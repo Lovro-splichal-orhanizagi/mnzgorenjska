@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { formatirajTocke } from '../lib/pomozno'
 import { useTekmovanje } from '../lib/tekmovanje'
+import { sestejOdKroga } from '../lib/lestvica'
 
 const MEDALJE = ['🥇', '🥈', '🥉']
 
@@ -149,28 +150,15 @@ export default function Lestvica() {
       .sort((a, b) => a.round_number - b.round_number)
   }, [odigraneTocke, vsiKrogiOdigrani])
 
-  // Lestvica "od kroga N naprej": sešteje points - penalty za vse kroge
-  // te sezone, katerih number >= odKroga, in razvrsti ekipe.
-  const lestvicaOd = useMemo(() => {
+  // Lestvica "od kroga N naprej": sešteje točke krogov te sezone, katerih
+  // number >= odKroga. Kazni NE odšteva — v `points` je že vštetá (glej
+  // `sestejOdKroga`). Seštevek je v `lib/lestvica.ts`, da ga preverja smoke.
+  const lestvicaOd = useMemo<VrsticaLestvice[] | null>(() => {
     if (odKroga <= 1) return null // enako kot Skupno
     const idsOd = new Set<number>(
       vsiKrogiOdigrani.filter((k) => k.number >= odKroga).map((k) => k.id),
     )
-    const skupine = new Map<number, VrsticaLestvice & { points: number; krogov: number }>()
-    for (const t of odigraneTocke) {
-      if (!idsOd.has(t.round_id)) continue
-      const prej = skupine.get(t.fantasy_team_id) ?? {
-        fantasy_team_id: t.fantasy_team_id,
-        team_name: t.team_name,
-        owner_name: t.owner_name,
-        points: 0,
-        krogov: 0,
-      }
-      prej.points += Number(t.points ?? 0) - Number(t.penalty ?? 0)
-      prej.krogov += 1
-      skupine.set(t.fantasy_team_id, prej)
-    }
-    return [...skupine.values()].sort((a, b) => b.points - a.points)
+    return sestejOdKroga(odigraneTocke, idsOd)
   }, [odKroga, vsiKrogiOdigrani, odigraneTocke])
 
   if (nalaganje)

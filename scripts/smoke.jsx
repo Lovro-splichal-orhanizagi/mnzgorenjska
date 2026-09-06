@@ -27,6 +27,7 @@ import {
   KAPETAN_MNOZITELJ,
 } from '../src/lib/pravila'
 import { tockeZaNastop } from '../src/lib/tockovanje'
+import { sestejOdKroga } from '../src/lib/lestvica'
 
 let napak = 0
 const preveri = (label, cond, extra = '') => {
@@ -349,6 +350,39 @@ preveri(
   (zakajNeGre({ id: 99, position: 'GK', team_id: 42, value: 5 }, veljavna.slice(0, 14), 50) ??
     '').includes('kadru'),
 )
+
+// --- lestvica "od N. kroga naprej" -----------------------------------------
+// Kazen za prestope je v `points` ZE odsteta (glej fantasy_round_points).
+// Stran jo je odstevala se enkrat: ekipa Gospodini je imela v 2. krogu 13
+// tock in 20 kazni -> points = -7, stran pa je kazala -7 - 20 = -27.
+{
+  const vrstice = [
+    { round_id: 1, fantasy_team_id: 201, team_name: 'Gospodini', points: 14 },
+    { round_id: 2, fantasy_team_id: 201, team_name: 'Gospodini', points: -7, penalty: 20 },
+  ]
+  const vsi = new Set([1, 2])
+  const samoDrugi = new Set([2])
+
+  const skupno = sestejOdKroga(vrstice, vsi)
+  preveri('lestvica: sestevek obeh krogov je 7', skupno[0].points === 7, String(skupno[0].points))
+
+  const odDrugega = sestejOdKroga(vrstice, samoDrugi)
+  preveri('lestvica: od 2. kroga je -7, ne -27', odDrugega[0].points === -7, String(odDrugega[0].points))
+
+  preveri('lestvica: steje kroge', odDrugega[0].krogov === 1, String(odDrugega[0].krogov))
+
+  const prazno = sestejOdKroga(vrstice, new Set())
+  preveri('lestvica: brez krogov je prazna', prazno.length === 0)
+
+  const vec = sestejOdKroga(
+    [
+      { round_id: 1, fantasy_team_id: 1, team_name: 'A', points: 5 },
+      { round_id: 1, fantasy_team_id: 2, team_name: 'B', points: 9 },
+    ],
+    new Set([1]),
+  )
+  preveri('lestvica: razvrsti padajoce', vec[0].team_name === 'B', vec.map((x) => x.team_name).join(','))
+}
 
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)
 process.exit(napak === 0 ? 0 : 1)
