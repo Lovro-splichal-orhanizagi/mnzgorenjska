@@ -267,7 +267,11 @@ if (pocisti) {
 }
 
 // --- seznam zapisnikov ------------------------------------------------------
-const seznamUrl = vir.naslovSeznamaTekem(liga)
+// Cachebuster: MNZ ali cdn med njim je vec-krat vrnil zastarel HTML brez
+// najnovejsih zapisnikov, ceprav je bilo `sveze: true` in cache lokalno
+// pravilno prepisan. Random query param na URL prisili prehod skozi cache.
+const seznamUrl =
+  vir.naslovSeznamaTekem(liga) + `&_=${Date.now()}`
 console.log(`Berem seznam tekem: ${seznamUrl}`)
 // Seznam se dnevno spreminja (nova tekma → nov zapisnik ID); vedno sveže,
 // da ne izpustimo pravkar objavljenih. Posamezne zapisnike lahko cachiramo.
@@ -275,7 +279,7 @@ const seznam = await prenesi(seznamUrl, `liga-${liga}.html`, true)
 let ids = [...new Set([...seznam.matchAll(/zapisnik=(\d+)/g)].map((m) => m[1]))]
 ids.sort((a, b) => Number(a) - Number(b))
 if (omeji) ids = ids.slice(0, omeji)
-console.log(`Najdenih zapisnikov: ${ids.length}`)
+console.log(`Najdenih zapisnikov: ${ids.length}${ids.length ? ' — ' + ids.join(', ') : ''}`)
 
 let uvozenih = 0
 let preskocenih = 0
