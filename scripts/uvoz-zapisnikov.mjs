@@ -313,6 +313,13 @@ for (const id of ids) {
     const rId = await krogId(z.sezona, z.krog, z.datum)
 
     // tekma
+    // onConflict cilja `(round_id, home_team_id, away_team_id)` — isti nabor
+    // ima unique index `matches_krog_klub_klub_key` (migracija
+    // 20260902170000). Prej se je conflict resolval prek `zapisnik_id`, kar
+    // pa se ni ujelo z razporedno placeholder vrstico (zapisnik_id=NULL) —
+    // upsert je poskusil INSERT-ati novo vrstico, unique index ga je blokiral
+    // in cel zapisnik je pristal v "preskocenih". Zdaj upsert POSODOBI
+    // razporedno vrstico in ji doda zapisnik podatke.
     const { data: tekma, error: eTekma } = await db
       .from('matches')
       .upsert(
@@ -328,7 +335,7 @@ for (const id of ids) {
           imported_at: new Date().toISOString(),
           import_warnings: z.opozorila,
         },
-        { onConflict: 'zapisnik_id' },
+        { onConflict: 'round_id,home_team_id,away_team_id' },
       )
       .select('id')
       .single()
