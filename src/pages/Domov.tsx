@@ -510,7 +510,7 @@ export default function Domov() {
                   </div>
                   <Link
                     to={`/igralec/${krogNajboljsi[0].player_id}`}
-                    className="mt-1 block truncate text-3xl font-black text-white hover:text-gnl-200 sm:text-4xl"
+                    className="mt-1 block break-words text-2xl font-black leading-tight text-white hover:text-gnl-200 sm:text-3xl md:text-4xl"
                   >
                     {prikazniIme(krogNajboljsi[0].full_name)}
                   </Link>
