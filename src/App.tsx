@@ -4,6 +4,7 @@ import { TekmovanjeProvider } from './lib/tekmovanje'
 import Navbar from './components/Navbar'
 import RokKroga from './components/RokKroga'
 import OpozoriloEkipe from './components/OpozoriloEkipe'
+import NapakaOprijem from './components/NapakaOprijem'
 import Domov from './pages/Domov'
 import Igralci from './pages/Igralci'
 import Igralec from './pages/Igralec'
@@ -28,6 +29,7 @@ export default function App() {
           <Navbar />
           <OpozoriloEkipe />
           <main className="mx-auto max-w-5xl px-4 py-8">
+            <NapakaOprijem>
             <Routes>
               <Route path="/" element={<Domov />} />
               <Route path="/moja-ekipa" element={<MojaEkipa />} />
@@ -48,6 +50,7 @@ export default function App() {
                 element={<p className="text-slate-400">Stran ne obstaja.</p>}
               />
             </Routes>
+            </NapakaOprijem>
           </main>
           <footer className="border-t border-white/10 py-6 text-center text-xs text-slate-600">
             <Link to="/pravno" className="underline hover:text-slate-400">
