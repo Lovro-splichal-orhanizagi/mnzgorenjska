@@ -650,15 +650,21 @@ export default function MojaEkipa() {
   // Neaktivnega igralca (klub letos ne igra, igralec je odšel) na trgu ni:
   // kader z njim je neveljaven in ekipi tiho vzame vse točke kroga. V kadru,
   // če je nekdo tja prišel prej, ostane viden — sicer bi z igrišča izginil.
-  const vidni = igralci.filter((i) => {
-    if (i.active === false && !izbrani.some((s) => s.player_id === i.id))
-      return false
-    if (filterKlub !== 'vsi' && String(i.team_id) !== filterKlub) return false
-    if (filterPoz !== 'vse' && i.position !== filterPoz) return false
-    if (iskanje && !(i.full_name ?? '').toLowerCase().includes(iskanje.toLowerCase()))
-      return false
-    return true
-  })
+  const vidni = igralci
+    .filter((i) => {
+      if (i.active === false && !izbrani.some((s) => s.player_id === i.id))
+        return false
+      if (filterKlub !== 'vsi' && String(i.team_id) !== filterKlub) return false
+      if (filterPoz !== 'vse' && i.position !== filterPoz) return false
+      if (iskanje && !(i.full_name ?? '').toLowerCase().includes(iskanje.toLowerCase()))
+        return false
+      return true
+    })
+    // Točke zadnjega odigranega kroga — vidno na trgu, da uporabnik hitro
+    // oceni, ali je igralec v formi. Prej so bile točke prikazane samo za
+    // igralce, ki so že v kadru; na trgu se jih ni videlo, kar je otežilo
+    // primerjavo pri iskanju.
+    .map((i) => ({ ...i, tocke_krog: tockeZadnjiKrog[i.id] ?? null }))
 
   const klopPlus = pripomocki.find((c) => c.chip === 'klop_plus')
   const wildcard = pripomocki.find((c) => c.chip === 'wildcard')
@@ -701,7 +707,7 @@ export default function MojaEkipa() {
         <div
           role="status"
           aria-live="polite"
-          className="fixed inset-x-0 top-3 z-[60] mx-auto flex max-w-md items-center justify-between gap-3 rounded-2xl border border-gnl-400/40 bg-gnl-500/95 px-4 py-3 text-sm font-semibold text-slate-950 shadow-2xl shadow-black/50 backdrop-blur"
+          className="fixed inset-x-0 top-16 z-[60] mx-auto flex max-w-md items-center justify-between gap-3 rounded-2xl border border-gnl-400/40 bg-gnl-500/95 px-4 py-3 text-sm font-semibold text-slate-950 shadow-2xl shadow-black/50 backdrop-blur"
         >
           <span className="min-w-0 flex-1">{sporocilo}</span>
           <button
@@ -716,7 +722,7 @@ export default function MojaEkipa() {
       {napaka && (
         <div
           role="alert"
-          className="fixed inset-x-0 top-3 z-[60] mx-auto flex max-w-md items-center justify-between gap-3 rounded-2xl border border-rose-400/60 bg-rose-500/95 px-4 py-3 text-sm font-semibold text-white shadow-2xl shadow-black/50 backdrop-blur"
+          className="fixed inset-x-0 top-16 z-[60] mx-auto flex max-w-md items-center justify-between gap-3 rounded-2xl border border-rose-400/60 bg-rose-500/95 px-4 py-3 text-sm font-semibold text-white shadow-2xl shadow-black/50 backdrop-blur"
         >
           <span className="min-w-0 flex-1">⚠ {napaka}</span>
           <button
@@ -1431,21 +1437,19 @@ export default function MojaEkipa() {
             <span className="shrink-0 text-rose-200/70">popravi ↑</span>
           </button>
         )}
-        <div className="flex items-center gap-2 px-3 py-2">
-          <div className="min-w-0 flex-1 tabular-nums">
-            <div className="text-sm font-black leading-tight">
-              <span
-                className={preostalo < 0 ? 'text-rose-400' : 'text-gnl-300'}
-              >
-                {formatirajCeno(preostalo)}
-              </span>
-              <span className="ml-1 text-[10px] font-normal text-slate-500">
-                ostane
-              </span>
-            </div>
-            <div className="text-[10px] leading-tight text-slate-500">
+        <div className="flex items-center gap-2 px-3 py-1.5">
+          <div className="min-w-0 flex-1 tabular-nums leading-tight">
+            <span className="text-[10px] text-slate-500">ostane </span>
+            <span
+              className={`text-xs font-black ${
+                preostalo < 0 ? 'text-rose-400' : 'text-gnl-300'
+              }`}
+            >
+              {formatirajCeno(preostalo)}
+            </span>
+            <span className="ml-2 text-[10px] text-slate-500">
               {izbrani.length}/{VELIKOST_EKIPE} · {prvi.length}/{STEVILO_PRVIH}
-            </div>
+            </span>
           </div>
           <button
             onClick={() => {
@@ -1602,6 +1606,8 @@ function TrgIgralcev({
               : i.goli_lani > 0
                 ? `lani ${i.goli_lani} G`
                 : 'brez nastopov'
+          const zadnjeTocke =
+            (i as any).tocke_krog != null ? Number((i as any).tocke_krog) : null
           return (
             <li
               key={i.id}
@@ -1623,8 +1629,25 @@ function TrgIgralcev({
                   <div className="truncate text-sm font-semibold">
                     {prikazniIme(i.full_name)}
                   </div>
-                  <div className="truncate text-[11px] text-slate-500">
-                    {i.team_short} · {statLetos}
+                  <div className="flex items-center gap-1.5 truncate text-[11px] text-slate-500">
+                    <span className="truncate">
+                      {i.team_short} · {statLetos}
+                    </span>
+                    {zadnjeTocke != null && (
+                      <span
+                        title="Točke v zadnjem odigranem krogu"
+                        className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-black tabular-nums ${
+                          zadnjeTocke > 0
+                            ? 'bg-fuchsia-500/25 text-fuchsia-100'
+                            : zadnjeTocke < 0
+                              ? 'bg-rose-500/20 text-rose-200'
+                              : 'bg-white/10 text-slate-300'
+                        }`}
+                      >
+                        {zadnjeTocke > 0 ? '+' : ''}
+                        {zadnjeTocke}
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-1">
@@ -1632,7 +1655,15 @@ function TrgIgralcev({
                     {formatirajCeno(i.value)}
                   </span>
                   <button
-                    onClick={() => naPreklop(i)}
+                    onClick={(e) => {
+                      // Prepreci "phantom click" ob naravnem drsanju po
+                      // seznamu na mobilnem, kjer prst mimogrede zadene
+                      // gumb. React onClick se vseeno sprozi tudi z rocnim
+                      // dotikom, ki sledi drsanju.
+                      e.stopPropagation()
+                      naPreklop(i)
+                    }}
+                    onPointerDownCapture={(e) => e.stopPropagation()}
                     title={razlog ?? undefined}
                     className={`${
                       jeIzbran ? 'gumb-tih' : 'gumb-glavni'
