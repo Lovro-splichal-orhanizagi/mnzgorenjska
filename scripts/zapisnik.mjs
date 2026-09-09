@@ -71,13 +71,22 @@ function jeOznaka(s) {
  * Iz razdelka POSTAVI potegne obe ekipi.
  * Vrstni red v zapisniku: postava 1, postava 2, rezerve 1, rezerve 2.
  */
+// Glave stolpcev v tabeli postav. Kranj ima samo "Priimek in ime", MNZ
+// Ljubljana pa zraven se "Leto rojstva" — brez tega bi bila glava prebrana
+// kot ime kluba in postava bi se koncala pri prvem igralcu.
+const GLAVE_STOLPCEV = ['Priimek in ime', 'Leto rojstva', 'Št.', 'St.']
+
 function parsePostave(vrstice) {
   const skupine = []
   let trenutna = null
 
   for (let i = 0; i < vrstice.length; i++) {
     const v = vrstice[i]
-    if (v === 'Priimek in ime') continue
+    if (GLAVE_STOLPCEV.includes(v)) continue
+
+    // Letnica rojstva stoji za imenom (npr. "… Deronja Marko (V) 1995").
+    // Klub se nikoli ne imenuje s stirimi stevilkami, zato je varno preskociti.
+    if (/^\d{4}$/.test(v)) continue
 
     if (/^Rezervni igralci/i.test(v)) {
       trenutna = { naslov: 'rezerve', igralci: [] }

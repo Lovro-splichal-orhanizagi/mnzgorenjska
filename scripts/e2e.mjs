@@ -354,19 +354,44 @@ ok(
 )
 
 // prejeti goli: -1 za vsaka 2
-const { data: vratarPrejeti } = await anon
-  .from('appearance_points')
-  .select('points, minutes_played, goals_conceded, goals, assists')
-  .eq('position', 'GK')
+//
+// Nastop mora biti CIST: brez avtogola, kartona in zgresene enajstmetrovke.
+// Vsak od teh nosi svoje tocke in bi racunico spodaj podrl — natanko to se je
+// zgodilo, ko je izbrani vratar dosegel avtogol (-2) in je test padel, ceprav
+// je bilo tockovanje pravilno. Te stolpce ima `appearances`, ne
+// `appearance_points`, zato izberemo tam in sele nato pogledamo tocke.
+const { data: cistiNastopi } = await anon
+  .from('appearances')
+  .select('id, goals_conceded, own_goals, yellow_cards, red_cards, penalties_missed, penalties_saved')
   .eq('minutes_played', 90)
-  .eq('clean_sheet', false)
-  .eq('goals', 0)
-  .eq('assists', 0)
+  .eq('own_goals', 0)
+  .eq('yellow_cards', 0)
+  .eq('red_cards', 0)
+  .eq('penalties_missed', 0)
+  .eq('penalties_saved', 0)
   .gte('goals_conceded', 2)
-  .order('player_id')
-  .order('round_id')
-  .limit(1)
-  .single()
+  .order('id')
+  .limit(50)
+
+let vratarPrejeti = null
+for (const a of cistiNastopi ?? []) {
+  const { data: tocke } = await anon
+    .from('appearance_points')
+    .select('points, goals_conceded, goals, assists, position, clean_sheet')
+    .eq('appearance_id', a.id)
+    .maybeSingle()
+  if (
+    tocke &&
+    tocke.position === 'GK' &&
+    tocke.clean_sheet === false &&
+    Number(tocke.goals) === 0 &&
+    Number(tocke.assists) === 0
+  ) {
+    vratarPrejeti = tocke
+    break
+  }
+}
+
 if (vratarPrejeti) {
   const pricakovano = 2 - Math.floor(vratarPrejeti.goals_conceded / 2)
   ok(
@@ -374,6 +399,8 @@ if (vratarPrejeti) {
     Number(vratarPrejeti.points) === pricakovano,
     `prejetih ${vratarPrejeti.goals_conceded} -> ${vratarPrejeti.points}, pričakovano ${pricakovano}`,
   )
+} else {
+  console.log('OPOMBA  ni cistega vratarskega nastopa s 2+ prejetimi goli — preskoceno')
 }
 
 // --- 9. fantasy ekipa in proračun --------------------------------------------

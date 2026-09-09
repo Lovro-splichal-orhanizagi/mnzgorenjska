@@ -28,6 +28,8 @@ import {
 } from '../src/lib/pravila'
 import { tockeZaNastop } from '../src/lib/tockovanje'
 import { sestejOdKroga } from '../src/lib/lestvica'
+import { parsirajZapisnik, nastopi } from './zapisnik.mjs'
+import { readFileSync } from 'node:fs'
 
 let napak = 0
 const preveri = (label, cond, extra = '') => {
@@ -382,6 +384,49 @@ preveri(
     new Set([1]),
   )
   preveri('lestvica: razvrsti padajoce', vec[0].team_name === 'B', vec.map((x) => x.team_name).join(','))
+}
+
+// --- razclenjevanje zapisnikov ---------------------------------------------
+// Vzorca sta pravi strani obeh zvez (scripts/vzorci/). MNZ Ljubljana ima v
+// tabeli postav dodaten stolpec "Leto rojstva", ki ga Kranj nima — brez
+// naslavljanja stolpcev po glavi razclenjevalnik prebere glavo kot ime kluba
+// in se ustavi po prvem igralcu.
+{
+  const vzorec = (ime) =>
+    readFileSync(new URL(`../scripts/vzorci/${ime}`, import.meta.url), 'utf8')
+
+  // Kranj — referenca, ki NE sme razpasti
+  {
+    const z = parsirajZapisnik(vzorec('zapisnik-kranj-1601.html'), { zapisnikId: '158062' })
+    preveri('zapisnik Kranj: domaci klub', z.domaci?.ime === 'Zarica Kranj', z.domaci?.ime)
+    preveri('zapisnik Kranj: gostje klub', z.gostje?.ime === 'Britof', z.gostje?.ime)
+    preveri('zapisnik Kranj: 11 v postavi doma', z.domaci?.postava?.length === 11, String(z.domaci?.postava?.length))
+    preveri('zapisnik Kranj: 11 v postavi v gosteh', z.gostje?.postava?.length === 11, String(z.gostje?.postava?.length))
+    preveri('zapisnik Kranj: brez opozoril o postavi',
+      !(z.opozorila ?? []).some((o) => o.includes('namesto 11')),
+      (z.opozorila ?? []).join(' | ').slice(0, 60))
+  }
+
+  // Ljubljana — nov vir
+  {
+    const z = parsirajZapisnik(vzorec('zapisnik-ljubljana-2003.html'), { zapisnikId: '157904' })
+    preveri('zapisnik LJ: domaci klub', z.domaci?.ime === 'Ljubljana', z.domaci?.ime)
+    preveri('zapisnik LJ: gostje klub', z.gostje?.ime === 'Dragomer', z.gostje?.ime)
+    preveri('zapisnik LJ: 11 v postavi doma', z.domaci?.postava?.length === 11, String(z.domaci?.postava?.length))
+    preveri('zapisnik LJ: 11 v postavi v gosteh', z.gostje?.postava?.length === 11, String(z.gostje?.postava?.length))
+    preveri('zapisnik LJ: vratar oznacen',
+      z.domaci?.postava?.some((i) => i.vratar), String(z.domaci?.postava?.filter((i) => i.vratar).length))
+    preveri('zapisnik LJ: kapetan oznacen',
+      z.domaci?.postava?.some((i) => i.kapetan), String(z.domaci?.postava?.filter((i) => i.kapetan).length))
+    preveri('zapisnik LJ: letnica NI del imena',
+      !z.domaci?.postava?.some((i) => /\d{4}/.test(i.ime ?? '')),
+      (z.domaci?.postava ?? []).map((i) => i.ime).slice(0, 2).join(', '))
+    preveri('zapisnik LJ: brez opozoril o postavi',
+      !(z.opozorila ?? []).some((o) => o.includes('namesto 11')),
+      (z.opozorila ?? []).join(' | ').slice(0, 70))
+    const n = nastopi(z)
+    preveri('zapisnik LJ: nastopi za obe ekipi', (n?.length ?? 0) >= 22, String(n?.length))
+  }
 }
 
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)
