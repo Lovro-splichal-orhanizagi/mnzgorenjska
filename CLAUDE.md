@@ -42,6 +42,65 @@ Vsi pogledi imajo stolpec `competition_id`; vmesnik izbrano ligo hrani v
 
 Uvozne skripte sprejmejo `--tekmovanje mladinci` (privzeto `clani`).
 
+## Države, zveze, tekmovanja
+
+Nad tekmovanjem sta dve ravni, obe plitvi:
+
+```
+countries (SI)  →  federations (mnzg, mnzlj)  →  competitions (clani, lj-1-liga …)
+```
+
+- `federations` je **regijska zveza** (MNZ). Po njej izbirnik grupira lige in
+  z nje pride `site_url` za navedbo vira v nogi. `competitions.federation_id`
+  je lahko prazen — tekmovanje brez znane zveze se pokaže brez skupine.
+- `competitions_view` prilepi državo in zvezo; vmesnik bere **ta pogled**, ne
+  same tabele, in filtrira po `active`.
+- **Nova liga se vpiše kot `active = false`.** Vklopi se šele, ko sta uvožena
+  arhiv in tekoča sezona in cene niso več privzete — liga, v kateri stane vsak
+  igralec 4.5, nima igre.
+
+Vir podatkov je `competitions.source` in zanj obstaja datoteka v
+`scripts/viri/`. Uvozne skripte naslovov ne gradijo same in vira ne poznajo:
+dobijo ga iz tekmovanja (`viraZa`). Nova zveza = nova datoteka in ena vrstica
+v `scripts/viri/index.mjs`.
+
+**Vzdevki klubov so last vira**, ne sistema: dve zvezi sta dva ločena nabora
+klubov in ime, ki v Kranju pomeni en klub, v Ljubljani lahko pomeni drugega.
+Vsak vir zato pripelje svoj slovar v `naredikljucKluba`.
+
+**Šifra lige pri viru pripada sezoni, ne ligi.** Ob novi sezoni se popravi
+`competitions.source_league_code`, ne skripte. Arhiv prejšnje sezone se poda
+z `--liga`.
+
+| zveza | tekoča 2026/27 | arhiv 2025/26 |
+|---|---|---|
+| mnzg — člani / mladinci | 1601 / 1603 | 1502 / 1503 |
+| mnzlj — 1. / 2. liga | 2003 / 2004 | 1904 / 1905 |
+
+**Pragovi glasovanja so po tekmovanju** (`competition_settings`, brano prek
+`nastavitev_int_za`). Trije glasovi so v ligi z dvesto igralci lahek dosežek
+in v ligi z dvajsetimi nedosegljiv; kar tekmovanje nima svojega, pride iz
+globalnega `settings`. Zaupanje glasovalca (`voter_weight`) ostaja globalno —
+je lastnost človeka, ne lige.
+
+## Razčlenjevanje pri več virih
+
+Oba vira uporabljata isti CMS, a ne pišeta enako. Kar se je izkazalo:
+
+- **Stolpce naslavljaj po glavi tabele, ne po zaporedju.** Ljubljana ima
+  stolpec `Leto rojstva`, ki ga Kranj nima.
+- **Letnica ima lahko dve ali štiri števke** (`05.09.26` proti `05.09.2026`).
+- **Sezono beri v naslovni vrstici nad `Zapisnik:`**, ne kjerkoli na strani —
+  Ljubljana ima v meniju spustni seznam vseh sezon od 2006/07.
+- **Razpored se konča pri bloku rezultatov**, ki se pri Kranju imenuje
+  `REZULTATI`, pri Ljubljani `REZULTATI TEKEM`. Pod njim so rezultati DRUGE
+  lige in brez tega konca pristanejo v bazi kot dodatni krogi te.
+
+Vsi štirje so se končali **brez sporočila o napaki**: uvoz je poročal uspeh in
+vpisal smeti. Zato so v `scripts/vzorci/` shranjeni zapisniki in razporedi
+obeh zvez, `npm run smoke` pa jih preveri brez omrežja. **Ob novem viru dodaj
+vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
+
 ## Glavni koncepti podatkovnega modela
 
 - `players` → realni igralci, vezani na realni klub (`teams`) in tekmovanje
@@ -141,6 +200,10 @@ node scripts/ovrednoti-igralce.mjs                   # cene igralcev
 node scripts/prenesi-grbe.mjs --pisi                 # grbi klubov
 ```
 
+Vrstni red ni izbiren: **arhiv → razpored → tekoča sezona → pozicije → cene**.
+Igralec pod 270 minutami dobi privzeto 4.5, zato bi liga brez arhiva imela vse
+igralce po isti ceni in prvi teden ne bi imel igre.
+
 Isto zaporedje za mladince — `--tekmovanje mladinci`, arhiv je `--liga 1503`:
 
 ```bash
@@ -156,12 +219,39 @@ Brez `--liga` skripte vzamejo šifro tekoče sezone iz `competitions.mnzg_liga`
 razporeda razbere, kateri klubi letos igrajo, in igralce klubov zunaj lige
 deaktivira (pri mladincih vsako leto odide cela generacija).
 
+Ljubljanski ligi (vpisani sta **neaktivni**; vklopi ju šele, ko so cene prave):
+
+```bash
+node scripts/uvoz-zapisnikov.mjs  --tekmovanje lj-1-liga --liga 1904
+node scripts/uvoz-razporeda.mjs   --tekmovanje lj-1-liga --pisi
+node scripts/uvoz-zapisnikov.mjs  --tekmovanje lj-1-liga
+node scripts/ugani-pozicije.mjs   --tekmovanje lj-1-liga --pisi
+node scripts/ovrednoti-igralce.mjs --tekmovanje lj-1-liga --sezona 2025/26
+# isto za lj-2-liga, arhiv je --liga 1905
+```
+
+Preden ligo vklopiš, **preveri razpon cen** — mora biti primerljiv z
+Gorenjsko (povprečje okoli 5, resničen vrh, ne vsi po 4.5):
+
+```sql
+select round(avg(value),2), min(value), max(value),
+       count(*) filter (where value = 4.5) * 100.0 / count(*) as odst_privzetih
+  from players p join competitions c on c.id = p.competition_id
+ where c.slug = 'lj-1-liga' and p.active;
+
+update competitions set active = true where slug in ('lj-1-liga','lj-2-liga');
+```
+
 ## Preverjanje sprememb
 
 - Po spremembi kode poženi `npm run smoke`.
 - Po spremembi sheme ali RLS poženi še `npm test`.
 - Ob spremembi podatkovnega modela **dodaj novo migracijo** v `supabase/migrations/`;
   obstoječih migracij ne spreminjaj, ker so že uporabljene.
+- Migracijo, ki jo urejaš po prvem zagonu, preveri **na prazni bazi** — na
+  lokalni je že uveljavljena in napaka se pokaže šele pri drugem razvijalcu.
+- `create or replace view` ne more prerazporediti stolpcev; ko se `c.*`
+  razširi, je treba pogled najprej `drop`.
 - Pravila sestave ekipe so na enem mestu v `src/lib/pravila.ts` — spreminjaj jih tam,
   ne razpršeno po komponentah.
 - Vsaka nova poizvedba na strani mora filtrirati po `competition_id`, sicer
