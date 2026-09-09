@@ -3448,6 +3448,10 @@ export type Database = {
         Args: { p_competition_id: number; p_key: string; p_privzeto: number }
         Returns: number
       }
+      nastavitve_tekmovanja: {
+        Args: { p_competition_id: number }
+        Returns: Json
+      }
       nedavni_opomnik: {
         Args: { p_competition_id: number; p_user_id: string }
         Returns: boolean

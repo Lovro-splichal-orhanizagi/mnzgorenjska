@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useNastavitev } from '../lib/nastavitve'
 import { imeZveze } from '../components/VirPodatkov'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
@@ -6,7 +7,7 @@ import { useAuth } from '../lib/useAuth'
 import { useTekmovanje } from '../lib/tekmovanje'
 import Grb from '../components/Grb'
 import GolZaGlasovanje, {
-  PRAG_ASISTENCE,
+  PRAG_ASISTENCE_PRIVZETO,
   caka,
 } from '../components/GolZaGlasovanje'
 import type { Gol, Glas, Kandidat } from '../components/GolZaGlasovanje'
@@ -17,6 +18,10 @@ export default function Glasovanje() {
   const { session, loading } = useAuth()
   const { id: tekmovanjeId, tekmovanje } = useTekmovanje()
   const zveza = imeZveze(tekmovanje)
+  const pragAsistence = useNastavitev()(
+    'prag_glasov_asistenca',
+    PRAG_ASISTENCE_PRIVZETO,
+  )
   const [tekme, setTekme] = useState<TekmaVrstica[]>([])
   const [krogId, setKrogId] = useState<number | null>(null)
   const [sezona, setSezona] = useState<string | null>(null)
@@ -226,7 +231,7 @@ export default function Glasovanje() {
   if (loading || nalaganje)
     return <p className="animiraj-utrip text-slate-400">Nalaganje …</p>
 
-  const nepotrjenih = goli.filter((g) => caka(g, glasovi[g.id] ?? [])).length
+  const nepotrjenih = goli.filter((g) => caka(g, glasovi[g.id] ?? [], pragAsistence)).length
 
   return (
     <div className="space-y-6">
@@ -242,7 +247,7 @@ export default function Glasovanje() {
         <p className="max-w-2xl text-slate-400">
           Zapisniki {zveza} beležijo strelce, asistenc pa ne. Določi jih
           skupnost: ko isti igralec pri golu zbere{' '}
-          <strong className="text-gnl-300">{PRAG_ASISTENCE} glasov</strong>, se mu
+          <strong className="text-gnl-300">{pragAsistence} glasov</strong>, se mu
           asistenca prizna in prinese <strong className="text-gnl-300">+3 točke</strong>.
         </p>
       </header>

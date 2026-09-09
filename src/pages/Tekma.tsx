@@ -1,5 +1,7 @@
 // Ena tekma: obe postavi na igrišču in točke, ki jih je prinesla.
 import { useEffect, useState } from 'react'
+import { useNastavitev } from '../lib/nastavitve'
+import { PRAG_ASISTENCE_PRIVZETO } from '../components/GolZaGlasovanje'
 import { Link, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
@@ -36,6 +38,10 @@ export default function Tekma() {
   // opravil PostgREST, zdaj jo naredimo tu in je razvidna.
   const tekmaId = Number(id)
   const { session } = useAuth()
+  const pragAsistence = useNastavitev()(
+    'prag_glasov_asistenca',
+    PRAG_ASISTENCE_PRIVZETO,
+  )
   const [tekma, setTekma] = useState<TekmaVrstica | null>(null)
   const [nastopi, setNastopi] = useState<NastopTekme[]>([])
   const [goli, setGoli] = useState<Gol[]>([])
@@ -207,7 +213,7 @@ export default function Tekma() {
 
   // Koliko golov te tekme še čaka na odločitev skupnosti. Enajstmetrovke,
   // avtogoli in goli, pri katerih je zmagalo »brez asistence«, ne čakajo.
-  const cakajocih = goli.filter((g) => caka(g, glasovi[String(g.id)] ?? [])).length
+  const cakajocih = goli.filter((g) => caka(g, glasovi[String(g.id)] ?? [], pragAsistence)).length
 
   // Nastopi so v isti tabeli za obe ekipi; razdelimo jih po klubu.
   const domaci = nastopi.filter((n) => n.team_id === tekma.home_team_id)

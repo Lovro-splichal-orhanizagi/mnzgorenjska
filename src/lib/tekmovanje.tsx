@@ -6,6 +6,7 @@
 // pustil; parameter v naslovu jo vedno povozi, ker je bolj določen.
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useRef,
@@ -85,6 +86,24 @@ export function uskladiTekmovanje({
   return { dejanje: 'zapisi-naslov', param: zeljen }
 }
 
+/**
+ * Ali je ligo res nekdo izbral — ali je obiskovalec le pristal na privzeti?
+ *
+ * Izbiro shranjujemo v brskalnik, da je ob naslednjem obisku tam, kjer si
+ * pustil. Dokler se je zapisala ob vsakem nalaganju, je bila neuporabna kot
+ * dokaz izbire: zaslon prvega obiska jo bere prav v ta namen in je po enem
+ * ponovnem nalaganju izginil za vedno.
+ */
+export function jeIzrecnaIzbira({
+  vNaslovu,
+  shranjeno,
+}: {
+  vNaslovu: string | null | undefined
+  shranjeno: string | null | undefined
+}): boolean {
+  return Boolean(vNaslovu) || Boolean(shranjeno)
+}
+
 interface KontekstVrednost {
   slug: string
   id: number | null
@@ -116,6 +135,16 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
     () => iskanje.get('t') || shranjeno() || PRIVZETO,
   )
 
+  // Gol obisk brez parametra in brez shranjene lige ni izbira — dokler
+  // uporabnik ne izbere sam, v brskalnik ne zapišemo ničesar.
+  const izrecno = useRef(
+    jeIzrecnaIzbira({ vNaslovu: iskanje.get('t'), shranjeno: shranjeno() }),
+  )
+  const nastavi = useCallback((novi: string) => {
+    izrecno.current = true
+    setSlug(novi)
+  }, [])
+
   useEffect(() => {
     supabase
       // `competitions_view` prilozi zvezo in drzavo, da izbirnik ne spaja sam.
@@ -145,6 +174,8 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
     zadnjaPot.current = pathname
 
     if (ukaz.dejanje === 'prevzemi-naslov') {
+      // Liga iz naslova je izrecna — deljena povezava pove, kaj hočeš videti.
+      izrecno.current = true
       setSlug(ukaz.slug)
     } else if (ukaz.dejanje === 'zapisi-naslov') {
       const novo = new URLSearchParams(iskanje)
@@ -163,6 +194,7 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
   }, [tekmovanja, slug])
 
   useEffect(() => {
+    if (!izrecno.current) return
     try {
       localStorage.setItem(KLJUC, slug)
     } catch {
@@ -179,7 +211,7 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
         id: tekmovanje?.id ?? null,
         tekmovanje,
         tekmovanja,
-        nastavi: setSlug,
+        nastavi,
       }}
     >
       {children}

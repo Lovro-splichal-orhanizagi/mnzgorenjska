@@ -3,7 +3,7 @@
 import { renderToString } from 'react-dom/server'
 import { StaticRouter } from 'react-router'
 import { AuthProvider } from '../src/lib/useAuth'
-import { TekmovanjeProvider, uskladiTekmovanje } from '../src/lib/tekmovanje'
+import { TekmovanjeProvider, uskladiTekmovanje, jeIzrecnaIzbira } from '../src/lib/tekmovanje'
 import Navbar from '../src/components/Navbar'
 import RokKroga from '../src/components/RokKroga'
 import Domov from '../src/pages/Domov'
@@ -32,6 +32,8 @@ import { parsirajZapisnik, nastopi } from './zapisnik.mjs'
 import { poZvezah, ustreza } from '../src/components/IzbirnikLige'
 import { virPodatkov, imeZveze } from '../src/components/VirPodatkov'
 import { viraZa, znaniViri } from './viri/index.mjs'
+import { caka, brezAsistencePotrjeno, PRAG_ASISTENCE_PRIVZETO } from '../src/components/GolZaGlasovanje'
+import { adaptivniPrag } from '../src/pages/Pozicije'
 import { razcleniRazpored, datum, sezonaIz } from './razpored.mjs'
 import { readFileSync } from 'node:fs'
 
@@ -410,7 +412,8 @@ preveri(
       !(z.opozorila ?? []).some((o) => o.includes('namesto 11')),
       (z.opozorila ?? []).join(' | ').slice(0, 60))
     preveri('zapisnik Kranj: sezona', z.sezona === '2026/27', String(z.sezona))
-    preveri('zapisnik Kranj: datum', z.datum === '2026-09-05', String(z.datum))
+    // Kranj vrstice "Datum:" nima — datum ostane iz naslova kroga.
+    preveri('zapisnik Kranj: datum iz naslova kroga', z.datum === '2026-09-05', String(z.datum))
   }
 
   // Ljubljana — nov vir
@@ -430,13 +433,43 @@ preveri(
     preveri('zapisnik LJ: brez opozoril o postavi',
       !(z.opozorila ?? []).some((o) => o.includes('namesto 11')),
       (z.opozorila ?? []).join(' | ').slice(0, 70))
+    // MENJAVE: Kranj napise minuto ENKRAT ("46'", noter, ven), Ljubljana pa
+    // pred VSAKIM igralcem ("62'", noter, "62'", ven). Star razclenjevalnik je
+    // ob vsaki vrstici z minuto zavrgel cakajocega igralca, zato pri Ljubljani
+    // ni sestavil nobene menjave: vseh 11 zacetnikov je dobilo 90 minut,
+    // menjava pa sploh ni imela nastopa. Brez opozorila in brez izjeme —
+    // `nastopi` jih je vrnil natanko 22, kar je bilo videti pravilno.
+    preveri('zapisnik LJ: menjave prebrane', (z.menjave?.length ?? 0) === 6, String(z.menjave?.length))
+    preveri('zapisnik LJ: prva menjava v 62. minuti',
+      z.menjave?.[0]?.minuta === 62, String(z.menjave?.[0]?.minuta))
+    preveri('zapisnik LJ: menjava ima noter in ven',
+      Boolean(z.menjave?.[0]?.noter?.ime && z.menjave?.[0]?.ven?.ime),
+      JSON.stringify(z.menjave?.[0]))
+    {
+      const n = nastopi(z)
+      const manj = (n ?? []).filter((x) => (x.minutes ?? 0) < 90).length
+      preveri('zapisnik LJ: nekdo je igral manj kot 90 minut', manj > 0, String(manj))
+      preveri('zapisnik LJ: nastopov je vec kot 22 (klop steje)',
+        (n?.length ?? 0) > 22, String(n?.length))
+    }
+
+    // Razdelek se konca pri naslovu z veliko zacetnico: Kranj "REZULTATI",
+    // Ljubljana "REZULTATI TEKEM". Ob primerjavi z enakostjo je blok MENJAVE
+    // tekel se 77 vrstic cez konec zapisnika, v seznam rezultatov druge lige.
+    preveri('zapisnik LJ: menjave se koncajo pred rezultati',
+      (z.menjave ?? []).every((m) => m.minuta <= 120),
+      (z.menjave ?? []).map((m) => m.minuta).join(','))
+
     // Ljubljana pise letnico s stirimi stevkami — "Sezona 2026/2027",
     // "05.09.2026" — in v meniju nasteje vse sezone od 2006/07 naprej. Stara
     // izraza sta zajela prvo vrstico z letnico kjerkoli na strani in ji
     // odgrizla zadnji dve stevki: sezona "2026/20", datum "2020-09-05".
     // Cel arhiv se je uvozil v izmisljeno sezono z desetletje starimi datumi.
     preveri('zapisnik LJ: sezona ni iz menija', z.sezona === '2026/27', String(z.sezona))
-    preveri('zapisnik LJ: datum s stirimestno letnico', z.datum === '2026-09-05', String(z.datum))
+    // Ljubljanski zapisnik ima svojo vrstico "Datum: 04.09.26 - 19.30" — tekma
+    // se je igrala v petek, naslov kroga pa nosi soboto. Igra tega ne pokvari
+    // (krog dolocuje `z.krog`), na strani Rezultati pa bi pisal napacen dan.
+    preveri('zapisnik LJ: datum je datum TEKME, ne kroga', z.datum === '2026-09-04', String(z.datum))
     const n = nastopi(z)
     preveri('zapisnik LJ: nastopi za obe ekipi', (n?.length ?? 0) >= 22, String(n?.length))
   }
@@ -489,6 +522,53 @@ preveri(
   preveri('vir: zveza brez naslova se navede brez povezave',
     virPodatkov(lige[0])?.url === null && virPodatkov(lige[0])?.ime === 'MNZ Gorenjska',
     JSON.stringify(virPodatkov(lige[0])))
+}
+
+// --- lepljiva izbira lige ---------------------------------------------------
+// Izbrano ligo shranimo SAMO, kadar jo je nekdo res izbral. Doslej se je
+// zapisala ob vsakem nalaganju strani, tudi ce je obiskovalec le pristal na
+// privzeti ligi. Zaslon "Katero ligo spremljas?" pa to isto kljuc bere kot
+// dokaz, da je bil ze vprasan — zato je po enem samem ponovnem nalaganju
+// izginil za vedno in obiskovalec je tiho koncal na Gorenjski, torej natanko
+// tam, kamor ga zaslon ne bi smel spustiti.
+{
+  preveri('izbira: parameter v naslovu je izrecen',
+    jeIzrecnaIzbira({ vNaslovu: 'mladinci', shranjeno: null }))
+  preveri('izbira: shranjena liga iz prejsnjega obiska je izrecna',
+    jeIzrecnaIzbira({ vNaslovu: null, shranjeno: 'clani' }))
+  preveri('izbira: gol obisk brez obojega ni izrecen',
+    !jeIzrecnaIzbira({ vNaslovu: null, shranjeno: null }))
+  preveri('izbira: prazen parameter ne steje',
+    !jeIzrecnaIzbira({ vNaslovu: '', shranjeno: '' }))
+}
+
+// --- pragovi po ligi -------------------------------------------------------
+// Prag pripada tekmovanju (migracija 20260909090000). Streznik ga je upostevni
+// ze prej, vmesnik pa je kazal stevilo iz kode — ob prvem povozu bi stran
+// trdila "1 / 3 — se 2 do odlocitve", asistenca pa bi se potrdila ze pri dveh.
+{
+  const gol = { id: 1, is_penalty: false, is_own_goal: false, assist_player_id: null,
+    assist_none_confirmed_at: null }
+  const dvaGlasovaZaNikogar = [{ player_id: null, votes: 2 }]
+
+  preveri('prag: pri privzetih treh dva glasova ne odlocita',
+    !brezAsistencePotrjeno(gol, dvaGlasovaZaNikogar))
+  preveri('prag: liga s pragom 2 odloci ze pri dveh',
+    brezAsistencePotrjeno(gol, dvaGlasovaZaNikogar, 2))
+  preveri('prag: gol s pragom 2 ne caka vec',
+    !caka(gol, dvaGlasovaZaNikogar, 2))
+  preveri('prag: gol s privzetim pragom se caka',
+    caka(gol, dvaGlasovaZaNikogar))
+  preveri('prag: privzetek je enak strezniskemu', PRAG_ASISTENCE_PRIVZETO === 3,
+    String(PRAG_ASISTENCE_PRIVZETO))
+
+  // Adaptivni prag za pozicije mora slediti isti logiki kot `adaptivni_prag`
+  // v migraciji, le da pragova zdaj prideta od klicatelja.
+  preveri('prag: mocan prior zniza prag za 3', adaptivniPrag(0.8, 5, 2) === 2, String(adaptivniPrag(0.8, 5, 2)))
+  preveri('prag: srednji prior zniza za 2', adaptivniPrag(0.55, 5, 2) === 3, String(adaptivniPrag(0.55, 5, 2)))
+  preveri('prag: sibek prior ne zniza', adaptivniPrag(0.1, 5, 2) === 5, String(adaptivniPrag(0.1, 5, 2)))
+  preveri('prag: nikoli pod spodnjo mejo', adaptivniPrag(0.9, 3, 2) === 2, String(adaptivniPrag(0.9, 3, 2)))
+  preveri('prag: liga s pragom 3 se zniza na 2', adaptivniPrag(0.8, 3, 2) === 2, String(adaptivniPrag(0.8, 3, 2)))
 }
 
 // --- viri ------------------------------------------------------------------

@@ -8,6 +8,7 @@
 //     in prav tako ne čaka več,
 //   - gol je bil iz enajstmetrovke ali avtogol — asistence po pravilih ni.
 import { useState } from 'react'
+import { useNastavitev } from '../lib/nastavitve'
 import { prikazniIme, razredPozicije, KRATKA_POZICIJA } from '../lib/pomozno'
 import type { Pozicija } from '../lib/tipi'
 
@@ -46,7 +47,10 @@ export interface Glas {
   votes: number
 }
 
-export const PRAG_ASISTENCE = 3
+// Privzetek; dejanski prag pripada ligi (`competition_settings`), zato ga
+// funkcije spodaj sprejmejo kot argument. Ista številka je privzetek tudi v
+// `potrdi_asistenco` na strežniku.
+export const PRAG_ASISTENCE_PRIVZETO = 3
 
 /**
  * Številka dresa — neposredno iz zapisnika te tekme, ne iz profila igralca
@@ -68,18 +72,24 @@ export const lahkoImaAsistenco = (gol: Gol) => !gol.is_own_goal && !gol.is_penal
 /** Ali je skupnost odločila, da gol nima asistence. */
 // `_gol` se ne bere — odlocijo samo glasovi. Parameter ostaja zaradi klicnih
 // mest, ki ga podajajo, in ker je simetricen z `lahkoImaAsistenco(gol)`.
-export const brezAsistencePotrjeno = (_gol: Gol, glasovi: Glas[] = []) => {
+export const brezAsistencePotrjeno = (
+  _gol: Gol,
+  glasovi: Glas[] = [],
+  prag: number = PRAG_ASISTENCE_PRIVZETO,
+) => {
   const vodilni = glasovi[0]
-  return Boolean(
-    vodilni && vodilni.player_id == null && vodilni.votes >= PRAG_ASISTENCE,
-  )
+  return Boolean(vodilni && vodilni.player_id == null && vodilni.votes >= prag)
 }
 
 /** Ali gol še čaka na odločitev skupnosti. */
-export const caka = (gol: Gol, glasovi: Glas[] = []) =>
+export const caka = (
+  gol: Gol,
+  glasovi: Glas[] = [],
+  prag: number = PRAG_ASISTENCE_PRIVZETO,
+) =>
   lahkoImaAsistenco(gol) &&
   !gol.assist_player_id &&
-  !brezAsistencePotrjeno(gol, glasovi)
+  !brezAsistencePotrjeno(gol, glasovi, prag)
 
 function Zakljucek({
   gol,
@@ -135,7 +145,8 @@ export default function GolZaGlasovanje({
     glasovi.map((v) => [String(v.player_id), v.votes]),
   )
   const vodilni = glasovi[0]
-  const brezAsistence = brezAsistencePotrjeno(gol, glasovi)
+  const prag = useNastavitev()('prag_glasov_asistenca', PRAG_ASISTENCE_PRIVZETO)
+  const brezAsistence = brezAsistencePotrjeno(gol, glasovi, prag)
   const zakljuceno = potrjeno || brezAsistence
 
   // Strelec je iz `kandidati` izločen (nihče si ne da asistence), zato
@@ -249,9 +260,9 @@ export default function GolZaGlasovanje({
               )}
             </div>
             <span className="tabular-nums text-sm font-black text-gnl-300">
-              {vodilni.votes} / {PRAG_ASISTENCE}{' '}
+              {vodilni.votes} / {prag}{' '}
               <span className="text-xs font-normal text-slate-500">
-                — še {Math.max(0, PRAG_ASISTENCE - vodilni.votes)} do odločitve
+                — še {Math.max(0, prag - vodilni.votes)} do odločitve
               </span>
             </span>
           </div>
@@ -259,7 +270,7 @@ export default function GolZaGlasovanje({
             <div
               className="h-full rounded-full bg-gradient-to-r from-gnl-500 to-gnl-300 transition-all duration-300"
               style={{
-                width: `${Math.min(100, (vodilni.votes / PRAG_ASISTENCE) * 100)}%`,
+                width: `${Math.min(100, (vodilni.votes / prag) * 100)}%`,
               }}
             />
           </div>

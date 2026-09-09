@@ -2,16 +2,25 @@
 -- Klubi so resnični iz gorenjske regije; IGRALCI SO IZMIŠLJENI (demo).
 -- Pred produkcijo uvozi resnične nabore igralcev z https://www.mnzgkranj.si/
 
-insert into teams (name, short_name) values
-  ('NK Triglav Kranj', 'TRI'),
-  ('NK Šenčur', 'SEN'),
-  ('NK Britof', 'BRI'),
-  ('NK Bled', 'BLE'),
-  ('NK Kranjska Gora', 'KGO'),
-  ('NK Železniki', 'ZEL'),
-  ('NK Visoko', 'VIS'),
-  ('NK Naklo', 'NAK')
-on conflict (name) do nothing;
+-- Klub je enoličen znotraj DRŽAVE, ne globalno (migracija 20260905090000):
+-- dve zvezi v isti državi sta lahko dva različna kluba z istim imenom.
+-- `country_id` je zato obvezen in `on conflict` mora naslavljati oba stolpca,
+-- sicer `supabase db reset` pade na seedu in lokalna baza ostane prazna.
+insert into teams (name, short_name, country_id)
+select v.name, v.short_name, d.id
+  from (values
+    ('NK Triglav Kranj', 'TRI'),
+    ('NK Šenčur', 'SEN'),
+    ('NK Britof', 'BRI'),
+    ('NK Bled', 'BLE'),
+    ('NK Kranjska Gora', 'KGO'),
+    ('NK Železniki', 'ZEL'),
+    ('NK Visoko', 'VIS'),
+    ('NK Naklo', 'NAK')
+  ) as v(name, short_name)
+  cross join countries d
+ where d.code = 'SI'
+on conflict (country_id, name) do nothing;
 
 -- Demo igralci: 14 na klub, razporejeni po pozicijah
 insert into players (team_id, first_name, last_name, position)

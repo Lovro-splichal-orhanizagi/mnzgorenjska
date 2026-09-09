@@ -43,7 +43,13 @@ const MARKERJI = [
 function razdelki(vrstice) {
   const meje = []
   for (const m of MARKERJI) {
-    const i = vrstice.findIndex((v) => v === m || v === m + ':')
+    // Naslov razdelka ni vedno gola beseda: Kranj napise "REZULTATI",
+    // Ljubljana "REZULTATI TEKEM". Ob primerjavi z enakostjo je blok MENJAVE
+    // pri Ljubljani tekel se cez konec zapisnika, v seznam rezultatov druge
+    // lige. Podaljsek dovolimo le za presledkom, da naslov ostane naslov.
+    const i = vrstice.findIndex(
+      (v) => v === m || v === m + ':' || v.startsWith(m + ' '),
+    )
     if (i >= 0) meje.push({ ime: m, i })
   }
   meje.sort((a, b) => a.i - b.i)
@@ -240,8 +246,14 @@ function parseMenjave(vrstice, imena) {
       if (v === 'Minuta' || v === 'Igralec') continue
       const mm = v.match(/^(\d{1,3})'$/)
       if (mm) {
-        minuta = Number(mm[1])
-        noter = null
+        const nova = Number(mm[1])
+        // Kranj napise minuto enkrat na menjavo ("46'", noter, ven),
+        // Ljubljana pa pred VSAKIM igralcem ("62'", noter, "62'", ven).
+        // Ponovljena ista minuta zato ne sme zavreci igralca, ki ze caka na
+        // par — sicer se pri Ljubljani ne sestavi nobena menjava in vsi
+        // zacetniki dobijo 90 minut, menjave pa nastopa sploh ne.
+        if (!(noter && nova === minuta)) noter = null
+        minuta = nova
         continue
       }
       const ig = igralecIzNiza(v)
@@ -291,7 +303,13 @@ export function parsirajZapisnik(html, { zapisnikId = null, url = null } = {}) {
   const iKrog = vrstice.findIndex((v) => /^Zapisnik:/.test(v))
   const krogVrstica = iKrog > -1 ? vrstice[iKrog] : ''
   const mKrog = krogVrstica.match(/(\d+)\.\s*krog/)
-  const mDatum = krogVrstica.match(/(\d{2})\.(\d{2})\.(\d{4}|\d{2})/)
+  // Datum tekme je natancnejsi od naslova kroga: Ljubljana ima svojo vrstico
+  // "Datum: 04.09.26 - 19.30", tekma v petek pa stoji pod sobotnim krogom.
+  // Kranj te vrstice nima, zato tam ostane datum iz naslova kroga.
+  const datumVrstica = vrstice.find((v) => /^Datum:/.test(v))
+  const mDatum =
+    (datumVrstica ?? '').match(/(\d{2})\.(\d{2})\.(\d{4}|\d{2})/) ??
+    krogVrstica.match(/(\d{2})\.(\d{2})\.(\d{4}|\d{2})/)
 
   // Sezona stoji v naslovni vrstici tekmovanja tik NAD "Zapisnik:", npr.
   // "Merkur GNL - člani 2025/26" ali "Regionalna Ljubljanska liga 2026/27".

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useNastavitev } from '../lib/nastavitve'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import { prikazniIme, IME_POZICIJE, KRATKA_POZICIJA } from '../lib/pomozno'
@@ -35,8 +36,11 @@ type GlasoviIgralca = Partial<Record<Pozicija, { votes: number; weight: number }
 /** Statisticni prior za enega igralca po pozicijah. */
 type PrioriIgralca = Partial<Record<Pozicija, number>>
 
-const PRAG = 5
-const MIN_PRAG = 2
+// Privzetka; dejanska pragova povesta `settings` oz. `competition_settings`
+// za izbrano ligo (`useNastavitev`). Isti števili sta privzetka tudi v
+// `adaptivni_prag` na strežniku.
+const PRAG_PRIVZETO = 5
+const MIN_PRAG_PRIVZETO = 2
 const POZICIJE: Pozicija[] = ['GK', 'DEF', 'MID', 'FWD']
 
 const IKONA: Record<Pozicija, string> = {
@@ -47,17 +51,21 @@ const IKONA: Record<Pozicija, string> = {
 }
 
 // Ista logika kot v migraciji `adaptivni_prag` — če je prior močan za neko
-// pozicijo, prag za to pozicijo pade.
-function adaptivniPrag(priorZaTo: number) {
-  if (priorZaTo >= 0.70) return Math.max(MIN_PRAG, PRAG - 3)
-  if (priorZaTo >= 0.50) return Math.max(MIN_PRAG, PRAG - 2)
-  if (priorZaTo >= 0.30) return Math.max(MIN_PRAG, PRAG - 1)
-  return PRAG
+// pozicijo, prag za to pozicijo pade. Pragova sta last tekmovanja, zato ju
+// funkcija dobi od klicatelja in ju ne bere iz kode.
+export function adaptivniPrag(priorZaTo: number, prag: number, minPrag: number) {
+  if (priorZaTo >= 0.7) return Math.max(minPrag, prag - 3)
+  if (priorZaTo >= 0.5) return Math.max(minPrag, prag - 2)
+  if (priorZaTo >= 0.3) return Math.max(minPrag, prag - 1)
+  return prag
 }
 
 export default function Pozicije() {
   const { session, loading } = useAuth()
   const { id: tekmovanjeId, tekmovanje } = useTekmovanje()
+  const nastavitev = useNastavitev()
+  const prag = nastavitev('prag_glasov_pozicija', PRAG_PRIVZETO)
+  const minPrag = nastavitev('min_prag_glasov_pozicija', MIN_PRAG_PRIVZETO)
   const [klubi, setKlubi] = useState<Klub[]>([])
   const [klubId, setKlubId] = useState<number | null>(null)
   const [igralci, setIgralci] = useState<IgralecPoz[]>([])
@@ -296,8 +304,8 @@ export default function Pozicije() {
         <p className="max-w-2xl text-slate-400">
           Zapisniki označijo le vratarja, postave pa naštejejo po številkah
           dresov — pozicij torej ni mogoče razbrati. Določi jih skupnost. Osnovni
-          prag je <strong className="text-gnl-300">{PRAG} glasov</strong>, a se
-          zniža (do {MIN_PRAG}), če je statistični prior (številka dresa, goli,
+          prag je <strong className="text-gnl-300">{prag} glasov</strong>, a se
+          zniža (do {minPrag}), če je statistični prior (številka dresa, goli,
           kartoni) močan v tisto smer. Glasovi{' '}
           <strong className="text-gnl-300">poznavalcev kluba</strong> in
           uporabnikov z <strong className="text-gnl-300">visoko točnostjo</strong>{' '}
@@ -462,6 +470,12 @@ function IgralecKartica({
   insiderVelja: boolean
   onGlasuj: (playerId: number, pozicija: Pozicija) => void
 }) {
+  // Pragova pripadata ligi; `useNastavitev` ju naloži enkrat za vse kartice.
+  const nastavitev = useNastavitev()
+  const prag = nastavitev('prag_glasov_pozicija', PRAG_PRIVZETO)
+  const minPrag = nastavitev('min_prag_glasov_pozicija', MIN_PRAG_PRIVZETO)
+  const pragZaPrior = (p: number) => adaptivniPrag(p, prag, minPrag)
+
   // Zapisnika in ročnega vnosa administratorja glasovanje ne premakne; vse
   // ostalo (neznano, ugibanje, prejšnje glasovanje) je mogoče popraviti.
   const izZapisnika = igralec.position_source === 'zapisnik'
@@ -488,7 +502,7 @@ function IgralecKartica({
     !zaklenjeno &&
     vodilna &&
     vodilna[0] !== igralec.position &&
-    vodilna[1] >= adaptivniPrag(prior?.[vodilna[0]] ?? 0)
+    vodilna[1] >= pragZaPrior(prior?.[vodilna[0]] ?? 0)
 
   return (
     <li className="kartica kartica-hover p-4">
@@ -552,7 +566,7 @@ function IgralecKartica({
             {IME_POZICIJE[priorVodilna[0]]} ({Math.round(priorVodilna[1] * 100)}%)
           </strong>
           {' '}— glas v tej smeri se šteje z nižjim pragom{' '}
-          ({adaptivniPrag(priorVodilna[1])} namesto {PRAG}).
+          ({pragZaPrior(priorVodilna[1])} namesto {prag}).
         </p>
       )}
 
@@ -571,7 +585,7 @@ function IgralecKartica({
             const votes = g?.votes ?? 0
             const weight = g?.weight ?? 0
             const priorZa = prior?.[p] ?? 0
-            const pragZa = adaptivniPrag(priorZa)
+            const pragZa = pragZaPrior(priorZa)
             const izbran = mojGlas === p
             const delez = Math.min(100, (weight / pragZa) * 100)
             const potrjenBiVajino = weight >= pragZa
@@ -625,7 +639,7 @@ function IgralecKartica({
       {!potrjeno && vodilna && (
         <p className="mt-2 text-xs text-slate-500">
           Vodi {IME_POZICIJE[vodilna[0]]} — utež {vodilna[1].toFixed(1)} /{' '}
-          {adaptivniPrag(prior?.[vodilna[0]] ?? 0)}
+          {pragZaPrior(prior?.[vodilna[0]] ?? 0)}
         </p>
       )}
     </li>
