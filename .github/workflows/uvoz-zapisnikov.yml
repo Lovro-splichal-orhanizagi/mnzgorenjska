@@ -1,15 +1,22 @@
 name: Uvoz zapisnikov
 
-# Zapisniki MNZ Gorenjska se objavijo nekaj ur do nekaj dni po tekmi.
-# Ker se tekme igrajo predvsem ob petkih, sobotah in nedeljah,
-# na ta dneva pobiramo VSAKO URO (matches končane 17-19h → zapisnik
-# tipično 20-22h, včasih zjutraj). Med tednom enkrat dnevno je dovolj.
+# Zapisniki se objavijo nekaj ur do nekaj dni po tekmi. Ker se tekme igrajo
+# predvsem ob petkih, sobotah in nedeljah, na te dneve pobiramo VSAKO URO
+# (tekme končane 17-19h → zapisnik tipično 20-22h, včasih zjutraj). Med
+# tednom enkrat dnevno je dovolj.
+#
 # Uvoz je idempotenten: tekma z istim zapisnikom se posodobi, ne podvoji.
 #
-# ČLANI in MLADINCI sta dve ločeni ligi — vsaka ima svoje krogi, tekme,
-# igralce in fantasy ekipe. Nekateri fantje igrajo v obeh ligah, a v naši
-# bazi sta to dve različni player vrstici (players.competition_id), zato
-# statistika ne uhaja med njima. Uvoz teče za obe zaporedno v istem jobu.
+# **Seznam lig pove baza, ne ta datoteka.** Doslej sta bili člani in mladinci
+# napisani kot dva bloka korakov. Ob tretji ligi bi to pomenilo, da se nova
+# liga tiho ne uvaža — stran bi jo pokazala, točke pa se ne bi nikoli
+# osvežile in nič ne bi javilo napake. Zato korak najprej vpraša
+# `aktivna-tekmovanja.mjs`, katera tekmovanja so vklopljena.
+#
+# Vsaka liga ima svoje kroge, tekme, igralce in fantasy ekipe; ista oseba je
+# pri članih in mladincih dve vrstici (`players.competition_id`), zato
+# statistika med ligami ne uhaja. Klubi so si skupni, vir pa ne — naslove in
+# vzdevke klubov da `competitions.source` prek `scripts/viri/`.
 on:
   schedule:
     # Petek (5), Sobota (6), Nedelja (0) — vsako uro
@@ -48,40 +55,31 @@ jobs:
           key: zapisniki-${{ github.run_id }}
           restore-keys: zapisniki-
 
-      # === ČLANI (liga 1601) ==============================================
-      # Šifra lige je v competitions.mnzg_liga, zato skripte tukaj --liga
-      # ne potrebujejo — jo poberejo iz baze glede na --tekmovanje.
-      - name: Člani — razpored
-        run: node scripts/uvoz-razporeda.mjs --pisi
-      - name: Člani — delegacije (roki)
-        run: node scripts/uvoz-delegiranja.mjs --pisi
-      - name: Člani — zapisniki
-        run: node scripts/uvoz-zapisnikov.mjs
-      - name: Člani — prestopi (poročilo)
-        run: node scripts/uvoz-registracij.mjs
-        continue-on-error: true
-      - name: Člani — pozicije novincev
-        run: node scripts/ugani-pozicije.mjs --pisi --samo-nove
+      # === Vse vklopljene lige ===========================================
+      # `set -e` velja za korak kot celoto; koraki, ki smejo spodleteti
+      # (prestopi), so posebej odklopljeni z `|| true`.
+      - name: Uvoz po ligah
+        run: |
+          set -euo pipefail
+          node scripts/aktivna-tekmovanja.mjs > /tmp/lige.txt
+          echo "Lige za uvoz: $(tr '\n' ' ' < /tmp/lige.txt)"
+          while IFS= read -r liga; do
+            [ -n "$liga" ] || continue
+            echo "::group::$liga"
+            node scripts/uvoz-razporeda.mjs   --tekmovanje "$liga" --pisi
+            node scripts/uvoz-delegiranja.mjs --tekmovanje "$liga" --pisi
+            node scripts/uvoz-zapisnikov.mjs  --tekmovanje "$liga"
+            # Prestopi so poročilo, ne podatek za igro; zveza, ki jih ne
+            # objavlja, to pove sama in se konča brez napake.
+            node scripts/uvoz-registracij.mjs --tekmovanje "$liga" || true
+            node scripts/ugani-pozicije.mjs   --tekmovanje "$liga" --pisi --samo-nove
+            echo "::endgroup::"
+          done < /tmp/lige.txt
 
-      # === MLADINCI (liga 1603) ==========================================
-      # Ista pipeline, drugačno tekmovanje. Nikoli ne prehaja med lig-ama —
-      # players.competition_id loči igralca, klubi so si skupni.
-      - name: Mladinci — razpored
-        run: node scripts/uvoz-razporeda.mjs --tekmovanje mladinci --pisi
-      - name: Mladinci — delegacije (roki)
-        run: node scripts/uvoz-delegiranja.mjs --tekmovanje mladinci --pisi
-      - name: Mladinci — zapisniki
-        run: node scripts/uvoz-zapisnikov.mjs --tekmovanje mladinci
-      - name: Mladinci — prestopi (poročilo)
-        run: node scripts/uvoz-registracij.mjs --tekmovanje mladinci
-        continue-on-error: true
-      - name: Mladinci — pozicije novincev
-        run: node scripts/ugani-pozicije.mjs --tekmovanje mladinci --pisi --samo-nove
-
-      # === Skupno za obe ligi ============================================
-      # Zdruzi duplikate: kljuc je `competition_id|full_name`, tako
-      # nikoli ne pomesa mladinske vrstice s clansko — mladinec X in
-      # clan X ostaneta locena, cetudi je oseba ista. Poganja se enkrat.
-      - name: Združi duplikate (obe ligi)
+      # === Skupno za vse lige ============================================
+      # Združi duplikate: ključ je `competition_id|full_name`, tako nikoli ne
+      # pomeša vrstic iz dveh lig — mladinec X in član X ostaneta ločena,
+      # četudi je oseba ista. Poganja se enkrat.
+      - name: Združi duplikate (vse lige)
         run: node scripts/zdruzi-duplikate.mjs --pisi
         continue-on-error: true
