@@ -21,6 +21,16 @@ ima vsaka svoje spletišče.
 | 2003 | Regionalna Ljubljanska liga | 1. liga člani |
 | 2004 | MNZ Liga | 2. liga člani |
 
+**Šifra pripada sezoni, ne ligi.** Izbirnik sezone je POST obrazec
+(`sezona=2025/2026` na `index.cfm?akc=tekmovanja`), po katerem se šifre
+zamenjajo — enako kot pri Kranju, kjer se ob novi sezoni popravi
+`competitions.source_league_code`:
+
+| sezona | 1. liga | 2. liga |
+|---|---|---|
+| 2026/2027 (tekoča) | 2003 | 2004 |
+| 2025/2026 (arhiv za cene) | 1904 | 1905 |
+
 Zapisniki **vsebujejo cele postave** — številka dresa, ime, `(V)` za vratarja,
 `(K)` za kapetana. Arhiv sega v sezono 2006/2007.
 
@@ -104,6 +114,24 @@ nanjo ne kaže nič razen `competitions`.
 5. **Odpri ligi** — dve vrstici v `competitions`.
 
 1 in 2 sta neodvisna.
+
+## Kaj je pokazal vir v resnici
+
+Razčlenitev vseh zapisnikov prek `viri/mnzlj.mjs`:
+
+| liga | zapisnikov | čistih (22 nastopov, brez opozoril) |
+|---|---|---|
+| 2003 tekoča | 12 | 12 |
+| 2004 tekoča | 4 | 4 |
+| 1904 arhiv | 156 (vzorec 40) | 40 |
+| 1905 arhiv | 76 (vzorec 40) | 36 |
+
+Štirje odstopi pri 1905 niso napake razčlenjevalnika:
+
+- **114215, 114216, 114217** — tekme brez rezultata (`Komenda ()`), torej
+  neodigrane. `parsirajZapisnik` vrne `null`, kar je pravilno.
+- **116456** (`Komenda 0 : 11`) — vir sam ni označil vratarja z `(V)`.
+  Opozorilo je zato resnično in koristno; pozicijo dopolni glasovanje.
 
 ## Preverjanje
 

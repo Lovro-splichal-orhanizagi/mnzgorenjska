@@ -16,6 +16,10 @@ export const poenostavi = (ime) =>
     .replace(/[^a-zčšž0-9]+/g, ' ')
     .trim()
 
+// Vzdevki so last VIRA, ne sistema: dve zvezi sta dva ločena nabora klubov in
+// ime, ki v Kranju pomeni en klub, v Ljubljani lahko pomeni drug. Zato vsak vir
+// pripelje svoj slovar (`naredikljucKluba`), spodnji pa je gorenjski.
+//
 // levo: kar piše vir, desno: poenostavljeno ime, pod katerim klub že poznamo
 const ISTI_KLUB = {
   'arne jezero medvode': 'jezero medvode',
@@ -23,11 +27,20 @@ const ISTI_KLUB = {
   'bled bohinj': 'bled bohinj hirter',
 }
 
-/** Ključ, pod katerim klub iščemo in shranjujemo. */
-export const kljucKluba = (ime) => {
-  const k = poenostavi(ime)
-  return ISTI_KLUB[k] ?? k
-}
+/**
+ * Sestavi prepoznavo kluba za en vir.
+ *
+ * @param {Record<string,string>} vzdevki poenostavljeno ime → ime, ki ga že poznamo
+ */
+export const naredikljucKluba =
+  (vzdevki = {}) =>
+  (ime) => {
+    const k = poenostavi(ime)
+    return vzdevki[k] ?? k
+  }
+
+/** Ključ, pod katerim klub iščemo in shranjujemo (MNZ Gorenjska). */
+export const kljucKluba = naredikljucKluba(ISTI_KLUB)
 
 /** Kratica iz začetnic, kadar klub v bazo pride na novo. */
 export const kratkoIme = (polnoIme) =>

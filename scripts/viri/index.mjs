@@ -7,9 +7,11 @@
 // razvidno, kateri viri obstajajo, in tipkarska napaka v `source` pade takoj
 // z razumljivo napako namesto na pol poti skozi uvoz.
 import mnzg from './mnzg.mjs'
+import mnzlj from './mnzlj.mjs'
 
 const VIRI = {
   mnzg,
+  mnzlj,
 }
 
 /**

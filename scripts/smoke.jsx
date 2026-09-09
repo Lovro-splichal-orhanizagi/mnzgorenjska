@@ -31,6 +31,7 @@ import { sestejOdKroga } from '../src/lib/lestvica'
 import { parsirajZapisnik, nastopi } from './zapisnik.mjs'
 import { poZvezah, ustreza } from '../src/components/IzbirnikLige'
 import { virPodatkov } from '../src/components/VirPodatkov'
+import { viraZa, znaniViri } from './viri/index.mjs'
 import { readFileSync } from 'node:fs'
 
 let napak = 0
@@ -470,6 +471,49 @@ preveri(
   preveri('vir: zveza brez naslova se navede brez povezave',
     virPodatkov(lige[0])?.url === null && virPodatkov(lige[0])?.ime === 'MNZ Gorenjska',
     JSON.stringify(virPodatkov(lige[0])))
+}
+
+// --- viri ------------------------------------------------------------------
+{
+  preveri('viri: poznamo mnzg in mnzlj',
+    znaniViri().includes('mnzg') && znaniViri().includes('mnzlj'), znaniViri().join(', '))
+
+  const lj = viraZa({ source: 'mnzlj', slug: 'lj-1-liga' })
+  preveri('viri: mnzlj se predstavi', lj.ime === 'mnzlj' && lj.drzava === 'SI', lj.ime)
+
+  // Naslovi so preverjeni proti zivemu spletiscu (vsi 200), zato jih tu
+  // pribijemo — tiho spremenjen naslov bi sicer padel sele med uvozom.
+  preveri('viri: mnzlj razpored',
+    lj.naslovRazporeda(2003) ===
+      'https://www.mnzljubljana-zveza.si/index.cfm?akc=tekmovanja&liga=2003&prikazi=razpored',
+    lj.naslovRazporeda(2003))
+  preveri('viri: mnzlj zapisnik',
+    lj.naslovZapisnika(2003, 12345) ===
+      'https://www.mnzljubljana-zveza.si/index.cfm?akc=zapisnik&liga=2003&zapisnik=12345',
+    lj.naslovZapisnika(2003, 12345))
+  preveri('viri: mnzlj delegiranje',
+    lj.naslovDelegiranja(2003, 3).startsWith(
+      'https://www.mnzljubljana-zveza.si/print.cfm?prikazi=delegiranje&liga=2003&krog=3'),
+    lj.naslovDelegiranja(2003, 3))
+
+  // Ljubljanski klub ne sme skozi gorenjski slovar vzdevkov: to sta dva vira
+  // in dva niza klubov, ki se lahko imenujeta enako.
+  const gor = viraZa({ source: 'mnzg' })
+  preveri('viri: mnzg zdruzi znani vzdevek',
+    gor.kljucKluba('Preddvor SP Avto') === 'eltron preddvor', gor.kljucKluba('Preddvor SP Avto'))
+  preveri('viri: mnzlj gorenjskih vzdevkov ne uporablja',
+    lj.kljucKluba('Preddvor SP Avto') === 'preddvor sp avto', lj.kljucKluba('Preddvor SP Avto'))
+  preveri('viri: mnzlj poenostavi enako', lj.kljucKluba('NK Ivančna Gorica') === 'nk ivančna gorica',
+    lj.kljucKluba('NK Ivančna Gorica'))
+
+  // MNZ Ljubljana zapisnikov o registracijah ne objavlja; uvoz naj to pove,
+  // namesto da porocca "0 zapisnikov", kar je videti kot okvara.
+  preveri('viri: mnzlj nima registracij', lj.imaRegistracije === false, String(lj.imaRegistracije))
+  preveri('viri: mnzg ima registracije', gor.imaRegistracije !== false, String(gor.imaRegistracije))
+
+  let padlo = false
+  try { viraZa({ source: 'ni-tak-vir', slug: 'x' }) } catch { padlo = true }
+  preveri('viri: neznan vir pade takoj', padlo)
 }
 
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)

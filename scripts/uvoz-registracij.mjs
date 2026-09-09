@@ -179,6 +179,13 @@ async function prenesi(url, ime) {
 }
 
 // --- seznam zapisnikov -----------------------------------------------------
+// Zveza, ki prestopov ne objavlja, ni okvara — povejmo to naravnost, sicer je
+// "Zapisnikov za leto X: 0" videti kot pokvarjen uvoz.
+if (vir.imaRegistracije === false) {
+  console.log(`${vir.polnoIme} zapisnikov o prestopih ne objavlja — nimam česa uvoziti.`)
+  process.exit(0)
+}
+
 const stran = await (await fetch(vir.naslovRegistracij())).text()
 const dokumenti = [
   ...new Set(
