@@ -18,11 +18,9 @@
 // ki ustreza mesecu (poletje +02:00, zima +01:00). Enostavno, brez tzdb.
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs'
-import { vBesedilo } from './zapisnik.mjs'
 import { tekmovanje as najdiTekmovanje, sifraLige } from './tekmovanje.mjs'
 import { viraZa } from './viri/index.mjs'
 
-const IZVOR = 'https://www.mnzgkranj.si'
 const PREDPOMNILNIK = 'scripts/.predpomnilnik'
 
 function izEnv() {
@@ -72,12 +70,14 @@ console.log(`Tekmovanje: ${tekmovanje.name} (liga ${liga}, pomak ${pomakUr}h)`)
 
 // --- prenos strani z lokalnim predpomnilnikom -------------------------------
 async function prenesi(url, ime, sveze = false) {
-  const pot = `${PREDPOMNILNIK}/${ime}`
+  const pot = `${PREDPOMNILNIK}/${vir.ime}/${ime}`
   if (!sveze && existsSync(pot)) return readFileSync(pot, 'utf8')
   const odgovor = await fetch(url)
   if (!odgovor.ok) throw new Error(`${odgovor.status} ${url}`)
   const html = await odgovor.text()
-  if (!existsSync(PREDPOMNILNIK)) mkdirSync(PREDPOMNILNIK, { recursive: true })
+  // Ločeno po viru: šifre lig in dokumentov so last spletišča, ne sistema,
+  // in dve zvezi bi si lahko delili isto ime datoteke.
+  mkdirSync(`${PREDPOMNILNIK}/${vir.ime}`, { recursive: true })
   writeFileSync(pot, html)
   return html
 }
@@ -153,7 +153,7 @@ function razclenit(html) {
   //   "Srednja Bela Športni park Preddvor"
   //   "Eltron Preddvor : Tržič 2012"
   // Ker so vse tekme kroga v isti tabeli, pobiramo pare (datum+ura → tekma).
-  const vrstice = vBesedilo(html)
+  const vrstice = vir.vBesedilo(html)
   const tekme = []
   let zadnjiDatum = null
   let zadnjaUra = null

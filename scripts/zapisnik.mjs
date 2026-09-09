@@ -76,6 +76,18 @@ function jeOznaka(s) {
 // kot ime kluba in postava bi se koncala pri prvem igralcu.
 const GLAVE_STOLPCEV = ['Priimek in ime', 'Leto rojstva', 'Št.', 'St.']
 
+// Sezona: Kranj piše "2025/26", Ljubljana "2025/2026". Oba zapisa pomenita
+// isto sezono in v bazi mora stati en sam, sicer bi ista sezona nastopala
+// dvakrat in cene bi se računale vsaka iz svoje polovice.
+const SEZONA = /(\d{4})\/(\d{4}|\d{2})/
+
+/** "2025/2026" in "2025/26" → "2025/26". */
+function normalizirajSezono(m) {
+  const zacetek = m[1]
+  const konec = m[2].length === 4 ? m[2].slice(2) : m[2]
+  return `${zacetek}/${konec}`
+}
+
 function parsePostave(vrstice) {
   const skupine = []
   let trenutna = null
@@ -272,12 +284,28 @@ export function parsirajZapisnik(html, { zapisnikId = null, url = null } = {}) {
   const polcas = { domaci: Number(mRez[3]), gostje: Number(mRez[4]) }
 
   // Krog in datum: "Zapisnik: 26. krog 30.05.26"
-  const krogVrstica = vrstice.find((v) => /^Zapisnik:/.test(v)) ?? ''
+  //
+  // Ljubljana piše letnico s štirimi števkami ("05.09.2026"). Star izraz je
+  // ujel prvi dve in `20${...}` je iz tega naredil leto 2020 — cel arhiv se je
+  // uvozil z desetletje starimi datumi, ne da bi karkoli javilo napako.
+  const iKrog = vrstice.findIndex((v) => /^Zapisnik:/.test(v))
+  const krogVrstica = iKrog > -1 ? vrstice[iKrog] : ''
   const mKrog = krogVrstica.match(/(\d+)\.\s*krog/)
-  const mDatum = krogVrstica.match(/(\d{2})\.(\d{2})\.(\d{2})/)
-  // sezona je v naslovni vrstici tekmovanja, npr. "Merkur GNL - člani 2025/26"
-  const sezonaVrstica = vrstice.find((v) => /\d{4}\/\d{2}/.test(v)) ?? ''
-  const mSezona = sezonaVrstica.match(/(\d{4}\/\d{2})/)
+  const mDatum = krogVrstica.match(/(\d{2})\.(\d{2})\.(\d{4}|\d{2})/)
+
+  // Sezona stoji v naslovni vrstici tekmovanja tik NAD "Zapisnik:", npr.
+  // "Merkur GNL - člani 2025/26" ali "Regionalna Ljubljanska liga 2026/27".
+  //
+  // Iskati jo kjerkoli na strani ne gre: Ljubljana ima v meniju spustni
+  // seznam vseh sezon od 2006/07 naprej in ta stoji pred zapisnikom, zato je
+  // star izraz vzel prvo možnost iz menija namesto sezone tekme.
+  const sezonaVrstica =
+    (iKrog > -1
+      ? vrstice.slice(0, iKrog).reverse().find((v) => SEZONA.test(v))
+      : null) ??
+    vrstice.find((v) => SEZONA.test(v)) ??
+    ''
+  const mSezona = sezonaVrstica.match(SEZONA)
 
   const { goli, zgresene } = r.STRELCI
     ? parseStrelci(r.STRELCI, imena)
@@ -312,9 +340,11 @@ export function parsirajZapisnik(html, { zapisnikId = null, url = null } = {}) {
   return {
     zapisnikId,
     url,
-    sezona: mSezona ? mSezona[1] : null,
+    sezona: mSezona ? normalizirajSezono(mSezona) : null,
     krog: mKrog ? Number(mKrog[1]) : null,
-    datum: mDatum ? `20${mDatum[3]}-${mDatum[2]}-${mDatum[1]}` : null,
+    datum: mDatum
+      ? `${mDatum[3].length === 4 ? mDatum[3] : '20' + mDatum[3]}-${mDatum[2]}-${mDatum[1]}`
+      : null,
     domaci: ekipe[0],
     gostje: ekipe[1],
     rezultat,

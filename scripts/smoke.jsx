@@ -408,6 +408,8 @@ preveri(
     preveri('zapisnik Kranj: brez opozoril o postavi',
       !(z.opozorila ?? []).some((o) => o.includes('namesto 11')),
       (z.opozorila ?? []).join(' | ').slice(0, 60))
+    preveri('zapisnik Kranj: sezona', z.sezona === '2026/27', String(z.sezona))
+    preveri('zapisnik Kranj: datum', z.datum === '2026-09-05', String(z.datum))
   }
 
   // Ljubljana — nov vir
@@ -427,6 +429,13 @@ preveri(
     preveri('zapisnik LJ: brez opozoril o postavi',
       !(z.opozorila ?? []).some((o) => o.includes('namesto 11')),
       (z.opozorila ?? []).join(' | ').slice(0, 70))
+    // Ljubljana pise letnico s stirimi stevkami — "Sezona 2026/2027",
+    // "05.09.2026" — in v meniju nasteje vse sezone od 2006/07 naprej. Stara
+    // izraza sta zajela prvo vrstico z letnico kjerkoli na strani in ji
+    // odgrizla zadnji dve stevki: sezona "2026/20", datum "2020-09-05".
+    // Cel arhiv se je uvozil v izmisljeno sezono z desetletje starimi datumi.
+    preveri('zapisnik LJ: sezona ni iz menija', z.sezona === '2026/27', String(z.sezona))
+    preveri('zapisnik LJ: datum s stirimestno letnico', z.datum === '2026-09-05', String(z.datum))
     const n = nastopi(z)
     preveri('zapisnik LJ: nastopi za obe ekipi', (n?.length ?? 0) >= 22, String(n?.length))
   }

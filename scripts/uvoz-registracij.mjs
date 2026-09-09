@@ -29,7 +29,6 @@ import {
 } from './tekmovanje.mjs'
 import { viraZa } from './viri/index.mjs'
 
-const IZVOR = 'https://www.mnzgkranj.si'
 const PREDPOMNILNIK = 'scripts/.predpomnilnik'
 
 // V zapisnikih so uradna imena klubov, v tekmovanju pa tržna. Preslikava velja
@@ -168,12 +167,14 @@ function pdfVBesedilo(buf) {
 }
 
 async function prenesi(url, ime) {
-  const pot = `${PREDPOMNILNIK}/${ime}`
+  const pot = `${PREDPOMNILNIK}/${vir.ime}/${ime}`
   if (existsSync(pot)) return readFileSync(pot)
   const odgovor = await fetch(url)
   if (!odgovor.ok) throw new Error(`${odgovor.status}`)
   const buf = Buffer.from(await odgovor.arrayBuffer())
-  if (!existsSync(PREDPOMNILNIK)) mkdirSync(PREDPOMNILNIK, { recursive: true })
+  // Ločeno po viru: šifre lig in dokumentov so last spletišča, ne sistema,
+  // in dve zvezi bi si lahko delili isto ime datoteke.
+  mkdirSync(`${PREDPOMNILNIK}/${vir.ime}`, { recursive: true })
   writeFileSync(pot, buf)
   return buf
 }

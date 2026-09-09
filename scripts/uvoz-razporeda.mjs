@@ -13,12 +13,9 @@
 // Rok kroga postavimo na 10:00 na dan prve tekme v krogu.
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs'
-import { vBesedilo } from './zapisnik.mjs'
 import { tekmovanje as najdiTekmovanje, sifraLige } from './tekmovanje.mjs'
 import { viraZa } from './viri/index.mjs'
-import { kljucKluba, kratkoIme } from './klubi.mjs'
 
-const IZVOR = 'https://www.mnzgkranj.si'
 const PREDPOMNILNIK = 'scripts/.predpomnilnik'
 const URA_ROKA = 10
 
@@ -64,12 +61,14 @@ const liga = arg('liga', sifraLige(tekmovanje, '1601'))
 console.log(`Tekmovanje: ${tekmovanje.name} (liga ${liga})`)
 
 async function prenesi(url, ime) {
-  const pot = `${PREDPOMNILNIK}/${ime}`
+  const pot = `${PREDPOMNILNIK}/${vir.ime}/${ime}`
   if (existsSync(pot)) return readFileSync(pot, 'utf8')
   const odgovor = await fetch(url)
   if (!odgovor.ok) throw new Error(`${odgovor.status} ${url}`)
   const html = await odgovor.text()
-  if (!existsSync(PREDPOMNILNIK)) mkdirSync(PREDPOMNILNIK, { recursive: true })
+  // Ločeno po viru: šifre lig in dokumentov so last spletišča, ne sistema,
+  // in dve zvezi bi si lahko delili isto ime datoteke.
+  mkdirSync(`${PREDPOMNILNIK}/${vir.ime}`, { recursive: true })
   writeFileSync(pot, html)
   return html
 }
@@ -97,7 +96,7 @@ const html = await prenesi(url, `razpored-${liga}.html`)
 
 // Stran je ena velika tabela: naslov kroga ("1. krog  29.08.26"), pod njim pa
 // vrstice "datum" + "Domači : Gostje". Zato beremo kar zaporedje besedila.
-const vrstice = vBesedilo(html)
+const vrstice = vir.vBesedilo(html)
 
 const krogi = []
 let tekoci = null
@@ -167,10 +166,10 @@ if (!pisi) {
 // `klubi.mjs` — sicer bi ob vsakem uvozu nastal dvojnik.
 const klubi = new Map()
 const { data: vsiKlubi } = await db.from('teams').select('id, name')
-for (const k of vsiKlubi ?? []) klubi.set(kljucKluba(k.name), k.id)
+for (const k of vsiKlubi ?? []) klubi.set(vir.kljucKluba(k.name), k.id)
 
 async function klubId(ime) {
-  const kljuc = kljucKluba(ime)
+  const kljuc = vir.kljucKluba(ime)
   if (klubi.has(kljuc)) return klubi.get(kljuc)
 
   const polnoIme = ime.trim()
@@ -181,7 +180,7 @@ async function klubId(ime) {
     // vsakem novem zapisniku, ne le ob prvem uvozu.
     .insert({
       name: polnoIme,
-      short_name: kratkoIme(polnoIme),
+      short_name: vir.kratkoIme(polnoIme),
       country_id: tekmovanje.country_id,
     })
     .select('id')

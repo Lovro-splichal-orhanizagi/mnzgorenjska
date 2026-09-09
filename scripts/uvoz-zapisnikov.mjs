@@ -14,12 +14,9 @@
 // selekcijama povlekel statistiko in ceno s seboj.
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs'
-import { parsirajZapisnik, nastopi } from './zapisnik.mjs'
 import { tekmovanje as najdiTekmovanje, sifraLige } from './tekmovanje.mjs'
 import { viraZa } from './viri/index.mjs'
-import { kljucKluba, kratkoIme } from './klubi.mjs'
 
-const IZVOR = 'https://www.mnzgkranj.si'
 const PREDPOMNILNIK = 'scripts/.predpomnilnik'
 
 function izEnv() {
@@ -68,10 +65,14 @@ const liga = arg('liga', sifraLige(tekmovanje, '1502'))
 console.log(`Tekmovanje: ${tekmovanje.name} (liga ${liga})`)
 
 // --- prenos s predpomnilnikom ---------------------------------------------
-if (!existsSync(PREDPOMNILNIK)) mkdirSync(PREDPOMNILNIK, { recursive: true })
+// Predpomnilnik je ločen po viru. Šifra zapisnika je last SPLETIŠČA, ne
+// sistema, in obe zvezi štejeta v istem razponu — če bi se kje ujeli, bi
+// uvoz Ljubljane tiho prebral kranjsko tekmo in za napako se ne bi izvedelo.
+const MAPA = `${PREDPOMNILNIK}/${vir.ime}`
+if (!existsSync(MAPA)) mkdirSync(MAPA, { recursive: true })
 
 async function prenesi(url, datoteka, sveze = false) {
-  const pot = `${PREDPOMNILNIK}/${datoteka}`
+  const pot = `${MAPA}/${datoteka}`
   if (!sveze && existsSync(pot)) return readFileSync(pot, 'utf8')
   const odgovor = await fetch(url)
   if (!odgovor.ok) throw new Error(`${url} -> HTTP ${odgovor.status}`)
@@ -86,11 +87,11 @@ async function prenesi(url, datoteka, sveze = false) {
 // ustvarilo dvojnik ter sezono razklalo na dva zapisa.
 const klubi = new Map() // ključ kluba -> id
 const { data: vsiKlubi } = await db.from('teams').select('id, name')
-for (const k of vsiKlubi ?? []) klubi.set(kljucKluba(k.name), k.id)
+for (const k of vsiKlubi ?? []) klubi.set(vir.kljucKluba(k.name), k.id)
 const igralci = new Map() // `${team_id}|${ime}` -> id
 
 async function klubId(ime) {
-  const kljuc = kljucKluba(ime)
+  const kljuc = vir.kljucKluba(ime)
   if (klubi.has(kljuc)) return klubi.get(kljuc)
 
   const polnoIme = ime.trim()
@@ -101,7 +102,7 @@ async function klubId(ime) {
     // vsakem novem zapisniku, ne le ob prvem uvozu.
     .insert({
       name: polnoIme,
-      short_name: kratkoIme(polnoIme),
+      short_name: vir.kratkoIme(polnoIme),
       country_id: tekmovanje.country_id,
     })
     .select('id')
@@ -296,7 +297,7 @@ for (const id of ids) {
     continue
   }
 
-  const z = parsirajZapisnik(html, { zapisnikId: id, url })
+  const z = vir.parsirajZapisnik(html, { zapisnikId: id, url })
   if (!z) {
     preskocenih++
     continue
@@ -359,7 +360,7 @@ for (const id of ids) {
     await db.from('appearances').delete().eq('match_id', tekma.id)
 
     // nastopi
-    const n = nastopi(z)
+    const n = vir.nastopi(z)
 
     // imena, ki se v isti ekipi pojavijo večkrat (soimenjaki)
     const stejIme = new Map()
