@@ -2,6 +2,8 @@ import { Routes, Route, Link } from 'react-router-dom'
 import { AuthProvider } from './lib/useAuth'
 import { TekmovanjeProvider } from './lib/tekmovanje'
 import Navbar from './components/Navbar'
+import PrviObisk from './components/PrviObisk'
+import VirPodatkov from './components/VirPodatkov'
 import RokKroga from './components/RokKroga'
 import OpozoriloEkipe from './components/OpozoriloEkipe'
 import NapakaOprijem from './components/NapakaOprijem'
@@ -25,6 +27,7 @@ export default function App() {
     <AuthProvider>
       <TekmovanjeProvider>
         <div className="min-h-screen overflow-x-hidden">
+          <PrviObisk />
           <RokKroga />
           <Navbar />
           <OpozoriloEkipe />
@@ -56,16 +59,7 @@ export default function App() {
             <Link to="/pravno" className="underline hover:text-slate-400">
               Zasebnost in pogoji
             </Link>
-            {' · '}
-            Podatki: uradni zapisniki{' '}
-            <a
-              href="https://www.mnzgkranj.si/"
-              className="underline hover:text-slate-400"
-              target="_blank"
-              rel="noreferrer"
-            >
-              MNZ Gorenjska Kranj
-            </a>
+            <VirPodatkov />
           </footer>
         </div>
       </TekmovanjeProvider>

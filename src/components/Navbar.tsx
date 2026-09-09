@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom'
 import { useAuth } from '../lib/useAuth'
 import { useTekmovanje } from '../lib/tekmovanje'
 import { supabase } from '../lib/supabase'
+import IzbirnikLige from './IzbirnikLige'
 
 interface Povezava {
   pot: string
@@ -27,39 +28,6 @@ const VABILO_MAILTO =
   encodeURIComponent(
     'Živjo!\n\nIgram fantasy nogometno ligo za 1. Gorenjsko nogometno ligo — sestaviš svojo ekipo iz igralcev naših klubov (Preddvor, Sava Kranj, Jezero Medvode, Bled-Bohinj Hirter, Britof, Visoko, Polet, Velesovo-Cerklje, Zarica, Bitnje, Niko Železniki, Tržič, Kranjska Gora) in tekmuješ z drugimi.\n\nPovsem brezplačno. Registriraj se na:\nhttps://slff.eu\n\nSestavi ekipo, določi kapetana in po vsakem krogu preveri, kdo je zbral največ točk.\n\nSe vidimo v ligi!',
   )
-
-/**
- * Preklop med ligama. Stoji v vrstici z logotipom in je viden tudi na
- * telefonu — skrit v meniju bi pomenil, da med brskanjem ne vidiš, katero
- * ligo sploh gledaš. Brez druge lige v bazi se sploh ne izriše.
- */
-function PreklopLige() {
-  const { slug, tekmovanja, nastavi } = useTekmovanje()
-  if (tekmovanja.length < 2) return null
-
-  return (
-    <div
-      className="flex rounded-lg bg-white/5 p-0.5 ring-1 ring-white/10"
-      role="group"
-      aria-label="Liga"
-    >
-      {tekmovanja.map((t) => (
-        <button
-          key={t.slug}
-          onClick={() => nastavi(t.slug)}
-          aria-pressed={t.slug === slug}
-          className={`whitespace-nowrap rounded-md px-2 py-1 text-[11px] font-bold sm:px-2.5 sm:text-xs ${
-            t.slug === slug
-              ? 'bg-gnl-500/25 text-gnl-200'
-              : 'text-slate-400 hover:text-slate-100'
-          }`}
-        >
-          {t.short_name}
-        </button>
-      ))}
-    </div>
-  )
-}
 
 export default function Navbar() {
   const { session } = useAuth()
@@ -124,7 +92,7 @@ export default function Navbar() {
             <span className="naslov">SLFF</span>
           </NavLink>
 
-          <PreklopLige />
+          <IzbirnikLige />
 
           <div className="ml-auto hidden items-center gap-1.5 text-sm lg:flex">
             {vse.map((p) => (

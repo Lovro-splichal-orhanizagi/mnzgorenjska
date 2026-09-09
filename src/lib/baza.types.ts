@@ -365,6 +365,7 @@ export type Database = {
         Row: {
           active: boolean
           country_id: number
+          federation_id: number | null
           id: number
           mnzg_liga: string | null
           name: string
@@ -379,6 +380,7 @@ export type Database = {
         Insert: {
           active?: boolean
           country_id: number
+          federation_id?: number | null
           id?: never
           mnzg_liga?: string | null
           name: string
@@ -393,6 +395,7 @@ export type Database = {
         Update: {
           active?: boolean
           country_id?: number
+          federation_id?: number | null
           id?: never
           mnzg_liga?: string | null
           name?: string
@@ -410,6 +413,13 @@ export type Database = {
             columns: ["country_id"]
             isOneToOne: false
             referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competitions_federation_id_fkey"
+            columns: ["federation_id"]
+            isOneToOne: false
+            referencedRelation: "federations"
             referencedColumns: ["id"]
           },
         ]
@@ -1009,6 +1019,47 @@ export type Database = {
             columns: ["round_id"]
             isOneToOne: false
             referencedRelation: "zadnji_odigrani_krog"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      federations: {
+        Row: {
+          active: boolean
+          code: string
+          country_id: number
+          id: number
+          name: string
+          short_name: string
+          site_url: string | null
+          sort_order: number
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          country_id: number
+          id?: never
+          name: string
+          short_name: string
+          site_url?: string | null
+          sort_order?: number
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          country_id?: number
+          id?: never
+          name?: string
+          short_name?: string
+          site_url?: string | null
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "federations_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
             referencedColumns: ["id"]
           },
         ]
@@ -2227,6 +2278,12 @@ export type Database = {
           country_code: string | null
           country_id: number | null
           country_name: string | null
+          federation_code: string | null
+          federation_id: number | null
+          federation_name: string | null
+          federation_short: string | null
+          federation_sort: number | null
+          federation_url: string | null
           id: number | null
           mnzg_liga: string | null
           name: string | null
@@ -2244,6 +2301,13 @@ export type Database = {
             columns: ["country_id"]
             isOneToOne: false
             referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competitions_federation_id_fkey"
+            columns: ["federation_id"]
+            isOneToOne: false
+            referencedRelation: "federations"
             referencedColumns: ["id"]
           },
         ]

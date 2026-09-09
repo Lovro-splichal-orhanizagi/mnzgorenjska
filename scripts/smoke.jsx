@@ -29,6 +29,8 @@ import {
 import { tockeZaNastop } from '../src/lib/tockovanje'
 import { sestejOdKroga } from '../src/lib/lestvica'
 import { parsirajZapisnik, nastopi } from './zapisnik.mjs'
+import { poZvezah, ustreza } from '../src/components/IzbirnikLige'
+import { virPodatkov } from '../src/components/VirPodatkov'
 import { readFileSync } from 'node:fs'
 
 let napak = 0
@@ -427,6 +429,47 @@ preveri(
     const n = nastopi(z)
     preveri('zapisnik LJ: nastopi za obe ekipi', (n?.length ?? 0) >= 22, String(n?.length))
   }
+}
+
+// --- izbirnik lige ---------------------------------------------------------
+{
+  const liga = (slug, name, fed, fedShort, sort) => ({
+    id: 1, slug, name, short_name: name, prvi_fantasy_krog: 1,
+    federation_code: fed, federation_name: fed ? 'MNZ ' + fedShort : null,
+    federation_short: fedShort, federation_sort: sort,
+    country_code: 'SI', country_name: 'Slovenija',
+  })
+  const lige = [
+    liga('clani', '1. GNL — člani', 'mnzg', 'Gorenjska', 1),
+    liga('mladinci', 'GNL — mladinci', 'mnzg', 'Gorenjska', 1),
+    liga('lj-1', '1. liga Ljubljana', 'mnzlj', 'Ljubljana', 2),
+    liga('brez', 'Liga brez zveze', null, null, null),
+  ]
+
+  const sk = poZvezah(lige)
+  preveri('izbirnik: tri skupine', sk.length === 3, String(sk.length))
+  preveri('izbirnik: Gorenjska prva', sk[0].naslov === 'Gorenjska', sk[0].naslov)
+  preveri('izbirnik: Gorenjska ima dve ligi', sk[0].lige.length === 2, String(sk[0].lige.length))
+  preveri('izbirnik: Ljubljana druga', sk[1].naslov === 'Ljubljana', sk[1].naslov)
+  preveri('izbirnik: liga brez zveze gre na konec', sk[2].kljuc === '—', sk[2].kljuc)
+
+  preveri('izbirnik: iskanje po imenu lige', ustreza(lige[2], 'ljublj'), 'lj-1')
+  preveri('izbirnik: iskanje po zvezi', ustreza(lige[0], 'gorenjska'), 'clani')
+  preveri('izbirnik: iskanje brez sumnikov', ustreza(lige[0], 'clani') || ustreza(lige[0], 'GNL'), 'GNL')
+  preveri('izbirnik: prazno iskanje najde vse', lige.every((l) => ustreza(l, '')))
+  preveri('izbirnik: nesmisel ne najde nic', !lige.some((l) => ustreza(l, 'xyzzy')))
+
+  // Noga navaja vir podatkov. Dokler je bila ena zveza, je bil zapisan v kodi;
+  // ob ljubljanski ligi bi trdil, da so podatki iz Kranja, kar ni res.
+  const vir = virPodatkov({ ...lige[2], federation_url: 'https://www.mnzljubljana-zveza.si/' })
+  preveri('vir: ime po zvezi tekmovanja', vir?.ime === 'MNZ Ljubljana', String(vir?.ime))
+  preveri('vir: povezava po zvezi tekmovanja',
+    vir?.url === 'https://www.mnzljubljana-zveza.si/', String(vir?.url))
+  preveri('vir: brez zveze ni trditve o viru', virPodatkov(lige[3]) === null)
+  preveri('vir: brez izbranega tekmovanja ni trditve', virPodatkov(null) === null)
+  preveri('vir: zveza brez naslova se navede brez povezave',
+    virPodatkov(lige[0])?.url === null && virPodatkov(lige[0])?.ime === 'MNZ Gorenjska',
+    JSON.stringify(virPodatkov(lige[0])))
 }
 
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)

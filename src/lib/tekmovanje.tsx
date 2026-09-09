@@ -25,6 +25,14 @@ export interface Tekmovanje {
   name: string
   short_name: string | null
   prvi_fantasy_krog: number | null
+  /** Zveza, ki ligo objavlja — po njej izbirnik grupira. Lahko je prazna. */
+  federation_code: string | null
+  federation_name: string | null
+  federation_short: string | null
+  federation_url: string | null
+  federation_sort: number | null
+  country_code: string | null
+  country_name: string | null
 }
 
 /** Ukaz, ki ga vrne `uskladiTekmovanje` — kdo popravi koga. */
@@ -110,9 +118,13 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     supabase
-      .from('competitions')
-      .select('id, slug, name, short_name, prvi_fantasy_krog')
+      // `competitions_view` prilozi zvezo in drzavo, da izbirnik ne spaja sam.
+      .from('competitions_view')
+      .select(
+        'id, slug, name, short_name, prvi_fantasy_krog, federation_code, federation_name, federation_short, federation_url, federation_sort, country_code, country_name',
+      )
       .eq('active', true)
+      .order('federation_sort')
       .order('sort_order')
       .then(({ data }) => setTekmovanja((data as Tekmovanje[] | null) ?? []))
   }, [])
