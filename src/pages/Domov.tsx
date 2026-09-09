@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { imeZveze } from '../components/VirPodatkov'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { PRAVILA_OPIS } from '../lib/tockovanje'
@@ -45,6 +46,7 @@ interface KrogPodatek {
 
 export default function Domov() {
   const { id: tekmovanjeId, tekmovanje } = useTekmovanje()
+  const zveza = imeZveze(tekmovanje)
   const [stat, setStat] = useState<Statistika | null>(null)
   const [zvezde, setZvezde] = useState<VrhIgralec[]>([])
   const [podajalci, setPodajalci] = useState<VrhIgralec[]>([])
@@ -328,7 +330,7 @@ export default function Domov() {
             Sestavi ekipo. Zberi točke. Zmagaj.
           </p>
           <p className="max-w-xl text-slate-300">
-            Točke prihajajo iz uradnih zapisnikov MNZ Gorenjska — goli, minute,
+            Točke prihajajo iz uradnih zapisnikov {zveza} — goli, minute,
             ohranjene mreže, kartoni. Vse razen asistenc, ki jih določi
             skupnost.
           </p>

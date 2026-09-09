@@ -12,7 +12,7 @@ create table if not exists federations (
   id         bigint primary key generated always as identity,
   country_id bigint  not null references countries(id) on delete cascade,
   code       text    not null unique,   -- 'mnzg', 'mnzlj'
-  name       text    not null,          -- 'MNZ Gorenjska Kranj' (kakor se podpisuje)
+  name       text    not null,          -- 'MNZ Gorenjska'; pojavi se tudi sredi stavka
   short_name text    not null,          -- 'Gorenjska'
   site_url   text,                      -- spletisce zveze; noga ga navede kot vir
   sort_order integer not null default 0,
@@ -34,7 +34,7 @@ create policy "admin ureja zveze" on federations
   for all using (is_admin()) with check (is_admin());
 
 insert into federations (country_id, code, name, short_name, site_url, sort_order)
-select id, 'mnzg', 'MNZ Gorenjska Kranj', 'Gorenjska', 'https://www.mnzgkranj.si/', 1
+select id, 'mnzg', 'MNZ Gorenjska', 'Gorenjska', 'https://www.mnzgkranj.si/', 1
   from countries where code = 'SI'
 on conflict (code) do nothing;
 

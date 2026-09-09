@@ -15,6 +15,7 @@ import { createClient } from '@supabase/supabase-js'
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { tekmovanje as najdiTekmovanje, sifraLige } from './tekmovanje.mjs'
 import { viraZa } from './viri/index.mjs'
+import { razcleniRazpored, sezonaIz } from './razpored.mjs'
 
 const PREDPOMNILNIK = 'scripts/.predpomnilnik'
 const URA_ROKA = 10
@@ -73,22 +74,6 @@ async function prenesi(url, ime) {
   return html
 }
 
-/** "29.08.26" → "2026-08-29" */
-function datum(slovenski) {
-  const m = slovenski.match(/(\d{1,2})\.(\d{1,2})\.(\d{2,4})/)
-  if (!m) return null
-  const [, d, mes, l] = m
-  const leto = l.length === 2 ? 2000 + Number(l) : Number(l)
-  return `${leto}-${String(mes).padStart(2, '0')}-${String(d).padStart(2, '0')}`
-}
-
-/** Sezona iz datuma prvega kroga: avgust 2026 → "2026/27". */
-function sezonaIz(datumIso) {
-  const [leto, mesec] = datumIso.split('-').map(Number)
-  const zacetek = mesec >= 7 ? leto : leto - 1
-  return `${zacetek}/${String((zacetek + 1) % 100).padStart(2, '0')}`
-}
-
 // --- razčlenitev razporeda --------------------------------------------------
 const url = vir.naslovRazporeda(liga)
 console.log(`Berem razpored: ${url}`)
@@ -96,51 +81,8 @@ const html = await prenesi(url, `razpored-${liga}.html`)
 
 // Stran je ena velika tabela: naslov kroga ("1. krog  29.08.26"), pod njim pa
 // vrstice "datum" + "Domači : Gostje". Zato beremo kar zaporedje besedila.
-const vrstice = vir.vBesedilo(html)
+const veljavni = razcleniRazpored(vir.vBesedilo(html))
 
-const krogi = []
-let tekoci = null
-let zadnjiDatum = null
-
-// Ime kluba ima vedno vsaj eno črko. Rezultat ("8 : 1(5 : 0)") je nima — brez
-// tega bi vsak že odigran krog dobil še enkrat toliko izmišljenih tekem.
-const jeIme = (s) => /[a-zžčšđćA-ZŽČŠĐĆ]/.test(s)
-
-for (const v of vrstice) {
-  // Pod razporedom stran nadaljuje z blokom "REZULTATI" DRUGE lige (na strani
-  // mladincev so to člani). Brez tega konca bi ti rezultati pristali v bazi
-  // kot 19. krog mladincev. Naslov bloka je izpisan z velikimi črkami; enako
-  // ime v meniju ("Rezultati") je zato treba pustiti pri miru.
-  if (v === 'REZULTATI' && krogi.length) break
-
-  const mKrog = v.match(/^(\d{1,2})\.\s*krog/i)
-  if (mKrog) {
-    tekoci = { stevilka: Number(mKrog[1]), tekme: [] }
-    krogi.push(tekoci)
-    zadnjiDatum = datum(v)
-    continue
-  }
-  if (!tekoci) continue
-
-  const mDatum = v.match(/^(\d{1,2}\.\d{1,2}\.\d{2,4})$/)
-  if (mDatum) {
-    zadnjiDatum = datum(mDatum[1])
-    continue
-  }
-
-  // "Eltron Preddvor : Tržič 2012" (lahko z datumom na začetku iste vrstice)
-  const mTekma = v.match(/^(?:\d{1,2}\.\d{1,2}\.\d{2,4}\s+)?(.+?)\s+:\s+(.+?)$/)
-  if (mTekma && jeIme(mTekma[1]) && jeIme(mTekma[2])) {
-    const vRstiDatum = datum(v)
-    tekoci.tekme.push({
-      domaci: mTekma[1].trim(),
-      gostje: mTekma[2].trim(),
-      datum: vRstiDatum ?? zadnjiDatum,
-    })
-  }
-}
-
-const veljavni = krogi.filter((k) => k.tekme.length)
 console.log(`Najdenih krogov: ${veljavni.length}`)
 if (!veljavni.length) {
   console.error('Razporeda ni bilo mogoče razbrati — se je stran spremenila?')

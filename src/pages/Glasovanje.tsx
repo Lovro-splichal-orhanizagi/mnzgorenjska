@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { imeZveze } from '../components/VirPodatkov'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
@@ -15,6 +16,7 @@ import type { TekmaVrstica } from '../lib/tipi'
 export default function Glasovanje() {
   const { session, loading } = useAuth()
   const { id: tekmovanjeId, tekmovanje } = useTekmovanje()
+  const zveza = imeZveze(tekmovanje)
   const [tekme, setTekme] = useState<TekmaVrstica[]>([])
   const [krogId, setKrogId] = useState<number | null>(null)
   const [sezona, setSezona] = useState<string | null>(null)
@@ -238,7 +240,7 @@ export default function Glasovanje() {
           )}
         </h1>
         <p className="max-w-2xl text-slate-400">
-          Zapisniki MNZ Gorenjska beležijo strelce, asistenc pa ne. Določi jih
+          Zapisniki {zveza} beležijo strelce, asistenc pa ne. Določi jih
           skupnost: ko isti igralec pri golu zbere{' '}
           <strong className="text-gnl-300">{PRAG_ASISTENCE} glasov</strong>, se mu
           asistenca prizna in prinese <strong className="text-gnl-300">+3 točke</strong>.

@@ -133,6 +133,31 @@ Razčlenitev vseh zapisnikov prek `viri/mnzlj.mjs`:
 - **116456** (`Komenda 0 : 11`) — vir sam ni označil vratarja z `(V)`.
   Opozorilo je zato resnično in koristno; pozicijo dopolni glasovanje.
 
+## Kaj je odkril šele pravi uvoz
+
+Trije hrošči, ki jih ni bilo mogoče predvideti iz enega zapisnika. Vsak se je
+končal **brez sporočila o napaki** — uvoz je poročal uspeh in vpisal smeti.
+
+1. **Letnica s štirimi števkami.** `05.09.2026` je star izraz prebral kot
+   `05.09.20` in iz tega naredil leto **2020**. Sezono je iskal kot prvo
+   vrstico z `\d{4}/\d{2}` kjerkoli na strani — v Ljubljani je to spustni
+   seznam sezon v meniju. Cel arhiv 2025/26 je pristal v sezoni `2026/20` z
+   datumi iz leta 2020.
+
+2. **Konec razporeda.** Pod razporedom stran nadaljuje z rezultati, najprej te
+   lige, nato **druge**. Kranj naslovi blok `REZULTATI`, Ljubljana
+   `REZULTATI TEKEM`, primerjava pa je bila z enakostjo — zato je v 1. ligo
+   pripeljalo Kamnik, Termit Moravče, ŠD Vir in še pet klubov 2. lige.
+   Namesto 12 klubov jih je bilo 20.
+
+3. **Klubi s sponzorjem.** `Ljubljana` in `Ljubljana Arol` sta isti klub;
+   enako `Vir` / `ŠD Vir` in `Kresnice` / `NK IAK Kresnice`. Prva dva sta se
+   razklala **znotraj ene sezone** (12 + 12 oz. 13 + 7 tekem), kar je hkrati
+   dokaz, da gre res za isti klub. Vzdevki so zato last vira.
+
+Zato so zdaj shranjeni vzorci razporeda obeh zvez in razčlenitev je ločena v
+`scripts/razpored.mjs`, kjer jo `npm run smoke` preveri brez omrežja.
+
 ## Preverjanje
 
 - Zapisnik Kranja se razčleni enako kot prej (primerjava s shranjenim izidom).

@@ -19,6 +19,22 @@ export function virPodatkov(t: Tekmovanje | null | undefined): Vir | null {
   return { ime: t.federation_name, url: t.federation_url ?? null }
 }
 
+/**
+ * Ime zveze za sredi stavka ("Statistika iz uradnih zapisnikov {X}.").
+ *
+ * Kadar zveze ne poznamo, vrne splošen izraz — stavek mora ostati slovnično
+ * cel, prazna vrzel bi bila slabša od nenatančnosti.
+ */
+export function imeZveze(t: Tekmovanje | null | undefined): string {
+  return t?.federation_name ?? 'zveze'
+}
+
+/** Ime zveze za trenutno izbrano ligo. */
+export function useImeZveze(): string {
+  const { tekmovanje } = useTekmovanje()
+  return imeZveze(tekmovanje)
+}
+
 export default function VirPodatkov() {
   const { tekmovanje } = useTekmovanje()
   const vir = virPodatkov(tekmovanje)

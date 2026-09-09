@@ -30,8 +30,9 @@ import { tockeZaNastop } from '../src/lib/tockovanje'
 import { sestejOdKroga } from '../src/lib/lestvica'
 import { parsirajZapisnik, nastopi } from './zapisnik.mjs'
 import { poZvezah, ustreza } from '../src/components/IzbirnikLige'
-import { virPodatkov } from '../src/components/VirPodatkov'
+import { virPodatkov, imeZveze } from '../src/components/VirPodatkov'
 import { viraZa, znaniViri } from './viri/index.mjs'
+import { razcleniRazpored, datum, sezonaIz } from './razpored.mjs'
 import { readFileSync } from 'node:fs'
 
 let napak = 0
@@ -477,6 +478,14 @@ preveri(
     vir?.url === 'https://www.mnzljubljana-zveza.si/', String(vir?.url))
   preveri('vir: brez zveze ni trditve o viru', virPodatkov(lige[3]) === null)
   preveri('vir: brez izbranega tekmovanja ni trditve', virPodatkov(null) === null)
+  // Ime zveze se pojavi tudi sredi stavka ("Statistika iz uradnih zapisnikov
+  // MNZ Gorenjska."). Kadar zveze ne poznamo, mora stavek ostati smiseln —
+  // zato imeZveze vrne splosen izraz, ne prazne vrzeli.
+  preveri('vir: ime zveze za sredi stavka',
+    imeZveze({ ...lige[2], federation_name: 'MNZ Ljubljana' }) === 'MNZ Ljubljana')
+  preveri('vir: brez zveze splosen izraz', imeZveze(lige[3]) === 'zveze', imeZveze(lige[3]))
+  preveri('vir: brez tekmovanja splosen izraz', imeZveze(null) === 'zveze', imeZveze(null))
+
   preveri('vir: zveza brez naslova se navede brez povezave',
     virPodatkov(lige[0])?.url === null && virPodatkov(lige[0])?.ime === 'MNZ Gorenjska',
     JSON.stringify(virPodatkov(lige[0])))
@@ -515,6 +524,20 @@ preveri(
   preveri('viri: mnzlj poenostavi enako', lj.kljucKluba('NK Ivančna Gorica') === 'nk ivančna gorica',
     lj.kljucKluba('NK Ivančna Gorica'))
 
+  // Ljubljanski klubi so med sezono dobili sponzorja oz. predpono. Brez teh
+  // treh vzdevkov je vsak nastopal kot dva kluba: "Ljubljana" 12 tekem in
+  // "Ljubljana Arol" 12 v ISTI sezoni, "Vir" 13 in "SD Vir" 7. To razklane
+  // igralce, statistiko in pravilo o najvec treh igralcih iz kluba.
+  for (const [pisano, isti] of [
+    ['Ljubljana Arol', 'ljubljana'],
+    ['ŠD Vir', 'vir'],
+    ['NK IAK Kresnice', 'kresnice'],
+  ]) {
+    preveri(`viri: mnzlj zdruzi "${pisano}"`, lj.kljucKluba(pisano) === isti, lj.kljucKluba(pisano))
+  }
+  preveri('viri: mnzlj pusti neznan klub pri miru',
+    lj.kljucKluba('Kočevje') === 'kočevje', lj.kljucKluba('Kočevje'))
+
   // MNZ Ljubljana zapisnikov o registracijah ne objavlja; uvoz naj to pove,
   // namesto da porocca "0 zapisnikov", kar je videti kot okvara.
   preveri('viri: mnzlj nima registracij', lj.imaRegistracije === false, String(lj.imaRegistracije))
@@ -523,6 +546,47 @@ preveri(
   let padlo = false
   try { viraZa({ source: 'ni-tak-vir', slug: 'x' }) } catch { padlo = true }
   preveri('viri: neznan vir pade takoj', padlo)
+}
+
+// --- razpored --------------------------------------------------------------
+// Pod razporedom stran nadaljuje z rezultati — najprej te lige, nato DRUGE.
+// Kranj naslovi blok "REZULTATI", Ljubljana "REZULTATI TEKEM"; primerjava z
+// enakostjo je zato Ljubljani spustila skozi cel blok 2. lige in v 1. ligo
+// pripeljala Kamnik, Termit Moravce, SD Vir in se pet tujih klubov.
+{
+  const vrstice = (ime) =>
+    readFileSync(new URL(`../scripts/vzorci/${ime}`, import.meta.url), 'utf8').split('\n')
+
+  const klubi = (krogi) =>
+    new Set(krogi.flatMap((k) => k.tekme.flatMap((t) => [t.domaci, t.gostje])))
+
+  {
+    const k = razcleniRazpored(vrstice('razpored-ljubljana-2003.txt'))
+    preveri('razpored LJ: 22 krogov', k.length === 22, String(k.length))
+    preveri('razpored LJ: 12 klubov', klubi(k).size === 12, [...klubi(k)].length + ': ' + [...klubi(k)].join(', ').slice(0, 60))
+    preveri('razpored LJ: brez klubov 2. lige',
+      !['Kamnik', 'Termit Moravče', 'ŠD Vir', 'Črnuče'].some((c) => klubi(k).has(c)),
+      [...klubi(k)].join(', ').slice(0, 70))
+    preveri('razpored LJ: vsak krog ima 6 tekem',
+      k.every((r) => r.tekme.length === 6), k.map((r) => r.tekme.length).join(','))
+    // Tekma ima lahko svoj datum, drugacen od naslova kroga ("1. krog 29.08.26").
+    preveri('razpored LJ: krog 1 se igra konec avgusta',
+      k[0].tekme[0].datum === '2026-08-30', String(k[0].tekme[0].datum))
+  }
+
+  {
+    const k = razcleniRazpored(vrstice('razpored-kranj-1601.txt'))
+    preveri('razpored Kranj: 26 krogov', k.length === 26, String(k.length))
+    // Kranj ima 13 klubov, zato je v vsakem krogu en prost.
+    preveri('razpored Kranj: 13 klubov', klubi(k).size === 13, String(klubi(k).size))
+    preveri('razpored Kranj: vsak krog ima 6 tekem',
+      k.every((r) => r.tekme.length === 6), k.map((r) => r.tekme.length).join(','))
+  }
+
+  preveri('razpored: datum z dvomestno letnico', datum('29.08.26') === '2026-08-29', datum('29.08.26'))
+  preveri('razpored: datum s stirimestno letnico', datum('29.08.2026') === '2026-08-29', datum('29.08.2026'))
+  preveri('razpored: sezona iz avgusta', sezonaIz('2026-08-29') === '2026/27', sezonaIz('2026-08-29'))
+  preveri('razpored: sezona iz marca', sezonaIz('2027-03-13') === '2026/27', sezonaIz('2027-03-13'))
 }
 
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)

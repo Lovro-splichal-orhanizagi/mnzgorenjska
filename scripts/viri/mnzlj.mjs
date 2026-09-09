@@ -20,9 +20,21 @@ import { naredikljucKluba, kratkoIme, poenostavi } from '../klubi.mjs'
 
 const OSNOVNI = 'https://www.mnzljubljana-zveza.si'
 
-// Zaenkrat prazen. Vzdevki se pokažejo šele, ko sponzor spremeni ime kluba
-// sredi sezone; ugibati jih vnaprej bi pomenilo združiti dva različna kluba.
-const ISTI_KLUB = {}
+// Levo: kar piše vir, desno: ime, pod katerim klub že poznamo iz arhiva.
+//
+// Vsi trije so se pokazali ob prvem uvozu. Ljubljana in Vir sta se razklala
+// celo ZNOTRAJ ene sezone (12 + 12 oz. 13 + 7 tekem), kar je tudi dokaz, da
+// gre res za isti klub in ne za dva s podobnim imenom. Brez preslikave klub
+// nastopa dvakrat, igralci in statistika se razdelijo, pravilo o največ treh
+// igralcih iz kluba pa se da zaobiti.
+//
+// Vzdevkov ne dodajamo na zalogo: "NK Ugar Ribnica" nima para v arhivu, zato
+// zanj ni ključa, pod katerega bi ga bilo pravilno spraviti.
+const ISTI_KLUB = {
+  'ljubljana arol': 'ljubljana',
+  'šd vir': 'vir',
+  'nk iak kresnice': 'kresnice',
+}
 
 export default {
   ime: 'mnzlj',

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { imeZveze } from '../components/VirPodatkov'
 import { supabase } from '../lib/supabase'
 import {
   prikazniIme,
@@ -74,6 +75,7 @@ const STOLPCI: Array<{ kljuc: Stolpec; naslov: string; opis: string }> = [
 
 export default function Igralci() {
   const { id: tekmovanjeId, tekmovanje } = useTekmovanje()
+  const zveza = imeZveze(tekmovanje)
   const [igralci, setIgralci] = useState<IgralecSezone[]>([])
   const [nalaganje, setNalaganje] = useState(true)
   const [napaka, setNapaka] = useState<string | null>(null)
@@ -242,7 +244,7 @@ export default function Igralci() {
             : ''}
         </h1>
         <p className="mt-1 text-sm text-slate-400">
-          Statistika iz uradnih zapisnikov MNZ Gorenjska. Klikni stolpec za
+          Statistika iz uradnih zapisnikov {zveza}. Klikni stolpec za
           razvrstitev.
         </p>
       </div>

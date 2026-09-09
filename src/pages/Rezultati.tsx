@@ -1,5 +1,6 @@
 // Rezultati odigranih tekem. Klik na tekmo odpre obe postavi s točkami.
 import { useEffect, useMemo, useState } from 'react'
+import { imeZveze } from '../components/VirPodatkov'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useTekmovanje } from '../lib/tekmovanje'
@@ -10,6 +11,7 @@ import type { TekmaVrstica } from '../lib/tipi'
 
 export default function Rezultati() {
   const { id: tekmovanjeId, tekmovanje } = useTekmovanje()
+  const zveza = imeZveze(tekmovanje)
   const [tekme, setTekme] = useState<TekmaVrstica[]>([])
   const [sezona, setSezona] = useState<string | null>(null)
   const [krogId, setKrogId] = useState<number | null>(null)
@@ -79,7 +81,7 @@ export default function Rezultati() {
             : ''}
         </h1>
         <p className="max-w-2xl text-slate-400">
-          Odigrane tekme iz zapisnikov MNZ Gorenjska. Klikni na tekmo in vidiš
+          Odigrane tekme iz zapisnikov {zveza}. Klikni na tekmo in vidiš
           obe postavi na igrišču — na vsakem dresu točke, ki jih je igralec
           zaslužil.
         </p>
