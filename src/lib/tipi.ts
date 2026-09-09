@@ -12,8 +12,6 @@ type Tabele = Database['public']['Tables']
 /** Pozicija igralca. V bazi je `players.position` (text, lahko prazen). */
 export type Pozicija = 'GK' | 'DEF' | 'MID' | 'FWD'
 
-/** Slug tekmovanja — `competitions.slug`. */
-export type TekmovanjeSlug = 'clani' | 'mladinci'
 
 /**
  * Igralec, kot ga potrebujejo pravila sestave ekipe. Namenoma ohlapen: strani

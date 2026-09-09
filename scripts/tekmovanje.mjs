@@ -48,10 +48,19 @@ export async function tekmovanje(db, slug = slugTekmovanja()) {
     data = staraShema.data
   }
 
-  if (!data)
+  if (!data) {
+    // Nasteti "clani in mladinci" je bilo res, dokler sta bili ligi dve.
+    // Seznam zato preberemo, sicer napaka zavaja prav takrat, ko je nova liga
+    // vzrok zanjo.
+    const { data: vse } = await db
+      .from('competitions')
+      .select('slug')
+      .order('sort_order')
+    const nasteti = (vse ?? []).map((t) => `"${t.slug}"`).join(', ')
     throw new Error(
-      `tekmovanje "${slug}" ne obstaja — na voljo sta "clani" in "mladinci"`,
+      `tekmovanje "${slug}" ne obstaja${nasteti ? ` — na voljo so ${nasteti}` : ''}`,
     )
+  }
   return data
 }
 

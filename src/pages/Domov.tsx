@@ -317,9 +317,13 @@ export default function Domov() {
             className="h-24 w-24 drop-shadow-xl sm:h-32 sm:w-32"
           />
           <span className="znacka bg-gnl-400/20 text-gnl-200">
-            {tekmovanje?.slug === 'mladinci'
-              ? 'Gorenjska nogometna liga — mladinci'
-              : '1. Gorenjska nogometna liga'}
+            {/* Gorenjski besedili sta oglasni in ostaneta natanko taki, kot
+                sta bili; druga zveza dobi ime svoje lige. */}
+            {tekmovanje?.federation_code === 'mnzg' || !tekmovanje
+              ? tekmovanje?.slug === 'mladinci'
+                ? 'Gorenjska nogometna liga — mladinci'
+                : '1. Gorenjska nogometna liga'
+              : tekmovanje.name}
           </span>
           <h1 className="text-4xl font-black leading-tight naslov sm:text-5xl">
             Sunday League
