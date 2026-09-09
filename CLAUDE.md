@@ -72,10 +72,16 @@ Vsak vir zato pripelje svoj slovar v `naredikljucKluba`.
 `competitions.source_league_code`, ne skripte. Arhiv prejšnje sezone se poda
 z `--liga`.
 
-| zveza | tekoča 2026/27 | arhiv 2025/26 |
-|---|---|---|
-| mnzg — člani / mladinci | 1601 / 1603 | 1502 / 1503 |
-| mnzlj — 1. / 2. liga | 2003 / 2004 | 1904 / 1905 |
+| zveza | tekoča 2026/27 | arhiv 2025/26 | arhiv 2024/25 |
+|---|---|---|---|
+| mnzg — člani / mladinci | 1601 / 1603 | 1502 / 1503 | — |
+| mnzlj — 1. / 2. liga | 2003 / 2004 | 1904 / 1905 | 1804 / 1805 |
+
+Ena arhivska sezona ni vedno dovolj. Cena je percentil znotraj lige, igralec
+pod 270 minutami pa dobi privzeto 4.5 — v majhni ligi (MNZ liga ima devet
+klubov) toliko minut v eni sezoni nabere premalo igralcev in cenik se sesede
+v eno samo številko. Takrat uvozi še eno sezono nazaj in `ovrednoti-igralce`
+poženi **brez** `--sezona`, da sešteje vse.
 
 **Pragovi glasovanja so po tekmovanju** (`competition_settings`, brano prek
 `nastavitev_int_za`). Trije glasovi so v ligi z dvesto igralci lahek dosežek
@@ -254,6 +260,14 @@ update competitions set active = true where slug in ('lj-1-liga','lj-2-liga');
   razširi, je treba pogled najprej `drop`.
 - Pravila sestave ekipe so na enem mestu v `src/lib/pravila.ts` — spreminjaj jih tam,
   ne razpršeno po komponentah.
+- **PostgREST vrne največ 1000 vrstic in tega ne pove.** Odgovor je videti
+  običajen, le krajši; `.limit(5000)` in `.range(0, 9999)` meje ne premakneta.
+  Dokler je bila liga ena, so poizvedbe ostajale pod mejo — z vsako novo se
+  tiho prekorači. Kjer števila vrstic ne omeji majhen filter, beri prek
+  `vseVrstice()` iz `scripts/strani.mjs` (in poizvedbi **določi vrstni red**,
+  sicer se strani prekrivajo). Tako je padel `ovrednoti-igralce`: druga
+  ljubljanska liga je dobila 0 vrstic statistike, ker je prvih tisoč porabila
+  gorenjska, in vsi igralci bi imeli ceno 4.5.
 - Vsaka nova poizvedba na strani mora filtrirati po `competition_id`, sicer
   stran pokaže obe ligi hkrati. `useTekmovanje().id` je `null`, dokler se
   seznam lig ne naloži — do takrat naj stran ne poizveduje.

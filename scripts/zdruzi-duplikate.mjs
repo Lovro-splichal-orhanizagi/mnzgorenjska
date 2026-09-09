@@ -17,6 +17,7 @@
 //
 // Zagon: dnevni cron po uvozu zapisnikov (glej .github/workflows/...).
 import { createClient } from '@supabase/supabase-js'
+import { vseVrstice } from './strani.mjs'
 import { readFileSync } from 'node:fs'
 
 const PREVEC_DUPLIKATOV = 3 // pri več kot 3 zapisih ne mergamo — v amaterski
@@ -53,9 +54,15 @@ const db = createClient(BASE, SERVICE, { auth: { persistSession: false } })
 
 // --- najdi kandidate za merga -----------------------------------------------
 async function najdiPare() {
-  const { data: p } = await db
-    .from('players')
-    .select('id, full_name, team_id, shirt_number, active, competition_id')
+  // Igralcev je cez 1700 in poizvedba ni omejena na eno ligo — brez branja po
+  // straneh bi dvojnike iskali le med prvimi tisoc.
+  const p = await vseVrstice((od, do_) =>
+    db
+      .from('players')
+      .select('id, full_name, team_id, shirt_number, active, competition_id')
+      .order('id')
+      .range(od, do_),
+  )
   // Ime združujemo znotraj ene lige. Isti fant je lahko hkrati mladinec in
   // član — to nista dvojnika, ampak dva različna nastopa z ločeno statistiko
   // in ceno, zato ju ne smemo zliti.

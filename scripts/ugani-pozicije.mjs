@@ -67,18 +67,30 @@ const db = createClient(BASE, SERVICE, { auth: { persistSession: false } })
 const tekmovanje = await najdiTekmovanje(db, slugTekmovanja())
 console.log(`Tekmovanje: ${tekmovanje.name}`)
 
-const { data: igralci, error } = await db
-  .from('player_overview')
-  .select('id, full_name, team_id, team_name, position, position_source, minutes, goals, matches, shirt_number')
-  .eq('competition_id', tekmovanje.id)
-if (error) {
-  console.error(error.message)
+let igralci
+try {
+  igralci = await vseVrstice((od, do_) =>
+    db
+      .from('player_overview')
+      .select('id, full_name, team_id, team_name, position, position_source, minutes, goals, matches, shirt_number')
+      .eq('competition_id', tekmovanje.id)
+      .order('id')
+      .range(od, do_),
+  )
+} catch (e) {
+  console.error(e.message)
   process.exit(1)
 }
 
-const { data: kartoni } = await db
-  .from('appearances')
-  .select('player_id, yellow_cards, red_cards')
+// Nastopov je cez 19.000 — brez branja po straneh bi karton stel le prvih
+// tisoc vrstic in prior za pozicijo bi slonel na nakljucnem drobcu.
+const kartoni = await vseVrstice((od, do_) =>
+  db
+    .from('appearances')
+    .select('player_id, yellow_cards, red_cards')
+    .order('id')
+    .range(od, do_),
+)
 const poIgralcu = new Map()
 for (const a of kartoni ?? []) {
   const t = poIgralcu.get(a.player_id) ?? { rumeni: 0, rdeci: 0 }

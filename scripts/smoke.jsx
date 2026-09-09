@@ -35,6 +35,7 @@ import { viraZa, znaniViri } from './viri/index.mjs'
 import { caka, brezAsistencePotrjeno, PRAG_ASISTENCE_PRIVZETO } from '../src/components/GolZaGlasovanje'
 import { adaptivniPrag } from '../src/pages/Pozicije'
 import { razcleniRazpored, datum, sezonaIz } from './razpored.mjs'
+import { vseVrstice } from './strani.mjs'
 import { readFileSync } from 'node:fs'
 
 let napak = 0
@@ -569,6 +570,37 @@ preveri(
   preveri('prag: sibek prior ne zniza', adaptivniPrag(0.1, 5, 2) === 5, String(adaptivniPrag(0.1, 5, 2)))
   preveri('prag: nikoli pod spodnjo mejo', adaptivniPrag(0.9, 3, 2) === 2, String(adaptivniPrag(0.9, 3, 2)))
   preveri('prag: liga s pragom 3 se zniza na 2', adaptivniPrag(0.8, 3, 2) === 2, String(adaptivniPrag(0.8, 3, 2)))
+}
+
+// --- branje cez mejo tisoc vrstic ------------------------------------------
+// PostgREST vrne najvec 1000 vrstic in tega ne pove — odgovor je videti
+// obicajen, le krajsi. Z vsako novo ligo se meja tiho prekoraci.
+{
+  const lazniOdgovor = (skupaj) => async (od, do_) => ({
+    data: Array.from({ length: Math.max(0, Math.min(do_, skupaj - 1) - od + 1) },
+      (_, i) => ({ id: od + i })),
+    error: null,
+  })
+
+  const malo = await vseVrstice(lazniOdgovor(42))
+  preveri('strani: manj kot ena stran', malo.length === 42, String(malo.length))
+
+  const cez = await vseVrstice(lazniOdgovor(2449))
+  preveri('strani: cez mejo prebere vse', cez.length === 2449, String(cez.length))
+  preveri('strani: vrstice se ne podvojijo',
+    new Set(cez.map((v) => v.id)).size === 2449, String(new Set(cez.map((v) => v.id)).size))
+
+  const natanko = await vseVrstice(lazniOdgovor(2000))
+  preveri('strani: natanko dve strani', natanko.length === 2000, String(natanko.length))
+
+  const prazno = await vseVrstice(lazniOdgovor(0))
+  preveri('strani: nic vrstic', prazno.length === 0, String(prazno.length))
+
+  let padlo = false
+  try {
+    await vseVrstice(async () => ({ data: null, error: { message: 'baza je padla' } }))
+  } catch (e) { padlo = e.message === 'baza je padla' }
+  preveri('strani: napaka se ne poje tiho', padlo)
 }
 
 // --- viri ------------------------------------------------------------------

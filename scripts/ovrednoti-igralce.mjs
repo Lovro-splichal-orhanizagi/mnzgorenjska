@@ -18,6 +18,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'node:fs'
 import { tekmovanje as najdiTekmovanje } from './tekmovanje.mjs'
+import { vseVrstice } from './strani.mjs'
 
 const NAJNIZJA = 4.0
 const NAJVISJA = 12.0
@@ -87,23 +88,35 @@ const sezona = arg('sezona')
 const tekmovanje = await najdiTekmovanje(db, arg('tekmovanje', 'clani'))
 console.log(`Tekmovanje: ${tekmovanje.name}`)
 
-const { data: igralci } = await db
-  .from('players')
-  .select(
-    'id, full_name, position, value, value_start, value_locked, nzs_top_league, nzs_top_league_minutes',
-  )
-  .eq('competition_id', tekmovanje.id)
+const igralci = await vseVrstice((od, do_) =>
+  db
+    .from('players')
+    .select(
+      'id, full_name, position, value, value_start, value_locked, nzs_top_league, nzs_top_league_minutes',
+    )
+    .eq('competition_id', tekmovanje.id)
+    .order('id')
+    .range(od, do_),
+)
 
 const naSi = new Set((igralci ?? []).map((p) => p.id))
 
 // --- statistika ------------------------------------------------------------
-let poizvedba = db
-  .from('player_season_stats')
-  .select('player_id, season, minutes, goals, points, matches, clean_sheets, yellow_cards, red_cards')
-if (sezona) poizvedba = poizvedba.eq('season', sezona)
-const { data: stat, error } = await poizvedba
-if (error) {
-  console.error(error.message)
+// `player_season_stats` nima stolpca za tekmovanje, zato pade sem vse — pri
+// stirih ligah cez 2400 vrstic. Brez branja po straneh bi PostgREST vrnil
+// prvih tisoc in liga, ki bi bila v vrsti zadnja, bi ostala brez statistike:
+// vsi igralci po 4.5 in nobene napake.
+let stat
+try {
+  stat = await vseVrstice((od, do_) => {
+    let q = db
+      .from('player_season_stats')
+      .select('player_id, season, minutes, goals, points, matches, clean_sheets, yellow_cards, red_cards')
+    if (sezona) q = q.eq('season', sezona)
+    return q.order('player_id').order('season').range(od, do_)
+  })
+} catch (e) {
+  console.error(e.message)
   process.exit(1)
 }
 
