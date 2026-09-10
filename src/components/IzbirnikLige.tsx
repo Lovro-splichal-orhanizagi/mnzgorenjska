@@ -101,11 +101,20 @@ export default function IzbirnikLige() {
   // Ena sama liga: izbirati ni česa.
   if (tekmovanja.length < 2) return null
 
-  // Na mobilnem prikazemo kratico (npr. "GNL Clani"), na desktopu polno ime.
-  // Prej je polno ime na mobilnem odrivalo hamburger meni z zaslona.
+  // Prikaz mora vedno vsebovati zvezo, sicer uporabnik ne loci "Clani"
+  // (Gorenjska) od "Clani" (Ljubljana). Ce je zveza ze v imenu (kot pri
+  // 1. GNL — clani), je ne podvajamo.
   const kratko = tekmovanje?.short_name ?? 'Liga'
-  const polnoIme = tekmovanje?.name ?? kratko
+  const surovoIme = tekmovanje?.name ?? kratko
   const zveza = pokaziZvezo(tekmovanja) ? tekmovanje?.federation_short : null
+  const jeZeVIme = (s: string) =>
+    zveza != null && s.toLowerCase().includes(zveza.toLowerCase())
+  // Mobilno: kratko z zvezo v predponi ("GNL Clani", "MNZLJ LJ 1.").
+  const zaMobile = zveza && !jeZeVIme(kratko) ? `${zveza} ${kratko}` : kratko
+  // Desktop: polno ime, po potrebi z zvezo v predponi.
+  const zaDesktop = zveza && !jeZeVIme(surovoIme)
+    ? `${zveza} — ${surovoIme}`
+    : surovoIme
 
   return (
     <div className="relative shrink-0" ref={ovoj}>
@@ -125,13 +134,8 @@ export default function IzbirnikLige() {
         <span className="hidden shrink-0 text-[10px] font-bold uppercase tracking-wide text-amber-300/80 sm:inline">
           Liga:
         </span>
-        {zveza && (
-          <span className="hidden shrink-0 text-amber-200/80 sm:inline">
-            {zveza}
-          </span>
-        )}
-        <span className="truncate text-amber-100 sm:hidden">{kratko}</span>
-        <span className="hidden truncate text-amber-100 sm:inline">{polnoIme}</span>
+        <span className="truncate text-amber-100 sm:hidden">{zaMobile}</span>
+        <span className="hidden truncate text-amber-100 sm:inline">{zaDesktop}</span>
         <span aria-hidden="true" className="shrink-0 text-amber-300/70">
           ▾
         </span>
