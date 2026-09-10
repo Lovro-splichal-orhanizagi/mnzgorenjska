@@ -8,10 +8,12 @@
 // z razumljivo napako namesto na pol poti skozi uvoz.
 import mnzg from './mnzg.mjs'
 import mnzlj from './mnzlj.mjs'
+import mnzce from './mnzce.mjs'
 
 const VIRI = {
   mnzg,
   mnzlj,
+  mnzce,
 }
 
 /**

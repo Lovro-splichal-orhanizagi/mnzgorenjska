@@ -476,6 +476,22 @@ preveri(
     const n = nastopi(z)
     preveri('zapisnik LJ: nastopi za obe ekipi', (n?.length ?? 0) >= 22, String(n?.length))
   }
+
+  // Celje — tretja zveza na istem CMS-u. Sezono pise z DVEMA stevkama
+  // ("Medobcinska clanska liga - Golgeter 26/27"), zato je star izraz, ki je
+  // zahteval stiri, segel nazaj v meni in nasel 2007/08. Cel arhiv bi pristal
+  // v sezoni izpred dvajsetih let.
+  {
+    const z = parsirajZapisnik(vzorec('zapisnik-celje-1902.html'), { zapisnikId: '158079' })
+    preveri('zapisnik Celje: sezona iz dvomestne letnice', z.sezona === '2026/27', String(z.sezona))
+    preveri('zapisnik Celje: datum', z.datum === '2026-09-05', String(z.datum))
+    preveri('zapisnik Celje: krog', z.krog === 2, String(z.krog))
+    preveri('zapisnik Celje: 11 v postavi doma', z.domaci?.postava?.length === 11, String(z.domaci?.postava?.length))
+    preveri('zapisnik Celje: menjave prebrane', (z.menjave?.length ?? 0) === 10, String(z.menjave?.length))
+    preveri('zapisnik Celje: brez opozoril', (z.opozorila ?? []).length === 0,
+      (z.opozorila ?? []).join(' | ').slice(0, 60))
+    preveri('zapisnik Celje: klop steje', (nastopi(z)?.length ?? 0) > 22, String(nastopi(z)?.length))
+  }
 }
 
 // --- izbirnik lige ---------------------------------------------------------
@@ -1100,6 +1116,21 @@ preveri(
   preveri('viri: mnzlj nima registracij', lj.imaRegistracije === false, String(lj.imaRegistracije))
   preveri('viri: mnzg ima registracije', gor.imaRegistracije !== false, String(gor.imaRegistracije))
 
+  // Celje — tretja zveza na istem CMS-u.
+  const ce = viraZa({ source: 'mnzce', slug: 'ce-clani' })
+  preveri('viri: poznamo tudi mnzce', znaniViri().includes('mnzce'), znaniViri().join(', '))
+  preveri('viri: mnzce zapisnik',
+    ce.naslovZapisnika(1902, 158079) ===
+      'https://www.mnzcelje.com/index.cfm?akc=zapisnik&liga=1902&zapisnik=158079',
+    ce.naslovZapisnika(1902, 158079))
+  preveri('viri: mnzce razpored',
+    ce.naslovRazporeda(1902) ===
+      'https://www.mnzcelje.com/index.cfm?akc=tekmovanja&liga=1902&prikazi=razpored',
+    ce.naslovRazporeda(1902))
+  preveri('viri: mnzce nima registracij', ce.imaRegistracije === false)
+  preveri('viri: mnzce ne uporablja tujih vzdevkov',
+    ce.kljucKluba('Preddvor SP Avto') === 'preddvor sp avto', ce.kljucKluba('Preddvor SP Avto'))
+
   let padlo = false
   try { viraZa({ source: 'ni-tak-vir', slug: 'x' }) } catch { padlo = true }
   preveri('viri: neznan vir pade takoj', padlo)
@@ -1138,6 +1169,14 @@ preveri(
     preveri('razpored Kranj: 13 klubov', klubi(k).size === 13, String(klubi(k).size))
     preveri('razpored Kranj: vsak krog ima 6 tekem',
       k.every((r) => r.tekme.length === 6), k.map((r) => r.tekme.length).join(','))
+  }
+
+  {
+    const k = razcleniRazpored(vrstice('razpored-celje-1902.txt'))
+    preveri('razpored Celje: 18 krogov', k.length === 18, String(k.length))
+    preveri('razpored Celje: 10 klubov', klubi(k).size === 10, String(klubi(k).size))
+    preveri('razpored Celje: vsak krog 5 tekem',
+      k.every((r) => r.tekme.length === 5), k.map((r) => r.tekme.length).join(','))
   }
 
   preveri('razpored: datum z dvomestno letnico', datum('29.08.26') === '2026-08-29', datum('29.08.26'))

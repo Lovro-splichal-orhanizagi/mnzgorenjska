@@ -82,14 +82,19 @@ function jeOznaka(s) {
 // kot ime kluba in postava bi se koncala pri prvem igralcu.
 const GLAVE_STOLPCEV = ['Priimek in ime', 'Leto rojstva', 'Št.', 'St.']
 
-// Sezona: Kranj piše "2025/26", Ljubljana "2025/2026". Oba zapisa pomenita
-// isto sezono in v bazi mora stati en sam, sicer bi ista sezona nastopala
-// dvakrat in cene bi se računale vsaka iz svoje polovice.
-const SEZONA = /(\d{4})\/(\d{4}|\d{2})/
+// Sezona: vsaka zveza jo piše po svoje — Kranj "2025/26", Ljubljana
+// "2025/2026", Celje pa "Golgeter 26/27". V bazi mora stati en sam zapis,
+// sicer ista sezona nastopa dvakrat in cene se računajo vsaka iz svoje
+// polovice.
+//
+// Dvomestni začetek je bil past: izraz je zahteval štiri števke, zato je pri
+// Celju segel mimo naslova nazaj v meni in našel sezono 2007/08 — cel arhiv
+// bi pristal dvajset let v preteklosti, brez ene same napake.
+const SEZONA = /\b(\d{4}|\d{2})\/(\d{4}|\d{2})\b/
 
-/** "2025/2026" in "2025/26" → "2025/26". */
+/** "2025/2026", "2025/26" in "26/27" → "2025/26" oz. "2026/27". */
 function normalizirajSezono(m) {
-  const zacetek = m[1]
+  const zacetek = m[1].length === 2 ? `20${m[1]}` : m[1]
   const konec = m[2].length === 4 ? m[2].slice(2) : m[2]
   return `${zacetek}/${konec}`
 }
