@@ -88,7 +88,7 @@ async function prenesi(url, datoteka, sveze = false) {
 const klubi = new Map() // ključ kluba -> id
 const { data: vsiKlubi } = await db.from('teams').select('id, name')
 for (const k of vsiKlubi ?? []) klubi.set(vir.kljucKluba(k.name), k.id)
-const igralci = new Map() // `${team_id}|${ime}` -> id
+const igralci = new Map() // Dres mora lociti soimenjake tudi pri samostojnem nastopu.
 
 async function klubId(ime) {
   const kljuc = vir.kljucKluba(ime)
@@ -129,7 +129,7 @@ function razdeliIme(polno) {
  * vedno, ker isti igralec med sezono lahko zamenja dres.
  */
 async function igralecId(teamId, polnoIme, { vratar, st, dvoumno = false, zasedeni = null }) {
-  let kljuc = `${teamId}|${polnoIme}${dvoumno ? '#' + st : ''}`
+  const kljuc = `${teamId}|${polnoIme}#${st}`
   if (igralci.has(kljuc)) return igralci.get(kljuc)
 
   let poizvedba = db
@@ -161,8 +161,6 @@ async function igralecId(teamId, polnoIme, { vratar, st, dvoumno = false, zasede
       .limit(1)
     if (poDresu?.length) {
       zadetki = poDresu
-      // Soimenjaka locimo, zato mora tudi predpomnilnik loceti po dresu.
-      kljuc = `${teamId}|${polnoIme}#${st}`
     }
   }
 
@@ -369,9 +367,9 @@ for (const id of ids) {
           played_on: z.datum,
           zapisnik_id: id,
           source_url: url,
-          // `imported_at` se postavi SELE, ko so nastopi in goli vpisani —
-          // sicer tekma ob spodleteli vstavitvi obvisi videti uvozena, v
-          // resnici pa je brez enega samega nastopa in nihce ne dobi tock.
+          // Tudi pri ponovnem uvozu mora stari zig izginiti PRED zamenjavo
+          // nastopov, sicer spodletelo vstavljanje ostane videti uspesno.
+          imported_at: null,
           import_warnings: z.opozorila,
         },
         { onConflict: 'round_id,home_team_id,away_team_id' },
@@ -393,9 +391,6 @@ for (const id of ids) {
       `${g.minute}|${g.scorer_id}|${g.team_id}|${g.is_own_goal ? 1 : 0}|${g.is_penalty ? 1 : 0}`
     const obstKljuci = new Set((obstGoli ?? []).map(kljucGola))
     let hkratenIzbris = false // odloči šele po pripravi novih vrstic spodaj
-
-    // ob ponovnem uvozu nastope vedno prepišemo (nimajo cascade-občutljivih podatkov)
-    await db.from('appearances').delete().eq('match_id', tekma.id)
 
     // nastopi
     const n = vir.nastopi(z)
@@ -441,13 +436,12 @@ for (const id of ids) {
       })
     }
     // Zadnja varovalka pri soimenjakih: dva nastopa ne smeta pokazati na
-    // istega igralca. Baza to zavrne in cela tekma ostane brez enega samega
-    // nastopa — z `imported_at` in videti uvozena. Tako je pri Niko Zelezniki
-    // (trije "Potocnik Matic") tiho izpadlo enajst arhivskih tekem.
+    // istega igralca, sicer baza zavrne vse nastope na tekmi.
     //
     // Pripisa ne moremo vedno uganiti, izgubiti tekme pa ne smemo. Zato
-    // drugemu nastopu naredimo svoj zapis in to zapisemo med opozorila, da
-    // administrator vidi, kje je pripis negotov.
+    // drugemu nastopu priredimo prostega soimenjaka in sele, ce ga ni,
+    // ustvarimo novega. Menjava dresov sicer razmnozi iste ljudi. Opozorilo
+    // ostane tudi ob ponovni uporabi, saj administrator mora videti negotovost.
     const videni = new Set()
     for (let i = 0; i < vrstice.length; i++) {
       const v = vrstice[i]
@@ -456,30 +450,56 @@ for (const id of ids) {
         continue
       }
       const x = n[i]
-      const { priimek, ime } = razdeliIme(x.ime)
-      const { data: nov, error: eNov } = await db
+      const { data: soimenjaki, error: eSoimenjaki } = await db
         .from('players')
-        .insert({
-          competition_id: tekmovanje.id,
-          team_id: v.team_id,
-          full_name: x.ime,
-          last_name: priimek,
-          first_name: ime,
-          shirt_number: x.st,
-          position: x.vratar ? 'GK' : null,
-          position_source: x.vratar ? 'zapisnik' : 'neznano',
-        })
         .select('id')
-        .single()
-      if (eNov) throw new Error(`soimenjak ${x.ime}: ${eNov.message}`)
+        .eq('competition_id', tekmovanje.id)
+        .eq('team_id', v.team_id)
+        .eq('full_name', x.ime)
+        .order('id')
+      if (eSoimenjaki) throw new Error(`soimenjak ${x.ime}: ${eSoimenjaki.message}`)
+      // Upostevamo tudi poznejse vrstice, da jim popravilo ne vzame igralca.
+      let nov = (soimenjaki ?? []).find((p) => !zasedeni.has(p.id))
+      const novZapis = !nov
+      if (nov) {
+        const { error: eDres } = await db
+          .from('players')
+          .update({ shirt_number: x.st })
+          .eq('id', nov.id)
+        if (eDres) throw new Error(`soimenjak ${x.ime}: ${eDres.message}`)
+      } else {
+        const { priimek, ime } = razdeliIme(x.ime)
+        const { data, error: eNov } = await db
+          .from('players')
+          .insert({
+            competition_id: tekmovanje.id,
+            team_id: v.team_id,
+            full_name: x.ime,
+            last_name: priimek,
+            first_name: ime,
+            shirt_number: x.st,
+            position: x.vratar ? 'GK' : null,
+            position_source: x.vratar ? 'zapisnik' : 'neznano',
+          })
+          .select('id')
+          .single()
+        if (eNov) throw new Error(`soimenjak ${x.ime}: ${eNov.message}`)
+        nov = data
+      }
       v.player_id = nov.id
       videni.add(nov.id)
+      zasedeni.add(nov.id)
+      // Naslednja tekma mora uporabiti popravljeni pripis, ne starega trka.
+      igralci.set(`${v.team_id}|${x.ime}#${x.st}`, nov.id)
       idPoStevilki.set(`${x.ekipaIdx}|${x.st}`, nov.id)
       z.opozorila.push(
-        `soimenjaka ${x.ime} (dres ${x.st}) ni bilo mogoče ločiti — ustvarjen nov zapis`,
+        `soimenjaka ${x.ime} (dres ${x.st}) ni bilo mogoče ločiti — ${novZapis ? 'ustvarjen nov zapis' : 'uporabljen prost soimenjak'}`,
       )
     }
 
+    // Napaka pri pripravi ne sme izbrisati prejsnjih nastopov.
+    const { error: eIzbris } = await db.from('appearances').delete().eq('match_id', tekma.id)
+    if (eIzbris) throw new Error(eIzbris.message)
     const { error: eNastopi } = await db.from('appearances').insert(vrstice)
     if (eNastopi) throw new Error(eNastopi.message)
 
