@@ -19,6 +19,7 @@ import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'node:fs'
 import { tekmovanje as najdiTekmovanje } from './tekmovanje.mjs'
 import { vseVrstice } from './strani.mjs'
+import { premakniProti, NAJVECJI_TEDENSKI_PREMIK } from './premik-cene.mjs'
 
 const NAJNIZJA = 4.0
 const NAJVISJA = 12.0
@@ -85,6 +86,13 @@ if (!SERVICE) {
 const db = createClient(BASE, SERVICE, { auth: { persistSession: false } })
 
 const sezona = arg('sezona')
+// Tedenski zagon: cene ne postavi na novo, ampak jih priblizuje izracunani —
+// najvec za `--najvec` (privzeto 1.0) na zagon. Brez tega bi igralec, ki je
+// jeseni pri 4.5 nabral minute, cez noc stal 9.0, uporabnik pa ga ima v ekipi
+// po stari ceni. Sidro borze (`value_start`) potuje z njim, sicer bi cena
+// takoj trcila ob mejo 3.0 od sidra.
+const tedensko = process.argv.includes('--tedensko')
+const najvecPremik = Number(arg('najvec', NAJVECJI_TEDENSKI_PREMIK))
 const tekmovanje = await najdiTekmovanje(db, arg('tekmovanje', 'clani'))
 console.log(`Tekmovanje: ${tekmovanje.name}`)
 
@@ -200,6 +208,7 @@ const zaokrozi = (v) => Math.round(v * 2) / 2 // na 0.5 natančno
 
 let posodobljenih = 0
 let zaklenjenih = 0
+const premaknjenih = []
 const razpored = new Map()
 
 for (const p of igralci ?? []) {
@@ -237,6 +246,18 @@ for (const p of igralci ?? []) {
   const popravek = { value: vrednost }
   if (p.value_start == null) popravek.value_start = vrednost
 
+  if (tedensko) {
+    const stara = Number(p.value)
+    vrednost = premakniProti(stara, vrednost, najvecPremik)
+    popravek.value = vrednost
+    if (vrednost === stara) continue
+    // Sidro potuje z isto razliko: cena, ki se je pomaknila, mora imeti okoli
+    // sebe enak manevrski prostor kot prej, sicer bi borza takoj obstala.
+    if (p.value_start != null)
+      popravek.value_start = Math.round((Number(p.value_start) + (vrednost - stara)) * 2) / 2
+    premaknjenih.push({ ime: p.full_name, iz: stara, v: vrednost })
+  }
+
   const { error: eUpd } = await db
     .from('players')
     .update(popravek)
@@ -246,6 +267,13 @@ for (const p of igralci ?? []) {
 }
 
 console.log(`\nPosodobljenih: ${posodobljenih}, zaklenjenih (ročno): ${zaklenjenih}`)
+
+if (tedensko) {
+  premaknjenih.sort((a, b) => Math.abs(b.v - b.iz) - Math.abs(a.v - a.iz))
+  console.log(`Premaknjenih cen: ${premaknjenih.length} (največ ${najvecPremik} na zagon)`)
+  for (const x of premaknjenih.slice(0, 10))
+    console.log(`  ${x.iz.toFixed(1)} → ${x.v.toFixed(1)}  ${x.ime}`)
+}
 
 console.log('\nPorazdelitev vrednosti:')
 for (const v of [...razpored.keys()].sort((a, b) => a - b))

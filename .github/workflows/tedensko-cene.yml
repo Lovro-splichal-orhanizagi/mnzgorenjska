@@ -1,0 +1,58 @@
+name: Tedensko prevrednotenje
+
+# Cena je izracunana ob postavitvi lige, med sezono pa jo premika borza:
+# najvec ±0.3 na krog in nikoli vec kot 3.0 od `value_start`. Kdor je ob
+# postavitvi imel premalo minut, je dobil privzeto 4.5 — in ce je pozneje
+# postal nosilec igre, ostane poceni vso sezono.
+#
+# Ta zagon zato enkrat tedensko izracuna ceno na novo in jo PRIBLIZA
+# izracunani, najvec za 1.0. Brez te omejitve bi igralec cez noc poskocil s
+# 4.5 na 9.0, uporabnik pa ga ima v ekipi po stari ceni in proracun je vezan
+# na ceno ob nakupu. Sidro borze potuje z isto razliko, sicer bi cena takoj
+# obstala ob meji.
+#
+# V torek, ker so takrat vikend zapisniki ze uvozeni, v bazi pa je v
+# ponedeljek ob 2:00 ze steklo tedensko potrjevanje pozicij (`uveljavi_pozicije`)
+# — pozicija odloca, koliko je vreden gol, zato mora biti prej znana.
+on:
+  schedule:
+    - cron: '0 4 * * 2'
+  workflow_dispatch:
+    inputs:
+      najvec:
+        description: 'Najvecji premik cene v enem zagonu'
+        required: false
+        default: '1.0'
+        type: string
+
+concurrency:
+  group: uvoz
+  cancel-in-progress: false
+
+jobs:
+  cene:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      NAJVEC: ${{ inputs.najvec || '1.0' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+
+      - name: Prevrednoti vklopljene lige
+        run: |
+          set -euo pipefail
+          node scripts/aktivna-tekmovanja.mjs > /tmp/lige.txt
+          echo "Lige: $(tr '\n' ' ' < /tmp/lige.txt)"
+          while IFS= read -r liga; do
+            [ -n "$liga" ] || continue
+            echo "::group::$liga"
+            node scripts/ovrednoti-igralce.mjs --tekmovanje "$liga" --tedensko --najvec "$NAJVEC"
+            echo "::endgroup::"
+          done < /tmp/lige.txt

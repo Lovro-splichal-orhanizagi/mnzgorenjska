@@ -36,6 +36,8 @@ import { caka, brezAsistencePotrjeno, PRAG_ASISTENCE_PRIVZETO } from '../src/com
 import { adaptivniPrag } from '../src/pages/Pozicije'
 import { razcleniRazpored, datum, sezonaIz } from './razpored.mjs'
 import { vseVrstice } from './strani.mjs'
+import { premakniProti, NAJVECJI_TEDENSKI_PREMIK } from './premik-cene.mjs'
+import { oceniPripravljenost } from '../src/lib/pripravljenost'
 import { readFileSync } from 'node:fs'
 
 let napak = 0
@@ -633,6 +635,74 @@ preveri(
     await vseVrstice(async () => ({ data: null, error: { message: 'baza je padla' } }))
   } catch (e) { padlo = e.message === 'baza je padla' }
   preveri('strani: napaka se ne poje tiho', padlo)
+}
+
+// --- prevrednotenje ne sme skakati ------------------------------------------
+// Borza premakne ceno najvec za 0.3 na krog in nikoli vec kot 3.0 od
+// `value_start`. Prevrednotenje pa jo izracuna na novo — brez omejitve bi
+// igralca s 4.5 cez noc prestavilo na 9.0, uporabnik pa ga ima v ekipi po
+// stari ceni in proracun je vezan na ceno ob nakupu.
+{
+  preveri('premik: majhna razlika gre do cilja', premakniProti(5.0, 5.5) === 5.5,
+    String(premakniProti(5.0, 5.5)))
+  preveri('premik: velik skok navzgor je omejen', premakniProti(4.5, 9.0) === 5.5,
+    String(premakniProti(4.5, 9.0)))
+  preveri('premik: velik skok navzdol je omejen', premakniProti(9.0, 4.5) === 8.0,
+    String(premakniProti(9.0, 4.5)))
+  preveri('premik: brez razlike ostane isto', premakniProti(6.0, 6.0) === 6.0)
+  preveri('premik: zaokrozi na 0.5', premakniProti(5.0, 5.3) === 5.5,
+    String(premakniProti(5.0, 5.3)))
+  preveri('premik: meja se da nastaviti', premakniProti(4.0, 12.0, 0.5) === 4.5,
+    String(premakniProti(4.0, 12.0, 0.5)))
+  preveri('premik: privzeta meja je 1.0', NAJVECJI_TEDENSKI_PREMIK === 1.0)
+
+  // Po dovolj tednih mora cena cilj vseeno doseci — omejitev upocasni, ne ustavi.
+  let c = 4.5
+  for (let i = 0; i < 10; i++) c = premakniProti(c, 9.0)
+  preveri('premik: po desetih tednih doseze cilj', c === 9.0, String(c))
+}
+
+// --- pripravljenost lige na vklop -------------------------------------------
+// Liga, v kateri stane vsak igralec 4.5, nima igre: 15 x 4.5 = 67.5 pri
+// proracunu 100 in vsaka ekipa je enaka. Zato vklop stoji za temi preverbami.
+{
+  const zdrava = {
+    aktivnih: 400, privzetih: 200, klubov: 12, najvisjaCena: 12,
+    poPozicijah: { GK: 30, DEF: 120, MID: 130, FWD: 70 },
+    nastopovSKlopi: 1200, golovBrezNastopa: 0, krogovTekoce: 22,
+  }
+  const o = oceniPripravljenost(zdrava)
+  preveri('pripravljenost: zdrava liga je pripravljena', o.pripravljena,
+    o.tezave.map((t) => t.kaj).join('; '))
+
+  const vsiPrivzeti = oceniPripravljenost({ ...zdrava, privzetih: 380, najvisjaCena: 4.5 })
+  preveri('pripravljenost: cenik brez razlik ustavi vklop', !vsiPrivzeti.pripravljena)
+  preveri('pripravljenost: pove, da so cene privzete',
+    vsiPrivzeti.tezave.some((t) => t.kljuc === 'cene'),
+    vsiPrivzeti.tezave.map((t) => t.kljuc).join(','))
+
+  // Menjave: ce jih razclenjevalnik ne prebere, ima vsak 90 minut in nihce ne
+  // pride s klopi. To je bilo pri MNZ Ljubljana in ni javilo nicesar.
+  const brezKlopi = oceniPripravljenost({ ...zdrava, nastopovSKlopi: 0 })
+  preveri('pripravljenost: nic nastopov s klopi ustavi vklop', !brezKlopi.pripravljena)
+  preveri('pripravljenost: pove, da menjave niso prebrane',
+    brezKlopi.tezave.some((t) => t.kljuc === 'menjave'))
+
+  const goliBrez = oceniPripravljenost({ ...zdrava, golovBrezNastopa: 12 })
+  preveri('pripravljenost: gol brez nastopa strelca ustavi vklop', !goliBrez.pripravljena)
+
+  const malo = oceniPripravljenost({ ...zdrava, klubov: 3 })
+  preveri('pripravljenost: premalo klubov za kader', !malo.pripravljena,
+    malo.tezave.map((t) => t.kljuc).join(','))
+
+  const brezVratarjev = oceniPripravljenost({ ...zdrava, poPozicijah: { ...zdrava.poPozicijah, GK: 1 } })
+  preveri('pripravljenost: premalo vratarjev', !brezVratarjev.pripravljena)
+
+  const brezKrogov = oceniPripravljenost({ ...zdrava, krogovTekoce: 0 })
+  preveri('pripravljenost: brez krogov tekoce sezone', !brezKrogov.pripravljena)
+
+  preveri('pripravljenost: vsaka tezava ima razlago',
+    vsiPrivzeti.tezave.every((t) => t.kaj && t.zakaj))
 }
 
 // --- viri ------------------------------------------------------------------

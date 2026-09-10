@@ -1,0 +1,103 @@
+name: Uvoz lige (rocno)
+
+# Postavitev NOVE lige: arhiv prejsnjih sezon, razpored, tekoca sezona,
+# pozicije in cene — vse proti produkciji, s kljucem, ki nikoli ne zapusti
+# GitHuba.
+#
+# Arhiv je bistven: cena je percentil znotraj lige, igralec pod 270 minutami
+# pa dobi privzeto 4.5. Liga brez arhiva ima vse igralce po isti ceni in prvi
+# teden nima igre. Ena sezona ni vedno dovolj — pri majhni ligi (devet klubov)
+# navrzi dve, `ovrednoti-igralce` pa jih sesteje.
+#
+# Sifra lige pripada SEZONI, ne ligi. Tekoca je v `competitions.source_league_code`,
+# arhivske se podajo tu (glej tabelo v CLAUDE.md).
+on:
+  workflow_dispatch:
+    inputs:
+      liga:
+        description: 'Slug tekmovanja (npr. lj-1-liga)'
+        required: true
+        type: string
+      arhiv:
+        description: 'Sifre arhivskih sezon, locene z vejico (npr. 1904,1804). Prazno = brez arhiva.'
+        required: false
+        type: string
+      tekoca:
+        description: 'Uvozi tudi razpored in zapisnike tekoce sezone'
+        required: false
+        type: boolean
+        default: true
+      cene:
+        description: 'Po uvozu preracunaj pozicije in cene'
+        required: false
+        type: boolean
+        default: true
+
+concurrency:
+  group: uvoz
+  cancel-in-progress: false
+
+jobs:
+  uvoz:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      LIGA: ${{ inputs.liga }}
+      ARHIV: ${{ inputs.arhiv }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+
+      - name: Predpomnilnik zapisnikov
+        uses: actions/cache@v4
+        with:
+          path: scripts/.predpomnilnik
+          key: zapisniki-${{ github.run_id }}
+          restore-keys: zapisniki-
+
+      # Liga mora obstajati, sicer se skripte ustavijo sele na pol poti.
+      - name: Preveri, da liga obstaja
+        run: |
+          set -euo pipefail
+          node scripts/aktivna-tekmovanja.mjs --vsa > /tmp/vse-lige.txt
+          if ! grep -qx "$LIGA" /tmp/vse-lige.txt; then
+            echo "Lige \"$LIGA\" ni. Na voljo:"; cat /tmp/vse-lige.txt; exit 1
+          fi
+
+      - name: Arhiv prejsnjih sezon
+        if: inputs.arhiv != ''
+        run: |
+          set -euo pipefail
+          echo "$ARHIV" | tr ',' '\n' | while IFS= read -r sifra; do
+            sifra=$(echo "$sifra" | tr -d '[:space:]')
+            [ -n "$sifra" ] || continue
+            echo "::group::arhiv $sifra"
+            node scripts/uvoz-zapisnikov.mjs --tekmovanje "$LIGA" --liga "$sifra"
+            echo "::endgroup::"
+          done
+
+      - name: Razpored in zapisniki tekoce sezone
+        if: inputs.tekoca
+        run: |
+          set -euo pipefail
+          node scripts/uvoz-razporeda.mjs   --tekmovanje "$LIGA" --pisi
+          node scripts/uvoz-delegiranja.mjs --tekmovanje "$LIGA" --pisi
+          node scripts/uvoz-zapisnikov.mjs  --tekmovanje "$LIGA"
+
+      - name: Pozicije in cene
+        if: inputs.cene
+        run: |
+          set -euo pipefail
+          node scripts/ugani-pozicije.mjs    --tekmovanje "$LIGA" --pisi
+          node scripts/ovrednoti-igralce.mjs --tekmovanje "$LIGA"
+
+      # Brez tega bi lahko ligo vklopili s cenikom, v katerem stane vsak
+      # igralec 4.5 — 15 x 4.5 = 67.5 pri proracunu 100 in nobene izbire.
+      - name: Ali je liga pripravljena na vklop
+        run: node scripts/pripravljenost-lige.mjs --tekmovanje "$LIGA"

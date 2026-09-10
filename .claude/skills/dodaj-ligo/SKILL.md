@@ -116,6 +116,15 @@ klubov) v eni sezoni nabere premalo minut. Takrat uvozi še eno sezono nazaj in
 
 ### Preveri, preden vklopiš
 
+Odgovor da skripta — merila so v `src/lib/pripravljenost.ts`, uporablja jih
+tudi delovni tok in stran za administracijo:
+
+```bash
+node scripts/pripravljenost-lige.mjs --tekmovanje <slug>
+```
+
+Konča se z napako in našteje, kaj manjka. Ročno pa tako:
+
 ```sql
 select c.slug,
        count(*) filter (where p.active) aktivnih,
@@ -152,6 +161,14 @@ select count(*) from goals g join matches m on m.id = g.match_id
                    where a.player_id = g.scorer_id and a.match_id = g.match_id);
 ```
 
+## Uvoz proti produkciji
+
+Ne prek terminala s produkcijskim ključem, ampak z delovnim tokom
+**Uvoz lige (rocno)** (`workflow_dispatch`) — ključ tako nikoli ne zapusti
+GitHuba. Vnese se slug lige in šifre arhivskih sezon (z vejico ločene, npr.
+`1904,1804`). Zadnji korak je preverba pripravljenosti, zato zagon pade, če
+cenik ni igriv.
+
 ## 5. Vklop
 
 ```sql
@@ -160,6 +177,19 @@ update competitions set active = true where slug = '<slug>';
 
 Nočni uvoz seznam lig prebere iz baze (`scripts/aktivna-tekmovanja.mjs`), zato
 delovnega toka ni treba spreminjati — nova liga se začne uvažati sama.
+
+## Cene med sezono
+
+Ob postavitvi je cena izračunana, potem pa jo premika **borza**: največ ±0.3
+na krog in nikoli več kot 3.0 od `value_start`. Kdor je ob postavitvi imel
+premalo minut, ima 4.5 — in če pozneje postane nosilec igre, ostane poceni.
+
+Zato teče **tedensko prevrednotenje** (`tedensko-cene.yml`, torek). Cene ne
+postavi na novo, ampak jih **približa** izračunani, največ za 1.0 na zagon
+(`ovrednoti-igralce --tedensko --najvec N`). Brez te omejitve bi igralec čez
+noč poskočil s 4.5 na 9.0, uporabnik pa ga ima v ekipi po stari ceni in
+proračun je vezan na ceno ob nakupu. Sidro borze potuje z isto razliko, sicer
+bi cena takoj obstala ob meji.
 
 ## Pasti, ki niso v korakih
 

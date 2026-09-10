@@ -3496,6 +3496,7 @@ export type Database = {
         Returns: Json
       }
       skupaj_uporabnikov: { Args: never; Returns: number }
+      stanje_lige: { Args: { p_competition_id: number }; Returns: Json }
       tekmovanje_id: { Args: { p_slug: string }; Returns: number }
       tocke_za_nastop: {
         Args: {
