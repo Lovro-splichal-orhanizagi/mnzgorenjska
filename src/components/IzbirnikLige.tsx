@@ -108,7 +108,7 @@ export default function IzbirnikLige() {
   const zveza = pokaziZvezo(tekmovanja) ? tekmovanje?.federation_short : null
 
   return (
-    <div className="relative min-w-0 shrink" ref={ovoj}>
+    <div className="relative shrink-0" ref={ovoj}>
       <button
         onClick={() => setOdprt(!odprt)}
         aria-haspopup="listbox"
