@@ -103,9 +103,26 @@ export default function UpravljanjeLig() {
     nalozi()
   }, [nalozi])
 
-  const ocenaZa = (l: Liga): Ocena | null => {
+  // Kadar stanja ne poznamo (funkcije `stanje_lige` ni ali je poizvedba
+  // padla), ligo raje NE vklopimo. Prej je manjkajoče stanje pomenilo, da
+  // zadržkov ni — varovalka je tiho izginila prav takrat, ko je nekaj narobe.
+  const NEZNANO: Ocena = {
+    pripravljena: false,
+    odstotekPrivzetih: 100,
+    tezave: [
+      {
+        kljuc: 'stanje',
+        kaj: 'Stanja lige ni bilo mogoče prebrati.',
+        zakaj:
+          'Brez njega ni mogoče presoditi, ali je cenik igriv. Preveri, ali je migracija ' +
+          'za `stanje_lige` uveljavljena.',
+      },
+    ],
+  }
+
+  const ocenaZa = (l: Liga): Ocena => {
     const s = stanja[l.id]
-    if (!s) return null
+    if (!s) return NEZNANO
     return oceniPripravljenost({
       aktivnih: s.aktivnih,
       privzetih: s.privzetih,
@@ -122,7 +139,7 @@ export default function UpravljanjeLig() {
     setNapaka(null)
     setSporocilo(null)
     const o = ocenaZa(l)
-    if (!l.active && !vsiljeno && o && !o.pripravljena) {
+    if (!l.active && !vsiljeno && !o.pripravljena) {
       setNapaka(`Lige "${l.name}" ni mogoče vklopiti — najprej odpravi zadržke spodaj.`)
       return
     }
@@ -209,11 +226,11 @@ export default function UpravljanjeLig() {
 
                 <button
                   onClick={() => preklopi(l)}
-                  disabled={delam === l.id || (!l.active && Boolean(o && !o.pripravljena))}
+                  disabled={delam === l.id || (!l.active && !o.pripravljena)}
                   className="rounded-lg bg-white/10 px-2.5 py-1.5 text-xs font-bold
                              hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-40"
                   title={
-                    !l.active && o && !o.pripravljena
+                    !l.active && !o.pripravljena
                       ? 'Liga ni pripravljena — glej zadržke'
                       : undefined
                   }
@@ -224,7 +241,7 @@ export default function UpravljanjeLig() {
 
               {odprto && (
                 <div className="space-y-3 border-t border-white/10 p-3 text-sm">
-                  {o && !o.pripravljena && (
+                  {!o.pripravljena && (
                     <div className="space-y-1.5">
                       <p className="font-semibold text-amber-200">
                         Zadržki pred vklopom ({o.tezave.length})
@@ -246,7 +263,7 @@ export default function UpravljanjeLig() {
                     </div>
                   )}
 
-                  {o?.pripravljena && (
+                  {o.pripravljena && (
                     <p className="text-gnl-300">
                       Pripravljena. Privzeto ceno ima {o.odstotekPrivzetih} % igralcev,
                       najvišja je {Number(s?.najvisja_cena ?? 0)}.
