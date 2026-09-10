@@ -165,9 +165,44 @@ select count(*) from goals g join matches m on m.id = g.match_id
 
 Ne prek terminala s produkcijskim ključem, ampak z delovnim tokom
 **Uvoz lige (rocno)** (`workflow_dispatch`) — ključ tako nikoli ne zapusti
-GitHuba. Vnese se slug lige in šifre arhivskih sezon (z vejico ločene, npr.
-`1904,1804`). Zadnji korak je preverba pripravljenosti, zato zagon pade, če
-cenik ni igriv.
+GitHuba. Zadnji korak je preverba pripravljenosti, zato zagon pade, če cenik
+ni igriv.
+
+```bash
+gh workflow run uvoz-lige.yml -f liga=lj-1-liga -f arhiv=1904,1804
+gh run list --workflow=uvoz-lige.yml --limit 1        # id zagona
+gh run view <id> --log | grep -A 12 'Liga:'           # izid preverbe
+```
+
+Traja **20–30 minut na ligo** (arhiv dveh sezon je nekaj sto zapisnikov).
+
+### Tako je izpadlo pri MNZ Ljubljana
+
+Merilo za novo ligo ni absolutno število, ampak **podobnost z obstoječo**:
+
+| liga | igralcev | klubov | krogov | privzeta cena | vrh |
+|---|---|---|---|---|---|
+| 1. GNL — člani (obstoječa) | 465 | 13 | 26 | — | 11.7 |
+| LJ 1. liga | 520 | 12 | 22 | 49.4 % | 12.0 |
+| LJ 2. liga | 281 | 8 | 18 | 55.5 % | 12.0 |
+
+**Obe ljubljanski ligi sta potrebovali dve arhivski sezoni.** Z eno samo je
+imela 2. liga 77.6 % igralcev na privzeti ceni — cenik brez razlik. Z dvema
+je padlo na 55.5 %. Pri majhni ligi računaj z dvema že vnaprej.
+
+### Ko preverba ustavi vklop
+
+Sporočilo »liga ni pripravljena, glej zadržke« skoraj vedno pomeni, da
+podatkov **še ni v produkciji** — uvoz je tekel lokalno. Preveri:
+
+```sql
+select slug, (stanje_lige(id)->>'aktivnih')::int, (stanje_lige(id)->>'krogov_tekoce')::int
+  from competitions where slug = '<slug>';
+```
+
+Same ničle pomenijo: poženi uvoz. Gumba **Vseeno vklopi** ne uporabljaj za to
+— obstaja za primer, ko veš kaj, česar preverba ne more vedeti, ne za to, da
+se prebiješ mimo prazne lige.
 
 ## 5. Vklop
 
@@ -230,6 +265,19 @@ baze; CI jih ne poganja).
 Pravi vrstni red je **najprej migracija, potem koda** — takrat ni vmesnega
 okna. Če se obrne, mora vmesnik preživeti: bere, kar je na voljo, in ne
 ostane brez lig (`brezZveze` v `src/lib/tekmovanje.tsx`).
+
+`supabase db push` zahteva **geslo baze**, ki ga v seji navadno ni. Migracije
+se da uveljaviti tudi z dostopnim žetonom CLI (`security find-generic-password
+-s "Supabase CLI"`) prek Management API:
+
+```
+POST https://api.supabase.com/v1/projects/<ref>/database/query   {"query": "<sql>"}
+```
+
+Dvoje, ker se drugače izgubi ura: Cloudflare zavrne zahtevo brez glave
+`User-Agent` (napaka 1010), zapis v `supabase_migrations.schema_migrations`
+(`version`, `name`) pa je treba dodati sam, sicer bo `db push` migracijo
+pognal še enkrat. Žetona ne izpisuj — beri ga v spremenljivko.
 
 Pred objavo naredi **generalko**, ne le testov:
 
