@@ -73,6 +73,11 @@ jobs:
             # objavlja, to pove sama in se konča brez napake.
             node scripts/uvoz-registracij.mjs --tekmovanje "$liga" || true
             node scripts/ugani-pozicije.mjs   --tekmovanje "$liga" --pisi --samo-nove
+            # Igralci, ki jih zapisnik prvic pripelje v bazo, dobijo sidro
+            # borze (`value_start`). Obstojecim ne diramo — polno ovrednoto
+            # rocno pozene admin, ko oceni, da so tocke stabilizirane. Brez
+            # tega je novi Ljubljancan ostal pri privzeti 4.5 do konca sezone.
+            node scripts/ovrednoti-igralce.mjs --tekmovanje "$liga" --samo-nove
             echo "::endgroup::"
           done < /tmp/lige.txt
 

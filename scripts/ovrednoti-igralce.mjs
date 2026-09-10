@@ -92,9 +92,14 @@ const sezona = arg('sezona')
 // po stari ceni. Sidro borze (`value_start`) potuje z njim, sicer bi cena
 // takoj trcila ob mejo 3.0 od sidra.
 const tedensko = process.argv.includes('--tedensko')
+// `--samo-nove` predela le igralce brez `value_start` — tiste, ki jih uvoz
+// prvič pripelje v bazo. Obstoječih cen se ne dotakne. Uporabno v tedenskem
+// cronu, kjer polna ovrednota lahko premika stare cene skokovito, mi pa
+// samo hočemo, da vsakič novi rekruti dobijo pravo sidro.
+const samoNove = process.argv.includes('--samo-nove')
 const najvecPremik = Number(arg('najvec', NAJVECJI_TEDENSKI_PREMIK))
 const tekmovanje = await najdiTekmovanje(db, arg('tekmovanje', 'clani'))
-console.log(`Tekmovanje: ${tekmovanje.name}`)
+console.log(`Tekmovanje: ${tekmovanje.name}${samoNove ? ' — samo novi' : ''}`)
 
 const igralci = await vseVrstice((od, do_) =>
   db
@@ -216,6 +221,9 @@ for (const p of igralci ?? []) {
     zaklenjenih++
     continue
   }
+  // V nacinu "samo novi" pustimo obstojece cene pri miru — zanima nas samo
+  // sidro (value_start) za igralce, ki so ravno prisli v bazo.
+  if (samoNove && p.value_start != null) continue
 
   const koda = p.position ?? 'MID'
   const [spodnja, zgornja] = MEJE[koda] ?? [NAJNIZJA, NAJVISJA]
@@ -241,10 +249,12 @@ for (const p of igralci ?? []) {
   razpored.set(vrednost, (razpored.get(vrednost) ?? 0) + 1)
 
   // `value_start` je sidro borze (cena se od njega lahko oddalji največ 3.0).
-  // Postavimo ga le, kadar ga še ni — sicer bi vsak ponovni zagon sidro
-  // premaknil in bi borza dobila nov manevrski prostor.
+  // Postavimo ga le, kadar ga še ni IN imamo dovolj podatkov — sicer bi
+  // novega Ljubljancana z 90 min zasidrali na 4.5 in do konca sezone borza
+  // ne bi imela manevrskega prostora, kljub temu da bo cez cez pet krogov
+  // pokazal, da spada v 8.0-9.0 razred.
   const popravek = { value: vrednost }
-  if (p.value_start == null) popravek.value_start = vrednost
+  if (p.value_start == null && ocena != null) popravek.value_start = vrednost
 
   if (tedensko) {
     const stara = Number(p.value)
