@@ -162,7 +162,11 @@ for (const p of igralci ?? []) {
   const na90 = (v) => v / (s.minutes / 90)
   const goliNa90 = na90(s.goals)
   const csDelez = s.clean_sheets / Math.max(1, s.matches)
-  const kartoniNa90 = na90(s.yellow_cards + 3 * s.red_cards)
+  // Rumene karte namenoma tehtamo malo (0.3 namesto 1). Branilec, ki v
+  // sezoni nabere 10 rumenih, pogosto ni "slab" — ampak taksts se je
+  // krcal in delal obrambe. Rdece so drugacna zgodba (izgubljena tekma
+  // za soigralce), zato ostajajo pri utezi 3.
+  const kartoniNa90 = na90(0.3 * s.yellow_cards + 3 * s.red_cards)
 
   const ocena =
     goliNa90 * 3.0 + // napadalni prispevek

@@ -397,7 +397,7 @@ export default function Administracija() {
         Administracija
         {tekmovanje && (
           <span className="ml-2 align-middle text-base font-bold text-slate-500">
-            {tekmovanje.short_name?.toLowerCase()}
+            {tekmovanje.short_name}
           </span>
         )}
       </h1>

@@ -240,7 +240,7 @@ export default function Igralci() {
         <h1 className="text-2xl font-black naslov sm:text-3xl">
           Igralci
           {tekmovanje?.short_name
-            ? ` — ${tekmovanje.short_name.toLowerCase()}`
+            ? ` — ${tekmovanje.short_name}`
             : ''}
         </h1>
         <p className="mt-1 text-sm text-slate-400">

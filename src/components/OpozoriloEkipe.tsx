@@ -94,7 +94,7 @@ export default function OpozoriloEkipe() {
     return null
   if (imaEkipo === null) return null
 
-  const oznakaLige = tekmovanje?.short_name?.toLowerCase()
+  const oznakaLige = tekmovanje?.short_name
 
   // 1) Uporabnik ekipe še sploh nima
   if (!imaEkipo) {

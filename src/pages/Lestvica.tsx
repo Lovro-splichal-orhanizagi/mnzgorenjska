@@ -171,7 +171,7 @@ export default function Lestvica() {
         <h1 className="text-3xl font-black naslov">
           Lestvica
           {tekmovanje?.short_name
-            ? ` — ${tekmovanje.short_name.toLowerCase()}`
+            ? ` — ${tekmovanje.short_name}`
             : ''}
         </h1>
         <p className="kartica p-6 text-center text-slate-400">
@@ -189,7 +189,7 @@ export default function Lestvica() {
       <h1 className="text-2xl font-black naslov sm:text-3xl">
         Lestvica
           {tekmovanje?.short_name
-            ? ` — ${tekmovanje.short_name.toLowerCase()}`
+            ? ` — ${tekmovanje.short_name}`
             : ''}
       </h1>
 

@@ -101,7 +101,10 @@ export default function IzbirnikLige() {
   // Ena sama liga: izbirati ni česa.
   if (tekmovanja.length < 2) return null
 
-  const oznaka = tekmovanje?.short_name ?? 'Liga'
+  // Polno ime lige (npr. "1. GNL — člani") namesto skrajšane kratice — po
+  // preklopu je jasno na prvi pogled, kje si. Ce je liga v drugi zvezi, zraven
+  // se okrasa zveze, ker "1. liga — clani" pri Ljubljani sicer ne pove nicesar.
+  const polnoIme = tekmovanje?.name ?? tekmovanje?.short_name ?? 'Izberi ligo'
   const zveza = pokaziZvezo(tekmovanja) ? tekmovanje?.federation_short : null
 
   return (
@@ -110,12 +113,21 @@ export default function IzbirnikLige() {
         onClick={() => setOdprt(!odprt)}
         aria-haspopup="listbox"
         aria-expanded={odprt}
-        className="flex items-center gap-1.5 whitespace-nowrap rounded-lg bg-white/5 px-2.5 py-1.5
-                   text-[11px] font-bold ring-1 ring-white/10 hover:bg-white/10 sm:text-xs"
+        // Preklopnik je bil premajhen — nov obiskovalec ga ni videl, kliknil
+        // je Igralce in nadrznil se je nad Ljubljancani na gorenjski lestvici.
+        // Zdaj: viden gumb z ambrasto obrobo, izrazitejsi napis in prefiks
+        // "Liga:" — po dveh dneh je jasno, kje si.
+        className="flex max-w-[70vw] items-center gap-1.5 whitespace-nowrap rounded-xl
+                   bg-amber-500/15 px-3 py-1.5 text-xs font-black ring-1 ring-amber-400/40
+                   shadow-sm shadow-amber-500/10 transition
+                   hover:bg-amber-500/25 hover:ring-amber-400/60 sm:max-w-none sm:text-sm sm:py-2"
       >
-        {zveza && <span className="text-slate-400">{zveza}</span>}
-        <span className="text-gnl-200">{oznaka}</span>
-        <span aria-hidden="true" className="text-slate-500">
+        <span className="hidden shrink-0 text-[10px] font-bold uppercase tracking-wide text-amber-300/80 sm:inline">
+          Liga:
+        </span>
+        {zveza && <span className="shrink-0 text-amber-200/80">{zveza}</span>}
+        <span className="truncate text-amber-100">{polnoIme}</span>
+        <span aria-hidden="true" className="shrink-0 text-amber-300/70">
           ▾
         </span>
       </button>

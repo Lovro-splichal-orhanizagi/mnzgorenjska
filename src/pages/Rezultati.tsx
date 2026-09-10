@@ -77,7 +77,7 @@ export default function Rezultati() {
         <h1 className="text-3xl font-black naslov">
           Rezultati
           {tekmovanje?.short_name
-            ? ` — ${tekmovanje.short_name.toLowerCase()}`
+            ? ` — ${tekmovanje.short_name}`
             : ''}
         </h1>
         <p className="max-w-2xl text-slate-400">
