@@ -171,6 +171,14 @@ cenik ni igriv.
 
 ## 5. Vklop
 
+Na strani **Administracija → Lige**. Vsaka liga pokaže število igralcev,
+klubov in krogov, gumb za vklop pa je onemogočen, dokler preverba ne gre
+skozi — zadržki so našteti z razlogom. Kdor ve, kaj dela, ima pod njimi
+izhod v sili.
+
+Tam se nastavijo tudi **pragovi glasovanja po ligi** (prazno polje pomeni
+globalno vrednost). Isto se da iz baze:
+
 ```sql
 update competitions set active = true where slug = '<slug>';
 ```

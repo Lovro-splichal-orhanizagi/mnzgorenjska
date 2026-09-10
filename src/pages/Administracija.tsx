@@ -5,6 +5,7 @@ import { useAuth } from '../lib/useAuth'
 import { prikazniIme, IME_POZICIJE, formatirajTocke, formatirajCeno } from '../lib/pomozno'
 import { POZICIJE, VELIKOST_EKIPE, STEVILO_PRVIH, MAX_IZ_KLUBA, VRSTNI_RED, poPozicijah } from '../lib/pravila'
 import { useTekmovanje } from '../lib/tekmovanje'
+import UpravljanjeLig from '../components/admin/UpravljanjeLig'
 
 export default function Administracija() {
   const { session, loading } = useAuth()
@@ -783,6 +784,8 @@ export default function Administracija() {
           Preračunaj vse kroge
         </button>
       </section>
+
+      <UpravljanjeLig />
 
       {/* uvoz */}
       <section className="kartica space-y-2 p-4">
