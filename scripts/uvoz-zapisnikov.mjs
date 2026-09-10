@@ -128,7 +128,7 @@ function razdeliIme(polno) {
  * zato ju v takem primeru ločimo še po številki dresa. Številke ne uporabimo
  * vedno, ker isti igralec med sezono lahko zamenja dres.
  */
-async function igralecId(teamId, polnoIme, { vratar, st, dvoumno = false }) {
+async function igralecId(teamId, polnoIme, { vratar, st, dvoumno = false, zasedeni = null }) {
   let kljuc = `${teamId}|${polnoIme}${dvoumno ? '#' + st : ''}`
   if (igralci.has(kljuc)) return igralci.get(kljuc)
 
@@ -172,7 +172,38 @@ async function igralecId(teamId, polnoIme, { vratar, st, dvoumno = false }) {
   // drugem. Zapisnik je najzanesljivejsi dokaz — ce nastopa za ta klub, je
   // njegov. Brez tega bi ga ustvarili na novo in bi bil v bazi dvakrat: enkrat
   // s statistiko in ceno, enkrat prazen.
-  if (!obstoj) {
+  // Soimenjaka na isti tekmi, dresa pa v bazi (se) ni. Stevilke dresov v
+  // amaterski ligi niso stalne, zato bi za vsako novo stevilko ustvarili nov
+  // zapis in ena oseba bi razpadla na sedem — `zdruzi-duplikate` pri vec kot
+  // treh zapisih ne zdruzuje, zato bi tak razpad ostal.
+  //
+  // Zato najprej porabimo obstojece soimenjake, ki na TEJ tekmi se niso
+  // zasedeni, in sele ko jih zmanjka, ustvarimo novega. Najvec zapisov na ime
+  // je tako toliko, kolikor jih je kdaj hkrati igralo — to je najboljsa ocena
+  // stevila resnicnih ljudi.
+  if (!obstoj && dvoumno && zasedeni) {
+    const { data: vsi } = await db
+      .from('players')
+      .select('id, position, position_source')
+      .eq('competition_id', tekmovanje.id)
+      .eq('team_id', teamId)
+      .eq('full_name', polnoIme)
+      .order('id')
+    const prost = (vsi ?? []).find((x) => !zasedeni.has(x.id))
+    if (prost) {
+      obstoj = prost
+      // Dres zapisemo, da ga naslednja tekma najde naravnost.
+      await db.from('players').update({ shirt_number: st }).eq('id', prost.id)
+    }
+  }
+
+  // `dvoumno` pomeni, da sta na TEJ tekmi nastopila dva soimenjaka. Takrat
+  // posvojitev spodaj ne pride v postev: edini obstojeci soimenjak je lahko
+  // pravi kvecjemu za enega od njiju, oba nastopa pa bi dobila isti
+  // `player_id`. Baza vstavljanje zavrne, tekma pa obvisi z `imported_at` in
+  // brez enega samega nastopa — tako je pri Niko Zelezniki, kjer so trije
+  // "Potocnik Matic", tiho izpadlo enajst arhivskih tekem.
+  if (!obstoj && !dvoumno) {
     const { data: drugje } = await db
       .from('players')
       .select('id, position, position_source, team_id, teams(name)')
@@ -279,6 +310,11 @@ console.log(`Berem seznam tekem: ${seznamUrl}`)
 const seznam = await prenesi(seznamUrl, `liga-${liga}.html`, true)
 let ids = [...new Set([...seznam.matchAll(/zapisnik=(\d+)/g)].map((m) => m[1]))]
 ids.sort((a, b) => Number(a) - Number(b))
+// `--zapisnik 105627` popravi eno samo tekmo. Ob napaki v pripisu (soimenjaki)
+// ostane tekma brez nastopov; ponovni uvoz cele lige bi mid-sezone premaknil
+// vec, kot je treba, zato se da popraviti natanko tisto, kar je pokvarjeno.
+const samoZapisnik = arg('zapisnik')
+if (samoZapisnik) ids = ids.filter((x) => x === String(samoZapisnik))
 if (omeji) ids = ids.slice(0, omeji)
 console.log(`Najdenih zapisnikov: ${ids.length}${ids.length ? ' — ' + ids.join(', ') : ''}`)
 
@@ -333,7 +369,9 @@ for (const id of ids) {
           played_on: z.datum,
           zapisnik_id: id,
           source_url: url,
-          imported_at: new Date().toISOString(),
+          // `imported_at` se postavi SELE, ko so nastopi in goli vpisani —
+          // sicer tekma ob spodleteli vstavitvi obvisi videti uvozena, v
+          // resnici pa je brez enega samega nastopa in nihce ne dobi tock.
           import_warnings: z.opozorila,
         },
         { onConflict: 'round_id,home_team_id,away_team_id' },
@@ -371,6 +409,7 @@ for (const id of ids) {
     const jeDvoumno = (x) => (stejIme.get(`${x.ekipaIdx}|${x.ime}`) ?? 0) > 1
 
     const idPoStevilki = new Map() // `${ekipaIdx}|${st}` -> player_id
+    const zasedeni = new Set() // igralci, ze porabljeni na TEJ tekmi
     const vrstice = []
     for (const x of n) {
       const tId = x.ekipaIdx === 0 ? domaciId : gostjeId
@@ -378,7 +417,9 @@ for (const id of ids) {
         vratar: x.vratar,
         st: x.st,
         dvoumno: jeDvoumno(x),
+        zasedeni,
       })
+      zasedeni.add(pId)
       idPoStevilki.set(`${x.ekipaIdx}|${x.st}`, pId)
       vrstice.push({
         match_id: tekma.id,
@@ -399,6 +440,46 @@ for (const id of ids) {
         clean_sheet: x.cleanSheet,
       })
     }
+    // Zadnja varovalka pri soimenjakih: dva nastopa ne smeta pokazati na
+    // istega igralca. Baza to zavrne in cela tekma ostane brez enega samega
+    // nastopa — z `imported_at` in videti uvozena. Tako je pri Niko Zelezniki
+    // (trije "Potocnik Matic") tiho izpadlo enajst arhivskih tekem.
+    //
+    // Pripisa ne moremo vedno uganiti, izgubiti tekme pa ne smemo. Zato
+    // drugemu nastopu naredimo svoj zapis in to zapisemo med opozorila, da
+    // administrator vidi, kje je pripis negotov.
+    const videni = new Set()
+    for (let i = 0; i < vrstice.length; i++) {
+      const v = vrstice[i]
+      if (!videni.has(v.player_id)) {
+        videni.add(v.player_id)
+        continue
+      }
+      const x = n[i]
+      const { priimek, ime } = razdeliIme(x.ime)
+      const { data: nov, error: eNov } = await db
+        .from('players')
+        .insert({
+          competition_id: tekmovanje.id,
+          team_id: v.team_id,
+          full_name: x.ime,
+          last_name: priimek,
+          first_name: ime,
+          shirt_number: x.st,
+          position: x.vratar ? 'GK' : null,
+          position_source: x.vratar ? 'zapisnik' : 'neznano',
+        })
+        .select('id')
+        .single()
+      if (eNov) throw new Error(`soimenjak ${x.ime}: ${eNov.message}`)
+      v.player_id = nov.id
+      videni.add(nov.id)
+      idPoStevilki.set(`${x.ekipaIdx}|${x.st}`, nov.id)
+      z.opozorila.push(
+        `soimenjaka ${x.ime} (dres ${x.st}) ni bilo mogoče ločiti — ustvarjen nov zapis`,
+      )
+    }
+
     const { error: eNastopi } = await db.from('appearances').insert(vrstice)
     if (eNastopi) throw new Error(eNastopi.message)
 
@@ -435,6 +516,18 @@ for (const id of ids) {
         if (eGoli) throw new Error(eGoli.message)
       }
     }
+
+    // Sele zdaj je tekma res uvozena. Skupaj z zigom zapisemo opozorila —
+    // med razclenjevanjem nastopov jih lahko pribudejo (negotov pripis
+    // soimenjaka), vrstica tekme pa je bila zapisana ze prej.
+    const { error: eKonec } = await db
+      .from('matches')
+      .update({
+        imported_at: new Date().toISOString(),
+        import_warnings: z.opozorila,
+      })
+      .eq('id', tekma.id)
+    if (eKonec) throw new Error(eKonec.message)
 
     uvozenih++
     if (z.opozorila.length)

@@ -22,6 +22,10 @@ on:
         description: 'Sifre arhivskih sezon, locene z vejico (npr. 1904,1804). Prazno = brez arhiva.'
         required: false
         type: string
+      zapisnik:
+        description: 'Samo ta zapisnik (popravilo ene tekme). Prazno = vsi.'
+        required: false
+        type: string
       tekoca:
         description: 'Uvozi tudi razpored in zapisnike tekoce sezone'
         required: false
@@ -46,6 +50,7 @@ jobs:
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       LIGA: ${{ inputs.liga }}
       ARHIV: ${{ inputs.arhiv }}
+      ZAPISNIK: ${{ inputs.zapisnik }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -78,7 +83,11 @@ jobs:
             sifra=$(echo "$sifra" | tr -d '[:space:]')
             [ -n "$sifra" ] || continue
             echo "::group::arhiv $sifra"
-            node scripts/uvoz-zapisnikov.mjs --tekmovanje "$LIGA" --liga "$sifra"
+            if [ -n "${ZAPISNIK:-}" ]; then
+              node scripts/uvoz-zapisnikov.mjs --tekmovanje "$LIGA" --liga "$sifra" --zapisnik "$ZAPISNIK"
+            else
+              node scripts/uvoz-zapisnikov.mjs --tekmovanje "$LIGA" --liga "$sifra"
+            fi
             echo "::endgroup::"
           done
 

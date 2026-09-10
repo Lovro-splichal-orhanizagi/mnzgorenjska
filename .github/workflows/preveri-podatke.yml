@@ -1,0 +1,35 @@
+name: Preverba podatkov
+
+# Vsaka huda napaka v tem projektu je bila TIHA: uvoz je porocal uspeh in
+# vpisal smeti, testi so bili zeleni, stran je izrisala stevilko. Enotski
+# testi tega ne ujamejo, ker koda naredi natanko to, kar ji pise.
+#
+# Ujame jih sele trditev o podatkih samih — in ta mora teci sama od sebe,
+# sicer je nihce ne pozene. Zato vsak dan po nocnem uvozu, ob tezavi pa
+# sporocilo na Discord.
+on:
+  schedule:
+    - cron: '30 6 * * *'
+  workflow_dispatch:
+  # Po uvozu zapisnikov: ce je uvoz kaj pokvaril, naj se izve takoj.
+  workflow_run:
+    workflows: ['Uvoz zapisnikov', 'Uvoz lige (rocno)']
+    types: [completed]
+
+jobs:
+  preveri:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Trditve o podatkih
+        run: node scripts/preveri-podatke.mjs --discord

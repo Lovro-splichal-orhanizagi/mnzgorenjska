@@ -234,6 +234,27 @@ noč poskočil s 4.5 na 9.0, uporabnik pa ga ima v ekipi po stari ceni in
 proračun je vezan na ceno ob nakupu. Sidro borze potuje z isto razliko, sicer
 bi cena takoj obstala ob meji.
 
+## Preverba podatkov
+
+`node scripts/preveri-podatke.mjs` trdi stvari, ki morajo držati v vsaki ligi,
+in se konča z napako, če katera ne drži. Teče vsak dan po nočnem uvozu
+(`preveri-podatke.yml`) in ob težavi javi na Discord.
+
+Dve pravili, ki sta se izkazali:
+
+- **Preverba mora znati sprožiti.** Vsako je treba preizkusiti z namerno
+  okvaro. Dve od mojih nista mogli sprožiti nikoli, ker isto stvar prepreči že
+  enolično kazalo v bazi — omejitev v bazi je boljša varovalka (pade ob
+  vpisu), preverba pa je bila prazna obljuba.
+- **Preverba, ki lažno alarmira, je slabša od nobene.** Prva različica je v
+  produkciji našla 5405 »težav«, od katerih ni bila nobena prava: v arhivu
+  posnetek točk namenoma odstopa za vrednost asistence, ker se stare sezone ne
+  osvežujejo. Zato točkovne preverbe gledajo samo tekočo sezono.
+
+Ekipo mora biti mogoče **sestaviti**: pozicije in klubi so lahko vsak zase v
+redu, pravilo o največ treh iz kluba in proračun pa se sekata. Skripta zato
+sestavi najcenejši veljaven kader in ga primerja s proračunom.
+
 ## Pasti, ki niso v korakih
 
 - **PostgREST vrne največ 1000 vrstic in tega ne pove.** `.limit(5000)` in
@@ -251,6 +272,21 @@ bi cena takoj obstala ob meji.
   zvezi štejeta v istem razponu.
 - **Migracijo, ki jo urejaš po prvem zagonu, preveri na prazni bazi.** Lokalna
   jo že ima uveljavljeno in napaka se pokaže šele pri drugem razvijalcu.
+- **Soimenjaki.** Če dva igralca z istim imenom igrata za isti klub, ju loči
+  dres — dokler ga v bazi ni. Takrat je star uvoz posvojil edinega
+  obstoječega in oba nastopa sta dobila isti `player_id`: baza je vstavljanje
+  zavrnila in tekma je obvisela z `imported_at` in **brez enega samega
+  nastopa**. Tako je pri Niko Železniki (trije »Potočnik Matic«) tiho izpadlo
+  enajst arhivskih tekem. Zdaj se najprej porabijo obstoječi soimenjaki, ki na
+  tej tekmi še niso zasedeni, sicer nastane nov zapis in tekma dobi opozorilo.
+  Pripisa ni vedno mogoče uganiti — izgubiti tekme pa ne smemo.
+- **Žig `imported_at` postavi šele, ko so nastopi in goli vpisani.** Sicer
+  tekma ob spodleteli vstavitvi izgleda uvožena in nihče ne dobi točk.
+- **`--zapisnik <id>`** popravi eno samo tekmo. Ponovni uvoz cele lige med
+  sezono premakne več, kot je treba.
+- **`ovrednoti-igralce` brez `--tedensko` med sezono ne poganjaj.** Cene
+  postavi na novo, `value_start` pa pusti pri miru — cena konča več kot 3.0
+  od sidra in borza obstane. Preverba to ujame (`cena-predalec-od-sidra`).
 - **Vmesnik mora preživeti neuveljavljeno migracijo.** Koda gre na Vercel,
   migracijo pa nekdo požene proti Supabase; če se vrstni red obrne, PostgREST
   zavrne poizvedbo z neznanimi stolpci in vmesnik ostane brez lig. Beri, kar
