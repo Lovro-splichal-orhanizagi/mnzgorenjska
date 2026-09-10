@@ -45,7 +45,7 @@ interface KrogPodatek {
 }
 
 export default function Domov() {
-  const { id: tekmovanjeId, tekmovanje } = useTekmovanje()
+  const { id: tekmovanjeId, tekmovanje, tekmovanja } = useTekmovanje()
   const zveza = imeZveze(tekmovanje)
   const [stat, setStat] = useState<Statistika | null>(null)
   const [zvezde, setZvezde] = useState<VrhIgralec[]>([])
@@ -225,6 +225,11 @@ export default function Domov() {
       )
       const cistoNove = (prihajajoce ?? []).filter(
         (m) =>
+          // Obe ekipi morata biti v ligi. V razporedu se znajde tudi vrstica
+          // z ekipo, ki jo `competition_teams` ne pozna (npr. tisti krog
+          // počiva) — brez tega filtra bi se izrisala tekma z "?".
+          klubPo[String(m.home_team_id)] &&
+          klubPo[String(m.away_team_id)] &&
           !uvozeniKljuc.has(
             `${m.home_team_id}-${m.away_team_id}-${m.played_on ?? ''}`,
           ),
@@ -338,6 +343,12 @@ export default function Domov() {
             ohranjene mreže, kartoni. Vse razen asistenc, ki jih določi
             skupnost.
           </p>
+          {tekmovanja.length > 1 && (
+            <p className="text-sm text-slate-400">
+              👉 Igraš lahko v več ligah — <strong>ligo izbereš zgoraj levo</strong>,
+              vsaka ima svojo ekipo in lestvico.
+            </p>
+          )}
           {/* Poziv za novince — v hero, da ga vidi vsak prvič obiskovalec. */}
           <div className="rounded-2xl border border-gnl-400/40 bg-gnl-500/10 p-3 text-sm text-gnl-100 backdrop-blur">
             🏁 <strong>Zamudil si štart? Nič hudega.</strong> Vsak krog ima
@@ -502,15 +513,24 @@ export default function Domov() {
         </section>
       )}
 
-      {/* igralec kroga in najboljši strelci — eden ob drugem */}
-      <div className="grid items-start gap-4 lg:grid-cols-2">
-        <div className="space-y-2">
-          {/* Igralec kroga — vertikalno zloženo na mobilnem, na sm+ ostane
-              horizontalni razpored. Prej 3-stolpicni grid: dolga imena in
-              zvezda so kartico razrezali na "zamaknjene" stolpce, ker je
-              ime v srednjem stolpcu bilo veliko sirse od ostalih dveh.
-              Zdaj: header (zvezda + oznaka), ime cez celo sirino, spodaj
-              klub+meta levo, tocke desno. */}
+      {/* Igralec kroga + tri sezonske lestvice.
+          Mobilno: vodoravni "carousel" — po eno kartico naenkrat, prst povleče
+          vstran (snap). Prej so se vse štiri zložile ena pod drugo in nastal je
+          en neskončen seznam "kot Excel".
+          lg: mreža 2×2, kot doslej. */}
+      {(krogNajboljsi.length > 0 ||
+        zvezde.length > 0 ||
+        podajalci.length > 0 ||
+        obrambe.length > 0) && (
+      <section
+        className="-mx-4 flex snap-x snap-mandatory items-start gap-4 overflow-x-auto px-4 pb-3
+                   sm:mx-0 sm:px-0
+                   lg:grid lg:snap-none lg:grid-cols-2 lg:overflow-visible lg:pb-0"
+      >
+        {krogNajboljsi.length > 0 && (
+        <div className="w-[86%] shrink-0 snap-start space-y-2 sm:w-[68%] lg:w-auto lg:shrink">
+          {/* Igralec kroga — header (zvezda + oznaka), ime čez celo širino,
+              spodaj klub+meta levo, točke desno. */}
           {krogNajboljsi[0] && (
             <section className="relative overflow-hidden rounded-3xl border border-amber-300/40 bg-gradient-to-br from-amber-500/20 via-slate-950/60 to-fuchsia-500/10 p-4 shadow-lg shadow-black/40 sm:p-6">
               <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-amber-200/80 sm:text-xs">
@@ -608,34 +628,44 @@ export default function Domov() {
             </p>
           )}
         </div>
-        {/* zvezde */}
-        <VrhLestvice
-          naslov="Najboljši strelci sezone"
-          ikona="⚽"
-          znacka="bg-rose-400/15 text-rose-200"
-          kljuc="goals"
-          seznam={zvezde}
-        />
-      </div>
+        )}
 
-      {/* podajalci in obrambe — enak vzorec kot strelci, druga sezonska statistika */}
-      {(podajalci.length > 0 || obrambe.length > 0) && (
-        <div className="grid items-start gap-4 lg:grid-cols-2">
-          <VrhLestvice
-            naslov="Najboljši podajalci sezone"
-            ikona="🅰️"
-            znacka="bg-gnl-400/15 text-gnl-200"
-            kljuc="assists"
-            seznam={podajalci}
-          />
-          <VrhLestvice
-            naslov="Največ ohranjenih mrež"
-            ikona="🧤"
-            znacka="bg-sky-400/15 text-sky-200"
-            kljuc="clean_sheets"
-            seznam={obrambe}
-          />
-        </div>
+        {zvezde.length > 0 && (
+          <div className="w-[86%] shrink-0 snap-start sm:w-[68%] lg:w-auto lg:shrink">
+            <VrhLestvice
+              naslov="Najboljši strelci sezone"
+              ikona="⚽"
+              znacka="bg-rose-400/15 text-rose-200"
+              kljuc="goals"
+              seznam={zvezde}
+            />
+          </div>
+        )}
+
+        {podajalci.length > 0 && (
+          <div className="w-[86%] shrink-0 snap-start sm:w-[68%] lg:w-auto lg:shrink">
+            <VrhLestvice
+              naslov="Najboljši podajalci sezone"
+              ikona="🅰️"
+              znacka="bg-gnl-400/15 text-gnl-200"
+              kljuc="assists"
+              seznam={podajalci}
+            />
+          </div>
+        )}
+
+        {obrambe.length > 0 && (
+          <div className="w-[86%] shrink-0 snap-start sm:w-[68%] lg:w-auto lg:shrink">
+            <VrhLestvice
+              naslov="Največ ohranjenih mrež"
+              ikona="🧤"
+              znacka="bg-sky-400/15 text-sky-200"
+              kljuc="clean_sheets"
+              seznam={obrambe}
+            />
+          </div>
+        )}
+      </section>
       )}
 
       {/* idealna enajsterica zadnjega kroga — na igrišču */}

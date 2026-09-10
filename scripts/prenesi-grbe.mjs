@@ -16,11 +16,28 @@
 // Grbi so blagovne znamke klubov; uporabljamo jih za prikaz kluba, kar je pri
 // navijaških straneh običajno. Če kak klub tega ne želi, se vrstica pobriše in
 // aplikacija zanj spet nariše grb iz začetnic.
+//
+// MNZ Ljubljana grbov ne objavlja, jih pa ima NK Vir na svoji strani zbrane za
+// napovedi tekem (`tl_files/Klubski grbi/`) — od tam vzamemo 2. ljubljansko
+// ligo, manjkajoča dva kluba z njunih strani. (1. LJ ligo smo dodali ročno.)
+//
+// Vsak prenesen grb takoj pomanjšamo na največ 256 px (`sips`, sistemsko na
+// macOS) — vir jih ponuja tudi po 800 px in 1 MB, v aplikaciji pa se grb
+// izriše pri ~22–32 px. Če `sips` ni na voljo, grb ostane v izvirni velikosti.
 import { createClient } from '@supabase/supabase-js'
-import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs'
+import {
+  readFileSync,
+  existsSync,
+  mkdirSync,
+  writeFileSync,
+  statSync,
+} from 'node:fs'
+import { execFileSync } from 'node:child_process'
 
 const MAPA = 'public/grbi'
+const NAJVECJA_STRANICA = 256
 const NKK = 'https://nkkranj.si/wp-content/uploads'
+const NKV = 'https://www.nkvir.si/tl_files/Klubski%20grbi'
 
 const GRBI = {
   'bled bohinj hirter': `${NKK}/2026/07/grb-hirter-bled.png`,
@@ -43,6 +60,45 @@ const GRBI = {
     'https://sportnodrustvo-sencur.si/resources/files/pic/Drago/razno/grb.jpg.JPG',
   'sobec lesce': 'http://www.nk-lesce.si/wp-content/themes/nklesce/images/logo.png',
   'eksist ziri': 'https://nklub-ziri.si/wp-content/uploads/2018/11/site-icon.png',
+
+  // MNZ Ljubljana, 2. liga — člani. Ključi so podvojeni, ker arhiv klub
+  // ponekod vpiše s predpono ("ŠD Vir"), drugod brez ("Vir"); odvečen ključ,
+  // ki se ne ujame z nobenim klubom, ne škodi.
+  kamnik: `${NKV}/kamnik_90x90.png`,
+  'termit moravce': `${NKV}/moravce_90x90.png`,
+  moravce: `${NKV}/moravce_90x90.png`,
+  'sd vir': `${NKV}/vir_90x90.png`,
+  vir: `${NKV}/vir_90x90.png`,
+  komenda: `${NKV}/komenda_90x90.png`,
+  crnuce: `${NKV}/crnuce_90x90.png`,
+  sentjernej: `${NKV}/sentjernej_90x90.png`,
+  'nk iak kresnice': `${NKV}/kresnice_90x90.png`,
+  'iak kresnice': `${NKV}/kresnice_90x90.png`,
+  kresnice: `${NKV}/kresnice_90x90.png`,
+  'nk ugar ribnica':
+    'https://www.nkugar.si/wp-content/uploads/2025/08/logo-nk-ugar-pravi-2.png',
+  'ugar ribnica':
+    'https://www.nkugar.si/wp-content/uploads/2025/08/logo-nk-ugar-pravi-2.png',
+  ribnica:
+    'https://www.nkugar.si/wp-content/uploads/2025/08/logo-nk-ugar-pravi-2.png',
+  ihan: 'https://nkihan.si/wp-content/uploads/2021/02/1932.png',
+}
+
+// Pomanjša datoteko na kvadrat NAJVECJA_STRANICA px (ohrani razmerje, ne
+// poveča manjših). `sips` je na macOS vedno na voljo; drugje tiho preskočimo.
+let sipsManjka = false
+function zmanjsaj(pot) {
+  if (sipsManjka) return
+  try {
+    execFileSync(
+      'sips',
+      ['--resampleHeightWidthMax', String(NAJVECJA_STRANICA), pot],
+      { stdio: 'ignore' },
+    )
+  } catch (e) {
+    sipsManjka = true
+    console.log(`  (sips ni na voljo — grbi ostanejo v izvirni velikosti: ${e.code ?? e.message})`)
+  }
 }
 
 function izEnv() {
@@ -124,7 +180,10 @@ for (const n of nacrt) {
     const odgovor = await fetch(n.vir)
     if (!odgovor.ok) throw new Error(`${odgovor.status}`)
     const slika = Buffer.from(await odgovor.arrayBuffer())
-    writeFileSync(`${MAPA}/${n.pot.split('/').pop()}`, slika)
+    const datoteka = `${MAPA}/${n.pot.split('/').pop()}`
+    writeFileSync(datoteka, slika)
+    zmanjsaj(datoteka)
+    const koncna = statSync(datoteka).size
 
     const { error: eKlub } = await db
       .from('teams')
@@ -132,7 +191,11 @@ for (const n of nacrt) {
       .eq('id', n.klub.id)
     if (eKlub) throw new Error(eKlub.message)
 
-    console.log(`  ✓ ${n.klub.name} (${Math.round(slika.length / 1024)} kB)`)
+    const izvirna = Math.round(slika.length / 1024)
+    const zdaj = Math.round(koncna / 1024)
+    console.log(
+      `  ✓ ${n.klub.name} (${zdaj} kB${zdaj !== izvirna ? `, prej ${izvirna} kB` : ''})`,
+    )
     preneseno++
   } catch (e) {
     console.log(`  ✗ ${n.klub.name}: ${e.message}`)
