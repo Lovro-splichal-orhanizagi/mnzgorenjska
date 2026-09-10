@@ -14,9 +14,15 @@ name: Tedensko prevrednotenje
 # V torek, ker so takrat vikend zapisniki ze uvozeni, v bazi pa je v
 # ponedeljek ob 2:00 ze steklo tedensko potrjevanje pozicij (`uveljavi_pozicije`)
 # — pozicija odloca, koliko je vreden gol, zato mora biti prej znana.
+# URNIK JE IZKLOPLJEN. Codex je pregledal to pot in nasel stiri napake, ki
+# same od sebe pokvarijo cene: sidro dobi NEOMEJEN cilj (cena 5.5, sidro 12 —
+# takoj cez mejo 3.0), zaokrozevanje po omejitvi jo prekoraci
+# (`premakniProti(4.3, 9, 1)` premakne 1.2), ponovni zagon isti teden premakne
+# se enkrat, spodletela posamezna pisanja pa se le izpisejo in zagon vseeno
+# uspe. Zaganjaj rocno, dokler to ni popravljeno.
 on:
-  schedule:
-    - cron: '0 4 * * 2'
+  # schedule:
+  #   - cron: '0 4 * * 2'
   workflow_dispatch:
     inputs:
       najvec:
