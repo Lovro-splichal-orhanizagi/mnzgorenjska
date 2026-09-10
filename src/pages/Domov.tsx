@@ -53,6 +53,7 @@ export default function Domov() {
   const [obrambe, setObrambe] = useState<VrhIgralec[]>([])
   const [krog, setKrog] = useState<KrogPodatek | null>(null)
   const [krogNajboljsi, setKrogNajboljsi] = useState<any[]>([])
+  const [igralecSezone, setIgralecSezone] = useState<any[]>([])
   const [idealnaPostava, setIdealnaPostava] = useState<IgralecEnajsterice[]>(
     [],
   )
@@ -76,8 +77,16 @@ export default function Domov() {
 
       // Tekme in goli tekmovanja ne nosijo neposredno — do njega pridemo prek
       // kroga, zato notranji spoj (`!inner`) namesto navadnega štetja.
-      const [tekme, igralci, goli, brezAsistence, top, podajalciTop, obrambeTop] =
-        await Promise.all([
+      const [
+        tekme,
+        igralci,
+        goli,
+        brezAsistence,
+        top,
+        podajalciTop,
+        obrambeTop,
+        sezonaTop,
+      ] = await Promise.all([
           supabase
             .from('matches')
             .select('id, rounds!inner(competition_id)', {
@@ -139,6 +148,17 @@ export default function Domov() {
             .order('clean_sheets', { ascending: false })
             .order('minutes', { ascending: false })
             .limit(5),
+          // Igralec sezone — največ fantasy točk doslej v tekoči sezoni.
+          supabase
+            .from('player_season_standings')
+            .select(
+              'id, full_name, team_name, team_short, team_logo, position, points, minutes, matches',
+            )
+            .eq('competition_id', ligaId)
+            .eq('season', tekocaSezona)
+            .order('points', { ascending: false })
+            .order('minutes', { ascending: false })
+            .limit(5),
         ])
       setStat({
         tekme: tekme.count ?? 0,
@@ -152,6 +172,7 @@ export default function Domov() {
       setZvezde((top.data ?? []) as VrhIgralec[])
       setPodajalci((podajalciTop.data ?? []) as VrhIgralec[])
       setObrambe((obrambeTop.data ?? []) as VrhIgralec[])
+      setIgralecSezone((sezonaTop.data ?? []) as any[])
 
       // Naslednji krog — za odštevalnik do zaklepanja postave.
       const { data: nextRound } = await supabase
@@ -513,15 +534,16 @@ export default function Domov() {
         </section>
       )}
 
-      {/* Igralec kroga + tri sezonske lestvice.
+      {/* Igralec kroga + sezonske lestvice + igralec sezone.
           Mobilno: vodoravni "carousel" — po eno kartico naenkrat, prst povleče
-          vstran (snap). Prej so se vse štiri zložile ena pod drugo in nastal je
+          vstran (snap). Prej so se vse zložile ena pod drugo in nastal je
           en neskončen seznam "kot Excel".
           lg: mreža 2×2, kot doslej. */}
       {(krogNajboljsi.length > 0 ||
         zvezde.length > 0 ||
         podajalci.length > 0 ||
-        obrambe.length > 0) && (
+        obrambe.length > 0 ||
+        igralecSezone.length > 0) && (
       <section
         className="-mx-4 flex snap-x snap-mandatory items-start gap-4 overflow-x-auto px-4 pb-3
                    sm:mx-0 sm:px-0
@@ -663,6 +685,92 @@ export default function Domov() {
               kljuc="clean_sheets"
               seznam={obrambe}
             />
+          </div>
+        )}
+
+        {/* Igralec sezone — največ fantasy točk doslej. Poudarjen vrh kot pri
+            igralcu kroga, pod njim 2.–5. */}
+        {igralecSezone.length > 0 && (
+          <div className="w-[86%] shrink-0 snap-start space-y-2 sm:w-[68%] lg:w-auto lg:shrink">
+            <section className="relative overflow-hidden rounded-3xl border border-emerald-300/40 bg-gradient-to-br from-emerald-500/20 via-slate-950/60 to-gnl-500/10 p-4 shadow-lg shadow-black/40 sm:p-6">
+              <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-emerald-200/80 sm:text-xs">
+                <span className="text-lg leading-none sm:text-xl">🏆</span>
+                <span>Igralec sezone{krog?.season ? ` ${krog.season}` : ''}</span>
+              </div>
+              <Link
+                to={`/igralec/${igralecSezone[0].id}`}
+                className="mt-1 block break-words text-2xl font-black leading-tight text-white hover:text-gnl-200 sm:text-3xl md:text-4xl"
+              >
+                {prikazniIme(igralecSezone[0].full_name)}
+              </Link>
+              <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
+                <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-300 sm:text-sm">
+                  <Grb
+                    ime={igralecSezone[0].team_name}
+                    kratko={igralecSezone[0].team_short}
+                    logo={igralecSezone[0].team_logo}
+                    velikost={18}
+                  />
+                  <span className="truncate">{igralecSezone[0].team_name}</span>
+                  <span className={`znacka poz-${igralecSezone[0].position}`}>
+                    {igralecSezone[0].position}
+                  </span>
+                  <span className="text-slate-500">
+                    · {igralecSezone[0].matches} tekem
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-1 leading-none">
+                  <span className="text-3xl font-black tabular-nums text-emerald-200 sm:text-5xl">
+                    {formatirajTocke(igralecSezone[0].points)}
+                  </span>
+                  <span className="text-[10px] uppercase tracking-wide text-slate-400 sm:text-xs">
+                    točk
+                  </span>
+                </div>
+              </div>
+            </section>
+
+            {igralecSezone.length > 1 && (
+              <ul className="space-y-1.5">
+                {igralecSezone.slice(1).map((z, i) => (
+                  <li
+                    key={z.id}
+                    className="kartica kartica-hover flex items-center gap-2 p-2.5 sm:gap-3"
+                  >
+                    <span className="w-6 text-center font-black text-slate-500">
+                      {i + 2}
+                    </span>
+                    <Grb
+                      ime={z.team_name}
+                      kratko={z.team_short}
+                      logo={z.team_logo}
+                      velikost={22}
+                    />
+                    <Link
+                      to={`/igralec/${z.id}`}
+                      className="min-w-0 flex-1 truncate font-semibold hover:text-gnl-300"
+                    >
+                      {prikazniIme(z.full_name)}
+                    </Link>
+                    <span className="hidden text-xs text-slate-500 sm:inline">
+                      {z.minutes} min
+                    </span>
+                    <span className="w-12 text-right font-black tabular-nums">
+                      {formatirajTocke(z.points)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <p className="pt-1 text-right">
+              <Link
+                to="/lestvica"
+                className="text-sm text-slate-500 underline hover:text-gnl-300"
+              >
+                Cela lestvica igralcev →
+              </Link>
+            </p>
           </div>
         )}
       </section>
