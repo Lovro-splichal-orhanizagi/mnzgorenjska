@@ -29,7 +29,7 @@ import {
 import { tockeZaNastop } from '../src/lib/tockovanje'
 import { sestejOdKroga } from '../src/lib/lestvica'
 import { parsirajZapisnik, nastopi } from './zapisnik.mjs'
-import { poZvezah, ustreza } from '../src/components/IzbirnikLige'
+import { poZvezah, ustreza, pokaziZvezo } from '../src/components/IzbirnikLige'
 import { virPodatkov, imeZveze } from '../src/components/VirPodatkov'
 import { viraZa, znaniViri } from './viri/index.mjs'
 import { caka, brezAsistencePotrjeno, PRAG_ASISTENCE_PRIVZETO } from '../src/components/GolZaGlasovanje'
@@ -497,6 +497,14 @@ preveri(
   preveri('izbirnik: Gorenjska ima dve ligi', sk[0].lige.length === 2, String(sk[0].lige.length))
   preveri('izbirnik: Ljubljana druga', sk[1].naslov === 'Ljubljana', sk[1].naslov)
   preveri('izbirnik: liga brez zveze gre na konec', sk[2].kljuc === '—', sk[2].kljuc)
+
+  // Ime zveze na gumbu pove nekaj sele, ko so zveze vec kot ena. Pri eni je
+  // odvec in vrstica v meniju je ozka: z dodano "Gorenjska" je znacka zlezla
+  // cez logotip.
+  preveri('izbirnik: pri eni zvezi je ne pisemo', !pokaziZvezo(lige.slice(0, 2)))
+  preveri('izbirnik: pri dveh zvezah jo pisemo', pokaziZvezo(lige.slice(0, 3)))
+  preveri('izbirnik: liga brez zveze steje kot svoja skupina',
+    pokaziZvezo([lige[0], lige[3]]))
 
   preveri('izbirnik: iskanje po imenu lige', ustreza(lige[2], 'ljublj'), 'lj-1')
   preveri('izbirnik: iskanje po zvezi', ustreza(lige[0], 'gorenjska'), 'clani')

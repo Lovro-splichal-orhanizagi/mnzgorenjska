@@ -42,6 +42,18 @@ export function poZvezah(tekmovanja: Tekmovanje[]): Skupina[] {
   })
 }
 
+/**
+ * Ali naj gumb pred imenom lige pokaže še zvezo.
+ *
+ * Pri eni sami zvezi ne pove ničesar — vse lige so njene — zato jo izpustimo.
+ * Vrstica v meniju je ozka: `max-w-6xl` je bilo z dodano "Gorenjska" preseženo
+ * in značka je zlezla čez logotip.
+ */
+export function pokaziZvezo(tekmovanja: Tekmovanje[]): boolean {
+  const zveze = new Set(tekmovanja.map((t) => t.federation_code ?? '—'))
+  return zveze.size > 1
+}
+
 /** Ali liga ustreza iskalnemu nizu — po imenu lige, kratici ali zvezi. */
 export function ustreza(t: Tekmovanje, iskanje: string): boolean {
   const q = poenostavi(iskanje)
@@ -90,7 +102,7 @@ export default function IzbirnikLige() {
   if (tekmovanja.length < 2) return null
 
   const oznaka = tekmovanje?.short_name ?? 'Liga'
-  const zveza = tekmovanje?.federation_short
+  const zveza = pokaziZvezo(tekmovanja) ? tekmovanje?.federation_short : null
 
   return (
     <div className="relative" ref={ovoj}>

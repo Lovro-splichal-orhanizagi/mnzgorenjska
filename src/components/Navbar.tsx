@@ -87,7 +87,7 @@ export default function Navbar() {
     <header className="sticky top-0 z-20 border-b border-white/10 bg-slate-950/80 backdrop-blur">
       <nav className="mx-auto max-w-6xl px-4 py-3">
         <div className="flex items-center gap-3 lg:gap-4">
-          <NavLink to="/" className="flex items-center gap-2 font-black">
+          <NavLink to="/" className="flex shrink-0 items-center gap-2 font-black">
             <img src="/logo/slff-grb.png" alt="" className="h-8 w-8" />
             <span className="naslov">SLFF</span>
           </NavLink>
