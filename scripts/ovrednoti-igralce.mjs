@@ -4,6 +4,8 @@
 //   SUPABASE_SERVICE_ROLE_KEY=... node scripts/ovrednoti-igralce.mjs
 //   ... --sezona 2025/26
 //   ... --tekmovanje mladinci   (mladinska liga; brez tega člani)
+//   ... --tedensko             (cene približa izračunanim; samo pokaže predlog)
+//   ... --tedensko --pisi       (dejansko zapiše; brez tega samo pokaže predlog)
 //
 // Vsaka liga se vrednoti zase: percentili mladincev nimajo nič opraviti s
 // percentili članov, sicer bi mladince do zadnjega stlačilo na dno cenika.
@@ -75,6 +77,13 @@ function arg(ime, privzeto = null) {
   return v && !v.startsWith('--') ? v : true
 }
 
+const najvec = arg('najvec', NAJVECJI_TEDENSKI_PREMIK)
+const najvecPremik = Number(najvec)
+if (najvec === true || String(najvec).trim() === '' || !Number.isFinite(najvecPremik) || najvecPremik < 0) {
+  console.error('Neveljaven --najvec: podaj končno število, večje ali enako 0.')
+  process.exit(1)
+}
+
 const env = izEnv()
 const BASE =
   process.env.SUPABASE_URL ?? env.VITE_SUPABASE_URL ?? 'http://127.0.0.1:54321'
@@ -92,12 +101,12 @@ const sezona = arg('sezona')
 // po stari ceni. Sidro borze (`value_start`) potuje z njim, sicer bi cena
 // takoj trcila ob mejo 3.0 od sidra.
 const tedensko = process.argv.includes('--tedensko')
+const pisi = process.argv.includes('--pisi')
 // `--samo-nove` predela le igralce brez `value_start` — tiste, ki jih uvoz
 // prvič pripelje v bazo. Obstoječih cen se ne dotakne. Uporabno v tedenskem
 // cronu, kjer polna ovrednota lahko premika stare cene skokovito, mi pa
 // samo hočemo, da vsakič novi rekruti dobijo pravo sidro.
 const samoNove = process.argv.includes('--samo-nove')
-const najvecPremik = Number(arg('najvec', NAJVECJI_TEDENSKI_PREMIK))
 const tekmovanje = await najdiTekmovanje(db, arg('tekmovanje', 'clani'))
 console.log(`Tekmovanje: ${tekmovanje.name}${samoNove ? ' — samo novi' : ''}`)
 
@@ -113,6 +122,24 @@ const igralci = await vseVrstice((od, do_) =>
 )
 
 const naSi = new Set((igralci ?? []).map((p) => p.id))
+
+// Cene igralcev z zgodovino upravlja borza, ki lahko znova uveljavi stare zapise.
+const naBorzi = new Set()
+if (tedensko) {
+  try {
+    const zgodovina = await vseVrstice((od, do_) =>
+      db.from('price_changes')
+        .select('player_id, players!inner(competition_id)')
+        .eq('players.competition_id', tekmovanje.id)
+        .order('id')
+        .range(od, do_),
+    )
+    for (const z of zgodovina) naBorzi.add(z.player_id)
+  } catch (e) {
+    console.error(`Borzne zgodovine ni mogoče prebrati: ${e.message}`)
+    process.exit(1)
+  }
+}
 
 // --- statistika ------------------------------------------------------------
 // `player_season_stats` nima stolpca za tekmovanje, zato pade sem vse — pri
@@ -216,7 +243,9 @@ const percentilV = (urejene, v) => {
 const zaokrozi = (v) => Math.round(v * 2) / 2 // na 0.5 natančno
 
 let posodobljenih = 0
+let neuspesnih = 0
 let zaklenjenih = 0
+let borznih = 0
 const premaknjenih = []
 const razpored = new Map()
 
@@ -228,6 +257,10 @@ for (const p of igralci ?? []) {
   // V nacinu "samo novi" pustimo obstojece cene pri miru — zanima nas samo
   // sidro (value_start) za igralce, ki so ravno prisli v bazo.
   if (samoNove && p.value_start != null) continue
+  if (tedensko && naBorzi.has(p.id)) {
+    borznih++
+    continue
+  }
 
   const koda = p.position ?? 'MID'
   const [spodnja, zgornja] = MEJE[koda] ?? [NAJNIZJA, NAJVISJA]
@@ -250,7 +283,6 @@ for (const p of igralci ?? []) {
   }
 
   vrednost = zaokrozi(Math.min(zgornja, Math.max(spodnja, vrednost)))
-  razpored.set(vrednost, (razpored.get(vrednost) ?? 0) + 1)
 
   // `value_start` je sidro borze (cena se od njega lahko oddalji največ 3.0).
   // Postavimo ga le, kadar ga še ni IN imamo dovolj podatkov — sicer bi
@@ -258,7 +290,6 @@ for (const p of igralci ?? []) {
   // ne bi imela manevrskega prostora, kljub temu da bo cez cez pet krogov
   // pokazal, da spada v 8.0-9.0 razred.
   const popravek = { value: vrednost }
-  if (p.value_start == null && ocena != null) popravek.value_start = vrednost
 
   if (tedensko) {
     const stara = Number(p.value)
@@ -267,24 +298,33 @@ for (const p of igralci ?? []) {
     if (vrednost === stara) continue
     // Sidro potuje z isto razliko: cena, ki se je pomaknila, mora imeti okoli
     // sebe enak manevrski prostor kot prej, sicer bi borza takoj obstala.
+    // Borza hrani desetinke; zaokrožitev sidra na polovico bi spremenila odmik.
     if (p.value_start != null)
-      popravek.value_start = Math.round((Number(p.value_start) + (vrednost - stara)) * 2) / 2
+      popravek.value_start = Math.round((Number(p.value_start) + (vrednost - stara)) * 10) / 10
     premaknjenih.push({ ime: p.full_name, iz: stara, v: vrednost })
   }
+
+  if (p.value_start == null && ocena != null) popravek.value_start = vrednost
+  razpored.set(vrednost, (razpored.get(vrednost) ?? 0) + 1)
+  if (tedensko && !pisi) continue
 
   const { error: eUpd } = await db
     .from('players')
     .update(popravek)
     .eq('id', p.id)
-  if (eUpd) console.log(`  ${p.full_name}: ${eUpd.message}`)
-  else posodobljenih++
+  if (eUpd) {
+    neuspesnih++
+    console.error(`  ${p.full_name}: ${eUpd.message}`)
+  } else posodobljenih++
 }
 
-console.log(`\nPosodobljenih: ${posodobljenih}, zaklenjenih (ročno): ${zaklenjenih}`)
+if (!tedensko || pisi)
+  console.log(`\nPosodobljenih: ${posodobljenih}, zaklenjenih (ročno): ${zaklenjenih}`)
 
 if (tedensko) {
+  console.log(`Preskočenih (cene upravlja borza): ${borznih}`)
   premaknjenih.sort((a, b) => Math.abs(b.v - b.iz) - Math.abs(a.v - a.iz))
-  console.log(`Premaknjenih cen: ${premaknjenih.length} (največ ${najvecPremik} na zagon)`)
+  console.log(`Predlaganih premikov cen: ${premaknjenih.length} (največ ${najvecPremik} na zagon)`)
   for (const x of premaknjenih.slice(0, 10))
     console.log(`  ${x.iz.toFixed(1)} → ${x.v.toFixed(1)}  ${x.ime}`)
 }
@@ -292,6 +332,11 @@ if (tedensko) {
 console.log('\nPorazdelitev vrednosti:')
 for (const v of [...razpored.keys()].sort((a, b) => a - b))
   console.log(`  ${v.toFixed(1)}  ${'█'.repeat(Math.ceil(razpored.get(v) / 3))} ${razpored.get(v)}`)
+
+if (tedensko && !pisi) {
+  console.log('\nTo je le predlog. Za zapis v bazo dodaj --pisi')
+  process.exit(0)
+}
 
 const { data: najdrazji } = await db
   .from('player_overview')
@@ -304,3 +349,8 @@ for (const p of najdrazji ?? [])
   console.log(
     `  ${String(p.value).padStart(5)}  ${p.full_name.padEnd(26)} ${(p.team_name ?? '').padEnd(20)} ${String(p.position ?? '—').padEnd(4)} ${String(p.points).padStart(6)} tock, ${p.goals} golov, ${p.minutes} min`,
   )
+
+if (neuspesnih > 0) {
+  console.error(`\nNeuspešnih: ${neuspesnih}, uspešnih: ${posodobljenih}. Vrednotenje ni uspelo v celoti.`)
+  process.exitCode = 1
+}
