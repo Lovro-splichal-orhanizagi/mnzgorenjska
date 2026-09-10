@@ -31,7 +31,22 @@ Vir mora objavljati **postave po tekmah**, ne le rezultatov in lestvic. Brez
 postav ni minut, brez minut ni točk.
 
 NZS objavlja ~30 državnih tekmovanj, a postav po tekmah **ne** — iz 1. SNL
-fantasy ni mogoč. Regijske zveze (MNZ) jih objavljajo.
+fantasy ni mogoč.
+
+Medobčinskih zvez je devet (`nzs.si/zveza/organizacija/medobcinske-nogometne-zveze`),
+postave pa objavljajo **samo tri**: Gorenjska, Ljubljana in Celje, vse na
+istem starem CMS-u. Koper, Lendava, Maribor, Murska Sobota, Nova Gorica in
+Ptuj dajo rezultate in lestvice, postav pa ne — njihovi podatki živijo v
+**Registi** (`regista.nzs.si`), ki je za prijavo in namenjena funkcionarjem.
+Zanje fantasy iz javnih podatkov ni mogoč.
+
+Šifre lig po sezonah:
+
+| zveza | tekoča 2026/27 | arhiv 2025/26 | arhiv 2024/25 |
+|---|---|---|---|
+| mnzg — člani / mladinci | 1601 / 1603 | 1502 / 1503 | — |
+| mnzlj — 1. / 2. liga | 2003 / 2004 | 1904 / 1905 | 1804 / 1805 |
+| mnzce — člani | 1902 | 1801 | 1701 |
 
 Odpri en zapisnik in preveri, da vidiš številke dresov, imena in oznako `(V)`
 za vratarja. Če ne, tu se konča.
@@ -47,6 +62,11 @@ zapisniku, ne po spominu:
 - **Stolpci.** Naslavljaj jih po glavi tabele, ne po zaporedju. Ljubljana ima
   stolpec `Leto rojstva`, ki ga Kranj nima.
 - **Letnica.** Dve števki ali štiri? `05.09.26` proti `05.09.2026`.
+- **Tudi sezona ima tri različice.** Kranj piše `2025/26`, Ljubljana
+  `2025/2026`, Celje pa `Golgeter 26/27`. Ob dvomestnem začetku je izraz, ki
+  je zahteval štiri števke, segel mimo naslova nazaj v meni in našel
+  `2007/08` — cel arhiv bi pristal dvajset let v preteklosti, brez ene same
+  napake. Tri zveze, tri različice: **preveri jo pri vsaki novi.**
 - **Sezona.** Beri jo v naslovni vrstici tik nad `Zapisnik:`, nikoli kot prvo
   vrstico z letnico na strani — meniji naštevajo vse sezone od 2006/07.
 - **Datum tekme.** Če obstaja vrstica `Datum:`, velja ona; naslov kroga nosi
