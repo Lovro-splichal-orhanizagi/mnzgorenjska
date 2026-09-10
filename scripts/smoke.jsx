@@ -37,7 +37,7 @@ import { adaptivniPrag } from '../src/pages/Pozicije'
 import { razcleniRazpored, datum, sezonaIz } from './razpored.mjs'
 import { vseVrstice } from './strani.mjs'
 import { premakniProti, NAJVECJI_TEDENSKI_PREMIK } from './premik-cene.mjs'
-import { oceniPripravljenost } from '../src/lib/pripravljenost'
+import { oceniPripravljenost, najcenejsiKader } from '../src/lib/pripravljenost'
 import { readFileSync } from 'node:fs'
 
 let napak = 0
@@ -660,20 +660,264 @@ preveri(
   let c = 4.5
   for (let i = 0; i < 10; i++) c = premakniProti(c, 9.0)
   preveri('premik: po desetih tednih doseze cilj', c === 9.0, String(c))
+
+  preveri('premik: zaokroževanje ne preseže meje navzgor',
+    premakniProti(4.3, 9, 1) === 5.0, String(premakniProti(4.3, 9, 1)))
+  preveri('premik: zaokroževanje ne preseže meje navzdol',
+    premakniProti(8.7, 4, 1) === 8.0, String(premakniProti(8.7, 4, 1)))
+  preveri('premik: tudi bližnji cilj ostane znotraj meje',
+    premakniProti(4.3, 4.4, 0.1) === 4.3)
+  preveri('premik: premajhna meja ne premakne cene v napačno smer',
+    premakniProti(4.3, 9, 0.1) === 4.3 && premakniProti(8.7, 4, 0.1) === 8.7)
+  preveri('premik: meja pod pol koraka ohrani ceno na mreži',
+    premakniProti(4.5, 9, 0.3) === 4.5)
+  preveri('premik: enaka decimalna cena ne potrebuje zaokroževanja',
+    premakniProti(4.3, 4.3, 1) === 4.3)
+  for (const cilj of [4, 4.3, 9])
+    preveri(`premik: meja 0 ohrani 4.3 pri cilju ${cilj}`,
+      premakniProti(4.3, cilj, 0) === 4.3, String(premakniProti(4.3, cilj, 0)))
+
+  const primeri = []
+  for (const trenutna of [4, 4.3, 4.5, 5.2, 8.7, 12])
+    for (const ciljna of [4, 4.3, 4.4, 5.3, 9, 12])
+      for (const najvec of [0, 0.1, 0.2, 0.3, 0.5, 1, 1.25])
+        primeri.push({ trenutna, ciljna, najvec, nova: premakniProti(trenutna, ciljna, najvec) })
+  preveri('premik: dejanski premik vedno spoštuje mejo',
+    primeri.every((p) => Math.abs(p.nova - p.trenutna) <= p.najvec))
+  preveri('premik: vsaka spremenjena cena je na mreži 0.5',
+    primeri.every((p) => p.nova === p.trenutna || Number.isInteger(p.nova * 2)))
+  preveri('premik: cena se nikoli ne premakne stran od cilja',
+    primeri.every((p) => p.nova === p.trenutna ||
+      Math.sign(p.nova - p.trenutna) === Math.sign(p.ciljna - p.trenutna)))
+
+  // Ločen proces preveri prave argumente, izhodno kodo in poslane popravke;
+  // nadomestimo le omrežje, da smoke nikoli ne piše v pravo bazo.
+  const { spawnSync } = await import('node:child_process')
+  const ovrednoti = (zastavice, moznosti = {}) => {
+    const zagon = spawnSync(process.execPath, ['--input-type=module', '-e', `
+      const zastavice = ${JSON.stringify(zastavice)}
+      const moznosti = ${JSON.stringify(moznosti)}
+      process.argv = ['node', 'scripts/ovrednoti-igralce.mjs', ...zastavice]
+      const igralci = [
+        { id: 1, full_name: 'Prvi igralec', position: 'MID', value: 4.5, value_start: null,
+          value_locked: false, nzs_top_league: null, nzs_top_league_minutes: null },
+        { id: 2, full_name: 'Drugi igralec', position: 'MID', value: 4.5, value_start: null,
+          value_locked: false, nzs_top_league: null, nzs_top_league_minutes: null },
+      ].map((p) => ({ ...p, ...(moznosti.igralci?.[p.id] ?? {}) }))
+      const statistika = igralci.map((p) => ({ player_id: p.id, season: '2026/27',
+        minutes: 900, goals: p.id, points: 20, matches: 10, clean_sheets: 0,
+        yellow_cards: 0, red_cards: 0 }))
+      const zapisi = []
+      const zahteve = []
+      process.on('exit', () => console.log('REZULTAT_PREMIKA:' + JSON.stringify({ igralci, zapisi, zahteve })))
+      globalThis.fetch = async (vhod, moznostiZahteve) => {
+        const zahteva = new Request(vhod, moznostiZahteve)
+        const url = new URL(zahteva.url)
+        const tabela = url.pathname.split('/').pop()
+        zahteve.push({ tabela, metoda: zahteva.method })
+        const odgovor = (data, status = 200) => new Response(JSON.stringify(data), {
+          status, headers: { 'Content-Type': 'application/json' },
+        })
+        if (zahteva.method === 'GET') {
+          if (tabela === 'competitions') return odgovor({ id: 1, name: 'Preizkusna liga', slug: 'clani' })
+          if (tabela === 'players') return odgovor(igralci)
+          if (tabela === 'player_season_stats') return odgovor(statistika)
+          if (tabela === 'player_overview') return odgovor([])
+          if (tabela === 'price_changes') {
+            if (moznosti.napakaZgodovine) return odgovor({ message: 'Zgodovina ni dosegljiva' }, 500)
+            const od = Number(url.searchParams.get('offset') ?? 0)
+            const koliko = Number(url.searchParams.get('limit') ?? 1000)
+            return odgovor((moznosti.zgodovina ?? []).slice(od, od + koliko))
+          }
+        }
+        if (zahteva.method === 'PATCH' && tabela === 'players') {
+          const id = Number(url.searchParams.get('id')?.replace('eq.', ''))
+          const popravek = await zahteva.json()
+          zapisi.push({ id, popravek })
+          if (id === moznosti.neuspesen) return odgovor({ message: 'Zapis ni uspel' }, 400)
+          Object.assign(igralci.find((p) => p.id === id), popravek)
+          return new Response(null, { status: 204 })
+        }
+        throw new Error('Nepričakovana zahteva: ' + zahteva.method + ' ' + url)
+      }
+      await import(${JSON.stringify(new URL('./ovrednoti-igralce.mjs', import.meta.url).href)})
+    `], {
+      encoding: 'utf8', timeout: 10000,
+      env: { PATH: process.env.PATH, SUPABASE_URL: 'http://127.0.0.1:54321',
+        SUPABASE_SERVICE_ROLE_KEY: 'preizkusni-kljuc' },
+    })
+    const vrstica = zagon.stdout?.split('\n').find((v) => v.startsWith('REZULTAT_PREMIKA:'))
+    return { ...zagon, ...(vrstica ? JSON.parse(vrstica.slice('REZULTAT_PREMIKA:'.length)) : {}) }
+  }
+
+  const zapis = ovrednoti(['--tedensko', '--pisi'])
+  preveri('premik: tedenski zapis uspe', zapis.status === 0, zapis.stderr)
+  preveri('premik: novo sidro dobi končno omejeno ceno',
+    zapis.igralci?.[1].value === 5.5 && zapis.igralci?.[1].value_start === 5.5,
+    JSON.stringify(zapis.igralci?.[1]))
+  const decimalna = ovrednoti(['--tedensko', '--pisi'], {
+    igralci: { 2: { value: 4.3, value_start: 7.3 } },
+  })
+  preveri('premik: premik sidra ohrani odmik 3.0 tudi pri decimalni ceni',
+    decimalna.igralci?.[1].value === 5 && decimalna.igralci?.[1].value_start === 8,
+    JSON.stringify(decimalna.igralci?.[1]))
+  const odmik = ovrednoti(['--tedensko', '--pisi'], {
+    igralci: { 2: { value: 4.3, value_start: 4.5 } },
+  })
+  preveri('premik: sidra ne zaokroži na račun obstoječega odmika',
+    odmik.igralci?.[1].value === 5 && odmik.igralci?.[1].value_start === 5.2,
+    JSON.stringify(odmik.igralci?.[1]))
+  const nic = ovrednoti(['--tedensko', '--pisi', '--najvec', '0'], {
+    igralci: { 2: { value: 4.3, value_start: 4.3 } },
+  })
+  preveri('premik: tedenska meja 0 ne pošlje nobenega zapisa',
+    nic.status === 0 && nic.zapisi?.length === 0, nic.stderr)
+
+  for (const meja of ['NaN', 'abc', '-1', 'Infinity', '-Infinity', '1e309', '', ' ']) {
+    const neveljavna = ovrednoti(['--tedensko', '--pisi', '--najvec', meja])
+    preveri(`premik: neveljavna meja ${meja} ustavi zagon pred dostopom do baze`,
+      neveljavna.status === 1 && neveljavna.stderr.includes('--najvec') &&
+      neveljavna.zahteve?.length === 0, neveljavna.stderr.trim())
+  }
+  const brezMeje = ovrednoti(['--tedensko', '--pisi', '--najvec'])
+  preveri('premik: manjkajoča vrednost meje ustavi zagon pred dostopom do baze',
+    brezMeje.status === 1 && brezMeje.stderr.includes('--najvec') && brezMeje.zahteve?.length === 0)
+  const predlog = ovrednoti(['--tedensko'])
+  preveri('premik: tedenski predogled ne piše v bazo',
+    predlog.status === 0 && predlog.zahteve?.every((z) => z.metoda === 'GET'), predlog.stderr)
+  preveri('premik: predogled pokaže ceno in navodilo za zapis',
+    predlog.stdout.includes('4.5 → 5.5') &&
+    predlog.stdout.includes('To je le predlog. Za zapis v bazo dodaj --pisi'))
+  preveri('premik: porazdelitev predloga kaže omejene cene',
+    predlog.stdout.includes('\n  5.5  ') && !predlog.stdout.includes('\n  12.0  '))
+  const delni = ovrednoti(['--tedensko', '--pisi'], { neuspesen: 1 })
+  preveri('premik: delni neuspeh ne ustavi preostalih zapisov',
+    delni.igralci?.[0].value === 4.5 && delni.igralci?.[1].value === 5.5)
+  preveri('premik: delni neuspeh javi neuspešen izhod in oba števca',
+    delni.status === 1 && delni.stderr.includes('Neuspešnih: 1, uspešnih: 1'), delni.stderr.trim())
+  const obicajni = ovrednoti([], { neuspesen: 1 })
+  preveri('premik: tudi običajno vrednotenje javi delni neuspeh',
+    obicajni.status === 1 && obicajni.stderr.includes('Neuspešnih: 1, uspešnih: 1'), obicajni.stderr.trim())
+
+  const zgodovina = [
+    { id: 1, player_id: 2, round_id: 10, old_value: 4.5, new_value: 4.4, form: 1,
+      changed_at: '2026-09-01T00:00:00Z' },
+    { id: 2, player_id: 2, round_id: 11, old_value: 4.4, new_value: 4.3, form: 1,
+      changed_at: '2026-09-08T00:00:00Z' },
+  ]
+  for (const zastavice of [['--tedensko'], ['--tedensko', '--pisi']]) {
+    const borza = ovrednoti(zastavice, {
+      zgodovina, igralci: { 2: { value: 4.3, value_start: 4.5 } },
+    })
+    preveri(`premik: ${zastavice.join(' ')} prepusti ceno in sidro borzi`,
+      borza.status === 0 && borza.igralci?.[1].value === 4.3 &&
+      borza.igralci?.[1].value_start === 4.5 && !borza.zapisi?.some((z) => z.id === 2), borza.stderr)
+    preveri(`premik: ${zastavice.join(' ')} jasno izpiše preskok zaradi borze`,
+      borza.stdout.includes('Preskočenih (cene upravlja borza): 1'))
+  }
+  const velikoZgodovine = ovrednoti(['--tedensko', '--pisi'], {
+    zgodovina: [...Array.from({ length: 1000 }, (_, i) => ({ ...zgodovina[0], id: i + 1, player_id: 1 })),
+      { ...zgodovina[1], id: 1001 }],
+  })
+  preveri('premik: borzna zgodovina ščiti tudi igralce po prvi strani',
+    velikoZgodovine.status === 0 && velikoZgodovine.zapisi?.length === 0, velikoZgodovine.stderr)
+  const brezZgodovine = ovrednoti(['--tedensko', '--pisi'], { napakaZgodovine: true })
+  preveri('premik: neuspešno branje zgodovine prepreči vse zapise',
+    brezZgodovine.status === 1 && brezZgodovine.zapisi?.length === 0 &&
+    brezZgodovine.stderr.includes('Zgodovina ni dosegljiva'), brezZgodovine.stderr.trim())
+  const primerjava = ovrednoti(['--tedensko', '--pisi'], {
+    zgodovina: [{ ...zgodovina[0], player_id: 1 }],
+  })
+  preveri('premik: borzni igralec ostane v percentilni primerjavi lige',
+    primerjava.status === 0 && primerjava.zapisi?.length === 1 &&
+    primerjava.zapisi[0].id === 2 && primerjava.igralci?.[1].value === 5.5 &&
+    primerjava.igralci?.[1].value_start === 5.5)
+  const zacetne = ovrednoti([], { zgodovina })
+  preveri('premik: običajno začetno vrednotenje ohrani dosedanje pisanje',
+    zacetne.status === 0 && zacetne.igralci?.[1].value === 12 &&
+    zacetne.igralci?.[1].value_start === 12 &&
+    zacetne.zahteve?.every((z) => z.tabela !== 'price_changes'))
 }
 
 // --- pripravljenost lige na vklop -------------------------------------------
 // Liga, v kateri stane vsak igralec 4.5, nima igre: 15 x 4.5 = 67.5 pri
 // proracunu 100 in vsaka ekipa je enaka. Zato vklop stoji za temi preverbami.
 {
+  let id = 0
+  const skupina = (team_id, position, cene) => cene.map((value) => ({
+    id: ++id, team_id, position, value,
+  }))
+  // Poceni vratarja zasedeta klub, iz katerega nujno potrebujemo branilce.
+  // Veljaven minimum je 2 × 5 + 3 × 4 + 2 × 4 + 5 × 5 + 3 × 6 = 73.
+  const igralci = [
+    ...skupina(1, 'GK', [4, 4]), ...skupina(1, 'DEF', [4, 4, 4]),
+    ...skupina(2, 'GK', [5, 5]), ...skupina(2, 'MID', [5]),
+    ...skupina(3, 'DEF', [4, 4]), ...skupina(3, 'MID', [5]),
+    ...skupina(4, 'MID', [5, 5, 5]), ...skupina(5, 'FWD', [6, 6, 6]),
+  ]
+  const vsiBranilciIzEnega = igralci.map((i) => ({
+    ...i, team_id: i.position === 'DEF' ? 1 : i.team_id,
+  }))
+  const najcenejsi = najcenejsiKader
+  preveri('kader: veljaven kader stane 73 kljub pohlepni slepi ulici', najcenejsi(igralci) === 73)
+  preveri('kader: vrstni red vhodnih igralcev ne vpliva na minimum',
+    najcenejsi([...igralci].reverse()) === 73)
+  preveri('kader: vseh pet branilcev iz enega kluba ni izvedljivo',
+    najcenejsi(vsiBranilciIzEnega) === null)
+  preveri('kader: prazen seznam ni izvedljiv', najcenejsi([]) === null)
+  preveri('kader: minimum se izračuna tudi nad proračunom',
+    najcenejsi(igralci.map((i) => ({ ...i, value: 7 }))) === 105)
+  const meja = igralci.map((i, n) => ({ ...i, value: n === 15 ? 7.6 : 6.6 }))
+  preveri('kader: decimalne cene in kader točno za 100', najcenejsi(meja) === 100)
+  preveri('kader: podvojena vrstica ne ustvari dodatnega igralca',
+    najcenejsi([...igralci.filter((i) => i.position !== 'GK'), igralci[5], igralci[5]]) === null)
+
+  // Izčrpna izbira podmnožic je neodvisna kontrola minimuma pri prepletenih klubih.
+  const izcrpno = (vsi) => {
+    let minimum = Infinity
+    const izberi = (od, kader) => {
+      if (kader.length === 15) {
+        const poPoziciji = { GK: 0, DEF: 0, MID: 0, FWD: 0 }
+        const poKlubu = new Map()
+        for (const i of kader) {
+          poPoziciji[i.position]++
+          poKlubu.set(i.team_id, (poKlubu.get(i.team_id) ?? 0) + 1)
+        }
+        if (poPoziciji.GK === 2 && poPoziciji.DEF === 5 && poPoziciji.MID === 5 &&
+            poPoziciji.FWD === 3 && [...poKlubu.values()].every((n) => n <= 3))
+          minimum = Math.min(minimum, kader.reduce((vsota, i) => vsota + Math.round(i.value * 100), 0))
+        return
+      }
+      for (let i = od; i <= vsi.length - (15 - kader.length); i++)
+        izberi(i + 1, [...kader, vsi[i]])
+    }
+    izberi(0, [])
+    return Number.isFinite(minimum) ? minimum / 100 : null
+  }
+  for (let primer = 0; primer < 6; primer++) {
+    const kandidati = [...igralci, ...skupina(6, 'DEF', [4.2]), ...skupina(6, 'MID', [4.8])]
+      .map((i, n) => ({ ...i, value: 4 + ((n * 7 + primer * 3) % 30) / 10 }))
+    preveri(`kader: minimum se ujema z izčrpnim iskanjem (${primer + 1})`,
+      najcenejsi(kandidati) === izcrpno(kandidati))
+  }
   const zdrava = {
     aktivnih: 400, privzetih: 200, klubov: 12, najvisjaCena: 12,
     poPozicijah: { GK: 30, DEF: 120, MID: 130, FWD: 70 },
     nastopovSKlopi: 1200, golovBrezNastopa: 0, krogovTekoce: 22,
+    igralci,
   }
   const o = oceniPripravljenost(zdrava)
   preveri('pripravljenost: zdrava liga je pripravljena', o.pripravljena,
     o.tezave.map((t) => t.kaj).join('; '))
+
+  preveri('pripravljenost: pet branilcev iz enega kluba ustavi vklop',
+    !oceniPripravljenost({ ...zdrava, igralci: vsiBranilciIzEnega }).pripravljena)
+  preveri('pripravljenost: najcenejši kader nad proračunom ustavi vklop',
+    !oceniPripravljenost({ ...zdrava, igralci: igralci.map((i) => ({ ...i, value: 7 })) }).pripravljena)
+  preveri('pripravljenost: brez podatkov za kader ni dovoljenja za vklop',
+    !oceniPripravljenost({ ...zdrava, igralci: undefined }).pripravljena)
+  preveri('pripravljenost: kader točno na proračunu dovoljuje vklop',
+    oceniPripravljenost({ ...zdrava, igralci: meja }).pripravljena)
 
   const vsiPrivzeti = oceniPripravljenost({ ...zdrava, privzetih: 380, najvisjaCena: 4.5 })
   preveri('pripravljenost: cenik brez razlik ustavi vklop', !vsiPrivzeti.pripravljena)
@@ -691,11 +935,18 @@ preveri(
   const goliBrez = oceniPripravljenost({ ...zdrava, golovBrezNastopa: 12 })
   preveri('pripravljenost: gol brez nastopa strelca ustavi vklop', !goliBrez.pripravljena)
 
-  const malo = oceniPripravljenost({ ...zdrava, klubov: 3 })
+  // Povzetki so za prikaz; o izvedljivosti odločajo dejanski kandidati.
+  preveri('pripravljenost: izvedljiv kader ni odvisen od ločenih števcev',
+    oceniPripravljenost({ ...zdrava, klubov: 0, poPozicijah: {} }).pripravljena)
+  const malo = oceniPripravljenost({ ...zdrava,
+    igralci: igralci.map((i) => ({ ...i, team_id: i.team_id % 3 })),
+  })
   preveri('pripravljenost: premalo klubov za kader', !malo.pripravljena,
     malo.tezave.map((t) => t.kljuc).join(','))
 
-  const brezVratarjev = oceniPripravljenost({ ...zdrava, poPozicijah: { ...zdrava.poPozicijah, GK: 1 } })
+  const brezVratarjev = oceniPripravljenost({ ...zdrava,
+    igralci: igralci.filter((i) => i.position !== 'GK'),
+  })
   preveri('pripravljenost: premalo vratarjev', !brezVratarjev.pripravljena)
 
   const brezKrogov = oceniPripravljenost({ ...zdrava, krogovTekoce: 0 })
@@ -703,6 +954,98 @@ preveri(
 
   preveri('pripravljenost: vsaka tezava ima razlago',
     vsiPrivzeti.tezave.every((t) => t.kaj && t.zakaj))
+
+  // Pravi CLI mora prenesti tudi seznam igralcev iz RPC; sicer ustavi vsak uvoz.
+  // Nadomestimo le omrežje, da smoke ne more doseči niti lokalne niti produkcijske baze.
+  const { spawnSync } = await import('node:child_process')
+  const cli = (skripta, kandidati, moznosti = {}) => spawnSync(process.execPath, ['--input-type=module', '-e', `
+    const igralci = ${JSON.stringify(kandidati)}
+    const moznosti = ${JSON.stringify(moznosti)}
+    const liga = { id: 1, name: 'Preizkusna liga', slug: 'preizkus' }
+    process.argv = ['node', ${JSON.stringify(skripta)}, '--tekmovanje', liga.slug]
+    globalThis.fetch = async (vhod, nastavitve) => {
+      const zahteva = new Request(vhod, nastavitve)
+      const url = new URL(zahteva.url)
+      const tabela = url.pathname.split('/').pop()
+      const odgovor = (data, status = 200) => new Response(JSON.stringify(data), {
+        status, headers: { 'Content-Type': 'application/json' },
+      })
+      if (tabela === 'competitions')
+        return odgovor(url.searchParams.has('slug') ? liga : [liga])
+      if (tabela === 'preveri_podatke') return odgovor([])
+      if (tabela === 'players') {
+        const od = Number(url.searchParams.get('offset') ?? 0)
+        const koliko = Number(url.searchParams.get('limit') ?? 1000)
+        return odgovor(igralci.slice(od, od + koliko))
+      }
+      if (tabela === 'stanje_lige') {
+        if (moznosti.napaka) return odgovor({ message: 'Stanje ni dosegljivo' }, 500)
+        if (moznosti.prazno) return odgovor(null)
+        return odgovor({
+          aktivnih: igralci.length,
+          privzetih: igralci.filter((i) => i.value === 4.5).length,
+          klubov: new Set(igralci.map((i) => i.team_id)).size,
+          najvisja_cena: Math.max(...igralci.map((i) => i.value)),
+          po_pozicijah: Object.fromEntries(['GK', 'DEF', 'MID', 'FWD'].map((p) =>
+            [p, igralci.filter((i) => i.position === p).length])),
+          nastopov_s_klopi: 10, golov_brez_nastopa: 0, krogov_tekoce: 1,
+          ...(moznosti.brezIgralcev ? {} : { igralci }),
+        })
+      }
+      throw new Error('Nepričakovana zahteva: ' + zahteva.method + ' ' + url)
+    }
+    await import(${JSON.stringify(new URL('./', import.meta.url).href)} + ${JSON.stringify(skripta)})
+  `], {
+    encoding: 'utf8', timeout: 10000,
+    env: { PATH: process.env.PATH, SUPABASE_URL: 'http://127.0.0.1:54321',
+      SUPABASE_SERVICE_ROLE_KEY: 'preizkusni-kljuc' },
+  })
+  const vrhCenika = skupina(6, 'GK', [12])
+  for (const skripta of ['preveri-podatke.mjs', 'pripravljenost-lige.mjs']) {
+    for (const [ime, kandidati, status] of [
+      ['pohlepna slepa ulica', igralci, 0],
+      ['kader točno za 100', meja, 0],
+      ['prepletene neizvedljive kvote', vsiBranilciIzEnega, 1],
+      ['kader nad proračunom', igralci.map((i) => ({ ...i, value: 7 })), 1],
+    ]) {
+      const izid = cli(skripta, [...kandidati, ...vrhCenika])
+      preveri(`${skripta}: ${ime}`, izid.status === status, izid.stderr || izid.stdout.trim())
+    }
+  }
+  for (const moznosti of [{ napaka: true }, { prazno: true }, { brezIgralcev: true }]) {
+    const izid = cli('pripravljenost-lige.mjs', [...igralci, ...vrhCenika], moznosti)
+    preveri(`pripravljenost CLI: manjkajoče stanje ne dovoli vklopa (${Object.keys(moznosti)[0]})`,
+      izid.status === 1 && !izid.stdout.includes('Liga je pripravljena na vklop'), izid.stderr.trim())
+    if (moznosti.prazno)
+      preveri('pripravljenost CLI: prazen odgovor ima razumljivo napako',
+        izid.stderr.includes('Stanja lige ni mogoče prebrati'))
+  }
+}
+
+// Uspešen prazen izid SQL ne sme prikriti neuspešnega branja lig.
+{
+  const { spawnSync } = await import('node:child_process')
+  const zagon = spawnSync(process.execPath, ['--input-type=module', '-e', `
+    globalThis.fetch = async (vhod, moznosti) => {
+      const zahteva = new Request(vhod, moznosti)
+      const pot = new URL(zahteva.url).pathname
+      if (pot.endsWith('/rpc/preveri_podatke'))
+        return new Response('[]', { headers: { 'Content-Type': 'application/json' } })
+      if (pot.endsWith('/competitions'))
+        return new Response(JSON.stringify({ message: 'Branje lig ni uspelo' }), {
+          status: 500, headers: { 'Content-Type': 'application/json' },
+        })
+      throw new Error('Nepričakovana zahteva: ' + pot)
+    }
+    await import(${JSON.stringify(new URL('./preveri-podatke.mjs', import.meta.url).href)})
+  `], {
+    encoding: 'utf8', timeout: 10000,
+    env: { PATH: process.env.PATH, SUPABASE_URL: 'http://127.0.0.1:54321',
+      SUPABASE_SERVICE_ROLE_KEY: 'preizkusni-kljuc' },
+  })
+  preveri('podatki: napaka branja lig konča nadzor z napako',
+    zagon.status === 1 && zagon.stderr.includes('Branje lig ni uspelo'), zagon.stderr.trim())
+  preveri('podatki: napaka branja lig nikoli ne izpiše uspeha', !zagon.stdout.includes('Vse v redu'))
 }
 
 // --- viri ------------------------------------------------------------------

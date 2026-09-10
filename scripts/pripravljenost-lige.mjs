@@ -42,8 +42,8 @@ const db = createClient(BASE, KLJUC, { auth: { persistSession: false } })
 const t = await najdiTekmovanje(db, slugTekmovanja())
 
 const { data, error } = await db.rpc('stanje_lige', { p_competition_id: t.id })
-if (error) {
-  console.error(`Stanja lige ni mogoče prebrati: ${error.message}`)
+if (error || !data) {
+  console.error(`Stanja lige ni mogoče prebrati: ${error?.message ?? 'Manjka odgovor baze.'}`)
   process.exit(1)
 }
 
@@ -56,6 +56,8 @@ const s = {
   nastopovSKlopi: data.nastopov_s_klopi ?? 0,
   golovBrezNastopa: data.golov_brez_nastopa ?? 0,
   krogovTekoce: data.krogov_tekoce ?? 0,
+  // Ločeni števci ne povedo, ali pozicije, klubi in proračun dopuščajo isti kader.
+  igralci: data.igralci,
 }
 
 const o = oceniPripravljenost(s)

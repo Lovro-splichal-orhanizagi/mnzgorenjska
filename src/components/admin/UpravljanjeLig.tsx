@@ -7,7 +7,7 @@
 // Ločeno od `Administracija.tsx`, ker je ta že skoraj tisoč vrstic.
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
-import { oceniPripravljenost, type Ocena } from '../../lib/pripravljenost'
+import { oceniPripravljenost, type Ocena, type IgralecZaKader } from '../../lib/pripravljenost'
 import type { Pozicija } from '../../lib/tipi'
 
 interface Liga {
@@ -31,6 +31,7 @@ interface Stanje {
   nastopov_s_klopi: number
   golov_brez_nastopa: number
   krogov_tekoce: number
+  igralci: IgralecZaKader[]
 }
 
 /** Pragovi, ki jih je smiselno nastaviti po ligi (ostalo ostane globalno). */
@@ -132,24 +133,27 @@ export default function UpravljanjeLig() {
       nastopovSKlopi: s.nastopov_s_klopi,
       golovBrezNastopa: s.golov_brez_nastopa,
       krogovTekoce: s.krogov_tekoce,
+      igralci: s.igralci,
     })
   }
 
-  const preklopi = async (l: Liga, vsiljeno = false) => {
+  const preklopi = async (l: Liga) => {
     setNapaka(null)
     setSporocilo(null)
-    const o = ocenaZa(l)
-    if (!l.active && !vsiljeno && !o.pripravljena) {
-      setNapaka(`Lige "${l.name}" ni mogoče vklopiti — najprej odpravi zadržke spodaj.`)
-      return
-    }
     setDelam(l.id)
+    // Sprožilec preveri stanje ob zapisu; prikaz v brskalniku je lahko že zastarel.
     const { error } = await supabase
       .from('competitions')
       .update({ active: !l.active })
       .eq('id', l.id)
+      .select('id')
+      .single()
     setDelam(null)
-    if (error) return setNapaka(error.message)
+    if (error) {
+      setNapaka(error.message)
+      await nalozi()
+      return
+    }
     setSporocilo(`${l.name}: ${!l.active ? 'vklopljena' : 'izklopljena'}.`)
     nalozi()
   }
@@ -252,14 +256,6 @@ export default function UpravljanjeLig() {
                           <p className="text-xs text-amber-200/70">{t.zakaj}</p>
                         </div>
                       ))}
-                      {!l.active && (
-                        <button
-                          onClick={() => preklopi(l, true)}
-                          className="text-xs text-slate-400 underline hover:text-slate-200"
-                        >
-                          Vseeno vklopi (vem, kaj delam)
-                        </button>
-                      )}
                     </div>
                   )}
 

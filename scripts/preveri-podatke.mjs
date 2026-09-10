@@ -13,7 +13,8 @@
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'node:fs'
 import { vseVrstice } from './strani.mjs'
-import { POZICIJE, VELIKOST_EKIPE, MAX_IZ_KLUBA, PRORACUN } from '../src/lib/pravila.ts'
+import { VELIKOST_EKIPE, PRORACUN } from '../src/lib/pravila.ts'
+import { najcenejsiKader } from '../src/lib/pripravljenost.ts'
 
 function izEnv() {
   try {
@@ -57,7 +58,11 @@ for (const t of izBaze ?? [])
 // Pozicije in klubi so lahko vsak zase v redu, ekipa pa vseeno nemogoča:
 // pravilo o največ treh igralcih iz kluba in proračun se sekata. Zato
 // poskusimo sestaviti najcenejši veljaven kader.
-const { data: lige } = await db.from('competitions').select('id, slug').eq('active', true)
+const { data: lige, error: napakaLig } = await db.from('competitions').select('id, slug').eq('active', true)
+if (napakaLig || !lige) {
+  console.error(`Lig ni bilo mogoče prebrati: ${napakaLig?.message ?? 'Manjka odgovor baze.'}`)
+  process.exit(1)
+}
 
 for (const l of lige ?? []) {
   const igralci = await vseVrstice((od, do_) =>
@@ -71,30 +76,14 @@ for (const l of lige ?? []) {
       .range(od, do_),
   )
 
-  const naKlub = {}
-  let cena = 0
-  let manjka = null
-  for (const [koda, pravilo] of Object.entries(POZICIJE)) {
-    const kandidati = igralci
-      .filter((i) => i.position === koda)
-      .sort((a, b) => Number(a.value) - Number(b.value))
-    let vzeto = 0
-    for (const i of kandidati) {
-      if (vzeto >= pravilo.kader) break
-      if ((naKlub[i.team_id] ?? 0) >= MAX_IZ_KLUBA) continue
-      naKlub[i.team_id] = (naKlub[i.team_id] ?? 0) + 1
-      cena += Number(i.value)
-      vzeto++
-    }
-    if (vzeto < pravilo.kader) manjka = `${pravilo.naslov}: ${vzeto} od ${pravilo.kader}`
-  }
+  const cena = najcenejsiKader(igralci)
 
-  if (manjka)
+  if (cena === null)
     tezave.push({
       kljuc: 'kader-nemogoc',
       opis: `Veljavnega kadra ${VELIKOST_EKIPE} igralcev ni mogoče sestaviti`,
       koliko: 1,
-      primer: `${l.slug} — ${manjka}`,
+      primer: l.slug,
     })
   else if (cena > PRORACUN)
     tezave.push({
