@@ -505,50 +505,49 @@ export default function Domov() {
       {/* igralec kroga in najboljši strelci — eden ob drugem */}
       <div className="grid items-start gap-4 lg:grid-cols-2">
         <div className="space-y-2">
-          {/* Igralec kroga — najboljši posameznik kroga, velika kartica.
-              Postavitev: 3-stolpicni grid (zvezda | ime+klub+min | tocke).
-              Prej flex+wrap: dolgo ime (Ljubljancani z dvema priimkoma) je
-              tocke odvrglo pod ime in kartica je izgledala zamaknjena. Grid
-              drzi stolpce ne glede na sirino imena. */}
+          {/* Igralec kroga — vertikalno zloženo na mobilnem, na sm+ ostane
+              horizontalni razpored. Prej 3-stolpicni grid: dolga imena in
+              zvezda so kartico razrezali na "zamaknjene" stolpce, ker je
+              ime v srednjem stolpcu bilo veliko sirse od ostalih dveh.
+              Zdaj: header (zvezda + oznaka), ime cez celo sirino, spodaj
+              klub+meta levo, tocke desno. */}
           {krogNajboljsi[0] && (
             <section className="relative overflow-hidden rounded-3xl border border-amber-300/40 bg-gradient-to-br from-amber-500/20 via-slate-950/60 to-fuchsia-500/10 p-4 shadow-lg shadow-black/40 sm:p-6">
-              <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 sm:gap-6">
-                <div className="text-4xl leading-none sm:text-6xl">🌟</div>
-                <div className="min-w-0">
-                  <div className="text-[11px] font-bold uppercase tracking-wide text-amber-200/80 sm:text-xs">
-                    Igralec {krog?.number}. kroga
-                  </div>
-                  <Link
-                    to={`/igralec/${krogNajboljsi[0].player_id}`}
-                    className="mt-0.5 block break-words text-xl font-black leading-tight text-white hover:text-gnl-200 sm:text-3xl md:text-4xl"
+              <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-amber-200/80 sm:text-xs">
+                <span className="text-lg leading-none sm:text-xl">🌟</span>
+                <span>Igralec {krog?.number}. kroga</span>
+              </div>
+              <Link
+                to={`/igralec/${krogNajboljsi[0].player_id}`}
+                className="mt-1 block break-words text-2xl font-black leading-tight text-white hover:text-gnl-200 sm:text-3xl md:text-4xl"
+              >
+                {prikazniIme(krogNajboljsi[0].full_name)}
+              </Link>
+              <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
+                <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-300 sm:text-sm">
+                  <Grb
+                    ime={krogNajboljsi[0].team_name}
+                    kratko={krogNajboljsi[0].team_short}
+                    logo={krogNajboljsi[0].team_logo}
+                    velikost={18}
+                  />
+                  <span className="truncate">{krogNajboljsi[0].team_name}</span>
+                  <span
+                    className={`znacka poz-${krogNajboljsi[0].position}`}
                   >
-                    {prikazniIme(krogNajboljsi[0].full_name)}
-                  </Link>
-                  <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-300 sm:text-sm">
-                    <Grb
-                      ime={krogNajboljsi[0].team_name}
-                      kratko={krogNajboljsi[0].team_short}
-                      logo={krogNajboljsi[0].team_logo}
-                      velikost={18}
-                    />
-                    <span className="truncate">{krogNajboljsi[0].team_name}</span>
-                    <span
-                      className={`znacka poz-${krogNajboljsi[0].position}`}
-                    >
-                      {krogNajboljsi[0].position}
-                    </span>
-                    <span className="text-slate-500">
-                      · {krogNajboljsi[0].minutes} min
-                    </span>
-                  </div>
+                    {krogNajboljsi[0].position}
+                  </span>
+                  <span className="text-slate-500">
+                    · {krogNajboljsi[0].minutes} min
+                  </span>
                 </div>
-                <div className="text-right">
-                  <div className="text-3xl font-black tabular-nums text-amber-200 sm:text-5xl">
+                <div className="flex items-baseline gap-1 leading-none">
+                  <span className="text-3xl font-black tabular-nums text-amber-200 sm:text-5xl">
                     {formatirajTocke(krogNajboljsi[0].points)}
-                  </div>
-                  <div className="text-[10px] uppercase tracking-wide text-slate-400 sm:text-xs">
+                  </span>
+                  <span className="text-[10px] uppercase tracking-wide text-slate-400 sm:text-xs">
                     točk
-                  </div>
+                  </span>
                 </div>
               </div>
             </section>
