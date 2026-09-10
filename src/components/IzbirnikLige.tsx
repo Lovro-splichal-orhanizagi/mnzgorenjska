@@ -117,11 +117,10 @@ export default function IzbirnikLige() {
         // je Igralce in nadrznil se je nad Ljubljancani na gorenjski lestvici.
         // Ambrasti gumb z obrobo je vidno drugacen od cistih tekstualnih
         // povezav v meniju. Na mobilnem kratko ime, na desktopu polno.
-        className="flex max-w-full items-center gap-1 whitespace-nowrap
-                   rounded-xl bg-amber-500/15 px-2 py-1.5 text-[11px] font-black
+        className="flex max-w-full items-center gap-1.5 whitespace-nowrap
+                   rounded-xl bg-amber-500/15 px-3 py-2 text-sm font-black
                    ring-1 ring-amber-400/40 shadow-sm shadow-amber-500/10
-                   transition hover:bg-amber-500/25 hover:ring-amber-400/60
-                   sm:px-3 sm:py-2 sm:text-sm"
+                   transition hover:bg-amber-500/25 hover:ring-amber-400/60"
       >
         <span className="hidden shrink-0 text-[10px] font-bold uppercase tracking-wide text-amber-300/80 sm:inline">
           Liga:

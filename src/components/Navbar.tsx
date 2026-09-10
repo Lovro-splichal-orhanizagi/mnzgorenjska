@@ -89,7 +89,7 @@ export default function Navbar() {
         <div className="flex items-center gap-3 lg:gap-4">
           <NavLink to="/" className="flex shrink-0 items-center gap-2 font-black">
             <img src="/logo/slff-grb.png" alt="" className="h-8 w-8" />
-            <span className="naslov">SLFF</span>
+            <span className="naslov hidden sm:inline">SLFF</span>
           </NavLink>
 
           <IzbirnikLige />
