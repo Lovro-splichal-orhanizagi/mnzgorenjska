@@ -101,32 +101,38 @@ export default function IzbirnikLige() {
   // Ena sama liga: izbirati ni česa.
   if (tekmovanja.length < 2) return null
 
-  // Polno ime lige (npr. "1. GNL — člani") namesto skrajšane kratice — po
-  // preklopu je jasno na prvi pogled, kje si. Ce je liga v drugi zvezi, zraven
-  // se okrasa zveze, ker "1. liga — clani" pri Ljubljani sicer ne pove nicesar.
-  const polnoIme = tekmovanje?.name ?? tekmovanje?.short_name ?? 'Izberi ligo'
+  // Na mobilnem prikazemo kratico (npr. "GNL Clani"), na desktopu polno ime.
+  // Prej je polno ime na mobilnem odrivalo hamburger meni z zaslona.
+  const kratko = tekmovanje?.short_name ?? 'Liga'
+  const polnoIme = tekmovanje?.name ?? kratko
   const zveza = pokaziZvezo(tekmovanja) ? tekmovanje?.federation_short : null
 
   return (
-    <div className="relative" ref={ovoj}>
+    <div className="relative min-w-0 shrink" ref={ovoj}>
       <button
         onClick={() => setOdprt(!odprt)}
         aria-haspopup="listbox"
         aria-expanded={odprt}
         // Preklopnik je bil premajhen — nov obiskovalec ga ni videl, kliknil
         // je Igralce in nadrznil se je nad Ljubljancani na gorenjski lestvici.
-        // Zdaj: viden gumb z ambrasto obrobo, izrazitejsi napis in prefiks
-        // "Liga:" — po dveh dneh je jasno, kje si.
-        className="flex max-w-[70vw] items-center gap-1.5 whitespace-nowrap rounded-xl
-                   bg-amber-500/15 px-3 py-1.5 text-xs font-black ring-1 ring-amber-400/40
-                   shadow-sm shadow-amber-500/10 transition
-                   hover:bg-amber-500/25 hover:ring-amber-400/60 sm:max-w-none sm:text-sm sm:py-2"
+        // Ambrasti gumb z obrobo je vidno drugacen od cistih tekstualnih
+        // povezav v meniju. Na mobilnem kratko ime, na desktopu polno.
+        className="flex max-w-full items-center gap-1 whitespace-nowrap
+                   rounded-xl bg-amber-500/15 px-2 py-1.5 text-[11px] font-black
+                   ring-1 ring-amber-400/40 shadow-sm shadow-amber-500/10
+                   transition hover:bg-amber-500/25 hover:ring-amber-400/60
+                   sm:px-3 sm:py-2 sm:text-sm"
       >
         <span className="hidden shrink-0 text-[10px] font-bold uppercase tracking-wide text-amber-300/80 sm:inline">
           Liga:
         </span>
-        {zveza && <span className="shrink-0 text-amber-200/80">{zveza}</span>}
-        <span className="truncate text-amber-100">{polnoIme}</span>
+        {zveza && (
+          <span className="hidden shrink-0 text-amber-200/80 sm:inline">
+            {zveza}
+          </span>
+        )}
+        <span className="truncate text-amber-100 sm:hidden">{kratko}</span>
+        <span className="hidden truncate text-amber-100 sm:inline">{polnoIme}</span>
         <span aria-hidden="true" className="shrink-0 text-amber-300/70">
           ▾
         </span>
