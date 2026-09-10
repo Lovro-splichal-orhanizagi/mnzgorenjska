@@ -255,6 +255,26 @@ Ekipo mora biti mogoče **sestaviti**: pozicije in klubi so lahko vsak zase v
 redu, pravilo o največ treh iz kluba in proračun pa se sekata. Skripta zato
 sestavi najcenejši veljaven kader in ga primerja s proračunom.
 
+## Dvojni pregled se je izplačal
+
+Ta postopek je nastal ob MNZ Ljubljana, potem pa ga je pregledal še drug
+model (Codex) in našel enajst napak, ki so vse držale. Dve se ponovita
+povsod, zato sta tu:
+
+- **Konstanta, prepisana na dveh mestih, se razide.** Preverba je javljala
+  napako nad 12.0, borza pa gre do 15.0 — zakonita cena je zvenela kot okvara.
+  Meje zdaj bere ena funkcija (`meje_borze()`), okno preračuna prav tako
+  (`okno_preracuna_tock()`).
+- **Približek namesto izračuna laže v obe smeri.** Izvedljivost kadra sem
+  ocenil s požrešnim izborom po pozicijah; javljal je »nemogoče« tam, kjer
+  veljaven kader obstaja, in spregledal primer, ko vseh pet branilcev pride iz
+  enega kluba. Zdaj jo izračuna `najcenejsi_kader()` in isto številko bereta
+  nočna preverba in vmesnik.
+
+Tretje, kar velja ponoviti: **varovalka v brskalniku ni varovalka.** Vklop
+lige zdaj brani sprožilec v bazi, zato pade tudi neposreden
+`update ... set active = true` s servisnim ključem.
+
 ## Pasti, ki niso v korakih
 
 - **PostgREST vrne največ 1000 vrstic in tega ne pove.** `.limit(5000)` in
@@ -284,6 +304,11 @@ sestavi najcenejši veljaven kader in ga primerja s proračunom.
   tekma ob spodleteli vstavitvi izgleda uvožena in nihče ne dobi točk.
 - **`--zapisnik <id>`** popravi eno samo tekmo. Ponovni uvoz cele lige med
   sezono premakne več, kot je treba.
+- **`--tedensko` je predogled**; za zapis je treba dodati `--pisi`. Preskoči
+  igralce, ki že imajo zgodovino v `price_changes` — tem ceno upravlja borza
+  in bi ju tedenski premik in ponovna uveljavitev starega kroga tolkla drug ob
+  drugega. Urnik je zaenkrat izklopljen: ponovni zagon isti teden bi premik
+  uporabil dvakrat, ker ni zapisa o že opravljenem tednu.
 - **`ovrednoti-igralce` brez `--tedensko` med sezono ne poganjaj.** Cene
   postavi na novo, `value_start` pa pusti pri miru — cena konča več kot 3.0
   od sidra in borza obstane. Preverba to ujame (`cena-predalec-od-sidra`).
