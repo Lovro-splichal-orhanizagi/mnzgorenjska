@@ -15,6 +15,7 @@
 // sabo močno razlikujejo — v slabši ekipi ima najboljši strelec lahko manj
 // golov kot rezervni napadalec v najboljši.
 import { createClient } from '@supabase/supabase-js'
+import { vseVrstice } from './strani.mjs'
 import { readFileSync } from 'node:fs'
 import {
   slugTekmovanja,

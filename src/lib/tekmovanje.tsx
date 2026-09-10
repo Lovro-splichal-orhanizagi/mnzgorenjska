@@ -128,6 +128,33 @@ function shranjeno(): string | null {
   }
 }
 
+// Stolpci, ki obstajajo šele po migraciji za zveze (20260909100000).
+const STOLPCI_ZVEZE =
+  'federation_code, federation_name, federation_short, federation_url, federation_sort'
+const STOLPCI_OSNOVNI =
+  'id, slug, name, short_name, prvi_fantasy_krog, country_code, country_name'
+
+/**
+ * Dopolni vrstico, prebrano po stari shemi, s praznimi polji zveze.
+ *
+ * Koda in migracije potujeta vsaka po svoji poti: koda gre v git in na
+ * Vercel, migracijo pa mora nekdo pognati proti Supabase. Če se vrstni red
+ * obrne — ali če migracija spodleti — PostgREST zavrne poizvedbo z neznanimi
+ * stolpci in vmesnik ostane BREZ LIG: nobena stran nima česa prikazati.
+ * Zato raje beremo, kar je na voljo; izbirnik lig brez zveze pokaže vse v eni
+ * skupini, kar je natanko tako, kot je bilo prej.
+ */
+export function brezZveze(v: Record<string, unknown>): Tekmovanje {
+  return {
+    federation_code: null,
+    federation_name: null,
+    federation_short: null,
+    federation_url: null,
+    federation_sort: null,
+    ...v,
+  } as Tekmovanje
+}
+
 export function TekmovanjeProvider({ children }: { children: ReactNode }) {
   const [iskanje, setIskanje] = useSearchParams()
   const [tekmovanja, setTekmovanja] = useState<Tekmovanje[]>([])
@@ -146,16 +173,32 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
-    supabase
+    let veljavno = true
+    const naloziti = async () => {
       // `competitions_view` prilozi zvezo in drzavo, da izbirnik ne spaja sam.
-      .from('competitions_view')
-      .select(
-        'id, slug, name, short_name, prvi_fantasy_krog, federation_code, federation_name, federation_short, federation_url, federation_sort, country_code, country_name',
-      )
-      .eq('active', true)
-      .order('federation_sort')
-      .order('sort_order')
-      .then(({ data }) => setTekmovanja((data as Tekmovanje[] | null) ?? []))
+      const polno = await supabase
+        .from('competitions_view')
+        .select(`${STOLPCI_OSNOVNI}, ${STOLPCI_ZVEZE}`)
+        .eq('active', true)
+        .order('federation_sort')
+        .order('sort_order')
+      if (!polno.error) return (polno.data as Tekmovanje[] | null) ?? []
+
+      // Migracija za zveze še ni stekla — beri po stari shemi, da vmesnik
+      // vseeno dobi lige.
+      const staro = await supabase
+        .from('competitions_view')
+        .select(STOLPCI_OSNOVNI)
+        .eq('active', true)
+        .order('sort_order')
+      return ((staro.data as Record<string, unknown>[] | null) ?? []).map(brezZveze)
+    }
+    naloziti().then((t) => {
+      if (veljavno) setTekmovanja(t)
+    })
+    return () => {
+      veljavno = false
+    }
   }, [])
 
   const { pathname } = useLocation()

@@ -3,7 +3,7 @@
 import { renderToString } from 'react-dom/server'
 import { StaticRouter } from 'react-router'
 import { AuthProvider } from '../src/lib/useAuth'
-import { TekmovanjeProvider, uskladiTekmovanje, jeIzrecnaIzbira } from '../src/lib/tekmovanje'
+import { TekmovanjeProvider, uskladiTekmovanje, jeIzrecnaIzbira, brezZveze } from '../src/lib/tekmovanje'
 import Navbar from '../src/components/Navbar'
 import RokKroga from '../src/components/RokKroga'
 import Domov from '../src/pages/Domov'
@@ -570,6 +570,30 @@ preveri(
   preveri('prag: sibek prior ne zniza', adaptivniPrag(0.1, 5, 2) === 5, String(adaptivniPrag(0.1, 5, 2)))
   preveri('prag: nikoli pod spodnjo mejo', adaptivniPrag(0.9, 3, 2) === 2, String(adaptivniPrag(0.9, 3, 2)))
   preveri('prag: liga s pragom 3 se zniza na 2', adaptivniPrag(0.8, 3, 2) === 2, String(adaptivniPrag(0.8, 3, 2)))
+}
+
+// --- vmesnik prezivi neuveljavljeno migracijo -------------------------------
+// Koda gre na Vercel, migracijo pa mora nekdo pognati proti Supabase. Ce se
+// vrstni red obrne, PostgREST zavrne poizvedbo z neznanimi stolpci in vmesnik
+// ostane BREZ LIG — nobena stran nima kaj pokazati. Zato zna brati tudi staro
+// shemo.
+{
+  const staraVrstica = {
+    id: 1, slug: 'clani', name: '1. GNL — clani', short_name: 'Clani',
+    prvi_fantasy_krog: 1, country_code: 'SI', country_name: 'Slovenija',
+  }
+  const t = brezZveze(staraVrstica)
+  preveri('stara shema: liga se prebere', t.slug === 'clani', t.slug)
+  preveri('stara shema: polja zveze so prazna, ne manjkajoca',
+    t.federation_code === null && t.federation_url === null && t.federation_sort === null,
+    JSON.stringify([t.federation_code, t.federation_url, t.federation_sort]))
+  preveri('stara shema: izbirnik jo uvrsti v skupino brez zveze',
+    poZvezah([t])[0].kljuc === '—', poZvezah([t])[0].kljuc)
+  preveri('stara shema: noga ne trdi vira', virPodatkov(t) === null)
+
+  // Ce stolpci ZE obstajajo, jih ne smemo povoziti s praznimi.
+  const nova = brezZveze({ ...staraVrstica, federation_code: 'mnzg', federation_name: 'MNZ Gorenjska' })
+  preveri('nova shema: zveza se ohrani', nova.federation_code === 'mnzg', String(nova.federation_code))
 }
 
 // --- branje cez mejo tisoc vrstic ------------------------------------------
