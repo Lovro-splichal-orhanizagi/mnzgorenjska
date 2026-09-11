@@ -3,6 +3,7 @@ import { izPovezav } from './zapisniki.mjs'
 // en vir ohrani skupno tekmovanje tudi pri uvozu klubov obeh zvez.
 import { parsirajZapisnik, nastopi, vBesedilo, izlusciPovezaveZapisnikov } from '../zapisnik-gorica.mjs'
 import { naredikljucKluba, kratkoIme, poenostavi } from '../klubi.mjs'
+import { ZAHOD } from './vzdevki-3snl.mjs'
 
 const OSNOVNI = 'https://mnzgorica.si'
 const rezultati = (liga) => `${OSNOVNI}/tekmovanja/${liga}/rezultati`
@@ -30,7 +31,9 @@ const vir = {
   izlusciPovezaveZapisnikov,
   nastopi,
   vBesedilo,
-  kljucKluba: naredikljucKluba({}),
+  // 3. SNL gre skozi dva vira (tekoca sezona in arhiv pri razlicnih
+  // zvezah), zato morata oba priti do istega kljuca kluba.
+  kljucKluba: naredikljucKluba({ ...ZAHOD }),
   kratkoIme,
   poenostavi,
 

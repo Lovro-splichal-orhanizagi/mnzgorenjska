@@ -1,6 +1,7 @@
 import { poKrogih } from './zapisniki.mjs'
 import { razclenjevalnikZa } from '../zapisnik-pomurje.mjs'
 import { naredikljucKluba, kratkoIme, poenostavi } from '../klubi.mjs'
+import { VZHOD } from './vzdevki-3snl.mjs'
 
 // Zapisniki so po krogih; povezav za posamezno tekmo v shranjenem viru ni.
 const OSNOVNI = 'https://www.mnzveza-ptuj.si'
@@ -22,7 +23,9 @@ const vir = {
     return `${OSNOVNI}/tekmovanja?sezona=${sezona}&liga=${liga}&podatek=program`
   },
   zapisniki: (koda, prenesi) => poKrogih(vir, koda, prenesi),
-  kljucKluba: naredikljucKluba({}),
+  // 3. SNL gre skozi dva vira (tekoca sezona in arhiv pri razlicnih
+  // zvezah), zato morata oba priti do istega kljuca kluba.
+  kljucKluba: naredikljucKluba({ ...VZHOD }),
   kratkoIme,
   poenostavi,
 }

@@ -1631,5 +1631,45 @@ preveri(
   preveri('viri: Maribor izpostavi enumeracijo zapisnikov', mb.izlusciIdjeZapisnikov(tekme).length === 132)
 }
 
+// --- 3. SNL: en klub cez dva vira -------------------------------------------
+// Ligo vodi NZS, tekoco sezono in arhiv pa objavita RAZLICNI zvezi. Klub gre
+// zato skozi dva razclenjevalnika; ce ne prideta do istega kljuca, dobi v bazi
+// dva zapisa in sezona se razdeli. Pari spodaj so dokazani s stevilom tekem v
+// arhivu 2023/24 (26 krogov): 14 + 12 = 26, 19 + 7 = 26.
+{
+  const vzhodArhiv = viraZa({ source: 'mnzle' })
+  const vzhodTekoca = viraZa({ source: 'mnzpt' })
+  const zahodArhiv = viraZa({ source: 'mnzlj', slug: 'snl3-zahod' })
+  const zahodTekoca = viraZa({ source: 'mnzng' })
+
+  const ujemata = (a, b, x, y) =>
+    a.kljucKluba(x) === a.kljucKluba(y) &&
+    b.kljucKluba(x) === b.kljucKluba(y) &&
+    a.kljucKluba(x) === b.kljucKluba(y)
+
+  for (const [x, y] of [['NK Izola', 'Izola'], ['Brda Dobrovo', 'Brda']]) {
+    preveri(`3. SNL Zahod: "${x}" je isti klub kot "${y}"`,
+      ujemata(zahodArhiv, zahodTekoca, x, y),
+      `${zahodArhiv.kljucKluba(x)} / ${zahodTekoca.kljucKluba(y)}`)
+  }
+  preveri('3. SNL Zahod: sponzorska predpona ne razkolje kluba',
+    ujemata(zahodArhiv, zahodTekoca, '\u0160en\u010dur', 'Eltron \u0160en\u010dur'),
+    zahodArhiv.kljucKluba('\u0160en\u010dur'))
+  for (const [x, y] of [['NK Ljutomer', 'Ljutomer'], ['ZASE Videm', 'Videm']]) {
+    preveri(`3. SNL Vzhod: "${x}" je isti klub kot "${y}"`,
+      ujemata(vzhodArhiv, vzhodTekoca, x, y),
+      `${vzhodArhiv.kljucKluba(x)} / ${vzhodTekoca.kljucKluba(y)}`)
+  }
+
+  // Vzdevki 3. SNL se prilijejo Ljubljani, ne da bi poteptali njene lastne.
+  preveri('3. SNL: Ljubljana ohrani svoje vzdevke',
+    zahodArhiv.kljucKluba('\u0160D Vir') === 'vir' &&
+    zahodArhiv.kljucKluba('Ljubljana Arol') === 'ljubljana')
+  // Klub brez para se ne sme tiho preslikati nikamor.
+  preveri('3. SNL: neznan klub ostane sam svoj',
+    vzhodTekoca.kljucKluba('Odranci') === 'odranci' &&
+    zahodTekoca.kljucKluba('TKK Tolmin') === 'tkk tolmin')
+}
+
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)
 process.exit(napak === 0 ? 0 : 1)

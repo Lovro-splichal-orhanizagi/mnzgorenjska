@@ -18,6 +18,7 @@
 import { parsirajZapisnik, nastopi, vBesedilo } from '../zapisnik.mjs'
 import { izSeznamaTekem } from './zapisniki.mjs'
 import { naredikljucKluba, kratkoIme, poenostavi } from '../klubi.mjs'
+import { ZAHOD } from './vzdevki-3snl.mjs'
 
 const OSNOVNI = 'https://www.mnzljubljana-zveza.si'
 
@@ -31,10 +32,15 @@ const OSNOVNI = 'https://www.mnzljubljana-zveza.si'
 //
 // Vzdevkov ne dodajamo na zalogo: "NK Ugar Ribnica" nima para v arhivu, zato
 // zanj ni ključa, pod katerega bi ga bilo pravilno spraviti.
+//
+// Ljubljana je poleg svojih dveh lig objavila tudi arhiv 3. SNL Zahod
+// (2023/24 in 2022/23). Tekočo sezono te lige objavlja Nova Gorica, zato se
+// vzdevki 3. SNL prilijejo obema viroma — sicer bi klub dobil dva zapisa.
 const ISTI_KLUB = {
   'ljubljana arol': 'ljubljana',
   'šd vir': 'vir',
   'nk iak kresnice': 'kresnice',
+  ...ZAHOD,
 }
 
 const vir = {
