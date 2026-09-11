@@ -23,7 +23,7 @@
 //
 // Vsak prenesen grb takoj pomanjšamo na največ 256 px (`sips`, sistemsko na
 // macOS) — vir jih ponuja tudi po 800 px in 1 MB, v aplikaciji pa se grb
-// izriše pri ~22–32 px. Če `sips` ni na voljo, grb ostane v izvirni velikosti.
+// izriše pri ~22–32 px. Na Windows to opravi `zmanjsaj-grb.ps1` prek .NET.
 import { createClient } from '@supabase/supabase-js'
 import {
   readFileSync,
@@ -33,9 +33,12 @@ import {
   statSync,
 } from 'node:fs'
 import { execFileSync } from 'node:child_process'
+import { resolve } from 'node:path'
 
 const MAPA = 'public/grbi'
 const NAJVECJA_STRANICA = 256
+// Nad tem grb ni videti kot grb, ampak kot pozabljena izvirna datoteka.
+const PRAG_KB = 150
 const NKK = 'https://nkkranj.si/wp-content/uploads'
 const NKV = 'https://www.nkvir.si/tl_files/Klubski%20grbi'
 
@@ -85,19 +88,59 @@ const GRBI = {
 }
 
 // Pomanjša datoteko na kvadrat NAJVECJA_STRANICA px (ohrani razmerje, ne
-// poveča manjših). `sips` je na macOS vedno na voljo; drugje tiho preskočimo.
-let sipsManjka = false
+// poveča manjših).
+//
+// Orodje je odvisno od sistema: macOS ima `sips`, Windows pa .NET prek
+// PowerShella (`zmanjsaj-grb.ps1`). ImageMagick namenoma ne poskušamo — na
+// Windows je `convert` sistemsko orodje za datotečne sisteme in bi ga
+// poklicali po nesreči.
+//
+// Prej je bil tu samo `sips`, kar je na Windows pomenilo tiho preskočeno
+// pomanjšanje: grb Trebnjega je tako pristal v repozitoriju pri 2466 px in
+// 1,3 MB, čeprav se izriše pri ~30 px. Zato zdaj prenos brez orodja ob koncu
+// pove naglas, kateri grbi so ostali preveliki.
+const PS_SKRIPTA = new URL('./zmanjsaj-grb.ps1', import.meta.url).pathname.replace(/^\//, '')
+let orodje // undefined = še nismo pogledali, null = nobenega
+
+function najdiOrodje() {
+  const kandidati = [
+    ['sips', ['--version']],
+    ['powershell', ['-NoProfile', '-Command', 'exit 0']],
+  ]
+  for (const [ime, args] of kandidati) {
+    try {
+      execFileSync(ime, args, { stdio: 'ignore' })
+      return ime
+    } catch {
+      // gremo na naslednjega
+    }
+  }
+  return null
+}
+
 function zmanjsaj(pot) {
-  if (sipsManjka) return
+  if (orodje === undefined) {
+    orodje = najdiOrodje()
+    if (!orodje)
+      console.log('  (ni orodja za pomanjšanje — grbi ostanejo v izvirni velikosti)')
+  }
+  if (!orodje) return
   try {
-    execFileSync(
-      'sips',
-      ['--resampleHeightWidthMax', String(NAJVECJA_STRANICA), pot],
-      { stdio: 'ignore' },
-    )
+    if (orodje === 'sips')
+      execFileSync(
+        'sips',
+        ['--resampleHeightWidthMax', String(NAJVECJA_STRANICA), pot],
+        { stdio: 'ignore' },
+      )
+    else
+      execFileSync(
+        'powershell',
+        ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', PS_SKRIPTA,
+         '-Pot', resolve(pot), '-Max', String(NAJVECJA_STRANICA)],
+        { stdio: 'ignore' },
+      )
   } catch (e) {
-    sipsManjka = true
-    console.log(`  (sips ni na voljo — grbi ostanejo v izvirni velikosti: ${e.code ?? e.message})`)
+    console.log(`  (pomanjšanje ni uspelo: ${e.code ?? e.message})`)
   }
 }
 
@@ -174,6 +217,7 @@ if (!pisi) {
 
 if (!existsSync(MAPA)) mkdirSync(MAPA, { recursive: true })
 
+const preveliki = []
 let preneseno = 0
 for (const n of nacrt) {
   try {
@@ -196,6 +240,7 @@ for (const n of nacrt) {
     console.log(
       `  ✓ ${n.klub.name} (${zdaj} kB${zdaj !== izvirna ? `, prej ${izvirna} kB` : ''})`,
     )
+    if (koncna > PRAG_KB * 1024) preveliki.push(`${n.pot} (${zdaj} kB)`)
     preneseno++
   } catch (e) {
     console.log(`  ✗ ${n.klub.name}: ${e.message}`)
@@ -203,3 +248,8 @@ for (const n of nacrt) {
 }
 
 console.log(`\nPrenesenih grbov: ${preneseno}`)
+if (preveliki.length) {
+  console.log(`\nPreveliki grbi (nad ${PRAG_KB} kB) — pomanjšanje ni steklo:`)
+  for (const g of preveliki) console.log(`  ! ${g}`)
+  console.log('  Poženi scripts/zmanjsaj-grb.ps1 ali sips ročno, preden jih commitaš.')
+}
