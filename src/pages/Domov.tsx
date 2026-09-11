@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { imeZveze } from '../components/VirPodatkov'
+import { sestaviVabilo, vabiloMailto } from '../lib/vabilo'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { PRAVILA_OPIS } from '../lib/tockovanje'
@@ -47,6 +48,25 @@ interface KrogPodatek {
 export default function Domov() {
   const { id: tekmovanjeId, tekmovanje, tekmovanja } = useTekmovanje()
   const zveza = imeZveze(tekmovanje)
+  const [klubiLige, setKlubiLige] = useState<string[]>([])
+  const vabilo = vabiloMailto(sestaviVabilo(tekmovanje, klubiLige))
+
+  // Klube beremo samo za vabilo; brez njih vabilo ostane smiselno, le brez
+  // seznama imen.
+  useEffect(() => {
+    if (!tekmovanjeId) return
+    let veljavno = true
+    supabase
+      .from('competition_teams')
+      .select('name')
+      .eq('competition_id', tekmovanjeId)
+      .then(({ data }) => {
+        if (veljavno) setKlubiLige((data ?? []).map((k) => k.name as string))
+      })
+    return () => {
+      veljavno = false
+    }
+  }, [tekmovanjeId])
   const [stat, setStat] = useState<Statistika | null>(null)
   const [zvezde, setZvezde] = useState<VrhIgralec[]>([])
   const [podajalci, setPodajalci] = useState<VrhIgralec[]>([])
@@ -808,11 +828,7 @@ export default function Domov() {
             </p>
           </div>
           <a
-            href={`mailto:?subject=${encodeURIComponent(
-              'Fantasy liga za 1. GNL — pridi zraven',
-            )}&body=${encodeURIComponent(
-              'Živjo!\n\nIgram fantasy nogometno ligo za 1. Gorenjsko nogometno ligo — sestaviš svojo ekipo iz igralcev iz naših klubov (Preddvor, Sava Kranj, Jezero Medvode, Bled-Bohinj Hirter, Britof, Visoko, Polet, Velesovo-Cerklje, Zarica, Bitnje, Niko Železniki, Tržič, Kranjska Gora) in tekmuješ z drugimi.\n\nPovsem brezplačno. Registriraj se na:\nhttps://slff.eu\n\nSestavi ekipo, določi kapetana in po vsakem krogu preveri, kdo je zbral največ točk.\n\nSe vidimo v ligi!',
-            )}`}
+            href={vabilo}
             className="gumb-glavni shrink-0"
           >
             Odpri e-pošto

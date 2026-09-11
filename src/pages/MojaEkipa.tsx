@@ -924,7 +924,7 @@ export default function MojaEkipa() {
               ref={imeRef}
               value={imeEkipe}
               onChange={(e) => setImeEkipe(e.target.value)}
-              placeholder="npr. Gorenjski Orli"
+              placeholder="npr. Nedeljski Junaki"
               className={`mt-1 w-full rounded-xl border bg-slate-900 px-3 py-2 text-sm ${
                 !imeEkipe.trim() && napaka
                   ? 'border-rose-400/60 ring-1 ring-rose-400/30'

@@ -15,10 +15,10 @@ export default function Pravno() {
       <section className="space-y-3">
         <h2 className="text-lg font-bold">Kaj je SLFF</h2>
         <p className="text-slate-300">
-          SLFF (Sunday League Fantasy Football) je navijaška fantasy liga za 1.
-          Gorenjsko nogometno ligo. Vodimo jo ljubiteljsko in ni povezana z MNZ
-          Gorenjska, NZS ali s klubi. Igra je brezplačna in brez denarnih vložkov
-          ali nagrad.
+          SLFF (Sunday League Fantasy Football) je navijaška fantasy liga za
+          slovenske medobčinske nogometne lige. Vodimo jo ljubiteljsko in ni
+          povezana z medobčinskimi nogometnimi zvezami, NZS ali s klubi. Igra je
+          brezplačna in brez denarnih vložkov ali nagrad.
         </p>
       </section>
 
@@ -60,7 +60,8 @@ export default function Pravno() {
         <h2 className="text-lg font-bold">Statistika igralcev</h2>
         <p className="text-slate-300">
           Podatki o nogometaših (nastopi, goli, kartoni) so povzeti po javno
-          objavljenih zapisnikih MNZ Gorenjska. Pozicije in asistence, ki jih
+          objavljenih zapisnikih medobčinskih nogometnih zvez; katere so za
+          izbrano ligo, piše v nogi strani. Pozicije in asistence, ki jih
           zapisnik ne vsebuje, določi skupnost z glasovanjem — zato so lahko
           napačne. Če je kaj narobe, klikni igralca in nam sporoči.
         </p>
@@ -84,7 +85,7 @@ export default function Pravno() {
             Unsplashu
           </a>{' '}
           pod njihovo licenco, ki dovoljuje prosto uporabo. Ne prikazuje
-          igralcev 1. GNL.
+          igralcev naših lig.
         </p>
       </section>
 

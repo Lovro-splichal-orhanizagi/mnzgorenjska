@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../lib/useAuth'
 import { useTekmovanje } from '../lib/tekmovanje'
+import { sestaviVabilo, vabiloMailto } from '../lib/vabilo'
 import { supabase } from '../lib/supabase'
 import IzbirnikLige from './IzbirnikLige'
 
@@ -21,22 +22,35 @@ const povezave: Povezava[] = [
   { pot: '/lestvica', naslov: 'Lestvica' },
 ]
 
-const VABILO_MAILTO =
-  'mailto:?subject=' +
-  encodeURIComponent('Fantasy liga za 1. GNL — pridi zraven') +
-  '&body=' +
-  encodeURIComponent(
-    'Živjo!\n\nIgram fantasy nogometno ligo za 1. Gorenjsko nogometno ligo — sestaviš svojo ekipo iz igralcev naših klubov (Preddvor, Sava Kranj, Jezero Medvode, Bled-Bohinj Hirter, Britof, Visoko, Polet, Velesovo-Cerklje, Zarica, Bitnje, Niko Železniki, Tržič, Kranjska Gora) in tekmuješ z drugimi.\n\nPovsem brezplačno. Registriraj se na:\nhttps://slff.eu\n\nSestavi ekipo, določi kapetana in po vsakem krogu preveri, kdo je zbral največ točk.\n\nSe vidimo v ligi!',
-  )
+// Vabilo sestavimo iz izbrane lige in njenih klubov (glej `lib/vabilo.ts`).
 
 export default function Navbar() {
   const { session } = useAuth()
-  const { id: tekmovanjeId } = useTekmovanje()
+  const { id: tekmovanjeId, tekmovanje } = useTekmovanje()
+  const [klubiLige, setKlubiLige] = useState<string[]>([])
   const [jeAdmin, setJeAdmin] = useState(false)
   const [odprt, setOdprt] = useState(false)
   // Koliko golov tekoče sezone še čaka na asistenco — značka ob povezavi je
   // najzanesljivejši opomnik, da liga brez glasov ne deluje.
   const [cakaGlasov, setCakaGlasov] = useState(0)
+
+  // Klube beremo za vabilo; brez njih vabilo ostane smiselno, le brez seznama.
+  useEffect(() => {
+    if (!tekmovanjeId) return
+    let veljavno = true
+    supabase
+      .from('competition_teams')
+      .select('name')
+      .eq('competition_id', tekmovanjeId)
+      .then(({ data }) => {
+        if (veljavno) setKlubiLige((data ?? []).map((k) => k.name as string))
+      })
+    return () => {
+      veljavno = false
+    }
+  }, [tekmovanjeId])
+
+  const vabilo = vabiloMailto(sestaviVabilo(tekmovanje, klubiLige))
 
   useEffect(() => {
     if (!tekmovanjeId) return
@@ -109,7 +123,7 @@ export default function Navbar() {
                 Na ozjih desktopih (lg 1024–1279) samo ikona, da menija ne
                 stisne; polni napis se vrne na xl. */}
             <a
-              href={VABILO_MAILTO}
+              href={vabilo}
               title="Povabi prijatelja"
               aria-label="Povabi prijatelja"
               className="rounded-lg bg-fuchsia-500/15 px-3 py-1.5 font-semibold text-fuchsia-200 ring-1 ring-fuchsia-400/30 hover:bg-fuchsia-500/25"
@@ -165,7 +179,7 @@ export default function Navbar() {
               </NavLink>
             ))}
             <a
-              href={VABILO_MAILTO}
+              href={vabilo}
               className="col-span-2 rounded-lg bg-fuchsia-500/15 px-3 py-1.5 text-center font-semibold text-fuchsia-200 ring-1 ring-fuchsia-400/30"
               onClick={() => setOdprt(false)}
             >

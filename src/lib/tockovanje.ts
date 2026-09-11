@@ -1,6 +1,6 @@
-// Točkovanje Gorenjske Fantasy Lige.
+// Točkovanje SLFF.
 //
-// Točke se računajo iz uradnih zapisnikov MNZ Gorenjska, razen asistenc in
+// Točke se računajo iz uradnih zapisnikov medobčinskih zvez, razen asistenc in
 // pozicij, ki jih določi skupnost z glasovanjem.
 
 import type { IzracunTock, Nastop, Postavka, Pozicija } from './tipi'
