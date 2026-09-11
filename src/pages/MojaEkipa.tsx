@@ -518,13 +518,22 @@ export default function MojaEkipa() {
     setNapaka(null)
     setSporocilo(null)
 
+    // Brez znane lige ekipe ne vstavljamo. Stolpec `competition_id` ima v
+    // bazi privzeto vrednost `tekmovanje_id('clani')`, zato bi ekipa ob
+    // `undefined` tiho pristala v gorenjski ligi — karkoli je uporabnik
+    // gledal. Rajši povemo, da liga še ni naložena.
+    if (!tekmovanjeId) {
+      setNapaka('Liga se še nalaga — poskusi še enkrat čez trenutek.')
+      return
+    }
+
     let ekipaId = ekipa?.id
     if (!ekipaId) {
       const { data, error } = await supabase
         .from('fantasy_teams')
         .insert({
           owner_id: session!.user.id,
-          competition_id: tekmovanjeId ?? undefined,
+          competition_id: tekmovanjeId,
           name: imeEkipe.trim(),
         })
         .select('id, name, budget, cash')
