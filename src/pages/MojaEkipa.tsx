@@ -906,6 +906,9 @@ export default function MojaEkipa() {
         <div className="block">
           <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
             Ime ekipe
+            {!ekipa?.name && (
+              <span className="ml-1 text-amber-300/80">· obvezno</span>
+            )}
           </span>
           {ekipa?.name ? (
             <div className="mt-1 flex items-center gap-2 rounded-xl border border-white/10 bg-slate-900/60 px-3 py-2 text-sm">
@@ -1464,7 +1467,11 @@ export default function MojaEkipa() {
             onClick={poskusiShraniti}
             className="gumb-glavni shrink-0 px-3 py-2 text-xs"
           >
-            {!imeEkipe.trim() || napakeEkipe.length ? 'Osnutek' : 'Shrani'}
+            {!imeEkipe.trim()
+              ? 'Vpiši ime'
+              : napakeEkipe.length
+                ? 'Osnutek'
+                : 'Shrani'}
           </button>
         </div>
       </div>
