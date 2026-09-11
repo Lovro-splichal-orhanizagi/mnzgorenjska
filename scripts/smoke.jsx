@@ -1143,7 +1143,7 @@ preveri(
 // pripeljala Kamnik, Termit Moravce, SD Vir in se pet tujih klubov.
 {
   const vrstice = (ime) =>
-    readFileSync(new URL(`../scripts/vzorci/${ime}`, import.meta.url), 'utf8').split('\n')
+    readFileSync(new URL(`../scripts/vzorci/${ime}`, import.meta.url), 'utf8').split(/\r?\n/)
 
   const klubi = (krogi) =>
     new Set(krogi.flatMap((k) => k.tekme.flatMap((t) => [t.domaci, t.gostje])))
