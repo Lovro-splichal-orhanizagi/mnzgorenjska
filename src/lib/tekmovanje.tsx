@@ -32,6 +32,13 @@ export interface Tekmovanje {
   federation_short: string | null
   federation_url: string | null
   federation_sort: number | null
+  /**
+   * Kdo objavlja zapisnike, kadar to ni zveza tekmovanja. Prazno pri vseh
+   * ligah MNZ; izpolnjeno pri 3. SNL, ki jo vodi NZS, objavi pa jo ena od
+   * medobčinskih zvez.
+   */
+  vir_ime: string | null
+  vir_url: string | null
   country_code: string | null
   country_name: string | null
 }
@@ -128,9 +135,12 @@ function shranjeno(): string | null {
   }
 }
 
-// Stolpci, ki obstajajo šele po migraciji za zveze (20260909100000).
+// Stolpci, ki obstajajo šele po migraciji za zveze (20260909100000) oziroma
+// za 3. SNL (20260912090000). Stojijo v isti skupini namenoma: obe sta le
+// dodatek k izpisu, zato je varno, da ju manjkajoča migracija odnese skupaj.
 const STOLPCI_ZVEZE =
-  'federation_code, federation_name, federation_short, federation_url, federation_sort'
+  'federation_code, federation_name, federation_short, federation_url, federation_sort,' +
+  ' vir_ime, vir_url'
 const STOLPCI_OSNOVNI =
   'id, slug, name, short_name, prvi_fantasy_krog, country_code, country_name'
 
@@ -151,6 +161,8 @@ export function brezZveze(v: Record<string, unknown>): Tekmovanje {
     federation_short: null,
     federation_url: null,
     federation_sort: null,
+    vir_ime: null,
+    vir_url: null,
     ...v,
   } as Tekmovanje
 }

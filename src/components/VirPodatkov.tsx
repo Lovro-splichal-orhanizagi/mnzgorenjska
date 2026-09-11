@@ -13,8 +13,15 @@ export interface Vir {
   url: string | null
 }
 
-/** Vir podatkov za tekmovanje; `null`, kadar ga ne poznamo. */
+/**
+ * Vir podatkov za tekmovanje; `null`, kadar ga ne poznamo.
+ *
+ * Pri 3. SNL zveza in objavitelj nista ista: ligo vodi NZS, zapisnike pa
+ * objavi ena od medobčinskih zvez. Zato ima tekmovanje lahko svojo navedbo,
+ * ki povozi zvezino — sicer bi noga pokazala na `nzs.si`, kjer zapisnikov ni.
+ */
 export function virPodatkov(t: Tekmovanje | null | undefined): Vir | null {
+  if (t?.vir_ime) return { ime: t.vir_ime, url: t.vir_url ?? null }
   if (!t?.federation_name) return null
   return { ime: t.federation_name, url: t.federation_url ?? null }
 }
@@ -26,7 +33,7 @@ export function virPodatkov(t: Tekmovanje | null | undefined): Vir | null {
  * cel, prazna vrzel bi bila slabša od nenatančnosti.
  */
 export function imeZveze(t: Tekmovanje | null | undefined): string {
-  return t?.federation_name ?? 'zveze'
+  return virPodatkov(t)?.ime ?? 'zveze'
 }
 
 /** Ime zveze za trenutno izbrano ligo. */

@@ -62,6 +62,18 @@ const db = createClient(BASE, SERVICE, { auth: { persistSession: false } })
 
 const tekmovanje = await najdiTekmovanje(db, arg('tekmovanje', 'clani'))
 const vir = viraZa(tekmovanje)
+
+// Delegacijsko stran objavljajo samo zveze na starem CMS-u (Kranj, Ljubljana,
+// Celje). Ostale dajo uro tekme le v razporedu, kar je za rok kroga dovolj.
+//
+// Brez tega izhoda bi se skripta ustavila na `vir.naslovDelegiranja is not a
+// function` — in ker delovni tok tece s `set -e`, bi padel cel uvoz lige,
+// potem ko je arhiv ze pretekel pol ure. Manjkajoca neobvezna stran ni napaka.
+if (typeof vir.naslovDelegiranja !== 'function') {
+  console.log(`Vir ${vir.ime} ne objavlja delegiranja — rok krogov ostane iz razporeda.`)
+  process.exit(0)
+}
+
 const liga = arg('liga', sifraLige(tekmovanje, '1601'))
 // Pomak je lastnost lige (mladinci igrajo zgodaj, zato krajsi), `--pomak` pa
 // ga za posamezen zagon se vedno povozi.

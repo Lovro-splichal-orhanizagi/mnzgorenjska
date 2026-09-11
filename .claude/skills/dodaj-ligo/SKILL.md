@@ -30,17 +30,50 @@ uspel, zato ker ni javil napake.** Preveri številke.
 Vir mora objavljati **postave po tekmah**, ne le rezultatov in lestvic. Brez
 postav ni minut, brez minut ni točk.
 
-NZS objavlja ~30 državnih tekmovanj, a postav po tekmah **ne** — iz 1. SNL
-fantasy ni mogoč.
+Medobčinskih zvez je devet (`nzs.si/zveza/organizacija/medobcinske-nogometne-zveze`)
+in postave po tekmah objavljajo **vse**. Prvotno sem zapisal, da jih objavljajo
+samo tri — to je bilo narobe in stalo je en cikel dela. Napaka je bila v metodi:
+pogledal sem samo **domačo stran** vsake zveze. Rezultati in lestvice so tam,
+zapisniki pa dve ali tri klike globlje, pri nekaterih zvezah pod `zapisniki?krog=`.
+Nauk: dokler nisi odprl **strani tekmovanja**, ne pa samo naslovnice, o viru ne
+veš nič.
 
-Medobčinskih zvez je devet (`nzs.si/zveza/organizacija/medobcinske-nogometne-zveze`),
-postave pa objavljajo **samo tri**: Gorenjska, Ljubljana in Celje, vse na
-istem starem CMS-u. Koper, Lendava, Maribor, Murska Sobota, Nova Gorica in
-Ptuj dajo rezultate in lestvice, postav pa ne — njihovi podatki živijo v
-**Registi** (`regista.nzs.si`), ki je za prijavo in namenjena funkcionarjem.
-Zanje fantasy iz javnih podatkov ni mogoč.
+Tri zveze dajo poleg imena še **registrsko številko NZS** (`Reg. št.`): Ptuj,
+Murska Sobota in Lendava. Pri njih identiteta igralca ne stoji na ugibanju iz
+imena in številke dresa.
 
-Šifre lig po sezonah:
+**Državna tekmovanja (NZS).** Tu velja ločnica, ki ni po ligi, ampak po tem,
+kdo tekmovanje *objavlja*:
+
+- **1. SNL in 2. SNL — ni mogoče.** `nzs.si` da razpored, rezultate, sodnike,
+  gledalce, lestvico in zbirno statistiko sezone, postav pa ne. Preverjeno:
+  stran na tekmo (`/klubi/moski/<liga>/tekme/<slug>`), njeni podzavihki,
+  `?tab=`, `nzs-dynamic-page`, `prvaliga.si`, iskanje PDF‑jev in uradnih objav.
+  Postave so v **Registi** (`regista.nzs.si`), ki je v celoti za prijavo.
+  Nobena MNZ 1. ali 2. SNL ne podvaja — preverjeno po seznamih tekmovanj vseh
+  zvez in vseh sezon.
+- **3. SNL Vzhod in Zahod — mogoče**, ker ju vodi posamezna MNZ in ju objavi
+  na svojem spletišču z istimi zapisniki kot svoje lige.
+
+**Skrbništvo 3. SNL se med sezonami seli.** Arhiva torej ni na isti strani kot
+tekoča sezona; iskati ga je treba pri zvezi, ki je ligo vodila **tisto** leto:
+
+| sezona | 3. SNL Vzhod | 3. SNL Zahod |
+|---|---|---|
+| 2026/27 | mnzpt `2026:96` | mnzng `2785` |
+| 2025/26 | mnzle `2025-26/3-snl-v-25-26` | — |
+| 2024/25 | mnzle `2024-25/3-snl-v-24-25` | — |
+| 2023/24 | — | mnzlj `1703` |
+| 2022/23 | — | mnzlj `1603` |
+| 2017/18 | mnzle `2017-18/3-snl-v` | — |
+
+Kako najdeš skrbnika za dano sezono: `sezona-<L>-<L>` v meniju pri Lendavi,
+POST `sezona=<L>/<L>` na `index.cfm?akc=tekmovanja` pri zvezah na starem CMS-u
+(Kranj, Ljubljana, Celje), `?sezona=<L>` pri Ptuju. Nova Gorica in Maribor
+arhiva **nimata** — neznana šifra tam vrne privzeto stran s statusom 200, ne
+404, zato je videti, kot da arhiv obstaja. Preveri po vsebini, ne po statusu.
+
+Šifre klubskih lig po sezonah:
 
 | zveza | tekoča 2026/27 | arhiv 2025/26 | arhiv 2024/25 |
 |---|---|---|---|
@@ -115,6 +148,19 @@ obstoječe uporabnike ne spremeni ničesar. Vklopiš jo šele po koraku 4.
 
 Če dodajaš tudi zvezo, gre v `federations` (koda, ime, kratica, `site_url` za
 navedbo vira v nogi).
+
+**Kadar tekmovanja ne vodi tisti, ki ga objavlja.** Do 3. SNL je veljalo
+"ena zveza = eno spletišče" in stolpca sta bila praktično ista stvar. Nista:
+
+| stolpec | pomen | uporabi ga |
+|---|---|---|
+| `federation_id` | kdo tekmovanje **vodi** | izbirnik, ko grupira lige |
+| `source` | kdo ga **objavlja** | uvoz, ko izbere razčlenjevalnik |
+| `vir_ime` / `vir_url` | objavitelj za navedbo v nogi | noga, kadar nista ista |
+
+Pri ligi MNZ pusti `vir_ime` in `vir_url` prazna — noga jih takrat vzame od
+zveze in izpis je enak kot prej. Izpolni ju samo, kadar bi noga sicer lagala:
+3. SNL vodi NZS, zapisniki pa so na strani Ptuja oziroma Nove Gorice.
 
 ## 4. Podatki in cene — tu se odloči, ali je liga igriva
 
@@ -195,6 +241,21 @@ gh run view <id> --log | grep -A 12 'Liga:'           # izid preverbe
 ```
 
 Traja **20–30 minut na ligo** (arhiv dveh sezon je nekaj sto zapisnikov).
+
+Če arhiv leži pri **drugi zvezi** kot tekoča sezona, pripni šifri `@vir`;
+delovni tok iz tega sestavi `--vir` in uvoz bere s pravega spletišča, ne da bi
+se liga preselila:
+
+```bash
+gh workflow run uvoz-lige.yml -f liga=snl3-vzhod \
+  -f arhiv='2025-26/3-snl-v-25-26@mnzle,2024-25/3-snl-v-24-25@mnzle'
+```
+
+Ločilo je `@`, ker se `:` in `/` pojavljata znotraj samih šifer (Ptuj
+`2026:96`, Lendava `2025-26/…`).
+
+Delegacijske strani nima vsaka zveza; `uvoz-delegiranja.mjs` se pri viru brez
+nje izpiše in konča z 0. Rok kroga takrat stoji na urah iz razporeda.
 
 ### Tako je izpadlo pri MNZ Ljubljana
 

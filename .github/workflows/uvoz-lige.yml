@@ -19,7 +19,7 @@ on:
         required: true
         type: string
       arhiv:
-        description: 'Sifre arhivskih sezon, locene z vejico (npr. 1904,1804). Prazno = brez arhiva.'
+        description: 'Sifre arhivskih sezon, locene z vejico (npr. 1904,1804). Za arhiv pri drugi zvezi pripni @vir (npr. 2025-26/3-snl-v-25-26@mnzle). Prazno = brez arhiva.'
         required: false
         type: string
       zapisnik:
@@ -79,14 +79,20 @@ jobs:
         if: inputs.arhiv != ''
         run: |
           set -euo pipefail
-          echo "$ARHIV" | tr ',' '\n' | while IFS= read -r sifra; do
-            sifra=$(echo "$sifra" | tr -d '[:space:]')
-            [ -n "$sifra" ] || continue
-            echo "::group::arhiv $sifra"
+          # Sifra je lahko "<koda>" ali "<koda>@<vir>". Drugo obliko potrebuje
+          # 3. SNL: skrbnistvo se med sezonami seli, zato arhiv ne lezi na
+          # istem spletiscu kot tekoca sezona. Locilo je @, ker se : in /
+          # pojavljata ZNOTRAJ sifer (Ptuj "2026:96", Lendava "2025-26/...").
+          echo "$ARHIV" | tr ',' '\n' | while IFS= read -r vnos; do
+            vnos=$(echo "$vnos" | tr -d '[:space:]')
+            [ -n "$vnos" ] || continue
+            sifra=${vnos%@*}
+            case "$vnos" in *@*) virArg=(--vir "${vnos##*@}") ;; *) virArg=() ;; esac
+            echo "::group::arhiv $vnos"
             if [ -n "${ZAPISNIK:-}" ]; then
-              node scripts/uvoz-zapisnikov.mjs --tekmovanje "$LIGA" --liga "$sifra" --zapisnik "$ZAPISNIK"
+              node scripts/uvoz-zapisnikov.mjs --tekmovanje "$LIGA" --liga "$sifra" ${virArg[@]+"${virArg[@]}"} --zapisnik "$ZAPISNIK"
             else
-              node scripts/uvoz-zapisnikov.mjs --tekmovanje "$LIGA" --liga "$sifra"
+              node scripts/uvoz-zapisnikov.mjs --tekmovanje "$LIGA" --liga "$sifra" ${virArg[@]+"${virArg[@]}"}
             fi
             echo "::endgroup::"
           done

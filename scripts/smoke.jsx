@@ -550,6 +550,23 @@ preveri(
   preveri('vir: zveza brez naslova se navede brez povezave',
     virPodatkov(lige[0])?.url === null && virPodatkov(lige[0])?.ime === 'MNZ Gorenjska',
     JSON.stringify(virPodatkov(lige[0])))
+
+  // 3. SNL vodi NZS, zapisnike pa objavi Ptuj oziroma Nova Gorica. Ce bi noga
+  // vzela zvezo, bi trdila, da so zapisniki na nzs.si — tam jih ni.
+  const snl3 = {
+    ...lige[2],
+    federation_code: 'nzs', federation_name: 'Nogometna zveza Slovenije',
+    federation_url: 'https://www.nzs.si/',
+    vir_ime: 'MNZ Ptuj', vir_url: 'https://www.mnzveza-ptuj.si/',
+  }
+  preveri('vir: objavitelj povozi zvezo',
+    virPodatkov(snl3)?.ime === 'MNZ Ptuj' &&
+    virPodatkov(snl3)?.url === 'https://www.mnzveza-ptuj.si/',
+    JSON.stringify(virPodatkov(snl3)))
+  preveri('vir: objavitelj velja tudi sredi stavka',
+    imeZveze(snl3) === 'MNZ Ptuj', imeZveze(snl3))
+  preveri('vir: prazen vir_ime pusti zvezo pri miru',
+    virPodatkov({ ...snl3, vir_ime: null, vir_url: null })?.ime === 'Nogometna zveza Slovenije')
 }
 
 // --- lepljiva izbira lige ---------------------------------------------------

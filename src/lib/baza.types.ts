@@ -376,6 +376,8 @@ export type Database = {
           sort_order: number
           source: string
           source_league_code: string | null
+          vir_ime: string | null
+          vir_url: string | null
         }
         Insert: {
           active?: boolean
@@ -391,6 +393,8 @@ export type Database = {
           sort_order?: number
           source: string
           source_league_code?: string | null
+          vir_ime?: string | null
+          vir_url?: string | null
         }
         Update: {
           active?: boolean
@@ -406,6 +410,8 @@ export type Database = {
           sort_order?: number
           source?: string
           source_league_code?: string | null
+          vir_ime?: string | null
+          vir_url?: string | null
         }
         Relationships: [
           {
@@ -1561,6 +1567,7 @@ export type Database = {
           nzs_url: string | null
           position: string | null
           position_source: string
+          reg_st: number | null
           shirt_number: number | null
           team_id: number
           value: number
@@ -1581,6 +1588,7 @@ export type Database = {
           nzs_url?: string | null
           position?: string | null
           position_source?: string
+          reg_st?: number | null
           shirt_number?: number | null
           team_id: number
           value?: number
@@ -1601,6 +1609,7 @@ export type Database = {
           nzs_url?: string | null
           position?: string | null
           position_source?: string
+          reg_st?: number | null
           shirt_number?: number | null
           team_id?: number
           value?: number
@@ -2294,6 +2303,8 @@ export type Database = {
           sort_order: number | null
           source: string | null
           source_league_code: string | null
+          vir_ime: string | null
+          vir_url: string | null
         }
         Relationships: [
           {
@@ -3440,6 +3451,15 @@ export type Database = {
       }
       is_admin: { Args: never; Returns: boolean }
       krog_je_odigran: { Args: { p_round_id: number }; Returns: boolean }
+      meje_borze: {
+        Args: never
+        Returns: {
+          najnizja: number
+          najvisja: number
+          odmik: number
+        }[]
+      }
+      najcenejsi_kader: { Args: { p_igralci: Json }; Returns: number }
       nastavitev_int: {
         Args: { p_key: string; p_privzeto: number }
         Returns: number
@@ -3456,6 +3476,7 @@ export type Database = {
         Args: { p_competition_id: number; p_user_id: string }
         Returns: boolean
       }
+      okno_preracuna_tock: { Args: never; Returns: string }
       poenostavljeno_ime: { Args: { p_ime: string }; Returns: string }
       postava_kroga: {
         Args: { p_round: number; p_team: number }
@@ -3482,6 +3503,15 @@ export type Database = {
         Args: { p_okno?: string; p_player_id: number }
         Returns: number
       }
+      preveri_podatke: {
+        Args: never
+        Returns: {
+          kljuc: string
+          koliko: number
+          opis: string
+          primer: string
+        }[]
+      }
       pripisi_obranjene_enajstmetrovke: {
         Args: { p_round_id: number }
         Returns: number
@@ -3498,6 +3528,7 @@ export type Database = {
       skupaj_uporabnikov: { Args: never; Returns: number }
       stanje_lige: { Args: { p_competition_id: number }; Returns: Json }
       tekmovanje_id: { Args: { p_slug: string }; Returns: number }
+      tekoca_sezona: { Args: { p_datum?: string }; Returns: string }
       tocke_za_nastop: {
         Args: {
           p_assists: number
