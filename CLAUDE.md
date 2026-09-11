@@ -77,6 +77,15 @@ z `--liga`.
 | mnzg — člani / mladinci | 1601 / 1603 | 1502 / 1503 | — |
 | mnzlj — 1. / 2. liga | 2003 / 2004 | 1904 / 1905 | 1804 / 1805 |
 
+**Pri 3. SNL arhiv ni pri istem viru kot tekoča sezona.** Ligo vodi NZS,
+objavi pa jo tista medobčinska zveza, ki ji jo je NZS za to sezono zaupala —
+in skrbništvo se seli. Zato ima šifra v delovnem toku obliko `<koda>@<vir>`:
+
+| liga | tekoča 2026/27 | arhiv |
+|---|---|---|
+| snl3-vzhod | mnzpt `2026:96` | `2025-26/3-snl-v-25-26@mnzle`, `2024-25/3-snl-v-24-25@mnzle` |
+| snl3-zahod | mnzng `2785` | `1703@mnzlj` (23/24), `1603@mnzlj` (22/23) |
+
 Ena arhivska sezona ni vedno dovolj. Cena je percentil znotraj lige, igralec
 pod 270 minutami pa dobi privzeto 4.5 — v majhni ligi (MNZ liga ima devet
 klubov) toliko minut v eni sezoni nabere premalo igralcev in cenik se sesede
