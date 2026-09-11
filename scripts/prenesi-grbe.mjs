@@ -85,6 +85,25 @@ const GRBI = {
   ribnica:
     'https://www.nkugar.si/wp-content/uploads/2025/08/logo-nk-ugar-pravi-2.png',
   ihan: 'https://nkihan.si/wp-content/uploads/2021/02/1932.png',
+
+  // MNZ Celje, Medobčinska članska liga (vir mnzce)
+  //
+  // Celjska zveza grbov ne objavlja — njena stran `akc=klubi` ima samo
+  // naslove in kontakte, brez slik. Zato so ti vzeti s klubskih strani.
+  //
+  // Trije klubi ostanejo brez grba in dobijo ščit iz začetnic: NK Mons
+  // Claudius Rogatec (mons-claudius.si se ne odziva), NK Unior Zreče in
+  // NK Ljubno ob Savinji (oba le na Facebooku, od koder slike ne jemljemo).
+  'nk lasko': 'https://www.nk-lasko.si/wp-content/themes/vensica/vensica/assets/images/logo.png',
+  'nd polzela zdruzena savinjska':
+    'http://nogomet-polzela.si/wp-content/uploads/2021/09/logo-1.png',
+  'nk sostanj': 'https://nk-sostanj.si/wp/wp-content/uploads/2024/10/cropped-Frame-1-1.png',
+  'nk zalec sentjur': 'https://www.nkzalec.si/wp-content/uploads/2017/08/nkzalec_grb.png',
+  'nd mozirje zdruzena savinjska':
+    'https://www.nd-mozirje.si/wp-content/uploads/2020/09/cropped-grb.jpg',
+  'nk smarje pri jelsah': 'https://nk-smarje.si/wp-content/uploads/2025/09/NK-grb-300x300.png',
+  rogaska:
+    'https://nkrogaska.com/wp-content/uploads/2023/07/cropped-NKrogaska-ikona-04-01-192x192.png',
 }
 
 // Pomanjša datoteko na kvadrat NAJVECJA_STRANICA px (ohrani razmerje, ne
