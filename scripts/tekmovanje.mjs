@@ -16,7 +16,7 @@ export function slugTekmovanja(privzeto = 'clani') {
 
 // Stolpci, ki obstajajo šele po migraciji 20260905090000 (države in viri).
 const NOVI = 'source, source_league_code, country_id'
-const STARI = 'id, slug, name, short_name, mnzg_liga, prvi_fantasy_krog, rok_pomak_ur'
+const STARI = 'id, slug, name, short_name, mnzg_liga, prvi_fantasy_krog, rok_pomak_ur, active'
 
 /**
  * Vrne vrstico iz `competitions` za dani slug; brez nje se ne da uvažati.

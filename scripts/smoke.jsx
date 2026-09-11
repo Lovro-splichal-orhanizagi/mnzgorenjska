@@ -1185,5 +1185,402 @@ preveri(
   preveri('razpored: sezona iz marca', sezonaIz('2027-03-13') === '2026/27', sezonaIz('2027-03-13'))
 }
 
+// Gorica potrebuje svoj parser: goli nimajo številk dresov, menjave pa so
+// ločene z oznakama sub-in/sub-out. Preverimo tudi dejanske minute nastopov.
+{
+  const { parsirajZapisnik: gorica, izlusciPovezaveZapisnikov } =
+    await import('./zapisnik-gorica.mjs')
+  const html = readFileSync(new URL('./vzorci/zapisnik-gorica-3199.html', import.meta.url), 'utf8')
+  const rezultati = readFileSync(new URL('./vzorci/rezultati-gorica-3199.html', import.meta.url), 'utf8')
+  const url = 'https://mnzgorica.si/tekmovanja/3199/zapisnik/1/267797'
+  const z = gorica(html, { zapisnikId: 267797, url })
+  preveri('Gorica: uporaben zapisnik', z !== null)
+  if (z) {
+    preveri('Gorica: obe ekipi', z.domaci.ime === 'Brda' && z.gostje.ime === 'Komen')
+    preveri('Gorica: identiteta zapisnika', z.zapisnikId === 267797 && z.url === url)
+    preveri('Gorica: sezona iz datuma tekme', z.sezona === '2026/27', z.sezona)
+    preveri('Gorica: prvi krog 6. septembra 2026', z.krog === 1 && z.datum === '2026-09-06')
+    for (const [idx, ekipa] of [z.domaci, z.gostje].entries()) {
+      preveri(`Gorica: ${ekipa.ime} ima 11 začetnikov in 7 rezerv`,
+        ekipa.postava.length === 11 && ekipa.rezerve.length === 7)
+      preveri(`Gorica: ${ekipa.ime} ima pravega vratarja in kapetana`,
+        ekipa.postava.filter((i) => i.vratar).length === 1 &&
+        ekipa.postava.find((i) => i.vratar)?.st === [12, 1][idx] &&
+        ekipa.postava.filter((i) => i.kapetan).length === 1 &&
+        ekipa.postava.find((i) => i.kapetan)?.st === [22, 9][idx])
+      preveri(`Gorica: ${ekipa.ime} ima rezervnega vratarja brez registrskih številk`,
+        ekipa.rezerve.find((i) => i.vratar)?.st === [1, 99][idx] &&
+        [...ekipa.postava, ...ekipa.rezerve].every((i) =>
+          !('regSt' in i) && typeof i.vratar === 'boolean' && typeof i.kapetan === 'boolean'))
+    }
+    preveri('Gorica: rezultat 3 : 0 in polčas 2 : 0',
+      z.rezultat.domaci === 3 && z.rezultat.gostje === 0 &&
+      z.polcas?.domaci === 2 && z.polcas?.gostje === 0)
+    preveri('Gorica: trije goli se ujemajo z rezultatom in številkami dresov',
+      z.goli.length === z.rezultat.domaci + z.rezultat.gostje &&
+      JSON.stringify(z.goli.map((g) => [g.ekipaIdx, g.st, g.minuta, g.rezultat])) ===
+        JSON.stringify([[0, 7, 19, [1, 0]], [0, 2, 21, [2, 0]], [0, 2, 63, [3, 0]]]) &&
+      z.goli.every((g) => g.avtogol === false && g.enajstmetrovka === false))
+    preveri('Gorica: vseh osem menjav s pravimi smermi in minutami', z.menjave.length > 0 &&
+      JSON.stringify(z.menjave.map((m) => [m.ekipaIdx, m.minuta, m.noter.st, m.ven.st])) ===
+        JSON.stringify([[0, 65, 11, 3], [0, 70, 4, 6], [0, 80, 5, 21],
+          [1, 46, 16, 8], [1, 54, 10, 15], [1, 67, 7, 17], [1, 75, 19, 6], [1, 75, 18, 20]]))
+    const n = nastopi(z)
+    preveri('Gorica: osem rezerv dobi nastop', n.filter((i) => !i.zacetnik).length === 8)
+    preveri('Gorica: prva menjava razdeli minute 65 + 25',
+      n.find((i) => i.ekipaIdx === 0 && i.st === 3)?.minute === 65 &&
+      n.find((i) => i.ekipaIdx === 0 && i.st === 11)?.minute === 25)
+    preveri('Gorica: Kavčič je opominjan v 36. minuti',
+      JSON.stringify(z.rumeni) === JSON.stringify([
+        { ekipaIdx: 1, st: 5, ime: 'Kavčič Matevž', minuta: 36 },
+      ]) && z.rdeci.length === 0 && z.zgresene.length === 0)
+    preveri('Gorica: vzorec je razčlenjen brez opozoril', z.opozorila.length === 0, z.opozorila.join('; '))
+  }
+
+  // Mladinske kategorije U13/12 v meniju niso sezone; prednost ima glava tekme.
+  for (const [sezona, pricakovana] of [['2025/26', '2025/26'], ['2025/2026', '2025/26'], ['26/27', '2026/27']]) {
+    const drugaSezona = html.replace('Primorska članska liga · 1. krog',
+      `Primorska članska liga ${sezona} · 1. krog`)
+    preveri(`Gorica: normalizirana sezona ${sezona}`, gorica(drugaSezona)?.sezona === pricakovana)
+  }
+  preveri('Gorica: štirimestna letnica datuma',
+    gorica(html.replace('06.09.26 ·', '06.09.2026 ·'))?.datum === '2026-09-06')
+  const brezPolcasa = gorica(html.replace(/<span\b[^>]*class="report-score-ht"[^>]*>[\s\S]*?<\/span>/, ''))
+  preveri('Gorica: manjkajoč polčas ne zavrže tekme',
+    brezPolcasa?.polcas === null && brezPolcasa?.menjave.length === 8)
+  const ponovljeneMinute = html.replace(/(<span class="sub-min"[^>]*>[\s\S]*?<\/span>)([\s\S]*?)(<span class="sub-out")/g,
+    '$1$2$1$3')
+  preveri('Gorica: ponovljena minuta pred izstopom ohrani vseh osem menjav',
+    JSON.stringify(gorica(ponovljeneMinute)?.menjave) === JSON.stringify(z?.menjave))
+  preveri('Gorica: obvestilo o nedostopnem zapisniku vrne null',
+    gorica('<main>Zapisnik za izbrano tekmo ni na voljo</main>') === null)
+  preveri('Gorica: prazna stran in rezultati niso zapisnik', gorica('') === null && gorica(rezultati) === null)
+
+  const povezave = izlusciPovezaveZapisnikov(rezultati)
+  preveri('Gorica: pet povezav s krogom in ID tekme',
+    JSON.stringify(povezave) === JSON.stringify([
+      { krog: 1, matchId: 267795 }, { krog: 1, matchId: 267796 },
+      { krog: 1, matchId: 267797 }, { krog: 1, matchId: 267798 }, { krog: 1, matchId: 267800 },
+    ]))
+  preveri('Gorica: absolutni in podvojeni naslovi ne podvojijo tekme',
+    izlusciPovezaveZapisnikov(rezultati + `<a href="${url}?x=1&amp;y=2">Zapisnik</a>`).length === 5)
+  const vir = viraZa({ source: 'mnzng' })
+  preveri('viri: mnzng je registriran', znaniViri().includes('mnzng') && vir.drzava === 'SI')
+  preveri('viri: Gorica uporablja svoj parser', vir.parsirajZapisnik(html)?.menjave.length === 8)
+  preveri('viri: Gorica gradi naslov s krogom iz povezave',
+    vir.naslovZapisnika(3199, povezave[2]?.matchId, povezave[2]?.krog) === url)
+  let brezKroga = false
+  try { vir.naslovZapisnika(3199, 267797) } catch { brezKroga = true }
+  preveri('viri: Gorica ne ugiba manjkajočega kroga', brezKroga)
+  preveri('viri: Gorica gradi rezultate in lestvico',
+    vir.naslovRazporeda(3199) === 'https://mnzgorica.si/tekmovanja/3199/rezultati' &&
+    vir.naslovSeznamaTekem(3199) === 'https://mnzgorica.si/tekmovanja/3199/rezultati' &&
+    vir.naslovLestvice(3199) === 'https://mnzgorica.si/tekmovanja/3199/lestvica')
+  preveri('viri: Gorica ne uporablja gorenjskih vzdevkov',
+    vir.kljucKluba('Preddvor SP Avto') === 'preddvor sp avto')
+}
+
+// --- zapisniki celotnih krogov ---------------------------------------------
+{
+  const skupni = await import('./zapisnik-pomurje.mjs')
+  const vzorec = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  const primeri = [
+    { vir: 'mnzpt', datoteka: 'zapisniki-ptuj-liga3-kolo2.html', tekem: 6,
+      domaci: 'Stojnci', gostje: 'Markovci', rezultat: [0, 1], krog: 2,
+      datum: '2026-08-30', regSt: 110385, menjav: 5, minuta: 66, ven: 10, noter: 23 },
+    { vir: 'mnzms', datoteka: 'zapisniki-ms-liga113-kolo2.html', tekem: 7,
+      domaci: 'Mlinopek Križevci', gostje: 'ŠD Bogojina', rezultat: [2, 3], krog: 2,
+      datum: '2026-08-30', regSt: 48836, menjav: 7, minuta: 78, ven: 20, noter: 22 },
+    { vir: 'mnzle', datoteka: 'zapisniki-lendava-pnl-krog1.html', tekem: 6,
+      domaci: 'Bistrica', gostje: 'Črenšovci', rezultat: [1, 3], krog: 1,
+      datum: '2026-08-23', regSt: 102430, menjav: 6, minuta: 59, ven: 11, noter: 4 },
+  ]
+  for (const p of primeri) {
+    preveri(`zapisniki ${p.vir}: vir je registriran`, znaniViri().includes(p.vir))
+    if (!znaniViri().includes(p.vir)) continue
+    const vir = viraZa({ source: p.vir })
+    const html = vzorec(p.datoteka)
+    const url = `vzorec:${p.datoteka}`
+    const vsi = vir.zapisnikiIzKroga(html, { url })
+    const ponovljeni = vir.zapisnikiIzKroga(html)
+    preveri(`zapisniki ${p.vir}: skupni parser sam prepozna vir`,
+      JSON.stringify(skupni.zapisnikiIzKroga(html)) === JSON.stringify(ponovljeni))
+    preveri(`zapisniki ${p.vir}: ${p.tekem} tekem`, vsi.length === p.tekem, String(vsi.length))
+    const z = vsi.find((t) => t.domaci.ime === p.domaci && t.gostje.ime === p.gostje)
+    preveri(`zapisniki ${p.vir}: ${p.domaci} – ${p.gostje}`, Boolean(z))
+    if (!z) continue
+    preveri(`zapisniki ${p.vir}: 11 začetnikov na obeh straneh`,
+      z.domaci.postava.length === 11 && z.gostje.postava.length === 11)
+    preveri(`zapisniki ${p.vir}: sezona, krog in datum tekme`,
+      z.sezona === '2026/27' && z.krog === p.krog && z.datum === p.datum, z.datum)
+    preveri(`zapisniki ${p.vir}: rezultat iz vzorca`,
+      z.rezultat.domaci === p.rezultat[0] && z.rezultat.gostje === p.rezultat[1])
+    preveri(`zapisniki ${p.vir}: ${p.menjav} menjav`, z.menjave.length === p.menjav,
+      String(z.menjave.length))
+    preveri(`zapisniki ${p.vir}: pravilna smer in minuta prve menjave`,
+      z.menjave[0]?.minuta === p.minuta && z.menjave[0]?.ven.st === p.ven &&
+      z.menjave[0]?.noter.st === p.noter, JSON.stringify(z.menjave[0]))
+    preveri(`zapisniki ${p.vir}: regSt vratarja`,
+      z.domaci.postava[0].regSt === p.regSt && z.domaci.postava[0].vratar)
+    preveri(`zapisniki ${p.vir}: kapetana sta označena`,
+      [z.domaci, z.gostje].every((e) => e.postava.filter((i) => i.kapetan).length === 1))
+    preveri(`zapisniki ${p.vir}: klop dobi dejanske minute`,
+      vir.nastopi(z).some((n) => !n.zacetnik && n.minute > 0 && n.minute < 90 && Number.isInteger(n.regSt)))
+    preveri(`zapisniki ${p.vir}: enolični in ponovljivi identifikatorji`,
+      new Set(vsi.map((t) => t.zapisnikId)).size === p.tekem &&
+      vsi.every((t, i) => t.zapisnikId && t.url === url &&
+        t.zapisnikId === ponovljeni[i].zapisnikId))
+    preveri(`zapisniki ${p.vir}: izbor posamezne tekme po identifikatorju`,
+      vir.parsirajZapisnik(html, { zapisnikId: z.zapisnikId, url })?.domaci.ime === p.domaci)
+    preveri(`zapisniki ${p.vir}: brez izbire ne ugibamo med tekmami`, vir.parsirajZapisnik(html) === null)
+    preveri(`zapisniki ${p.vir}: neznan identifikator ni prva tekma`,
+      vir.parsirajZapisnik(html, { zapisnikId: 'ne-obstaja' }) === null)
+    for (const t of vsi) {
+      const oznaka = `${p.vir} ${t.domaci.ime}`
+      const igralci = [t.domaci, t.gostje].flatMap((e) => [...e.postava, ...e.rezerve])
+      preveri(`zapisniki ${oznaka}: registracije vseh igralcev`,
+        igralci.length >= 22 && igralci.every((i) => Number.isInteger(i.regSt)))
+      const dogodki = [...t.goli, ...t.rumeni, ...t.rdeci,
+        ...t.menjave.flatMap((m) => [m.noter, m.ven])]
+      preveri(`zapisniki ${oznaka}: registracije dogodkov`,
+        dogodki.every((i) => Number.isInteger(i.regSt)))
+      const zadetki = [0, 0]
+      for (const g of t.goli) zadetki[g.avtogol ? 1 - g.ekipaIdx : g.ekipaIdx]++
+      preveri(`zapisniki ${oznaka}: goli ustrezajo obema ekipama`,
+        zadetki[0] === t.rezultat.domaci && zadetki[1] === t.rezultat.gostje)
+      preveri(`zapisniki ${oznaka}: tekoči rezultat zadnjega gola`,
+        t.goli.length === 0 || JSON.stringify(t.goli.at(-1).rezultat) === JSON.stringify(zadetki))
+      preveri(`zapisniki ${oznaka}: brez opozoril`, t.opozorila.length === 0, t.opozorila.join(' | '))
+    }
+
+    // Ista menjava lahko minuto izpiše enkrat ali dvakrat; druga vrstica
+    // ne sme zavreči čakajočega para niti ob izpraznjeni celici.
+    const enkrat = html.replace(/<tr\b[^>]*>[\s\S]*?<\/tr>/gi, (vrstica) =>
+      /(?:\/in\.gif|ARROW_IN\.svg)/i.test(vrstica)
+        ? vrstica.replace(/\d+'(?=\s*<\/td>)/g, '') : vrstica)
+    const manjMinut = vir.zapisnikiIzKroga(enkrat).find((t) => t.domaci.ime === p.domaci)
+    preveri(`zapisniki ${p.vir}: minuta enkrat na menjavo`,
+      JSON.stringify(manjMinut?.menjave) === JSON.stringify(z.menjave))
+    for (const sezona of ['2025/2026', '2025/26']) {
+      const drugace = html.replace(/2026\/2027|2026\/27|26\/27/g, sezona)
+      preveri(`zapisniki ${p.vir}: normalizacija ${sezona}`,
+        vir.zapisnikiIzKroga(drugace).every((t) => t.sezona === '2025/26'))
+    }
+    const brezIzida = html.replace(/\d+\s*:\s*\d+\s*\(\s*\d+\s*:\s*\d+\s*\)/g, '- : - (- : -)')
+    preveri(`zapisniki ${p.vir}: neodigrane tekme preskočimo`,
+      vir.zapisnikiIzKroga(brezIzida).length === 0 && vir.parsirajZapisnik(brezIzida) === null)
+    const izid = `${z.rezultat.domaci} : ${z.rezultat.gostje} (${z.polcas.domaci} : ${z.polcas.gostje})`
+    const mesano = html.replaceAll(izid, 'Ni odigrano')
+    const ostale = vir.zapisnikiIzKroga(mesano)
+    preveri(`zapisniki ${p.vir}: neodigrana tekma ne skrije preostanka kroga`,
+      ostale.length === p.tekem - 1 && !ostale.some((t) => t.domaci.ime === p.domaci) &&
+      vir.parsirajZapisnik(mesano, { zapisnikId: z.zapisnikId }) === null)
+    const drugaMeja = { mnzpt: '<h1>Tekma: Makole', mnzms: '<div id="157698"', mnzle: '<div id="tisk1"' }[p.vir]
+    const druga = html.indexOf(drugaMeja)
+    const samoPrva = html.slice(0, druga) + html.slice(druga)
+      .replace(/\d+\s*:\s*\d+\s*\(\s*\d+\s*:\s*\d+\s*\)/g, 'Ni odigrano')
+    preveri(`zapisniki ${p.vir}: edina odigrana tekma ne nadomesti izbrane neodigrane`,
+      vir.zapisnikiIzKroga(samoPrva).length === 1 &&
+      vir.parsirajZapisnik(samoPrva, { zapisnikId: vsi[1].zapisnikId }) === null &&
+      vir.parsirajZapisnik(samoPrva, { zapisnikId: 'ne-obstaja' }) === null)
+    const brezReg = html.replace(`>${p.regSt}</td>`, '></td>')
+    preveri(`zapisniki ${p.vir}: prazna registracija ostane null`,
+      vir.zapisnikiIzKroga(brezReg)[0]?.domaci.postava[0].regSt === null)
+    const drugDatum = p.vir === 'mnzle'
+      ? html.replaceAll('23. 8. 2026', '23.08.26') : html.replaceAll('30.08.26', '30.08.2026')
+    preveri(`zapisniki ${p.vir}: dve in štiri števke letnice pomenijo isti datum`,
+      vir.zapisnikiIzKroga(drugDatum)[0]?.datum === p.datum)
+    const entitete = vir.zapisnikiIzKroga(html.replaceAll('Nejc', 'Nej&#x63;'))
+    preveri(`zapisniki ${p.vir}: številske entitete ne spremenijo imen`,
+      JSON.stringify(entitete) === JSON.stringify(ponovljeni))
+    preveri(`zapisniki ${p.vir}: navadna stran ni zapisnik`, vir.parsirajZapisnik('<p>Novice</p>') === null)
+  }
+  if (znaniViri().includes('mnzle')) {
+    const tekme = viraZa({ source: 'mnzle' }).zapisnikiIzKroga(vzorec(primeri[2].datoteka))
+    const ag = tekme.find((t) => t.domaci.ime === 'Grad')?.goli.find((g) => g.avtogol)
+    preveri('zapisniki Lendava: avtogol ostane pri igralcu Hotize',
+      ag?.ekipaIdx === 1 && ag.st === 44 && ag.regSt === 92156 && ag.minuta === 83 &&
+      JSON.stringify(ag.rezultat) === '[1,1]' && !ag.enajstmetrovka)
+  }
+  if (znaniViri().includes('mnzpt')) {
+    const pt = viraZa({ source: 'mnzpt' })
+    const tekme = pt.zapisnikiIzKroga(vzorec(primeri[0].datoteka))
+    const penal = tekme.find((t) => t.domaci.ime === 'Makole Bar Miha')?.goli.find((g) => g.enajstmetrovka)
+    preveri('zapisniki Ptuj: oznaka 11m ob minuti', penal?.st === 14 && penal.minuta === 53 && penal.regSt === 55647)
+    const izvirnik = vzorec(primeri[0].datoteka)
+    const regPriGolu = izvirnik.replace('>82184</td>', '></td>')
+      .replace('<th>Minuta</th>', '<th>Minuta</th><th>Reg. št.</th>')
+      .replace("<td align=\"right\">81'</td>", "<td align=\"right\">81'</td><td>82184</td>")
+    preveri('zapisniki Ptuj: registracija neposredno ob dogodku',
+      pt.zapisnikiIzKroga(regPriGolu)[0]?.goli[0].regSt === 82184)
+    const prvi = izvirnik.slice(0, izvirnik.indexOf('<h1>Tekma: Makole'))
+    const sam = pt.parsirajZapisnik(prvi, { zapisnikId: 'posamezna', url: 'vzorec:prvi' })
+    preveri('zapisniki Ptuj: posamezen zapisnik ohrani podani id in URL',
+      sam?.zapisnikId === 'posamezna' && sam.url === 'vzorec:prvi' && sam.domaci.ime === 'Stojnci')
+    preveri('zapisniki Ptuj: ključ druge tekme ne preimenuje edine tekme',
+      pt.parsirajZapisnik(prvi, { zapisnikId: tekme[1].zapisnikId }) === null)
+    const rdec = tekme[0]?.rdeci[0]
+    preveri('zapisniki Ptuj: rdeči karton pripada gostu',
+      rdec?.ekipaIdx === 1 && rdec.st === 10 && rdec.minuta === 85 && rdec.regSt === 84562)
+  }
+  if (znaniViri().includes('mnzms')) {
+    const ms = viraZa({ source: 'mnzms' })
+    const z = ms.parsirajZapisnik(vzorec(primeri[1].datoteka), { zapisnikId: '157718' })
+    preveri('zapisniki MS: ohranimo javno šifro tekme', z?.domaci.ime === 'Mlinopek Križevci')
+    const html = vzorec(primeri[1].datoteka)
+    const prvi = html.slice(html.indexOf('<div id="157718"'), html.indexOf('<div id="157698"'))
+    preveri('zapisniki MS: tuja šifra ne preimenuje edine tekme',
+      ms.parsirajZapisnik(prvi, { zapisnikId: '157698' }) === null)
+    const klop = z && ms.nastopi(z).find((n) => n.ime === 'Obradovič Kleo')
+    preveri('zapisniki MS: rezervist lahko tudi izstopi',
+      klop?.minutaOd === 26 && klop.minutaDo === 46 && klop.minute === 20 && klop.regSt === 107112)
+  }
+  for (const [ime, vir] of [['program-ptuj-liga3.html', 'mnzpt'], ['program-ms-liga113.html', 'mnzms']]) {
+    if (!znaniViri().includes(vir)) continue
+    preveri(`zapisniki ${vir}: program ni zapisnik`,
+      viraZa({ source: vir }).zapisnikiIzKroga(vzorec(ime)).length === 0)
+  }
+}
+
+// --- zapisnik Maribor ------------------------------------------------------
+{
+  const { parsirajZapisnik: razcleni, izlusciIdjeZapisnikov } =
+    await import('./zapisnik-maribor.mjs')
+  const { default: mb } = await import('./viri/mnzmb.mjs')
+  const html = readFileSync(new URL('./vzorci/zapisnik-maribor-219915.html', import.meta.url), 'utf8')
+  const tekme = readFileSync(new URL('./vzorci/tekme-maribor-1clanska.html', import.meta.url), 'utf8')
+  const url = 'https://mnzmaribor.si/tekmovanje/1-clanska-liga-26-27/zapisnik/?event=219915'
+  const z = razcleni(html, { zapisnikId: '219915', url })
+
+  preveri('zapisnik Maribor: uporaben zapisnik', z !== null)
+  if (z) {
+    preveri('zapisnik Maribor: obe imeni ekip', z.domaci.ime === 'Peca' && z.gostje.ime === 'Brunšvik')
+    preveri('zapisnik Maribor: 11 začetnikov doma', z.domaci.postava.length === 11)
+    preveri('zapisnik Maribor: 11 začetnikov v gosteh', z.gostje.postava.length === 11)
+    preveri('zapisnik Maribor: šest domačih in pet gostujočih rezerv',
+      z.domaci.rezerve.length === 6 && z.gostje.rezerve.length === 5)
+    preveri('zapisnik Maribor: sezona, krog in datum tekme',
+      z.sezona === '2026/27' && z.krog === 1 && z.datum === '2026-08-29',
+      JSON.stringify([z.sezona, z.krog, z.datum]))
+    preveri('zapisnik Maribor: ohrani identiteto in pogodbo brez dodatnih polj',
+      z.zapisnikId === '219915' && z.url === url &&
+      Object.keys(z).sort().join(',') === [
+        'zapisnikId', 'url', 'sezona', 'krog', 'datum', 'domaci', 'gostje',
+        'rezultat', 'polcas', 'goli', 'zgresene', 'rumeni', 'rdeci', 'menjave', 'opozorila',
+      ].sort().join(','))
+
+    const vsi = [z.domaci, z.gostje].flatMap((e) => [...e.postava, ...e.rezerve])
+    preveri('zapisnik Maribor: igralci imajo samo številko, ime in zastavici',
+      vsi.every((i) => Object.keys(i).sort().join(',') === 'ime,kapetan,st,vratar' &&
+        typeof i.vratar === 'boolean' && typeof i.kapetan === 'boolean'))
+    preveri('zapisnik Maribor: oba začetna vratarja in obe rezervi',
+      JSON.stringify(vsi.filter((i) => i.vratar).map((i) => [i.st, i.ime])) === JSON.stringify([
+        [21, 'Vertačnik Alen'], [76, 'Kreuh Aleš'], [12, 'Kolar Luka'], [1, 'Lončarič Tilen'],
+      ]))
+    // Gostje nimajo oznake K; kapetana ne smemo sklepati iz številke dresa.
+    preveri('zapisnik Maribor: oznaka K se ne prilepi imenu in ne ustvari kapetana gostov',
+      JSON.stringify(vsi.filter((i) => i.kapetan).map((i) => [i.st, i.ime])) ===
+        JSON.stringify([[10, 'Obretan Matic']]) && !z.gostje.postava.some((i) => i.kapetan))
+
+    preveri('zapisnik Maribor: končni rezultat in polčas',
+      z.rezultat.domaci === 5 && z.rezultat.gostje === 1 &&
+      z.polcas.domaci === 2 && z.polcas.gostje === 0)
+    preveri('zapisnik Maribor: vseh šest zadetkov s tekočimi rezultati',
+      JSON.stringify(z.goli.map((g) => [g.ekipaIdx, g.st, g.ime, g.minuta, g.rezultat, g.avtogol, g.enajstmetrovka])) ===
+      JSON.stringify([
+        [1, 4, 'Hedl Nejc', 19, [1, 0], true, false],
+        [0, 10, 'Obretan Matic', 44, [2, 0], false, false],
+        [0, 15, 'Vrabič Andraž', 68, [3, 0], false, false],
+        [0, 11, 'Obretan Nejc', 72, [4, 0], false, false],
+        [0, 11, 'Obretan Nejc', 79, [5, 0], false, false],
+        [1, 27, 'Pelcl Anej', 89, [5, 1], false, false],
+      ]), JSON.stringify(z.goli))
+    const zadetki = [0, 0]
+    for (const g of z.goli) zadetki[g.avtogol ? 1 - g.ekipaIdx : g.ekipaIdx]++
+    preveri('zapisnik Maribor: avtogol šteje Peci za rezultat 5:1',
+      zadetki[0] === 5 && zadetki[1] === 1)
+
+    // Rajšp je začetnik, Pelcl rezerva: zapis 17 / 27 v isti vrstici kot
+    // 54&#8242; dokazuje, da je prva številka VEN, druga pa NOTER.
+    preveri('zapisnik Maribor: vseh sedem menjav v pravilni smeri in minuti',
+      JSON.stringify(z.menjave.map((m) => [m.ekipaIdx, m.minuta, m.ven.st, m.ven.ime, m.noter.st, m.noter.ime])) ===
+      JSON.stringify([
+        [1, 54, 17, 'Rajšp Žan', 27, 'Pelcl Anej'],
+        [1, 67, 77, 'Kokot Žiga', 5, 'Harih Davorin'],
+        [1, 67, 45, 'Zorec David', 16, 'Voglar Aljoša'],
+        [0, 80, 8, 'Kert Rok', 6, 'Pumpas Gašper'],
+        [0, 80, 88, 'Kotnik Timotej', 7, 'Previšić Aljaž'],
+        [0, 85, 79, 'Radivojević Darko', 50, 'Pranjič Kristijan'],
+        [0, 85, 4, 'Kert Jaka', 14, 'Butolen Ožbej'],
+      ]), JSON.stringify(z.menjave))
+    const n = nastopi(z)
+    preveri('zapisnik Maribor: klop prinese sedem dodatnih nastopov', n.length === 29)
+    preveri('zapisnik Maribor: Rajšp igra 54 minut, Pelcl 36 minut in doseže gol',
+      n.find((i) => i.ekipaIdx === 1 && i.st === 17)?.minute === 54 &&
+      n.find((i) => i.ekipaIdx === 1 && i.st === 27)?.minute === 36 &&
+      n.find((i) => i.ekipaIdx === 1 && i.st === 27)?.goli === 1)
+    preveri('zapisnik Maribor: avtogol pripada Hedlu, ne strelcem Pece',
+      n.find((i) => i.ekipaIdx === 1 && i.st === 4)?.avtogoli === 1 &&
+      n.find((i) => i.ekipaIdx === 1 && i.st === 4)?.goli === 0)
+    preveri('zapisnik Maribor: dva rumena kartona',
+      JSON.stringify(z.rumeni) === JSON.stringify([
+        { ekipaIdx: 1, st: 19, ime: 'Ekart Nejc', minuta: 37 },
+        { ekipaIdx: 0, st: 4, ime: 'Kert Jaka', minuta: 50 },
+      ]))
+    preveri('zapisnik Maribor: brez rdečih, zgrešenih enajstmetrovk in opozoril',
+      z.rdeci.length === 0 && z.zgresene.length === 0 && z.opozorila.length === 0,
+      z.opozorila.join(' | '))
+  }
+
+  preveri('zapisnik Maribor: štirimestna letnica datuma',
+    razcleni(html.replace('29.08.26 ob', '29.08.2026 ob'), { url })?.datum === '2026-08-29')
+  for (const [zapis, pricakovano] of [['2025/26', '2025/26'], ['2025/2026', '2025/26'], ['26/27', '2026/27']]) {
+    const naslov = html.replace('Golgeter Premium liga &#8211; Zapisnik</h1>',
+      `Golgeter Premium liga ${zapis} &#8211; Zapisnik</h1>`)
+    preveri(`zapisnik Maribor: sezona ${zapis} iz naslova, ne menija`,
+      razcleni('<nav>Arhiv 2007/08</nav>' + naslov)?.sezona === pricakovano)
+  }
+  preveri('zapisnik Maribor: brez podanega URL prebere sezono iz lastnega obrazca',
+    razcleni(html)?.sezona === '2026/27')
+  preveri('zapisnik Maribor: naslednja sezona pride iz podanega naslova',
+    razcleni(html, { url: url.replace('26-27', '27-28') })?.sezona === '2027/28')
+  const brezPolcasa = razcleni(html.replace(/<span class="halftime"[^>]*>[\s\S]*?<\/span>/, ''), { url })
+  preveri('zapisnik Maribor: manjkajoč polčas ostane neznan in ohrani končni rezultat',
+    brezPolcasa?.rezultat.domaci === 5 && brezPolcasa?.rezultat.gostje === 1 &&
+    brezPolcasa?.polcas.domaci === null && brezPolcasa?.polcas.gostje === null)
+  preveri('zapisnik Maribor: prazna stran in razpored nista zapisnika',
+    razcleni('') === null && razcleni(tekme) === null)
+  preveri('zapisnik Maribor: neodigrana tekma nima uporabnega zapisnika',
+    razcleni(html.replace(/5 : 1\s*<span class="halftime"[^>]*>[\s\S]*?<\/span>/, ''), { url }) === null)
+
+  const ids = izlusciIdjeZapisnikov(tekme)
+  preveri('razpored Maribor: vseh 132 tekem brez dvojnikov iz stranskega stolpca',
+    ids.length === 132 && new Set(ids).size === 132)
+  preveri('razpored Maribor: vsebuje odigrane, prihodnje in prestavljene tekme',
+    ['219915', '219927', '220046', '220883', '220884'].every((id) => ids.includes(id)))
+  preveri('razpored Maribor: ID-ji so nizi, urejeni številčno',
+    ids[0] === '219915' && ids.at(-1) === '220884' &&
+    ids.every((id, i) => typeof id === 'string' && (!i || Number(ids[i - 1]) < Number(id))))
+  preveri('razpored Maribor: povezave ostanejo uporabne tudi brez data-event_id',
+    izlusciIdjeZapisnikov(tekme.replace(/\sdata-event_id="\d+"/g, '')).length === 12)
+  preveri('razpored Maribor: prazna stran nima ID-jev', izlusciIdjeZapisnikov('').length === 0)
+
+  preveri('viri: Maribor je registriran', znaniViri().includes('mnzmb'))
+  if (znaniViri().includes('mnzmb')) {
+    preveri('viri: Maribor uporablja svoj parser in obstoječe nastope',
+      viraZa({ source: 'mnzmb' }) === mb && mb.parsirajZapisnik === razcleni && mb.nastopi === nastopi)
+  }
+  for (const liga of ['1-clanska-liga-26-27', '2-clanska-liga-26-27', '1-clanska-liga-27-28']) {
+    preveri(`viri: Maribor sestavi zapisnik za ${liga}`,
+      mb.naslovZapisnika?.(liga, '219915') === `https://mnzmaribor.si/tekmovanje/${liga}/zapisnik/?event=219915`)
+    preveri(`viri: Maribor sestavi razpored in seznam tekem za ${liga}`,
+      mb.naslovRazporeda?.(liga) === `https://mnzmaribor.si/tekmovanje/${liga}/tekme` &&
+      mb.naslovSeznamaTekem?.(liga) === `https://mnzmaribor.si/tekmovanje/${liga}/tekme`)
+    preveri(`viri: Maribor sestavi lestvico za ${liga}`,
+      mb.naslovLestvice?.(liga) === `https://mnzmaribor.si/tekmovanje/${liga}`)
+  }
+  preveri('viri: Maribor izpostavi enumeracijo zapisnikov', mb.izlusciIdjeZapisnikov(tekme).length === 132)
+}
+
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)
 process.exit(napak === 0 ? 0 : 1)

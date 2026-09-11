@@ -9,11 +9,21 @@
 import mnzg from './mnzg.mjs'
 import mnzlj from './mnzlj.mjs'
 import mnzce from './mnzce.mjs'
+import mnzpt from './mnzpt.mjs'
+import mnzms from './mnzms.mjs'
+import mnzle from './mnzle.mjs'
+import mnzmb from './mnzmb.mjs'
+import mnzng from './mnzng.mjs'
 
 const VIRI = {
   mnzg,
   mnzlj,
   mnzce,
+  mnzpt,
+  mnzms,
+  mnzle,
+  mnzmb,
+  mnzng,
 }
 
 /**

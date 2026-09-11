@@ -60,7 +60,12 @@ const db = createClient(BASE, SERVICE, { auth: { persistSession: false } })
 
 const tekmovanje = await najdiTekmovanje(db, arg('tekmovanje', 'clani'))
 // Brez `--liga` vzamemo tekočo sezono tekmovanja; arhiv se navede izrecno.
-const vir = viraZa(tekmovanje)
+// Ista liga je lahko objavljena pri dveh zvezah: Pomurska liga ima tekočo
+// sezono pri Lendavi, arhiv pa pri Murski Soboti. `--vir mnzms` pove, od kod
+// brati, ne da bi se liga preselila.
+const virIme = arg('vir')
+const vir = viraZa(virIme ? { source: virIme, slug: tekmovanje.slug } : tekmovanje)
+if (virIme) console.log(`Vir povožen: ${virIme}`)
 const liga = arg('liga', sifraLige(tekmovanje, '1502'))
 console.log(`Tekmovanje: ${tekmovanje.name} (liga ${liga})`)
 
@@ -128,7 +133,63 @@ function razdeliIme(polno) {
  * zato ju v takem primeru ločimo še po številki dresa. Številke ne uporabimo
  * vedno, ker isti igralec med sezono lahko zamenja dres.
  */
-async function igralecId(teamId, polnoIme, { vratar, st, dvoumno = false, zasedeni = null }) {
+async function igralecId(
+  teamId,
+  polnoIme,
+  { vratar, st, dvoumno = false, zasedeni = null, regSt = null },
+) {
+  // Registrska stevilka NZS je edina zanesljiva identiteta, kar jih vir lahko
+  // da: enolicna je za cloveka, prezivi prestop in menjavo dresa. Kjer je na
+  // voljo (Ptuj, Murska Sobota, Lendava), ugibanje po imenu in dresu odpade —
+  // in z njim cela druzina napak s soimenjaki.
+  if (regSt != null) {
+    const kljucReg = `reg|${regSt}`
+    if (igralci.has(kljucReg)) return igralci.get(kljucReg)
+
+    const { data: poReg } = await db
+      .from('players')
+      .select('id, position, position_source, team_id')
+      .eq('competition_id', tekmovanje.id)
+      .eq('reg_st', regSt)
+      .maybeSingle()
+
+    if (poReg) {
+      // Prestop ali nova stevilka dresa: zapisnik je najzanesljivejsi dokaz,
+      // zato oboje popravimo po njem.
+      const popravek = {}
+      if (poReg.team_id !== teamId) popravek.team_id = teamId
+      if (st != null) popravek.shirt_number = st
+      if (vratar && poReg.position_source !== 'admin') {
+        popravek.position = 'GK'
+        popravek.position_source = 'zapisnik'
+      }
+      if (Object.keys(popravek).length)
+        await db.from('players').update(popravek).eq('id', poReg.id)
+      igralci.set(kljucReg, poReg.id)
+      return poReg.id
+    }
+
+    const { priimek, ime } = razdeliIme(polnoIme)
+    const { data: nov, error: eNov } = await db
+      .from('players')
+      .insert({
+        competition_id: tekmovanje.id,
+        team_id: teamId,
+        full_name: polnoIme,
+        last_name: priimek,
+        first_name: ime,
+        shirt_number: st,
+        reg_st: regSt,
+        position: vratar ? 'GK' : null,
+        position_source: vratar ? 'zapisnik' : 'neznano',
+      })
+      .select('id')
+      .single()
+    if (eNov) throw new Error(`igralec ${polnoIme} (reg ${regSt}): ${eNov.message}`)
+    igralci.set(kljucReg, nov.id)
+    return nov.id
+  }
+
   const kljuc = `${teamId}|${polnoIme}#${st}`
   if (igralci.has(kljuc)) return igralci.get(kljuc)
 
@@ -297,45 +358,26 @@ if (pocisti) {
 }
 
 // --- seznam zapisnikov ------------------------------------------------------
-// Cachebuster: MNZ ali cdn med njim je vec-krat vrnil zastarel HTML brez
-// najnovejsih zapisnikov, ceprav je bilo `sveze: true` in cache lokalno
-// pravilno prepisan. Random query param na URL prisili prehod skozi cache.
-const seznamUrl =
-  vir.naslovSeznamaTekem(liga) + `&_=${Date.now()}`
-console.log(`Berem seznam tekem: ${seznamUrl}`)
-// Seznam se dnevno spreminja (nova tekma → nov zapisnik ID); vedno sveže,
-// da ne izpustimo pravkar objavljenih. Posamezne zapisnike lahko cachiramo.
-const seznam = await prenesi(seznamUrl, `liga-${liga}.html`, true)
-let ids = [...new Set([...seznam.matchAll(/zapisnik=(\d+)/g)].map((m) => m[1]))]
-ids.sort((a, b) => Number(a) - Number(b))
-// `--zapisnik 105627` popravi eno samo tekmo. Ob napaki v pripisu (soimenjaki)
-// ostane tekma brez nastopov; ponovni uvoz cele lige bi mid-sezone premaknil
-// vec, kot je treba, zato se da popraviti natanko tisto, kar je pokvarjeno.
+// Uvoz ne pozna oblike vira. Kranj, Ljubljana in Celje imajo stran na tekmo,
+// Ptuj, Murska Sobota in Lendava eno stran na krog, Nova Gorica in Maribor pa
+// svoje naslove — zato zapisnike vrne vir sam, ze razclenjene.
+console.log(`Berem zapisnike vira ${vir.ime} (liga ${liga})`)
+let zapisniki = await vir.zapisniki(liga, prenesi)
+
+// `--zapisnik <id>` popravi eno samo tekmo. Ponovni uvoz cele lige med sezono
+// premakne vec, kot je treba.
 const samoZapisnik = arg('zapisnik')
-if (samoZapisnik) ids = ids.filter((x) => x === String(samoZapisnik))
-if (omeji) ids = ids.slice(0, omeji)
-console.log(`Najdenih zapisnikov: ${ids.length}${ids.length ? ' — ' + ids.join(', ') : ''}`)
+if (samoZapisnik) zapisniki = zapisniki.filter((x) => String(x.id) === String(samoZapisnik))
+if (omeji) zapisniki = zapisniki.slice(0, omeji)
+console.log(`Najdenih zapisnikov: ${zapisniki.length}`)
 
 let uvozenih = 0
 let preskocenih = 0
+// Opozorila iz zapisnikov zberemo in jih pokazemo skupaj na koncu; sproti bi
+// se izgubila med vrsticami napredka.
 const vsaOpozorila = []
 
-for (const id of ids) {
-  const url = vir.naslovZapisnika(liga, id)
-  let html
-  try {
-    html = await prenesi(url, `${id}.html`)
-  } catch (e) {
-    console.log(`  ${id}: prenos ni uspel — ${e.message}`)
-    preskocenih++
-    continue
-  }
-
-  const z = vir.parsirajZapisnik(html, { zapisnikId: id, url })
-  if (!z) {
-    preskocenih++
-    continue
-  }
+for (const { id, z, url } of zapisniki) {
   if (!z.sezona || z.krog == null) {
     console.log(`  ${id}: manjka sezona ali krog — preskočeno`)
     preskocenih++
@@ -395,6 +437,43 @@ for (const id of ids) {
     // nastopi
     const n = vir.nastopi(z)
 
+    // Strelec s klopi, ki mu zapisnik ne pripise menjave. Zgodi se: Maribor
+    // je v enem zapisniku navedel gol Vukovica (rezerva, 47. minuta), menjave
+    // zanj pa ne. Brez nastopa gol ne prinese tock nikomur, pri tem pa ni
+    // sporno, da je igral — gol je dokaz. Vstop postavimo na minuto gola in
+    // to zapisemo med opozorila, da ostane vidno, da je podatek nepopoln.
+    for (const g of z.goli) {
+      if (g.st == null) continue
+      if (n.some((x) => x.ekipaIdx === g.ekipaIdx && x.st === g.st)) continue
+      const ekipa = g.ekipaIdx === 0 ? z.domaci : z.gostje
+      const kdo = (ekipa.rezerve ?? []).find((r) => r.st === g.st)
+      if (!kdo) continue
+      const od = g.minuta ?? 0
+      n.push({
+        ekipaIdx: g.ekipaIdx,
+        ekipa: ekipa.ime,
+        st: kdo.st,
+        ime: kdo.ime,
+        regSt: kdo.regSt ?? null,
+        vratar: Boolean(kdo.vratar),
+        zacetnik: false,
+        minutaOd: od,
+        minutaDo: 90,
+        minute: Math.max(0, 90 - od),
+        goli: 0,
+        goliIzEnajstmetrovke: 0,
+        avtogoli: 0,
+        zgreseneEnajstmetrovke: 0,
+        rumeni: 0,
+        rdeci: 0,
+        prejetiGoli: 0,
+        cleanSheet: false,
+      })
+      z.opozorila.push(
+        `strelec ${kdo.ime} (dres ${kdo.st}) je na klopi, menjave zanj ni — vstop postavljen na ${od}. minuto`,
+      )
+    }
+
     // imena, ki se v isti ekipi pojavijo večkrat (soimenjaki)
     const stejIme = new Map()
     for (const x of n) {
@@ -413,6 +492,7 @@ for (const id of ids) {
         st: x.st,
         dvoumno: jeDvoumno(x),
         zasedeni,
+        regSt: x.regSt ?? null,
       })
       zasedeni.add(pId)
       idPoStevilki.set(`${x.ekipaIdx}|${x.st}`, pId)
@@ -553,7 +633,7 @@ for (const id of ids) {
     if (z.opozorila.length)
       vsaOpozorila.push(`${id} (${z.domaci.ime} — ${z.gostje.ime}): ${z.opozorila.join('; ')}`)
     process.stdout.write(
-      `\r  uvoženih: ${uvozenih}/${ids.length}  (preskočenih: ${preskocenih})   `,
+      `\r  uvoženih: ${uvozenih}/${zapisniki.length}  (preskočenih: ${preskocenih})   `,
     )
   } catch (e) {
     console.log(`\n  ${id}: napaka — ${e.message}`)

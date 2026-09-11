@@ -11,6 +11,7 @@
 // zahteval štiri in je segel mimo naslova nazaj v meni, kjer je našel
 // 2007/08 — cel arhiv bi pristal dvajset let v preteklosti.
 import { parsirajZapisnik, nastopi, vBesedilo } from '../zapisnik.mjs'
+import { izSeznamaTekem } from './zapisniki.mjs'
 import { naredikljucKluba, kratkoIme, poenostavi } from '../klubi.mjs'
 
 const OSNOVNI = 'https://www.mnzcelje.com'
@@ -19,7 +20,7 @@ const OSNOVNI = 'https://www.mnzcelje.com'
 // ime; ugibati jih vnaprej pomeni združiti dva različna kluba.
 const ISTI_KLUB = {}
 
-export default {
+const vir = {
   ime: 'mnzce',
   polnoIme: 'MNZ Celje',
   drzava: 'SI',
@@ -48,7 +49,12 @@ export default {
   nastopi,
   vBesedilo,
 
+  // Seznam tekem → `zapisnik=<id>` → stran na tekmo.
+  zapisniki: (koda, prenesi) => izSeznamaTekem(vir, koda, prenesi),
+
   kljucKluba: naredikljucKluba(ISTI_KLUB),
   kratkoIme,
   poenostavi,
 }
+
+export default vir

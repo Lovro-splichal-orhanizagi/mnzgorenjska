@@ -124,8 +124,12 @@ const igralci = await vseVrstice((od, do_) =>
 const naSi = new Set((igralci ?? []).map((p) => p.id))
 
 // Cene igralcev z zgodovino upravlja borza, ki lahko znova uveljavi stare zapise.
+// Zgodovino potrebujeta dva primera: tedenski zagon (ki borzne igralce
+// preskoci) in vklopljena liga (kjer sidro sme slediti izracunu le pri
+// igralcih brez borze). Pri neaktivni ligi je ne beremo — ekip ni in sidro
+// tako ali tako sme slediti.
 const naBorzi = new Set()
-if (tedensko) {
+if (tedensko || tekmovanje.active) {
   try {
     const zgodovina = await vseVrstice((od, do_) =>
       db.from('price_changes')
@@ -290,6 +294,14 @@ for (const p of igralci ?? []) {
   // ne bi imela manevrskega prostora, kljub temu da bo cez cez pet krogov
   // pokazal, da spada v 8.0-9.0 razred.
   const popravek = { value: vrednost }
+  // Liga, ki se ni zazivela, nima borzne zgodovine — takrat sme sidro slediti
+  // izracunu. Brez tega ponovni zagon med postavljanjem lige premakne ceno,
+  // sidro pa pusti pri miru in cena konca vec kot 3.0 od njega, kar preverba
+  // upraviceno javi kot napako.
+  // Liga, ki se ni vklopljena, nima ekip — nihce teh igralcev nima v kadru,
+  // zato sme sidro slediti izracunu tudi, ce je nocni posel ceno ze premaknil.
+  // Pri vklopljeni ligi to stori le, kadar igralec se ni bil na borzi.
+  const brezBorze = tedensko ? false : !tekmovanje.active || !naBorzi.has(p.id)
 
   if (tedensko) {
     const stara = Number(p.value)
@@ -304,7 +316,7 @@ for (const p of igralci ?? []) {
     premaknjenih.push({ ime: p.full_name, iz: stara, v: vrednost })
   }
 
-  if (p.value_start == null && ocena != null) popravek.value_start = vrednost
+  if ((p.value_start == null || brezBorze) && ocena != null) popravek.value_start = vrednost
   razpored.set(vrednost, (razpored.get(vrednost) ?? 0) + 1)
   if (tedensko && !pisi) continue
 

@@ -16,6 +16,7 @@
 // od 5137533 stolpce naslavlja po glavi tabele in ne po zaporedju. Isti
 // razčlenjevalnik torej velja za oba vira.
 import { parsirajZapisnik, nastopi, vBesedilo } from '../zapisnik.mjs'
+import { izSeznamaTekem } from './zapisniki.mjs'
 import { naredikljucKluba, kratkoIme, poenostavi } from '../klubi.mjs'
 
 const OSNOVNI = 'https://www.mnzljubljana-zveza.si'
@@ -36,7 +37,7 @@ const ISTI_KLUB = {
   'nk iak kresnice': 'kresnice',
 }
 
-export default {
+const vir = {
   ime: 'mnzlj',
   polnoIme: 'MNZ Ljubljana',
   drzava: 'SI',
@@ -69,8 +70,13 @@ export default {
   nastopi,
   vBesedilo,
 
+  // Seznam tekem → `zapisnik=<id>` → stran na tekmo.
+  zapisniki: (koda, prenesi) => izSeznamaTekem(vir, koda, prenesi),
+
   // --- klubi ---------------------------------------------------------------
   kljucKluba: naredikljucKluba(ISTI_KLUB),
   kratkoIme,
   poenostavi,
 }
+
+export default vir

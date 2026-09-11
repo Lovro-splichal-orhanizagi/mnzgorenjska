@@ -11,11 +11,12 @@
 // `zapisnik.mjs` in `klubi.mjs` ostajata, kjer sta — tu ju samo ovijemo,
 // da sprememba ostane majhna in se obstoječa logika ne prepisuje.
 import { parsirajZapisnik, nastopi, vBesedilo } from '../zapisnik.mjs'
+import { izSeznamaTekem } from './zapisniki.mjs'
 import { kljucKluba, kratkoIme, poenostavi } from '../klubi.mjs'
 
 const OSNOVNI = 'https://www.mnzgkranj.si'
 
-export default {
+const vir = {
   ime: 'mnzg',
   polnoIme: 'MNZ Gorenjska',
   drzava: 'SI',
@@ -46,8 +47,13 @@ export default {
   nastopi,
   vBesedilo,
 
+  // Seznam tekem → `zapisnik=<id>` → stran na tekmo.
+  zapisniki: (koda, prenesi) => izSeznamaTekem(vir, koda, prenesi),
+
   // --- klubi ---------------------------------------------------------------
   kljucKluba,
   kratkoIme,
   poenostavi,
 }
+
+export default vir
