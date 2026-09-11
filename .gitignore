@@ -11,3 +11,4 @@ scripts/.predpomnilnik/
 
 # Produkcijski javni ključi so del repozitorija — brez njih deploy ne ve za bazo.
 !.env.production
+scripts/.naslovi.tsv
