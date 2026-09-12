@@ -97,8 +97,12 @@ const html = await prenesi(url, `razpored-${sifra(liga)}.html`)
 // starem CMS-u berejo zaporedje vrstic, NZS pa tabelo, v kateri ima krog svoj
 // stolpec — iz golega besedila se stolpci ne dajo lociti. Stari
 // razclenjevalniki drugi argument preprosto prezrejo.
+// Vir, pri katerem je razpored ostranjen, si ga pobere sam; ostali berejo
+// eno stran, kakor doslej.
 const razclenit = vir.razcleniRazpored ?? razcleniRazpored
-const veljavni = razclenit(vir.vBesedilo(html), html)
+const veljavni = vir.razporedVseStrani
+  ? await vir.razporedVseStrani(liga, prenesi)
+  : razclenit(vir.vBesedilo(html), html)
 
 console.log(`Najdenih krogov: ${veljavni.length}`)
 if (!veljavni.length) {

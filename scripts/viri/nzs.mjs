@@ -106,6 +106,43 @@ const vir = {
   // iz golega besedila ne da lociti. Uvoz zato poda oboje, vrstice in HTML.
   razcleniRazpored: (_vrstice, html) => razcleniRazporedNzs(html),
 
+  /**
+   * Razpored je OSTRANJEN, zato ena stran ni cel razpored.
+   *
+   * Sprva sem vzel samo prvo: arhiv je bil vseeno poln, ker kroge ustvari ze
+   * nastevanje zapisnikov, tekoca sezona pa je dobila le prvih deset tekem in
+   * brez prihodnjih krogov ni rokov. Tega se na uvozu ne vidi — porocal je
+   * uspeh.
+   */
+  async razporedVseStrani(koda, prenesi) {
+    const { pot, sezona } = razbijKodo(koda)
+    const krogi = new Map()
+    for (let stran = 0; stran < 60; stran++) {
+      const html = await prenesi(
+        naslovSeznama(koda, stran),
+        `razpored-${pot}-${sezona ?? 'tekoca'}-${stran}.html`,
+        stran === 0,
+      )
+      const del = razcleniRazporedNzs(html)
+      if (!del.length) break
+      let novih = 0
+      for (const k of del) {
+        if (!krogi.has(k.stevilka)) krogi.set(k.stevilka, { stevilka: k.stevilka, tekme: [] })
+        const cilj = krogi.get(k.stevilka)
+        for (const t of k.tekme) {
+          // Ista tekma se lahko pojavi na dveh straneh; podvojena bi v bazi
+          // nastala dvakrat in krog bi imel vec tekem, kot jih liga ima.
+          const ze = cilj.tekme.some(
+            (x) => x.domaci === t.domaci && x.gostje === t.gostje && x.datum === t.datum,
+          )
+          if (!ze) { cilj.tekme.push(t); novih++ }
+        }
+      }
+      if (!novih) break
+    }
+    return [...krogi.values()].sort((a, b) => a.stevilka - b.stevilka)
+  },
+
   // Zveze pri NZS ne poznamo kot MNZ, zato vzdevkov klubov ni na zalogo.
   kljucKluba: naredikljucKluba({}),
   kratkoIme,

@@ -1873,6 +1873,39 @@ preveri(
       n.some((x) => x.zacetnik && x.minute === 90))
   }
 
+  // Nepopolni dogodki: stran za starejse sezone ponekod nasteje postavi,
+  // dogodkov pa ne. Prej je uvoz tak zapisnik vpisal kot uspesen — 22
+  // nastopov, nobene menjave, premalo golov, nobene napake.
+  {
+    const cel = beri('zapisnik-nzs-1snl.html')
+    const brezIkon = cel.replace(/<i class="fa-(?:light|solid) fa-(?:futbol|arrows-repeat|circle yellow|circle red)"[^>]*><\/i>/g, '')
+    const z = nzsRazcleni(brezIkon, { zapisnikId: 'x', url: 'u' })
+    preveri('NZS: zapisnik brez dogodkov se vseeno razcleni', z !== null)
+    preveri('NZS: neskladje med goli in izidom je opozorilo, ne tisina',
+      z.opozorila.some((o) => /golov iz ikon/.test(o)), JSON.stringify(z.opozorila))
+    preveri('NZS: manjkajoce menjave so opozorilo',
+      z.opozorila.some((o) => /menjave/.test(o)), JSON.stringify(z.opozorila))
+    preveri('NZS: cel zapisnik nima opozoril',
+      nzsRazcleni(cel, { zapisnikId: 'x', url: 'u' }).opozorila.length === 0)
+  }
+
+  // Rezervist z golom je gotovo igral, tudi ce ikone menjave ni. Rezervist s
+  // KARTONOM pa ne: opomin lahko dobi tudi, kdor sedi na klopi — prvi poskus
+  // je tako na igrisce poslal vratarja z rumenim kartonom v 83. minuti.
+  {
+    const z = nzsRazcleni(beri('zapisnik-nzs-2snl.html'), { zapisnikId: 'x', url: 'u' })
+    const n = nzsNastopi(z)
+    const naKlopi = [z.domaci, z.gostje].flatMap((e, i) =>
+      e.rezerve.map((r) => ({ ...r, ekipaIdx: i })))
+    const samoKarton = naKlopi.filter((r) =>
+      r.dogodki.length && !r.dogodki.some((d) => d.vrsta === 'menjava' || d.vrsta === 'gol'))
+    preveri('NZS: rezervist z zgolj kartonom ne dobi nastopa',
+      samoKarton.every((r) => !n.some((x) => x.ekipaIdx === r.ekipaIdx && x.st === r.st)),
+      samoKarton.map((r) => r.ime).join(', ') || '(ni takega)')
+    preveri('NZS: noben gol ne ostane brez nastopa strelca',
+      z.goli.every((g) => n.some((x) => x.ekipaIdx === g.ekipaIdx && x.st === g.st)))
+  }
+
   // Stran brez postav (navadna stran tekme) ne sme dati zapisnika.
   preveri('NZS: stran brez postav ni zapisnik',
     nzsRazcleni('<html><body>ni postav</body></html>', {}) === null)
