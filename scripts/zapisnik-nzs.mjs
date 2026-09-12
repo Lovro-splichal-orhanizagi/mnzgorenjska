@@ -75,7 +75,7 @@ function igralec(li) {
   return {
     st: Number(st[1]),
     ime: razpakiraj(ime[1]),
-    // Stalna šifra igralca pri NZS; uvoz jo uporabi kot identiteto.
+    // Stalna šifra igralca pri NZS. NI registrska številka — glej glavo.
     nzsId: profil ? Number(profil[2]) : null,
     klubSlug: profil ? profil[1] : null,
     vratar: oznake.includes('(V)'),
