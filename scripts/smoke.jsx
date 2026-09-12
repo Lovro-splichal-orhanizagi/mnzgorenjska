@@ -1780,5 +1780,87 @@ preveri(
     razcleni(html, {}) !== null)
 }
 
+// --- zapisnik NZS (1. in 2. SNL) --------------------------------------------
+// Dolgo sem trdil, da NZS postav po tekmah ne objavlja. Narobe: stran zanje
+// stoji pod stranjo tekme kot `/zapisnik`. Iskal sem besedo "postave", ki je
+// na strani ni — zacetna enajsterica nima naslova, klop pise "Rezervni
+// igralci". Iz odsotnosti NAPISA sem sklepal na odsotnost PODATKA.
+{
+  const { parsirajZapisnik: nzsRazcleni } = await import('./zapisnik-nzs.mjs')
+  const { nastopi: nzsNastopi } = await import('./zapisnik.mjs')
+  const beri = (f) => readFileSync(new URL(`./vzorci/${f}`, import.meta.url), 'utf8')
+
+  const primeri = [
+    { f: 'zapisnik-nzs-1snl.html', liga: '1. SNL', domaci: 'Celje', gostje: 'Koper',
+      izid: [0, 1], krog: 8, datum: '2026-09-06', klop: [12, 11] },
+    { f: 'zapisnik-nzs-2snl.html', liga: '2. SNL', domaci: 'Ilirija 1911', gostje: 'Primorje',
+      izid: [0, 0], krog: 5, datum: '2026-09-04', klop: [9, 7] },
+  ]
+
+  for (const p of primeri) {
+    const z = nzsRazcleni(beri(p.f), { zapisnikId: 'x', url: 'u' })
+    preveri(`NZS ${p.liga}: zapisnik je uporaben`, z !== null)
+    if (!z) continue
+
+    preveri(`NZS ${p.liga}: obe imeni ekip`,
+      z.domaci.ime === p.domaci && z.gostje.ime === p.gostje,
+      `${z.domaci.ime} / ${z.gostje.ime}`)
+    preveri(`NZS ${p.liga}: izid, krog in datum`,
+      z.rezultat.domaci === p.izid[0] && z.rezultat.gostje === p.izid[1] &&
+      z.krog === p.krog && z.datum === p.datum,
+      `${z.rezultat.domaci}:${z.rezultat.gostje} krog ${z.krog} ${z.datum}`)
+    preveri(`NZS ${p.liga}: sezona iz naslova tekmovanja`, z.sezona === '2026/27', z.sezona)
+
+    preveri(`NZS ${p.liga}: po 11 zacetnikov`,
+      z.domaci.postava.length === 11 && z.gostje.postava.length === 11,
+      `${z.domaci.postava.length}/${z.gostje.postava.length}`)
+    preveri(`NZS ${p.liga}: klop je locena od zacetnikov`,
+      z.domaci.rezerve.length === p.klop[0] && z.gostje.rezerve.length === p.klop[1],
+      `${z.domaci.rezerve.length}/${z.gostje.rezerve.length}`)
+    preveri(`NZS ${p.liga}: natanko en vratar in en kapetan na ekipo`,
+      [z.domaci, z.gostje].every((e) =>
+        e.postava.filter((i) => i.vratar).length === 1 &&
+        e.postava.filter((i) => i.kapetan).length === 1))
+
+    // Trenerjev blok nima profilnih povezav; ce bi zdrsnil med igralce, bi
+    // se stevilo poveca in "trener" bi dobil nastop.
+    preveri(`NZS ${p.liga}: trener ni igralec`,
+      [z.domaci, z.gostje].every((e) =>
+        [...e.postava, ...e.rezerve].every((i) => i.nzsId != null)))
+
+    // Stalna sifra igralca je razlog, da tu ni ugibanja identitete.
+    const sifre = [z.domaci, z.gostje].flatMap((e) => [...e.postava, ...e.rezerve].map((i) => i.nzsId))
+    preveri(`NZS ${p.liga}: sifre igralcev so enolicne`,
+      new Set(sifre).size === sifre.length, `${new Set(sifre).size}/${sifre.length}`)
+
+    // Goli iz ikon se morajo sesteti v izid — najmocnejsa preverba parserja.
+    preveri(`NZS ${p.liga}: goli iz ikon se ujemajo z izidom`,
+      z.goli.length === p.izid[0] + p.izid[1], String(z.goli.length))
+
+    // Menjava ima isto ikono pri obeh igralcih; locimo ju po tem, ali je
+    // igralec zacetnik. Vsak vstop mora imeti svoj izstop.
+    preveri(`NZS ${p.liga}: vsaka menjava ima vstop in izstop`,
+      z.menjave.every((m) => m.noter.st != null && m.ven.st != null),
+      JSON.stringify(z.menjave.filter((m) => m.ven.st == null)))
+
+    // Skupni `nastopi()` mora delati brez sprememb — to je merilo, da je
+    // struktura res enaka kot pri drugih virih.
+    const n = nzsNastopi(z)
+    preveri(`NZS ${p.liga}: 22 zacetnikov dobi nastop`,
+      n.filter((x) => x.zacetnik).length === 22, String(n.filter((x) => x.zacetnik).length))
+    preveri(`NZS ${p.liga}: rezerva brez vstopa nima nastopa`,
+      n.filter((x) => !x.zacetnik).length === z.menjave.length,
+      `${n.filter((x) => !x.zacetnik).length} proti ${z.menjave.length}`)
+    preveri(`NZS ${p.liga}: nihce ne igra vec kot 90 minut`,
+      n.every((x) => x.minute >= 0 && x.minute <= 90))
+    preveri(`NZS ${p.liga}: zacetnik brez menjave igra vseh 90`,
+      n.some((x) => x.zacetnik && x.minute === 90))
+  }
+
+  // Stran brez postav (navadna stran tekme) ne sme dati zapisnika.
+  preveri('NZS: stran brez postav ni zapisnik',
+    nzsRazcleni('<html><body>ni postav</body></html>', {}) === null)
+}
+
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)
 process.exit(napak === 0 ? 0 : 1)
