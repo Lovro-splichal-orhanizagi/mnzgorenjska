@@ -45,15 +45,29 @@ imena in številke dresa.
 **Državna tekmovanja (NZS).** Tu velja ločnica, ki ni po ligi, ampak po tem,
 kdo tekmovanje *objavlja*:
 
-- **1. SNL in 2. SNL — ni mogoče.** `nzs.si` da razpored, rezultate, sodnike,
-  gledalce, lestvico in zbirno statistiko sezone, postav pa ne. Preverjeno:
-  stran na tekmo (`/klubi/moski/<liga>/tekme/<slug>`), njeni podzavihki,
-  `?tab=`, `nzs-dynamic-page`, `prvaliga.si`, iskanje PDF‑jev in uradnih objav.
-  Postave so v **Registi** (`regista.nzs.si`), ki je v celoti za prijavo.
-  Nobena MNZ 1. ali 2. SNL ne podvaja — preverjeno po seznamih tekmovanj vseh
-  zvez in vseh sezon.
-- **3. SNL Vzhod in Zahod — mogoče**, ker ju vodi posamezna MNZ in ju objavi
-  na svojem spletišču z istimi zapisniki kot svoje lige.
+- **1. SNL in 2. SNL — mogoče.** Stran s postavami stoji **pod** stranjo
+  tekme: `/klubi/moski/<liga>/tekme/<slug>/zapisnik`. Vir je `nzs`.
+- **3. SNL Vzhod in Zahod — mogoče** na dva načina: prek `nzs` kakor zgornji
+  dve, ali prek MNZ, ki ju za tekočo sezono objavi na svojem spletišču.
+
+**Tu sem se zmotil dvakrat in obakrat enako, zato je vredno zapisati, kako.**
+
+Trdil sem, da NZS postav ne objavlja, in to za dve celi ligi. Stran sem
+prenesel, a sem v njej **iskal besedo "postave"**. Te na njej ni: začetna
+enajsterica nima nobenega naslova, klop piše "Rezervni igralci". Iz odsotnosti
+NAPISA sem sklepal na odsotnost PODATKA.
+
+Nato sem trdil, da arhiva ni, ker izbirnik sezone ob navadnem POST vrne tekočo
+sezono. Odgovor AJAX pa v ukazu `redirect` pove, kam vodi — in to je navaden
+`?season=<id>`.
+
+Iz obojega isto pravilo: **preden zapišeš, da vira ni, poglej, kaj stran
+vsebuje, ne, ali vsebuje besedo, ki jo pričakuješ.** Če iskanje ne najde
+ničesar, je to podatek o iskanju, ne o strani. In nikoli ne sklepaj o celi
+ligi iz ene poizvedbe.
+
+**Regista** (`regista.nzs.si`) je v celoti za prijavo. Ni je treba obiskovati:
+vse, kar potrebujemo, je javno na `nzs.si`.
 
 **Skrbništvo 3. SNL se med sezonami seli.** Arhiva torej ni na isti strani kot
 tekoča sezona; iskati ga je treba pri zvezi, ki je ligo vodila **tisto** leto:
@@ -111,6 +125,53 @@ ljubljanska 1703 in 1603.
 
 Odpri en zapisnik in preveri, da vidiš številke dresov, imena in oznako `(V)`
 za vratarja. Če ne, tu se konča.
+
+## 0b. Vir `nzs` — državne lige
+
+Drugačen od vseh MNZ, zato na kratko, kar je treba vedeti.
+
+**Zapisnik** je `/klubi/moski/<liga>/tekme/<slug>/zapisnik`. Vrsto dogodka pove
+**ikona**, ne besedilo:
+
+| ikona | pomen |
+|---|---|
+| `fa-futbol` | gol |
+| `fa-circle yellow` | rumeni karton |
+| `fa-circle red` | rdeči karton |
+| `fa-arrows-repeat` | menjava (ista ikona pri obeh; loči ju začetnik) |
+
+Vsak igralec ima v profilni povezavi **stalno šifro**
+(`…/mostvo/pijus-sirvys-157721`). To je najboljša identiteta med vsemi viri —
+boljša od registrske številke, ker je vedno tam. Ugibanja iz imena in dresa
+tu ni.
+
+**Nastevanje tekem** je bilo težje od postav:
+
+- Sezona je `?season=<id>`, kjer je id **številka iz spustnega seznama**, ne
+  letnica: `372571` = 2026/27, `22` = 2025/26, `23` = 2024/25, `24` = 2023/24,
+  `25` = 2022/23, `26` = 2021/22, `27` = 2020/21, `28` = 2019/20.
+- Seznam je ostranjen z Drupalovim **večstranskim** pagerjem, zato je vrednost
+  **par**: `page=0,<n>`, ne `page=<n>`. Z napačno obliko vrne vsakič isto
+  stran in videti je, kot da ostranjevanja ni. Zadnja stran je krajša od
+  desetih; to je edino merilo za konec, ker pager čez konec ne vrne napake.
+- Šifra lige je `<pot>` za tekočo sezono in `<pot>:<sezona>` za arhiv.
+
+Arhiv je globok: sezona 2022/23 ima 182 tekem na 19 straneh in se razčleni
+enako kot tekoča.
+
+## 0c. Preden uvoziš arhiv, ga preštej
+
+Vsak arhiv ni uporaben, in neuporaben arhiv ne javi ničesar — uvoz poroča
+uspeh in vpiše polovične podatke. Trije podatki povedo vse:
+
+```
+tekem · golov · koliko postav ima natanko 11 igralcev
+```
+
+Primerjaj Gorico: `2579` da 110 tekem, 446 golov in vseh 220 postav po 11;
+`2163` da 110 tekem, **0 golov** in 193 od 220 postav, ki niso po 11. Isti
+razčlenjevalnik, ista zveza, dve sezoni narazen — spletišče je vmes zamenjalo
+obliko strani. **Arhiv brez golov je tišja okvara od arhiva brez tekem.**
 
 ## 1. Razčlenjevalnik
 
@@ -284,6 +345,25 @@ Ločilo je `@`, ker se `:` in `/` pojavljata znotraj samih šifer (Ptuj
 
 Delegacijske strani nima vsaka zveza; `uvoz-delegiranja.mjs` se pri viru brez
 nje izpiše in konča z 0. Rok kroga takrat stoji na urah iz razporeda.
+
+**Lige uvažaj ENO ZA DRUGO.** Delovni tok ima `concurrency: uvoz` s
+`cancel-in-progress: false`. GitHub v taki skupini hrani **največ eno** čakajočo
+zahtevo in vsaka nova povozi prejšnjo — osem naenkrat pomeni sedem preklicev,
+ki jih opaziš šele, ko pogledaš seznam zagonov. Počakaj, da se vrsta izprazni,
+šele nato zaženi naslednjo.
+
+**Šifra lige gre v ime datoteke predpomnilnika.** Če vsebuje `/` ali `:`
+(Lendava `2026-27/mnl-lendava-26-27`, Ptuj `2026:96`), jo je treba očistiti,
+sicer postane pot v mapo, ki je ni. Obe lendavski ligi sta tako padli z
+`ENOENT` — a šele po tem, ko je bil arhiv že prenesen. Za to je
+`sifra()` v `scripts/viri/zapisniki.mjs`.
+
+**Ime v predpomnilniku mora nositi LIGO, ne le šifre zapisnika.** Naslov
+zapisnika vsebuje `liga=`, ime datoteke pa je bilo `<id>.html` — dve ligi
+istega vira sta si tako povozili stran. Pokazalo se je pri 3. SNL Zahod, ker
+sta oba arhiva (1703 in 1603) ljubljanska in tečeta v istem zagonu drug za
+drugim: druga sezona je dobila postavo prve, goli pa so ostali svoji.
+Invarianta `gol-brez-nastopa` je ujela **en gol od 3953**.
 
 ### Tako je izpadlo pri MNZ Ljubljana
 
