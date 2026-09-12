@@ -1756,6 +1756,34 @@ preveri(
     offsetLjubljana('2027-10-30') === '+02:00', offsetLjubljana('2027-10-30'))
   preveri('cas: na dan jesenskega preklopa je zimski',
     offsetLjubljana('2027-10-31') === '+01:00', offsetLjubljana('2027-10-31'))
+  // Preklop se zgodi ob 02:00 po lokalnem casu, ne ob polnoci, zato je na DAN
+  // preklopa odvisen tudi od URE. Nocnih terminov v razporedu ni, a merilo
+  // brez ure je bilo vseeno napacno.
+  preveri('cas: na dan spomladanskega preklopa je ura pred 02:00 se zimska',
+    offsetLjubljana('2027-03-28', '01:30') === '+01:00', offsetLjubljana('2027-03-28','01:30'))
+  preveri('cas: na dan jesenskega preklopa je ura pred 03:00 se poletna',
+    offsetLjubljana('2027-10-31', '02:30') === '+02:00', offsetLjubljana('2027-10-31','02:30'))
+  preveri('cas: popoldne na dan jesenskega preklopa je zimski',
+    offsetLjubljana('2027-10-31', '15:00') === '+01:00', offsetLjubljana('2027-10-31','15:00'))
+
+  // Okno razclenjevalnika se ne sme raztezati cez naslov naslednjega kroga:
+  // "2. krog" je beseda in bi pri Mariboru postal ime gostujoce ekipe.
+  {
+    const { razporedMaribor } = await import('./razporedi.mjs')
+    const vrstice = [
+      '1. krog', 'Kraj A', '29.08.26', '17.00', 'Peca', '5 : 1', '(2 : 0)',
+      '2. krog', 'Kraj B', '05.09.26', '17.00', 'Rogoza', '1 : 1', '(0 : 0)', 'Marjeta',
+    ]
+    const k = razporedMaribor(vrstice)
+    const imena = k.flatMap((x) => x.tekme.flatMap((t) => [t.domaci, t.gostje]))
+    preveri('razpored: naslov kroga ne postane ime ekipe',
+      !imena.some((i) => /krog/i.test(i)), imena.join(' | '))
+    preveri('razpored: tekma za naslovom pripada svojemu krogu',
+      k.every((x) => x.tekme.every((t) => t.datum)) &&
+      (k.find((x) => x.stevilka === 2)?.tekme.length ?? 0) === 1,
+      k.map((x) => x.stevilka + ':' + x.tekme.length).join(','))
+  }
+
   preveri('rok kroga: ura se ne zamakne cez marcni preklop',
     rokKroga('2027-03-28', '15:00', 6) === '2027-03-28T07:00:00.000Z',
     rokKroga('2027-03-28', '15:00', 6))

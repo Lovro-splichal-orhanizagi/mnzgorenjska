@@ -6,10 +6,17 @@
 // Začetna enajsterica nima nobenega naslova, klop pa piše "Rezervni igralci".
 // Sklepati iz odsotnosti NAPISA, da ni PODATKA, je bila napaka.
 //
-// Ta vir je od vseh najbogatejši, ker ima vsak igralec v profilni povezavi
-// svojo **stalno šifro** (`…/mostvo/pijus-sirvys-157721`). Identitete igralca
-// torej ni treba ugibati iz imena in številke dresa — kar je bil vir
-// soimenjaških napak pri medobčinskih ligah.
+// Vsak igralec ima v profilni povezavi svojo **stalno šifro**
+// (`…/mostvo/pijus-sirvys-157721`). To je obetavna identiteta, a je zaenkrat
+// NE uporabljamo.
+//
+// **Šifra NI registrska številka NZS.** Preverjeno: šifra 74641 pripada na
+// nzs.si Krošlju Tijanu, v naši bazi pa ima `reg_st` 74641 Cimerman Alen —
+// dva različna človeka. Če bi jo vpisali v `players.reg_st`, bi uvoz zlil
+// igralca, ki nimata nič skupnega, in to nepovratno.
+//
+// Šifra je zato razčlenjena in na voljo v `nzsId`, ni pa shranjena. Za rabo
+// bi potrebovala svoj stolpec, ne tujega.
 //
 // Oblika strani (vse znotraj `<ul class="match-report">`):
 //

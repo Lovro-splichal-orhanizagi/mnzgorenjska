@@ -15,17 +15,33 @@ function zadnjaNedelja(leto, mesec) {
   return zadnji
 }
 
-/** Odmik UTC za Ljubljano na dani dan: `+01:00` ali `+02:00`. */
-export function offsetLjubljana(datumIso) {
+/**
+ * Odmik UTC za Ljubljano: `+01:00` ali `+02:00`.
+ *
+ * Preklop se zgodi ob 02:00 po lokalnem casu, ne ob polnoci, zato je na DAN
+ * preklopa odvisen tudi od ure. Brez `ura` privzamemo popoldne, ko je tekma;
+ * to je pravilno za vse dnevne termine, zgresi pa nocne, ki jih v razporedu
+ * ni. Kadar uro poznamo, jo podaj.
+ */
+export function offsetLjubljana(datumIso, ura = '12:00') {
   const [y, m, d] = datumIso.split('-').map(Number)
   if (m < 3 || m > 10) return '+01:00'
   if (m > 3 && m < 10) return '+02:00'
   const preklop = zadnjaNedelja(y, m)
-  if (m === 3) return d >= preklop ? '+02:00' : '+01:00'
-  return d < preklop ? '+02:00' : '+01:00'
+  const h = Number(String(ura).split(':')[0])
+  if (m === 3) {
+    if (d > preklop) return '+02:00'
+    if (d < preklop) return '+01:00'
+    // Na dan preklopa: pred 02:00 se zimski cas.
+    return h >= 2 ? '+02:00' : '+01:00'
+  }
+  if (d < preklop) return '+02:00'
+  if (d > preklop) return '+01:00'
+  // Jeseni ura pred 03:00 se tece po poletnem casu.
+  return h < 3 ? '+02:00' : '+01:00'
 }
 
 /** Datum in ura v slovenskem času → ISO z odmikom. */
 export function isoLjubljana(datumIso, uraHhmm) {
-  return `${datumIso}T${uraHhmm}:00${offsetLjubljana(datumIso)}`
+  return `${datumIso}T${uraHhmm}:00${offsetLjubljana(datumIso, uraHhmm)}`
 }

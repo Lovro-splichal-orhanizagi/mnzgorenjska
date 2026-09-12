@@ -55,7 +55,15 @@ function poKrogih(vrstice, vzemi) {
       continue
     }
     if (!tekoci) continue
-    const { tekma, porabljeno } = vzemi(vrstice.slice(i, i + 8))
+    // Okno se NE sme raztezati čez naslov naslednjega kroga. Pri Mariboru je
+    // iskanje imena gostov teklo, dokler ni naletelo na besedo — in "2. krog"
+    // je beseda. Naslov bi tako postal ime ekipe, hkrati pa bi ga `porabljeno`
+    // preskočilo in vse nadaljnje tekme bi pristale v prejšnjem krogu.
+    let konec = i + 8
+    for (let k = i + 1; k < konec && k < vrstice.length; k++) {
+      if (krogIz(vrstice[k]) !== null) { konec = k; break }
+    }
+    const { tekma, porabljeno } = vzemi(vrstice.slice(i, konec))
     if (tekma) { tekoci.tekme.push(tekma); i += porabljeno - 1 }
   }
   return krogi.filter((k) => k.tekme.length)
@@ -170,7 +178,7 @@ const URA_ROKA = 10
  */
 export function rokKroga(datumKroga, ura, pomakUr) {
   if (!datumKroga) return null
-  const odmik = offsetLjubljana(datumKroga)
+  const odmik = offsetLjubljana(datumKroga, ura ?? '12:00')
   if (!ura) return `${datumKroga}T${String(URA_ROKA).padStart(2, '0')}:00:00${odmik}`
   const zacetek = new Date(`${datumKroga}T${ura}:00${odmik}`)
   return new Date(zacetek.getTime() - pomakUr * 3600000).toISOString()
