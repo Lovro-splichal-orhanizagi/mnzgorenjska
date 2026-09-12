@@ -1,3 +1,4 @@
+import { razporedMaribor } from '../razporedi.mjs'
 import { izPovezav } from './zapisniki.mjs'
 // Šifra lige vsebuje sezono; ob prehodu v novo leto jo poda tekmovanje.
 // Nastope računa skupna logika, ker je pogodba parserja povsem enaka.
@@ -26,6 +27,9 @@ const vir = {
   vBesedilo,
 
   // Vzorec ne dokazuje vzdevkov; preslikave druge zveze bi združile napačne klube.
+  // Razpored te zveze ni v obliki "Domači : Gostje"; splošni
+  // razčlenjevalnik bi vrnil nič krogov in uvoz bi se ustavil.
+  razcleniRazpored: razporedMaribor,
   kljucKluba: naredikljucKluba(),
   kratkoIme,
   poenostavi,

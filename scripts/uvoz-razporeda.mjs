@@ -10,15 +10,16 @@
 // za noben prihodnji krog — igra pa rok potrebuje vnaprej. Razpored da kroge z
 // datumi; rezultate in statistiko pozneje doda `uvoz-zapisnikov.mjs`.
 //
-// Rok kroga postavimo na 10:00 na dan prve tekme v krogu.
+// Rok kroga stoji `competitions.rok_pomak_ur` pred prvo tekmo, kadar uro
+// poznamo; sicer ob 10:00 na dan prve tekme (glej `rokKroga`).
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { tekmovanje as najdiTekmovanje, sifraLige } from './tekmovanje.mjs'
 import { viraZa } from './viri/index.mjs'
 import { razcleniRazpored, sezonaIz } from './razpored.mjs'
+import { rokKroga } from './razporedi.mjs'
 
 const PREDPOMNILNIK = 'scripts/.predpomnilnik'
-const URA_ROKA = 10
 
 function izEnv() {
   try {
@@ -59,6 +60,8 @@ const db = createClient(BASE, SERVICE, { auth: { persistSession: false } })
 const tekmovanje = await najdiTekmovanje(db, arg('tekmovanje', 'clani'))
 const vir = viraZa(tekmovanje)
 const liga = arg('liga', sifraLige(tekmovanje, '1601'))
+// Isti pomak kot pri delegiranju: mladinci igrajo zgodaj, zato imajo krajsega.
+const pomakUr = Number(arg('pomak', null) ?? tekmovanje.rok_pomak_ur ?? 6)
 console.log(`Tekmovanje: ${tekmovanje.name} (liga ${liga})`)
 
 async function prenesi(url, ime) {
@@ -79,9 +82,15 @@ const url = vir.naslovRazporeda(liga)
 console.log(`Berem razpored: ${url}`)
 const html = await prenesi(url, `razpored-${liga}.html`)
 
-// Stran je ena velika tabela: naslov kroga ("1. krog  29.08.26"), pod njim pa
-// vrstice "datum" + "Domači : Gostje". Zato beremo kar zaporedje besedila.
-const veljavni = razcleniRazpored(vir.vBesedilo(html))
+// Stari CMS (Kranj, Ljubljana, Celje) postavi stran kot eno veliko tabelo:
+// naslov kroga ("1. krog  29.08.26"), pod njim pa vrstice "datum" in
+// "Domači : Gostje". Zato beremo kar zaporedje besedila.
+//
+// Ostalih pet zvez piše vsaka po svoje in nobena ne loči ekip z dvopičjem;
+// splošni razčlenjevalnik jim vrne NIČ krogov. Zato lahko vir prinese svojega
+// (`scripts/razporedi.mjs`).
+const razclenit = vir.razcleniRazpored ?? razcleniRazpored
+const veljavni = razclenit(vir.vBesedilo(html))
 
 console.log(`Najdenih krogov: ${veljavni.length}`)
 if (!veljavni.length) {
@@ -139,9 +148,13 @@ const letosnjiKlubi = new Set()
 
 for (const k of veljavni) {
   const datumKroga = k.tekme.map((t) => t.datum).filter(Boolean).sort()[0]
-  const rok = datumKroga
-    ? `${datumKroga}T${String(URA_ROKA).padStart(2, '0')}:00:00+02:00`
-    : null
+  // Ura PRVE tekme tega dne, ne prve v seznamu: krog se lahko začne v soboto
+  // ob 17.30 in nadaljuje v nedeljo ob 10h, rok pa mora biti pred obema.
+  const uraKroga = k.tekme
+    .filter((t) => t.datum === datumKroga && t.ura)
+    .map((t) => t.ura)
+    .sort()[0]
+  const rok = rokKroga(datumKroga, uraKroga, pomakUr)
 
   const { data: obstoj } = await db
     .from('rounds')

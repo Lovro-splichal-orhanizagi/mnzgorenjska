@@ -1,3 +1,4 @@
+import { razporedLendava } from '../razporedi.mjs'
 import { poKrogih } from './zapisniki.mjs'
 import { razclenjevalnikZa } from '../zapisnik-pomurje.mjs'
 import { naredikljucKluba, kratkoIme, poenostavi } from '../klubi.mjs'
@@ -25,6 +26,9 @@ const vir = {
   zapisniki: (koda, prenesi) => poKrogih(vir, koda, prenesi),
   // 3. SNL gre skozi dva vira (tekoca sezona in arhiv pri razlicnih
   // zvezah), zato morata oba priti do istega kljuca kluba.
+  // Razpored te zveze ni v obliki "Domači : Gostje"; splošni
+  // razčlenjevalnik bi vrnil nič krogov in uvoz bi se ustavil.
+  razcleniRazpored: razporedLendava,
   kljucKluba: naredikljucKluba({ ...VZHOD }),
   kratkoIme,
   poenostavi,

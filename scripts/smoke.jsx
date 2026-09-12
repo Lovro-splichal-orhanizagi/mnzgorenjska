@@ -1321,8 +1321,11 @@ preveri(
   let brezKroga = false
   try { vir.naslovZapisnika(3199, 267797) } catch { brezKroga = true }
   preveri('viri: Gorica ne ugiba manjkajočega kroga', brezKroga)
-  preveri('viri: Gorica gradi rezultate in lestvico',
-    vir.naslovRazporeda(3199) === 'https://mnzgorica.si/tekmovanja/3199/rezultati' &&
+  // `/rezultati` da SAMO odigrane kroge — ob uvozu 3. SNL Zahod jih je bilo 4
+  // od 26 — zato razpored beremo z `/razpored`. Seznam tekem ostane na
+  // rezultatih, ker so povezave na zapisnike tam.
+  preveri('viri: Gorica loci razpored od rezultatov',
+    vir.naslovRazporeda(3199) === 'https://mnzgorica.si/tekmovanja/3199/razpored' &&
     vir.naslovSeznamaTekem(3199) === 'https://mnzgorica.si/tekmovanja/3199/rezultati' &&
     vir.naslovLestvice(3199) === 'https://mnzgorica.si/tekmovanja/3199/lestvica')
   preveri('viri: Gorica ne uporablja gorenjskih vzdevkov',
@@ -1669,6 +1672,85 @@ preveri(
   preveri('3. SNL: neznan klub ostane sam svoj',
     vzhodTekoca.kljucKluba('Odranci') === 'odranci' &&
     zahodTekoca.kljucKluba('TKK Tolmin') === 'tkk tolmin')
+}
+
+// --- razpored pri virih, ki niso na starem CMS-u ----------------------------
+// Splosni razclenjevalnik zahteva "Domaci : Gostje"; teh pet zvez tako ne
+// pise in vsaka po svoje. Ko je uvoz prvic tekel proti produkciji, je zato
+// javil "Najdenih krogov: 0" in se ustavil — arhiv je bil ze uvozen, pol ure
+// pa porabljeno. Vzorci spodaj so prave strani (scripts/vzorci/).
+{
+  const { rokKroga } = await import('./razporedi.mjs')
+  const beri = (f) => readFileSync(new URL(`./vzorci/${f}`, import.meta.url), 'utf8')
+
+  // klubov: koliko jih liga ima; tekemNaKrog: enako v vsakem prebranem krogu.
+  const primeri = [
+    { vir: 'mnzpt', vzorec: 'program-ptuj-liga3.html', klubov: 12, tekemNaKrog: 6 },
+    { vir: 'mnzms', vzorec: 'program-ms-liga113.html', klubov: 15, tekemNaKrog: 7 },
+    { vir: 'mnzng', vzorec: 'razpored-gorica-2785.html', klubov: 14, tekemNaKrog: 7, krogov: 26 },
+    { vir: 'mnzle', vzorec: 'razpored-lendava-mnl.html', klubov: 7, tekemNaKrog: 3 },
+    { vir: 'mnzmb', vzorec: 'tekme-maribor-1clanska.html', klubov: 12, tekemNaKrog: 6 },
+  ]
+
+  for (const p of primeri) {
+    if (!znaniViri().includes(p.vir)) continue
+    const v = viraZa({ source: p.vir })
+    preveri(`razpored ${p.vir}: vir prinese svoj razclenjevalnik`,
+      typeof v.razcleniRazpored === 'function')
+    if (typeof v.razcleniRazpored !== 'function') continue
+
+    const krogi = v.razcleniRazpored(v.vBesedilo(beri(p.vzorec)))
+    preveri(`razpored ${p.vir}: krogi so prebrani`, krogi.length > 0, String(krogi.length))
+    if (!krogi.length) continue
+
+    // Vsak krog ima enako tekem — ce bi se v tekme prikradel kraj ali izid,
+    // bi se stevilo razslo.
+    preveri(`razpored ${p.vir}: vsak krog ima ${p.tekemNaKrog} tekem`,
+      krogi.every((k) => k.tekme.length === p.tekemNaKrog),
+      [...new Set(krogi.map((k) => k.tekme.length))].join('/'))
+
+    const tekme = krogi.flatMap((k) => k.tekme)
+    const klubi = new Set(tekme.flatMap((t) => [t.domaci, t.gostje]))
+    preveri(`razpored ${p.vir}: ${p.klubov} klubov in nic vec`,
+      klubi.size === p.klubov, String(klubi.size))
+
+    // Klub ne more igrati dvakrat v istem krogu; ce bi se skupine zamaknile,
+    // bi se ime ponovilo.
+    preveri(`razpored ${p.vir}: klub igra v krogu najvec enkrat`,
+      krogi.every((k) => new Set(k.tekme.flatMap((t) => [t.domaci, t.gostje])).size === k.tekme.length * 2))
+
+    preveri(`razpored ${p.vir}: stevilke krogov so zaporedne od 1`,
+      krogi.map((k) => k.stevilka).every((n, i) => n === i + 1),
+      krogi.map((k) => k.stevilka).join(','))
+
+    preveri(`razpored ${p.vir}: prebrani krogi imajo datum`,
+      tekme.every((t) => /^\d{4}-\d{2}-\d{2}$/.test(t.datum ?? '')))
+
+    if (p.krogov) {
+      // Prihodnji krogi ure se nimajo (Gorica napise "TBD", Lendava vrstico
+      // izpusti). Ce bi bila ura obvezna, bi se razpored bral le do danes.
+      preveri(`razpored ${p.vir}: prebere vseh ${p.krogov} krogov, tudi brez ure`,
+        krogi.length === p.krogov, String(krogi.length))
+      preveri(`razpored ${p.vir}: tekma brez znane ure ni zavrzena`,
+        tekme.some((t) => !t.ura) && tekme.some((t) => t.ura))
+    }
+  }
+
+  // Rok kroga: pomak pred prvo tekmo, kadar uro poznamo.
+  preveri('rok kroga: 6 ur pred tekmo ob 17:30 poleti',
+    rokKroga('2026-09-19', '17:30', 6) === '2026-09-19T09:30:00.000Z',
+    rokKroga('2026-09-19', '17:30', 6))
+  preveri('rok kroga: pozimi velja +01:00',
+    rokKroga('2027-02-20', '15:00', 6) === '2027-02-20T08:00:00.000Z',
+    rokKroga('2027-02-20', '15:00', 6))
+  preveri('rok kroga: mladinski pomak je krajsi',
+    rokKroga('2026-09-19', '10:00', 2) === '2026-09-19T06:00:00.000Z',
+    rokKroga('2026-09-19', '10:00', 2))
+  preveri('rok kroga: brez ure ostane 10:00 na dan tekme',
+    rokKroga('2026-09-19', null, 6) === '2026-09-19T10:00:00+02:00',
+    rokKroga('2026-09-19', null, 6))
+  preveri('rok kroga: krog brez datuma nima roka',
+    rokKroga(null, '17:30', 6) === null)
 }
 
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)

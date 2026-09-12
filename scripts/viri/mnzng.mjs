@@ -1,3 +1,4 @@
+import { razporedNovaGorica } from '../razporedi.mjs'
 import { izPovezav } from './zapisniki.mjs'
 // Primorska članska liga (3199) združuje MNZ Nova Gorica in MNZ Koper;
 // en vir ohrani skupno tekmovanje tudi pri uvozu klubov obeh zvez.
@@ -13,7 +14,10 @@ const vir = {
   polnoIme: 'MNZ Nova Gorica',
   drzava: 'SI',
   osnovniNaslov: OSNOVNI,
-  naslovRazporeda: rezultati,
+  // `/rezultati` da SAMO odigrane kroge (ob uvozu jih je bilo 4 od 26), zato
+  // razpored beremo z `/razpored`. Seznam tekem ostane na rezultatih, ker so
+  // povezave na zapisnike tam.
+  naslovRazporeda: (liga) => `${OSNOVNI}/tekmovanja/${liga}/razpored`,
   naslovSeznamaTekem: rezultati,
   naslovLestvice: (liga) => `${OSNOVNI}/tekmovanja/${liga}/lestvica`,
 
@@ -33,6 +37,9 @@ const vir = {
   vBesedilo,
   // 3. SNL gre skozi dva vira (tekoca sezona in arhiv pri razlicnih
   // zvezah), zato morata oba priti do istega kljuca kluba.
+  // Razpored te zveze ni v obliki "Domači : Gostje"; splošni
+  // razčlenjevalnik bi vrnil nič krogov in uvoz bi se ustavil.
+  razcleniRazpored: razporedNovaGorica,
   kljucKluba: naredikljucKluba({ ...ZAHOD }),
   kratkoIme,
   poenostavi,
