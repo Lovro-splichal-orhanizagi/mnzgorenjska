@@ -63,18 +63,39 @@ jobs:
           set -euo pipefail
           node scripts/aktivna-tekmovanja.mjs > /tmp/lige.txt
           echo "Lige za uvoz: $(tr '\n' ' ' < /tmp/lige.txt)"
+          # Ena liga ne sme podreti ostalih. Spletisca zvez so razlicno
+          # zanesljiva: Nova Gorica je zvecer strezla okrnjeno stran, Ljubljana
+          # in NZS sta obcasno pocasni. Pod `set -e` je prva taka napaka
+          # ustavila zanko in vse NASLEDNJE lige tisti dan sploh niso bile
+          # uvozene — pri sestnajstih ligah je to tiha izguba dneva.
+          #
+          # Zato vsako ligo poganjamo v svoji lupini in napako zabelezimo.
+          # Zagon se na koncu vseeno konca z napako, da se opozorilo vidi.
+          padle=""
           while IFS= read -r liga; do
             [ -n "$liga" ] || continue
             echo "::group::$liga"
-            node scripts/uvoz-razporeda.mjs   --tekmovanje "$liga" --pisi
-            node scripts/uvoz-delegiranja.mjs --tekmovanje "$liga" --pisi
-            node scripts/uvoz-zapisnikov.mjs  --tekmovanje "$liga"
-            # Prestopi so poročilo, ne podatek za igro; zveza, ki jih ne
-            # objavlja, to pove sama in se konča brez napake.
-            node scripts/uvoz-registracij.mjs --tekmovanje "$liga" || true
-            node scripts/ugani-pozicije.mjs   --tekmovanje "$liga" --pisi --samo-nove
+            if (
+              set -e
+              node scripts/uvoz-razporeda.mjs   --tekmovanje "$liga" --pisi
+              node scripts/uvoz-delegiranja.mjs --tekmovanje "$liga" --pisi
+              node scripts/uvoz-zapisnikov.mjs  --tekmovanje "$liga"
+              # Prestopi so porocilo, ne podatek za igro; zveza, ki jih ne
+              # objavlja, to pove sama in se konca brez napake.
+              node scripts/uvoz-registracij.mjs --tekmovanje "$liga"
+              node scripts/ugani-pozicije.mjs   --tekmovanje "$liga" --pisi --samo-nove
+            ); then
+              echo "$liga: v redu"
+            else
+              echo "::warning title=Uvoz lige::$liga ni uspela; ostale se nadaljujejo"
+              padle="$padle $liga"
+            fi
             echo "::endgroup::"
           done < /tmp/lige.txt
+          if [ -n "$padle" ]; then
+            echo "::error title=Neuspele lige::$padle"
+            exit 1
+          fi
 
       # === Skupno za vse lige ============================================
       # Združi duplikate: ključ je `competition_id|full_name`, tako nikoli ne

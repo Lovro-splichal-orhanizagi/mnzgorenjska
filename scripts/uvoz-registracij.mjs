@@ -182,7 +182,13 @@ async function prenesi(url, ime) {
 // --- seznam zapisnikov -----------------------------------------------------
 // Zveza, ki prestopov ne objavlja, ni okvara — povejmo to naravnost, sicer je
 // "Zapisnikov za leto X: 0" videti kot pokvarjen uvoz.
-if (vir.imaRegistracije === false) {
+// Prestope objavljajo samo zveze na starem CMS-u (Kranj, Ljubljana, Celje).
+// Merilo je bila zastavica `imaRegistracije`, ki pa je ni nihče postavil pri
+// novih virih — ti so padli na `vir.naslovRegistracij is not a function`.
+// V dnevnem toku je klic sicer ovit v `|| true`, zato ni nič podrl, je pa v
+// dnevnik dvakrat zapisal sled sklada in komentar ob klicu je trdil, da se
+// tak vir "konča brez napake". Zdaj se res.
+if (vir.imaRegistracije === false || typeof vir.naslovRegistracij !== 'function') {
   console.log(`${vir.polnoIme} zapisnikov o prestopih ne objavlja — nimam česa uvoziti.`)
   process.exit(0)
 }
