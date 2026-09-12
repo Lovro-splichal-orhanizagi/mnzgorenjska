@@ -102,9 +102,9 @@ const vir = {
   vBesedilo,
   sifreTekem,
 
-  // Razpored NZS je tabela, ne zaporedje vrstic; krog ima svoj stolpec.
+  // Razpored NZS je tabela, ne zaporedje vrstic: krog ima svoj STOLPEC in se
+  // iz golega besedila ne da lociti. Uvoz zato poda oboje, vrstice in HTML.
   razcleniRazpored: (_vrstice, html) => razcleniRazporedNzs(html),
-  razporedIzHtml: razcleniRazporedNzs,
 
   // Zveze pri NZS ne poznamo kot MNZ, zato vzdevkov klubov ni na zalogo.
   kljucKluba: naredikljucKluba({}),

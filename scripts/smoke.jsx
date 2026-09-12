@@ -1924,6 +1924,19 @@ preveri(
     krogi.reduce((n, k) => n + k.tekme.length, 0) === sifre.length)
   preveri('NZS razpored: tekma ima datum in uro',
     krogi.flatMap((k) => k.tekme).every((t) => /^\d{4}-\d{2}-\d{2}$/.test(t.datum) && /^\d{1,2}:\d{2}$/.test(t.ura)))
+  // Uvoz poklice `razcleniRazpored(vrstice, html)`. Zveze na starem CMS-u
+  // berejo vrstice, NZS pa surov HTML, ker ima krog svoj STOLPEC in se iz
+  // golega besedila ne da lociti. Ko je NZS pricakoval drugi argument, ki ga
+  // uvoz takrat ni podajal, je uvoz 1. SNL padel z "Cannot read properties of
+  // undefined" — sele v produkciji, po tem ko je arhiv ze pretekel.
+  preveri('NZS razpored: deluje tako, kot ga poklice uvoz',
+    nzs.razcleniRazpored(nzs.vBesedilo(html), html).length > 0)
+  for (const ime of ['mnzpt', 'mnzms', 'mnzng', 'mnzle', 'mnzmb', 'nzs']) {
+    const v = viraZa({ source: ime })
+    preveri(`razpored ${ime}: sprejme (vrstice, html) kot uvoz`,
+      typeof v.razcleniRazpored === 'function' && v.razcleniRazpored.length <= 2)
+  }
+
   preveri('NZS razpored: klub igra v krogu najvec enkrat',
     krogi.every((k) => new Set(k.tekme.flatMap((t) => [t.domaci, t.gostje])).size === k.tekme.length * 2))
 }

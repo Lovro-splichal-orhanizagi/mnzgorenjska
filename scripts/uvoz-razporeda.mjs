@@ -93,8 +93,12 @@ const html = await prenesi(url, `razpored-${sifra(liga)}.html`)
 // Ostalih pet zvez piše vsaka po svoje in nobena ne loči ekip z dvopičjem;
 // splošni razčlenjevalnik jim vrne NIČ krogov. Zato lahko vir prinese svojega
 // (`scripts/razporedi.mjs`).
+// Razclenjevalnik dobi OBOJE: vrstice besedila in surov HTML. Zveze na
+// starem CMS-u berejo zaporedje vrstic, NZS pa tabelo, v kateri ima krog svoj
+// stolpec — iz golega besedila se stolpci ne dajo lociti. Stari
+// razclenjevalniki drugi argument preprosto prezrejo.
 const razclenit = vir.razcleniRazpored ?? razcleniRazpored
-const veljavni = razclenit(vir.vBesedilo(html))
+const veljavni = razclenit(vir.vBesedilo(html), html)
 
 console.log(`Najdenih krogov: ${veljavni.length}`)
 if (!veljavni.length) {
