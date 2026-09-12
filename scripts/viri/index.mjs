@@ -14,6 +14,7 @@ import mnzms from './mnzms.mjs'
 import mnzle from './mnzle.mjs'
 import mnzmb from './mnzmb.mjs'
 import mnzng from './mnzng.mjs'
+import nzs from './nzs.mjs'
 
 const VIRI = {
   mnzg,
@@ -24,6 +25,8 @@ const VIRI = {
   mnzle,
   mnzmb,
   mnzng,
+  // Edini vir, ki ni medobcinska zveza: drzavne lige na nzs.si.
+  nzs,
 }
 
 /**

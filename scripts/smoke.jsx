@@ -1862,5 +1862,55 @@ preveri(
     nzsRazcleni('<html><body>ni postav</body></html>', {}) === null)
 }
 
+// --- vir NZS: nastevanje tekem in razpored ----------------------------------
+// Zadnja uganka pri drzavnih ligah ni bila postava, ampak kako priti do
+// SEZNAMA tekem pretekle sezone. Izbirnik sezone je skripten in navaden POST
+// vrne tekoco sezono; AJAX odgovor pa pove, kam preusmeri — in to je navaden
+// `?season=<id>`. Seznam je ostranjen z Drupalovim VECSTRANSKIM pagerjem,
+// zato je vrednost par: `page=0,<n>`, ne `page=<n>`.
+{
+  const { default: nzs } = await import('./viri/nzs.mjs')
+  const { razbijKodo, sifreTekem, razcleniRazporedNzs } = await import('./viri/nzs.mjs')
+  const html = readFileSync(new URL('./vzorci/tekme-nzs-1snl-sezona25.html', import.meta.url), 'utf8')
+
+  preveri('NZS vir: registriran', znaniViri().includes('nzs'))
+  preveri('NZS vir: tekmovanje ga dobi po source', viraZa({ source: 'nzs' }) === nzs)
+
+  // Sezona je stevilka iz spustnega seznama, ne letnica: 25 = 2022/23.
+  preveri('NZS: sifra brez sezone je tekoca',
+    razbijKodo('prva-liga-telemach').sezona === null)
+  preveri('NZS: sifra s sezono se razbije',
+    razbijKodo('prva-liga-telemach:25').pot === 'prva-liga-telemach' &&
+    razbijKodo('prva-liga-telemach:25').sezona === '25')
+
+  preveri('NZS: naslov seznama nosi sezono in vecstranski pager',
+    nzs.naslovSeznamaTekem('prva-liga-telemach:25') ===
+      'https://www.nzs.si/klubi/moski/prva-liga-telemach/tekme?season=25&page=0%2C0',
+    nzs.naslovSeznamaTekem('prva-liga-telemach:25'))
+  preveri('NZS: tekoca sezona je brez parametra season',
+    !nzs.naslovSeznamaTekem('prva-liga-telemach').includes('season='),
+    nzs.naslovSeznamaTekem('prva-liga-telemach'))
+  preveri('NZS: zapisnik stoji pod stranjo tekme',
+    nzs.naslovZapisnika('prva-liga-telemach:25', 'fc-koper-dns-mura-1snl2223-2023-05-20-201500') ===
+      'https://www.nzs.si/klubi/moski/prva-liga-telemach/tekme/fc-koper-dns-mura-1snl2223-2023-05-20-201500/zapisnik')
+
+  const sifre = sifreTekem(html)
+  preveri('NZS: stran seznama da deset tekem', sifre.length === 10, String(sifre.length))
+  preveri('NZS: sifra tekme je njen del poti z datumom',
+    sifre.every((x) => /^[a-z0-9-]+-\d{4}-\d{2}-\d{2}-\d{6}$/.test(x)), sifre[0])
+
+  // Krog ima v tabeli svoj stolpec, zato ga ni treba sklepati iz datuma.
+  const krogi = razcleniRazporedNzs(html)
+  preveri('NZS razpored: krogi imajo stevilko iz stolpca',
+    krogi.length > 0 && krogi.every((k) => Number.isInteger(k.stevilka) && k.stevilka > 0),
+    krogi.map((k) => k.stevilka).join(','))
+  preveri('NZS razpored: vsota tekem je enaka stevilu sifer',
+    krogi.reduce((n, k) => n + k.tekme.length, 0) === sifre.length)
+  preveri('NZS razpored: tekma ima datum in uro',
+    krogi.flatMap((k) => k.tekme).every((t) => /^\d{4}-\d{2}-\d{2}$/.test(t.datum) && /^\d{1,2}:\d{2}$/.test(t.ura)))
+  preveri('NZS razpored: klub igra v krogu najvec enkrat',
+    krogi.every((k) => new Set(k.tekme.flatMap((t) => [t.domaci, t.gostje])).size === k.tekme.length * 2))
+}
+
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)
 process.exit(napak === 0 ? 0 : 1)
