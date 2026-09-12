@@ -1753,5 +1753,32 @@ preveri(
     rokKroga(null, '17:30', 6) === null)
 }
 
+// --- zapisnik pripada svoji sifri --------------------------------------------
+// Predpomnilnik je zapisnike hranil kot `<id>.html`, brez lige, cetudi naslov
+// vsebuje `liga=`. Arhiva 3. SNL Zahod 1703 in 1603 techeta drug za drugim v
+// istem zagonu pri istem viru, zato je druga sezona dobila stran prve: postava
+// ene tekme, goli druge. Ujela je sele invarianta `gol-brez-nastopa` v
+// produkciji — en sam gol od 3953.
+//
+// Kljuc predpomnilnika je popravljen; to je druga vrsta obrambe. Tiho napacna
+// tekma je hujsa od preskocene, zato ob neujemanju vrnemo null.
+{
+  const { parsirajZapisnik: razcleni } = await import('./zapisnik.mjs')
+  const html = readFileSync(new URL('./vzorci/zapisnik-kranj-1601.html', import.meta.url), 'utf8')
+  const lastna = html.match(/printz\.cfm\?zapisnik=(\d+)/)?.[1]
+
+  preveri('zapisnik: stran pove svojo sifro', Boolean(lastna), String(lastna))
+  if (lastna) {
+    preveri('zapisnik: prava sifra se razcleni',
+      razcleni(html, { zapisnikId: lastna })?.domaci?.ime !== undefined)
+    preveri('zapisnik: tuja sifra ne dobi tuje tekme',
+      razcleni(html, { zapisnikId: String(Number(lastna) + 1) }) === null)
+    preveri('zapisnik: sifra kot stevilka je ista sifra',
+      razcleni(html, { zapisnikId: Number(lastna) }) !== null)
+  }
+  preveri('zapisnik: brez zahtevane sifre preverbe ni',
+    razcleni(html, {}) !== null)
+}
+
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)
 process.exit(napak === 0 ? 0 : 1)

@@ -280,6 +280,20 @@ function parseMenjave(vrstice, imena) {
  * Vrne null, če zapisnik ni veljaven (prazna tekma).
  */
 export function parsirajZapisnik(html, { zapisnikId = null, url = null } = {}) {
+  // Stran pove svojo šifro sama, v gumbu za tiskanje
+  // (`printz.cfm?zapisnik=<id>`). Če se ne ujema z zahtevano, to NI ta tekma
+  // in razčlenitev bi pripisala tuje postave in gole.
+  //
+  // Zgodilo se je: predpomnilnik je zapisnike hranil kot `<id>.html`, brez
+  // lige. Arhiva 3. SNL Zahod 1703 in 1603 tečeta drug za drugim v istem
+  // zagonu, zato je druga sezona dobila stran prve. Ključ je zdaj popravljen,
+  // ta preverba pa je druga vrsta obrambe — tiho napačna tekma je hujša od
+  // preskočene.
+  if (zapisnikId != null) {
+    const m = html.match(/printz\.cfm\?zapisnik=(\d+)/)
+    if (m && m[1] !== String(zapisnikId)) return null
+  }
+
   const vrstice = vBesedilo(html)
 
   const tekmaVrstica = vrstice.find((v) => v.startsWith('TEKMA:'))

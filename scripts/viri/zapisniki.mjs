@@ -8,6 +8,9 @@
 // Zato uvoz ne pozna več oblike vira: vpraša vir, ta pa vrne razčlenjene
 // zapisnike. Vsak nov vir doda svojo funkcijo tu in ničesar v uvozu.
 
+/** Šifra lige, varna za ime datoteke (vsebuje `:` in `/`). */
+const sifra = (koda) => String(koda).replace(/[^\w-]/g, '_')
+
 /** Koliko zaporednih praznih krogov pomeni, da smo prišli do konca. */
 const DOVOLJ_PRAZNIH = 3
 
@@ -26,7 +29,12 @@ export async function izSeznamaTekem(vir, koda, prenesi) {
   const out = []
   for (const id of ids) {
     const url = vir.naslovZapisnika(koda, id)
-    const html = await prenesi(url, `${id}.html`)
+    // Ime v predpomnilniku mora nositi tudi LIGO. Naslov zapisnika vsebuje
+    // `liga=`, prej pa se je shranil kot `<id>.html` — dve ligi iste zveze sta
+    // si tako povozili stran. Pri 3. SNL Zahod se je zgodilo: arhiv 1703 in
+    // 1603 tece drug za drugim v istem zagonu, zato je druga sezona dobila
+    // postavo iz prve, invarianta `gol-brez-nastopa` pa je to ujela.
+    const html = await prenesi(url, `${sifra(koda)}-${id}.html`)
     const z = vir.parsirajZapisnik(html, { zapisnikId: id, url })
     if (z) out.push({ id, z, url })
   }
@@ -72,7 +80,7 @@ export async function izPovezav(vir, koda, prenesi) {
     const url = vir.naslovZapisnika(koda, p.id, p.krog)
     let html
     try {
-      html = await prenesi(url, `${vir.ime}-${p.id}.html`)
+      html = await prenesi(url, `${vir.ime}-${sifra(koda)}-${p.id}.html`)
     } catch {
       continue
     }
