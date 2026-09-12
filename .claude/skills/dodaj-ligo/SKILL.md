@@ -69,9 +69,37 @@ tekoča sezona; iskati ga je treba pri zvezi, ki je ligo vodila **tisto** leto:
 
 Kako najdeš skrbnika za dano sezono: `sezona-<L>-<L>` v meniju pri Lendavi,
 POST `sezona=<L>/<L>` na `index.cfm?akc=tekmovanja` pri zvezah na starem CMS-u
-(Kranj, Ljubljana, Celje), `?sezona=<L>` pri Ptuju. Nova Gorica in Maribor
-arhiva **nimata** — neznana šifra tam vrne privzeto stran s statusom 200, ne
-404, zato je videti, kot da arhiv obstaja. Preveri po vsebini, ne po statusu.
+(Kranj, Ljubljana, Celje), `?sezona=<L>` pri Ptuju, `<slug>-<L><L>` v poti pri
+Mariboru.
+
+**Nova Gorica arhiv ima, a ga ne razkazuje.** Menija za pretekle sezone ni:
+stara sezona je svoje tekmovanje s svojo šifro in do nje ne vodi nobena
+povezava. Edini način je, da šifre **prečešeš** (`/tekmovanja/<n>/rezultati`).
+
+Tu je past, ki me je prvič zavedla v napačno trditev, da arhiva ni: **neznana
+šifra vrne privzeto stran s statusom 200**, ne 404. Vzorčil sem deset šifer,
+vseh deset je bilo neveljavnih, vseh deset je vrnilo isto stran — in sklenil
+sem, da arhiva ni. Privzeta stran je pri Gorici dolga 45304 B in nima nobenega
+naslova kroga; veljavna jih ima 16–24. **Loči po vsebini, nikoli po statusu**,
+in ne sklepaj iz vzorca — prečeši razpon.
+
+Najdeno pri Gorici (razpon 1500–3600):
+
+| šifra | tekmovanje | uporabno |
+|---|---|---|
+| 3199 | Primorska članska liga 2026/27 | tekoča sezona |
+| 2579 | Primorska članska liga 2025/26 | **da** — 110 tekem, 446 golov, vse postave po 11 |
+| 2163 | Primorska članska liga 2023/24 | **ne** — 0 golov, 193 od 220 postav ni po 11 |
+| 1537, 1575 | starejši Primorski sezoni | ne — razčlenjevalnik vrne 0 tekem |
+| 2785 | 3. SNL Zahod 2026/27 | tekoča sezona |
+
+Starejša sezona torej ni samodejno uporabna: spletišče je obliko strani med
+sezonama spremenilo. **Vsak arhiv preštej, preden ga uvoziš** — koliko tekem,
+koliko golov, koliko postav ima natanko 11 igralcev. Arhiv brez golov je
+tišja okvara od arhiva brez tekem.
+
+3. SNL Zahod pri Gorici arhiva nima (prečesano 1500–3600); njegova arhiva sta
+ljubljanska 1703 in 1603.
 
 Šifre klubskih lig po sezonah:
 

@@ -86,6 +86,26 @@ in skrbništvo se seli. Zato ima šifra v delovnem toku obliko `<koda>@<vir>`:
 | snl3-vzhod | mnzpt `2026:96` | `2025-26/3-snl-v-25-26@mnzle`, `2024-25/3-snl-v-24-25@mnzle` |
 | snl3-zahod | mnzng `2785` | `1703@mnzlj` (23/24), `1603@mnzlj` (22/23) |
 
+Arhivi preostalih zvez:
+
+| liga | tekoča 2026/27 | arhiv |
+|---|---|---|
+| pt-super | `2026:3` | `2025:65`, `2024:65` |
+| pt-1razred | `2026:4` | `2025:67`, `2024:67` |
+| ms-clani | `2026:113` | `2025:113` |
+| le-pnl | `2026-27/pomurska-nogometna-liga-26-27` | `2025:112@mnzms`, `2024:112@mnzms` |
+| le-mnl | `2026-27/mnl-lendava-26-27` | `2025-26/mnl-lendava-25-26` |
+| ng-primorska | `3199` | `2579` (25/26) — starejših **ne** uvažaj, glej spodaj |
+| mb-1clanska | `1-clanska-liga-26-27` | `1-clanska-liga-25-26` |
+| mb-2clanska | `2-clanska-liga-26-27` | `2-clanska-liga-25-26` |
+
+Nova Gorica menija za pretekle sezone nima — stara sezona je svoje tekmovanje
+s svojo šifro in do nje ne vodi nobena povezava, zato jih je treba prečesati.
+Neznana šifra vrne privzeto stran s **statusom 200**, ne 404, zato je iz
+vzorca lahko napačno sklepati, da arhiva ni. Starejše sezone so v drugačni
+obliki: `2163` (2023/24) da 0 golov in 193 od 220 postav ni po 11 igralcev.
+Zato vsak arhiv preštej, preden ga uvoziš.
+
 Ena arhivska sezona ni vedno dovolj. Cena je percentil znotraj lige, igralec
 pod 270 minutami pa dobi privzeto 4.5 — v majhni ligi (MNZ liga ima devet
 klubov) toliko minut v eni sezoni nabere premalo igralcev in cenik se sesede
