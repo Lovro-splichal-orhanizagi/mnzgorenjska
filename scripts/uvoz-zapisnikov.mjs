@@ -617,6 +617,35 @@ for (const { id, z, url } of zapisniki) {
       }
     }
 
+    // Gol, katerega strelec na tej tekmi nima nastopa, je NEUPORABEN: tock ne
+    // prinese nikomur in invarianta ga upraviceno javi kot napako. Tak gol
+    // ostane za starim uvozom — nove gole zamenjamo le, kadar jih razclenitev
+    // sploh najde (`if (goliVrstice.length)` zgoraj), sicer bi stran, ki
+    // trenutno ne izpise dogodkov, pobrisala dobre podatke.
+    //
+    // Zato pocistimo ozko: samo gole, ki po SVEZE vpisanih nastopih nimajo
+    // strelca na igriscu. Dobrih golov to ne more odnesti, ker ima njihov
+    // strelec nastop.
+    const { data: siroteGoli } = await db
+      .from('goals')
+      .select('id, scorer_id')
+      .eq('match_id', tekma.id)
+      .not('scorer_id', 'is', null)
+    if (siroteGoli?.length) {
+      const { data: nastopiTekme } = await db
+        .from('appearances')
+        .select('player_id')
+        .eq('match_id', tekma.id)
+      const igrali = new Set((nastopiTekme ?? []).map((a) => a.player_id))
+      const zaBrisat = siroteGoli.filter((g) => !igrali.has(g.scorer_id)).map((g) => g.id)
+      if (zaBrisat.length) {
+        await db.from('goals').delete().in('id', zaBrisat)
+        z.opozorila.push(
+          `odstranjenih ${zaBrisat.length} golov brez nastopa strelca`,
+        )
+      }
+    }
+
     // Sele zdaj je tekma res uvozena. Skupaj z zigom zapisemo opozorila —
     // med razclenjevanjem nastopov jih lahko pribudejo (negotov pripis
     // soimenjaka), vrstica tekme pa je bila zapisana ze prej.
