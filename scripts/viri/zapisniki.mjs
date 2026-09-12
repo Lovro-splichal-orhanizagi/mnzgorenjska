@@ -9,7 +9,7 @@
 // zapisnike. Vsak nov vir doda svojo funkcijo tu in ničesar v uvozu.
 
 /** Šifra lige, varna za ime datoteke (vsebuje `:` in `/`). */
-const sifra = (koda) => String(koda).replace(/[^\w-]/g, '_')
+export const sifra = (koda) => String(koda).replace(/[^\w-]/g, '_')
 
 /** Koliko zaporednih praznih krogov pomeni, da smo prišli do konca. */
 const DOVOLJ_PRAZNIH = 3

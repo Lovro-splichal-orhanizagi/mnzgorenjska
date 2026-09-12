@@ -1743,6 +1743,22 @@ preveri(
   preveri('rok kroga: pozimi velja +01:00',
     rokKroga('2027-02-20', '15:00', 6) === '2027-02-20T08:00:00.000Z',
     rokKroga('2027-02-20', '15:00', 6))
+
+  // Preklop na poletni cas pade SREDI marca in oktobra. Groba delitev po
+  // mesecu se tu zmoti za celo uro in menjave bi se zaprle uro prezgodaj.
+  // Leta 2027 je zadnja nedelja marca 28., zadnja oktobrska 31.
+  const { offsetLjubljana } = await import('./cas.mjs')
+  preveri('cas: dan pred preklopom je se zimski',
+    offsetLjubljana('2027-03-27') === '+01:00', offsetLjubljana('2027-03-27'))
+  preveri('cas: na dan preklopa je ze poletni',
+    offsetLjubljana('2027-03-28') === '+02:00', offsetLjubljana('2027-03-28'))
+  preveri('cas: dan pred jesenskim preklopom je se poletni',
+    offsetLjubljana('2027-10-30') === '+02:00', offsetLjubljana('2027-10-30'))
+  preveri('cas: na dan jesenskega preklopa je zimski',
+    offsetLjubljana('2027-10-31') === '+01:00', offsetLjubljana('2027-10-31'))
+  preveri('rok kroga: ura se ne zamakne cez marcni preklop',
+    rokKroga('2027-03-28', '15:00', 6) === '2027-03-28T07:00:00.000Z',
+    rokKroga('2027-03-28', '15:00', 6))
   preveri('rok kroga: mladinski pomak je krajsi',
     rokKroga('2026-09-19', '10:00', 2) === '2026-09-19T06:00:00.000Z',
     rokKroga('2026-09-19', '10:00', 2))

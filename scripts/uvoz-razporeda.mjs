@@ -16,6 +16,7 @@ import { createClient } from '@supabase/supabase-js'
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { tekmovanje as najdiTekmovanje, sifraLige } from './tekmovanje.mjs'
 import { viraZa } from './viri/index.mjs'
+import { sifra } from './viri/zapisniki.mjs'
 import { razcleniRazpored, sezonaIz } from './razpored.mjs'
 import { rokKroga } from './razporedi.mjs'
 
@@ -80,7 +81,10 @@ async function prenesi(url, ime) {
 // --- razčlenitev razporeda --------------------------------------------------
 const url = vir.naslovRazporeda(liga)
 console.log(`Berem razpored: ${url}`)
-const html = await prenesi(url, `razpored-${liga}.html`)
+// Sifra lige gre v IME datoteke, vsebuje pa lahko `/` (Lendava:
+// `2026-27/mnl-lendava-26-27`). Brez ociscenja postane pot v mapo, ki je ni,
+// in uvoz pade z ENOENT sele po tem, ko je razpored ze prenesen.
+const html = await prenesi(url, `razpored-${sifra(liga)}.html`)
 
 // Stari CMS (Kranj, Ljubljana, Celje) postavi stran kot eno veliko tabelo:
 // naslov kroga ("1. krog  29.08.26"), pod njim pa vrstice "datum" in

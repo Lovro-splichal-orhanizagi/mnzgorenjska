@@ -12,6 +12,7 @@
 // `ura` je novost — te strani jo dajo že v razporedu. Stari CMS je zanjo
 // terjal posebno delegacijsko stran, ki je te zveze nimajo.
 import { datum } from './razpored.mjs'
+import { offsetLjubljana } from './cas.mjs'
 
 // Ime kluba ima črko; izid ("3:0", "-:-") in ura je nimata.
 const jeIme = (s) => /[a-zžčšđćA-ZŽČŠĐĆ]/.test(s) && !/^\d{1,2}[.:]\d{2}$/.test(s)
@@ -169,9 +170,8 @@ const URA_ROKA = 10
  */
 export function rokKroga(datumKroga, ura, pomakUr) {
   if (!datumKroga) return null
-  const odmik = (m) => (m >= 4 && m <= 10 ? '+02:00' : '+01:00')
-  const mesec = Number(datumKroga.split('-')[1])
-  if (!ura) return `${datumKroga}T${String(URA_ROKA).padStart(2, '0')}:00:00${odmik(mesec)}`
-  const zacetek = new Date(`${datumKroga}T${ura}:00${odmik(mesec)}`)
+  const odmik = offsetLjubljana(datumKroga)
+  if (!ura) return `${datumKroga}T${String(URA_ROKA).padStart(2, '0')}:00:00${odmik}`
+  const zacetek = new Date(`${datumKroga}T${ura}:00${odmik}`)
   return new Date(zacetek.getTime() - pomakUr * 3600000).toISOString()
 }

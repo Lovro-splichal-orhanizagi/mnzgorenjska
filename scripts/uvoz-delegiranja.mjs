@@ -20,6 +20,8 @@ import { createClient } from '@supabase/supabase-js'
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { tekmovanje as najdiTekmovanje, sifraLige } from './tekmovanje.mjs'
 import { viraZa } from './viri/index.mjs'
+import { sifra } from './viri/zapisniki.mjs'
+import { isoLjubljana } from './cas.mjs'
 
 const PREDPOMNILNIK = 'scripts/.predpomnilnik'
 
@@ -111,29 +113,6 @@ function ura(slo) {
   return `${String(m[1]).padStart(2, '0')}:${m[2]}`
 }
 
-/** Slovenija: DST od zadnje nedelje marca do zadnje nedelje oktobra. */
-function offsetLjubljana(datumIso) {
-  const [y, m, d] = datumIso.split('-').map(Number)
-  if (m < 3 || m > 10) return '+01:00'
-  if (m > 3 && m < 10) return '+02:00'
-  // Robna meseca: preverimo zadnjo nedeljo
-  const zadnjaNedelja = (leto, mesec) => {
-    const zadnji = new Date(Date.UTC(leto, mesec, 0)).getUTCDate()
-    for (let dd = zadnji; dd > zadnji - 7; dd--) {
-      if (new Date(Date.UTC(leto, mesec - 1, dd)).getUTCDay() === 0) return dd
-    }
-    return zadnji
-  }
-  const preklop = zadnjaNedelja(y, m)
-  if (m === 3) return d >= preklop ? '+02:00' : '+01:00'
-  return d < preklop ? '+02:00' : '+01:00'
-}
-
-/** Sestavi ISO čas s pravilnim offsetom. */
-function isoLjubljana(datumIso, uraHhmm) {
-  return `${datumIso}T${uraHhmm}:00${offsetLjubljana(datumIso)}`
-}
-
 // --- najdi trenutno sezono in kroge, ki še niso odigrani ---------------------
 async function naloziKroge() {
   const { data: sez } = await db
@@ -207,7 +186,7 @@ for (const k of krogi) {
   let html
   try {
     // Sveže — delegacije se pogosto spreminjajo (menjava ur, prestavitve).
-    html = await prenesi(url, `delegiranje-${liga}-${k.number}.html`, true)
+    html = await prenesi(url, `delegiranje-${sifra(liga)}-${k.number}.html`, true)
   } catch (e) {
     console.log(`✗ ${k.number}. krog: prenos ni uspel — ${e.message}`)
     opozoril++
