@@ -112,16 +112,23 @@ async function stanjeLige(liga) {
     uvozenih = (t ?? []).filter((x) => x.imported_at).length
   }
 
-  // Tekme zadnjega tedna, ki se cakajo na statistiko — to je tisto, kar
-  // uporabnik opazi prvi: krog je odigran, tock pa ni.
+  // Tekme zadnjega tedna, ki še čakajo na statistiko — to uporabnik opazi
+  // prvi: tekma je odigrana, točk pa ni.
+  //
+  // Meja NAVZGOR je bistvena. Brez nje so med "brez statistike" šteti tudi
+  // vsi PRIHODNJI krogi, ki seveda nimajo zapisnikov, ker še niso bili
+  // odigrani — prvo poročilo je tako javilo 145 manjkajočih tekem za ligo,
+  // ki ni zamujala z ničimer. Merilo štejemo po datumu TEKME, ne kroga:
+  // prestavljena tekma ima svoj datum in ni zamuda kroga.
+  const danes = new Date().toISOString().slice(0, 10)
   const { data: sveze } = await db
-    .from('rounds')
-    .select('id, number, matches(id, imported_at)')
-    .eq('competition_id', liga.id)
+    .from('matches')
+    .select('id, imported_at, played_on, rounds!inner(number, competition_id)')
+    .eq('rounds.competition_id', liga.id)
     .gte('played_on', odKdaj)
-  const manjka = (sveze ?? []).flatMap((r) =>
-    (r.matches ?? []).filter((m) => !m.imported_at).map(() => r.number),
-  )
+    .lte('played_on', danes)
+    .is('imported_at', null)
+  const manjka = sveze ?? []
 
   return { zadnji, naslednji: naslednji?.[0] ?? null, tekem, uvozenih, manjka }
 }
