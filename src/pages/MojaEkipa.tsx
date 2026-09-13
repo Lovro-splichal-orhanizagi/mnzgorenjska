@@ -13,6 +13,7 @@ import {
   lahkoZacne,
   zakajNeGre,
   preveriEkipo,
+  lahkoUrejasPripomocek,
 } from '../lib/pravila'
 import {
   prikazniIme,
@@ -64,6 +65,8 @@ interface KrogRok {
   season?: string | null
   played_on?: string | null
   deadline_at?: string | null
+  competition_id?: number | null
+  lineups_locked_at?: string | null
 }
 
 export default function MojaEkipa() {
@@ -90,6 +93,7 @@ export default function MojaEkipa() {
   const [zaklenjenaPostava, setZaklenjenaPostava] = useState<any | null>(null)
   const [pravila, setPravila] = useState({ prosti: 3, kazen: 4 })
   const [izbranKrog, setIzbranKrog] = useState('')
+  const [casPripomockov, setCasPripomockov] = useState(Date.now)
   const [nalaganje, setNalaganje] = useState(true)
   const [sporocilo, setSporocilo] = useState<string | null>(null)
   const [napaka, setNapaka] = useState<string | null>(null)
@@ -99,6 +103,16 @@ export default function MojaEkipa() {
   // Na telefonu je trg predal, ki se odpre ob kliku na prazno mesto.
   const [odprtTrg, setOdprtTrg] = useState(false)
   const imeRef = useRef<HTMLInputElement | null>(null)
+
+  // Ob roku se zaprejo tudi že odprti gumbi in seznam krogov.
+  useEffect(() => {
+    const zdaj = Date.now()
+    const roki = krogi.map((k) => Date.parse(k.deadline_at ?? '')).filter((r) => r > zdaj)
+    if (!roki.length) return
+    const timer = setTimeout(() => setCasPripomockov(Date.now()),
+      Math.min(Math.min(...roki) - zdaj + 1, 2147483647))
+    return () => clearTimeout(timer)
+  }, [krogi, casPripomockov])
 
   // Sporocilo o uspehu shrani samo za nekaj sekund — kot toast. Napake pustimo,
   // dokler jih uporabnik ne odpravi.
@@ -118,6 +132,8 @@ export default function MojaEkipa() {
     // na tekmovanje, mešanica obojega bi pomenila neveljaven kader.
     setNalaganje(true)
     setEkipa(null)
+    setKrogi([])
+    setIzbranKrog('')
     setIzbrani([])
     setZacetniIds(new Set())
     setPripomocki([])
@@ -184,7 +200,7 @@ export default function MojaEkipa() {
           .order('value', { ascending: false }),
         supabase
           .from('rounds')
-          .select('id, season, number, played_on, deadline_at')
+          .select('id, season, number, played_on, deadline_at, competition_id, lineups_locked_at')
           .eq('competition_id', tekmovanjeId as number)
           .order('number', { ascending: true }),
         supabase
@@ -596,6 +612,8 @@ export default function MojaEkipa() {
     setNapaka(null)
     if (!ekipa?.id) return setNapaka('Najprej shrani ekipo.')
     if (!krogId) return setNapaka('Izberi krog, v katerem naj pripomoček velja.')
+    if (!lahkoUrejasPripomocek(krogi.find((k) => k.id === krogId), tekmovanjeId))
+      return setNapaka('Izberi prihodnji nezaklenjen krog z določenim rokom.')
     const { error } = await supabase.from('fantasy_chips').insert({
       fantasy_team_id: ekipa.id,
       chip,
@@ -618,12 +636,9 @@ export default function MojaEkipa() {
     const chipVpis = pripomocki.find((c) => c.chip === chip)
     if (!chipVpis) return
     const krogVpisa = krogi.find((k) => k.id === chipVpis.round_id)
-    if (
-      krogVpisa?.deadline_at &&
-      new Date(krogVpisa.deadline_at) <= new Date()
-    ) {
+    if (!lahkoUrejasPripomocek(krogVpisa, tekmovanjeId)) {
       return setNapaka(
-        'Rok kroga je potekel — pripomočka ni več mogoče preklicati.',
+        'Pripomočka za ta krog ni več mogoče preklicati.',
       )
     }
     const { error } = await supabase
@@ -672,6 +687,12 @@ export default function MojaEkipa() {
   const wildcard = pripomocki.find((c) => c.chip === 'wildcard')
   const krogPripomocka = krogi.find((k) => k.id === klopPlus?.round_id)
   const krogWildcard = krogi.find((k) => k.id === wildcard?.round_id)
+  const zdaj = Math.max(casPripomockov, Date.now())
+  const krogiZaPripomocek = krogi
+    .filter((k) => lahkoUrejasPripomocek(k, tekmovanjeId, zdaj))
+    .sort((a, b) => Date.parse(a.deadline_at!) - Date.parse(b.deadline_at!))
+  const izbranKrogPripomocka = krogiZaPripomocek.find((k) => k.id === Number(izbranKrog))
+  const naslednjiZaPripomocek = krogiZaPripomocek[0]
 
   // Prestop je igralec, ki ga v zadnji zaklenjeni postavi ni bilo.
   const prestopi = zaklenjenaPostava
@@ -1150,21 +1171,16 @@ export default function MojaEkipa() {
               <h3 className="text-xs font-bold uppercase tracking-wide text-slate-400">
                 Pripomoček Klop+
               </h3>
-              {krogPripomocka ? (
+              {klopPlus ? (
                 (() => {
-                  // Zaklenjen je samo, ce rok obstaja IN je ze potekel.
-                  // Prihodnji krog brez razporeda (deadline_at je null)
-                  // dopusca preklic — sicer bi napacen klik za zafiksiral
-                  // pripomocek za cel mesec.
-                  const zaklenjen =
-                    krogPripomocka.deadline_at &&
-                    new Date(krogPripomocka.deadline_at) <= new Date()
+                  const zaklenjen = !lahkoUrejasPripomocek(krogPripomocka, tekmovanjeId, zdaj)
                   return (
                     <div className="space-y-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="text-sm text-gnl-300">
-                          Vložen za {krogPripomocka.number}. krog — v njem
-                          štejejo tudi točke klopi.
+                          {krogPripomocka
+                            ? `Vložen za ${krogPripomocka.number}. krog (${krogPripomocka.season})`
+                            : 'Klop+ je že vložen'} — v njem štejejo tudi točke klopi.
                         </p>
                         {zaklenjen ? (
                           <span className="znacka bg-white/10 text-[10px] text-slate-400">
@@ -1179,19 +1195,10 @@ export default function MojaEkipa() {
                           </button>
                         )}
                       </div>
-                      {!zaklenjen && (
+                      {!zaklenjen && krogPripomocka?.deadline_at && (
                         <p className="text-[11px] text-slate-500">
-                          {krogPripomocka.deadline_at ? (
-                            <>
-                              Prekliči lahko do{' '}
-                              <Odstevanje do={krogPripomocka.deadline_at} />
-                            </>
-                          ) : (
-                            <>
-                              Rok kroga še ni objavljen — dokler traja, lahko
-                              prosto premakneš na drug krog.
-                            </>
-                          )}
+                          Prekliči lahko do{' '}
+                          <Odstevanje do={krogPripomocka.deadline_at} />
                         </p>
                       )}
                     </div>
@@ -1200,12 +1207,13 @@ export default function MojaEkipa() {
               ) : (
                 <div className="flex flex-wrap gap-2">
                   <select
-                    value={izbranKrog}
+                    value={izbranKrogPripomocka ? izbranKrog : ''}
+                    disabled={!krogiZaPripomocek.length}
                     onChange={(e) => setIzbranKrog(e.target.value)}
                     className="min-w-0 flex-1 rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm"
                   >
-                    <option value="">Izberi krog …</option>
-                    {krogi.map((k) => (
+                    <option value="">{krogiZaPripomocek.length ? 'Izberi krog …' : 'Ni prihodnjega kroga z rokom'}</option>
+                    {krogiZaPripomocek.map((k) => (
                       <option key={k.id} value={k.id}>
                         {k.number}. krog ({k.season})
                       </option>
@@ -1213,7 +1221,8 @@ export default function MojaEkipa() {
                   </select>
                   <button
                     onClick={() => vloziPripomocek('klop_plus', Number(izbranKrog))}
-                    className="gumb-tih"
+                    disabled={!izbranKrogPripomocka}
+                    className="gumb-tih disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Vloži
                   </button>
@@ -1227,17 +1236,16 @@ export default function MojaEkipa() {
               <h3 className="pt-2 text-xs font-bold uppercase tracking-wide text-slate-400">
                 Pripomoček Wildcard
               </h3>
-              {krogWildcard ? (
+              {wildcard ? (
                 (() => {
-                  const zaklenjen =
-                    krogWildcard.deadline_at &&
-                    new Date(krogWildcard.deadline_at) <= new Date()
+                  const zaklenjen = !lahkoUrejasPripomocek(krogWildcard, tekmovanjeId, zdaj)
                   return (
                     <div className="space-y-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="text-sm text-gnl-300">
-                          Vložen za {krogWildcard.number}. krog — prestopi v
-                          njem so brezplačni.
+                          {krogWildcard
+                            ? `Vložen za ${krogWildcard.number}. krog (${krogWildcard.season})`
+                            : 'Wildcard je že vložen'} — prestopi v njem so brezplačni.
                         </p>
                         {zaklenjen ? (
                           <span className="znacka bg-white/10 text-[10px] text-slate-400">
@@ -1252,19 +1260,10 @@ export default function MojaEkipa() {
                           </button>
                         )}
                       </div>
-                      {!zaklenjen && (
+                      {!zaklenjen && krogWildcard?.deadline_at && (
                         <p className="text-[11px] text-slate-500">
-                          {krogWildcard.deadline_at ? (
-                            <>
-                              Prekliči lahko do{' '}
-                              <Odstevanje do={krogWildcard.deadline_at} />
-                            </>
-                          ) : (
-                            <>
-                              Rok kroga še ni objavljen — dokler traja, lahko
-                              prosto premakneš na drug krog.
-                            </>
-                          )}
+                          Prekliči lahko do{' '}
+                          <Odstevanje do={krogWildcard.deadline_at} />
                         </p>
                       )}
                     </div>
@@ -1275,12 +1274,13 @@ export default function MojaEkipa() {
                   onClick={() =>
                     vloziPripomocek(
                       'wildcard',
-                      Number(naslednjiKrog?.id ?? izbranKrog),
+                      Number(naslednjiZaPripomocek?.id),
                     )
                   }
-                  className="gumb-tih w-full"
+                  disabled={!naslednjiZaPripomocek}
+                  className="gumb-tih w-full disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Vloži za {naslednjiKrog ? `${naslednjiKrog.number}. krog` : 'naslednji krog'}
+                  {naslednjiZaPripomocek ? `Vloži za ${naslednjiZaPripomocek.number}. krog` : 'Ni prihodnjega kroga z rokom'}
                 </button>
               )}
               <p className="text-xs text-slate-500">

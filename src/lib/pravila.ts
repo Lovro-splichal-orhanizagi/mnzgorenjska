@@ -13,6 +13,21 @@ export const MAX_IZ_KLUBA = 3
 export const PRORACUN = 100.0
 export const KAPETAN_MNOZITELJ = 3
 
+/** Vložitev in preklic pripomočka imata enak rok kot zaklep postave. */
+export function lahkoUrejasPripomocek(
+  krog: {
+    competition_id?: number | null
+    deadline_at?: string | null
+    lineups_locked_at?: string | null
+  } | null | undefined,
+  tekmovanjeId: number | null,
+  zdaj: number = Date.now(),
+): boolean {
+  return tekmovanjeId != null && krog?.competition_id === tekmovanjeId &&
+    krog.lineups_locked_at == null && krog.deadline_at != null &&
+    Date.parse(krog.deadline_at) > zdaj
+}
+
 interface PravilaPozicije {
   naslov: string
   kader: number

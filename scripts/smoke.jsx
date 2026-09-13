@@ -19,6 +19,7 @@ import Odsotnosti from '../src/pages/Odsotnosti'
 import Administracija from '../src/pages/Administracija'
 import {
   preveriEkipo,
+  lahkoUrejasPripomocek,
   lahkoZacne,
   zakajNeGre,
   VELIKOST_EKIPE,
@@ -319,6 +320,25 @@ preveri(
   preveri('proračun: dovolj denarja ne preskoči preverjanja postave',
     manjkaKapetan.some((n) => n.includes('kapetana')) &&
       !manjkaKapetan.some((n) => n.includes('proračun')), manjkaKapetan.join(' | '))
+}
+
+// Pripomoček lahko vložimo ali prekličemo samo pred rokom nezaklenjenega
+// kroga iste lige. Ista odločitev velja za oba gumba in seznam krogov.
+{
+  const zdaj = Date.parse('2026-09-13T12:00:00Z')
+  const prihodnji = { competition_id: 1, deadline_at: '2026-09-14T12:00:00Z', lineups_locked_at: null }
+  for (const [opis, krog, dovoljeno] of [
+    ['prihodnji krog iste lige', prihodnji, true],
+    ['pretekli krog', { ...prihodnji, deadline_at: '2024-09-14T12:00:00Z' }, false],
+    ['natanko ob roku', { ...prihodnji, deadline_at: '2026-09-13T12:00:00Z' }, false],
+    ['krog brez roka', { ...prihodnji, deadline_at: null }, false],
+    ['neveljaven rok', { ...prihodnji, deadline_at: 'neznano' }, false],
+    ['že zaklenjen krog', { ...prihodnji, lineups_locked_at: '2026-09-12T12:00:00Z' }, false],
+    ['krog druge lige', { ...prihodnji, competition_id: 2 }, false],
+    ['manjkajoč krog', undefined, false],
+  ]) {
+    preveri(`pripomočki: ${opis}`, lahkoUrejasPripomocek(krog, 1, zdaj) === dovoljeno)
+  }
 }
 
 // --- kvote kadra, trak in menjave -----------------------------------------
