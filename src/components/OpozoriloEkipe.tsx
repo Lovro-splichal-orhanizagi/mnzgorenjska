@@ -42,7 +42,7 @@ export default function OpozoriloEkipe() {
       // Ekipa uporabnika v tem tekmovanju
       const { data: ekipa } = await supabase
         .from('fantasy_teams')
-        .select('id, name')
+        .select('id, name, budget, cash')
         .eq('owner_id', uporabnikId)
         .eq('competition_id', ligaId)
         .maybeSingle()
@@ -73,7 +73,8 @@ export default function OpozoriloEkipe() {
           team_id: r.players?.team_id ?? null,
           value: Number(r.players?.value ?? 0),
         }))
-      setNapake(preveriEkipo(izbrani))
+      // Že kupljenih igralcev ne kupujemo znova po njihovih novih cenah.
+      setNapake(preveriEkipo(izbrani, ekipa.budget, ekipa.cash))
       setNalaganje(false)
     }
     preveri()

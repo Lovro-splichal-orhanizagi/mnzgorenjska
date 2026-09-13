@@ -289,6 +289,38 @@ preveri(
   ).some((n) => n.includes('pozicije')),
 )
 
+// Že kupljen kader za 90 je danes vreden 105, v blagajni pa ostane 10.
+// Podražitev ni nov nakup; pri prestopu se porabi le dejanski denar.
+{
+  const podrazeni = veljavna.map((i) => ({ ...i, buy_value: 6, value: 7 }))
+  const brezPrestopa = preveriEkipo(podrazeni, 100, 10)
+  preveri('proračun: podražitev kupljenega kadra ne sproži opozorila',
+    brezPrestopa.length === 0, brezPrestopa.join(' | '))
+
+  const poPrestopu = (cena) => podrazeni.map((i) => i.id === 15
+    ? { ...i, id: 99, buy_value: cena, value: cena }
+    : i)
+  // Prodaja za 7 in nakup za 18 ob začetnih 10 pustita primanjkljaj 1.
+  const predrag = preveriEkipo(poPrestopu(18), 100, -1)
+  preveri('proračun: resnično predrag prestop pokaže dejanski primanjkljaj',
+    predrag.length === 1 && predrag[0].includes('proračun za 1.0'), predrag.join(' | '))
+
+  // Nakup za 17 je mogoč: ob prodaji se realizira tudi dobiček 1.
+  const prodajniDobicek = preveriEkipo(poPrestopu(17), 100, 0)
+  preveri('proračun: prodajni dobiček lahko financira prestop do zadnjega centa',
+    prodajniDobicek.length === 0, prodajniDobicek.join(' | '))
+
+  const naMeji = preveriEkipo(podrazeni, 100, 0.3 - 0.1 - 0.2)
+  preveri('proračun: decimalno zaokroževanje ne ustvari primanjkljaja',
+    naMeji.length === 0, naMeji.join(' | '))
+
+  const manjkaKapetan = preveriEkipo(
+    podrazeni.map((i) => ({ ...i, is_captain: false })), 100, 10)
+  preveri('proračun: dovolj denarja ne preskoči preverjanja postave',
+    manjkaKapetan.some((n) => n.includes('kapetana')) &&
+      !manjkaKapetan.some((n) => n.includes('proračun')), manjkaKapetan.join(' | '))
+}
+
 // --- kvote kadra, trak in menjave -----------------------------------------
 preveri(
   'kvota kadra je 2-5-5-3',

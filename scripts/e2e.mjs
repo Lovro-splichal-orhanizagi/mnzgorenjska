@@ -19,7 +19,9 @@ function izEnv() {
         .filter((v) => v.includes('=') && !v.startsWith('#'))
         .map((v) => {
           const i = v.indexOf('=')
-          return [v.slice(0, i).trim(), v.slice(i + 1).trim()]
+          const vrednost = v.slice(i + 1).trim()
+          return [v.slice(0, i).trim(), /^(['"]).*\1$/.test(vrednost)
+            ? vrednost.slice(1, -1) : vrednost]
         }),
     )
   } catch {
@@ -28,22 +30,36 @@ function izEnv() {
 }
 
 const env = izEnv()
-const BASE = env.VITE_SUPABASE_URL ?? 'http://127.0.0.1:54321'
-const ANON = env.VITE_SUPABASE_ANON_KEY
-if (!ANON) {
-  console.error('Manjka VITE_SUPABASE_ANON_KEY (.env).')
+const BASE = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ??
+  env.SUPABASE_URL ?? env.VITE_SUPABASE_URL ?? 'http://127.0.0.1:54321'
+const ANON = process.env.SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_ANON_KEY ??
+  env.SUPABASE_ANON_KEY ?? env.VITE_SUPABASE_ANON_KEY
+const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY ?? env.SUPABASE_SERVICE_ROLE_KEY
+let lokalna = false
+try {
+  const naslov = new URL(BASE)
+  lokalna = ['http:', 'https:'].includes(naslov.protocol) &&
+    ['127.0.0.1', 'localhost', '[::1]'].includes(naslov.hostname) &&
+    !naslov.username && !naslov.password
+} catch { /* Napačen naslov zavrnemo pred prvim zahtevkom. */ }
+if (!lokalna) {
+  console.error('E2E spreminja testne podatke: dovoljen je samo lokalni Supabase URL.')
+  process.exit(1)
+}
+if (!ANON || !SERVICE) {
+  console.error('Manjka javni ali SUPABASE_SERVICE_ROLE_KEY ključ (okolje ali .env).')
   process.exit(1)
 }
 
 const fresh = () => createClient(BASE, ANON, { auth: { persistSession: false } })
-
-// Testi tečejo skozi RLS z javnim ključem. Servisni ključ rabimo le za
-// pospravljanje na koncu: glasovi potrdijo asistenco in pozicijo, kar navaden
-// uporabnik ne sme razveljaviti.
-const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY
-const admin = SERVICE
-  ? createClient(BASE, SERVICE, { auth: { persistSession: false } })
-  : null
+// Uporabniške poti preverjamo z javnim ključem; servis ureja interne operacije
+// in povrne samo podatke, ki jih je ta zagon izrecno spremenil.
+const admin = createClient(BASE, SERVICE, { auth: { persistSession: false } })
+const zahtevaj = async (opis, poizvedba) => {
+  const { data, error } = await poizvedba
+  if (error) throw new Error(`${opis}: ${error.message}`)
+  return data
+}
 
 let fails = 0
 const ok = (label, cond, extra = '') => {
@@ -51,7 +67,10 @@ const ok = (label, cond, extra = '') => {
   if (!cond) fails++
 }
 
-const stamp = process.argv[2] ?? Date.now().toString(36)
+const stamp = `${process.argv[2] ?? 'e2e'}.${Date.now().toString(36)}.${process.pid}`
+const users = []
+const pospravljanje = []
+const testneEkipe = []
 
 // --- 0. predpogoji ---------------------------------------------------------
 const anon = fresh()
@@ -61,9 +80,13 @@ const anon = fresh()
 const { data: nastavitve } = await anon.from('settings').select('key, value')
 const nastavitev = (kljuc, privzeto) =>
   Number((nastavitve ?? []).find((n) => n.key === kljuc)?.value ?? privzeto)
-const PRAG_ASISTENCE = nastavitev('prag_glasov_asistenca', 3)
-const PRAG_POZICIJE = nastavitev('prag_glasov_pozicija', 5)
-const PRAG = Math.max(PRAG_ASISTENCE, PRAG_POZICIJE) // toliko testnih glasovalcev
+const nastavitveLige = await zahtevaj('nastavitve članske lige', anon.from('competition_settings')
+  .select('key, value').eq('competition_id', 1))
+const nastavitevLige = (kljuc, privzeto) =>
+  Number(nastavitveLige.find((n) => n.key === kljuc)?.value ?? nastavitev(kljuc, privzeto))
+const PRAG_ASISTENCE = nastavitevLige('prag_glasov_asistenca', 3)
+const PRAG_POZICIJE = nastavitevLige('prag_glasov_pozicija', 5)
+const PRAG = Math.max(2, PRAG_ASISTENCE, PRAG_POZICIJE) // toliko testnih glasovalcev
 const { count: stTekem } = await anon
   .from('matches')
   .select('id', { count: 'exact', head: true })
@@ -75,7 +98,7 @@ if (!stTekem) {
 }
 
 // --- 1. registracija -------------------------------------------------------
-const users = []
+try {
 for (let n = 1; n <= PRAG; n++) {
   const c = fresh()
   const email = `test${n}.${stamp}@example.com`
@@ -85,10 +108,12 @@ for (let n = 1; n <= PRAG; n++) {
     options: { data: { display_name: `Tester ${n}` } },
   })
   if (error) {
-    ok(`signup ${email}`, false, error.message)
-    process.exit(1)
+    throw new Error(`signup ${email}: ${error.message}`)
   }
+  if (!data.user?.id || data.user.identities?.length === 0)
+    throw new Error('Registracija ni ustvarila novega testnega uporabnika.')
   users.push({ c, id: data.user.id, email })
+  if (!data.session) throw new Error('Lokalna registracija zahteva takojšnjo prijavo brez potrjevanja e-pošte.')
 }
 ok(`registracija ${PRAG} uporabnikov`, users.length === PRAG)
 
@@ -103,17 +128,21 @@ ok('trigger ustvari profil', profil?.display_name === 'Tester 1')
 const { data: javniIgralci } = await anon
   .from('player_overview')
   .select('id, full_name, value')
+  .eq('competition_id', 1)
+  .eq('active', true)
+  .order('id')
   .limit(5)
 ok('anonimni vidi igralce', javniIgralci?.length === 5)
 
-const { data: javneTekme } = await anon.from('matches').select('id').limit(3)
+const { data: javneTekme } = await anon.from('matches').select('id').order('id').limit(3)
 ok('anonimni vidi tekme', javneTekme?.length === 3)
 
 // --- 3. glasovanje o asistenci ---------------------------------------------
 const u = users[0]
 const { data: gol } = await u.c
   .from('goals')
-  .select('id, match_id, team_id, scorer_id, assist_player_id')
+  .select('id, match_id, team_id, scorer_id, assist_player_id, assist_confirmed_at, assist_none_confirmed_at, matches!inner(rounds!inner(competition_id))')
+  .eq('matches.rounds.competition_id', 1)
   .eq('is_own_goal', false)
   // Enajstmetrovka in avtogol asistence nimata in sta že zaklenjena, prav tako
   // gol, o katerem je skupnost odločila, da podajalca ni — o teh ni glasovanja.
@@ -124,6 +153,12 @@ const { data: gol } = await u.c
   .limit(1)
   .single()
 ok('najden gol brez asistence', Boolean(gol))
+if (!gol) throw new Error('Potreben je neodločen gol v članski ligi.')
+pospravljanje.push(['povrnitev asistence', () => admin.from('goals').update({
+  assist_player_id: gol.assist_player_id,
+  assist_confirmed_at: gol.assist_confirmed_at,
+  assist_none_confirmed_at: gol.assist_none_confirmed_at,
+}).eq('id', gol.id)])
 
 const { data: soigralci } = await u.c
   .from('appearances')
@@ -132,7 +167,9 @@ const { data: soigralci } = await u.c
   .eq('team_id', gol.team_id)
   .neq('player_id', gol.scorer_id)
   .gt('minutes_played', 0)
+  .order('player_id')
   .limit(2)
+if (soigralci?.length !== 2) throw new Error('Gol potrebuje dva soigralca z nastopom.')
 const podajalec = soigralci[0].player_id
 const drugi = soigralci[1].player_id
 
@@ -203,10 +240,16 @@ const { data: brezPozicije } = await u.c
   .from('players')
   .select('id, full_name, position, position_source')
   .eq('position_source', 'ugibanje')
+  .eq('competition_id', 1)
+  .eq('active', true)
   .order('id')
   .limit(1)
   .single()
 ok('najden igralec z ugibano pozicijo', Boolean(brezPozicije))
+if (!brezPozicije) throw new Error('Potreben je aktiven igralec z ugibano pozicijo.')
+pospravljanje.push(['povrnitev ugibane pozicije', () => admin.from('players').update({
+  position: brezPozicije.position, position_source: brezPozicije.position_source,
+}).eq('id', brezPozicije.id)])
 
 // Glasujemo za pozicijo, ki je različna od ugibanja, da je popravek razviden.
 const novaPozicija = brezPozicije?.position === 'MID' ? 'DEF' : 'MID'
@@ -268,7 +311,9 @@ ok(
   pred.position_source,
 )
 
-await (admin ?? u.c).rpc('uveljavi_pozicije')
+await zahtevaj('uveljavitev izbrane pozicije', admin.rpc('potrdi_pozicijo', {
+  p_player_id: brezPozicije.id,
+}))
 const { data: pozNad } = await anon
   .from('players')
   .select('position, position_source')
@@ -406,17 +451,22 @@ if (vratarPrejeti) {
 // --- 9. fantasy ekipa in proračun --------------------------------------------
 const { data: ekipa, error: eEkipa } = await u.c
   .from('fantasy_teams')
-  .insert({ owner_id: u.id, name: `Ekipa ${stamp}` })
+  .insert({ owner_id: u.id, competition_id: 1, name: `Ekipa ${stamp}` })
   .select('id, budget')
   .single()
 ok('ustvari fantasy ekipo', !eEkipa, eEkipa?.message)
+if (!ekipa) throw new Error('Fantasy ekipa ni bila ustvarjena.')
+testneEkipe.push(ekipa.id)
 ok('ekipa ima privzet proračun', Number(ekipa?.budget) === 100)
 
 const { data: poceni } = await u.c
   .from('player_overview')
   .select('id, value, team_id')
+  .eq('competition_id', 1)
+  .eq('active', true)
   .order('value')
-  .limit(40)
+  .order('id')
+  .limit(400)
 
 const izbrani = []
 const naKlub = {}
@@ -425,13 +475,14 @@ for (const p of poceni) {
   if ((naKlub[p.team_id] ?? 0) >= 3) continue
   naKlub[p.team_id] = (naKlub[p.team_id] ?? 0) + 1
   izbrani.push({
-    fantasy_team_id: ekipa.id,
     player_id: p.id,
     is_starter: izbrani.length < 11,
   })
 }
-const { error: eNabor } = await u.c.from('fantasy_roster').insert(izbrani)
-ok('shrani nabor 15 igralcev', !eNabor, eNabor?.message)
+const { error: eNabor } = await u.c.rpc('shrani_ekipo', {
+  p_team_id: ekipa.id, p_roster: izbrani,
+})
+ok('shrani nabor 15 igralcev prek RPC', !eNabor && izbrani.length === 15, eNabor?.message)
 
 const { data: proracun } = await u.c
   .from('fantasy_team_budget')
@@ -466,66 +517,37 @@ ok(
 // sploh nima (`deadline_at is null`) — in predpostavka spodaj ni drzala.
 const { data: krog } = await anon
   .from('rounds')
-  .select('id')
+  .select('id, lineups_locked_at')
+  .eq('competition_id', 1)
   .not('deadline_at', 'is', null)
   .lt('deadline_at', new Date().toISOString())
   .order('deadline_at', { ascending: false })
+  .order('id')
   .limit(1)
   .single()
 ok('najden krog s pretecenim rokom', Boolean(krog?.id))
-await u.c.rpc('recompute_round_scores', { p_round_id: krog.id })
+if (!krog) throw new Error('Potreben je članski krog s pretečenim rokom.')
+await zahtevaj('servisni preračun kroga', admin.rpc('recompute_round_scores', {
+  p_round_id: krog.id,
+}))
 
-// Rok tega kroga je davno mimo, zato ekipa brez posnetka v njem nima postave.
-// Tako je tudi prav — kdor se pridruži pozneje, za odigrane kroge ne dobi točk.
-// Za preizkus lestvice krog izrecno zaklenemo, kar naredi posnetek postave.
-let zaklenjenoOb = null
-if (admin) {
-  const { data: predZaklepom } = await anon
-    .from('fantasy_team_standings')
-    .select('total_points')
-    .eq('fantasy_team_id', ekipa.id)
-    .single()
-  ok(
-    'brez posnetka pretekli krog ne prinese točk',
-    Number(predZaklepom?.total_points) === 0,
-    `${predZaklepom?.total_points}`,
-  )
-  // Zaklep naredi posnetke postav za VSE ekipe (tudi demo). Zapomnimo si cas,
-  // da jih ob pospravljanju pobrisemo — sicer naslednji zagon tega kroga ne
-  // vidi vec kot "brez posnetka" in test pade, ceprav je koda ista.
-  zaklenjenoOb = new Date().toISOString()
-  await admin.rpc('zakleni_krog', { p_round_id: krog.id })
-} else {
-  console.log('OPOMBA  brez servisnega ključa preskočen preizkus posnetka postave')
-}
-
-// Pričakovana vsota: točke zaklenjenega kroga za postavo po samodejnih
-// menjavah, pomnožene s kapetanovim množiteljem. Lestvica sme šteti samo
-// zaklenjeni krog, ne vseh krogov, v katerih so ti igralci kdaj nastopili.
-const { data: ucinkovita } = await (admin ?? u.c).rpc('ucinkovita_postava', {
+// Nova ekipa nima pravice do zgodovinskih točk. Zaklepa in posnetkov drugih
+// ekip ne spreminjamo; dejanski zajem postave preizkusi izolirani test 11c.
+const ucinkovita = await zahtevaj('zgodovinska postava', u.c.rpc('ucinkovita_postava', {
   p_team: ekipa.id,
   p_round: krog.id,
-})
-const { data: tocke } = await u.c
-  .from('player_scores')
-  .select('player_id, points')
-  .eq('round_id', krog.id)
-  .in(
-    'player_id',
-    (ucinkovita ?? []).map((x) => x.player_id),
-  )
-const pricakovanaVsota = (ucinkovita ?? []).reduce((v, x) => {
-  const t = (tocke ?? []).find((p) => p.player_id === x.player_id)
-  return v + Number(t?.points ?? 0) * x.mnozitelj
-}, 0)
+}))
+ok('brez posnetka pretekli krog ne prinese postave', ucinkovita?.length === 0)
+const pricakovanaVsota = 0
 
 const { data: lestvica } = await anon
   .from('fantasy_team_standings')
   .select('team_name, owner_name, total_points')
+  .eq('fantasy_team_id', ekipa.id)
   .order('total_points', { ascending: false })
 const moja = lestvica.find((l) => l.team_name === `Ekipa ${stamp}`)
 ok(
-  'lestvica sešteje točke prve postave',
+  'nova ekipa nima točk iz preteklih krogov',
   Math.abs(Number(moja?.total_points) - pricakovanaVsota) < 0.01,
   `${moja?.total_points} (pričakovano ${pricakovanaVsota.toFixed(2)})`,
 )
@@ -535,14 +557,16 @@ ok('lestvica pokaže lastnika', moja?.owner_name === 'Tester 1', moja?.owner_nam
 // Kvota kadra se meri po poziciji OB NAKUPU. Ko skupnost igralca prestavi z
 // enega mesta na drugo, kader ostane veljaven — sicer bi lastnik brez svoje
 // krivde v tistem krogu dobil nič točk.
-if (admin) {
+{
   const kvota = { GK: 2, DEF: 5, MID: 5, FWD: 3 }
   const { data: naVoljo } = await anon
     .from('player_overview')
-    .select('id, position, team_id, value')
+    .select('id, position, position_source, team_id, value')
     .eq('competition_id', 1)
+    .eq('active', true)
     .not('position', 'is', null)
     .order('value')
+    .order('id')
     .limit(400)
 
   const kader = []
@@ -591,6 +615,9 @@ if (admin) {
 
     // Skupnost prestavi enega branilca med napadalce.
     const branilec = kader.find((p) => p.position === 'DEF')
+    pospravljanje.push(['povrnitev branilca', () => admin.from('players').update({
+      position: branilec.position, position_source: branilec.position_source,
+    }).eq('id', branilec.id)])
     await admin
       .from('players')
       .update({ position: 'FWD', position_source: 'glasovanje' })
@@ -619,93 +646,108 @@ if (admin) {
 
     await admin
       .from('players')
-      .update({ position: 'DEF', position_source: 'ugibanje' })
+      .update({ position: branilec.position, position_source: branilec.position_source })
       .eq('id', branilec.id)
   }
 }
 
-// --- 11c. prestopi se stejejo med dvema zaklenjenima krogoma ----------------
-// Med rokoma lahko lastnik pocne, kar hoce. Steje razlika med posnetkom tega
-// in prejsnjega kroga: kdor je v novem in ga v prejsnjem ni bilo, je prestop.
-// Prvi zaklenjeni krog sezone je zastonj.
-if (admin) {
-  const { data: sez } = await anon
-    .from('rounds')
-    .select('id, number, season')
-    .eq('competition_id', 1)
-    .order('season', { ascending: false })
-    .order('number')
-    .limit(400)
-  const sezona = sez?.[0]?.season
-  const krogi = (sez ?? []).filter((r) => r.season === sezona).slice(0, 2)
+// --- 11c. prestopi med resnično zaklenjenima testnima krogoma ---------------
+// Ločena neaktivna liga prepreči zajem postav drugih uporabnikov. Roki so
+// najprej v prihodnosti; po shranjevanju jih servis premakne na čas shranitve.
+{
+  const izvor = await zahtevaj('država in vir testne lige', anon.from('competitions')
+    .select('country_id, source').eq('id', 1).single())
+  const liga = await zahtevaj('ustvarjanje testne lige', admin.from('competitions').insert({
+    slug: `e2e-prestopi-${stamp}`, name: `E2E prestopi ${stamp}`,
+    short_name: 'E2E', active: false, country_id: izvor.country_id, source: izvor.source,
+  }).select('id').single())
+  pospravljanje.push(['brisanje testne lige', () => admin.from('competitions').delete().eq('id', liga.id)])
+  const klubi = await zahtevaj('klubi za testni kader', anon.from('teams')
+    .select('id').order('id').limit(5))
+  if (klubi.length !== 5) throw new Error('Za testni kader je potrebnih pet klubov.')
 
-  if (krogi.length === 2) {
-    const { data: nabor } = await anon
-      .from('fantasy_roster')
-      .select('player_id')
-      .eq('fantasy_team_id', ekipa.id)
-    const imam = (nabor ?? []).map((r) => r.player_id)
+  const pozicije = ['GK', 'GK', ...Array(5).fill('DEF'), ...Array(5).fill('MID'), ...Array(3).fill('FWD')]
+  const podatki = pozicije.map((position, i) => ({
+    competition_id: liga.id, team_id: klubi[i % 5].id,
+    first_name: 'E2E', last_name: `${stamp}-${i}`,
+    full_name: `E2E ${stamp}-${i}`, position, position_source: 'admin',
+    active: true, value: 4.5,
+  }))
+  // Dva nova napadalca zamenjata igralca istih klubov, zato kvote ostanejo.
+  for (const i of [13, 14]) podatki.push({
+    ...podatki[i], last_name: `${stamp}-nov-${i}`, full_name: `E2E ${stamp}-nov-${i}`,
+  })
+  const igralci = await zahtevaj('ustvarjanje testnih igralcev', admin.from('players')
+    .insert(podatki).select('id, full_name, position'))
+  const poImenu = new Map(igralci.map((p) => [p.full_name, p]))
+  const osnovni = podatki.slice(0, 15).map((p) => poImenu.get(p.full_name))
+  const nova = podatki.slice(15).map((p) => poImenu.get(p.full_name))
+  const testna = await zahtevaj('testna ekipa za prestope', u.c.from('fantasy_teams')
+    .insert({ owner_id: u.id, competition_id: liga.id, name: `Prestopi ${stamp}` })
+    .select('id').single())
+  testneEkipe.push(testna.id)
+  const krogi = await zahtevaj('prihodnja testna kroga', admin.from('rounds').insert(
+    [2, 3].map((number) => ({
+      competition_id: liga.id, season: `e2e-${stamp}`, number,
+      deadline_at: new Date(Date.now() + 86400000).toISOString(),
+    })),
+  ).select('id, number'))
+  krogi.sort((a, b) => a.number - b.number)
 
-    // 1) prvi krog: kader je nov, prestopov se ne racuna
-    await admin.from('fantasy_lineups').delete().eq('fantasy_team_id', ekipa.id)
-    await admin.from('fantasy_transfers').delete().eq('fantasy_team_id', ekipa.id)
-    await admin.from('fantasy_lineups').insert(
-      imam.map((id, i) => ({
-        round_id: krogi[0].id,
-        fantasy_team_id: ekipa.id,
-        player_id: id,
-        is_starter: i < 11,
-        bench_order: i < 11 ? null : i - 10,
-      })),
-    )
-
-    // 2) dva igralca zamenjamo in zaklenemo naslednji krog
-    const { data: zamenjave } = await anon
-      .from('player_overview')
-      .select('id')
-      .eq('competition_id', 1)
-      .not('id', 'in', `(${imam.join(',')})`)
-      .limit(2)
-    const nov = imam.slice(0, 13).concat((zamenjave ?? []).map((z) => z.id))
-
-    await admin.from('fantasy_lineups').insert(
-      nov.map((id, i) => ({
-        round_id: krogi[1].id,
-        fantasy_team_id: ekipa.id,
-        player_id: id,
-        is_starter: i < 11,
-        bench_order: i < 11 ? null : i - 10,
-      })),
-    )
-    await admin.rpc('zakleni_krog', { p_round_id: krogi[1].id })
-
-    const { data: prestop } = await anon
-      .from('fantasy_transfers')
-      .select('transfers, free_transfers, penalty')
-      .eq('fantasy_team_id', ekipa.id)
-      .eq('round_id', krogi[1].id)
-      .maybeSingle()
-    ok(
-      'prestopi se stejejo glede na prejsnji zaklenjeni krog',
-      prestop?.transfers === 2,
-      `${prestop?.transfers ?? 'ni zapisa'} prestopov`,
-    )
-    ok(
-      'dva prestopa sta znotraj brezplacnih, brez kazni',
-      Number(prestop?.penalty ?? -1) === 0,
-      `kazen ${prestop?.penalty}`,
-    )
-
-    await admin.from('fantasy_lineups').delete().eq('fantasy_team_id', ekipa.id)
-    await admin.from('fantasy_transfers').delete().eq('fantasy_team_id', ekipa.id)
+  const zacetnikov = { GK: 1, DEF: 4, MID: 4, FWD: 2 }
+  let klop = 0
+  const nabor = osnovni.map((p, i) => {
+    const prvi = zacetnikov[p.position]-- > 0
+    return {
+      player_id: p.id, is_starter: prvi, is_captain: i === 7, is_vice: i === 8,
+      bench_order: prvi ? null : ++klop,
+    }
+  })
+  const shrani = (kader) => zahtevaj('shranitev testnega kadra', u.c.rpc('shrani_ekipo', {
+    p_team_id: testna.id, p_roster: kader,
+  }))
+  const zakleni = async (krogId) => {
+    const stanje = await zahtevaj('čas shranitve testne ekipe', admin.from('fantasy_teams')
+      .select('roster_updated_at').eq('id', testna.id).single())
+    await zahtevaj('iztek testnega roka', admin.from('rounds')
+      .update({ deadline_at: stanje.roster_updated_at }).eq('id', krogId))
+    return zahtevaj('zaklep testnega kroga', admin.rpc('zakleni_krog', { p_round_id: krogId }))
   }
+
+  await shrani(nabor)
+  const prezgodaj = await zahtevaj('poskus pred rokom', admin.rpc('zakleni_krog', {
+    p_round_id: krogi[0].id,
+  }))
+  ok('pred rokom se testni krog ne zaklene', prezgodaj === 0)
+  ok('prvi zaklep zajame vseh 15 igralcev', await zakleni(krogi[0].id) === 15)
+  const prviPrestop = await zahtevaj('prestopi prvega posnetka', anon.from('fantasy_transfers')
+    .select('transfers').eq('fantasy_team_id', testna.id).eq('round_id', krogi[0].id).maybeSingle())
+  ok('prvi posnetek sezone nima prestopne kazni', prviPrestop === null)
+
+  const noviNabor = nabor.map((p, i) => i >= 13 ? { ...p, player_id: nova[i - 13].id } : p)
+  await shrani(noviNabor)
+  ok('drugi zaklep zajame vseh 15 igralcev', await zakleni(krogi[1].id) === 15)
+  const prestop = await zahtevaj('izračun prestopov', anon.from('fantasy_transfers')
+    .select('transfers, free_transfers, penalty')
+    .eq('fantasy_team_id', testna.id).eq('round_id', krogi[1].id).maybeSingle())
+  ok('prestopi se štejejo glede na prejšnji zaklenjeni krog', prestop?.transfers === 2,
+    `${prestop?.transfers ?? 'ni zapisa'} prestopov`)
+  const prosti = nastavitev('prosti_prestopi', 3)
+  const kazen = Math.max(0, 2 - prosti) * nastavitev('kazen_prestopa', 4)
+  ok('prestopna kazen sledi nastavljenim brezplačnim prestopom',
+    prestop?.free_transfers === prosti && Number(prestop?.penalty) === kazen,
+    `kazen ${prestop?.penalty}, pričakovano ${kazen}`)
+  const ponovitev = await zahtevaj('ponovljeni zaklep', admin.rpc('zakleni_krog', {
+    p_round_id: krogi[1].id,
+  }))
+  ok('ponovljeni zaklep ne zajame nove postave', ponovitev === 0)
 }
 
 // --- 11b. borza se premakne samo za odigran krog ----------------------------
 // Cena se sme premakniti šele, ko je krog res odigran, in samo takrat. Uvožen
 // arhiv prejšnje sezone ima točke po krogih; če bi ga borza obračunala, bi
 // cene čez noč poskočile za formo, ki je v izhodiščni ceni že upoštevana.
-if (admin) {
+{
   const preveriBorzo = async (opis, krog) => {
     if (!krog) return
     const { data, error } = await admin.rpc('preracunaj_cene', {
@@ -722,12 +764,17 @@ if (admin) {
   const { data: sezone } = await anon
     .from('rounds')
     .select('season')
+    .eq('competition_id', 1)
     .order('season', { ascending: false })
   const zadnja = sezone?.[0]?.season
   const { data: arhivski } = await anon
     .from('rounds')
     .select('id, season, number')
+    .eq('competition_id', 1)
     .neq('season', zadnja)
+    .order('season')
+    .order('number')
+    .order('id')
     .limit(1)
     .maybeSingle()
   await preveriBorzo('krog prejšnje sezone', arhivski)
@@ -736,9 +783,11 @@ if (admin) {
   const { data: neodigran } = await anon
     .from('rounds')
     .select('id, number, matches!inner(imported_at)')
+    .eq('competition_id', 1)
     .eq('season', zadnja)
     .is('matches.imported_at', null)
     .order('number')
+    .order('id')
     .limit(1)
     .maybeSingle()
   await preveriBorzo('neodigran krog', neodigran)
@@ -749,7 +798,7 @@ if (admin) {
 // more postaviti. Brez tega bi se ligi na tihem pomešali že ob prvem prestopu.
 let mladinec = null
 let ekipaM = null
-if (admin) {
+{
   const { data: mladinci } = await anon
     .from('competitions')
     .select('id')
@@ -766,6 +815,7 @@ if (admin) {
     .select('id, competition_id')
     .single()
   ekipaM = ekipaMlad
+  if (ekipaM) testneEkipe.push(ekipaM.id)
   ok('ista oseba ima ekipo v obeh ligah', !eEkipaM, eEkipaM?.message)
 
   const { data: nekKlub } = await anon
@@ -788,6 +838,8 @@ if (admin) {
     .select('id')
     .single()
   mladinec = novMladinec
+  if (!mladinec) throw new Error('Testni mladinec ni bil ustvarjen.')
+  pospravljanje.push(['brisanje testnega mladinca', () => admin.from('players').delete().eq('id', mladinec.id)])
 
   const { error: eTujec } = await u.c.rpc('shrani_ekipo', {
     p_team_id: ekipa.id,
@@ -802,45 +854,35 @@ if (admin) {
   ok('zavrnjeno shranjevanje pusti kader pri miru', seVednoNabor === 15)
 }
 
-// --- 13. pospravljanje ------------------------------------------------------------
-await u.c.from('fantasy_roster').delete().eq('fantasy_team_id', ekipa.id)
-await u.c.from('fantasy_teams').delete().eq('id', ekipa.id)
-if (ekipaM) await u.c.from('fantasy_teams').delete().eq('id', ekipaM.id)
-if (mladinec) await admin.from('players').delete().eq('id', mladinec.id)
-for (const usr of users) {
-  await usr.c.from('assist_votes').delete().eq('voter_id', usr.id)
-  await usr.c.from('position_votes').delete().eq('voter_id', usr.id)
-}
-// Glasovi so potrdili asistenco in pozicijo; brez povrnitve bi naslednji zagon
-// tekel nad podatki, ki jih je pustil prejšnji, in test asistence bi padel.
-if (admin) {
-  if (zaklenjenoOb) {
-    await admin
-      .from('fantasy_lineups')
-      .delete()
-      .eq('round_id', krog.id)
-      .gte('captured_at', zaklenjenoOb)
+} catch (error) {
+  ok('izvedba E2E', false, error.message)
+} finally {
+  // Najprej odstranimo samo glasove novih testnih uporabnikov, nato povrnemo
+  // izbrane izvorne podatke. Tudi izjema sredi testa mora pustiti bazo čisto.
+  const cisti = async (opis, poizvedba) => {
+    try { await zahtevaj(opis, poizvedba) }
+    catch (error) { ok(opis, false, error.message) }
   }
-  await admin.from('goals').update({ assist_player_id: null }).eq('id', gol.id)
-  await admin
-    .from('players')
-    .update({
-      position: brezPozicije.position,
-      position_source: brezPozicije.position_source,
-    })
-    .eq('id', brezPozicije.id)
-} else {
-  console.log(
-    'OPOMBA  brez SUPABASE_SERVICE_ROLE_KEY potrjena asistenca in pozicija ostaneta — naslednji zagon naj uporabi drug gol',
-  )
+  for (const usr of users) {
+    await cisti('brisanje testnih glasov asistenc', admin.from('assist_votes').delete().eq('voter_id', usr.id))
+    await cisti('brisanje testnih glasov pozicij', admin.from('position_votes').delete().eq('voter_id', usr.id))
+  }
+  for (const id of testneEkipe)
+    await cisti('brisanje testne ekipe', admin.from('fantasy_teams').delete().eq('id', id))
+  for (const [opis, opravilo] of pospravljanje.reverse()) {
+    try { await cisti(opis, opravilo()) }
+    catch (error) { ok(opis, false, error.message) }
+  }
+  for (const usr of users) {
+    await cisti('brisanje testnega audita asistenc', admin.from('assist_votes_deleted').delete().eq('voter_id', usr.id))
+    await cisti('brisanje testnega audita pozicij', admin.from('position_votes_deleted').delete().eq('voter_id', usr.id))
+    await cisti('brisanje testnega uporabnika', admin.auth.admin.deleteUser(usr.id))
+  }
+  if (testneEkipe.length) {
+    const { data, error } = await anon.from('fantasy_teams').select('id').in('id', testneEkipe)
+    ok('testne ekipe so pospravljene', !error && data?.length === 0, error?.message)
+  }
 }
-const { data: poCiscenju } = await anon
-  .from('fantasy_team_standings')
-  .select('team_name')
-ok(
-  'testni podatki so pospravljeni',
-  !poCiscenju.some((l) => l.team_name === `Ekipa ${stamp}`),
-)
 
 console.log(`\n${fails === 0 ? 'VSE OK' : fails + ' NAPAK'}`)
 process.exit(fails === 0 ? 0 : 1)

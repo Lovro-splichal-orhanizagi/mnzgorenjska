@@ -403,7 +403,9 @@ export default function MojaEkipa() {
     (v, id) => v + Number(poId[id]?.value ?? 0),
     0,
   )
-  const preostalo = cashPersistiran + dobicekOdstranjenih - stroskiNovih
+  const preostalo = Math.round(
+    (cashPersistiran + dobicekOdstranjenih - stroskiNovih) * 100,
+  ) / 100
   // Porabljeno = kar so plačali za trenutno držane igralce (buy_value).
   const porabljeno = izbraniPodrobno.reduce(
     (v, s) => v + Number(s.buy_value ?? s.value ?? 0),
@@ -413,7 +415,7 @@ export default function MojaEkipa() {
   const bogastvo =
     preostalo +
     izbraniPodrobno.reduce((v, s) => v + Number(s.value ?? 0), 0)
-  const napakeEkipe = preveriEkipo(izbraniPodrobno, cashPersistiran + porabljeno)
+  const napakeEkipe = preveriEkipo(izbraniPodrobno, proracun, preostalo)
   const prvi = izbraniPodrobno.filter((s) => s.is_starter)
   const vKadru = poPozicijah(izbraniPodrobno)
 
@@ -872,7 +874,7 @@ export default function MojaEkipa() {
           <div className="h-2 overflow-hidden rounded-full bg-white/10">
             <div
               className={`h-full rounded-full transition-all duration-300 ${
-                porabljeno > proracun
+                preostalo < 0
                   ? 'bg-rose-500'
                   : 'bg-gradient-to-r from-gnl-500 to-gnl-300'
               }`}
@@ -1759,4 +1761,3 @@ function IzborTraku({
     </label>
   )
 }
-

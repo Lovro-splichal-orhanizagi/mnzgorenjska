@@ -316,7 +316,7 @@ export default function Administracija() {
     setNapaka(null)
     setSporocilo('Preračunavam …')
     for (const k of krogi) {
-      const { error } = await supabase.rpc('recompute_round_scores', {
+      const { error } = await supabase.rpc('admin_preracunaj_krog', {
         p_round_id: k.id,
       })
       if (error) {

@@ -95,10 +95,15 @@ export function zakajNeGre(
   return null
 }
 
-/** Vrne seznam napak; prazen seznam pomeni veljavno ekipo. */
+/**
+ * Vrne seznam napak; prazen seznam pomeni veljavno ekipo.
+ * Za kupljen kader podaj denar po načrtovanih prodajah in nakupih: njegova
+ * trenutna vrednost ni strošek. Brez tega podatka gre za nov izbor iz proračuna.
+ */
 export function preveriEkipo(
   izbrani: IgralecVKadru[],
   proracun: number = PRORACUN,
+  preostalo?: number,
 ): string[] {
   const napake: string[] = []
   const prvi = izbrani.filter((i) => i.is_starter)
@@ -152,10 +157,12 @@ export function preveriEkipo(
   if (Object.values(poKlubih).some((n) => n > MAX_IZ_KLUBA))
     napake.push(`Iz istega kluba lahko izbereš največ ${MAX_IZ_KLUBA} igralce.`)
 
-  const porabljeno = izbrani.reduce((v, i) => v + Number(i.value ?? 0), 0)
-  if (porabljeno > proracun)
+  const denar = preostalo ??
+    proracun - izbrani.reduce((v, i) => v + Number(i.value ?? 0), 0)
+  const primanjkljaj = Math.round(-denar * 100) / 100
+  if (primanjkljaj > 0)
     napake.push(
-      `Presegel si proračun za ${(porabljeno - proracun).toFixed(1)}.`,
+      `Presegel si proračun za ${primanjkljaj.toFixed(1)}.`,
     )
 
   return napake

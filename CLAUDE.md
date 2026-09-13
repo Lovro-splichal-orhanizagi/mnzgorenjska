@@ -144,6 +144,10 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
 - `fantasy_chips` → vloženi pripomočki (zaenkrat le `klop_plus`, enkrat na sezono)
 - `fantasy_lineups` → posnetek postave po krogih; nastane s `zakleni_krog(krog)`
   oz. `zakleni_zapadle_kroge()` (za cron). Točkovanje bere posnetek, če obstaja.
+- `rounds.lineups_locked_at` → dokončan zajem, tudi za neveljavne/prazne ekipe;
+  odsotnost posnetka ni dovoljenje za poznejši zajem. `fantasy_teams.roster_updated_at`
+  beleži čas shranjevanja. `shrani_ekipo` pred spremembo zajame zapadle kroge;
+  shranjevanje, zaklep in urejanje pripomočkov si delijo transakcijski zaklep lige.
 - `rounds` → krogi sezone, `matches` → tekme (z izvorom `zapisnik_id`)
 - `appearances` → nastop igralca na tekmi (minute, goli, kartoni, prejeti goli)
 - `goals` → posamezen gol; nosi tudi potrjeno asistenco
@@ -200,12 +204,14 @@ npx supabase start  # lokalna baza (Docker)
 npm run dev         # razvojni strežnik
 npm run build       # produkcijski build
 npm test            # e2e test proti bazi (RLS, glasovanje, točke, lestvica)
+npm run test:varnost # pravice in roki, izolirane SQL regresije z ROLLBACK
+npm run test:socasnost # dve povezavi: shranjevanje in zaklep brez dirke
 npm run smoke       # izris vseh strani + pravila ekipe, brez brskalnika
 npm run typecheck   # preverjanje tipov (tsc --noEmit)
 npm run tipi        # regeneriraj src/lib/baza.types.ts iz lokalne baze
 ```
 
-`npm test` naj teče s `SUPABASE_SERVICE_ROLE_KEY` v okolju — brez njega ne more
+`npm test` potrebuje `SUPABASE_SERVICE_ROLE_KEY` v okolju ali `.env` — brez njega ne more
 povrniti asistence in pozicije, ki ju potrdi z glasovi, in naslednji zagon pade.
 
 `npm test` je idempotenten — poganjaj ga zaporedoma, kolikorkrat hočeš.
@@ -215,9 +221,10 @@ Da tak tudi ostane, veljata dve pravili:
   poljubno vrstico in test dobi vsakič drugega igralca ali krog: enkrat pade,
   drugič ne, koda pa je ves čas ista. Pri krogih `.order('number')` ni dovolj —
   številko 1 ima vsaka sezona, zato filtriraj še po `deadline_at`.
-- **Kar test spremeni, mora tudi povrniti.** Posebej `zakleni_krog` naredi
-  posnetke postav za vse ekipe; e2e si zapomni čas zaklepa in jih ob koncu
-  pobriše, sicer naslednji zagon kroga ne vidi več kot "brez posnetka".
+- **Kar test spremeni, mora tudi povrniti.** `zakleni_krog` naredi posnetke
+  za celo ligo, zato e2e zajem preverja v lastnem začasnem tekmovanju.
+  Ne briši posnetkov drugih uporabnikov in ne odpiraj zgodovinskih krogov;
+  svoje fixture in uporabnike odstrani v `finally`, tudi ob napaki.
 
 Testno okolje mora imeti uvoženo **tekočo** sezono, ne le arhiva:
 `preracunaj_igralca` osveži samo kroge znotraj okna (14 dni, migracija
@@ -281,6 +288,19 @@ update competitions set active = true where slug in ('lj-1-liga','lj-2-liga');
 
 - Po spremembi kode poženi `npm run smoke`.
 - Po spremembi sheme ali RLS poženi še `npm test`.
+- Po spremembi pravic ali rokov poženi tudi `npm run test:varnost`. Testi
+  potrebujejo le lokalni Docker Postgres in migracije, ne uvoženih tekem.
+  `SUPABASE_TEST_DB` lahko izbere izolirano testno bazo v istem kontejnerju.
+- Lastnik profila sme posodobiti le `display_name` in `insider_team_id`;
+  `is_admin` je servisno polje. Lastnik ekipe sme pisati le vnosna polja ob
+  nastanku in ime ob spremembi. Za kader in denar vedno kliči `shrani_ekipo`.
+  Brisanje ekipe je servisno opravilo, ker bi sicer obšlo zaklenjeno zgodovino.
+- Mutacijski RPC-ji so servisni. Admin stran kliče `admin_preracunaj_krog`,
+  ki izrecno preveri `is_admin()`. Novi javni RPC potrebuje izrecen `grant execute`;
+  privzeto funkcije niso več odprte vlogama `anon` in `authenticated`.
+- Migracija `20260913100000` zapre vse že zapadle kroge brez rekonstruiranja
+  manjkajočih postav. V produkciji jo namesti po končanem zajemu zapadlih
+  krogov in pred naslednjim rokom; nato objavi frontend z novim admin RPC-jem.
 - Ob spremembi podatkovnega modela **dodaj novo migracijo** v `supabase/migrations/`;
   obstoječih migracij ne spreminjaj, ker so že uporabljene.
 - Migracijo, ki jo urejaš po prvem zagonu, preveri **na prazni bazi** — na

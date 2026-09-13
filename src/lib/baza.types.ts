@@ -881,6 +881,7 @@ export type Database = {
           id: number
           name: string
           owner_id: string
+          roster_updated_at: string
         }
         Insert: {
           budget?: number
@@ -890,6 +891,7 @@ export type Database = {
           id?: never
           name: string
           owner_id: string
+          roster_updated_at?: string
         }
         Update: {
           budget?: number
@@ -899,6 +901,7 @@ export type Database = {
           id?: never
           name?: string
           owner_id?: string
+          roster_updated_at?: string
         }
         Relationships: [
           {
@@ -1998,6 +2001,7 @@ export type Database = {
           competition_id: number
           deadline_at: string | null
           id: number
+          lineups_locked_at: string | null
           number: number
           played_on: string | null
           season: string
@@ -2008,6 +2012,7 @@ export type Database = {
           competition_id?: number
           deadline_at?: string | null
           id?: never
+          lineups_locked_at?: string | null
           number: number
           played_on?: string | null
           season: string
@@ -2018,6 +2023,7 @@ export type Database = {
           competition_id?: number
           deadline_at?: string | null
           id?: never
+          lineups_locked_at?: string | null
           number?: number
           played_on?: string | null
           season?: string
@@ -3434,6 +3440,10 @@ export type Database = {
       adaptivni_prag: {
         Args: { p_player_id: number; p_position: string }
         Returns: number
+      }
+      admin_preracunaj_krog: {
+        Args: { p_round_id: number }
+        Returns: undefined
       }
       admin_uporabniki: {
         Args: { p_competition_id?: number }

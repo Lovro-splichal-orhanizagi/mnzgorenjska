@@ -137,8 +137,25 @@ točke, in njihov množitelj.
 - Klubi, igralci, krogi, točke in lestvica so **javno berljivi**.
 - Glasovi o asistencah in pozicijah so **javno vidni** (skupnost vidi napredek do praga), oddati pa jih je mogoče **le v svojem imenu**.
 - Asistenco in pozicijo potrdi **sprožilec v bazi**, ne odjemalec — praga ni mogoče obiti iz brskalnika.
-- Fantasy ekipo in nabor ureja **le lastnik**.
+- Lastnik profila lahko spremeni le prikazno ime in svoj klub; `is_admin` in
+  datum registracije ureja le servisna vloga.
+- Lastnik lahko ustvari in preimenuje fantasy ekipo. Denar, nakupne cene in
+  kader spreminja izključno `shrani_ekipo`, ki preveri lastništvo in obračuna
+  prodaje ter nakupe. Neposredno pisanje v nabor in brisanje ekipe nista dovoljena.
+- Zaklepanje, potrjevanje pozicij in premikanje cen niso javni RPC-ji.
+  Skrbniška stran za preračun uporablja `admin_preracunaj_krog`, ki preveri admina.
+- `rounds.lineups_locked_at` zaključi zajem za cel krog, tudi za prazne in
+  neveljavne ekipe. Shranjevanje po roku najprej posname prejšnji kader, če
+  cron zamuja; `fantasy_teams.roster_updated_at` prepreči zajem poznejših sprememb.
+- Klop+ in Wildcard lahko uporabnik doda, premakne ali prekliče samo pred
+  določenim rokom kroga iste lige. Preverbo izvaja baza.
 - Kroge, klube in igralce urejajo **le administratorji** (`profiles.is_admin`).
+
+Migracijo `20260913100000_varnost_in_roki.sql` namesti pred novim frontendom,
+ker ta uporablja novi skrbniški RPC. Migracija ohrani obstoječe posnetke in
+zapre vse kroge s pretečenim rokom, tudi trenutni krog, če njegov prvi zajem
+še ni stekel. Manjkajočih preteklih postav ne rekonstruira iz današnjih kadrov.
+Namestitev načrtuj pred naslednjim rokom, po končanem zajemu že zapadlih krogov.
 
 ## Zagon lokalno
 
@@ -212,6 +229,8 @@ v `matches.import_warnings` in jih pokaže v Administraciji.
 | `npm run build` | produkcijski build |
 | `npm run preview` | predogled builda |
 | `npm test` | end-to-end test proti bazi (RLS, glasovanje, pragovi, točkovanje, proračun) |
+| `npm run test:varnost` | regresije pravic in rokov v lokalni transakciji; vse spremembe se razveljavijo |
+| `npm run test:socasnost` | sočasno shranjevanje in zaklepanje prek ločenih povezav v lokalno bazo |
 | `npm run smoke` | izris vseh strani + vsa pravila točkovanja in sestave ekipe |
 | `npm run db:start` / `db:stop` | zagon/ustavitev lokalnega Supabase |
 | `npm run db:reset` | ponovna uporaba migracij in seed podatkov |

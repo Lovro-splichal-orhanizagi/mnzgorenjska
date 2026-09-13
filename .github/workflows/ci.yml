@@ -45,9 +45,27 @@ jobs:
           VITE_SUPABASE_URL: https://primer.supabase.co
           VITE_SUPABASE_ANON_KEY: sb_publishable_ci_ni_pravi_kljuc
 
+  varnost:
+    name: Pravice in roki v svezi bazi
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      # Zagon same baze preveri celotno verigo migracij na praznem Postgresu.
+      - run: npx --yes supabase@2.117.0 db start
+      - run: npm run test:varnost
+      - run: npm run test:socasnost
+      - if: always()
+        run: npx --yes supabase@2.117.0 stop --no-backup
+
   objavi:
     name: Objava na Vercel
-    needs: preveri
+    needs: [preveri, varnost]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 15

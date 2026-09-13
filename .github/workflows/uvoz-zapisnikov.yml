@@ -32,7 +32,9 @@ concurrency:
 jobs:
   uvoz:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    # 17 lig je 13. septembra porabilo 43 minut ze pred zadnjo ligo.
+    # Ura pusti prostor se za njen uvoz, predpomnilnik in obcasno pocasne vire.
+    timeout-minutes: 60
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -56,8 +58,8 @@ jobs:
           restore-keys: zapisniki-
 
       # === Vse vklopljene lige ===========================================
-      # `set -e` velja za korak kot celoto; koraki, ki smejo spodleteti
-      # (prestopi), so posebej odklopljeni z `|| true`.
+      # Napake posamezne lige zberemo, obdelamo tudi ostale in na koncu
+      # vrnemo neuspeh, ce katera liga ni uspela.
       - name: Uvoz po ligah
         run: |
           set -euo pipefail
@@ -69,22 +71,19 @@ jobs:
           # ustavila zanko in vse NASLEDNJE lige tisti dan sploh niso bile
           # uvozene — pri sestnajstih ligah je to tiha izguba dneva.
           #
-          # Zato vsako ligo poganjamo v svoji lupini in napako zabelezimo.
+          # Vsak ukaz povezemo z &&. `set -e` znotraj pogoja `if` ne velja,
+          # zato bi samostojni ukazi lahko prikrili napako s kasnejsim uspehom.
           # Zagon se na koncu vseeno konca z napako, da se opozorilo vidi.
           padle=""
           while IFS= read -r liga; do
             [ -n "$liga" ] || continue
             echo "::group::$liga"
-            if (
-              set -e
-              node scripts/uvoz-razporeda.mjs   --tekmovanje "$liga" --pisi
-              node scripts/uvoz-delegiranja.mjs --tekmovanje "$liga" --pisi
-              node scripts/uvoz-zapisnikov.mjs  --tekmovanje "$liga"
-              # Prestopi so porocilo, ne podatek za igro; zveza, ki jih ne
-              # objavlja, to pove sama in se konca brez napake.
-              node scripts/uvoz-registracij.mjs --tekmovanje "$liga"
-              node scripts/ugani-pozicije.mjs   --tekmovanje "$liga" --pisi --samo-nove
-            ); then
+            # Prestopi so porocilo; vir, ki jih ne objavlja, se konca z 0.
+            if node scripts/uvoz-razporeda.mjs   --tekmovanje "$liga" --pisi &&
+               node scripts/uvoz-delegiranja.mjs --tekmovanje "$liga" --pisi &&
+               node scripts/uvoz-zapisnikov.mjs  --tekmovanje "$liga" &&
+               node scripts/uvoz-registracij.mjs --tekmovanje "$liga" &&
+               node scripts/ugani-pozicije.mjs   --tekmovanje "$liga" --pisi --samo-nove; then
               echo "$liga: v redu"
             else
               echo "::warning title=Uvoz lige::$liga ni uspela; ostale se nadaljujejo"
