@@ -31,16 +31,56 @@ const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY
 if (!SERVICE) { console.error('Manjka SUPABASE_SERVICE_ROLE_KEY'); process.exit(1) }
 const db = createClient(BASE, SERVICE, { auth: { persistSession: false } })
 
+/**
+ * Poizvedba s ponovnimi poskusi.
+ *
+ * Prvi zagon tega poročila je padel na `Gateway Timeout` pri PRVI poizvedbi.
+ * Poročilo, ki naj dokaže, da je vse v redu, ne sme odpovedati ob enem
+ * zatikljaju — sicer je njegova odsotnost dvoumna na isti način kot tišina,
+ * ki naj bi jo odpravilo.
+ */
+async function poskusi(ime, fn, poskusov = 4) {
+  let zadnja
+  for (let i = 1; i <= poskusov; i++) {
+    const { data, error, count } = await fn()
+    if (!error) return { data, count }
+    zadnja = error
+    if (i < poskusov) await new Promise((r) => setTimeout(r, 1000 * 2 ** (i - 1)))
+  }
+  throw new Error(`${ime}: ${zadnja?.message ?? 'neznana napaka'}`)
+}
+
+/** Ob usodni napaki povej na Discord — tiho odpovedan nadzor je najhujsi. */
+async function javiNapako(sporocilo) {
+  const webhook = process.env.DISCORD_WEBHOOK_TEDENSKO ?? env.DISCORD_WEBHOOK_TEDENSKO
+  if (!process.argv.includes('--discord') || !webhook) return
+  try {
+    await fetch(webhook, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        content: `🔴 **Tedenskega poročila ni bilo mogoče sestaviti**\n\`${sporocilo}\`\n_Podrobnosti v zagonu GitHub Actions._`.slice(0, 1900),
+      }),
+    })
+  } catch { /* ce tudi Discord ne dela, ostane zagon Actions */ }
+}
+
 const DNI = 7
 const odKdaj = new Date(Date.now() - DNI * 86400000).toISOString().slice(0, 10)
 
-const { data: lige, error: eLige } = await db
-  .from('competitions_view')
-  .select('id, slug, name, short_name, federation_short')
-  .eq('active', true)
-  .order('federation_sort')
-  .order('sort_order')
-if (eLige) { console.error(`Lig ni bilo mogoče prebrati: ${eLige.message}`); process.exit(1) }
+let lige
+try {
+  ;({ data: lige } = await poskusi('lige', () =>
+    db.from('competitions_view')
+      .select('id, slug, name, short_name, federation_short')
+      .eq('active', true)
+      .order('federation_sort')
+      .order('sort_order')))
+} catch (e) {
+  console.error(e.message)
+  await javiNapako(e.message)
+  process.exit(1)
+}
 
 /** Zadnji krog z odigrano tekmo in koliko tekem v njem je uvoženih. */
 async function stanjeLige(liga) {
@@ -107,11 +147,18 @@ for (const liga of lige ?? []) {
   })
 }
 
-const { data: tezave } = await db.rpc('preveri_podatke')
-const { count: igralcev } = await db
-  .from('players').select('id', { count: 'exact', head: true }).eq('active', true)
-const { count: ekip } = await db
-  .from('fantasy_teams').select('id', { count: 'exact', head: true })
+let tezave, igralcev, ekip
+try {
+  ;({ data: tezave } = await poskusi('preverba', () => db.rpc('preveri_podatke')))
+  ;({ count: igralcev } = await poskusi('igralci', () =>
+    db.from('players').select('id', { count: 'exact', head: true }).eq('active', true)))
+  ;({ count: ekip } = await poskusi('ekipe', () =>
+    db.from('fantasy_teams').select('id', { count: 'exact', head: true })))
+} catch (e) {
+  console.error(e.message)
+  await javiNapako(e.message)
+  process.exit(1)
+}
 
 // --- izpis ------------------------------------------------------------------
 console.log(`Tedensko poročilo — ${lige?.length ?? 0} lig, ${igralcev ?? 0} igralcev, ${ekip ?? 0} fantasy ekip\n`)
