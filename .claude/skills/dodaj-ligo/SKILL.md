@@ -554,6 +554,26 @@ obstaja, preden kaj povoziš s `create or replace`.
 ne proti kopiji produkcije. Kopija ima kroge s prestavljenimi tekmami in brez
 fantasy ekip, zato padejo testi, ki so pravilni.
 
+## Nadzor: alarm in poročilo nista isto
+
+`preveri-podatke.mjs` (dnevno) se oglasi **samo ob težavi**. To je prav za
+alarm, a pomeni, da tišina lahko pomeni oboje — da je vse v redu ali da je
+nekaj nehalo teči. Prav tiho ustavljen tok je tisto, česar nihče ne opazi.
+
+`tedensko-porocilo.mjs` (ponedeljek) pride **vedno**, tudi kadar je vse v
+redu, in pove številke po ligah: zadnji odigrani krog, koliko tekem v njem je
+uvoženih, koliko tekem zadnjega tedna še čaka na statistiko, kdaj je naslednji
+rok. Če poročila kak teden ni, je to podatek.
+
+Webhooka sta ločena (`DISCORD_WEBHOOK`, `DISCORD_WEBHOOK_TEDENSKO`), da se
+nujno opozorilo in tedenski pregled ne mešata v istem kanalu.
+
+**Fantasy ekipa v vsaki ligi je tretja plast.** Račun lastnika ima ekipo v
+vsaki aktivni ligi; če teden ne obračuna točk, se to vidi na ekipi, ne šele v
+pritožbi igralca. Sestavi jih `/tmp`-skripta iz seje, pravila pa so v
+`src/lib/pravila.ts` — baza jih NE preverja, preverja jih vmesnik, zato jih
+mora vsak zapis mimo vmesnika preveriti sam.
+
 ## Ob koncu
 
 `npm run smoke`, `npm test`, `npm run typecheck`, `npm run build` — vsi zeleni,
