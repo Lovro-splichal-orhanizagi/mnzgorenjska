@@ -1,0 +1,33 @@
+name: Tedensko porocilo
+
+# Dnevna "Preverba podatkov" se oglasi SAMO ob tezavi. To je prav za alarm, a
+# pomeni, da tisina lahko pomeni oboje: da je vse v redu ali da je nekaj
+# nehalo teci. Teden dni tisine je zato brez pomena.
+#
+# To porocilo pride vsak teden, tudi kadar je vse v redu, in pove stevilke.
+# Ce ga kak teden ni, je to podatek.
+#
+# Ponedeljek ob 8:00 po slovenskem casu (6:00 UTC poleti, 7:00 pozimi —
+# cron je v UTC, ura poletnega casa nas tu ne moti).
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+jobs:
+  porocilo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      DISCORD_WEBHOOK_TEDENSKO: ${{ secrets.DISCORD_WEBHOOK_TEDENSKO }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Tedensko porocilo
+        run: node scripts/tedensko-porocilo.mjs --discord
