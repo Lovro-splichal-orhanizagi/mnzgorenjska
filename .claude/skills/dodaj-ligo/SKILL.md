@@ -554,6 +554,43 @@ obstaja, preden kaj povoziš s `create or replace`.
 ne proti kopiji produkcije. Kopija ima kroge s prestavljenimi tekmami in brez
 fantasy ekip, zato padejo testi, ki so pravilni.
 
+## Zakaj tekma ostane brez statistike
+
+Ko poročilo javi odigrano tekmo brez statistike, vzrok skoraj nikoli ni
+»uvoz je padel«. Padel uvoz se vidi. Tiho obvisele tekme imajo tri vzroke in
+vsi trije so videti enako:
+
+**1. Klub se v razporedu in v zapisniku piše različno.** Tekma se išče po
+(krog, domači, gostje); če ključ kluba ni isti, je uvoz ne najde in ne javi
+ničesar — z njegovega vidika ni česa uvoziti. Najbolj zahrbtne so **entitete
+HTML**: `&amp;` v ključu postane beseda `amp`, `&#8211;` postane `8211`.
+"Kety Emmi&Impol Bistrica" se je tako razklal na tri zapise. Preveri z:
+
+```sql
+select name from teams where name like '%&%;%';
+```
+
+**2. Prazna stran obtiči v predpomnilniku.** Zapisnik se objavi nekaj ur po
+tekmi, uvoz pa ob koncu tedna teče vsako uro. Prvi zagon prenese stran BREZ
+postav, ta obleži v predpomnilniku (ki se med zagoni obnavlja) in vsak
+naslednji zagon jo prebere od tam. Zapisnik je medtem objavljen, a ga nihče
+več ne pogleda. Zato mora vsaka pot ob nerazčlenjeni strani **poskusiti še
+enkrat sveže** (`zapisnikSvez` v `scripts/viri/zapisniki.mjs`).
+
+**3. Zveza je zamenjala domačina ali prestavila tekmo.** Razpored ima
+"Visoko – Niko Železniki" 5. 9., zapisnik pa "Niko Železniki – Visoko" 8. 9.
+Odigrana tekma se uvozi v svojo vrstico, razporedna pa obvisi. To je redko
+(v vsej bazi en primer) in ne potrebuje kode — vrstico iz razporeda pobriši.
+
+Kako ločiš, kaj od tega je: poglej, ali vir zapisnik **sploh ima**. Če ga
+ima in ga uvoz ni vzel, je vzrok 1 ali 2; če ga nima, tekma samo čaka.
+
+```bash
+node -e "import('./scripts/viri/<vir>.mjs').then(async ({default:v})=>{
+  const zs = await v.zapisniki('<koda>', async u => (await fetch(u)).text())
+  console.log(zs.length, zs.map(z=>z.z.domaci.ime+'-'+z.z.gostje.ime).join(' | '))})"
+```
+
 ## Nadzor: alarm in poročilo nista isto
 
 `preveri-podatke.mjs` (dnevno) se oglasi **samo ob težavi**. To je prav za
