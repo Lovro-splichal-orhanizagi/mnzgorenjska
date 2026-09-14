@@ -14,7 +14,7 @@
 // **večstranskim** pagerjem, zato je vrednost par: `page=0,<n>`.
 import { parsirajZapisnik } from '../zapisnik-nzs.mjs'
 import { nastopi, vBesedilo } from '../zapisnik.mjs'
-import { naredikljucKluba, kratkoIme, poenostavi } from '../klubi.mjs'
+import { naredikljucKluba, kratkoIme, poenostavi, razpakiraj } from '../klubi.mjs'
 
 const OSNOVNI = 'https://www.nzs.si'
 const NA_STRAN = 10
@@ -50,8 +50,10 @@ export function razcleniRazporedNzs(html) {
     const v = m[1]
     const datum = v.match(/<time class="date" datetime="(\d{4}-\d{2}-\d{2})"/)?.[1]
     const ura = v.match(/<time class="time" datetime="(\d{1,2}:\d{2})"/)?.[1] ?? null
+    // Entitete razresimo TU, ne sele ob kljucu: pod tem imenom klub tudi
+    // nastane v bazi, in "Kety Emmi&amp;Impol" bi ostal zapisan tako.
     const imena = [...v.matchAll(/<h5 class="match-team-name[^"]*">([^<]+)<\/h5>/g)].map(
-      (x) => x[1].trim(),
+      (x) => razpakiraj(x[1]),
     )
     const krog = Number(
       v.match(/mobile-label">Krog<\/span>\s*(\d+)/)?.[1] ?? NaN,

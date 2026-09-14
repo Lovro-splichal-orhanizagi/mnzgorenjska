@@ -13,6 +13,7 @@
 // terjal posebno delegacijsko stran, ki je te zveze nimajo.
 import { datum } from './razpored.mjs'
 import { offsetLjubljana } from './cas.mjs'
+import { razpakiraj } from './klubi.mjs'
 
 // Ime kluba ima črko; izid ("3:0", "-:-") in ura je nimata.
 const jeIme = (s) => /[a-zžčšđćA-ZŽČŠĐĆ]/.test(s) && !/^\d{1,2}[.:]\d{2}$/.test(s)
@@ -78,7 +79,7 @@ export function razporedPtuj(vrstice) {
     const m = o[1]?.match(/^(\d{1,2}\.\d{1,2}\.\d{2,4})\s+ob\s+(\d{1,2}[.:]\d{2})/)
     if (!m || !jeIme(o[2] ?? '') || !jeIme(o[3] ?? '')) return { porabljeno: 0 }
     return {
-      tekma: { domaci: o[2].trim(), gostje: o[3].trim(), datum: datum(m[1]), ura: uraIz(m[2]) },
+      tekma: { domaci: razpakiraj(o[2]), gostje: razpakiraj(o[3]), datum: datum(m[1]), ura: uraIz(m[2]) },
       porabljeno: 4,
     }
   })
@@ -94,7 +95,7 @@ export function razporedMurskaSobota(vrstice) {
     const m = o[3]?.match(/^(\d{1,2}\.\d{1,2}\.\d{2,4})\s*\|/)
     if (!m) return { porabljeno: 0 }
     return {
-      tekma: { domaci: o[0].trim(), gostje: o[2].trim(), datum: datum(m[1]), ura: uraIz(o[1]) },
+      tekma: { domaci: razpakiraj(o[0]), gostje: razpakiraj(o[2]), datum: datum(m[1]), ura: uraIz(o[1]) },
       porabljeno: 4,
     }
   })
@@ -109,7 +110,7 @@ export function razporedNovaGorica(vrstice) {
     if (!jeDatum(o[0] ?? '') || !jeUraAliPrazno(o[1] ?? '')) return { porabljeno: 0 }
     if (!jeIme(o[2] ?? '') || !jeIme(o[3] ?? '')) return { porabljeno: 0 }
     return {
-      tekma: { domaci: o[2].trim(), gostje: o[3].trim(), datum: datumIz(o[0]), ura: uraIz(o[1]) },
+      tekma: { domaci: razpakiraj(o[2]), gostje: razpakiraj(o[3]), datum: datumIz(o[0]), ura: uraIz(o[1]) },
       porabljeno: 4,
     }
   })
@@ -128,7 +129,7 @@ export function razporedLendava(vrstice) {
     if (!m || !jeIme(m[1]) || !jeIme(m[2])) return { porabljeno: 0 }
     return {
       tekma: {
-        domaci: m[1].trim(), gostje: m[2].trim(),
+        domaci: razpakiraj(m[1]), gostje: razpakiraj(m[2]),
         datum: datumIz(o[0]), ura: zUro ? uraIz(o[1]) : null,
       },
       porabljeno: zUro ? 3 : 2,
@@ -149,7 +150,7 @@ export function razporedMaribor(vrstice) {
     while (i < o.length && o[i] !== undefined && !jeIme(o[i])) i++
     if (i >= o.length || !jeIme(o[i])) return { porabljeno: 0 }
     return {
-      tekma: { domaci: o[3].trim(), gostje: o[i].trim(), datum: datum(o[1]), ura: uraIz(o[2]) },
+      tekma: { domaci: razpakiraj(o[3]), gostje: razpakiraj(o[i]), datum: datum(o[1]), ura: uraIz(o[2]) },
       porabljeno: i + 1,
     }
   })

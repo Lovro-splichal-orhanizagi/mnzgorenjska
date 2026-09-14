@@ -9,9 +9,31 @@
 // pa preslikamo na eno samo. Brez preslikave bi vsak uvoz razporeda znova
 // ustvaril "svoj" klub in razklal ligo na dva zapisa.
 
+/**
+ * Razreši HTML entitete v besedilu.
+ *
+ * Nujno PRED poenostavitvijo: `&amp;` se sicer spremeni v besedo "amp",
+ * `&#8211;` pa v "8211", in klub dobi ključ, ki z ničimer ne ujema.
+ * Tako se je "Kety Emmi&Impol Bistrica" v bazi razklal na tri zapise in
+ * sedem odigranih tekem je ostalo brez statistike — uvoz zapisnika ni našel
+ * tekme, ker je razpored zapisal klub pod drugim imenom.
+ */
+export const razpakiraj = (ime) =>
+  String(ime)
+    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&ndash;/g, '–')
+    .replace(/&mdash;/g, '—')
+    .replace(/\s+/g, ' ')
+    .trim()
+
 /** "Bled - Bohinj Hirter" → "bled bohinj hirter" */
 export const poenostavi = (ime) =>
-  ime
+  razpakiraj(ime)
     .toLowerCase()
     .replace(/[^a-zčšž0-9]+/g, ' ')
     .trim()

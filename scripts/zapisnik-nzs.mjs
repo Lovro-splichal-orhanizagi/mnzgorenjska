@@ -30,6 +30,8 @@
 // Blokov je šest: enajsterica, klop in trener za vsako ekipo. Trenerjev blok
 // nima profilnih povezav, zato ga ločimo po tem in ne po vrstnem redu.
 
+import { razpakiraj } from './klubi.mjs'
+
 const DOLZINA_TEKME = 90
 
 /** Dogodek pove ikona, ne besedilo. */
@@ -39,15 +41,6 @@ const IKONE = {
   'fa-circle red': 'rdeci',
   'fa-arrows-repeat': 'menjava',
 }
-
-const razpakiraj = (s) =>
-  s
-    .replace(/&#0?39;/g, "'")
-    .replace(/&quot;/g, '"')
-    .replace(/&amp;/g, '&')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
 
 /** Dogodki enega igralca: [{ vrsta, minuta }]. */
 function dogodki(blok) {

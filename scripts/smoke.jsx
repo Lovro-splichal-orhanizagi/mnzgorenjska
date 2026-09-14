@@ -1686,6 +1686,49 @@ preveri(
   preveri('viri: Maribor izpostavi enumeracijo zapisnikov', mb.izlusciIdjeZapisnikov(tekme).length === 132)
 }
 
+// --- HTML entitete v imenih klubov ------------------------------------------
+// Sest odigranih tekem je ostalo brez statistike, ker je razpored zapisal
+// klub kot "Kety Emmi&amp;Impol Bistrica", zapisnik pa kot "Kety Emmi&Impol
+// Bistrica". Kljuc se racuna iz poenostavljenega imena, kjer se `&amp;`
+// spremeni v BESEDO "amp" in `&#8211;` v "8211" — klub je v bazi dobil tri
+// locene zapise, uvoz zapisnika pa tekme ni nasel.
+{
+  const { poenostavi: p, razpakiraj: r } = await import('./klubi.mjs')
+
+  preveri('entitete: &amp; postane &, ne beseda "amp"',
+    r('Kety Emmi&amp;Impol Bistrica') === 'Kety Emmi&Impol Bistrica',
+    r('Kety Emmi&amp;Impol Bistrica'))
+  preveri('entitete: stevilcna entiteta postane znak',
+    r('Rošnja &#8211; Loka') === 'Rošnja – Loka', r('Rošnja &#8211; Loka'))
+  preveri('entitete: sestnajstiska entiteta postane znak',
+    r('A &#x26; B') === 'A & B', r('A &#x26; B'))
+
+  // Bistvo: obe pisavi istega kluba morata dati ISTI kljuc.
+  for (const [a, b] of [
+    ['Kety Emmi&amp;Impol Bistrica', 'Kety Emmi&Impol Bistrica'],
+    ['Rošnja &#8211; Loka', 'Rošnja – Loka'],
+    ['Rogoza &#8211; Miklavž', 'Rogoza – Miklavž'],
+  ]) {
+    preveri(`entitete: "${a.slice(0, 26)}" in "${b.slice(0, 22)}" sta isti klub`,
+      p(a) === p(b), `${p(a)} / ${p(b)}`)
+  }
+
+  preveri('entitete: kljuc ne vsebuje vec ostanka entitete',
+    !p('Kety Emmi&amp;Impol').includes('amp') && !p('Rošnja &#8211; Loka').includes('8211'),
+    `${p('Kety Emmi&amp;Impol')} / ${p('Rošnja &#8211; Loka')}`)
+
+  // Razclenjevalniki razporeda imena zapisejo v bazo, zato morajo entitete
+  // razresiti ze tam — ne sele ob racunanju kljuca.
+  const { razporedMaribor } = await import('./razporedi.mjs')
+  const k = razporedMaribor([
+    '1. krog', 'Kraj', '29.08.26', '17.00', 'Rošnja &#8211; Loka', '5 : 1', '(2 : 0)', 'Kety Emmi&amp;Impol',
+  ])
+  const t = k[0]?.tekme[0]
+  preveri('razpored: ime ekipe je zapisano brez entitet',
+    t?.domaci === 'Rošnja – Loka' && t?.gostje === 'Kety Emmi&Impol',
+    JSON.stringify(t))
+}
+
 // --- 3. SNL: en klub cez dva vira -------------------------------------------
 // Ligo vodi NZS, tekoco sezono in arhiv pa objavita RAZLICNI zvezi. Klub gre
 // zato skozi dva razclenjevalnika; ce ne prideta do istega kljuca, dobi v bazi
