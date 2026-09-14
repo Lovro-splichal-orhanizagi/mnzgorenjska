@@ -591,6 +591,28 @@ node -e "import('./scripts/viri/<vir>.mjs').then(async ({default:v})=>{
   console.log(zs.length, zs.map(z=>z.z.domaci.ime+'-'+z.z.gostje.ime).join(' | '))})"
 ```
 
+## Cene med sezono: zagon, ki ga ni varno ponoviti
+
+Tedensko prevrednotenje **ni idempotentno**. Vsak zagon približa ceno
+izračunani za največ 1.0 in z njo potuje sidro borze `value_start` — dvakrat
+v istem tednu torej pomeni premik za 2.0. Zaradi tega je bil urnik nekaj
+časa izklopljen.
+
+Varovalo je `players.repriced_week` (ISO teden, npr. `2026-W38`); ob njem
+stoji `repriced_at` kot sled. Igralca, ki je ta teden že bil prevrednoten,
+zagon preskoči.
+
+**Teden, ne "manj kot sedem dni nazaj".** Drseče okno se z vsakim zagonom
+premakne naprej: zagoni ob 6., 5. in 4. dnevu bi ceno premaknili trikrat.
+ISO teden je nepremičen ključ — torkov zagon in sredin popravek zadeneta
+istega.
+
+Iz tega sledi tudi to, da je prekinjen zagon zdaj varno ponoviti: pobere
+samo tiste, ki jih prvi ni. Zato ima tok izolacijo po ligah, tako kot uvoz.
+
+Izjema je `--znova`, ki varovalo povozi. Uporabi jo le, kadar je prvi zagon
+naredil kaj narobe in morajo cene res iti še enkrat.
+
 ## Nadzor: alarm in poročilo nista isto
 
 `preveri-podatke.mjs` (dnevno) se oglasi **samo ob težavi**. To je prav za
