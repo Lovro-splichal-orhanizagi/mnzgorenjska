@@ -22,6 +22,7 @@ import { readFileSync } from 'node:fs'
 import { tekmovanje as najdiTekmovanje } from './tekmovanje.mjs'
 import { vseVrstice } from './strani.mjs'
 import { premakniProti, NAJVECJI_TEDENSKI_PREMIK } from './premik-cene.mjs'
+import { isoTeden } from './cas.mjs'
 
 const NAJNIZJA = 4.0
 const NAJVISJA = 12.0
@@ -101,6 +102,11 @@ const sezona = arg('sezona')
 // po stari ceni. Sidro borze (`value_start`) potuje z njim, sicer bi cena
 // takoj trcila ob mejo 3.0 od sidra.
 const tedensko = process.argv.includes('--tedensko')
+// `--znova` povozi tedensko varovalo; za popravke, kadar je prvi zagon
+// napravil kaj narobe in cene res morajo iti se enkrat.
+const znova = process.argv.includes('--znova')
+const tekociTeden = isoTeden()
+let zeTaTeden = 0
 const pisi = process.argv.includes('--pisi')
 // `--samo-nove` predela le igralce brez `value_start` — tiste, ki jih uvoz
 // prvič pripelje v bazo. Obstoječih cen se ne dotakne. Uporabno v tedenskem
@@ -114,7 +120,7 @@ const igralci = await vseVrstice((od, do_) =>
   db
     .from('players')
     .select(
-      'id, full_name, position, value, value_start, value_locked, nzs_top_league, nzs_top_league_minutes',
+      'id, full_name, position, value, value_start, value_locked, nzs_top_league, nzs_top_league_minutes, repriced_week',
     )
     .eq('competition_id', tekmovanje.id)
     .order('id')
@@ -265,6 +271,13 @@ for (const p of igralci ?? []) {
     borznih++
     continue
   }
+  // Zagon NI idempotenten: vsak premakne ceno do 1.0 in z njo sidro borze.
+  // Dvakrat v istem tednu torej pomeni premik za 2.0 — prav zato je bil urnik
+  // izklopljen. Igralca, ki je ta teden ze bil prevrednoten, pustimo pri miru.
+  if (tedensko && !znova && p.repriced_week === tekociTeden) {
+    zeTaTeden++
+    continue
+  }
 
   const koda = p.position ?? 'MID'
   const [spodnja, zgornja] = MEJE[koda] ?? [NAJNIZJA, NAJVISJA]
@@ -313,6 +326,9 @@ for (const p of igralci ?? []) {
     // Borza hrani desetinke; zaokrožitev sidra na polovico bi spremenila odmik.
     if (p.value_start != null)
       popravek.value_start = Math.round((Number(p.value_start) + (vrednost - stara)) * 10) / 10
+    // Zig nosi teden (kljuc varovala) in cas (sled, kdaj natanko).
+    popravek.repriced_week = tekociTeden
+    popravek.repriced_at = new Date().toISOString()
     premaknjenih.push({ ime: p.full_name, iz: stara, v: vrednost })
   }
 
@@ -335,6 +351,15 @@ if (!tedensko || pisi)
 
 if (tedensko) {
   console.log(`Preskočenih (cene upravlja borza): ${borznih}`)
+  // Ob `--znova` je stevec vedno 0, ker varovala sploh ne vprasamo — izpis
+  // "noben ni bil prevrednoten" bi bil takrat neresnica.
+  console.log(
+    znova
+      ? `Teden ${tekociTeden}: varovalo povoženo z --znova`
+      : zeTaTeden
+        ? `Preskočenih (v tednu ${tekociTeden} že prevrednoteni): ${zeTaTeden}`
+        : `Teden ${tekociTeden}: noben igralec še ni bil prevrednoten`,
+  )
   premaknjenih.sort((a, b) => Math.abs(b.v - b.iz) - Math.abs(a.v - a.iz))
   console.log(`Predlaganih premikov cen: ${premaknjenih.length} (največ ${najvecPremik} na zagon)`)
   for (const x of premaknjenih.slice(0, 10))

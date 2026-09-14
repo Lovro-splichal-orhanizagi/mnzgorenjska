@@ -45,3 +45,25 @@ export function offsetLjubljana(datumIso, ura = '12:00') {
 export function isoLjubljana(datumIso, uraHhmm) {
   return `${datumIso}T${uraHhmm}:00${offsetLjubljana(datumIso, uraHhmm)}`
 }
+
+/**
+ * Teden po ISO 8601: `2026-W38`.
+ *
+ * Uporablja ga tedensko prevrednotenje kot ključ "ta igralec je bil ta teden
+ * že prevrednoten". Teden je boljše merilo od časovnega žiga: ponovni zagon
+ * v torek zvečer ali v sredo mora zadeti isti ključ, primerjava "manj kot
+ * sedem dni nazaj" pa bi se z vsakim zagonom premikala naprej.
+ *
+ * ISO teden se začne v ponedeljek, prvi teden leta pa je tisti s prvim
+ * četrtkom. Zato štejemo od četrtka tekočega tedna.
+ */
+export function isoTeden(datum = new Date()) {
+  const d = new Date(Date.UTC(datum.getFullYear(), datum.getMonth(), datum.getDate()))
+  // Nedelja je 0; ISO ima ponedeljek 1 in nedeljo 7.
+  const dan = d.getUTCDay() || 7
+  d.setUTCDate(d.getUTCDate() + 4 - dan) // četrtek tega tedna
+  const leto = d.getUTCFullYear()
+  const prviJanuar = new Date(Date.UTC(leto, 0, 1))
+  const teden = Math.ceil(((d - prviJanuar) / 86400000 + 1) / 7)
+  return `${leto}-W${String(teden).padStart(2, '0')}`
+}

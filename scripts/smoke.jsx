@@ -1686,6 +1686,35 @@ preveri(
   preveri('viri: Maribor izpostavi enumeracijo zapisnikov', mb.izlusciIdjeZapisnikov(tekme).length === 132)
 }
 
+// --- ISO teden za tedensko prevrednotenje ------------------------------------
+// Prevrednotenje NI idempotentno: vsak zagon priblizna ceno za najvec 1.0 in
+// z njo potuje sidro borze. Dvakrat v istem tednu pomeni premik za 2.0, zato
+// je bil urnik izklopljen. Kljuc varovala je ISO teden — ne "manj kot sedem
+// dni nazaj", ker bi se tako merilo z vsakim zagonom premikalo naprej in bi
+// zagoni ob 6., 5. in 4. dnevu ceno premaknili trikrat.
+{
+  const { isoTeden } = await import('./cas.mjs')
+  const t = (d) => isoTeden(new Date(`${d}T12:00:00`))
+
+  // Ponedeljek zacne teden, nedelja ga konca.
+  preveri('teden: ponedeljek in nedelja istega tedna sta isti kljuc',
+    t('2026-09-14') === t('2026-09-20'), `${t('2026-09-14')} / ${t('2026-09-20')}`)
+  preveri('teden: naslednji ponedeljek je ze drug kljuc',
+    t('2026-09-20') !== t('2026-09-21'), `${t('2026-09-20')} / ${t('2026-09-21')}`)
+  preveri('teden: torkov zagon in sredin popravek sta isti teden',
+    t('2026-09-15') === t('2026-09-16'))
+
+  // Prehod cez leto: ISO teden pripada letu s prvim cetrtkom.
+  preveri('teden: 1. januar 2027 (petek) pripada se tednu 2026',
+    t('2027-01-01') === '2026-W53', t('2027-01-01'))
+  preveri('teden: prvi ponedeljek 2027 je 2027-W01',
+    t('2027-01-04') === '2027-W01', t('2027-01-04'))
+  preveri('teden: 1. januar 2026 (cetrtek) je 2026-W01',
+    t('2026-01-01') === '2026-W01', t('2026-01-01'))
+  preveri('teden: oblika je LLLL-Wnn',
+    /^\d{4}-W\d{2}$/.test(t('2026-09-14')), t('2026-09-14'))
+}
+
 // --- prazna stran v predpomnilniku ne sme obviseti --------------------------
 // Zapisnik se objavi sele nekaj ur po tekmi, uvoz pa ob koncu tedna tece
 // vsako uro. Prvi zagon po tekmi prenese stran BREZ postav; ta prazna stran

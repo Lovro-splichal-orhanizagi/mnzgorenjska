@@ -16,11 +16,16 @@ name: Tedensko prevrednotenje
 # — pozicija odloca, koliko je vreden gol, zato mora biti prej znana.
 # Igralce z zgodovino cen prepustimo borzi, da ponovna uveljavitev starega
 # kroga ne povozi tedenske cene ob premaknjenem sidru.
-# URNIK JE IZKLOPLJEN: ponovni zagon isti teden lahko ceno premakne se
-# enkrat. Zaganjaj rocno, dokler to ni popravljeno.
+# Urnik je bil izklopljen, ker ponovni zagon v istem tednu premakne ceno se
+# enkrat: vsak zagon jo priblizna za najvec 1.0, dvakrat torej za 2.0, in z
+# njo potuje sidro borze. Zdaj si igralec zapomni, v katerem ISO tednu je bil
+# prevrednoten (`players.repriced_week`), in ga isti teden ne premaknemo
+# drugic. Ponovni zagon je zato varen — pobere le tiste, ki jih prvi ni.
+#
+# Za izjemo obstaja `--znova`, ki varovalo povozi.
 on:
-  # schedule:
-  #   - cron: '0 4 * * 2'
+  schedule:
+    - cron: '0 4 * * 2'
   workflow_dispatch:
     inputs:
       najvec:
@@ -54,9 +59,23 @@ jobs:
           set -euo pipefail
           node scripts/aktivna-tekmovanja.mjs > /tmp/lige.txt
           echo "Lige: $(tr '\n' ' ' < /tmp/lige.txt)"
+          # Ena liga ne sme podreti ostalih — isto kot pri uvozu. Tu je se bolj
+          # pomembno: liga, ki jo prekine napaka na pol poti, ima del igralcev
+          # prevrednoten in del ne. Zig `repriced_week` poskrbi, da naslednji
+          # zagon pobere samo preostale in nikogar ne premakne dvakrat.
+          padle=""
           while IFS= read -r liga; do
             [ -n "$liga" ] || continue
             echo "::group::$liga"
-            node scripts/ovrednoti-igralce.mjs --tekmovanje "$liga" --tedensko --pisi --najvec "$NAJVEC"
+            if node scripts/ovrednoti-igralce.mjs --tekmovanje "$liga" --tedensko --pisi --najvec "$NAJVEC"; then
+              echo "$liga: v redu"
+            else
+              echo "::warning title=Prevrednotenje::$liga ni uspela; ostale se nadaljujejo"
+              padle="$padle $liga"
+            fi
             echo "::endgroup::"
           done < /tmp/lige.txt
+          if [ -n "$padle" ]; then
+            echo "::error title=Neuspele lige::$padle"
+            exit 1
+          fi
