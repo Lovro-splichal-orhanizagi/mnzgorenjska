@@ -14,6 +14,29 @@ export const sifra = (koda) => String(koda).replace(/[^\w-]/g, '_')
 /** Koliko zaporednih praznih krogov pomeni, da smo prišli do konca. */
 const DOVOLJ_PRAZNIH = 3
 
+/**
+ * Prenesi zapisnik in ga razčleni; če iz predpomnilnika ne da ničesar,
+ * poskusi še enkrat s svežo stranjo.
+ *
+ * Zakaj: zapisnik se objavi ŠELE nekaj ur po tekmi, uvoz pa ob koncu tedna
+ * teče vsako uro. Prvi zagon po tekmi zato prenese stran BREZ postav — in ta
+ * prazna stran obleži v predpomnilniku, ki se med zagoni obnavlja. Vsak
+ * naslednji zagon jo prebere iz predpomnilnika, znova ne najde postav in
+ * tekma ostane brez statistike ZA VEDNO, čeprav je zapisnik medtem objavljen.
+ *
+ * Tako so obviseli štirje krogi 1. SNL in še dvanajst tekem drugod. Uvoz ni
+ * javil ničesar: z njegovega vidika stran pač ni bila zapisnik.
+ *
+ * Prazna stran je poceni; drugi prenos velja samo zanje.
+ */
+async function zapisnikSvez(vir, prenesi, url, ime, meta) {
+  const izPredpomnilnika = await prenesi(url, ime)
+  const z = vir.parsirajZapisnik(izPredpomnilnika, meta)
+  if (z) return z
+  const svez = await prenesi(url, ime, true)
+  return vir.parsirajZapisnik(svez, meta)
+}
+
 /** Kranj, Ljubljana, Celje: seznam tekem → `zapisnik=<id>` → stran na tekmo. */
 export async function izSeznamaTekem(vir, koda, prenesi) {
   // Cachebuster: vmesni predpomnilnik je že vračal star seznam brez
@@ -34,8 +57,9 @@ export async function izSeznamaTekem(vir, koda, prenesi) {
     // si tako povozili stran. Pri 3. SNL Zahod se je zgodilo: arhiv 1703 in
     // 1603 tece drug za drugim v istem zagonu, zato je druga sezona dobila
     // postavo iz prve, invarianta `gol-brez-nastopa` pa je to ujela.
-    const html = await prenesi(url, `${sifra(koda)}-${id}.html`)
-    const z = vir.parsirajZapisnik(html, { zapisnikId: id, url })
+    const z = await zapisnikSvez(vir, prenesi, url, `${sifra(koda)}-${id}.html`, {
+      zapisnikId: id, url,
+    })
     if (z) out.push({ id, z, url })
   }
   return out
@@ -78,13 +102,14 @@ export async function izPovezav(vir, koda, prenesi) {
   const out = []
   for (const p of povezave) {
     const url = vir.naslovZapisnika(koda, p.id, p.krog)
-    let html
+    let z
     try {
-      html = await prenesi(url, `${vir.ime}-${sifra(koda)}-${p.id}.html`)
+      z = await zapisnikSvez(vir, prenesi, url, `${vir.ime}-${sifra(koda)}-${p.id}.html`, {
+        zapisnikId: String(p.id), url,
+      })
     } catch {
       continue
     }
-    const z = vir.parsirajZapisnik(html, { zapisnikId: String(p.id), url })
     if (z) out.push({ id: String(p.id), z, url })
   }
   return out

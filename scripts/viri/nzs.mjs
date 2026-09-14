@@ -155,8 +155,12 @@ const vir = {
     const out = []
     for (const sifra of await seznamTekem(koda, prenesi)) {
       const url = vir.naslovZapisnika(koda, sifra)
-      const html = await prenesi(url, `zapisnik-${pot}-${sezona ?? 'tekoca'}-${sifra}.html`)
-      const z = parsirajZapisnik(html, { zapisnikId: sifra, url })
+      const ime = `zapisnik-${pot}-${sezona ?? 'tekoca'}-${sifra}.html`
+      // Zapisnik se objavi sele nekaj ur po tekmi. Prazna stran, prenesena
+      // prezgodaj, bi sicer obtičala v predpomnilniku in tekma bi ostala brez
+      // statistike za vedno — glej `zapisnikSvez` v `zapisniki.mjs`.
+      let z = parsirajZapisnik(await prenesi(url, ime), { zapisnikId: sifra, url })
+      if (!z) z = parsirajZapisnik(await prenesi(url, ime, true), { zapisnikId: sifra, url })
       if (z) out.push({ id: sifra, z, url })
     }
     return out

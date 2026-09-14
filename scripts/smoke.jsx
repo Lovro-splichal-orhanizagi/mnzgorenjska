@@ -1686,6 +1686,54 @@ preveri(
   preveri('viri: Maribor izpostavi enumeracijo zapisnikov', mb.izlusciIdjeZapisnikov(tekme).length === 132)
 }
 
+// --- prazna stran v predpomnilniku ne sme obviseti --------------------------
+// Zapisnik se objavi sele nekaj ur po tekmi, uvoz pa ob koncu tedna tece
+// vsako uro. Prvi zagon po tekmi prenese stran BREZ postav; ta prazna stran
+// obleži v predpomnilniku, ki se med zagoni obnavlja, in vsak naslednji zagon
+// jo prebere od tam. Tekma tako ostane brez statistike za vedno, ceprav je
+// zapisnik medtem objavljen. Tako so obviseli stirje krogi 1. SNL.
+{
+  const { izSeznamaTekem } = await import('./viri/zapisniki.mjs')
+
+  const prazna = '<html>ni postav</html>'
+  const polna = '<html>POSTAVI</html>'
+  let prenosov = 0, sveze = 0
+  const vir = {
+    ime: 'preizkus',
+    naslovSeznamaTekem: () => 'http://primer/seznam',
+    naslovZapisnika: (_k, id) => `http://primer/zapisnik?zapisnik=${id}`,
+    // Prvi (predpomnjeni) prenos da prazno stran, svez pa pravo.
+    parsirajZapisnik: (html, { zapisnikId }) =>
+      html.includes('POSTAVI') ? { zapisnikId, domaci: { ime: 'A' }, gostje: { ime: 'B' } } : null,
+  }
+  const prenesi = async (_url, _ime, svez = false) => {
+    prenosov++
+    // Seznam tekem se vedno prenese svez; to ni zapisnik in ga ta preizkus
+    // ne sme zamenjati z njim.
+    if (_url.includes('seznam')) return 'zapisnik=11 zapisnik=12'
+    if (svez) { sveze++; return polna }
+    return prazna
+  }
+
+  const out = await izSeznamaTekem(vir, '1601', prenesi)
+  preveri('predpomnilnik: prazna stran se ponovno prenese sveze',
+    out.length === 2, `${out.length} zapisnikov`)
+  preveri('predpomnilnik: svez prenos se zgodi le ob prazni strani',
+    sveze === 2, `svezih prenosov: ${sveze}`)
+
+  // Ko je stran ze uporabna, drugega prenosa ne sme biti — sicer bi vsak
+  // zagon znova prenesel cel arhiv.
+  let prenosov2 = 0
+  const virPolni = { ...vir }
+  const prenesiPolno = async (_url) => {
+    prenosov2++
+    return _url.includes('seznam') ? 'zapisnik=11' : polna
+  }
+  const out2 = await izSeznamaTekem(virPolni, '1601', prenesiPolno)
+  preveri('predpomnilnik: uporabna stran se ne prenasa dvakrat',
+    out2.length === 1 && prenosov2 === 2, `zapisnikov ${out2.length}, prenosov ${prenosov2}`)
+}
+
 // --- HTML entitete v imenih klubov ------------------------------------------
 // Sest odigranih tekem je ostalo brez statistike, ker je razpored zapisal
 // klub kot "Kety Emmi&amp;Impol Bistrica", zapisnik pa kot "Kety Emmi&Impol
