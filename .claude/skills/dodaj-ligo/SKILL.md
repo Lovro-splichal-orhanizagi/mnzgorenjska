@@ -734,6 +734,59 @@ Dve od treh prošenj v klepetu sta bili za stvari, ki jih aplikacija že ima
 podatek, da je v meniju ne najdejo. Preden kaj zgradiš, preveri, ali stran že
 obstaja — in če obstaja, je delo drugje.
 
+## Popravek, ki tiho ustavi celo ligo, je slabši od napake, ki jo odpravi
+
+Prvi popravek zgornje napake je bil: "krog je odigran, ko so uvožene **vse**
+tekme". Odpravil je krivico ~30 igralcem, uvedel pa hujšo: če ena tekma ne
+pride nikoli — prestavljena čez štirinajst dni, zapisnik z dvoumnim imenom,
+podvojena vrstica v razporedu — borza celega kroga ne obračuna več. Ker
+`uveljavi_zapadle_cene` kroge, starejše od štirinajstih dni, preskoči, se to
+ne popravi samo od sebe, nikjer ne piše in nihče ne opazi.
+
+Prava rešitev je bila varovalko premakniti z **ravni kroga na raven igralca**:
+krog je odigran, ko je uvožena vsaj ena tekma, iz obračuna pa izpade igralec,
+čigar klub v oknu forme še nima zapisnika. Ker zanj ne nastane vrstica v
+`price_changes`, ga naslednji nočni tek pobere sam.
+
+Pravilo: **preden zaostriš pogoj, vprašaj, kdo vse ostane zunaj.** Če jih je
+več, kot jih je bilo prej prizadetih, si napako povečal in jo skril.
+
+Drugi del iste lekcije: varovalka mora pokrivati vse, kar v izračun vstopa.
+Prvi popravek je varoval le krog, ki se je obračunaval — okno forme pa sega
+dva kroga nazaj in tam je napaka ostala.
+
+## Trditev, ki pade šele, ko jo pokvariš
+
+Vsak nov preizkus poženi **tudi proti stari, pokvarjeni kodi** in preveri, da
+pade. Brez tega ne veš, ali meri tisto, kar misliš.
+
+Pri tuji postavi sta dve trditvi veljali same od sebe: `tuja_postava` ni
+vrnila ničesar, ker vrstic v `fantasy_lineups` sploh še ni bilo — ne zaradi
+zaklepa. Trditev je bila zelena tudi, če bi pogoj o zaklepu iz funkcije
+izbrisal. Popravek: posnetek vpiši ročno, preden je krog zaklenjen, in šele
+potem trdi, da ga ni videti.
+
+Postopek, ki se je obnesel:
+
+```bash
+# rdeče: staro definicijo funkcije in nov preizkus v isto transakcijo
+{ echo 'begin;'; <stara definicija>; <do blok preizkusa>; echo 'rollback;'; } \
+  | docker exec -i supabase_db_mnzgorenjska psql -U postgres -d postgres
+```
+
+Tudi mesto trditve šteje. "Obvoz prek `postava_kroga` ne izda kadra" je najprej
+stal za zaklepom kroga — in tam funkcija vrne posnetek, ki je javen tako ali
+tako. Trditev je padla, čeprav luknje ni bilo. Šele pred zaklepom meri tisto,
+kar naj bi merila.
+
+## Preizkus naj si stanje sestavi, ne poišče
+
+Trditev o delno uvoženem krogu je stanje iskala med uvoženimi podatki. Sredi
+tedna, ko vsi zapisniki pridejo, takega kroga ni — in pomožna funkcija se je
+ob manjkajočem krogu tiho vrnila, torej je trditev izginila, izpis pa je bil
+videti popoln. Zdaj tak primer sestavi `scripts/preizkus-borze.sql` sam (dve
+tekmi, ena uvožena), e2e pa te trditve nima več.
+
 ## Ob koncu
 
 `npm run smoke`, `npm test`, `npm run typecheck`, `npm run build` — vsi zeleni,

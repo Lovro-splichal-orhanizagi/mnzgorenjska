@@ -129,6 +129,14 @@ begin
     raise exception '1. priprava: kader ni veljaven, zato posnetka ne bo';
   end if;
 
+  -- Posnetek vpisemo ROCNO, se preden je krog zaklenjen. Brez tega bi
+  -- trditvi 2 in 3 veljali same od sebe — `tuja_postava` ne bi vrnila
+  -- nicesar ze zato, ker vrstic ni, in ne zaradi zaklepa. Tako pa preverjata
+  -- prav pogoj o zaklepu.
+  insert into fantasy_lineups (round_id, fantasy_team_id, player_id, is_starter, is_captain, is_vice, bench_order)
+  select krog, ekipa_a, fr.player_id, fr.is_starter, fr.is_captain, fr.is_vice, fr.bench_order
+    from fantasy_roster fr where fr.fantasy_team_id = ekipa_a;
+
   -- --- 2. pred rokom tuje postave ni ---------------------------------------
   perform set_config('request.jwt.claims', json_build_object('sub', b, 'role', 'authenticated')::text, true);
   execute 'set local role authenticated';
@@ -146,6 +154,9 @@ begin
   if n <> 0 then
     raise exception '3. nezaklenjen krog naj bo prazen tudi za lastnika, vrnil je %', n;
   end if;
+
+  -- Posnetek pospravimo: naprej naj ga naredi `zakleni_krog` sam.
+  delete from fantasy_lineups where round_id = krog and fantasy_team_id = ekipa_a;
 
   -- --- 4. tekocega kadra tujec ne prebere ----------------------------------
   perform set_config('request.jwt.claims', json_build_object('sub', b, 'role', 'authenticated')::text, true);
@@ -173,6 +184,35 @@ begin
   if n <> 0 then
     raise exception '6. anonimni naj ne bere kadrov, prebral je % vrstic', n;
   end if;
+
+  -- --- 6b. tudi obvoz prek `postava_kroga` ne izda tekocega kadra ----------
+  -- `postava_kroga` je starejsa pomozna funkcija: dokler posnetka se ni in
+  -- rok se ni potekel, vrne ZIVI kader iz `fantasy_roster`. Zato mora ta
+  -- trditev stati PRED zaklepom — potem prva veja vrne posnetek, ki je javen
+  -- tako ali tako, in preizkus ne bi meril tistega, kar misli, da meri. Tece s pravicami klicatelja
+  -- in je javna, zato je bila pred zaostritvijo RLS druga pot do tuje ekipe —
+  -- mimo politike in mimo `tuja_postava`.
+  update rounds set deadline_at = now() + interval '2 days' where id = krog;
+
+  perform set_config('request.jwt.claims', json_build_object('sub', b, 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+  select count(*) into n from postava_kroga(ekipa_a, krog);
+  execute 'set local role postgres';
+  if n <> 0 then
+    raise exception '6b. postava_kroga naj tujcu ne izda kadra, izdala je % vrstic', n;
+  end if;
+
+  -- Lastniku pa jo se vedno vrne — funkcija mora ostati uporabna.
+  perform set_config('request.jwt.claims', json_build_object('sub', a, 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+  select count(*) into n from postava_kroga(ekipa_a, krog);
+  execute 'set local role postgres';
+  if n = 0 then
+    raise exception '6b. postava_kroga naj lastniku vrne njegov kader, vrnila je 0';
+  end if;
+
+  update rounds set deadline_at = now() - interval '1 day' where id = krog;
+
 
   -- --- 7. po zaklepu je tuja postava vidna ---------------------------------
   -- Kapetan tudi odigra tekmo: mnozitelj pripada tistemu, ki je igral, in
@@ -235,7 +275,7 @@ begin
     raise exception '11. kapetan z golom in 90 minutami naj ima tocke, ima %', t;
   end if;
 
-  raise notice 'preizkus tujih ekip: vseh 11 trditev drzi';
+  raise notice 'preizkus tujih ekip: vse trditve drzijo';
 end $$;
 
 rollback;

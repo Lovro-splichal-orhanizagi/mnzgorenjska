@@ -42,6 +42,9 @@ export default function Ekipa() {
   const [vrstice, setVrstice] = useState<VrsticaTuje[]>([])
   const [nalaganje, setNalaganje] = useState(true)
   const [nalaganjePostave, setNalaganjePostave] = useState(false)
+  const [okvara, setOkvara] = useState<string | null>(null)
+  const [kazen, setKazen] = useState(0)
+  const [neto, setNeto] = useState<number | null>(null)
   const [napaka, setNapaka] = useState<string | null>(null)
 
   // --- ekipa in njeni zaklenjeni krogi -------------------------------------
@@ -63,11 +66,20 @@ export default function Ekipa() {
       }
       setEkipa(e)
 
+      // Migracija 20260913100000 je zaklenila vse ze zapadle kroge, tudi
+      // tiste pred zacetkom fantasy dela lige. Za te posnetka ni in gumb bi
+      // vodil v prazno, zato jih izpustimo.
+      const { data: liga } = await supabase
+        .from('competitions')
+        .select('prvi_fantasy_krog')
+        .eq('id', e.competition_id as number)
+        .maybeSingle()
       const { data: k } = await supabase
         .from('rounds')
         .select('id, number, season')
         .eq('competition_id', e.competition_id as number)
         .not('lineups_locked_at', 'is', null)
+        .gte('number', liga?.prvi_fantasy_krog ?? 1)
         .order('number', { ascending: false })
       if (!veljavno) return
       const zaprti = (k ?? []) as Krog[]
@@ -90,14 +102,28 @@ export default function Ekipa() {
     let veljavno = true
     ;(async () => {
       setNalaganjePostave(true)
-      const { data, error } = await supabase.rpc('tuja_postava', {
-        p_team: Number(id),
-        p_round: izbranKrog,
-      })
+      const [{ data, error }, { data: krogTocke }] = await Promise.all([
+        supabase.rpc('tuja_postava', {
+          p_team: Number(id),
+          p_round: izbranKrog,
+        }),
+        // Naslov mora pokazati isto stevilko kot lestvica, ta pa od vsote
+        // igralcev odsteje se kazen za prestope.
+        supabase
+          .from('fantasy_round_points')
+          .select('points, penalty')
+          .eq('fantasy_team_id', Number(id))
+          .eq('round_id', izbranKrog)
+          .maybeSingle(),
+      ])
       if (!veljavno) return
-      // Migracija in koda potujeta vsaka po svoji poti; ce funkcije se ni,
-      // naj stran pove, da postave ni, ne pa da se sesuje.
+      // Migracija in koda potujeta vsaka po svoji poti. Ce funkcije se ni,
+      // naj stran pove, da je slo kaj narobe — prazna postava in okvara
+      // nista isto.
+      setOkvara(error ? 'Postave ni bilo mogoce naloziti.' : null)
       setVrstice(error ? [] : ((data ?? []) as VrsticaTuje[]))
+      setKazen(Number(krogTocke?.penalty ?? 0))
+      setNeto(krogTocke ? Number(krogTocke.points) : null)
       setNalaganjePostave(false)
     })()
     return () => {
@@ -162,17 +188,24 @@ export default function Ekipa() {
 
           {nalaganjePostave ? (
             <p className="text-slate-400">Nalaganje postave …</p>
+          ) : okvara ? (
+            <p className="rounded-lg bg-rose-500/10 p-4 text-rose-200">{okvara}</p>
           ) : vrstice.length === 0 ? (
             <p className="rounded-lg bg-slate-800/60 p-4 text-slate-300">
               Ta ekipa v izbranem krogu ni imela postave.
             </p>
           ) : (
             <>
-              <div className="flex items-baseline gap-2">
+              <div className="flex flex-wrap items-baseline gap-2">
                 <span className="text-3xl font-black tabular-nums text-gnl-400">
-                  {formatirajTocke(skupaj)}
+                  {formatirajTocke(neto ?? skupaj)}
                 </span>
                 <span className="text-sm text-slate-400">točk v tem krogu</span>
+                {kazen > 0 && (
+                  <span className="text-sm text-rose-400">
+                    (−{kazen} za prestope)
+                  </span>
+                )}
               </div>
 
               <EnajstericaNaIgriscu igralci={postava.map(zaIgrisce)} />

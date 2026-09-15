@@ -12,6 +12,7 @@ do $$
 declare
   a uuid := '00000000-0000-0000-0000-00000000000a';
   b uuid := '00000000-0000-0000-0000-00000000000b';
+  c uuid := '00000000-0000-0000-0000-00000000000c';
   ekipa_a bigint;
   ekipa_b bigint;
   liga bigint;
@@ -25,9 +26,10 @@ begin
   -- --- priprava ------------------------------------------------------------
   insert into auth.users (id, email, instance_id, aud, role)
   values (a, 'a@preizkus', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated'),
-         (b, 'b@preizkus', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated')
+         (b, 'b@preizkus', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated'),
+         (c, 'c@preizkus', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated')
   on conflict (id) do nothing;
-  insert into profiles (id, display_name) values (a, 'A'), (b, 'B')
+  insert into profiles (id, display_name) values (a, 'A'), (b, 'B'), (c, 'C')
   on conflict (id) do nothing;
 
   select id into drzava from countries limit 1;
@@ -140,10 +142,74 @@ begin
   if n <> 1 then raise exception 'NAPAKA: lastnik ni mogel odstraniti clana (vrstic %)', n; end if;
   raise notice 'OK 10: lastnik mini lige sme odstraniti clana';
 
+  -- Korak 10 je B-jevo ekipo iz lige odstranil; za trditve o branju jo
+  -- vrnemo, sicer bi "clan vidi svojo ligo" preverjal neclana.
+  insert into mini_liga_clani (mini_liga_id, fantasy_team_id)
+  values (liga, ekipa_b) on conflict do nothing;
+
+  -- --- 11. koda zasebne mini lige ni javna ---------------------------------
+  -- Koda je edino, kar mini ligo zapira. Dokler je bilo branje `mini_lige`
+  -- javno, jo je lahko prebral vsak in se pridruzil kamorkoli.
+  perform set_config('request.jwt.claims', json_build_object('sub', c, 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+  select count(*) into n from mini_lige where id = liga;
+  execute 'set local role postgres';
+  if n <> 0 then
+    raise exception '11. tujec ne sme videti tuje mini lige (in njene kode), vidi % vrstic', n;
+  end if;
+  raise notice 'OK 11: koda zasebne mini lige ni javna';
+
+  -- --- 12. clan svojo mini ligo se vedno vidi -----------------------------
+  perform set_config('request.jwt.claims', json_build_object('sub', b, 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+  select count(*) into n from mini_lige where id = liga;
+  execute 'set local role postgres';
+  if n <> 1 then
+    raise exception '12. clan mora videti svojo mini ligo, vidi % vrstic', n;
+  end if;
+  raise notice 'OK 12: clan svojo mini ligo vidi';
+
+  -- --- 13. tuja lestvica mini lige ni berljiva ----------------------------
+  -- Pogled je tekel s pravicami lastnika in je obsel RLS: kdor je uganil
+  -- `mini_liga_id`, je prebral tujo zasebno lestvico.
+  perform set_config('request.jwt.claims', json_build_object('sub', c, 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+  select count(*) into n from mini_liga_lestvica where mini_liga_id = liga;
+  execute 'set local role postgres';
+  if n <> 0 then
+    raise exception '13. tujec ne sme brati tuje lestvice, prebral je % vrstic', n;
+  end if;
+  raise notice 'OK 13: tuja lestvica mini lige ni berljiva';
+
+  -- --- 14. klepet ne izda avtorja ------------------------------------------
+  -- Sporocilo je pod psevdonimom, a je bil `user_id` javen in ga je bilo
+  -- mogoce prek `fantasy_teams.owner_id` pripisati ekipi.
+  insert into chat_messages (user_id, content, alias) values (a, 'zivjo', 'Psevdonim 1');
+  perform set_config('request.jwt.claims', json_build_object('sub', c, 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+  select count(*) into n from chat_messages;
+  execute 'set local role postgres';
+  if n <> 0 then
+    raise exception '14. tujec ne sme brati tabele klepeta, prebral je % vrstic', n;
+  end if;
+
+  perform set_config('request.jwt.claims', json_build_object('sub', c, 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+  select count(*) into n from klepet_sporocila where not je_moje;
+  execute 'set local role postgres';
+  if n < 1 then
+    raise exception '14. vsebina klepeta mora ostati vidna, vidnih je %', n;
+  end if;
+  raise notice 'OK 14: klepet je viden, avtor pa ne';
+
   -- --- pospravi -------------------------------------------------------------
+  delete from chat_messages where user_id in (a, b, c);
+  delete from mini_liga_clani where mini_liga_id = liga;
   delete from mini_lige where id = liga;
   delete from fantasy_teams where id in (ekipa_a, ekipa_b);
-  delete from profiles where id in (a, b);
-  delete from auth.users where id in (a, b);
+  delete from profiles where id in (a, b, c);
+  delete from auth.users where id in (a, b, c);
   raise notice 'VSI PREIZKUSI MINI LIG USPESNI';
+
+
 end $$;

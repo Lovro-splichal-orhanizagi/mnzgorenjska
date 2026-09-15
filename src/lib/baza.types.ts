@@ -2723,6 +2723,30 @@ export type Database = {
           },
         ]
       }
+      klepet_sporocila: {
+        Row: {
+          alias: string | null
+          content: string | null
+          created_at: string | null
+          id: number | null
+          je_moje: boolean | null
+        }
+        Insert: {
+          alias?: string | null
+          content?: string | null
+          created_at?: string | null
+          id?: number | null
+          je_moje?: never
+        }
+        Update: {
+          alias?: string | null
+          content?: string | null
+          created_at?: string | null
+          id?: number | null
+          je_moje?: never
+        }
+        Relationships: []
+      }
       krog_najboljsi: {
         Row: {
           competition_id: number | null

@@ -787,35 +787,24 @@ ok('lestvica pokaže lastnika', moja?.owner_name === 'Tester 1', moja?.owner_nam
     .maybeSingle()
   await preveriBorzo('krog prejšnje sezone', arhivski)
 
-  // Krog, ki še ni bil odigran (ni uvožene tekme).
-  const { data: neodigran } = await anon
-    .from('rounds')
-    .select('id, number, matches!inner(imported_at)')
-    .eq('competition_id', 1)
-    .eq('season', zadnja)
-    .is('matches.imported_at', null)
-    .order('number')
-    .order('id')
-    .limit(1)
-    .maybeSingle()
-  await preveriBorzo('neodigran krog', neodigran)
-
-  // Delno uvozen krog ni odigran. Zapisniki amaterske lige pridejo vsak ob
-  // svojem casu; dokler manjka ena tekma, bi borza njene igralce ovrednotila,
-  // kot da niso igrali, popravka pa pozneje ne bi bilo.
-  const { data: delni } = await anon
+  // Krog, ki še ni bil odigran — torej NOBENA njegova tekma ni uvožena.
+  // "Vsaj ena tekma brez zapisnika" ni isto: tak krog je delno odigran in
+  // borza ga po migraciji 20260916140000 obračuna za klube, ki zapisnik že
+  // imajo. Tu nas zanima krog, v katerem se še ni igralo nič.
+  const { data: vsiKrogi } = await anon
     .from('rounds')
     .select('id, number, matches(imported_at)')
     .eq('competition_id', 1)
     .eq('season', zadnja)
     .order('number')
-  const delnoUvozen = (delni ?? []).find(
-    (r) =>
-      r.matches.length > 1 &&
-      r.matches.some((m) => m.imported_at) &&
-      r.matches.some((m) => !m.imported_at),
+  const neodigran = (vsiKrogi ?? []).find(
+    (r) => r.matches.length > 0 && r.matches.every((m) => !m.imported_at),
   )
-  await preveriBorzo('delno uvozen krog', delnoUvozen)
+  await preveriBorzo('neodigran krog', neodigran)
+
+  // Delno uvozen krog ima svoj preizkus v scripts/preizkus-borze.sql, ki si
+  // tako stanje SESTAVI. Tu bi ga bilo treba poiskati med uvozenimi podatki —
+  // preizkus, ki stanje samo isce, pa je zelen tudi takrat, ko ga slucajno ni.
 }
 
 // --- 12. dve ligi ostaneta ločeni ------------------------------------------

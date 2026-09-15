@@ -11,7 +11,7 @@ import { useAuth } from '../lib/useAuth'
 /** Sporocilo v klepetu — vrstica tabele `chat_messages`. */
 export interface Sporocilo {
   id: number
-  user_id: string
+  je_moje: boolean
   content: string
   alias: string
   created_at: string
@@ -66,9 +66,11 @@ export default function Klepet() {
   useEffect(() => {
     let preklican = false
     async function nalozi() {
+      // Beremo pogled, ne tabele: `user_id` ne zapusti baze, sicer bi se
+      // dalo psevdonim prek `fantasy_teams.owner_id` pripisati ekipi.
       const { data, error } = await supabase
-        .from('chat_messages')
-        .select('id, user_id, content, alias, created_at')
+        .from('klepet_sporocila')
+        .select('id, content, alias, created_at, je_moje')
         .order('created_at', { ascending: false })
         .limit(30)
       if (preklican) return
@@ -96,11 +98,11 @@ export default function Klepet() {
     const { data, error } = await supabase
       .from('chat_messages')
       .insert({ user_id: session.user.id, content: t, alias: mojPsev })
-      .select('id, user_id, content, alias, created_at')
+      .select('id, content, alias, created_at')
       .single()
     setPosiljam(false)
     if (error) return setNapaka(error.message)
-    if (data) setSporocila([...sporocila, data as Sporocilo])
+    if (data) setSporocila([...sporocila, { ...data, je_moje: true }])
     setBesedilo('')
   }
 
@@ -149,7 +151,7 @@ export default function Klepet() {
           </p>
         ) : (
           sporocila.map((s) => {
-            const mojeSporocilo = session?.user?.id === s.user_id
+            const mojeSporocilo = s.je_moje
             return (
               <div
                 key={s.id}
