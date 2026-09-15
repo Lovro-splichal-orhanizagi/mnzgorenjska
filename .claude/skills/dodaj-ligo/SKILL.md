@@ -613,6 +613,30 @@ samo tiste, ki jih prvi ni. Zato ima tok izolacijo po ligah, tako kot uvoz.
 Izjema je `--znova`, ki varovalo povozi. Uporabi jo le, kadar je prvi zagon
 naredil kaj narobe in morajo cene res iti še enkrat.
 
+## Kar je veljalo za eno ligo, pri sedemnajstih ne velja več
+
+Trikrat se je isto pokazalo: odločitev, ki je bila pri **eni** ligi pravilna,
+je pri sedemnajstih napačna, in koda tega ne pove — deluje naprej.
+
+**Opomniki.** `posli-opomnik` je iskal uporabnike brez ekipe v DANI ligi.
+Dokler je bila liga ena, je bilo to isto kot »brez ekipe«. Pri sedemnajstih
+skoraj nihče nima ekipe v petnajstih novih, zato bi zagon čez vse lige
+poskusil **5.830 sporočil**; isti človek bi jih dobil sedemnajst, ker varovalo
+proti podvajanju šteje na par (uporabnik, liga). Pravilna številka je 217 —
+po eno na osebo. **Izmeri, preden vklopiš karkoli, kar gre navzven.**
+
+**Privzeta liga.** Za človeka brez ekipe sem privzeto vzel ligo z najnižjim
+`sort_order`. To je 1. SNL, ker so državne lige na vrhu izbirnika — 195 ljudi,
+prijavljenih ob Gorenjski, bi dobilo vabilo v 1. SNL. Vrstni red v izbirniku
+je okrasek; kam človeka povabiti, je vsebina. Zdaj velja liga z največ
+ekipami, kar se popravlja samo.
+
+**Gostota.** Tudi produkt sam: pokritost je rešena, gostota ni. 170 od 198
+ekip je v Gorenjski, ostalih petnajst lig ima po nekaj. Zato državna lestvica
+in mini lige — obe delujeta pri vsaki gostoti.
+
+Pravilo: **ko se število lig spremeni, preglej vse, kar šteje »na ligo«.**
+
 ## Nadzor: alarm in poročilo nista isto
 
 `preveri-podatke.mjs` (dnevno) se oglasi **samo ob težavi**. To je prav za
