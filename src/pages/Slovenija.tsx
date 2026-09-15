@@ -132,7 +132,12 @@ export default function Slovenija() {
                 {v.mesto <= 3 ? MEDALJE[v.mesto - 1] : v.mesto}
               </span>
               <div className="min-w-0 flex-1">
-                <div className="truncate font-bold">{v.team_name}</div>
+                <Link
+                  to={`/ekipa/${v.fantasy_team_id}`}
+                  className="block truncate font-bold hover:text-gnl-400"
+                >
+                  {v.team_name}
+                </Link>
                 <div className="truncate text-xs text-slate-500">
                   {v.owner_name}
                   {v.competition_short ? ` · ${v.competition_short}` : ''}

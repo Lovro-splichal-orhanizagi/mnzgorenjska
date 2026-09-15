@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { formatirajTocke } from '../lib/pomozno'
 import { useTekmovanje } from '../lib/tekmovanje'
@@ -223,7 +224,12 @@ export default function Lestvica() {
                   <span className="w-5 text-center text-xs font-black text-slate-600">
                     {e.rank}
                   </span>
-                  <span className="min-w-0 flex-1 truncate">{e.team_name}</span>
+                  <Link
+                    to={`/ekipa/${e.fantasy_team_id}`}
+                    className="min-w-0 flex-1 truncate hover:text-gnl-400"
+                  >
+                    {e.team_name}
+                  </Link>
                   {Number(e.penalty ?? 0) > 0 && (
                     <span
                       className="text-xs text-rose-400"
@@ -357,7 +363,12 @@ export default function Lestvica() {
                   {MEDALJE[i] ?? i + 1}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate font-bold">{e.team_name}</div>
+                  <Link
+                    to={`/ekipa/${e.fantasy_team_id}`}
+                    className="block truncate font-bold hover:text-gnl-400"
+                  >
+                    {e.team_name}
+                  </Link>
                   <div className="text-xs text-slate-500">
                     {e.owner_name}
                     {(e.team_created_at ?? e.owner_registered_at) && (

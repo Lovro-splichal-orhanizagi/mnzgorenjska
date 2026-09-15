@@ -3835,6 +3835,15 @@ export type Database = {
         }[]
       }
       is_admin: { Args: never; Returns: boolean }
+      kandidati_za_opomnik: {
+        Args: { p_competition_id: number }
+        Returns: {
+          display_name: string
+          email: string
+          team_id: number
+          user_id: string
+        }[]
+      }
       krog_je_odigran: { Args: { p_round_id: number }; Returns: boolean }
       meje_borze: {
         Args: never
@@ -3937,6 +3946,20 @@ export type Database = {
           p_yellow: number
         }
         Returns: number
+      }
+      tuja_postava: {
+        Args: { p_round: number; p_team: number }
+        Returns: {
+          ime: string
+          je_kapetan: boolean
+          je_namestnik: boolean
+          je_zacetnik: boolean
+          klub: string
+          mnozitelj: number
+          player_id: number
+          pozicija: string
+          tocke: number
+        }[]
       }
       ucinkovita_postava: {
         Args: { p_round: number; p_team: number }

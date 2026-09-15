@@ -16,6 +16,9 @@ import MojaEkipa from '../src/pages/MojaEkipa'
 import Glasovanje from '../src/pages/Glasovanje'
 import Pozicije from '../src/pages/Pozicije'
 import Odsotnosti from '../src/pages/Odsotnosti'
+import Slovenija from '../src/pages/Slovenija'
+import MiniLige from '../src/pages/MiniLige'
+import Ekipa from '../src/pages/Ekipa'
 import Administracija from '../src/pages/Administracija'
 import {
   preveriEkipo,
@@ -58,6 +61,9 @@ const strani = [
   ['Pozicije', Pozicije, '/pozicije'],
   ['Igralci', Igralci, '/igralci'],
   ['Lestvica', Lestvica, '/lestvica'],
+  ['Slovenija', Slovenija, '/slovenija'],
+  ['Mini lige', MiniLige, '/mini-lige'],
+  ['Tuja ekipa', Ekipa, '/ekipa/1'],
   ['Rezultati', Rezultati, '/rezultati'],
   ['Tekma', Tekma, '/tekma/1'],
   ['Prijava', Prijava, '/prijava'],
