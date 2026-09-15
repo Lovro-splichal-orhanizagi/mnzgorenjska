@@ -1686,6 +1686,63 @@ preveri(
   preveri('viri: Maribor izpostavi enumeracijo zapisnikov', mb.izlusciIdjeZapisnikov(tekme).length === 132)
 }
 
+// --- drzavna lestvica -------------------------------------------------------
+// 15 od 17 lig ima po nekaj ekip. Manager v taki ligi nima s cim primerjati
+// rezultata, zato liga ostane mrtva, dokler se sama ne napolni. Drzavna
+// lestvica mu da nasprotnike takoj — a le, ce je razvrstitev postena.
+{
+  const { razvrsti, zMesti, povzetek, NAJMANJ_KROGOV_ZA_POVPRECJE } =
+    await import('../src/lib/drzavna.ts')
+
+  const v = (id, ime, tock, krogov, liga, zveza) => ({
+    fantasy_team_id: id, team_name: ime, owner_name: 'X',
+    total_points: tock, rounds_played: krogov,
+    points_per_round: krogov ? Math.round((tock / krogov) * 100) / 100 : 0,
+    competition_slug: liga, competition_short: liga, federation_short: zveza,
+  })
+
+  const vrstice = [
+    v(1, 'Dolga sezona', 240, 4, 'clani', 'Gorenjska'),   // 60 na krog
+    v(2, 'Ena nedelja', 104, 1, 'snl1', 'NZS'),           // 104 na krog, a en krog
+    v(3, 'Solidna', 180, 3, 'lj-1-liga', 'Ljubljana'),    // 60 na krog
+    v(4, 'Brez kroga', 0, 0, 'le-mnl', 'Lendava'),
+  ]
+
+  const skupno = razvrsti(vrstice, 'skupno')
+  preveri('drzavna: skupno razvrsti po tockah',
+    skupno.map((x) => x.fantasy_team_id).join(',') === '1,3,2,4',
+    skupno.map((x) => x.team_name).join(' > '))
+
+  // Brez praga bi bila na vrhu vedno ekipa z enim odigranim krogom: ena dobra
+  // nedelja da 104, cela sezona redko cez 60.
+  const povp = razvrsti(vrstice, 'povprecje')
+  preveri('drzavna: povprecje izloci ekipe pod pragom krogov',
+    !povp.some((x) => Number(x.rounds_played) < NAJMANJ_KROGOV_ZA_POVPRECJE),
+    povp.map((x) => `${x.team_name}(${x.rounds_played})`).join(', '))
+  preveri('drzavna: ekipa z enim krogom ne vodi lestvice po povprecju',
+    povp[0]?.fantasy_team_id !== 2, String(povp[0]?.team_name))
+
+  // Enak izid = enako mesto, kakor v sportu.
+  const zIstimi = [
+    v(1, 'A', 100, 2, 'x', 'X'), v(2, 'B', 100, 2, 'y', 'Y'), v(3, 'C', 90, 2, 'z', 'Z'),
+  ]
+  const mesta = zMesti(razvrsti(zIstimi, 'skupno'), 'skupno').map((x) => x.mesto)
+  preveri('drzavna: enak izid si deli mesto in naslednje preskoci',
+    mesta.join(',') === '1,1,3', mesta.join(','))
+
+  // Vrstni red mora biti stabilen tudi ob popolnoma enakih vrsticah.
+  const enake = [v(2, 'Beta', 50, 1, 'x', 'X'), v(1, 'Alfa', 50, 1, 'x', 'X')]
+  preveri('drzavna: ob enakem izidu odloci ime, da vrstni red ne skace',
+    razvrsti(enake, 'skupno')[0].team_name === 'Alfa',
+    razvrsti(enake, 'skupno').map((x) => x.team_name).join(','))
+
+  const p = povzetek(vrstice)
+  preveri('drzavna: povzetek presteje lige in zveze',
+    p.ekip === 4 && p.lig === 4 && p.zvez === 4, JSON.stringify(p))
+  preveri('drzavna: prazna lestvica ne pade',
+    razvrsti([], 'povprecje').length === 0 && povzetek([]).lig === 0)
+}
+
 // --- ISO teden za tedensko prevrednotenje ------------------------------------
 // Prevrednotenje NI idempotentno: vsak zagon priblizna ceno za najvec 1.0 in
 // z njo potuje sidro borze. Dvakrat v istem tednu pomeni premik za 2.0, zato

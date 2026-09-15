@@ -359,6 +359,13 @@ export type Database = {
             referencedRelation: "competitions_view"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "competition_settings_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["competition_id"]
+          },
         ]
       }
       competitions: {
@@ -500,6 +507,13 @@ export type Database = {
             referencedRelation: "competitions_view"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "email_log_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["competition_id"]
+          },
         ]
       }
       fantasy_chips: {
@@ -563,6 +577,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "fantasy_teams"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fantasy_chips_fantasy_team_id_fkey"
+            columns: ["fantasy_team_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["fantasy_team_id"]
           },
           {
             foreignKeyName: "fantasy_chips_round_id_fkey"
@@ -674,6 +695,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "fantasy_teams"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fantasy_lineups_fantasy_team_id_fkey"
+            columns: ["fantasy_team_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["fantasy_team_id"]
           },
           {
             foreignKeyName: "fantasy_lineups_player_id_fkey"
@@ -829,6 +857,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "fantasy_roster_fantasy_team_id_fkey"
+            columns: ["fantasy_team_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["fantasy_team_id"]
+          },
+          {
             foreignKeyName: "fantasy_roster_player_id_fkey"
             columns: ["player_id"]
             isOneToOne: false
@@ -919,6 +954,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "fantasy_teams_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["competition_id"]
+          },
+          {
             foreignKeyName: "fantasy_teams_owner_id_fkey"
             columns: ["owner_id"]
             isOneToOne: false
@@ -994,6 +1036,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "fantasy_teams"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fantasy_transfers_fantasy_team_id_fkey"
+            columns: ["fantasy_team_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["fantasy_team_id"]
           },
           {
             foreignKeyName: "fantasy_transfers_round_id_fkey"
@@ -1571,6 +1620,8 @@ export type Database = {
           position: string | null
           position_source: string
           reg_st: number | null
+          repriced_at: string | null
+          repriced_week: string | null
           shirt_number: number | null
           team_id: number
           value: number
@@ -1592,6 +1643,8 @@ export type Database = {
           position?: string | null
           position_source?: string
           reg_st?: number | null
+          repriced_at?: string | null
+          repriced_week?: string | null
           shirt_number?: number | null
           team_id: number
           value?: number
@@ -1613,6 +1666,8 @@ export type Database = {
           position?: string | null
           position_source?: string
           reg_st?: number | null
+          repriced_at?: string | null
+          repriced_week?: string | null
           shirt_number?: number | null
           team_id?: number
           value?: number
@@ -1633,6 +1688,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "competitions_view"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "players_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["competition_id"]
           },
           {
             foreignKeyName: "players_team_id_fkey"
@@ -2045,6 +2107,13 @@ export type Database = {
             referencedRelation: "competitions_view"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "rounds_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["competition_id"]
+          },
         ]
       }
       settings: {
@@ -2285,6 +2354,13 @@ export type Database = {
             referencedRelation: "competitions_view"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "players_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["competition_id"]
+          },
         ]
       }
       competitions_view: {
@@ -2355,6 +2431,13 @@ export type Database = {
             referencedRelation: "competitions_view"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fantasy_teams_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["competition_id"]
+          },
         ]
       }
       fantasy_round_standings: {
@@ -2386,6 +2469,13 @@ export type Database = {
             referencedRelation: "competitions_view"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fantasy_teams_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["competition_id"]
+          },
         ]
       }
       fantasy_team_budget: {
@@ -2411,6 +2501,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "competitions_view"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fantasy_teams_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["competition_id"]
           },
         ]
       }
@@ -2441,6 +2538,13 @@ export type Database = {
             referencedRelation: "competitions_view"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fantasy_teams_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["competition_id"]
+          },
         ]
       }
       fantasy_team_wealth: {
@@ -2467,6 +2571,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "competitions_view"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fantasy_teams_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["competition_id"]
           },
         ]
       }
@@ -2539,7 +2650,32 @@ export type Database = {
             referencedRelation: "competitions_view"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "rounds_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["competition_id"]
+          },
         ]
+      }
+      lestvica_drzavna: {
+        Row: {
+          best_round: number | null
+          competition_id: number | null
+          competition_name: string | null
+          competition_short: string | null
+          competition_slug: string | null
+          fantasy_team_id: number | null
+          federation_name: string | null
+          federation_short: string | null
+          owner_name: string | null
+          points_per_round: number | null
+          rounds_played: number | null
+          team_name: string | null
+          total_points: number | null
+        }
+        Relationships: []
       }
       match_assist_status: {
         Row: {
@@ -2668,6 +2804,13 @@ export type Database = {
             referencedRelation: "competitions_view"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "rounds_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["competition_id"]
+          },
         ]
       }
       minute_kroga: {
@@ -2780,6 +2923,13 @@ export type Database = {
             referencedRelation: "competitions_view"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "rounds_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["competition_id"]
+          },
         ]
       }
       player_overview: {
@@ -2820,6 +2970,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "competitions_view"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "players_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["competition_id"]
           },
           {
             foreignKeyName: "players_team_id_fkey"
@@ -2931,6 +3088,13 @@ export type Database = {
             referencedRelation: "competitions_view"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "players_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["competition_id"]
+          },
         ]
       }
       player_season_standings: {
@@ -2973,6 +3137,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "competitions_view"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "players_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["competition_id"]
           },
           {
             foreignKeyName: "players_team_id_fkey"
@@ -3102,6 +3273,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "competitions_view"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "players_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["competition_id"]
           },
           {
             foreignKeyName: "players_team_id_fkey"
@@ -3322,6 +3500,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "players_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["competition_id"]
+          },
+          {
             foreignKeyName: "players_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
@@ -3392,6 +3577,13 @@ export type Database = {
             referencedRelation: "competitions_view"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "rounds_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["competition_id"]
+          },
         ]
       }
       voter_position_accuracy: {
@@ -3432,6 +3624,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "competitions_view"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rounds_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["competition_id"]
           },
         ]
       }
