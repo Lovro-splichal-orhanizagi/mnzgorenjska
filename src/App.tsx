@@ -12,6 +12,7 @@ import Igralci from './pages/Igralci'
 import Igralec from './pages/Igralec'
 import Lestvica from './pages/Lestvica'
 import Slovenija from './pages/Slovenija'
+import MiniLige from './pages/MiniLige'
 import Rezultati from './pages/Rezultati'
 import Tekma from './pages/Tekma'
 import Prijava from './pages/Prijava'
@@ -44,6 +45,7 @@ export default function App() {
               <Route path="/igralec/:id" element={<Igralec />} />
               <Route path="/lestvica" element={<Lestvica />} />
               <Route path="/slovenija" element={<Slovenija />} />
+              <Route path="/mini-lige" element={<MiniLige />} />
               <Route path="/rezultati" element={<Rezultati />} />
               <Route path="/tekma/:id" element={<Tekma />} />
               <Route path="/prijava" element={<Prijava />} />

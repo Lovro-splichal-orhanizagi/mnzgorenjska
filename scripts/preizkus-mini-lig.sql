@@ -42,15 +42,17 @@ begin
 
   -- --- 1. A ustvari mini ligo ---------------------------------------------
   perform set_config('request.jwt.claims', json_build_object('sub', a, 'role', 'authenticated')::text, true);
-  select m.id, m.code into liga, koda from ustvari_mini_ligo('Bratje') m;
+  select m.id, m.code into liga, koda from ustvari_mini_ligo('Bratje', ekipa_a) m;
   if liga is null then raise exception 'NAPAKA: mini liga ni nastala'; end if;
   raise notice 'OK 1: A ustvaril mini ligo % s kodo %', liga, koda;
 
-  -- --- 2. A pridruzi SVOJO ekipo ------------------------------------------
-  perform pridruzi_mini_ligi(koda, ekipa_a);
+  -- --- 2. Ustvarjalec je ZE clan -------------------------------------------
+  -- Prva razlicica je ligo le ustvarila; clovek je dobil kodo in prazno
+  -- lestvico, v svojo ligo pa bi se moral pridruziti s svojo kodo. Videti je
+  -- bilo kot okvara. Pokazalo se je sele ob uporabi strani.
   select count(*) into n from mini_liga_clani where mini_liga_id = liga;
-  if n <> 1 then raise exception 'NAPAKA: po pridruzitvi A je clanov %, pricakovano 1', n; end if;
-  raise notice 'OK 2: A pridruzil svojo ekipo';
+  if n <> 1 then raise exception 'NAPAKA: ustvarjalec ni clan svoje lige (clanov %)', n; end if;
+  raise notice 'OK 2: ustvarjalec je takoj clan';
 
   -- --- 3. A NE sme pridruziti tuje ekipe -----------------------------------
   begin
@@ -68,6 +70,14 @@ begin
   select count(*) into n from mini_liga_clani where mini_liga_id = liga;
   if n <> 2 then raise exception 'NAPAKA: po pridruzitvi B je clanov %, pricakovano 2', n; end if;
   raise notice 'OK 4: B se pridruzil s kodo';
+
+  -- Pridruzitev mora POVEDATI, ali se je kaj zgodilo: sicer vmesnik izpise
+  -- potrditev tudi, kadar je bila ekipa clan ze prej, lestvica pa se ne
+  -- spremeni — in to je videti kot okvara.
+  if not (select p.dodano from pridruzi_mini_ligi(koda, ekipa_b) p) is false then
+    raise exception 'NAPAKA: ponovna pridruzitev trdi, da je kaj dodala';
+  end if;
+  raise notice 'OK 4b: ponovna pridruzitev pove, da ni dodala nicesar';
 
   -- --- 5. Napacna koda ne sme uspeti ---------------------------------------
   begin

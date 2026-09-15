@@ -3890,7 +3890,10 @@ export type Database = {
       }
       pridruzi_mini_ligi: {
         Args: { p_ekipa: number; p_koda: string }
-        Returns: number
+        Returns: {
+          dodano: boolean
+          mini_liga_id: number
+        }[]
       }
       pripisi_obranjene_enajstmetrovke: {
         Args: { p_round_id: number }
@@ -3933,7 +3936,7 @@ export type Database = {
         }[]
       }
       ustvari_mini_ligo: {
-        Args: { p_ime: string }
+        Args: { p_ekipa?: number; p_ime: string }
         Returns: {
           code: string
           id: number

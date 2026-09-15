@@ -1686,6 +1686,60 @@ preveri(
   preveri('viri: Maribor izpostavi enumeracijo zapisnikov', mb.izlusciIdjeZapisnikov(tekme).length === 132)
 }
 
+// --- mini lige --------------------------------------------------------------
+// Koda potuje po SMS, na glas ali na listku in pride nazaj z malimi crkami,
+// presledki ali vezaji. Vse to je ISTA koda; zavrniti jo zaradi oblike pomeni
+// izgubiti cloveka na zadnjem koraku pred pridruzitvijo.
+{
+  const { ocistiKodo, kodaJeVeljavna, zakajNiVeljavna, razvrstiMini, vecLig,
+          besediloVabila, ZNAKI_KODE, DOLZINA_KODE } =
+    await import('../src/lib/miniLige.ts')
+
+  for (const vnos of ['4ar7vz', '4AR7VZ', ' 4AR7VZ ', '4AR-7VZ', '4ar 7vz']) {
+    preveri(`mini: "${vnos}" je koda 4AR7VZ`, ocistiKodo(vnos) === '4AR7VZ', ocistiKodo(vnos))
+  }
+  preveri('mini: prava koda je veljavna', kodaJeVeljavna(' 4ar7-vz '))
+  preveri('mini: prekratka koda ni veljavna', !kodaJeVeljavna('4AR7V'))
+
+  // Nabor brez dvoumnih znakov je obljuba: ce se v kodi znajde 0 ali I, je
+  // to skoraj gotovo napaka pri prepisu, in to je treba POVEDATI.
+  preveri('mini: nabor nima dvoumnih znakov',
+    !/[01OIL]/.test(ZNAKI_KODE) && ZNAKI_KODE.length === 31, ZNAKI_KODE)
+  preveri('mini: koda z niclo ni veljavna', !kodaJeVeljavna('4AR7V0'))
+  preveri('mini: razlog omeni zamenjavo 0 in O',
+    /0 in O/.test(zakajNiVeljavna('4AR7V0') ?? ''), zakajNiVeljavna('4AR7V0'))
+  preveri('mini: prekratki kodi pove, koliko znakov manjka',
+    /6 znakov/.test(zakajNiVeljavna('4AR') ?? ''), zakajNiVeljavna('4AR'))
+  preveri('mini: prazen vnos ima svoj razlog',
+    zakajNiVeljavna('') === 'Vpiši kodo mini lige.', zakajNiVeljavna(''))
+  preveri('mini: veljavna koda nima razloga', zakajNiVeljavna('4AR7VZ') === null)
+  preveri('mini: dolzina kode je 6', DOLZINA_KODE === 6)
+
+  // Lestvica: enak izid = enako mesto.
+  const v = (ime, tock, krogov, liga) => ({
+    fantasy_team_id: ime.length, team_name: ime, owner_name: 'X',
+    total_points: tock, rounds_played: krogov,
+    points_per_round: krogov ? tock / krogov : 0,
+    competition_short: liga, federation_short: 'Z',
+  })
+  const l = razvrstiMini([v('Ana', 100, 2, 'Člani'), v('Bor', 120, 2, 'Člani'), v('Cene', 100, 2, 'Člani')])
+  preveri('mini: lestvica po tockah navzdol',
+    l.map((x) => x.team_name).join(',') === 'Bor,Ana,Cene', l.map((x) => x.team_name).join(','))
+  preveri('mini: enak izid si deli mesto',
+    l.map((x) => x.mesto).join(',') === '1,2,2', l.map((x) => x.mesto).join(','))
+
+  // Stolpec z ligo ima smisel le, kadar so ekipe iz razlicnih lig.
+  preveri('mini: ena liga -> stolpca ne potrebujemo',
+    !vecLig([v('A', 1, 1, 'Člani'), v('B', 1, 1, 'Člani')]))
+  preveri('mini: vec lig -> stolpec je potreben',
+    vecLig([v('A', 1, 1, 'Člani'), v('B', 1, 1, '1. SNL')]))
+
+  const vabilo = besediloVabila('Bratje', '4AR7VZ', 'https://slff.eu')
+  preveri('mini: vabilo vsebuje ime, kodo in naslov',
+    vabilo.includes('Bratje') && vabilo.includes('4AR7VZ') && vabilo.includes('https://slff.eu'),
+    JSON.stringify(vabilo))
+}
+
 // --- drzavna lestvica -------------------------------------------------------
 // 15 od 17 lig ima po nekaj ekip. Manager v taki ligi nima s cim primerjati
 // rezultata, zato liga ostane mrtva, dokler se sama ne napolni. Drzavna

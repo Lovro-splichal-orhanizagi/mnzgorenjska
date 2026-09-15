@@ -21,6 +21,7 @@ const povezave: Povezava[] = [
   { pot: '/rezultati', naslov: 'Rezultati' },
   { pot: '/lestvica', naslov: 'Lestvica' },
   { pot: '/slovenija', naslov: 'Slovenija' },
+  { pot: '/mini-lige', naslov: 'Mini lige' },
 ]
 
 // Vabilo sestavimo iz izbrane lige in njenih klubov (glej `lib/vabilo.ts`).
