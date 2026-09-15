@@ -1,0 +1,48 @@
+name: Opomniki brez ekipe
+
+# `posli-opomnik` obstaja in dela — 195 poslanih — a ga sprozi GUMB v
+# administraciji. Zato je zadnji opomnik odsel 3. septembra in nato nic: ne
+# zato, ker bi bil pokvarjen, ampak ker ga ni nihce pritisnil. Uporabniki brez
+# ekipe so najvecje puscanje, v novih ligah pa so to skoraj vsi.
+#
+# URNIK JE NAMENOMA IZKLOPLJEN.
+#
+# Ta tok posilja posto ZIVIM uporabnikom (353 racunov). Vklop takega posiljanja
+# ni odlocitev razvijalca, zato je tu samo `workflow_dispatch`. Preden se urnik
+# vklopi, ga pozeni ROCNO s `suho: true` in poglej stevilke — funkcija takrat
+# samo presteje, komu bi pisala, in ne poslje nicesar.
+#
+# Funkcija sama ze varuje pred podvajanjem: istemu cloveku ne poslje dvakrat v
+# treh dneh (`nedavni_opomnik`).
+on:
+  # schedule:
+  #   - cron: '0 8 * * 3'   # sreda zjutraj, dan pred vikend krogom
+  workflow_dispatch:
+    inputs:
+      suho:
+        description: 'Samo presteje, ne posilja'
+        required: false
+        default: true
+        type: boolean
+
+concurrency:
+  group: opomniki
+  cancel-in-progress: false
+
+jobs:
+  opomniki:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      SUHO: ${{ inputs.suho }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Posli opomnike po ligah
+        run: node scripts/posli-opomnike.mjs

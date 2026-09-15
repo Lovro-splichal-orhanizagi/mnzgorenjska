@@ -59,16 +59,23 @@ Deno.serve(async (req) => {
   const RESEND_KEY = Deno.env.get('RESEND_API_KEY')
   const EMAIL_FROM = Deno.env.get('EMAIL_FROM') ?? 'SLFF <noreply@slff.eu>'
 
-  if (!RESEND_KEY)
-    return json({ error: 'Pomanjkljiva nastavitev: RESEND_API_KEY.' }, 500)
-
-  // 1) Preveri, ali kliče admin (skozi anon klienta z uporabnikovim tokenom).
+  // 1) Kdo kliče?
+  //
+  // Dve poti: človek (admin iz vmesnika) in stroj (urnik s service ključem).
+  // Gumb v administraciji je delal, a ga je bilo treba pritisniti — zato je
+  // zadnji opomnik odšel 3. septembra in nato nič. Urnik tega ne pozabi.
+  //
+  // Service ključ ima tako ali tako vse pravice, zato njegovo sprejemanje
+  // ničesar ne odpira; primerjamo ga natanko, ne po predponi.
+  const jeStroj = auth === `Bearer ${SERVICE_KEY}`
   const uporabnikov = createClient(SUPABASE_URL, ANON_KEY, {
     global: { headers: { Authorization: auth } },
   })
-  const { data: adminOk, error: adminErr } = await uporabnikov.rpc('is_admin')
-  if (adminErr) return json({ error: adminErr.message }, 500)
-  if (!adminOk) return json({ error: 'Samo administrator.' }, 403)
+  if (!jeStroj) {
+    const { data: adminOk, error: adminErr } = await uporabnikov.rpc('is_admin')
+    if (adminErr) return json({ error: adminErr.message }, 500)
+    if (!adminOk) return json({ error: 'Samo administrator.' }, 403)
+  }
 
   // 2) Parsiraj vhod.
   let vhod: Zahteva
@@ -80,6 +87,13 @@ Deno.serve(async (req) => {
   const { competition_id, test_email, suho } = vhod
   if (!competition_id)
     return json({ error: 'Manjka competition_id.' }, 400)
+
+  // Ključ za pošto zahtevamo šele, kadar bomo res pošiljali. Suhi tek obstaja
+  // prav zato, da se pred vklopom urnika preverijo številke — če bi padel na
+  // manjkajočem ključu, bi bila varovalka neuporabna ravno takrat, ko je
+  // najbolj potrebna.
+  if (!RESEND_KEY && !suho)
+    return json({ error: 'Pomanjkljiva nastavitev: RESEND_API_KEY.' }, 500)
 
   // Service role rabimo za pisanje v email_log in za branje nastavitev; za
   // seznam uporabnikov pa NE. `admin_uporabniki` je SECURITY DEFINER z
@@ -100,6 +114,8 @@ Deno.serve(async (req) => {
   // Test režim gre PRED branjem uporabnikov: testni gumb obstaja zato, da
   // preveri samo dostavo pošte, in ne sme pasti zaradi česa drugega.
   if (test_email) {
+    if (!RESEND_KEY)
+      return json({ error: 'Pomanjkljiva nastavitev: RESEND_API_KEY.' }, 500)
     const rez = await posljiEnega(RESEND_KEY, EMAIL_FROM, test_email, oznaka, {
       display_name: 'Test',
       brez_ekipe: false,
@@ -116,15 +132,26 @@ Deno.serve(async (req) => {
     return json({ test: true, resend: rez })
   }
 
-  const { data: vsi, error: rpcErr } = await uporabnikov.rpc(
-    'admin_uporabniki',
-    { p_competition_id: competition_id },
-  )
-  if (rpcErr) return json({ error: rpcErr.message }, 500)
-
-  const kandidati: Uporabnik[] = (vsi ?? []).filter(
-    (u: Uporabnik) => !u.ekipa_veljavna && u.email,
-  )
+  // Seznam: človek ga bere s svojim tokenom (`admin_uporabniki` zahteva
+  // `is_admin()`, ta pa `auth.uid()`), stroj pa prek ločene funkcije — pri
+  // service ključu uporabnika ni in prva pot vedno pade.
+  let kandidati: Uporabnik[]
+  if (jeStroj) {
+    const { data, error } = await service.rpc('kandidati_za_opomnik', {
+      p_competition_id: competition_id,
+    })
+    if (error) return json({ error: error.message }, 500)
+    kandidati = (data ?? []).map((u: {
+      user_id: string; email: string; display_name: string | null; team_id: number | null
+    }) => ({ ...u, ekipa_veljavna: false }))
+  } else {
+    const { data: vsi, error: rpcErr } = await uporabnikov.rpc(
+      'admin_uporabniki',
+      { p_competition_id: competition_id },
+    )
+    if (rpcErr) return json({ error: rpcErr.message }, 500)
+    kandidati = (vsi ?? []).filter((u: Uporabnik) => !u.ekipa_veljavna && u.email)
+  }
 
   if (suho)
     return json({ suho: true, kandidati_stevilo: kandidati.length })
