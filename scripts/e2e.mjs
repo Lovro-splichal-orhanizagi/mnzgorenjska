@@ -632,7 +632,9 @@ ok('lestvica pokaže lastnika', moja?.owner_name === 'Tester 1', moja?.owner_nam
       poGlasu ? '' : 'kader je postal neveljaven',
     )
 
-    const { data: mesto } = await anon
+    // Kader bereva s servisnim klientom: odkar tekoci kader ni vec javen,
+    // ga anonimni ne vidi — tu naju zanima stanje v bazi, ne pravica.
+    const { data: mesto } = await admin
       .from('fantasy_roster')
       .select('buy_position')
       .eq('fantasy_team_id', ekipa.id)
@@ -749,7 +751,13 @@ ok('lestvica pokaže lastnika', moja?.owner_name === 'Tester 1', moja?.owner_nam
 // cene čez noč poskočile za formo, ki je v izhodiščni ceni že upoštevana.
 {
   const preveriBorzo = async (opis, krog) => {
-    if (!krog) return
+    // Brez tega je manjkajoc krog videti kot uspeh: trditev tiho izgine in
+    // test ostane zelen, ceprav ni nicesar preveril. Prav tako se je borzna
+    // napaka skrivala — ob ponovnem zagonu je bila cena ze premaknjena.
+    if (!krog) {
+      ok(`borza: obstaja krog za preizkus (${opis})`, false, 'takega kroga ni')
+      return
+    }
     const { data, error } = await admin.rpc('preracunaj_cene', {
       p_round_id: krog.id,
     })
@@ -791,6 +799,23 @@ ok('lestvica pokaže lastnika', moja?.owner_name === 'Tester 1', moja?.owner_nam
     .limit(1)
     .maybeSingle()
   await preveriBorzo('neodigran krog', neodigran)
+
+  // Delno uvozen krog ni odigran. Zapisniki amaterske lige pridejo vsak ob
+  // svojem casu; dokler manjka ena tekma, bi borza njene igralce ovrednotila,
+  // kot da niso igrali, popravka pa pozneje ne bi bilo.
+  const { data: delni } = await anon
+    .from('rounds')
+    .select('id, number, matches(imported_at)')
+    .eq('competition_id', 1)
+    .eq('season', zadnja)
+    .order('number')
+  const delnoUvozen = (delni ?? []).find(
+    (r) =>
+      r.matches.length > 1 &&
+      r.matches.some((m) => m.imported_at) &&
+      r.matches.some((m) => !m.imported_at),
+  )
+  await preveriBorzo('delno uvozen krog', delnoUvozen)
 }
 
 // --- 12. dve ligi ostaneta ločeni ------------------------------------------
@@ -847,11 +872,19 @@ let ekipaM = null
   })
   ok('mladinec ne more v člansko ekipo', Boolean(eTujec), eTujec?.message)
 
-  const { count: seVednoNabor } = await anon
+  const { count: seVednoNabor } = await admin
     .from('fantasy_roster')
     .select('player_id', { count: 'exact', head: true })
     .eq('fantasy_team_id', ekipa.id)
   ok('zavrnjeno shranjevanje pusti kader pri miru', seVednoNabor === 15)
+
+  // Tekoci kader tuje ekipe ni javen. Do migracije 20260916090000 ga je z
+  // anonimnim kljucem lahko prebral kdorkoli, ceprav ga vmesnik ni kazal.
+  const { count: tujKader } = await anon
+    .from('fantasy_roster')
+    .select('player_id', { count: 'exact', head: true })
+    .eq('fantasy_team_id', ekipa.id)
+  ok('tekoci kader tuje ekipe ni javen', !tujKader, `${tujKader} vrstic`)
 }
 
 } catch (error) {
