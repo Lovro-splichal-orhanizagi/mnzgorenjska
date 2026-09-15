@@ -657,6 +657,83 @@ pritožbi igralca. Sestavi jih `/tmp`-skripta iz seje, pravila pa so v
 `src/lib/pravila.ts` — baza jih NE preverja, preverja jih vmesnik, zato jih
 mora vsak zapis mimo vmesnika preveriti sam.
 
+## Krog ni odigran, dokler ni uvožena zadnja tekma
+
+`krog_je_odigran` je dolgo pomenilo "vsaj ena tekma uvožena". V amaterski
+ligi to ni isto kot "krog je končan": zapisniki pridejo vsak ob svojem času,
+nekateri v nedeljo, drugi v sredo. Nočna borza (`uveljavi_zapadle_cene`,
+pg_cron ob 3:30) je tak krog imela za končan in ovrednotila **tudi igralce,
+katerih tekme še ni bilo v bazi** — v obdobju forme so šteli nič točk in
+padli v ceni. Popravka ni bilo, ker `preracunaj_cene` izpusti igralca, ki za
+ta krog že ima vrstico v `price_changes`. Padec je torej trajen.
+
+Zato: **krog je odigran, ko so uvozene vse njegove tekme.** Če katera ne
+pride nikoli (prestavljena, razveljavljena), krog ostane neodigran in ga
+borza po štirinajstih dneh preskoči — raje brez obračuna kot narobe.
+
+Ob novem viru to pomeni, da mora `uvoz-razporeda` vpisati **vse** tekme
+kroga, tudi tiste brez zapisnika. Če jih vpiše le toliko, kolikor jih je
+objavljenih, je krog videti končan, čim je objavljena zadnja od njih.
+
+### Zeleni test, ki ni ničesar preveril
+
+Napako je bilo mogoče videti samo ob PRVEM zagonu na svežem okolju. Ob
+ponovnem je bil test zelen, ker je bila škoda že narejena in drugi zagon ni
+premaknil ničesar. Poleg tega se je pomožna funkcija ob manjkajočem krogu
+tiho vrnila — trditev je izginila, izpis pa je bil videti popoln.
+
+Dvoje za naprej:
+
+- **Test, ki ob manjkajočem vzorcu ne pade, ni test.** Če fixture ni, naj to
+  pade, ne izpusti.
+- **Preizkus, ki spreminja stanje, poženi na sveže postavljenem okolju.**
+  `npm test` je idempotenten po namenu; kar se pokaže samo prvič, se skriva
+  prav za to idempotentnostjo.
+
+## Kar vmesnik skriva, API vseeno vrne
+
+`fantasy_roster` je imel politiko `javno branje using (true)`. Vmesnik tujih
+ekip ni kazal, zato je veljalo, da so skrite — a jih je z anonimnim ključem
+prebral vsak, ki je znal poklicati PostgREST. Skrivnost je bila navidezna in
+krivična: videl jo je tisti, ki zna, ne pa tisti, ki vpraša.
+
+Ob vsaki tabeli, za katero misliš, da je zasebna, preveri z anonimnim
+ključem, ne z vmesnikom:
+
+```bash
+curl -s "$URL/rest/v1/<tabela>?select=*&limit=3" -H "apikey: $ANON"
+```
+
+Pogledi nad tako tabelo tečejo s pravicami **lastnika pogleda**
+(`security_invoker=false`), zato zaostritev RLS ne pokvari izračunov, kot je
+izbranost igralca. Preveri, preden zaostriš:
+
+```sql
+select c.relname, coalesce((select option_value from pg_options_to_table(c.reloptions)
+        where option_name='security_invoker'),'false') as invoker
+  from pg_class c join pg_rewrite r on r.ev_class=c.oid
+  join pg_depend d on d.objid=r.oid join pg_class t on t.oid=d.refobjid
+ where t.relname='<tabela>' and c.relkind='v' group by 1,2;
+```
+
+## Dve nasprotujoči si prošnji imata pogosto skupen rok
+
+V klepetu je en manager prosil, naj se vidijo tuje ekipe, drug pa odgovoril,
+da igra tako izgubi smisel. Nobeden ni imel krive: pred rokom je vpogled
+prepisovanje, po roku je postava zamrznjena in je edino, kar se da z njo
+početi, primerjati se. Rešitev ni bila nastavitev zasebnosti, ampak **rok**
+— `fantasy_lineups` postavo tako ali tako posname ob zaklepu.
+
+Preden dodaš nastavitev, poglej, ali obstaja trenutek, ob katerem prošnji
+nehata nasprotovati.
+
+## Prošnja za nekaj, kar že obstaja, je prošnja za vidnost
+
+Dve od treh prošenj v klepetu sta bili za stvari, ki jih aplikacija že ima
+(stran Odsotnosti, glasovanje o pozicijah). To ni prošnja za funkcijo, ampak
+podatek, da je v meniju ne najdejo. Preden kaj zgradiš, preveri, ali stran že
+obstaja — in če obstaja, je delo drugje.
+
 ## Ob koncu
 
 `npm run smoke`, `npm test`, `npm run typecheck`, `npm run build` — vsi zeleni,
