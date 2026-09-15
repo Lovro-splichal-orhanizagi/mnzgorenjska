@@ -3065,6 +3065,16 @@ export type Database = {
           },
         ]
       }
+      moj_prispevek: {
+        Row: {
+          glasov_asistenc: number | null
+          glasov_pozicij: number | null
+          obveljalo_asistenc: number | null
+          obveljalo_pozicij: number | null
+          voter_id: string | null
+        }
+        Relationships: []
+      }
       naslednji_krog: {
         Row: {
           competition_id: number | null

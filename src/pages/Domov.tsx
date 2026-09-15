@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import Prispevek from '../components/Prispevek'
 import { imeZveze } from '../components/VirPodatkov'
 import { sestaviVabilo, vabiloMailto } from '../lib/vabilo'
 import { Link } from 'react-router-dom'
@@ -951,6 +952,9 @@ export default function Domov() {
           </div>
         </section>
       )}
+
+      {/* Prispevek glasovalca: pokaže se le, kdor je kdaj glasoval. */}
+      <Prispevek />
 
       {/* številke — iz zgodovine (vključno z lansko sezono, ne trenutne) */}
       {stat && (
