@@ -25,6 +25,7 @@ export default function Slovenija() {
   const [kako, setKako] = useState<Razvrstitev>('skupno')
   const [nalaganje, setNalaganje] = useState(true)
   const [napaka, setNapaka] = useState<string | null>(null)
+  const [seNiPripravljena, setSeNiPripravljena] = useState(false)
 
   useEffect(() => {
     let veljavno = true
@@ -40,8 +41,17 @@ export default function Slovenija() {
         .order('total_points', { ascending: false })
         .limit(500)
       if (!veljavno) return
-      if (error) setNapaka(error.message)
-      else setVrstice((data as DrzavnaVrstica[]) ?? [])
+      // Koda in migracije potujeta vsaka po svoji poti: koda gre prek CI na
+      // Vercel, migracijo pa je treba pognati proti Supabase. Ce se vrstni red
+      // obrne — ali ce je Supabase ravno na vzdrzevanju, kakor je bil ob
+      // objavi te strani — pogleda se ni in PostgREST vrne 42P01. Takrat naj
+      // stran pove, da lestvice se ni, ne pa izpise napake baze.
+      if (error) {
+        const seNiPripravljena =
+          error.code === '42P01' || /lestvica_drzavna/.test(error.message)
+        setNapaka(seNiPripravljena ? null : error.message)
+        setSeNiPripravljena(seNiPripravljena)
+      } else setVrstice((data as DrzavnaVrstica[]) ?? [])
       setNalaganje(false)
     })()
     return () => {
@@ -54,6 +64,15 @@ export default function Slovenija() {
 
   if (nalaganje) return <p className="animiraj-utrip text-slate-400">Nalaganje …</p>
   if (napaka) return <p className="text-rose-400">Napaka: {napaka}</p>
+  if (seNiPripravljena)
+    return (
+      <div className="space-y-4">
+        <h1 className="text-2xl font-black naslov sm:text-3xl">Slovenija</h1>
+        <p className="kartica p-6 text-center text-slate-400">
+          Državna lestvica se pripravlja. Poskusi čez nekaj minut.
+        </p>
+      </div>
+    )
 
   return (
     <div className="space-y-5">
