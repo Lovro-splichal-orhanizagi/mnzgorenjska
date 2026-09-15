@@ -11,7 +11,9 @@ import { useAuth } from '../lib/useAuth'
 /** Sporocilo v klepetu — vrstica tabele `chat_messages`. */
 export interface Sporocilo {
   id: number
-  je_moje: boolean
+  // Za neprijavljenega je `null`: `auth.uid()` je prazen in primerjava
+  // ne da ne true ne false. Oboje pomeni "ni moje".
+  je_moje: boolean | null
   content: string
   alias: string
   created_at: string
