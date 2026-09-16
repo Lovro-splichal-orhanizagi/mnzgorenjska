@@ -21,7 +21,8 @@
     "preizkus-borze": "docker exec -i supabase_db_mnzgorenjska psql -U postgres -d postgres -v ON_ERROR_STOP=1 < scripts/preizkus-borze.sql",
     "preizkusi": "npm run preizkus-pravic && npm run preizkus-borze && npm run preizkus-opozoril && npm run preizkus-zivosti",
     "preizkus-opozoril": "docker exec -i supabase_db_mnzgorenjska psql -U postgres -d postgres -v ON_ERROR_STOP=1 < scripts/preizkus-opozoril.sql",
-    "preizkus-zivosti": "docker exec -i supabase_db_mnzgorenjska psql -U postgres -d postgres -v ON_ERROR_STOP=1 < scripts/preizkus-zivosti.sql"
+    "preizkus-zivosti": "docker exec -i supabase_db_mnzgorenjska psql -U postgres -d postgres -v ON_ERROR_STOP=1 < scripts/preizkus-zivosti.sql",
+    "preveri-predlog": "vite-node scripts/preveri-predlog.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",

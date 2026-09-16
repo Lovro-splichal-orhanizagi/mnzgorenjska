@@ -31,6 +31,8 @@ import {
   PRORACUN,
   POZICIJE,
   KAPETAN_MNOZITELJ,
+  MAX_IZ_KLUBA,
+  STEVILO_PRVIH,
 } from '../src/lib/pravila'
 import { tockeZaNastop } from '../src/lib/tockovanje'
 import { sestejOdKroga } from '../src/lib/lestvica'
@@ -46,6 +48,7 @@ import { vseVrstice } from './strani.mjs'
 import { premakniProti, NAJVECJI_TEDENSKI_PREMIK } from './premik-cene.mjs'
 import { oceniPripravljenost, najcenejsiKader } from '../src/lib/pripravljenost'
 import { serijaCen, premik, crta, zadnjiPremiki } from '../src/lib/gibanjeCene'
+import { predlagajKader } from '../src/lib/predlogKadra'
 import { readFileSync } from 'node:fs'
 
 let napak = 0
@@ -2349,6 +2352,81 @@ preveri(
     zadnji[0].krog === 5 && zadnji[0].iz === 4.7 && zadnji[0].v === 4.6,
     JSON.stringify(zadnji[0]),
   )
+}
+
+// --- predlog kadra ---------------------------------------------------------
+// Ekipa v enem kliku mora biti veljavna PO KONSTRUKCIJI: novinec, ki jo dobi,
+// ne sme pristati v stanju, zaradi katerega je 27 ekip ostalo brez tock.
+{
+  // Liga s stirimi klubi in dovolj igralci na vsaki poziciji.
+  const liga = []
+  let id = 1
+  for (let klub = 1; klub <= 8; klub++) {
+    for (const [poz, koliko] of [['GK', 3], ['DEF', 6], ['MID', 6], ['FWD', 4]]) {
+      for (let n = 0; n < koliko; n++) {
+        liga.push({
+          id: id++,
+          position: poz,
+          team_id: klub,
+          // Cene od 4.0 do 9.5, da je izbira med drazjimi in cenejsimi prava.
+          value: 4 + ((klub + n) % 12) * 0.5,
+          points: (klub * 3 + n * 7) % 40,
+        })
+      }
+    }
+  }
+
+  const kader = predlagajKader(liga, PRORACUN)
+  preveri('predlog: kader nastane', Array.isArray(kader) && kader.length === VELIKOST_EKIPE,
+    kader ? String(kader.length) : 'null')
+
+  const poPoz = {}
+  for (const k of kader) poPoz[k.position] = (poPoz[k.position] ?? 0) + 1
+  preveri('predlog: razmerje pozicij je 2-5-5-3',
+    Object.entries(POZICIJE).every(([p, pr]) => poPoz[p] === pr.kader),
+    JSON.stringify(poPoz))
+
+  const cena = kader.reduce((v, k) => v + k.value, 0)
+  preveri('predlog: kader je v proracunu', cena <= PRORACUN + 1e-9, `${cena.toFixed(1)} M€`)
+
+  const poKlubu = {}
+  for (const k of kader) poKlubu[k.team_id] = (poKlubu[k.team_id] ?? 0) + 1
+  preveri('predlog: najvec trije iz kluba',
+    Math.max(...Object.values(poKlubu)) <= MAX_IZ_KLUBA,
+    `najvec ${Math.max(...Object.values(poKlubu))}`)
+
+  const zacetnikov = kader.filter((k) => k.je_zacetnik).length
+  preveri('predlog: v postavi je enajst', zacetnikov === STEVILO_PRVIH, String(zacetnikov))
+
+  const vPostavi = {}
+  for (const k of kader) if (k.je_zacetnik) vPostavi[k.position] = (vPostavi[k.position] ?? 0) + 1
+  preveri('predlog: postava spostuje meje po pozicijah',
+    Object.entries(POZICIJE).every(([p, pr]) =>
+      (vPostavi[p] ?? 0) >= pr.min && (vPostavi[p] ?? 0) <= pr.max),
+    JSON.stringify(vPostavi))
+
+  const kapetanov = kader.filter((k) => k.je_kapetan).length
+  const namestnikov = kader.filter((k) => k.je_namestnik).length
+  preveri('predlog: natanko en kapetan in en namestnik',
+    kapetanov === 1 && namestnikov === 1, `${kapetanov}/${namestnikov}`)
+  preveri('predlog: kapetan in namestnik sta v postavi',
+    kader.every((k) => (!k.je_kapetan && !k.je_namestnik) || k.je_zacetnik))
+
+  // Smisel gumba je ekipa, ki je vredna igranja — ne najcenejsa mogoca.
+  const najcenejsa = 15 * 4
+  preveri('predlog: proracun se res porabi', cena > najcenejsa * 1.3,
+    `${cena.toFixed(1)} M€ proti ${najcenejsa} M€ najcenejse`)
+
+  // Liga, v kateri veljavnega kadra ni: gumba ne smemo ponuditi.
+  const premajhna = liga.filter((i) => i.position === 'GK').slice(0, 2)
+  preveri('predlog: v premajhni ligi vrne null', predlagajKader(premajhna, PRORACUN) === null)
+
+  // Skop proracun mora vseeno dati veljaven kader ali null, nikoli pokvarjenega.
+  const skop = predlagajKader(liga, 61)
+  preveri('predlog: pri skopem proracunu ostane veljaven',
+    skop === null || (skop.length === 15 &&
+      skop.reduce((v, k) => v + k.value, 0) <= 61 + 1e-9),
+    skop ? `${skop.reduce((v, k) => v + k.value, 0).toFixed(1)} M€` : 'null')
 }
 
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)

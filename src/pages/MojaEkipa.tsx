@@ -27,6 +27,7 @@ import Grb from '../components/Grb'
 import Odstevanje from '../components/Odstevanje'
 import EnajstericaNaIgriscu from '../components/EnajstericaNaIgriscu'
 import InfoIgralca from '../components/InfoIgralca'
+import { predlagajKader } from '../lib/predlogKadra'
 import type { IgralecNaIgriscu } from '../components/Igrisce'
 import type { Pozicija } from '../lib/tipi'
 
@@ -464,6 +465,42 @@ export default function MojaEkipa() {
         buy_position: igralec.position ?? null,
       },
     ])
+  }
+
+  /**
+   * Ekipa v enem kliku.
+   *
+   * Novinec pristane na praznem igriscu ob trgu s petsto igralci in mora
+   * izbrati petnajst imen, ki hkrati ustrezajo razmerju pozicij, proracunu in
+   * omejitvi treh iz kluba. Od 354 registriranih jih ekipe ni zacelo 196, in
+   * samo sedem jih je odnehalo sredi sestavljanja — ustavi jih prazen zacetek.
+   * Predlog je zato izhodisce, ne koncna beseda: igralce se da takoj menjati,
+   * shrani pa se, ko uporabnik sam pritisne Shrani.
+   */
+  function predlagaj() {
+    setSporocilo(null)
+    const predlog = predlagajKader(
+      igralci.filter((i) => i.active !== false),
+      proracun,
+    )
+    if (!predlog) {
+      return setSporocilo(
+        'Iz te lige zaenkrat ni mogoce sestaviti veljavne ekipe.',
+      )
+    }
+    setIzbrani(
+      predlog.map((p) => ({
+        player_id: p.id,
+        is_starter: p.je_zacetnik,
+        is_captain: p.je_kapetan,
+        is_vice: p.je_namestnik,
+        buy_value: p.value,
+        buy_position: p.position,
+      })),
+    )
+    setSporocilo(
+      'Ekipa je sestavljena — zamenjaj, kogar hoces, in pritisni Shrani.',
+    )
   }
 
   function odstrani(igralec: IgralecTrga) {
@@ -966,6 +1003,23 @@ export default function MojaEkipa() {
       {izbrani.length === 0 && (
         <div className="kartica border-gnl-400/30 bg-gnl-500/5 p-3 text-sm sm:p-4">
           <h2 className="mb-1 text-sm font-bold text-gnl-200">Kje začeti?</h2>
+
+          {/* Najhitrejša pot je ena. Navodila spodaj ostanejo za tiste, ki
+              hočejo ekipo sestaviti sami — ni pa več edina pot naprej. */}
+          <div className="mb-3 flex flex-wrap items-center gap-2 rounded-xl bg-slate-950/40 p-2.5">
+            <button
+              onClick={predlagaj}
+              disabled={igralci.length === 0}
+              className="gumb-glavni px-3 py-2 text-sm disabled:opacity-50"
+            >
+              ⚡ Sestavi mi ekipo
+            </button>
+            <span className="min-w-0 flex-1 text-xs text-slate-400">
+              Postavimo veljavno ekipo v okviru proračuna. Nato zamenjaj,
+              kogar hočeš, in shrani.
+            </span>
+          </div>
+
           <ol className="ml-4 list-decimal space-y-1 text-slate-300">
             <li>
               Vpiši ime ekipe zgoraj — brez njega shranjevanje ne bo delovalo.

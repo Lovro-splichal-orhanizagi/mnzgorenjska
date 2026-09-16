@@ -1,4 +1,4 @@
-// Ob prvem obisku: katero ligo gledaš?
+// Ob prvem obisku: kje želiš igrati?
 //
 // Doslej je nov obiskovalec tiho pristal na Gorenjski (`PRIVZETO = 'clani'`).
 // Ob eni zvezi je bilo to prav; ob dveh je narobe — nekdo iz Ljubljane bi
@@ -9,8 +9,13 @@
 //
 // Zaslon se da preskočiti. Kdor je prišel samo pogledat lestvico, ne sme
 // naleteti na zid; preskok pomeni privzeto ligo, kakor doslej.
-import { useMemo, useState } from 'react'
+//
+// Ob vsaki ligi piše, koliko ekip že igra. Sedemnajst lig je in v trinajstih
+// je manj kot pet ekip — novinec, ki slepo izbere prazno, nima nasprotnikov in
+// se ne vrne. Število ni okras, ampak edino, kar mu to pove vnaprej.
+import { useEffect, useMemo, useState } from 'react'
 import { useTekmovanje } from '../lib/tekmovanje'
+import { supabase } from '../lib/supabase'
 import { poZvezah } from './IzbirnikLige'
 
 const KLJUC_PRESKOKA = 'slff-prvi-obisk'
@@ -40,6 +45,27 @@ export default function PrviObisk() {
   const { tekmovanja, nastavi } = useTekmovanje()
   const [skrit, setSkrit] = useState(() => zeVprasan())
   const [drzava, setDrzava] = useState<string | null>(null)
+  const [ekip, setEkip] = useState<Record<number, number>>({})
+
+  useEffect(() => {
+    if (skrit) return
+    let veljavno = true
+    ;(async () => {
+      const { data } = await supabase
+        .from('fantasy_team_standings')
+        .select('competition_id')
+        .limit(2000)
+      if (!veljavno) return
+      const n: Record<number, number> = {}
+      for (const v of (data ?? []) as Array<{ competition_id: number | null }>) {
+        if (v.competition_id != null) n[v.competition_id] = (n[v.competition_id] ?? 0) + 1
+      }
+      setEkip(n)
+    })()
+    return () => {
+      veljavno = false
+    }
+  }, [skrit])
 
   const drzave = useMemo(() => {
     const m = new Map<string, string>()
@@ -68,10 +94,10 @@ export default function PrviObisk() {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur">
       <div className="animiraj-vstop w-full max-w-md rounded-2xl border border-white/10 bg-slate-900 p-5 shadow-2xl">
-        <h2 className="text-xl font-black naslov">Katero ligo spremljaš?</h2>
+        <h2 className="text-xl font-black naslov">Kje želiš igrati?</h2>
         <p className="mt-1 text-sm text-slate-400">
-          Da ti pokažemo prave igralce in lestvico. Pozneje jo lahko kadarkoli
-          zamenjaš zgoraj.
+          Izberi ligo, v kateri boš sestavil ekipo in tekmoval. Pokažemo ti
+          njene igralce in lestvico; pozneje jo lahko kadarkoli zamenjaš zgoraj.
         </p>
 
         {potrebnaDrzava ? (
@@ -93,18 +119,28 @@ export default function PrviObisk() {
                 <div className="px-1 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-500">
                   {s.naslov}
                 </div>
-                {s.lige.map((t) => (
-                  <button
-                    key={t.slug}
-                    onClick={() => {
-                      nastavi(t.slug)
-                      zapri()
-                    }}
-                    className="mb-1 block w-full truncate rounded-xl bg-white/5 px-3 py-2 text-left text-sm hover:bg-gnl-500/20"
-                  >
-                    {t.name}
-                  </button>
-                ))}
+                {s.lige.map((t) => {
+                  const n = ekip[t.id] ?? 0
+                  return (
+                    <button
+                      key={t.slug}
+                      onClick={() => {
+                        nastavi(t.slug)
+                        zapri()
+                      }}
+                      className="mb-1 flex w-full items-center gap-2 rounded-xl bg-white/5 px-3 py-2 text-left text-sm hover:bg-gnl-500/20"
+                    >
+                      <span className="min-w-0 flex-1 truncate">{t.name}</span>
+                      <span
+                        className={`shrink-0 text-xs tabular-nums ${
+                          n >= 5 ? 'text-gnl-300' : 'text-slate-500'
+                        }`}
+                      >
+                        {n === 0 ? 'še brez ekip' : `${n} ekip`}
+                      </span>
+                    </button>
+                  )
+                })}
               </div>
             ))}
           </div>
