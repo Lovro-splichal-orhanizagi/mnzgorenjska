@@ -10,6 +10,9 @@ import {
   formatirajTocke,
   formatirajCeno,
 } from '../lib/pomozno'
+// `premik` je tu ze ime lokalne stevilke (zadnja sprememba cene), zato
+// funkcijo uvozimo pod drugim imenom.
+import { serijaCen, premik as premikSerije, crta } from '../lib/gibanjeCene'
 import Grb from '../components/Grb'
 import {
   VRSTE,
@@ -58,6 +61,8 @@ export default function Igralec() {
   const [razlage, setRazlage] = useState<Razlaga[]>([])
   const [odprtRazlaga, setOdprtRazlaga] = useState<number | null>(null)
   const [cene, setCene] = useState<any[]>([])
+  const [izhodisce, setIzhodisce] = useState<number | null>(null)
+  const [zadnjiKrog, setZadnjiKrog] = useState(0)
   const [tekme, setTekme] = useState<any[]>([])
   const [glasovi, setGlasovi] = useState<Record<string, number>>({})
   const [mojGlas, setMojGlas] = useState<Pozicija | null>(null)
@@ -105,8 +110,7 @@ export default function Igralec() {
           .select('old_value, new_value, changed_at, rounds!inner(number, season)')
           .eq('player_id', igralecId)
           .eq('rounds.season', tekocaSez)
-          .order('changed_at', { ascending: false })
-          .limit(5),
+          .order('changed_at', { ascending: false }),
         supabase
           .from('position_vote_counts')
           .select('position, votes')
@@ -124,6 +128,30 @@ export default function Igralec() {
       ])
       if (preklican) return
       setCene((c ?? []) as any[])
+
+      // Za crto rabimo izhodiscno ceno in zadnji ODIGRANI krog: med
+      // premikoma cena ni neznana, ampak mirna, in ravno to je treba videti.
+      const [{ data: zac }, { data: zk }] = await Promise.all([
+        supabase
+          .from('players')
+          .select('value_start')
+          .eq('id', igralecId)
+          .maybeSingle(),
+        tekocaSez
+          ? supabase
+              .from('rounds')
+              .select('number, matches!inner(imported_at)')
+              .eq('competition_id', p?.competition_id ?? 0)
+              .eq('season', tekocaSez)
+              .not('matches.imported_at', 'is', null)
+              .order('number', { ascending: false })
+              .limit(1)
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
+      ])
+      if (preklican) return
+      setIzhodisce(zac?.value_start != null ? Number(zac.value_start) : null)
+      setZadnjiKrog(Number((zk as any)?.number ?? 0))
       setTekme((t ?? []) as any[])
       setGlasovi(
         Object.fromEntries(
@@ -618,8 +646,68 @@ export default function Igralec() {
           <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-400">
             Gibanje cene
           </h2>
+          {(() => {
+            if (izhodisce == null) return null
+            const serija = serijaCen(
+              izhodisce,
+              cene.map((c: any) => ({
+                krog: Number(c.rounds?.number ?? 0),
+                nova: Number(c.new_value),
+              })),
+              zadnjiKrog,
+            )
+            if (serija.length < 2) return null
+            const dp = premikSerije(serija)
+            const barva = dp > 0 ? '#86efac' : dp < 0 ? '#fda4af' : '#94a3b8'
+            return (
+              <div className="mb-3">
+                <div className="mb-1 flex items-baseline justify-between text-xs tabular-nums text-slate-400">
+                  <span>
+                    {formatirajCeno(serija[0].cena)} ob postavitvi lige
+                  </span>
+                  <span>
+                    <strong className="text-slate-200">
+                      {formatirajCeno(serija[serija.length - 1].cena)}
+                    </strong>
+                    <span
+                      className={`ml-1.5 ${
+                        dp > 0
+                          ? 'text-gnl-300'
+                          : dp < 0
+                            ? 'text-rose-400'
+                            : 'text-slate-500'
+                      }`}
+                    >
+                      {dp > 0 ? '▲' : dp < 0 ? '▼' : '•'}{' '}
+                      {Math.abs(dp).toFixed(1)}
+                    </span>
+                  </span>
+                </div>
+                <svg
+                  viewBox="0 0 160 40"
+                  className="h-12 w-full"
+                  preserveAspectRatio="none"
+                  aria-label={`Cena od ${serija[0].cena} do ${serija[serija.length - 1].cena}`}
+                >
+                  <path
+                    d={crta(serija, 160, 40)}
+                    fill="none"
+                    stroke={barva}
+                    strokeWidth="2"
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
+                    vectorEffect="non-scaling-stroke"
+                  />
+                </svg>
+                <div className="flex justify-between text-[10px] text-slate-600">
+                  <span>začetek sezone</span>
+                  <span>{serija[serija.length - 1].krog}. krog</span>
+                </div>
+              </div>
+            )
+          })()}
           <ul className="space-y-1">
-            {cene.map((c, n) => {
+            {cene.slice(0, 5).map((c, n) => {
               const d = Number(c.new_value) - Number(c.old_value)
               return (
                 <li

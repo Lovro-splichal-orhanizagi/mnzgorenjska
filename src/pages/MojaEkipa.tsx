@@ -26,6 +26,7 @@ import Igrisce from '../components/Igrisce'
 import Grb from '../components/Grb'
 import Odstevanje from '../components/Odstevanje'
 import EnajstericaNaIgriscu from '../components/EnajstericaNaIgriscu'
+import InfoIgralca from '../components/InfoIgralca'
 import type { IgralecNaIgriscu } from '../components/Igrisce'
 import type { Pozicija } from '../lib/tipi'
 
@@ -102,6 +103,8 @@ export default function MojaEkipa() {
   const [iskanje, setIskanje] = useState('')
   // Na telefonu je trg predal, ki se odpre ob kliku na prazno mesto.
   const [odprtTrg, setOdprtTrg] = useState(false)
+  // Igralec, za katerega je odprta plosca s podatki.
+  const [info, setInfo] = useState<IgralecTrga | null>(null)
   const imeRef = useRef<HTMLInputElement | null>(null)
 
   // Ob roku se zaprejo tudi že odprti gumbi in seznam krogov.
@@ -719,6 +722,7 @@ export default function MojaEkipa() {
       filterPoz={filterPoz}
       setFilterPoz={setFilterPoz}
       naPreklop={preklopi}
+      naInfo={setInfo}
     />
   )
 
@@ -1401,6 +1405,7 @@ export default function MojaEkipa() {
                 filterPoz={filterPoz}
                 setFilterPoz={setFilterPoz}
                 naPreklop={preklopi}
+                naInfo={setInfo}
                 mobilno
               />
             </div>
@@ -1470,6 +1475,19 @@ export default function MojaEkipa() {
           </button>
         </div>
       </div>
+
+      {/* Podatki o igralcu — brez zapuscanja na pol sestavljene ekipe. */}
+      {info && tekmovanjeId != null && (
+        <InfoIgralca
+          igralecId={info.id}
+          tekmovanjeId={tekmovanjeId}
+          ime={info.full_name}
+          klub={info.team_name}
+          klubKratko={info.team_short}
+          klubLogo={info.team_logo}
+          naZapri={() => setInfo(null)}
+        />
+      )}
     </div>
   )
 }
@@ -1488,6 +1506,7 @@ function TrgIgralcev({
   filterPoz,
   setFilterPoz,
   naPreklop,
+  naInfo,
   mobilno = false,
 }: {
   vidni: IgralecTrga[]
@@ -1503,6 +1522,7 @@ function TrgIgralcev({
   filterPoz: Pozicija | 'vse'
   setFilterPoz: (v: Pozicija | 'vse') => void
   naPreklop: (i: IgralecTrga) => void
+  naInfo: (i: IgralecTrga) => void
   mobilno?: boolean
 }) {
   const iskanjeRef = useRef<HTMLInputElement | null>(null)
@@ -1652,6 +1672,18 @@ function TrgIgralcev({
                     )}
                   </div>
                 </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    naInfo(i)
+                  }}
+                  onPointerDownCapture={(e) => e.stopPropagation()}
+                  aria-label={`Podatki o igralcu ${prikazniIme(i.full_name)}`}
+                  title="Statistika, gibanje cene, naslednje tekme"
+                  className="shrink-0 rounded-full border border-white/15 bg-white/5 px-2 py-0.5 text-xs font-bold text-slate-300 hover:bg-white/15"
+                >
+                  i
+                </button>
                 <div className="flex shrink-0 flex-col items-end gap-1">
                   <span className="text-sm font-black tabular-nums text-gnl-300">
                     {formatirajCeno(i.value)}

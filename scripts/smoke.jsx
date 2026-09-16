@@ -19,6 +19,7 @@ import Odsotnosti from '../src/pages/Odsotnosti'
 import Slovenija from '../src/pages/Slovenija'
 import MiniLige from '../src/pages/MiniLige'
 import Ekipa from '../src/pages/Ekipa'
+import InfoIgralca from '../src/components/InfoIgralca'
 import Administracija from '../src/pages/Administracija'
 import {
   preveriEkipo,
@@ -43,6 +44,7 @@ import { razcleniRazpored, datum, sezonaIz } from './razpored.mjs'
 import { vseVrstice } from './strani.mjs'
 import { premakniProti, NAJVECJI_TEDENSKI_PREMIK } from './premik-cene.mjs'
 import { oceniPripravljenost, najcenejsiKader } from '../src/lib/pripravljenost'
+import { serijaCen, premik, crta, zadnjiPremiki } from '../src/lib/gibanjeCene'
 import { readFileSync } from 'node:fs'
 
 let napak = 0
@@ -64,6 +66,19 @@ const strani = [
   ['Slovenija', Slovenija, '/slovenija'],
   ['Mini lige', MiniLige, '/mini-lige'],
   ['Tuja ekipa', Ekipa, '/ekipa/1'],
+  [
+    'Info o igralcu',
+    () => (
+      <InfoIgralca
+        igralecId={1}
+        tekmovanjeId={1}
+        ime="Testni Igralec"
+        klub="Testni klub"
+        naZapri={() => {}}
+      />
+    ),
+    '/moja-ekipa',
+  ],
   ['Rezultati', Rezultati, '/rezultati'],
   ['Tekma', Tekma, '/tekma/1'],
   ['Prijava', Prijava, '/prijava'],
@@ -2289,6 +2304,49 @@ preveri(
 
   preveri('NZS razpored: klub igra v krogu najvec enkrat',
     krogi.every((k) => new Set(k.tekme.flatMap((t) => [t.domaci, t.gostje])).size === k.tekme.length * 2))
+}
+
+// --- gibanje cene ----------------------------------------------------------
+// `price_changes` hrani samo kroge s premikom; vmesni krogi niso neznani,
+// ampak mirni. Ce se ne dopolnijo, trije zapisi izgledajo kot tri zaporedne
+// spremembe, pa naj bo med njimi pet krogov ali noben.
+{
+  const serija = serijaCen(4.5, [{ krog: 2, nova: 4.7 }, { krog: 5, nova: 4.6 }], 6)
+  preveri(
+    'cena: serija ima krog 0 in vse kroge do konca',
+    serija.length === 7 && serija[0].krog === 0,
+    `${serija.length} tock`,
+  )
+  preveri(
+    'cena: med spremembama ostane nespremenjena',
+    serija[3].cena === 4.7 && serija[4].cena === 4.7,
+    `${serija[3].cena}, ${serija[4].cena}`,
+  )
+  preveri(
+    'cena: po zadnji spremembi se drzi do konca',
+    serija[6].cena === 4.6,
+    String(serija[6].cena),
+  )
+  preveri('cena: premik je razlika od izhodisca', premik(serija) === 0.1 || Math.abs(premik(serija) - 0.1) < 1e-9, String(premik(serija)))
+
+  // Borza lahko stece dlje od zadnjega odigranega kroga; podatek je, ne napaka.
+  const dlje = serijaCen(5, [{ krog: 9, nova: 5.3 }], 4)
+  preveri('cena: sprememba za krogom konca serijo razsiri', dlje.length === 10, `${dlje.length}`)
+
+  const brez = serijaCen(6, [], 0)
+  preveri('cena: brez sprememb ostane ena tocka', brez.length === 1 && brez[0].cena === 6)
+  preveri('cena: ena tocka nima crte', crta(brez) === '')
+
+  // Navpicno raztegnemo na razpon serije, sicer se premik 0.3 zlije v ravno crto.
+  const pot = crta(serijaCen(4.5, [{ krog: 1, nova: 4.8 }], 1), 100, 20)
+  preveri('cena: crta gre od dna do vrha', pot === 'M0.0,20.0 L100.0,0.0', pot)
+
+  const zadnji = zadnjiPremiki([{ krog: 2, nova: 4.7 }, { krog: 5, nova: 4.6 }], 4.5)
+  preveri(
+    'cena: zadnji premik je prvi na seznamu in ve, od kod je prisel',
+    zadnji[0].krog === 5 && zadnji[0].iz === 4.7 && zadnji[0].v === 4.6,
+    JSON.stringify(zadnji[0]),
+  )
 }
 
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)
