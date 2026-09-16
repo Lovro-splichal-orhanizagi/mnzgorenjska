@@ -924,6 +924,44 @@ dan prej". Okno naj bo za en razmik širše od obljube — tu trije dnevi, kar d
 Ker opozorilo pride enkrat na težavo, širše okno ne pomeni več pošte, le
 zgodnejšo.
 
+## Preverbe ne vidijo podatkov, ki jih ni
+
+Uvoz je 15. in 16. septembra padel in **dva dni ni opazil nihče**. Preverba
+podatkov je bila ves čas zelena — in po svoje pravilno: meri, ali so uvoženi
+podatki pravilni, ne pa ali je uvoz sploh stekel. Podatki v bazi so bili
+brezhibni; manjkali so novi. Dva rdeča zagona sta čakala v GitHubu, kjer ju ni
+nihče gledal.
+
+Dvoje je potrebno in nobeno ne nadomesti drugega:
+
+- **Zagon, ki pade, mora sam zazvoniti.** `if: failure()` korak z obvestilom v
+  vsakem urnikovem zagonu (`scripts/javi-napako.mjs`). Javljalec ne sme
+  podreti zagona — ta je že padel iz drugega razloga.
+- **Preverba mora vprašati tudi po odsotnosti.** "Ali je kakšna tekma,
+  odigrana pred več kot tremi dnevi, še vedno brez zapisnika?" Tri dni so
+  velikodušni: zapisnik pride nekaj ur po tekmi, prestavljena tekma pa dobi nov
+  datum, zato stara vrstica ne ostane viseti.
+
+Pri obojem velja isto pravilo: **neuspela poizvedba ni "ni težav"**. Napako
+poizvedbe zabeleži kot svojo težavo, sicer si pravkar zgradil tiho preverbo.
+
+### NZS vrne 404 za tekmo, ki še ni bila odigrana
+
+Razpored našteje tudi prihodnje tekme, zapisnika zanje pa (še) ni. Posamezen
+404 je normalno stanje in se preskoči. **Sami 404 pa niso** — tako bi izgledala
+sprememba oblike naslovov pri viru, in tiho uvoziti nič je slabše kot pasti.
+Zato `prenesi` napaki pripne `status`, klicatelj pa loči eno od drugega.
+
+## Nadomestno omrežje v smoke mora poznati vsako novo tabelo
+
+`preveri-podatke.mjs` se v smoke poganja proti lažnemu `fetch`. Ko sem skripti
+dodal poizvedbo po `matches`, je nadomestek zanjo vrgel napako, skripta je
+končala z 1 in dve trditvi sta padli. Ob vsaki novi poizvedbi v skripti, ki jo
+smoke poganja, dopolni tudi nadomestek — in dodaj trditev za novo vedenje.
+
+In: **testov ne poganjaj po objavi.** Ta commit sem objavil z rdečim smoke in
+ga moral popraviti z naslednjim.
+
 ## Ob koncu
 
 `npm run smoke`, `npm test`, `npm run typecheck`, `npm run build` — vsi zeleni,
