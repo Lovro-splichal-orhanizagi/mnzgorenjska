@@ -48,5 +48,12 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           VRSTA: opozorilo
+          # Okno je 3 dni, ne 2, ker zagon tece enkrat na dan ob 8:00.
+          # Pri dvodnevnem oknu bi liga z rokom ob 8:30 padla cez rob — zagon
+          # dva dni prej je ne bi zajel (8:30 > 8:00), naslednji pa sele dan
+          # pred rokom. Trije dnevi zagotovijo, da posta pride VSAJ dva dni
+          # prej. Ker opozorilo pride enkrat na tezavo, sirse okno ne pomeni
+          # vec poste — pomeni le zgodnejso.
+          DNI: 3
           SUHO: ${{ github.event_name == 'workflow_dispatch' && inputs.suho || 'false' }}
         run: node scripts/posli-opomnike.mjs
