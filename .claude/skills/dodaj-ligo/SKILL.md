@@ -847,6 +847,60 @@ sicer graf laže o hitrosti gibanja.
 Drugo: krivuljo raztegni na razpon **serije**, ne cenika. Premik za 0.3 je pri
 igralcu za 4.5 velika novica in bi se ob lestvici od 0 do 15 zlil v ravno črto.
 
+## Ekipa se prenaša sama, dokler se lahko
+
+`zakleni_krog` ob roku posname shranjeni kader — uporabniku ni treba vsak
+teden ničesar shraniti. Izjema je kader, ki ob roku ni več veljaven: posnetka
+ni, krog je brez točk, in dokler ni bilo opozorila, tega ni povedal nihče.
+
+Past je v tem, da kader **postane neveljaven sam od sebe**.
+`roster_je_veljaven` gleda `players.team_id`, torej TRENUTNI klub. Ko igralec
+med sezono prestopi v klub, iz katerega jih lastnik že ima tri, ekipa čez noč
+krši omejitev `MAX_IZ_KLUBA` — brez vsake lastnikove spremembe. En prestop
+(Tadić Ivano, Jesenice → Šenčur) je podrl štiri ekipe hkrati.
+
+Isto velja za deaktivacijo: `uvoz-razporeda` igralce klubov zunaj lige
+deaktivira, `roster_je_veljaven` pa zahteva `neaktivnih = 0`.
+
+Zato ob vsakem uvozu, ki premakne igralce med klubi ali jih deaktivira,
+preštej, koliko ekip je s tem postalo neveljavnih:
+
+```sql
+select c.slug, count(*) filter (where not roster_je_veljaven(ft.id)) as neveljavnih
+  from fantasy_teams ft join competitions c on c.id = ft.competition_id
+ where c.active group by 1 having count(*) filter (where not roster_je_veljaven(ft.id)) > 0;
+```
+
+**Opozorilo mora povedati razlog, ne le da je nekaj narobe.** In kadar razloga
+ni zakrivil uporabnik, mora to izrecno pisati — sicer išče svojo napako, ki je
+ni naredil.
+
+### Množična pošta potrebuje varovalko na številu
+
+Opozorilo naslavlja napako posameznika, zato jih je nekaj na ligo. Če jih je
+nenadoma cel kup, to skoraj gotovo ni dvajset ljudi, ki bi vsak zase pokvaril
+ekipo — verjetneje je uvoz deaktiviral cel klub. Zato se pošiljanje nad
+`NAJVEC_NA_LIGO` ustavi: pomota, poslana dvajsetim, napake ne popravi.
+
+## Projekt ima dva servisna ključa, funkcija pozna enega
+
+Supabase ima zdaj star (`eyJ…`, legacy JWT) in nov (`sb_secret_…`) servisni
+ključ. Oba sta veljavna, okolje edge funkcije pa dobi **le enega**. Koda, ki
+dela `auth === "Bearer " + SERVICE_KEY`, zato drugega zavrne — in klic pride do
+konca ter dobi `403 Samo administrator.`, kar krivdo zvali na pravice namesto
+na zapis ključa. Sprejmi oba:
+
+```ts
+const strojniKljuci = [
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),
+  Deno.env.get('SUPABASE_SECRET_KEY'),
+].filter(Boolean)
+const jeStroj = strojniKljuci.some((k) => auth === `Bearer ${k}`)
+```
+
+Kateri ključ okolje res ima, se preveri tako, da funkcijo suho pokličeš z
+vsakim posebej.
+
 ## Ob koncu
 
 `npm run smoke`, `npm test`, `npm run typecheck`, `npm run build` — vsi zeleni,
