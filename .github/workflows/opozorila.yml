@@ -1,0 +1,52 @@
+name: Opozorila pred rokom
+
+# Ekipa se iz kroga v krog prenasa sama: `zakleni_krog` ob roku posname
+# shranjeni kader in uporabniku ni treba storiti nicesar. Izjema je kader, ki
+# ob roku ni vec veljaven — takrat posnetka ni, krog je brez tock in doslej
+# tega ni povedal nihce.
+#
+# Kader lahko postane neveljaven tudi brez lastnikove spremembe:
+# `roster_je_veljaven` gleda TRENUTNI klub igralca, zato pravi prestop v ligi
+# ekipo s tremi igralci enega kluba cez noc spremeni v ekipo s stirimi. Tako
+# je 8 ekip izgubilo 4. krog pri clanih.
+#
+# Zato ta zagon vsak dan pogleda, katerim ligam rok pade v naslednjih dveh
+# dneh, in lastnikom takih ekip poslje eno posto — z razlogom, ne le z
+# "nekaj je narobe". Enkrat na krog, za kar skrbi `email_log.round_id`.
+#
+# Urnik je vklopljen, ker posta ni mnozicna: gre samo tistim, ki ekipo IMAJO
+# in se jim ne bo zaklenila. Opomnik vsem brez ekipe je druga stvar in ostaja
+# rocen (`opomniki.yml`).
+on:
+  schedule:
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+    inputs:
+      suho:
+        description: 'Suhi tek (samo presteje, ne poslje)'
+        required: false
+        default: 'true'
+        type: choice
+        options: ['true', 'false']
+
+concurrency:
+  group: opozorila
+  cancel-in-progress: false
+
+jobs:
+  opozori:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Poslji opozorila
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          VRSTA: opozorilo
+          SUHO: ${{ github.event_name == 'workflow_dispatch' && inputs.suho || 'false' }}
+        run: node scripts/posli-opomnike.mjs

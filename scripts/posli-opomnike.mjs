@@ -1,4 +1,5 @@
-// Opomnik uporabnikom, ki v ligi še nimajo veljavne ekipe.
+// Opomnik uporabnikom, ki v ligi še nimajo veljavne ekipe, in opozorilo
+// tistim, katerih ekipa se ob roku ne bo zaklenila.
 //
 // Kliče edge funkcijo `posli-opomnik` s service ključem — ta pot obstaja
 // prav zato, da opomnika ni treba prožiti z gumbom. Ključ ostane v GitHubu,
@@ -7,6 +8,11 @@
 // Uporaba:
 //   SUPABASE_SERVICE_ROLE_KEY=... node scripts/posli-opomnike.mjs        # suho
 //   ... SUHO=false node scripts/posli-opomnike.mjs                       # pošlje
+//   ... VRSTA=opozorilo node scripts/posli-opomnike.mjs                  # opozorila
+//
+// Opomnik gre vsem brez ekipe (353 ljudi) in je zato ročna odločitev.
+// Opozorilo gre samo tistim, ki ekipo IMAJO in se jim ne bo zaklenila — to
+// je nekaj ljudi na krog in teče po urniku.
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'node:fs'
 
@@ -29,6 +35,15 @@ if (!SERVICE) { console.error('Manjka SUPABASE_SERVICE_ROLE_KEY'); process.exit(
 // Suho je PRIVZETO. Pošiljanje pošte resničnim ljudem mora biti izrecna
 // izbira, ne privzeta posledica zagona.
 const suho = String(process.env.SUHO ?? 'true').toLowerCase() !== 'false'
+const vrsta = process.env.VRSTA === 'opozorilo' ? 'opozorilo' : 'opomnik'
+
+// Varovalka za opozorila. Opozorilo naslavlja napako posameznika, zato jih je
+// obicajno nekaj na ligo. Ce jih je nenadoma cel kup, to skoraj gotovo ni
+// dvajset ljudi, ki bi vsak zase pokvaril svojo ekipo — verjetneje je uvoz
+// deaktiviral cel klub ali prestavil pol lige. Takrat je napaka nasa in
+// posiljanje pomote dvajsetim ljudem je ne popravi.
+const NAJVEC_NA_LIGO = Number(process.env.NAJVEC_NA_LIGO ?? 25)
+const dni = Number(process.env.DNI ?? 2)
 
 const db = createClient(BASE, SERVICE, { auth: { persistSession: false } })
 const { data: lige, error } = await db
@@ -38,7 +53,10 @@ const { data: lige, error } = await db
   .order('sort_order')
 if (error) { console.error(`Lig ni bilo mogoče prebrati: ${error.message}`); process.exit(1) }
 
-console.log(suho ? 'SUHI TEK — pošte ne pošiljam.\n' : 'POŠILJAM pošto.\n')
+console.log(
+  `${vrsta === 'opozorilo' ? 'OPOZORILA (ekipa se ne bo zaklenila)' : 'OPOMNIKI (ni ekipe)'} — ` +
+    (suho ? 'SUHI TEK, pošte ne pošiljam.\n' : 'POŠILJAM pošto.\n'),
+)
 
 let skupaj = 0
 let padlo = 0
@@ -49,7 +67,7 @@ for (const liga of lige ?? []) {
       Authorization: `Bearer ${SERVICE}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ competition_id: liga.id, suho }),
+    body: JSON.stringify({ competition_id: liga.id, suho, vrsta, dni }),
   })
   const izid = await odgovor.json().catch(() => ({}))
   if (!odgovor.ok) {
@@ -58,6 +76,14 @@ for (const liga of lige ?? []) {
     continue
   }
   const n = izid.kandidati_stevilo ?? 0
+  if (vrsta === 'opozorilo' && n > NAJVEC_NA_LIGO && !suho) {
+    console.error(
+      `  ${liga.slug.padEnd(14)} USTAVLJENO: ${n} kandidatov (meja ${NAJVEC_NA_LIGO}).` +
+        ' Toliko hkrati pomeni napako pri uvozu, ne pri uporabnikih.',
+    )
+    padlo++
+    continue
+  }
   skupaj += n
   console.log(
     `  ${liga.slug.padEnd(14)} kandidatov ${String(n).padStart(4)}` +

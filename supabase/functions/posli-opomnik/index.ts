@@ -29,6 +29,12 @@ interface Zahteva {
   competition_id: number
   test_email?: string // če je nastavljen, gre samo test mail nanj (za preizkus)
   suho?: boolean // dry-run: samo prešteje, ne pošilja
+  // 'opomnik'   — kdor ekipe še nima
+  // 'opozorilo' — kdor ekipo IMA, a se ob roku ne bo zaklenila
+  vrsta?: 'opomnik' | 'opozorilo'
+  // Koliko dni pred rokom opozarjamo. Privzeto 2; nastavljivo, da se da
+  // suho preveriti, koga bi zajelo sirse okno.
+  dni?: number
 }
 
 interface Uporabnik {
@@ -37,6 +43,12 @@ interface Uporabnik {
   display_name: string | null
   team_id: number | null
   ekipa_veljavna: boolean
+  // samo pri opozorilu
+  team_name?: string | null
+  round_id?: number | null
+  round_number?: number | null
+  deadline_at?: string | null
+  razlog?: string | null
 }
 
 interface ResendOdgovor {
@@ -67,7 +79,15 @@ Deno.serve(async (req) => {
   //
   // Service ključ ima tako ali tako vse pravice, zato njegovo sprejemanje
   // ničesar ne odpira; primerjamo ga natanko, ne po predponi.
-  const jeStroj = auth === `Bearer ${SERVICE_KEY}`
+  //
+  // Primerjati SAMO s `SUPABASE_SERVICE_ROLE_KEY` je premalo. Projekt ima dva
+  // veljavna servisna ključa — starega (JWT `eyJ…`) in novega (`sb_secret_…`)
+  // — okolje funkcije pa dobi le enega. Klic s tistim drugim je prišel do sem
+  // in dobil "Samo administrator.", kar je zavajajoče: ključ je bil pravi,
+  // le drugi od dveh. Zato sprejmemo oba znana zapisa.
+  const SECRET_KEY = Deno.env.get('SUPABASE_SECRET_KEY')
+  const strojniKljuci = [SERVICE_KEY, SECRET_KEY].filter(Boolean) as string[]
+  const jeStroj = strojniKljuci.some((k) => auth === `Bearer ${k}`)
   const uporabnikov = createClient(SUPABASE_URL, ANON_KEY, {
     global: { headers: { Authorization: auth } },
   })
@@ -85,6 +105,12 @@ Deno.serve(async (req) => {
     return json({ error: 'Neveljaven JSON.' }, 400)
   }
   const { competition_id, test_email, suho } = vhod
+  const vrsta = vhod.vrsta ?? 'opomnik'
+  if (vrsta === 'opozorilo' && !jeStroj)
+    return json(
+      { error: 'Opozorilo poslje samo urnik (servisni kljuc).' },
+      403,
+    )
   if (!competition_id)
     return json({ error: 'Manjka competition_id.' }, 400)
 
@@ -136,7 +162,27 @@ Deno.serve(async (req) => {
   // `is_admin()`, ta pa `auth.uid()`), stroj pa prek ločene funkcije — pri
   // service ključu uporabnika ni in prva pot vedno pade.
   let kandidati: Uporabnik[]
-  if (jeStroj) {
+  if (vrsta === 'opozorilo') {
+    // Opozorilo je vedno strojno: pove, da se ekipa ob roku ne bo zaklenila,
+    // in tega ne sme poslati nihče "na roko" sredi tedna.
+    const { data, error } = await service.rpc('kandidati_za_opozorilo', {
+      p_competition_id: competition_id,
+      p_dni: Math.min(Math.max(vhod.dni ?? 2, 1), 14),
+    })
+    if (error) return json({ error: error.message }, 500)
+    kandidati = (data ?? []).map((u: Record<string, unknown>) => ({
+      user_id: u.user_id as string,
+      email: u.email as string,
+      display_name: (u.display_name as string) ?? null,
+      team_id: (u.team_id as number) ?? null,
+      ekipa_veljavna: false,
+      team_name: (u.team_name as string) ?? null,
+      round_id: (u.round_id as number) ?? null,
+      round_number: (u.round_number as number) ?? null,
+      deadline_at: (u.deadline_at as string) ?? null,
+      razlog: (u.razlog as string) ?? null,
+    }))
+  } else if (jeStroj) {
     const { data, error } = await service.rpc('kandidati_za_opomnik', {
       p_competition_id: competition_id,
     })
@@ -164,25 +210,34 @@ Deno.serve(async (req) => {
     resend_id?: string
   }> = []
   for (const u of kandidati) {
-    const { data: nedavni } = await service.rpc('nedavni_opomnik', {
-      p_user_id: u.user_id,
-      p_competition_id: competition_id,
-    })
+    // Opozorilo se ne podvaja po krogu — za to poskrbi že
+    // `kandidati_za_opozorilo`, ki pogleda v email_log. Opomnik pa po času.
+    const { data: nedavni } =
+      vrsta === 'opozorilo'
+        ? { data: false }
+        : await service.rpc('nedavni_opomnik', {
+            p_user_id: u.user_id,
+            p_competition_id: competition_id,
+          })
     if (nedavni) {
       rezultati.push({ email: u.email, ok: false, razlog: 'nedavno poslano' })
       continue
     }
 
-    const rez = await posljiEnega(RESEND_KEY, EMAIL_FROM, u.email, oznaka, {
-      display_name: u.display_name ?? '',
-      brez_ekipe: !u.team_id,
-    })
+    const rez =
+      vrsta === 'opozorilo'
+        ? await posljiOpozorilo(RESEND_KEY, EMAIL_FROM, u.email, oznaka, u)
+        : await posljiEnega(RESEND_KEY, EMAIL_FROM, u.email, oznaka, {
+            display_name: u.display_name ?? '',
+            brez_ekipe: !u.team_id,
+          })
 
     await service.from('email_log').insert({
       user_id: u.user_id,
       email: u.email,
-      vrsta: 'opomnik-ekipa',
+      vrsta: vrsta === 'opozorilo' ? 'opozorilo-postava' : 'opomnik-ekipa',
       competition_id,
+      round_id: u.round_id ?? null,
       resend_id: rez.id ?? null,
       napaka: rez.napaka ?? null,
     })
@@ -234,6 +289,77 @@ async function posljiEnega(
       <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">
         Če opomnika ne rabiš (ekipe letos ne boš sestavil/a), lahko ta mail ignoriraš.
         Naslednjič ti bomo pisali šele pred naslednjim krogom.
+      </p>
+      <p style="font-size: 12px; color: #94a3b8; margin: 24px 0 0;">
+        SLFF — Sunday League Fantasy Football · slff.eu
+      </p>
+    </div>
+  `
+
+  try {
+    const r = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ from, to, subject: naslov, html }),
+    })
+    const odgovor: ResendOdgovor = await r.json()
+    if (!r.ok) return { napaka: odgovor.message ?? `HTTP ${r.status}` }
+    return { id: odgovor.id }
+  } catch (e) {
+    return { napaka: String(e) }
+  }
+}
+
+async function posljiOpozorilo(
+  apiKey: string,
+  from: string,
+  to: string,
+  ozn: string,
+  u: Uporabnik,
+): Promise<{ id?: string; napaka?: string }> {
+  const uvod = u.display_name
+    ? `Živjo, ${u.display_name.split(' ')[0]}!`
+    : 'Živjo!'
+  const krog = u.round_number ? `${u.round_number}. krog` : 'naslednji krog'
+  const rok = u.deadline_at
+    ? new Date(u.deadline_at).toLocaleString('sl-SI', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'Europe/Ljubljana',
+      })
+    : null
+
+  const naslov = `SLFF ${ozn} — tvoja ekipa se ${krog} ne bo zaklenila`
+
+  const html = `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; color: #0f172a;">
+      <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">${uvod}</p>
+      <p style="font-size: 15px; line-height: 1.5; margin: 0 0 8px;">
+        Ekipa <strong>${u.team_name ?? ''}</strong> se za ${krog} ne bo zaklenila,
+        zato v njem ne bi dobila točk.
+      </p>
+      <p style="font-size: 15px; line-height: 1.5; margin: 0 0 8px; padding: 12px; background: #fef2f2; border-left: 3px solid #f87171; border-radius: 6px;">
+        ${u.razlog ?? 'Kader ni veljaven.'}
+      </p>
+      ${
+        rok
+          ? `<p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Popraviti jo je mogoče do <strong>${rok}</strong>.</p>`
+          : ''
+      }
+      <p style="text-align: center; margin: 24px 0;">
+        <a href="https://slff.eu/moja-ekipa" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">
+          Popravi ekipo →
+        </a>
+      </p>
+      <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">
+        Sicer se ekipa prenaša iz kroga v krog sama in ti ni treba storiti ničesar —
+        pišemo ti samo takrat, kadar se ne bo mogla.
       </p>
       <p style="font-size: 12px; color: #94a3b8; margin: 24px 0 0;">
         SLFF — Sunday League Fantasy Football · slff.eu
