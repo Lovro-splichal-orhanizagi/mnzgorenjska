@@ -57,3 +57,11 @@ jobs:
           DNI: 3
           SUHO: ${{ github.event_name == 'workflow_dispatch' && inputs.suho || 'false' }}
         run: node scripts/posli-opomnike.mjs
+
+      # Rdec zagon v GitHubu ni alarm, dokler ga kdo ne vidi. Uvoz je dvakrat
+      # padel in dva dni ni opazil nihce.
+      - name: Javi padec na Discord
+        if: failure()
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_TEDENSKO }}
+        run: node scripts/javi-napako.mjs "Opozorila pred rokom"

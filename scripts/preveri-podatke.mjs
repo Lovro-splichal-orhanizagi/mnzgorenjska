@@ -94,6 +94,50 @@ for (const l of lige ?? []) {
     })
 }
 
+// --- tekme, ki bi morale biti ze uvozene -------------------------------------
+// Preverbe v bazi merijo, ali so uvozeni podatki pravilni. Ne morejo pa
+// videti, da uvoza sploh ni bilo. Prav to se je zgodilo 15. in 16. septembra:
+// uvoz je padel na tekmi, ki se ni bila odigrana, snl3-zahod se dva dni ni
+// osvezila, podatki v bazi pa so bili ves cas brezhibni in preverba tiha.
+//
+// Tri dni je namenoma velikodusno: zapisnik pride nekaj ur po tekmi, prelozena
+// tekma pa dobi nov datum, zato stara vrstica ne ostane viseti.
+const PRAG_DNI = 3
+const { data: zamujene, error: napakaZamud } = await db
+  .from('matches')
+  .select('id, played_on, imported_at, rounds!inner(competition_id, competitions!inner(slug, active))')
+  .is('imported_at', null)
+  .lt('played_on', new Date(Date.now() - PRAG_DNI * 86400000).toISOString().slice(0, 10))
+  .order('played_on')
+  .limit(200)
+
+if (napakaZamud) {
+  // Neuspela poizvedba ni "ni zamud" — to je ista past, ki nas je ze ujela.
+  tezave.push({
+    kljuc: 'zamude-neznane',
+    opis: 'Preverbe zamujenih tekem ni bilo mogoce pognati',
+    koliko: 1,
+    primer: napakaZamud.message,
+  })
+} else {
+  const poLigi = new Map()
+  for (const m of zamujene ?? []) {
+    const liga = m.rounds?.competitions
+    if (!liga?.active) continue
+    const seznam = poLigi.get(liga.slug) ?? []
+    seznam.push(m)
+    poLigi.set(liga.slug, seznam)
+  }
+  for (const [slug, seznam] of poLigi) {
+    tezave.push({
+      kljuc: 'tekma-ni-uvozena',
+      opis: `Tekma, odigrana pred vec kot ${PRAG_DNI} dnevi, se ni uvozena`,
+      koliko: seznam.length,
+      primer: `${slug}: ${seznam[0].played_on} (tekma ${seznam[0].id})`,
+    })
+  }
+}
+
 // --- izpis ------------------------------------------------------------------
 if (!tezave.length) {
   console.log(`Vse v redu — ${(lige ?? []).length} vklopljenih lig, nobene težave.`)
