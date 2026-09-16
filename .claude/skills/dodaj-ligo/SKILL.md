@@ -901,6 +901,29 @@ const jeStroj = strojniKljuci.some((k) => auth === `Bearer ${k}`)
 Kateri ključ okolje res ima, se preveri tako, da funkcijo suho pokličeš z
 vsakim posebej.
 
+## Opozorilo enkrat na težavo, ne enkrat na krog
+
+Opozorilo, ki pride šestič, ni več opozorilo. Kdor ekipe ne popravi, bi pri
+pravilu "enkrat na krog" dobival isto pošto vsak teden do konca sezone — in
+prvo, ki bi koga res rešilo, bi se izgubilo med njimi.
+
+Vprašanje je, kako vemo, da je človek težavo **odpravil**. `roster_updated_at`
+pove le, da se je ekipe dotaknil, ne da je z njo kaj rešil. Pošten pokazatelj
+je ZAKLEP: če se je ekipa po opozorilu kdaj zaklenila (`fantasy_lineups` za
+krog z `lineups_locked_at` po tistem mailu), je bil kader takrat veljaven. Če
+se pozneje spet pokvari, je to nova težava in novo opozorilo.
+
+### Okno mora biti širše od razmika med zagoni
+
+Zagon teče enkrat na dan ob 8:00, okno pa je bilo najprej dva dni. Liga z rokom
+ob 8:30 tako pade čez rob: zagon dva dni prej je ne ujame (8:30 > 8:00),
+naslednji pa pride šele dan pred rokom. "Dva dni prej" v resnici postane "en
+dan prej". Okno naj bo za en razmik širše od obljube — tu trije dnevi, kar da
+48 do 52 ur.
+
+Ker opozorilo pride enkrat na težavo, širše okno ne pomeni več pošte, le
+zgodnejšo.
+
 ## Ob koncu
 
 `npm run smoke`, `npm test`, `npm run typecheck`, `npm run build` — vsi zeleni,
