@@ -1085,6 +1085,11 @@ preveri(
       if (tabela === 'competitions')
         return odgovor(url.searchParams.has('slug') ? liga : [liga])
       if (tabela === 'preveri_podatke') return odgovor([])
+      // Zamujene tekme: privzeto jih ni. Preverba mora znati lociti "ni
+      // zamud" od "poizvedba je padla", zato tu vrnemo prazen seznam in ne
+      // napake — zamude imajo svojo trditev nize.
+      if (tabela === 'matches')
+        return odgovor(moznosti.zamude ?? [])
       if (tabela === 'players') {
         const od = Number(url.searchParams.get('offset') ?? 0)
         const koliko = Number(url.searchParams.get('limit') ?? 1000)
@@ -1124,6 +1129,19 @@ preveri(
       preveri(`${skripta}: ${ime}`, izid.status === status, izid.stderr || izid.stdout.trim())
     }
   }
+  // Tekma, ki bi morala biti ze uvozena, je tezava — uvoz je lahko padel,
+  // podatki v bazi pa so videti brezhibni. Prav to je dva dni ostalo neopazeno.
+  {
+    const zamuda = [{
+      id: 1818, played_on: '2026-09-11', imported_at: null,
+      rounds: { competition_id: 1, competitions: { slug: 'preizkus', active: true } },
+    }]
+    const izid = cli('preveri-podatke.mjs', [...igralci, ...vrhCenika], { zamude: zamuda })
+    preveri('preverba javi tekmo, ki bi ze morala biti uvozena',
+      izid.status === 1 && izid.stdout.includes('se ni uvozena'),
+      izid.stdout.trim().split('\n').slice(-1)[0])
+  }
+
   for (const moznosti of [{ napaka: true }, { prazno: true }, { brezIgralcev: true }]) {
     const izid = cli('pripravljenost-lige.mjs', [...igralci, ...vrhCenika], moznosti)
     preveri(`pripravljenost CLI: manjkajoče stanje ne dovoli vklopa (${Object.keys(moznosti)[0]})`,
