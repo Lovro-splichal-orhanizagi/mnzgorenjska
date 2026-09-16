@@ -705,8 +705,21 @@ curl -s "$URL/rest/v1/<tabela>?select=*&limit=3" -H "apikey: $ANON"
 ```
 
 Pogledi nad tako tabelo tečejo s pravicami **lastnika pogleda**
-(`security_invoker=false`), zato zaostritev RLS ne pokvari izračunov, kot je
-izbranost igralca. Preveri, preden zaostriš:
+(`security_invoker=false`). To je nož z dvema rezitvama: izračuni po
+zaostritvi RLS delujejo naprej — a prav zato **zaostritev nanje ne velja**.
+Zapreti tabelo in pustiti pogled nad njo pomeni pustiti vrata odprta.
+
+Tu se je to zgodilo trikrat: `player_standings.owners` je štel žive kadre in
+je v majhni ligi tujo ekipo izdal v celoti, `fantasy_team_wealth.roster_value`
+in `fantasy_team_budget` pa sta bila seštevka istega. Rešitev je bila dvojna:
+izbranost šteje posnetek zadnjega zaklenjenega kroga, obema seštevkoma pa je
+vklopljen `security_invoker = on`, da zanju velja ista politika kot za kader.
+
+**Ob vsaki zaostritvi RLS zato preštej pogleda nad tabelo in se pri vsakem
+vprašaj, ali sme povedati to, kar tabela odslej skriva.** Agregat ni manj
+razkrivajoč od vrstic — število je lahko dovolj.
+
+Preveri, preden zaostriš:
 
 ```sql
 select c.relname, coalesce((select option_value from pg_options_to_table(c.reloptions)
@@ -773,6 +786,12 @@ Postopek, ki se je obnesel:
 { echo 'begin;'; <stara definicija>; <do blok preizkusa>; echo 'rollback;'; } \
   | docker exec -i supabase_db_mnzgorenjska psql -U postgres -d postgres
 ```
+
+Trditev tudi ne sme domnevati, KATERO vrstico bo koda izbrala. "Izbranost
+šteje zadnji zaklenjeni krog" je bila zelena na golem seedu in rdeča na
+uvoženem okolju — preizkus je mislil, da je njegov krog zadnji, v resnici jih
+je bilo zaklenjenih dvajset. Trditev naj zadnji krog poišče enako, kot ga
+poišče pogled.
 
 Tudi mesto trditve šteje. "Obvoz prek `postava_kroga` ne izda kadra" je najprej
 stal za zaklepom kroga — in tam funkcija vrne posnetek, ki je javen tako ali
