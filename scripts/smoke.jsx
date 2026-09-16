@@ -2429,5 +2429,55 @@ preveri(
     skop ? `${skop.reduce((v, k) => v + k.value, 0).toFixed(1)} M€` : 'null')
 }
 
+// --- NZS: neodigrana tekma ne sme podreti uvoza ----------------------------
+// Razpored našteje tudi tekme, ki se še niso odigrale, in NZS za te vrne 404.
+// Uvoz je zaradi tega dvakrat padel (15. in 16. septembra) na tekmi, predvideni
+// tri dni vnaprej, in cela liga je ostala brez osvežitve.
+{
+  const nzsVir = (await import('../scripts/viri/nzs.mjs')).default
+  const { sifreTekem } = await import('../scripts/viri/nzs.mjs')
+  const seznam = readFileSync(
+    new URL('./vzorci/tekme-nzs-1snl-sezona25.html', import.meta.url), 'utf8')
+  const zapisnik = readFileSync(
+    new URL('./vzorci/zapisnik-nzs-1snl.html', import.meta.url), 'utf8')
+  const sifre = sifreTekem(seznam)
+  const prva = sifre[0]
+
+  const ni = () => {
+    const e = new Error('HTTP 404')
+    e.status = 404
+    return e
+  }
+  // Seznam tekem prebere prek istega `prenesi`; locimo ga po imenu datoteke
+  // (`seznam-…`), zapisnike pa po `zapisnik-…`.
+  const jeSeznam = (ime) => String(ime).startsWith('seznam-')
+
+  const mesano = async (url, ime) => {
+    if (jeSeznam(ime)) return seznam
+    if (String(ime).includes(prva)) return zapisnik
+    throw ni()
+  }
+  const out = await nzsVir.zapisniki('prva-liga-telemach:25', mesano)
+  preveri(
+    'NZS: neodigrana tekma se preskoci, odigrana se uvozi',
+    Array.isArray(out) && out.length === 1 && out[0].id === prva,
+    `${out.length} zapisnikov od ${sifre.length} tekem`,
+  )
+
+  // Ce 404 vrnejo VSI, to ni normalno stanje, ampak spremenjen naslov — in
+  // tiho uvoziti nic je slabse kot pasti.
+  const vsi404 = async (url, ime) => {
+    if (jeSeznam(ime)) return seznam
+    throw ni()
+  }
+  let pove = false
+  try {
+    await nzsVir.zapisniki('prva-liga-telemach:25', vsi404)
+  } catch (e) {
+    pove = /nobeden/.test(String(e.message))
+  }
+  preveri('NZS: sami 404 so napaka, ne normalno stanje', pove)
+}
+
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)
 process.exit(napak === 0 ? 0 : 1)

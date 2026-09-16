@@ -80,7 +80,13 @@ async function prenesi(url, datoteka, sveze = false) {
   const pot = `${MAPA}/${datoteka}`
   if (!sveze && existsSync(pot)) return readFileSync(pot, 'utf8')
   const odgovor = await fetch(url)
-  if (!odgovor.ok) throw new Error(`${url} -> HTTP ${odgovor.status}`)
+  if (!odgovor.ok) {
+    // Statusa ne pozremo, ga pa pripnemo: klicatelj mora znati lociti
+    // "te strani (se) ni" od "vir je padel". Vir sam tega ne pove drugace.
+    const e = new Error(`${url} -> HTTP ${odgovor.status}`)
+    e.status = odgovor.status
+    throw e
+  }
   const besedilo = await odgovor.text()
   writeFileSync(pot, besedilo)
   return besedilo

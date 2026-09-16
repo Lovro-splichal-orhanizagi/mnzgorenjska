@@ -153,15 +153,53 @@ const vir = {
   async zapisniki(koda, prenesi) {
     const { pot, sezona } = razbijKodo(koda)
     const out = []
-    for (const sifra of await seznamTekem(koda, prenesi)) {
+    const sifre = await seznamTekem(koda, prenesi)
+    let seNiObjavljenih = 0
+
+    for (const sifra of sifre) {
       const url = vir.naslovZapisnika(koda, sifra)
       const ime = `zapisnik-${pot}-${sezona ?? 'tekoca'}-${sifra}.html`
+      // Razpored nasteje tudi tekme, ki se niso odigrane, in NZS za te vrne
+      // 404. To ni napaka vira, ampak normalno stanje — dokler se ne igra,
+      // zapisnika ni. Uvoz je zato dvakrat padel na tekmi, predvideni cez tri
+      // dni, in cela liga je ostala brez osvezitve.
+      let besedilo
+      try {
+        besedilo = await prenesi(url, ime)
+      } catch (e) {
+        if (e?.status === 404) {
+          seNiObjavljenih++
+          continue
+        }
+        throw e
+      }
+
       // Zapisnik se objavi sele nekaj ur po tekmi. Prazna stran, prenesena
       // prezgodaj, bi sicer obtičala v predpomnilniku in tekma bi ostala brez
       // statistike za vedno — glej `zapisnikSvez` v `zapisniki.mjs`.
-      let z = parsirajZapisnik(await prenesi(url, ime), { zapisnikId: sifra, url })
-      if (!z) z = parsirajZapisnik(await prenesi(url, ime, true), { zapisnikId: sifra, url })
+      let z = parsirajZapisnik(besedilo, { zapisnikId: sifra, url })
+      if (!z) {
+        try {
+          z = parsirajZapisnik(await prenesi(url, ime, true), { zapisnikId: sifra, url })
+        } catch (e) {
+          if (e?.status !== 404) throw e
+          seNiObjavljenih++
+          continue
+        }
+      }
       if (z) out.push({ id: sifra, z, url })
+    }
+
+    // Posamezen 404 je normalen, sami 404 pa niso: tako bi izgledala
+    // sprememba naslovov pri viru, in tiho bi uvozili nic.
+    if (sifre.length > 0 && out.length === 0 && seNiObjavljenih === sifre.length) {
+      throw new Error(
+        `nzs: nobeden od ${sifre.length} zapisnikov ni dosegljiv (vsi 404) — ` +
+          'ali se je oblika naslova spremenila?',
+      )
+    }
+    if (seNiObjavljenih > 0) {
+      console.log(`  zapisnikov se ni objavljenih: ${seNiObjavljenih}`)
     }
     return out
   },
