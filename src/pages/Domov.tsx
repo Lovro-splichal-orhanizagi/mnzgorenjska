@@ -20,6 +20,7 @@ interface Statistika {
   igralci: number
   goli: number
   brezAsistence: number
+  brezPozicije: number
 }
 
 /** Igralec v eni od treh lestvic (strelci, podajalci, obrambe). */
@@ -107,6 +108,7 @@ export default function Domov() {
         podajalciTop,
         obrambeTop,
         sezonaTop,
+        brezPozicije,
       ] = await Promise.all([
           supabase
             .from('matches')
@@ -180,6 +182,15 @@ export default function Domov() {
             .order('points', { ascending: false })
             .order('minutes', { ascending: false })
             .limit(5),
+          // Igralci, ki jim je pozicijo doslej le ugibal uvoz. Pozicija
+          // odloca, koliko je vreden gol, zato ni kozmeticna.
+          supabase
+            .from('player_overview')
+            .select('id', { count: 'exact', head: true })
+            .eq('competition_id', ligaId)
+            .eq('position_source', 'ugibanje')
+            .eq('active', true)
+            .gt('minutes', 0),
         ])
       setStat({
         tekme: tekme.count ?? 0,
@@ -189,6 +200,7 @@ export default function Domov() {
           (v: number, x) => v + Number(x.brez_asistence ?? 0),
           0,
         ),
+        brezPozicije: brezPozicije.count ?? 0,
       })
       setZvezde((top.data ?? []) as VrhIgralec[])
       setPodajalci((podajalciTop.data ?? []) as VrhIgralec[])
@@ -840,23 +852,58 @@ export default function Domov() {
       {/* klepet — anonimni prostor za pogovor */}
       <Klepet />
 
-      {/* naloge za skupnost — samo asistence, pozicij ne izpostavljamo, ker
-          so postavljene iz statistike in jih glasovanje po potrebi popravi. */}
-      {stat && stat.brezAsistence > 0 && (
+      {/* Naloge za skupnost.
+          Pozicij tu dolgo ni bilo, ker jih postavi statistika in jih
+          glasovanje le popravi. Potem je v klepetu nekdo prosil "dajte
+          naredit da se lahko glasuje za pravo pozicijo igralcev" — za stran,
+          ki obstaja in je v meniju. Prosnja za nekaj, kar ze imamo, ni
+          prosnja za funkcijo, ampak podatek, da je ne najdejo. Isto velja za
+          odsotnosti: stran je bila, prijav ni bilo nobene. */}
+      {stat && (stat.brezAsistence > 0 || stat.brezPozicije > 0) && (
         <section className="space-y-3">
           <h2 className="text-xl font-bold">Pomagaj skupnosti</h2>
           <div className="grid gap-3 sm:grid-cols-2">
+            {stat.brezAsistence > 0 && (
+              <Link
+                to="/glasovanje"
+                className="kartica kartica-hover flex items-center gap-4 p-4"
+              >
+                <span className="text-3xl">🅰️</span>
+                <div className="min-w-0">
+                  <div className="font-bold">
+                    {stat.brezAsistence} golov brez asistence
+                  </div>
+                  <div className="text-sm text-slate-400">
+                    Povej, kdo je podal — 3 glasovi potrdijo
+                  </div>
+                </div>
+              </Link>
+            )}
+            {stat.brezPozicije > 0 && (
+              <Link
+                to="/pozicije"
+                className="kartica kartica-hover flex items-center gap-4 p-4"
+              >
+                <span className="text-3xl">🧭</span>
+                <div className="min-w-0">
+                  <div className="font-bold">
+                    {stat.brezPozicije} igralcev z ugibano pozicijo
+                  </div>
+                  <div className="text-sm text-slate-400">
+                    Pozicija odloča, koliko je vreden gol
+                  </div>
+                </div>
+              </Link>
+            )}
             <Link
-              to="/glasovanje"
+              to="/odsotnosti"
               className="kartica kartica-hover flex items-center gap-4 p-4"
             >
-              <span className="text-3xl">🅰️</span>
+              <span className="text-3xl">🩹</span>
               <div className="min-w-0">
-                <div className="font-bold">
-                  {stat.brezAsistence} golov brez asistence
-                </div>
+                <div className="font-bold">Poškodbe in odsotnosti</div>
                 <div className="text-sm text-slate-400">
-                  Povej, kdo je podal — 3 glasovi potrdijo
+                  Javi, kdo ne bo igral — drugim prihrani krog
                 </div>
               </div>
             </Link>
