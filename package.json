@@ -19,8 +19,9 @@
     "testno-okolje": "bash scripts/testno-okolje.sh",
     "preizkus-pravic": "docker exec -i supabase_db_mnzgorenjska psql -U postgres -d postgres -v ON_ERROR_STOP=1 < scripts/preizkus-mini-lig.sql && docker exec -i supabase_db_mnzgorenjska psql -U postgres -d postgres -v ON_ERROR_STOP=1 < scripts/preizkus-tujih-ekip.sql",
     "preizkus-borze": "docker exec -i supabase_db_mnzgorenjska psql -U postgres -d postgres -v ON_ERROR_STOP=1 < scripts/preizkus-borze.sql",
-    "preizkusi": "npm run preizkus-pravic && npm run preizkus-borze && npm run preizkus-opozoril",
-    "preizkus-opozoril": "docker exec -i supabase_db_mnzgorenjska psql -U postgres -d postgres -v ON_ERROR_STOP=1 < scripts/preizkus-opozoril.sql"
+    "preizkusi": "npm run preizkus-pravic && npm run preizkus-borze && npm run preizkus-opozoril && npm run preizkus-zivosti",
+    "preizkus-opozoril": "docker exec -i supabase_db_mnzgorenjska psql -U postgres -d postgres -v ON_ERROR_STOP=1 < scripts/preizkus-opozoril.sql",
+    "preizkus-zivosti": "docker exec -i supabase_db_mnzgorenjska psql -U postgres -d postgres -v ON_ERROR_STOP=1 < scripts/preizkus-zivosti.sql"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",

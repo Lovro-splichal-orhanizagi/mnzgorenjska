@@ -20,6 +20,7 @@ import Slovenija from '../src/pages/Slovenija'
 import MiniLige from '../src/pages/MiniLige'
 import Ekipa from '../src/pages/Ekipa'
 import InfoIgralca from '../src/components/InfoIgralca'
+import ZivostSkupnosti from '../src/components/admin/Zivost'
 import Administracija from '../src/pages/Administracija'
 import {
   preveriEkipo,
@@ -79,6 +80,7 @@ const strani = [
     ),
     '/moja-ekipa',
   ],
+  ['Zivost skupnosti', ZivostSkupnosti, '/admin'],
   ['Rezultati', Rezultati, '/rezultati'],
   ['Tekma', Tekma, '/tekma/1'],
   ['Prijava', Prijava, '/prijava'],

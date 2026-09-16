@@ -6,6 +6,7 @@ import { prikazniIme, IME_POZICIJE, formatirajTocke, formatirajCeno } from '../l
 import { POZICIJE, VELIKOST_EKIPE, STEVILO_PRVIH, MAX_IZ_KLUBA, VRSTNI_RED, poPozicijah } from '../lib/pravila'
 import { useTekmovanje } from '../lib/tekmovanje'
 import UpravljanjeLig from '../components/admin/UpravljanjeLig'
+import ZivostSkupnosti from '../components/admin/Zivost'
 
 export default function Administracija() {
   const { session, loading } = useAuth()
@@ -413,6 +414,9 @@ export default function Administracija() {
         />
         <Kazalnik oznaka="Opozoril iz uvoza" vrednost={opozorila.length} opozori />
       </section>
+
+      {/* zivost — koliko ljudi je res aktivnih */}
+      <ZivostSkupnosti />
 
       {/* uporabniki + e-pošte za opomnik */}
       <section className="kartica space-y-3 p-3 sm:p-4">

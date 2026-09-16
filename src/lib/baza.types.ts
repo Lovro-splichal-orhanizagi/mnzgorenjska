@@ -469,6 +469,7 @@ export type Database = {
           napaka: string | null
           poslano_at: string
           resend_id: string | null
+          round_id: number | null
           user_id: string | null
           vrsta: string
         }
@@ -479,6 +480,7 @@ export type Database = {
           napaka?: string | null
           poslano_at?: string
           resend_id?: string | null
+          round_id?: number | null
           user_id?: string | null
           vrsta: string
         }
@@ -489,6 +491,7 @@ export type Database = {
           napaka?: string | null
           poslano_at?: string
           resend_id?: string | null
+          round_id?: number | null
           user_id?: string | null
           vrsta?: string
         }
@@ -513,6 +516,41 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "lestvica_drzavna"
             referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "email_log_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "fantasy_round_points"
+            referencedColumns: ["round_id"]
+          },
+          {
+            foreignKeyName: "email_log_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "fantasy_round_standings"
+            referencedColumns: ["round_id"]
+          },
+          {
+            foreignKeyName: "email_log_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "naslednji_krog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_log_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "rounds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_log_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "zadnji_odigrani_krog"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3844,6 +3882,19 @@ export type Database = {
         Args: { p_round_id: number }
         Returns: undefined
       }
+      admin_tedenska_aktivnost: {
+        Args: { p_tednov?: number }
+        Returns: {
+          aktivnih: number
+          glasovalcev: number
+          javiteljev: number
+          klepetalcev: number
+          novih: number
+          teden: string
+          urejalcev_ekipe: number
+          zacetek: string
+        }[]
+      }
       admin_uporabniki: {
         Args: { p_competition_id?: number }
         Returns: {
@@ -3858,6 +3909,16 @@ export type Database = {
           user_id: string
         }[]
       }
+      admin_zivost: {
+        Args: never
+        Returns: {
+          aktivnih_30dni: number
+          aktivnih_7dni: number
+          prijavljenih_7dni: number
+          registriranih: number
+          z_veljavno_ekipo: number
+        }[]
+      }
       is_admin: { Args: never; Returns: boolean }
       kandidati_za_opomnik: {
         Args: { p_competition_id: number }
@@ -3865,6 +3926,20 @@ export type Database = {
           display_name: string
           email: string
           team_id: number
+          user_id: string
+        }[]
+      }
+      kandidati_za_opozorilo: {
+        Args: { p_competition_id: number; p_dni?: number }
+        Returns: {
+          deadline_at: string
+          display_name: string
+          email: string
+          razlog: string
+          round_id: number
+          round_number: number
+          team_id: number
+          team_name: string
           user_id: string
         }[]
       }
@@ -3942,11 +4017,13 @@ export type Database = {
         Args: { p_round_id: number }
         Returns: number
       }
+      razlog_neveljavne_ekipe: { Args: { p_team_id: number }; Returns: string }
       recompute_round_scores: {
         Args: { p_round_id: number }
         Returns: undefined
       }
       roster_je_veljaven: { Args: { p_team_id: number }; Returns: boolean }
+      sem_v_mini_ligi: { Args: { p_liga: number }; Returns: boolean }
       shrani_ekipo: {
         Args: { p_roster: Json; p_team_id: number }
         Returns: Json
