@@ -29,6 +29,7 @@ declare
   potrebno int;
   tekma bigint;
   t numeric;
+  zadnji_zaklenjen bigint;
   n int;
 begin
   -- --- priprava ------------------------------------------------------------
@@ -267,6 +268,40 @@ begin
   execute 'set local role postgres';
   if n <> 0 then
     raise exception '10. zaklep kroga naj ne odpre tekocega kadra, odprl je % vrstic', n;
+  end if;
+
+  -- --- 10b. izbranost ne izda zivega kadra --------------------------------
+  -- `player_standings.owners` je stel vrstice v `fantasy_roster`. V majhni
+  -- ligi to tujo ekipo izda v celoti, pogled pa tece s pravicami lastnika in
+  -- RLS obide, zato ga zaostritev politike ne zadeva.
+  --
+  -- Pogled steje posnetek ZADNJEGA zaklenjenega kroga lige, ne kroga iz tega
+  -- preizkusa — v uvozenem okolju jih je zaklenjenih vec.
+  select r.id into zadnji_zaklenjen
+    from rounds r
+   where r.competition_id = tekmovanje and r.lineups_locked_at is not null
+   order by r.season desc, r.number desc
+   limit 1;
+
+  select count(*) into n
+    from fantasy_lineups fl
+    join player_standings ps on ps.id = fl.player_id
+   where fl.round_id = zadnji_zaklenjen
+     and coalesce(ps.owners, 0) = 0;
+  if n > 0 then
+    raise exception '10b. igralci iz zadnjega zaklenjenega kroga naj steti v izbranost, brez nje jih je %', n;
+  end if;
+
+  -- Ko zaklenjenega kroga ni, izbranost ni nic, ampak se ne vemo.
+  create temp table zaklepi on commit drop as
+    select id, lineups_locked_at from rounds where competition_id = tekmovanje;
+  update rounds set lineups_locked_at = null where competition_id = tekmovanje;
+  select count(*) into n from player_standings ps
+   where ps.competition_id = tekmovanje and ps.owners is not null;
+  update rounds r set lineups_locked_at = z.lineups_locked_at
+    from zaklepi z where z.id = r.id;
+  if n > 0 then
+    raise exception '10b. brez zaklenjenega kroga naj izbranost ne bo znana, znana je pri % igralcih', n;
   end if;
 
   -- --- 11. postava nosi tocke, ne le imen ---------------------------------

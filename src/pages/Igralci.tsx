@@ -70,7 +70,11 @@ const STOLPCI: Array<{ kljuc: Stolpec; naslov: string; opis: string }> = [
   { kljuc: 'value', naslov: 'Cena', opis: 'Cena v proračunu (v milijonih €)' },
   { kljuc: 'goals', naslov: 'Goli', opis: 'Doseženi goli' },
   { kljuc: 'minutes', naslov: 'Minute', opis: 'Odigrane minute' },
-  { kljuc: 'owners', naslov: 'Izbran', opis: 'Št. fantasy ekip z igralcem' },
+  {
+    kljuc: 'owners',
+    naslov: 'Izbran',
+    opis: 'Št. fantasy ekip z igralcem v zadnjem zaklenjenem krogu',
+  },
 ]
 
 export default function Igralci() {
@@ -230,6 +234,9 @@ export default function Igralci() {
     return <p className="animiraj-utrip text-slate-400">Nalaganje …</p>
   if (napaka) return <p className="text-rose-400">Napaka: {napaka}</p>
 
+  // Izbranost pride iz posnetka zadnjega zaklenjenega kroga. Dokler ta ne
+  // obstaja, je `owners` NULL — pred prvim rokom so ekipe se skrite in
+  // stevilke ni, kar ni isto kot nic.
   const ekip = igralci.length
     ? Math.max(...igralci.map((i) => Number(i.owners ?? 0)), 1)
     : 1
@@ -399,10 +406,18 @@ export default function Igralci() {
                   {i.minutes}
                 </td>
                 <td className="px-2 py-2 text-right tabular-nums text-slate-400">
-                  {i.owners}
-                  <span className="ml-1 text-xs text-slate-600">
-                    ({Math.round((Number(i.owners ?? 0) / ekip) * 100)}%)
-                  </span>
+                  {i.owners === null ? (
+                    <span className="text-slate-600" title="Znano bo po prvem roku">
+                      –
+                    </span>
+                  ) : (
+                    <>
+                      {i.owners}
+                      <span className="ml-1 text-xs text-slate-600">
+                        ({Math.round((Number(i.owners ?? 0) / ekip) * 100)}%)
+                      </span>
+                    </>
+                  )}
                 </td>
               </tr>
             ))}
