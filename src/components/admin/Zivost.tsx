@@ -43,7 +43,12 @@ export default function ZivostSkupnosti() {
       // Migracija in koda potujeta vsaka po svoji poti; brez nje naj razdelek
       // pove, da ga se ni, ne pa da je skupnost mrtva.
       if (e1 || e2) setNapaka((e1 ?? e2)?.message ?? 'Napaka.')
-      setTedni(((t ?? []) as Teden[]).slice().reverse())
+      // Tedne pred prvim dejanjem odrežemo: aplikacija takrat še ni
+      // obstajala in osem praznih vrstic pove le to. Prazen teden MED
+      // dejavnimi pa ostane — ta je podatek.
+      const vsi = (t ?? []) as Teden[]
+      const prvi = vsi.findIndex((x) => x.aktivnih > 0 || x.novih > 0)
+      setTedni((prvi === -1 ? vsi : vsi.slice(prvi)).reverse())
       setZdaj(((z ?? []) as Zivost[])[0] ?? null)
       setNalaganje(false)
     })()
@@ -68,7 +73,14 @@ export default function ZivostSkupnosti() {
   return (
     <section className="kartica space-y-3 p-3 sm:p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="font-bold">Živost skupnosti</h2>
+        <h2 className="font-bold">
+          Živost skupnosti
+          {/* Pas nad tem razdelkom je za IZBRANO ligo, te številke pa so
+              skupne. Brez oznake stojita druga ob drugi dve različni meri. */}
+          <span className="ml-2 text-xs font-normal text-slate-500">
+            vse lige skupaj
+          </span>
+        </h2>
         <span className="text-xs text-slate-500">
           šteje dejanja, ne obiskov
         </span>
