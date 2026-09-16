@@ -263,9 +263,12 @@ export default function InfoIgralca({
                   {tekme.map((t) => (
                     <li
                       key={t.match_id}
+                      // Kratice klubov so ponekod ena sama crka ("D", "K"),
+                      // zato polno ime vsaj ob prehodu z misko.
+                      title={t.opponent_name ?? undefined}
                       className="rounded-md bg-white/5 px-2 py-1 text-[11px] text-slate-300"
                     >
-                      {t.opponent_short ?? t.opponent_name}
+                      {t.opponent_short || t.opponent_name}
                       <span className="ml-1 text-slate-600">
                         {t.doma ? 'doma' : 'v gosteh'}
                       </span>
