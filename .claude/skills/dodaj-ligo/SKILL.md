@@ -806,6 +806,47 @@ ob manjkajočem krogu tiho vrnila, torej je trditev izginila, izpis pa je bil
 videti popoln. Zdaj tak primer sestavi `scripts/preizkus-borze.sql` sam (dve
 tekmi, ena uvožena), e2e pa te trditve nima več.
 
+## `sezone.odigranih` šteje tekme, ne krogov
+
+Ime zavaja: pogled `sezone` z `odigranih` misli **uvožene tekme**. Pri članih
+je to 19 proti 4 dejansko odigranim krogom. Kdor ga uporabi kot "zadnji krog",
+razpotegne graf čez pol sezone, ki še ni bila odigrana. Zadnji odigrani krog
+se dobi neposredno:
+
+```ts
+supabase.from('rounds')
+  .select('number, matches!inner(imported_at)')
+  .eq('competition_id', liga).eq('season', sezona)
+  .not('matches.imported_at', 'is', null)
+  .order('number', { ascending: false }).limit(1)
+```
+
+Brez filtra na sezono vrne krog iz lanskega arhiva (26 namesto 4).
+
+## Preveri objavo po nizu, ki ga stara koda NIMA
+
+Čakanje na Vercel z `grep "Gibanje cene"` je bilo takoj zeleno — tisti naslov
+je v strani stal že prej. Stran sem torej pogledal, preden je bila objavljena,
+in sklepal, da graf ne dela. Za čakanje vzemi niz, ki obstaja **samo** v novi
+kodi:
+
+```bash
+until curl -s https://slff.eu/ | grep -o '/assets/[^"]*\.js' | head -1 \
+      | xargs -I{} curl -s "https://slff.eu{}" | grep -q "ob postavitvi lige"; do
+  sleep 20
+done
+```
+
+## Kar hrani samo spremembe, je za graf treba dopolniti
+
+`price_changes` ima vrstico le za krog, v katerem se je cena premaknila. Trije
+zapisi zato izgledajo kot tri zaporedne spremembe, pa naj bo med njima pet
+mirnih krogov ali noben. Vmesne kroge dopolni (`src/lib/gibanjeCene.ts`),
+sicer graf laže o hitrosti gibanja.
+
+Drugo: krivuljo raztegni na razpon **serije**, ne cenika. Premik za 0.3 je pri
+igralcu za 4.5 velika novica in bi se ob lestvici od 0 do 15 zlil v ravno črto.
+
 ## Ob koncu
 
 `npm run smoke`, `npm test`, `npm run typecheck`, `npm run build` — vsi zeleni,
