@@ -18,6 +18,8 @@ declare
   krog bigint;
   ekipa bigint;
   klub_a bigint;
+  vmesni_krog bigint;
+  naslednji_krog bigint;
   n int;
   besedilo text;
   poz text;
@@ -192,22 +194,60 @@ begin
   end if;
   update rounds set deadline_at = now() + interval '1 day' where id = krog;
 
-  -- --- 7. enkrat na krog, ne enkrat na dan --------------------------------
-  insert into email_log (user_id, email, vrsta, competition_id, round_id)
-  values (a, 'c@opozorilo', 'opozorilo-postava', tekmovanje, krog);
+  -- --- 7. enkrat na tezavo, ne enkrat na krog -----------------------------
+  -- Kdor ekipe ne popravi, bi sicer dobival isto posto vsak teden do konca
+  -- sezone. Opozorilo, ki pride sestic, ni vec opozorilo.
+  insert into email_log (user_id, email, vrsta, competition_id, round_id, poslano_at)
+  values (a, 'c@opozorilo', 'opozorilo-postava', tekmovanje, krog, now() - interval '10 days');
+
   select count(*) into n from kandidati_za_opozorilo(tekmovanje, 2) where team_id = ekipa;
   if n <> 0 then
-    raise exception '7. kdor je opozorilo za ta krog ze dobil, naj ga ne dobi znova (kandidatov %)', n;
+    raise exception '7. kdor je opozorilo ze dobil in ni popravil, naj ga ne dobi znova (kandidatov %)', n;
   end if;
 
-  -- Neuspela posta ne steje za poslano.
-  update email_log set napaka = 'Resend 500' where user_id = a and round_id = krog;
+  -- Tisina mora zdrzati tudi v NASLEDNJEM krogu — prav to je razlika med
+  -- "enkrat na tezavo" in "enkrat na krog". Zato tu nastane nov krog, ne le
+  -- premaknjen rok starega: sicer bi trditev veljala tudi za staro pravilo.
+  update rounds set deadline_at = now() + interval '5 days' where id = krog;
+  insert into rounds (competition_id, season, number, deadline_at, played_on)
+  select tekmovanje, sezona, coalesce(max(number), 0) + 1,
+         now() + interval '1 day', current_date + 1
+    from rounds where competition_id = tekmovanje and season = sezona
+  returning id into naslednji_krog;
+
+  select count(*) into n from kandidati_za_opozorilo(tekmovanje, 2) where team_id = ekipa;
+  if n <> 0 then
+    raise exception '7. tisina naj traja tudi v naslednjem krogu (kandidatov %)', n;
+  end if;
+
+  -- --- 8. neuspela posta ne steje za poslano -------------------------------
+  update email_log set napaka = 'Resend 500' where user_id = a;
   select count(*) into n from kandidati_za_opozorilo(tekmovanje, 2) where team_id = ekipa;
   if n <> 1 then
-    raise exception '7. po neuspeli posti naj poskusimo znova, kandidatov je %', n;
+    raise exception '8. po neuspeli posti naj poskusimo znova, kandidatov je %', n;
+  end if;
+  update email_log set napaka = null where user_id = a;
+
+  -- --- 9. ko ekipo popravi, opozorilo spet zazivi --------------------------
+  -- Da je tezava odpravljena, pove ZAKLEP: ce se je ekipa po opozorilu
+  -- zaklenila, je bil kader takrat veljaven. Ce se pozneje spet pokvari, je to
+  -- nova tezava in novo opozorilo.
+  insert into rounds (competition_id, season, number, deadline_at, played_on, lineups_locked_at)
+  select tekmovanje, sezona, coalesce(max(number), 0) + 1,
+         now() - interval '2 days', current_date - 2, now() - interval '2 days'
+    from rounds where competition_id = tekmovanje and season = sezona
+  returning id into vmesni_krog;
+
+  insert into fantasy_lineups (round_id, fantasy_team_id, player_id, is_starter, is_captain, is_vice, bench_order)
+  select vmesni_krog, ekipa, fr.player_id, fr.is_starter, fr.is_captain, fr.is_vice, fr.bench_order
+    from fantasy_roster fr where fr.fantasy_team_id = ekipa;
+
+  select count(*) into n from kandidati_za_opozorilo(tekmovanje, 2) where team_id = ekipa;
+  if n <> 1 then
+    raise exception '9. po vmesnem zaklepu naj se opozorilo spet posilja, kandidatov je %', n;
   end if;
 
-  raise notice 'preizkus opozoril: vseh 7 trditev drzi';
+  raise notice 'preizkus opozoril: vseh 9 trditev drzi';
 end $$;
 
 rollback;
