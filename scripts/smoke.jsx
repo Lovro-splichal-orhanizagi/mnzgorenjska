@@ -50,6 +50,7 @@ import { premakniProti, NAJVECJI_TEDENSKI_PREMIK } from './premik-cene.mjs'
 import { oceniPripravljenost, najcenejsiKader } from '../src/lib/pripravljenost'
 import { serijaCen, premik, crta, zadnjiPremiki } from '../src/lib/gibanjeCene'
 import { predlagajKader } from '../src/lib/predlogKadra'
+import { vVrstice, velikostNaslova, vrsticeStatistike, imeDatoteke } from '../src/lib/plakat'
 import { readFileSync } from 'node:fs'
 
 let napak = 0
@@ -2497,6 +2498,42 @@ preveri(
     pove = /nobeden/.test(String(e.message))
   }
   preveri('NZS: sami 404 so napaka, ne normalno stanje', pove)
+}
+
+// --- plakat za objavo ------------------------------------------------------
+// Klub dobi sliko, ki jo objavi na Instagramu, kjer povezave ne delujejo.
+// Ime kluba mora ostati na sliki tudi, kadar je dolgo.
+{
+  // Merilo sirine je tu preprosto (znak = 10 enot), da je racun ponovljiv;
+  // v brskalniku sirino izmeri `ctx.measureText`.
+  const meri = (s) => s.length * 10
+
+  preveri('plakat: kratko ime ostane v eni vrstici',
+    vVrstice('Jevnica', 300, meri).length === 1)
+  preveri('plakat: dolgo ime se razlomi, nobena vrstica ni pressiroka',
+    vVrstice('Kety Emmi Impol Slovenska Bistrica', 200, meri).every((v) => meri(v) <= 200),
+    JSON.stringify(vVrstice('Kety Emmi Impol Slovenska Bistrica', 200, meri)))
+  preveri('plakat: beseda, daljsa od vrstice, se ne izgubi',
+    vVrstice('Nadpovprecnodolgoime', 50, meri).join(' ') === 'Nadpovprecnodolgoime')
+  preveri('plakat: prazno besedilo ne da vrstic', vVrstice('   ', 200, meri).length === 0)
+
+  preveri('plakat: daljse ime dobi manjso pisavo',
+    velikostNaslova('Jevnica') > velikostNaslova('Kety Emmi&Impol Bistrica'),
+    `${velikostNaslova('Jevnica')} proti ${velikostNaslova('Kety Emmi&Impol Bistrica')}`)
+
+  // Nicelnih podatkov ne oglasujemo: "0 navijacev" ni razlog za objavo.
+  const brez = vrsticeStatistike({ klub: 'X', liga: 'Y', igralcev: 20, navijacev: 0 })
+  preveri('plakat: nic navijacev se ne izpise', brez.length === 1, JSON.stringify(brez))
+  const eden = vrsticeStatistike({ klub: 'X', liga: 'Y', igralcev: 20, navijacev: 1 })
+  preveri('plakat: en navijac je v ednini', eden[1].includes('navijač jih ima'), eden[1])
+  const polno = vrsticeStatistike({ klub: 'X', liga: 'Y', igralcev: 20, navijacev: 6, najboljsi: 'Davor Bokalič', tock: 22 })
+  preveri('plakat: najboljsi igralec pride na sliko', polno.length === 3 && polno[2].includes('Bokalič'), JSON.stringify(polno))
+  const brezTock = vrsticeStatistike({ klub: 'X', liga: 'Y', igralcev: 20, navijacev: 6, najboljsi: 'Nekdo', tock: 0 })
+  preveri('plakat: igralca z nic tockami ne hvalimo', brezTock.length === 2)
+
+  preveri('plakat: ime datoteke je varno', imeDatoteke('Kety Emmi&Impol Bistrica') === 'slff-kety-emmi-impol-bistrica.png',
+    imeDatoteke('Kety Emmi&Impol Bistrica'))
+  preveri('plakat: ime brez crk da razumno datoteko', imeDatoteke('!!!') === 'slff-klub.png', imeDatoteke('!!!'))
 }
 
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)

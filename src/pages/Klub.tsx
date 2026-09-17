@@ -11,6 +11,7 @@ import { formatirajCeno, formatirajTocke, prikazniIme, razredPozicije, KRATKA_PO
 import { VRSTNI_RED } from '../lib/pravila'
 import type { Pozicija } from '../lib/tipi'
 import Grb from '../components/Grb'
+import Plakat from '../components/Plakat'
 
 interface Igralec {
   id: number
@@ -95,6 +96,10 @@ export default function Klub() {
     () => igralci.reduce((v, i) => v + Number(i.owners ?? 0), 0),
     [igralci],
   )
+  const najboljsi = useMemo(
+    () => [...igralci].sort((a, b) => Number(b.points ?? 0) - Number(a.points ?? 0))[0] ?? null,
+    [igralci],
+  )
   const poPoziciji = useMemo(() => {
     const m = new Map<string, Igralec[]>()
     for (const i of igralci) {
@@ -145,6 +150,23 @@ export default function Klub() {
           <Link to="/lestvica" className="gumb-tih px-3 py-2 text-sm">
             Lestvica
           </Link>
+        </div>
+
+        {/* Klubu damo tisto, kar je prosil: povezavo za FB in sliko za
+            Instagram, kjer povezave ne delujejo. */}
+        <div className="mt-3 border-t border-white/10 pt-3">
+          <Plakat
+            podatki={{
+              klub: klub?.name ?? '',
+              liga: liga?.name ?? '',
+              igralcev: igralci.length,
+              navijacev: izbranih,
+              najboljsi: najboljsi?.full_name ?? null,
+              tock: najboljsi?.points ?? null,
+            }}
+            grb={klub?.logo_url ?? null}
+            povezava={typeof window !== 'undefined' ? window.location.href : ''}
+          />
         </div>
       </section>
 
