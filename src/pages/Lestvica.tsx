@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../lib/useAuth'
 import Plakat from '../components/Plakat'
-import { vrsticeKroga } from '../lib/plakat'
+import { znackaKroga } from '../lib/plakat'
 import { supabase } from '../lib/supabase'
 import { formatirajTocke } from '../lib/pomozno'
 import { useTekmovanje } from '../lib/tekmovanje'
@@ -247,13 +247,10 @@ export default function Lestvica() {
             <Plakat
               podatki={{
                 naslov: mojRezultat.team_name ?? 'Moja ekipa',
-                podnaslov: `${formatirajTocke(mojRezultat.points)} točk v krogu`,
-                drobno: tekmovanje?.name ?? null,
-                vrstice: vrsticeKroga({
-                  mesto: mojRezultat.rank ?? null,
-                  odEkip: krogLestvica.length || null,
-                  kazen: Number(mojRezultat.penalty ?? 0),
-                }),
+                liga: tekmovanje?.name ?? null,
+                stevilo: formatirajTocke(mojRezultat.points),
+                oznaka: 'točk v krogu',
+                znacka: znackaKroga(mojRezultat.rank ?? null, krogLestvica.length || null),
               }}
               grb={null}
               povezava={

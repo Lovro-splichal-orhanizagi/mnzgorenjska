@@ -12,7 +12,7 @@ import { VRSTNI_RED } from '../lib/pravila'
 import type { Pozicija } from '../lib/tipi'
 import Grb from '../components/Grb'
 import Plakat from '../components/Plakat'
-import { vrsticeKluba } from '../lib/plakat'
+import { znackaKluba } from '../lib/plakat'
 
 interface Igralec {
   id: number
@@ -97,10 +97,6 @@ export default function Klub() {
     () => igralci.reduce((v, i) => v + Number(i.owners ?? 0), 0),
     [igralci],
   )
-  const najboljsi = useMemo(
-    () => [...igralci].sort((a, b) => Number(b.points ?? 0) - Number(a.points ?? 0))[0] ?? null,
-    [igralci],
-  )
   const poPoziciji = useMemo(() => {
     const m = new Map<string, Igralec[]>()
     for (const i of igralci) {
@@ -159,14 +155,10 @@ export default function Klub() {
           <Plakat
             podatki={{
               naslov: klub?.name ?? '',
-              podnaslov: 'je v fantasy ligi SLFF',
-              drobno: liga?.name ?? null,
-              vrstice: vrsticeKluba({
-                igralcev: igralci.length,
-                navijacev: izbranih,
-                najboljsi: najboljsi?.full_name ?? null,
-                tock: najboljsi?.points != null ? Number(najboljsi.points) : null,
-              }),
+              liga: liga?.name ?? null,
+              stevilo: igralci.length,
+              oznaka: 'igralcev v igri',
+              znacka: znackaKluba(izbranih),
             }}
             grb={klub?.logo_url ?? null}
             povezava={typeof window !== 'undefined' ? window.location.href : ''}

@@ -50,7 +50,7 @@ import { premakniProti, NAJVECJI_TEDENSKI_PREMIK } from './premik-cene.mjs'
 import { oceniPripravljenost, najcenejsiKader } from '../src/lib/pripravljenost'
 import { serijaCen, premik, crta, zadnjiPremiki } from '../src/lib/gibanjeCene'
 import { predlagajKader } from '../src/lib/predlogKadra'
-import { vVrstice, velikostNaslova, vrsticeKluba, vrsticeKroga, zacetekBloka, imeDatoteke } from '../src/lib/plakat'
+import { velikostNaslova, visinaKartice, zacetekKartice, znackaKluba, znackaKroga, imeDatoteke } from '../src/lib/plakat'
 import { readFileSync } from 'node:fs'
 
 let napak = 0
@@ -2501,55 +2501,38 @@ preveri(
 }
 
 // --- plakat za objavo ------------------------------------------------------
-// Klub dobi sliko, ki jo objavi na Instagramu, kjer povezave ne delujejo.
-// Ime kluba mora ostati na sliki tudi, kadar je dolgo.
+// Slika je edino, kar pove sporocilo na Instagramu, kjer povezave ne delujejo.
 {
-  // Merilo sirine je tu preprosto (znak = 10 enot), da je racun ponovljiv;
-  // v brskalniku sirino izmeri `ctx.measureText`.
-  const meri = (s) => s.length * 10
-
-  preveri('plakat: kratko ime ostane v eni vrstici',
-    vVrstice('Jevnica', 300, meri).length === 1)
-  preveri('plakat: dolgo ime se razlomi, nobena vrstica ni pressiroka',
-    vVrstice('Kety Emmi Impol Slovenska Bistrica', 200, meri).every((v) => meri(v) <= 200),
-    JSON.stringify(vVrstice('Kety Emmi Impol Slovenska Bistrica', 200, meri)))
-  preveri('plakat: beseda, daljsa od vrstice, se ne izgubi',
-    vVrstice('Nadpovprecnodolgoime', 50, meri).join(' ') === 'Nadpovprecnodolgoime')
-  preveri('plakat: prazno besedilo ne da vrstic', vVrstice('   ', 200, meri).length === 0)
-
   preveri('plakat: daljse ime dobi manjso pisavo',
-    velikostNaslova('Jevnica') > velikostNaslova('Kety Emmi&Impol Bistrica'),
-    `${velikostNaslova('Jevnica')} proti ${velikostNaslova('Kety Emmi&Impol Bistrica')}`)
+    velikostNaslova('Gospodini') > velikostNaslova('Kety Emmi&Impol Bistrica'),
+    `${velikostNaslova('Gospodini')} proti ${velikostNaslova('Kety Emmi&Impol Bistrica')}`)
 
-  // Nicelnih podatkov ne oglasujemo: "0 navijacev" ni razlog za objavo.
-  const brez = vrsticeKluba({ igralcev: 20, navijacev: 0 })
-  preveri('plakat: nic navijacev se ne izpise', brez.length === 1, JSON.stringify(brez))
-  const eden = vrsticeKluba({ igralcev: 20, navijacev: 1 })
-  preveri('plakat: en navijac je v ednini', eden[1].includes('navijač jih ima'), eden[1])
-  const polno = vrsticeKluba({ igralcev: 20, navijacev: 6, najboljsi: 'Davor Bokalič', tock: 22 })
-  preveri('plakat: najboljsi igralec pride na sliko', polno.length === 3 && polno[2].includes('Bokalič'), JSON.stringify(polno))
-  const brezTock = vrsticeKluba({ igralcev: 20, navijacev: 6, najboljsi: 'Nekdo', tock: 0 })
-  preveri('plakat: igralca z nic tockami ne hvalimo', brezTock.length === 2)
+  // Kartica se mora prilagoditi vsebini, sicer ostane prazna tretjina.
+  const brezZnacke = { naslov: 'Ekipa', stevilo: 22, oznaka: 'točk' }
+  const zZnacko = { ...brezZnacke, znacka: '5. MESTO OD 7' }
+  preveri('plakat: znacka poveca kartico',
+    visinaKartice(zZnacko) > visinaKartice(brezZnacke),
+    `${visinaKartice(zZnacko)} proti ${visinaKartice(brezZnacke)}`)
+  preveri('plakat: nizja kartica se zacne nize',
+    zacetekKartice(500) > zacetekKartice(800),
+    `${zacetekKartice(500)} proti ${zacetekKartice(800)}`)
+  preveri('plakat: zelo visoka kartica ne zleze cez vrh', zacetekKartice(1600) >= 96)
 
-  preveri('plakat: ime datoteke je varno', imeDatoteke('Kety Emmi&Impol Bistrica') === 'slff-kety-emmi-impol-bistrica.png',
+  // Nicel ne oglasujemo: "0 navijacev" ni razlog za objavo.
+  preveri('plakat: nic navijacev nima znacke', znackaKluba(0) === null)
+  preveri('plakat: en navijac je v ednini', znackaKluba(1) === '1 NAVIJAČ JIH IMA', znackaKluba(1))
+  preveri('plakat: trije navijaci so v mnozini', znackaKluba(3) === '3 NAVIJAČI JIH IMA', znackaKluba(3))
+  preveri('plakat: pet navijacev je v rodilniku', znackaKluba(5) === '5 NAVIJAČEV JIH IMA', znackaKluba(5))
+  preveri('plakat: enajst navijacev je posebnost', znackaKluba(11) === '11 NAVIJAČEV JIH IMA', znackaKluba(11))
+
+  preveri('plakat: mesto med ekipami', znackaKroga(5, 7) === '5. MESTO OD 7', znackaKroga(5, 7))
+  preveri('plakat: mesto brez stevila ekip', znackaKroga(5, null) === '5. MESTO')
+  preveri('plakat: brez mesta ni znacke', znackaKroga(null, 7) === null)
+
+  preveri('plakat: ime datoteke je varno',
+    imeDatoteke('Kety Emmi&Impol Bistrica') === 'slff-kety-emmi-impol-bistrica.png',
     imeDatoteke('Kety Emmi&Impol Bistrica'))
-  preveri('plakat: ime brez crk da razumno datoteko', imeDatoteke('!!!') === 'slff-klub.png', imeDatoteke('!!!'))
-
-  // Tedenski rezultat — tisto, kar se ponovi vsak teden.
-  const krog = vrsticeKroga({ mesto: 3, odEkip: 109, kazen: 0 })
-  preveri('plakat: rezultat kroga pove mesto med ekipami',
-    krog[0] === '3. mesto med 109 ekipami', JSON.stringify(krog))
-  preveri('plakat: brez kazni se kazen ne omenja', krog.length === 1)
-  const skazen = vrsticeKroga({ mesto: 5, odEkip: 60, kazen: 8 })
-  preveri('plakat: kazen se pove, sicer stevilka ni resnicna',
-    skazen.some((v) => v.includes('−8')), JSON.stringify(skazen))
-  const brezMesta = vrsticeKroga({ mesto: null, odEkip: 60 })
-  preveri('plakat: brez mesta ni prazne vrstice', brezMesta.length === 0)
-
-  // Navpicno sredinjenje: plakat brez grba ne sme pustiti luknje.
-  preveri('plakat: nizja vsebina se zacne nize', zacetekBloka(300) > zacetekBloka(700),
-    `${zacetekBloka(300)} proti ${zacetekBloka(700)}`)
-  preveri('plakat: zelo visoka vsebina ne gre cez vrh', zacetekBloka(2000) >= 120)
+  preveri('plakat: ime brez crk da razumno datoteko', imeDatoteke('!!!') === 'slff-ekipa.png', imeDatoteke('!!!'))
 }
 
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)
