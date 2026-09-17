@@ -19,7 +19,13 @@ name: Opozorila pred rokom
 # rocen (`opomniki.yml`).
 on:
   schedule:
-    - cron: '0 8 * * *'
+    # Dvakrat na dan, ker urnik GitHuba ni zanesljiv: uvozov cron `0 5 * * 1-4`
+    # se v praksi sprozi okoli 9:40 UTC, torej stiri ure in pol pozneje, nov
+    # urnik pa prvi dan sploh ni stekel. Opozorilo pride enkrat na tezavo, zato
+    # drugi termin ne pomeni vec poste — pomeni le, da izpusceni prvi ne pobere
+    # obljube "dva dni prej" s seboj.
+    - cron: '0 6 * * *'
+    - cron: '0 14 * * *'
   workflow_dispatch:
     inputs:
       suho:
