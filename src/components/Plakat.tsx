@@ -185,8 +185,18 @@ export default function Plakat({
       const a = document.createElement('a')
       a.href = url
       a.download = imeDatoteke(podatki.naslov)
+      // Sidro mora biti v dokumentu, sicer ga del brskalnikov (Safari, mobilni
+      // Chrome) ne sprozi.
+      a.style.display = 'none'
+      document.body.appendChild(a)
       a.click()
-      URL.revokeObjectURL(url)
+      // Naslova NE sprostimo takoj: brskalnik prenos sele zacenja in
+      // predcasen `revokeObjectURL` ga utegne prekiniti — prav zato prenos
+      // prej ni ustvaril datoteke.
+      setTimeout(() => {
+        URL.revokeObjectURL(url)
+        a.remove()
+      }, 30000)
       setSporocilo('Slika je shranjena — objavi jo na Instagramu ali Facebooku.')
     } catch (e) {
       setSporocilo(`Slike ni bilo mogoče pripraviti: ${(e as Error).message}`)
