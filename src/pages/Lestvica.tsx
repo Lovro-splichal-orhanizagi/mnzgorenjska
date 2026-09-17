@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../lib/useAuth'
+import Plakat from '../components/Plakat'
+import { vrsticeKroga } from '../lib/plakat'
 import { supabase } from '../lib/supabase'
 import { formatirajTocke } from '../lib/pomozno'
 import { useTekmovanje } from '../lib/tekmovanje'
@@ -49,15 +52,39 @@ type ZmagovalecKroga = TockeKroga & { round_number: number; season: string }
 
 export default function Lestvica() {
   const { id: tekmovanjeId, tekmovanje } = useTekmovanje()
+  const { session } = useAuth()
   const [ekipe, setEkipe] = useState<VrsticaLestvice[]>([])
   const [krog, setKrog] = useState<Krog | null>(null)
   const [krogLestvica, setKrogLestvica] = useState<TockeKroga[]>([])
+  // Svojo ekipo potrebujemo, da lahko manager deli SVOJ rezultat kroga —
+  // to je edina stvar na strani, ki se ponovi vsak teden.
+  const [mojaEkipa, setMojaEkipa] = useState<number | null>(null)
   const [vsiKrogiOdigrani, setVsiKrogiOdigrani] = useState<Krog[]>([])
   const [odigraneTocke, setOdigraneTocke] = useState<TockeKroga[]>([])
   // filter "od kroga N naprej"
   const [odKroga, setOdKroga] = useState(1)
   const [nalaganje, setNalaganje] = useState(true)
   const [napaka, setNapaka] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!session || !tekmovanjeId) {
+      setMojaEkipa(null)
+      return
+    }
+    let veljavno = true
+    ;(async () => {
+      const { data } = await supabase
+        .from('fantasy_teams')
+        .select('id')
+        .eq('owner_id', session.user.id)
+        .eq('competition_id', tekmovanjeId)
+        .maybeSingle()
+      if (veljavno) setMojaEkipa(data?.id ?? null)
+    })()
+    return () => {
+      veljavno = false
+    }
+  }, [session, tekmovanjeId])
 
   useEffect(() => {
     if (!tekmovanjeId) return
@@ -184,6 +211,9 @@ export default function Lestvica() {
   const najvec = Math.max(...ekipe.map((e) => Number(e.total_points) || 0), 1)
 
   const zmagovalecKroga = krogLestvica[0]
+  const mojRezultat = mojaEkipa
+    ? krogLestvica.find((e) => e.fantasy_team_id === mojaEkipa)
+    : undefined
 
   return (
     <div className="space-y-5">
@@ -193,6 +223,48 @@ export default function Lestvica() {
             ? ` — ${tekmovanje.short_name}`
             : ''}
       </h1>
+
+      {/* Svoj rezultat kroga — edina stvar, ki se ponovi vsak teden in jo
+          človek rad pokaže. Pokažemo jo NAD lestvico, ker je njegova. */}
+      {mojRezultat && (
+        <section className="kartica border-gnl-400/30 bg-gnl-500/5 p-4">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <div>
+              <div className="text-sm text-slate-400">
+                Tvoj rezultat v {krogLestvica.length > 0 ? 'zadnjem krogu' : 'krogu'}
+              </div>
+              <div className="text-2xl font-black">
+                {formatirajTocke(mojRezultat.points)} točk
+                {mojRezultat.rank ? (
+                  <span className="ml-2 text-base font-bold text-gnl-300">
+                    {mojRezultat.rank}. mesto
+                  </span>
+                ) : null}
+              </div>
+            </div>
+          </div>
+          <div className="mt-3">
+            <Plakat
+              podatki={{
+                naslov: mojRezultat.team_name ?? 'Moja ekipa',
+                podnaslov: `${formatirajTocke(mojRezultat.points)} točk v krogu`,
+                drobno: tekmovanje?.name ?? null,
+                vrstice: vrsticeKroga({
+                  mesto: mojRezultat.rank ?? null,
+                  odEkip: krogLestvica.length || null,
+                  kazen: Number(mojRezultat.penalty ?? 0),
+                }),
+              }}
+              grb={null}
+              povezava={
+                typeof window !== 'undefined'
+                  ? `${window.location.origin}/ekipa/${mojRezultat.fantasy_team_id}`
+                  : ''
+              }
+            />
+          </div>
+        </section>
+      )}
 
       {zmagovalecKroga && (
         <section className="kartica space-y-3 p-4">

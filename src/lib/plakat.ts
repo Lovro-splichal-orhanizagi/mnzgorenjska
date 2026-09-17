@@ -12,13 +12,21 @@
 export const SIRINA = 1080
 export const VISINA = 1080
 
+/**
+ * Plakat je splosen, ker sta priloznosti dve in nista ista:
+ *   • klub objavi, da je v ligi (enkrat),
+ *   • manager objavi svoj rezultat kroga (vsak teden).
+ * Druga je tista, ki se ponavlja, zato plakat ne sme poznati samo klubov.
+ */
 export interface PodatkiPlakata {
-  klub: string
-  liga: string
-  igralcev: number
-  navijacev: number
-  najboljsi?: string | null
-  tock?: number | null
+  /** Veliko, na sredini: ime kluba ali ime ekipe. */
+  naslov: string
+  /** Zeleno pod naslovom: "je v fantasy ligi SLFF" ali "68 tock v 4. krogu". */
+  podnaslov: string
+  /** Drobno: ime lige. */
+  drobno?: string | null
+  /** Vrstice s stevilkami. */
+  vrstice: string[]
 }
 
 /**
@@ -58,17 +66,41 @@ export function velikostNaslova(ime: string): number {
   return 52
 }
 
-/** Vrstice s stevilkami — izpustimo tiste, ki nicesar ne povedo. */
-export function vrsticeStatistike(p: PodatkiPlakata): string[] {
-  const out = [`${p.igralcev} igralcev v igri`]
-  if (p.navijacev > 0) {
+/** Vrstice za plakat kluba — izpustimo tiste, ki nicesar ne povedo. */
+export function vrsticeKluba(v: {
+  igralcev: number
+  navijacev: number
+  najboljsi?: string | null
+  tock?: number | null
+}): string[] {
+  const out = [`${v.igralcev} igralcev v igri`]
+  if (v.navijacev > 0) {
     out.push(
-      `${p.navijacev} ${p.navijacev === 1 ? 'navijač jih ima' : 'navijačev jih ima'} v ekipi`,
+      `${v.navijacev} ${v.navijacev === 1 ? 'navijač jih ima' : 'navijačev jih ima'} v ekipi`,
     )
   }
-  if (p.najboljsi && p.tock != null && p.tock > 0) {
-    out.push(`Največ točk: ${p.najboljsi} (${p.tock})`)
+  if (v.najboljsi && v.tock != null && v.tock > 0) {
+    out.push(`Največ točk: ${v.najboljsi} (${v.tock})`)
   }
+  return out
+}
+
+/** Vrstice za plakat tedenskega rezultata. */
+export function vrsticeKroga(v: {
+  mesto?: number | null
+  odEkip?: number | null
+  najboljsi?: string | null
+  tockeNajboljsega?: number | null
+  kazen?: number | null
+}): string[] {
+  const out: string[] = []
+  if (v.mesto && v.odEkip) out.push(`${v.mesto}. mesto med ${v.odEkip} ekipami`)
+  else if (v.mesto) out.push(`${v.mesto}. mesto v krogu`)
+  if (v.najboljsi && v.tockeNajboljsega != null && v.tockeNajboljsega > 0) {
+    out.push(`Najboljši: ${v.najboljsi} (${v.tockeNajboljsega})`)
+  }
+  // Kazen povemo, ker brez nje stevilka ne bi bila resnicna.
+  if (v.kazen && v.kazen > 0) out.push(`Kazen za prestope: −${v.kazen}`)
   return out
 }
 
@@ -81,4 +113,15 @@ export function imeDatoteke(klub: string): string {
     .replace(/^-|-$/g, '')
     .toLowerCase()
   return `slff-${cist || 'klub'}.png`
+}
+
+/**
+ * Kje naj se blok zacne, da je navpicno sredinjen.
+ *
+ * Brez tega plakat brez grba pusti veliko luknjo: vsebina se zacne na istem
+ * mestu kot pri grbu, konca pa visje, in spodnja tretjina ostane prazna.
+ */
+export function zacetekBloka(visinaVsebine: number, visinaNoge = 200): number {
+  const prostor = VISINA - visinaNoge
+  return Math.max(120, Math.round((prostor - visinaVsebine) / 2))
 }

@@ -12,7 +12,7 @@ import {
   VISINA,
   vVrstice,
   velikostNaslova,
-  vrsticeStatistike,
+  zacetekBloka,
   imeDatoteke,
   type PodatkiPlakata,
 } from '../lib/plakat'
@@ -42,54 +42,69 @@ async function narisi(p: PodatkiPlakata, grb: string | null): Promise<Blob | nul
 
   c.fillStyle = OZADJE
   c.fillRect(0, 0, SIRINA, VISINA)
-
-  // Zeleni pas na vrhu — isti kot v aplikaciji.
   c.fillStyle = ZELENA
   c.fillRect(0, 0, SIRINA, 12)
 
   const sredina = SIRINA / 2
-  let y = 150
-
   const slika = grb ? await naloziSliko(grb) : null
-  if (slika) {
+
+  // Najprej izmerimo, kako visok bo blok, da ga lahko navpicno sredinimo.
+  const velN = velikostNaslova(p.naslov)
+  c.textAlign = 'center'
+  c.font = `900 ${velN}px Inter, "Segoe UI", system-ui, sans-serif`
+  const vrsticeNaslova = vVrstice(p.naslov, SIRINA - 140, (t) => c.measureText(t).width)
+
+  let visinaGrba = 0
+  let sirinaGrba = 0
+  if (slika && slika.width) {
     const naj = 240
     const r = Math.min(naj / slika.width, naj / slika.height)
-    const s = slika.width * r
-    const v = slika.height * r
-    c.drawImage(slika, sredina - s / 2, y, s, v)
-    y += v + 60
-  } else {
-    y += 40
+    sirinaGrba = slika.width * r
+    visinaGrba = slika.height * r
   }
 
-  c.textAlign = 'center'
+  const visina =
+    (visinaGrba ? visinaGrba + 60 : 0) +
+    vrsticeNaslova.length * velN * 1.15 +
+    16 + 64 +
+    (p.drobno ? 80 : 20) +
+    p.vrstice.length * 54
+
+  let y = zacetekBloka(visina)
+
+  if (visinaGrba) {
+    c.drawImage(slika as HTMLImageElement, sredina - sirinaGrba / 2, y, sirinaGrba, visinaGrba)
+    y += visinaGrba + 60
+  }
+
+  y += velN * 0.85
   c.fillStyle = SVETLA
-  const vel = velikostNaslova(p.klub)
-  c.font = `900 ${vel}px Inter, "Segoe UI", system-ui, sans-serif`
-  for (const vrstica of vVrstice(p.klub, SIRINA - 140, (s) => c.measureText(s).width)) {
+  c.font = `900 ${velN}px Inter, "Segoe UI", system-ui, sans-serif`
+  for (const vrstica of vrsticeNaslova) {
     c.fillText(vrstica, sredina, y)
-    y += vel * 1.15
+    y += velN * 1.15
   }
 
   y += 16
   c.fillStyle = ZELENA
   c.font = '700 40px Inter, "Segoe UI", system-ui, sans-serif'
-  c.fillText('je v fantasy ligi SLFF', sredina, y)
+  c.fillText(p.podnaslov, sredina, y)
 
-  y += 64
-  c.fillStyle = SIVA
-  c.font = '400 34px Inter, "Segoe UI", system-ui, sans-serif'
-  c.fillText(p.liga, sredina, y)
+  if (p.drobno) {
+    y += 64
+    c.fillStyle = SIVA
+    c.font = '400 34px Inter, "Segoe UI", system-ui, sans-serif'
+    c.fillText(p.drobno, sredina, y)
+  }
 
   y += 80
   c.fillStyle = SVETLA
   c.font = '600 36px Inter, "Segoe UI", system-ui, sans-serif'
-  for (const vrstica of vrsticeStatistike(p)) {
+  for (const vrstica of p.vrstice) {
     c.fillText(vrstica, sredina, y)
     y += 54
   }
 
-  // Noga: od kod točke in kam naj gredo.
   c.fillStyle = SIVA
   c.font = '400 30px Inter, "Segoe UI", system-ui, sans-serif'
   c.fillText('Točke iz uradnih zapisnikov: goli, minute, mreže', sredina, VISINA - 132)
@@ -113,12 +128,12 @@ export default function Plakat({
   const [sporocilo, setSporocilo] = useState<string | null>(null)
 
   async function deli() {
-    const besedilo = `${podatki.klub} je v fantasy ligi SLFF — sestavi svojo ekipo iz pravih igralcev ${podatki.liga}.`
+    const besedilo = `${podatki.naslov} — ${podatki.podnaslov}. SLFF, fantasy liga za slovenske lige.`
     // Sistemski meni pozna Facebook, WhatsApp, Viber in vse ostalo, kar ima
     // uporabnik nameščeno; na namizju ga večinoma ni.
     if (navigator.share) {
       try {
-        await navigator.share({ title: `${podatki.klub} — SLFF`, text: besedilo, url: povezava })
+        await navigator.share({ title: `${podatki.naslov} — SLFF`, text: besedilo, url: povezava })
         return
       } catch {
         // Uporabnik je meni zaprl — to ni napaka.
@@ -142,7 +157,7 @@ export default function Plakat({
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = imeDatoteke(podatki.klub)
+      a.download = imeDatoteke(podatki.naslov)
       a.click()
       URL.revokeObjectURL(url)
       setSporocilo('Slika je shranjena — objavi jo na FB ali Instagramu.')

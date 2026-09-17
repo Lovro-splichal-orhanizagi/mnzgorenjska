@@ -12,6 +12,7 @@ import { VRSTNI_RED } from '../lib/pravila'
 import type { Pozicija } from '../lib/tipi'
 import Grb from '../components/Grb'
 import Plakat from '../components/Plakat'
+import { vrsticeKluba } from '../lib/plakat'
 
 interface Igralec {
   id: number
@@ -157,12 +158,15 @@ export default function Klub() {
         <div className="mt-3 border-t border-white/10 pt-3">
           <Plakat
             podatki={{
-              klub: klub?.name ?? '',
-              liga: liga?.name ?? '',
-              igralcev: igralci.length,
-              navijacev: izbranih,
-              najboljsi: najboljsi?.full_name ?? null,
-              tock: najboljsi?.points ?? null,
+              naslov: klub?.name ?? '',
+              podnaslov: 'je v fantasy ligi SLFF',
+              drobno: liga?.name ?? null,
+              vrstice: vrsticeKluba({
+                igralcev: igralci.length,
+                navijacev: izbranih,
+                najboljsi: najboljsi?.full_name ?? null,
+                tock: najboljsi?.points != null ? Number(najboljsi.points) : null,
+              }),
             }}
             grb={klub?.logo_url ?? null}
             povezava={typeof window !== 'undefined' ? window.location.href : ''}

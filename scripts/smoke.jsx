@@ -50,7 +50,7 @@ import { premakniProti, NAJVECJI_TEDENSKI_PREMIK } from './premik-cene.mjs'
 import { oceniPripravljenost, najcenejsiKader } from '../src/lib/pripravljenost'
 import { serijaCen, premik, crta, zadnjiPremiki } from '../src/lib/gibanjeCene'
 import { predlagajKader } from '../src/lib/predlogKadra'
-import { vVrstice, velikostNaslova, vrsticeStatistike, imeDatoteke } from '../src/lib/plakat'
+import { vVrstice, velikostNaslova, vrsticeKluba, vrsticeKroga, zacetekBloka, imeDatoteke } from '../src/lib/plakat'
 import { readFileSync } from 'node:fs'
 
 let napak = 0
@@ -2522,18 +2522,34 @@ preveri(
     `${velikostNaslova('Jevnica')} proti ${velikostNaslova('Kety Emmi&Impol Bistrica')}`)
 
   // Nicelnih podatkov ne oglasujemo: "0 navijacev" ni razlog za objavo.
-  const brez = vrsticeStatistike({ klub: 'X', liga: 'Y', igralcev: 20, navijacev: 0 })
+  const brez = vrsticeKluba({ igralcev: 20, navijacev: 0 })
   preveri('plakat: nic navijacev se ne izpise', brez.length === 1, JSON.stringify(brez))
-  const eden = vrsticeStatistike({ klub: 'X', liga: 'Y', igralcev: 20, navijacev: 1 })
+  const eden = vrsticeKluba({ igralcev: 20, navijacev: 1 })
   preveri('plakat: en navijac je v ednini', eden[1].includes('navijač jih ima'), eden[1])
-  const polno = vrsticeStatistike({ klub: 'X', liga: 'Y', igralcev: 20, navijacev: 6, najboljsi: 'Davor Bokalič', tock: 22 })
+  const polno = vrsticeKluba({ igralcev: 20, navijacev: 6, najboljsi: 'Davor Bokalič', tock: 22 })
   preveri('plakat: najboljsi igralec pride na sliko', polno.length === 3 && polno[2].includes('Bokalič'), JSON.stringify(polno))
-  const brezTock = vrsticeStatistike({ klub: 'X', liga: 'Y', igralcev: 20, navijacev: 6, najboljsi: 'Nekdo', tock: 0 })
+  const brezTock = vrsticeKluba({ igralcev: 20, navijacev: 6, najboljsi: 'Nekdo', tock: 0 })
   preveri('plakat: igralca z nic tockami ne hvalimo', brezTock.length === 2)
 
   preveri('plakat: ime datoteke je varno', imeDatoteke('Kety Emmi&Impol Bistrica') === 'slff-kety-emmi-impol-bistrica.png',
     imeDatoteke('Kety Emmi&Impol Bistrica'))
   preveri('plakat: ime brez crk da razumno datoteko', imeDatoteke('!!!') === 'slff-klub.png', imeDatoteke('!!!'))
+
+  // Tedenski rezultat — tisto, kar se ponovi vsak teden.
+  const krog = vrsticeKroga({ mesto: 3, odEkip: 109, kazen: 0 })
+  preveri('plakat: rezultat kroga pove mesto med ekipami',
+    krog[0] === '3. mesto med 109 ekipami', JSON.stringify(krog))
+  preveri('plakat: brez kazni se kazen ne omenja', krog.length === 1)
+  const skazen = vrsticeKroga({ mesto: 5, odEkip: 60, kazen: 8 })
+  preveri('plakat: kazen se pove, sicer stevilka ni resnicna',
+    skazen.some((v) => v.includes('−8')), JSON.stringify(skazen))
+  const brezMesta = vrsticeKroga({ mesto: null, odEkip: 60 })
+  preveri('plakat: brez mesta ni prazne vrstice', brezMesta.length === 0)
+
+  // Navpicno sredinjenje: plakat brez grba ne sme pustiti luknje.
+  preveri('plakat: nizja vsebina se zacne nize', zacetekBloka(300) > zacetekBloka(700),
+    `${zacetekBloka(300)} proti ${zacetekBloka(700)}`)
+  preveri('plakat: zelo visoka vsebina ne gre cez vrh', zacetekBloka(2000) >= 120)
 }
 
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)
