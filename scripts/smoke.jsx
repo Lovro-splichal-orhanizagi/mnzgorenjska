@@ -19,6 +19,7 @@ import Odsotnosti from '../src/pages/Odsotnosti'
 import Slovenija from '../src/pages/Slovenija'
 import MiniLige from '../src/pages/MiniLige'
 import Ekipa from '../src/pages/Ekipa'
+import Klub from '../src/pages/Klub'
 import InfoIgralca from '../src/components/InfoIgralca'
 import ZivostSkupnosti from '../src/components/admin/Zivost'
 import Administracija from '../src/pages/Administracija'
@@ -70,6 +71,7 @@ const strani = [
   ['Slovenija', Slovenija, '/slovenija'],
   ['Mini lige', MiniLige, '/mini-lige'],
   ['Tuja ekipa', Ekipa, '/ekipa/1'],
+  ['Klub', Klub, '/klub/24'],
   [
     'Info o igralcu',
     () => (
