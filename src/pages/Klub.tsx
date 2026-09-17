@@ -171,7 +171,7 @@ export default function Klub() {
                   <span className="w-12 shrink-0 text-right font-bold tabular-nums">
                     {formatirajTocke(i.points)}
                   </span>
-                  <span className="w-14 shrink-0 text-right tabular-nums text-gnl-300">
+                  <span className="w-16 shrink-0 whitespace-nowrap text-right tabular-nums text-gnl-300">
                     {formatirajCeno(i.value)}
                   </span>
                 </li>
