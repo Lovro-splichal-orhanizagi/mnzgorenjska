@@ -192,6 +192,29 @@ export default function Lestvica() {
     return sestejOdKroga(odigraneTocke, idsOd)
   }, [odKroga, vsiKrogiOdigrani, odigraneTocke])
 
+  useEffect(() => {
+    if (!mojaEkipa || !krog?.id) {
+      setMojiNajboljsi([])
+      return
+    }
+    let veljavno = true
+    ;(async () => {
+      const { data } = await supabase.rpc('tuja_postava', {
+        p_team: mojaEkipa,
+        p_round: krog.id,
+      })
+      if (!veljavno) return
+      // Mnozitelj je ze vracunan: kapetanovih 12 je 4 x 3.
+      const zTockami = ((data ?? []) as any[])
+        .filter((v) => v.mnozitelj > 0)
+        .map((v) => ({ ime: v.ime, tocke: Number(v.tocke) * v.mnozitelj, je_kapetan: v.je_kapetan }))
+      setMojiNajboljsi(najboljsiTrije(zTockami))
+    })()
+    return () => {
+      veljavno = false
+    }
+  }, [mojaEkipa, krog?.id])
+
   if (nalaganje)
     return <p className="animiraj-utrip text-slate-400">Nalaganje …</p>
   if (napaka) return <p className="text-rose-400">Napaka: {napaka}</p>
@@ -218,28 +241,6 @@ export default function Lestvica() {
     ? krogLestvica.find((e) => e.fantasy_team_id === mojaEkipa)
     : undefined
 
-  useEffect(() => {
-    if (!mojaEkipa || !krog?.id) {
-      setMojiNajboljsi([])
-      return
-    }
-    let veljavno = true
-    ;(async () => {
-      const { data } = await supabase.rpc('tuja_postava', {
-        p_team: mojaEkipa,
-        p_round: krog.id,
-      })
-      if (!veljavno) return
-      // Mnozitelj je ze vracunan: kapetanovih 12 je 4 x 3.
-      const zTockami = ((data ?? []) as any[])
-        .filter((v) => v.mnozitelj > 0)
-        .map((v) => ({ ime: v.ime, tocke: Number(v.tocke) * v.mnozitelj, je_kapetan: v.je_kapetan }))
-      setMojiNajboljsi(najboljsiTrije(zTockami))
-    })()
-    return () => {
-      veljavno = false
-    }
-  }, [mojaEkipa, krog?.id])
 
   return (
     <div className="space-y-5">

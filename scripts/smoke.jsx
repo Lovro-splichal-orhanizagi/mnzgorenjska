@@ -2542,5 +2542,38 @@ preveri(
     imeDatoteke('Kety Emmi&Impol Bistrica') === 'slff-kety-emmi-impol-bistrica.png', imeDatoteke('Kety Emmi&Impol Bistrica'))
 }
 
+// --- hooki pred zgodnjim return ---------------------------------------------
+// React #310 v produkciji: `useEffect` je stal ZA `if (nalaganje) return`,
+// zato se je ob prehodu iz nalaganja v prikaz stevilo hookov spremenilo in
+// stran Lestvica se je sesula. Izris v smoke tega ne ujame, ker izrise le
+// stanje nalaganja. Zato staticno: v nobeni strani noben hook ne sme stati za
+// vrstico, ki se zacne z `if (...) return`.
+{
+  const { readdirSync } = await import('node:fs')
+  const mapa = new URL('../src/pages/', import.meta.url)
+  let krsitev = []
+  for (const dat of readdirSync(mapa).filter((d) => d.endsWith('.tsx'))) {
+    const koda = readFileSync(new URL(dat, mapa), 'utf8')
+    // Telo glavne komponente: od `export default function` do njenega konca
+    // (prva vrstica, ki je natanko `}`). Pomozne komponente nize v datoteki
+    // imajo svoje hooke in nas tu ne zanimajo.
+    const od = koda.indexOf('export default function')
+    if (od < 0) continue
+    const vse = koda.slice(od).split('\n')
+    const konec = vse.findIndex((v, i) => i > 0 && v === '}')
+    const vrstice = konec > 0 ? vse.slice(0, konec) : vse
+    let prviReturn = -1
+    for (let i = 0; i < vrstice.length; i++) {
+      const v = vrstice[i]
+      // Zgodnji return na vrhu telesa komponente (dva presledka zamika).
+      if (prviReturn < 0 && /^  (if \(.*\) )?return[ (]/.test(v)) prviReturn = i
+      if (prviReturn >= 0 && i > prviReturn && /^  (const .* = )?use(State|Effect|Memo|Ref|Callback)\(/.test(v)) {
+        krsitev.push(`${dat}:${i + 1} ${v.trim().slice(0, 50)}`)
+      }
+    }
+  }
+  preveri('strani: noben hook ne stoji za zgodnjim return', krsitev.length === 0, krsitev.join('; '))
+}
+
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)
 process.exit(napak === 0 ? 0 : 1)
