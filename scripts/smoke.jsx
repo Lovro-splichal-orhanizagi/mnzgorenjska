@@ -2535,5 +2535,27 @@ preveri(
   preveri('plakat: ime brez crk da razumno datoteko', imeDatoteke('!!!') === 'slff-ekipa.png', imeDatoteke('!!!'))
 }
 
+// --- uvoz razporeda ne sme zamrzniti v predpomnilniku --------------------
+// Razpored je ziv dokument do konca sezone. Ce ga skripta prebere z vira
+// samo prvic in potem vedno iz datoteke, do nas nikoli ne pride nobena
+// prestavitev — tako je Termit Moravce : Vir (11. 9. -> 14. 11.) stiri dni
+// veljala za "neuvozeno", in 13 prestavitev v 11 ligah je ostalo neopazenih.
+// Skripta potrebuje bazo, zato tu preverimo besedilo same skripte: vir se
+// mora klicati PRED branjem datoteke, datoteka pa je le rezerva ob napaki.
+{
+  const koda = readFileSync(new URL('./uvoz-razporeda.mjs', import.meta.url), 'utf8')
+  const telo = koda.slice(koda.indexOf('async function prenesi('), koda.indexOf('// --- razčlenitev razporeda'))
+  const fetchPrej = telo.indexOf('await fetch(') < telo.indexOf('readFileSync(')
+  preveri('razpored: skripta vir vpraša PRED branjem predpomnilnika', fetchPrej)
+  preveri('razpored: predpomnilnik je rezerva ob napaki, ne prva izbira',
+    /catch[\s\S]*readFileSync/.test(telo))
+  preveri('razpored: prestavljena tekma dobi nov datum',
+    koda.includes("update({ played_on: t.datum })"))
+  preveri('razpored: odigrani tekmi datuma ne spreminjamo',
+    /!obstojeca\.imported_at\s*&&/.test(koda))
+  preveri('razpored: neodigrane tekme odstopljenega kluba se odstranijo',
+    koda.includes("Odstranjenih neodigranih tekem"))
+}
+
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)
 process.exit(napak === 0 ? 0 : 1)

@@ -65,17 +65,34 @@ const liga = arg('liga', sifraLige(tekmovanje, '1601'))
 const pomakUr = Number(arg('pomak', null) ?? tekmovanje.rok_pomak_ur ?? 6)
 console.log(`Tekmovanje: ${tekmovanje.name} (liga ${liga})`)
 
+// Razpored se VEDNO prenese svez; predpomnilnik je le rezerva, ce vir pade.
+//
+// Doslej je veljalo "ce datoteka obstaja, jo vrni" — in ker GitHub Actions
+// predpomnilnik hrani med zagoni, se je razpored prebral z vira natanko
+// enkrat, 9. septembra. Vse, kar se je od takrat spremenilo pri viru,
+// prestavljena tekma Termit Moravce : Vir (11. 9. -> 14. 11.) in umaknjena
+// Gorica : Galeb Ankaran, do nas ni nikoli prislo. Preverba je tekmi stiri
+// dni javljala kot "ni uvozena", borza je zaradi njiju zadrzala dva kroga.
+//
+// Zapisniki so drugacni: odigrana tekma se ne spremeni, zato zanje
+// predpomnilnik velja (in `zapisnikSvez` poskrbi za prezgodaj zajete).
+// Razpored pa je ziv dokument do konca sezone.
 async function prenesi(url, ime) {
   const pot = `${PREDPOMNILNIK}/${vir.ime}/${ime}`
-  if (existsSync(pot)) return readFileSync(pot, 'utf8')
-  const odgovor = await fetch(url)
-  if (!odgovor.ok) throw new Error(`${odgovor.status} ${url}`)
-  const html = await odgovor.text()
-  // Ločeno po viru: šifre lig in dokumentov so last spletišča, ne sistema,
-  // in dve zvezi bi si lahko delili isto ime datoteke.
-  mkdirSync(`${PREDPOMNILNIK}/${vir.ime}`, { recursive: true })
-  writeFileSync(pot, html)
-  return html
+  try {
+    const odgovor = await fetch(url)
+    if (!odgovor.ok) throw new Error(`${odgovor.status} ${url}`)
+    const html = await odgovor.text()
+    // Ločeno po viru: šifre lig in dokumentov so last spletišča, ne sistema,
+    // in dve zvezi bi si lahko delili isto ime datoteke.
+    mkdirSync(`${PREDPOMNILNIK}/${vir.ime}`, { recursive: true })
+    writeFileSync(pot, html)
+    return html
+  } catch (e) {
+    if (!existsSync(pot)) throw e
+    console.log(`  vir ni dosegljiv (${e.message}) — uporabim zadnji shranjeni razpored`)
+    return readFileSync(pot, 'utf8')
+  }
 }
 
 // --- razčlenitev razporeda --------------------------------------------------
@@ -156,6 +173,7 @@ async function klubId(ime) {
 
 let novihKrogov = 0
 let novihTekem = 0
+let prestavljenih = 0
 const letosnjiKlubi = new Set()
 
 for (const k of veljavni) {
@@ -217,12 +235,31 @@ for (const k of veljavni) {
     // je funkcija odporna tudi na že obstoječe podvojene vrstice.
     const { data: obstojTekme } = await db
       .from('matches')
-      .select('id')
+      .select('id, played_on, imported_at')
       .eq('round_id', krogId)
       .eq('home_team_id', domaciId)
       .eq('away_team_id', gostjeId)
       .limit(1)
-    if (obstojTekme && obstojTekme.length > 0) continue
+    if (obstojTekme && obstojTekme.length > 0) {
+      // Tekma ze obstaja — a datum se lahko spremeni. Prestavljena tekma
+      // (Termit Moravce : Vir, 11. 9. -> 14. 11.) je pri nas obdrzala stari
+      // datum, preverba jo je stiri dni zapored javljala kot "ni uvozena",
+      // borza pa je zaradi nje zadrzala cel krog. Datum popravimo SAMO, dokler
+      // tekma ni uvozena: odigrana tekma ima pravi datum iz zapisnika.
+      const obstojeca = obstojTekme[0]
+      if (!obstojeca.imported_at && t.datum && obstojeca.played_on !== t.datum) {
+        const { error } = await db
+          .from('matches')
+          .update({ played_on: t.datum })
+          .eq('id', obstojeca.id)
+        if (error) console.log(`  tekma ${t.domaci} : ${t.gostje}: ${error.message}`)
+        else {
+          console.log(`  prestavljena: ${t.domaci} : ${t.gostje}  ${obstojeca.played_on} -> ${t.datum}`)
+          prestavljenih++
+        }
+      }
+      continue
+    }
 
     const { error } = await db.from('matches').insert({
       round_id: krogId,
@@ -236,7 +273,7 @@ for (const k of veljavni) {
   }
 }
 
-console.log(`\nNovih krogov: ${novihKrogov}, novih tekem: ${novihTekem}`)
+console.log(`\nNovih krogov: ${novihKrogov}, novih tekem: ${novihTekem}, prestavljenih: ${prestavljenih}`)
 
 // --- kdo letos sploh igra ---------------------------------------------------
 // Razpored pove, kateri klubi so v ligi. Igralci klubov, ki jih letos ni,
@@ -262,4 +299,34 @@ if (letosnjiKlubi.size) {
       `deaktiviranih igralcev zunaj lige: ${deaktiviranih ?? 0}, ` +
       `vrnjenih med aktivne: ${vrnjenih ?? 0}`,
   )
+
+  // Klub, ki ga v razporedu ni vec, je iz lige odstopil (Gorica, Primorska
+  // liga, september 2026). Njegovi igralci so ze deaktivirani — njegove
+  // NEODIGRANE tekme pa so ostale in vsaka je "tekma brez zapisnika": preverba
+  // jo javlja, borza zaradi nje zadrzi krog. Odigranih se ne dotaknemo —
+  // rezultat, ki je bil, ostane.
+  const { data: krogiSezone } = await db
+    .from('rounds')
+    .select('id')
+    .eq('competition_id', tekmovanje.id)
+    .eq('season', sezona)
+  const krogIdji = (krogiSezone ?? []).map((r) => r.id)
+  if (krogIdji.length) {
+    const { data: fantomske } = await db
+      .from('matches')
+      .select('id, home_team_id, away_team_id')
+      .in('round_id', krogIdji)
+      .is('imported_at', null)
+    const zaBrisanje = (fantomske ?? []).filter(
+      (m) => !letosnjiKlubi.has(m.home_team_id) || !letosnjiKlubi.has(m.away_team_id),
+    )
+    if (zaBrisanje.length) {
+      const { error } = await db
+        .from('matches')
+        .delete()
+        .in('id', zaBrisanje.map((m) => m.id))
+      if (error) console.log(`  brisanje tekem odstopljenih klubov: ${error.message}`)
+      else console.log(`Odstranjenih neodigranih tekem klubov, ki jih v ligi ni več: ${zaBrisanje.length}`)
+    }
+  }
 }
