@@ -156,12 +156,21 @@ function seznam(
   return y
 }
 
+/**
+ * Plakat se rise v koordinatah 1080x1080, izvozi pa se pri `MERILO`-kratni
+ * velikosti. Platno je vektorsko do trenutka izvoza: besedilo in SVG grbi
+ * ostanejo ostri, ne pa raztegnjeni. 2 -> 2160x2160, kar Instagram in
+ * Facebook sama zmanjsata brez izgube.
+ */
+const MERILO = 2
+
 async function narisi(p: PodatkiPlakata): Promise<Blob | null> {
   const platno = document.createElement('canvas')
-  platno.width = SIRINA
-  platno.height = VISINA
+  platno.width = SIRINA * MERILO
+  platno.height = VISINA * MERILO
   const c = platno.getContext('2d')
   if (!c) return null
+  c.scale(MERILO, MERILO)
 
   if (p.vrsta === 'klub') {
     await ozadje(c, p.liga, p.grb)
@@ -262,8 +271,10 @@ async function narisi(p: PodatkiPlakata): Promise<Blob | null> {
     const grb = await naloziSliko('/logo/slff-grb.png')
     c.save()
     c.shadowColor = 'rgba(0,0,0,.6)'
-    c.shadowBlur = 50
-    c.shadowOffsetY = 16
+    // Senca ne sledi `c.scale()` (izmerjeno: pri 2x je pol ozja), zato jo
+    // pomnozimo rocno. Razmik med crkami merilu sledi in ostane, kot je.
+    c.shadowBlur = 50 * MERILO
+    c.shadowOffsetY = 16 * MERILO
     c.beginPath()
     c.arc(cx, cy, G / 2 + 10, 0, Math.PI * 2)
     c.fillStyle = ZLATA
