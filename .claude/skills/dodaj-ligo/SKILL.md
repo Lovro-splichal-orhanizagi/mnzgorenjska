@@ -962,6 +962,27 @@ smoke poganja, dopolni tudi nadomestek — in dodaj trditev za novo vedenje.
 In: **testov ne poganjaj po objavi.** Ta commit sem objavil z rdečim smoke in
 ga moral popraviti z naslednjim.
 
+## Razpored je živ dokument — predpomnilnik ga ne sme zamrzniti
+
+`prenesi` v `uvoz-razporeda.mjs` je delal "če datoteka obstaja, jo vrni".
+GitHub Actions predpomnilnik hrani med zagoni, zato se je razpored z vira
+prebral **natanko enkrat** (9. septembra) in od takrat nikoli več. Vse, kar se
+je pri viru spremenilo — 13 prestavljenih tekem v 11 ligah, 24 novih, en klub,
+ki je iz lige odstopil — do nas ni prišlo. Alarm je štiri dni javljal "tekma
+brez zapisnika", ni pa mogel povedati, da tekme sploh ni več.
+
+Ločnica: **zapisnik** je zgodovina in se ne spremeni — predpomnilnik velja.
+**Razpored** se spreminja do konca sezone — vedno svež, datoteka le rezerva,
+če vir pade.
+
+Ob prestavitvi: datum popravi samo neodigrani tekmi; odigrana ima pravi datum
+iz zapisnika. Ob odstopu kluba: odstrani njegove neodigrane tekme, odigrane
+pusti — rezultat, ki je bil, ostane.
+
+Alarm "tekma brez zapisnika" ima torej tri vzroke, ne enega: (a) zapisnik še
+ni objavljen, (b) tekma je prestavljena, (c) tekme ni več. Preden iščeš napako
+v uvozu zapisnikov, poglej razpored pri viru.
+
 ## Ob koncu
 
 `npm run smoke`, `npm test`, `npm run typecheck`, `npm run build` — vsi zeleni,
