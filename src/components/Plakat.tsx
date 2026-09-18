@@ -15,6 +15,8 @@ import {
   velikostImena,
   velikostEkipe,
   stavekNavijacev,
+  skrajsajIme,
+  prilagodiVelikost,
   imeDatoteke,
   type PodatkiPlakata,
   type VrsticaIgralca,
@@ -86,10 +88,17 @@ function seznam(
   c.fillRect(ROB, y + 18, 72, 5)
   for (const ig of igralci) {
     y += razmik
+    // Prostor za ime: cela sirina brez stolpca s tockami. Predolgo ime se
+    // skrajsa kot na programu tekme, ne odreze in ne prelije v stevilko.
+    c.font = pisava(900, velikost)
+    const sirinaTock = c.measureText(String(ig.tocke)).width + 40
+    c.font = pisava(800, velikost)
+    const oznaka = ig.kapetan ? '  ©' : ''
+    const naVoljo = SIRINA - 2 * ROB - sirinaTock - c.measureText(oznaka).width
+    const ime = skrajsajIme(ig.ime, naVoljo, (s) => c.measureText(s).width)
     c.textAlign = 'left'
     c.fillStyle = KREM
-    c.font = pisava(800, velikost)
-    c.fillText(ig.ime + (ig.kapetan ? '  ©' : ''), ROB, y)
+    c.fillText(ime + oznaka, ROB, y)
     c.textAlign = 'right'
     c.fillStyle = ZLATA
     c.font = pisava(900, velikost)
@@ -109,10 +118,20 @@ async function narisi(p: PodatkiPlakata): Promise<Blob | null> {
   if (p.vrsta === 'klub') {
     await ozadje(c, p.liga, p.grb)
     const ime = p.klub.toUpperCase()
-    const vel = velikostImena(ime)
+    // Razred po dolzini je izhodisce; potem se pisava manjsa, dokler ime ne
+    // pride v sirino. "ND POLZELA - ZDRUŽENA SAVINJSKA" je bil sicer 1211 px
+    // v 912 px prostora.
+    // Razmik med crkami raste s pisavo: -8px, ki pri 210px stisne naslov v
+    // blok, pri 62px crke zlepi v necitljivo maso. Zato je sorazmeren.
+    const razmik = (px: number) => `${-Math.round(px * 0.04)}px`
+    const vel = prilagodiVelikost(ime, velikostImena(ime), 56, SIRINA - 2 * ROB + 8, (px, t) => {
+      c.font = pisava(900, px)
+      c.letterSpacing = razmik(px)
+      return c.measureText(t).width
+    })
     c.fillStyle = KREM
     c.font = pisava(900, vel)
-    c.letterSpacing = '-8px'
+    c.letterSpacing = razmik(vel)
     c.fillText(ime, ROB - 6, 470)
     c.letterSpacing = '0px'
     c.fillStyle = ZLATA
@@ -142,9 +161,13 @@ async function narisi(p: PodatkiPlakata): Promise<Blob | null> {
     c.fillText(`${p.krog}. krog`, ROB + w + 12, 450)
 
     const ime = p.ekipa.toUpperCase()
-    c.fillStyle = KREM
-    c.font = pisava(900, velikostEkipe(ime))
     c.letterSpacing = '-3px'
+    const velE = prilagodiVelikost(ime, velikostEkipe(ime), 36, SIRINA - 2 * ROB + 4, (px, t) => {
+      c.font = pisava(900, px)
+      return c.measureText(t).width
+    })
+    c.fillStyle = KREM
+    c.font = pisava(900, velE)
     c.fillText(ime, ROB - 2, 560)
     c.letterSpacing = '0px'
     if (p.mesto) {

@@ -50,7 +50,7 @@ import { premakniProti, NAJVECJI_TEDENSKI_PREMIK } from './premik-cene.mjs'
 import { oceniPripravljenost, najcenejsiKader } from '../src/lib/pripravljenost'
 import { serijaCen, premik, crta, zadnjiPremiki } from '../src/lib/gibanjeCene'
 import { predlagajKader } from '../src/lib/predlogKadra'
-import { velikostImena, velikostEkipe, imeZaPlakat, najboljsiTrije, navijacev, stavekNavijacev, imeDatoteke } from '../src/lib/plakat'
+import { velikostImena, velikostEkipe, imeZaPlakat, najboljsiTrije, navijacev, stavekNavijacev, skrajsajIme, prilagodiVelikost, imeDatoteke } from '../src/lib/plakat'
 import { readFileSync } from 'node:fs'
 
 let napak = 0
@@ -2540,6 +2540,26 @@ preveri(
 
   preveri('plakat: ime datoteke je varno',
     imeDatoteke('Kety Emmi&Impol Bistrica') === 'slff-kety-emmi-impol-bistrica.png', imeDatoteke('Kety Emmi&Impol Bistrica'))
+
+  // Predolga imena — vzeta iz baze, ne izmisljena. Merilo: 10 enot na znak.
+  const meri = (t) => t.length * 10
+  const dolg = imeZaPlakat('Tshipamba-Mulowayi Isaac Raphaël Tshima Omombo') // 46 znakov
+  preveri('plakat: kratko ime ostane celo', skrajsajIme('Harun Hodžić', 300, meri) === 'Harun Hodžić')
+  preveri('plakat: predolgo ime najprej izgubi srednja imena',
+    skrajsajIme(dolg, 260, meri) === 'Isaac Tshipamba-Mulowayi', skrajsajIme(dolg, 260, meri))
+  preveri('plakat: se predolgo ime dobi zacetnico, priimek ostane cel',
+    skrajsajIme(dolg, 220, meri) === 'I. Tshipamba-Mulowayi', skrajsajIme(dolg, 220, meri))
+  preveri('plakat: skrajsano ime ni nikoli sirse od prostora, ce priimek to dopusca',
+    meri(skrajsajIme(dolg, 220, meri)) <= 220)
+  preveri('plakat: eno samo predolgo ime se ne razbije', skrajsajIme('Ronaldinho', 50, meri) === 'Ronaldinho')
+
+  // Ime kluba se manjsa, dokler ne pride v sirino — po meritvi, ne po znakih.
+  const meriPri = (px, t) => t.length * px * 0.6
+  const klub = 'ND POLZELA - ZDRUŽENA SAVINJSKA'
+  const px = prilagodiVelikost(klub, 78, 40, 912, meriPri)
+  preveri('plakat: predolgo ime kluba dobi manjso pisavo', px < 78 && meriPri(px, klub) <= 912, `${px}px`)
+  preveri('plakat: kratko ime kluba obdrzi zacetno velikost', prilagodiVelikost('VIR', 210, 40, 912, meriPri) === 210)
+  preveri('plakat: pisava ne pade pod najmanjso', prilagodiVelikost('X'.repeat(200), 78, 40, 912, meriPri) === 40)
 }
 
 // --- hooki pred zgodnjim return ---------------------------------------------

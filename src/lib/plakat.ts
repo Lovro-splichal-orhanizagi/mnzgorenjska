@@ -74,6 +74,48 @@ export function imeZaPlakat(polno: string | null | undefined): string {
   return `${d.slice(1).join(' ')} ${d[0]}`
 }
 
+/**
+ * Krajsanje imena, kot ga naredi program tekme: najprej gredo srednja imena,
+ * nato se prvo ime skrajsa na zacetnico. "Isaac Raphaël Tshima Omombo
+ * Tshipamba-Mulowayi" (46 znakov — in tak igralec v bazi res je) postane
+ * "I. Tshipamba-Mulowayi". Priimek je zadnja beseda in ostane cel, ker je
+ * to tisto, po cemer ga navijaci poznajo.
+ *
+ * `meri` vrne sirino besedila v pikslih — na platnu `ctx.measureText`.
+ */
+export function skrajsajIme(ime: string, najvec: number, meri: (s: string) => number): string {
+  if (meri(ime) <= najvec) return ime
+  const d = ime.trim().split(/\s+/)
+  if (d.length < 2) return ime
+  const priimek = d[d.length - 1]
+  const prvo = d[0]
+  // 1. samo prvo ime + priimek
+  const kratko = `${prvo} ${priimek}`
+  if (meri(kratko) <= najvec) return kratko
+  // 2. zacetnica + priimek
+  const zacetnica = `${prvo[0]}. ${priimek}`
+  if (meri(zacetnica) <= najvec) return zacetnica
+  // 3. tudi priimek je predolg — ostane, kar je; klicatelj bo zmanjsal pisavo
+  return zacetnica
+}
+
+/**
+ * Najvecja velikost pisave, pri kateri besedilo ostane v `najvec` pikslih.
+ * Racun po dolzini v znakih ne zadosca: "ND POLZELA - ZDRUŽENA SAVINJSKA" je
+ * pri najmanjsem razredu (78 px) se vedno 1211 px sirok v 912 px prostora.
+ */
+export function prilagodiVelikost(
+  besedilo: string,
+  zacetna: number,
+  najmanj: number,
+  najvec: number,
+  meriPri: (px: number, s: string) => number,
+): number {
+  let px = zacetna
+  while (px > najmanj && meriPri(px, besedilo) > najvec) px -= 4
+  return Math.max(px, najmanj)
+}
+
 /** Najvec trije, samo s tockami nad nic — plakat ne hvali nicel. */
 export function najboljsiTrije(
   seznam: Array<{ full_name?: string | null; ime?: string | null; points?: number | string | null; tocke?: number | string | null; je_kapetan?: boolean }>,
