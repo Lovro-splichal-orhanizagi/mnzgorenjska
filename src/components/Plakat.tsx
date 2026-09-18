@@ -1,28 +1,27 @@
-// Gumb "Deli" — plakat za objavo in povezava v domači aplikaciji.
+// Gumb "Deli" — plakat za objavo in povezava.
 //
-// Dve poti, ker sta dve omrežji:
-//   • Facebook, WhatsApp in Viber vzamejo POVEZAVO — odpre se sistemski meni
-//     za deljenje, na namizju pa se naslov prekopira.
-//   • Instagram povezav ne sprejme, zato mora SLIKA sama povedati vse. Zato
-//     ni ena skupna slika, ampak plakat, ki nastane v brskalniku za vsak klub
-//     in vsak rezultat posebej.
+// Dve poti, ker sta dve omrežji: Facebook, WhatsApp in Viber vzamejo povezavo
+// (sistemski meni), Instagram pa ne — tam mora slika povedati vse sama.
+//
+// Plakat je zgrajen kot program tekme, ne kot kartica: floodlit igrišče,
+// ime čez vso širino, imena igralcev s točkami, en stavek. Vse levo
+// poravnano. Oblikovan tako, da je bil izrisan in POGLEDAN, preden je šel
+// v produkcijo — prva različica ni bila.
 import { useState } from 'react'
 import {
   SIRINA,
   VISINA,
-  velikostNaslova,
-  visinaKartice,
-  zacetekKartice,
+  ROB,
+  velikostImena,
+  velikostEkipe,
+  stavekNavijacev,
   imeDatoteke,
   type PodatkiPlakata,
+  type VrsticaIgralca,
 } from '../lib/plakat'
 
-const KREM = '#faf6ec'
-const TEMNA = '#10261c'
-const ZLATA = '#e3a008'
-const SIVA = '#7b8d83'
-const ZELENA = '#1d6b48'
-const GRB = 208
+const KREM = '#F3EDE0'
+const ZLATA = '#D9A21B'
 
 function naloziSliko(src: string): Promise<HTMLImageElement | null> {
   return new Promise((resolve) => {
@@ -33,135 +32,155 @@ function naloziSliko(src: string): Promise<HTMLImageElement | null> {
   })
 }
 
-function zaokrozen(
-  c: CanvasRenderingContext2D,
-  x: number, y: number, w: number, h: number, r: number,
-) {
-  c.beginPath()
-  c.moveTo(x + r, y)
-  c.arcTo(x + w, y, x + w, y + h, r)
-  c.arcTo(x + w, y + h, x, y + h, r)
-  c.arcTo(x, y + h, x, y, r)
-  c.arcTo(x, y, x + w, y, r)
-  c.closePath()
+const pisava = (teza: number, px: number) => `${teza} ${px}px Inter, system-ui, sans-serif`
+
+/** Ozadje in glava sta obema plakatoma skupna. */
+async function ozadje(c: CanvasRenderingContext2D, liga: string, grbUrl: string | null) {
+  const foto = await naloziSliko('/foto/igrisce.jpg')
+  if (foto) {
+    const r = Math.max(SIRINA / foto.width, VISINA / foto.height)
+    const w = foto.width * r
+    const h = foto.height * r
+    c.drawImage(foto, (SIRINA - w) / 2, (VISINA - h) / 2 - 40, w, h)
+  } else {
+    c.fillStyle = '#0E1F17'
+    c.fillRect(0, 0, SIRINA, VISINA)
+  }
+  // Reflektor zgoraj ostane; spodaj se zatemni, da imena berejo.
+  const g = c.createLinearGradient(0, 0, 0, VISINA)
+  g.addColorStop(0, 'rgba(8,24,17,.30)')
+  g.addColorStop(0.42, 'rgba(8,24,17,.50)')
+  g.addColorStop(0.62, 'rgba(6,18,13,.90)')
+  g.addColorStop(1, 'rgba(6,18,13,.98)')
+  c.fillStyle = g
+  c.fillRect(0, 0, SIRINA, VISINA)
+
+  const grb = await naloziSliko(grbUrl || '/logo/slff-grb.png')
+  if (grb) {
+    const r = 140 / Math.max(grb.width, grb.height)
+    c.drawImage(grb, ROB, 88, grb.width * r, grb.height * r)
+  }
+  c.textAlign = 'right'
+  c.fillStyle = 'rgba(243,237,224,.7)'
+  c.font = pisava(600, 28)
+  c.fillText(liga, SIRINA - ROB, 122)
+  c.fillStyle = KREM
+  c.font = pisava(800, 30)
+  c.fillText('slff.eu', SIRINA - ROB, 164)
+  c.textAlign = 'left'
 }
 
-async function narisi(p: PodatkiPlakata, grbUrl: string | null): Promise<Blob | null> {
+/** Seznam igralcev: ime levo, tocke desno v zlati, kot na programu tekme. */
+function seznam(
+  c: CanvasRenderingContext2D,
+  naslov: string,
+  igralci: VrsticaIgralca[],
+  y: number,
+  velikost: number,
+  razmik: number,
+): number {
+  c.fillStyle = 'rgba(243,237,224,.55)'
+  c.font = pisava(600, 28)
+  c.fillText(naslov, ROB, y)
+  c.fillStyle = ZLATA
+  c.fillRect(ROB, y + 18, 72, 5)
+  for (const ig of igralci) {
+    y += razmik
+    c.textAlign = 'left'
+    c.fillStyle = KREM
+    c.font = pisava(800, velikost)
+    c.fillText(ig.ime + (ig.kapetan ? '  ©' : ''), ROB, y)
+    c.textAlign = 'right'
+    c.fillStyle = ZLATA
+    c.font = pisava(900, velikost)
+    c.fillText(String(ig.tocke), SIRINA - ROB, y)
+  }
+  c.textAlign = 'left'
+  return y
+}
+
+async function narisi(p: PodatkiPlakata): Promise<Blob | null> {
   const platno = document.createElement('canvas')
   platno.width = SIRINA
   platno.height = VISINA
   const c = platno.getContext('2d')
   if (!c) return null
 
-  // Ozadje je fotografija razsvetljenega igrišča — nedeljska liga je večinoma
-  // to. Čez gre zelena prevleka, da kartica in besedilo držita kontrast.
-  const foto = await naloziSliko('/foto/igrisce.jpg')
-  if (foto) {
-    const r = Math.max(SIRINA / foto.width, VISINA / foto.height)
-    const w = foto.width * r
-    const h = foto.height * r
-    c.drawImage(foto, (SIRINA - w) / 2, (VISINA - h) / 2, w, h)
-  } else {
-    c.fillStyle = ZELENA
-    c.fillRect(0, 0, SIRINA, VISINA)
-  }
-  const g = c.createLinearGradient(0, 0, 0, VISINA)
-  g.addColorStop(0, 'rgba(10,44,30,.22)')
-  g.addColorStop(0.45, 'rgba(10,44,30,.04)')
-  g.addColorStop(1, 'rgba(6,26,18,.52)')
-  c.fillStyle = g
-  c.fillRect(0, 0, SIRINA, VISINA)
-
-  const mid = SIRINA / 2
-  const rob = 64
-  const CH = visinaKartice(p, GRB)
-  const CY = zacetekKartice(CH)
-
-  c.save()
-  c.shadowColor = 'rgba(0,0,0,.55)'
-  c.shadowBlur = 56
-  c.shadowOffsetY = 20
-  c.fillStyle = KREM
-  zaokrozen(c, rob, CY, SIRINA - 2 * rob, CH, 48)
-  c.fill()
-  c.restore()
-
-  // Grb čez zgornji rob kartice — klubski, če ga ima, sicer SLFF.
-  const grb = await naloziSliko(grbUrl || '/logo/slff-grb.png')
-  if (grb) {
-    const r = GRB / Math.max(grb.width, grb.height)
-    const w = grb.width * r
-    const h = grb.height * r
-    c.beginPath()
-    c.arc(mid, CY, GRB / 2 + 14, 0, Math.PI * 2)
+  if (p.vrsta === 'klub') {
+    await ozadje(c, p.liga, p.grb)
+    const ime = p.klub.toUpperCase()
+    const vel = velikostImena(ime)
     c.fillStyle = KREM
-    c.fill()
-    c.drawImage(grb, mid - w / 2, CY - h / 2, w, h)
-  }
-
-  c.textAlign = 'center'
-  let y = CY + GRB * 0.55 + 54
-
-  if (p.liga) {
-    c.fillStyle = SIVA
-    c.font = '800 27px Inter, system-ui, sans-serif'
-    c.fillText(p.liga.toUpperCase(), mid, y)
-  }
-  y += 46
-
-  const vel = velikostNaslova(p.naslov)
-  c.fillStyle = TEMNA
-  c.font = `900 ${vel}px Inter, system-ui, sans-serif`
-  c.fillText(p.naslov, mid, y + vel * 0.76)
-  y += vel + 22
-
-  c.fillStyle = ZELENA
-  c.font = '900 198px Inter, system-ui, sans-serif'
-  c.fillText(String(p.stevilo), mid, y + 156)
-  y += 194
-
-  c.fillStyle = SIVA
-  c.font = '800 31px Inter, system-ui, sans-serif'
-  c.fillText(p.oznaka.toUpperCase(), mid, y)
-  y += 48
-
-  if (p.znacka) {
-    c.font = '800 31px Inter, system-ui, sans-serif'
-    const w = c.measureText(p.znacka).width + 72
+    c.font = pisava(900, vel)
+    c.letterSpacing = '-8px'
+    c.fillText(ime, ROB - 6, 470)
+    c.letterSpacing = '0px'
     c.fillStyle = ZLATA
-    zaokrozen(c, mid - w / 2, y, w, 60, 30)
-    c.fill()
-    c.fillStyle = TEMNA
-    c.fillText(p.znacka, mid, y + 41)
-  }
+    c.font = pisava(700, 46)
+    c.fillText('Sestavi svojo ekipo iz naših igralcev.', ROB, 540)
+    seznam(c, 'Največ točk to sezono', p.igralci, 650, 54, 92)
+    const stavek = stavekNavijacev(p.navijacev)
+    if (stavek) {
+      c.fillStyle = 'rgba(243,237,224,.62)'
+      c.font = pisava(600, 32)
+      c.fillText(stavek, ROB, VISINA - 72)
+    }
+  } else {
+    await ozadje(c, p.liga, null)
+    const tocke = String(p.tocke)
+    c.fillStyle = KREM
+    c.font = pisava(900, 250)
+    c.letterSpacing = '-10px'
+    c.fillText(tocke, ROB - 8, 470)
+    c.letterSpacing = '0px'
+    const w = c.measureText(tocke).width
+    c.fillStyle = ZLATA
+    c.font = pisava(800, 46)
+    c.fillText('točk', ROB + w + 12, 400)
+    c.fillStyle = 'rgba(243,237,224,.7)'
+    c.font = pisava(600, 38)
+    c.fillText(`${p.krog}. krog`, ROB + w + 12, 450)
 
-  c.fillStyle = 'rgba(250,246,236,.85)'
-  c.font = '700 25px Inter, system-ui, sans-serif'
-  c.fillText('TOČKE IZ URADNIH ZAPISNIKOV MNZ', mid, VISINA - 118)
-  c.fillStyle = KREM
-  c.font = '900 48px Inter, system-ui, sans-serif'
-  c.fillText('slff.eu', mid, VISINA - 62)
+    const ime = p.ekipa.toUpperCase()
+    c.fillStyle = KREM
+    c.font = pisava(900, velikostEkipe(ime))
+    c.letterSpacing = '-3px'
+    c.fillText(ime, ROB - 2, 560)
+    c.letterSpacing = '0px'
+    if (p.mesto) {
+      c.fillStyle = ZLATA
+      c.font = pisava(700, 40)
+      c.fillText(p.odEkip ? `${p.mesto}. mesto od ${p.odEkip} ekip` : `${p.mesto}. mesto`, ROB, 616)
+    }
+    if (p.igralci.length) seznam(c, 'Moji najboljši v krogu', p.igralci, 680, 50, 84)
+    c.fillStyle = 'rgba(243,237,224,.62)'
+    c.font = pisava(600, 32)
+    c.fillText('Sestavi svojo ekipo in me premagaj.', ROB, VISINA - 72)
+  }
 
   return new Promise((resolve) => platno.toBlob((b) => resolve(b), 'image/png'))
 }
 
 export default function Plakat({
   podatki,
-  grb,
   povezava,
 }: {
   podatki: PodatkiPlakata
-  grb: string | null
   povezava: string
 }) {
   const [dela, setDela] = useState(false)
   const [sporocilo, setSporocilo] = useState<string | null>(null)
 
+  const naslov = podatki.vrsta === 'klub' ? podatki.klub : podatki.ekipa
+  const besedilo =
+    podatki.vrsta === 'klub'
+      ? `${podatki.klub} je v fantasy ligi SLFF — sestavi svojo ekipo iz naših igralcev.`
+      : `${podatki.ekipa}: ${podatki.tocke} točk v ${podatki.krog}. krogu. Sestavi svojo ekipo in me premagaj.`
+
   async function deli() {
-    const besedilo = `${podatki.naslov} — ${podatki.stevilo} ${podatki.oznaka}. SLFF, fantasy liga za slovenske lige.`
     if (navigator.share) {
       try {
-        await navigator.share({ title: `${podatki.naslov} — SLFF`, text: besedilo, url: povezava })
+        await navigator.share({ title: `${naslov} — SLFF`, text: besedilo, url: povezava })
       } catch {
         // Uporabnik je meni zaprl — to ni napaka.
       }
@@ -179,20 +198,16 @@ export default function Plakat({
     setDela(true)
     setSporocilo(null)
     try {
-      const blob = await narisi(podatki, grb)
+      const blob = await narisi(podatki)
       if (!blob) throw new Error('slike ni bilo mogoče izrisati')
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = imeDatoteke(podatki.naslov)
-      // Sidro mora biti v dokumentu, sicer ga del brskalnikov (Safari, mobilni
-      // Chrome) ne sprozi.
+      a.download = imeDatoteke(naslov)
       a.style.display = 'none'
       document.body.appendChild(a)
       a.click()
-      // Naslova NE sprostimo takoj: brskalnik prenos sele zacenja in
-      // predcasen `revokeObjectURL` ga utegne prekiniti — prav zato prenos
-      // prej ni ustvaril datoteke.
+      // Naslova ne sprostimo takoj: brskalnik prenos šele začenja.
       setTimeout(() => {
         URL.revokeObjectURL(url)
         a.remove()
@@ -209,14 +224,10 @@ export default function Plakat({
     <div className="space-y-2">
       <div className="flex flex-wrap gap-2">
         <button onClick={deli} className="gumb-tih px-3 py-2 text-sm">
-          ↗ Deli povezavo
+          Deli povezavo
         </button>
-        <button
-          onClick={prenesi}
-          disabled={dela}
-          className="gumb-tih px-3 py-2 text-sm disabled:opacity-60"
-        >
-          {dela ? 'Pripravljam …' : '⬇ Prenesi sliko za objavo'}
+        <button onClick={prenesi} disabled={dela} className="gumb-tih px-3 py-2 text-sm disabled:opacity-60">
+          {dela ? 'Pripravljam …' : 'Prenesi sliko za objavo'}
         </button>
       </div>
       {sporocilo && <p className="text-xs text-slate-400">{sporocilo}</p>}

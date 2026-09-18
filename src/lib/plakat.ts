@@ -1,68 +1,106 @@
-// Plakat za objavo — slika, ki jo klub ali manager deli na FB in Instagramu.
+// Plakat za objavo — matchday plakat, ne kartica s stevilko.
 //
-// Instagram povezav ne sprejme, zato mora slika sama povedati vse: kdo, koliko
-// in kje. Ker sta priloznosti dve in nista isti — klub objavi enkrat, da je v
-// ligi, manager pa vsak teden svoj rezultat — je plakat splosen: veliko
-// stevilo, oznaka pod njim in po potrebi znacka.
+// Prva razlicica je bila kremna kartica z eno veliko stevilko: "18 igralcev v
+// igri". To navijacu ne pove nicesar. Navijac nedeljske lige pozna igralce
+// osebno — ustavi ga IME, ne stevilka. Zato je plakat sestavljen kot program
+// tekme: grb, ime kluba cez vso sirino, tri imena s tockami, en stavek, ki
+// pove, kaj naj naredi.
 //
-// Tu je samo racunanje. Risanje je v `src/components/Plakat.tsx`, ker
-// potrebuje `canvas`.
+// Dve razlicici z istim jezikom:
+//   • klub: "ZAGORJE — sestavi svojo ekipo iz nasih igralcev" + najboljsi trije
+//   • krog: "22 tock, 4. krog, GOSPODINI, 5. mesto" + moji najboljsi + "premagaj me"
+//
+// Tu je racunski del; risanje je v `src/components/Plakat.tsx`.
 
-/** Kvadrat: Instagram ga ne obreze, FB ga pokaze v celoti. */
 export const SIRINA = 1080
 export const VISINA = 1080
+/** Levi rob — vse je levo poravnano, kot na plakatu, ne sredinjeno kot na kartici. */
+export const ROB = 84
 
-export interface PodatkiPlakata {
-  /** Ime kluba ali ekipe — najvecje besedilo na kartici. */
-  naslov: string
-  /** Drobno nad imenom: liga. */
-  liga?: string | null
-  /** Junak plakata: ena sama velika stevilka. */
-  stevilo: number | string
-  /** Kaj ta stevilka je ("točk v 4. krogu", "igralcev v igri"). */
-  oznaka: string
-  /** Zlata znacka pod stevilko; brez nje se ne izrise. */
-  znacka?: string | null
+export interface VrsticaIgralca {
+  ime: string
+  tocke: number
+  kapetan?: boolean
 }
+
+export interface PlakatKluba {
+  vrsta: 'klub'
+  klub: string
+  liga: string
+  grb: string | null
+  igralci: VrsticaIgralca[]
+  navijacev: number
+}
+
+export interface PlakatKroga {
+  vrsta: 'krog'
+  ekipa: string
+  liga: string
+  tocke: number | string
+  krog: number
+  mesto: number | null
+  odEkip: number | null
+  igralci: VrsticaIgralca[]
+}
+
+export type PodatkiPlakata = PlakatKluba | PlakatKroga
 
 /**
- * Velikost pisave za ime: dolga imena ("Kety Emmi&Impol Bistrica") morajo
- * ostati v eni vrstici, ne pa pobegniti cez rob kartice.
+ * Ime kluba cez vso sirino: velikost pade z dolzino, da "KETY EMMI&IMPOL
+ * BISTRICA" ostane v eni vrstici, "VIR" pa ne izgleda izgubljeno.
  */
-export function velikostNaslova(ime: string): number {
+export function velikostImena(ime: string): number {
   const n = ime.length
-  if (n <= 10) return 88
-  if (n <= 16) return 72
-  if (n <= 24) return 56
-  return 46
+  if (n <= 8) return 210
+  if (n <= 12) return 170
+  if (n <= 16) return 132
+  if (n <= 22) return 100
+  return 78
 }
 
-/** Visina kartice iz vsebine — brez tega plakat pusti prazno tretjino. */
-export function visinaKartice(p: PodatkiPlakata, visinaGrba = 208): number {
-  const padTop = visinaGrba * 0.55 + 54
-  return padTop + 46 + (velikostNaslova(p.naslov) + 22) + 194 + 48 + (p.znacka ? 96 : 0) + 54
+/** Ime ekipe managerja — manjse, ker nad njim ze stoji stevilka tock. */
+export function velikostEkipe(ime: string): number {
+  const n = ime.length
+  if (n <= 10) return 96
+  if (n <= 16) return 78
+  if (n <= 24) return 60
+  return 48
 }
 
-/** Kje se kartica zacne, da je slika navpicno uravnotezena. */
-export function zacetekKartice(visina: number): number {
-  return Math.max(96, Math.round((VISINA - visina - 150) / 2) + 40)
+/** "Priimek Ime" iz baze -> "Ime Priimek" za plakat. */
+export function imeZaPlakat(polno: string | null | undefined): string {
+  const d = (polno ?? '').trim().split(/\s+/)
+  if (d.length < 2) return polno ?? ''
+  return `${d.slice(1).join(' ')} ${d[0]}`
 }
 
-/** Znacka za plakat kluba — nicel ne oglasujemo. */
-export function znackaKluba(navijacev: number): string | null {
-  if (!navijacev) return null
-  const beseda =
-    navijacev % 100 >= 11 && navijacev % 100 <= 14
-      ? 'navijačev'
-      : { 1: 'navijač', 2: 'navijača', 3: 'navijači', 4: 'navijači' }[navijacev % 10] ??
-        'navijačev'
-  return `${navijacev} ${beseda.toUpperCase()} JIH IMA`
+/** Najvec trije, samo s tockami nad nic — plakat ne hvali nicel. */
+export function najboljsiTrije(
+  seznam: Array<{ full_name?: string | null; ime?: string | null; points?: number | string | null; tocke?: number | string | null; je_kapetan?: boolean }>,
+): VrsticaIgralca[] {
+  return seznam
+    .map((s) => ({
+      ime: imeZaPlakat(s.full_name ?? s.ime ?? ''),
+      tocke: Number(s.points ?? s.tocke ?? 0),
+      kapetan: Boolean(s.je_kapetan),
+    }))
+    .filter((s) => s.ime && s.tocke > 0)
+    .sort((a, b) => b.tocke - a.tocke)
+    .slice(0, 3)
 }
 
-/** Znacka za tedenski rezultat. */
-export function znackaKroga(mesto?: number | null, odEkip?: number | null): string | null {
-  if (!mesto) return null
-  return odEkip ? `${mesto}. MESTO OD ${odEkip}` : `${mesto}. MESTO`
+/** Slovenska sklanjatev: 1 navijač, 2 navijača, 3–4 navijači, 5+ navijačev. */
+export function navijacev(n: number): string {
+  if (n % 100 >= 11 && n % 100 <= 14) return `${n} navijačev`
+  const k = { 1: 'navijač', 2: 'navijača', 3: 'navijači', 4: 'navijači' }[n % 10] ?? 'navijačev'
+  return `${n} ${k}`
+}
+
+/** Stavek pod seznamom kluba; prazen, kadar ni kaj povedati. */
+export function stavekNavijacev(n: number): string | null {
+  if (n <= 0) return null
+  const glagol = n === 1 ? 'že ima' : n === 2 ? 'že imata' : n <= 4 ? 'že imajo' : 'že ima'
+  return `${navijacev(n)} ${glagol} naše igralce v ekipi.`
 }
 
 /** Ime datoteke, ki jo clovek prenese. */
@@ -73,5 +111,5 @@ export function imeDatoteke(naslov: string): string {
     .replace(/[^a-zA-Z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
     .toLowerCase()
-  return `slff-${cist || 'ekipa'}.png`
+  return `slff-${cist || 'plakat'}.png`
 }

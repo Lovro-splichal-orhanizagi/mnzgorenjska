@@ -12,7 +12,7 @@ import { VRSTNI_RED } from '../lib/pravila'
 import type { Pozicija } from '../lib/tipi'
 import Grb from '../components/Grb'
 import Plakat from '../components/Plakat'
-import { znackaKluba } from '../lib/plakat'
+import { najboljsiTrije } from '../lib/plakat'
 
 interface Igralec {
   id: number
@@ -154,13 +154,13 @@ export default function Klub() {
         <div className="mt-3 border-t border-white/10 pt-3">
           <Plakat
             podatki={{
-              naslov: klub?.name ?? '',
-              liga: liga?.name ?? null,
-              stevilo: igralci.length,
-              oznaka: 'igralcev v igri',
-              znacka: znackaKluba(izbranih),
+              vrsta: 'klub',
+              klub: klub?.name ?? '',
+              liga: liga?.name ?? '',
+              grb: klub?.logo_url ?? null,
+              igralci: najboljsiTrije(igralci),
+              navijacev: izbranih,
             }}
-            grb={klub?.logo_url ?? null}
             povezava={typeof window !== 'undefined' ? window.location.href : ''}
           />
         </div>

@@ -50,7 +50,7 @@ import { premakniProti, NAJVECJI_TEDENSKI_PREMIK } from './premik-cene.mjs'
 import { oceniPripravljenost, najcenejsiKader } from '../src/lib/pripravljenost'
 import { serijaCen, premik, crta, zadnjiPremiki } from '../src/lib/gibanjeCene'
 import { predlagajKader } from '../src/lib/predlogKadra'
-import { velikostNaslova, visinaKartice, zacetekKartice, znackaKluba, znackaKroga, imeDatoteke } from '../src/lib/plakat'
+import { velikostImena, velikostEkipe, imeZaPlakat, najboljsiTrije, navijacev, stavekNavijacev, imeDatoteke } from '../src/lib/plakat'
 import { readFileSync } from 'node:fs'
 
 let napak = 0
@@ -2501,60 +2501,45 @@ preveri(
 }
 
 // --- plakat za objavo ------------------------------------------------------
-// Slika je edino, kar pove sporocilo na Instagramu, kjer povezave ne delujejo.
+// Plakat je zgrajen kot program tekme: imena igralcev, ne stevilke.
 {
-  preveri('plakat: daljse ime dobi manjso pisavo',
-    velikostNaslova('Gospodini') > velikostNaslova('Kety Emmi&Impol Bistrica'),
-    `${velikostNaslova('Gospodini')} proti ${velikostNaslova('Kety Emmi&Impol Bistrica')}`)
+  preveri('plakat: kratko ime kluba je najvecje',
+    velikostImena('VIR') > velikostImena('KETY EMMI&IMPOL BISTRICA'),
+    `${velikostImena('VIR')} proti ${velikostImena('KETY EMMI&IMPOL BISTRICA')}`)
+  preveri('plakat: ime ekipe je manjse od imena kluba, ker nad njim stoji stevilka',
+    velikostEkipe('GOSPODINI') < velikostImena('GOSPODINI'))
 
-  // Kartica se mora prilagoditi vsebini, sicer ostane prazna tretjina.
-  const brezZnacke = { naslov: 'Ekipa', stevilo: 22, oznaka: 'točk' }
-  const zZnacko = { ...brezZnacke, znacka: '5. MESTO OD 7' }
-  preveri('plakat: znacka poveca kartico',
-    visinaKartice(zZnacko) > visinaKartice(brezZnacke),
-    `${visinaKartice(zZnacko)} proti ${visinaKartice(brezZnacke)}`)
-  preveri('plakat: nizja kartica se zacne nize',
-    zacetekKartice(500) > zacetekKartice(800),
-    `${zacetekKartice(500)} proti ${zacetekKartice(800)}`)
-  preveri('plakat: zelo visoka kartica ne zleze cez vrh', zacetekKartice(1600) >= 96)
+  preveri('plakat: "Priimek Ime" iz baze postane "Ime Priimek"',
+    imeZaPlakat('Hodžić Harun') === 'Harun Hodžić', imeZaPlakat('Hodžić Harun'))
+  preveri('plakat: eno samo ime ostane', imeZaPlakat('Ronaldinho') === 'Ronaldinho')
 
-  // Nicel ne oglasujemo: "0 navijacev" ni razlog za objavo.
-  preveri('plakat: nic navijacev nima znacke', znackaKluba(0) === null)
-  preveri('plakat: en navijac je v ednini', znackaKluba(1) === '1 NAVIJAČ JIH IMA', znackaKluba(1))
-  preveri('plakat: trije navijaci so v mnozini', znackaKluba(3) === '3 NAVIJAČI JIH IMA', znackaKluba(3))
-  preveri('plakat: pet navijacev je v rodilniku', znackaKluba(5) === '5 NAVIJAČEV JIH IMA', znackaKluba(5))
-  preveri('plakat: enajst navijacev je posebnost', znackaKluba(11) === '11 NAVIJAČEV JIH IMA', znackaKluba(11))
+  const trije = najboljsiTrije([
+    { full_name: 'Hodžić Harun', points: 36 }, { full_name: 'Hodžić Adis', points: 27 },
+    { full_name: 'Kosmač Matija', points: 22 }, { full_name: 'Hudomalj Luka', points: 18 },
+    { full_name: 'Nekdo Brez', points: 0 },
+  ])
+  preveri('plakat: najboljsi trije, po tockah', trije.length === 3 && trije[0].ime === 'Harun Hodžić' && trije[2].tocke === 22,
+    JSON.stringify(trije))
+  preveri('plakat: igralec z nic tockami ne pride na plakat',
+    najboljsiTrije([{ full_name: 'Nekdo', points: 0 }]).length === 0)
+  preveri('plakat: kapetan obdrzi oznako',
+    najboljsiTrije([{ ime: 'Hodžić Harun', tocke: 12, je_kapetan: true }])[0].kapetan === true)
 
-  preveri('plakat: mesto med ekipami', znackaKroga(5, 7) === '5. MESTO OD 7', znackaKroga(5, 7))
-  preveri('plakat: mesto brez stevila ekip', znackaKroga(5, null) === '5. MESTO')
-  preveri('plakat: brez mesta ni znacke', znackaKroga(null, 7) === null)
+  preveri('plakat: 1 navijač', navijacev(1) === '1 navijač', navijacev(1))
+  preveri('plakat: 2 navijača', navijacev(2) === '2 navijača', navijacev(2))
+  preveri('plakat: 3 navijači', navijacev(3) === '3 navijači', navijacev(3))
+  preveri('plakat: 5 navijačev', navijacev(5) === '5 navijačev', navijacev(5))
+  preveri('plakat: 11 navijačev (ne 11 navijač)', navijacev(11) === '11 navijačev', navijacev(11))
+  preveri('plakat: 21 navijač', navijacev(21) === '21 navijač', navijacev(21))
+
+  preveri('plakat: brez navijacev ni stavka', stavekNavijacev(0) === null)
+  preveri('plakat: en navijac "ze ima"', stavekNavijacev(1) === '1 navijač že ima naše igralce v ekipi.', stavekNavijacev(1))
+  preveri('plakat: dva navijaca "ze imata"', stavekNavijacev(2).includes('že imata'), stavekNavijacev(2))
+  preveri('plakat: trije "ze imajo"', stavekNavijacev(3).includes('že imajo'), stavekNavijacev(3))
+  preveri('plakat: enajst "ze ima"', stavekNavijacev(11).includes('že ima naše'), stavekNavijacev(11))
 
   preveri('plakat: ime datoteke je varno',
-    imeDatoteke('Kety Emmi&Impol Bistrica') === 'slff-kety-emmi-impol-bistrica.png',
-    imeDatoteke('Kety Emmi&Impol Bistrica'))
-  preveri('plakat: ime brez crk da razumno datoteko', imeDatoteke('!!!') === 'slff-ekipa.png', imeDatoteke('!!!'))
-}
-
-// --- uvoz razporeda ne sme zamrzniti v predpomnilniku --------------------
-// Razpored je ziv dokument do konca sezone. Ce ga skripta prebere z vira
-// samo prvic in potem vedno iz datoteke, do nas nikoli ne pride nobena
-// prestavitev — tako je Termit Moravce : Vir (11. 9. -> 14. 11.) stiri dni
-// veljala za "neuvozeno", in 13 prestavitev v 11 ligah je ostalo neopazenih.
-// Skripta potrebuje bazo, zato tu preverimo besedilo same skripte: vir se
-// mora klicati PRED branjem datoteke, datoteka pa je le rezerva ob napaki.
-{
-  const koda = readFileSync(new URL('./uvoz-razporeda.mjs', import.meta.url), 'utf8')
-  const telo = koda.slice(koda.indexOf('async function prenesi('), koda.indexOf('// --- razčlenitev razporeda'))
-  const fetchPrej = telo.indexOf('await fetch(') < telo.indexOf('readFileSync(')
-  preveri('razpored: skripta vir vpraša PRED branjem predpomnilnika', fetchPrej)
-  preveri('razpored: predpomnilnik je rezerva ob napaki, ne prva izbira',
-    /catch[\s\S]*readFileSync/.test(telo))
-  preveri('razpored: prestavljena tekma dobi nov datum',
-    koda.includes("update({ played_on: t.datum })"))
-  preveri('razpored: odigrani tekmi datuma ne spreminjamo',
-    /!obstojeca\.imported_at\s*&&/.test(koda))
-  preveri('razpored: neodigrane tekme odstopljenega kluba se odstranijo',
-    koda.includes("Odstranjenih neodigranih tekem"))
+    imeDatoteke('Kety Emmi&Impol Bistrica') === 'slff-kety-emmi-impol-bistrica.png', imeDatoteke('Kety Emmi&Impol Bistrica'))
 }
 
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../lib/useAuth'
 import Plakat from '../components/Plakat'
-import { znackaKroga } from '../lib/plakat'
+import { najboljsiTrije, type VrsticaIgralca } from '../lib/plakat'
 import { supabase } from '../lib/supabase'
 import { formatirajTocke } from '../lib/pomozno'
 import { useTekmovanje } from '../lib/tekmovanje'
@@ -59,6 +59,9 @@ export default function Lestvica() {
   // Svojo ekipo potrebujemo, da lahko manager deli SVOJ rezultat kroga —
   // to je edina stvar na strani, ki se ponovi vsak teden.
   const [mojaEkipa, setMojaEkipa] = useState<number | null>(null)
+  // Za plakat: kdo mi je v tem krogu prinesel največ. Bere zaklenjeno
+  // postavo, isto kot stran tuje ekipe — po roku je javna.
+  const [mojiNajboljsi, setMojiNajboljsi] = useState<VrsticaIgralca[]>([])
   const [vsiKrogiOdigrani, setVsiKrogiOdigrani] = useState<Krog[]>([])
   const [odigraneTocke, setOdigraneTocke] = useState<TockeKroga[]>([])
   // filter "od kroga N naprej"
@@ -215,6 +218,29 @@ export default function Lestvica() {
     ? krogLestvica.find((e) => e.fantasy_team_id === mojaEkipa)
     : undefined
 
+  useEffect(() => {
+    if (!mojaEkipa || !krog?.id) {
+      setMojiNajboljsi([])
+      return
+    }
+    let veljavno = true
+    ;(async () => {
+      const { data } = await supabase.rpc('tuja_postava', {
+        p_team: mojaEkipa,
+        p_round: krog.id,
+      })
+      if (!veljavno) return
+      // Mnozitelj je ze vracunan: kapetanovih 12 je 4 x 3.
+      const zTockami = ((data ?? []) as any[])
+        .filter((v) => v.mnozitelj > 0)
+        .map((v) => ({ ime: v.ime, tocke: Number(v.tocke) * v.mnozitelj, je_kapetan: v.je_kapetan }))
+      setMojiNajboljsi(najboljsiTrije(zTockami))
+    })()
+    return () => {
+      veljavno = false
+    }
+  }, [mojaEkipa, krog?.id])
+
   return (
     <div className="space-y-5">
       <h1 className="text-2xl font-black naslov sm:text-3xl">
@@ -246,13 +272,15 @@ export default function Lestvica() {
           <div className="mt-3">
             <Plakat
               podatki={{
-                naslov: mojRezultat.team_name ?? 'Moja ekipa',
-                liga: tekmovanje?.name ?? null,
-                stevilo: formatirajTocke(mojRezultat.points),
-                oznaka: 'točk v krogu',
-                znacka: znackaKroga(mojRezultat.rank ?? null, krogLestvica.length || null),
+                vrsta: 'krog',
+                ekipa: mojRezultat.team_name ?? 'Moja ekipa',
+                liga: tekmovanje?.name ?? '',
+                tocke: formatirajTocke(mojRezultat.points),
+                krog: krog?.number ?? 0,
+                mesto: mojRezultat.rank ?? null,
+                odEkip: krogLestvica.length || null,
+                igralci: mojiNajboljsi,
               }}
-              grb={null}
               povezava={
                 typeof window !== 'undefined'
                   ? `${window.location.origin}/ekipa/${mojRezultat.fantasy_team_id}`
