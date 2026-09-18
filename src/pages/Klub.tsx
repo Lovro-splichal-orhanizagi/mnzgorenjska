@@ -29,6 +29,9 @@ export default function Klub() {
   const { id } = useParams<{ id: string }>()
   const [klub, setKlub] = useState<{ name: string; logo_url: string | null; short_name: string | null } | null>(null)
   const [liga, setLiga] = useState<{ slug: string; name: string; short_name: string | null } | null>(null)
+  // "1. liga MNZ Ljubljana" za plakat: ime lige v bazi je "1. liga — člani",
+  // kar na plakatu brez zveze ne pove, KJE je ta liga.
+  const [ligaZaPlakat, setLigaZaPlakat] = useState<string>('')
   const [igralci, setIgralci] = useState<Igralec[]>([])
   const [nalaganje, setNalaganje] = useState(true)
   const [napaka, setNapaka] = useState<string | null>(null)
@@ -55,7 +58,7 @@ export default function Klub() {
       // najvec njegovimi igralci, da stran pokaze glavno mostvo.
       const { data: ct } = await supabase
         .from('competition_teams')
-        .select('competition_id, competitions(slug, name, short_name)')
+        .select('competition_id, competitions(slug, name, short_name, federation_id)')
         .eq('team_id', Number(id))
       const tekmovanja = (ct ?? []) as Array<{ competition_id: number; competitions: any }>
       if (!tekmovanja.length) {
@@ -86,6 +89,16 @@ export default function Klub() {
       if (!veljavno) return
       setLiga(najboljsi?.liga ?? null)
       setIgralci(najboljsi?.igralci ?? [])
+      if (najboljsi) {
+        const { data: v } = await supabase
+          .from('competitions_view')
+          .select('name, federation_name')
+          .eq('id', najboljsi.id)
+          .maybeSingle()
+        if (!veljavno) return
+        const kratko = (v?.name ?? '').replace(/\s*—\s*(člani|mladinci)\s*$/, '')
+        setLigaZaPlakat(v?.federation_name ? `${kratko} ${v.federation_name}` : kratko)
+      }
       setNalaganje(false)
     })()
     return () => {
@@ -151,18 +164,33 @@ export default function Klub() {
 
         {/* Klubu damo tisto, kar je prosil: povezavo za FB in sliko za
             Instagram, kjer povezave ne delujejo. */}
-        <div className="mt-3 border-t border-white/10 pt-3">
-          <Plakat
-            podatki={{
-              vrsta: 'klub',
-              klub: klub?.name ?? '',
-              liga: liga?.name ?? '',
-              grb: klub?.logo_url ?? null,
-              igralci: najboljsiTrije(igralci),
-              navijacev: izbranih,
-            }}
-            povezava={typeof window !== 'undefined' ? window.location.href : ''}
-          />
+        <div className="mt-3 space-y-3 border-t border-white/10 pt-3">
+          <div>
+            <div className="mb-1.5 text-xs text-slate-400">Napoved — za objavo ob zagonu</div>
+            <Plakat
+              podatki={{
+                vrsta: 'napoved',
+                klub: klub?.name ?? '',
+                liga: ligaZaPlakat || liga?.name || '',
+                grb: klub?.logo_url ?? null,
+              }}
+              povezava={typeof window !== 'undefined' ? window.location.href : ''}
+            />
+          </div>
+          <div>
+            <div className="mb-1.5 text-xs text-slate-400">Naši igralci — s točkami</div>
+            <Plakat
+              podatki={{
+                vrsta: 'klub',
+                klub: klub?.name ?? '',
+                liga: ligaZaPlakat || liga?.name || '',
+                grb: klub?.logo_url ?? null,
+                igralci: najboljsiTrije(igralci),
+                navijacev: izbranih,
+              }}
+              povezava={typeof window !== 'undefined' ? window.location.href : ''}
+            />
+          </div>
         </div>
       </section>
 

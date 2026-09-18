@@ -17,6 +17,7 @@ import {
   stavekNavijacev,
   skrajsajIme,
   prilagodiVelikost,
+  ligaVTozilniku,
   imeDatoteke,
   type PodatkiPlakata,
   type VrsticaIgralca,
@@ -35,6 +36,16 @@ function naloziSliko(src: string): Promise<HTMLImageElement | null> {
 }
 
 const pisava = (teza: number, px: number) => `${teza} ${px}px Inter, system-ui, sans-serif`
+
+function plosca(c: CanvasRenderingContext2D, x: number, y: number, d: number, r: number) {
+  c.beginPath()
+  c.moveTo(x + r, y)
+  c.arcTo(x + d, y, x + d, y + d, r)
+  c.arcTo(x + d, y + d, x, y + d, r)
+  c.arcTo(x, y + d, x, y, r)
+  c.arcTo(x, y, x + d, y, r)
+  c.closePath()
+}
 
 /** Ozadje in glava sta obema plakatoma skupna. */
 async function ozadje(c: CanvasRenderingContext2D, liga: string, grbUrl: string | null) {
@@ -144,6 +155,66 @@ async function narisi(p: PodatkiPlakata): Promise<Blob | null> {
       c.font = pisava(600, 32)
       c.fillText(stavek, ROB, VISINA - 72)
     }
+  } else if (p.vrsta === 'napoved') {
+    // Napoved ne uporablja skupne glave: grb kluba stoji na kremni plošči
+    // (JPG brez prozornosti sicer izgleda kot bel kvadrat), SLFF grb desno.
+    const foto = await naloziSliko('/foto/igrisce.jpg')
+    if (foto) {
+      const r = Math.max(SIRINA / foto.width, VISINA / foto.height)
+      c.drawImage(foto, (SIRINA - foto.width * r) / 2, (VISINA - foto.height * r) / 2 - 40, foto.width * r, foto.height * r)
+    } else {
+      c.fillStyle = '#0E1F17'
+      c.fillRect(0, 0, SIRINA, VISINA)
+    }
+    const g = c.createLinearGradient(0, 0, 0, VISINA)
+    g.addColorStop(0, 'rgba(8,24,17,.30)')
+    g.addColorStop(0.42, 'rgba(8,24,17,.55)')
+    g.addColorStop(0.62, 'rgba(6,18,13,.92)')
+    g.addColorStop(1, 'rgba(6,18,13,.98)')
+    c.fillStyle = g
+    c.fillRect(0, 0, SIRINA, VISINA)
+
+    const D = 156
+    plosca(c, ROB, 84, D, 28)
+    c.fillStyle = KREM
+    c.fill()
+    const grb = await naloziSliko(p.grb || '/logo/slff-grb.png')
+    if (grb) {
+      const r = (D - 28) / Math.max(grb.width, grb.height)
+      const w = grb.width * r
+      const h = grb.height * r
+      c.drawImage(grb, ROB + (D - w) / 2, 84 + (D - h) / 2, w, h)
+    }
+    const slff = await naloziSliko('/logo/slff-grb.png')
+    if (slff && p.grb) c.drawImage(slff, SIRINA - ROB - 124, 100, 124, 124)
+
+    c.textAlign = 'left'
+    c.fillStyle = KREM
+    c.font = pisava(900, 150)
+    c.letterSpacing = '-6px'
+    c.fillText('PRIDI', ROB - 4, 478)
+    c.fillText('SESTAVIT', ROB - 4, 618)
+    c.fillStyle = ZLATA
+    c.fillText('EKIPO.', ROB - 4, 758)
+    c.letterSpacing = '0px'
+
+    c.fillStyle = KREM
+    c.font = pisava(800, 46)
+    c.fillText(p.klub, ROB, 850)
+    c.fillStyle = 'rgba(243,237,224,.72)'
+    c.font = pisava(600, 32)
+    c.fillText(`Fantasy liga za ${ligaVTozilniku(p.liga)} je odprta. Brezplačno.`, ROB, 900)
+
+    c.fillStyle = ZLATA
+    c.fillRect(ROB, VISINA - 104, 72, 5)
+    c.fillStyle = KREM
+    c.font = pisava(900, 46)
+    c.fillText('slff.eu', ROB, VISINA - 40)
+    c.textAlign = 'right'
+    c.fillStyle = 'rgba(243,237,224,.6)'
+    c.font = pisava(600, 28)
+    c.fillText('točke iz uradnih zapisnikov MNZ', SIRINA - ROB, VISINA - 44)
+    c.textAlign = 'left'
   } else {
     await ozadje(c, p.liga, null)
     const tocke = String(p.tocke)
@@ -194,11 +265,13 @@ export default function Plakat({
   const [dela, setDela] = useState(false)
   const [sporocilo, setSporocilo] = useState<string | null>(null)
 
-  const naslov = podatki.vrsta === 'klub' ? podatki.klub : podatki.ekipa
+  const naslov = podatki.vrsta === 'krog' ? podatki.ekipa : podatki.klub
   const besedilo =
     podatki.vrsta === 'klub'
       ? `${podatki.klub} je v fantasy ligi SLFF — sestavi svojo ekipo iz naših igralcev.`
-      : `${podatki.ekipa}: ${podatki.tocke} točk v ${podatki.krog}. krogu. Sestavi svojo ekipo in me premagaj.`
+      : podatki.vrsta === 'napoved'
+        ? `Pridi sestavit ekipo! Fantasy liga za ${ligaVTozilniku(podatki.liga)} je odprta — brezplačno, s pravimi igralci ${podatki.klub}.`
+        : `${podatki.ekipa}: ${podatki.tocke} točk v ${podatki.krog}. krogu. Sestavi svojo ekipo in me premagaj.`
 
   async function deli() {
     if (navigator.share) {
@@ -226,7 +299,7 @@ export default function Plakat({
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = imeDatoteke(naslov)
+      a.download = imeDatoteke(podatki.vrsta === 'napoved' ? `${naslov}-napoved` : naslov)
       a.style.display = 'none'
       document.body.appendChild(a)
       a.click()

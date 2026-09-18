@@ -43,7 +43,24 @@ export interface PlakatKroga {
   igralci: VrsticaIgralca[]
 }
 
-export type PodatkiPlakata = PlakatKluba | PlakatKroga
+/** Napoved: "Pridi sestavit ekipo." — ena stvar, glasno. Za objavo ob zagonu. */
+export interface PlakatNapovedi {
+  vrsta: 'napoved'
+  klub: string
+  liga: string
+  grb: string | null
+}
+
+export type PodatkiPlakata = PlakatKluba | PlakatKroga | PlakatNapovedi
+
+/**
+ * "1. liga — člani" iz baze -> "1. ligo MNZ Ljubljana" v tozilniku za stavek
+ * "Fantasy liga za … je odprta". Sklanjamo samo "liga" -> "ligo"; ce oblike
+ * ne prepoznamo, pustimo, kot je — napacen sklon je manjse zlo kot zmazek.
+ */
+export function ligaVTozilniku(liga: string): string {
+  return liga.replace(/\bliga\b/, 'ligo')
+}
 
 /**
  * Ime kluba cez vso sirino: velikost pade z dolzino, da "KETY EMMI&IMPOL
