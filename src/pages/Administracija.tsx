@@ -7,10 +7,17 @@ import { POZICIJE, VELIKOST_EKIPE, STEVILO_PRVIH, MAX_IZ_KLUBA, VRSTNI_RED, poPo
 import { useTekmovanje } from '../lib/tekmovanje'
 import UpravljanjeLig from '../components/admin/UpravljanjeLig'
 import ZivostSkupnosti from '../components/admin/Zivost'
+import Plakat from '../components/Plakat'
 
 export default function Administracija() {
   const { session, loading } = useAuth()
   const { id: tekmovanjeId, tekmovanje } = useTekmovanje()
+  const imeLigeZaPlakat = (() => {
+    if (!tekmovanje) return ''
+    const kratko = (tekmovanje.name ?? '').replace(/\s*—\s*(člani|mladinci)\s*$/, '')
+    const zveza = tekmovanje.federation_name
+    return zveza ? `${kratko} ${zveza}` : kratko
+  })()
   const [jeAdmin, setJeAdmin] = useState(false)
   const [nalaganje, setNalaganje] = useState(true)
   const [opozorila, setOpozorila] = useState<any[]>([])
@@ -417,6 +424,22 @@ export default function Administracija() {
 
       {/* zivost — koliko ljudi je res aktivnih */}
       <ZivostSkupnosti />
+
+      {/* Promo za izbrano ligo — "je live". SLFF znacka je subjekt, liga je
+          junak; brez kluba, za nas kanal. Ime lige pride iz izbirnika: pri
+          "1. liga — člani" tega ne pove, zato zvezo dodamo. */}
+      {tekmovanje && (
+        <section className="kartica space-y-2 p-3 sm:p-4">
+          <h2 className="font-bold">
+            Promo: liga je live
+            <span className="ml-2 text-xs font-normal text-slate-500">{imeLigeZaPlakat}</span>
+          </h2>
+          <Plakat
+            podatki={{ vrsta: 'live', liga: imeLigeZaPlakat }}
+            povezava={typeof window !== 'undefined' ? `${window.location.origin}/?t=${tekmovanje.slug}` : ''}
+          />
+        </section>
+      )}
 
       {/* uporabniki + e-pošte za opomnik */}
       <section className="kartica space-y-3 p-3 sm:p-4">

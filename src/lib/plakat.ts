@@ -51,7 +51,25 @@ export interface PlakatNapovedi {
   grb: string | null
 }
 
-export type PodatkiPlakata = PlakatKluba | PlakatKroga | PlakatNapovedi
+/** Liga je live: SLFF znacka je subjekt, liga je junak. Brez kluba — za nas kanal. */
+export interface PlakatLive {
+  vrsta: 'live'
+  liga: string
+}
+
+export type PodatkiPlakata = PlakatKluba | PlakatKroga | PlakatNapovedi | PlakatLive
+
+/**
+ * Velikost imena lige na plakatu "je live". Kratko ime ("3. SNL Zahod") bi
+ * pri isti logiki kot pri klubu zraslo cez 150 px in se v dveh vrsticah
+ * zaletelo v nogo; zato je zgornja meja nizja in odvisna od stevila vrstic,
+ * ki jih ime potrebuje.
+ */
+export function velikostLige(ime: string, vrstic: number): number {
+  const n = ime.length
+  const osnova = n <= 14 ? 124 : n <= 20 ? 104 : n <= 28 ? 86 : 68
+  return vrstic >= 2 ? Math.min(osnova, 104) : osnova
+}
 
 /**
  * "1. liga — člani" iz baze -> "1. ligo MNZ Ljubljana" v tozilniku za stavek

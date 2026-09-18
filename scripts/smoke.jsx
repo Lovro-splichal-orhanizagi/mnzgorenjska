@@ -50,7 +50,7 @@ import { premakniProti, NAJVECJI_TEDENSKI_PREMIK } from './premik-cene.mjs'
 import { oceniPripravljenost, najcenejsiKader } from '../src/lib/pripravljenost'
 import { serijaCen, premik, crta, zadnjiPremiki } from '../src/lib/gibanjeCene'
 import { predlagajKader } from '../src/lib/predlogKadra'
-import { velikostImena, velikostEkipe, imeZaPlakat, najboljsiTrije, navijacev, stavekNavijacev, skrajsajIme, prilagodiVelikost, ligaVTozilniku, imeDatoteke } from '../src/lib/plakat'
+import { velikostImena, velikostEkipe, imeZaPlakat, najboljsiTrije, navijacev, stavekNavijacev, skrajsajIme, prilagodiVelikost, ligaVTozilniku, velikostLige, imeDatoteke } from '../src/lib/plakat'
 import { readFileSync } from 'node:fs'
 
 let napak = 0
@@ -2540,6 +2540,11 @@ preveri(
 
   preveri('plakat: "1. liga MNZ Ljubljana" v tozilniku', ligaVTozilniku('1. liga MNZ Ljubljana') === '1. ligo MNZ Ljubljana', ligaVTozilniku('1. liga MNZ Ljubljana'))
   preveri('plakat: "3. SNL — Zahod" brez besede liga ostane', ligaVTozilniku('3. SNL — Zahod') === '3. SNL — Zahod')
+
+  // "Je live": kratko ime lige ne sme zrasti cez rob, ce gre v dve vrstici.
+  preveri('plakat live: kratko ime v eni vrstici je najvecje', velikostLige('3. SNL ZAHOD', 1) === 124)
+  preveri('plakat live: isto ime v dveh vrsticah se omeji', velikostLige('3. SNL ZAHOD', 2) <= 104, String(velikostLige('3. SNL ZAHOD', 2)))
+  preveri('plakat live: dolgo ime je manjse', velikostLige('POMURSKA NOGOMETNA LIGA', 2) < velikostLige('3. SNL ZAHOD', 1))
 
   preveri('plakat: ime datoteke je varno',
     imeDatoteke('Kety Emmi&Impol Bistrica') === 'slff-kety-emmi-impol-bistrica.png', imeDatoteke('Kety Emmi&Impol Bistrica'))

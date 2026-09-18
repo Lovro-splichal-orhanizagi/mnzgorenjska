@@ -18,6 +18,7 @@ import {
   skrajsajIme,
   prilagodiVelikost,
   ligaVTozilniku,
+  velikostLige,
   imeDatoteke,
   type PodatkiPlakata,
   type VrsticaIgralca,
@@ -45,6 +46,42 @@ function plosca(c: CanvasRenderingContext2D, x: number, y: number, d: number, r:
   c.arcTo(x, y + d, x, y, r)
   c.arcTo(x, y, x + d, y, r)
   c.closePath()
+}
+
+/** Fotografija igrisca s prevleko — brez glave. */
+async function foto(c: CanvasRenderingContext2D) {
+  const slika = await naloziSliko('/foto/igrisce.jpg')
+  if (slika) {
+    const r = Math.max(SIRINA / slika.width, VISINA / slika.height)
+    c.drawImage(slika, (SIRINA - slika.width * r) / 2, (VISINA - slika.height * r) / 2 - 40, slika.width * r, slika.height * r)
+  } else {
+    c.fillStyle = '#0E1F17'
+    c.fillRect(0, 0, SIRINA, VISINA)
+  }
+  const g = c.createLinearGradient(0, 0, 0, VISINA)
+  g.addColorStop(0, 'rgba(8,24,17,.30)')
+  g.addColorStop(0.42, 'rgba(8,24,17,.55)')
+  g.addColorStop(0.62, 'rgba(6,18,13,.92)')
+  g.addColorStop(1, 'rgba(6,18,13,.98)')
+  c.fillStyle = g
+  c.fillRect(0, 0, SIRINA, VISINA)
+}
+
+/** Razlomi po besedah na vrstice, ozje od `najvec`. */
+function vVrstice(c: CanvasRenderingContext2D, besedilo: string, najvec: number): string[] {
+  const b = besedilo.split(' ')
+  const out: string[] = []
+  let t = b[0]
+  for (const w of b.slice(1)) {
+    const x = `${t} ${w}`
+    if (c.measureText(x).width <= najvec) t = x
+    else {
+      out.push(t)
+      t = w
+    }
+  }
+  out.push(t)
+  return out
 }
 
 /** Ozadje in glava sta obema plakatoma skupna. */
@@ -185,8 +222,10 @@ async function narisi(p: PodatkiPlakata): Promise<Blob | null> {
       const h = grb.height * r
       c.drawImage(grb, ROB + (D - w) / 2, 84 + (D - h) / 2, w, h)
     }
+    // SLFF grb enako velik in na enaki visini kot klubski: brez tega je bil
+    // 124 px ob 156 px plosci in je izgledal manjsi in zamaknjen.
     const slff = await naloziSliko('/logo/slff-grb.png')
-    if (slff && p.grb) c.drawImage(slff, SIRINA - ROB - 124, 100, 124, 124)
+    if (slff && p.grb) c.drawImage(slff, SIRINA - ROB - D, 84, D, D)
 
     c.textAlign = 'left'
     c.fillStyle = KREM
@@ -214,6 +253,71 @@ async function narisi(p: PodatkiPlakata): Promise<Blob | null> {
     c.fillStyle = 'rgba(243,237,224,.6)'
     c.font = pisava(600, 28)
     c.fillText('točke iz uradnih zapisnikov MNZ', SIRINA - ROB, VISINA - 44)
+    c.textAlign = 'left'
+  } else if (p.vrsta === 'live') {
+    await foto(c)
+    const cx = SIRINA / 2
+    const G = 250
+    const cy = 230
+    const grb = await naloziSliko('/logo/slff-grb.png')
+    c.save()
+    c.shadowColor = 'rgba(0,0,0,.6)'
+    c.shadowBlur = 50
+    c.shadowOffsetY = 16
+    c.beginPath()
+    c.arc(cx, cy, G / 2 + 10, 0, Math.PI * 2)
+    c.fillStyle = ZLATA
+    c.fill()
+    c.restore()
+    if (grb) c.drawImage(grb, cx - G / 2, cy - G / 2, G, G)
+
+    c.textAlign = 'center'
+    const liga = p.liga.toUpperCase()
+    // Najprej izmerimo, koliko vrstic ime potrebuje, in sele nato izberemo
+    // velikost — kratko ime v dveh vrsticah se je sicer zaletelo v nogo.
+    c.font = pisava(900, 124)
+    const stVrstic = vVrstice(c, liga, SIRINA - 2 * ROB).length
+    const vel = velikostLige(liga, stVrstic)
+    c.font = pisava(900, vel)
+    c.letterSpacing = `${-Math.round(vel * 0.045)}px`
+    const vrstice = vVrstice(c, liga, SIRINA - 2 * ROB)
+
+    // Blok besedila je sredinjen v prostoru med znacko in nogo.
+    const visina = 36 + 42 + vrstice.length * vel * 1.02 + vel * 0.62 + 8 + 76
+    const vrh = cy + G / 2 + 40
+    const dno = VISINA - 160
+    let y = vrh + Math.max(0, (dno - vrh - visina) / 2) + 36
+
+    c.fillStyle = 'rgba(243,237,224,.72)'
+    c.font = pisava(700, 36)
+    c.letterSpacing = '0px'
+    c.fillText('Fantasy liga za', cx, y)
+    y += 42 + vel * 0.82
+    c.fillStyle = KREM
+    c.font = pisava(900, vel)
+    c.letterSpacing = `${-Math.round(vel * 0.045)}px`
+    for (const v of vrstice) {
+      c.fillText(v, cx, y)
+      y += vel * 1.02
+    }
+    y -= vel * 1.02
+    c.letterSpacing = '2px'
+    y += vel * 0.62 + 8
+    c.fillStyle = ZLATA
+    c.font = pisava(900, Math.round(vel * 0.62))
+    c.fillText('JE LIVE.', cx, y)
+    c.letterSpacing = '0px'
+    y += 76
+    c.fillStyle = 'rgba(243,237,224,.72)'
+    c.font = pisava(600, 34)
+    c.fillText('Sestavi ekipo iz pravih igralcev. Točke iz uradnih zapisnikov.', cx, y)
+
+    c.fillStyle = 'rgba(243,237,224,.55)'
+    c.font = pisava(600, 28)
+    c.fillText('brezplačno', cx, VISINA - 124)
+    c.fillStyle = KREM
+    c.font = pisava(900, 52)
+    c.fillText('slff.eu', cx, VISINA - 72)
     c.textAlign = 'left'
   } else {
     await ozadje(c, p.liga, null)
@@ -265,13 +369,16 @@ export default function Plakat({
   const [dela, setDela] = useState(false)
   const [sporocilo, setSporocilo] = useState<string | null>(null)
 
-  const naslov = podatki.vrsta === 'krog' ? podatki.ekipa : podatki.klub
+  const naslov =
+    podatki.vrsta === 'krog' ? podatki.ekipa : podatki.vrsta === 'live' ? podatki.liga : podatki.klub
   const besedilo =
     podatki.vrsta === 'klub'
       ? `${podatki.klub} je v fantasy ligi SLFF — sestavi svojo ekipo iz naših igralcev.`
       : podatki.vrsta === 'napoved'
         ? `Pridi sestavit ekipo! Fantasy liga za ${ligaVTozilniku(podatki.liga)} je odprta — brezplačno, s pravimi igralci ${podatki.klub}.`
-        : `${podatki.ekipa}: ${podatki.tocke} točk v ${podatki.krog}. krogu. Sestavi svojo ekipo in me premagaj.`
+        : podatki.vrsta === 'live'
+          ? `Fantasy liga za ${ligaVTozilniku(podatki.liga)} je live. Sestavi ekipo iz pravih igralcev — brezplačno.`
+          : `${podatki.ekipa}: ${podatki.tocke} točk v ${podatki.krog}. krogu. Sestavi svojo ekipo in me premagaj.`
 
   async function deli() {
     if (navigator.share) {
@@ -299,7 +406,9 @@ export default function Plakat({
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = imeDatoteke(podatki.vrsta === 'napoved' ? `${naslov}-napoved` : naslov)
+      a.download = imeDatoteke(
+        podatki.vrsta === 'napoved' ? `${naslov}-napoved` : podatki.vrsta === 'live' ? `${naslov}-live` : naslov,
+      )
       a.style.display = 'none'
       document.body.appendChild(a)
       a.click()
