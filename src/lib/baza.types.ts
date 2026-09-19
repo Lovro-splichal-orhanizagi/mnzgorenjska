@@ -1797,6 +1797,8 @@ export type Database = {
           nzs_top_league: string | null
           nzs_top_league_minutes: number | null
           nzs_url: string | null
+          odsel_at: string | null
+          odsel_by: string | null
           position: string | null
           position_source: string
           reg_st: number | null
@@ -1820,6 +1822,8 @@ export type Database = {
           nzs_top_league?: string | null
           nzs_top_league_minutes?: number | null
           nzs_url?: string | null
+          odsel_at?: string | null
+          odsel_by?: string | null
           position?: string | null
           position_source?: string
           reg_st?: number | null
@@ -1843,6 +1847,8 @@ export type Database = {
           nzs_top_league?: string | null
           nzs_top_league_minutes?: number | null
           nzs_url?: string | null
+          odsel_at?: string | null
+          odsel_by?: string | null
           position?: string | null
           position_source?: string
           reg_st?: number | null
@@ -1875,6 +1881,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "lestvica_drzavna"
             referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "players_odsel_by_fkey"
+            columns: ["odsel_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "players_team_id_fkey"
@@ -3949,6 +3962,10 @@ export type Database = {
         }[]
       }
       is_admin: { Args: never; Returns: boolean }
+      je_poznavalec_lige: {
+        Args: { p_competition_id: number }
+        Returns: boolean
+      }
       kandidati_za_opomnik: {
         Args: { p_competition_id: number }
         Returns: {
@@ -4000,6 +4017,10 @@ export type Database = {
       }
       nova_koda_mini_lige: { Args: never; Returns: string }
       okno_preracuna_tock: { Args: never; Returns: string }
+      oznaci_odhod_igralca: {
+        Args: { p_odsel: boolean; p_player_id: number }
+        Returns: undefined
+      }
       poenostavljeno_ime: { Args: { p_ime: string }; Returns: string }
       postava_kroga: {
         Args: { p_round: number; p_team: number }

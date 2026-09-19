@@ -251,6 +251,37 @@ select uveljavi_pozicije();
 select pg_temp.preveri('poznavalec druge lige tu ne potrdi sam',
   (select position='MID' from players where id=-913017));
 
+
+-- --------------------------------------------------------------------------
+-- Odhod igralca: poznavalec lige ga oznaci, tujec ne; nastop ga obudi.
+-- --------------------------------------------------------------------------
+-- Tujec (ac) je zdaj poznavalec lige -913002, ne -913001.
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ac',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('poznavalec druge lige ne more oznaciti odhoda',
+  $$select oznaci_odhod_igralca(-913017, true)$$);
+reset role;
+update profiles set insider_competition_id=-913001 where id='b8a06635-2322-4444-8c42-44e419f912ac';
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ac',true);
+set local role authenticated;
+select oznaci_odhod_igralca(-913017, true);
+select pg_temp.preveri('poznavalec lige oznaci odhod: igralec ni aktiven',
+  (select not active and odsel_at is not null from players where id=-913017));
+select oznaci_odhod_igralca(-913017, false);
+select pg_temp.preveri('poznavalec lige odhod tudi preklice',
+  (select active and odsel_at is null from players where id=-913017));
+select oznaci_odhod_igralca(-913017, true);
+reset role;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('navaden uporabnik ne more oznaciti odhoda',
+  $$select oznaci_odhod_igralca(-913016, true)$$);
+reset role;
+-- Nastop v zapisniku ga obudi.
+insert into appearances(match_id, player_id, team_id) values (-913001, -913017, -913001);
+select pg_temp.preveri('nastop obudi odslega igralca',
+  (select active and odsel_at is null from players where id=-913017));
+
 do $$
 declare v_napak int;
 begin

@@ -288,11 +288,14 @@ if (letosnjiKlubi.size) {
     .eq('competition_id', tekmovanje.id)
     .eq('active', true)
     .not('team_id', 'in', `(${seznam.join(',')})`)
+  // Kogar je poznavalec lige oznacil kot odslega, ostane neaktiven — obudi
+  // ga samo nastop v zapisniku (sprozilec na appearances).
   const { count: vrnjenih } = await db
     .from('players')
     .update({ active: true }, { count: 'exact' })
     .eq('competition_id', tekmovanje.id)
     .eq('active', false)
+    .is('odsel_at', null)
     .in('team_id', seznam)
   console.log(
     `Klubov v tej sezoni: ${seznam.length}; ` +

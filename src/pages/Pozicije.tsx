@@ -25,6 +25,7 @@ interface IgralecPoz {
   goals: number | null
   matches: number | null
   clean_sheets: number | null
+  active?: boolean | null
   team_name?: string | null
   team_short?: string | null
   team_logo?: string | null
@@ -76,6 +77,8 @@ export default function Pozicije() {
   // player_id -> pozicija, za katero sem glasoval
   const [mojiGlasovi, setMojiGlasovi] = useState<Record<string, Pozicija>>({})
   const [insiderTeamId, setInsiderTeamId] = useState<number | null>(null)
+  // Poznavalec lige (ali admin) sme oznaciti, da igralec ne igra vec.
+  const [poznavalecLige, setPoznavalecLige] = useState(false)
   const [mojaUtez, setMojaUtez] = useState<number | null>(null)
   const [mojaTocnost, setMojaTocnost] = useState<{
     correct: number
@@ -109,6 +112,7 @@ export default function Pozicije() {
   useEffect(() => {
     if (!session) {
       setInsiderTeamId(null)
+      setPoznavalecLige(false)
       setMojaUtez(null)
       setMojaTocnost(null)
       return
@@ -118,7 +122,7 @@ export default function Pozicije() {
       const [{ data: profil }, { data: tocnost }] = await Promise.all([
         supabase
           .from('profiles')
-          .select('insider_team_id')
+          .select('insider_team_id, insider_competition_id, is_admin')
           .eq('id', session.user.id)
           .maybeSingle(),
         supabase
@@ -129,6 +133,10 @@ export default function Pozicije() {
       ])
       if (preklican) return
       setInsiderTeamId(profil?.insider_team_id ?? null)
+      setPoznavalecLige(
+        Boolean(profil?.is_admin) ||
+          (profil?.insider_competition_id != null && profil.insider_competition_id === tekmovanjeId),
+      )
       const r = tocnost?.resolved ?? 0
       const c = tocnost?.correct ?? 0
       setMojaTocnost({ resolved: r, correct: c })
@@ -139,7 +147,7 @@ export default function Pozicije() {
       else setMojaUtez(Math.max(0.5, Math.min(max, 0.5 + (max - 0.5) * (c / r))))
     })()
     return () => { preklican = true }
-  }, [session])
+  }, [session, tekmovanjeId])
 
   useEffect(() => {
     if (!klubId) return
@@ -151,7 +159,7 @@ export default function Pozicije() {
       const { data: p } = await supabase
         .from('player_overview')
         .select(
-          'id, full_name, position, position_source, shirt_number, minutes, goals, matches, clean_sheets, team_name, team_short, team_logo',
+          'id, full_name, position, position_source, shirt_number, minutes, goals, matches, clean_sheets, active, team_name, team_short, team_logo',
         )
         .eq('competition_id', ligaId as number)
         .eq('team_id', idKluba as number)
@@ -223,6 +231,18 @@ export default function Pozicije() {
       .eq('id', session.user.id)
     if (error) return setNapaka(error.message)
     setInsiderTeamId(id)
+  }
+
+  // Odhod: poznavalec lige oznaci, da igralec ne igra vec (ali to preklice).
+  // Nastop v zapisniku oznako pobrise sam.
+  async function oznaciOdhod(playerId: number, odsel: boolean) {
+    setNapaka(null)
+    const { error } = await supabase.rpc('oznaci_odhod_igralca', {
+      p_player_id: playerId,
+      p_odsel: odsel,
+    })
+    if (error) return setNapaka(error.message)
+    setIgralci((prev) => prev.map((i) => (i.id === playerId ? { ...i, active: !odsel } : i)))
   }
 
   async function glasuj(playerId: number, pozicija: Pozicija) {
@@ -382,7 +402,9 @@ export default function Pozicije() {
               mojGlas={mojiGlasovi[i.id]}
               omogoceno={Boolean(session)}
               insiderVelja={Boolean(insiderVeljaZaKlub)}
+              poznavalecLige={poznavalecLige}
               onGlasuj={glasuj}
+              onOdhod={oznaciOdhod}
             />
           ))}
         </ul>
@@ -460,7 +482,9 @@ function IgralecKartica({
   mojGlas,
   omogoceno,
   insiderVelja,
+  poznavalecLige,
   onGlasuj,
+  onOdhod,
 }: {
   igralec: IgralecPoz
   glasovi: GlasoviIgralca
@@ -468,7 +492,9 @@ function IgralecKartica({
   mojGlas?: Pozicija
   omogoceno: boolean
   insiderVelja: boolean
+  poznavalecLige: boolean
   onGlasuj: (playerId: number, pozicija: Pozicija) => void
+  onOdhod: (playerId: number, odsel: boolean) => void
 }) {
   // Pragova pripadata ligi; `useNastavitev` ju naloži enkrat za vse kartice.
   const nastavitev = useNastavitev()
@@ -557,6 +583,33 @@ function IgralecKartica({
             ⏳ izglasovano: {IME_POZICIJE[vodilna[0]]} · v ponedeljek
           </span>
         )}
+
+        {igralec.active === false && (
+          <span
+            className="znacka bg-slate-700/60 text-slate-300"
+            title="Ne igra več — ni na trgu. Če se pojavi v zapisniku, se vrne sam."
+          >
+            ne igra več
+          </span>
+        )}
+        {poznavalecLige &&
+          (igralec.active === false ? (
+            <button
+              onClick={() => onOdhod(igralec.id, false)}
+              className="gumb-tih text-xs"
+              title="Vrni igralca med aktivne"
+            >
+              vrni
+            </button>
+          ) : (
+            <button
+              onClick={() => onOdhod(igralec.id, true)}
+              className="text-xs text-slate-600 hover:text-rose-300"
+              title="Igralec pri tem klubu ne igra več — umakne ga s trga. Nastop v zapisniku ga vrne sam."
+            >
+              ne igra več
+            </button>
+          ))}
       </div>
 
       {!zaklenjeno && priorVodilna && priorVodilna[1] >= 0.30 && (
