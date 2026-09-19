@@ -2190,6 +2190,7 @@ export type Database = {
           created_at: string
           display_name: string
           id: string
+          insider_competition_id: number | null
           insider_team_id: number | null
           is_admin: boolean
         }
@@ -2197,6 +2198,7 @@ export type Database = {
           created_at?: string
           display_name: string
           id: string
+          insider_competition_id?: number | null
           insider_team_id?: number | null
           is_admin?: boolean
         }
@@ -2204,10 +2206,32 @@ export type Database = {
           created_at?: string
           display_name?: string
           id?: string
+          insider_competition_id?: number | null
           insider_team_id?: number | null
           is_admin?: boolean
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_insider_competition_id_fkey"
+            columns: ["insider_competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_insider_competition_id_fkey"
+            columns: ["insider_competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_insider_competition_id_fkey"
+            columns: ["insider_competition_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["competition_id"]
+          },
           {
             foreignKeyName: "profiles_insider_team_id_fkey"
             columns: ["insider_team_id"]
@@ -3878,6 +3902,10 @@ export type Database = {
         Args: { p_player_id: number; p_position: string }
         Returns: number
       }
+      admin_nastavi_poznavalca: {
+        Args: { p_competition_id?: number; p_user_id: string }
+        Returns: undefined
+      }
       admin_preracunaj_krog: {
         Args: { p_round_id: number }
         Returns: undefined
@@ -3901,6 +3929,7 @@ export type Database = {
           display_name: string
           ekipa_veljavna: boolean
           email: string
+          insider_competition_id: number
           is_admin: boolean
           registered_at: string
           roster_stevilo: number

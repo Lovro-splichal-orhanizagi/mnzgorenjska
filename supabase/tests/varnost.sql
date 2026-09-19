@@ -195,6 +195,62 @@ select pg_temp.zavrnjeno('tujec ne more shraniti moje ekipe',
   $$select shrani_ekipo(-913001,'[]'::jsonb)$$);
 reset role;
 
+
+-- --------------------------------------------------------------------------
+-- Poznavalec lige: en glas potrdi pozicijo in asistenco; sam si ga ne moreš dati.
+-- --------------------------------------------------------------------------
+-- Igralec 16 ima pozicijo iz ugibanja (ne admin), da ga glasovanje sme spremeniti.
+insert into players(id, team_id, competition_id, first_name, last_name, position,
+                    position_source, value, value_start, active) overriding system value
+values (-913016, -913001, -913001, 'Test', '16', 'MID', 'ugibanje', 6, 6, true);
+insert into matches(id, round_id, home_team_id, away_team_id) overriding system value
+values (-913001, -913001, -913001, -913002);
+insert into goals(id, match_id, scorer_id, team_id) overriding system value
+values (-913001, -913001, -913016, -913001);
+
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('uporabnik si ne more sam dodeliti poznavalca lige',
+  $$update profiles set insider_competition_id=-913001 where id=auth.uid()$$);
+-- Navaden glas (utez 1) pod pragom: pozicija ostane.
+insert into position_votes(player_id, voter_id, position) values (-913016, auth.uid(), 'FWD');
+reset role;
+-- Pozicije se uveljavijo tedensko (uveljavi_pozicije), ne ob glasu.
+select uveljavi_pozicije();
+select pg_temp.preveri('en navaden glas pozicije ne potrdi',
+  (select position='MID' from players where id=-913016));
+
+-- Tujec postane poznavalec lige (nastavi admin/servis) in glasuje enkrat.
+update profiles set insider_competition_id=-913001 where id='b8a06635-2322-4444-8c42-44e419f912ac';
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ac',true);
+set local role authenticated;
+insert into position_votes(player_id, voter_id, position) values (-913016, auth.uid(), 'FWD');
+reset role;
+select uveljavi_pozicije();
+select pg_temp.preveri('en glas poznavalca lige potrdi pozicijo',
+  (select position='FWD' and position_source='glasovanje' from players where id=-913016));
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ac',true);
+set local role authenticated;
+insert into assist_votes(goal_id, voter_id, player_id) values (-913001, auth.uid(), -913001);
+select pg_temp.preveri('en glas poznavalca lige potrdi asistenco',
+  (select assist_player_id=-913001 from goals where id=-913001));
+select pg_temp.preveri('pogled za UI steje glas poznavalca kot prag',
+  (select votes>=3 from assist_vote_counts where goal_id=-913001 and player_id=-913001));
+reset role;
+
+-- Poznavalec DRUGE lige v tej ligi steje kot navaden glasovalec.
+insert into players(id, team_id, competition_id, first_name, last_name, position,
+                    position_source, value, value_start, active) overriding system value
+values (-913017, -913001, -913001, 'Test', '17', 'MID', 'ugibanje', 6, 6, true);
+update profiles set insider_competition_id=-913002 where id='b8a06635-2322-4444-8c42-44e419f912ac';
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ac',true);
+set local role authenticated;
+insert into position_votes(player_id, voter_id, position) values (-913017, auth.uid(), 'FWD');
+reset role;
+select uveljavi_pozicije();
+select pg_temp.preveri('poznavalec druge lige tu ne potrdi sam',
+  (select position='MID' from players where id=-913017));
+
 do $$
 declare v_napak int;
 begin

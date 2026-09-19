@@ -188,6 +188,19 @@ export default function Administracija() {
     await naloziUporabnike()
   }
 
+  // Poznavalec lige: en njegov glas potrdi pozicijo ali asistenco v tej ligi.
+  // Dodeli se za izbrano ligo; klik na značko ga odvzame.
+  async function nastaviPoznavalca(user_id: string, dodeli: boolean) {
+    setNapaka(null)
+    const { error } = await supabase.rpc('admin_nastavi_poznavalca', {
+      p_user_id: user_id,
+      ...(dodeli ? { p_competition_id: tekmovanjeId as number } : {}),
+    })
+    if (error) return setNapaka(error.message)
+    setSporocilo(dodeli ? 'Dodeljen kot poznavalec te lige.' : 'Poznavalec lige odvzet.')
+    await naloziUporabnike()
+  }
+
   async function kopirajEmaile(seznam: any[]) {
     const emaili = seznam.map((u) => u.email).filter(Boolean).join(', ')
     try {
@@ -557,6 +570,7 @@ export default function Administracija() {
                       <th className="pb-2 pr-2">Ekipa</th>
                       <th className="pb-2 pr-2 text-right">Kader</th>
                       <th className="pb-2 pr-2">Status</th>
+                      <th className="pb-2 pr-2">Poznavalec</th>
                       <th className="pb-2 pr-2">Registracija</th>
                     </tr>
                   </thead>
@@ -638,6 +652,29 @@ export default function Administracija() {
                             <span className="znacka bg-rose-400/20 text-rose-200">
                               nepopolna
                             </span>
+                          )}
+                        </td>
+                        <td className="py-1.5 pr-2">
+                          {u.insider_competition_id === tekmovanjeId ? (
+                            <button
+                              onClick={() => nastaviPoznavalca(u.user_id, false)}
+                              className="znacka bg-sky-400/20 text-sky-200 hover:bg-sky-400/30"
+                              title="Poznavalec te lige — klik odvzame"
+                            >
+                              ★ te lige
+                            </button>
+                          ) : u.insider_competition_id ? (
+                            <span className="text-xs text-slate-500" title="Poznavalec druge lige">
+                              druge lige
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => nastaviPoznavalca(u.user_id, true)}
+                              className="text-xs text-slate-600 hover:text-sky-200"
+                              title="Dodeli kot poznavalca te lige: en njegov glas potrdi pozicijo ali asistenco"
+                            >
+                              dodeli
+                            </button>
                           )}
                         </td>
                         <td className="py-1.5 pr-2 text-xs text-slate-500">
