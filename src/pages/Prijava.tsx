@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 
@@ -8,6 +8,11 @@ type Nacin = 'prijava' | 'registracija' | 'pozabljeno'
 export default function Prijava() {
   const { session } = useAuth()
   const navigate = useNavigate()
+  // Kam po prijavi: povabilo v mini ligo pošlje človeka sem in ga hoče nazaj.
+  // Sprejmemo samo notranjo pot, da povezava ne more voditi drugam.
+  const [params] = useSearchParams()
+  const nazajParam = params.get('nazaj')
+  const nazaj = nazajParam && /^\/[^/\\]/.test(nazajParam) ? nazajParam : '/moja-ekipa'
   const [nacin, setNacin] = useState<Nacin>('prijava')
   const [email, setEmail] = useState('')
   const [geslo, setGeslo] = useState('')
@@ -23,7 +28,7 @@ export default function Prijava() {
     setNapaka(null)
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/moja-ekipa` },
+      options: { redirectTo: `${window.location.origin}${nazaj}` },
     })
     // Dokler Google v Supabase ni vklopljen, vrne "provider is not enabled";
     // to uporabniku ne pove nic, zato ga usmerimo na e-posto.
@@ -61,7 +66,7 @@ export default function Prijava() {
             password: geslo,
             options: {
               data: { display_name: ime || email.split('@')[0] },
-              emailRedirectTo: `${window.location.origin}/moja-ekipa`,
+              emailRedirectTo: `${window.location.origin}${nazaj}`,
             },
           })
         : await supabase.auth.signInWithPassword({ email, password: geslo })
@@ -72,7 +77,7 @@ export default function Prijava() {
       return setSporocilo(
         'Račun je ustvarjen. Na e-pošto smo poslali potrditveno povezavo — odpri jo in se vrni.',
       )
-    navigate('/moja-ekipa')
+    navigate(nazaj)
   }
 
   if (session)

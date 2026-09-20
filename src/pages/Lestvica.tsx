@@ -7,6 +7,7 @@ import { supabase } from '../lib/supabase'
 import { formatirajTocke } from '../lib/pomozno'
 import { useTekmovanje } from '../lib/tekmovanje'
 import { sestejOdKroga } from '../lib/lestvica'
+import MojeMiniLige from '../components/MojeMiniLige'
 
 const MEDALJE = ['🥇', '🥈', '🥉']
 
@@ -250,6 +251,9 @@ export default function Lestvica() {
             ? ` — ${tekmovanje.short_name}`
             : ''}
       </h1>
+
+      {/* Najprej moje mini lige: trije prijatelji so igra, dvanajst tujcev ni. */}
+      <MojeMiniLige ekipaId={mojaEkipa} />
 
       {/* Svoj rezultat kroga — edina stvar, ki se ponovi vsak teden in jo
           človek rad pokaže. Pokažemo jo NAD lestvico, ker je njegova. */}

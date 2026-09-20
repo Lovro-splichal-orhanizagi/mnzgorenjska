@@ -3956,8 +3956,10 @@ export type Database = {
         Returns: {
           aktivnih_30dni: number
           aktivnih_7dni: number
+          mini_lig: number
           prijavljenih_7dni: number
           registriranih: number
+          v_mini_ligah: number
           z_veljavno_ekipo: number
         }[]
       }
@@ -3996,6 +3998,15 @@ export type Database = {
           najnizja: number
           najvisja: number
           odmik: number
+        }[]
+      }
+      mini_liga_po_kodi: {
+        Args: { p_koda: string }
+        Returns: {
+          ekip: number
+          id: number
+          name: string
+          owner_name: string
         }[]
       }
       najcenejsi_kader: { Args: { p_igralci: Json }; Returns: number }

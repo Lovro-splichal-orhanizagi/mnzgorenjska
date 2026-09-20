@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import { formatirajTocke } from '../lib/pomozno'
@@ -8,7 +8,9 @@ import {
   zakajNiVeljavna,
   razvrstiMini,
   vecLig,
-  besediloVabila,
+  deliVabilo,
+  povezavaVabila,
+  privzetoImeLige,
   DOLZINA_KODE,
   type MiniVrstica,
 } from '../lib/miniLige'
@@ -37,6 +39,8 @@ interface MojaEkipa {
  */
 export default function MiniLige() {
   const { session } = useAuth()
+  // Vstop prek povezave pripelje sem z ?liga=ID&vstop=nov|ze.
+  const [params, setParams] = useSearchParams()
   const [lige, setLige] = useState<MojaLiga[]>([])
   const [ekipe, setEkipe] = useState<MojaEkipa[]>([])
   const [izbrana, setIzbrana] = useState<number | null>(null)
@@ -48,6 +52,17 @@ export default function MiniLige() {
   const [napaka, setNapaka] = useState<string | null>(null)
   const [nalaganje, setNalaganje] = useState(true)
   const [dela, setDela] = useState(false)
+  const [vzdevek, setVzdevek] = useState<string | null>(null)
+
+  useEffect(() => {
+    const vstop = params.get('vstop')
+    const liga = params.get('liga')
+    if (!vstop && !liga) return
+    if (liga) setIzbrana(Number(liga))
+    if (vstop === 'nov') setSporocilo('Pridružen. Dobrodošel v ligi.')
+    else if (vstop === 'ze') setSporocilo('Ta ekipa je v tej mini ligi že od prej.')
+    setParams({}, { replace: true })
+  }, [params, setParams])
 
   const naloziSvoje = useCallback(async () => {
     if (!session) {
@@ -66,6 +81,12 @@ export default function MiniLige() {
     }))
     setEkipe(seznam)
     setZEkipo((prej) => prej ?? seznam[0]?.id ?? null)
+    const { data: profil } = await supabase
+      .from('profiles')
+      .select('display_name')
+      .eq('id', session.user.id)
+      .maybeSingle()
+    setVzdevek((profil?.display_name as string | null) ?? null)
 
     // Mini lige, v katerih je katera od mojih ekip, in tiste, ki jih imam v lasti.
     const idji = seznam.map((e) => e.id)
@@ -119,10 +140,10 @@ export default function MiniLige() {
   const kaziLigo = useMemo(() => vecLig(lestvica), [lestvica])
   const trenutna = lige.find((l) => l.id === izbrana) ?? null
 
-  async function ustvari() {
+  async function ustvari(podanoIme?: string) {
     setNapaka(null)
     setSporocilo(null)
-    const ime = imeNove.trim()
+    const ime = (podanoIme ?? imeNove).trim()
     if (ime.length < 2) return setNapaka('Ime mini lige naj ima vsaj 2 znaka.')
     setDela(true)
     // Ekipo podamo ze ob ustvarjanju: brez tega bi se moral clovek v svojo
@@ -212,7 +233,7 @@ export default function MiniLige() {
               ))}
             </select>
           )}
-          <button onClick={ustvari} disabled={dela} className="gumb-glavni w-full text-sm">
+          <button onClick={() => ustvari()} disabled={dela} className="gumb-glavni w-full text-sm">
             Ustvari mini ligo
           </button>
         </section>
@@ -247,9 +268,24 @@ export default function MiniLige() {
       </div>
 
       {lige.length === 0 ? (
-        <p className="kartica p-6 text-center text-slate-400">
-          Nisi še v nobeni mini ligi. Ustvari svojo in povabi znance s kodo.
-        </p>
+        <div className="kartica space-y-3 p-6 text-center">
+          <p className="text-slate-400">
+            Nisi še v nobeni mini ligi. Kdo je boljši manager — ti ali tvoja družba?
+          </p>
+          {zEkipo != null ? (
+            <button
+              onClick={() => ustvari(privzetoImeLige(vzdevek))}
+              disabled={dela}
+              className="gumb-glavni text-sm"
+            >
+              Ustvari ligo »{privzetoImeLige(vzdevek)}«
+            </button>
+          ) : (
+            <Link to="/moja-ekipa" className="gumb-glavni inline-block text-sm">
+              Najprej sestavi ekipo
+            </Link>
+          )}
+        </div>
       ) : (
         <>
           <div className="flex flex-wrap gap-2">
@@ -270,20 +306,29 @@ export default function MiniLige() {
 
           {trenutna && (
             <div className="kartica flex flex-wrap items-center justify-between gap-2 p-3 text-sm">
-              <span className="text-slate-400">
-                Koda za povabilo:{' '}
-                <span className="font-mono font-black text-gnl-300">{trenutna.code}</span>
+              <span className="min-w-0 text-slate-400">
+                Povabilo:{' '}
+                <span className="font-mono text-gnl-300">
+                  {povezavaVabila(trenutna.code, window.location.host)}
+                </span>
+                <span className="ml-2 text-xs text-slate-600">koda {trenutna.code}</span>
               </span>
               <button
-                onClick={() => {
-                  void navigator.clipboard?.writeText(
-                    besediloVabila(trenutna.name, trenutna.code, window.location.origin),
+                onClick={async () => {
+                  const izid = await deliVabilo(trenutna.name, trenutna.code)
+                  setSporocilo(
+                    izid === 'deljeno'
+                      ? 'Povabilo je poslano.'
+                      : izid === 'kopirano'
+                        ? 'Povabilo je kopirano — prilepi ga v skupino.'
+                        : izid === 'preklicano'
+                          ? null
+                          : 'Deljenje ni uspelo.',
                   )
-                  setSporocilo('Povabilo kopirano.')
                 }}
-                className="rounded-lg bg-white/5 px-3 py-1.5 text-xs font-bold text-slate-300"
+                className="gumb-glavni text-xs"
               >
-                Kopiraj povabilo
+                Deli povabilo
               </button>
             </div>
           )}

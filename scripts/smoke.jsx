@@ -18,6 +18,7 @@ import Pozicije from '../src/pages/Pozicije'
 import Odsotnosti from '../src/pages/Odsotnosti'
 import Slovenija from '../src/pages/Slovenija'
 import MiniLige from '../src/pages/MiniLige'
+import VstopVMiniLigo from '../src/pages/VstopVMiniLigo'
 import Ekipa from '../src/pages/Ekipa'
 import Klub from '../src/pages/Klub'
 import InfoIgralca from '../src/components/InfoIgralca'
@@ -71,6 +72,7 @@ const strani = [
   ['Lestvica', Lestvica, '/lestvica'],
   ['Slovenija', Slovenija, '/slovenija'],
   ['Mini lige', MiniLige, '/mini-lige'],
+  ['Vstop v mini ligo', VstopVMiniLigo, '/l/ABCDEF'],
   ['Tuja ekipa', Ekipa, '/ekipa/1'],
   ['Klub', Klub, '/klub/24'],
   [
@@ -1785,6 +1787,32 @@ preveri(
   preveri('mini: vabilo vsebuje ime, kodo in naslov',
     vabilo.includes('Bratje') && vabilo.includes('4AR7VZ') && vabilo.includes('https://slff.eu'),
     JSON.stringify(vabilo))
+
+  // Povabilo je povezava: klik naredi vse, kode ne tipka nihce.
+  const { povezavaVabila, privzetoImeLige, shraniVabilo, preberiVabilo, pozabiVabilo } =
+    await import('../src/lib/miniLige.ts')
+  preveri('mini: povezava vabila je /l/KODA', povezavaVabila(' 4ar-7vz ', 'https://slff.eu') === 'https://slff.eu/l/4AR7VZ', povezavaVabila(' 4ar-7vz ', 'https://slff.eu'))
+  preveri('mini: vabilo je povezava, ne navodilo za tipkanje',
+    vabilo.includes('/l/4AR7VZ') && !/Koda:/.test(vabilo), JSON.stringify(vabilo))
+  preveri('mini: privzeto ime iz vzdevka', privzetoImeLige('Jernej Kocica') === 'Jernej in prijatelji', privzetoImeLige('Jernej Kocica'))
+  preveri('mini: privzeto ime brez vzdevka', privzetoImeLige(null) === 'Moja mini liga')
+  preveri('mini: privzeto ime ne preseze 40 znakov', privzetoImeLige('Xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx').length <= 40)
+  // Cakajoce povabilo prezivi prijavo in sestavljanje ekipe. Node nima
+  // localStorage; zadostuje najmanjsi mozni nadomestek.
+  const shramba = new Map()
+  globalThis.localStorage = {
+    getItem: (k) => (shramba.has(k) ? shramba.get(k) : null),
+    setItem: (k, v) => shramba.set(k, String(v)),
+    removeItem: (k) => shramba.delete(k),
+  }
+  shraniVabilo('4ar7vz')
+  preveri('mini: shranjeno povabilo se prebere ocisceno', preberiVabilo() === '4AR7VZ', preberiVabilo())
+  pozabiVabilo()
+  preveri('mini: pozabljeno povabilo je null', preberiVabilo() === null)
+  shraniVabilo('XX')
+  preveri('mini: neveljavno povabilo se ne prebere', preberiVabilo() === null)
+  pozabiVabilo()
+  delete globalThis.localStorage
 }
 
 // --- drzavna lestvica -------------------------------------------------------

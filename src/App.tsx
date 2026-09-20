@@ -25,6 +25,7 @@ import Glasovanje from './pages/Glasovanje'
 import Pozicije from './pages/Pozicije'
 import Odsotnosti from './pages/Odsotnosti'
 import Administracija from './pages/Administracija'
+import VstopVMiniLigo from './pages/VstopVMiniLigo'
 
 export default function App() {
   return (
@@ -48,6 +49,7 @@ export default function App() {
               <Route path="/lestvica" element={<Lestvica />} />
               <Route path="/slovenija" element={<Slovenija />} />
               <Route path="/mini-lige" element={<MiniLige />} />
+              <Route path="/l/:koda" element={<VstopVMiniLigo />} />
               <Route path="/ekipa/:id" element={<Ekipa />} />
               <Route path="/klub/:id" element={<Klub />} />
               <Route path="/rezultati" element={<Rezultati />} />

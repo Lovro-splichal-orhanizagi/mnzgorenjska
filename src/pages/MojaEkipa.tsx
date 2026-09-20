@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
+import { preberiVabilo, pozabiVabilo } from '../lib/miniLige'
+import PovabiSoigralce from '../components/PovabiSoigralce'
 import {
   VELIKOST_EKIPE,
   STEVILO_PRVIH,
@@ -98,6 +101,10 @@ export default function MojaEkipa() {
   const [casPripomockov, setCasPripomockov] = useState(Date.now)
   const [nalaganje, setNalaganje] = useState(true)
   const [sporocilo, setSporocilo] = useState<string | null>(null)
+  // Po shranjeni ekipi je pravi trenutek za povabilo v mini ligo: clovek je
+  // ravno vlozil delo in hoce nekoga, ki ga bo premagal.
+  const [pokaziVabilo, setPokaziVabilo] = useState(false)
+  const navigate = useNavigate()
   const [napaka, setNapaka] = useState<string | null>(null)
   const [filterKlub, setFilterKlub] = useState<string>('vsi')
   const [filterPoz, setFilterPoz] = useState<Pozicija | 'vse'>('vse')
@@ -646,6 +653,23 @@ export default function MojaEkipa() {
     else if (delta < 0)
       setSporocilo(`Ekipa shranjena. Nakupi so pobrali ${Math.abs(delta).toFixed(1)} M. 💾`)
     else setSporocilo('Ekipa je shranjena. 💾')
+
+    // Povabilo v mini ligo, ki je cakalo na ekipo: vstop dokoncamo zdaj, brez
+    // vracanja na povezavo iz tujega pogovora.
+    const cakajoce = preberiVabilo()
+    if (cakajoce && ekipaId) {
+      const { data: vstop, error: eVstop } = await supabase.rpc('pridruzi_mini_ligi', {
+        p_koda: cakajoce,
+        p_ekipa: ekipaId,
+      })
+      pozabiVabilo()
+      const izidVstopa = Array.isArray(vstop) ? vstop[0] : vstop
+      if (!eVstop && izidVstopa?.mini_liga_id) {
+        navigate(`/mini-lige?liga=${izidVstopa.mini_liga_id}&vstop=${izidVstopa.dodano ? 'nov' : 'ze'}`)
+        return
+      }
+    }
+    setPokaziVabilo(true)
   }
 
   async function vloziPripomocek(chip: string, krogId: number) {
@@ -817,6 +841,10 @@ export default function MojaEkipa() {
           {tekmovanje.prvi_fantasy_krog}. kroga naprej, ker se do takrat še
           vrstijo prestopi in prehodi med člane.
         </p>
+      )}
+
+      {pokaziVabilo && ekipa?.id && (
+        <PovabiSoigralce ekipaId={ekipa.id} naZapri={() => setPokaziVabilo(false)} />
       )}
 
       {naslednjiKrog && <Rok krog={naslednjiKrog} />}

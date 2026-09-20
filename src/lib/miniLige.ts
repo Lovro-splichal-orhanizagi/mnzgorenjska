@@ -89,11 +89,82 @@ export function vecLig(vrstice: MiniVrstica[]): boolean {
   return new Set(vrstice.map((v) => v.competition_short).filter(Boolean)).size > 1
 }
 
-/** Povabilo, ki ga človek prilepi v pogovor. */
+/** Povezava, ki vabi: klik naredi vse, kode ne tipka nihče. */
+export function povezavaVabila(koda: string, naslov: string): string {
+  return `${naslov}/l/${ocistiKodo(koda)}`
+}
+
+/**
+ * Povabilo, ki ga človek prilepi v pogovor.
+ *
+ * Skupine amaterskih ekip živijo na WhatsAppu in Viberju; to besedilo gre
+ * tja. Kratko in z izzivom — "premagaj me" je razlog, da kdo klikne.
+ */
 export function besediloVabila(ime: string, koda: string, naslov: string): string {
-  return (
-    `Pridruži se mini ligi "${ime}" v SLFF.\n` +
-    `Koda: ${koda}\n` +
-    `${naslov}/mini-lige`
-  )
+  return `Pridi v mojo mini ligo "${ime}" v SLFF in me premagaj: ${povezavaVabila(koda, naslov)}`
+}
+
+/**
+ * Deli povabilo: na telefonu odpre sistemski list (naravnost v skupino),
+ * sicer kopira. Vrne, kaj se je zgodilo, da stran pove pravo stvar.
+ */
+export async function deliVabilo(
+  ime: string,
+  koda: string,
+): Promise<'deljeno' | 'kopirano' | 'preklicano' | 'neuspelo'> {
+  const naslov = window.location.origin
+  const besedilo = besediloVabila(ime, koda, naslov)
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: `Mini liga ${ime} — SLFF`, text: besedilo })
+      return 'deljeno'
+    } catch (e) {
+      if ((e as Error).name === 'AbortError') return 'preklicano'
+    }
+  }
+  try {
+    await navigator.clipboard.writeText(besedilo)
+    return 'kopirano'
+  } catch {
+    return 'neuspelo'
+  }
+}
+
+/**
+ * Povabilo, ki čaka: človek je kliknil povezavo, a se mora najprej prijaviti
+ * ali sestaviti ekipo. Kodo si zapomnimo in vstop dokončamo, ko ima ekipo —
+ * brez tega bi se moral vrniti na povezavo, ki je ostala v tujem pogovoru.
+ */
+export const KLJUC_VABILA = 'slff-mini-liga-vabilo'
+
+export function shraniVabilo(koda: string): void {
+  try {
+    localStorage.setItem(KLJUC_VABILA, ocistiKodo(koda))
+  } catch {
+    /* zasebni način: povabilo se izgubi, stran še vedno dela */
+  }
+}
+
+export function preberiVabilo(): string | null {
+  try {
+    const k = localStorage.getItem(KLJUC_VABILA)
+    return k && kodaJeVeljavna(k) ? k : null
+  } catch {
+    return null
+  }
+}
+
+export function pozabiVabilo(): void {
+  try {
+    localStorage.removeItem(KLJUC_VABILA)
+  } catch {
+    /* nič */
+  }
+}
+
+/** Privzeto ime nove lige: "Jernej in prijatelji" — en klik, brez tipkanja. */
+export function privzetoImeLige(vzdevek: string | null | undefined): string {
+  const v = (vzdevek ?? '').trim().split(/\s+/)[0]
+  const ime = v ? `${v} in prijatelji` : 'Moja mini liga'
+  return ime.length > 40 ? ime.slice(0, 40) : ime
 }
