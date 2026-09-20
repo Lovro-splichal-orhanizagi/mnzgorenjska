@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import { prikazniIme, IME_POZICIJE, KRATKA_POZICIJA } from '../lib/pomozno'
 import { useTekmovanje } from '../lib/tekmovanje'
+import ProsnjaZaPoznavalca from '../components/ProsnjaZaPoznavalca'
 import Grb from '../components/Grb'
 import { Link } from 'react-router-dom'
 import type { Pozicija } from '../lib/tipi'
@@ -79,6 +80,7 @@ export default function Pozicije() {
   const [insiderTeamId, setInsiderTeamId] = useState<number | null>(null)
   // Poznavalec lige (ali admin) sme oznaciti, da igralec ne igra vec.
   const [poznavalecLige, setPoznavalecLige] = useState(false)
+  const [insiderCompetitionId, setInsiderCompetitionId] = useState<number | null>(null)
   const [mojaUtez, setMojaUtez] = useState<number | null>(null)
   const [mojaTocnost, setMojaTocnost] = useState<{
     correct: number
@@ -133,6 +135,7 @@ export default function Pozicije() {
       ])
       if (preklican) return
       setInsiderTeamId(profil?.insider_team_id ?? null)
+      setInsiderCompetitionId(profil?.insider_competition_id ?? null)
       setPoznavalecLige(
         Boolean(profil?.is_admin) ||
           (profil?.insider_competition_id != null && profil.insider_competition_id === tekmovanjeId),
@@ -347,6 +350,15 @@ export default function Pozicije() {
           onNastaviInsider={nastaviInsider}
           utez={mojaUtez}
           tocnost={mojaTocnost}
+          prosnja={
+            tekmovanjeId ? (
+              <ProsnjaZaPoznavalca
+                competitionId={tekmovanjeId}
+                klubi={klubi}
+                insiderCompetitionId={insiderCompetitionId}
+              />
+            ) : null
+          }
         />
       )}
 
@@ -421,12 +433,14 @@ function MojStatus({
   onNastaviInsider,
   utez,
   tocnost,
+  prosnja,
 }: {
   klubi: Klub[]
   insiderTeamId: number | null
   onNastaviInsider: (id: number | null) => void
   utez: number | null
   tocnost: { correct: number; resolved: number } | null
+  prosnja?: React.ReactNode
 }) {
   return (
     <div className="kartica space-y-3 border-gnl-400/20 bg-gnl-500/5 p-3 sm:p-4">
@@ -471,6 +485,7 @@ function MojStatus({
         glasovi kažejo za napačne, se zaupanje niža. Zaupanje se preračuna iz
         preteklih glasov, ko je pozicija znana.
       </p>
+      {prosnja}
     </div>
   )
 }

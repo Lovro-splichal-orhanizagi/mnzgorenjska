@@ -7,6 +7,7 @@ import { POZICIJE, VELIKOST_EKIPE, STEVILO_PRVIH, MAX_IZ_KLUBA, VRSTNI_RED, poPo
 import { useTekmovanje } from '../lib/tekmovanje'
 import UpravljanjeLig from '../components/admin/UpravljanjeLig'
 import ZivostSkupnosti from '../components/admin/Zivost'
+import ProsnjePoznavalcev from '../components/admin/ProsnjePoznavalcev'
 import Plakat from '../components/Plakat'
 
 export default function Administracija() {
@@ -437,6 +438,8 @@ export default function Administracija() {
 
       {/* zivost — koliko ljudi je res aktivnih */}
       <ZivostSkupnosti />
+
+      <ProsnjePoznavalcev />
 
       {/* Promo za izbrano ligo — "je live". SLFF znacka je subjekt, liga je
           junak; brez kluba, za nas kanal. Ime lige pride iz izbirnika: pri

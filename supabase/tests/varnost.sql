@@ -282,6 +282,33 @@ insert into appearances(match_id, player_id, team_id) values (-913001, -913017, 
 select pg_temp.preveri('nastop obudi odslega igralca',
   (select active and odsel_at is null from players where id=-913017));
 
+
+-- --------------------------------------------------------------------------
+-- Prosnja za poznavalca: uporabnik zaprosi, odloci samo admin.
+-- --------------------------------------------------------------------------
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
+select zaprosi_za_poznavalca(-913001, -913001, 'igralec', 'Igram za ta klub.');
+select pg_temp.preveri('prosnja je vpisana in caka',
+  (select status='caka' from poznavalec_prosnje where user_id=auth.uid() and competition_id=-913001));
+select pg_temp.zavrnjeno('uporabnik ne more sam odlociti o svoji prosnji',
+  $$select admin_odloci_prosnjo((select id from poznavalec_prosnje where user_id=auth.uid() and status='caka'), 'liga')$$);
+select pg_temp.zavrnjeno('uporabnik ne vidi seznama prosenj',
+  $$select * from admin_prosnje_poznavalcev()$$);
+select pg_temp.zavrnjeno('uporabnik ne more vpisati prosnje mimo funkcije',
+  $$insert into poznavalec_prosnje(user_id, competition_id, vloga) values (auth.uid(), -913002, 'igralec')$$);
+reset role;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+select pg_temp.preveri('admin vidi cakajoco prosnjo',
+  exists(select 1 from admin_prosnje_poznavalcev() where competition_id=-913001 and vloga='igralec'));
+select admin_odloci_prosnjo((select id from admin_prosnje_poznavalcev() where competition_id=-913001 limit 1), 'liga');
+select pg_temp.preveri('odobritev za ligo nastavi poznavalca lige',
+  (select insider_competition_id=-913001 from profiles where id='b8a06635-2322-4444-8c42-44e419f912ab'));
+select pg_temp.preveri('odlocena prosnja ni vec med cakajocimi',
+  not exists(select 1 from admin_prosnje_poznavalcev() where competition_id=-913001));
+reset role;
+
 do $$
 declare v_napak int;
 begin

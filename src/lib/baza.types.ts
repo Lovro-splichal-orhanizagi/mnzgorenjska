@@ -2090,6 +2090,109 @@ export type Database = {
         }
         Relationships: []
       }
+      poznavalec_prosnje: {
+        Row: {
+          competition_id: number
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          id: number
+          sporocilo: string | null
+          status: string
+          team_id: number | null
+          user_id: string
+          vloga: string
+        }
+        Insert: {
+          competition_id: number
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: never
+          sporocilo?: string | null
+          status?: string
+          team_id?: number | null
+          user_id: string
+          vloga: string
+        }
+        Update: {
+          competition_id?: number
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: never
+          sporocilo?: string | null
+          status?: string
+          team_id?: number | null
+          user_id?: string
+          vloga?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poznavalec_prosnje_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "poznavalec_prosnje_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "poznavalec_prosnje_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "poznavalec_prosnje_decided_by_fkey"
+            columns: ["decided_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "poznavalec_prosnje_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "competition_teams"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "poznavalec_prosnje_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "krog_najboljsi"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "poznavalec_prosnje_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "player_reports_view"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "poznavalec_prosnje_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "poznavalec_prosnje_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       price_changes: {
         Row: {
           changed_at: string
@@ -3919,9 +4022,30 @@ export type Database = {
         Args: { p_competition_id?: number; p_user_id: string }
         Returns: undefined
       }
+      admin_odloci_prosnjo: {
+        Args: { p_id: number; p_odlocitev: string }
+        Returns: undefined
+      }
       admin_preracunaj_krog: {
         Args: { p_round_id: number }
         Returns: undefined
+      }
+      admin_prosnje_poznavalcev: {
+        Args: never
+        Returns: {
+          competition_id: number
+          competition_name: string
+          created_at: string
+          display_name: string
+          email: string
+          glasov: number
+          id: number
+          sporocilo: string
+          team_id: number
+          team_name: string
+          user_id: string
+          vloga: string
+        }[]
       }
       admin_tedenska_aktivnost: {
         Args: { p_tednov?: number }
@@ -4143,6 +4267,15 @@ export type Database = {
       voter_weight: { Args: { p_voter_id: string }; Returns: number }
       zakleni_krog: { Args: { p_round_id: number }; Returns: number }
       zakleni_zapadle_kroge: { Args: { p_okno?: string }; Returns: number }
+      zaprosi_za_poznavalca: {
+        Args: {
+          p_competition_id: number
+          p_sporocilo?: string
+          p_team_id: number
+          p_vloga: string
+        }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never
