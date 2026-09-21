@@ -145,8 +145,21 @@ const vir = {
     return [...krogi.values()].sort((a, b) => a.stevilka - b.stevilka)
   },
 
-  // Zveze pri NZS ne poznamo kot MNZ, zato vzdevkov klubov ni na zalogo.
-  kljucKluba: naredikljucKluba({}),
+  // Isti klub piše NZS v članski in mladinski ligi različno: v SNL brez
+  // sponzorja ("Celje"), v SML z njim ("Cinkarna Celje"). Levo mladinski
+  // zapis, desno članski, pod katerim klub že poznamo. Šoštanj ima člane pri
+  // Celju, ki ga piše z vrsto društva.
+  kljucKluba: naredikljucKluba({
+    'cinkarna celje': 'celje',
+    'bravo mastercard': 'bravo',
+    'ah vrtač triglav kranj': 'triglav kranj',
+    'rudar velenje veplas': 'rudar velenje',
+    'mura mlinar': 'mura',
+    'brežice 1919': 'brežice 1919 terme čatež',
+    'vinakoper jadran dekani': 'jadran dekani',
+    'primorje leone': 'primorje',
+    'šoštanj': 'nk šoštanj',
+  }),
   kratkoIme,
   poenostavi,
 

@@ -26,11 +26,35 @@ const vir = {
   nastopi,
   vBesedilo,
 
-  // Vzorec ne dokazuje vzdevkov; preslikave druge zveze bi združile napačne klube.
   // Razpored te zveze ni v obliki "Domači : Gostje"; splošni
   // razčlenjevalnik bi vrnil nič krogov in uvoz bi se ustavil.
   razcleniRazpored: razporedMaribor,
-  kljucKluba: naredikljucKluba(),
+  // Maribor piše klub vsako sezono in v vsaki selekciji drugače: člani s
+  // sponzorjem ("Miklavž AT 24"), mladinci z vrsto društva ("Nk Miklavž"),
+  // lanski arhiv brez obojega ("Miklavž"). Desno je ime iz tekoče članske
+  // sezone; Dobrovce in Korotan igrata 3. SNL in sta vpisana pri Ptuju.
+  kljucKluba: naredikljucKluba({
+    'nk pohorje': 'pohorje',
+    'nk jurovski dol': 'jurovski dol',
+    'malečnik': 'malečnik asfalterstvo brus',
+    'nk malečnik': 'malečnik asfalterstvo brus',
+    'miklavž': 'miklavž at 24',
+    'nk miklavž': 'miklavž at 24',
+    'mb tabor': 'novogradnje mb tabor',
+    'nk mb tabor': 'novogradnje mb tabor',
+    'roho': 'roho krovstvo tit',
+    'nš roho': 'roho krovstvo tit',
+    'dobrovce': 'premium dobrovce',
+    'nk dobrovce': 'premium dobrovce',
+    'nk korotan prevalje': 'korotan prevalje',
+    'radlje u19': 'radlje',
+    'nš nk radlje u19': 'radlje',
+    'nk fram bitifit': 'fram bitifit',
+    'kovinar maribor': 'nk kovinar maribor',
+    'nk kovinar': 'nk kovinar maribor',
+    'pobrežje': 'nk pobrežje',
+    'nk pobrežje maribor': 'nk pobrežje',
+  }),
   kratkoIme,
   poenostavi,
 

@@ -1,0 +1,56 @@
+name: Zdruzi podvojena kluba
+
+# Isti klub je v bazi dvakrat, kadar ga vir v novi sezoni ali selekciji
+# zapise drugace. `zdruzi-klube.mjs` preseli igralce, nastope, gole in tekme
+# na obdrzani zapis in odvecnega izbrise. Skripta potrebuje zivi kljuc, ki
+# zivi samo tu — zato tece tu. Najprej brez `pisi` za predogled.
+#
+# Vzdevek za novo ime kluba dodaj v slovar vira (scripts/viri/*.mjs),
+# sicer ga naslednji uvoz ustvari znova.
+on:
+  workflow_dispatch:
+    inputs:
+      odvecni:
+        description: 'id kluba, ki se izbrise'
+        required: true
+        type: number
+      obdrzi:
+        description: 'id kluba, ki ostane (ime, grb, zgodovina)'
+        required: true
+        type: number
+      pisi:
+        description: 'Zapisi (brez tega je samo predogled)'
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: uvoz
+  cancel-in-progress: false
+
+jobs:
+  zdruzi:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      ODVECNI: ${{ inputs.odvecni }}
+      OBDRZI: ${{ inputs.obdrzi }}
+      PISI: ${{ inputs.pisi }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Zdruzi
+        run: |
+          set -euo pipefail
+          [[ "$ODVECNI" =~ ^[0-9]+$ && "$OBDRZI" =~ ^[0-9]+$ ]] || { echo "id morata biti stevili"; exit 1; }
+          if [ "$PISI" = "true" ]; then
+            node scripts/zdruzi-klube.mjs --odvecni "$ODVECNI" --obdrzi "$OBDRZI" --pisi
+          else
+            node scripts/zdruzi-klube.mjs --odvecni "$ODVECNI" --obdrzi "$OBDRZI"
+          fi
