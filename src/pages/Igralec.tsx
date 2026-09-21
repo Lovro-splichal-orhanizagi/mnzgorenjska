@@ -299,16 +299,36 @@ export default function Igralec() {
         { onConflict: 'player_id,voter_id' },
       )
     if (error) return setNapaka(error.message)
+
+    // Glas je en sam (upsert na player_id,voter_id): ob premisleku se prestavi,
+    // ne prišteje. Brez odštevanja prejšnjega bi po nekaj klikih vsaka pozicija
+    // kazala svoj števec, kot da smo glasovali za vse — dokler strani ne osvežiš.
+    const prejsnji = mojGlas
     setMojGlas(pozicija)
-    setGlasovi({ ...glasovi, [pozicija]: (glasovi[pozicija] ?? 0) + 1 })
+    setGlasovi((prej) => {
+      if (prejsnji === pozicija) return prej
+      const nov = { ...prej, [pozicija]: (prej[pozicija] ?? 0) + 1 }
+      if (prejsnji) nov[prejsnji] = Math.max(0, (nov[prejsnji] ?? 0) - 1)
+      return nov
+    })
     setSporocilo('Hvala — sporočilo je zabeleženo. Ko se zbere dovolj enakih, se pozicija popravi.')
 
-    const { data: p } = await supabase
-      .from('player_overview')
-      .select('*')
-      .eq('id', igralecId)
-      .maybeSingle()
+    // Pravo stanje vseeno preberemo iz baze: medtem je lahko glasoval še kdo,
+    // uteži pa niso vse enake, zato ocene ne gre puščati na naši aritmetiki.
+    const [{ data: p }, { data: g }] = await Promise.all([
+      supabase.from('player_overview').select('*').eq('id', igralecId).maybeSingle(),
+      supabase
+        .from('position_vote_counts')
+        .select('position, votes')
+        .eq('player_id', igralecId),
+    ])
     if (p) setIgralec(p as Profil)
+    if (g)
+      setGlasovi(
+        Object.fromEntries(
+          (g as any[]).map((v) => [String(v.position), Number(v.votes)]),
+        ),
+      )
   }
 
   if (nalaganje)
