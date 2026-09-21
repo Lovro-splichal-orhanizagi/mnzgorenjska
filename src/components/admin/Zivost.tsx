@@ -26,6 +26,7 @@ interface Zivost {
   prijavljenih_7dni: number
   mini_lig: number
   v_mini_ligah: number
+  z_ekipo: number
 }
 
 export default function ZivostSkupnosti() {
@@ -93,6 +94,7 @@ export default function ZivostSkupnosti() {
           <Stevilka oznaka="Registriranih" vrednost={zdaj.registriranih} />
           <Stevilka oznaka="Aktivnih 7 dni" vrednost={zdaj.aktivnih_7dni} poudari />
           <Stevilka oznaka="Aktivnih 30 dni" vrednost={zdaj.aktivnih_30dni} />
+          <Stevilka oznaka="Z vsaj eno ekipo" vrednost={zdaj.z_ekipo} />
           <Stevilka oznaka="Z veljavno ekipo" vrednost={zdaj.z_veljavno_ekipo} />
           <Stevilka oznaka="Prijav 7 dni" vrednost={zdaj.prijavljenih_7dni} />
           <Stevilka oznaka="Mini lig" vrednost={zdaj.mini_lig} />

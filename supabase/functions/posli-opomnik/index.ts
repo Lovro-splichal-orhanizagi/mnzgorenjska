@@ -31,7 +31,10 @@ interface Zahteva {
   suho?: boolean // dry-run: samo prešteje, ne pošilja
   // 'opomnik'   — kdor ekipe še nima
   // 'opozorilo' — kdor ekipo IMA, a se ob roku ne bo zaklenila
-  vrsta?: 'opomnik' | 'opozorilo'
+  // 'poznavalec' — odobrena prosnja: enemu cloveku (user_id), samo admin
+  vrsta?: 'opomnik' | 'opozorilo' | 'poznavalec'
+  user_id?: string
+  obseg?: 'klub' | 'liga'
   // Koliko dni pred rokom opozarjamo. Privzeto 2; nastavljivo, da se da
   // suho preveriti, koga bi zajelo sirse okno.
   dni?: number
@@ -113,6 +116,42 @@ Deno.serve(async (req) => {
     )
   if (!competition_id)
     return json({ error: 'Manjka competition_id.' }, 400)
+
+  // Odobritev poznavalca: en mail enemu cloveku, klice ga admin ob odobritvi.
+  // Redko (nekaj na teden), zato ne obremeni kvote.
+  if (vrsta === 'poznavalec') {
+    if (jeStroj) return json({ error: 'Poznavalca odobri clovek, ne urnik.' }, 403)
+    if (!vhod.user_id) return json({ error: 'Manjka user_id.' }, 400)
+    if (!RESEND_KEY) return json({ error: 'Pomanjkljiva nastavitev: RESEND_API_KEY.' }, 500)
+    const service0 = createClient(SUPABASE_URL, SERVICE_KEY)
+    const [{ data: u }, { data: pr }, { data: liga0 }] = await Promise.all([
+      service0.auth.admin.getUserById(vhod.user_id),
+      service0.from('profiles').select('display_name, insider_team_id').eq('id', vhod.user_id).maybeSingle(),
+      service0.from('competitions').select('name').eq('id', competition_id).maybeSingle(),
+    ])
+    const email = u?.user?.email
+    if (!email) return json({ error: 'Uporabnik nima e-naslova.' }, 404)
+    let klub: string | null = null
+    if (vhod.obseg === 'klub' && pr?.insider_team_id) {
+      const { data: t } = await service0.from('teams').select('name').eq('id', pr.insider_team_id).maybeSingle()
+      klub = t?.name ?? null
+    }
+    const rez = await posljiPoznavalcu(RESEND_KEY, EMAIL_FROM, email, {
+      display_name: pr?.display_name ?? null,
+      liga: liga0?.name ?? '',
+      obseg: vhod.obseg ?? 'liga',
+      klub,
+    })
+    await service0.from('email_log').insert({
+      email,
+      vrsta: 'poznavalec',
+      competition_id,
+      resend_id: rez.id ?? null,
+      napaka: rez.napaka ?? null,
+    })
+    if (rez.napaka) return json({ error: rez.napaka }, 502)
+    return json({ poslano: true, resend: rez })
+  }
 
   // Ključ za pošto zahtevamo šele, kadar bomo res pošiljali. Suhi tek obstaja
   // prav zato, da se pred vklopom urnika preverijo številke — če bi padel na
@@ -257,6 +296,68 @@ Deno.serve(async (req) => {
     rezultati,
   })
 })
+
+/**
+ * Odobrena prosnja za poznavalca. Pove, kaj je dobil, in postavi pravilo:
+ * privilegij je zaupanje in se ob zlorabi vzame.
+ */
+async function posljiPoznavalcu(
+  apiKey: string,
+  from: string,
+  to: string,
+  meta: { display_name: string | null; liga: string; obseg: 'klub' | 'liga'; klub: string | null },
+): Promise<{ id?: string; napaka?: string }> {
+  const naslov = `SLFF — odobrili smo tvojo prošnjo za poznavalca`
+  const uvod = meta.display_name ? `Živjo, ${meta.display_name.split(' ')[0]}!` : 'Živjo!'
+  const kaj =
+    meta.obseg === 'liga'
+      ? `Od zdaj si <strong>poznavalec lige ${meta.liga}</strong>: tvoj glas sam potrdi pozicijo igralca ali asistenco, drugih glasov ni treba čakati.`
+      : `Od zdaj si <strong>poznavalec kluba ${meta.klub ?? ''}</strong> v ligi ${meta.liga}: tvoj glas za igralce tega kluba šteje trojno.`
+
+  const html = `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; color: #0f172a;">
+      <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">${uvod}</p>
+      <p style="font-size: 15px; line-height: 1.5; margin: 0 0 16px;">Hvala, da si se ponudil. ${kaj}</p>
+      <p style="font-size: 15px; line-height: 1.5; margin: 0 0 16px;">
+        Ena prošnja: to je zaupanje. Vnašaj samo tisto, kar zares veš, in ne prilagajaj podatkov svoji fantasy ekipi.
+        Točke vseh v ligi so odvisne od tega. Če se izkaže, da so podatki namerno napačni, poznavalca izgubiš.
+      </p>
+      <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">
+        Pozicije urejaš na strani <a href="https://slff.eu/pozicije" style="color:#15803d;">Pozicije</a>
+        (uveljavijo se vsak ponedeljek zjutraj), asistence na strani
+        <a href="https://slff.eu/glasovanje" style="color:#15803d;">Asistence</a> (takoj).
+        Igralca, ki pri klubu ne igra več, lahko označiš z "ne igra več".
+      </p>
+      <p style="text-align: center; margin: 24px 0;">
+        <a href="https://slff.eu/pozicije" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">
+          Odpri Pozicije →
+        </a>
+      </p>
+      <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">
+        Če kaj ni jasno, odgovori na ta mail.
+      </p>
+      <p style="font-size: 12px; color: #94a3b8; margin: 24px 0 0;">
+        SLFF — Sunday League Fantasy Football · slff.eu
+      </p>
+    </div>
+  `
+  try {
+    const r = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from, to, subject: naslov, html,
+        // Odgovor naj pride cloveku, ne na noreply: prosnja je pogovor.
+        ...(Deno.env.get('EMAIL_REPLY_TO') ? { reply_to: Deno.env.get('EMAIL_REPLY_TO') } : {}),
+      }),
+    })
+    const odgovor: ResendOdgovor = await r.json()
+    if (!r.ok) return { napaka: odgovor.message ?? `HTTP ${r.status}` }
+    return { id: odgovor.id }
+  } catch (e) {
+    return { napaka: String(e) }
+  }
+}
 
 async function posljiEnega(
   apiKey: string,

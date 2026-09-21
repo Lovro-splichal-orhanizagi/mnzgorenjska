@@ -42,11 +42,33 @@ export default function ProsnjePoznavalcev() {
     void nalozi()
   }, [nalozi])
 
-  async function odloci(id: number, odlocitev: 'klub' | 'liga' | 'zavrnjeno') {
+  const [sporocilo, setSporocilo] = useState<string | null>(null)
+
+  async function odloci(p: Prosnja, odlocitev: 'klub' | 'liga' | 'zavrnjeno') {
     setNapaka(null)
-    const { error } = await supabase.rpc('admin_odloci_prosnjo', { p_id: id, p_odlocitev: odlocitev })
+    setSporocilo(null)
+    const { error } = await supabase.rpc('admin_odloci_prosnjo', { p_id: p.id, p_odlocitev: odlocitev })
     if (error) return setNapaka(error.message)
     await nalozi()
+    if (odlocitev === 'zavrnjeno') return
+    // Odobritev pove cloveku po mailu: kaj je dobil in da je to zaupanje.
+    const { data: seja } = await supabase.auth.getSession()
+    const r = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/posli-opomnik`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${seja.session?.access_token ?? ''}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        vrsta: 'poznavalec',
+        competition_id: p.competition_id,
+        user_id: p.user_id,
+        obseg: odlocitev,
+      }),
+    })
+    const izid = await r.json().catch(() => ({}))
+    if (!r.ok) return setNapaka(`Odobreno, mail pa ni sel: ${izid.error ?? r.status}`)
+    setSporocilo(`Odobreno, mail poslan na ${p.email}.`)
   }
 
   if (prosnje === null) return null
@@ -60,6 +82,7 @@ export default function ProsnjePoznavalcev() {
         )}
       </h2>
       {napaka && <p className="text-sm text-rose-400">{napaka}</p>}
+      {sporocilo && <p className="text-sm text-gnl-300">{sporocilo}</p>}
       {prosnje.length === 0 ? (
         <p className="text-sm text-slate-500">Ni čakajočih prošenj.</p>
       ) : (
@@ -80,7 +103,7 @@ export default function ProsnjePoznavalcev() {
               </div>
               <div className="flex shrink-0 flex-wrap gap-1.5">
                 <button
-                  onClick={() => odloci(p.id, 'klub')}
+                  onClick={() => odloci(p, 'klub')}
                   disabled={!p.team_id}
                   className="gumb-tih text-xs"
                   title="Poznavalec svojega kluba: glas za igralce tega kluba šteje 3×"
@@ -88,14 +111,14 @@ export default function ProsnjePoznavalcev() {
                   za klub
                 </button>
                 <button
-                  onClick={() => odloci(p.id, 'liga')}
+                  onClick={() => odloci(p, 'liga')}
                   className="gumb-glavni text-xs"
                   title="Poznavalec cele lige: en njegov glas potrdi pozicijo ali asistenco"
                 >
                   za ligo
                 </button>
                 <button
-                  onClick={() => odloci(p.id, 'zavrnjeno')}
+                  onClick={() => odloci(p, 'zavrnjeno')}
                   className="text-xs text-slate-500 hover:text-rose-300"
                 >
                   zavrni

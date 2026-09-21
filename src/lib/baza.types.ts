@@ -4084,6 +4084,7 @@ export type Database = {
           prijavljenih_7dni: number
           registriranih: number
           v_mini_ligah: number
+          z_ekipo: number
           z_veljavno_ekipo: number
         }[]
       }
