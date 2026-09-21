@@ -5,6 +5,7 @@
 //   ... --liga 1502 --omeji 5      (samo prvih 5 tekem, za preizkus)
 //   ... --liga 1502 --pocisti      (najprej pobriše demo klube in igralce)
 //   ... --tekmovanje mladinci      (mladinska liga; brez tega člani)
+//   ... --sveze 21                 (preskoči že uvožene tekme, starejše od 21 dni)
 //
 // Igralce prepozna po klubu, tekmovanju in imenu. Vratarja postavi iz oznake
 // (V) v zapisniku; ostale pozicije določi glasovanje uporabnikov.
@@ -16,6 +17,7 @@ import { createClient } from '@supabase/supabase-js'
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { tekmovanje as najdiTekmovanje, sifraLige } from './tekmovanje.mjs'
 import { viraZa } from './viri/index.mjs'
+import { vseVrstice } from './strani.mjs'
 
 const PREDPOMNILNIK = 'scripts/.predpomnilnik'
 
@@ -375,6 +377,35 @@ let zapisniki = await vir.zapisniki(liga, prenesi)
 const samoZapisnik = arg('zapisnik')
 if (samoZapisnik) zapisniki = zapisniki.filter((x) => String(x.id) === String(samoZapisnik))
 if (omeji) zapisniki = zapisniki.slice(0, omeji)
+
+// `--sveze <dni>`: nocni uvoz. Vsak zapisnik se sicer uvozi znova, da ujame
+// popravek — a pri 24 ligah in do 180 tekmah na ligo je to ura in pol dela
+// za nic novega, in nocni zagon je padel na casovni omejitvi. Popravki
+// zapisnika pridejo v dnevih, ne mesecih; kar je uvozeno in starejse od meje,
+// pustimo. Prestavljena tekma nima `imported_at` in gre skozi; za starejsi
+// popravek je tu `--zapisnik <id>` ali rocni uvoz cele lige.
+const svezeDni = arg('sveze') ? Number(arg('sveze')) : null
+if (svezeDni != null && !samoZapisnik) {
+  const meja = new Date(Date.now() - svezeDni * 86400000).toISOString().slice(0, 10)
+  const stare = await vseVrstice((od, do_) =>
+    db
+      .from('matches')
+      .select('zapisnik_id, rounds!inner(competition_id, played_on)')
+      .eq('rounds.competition_id', tekmovanje.id)
+      .lt('rounds.played_on', meja)
+      .not('imported_at', 'is', null)
+      .not('zapisnik_id', 'is', null)
+      .order('id')
+      .range(od, do_),
+  )
+  const preskoci = new Set(stare.map((m) => String(m.zapisnik_id)))
+  const prej = zapisniki.length
+  zapisniki = zapisniki.filter((x) => !preskoci.has(String(x.id)))
+  console.log(
+    `Sveže (${svezeDni} dni): ${zapisniki.length} od ${prej} zapisnikov; ` +
+      `${prej - zapisniki.length} je uvoženih in starejših od ${meja}.`,
+  )
+}
 console.log(`Najdenih zapisnikov: ${zapisniki.length}`)
 
 let uvozenih = 0

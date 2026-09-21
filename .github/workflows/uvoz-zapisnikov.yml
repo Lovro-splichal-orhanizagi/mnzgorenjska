@@ -34,7 +34,8 @@ jobs:
     runs-on: ubuntu-latest
     # 17 lig je 13. septembra porabilo 43 minut ze pred zadnjo ligo.
     # Ura pusti prostor se za njen uvoz, predpomnilnik in obcasno pocasne vire.
-    timeout-minutes: 60
+    # 24 lig; z `--sveze` vsaka vzame minuto, brez njega tri.
+    timeout-minutes: 120
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -81,7 +82,7 @@ jobs:
             # Prestopi so porocilo; vir, ki jih ne objavlja, se konca z 0.
             if node scripts/uvoz-razporeda.mjs   --tekmovanje "$liga" --pisi &&
                node scripts/uvoz-delegiranja.mjs --tekmovanje "$liga" --pisi &&
-               node scripts/uvoz-zapisnikov.mjs  --tekmovanje "$liga" &&
+               node scripts/uvoz-zapisnikov.mjs  --tekmovanje "$liga" --sveze 21 &&
                node scripts/uvoz-registracij.mjs --tekmovanje "$liga" &&
                node scripts/ugani-pozicije.mjs   --tekmovanje "$liga" --pisi --samo-nove; then
               echo "$liga: v redu"
