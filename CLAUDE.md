@@ -99,6 +99,18 @@ Arhivi preostalih zvez:
 | mb-1clanska | `1-clanska-liga-26-27` | `1-clanska-liga-25-26` |
 | mb-2clanska | `2-clanska-liga-26-27` | `2-clanska-liga-25-26` |
 
+Mladinske lige (U19) — `prvi_fantasy_krog = 2`, `rok_pomak_ur = 2`, ker so
+tekme zjutraj. Izpuščeni Celje (4 klubi) in Lendava (5): pri 15 igralcih in
+največ 3 iz kluba je pet klubov spodnja meja brez izbire.
+
+| liga | tekoča 2026/27 | arhiv |
+|---|---|---|
+| sml1 / sml2-vzhod / sml2-zahod (nzs) | `1-sml-eon-nextgen` / `2-sml-vzhod` / `2-sml-zahod` | `<pot>:22` (25/26), `<pot>:23` (24/25) |
+| mb-u19 | `u19-mladinska-liga-26-27` | `u19-mladinska-liga-25-26`, `…-24-25` |
+| lj-mladinci / lj-mladinci-2 | `2005` / `2006` | `1906`,`1806` / `1907`,`1807` |
+| pt-mladinci | `2026:53` | `2025:71`, `2024:71` (šifra Mladine se s sezono menja) |
+| ms-mladinci | `2026:115` | `2025:115`, `2024:115` |
+
 Nova Gorica menija za pretekle sezone nima — stara sezona je svoje tekmovanje
 s svojo šifro in do nje ne vodi nobena povezava, zato jih je treba prečesati.
 Neznana šifra vrne privzeto stran s **statusom 200**, ne 404, zato je iz
