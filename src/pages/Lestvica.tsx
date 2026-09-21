@@ -109,12 +109,32 @@ export default function Lestvica() {
 
     // Zmagovalec zadnjega odigranega kroga — ta je pogosto zanimivejši od
     // skupne lestvice, ker se menja vsak teden.
+    //
+    // Vse troje gre v en val: prej so se poizvedbe verižile (krog → krogi
+    // sezone → točke), čeprav nobena ni rabila izida prejšnje — kroge lahko
+    // preberemo za vse sezone in filtriramo tu. Lestvica kroga je bila celo
+    // četrta poizvedba nad vrsticami, ki smo jih že imeli; zdaj vzamemo `rank`
+    // zraven in jo sestavimo iz istih podatkov.
     async function nalozi() {
-      const { data: zadnji } = await supabase
-        .from('zadnji_odigrani_krog')
-        .select('id, season, number')
-        .eq('competition_id', ligaId)
-        .maybeSingle()
+      const [zadnjiOdgovor, krogiOdgovor, vseTockeOdgovor] = await Promise.all([
+        supabase
+          .from('zadnji_odigrani_krog')
+          .select('id, season, number')
+          .eq('competition_id', ligaId)
+          .maybeSingle(),
+        supabase
+          .from('rounds')
+          .select('id, number, season')
+          .eq('competition_id', ligaId)
+          .order('number', { ascending: true }),
+        supabase
+          .from('fantasy_round_standings')
+          .select(
+            'round_id, fantasy_team_id, team_name, owner_name, points, penalty, transfers, rank',
+          )
+          .eq('competition_id', ligaId),
+      ])
+      const zadnji = zadnjiOdgovor.data
       // Pogled vrne nullable stolpce; brez id-ja ali sezone kroga ni.
       const krogOk: Krog | null =
         zadnji && zadnji.id != null && zadnji.season != null
@@ -128,34 +148,23 @@ export default function Lestvica() {
         return
       }
 
-      // Vsi odigrani krogi te sezone (za selektor "od kroga N").
-      const { data: krogi } = await supabase
-        .from('rounds')
-        .select('id, number, season')
-        .eq('competition_id', ligaId)
-        .eq('season', krogOk.season)
-        .order('number', { ascending: true })
+      const vseTocke = vseTockeOdgovor.data
       const idsOdigranih = new Set<number>()
       // Odigran = ima fantasy_round_standings vrstice
-      const { data: vseTocke } = await supabase
-        .from('fantasy_round_standings')
-        .select('round_id, fantasy_team_id, team_name, owner_name, points, penalty, transfers')
-        .eq('competition_id', ligaId)
       for (const t of vseTocke ?? [])
         if (t.round_id != null) idsOdigranih.add(t.round_id)
-      const odigraniKrogi = ((krogi ?? []) as Krog[]).filter((k) =>
-        idsOdigranih.has(k.id),
+      const odigraniKrogi = ((krogiOdgovor.data ?? []) as Krog[]).filter(
+        (k) => k.season === krogOk.season && idsOdigranih.has(k.id),
       )
       setVsiKrogiOdigrani(odigraniKrogi)
       setOdigraneTocke((vseTocke ?? []) as TockeKroga[])
 
-      const { data } = await supabase
-        .from('fantasy_round_standings')
-        .select('fantasy_team_id, team_name, owner_name, points, transfers, penalty, rank')
-        .eq('round_id', krogOk.id)
-        .order('points', { ascending: false })
-        .limit(10)
-      setKrogLestvica((data ?? []) as TockeKroga[])
+      setKrogLestvica(
+        ((vseTocke ?? []) as TockeKroga[])
+          .filter((t) => (t as any).round_id === krogOk.id)
+          .sort((a, b) => Number(b.points ?? 0) - Number(a.points ?? 0))
+          .slice(0, 10),
+      )
     }
     nalozi()
   }, [tekmovanjeId])

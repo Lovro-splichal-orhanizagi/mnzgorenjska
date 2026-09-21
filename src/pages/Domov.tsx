@@ -87,29 +87,34 @@ export default function Domov() {
     if (!tekmovanjeId) return
     const ligaId = tekmovanjeId
     async function nalozi() {
-      // Tekoča sezona — potrebuje jo vsaka od treh lestvic spodaj (strelci,
-      // podajalci, obrambe), zato jo poberemo enkrat vnaprej.
-      const { data: sezonaPodatek } = await supabase
-        .from('sezone')
-        .select('season')
-        .eq('competition_id', ligaId)
-        .eq('tekoca', true)
-        .maybeSingle()
-      const tekocaSezona = sezonaPodatek?.season ?? ''
+      // Ob zamenjavi lige se naloži vse od začetka, zato gre v en sam val
+      // vse, kar ne potrebuje sezone ali kroga. Prej je bilo šest zaporednih
+      // valov in vsak je čakal prejšnjega: na članih 3.4 s namesto 1.2 s.
+      // Odvisna sta le dva — lestvice sezone (rabijo sezono) in najboljši
+      // kroga (rabi id kroga) — in ta dva gresta skupaj v drugi val.
 
       // Tekme in goli tekmovanja ne nosijo neposredno — do njega pridemo prek
       // kroga, zato notranji spoj (`!inner`) namesto navadnega štetja.
       const [
+        sezonaPodatek,
         tekme,
         igralci,
         goli,
         brezAsistence,
-        top,
-        podajalciTop,
-        obrambeTop,
-        sezonaTop,
         brezPozicije,
+        nextRoundOdgovor,
+        zadnjiOdgovor,
+        prihajajoceOdgovor,
+        nedavnoOdgovor,
+        klubiOdgovor,
+        krogiOdgovor,
       ] = await Promise.all([
+          supabase
+            .from('sezone')
+            .select('season')
+            .eq('competition_id', ligaId)
+            .eq('tekoca', true)
+            .maybeSingle(),
           supabase
             .from('matches')
             .select('id, rounds!inner(competition_id)', {
@@ -138,50 +143,6 @@ export default function Domov() {
               'played_on',
               new Date(Date.now() - 21 * 86400000).toISOString().slice(0, 10),
             ),
-          // Tri lestvice tekoče sezone iz player_season_standings — strelci,
-          // podajalci (asistence gredo skozi glasovanje, zato so na voljo
-          // le potrjene), najbolj zanesljive obrambe (ohranjene mreže).
-          supabase
-            .from('player_season_standings')
-            .select(
-              'id, full_name, team_name, team_short, team_logo, position, value, goals, minutes',
-            )
-            .eq('competition_id', ligaId)
-            .eq('season', tekocaSezona)
-            .order('goals', { ascending: false })
-            .order('minutes', { ascending: false })
-            .limit(5),
-          supabase
-            .from('player_season_standings')
-            .select(
-              'id, full_name, team_name, team_short, team_logo, position, value, assists, minutes',
-            )
-            .eq('competition_id', ligaId)
-            .eq('season', tekocaSezona)
-            .order('assists', { ascending: false })
-            .order('minutes', { ascending: false })
-            .limit(5),
-          supabase
-            .from('player_season_standings')
-            .select(
-              'id, full_name, team_name, team_short, team_logo, position, value, clean_sheets, minutes',
-            )
-            .eq('competition_id', ligaId)
-            .eq('season', tekocaSezona)
-            .order('clean_sheets', { ascending: false })
-            .order('minutes', { ascending: false })
-            .limit(5),
-          // Igralec sezone — največ fantasy točk doslej v tekoči sezoni.
-          supabase
-            .from('player_season_standings')
-            .select(
-              'id, full_name, team_name, team_short, team_logo, position, points, minutes, matches',
-            )
-            .eq('competition_id', ligaId)
-            .eq('season', tekocaSezona)
-            .order('points', { ascending: false })
-            .order('minutes', { ascending: false })
-            .limit(5),
           // Igralci, ki jim je pozicijo doslej le ugibal uvoz. Pozicija
           // odloca, koliko je vreden gol, zato ni kozmeticna.
           supabase
@@ -191,7 +152,51 @@ export default function Domov() {
             .eq('position_source', 'ugibanje')
             .eq('active', true)
             .gt('minutes', 0),
+          // Naslednji krog — za odštevalnik do zaklepanja postave.
+          supabase
+            .from('naslednji_krog')
+            .select('id, number, season, played_on, deadline_at')
+            .eq('competition_id', ligaId)
+            .maybeSingle(),
+          // Zadnji odigrani krog — za najboljše kroga in idealno enajsterico.
+          supabase
+            .from('zadnji_odigrani_krog')
+            .select('id, season, number, played_on')
+            .eq('competition_id', ligaId)
+            .maybeSingle(),
+          // Naslednje tekme (neuvožene) + zadnji rezultati (uvožene v 14 dneh).
+          supabase
+            .from('matches')
+            .select(
+              'id, round_id, home_team_id, away_team_id, played_on, home_goals, away_goals, rounds!inner(competition_id)',
+            )
+            .eq('rounds.competition_id', ligaId)
+            .is('imported_at', null)
+            .order('played_on', { ascending: true, nullsFirst: false })
+            .limit(30),
+          supabase
+            .from('matches')
+            .select(
+              'id, round_id, home_team_id, away_team_id, played_on, home_goals, away_goals, rounds!inner(competition_id)',
+            )
+            .eq('rounds.competition_id', ligaId)
+            .not('imported_at', 'is', null)
+            .gte(
+              'played_on',
+              new Date(Date.now() - 14 * 86400000).toISOString().slice(0, 10),
+            )
+            .order('played_on', { ascending: false })
+            .limit(30),
+          supabase
+            .from('competition_teams')
+            .select('team_id, name, short_name, logo_url')
+            .eq('competition_id', ligaId),
+          supabase
+            .from('rounds')
+            .select('id, season, number, played_on')
+            .eq('competition_id', ligaId),
         ])
+      const tekocaSezona = sezonaPodatek.data?.season ?? ''
       setStat({
         tekme: tekme.count ?? 0,
         igralci: igralci.count ?? 0,
@@ -202,57 +207,12 @@ export default function Domov() {
         ),
         brezPozicije: brezPozicije.count ?? 0,
       })
-      setZvezde((top.data ?? []) as VrhIgralec[])
-      setPodajalci((podajalciTop.data ?? []) as VrhIgralec[])
-      setObrambe((obrambeTop.data ?? []) as VrhIgralec[])
-      setIgralecSezone((sezonaTop.data ?? []) as any[])
+      setNaslednjiKrog((nextRoundOdgovor.data as KrogPodatek | null) ?? null)
 
-      // Naslednji krog — za odštevalnik do zaklepanja postave.
-      const { data: nextRound } = await supabase
-        .from('naslednji_krog')
-        .select('id, number, season, played_on, deadline_at')
-        .eq('competition_id', ligaId)
-        .maybeSingle()
-      setNaslednjiKrog((nextRound as KrogPodatek | null) ?? null)
-
-      // Naslednje tekme (neuvožene) + zadnji rezultati (uvožene v zadnjih 14 dneh).
-      const enkratDavno = new Date(Date.now() - 14 * 86400000)
-        .toISOString()
-        .slice(0, 10)
-      const [
-        { data: prihajajoce },
-        { data: nedavno },
-        { data: vsiKlubi },
-        { data: vsiKrogi },
-      ] = await Promise.all([
-        supabase
-          .from('matches')
-          .select(
-            'id, round_id, home_team_id, away_team_id, played_on, home_goals, away_goals, rounds!inner(competition_id)',
-          )
-          .eq('rounds.competition_id', ligaId)
-          .is('imported_at', null)
-          .order('played_on', { ascending: true, nullsFirst: false })
-          .limit(30),
-        supabase
-          .from('matches')
-          .select(
-            'id, round_id, home_team_id, away_team_id, played_on, home_goals, away_goals, rounds!inner(competition_id)',
-          )
-          .eq('rounds.competition_id', ligaId)
-          .not('imported_at', 'is', null)
-          .gte('played_on', enkratDavno)
-          .order('played_on', { ascending: false })
-          .limit(30),
-        supabase
-          .from('competition_teams')
-          .select('team_id, name, short_name, logo_url')
-          .eq('competition_id', ligaId),
-        supabase
-          .from('rounds')
-          .select('id, season, number, played_on')
-          .eq('competition_id', ligaId),
-      ])
+      const prihajajoce = prihajajoceOdgovor.data
+      const nedavno = nedavnoOdgovor.data
+      const vsiKlubi = klubiOdgovor.data
+      const vsiKrogi = krogiOdgovor.data
       const klubPo: Record<string, any> = Object.fromEntries(
         ((vsiKlubi ?? []) as any[]).map((t) => [
           String(t.team_id),
@@ -292,11 +252,7 @@ export default function Domov() {
       setZadnjiRezultati((nedavno ?? []).map(obogati))
 
       // Kdo je bil najboljši v zadnjem odigranem krogu.
-      const { data: zadnji } = await supabase
-        .from('zadnji_odigrani_krog')
-        .select('id, season, number, played_on')
-        .eq('competition_id', ligaId)
-        .maybeSingle()
+      const zadnji = zadnjiOdgovor.data
       // Pogled vraca nullable stolpce; brez id-ja kroga ni.
       const krogOk: KrogPodatek | null =
         zadnji && zadnji.id != null
@@ -308,15 +264,48 @@ export default function Domov() {
             }
           : null
       setKrog(krogOk)
-      if (krogOk) {
-        const { data: najboljsi } = await supabase
-          .from('krog_najboljsi')
+
+      // Drugi val: oboje je odvisno od prvega (sezona, id kroga), zato gresta
+      // skupaj. `player_season_standings` je najdražji pogled v aplikaciji
+      // (~1.2 s) — prej smo ga za štiri lestvice klicali štirikrat, čeprav so
+      // vse iz istih vrstic; zdaj ga preberemo enkrat in uredimo v brskalniku.
+      const [sezonaVrstice, najboljsiOdgovor] = await Promise.all([
+        supabase
+          .from('player_season_standings')
           .select(
-            'player_id, full_name, position, team_name, team_short, team_logo, points, minutes, price_delta, rank',
+            'id, full_name, team_name, team_short, team_logo, position, value,' +
+              ' goals, assists, clean_sheets, points, minutes, matches',
           )
-          .eq('round_id', krogOk.id)
-          .order('points', { ascending: false })
-          .limit(50)
+          .eq('competition_id', ligaId)
+          .eq('season', tekocaSezona),
+        krogOk
+          ? supabase
+              .from('krog_najboljsi')
+              .select(
+                'player_id, full_name, position, team_name, team_short, team_logo, points, minutes, price_delta, rank',
+              )
+              .eq('round_id', krogOk.id)
+              .order('points', { ascending: false })
+              .limit(50)
+          : Promise.resolve({ data: null }),
+      ])
+
+      // Minute so povsod razsodnik ob izenačenju — enako kot prej v SQL.
+      const vrh = (stolpec: 'goals' | 'assists' | 'clean_sheets' | 'points') =>
+        [...((sezonaVrstice.data ?? []) as any[])]
+          .sort(
+            (a, b) =>
+              Number(b[stolpec] ?? 0) - Number(a[stolpec] ?? 0) ||
+              Number(b.minutes ?? 0) - Number(a.minutes ?? 0),
+          )
+          .slice(0, 5)
+      setZvezde(vrh('goals') as VrhIgralec[])
+      setPodajalci(vrh('assists') as VrhIgralec[])
+      setObrambe(vrh('clean_sheets') as VrhIgralec[])
+      setIgralecSezone(vrh('points'))
+
+      if (krogOk) {
+        const najboljsi = najboljsiOdgovor.data
         setKrogNajboljsi(((najboljsi ?? []) as any[]).slice(0, 5))
 
         // Idealna enajsterica: 1 GK + top 4 DEF + top 4 MID + top 2 FWD
