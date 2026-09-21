@@ -76,8 +76,10 @@ export default function Klepet() {
         .order('created_at', { ascending: false })
         .limit(30)
       if (preklican) return
+      // Najnovejse zgoraj: to je knjiga zelja, ne pogovor v zivo — kdor
+      // pride, hoce videti zadnji odgovor, ne prvega sporocila iz avgusta.
       if (error) setNapaka(error.message)
-      else setSporocila(((data ?? []) as Sporocilo[]).slice().reverse())
+      else setSporocila((data ?? []) as Sporocilo[])
     }
     nalozi()
     // Vsakih 20 s osveži — realtime bi bil boljši, a to zadošča za začetek.
@@ -104,7 +106,7 @@ export default function Klepet() {
       .single()
     setPosiljam(false)
     if (error) return setNapaka(error.message)
-    if (data) setSporocila([...sporocila, { ...data, je_moje: true }])
+    if (data) setSporocila([{ ...data, je_moje: true }, ...sporocila])
     setBesedilo('')
   }
 
