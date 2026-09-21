@@ -26,6 +26,9 @@
 export const VZHOD = {
   'nk ljutomer': 'ljutomer',
   'zase videm': 'videm',
+  'marles': 'marles limbuš pekre',
+  'nk rače': 'rače',
+  'nk šampion': 'šampion',
 }
 
 /** 3. SNL Zahod: arhiv pri Ljubljani, tekoča sezona pri Novi Gorici. */

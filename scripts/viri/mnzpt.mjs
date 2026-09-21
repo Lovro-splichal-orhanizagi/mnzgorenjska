@@ -29,7 +29,23 @@ const vir = {
   // Razpored te zveze ni v obliki "Domači : Gostje"; splošni
   // razčlenjevalnik bi vrnil nič krogov in uvoz bi se ustavil.
   razcleniRazpored: razporedPtuj,
-  kljucKluba: naredikljucKluba({ ...VZHOD }),
+  // Mladina piše klub s svojim sponzorjem ("Hajdina Golgeter", "Korant
+  // Bukovci"); desno je ime iz članske lige. Hajdina in Videm igrata 3. SNL.
+  kljucKluba: naredikljucKluba({
+    ...VZHOD,
+    'hajdina': 'hajdina hiša daril',
+    'hajdina golgeter': 'hajdina hiša daril',
+    'klopotec videm': 'videm',
+    'grajena': 'grajena anpro',
+    'podvinci betonarna kuhar': 'iblo podvinci',
+    'podvinci elektrohanza': 'iblo podvinci',
+    'korant bukovci': 'bukovci',
+    'korant markovci': 'markovci',
+    'šd markovci': 'markovci',
+    'intera drava aluminij': 'drava intera',
+    'šola nogometa gorišnica': 'šd gorišnica',
+    'ormož jeruzalem slovenija': 'jeruzalem slovenija ormož',
+  }),
   kratkoIme,
   poenostavi,
 }

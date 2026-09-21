@@ -29,7 +29,15 @@ const vir = {
   // Razpored te zveze ni v obliki "Domači : Gostje"; splošni
   // razčlenjevalnik bi vrnil nič krogov in uvoz bi se ustavil.
   razcleniRazpored: razporedMurskaSobota,
-  kljucKluba: naredikljucKluba({}),
+  // Mladinci pišejo klub z nogometno šolo ali brez sponzorja ("NŠ Kema
+  // Čarda", "Tromejnik"); desno je ime iz članske lige. Čarda igra 3. SNL.
+  kljucKluba: naredikljucKluba({
+    'nš kema čarda': 'čarda martjanci',
+    'tromejnik': 'tromejnik montpreis',
+    'nšab gančani': 'aluvar gančani',
+    'avto rajh ljutomer': 'ljutomer',
+    'radenska slatina radgona': 'radgona',
+  }),
   kratkoIme,
   poenostavi,
 }

@@ -51,6 +51,9 @@ const ISTI_KLUB = {
   'nk dragomer': 'dragomer',
   'fc svoboda ljubljana': 'svoboda ljubljana',
   'fenix svoboda': 'svoboda ljubljana',
+  'nk jevnica': 'jevnica',
+  'tim trebnje mirna': 'trebnje',
+  'nk krim hubat': 'nk krim',
   ...ZAHOD,
 }
 
