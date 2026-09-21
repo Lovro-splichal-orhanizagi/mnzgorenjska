@@ -10,6 +10,9 @@ import ZivostSkupnosti from '../components/admin/Zivost'
 import ProsnjePoznavalcev from '../components/admin/ProsnjePoznavalcev'
 import Plakat from '../components/Plakat'
 
+// Koliko uporabnikov pokaže ena stran seznama.
+const UPORABNIKOV_NA_STRAN = 50
+
 export default function Administracija() {
   const { session, loading } = useAuth()
   const { id: tekmovanjeId, tekmovanje } = useTekmovanje()
@@ -31,6 +34,7 @@ export default function Administracija() {
   const [ekipe, setEkipe] = useState<any[]>([])
   const [uporabniki, setUporabniki] = useState<any[]>([])
   const [filterNepopolne, setFilterNepopolne] = useState(false)
+  const [stranUporabnikov, setStranUporabnikov] = useState(1)
   const [urediEkipa, setUrediEkipa] = useState<any | null>(null)
   const [urediUporabnik, setUrediUporabnik] = useState<any | null>(null)
   const [kopirano, setKopirano] = useState(false)
@@ -472,7 +476,10 @@ export default function Administracija() {
             <input
               type="checkbox"
               checked={filterNepopolne}
-              onChange={(e) => setFilterNepopolne(e.target.checked)}
+              onChange={(e) => {
+                setFilterNepopolne(e.target.checked)
+                setStranUporabnikov(1)
+              }}
             />
             samo brez veljavne ekipe
           </label>
@@ -482,6 +489,12 @@ export default function Administracija() {
           const seznam = filterNepopolne
             ? uporabniki.filter((u) => !u.ekipa_veljavna && u.email)
             : uporabniki
+          // Stran držimo v meji tudi, ko se seznam skrči (osvežitev, filter),
+          // sicer bi zadnja stran ostala prazna.
+          const stStrani = Math.max(1, Math.ceil(seznam.length / UPORABNIKOV_NA_STRAN))
+          const stran = Math.min(stranUporabnikov, stStrani)
+          const zacetek = (stran - 1) * UPORABNIKOV_NA_STRAN
+          const naStrani = seznam.slice(zacetek, zacetek + UPORABNIKOV_NA_STRAN)
           return (
             <>
               <div className="flex flex-wrap items-center gap-2">
@@ -578,7 +591,7 @@ export default function Administracija() {
                     </tr>
                   </thead>
                   <tbody>
-                    {seznam.map((u) => (
+                    {naStrani.map((u) => (
                       <tr key={u.user_id} className="border-t border-white/5 align-top">
                         <td className="py-1.5 pr-2 font-semibold">
                           {urediUporabnik?.user_id === u.user_id ? (
@@ -694,6 +707,33 @@ export default function Administracija() {
                   </tbody>
                 </table>
               </div>
+
+              {stStrani > 1 && (
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
+                  <span className="tabular-nums">
+                    {zacetek + 1}–{zacetek + naStrani.length} od {seznam.length}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setStranUporabnikov(stran - 1)}
+                      disabled={stran === 1}
+                      className="gumb-tih text-xs disabled:opacity-40"
+                    >
+                      ← Prejšnja
+                    </button>
+                    <span className="tabular-nums">
+                      Stran {stran} / {stStrani}
+                    </span>
+                    <button
+                      onClick={() => setStranUporabnikov(stran + 1)}
+                      disabled={stran === stStrani}
+                      className="gumb-tih text-xs disabled:opacity-40"
+                    >
+                      Naslednja →
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {filterNepopolne && seznam.length === 0 && (
                 <p className="text-sm text-slate-500">
