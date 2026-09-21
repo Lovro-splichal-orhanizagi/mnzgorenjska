@@ -4,6 +4,7 @@ import { useAuth } from '../lib/useAuth'
 import Plakat from '../components/Plakat'
 import { najboljsiTrije, type VrsticaIgralca } from '../lib/plakat'
 import { supabase } from '../lib/supabase'
+import { vseVrstice } from '../lib/strani'
 import { formatirajTocke } from '../lib/pomozno'
 import { useTekmovanje } from '../lib/tekmovanje'
 import { sestejOdKroga } from '../lib/lestvica'
@@ -127,12 +128,18 @@ export default function Lestvica() {
           .select('id, number, season')
           .eq('competition_id', ligaId)
           .order('number', { ascending: true }),
-        supabase
-          .from('fantasy_round_standings')
-          .select(
-            'round_id, fantasy_team_id, team_name, owner_name, points, penalty, transfers, rank',
-          )
-          .eq('competition_id', ligaId),
+        // Po straneh: 119 ekip krat 9 krogov je čez tisoč vrstic.
+        vseVrstice((od, do_) =>
+          supabase
+            .from('fantasy_round_standings')
+            .select(
+              'round_id, fantasy_team_id, team_name, owner_name, points, penalty, transfers, rank',
+            )
+            .eq('competition_id', ligaId)
+            .order('round_id')
+            .order('fantasy_team_id')
+            .range(od, do_),
+        ),
       ])
       const zadnji = zadnjiOdgovor.data
       // Pogled vrne nullable stolpce; brez id-ja ali sezone kroga ni.
@@ -148,7 +155,7 @@ export default function Lestvica() {
         return
       }
 
-      const vseTocke = vseTockeOdgovor.data
+      const vseTocke = vseTockeOdgovor
       const idsOdigranih = new Set<number>()
       // Odigran = ima fantasy_round_standings vrstice
       for (const t of vseTocke ?? [])

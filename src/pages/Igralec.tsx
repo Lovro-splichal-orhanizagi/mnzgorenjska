@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
@@ -285,6 +285,10 @@ export default function Igralec() {
     setPorocila((prej) => prej.filter((p) => p.id !== id))
   }
 
+  // Zaporedna številka branja po glasu: dva hitra klika (DEF, nato MID)
+  // sprožita dve branji in počasnejše prvo bi sicer povozilo drugo.
+  const branjeGlasov = useRef(0)
+
   async function glasuj(pozicija: Pozicija) {
     if (!session) return
     setNapaka(null)
@@ -315,6 +319,7 @@ export default function Igralec() {
 
     // Pravo stanje vseeno preberemo iz baze: medtem je lahko glasoval še kdo,
     // uteži pa niso vse enake, zato ocene ne gre puščati na naši aritmetiki.
+    const to = ++branjeGlasov.current
     const [{ data: p }, { data: g }] = await Promise.all([
       supabase.from('player_overview').select('*').eq('id', igralecId).maybeSingle(),
       supabase
@@ -322,6 +327,7 @@ export default function Igralec() {
         .select('position, votes')
         .eq('player_id', igralecId),
     ])
+    if (to !== branjeGlasov.current) return
     if (p) setIgralec(p as Profil)
     if (g)
       setGlasovi(

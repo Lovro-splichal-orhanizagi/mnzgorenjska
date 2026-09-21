@@ -99,22 +99,28 @@ const db = createClient(BASE, KLJUC, { auth: { persistSession: false } })
 
 // `sips` je macOS, `convert` (ImageMagick) je na ubuntu-latest v GitHub
 // Actions, kjer skripta tece z zivim kljucem. Brez obeh ostane izvirnik.
-let zmanjsevalnik
+// Orodje, ki ga ni (ENOENT), si zapomnimo in ga ne kličemo več; napaka pri
+// ENI sliki (nenavaden format) pa ne sme izklopiti manjšanja za vse naslednje.
+const manjka = new Set()
+let opozorjeno = false
 function zmanjsaj(pot) {
-  if (zmanjsevalnik === null) return
-  const poskusi = [
+  const orodja = [
     ['sips', ['--resampleHeightWidthMax', String(NAJVECJA_STRANICA), pot]],
     ['convert', [pot, '-resize', `${NAJVECJA_STRANICA}x${NAJVECJA_STRANICA}>`, pot]],
-  ]
-  for (const [ukaz, arg] of zmanjsevalnik ? [poskusi.find((p) => p[0] === zmanjsevalnik)] : poskusi) {
+  ].filter(([ukaz]) => !manjka.has(ukaz))
+  for (const [ukaz, arg] of orodja) {
     try {
       execFileSync(ukaz, arg, { stdio: 'ignore' })
-      zmanjsevalnik = ukaz
       return
-    } catch { /* naslednji */ }
+    } catch (e) {
+      if (e.code === 'ENOENT') manjka.add(ukaz)
+      else console.log(`  (${ukaz} ni zmanjšal ${pot.split('/').pop()}: ${e.message.split('\n')[0]})`)
+    }
   }
-  zmanjsevalnik = null
-  console.log('  (ne sips ne convert nista na voljo — grbi ostanejo v izvirni velikosti)')
+  if (orodja.length === 0 && !opozorjeno) {
+    opozorjeno = true
+    console.log('  (ne sips ne convert nista na voljo — grbi ostanejo v izvirni velikosti)')
+  }
 }
 
 /**

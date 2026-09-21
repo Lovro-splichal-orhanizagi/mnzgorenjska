@@ -78,8 +78,21 @@ export default function Klepet() {
       if (preklican) return
       // Najnovejse zgoraj: to je knjiga zelja, ne pogovor v zivo — kdor
       // pride, hoce videti zadnji odgovor, ne prvega sporocila iz avgusta.
+      // Lastno sporocilo, poslano med branjem, ostane: branje ga se ne
+      // pozna, naslednje ga prinese.
       if (error) setNapaka(error.message)
-      else setSporocila((data ?? []) as Sporocilo[])
+      else
+        setSporocila((prej) => {
+          const nova = (data ?? []) as Sporocilo[]
+          const znana = new Set(nova.map((s) => s.id))
+          const mejaCasa = nova[nova.length - 1]?.created_at ?? ''
+          const manjkajoca = prej.filter(
+            (s) => s.je_moje && !znana.has(s.id) && s.created_at >= mejaCasa,
+          )
+          return manjkajoca.length
+            ? [...nova, ...manjkajoca].sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
+            : nova
+        })
     }
     nalozi()
     // Vsakih 20 s osveži — realtime bi bil boljši, a to zadošča za začetek.
@@ -106,7 +119,7 @@ export default function Klepet() {
       .single()
     setPosiljam(false)
     if (error) return setNapaka(error.message)
-    if (data) setSporocila([{ ...data, je_moje: true }, ...sporocila])
+    if (data) setSporocila((prej) => [{ ...data, je_moje: true }, ...prej.filter((s) => s.id !== data.id)])
     setBesedilo('')
   }
 
@@ -114,7 +127,7 @@ export default function Klepet() {
     if (!confirm('Izbrišem sporočilo?')) return
     const { error } = await supabase.from('chat_messages').delete().eq('id', id)
     if (error) return setNapaka(error.message)
-    setSporocila(sporocila.filter((s) => s.id !== id))
+    setSporocila((prej) => prej.filter((s) => s.id !== id))
   }
 
   return (

@@ -7,6 +7,9 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Za zagone, ki jih sprozi drug delovni tok (grbi z NZS potisnejo z
+  # GITHUB_TOKEN, ki CI ne sprozi sam).
+  workflow_dispatch:
 
 # Nov push na isto vejo prekine prejšnji tek — zadnje stanje je edino, ki šteje.
 concurrency:
@@ -66,7 +69,7 @@ jobs:
   objavi:
     name: Objava na Vercel
     needs: [preveri, varnost]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:

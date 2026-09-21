@@ -24,8 +24,12 @@ on:
         type: boolean
         default: false
 
-# Brez skupine `uvoz`: uvoz druge lige se teh dveh klubov ne dotakne, cakanje
-# na vecurni uvoz pa bi pomenilo, da se zdruzitev nikoli ne pride na vrsto.
+# V vrsti `uvoz` skupaj z uvozi: klubi so skupni vsem ligam in uvoz si ob
+# zagonu zapomni id-je klubov — ce mu medtem enega izbrisemo, tekme obvisijo.
+concurrency:
+  group: uvoz
+  cancel-in-progress: false
+
 jobs:
   zdruzi:
     runs-on: ubuntu-latest
@@ -47,6 +51,7 @@ jobs:
         run: |
           set -euo pipefail
           [[ "$ODVECNI" =~ ^[0-9]+$ && "$OBDRZI" =~ ^[0-9]+$ ]] || { echo "id morata biti stevili"; exit 1; }
+          [ "$ODVECNI" != "$OBDRZI" ] || { echo "isti id dvakrat: klub bi izginil"; exit 1; }
           if [ "$PISI" = "true" ]; then
             node scripts/zdruzi-klube.mjs --odvecni "$ODVECNI" --obdrzi "$OBDRZI" --pisi
           else

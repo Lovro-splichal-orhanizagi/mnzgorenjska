@@ -102,6 +102,12 @@ if (arg('odvecni') && arg('obdrzi')) {
     console.error('Kluba s tema id-jema ni.')
     process.exit(1)
   }
+  // Isti id dvakrat bi bil "preseli nase, nato izbriši" — klub bi izginil
+  // skupaj z igralci.
+  if (odvecni.id === obdrzi.id) {
+    console.error('Odvečni in obdržani klub sta isti zapis.')
+    process.exit(1)
+  }
   pari.push({ odvecni, obdrzi })
 } else {
   const skupine = new Map()
@@ -187,6 +193,14 @@ for (const { odvecni, obdrzi } of pari) {
     continue
   }
 
+  // Ista tekma je lahko v bazi dvakrat: razpored jo je vpisal z enim imenom
+  // kluba, zapisnik z drugim, in do združitve sta bila to dva kluba. Po
+  // selitvi bi trčili na ključu (krog, domači, gostje). Razporedna vrstica
+  // brez uvoza in brez nastopov je le ogrodje — njo umaknemo, zapisnik obvelja.
+  await pospraviPodvojeneTekme(odvecni.id, obdrzi.id)
+
+  // Napaka ustavi združitev in zagon konča z napako: pol preseljen klub, ki
+  // ga skripta v dnevniku označi za "izbrisanega", je hujši od nedokončanega.
   for (const [tabela, stolpec] of [
     ['players', 'team_id'],
     ['appearances', 'team_id'],
@@ -199,8 +213,11 @@ for (const { odvecni, obdrzi } of pari) {
       .update({ [stolpec]: obdrzi.id })
       .eq(stolpec, odvecni.id)
       .select('id')
-    if (error) console.log(`  ${tabela}.${stolpec}: NAPAKA ${error.message}`)
-    else console.log(`  ${tabela}.${stolpec}: preseljenih ${data?.length ?? 0}`)
+    if (error) {
+      console.error(`  ${tabela}.${stolpec}: NAPAKA ${error.message} — združitev ustavljena`)
+      process.exit(1)
+    }
+    console.log(`  ${tabela}.${stolpec}: preseljenih ${data?.length ?? 0}`)
   }
 
   // Grb prevzame obdržani klub, če ga sam nima.
@@ -216,11 +233,65 @@ for (const { odvecni, obdrzi } of pari) {
     .from('teams')
     .delete()
     .eq('id', odvecni.id)
-  console.log(
-    napakaBrisanja
-      ? `  klub ${odvecni.id} NI izbrisan: ${napakaBrisanja.message}`
-      : `  klub ${odvecni.id} izbrisan`,
-  )
+  if (napakaBrisanja) {
+    console.error(`  klub ${odvecni.id} NI izbrisan: ${napakaBrisanja.message}`)
+    process.exit(1)
+  }
+  console.log(`  klub ${odvecni.id} izbrisan`)
+}
+
+/**
+ * Tekme, ki bi po selitvi trčile: (krog, A, X) pri odvečnem in (krog, B, X)
+ * pri obdržanem. Kadar je ena od njiju neuvožena in brez nastopov, jo
+ * izbrišemo; kadar sta obe prave, se ustavimo — to mora pogledati človek.
+ */
+async function pospraviPodvojeneTekme(odvecniId, obdrziId) {
+  const { data: tekme, error } = await db
+    .from('matches')
+    .select('id, round_id, home_team_id, away_team_id, imported_at')
+    .or(
+      `home_team_id.in.(${odvecniId},${obdrziId}),away_team_id.in.(${odvecniId},${obdrziId})`,
+    )
+  if (error) {
+    console.error(`  tekem ni bilo mogoče prebrati: ${error.message}`)
+    process.exit(1)
+  }
+  const poKljucu = new Map()
+  for (const t of tekme ?? []) {
+    const d = t.home_team_id === odvecniId ? obdrziId : t.home_team_id
+    const g = t.away_team_id === odvecniId ? obdrziId : t.away_team_id
+    const k = `${t.round_id}|${d}|${g}`
+    if (!poKljucu.has(k)) poKljucu.set(k, [])
+    poKljucu.get(k).push(t)
+  }
+  for (const skupina of poKljucu.values()) {
+    if (skupina.length < 2) continue
+    const ogrodja = []
+    for (const t of skupina) {
+      if (t.imported_at) continue
+      const { count } = await db
+        .from('appearances')
+        .select('id', { count: 'exact', head: true })
+        .eq('match_id', t.id)
+      if (!count) ogrodja.push(t)
+    }
+    if (skupina.length - ogrodja.length > 1) {
+      console.error(
+        `  tekma ${skupina.map((t) => t.id).join('/')} je v bazi dvakrat z nastopi — ` +
+          'združitev ustavljena, poglej ročno',
+      )
+      process.exit(1)
+    }
+    // Vsaj ena mora ostati.
+    for (const t of ogrodja.slice(0, skupina.length - 1)) {
+      const { error: e } = await db.from('matches').delete().eq('id', t.id)
+      if (e) {
+        console.error(`  tekme ${t.id} ni bilo mogoče izbrisati: ${e.message}`)
+        process.exit(1)
+      }
+      console.log(`  razporedno ogrodje tekme ${t.id} umaknjeno (zapisnik obvelja)`)
+    }
+  }
 }
 
 if (pisi)

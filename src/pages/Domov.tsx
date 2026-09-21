@@ -4,6 +4,7 @@ import { imeZveze } from '../components/VirPodatkov'
 import { sestaviVabilo, vabiloMailto } from '../lib/vabilo'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { vseVrstice } from '../lib/strani'
 import { PRAVILA_OPIS } from '../lib/tockovanje'
 import { prikazniIme, formatirajTocke, formatirajCeno } from '../lib/pomozno'
 import { useTekmovanje } from '../lib/tekmovanje'
@@ -270,14 +271,20 @@ export default function Domov() {
       // (~1.2 s) — prej smo ga za štiri lestvice klicali štirikrat, čeprav so
       // vse iz istih vrstic; zdaj ga preberemo enkrat in uredimo v brskalniku.
       const [sezonaVrstice, najboljsiOdgovor] = await Promise.all([
-        supabase
-          .from('player_season_standings')
-          .select(
-            'id, full_name, team_name, team_short, team_logo, position, value,' +
-              ' goals, assists, clean_sheets, points, minutes, matches',
-          )
-          .eq('competition_id', ligaId)
-          .eq('season', tekocaSezona),
+        // Po straneh: 1. SML ima čez 500 igralcev in vrh bi tiho ostal brez
+        // tistih za mejo.
+        vseVrstice((od, do_) =>
+          supabase
+            .from('player_season_standings')
+            .select(
+              'id, full_name, team_name, team_short, team_logo, position, value,' +
+                ' goals, assists, clean_sheets, points, minutes, matches',
+            )
+            .eq('competition_id', ligaId)
+            .eq('season', tekocaSezona)
+            .order('id')
+            .range(od, do_),
+        ),
         krogOk
           ? supabase
               .from('krog_najboljsi')
@@ -292,7 +299,7 @@ export default function Domov() {
 
       // Minute so povsod razsodnik ob izenačenju — enako kot prej v SQL.
       const vrh = (stolpec: 'goals' | 'assists' | 'clean_sheets' | 'points') =>
-        [...((sezonaVrstice.data ?? []) as any[])]
+        [...(sezonaVrstice as any[])]
           .sort(
             (a, b) =>
               Number(b[stolpec] ?? 0) - Number(a[stolpec] ?? 0) ||

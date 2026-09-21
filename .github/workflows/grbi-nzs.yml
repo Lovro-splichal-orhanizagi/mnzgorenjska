@@ -17,6 +17,7 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: write
+      actions: write
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -37,4 +38,15 @@ jobs:
           git config user.name "slff-bot"
           git config user.email "slff-bot@users.noreply.github.com"
           git commit -m "Grbi z NZS ($(git diff --cached --numstat | wc -l | tr -d ' ') datotek)"
-          git push
+          # Medtem je lahko nekdo potisnil na main: potegni in poskusi znova.
+          # Baza ze kaze na te datoteke, zato push ne sme tiho pasti.
+          for i in 1 2 3 4 5; do
+            git pull --rebase origin main && git push && break
+            [ "$i" -lt 5 ] || { echo "push ni uspel po 5 poskusih"; exit 1; }
+            sleep $((i * 10))
+          done
+          # Push z GITHUB_TOKEN ne sprozi CI in z njim objave na Vercel;
+          # brez tega bi baza kazala na grbe, ki jih stran se ne streze.
+          gh workflow run ci.yml --ref main
+        env:
+          GH_TOKEN: ${{ github.token }}
