@@ -5,7 +5,7 @@
 // obeh klubov in ju v HTML postavi kot `<img src="…" alt="SD Šenčur">`. Ime
 // kluba in grb sta torej v isti znacki in ju ni treba ugibati.
 //
-// Pokriva 1. SNL, 2. SNL in obe 3. SNL. Regionalnih lig (MNZ) NZS ne objavlja
+// Pokriva 1. SNL, 2. SNL, obe 3. SNL in mladinske SML. Regionalnih lig (MNZ) NZS ne objavlja
 // in zanje tega vira ni — tam klub ostane pri grbu iz zacetnic, ki ga narise
 // `src/components/Grb.jsx`.
 //
@@ -74,6 +74,11 @@ const LIGE = [
   '2-slovenska-nogometna-liga',
   '3-slovenska-nogometna-liga-zahod',
   '3-slovenska-nogometna-liga-vzhod',
+  // Mladinske lige: isti klubi, a NZS jih tu piše brez sponzorja, zato
+  // grb dobi tudi klub, ki ga je članska liga imenovala drugače.
+  '1-sml-eon-nextgen',
+  '2-sml-vzhod',
+  '2-sml-zahod',
 ]
 
 function izEnv() {
@@ -92,15 +97,24 @@ const KLJUC = env.SUPABASE_SERVICE_ROLE_KEY
 if (!BASE || !KLJUC) { console.error('Manjka SUPABASE_URL ali servisni ključ.'); process.exit(1) }
 const db = createClient(BASE, KLJUC, { auth: { persistSession: false } })
 
-let sipsManjka = false
+// `sips` je macOS, `convert` (ImageMagick) je na ubuntu-latest v GitHub
+// Actions, kjer skripta tece z zivim kljucem. Brez obeh ostane izvirnik.
+let zmanjsevalnik
 function zmanjsaj(pot) {
-  if (sipsManjka) return
-  try {
-    execFileSync('sips', ['--resampleHeightWidthMax', String(NAJVECJA_STRANICA), pot], { stdio: 'ignore' })
-  } catch (e) {
-    sipsManjka = true
-    console.log(`  (sips ni na voljo — grbi ostanejo v izvirni velikosti: ${e.code ?? e.message})`)
+  if (zmanjsevalnik === null) return
+  const poskusi = [
+    ['sips', ['--resampleHeightWidthMax', String(NAJVECJA_STRANICA), pot]],
+    ['convert', [pot, '-resize', `${NAJVECJA_STRANICA}x${NAJVECJA_STRANICA}>`, pot]],
+  ]
+  for (const [ukaz, arg] of zmanjsevalnik ? [poskusi.find((p) => p[0] === zmanjsevalnik)] : poskusi) {
+    try {
+      execFileSync(ukaz, arg, { stdio: 'ignore' })
+      zmanjsevalnik = ukaz
+      return
+    } catch { /* naslednji */ }
   }
+  zmanjsevalnik = null
+  console.log('  (ne sips ne convert nista na voljo — grbi ostanejo v izvirni velikosti)')
 }
 
 /**
