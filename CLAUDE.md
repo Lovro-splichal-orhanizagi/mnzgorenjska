@@ -254,6 +254,13 @@ node scripts/ovrednoti-igralce.mjs                   # cene igralcev
 node scripts/prenesi-grbe.mjs --pisi                 # grbi klubov
 ```
 
+Živi servisni ključ živi samo v GitHub Actions. Kar piše v produkcijo,
+teče tam: `uvoz-lige.yml` (uvoz ene lige), `grbi-nzs.yml` (grbi z NZS, ki
+jih sam zapiše v git) in `zdruzi-klube.yml` (dva podvojena kluba; najprej
+brez `pisi` za predogled). Shemo in poizvedbe potisne Supabase CLI, ki je
+povezan s projektom: `npx supabase db push --linked`, `npx supabase db query
+--linked "<sql>"`.
+
 Vrstni red ni izbiren: **arhiv → razpored → tekoča sezona → pozicije → cene**.
 Igralec pod 270 minutami dobi privzeto 4.5, zato bi liga brez arhiva imela vse
 igralce po isti ceni in prvi teden ne bi imel igre.
