@@ -36,10 +36,21 @@ const OSNOVNI = 'https://www.mnzljubljana-zveza.si'
 // Ljubljana je poleg svojih dveh lig objavila tudi arhiv 3. SNL Zahod
 // (2023/24 in 2022/23). Tekočo sezono te lige objavlja Nova Gorica, zato se
 // vzdevki 3. SNL prilijejo obema viroma — sicer bi klub dobil dva zapisa.
+//
+// Mladinci istega kluba pridejo z vrsto društva ali z drugim sponzorjem
+// ("Nk Ljubljana", "NK Ljubljana RUMI ZAVAROVANJE"), Svoboda celo v razporedu
+// drugače kot v zapisniku ("Fenix Svoboda") — takrat se tekma podvoji.
 const ISTI_KLUB = {
   'ljubljana arol': 'ljubljana',
+  'nk ljubljana': 'ljubljana',
+  'nk ljubljana rumi zavarovanje': 'ljubljana',
+  'ljubljana avtokleparstvo bizjan': 'ljubljana',
   'šd vir': 'vir',
   'nk iak kresnice': 'kresnice',
+  'nk kamnik': 'kamnik',
+  'nk dragomer': 'dragomer',
+  'fc svoboda ljubljana': 'svoboda ljubljana',
+  'fenix svoboda': 'svoboda ljubljana',
   ...ZAHOD,
 }
 
