@@ -166,6 +166,7 @@ const vir = {
     'bravo big bang': 'bravo',
     'bravo ljubljana': 'bravo',
     'aluminij energija plus': 'aluminij',
+    'pergola misteral jadran dekani': 'jadran dekani',
   }),
   kratkoIme,
   poenostavi,

@@ -54,6 +54,7 @@ const ISTI_KLUB = {
   'nk jevnica': 'jevnica',
   'tim trebnje mirna': 'trebnje',
   'nk krim hubat': 'nk krim',
+  'nk zagorje': 'zagorje',
   ...ZAHOD,
 }
 
