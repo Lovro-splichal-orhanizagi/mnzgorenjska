@@ -152,16 +152,17 @@ if (tedensko || tekmovanje.active) {
 }
 
 // --- statistika ------------------------------------------------------------
-// `player_season_stats` nima stolpca za tekmovanje, zato pade sem vse — pri
-// stirih ligah cez 2400 vrstic. Brez branja po straneh bi PostgREST vrnil
-// prvih tisoc in liga, ki bi bila v vrsti zadnja, bi ostala brez statistike:
-// vsi igralci po 4.5 in nobene napake.
+// Po straneh in po ligi. Brez branja po straneh bi PostgREST vrnil prvih
+// tisoc in liga, ki bi bila v vrsti zadnja, bi ostala brez statistike: vsi
+// igralci po 4.5 in nobene napake. Brez filtra na ligo pa vsaka stran znova
+// seteje nastope vseh lig in pri 24 ligah pade na statement timeout.
 let stat
 try {
   stat = await vseVrstice((od, do_) => {
     let q = db
       .from('player_season_stats')
       .select('player_id, season, minutes, goals, points, matches, clean_sheets, yellow_cards, red_cards')
+      .eq('competition_id', tekmovanje.id)
     if (sezona) q = q.eq('season', sezona)
     return q.order('player_id').order('season').range(od, do_)
   })

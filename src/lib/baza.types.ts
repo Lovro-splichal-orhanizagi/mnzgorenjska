@@ -3557,6 +3557,7 @@ export type Database = {
         Row: {
           assists: number | null
           clean_sheets: number | null
+          competition_id: number | null
           goals: number | null
           matches: number | null
           minutes: number | null
@@ -3609,6 +3610,27 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "pozicije_v_cakanju"
             referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "rounds_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rounds_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rounds_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["competition_id"]
           },
         ]
       }
