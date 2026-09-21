@@ -24,10 +24,8 @@ on:
         type: boolean
         default: false
 
-concurrency:
-  group: uvoz
-  cancel-in-progress: false
-
+# Brez skupine `uvoz`: uvoz druge lige se teh dveh klubov ne dotakne, cakanje
+# na vecurni uvoz pa bi pomenilo, da se zdruzitev nikoli ne pride na vrsto.
 jobs:
   zdruzi:
     runs-on: ubuntu-latest
