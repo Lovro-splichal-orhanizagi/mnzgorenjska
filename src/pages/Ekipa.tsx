@@ -66,21 +66,28 @@ export default function Ekipa() {
       }
       setEkipa(e)
 
-      // Migracija 20260913100000 je zaklenila vse ze zapadle kroge, tudi
-      // tiste pred zacetkom fantasy dela lige. Za te posnetka ni in gumb bi
-      // vodil v prazno, zato jih izpustimo.
-      const { data: liga } = await supabase
-        .from('competitions')
-        .select('prvi_fantasy_krog')
-        .eq('id', e.competition_id as number)
-        .maybeSingle()
-      const { data: k } = await supabase
-        .from('rounds')
-        .select('id, number, season')
-        .eq('competition_id', e.competition_id as number)
-        .not('lineups_locked_at', 'is', null)
-        .gte('number', liga?.prvi_fantasy_krog ?? 1)
-        .order('number', { ascending: false })
+      // Samo krogi, v katerih ima TA ekipa posnetek. Migracija 20260913100000
+      // je zaklenila vse ze zapadle kroge, tudi cele lanske sezone, za katere
+      // posnetkov ni — gumbi so vodili v prazno, stevilke krogov pa so se
+      // med sezonama podvajale ("2. krog" dvakrat) in privzeto se je odprl
+      // lanski zadnji krog namesto letosnjega.
+      // `fantasy_round_points` ima vrstico natanko za kroge s posnetkom —
+      // ena vrstica na krog namesto petnajstih iz `fantasy_lineups`.
+      const { data: posnetki } = await supabase
+        .from('fantasy_round_points')
+        .select('round_id')
+        .eq('fantasy_team_id', Number(id))
+      const ids = [...new Set((posnetki ?? []).map((p) => p.round_id))].filter(
+        (x): x is number => x != null,
+      )
+      const { data: k } = ids.length
+        ? await supabase
+            .from('rounds')
+            .select('id, number, season')
+            .in('id', ids)
+            .order('season', { ascending: false })
+            .order('number', { ascending: false })
+        : { data: [] }
       if (!veljavno) return
       const zaprti = (k ?? []) as Krog[]
       setKrogi(zaprti)
@@ -135,6 +142,12 @@ export default function Ekipa() {
   const skupaj = useMemo(() => skupajTock(vrstice), [vrstice])
   const vskocil = useMemo(() => namestnikJeVskocil(vrstice), [vrstice])
 
+  // Sezono pokazemo le, kadar jih je vec — sicer je pri vsakem gumbu odvec.
+  const vecSezon = useMemo(
+    () => new Set(krogi.map((k) => k.season)).size > 1,
+    [krogi],
+  )
+
   function izberi(krog: number) {
     setIzbranKrog(krog)
     nastaviIskanje({ krog: String(krog) }, { replace: true })
@@ -182,6 +195,9 @@ export default function Ekipa() {
                 }`}
               >
                 {k.number}. krog
+                {vecSezon && k.season && (
+                  <span className="ml-1 font-normal opacity-70">{k.season}</span>
+                )}
               </button>
             ))}
           </div>

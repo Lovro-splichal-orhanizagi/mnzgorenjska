@@ -676,6 +676,7 @@ export type Database = {
           is_starter: boolean
           is_vice: boolean
           player_id: number
+          position: string | null
           round_id: number
         }
         Insert: {
@@ -686,6 +687,7 @@ export type Database = {
           is_starter: boolean
           is_vice?: boolean
           player_id: number
+          position?: string | null
           round_id: number
         }
         Update: {
@@ -696,6 +698,7 @@ export type Database = {
           is_starter?: boolean
           is_vice?: boolean
           player_id?: number
+          position?: string | null
           round_id?: number
         }
         Relationships: [
@@ -4188,6 +4191,7 @@ export type Database = {
           is_starter: boolean
           is_vice: boolean
           player_id: number
+          poz: string
         }[]
       }
       potrdi_asistenco: { Args: { p_goal_id: number }; Returns: undefined }
