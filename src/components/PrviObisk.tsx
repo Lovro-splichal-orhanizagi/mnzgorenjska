@@ -10,6 +10,11 @@
 // Zaslon se da preskočiti. Kdor je prišel samo pogledat lestvico, ne sme
 // naleteti na zid; preskok pomeni privzeto ligo, kakor doslej.
 //
+// Vprašanje počaka poldrugo sekundo. Modalno okno, ki pade čez stran, preden
+// je ta sploh narisana, vpraša nekoga, ki še ne ve, kaj ga sprašujemo — in
+// prvo dejanje na strani je zapiranje okna. Po zamiku obiskovalec vidi, da
+// je prišel na fantasy ligo, in šele nato izbira.
+//
 // Ob vsaki ligi piše, koliko ekip že igra. Sedemnajst lig je in v trinajstih
 // je manj kot pet ekip — novinec, ki slepo izbere prazno, nima nasprotnikov in
 // se ne vrne. Število ni okras, ampak edino, kar mu to pove vnaprej.
@@ -41,12 +46,23 @@ function zapomniSi() {
   }
 }
 
+const ZAMIK_MS = 1500
+
 export default function PrviObisk() {
   const { tekmovanja, nastavi } = useTekmovanje()
   const [skrit, setSkrit] = useState(() => zeVprasan())
+  const [cas, setCas] = useState(false)
   const [drzava, setDrzava] = useState<string | null>(null)
   const [ekip, setEkip] = useState<Record<number, number>>({})
 
+  useEffect(() => {
+    if (skrit) return
+    const t = window.setTimeout(() => setCas(true), ZAMIK_MS)
+    return () => window.clearTimeout(t)
+  }, [skrit])
+
+  // Število ekip naložimo takoj, da je ob prikazu že tu in se okno ne dopolnjuje
+  // pred očmi.
   useEffect(() => {
     if (skrit) return
     let veljavno = true
@@ -79,8 +95,8 @@ export default function PrviObisk() {
     [tekmovanja, drzava],
   )
 
-  // Dokler se lige ne naložijo, ni kaj ponuditi.
-  if (skrit || tekmovanja.length < 2) return null
+  // Dokler se lige ne naložijo ali dokler ne mine zamik, ni kaj pokazati.
+  if (skrit || !cas || tekmovanja.length < 2) return null
 
   const zapri = () => {
     zapomniSi()
