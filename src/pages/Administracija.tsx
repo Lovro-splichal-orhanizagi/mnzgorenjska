@@ -8,6 +8,8 @@ import { useTekmovanje } from '../lib/tekmovanje'
 import UpravljanjeLig from '../components/admin/UpravljanjeLig'
 import ZivostSkupnosti from '../components/admin/Zivost'
 import ProsnjePoznavalcev from '../components/admin/ProsnjePoznavalcev'
+import RastLig from '../components/admin/RastLig'
+import Sponzorji from '../components/admin/Sponzorji'
 import Plakat from '../components/Plakat'
 
 // Koliko uporabnikov pokaže ena stran seznama.
@@ -444,6 +446,8 @@ export default function Administracija() {
       <ZivostSkupnosti />
 
       <ProsnjePoznavalcev />
+      <RastLig />
+      <Sponzorji />
 
       {/* Promo za izbrano ligo — "je live". SLFF znacka je subjekt, liga je
           junak; brez kluba, za nas kanal. Ime lige pride iz izbirnika: pri

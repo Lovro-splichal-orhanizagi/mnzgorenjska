@@ -139,10 +139,21 @@ ok('anonimni vidi tekme', javneTekme?.length === 3)
 
 // --- 3. glasovanje o asistenci ---------------------------------------------
 const u = users[0]
+// Glasovanje o asistenci se zapre z naslednjim krogom (migracija
+// 20260922170000), zato gol iščemo med tekmami, ki so ŠE ODPRTE — sicer bi
+// RLS glas zavrnil in test bi padel na pravilnem vedenju.
+const { data: odprte } = await u.c
+  .from('match_assist_status')
+  .select('match_id')
+  .eq('competition_id', 1)
+  .eq('glasovanje_odprto', true)
+  .gt('brez_asistence', 0)
+  .order('match_id')
+const odprtiIdji = (odprte ?? []).map((t) => t.match_id)
 const { data: gol } = await u.c
   .from('goals')
-  .select('id, match_id, team_id, scorer_id, assist_player_id, assist_confirmed_at, assist_none_confirmed_at, matches!inner(rounds!inner(competition_id))')
-  .eq('matches.rounds.competition_id', 1)
+  .select('id, match_id, team_id, scorer_id, assist_player_id, assist_confirmed_at, assist_none_confirmed_at')
+  .in('match_id', odprtiIdji.length ? odprtiIdji : [-1])
   .eq('is_own_goal', false)
   // Enajstmetrovka in avtogol asistence nimata in sta že zaklenjena, prav tako
   // gol, o katerem je skupnost odločila, da podajalca ni — o teh ni glasovanja.
@@ -153,7 +164,10 @@ const { data: gol } = await u.c
   .limit(1)
   .single()
 ok('najden gol brez asistence', Boolean(gol))
-if (!gol) throw new Error('Potreben je neodločen gol v članski ligi.')
+if (!gol)
+  throw new Error(
+    'Potreben je neodločen gol v članski ligi, na tekmi z odprtim glasovanjem.',
+  )
 pospravljanje.push(['povrnitev asistence', () => admin.from('goals').update({
   assist_player_id: gol.assist_player_id,
   assist_confirmed_at: gol.assist_confirmed_at,

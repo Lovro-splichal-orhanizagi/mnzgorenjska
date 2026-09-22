@@ -5,6 +5,7 @@ import Plakat from '../components/Plakat'
 import { najboljsiTrije, type VrsticaIgralca } from '../lib/plakat'
 import { supabase } from '../lib/supabase'
 import { vseVrstice } from '../lib/strani'
+import Sponzor from '../components/Sponzor'
 import { formatirajTocke } from '../lib/pomozno'
 import { useTekmovanje } from '../lib/tekmovanje'
 import { sestejOdKroga } from '../lib/lestvica'
@@ -511,6 +512,10 @@ export default function Lestvica() {
           )
         })}
       </ul>
+
+      {/* Sponzorsko mesto. Dokler `sponzorji_vidni` ni 1, se ne izriše nič —
+          stoji pod lestvico, ne nad njo. */}
+      <Sponzor />
     </div>
   )
 }

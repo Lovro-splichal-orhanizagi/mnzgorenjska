@@ -343,5 +343,9 @@ update competitions set active = true where slug in ('lj-1-liga','lj-2-liga');
   tekočo sezono (trg v Moji ekipi, naslovnica, stran Igralci), beri
   `player_season_standings` s filtrom na sezono; lanska sezona je le zgodovina
   in izhodišče za ceno.
+- Sponzorska mesta (`sponsors`) imajo hierarhičen doseg: liga > zveza >
+  država > vsi, najbolj določen zadetek zmaga (`sponzorji_za(liga)`). Nič se
+  ne prikaže, dokler nastavitev `sponzorji_vidni` ni 1 — vklop je stikalo v
+  adminu, ne objava. Števci so dnevni seštevki v `sponsor_stats`, ne dogodki.
 - Na trg sodijo samo aktivni igralci (`player_overview.active`) — kader z
   neaktivnim igralcem `roster_je_veljaven` zavrne in ekipa tiho ostane brez točk.

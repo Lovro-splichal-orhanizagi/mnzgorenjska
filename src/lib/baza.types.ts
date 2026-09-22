@@ -2454,6 +2454,149 @@ export type Database = {
         }
         Relationships: []
       }
+      sponsor_stats: {
+        Row: {
+          competition_id: number
+          dan: string
+          klikov: number
+          prikazov: number
+          sponsor_id: number
+        }
+        Insert: {
+          competition_id: number
+          dan: string
+          klikov?: number
+          prikazov?: number
+          sponsor_id: number
+        }
+        Update: {
+          competition_id?: number
+          dan?: string
+          klikov?: number
+          prikazov?: number
+          sponsor_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sponsor_stats_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sponsor_stats_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sponsor_stats_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "sponsor_stats_sponsor_id_fkey"
+            columns: ["sponsor_id"]
+            isOneToOne: false
+            referencedRelation: "sponsors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sponsors: {
+        Row: {
+          active: boolean
+          claim: string | null
+          competition_id: number | null
+          country_id: number | null
+          created_at: string
+          ends_on: string | null
+          federation_id: number | null
+          id: number
+          logo_url: string | null
+          name: string
+          opomba: string | null
+          starts_on: string | null
+          updated_at: string
+          url: string
+          utez: number
+        }
+        Insert: {
+          active?: boolean
+          claim?: string | null
+          competition_id?: number | null
+          country_id?: number | null
+          created_at?: string
+          ends_on?: string | null
+          federation_id?: number | null
+          id?: never
+          logo_url?: string | null
+          name: string
+          opomba?: string | null
+          starts_on?: string | null
+          updated_at?: string
+          url: string
+          utez?: number
+        }
+        Update: {
+          active?: boolean
+          claim?: string | null
+          competition_id?: number | null
+          country_id?: number | null
+          created_at?: string
+          ends_on?: string | null
+          federation_id?: number | null
+          id?: never
+          logo_url?: string | null
+          name?: string
+          opomba?: string | null
+          starts_on?: string | null
+          updated_at?: string
+          url?: string
+          utez?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sponsors_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sponsors_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sponsors_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "sponsors_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sponsors_federation_id_fkey"
+            columns: ["federation_id"]
+            isOneToOne: false
+            referencedRelation: "federations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       teams: {
         Row: {
           country_id: number
@@ -4074,6 +4217,40 @@ export type Database = {
           vloga: string
         }[]
       }
+      admin_rast_lig: {
+        Args: { p_tednov?: number }
+        Returns: {
+          aktivnih: number
+          competition_id: number
+          ekip: number
+          federation: string
+          name: string
+          novih: number
+          slug: string
+          teden: string
+        }[]
+      }
+      admin_sponzorji: {
+        Args: never
+        Returns: {
+          active: boolean
+          claim: string
+          competition_id: number
+          country_id: number
+          doseg_ime: string
+          ends_on: string
+          federation_id: number
+          id: number
+          klikov: number
+          logo_url: string
+          name: string
+          opomba: string
+          prikazov: number
+          starts_on: string
+          url: string
+          utez: number
+        }[]
+      }
       admin_tedenska_aktivnost: {
         Args: { p_tednov?: number }
         Returns: {
@@ -4245,6 +4422,17 @@ export type Database = {
         Returns: Json
       }
       skupaj_uporabnikov: { Args: never; Returns: number }
+      sponzorji_za: {
+        Args: { p_competition_id: number }
+        Returns: {
+          claim: string
+          doseg: string
+          id: number
+          logo_url: string
+          name: string
+          url: string
+        }[]
+      }
       stanje_lige: { Args: { p_competition_id: number }; Returns: Json }
       tekmovanje_id: { Args: { p_slug: string }; Returns: number }
       tekoca_sezona: { Args: { p_datum?: string }; Returns: string }
@@ -4296,6 +4484,14 @@ export type Database = {
       uveljavi_pozicije: { Args: never; Returns: number }
       uveljavi_zapadle_cene: { Args: { p_okno?: string }; Returns: number }
       voter_weight: { Args: { p_voter_id: string }; Returns: number }
+      zabelezi_sponzorja: {
+        Args: {
+          p_competition_id?: number
+          p_klik?: boolean
+          p_sponsor_id: number
+        }
+        Returns: undefined
+      }
       zakleni_krog: { Args: { p_round_id: number }; Returns: number }
       zakleni_zapadle_kroge: { Args: { p_okno?: string }; Returns: number }
       zaprosi_za_poznavalca: {
