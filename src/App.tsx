@@ -7,6 +7,7 @@ import VirPodatkov from './components/VirPodatkov'
 import RokKroga from './components/RokKroga'
 import OpozoriloEkipe from './components/OpozoriloEkipe'
 import NapakaOprijem from './components/NapakaOprijem'
+import Podpora from './components/Podpora'
 import Domov from './pages/Domov'
 import Igralci from './pages/Igralci'
 import Igralec from './pages/Igralec'
@@ -65,6 +66,7 @@ export default function App() {
             </Routes>
             </NapakaOprijem>
           </main>
+          <Podpora />
           <footer className="border-t border-white/10 py-6 text-center text-xs text-slate-600">
             <Link to="/pravno" className="underline hover:text-slate-400">
               Zasebnost in pogoji

@@ -40,8 +40,9 @@ export default function Pravno() {
         </ul>
         <p className="text-slate-300">
           Ne hranimo naslova, telefonske številke ali podatkov o plačilih.
-          Piškotkov za sledenje in oglaševalskih orodij ne uporabljamo — edini
-          shranjeni podatek v brskalniku je tvoja prijavna seja.
+          Piškotkov za sledenje in oglaševalskih orodij ne uporabljamo. V
+          brskalniku sta shranjena tvoja prijavna seja in oznaka pogovora v
+          klepetu za pomoč, če ga odpreš.
         </p>
       </section>
 
@@ -51,7 +52,10 @@ export default function Pravno() {
           Podatki tečejo pri dveh ponudnikih: <strong>Supabase</strong> (baza in
           prijava, strežniki v EU) in <strong>Vercel</strong> (gostovanje
           strani). Potrditvena in ponastavitvena pošta gre prek{' '}
-          <strong>Resend</strong>. Nikomur drugemu podatkov ne posredujemo in
+          <strong>Resend</strong>. Klepet za pomoč v spodnjem desnem kotu teče
+          prek <strong>HelpStack</strong>: tja gre to, kar vanj napišeš, in —
+          če si prijavljen — tvoje prikazno ime, da vemo, komu odgovarjamo.
+          E-pošte mu ne posredujemo. Nikomur drugemu podatkov ne posredujemo in
           jih ne prodajamo.
         </p>
       </section>
