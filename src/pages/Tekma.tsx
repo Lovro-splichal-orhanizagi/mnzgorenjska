@@ -311,7 +311,7 @@ export default function Tekma() {
                 nastopi={nastopi}
                 glasovi={glasovi[String(g.id)] ?? []}
                 mojGlas={mojiGlasovi[String(g.id)]}
-                omogoceno={Boolean(session)}
+                omogoceno={Boolean(session) && tekma?.glasovanje_odprto !== false}
                 pravkar={pravkarOddan === g.id}
                 onGlasuj={glasuj}
               />

@@ -18,6 +18,8 @@ export interface IgralecEnajsterice {
   team_name?: string | null
   team_short?: string | null
   team_logo?: string | null
+  /** "K" za kapetana, "N" za namestnika, ki je prevzel trak. */
+  oznaka?: string | null
 }
 
 function KarticaIgralca({ igralec }: { igralec: IgralecEnajsterice }) {
@@ -26,8 +28,16 @@ function KarticaIgralca({ igralec }: { igralec: IgralecEnajsterice }) {
       to={`/igralec/${igralec.player_id ?? igralec.id}`}
       className="group relative w-[3.6rem] text-center transition sm:w-[5rem]"
     >
-      <div className="flex justify-center">
+      <div className="relative flex justify-center">
         <Dres pozicija={igralec.position} razred="h-8 w-9 sm:h-10 sm:w-11" />
+        {igralec.oznaka && (
+          <span
+            title={igralec.oznaka === 'K' ? 'Kapetan' : 'Namestnik s trakom'}
+            className="absolute -right-0.5 top-0 grid h-4 w-4 place-items-center rounded-full bg-amber-400 text-[9px] font-black text-slate-950 ring-1 ring-slate-950/40 sm:h-[18px] sm:w-[18px] sm:text-[10px]"
+          >
+            {igralec.oznaka}
+          </span>
+        )}
       </div>
       <div className="mt-0.5 truncate rounded-t-md bg-slate-900/90 px-1 py-0.5 text-[10px] font-semibold leading-tight text-slate-100 sm:text-[11px]">
         {prikazniIme(igralec.full_name).split(' ').slice(-1)[0]}

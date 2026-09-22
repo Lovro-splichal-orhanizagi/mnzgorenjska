@@ -3033,6 +3033,8 @@ export type Database = {
           away_team_id: number | null
           brez_asistence: number | null
           competition_id: number | null
+          glasovanje_do: string | null
+          glasovanje_odprto: boolean | null
           golov: number | null
           home_goals: number | null
           home_logo: string | null
@@ -4113,6 +4115,8 @@ export type Database = {
           z_veljavno_ekipo: number
         }[]
       }
+      asistenca_odprta: { Args: { p_goal_id: number }; Returns: boolean }
+      asistence_odprte_do: { Args: { p_match_id: number }; Returns: string }
       is_admin: { Args: never; Returns: boolean }
       je_poznavalec_lige: {
         Args: { p_competition_id: number }

@@ -64,7 +64,10 @@ export default function Glasovanje() {
       )
       setTekme(samoTekoca)
       setSezona(tekocaSez)
-      const cakajoc = samoTekoca.find((t) => Number(t.brez_asistence ?? 0) > 0)
+      // Najprej krog, ki še čaka IN je odprt — zaprtega ni smisel ponujati.
+      const cakajoc = samoTekoca.find(
+        (t) => Number(t.brez_asistence ?? 0) > 0 && t.glasovanje_odprto,
+      )
       setKrogId(cakajoc?.round_id ?? samoTekoca[0]?.round_id ?? null)
       setNalaganje(false)
     }
@@ -76,7 +79,9 @@ export default function Glasovanje() {
     if (!krogId) return
     const vKrogu = tekme.filter((t) => t.round_id === krogId)
     const cakajoca =
-      vKrogu.find((t) => Number(t.brez_asistence ?? 0) > 0) ?? vKrogu[0]
+      vKrogu.find(
+        (t) => Number(t.brez_asistence ?? 0) > 0 && t.glasovanje_odprto,
+      ) ?? vKrogu[0]
     setTekmaId(cakajoca?.match_id ?? null)
   }, [krogId, tekme])
 
@@ -169,8 +174,10 @@ export default function Glasovanje() {
         number: t.round_number,
         season: t.season,
         brez_asistence: 0,
+        odprt: false,
       }
       k.brez_asistence += t.brez_asistence
+      k.odprt = k.odprt || Boolean(t.glasovanje_odprto)
       m.set(t.round_id, k)
     }
     return [...m.values()].sort(
@@ -316,7 +323,7 @@ export default function Glasovanje() {
               }`}
             >
               {k.number}. krog
-              {k.brez_asistence > 0 && (
+              {k.brez_asistence > 0 && k.odprt && (
                 <span
                   className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-black ${
                     krogId === k.id
@@ -356,12 +363,14 @@ export default function Glasovanje() {
                 <span className="rounded-lg bg-slate-950/60 px-2 py-0.5 text-sm font-black tabular-nums">
                   {t.home_goals}:{t.away_goals}
                 </span>
-                {Number(t.brez_asistence ?? 0) > 0 ? (
+                {Number(t.brez_asistence ?? 0) === 0 ? (
+                  <span className="znacka bg-gnl-400/20 text-gnl-200">✓</span>
+                ) : t.glasovanje_odprto ? (
                   <span className="znacka bg-amber-400/20 text-amber-300">
                     {t.brez_asistence}
                   </span>
                 ) : (
-                  <span className="znacka bg-gnl-400/20 text-gnl-200">✓</span>
+                  <span className="znacka bg-white/5 text-slate-500">zaprto</span>
                 )}
               </button>
             </li>
@@ -409,7 +418,9 @@ export default function Glasovanje() {
           <p className="text-sm text-slate-400">
             {nepotrjenih === 0
               ? 'Vse asistence na tej tekmi so potrjene. 🎉'
-              : `Čaka te ${nepotrjenih} ${nepotrjenih === 1 ? 'gol' : 'golov'} brez potrjene asistence.`}
+              : tekma?.glasovanje_odprto === false
+                ? 'Glasovanje o tej tekmi je zaprto — odprto je do roka naslednjega kroga.'
+                : `Čaka te ${nepotrjenih} ${nepotrjenih === 1 ? 'gol' : 'golov'} brez potrjene asistence.`}
           </p>
 
           <ul className="space-y-4">
@@ -427,7 +438,7 @@ export default function Glasovanje() {
                 nastopi={igralci}
                 glasovi={glasovi[g.id] ?? []}
                 mojGlas={mojiGlasovi[g.id]}
-                omogoceno={Boolean(session)}
+                omogoceno={Boolean(session) && Boolean(tekma?.glasovanje_odprto)}
                 pravkar={pravkarOddan === g.id}
                 onGlasuj={glasuj}
               />

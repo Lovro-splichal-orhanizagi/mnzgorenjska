@@ -238,6 +238,36 @@ select pg_temp.preveri('pogled za UI steje glas poznavalca kot prag',
   (select votes>=3 from assist_vote_counts where goal_id=-913001 and player_id=-913001));
 reset role;
 
+
+-- --------------------------------------------------------------------------
+-- Okno glasovanja o asistencah: odprto do roka naslednjega kroga.
+-- --------------------------------------------------------------------------
+-- Tekma v krogu -913001 (rok cez dan, naslednji krog cez dva) je odprta,
+-- tekma v ze odigranem krogu -913004 pa ne.
+insert into rounds(id,season,number,deadline_at,competition_id) overriding system value
+values (-913006,'2099/00',1,now()-interval '30 days',-913001);
+insert into matches(id, round_id, home_team_id, away_team_id, imported_at, played_on) overriding system value
+values (-913002, -913006, -913001, -913002, now()-interval '29 days',
+        (now()-interval '30 days')::date);
+insert into goals(id, match_id, scorer_id, team_id) overriding system value
+values (-913002, -913002, -913016, -913001);
+update matches set imported_at = now() - interval '5 days',
+                  played_on = (now() - interval '5 days')::date
+ where id = -913001;
+
+select pg_temp.preveri('gol tekocega kroga je odprt za glasovanje',
+  asistenca_odprta(-913001));
+select pg_temp.preveri('gol starega kroga je zaprt',
+  not asistenca_odprta(-913002));
+select pg_temp.preveri('pogled pove, da je stara tekma zaprta',
+  (select not glasovanje_odprto from match_assist_status where match_id=-913002));
+
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('po zaprtju glas o asistenci ne gre skozi',
+  $$insert into assist_votes(goal_id, voter_id, player_id) values (-913002, auth.uid(), -913016)$$);
+reset role;
+
 -- Poznavalec DRUGE lige v tej ligi steje kot navaden glasovalec.
 insert into players(id, team_id, competition_id, first_name, last_name, position,
                     position_source, value, value_start, active) overriding system value

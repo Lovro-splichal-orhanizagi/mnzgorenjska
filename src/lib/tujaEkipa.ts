@@ -49,6 +49,19 @@ export function razdeli(vrstice: VrsticaTuje[]): {
   }
 }
 
+/**
+ * Oznaka ob imenu: kapetan, namestnik, ali nic.
+ *
+ * Trak je viden le, kadar kaj pomeni: namestnik ga dobi sele, ko kapetan ni
+ * igral in je mnozitelj presel nanj. Sicer je samo rezerva za trak in bi ga
+ * "N" ob dresu po nepotrebnem izenacil s kapetanom.
+ */
+export function oznaka(v: VrsticaTuje): string | null {
+  if (v.je_kapetan) return 'K'
+  if (v.je_namestnik) return 'N'
+  return null
+}
+
 /** Igralec, kakor ga pricakuje `EnajstericaNaIgriscu`. */
 export function zaIgrisce(v: VrsticaTuje): IgralecEnajsterice {
   return {
@@ -57,14 +70,10 @@ export function zaIgrisce(v: VrsticaTuje): IgralecEnajsterice {
     position: v.pozicija,
     points: prispevek(v),
     team_name: v.klub,
+    // Na igriscu pokazemo trak tam, kjer je mnozitelj: kapetan, ali namestnik,
+    // ki je vskocil namesto njega.
+    oznaka: v.mnozitelj > 1 ? (v.je_kapetan ? 'K' : 'N') : null,
   }
-}
-
-/** Oznaka ob imenu: kapetan, namestnik, ali nic. */
-export function oznaka(v: VrsticaTuje): string | null {
-  if (v.je_kapetan) return 'K'
-  if (v.je_namestnik) return 'N'
-  return null
 }
 
 /**

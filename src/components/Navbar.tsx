@@ -88,16 +88,14 @@ export default function Navbar() {
 
   useEffect(() => {
     if (!tekmovanjeId) return
-    // Prikažemo le sveže odigrane tekme (zadnjih 21 dni), da lansko sezono
-    // z ~700 nedokončanimi asistencami ne visimo večno v opozorilu.
+    // Samo tekme, o katerih se je še mogoče izreči: glasovanje se zapre z
+    // naslednjim krogom. Prej je značka štela vse od začetka časa in je
+    // kazala številko, ki je ni bilo mogoče spraviti na nič.
     supabase
       .from('match_assist_status')
-      .select('brez_asistence, played_on')
+      .select('brez_asistence')
       .eq('competition_id', tekmovanjeId)
-      .gte(
-        'played_on',
-        new Date(Date.now() - 21 * 86400000).toISOString().slice(0, 10),
-      )
+      .eq('glasovanje_odprto', true)
       .then(({ data }) => {
         setCakaGlasov(
           (data ?? []).reduce(
