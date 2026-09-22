@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { imeZveze } from '../components/VirPodatkov'
 import { supabase } from '../lib/supabase'
+import { useOdsotni, opisOdsotnosti } from '../lib/odsotni'
 import {
   prikazniIme,
   razredPozicije,
@@ -79,6 +80,7 @@ const STOLPCI: Array<{ kljuc: Stolpec; naslov: string; opis: string }> = [
 
 export default function Igralci() {
   const { id: tekmovanjeId, tekmovanje } = useTekmovanje()
+  const odsotni = useOdsotni(tekmovanjeId)
   const zveza = imeZveze(tekmovanje)
   const [igralci, setIgralci] = useState<IgralecSezone[]>([])
   const [nalaganje, setNalaganje] = useState(true)
@@ -374,6 +376,14 @@ export default function Igralci() {
                         className="block truncate font-semibold hover:text-gnl-300"
                       >
                         {prikazniIme(i.full_name)}
+                        {odsotni[i.id] && (
+                          <span
+                            title={opisOdsotnosti(odsotni[i.id])}
+                            className="ml-1.5 align-middle text-xs"
+                          >
+                            {odsotni[i.id].kind === 'poskodba' ? '🩹' : '🚫'}
+                          </span>
+                        )}
                       </Link>
                       <div className="text-xs text-slate-500">
                         {i.team_short} · {i.matches} tekem

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useOdsotni, opisOdsotnosti } from '../lib/odsotni'
 import { useAuth } from '../lib/useAuth'
 import { preberiVabilo, pozabiVabilo } from '../lib/miniLige'
 import PovabiSoigralce from '../components/PovabiSoigralce'
@@ -1607,6 +1608,10 @@ function TrgIgralcev({
   naInfo: (i: IgralecTrga) => void
   mobilno?: boolean
 }) {
+  // Poskodba je razlog, da igralca NE kupis — vidna mora biti na trgu,
+  // ne sele na njegovem profilu.
+  const { id: ligaId } = useTekmovanje()
+  const odsotni = useOdsotni(ligaId)
   const iskanjeRef = useRef<HTMLInputElement | null>(null)
   useEffect(() => {
     // Na mobilnem uporabnik odpre predal, ker točno ve, koga išče —
@@ -1732,6 +1737,14 @@ function TrgIgralcev({
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-semibold">
                     {prikazniIme(i.full_name)}
+                    {odsotni[i.id] && (
+                      <span
+                        title={opisOdsotnosti(odsotni[i.id])}
+                        className="ml-1.5 align-middle text-xs"
+                      >
+                        {odsotni[i.id].kind === 'poskodba' ? '🩹' : '🚫'}
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-1.5 truncate text-[11px] text-slate-500">
                     <span className="truncate">

@@ -31,6 +31,9 @@ export default function Odsotnosti() {
   const { session } = useAuth()
   const { id: tekmovanjeId, tekmovanje } = useTekmovanje()
   const [porocila, setPorocila] = useState<Porocilo[]>([])
+  // Kaj se dogaja v DRUGIH ligah. Pri petindvajsetih ligah in peščici poročil
+  // je stran skoraj vedno prazna — in prazna stran ne pove, čemu služi.
+  const [drugod, setDrugod] = useState<Porocilo[]>([])
   const [filter, setFilter] = useState<VrstaPorocila | 'vse'>('vse')
   const [nalaganje, setNalaganje] = useState(true)
   const [napaka, setNapaka] = useState<string | null>(null)
@@ -48,17 +51,31 @@ export default function Odsotnosti() {
     if (!tekmovanjeId) return
     const ligaId = tekmovanjeId
     setNalaganje(true)
-    supabase
-      .from('player_reports_view')
-      .select('*')
-      .eq('competition_id', ligaId)
-      .order('created_at', { ascending: false })
-      .limit(100)
-      .then(({ data, error }) => {
-        if (error) setNapaka(error.message)
-        else setPorocila((data ?? []) as Porocilo[])
-        setNalaganje(false)
-      })
+    let veljavno = true
+    ;(async () => {
+      const [{ data, error }, { data: ostalo }] = await Promise.all([
+        supabase
+          .from('player_reports_view')
+          .select('*')
+          .eq('competition_id', ligaId)
+          .order('created_at', { ascending: false })
+          .limit(100),
+        supabase
+          .from('player_reports_view')
+          .select('*')
+          .neq('competition_id', ligaId)
+          .order('created_at', { ascending: false })
+          .limit(5),
+      ])
+      if (!veljavno) return
+      if (error) setNapaka(error.message)
+      else setPorocila((data ?? []) as Porocilo[])
+      setDrugod((ostalo ?? []) as Porocilo[])
+      setNalaganje(false)
+    })()
+    return () => {
+      veljavno = false
+    }
   }, [tekmovanjeId])
 
   // Iskanje igralca ob objavi. Brez izbranega igralca poročilo nima smisla —
@@ -274,11 +291,19 @@ export default function Odsotnosti() {
       )}
 
       {vidna.length === 0 ? (
-        <p className="kartica p-6 text-center text-slate-400">
-          {porocila.length === 0
-            ? 'Še ni poročil. Če veš za koga, ki manjka, bodi prvi.'
-            : 'V tej kategoriji ni poročil.'}
-        </p>
+        <div className="kartica space-y-2 p-6 text-center text-slate-400">
+          <p>
+            {porocila.length === 0
+              ? 'V tej ligi še ni poročil. Če veš za koga, ki manjka, bodi prvi.'
+              : 'V tej kategoriji ni poročil.'}
+          </p>
+          {porocila.length === 0 && (
+            <p className="text-sm text-slate-500">
+              Poročilo je najbolj vredno takrat, ko ga nihče drug ne more
+              napisati — igralci pišejo tudi sami zase.
+            </p>
+          )}
+        </div>
       ) : (
         <ul className="space-y-2">
           {vidna.map((p) => (
@@ -307,6 +332,38 @@ export default function Odsotnosti() {
             />
           ))}
         </ul>
+      )}
+
+      {drugod.length > 0 && (
+        <section className="space-y-2 pt-2">
+          <h2 className="text-xs font-bold uppercase tracking-wide text-slate-500">
+            Nazadnje drugod po Sloveniji
+          </h2>
+          <ul className="space-y-2 opacity-75">
+            {drugod.map((p) => (
+              <VrsticaPorocila
+                key={`d-${p.id}`}
+                porocilo={p}
+                naslov={
+                  <span className="flex min-w-0 items-center gap-1.5">
+                    <Grb
+                      ime={p.team_name}
+                      kratko={p.team_short}
+                      logo={p.team_logo}
+                      velikost={18}
+                    />
+                    <Link
+                      to={`/igralec/${p.player_id}`}
+                      className="truncate font-semibold hover:text-gnl-300"
+                    >
+                      {prikazniIme(p.player_name)}
+                    </Link>
+                  </span>
+                }
+              />
+            ))}
+          </ul>
+        </section>
       )}
 
       {napaka && <p className="text-sm text-rose-400">Napaka: {napaka}</p>}
