@@ -115,7 +115,7 @@ export const PRAVILA_OPIS: Array<{
     ['Brez prejetega gola — vratar, branilec', '+4'],
     ['Brez prejetega gola — vezist', '+1'],
     ['Vsaka 2 prejeta gola — vratar, branilec', '−1'],
-    ['Obranjena enajstmetrovka', '+5'],
+    ['Obranjena enajstmetrovka — vratar (zapisnik jo vodi kot zgrešeno enajstmetrovko nasprotnika)', '+5'],
   ]},
   { skupina: 'Kazni', vrstice: [
     ['Zgrešena enajstmetrovka', '−2'],
