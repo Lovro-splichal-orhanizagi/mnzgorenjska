@@ -463,6 +463,27 @@ select pg_temp.preveri('odlocena prosnja ni vec med cakajocimi',
   not exists(select 1 from admin_prosnje_poznavalcev() where competition_id=-913001));
 reset role;
 
+-- Stanje mojih ekip: vsak vidi le svoje, anonimni nic. Funkcija kaze le
+-- aktivne lige, testni pa ni mogoce vklopiti (varovalo vklopa), zato ekipa
+-- za ta preizkus stoji v prvi aktivni ligi.
+insert into fantasy_teams(id,owner_id,name,competition_id) overriding system value
+select -913009,'b8a06635-2322-4444-8c42-44e419f912ab','Stanje',id
+  from competitions where active order by id limit 1;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
+select pg_temp.preveri('stanje_mojih_ekip vrne lastnikovo ekipo',
+  exists(select 1 from stanje_mojih_ekip() where team_id=-913009));
+reset role;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ac',true);
+set local role authenticated;
+select pg_temp.preveri('stanje_mojih_ekip ne vrne tuje ekipe',
+  not exists(select 1 from stanje_mojih_ekip() where team_id=-913009));
+reset role;
+select set_config('request.jwt.claim.sub','',true);
+set local role anon;
+select pg_temp.zavrnjeno('anonimni ne bere stanja ekip', $$select * from stanje_mojih_ekip()$$);
+reset role;
+
 do $$
 declare v_napak int;
 begin

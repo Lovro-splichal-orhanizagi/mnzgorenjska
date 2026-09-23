@@ -4,7 +4,8 @@ import { supabase } from '../lib/supabase'
 import { vseVrstice } from '../lib/strani'
 import { povezavaNaPrijavo } from '../lib/prijava'
 import { nastaviNeshranjeno, VPRASANJE_ZAPUSTITVE } from '../lib/neshranjeno'
-import { useOdsotni, opisOdsotnosti } from '../lib/odsotni'
+import { useOdsotni, opisOdsotnosti, type Odsotnost as PorociloOdsotnosti } from '../lib/odsotni'
+import { useNaslov } from '../lib/naslov'
 import type { Odsotnost } from '../lib/odsotni'
 import { useAuth } from '../lib/useAuth'
 import { preberiVabilo, pozabiVabilo } from '../lib/miniLige'
@@ -188,8 +189,14 @@ interface KrogRok {
   lineups_locked_at?: string | null
 }
 
+function odsotnostZaIgrisce(o: PorociloOdsotnosti | undefined): IgralecNaIgriscu['odsotnost'] {
+  if (!o || (o.kind !== 'poskodba' && o.kind !== 'odsotnost')) return null
+  return { vrsta: o.kind, opis: opisOdsotnosti(o) }
+}
+
 export default function MojaEkipa() {
   const { session, loading } = useAuth()
+  useNaslov('Moja ekipa')
   // Ob osvežitvi žetona (in ob vrnitvi v zavihek) useAuth nastavi NOV objekt
   // seje za istega človeka. Nalaganje zato visi na id-ju, ne na seji — sicer
   // bi vsaka osvežitev pobrisala nesharanjen kader.
@@ -707,10 +714,12 @@ export default function MojaEkipa() {
             prava_pozicija: igralec?.position ?? null,
             // Točke zadnjega odigranega kroga (za prikaz na igrišču).
             tocke_krog: tockeZadnjiKrog[s.player_id] ?? null,
+            // Poškodba/odsotnost: ekipa ostane veljavna, a naj se vidi na dresu.
+            odsotnost: odsotnostZaIgrisce(odsotni[s.player_id]),
           }
         })
         .filter((s) => s.id != null),
-    [izbrani, poId, tockeZadnjiKrog],
+    [izbrani, poId, tockeZadnjiKrog, odsotni],
   )
 
   const proracun = ekipa?.budget ?? PRORACUN

@@ -521,14 +521,7 @@ export type Database = {
             foreignKeyName: "email_log_round_id_fkey"
             columns: ["round_id"]
             isOneToOne: false
-            referencedRelation: "fantasy_round_points"
-            referencedColumns: ["round_id"]
-          },
-          {
-            foreignKeyName: "email_log_round_id_fkey"
-            columns: ["round_id"]
-            isOneToOne: false
-            referencedRelation: "fantasy_round_standings"
+            referencedRelation: "fantasy_round_points_izracun"
             referencedColumns: ["round_id"]
           },
           {
@@ -581,14 +574,7 @@ export type Database = {
             foreignKeyName: "fantasy_chips_fantasy_team_id_fkey"
             columns: ["fantasy_team_id"]
             isOneToOne: false
-            referencedRelation: "fantasy_round_points"
-            referencedColumns: ["fantasy_team_id"]
-          },
-          {
-            foreignKeyName: "fantasy_chips_fantasy_team_id_fkey"
-            columns: ["fantasy_team_id"]
-            isOneToOne: false
-            referencedRelation: "fantasy_round_standings"
+            referencedRelation: "fantasy_round_points_izracun"
             referencedColumns: ["fantasy_team_id"]
           },
           {
@@ -637,14 +623,7 @@ export type Database = {
             foreignKeyName: "fantasy_chips_round_id_fkey"
             columns: ["round_id"]
             isOneToOne: false
-            referencedRelation: "fantasy_round_points"
-            referencedColumns: ["round_id"]
-          },
-          {
-            foreignKeyName: "fantasy_chips_round_id_fkey"
-            columns: ["round_id"]
-            isOneToOne: false
-            referencedRelation: "fantasy_round_standings"
+            referencedRelation: "fantasy_round_points_izracun"
             referencedColumns: ["round_id"]
           },
           {
@@ -709,14 +688,7 @@ export type Database = {
             foreignKeyName: "fantasy_lineups_fantasy_team_id_fkey"
             columns: ["fantasy_team_id"]
             isOneToOne: false
-            referencedRelation: "fantasy_round_points"
-            referencedColumns: ["fantasy_team_id"]
-          },
-          {
-            foreignKeyName: "fantasy_lineups_fantasy_team_id_fkey"
-            columns: ["fantasy_team_id"]
-            isOneToOne: false
-            referencedRelation: "fantasy_round_standings"
+            referencedRelation: "fantasy_round_points_izracun"
             referencedColumns: ["fantasy_team_id"]
           },
           {
@@ -807,14 +779,7 @@ export type Database = {
             foreignKeyName: "fantasy_lineups_round_id_fkey"
             columns: ["round_id"]
             isOneToOne: false
-            referencedRelation: "fantasy_round_points"
-            referencedColumns: ["round_id"]
-          },
-          {
-            foreignKeyName: "fantasy_lineups_round_id_fkey"
-            columns: ["round_id"]
-            isOneToOne: false
-            referencedRelation: "fantasy_round_standings"
+            referencedRelation: "fantasy_round_points_izracun"
             referencedColumns: ["round_id"]
           },
           {
@@ -876,14 +841,7 @@ export type Database = {
             foreignKeyName: "fantasy_roster_fantasy_team_id_fkey"
             columns: ["fantasy_team_id"]
             isOneToOne: false
-            referencedRelation: "fantasy_round_points"
-            referencedColumns: ["fantasy_team_id"]
-          },
-          {
-            foreignKeyName: "fantasy_roster_fantasy_team_id_fkey"
-            columns: ["fantasy_team_id"]
-            isOneToOne: false
-            referencedRelation: "fantasy_round_standings"
+            referencedRelation: "fantasy_round_points_izracun"
             referencedColumns: ["fantasy_team_id"]
           },
           {
@@ -1064,14 +1022,7 @@ export type Database = {
             foreignKeyName: "fantasy_transfers_fantasy_team_id_fkey"
             columns: ["fantasy_team_id"]
             isOneToOne: false
-            referencedRelation: "fantasy_round_points"
-            referencedColumns: ["fantasy_team_id"]
-          },
-          {
-            foreignKeyName: "fantasy_transfers_fantasy_team_id_fkey"
-            columns: ["fantasy_team_id"]
-            isOneToOne: false
-            referencedRelation: "fantasy_round_standings"
+            referencedRelation: "fantasy_round_points_izracun"
             referencedColumns: ["fantasy_team_id"]
           },
           {
@@ -1120,14 +1071,7 @@ export type Database = {
             foreignKeyName: "fantasy_transfers_round_id_fkey"
             columns: ["round_id"]
             isOneToOne: false
-            referencedRelation: "fantasy_round_points"
-            referencedColumns: ["round_id"]
-          },
-          {
-            foreignKeyName: "fantasy_transfers_round_id_fkey"
-            columns: ["round_id"]
-            isOneToOne: false
-            referencedRelation: "fantasy_round_standings"
+            referencedRelation: "fantasy_round_points_izracun"
             referencedColumns: ["round_id"]
           },
           {
@@ -1467,14 +1411,7 @@ export type Database = {
             foreignKeyName: "matches_round_id_fkey"
             columns: ["round_id"]
             isOneToOne: false
-            referencedRelation: "fantasy_round_points"
-            referencedColumns: ["round_id"]
-          },
-          {
-            foreignKeyName: "matches_round_id_fkey"
-            columns: ["round_id"]
-            isOneToOne: false
-            referencedRelation: "fantasy_round_standings"
+            referencedRelation: "fantasy_round_points_izracun"
             referencedColumns: ["round_id"]
           },
           {
@@ -1521,14 +1458,7 @@ export type Database = {
             foreignKeyName: "mini_liga_clani_fantasy_team_id_fkey"
             columns: ["fantasy_team_id"]
             isOneToOne: false
-            referencedRelation: "fantasy_round_points"
-            referencedColumns: ["fantasy_team_id"]
-          },
-          {
-            foreignKeyName: "mini_liga_clani_fantasy_team_id_fkey"
-            columns: ["fantasy_team_id"]
-            isOneToOne: false
-            referencedRelation: "fantasy_round_standings"
+            referencedRelation: "fantasy_round_points_izracun"
             referencedColumns: ["fantasy_team_id"]
           },
           {
@@ -1757,14 +1687,7 @@ export type Database = {
             foreignKeyName: "player_scores_round_id_fkey"
             columns: ["round_id"]
             isOneToOne: false
-            referencedRelation: "fantasy_round_points"
-            referencedColumns: ["round_id"]
-          },
-          {
-            foreignKeyName: "player_scores_round_id_fkey"
-            columns: ["round_id"]
-            isOneToOne: false
-            referencedRelation: "fantasy_round_standings"
+            referencedRelation: "fantasy_round_points_izracun"
             referencedColumns: ["round_id"]
           },
           {
@@ -2274,14 +2197,7 @@ export type Database = {
             foreignKeyName: "price_changes_round_id_fkey"
             columns: ["round_id"]
             isOneToOne: false
-            referencedRelation: "fantasy_round_points"
-            referencedColumns: ["round_id"]
-          },
-          {
-            foreignKeyName: "price_changes_round_id_fkey"
-            columns: ["round_id"]
-            isOneToOne: false
-            referencedRelation: "fantasy_round_standings"
+            referencedRelation: "fantasy_round_points_izracun"
             referencedColumns: ["round_id"]
           },
           {
@@ -2638,6 +2554,108 @@ export type Database = {
           },
         ]
       }
+      tocke_krogov: {
+        Row: {
+          fantasy_team_id: number
+          penalty: number
+          points: number
+          round_id: number
+          transfers: number
+        }
+        Insert: {
+          fantasy_team_id: number
+          penalty: number
+          points: number
+          round_id: number
+          transfers: number
+        }
+        Update: {
+          fantasy_team_id?: number
+          penalty?: number
+          points?: number
+          round_id?: number
+          transfers?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tocke_krogov_fantasy_team_id_fkey"
+            columns: ["fantasy_team_id"]
+            isOneToOne: false
+            referencedRelation: "fantasy_round_points_izracun"
+            referencedColumns: ["fantasy_team_id"]
+          },
+          {
+            foreignKeyName: "tocke_krogov_fantasy_team_id_fkey"
+            columns: ["fantasy_team_id"]
+            isOneToOne: false
+            referencedRelation: "fantasy_team_budget"
+            referencedColumns: ["fantasy_team_id"]
+          },
+          {
+            foreignKeyName: "tocke_krogov_fantasy_team_id_fkey"
+            columns: ["fantasy_team_id"]
+            isOneToOne: false
+            referencedRelation: "fantasy_team_standings"
+            referencedColumns: ["fantasy_team_id"]
+          },
+          {
+            foreignKeyName: "tocke_krogov_fantasy_team_id_fkey"
+            columns: ["fantasy_team_id"]
+            isOneToOne: false
+            referencedRelation: "fantasy_team_wealth"
+            referencedColumns: ["fantasy_team_id"]
+          },
+          {
+            foreignKeyName: "tocke_krogov_fantasy_team_id_fkey"
+            columns: ["fantasy_team_id"]
+            isOneToOne: false
+            referencedRelation: "fantasy_teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tocke_krogov_fantasy_team_id_fkey"
+            columns: ["fantasy_team_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["fantasy_team_id"]
+          },
+          {
+            foreignKeyName: "tocke_krogov_fantasy_team_id_fkey"
+            columns: ["fantasy_team_id"]
+            isOneToOne: false
+            referencedRelation: "mini_liga_lestvica"
+            referencedColumns: ["fantasy_team_id"]
+          },
+          {
+            foreignKeyName: "tocke_krogov_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "fantasy_round_points_izracun"
+            referencedColumns: ["round_id"]
+          },
+          {
+            foreignKeyName: "tocke_krogov_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "naslednji_krog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tocke_krogov_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "rounds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tocke_krogov_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "zadnji_odigrani_krog"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       appearance_points: {
@@ -2715,14 +2733,7 @@ export type Database = {
             foreignKeyName: "matches_round_id_fkey"
             columns: ["round_id"]
             isOneToOne: false
-            referencedRelation: "fantasy_round_points"
-            referencedColumns: ["round_id"]
-          },
-          {
-            foreignKeyName: "matches_round_id_fkey"
-            columns: ["round_id"]
-            isOneToOne: false
-            referencedRelation: "fantasy_round_standings"
+            referencedRelation: "fantasy_round_points_izracun"
             referencedColumns: ["round_id"]
           },
           {
@@ -2913,6 +2924,118 @@ export type Database = {
             referencedRelation: "lestvica_drzavna"
             referencedColumns: ["competition_id"]
           },
+          {
+            foreignKeyName: "tocke_krogov_fantasy_team_id_fkey"
+            columns: ["fantasy_team_id"]
+            isOneToOne: false
+            referencedRelation: "fantasy_round_points_izracun"
+            referencedColumns: ["fantasy_team_id"]
+          },
+          {
+            foreignKeyName: "tocke_krogov_fantasy_team_id_fkey"
+            columns: ["fantasy_team_id"]
+            isOneToOne: false
+            referencedRelation: "fantasy_team_budget"
+            referencedColumns: ["fantasy_team_id"]
+          },
+          {
+            foreignKeyName: "tocke_krogov_fantasy_team_id_fkey"
+            columns: ["fantasy_team_id"]
+            isOneToOne: false
+            referencedRelation: "fantasy_team_standings"
+            referencedColumns: ["fantasy_team_id"]
+          },
+          {
+            foreignKeyName: "tocke_krogov_fantasy_team_id_fkey"
+            columns: ["fantasy_team_id"]
+            isOneToOne: false
+            referencedRelation: "fantasy_team_wealth"
+            referencedColumns: ["fantasy_team_id"]
+          },
+          {
+            foreignKeyName: "tocke_krogov_fantasy_team_id_fkey"
+            columns: ["fantasy_team_id"]
+            isOneToOne: false
+            referencedRelation: "fantasy_teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tocke_krogov_fantasy_team_id_fkey"
+            columns: ["fantasy_team_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["fantasy_team_id"]
+          },
+          {
+            foreignKeyName: "tocke_krogov_fantasy_team_id_fkey"
+            columns: ["fantasy_team_id"]
+            isOneToOne: false
+            referencedRelation: "mini_liga_lestvica"
+            referencedColumns: ["fantasy_team_id"]
+          },
+          {
+            foreignKeyName: "tocke_krogov_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "fantasy_round_points_izracun"
+            referencedColumns: ["round_id"]
+          },
+          {
+            foreignKeyName: "tocke_krogov_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "naslednji_krog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tocke_krogov_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "rounds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tocke_krogov_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "zadnji_odigrani_krog"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fantasy_round_points_izracun: {
+        Row: {
+          competition_id: number | null
+          fantasy_team_id: number | null
+          penalty: number | null
+          points: number | null
+          round_id: number | null
+          round_number: number | null
+          season: string | null
+          transfers: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fantasy_teams_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fantasy_teams_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fantasy_teams_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["competition_id"]
+          },
         ]
       }
       fantasy_round_standings: {
@@ -2950,6 +3073,83 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "lestvica_drzavna"
             referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "tocke_krogov_fantasy_team_id_fkey"
+            columns: ["fantasy_team_id"]
+            isOneToOne: false
+            referencedRelation: "fantasy_round_points_izracun"
+            referencedColumns: ["fantasy_team_id"]
+          },
+          {
+            foreignKeyName: "tocke_krogov_fantasy_team_id_fkey"
+            columns: ["fantasy_team_id"]
+            isOneToOne: false
+            referencedRelation: "fantasy_team_budget"
+            referencedColumns: ["fantasy_team_id"]
+          },
+          {
+            foreignKeyName: "tocke_krogov_fantasy_team_id_fkey"
+            columns: ["fantasy_team_id"]
+            isOneToOne: false
+            referencedRelation: "fantasy_team_standings"
+            referencedColumns: ["fantasy_team_id"]
+          },
+          {
+            foreignKeyName: "tocke_krogov_fantasy_team_id_fkey"
+            columns: ["fantasy_team_id"]
+            isOneToOne: false
+            referencedRelation: "fantasy_team_wealth"
+            referencedColumns: ["fantasy_team_id"]
+          },
+          {
+            foreignKeyName: "tocke_krogov_fantasy_team_id_fkey"
+            columns: ["fantasy_team_id"]
+            isOneToOne: false
+            referencedRelation: "fantasy_teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tocke_krogov_fantasy_team_id_fkey"
+            columns: ["fantasy_team_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["fantasy_team_id"]
+          },
+          {
+            foreignKeyName: "tocke_krogov_fantasy_team_id_fkey"
+            columns: ["fantasy_team_id"]
+            isOneToOne: false
+            referencedRelation: "mini_liga_lestvica"
+            referencedColumns: ["fantasy_team_id"]
+          },
+          {
+            foreignKeyName: "tocke_krogov_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "fantasy_round_points_izracun"
+            referencedColumns: ["round_id"]
+          },
+          {
+            foreignKeyName: "tocke_krogov_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "naslednji_krog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tocke_krogov_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "rounds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tocke_krogov_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "zadnji_odigrani_krog"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3104,14 +3304,7 @@ export type Database = {
             foreignKeyName: "player_scores_round_id_fkey"
             columns: ["round_id"]
             isOneToOne: false
-            referencedRelation: "fantasy_round_points"
-            referencedColumns: ["round_id"]
-          },
-          {
-            foreignKeyName: "player_scores_round_id_fkey"
-            columns: ["round_id"]
-            isOneToOne: false
-            referencedRelation: "fantasy_round_standings"
+            referencedRelation: "fantasy_round_points_izracun"
             referencedColumns: ["round_id"]
           },
           {
@@ -3260,14 +3453,7 @@ export type Database = {
             foreignKeyName: "matches_round_id_fkey"
             columns: ["round_id"]
             isOneToOne: false
-            referencedRelation: "fantasy_round_points"
-            referencedColumns: ["round_id"]
-          },
-          {
-            foreignKeyName: "matches_round_id_fkey"
-            columns: ["round_id"]
-            isOneToOne: false
-            referencedRelation: "fantasy_round_standings"
+            referencedRelation: "fantasy_round_points_izracun"
             referencedColumns: ["round_id"]
           },
           {
@@ -3391,14 +3577,7 @@ export type Database = {
             foreignKeyName: "matches_round_id_fkey"
             columns: ["round_id"]
             isOneToOne: false
-            referencedRelation: "fantasy_round_points"
-            referencedColumns: ["round_id"]
-          },
-          {
-            foreignKeyName: "matches_round_id_fkey"
-            columns: ["round_id"]
-            isOneToOne: false
-            referencedRelation: "fantasy_round_standings"
+            referencedRelation: "fantasy_round_points_izracun"
             referencedColumns: ["round_id"]
           },
           {
@@ -4442,6 +4621,8 @@ export type Database = {
       }
       nova_koda_mini_lige: { Args: never; Returns: string }
       okno_preracuna_tock: { Args: never; Returns: string }
+      osvezi_tocke_krogov: { Args: { p_krogi: number[] }; Returns: undefined }
+      osvezi_vse_tocke_krogov: { Args: never; Returns: undefined }
       oznaci_odhod_igralca: {
         Args: { p_odsel: boolean; p_player_id: number }
         Returns: undefined
@@ -4517,6 +4698,22 @@ export type Database = {
         }[]
       }
       stanje_lige: { Args: { p_competition_id: number }; Returns: Json }
+      stanje_mojih_ekip: {
+        Args: never
+        Returns: {
+          brez_tock: boolean
+          competition_id: number
+          krog: number
+          liga: string
+          opozorila: Json
+          razlog: string
+          rok: string
+          slug: string
+          team_id: number
+          team_name: string
+          veljavna: boolean
+        }[]
+      }
       tekmovanje_id: { Args: { p_slug: string }; Returns: number }
       tekoca_sezona: { Args: { p_datum?: string }; Returns: string }
       tocke_za_nastop: {

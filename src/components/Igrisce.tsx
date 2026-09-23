@@ -26,6 +26,8 @@ export interface IgralecNaIgriscu extends IgralecVKadru {
   tocke_krog?: number | null
   /** `false`, ko igralec ni več v ligi — baza takšen kader zavrne. */
   active?: boolean | null
+  /** Zadnje poročilo o poškodbi/odsotnosti; ekipa ostane veljavna. */
+  odsotnost?: { vrsta: 'poskodba' | 'odsotnost'; opis: string } | null
 }
 
 function KarticaIgralca({
@@ -73,6 +75,14 @@ function KarticaIgralca({
             className="bg-rose-500 px-0.5 text-[8px] font-black uppercase leading-tight text-white sm:text-[9px]"
           >
             ni več v ligi
+          </div>
+        )}
+        {igralec.active !== false && igralec.odsotnost && (
+          <div
+            title={igralec.odsotnost.opis}
+            className="bg-amber-400 px-0.5 text-[8px] font-black uppercase leading-tight text-slate-950 sm:text-[9px]"
+          >
+            {igralec.odsotnost.vrsta === 'poskodba' ? 'poškodba' : 'odsoten'}
           </div>
         )}
         <div className="flex items-center justify-center gap-1 rounded-b-md bg-gnl-500/90 px-1 py-0.5 text-[9px] font-bold leading-tight tabular-nums text-slate-950 sm:text-[10px]">

@@ -2734,6 +2734,35 @@ preveri(
   } catch (e) {
     preveri('izris: Potrditev je alertdialog', false, e.message)
   }
+
+  const { obvestilaEkip, naslovNapak, kljucOpozorila } = await import('../src/lib/stanjeEkip')
+  const blaj = { player_id: 7, ime: 'Blaj Marcel', vrsta: 'poskodba', opis: 'gleženj', datum: '2026-09-20', v_postavi: true, kapetan: true, namestnik: false }
+  const klop = { player_id: 8, ime: 'Novak Luka', vrsta: 'odsotnost', opis: null, datum: '2026-09-21', v_postavi: false, kapetan: false, namestnik: false }
+  const ekipe = [
+    { competition_id: 1, slug: 'snl3-vzhod', liga: '3. V', team_id: 10, team_name: 'G', veljavna: true, brez_tock: false, razlog: null, krog: 7, rok: null, opozorila: [blaj, klop] },
+    { competition_id: 2, slug: 'clani', liga: 'Člani', team_id: 11, team_name: 'G', veljavna: false, brez_tock: true, razlog: 'Kader ima 14 igralcev namesto 15.', krog: 6, rok: null, opozorila: [] },
+    { competition_id: 3, slug: 'mladinci', liga: 'Mladinci', team_id: 12, team_name: 'G', veljavna: false, brez_tock: false, razlog: 'Manjka vratar.', krog: 2, rok: null, opozorila: [] },
+  ]
+  const ob = obvestilaEkip(ekipe)
+  preveri('obvestila: neveljavna ekipa je napaka z razlogom',
+    ob.napake.length === 1 && ob.napake[0].slug === 'clani' && ob.napake[0].besedilo.includes('6. krogu') && ob.napake[0].podrobnost.includes('14 igralcev'))
+  preveri('obvestila: poskodovan kapetan je opozorilo',
+    ob.opozorila.some((o) => o.besedilo === 'Kapetan Marcel Blaj je poškodovan.' && o.podrobnost.startsWith('gleženj')), JSON.stringify(ob.opozorila.map((o) => o.besedilo)))
+  preveri('obvestila: odsoten na klopi', ob.opozorila.some((o) => o.besedilo === 'Luka Novak na klopi je odsoten.'))
+  preveri('obvestila: nepopolna v prvem krogu je le opozorilo',
+    ob.opozorila.some((o) => o.slug === 'mladinci' && o.besedilo.startsWith('Ekipa ni popolna')))
+  const skrito = obvestilaEkip(ekipe, { skrita: new Set([kljucOpozorila(10, blaj)]) })
+  preveri('obvestila: skrito opozorilo izgine', !skrito.opozorila.some((o) => o.besedilo.startsWith('Kapetan')))
+  const novo = obvestilaEkip([{ ...ekipe[0], opozorila: [{ ...blaj, datum: '2026-09-22' }] }], { skrita: new Set([kljucOpozorila(10, blaj)]) })
+  preveri('obvestila: novo porocilo se spet pokaze', novo.opozorila.length === 1)
+  preveri('obvestila: na Moji ekipi se izbrana liga skrije',
+    obvestilaEkip(ekipe, { skrijLigo: 'clani' }).napake.length === 0)
+  preveri('obvestila: napake ni mogoce skriti',
+    obvestilaEkip(ekipe, { skrita: new Set(['napaka:11']) }).napake.length === 1)
+  preveri('obvestila: naslov 1', naslovNapak(1) === 'Ena od tvojih ekip ne bo dobila točk')
+  preveri('obvestila: naslov 2', naslovNapak(2) === '2 tvoji ekipi ne bosta dobili točk')
+  preveri('obvestila: naslov 3', naslovNapak(3) === '3 tvoje ekipe ne bodo dobile točk')
+  preveri('obvestila: naslov 5', naslovNapak(5) === '5 tvojih ekip ne bo dobilo točk')
 }
 
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)
