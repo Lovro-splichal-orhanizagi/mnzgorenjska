@@ -22,6 +22,8 @@ import {
 // funkcijo uvozimo pod drugim imenom.
 import { serijaCen, premik as premikSerije, crta } from '../lib/gibanjeCene'
 import Grb from '../components/Grb'
+import KarticaIgralca from '../components/KarticaIgralca'
+import { dosezkiNastopa, vrsticaTekme, type NastopZaKartico } from '../lib/karticaIgralca'
 import {
   VRSTE,
   VrsticaPorocila,
@@ -59,6 +61,8 @@ interface Razlaga {
   minute: number | null
   postavke: Postavka[]
   skupaj: number
+  /** Surove številke nastopa — za kartico igralca. */
+  nastop: NastopZaKartico
 }
 
 const POZICIJE: Pozicija[] = ['GK', 'DEF', 'MID', 'FWD']
@@ -97,6 +101,9 @@ export default function Igralec() {
   const [besediloPorocila, setBesediloPorocila] = useState('')
   const [posiljamPorocilo, setPosiljamPorocilo] = useState(false)
   const [nalaganje, setNalaganje] = useState(true)
+  // Za kartico: tekma zadnjega nastopa in v koliko ekipah je igralec.
+  const [tekmaKartice, setTekmaKartice] = useState<string | null>(null)
+  const [ekipZIgralcem, setEkipZIgralcem] = useState<number | null>(null)
   useNaslov(igralec ? prikazniIme(igralec.full_name) || 'Igralec' : 'Igralec')
 
   useEffect(() => {
@@ -240,6 +247,13 @@ export default function Igralec() {
         }
         const { skupaj, postavke } = tockeZaNastop(nastop, pozicija)
         raz.push({
+          nastop: {
+            minute: n.minutes_played,
+            goli: n.goals,
+            asistence: asistPoMatchu.get(n.match_id) ?? 0,
+            cistaMreza: n.clean_sheet,
+            obranjene: n.penalties_saved,
+          },
           round_id: n.matches.round_id,
           number: r.number,
           season: r.season,
@@ -381,6 +395,36 @@ export default function Igralec() {
       )
   }
 
+  // Kartica igralca: zadnji nastop tekoče sezone, tekma in v koliko ekipah je.
+  const zadnjiNastop = sezonsko ? razlage.find((r) => r.season === sezonsko.season) ?? null : null
+  const tekmaZadnjega = zadnjiNastop?.match_id ?? null
+  useEffect(() => {
+    let veljavno = true
+    ;(async () => {
+      const [rTekma, rEkip] = await Promise.all([
+        tekmaZadnjega
+          ? supabase
+              .from('matches')
+              .select(
+                'home_goals, away_goals, domaci:teams!matches_home_team_id_fkey(name), gostje:teams!matches_away_team_id_fkey(name)',
+              )
+              .eq('id', tekmaZadnjega)
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
+        supabase.from('player_standings').select('owners').eq('id', igralecId).maybeSingle(),
+      ])
+      if (!veljavno) return
+      const t = rTekma.data as any
+      setTekmaKartice(
+        t ? vrsticaTekme(t.domaci?.name ?? null, t.gostje?.name ?? null, t.home_goals, t.away_goals) : null,
+      )
+      setEkipZIgralcem(rEkip.data?.owners != null ? Number(rEkip.data.owners) : null)
+    })()
+    return () => {
+      veljavno = false
+    }
+  }, [tekmaZadnjega, igralecId])
+
   if (nalaganje)
     return <p className="animiraj-utrip text-slate-400">Nalaganje …</p>
   if (napaka) return <p className="text-rose-400">Napaka: {napaka}</p>
@@ -461,6 +505,42 @@ export default function Igralec() {
           </p>
         )}
       </div>
+
+      {/* kartica za objavo — za igralca, starše in navijače */}
+      {(zadnjiNastop || (sezonsko && (sezonsko.matches ?? 0) > 0)) && (
+        <section className="kartica space-y-3 p-4">
+          <h2 className="text-sm font-bold text-slate-200">Deli kartico igralca</h2>
+          <KarticaIgralca
+            podatki={{
+              ime: igralec.first_name ?? '',
+              priimek: igralec.last_name ?? prikazniIme(igralec.full_name),
+              stevilka: igralec.shirt_number ?? null,
+              pozicija: igralec.position ?? null,
+              klub: igralec.team_name ?? '',
+              klubKratko: igralec.team_short ?? null,
+              grb: igralec.team_logo ?? null,
+              liga: tekmovanja.find((t) => t.id === igralec.competition_id)?.name ?? '',
+              krog: zadnjiNastop?.number ?? null,
+              tocke: zadnjiNastop ? zadnjiNastop.skupaj : Number(sezonsko?.points ?? 0),
+              dosezki: zadnjiNastop ? dosezkiNastopa(zadnjiNastop.nastop, igralec.position ?? null) : [],
+              tekma: zadnjiNastop ? tekmaKartice : null,
+              sezona: sezonsko
+                ? {
+                    tocke: Number(sezonsko.points ?? 0),
+                    tekem: Number(sezonsko.matches ?? 0),
+                    golov: Number(sezonsko.goals ?? 0),
+                  }
+                : null,
+              ekip: ekipZIgralcem,
+            }}
+            povezava={
+              typeof window !== 'undefined'
+                ? `${window.location.origin}/igralec/${igralec.id}${slugLige ? `?t=${slugLige}` : ''}`
+                : ''
+            }
+          />
+        </section>
+      )}
 
       {/* pozicija — s hitrim glasovanjem, brez preskoka na /pozicije */}
       <section className="kartica space-y-3 p-4">

@@ -2763,6 +2763,17 @@ preveri(
   preveri('obvestila: naslov 2', naslovNapak(2) === '2 tvoji ekipi ne bosta dobili točk')
   preveri('obvestila: naslov 3', naslovNapak(3) === '3 tvoje ekipe ne bodo dobile točk')
   preveri('obvestila: naslov 5', naslovNapak(5) === '5 tvojih ekip ne bo dobilo točk')
+
+  const K = await import('../src/lib/karticaIgralca')
+  preveri('kartica: dva gola in asistenca', K.dosezkiNastopa({ minute: 90, goli: 2, asistence: 1, cistaMreza: false, obranjene: 0 }, 'FWD').join(', ') === '2 gola, asistenca, 90 min')
+  preveri('kartica: en gol je "gol"', K.dosezkiNastopa({ minute: 70, goli: 1, asistence: 0, cistaMreza: false, obranjene: 0 }, 'MID')[0] === 'gol')
+  preveri('kartica: vratar brez prejetega gola', K.dosezkiNastopa({ minute: 90, goli: 0, asistence: 0, cistaMreza: true, obranjene: 1 }, 'GK').join(', ') === 'obranjena enajstmetrovka, mreža brez gola, 90 min')
+  preveri('kartica: napadalcu mreza ne steje', !K.dosezkiNastopa({ minute: 90, goli: 0, asistence: 0, cistaMreza: true, obranjene: 0 }, 'FWD').includes('mreža brez gola'))
+  preveri('kartica: tekma', K.vrsticaTekme('Triglav', 'Bled', 3, 1) === 'Triglav 3 : 1 Bled' && K.vrsticaTekme('A', 'B', null, null) === 'A – B')
+  preveri('kartica: 1 tocka / 2 tocki / 5 tock', K.podnapisTock(1, 8) === 'točka v 8. krogu' && K.podnapisTock(2, 8) === 'točki v 8. krogu' && K.podnapisTock(5, null) === 'točk v sezoni')
+  preveri('kartica: ekipe', K.stavekEkip(1) === 'V 1 fantasy ekipi' && K.stavekEkip(34) === 'V 34 fantasy ekipah' && K.stavekEkip(0) === null)
+  preveri('kartica: dolg priimek se zmanjsa', K.velikostPriimka(600, (px) => px * 20) === 72 && K.velikostPriimka(600, (px) => px * 2) === 210)
+  preveri('kartica: ime datoteke', K.imeDatotekeKartice('Žan', 'Bunić', 8) === 'slff-zan-bunic-8-krog.png')
 }
 
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)

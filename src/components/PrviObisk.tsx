@@ -58,9 +58,15 @@ export default function PrviObisk() {
   const [drzava, setDrzava] = useState<string | null>(null)
   const [ekip, setEkip] = useState<Record<number, number>>({})
   const { pathname } = useLocation()
-  // Povezava na klub ali povabilo v mini ligo že pove, kam človek gre — liga
-  // je v naslovu ali pa je sploh ne rabi, okno bi ga le zmotilo.
-  const vabljen = pathname.startsWith('/klub/') || pathname.startsWith('/l/')
+  // Povezava na klub, igralca, ekipo ali povabilo v mini ligo že pove, kam
+  // človek gre — okno bi ga le zmotilo.
+  const vabljen =
+    pathname.startsWith('/klub/') ||
+    pathname.startsWith('/l/') ||
+    // Deljena kartica igralca ali plakat ekipe: kdor pride od tam (pogosto
+    // starši), naj najprej vidi, kar mu je kdo poslal.
+    pathname.startsWith('/igralec/') ||
+    pathname.startsWith('/ekipa/')
   const okno = useRef<HTMLDivElement | null>(null)
 
   const zapri = () => {
