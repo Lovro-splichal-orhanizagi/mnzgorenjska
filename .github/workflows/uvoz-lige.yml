@@ -11,6 +11,11 @@ name: Uvoz lige (rocno)
 #
 # Sifra lige pripada SEZONI, ne ligi. Tekoca je v `competitions.source_league_code`,
 # arhivske se podajo tu (glej tabelo v CLAUDE.md).
+#
+# Na VKLOPLJENI ligi je ta tok nevaren: pozicije in cene bi prepisal igralcem,
+# ki jih imajo ljudje v ekipah. Zato je `cene` privzeto izklopljen, skripti pa
+# vklopljene lige ne prepiseta brez `prepisi_aktivno`. Popravilo ene tekme
+# (`zapisnik`) uvozi samo to tekmo — nic razporeda, nic cen.
 on:
   workflow_dispatch:
     inputs:
@@ -23,7 +28,7 @@ on:
         required: false
         type: string
       zapisnik:
-        description: 'Samo ta zapisnik (popravilo ene tekme). Prazno = vsi.'
+        description: 'Samo ta zapisnik (popravilo ene tekme). Prazno = vsi. Ce je izpolnjen, se razpored in cene ne izvedejo.'
         required: false
         type: string
       tekoca:
@@ -32,32 +37,81 @@ on:
         type: boolean
         default: true
       cene:
-        description: 'Po uvozu preracunaj pozicije in cene'
+        description: 'Po uvozu preracunaj pozicije in cene (za novo ligo)'
         required: false
         type: boolean
-        default: true
+        default: false
+      prepisi_aktivno:
+        description: 'Dovoli prepis pozicij in cen VKLOPLJENE lige (ljudje imajo te igralce v ekipah)'
+        required: false
+        type: boolean
+        default: false
+      dovoli_manj_klubov:
+        description: 'Razpored ima manj klubov kot tekme sezone v bazi, ker je klub res odstopil — vseeno deaktiviraj njegove igralce in izbrisi neodigrane tekme'
+        required: false
+        type: boolean
+        default: false
 
+permissions:
+  contents: read
+
+# Lastna skupina: pri skupni `uvoz` je vsak nocni cron (ob vikendih vsako uro)
+# izpodrinil rocni zagon, ki je cakal v vrsti — GitHub v skupini hrani le en
+# cakajoci zagon. Da uvozi vseeno ne tecejo hkrati, prvi korak pocaka na vse
+# starejse zagone iz druzine uvozov (glej "Pocakaj na starejse uvoze").
 concurrency:
-  group: uvoz
+  group: uvoz-lige-${{ inputs.liga }}
   cancel-in-progress: false
 
 jobs:
   uvoz:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    # 60 minut dela + do 120 minut cakanja na starejsi uvoz.
+    timeout-minutes: 180
+    permissions:
+      contents: read
+      actions: read
     env:
-      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       LIGA: ${{ inputs.liga }}
       ARHIV: ${{ inputs.arhiv }}
       ZAPISNIK: ${{ inputs.zapisnik }}
+      DOVOLI_AKTIVNO: ${{ inputs.prepisi_aktivno && '--dovoli-aktivno' || '' }}
+      DOVOLI_MANJ_KLUBOV: ${{ inputs.dovoli_manj_klubov && '--dovoli-manj-klubov' || '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
-      - run: npm ci
+      # Nobena odvisnost ne potrebuje namestitvenih skript (edina je fsevents
+      # za macOS); brez njih tuja koda ob namestitvi ne tece.
+      - run: npm ci --ignore-scripts
+
+      # Druzina uvozov (uvoz-zapisnikov, uvoz-lige, zdruzi-klube,
+      # tedensko-cene) pise v iste tabele: klube, igralce, tekme, cene. Zato
+      # tecejo po vrsti — po casu zacetka, brez izpodrivanja.
+      - name: Pocakaj na starejse uvoze
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          MOJ=$(gh run view "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" --json startedAt --jq .startedAt)
+          for i in $(seq 1 120); do
+            n=0
+            for wf in uvoz-zapisnikov.yml uvoz-lige.yml zdruzi-klube.yml tedensko-cene.yml; do
+              # Brez --status: tudi cakajoci (queued) starejsi zagon mora priti
+              # prvi. Zato vec kot 20 — koncani zagoni zasedejo del seznama.
+              k=$(gh run list -R "$GITHUB_REPOSITORY" --workflow "$wf" --limit 50 \
+                --json databaseId,startedAt,status \
+                --jq "[.[] | select(.status != \"completed\" and .databaseId != $GITHUB_RUN_ID and .startedAt > \"2000\" and (.startedAt < \"$MOJ\" or (.startedAt == \"$MOJ\" and .databaseId < $GITHUB_RUN_ID)))] | length")
+              n=$((n + k))
+            done
+            [ "$n" -eq 0 ] && exit 0
+            echo "Pred mano tece se $n uvozov — cakam ($i/120 min)"
+            sleep 60
+          done
+          echo "::error::Starejsi uvoz tece ze dve uri."
+          exit 1
 
       - name: Predpomnilnik zapisnikov
         uses: actions/cache@v4
@@ -68,6 +122,9 @@ jobs:
 
       # Liga mora obstajati, sicer se skripte ustavijo sele na pol poti.
       - name: Preveri, da liga obstaja
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           set -euo pipefail
           node scripts/aktivna-tekmovanja.mjs --vsa > /tmp/vse-lige.txt
@@ -77,6 +134,9 @@ jobs:
 
       - name: Arhiv prejsnjih sezon
         if: inputs.arhiv != ''
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           set -euo pipefail
           # Sifra je lahko "<koda>" ali "<koda>@<vir>". Drugo obliko potrebuje
@@ -97,22 +157,43 @@ jobs:
             echo "::endgroup::"
           done
 
+      # Z `zapisnik` samo ta tekma tekoce sezone: razpored bi premaknil roke
+      # in deaktiviral igralce, kar pri popravilu ene tekme ni namen. Ce je
+      # zapisnik arhivski, ta korak ne najde nicesar in ne naredi nic.
+      - name: Ena tekma tekoce sezone
+        if: inputs.zapisnik != '' && inputs.tekoca
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/uvoz-zapisnikov.mjs --tekmovanje "$LIGA" --zapisnik "$ZAPISNIK"
+
       - name: Razpored in zapisniki tekoce sezone
-        if: inputs.tekoca
+        if: inputs.tekoca && inputs.zapisnik == ''
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           set -euo pipefail
-          node scripts/uvoz-razporeda.mjs   --tekmovanje "$LIGA" --pisi
+          node scripts/uvoz-razporeda.mjs   --tekmovanje "$LIGA" --pisi ${DOVOLI_MANJ_KLUBOV:+"$DOVOLI_MANJ_KLUBOV"}
           node scripts/uvoz-delegiranja.mjs --tekmovanje "$LIGA" --pisi
           node scripts/uvoz-zapisnikov.mjs  --tekmovanje "$LIGA"
 
+      # Skripti sami zavrneta prepis VKLOPLJENE lige, razen z --dovoli-aktivno
+      # (vhod `prepisi_aktivno`). Brez `--pisi` ne pise nobena.
       - name: Pozicije in cene
-        if: inputs.cene
+        if: inputs.cene && inputs.zapisnik == ''
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           set -euo pipefail
-          node scripts/ugani-pozicije.mjs    --tekmovanje "$LIGA" --pisi
-          node scripts/ovrednoti-igralce.mjs --tekmovanje "$LIGA"
+          node scripts/ugani-pozicije.mjs    --tekmovanje "$LIGA" --pisi $DOVOLI_AKTIVNO
+          node scripts/ovrednoti-igralce.mjs --tekmovanje "$LIGA" --pisi $DOVOLI_AKTIVNO
 
       # Brez tega bi lahko ligo vklopili s cenikom, v katerem stane vsak
       # igralec 4.5 — 15 x 4.5 = 67.5 pri proracunu 100 in nobene izbire.
       - name: Ali je liga pripravljena na vklop
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node scripts/pripravljenost-lige.mjs --tekmovanje "$LIGA"

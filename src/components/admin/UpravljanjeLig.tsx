@@ -9,6 +9,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { oceniPripravljenost, type Ocena, type IgralecZaKader } from '../../lib/pripravljenost'
 import type { Pozicija } from '../../lib/tipi'
+import Potrditev from './Potrditev'
 
 interface Liga {
   id: number
@@ -68,6 +69,8 @@ export default function UpravljanjeLig() {
   const [nastavitve, setNastavitve] = useState<Record<number, Record<string, number>>>({})
   const [odprta, setOdprta] = useState<number | null>(null)
   const [delam, setDelam] = useState<number | null>(null)
+  // Izklop žive lige skrije ligo vsem in ustavi nočni uvoz — vprašamo prej.
+  const [potrjujemIzklop, setPotrjujemIzklop] = useState<number | null>(null)
   const [napaka, setNapaka] = useState<string | null>(null)
   const [sporocilo, setSporocilo] = useState<string | null>(null)
 
@@ -149,6 +152,7 @@ export default function UpravljanjeLig() {
       .select('id')
       .single()
     setDelam(null)
+    setPotrjujemIzklop(null)
     if (error) {
       setNapaka(error.message)
       await nalozi()
@@ -229,8 +233,10 @@ export default function UpravljanjeLig() {
                 </span>
 
                 <button
-                  onClick={() => preklopi(l)}
-                  disabled={delam === l.id || (!l.active && !o.pripravljena)}
+                  onClick={() => (l.active ? setPotrjujemIzklop(l.id) : preklopi(l))}
+                  disabled={
+                    delam != null || potrjujemIzklop === l.id || (!l.active && !o.pripravljena)
+                  }
                   className="rounded-lg bg-white/10 px-2.5 py-1.5 text-xs font-bold
                              hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-40"
                   title={
@@ -239,9 +245,24 @@ export default function UpravljanjeLig() {
                       : undefined
                   }
                 >
-                  {l.active ? 'Izklopi' : 'Vklopi'}
+                  {delam === l.id ? '…' : l.active ? 'Izklopi' : 'Vklopi'}
                 </button>
               </div>
+
+              {potrjujemIzklop === l.id && (
+                <div className="px-2.5 pb-2.5">
+                  <Potrditev
+                    potrdi={() => preklopi(l)}
+                    preklici={() => setPotrjujemIzklop(null)}
+                    zaseden={delam === l.id}
+                    gumb="Da, izklopi"
+                  >
+                    Izklopim <strong>{l.name}</strong>? Liga izgine iz izbirnika za
+                    vse obiskovalce in nočni uvoz se zanjo ustavi. Ekipe in točke
+                    ostanejo.
+                  </Potrditev>
+                </div>
+              )}
 
               {odprto && (
                 <div className="space-y-3 border-t border-white/10 p-3 text-sm">
@@ -294,10 +315,14 @@ export default function UpravljanjeLig() {
                     <p className="mb-1.5 text-xs text-slate-400">
                       Teče v GitHub Actions, ker potrebuje servisni ključ — ta ne sme
                       v brskalnik. Odpri delovni tok <strong>Uvoz lige (rocno)</strong> in
-                      vpiši slug ter šifre arhivskih sezon.
+                      vpiši slug ter šifre arhivskih sezon. Pozicije in cene
+                      (<code>cene</code>) so privzeto izklopljene; vklopljene lige ne
+                      prepišejo brez <code>prepisi_aktivno</code>.
                     </p>
                     <pre className="overflow-x-auto rounded-lg bg-slate-950 p-2 text-xs text-slate-300">
-{`gh workflow run uvoz-lige.yml -f liga=${l.slug} -f arhiv=<sifre>`}
+{l.active
+  ? `gh workflow run uvoz-lige.yml -f liga=${l.slug} -f zapisnik=<id>`
+  : `gh workflow run uvoz-lige.yml -f liga=${l.slug} -f arhiv=<sifre> -f cene=true`}
                     </pre>
                   </div>
                 </div>

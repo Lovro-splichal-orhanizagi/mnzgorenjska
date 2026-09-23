@@ -3,7 +3,7 @@
 // Uporaba:
 //   SUPABASE_SERVICE_ROLE_KEY=... node scripts/uvoz-zapisnikov.mjs --liga 1502
 //   ... --liga 1502 --omeji 5      (samo prvih 5 tekem, za preizkus)
-//   ... --liga 1502 --pocisti      (najprej pobriše demo klube in igralce)
+//   ... --liga 1502 --pocisti      (najprej pobriše demo klube in igralce; SAMO lokalno)
 //   ... --tekmovanje mladinci      (mladinska liga; brez tega člani)
 //   ... --sveze 21                 (preskoči že uvožene tekme, starejše od 21 dni)
 //
@@ -17,6 +17,7 @@ import { createClient } from '@supabase/supabase-js'
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { tekmovanje as najdiTekmovanje, sifraLige } from './tekmovanje.mjs'
 import { viraZa } from './viri/index.mjs'
+import { mapaKlubov } from './klubi.mjs'
 import { vseVrstice } from './strani.mjs'
 
 const PREDPOMNILNIK = 'scripts/.predpomnilnik'
@@ -57,6 +58,20 @@ if (!SERVICE) {
 
 const omeji = arg('omeji') ? Number(arg('omeji')) : null
 const pocisti = Boolean(arg('pocisti'))
+// Demo igralci nimajo nobene oznake — prepoznamo jih le po priimku z vezajem,
+// ki ga imajo tudi resnični ljudje (Marolt-Nagode). Proti pravi bazi bi
+// `--pocisti` zato brisal žive igralce in z njimi nastope. Dovoljen je samo
+// proti lokalnemu stacku.
+if (pocisti) {
+  let gostitelj = ''
+  try {
+    gostitelj = new URL(BASE).hostname
+  } catch {}
+  if (gostitelj !== 'localhost' && gostitelj !== '127.0.0.1') {
+    console.error(`--pocisti je dovoljen le proti lokalni bazi (localhost/127.0.0.1), ne ${gostitelj || BASE}.`)
+    process.exit(1)
+  }
+}
 
 const db = createClient(BASE, SERVICE, { auth: { persistSession: false } })
 
@@ -98,9 +113,9 @@ async function prenesi(url, datoteka, sveze = false) {
 // Klube iščemo po ključu iz `klubi.mjs`, ne po natančnem imenu: vir isti klub
 // piše različno in ujemanje po imenu je ob prvem zapisniku nove sezone
 // ustvarilo dvojnik ter sezono razklalo na dva zapisa.
-const klubi = new Map() // ključ kluba -> id
-const { data: vsiKlubi } = await db.from('teams').select('id, name')
-for (const k of vsiKlubi ?? []) klubi.set(vir.kljucKluba(k.name), k.id)
+// Po straneh, urejeno, brez povoza obstoječega ključa; vzdevki le za klube
+// tega vira (glej `mapaKlubov`).
+const klubi = await mapaKlubov(db, vir) // ključ kluba -> id
 const igralci = new Map() // Dres mora lociti soimenjake tudi pri samostojnem nastopu.
 
 async function klubId(ime) {
@@ -108,6 +123,16 @@ async function klubId(ime) {
   if (klubi.has(kljuc)) return klubi.get(kljuc)
 
   const polnoIme = ime.trim()
+  // Klub s tem imenom morda že obstaja, le ključ ga ni našel (vzdevek kluba,
+  // ki v ligah tega vira še nima igralcev). Ime je unikatno znotraj države,
+  // zato bi vstavljanje padlo — raje ga vzamemo.
+  let poImenuQ = db.from('teams').select('id').eq('name', polnoIme)
+  if (tekmovanje.country_id != null) poImenuQ = poImenuQ.eq('country_id', tekmovanje.country_id)
+  const { data: poImenu } = await poImenuQ.order('id').limit(1)
+  if (poImenu?.length) {
+    klubi.set(kljuc, poImenu[0].id)
+    return poImenu[0].id
+  }
   const { data, error } = await db
     .from('teams')
     // `country_id` je obvezen: ime kluba je unikatno znotraj drzave, ne
@@ -410,6 +435,10 @@ console.log(`Najdenih zapisnikov: ${zapisniki.length}`)
 
 let uvozenih = 0
 let preskocenih = 0
+// Prava napaka (baza, razclenitev) — v nasprotju s preskokom zapisnika brez
+// sezone ali kroga, ki je pri viru obicajen. Brez tega je bil uvoz vedno
+// zelen, tudi ce ni uvozil nicesar.
+let napak = 0
 // Opozorila iz zapisnikov zberemo in jih pokazemo skupaj na koncu; sproti bi
 // se izgubila med vrsticami napredka.
 const vsaOpozorila = []
@@ -614,11 +643,34 @@ for (const { id, z, url } of zapisniki) {
       )
     }
 
-    // Napaka pri pripravi ne sme izbrisati prejsnjih nastopov.
+    // Napaka pri pripravi ne sme izbrisati prejsnjih nastopov. Zamenjava ni
+    // v transakciji (RPC-ja zanjo ni), zato stare nastope najprej preberemo:
+    // ce vstavljanje novih pade, jih vrnemo, sicer bi tekma ostala brez
+    // enega samega nastopa in z njo tocke vseh, ki so igrali.
+    const { data: stariNastopi, error: eStari } = await db
+      .from('appearances')
+      .select(
+        'match_id, player_id, team_id, shirt_number, started, minute_on, minute_off, minutes_played, ' +
+          'goals, own_goals, penalties_scored, penalties_missed, penalties_saved, yellow_cards, red_cards, ' +
+          'goals_conceded, clean_sheet',
+      )
+      .eq('match_id', tekma.id)
+      .order('id')
+    if (eStari) throw new Error(`branje starih nastopov: ${eStari.message}`)
     const { error: eIzbris } = await db.from('appearances').delete().eq('match_id', tekma.id)
     if (eIzbris) throw new Error(eIzbris.message)
     const { error: eNastopi } = await db.from('appearances').insert(vrstice)
-    if (eNastopi) throw new Error(eNastopi.message)
+    if (eNastopi) {
+      if (stariNastopi?.length) {
+        const { error: eVrni } = await db.from('appearances').insert(stariNastopi)
+        if (eVrni)
+          throw new Error(
+            `${eNastopi.message}; VRAČANJE ${stariNastopi.length} starih nastopov NI USPELO: ${eVrni.message}`,
+          )
+        throw new Error(`${eNastopi.message} (stari nastopi vrnjeni)`)
+      }
+      throw new Error(eNastopi.message)
+    }
 
     // goli
     const goliVrstice = []
@@ -648,7 +700,8 @@ for (const { id, z, url } of zapisniki) {
         // Vsebina se je spremenila (dodan/odstranjen gol, popravek). Le tedaj
         // izbrišemo in ponovno vstavimo — vsi glasovi za spremenjene gole se
         // sicer izgubijo, a to je pravilno vedenje ob spremembi zapisnika.
-        await db.from('goals').delete().eq('match_id', tekma.id)
+        const { error: eBrisGoli } = await db.from('goals').delete().eq('match_id', tekma.id)
+        if (eBrisGoli) throw new Error(eBrisGoli.message)
         const { error: eGoli } = await db.from('goals').insert(goliVrstice)
         if (eGoli) throw new Error(eGoli.message)
       }
@@ -702,12 +755,12 @@ for (const { id, z, url } of zapisniki) {
       `\r  uvoženih: ${uvozenih}/${zapisniki.length}  (preskočenih: ${preskocenih})   `,
     )
   } catch (e) {
-    console.log(`\n  ${id}: napaka — ${e.message}`)
-    preskocenih++
+    console.error(`\n  ${id}: napaka — ${e.message}`)
+    napak++
   }
 }
 
-console.log(`\n\nUvoženih tekem: ${uvozenih}, preskočenih: ${preskocenih}`)
+console.log(`\n\nUvoženih tekem: ${uvozenih}, preskočenih: ${preskocenih}, napak: ${napak}`)
 
 // --- preračun točk po krogih -------------------------------------------------
 const { data: krogi } = await db
@@ -716,7 +769,10 @@ const { data: krogi } = await db
   .eq('competition_id', tekmovanje.id)
 for (const k of krogi ?? []) {
   const { error } = await db.rpc('recompute_round_scores', { p_round_id: k.id })
-  if (error) console.log(`  krog ${k.season}/${k.number}: ${error.message}`)
+  if (error) {
+    console.error(`  krog ${k.season}/${k.number}: ${error.message}`)
+    napak++
+  }
 }
 console.log(`Točke preračunane za ${krogi?.length ?? 0} krogov.`)
 
@@ -747,4 +803,9 @@ if (vsaOpozorila.length) {
   for (const o of vsaOpozorila.slice(0, 15)) console.log('  ' + o)
   if (vsaOpozorila.length > 15)
     console.log(`  ... in še ${vsaOpozorila.length - 15}`)
+}
+
+if (napak > 0) {
+  console.error(`\nUvoz ni uspel v celoti: ${napak} napak (glej zgoraj).`)
+  process.exitCode = 1
 }

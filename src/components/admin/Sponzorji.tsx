@@ -9,6 +9,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useTekmovanje } from '../../lib/tekmovanje'
+import Potrditev from './Potrditev'
 
 interface Sponzor {
   id: number
@@ -29,6 +30,20 @@ interface Sponzor {
   klikov: number
 }
 
+// Povezava sponzorja se izriše kot <a href>: `javascript:` ali `data:` bi
+// na klik pognal kodo v strani. Zato le http(s).
+function jeSpletniNaslov(v: string) {
+  try {
+    const u = new URL(v)
+    return u.protocol === 'https:' || u.protocol === 'http:'
+  } catch {
+    return false
+  }
+}
+
+// Logotip je lahko pot na naši strani (/sponzorji/x.png) ali http(s) naslov.
+const jeLogotip = (v: string) => (v.startsWith('/') && !v.startsWith('//')) || jeSpletniNaslov(v)
+
 const PRAZEN = {
   name: '',
   url: '',
@@ -45,6 +60,9 @@ export default function Sponzorji() {
   const [nov, setNov] = useState(PRAZEN)
   const [napaka, setNapaka] = useState<string | null>(null)
   const [odprto, setOdprto] = useState(false)
+  // Kateri sponzor čaka na potrditev izbrisa, in ali zapis ravno teče.
+  const [brisem, setBrisem] = useState<number | null>(null)
+  const [delam, setDelam] = useState(false)
 
   const nalozi = useCallback(async () => {
     const [{ data, error }, { data: n }] = await Promise.all([
@@ -79,40 +97,63 @@ export default function Sponzorji() {
     }
   }, [tekmovanja])
 
-  async function preklopiVidnost() {
-    const nova = vidni ? '0' : '1'
-    const { error } = await supabase
-      .from('settings')
-      .update({ value: nova })
-      .eq('key', 'sponzorji_vidni')
-    if (error) return setNapaka(error.message)
-    setVidni(!vidni)
+  // Vsi zapisi gredo skozi to: med izvajanjem so gumbi onemogočeni, da dvojni
+  // klik ne vstavi sponzorja dvakrat ali preklopi vidnosti tja in nazaj.
+  async function zDelom(fn: () => Promise<void>) {
+    if (delam) return
+    setDelam(true)
+    try {
+      await fn()
+    } finally {
+      setDelam(false)
+    }
   }
 
-  async function dodaj() {
+  const preklopiVidnost = () =>
+    zDelom(async () => {
+      const nova = vidni ? '0' : '1'
+      const { error } = await supabase
+        .from('settings')
+        .update({ value: nova })
+        .eq('key', 'sponzorji_vidni')
+      if (error) return setNapaka(error.message)
+      setVidni(!vidni)
+    })
+
+  const dodaj = () => zDelom(dodajZdaj)
+
+  async function dodajZdaj() {
     setNapaka(null)
     if (!nov.name.trim() || !nov.url.trim())
       return setNapaka('Ime in povezava sta obvezna.')
+    if (!jeSpletniNaslov(nov.url.trim()))
+      return setNapaka('Povezava mora biti spletni naslov, ki se začne s http:// ali https://.')
+    if (nov.logo_url.trim() && !jeLogotip(nov.logo_url.trim()))
+      return setNapaka('Logotip mora biti pot na strani (/sponzorji/…) ali naslov http(s)://.')
     const [vrsta, vrednost] = nov.doseg.split(':')
     let competition_id: number | null = null
     let federation_id: number | null = null
     let country_id: number | null = null
     if (vrsta === 'liga') competition_id = Number(vrednost)
+    // Če iskanje zveze ali države ne uspe, NE shranimo: prazen doseg pomeni
+    // "Povsod" in sponzor iz Kranja bi se tiho pokazal vsem.
     if (vrsta === 'zveza') {
-      const { data: f } = await supabase
+      const { data: f, error: eF } = await supabase
         .from('federations')
         .select('id')
         .eq('code', vrednost)
         .maybeSingle()
-      federation_id = f?.id ?? null
+      if (eF || !f) return setNapaka(`Zveze ${vrednost} ni bilo mogoče najti${eF ? `: ${eF.message}` : ''}. Sponzor ni shranjen.`)
+      federation_id = f.id
     }
     if (vrsta === 'drzava') {
-      const { data: d } = await supabase
+      const { data: d, error: eD } = await supabase
         .from('countries')
         .select('id')
         .eq('code', vrednost)
         .maybeSingle()
-      country_id = d?.id ?? null
+      if (eD || !d) return setNapaka(`Države ${vrednost} ni bilo mogoče najti${eD ? `: ${eD.message}` : ''}. Sponzor ni shranjen.`)
+      country_id = d.id
     }
     const { error } = await supabase.from('sponsors').insert({
       name: nov.name.trim(),
@@ -130,21 +171,24 @@ export default function Sponzorji() {
     await nalozi()
   }
 
-  async function preklopi(s: Sponzor) {
-    const { error } = await supabase
-      .from('sponsors')
-      .update({ active: !s.active, updated_at: new Date().toISOString() })
-      .eq('id', s.id)
-    if (error) return setNapaka(error.message)
-    await nalozi()
-  }
+  const preklopi = (s: Sponzor) =>
+    zDelom(async () => {
+      const { error } = await supabase
+        .from('sponsors')
+        .update({ active: !s.active, updated_at: new Date().toISOString() })
+        .eq('id', s.id)
+      if (error) return setNapaka(error.message)
+      await nalozi()
+    })
 
-  async function odstrani(s: Sponzor) {
-    if (!confirm(`Izbrišem sponzorja ${s.name}?`)) return
-    const { error } = await supabase.from('sponsors').delete().eq('id', s.id)
-    if (error) return setNapaka(error.message)
-    await nalozi()
-  }
+  // Brez window.confirm — glej Potrditev.tsx.
+  const odstrani = (s: Sponzor) =>
+    zDelom(async () => {
+      const { error } = await supabase.from('sponsors').delete().eq('id', s.id)
+      setBrisem(null)
+      if (error) return setNapaka(error.message)
+      await nalozi()
+    })
 
   if (sponzorji === null) return null
 
@@ -158,7 +202,7 @@ export default function Sponzorji() {
           </span>
         </h2>
         <label className="flex items-center gap-2 text-xs text-slate-400">
-          <input type="checkbox" checked={vidni} onChange={preklopiVidnost} />
+          <input type="checkbox" checked={vidni} onChange={preklopiVidnost} disabled={delam} />
           Prikaži na strani
         </label>
       </div>
@@ -189,15 +233,33 @@ export default function Sponzorji() {
               <span className="shrink-0 text-xs text-slate-500 tabular-nums">
                 {s.prikazov} prikazov · {s.klikov} klikov
               </span>
-              <button onClick={() => preklopi(s)} className="gumb-tih shrink-0 text-xs">
+              <button
+                onClick={() => preklopi(s)}
+                disabled={delam}
+                className="gumb-tih shrink-0 text-xs disabled:opacity-50"
+              >
                 {s.active ? 'ugasni' : 'vklopi'}
               </button>
               <button
-                onClick={() => odstrani(s)}
-                className="shrink-0 text-xs text-slate-500 hover:text-rose-300"
+                onClick={() => setBrisem(s.id)}
+                disabled={delam || brisem === s.id}
+                className="shrink-0 text-xs text-slate-500 hover:text-rose-300 disabled:opacity-50"
               >
                 izbriši
               </button>
+              {brisem === s.id && (
+                <div className="w-full">
+                  <Potrditev
+                    potrdi={() => odstrani(s)}
+                    preklici={() => setBrisem(null)}
+                    zaseden={delam}
+                    gumb="Da, izbriši"
+                  >
+                    Izbrišem sponzorja <strong>{s.name}</strong>? Z njim gredo tudi
+                    števci prikazov in klikov.
+                  </Potrditev>
+                </div>
+              )}
             </li>
           ))}
         </ul>
@@ -266,8 +328,8 @@ export default function Sponzorji() {
             />
           </div>
           <div className="flex gap-2">
-            <button onClick={dodaj} className="gumb-glavni text-sm">
-              Dodaj
+            <button onClick={dodaj} disabled={delam} className="gumb-glavni text-sm disabled:opacity-50">
+              {delam ? 'Shranjujem …' : 'Dodaj'}
             </button>
             <button onClick={() => setOdprto(false)} className="gumb-tih text-sm">
               Prekliči

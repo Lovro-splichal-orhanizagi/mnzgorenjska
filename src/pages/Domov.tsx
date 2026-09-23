@@ -6,8 +6,23 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { vseVrstice } from '../lib/strani'
 import { PRAVILA_OPIS } from '../lib/tockovanje'
-import { prikazniIme, formatirajTocke, formatirajCeno } from '../lib/pomozno'
+import {
+  prikazniIme,
+  formatirajTocke,
+  formatirajCeno,
+  mnozina,
+  oblika,
+  KRATKA_POZICIJA,
+  GLASOVI,
+  GOLI,
+  IGRALCI,
+  TEKME,
+  tockZ,
+} from '../lib/pomozno'
 import { useTekmovanje } from '../lib/tekmovanje'
+import { useNastavitev } from '../lib/nastavitve'
+import { useNaslov } from '../lib/naslov'
+import { PRAG_ASISTENCE_PRIVZETO } from '../components/GolZaGlasovanje'
 import Grb from '../components/Grb'
 import Klepet from '../components/Klepet'
 import Odstevanje from '../components/Odstevanje'
@@ -48,7 +63,18 @@ interface KrogPodatek {
   deadline_at?: string | null
 }
 
+/** Današnji datum v Ljubljani (YYYY-MM-DD) — tekme so zapisane po lokalnem koledarju. */
+function danesVLjubljani(): string {
+  return new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Ljubljana' })
+}
+
+/** Kratka oznaka pozicije (VRA/BRA/VEZ/NAP), kakor jo kažejo ostale strani. */
+function kratkaPozicija(p: string | null | undefined): string {
+  return (p && KRATKA_POZICIJA[p as Pozicija]) || (p ?? '')
+}
+
 export default function Domov() {
+  useNaslov(null)
   const { id: tekmovanjeId, tekmovanje, tekmovanja } = useTekmovanje()
   const zveza = imeZveze(tekmovanje)
   const [klubiLige, setKlubiLige] = useState<string[]>([])
@@ -83,10 +109,20 @@ export default function Domov() {
   const [naslednjeTekme, setNaslednjeTekme] = useState<any[]>([])
   const [zadnjiRezultati, setZadnjiRezultati] = useState<any[]>([])
   const [naslednjiKrog, setNaslednjiKrog] = useState<KrogPodatek | null>(null)
+  const [tekocaSezona, setTekocaSezona] = useState('')
+  // Ali je tekoča sezona že odigrala vsaj en krog. `null`, dokler ne vemo —
+  // takrat ne kažemo ne predsezonske kartice ne poziva za zamudnike.
+  const [sezonaTece, setSezonaTece] = useState<boolean | null>(null)
+  const [napaka, setNapaka] = useState<string | null>(null)
+  const prag = useNastavitev()('prag_glasov_asistenca', PRAG_ASISTENCE_PRIVZETO)
 
   useEffect(() => {
     if (!tekmovanjeId) return
     const ligaId = tekmovanjeId
+    // Hiter preklop lig: odgovor prejšnje lige ne sme povoziti nove.
+    let veljavno = true
+    setNapaka(null)
+    setSezonaTece(null)
     async function nalozi() {
       // Ob zamenjavi lige se naloži vse od začetka, zato gre v en sam val
       // vse, kar ne potrebuje sezone ali kroga. Prej je bilo šest zaporednih
@@ -173,7 +209,13 @@ export default function Domov() {
             )
             .eq('rounds.competition_id', ligaId)
             .is('imported_at', null)
+            // Brez spodnje meje bi se med "naslednjimi" znašle neuvožene
+            // tekme iz preteklih krogov (odpovedane, preložene, nikoli
+            // objavljene) — in kot prve, ker so najstarejše.
+            // Tekme brez datuma (razpored še ni objavljen) ostanejo — na koncu.
+            .or(`played_on.gte.${danesVLjubljani()},played_on.is.null`)
             .order('played_on', { ascending: true, nullsFirst: false })
+            .order('round_id', { ascending: true })
             .limit(30),
           supabase
             .from('matches')
@@ -197,7 +239,9 @@ export default function Domov() {
             .select('id, season, number, played_on')
             .eq('competition_id', ligaId),
         ])
+      if (!veljavno) return
       const tekocaSezona = sezonaPodatek.data?.season ?? ''
+      setTekocaSezona(tekocaSezona)
       setStat({
         tekme: tekme.count ?? 0,
         igralci: igralci.count ?? 0,
@@ -265,6 +309,8 @@ export default function Domov() {
             }
           : null
       setKrog(krogOk)
+      // `zadnji_odigrani_krog` pred prvim krogom vrne zadnjega lanskega.
+      setSezonaTece(Boolean(krogOk && tekocaSezona && krogOk.season === tekocaSezona))
 
       // Drugi val: oboje je odvisno od prvega (sezona, id kroga), zato gresta
       // skupaj. `player_season_standings` je najdražji pogled v aplikaciji
@@ -296,6 +342,7 @@ export default function Domov() {
               .limit(50)
           : Promise.resolve({ data: null }),
       ])
+      if (!veljavno) return
 
       // Minute so povsod razsodnik ob izenačenju — enako kot prej v SQL.
       const vrh = (stolpec: 'goals' | 'assists' | 'clean_sheets' | 'points') =>
@@ -347,8 +394,17 @@ export default function Domov() {
         setIdealnaPostava([])
       }
     }
-    nalozi()
+    nalozi().catch((e: unknown) => {
+      if (veljavno)
+        setNapaka(e instanceof Error ? e.message : 'Podatkov ni bilo mogoče naložiti.')
+    })
+    return () => {
+      veljavno = false
+    }
   }, [tekmovanjeId])
+
+  // Pred prvim krogom: datum začetka iz naslednjega kroga (tekma ali rok).
+  const zacetekSezone = naslednjiKrog?.played_on ?? naslednjiKrog?.deadline_at ?? null
 
   return (
     <div className="space-y-10">
@@ -371,15 +427,25 @@ export default function Domov() {
             alt="SLFF — Sunday League Fantasy Football"
             className="h-24 w-24 drop-shadow-xl sm:h-32 sm:w-32"
           />
-          <span className="znacka bg-gnl-400/20 text-gnl-200">
-            {/* Gorenjski besedili sta oglasni in ostaneta natanko taki, kot
-                sta bili; druga zveza dobi ime svoje lige. */}
-            {tekmovanje?.federation_code === 'mnzg' || !tekmovanje
-              ? tekmovanje?.slug === 'mladinci'
-                ? 'Gorenjska nogometna liga — mladinci'
-                : '1. Gorenjska nogometna liga'
-              : tekmovanje.name}
-          </span>
+          {/* Dokler se lige nalagajo, ne vemo, katera je izbrana — nevtralen
+              obris namesto gorenjskega imena, ki bi obiskovalcu druge lige
+              za hip pokazal napačno ligo. */}
+          {!tekmovanje ? (
+            <span
+              className="znacka inline-block h-6 w-48 animate-pulse bg-white/10"
+              aria-hidden
+            />
+          ) : (
+            <span className="znacka bg-gnl-400/20 text-gnl-200">
+              {/* Gorenjski besedili sta oglasni in ostaneta natanko taki, kot
+                  sta bili; druga zveza dobi ime svoje lige. */}
+              {tekmovanje.federation_code === 'mnzg'
+                ? tekmovanje.slug === 'mladinci'
+                  ? 'Gorenjska nogometna liga — mladinci'
+                  : '1. Gorenjska nogometna liga'
+                : tekmovanje.name}
+            </span>
+          )}
           <h1 className="text-4xl font-black leading-tight naslov sm:text-5xl">
             Sunday League
             <br />
@@ -395,20 +461,39 @@ export default function Domov() {
           </p>
           {tekmovanja.length > 1 && (
             <p className="text-sm text-slate-400">
-              👉 Igraš lahko v več ligah — <strong>ligo izbereš zgoraj levo</strong>,
+              <span aria-hidden>👉</span> Igraš lahko v več ligah — <strong>ligo izbereš zgoraj levo</strong>,
               vsaka ima svojo ekipo in lestvico.
             </p>
           )}
-          {/* Poziv za novince — v hero, da ga vidi vsak prvič obiskovalec. */}
-          <div className="rounded-2xl border border-gnl-400/40 bg-gnl-500/10 p-3 text-sm text-gnl-100 backdrop-blur">
-            🏁 <strong>Zamudil si štart? Nič hudega.</strong> Vsak krog ima
-            svojega zmagovalca. Na{' '}
-            <Link to="/lestvica" className="underline">
-              Lestvici
-            </Link>{' '}
-            izbereš "Od N. kroga naprej" in tekmuješ od trenutka, ko se
-            pridružiš. Nič ni prepozno.
-          </div>
+          {/* Pred sezono: kdaj se začne in do kdaj sestaviti ekipo. */}
+          {sezonaTece === false && zacetekSezone && (
+            <div className="rounded-2xl border border-gnl-400/40 bg-gnl-500/10 p-3 text-sm text-gnl-100 backdrop-blur">
+              <span aria-hidden>📅</span>{' '}
+              <strong>
+                Sezona se začne{' '}
+                {new Date(zacetekSezone).toLocaleDateString('sl-SI', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                })}
+              </strong>{' '}
+              — sestavi ekipo pred rokom.
+            </div>
+          )}
+          {/* Poziv za zamudnike — v hero, da ga vidi vsak prvič obiskovalec.
+              Smisel ima šele, ko je odigran vsaj prvi krog. */}
+          {sezonaTece && (
+            <div className="rounded-2xl border border-gnl-400/40 bg-gnl-500/10 p-3 text-sm text-gnl-100 backdrop-blur">
+              <span aria-hidden>🏁</span>{' '}
+              <strong>Zamudil si štart? Nič hudega.</strong> Vsak krog ima
+              svojega zmagovalca. Na{' '}
+              <Link to="/lestvica" className="underline">
+                Lestvici
+              </Link>{' '}
+              izbereš "Od N. kroga naprej" in tekmuješ od trenutka, ko se
+              pridružiš. Nič ni prepozno.
+            </div>
+          )}
           <div className="flex flex-wrap gap-3 pt-2">
             <Link to="/moja-ekipa" className="gumb-glavni">
               Sestavi ekipo
@@ -423,6 +508,12 @@ export default function Domov() {
         </div>
       </section>
 
+      {napaka && (
+        <p className="rounded-xl bg-rose-500/10 p-3 text-sm text-rose-300 ring-1 ring-rose-400/30">
+          Del podatkov se ni naložil: {napaka}
+        </p>
+      )}
+
       {/* glasovanje o asistencah je edino, kar liga potrebuje od ljudi */}
       {stat && stat.brezAsistence > 0 && (
         <Link
@@ -431,12 +522,17 @@ export default function Domov() {
                      p-5 ring-1 ring-amber-400/40 transition hover:ring-amber-300/70 sm:p-6"
         >
           <div className="flex flex-wrap items-center gap-4">
-            <span className="text-4xl sm:text-5xl">🅰️</span>
+            <span className="text-4xl sm:text-5xl" aria-hidden>🅰️</span>
             <div className="min-w-0 flex-1">
               <h2 className="text-xl font-black text-amber-100 sm:text-2xl">
                 {stat.brezAsistence}{' '}
-                {stat.brezAsistence === 1 ? 'gol čaka' : 'golov čaka'} na
-                asistenco
+                {oblika(stat.brezAsistence, [
+                  'gol čaka',
+                  'gola čakata',
+                  'goli čakajo',
+                  'golov čaka',
+                ])}{' '}
+                na asistenco
               </h2>
               <p className="mt-1 text-sm text-amber-100/80">
                 Zapisniki asistenc ne beležijo — določi jih skupnost. Brez tvojih
@@ -456,11 +552,11 @@ export default function Domov() {
           className="block overflow-hidden rounded-3xl bg-gradient-to-r from-gnl-500/15 to-gnl-800/10 p-4 ring-1 ring-gnl-400/30 transition hover:ring-gnl-300/60 sm:p-5"
         >
           <div className="flex flex-wrap items-center gap-3">
-            <span className="text-3xl">⏱️</span>
+            <span className="text-3xl" aria-hidden>⏱️</span>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-baseline gap-2 text-sm">
                 <span className="font-bold text-gnl-200">
-                  {naslednjiKrog.number}. krog se zakleni
+                  {naslednjiKrog.number}. krog se zaklene
                 </span>
                 <Odstevanje do={naslednjiKrog.deadline_at} />
               </div>
@@ -585,7 +681,7 @@ export default function Domov() {
           {krogNajboljsi[0] && (
             <section className="relative overflow-hidden rounded-3xl border border-amber-300/40 bg-gradient-to-br from-amber-500/20 via-slate-950/60 to-fuchsia-500/10 p-4 shadow-lg shadow-black/40 sm:p-6">
               <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-amber-200/80 sm:text-xs">
-                <span className="text-lg leading-none sm:text-xl">🌟</span>
+                <span className="text-lg leading-none sm:text-xl" aria-hidden>🌟</span>
                 <span>Igralec {krog?.number}. kroga</span>
               </div>
               <Link
@@ -606,7 +702,7 @@ export default function Domov() {
                   <span
                     className={`znacka poz-${krogNajboljsi[0].position}`}
                   >
-                    {krogNajboljsi[0].position}
+                    {kratkaPozicija(krogNajboljsi[0].position)}
                   </span>
                   <span className="text-slate-500">
                     · {krogNajboljsi[0].minutes} min
@@ -617,7 +713,7 @@ export default function Domov() {
                     {formatirajTocke(krogNajboljsi[0].points)}
                   </span>
                   <span className="text-[10px] uppercase tracking-wide text-slate-400 sm:text-xs">
-                    točk
+                    {tockZ(krogNajboljsi[0].points)}
                   </span>
                 </div>
               </div>
@@ -723,8 +819,8 @@ export default function Domov() {
           <div className="w-[86%] shrink-0 snap-start space-y-2 sm:w-[68%] lg:w-auto lg:shrink">
             <section className="relative overflow-hidden rounded-3xl border border-emerald-300/40 bg-gradient-to-br from-emerald-500/20 via-slate-950/60 to-gnl-500/10 p-4 shadow-lg shadow-black/40 sm:p-6">
               <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-emerald-200/80 sm:text-xs">
-                <span className="text-lg leading-none sm:text-xl">🏆</span>
-                <span>Igralec sezone{krog?.season ? ` ${krog.season}` : ''}</span>
+                <span className="text-lg leading-none sm:text-xl" aria-hidden>🏆</span>
+                <span>Igralec sezone{tekocaSezona ? ` ${tekocaSezona}` : ''}</span>
               </div>
               <Link
                 to={`/igralec/${igralecSezone[0].id}`}
@@ -742,10 +838,10 @@ export default function Domov() {
                   />
                   <span className="truncate">{igralecSezone[0].team_name}</span>
                   <span className={`znacka poz-${igralecSezone[0].position}`}>
-                    {igralecSezone[0].position}
+                    {kratkaPozicija(igralecSezone[0].position)}
                   </span>
                   <span className="text-slate-500">
-                    · {igralecSezone[0].matches} tekem
+                    · {mnozina(Number(igralecSezone[0].matches ?? 0), TEKME)}
                   </span>
                 </div>
                 <div className="flex items-baseline gap-1 leading-none">
@@ -753,7 +849,7 @@ export default function Domov() {
                     {formatirajTocke(igralecSezone[0].points)}
                   </span>
                   <span className="text-[10px] uppercase tracking-wide text-slate-400 sm:text-xs">
-                    točk
+                    {tockZ(igralecSezone[0].points)}
                   </span>
                 </div>
               </div>
@@ -815,8 +911,8 @@ export default function Domov() {
             </span>
           </div>
           <p className="text-xs text-slate-500">
-            Najboljših 11 igralcev zadnjega odigranega kroga (1 GK, 4 BR, 4 VE,
-            2 NA). Številka pod dresom je točke, ki jih je igralec zbral.
+            Najboljših 11 igralcev zadnjega odigranega kroga (1 VRA, 4 BRA,
+            4 VEZ, 2 NAP). Številka pod dresom so točke, ki jih je igralec zbral.
           </p>
           <EnajstericaNaIgriscu igralci={idealnaPostava} />
         </section>
@@ -826,7 +922,7 @@ export default function Domov() {
           da uporabnik izbere prejemnika (privzeto brez WhatsApp preskoka). */}
       <section className="kartica overflow-hidden border-gnl-400/30 bg-gradient-to-br from-gnl-500/10 via-slate-950/50 to-fuchsia-500/10 p-4 sm:p-5">
         <div className="flex flex-wrap items-center gap-4">
-          <span className="text-3xl">📧</span>
+          <span className="text-3xl" aria-hidden>📧</span>
           <div className="min-w-0 flex-1">
             <h2 className="text-base font-bold text-gnl-100 sm:text-lg">
               Povabi prijatelja v ligo
@@ -864,13 +960,14 @@ export default function Domov() {
                 to="/glasovanje"
                 className="kartica kartica-hover flex items-center gap-4 p-4"
               >
-                <span className="text-3xl">🅰️</span>
+                <span className="text-3xl" aria-hidden>🅰️</span>
                 <div className="min-w-0">
                   <div className="font-bold">
-                    {stat.brezAsistence} golov brez asistence
+                    {mnozina(stat.brezAsistence, GOLI)} brez asistence
                   </div>
                   <div className="text-sm text-slate-400">
-                    Povej, kdo je podal — 3 glasovi potrdijo
+                    Povej, kdo je podal — {mnozina(prag, GLASOVI)}{' '}
+                    {oblika(prag, ['potrdi', 'potrdita', 'potrdijo', 'potrdi'])}
                   </div>
                 </div>
               </Link>
@@ -880,10 +977,10 @@ export default function Domov() {
                 to="/pozicije"
                 className="kartica kartica-hover flex items-center gap-4 p-4"
               >
-                <span className="text-3xl">🧭</span>
+                <span className="text-3xl" aria-hidden>🧭</span>
                 <div className="min-w-0">
                   <div className="font-bold">
-                    {stat.brezPozicije} igralcev z ugibano pozicijo
+                    {mnozina(stat.brezPozicije, IGRALCI)} z ugibano pozicijo
                   </div>
                   <div className="text-sm text-slate-400">
                     Pozicija odloča, koliko je vreden gol
@@ -895,7 +992,7 @@ export default function Domov() {
               to="/odsotnosti"
               className="kartica kartica-hover flex items-center gap-4 p-4"
             >
-              <span className="text-3xl">🩹</span>
+              <span className="text-3xl" aria-hidden>🩹</span>
               <div className="min-w-0">
                 <div className="font-bold">Poškodbe in odsotnosti</div>
                 <div className="text-sm text-slate-400">
@@ -913,8 +1010,7 @@ export default function Domov() {
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h2 className="text-xl font-bold">Naslednje tekme</h2>
             <span className="text-xs text-slate-500">
-              {naslednjeTekme.length}{' '}
-              {naslednjeTekme.length === 1 ? 'tekma' : 'tekem'} v razporedu
+              {mnozina(naslednjeTekme.length, TEKME)} v razporedu
             </span>
           </div>
           <div className="space-y-4">
@@ -999,15 +1095,16 @@ export default function Domov() {
       {/* Prispevek glasovalca: pokaže se le, kdor je kdaj glasoval. */}
       <Prispevek />
 
-      {/* številke — iz zgodovine (vključno z lansko sezono, ne trenutne) */}
-      {stat && (
+      {/* številke — štetje zajame vse sezone lige, zato jih pred prvim
+          krogom označimo kot zgodovino; ko sezona teče, to ne drži več. */}
+      {stat && sezonaTece !== null && (
         <section className="space-y-2">
           <div className="flex items-baseline justify-between">
             <h2 className="text-sm font-bold uppercase tracking-wide text-slate-400">
-              Iz zgodovine (pretekla sezona)
+              {sezonaTece ? 'Liga v številkah' : 'Iz zgodovine (pretekla sezona)'}
             </h2>
-            <span className="text-[10px] uppercase tracking-wide text-slate-600">
-              nova sezona še ni odigrana
+            <span className="text-[10px] uppercase tracking-wide text-slate-400">
+              {sezonaTece ? 'vse sezone skupaj' : 'nova sezona še ni odigrana'}
             </span>
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -1031,7 +1128,7 @@ export default function Domov() {
           {[
             [
               '1. Registracija',
-              'Ustvari račun z e-pošto in geslom ter si izmisli ime ekipe.',
+              'Ustvari račun z Googlom ali z e-pošto in geslom ter si izmisli ime ekipe.',
             ],
             [
               '2. Sestavi kader',
@@ -1129,7 +1226,7 @@ function VrhLestvice({
               {prikazniIme(z.full_name)}
             </Link>
             <span className={`znacka ${znacka}`}>
-              {z[kljuc]} {ikona}
+              {z[kljuc]} <span aria-hidden>{ikona}</span>
             </span>
             <span className="w-20 text-right font-black tabular-nums text-gnl-300">
               {formatirajCeno(z.value)}
@@ -1156,7 +1253,9 @@ function Stevilka({
     <div
       className={`kartica p-4 ${poudari && vrednost > 0 ? 'ring-1 ring-gnl-400/40' : ''}`}
     >
-      <div className="text-2xl">{ikona}</div>
+      <div className="text-2xl" aria-hidden>
+        {ikona}
+      </div>
       <div className="mt-1 text-2xl font-black tabular-nums">{vrednost}</div>
       <div className="text-xs uppercase tracking-wide text-slate-500">
         {oznaka}

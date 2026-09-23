@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { povezavaNaPrijavo } from '../lib/prijava'
 import type { FormEvent } from 'react'
 import { useAuth } from '../lib/useAuth'
 
@@ -64,6 +66,7 @@ export default function Klepet() {
   const [posiljam, setPosiljam] = useState(false)
   const [napaka, setNapaka] = useState<string | null>(null)
   const mojPsev = psevdonim(session?.user?.id)
+  const { pathname, search } = useLocation()
 
   useEffect(() => {
     let preklican = false
@@ -96,10 +99,18 @@ export default function Klepet() {
     }
     nalozi()
     // Vsakih 20 s osveži — realtime bi bil boljši, a to zadošča za začetek.
-    const id = setInterval(nalozi, 20000)
+    // Skrit zavihek ne sprašuje; ko se vrneš, se osveži takoj.
+    const id = setInterval(() => {
+      if (!document.hidden) nalozi()
+    }, 20000)
+    const vidnost = () => {
+      if (!document.hidden) nalozi()
+    }
+    document.addEventListener('visibilitychange', vidnost)
     return () => {
       preklican = true
       clearInterval(id)
+      document.removeEventListener('visibilitychange', vidnost)
     }
   }, [])
 
@@ -134,29 +145,29 @@ export default function Klepet() {
     <section className="relative overflow-hidden rounded-3xl border-2 border-fuchsia-400/40 bg-gradient-to-br from-fuchsia-500/15 via-slate-950/70 to-gnl-500/10 p-4 shadow-lg shadow-fuchsia-500/10 sm:p-5">
       <div className="mb-3 space-y-2">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-2xl">💬</span>
+          <span aria-hidden="true" className="text-2xl">💬</span>
           <h2 className="text-xl font-black text-fuchsia-100 sm:text-2xl">
-            Pomagajte nam izboljšati!
+            Pomagaj nam izboljšati!
           </h2>
           <span className="znacka bg-white/10 text-[10px] text-slate-300">
             anonimno
           </span>
         </div>
         <p className="text-sm text-slate-200">
-          Kaj vas moti? Kaj bi radi videli? Kaj pogrešate? Vaš vtis nam ogromno
-          pomeni — <strong className="text-fuchsia-200">povejte</strong>. Klepet
+          Kaj te moti? Kaj bi rad videl? Kaj pogrešaš? Tvoj vtis nam ogromno
+          pomeni — <strong className="text-fuchsia-200">povej</strong>. Klepet
           je anonimen; nihče ne vidi, kdo je kaj napisal.
         </p>
         {session ? (
           <p className="text-xs text-slate-400">
-            V klepetu se prikažete kot{' '}
-            <strong className="text-fuchsia-200">{mojPsev}</strong>. Vaše
+            V klepetu se prikažeš kot{' '}
+            <strong className="text-fuchsia-200">{mojPsev}</strong>. Tvoje
             registrirano ime ostane skrito.
           </p>
         ) : (
           <p className="text-xs text-slate-400">
-            Za pisanje se prijavite (branje je javno). Vaše registrirano ime
-            ostane skrito, pojavite se pod naključnim psevdonimom.
+            Za pisanje se prijavi (branje je javno). Tvoje registrirano ime
+            ostane skrito, pojaviš se pod naključnim psevdonimom.
           </p>
         )}
       </div>
@@ -187,6 +198,7 @@ export default function Klepet() {
                         onClick={() => izbrisi(s.id)}
                         className="ml-2 text-slate-500 hover:text-rose-400"
                         title="Izbriši sporočilo"
+                        aria-label="Izbriši sporočilo"
                       >
                         ✕
                       </button>
@@ -222,9 +234,12 @@ export default function Klepet() {
       ) : (
         <p className="text-center text-xs text-slate-500">
           Za objavo se{' '}
-          <a href="/prijava" className="underline hover:text-gnl-300">
+          <Link
+            to={povezavaNaPrijavo(pathname + search)}
+            className="underline hover:text-gnl-300"
+          >
             prijavi
-          </a>
+          </Link>
           .
         </p>
       )}

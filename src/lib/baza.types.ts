@@ -560,18 +560,21 @@ export type Database = {
           fantasy_team_id: number
           played_at: string
           round_id: number
+          season: string
         }
         Insert: {
           chip: string
           fantasy_team_id: number
           played_at?: string
           round_id: number
+          season?: string
         }
         Update: {
           chip?: string
           fantasy_team_id?: number
           played_at?: string
           round_id?: number
+          season?: string
         }
         Relationships: [
           {
@@ -2306,6 +2309,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          brez_opomnikov: boolean
           created_at: string
           display_name: string
           id: string
@@ -2314,6 +2318,7 @@ export type Database = {
           is_admin: boolean
         }
         Insert: {
+          brez_opomnikov?: boolean
           created_at?: string
           display_name: string
           id: string
@@ -2322,6 +2327,7 @@ export type Database = {
           is_admin?: boolean
         }
         Update: {
+          brez_opomnikov?: boolean
           created_at?: string
           display_name?: string
           id?: string
@@ -2456,22 +2462,25 @@ export type Database = {
       }
       sponsor_stats: {
         Row: {
-          competition_id: number
+          competition_id: number | null
           dan: string
+          id: number
           klikov: number
           prikazov: number
           sponsor_id: number
         }
         Insert: {
-          competition_id: number
+          competition_id?: number | null
           dan: string
+          id?: never
           klikov?: number
           prikazov?: number
           sponsor_id: number
         }
         Update: {
-          competition_id?: number
+          competition_id?: number | null
           dan?: string
+          id?: never
           klikov?: number
           prikazov?: number
           sponsor_id?: number

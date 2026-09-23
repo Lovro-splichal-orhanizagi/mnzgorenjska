@@ -4,6 +4,7 @@
 //   SUPABASE_SERVICE_ROLE_KEY=... node scripts/uvoz-razporeda.mjs --liga 1601
 //   ... --tekmovanje mladinci   (mladinska liga; brez tega člani)
 //   ... --pisi        (dejansko zapiše; brez tega samo pokaže, kaj bi naredil)
+//   ... --dovoli-manj-klubov  (klub je res odstopil: deaktiviraj kljub manj klubom)
 //   SUPABASE_URL=...  (za projekt v oblaku; sicer vzame VITE_SUPABASE_URL iz .env)
 //
 // Zapisniki nastanejo šele po odigrani tekmi, zato brez razporeda baza ne ve
@@ -16,9 +17,11 @@ import { createClient } from '@supabase/supabase-js'
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { tekmovanje as najdiTekmovanje, sifraLige } from './tekmovanje.mjs'
 import { viraZa } from './viri/index.mjs'
+import { mapaKlubov } from './klubi.mjs'
 import { sifra } from './viri/zapisniki.mjs'
 import { razcleniRazpored, sezonaIz } from './razpored.mjs'
 import { rokKroga } from './razporedi.mjs'
+import { vseVrstice } from './strani.mjs'
 
 const PREDPOMNILNIK = 'scripts/.predpomnilnik'
 
@@ -56,6 +59,7 @@ const arg = (ime, privzeto = null) => {
     : privzeto
 }
 const pisi = process.argv.includes('--pisi')
+const dovoliManjKlubov = process.argv.includes('--dovoli-manj-klubov')
 const db = createClient(BASE, SERVICE, { auth: { persistSession: false } })
 
 const tekmovanje = await najdiTekmovanje(db, arg('tekmovanje', 'clani'))
@@ -144,15 +148,25 @@ if (!pisi) {
 // --- zapis ------------------------------------------------------------------
 // Razpored in zapisniki isti klub pišejo različno, zato ga iščemo po ključu iz
 // `klubi.mjs` — sicer bi ob vsakem uvozu nastal dvojnik.
-const klubi = new Map()
-const { data: vsiKlubi } = await db.from('teams').select('id, name')
-for (const k of vsiKlubi ?? []) klubi.set(vir.kljucKluba(k.name), k.id)
+// Po straneh, urejeno, brez povoza obstoječega ključa; vzdevki le za klube
+// tega vira (glej `mapaKlubov`).
+const klubi = await mapaKlubov(db, vir) // ključ kluba -> id
 
 async function klubId(ime) {
   const kljuc = vir.kljucKluba(ime)
   if (klubi.has(kljuc)) return klubi.get(kljuc)
 
   const polnoIme = ime.trim()
+  // Klub s tem imenom morda že obstaja, le ključ ga ni našel (vzdevek kluba,
+  // ki v ligah tega vira še nima igralcev). Ime je unikatno znotraj države,
+  // zato bi vstavljanje padlo — raje ga vzamemo.
+  let poImenuQ = db.from('teams').select('id').eq('name', polnoIme)
+  if (tekmovanje.country_id != null) poImenuQ = poImenuQ.eq('country_id', tekmovanje.country_id)
+  const { data: poImenu } = await poImenuQ.order('id').limit(1)
+  if (poImenu?.length) {
+    klubi.set(kljuc, poImenu[0].id)
+    return poImenu[0].id
+  }
   const { data, error } = await db
     .from('teams')
     // `country_id` je obvezen: ime kluba je unikatno znotraj drzave, ne
@@ -214,11 +228,18 @@ for (const k of veljavni) {
     krogId = data.id
     novihKrogov++
   } else {
-    // Datum se lahko prestavi; rok mu sledi, dokler krog še ni odigran.
-    await db
+    // Datum se lahko prestavi; rok mu sledi, dokler krog še ni zaklenjen.
+    // Zaklenjenemu krogu roka ne premikamo: posnetki postav so ze zajeti in
+    // premaknjen rok bi obetal urejanje, ki ga ni vec.
+    const { error: eRok } = await db
       .from('rounds')
       .update({ played_on: datumKroga, deadline_at: rok })
       .eq('id', krogId)
+      .is('lineups_locked_at', null)
+    if (eRok) {
+      console.error(`  krog ${k.stevilka}: rok ni posodobljen — ${eRok.message}`)
+      process.exitCode = 1
+    }
   }
 
   for (const t of k.tekme) {
@@ -280,23 +301,74 @@ console.log(`\nNovih krogov: ${novihKrogov}, novih tekem: ${novihTekem}, prestav
 // ne smejo ostati na trgu — sicer jih kdo kupi in do konca sezone ne dobi
 // nobene točke. Pri mladincih to ni izjema, ampak pravilo: vsako leto ena
 // generacija odide med člane, kakšen klub pa ekipe sploh ne prijavi.
-if (letosnjiKlubi.size) {
+// Varovalo: razpored z MANJ klubi, kot jih ima ta sezona v bazi že tekem,
+// je najverjetneje okrnjena stran (vir je vrnil pol razporeda), ne odstop.
+// Brez varovala bi deaktivirali igralce celih klubov in izbrisali njihove
+// tekme. Izhodišče so klubi TEKEM te sezone, ne `competition_teams` — ta
+// pogled šteje klube z aktivnimi igralci, torej ravno tiste, ki jih
+// deaktivacija izklaplja (po uvozu arhiva so to tudi izpadli klubi), in bi
+// deaktivacijo za vedno blokiral. Sezona brez tekem v bazi ne blokira.
+// Kadar je klub res odstopil, zagon ponovi z `--dovoli-manj-klubov`.
+let smemoDeaktivirati = letosnjiKlubi.size > 0
+if (smemoDeaktivirati) {
+  try {
+    const tekmeSezone = await vseVrstice((od, do_) =>
+      db
+        .from('matches')
+        .select('id, home_team_id, away_team_id, rounds!inner(season, competition_id)')
+        .eq('rounds.competition_id', tekmovanje.id)
+        .eq('rounds.season', sezona)
+        .order('id')
+        .range(od, do_),
+    )
+    const vBazi = new Set(tekmeSezone.flatMap((m) => [m.home_team_id, m.away_team_id]))
+    // Po vstavljanju zgoraj baza vsebuje vse klube razporeda, zato je
+    // "manj klubov" isto kot "v bazi je klub, ki ga razpored nima".
+    if (vBazi.size > letosnjiKlubi.size && !dovoliManjKlubov) {
+      console.error(
+        `::warning::Razpored ima ${letosnjiKlubi.size} klubov, tekme te sezone v bazi pa ${vBazi.size}. ` +
+          'Deaktivacijo igralcev in brisanje tekem preskočim. Če je klub res ' +
+          'odstopil, poženi znova z --dovoli-manj-klubov.',
+      )
+      process.exitCode = 1
+      smemoDeaktivirati = false
+    }
+  } catch (e) {
+    console.error(`Tekem sezone ni mogoče prebrati (${e.message}) — deaktivacijo preskočim.`)
+    process.exitCode = 1
+    smemoDeaktivirati = false
+  }
+}
+
+if (smemoDeaktivirati) {
   const seznam = [...letosnjiKlubi]
-  const { count: deaktiviranih } = await db
+  const { count: deaktiviranih, error: eDeakt } = await db
     .from('players')
     .update({ active: false }, { count: 'exact' })
     .eq('competition_id', tekmovanje.id)
     .eq('active', true)
     .not('team_id', 'in', `(${seznam.join(',')})`)
-  // Kogar je poznavalec lige oznacil kot odslega, ostane neaktiven — obudi
-  // ga samo nastop v zapisniku (sprozilec na appearances).
-  const { count: vrnjenih } = await db
+  if (eDeakt) {
+    console.error(`  deaktivacija: ${eDeakt.message}`)
+    process.exitCode = 1
+  }
+
+  // Igralci klubov, ki letos igrajo, se vrnejo med aktivne (klub se je vrnil
+  // v ligo, igralec je prestopil iz kluba zunaj lige). Ročno umaknjeni ostanejo
+  // neaktivni: `popravki-igralcev.mjs` in poznavalec lige (`oznaci_odhod_igralca`)
+  // nastavita `odsel_at`, deaktivacija uvoza pa ne — po tem ju ločimo. Takega
+  // igralca obudi samo nastop (sprožilec na appearances).
+  const { count: vrnjenih, error: eVrni } = await db
     .from('players')
     .update({ active: true }, { count: 'exact' })
     .eq('competition_id', tekmovanje.id)
     .eq('active', false)
     .is('odsel_at', null)
     .in('team_id', seznam)
+  if (eVrni) {
+    console.error(`  vračanje med aktivne: ${eVrni.message}`)
+    process.exitCode = 1
+  }
   console.log(
     `Klubov v tej sezoni: ${seznam.length}; ` +
       `deaktiviranih igralcev zunaj lige: ${deaktiviranih ?? 0}, ` +

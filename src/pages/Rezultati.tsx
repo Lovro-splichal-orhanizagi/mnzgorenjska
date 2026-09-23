@@ -6,8 +6,8 @@ import { supabase } from '../lib/supabase'
 import { useTekmovanje } from '../lib/tekmovanje'
 import Grb from '../components/Grb'
 import type { TekmaVrstica } from '../lib/tipi'
-
-
+import { vseVrstice } from '../lib/strani'
+import { useNaslov } from '../lib/naslov'
 
 export default function Rezultati() {
   const { id: tekmovanjeId, tekmovanje } = useTekmovanje()
@@ -17,20 +17,33 @@ export default function Rezultati() {
   const [krogId, setKrogId] = useState<number | null>(null)
   const [nalaganje, setNalaganje] = useState(true)
   const [napaka, setNapaka] = useState<string | null>(null)
+  useNaslov('Rezultati')
 
   useEffect(() => {
     if (!tekmovanjeId) return
+    // Odgovor prejšnje lige ne sme prepisati izbrane.
+    let veljavno = true
     setNalaganje(true)
+    setNapaka(null)
     // Ujamemo tu: znotraj async funkcije preverjanje z vrha ne velja vec.
     const ligaId = tekmovanjeId
     async function nalozi() {
-      const { data, error } = await supabase
-        .from('match_assist_status')
-        .select('*')
-        .eq('competition_id', ligaId)
-        .order('played_on', { ascending: false })
-      if (error) setNapaka(error.message)
-      const vrstice = (data ?? []) as TekmaVrstica[]
+      // Po straneh: več sezon ene lige hitro preseže tisoč tekem.
+      let vrstice: TekmaVrstica[] = []
+      try {
+        vrstice = (await vseVrstice((od, do_) =>
+          supabase
+            .from('match_assist_status')
+            .select('*')
+            .eq('competition_id', ligaId)
+            .order('played_on', { ascending: false })
+            .order('match_id')
+            .range(od, do_),
+        )) as TekmaVrstica[]
+      } catch (e) {
+        if (veljavno) setNapaka((e as Error).message)
+      }
+      if (!veljavno) return
       setTekme(vrstice)
       const sezone = [
         ...new Set(vrstice.map((t) => t.season).filter((x): x is string => !!x)),
@@ -42,6 +55,9 @@ export default function Rezultati() {
       setNalaganje(false)
     }
     nalozi()
+    return () => {
+      veljavno = false
+    }
   }, [tekmovanjeId])
 
   const sezone = useMemo(
@@ -120,7 +136,11 @@ export default function Rezultati() {
         ))}
       </div>
 
-      {vKrogu.length === 0 ? (
+      {tekme.length === 0 && !napaka ? (
+        <p className="kartica p-6 text-center text-slate-400">
+          Sezona se še ni začela.
+        </p>
+      ) : vKrogu.length === 0 ? (
         <p className="text-slate-400">V tem krogu ni odigranih tekem.</p>
       ) : (
         <ul className="grid gap-2 sm:grid-cols-2">
@@ -138,7 +158,7 @@ export default function Rezultati() {
                 <span className="rounded-lg bg-slate-950/60 px-2 py-0.5 text-sm font-black tabular-nums">
                   {t.home_goals}:{t.away_goals}
                 </span>
-                <span className="text-slate-500">→</span>
+                <span className="text-slate-500" aria-hidden="true">→</span>
               </Link>
             </li>
           ))}

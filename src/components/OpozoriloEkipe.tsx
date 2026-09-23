@@ -58,11 +58,11 @@ export default function OpozoriloEkipe() {
       const { data: roster } = await supabase
         .from('fantasy_roster')
         .select(
-          'is_starter, is_captain, is_vice, buy_position, players(id, position, team_id, value)',
+          'is_starter, is_captain, is_vice, buy_position, players(id, full_name, position, team_id, value, active)',
         )
         .eq('fantasy_team_id', ekipa.id)
       if (odjava) return
-      const izbrani: IgralecVKadru[] = (roster ?? [])
+      const izbrani: Array<IgralecVKadru & { active?: boolean; full_name?: string | null }> = (roster ?? [])
         .map((r: any) => ({
           is_starter: r.is_starter,
           is_captain: r.is_captain,
@@ -72,6 +72,9 @@ export default function OpozoriloEkipe() {
           position: r.buy_position ?? r.players?.position ?? null,
           team_id: r.players?.team_id ?? null,
           value: Number(r.players?.value ?? 0),
+          // Neaktiven igralec (ni več v ligi) ekipi vzame točke kroga.
+          active: r.players?.active,
+          full_name: r.players?.full_name ?? null,
         }))
       // Že kupljenih igralcev ne kupujemo znova po njihovih novih cenah.
       setNapake(preveriEkipo(izbrani, ekipa.budget, ekipa.cash))

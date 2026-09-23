@@ -16,22 +16,27 @@ on:
     workflows: ['Uvoz zapisnikov', 'Uvoz lige (rocno)']
     types: [completed]
 
+permissions:
+  contents: read
+
 jobs:
   preveri:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-      DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
-      - run: npm ci
+      # Nobena odvisnost ne potrebuje namestitvenih skript (edina je fsevents
+      # za macOS); brez njih tuja koda ob namestitvi ne tece.
+      - run: npm ci --ignore-scripts
       - name: Trditve o podatkih
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         run: node scripts/preveri-podatke.mjs --discord
 
       # Rdec zagon v GitHubu ni alarm, dokler ga kdo ne vidi. Uvoz je dvakrat

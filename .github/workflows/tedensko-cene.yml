@@ -34,17 +34,25 @@ on:
         default: '1.0'
         type: string
 
+permissions:
+  contents: read
+
+# Lastna skupina (prej skupna `uvoz`, kjer je nocni cron izpodrival cakajoci
+# zagon). Cene istih igralcev pise tudi uvoz-lige (korak cene), zato prvi
+# korak pocaka na starejse zagone iz druzine uvozov — glej uvoz-zapisnikov.yml.
 concurrency:
-  group: uvoz
+  group: tedensko-cene
   cancel-in-progress: false
 
 jobs:
   cene:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # 30 minut dela + do 120 minut cakanja na starejsi uvoz.
+    timeout-minutes: 150
+    permissions:
+      contents: read
+      actions: read
     env:
-      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       NAJVEC: ${{ inputs.najvec || '1.0' }}
     steps:
       - uses: actions/checkout@v4
@@ -52,9 +60,40 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-      - run: npm ci
+      # Nobena odvisnost ne potrebuje namestitvenih skript (edina je fsevents
+      # za macOS); brez njih tuja koda ob namestitvi ne tece.
+      - run: npm ci --ignore-scripts
+
+      # Druzina uvozov (uvoz-zapisnikov, uvoz-lige, zdruzi-klube,
+      # tedensko-cene) pise v iste tabele: klube, igralce, tekme, cene. Zato
+      # tecejo po vrsti — po casu zacetka, brez izpodrivanja.
+      - name: Pocakaj na starejse uvoze
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          MOJ=$(gh run view "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" --json startedAt --jq .startedAt)
+          for i in $(seq 1 120); do
+            n=0
+            for wf in uvoz-zapisnikov.yml uvoz-lige.yml zdruzi-klube.yml tedensko-cene.yml; do
+              # Brez --status: tudi cakajoci (queued) starejsi zagon mora priti
+              # prvi. Zato vec kot 20 — koncani zagoni zasedejo del seznama.
+              k=$(gh run list -R "$GITHUB_REPOSITORY" --workflow "$wf" --limit 50 \
+                --json databaseId,startedAt,status \
+                --jq "[.[] | select(.status != \"completed\" and .databaseId != $GITHUB_RUN_ID and .startedAt > \"2000\" and (.startedAt < \"$MOJ\" or (.startedAt == \"$MOJ\" and .databaseId < $GITHUB_RUN_ID)))] | length")
+              n=$((n + k))
+            done
+            [ "$n" -eq 0 ] && exit 0
+            echo "Pred mano tece se $n uvozov — cakam ($i/120 min)"
+            sleep 60
+          done
+          echo "::error::Starejsi uvoz tece ze dve uri."
+          exit 1
 
       - name: Prevrednoti vklopljene lige
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           set -euo pipefail
           node scripts/aktivna-tekmovanja.mjs > /tmp/lige.txt

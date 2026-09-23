@@ -24,6 +24,8 @@ export interface IgralecNaIgriscu extends IgralecVKadru {
   team_short?: string | null
   team_logo?: string | null
   tocke_krog?: number | null
+  /** `false`, ko igralec ni več v ligi — baza takšen kader zavrne. */
+  active?: boolean | null
 }
 
 function KarticaIgralca({
@@ -31,18 +33,25 @@ function KarticaIgralca({
   naKlik,
   naOdstrani,
   zatemnjen,
+  premik,
 }: {
   igralec: IgralecNaIgriscu
   naKlik: () => void
   naOdstrani: () => void
   zatemnjen?: boolean
+  /** Na klopi: premik v vrstnem redu menjav (null = na robu). */
+  premik?: { gor: (() => void) | null; dol: (() => void) | null }
 }) {
+  const ime = prikazniIme(igralec.full_name)
   return (
     <div
       className={`group relative w-[3.4rem] text-center sm:w-[4.75rem] ${
         zatemnjen ? 'opacity-70' : ''
       }`}
     >
+      {/* Dres z značkami in ✕ je svoj relativni okvir: ✕ se sidra nanj, ne na
+          celo kartico — sicer bi na klopi prekril puščici pod njim. */}
+      <div className="relative">
       <button
         onClick={naKlik}
         title={
@@ -56,8 +65,16 @@ function KarticaIgralca({
           <Dres pozicija={igralec.position} razred="h-7 w-8 sm:h-9 sm:w-10" />
         </div>
         <div className="mt-0.5 truncate rounded-t-md bg-slate-900/90 px-1 py-0.5 text-[10px] font-semibold leading-tight sm:text-[11px]">
-          {prikazniIme(igralec.full_name).split(' ').slice(-1)[0]}
+          {ime.split(' ').slice(-1)[0]}
         </div>
+        {igralec.active === false && (
+          <div
+            title="Igralec ni več v ligi — kader z njim ne dobi točk."
+            className="bg-rose-500 px-0.5 text-[8px] font-black uppercase leading-tight text-white sm:text-[9px]"
+          >
+            ni več v ligi
+          </div>
+        )}
         <div className="flex items-center justify-center gap-1 rounded-b-md bg-gnl-500/90 px-1 py-0.5 text-[9px] font-bold leading-tight tabular-nums text-slate-950 sm:text-[10px]">
           <Grb
             ime={igralec.team_name}
@@ -102,15 +119,45 @@ function KarticaIgralca({
       {/* Gumb za odstranitev — vedno v istem kotu (spodaj desno), ne glede
           na to, ali ima igralec točke. Prej dinamičen položaj, kar je
           zmedlo uporabnike. */}
+      {/* Vidni krožec je majhen, površina za dotik pa 36 px — sicer prst
+          zadene dres in igralca premakne na klop. */}
       <button
         onClick={naOdstrani}
         title="Odstrani iz kadra"
-        className="absolute -right-1 -bottom-1 flex h-5 w-5 items-center justify-center
-                   rounded-full bg-slate-900/90 text-[10px] text-slate-300 ring-1
-                   ring-white/20 hover:text-rose-400 lg:hidden lg:group-hover:flex"
+        aria-label={`Odstrani ${ime}`}
+        className="absolute -bottom-3 -right-3 flex h-9 w-9 items-center justify-center
+                   text-slate-300 hover:text-rose-400 focus-visible:flex lg:hidden lg:group-hover:flex"
       >
-        ✕
+        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-900/90 text-[10px] ring-1 ring-white/20">
+          ✕
+        </span>
       </button>
+      </div>
+
+      {/* mt-3 = točno toliko, kolikor ✕ (-bottom-3) sega pod dres: se ne
+          prekrivata; z-20 pa puščici za vsak primer ostaneta na vrhu. */}
+      {premik && (
+        <div className="relative z-20 mt-3 flex justify-center gap-1">
+          <button
+            onClick={premik.gor ?? undefined}
+            disabled={!premik.gor}
+            aria-label={`${ime}: prej na vrsti za menjavo`}
+            title="Prej na vrsti za menjavo"
+            className="h-7 w-7 rounded-md bg-white/10 text-xs text-slate-200 hover:bg-white/20 disabled:opacity-30"
+          >
+            ←
+          </button>
+          <button
+            onClick={premik.dol ?? undefined}
+            disabled={!premik.dol}
+            aria-label={`${ime}: pozneje na vrsti za menjavo`}
+            title="Pozneje na vrsti za menjavo"
+            className="h-7 w-7 rounded-md bg-white/10 text-xs text-slate-200 hover:bg-white/20 disabled:opacity-30"
+          >
+            →
+          </button>
+        </div>
+      )}
     </div>
   )
 }
@@ -150,11 +197,14 @@ export default function Igrisce({
   naPreklopPrvo,
   naOdstrani,
   naPraznoMesto,
+  naPremakniKlop,
 }: {
   izbrani: IgralecNaIgriscu[]
   naPreklopPrvo: (i: IgralecNaIgriscu) => void
   naOdstrani: (i: IgralecNaIgriscu) => void
   naPraznoMesto: (p: Pozicija) => void
+  /** Vrstni red klopi; brez njega se klop ne da preurejati. */
+  naPremakniKlop?: (i: IgralecNaIgriscu, smer: -1 | 1) => void
 }) {
   const prvi = izbrani.filter((i) => i.is_starter && i.position)
   const klop = izbrani.filter((i) => !i.is_starter && i.position)
@@ -207,17 +257,29 @@ export default function Igrisce({
 
       {/* klop */}
       <div className="kartica p-2 sm:p-3">
-        <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">
+        <h3 className="text-xs font-bold uppercase tracking-wide text-slate-400">
           Klop
         </h3>
+        <p className="mb-2 text-[11px] text-slate-500">
+          Kdor iz postave ne igra, ga zamenja prvi z iste pozicije s klopi — po
+          vrsti od leve proti desni.
+        </p>
         <Vrsta>
-          {klop.map((i) => (
+          {klop.map((i, n) => (
             <KarticaIgralca
               key={i.id}
               igralec={i}
               zatemnjen
               naKlik={() => naPreklopPrvo(i)}
               naOdstrani={() => naOdstrani(i)}
+              premik={
+                naPremakniKlop && klop.length > 1
+                  ? {
+                      gor: n > 0 ? () => naPremakniKlop(i, -1) : null,
+                      dol: n < klop.length - 1 ? () => naPremakniKlop(i, 1) : null,
+                    }
+                  : undefined
+              }
             />
           ))}
           {VRSTNI_RED.flatMap((koda) =>

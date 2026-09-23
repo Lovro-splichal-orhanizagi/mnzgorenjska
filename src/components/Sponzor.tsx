@@ -13,6 +13,20 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useTekmovanje } from '../lib/tekmovanje'
 
+/**
+ * Naslov iz baze gre v `href`; `javascript:` ali `data:` bi se ob kliku
+ * izvedel na naši domeni. Dovolimo le http(s).
+ */
+function varenNaslov(url: string | null | undefined): string | null {
+  if (!url) return null
+  try {
+    const u = new URL(url)
+    return u.protocol === 'http:' || u.protocol === 'https:' ? u.href : null
+  } catch {
+    return null
+  }
+}
+
 interface Mesto {
   id: number
   name: string
@@ -47,11 +61,12 @@ export default function Sponzor() {
     }
   }, [ligaId])
 
-  if (!mesto) return null
+  const naslov = varenNaslov(mesto?.url)
+  if (!mesto || !naslov) return null
 
   return (
     <a
-      href={mesto.url}
+      href={naslov}
       target="_blank"
       rel="sponsored noopener noreferrer"
       onClick={() =>
@@ -72,7 +87,7 @@ export default function Sponzor() {
         />
       )}
       <span className="min-w-0 flex-1">
-        <span className="block text-xs uppercase tracking-wide text-slate-500">
+        <span className="block text-xs uppercase tracking-wide text-slate-400">
           Sponzor
         </span>
         <span className="block truncate font-semibold text-slate-200">{mesto.name}</span>

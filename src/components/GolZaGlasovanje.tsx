@@ -27,6 +27,8 @@ export interface Gol {
 }
 
 export interface Tekma {
+  /** Liga tekme — prag glasov je njen, ne lige, izbrane v meniju. */
+  competition_id?: number | null
   home_team_id?: number | null
   home_name?: string | null
   away_name?: string | null
@@ -108,7 +110,7 @@ function Zakljucek({
         <span className="w-12 shrink-0 text-center font-black tabular-nums text-slate-500">
           {gol.minute}&apos;
         </span>
-        <span className="text-lg">{ikona}</span>
+        <span className="text-lg" aria-hidden="true">{ikona}</span>
         <span className="min-w-0 flex-1 truncate text-slate-300">
           {besedilo}
         </span>
@@ -145,7 +147,12 @@ export default function GolZaGlasovanje({
     glasovi.map((v) => [String(v.player_id), v.votes]),
   )
   const vodilni = glasovi[0]
-  const prag = useNastavitev()('prag_glasov_asistenca', PRAG_ASISTENCE_PRIVZETO)
+  // Prag lige, v kateri je bila tekma odigrana. Tekma iz deljene povezave ni
+  // nujno iz lige v meniju; brez znane lige velja ta iz menija.
+  const prag = useNastavitev(tekma?.competition_id ?? undefined)(
+    'prag_glasov_asistenca',
+    PRAG_ASISTENCE_PRIVZETO,
+  )
   const brezAsistence = brezAsistencePotrjeno(gol, glasovi, prag)
   const zakljuceno = potrjeno || brezAsistence
 
@@ -192,7 +199,7 @@ export default function GolZaGlasovanje({
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-lg">⚽</span>
+            <span className="text-lg" aria-hidden="true">⚽</span>
             <StDres st={stDresa[String(gol.scorer?.id)]} />
             <strong className="truncate">{ime}</strong>
           </div>
@@ -203,7 +210,7 @@ export default function GolZaGlasovanje({
 
         {potrjeno && (
           <div className="flex items-center gap-2 rounded-xl bg-gnl-500/15 px-3 py-2 ring-1 ring-gnl-400/30">
-            <span>🅰️</span>
+            <span aria-hidden="true">🅰️</span>
             <div className="text-sm">
               <div className="flex items-center gap-1.5 font-bold text-gnl-200">
                 <StDres st={stDresa[String(gol.assist_player_id)]} />
@@ -312,6 +319,7 @@ export default function GolZaGlasovanje({
                 <button
                   key={k.player_id}
                   onClick={() => onGlasuj(gol.id, k.player_id)}
+                  aria-pressed={izbran}
                   className={`flex items-center gap-2 rounded-xl px-3 py-2 text-left text-sm transition ${
                     izbran
                       ? 'bg-gnl-500/25 ring-2 ring-gnl-400'
@@ -328,7 +336,7 @@ export default function GolZaGlasovanje({
                   {n > 0 && (
                     <span className="tabular-nums text-xs text-slate-400">{n}</span>
                   )}
-                  {izbran && <span className="text-gnl-300">✓</span>}
+                  {izbran && <span className="text-gnl-300" aria-hidden="true">✓</span>}
                 </button>
               )
             })}

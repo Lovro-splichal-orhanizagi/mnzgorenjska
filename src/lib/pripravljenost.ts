@@ -25,6 +25,19 @@ export interface IgralecZaKader {
 
 /** Pohlepna izbira zasede klub prezgodaj; ohraniti moramo vse dosegljive kvote. */
 export function najcenejsiKader(igralci: readonly IgralecZaKader[]): number | null {
+  const izbor = najcenejsiIzbor(igralci)
+  return izbor
+    ? izbor.reduce((v, i) => v + Math.round(Number(i.value) * 100), 0) / 100
+    : null
+}
+
+/**
+ * Igralci najcenejšega veljavnega kadra ali `null`, če ga ni. Stanje je
+ * število izbranih po pozicijah; kluba obdelamo enega za drugim, zato njegova
+ * omejitev treh velja natanko enkrat. Ob enaki ceni obdrži vrstni red vhoda —
+ * kdor poda igralce po kakovosti, dobi pri isti ceni boljšega.
+ */
+export function najcenejsiIzbor<T extends IgralecZaKader>(igralci: readonly T[]): T[] | null {
   const pozicije = Object.keys(POZICIJE) as Pozicija[]
   const kvote = pozicije.map((p) => POZICIJE[p].kader)
   const koraki: number[] = []
@@ -36,7 +49,7 @@ export function najcenejsiKader(igralci: readonly IgralecZaKader[]): number | nu
   const stevila = Array.from({ length: stanj }, (_, stanje) =>
     kvote.map((kvota, p) => Math.floor(stanje / koraki[p]) % (kvota + 1)),
   )
-  const klubi = new Map<number, number[][]>()
+  const klubi = new Map<number, { cena: number; igralec: T }[][]>()
   const videni = new Set<number>()
   for (const i of igralci) {
     const p = pozicije.indexOf(i.position as Pozicija)
@@ -50,19 +63,23 @@ export function najcenejsiKader(igralci: readonly IgralecZaKader[]): number | nu
       klubi.set(i.team_id, klub)
     }
     // Celoštevilski centi preprečijo zavrnitev kadra točno na meji proračuna.
-    klub[p].push(Math.round(cena * 100))
+    klub[p].push({ cena: Math.round(cena * 100), igralec: i })
   }
 
+  interface Moznost { stevila: number[]; zamik: number; cena: number }
   let cene = Array<number>(stanj).fill(Infinity)
   cene[0] = 0
+  // Za vsak klub: iz katerega stanja in s katero možnostjo smo prišli.
+  const sledi: { klub: { cena: number; igralec: T }[][]; moznosti: Moznost[]; od: Int32Array; izbira: Int32Array }[] = []
   for (const klub of klubi.values()) {
+    for (const cenePozicije of klub) cenePozicije.sort((a, b) => a.cena - b.cena)
     const vsote = klub.map((cenePozicije) => {
       const vsota = [0]
-      for (const cena of cenePozicije.sort((a, b) => a - b).slice(0, MAX_IZ_KLUBA))
+      for (const { cena } of cenePozicije.slice(0, MAX_IZ_KLUBA))
         vsota.push(vsota[vsota.length - 1] + cena)
       return vsota
     })
-    const moznosti: { stevila: number[]; zamik: number; cena: number }[] = []
+    const moznosti: Moznost[] = []
     const dodaj = (p: number, n: number[], skupaj: number, zamik: number, cena: number): void => {
       if (p === pozicije.length) {
         moznosti.push({ stevila: n, zamik, cena })
@@ -73,19 +90,38 @@ export function najcenejsiKader(igralci: readonly IgralecZaKader[]): number | nu
     }
     dodaj(0, [], 0, 0, 0)
 
-    // Vsak klub obdelamo enkrat, zato se njegova omejitev ne more podvojiti.
     const nove = Array<number>(stanj).fill(Infinity)
+    const od = new Int32Array(stanj).fill(-1)
+    const izbira = new Int32Array(stanj).fill(-1)
     for (let stanje = 0; stanje < stanj; stanje++) {
       if (!Number.isFinite(cene[stanje])) continue
-      for (const m of moznosti) {
-        if (m.stevila.some((n, p) => stevila[stanje][p] + n > kvote[p])) continue
+      moznosti.forEach((m, mi) => {
+        if (m.stevila.some((n, p) => stevila[stanje][p] + n > kvote[p])) return
         const cilj = stanje + m.zamik
-        nove[cilj] = Math.min(nove[cilj], cene[stanje] + m.cena)
-      }
+        if (cene[stanje] + m.cena < nove[cilj]) {
+          nove[cilj] = cene[stanje] + m.cena
+          od[cilj] = stanje
+          izbira[cilj] = mi
+        }
+      })
     }
     cene = nove
+    sledi.push({ klub, moznosti, od, izbira })
   }
-  return Number.isFinite(cene[stanj - 1]) ? cene[stanj - 1] / 100 : null
+  if (!Number.isFinite(cene[stanj - 1])) return null
+
+  // Pot nazaj od polnega kadra do praznega.
+  const izbrani: T[] = []
+  let stanje = stanj - 1
+  for (let k = sledi.length - 1; k >= 0; k--) {
+    const { klub, moznosti, od, izbira } = sledi[k]
+    const m = moznosti[izbira[stanje]]
+    m.stevila.forEach((n, p) => {
+      for (const { igralec } of klub[p].slice(0, n)) izbrani.push(igralec)
+    })
+    stanje = od[stanje]
+  }
+  return izbrani
 }
 
 export interface StanjeLige {

@@ -42,6 +42,10 @@ Vsi pogledi imajo stolpec `competition_id`; vmesnik izbrano ligo hrani v
 
 Uvozne skripte sprejmejo `--tekmovanje mladinci` (privzeto `clani`).
 
+`ovrednoti-igralce` piše samo z `--pisi`. Na **aktivni** ligi celotno
+prevrednotenje (in `ugani-pozicije --pisi` brez `--samo-nove`) zavrne, dokler
+ne dodaš `--dovoli-aktivno` — med sezono cene premika le `--tedensko`.
+
 ## Države, zveze, tekmovanja
 
 Nad tekmovanjem sta dve ravni, obe plitvi:
@@ -153,7 +157,9 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
 - `players` → realni igralci, vezani na realni klub (`teams`) in tekmovanje
 - `fantasy_teams` → ekipe uporabnikov, `fantasy_roster` → izbrani igralci
   (`is_starter`, `is_captain`, `is_vice`, `bench_order`)
-- `fantasy_chips` → vloženi pripomočki (zaenkrat le `klop_plus`, enkrat na sezono)
+- `fantasy_chips` → vloženi pripomočki (`klop_plus`, `wildcard`), vsak enkrat na
+  sezono: ključ je `(fantasy_team_id, chip, season)`, `season` vpiše sprožilec
+  iz kroga. Vmesnik naj bere in briše pripomočke **s filtrom na sezono**.
 - `fantasy_lineups` → posnetek postave po krogih; nastane s `zakleni_krog(krog)`
   oz. `zakleni_zapadle_kroge()` (za cron). Točkovanje bere posnetek, če obstaja.
 - `rounds.lineups_locked_at` → dokončan zajem, tudi za neveljavne/prazne ekipe;
@@ -250,9 +256,12 @@ node scripts/uvoz-zapisnikov.mjs --liga 1502         # arhiv (za cene igralcev)
 node scripts/uvoz-zapisnikov.mjs                     # rezultati tekoče sezone
 node scripts/uvoz-razporeda.mjs --pisi               # krogi in tekme z datumi
 node scripts/ugani-pozicije.mjs --pisi               # ugibanje pozicij
-node scripts/ovrednoti-igralce.mjs                   # cene igralcev
+node scripts/ovrednoti-igralce.mjs --pisi            # cene igralcev
 node scripts/prenesi-grbe.mjs --pisi                 # grbi klubov
 ```
+
+Pozicije in cene na **aktivni** ligi zahtevajo `--dovoli-aktivno` (glej
+razdelek *Dve ligi* zgoraj).
 
 Živi servisni ključ živi samo v GitHub Actions. Kar piše v produkcijo,
 teče tam: `uvoz-lige.yml` (uvoz ene lige), `grbi-nzs.yml` (grbi z NZS, ki
@@ -272,7 +281,7 @@ node scripts/uvoz-zapisnikov.mjs --tekmovanje mladinci --liga 1503
 node scripts/uvoz-zapisnikov.mjs --tekmovanje mladinci
 node scripts/uvoz-razporeda.mjs  --tekmovanje mladinci --pisi
 node scripts/ugani-pozicije.mjs  --tekmovanje mladinci --pisi
-node scripts/ovrednoti-igralce.mjs --tekmovanje mladinci --sezona 2025/26
+node scripts/ovrednoti-igralce.mjs --tekmovanje mladinci --sezona 2025/26 --pisi
 ```
 
 Brez `--liga` skripte vzamejo šifro tekoče sezone iz `competitions.mnzg_liga`
@@ -287,7 +296,7 @@ node scripts/uvoz-zapisnikov.mjs  --tekmovanje lj-1-liga --liga 1904
 node scripts/uvoz-razporeda.mjs   --tekmovanje lj-1-liga --pisi
 node scripts/uvoz-zapisnikov.mjs  --tekmovanje lj-1-liga
 node scripts/ugani-pozicije.mjs   --tekmovanje lj-1-liga --pisi
-node scripts/ovrednoti-igralce.mjs --tekmovanje lj-1-liga --sezona 2025/26
+node scripts/ovrednoti-igralce.mjs --tekmovanje lj-1-liga --sezona 2025/26 --pisi
 # isto za lj-2-liga, arhiv je --liga 1905
 ```
 
@@ -310,10 +319,16 @@ update competitions set active = true where slug in ('lj-1-liga','lj-2-liga');
 - Po spremembi pravic ali rokov poženi tudi `npm run test:varnost`. Testi
   potrebujejo le lokalni Docker Postgres in migracije, ne uvoženih tekem.
   `SUPABASE_TEST_DB` lahko izbere izolirano testno bazo v istem kontejnerju.
-- Lastnik profila sme posodobiti le `display_name` in `insider_team_id`;
-  `is_admin` je servisno polje. Lastnik ekipe sme pisati le vnosna polja ob
+- Lastnik profila sme posodobiti le `display_name`, `insider_team_id` in
+  `brez_opomnikov` (odjava od opomnikov, stran `/opomniki`); `is_admin` je servisno polje. Lastnik ekipe sme pisati le vnosna polja ob
   nastanku in ime ob spremembi. Za kader in denar vedno kliči `shrani_ekipo`.
   Brisanje ekipe je servisno opravilo, ker bi sicer obšlo zaklenjeno zgodovino.
+- Nove tabele in pogledi v `public` vlogama `anon`/`authenticated` **ne dajo
+  več pisanja** samodejno (migracija 20260923090000). Tabela, v katero piše
+  vmesnik, potrebuje izrecen `grant insert/update/delete` in RLS. Pogled, ki ni
+  `security_invoker`, teče mimo RLS — nikoli mu ne daj pisanja.
+- V mini ligo se vstopi samo prek `pridruzi_mini_ligi` (s kodo) ali
+  `ustvari_mini_ligo`; neposrednega vpisa v `mini_liga_clani` ni.
 - Mutacijski RPC-ji so servisni. Admin stran kliče `admin_preracunaj_krog`,
   ki izrecno preveri `is_admin()`. Novi javni RPC potrebuje izrecen `grant execute`;
   privzeto funkcije niso več odprte vlogama `anon` in `authenticated`.

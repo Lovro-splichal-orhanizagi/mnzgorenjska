@@ -13,7 +13,8 @@
 //   2. ga nato izboljsuje z menjavami, dokler jih proracun prenese.
 // Obratna pot (zberi najboljse in potem rezi) se lahko zaplete v kader, ki ga
 // ni mogoce dokoncati — zadnjih nekaj mest zmanjka denarja in ni poti nazaj.
-import { POZICIJE, VRSTNI_RED, MAX_IZ_KLUBA, PRORACUN, STEVILO_PRVIH } from './pravila'
+import { POZICIJE, VRSTNI_RED, MAX_IZ_KLUBA, PRORACUN, STEVILO_PRVIH } from './pravila.ts'
+import { najcenejsiIzbor } from './pripravljenost.ts'
 import type { Pozicija } from './tipi'
 
 export interface IgralecZaPredlog {
@@ -79,27 +80,15 @@ function uporabni(igralci: readonly IgralecZaPredlog[]): Kandidat[] {
 const centi = (v: number) => Math.round(v * 100)
 
 /**
- * Najcenejsi veljaven kader. Poziciji za pozicijo jemlje najcenejse in
- * preskoci klube, ki so ze polni.
+ * Najcenejsi veljaven kader. Pohlepno jemanje po pozicijah tu ne zadostuje:
+ * v ligi s petimi klubi (15 igralcev, najvec 3 iz kluba) mora vsak klub dati
+ * natanko tri, in ce vratarji porabijo mesta v napacnih klubih, napadalcev
+ * zmanjka. Zato isti izracun kot pri preverbi pripravljenosti lige.
  */
 function najcenejsi(kandidati: Kandidat[]): Kandidat[] | null {
-  const poKlubu = new Map<number, number>()
-  const izbrani: Kandidat[] = []
-  for (const poz of VRSTNI_RED) {
-    const nabor = kandidati
-      .filter((k) => k.position === poz)
-      .sort((a, b) => a.cena - b.cena || b.ocena - a.ocena)
-    let vzeto = 0
-    for (const k of nabor) {
-      if (vzeto === POZICIJE[poz].kader) break
-      if ((poKlubu.get(k.team_id) ?? 0) >= MAX_IZ_KLUBA) continue
-      poKlubu.set(k.team_id, (poKlubu.get(k.team_id) ?? 0) + 1)
-      izbrani.push(k)
-      vzeto++
-    }
-    if (vzeto < POZICIJE[poz].kader) return null
-  }
-  return izbrani
+  // Pri enaki ceni naj ostane boljsi igralec.
+  const poOceni = [...kandidati].sort((a, b) => b.ocena - a.ocena)
+  return najcenejsiIzbor(poOceni.map((k) => ({ ...k, value: k.cena })))
 }
 
 /**

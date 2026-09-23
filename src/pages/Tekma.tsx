@@ -2,7 +2,10 @@
 import { useEffect, useState } from 'react'
 import { useNastavitev } from '../lib/nastavitve'
 import { PRAG_ASISTENCE_PRIVZETO } from '../components/GolZaGlasovanje'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useLocation, useParams } from 'react-router-dom'
+import { useNaslov } from '../lib/naslov'
+import { povezavaNaPrijavo } from '../lib/prijava'
+import { mnozina, oblika, GOLI } from '../lib/pomozno'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import type { Pozicija } from '../lib/tipi'
@@ -38,11 +41,16 @@ export default function Tekma() {
   // opravil PostgREST, zdaj jo naredimo tu in je razvidna.
   const tekmaId = Number(id)
   const { session } = useAuth()
-  const pragAsistence = useNastavitev()(
+  const uporabnikId = session?.user.id ?? null
+  const lokacija = useLocation()
+  const [tekma, setTekma] = useState<TekmaVrstica | null>(null)
+  // Prag lige, v kateri je bila tekma odigrana — ne lige iz menija. Do
+  // nalaganja tekme velja privzetek.
+  const pragAsistence = useNastavitev(tekma?.competition_id ?? null)(
     'prag_glasov_asistenca',
     PRAG_ASISTENCE_PRIVZETO,
   )
-  const [tekma, setTekma] = useState<TekmaVrstica | null>(null)
+  useNaslov(tekma ? `${tekma.home_short} – ${tekma.away_short}` : 'Tekma')
   const [nastopi, setNastopi] = useState<NastopTekme[]>([])
   const [goli, setGoli] = useState<Gol[]>([])
   // goal_id -> glasovi, razvrsceni padajoce
@@ -132,12 +140,12 @@ export default function Tekma() {
         skupine[k].sort((a, b) => b.votes - a.votes)
       setGlasovi(skupine)
 
-      if (!session) return setMojiGlasovi({})
+      if (!uporabnikId) return setMojiGlasovi({})
       const { data: moji } = await supabase
         .from('assist_votes')
         .select('goal_id, player_id')
         .in('goal_id', idji)
-        .eq('voter_id', session.user.id)
+        .eq('voter_id', uporabnikId)
       if (preklican) return
       setMojiGlasovi(
         Object.fromEntries(
@@ -150,7 +158,7 @@ export default function Tekma() {
     return () => {
       preklican = true
     }
-  }, [tekmaId, session])
+  }, [tekmaId, uporabnikId])
 
   async function glasuj(golId: number, playerId: number | null) {
     if (!session) return
@@ -279,8 +287,8 @@ export default function Tekma() {
 
       {cakajocih > 0 && (
         <p className="rounded-2xl bg-amber-400/10 p-4 text-sm text-amber-200 ring-1 ring-amber-400/30">
-          🅰️ {cakajocih}{' '}
-          {cakajocih === 1 ? 'gol na tej tekmi čaka' : 'golov na tej tekmi čaka'} na
+          <span aria-hidden="true">🅰️</span> {mnozina(cakajocih, GOLI)} na tej
+          tekmi {oblika(cakajocih, ['čaka', 'čakata', 'čakajo', 'čaka'])} na
           asistenco — dokler je ni, podajalec ostane brez +3 točk. Povej spodaj,
           kdo je podal.
         </p>
@@ -291,7 +299,10 @@ export default function Tekma() {
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h2 className="text-xl font-bold">Goli in asistence</h2>
             {!session && (
-              <Link to="/prijava" className="text-sm text-gnl-300 underline">
+              <Link
+                to={povezavaNaPrijavo(lokacija.pathname + lokacija.search)}
+                className="text-sm text-gnl-300 underline"
+              >
                 Prijavi se za glasovanje
               </Link>
             )}

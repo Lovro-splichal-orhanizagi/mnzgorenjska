@@ -35,6 +35,9 @@ on:
         type: choice
         options: ['true', 'false']
 
+permissions:
+  contents: read
+
 concurrency:
   group: opozorila
   cancel-in-progress: false
@@ -48,7 +51,9 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-      - run: npm ci
+      # Nobena odvisnost ne potrebuje namestitvenih skript (edina je fsevents
+      # za macOS); brez njih tuja koda ob namestitvi ne tece.
+      - run: npm ci --ignore-scripts
       - name: Poslji opozorila
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}

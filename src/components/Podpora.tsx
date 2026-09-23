@@ -49,10 +49,12 @@ export default function Podpora() {
   }, [])
 
   // Ime povemo, ko je znano — tudi ce se je uporabnik prijavil sele pozneje.
+  // Odvisni smo od imena, ne od seje: seja je ob vsakem osveženju žetona nov
+  // objekt in bi interval zagnala znova.
+  const ime =
+    (session?.user?.user_metadata?.display_name as string | undefined) ??
+    (session?.user?.user_metadata?.name as string | undefined)
   useEffect(() => {
-    const ime =
-      (session?.user?.user_metadata?.display_name as string | undefined) ??
-      (session?.user?.user_metadata?.name as string | undefined)
     if (!ime) return
     let ustavljeno = false
     // Skripta se nalaga v ozadju; ko se javi, ji povemo, kdo pise.
@@ -67,7 +69,7 @@ export default function Podpora() {
       ustavljeno = true
       window.clearInterval(cakaj)
     }
-  }, [session])
+  }, [ime])
 
   return null
 }

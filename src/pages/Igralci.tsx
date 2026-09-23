@@ -8,7 +8,12 @@ import {
   KRATKA_POZICIJA,
   formatirajTocke,
   formatirajCeno,
+  mnozina,
+  IGRALCI,
+  TEKME,
 } from '../lib/pomozno'
+import { vseVrstice } from '../lib/strani'
+import { useNaslov } from '../lib/naslov'
 import { Link } from 'react-router-dom'
 import { POZICIJE } from '../lib/pravila'
 import { useTekmovanje } from '../lib/tekmovanje'
@@ -92,14 +97,27 @@ export default function Igralci() {
   const [koliko, setKoliko] = useState(50)
   const [sezone, setSezone] = useState<SezonaVrstica[]>([])
   const [sezona, setSezona] = useState<string | null>(null)
+  // Število ekip v ligi — imenovalec za "Izbran %". Največje število
+  // lastnikov enega igralca ni isto: tudi najbolj izbranega nima vsak.
+  const [ekipVLigi, setEkipVLigi] = useState<number | null>(null)
+  useNaslov('Igralci')
 
   // Sezone in prva stran lestvice gresta hkrati: čakanje na seznam sezon, da
   // sploh vemo, katero lestvico naložiti, je podvojilo čas do prvega izrisa.
   useEffect(() => {
     if (!tekmovanjeId) return
+    // Nova liga: klubi, sezone in napaka prejšnje ne veljajo več, njeni
+    // pozni odgovori pa ne smejo prepisati nove.
+    let veljavno = true
+    setNalaganje(true)
+    setNapaka(null)
+    setFilterKlub('vsi')
+    setSezona(null)
+    setSezone([])
+    setEkipVLigi(null)
     const ligaId = tekmovanjeId
     async function nalozi() {
-      const [{ data: vse, error }, { data: privzeta }] = await Promise.all([
+      const [{ data: vse, error }, { data: privzeta }, { count }] = await Promise.all([
         supabase
           .from('sezone')
           .select('season, odigranih, tekoca')
@@ -113,8 +131,18 @@ export default function Igralci() {
           .eq('competition_id', ligaId)
           .order('points', { ascending: false })
           .limit(500),
+        supabase
+          .from('fantasy_team_standings')
+          .select('fantasy_team_id', { count: 'exact', head: true })
+          .eq('competition_id', ligaId),
       ])
-      if (error) return setNapaka(error.message)
+      if (!veljavno) return
+      if (error) {
+        setNapaka(error.message)
+        setNalaganje(false)
+        return
+      }
+      setEkipVLigi(count ?? null)
       const sezone = (vse ?? []) as SezonaVrstica[]
       setSezone(sezone)
       const izbrana =
@@ -140,41 +168,59 @@ export default function Igralci() {
       }
     }
     nalozi()
+    return () => {
+      veljavno = false
+    }
   }, [tekmovanjeId])
 
   useEffect(() => {
     if (!sezona || !tekmovanjeId) return
+    let veljavno = true
     setNalaganje(true)
     const ligaId = tekmovanjeId
     const izbranaSezona = sezona
     const jeTekoca = sezone.find((s) => s.season === sezona)?.tekoca
     ;(async () => {
-      const { data: standings, error } = await supabase
-        .from('player_season_standings')
-        .select(
-          'id, full_name, position, team_id, team_name, team_short, team_logo, value, season, points, form, last_round, points_per_match, points_per_value, owners, goals, minutes, matches, clean_sheets, rank',
-        )
-        .eq('competition_id', ligaId)
-        .eq('season', izbranaSezona)
-        .order('points', { ascending: false })
-      if (error) {
-        setNapaka(error.message)
+      // Po straneh: velika liga ima v sezoni lahko čez tisoč igralcev.
+      let standings: IgralecSezone[]
+      try {
+        standings = await vseVrstice((od, do_) =>
+          supabase
+            .from('player_season_standings')
+            .select(
+              'id, full_name, position, team_id, team_name, team_short, team_logo, value, season, points, form, last_round, points_per_match, points_per_value, owners, goals, minutes, matches, clean_sheets, rank',
+            )
+            .eq('competition_id', ligaId)
+            .eq('season', izbranaSezona)
+            .order('points', { ascending: false })
+            .order('id')
+            .range(od, do_),
+        ) as IgralecSezone[]
+      } catch (e) {
+        if (!veljavno) return
+        setNapaka((e as Error).message)
         setNalaganje(false)
         return
       }
+      if (!veljavno) return
 
       // Za TEKOČO sezono pokažimo tudi na novo registrirane igralce, ki
       // še nimajo nastopov — sicer novi igralec (npr. sveži prestop) ne
       // bo viden na tej strani, dokler ne odigra prve tekme.
-      let vsi = (standings ?? []) as IgralecSezone[]
+      let vsi = standings
       if (jeTekoca) {
-        const { data: aktivni } = await supabase
-          .from('players')
-          .select(
-            'id, full_name, position, team_id, value, active, teams!inner(name, short_name, logo_url)',
-          )
-          .eq('competition_id', ligaId)
-          .eq('active', true)
+        const aktivni = await vseVrstice((od, do_) =>
+          supabase
+            .from('players')
+            .select(
+              'id, full_name, position, team_id, value, active, teams!inner(name, short_name, logo_url)',
+            )
+            .eq('competition_id', ligaId)
+            .eq('active', true)
+            .order('id')
+            .range(od, do_),
+        ).catch(() => [])
+        if (!veljavno) return
         const znani = new Set(vsi.map((i) => i.id))
         const brezStatistike: IgralecSezone[] = ((aktivni ?? []) as any[])
           .filter((p) => !znani.has(p.id))
@@ -205,6 +251,9 @@ export default function Igralci() {
       setIgralci(vsi)
       setNalaganje(false)
     })()
+    return () => {
+      veljavno = false
+    }
   }, [sezona, sezone, tekmovanjeId])
 
   const klubi = useMemo(() => {
@@ -232,16 +281,14 @@ export default function Igralci() {
   const sezonaPodatki = sezone.find((s) => s.season === sezona)
   const jeLanska = Boolean(sezonaPodatki) && !sezonaPodatki?.tekoca
 
+  if (napaka) return <p className="text-rose-400">Napaka: {napaka}</p>
   if (nalaganje)
     return <p className="animiraj-utrip text-slate-400">Nalaganje …</p>
-  if (napaka) return <p className="text-rose-400">Napaka: {napaka}</p>
 
   // Izbranost pride iz posnetka zadnjega zaklenjenega kroga. Dokler ta ne
   // obstaja, je `owners` NULL — pred prvim rokom so ekipe se skrite in
-  // stevilke ni, kar ni isto kot nic.
-  const ekip = igralci.length
-    ? Math.max(...igralci.map((i) => Number(i.owners ?? 0)), 1)
-    : 1
+  // stevilke ni, kar ni isto kot nic. Delež je od vseh ekip v ligi.
+  const ekip = Math.max(ekipVLigi ?? 0, 1)
 
   return (
     <div className="space-y-5">
@@ -282,7 +329,12 @@ export default function Igralci() {
           <span className="text-xs text-slate-500">
             {sezonaPodatki.odigranih === 0
               ? 'sezona se še ni začela — spodaj ni podatkov'
-              : `${sezonaPodatki.odigranih} odigranih tekem`}
+              : mnozina(sezonaPodatki.odigranih, [
+                  'odigrana tekma',
+                  'odigrani tekmi',
+                  'odigrane tekme',
+                  'odigranih tekem',
+                ])}
           </span>
         )}
       </div>
@@ -356,7 +408,7 @@ export default function Igralci() {
                 key={i.id}
                 className="border-b border-white/5 transition hover:bg-white/5"
               >
-                <td className="px-3 py-2 text-xs font-black text-slate-600">
+                <td className="px-3 py-2 text-xs font-black text-slate-400">
                   {idx + 1}
                 </td>
                 <td className="px-3 py-2">
@@ -379,6 +431,8 @@ export default function Igralci() {
                         {odsotni[i.id] && (
                           <span
                             title={opisOdsotnosti(odsotni[i.id])}
+                            role="img"
+                            aria-label={opisOdsotnosti(odsotni[i.id])}
                             className="ml-1.5 align-middle text-xs"
                           >
                             {odsotni[i.id].kind === 'poskodba' ? '🩹' : '🚫'}
@@ -386,7 +440,7 @@ export default function Igralci() {
                         )}
                       </Link>
                       <div className="text-xs text-slate-500">
-                        {i.team_short} · {i.matches} tekem
+                        {i.team_short} · {mnozina(Number(i.matches ?? 0), TEKME)}
                       </div>
                     </div>
                   </div>
@@ -417,13 +471,13 @@ export default function Igralci() {
                 </td>
                 <td className="px-2 py-2 text-right tabular-nums text-slate-400">
                   {i.owners === null ? (
-                    <span className="text-slate-600" title="Znano bo po prvem roku">
+                    <span className="text-slate-500" title="Znano bo po prvem roku">
                       –
                     </span>
                   ) : (
                     <>
                       {i.owners}
-                      <span className="ml-1 text-xs text-slate-600">
+                      <span className="ml-1 text-xs text-slate-500">
                         ({Math.round((Number(i.owners ?? 0) / ekip) * 100)}%)
                       </span>
                     </>
@@ -443,7 +497,7 @@ export default function Igralci() {
         </div>
       ) : (
         <p className="text-center text-xs text-slate-500">
-          Prikazanih vseh {vidni.length} igralcev.
+          Prikazani so vsi ({mnozina(vidni.length, IGRALCI)}).
         </p>
       )}
     </div>

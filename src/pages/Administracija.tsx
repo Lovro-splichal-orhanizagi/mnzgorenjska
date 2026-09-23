@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { FunctionsHttpError } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import type { Pozicija } from '../lib/tipi'
 import { useAuth } from '../lib/useAuth'
-import { prikazniIme, IME_POZICIJE, formatirajTocke, formatirajCeno } from '../lib/pomozno'
+import { prikazniIme, IME_POZICIJE, formatirajTocke, formatirajCeno, oblika } from '../lib/pomozno'
 import { POZICIJE, VELIKOST_EKIPE, STEVILO_PRVIH, MAX_IZ_KLUBA, VRSTNI_RED, poPozicijah } from '../lib/pravila'
 import { useTekmovanje } from '../lib/tekmovanje'
 import UpravljanjeLig from '../components/admin/UpravljanjeLig'
@@ -10,10 +11,43 @@ import ZivostSkupnosti from '../components/admin/Zivost'
 import ProsnjePoznavalcev from '../components/admin/ProsnjePoznavalcev'
 import RastLig from '../components/admin/RastLig'
 import Sponzorji from '../components/admin/Sponzorji'
+import Potrditev from '../components/admin/Potrditev'
 import Plakat from '../components/Plakat'
 
 // Koliko uporabnikov pokaže ena stran seznama.
 const UPORABNIKOV_NA_STRAN = 50
+
+// Med suhim tekom in pošiljanjem se lahko kdo registrira — toliko jih
+// funkcija sme zajeti več, kot jih je pokazal suhi tek. Kar je čez, zavrne.
+const REZERVA_OPOMNIKOV = 5
+
+const UPORABNIKOM: [string, string, string, string] = ['uporabniku', 'uporabnikoma', 'uporabnikom', 'uporabnikom']
+
+/**
+ * Sporočilo napake klica funkcije. Ob odgovoru, ki ni 2xx, supabase vrne
+ * FunctionsHttpError z `data = null` — razlog (npr. 409 "Preveč kandidatov")
+ * je v telesu odgovora.
+ */
+async function napakaFunkcije(error: unknown): Promise<string> {
+  if (error instanceof FunctionsHttpError) {
+    try {
+      const telo = await (error.context as Response).json()
+      if (telo?.error) return String(telo.error)
+    } catch {
+      /* telo ni JSON — spodaj splošno sporočilo */
+    }
+  }
+  return (error as Error)?.message ?? String(error)
+}
+
+/** "za 1 krog", "za oba kroga", "za vse 3 kroge", "za vseh 5 krogov". */
+function zaVseKroge(n: number): string {
+  if (n === 1) return 'za 1 krog'
+  if (n === 2) return 'za oba kroga'
+  const o = Math.abs(n) % 100
+  if (o === 3 || o === 4) return `za vse ${n} kroge`
+  return `za vseh ${n} krogov`
+}
 
 export default function Administracija() {
   const { session, loading } = useAuth()
@@ -47,7 +81,33 @@ export default function Administracija() {
   // blokirati — koda je nato tiho ne naredila nič: brez zahteve, brez napake.
   // Zato vprašanje in vnos naslova živita kar na strani.
   const [testniNaslov, setTestniNaslov] = useState('')
-  const [potrjujemOpomnike, setPotrjujemOpomnike] = useState(false)
+  // Število prejemnikov iz suhega teka funkcije; dokler ga ni, ni vprašanja.
+  // Prej je številka prišla iz `admin_uporabniki`, funkcija pa je pisala
+  // svojemu (drugačnemu) seznamu — potrditev je obljubljala eno, poslalo se
+  // je drugo.
+  const [kandidatiOpomnika, setKandidatiOpomnika] = useState<number | null>(null)
+  const [potrjujemPreracun, setPotrjujemPreracun] = useState(false)
+  const [preracunavam, setPreracunavam] = useState(false)
+  // Sprememba igralca čaka na potrditev: pozicija povozi glasovanje, klub
+  // spremeni kvoto v kadrih — oboje na en klik po nesreči.
+  const [cakaIgralec, setCakaIgralec] = useState<
+    | { id: number; vrsta: 'pozicija'; pozicija: Pozicija }
+    | { id: number; vrsta: 'klub'; klubId: number }
+    | null
+  >(null)
+  const [shranjujemIgralca, setShranjujemIgralca] = useState(false)
+  const [poznavalecDelam, setPoznavalecDelam] = useState(false)
+  // Trenutna liga za asinhrone odgovore: suhi tek, ki se vrne po menjavi
+  // lige, bi sicer ponudil pošiljanje z drugo številko drugi ligi.
+  const trenutnaLiga = useRef(tekmovanjeId)
+  trenutnaLiga.current = tekmovanjeId
+
+  // Ob menjavi lige odpadejo vsa odprta vprašanja — veljala so za prejšnjo.
+  useEffect(() => {
+    setKandidatiOpomnika(null)
+    setPotrjujemPreracun(false)
+    setCakaIgralec(null)
+  }, [tekmovanjeId])
 
   useEffect(() => {
     if (loading || !tekmovanjeId) return
@@ -123,15 +183,42 @@ export default function Administracija() {
     setLogMailov(log ?? [])
   }
 
+  // Suhi tek: funkcija le prešteje, komu bi pisala (`kandidati_za_opomnik`),
+  // in ne pošlje ničesar. Ta številka gre v vprašanje.
+  async function pripraviOpomnike() {
+    setNapaka(null)
+    setSporocilo(null)
+    setPosiljam(true)
+    const liga = tekmovanjeId
+    try {
+      const { data, error } = await supabase.functions.invoke('posli-opomnik', {
+        body: { competition_id: liga, suho: true },
+      })
+      if (trenutnaLiga.current !== liga) return
+      if (error) throw new Error(await napakaFunkcije(error))
+      if (data?.error) throw new Error(data.error)
+      const n = data?.kandidati_stevilo
+      if (typeof n !== 'number') throw new Error('suhi tek ni vrnil števila prejemnikov')
+      if (n === 0) return setSporocilo('Nikomur v tej ligi ni treba poslati opomnika.')
+      setKandidatiOpomnika(n)
+    } catch (e) {
+      if (trenutnaLiga.current !== liga) return
+      setNapaka(`Štetje prejemnikov ni uspelo: ${(e as Error)?.message ?? e}`)
+    } finally {
+      setPosiljam(false)
+    }
+  }
+
   async function posljiOpomnike() {
-    setPotrjujemOpomnike(false)
+    const n = kandidatiOpomnika
+    if (n == null) return
     setNapaka(null)
     setPosiljam(true)
     try {
       const { data, error } = await supabase.functions.invoke('posli-opomnik', {
-        body: { competition_id: tekmovanjeId },
+        body: { competition_id: tekmovanjeId, najvec: n + REZERVA_OPOMNIKOV },
       })
-      if (error) throw error
+      if (error) throw new Error(await napakaFunkcije(error))
       if (data?.error) throw new Error(data.error)
       const posl = data?.poslano ?? 0
       const presk = data?.preskoceno ?? 0
@@ -142,6 +229,7 @@ export default function Administracija() {
     } catch (e) {
       setNapaka(`Pošiljanje ni uspelo: ${(e as Error)?.message ?? e}`)
     } finally {
+      setKandidatiOpomnika(null)
       setPosiljam(false)
     }
   }
@@ -157,7 +245,7 @@ export default function Administracija() {
       const { data, error } = await supabase.functions.invoke('posli-opomnik', {
         body: { competition_id: tekmovanjeId, test_email: naslov },
       })
-      if (error) throw error
+      if (error) throw new Error(await napakaFunkcije(error))
       if (data?.error) throw new Error(data.error)
       const r = data?.resend
       if (r?.napaka) throw new Error(r.napaka)
@@ -198,11 +286,14 @@ export default function Administracija() {
   // Poznavalec lige: en njegov glas potrdi pozicijo ali asistenco v tej ligi.
   // Dodeli se za izbrano ligo; klik na značko ga odvzame.
   async function nastaviPoznavalca(user_id: string, dodeli: boolean) {
+    if (poznavalecDelam) return
     setNapaka(null)
+    setPoznavalecDelam(true)
     const { error } = await supabase.rpc('admin_nastavi_poznavalca', {
       p_user_id: user_id,
       ...(dodeli ? { p_competition_id: tekmovanjeId as number } : {}),
     })
+    setPoznavalecDelam(false)
     if (error) return setNapaka(error.message)
     setSporocilo(dodeli ? 'Dodeljen kot poznavalec te lige.' : 'Poznavalec lige odvzet.')
     await naloziUporabnike()
@@ -343,20 +434,27 @@ export default function Administracija() {
   async function preracunajVse() {
     setNapaka(null)
     setSporocilo('Preračunavam …')
-    for (const k of krogi) {
-      const { error } = await supabase.rpc('admin_preracunaj_krog', {
-        p_round_id: k.id,
-      })
-      if (error) {
-        setSporocilo(null)
-        return setNapaka(`${k.season}/${k.number}: ${error.message}`)
+    setPreracunavam(true)
+    try {
+      for (const k of krogi) {
+        const { error } = await supabase.rpc('admin_preracunaj_krog', {
+          p_round_id: k.id,
+        })
+        if (error) {
+          setSporocilo(null)
+          return setNapaka(`${k.season}/${k.number}: ${error.message}`)
+        }
       }
+      setSporocilo(`Točke preračunane za ${krogi.length} krogov.`)
+    } finally {
+      setPreracunavam(false)
+      setPotrjujemPreracun(false)
     }
-    setSporocilo(`Točke preračunane za ${krogi.length} krogov.`)
   }
 
   async function isciIgralca(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    setCakaIgralec(null)
     if (!iskanje.trim()) return setZadetki([])
     const { data } = await supabase
       .from('player_overview')
@@ -370,10 +468,13 @@ export default function Administracija() {
 
   async function premakniKlub(id: number, novKlubId: number) {
     setNapaka(null)
+    setShranjujemIgralca(true)
     const { error } = await supabase
       .from('players')
       .update({ team_id: novKlubId })
       .eq('id', id)
+    setShranjujemIgralca(false)
+    setCakaIgralec(null)
     if (error) return setNapaka(error.message)
     const novoIme = klubi.find((k) => k.id === novKlubId)?.name ?? ''
     setZadetki(
@@ -386,10 +487,13 @@ export default function Administracija() {
 
   async function nastaviPozicijo(id: number, pozicija: Pozicija) {
     setNapaka(null)
+    setShranjujemIgralca(true)
     const { error } = await supabase
       .from('players')
       .update({ position: pozicija, position_source: 'admin' })
       .eq('id', id)
+    setShranjujemIgralca(false)
+    setCakaIgralec(null)
     if (error) return setNapaka(error.message)
     setZadetki(zadetki.map((z) => (z.id === id ? { ...z, position: pozicija } : z)))
     setSporocilo('Pozicija nastavljena.')
@@ -503,11 +607,11 @@ export default function Administracija() {
             <>
               <div className="flex flex-wrap items-center gap-2">
                 <button
-                  onClick={() => setPotrjujemOpomnike(true)}
-                  disabled={posiljam || potrjujemOpomnike}
+                  onClick={pripraviOpomnike}
+                  disabled={posiljam || kandidatiOpomnika != null}
                   className="gumb-glavni text-xs disabled:opacity-50"
                 >
-                  {posiljam ? 'Pošiljam …' : '📨 Pošlji opomnike'}
+                  {posiljam ? 'Delam …' : '📨 Pošlji opomnike'}
                 </button>
 
                 {/* Vnos naslova stoji na strani, ne v pogovornem oknu —
@@ -552,33 +656,18 @@ export default function Administracija() {
                 </button>
               </div>
 
-              {potrjujemOpomnike && (
-                <div className="animiraj-vstop flex flex-wrap items-center gap-2 rounded-xl bg-amber-400/10 p-3 text-sm ring-1 ring-amber-400/30">
-                  <span className="text-amber-100">
-                    Poslati opomnik{' '}
-                    <strong>
-                      {
-                        uporabniki.filter((u) => !u.ekipa_veljavna && u.email)
-                          .length
-                      }
-                    </strong>{' '}
-                    uporabnikom brez veljavne ekipe? Kdor ga je dobil v zadnjih
-                    3 dneh, bo preskočen.
-                  </span>
-                  <button
-                    onClick={posljiOpomnike}
-                    disabled={posiljam}
-                    className="gumb-glavni text-xs disabled:opacity-50"
-                  >
-                    Da, pošlji
-                  </button>
-                  <button
-                    onClick={() => setPotrjujemOpomnike(false)}
-                    className="gumb-tih text-xs"
-                  >
-                    Prekliči
-                  </button>
-                </div>
+              {kandidatiOpomnika != null && (
+                <Potrditev
+                  potrdi={posljiOpomnike}
+                  preklici={() => setKandidatiOpomnika(null)}
+                  zaseden={posiljam}
+                  gumb="Da, pošlji"
+                >
+                  Poslati opomnik <strong>{kandidatiOpomnika}</strong>{' '}
+                  {oblika(kandidatiOpomnika, UPORABNIKOM)} te lige brez veljavne ekipe? Kdor ga je dobil v
+                  zadnjih 3 dneh, bo preskočen. Če jih je medtem več kot{' '}
+                  {kandidatiOpomnika + REZERVA_OPOMNIKOV}, funkcija ne pošlje nič.
+                </Potrditev>
               )}
 
               <div className="overflow-x-auto">
@@ -678,7 +767,8 @@ export default function Administracija() {
                           {u.insider_competition_id === tekmovanjeId ? (
                             <button
                               onClick={() => nastaviPoznavalca(u.user_id, false)}
-                              className="znacka bg-sky-400/20 text-sky-200 hover:bg-sky-400/30"
+                              disabled={poznavalecDelam}
+                              className="znacka disabled:opacity-50 bg-sky-400/20 text-sky-200 hover:bg-sky-400/30"
                               title="Poznavalec te lige — klik odvzame"
                             >
                               ★ te lige
@@ -690,7 +780,8 @@ export default function Administracija() {
                           ) : (
                             <button
                               onClick={() => nastaviPoznavalca(u.user_id, true)}
-                              className="text-xs text-slate-600 hover:text-sky-200"
+                              disabled={poznavalecDelam}
+                              className="disabled:opacity-50 text-xs text-slate-600 hover:text-sky-200"
                               title="Dodeli kot poznavalca te lige: en njegov glas potrdi pozicijo ali asistenco"
                             >
                               dodeli
@@ -891,9 +982,24 @@ export default function Administracija() {
           Točke se preračunajo iz nastopov. Poženi po uvozu zapisnikov ali ko se
           potrdi večje število asistenc in pozicij.
         </p>
-        <button onClick={preracunajVse} className="gumb-glavni">
-          Preračunaj vse kroge
+        <button
+          onClick={() => setPotrjujemPreracun(true)}
+          disabled={preracunavam || potrjujemPreracun || krogi.length === 0}
+          className="gumb-glavni disabled:opacity-50"
+        >
+          {preracunavam ? 'Preračunavam …' : 'Preračunaj vse kroge'}
         </button>
+        {potrjujemPreracun && (
+          <Potrditev
+            potrdi={preracunajVse}
+            preklici={() => setPotrjujemPreracun(false)}
+            zaseden={preracunavam}
+            gumb="Da, preračunaj"
+          >
+            Preračunam točke {zaVseKroge(krogi.length)} te lige? Lestvica se
+            med preračunom lahko za hip pokaže napol osveženo.
+          </Potrditev>
+        )}
       </section>
 
       <UpravljanjeLig />
@@ -908,9 +1014,10 @@ export default function Administracija() {
 {`SUPABASE_SERVICE_ROLE_KEY=... node scripts/uvoz-zapisnikov.mjs --tekmovanje ${
   tekmovanje?.slug ?? 'clani'
 }
+# cene: brez --pisi le predogled; vklopljena liga zahteva še --tedensko ali --dovoli-aktivno
 SUPABASE_SERVICE_ROLE_KEY=... node scripts/ovrednoti-igralce.mjs --tekmovanje ${
   tekmovanje?.slug ?? 'clani'
-}`}
+} --pisi`}
         </pre>
       </section>
 
@@ -984,8 +1091,11 @@ SUPABASE_SERVICE_ROLE_KEY=... node scripts/ovrednoti-igralce.mjs --tekmovanje ${
                 {(['GK', 'DEF', 'MID', 'FWD'] as Pozicija[]).map((p) => (
                   <button
                     key={p}
-                    onClick={() => nastaviPozicijo(z.id, p)}
-                    className={`znacka poz-${p} ${
+                    onClick={() =>
+                      z.position !== p && setCakaIgralec({ id: z.id, vrsta: 'pozicija', pozicija: p })
+                    }
+                    disabled={shranjujemIgralca}
+                    className={`znacka poz-${p} disabled:opacity-50 ${
                       z.position === p ? 'ring-2 ring-white/40' : ''
                     }`}
                   >
@@ -1000,9 +1110,10 @@ SUPABASE_SERVICE_ROLE_KEY=... node scripts/ovrednoti-igralce.mjs --tekmovanje ${
                   onChange={(e) =>
                     e.target.value &&
                     Number(e.target.value) !== z.team_id &&
-                    premakniKlub(z.id, Number(e.target.value))
+                    setCakaIgralec({ id: z.id, vrsta: 'klub', klubId: Number(e.target.value) })
                   }
-                  className="rounded-lg border border-white/10 bg-slate-900 px-2 py-1 text-xs"
+                  disabled={shranjujemIgralca}
+                  className="rounded-lg border border-white/10 bg-slate-900 px-2 py-1 text-xs disabled:opacity-50"
                 >
                   {klubi.map((k) => (
                     <option key={k.id} value={k.id}>
@@ -1011,6 +1122,39 @@ SUPABASE_SERVICE_ROLE_KEY=... node scripts/ovrednoti-igralce.mjs --tekmovanje ${
                   ))}
                 </select>
               </div>
+              {cakaIgralec?.id === z.id &&
+                (() => {
+                  const c = cakaIgralec
+                  if (!c) return null
+                  return (
+                    <div className="mt-2">
+                      <Potrditev
+                        potrdi={() =>
+                          c.vrsta === 'pozicija'
+                            ? nastaviPozicijo(z.id, c.pozicija)
+                            : premakniKlub(z.id, c.klubId)
+                        }
+                        preklici={() => setCakaIgralec(null)}
+                        zaseden={shranjujemIgralca}
+                        gumb="Da, shrani"
+                      >
+                        {c.vrsta === 'pozicija' ? (
+                          <>
+                            Igralcu {prikazniIme(z.full_name)} nastavim pozicijo{' '}
+                            <strong>{IME_POZICIJE[c.pozicija]}</strong>? Povozi
+                            glasovanje in spremeni točke za gole ter kvote v kadrih.
+                          </>
+                        ) : (
+                          <>
+                            Prestavim {prikazniIme(z.full_name)} v klub{' '}
+                            <strong>{klubi.find((k) => k.id === c.klubId)?.name ?? '?'}</strong>?
+                            Kadri z več kot {MAX_IZ_KLUBA} igralci kluba postanejo neveljavni.
+                          </>
+                        )}
+                      </Potrditev>
+                    </div>
+                  )
+                })()}
               <div className="mt-2 flex flex-wrap gap-2">
                 <select
                   onChange={(e) =>

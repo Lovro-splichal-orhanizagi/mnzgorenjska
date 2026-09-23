@@ -23,6 +23,7 @@ import {
   type PodatkiPlakata,
   type VrsticaIgralca,
 } from '../lib/plakat'
+import { formatirajTocke, tockZ } from '../lib/pomozno'
 
 const KREM = '#F3EDE0'
 const ZLATA = '#D9A21B'
@@ -341,7 +342,7 @@ async function narisi(p: PodatkiPlakata): Promise<Blob | null> {
     const w = c.measureText(tocke).width
     c.fillStyle = ZLATA
     c.font = pisava(800, 46)
-    c.fillText('točk', ROB + w + 12, 400)
+    c.fillText(tockZ(p.tocke), ROB + w + 12, 400)
     c.fillStyle = 'rgba(243,237,224,.7)'
     c.font = pisava(600, 38)
     c.fillText(`${p.krog}. krog`, ROB + w + 12, 450)
@@ -359,7 +360,7 @@ async function narisi(p: PodatkiPlakata): Promise<Blob | null> {
     if (p.mesto) {
       c.fillStyle = ZLATA
       c.font = pisava(700, 40)
-      c.fillText(p.odEkip ? `${p.mesto}. mesto od ${p.odEkip} ekip` : `${p.mesto}. mesto`, ROB, 616)
+      c.fillText(p.odEkip ? `${p.mesto}. mesto od ${p.odEkip} ${p.odEkip === 1 ? 'ekipe' : 'ekip'}` : `${p.mesto}. mesto`, ROB, 616)
     }
     if (p.igralci.length) seznam(c, 'Moji najboljši v krogu', p.igralci, 680, 50, 84)
     c.fillStyle = 'rgba(243,237,224,.62)'
@@ -389,7 +390,7 @@ export default function Plakat({
         ? `Pridi sestavit ekipo! Fantasy liga za ${ligaVTozilniku(podatki.liga)} je odprta — brezplačno, s pravimi igralci ${podatki.klub}.`
         : podatki.vrsta === 'live'
           ? `Fantasy liga za ${ligaVTozilniku(podatki.liga)} je live. Sestavi ekipo iz pravih igralcev — brezplačno.`
-          : `${podatki.ekipa}: ${podatki.tocke} točk v ${podatki.krog}. krogu. Sestavi svojo ekipo in me premagaj.`
+          : `${podatki.ekipa}: ${formatirajTocke(podatki.tocke)} ${tockZ(podatki.tocke)} v ${podatki.krog}. krogu. Sestavi svojo ekipo in me premagaj.`
 
   async function deli() {
     if (navigator.share) {

@@ -3,6 +3,12 @@
 //   SUPABASE_SERVICE_ROLE_KEY=... node scripts/ugani-pozicije.mjs
 //   ... --pisi                  (dejansko zapiše; brez tega samo pokaže predlog)
 //   ... --tekmovanje mladinci   (mladinska liga; brez tega člani)
+//   ... --samo-nove             (samo igralci brez pozicije; nočni uvoz)
+//   ... --dovoli-aktivno        (prepiše ugibanja tudi v VKLOPLJENI ligi)
+//
+// Pozicija odloča, koliko je vreden gol, in kvoto v kadru. Na vklopljeni ligi
+// bi ponovno ugibanje premetalo pozicije igralcev, ki jih imajo ljudje v
+// ekipah, zato `--pisi` brez `--samo-nove` tam zahteva `--dovoli-aktivno`.
 //
 // Zamisel: kdor doseže veliko golov, je najbrž napadalec. Kdor golov skoraj
 // nima, prejema pa veliko kartonov, je najbrž branilec. Vmesni so vezisti.
@@ -60,6 +66,7 @@ const pisi = process.argv.includes('--pisi')
 // premetavala, ko se statistika nabira. S to zastavico skript le zapolni tiste,
 // ki pozicije še nimajo — tipično novinci, ki so prišli med sezono.
 const samoNove = process.argv.includes('--samo-nove')
+const dovoliAktivno = process.argv.includes('--dovoli-aktivno')
 const db = createClient(BASE, SERVICE, { auth: { persistSession: false } })
 
 // --- podatki ---------------------------------------------------------------
@@ -67,6 +74,13 @@ const db = createClient(BASE, SERVICE, { auth: { persistSession: false } })
 // najprej zožimo na eno tekmovanje, sicer bi mladince primerjali s člani.
 const tekmovanje = await najdiTekmovanje(db, slugTekmovanja())
 console.log(`Tekmovanje: ${tekmovanje.name}`)
+if (pisi && tekmovanje.active && !samoNove && !dovoliAktivno) {
+  console.error(
+    `Liga ${tekmovanje.slug} je vklopljena: ugibanje bi prepisalo pozicije igralcev v ekipah.\n` +
+      'Za nove igralce uporabi --samo-nove, za izrecen prepis dodaj --dovoli-aktivno.',
+  )
+  process.exit(1)
+}
 
 let igralci
 try {
@@ -84,14 +98,22 @@ try {
 }
 
 // Nastopov je cez 19.000 — brez branja po straneh bi karton stel le prvih
-// tisoc vrstic in prior za pozicijo bi slonel na nakljucnem drobcu.
-const kartoni = await vseVrstice((od, do_) =>
-  db
-    .from('appearances')
-    .select('player_id, yellow_cards, red_cards')
-    .order('id')
-    .range(od, do_),
-)
+// tisoc vrstic in prior za pozicijo bi slonel na nakljucnem drobcu. Beremo
+// le nastope te lige: ostale bi le brali zaman.
+let kartoni
+try {
+  kartoni = await vseVrstice((od, do_) =>
+    db
+      .from('appearances')
+      .select('player_id, yellow_cards, red_cards, players!inner(competition_id)')
+      .eq('players.competition_id', tekmovanje.id)
+      .order('id')
+      .range(od, do_),
+  )
+} catch (e) {
+  console.error(`Nastopov ni mogoče prebrati: ${e.message}`)
+  process.exit(1)
+}
 const poIgralcu = new Map()
 for (const a of kartoni ?? []) {
   const t = poIgralcu.get(a.player_id) ?? { rumeni: 0, rdeci: 0 }
@@ -182,14 +204,19 @@ if (!pisi) {
   process.exit(0)
 }
 
+// Vsaka napaka pri zapisu konča zagon z neuspehom — sicer je nočni uvoz
+// zelen, čeprav pozicije niso zapisane.
+let napak = 0
 let zapisanih = 0
 for (const p of predlogi) {
   const { error: e } = await db
     .from('players')
     .update({ position: p.ugibanje, position_source: 'ugibanje' })
     .eq('id', p.id)
-  if (e) console.log(`  ${p.full_name}: ${e.message}`)
-  else zapisanih++
+  if (e) {
+    console.error(`  ${p.full_name}: ${e.message}`)
+    napak++
+  } else zapisanih++
 }
 console.log(`\nZapisanih ugibanj: ${zapisanih}`)
 
@@ -267,21 +294,52 @@ for (const pi of priori) {
   }
 }
 
-// Vrstice zapisujemo v paketih, da ne presežemo request-sizea.
-const { error: eDel } = await db
-  .from('position_priors')
-  .delete()
-  .in('player_id', priori.map((p) => p.id))
-if (eDel) console.log(`Napaka pri brisanju starih priorjev: ${eDel.message}`)
-
+// Upsert namesto "izbriši vse, nato vstavi": ob napaki na pol poti je prej
+// del lige ostal brez priorjev (prag glasovanja brez njih ne pade). Ključ je
+// (player_id, position), zato ponovni zapis le posodobi oceno.
+// Paketi po 200 — tako ne presežemo velikosti zahteve.
 let zapisanihPriorjev = 0
 for (let i = 0; i < vrstice.length; i += 200) {
   const paket = vrstice.slice(i, i + 200)
-  const { error: eIns } = await db.from('position_priors').insert(paket)
-  if (eIns) console.log(`Napaka pri zapisu priorjev: ${eIns.message}`)
-  else zapisanihPriorjev += paket.length
+  const { error: eIns } = await db
+    .from('position_priors')
+    .upsert(paket, { onConflict: 'player_id,position' })
+  if (eIns) {
+    console.error(`Napaka pri zapisu priorjev: ${eIns.message}`)
+    napak++
+  } else zapisanihPriorjev += paket.length
 }
 console.log(`Zapisanih priorjev: ${zapisanihPriorjev} (${priori.length} igralcev × 4 pozicije)`)
+
+// Odvečni so le priori igralcev te lige, ki jih zgornji seznam ni zajel.
+// Brišemo po id-jih v paketih po 200, da naslov zahteve ne preraste meje.
+try {
+  const znani = new Set(priori.map((p) => p.id))
+  const obstojeci = await vseVrstice((od, do_) =>
+    db
+      .from('position_priors')
+      .select('player_id, players!inner(competition_id)')
+      .eq('players.competition_id', tekmovanje.id)
+      .order('player_id')
+      .order('position')
+      .range(od, do_),
+  )
+  const odvecni = [...new Set(obstojeci.map((r) => r.player_id))].filter((id) => !znani.has(id))
+  for (let i = 0; i < odvecni.length; i += 200) {
+    const { error: eDel } = await db
+      .from('position_priors')
+      .delete()
+      .in('player_id', odvecni.slice(i, i + 200))
+    if (eDel) {
+      console.error(`Napaka pri brisanju odvečnih priorjev: ${eDel.message}`)
+      napak++
+    }
+  }
+  if (odvecni.length) console.log(`Odstranjenih odvečnih priorjev: ${odvecni.length} igralcev`)
+} catch (e) {
+  console.error(`Odvečnih priorjev ni mogoče prebrati: ${e.message}`)
+  napak++
+}
 
 // Nekaj najbolj prepričljivih primerov v izpis.
 const najzanesljivejsi = [...priori]
@@ -297,3 +355,8 @@ for (const p of najzanesljivejsi) {
 const { data: pregled } = await db.from('position_confidence').select('*')
 console.log('\nIzvor pozicij:')
 for (const r of pregled ?? []) console.log(`  ${r.position_source}: ${r.players}`)
+
+if (napak > 0) {
+  console.error(`\nNapak pri zapisu: ${napak}. Ugibanje ni uspelo v celoti.`)
+  process.exitCode = 1
+}

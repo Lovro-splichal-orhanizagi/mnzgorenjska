@@ -14,22 +14,27 @@ on:
     - cron: '0 6 * * 1'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   porocilo:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    env:
-      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-      DISCORD_WEBHOOK_TEDENSKO: ${{ secrets.DISCORD_WEBHOOK_TEDENSKO }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
-      - run: npm ci
+      # Nobena odvisnost ne potrebuje namestitvenih skript (edina je fsevents
+      # za macOS); brez njih tuja koda ob namestitvi ne tece.
+      - run: npm ci --ignore-scripts
       - name: Tedensko porocilo
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          DISCORD_WEBHOOK_TEDENSKO: ${{ secrets.DISCORD_WEBHOOK_TEDENSKO }}
         run: node scripts/tedensko-porocilo.mjs --discord
 
       # Rdec zagon v GitHubu ni alarm, dokler ga kdo ne vidi. Uvoz je dvakrat

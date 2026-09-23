@@ -12,6 +12,8 @@
 //
 // Tu je racunski del; risanje je v `src/components/Plakat.tsx`.
 
+import { mnozina, oblika } from './pomozno'
+
 export const SIRINA = 1080
 export const VISINA = 1080
 /** Levi rob — vse je levo poravnano, kot na plakatu, ne sredinjeno kot na kartici. */
@@ -166,17 +168,15 @@ export function najboljsiTrije(
     .slice(0, 3)
 }
 
-/** Slovenska sklanjatev: 1 navijač, 2 navijača, 3–4 navijači, 5+ navijačev. */
+/** Slovenska sklanjatev: 1 navijač, 2 navijača, 3–4 navijači, 5+ (in 21) navijačev. */
 export function navijacev(n: number): string {
-  if (n % 100 >= 11 && n % 100 <= 14) return `${n} navijačev`
-  const k = { 1: 'navijač', 2: 'navijača', 3: 'navijači', 4: 'navijači' }[n % 10] ?? 'navijačev'
-  return `${n} ${k}`
+  return mnozina(n, ['navijač', 'navijača', 'navijači', 'navijačev'])
 }
 
 /** Stavek pod seznamom kluba; prazen, kadar ni kaj povedati. */
 export function stavekNavijacev(n: number): string | null {
   if (n <= 0) return null
-  const glagol = n === 1 ? 'že ima' : n === 2 ? 'že imata' : n <= 4 ? 'že imajo' : 'že ima'
+  const glagol = oblika(n, ['že ima', 'že imata', 'že imajo', 'že ima'])
   return `${navijacev(n)} ${glagol} naše igralce v ekipi.`
 }
 

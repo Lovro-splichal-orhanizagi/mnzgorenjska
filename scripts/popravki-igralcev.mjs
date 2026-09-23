@@ -295,7 +295,8 @@ for (const ime of NEAKTIVNI) {
   if (!pisi) continue
   const { error: eA } = await db
     .from('players')
-    .update({ active: false })
+    // odsel_at pove uvozu razporeda, da igralca ne sme spet vkljuciti.
+    .update({ active: false, odsel_at: new Date().toISOString() })
     .eq('id', i.id)
   if (eA) {
     console.log(`  ✗ napaka: ${eA.message}`)

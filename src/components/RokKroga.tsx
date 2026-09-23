@@ -97,6 +97,8 @@ export default function RokKroga() {
     month: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
+    // Rok je po ljubljanskem času, tudi če je telefon nastavljen drugače.
+    timeZone: 'Europe/Ljubljana',
   })
 
   return (
@@ -111,7 +113,7 @@ export default function RokKroga() {
           {tekmovanje?.short_name ?? ''} · {krog.number}. krog
         </span>
         {zapadel ? (
-          <span>zaklenjen — postave ni več mogoče spreminjati</span>
+          <span>zaklenjen — spremembe ekipe zdaj veljajo za naslednji krog</span>
         ) : (
           <>
             <span className="opacity-80">zaklep čez</span>

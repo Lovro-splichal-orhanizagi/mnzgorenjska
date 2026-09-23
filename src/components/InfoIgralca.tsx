@@ -4,7 +4,7 @@
 // njegov profil — na pol sestavljeni ekipi to pomeni izgubiti kontekst. Ta
 // plosca pokaze isto, kar odloca ob nakupu: kaj je letos naredil, kam gre
 // cena in koga njegov klub igra naslednjic.
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { formatirajCeno, formatirajTocke, prikazniIme } from '../lib/pomozno'
@@ -57,6 +57,19 @@ export default function InfoIgralca({
   const [krogov, setKrogov] = useState(0)
   const [tekme, setTekme] = useState<Tekma[]>([])
   const [nalaganje, setNalaganje] = useState(true)
+  const okno = useRef<HTMLDivElement | null>(null)
+
+  // Pogovorno okno: fokus vanj ob odprtju, Escape ga zapre.
+  useEffect(() => {
+    okno.current?.focus()
+  }, [])
+  useEffect(() => {
+    const tipka = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') naZapri()
+    }
+    window.addEventListener('keydown', tipka)
+    return () => window.removeEventListener('keydown', tipka)
+  }, [naZapri])
 
   useEffect(() => {
     let veljavno = true
@@ -154,7 +167,14 @@ export default function InfoIgralca({
         onClick={naZapri}
         className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm"
       />
-      <div className="relative max-h-[88dvh] w-full overflow-y-auto overscroll-contain rounded-t-2xl border-t border-white/15 bg-slate-950 p-4 shadow-2xl sm:max-w-md sm:rounded-2xl sm:border">
+      <div
+        ref={okno}
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Podatki o igralcu ${prikazniIme(ime)}`}
+        tabIndex={-1}
+        className="relative max-h-[88dvh] w-full overflow-y-auto overscroll-contain rounded-t-2xl border-t border-white/15 bg-slate-950 p-4 shadow-2xl outline-none sm:max-w-md sm:rounded-2xl sm:border"
+      >
         <div className="mb-3 flex items-start gap-2">
           <Grb ime={klub} kratko={klubKratko} logo={klubLogo} velikost={26} />
           <div className="min-w-0 flex-1">
@@ -163,7 +183,7 @@ export default function InfoIgralca({
           </div>
           <button
             onClick={naZapri}
-            aria-label="Zapri"
+            aria-label="Zapri podatke o igralcu"
             className="shrink-0 rounded-lg border border-white/15 bg-white/10 px-2.5 py-1 text-sm font-semibold hover:bg-white/15"
           >
             ✕
@@ -212,7 +232,7 @@ export default function InfoIgralca({
                       }`}
                     >
                       {dp > 0 ? '▲' : dp < 0 ? '▼' : '•'}{' '}
-                      {Math.abs(dp).toFixed(1)}
+                      {formatirajCeno(Math.abs(dp))}
                     </span>
                   </span>
                 </div>

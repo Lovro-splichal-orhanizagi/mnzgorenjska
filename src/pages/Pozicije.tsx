@@ -2,11 +2,20 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNastavitev } from '../lib/nastavitve'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
-import { prikazniIme, IME_POZICIJE, KRATKA_POZICIJA } from '../lib/pomozno'
+import {
+  prikazniIme,
+  IME_POZICIJE,
+  KRATKA_POZICIJA,
+  mnozina,
+  GOLI,
+  TEKME,
+} from '../lib/pomozno'
 import { useTekmovanje } from '../lib/tekmovanje'
 import ProsnjaZaPoznavalca from '../components/ProsnjaZaPoznavalca'
 import Grb from '../components/Grb'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
+import { useNaslov } from '../lib/naslov'
+import { povezavaNaPrijavo } from '../lib/prijava'
 import type { Pozicija } from '../lib/tipi'
 
 /** Klub v izbirniku. */
@@ -64,7 +73,10 @@ export function adaptivniPrag(priorZaTo: number, prag: number, minPrag: number) 
 
 export default function Pozicije() {
   const { session, loading } = useAuth()
+  const uporabnikId = session?.user.id ?? null
   const { id: tekmovanjeId, tekmovanje } = useTekmovanje()
+  const lokacija = useLocation()
+  useNaslov('Pozicije')
   const nastavitev = useNastavitev()
   const prag = nastavitev('prag_glasov_pozicija', PRAG_PRIVZETO)
   const minPrag = nastavitev('min_prag_glasov_pozicija', MIN_PRAG_PRIVZETO)
@@ -94,12 +106,18 @@ export default function Pozicije() {
 
   useEffect(() => {
     if (!tekmovanjeId) return
+    // Klub prejšnje lige v tej morda sploh ne igra — izbira se začne znova.
+    setKlubId(null)
+    setIgralci([])
+    setNalaganje(true)
+    let veljavno = true
     supabase
       .from('competition_teams')
       .select('team_id, name')
       .eq('competition_id', tekmovanjeId)
       .order('name')
       .then(({ data }) => {
+        if (!veljavno) return
         const seznam: Klub[] = ((data ?? []) as any[]).map((k) => ({
           id: k.team_id,
           name: k.name,
@@ -108,11 +126,14 @@ export default function Pozicije() {
         setKlubId(seznam[0]?.id ?? null)
         setNalaganje(false)
       })
+    return () => {
+      veljavno = false
+    }
   }, [tekmovanjeId])
 
   // Profil (insider status) in točnost glasovanja — enkrat ob prijavi.
   useEffect(() => {
-    if (!session) {
+    if (!uporabnikId) {
       setInsiderTeamId(null)
       setPoznavalecLige(false)
       setMojaUtez(null)
@@ -125,12 +146,12 @@ export default function Pozicije() {
         supabase
           .from('profiles')
           .select('insider_team_id, insider_competition_id, is_admin')
-          .eq('id', session.user.id)
+          .eq('id', uporabnikId)
           .maybeSingle(),
         supabase
           .from('voter_position_accuracy')
           .select('resolved, correct')
-          .eq('voter_id', session.user.id)
+          .eq('voter_id', uporabnikId)
           .maybeSingle(),
       ])
       if (preklican) return
@@ -150,10 +171,10 @@ export default function Pozicije() {
       else setMojaUtez(Math.max(0.5, Math.min(max, 0.5 + (max - 0.5) * (c / r))))
     })()
     return () => { preklican = true }
-  }, [session, tekmovanjeId])
+  }, [uporabnikId, tekmovanjeId])
 
   useEffect(() => {
-    if (!klubId) return
+    if (!klubId || !tekmovanjeId) return
     const ligaId = tekmovanjeId
     const idKluba = klubId
     let preklican = false
@@ -204,12 +225,12 @@ export default function Pozicije() {
       }
       setPriori(priorMap)
 
-      if (session) {
+      if (uporabnikId) {
         const { data: moji } = await supabase
           .from('position_votes')
           .select('player_id, position')
           .in('player_id', ids)
-          .eq('voter_id', session.user.id)
+          .eq('voter_id', uporabnikId)
         if (preklican) return
         setMojiGlasovi(
           Object.fromEntries(
@@ -223,7 +244,7 @@ export default function Pozicije() {
       preklican = true
     }
     // insiderTeamId je v DEP, ker sprememba insider statusa vpliva na uteži.
-  }, [klubId, session, insiderTeamId, tekmovanjeId])
+  }, [klubId, uporabnikId, insiderTeamId, tekmovanjeId])
 
   async function nastaviInsider(id: number | null) {
     if (!session) return
@@ -326,20 +347,20 @@ export default function Pozicije() {
         </h1>
         <p className="max-w-2xl text-slate-400">
           Zapisniki označijo le vratarja, postave pa naštejejo po številkah
-          dresov — pozicij torej ni mogoče razbrati. Določi jih skupnost. Osnovni
-          prag je <strong className="text-gnl-300">{prag} glasov</strong>, a se
-          zniža (do {minPrag}), če je statistični prior (številka dresa, goli,
-          kartoni) močan v tisto smer. Glasovi{' '}
+          dresov — pozicij torej ni mogoče razbrati. Določi jih skupnost.
+          Potrebnih glasov: <strong className="text-gnl-300">{prag}</strong> —
+          število se zniža (do {minPrag}), če je statistični prior (številka
+          dresa, goli, kartoni) močan v tisto smer. Glasovi{' '}
           <strong className="text-gnl-300">poznavalcev kluba</strong> in
           uporabnikov z <strong className="text-gnl-300">visoko točnostjo</strong>{' '}
           štejejo več.
         </p>
         <p className="max-w-2xl rounded-xl bg-white/5 p-3 text-sm text-slate-400">
-          ⏳ Izglasovane pozicije se uveljavijo <strong>enkrat na teden, v
+          <span aria-hidden="true">⏳</span> Izglasovane pozicije se uveljavijo <strong>enkrat na teden, v
           ponedeljek zjutraj</strong>, vse naenkrat. Tako se liga med tednom ne
           spreminja pod prsti: kar vidiš v torek, velja tudi v soboto, ko se
           zaklene krog. Igralec, ki je že zbral dovolj glasov, je do takrat
-          označen z ⏳.
+          označen s peščeno uro <span aria-hidden="true">⏳</span>.
         </p>
       </header>
 
@@ -393,7 +414,14 @@ export default function Pozicije() {
 
       {!session && (
         <p className="kartica border-amber-400/30 bg-amber-400/10 p-3 text-sm text-amber-200">
-          Za glasovanje se moraš prijaviti.
+          Za glasovanje se moraš{' '}
+          <Link
+            to={povezavaNaPrijavo(lokacija.pathname + lokacija.search)}
+            className="font-semibold underline hover:text-amber-100"
+          >
+            prijaviti
+          </Link>
+          .
         </p>
       )}
 
@@ -567,9 +595,9 @@ function IgralecKartica({
             {prikazniIme(igralec.full_name)}
           </Link>
           <div className="text-xs text-slate-500">
-            {igralec.matches} tekem · {igralec.minutes} min · {igralec.goals}{' '}
-            {igralec.goals === 1 ? 'gol' : 'golov'} ·{' '}
-            {igralec.clean_sheets} brez prejetega
+            {mnozina(igralec.matches ?? 0, TEKME)} · {igralec.minutes ?? 0} min ·{' '}
+            {mnozina(igralec.goals ?? 0, GOLI)} · {igralec.clean_sheets ?? 0} brez
+            prejetega
           </div>
         </div>
 
@@ -584,8 +612,14 @@ function IgralecKartica({
                   : 'Potrdila skupnost'
             }
           >
-            {igralec.position ? IKONA[igralec.position] : '❔'}{' '}
-            {igralec.position ? IME_POZICIJE[igralec.position] : ''}
+            <span aria-hidden="true">
+              {igralec.position ? IKONA[igralec.position] : '❔'}
+            </span>{' '}
+            {igralec.position && (
+              <abbr title={IME_POZICIJE[igralec.position]} className="no-underline">
+                {KRATKA_POZICIJA[igralec.position]}
+              </abbr>
+            )}
             {izZapisnika && ' · zapisnik'}
           </span>
         )}
@@ -595,7 +629,8 @@ function IgralecKartica({
             className="znacka bg-amber-400/20 text-amber-200"
             title="Pozicije se uveljavijo enkrat na teden, v ponedeljek zjutraj — tako se liga med tednom ne spreminja pod prsti."
           >
-            ⏳ izglasovano: {IME_POZICIJE[vodilna[0]]} · v ponedeljek
+            <span aria-hidden="true">⏳</span> izglasovano:{' '}
+            {KRATKA_POZICIJA[vodilna[0]]} · v ponedeljek
           </span>
         )}
 
@@ -619,7 +654,7 @@ function IgralecKartica({
           ) : (
             <button
               onClick={() => onOdhod(igralec.id, true)}
-              className="text-xs text-slate-600 hover:text-rose-300"
+              className="text-xs text-slate-400 hover:text-rose-300"
               title="Igralec pri tem klubu ne igra več — umakne ga s trga. Nastop v zapisniku ga vrne sam."
             >
               ne igra več
@@ -662,6 +697,7 @@ function IgralecKartica({
                 key={p}
                 onClick={() => onGlasuj(igralec.id, p)}
                 disabled={!omogoceno}
+                aria-pressed={izbran}
                 title={
                   `Utež ${weight.toFixed(1)} / prag ${pragZa}` +
                   (priorZa ? ` · prior ${Math.round(priorZa * 100)}%` : '') +
@@ -690,13 +726,13 @@ function IgralecKartica({
                   />
                 )}
                 <span className="relative flex items-center justify-center gap-1">
-                  {IKONA[p]} {KRATKA_POZICIJA[p]}
+                  <span aria-hidden="true">{IKONA[p]}</span> {KRATKA_POZICIJA[p]}
                   {votes > 0 && (
                     <span className="tabular-nums opacity-70">
                       {weight.toFixed(1)}
                     </span>
                   )}
-                  {izbran && <span>✓</span>}
+                  {izbran && <span aria-hidden="true">✓</span>}
                 </span>
               </button>
             )

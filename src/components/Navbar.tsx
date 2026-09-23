@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../lib/useAuth'
 import { useTekmovanje } from '../lib/tekmovanje'
 import { sestaviVabilo, vabiloMailto } from '../lib/vabilo'
 import { supabase } from '../lib/supabase'
+import { potrdiZapustitev } from '../lib/neshranjeno'
 import IzbirnikLige from './IzbirnikLige'
 
 interface Povezava {
@@ -68,6 +69,15 @@ export default function Navbar() {
   const vecRef = useZapriZunaj(vecOdprt, () => setVecOdprt(false))
   const racunRef = useZapriZunaj(racunOdprt, () => setRacunOdprt(false))
 
+  // Mobilni meni se zapre ob vsaki navigaciji — tudi ob gumbu nazaj ali
+  // povezavi zunaj menija, ne le ob kliku nanj.
+  const { pathname } = useLocation()
+  useEffect(() => {
+    setOdprt(false)
+    setVecOdprt(false)
+    setRacunOdprt(false)
+  }, [pathname])
+
   // Klube beremo za vabilo; brez njih vabilo ostane smiselno, le brez seznama.
   useEffect(() => {
     if (!tekmovanjeId) return
@@ -88,6 +98,7 @@ export default function Navbar() {
 
   useEffect(() => {
     if (!tekmovanjeId) return
+    let veljavno = true
     // Samo tekme, o katerih se je še mogoče izreči: glasovanje se zapre z
     // naslednjim krogom. Prej je značka štela vse od začetka časa in je
     // kazala številko, ki je ni bilo mogoče spraviti na nič.
@@ -97,6 +108,8 @@ export default function Navbar() {
       .eq('competition_id', tekmovanjeId)
       .eq('glasovanje_odprto', true)
       .then(({ data }) => {
+        // Odgovor za ligo, ki je medtem ni več v meniju, ne sme prepisati značke.
+        if (!veljavno) return
         setCakaGlasov(
           (data ?? []).reduce(
             (v: number, x: { brez_asistence?: number | null }) =>
@@ -105,24 +118,33 @@ export default function Navbar() {
           ),
         )
       })
+    return () => {
+      veljavno = false
+    }
   }, [tekmovanjeId])
 
+  const uporabnikId = session?.user.id
   useEffect(() => {
-    if (!session) {
+    if (!uporabnikId) {
       setJeAdmin(false)
       setIme(null)
       return
     }
+    let veljavno = true
     supabase
       .from('profiles')
       .select('is_admin, display_name')
-      .eq('id', session.user.id)
+      .eq('id', uporabnikId)
       .maybeSingle()
       .then(({ data }) => {
+        if (!veljavno) return
         setJeAdmin(Boolean(data?.is_admin))
         setIme((data?.display_name as string | null) ?? null)
       })
-  }, [session])
+    return () => {
+      veljavno = false
+    }
+  }, [uporabnikId])
 
   const vec = jeAdmin ? [...ostale, { pot: '/admin', naslov: 'Admin' }] : ostale
   // Začetnica za avatar: iz vzdevka, sicer iz e-naslova.
@@ -203,7 +225,7 @@ export default function Navbar() {
             </div>
           </div>
 
-          <div className="ml-auto text-sm lg:ml-1">
+          <div className="ml-auto shrink-0 text-sm lg:ml-1">
             {session ? (
               <div ref={racunRef} className="relative">
                 <button
@@ -225,6 +247,14 @@ export default function Navbar() {
                     <div className="truncate px-3 py-2 text-xs text-slate-500">
                       {ime ?? session.user.email}
                     </div>
+                    <NavLink
+                      to="/opomniki"
+                      role="menuitem"
+                      className={vrsticaMenija}
+                      onClick={() => setRacunOdprt(false)}
+                    >
+                      Opomniki
+                    </NavLink>
                     <a
                       href={vabilo}
                       role="menuitem"
@@ -236,7 +266,10 @@ export default function Navbar() {
                     <button
                       type="button"
                       role="menuitem"
-                      onClick={() => supabase.auth.signOut()}
+                      onClick={() => {
+                        if (!potrdiZapustitev()) return
+                        supabase.auth.signOut()
+                      }}
                       className={`w-full ${vrsticaMenija}`}
                     >
                       Odjava
@@ -251,15 +284,25 @@ export default function Navbar() {
             )}
           </div>
 
+          {/* Značka asistenc je tudi na hamburgerju: na telefonu je meni zaprt
+              in opomnik bi sicer ostal skrit. */}
           <button
             onClick={() => setOdprt(!odprt)}
-            aria-label="Meni"
+            aria-label={cakaGlasov > 0 ? `Meni (${cakaGlasov} za glasovanje)` : 'Meni'}
             aria-expanded={odprt}
-            className="flex h-11 w-11 items-center justify-center rounded-xl border
+            className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border
                        border-white/15 bg-white/5 text-2xl leading-none text-slate-200
                        active:scale-95 lg:hidden"
           >
-            ☰
+            <span aria-hidden="true">☰</span>
+            {cakaGlasov > 0 && (
+              <span
+                aria-hidden="true"
+                className="absolute -right-1.5 -top-1.5 rounded-full bg-amber-400 px-1.5 py-0.5 text-[10px] font-black leading-none text-slate-950"
+              >
+                {cakaGlasov}
+              </span>
+            )}
           </button>
         </div>
 
@@ -279,6 +322,11 @@ export default function Navbar() {
                   {p.pot === '/glasovanje' && znacka(cakaGlasov)}
                 </NavLink>
               ))}
+              {session && (
+                <NavLink to="/opomniki" className={slog} onClick={() => setOdprt(false)}>
+                  Opomniki
+                </NavLink>
+              )}
               <a
                 href={vabilo}
                 className="col-span-2 rounded-lg px-3 py-1.5 text-center text-slate-400 hover:bg-white/5"
