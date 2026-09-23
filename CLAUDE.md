@@ -175,7 +175,13 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   — pozicija odloča, koliko je vreden gol, zato bi brez tega lestvica kazala
   stanje ob uvozu, ko je pozicijo poznal samo vratar
 - `ucinkovita_postava(ekipa, krog)` → postava po samodejnih menjavah z množitelji;
-  iz nje računata `fantasy_round_points` in `fantasy_team_standings`
+  iz nje računa `fantasy_round_points_izracun`. Izid hrani tabela `tocke_krogov`
+  in `fantasy_round_points` (ter z njim obe lestvici) bere **tabelo**, ker je
+  sprotni izračun anonimnim obiskovalcem presegel 3 s. Tabelo po krogih osvežijo
+  sprožilci na `player_scores`, `fantasy_lineups`, `fantasy_transfers`,
+  `fantasy_chips`, `appearances` in `matches`; ponoči jo cron obnovi vso. Nov
+  vhod v izračun **potrebuje svoj sprožilec**, sicer lestvica zaostaja do noči
+  (`npm run preizkus-tock-krogov` primerja tabelo z izračunom).
 - `player_standings` → lestvica igralcev (točke, forma, na tekmo, izbranost)
 - stran Rezultati (`/rezultati`, `/tekma/:id`) sestavi postavi tekme iz
   `appearances` + `appearance_points`; nove sheme ne potrebuje
