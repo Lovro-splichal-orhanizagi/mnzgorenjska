@@ -6,6 +6,7 @@
 // spoštuje spodnje in zgornje meje po pozicijah.
 
 import type { IgralecVKadru, IgralecZaPravila, Pozicija } from './tipi'
+import { formatirajCeno, oblika, prikazniIme } from './pomozno.ts'
 
 export const VELIKOST_EKIPE = 15
 export const STEVILO_PRVIH = 11
@@ -98,7 +99,7 @@ export function zakajNeGre(
   }
 
   if (Number(igralec.value ?? 0) > preostalo)
-    return `Premalo proračuna — igralec stane ${Number(igralec.value ?? 0)}, na voljo imaš ${preostalo.toFixed(1)}.`
+    return `Premalo proračuna — igralec stane ${formatirajCeno(igralec.value)}, na voljo imaš ${formatirajCeno(preostalo)}.`
 
   const izKluba = izbrani.filter((s) => s.team_id === igralec.team_id).length
   if (izKluba >= MAX_IZ_KLUBA)
@@ -116,7 +117,7 @@ export function zakajNeGre(
  * trenutna vrednost ni strošek. Brez tega podatka gre za nov izbor iz proračuna.
  */
 export function preveriEkipo(
-  izbrani: IgralecVKadru[],
+  izbrani: Array<IgralecVKadru & { active?: boolean | null; full_name?: string | null }>,
   proracun: number = PRORACUN,
   preostalo?: number,
 ): string[] {
@@ -138,8 +139,20 @@ export function preveriEkipo(
   const manjkaPozicija = brezPozicije(izbrani).length
   if (manjkaPozicija > 0)
     napake.push(
-      `${manjkaPozicija} izbranih igralcev še nima potrjene pozicije — pomagaj v razdelku Pozicije.`,
+      `${manjkaPozicija} ${oblika(manjkaPozicija, [
+        'izbrani igralec še nima',
+        'izbrana igralca še nimata',
+        'izbrani igralci še nimajo',
+        'izbranih igralcev še nima',
+      ])} potrjene pozicije — pomagaj v razdelku Pozicije.`,
     )
+
+  // Neaktivnega igralca (klub letos ne igra, igralec je odšel) baza v
+  // `roster_je_veljaven` zavrne — brez tega opozorila bi ekipa tiho ostala
+  // brez točk.
+  for (const i of izbrani)
+    if (i.active === false)
+      napake.push(`${prikazniIme(i.full_name) || 'Igralec'} ni več v ligi — zamenjaj ga.`)
 
   const vKadru = poPozicijah(izbrani)
   const vPostavi = poPozicijah(prvi)
@@ -177,7 +190,7 @@ export function preveriEkipo(
   const primanjkljaj = Math.round(-denar * 100) / 100
   if (primanjkljaj > 0)
     napake.push(
-      `Presegel si proračun za ${primanjkljaj.toFixed(1)}.`,
+      `Presegel si proračun za ${formatirajCeno(primanjkljaj)}.`,
     )
 
   return napake

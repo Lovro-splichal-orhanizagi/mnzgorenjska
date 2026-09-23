@@ -18,9 +18,11 @@
 // Ob vsaki ligi piše, koliko ekip že igra. Sedemnajst lig je in v trinajstih
 // je manj kot pet ekip — novinec, ki slepo izbere prazno, nima nasprotnikov in
 // se ne vrne. Število ni okras, ampak edino, kar mu to pove vnaprej.
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useTekmovanje } from '../lib/tekmovanje'
 import { supabase } from '../lib/supabase'
+import { mnozina, EKIPE } from '../lib/pomozno'
 import { poZvezah } from './IzbirnikLige'
 
 const KLJUC_PRESKOKA = 'slff-prvi-obisk'
@@ -54,6 +56,16 @@ export default function PrviObisk() {
   const [cas, setCas] = useState(false)
   const [drzava, setDrzava] = useState<string | null>(null)
   const [ekip, setEkip] = useState<Record<number, number>>({})
+  const { pathname } = useLocation()
+  // Povezava na klub ali povabilo v mini ligo že pove, kam človek gre — liga
+  // je v naslovu ali pa je sploh ne rabi, okno bi ga le zmotilo.
+  const vabljen = pathname.startsWith('/klub/') || pathname.startsWith('/l/')
+  const okno = useRef<HTMLDivElement | null>(null)
+
+  const zapri = () => {
+    zapomniSi()
+    setSkrit(true)
+  }
 
   useEffect(() => {
     if (skrit) return
@@ -62,26 +74,42 @@ export default function PrviObisk() {
   }, [skrit])
 
   // Število ekip naložimo takoj, da je ob prikazu že tu in se okno ne dopolnjuje
-  // pred očmi.
+  // pred očmi. Šteje baza, po ligi posebej: seznam vseh ekip bi PostgREST
+  // tiho odrezal pri tisoč vrsticah.
   useEffect(() => {
-    if (skrit) return
+    if (skrit || !tekmovanja.length) return
     let veljavno = true
     ;(async () => {
-      const { data } = await supabase
-        .from('fantasy_team_standings')
-        .select('competition_id')
-        .limit(2000)
+      const stevila = await Promise.all(
+        tekmovanja.map((t) =>
+          supabase
+            .from('fantasy_team_standings')
+            .select('*', { count: 'exact', head: true })
+            .eq('competition_id', t.id)
+            .then(({ count }) => [t.id, count ?? 0] as const),
+        ),
+      )
       if (!veljavno) return
-      const n: Record<number, number> = {}
-      for (const v of (data ?? []) as Array<{ competition_id: number | null }>) {
-        if (v.competition_id != null) n[v.competition_id] = (n[v.competition_id] ?? 0) + 1
-      }
-      setEkip(n)
+      setEkip(Object.fromEntries(stevila))
     })()
     return () => {
       veljavno = false
     }
-  }, [skrit])
+  }, [skrit, tekmovanja])
+
+  const prikazan = !skrit && cas && !vabljen && tekmovanja.length >= 2
+  useEffect(() => {
+    if (!prikazan) return
+    okno.current?.focus()
+    const tipka = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        zapomniSi()
+        setSkrit(true)
+      }
+    }
+    window.addEventListener('keydown', tipka)
+    return () => window.removeEventListener('keydown', tipka)
+  }, [prikazan])
 
   const drzave = useMemo(() => {
     const m = new Map<string, string>()
@@ -96,12 +124,7 @@ export default function PrviObisk() {
   )
 
   // Dokler se lige ne naložijo ali dokler ne mine zamik, ni kaj pokazati.
-  if (skrit || !cas || tekmovanja.length < 2) return null
-
-  const zapri = () => {
-    zapomniSi()
-    setSkrit(true)
-  }
+  if (!prikazan) return null
 
   // Ena sama država: koraka za državo ne pokažemo, ker ni izbire. Ko jih bo
   // več, se pojavi sam.
@@ -109,8 +132,15 @@ export default function PrviObisk() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur">
-      <div className="animiraj-vstop w-full max-w-md rounded-2xl border border-white/10 bg-slate-900 p-5 shadow-2xl">
-        <h2 className="text-xl font-black naslov">Kje želiš igrati?</h2>
+      <div
+        ref={okno}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="prvi-obisk-naslov"
+        tabIndex={-1}
+        className="animiraj-vstop w-full max-w-md rounded-2xl border border-white/10 bg-slate-900 p-5 shadow-2xl outline-none"
+      >
+        <h2 id="prvi-obisk-naslov" className="text-xl font-black naslov">Kje želiš igrati?</h2>
         <p className="mt-1 text-sm text-slate-400">
           Izberi ligo, v kateri boš sestavil ekipo in tekmoval. Pokažemo ti
           njene igralce in lestvico; pozneje jo lahko kadarkoli zamenjaš zgoraj.
@@ -152,7 +182,7 @@ export default function PrviObisk() {
                           n >= 5 ? 'text-gnl-300' : 'text-slate-500'
                         }`}
                       >
-                        {n === 0 ? 'še brez ekip' : `${n} ekip`}
+                        {n === 0 ? 'še brez ekip' : mnozina(n, EKIPE)}
                       </span>
                     </button>
                   )
