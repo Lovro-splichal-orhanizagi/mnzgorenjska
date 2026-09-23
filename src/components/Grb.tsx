@@ -14,13 +14,13 @@ const BARVE: Array<[string, string]> = [
   ['#fdba74', '#7c2d12'],
 ]
 
-export function barvaKluba(ime = ''): [string, string] {
+function barvaKluba(ime = ''): [string, string] {
   let vsota = 0
   for (let i = 0; i < ime.length; i++) vsota = (vsota + ime.charCodeAt(i)) % 997
   return BARVE[vsota % BARVE.length]
 }
 
-export function zacetnice(ime = '', kratko?: string | null): string {
+function zacetnice(ime = '', kratko?: string | null): string {
   if (kratko) return kratko.slice(0, 3).toUpperCase()
   return ime
     .split(/\s+/)
