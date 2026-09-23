@@ -1,211 +1,259 @@
-// Kartica igralca za objavo — mirna, tipografska.
+// Kartica igralca za objavo — v obliki kartice FIFA Ultimate Team.
 //
-// Prva različica je bila Panini sličica (nagnjena, dres, trak, raster,
-// zavihan vogal) in je bilo na njej preveč. Zdaj je glasno samo dvoje: ime in
-// število točk. Ena barva ozadja, en poudarek (zlata), vse levo poravnano,
-// vsaka vrstica se prilagodi širini, da se nič ne prekriva.
+// Mlajši igralci te kartice poznajo iz igre FC/FIFA in jih zbirajo; zato je
+// to oblika, ki jo bodo delili. Ocena levo zgoraj so točke kroga, pod njo
+// pozicija in grb; namesto fotografije je velika številka dresa, spodaj
+// statistika kroga in sezone. Zunaj kartice sta krog z ligo in izid tekme.
 //
-// Priimek je v ozki pisavi (Barlow Condensed); če se ne naloži, jo nadomesti
-// sistemska ozka pisava.
+// Vsaka vrstica se prilagodi širini (manjša pisava, nato "…"), da se ob
+// dolgih imenih nič ne prekriva. Priimek je v ozki pisavi (Barlow Condensed);
+// če se ne naloži, jo nadomesti sistemska ozka pisava.
 import { useEffect, useState } from 'react'
 import DeliSliko from './DeliSliko'
 import {
-  SIRINA_K,
-  VISINA_K,
-  imePozicije,
-  podnapisTock,
+  SIRINA_K as W,
+  VISINA_K as H,
   stavekEkip,
-  velikostPriimka,
   imeDatotekeKartice,
   type PodatkiKartice,
 } from '../lib/karticaIgralca'
-import { formatirajTocke, mnozina, TEKME, GOLI } from '../lib/pomozno'
+import { formatirajTocke, KRATKA_POZICIJA } from '../lib/pomozno'
 
-const MERILO = 2
-const ZELENA = '#15432F'
-const ZELENA_TEMNA = '#0D2E20'
+const M = 2
+const OZKA = '"Barlow Condensed", "Arial Narrow", sans-serif'
+const oz = (t: number, px: number) => `${t} ${px}px ${OZKA}`
+const sans = (t: number, px: number) => `${t} ${px}px Inter, system-ui, sans-serif`
 const KREM = '#F2E8CF'
-const ZLATA = '#E3A92B'
-const L = 72 // levi in desni rob — vse je levo poravnano
-const SIR = SIRINA_K - 2 * L
+const CRNILO = '#241C0C'
 
-const OZKA = '"Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif'
-const pisava = (teza: number, px: number) => `${teza} ${px}px Inter, system-ui, sans-serif`
-const ozka = (teza: number, px: number) => `${teza} ${px}px ${OZKA}`
-
-let pisavaObljuba: Promise<void> | null = null
+let pisava: Promise<void> | null = null
 function naloziPisavo(): Promise<void> {
-  if (pisavaObljuba) return pisavaObljuba
-  pisavaObljuba = (async () => {
-    if (typeof document === 'undefined') return
-    let povezava = document.querySelector<HTMLLinkElement>('link[data-pisava-kartice]')
-    if (!povezava) {
-      povezava = document.createElement('link')
-      povezava.rel = 'stylesheet'
-      povezava.href = 'https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800&display=swap'
-      povezava.dataset.pisavaKartice = '1'
-      const nalozena = new Promise((r) => {
-        povezava!.onload = r
-        povezava!.onerror = r
+  if (pisava) return pisava
+  pisava = (async () => {
+    let l = document.querySelector<HTMLLinkElement>('link[data-pisava-kartice]')
+    if (!l) {
+      l = document.createElement('link')
+      l.rel = 'stylesheet'
+      l.href = 'https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&display=swap'
+      l.dataset.pisavaKartice = '1'
+      const ok = new Promise((r) => {
+        l!.onload = r
+        l!.onerror = r
       })
-      document.head.appendChild(povezava)
-      // `fonts.load` pred naloženim slogom takoj vrne prazno — najprej slog.
-      await Promise.race([nalozena, new Promise((r) => setTimeout(r, 3000))])
+      document.head.appendChild(l)
+      await Promise.race([ok, new Promise((r) => setTimeout(r, 3000))])
     }
-    // Brez pisave kartica še vedno nastane — čakamo največ tri sekunde.
     await Promise.race([
-      Promise.all([
-        document.fonts.load(`800 100px "Barlow Condensed"`),
-        document.fonts.load(`600 40px "Barlow Condensed"`),
-      ]),
+      Promise.all([700, 800, 600].map((t) => document.fonts.load(`${t} 100px "Barlow Condensed"`))),
       new Promise((r) => setTimeout(r, 3000)),
     ]).catch(() => {})
   })()
-  return pisavaObljuba
+  return pisava
 }
 
-function naloziSliko(src: string): Promise<HTMLImageElement | null> {
-  return new Promise((resolve) => {
+function slika(src: string): Promise<HTMLImageElement | null> {
+  return new Promise((res) => {
     const s = new Image()
-    s.onload = () => resolve(s)
-    s.onerror = () => resolve(null)
+    s.onload = () => res(s)
+    s.onerror = () => res(null)
     s.src = src
   })
 }
 
-/**
- * Napiše besedilo v dano širino: najprej ga pomanjša (do `najmanj`), če še
- * vedno ne gre, ga skrajša s "…". Nobena vrstica ne sme čez rob ali v drugo.
- */
-function napisi(
-  c: CanvasRenderingContext2D,
-  besedilo: string,
-  x: number,
-  y: number,
-  sirina: number,
-  font: (px: number) => string,
-  px: number,
-  najmanj = px,
-): number {
-  let vel = px
-  c.font = font(vel)
-  while (vel > najmanj && c.measureText(besedilo).width > sirina) {
-    vel -= 2
-    c.font = font(vel)
+/** Besedilo v širino: pomanjša, nato skrajša s "…". */
+function napisi(c: CanvasRenderingContext2D, t: string, x: number, y: number, sir: number, f: (px: number) => string, px: number, min = px) {
+  let v = px
+  c.font = f(v)
+  while (v > min && c.measureText(t).width > sir) c.font = f((v -= 2))
+  let b = t
+  if (c.measureText(b).width > sir) {
+    while (b.length > 1 && c.measureText(`${b}…`).width > sir) b = b.slice(0, -1)
+    b = `${b.trimEnd()}…`
   }
-  let t = besedilo
-  if (c.measureText(t).width > sirina) {
-    while (t.length > 1 && c.measureText(`${t}…`).width > sirina) t = t.slice(0, -1)
-    t = `${t.trimEnd()}…`
-  }
-  c.fillText(t, x, y)
-  return c.measureText(t).width
+  c.fillText(b, x, y)
+  return v
+}
+
+function platno() {
+  const p = document.createElement('canvas')
+  p.width = W * M
+  p.height = H * M
+  const c = p.getContext('2d')!
+  c.scale(M, M)
+  return { p, c }
+}
+
+/** Do tri začetnice kluba: "Niko Železniki" -> "NŽ". */
+function zacetnice(ime: string, kratko: string | null): string {
+  if (kratko) return kratko.slice(0, 3).toUpperCase()
+  return ime
+    .split(/\s+/)
+    .filter((d) => /[a-zčšžA-ZČŠŽ0-9]/.test(d))
+    .map((d) => d[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 3)
+}
+
+const vBlob = (p: HTMLCanvasElement) => new Promise<Blob | null>((r) => p.toBlob((b) => r(b), 'image/png'))
+
+function statistika(p: PodatkiKartice): Array<[string, string]> {
+  const n = p.nastop
+  const out: Array<[string, string]> = [
+    [String(n?.goli ?? 0), 'GOL'],
+    [String(n?.asistence ?? 0), 'AST'],
+    [String(n?.minute ?? 0), 'MIN'],
+  ]
+  if (p.krog) out.push([String(p.krog), 'KROG'])
+  if (p.sezona) out.push([formatirajTocke(p.sezona.tocke), 'SEZ'])
+  if (p.ekip) out.push([String(p.ekip), 'EKIP'])
+  return out.slice(0, 6)
 }
 
 export async function narisiKartico(p: PodatkiKartice): Promise<Blob | null> {
   await naloziPisavo()
-  const platno = document.createElement('canvas')
-  platno.width = SIRINA_K * MERILO
-  platno.height = VISINA_K * MERILO
-  const c = platno.getContext('2d')
-  if (!c) return null
-  c.scale(MERILO, MERILO)
-  c.textAlign = 'left'
+  const { p: pl, c } = platno()
 
-  // Ozadje: ena barva, le rahlo temnejša spodaj — nič drugega.
-  const g = c.createLinearGradient(0, 0, 0, VISINA_K)
-  g.addColorStop(0, ZELENA)
-  g.addColorStop(1, ZELENA_TEMNA)
-  c.fillStyle = g
-  c.fillRect(0, 0, SIRINA_K, VISINA_K)
+  const bg = c.createRadialGradient(W / 2, H * 0.45, 80, W / 2, H * 0.45, H * 0.8)
+  bg.addColorStop(0, '#1A5A3E')
+  bg.addColorStop(1, '#06170F')
+  c.fillStyle = bg
+  c.fillRect(0, 0, W, H)
+  c.strokeStyle = 'rgba(242,232,207,.06)'
+  c.lineWidth = 4
+  c.beginPath()
+  c.arc(W / 2, H * 0.47, 330, 0, Math.PI * 2)
+  c.stroke()
 
-  // --- glava: SLFF levo, liga desno -----------------------------------------
-  const slff = await naloziSliko('/logo/slff-grb.png')
-  if (slff) c.drawImage(slff, L, 64, 96, 96)
-  c.textAlign = 'right'
-  c.fillStyle = 'rgba(242,232,207,.62)'
-  napisi(c, p.liga, SIRINA_K - L, 124, SIR - 140, (v) => pisava(600, v), 30, 22)
-  c.textAlign = 'left'
-
-  // --- igralec ----------------------------------------------------------------
-  // Blok z imenom stoji tik nad točkami (spodnji rob pri DNO), ne visi pod
-  // glavo — sicer med imenom in točkami zija praznina.
-  const priimek = p.priimek.toUpperCase()
-  const vel = velikostPriimka(SIR, (px) => {
-    c.font = ozka(800, px)
-    return c.measureText(priimek).width
-  }, 220, 90)
-  const grb = p.grb ? await naloziSliko(p.grb) : null
-  const DNO = 770
-  const GRB = 128
-  const visina = (grb ? GRB + 44 : 0) + 64 + vel * 0.92 + 58
-  let y = DNO - visina
-  if (grb) {
-    // Krema pod grbom: grbi z belim ozadjem sicer izgledajo kot nalepljen kvadrat.
+  // oblika kartice
+  const cw = 740
+  const ch = 1040
+  const x = (W - cw) / 2
+  const y = 130
+  const oblika = (k = 0) => {
     c.beginPath()
-    c.arc(L + GRB / 2, y + GRB / 2, GRB / 2, 0, Math.PI * 2)
-    c.fillStyle = KREM
-    c.fill()
-    const r = (GRB * 0.7) / Math.max(grb.width, grb.height)
-    const w = grb.width * r
-    const h = grb.height * r
-    c.drawImage(grb, L + (GRB - w) / 2, y + (GRB - h) / 2, w, h)
-    y += GRB + 44
+    c.moveTo(x + k, y + 110)
+    c.lineTo(x + 110, y + k)
+    c.lineTo(x + cw - 110, y + k)
+    c.lineTo(x + cw - k, y + 110)
+    c.lineTo(x + cw - k, y + ch - 190)
+    c.quadraticCurveTo(x + cw - k, y + ch - 110, x + cw / 2, y + ch - k)
+    c.quadraticCurveTo(x + k, y + ch - 110, x + k, y + ch - 190)
+    c.closePath()
   }
-  c.fillStyle = 'rgba(242,232,207,.78)'
-  napisi(c, p.ime, L, y + 52, SIR, (v) => ozka(600, v), 64, 40)
-  y += 64 + vel * 0.92
-  c.fillStyle = KREM
-  napisi(c, priimek, L - 4, y, SIR, (v) => ozka(800, v), vel, vel)
-  y += 58
-  c.fillStyle = 'rgba(242,232,207,.66)'
-  const opis = [p.klub, imePozicije(p.pozicija).toLowerCase(), p.stevilka != null ? `št. ${p.stevilka}` : null]
-    .filter(Boolean)
-    .join(', ')
-  napisi(c, opis, L, y, SIR, (v) => pisava(600, v), 34, 24)
+  c.save()
+  c.shadowColor = 'rgba(0,0,0,.55)'
+  c.shadowBlur = 60 * M
+  c.shadowOffsetY = 24 * M
+  oblika()
+  const zl = c.createLinearGradient(x, y, x + cw, y + ch)
+  zl.addColorStop(0, '#F8E3A0')
+  zl.addColorStop(0.45, '#E2B04A')
+  zl.addColorStop(1, '#B5832A')
+  c.fillStyle = zl
+  c.fill()
+  c.restore()
+  // lesk
+  c.save()
+  oblika()
+  c.clip()
+  const lesk = c.createLinearGradient(x, y, x + cw * 0.7, y + ch * 0.5)
+  lesk.addColorStop(0, 'rgba(255,255,255,0)')
+  lesk.addColorStop(0.5, 'rgba(255,255,255,.28)')
+  lesk.addColorStop(0.62, 'rgba(255,255,255,0)')
+  c.fillStyle = lesk
+  c.fillRect(x, y, cw, ch)
+  c.restore()
+  oblika(18)
+  c.strokeStyle = 'rgba(255,246,210,.7)'
+  c.lineWidth = 4
+  c.stroke()
 
-  // --- točke ------------------------------------------------------------------
-  const Y = 1060
-  c.fillStyle = ZLATA
-  c.fillRect(L, Y - 236, 88, 6)
-  const tocke = p.tocke ?? p.sezona?.tocke ?? 0
-  const stevilka = formatirajTocke(tocke)
-  c.font = ozka(800, 230)
-  c.fillText(stevilka, L - 6, Y)
-  const sw = c.measureText(stevilka).width
-  const X2 = L + sw + 28
-  const S2 = SIRINA_K - L - X2
-  c.fillStyle = KREM
-  napisi(c, podnapisTock(Number(tocke), p.krog), X2, Y - 110, S2, (v) => pisava(800, v), 42, 26)
-  const dosezki = p.krog
-    ? p.dosezki
-    : p.sezona
-      ? [mnozina(p.sezona.tekem, TEKME), mnozina(p.sezona.golov, GOLI)]
-      : []
-  if (dosezki.length) {
-    c.fillStyle = 'rgba(242,232,207,.8)'
-    napisi(c, dosezki.join(', '), X2, Y - 56, S2, (v) => pisava(600, v), 34, 22)
+  // levo zgoraj: ocena = točke kroga, pozicija, grb
+  const tocke = formatirajTocke(p.tocke ?? p.sezona?.tocke ?? 0)
+  c.fillStyle = CRNILO
+  c.textAlign = 'center'
+  const lx = x + 150
+  napisi(c, tocke, lx, y + 250, 190, (v) => oz(800, v), 170, 110)
+  c.font = oz(700, 64)
+  c.fillText(p.pozicija ? KRATKA_POZICIJA[p.pozicija] : '—', lx, y + 320)
+  c.fillStyle = 'rgba(36,28,12,.35)'
+  c.fillRect(lx - 50, y + 348, 100, 3)
+  // grb v okrogli znački (grbi z belim ozadjem sicer izgledajo kot kvadrat);
+  // brez grba začetnice kluba — mesto ne sme ostati prazno
+  const G = 104
+  const gx = lx
+  const gy = y + 372 + G / 2
+  c.beginPath()
+  c.arc(gx, gy, G / 2, 0, Math.PI * 2)
+  c.fillStyle = '#FFF8E4'
+  c.fill()
+  c.lineWidth = 3
+  c.strokeStyle = 'rgba(36,28,12,.35)'
+  c.stroke()
+  const grb = p.grb ? await slika(p.grb) : null
+  if (grb) {
+    const r = (G * 0.72) / Math.max(grb.width, grb.height)
+    c.drawImage(grb, gx - (grb.width * r) / 2, gy - (grb.height * r) / 2, grb.width * r, grb.height * r)
+  } else {
+    c.fillStyle = CRNILO
+    napisi(c, zacetnice(p.klub, p.klubKratko), gx, gy + 16, G - 20, (v) => oz(800, v), 46, 28)
   }
-  if (p.tekma) {
-    c.fillStyle = 'rgba(242,232,207,.58)'
-    napisi(c, p.tekma, L, Y + 70, SIR, (v) => pisava(600, v), 30, 22)
-  }
+  // desno: namesto fotografije velika številka dresa
+  c.fillStyle = 'rgba(36,28,12,.16)'
+  c.font = oz(800, 430)
+  c.fillText(p.stevilka != null ? String(p.stevilka) : '', x + cw * 0.64, y + 520)
 
-  // --- noga -------------------------------------------------------------------
-  c.fillStyle = 'rgba(242,232,207,.14)'
-  c.fillRect(L, VISINA_K - 110, SIR, 2)
-  c.fillStyle = KREM
-  c.font = pisava(800, 32)
-  c.fillText('slff.eu', L, VISINA_K - 56)
-  const ekip = stavekEkip(p.ekip)
-  if (ekip) {
+  // ime
+  c.fillStyle = CRNILO
+  napisi(c, p.priimek.toUpperCase(), W / 2, y + 620, cw - 120, (v) => oz(800, v), 96, 56)
+  c.fillStyle = 'rgba(36,28,12,.72)'
+  napisi(c, p.klub, W / 2, y + 666, cw - 160, (v) => oz(700, v), 38, 28)
+  c.fillStyle = 'rgba(36,28,12,.35)'
+  c.fillRect(x + 90, y + 692, cw - 180, 3)
+
+  // statistika 2 x 3
+  const st = statistika(p)
+  const kol = [x + cw * 0.3, x + cw * 0.7]
+  st.forEach(([v, o], i) => {
+    const cx = kol[i < 3 ? 0 : 1]
+    const cy = y + 768 + (i % 3) * 66
     c.textAlign = 'right'
-    c.fillStyle = 'rgba(242,232,207,.62)'
-    napisi(c, ekip, SIRINA_K - L, VISINA_K - 58, SIR - 200, (v) => pisava(600, v), 28, 22)
+    c.fillStyle = CRNILO
+    c.font = oz(800, 60)
+    c.fillText(v, cx - 8, cy)
     c.textAlign = 'left'
-  }
+    c.font = oz(600, 44)
+    c.fillStyle = 'rgba(36,28,12,.75)'
+    c.fillText(o, cx + 8, cy)
+  })
+  c.fillStyle = 'rgba(36,28,12,.35)'
+  c.fillRect(W / 2 - 1.5, y + 722, 3, 184)
 
-  return new Promise((resolve) => platno.toBlob((b) => resolve(b), 'image/png'))
+  // spodnja konica: znak SLFF
+  c.textAlign = 'center'
+  const slff = await slika('/logo/slff-grb.png')
+  if (slff) c.drawImage(slff, W / 2 - 34, y + ch - 116, 68, 68)
+
+  // zunaj kartice: krog in liga zgoraj, izid spodaj
+  c.fillStyle = 'rgba(242,232,207,.75)'
+  napisi(c, `${p.krog ? `${p.krog}. krog · ` : ''}${p.liga}`, W / 2, 84, W - 160, (v) => sans(600, v), 32, 22)
+  if (p.tekma) {
+    c.fillStyle = 'rgba(242,232,207,.85)'
+    napisi(c, p.tekma, W / 2, H - 132, W - 160, (v) => sans(700, v), 32, 22)
+  }
+  c.textAlign = 'left'
+  c.fillStyle = KREM
+  c.font = sans(800, 30)
+  c.fillText('slff.eu', 72, H - 70)
+  const e = stavekEkip(p.ekip)
+  if (e) {
+    c.textAlign = 'right'
+    c.fillStyle = 'rgba(242,232,207,.65)'
+    napisi(c, e, W - 72, H - 70, 330, (v) => sans(600, v), 26, 20)
+  }
+  c.textAlign = 'left'
+  return vBlob(pl)
 }
 
 export default function KarticaIgralca({

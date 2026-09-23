@@ -1,11 +1,7 @@
-// Kartica igralca za objavo — sličica iz albuma, ne statistična tabela.
+// Kartica igralca za objavo (oblika FIFA Ultimate Team).
 //
-// Deli jo igralec sam ali starši: "moj je v 8. krogu zabil dva". Zato je
-// junak ime in to, kar je naredil na tekmi, ne rang ali cena. Oblika je
-// Panini sličica, ker jo pozna vsak, ki je kdaj zbiral nogometni album, in
-// ker nedeljske lige ne prikaže nihče drug — v tem je vsa njena vrednost.
-//
-// Tu so besedila in mere; risanje je v `src/components/KarticaIgralca.tsx`.
+// Deli jo igralec sam ali starši: "moj je v 8. krogu zabil dva". Tu so
+// besedila in mere; risanje je v `src/components/KarticaIgralca.tsx`.
 import { mnozina, oblika, GOLI, IME_POZICIJE } from './pomozno'
 import type { Pozicija } from './tipi'
 
@@ -33,6 +29,8 @@ export interface PodatkiKartice {
   krog: number | null
   tocke: number | null
   dosezki: string[]
+  /** Surove številke nastopa za statistiko na kartici. */
+  nastop: NastopZaKartico | null
   tekma: string | null
   sezona: { tocke: number; tekem: number; golov: number } | null
   ekip: number | null

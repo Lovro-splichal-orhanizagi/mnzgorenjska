@@ -523,6 +523,7 @@ export default function Igralec() {
               krog: zadnjiNastop?.number ?? null,
               tocke: zadnjiNastop ? zadnjiNastop.skupaj : Number(sezonsko?.points ?? 0),
               dosezki: zadnjiNastop ? dosezkiNastopa(zadnjiNastop.nastop, igralec.position ?? null) : [],
+              nastop: zadnjiNastop?.nastop ?? null,
               tekma: zadnjiNastop ? tekmaKartice : null,
               sezona: sezonsko
                 ? {
