@@ -172,6 +172,14 @@ select pg_temp.zavrnjeno('po roku pripomocka ni mogoce izbrisati',
   $$delete from fantasy_chips where fantasy_team_id=-913001 and chip='klop_plus'$$);
 select pg_temp.zavrnjeno('po roku pripomocka ni mogoce prestaviti naprej',
   $$update fantasy_chips set round_id=-913004 where fantasy_team_id=-913001 and chip='klop_plus'$$);
+select pg_temp.zavrnjeno('po roku pripomocku ni mogoce spremeniti casa vlozitve',
+  $$update fantasy_chips set played_at=now()+interval '1 day' where fantasy_team_id=-913001 and chip='klop_plus'$$);
+-- Samo sezona gre skozi rok (zapolnitev v migraciji 20260923090000), a je ni
+-- mogoce ponarediti: sprozilec jo znova izpelje iz kroga.
+update fantasy_chips set season='ponaredek' where fantasy_team_id=-913001 and chip='klop_plus';
+select pg_temp.preveri('sezona pripomocka ostane sezona kroga tudi po roku',
+  (select c.season = r.season from fantasy_chips c join rounds r on r.id=c.round_id
+    where c.fantasy_team_id=-913001 and c.chip='klop_plus'));
 select pg_temp.zavrnjeno('uporabnik ne more sproziti skrbniskega preracuna',
   $$select recompute_round_scores(-913002)$$);
 select pg_temp.zavrnjeno('skrbniski vstop preveri navadnega uporabnika',

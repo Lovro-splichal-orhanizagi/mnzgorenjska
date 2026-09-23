@@ -289,6 +289,64 @@ grant execute on function public.zabelezi_sponzorja(bigint, bigint, boolean) to 
 alter table public.fantasy_chips
   add column if not exists season text not null default '';
 
+-- Rok pripomocka (20260913100000) zavrne vsak UPDATE po roku kroga. Sprememba
+-- samo stolpca `season` ni vsebinska — sezono vedno znova izpelje sprozilec
+-- iz kroga — zato jo pusti skozi. Brez tega zapolnitev spodaj pade na vsakem
+-- ze odigranem pripomocku: `db push` ne tece kot seja postgres, zato skrbniski
+-- izhod na vrhu funkcije zanj ne velja. Ostalo je nespremenjeno.
+create or replace function public.preveri_rok_pripomocka()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_ekipa bigint;
+  v_tekmovanje bigint;
+  v_krog rounds;
+begin
+  -- Servisni uvozi in izrecni skrbniski popravki prek SQL ostanejo mogoci.
+  if current_setting('role', true) = 'service_role'
+     or (current_setting('role', true) in ('none', 'postgres', 'supabase_admin')
+         and session_user in ('postgres', 'supabase_admin')) then
+    if tg_op = 'DELETE' then return old; else return new; end if;
+  end if;
+
+  -- Novo: spremenila se je le izpeljana sezona.
+  if tg_op = 'UPDATE' and (to_jsonb(new) - 'season') = (to_jsonb(old) - 'season') then
+    return new;
+  end if;
+
+  if tg_op = 'UPDATE' and
+     (new.fantasy_team_id <> old.fantasy_team_id or new.chip <> old.chip) then
+    raise exception 'Vrste pripomocka in ekipe ni mogoce spreminjati.' using errcode = '42501';
+  end if;
+  v_ekipa := case when tg_op = 'DELETE' then old.fantasy_team_id else new.fantasy_team_id end;
+  select competition_id into v_tekmovanje from fantasy_teams where id = v_ekipa;
+  perform pg_advisory_xact_lock(hashtextextended('slff-kader:' || v_tekmovanje, 0));
+
+  if tg_op in ('UPDATE', 'DELETE') then
+    select * into v_krog from rounds where id = old.round_id;
+    if v_krog.deadline_at is null or v_krog.deadline_at <= clock_timestamp()
+       or v_krog.lineups_locked_at is not null then
+      raise exception 'Rok kroga je potekel — pripomocka ni vec mogoce spreminjati.'
+        using errcode = '42501';
+    end if;
+  end if;
+  if tg_op in ('INSERT', 'UPDATE') then
+    select * into v_krog from rounds where id = new.round_id;
+    if not found or v_krog.competition_id is distinct from v_tekmovanje
+       or v_krog.deadline_at is null or v_krog.deadline_at <= clock_timestamp()
+       or v_krog.lineups_locked_at is not null then
+      raise exception 'Izberi prihodnji krog iste lige z dolocenim rokom.'
+        using errcode = '42501';
+    end if;
+  end if;
+  if tg_op = 'DELETE' then return old; else return new; end if;
+end;
+$$;
+revoke all on function public.preveri_rok_pripomocka() from public, anon, authenticated;
+
 update public.fantasy_chips fc
    set season = r.season
   from public.rounds r
