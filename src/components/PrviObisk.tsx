@@ -22,6 +22,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useTekmovanje } from '../lib/tekmovanje'
 import { supabase } from '../lib/supabase'
+import { vseVrstice } from '../lib/strani'
 import { mnozina, EKIPE } from '../lib/pomozno'
 import { poZvezah } from './IzbirnikLige'
 
@@ -74,24 +75,25 @@ export default function PrviObisk() {
   }, [skrit])
 
   // Število ekip naložimo takoj, da je ob prikazu že tu in se okno ne dopolnjuje
-  // pred očmi. Šteje baza, po ligi posebej: seznam vseh ekip bi PostgREST
-  // tiho odrezal pri tisoč vrsticah.
+  // pred očmi. Beremo tabelo `fantasy_teams`, ne pogleda lestvice: ta za vsako
+  // ligo sešteje točke vseh krogov in petindvajset hkratnih štetij je bazo
+  // zasulo, da je lestvica vsem padla na časovni omejitvi. Po straneh, ker bi
+  // PostgREST seznam tiho odrezal pri tisoč vrsticah.
   useEffect(() => {
     if (skrit || !tekmovanja.length) return
     let veljavno = true
-    ;(async () => {
-      const stevila = await Promise.all(
-        tekmovanja.map((t) =>
-          supabase
-            .from('fantasy_team_standings')
-            .select('*', { count: 'exact', head: true })
-            .eq('competition_id', t.id)
-            .then(({ count }) => [t.id, count ?? 0] as const),
-        ),
-      )
-      if (!veljavno) return
-      setEkip(Object.fromEntries(stevila))
-    })()
+    vseVrstice<{ competition_id: number }>((od, do_) =>
+      supabase.from('fantasy_teams').select('competition_id').order('id').range(od, do_),
+    )
+      .then((vrstice) => {
+        if (!veljavno) return
+        const stevila: Record<number, number> = {}
+        for (const t of tekmovanja) stevila[t.id] = 0
+        for (const v of vrstice) stevila[v.competition_id] = (stevila[v.competition_id] ?? 0) + 1
+        setEkip(stevila)
+      })
+      // Brez števil je okno še vedno uporabno; ne kaži napake.
+      .catch(() => {})
     return () => {
       veljavno = false
     }
