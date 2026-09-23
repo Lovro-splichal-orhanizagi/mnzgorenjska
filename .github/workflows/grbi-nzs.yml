@@ -7,8 +7,14 @@ name: Grbi z NZS
 on:
   workflow_dispatch:
 
+# Privzeto samo branje; pisati v git sme le job spodaj.
+permissions:
+  contents: read
+
+# Lastna skupina: grbi pisejo le `teams.logo_url` in datoteke v public/grbi,
+# z uvozi se ne krizajo. V skupni `uvoz` jih je nocni cron izpodrival iz vrste.
 concurrency:
-  group: uvoz
+  group: grbi-nzs
   cancel-in-progress: false
 
 jobs:
@@ -18,17 +24,19 @@ jobs:
     permissions:
       contents: write
       actions: write
-    env:
-      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
-      - run: npm ci
+      # Nobena odvisnost ne potrebuje namestitvenih skript (edina je fsevents
+      # za macOS); brez njih tuja koda ob namestitvi ne tece.
+      - run: npm ci --ignore-scripts
       - name: Prenesi grbe in zapisi logo_url
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node scripts/prenesi-grbe-nzs.mjs --pisi
       - name: Zapisi nove grbe v git
         run: |

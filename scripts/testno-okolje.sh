@@ -56,8 +56,8 @@ node scripts/uvoz-zapisnikov.mjs
 
 echo
 echo "==> 5/6  Ugibanje pozicij in cene igralcev"
-node scripts/ugani-pozicije.mjs --pisi
-node scripts/ovrednoti-igralce.mjs
+node scripts/ugani-pozicije.mjs --pisi --dovoli-aktivno
+node scripts/ovrednoti-igralce.mjs --pisi --dovoli-aktivno
 
 echo
 echo "==> 6/6  Demo uporabniki in fantasy ekipe"

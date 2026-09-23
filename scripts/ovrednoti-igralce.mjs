@@ -4,8 +4,13 @@
 //   SUPABASE_SERVICE_ROLE_KEY=... node scripts/ovrednoti-igralce.mjs
 //   ... --sezona 2025/26
 //   ... --tekmovanje mladinci   (mladinska liga; brez tega člani)
-//   ... --tedensko             (cene približa izračunanim; samo pokaže predlog)
-//   ... --tedensko --pisi       (dejansko zapiše; brez tega samo pokaže predlog)
+//   ... --pisi                 (dejansko zapiše; brez tega samo pokaže predlog)
+//   ... --tedensko --pisi      (cene le približa izračunanim, največ --najvec)
+//   ... --dovoli-aktivno       (polno vrednotenje VKLOPLJENE lige; glej spodaj)
+//
+// Brez `--pisi` skripta nikoli ne piše — v nobenem načinu. Prej je polno
+// vrednotenje pisalo kar samo od sebe in ročni zagon na živi ligi je
+// prevrednotil vse igralce, ki jih imajo ljudje v ekipah.
 //
 // Vsaka liga se vrednoti zase: percentili mladincev nimajo nič opraviti s
 // percentili članov, sicer bi mladince do zadnjega stlačilo na dno cenika.
@@ -108,6 +113,11 @@ const znova = process.argv.includes('--znova')
 const tekociTeden = isoTeden()
 let zeTaTeden = 0
 const pisi = process.argv.includes('--pisi')
+// Polno vrednotenje postavi cene na novo. Na vklopljeni ligi to pomeni, da
+// se cene igralcev v kadrih premaknejo mimo borze — zato le z izrecnim
+// `--dovoli-aktivno`. Tedenski zagon (omejen premik) in `--samo-nove` (samo
+// igralci brez sidra) sta za živo ligo narejena in varovala ne potrebujeta.
+const dovoliAktivno = process.argv.includes('--dovoli-aktivno')
 // `--samo-nove` predela le igralce brez `value_start` — tiste, ki jih uvoz
 // prvič pripelje v bazo. Obstoječih cen se ne dotakne. Uporabno v tedenskem
 // cronu, kjer polna ovrednota lahko premika stare cene skokovito, mi pa
@@ -115,6 +125,14 @@ const pisi = process.argv.includes('--pisi')
 const samoNove = process.argv.includes('--samo-nove')
 const tekmovanje = await najdiTekmovanje(db, arg('tekmovanje', 'clani'))
 console.log(`Tekmovanje: ${tekmovanje.name}${samoNove ? ' — samo novi' : ''}`)
+if (pisi && tekmovanje.active && !tedensko && !samoNove && !dovoliAktivno) {
+  console.error(
+    `Liga ${tekmovanje.slug} je vklopljena: polno vrednotenje bi prepisalo cene igralcev v ekipah.\n` +
+      'Za tedenski premik uporabi --tedensko, za nove igralce --samo-nove, ' +
+      'za izrecen prepis pa dodaj --dovoli-aktivno.',
+  )
+  process.exit(1)
+}
 
 const igralci = await vseVrstice((od, do_) =>
   db
@@ -295,9 +313,11 @@ for (const p of igralci ?? []) {
   // bonus za višje lige (NZS)
   const bonus = BONUS_LIGE[p.nzs_top_league] ?? 0
   if (bonus > 0) {
-    const minute = p.nzs_top_league_minutes ?? 0
-    // polni bonus pri 900+ minutah v tisti ligi
-    vrednost += bonus * Math.min(1, minute / 900 || 1)
+    const minute = p.nzs_top_league_minutes
+    // polni bonus pri 900+ minutah v tisti ligi. Nevpisane minute (null)
+    // pomenijo poln bonus kot doslej; izrecnih 0 minut pomeni 0 bonusa
+    // (prej je `|| 1` tudi iz nič naredil poln bonus).
+    vrednost += bonus * (minute == null ? 1 : Math.min(1, minute / 900))
   }
 
   vrednost = zaokrozi(Math.min(zgornja, Math.max(spodnja, vrednost)))
@@ -335,7 +355,7 @@ for (const p of igralci ?? []) {
 
   if ((p.value_start == null || brezBorze) && ocena != null) popravek.value_start = vrednost
   razpored.set(vrednost, (razpored.get(vrednost) ?? 0) + 1)
-  if (tedensko && !pisi) continue
+  if (!pisi) continue
 
   const { error: eUpd } = await db
     .from('players')
@@ -347,7 +367,7 @@ for (const p of igralci ?? []) {
   } else posodobljenih++
 }
 
-if (!tedensko || pisi)
+if (pisi)
   console.log(`\nPosodobljenih: ${posodobljenih}, zaklenjenih (ročno): ${zaklenjenih}`)
 
 if (tedensko) {
@@ -371,7 +391,7 @@ console.log('\nPorazdelitev vrednosti:')
 for (const v of [...razpored.keys()].sort((a, b) => a - b))
   console.log(`  ${v.toFixed(1)}  ${'█'.repeat(Math.ceil(razpored.get(v) / 3))} ${razpored.get(v)}`)
 
-if (tedensko && !pisi) {
+if (!pisi) {
   console.log('\nTo je le predlog. Za zapis v bazo dodaj --pisi')
   process.exit(0)
 }

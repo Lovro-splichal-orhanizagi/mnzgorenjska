@@ -25,8 +25,25 @@ on:
     - cron: '0 5 * * 1-4'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+# Vsak delovni tok iz druzine uvozov ima svojo skupino. Skupna `uvoz` je
+# pomenila, da je vsak nov cron izpodrinil rocni zagon, ki je cakal v vrsti
+# (GitHub v skupini hrani le EN cakajoci zagon, starejsega preklice). Tu je
+# izpodrivanje v redu — naslednji cron naredi isto delo.
+#
+# Kateri pari ne smejo teci hkrati (vsi pisejo v iste tabele):
+#   - uvoz-zapisnikov / uvoz-lige: klubi, igralci, krogi, tekme, nastopi —
+#     dva uvoza iste lige bi ustvarila dvojnike igralcev in klubov;
+#   - zdruzi-klube z vsemi uvozi: uvoz si ob zagonu zapomni id-je klubov in
+#     ce mu enega medtem izbrisemo, tekme obvisijo;
+#   - tedensko-cene / uvoz-lige (cene): oba pisesta cene istih igralcev.
+# Grbi (grbi-nzs) pisejo le `teams.logo_url` in tecejo loceno.
+# Zaporedje zagotovi korak "Pocakaj na starejse uvoze": vsak zagon pocaka
+# na tiste iz druzine, ki so se zaceli pred njim.
 concurrency:
-  group: uvoz
+  group: uvoz-zapisnikov
   cancel-in-progress: false
 
 jobs:
@@ -35,10 +52,11 @@ jobs:
     # 17 lig je 13. septembra porabilo 43 minut ze pred zadnjo ligo.
     # Ura pusti prostor se za njen uvoz, predpomnilnik in obcasno pocasne vire.
     # 24 lig; z `--sveze` vsaka vzame minuto, brez njega tri.
-    timeout-minutes: 120
-    env:
-      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    # Do 120 minut cakanja na starejsi (rocni) uvoz pride zraven.
+    timeout-minutes: 240
+    permissions:
+      contents: read
+      actions: read
     steps:
       - uses: actions/checkout@v4
 
@@ -47,7 +65,35 @@ jobs:
           node-version: '22'
           cache: npm
 
-      - run: npm ci
+      # Nobena odvisnost ne potrebuje namestitvenih skript (edina je fsevents
+      # za macOS); brez njih tuja koda ob namestitvi ne tece.
+      - run: npm ci --ignore-scripts
+
+      # Druzina uvozov (uvoz-zapisnikov, uvoz-lige, zdruzi-klube,
+      # tedensko-cene) pise v iste tabele: klube, igralce, tekme, cene. Zato
+      # tecejo po vrsti — po casu zacetka, brez izpodrivanja.
+      - name: Pocakaj na starejse uvoze
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          MOJ=$(gh run view "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" --json startedAt --jq .startedAt)
+          for i in $(seq 1 120); do
+            n=0
+            for wf in uvoz-zapisnikov.yml uvoz-lige.yml zdruzi-klube.yml tedensko-cene.yml; do
+              # Brez --status: tudi cakajoci (queued) starejsi zagon mora priti
+              # prvi. Zato vec kot 20 — koncani zagoni zasedejo del seznama.
+              k=$(gh run list -R "$GITHUB_REPOSITORY" --workflow "$wf" --limit 50 \
+                --json databaseId,startedAt,status \
+                --jq "[.[] | select(.status != \"completed\" and .databaseId != $GITHUB_RUN_ID and .startedAt > \"2000\" and (.startedAt < \"$MOJ\" or (.startedAt == \"$MOJ\" and .databaseId < $GITHUB_RUN_ID)))] | length")
+              n=$((n + k))
+            done
+            [ "$n" -eq 0 ] && exit 0
+            echo "Pred mano tece se $n uvozov — cakam ($i/120 min)"
+            sleep 60
+          done
+          echo "::error::Starejsi uvoz tece ze dve uri."
+          exit 1
 
       # Predpomnilnik prihrani ponovno pobiranje že prebranih zapisnikov —
       # tako ob vsakem zagonu s strani MNZ potegnemo le nove tekme.
@@ -62,6 +108,9 @@ jobs:
       # Napake posamezne lige zberemo, obdelamo tudi ostale in na koncu
       # vrnemo neuspeh, ce katera liga ni uspela.
       - name: Uvoz po ligah
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           set -euo pipefail
           node scripts/aktivna-tekmovanja.mjs > /tmp/lige.txt
@@ -72,19 +121,22 @@ jobs:
           # ustavila zanko in vse NASLEDNJE lige tisti dan sploh niso bile
           # uvozene — pri sestnajstih ligah je to tiha izguba dneva.
           #
-          # Vsak ukaz povezemo z &&. `set -e` znotraj pogoja `if` ne velja,
-          # zato bi samostojni ukazi lahko prikrili napako s kasnejsim uspehom.
+          # Vsak ukaz preverimo posebej (`|| ok=0`). Prej so bili povezani z
+          # &&, kar je pomenilo, da je napaka razporeda (npr. varovalo pred
+          # okrnjenim razporedom) ustavila tudi uvoz zapisnikov te lige.
           # Zagon se na koncu vseeno konca z napako, da se opozorilo vidi.
           padle=""
           while IFS= read -r liga; do
             [ -n "$liga" ] || continue
             echo "::group::$liga"
+            ok=1
+            node scripts/uvoz-razporeda.mjs   --tekmovanje "$liga" --pisi </dev/null || ok=0
+            node scripts/uvoz-delegiranja.mjs --tekmovanje "$liga" --pisi </dev/null || ok=0
+            node scripts/uvoz-zapisnikov.mjs  --tekmovanje "$liga" --sveze 21 </dev/null || ok=0
             # Prestopi so porocilo; vir, ki jih ne objavlja, se konca z 0.
-            if node scripts/uvoz-razporeda.mjs   --tekmovanje "$liga" --pisi &&
-               node scripts/uvoz-delegiranja.mjs --tekmovanje "$liga" --pisi &&
-               node scripts/uvoz-zapisnikov.mjs  --tekmovanje "$liga" --sveze 21 &&
-               node scripts/uvoz-registracij.mjs --tekmovanje "$liga" &&
-               node scripts/ugani-pozicije.mjs   --tekmovanje "$liga" --pisi --samo-nove; then
+            node scripts/uvoz-registracij.mjs --tekmovanje "$liga" </dev/null || ok=0
+            node scripts/ugani-pozicije.mjs   --tekmovanje "$liga" --pisi --samo-nove </dev/null || ok=0
+            if [ "$ok" = 1 ]; then
               echo "$liga: v redu"
             else
               echo "::warning title=Uvoz lige::$liga ni uspela; ostale se nadaljujejo"
@@ -102,6 +154,9 @@ jobs:
       # pomeša vrstic iz dveh lig — mladinec X in član X ostaneta ločena,
       # četudi je oseba ista. Poganja se enkrat.
       - name: Združi duplikate (vse lige)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node scripts/zdruzi-duplikate.mjs --pisi
         continue-on-error: true
 

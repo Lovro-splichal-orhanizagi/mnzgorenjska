@@ -43,8 +43,20 @@ export default function ProsnjePoznavalcev() {
   }, [nalozi])
 
   const [sporocilo, setSporocilo] = useState<string | null>(null)
+  // Prošnja, o kateri se ravno odloča: dvojni klik bi sicer poslal dva maila.
+  const [odlocam, setOdlocam] = useState<number | null>(null)
 
   async function odloci(p: Prosnja, odlocitev: 'klub' | 'liga' | 'zavrnjeno') {
+    if (odlocam != null) return
+    setOdlocam(p.id)
+    try {
+      await odlociZdaj(p, odlocitev)
+    } finally {
+      setOdlocam(null)
+    }
+  }
+
+  async function odlociZdaj(p: Prosnja, odlocitev: 'klub' | 'liga' | 'zavrnjeno') {
     setNapaka(null)
     setSporocilo(null)
     const { error } = await supabase.rpc('admin_odloci_prosnjo', { p_id: p.id, p_odlocitev: odlocitev })
@@ -104,22 +116,24 @@ export default function ProsnjePoznavalcev() {
               <div className="flex shrink-0 flex-wrap gap-1.5">
                 <button
                   onClick={() => odloci(p, 'klub')}
-                  disabled={!p.team_id}
-                  className="gumb-tih text-xs"
+                  disabled={!p.team_id || odlocam != null}
+                  className="gumb-tih text-xs disabled:opacity-50"
                   title="Poznavalec svojega kluba: glas za igralce tega kluba šteje 3×"
                 >
                   za klub
                 </button>
                 <button
                   onClick={() => odloci(p, 'liga')}
-                  className="gumb-glavni text-xs"
+                  disabled={odlocam != null}
+                  className="gumb-glavni text-xs disabled:opacity-50"
                   title="Poznavalec cele lige: en njegov glas potrdi pozicijo ali asistenco"
                 >
                   za ligo
                 </button>
                 <button
                   onClick={() => odloci(p, 'zavrnjeno')}
-                  className="text-xs text-slate-500 hover:text-rose-300"
+                  disabled={odlocam != null}
+                  className="text-xs text-slate-500 hover:text-rose-300 disabled:opacity-50"
                 >
                   zavrni
                 </button>

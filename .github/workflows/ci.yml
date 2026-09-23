@@ -11,6 +11,9 @@ on:
   # GITHUB_TOKEN, ki CI ne sprozi sam).
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 # Nov push na isto vejo prekine prejšnji tek — zadnje stanje je edino, ki šteje.
 concurrency:
   group: ci-${{ github.ref }}
@@ -29,7 +32,10 @@ jobs:
           node-version: '22'
           cache: npm
 
-      - run: npm ci
+      # Nobena odvisnost ne potrebuje namestitvenih skript (edina je fsevents
+      # za macOS), tudi vite/rolldown ne — nativni paketi pridejo kot
+      # optionalDependencies. Brez skript tuja koda ob namestitvi ne tece.
+      - run: npm ci --ignore-scripts
 
       # `npm run build` že poganja `tsc --noEmit`, a ločen korak pove, KATERI
       # od obeh je padel, brez brskanja po dnevniku.
@@ -58,7 +64,10 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-      - run: npm ci
+      # Nobena odvisnost ne potrebuje namestitvenih skript (edina je fsevents
+      # za macOS), tudi vite/rolldown ne — nativni paketi pridejo kot
+      # optionalDependencies. Brez skript tuja koda ob namestitvi ne tece.
+      - run: npm ci --ignore-scripts
       # Zagon same baze preveri celotno verigo migracij na praznem Postgresu.
       - run: npx --yes supabase@2.117.0 db start
       - run: npm run test:varnost
@@ -72,10 +81,6 @@ jobs:
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     steps:
       - uses: actions/checkout@v4
 
@@ -91,6 +96,10 @@ jobs:
       # tu, poleg ostalih preverb, in se ne more tiho izgubiti.
       - name: Ali so skrivnosti nastavljene?
         id: skrivnosti
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
           if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_ORG_ID" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
             echo "::warning::Manjkajo VERCEL_TOKEN / VERCEL_ORG_ID / VERCEL_PROJECT_ID — objava preskočena."
@@ -102,7 +111,9 @@ jobs:
 
       - name: Namesti Vercel CLI
         if: steps.skrivnosti.outputs.so == 'da'
-        run: npm i -g vercel@latest
+        # Pripeta razlicica: `@latest` bi ob vsaki objavi potegnil, kar je
+        # tisti hip objavljeno — tudi pokvarjeno ali podtaknjeno razlicico.
+        run: npm i -g --ignore-scripts vercel@59.25.4
 
       # Ce objava pade, naj bo takoj jasno KAJ od treh je narobe, ne da je
       # treba ugibati iz "Could not retrieve Project Settings".
@@ -113,6 +124,10 @@ jobs:
       - name: Preveri dostop (samo diagnostika)
         if: steps.skrivnosti.outputs.so == 'da'
         continue-on-error: true
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
           echo "Kdo sem:"
           vercel whoami --token="$VERCEL_TOKEN" || echo "  (whoami ne razresi uporabnika — nadaljujem)"
@@ -125,6 +140,10 @@ jobs:
       # Vercelu — manj gibljivih delov, isti izid.
       - name: Objavi v produkcijo
         if: steps.skrivnosti.outputs.so == 'da'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
           vercel deploy --prod --yes --token="$VERCEL_TOKEN" || {
             echo "::error::Objava ni uspela. Najverjetneje se VERCEL_ORG_ID ali"

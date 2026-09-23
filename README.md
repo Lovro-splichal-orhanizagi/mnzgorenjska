@@ -105,7 +105,7 @@ rezervnih igralcev.
 
 | Tabela | Opis |
 |---|---|
-| `profiles` | Profili uporabnikov, zastavica `is_admin` |
+| `profiles` | Profili uporabnikov, zastavica `is_admin`, odjava od opomnikov `brez_opomnikov` |
 | `competitions` | Ligi: `clani` in `mladinci` (šifra vira, prvi fantasy krog) |
 | `teams` | Klubi — **skupni** obema ligama (grb, ime) |
 | `players` | Igralci ene lige (cena, pozicija, vir pozicije); ista oseba je v obeh ligah dve vrstici |
@@ -115,7 +115,7 @@ rezervnih igralcev.
 | `assist_votes` | Glasovi skupnosti o asistenci |
 | `position_votes` | Glasovi skupnosti o poziciji |
 | `fantasy_teams` / `fantasy_roster` | Ekipe uporabnikov in njihovi nabori (kapetan, namestnik, vrstni red klopi) |
-| `fantasy_chips` | Vloženi pripomočki ekipe (`klop_plus`) |
+| `fantasy_chips` | Vloženi pripomočki ekipe (`klop_plus`, `wildcard`) — vsak enkrat na sezono (`season` iz kroga) |
 | `fantasy_lineups` | Posnetek postave ob roku kroga — po njem preteklih krogov ni več mogoče popravljati |
 | `teams.logo_url` | Grb kluba; brez njega aplikacija nariše ščit z začetnicami |
 | `player_scores` | Točke igralca po krogih |
@@ -197,15 +197,19 @@ node scripts/uvoz-zapisnikov.mjs --liga 1502 --pocisti  # lanski arhiv, brez dem
 node scripts/uvoz-zapisnikov.mjs                        # rezultati tekoče sezone
 node scripts/uvoz-razporeda.mjs --pisi                  # krogi, tekme in roki
 node scripts/ugani-pozicije.mjs --pisi                  # ugibanje pozicij
-node scripts/ovrednoti-igralce.mjs                      # cene iz statistike
+node scripts/ovrednoti-igralce.mjs --pisi               # cene iz statistike
 
 # MLADINCI — isto zaporedje z --tekmovanje mladinci
 node scripts/uvoz-zapisnikov.mjs  --tekmovanje mladinci --liga 1503
 node scripts/uvoz-zapisnikov.mjs  --tekmovanje mladinci
 node scripts/uvoz-razporeda.mjs   --tekmovanje mladinci --pisi
 node scripts/ugani-pozicije.mjs   --tekmovanje mladinci --pisi
-node scripts/ovrednoti-igralce.mjs --tekmovanje mladinci --sezona 2025/26
+node scripts/ovrednoti-igralce.mjs --tekmovanje mladinci --sezona 2025/26 --pisi
 ```
+
+Na **aktivni** ligi `ugani-pozicije --pisi` (brez `--samo-nove`) in celotno
+`ovrednoti-igralce --pisi` zavrneta brez `--dovoli-aktivno` — ljudje imajo te
+igralce v ekipah; med sezono cene premika le `--tedensko`.
 
 Šifra lige na mnzgkranj.si: člani 2025/26 = `1502`, 2026/27 = `1601`;
 mladinci 2025/26 = `1503`, 2026/27 = `1603`. Brez `--liga` skripta vzame

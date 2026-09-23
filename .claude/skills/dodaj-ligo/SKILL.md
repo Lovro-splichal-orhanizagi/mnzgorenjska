@@ -258,7 +258,7 @@ node scripts/uvoz-zapisnikov.mjs  --tekmovanje <slug> --liga <arhiv>
 node scripts/uvoz-razporeda.mjs   --tekmovanje <slug> --pisi
 node scripts/uvoz-zapisnikov.mjs  --tekmovanje <slug>
 node scripts/ugani-pozicije.mjs   --tekmovanje <slug> --pisi
-node scripts/ovrednoti-igralce.mjs --tekmovanje <slug>
+node scripts/ovrednoti-igralce.mjs --tekmovanje <slug> --pisi
 ```
 
 Cena je percentil **znotraj lige**, igralec pod 270 minutami dobi privzeto
@@ -321,10 +321,11 @@ select count(*) from goals g join matches m on m.id = g.match_id
 Ne prek terminala s produkcijskim ključem, ampak z delovnim tokom
 **Uvoz lige (rocno)** (`workflow_dispatch`) — ključ tako nikoli ne zapusti
 GitHuba. Zadnji korak je preverba pripravljenosti, zato zagon pade, če cenik
-ni igriv.
+ni igriv. Za novo ligo dodaj `-f cene=true` — privzeto je izklopljen, ker bi
+na vklopljeni ligi prepisal pozicije in cene.
 
 ```bash
-gh workflow run uvoz-lige.yml -f liga=lj-1-liga -f arhiv=1904,1804
+gh workflow run uvoz-lige.yml -f liga=lj-1-liga -f arhiv=1904,1804 -f cene=true
 gh run list --workflow=uvoz-lige.yml --limit 1        # id zagona
 gh run view <id> --log | grep -A 12 'Liga:'           # izid preverbe
 ```
@@ -336,7 +337,7 @@ delovni tok iz tega sestavi `--vir` in uvoz bere s pravega spletišča, ne da bi
 se liga preselila:
 
 ```bash
-gh workflow run uvoz-lige.yml -f liga=snl3-vzhod \
+gh workflow run uvoz-lige.yml -f liga=snl3-vzhod -f cene=true \
   -f arhiv='2025-26/3-snl-v-25-26@mnzle,2024-25/3-snl-v-24-25@mnzle'
 ```
 
@@ -346,11 +347,11 @@ Ločilo je `@`, ker se `:` in `/` pojavljata znotraj samih šifer (Ptuj
 Delegacijske strani nima vsaka zveza; `uvoz-delegiranja.mjs` se pri viru brez
 nje izpiše in konča z 0. Rok kroga takrat stoji na urah iz razporeda.
 
-**Lige uvažaj ENO ZA DRUGO.** Delovni tok ima `concurrency: uvoz` s
-`cancel-in-progress: false`. GitHub v taki skupini hrani **največ eno** čakajočo
-zahtevo in vsaka nova povozi prejšnjo — osem naenkrat pomeni sedem preklicev,
-ki jih opaziš šele, ko pogledaš seznam zagonov. Počakaj, da se vrsta izprazni,
-šele nato zaženi naslednjo.
+**Isto ligo uvažaj ENO ZA DRUGO.** Delovni tok ima skupino
+`uvoz-lige-<liga>` s `cancel-in-progress: false`. GitHub v taki skupini hrani
+**največ eno** čakajočo zahtevo in vsaka nova povozi prejšnjo. Različne lige
+lahko zaženeš zapored; korak "Pocakaj na starejse uvoze" jih sam razvrsti, da
+ne pišejo hkrati (čaka do 120 minut, zato naj jih ne bo preveč naenkrat).
 
 **Šifra lige gre v ime datoteke predpomnilnika.** Če vsebuje `/` ali `:`
 (Lendava `2026-27/mnl-lendava-26-27`, Ptuj `2026:96`), jo je treba očistiti,

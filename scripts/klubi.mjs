@@ -9,6 +9,8 @@
 // pa preslikamo na eno samo. Brez preslikave bi vsak uvoz razporeda znova
 // ustvaril "svoj" klub in razklal ligo na dva zapisa.
 
+import { vseVrstice } from './strani.mjs'
+
 /**
  * Razreši HTML entitete v besedilu.
  *
@@ -73,3 +75,57 @@ export const kratkoIme = (polnoIme) =>
     .join('')
     .toUpperCase()
     .slice(0, 4)
+
+/**
+ * Slovar ključ kluba → id za uvoz iz enega vira.
+ *
+ * Prej je bil to en sam `select` brez vrstnega reda in brez branja po straneh:
+ * nad tisoč klubi bi del manjkal (in uvoz bi ustvaril dvojnike), pri dveh
+ * klubih z istim ključem pa je zmagal tisti, ki ga je baza slučajno vrnila
+ * zadnjega. Zdaj:
+ *
+ * - beremo po straneh, urejeno po id, in obstoječega ključa NE povozimo —
+ *   pri trku ostane starejši klub;
+ * - najprej velja natančno ime (poenostavljeno ime kluba je ključ sam), šele
+ *   nato vzdevek;
+ * - vzdevek uporabimo le za klube, ki igrajo v kateri od lig TEGA vira.
+ *   Vzdevki so last vira: ime, ki ga slovar enega vira preslika, je lahko pri
+ *   drugi zvezi povsem drug klub.
+ *
+ * @param {import('@supabase/supabase-js').SupabaseClient} db
+ * @param {{ ime: string, kljucKluba: (ime: string) => string }} vir
+ */
+export async function mapaKlubov(db, vir) {
+  const vsi = await vseVrstice((od, do_) =>
+    db.from('teams').select('id, name').order('id').range(od, do_),
+  )
+
+  const { data: lige, error } = await db.from('competitions').select('id').eq('source', vir.ime)
+  if (error) throw new Error(`lige vira ${vir.ime}: ${error.message}`)
+  const nasi = new Set()
+  const idLig = (lige ?? []).map((l) => l.id)
+  if (idLig.length) {
+    const vrstice = await vseVrstice((od, do_) =>
+      db
+        .from('competition_teams')
+        .select('team_id, competition_id')
+        .in('competition_id', idLig)
+        .order('team_id')
+        .order('competition_id')
+        .range(od, do_),
+    )
+    for (const v of vrstice) nasi.add(v.team_id)
+  }
+
+  const mapa = new Map()
+  for (const k of vsi) {
+    const kljuc = poenostavi(k.name)
+    if (!mapa.has(kljuc)) mapa.set(kljuc, k.id)
+  }
+  for (const k of vsi) {
+    if (!nasi.has(k.id)) continue
+    const kljuc = vir.kljucKluba(k.name)
+    if (!mapa.has(kljuc)) mapa.set(kljuc, k.id)
+  }
+  return mapa
+}
