@@ -8,7 +8,7 @@
 // Vsaka vrstica se prilagodi širini (manjša pisava, nato "…"), da se ob
 // dolgih imenih nič ne prekriva. Priimek je v ozki pisavi (Barlow Condensed);
 // če se ne naloži, jo nadomesti sistemska ozka pisava.
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent, type PointerEvent } from 'react'
 import DeliSliko from './DeliSliko'
 import {
   SIRINA_K as W,
@@ -110,7 +110,66 @@ function statistika(p: PodatkiKartice): Array<[string, string]> {
   return out.slice(0, 6)
 }
 
-export async function narisiKartico(p: PodatkiKartice): Promise<Blob | null> {
+/**
+ * Fotografija, ki jo je človek izbral na svoji napravi. Nikamor se ne naloži:
+ * nariše se le na kartico, ki jo sam deli. `x`/`y` sta premik v točkah
+ * kartice, `povecava` je večkratnik pokritja okna.
+ */
+export interface FotoKartice {
+  slika: CanvasImageSource
+  sirina: number
+  visina: number
+  x: number
+  y: number
+  povecava: number
+  id: number
+}
+
+/** Odpre izbrano datoteko in jo pomanjša (telefonske fotografije so ogromne). */
+export async function naloziFoto(datoteka: File): Promise<Omit<FotoKartice, 'x' | 'y' | 'povecava' | 'id'>> {
+  // createImageBitmap upošteva zasuk iz EXIF, zato pokončna fotografija ne leži.
+  const bmp = await createImageBitmap(datoteka)
+  const r = Math.min(1, 1600 / Math.max(bmp.width, bmp.height))
+  const cv = document.createElement('canvas')
+  cv.width = Math.round(bmp.width * r)
+  cv.height = Math.round(bmp.height * r)
+  cv.getContext('2d')!.drawImage(bmp, 0, 0, cv.width, cv.height)
+  bmp.close()
+  return { slika: cv, sirina: cv.width, visina: cv.height }
+}
+
+/** Fotografija v okno kartice, z mehkim prehodom v zlato spodaj, levo in zgoraj. */
+function narisiFoto(c: CanvasRenderingContext2D, f: FotoKartice, rx: number, ry: number, rw: number, rh: number) {
+  const off = document.createElement('canvas')
+  off.width = rw * M
+  off.height = rh * M
+  const o = off.getContext('2d')!
+  o.scale(M, M)
+  const s = Math.max(rw / f.sirina, rh / f.visina) * f.povecava
+  const w = f.sirina * s
+  const h = f.visina * s
+  o.drawImage(f.slika, rw / 2 - w / 2 + f.x, rh / 2 - h / 2 + f.y, w, h)
+  o.globalCompositeOperation = 'destination-in'
+  const navp = o.createLinearGradient(0, 0, 0, rh)
+  navp.addColorStop(0, 'rgba(0,0,0,0)')
+  navp.addColorStop(0.1, 'rgba(0,0,0,1)')
+  navp.addColorStop(0.6, 'rgba(0,0,0,1)')
+  navp.addColorStop(1, 'rgba(0,0,0,0)')
+  o.fillStyle = navp
+  o.fillRect(0, 0, rw, rh)
+  const vod = o.createLinearGradient(0, 0, rw, 0)
+  vod.addColorStop(0, 'rgba(0,0,0,0)')
+  vod.addColorStop(0.38, 'rgba(0,0,0,1)')
+  vod.addColorStop(1, 'rgba(0,0,0,1)')
+  o.fillStyle = vod
+  o.fillRect(0, 0, rw, rh)
+  c.drawImage(off, rx, ry, rw, rh)
+}
+
+/** Okno za fotografijo v točkah kartice — potrebno tudi za vlečenje. */
+export const OKNO_FOTO = { x: 170 + 240, y: 130 + 30, w: 740 - 270, h: 540 }
+
+export async function narisiKartico(p: PodatkiKartice, foto: FotoKartice | null = null): Promise<Blob | null> {
   await naloziPisavo()
   const { p: pl, c } = platno()
 
@@ -199,10 +258,18 @@ export async function narisiKartico(p: PodatkiKartice): Promise<Blob | null> {
     c.fillStyle = CRNILO
     napisi(c, zacetnice(p.klub, p.klubKratko), gx, gy + 16, G - 20, (v) => oz(800, v), 46, 28)
   }
-  // desno: namesto fotografije velika številka dresa
-  c.fillStyle = 'rgba(36,28,12,.16)'
-  c.font = oz(800, 430)
-  c.fillText(p.stevilka != null ? String(p.stevilka) : '', x + cw * 0.64, y + 520)
+  // desno: fotografija, če jo je kdo izbral, sicer velika številka dresa
+  if (foto) {
+    c.save()
+    oblika(18)
+    c.clip()
+    narisiFoto(c, foto, OKNO_FOTO.x, OKNO_FOTO.y, OKNO_FOTO.w, OKNO_FOTO.h)
+    c.restore()
+  } else {
+    c.fillStyle = 'rgba(36,28,12,.16)'
+    c.font = oz(800, 430)
+    c.fillText(p.stevilka != null ? String(p.stevilka) : '', x + cw * 0.64, y + 520)
+  }
 
   // ime
   c.fillStyle = CRNILO
@@ -263,25 +330,65 @@ export default function KarticaIgralca({
   podatki: PodatkiKartice
   povezava: string
 }) {
-  const kljuc = JSON.stringify(podatki)
+  const [foto, setFoto] = useState<FotoKartice | null>(null)
+  const [napakaFoto, setNapakaFoto] = useState<string | null>(null)
+  const kljuc =
+    JSON.stringify(podatki) + (foto ? `|${foto.id}:${Math.round(foto.x)}:${Math.round(foto.y)}:${foto.povecava}` : '')
   const [predogled, setPredogled] = useState<string | null>(null)
+  const vlecenje = useRef<{ px: number; py: number; x: number; y: number } | null>(null)
+  const okvir = useRef<HTMLDivElement | null>(null)
+  const fotoRef = useRef(foto)
+  fotoRef.current = foto
 
   useEffect(() => {
     let veljavno = true
     let url: string | null = null
-    narisiKartico(podatki)
-      .then((blob) => {
-        if (!veljavno || !blob) return
-        url = URL.createObjectURL(blob)
-        setPredogled(url)
-      })
-      .catch(() => {})
+    // Kratek zamik: med vlečenjem ali povečevanjem se riše šele, ko se roka ustavi.
+    const t = window.setTimeout(() => {
+      narisiKartico(podatki, fotoRef.current)
+        .then((blob) => {
+          if (!veljavno || !blob) return
+          url = URL.createObjectURL(blob)
+          setPredogled(url)
+        })
+        .catch(() => {})
+    }, foto ? 90 : 0)
     return () => {
       veljavno = false
+      window.clearTimeout(t)
       if (url) URL.revokeObjectURL(url)
     }
-    // `kljuc` je `podatki`, primerjan po vsebini.
+    // `kljuc` vsebuje podatke in stanje fotografije, primerjano po vsebini.
   }, [kljuc])
+
+  async function izberi(e: ChangeEvent<HTMLInputElement>) {
+    const datoteka = e.target.files?.[0]
+    e.target.value = ''
+    if (!datoteka) return
+    setNapakaFoto(null)
+    try {
+      const f = await naloziFoto(datoteka)
+      setFoto({ ...f, x: 0, y: 0, povecava: 1, id: Date.now() })
+    } catch {
+      setNapakaFoto('Te fotografije ni mogoče odpreti. Poskusi z drugo (JPG ali PNG).')
+    }
+  }
+
+  function zacni(e: PointerEvent<HTMLDivElement>) {
+    if (!foto) return
+    e.currentTarget.setPointerCapture(e.pointerId)
+    vlecenje.current = { px: e.clientX, py: e.clientY, x: foto.x, y: foto.y }
+  }
+  function vleci(e: PointerEvent<HTMLDivElement>) {
+    const v = vlecenje.current
+    if (!v || !okvir.current) return
+    // premik prsta v točkah kartice
+    const r = W / okvir.current.getBoundingClientRect().width
+    setFoto((f) => (f ? { ...f, x: v.x + (e.clientX - v.px) * r, y: v.y + (e.clientY - v.py) * r } : f))
+  }
+  function koncaj() {
+    vlecenje.current = null
+  }
 
   const ime = `${podatki.ime} ${podatki.priimek}`.trim()
   const besedilo = podatki.krog
@@ -290,12 +397,22 @@ export default function KarticaIgralca({
 
   return (
     <div className="grid gap-4 sm:grid-cols-[minmax(0,15rem)_1fr] sm:items-start">
-      <div className="mx-auto w-full max-w-[15rem] overflow-hidden rounded-xl bg-white/5 sm:mx-0">
+      <div
+        ref={okvir}
+        onPointerDown={zacni}
+        onPointerMove={vleci}
+        onPointerUp={koncaj}
+        onPointerCancel={koncaj}
+        className={`mx-auto w-full max-w-[15rem] select-none overflow-hidden rounded-xl bg-white/5 sm:mx-0 ${
+          foto ? 'cursor-grab touch-none active:cursor-grabbing' : ''
+        }`}
+      >
         {predogled ? (
           <img
             src={predogled}
             alt={`Kartica igralca ${ime}`}
-            className="block aspect-[4/5] w-full"
+            draggable={false}
+            className="pointer-events-none block aspect-[4/5] w-full"
           />
         ) : (
           <div className="aspect-[4/5] w-full animate-pulse bg-white/5" aria-hidden />
@@ -303,17 +420,51 @@ export default function KarticaIgralca({
       </div>
       <div className="space-y-3">
         <p className="text-sm text-slate-300">
-          Sličica za objavo — za igralca, starše in navijače. Na telefonu jo pošlješ naravnost v
+          Kartica za objavo — za igralca, starše in navijače. Na telefonu jo pošlješ naravnost v
           WhatsApp, Instagram ali Facebook.
         </p>
         <DeliSliko
-          narisi={() => narisiKartico(podatki)}
+          narisi={() => narisiKartico(podatki, fotoRef.current)}
           kljuc={kljuc}
           naslov={ime}
           besedilo={besedilo}
           povezava={povezava}
           imeSlike={imeDatotekeKartice(podatki.ime, podatki.priimek, podatki.krog)}
         />
+        <div className="space-y-2 border-t border-white/5 pt-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="gumb-tih cursor-pointer px-3 py-2 text-sm">
+              {foto ? 'Zamenjaj fotografijo' : 'Dodaj fotografijo'}
+              <input type="file" accept="image/*" onChange={izberi} className="sr-only" />
+            </label>
+            {foto && (
+              <button type="button" onClick={() => setFoto(null)} className="gumb-tih px-3 py-2 text-sm">
+                Odstrani
+              </button>
+            )}
+          </div>
+          {foto && (
+            <label className="flex items-center gap-3 text-xs text-slate-400">
+              Povečava
+              <input
+                type="range"
+                min={1}
+                max={3}
+                step={0.05}
+                value={foto.povecava}
+                onChange={(e) => setFoto({ ...foto, povecava: Number(e.target.value) })}
+                className="w-40 accent-gnl-400"
+              />
+            </label>
+          )}
+          <p className="text-xs text-slate-500">
+            {foto
+              ? 'Povleci fotografijo na kartici, da jo namestiš. '
+              : ''}
+            Fotografija ostane na tvoji napravi — nikamor je ne naložimo in na strani je ne vidi nihče.
+          </p>
+          {napakaFoto && <p className="text-xs text-rose-300">{napakaFoto}</p>}
+        </div>
       </div>
     </div>
   )
