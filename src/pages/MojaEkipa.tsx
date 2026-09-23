@@ -35,9 +35,12 @@ import {
   TOCKE,
   TOCK_RODILNIK,
   TOCKE_TOZILNIK,
+  formatirajTocke,
 } from '../lib/pomozno'
 import { useTekmovanje } from '../lib/tekmovanje'
 import Igrisce from '../components/Igrisce'
+import Plakat from '../components/Plakat'
+import { najboljsiTrije, type VrsticaIgralca } from '../lib/plakat'
 import Grb from '../components/Grb'
 import Odstevanje from '../components/Odstevanje'
 import EnajstericaNaIgriscu from '../components/EnajstericaNaIgriscu'
@@ -221,6 +224,13 @@ export default function MojaEkipa() {
   )
   const [posnetkiPoKrogih, setPosnetkiPoKrogih] = useState<any[]>([])
   const [zgodovinaKrogId, setZgodovinaKrogId] = useState<number | null>(null)
+  // Za plakat izbranega kroga: mesto, število ekip in najboljši v postavi.
+  const [delitevKroga, setDelitevKroga] = useState<{
+    round_id: number
+    mesto: number | null
+    odEkip: number | null
+    igralci: VrsticaIgralca[]
+  } | null>(null)
   const [pripomocki, setPripomocki] = useState<any[]>([])
   // Sezona, v kateri veljajo pripomočki (enkratni na sezono).
   const [sezonaPripomockov, setSezonaPripomockov] = useState<string | null>(null)
@@ -702,6 +712,46 @@ export default function MojaEkipa() {
   // kvota 2-5-5-3 in po njem stoji na igrišču. Če ga skupnost pozneje prestavi,
   // kader zaradi tega ne razpade (enako sodi `roster_je_veljaven` v bazi);
   // točke pa mu šteje prava, trenutna pozicija.
+  // Plakat kroga v zgodovini: podatki se preberejo šele, ko je krog izbran.
+  const ekipaId: number | null = ekipa?.id ?? null
+  useEffect(() => {
+    if (!ekipaId || !zgodovinaKrogId) {
+      setDelitevKroga(null)
+      return
+    }
+    let veljavno = true
+    const krogId = zgodovinaKrogId
+    ;(async () => {
+      const [rMesto, rEkip, rPostava] = await Promise.all([
+        supabase
+          .from('fantasy_round_standings')
+          .select('rank')
+          .eq('fantasy_team_id', ekipaId)
+          .eq('round_id', krogId)
+          .maybeSingle(),
+        supabase
+          .from('fantasy_round_standings')
+          .select('fantasy_team_id', { count: 'exact', head: true })
+          .eq('round_id', krogId),
+        supabase.rpc('tuja_postava', { p_team: ekipaId, p_round: krogId }),
+      ])
+      if (!veljavno) return
+      // Množitelj je že vračunan (kapetan ×3), kot na lestvici.
+      const zTockami = ((rPostava.data ?? []) as any[])
+        .filter((v) => v.mnozitelj > 0)
+        .map((v) => ({ ime: v.ime, tocke: Number(v.tocke) * v.mnozitelj, je_kapetan: v.je_kapetan }))
+      setDelitevKroga({
+        round_id: krogId,
+        mesto: rMesto.data?.rank != null ? Number(rMesto.data.rank) : null,
+        odEkip: rEkip.count ?? null,
+        igralci: najboljsiTrije(zTockami),
+      })
+    })()
+    return () => {
+      veljavno = false
+    }
+  }, [ekipaId, zgodovinaKrogId])
+
   const izbraniPodrobno = useMemo(
     () =>
       izbrani
@@ -1955,6 +2005,30 @@ export default function MojaEkipa() {
                         position: s.position,
                       }))}
                     />
+                    {skupaj != null && ekipa && (
+                      <div className="border-t border-white/5 pt-3">
+                        <div className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">
+                          Deli {izbrani.krog?.number}. krog
+                        </div>
+                        <Plakat
+                          podatki={{
+                            vrsta: 'krog',
+                            ekipa: ekipa.name ?? (imeEkipe || 'Moja ekipa'),
+                            liga: tekmovanje?.name ?? '',
+                            tocke: formatirajTocke(skupaj),
+                            krog: izbrani.krog?.number ?? 0,
+                            mesto: delitevKroga?.round_id === izbrani.round_id ? delitevKroga?.mesto ?? null : null,
+                            odEkip: delitevKroga?.round_id === izbrani.round_id ? delitevKroga?.odEkip ?? null : null,
+                            igralci: delitevKroga?.round_id === izbrani.round_id ? delitevKroga?.igralci ?? [] : [],
+                          }}
+                          povezava={
+                            typeof window !== 'undefined'
+                              ? `${window.location.origin}/ekipa/${ekipa.id}?krog=${izbrani.round_id}`
+                              : ''
+                          }
+                        />
+                      </div>
+                    )}
                   </>
                 )
               })()}
