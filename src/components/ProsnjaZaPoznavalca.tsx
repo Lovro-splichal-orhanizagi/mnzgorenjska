@@ -78,7 +78,7 @@ export default function ProsnjaZaPoznavalca({
   if (insiderCompetitionId === competitionId)
     return (
       <p className="text-xs text-sky-200">
-        ★ Poznavalec te lige si — tvoj glas sam potrdi pozicijo ali asistenco.
+        <span aria-hidden="true">★ </span>Poznavalec te lige si — tvoj glas sam potrdi pozicijo ali asistenco.
       </p>
     )
 

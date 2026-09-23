@@ -1,6 +1,9 @@
 // Kratka izjava o zasebnosti in pogoji. Namenoma brez pravniškega balasta —
 // pove, kaj hranimo, zakaj in kako se tega znebiš.
+import { useNaslov } from '../lib/naslov'
+
 export default function Pravno() {
+  useNaslov('Zasebnost in pogoji')
   return (
     <div className="max-w-2xl space-y-8">
       <header>

@@ -335,7 +335,7 @@ preveri(
   // Prodaja za 7 in nakup za 18 ob začetnih 10 pustita primanjkljaj 1.
   const predrag = preveriEkipo(poPrestopu(18), 100, -1)
   preveri('proračun: resnično predrag prestop pokaže dejanski primanjkljaj',
-    predrag.length === 1 && predrag[0].includes('proračun za 1.0'), predrag.join(' | '))
+    predrag.length === 1 && predrag[0].includes('proračun za 1,0 M€'), predrag.join(' | '))
 
   // Nakup za 17 je mogoč: ob prodaji se realizira tudi dobiček 1.
   const prodajniDobicek = preveriEkipo(poPrestopu(17), 100, 0)
@@ -912,7 +912,7 @@ preveri(
     delni.igralci?.[0].value === 4.5 && delni.igralci?.[1].value === 5.5)
   preveri('premik: delni neuspeh javi neuspešen izhod in oba števca',
     delni.status === 1 && delni.stderr.includes('Neuspešnih: 1, uspešnih: 1'), delni.stderr.trim())
-  const obicajni = ovrednoti([], { neuspesen: 1 })
+  const obicajni = ovrednoti(['--pisi'], { neuspesen: 1 })
   preveri('premik: tudi običajno vrednotenje javi delni neuspeh',
     obicajni.status === 1 && obicajni.stderr.includes('Neuspešnih: 1, uspešnih: 1'), obicajni.stderr.trim())
 
@@ -949,7 +949,7 @@ preveri(
     primerjava.status === 0 && primerjava.zapisi?.length === 1 &&
     primerjava.zapisi[0].id === 2 && primerjava.igralci?.[1].value === 5.5 &&
     primerjava.igralci?.[1].value_start === 5.5)
-  const zacetne = ovrednoti([], { zgodovina })
+  const zacetne = ovrednoti(['--pisi'], { zgodovina })
   preveri('premik: običajno začetno vrednotenje ohrani dosedanje pisanje',
     zacetne.status === 0 && zacetne.igralci?.[1].value === 12 &&
     zacetne.igralci?.[1].value_start === 12 &&
@@ -2558,7 +2558,9 @@ preveri(
   preveri('plakat: 3 navijači', navijacev(3) === '3 navijači', navijacev(3))
   preveri('plakat: 5 navijačev', navijacev(5) === '5 navijačev', navijacev(5))
   preveri('plakat: 11 navijačev (ne 11 navijač)', navijacev(11) === '11 navijačev', navijacev(11))
-  preveri('plakat: 21 navijač', navijacev(21) === '21 navijač', navijacev(21))
+  preveri('plakat: 21 navijačev (sloven. šteje ostanek pri 100)', navijacev(21) === '21 navijačev', navijacev(21))
+  preveri('plakat: 101 navijač', navijacev(101) === '101 navijač', navijacev(101))
+  preveri('plakat: 102 navijača', navijacev(102) === '102 navijača', navijacev(102))
 
   preveri('plakat: brez navijacev ni stavka', stavekNavijacev(0) === null)
   preveri('plakat: en navijac "ze ima"', stavekNavijacev(1) === '1 navijač že ima naše igralce v ekipi.', stavekNavijacev(1))
@@ -2629,6 +2631,109 @@ preveri(
     }
   }
   preveri('strani: noben hook ne stoji za zgodnjim return', krsitev.length === 0, krsitev.join('; '))
+}
+
+// --- prijava, opomniki, kanonicni naslov -------------------------------------
+{
+  const { varnaPot, napakaPrijave, povezavaNaPrijavo } = await import('../src/lib/prijava')
+  const { kanonicni } = await import('../src/lib/naslov')
+  const { default: Opomniki } = await import('../src/pages/Opomniki')
+  preveri('prijava: notranja pot je varna', varnaPot('/mini-lige?vstop=AB') === '/mini-lige?vstop=AB')
+  preveri(
+    'prijava: tuja ali relativna pot ni varna',
+    [null, '', 'https://zlo.si', '//zlo.si', '/\\zlo.si', 'mini-lige'].every((p) => varnaPot(p) === null),
+  )
+  preveri('prijava: povezava kodira pot', povezavaNaPrijavo('/pozicije?t=mladinci') === '/prijava?nazaj=%2Fpozicije%3Ft%3Dmladinci')
+  preveri('prijava: napacno geslo po slovensko', napakaPrijave('Invalid login credentials') === 'Napačen e-naslov ali geslo.')
+  preveri('prijava: neznana napaka ostane', napakaPrijave('Nekaj cudnega') === 'Nekaj cudnega')
+  preveri('naslov: kanonicni obdrzi le ligo', kanonicni('/igralci', '?t=mladinci&klub=3') === 'https://slff.eu/igralci?t=mladinci')
+  preveri('naslov: kanonicni brez lige', kanonicni('/', '') === 'https://slff.eu/')
+  try {
+    const html = renderToString(
+      <StaticRouter location="/opomniki">
+        <AuthProvider>
+          <TekmovanjeProvider>
+            <Opomniki />
+          </TekmovanjeProvider>
+        </AuthProvider>
+      </StaticRouter>,
+    )
+    preveri('izris: Opomniki', Boolean(html && html.length))
+  } catch (e) {
+    preveri('izris: Opomniki', false, e.message)
+  }
+}
+
+// --- Moja ekipa: neaktiven igralec in predlog v ligi s petimi klubi --------
+// Baza (`roster_je_veljaven`) kader z neaktivnim igralcem zavrne; brez
+// opozorila na strani bi ekipa tiho ostala brez tock.
+{
+  const zNeaktivnim = veljavna.map((i) =>
+    i.id === 12 ? { ...i, active: false, full_name: 'Novak Janez' } : i)
+  const napake = preveriEkipo(zNeaktivnim, 100)
+  preveri('pravila: neaktiven igralec sprozi napako z imenom',
+    napake.some((n) => n.includes('Janez Novak ni več v ligi')), napake.join(' | '))
+  preveri('pravila: aktivni igralci ne sprozijo napake o ligi',
+    !preveriEkipo(veljavna, 100).some((n) => n.includes('ni več v ligi')))
+}
+{
+  // Pet klubov po tri igralce na kader: vsak klub mora dati natanko tri.
+  // Najcenejsi vratarji, branilci in vezisti so v klubih 1-2, zato jih
+  // pohlepno jemanje po pozicijah vzame prevec iz istih klubov in napadalcev
+  // zmanjka.
+  const liga = []
+  let id = 1
+  for (let klub = 1; klub <= 5; klub++) {
+    const poceni = klub <= 2
+    for (const [poz, koliko] of [['GK', 2], ['DEF', 3], ['MID', 3], ['FWD', klub <= 2 ? 0 : 1]]) {
+      for (let n = 0; n < koliko; n++)
+        liga.push({ id: id++, position: poz, team_id: klub, value: poceni ? 4 : 5, points: n })
+    }
+  }
+  const kader = predlagajKader(liga, PRORACUN)
+  preveri('predlog: pet klubov da veljaven kader', Array.isArray(kader) && kader.length === 15,
+    kader ? String(kader.length) : 'null')
+  if (kader) {
+    const poKlubu = {}
+    for (const k of kader) poKlubu[k.team_id] = (poKlubu[k.team_id] ?? 0) + 1
+    preveri('predlog: pet klubov — iz vsakega natanko trije',
+      Object.values(poKlubu).length === 5 && Object.values(poKlubu).every((n) => n === 3),
+      JSON.stringify(poKlubu))
+  }
+}
+
+// --- prijava: odprta preusmeritev, slovnica tock, neshranjene spremembe ----
+{
+  const { varnaPot } = await import('../src/lib/prijava')
+  for (const p of ['/\t/zlo.si', '/\n/zlo.si', '/\r/zlo.si', '//zlo.si', '/\\zlo.si', '/\u0000x', '/x\u007F'])
+    preveri(`prijava: ${JSON.stringify(p)} ni varna`, varnaPot(p) === null, String(varnaPot(p)))
+  preveri('prijava: /l/ABC?t=x ostane', varnaPot('/l/ABC?t=x') === '/l/ABC?t=x')
+  preveri('prijava: hash ostane', varnaPot('/moja-ekipa#status') === '/moja-ekipa#status')
+
+  const { mnozina, tockZ, TOCK_RODILNIK, TOCKE_TOZILNIK } = await import('../src/lib/pomozno')
+  preveri('slovnica: odbitek 1 tocke', mnozina(1, TOCK_RODILNIK) === '1 točke')
+  preveri('slovnica: odbitek 4 tock', mnozina(4, TOCK_RODILNIK) === '4 točk')
+  preveri('slovnica: prinesla 1 tocko', mnozina(1, TOCKE_TOZILNIK) === '1 točko')
+  preveri('slovnica: prinesla 3 tocke', mnozina(3, TOCKE_TOZILNIK) === '3 točke')
+  preveri('slovnica: necelo je tocke', tockZ(2.5) === 'točke' && tockZ('12.5') === 'točke')
+  preveri('slovnica: celo po obliki', tockZ(1) === 'točka' && tockZ(5) === 'točk' && tockZ(null) === 'točk')
+
+  const { nastaviNeshranjeno, jeNeshranjeno, potrdiZapustitev } = await import('../src/lib/neshranjeno')
+  nastaviNeshranjeno(false)
+  preveri('neshranjeno: brez sprememb ni vprasanja', potrdiZapustitev() === true)
+  nastaviNeshranjeno(true)
+  preveri('neshranjeno: zastavica se nastavi', jeNeshranjeno() === true)
+  nastaviNeshranjeno(false)
+
+  const { default: Potrditev } = await import('../src/components/admin/Potrditev')
+  try {
+    const html = renderToString(
+      <Potrditev potrdi={() => {}} preklici={() => {}}>Res?</Potrditev>,
+    )
+    preveri('izris: Potrditev je alertdialog', html.includes('role="alertdialog"') && html.includes('aria-labelledby'))
+  } catch (e) {
+    preveri('izris: Potrditev je alertdialog', false, e.message)
+  }
 }
 
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)

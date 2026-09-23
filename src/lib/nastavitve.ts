@@ -43,15 +43,24 @@ async function naloziZa(id: number): Promise<Nastavitve> {
  *
  * Dokler se nastavitve ne naložijo, vrne privzetek — enako, kot je vmesnik
  * kazal doslej, le da se nato popravi na vrednost lige.
+ *
+ * `tekmovanjeId` poda ligo izrecno: tekma ali igralec iz deljene povezave
+ * ne pripadata nujno ligi, ki je izbrana v meniju, prag pa je njun. Brez
+ * njega velja liga iz menija.
  */
-export function useNastavitev(): (kljuc: string, privzeto: number) => number {
-  const { id } = useTekmovanje()
+export function useNastavitev(
+  tekmovanjeId?: number | null,
+): (kljuc: string, privzeto: number) => number {
+  const izMenija = useTekmovanje().id
+  const id = tekmovanjeId !== undefined ? tekmovanjeId : izMenija
   const [nastavitve, setNastavitve] = useState<Nastavitve>(() =>
     id != null ? (predpomnilnik.get(id) ?? {}) : {},
   )
 
   useEffect(() => {
     if (id == null) return
+    // Ob zamenjavi lige ne kaži pragov prejšnje, dokler se nove ne naložijo.
+    setNastavitve(predpomnilnik.get(id) ?? {})
     let veljavno = true
     naloziZa(id).then((v) => {
       if (veljavno) setNastavitve(v)

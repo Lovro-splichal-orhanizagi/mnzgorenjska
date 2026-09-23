@@ -101,7 +101,7 @@ export default function PovabiSoigralce({
         aria-label="Zapri"
         className="absolute right-2 top-2 rounded-lg px-2 py-0.5 text-slate-500 hover:bg-white/5 hover:text-slate-200"
       >
-        ✕
+        <span aria-hidden="true">✕</span>
       </button>
       <h2 className="font-bold text-gnl-200">
         {liga ? `Povabi še koga v ${liga.name}` : 'Sestavljeno. Zdaj povabi soigralce.'}

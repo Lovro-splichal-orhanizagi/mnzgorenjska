@@ -7,11 +7,14 @@
 // Informacija je SAMO informacija: nič od tega ne označi igralca za
 // nedosegljivega in ne vpliva na sestavo ekipe.
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import { useTekmovanje } from '../lib/tekmovanje'
 import { prikazniIme } from '../lib/pomozno'
+import { vseVrstice } from '../lib/strani'
+import { useNaslov } from '../lib/naslov'
+import { povezavaNaPrijavo } from '../lib/prijava'
 import Grb from '../components/Grb'
 import {
   VRSTE,
@@ -19,6 +22,14 @@ import {
   type Porocilo,
   type VrstaPorocila,
 } from '../components/Odsotnost'
+
+/** Brez šumnikov in velikih črk — "zeleznik" najde "Železnik" (kot izbirnik lige). */
+const poenostavi = (s: string) =>
+  s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
 
 /** Igralec v izbirniku ob objavi. */
 interface IgralecIzbira {
@@ -41,16 +52,21 @@ export default function Odsotnosti() {
   // obrazec
   const [odprt, setOdprt] = useState(false)
   const [iskanje, setIskanje] = useState('')
-  const [zadetki, setZadetki] = useState<IgralecIzbira[]>([])
+  // Vsi igralci lige, naloženi ob prvem odprtju obrazca. Iščemo po njih v
+  // brskalniku, ker `ilike` v bazi ne zna enačiti "c" in "č".
+  const [igralciLige, setIgralciLige] = useState<IgralecIzbira[]>([])
   const [izbran, setIzbran] = useState<IgralecIzbira | null>(null)
   const [vrsta, setVrsta] = useState<VrstaPorocila>('poskodba')
   const [besedilo, setBesedilo] = useState('')
   const [posiljam, setPosiljam] = useState(false)
+  const { pathname, search } = useLocation()
+  useNaslov('Odsotnosti in poškodbe')
 
   useEffect(() => {
     if (!tekmovanjeId) return
     const ligaId = tekmovanjeId
     setNalaganje(true)
+    setNapaka(null)
     let veljavno = true
     ;(async () => {
       const [{ data, error }, { data: ostalo }] = await Promise.all([
@@ -81,27 +97,40 @@ export default function Odsotnosti() {
   // Iskanje igralca ob objavi. Brez izbranega igralca poročilo nima smisla —
   // forum je urejen po igralcih, ne po prostem besedilu.
   useEffect(() => {
-    const q = iskanje.trim()
-    if (!tekmovanjeId || q.length < 2) return setZadetki([])
+    if (!tekmovanjeId || !odprt) return
     const ligaId = tekmovanjeId
-    let preklican = false
-    const t = setTimeout(() => {
+    setIgralciLige([])
+    let veljavno = true
+    vseVrstice((od, do_) =>
       supabase
         .from('player_overview')
         .select('id, full_name, team_name')
         .eq('competition_id', ligaId)
-        .ilike('full_name', `%${q}%`)
-        .order('full_name')
-        .limit(8)
-        .then(({ data }) => {
-          if (!preklican) setZadetki((data ?? []) as IgralecIzbira[])
-        })
-    }, 250)
+        .order('id')
+        .range(od, do_),
+    )
+      .then((vsi) => {
+        if (veljavno)
+          setIgralciLige(
+            vsi.flatMap((i) => (i.id == null ? [] : [{ ...i, id: i.id }])),
+          )
+      })
+      .catch((e: Error) => {
+        if (veljavno) setNapaka(e.message)
+      })
     return () => {
-      preklican = true
-      clearTimeout(t)
+      veljavno = false
     }
-  }, [iskanje, tekmovanjeId])
+  }, [tekmovanjeId, odprt])
+
+  const zadetki = useMemo(() => {
+    const q = poenostavi(iskanje)
+    if (q.length < 2) return []
+    return igralciLige
+      .filter((i) => poenostavi(i.full_name ?? '').includes(q))
+      .sort((a, b) => (a.full_name ?? '').localeCompare(b.full_name ?? '', 'sl'))
+      .slice(0, 8)
+  }, [iskanje, igralciLige])
 
   const vidna = useMemo(
     () => (filter === 'vse' ? porocila : porocila.filter((p) => p.kind === filter)),
@@ -203,7 +232,7 @@ export default function Odsotnosti() {
                 : 'bg-white/5 text-slate-300 hover:bg-white/10'
             }`}
           >
-            {v.ikona} {v.oznaka}
+            <span aria-hidden="true">{v.ikona}</span> {v.oznaka}
           </button>
         ))}
         <div className="ml-auto">
@@ -212,7 +241,10 @@ export default function Odsotnosti() {
               {odprt ? 'Zapri' : 'Javi odsotnost'}
             </button>
           ) : (
-            <Link to="/prijava" className="text-sm text-gnl-300 underline">
+            <Link
+              to={povezavaNaPrijavo(pathname + search)}
+              className="text-sm text-gnl-300 underline"
+            >
               Prijavi se za objavo
             </Link>
           )}
@@ -242,7 +274,6 @@ export default function Odsotnosti() {
                       type="button"
                       onClick={() => {
                         setIzbran(z)
-                        setZadetki([])
                       }}
                       className="w-full rounded-lg bg-white/5 px-3 py-1.5 text-left text-sm hover:bg-white/10"
                     >
@@ -267,7 +298,7 @@ export default function Odsotnosti() {
                     : 'bg-white/5 text-slate-300 hover:bg-white/10'
                 }`}
               >
-                {v.ikona} {v.oznaka}
+                <span aria-hidden="true">{v.ikona}</span> {v.oznaka}
               </button>
             ))}
           </div>

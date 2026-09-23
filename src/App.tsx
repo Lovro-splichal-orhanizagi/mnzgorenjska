@@ -1,4 +1,4 @@
-import { Routes, Route, Link } from 'react-router-dom'
+import { Routes, Route, Link, useLocation } from 'react-router-dom'
 import { AuthProvider } from './lib/useAuth'
 import { TekmovanjeProvider } from './lib/tekmovanje'
 import Navbar from './components/Navbar'
@@ -27,8 +27,29 @@ import Pozicije from './pages/Pozicije'
 import Odsotnosti from './pages/Odsotnosti'
 import Administracija from './pages/Administracija'
 import VstopVMiniLigo from './pages/VstopVMiniLigo'
+import Opomniki from './pages/Opomniki'
+import { useKanonicni, useNaslov } from './lib/naslov'
+
+function NiStrani() {
+  useNaslov('Stran ne obstaja')
+  return (
+    <div className="space-y-3">
+      <h1 className="text-3xl font-black naslov">Stran ne obstaja</h1>
+      <p className="text-slate-400">
+        Povezava je morda zastarela ali pa je v naslovu tipkarska napaka.
+      </p>
+      <Link to="/" className="inline-block text-gnl-300 underline">
+        Nazaj na začetno stran
+      </Link>
+    </div>
+  )
+}
 
 export default function App() {
+  // Napaka na eni strani naj ne ostane prilepljena na vse naslednje: nov
+  // ključ ob navigaciji oprijem ponastavi.
+  const { pathname, search } = useLocation()
+  useKanonicni(pathname, search)
   return (
     <AuthProvider>
       <TekmovanjeProvider>
@@ -38,7 +59,7 @@ export default function App() {
           <Navbar />
           <OpozoriloEkipe />
           <main className="mx-auto max-w-5xl px-4 py-8">
-            <NapakaOprijem>
+            <NapakaOprijem key={pathname}>
             <Routes>
               <Route path="/" element={<Domov />} />
               <Route path="/moja-ekipa" element={<MojaEkipa />} />
@@ -58,17 +79,15 @@ export default function App() {
               <Route path="/prijava" element={<Prijava />} />
               <Route path="/novo-geslo" element={<NovoGeslo />} />
               <Route path="/pravno" element={<Pravno />} />
+              <Route path="/opomniki" element={<Opomniki />} />
               <Route path="/admin" element={<Administracija />} />
-              <Route
-                path="*"
-                element={<p className="text-slate-400">Stran ne obstaja.</p>}
-              />
+              <Route path="*" element={<NiStrani />} />
             </Routes>
             </NapakaOprijem>
           </main>
           <Podpora />
-          <footer className="border-t border-white/10 py-6 text-center text-xs text-slate-600">
-            <Link to="/pravno" className="underline hover:text-slate-400">
+          <footer className="border-t border-white/10 py-6 text-center text-xs text-slate-400">
+            <Link to="/pravno" className="underline hover:text-slate-200">
               Zasebnost in pogoji
             </Link>
             <VirPodatkov />

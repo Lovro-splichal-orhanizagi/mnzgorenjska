@@ -7,12 +7,22 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { formatirajCeno, formatirajTocke, prikazniIme, razredPozicije, KRATKA_POZICIJA } from '../lib/pomozno'
+import {
+  formatirajCeno,
+  formatirajTocke,
+  prikazniIme,
+  razredPozicije,
+  KRATKA_POZICIJA,
+  mnozina,
+  oblika,
+  IGRALCI,
+} from '../lib/pomozno'
+import { useNaslov } from '../lib/naslov'
 import { VRSTNI_RED } from '../lib/pravila'
 import type { Pozicija } from '../lib/tipi'
 import Grb from '../components/Grb'
 import Plakat from '../components/Plakat'
-import { najboljsiTrije } from '../lib/plakat'
+import { najboljsiTrije, navijacev } from '../lib/plakat'
 
 interface Igralec {
   id: number
@@ -35,6 +45,7 @@ export default function Klub() {
   const [igralci, setIgralci] = useState<Igralec[]>([])
   const [nalaganje, setNalaganje] = useState(true)
   const [napaka, setNapaka] = useState<string | null>(null)
+  useNaslov(klub?.name ?? 'Klub')
 
   useEffect(() => {
     if (!id) return
@@ -55,12 +66,16 @@ export default function Klub() {
       setKlub(t)
 
       // Klub lahko igra v vec tekmovanjih (clani, mladinci); vzamemo tisto z
-      // najvec njegovimi igralci, da stran pokaze glavno mostvo.
+      // najvec njegovimi igralci, da stran pokaze glavno mostvo. Neaktivne
+      // lige (se v pripravi) pridejo v postev le, ce aktivne ni nobene —
+      // sicer bi CTA vodil v ligo, ki je v meniju ni.
       const { data: ct } = await supabase
         .from('competition_teams')
-        .select('competition_id, competitions(slug, name, short_name, federation_id)')
+        .select('competition_id, competitions(slug, name, short_name, federation_id, active)')
         .eq('team_id', Number(id))
-      const tekmovanja = (ct ?? []) as Array<{ competition_id: number; competitions: any }>
+      const vse = (ct ?? []) as Array<{ competition_id: number; competitions: any }>
+      const aktivna = vse.filter((t2) => t2.competitions?.active)
+      const tekmovanja = aktivna.length ? aktivna : vse
       if (!tekmovanja.length) {
         setNapaka('Ta klub letos ne igra v nobeni ligi, ki jo spremljamo.')
         setNalaganje(false)
@@ -119,6 +134,9 @@ export default function Klub() {
     return VRSTNI_RED.filter((p) => m.has(p)).map((p) => [p, m.get(p)!] as const)
   }, [igralci])
 
+  // CTA pelje v ligo kluba, ne v tisto, ki jo ima obiskovalec izbrano.
+  const ligaParam = liga?.slug ? `?t=${encodeURIComponent(liga.slug)}` : ''
+
   if (nalaganje) return <p className="p-4 text-slate-400">Nalaganje …</p>
   if (napaka)
     return (
@@ -135,7 +153,7 @@ export default function Klub() {
         <div className="min-w-0">
           <h1 className="truncate text-2xl font-black naslov sm:text-3xl">{klub?.name}</h1>
           <p className="text-sm text-slate-400">
-            {liga?.name ?? 'Liga'} · {igralci.length} igralcev v igri
+            {liga?.name ?? 'Liga'} · {mnozina(igralci.length, IGRALCI)} v igri
           </p>
         </div>
       </header>
@@ -149,15 +167,16 @@ export default function Klub() {
         </p>
         {izbranih > 0 && (
           <p className="mt-2 text-sm text-gnl-200">
-            Vaše igralce ima v svoji ekipi trenutno <strong>{izbranih}</strong>{' '}
-            {izbranih === 1 ? 'navijač' : 'navijačev'}.
+            Vaše igralce {oblika(izbranih, ['ima', 'imata', 'imajo', 'ima'])} v
+            svoji ekipi trenutno{' '}
+            <strong>{navijacev(izbranih)}</strong>.
           </p>
         )}
         <div className="mt-3 flex flex-wrap gap-2">
-          <Link to="/moja-ekipa" className="gumb-glavni px-3 py-2 text-sm">
+          <Link to={`/moja-ekipa${ligaParam}`} className="gumb-glavni px-3 py-2 text-sm">
             Sestavi svojo ekipo
           </Link>
-          <Link to="/lestvica" className="gumb-tih px-3 py-2 text-sm">
+          <Link to={`/lestvica${ligaParam}`} className="gumb-tih px-3 py-2 text-sm">
             Lestvica
           </Link>
         </div>

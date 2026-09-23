@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNastavitev } from '../lib/nastavitve'
 import { imeZveze } from '../components/VirPodatkov'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
+import { useNaslov } from '../lib/naslov'
+import { povezavaNaPrijavo } from '../lib/prijava'
+import { mnozina, GOLI } from '../lib/pomozno'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import { useTekmovanje } from '../lib/tekmovanje'
@@ -16,6 +19,9 @@ import type { TekmaVrstica } from '../lib/tipi'
 
 export default function Glasovanje() {
   const { session, loading } = useAuth()
+  const uporabnikId = session?.user.id ?? null
+  const lokacija = useLocation()
+  useNaslov('Asistence')
   const { id: tekmovanjeId, tekmovanje } = useTekmovanje()
   const zveza = imeZveze(tekmovanje)
   const pragAsistence = useNastavitev()(
@@ -40,28 +46,40 @@ export default function Glasovanje() {
 
   // Vse odigrane tekme naenkrat — samo TEKOČA sezona. Lanska liga ni bila
   // fantasy-aktivna, zato bi glasovanje o lanskih asistencah bilo brez smisla.
+  // Sezono filtrira strežnik: z arhivi vred bi pogled hitro presegel 1000
+  // vrstic, ki jih PostgREST vrne, in tekoča sezona bi tiho ostala brez tekem.
   useEffect(() => {
     if (!tekmovanjeId) return
+    // Izbira iz prejšnje lige tu nima pomena — tekma drugje ne obstaja.
+    setTekme([])
+    setKrogId(null)
+    setTekmaId(null)
+    setGoli([])
+    setNapaka(null)
     setNalaganje(true)
     const ligaId = tekmovanjeId
+    let veljavno = true
     async function nalozi() {
-      const [{ data, error }, { data: sez }] = await Promise.all([
-        supabase
+      const { data: sez } = await supabase
+        .from('sezone')
+        .select('season, tekoca')
+        .eq('competition_id', ligaId)
+      if (!veljavno) return
+      const tekocaSez =
+        ((sez ?? []) as any[]).find((x) => x.tekoca)?.season ?? null
+      let samoTekoca: TekmaVrstica[] = []
+      if (tekocaSez) {
+        const { data, error } = await supabase
           .from('match_assist_status')
           .select('*')
           .eq('competition_id', ligaId)
-          .order('played_on', { ascending: false }),
-        supabase
-          .from('sezone')
-          .select('season, tekoca')
-          .eq('competition_id', ligaId),
-      ])
-      if (error) setNapaka(error.message)
-      const tekocaSez =
-        ((sez ?? []) as any[]).find((x) => x.tekoca)?.season ?? null
-      const samoTekoca = ((data ?? []) as TekmaVrstica[]).filter(
-        (t) => t.season === tekocaSez,
-      )
+          .eq('season', tekocaSez)
+          .order('played_on', { ascending: false })
+          .order('match_id')
+        if (!veljavno) return
+        if (error) setNapaka(error.message)
+        samoTekoca = (data ?? []) as TekmaVrstica[]
+      }
       setTekme(samoTekoca)
       setSezona(tekocaSez)
       // Najprej krog, ki še čaka IN je odprt — zaprtega ni smisel ponujati.
@@ -72,6 +90,9 @@ export default function Glasovanje() {
       setNalaganje(false)
     }
     nalozi()
+    return () => {
+      veljavno = false
+    }
   }, [tekmovanjeId])
 
   // Ob menjavi kroga izberemo prvo tekmo, ki še potrebuje glasove.
@@ -131,12 +152,12 @@ export default function Glasovanje() {
           skupine[k].sort((a, b) => Number(b.votes ?? 0) - Number(a.votes ?? 0))
         setGlasovi(skupine)
 
-        if (session) {
+        if (uporabnikId) {
           const { data: moji } = await supabase
             .from('assist_votes')
             .select('goal_id, player_id')
             .in('goal_id', ids)
-            .eq('voter_id', session.user.id)
+            .eq('voter_id', uporabnikId)
           if (preklican) return
           setMojiGlasovi(
             Object.fromEntries(
@@ -153,7 +174,7 @@ export default function Glasovanje() {
     return () => {
       preklican = true
     }
-  }, [tekmaId, session])
+  }, [tekmaId, uporabnikId])
 
   const sezone = useMemo(
     () =>
@@ -254,7 +275,10 @@ export default function Glasovanje() {
         <p className="max-w-2xl text-slate-400">
           Zapisniki {zveza} beležijo strelce, asistenc pa ne. Določi jih
           skupnost: ko isti igralec pri golu zbere{' '}
-          <strong className="text-gnl-300">{pragAsistence} glasov</strong>, se mu
+          <strong className="text-gnl-300">
+            {mnozina(pragAsistence, ['glas', 'glasova', 'glasove', 'glasov'])}
+          </strong>
+          , se mu
           asistenca prizna in prinese <strong className="text-gnl-300">+3 točke</strong>.
         </p>
       </header>
@@ -262,7 +286,7 @@ export default function Glasovanje() {
       {tekme.length === 0 && (
         <div className="kartica p-6 text-center text-sm text-slate-300">
           <p className="mb-2 text-lg font-semibold">
-            V trenutni sezoni še ni odigranih tekem 🎯
+            V trenutni sezoni še ni odigranih tekem <span aria-hidden="true">🎯</span>
           </p>
           <p className="text-slate-400">
             Glasovanje o asistencah se odpre takoj, ko bo prvi krog
@@ -364,7 +388,7 @@ export default function Glasovanje() {
                   {t.home_goals}:{t.away_goals}
                 </span>
                 {Number(t.brez_asistence ?? 0) === 0 ? (
-                  <span className="znacka bg-gnl-400/20 text-gnl-200">✓</span>
+                  <span className="znacka bg-gnl-400/20 text-gnl-200" aria-label="Vse potrjeno">✓</span>
                 ) : t.glasovanje_odprto ? (
                   <span className="znacka bg-amber-400/20 text-amber-300">
                     {t.brez_asistence}
@@ -380,7 +404,14 @@ export default function Glasovanje() {
 
       {!session && (
         <p className="kartica border-amber-400/30 bg-amber-400/10 p-3 text-sm text-amber-200">
-          Za glasovanje se moraš prijaviti.
+          Za glasovanje se moraš{' '}
+          <Link
+            to={povezavaNaPrijavo(lokacija.pathname + lokacija.search)}
+            className="font-semibold underline hover:text-amber-100"
+          >
+            prijaviti
+          </Link>
+          .
         </p>
       )}
 
@@ -420,7 +451,7 @@ export default function Glasovanje() {
               ? 'Vse asistence na tej tekmi so potrjene. 🎉'
               : tekma?.glasovanje_odprto === false
                 ? 'Glasovanje o tej tekmi je zaprto — odprto je do roka naslednjega kroga.'
-                : `Čaka te ${nepotrjenih} ${nepotrjenih === 1 ? 'gol' : 'golov'} brez potrjene asistence.`}
+                : `Brez potrjene asistence: ${mnozina(nepotrjenih, GOLI)}.`}
           </p>
 
           <ul className="space-y-4">

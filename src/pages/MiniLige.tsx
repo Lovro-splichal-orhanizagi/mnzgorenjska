@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
-import { formatirajTocke } from '../lib/pomozno'
+import { formatirajTocke, mnozina, KROGI } from '../lib/pomozno'
+import { useNaslov } from '../lib/naslov'
+import { povezavaNaPrijavo } from '../lib/prijava'
 import {
   ocistiKodo,
   zakajNiVeljavna,
@@ -38,7 +40,10 @@ interface MojaEkipa {
  * to, katero tekmovanje igra.
  */
 export default function MiniLige() {
-  const { session } = useAuth()
+  const { session, loading: nalaganjePrijave } = useAuth()
+  const uporabnikId = session?.user.id
+  const { pathname, search } = useLocation()
+  useNaslov('Mini lige')
   // Vstop prek povezave pripelje sem z ?liga=ID&vstop=nov|ze.
   const [params, setParams] = useSearchParams()
   const [lige, setLige] = useState<MojaLiga[]>([])
@@ -61,18 +66,28 @@ export default function MiniLige() {
     if (liga) setIzbrana(Number(liga))
     if (vstop === 'nov') setSporocilo('Pridružen. Dobrodošel v ligi.')
     else if (vstop === 'ze') setSporocilo('Ta ekipa je v tej mini ligi že od prej.')
-    setParams({}, { replace: true })
+    // Odstranimo le svoja parametra — `?t=` nosi izbrano ligo in brez njega
+    // bi se ta tiho zamenjala.
+    setParams(
+      (prej) => {
+        const novo = new URLSearchParams(prej)
+        novo.delete('liga')
+        novo.delete('vstop')
+        return novo
+      },
+      { replace: true },
+    )
   }, [params, setParams])
 
   const naloziSvoje = useCallback(async () => {
-    if (!session) {
+    if (!uporabnikId) {
       setNalaganje(false)
       return
     }
     const { data: mojeEkipe } = await supabase
       .from('fantasy_teams')
       .select('id, name, competitions(short_name)')
-      .eq('owner_id', session.user.id)
+      .eq('owner_id', uporabnikId)
     const seznam: MojaEkipa[] = (mojeEkipe ?? []).map((e) => ({
       id: e.id as number,
       name: (e.name as string) ?? '',
@@ -84,7 +99,7 @@ export default function MiniLige() {
     const { data: profil } = await supabase
       .from('profiles')
       .select('display_name')
-      .eq('id', session.user.id)
+      .eq('id', uporabnikId)
       .maybeSingle()
     setVzdevek((profil?.display_name as string | null) ?? null)
 
@@ -99,7 +114,7 @@ export default function MiniLige() {
       .select('id, name, code, owner_id')
       .or(
         [
-          `owner_id.eq.${session.user.id}`,
+          `owner_id.eq.${uporabnikId}`,
           ligaIdji.length ? `id.in.(${ligaIdji.join(',')})` : null,
         ]
           .filter(Boolean)
@@ -110,7 +125,7 @@ export default function MiniLige() {
     setLige(ml)
     setIzbrana((prej) => prej ?? ml[0]?.id ?? null)
     setNalaganje(false)
-  }, [session])
+  }, [uporabnikId])
 
   useEffect(() => {
     void naloziSvoje()
@@ -186,16 +201,23 @@ export default function MiniLige() {
     if (izid?.mini_liga_id) setIzbrana(izid.mini_liga_id as number)
   }
 
-  if (!session)
+  if (!session && !nalaganjePrijave)
     return (
       <div className="space-y-4">
         <h1 className="text-2xl font-black naslov sm:text-3xl">Mini lige</h1>
         <p className="kartica p-6 text-center text-slate-400">
-          Za mini ligo se je treba prijaviti.
+          Za mini ligo se je treba{' '}
+          <Link
+            to={povezavaNaPrijavo(pathname + search)}
+            className="font-semibold text-gnl-300 underline hover:text-gnl-200"
+          >
+            prijaviti
+          </Link>
+          .
         </p>
       </div>
     )
-  if (nalaganje) return <p className="animiraj-utrip text-slate-400">Nalaganje …</p>
+  if (nalaganje || nalaganjePrijave) return <p className="animiraj-utrip text-slate-400">Nalaganje …</p>
 
   return (
     <div className="space-y-5">
@@ -311,7 +333,7 @@ export default function MiniLige() {
                 <span className="font-mono text-gnl-300">
                   {povezavaVabila(trenutna.code, window.location.host)}
                 </span>
-                <span className="ml-2 text-xs text-slate-600">koda {trenutna.code}</span>
+                <span className="ml-2 text-xs text-slate-400">koda {trenutna.code}</span>
               </span>
               <button
                 onClick={async () => {
@@ -344,8 +366,14 @@ export default function MiniLige() {
                   key={v.fantasy_team_id}
                   className="flex items-center gap-3 rounded-xl bg-white/5 px-3 py-2"
                 >
-                  <span className="w-7 shrink-0 text-center text-sm font-black text-slate-500">
-                    {v.mesto <= 3 ? MEDALJE[v.mesto - 1] : v.mesto}
+                  <span className="w-7 shrink-0 text-center text-sm font-black text-slate-400">
+                    {v.mesto <= 3 ? (
+                      <span role="img" aria-label={`${v.mesto}. mesto`}>
+                        {MEDALJE[v.mesto - 1]}
+                      </span>
+                    ) : (
+                      v.mesto
+                    )}
                   </span>
                   <div className="min-w-0 flex-1">
                     <Link
@@ -363,7 +391,7 @@ export default function MiniLige() {
                     <div className="font-black tabular-nums text-gnl-300">
                       {formatirajTocke(v.total_points)}
                     </div>
-                    <div className="text-[11px] text-slate-500">{v.rounds_played ?? 0} krogov</div>
+                    <div className="text-[11px] text-slate-500">{mnozina(v.rounds_played ?? 0, KROGI)}</div>
                   </div>
                 </li>
               ))}

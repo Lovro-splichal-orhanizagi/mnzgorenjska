@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
+import { useNaslov } from '../lib/naslov'
+import { povezavaNaPrijavo } from '../lib/prijava'
+import { mnozina, EKIPE } from '../lib/pomozno'
 import {
   kodaJeVeljavna,
   ocistiKodo,
@@ -38,12 +41,16 @@ export default function VstopVMiniLigo() {
   const { session, loading } = useAuth()
   const navigate = useNavigate()
   const [liga, setLiga] = useState<Liga | null | undefined>(undefined)
-  const [ekipe, setEkipe] = useState<Ekipa[]>([])
+  // null = še se nalaga; brez tega bi za hip pisalo "potrebuješ ekipo" tudi
+  // človeku, ki jih ima pet.
+  const [ekipe, setEkipe] = useState<Ekipa[] | null>(null)
   const [zEkipo, setZEkipo] = useState<number | null>(null)
   const [napaka, setNapaka] = useState<string | null>(null)
   const [dela, setDela] = useState(false)
 
   const veljavna = kodaJeVeljavna(koda)
+  const uporabnikId = session?.user.id
+  useNaslov(liga ? `Povabilo: ${liga.name}` : 'Povabilo v mini ligo')
 
   useEffect(() => {
     if (!veljavna) {
@@ -65,15 +72,16 @@ export default function VstopVMiniLigo() {
   }, [koda, veljavna])
 
   useEffect(() => {
-    if (!session) {
+    if (!uporabnikId) {
       setEkipe([])
       return
     }
+    setEkipe(null)
     let veljavno = true
     supabase
       .from('fantasy_teams')
       .select('id, name, competitions(short_name)')
-      .eq('owner_id', session.user.id)
+      .eq('owner_id', uporabnikId)
       .then(({ data }) => {
         if (!veljavno) return
         const seznam: Ekipa[] = (data ?? []).map((e) => ({
@@ -89,7 +97,7 @@ export default function VstopVMiniLigo() {
     return () => {
       veljavno = false
     }
-  }, [session])
+  }, [uporabnikId])
 
   async function pridruzi() {
     if (zEkipo == null) return
@@ -129,7 +137,7 @@ export default function VstopVMiniLigo() {
       <h1 className="text-2xl font-black naslov">{liga.name}</h1>
       <p className="text-sm text-slate-400">
         {liga.owner_name ? `Ustvaril ${liga.owner_name}` : 'Mini liga'} ·{' '}
-        {liga.ekip === 1 ? '1 ekipa' : liga.ekip === 2 ? '2 ekipi' : liga.ekip < 5 ? `${liga.ekip} ekipe` : `${liga.ekip} ekip`}
+        {mnozina(liga.ekip, EKIPE)}
       </p>
     </div>
   )
@@ -142,11 +150,19 @@ export default function VstopVMiniLigo() {
           Prijavi se ali si ustvari račun. Po prijavi te vrnemo sem in vstopiš z enim klikom.
         </p>
         <Link
-          to={`/prijava?nazaj=${encodeURIComponent(`/l/${koda}`)}`}
+          to={povezavaNaPrijavo(`/l/${koda}`)}
           className="gumb-glavni block w-full text-center"
         >
           Prijava ali registracija
         </Link>
+      </div>
+    )
+
+  if (ekipe === null)
+    return (
+      <div className="mx-auto max-w-md space-y-4">
+        {glava}
+        <p className="animiraj-utrip text-sm text-slate-400">Nalaganje tvojih ekip …</p>
       </div>
     )
 

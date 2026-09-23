@@ -6,7 +6,8 @@ import { najboljsiTrije, type VrsticaIgralca } from '../lib/plakat'
 import { supabase } from '../lib/supabase'
 import { vseVrstice } from '../lib/strani'
 import Sponzor from '../components/Sponzor'
-import { formatirajTocke } from '../lib/pomozno'
+import { formatirajTocke, mnozina, tockZ, TOCKE } from '../lib/pomozno'
+import { useNaslov } from '../lib/naslov'
 import { useTekmovanje } from '../lib/tekmovanje'
 import { sestejOdKroga } from '../lib/lestvica'
 import MojeMiniLige from '../components/MojeMiniLige'
@@ -71,9 +72,13 @@ export default function Lestvica() {
   const [odKroga, setOdKroga] = useState(1)
   const [nalaganje, setNalaganje] = useState(true)
   const [napaka, setNapaka] = useState<string | null>(null)
+  // Napaka pri krogih (zmagovalec, lestvica kroga) ne sme skriti skupne lestvice.
+  const [napakaKrogov, setNapakaKrogov] = useState<string | null>(null)
+  const uporabnikId = session?.user.id
+  useNaslov('Lestvica')
 
   useEffect(() => {
-    if (!session || !tekmovanjeId) {
+    if (!uporabnikId || !tekmovanjeId) {
       setMojaEkipa(null)
       return
     }
@@ -82,7 +87,7 @@ export default function Lestvica() {
       const { data } = await supabase
         .from('fantasy_teams')
         .select('id')
-        .eq('owner_id', session.user.id)
+        .eq('owner_id', uporabnikId)
         .eq('competition_id', tekmovanjeId)
         .maybeSingle()
       if (veljavno) setMojaEkipa(data?.id ?? null)
@@ -90,23 +95,38 @@ export default function Lestvica() {
     return () => {
       veljavno = false
     }
-  }, [session, tekmovanjeId])
+  }, [uporabnikId, tekmovanjeId])
 
   useEffect(() => {
     if (!tekmovanjeId) return
+    // Ob zamenjavi lige začnemo znova: filter "od kroga" in napaka sta
+    // pripadala prejšnji, odgovori prejšnje pa ne smejo prepisati nove.
+    let veljavno = true
     setNalaganje(true)
+    setNapaka(null)
+    setNapakaKrogov(null)
+    setOdKroga(1)
     const ligaId = tekmovanjeId
-    supabase
-      .from('fantasy_team_standings')
-      .select(
-        'fantasy_team_id, team_name, owner_name, owner_registered_at, team_created_at, total_points',
-      )
-      .eq('competition_id', ligaId)
-      .order('total_points', { ascending: false })
-      .then(({ data, error }) => {
-        if (error) setNapaka(error.message)
-        else setEkipe((data ?? []) as VrsticaLestvice[])
-        setNalaganje(false)
+    // Po straneh: velika liga ima lahko čez tisoč ekip.
+    vseVrstice((od, do_) =>
+      supabase
+        .from('fantasy_team_standings')
+        .select(
+          'fantasy_team_id, team_name, owner_name, owner_registered_at, team_created_at, total_points',
+        )
+        .eq('competition_id', ligaId)
+        .order('total_points', { ascending: false })
+        .order('fantasy_team_id')
+        .range(od, do_),
+    )
+      .then((data) => {
+        if (veljavno) setEkipe(data as VrsticaLestvice[])
+      })
+      .catch((e: Error) => {
+        if (veljavno) setNapaka(e.message)
+      })
+      .finally(() => {
+        if (veljavno) setNalaganje(false)
       })
 
     // Zmagovalec zadnjega odigranega kroga — ta je pogosto zanimivejši od
@@ -142,6 +162,9 @@ export default function Lestvica() {
             .range(od, do_),
         ),
       ])
+      if (!veljavno) return
+      if (zadnjiOdgovor.error) throw new Error(zadnjiOdgovor.error.message)
+      if (krogiOdgovor.error) throw new Error(krogiOdgovor.error.message)
       const zadnji = zadnjiOdgovor.data
       // Pogled vrne nullable stolpce; brez id-ja ali sezone kroga ni.
       const krogOk: Krog | null =
@@ -167,14 +190,25 @@ export default function Lestvica() {
       setVsiKrogiOdigrani(odigraniKrogi)
       setOdigraneTocke((vseTocke ?? []) as TockeKroga[])
 
+      // Cela lestvica kroga: svoj rezultat iščemo v njej, plakat pa rabi
+      // število vseh ekip. Na zaslon gre le vrh.
       setKrogLestvica(
         ((vseTocke ?? []) as TockeKroga[])
-          .filter((t) => (t as any).round_id === krogOk.id)
-          .sort((a, b) => Number(b.points ?? 0) - Number(a.points ?? 0))
-          .slice(0, 10),
+          .filter((t) => t.round_id === krogOk.id)
+          .sort((a, b) => Number(b.points ?? 0) - Number(a.points ?? 0)),
       )
     }
-    nalozi()
+    nalozi().catch((e: Error) => {
+      if (!veljavno) return
+      setNapakaKrogov(e.message)
+      setKrog(null)
+      setVsiKrogiOdigrani([])
+      setOdigraneTocke([])
+      setKrogLestvica([])
+    })
+    return () => {
+      veljavno = false
+    }
   }, [tekmovanjeId])
 
   // Zmagovalec vsakega odigranega kroga — pregled sezone kdo je bil #1
@@ -233,9 +267,9 @@ export default function Lestvica() {
     }
   }, [mojaEkipa, krog?.id])
 
+  if (napaka) return <p className="text-rose-400">Napaka: {napaka}</p>
   if (nalaganje)
     return <p className="animiraj-utrip text-slate-400">Nalaganje …</p>
-  if (napaka) return <p className="text-rose-400">Napaka: {napaka}</p>
 
   if (ekipe.length === 0)
     return (
@@ -272,6 +306,13 @@ export default function Lestvica() {
       {/* Najprej moje mini lige: trije prijatelji so igra, dvanajst tujcev ni. */}
       <MojeMiniLige ekipaId={mojaEkipa} />
 
+      {napakaKrogov && (
+        <p role="alert" className="kartica p-3 text-sm text-rose-300">
+          Rezultatov po krogih ni bilo mogoče naložiti ({napakaKrogov}). Skupna
+          lestvica spodaj je vseeno točna.
+        </p>
+      )}
+
       {/* Svoj rezultat kroga — edina stvar, ki se ponovi vsak teden in jo
           človek rad pokaže. Pokažemo jo NAD lestvico, ker je njegova. */}
       {mojRezultat && (
@@ -282,7 +323,8 @@ export default function Lestvica() {
                 Tvoj rezultat v {krogLestvica.length > 0 ? 'zadnjem krogu' : 'krogu'}
               </div>
               <div className="text-2xl font-black">
-                {formatirajTocke(mojRezultat.points)} točk
+                {formatirajTocke(mojRezultat.points)}{' '}
+                {tockZ(mojRezultat.points)}
                 {mojRezultat.rank ? (
                   <span className="ml-2 text-base font-bold text-gnl-300">
                     {mojRezultat.rank}. mesto
@@ -317,7 +359,7 @@ export default function Lestvica() {
         <section className="kartica space-y-3 p-4">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h2 className="text-lg font-bold">
-              🏆 Zmagovalec {krog?.number}. kroga
+              <span aria-hidden="true">🏆</span> Zmagovalec {krog?.number}. kroga
             </h2>
             <span className="text-xs text-slate-500">{krog?.season}</span>
           </div>
@@ -340,7 +382,7 @@ export default function Lestvica() {
                   key={e.fantasy_team_id}
                   className="flex items-center gap-3 rounded-lg bg-white/5 px-3 py-1.5 text-sm"
                 >
-                  <span className="w-5 text-center text-xs font-black text-slate-600">
+                  <span className="w-5 text-center text-xs font-black text-slate-400">
                     {e.rank}
                   </span>
                   <Link
@@ -352,7 +394,7 @@ export default function Lestvica() {
                   {Number(e.penalty ?? 0) > 0 && (
                     <span
                       className="text-xs text-rose-400"
-                      title={`${e.transfers} prestopov — kazen ${e.penalty} točk`}
+                      title={`Prestopi: ${e.transfers ?? 0} — kazen ${mnozina(Number(e.penalty ?? 0), TOCKE)}`}
                     >
                       −{e.penalty}
                     </span>
@@ -372,10 +414,12 @@ export default function Lestvica() {
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="text-lg font-bold">Zmagovalci po krogih</h2>
           <span className="text-xs text-slate-500">
-            {zmagovalciKrogov.length}{' '}
-            {zmagovalciKrogov.length === 1
-              ? 'odigran krog'
-              : 'odigranih krogov'}
+            {mnozina(zmagovalciKrogov.length, [
+              'odigran krog',
+              'odigrana kroga',
+              'odigrani krogi',
+              'odigranih krogov',
+            ])}
           </span>
         </div>
         {zmagovalciKrogov.length === 0 ? (
@@ -394,7 +438,7 @@ export default function Lestvica() {
                   {z.round_number}. krog
                 </span>
                 <span className="min-w-0 flex-1 truncate font-semibold">
-                  🏆 {z.team_name}
+                  <span aria-hidden="true">🏆</span> {z.team_name}
                 </span>
                 <span className="hidden text-xs text-slate-500 sm:inline">
                   {z.owner_name}
@@ -478,7 +522,7 @@ export default function Lestvica() {
                 aria-hidden
               />
               <div className="relative flex items-center gap-3">
-                <span className="w-8 text-center text-lg font-black text-slate-500">
+                <span className="w-8 text-center text-lg font-black text-slate-400">
                   {MEDALJE[i] ?? i + 1}
                 </span>
                 <div className="min-w-0 flex-1">
@@ -491,7 +535,7 @@ export default function Lestvica() {
                   <div className="text-xs text-slate-500">
                     {e.owner_name}
                     {(e.team_created_at ?? e.owner_registered_at) && (
-                      <span className="ml-2 text-slate-600">
+                      <span className="ml-2 text-slate-400">
                         · igra od{' '}
                         {new Date(
                           (e.team_created_at ?? e.owner_registered_at) as string,

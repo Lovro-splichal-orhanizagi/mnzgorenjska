@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useLocation } from 'react-router-dom'
+import { useNaslov } from '../lib/naslov'
+import { povezavaNaPrijavo } from '../lib/prijava'
+import { useTekmovanje } from '../lib/tekmovanje'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import {
@@ -9,6 +12,11 @@ import {
   IME_POZICIJE,
   formatirajTocke,
   formatirajCeno,
+  mnozina,
+  oblika,
+  TOCKE,
+  TEKME,
+  GOLI,
 } from '../lib/pomozno'
 // `premik` je tu ze ime lokalne stevilke (zadnja sprememba cene), zato
 // funkcijo uvozimo pod drugim imenom.
@@ -30,6 +38,15 @@ type Profil = Record<string, any> & {
   team_id?: number | null
   position?: Pozicija | null
   full_name?: string | null
+}
+
+/** Številke tekoče sezone (`player_season_standings`). */
+interface Sezonsko {
+  season: string
+  points: number | null
+  matches: number | null
+  goals: number | null
+  minutes: number | null
 }
 
 /** Razlaga tock v enem krogu. */
@@ -57,7 +74,13 @@ export default function Igralec() {
   // Iz naslova pride niz; stolpci so stevilcni.
   const igralecId = Number(id)
   const { session } = useAuth()
+  const uporabnikId = session?.user.id ?? null
+  const lokacija = useLocation()
+  const prijava = povezavaNaPrijavo(lokacija.pathname + lokacija.search)
+  const { tekmovanja } = useTekmovanje()
   const [igralec, setIgralec] = useState<Profil | null>(null)
+  // Številke tekoče sezone; `igralec` (player_overview) je seštevek vseh sezon.
+  const [sezonsko, setSezonsko] = useState<Sezonsko | null>(null)
   const [razlage, setRazlage] = useState<Razlaga[]>([])
   const [odprtRazlaga, setOdprtRazlaga] = useState<number | null>(null)
   const [cene, setCene] = useState<any[]>([])
@@ -74,6 +97,7 @@ export default function Igralec() {
   const [besediloPorocila, setBesediloPorocila] = useState('')
   const [posiljamPorocilo, setPosiljamPorocilo] = useState(false)
   const [nalaganje, setNalaganje] = useState(true)
+  useNaslov(igralec ? prikazniIme(igralec.full_name) || 'Igralec' : 'Igralec')
 
   useEffect(() => {
     let preklican = false
@@ -100,7 +124,27 @@ export default function Igralec() {
         .eq('competition_id', p?.competition_id ?? 0)
         .eq('tekoca', true)
         .maybeSingle()
+      if (preklican) return
       const tekocaSez = sez?.season ?? ''
+
+      // Kartice s številkami kažejo tekočo sezono — lanske točke so zgodovina
+      // in izhodišče za ceno, ne forma, po kateri se izbira ekipa.
+      if (tekocaSez) {
+        const { data: ss } = await supabase
+          .from('player_season_standings')
+          .select('season, points, matches, goals, minutes')
+          .eq('id', igralecId)
+          .eq('season', tekocaSez)
+          .maybeSingle()
+        if (preklican) return
+        setSezonsko({
+          season: tekocaSez,
+          points: ss?.points ?? 0,
+          matches: ss?.matches ?? 0,
+          goals: ss?.goals ?? 0,
+          minutes: ss?.minutes ?? 0,
+        })
+      } else setSezonsko(null)
 
       const [{ data: c }, { data: g }, { data: t }] = await Promise.all([
         // Samo spremembe cen v TEKOČI sezoni — sicer se pokažejo lanski
@@ -209,22 +253,22 @@ export default function Igralec() {
       raz.sort((a, b) => (b.played_on ?? '').localeCompare(a.played_on ?? ''))
       setRazlage(raz)
 
-      if (session) {
+      if (uporabnikId) {
         const { data: moj } = await supabase
           .from('position_votes')
           .select('position')
           .eq('player_id', igralecId)
-          .eq('voter_id', session.user.id)
+          .eq('voter_id', uporabnikId)
           .maybeSingle()
         if (!preklican) setMojGlas((moj?.position as Pozicija | null) ?? null)
-      }
+      } else setMojGlas(null)
       setNalaganje(false)
     }
     nalozi()
     return () => {
       preklican = true
     }
-  }, [igralecId, session])
+  }, [igralecId, uporabnikId])
 
   // Poročila o odsotnosti in poškodbah — ločena poizvedba, da počasnejši
   // pogled ne zadržuje profila igralca.
@@ -343,6 +387,11 @@ export default function Igralec() {
   if (!igralec)
     return <p className="kartica p-6 text-center text-slate-400">Igralca ni.</p>
 
+  // Povezave naprej vodijo v ligo igralca, ne v tisto, ki je izbrana v meniju
+  // — igralec iz deljene povezave je lahko iz druge lige.
+  const slugLige = tekmovanja.find((t) => t.id === igralec.competition_id)?.slug
+  const vLigo = slugLige ? `?t=${encodeURIComponent(slugLige)}` : ''
+
   const zadnjaSprememba = cene[0]
   const premik = zadnjaSprememba
     ? Number(zadnjaSprememba.new_value) - Number(zadnjaSprememba.old_value)
@@ -350,7 +399,7 @@ export default function Igralec() {
 
   return (
     <div className="space-y-5">
-      <Link to="/igralci" className="text-sm text-slate-400 hover:text-white">
+      <Link to={`/igralci${vLigo}`} className="text-sm text-slate-400 hover:text-white">
         ← Vsi igralci
       </Link>
 
@@ -387,19 +436,39 @@ export default function Igralec() {
         </div>
       </div>
 
-      {/* številke */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stevilka oznaka="Točke" vrednost={formatirajTocke(igralec.points)} />
-        <Stevilka oznaka="Tekem" vrednost={igralec.matches} />
-        <Stevilka oznaka="Golov" vrednost={igralec.goals} />
-        <Stevilka oznaka="Minut" vrednost={igralec.minutes} />
+      {/* številke — tekoča sezona; seštevek vseh sezon je drugotna vrstica */}
+      <div className="space-y-2">
+        {sezonsko && (
+          <h2 className="text-xs font-bold uppercase tracking-wide text-slate-400">
+            Sezona {sezonsko.season}
+          </h2>
+        )}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <Stevilka
+            oznaka="Točke"
+            vrednost={formatirajTocke((sezonsko ?? igralec).points)}
+          />
+          <Stevilka oznaka="Tekem" vrednost={(sezonsko ?? igralec).matches ?? 0} />
+          <Stevilka oznaka="Golov" vrednost={(sezonsko ?? igralec).goals ?? 0} />
+          <Stevilka oznaka="Minut" vrednost={(sezonsko ?? igralec).minutes ?? 0} />
+        </div>
+        {sezonsko && (
+          <p className="text-xs text-slate-500">
+            Skupaj vse sezone: {formatirajTocke(igralec.points)}{' '}
+            {oblika(Number(igralec.points ?? 0), TOCKE)} ·{' '}
+            {mnozina(igralec.matches ?? 0, TEKME)} ·{' '}
+            {mnozina(igralec.goals ?? 0, GOLI)} · {igralec.minutes ?? 0} min
+          </p>
+        )}
       </div>
 
       {/* pozicija — s hitrim glasovanjem, brez preskoka na /pozicije */}
       <section className="kartica space-y-3 p-4">
         <div className="flex flex-wrap items-center gap-3">
           <span className={`znacka ${razredPozicije(igralec.position)}`}>
-            {igralec.position ? IKONA[igralec.position] : '❔'}{' '}
+            <span aria-hidden="true">
+              {igralec.position ? IKONA[igralec.position] : '❔'}
+            </span>{' '}
             {(igralec.position && IME_POZICIJE[igralec.position]) ??
               'Pozicija ni znana'}
           </span>
@@ -426,6 +495,7 @@ export default function Igralec() {
                     key={p}
                     onClick={() => glasuj(p)}
                     disabled={!session}
+                    aria-pressed={izbran}
                     className={`relative rounded-xl px-3 py-2 text-sm font-semibold transition disabled:opacity-40 ${
                       izbran
                         ? 'ring-2 ring-gnl-400'
@@ -433,13 +503,13 @@ export default function Igralec() {
                     } poz-${p}`}
                   >
                     <span className="flex items-center justify-center gap-1">
-                      {IKONA[p]} {KRATKA_POZICIJA[p]}
+                      <span aria-hidden="true">{IKONA[p]}</span> {KRATKA_POZICIJA[p]}
                       {glasov > 0 && (
                         <span className="tabular-nums opacity-70">
                           {glasov}
                         </span>
                       )}
-                      {izbran && <span>✓</span>}
+                      {izbran && <span aria-hidden="true">✓</span>}
                     </span>
                   </button>
                 )
@@ -448,7 +518,7 @@ export default function Igralec() {
             {!session && (
               <p className="text-xs text-slate-500">
                 Za glasovanje se{' '}
-                <Link to="/prijava" className="underline">
+                <Link to={prijava} className="underline">
                   prijavi
                 </Link>
                 .
@@ -456,7 +526,7 @@ export default function Igralec() {
             )}
             <p className="text-[11px] text-slate-500">
               Podroben pregled vseh igralcev in uteži je na strani{' '}
-              <Link to="/pozicije" className="underline hover:text-gnl-300">
+              <Link to={`/pozicije${vLigo}`} className="underline hover:text-gnl-300">
                 Pozicije
               </Link>
               .
@@ -503,7 +573,7 @@ export default function Igralec() {
           <h2 className="text-xs font-bold uppercase tracking-wide text-slate-400">
             Odsotnosti in poškodbe
           </h2>
-          <Link to="/odsotnosti" className="text-xs text-gnl-300 hover:underline">
+          <Link to={`/odsotnosti${vLigo}`} className="text-xs text-gnl-300 hover:underline">
             vsa poročila →
           </Link>
         </div>
@@ -542,7 +612,7 @@ export default function Igralec() {
                       : 'bg-white/5 text-slate-300 hover:bg-white/10'
                   }`}
                 >
-                  {v.ikona} {v.oznaka}
+                  <span aria-hidden="true">{v.ikona}</span> {v.oznaka}
                 </button>
               ))}
             </div>
@@ -562,7 +632,7 @@ export default function Igralec() {
                 Objavi
               </button>
             </div>
-            <p className="text-[11px] text-slate-600">
+            <p className="text-[11px] text-slate-400">
               Informacija za druge — igralca ne odstrani s trga in ne vpliva na
               točke.
             </p>
@@ -570,7 +640,7 @@ export default function Igralec() {
         ) : (
           <p className="mt-3 text-xs text-slate-500">
             Za objavo se{' '}
-            <Link to="/prijava" className="underline hover:text-gnl-300">
+            <Link to={prijava} className="underline hover:text-gnl-300">
               prijavi
             </Link>
             .
@@ -725,7 +795,7 @@ export default function Igralec() {
                     vectorEffect="non-scaling-stroke"
                   />
                 </svg>
-                <div className="flex justify-between text-[10px] text-slate-600">
+                <div className="flex justify-between text-[10px] text-slate-400">
                   <span>začetek sezone</span>
                   <span>{serija[serija.length - 1].krog}. krog</span>
                 </div>

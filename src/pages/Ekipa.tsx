@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { formatirajTocke, prikazniIme } from '../lib/pomozno'
+import { formatirajTocke, prikazniIme, tockZ } from '../lib/pomozno'
+import { useNaslov } from '../lib/naslov'
 import EnajstericaNaIgriscu from '../components/EnajstericaNaIgriscu'
 import {
   razdeli,
@@ -46,6 +47,7 @@ export default function Ekipa() {
   const [kazen, setKazen] = useState(0)
   const [neto, setNeto] = useState<number | null>(null)
   const [napaka, setNapaka] = useState<string | null>(null)
+  useNaslov(ekipa?.team_name ?? 'Ekipa')
 
   // --- ekipa in njeni zaklenjeni krogi -------------------------------------
   useEffect(() => {
@@ -150,7 +152,15 @@ export default function Ekipa() {
 
   function izberi(krog: number) {
     setIzbranKrog(krog)
-    nastaviIskanje({ krog: String(krog) }, { replace: true })
+    // Ohrani ostale parametre — brez `?t=` bi se liga v meniju tiho zamenjala.
+    nastaviIskanje(
+      (prej) => {
+        const novo = new URLSearchParams(prej)
+        novo.set('krog', String(krog))
+        return novo
+      },
+      { replace: true },
+    )
   }
 
   if (nalaganje) return <p className="p-4 text-slate-400">Nalaganje …</p>
@@ -172,7 +182,8 @@ export default function Ekipa() {
         </h1>
         <p className="text-sm text-slate-400">
           {prikazniIme(ekipa?.owner_name)} · skupaj{' '}
-          {formatirajTocke(ekipa?.total_points)} točk
+          {formatirajTocke(ekipa?.total_points)}{' '}
+          {tockZ(ekipa?.total_points)}
         </p>
       </header>
 
@@ -216,7 +227,9 @@ export default function Ekipa() {
                 <span className="text-3xl font-black tabular-nums text-gnl-400">
                   {formatirajTocke(neto ?? skupaj)}
                 </span>
-                <span className="text-sm text-slate-400">točk v tem krogu</span>
+                <span className="text-sm text-slate-400">
+                  {tockZ(neto ?? skupaj)} v tem krogu
+                </span>
                 {kazen > 0 && (
                   <span className="text-sm text-rose-400">
                     (−{kazen} za prestope)

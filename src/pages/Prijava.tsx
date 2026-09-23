@@ -1,7 +1,9 @@
 import { useState, type FormEvent } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
+import { useNaslov } from '../lib/naslov'
+import { napakaPrijave, varnaPot } from '../lib/prijava'
 
 type Nacin = 'prijava' | 'registracija' | 'pozabljeno'
 
@@ -11,8 +13,8 @@ export default function Prijava() {
   // Kam po prijavi: povabilo v mini ligo pošlje človeka sem in ga hoče nazaj.
   // Sprejmemo samo notranjo pot, da povezava ne more voditi drugam.
   const [params] = useSearchParams()
-  const nazajParam = params.get('nazaj')
-  const nazaj = nazajParam && /^\/[^/\\]/.test(nazajParam) ? nazajParam : '/moja-ekipa'
+  const nazajParam = varnaPot(params.get('nazaj'))
+  const nazaj = nazajParam ?? '/moja-ekipa'
   const [nacin, setNacin] = useState<Nacin>('prijava')
   const [email, setEmail] = useState('')
   const [geslo, setGeslo] = useState('')
@@ -20,6 +22,9 @@ export default function Prijava() {
   const [napaka, setNapaka] = useState<string | null>(null)
   const [sporocilo, setSporocilo] = useState<string | null>(null)
   const [posiljam, setPosiljam] = useState(false)
+  useNaslov(
+    nacin === 'registracija' ? 'Registracija' : nacin === 'pozabljeno' ? 'Pozabljeno geslo' : 'Prijava',
+  )
 
   // Prijava z Googlom: Supabase preusmeri na Google in nazaj; nov uporabnik
   // dobi profil iz Googlovega imena (glej handle_new_user). Ista pot velja za
@@ -36,7 +41,7 @@ export default function Prijava() {
       setNapaka(
         /not enabled/i.test(error.message)
           ? 'Prijava z Googlom trenutno ni na voljo. Uporabi e-pošto.'
-          : error.message,
+          : napakaPrijave(error.message),
       )
   }
 
@@ -53,7 +58,7 @@ export default function Prijava() {
         redirectTo: `${window.location.origin}/novo-geslo`,
       })
       setPosiljam(false)
-      if (error) return setNapaka(error.message)
+      if (error) return setNapaka(napakaPrijave(error.message))
       return setSporocilo(
         'Poslali smo ti povezavo za ponastavitev gesla. Preveri e-pošto (tudi vsiljeno).',
       )
@@ -72,7 +77,7 @@ export default function Prijava() {
         : await supabase.auth.signInWithPassword({ email, password: geslo })
 
     setPosiljam(false)
-    if (error) return setNapaka(error.message)
+    if (error) return setNapaka(napakaPrijave(error.message))
     if (nacin === 'registracija')
       return setSporocilo(
         'Račun je ustvarjen. Na e-pošto smo poslali potrditveno povezavo — odpri jo in se vrni.',
@@ -80,6 +85,9 @@ export default function Prijava() {
     navigate(nazaj)
   }
 
+  // Prijavljen uporabnik, ki ga je sem poslala stran z `?nazaj=`, nima tu
+  // ničesar za početi — pošljemo ga naravnost tja, kamor je bil namenjen.
+  if (session && nazajParam) return <Navigate to={nazajParam} replace />
   if (session)
     return (
       <p className="text-slate-300">Prijavljen si kot {session.user.email}.</p>
