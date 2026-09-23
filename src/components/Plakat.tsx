@@ -7,7 +7,7 @@
 // ime čez vso širino, imena igralcev s točkami, en stavek. Vse levo
 // poravnano. Oblikovan tako, da je bil izrisan in POGLEDAN, preden je šel
 // v produkcijo — prva različica ni bila.
-import { useEffect, useRef, useState } from 'react'
+import DeliSliko from './DeliSliko'
 import {
   SIRINA,
   VISINA,
@@ -371,22 +371,6 @@ async function narisi(p: PodatkiPlakata): Promise<Blob | null> {
   return new Promise((resolve) => platno.toBlob((b) => resolve(b), 'image/png'))
 }
 
-/**
- * Ali brskalnik zna deliti SLIKO v sistemski meni (WhatsApp, Instagram,
- * Facebook, Messenger …). Telefoni večinoma znajo, računalniki večinoma ne.
- */
-function znaDelitiSliko(): boolean {
-  try {
-    return (
-      typeof navigator !== 'undefined' &&
-      typeof navigator.canShare === 'function' &&
-      navigator.canShare({ files: [new File([''], 'slff.png', { type: 'image/png' })] })
-    )
-  } catch {
-    return false
-  }
-}
-
 export default function Plakat({
   podatki,
   povezava,
@@ -394,32 +378,6 @@ export default function Plakat({
   podatki: PodatkiPlakata
   povezava: string
 }) {
-  const [dela, setDela] = useState(false)
-  const [sporocilo, setSporocilo] = useState<string | null>(null)
-  const [delitevSlike, setDelitevSlike] = useState(false)
-  // Slika je izrisana vnaprej: iOS dovoli sistemski meni le takoj po kliku,
-  // risanje (pisave, slike) pa lahko traja dlje od tega okna.
-  const pripravljena = useRef<{ kljuc: string; blob: Blob } | null>(null)
-  const kljuc = JSON.stringify(podatki)
-
-  useEffect(() => {
-    setDelitevSlike(znaDelitiSliko())
-  }, [])
-
-  useEffect(() => {
-    if (!delitevSlike) return
-    let veljavno = true
-    narisi(podatki)
-      .then((blob) => {
-        if (veljavno && blob) pripravljena.current = { kljuc, blob }
-      })
-      .catch(() => {})
-    return () => {
-      veljavno = false
-    }
-    // `kljuc` je `podatki` v obliki, ki se primerja po vsebini.
-  }, [kljuc, delitevSlike])
-
   const naslov =
     podatki.vrsta === 'krog' ? podatki.ekipa : podatki.vrsta === 'live' ? podatki.liga : podatki.klub
   const besedilo =
@@ -430,107 +388,16 @@ export default function Plakat({
         : podatki.vrsta === 'live'
           ? `Fantasy liga za ${ligaVTozilniku(podatki.liga)} je live. Sestavi ekipo iz pravih igralcev — brezplačno.`
           : `${podatki.ekipa}: ${formatirajTocke(podatki.tocke)} ${tockZ(podatki.tocke)} v ${podatki.krog}. krogu. Sestavi svojo ekipo in me premagaj.`
-  const imeSlike = imeDatoteke(
-    podatki.vrsta === 'napoved' ? `${naslov}-napoved` : podatki.vrsta === 'live' ? `${naslov}-live` : naslov,
-  )
-
-  async function deli() {
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: `${naslov} — SLFF`, text: besedilo, url: povezava })
-      } catch {
-        // Uporabnik je meni zaprl — to ni napaka.
-      }
-      return
-    }
-    try {
-      await navigator.clipboard.writeText(`${besedilo} ${povezava}`)
-      setSporocilo('Povezava je kopirana.')
-    } catch {
-      setSporocilo(povezava)
-    }
-  }
-
-  async function deliSliko() {
-    setSporocilo(null)
-    let blob = pripravljena.current?.kljuc === kljuc ? pripravljena.current.blob : null
-    if (!blob) {
-      setDela(true)
-      try {
-        blob = await narisi(podatki)
-      } finally {
-        setDela(false)
-      }
-    }
-    if (!blob) {
-      setSporocilo('Slike ni bilo mogoče pripraviti.')
-      return
-    }
-    const datoteka = new File([blob], imeSlike, { type: 'image/png' })
-    try {
-      // Povezava gre v besedilo: ob sliki jo aplikacije (WhatsApp) obdržijo,
-      // polje `url` pa mnoge zavržejo.
-      await navigator.share({ files: [datoteka], text: `${besedilo} ${povezava}` })
-    } catch (e) {
-      if ((e as Error).name === 'AbortError') return
-      // Brskalnik je zavrnil (npr. risanje je trajalo predolgo) — slika je
-      // zdaj pripravljena, drugi pritisk jo deli takoj.
-      pripravljena.current = { kljuc, blob }
-      setSporocilo('Pritisni še enkrat, da odpreš meni za deljenje.')
-    }
-  }
-
-  async function prenesi() {
-    setDela(true)
-    setSporocilo(null)
-    try {
-      const blob = await narisi(podatki)
-      if (!blob) throw new Error('slike ni bilo mogoče izrisati')
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = imeSlike
-      a.style.display = 'none'
-      document.body.appendChild(a)
-      a.click()
-      // Naslova ne sprostimo takoj: brskalnik prenos šele začenja.
-      setTimeout(() => {
-        URL.revokeObjectURL(url)
-        a.remove()
-      }, 30000)
-      setSporocilo('Slika je shranjena — objavi jo na Instagramu, Facebooku ali WhatsAppu.')
-    } catch (e) {
-      setSporocilo(`Slike ni bilo mogoče pripraviti: ${(e as Error).message}`)
-    } finally {
-      setDela(false)
-    }
-  }
-
   return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap gap-2">
-        {delitevSlike ? (
-          <button onClick={deliSliko} disabled={dela} className="gumb-glavni px-3 py-2 text-sm disabled:opacity-60">
-            {dela ? 'Pripravljam …' : 'Deli sliko'}
-          </button>
-        ) : (
-          <button onClick={prenesi} disabled={dela} className="gumb-tih px-3 py-2 text-sm disabled:opacity-60">
-            {dela ? 'Pripravljam …' : 'Prenesi sliko za objavo'}
-          </button>
-        )}
-        <button onClick={deli} className="gumb-tih px-3 py-2 text-sm">
-          Deli povezavo
-        </button>
-        {delitevSlike && (
-          <button onClick={prenesi} disabled={dela} className="gumb-tih px-3 py-2 text-sm disabled:opacity-60">
-            Shrani sliko
-          </button>
-        )}
-      </div>
-      {delitevSlike && !sporocilo && (
-        <p className="text-xs text-slate-500">WhatsApp, Instagram, Facebook … — izberi v meniju, ki se odpre.</p>
+    <DeliSliko
+      narisi={() => narisi(podatki)}
+      kljuc={JSON.stringify(podatki)}
+      naslov={naslov}
+      besedilo={besedilo}
+      povezava={povezava}
+      imeSlike={imeDatoteke(
+        podatki.vrsta === 'napoved' ? `${naslov}-napoved` : podatki.vrsta === 'live' ? `${naslov}-live` : naslov,
       )}
-      {sporocilo && <p className="text-xs text-slate-400">{sporocilo}</p>}
-    </div>
+    />
   )
 }
