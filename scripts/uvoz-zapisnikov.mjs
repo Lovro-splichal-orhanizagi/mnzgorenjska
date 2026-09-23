@@ -768,6 +768,14 @@ const { data: krogi } = await db
   .select('id, season, number')
   .eq('competition_id', tekmovanje.id)
 for (const k of krogi ?? []) {
+  // Zapisnik obrambe enajstmetrovke ne beleži, zgrešeno pa. Zgrešeno pripiše
+  // vratarju nasprotnikov — PO vpisu nastopov, ker jih uvoz tekme zamenja in
+  // bi prej pripisana obramba izginila.
+  const { error: eObr } = await db.rpc('pripisi_obranjene_enajstmetrovke', { p_round_id: k.id })
+  if (eObr) {
+    console.error(`  krog ${k.season}/${k.number} (obranjene enajstmetrovke): ${eObr.message}`)
+    napak++
+  }
   const { error } = await db.rpc('recompute_round_scores', { p_round_id: k.id })
   if (error) {
     console.error(`  krog ${k.season}/${k.number}: ${error.message}`)
