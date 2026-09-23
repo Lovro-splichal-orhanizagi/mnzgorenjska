@@ -45,6 +45,13 @@ begin
     from rounds where competition_id = tekmovanje and season = sezona
   returning id into krog;
 
+  -- Uvozeni krogi iste lige z rokom v blizini bi bili tudi kandidati in bi
+  -- preizkus meril koledar, ne pravila. Umaknemo jih; rollback jih vrne.
+  update rounds set deadline_at = deadline_at + interval '60 days'
+   where competition_id = tekmovanje and id <> krog
+     and lineups_locked_at is null
+     and deadline_at between now() - interval '14 days' and now() + interval '14 days';
+
   insert into fantasy_teams (owner_id, name, competition_id)
   values (a, 'Testna', tekmovanje) returning id into ekipa;
 

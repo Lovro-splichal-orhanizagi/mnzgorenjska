@@ -67,22 +67,44 @@ for (const liga of lige ?? []) {
       Authorization: `Bearer ${SERVICE}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ competition_id: liga.id, suho, vrsta, dni }),
+    // Mejo preveri funkcija PRED prvim mailom; prej smo jo preverjali sele
+    // po odgovoru, ko je bila posta ze poslana.
+    body: JSON.stringify({
+      competition_id: liga.id, suho, vrsta, dni,
+      ...(vrsta === 'opozorilo' ? { najvec: NAJVEC_NA_LIGO } : {}),
+    }),
   })
   const izid = await odgovor.json().catch(() => ({}))
+  if (odgovor.status === 409) {
+    console.error(
+      `  ${liga.slug.padEnd(14)} USTAVLJENO: ${izid.kandidati_stevilo ?? '?'} kandidatov (meja ${NAJVEC_NA_LIGO}).` +
+        ' Toliko hkrati pomeni napako pri uvozu, ne pri uporabnikih. Nic ni bilo poslano.',
+    )
+    padlo++
+    continue
+  }
   if (!odgovor.ok) {
     console.log(`  ${liga.slug.padEnd(14)} NAPAKA ${odgovor.status}: ${izid.error ?? ''}`)
     padlo++
     continue
   }
   const n = izid.kandidati_stevilo ?? 0
+  // Suhi tek ne posilja, zato ga funkcija ne ustavi; mejo pa vseeno pokazemo,
+  // da se vidi, katera liga bi se ob pravem zagonu ustavila.
+  if (vrsta === 'opozorilo' && n > NAJVEC_NA_LIGO && suho) {
+    console.error(
+      `  ${liga.slug.padEnd(14)} BI USTAVILO: ${n} kandidatov (meja ${NAJVEC_NA_LIGO}).`,
+    )
+  }
+  // Pravi zagon nad mejo, ki ga funkcija NI ustavila: objavljena je stara
+  // razlicica brez `najvec` in je sporocila ze poslala. Ustaviti ne moremo
+  // vec, zagon pa mora biti rdec, da se opazi.
   if (vrsta === 'opozorilo' && n > NAJVEC_NA_LIGO && !suho) {
     console.error(
-      `  ${liga.slug.padEnd(14)} USTAVLJENO: ${n} kandidatov (meja ${NAJVEC_NA_LIGO}).` +
-        ' Toliko hkrati pomeni napako pri uvozu, ne pri uporabnikih.',
+      `::error::${liga.slug}: ${n} kandidatov nad mejo ${NAJVEC_NA_LIGO}, funkcija pa ni ustavila ` +
+        'posiljanja — objavljena je stara razlicica brez `najvec`. Objavi funkcijo znova.',
     )
     padlo++
-    continue
   }
   skupaj += n
   console.log(

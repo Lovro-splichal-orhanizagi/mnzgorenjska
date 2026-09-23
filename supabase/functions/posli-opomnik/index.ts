@@ -1,8 +1,9 @@
 // Edge Function: posli-opomnik
 //
 // Poslje e-poštni opomnik uporabnikom, ki v izbrani ligi še nimajo veljavne
-// fantasy ekipe. Kdo dobi mail, določi RPC admin_uporabniki v bazi — enak
-// vir kot admin stran, da UI in server vidita isto sliko.
+// fantasy ekipe. Kdo dobi mail, določi RPC kandidati_za_opomnik — isti za
+// admin gumb in za urnik. `admin_uporabniki` vrne VSE račune (tudi tiste, ki
+// igrajo samo v drugih ligah) in za pošiljanje ni primeren.
 //
 // Zahteva se dostopa preko admin računa (Authorization: Bearer <access_token>);
 // funkcija to preveri z is_admin() klicem prek anon supabase klienta.
@@ -17,6 +18,10 @@
 // funkcijam avtomatsko).
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4'
+
+// Naslov strani; povezave v mailih in odjava vodijo sem.
+const SITE = 'https://slff.eu'
+const ODJAVA = `${SITE}/opomniki`
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -38,6 +43,9 @@ interface Zahteva {
   // Koliko dni pred rokom opozarjamo. Privzeto 2; nastavljivo, da se da
   // suho preveriti, koga bi zajelo sirse okno.
   dni?: number
+  // Varovalka: ce je kandidatov vec, ne poslje nicesar in vrne 409. Preveri
+  // se PRED prvim mailom, ne po njem.
+  najvec?: number
 }
 
 interface Uporabnik {
@@ -160,12 +168,9 @@ Deno.serve(async (req) => {
   if (!RESEND_KEY && !suho)
     return json({ error: 'Pomanjkljiva nastavitev: RESEND_API_KEY.' }, 500)
 
-  // Service role rabimo za pisanje v email_log in za branje nastavitev; za
-  // seznam uporabnikov pa NE. `admin_uporabniki` je SECURITY DEFINER z
-  // notranjim is_admin(), ta pa bere auth.uid() — pri service role ključu
-  // uporabnika ni, zato je klic vedno padel s "Samo administrator lahko bere
-  // uporabnike." in pošiljanje ni delovalo niti enkrat. Seznam beremo z
-  // uporabnikovim tokenom; da je admin, smo preverili zgoraj.
+  // Service role rabimo za pisanje v email_log, za branje nastavitev in za
+  // seznam kandidatov — `kandidati_*` so odprti samo servisni vlogi. Da je
+  // človek admin, smo preverili zgoraj.
   const service = createClient(SUPABASE_URL, SERVICE_KEY)
 
   // Podatek o ligi za predlogo
@@ -197,9 +202,9 @@ Deno.serve(async (req) => {
     return json({ test: true, resend: rez })
   }
 
-  // Seznam: človek ga bere s svojim tokenom (`admin_uporabniki` zahteva
-  // `is_admin()`, ta pa `auth.uid()`), stroj pa prek ločene funkcije — pri
-  // service ključu uporabnika ni in prva pot vedno pade.
+  // Seznam: obe poti (človek in stroj) bereta isto funkcijo prek servisnega
+  // klienta. Prej je človek bral `admin_uporabniki`, ki vrne vse račune — tudi
+  // tiste, ki igrajo samo v drugi ligi — in opomnik bi dobili vsi.
   let kandidati: Uporabnik[]
   if (vrsta === 'opozorilo') {
     // Opozorilo je vedno strojno: pove, da se ekipa ob roku ne bo zaklenila,
@@ -221,7 +226,7 @@ Deno.serve(async (req) => {
       deadline_at: (u.deadline_at as string) ?? null,
       razlog: (u.razlog as string) ?? null,
     }))
-  } else if (jeStroj) {
+  } else {
     const { data, error } = await service.rpc('kandidati_za_opomnik', {
       p_competition_id: competition_id,
     })
@@ -229,17 +234,21 @@ Deno.serve(async (req) => {
     kandidati = (data ?? []).map((u: {
       user_id: string; email: string; display_name: string | null; team_id: number | null
     }) => ({ ...u, ekipa_veljavna: false }))
-  } else {
-    const { data: vsi, error: rpcErr } = await uporabnikov.rpc(
-      'admin_uporabniki',
-      { p_competition_id: competition_id },
-    )
-    if (rpcErr) return json({ error: rpcErr.message }, 500)
-    kandidati = (vsi ?? []).filter((u: Uporabnik) => !u.ekipa_veljavna && u.email)
   }
 
   if (suho)
     return json({ suho: true, kandidati_stevilo: kandidati.length })
+
+  // Varovalka pred pošiljanjem: nenadoma veliko kandidatov je skoraj vedno
+  // napaka pri uvozu, ne pri ljudeh. Ustavi se, preden gre prvi mail.
+  if (typeof vhod.najvec === 'number' && kandidati.length > vhod.najvec)
+    return json(
+      {
+        error: `Preveč kandidatov (${kandidati.length}, meja ${vhod.najvec}). Nič ni bilo poslano.`,
+        kandidati_stevilo: kandidati.length,
+      },
+      409,
+    )
 
   // 4) Za vsakega: preveri, ali je nedavno dobil isti opomnik; če ne, pošlji.
   const rezultati: Array<{
@@ -308,11 +317,11 @@ async function posljiPoznavalcu(
   meta: { display_name: string | null; liga: string; obseg: 'klub' | 'liga'; klub: string | null },
 ): Promise<{ id?: string; napaka?: string }> {
   const naslov = `SLFF — odobrili smo tvojo prošnjo za poznavalca`
-  const uvod = meta.display_name ? `Živjo, ${meta.display_name.split(' ')[0]}!` : 'Živjo!'
+  const uvod = meta.display_name ? `Živjo, ${esc(meta.display_name.split(' ')[0])}!` : 'Živjo!'
   const kaj =
     meta.obseg === 'liga'
-      ? `Od zdaj si <strong>poznavalec lige ${meta.liga}</strong>: tvoj glas sam potrdi pozicijo igralca ali asistenco, drugih glasov ni treba čakati.`
-      : `Od zdaj si <strong>poznavalec kluba ${meta.klub ?? ''}</strong> v ligi ${meta.liga}: tvoj glas za igralce tega kluba šteje trojno.`
+      ? `Od zdaj si <strong>poznavalec lige ${esc(meta.liga)}</strong>: tvoj glas sam potrdi pozicijo igralca ali asistenco, drugih glasov ni treba čakati.`
+      : `Od zdaj si <strong>poznavalec kluba ${esc(meta.klub ?? '')}</strong> v ligi ${esc(meta.liga)}: tvoj glas za igralce tega kluba šteje trojno.`
 
   const html = `
     <div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; color: #0f172a;">
@@ -371,12 +380,12 @@ async function posljiEnega(
     : `SLFF ${ozn} — dokončaj ekipo pred naslednjim krogom`
 
   const uvod = meta.display_name
-    ? `Živjo, ${meta.display_name.split(' ')[0]}!`
+    ? `Živjo, ${esc(meta.display_name.split(' ')[0])}!`
     : 'Živjo!'
 
   const glavno = meta.brez_ekipe
-    ? `V ${ozn.toUpperCase()} še nimaš sestavljene fantasy ekipe. Brez nje v naslednjem krogu ne dobiš točk.`
-    : `Tvoja fantasy ekipa v ${ozn.toUpperCase()} še ni popolna (manjka kader, kapetan, namestnik ali podobno). Brez veljavne ekipe v naslednjem krogu ne dobiš točk.`
+    ? `V ${esc(ozn.toUpperCase())} še nimaš sestavljene fantasy ekipe. Brez nje v naslednjem krogu ne dobiš točk.`
+    : `Tvoja fantasy ekipa v ${esc(ozn.toUpperCase())} še ni popolna (manjka kader, kapetan, namestnik ali podobno). Brez veljavne ekipe v naslednjem krogu ne dobiš točk.`
 
   const html = `
     <div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; color: #0f172a;">
@@ -392,7 +401,8 @@ async function posljiEnega(
         Naslednjič ti bomo pisali šele pred naslednjim krogom.
       </p>
       <p style="font-size: 12px; color: #94a3b8; margin: 24px 0 0;">
-        SLFF — Sunday League Fantasy Football · slff.eu
+        SLFF — Sunday League Fantasy Football · slff.eu ·
+        <a href="${ODJAVA}" style="color:#94a3b8;">Ne želim več opomnikov</a>
       </p>
     </div>
   `
@@ -404,7 +414,11 @@ async function posljiEnega(
         Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ from, to, subject: naslov, html }),
+      body: JSON.stringify({
+        from, to, subject: naslov, html,
+        // Odjava z enim klikom v poštnem odjemalcu vodi na isto stran.
+        headers: { 'List-Unsubscribe': `<${ODJAVA}>` },
+      }),
     })
     const odgovor: ResendOdgovor = await r.json()
     if (!r.ok) return { napaka: odgovor.message ?? `HTTP ${r.status}` }
@@ -422,7 +436,7 @@ async function posljiOpozorilo(
   u: Uporabnik,
 ): Promise<{ id?: string; napaka?: string }> {
   const uvod = u.display_name
-    ? `Živjo, ${u.display_name.split(' ')[0]}!`
+    ? `Živjo, ${esc(u.display_name.split(' ')[0])}!`
     : 'Živjo!'
   const krog = u.round_number ? `${u.round_number}. krog` : 'naslednji krog'
   const rok = u.deadline_at
@@ -442,11 +456,11 @@ async function posljiOpozorilo(
     <div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; color: #0f172a;">
       <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">${uvod}</p>
       <p style="font-size: 15px; line-height: 1.5; margin: 0 0 8px;">
-        Ekipa <strong>${u.team_name ?? ''}</strong> se za ${krog} ne bo zaklenila,
+        Ekipa <strong>${esc(u.team_name ?? '')}</strong> se za ${krog} ne bo zaklenila,
         zato v njem ne bi dobila točk.
       </p>
       <p style="font-size: 15px; line-height: 1.5; margin: 0 0 8px; padding: 12px; background: #fef2f2; border-left: 3px solid #f87171; border-radius: 6px;">
-        ${u.razlog ?? 'Kader ni veljaven.'}
+        ${esc(u.razlog ?? 'Kader ni veljaven.')}
       </p>
       ${
         rok
@@ -463,7 +477,8 @@ async function posljiOpozorilo(
         pišemo ti samo takrat, kadar se ne bo mogla.
       </p>
       <p style="font-size: 12px; color: #94a3b8; margin: 24px 0 0;">
-        SLFF — Sunday League Fantasy Football · slff.eu
+        SLFF — Sunday League Fantasy Football · slff.eu ·
+        <a href="${ODJAVA}" style="color:#94a3b8;">Ne želim več opomnikov</a>
       </p>
     </div>
   `
@@ -475,7 +490,11 @@ async function posljiOpozorilo(
         Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ from, to, subject: naslov, html }),
+      body: JSON.stringify({
+        from, to, subject: naslov, html,
+        // Odjava z enim klikom v poštnem odjemalcu vodi na isto stran.
+        headers: { 'List-Unsubscribe': `<${ODJAVA}>` },
+      }),
     })
     const odgovor: ResendOdgovor = await r.json()
     if (!r.ok) return { napaka: odgovor.message ?? `HTTP ${r.status}` }
@@ -483,6 +502,17 @@ async function posljiOpozorilo(
   } catch (e) {
     return { napaka: String(e) }
   }
+}
+
+// Ime, ime ekipe in razlog napiše uporabnik (ali izhajajo iz njegovih
+// podatkov), zato v HTML ne gredo surovi.
+function esc(s: string): string {
+  return s
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;')
 }
 
 function json(obj: unknown, status = 200) {

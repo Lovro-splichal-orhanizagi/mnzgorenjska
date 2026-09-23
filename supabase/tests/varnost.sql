@@ -285,6 +285,9 @@ select pg_temp.preveri('poznavalec druge lige tu ne potrdi sam',
 -- --------------------------------------------------------------------------
 -- Odhod igralca: poznavalec lige ga oznaci, tujec ne; nastop ga obudi.
 -- --------------------------------------------------------------------------
+-- Krog -913003 je zapadel, a se ni zaklenjen; odhoda do zaklepa ni mogoce
+-- oznaciti (glej spodaj), zato ga tu zaklenemo kot cron.
+select zakleni_krog(-913003);
 -- Tujec (ac) je zdaj poznavalec lige -913002, ne -913001.
 select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ac',true);
 set local role authenticated;
@@ -311,6 +314,119 @@ reset role;
 insert into appearances(match_id, player_id, team_id) values (-913001, -913017, -913001);
 select pg_temp.preveri('nastop obudi odslega igralca',
   (select active and odsel_at is null from players where id=-913017));
+
+-- Preklic odhoda ne obudi igralca, ki ga je deaktiviral uvoz.
+update players set active=false where id=-913016;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ac',true);
+set local role authenticated;
+select oznaci_odhod_igralca(-913016, false);
+reset role;
+select pg_temp.preveri('preklic odhoda ne obudi igralca, ki ga je deaktiviral uvoz',
+  (select not active from players where id=-913016));
+-- Oznaka odhoda na igralcu, ki ga je deaktiviral uvoz, ne nastavi odsel_at
+-- (sicer ga uvoz ob vrnitvi kluba v ligo ne bi obudil).
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ac',true);
+set local role authenticated;
+select oznaci_odhod_igralca(-913016, true);
+reset role;
+select pg_temp.preveri('oznaka odhoda ne oznaci igralca, ki ga je deaktiviral uvoz',
+  (select not active and odsel_at is null from players where id=-913016));
+update players set active=true where id=-913016;
+
+-- 24 ur pred rokom oznake ni vec; administrator je izvzet. Preklic gre vedno.
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ac',true);
+set local role authenticated;
+select oznaci_odhod_igralca(-913017, true);
+reset role;
+update rounds set deadline_at=now()+interval '12 hours' where id=-913004;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ac',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('odhoda ni mogoce oznaciti 24 ur pred rokom',
+  $$select oznaci_odhod_igralca(-913017, true)$$);
+select oznaci_odhod_igralca(-913017, false);
+reset role;
+select pg_temp.preveri('poznavalec odhod preklice tudi 24 ur pred rokom',
+  (select active and odsel_at is null from players where id=-913017));
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+select oznaci_odhod_igralca(-913017, true);
+select oznaci_odhod_igralca(-913017, false);
+select pg_temp.preveri('administrator odhod oznaci tudi tik pred rokom',
+  (select active and odsel_at is null from players where id=-913017));
+reset role;
+update rounds set deadline_at=now()+interval '4 days' where id=-913004;
+
+
+-- --------------------------------------------------------------------------
+-- Pregled varnosti: klepet, mini lige, razlog ekipe, pripomocki po sezoni.
+-- --------------------------------------------------------------------------
+insert into chat_messages(id, user_id, content, alias) overriding system value
+values (-913001, 'b8a06635-2322-4444-8c42-44e419f912ab', 'Testno sporocilo', 'Test');
+set local role anon;
+select pg_temp.zavrnjeno('anonimni ne more spremeniti sporocila prek pogleda klepeta',
+  $$update klepet_sporocila set content='Vdor' where id=-913001$$);
+select pg_temp.zavrnjeno('anonimni ne more izbrisati sporocila prek pogleda klepeta',
+  $$delete from klepet_sporocila where id=-913001$$);
+reset role;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ac',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('prijavljeni ne more izbrisati tujega sporocila prek pogleda',
+  $$delete from klepet_sporocila where id=-913001$$);
+reset role;
+select pg_temp.preveri('sporocilo je po napadih nespremenjeno',
+  (select content='Testno sporocilo' from chat_messages where id=-913001));
+
+insert into mini_lige(id, name, code, owner_id) overriding system value
+values (-913001, 'Zasebna testna', 'TESTKODA913', 'b8a06635-2322-4444-8c42-44e419f912ad');
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('v zasebno mini ligo ni vpisa mimo kode',
+  $$insert into mini_liga_clani(mini_liga_id, fantasy_team_id) values (-913001, -913001)$$);
+select pridruzi_mini_ligi('TESTKODA913', -913001);
+select pg_temp.preveri('s kodo se pridruzis prek funkcije',
+  exists(select 1 from mini_liga_clani where mini_liga_id=-913001 and fantasy_team_id=-913001));
+reset role;
+select set_config('request.jwt.claim.sub','',true);
+set local role anon;
+select pg_temp.preveri('anonimni bere lestvico mini lige brez napake (prazno)',
+  (select count(*)=0 from mini_liga_lestvica where mini_liga_id=-913001));
+reset role;
+
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ac',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('razlog neveljavne ekipe ne razkrije tujega kadra',
+  $$select razlog_neveljavne_ekipe(-913001)$$);
+reset role;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
+select pg_temp.preveri('lastnik vidi razlog svoje ekipe',
+  razlog_neveljavne_ekipe(-913001) is not null);
+update profiles set brez_opomnikov=true where id=auth.uid();
+select pg_temp.preveri('lastnik se sam odjavi od opomnikov',
+  (select brez_opomnikov from profiles where id=auth.uid()));
+-- RLS tujo vrstico tiho preskoci, zato preverimo stanje, ne napake.
+update profiles set brez_opomnikov=true where id='b8a06635-2322-4444-8c42-44e419f912ac';
+reset role;
+select pg_temp.preveri('odjava drugega ni spremenila nicesar',
+  (select not brez_opomnikov from profiles where id='b8a06635-2322-4444-8c42-44e419f912ac'));
+
+-- Pripomocek je enkrat na sezono: klop_plus iz sezone 2099/00 ne zapre 2100/01.
+insert into rounds(id,season,number,deadline_at,competition_id) overriding system value
+values (-913007,'2100/01',2,now()+interval '10 days',-913001),
+       (-913008,'2099/00',6,now()+interval '11 days',-913001);
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
+insert into fantasy_chips(fantasy_team_id,chip,round_id) values(-913001,'klop_plus',-913007);
+select pg_temp.preveri('isti pripomocek je v novi sezoni spet na voljo',
+  (select season='2100/01' from fantasy_chips where fantasy_team_id=-913001 and round_id=-913007));
+do $$
+begin
+  insert into fantasy_chips(fantasy_team_id,chip,round_id) values(-913001,'klop_plus',-913008);
+  perform pg_temp.preveri('drugi klop_plus v isti sezoni je zavrnjen', false);
+exception when unique_violation then
+  perform pg_temp.preveri('drugi klop_plus v isti sezoni je zavrnjen', true);
+end $$;
+reset role;
 
 
 -- --------------------------------------------------------------------------
