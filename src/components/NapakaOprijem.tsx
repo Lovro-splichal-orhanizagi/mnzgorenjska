@@ -1,6 +1,7 @@
 // Error boundary — ujame vsako izjemo iz React drevesa in namesto tihe prazne
 // strani pokaže prijazno sporočilo. Podrobnosti (sled sklada) le v razvoju.
 import { Component, type ReactNode, type ErrorInfo } from 'react'
+import { t } from '../i18n'
 
 interface Stanje {
   napaka: Error | null
@@ -33,12 +34,9 @@ export default class NapakaOprijem extends Component<
       <div className="mx-auto max-w-3xl p-4 text-sm">
         <div role="alert" className="rounded-2xl border-2 border-rose-500/60 bg-rose-900/30 p-4 text-rose-100">
           <h1 className="mb-2 text-lg font-black">
-            <span aria-hidden="true">⚠ </span>Stran se je zataknila
+            <span aria-hidden="true">⚠ </span>{t('aplikacija.napaka.naslov')}
           </h1>
-          <p className="mb-3 opacity-90">
-            Nekaj je šlo narobe pri prikazu te strani. Osveži stran ali se vrni
-            na začetek — če se ponavlja, nam piši prek klepeta na začetni strani.
-          </p>
+          <p className="mb-3 opacity-90">{t('aplikacija.napaka.opis')}</p>
           {razvoj && (
             <pre className="max-h-64 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-slate-950/60 p-3 text-[11px] leading-tight">
               {this.state.napaka.name}: {this.state.napaka.message}
@@ -51,10 +49,10 @@ export default class NapakaOprijem extends Component<
             {/* Navaden <a>: oprijem je lahko nad usmerjevalnikom, polno
                 nalaganje pa počisti tudi stanje, ki je napako povzročilo. */}
             <a href="/" className="underline">
-              Nazaj na začetno stran
+              {t('aplikacija.napaka.nazaj')}
             </a>
             <button type="button" onClick={() => window.location.reload()} className="underline">
-              Osveži stran
+              {t('aplikacija.napaka.osvezi')}
             </button>
           </div>
         </div>

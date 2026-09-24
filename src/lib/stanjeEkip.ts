@@ -7,7 +7,8 @@
 //   * opozorilo — ekipa je veljavna, a nekaj je vredno vedeti (poškodovan
 //     kapetan, odsoten igralec v postavi). Da se skriti; skrito ostane skrito,
 //     dokler ne pride novo poročilo.
-import { oblika, prikazniIme } from './pomozno'
+import { prikazniIme } from './pomozno'
+import { t } from '../i18n/jedro.ts'
 
 export interface OpozoriloIgralca {
   player_id: number
@@ -48,26 +49,12 @@ export function kljucOpozorila(ekipa: number, o: OpozoriloIgralca): string {
 }
 
 function stavekIgralca(o: OpozoriloIgralca): { besedilo: string; posledica: string } {
-  const ime = prikazniIme(o.ime) || 'Igralec'
-  const stanje = o.vrsta === 'poskodba' ? 'je poškodovan' : 'je odsoten'
-  if (o.kapetan)
-    return {
-      besedilo: `Kapetan ${ime} ${stanje}.`,
-      posledica: 'Če ne igra, trak prevzame namestnik — morda raje izberi drugega kapetana.',
-    }
-  if (o.namestnik)
-    return {
-      besedilo: `Namestnik kapetana ${ime} ${stanje}.`,
-      posledica: 'Če ne igrata ne kapetan ne namestnik, trojnih točk ni.',
-    }
-  if (o.v_postavi)
-    return {
-      besedilo: `${ime} ${stanje} in je v prvi postavi.`,
-      posledica: 'Če ne igra, ga zamenja prvi igralec z iste pozicije s klopi.',
-    }
+  const ime = prikazniIme(o.ime) || t('mojaEkipa.igralec')
+  const vrsta = o.vrsta === 'poskodba' ? 'poskodba' : 'odsotnost'
+  const vloga = o.kapetan ? 'kapetan' : o.namestnik ? 'namestnik' : o.v_postavi ? 'vPostavi' : 'naKlopi'
   return {
-    besedilo: `${ime} na klopi ${stanje}.`,
-    posledica: 'Pri samodejni menjavi ga bo sistem preskočil, če ne igra.',
+    besedilo: t(`mojaEkipa.opozorila.igralec.${vloga}.${vrsta}`, { ime }),
+    posledica: t(`mojaEkipa.opozorila.posledica.${vloga}`),
   }
 }
 
@@ -80,15 +67,15 @@ export function obvestilaEkip(
   for (const e of ekipe) {
     if (moznosti.skrijLigo && e.slug === moznosti.skrijLigo) continue
     if (!e.veljavna) {
-      const razlog = e.razlog ?? 'Ekipa ne izpolnjuje pravil.'
+      const razlog = e.razlog ?? t('mojaEkipa.opozorila.razlog')
       if (e.brez_tock) {
         napake.push({
           kljuc: `napaka:${e.team_id}`,
           slug: e.slug,
           liga: e.liga,
           besedilo: e.krog
-            ? `V ${e.krog}. krogu ne bo dobila točk.`
-            : 'Ob naslednjem roku ne bo dobila točk.',
+            ? t('mojaEkipa.opozorila.brezTockKrog', { krog: e.krog })
+            : t('mojaEkipa.opozorila.brezTockRok'),
           podrobnost: razlog,
         })
       } else {
@@ -99,7 +86,7 @@ export function obvestilaEkip(
             kljuc,
             slug: e.slug,
             liga: e.liga,
-            besedilo: 'Ekipa ni popolna — ta krog se še zaklene, od naslednjega pa ne bo dobila točk.',
+            besedilo: t('mojaEkipa.opozorila.nepopolna'),
             podrobnost: razlog,
           })
       }
@@ -122,11 +109,6 @@ export function obvestilaEkip(
 
 /** Naslov rdečega pasu z ujemanjem v številu: ena / dve / tri-štiri / pet+. */
 export function naslovNapak(n: number): string {
-  if (n === 1) return 'Ena od tvojih ekip ne bo dobila točk'
-  return `${n} ${oblika(n, [
-    'tvoja ekipa ne bo dobila',
-    'tvoji ekipi ne bosta dobili',
-    'tvoje ekipe ne bodo dobile',
-    'tvojih ekip ne bo dobilo',
-  ])} točk`
+  if (n === 1) return t('mojaEkipa.opozorila.naslovNapakEna')
+  return t('mojaEkipa.opozorila.naslovNapak', { n })
 }

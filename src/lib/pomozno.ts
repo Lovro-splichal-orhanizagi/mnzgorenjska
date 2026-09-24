@@ -1,7 +1,7 @@
 // Skupne pomožne funkcije za prikaz.
 
 import type { Pozicija } from './tipi'
-import { t, stevilo, type Kljuc } from '../i18n'
+import { t, stevilo, type Kljuc } from '../i18n/jedro.ts'
 
 export const IME_POZICIJE: Record<Pozicija, string> = {
   GK: t('skupno.pozicija.GK'),

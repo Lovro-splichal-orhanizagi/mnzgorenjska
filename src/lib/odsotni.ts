@@ -8,6 +8,7 @@
 // starejše od 30 dni, ne pomeni nič — to počisti že pogled `odsotni_igralci`.
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase'
+import { t } from '../i18n/jedro.ts'
 import type { VrstaPorocila } from '../components/Odsotnost'
 
 export interface Odsotnost {
@@ -57,6 +58,10 @@ export function useOdsotni(ligaId: number | null): Record<number, Odsotnost> {
 /** Kratka oznaka ob imenu; naslov nosi besedilo poročila. */
 export function opisOdsotnosti(o: Odsotnost): string {
   const kaj =
-    o.kind === 'poskodba' ? 'Poškodba' : o.kind === 'odsotnost' ? 'Odsoten' : 'Opomba'
-  return o.content ? `${kaj}: ${o.content}` : kaj
+    o.kind === 'poskodba'
+      ? t('igralci.odsotni.poskodba')
+      : o.kind === 'odsotnost'
+        ? t('igralci.odsotni.odsoten')
+        : t('igralci.odsotni.opomba')
+  return o.content ? t('igralci.odsotni.zBesedilom', { kaj, besedilo: o.content }) : kaj
 }

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import { deliVabilo, privzetoImeLige } from '../lib/miniLige'
+import { t } from '../i18n'
 
 interface Liga {
   id: number
@@ -62,12 +63,12 @@ export default function PovabiSoigralce({
   function povej(izid: Awaited<ReturnType<typeof deliVabilo>>) {
     setSporocilo(
       izid === 'deljeno'
-        ? 'Povabilo je poslano.'
+        ? t('lestvice.miniLige.poslano')
         : izid === 'kopirano'
-          ? 'Povabilo je kopirano — prilepi ga v skupino.'
+          ? t('lestvice.miniLige.kopirano')
           : izid === 'preklicano'
             ? null
-            : 'Deljenje ni uspelo — povezavo najdeš na strani Mini lige.',
+            : t('lestvice.miniLige.neuspeloPovezava'),
     )
   }
 
@@ -98,25 +99,31 @@ export default function PovabiSoigralce({
     <div className="kartica relative space-y-2 border-gnl-400/30 bg-gnl-500/10 p-4">
       <button
         onClick={naZapri}
-        aria-label="Zapri"
+        aria-label={t('skupno.zapri')}
         className="absolute right-2 top-2 rounded-lg px-2 py-0.5 text-slate-500 hover:bg-white/5 hover:text-slate-200"
       >
         <span aria-hidden="true">✕</span>
       </button>
       <h2 className="font-bold text-gnl-200">
-        {liga ? `Povabi še koga v ${liga.name}` : 'Sestavljeno. Zdaj povabi soigralce.'}
+        {liga
+          ? t('lestvice.povabiSoigralce.naslovLiga', { ime: liga.name })
+          : t('lestvice.povabiSoigralce.naslovNova')}
       </h2>
       <p className="text-sm text-slate-300">
         {liga
-          ? 'Vsak, ki klikne povezavo, je v ligi z enim klikom.'
-          : 'Kdo je boljši manager? Mini liga je lestvica samo za tvojo družbo.'}
+          ? t('lestvice.povabiSoigralce.opisLiga')
+          : t('lestvice.povabiSoigralce.opisNova')}
       </p>
       <div className="flex flex-wrap items-center gap-2">
         <button onClick={povabi} disabled={dela} className="gumb-glavni text-sm">
-          {dela ? 'Trenutek …' : liga ? 'Deli povabilo' : 'Ustvari mini ligo in povabi'}
+          {dela
+            ? t('lestvice.povabiSoigralce.trenutek')
+            : liga
+              ? t('lestvice.povabiSoigralce.deliPovabilo')
+              : t('lestvice.povabiSoigralce.ustvariInPovabi')}
         </button>
         <Link to="/mini-lige" className="text-sm text-slate-400 hover:text-slate-200">
-          Mini lige
+          {t('lestvice.povabiSoigralce.miniLige')}
         </Link>
       </div>
       {sporocilo && <p className="text-sm text-gnl-300">{sporocilo}</p>}

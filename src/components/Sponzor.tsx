@@ -12,6 +12,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useTekmovanje } from '../lib/tekmovanje'
+import { t } from '../i18n'
 
 /**
  * Naslov iz baze gre v `href`; `javascript:` ali `data:` bi se ob kliku
@@ -88,7 +89,7 @@ export default function Sponzor() {
       )}
       <span className="min-w-0 flex-1">
         <span className="block text-xs uppercase tracking-wide text-slate-400">
-          Sponzor
+          {t('aplikacija.sponzor.oznaka')}
         </span>
         <span className="block truncate font-semibold text-slate-200">{mesto.name}</span>
         {mesto.claim && (

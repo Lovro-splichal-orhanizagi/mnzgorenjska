@@ -15,6 +15,7 @@ import type { ReactNode } from 'react'
 import type { IgralecVKadru, Pozicija } from '../lib/tipi'
 import Grb from './Grb'
 import Dres from './Dres'
+import { t } from '../i18n'
 
 /** Igralec na igriscu — kader plus polja, ki jih potrebuje prikaz. */
 export interface IgralecNaIgriscu extends IgralecVKadru {
@@ -58,8 +59,8 @@ function KarticaIgralca({
         onClick={naKlik}
         title={
           igralec.is_starter
-            ? 'Premakni na klop'
-            : 'Uvrsti v prvo postavo'
+            ? t('mojaEkipa.igrisce.naKlop')
+            : t('mojaEkipa.igrisce.vPostavo')
         }
         className="block w-full transition duration-150 active:scale-95 sm:hover:-translate-y-0.5"
       >
@@ -71,10 +72,10 @@ function KarticaIgralca({
         </div>
         {igralec.active === false && (
           <div
-            title="Igralec ni več v ligi — kader z njim ne dobi točk."
+            title={t('mojaEkipa.igrisce.niVecVLigiNamig')}
             className="bg-rose-500 px-0.5 text-[8px] font-black uppercase leading-tight text-white sm:text-[9px]"
           >
-            ni več v ligi
+            {t('mojaEkipa.igrisce.niVecVLigi')}
           </div>
         )}
         {igralec.active !== false && igralec.odsotnost && (
@@ -82,7 +83,9 @@ function KarticaIgralca({
             title={igralec.odsotnost.opis}
             className="bg-amber-400 px-0.5 text-[8px] font-black uppercase leading-tight text-slate-950 sm:text-[9px]"
           >
-            {igralec.odsotnost.vrsta === 'poskodba' ? 'poškodba' : 'odsoten'}
+            {igralec.odsotnost.vrsta === 'poskodba'
+              ? t('mojaEkipa.igrisce.poskodba')
+              : t('mojaEkipa.igrisce.odsoten')}
           </div>
         )}
         <div className="flex items-center justify-center gap-1 rounded-b-md bg-gnl-500/90 px-1 py-0.5 text-[9px] font-bold leading-tight tabular-nums text-slate-950 sm:text-[10px]">
@@ -98,7 +101,11 @@ function KarticaIgralca({
 
       {(igralec.is_captain || igralec.is_vice) && (
         <span
-          title={igralec.is_captain ? 'Kapetan — trojne točke' : 'Namestnik kapetana'}
+          title={
+            igralec.is_captain
+              ? t('mojaEkipa.igrisce.kapetan')
+              : t('mojaEkipa.igrisce.namestnik')
+          }
           className={`absolute -left-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full
                       text-[9px] font-black ring-1 sm:h-5 sm:w-5 sm:text-[10px] ${
                         igralec.is_captain
@@ -106,7 +113,9 @@ function KarticaIgralca({
                           : 'bg-slate-800 text-amber-200 ring-amber-300/40'
                       }`}
         >
-          {igralec.is_captain ? 'K' : 'N'}
+          {igralec.is_captain
+            ? t('mojaEkipa.oznaka.kapetan')
+            : t('mojaEkipa.oznaka.namestnik')}
         </span>
       )}
 
@@ -114,9 +123,12 @@ function KarticaIgralca({
           za vse igralce, da je enako berljivo in ne mislimo o gradientu. */}
       {igralec.tocke_krog != null && (
         <span
-          title={`Točke v zadnjem krogu: ${igralec.tocke_krog}${
-            igralec.is_captain ? ' × 3 (kapetan)' : ''
-          }`}
+          title={t(
+            igralec.is_captain
+              ? 'mojaEkipa.igrisce.tockeKrogaKapetan'
+              : 'mojaEkipa.igrisce.tockeKroga',
+            { tocke: igralec.tocke_krog },
+          )}
           className="absolute -right-1 -top-1 z-10 flex min-w-[1.35rem] items-center
                      justify-center rounded-full bg-fuchsia-500 px-1 py-0.5 text-[11px]
                      font-black leading-none text-white ring-1 ring-fuchsia-200/60
@@ -133,8 +145,8 @@ function KarticaIgralca({
           zadene dres in igralca premakne na klop. */}
       <button
         onClick={naOdstrani}
-        title="Odstrani iz kadra"
-        aria-label={`Odstrani ${ime}`}
+        title={t('mojaEkipa.igrisce.odstraniIzKadra')}
+        aria-label={t('mojaEkipa.igrisce.odstrani', { ime })}
         className="absolute -bottom-3 -right-3 flex h-9 w-9 items-center justify-center
                    text-slate-300 hover:text-rose-400 focus-visible:flex lg:hidden lg:group-hover:flex"
       >
@@ -151,8 +163,8 @@ function KarticaIgralca({
           <button
             onClick={premik.gor ?? undefined}
             disabled={!premik.gor}
-            aria-label={`${ime}: prej na vrsti za menjavo`}
-            title="Prej na vrsti za menjavo"
+            aria-label={t('mojaEkipa.igrisce.prejIme', { ime })}
+            title={t('mojaEkipa.igrisce.prej')}
             className="h-7 w-7 rounded-md bg-white/10 text-xs text-slate-200 hover:bg-white/20 disabled:opacity-30"
           >
             ←
@@ -160,8 +172,8 @@ function KarticaIgralca({
           <button
             onClick={premik.dol ?? undefined}
             disabled={!premik.dol}
-            aria-label={`${ime}: pozneje na vrsti za menjavo`}
-            title="Pozneje na vrsti za menjavo"
+            aria-label={t('mojaEkipa.igrisce.poznejeIme', { ime })}
+            title={t('mojaEkipa.igrisce.pozneje')}
             className="h-7 w-7 rounded-md bg-white/10 text-xs text-slate-200 hover:bg-white/20 disabled:opacity-30"
           >
             →
@@ -182,7 +194,9 @@ function PraznoMesto({
   return (
     <button
       onClick={() => naKlik(pozicija)}
-      title={`Izberi: ${POZICIJE[pozicija].naslov.toLowerCase()}`}
+      title={t('mojaEkipa.igrisce.izberi', {
+        pozicija: POZICIJE[pozicija].naslov.toLowerCase(),
+      })}
       className="flex h-[3.6rem] w-[3.4rem] flex-col items-center justify-center gap-0.5
                  rounded-lg border-2 border-dashed border-white/25 text-white/60
                  transition active:scale-95 hover:border-gnl-300 hover:bg-white/10
@@ -268,11 +282,10 @@ export default function Igrisce({
       {/* klop */}
       <div className="kartica p-2 sm:p-3">
         <h3 className="text-xs font-bold uppercase tracking-wide text-slate-400">
-          Klop
+          {t('mojaEkipa.igrisce.klop')}
         </h3>
         <p className="mb-2 text-[11px] text-slate-500">
-          Kdor iz postave ne igra, ga zamenja prvi z iste pozicije s klopi — po
-          vrsti od leve proti desni.
+          {t('mojaEkipa.igrisce.klopOpis')}
         </p>
         <Vrsta>
           {klop.map((i, n) => (
@@ -307,7 +320,7 @@ export default function Igrisce({
       {neuvrsceni.length > 0 && (
         <div className="kartica p-2 sm:p-3">
           <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">
-            Brez potrjene pozicije — na igrišče jih ni mogoče postaviti
+            {t('mojaEkipa.igrisce.brezPozicije')}
           </h3>
           <Vrsta>
             {neuvrsceni.map((i) => (

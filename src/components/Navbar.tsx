@@ -6,6 +6,7 @@ import { sestaviVabilo, vabiloMailto } from '../lib/vabilo'
 import { supabase } from '../lib/supabase'
 import { potrdiZapustitev } from '../lib/neshranjeno'
 import IzbirnikLige from './IzbirnikLige'
+import { t } from '../i18n'
 
 interface Povezava {
   pot: string
@@ -16,18 +17,18 @@ interface Povezava {
 // pod "Več": enajst enakovrednih povezav je pomenilo, da nobena ne izstopa.
 // Grb vodi domov, zato "Domov" ne potrebuje svoje povezave.
 const glavne: Povezava[] = [
-  { pot: '/moja-ekipa', naslov: 'Moja ekipa' },
-  { pot: '/igralci', naslov: 'Igralci' },
-  { pot: '/lestvica', naslov: 'Lestvica' },
-  { pot: '/rezultati', naslov: 'Rezultati' },
-  { pot: '/mini-lige', naslov: 'Mini lige' },
+  { pot: '/moja-ekipa', naslov: t('aplikacija.meni.mojaEkipa') },
+  { pot: '/igralci', naslov: t('aplikacija.meni.igralci') },
+  { pot: '/lestvica', naslov: t('aplikacija.meni.lestvica') },
+  { pot: '/rezultati', naslov: t('aplikacija.meni.rezultati') },
+  { pot: '/mini-lige', naslov: t('aplikacija.meni.miniLige') },
 ]
 
 const ostale: Povezava[] = [
-  { pot: '/glasovanje', naslov: 'Asistence' },
-  { pot: '/pozicije', naslov: 'Pozicije' },
-  { pot: '/odsotnosti', naslov: 'Odsotnosti' },
-  { pot: '/slovenija', naslov: 'Slovenija' },
+  { pot: '/glasovanje', naslov: t('aplikacija.meni.asistence') },
+  { pot: '/pozicije', naslov: t('aplikacija.meni.pozicije') },
+  { pot: '/odsotnosti', naslov: t('aplikacija.meni.odsotnosti') },
+  { pot: '/slovenija', naslov: t('aplikacija.meni.slovenija') },
 ]
 
 // Vabilo sestavimo iz izbrane lige in njenih klubov (glej `lib/vabilo.ts`).
@@ -146,7 +147,7 @@ export default function Navbar() {
     }
   }, [uporabnikId])
 
-  const vec = jeAdmin ? [...ostale, { pot: '/admin', naslov: 'Admin' }] : ostale
+  const vec = jeAdmin ? [...ostale, { pot: '/admin', naslov: t('aplikacija.meni.admin') }] : ostale
   // Začetnica za avatar: iz vzdevka, sicer iz e-naslova.
   const zacetnica = (ime || session?.user.email || '?').trim().charAt(0).toUpperCase()
 
@@ -195,7 +196,7 @@ export default function Navbar() {
                   vecOdprt ? 'bg-white/10 text-slate-100' : 'text-slate-400 hover:bg-white/5 hover:text-slate-100'
                 }`}
               >
-                Več
+                {t('aplikacija.meni.vec')}
                 {znacka(cakaGlasov)}
                 <span aria-hidden="true" className="ml-1 text-[10px]">
                   ▾
@@ -233,8 +234,8 @@ export default function Navbar() {
                   onClick={() => setRacunOdprt(!racunOdprt)}
                   aria-haspopup="menu"
                   aria-expanded={racunOdprt}
-                  aria-label="Račun"
-                  title={ime ?? session.user.email ?? 'Račun'}
+                  aria-label={t('aplikacija.meni.racun')}
+                  title={ime ?? session.user.email ?? t('aplikacija.meni.racun')}
                   className="flex h-9 w-9 items-center justify-center rounded-full bg-gnl-500/20 font-black text-gnl-200 ring-1 ring-gnl-400/40 hover:bg-gnl-500/30"
                 >
                   {zacetnica}
@@ -253,7 +254,7 @@ export default function Navbar() {
                       className={vrsticaMenija}
                       onClick={() => setRacunOdprt(false)}
                     >
-                      Opomniki
+                      {t('aplikacija.meni.opomniki')}
                     </NavLink>
                     <a
                       href={vabilo}
@@ -261,7 +262,7 @@ export default function Navbar() {
                       className={vrsticaMenija}
                       onClick={() => setRacunOdprt(false)}
                     >
-                      Povabi prijatelja
+                      {t('aplikacija.meni.povabi')}
                     </a>
                     <button
                       type="button"
@@ -272,14 +273,14 @@ export default function Navbar() {
                       }}
                       className={`w-full ${vrsticaMenija}`}
                     >
-                      Odjava
+                      {t('aplikacija.meni.odjava')}
                     </button>
                   </div>
                 )}
               </div>
             ) : (
               <NavLink to="/prijava" className="gumb-glavni whitespace-nowrap text-sm">
-                Prijava
+                {t('aplikacija.meni.prijava')}
               </NavLink>
             )}
           </div>
@@ -288,7 +289,11 @@ export default function Navbar() {
               in opomnik bi sicer ostal skrit. */}
           <button
             onClick={() => setOdprt(!odprt)}
-            aria-label={cakaGlasov > 0 ? `Meni (${cakaGlasov} za glasovanje)` : 'Meni'}
+            aria-label={
+              cakaGlasov > 0
+                ? t('aplikacija.meni.meniZGlasovi', { n: cakaGlasov })
+                : t('aplikacija.meni.meni')
+            }
             aria-expanded={odprt}
             className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border
                        border-white/15 bg-white/5 text-2xl leading-none text-slate-200
@@ -324,7 +329,7 @@ export default function Navbar() {
               ))}
               {session && (
                 <NavLink to="/opomniki" className={slog} onClick={() => setOdprt(false)}>
-                  Opomniki
+                  {t('aplikacija.meni.opomniki')}
                 </NavLink>
               )}
               <a
@@ -332,7 +337,7 @@ export default function Navbar() {
                 className="col-span-2 rounded-lg px-3 py-1.5 text-center text-slate-400 hover:bg-white/5"
                 onClick={() => setOdprt(false)}
               >
-                Povabi prijatelja
+                {t('aplikacija.meni.povabi')}
               </a>
             </div>
           </div>

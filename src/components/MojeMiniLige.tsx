@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { formatirajTocke } from '../lib/pomozno'
 import { razvrstiMini, type MiniVrstica } from '../lib/miniLige'
+import { t } from '../i18n'
 
 interface Vrstica {
   id: number
@@ -75,10 +76,10 @@ export default function MojeMiniLige({ ekipaId }: { ekipaId: number | null }) {
     return (
       <div className="kartica flex flex-wrap items-center justify-between gap-2 p-3 text-sm">
         <span className="text-slate-400">
-          Lestvica med prijatelji je bolj zabavna kot med tujci.
+          {t('lestvice.mojeMiniLige.povabilo')}
         </span>
         <Link to="/mini-lige" className="gumb-glavni text-xs">
-          Ustvari mini ligo
+          {t('lestvice.mojeMiniLige.ustvari')}
         </Link>
       </div>
     )
@@ -86,9 +87,9 @@ export default function MojeMiniLige({ ekipaId }: { ekipaId: number | null }) {
   return (
     <div className="kartica space-y-2 p-3 sm:p-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-bold text-slate-300">Moje mini lige</h2>
+        <h2 className="text-sm font-bold text-slate-300">{t('lestvice.mojeMiniLige.naslov')}</h2>
         <Link to="/mini-lige" className="text-xs text-slate-500 hover:text-slate-300">
-          vse →
+          {t('lestvice.mojeMiniLige.vse')}
         </Link>
       </div>
       <ul className="divide-y divide-white/5">
@@ -106,8 +107,8 @@ export default function MojeMiniLige({ ekipaId }: { ekipaId: number | null }) {
                 {v.name}
               </Link>
               <div className="truncate text-xs text-slate-500">
-                od {v.ekip} {v.ekip === 1 ? 'ekipe' : v.ekip < 5 ? 'ekip' : 'ekip'}
-                {v.mesto > 1 && v.vodilni ? ` · vodi ${v.vodilni}` : ''}
+                {t('lestvice.odEkip', { n: v.ekip })}
+                {v.mesto > 1 && v.vodilni ? t('lestvice.mojeMiniLige.vodi', { ime: v.vodilni }) : ''}
               </div>
             </div>
             <span className="shrink-0 font-black tabular-nums text-gnl-300">

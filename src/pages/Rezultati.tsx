@@ -8,6 +8,7 @@ import Grb from '../components/Grb'
 import type { TekmaVrstica } from '../lib/tipi'
 import { vseVrstice } from '../lib/strani'
 import { useNaslov } from '../lib/naslov'
+import { t } from '../i18n'
 
 export default function Rezultati() {
   const { id: tekmovanjeId, tekmovanje } = useTekmovanje()
@@ -17,7 +18,7 @@ export default function Rezultati() {
   const [krogId, setKrogId] = useState<number | null>(null)
   const [nalaganje, setNalaganje] = useState(true)
   const [napaka, setNapaka] = useState<string | null>(null)
-  useNaslov('Rezultati')
+  useNaslov(t('tekme.rezultati.naslov'))
 
   useEffect(() => {
     if (!tekmovanjeId) return
@@ -85,21 +86,19 @@ export default function Rezultati() {
   )
 
   if (nalaganje)
-    return <p className="animiraj-utrip text-slate-400">Nalaganje …</p>
+    return <p className="animiraj-utrip text-slate-400">{t('skupno.nalaganje')}</p>
 
   return (
     <div className="space-y-6">
       <header className="space-y-2">
         <h1 className="text-3xl font-black naslov">
-          Rezultati
+          {t('tekme.rezultati.naslov')}
           {tekmovanje?.short_name
             ? ` — ${tekmovanje.short_name}`
             : ''}
         </h1>
         <p className="max-w-2xl text-slate-400">
-          Odigrane tekme iz zapisnikov {zveza}. Klikni na tekmo in vidiš
-          obe postavi na igrišču — na vsakem dresu točke, ki jih je igralec
-          zaslužil.
+          {t('tekme.rezultati.uvod', { zveza })}
         </p>
       </header>
 
@@ -131,17 +130,17 @@ export default function Rezultati() {
               krogId === k.id ? 'bg-gnl-500 text-slate-950' : 'kartica text-slate-300'
             }`}
           >
-            {k.number}. krog
+            {t('tekme.krog', { n: k.number })}
           </button>
         ))}
       </div>
 
       {tekme.length === 0 && !napaka ? (
         <p className="kartica p-6 text-center text-slate-400">
-          Sezona se še ni začela.
+          {t('tekme.rezultati.niZacetka')}
         </p>
       ) : vKrogu.length === 0 ? (
-        <p className="text-slate-400">V tem krogu ni odigranih tekem.</p>
+        <p className="text-slate-400">{t('tekme.rezultati.prazenKrog')}</p>
       ) : (
         <ul className="grid gap-2 sm:grid-cols-2">
           {vKrogu.map((t) => (
@@ -165,7 +164,7 @@ export default function Rezultati() {
         </ul>
       )}
 
-      {napaka && <p className="text-sm text-rose-400">Napaka: {napaka}</p>}
+      {napaka && <p className="text-sm text-rose-400">{t('skupno.napaka', { sporocilo: napaka })}</p>}
     </div>
   )
 }

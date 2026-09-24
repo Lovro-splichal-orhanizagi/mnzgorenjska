@@ -7,6 +7,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import { useNaslov } from '../lib/naslov'
 import { povezavaNaPrijavo } from '../lib/prijava'
+import { t, tx } from '../i18n'
 
 const profili = () => supabase.from('profiles')
 
@@ -17,7 +18,7 @@ export default function Opomniki() {
   const [shranjujem, setShranjujem] = useState(false)
   const [napaka, setNapaka] = useState<string | null>(null)
   const [shranjeno, setShranjeno] = useState(false)
-  useNaslov('Opomniki')
+  useNaslov(t('racun.opomniki.naslov'))
 
   useEffect(() => {
     if (!uporabnik) return
@@ -29,7 +30,7 @@ export default function Opomniki() {
       .maybeSingle()
       .then(({ data, error }) => {
         if (!veljavno) return
-        if (error) return setNapaka('Nastavitve ni bilo mogoče naložiti.')
+        if (error) return setNapaka(t('racun.opomniki.napakaNalaganja'))
         setPosiljaj(!data?.brez_opomnikov)
       })
     return () => {
@@ -47,37 +48,38 @@ export default function Opomniki() {
       .update({ brez_opomnikov: !novo })
       .eq('id', uporabnik)
     setShranjujem(false)
-    if (error) return setNapaka('Shranjevanje ni uspelo. Poskusi znova.')
+    if (error) return setNapaka(t('racun.opomniki.napakaShranjevanja'))
     setPosiljaj(novo)
     setShranjeno(true)
   }
 
-  if (loading) return <p className="text-slate-400">Nalagam …</p>
+  if (loading) return <p className="text-slate-400">{t('racun.opomniki.nalagam')}</p>
 
   if (!session)
     return (
       <div className="max-w-md space-y-3">
-        <h1 className="text-3xl font-black naslov">Opomniki</h1>
+        <h1 className="text-3xl font-black naslov">{t('racun.opomniki.naslov')}</h1>
         <p className="text-slate-300">
-          Za urejanje opomnikov se moraš{' '}
-          <Link to={povezavaNaPrijavo('/opomniki')} className="text-gnl-300 underline">
-            prijaviti
-          </Link>
-          .
+          {tx('racun.opomniki.moraPrijava', {}, {
+            prijava: (v) => (
+              <Link to={povezavaNaPrijavo('/opomniki')} className="text-gnl-300 underline">
+                {v}
+              </Link>
+            ),
+          })}
         </p>
       </div>
     )
 
   return (
     <div className="max-w-md space-y-4">
-      <h1 className="text-3xl font-black naslov">Opomniki</h1>
+      <h1 className="text-3xl font-black naslov">{t('racun.opomniki.naslov')}</h1>
       <p className="text-sm text-slate-400">
-        Pred rokom kroga ti pošljemo kratko sporočilo na {session.user.email}, da ne
-        pozabiš urediti ekipe.
+        {t('racun.opomniki.opis', { email: session.user.email })}
       </p>
 
       <label className="kartica flex cursor-pointer items-center justify-between gap-4 p-4">
-        <span className="font-semibold">Pošiljaj mi opomnike po e-pošti</span>
+        <span className="font-semibold">{t('racun.opomniki.posiljaj')}</span>
         <input
           type="checkbox"
           role="switch"
@@ -89,11 +91,11 @@ export default function Opomniki() {
         />
       </label>
 
-      {posiljaj == null && !napaka && <p className="text-sm text-slate-400">Nalagam …</p>}
-      {shranjujem && <p className="text-sm text-slate-400">Shranjujem …</p>}
+      {posiljaj == null && !napaka && <p className="text-sm text-slate-400">{t('racun.opomniki.nalagam')}</p>}
+      {shranjujem && <p className="text-sm text-slate-400">{t('racun.opomniki.shranjujem')}</p>}
       {shranjeno && !shranjujem && (
         <p className="text-sm text-gnl-300">
-          {posiljaj ? 'Opomniki so vklopljeni.' : 'Opomnikov ti ne bomo več pošiljali.'}
+          {posiljaj ? t('racun.opomniki.vklopljeni') : t('racun.opomniki.izklopljeni')}
         </p>
       )}
       {napaka && <p className="text-sm text-rose-400">{napaka}</p>}

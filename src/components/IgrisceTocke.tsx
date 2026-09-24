@@ -11,6 +11,7 @@ import type { ReactNode } from 'react'
 import type { Pozicija } from '../lib/tipi'
 import Dres from './Dres'
 import Grb from './Grb'
+import { t } from '../i18n'
 
 /** Nastop igralca na tekmi, kot ga vrne pogled `appearance_points`. */
 export interface NastopNaTekmi {
@@ -52,14 +53,14 @@ function dogodki(n: NastopNaTekmi): string[] {
 }
 
 function opisNastopa(n: NastopNaTekmi): string {
-  const deli = [`${n.minutes_played} min`]
-  if (Number(n.goals ?? 0) > 0) deli.push(`${n.goals} × gol`)
-  if (Number(n.assists ?? 0) > 0) deli.push(`${n.assists} × asistenca`)
-  if (n.clean_sheet && Number(n.minutes_played ?? 0) >= 60) deli.push('brez prejetega gola')
-  if (Number(n.goals_conceded ?? 0) > 0) deli.push(`prejetih ${n.goals_conceded}`)
-  if (Number(n.yellow_cards ?? 0) > 0) deli.push('rumeni karton')
-  if (Number(n.red_cards ?? 0) > 0) deli.push('rdeči karton')
-  return `${prikazniIme(n.full_name)} — ${deli.join(', ')}`
+  const deli = [t('mojaEkipa.igrisceTocke.minut', { n: n.minutes_played ?? 0 })]
+  if (Number(n.goals ?? 0) > 0) deli.push(t('mojaEkipa.igrisceTocke.goli', { n: n.goals }))
+  if (Number(n.assists ?? 0) > 0) deli.push(t('mojaEkipa.igrisceTocke.asistence', { n: n.assists }))
+  if (n.clean_sheet && Number(n.minutes_played ?? 0) >= 60) deli.push(t('mojaEkipa.igrisceTocke.brezPrejetega'))
+  if (Number(n.goals_conceded ?? 0) > 0) deli.push(t('mojaEkipa.igrisceTocke.prejetih', { n: n.goals_conceded }))
+  if (Number(n.yellow_cards ?? 0) > 0) deli.push(t('mojaEkipa.igrisceTocke.rumeni'))
+  if (Number(n.red_cards ?? 0) > 0) deli.push(t('mojaEkipa.igrisceTocke.rdeci'))
+  return t('mojaEkipa.igrisceTocke.opis', { ime: prikazniIme(n.full_name), deli: deli.join(', ') })
 }
 
 function Kartica({
@@ -138,7 +139,7 @@ export default function IgrisceTocke({
         <Grb ime={ekipa.ime} kratko={ekipa.kratko} logo={ekipa.logo} velikost={26} />
         <h3 className="min-w-0 flex-1 truncate font-bold">{ekipa.ime}</h3>
         <span className="znacka bg-gnl-400/20 text-gnl-200">
-          {formatirajTocke(skupaj)} točk
+          {t('mojaEkipa.igrisceTocke.skupaj', { tocke: formatirajTocke(skupaj) })}
         </span>
       </div>
 
@@ -151,7 +152,7 @@ export default function IgrisceTocke({
 
         {prvi.length === 0 ? (
           <p className="relative py-8 text-center text-sm text-white/70">
-            Zapisnik za to ekipo ne navaja postave.
+            {t('mojaEkipa.igrisceTocke.brezPostave')}
           </p>
         ) : (
           <div className="relative space-y-3 py-2 lg:space-y-4 lg:py-3">
@@ -178,10 +179,10 @@ export default function IgrisceTocke({
       {menjave.length > 0 && (
         <div className="kartica p-2">
           <h4 className="mb-2 px-1 text-[11px] font-bold uppercase tracking-wide text-slate-400">
-            Klop
+            {t('mojaEkipa.igrisceTocke.klop')}
             {igrale.length > 0 && (
               <span className="ml-1.5 font-normal normal-case tracking-normal text-slate-500">
-                — {igrale.length} vstopilo v igro
+                {t('mojaEkipa.igrisceTocke.vstopilo', { n: igrale.length })}
               </span>
             )}
           </h4>

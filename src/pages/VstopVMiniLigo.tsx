@@ -11,6 +11,7 @@ import {
   pozabiVabilo,
   shraniVabilo,
 } from '../lib/miniLige'
+import { t, tx } from '../i18n'
 
 interface Liga {
   id: number
@@ -50,7 +51,7 @@ export default function VstopVMiniLigo() {
 
   const veljavna = kodaJeVeljavna(koda)
   const uporabnikId = session?.user.id
-  useNaslov(liga ? `Povabilo: ${liga.name}` : 'Povabilo v mini ligo')
+  useNaslov(liga ? t('lestvice.vstop.naslovLiga', { ime: liga.name }) : t('lestvice.vstop.naslov'))
 
   useEffect(() => {
     if (!veljavna) {
@@ -115,28 +116,33 @@ export default function VstopVMiniLigo() {
   }
 
   if (loading || liga === undefined)
-    return <p className="animiraj-utrip text-slate-400">Nalaganje …</p>
+    return <p className="animiraj-utrip text-slate-400">{t('skupno.nalaganje')}</p>
 
   if (!veljavna || liga === null)
     return (
       <div className="mx-auto max-w-md space-y-4">
-        <h1 className="text-2xl font-black naslov">Te mini lige ni</h1>
+        <h1 className="text-2xl font-black naslov">{t('lestvice.vstop.niLige')}</h1>
         <p className="kartica p-4 text-sm text-slate-400">
-          Povezava je nepopolna ali je liga izbrisana. Prosi, naj ti pošljejo novo, ali si{' '}
-          <Link to="/mini-lige" className="text-gnl-300 hover:underline">
-            ustvari svojo
-          </Link>
-          .
+          {tx('lestvice.vstop.niLigeOpis', {}, {
+            ustvari: (b) => (
+              <Link to="/mini-lige" className="text-gnl-300 hover:underline">
+                {b}
+              </Link>
+            ),
+          })}
         </p>
       </div>
     )
 
   const glava = (
     <div className="kartica space-y-1 p-5">
-      <p className="text-xs text-slate-500">Povabilo v mini ligo</p>
+      <p className="text-xs text-slate-500">{t('lestvice.vstop.naslov')}</p>
       <h1 className="text-2xl font-black naslov">{liga.name}</h1>
       <p className="text-sm text-slate-400">
-        {liga.owner_name ? `Ustvaril ${liga.owner_name}` : 'Mini liga'} ·{' '}
+        {liga.owner_name
+          ? t('lestvice.vstop.ustvaril', { ime: liga.owner_name })
+          : t('lestvice.vstop.miniLiga')}{' '}
+        ·{' '}
         {mnozina(liga.ekip, EKIPE)}
       </p>
     </div>
@@ -147,13 +153,13 @@ export default function VstopVMiniLigo() {
       <div className="mx-auto max-w-md space-y-4">
         {glava}
         <p className="text-sm text-slate-400">
-          Prijavi se ali si ustvari račun. Po prijavi te vrnemo sem in vstopiš z enim klikom.
+          {t('lestvice.vstop.prijaviSe')}
         </p>
         <Link
           to={povezavaNaPrijavo(`/l/${koda}`)}
           className="gumb-glavni block w-full text-center"
         >
-          Prijava ali registracija
+          {t('lestvice.vstop.prijavaAliRegistracija')}
         </Link>
       </div>
     )
@@ -162,7 +168,7 @@ export default function VstopVMiniLigo() {
     return (
       <div className="mx-auto max-w-md space-y-4">
         {glava}
-        <p className="animiraj-utrip text-sm text-slate-400">Nalaganje tvojih ekip …</p>
+        <p className="animiraj-utrip text-sm text-slate-400">{t('lestvice.vstop.nalaganjeEkip')}</p>
       </div>
     )
 
@@ -171,11 +177,10 @@ export default function VstopVMiniLigo() {
       <div className="mx-auto max-w-md space-y-4">
         {glava}
         <p className="text-sm text-slate-400">
-          Za mini ligo potrebuješ ekipo. Sestavi jo — traja minuto — in ob shranitvi si
-          samodejno v ligi.
+          {t('lestvice.vstop.potrebujesEkipo')}
         </p>
         <Link to="/moja-ekipa" className="gumb-glavni block w-full text-center">
-          Sestavi ekipo
+          {t('lestvice.vstop.sestaviEkipo')}
         </Link>
       </div>
     )
@@ -185,7 +190,7 @@ export default function VstopVMiniLigo() {
       {glava}
       {ekipe.length > 1 && (
         <label className="block text-sm text-slate-400">
-          S katero ekipo?
+          {t('lestvice.vstop.sKateroEkipo')}
           <select
             value={zEkipo ?? ''}
             onChange={(e) => setZEkipo(Number(e.target.value))}
@@ -201,7 +206,9 @@ export default function VstopVMiniLigo() {
         </label>
       )}
       <button onClick={pridruzi} disabled={dela} className="gumb-glavni w-full">
-        {dela ? 'Vstopam …' : `Pridruži se z ekipo ${ekipe.find((e) => e.id === zEkipo)?.name ?? ''}`}
+        {dela
+          ? t('lestvice.vstop.vstopam')
+          : t('lestvice.vstop.pridruziSe', { ime: ekipe.find((e) => e.id === zEkipo)?.name ?? '' })}
       </button>
       {napaka && <p className="text-sm text-rose-400">{napaka}</p>}
     </div>

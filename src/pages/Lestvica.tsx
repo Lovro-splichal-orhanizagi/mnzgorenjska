@@ -11,6 +11,7 @@ import { useNaslov } from '../lib/naslov'
 import { useTekmovanje } from '../lib/tekmovanje'
 import { sestejOdKroga } from '../lib/lestvica'
 import MojeMiniLige from '../components/MojeMiniLige'
+import { t, datum } from '../i18n'
 
 const MEDALJE = ['🥇', '🥈', '🥉']
 
@@ -75,7 +76,7 @@ export default function Lestvica() {
   // Napaka pri krogih (zmagovalec, lestvica kroga) ne sme skriti skupne lestvice.
   const [napakaKrogov, setNapakaKrogov] = useState<string | null>(null)
   const uporabnikId = session?.user.id
-  useNaslov('Lestvica')
+  useNaslov(t('lestvice.lestvica.naslov'))
 
   useEffect(() => {
     if (!uporabnikId || !tekmovanjeId) {
@@ -267,21 +268,21 @@ export default function Lestvica() {
     }
   }, [mojaEkipa, krog?.id])
 
-  if (napaka) return <p className="text-rose-400">Napaka: {napaka}</p>
+  if (napaka) return <p className="text-rose-400">{t('skupno.napaka', { sporocilo: napaka })}</p>
   if (nalaganje)
-    return <p className="animiraj-utrip text-slate-400">Nalaganje …</p>
+    return <p className="animiraj-utrip text-slate-400">{t('skupno.nalaganje')}</p>
 
   if (ekipe.length === 0)
     return (
       <div className="space-y-4">
         <h1 className="text-3xl font-black naslov">
-          Lestvica
+          {t('lestvice.lestvica.naslov')}
           {tekmovanje?.short_name
             ? ` — ${tekmovanje.short_name}`
             : ''}
         </h1>
         <p className="kartica p-6 text-center text-slate-400">
-          Lestvica je še prazna — sestavi prvo ekipo!
+          {t('lestvice.lestvica.prazna')}
         </p>
       </div>
     )
@@ -297,7 +298,7 @@ export default function Lestvica() {
   return (
     <div className="space-y-5">
       <h1 className="text-2xl font-black naslov sm:text-3xl">
-        Lestvica
+        {t('lestvice.lestvica.naslov')}
           {tekmovanje?.short_name
             ? ` — ${tekmovanje.short_name}`
             : ''}
@@ -308,8 +309,7 @@ export default function Lestvica() {
 
       {napakaKrogov && (
         <p role="alert" className="kartica p-3 text-sm text-rose-300">
-          Rezultatov po krogih ni bilo mogoče naložiti ({napakaKrogov}). Skupna
-          lestvica spodaj je vseeno točna.
+          {t('lestvice.lestvica.napakaKrogov', { napaka: napakaKrogov })}
         </p>
       )}
 
@@ -320,14 +320,16 @@ export default function Lestvica() {
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <div>
               <div className="text-sm text-slate-400">
-                Tvoj rezultat v {krogLestvica.length > 0 ? 'zadnjem krogu' : 'krogu'}
+                {krogLestvica.length > 0
+                  ? t('lestvice.lestvica.tvojRezultatZadnji')
+                  : t('lestvice.lestvica.tvojRezultatKrog')}
               </div>
               <div className="text-2xl font-black">
                 {formatirajTocke(mojRezultat.points)}{' '}
                 {tockZ(mojRezultat.points)}
                 {mojRezultat.rank ? (
                   <span className="ml-2 text-base font-bold text-gnl-300">
-                    {mojRezultat.rank}. mesto
+                    {t('lestvice.mesto', { mesto: mojRezultat.rank })}
                   </span>
                 ) : null}
               </div>
@@ -337,7 +339,7 @@ export default function Lestvica() {
             <Plakat
               podatki={{
                 vrsta: 'krog',
-                ekipa: mojRezultat.team_name ?? 'Moja ekipa',
+                ekipa: mojRezultat.team_name ?? t('lestvice.lestvica.mojaEkipa'),
                 liga: tekmovanje?.name ?? '',
                 tocke: formatirajTocke(mojRezultat.points),
                 krog: krog?.number ?? 0,
@@ -359,7 +361,8 @@ export default function Lestvica() {
         <section className="kartica space-y-3 p-4">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h2 className="text-lg font-bold">
-              <span aria-hidden="true">🏆</span> Zmagovalec {krog?.number}. kroga
+              <span aria-hidden="true">🏆</span>{' '}
+              {t('lestvice.lestvica.zmagovalecKroga', { krog: krog?.number })}
             </h2>
             <span className="text-xs text-slate-500">{krog?.season}</span>
           </div>
@@ -394,7 +397,10 @@ export default function Lestvica() {
                   {Number(e.penalty ?? 0) > 0 && (
                     <span
                       className="text-xs text-rose-400"
-                      title={`Prestopi: ${e.transfers ?? 0} — kazen ${mnozina(Number(e.penalty ?? 0), TOCKE)}`}
+                      title={t('lestvice.lestvica.kazen', {
+                        prestopi: e.transfers ?? 0,
+                        kazen: mnozina(Number(e.penalty ?? 0), TOCKE),
+                      })}
                     >
                       −{e.penalty}
                     </span>
@@ -412,20 +418,14 @@ export default function Lestvica() {
       {/* Zmagovalci vseh odigranih krogov — pregled sezone. */}
       <section className="kartica space-y-2 p-3 sm:p-4">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-lg font-bold">Zmagovalci po krogih</h2>
+          <h2 className="text-lg font-bold">{t('lestvice.lestvica.zmagovalciPoKrogih')}</h2>
           <span className="text-xs text-slate-500">
-            {mnozina(zmagovalciKrogov.length, [
-              'odigran krog',
-              'odigrana kroga',
-              'odigrani krogi',
-              'odigranih krogov',
-            ])}
+            {t('lestvice.lestvica.odigraniKrogi', { n: zmagovalciKrogov.length })}
           </span>
         </div>
         {zmagovalciKrogov.length === 0 ? (
           <p className="p-4 text-center text-sm text-slate-400">
-            Prvi krog še ni odigran. Ko bo, se tu vsak teden pojavi zmagovalec
-            (npr. "16. krog 🏆 Jenko").
+            {t('lestvice.lestvica.brezZmagovalcev')}
           </p>
         ) : (
           <ul className="space-y-1">
@@ -435,7 +435,7 @@ export default function Lestvica() {
                 className="flex items-center gap-3 rounded-lg bg-white/5 px-3 py-1.5 text-sm"
               >
                 <span className="znacka bg-gnl-400/15 text-[10px] text-gnl-200">
-                  {z.round_number}. krog
+                  {t('lestvice.krog', { n: z.round_number })}
                 </span>
                 <span className="min-w-0 flex-1 truncate font-semibold">
                   <span aria-hidden="true">🏆</span> {z.team_name}
@@ -458,17 +458,16 @@ export default function Lestvica() {
         <div className="flex flex-wrap items-baseline gap-2">
           <h2 className="text-lg font-bold">
             {odKroga === 1
-              ? 'Skupno (celotna sezona)'
-              : `Od ${odKroga}. kroga naprej`}
+              ? t('lestvice.lestvica.skupnoSezona')
+              : t('lestvice.lestvica.odKrogaNaprej', { n: odKroga })}
           </h2>
           <span className="text-xs text-slate-500">
-            Priključil si se pozneje? Izberi svoj krog in tekmuj od tam.
+            {t('lestvice.lestvica.pozneje')}
           </span>
         </div>
         {vsiKrogiOdigrani.length === 0 ? (
           <p className="rounded-xl bg-white/5 p-3 text-center text-xs text-slate-400">
-            Ko bodo odigrani krogi, se tu pojavijo gumbi "Od 2. kroga",
-            "Od 3. kroga" itd — pridi kadarkoli in imej svojo lestvico.
+            {t('lestvice.lestvica.brezKrogov')}
           </p>
         ) : (
           <div className="flex flex-wrap gap-1.5">
@@ -480,7 +479,7 @@ export default function Lestvica() {
                   : 'bg-white/5 text-slate-300 hover:bg-white/10'
               }`}
             >
-              Celotna sezona
+              {t('lestvice.lestvica.celotnaSezona')}
             </button>
             {vsiKrogiOdigrani
               .filter((k) => k.number > 1)
@@ -494,7 +493,7 @@ export default function Lestvica() {
                       : 'bg-white/5 text-slate-300 hover:bg-white/10'
                   }`}
                 >
-                  Od {k.number}. kroga
+                  {t('lestvice.lestvica.odKroga', { n: k.number })}
                 </button>
               ))}
           </div>
@@ -536,13 +535,12 @@ export default function Lestvica() {
                     {e.owner_name}
                     {(e.team_created_at ?? e.owner_registered_at) && (
                       <span className="ml-2 text-slate-400">
-                        · igra od{' '}
-                        {new Date(
-                          (e.team_created_at ?? e.owner_registered_at) as string,
-                        ).toLocaleDateString('sl-SI', {
-                          day: 'numeric',
-                          month: 'numeric',
-                          year: 'numeric',
+                        {t('lestvice.lestvica.igraOd', {
+                          datum: datum((e.team_created_at ?? e.owner_registered_at) as string, {
+                            day: 'numeric',
+                            month: 'numeric',
+                            year: 'numeric',
+                          }),
                         })}
                       </span>
                     )}

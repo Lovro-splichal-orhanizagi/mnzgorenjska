@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
+import { t, tx } from '../i18n'
 
 interface Klub {
   id: number
@@ -8,10 +9,10 @@ interface Klub {
 }
 
 const VLOGE: Array<[string, string]> = [
-  ['igralec', 'Igralec'],
-  ['trener', 'Trener ali član strokovnega štaba'],
-  ['vodstvo', 'Vodstvo kluba'],
-  ['navijac', 'Navijač, ki spremlja vse tekme'],
+  ['igralec', t('igralci.poznavalec.vloge.igralec')],
+  ['trener', t('igralci.poznavalec.vloge.trener')],
+  ['vodstvo', t('igralci.poznavalec.vloge.vodstvo')],
+  ['navijac', t('igralci.poznavalec.vloge.navijac')],
 ]
 
 /**
@@ -59,7 +60,7 @@ export default function ProsnjaZaPoznavalca({
 
   async function poslji() {
     setNapaka(null)
-    if (klub === '') return setNapaka('Izberi klub, ki ga poznaš.')
+    if (klub === '') return setNapaka(t('igralci.poznavalec.izberiKlubNapaka'))
     setDela(true)
     const { error } = await supabase.rpc('zaprosi_za_poznavalca', {
       p_competition_id: competitionId,
@@ -78,36 +79,38 @@ export default function ProsnjaZaPoznavalca({
   if (insiderCompetitionId === competitionId)
     return (
       <p className="text-xs text-sky-200">
-        <span aria-hidden="true">★ </span>Poznavalec te lige si — tvoj glas sam potrdi pozicijo ali asistenco.
+        <span aria-hidden="true">★ </span>{t('igralci.poznavalec.siPoznavalec')}
       </p>
     )
 
   if (status === 'caka')
     return (
       <p className="text-xs text-slate-400">
-        Tvoja prošnja za poznavalca čaka na pregled. Hvala.
+        {t('igralci.poznavalec.caka')}
       </p>
     )
 
   if (!odprto)
     return (
       <p className="text-xs text-slate-400">
-        Si igralec, trener ali v vodstvu kluba?{' '}
-        <button onClick={() => setOdprto(true)} className="text-gnl-300 hover:underline">
-          Prijavi se kot poznavalec
-        </button>{' '}
-        — tvoj glas bo štel več.
+        {tx('igralci.poznavalec.povabilo', {}, {
+          gumb: (b) => (
+            <button onClick={() => setOdprto(true)} className="text-gnl-300 hover:underline">
+              {b}
+            </button>
+          ),
+        })}
       </p>
     )
 
   return (
     <div className="space-y-2 rounded-xl border border-white/10 bg-slate-950/40 p-3 text-sm">
       <p className="text-xs text-slate-400">
-        Poznavalec lige potrdi pozicijo ali asistenco z enim glasom. Prošnjo pregleda skrbnik.
+        {t('igralci.poznavalec.opis')}
       </p>
       <div className="grid gap-2 sm:grid-cols-2">
         <label className="block text-xs text-slate-400">
-          Vloga
+          {t('igralci.poznavalec.vloga')}
           <select
             value={vloga}
             onChange={(e) => setVloga(e.target.value)}
@@ -121,13 +124,13 @@ export default function ProsnjaZaPoznavalca({
           </select>
         </label>
         <label className="block text-xs text-slate-400">
-          Klub
+          {t('igralci.poznavalec.klub')}
           <select
             value={klub}
             onChange={(e) => setKlub(e.target.value ? Number(e.target.value) : '')}
             className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-100"
           >
-            <option value="">— izberi —</option>
+            <option value="">{t('igralci.poznavalec.izberi')}</option>
             {klubi.map((k) => (
               <option key={k.id} value={k.id}>
                 {k.name}
@@ -137,20 +140,20 @@ export default function ProsnjaZaPoznavalca({
         </label>
       </div>
       <label className="block text-xs text-slate-400">
-        Kratko o sebi (neobvezno)
+        {t('igralci.poznavalec.oSebi')}
         <input
           value={sporocilo}
           onChange={(e) => setSporocilo(e.target.value.slice(0, 500))}
-          placeholder="npr. Vodim statistiko kluba, spremljam vse tekme lige …"
+          placeholder={t('igralci.poznavalec.oSebiPrimer')}
           className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-100"
         />
       </label>
       <div className="flex flex-wrap items-center gap-2">
         <button onClick={poslji} disabled={dela} className="gumb-glavni text-sm">
-          {dela ? 'Pošiljam …' : 'Pošlji prošnjo'}
+          {dela ? t('igralci.poznavalec.posiljam') : t('igralci.poznavalec.poslji')}
         </button>
         <button onClick={() => setOdprto(false)} className="text-sm text-slate-400 hover:text-slate-200">
-          Prekliči
+          {t('skupno.preklici')}
         </button>
       </div>
       {napaka && <p className="text-xs text-rose-400">{napaka}</p>}

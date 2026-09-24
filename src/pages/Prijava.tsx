@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import { useNaslov } from '../lib/naslov'
 import { napakaPrijave, varnaPot } from '../lib/prijava'
+import { t } from '../i18n'
 
 type Nacin = 'prijava' | 'registracija' | 'pozabljeno'
 
@@ -22,9 +23,13 @@ export default function Prijava() {
   const [napaka, setNapaka] = useState<string | null>(null)
   const [sporocilo, setSporocilo] = useState<string | null>(null)
   const [posiljam, setPosiljam] = useState(false)
-  useNaslov(
-    nacin === 'registracija' ? 'Registracija' : nacin === 'pozabljeno' ? 'Pozabljeno geslo' : 'Prijava',
-  )
+  const naslov =
+    nacin === 'registracija'
+      ? t('racun.prijava.naslovRegistracija')
+      : nacin === 'pozabljeno'
+        ? t('racun.prijava.naslovPozabljeno')
+        : t('racun.prijava.naslovPrijava')
+  useNaslov(naslov)
 
   // Prijava z Googlom: Supabase preusmeri na Google in nazaj; nov uporabnik
   // dobi profil iz Googlovega imena (glej handle_new_user). Ista pot velja za
@@ -40,7 +45,7 @@ export default function Prijava() {
     if (error)
       setNapaka(
         /not enabled/i.test(error.message)
-          ? 'Prijava z Googlom trenutno ni na voljo. Uporabi e-pošto.'
+          ? t('racun.prijava.googleNiNaVoljo')
           : napakaPrijave(error.message),
       )
   }
@@ -59,9 +64,7 @@ export default function Prijava() {
       })
       setPosiljam(false)
       if (error) return setNapaka(napakaPrijave(error.message))
-      return setSporocilo(
-        'Poslali smo ti povezavo za ponastavitev gesla. Preveri e-pošto (tudi vsiljeno).',
-      )
+      return setSporocilo(t('racun.prijava.poslanaPonastavitev'))
     }
 
     const { error } =
@@ -79,9 +82,7 @@ export default function Prijava() {
     setPosiljam(false)
     if (error) return setNapaka(napakaPrijave(error.message))
     if (nacin === 'registracija')
-      return setSporocilo(
-        'Račun je ustvarjen. Na e-pošto smo poslali potrditveno povezavo — odpri jo in se vrni.',
-      )
+      return setSporocilo(t('racun.prijava.racunUstvarjen'))
     navigate(nazaj)
   }
 
@@ -90,17 +91,15 @@ export default function Prijava() {
   if (session && nazajParam) return <Navigate to={nazajParam} replace />
   if (session)
     return (
-      <p className="text-slate-300">Prijavljen si kot {session.user.email}.</p>
+      <p className="text-slate-300">
+        {t('racun.prijava.prijavljenKot', { email: session.user.email })}
+      </p>
     )
 
   return (
     <div className="max-w-sm space-y-4">
       <h1 className="text-3xl font-black naslov">
-        {nacin === 'registracija'
-          ? 'Registracija'
-          : nacin === 'pozabljeno'
-            ? 'Pozabljeno geslo'
-            : 'Prijava'}
+        {naslov}
       </h1>
 
       {nacin !== 'pozabljeno' && (
@@ -116,11 +115,11 @@ export default function Prijava() {
               <path fill="#FBBC05" d="M10.5 28.6A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.6l-7.9-6.1A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.7l7.9-6.1z" />
               <path fill="#34A853" d="M24 48c6.3 0 11.7-2.1 15.6-5.7l-7.7-6c-2.1 1.4-4.8 2.3-7.9 2.3-6.3 0-11.6-4.2-13.5-9.9l-7.9 6.1C6.5 42.6 14.6 48 24 48z" />
             </svg>
-            Nadaljuj z Googlom
+            {t('racun.prijava.zGooglom')}
           </button>
           <div className="flex items-center gap-3 text-xs text-slate-500">
             <span className="h-px flex-1 bg-white/10" />
-            ali z e-pošto
+            {t('racun.prijava.aliZEposto')}
             <span className="h-px flex-1 bg-white/10" />
           </div>
         </>
@@ -129,7 +128,7 @@ export default function Prijava() {
       <form onSubmit={poslji} className="space-y-3">
         {nacin === 'registracija' && (
           <label className="block text-sm text-slate-400">
-            Prikazno ime
+            {t('racun.prijava.prikaznoIme')}
             <input
               value={ime}
               onChange={(e) => setIme(e.target.value)}
@@ -138,7 +137,7 @@ export default function Prijava() {
           </label>
         )}
         <label className="block text-sm text-slate-400">
-          E-pošta
+          {t('racun.prijava.eposta')}
           <input
             type="email"
             required
@@ -149,7 +148,7 @@ export default function Prijava() {
         </label>
         {nacin !== 'pozabljeno' && (
           <label className="block text-sm text-slate-400">
-            Geslo
+            {t('racun.prijava.geslo')}
             <input
               type="password"
               required
@@ -166,12 +165,12 @@ export default function Prijava() {
           className="gumb-glavni w-full"
         >
           {posiljam
-            ? 'Pošiljam …'
+            ? t('racun.prijava.posiljam')
             : nacin === 'registracija'
-              ? 'Ustvari račun'
+              ? t('racun.prijava.ustvariRacun')
               : nacin === 'pozabljeno'
-                ? 'Pošlji povezavo'
-                : 'Prijava'}
+                ? t('racun.prijava.posljiPovezavo')
+                : t('racun.prijava.gumbPrijava')}
         </button>
         {napaka && <p className="text-sm text-rose-400">{napaka}</p>}
         {sporocilo && <p className="text-sm text-gnl-300">{sporocilo}</p>}
@@ -187,8 +186,8 @@ export default function Prijava() {
           className="text-left text-sm text-gnl-300 hover:underline"
         >
           {nacin === 'registracija'
-            ? 'Že imaš račun? Prijavi se'
-            : 'Nimaš računa? Registriraj se'}
+            ? t('racun.prijava.zeImasRacun')
+            : t('racun.prijava.nimasRacuna')}
         </button>
         {nacin !== 'pozabljeno' ? (
           <button
@@ -199,7 +198,7 @@ export default function Prijava() {
             }}
             className="text-left text-sm text-slate-400 hover:underline"
           >
-            Pozabljeno geslo?
+            {t('racun.prijava.pozabljenoGeslo')}
           </button>
         ) : (
           <button
@@ -210,7 +209,7 @@ export default function Prijava() {
             }}
             className="text-left text-sm text-slate-400 hover:underline"
           >
-            ← Nazaj na prijavo
+            {t('racun.prijava.nazajNaPrijavo')}
           </button>
         )}
       </div>

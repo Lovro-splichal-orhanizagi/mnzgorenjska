@@ -7,6 +7,7 @@ import { VRSTNI_RED } from '../lib/pravila'
 import type { Pozicija } from '../lib/tipi'
 import Grb from './Grb'
 import Dres from './Dres'
+import { t } from '../i18n'
 
 /** Igralec v idealni enajsterici; pogledi ga vrnejo z `player_id` ali `id`. */
 export interface IgralecEnajsterice {
@@ -32,10 +33,18 @@ function KarticaIgralca({ igralec }: { igralec: IgralecEnajsterice }) {
         <Dres pozicija={igralec.position} razred="h-8 w-9 sm:h-10 sm:w-11" />
         {igralec.oznaka && (
           <span
-            title={igralec.oznaka === 'K' ? 'Kapetan' : 'Namestnik s trakom'}
+            title={
+              igralec.oznaka === 'K'
+                ? t('mojaEkipa.enajsterica.kapetan')
+                : t('mojaEkipa.enajsterica.namestnik')
+            }
             className="absolute -right-0.5 top-0 grid h-4 w-4 place-items-center rounded-full bg-amber-400 text-[9px] font-black text-slate-950 ring-1 ring-slate-950/40 sm:h-[18px] sm:w-[18px] sm:text-[10px]"
           >
-            {igralec.oznaka}
+            {igralec.oznaka === 'K'
+              ? t('mojaEkipa.oznaka.kapetan')
+              : igralec.oznaka === 'N'
+                ? t('mojaEkipa.oznaka.namestnik')
+                : igralec.oznaka}
           </span>
         )}
       </div>

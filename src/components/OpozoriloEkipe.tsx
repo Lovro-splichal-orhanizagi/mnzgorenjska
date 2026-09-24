@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import { useTekmovanje } from '../lib/tekmovanje'
+import { t, tx } from '../i18n'
 import { naslovNapak, obvestilaEkip, type Obvestilo, type StanjeEkipe } from '../lib/stanjeEkip'
 
 /**
@@ -101,7 +102,7 @@ export default function OpozoriloEkipe() {
           obvestila={napake} vse={vse} naVse={() => setVse(true)} />
       )}
       {opozorila.length > 0 && (
-        <Pas vrsta="opozorilo" naslov="Opozorila v tvojih ekipah"
+        <Pas vrsta="opozorilo" naslov={t('mojaEkipa.opozorila.naslov')}
           obvestila={opozorila} vse={vse} naVse={() => setVse(true)} naSkrij={skrij} />
       )}
       {brezEkipe && (
@@ -109,17 +110,22 @@ export default function OpozoriloEkipe() {
           <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-4 py-2 text-sm text-amber-100 sm:gap-3">
             <span aria-hidden className="text-lg leading-none">⚠</span>
             <span className="min-w-0 flex-1 font-semibold">
-              Nimaš še ekipe
-              {tekmovanje?.short_name && (
-                <span className="ml-1 font-normal text-amber-200/80">({tekmovanje.short_name})</span>
-              )}{' '}
-              — brez nje v naslednjem krogu ne dobiš točk.
+              {tx(
+                'mojaEkipa.opozorila.nimasEkipe',
+                { liga: tekmovanje?.short_name },
+                {
+                  liga: (b) =>
+                    tekmovanje?.short_name ? (
+                      <span className="ml-1 font-normal text-amber-200/80">{b}</span>
+                    ) : null,
+                },
+              )}
             </span>
             <Link
               to="/moja-ekipa"
               className="shrink-0 rounded-lg bg-amber-400 px-3 py-1 text-xs font-black text-slate-950 hover:bg-amber-300"
             >
-              Sestavi ekipo →
+              {t('mojaEkipa.opozorila.sestavi')}
             </Link>
           </div>
         </div>
@@ -177,14 +183,14 @@ function Pas({
                   napaka ? 'bg-rose-400 hover:bg-rose-300' : 'bg-amber-400 hover:bg-amber-300'
                 }`}
               >
-                {napaka ? 'Popravi →' : 'Poglej →'}
+                {napaka ? t('mojaEkipa.opozorila.popravi') : t('mojaEkipa.opozorila.poglej')}
               </Link>
               {naSkrij && (
                 <button
                   type="button"
                   onClick={() => naSkrij(o)}
-                  aria-label={`Skrij opozorilo: ${o.besedilo}`}
-                  title="Skrij, dokler ni novega poročila"
+                  aria-label={t('mojaEkipa.opozorila.skrij', { besedilo: o.besedilo })}
+                  title={t('mojaEkipa.opozorila.skrijNamig')}
                   className="-my-1 shrink-0 rounded-lg px-2 py-1 text-amber-200/70 hover:bg-amber-400/10 hover:text-amber-100"
                 >
                   ✕
@@ -195,7 +201,7 @@ function Pas({
         </ul>
         {!vse && obvestila.length > NAJVEC_VRSTIC && (
           <button type="button" onClick={naVse} className="mt-1 text-xs font-semibold underline underline-offset-2">
-            Pokaži vse ({obvestila.length})
+            {t('mojaEkipa.opozorila.pokaziVse', { n: obvestila.length })}
           </button>
         )}
       </div>

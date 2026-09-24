@@ -16,6 +16,7 @@ import { vseVrstice } from '../lib/strani'
 import { useNaslov } from '../lib/naslov'
 import { povezavaNaPrijavo } from '../lib/prijava'
 import Grb from '../components/Grb'
+import { t, tx } from '../i18n'
 import {
   VRSTE,
   VrsticaPorocila,
@@ -60,7 +61,7 @@ export default function Odsotnosti() {
   const [besedilo, setBesedilo] = useState('')
   const [posiljam, setPosiljam] = useState(false)
   const { pathname, search } = useLocation()
-  useNaslov('Odsotnosti in poškodbe')
+  useNaslov(t('igralci.odsotnosti.naslov'))
 
   useEffect(() => {
     if (!tekmovanjeId) return
@@ -139,10 +140,10 @@ export default function Odsotnosti() {
 
   async function objavi(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (!session) return setNapaka('Za objavo se moraš prijaviti.')
-    if (!izbran) return setNapaka('Najprej izberi igralca.')
-    const t = besedilo.trim()
-    if (!t) return
+    if (!session) return setNapaka(t('igralci.odsotnosti.prijavaZaObjavo'))
+    if (!izbran) return setNapaka(t('igralci.odsotnosti.najprejIzberi'))
+    const vsebina = besedilo.trim()
+    if (!vsebina) return
     setPosiljam(true)
     setNapaka(null)
 
@@ -152,7 +153,7 @@ export default function Odsotnosti() {
         player_id: izbran.id,
         user_id: session.user.id,
         kind: vrsta,
-        content: t,
+        content: vsebina,
       })
       .select('id')
       .single()
@@ -168,7 +169,7 @@ export default function Odsotnosti() {
           player_id: izbran.id,
           user_id: session.user.id,
           kind: vrsta,
-          content: t,
+          content: vsebina,
           created_at: new Date().toISOString(),
           player_name: izbran.full_name,
           team_name: izbran.team_name,
@@ -188,13 +189,13 @@ export default function Odsotnosti() {
     setPorocila((prej) => prej.filter((p) => p.id !== id))
   }
 
-  if (nalaganje) return <p className="animiraj-utrip text-slate-400">Nalaganje …</p>
+  if (nalaganje) return <p className="animiraj-utrip text-slate-400">{t('skupno.nalaganje')}</p>
 
   return (
     <div className="space-y-5">
       <header className="space-y-2">
         <h1 className="text-2xl font-black naslov sm:text-3xl">
-          Odsotnosti in poškodbe
+          {t('igralci.odsotnosti.naslov')}
           {tekmovanje?.short_name && (
             <span className="ml-2 align-middle text-base font-bold text-slate-500">
               {tekmovanje.short_name}
@@ -202,12 +203,9 @@ export default function Odsotnosti() {
           )}
         </h1>
         <p className="max-w-2xl text-slate-400">
-          Zapisnik pove, kdo je igral — ne pa, kdo naslednjič ne bo. Če veš, da
-          je nekdo poškodovan, kaznovan ali odsoten, povej tukaj.{' '}
-          <strong className="text-slate-300">
-            To je zgolj informacija za druge
-          </strong>{' '}
-          — igralca ne odstrani s trga in ne vpliva na točke.
+          {tx('igralci.odsotnosti.uvod', {}, {
+            krepko: (b) => <strong className="text-slate-300">{b}</strong>,
+          })}
         </p>
       </header>
 
@@ -220,7 +218,7 @@ export default function Odsotnosti() {
               : 'bg-white/5 text-slate-300 hover:bg-white/10'
           }`}
         >
-          Vse
+          {t('igralci.odsotnosti.vse')}
         </button>
         {VRSTE.map((v) => (
           <button
@@ -238,14 +236,14 @@ export default function Odsotnosti() {
         <div className="ml-auto">
           {session ? (
             <button onClick={() => setOdprt(!odprt)} className={odprt ? 'gumb-tih' : 'gumb-glavni'}>
-              {odprt ? 'Zapri' : 'Javi odsotnost'}
+              {odprt ? t('skupno.zapri') : t('igralci.odsotnosti.javi')}
             </button>
           ) : (
             <Link
               to={povezavaNaPrijavo(pathname + search)}
               className="text-sm text-gnl-300 underline"
             >
-              Prijavi se za objavo
+              {t('igralci.odsotnosti.prijaviSe')}
             </Link>
           )}
         </div>
@@ -255,14 +253,14 @@ export default function Odsotnosti() {
         <form onSubmit={objavi} className="kartica animiraj-vstop space-y-3 p-4">
           <div>
             <label className="block text-sm text-slate-400">
-              Kdo?
+              {t('igralci.odsotnosti.kdo')}
               <input
                 value={izbran ? prikazniIme(izbran.full_name) : iskanje}
                 onChange={(e) => {
                   setIzbran(null)
                   setIskanje(e.target.value)
                 }}
-                placeholder="Išči igralca …"
+                placeholder={t('igralci.odsotnosti.isciIgralca')}
                 className="mt-1 w-full rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm"
               />
             </label>
@@ -308,7 +306,7 @@ export default function Odsotnosti() {
             onChange={(e) => setBesedilo(e.target.value)}
             maxLength={500}
             rows={3}
-            placeholder="Npr. poškodba kolena, po besedah trenerja tri tedne."
+            placeholder={t('igralci.odsotnosti.primer')}
             className="w-full rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm"
           />
           <button
@@ -316,7 +314,7 @@ export default function Odsotnosti() {
             disabled={posiljam || !izbran || !besedilo.trim()}
             className="gumb-glavni w-full sm:w-auto"
           >
-            {posiljam ? 'Objavljam …' : 'Objavi'}
+            {posiljam ? t('igralci.odsotnosti.objavljam') : t('igralci.odsotnosti.objavi')}
           </button>
         </form>
       )}
@@ -325,13 +323,12 @@ export default function Odsotnosti() {
         <div className="kartica space-y-2 p-6 text-center text-slate-400">
           <p>
             {porocila.length === 0
-              ? 'V tej ligi še ni poročil. Če veš za koga, ki manjka, bodi prvi.'
-              : 'V tej kategoriji ni poročil.'}
+              ? t('igralci.odsotnosti.prazno')
+              : t('igralci.odsotnosti.praznaKategorija')}
           </p>
           {porocila.length === 0 && (
             <p className="text-sm text-slate-500">
-              Poročilo je najbolj vredno takrat, ko ga nihče drug ne more
-              napisati — igralci pišejo tudi sami zase.
+              {t('igralci.odsotnosti.praznoNamig')}
             </p>
           )}
         </div>
@@ -368,7 +365,7 @@ export default function Odsotnosti() {
       {drugod.length > 0 && (
         <section className="space-y-2 pt-2">
           <h2 className="text-xs font-bold uppercase tracking-wide text-slate-500">
-            Nazadnje drugod po Sloveniji
+            {t('igralci.odsotnosti.drugod')}
           </h2>
           <ul className="space-y-2 opacity-75">
             {drugod.map((p) => (
@@ -397,7 +394,7 @@ export default function Odsotnosti() {
         </section>
       )}
 
-      {napaka && <p className="text-sm text-rose-400">Napaka: {napaka}</p>}
+      {napaka && <p className="text-sm text-rose-400">{t('skupno.napaka', { sporocilo: napaka })}</p>}
     </div>
   )
 }

@@ -9,6 +9,7 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { useTekmovanje, type Tekmovanje } from '../lib/tekmovanje'
 import { potrdiZapustitev } from '../lib/neshranjeno'
+import { t as prevod } from '../i18n'
 
 /** Brez šumnikov in velikih črk — da "zelezniki" najde "Železniki". */
 const poenostavi = (s: string) =>
@@ -30,7 +31,7 @@ export function poZvezah(tekmovanja: Tekmovanje[]): Skupina[] {
   const skupine = new Map<string, Skupina>()
   for (const t of tekmovanja) {
     const kljuc = t.federation_code ?? '—'
-    const naslov = t.federation_short ?? t.country_name ?? 'Ostalo'
+    const naslov = t.federation_short ?? t.country_name ?? prevod('aplikacija.izbirnikLige.ostalo')
     if (!skupine.has(kljuc)) skupine.set(kljuc, { kljuc, naslov, lige: [] })
     skupine.get(kljuc)!.lige.push(t)
   }
@@ -132,7 +133,7 @@ export default function IzbirnikLige() {
   // Prikaz mora vedno vsebovati zvezo, sicer uporabnik ne loci "Clani"
   // (Gorenjska) od "Clani" (Ljubljana). Ce je zveza ze v imenu (kot pri
   // 1. GNL — clani), je ne podvajamo.
-  const kratko = tekmovanje?.short_name ?? 'Liga'
+  const kratko = tekmovanje?.short_name ?? prevod('aplikacija.izbirnikLige.liga')
   const surovoIme = tekmovanje?.name ?? kratko
   const zveza = pokaziZvezo(tekmovanja) ? tekmovanje?.federation_short : null
   const jeZeVIme = (s: string) =>
@@ -188,7 +189,7 @@ export default function IzbirnikLige() {
                    transition hover:bg-amber-500/25 hover:ring-amber-400/60"
       >
         <span className="hidden shrink-0 text-[10px] font-bold uppercase tracking-wide text-amber-300/80 sm:inline">
-          Liga:
+          {prevod('aplikacija.izbirnikLige.oznaka')}
         </span>
         <span className="min-w-0 truncate text-amber-100 sm:hidden">{zaMobile}</span>
         <span className="hidden min-w-0 truncate text-amber-100 sm:inline">{zaDesktop}</span>
@@ -208,9 +209,9 @@ export default function IzbirnikLige() {
             value={iskanje}
             onChange={(e) => setIskanje(e.target.value)}
             onKeyDown={tipka}
-            placeholder="Išči ligo …"
+            placeholder={prevod('aplikacija.izbirnikLige.isciPolje')}
             role="combobox"
-            aria-label="Išči ligo"
+            aria-label={prevod('aplikacija.izbirnikLige.isci')}
             aria-expanded="true"
             aria-controls="seznam-lig"
             aria-autocomplete="list"
@@ -220,13 +221,13 @@ export default function IzbirnikLige() {
 
           {skupine.length === 0 ? (
             <p className="px-2 py-3 text-center text-xs text-slate-500">
-              Ni zadetkov.
+              {prevod('aplikacija.izbirnikLige.niZadetkov')}
             </p>
           ) : (
             <div
               id="seznam-lig"
               role="listbox"
-              aria-label="Lige"
+              aria-label={prevod('aplikacija.izbirnikLige.lige')}
               className="max-h-72 overflow-y-auto"
             >
               {skupine.map((s) => (

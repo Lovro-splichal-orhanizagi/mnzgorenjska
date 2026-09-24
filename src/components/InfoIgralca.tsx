@@ -11,6 +11,7 @@ import { formatirajCeno, formatirajTocke, prikazniIme } from '../lib/pomozno'
 import { serijaCen, premik, crta, zadnjiPremiki } from '../lib/gibanjeCene'
 import type { SpremembaCene } from '../lib/gibanjeCene'
 import Grb from './Grb'
+import { t } from '../i18n'
 
 interface Sezona {
   matches: number | null
@@ -93,7 +94,7 @@ export default function InfoIgralca({
       if (!veljavno) return
       const letos = sez?.season ?? null
 
-      const [{ data: s }, { data: c }, { data: t }, { data: zadnjiKrog }] =
+      const [{ data: s }, { data: c }, { data: tek }, { data: zadnjiKrog }] =
         await Promise.all([
         letos
           ? supabase
@@ -148,7 +149,7 @@ export default function InfoIgralca({
         })),
       )
       setKrogov(Number((zadnjiKrog as any)?.number ?? 0))
-      setTekme((t ?? []) as Tekma[])
+      setTekme((tek ?? []) as Tekma[])
       setNalaganje(false)
     })()
     return () => {
@@ -171,7 +172,7 @@ export default function InfoIgralca({
         ref={okno}
         role="dialog"
         aria-modal="true"
-        aria-label={`Podatki o igralcu ${prikazniIme(ime)}`}
+        aria-label={t('igralci.info.ariaOkno', { ime: prikazniIme(ime) })}
         tabIndex={-1}
         className="relative max-h-[88dvh] w-full overflow-y-auto overscroll-contain rounded-t-2xl border-t border-white/15 bg-slate-950 p-4 shadow-2xl outline-none sm:max-w-md sm:rounded-2xl sm:border"
       >
@@ -183,7 +184,7 @@ export default function InfoIgralca({
           </div>
           <button
             onClick={naZapri}
-            aria-label="Zapri podatke o igralcu"
+            aria-label={t('igralci.info.zapri')}
             className="shrink-0 rounded-lg border border-white/15 bg-white/10 px-2.5 py-1 text-sm font-semibold hover:bg-white/15"
           >
             ✕
@@ -191,22 +192,22 @@ export default function InfoIgralca({
         </div>
 
         {nalaganje ? (
-          <p className="py-6 text-center text-slate-400">Nalaganje …</p>
+          <p className="py-6 text-center text-slate-400">{t('skupno.nalaganje')}</p>
         ) : (
           <div className="space-y-3">
             <div className="grid grid-cols-4 gap-1.5">
-              <Polje oznaka="Točke" vrednost={formatirajTocke(sezona?.points)} />
-              <Polje oznaka="Forma" vrednost={formatirajTocke(sezona?.form)} />
-              <Polje oznaka="Golov" vrednost={sezona?.goals ?? 0} />
-              <Polje oznaka="Asist." vrednost={sezona?.assists ?? 0} />
-              <Polje oznaka="Tekem" vrednost={sezona?.matches ?? 0} />
-              <Polje oznaka="Minut" vrednost={sezona?.minutes ?? 0} />
+              <Polje oznaka={t('igralci.info.tocke')} vrednost={formatirajTocke(sezona?.points)} />
+              <Polje oznaka={t('igralci.info.forma')} vrednost={formatirajTocke(sezona?.form)} />
+              <Polje oznaka={t('igralci.info.golov')} vrednost={sezona?.goals ?? 0} />
+              <Polje oznaka={t('igralci.info.asist')} vrednost={sezona?.assists ?? 0} />
+              <Polje oznaka={t('igralci.info.tekem')} vrednost={sezona?.matches ?? 0} />
+              <Polje oznaka={t('igralci.info.minut')} vrednost={sezona?.minutes ?? 0} />
               <Polje
-                oznaka="Na tekmo"
+                oznaka={t('igralci.info.naTekmo')}
                 vrednost={formatirajTocke(sezona?.points_per_match)}
               />
               <Polje
-                oznaka="Izbran"
+                oznaka={t('igralci.info.izbran')}
                 vrednost={sezona?.owners == null ? '–' : sezona.owners}
               />
             </div>
@@ -215,7 +216,7 @@ export default function InfoIgralca({
               <section className="rounded-xl bg-white/5 p-3">
                 <div className="mb-1 flex items-baseline justify-between gap-2">
                   <span className="text-xs font-bold uppercase tracking-wide text-slate-400">
-                    Gibanje cene
+                    {t('igralci.info.gibanjeCene')}
                   </span>
                   <span className="text-xs tabular-nums text-slate-400">
                     {formatirajCeno(serija[0].cena)} →{' '}
@@ -260,7 +261,7 @@ export default function InfoIgralca({
                       key={z.krog}
                       className="flex justify-between text-[11px] tabular-nums text-slate-500"
                     >
-                      <span>{z.krog}. krog</span>
+                      <span>{t('igralci.krog', { krog: z.krog })}</span>
                       <span>
                         {formatirajCeno(z.iz)} → {formatirajCeno(z.v)}
                       </span>
@@ -270,27 +271,27 @@ export default function InfoIgralca({
               </section>
             ) : (
               <p className="rounded-xl bg-white/5 p-3 text-xs text-slate-500">
-                Cena se še ni premaknila.
+                {t('igralci.info.cenaMirna')}
               </p>
             )}
 
             {tekme.length > 0 && (
               <section>
                 <div className="mb-1 text-xs font-bold uppercase tracking-wide text-slate-400">
-                  Naslednje tekme kluba
+                  {t('igralci.info.naslednjeTekme')}
                 </div>
                 <ul className="flex flex-wrap gap-1.5">
-                  {tekme.map((t) => (
+                  {tekme.map((tk) => (
                     <li
-                      key={t.match_id}
+                      key={tk.match_id}
                       // Kratice klubov so ponekod ena sama crka ("D", "K"),
                       // zato polno ime vsaj ob prehodu z misko.
-                      title={t.opponent_name ?? undefined}
+                      title={tk.opponent_name ?? undefined}
                       className="rounded-md bg-white/5 px-2 py-1 text-[11px] text-slate-300"
                     >
-                      {t.opponent_short || t.opponent_name}
+                      {tk.opponent_short || tk.opponent_name}
                       <span className="ml-1 text-slate-600">
-                        {t.doma ? 'doma' : 'v gosteh'}
+                        {tk.doma ? t('igralci.info.doma') : t('igralci.info.vGosteh')}
                       </span>
                     </li>
                   ))}
@@ -302,7 +303,7 @@ export default function InfoIgralca({
               to={`/igralec/${igralecId}`}
               className="block rounded-lg bg-white/10 px-3 py-2 text-center text-sm font-semibold hover:bg-white/15"
             >
-              Cel profil igralca →
+              {t('igralci.info.celProfil')}
             </Link>
           </div>
         )}

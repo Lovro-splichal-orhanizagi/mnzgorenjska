@@ -24,6 +24,7 @@ import {
   type VrsticaIgralca,
 } from '../lib/plakat'
 import { formatirajTocke, tockZ } from '../lib/pomozno'
+import { t } from '../i18n'
 
 const KREM = '#F3EDE0'
 const ZLATA = '#D9A21B'
@@ -72,16 +73,16 @@ async function foto(c: CanvasRenderingContext2D) {
 function vVrstice(c: CanvasRenderingContext2D, besedilo: string, najvec: number): string[] {
   const b = besedilo.split(' ')
   const out: string[] = []
-  let t = b[0]
+  let vrsta = b[0]
   for (const w of b.slice(1)) {
-    const x = `${t} ${w}`
-    if (c.measureText(x).width <= najvec) t = x
+    const x = `${vrsta} ${w}`
+    if (c.measureText(x).width <= najvec) vrsta = x
     else {
-      out.push(t)
-      t = w
+      out.push(vrsta)
+      vrsta = w
     }
   }
-  out.push(t)
+  out.push(vrsta)
   return out
 }
 
@@ -182,10 +183,10 @@ async function narisi(p: PodatkiPlakata): Promise<Blob | null> {
     // Razmik med crkami raste s pisavo: -8px, ki pri 210px stisne naslov v
     // blok, pri 62px crke zlepi v necitljivo maso. Zato je sorazmeren.
     const razmik = (px: number) => `${-Math.round(px * 0.04)}px`
-    const vel = prilagodiVelikost(ime, velikostImena(ime), 56, SIRINA - 2 * ROB + 8, (px, t) => {
+    const vel = prilagodiVelikost(ime, velikostImena(ime), 56, SIRINA - 2 * ROB + 8, (px, s) => {
       c.font = pisava(900, px)
       c.letterSpacing = razmik(px)
-      return c.measureText(t).width
+      return c.measureText(s).width
     })
     c.fillStyle = KREM
     c.font = pisava(900, vel)
@@ -194,8 +195,8 @@ async function narisi(p: PodatkiPlakata): Promise<Blob | null> {
     c.letterSpacing = '0px'
     c.fillStyle = ZLATA
     c.font = pisava(700, 46)
-    c.fillText('Sestavi svojo ekipo iz naših igralcev.', ROB, 540)
-    seznam(c, 'Največ točk to sezono', p.igralci, 650, 54, 92)
+    c.fillText(t('lestvice.plakat.izNasihIgralcev'), ROB, 540)
+    seznam(c, t('lestvice.plakat.najvecTock'), p.igralci, 650, 54, 92)
     const stavek = stavekNavijacev(p.navijacev)
     if (stavek) {
       c.fillStyle = 'rgba(243,237,224,.62)'
@@ -241,10 +242,10 @@ async function narisi(p: PodatkiPlakata): Promise<Blob | null> {
     c.fillStyle = KREM
     c.font = pisava(900, 150)
     c.letterSpacing = '-6px'
-    c.fillText('PRIDI', ROB - 4, 478)
-    c.fillText('SESTAVIT', ROB - 4, 618)
+    c.fillText(t('lestvice.plakat.pridi'), ROB - 4, 478)
+    c.fillText(t('lestvice.plakat.sestavit'), ROB - 4, 618)
     c.fillStyle = ZLATA
-    c.fillText('EKIPO.', ROB - 4, 758)
+    c.fillText(t('lestvice.plakat.ekipo'), ROB - 4, 758)
     c.letterSpacing = '0px'
 
     c.fillStyle = KREM
@@ -252,7 +253,7 @@ async function narisi(p: PodatkiPlakata): Promise<Blob | null> {
     c.fillText(p.klub, ROB, 850)
     c.fillStyle = 'rgba(243,237,224,.72)'
     c.font = pisava(600, 32)
-    c.fillText(`Fantasy liga za ${ligaVTozilniku(p.liga)} je odprta. Brezplačno.`, ROB, 900)
+    c.fillText(t('lestvice.plakat.jeOdprta', { liga: ligaVTozilniku(p.liga) }), ROB, 900)
 
     c.fillStyle = ZLATA
     c.fillRect(ROB, VISINA - 104, 72, 5)
@@ -262,7 +263,7 @@ async function narisi(p: PodatkiPlakata): Promise<Blob | null> {
     c.textAlign = 'right'
     c.fillStyle = 'rgba(243,237,224,.6)'
     c.font = pisava(600, 28)
-    c.fillText('točke iz uradnih zapisnikov MNZ', SIRINA - ROB, VISINA - 44)
+    c.fillText(t('lestvice.plakat.zapisnikiMnz'), SIRINA - ROB, VISINA - 44)
     c.textAlign = 'left'
   } else if (p.vrsta === 'live') {
     await foto(c)
@@ -303,7 +304,7 @@ async function narisi(p: PodatkiPlakata): Promise<Blob | null> {
     c.fillStyle = 'rgba(243,237,224,.72)'
     c.font = pisava(700, 36)
     c.letterSpacing = '0px'
-    c.fillText('Fantasy liga za', cx, y)
+    c.fillText(t('lestvice.plakat.fantasyLigaZa'), cx, y)
     y += 42 + vel * 0.82
     c.fillStyle = KREM
     c.font = pisava(900, vel)
@@ -317,16 +318,16 @@ async function narisi(p: PodatkiPlakata): Promise<Blob | null> {
     y += vel * 0.62 + 8
     c.fillStyle = ZLATA
     c.font = pisava(900, Math.round(vel * 0.62))
-    c.fillText('JE LIVE.', cx, y)
+    c.fillText(t('lestvice.plakat.jeLive'), cx, y)
     c.letterSpacing = '0px'
     y += 76
     c.fillStyle = 'rgba(243,237,224,.72)'
     c.font = pisava(600, 34)
-    c.fillText('Sestavi ekipo iz pravih igralcev. Točke iz uradnih zapisnikov.', cx, y)
+    c.fillText(t('lestvice.plakat.pravihIgralcev'), cx, y)
 
     c.fillStyle = 'rgba(243,237,224,.55)'
     c.font = pisava(600, 28)
-    c.fillText('brezplačno', cx, VISINA - 124)
+    c.fillText(t('lestvice.plakat.brezplacno'), cx, VISINA - 124)
     c.fillStyle = KREM
     c.font = pisava(900, 52)
     c.fillText('slff.eu', cx, VISINA - 72)
@@ -345,13 +346,13 @@ async function narisi(p: PodatkiPlakata): Promise<Blob | null> {
     c.fillText(tockZ(p.tocke), ROB + w + 12, 400)
     c.fillStyle = 'rgba(243,237,224,.7)'
     c.font = pisava(600, 38)
-    c.fillText(`${p.krog}. krog`, ROB + w + 12, 450)
+    c.fillText(t('lestvice.krog', { n: p.krog }), ROB + w + 12, 450)
 
     const ime = p.ekipa.toUpperCase()
     c.letterSpacing = '-3px'
-    const velE = prilagodiVelikost(ime, velikostEkipe(ime), 36, SIRINA - 2 * ROB + 4, (px, t) => {
+    const velE = prilagodiVelikost(ime, velikostEkipe(ime), 36, SIRINA - 2 * ROB + 4, (px, s) => {
       c.font = pisava(900, px)
-      return c.measureText(t).width
+      return c.measureText(s).width
     })
     c.fillStyle = KREM
     c.font = pisava(900, velE)
@@ -360,12 +361,18 @@ async function narisi(p: PodatkiPlakata): Promise<Blob | null> {
     if (p.mesto) {
       c.fillStyle = ZLATA
       c.font = pisava(700, 40)
-      c.fillText(p.odEkip ? `${p.mesto}. mesto od ${p.odEkip} ${p.odEkip === 1 ? 'ekipe' : 'ekip'}` : `${p.mesto}. mesto`, ROB, 616)
+      c.fillText(
+        p.odEkip
+          ? t('lestvice.plakat.mestoOd', { mesto: p.mesto, n: p.odEkip })
+          : t('lestvice.mesto', { mesto: p.mesto }),
+        ROB,
+        616,
+      )
     }
-    if (p.igralci.length) seznam(c, 'Moji najboljši v krogu', p.igralci, 680, 50, 84)
+    if (p.igralci.length) seznam(c, t('lestvice.plakat.mojiNajboljsi'), p.igralci, 680, 50, 84)
     c.fillStyle = 'rgba(243,237,224,.62)'
     c.font = pisava(600, 32)
-    c.fillText('Sestavi svojo ekipo in me premagaj.', ROB, VISINA - 72)
+    c.fillText(t('lestvice.plakat.premagajMe'), ROB, VISINA - 72)
   }
 
   return new Promise((resolve) => platno.toBlob((b) => resolve(b), 'image/png'))
@@ -382,12 +389,17 @@ export default function Plakat({
     podatki.vrsta === 'krog' ? podatki.ekipa : podatki.vrsta === 'live' ? podatki.liga : podatki.klub
   const besedilo =
     podatki.vrsta === 'klub'
-      ? `${podatki.klub} je v fantasy ligi SLFF — sestavi svojo ekipo iz naših igralcev.`
+      ? t('lestvice.plakat.deliKlub', { klub: podatki.klub })
       : podatki.vrsta === 'napoved'
-        ? `Pridi sestavit ekipo! Fantasy liga za ${ligaVTozilniku(podatki.liga)} je odprta — brezplačno, s pravimi igralci ${podatki.klub}.`
+        ? t('lestvice.plakat.deliNapoved', { liga: ligaVTozilniku(podatki.liga), klub: podatki.klub })
         : podatki.vrsta === 'live'
-          ? `Fantasy liga za ${ligaVTozilniku(podatki.liga)} je live. Sestavi ekipo iz pravih igralcev — brezplačno.`
-          : `${podatki.ekipa}: ${formatirajTocke(podatki.tocke)} ${tockZ(podatki.tocke)} v ${podatki.krog}. krogu. Sestavi svojo ekipo in me premagaj.`
+          ? t('lestvice.plakat.deliLive', { liga: ligaVTozilniku(podatki.liga) })
+          : t('lestvice.plakat.deliKrog', {
+              ekipa: podatki.ekipa,
+              tocke: formatirajTocke(podatki.tocke),
+              beseda: tockZ(podatki.tocke),
+              krog: podatki.krog,
+            })
   return (
     <DeliSliko
       narisi={() => narisi(podatki)}

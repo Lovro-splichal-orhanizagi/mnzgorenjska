@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useTekmovanje } from '../lib/tekmovanje'
+import { t, datumUra } from '../i18n'
 
 /** Vrstica pogleda `naslednji_krog` — prvi krog, ki se še ni zaklenil. */
 interface NaslednjiKrog {
@@ -30,10 +31,10 @@ function razdeli(ms: number) {
 
 function niz(ms: number) {
   const { d, h, m, s } = razdeli(ms)
-  if (d > 0) return `${d} d ${h} h`
-  if (h > 0) return `${h} h ${m} min`
-  if (m > 0) return `${m} min ${String(s).padStart(2, '0')} s`
-  return `${s} s`
+  if (d > 0) return t('aplikacija.rokKroga.dniUr', { d, h })
+  if (h > 0) return t('aplikacija.rokKroga.urMinut', { h, m })
+  if (m > 0) return t('aplikacija.rokKroga.minutSekund', { m, s: String(s).padStart(2, '0') })
+  return t('aplikacija.rokKroga.sekund', { s })
 }
 
 export default function RokKroga() {
@@ -91,7 +92,7 @@ export default function RokKroga() {
         ? 'bg-amber-400/15 text-amber-100 ring-1 ring-inset ring-amber-400/30'
         : 'bg-gnl-500/10 text-gnl-100 ring-1 ring-inset ring-gnl-400/20'
 
-  const datum = new Date(krog.deadline_at).toLocaleString('sl-SI', {
+  const kdaj = datumUra(krog.deadline_at, {
     weekday: 'short',
     day: 'numeric',
     month: 'numeric',
@@ -107,18 +108,20 @@ export default function RokKroga() {
         to="/moja-ekipa"
         className="mx-auto flex max-w-6xl flex-wrap items-center justify-center
                    gap-x-2 gap-y-0.5 px-4 py-1.5 text-xs sm:text-sm"
-        title={`Zaklep ${krog.number}. kroga: ${datum}`}
+        title={t('aplikacija.rokKroga.zaklepNaslov', { krog: krog.number, datum: kdaj })}
       >
         <span className="font-semibold">
-          {tekmovanje?.short_name ?? ''} · {krog.number}. krog
+          {t('aplikacija.rokKroga.ligaKrog', { liga: tekmovanje?.short_name ?? '', krog: krog.number })}
         </span>
         {zapadel ? (
-          <span>zaklenjen — spremembe ekipe zdaj veljajo za naslednji krog</span>
+          <span>{t('aplikacija.rokKroga.zaklenjen')}</span>
         ) : (
           <>
-            <span className="opacity-80">zaklep čez</span>
+            <span className="opacity-80">{t('aplikacija.rokKroga.zaklepCez')}</span>
             <strong className="tabular-nums">{niz(preostanek)}</strong>
-            <span className="hidden opacity-60 sm:inline">({datum})</span>
+            <span className="hidden opacity-60 sm:inline">
+              {t('aplikacija.rokKroga.datumOklepaj', { datum: kdaj })}
+            </span>
           </>
         )}
       </Link>

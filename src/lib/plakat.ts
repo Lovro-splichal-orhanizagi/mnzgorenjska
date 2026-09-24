@@ -12,7 +12,7 @@
 //
 // Tu je racunski del; risanje je v `src/components/Plakat.tsx`.
 
-import { mnozina, oblika } from './pomozno'
+import { t } from '../i18n/jedro.ts'
 
 export const SIRINA = 1080
 export const VISINA = 1080
@@ -170,14 +170,13 @@ export function najboljsiTrije(
 
 /** Slovenska sklanjatev: 1 navijač, 2 navijača, 3–4 navijači, 5+ (in 21) navijačev. */
 export function navijacev(n: number): string {
-  return mnozina(n, ['navijač', 'navijača', 'navijači', 'navijačev'])
+  return t('lestvice.plakat.navijaci', { n })
 }
 
 /** Stavek pod seznamom kluba; prazen, kadar ni kaj povedati. */
 export function stavekNavijacev(n: number): string | null {
   if (n <= 0) return null
-  const glagol = oblika(n, ['že ima', 'že imata', 'že imajo', 'že ima'])
-  return `${navijacev(n)} ${glagol} naše igralce v ekipi.`
+  return t('lestvice.plakat.stavekNavijacev', { n, navijacev: navijacev(n) })
 }
 
 /** Ime datoteke, ki jo clovek prenese. */

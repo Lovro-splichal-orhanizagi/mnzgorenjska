@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { t, datumUra } from '../i18n'
 
 // Živi odštevalnik do roka. Osveži se vsakih 30 s (dovolj natančno za
 // prikaz v dnevih/urah, brez podpisa vsake sekunde).
@@ -25,9 +26,9 @@ export default function Odstevanje({
   const m = Math.floor((abs % 3600000) / 60000)
 
   const nizComponents: string[] = []
-  if (d > 0) nizComponents.push(`${d}d`)
-  if (h > 0 || d > 0) nizComponents.push(`${h}h`)
-  nizComponents.push(`${m}m`)
+  if (d > 0) nizComponents.push(t('aplikacija.odstevanje.dni', { n: d }))
+  if (h > 0 || d > 0) nizComponents.push(t('aplikacija.odstevanje.ur', { n: h }))
+  nizComponents.push(t('aplikacija.odstevanje.minut', { n: m }))
   const niz = nizComponents.join(' ')
 
   const skoraj = !zapadel && preostanek < 3600000 // < 1 h
@@ -42,9 +43,11 @@ export default function Odstevanje({
       className={`tabular-nums ${barva} ${
         ozadje ? 'rounded-lg bg-slate-950/40 px-2 py-1' : ''
       }`}
-      title={new Date(doIso).toLocaleString('sl-SI')}
+      title={datumUra(doIso)}
     >
-      {zapadel ? `zaklenjeno pred ${niz}` : `še ${niz}`}
+      {zapadel
+        ? t('aplikacija.odstevanje.zaklenjenoPred', { cas: niz })
+        : t('aplikacija.odstevanje.se', { cas: niz })}
     </span>
   )
 }

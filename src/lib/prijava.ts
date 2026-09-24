@@ -1,5 +1,6 @@
 // Pomoč pri prijavi: povezava "prijavi se in se vrni sem" in slovenska
 // sporočila za napake, ki jih Supabase vrne v angleščini.
+import { t } from '../i18n/jedro.ts'
 
 /**
  * Ali je `nazaj` varna notranja pot. Samo "/…", brez kontrolnih znakov
@@ -27,18 +28,18 @@ export function povezavaNaPrijavo(pot: string): string {
 /** Prevede pogoste napake Supabase Auth; neznano sporočilo vrne nespremenjeno. */
 export function napakaPrijave(sporocilo: string): string {
   const s = sporocilo.toLowerCase()
-  if (s.includes('invalid login credentials')) return 'Napačen e-naslov ali geslo.'
+  if (s.includes('invalid login credentials')) return t('racun.napake.napacnaPrijava')
   if (s.includes('email not confirmed'))
-    return 'E-naslov še ni potrjen. Klikni povezavo v sporočilu, ki smo ti ga poslali.'
+    return t('racun.napake.niPotrjen')
   if (s.includes('already registered') || s.includes('already been registered'))
-    return 'Ta e-naslov je že registriran. Prijavi se ali ponastavi geslo.'
+    return t('racun.napake.zeRegistriran')
   if (s.includes('rate limit') || s.includes('too many requests') || s.includes('for security purposes'))
-    return 'Preveč poskusov. Počakaj nekaj minut in poskusi znova.'
+    return t('racun.napake.prevecPoskusov')
   if (s.includes('password') && (s.includes('weak') || s.includes('at least') || s.includes('should be')))
-    return 'Geslo je prešibko. Uporabi vsaj 6 znakov, najbolje mešanico črk in številk.'
+    return t('racun.napake.sibkoGeslo')
   if (s.includes('same password') || s.includes('different from the old'))
-    return 'Novo geslo mora biti drugačno od starega.'
+    return t('racun.napake.istoGeslo')
   if (s.includes('invalid email') || s.includes('unable to validate email'))
-    return 'E-naslov ni veljaven.'
+    return t('racun.napake.neveljavenNaslov')
   return sporocilo
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
+import { t, tx } from '../i18n'
 
 interface Vrstica {
   glasov_pozicij: number | null
@@ -49,36 +50,31 @@ export default function Prispevek() {
 
   return (
     <section className="kartica space-y-2 p-4">
-      <h2 className="text-lg font-bold">Tvoj prispevek</h2>
-      <p className="text-sm text-slate-400">
-        Pozicij in asistenc uradni zapisnik ne pove — označi samo vratarja. Vse
-        ostalo ve liga zato, ker ste povedali vi.
-      </p>
+      <h2 className="text-lg font-bold">{t('aplikacija.prispevek.naslov')}</h2>
+      <p className="text-sm text-slate-400">{t('aplikacija.prispevek.opis')}</p>
       <div className="flex flex-wrap gap-2 text-sm">
         <span className="rounded-lg bg-white/5 px-3 py-1.5">
-          <span className="font-black tabular-nums text-gnl-300">
-            {st(v.glasov_pozicij)}
-          </span>{' '}
-          glasov za pozicije
+          {tx('aplikacija.prispevek.glasoviPozicij', { n: st(v.glasov_pozicij) }, { st: (b) => <span className="font-black tabular-nums text-gnl-300">{b}</span> })}
           {st(v.obveljalo_pozicij) > 0 && (
-            <span className="text-slate-500"> · {st(v.obveljalo_pozicij)} obveljalo</span>
+            <span className="text-slate-500">
+              {t('aplikacija.prispevek.obveljalo', { n: st(v.obveljalo_pozicij) })}
+            </span>
           )}
         </span>
         <span className="rounded-lg bg-white/5 px-3 py-1.5">
-          <span className="font-black tabular-nums text-gnl-300">
-            {st(v.glasov_asistenc)}
-          </span>{' '}
-          glasov za asistence
+          {tx('aplikacija.prispevek.glasoviAsistenc', { n: st(v.glasov_asistenc) }, { st: (b) => <span className="font-black tabular-nums text-gnl-300">{b}</span> })}
           {st(v.obveljalo_asistenc) > 0 && (
-            <span className="text-slate-500"> · {st(v.obveljalo_asistenc)} obveljalo</span>
+            <span className="text-slate-500">
+              {t('aplikacija.prispevek.obveljalo', { n: st(v.obveljalo_asistenc) })}
+            </span>
           )}
         </span>
       </div>
       {obveljalo > 0 && (
         <p className="text-xs text-slate-500">
           {obveljalo === 1
-            ? 'En tvoj glas je obveljal in je zdaj del statistike, ki jo vidijo vsi.'
-            : `${obveljalo} tvojih glasov je obveljalo in so zdaj del statistike, ki jo vidijo vsi.`}
+            ? t('aplikacija.prispevek.obveljalEn')
+            : t('aplikacija.prispevek.obveljaloVec', { n: obveljalo })}
         </p>
       )}
     </section>
