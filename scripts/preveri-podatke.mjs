@@ -149,13 +149,19 @@ for (const t of tezave)
   console.log(`  • [${t.kljuc}] ${t.opis}\n    ${t.koliko}× — npr. ${t.primer}`)
 
 // --- javi na Discord --------------------------------------------------------
+const vrstice = tezave
+  .map((t) => `• **${t.opis}** — ${t.koliko}×\n  \`${t.primer}\``)
+  .join('\n')
+const besedilo =
+  `**Preverba podatkov je našla ${tezave.length} težav**\n` +
+  `${vrstice}\n\n_Podrobnosti v zagonu GitHub Actions._`
+
+// Delovni tok iz besedila izračuna odtis: preverba po vsakem uvozu (štirje
+// ročni uvozi zapored = štiri enaka sporočila) javi le, kar Discord še ni videl.
+const izhod = process.argv.indexOf('--izhod')
+if (izhod > 0) (await import('node:fs')).writeFileSync(process.argv[izhod + 1], besedilo)
+
 if (process.argv.includes('--discord') && env.DISCORD_WEBHOOK) {
-  const vrstice = tezave
-    .map((t) => `• **${t.opis}** — ${t.koliko}×\n  \`${t.primer}\``)
-    .join('\n')
-  const besedilo =
-    `**Preverba podatkov je našla ${tezave.length} težav**\n` +
-    `${vrstice}\n\n_Podrobnosti v zagonu GitHub Actions._`
   try {
     const odgovor = await fetch(env.DISCORD_WEBHOOK, {
       method: 'POST',

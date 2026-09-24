@@ -33,16 +33,48 @@ jobs:
       # za macOS); brez njih tuja koda ob namestitvi ne tece.
       - run: npm ci --ignore-scripts
       - name: Trditve o podatkih
+        id: trditve
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-        run: node scripts/preveri-podatke.mjs --discord
-
-      # Rdec zagon v GitHubu ni alarm, dokler ga kdo ne vidi. Uvoz je dvakrat
-      # padel in dva dni ni opazil nihce.
-      - name: Javi padec na Discord
-        if: failure()
+        run: |
+          ok=1
+          node scripts/preveri-podatke.mjs --izhod tezave.txt || ok=0
+          echo "ok=$ok" >> "$GITHUB_OUTPUT"
+          if [ -s tezave.txt ]; then
+            echo "odtis=$(sha256sum tezave.txt | cut -c1-16)" >> "$GITHUB_OUTPUT"
+          fi
+      # Isti seznam težav gre na Discord enkrat; po vsakem uvozu znova bi
+      # ob štirih ročnih uvozih prišla štiri enaka sporočila. Jutranja preverba
+      # javi vedno, da odprta težava ne utone.
+      - name: Ali je ta seznam že javljen
+        if: steps.trditve.outputs.odtis
+        id: javljeno
+        uses: actions/cache/restore@v4
+        with:
+          path: tezave.txt
+          key: preverba-javljeno-${{ steps.trditve.outputs.odtis }}
+          lookup-only: true
+      - name: Javi na Discord
+        if: steps.trditve.outputs.odtis && (github.event_name == 'schedule' || steps.javljeno.outputs.cache-hit != 'true')
         env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_TEDENSKO }}
-        run: node scripts/javi-napako.mjs "Preverba podatkov"
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          node -e '
+            const besedilo = require("fs").readFileSync("tezave.txt", "utf8")
+            fetch(process.env.DISCORD_WEBHOOK, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ content: besedilo.slice(0, 1900) }),
+            }).then((o) => console.log(o.ok ? "Javljeno na Discord." : `Discord: HTTP ${o.status}`))
+              .catch((e) => console.log(`Discord ni dosegljiv: ${e.message}`))
+          '
+      - name: Zapomni si javljeni seznam
+        if: steps.trditve.outputs.odtis && steps.javljeno.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: tezave.txt
+          key: preverba-javljeno-${{ steps.trditve.outputs.odtis }}
+      - name: Izid
+        if: steps.trditve.outputs.ok != '1'
+        run: exit 1
