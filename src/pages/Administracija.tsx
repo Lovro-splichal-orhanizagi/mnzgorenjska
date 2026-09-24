@@ -173,7 +173,12 @@ export default function Administracija() {
       p_competition_id: tekmovanjeId ?? undefined,
     })
     if (error) return setNapaka(error.message)
-    setUporabniki((data ?? []) as any[])
+    // Najnovejši člani na prvo stran, najstarejši na zadnjo.
+    setUporabniki(
+      ((data ?? []) as any[]).sort((a, b) =>
+        (b.registered_at ?? '').localeCompare(a.registered_at ?? ''),
+      ),
+    )
     const { data: log } = await supabase
       .from('email_log')
       .select('id, email, vrsta, poslano_at, napaka')
