@@ -189,6 +189,9 @@ let novihKrogov = 0
 let novihTekem = 0
 let prestavljenih = 0
 const letosnjiKlubi = new Set()
+// Pari (domači:gostje) vsakega kroga, kot jih razpored kaže ZDAJ — po njih
+// spodaj najdemo tekme, ki jih zveza iz kroga umakne.
+const pariKrogov = new Map() // krogId -> Set('domaci:gostje')
 
 for (const k of veljavni) {
   const datumKroga = k.tekme.map((t) => t.datum).filter(Boolean).sort()[0]
@@ -247,6 +250,8 @@ for (const k of veljavni) {
     const gostjeId = await klubId(t.gostje)
     letosnjiKlubi.add(domaciId)
     letosnjiKlubi.add(gostjeId)
+    if (!pariKrogov.has(krogId)) pariKrogov.set(krogId, new Set())
+    pariKrogov.get(krogId).add(`${domaciId}:${gostjeId}`)
 
     // Pred vstavljanjem preverimo obstoj z .limit(1) namesto .maybeSingle().
     // Prej: .maybeSingle() ob najdbi >1 vrstice vrne napako in `data`=null,
@@ -402,6 +407,46 @@ if (smemoDeaktivirati) {
         .in('id', zaBrisanje.map((m) => m.id))
       if (error) console.log(`  brisanje tekem odstopljenih klubov: ${error.message}`)
       else console.log(`Odstranjenih neodigranih tekem klubov, ki jih v ligi ni več: ${zaBrisanje.length}`)
+    }
+  }
+
+  // Zveza je tekmi zamenjala domačina in gosta (Eltron Preddvor : Kranjska
+  // Gora, 4. krog 2026/27). Uvoz je vpisal nov par, stari je ostal: preverba
+  // ga je javljala kot "ni uvozena", čeprav je bila tekma odigrana in uvožena
+  // pod obrnjenim parom. Neuvoženo tekmo, ki je razpored v svojem krogu ne
+  // pozna več, zato odstranimo. Krog, ki ima v razporedu manj tekem, kot jih
+  // liga premore, je okrnjen (vir je vrnil pol strani) — tam ne brišemo.
+  const polnKrog = Math.floor(letosnjiKlubi.size / 2)
+  const preverjeniKrogi = [...pariKrogov].filter(([, pari]) => pari.size >= polnKrog).map(([id]) => id)
+  if (preverjeniKrogi.length) {
+    const { data: neuvozene, error: eBeri } = await db
+      .from('matches')
+      .select('id, round_id, home_team_id, away_team_id')
+      .in('round_id', preverjeniKrogi)
+      .is('imported_at', null)
+      .is('zapisnik_id', null)
+      .order('id')
+    if (eBeri) {
+      console.error(`  tekme brez razporeda: ${eBeri.message}`)
+      process.exitCode = 1
+    }
+    const umaknjene = (neuvozene ?? []).filter(
+      (m) => !pariKrogov.get(m.round_id).has(`${m.home_team_id}:${m.away_team_id}`),
+    )
+    if (umaknjene.length) {
+      const { error } = await db
+        .from('matches')
+        .delete()
+        .in('id', umaknjene.map((m) => m.id))
+      if (error) {
+        console.error(`  brisanje tekem, ki jih razpored nima več: ${error.message}`)
+        process.exitCode = 1
+      } else {
+        console.log(
+          `Odstranjenih neodigranih tekem, ki jih razpored nima več: ${umaknjene.length} ` +
+            `(${umaknjene.map((m) => m.id).join(', ')})`,
+        )
+      }
     }
   }
 }
