@@ -3,7 +3,7 @@ import { FunctionsHttpError } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import type { Pozicija } from '../lib/tipi'
 import { useAuth } from '../lib/useAuth'
-import { prikazniIme, IME_POZICIJE, formatirajTocke, formatirajCeno, oblika } from '../lib/pomozno'
+import { prikazniIme, IME_POZICIJE, formatirajTocke, formatirajCeno } from '../lib/pomozno'
 import { POZICIJE, VELIKOST_EKIPE, STEVILO_PRVIH, MAX_IZ_KLUBA, VRSTNI_RED, poPozicijah } from '../lib/pravila'
 import { useTekmovanje } from '../lib/tekmovanje'
 import UpravljanjeLig from '../components/admin/UpravljanjeLig'
@@ -21,7 +21,10 @@ const UPORABNIKOV_NA_STRAN = 50
 // funkcija sme zajeti več, kot jih je pokazal suhi tek. Kar je čez, zavrne.
 const REZERVA_OPOMNIKOV = 5
 
-const UPORABNIKOM: [string, string, string, string] = ['uporabniku', 'uporabnikoma', 'uporabnikom', 'uporabnikom']
+// Administracija ostaja slovenska, zato ima dajalnik kar tu.
+const UPORABNIKOM = { one: 'uporabniku', two: 'uporabnikoma', few: 'uporabnikom', other: 'uporabnikom' }
+const uporabnikom = (n: number) =>
+  UPORABNIKOM[new Intl.PluralRules('sl').select(n) as keyof typeof UPORABNIKOM] ?? UPORABNIKOM.other
 
 /**
  * Sporočilo napake klica funkcije. Ob odgovoru, ki ni 2xx, supabase vrne
@@ -669,7 +672,7 @@ export default function Administracija() {
                   gumb="Da, pošlji"
                 >
                   Poslati opomnik <strong>{kandidatiOpomnika}</strong>{' '}
-                  {oblika(kandidatiOpomnika, UPORABNIKOM)} te lige brez veljavne ekipe? Kdor ga je dobil v
+                  {uporabnikom(kandidatiOpomnika)} te lige brez veljavne ekipe? Kdor ga je dobil v
                   zadnjih 3 dneh, bo preskočen. Če jih je medtem več kot{' '}
                   {kandidatiOpomnika + REZERVA_OPOMNIKOV}, funkcija ne pošlje nič.
                 </Potrditev>
