@@ -14,7 +14,8 @@
 // in član z istim imenom sta dve različni vrstici, sicer bi prestop med
 // selekcijama povlekel statistiko in ceno s seboj.
 import { createClient } from '@supabase/supabase-js'
-import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs'
+import { readFileSync, existsSync, mkdirSync, writeFileSync, readdirSync } from 'node:fs'
+import { createHash } from 'node:crypto'
 import { tekmovanje as najdiTekmovanje, sifraLige } from './tekmovanje.mjs'
 import { viraZa } from './viri/index.mjs'
 import { mapaKlubov } from './klubi.mjs'
@@ -433,6 +434,50 @@ if (svezeDni != null && !samoZapisnik) {
 }
 console.log(`Najdenih zapisnikov: ${zapisniki.length}`)
 
+// --- nespremenjeni zapisniki ------------------------------------------------
+// Nocni uvoz je vsak zapisnik zadnjih 21 dni uvazal znova: 20 tekem na ligo po
+// pet sekund in 25 lig je bilo skoraj uro dela, skoraj vedno za nic. Odtis
+// razclenjenega zapisnika hranimo v predpomnilniku (ga ohranja GitHub Actions)
+// skupaj z odtisom kode razclenjevalnikov. Uvozeno tekmo, katere zapisnik se
+// ni spremenil in ga je prebrala ista koda, preskocimo. Popravljen zapisnik
+// ali popravek razclenjevalnika gre skozi kot doslej; brez `--sveze` (rocni
+// uvoz cele lige) se ne preskoci nic.
+const ODTISI = `${MAPA}/odtisi-${tekmovanje.slug}.json`
+const odtisKode = (() => {
+  const h = createHash('sha256')
+  const datoteke = [
+    'scripts/uvoz-zapisnikov.mjs',
+    'scripts/klubi.mjs',
+    'scripts/razporedi.mjs',
+    ...readdirSync('scripts').filter((f) => /^zapisnik.*\.mjs$/.test(f)).map((f) => `scripts/${f}`),
+    ...readdirSync('scripts/viri').map((f) => `scripts/viri/${f}`),
+  ].sort()
+  for (const f of datoteke) h.update(f).update(readFileSync(f))
+  return h.digest('hex').slice(0, 16)
+})()
+const odtisZapisnika = (z) => createHash('sha256').update(odtisKode).update(JSON.stringify(z)).digest('hex').slice(0, 16)
+let odtisi = {}
+try {
+  odtisi = JSON.parse(readFileSync(ODTISI, 'utf8'))
+} catch {}
+const noviOdtisi = { ...odtisi }
+if (svezeDni != null && zapisniki.length) {
+  const uvozene = new Set()
+  const idji = zapisniki.map((x) => String(x.id))
+  for (let i = 0; i < idji.length; i += 200) {
+    const { data } = await db
+      .from('matches')
+      .select('zapisnik_id')
+      .in('zapisnik_id', idji.slice(i, i + 200))
+      .not('imported_at', 'is', null)
+    for (const m of data ?? []) uvozene.add(String(m.zapisnik_id))
+  }
+  const prej = zapisniki.length
+  zapisniki = zapisniki.filter((x) => !(uvozene.has(String(x.id)) && odtisi[x.id] === odtisZapisnika(x.z)))
+  console.log(`Nespremenjenih (preskočenih): ${prej - zapisniki.length}; za uvoz: ${zapisniki.length}`)
+}
+const dotaknjeniKrogi = new Set()
+
 let uvozenih = 0
 let preskocenih = 0
 // Prava napaka (baza, razclenitev) — v nasprotju s preskokom zapisnika brez
@@ -454,6 +499,7 @@ for (const { id, z, url } of zapisniki) {
     const domaciId = await klubId(z.domaci.ime)
     const gostjeId = await klubId(z.gostje.ime)
     const rId = await krogId(z.sezona, z.krog, z.datum)
+    dotaknjeniKrogi.add(rId)
 
     // tekma
     // onConflict cilja `(round_id, home_team_id, away_team_id)` — isti nabor
@@ -749,6 +795,7 @@ for (const { id, z, url } of zapisniki) {
     if (eKonec) throw new Error(eKonec.message)
 
     uvozenih++
+    noviOdtisi[id] = odtisZapisnika(z)
     if (z.opozorila.length)
       vsaOpozorila.push(`${id} (${z.domaci.ime} — ${z.gostje.ime}): ${z.opozorila.join('; ')}`)
     process.stdout.write(
@@ -762,11 +809,20 @@ for (const { id, z, url } of zapisniki) {
 
 console.log(`\n\nUvoženih tekem: ${uvozenih}, preskočenih: ${preskocenih}, napak: ${napak}`)
 
+writeFileSync(ODTISI, JSON.stringify(noviOdtisi))
+
 // --- preračun točk po krogih -------------------------------------------------
-const { data: krogi } = await db
-  .from('rounds')
-  .select('id, season, number')
-  .eq('competition_id', tekmovanje.id)
+// Nocni uvoz preracuna kroge, ki jih je ta zagon dotaknil, in kroge zadnjih
+// `--sveze` dni (ce je prejsnji zagon padel sredi dela). Prej je vsaka liga
+// vsako noc preracunala vse kroge vseh sezon — pri clanih 52.
+const krogiQ = db.from('rounds').select('id, season, number, played_on').eq('competition_id', tekmovanje.id)
+const { data: vsiKrogi } = await krogiQ
+let krogi = vsiKrogi ?? []
+if (svezeDni != null) {
+  const meja = new Date(Date.now() - svezeDni * 86400000).toISOString().slice(0, 10)
+  const danes = new Date().toISOString().slice(0, 10)
+  krogi = krogi.filter((k) => dotaknjeniKrogi.has(k.id) || (k.played_on && k.played_on >= meja && k.played_on <= danes))
+}
 for (const k of krogi ?? []) {
   // Zapisnik obrambe enajstmetrovke ne beleži, zgrešeno pa. Zgrešeno pripiše
   // vratarju nasprotnikov — PO vpisu nastopov, ker jih uvoz tekme zamenja in
