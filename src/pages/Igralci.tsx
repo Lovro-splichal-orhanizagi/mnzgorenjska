@@ -18,6 +18,7 @@ import { Link } from 'react-router-dom'
 import { POZICIJE } from '../lib/pravila'
 import { useTekmovanje } from '../lib/tekmovanje'
 import Grb from '../components/Grb'
+import { t, tx } from '../i18n'
 import type { Pozicija } from '../lib/tipi'
 
 /** Vrstica pogleda `player_season_standings` (+ igralci brez nastopov). */
@@ -68,18 +69,30 @@ type Stolpec = keyof Pick<
 // Tabela vseh igralcev lige s tekočimi točkami — po kateremkoli stolpcu se da
 // razvrstiti, da je razvidno, kdo je v sezoni ali v zadnjih krogih najboljši.
 const STOLPCI: Array<{ kljuc: Stolpec; naslov: string; opis: string }> = [
-  { kljuc: 'points', naslov: 'Točke', opis: 'Skupaj v sezoni' },
-  { kljuc: 'form', naslov: 'Forma', opis: 'Zadnji trije krogi' },
-  { kljuc: 'last_round', naslov: 'Zadnji krog', opis: 'Točke zadnjega kroga' },
-  { kljuc: 'points_per_match', naslov: 'Na tekmo', opis: 'Točke na odigrano tekmo' },
-  { kljuc: 'points_per_value', naslov: 'Na M€', opis: 'Točke na milijon evrov cene' },
-  { kljuc: 'value', naslov: 'Cena', opis: 'Cena v proračunu (v milijonih €)' },
-  { kljuc: 'goals', naslov: 'Goli', opis: 'Doseženi goli' },
-  { kljuc: 'minutes', naslov: 'Minute', opis: 'Odigrane minute' },
+  { kljuc: 'points', naslov: t('igralci.seznam.stolpci.tocke'), opis: t('igralci.seznam.stolpci.tockeOpis') },
+  { kljuc: 'form', naslov: t('igralci.seznam.stolpci.forma'), opis: t('igralci.seznam.stolpci.formaOpis') },
+  {
+    kljuc: 'last_round',
+    naslov: t('igralci.seznam.stolpci.zadnjiKrog'),
+    opis: t('igralci.seznam.stolpci.zadnjiKrogOpis'),
+  },
+  {
+    kljuc: 'points_per_match',
+    naslov: t('igralci.seznam.stolpci.naTekmo'),
+    opis: t('igralci.seznam.stolpci.naTekmoOpis'),
+  },
+  {
+    kljuc: 'points_per_value',
+    naslov: t('igralci.seznam.stolpci.naCeno'),
+    opis: t('igralci.seznam.stolpci.naCenoOpis'),
+  },
+  { kljuc: 'value', naslov: t('igralci.seznam.stolpci.cena'), opis: t('igralci.seznam.stolpci.cenaOpis') },
+  { kljuc: 'goals', naslov: t('igralci.seznam.stolpci.goli'), opis: t('igralci.seznam.stolpci.goliOpis') },
+  { kljuc: 'minutes', naslov: t('igralci.seznam.stolpci.minute'), opis: t('igralci.seznam.stolpci.minuteOpis') },
   {
     kljuc: 'owners',
-    naslov: 'Izbran',
-    opis: 'Št. fantasy ekip z igralcem v zadnjem zaklenjenem krogu',
+    naslov: t('igralci.seznam.stolpci.izbran'),
+    opis: t('igralci.seznam.stolpci.izbranOpis'),
   },
 ]
 
@@ -100,7 +113,7 @@ export default function Igralci() {
   // Število ekip v ligi — imenovalec za "Izbran %". Največje število
   // lastnikov enega igralca ni isto: tudi najbolj izbranega nima vsak.
   const [ekipVLigi, setEkipVLigi] = useState<number | null>(null)
-  useNaslov('Igralci')
+  useNaslov(t('igralci.seznam.naslov'))
 
   // Sezone in prva stran lestvice gresta hkrati: čakanje na seznam sezon, da
   // sploh vemo, katero lestvico naložiti, je podvojilo čas do prvega izrisa.
@@ -281,9 +294,9 @@ export default function Igralci() {
   const sezonaPodatki = sezone.find((s) => s.season === sezona)
   const jeLanska = Boolean(sezonaPodatki) && !sezonaPodatki?.tekoca
 
-  if (napaka) return <p className="text-rose-400">Napaka: {napaka}</p>
+  if (napaka) return <p className="text-rose-400">{t('skupno.napaka', { sporocilo: napaka })}</p>
   if (nalaganje)
-    return <p className="animiraj-utrip text-slate-400">Nalaganje …</p>
+    return <p className="animiraj-utrip text-slate-400">{t('skupno.nalaganje')}</p>
 
   // Izbranost pride iz posnetka zadnjega zaklenjenega kroga. Dokler ta ne
   // obstaja, je `owners` NULL — pred prvim rokom so ekipe se skrite in
@@ -294,14 +307,12 @@ export default function Igralci() {
     <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-black naslov sm:text-3xl">
-          Igralci
           {tekmovanje?.short_name
-            ? ` — ${tekmovanje.short_name}`
-            : ''}
+            ? t('igralci.seznam.naslovZLigo', { liga: tekmovanje.short_name })
+            : t('igralci.seznam.naslov')}
         </h1>
         <p className="mt-1 text-sm text-slate-400">
-          Statistika iz uradnih zapisnikov {zveza}. Klikni stolpec za
-          razvrstitev.
+          {t('igralci.seznam.uvod', { zveza })}
         </p>
       </div>
 
@@ -320,7 +331,7 @@ export default function Igralci() {
             {s.season}
             {s.tekoca && (
               <span className="ml-1.5 text-[10px] font-black uppercase opacity-70">
-                tekoča
+                {t('igralci.seznam.tekoca')}
               </span>
             )}
           </button>
@@ -328,22 +339,15 @@ export default function Igralci() {
         {sezonaPodatki && (
           <span className="text-xs text-slate-500">
             {sezonaPodatki.odigranih === 0
-              ? 'sezona se še ni začela — spodaj ni podatkov'
-              : mnozina(sezonaPodatki.odigranih, [
-                  'odigrana tekma',
-                  'odigrani tekmi',
-                  'odigrane tekme',
-                  'odigranih tekem',
-                ])}
+              ? t('igralci.seznam.sezonaNiZacela')
+              : t('igralci.seznam.odigranih', { n: sezonaPodatki.odigranih })}
           </span>
         )}
       </div>
 
       {jeLanska && (
         <p className="kartica border-amber-400/30 bg-amber-400/10 p-3 text-sm text-amber-200">
-          To je statistika sezone <strong>{sezona}</strong>, ne tekoče. Cene
-          igralcev v fantasy ligi izhajajo prav iz nje, dokler nova sezona ne
-          nabere dovolj tekem.
+          {tx('igralci.seznam.lanska', { sezona }, { krepko: (b) => <strong>{b}</strong> })}
         </p>
       )}
 
@@ -351,7 +355,7 @@ export default function Igralci() {
         <input
           value={iskanje}
           onChange={(e) => setIskanje(e.target.value)}
-          placeholder="Išči po imenu …"
+          placeholder={t('igralci.seznam.isci')}
           className="min-w-40 flex-1 rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm"
         />
         <select
@@ -359,7 +363,7 @@ export default function Igralci() {
           onChange={(e) => setFilterKlub(e.target.value)}
           className="rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm"
         >
-          <option value="vsi">Vsi klubi</option>
+          <option value="vsi">{t('igralci.seznam.vsiKlubi')}</option>
           {klubi.map(([id, ime]) => (
             <option key={id} value={id}>
               {ime}
@@ -371,7 +375,7 @@ export default function Igralci() {
           onChange={(e) => setFilterPoz(e.target.value as Pozicija | 'vse')}
           className="rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm"
         >
-          <option value="vse">Vse pozicije</option>
+          <option value="vse">{t('igralci.seznam.vsePozicije')}</option>
           {Object.entries(POZICIJE).map(([k, p]) => (
             <option key={k} value={k}>
               {p.naslov}
@@ -385,7 +389,7 @@ export default function Igralci() {
           <thead>
             <tr className="border-b border-white/10 text-xs uppercase tracking-wide text-slate-400">
               <th className="px-3 py-2 text-left font-semibold">#</th>
-              <th className="px-3 py-2 text-left font-semibold">Igralec</th>
+              <th className="px-3 py-2 text-left font-semibold">{t('igralci.seznam.igralec')}</th>
               {STOLPCI.map((s) => (
                 <th key={s.kljuc} className="px-2 py-2 text-right font-semibold">
                   <button
@@ -471,7 +475,7 @@ export default function Igralci() {
                 </td>
                 <td className="px-2 py-2 text-right tabular-nums text-slate-400">
                   {i.owners === null ? (
-                    <span className="text-slate-500" title="Znano bo po prvem roku">
+                    <span className="text-slate-500" title={t('igralci.seznam.znanoPoRoku')}>
                       –
                     </span>
                   ) : (
@@ -492,12 +496,12 @@ export default function Igralci() {
       {vidni.length > koliko ? (
         <div className="text-center">
           <button onClick={() => setKoliko(koliko + 50)} className="gumb-tih">
-            Pokaži več ({vidni.length - koliko})
+            {t('igralci.seznam.pokaziVec', { n: vidni.length - koliko })}
           </button>
         </div>
       ) : (
         <p className="text-center text-xs text-slate-500">
-          Prikazani so vsi ({mnozina(vidni.length, IGRALCI)}).
+          {t('igralci.seznam.prikazaniVsi', { igralci: mnozina(vidni.length, IGRALCI) })}
         </p>
       )}
     </div>

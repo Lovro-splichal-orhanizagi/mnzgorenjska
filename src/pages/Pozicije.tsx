@@ -17,6 +17,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { useNaslov } from '../lib/naslov'
 import { povezavaNaPrijavo } from '../lib/prijava'
 import type { Pozicija } from '../lib/tipi'
+import { t, tx } from '../i18n'
 
 /** Klub v izbirniku. */
 interface Klub {
@@ -76,7 +77,7 @@ export default function Pozicije() {
   const uporabnikId = session?.user.id ?? null
   const { id: tekmovanjeId, tekmovanje } = useTekmovanje()
   const lokacija = useLocation()
-  useNaslov('Pozicije')
+  useNaslov(t('tekme.pozicije.naslov'))
   const nastavitev = useNastavitev()
   const prag = nastavitev('prag_glasov_pozicija', PRAG_PRIVZETO)
   const minPrag = nastavitev('min_prag_glasov_pozicija', MIN_PRAG_PRIVZETO)
@@ -330,7 +331,7 @@ export default function Pozicije() {
   ).length
 
   if (loading || nalaganje)
-    return <p className="animiraj-utrip text-slate-400">Nalaganje …</p>
+    return <p className="animiraj-utrip text-slate-400">{t('skupno.nalaganje')}</p>
 
   const insiderVeljaZaKlub = insiderTeamId && insiderTeamId === klubId
 
@@ -338,7 +339,7 @@ export default function Pozicije() {
     <div className="space-y-6">
       <header className="space-y-2">
         <h1 className="text-3xl font-black naslov">
-          Kje kdo igra?
+          {t('tekme.pozicije.kjeKdoIgra')}
           {tekmovanje && (
             <span className="ml-2 align-middle text-base font-bold text-slate-500">
               {tekmovanje.short_name}
@@ -346,21 +347,18 @@ export default function Pozicije() {
           )}
         </h1>
         <p className="max-w-2xl text-slate-400">
-          Zapisniki označijo le vratarja, postave pa naštejejo po številkah
-          dresov — pozicij torej ni mogoče razbrati. Določi jih skupnost.
-          Potrebnih glasov: <strong className="text-gnl-300">{prag}</strong> —
-          število se zniža (do {minPrag}), če je statistični prior (številka
-          dresa, goli, kartoni) močan v tisto smer. Glasovi{' '}
-          <strong className="text-gnl-300">poznavalcev kluba</strong> in
-          uporabnikov z <strong className="text-gnl-300">visoko točnostjo</strong>{' '}
-          štejejo več.
+          {tx(
+            'tekme.pozicije.uvod',
+            { prag, minPrag },
+            { b: (v) => <strong className="text-gnl-300">{v}</strong> },
+          )}
         </p>
         <p className="max-w-2xl rounded-xl bg-white/5 p-3 text-sm text-slate-400">
-          <span aria-hidden="true">⏳</span> Izglasovane pozicije se uveljavijo <strong>enkrat na teden, v
-          ponedeljek zjutraj</strong>, vse naenkrat. Tako se liga med tednom ne
-          spreminja pod prsti: kar vidiš v torek, velja tudi v soboto, ko se
-          zaklene krog. Igralec, ki je že zbral dovolj glasov, je do takrat
-          označen s peščeno uro <span aria-hidden="true">⏳</span>.
+          <span aria-hidden="true">⏳</span>{' '}
+          {tx('tekme.pozicije.enkratNaTeden', {}, {
+            b: (v) => <strong>{v}</strong>,
+            ikona: (v) => <span aria-hidden="true">{v}</span>,
+          })}
         </p>
       </header>
 
@@ -386,17 +384,17 @@ export default function Pozicije() {
       <div className="kartica flex flex-wrap items-end gap-3 p-3">
         <label className="min-w-48 flex-1">
           <span className="block text-xs font-semibold uppercase tracking-wide text-slate-400">
-            Klub
+            {t('tekme.pozicije.klub')}
           </span>
           <select
             value={klubId ?? ''}
             onChange={(e) => setKlubId(Number(e.target.value))}
             className="mt-1 w-full rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-slate-100"
           >
-            {klubi.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name}
-                {insiderTeamId === t.id ? '  ★ poznavalec' : ''}
+            {klubi.map((k) => (
+              <option key={k.id} value={k.id}>
+                {k.name}
+                {insiderTeamId === k.id ? t('tekme.pozicije.poznavalecOznaka') : ''}
               </option>
             ))}
           </select>
@@ -408,28 +406,30 @@ export default function Pozicije() {
             onChange={(e) => setSamoNepotrjene(e.target.checked)}
             className="h-4 w-4 rounded accent-gnl-400"
           />
-          Samo iz statistike ({stNepotrjenih})
+          {t('tekme.pozicije.samoIzStatistike', { n: stNepotrjenih })}
         </label>
       </div>
 
       {!session && (
         <p className="kartica border-amber-400/30 bg-amber-400/10 p-3 text-sm text-amber-200">
-          Za glasovanje se moraš{' '}
-          <Link
-            to={povezavaNaPrijavo(lokacija.pathname + lokacija.search)}
-            className="font-semibold underline hover:text-amber-100"
-          >
-            prijaviti
-          </Link>
-          .
+          {tx('tekme.moraPrijava', {}, {
+            prijava: (v) => (
+              <Link
+                to={povezavaNaPrijavo(lokacija.pathname + lokacija.search)}
+                className="font-semibold underline hover:text-amber-100"
+              >
+                {v}
+              </Link>
+            ),
+          })}
         </p>
       )}
 
       {vidni.length === 0 ? (
         <p className="kartica p-6 text-center text-slate-400">
           {samoNepotrjene
-            ? 'Vsi igralci tega kluba imajo potrjeno pozicijo. 🎉'
-            : 'Ni igralcev.'}
+            ? t('tekme.pozicije.vsiPotrjeni')
+            : t('tekme.pozicije.niIgralcev')}
         </p>
       ) : (
         <ul className="space-y-3">
@@ -450,7 +450,7 @@ export default function Pozicije() {
         </ul>
       )}
 
-      {napaka && <p className="text-sm text-rose-400">Napaka: {napaka}</p>}
+      {napaka && <p className="text-sm text-rose-400">{t('skupno.napaka', { sporocilo: napaka })}</p>}
     </div>
   )
 }
@@ -473,16 +473,16 @@ function MojStatus({
   return (
     <div className="kartica space-y-3 border-gnl-400/20 bg-gnl-500/5 p-3 sm:p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-sm font-bold text-gnl-200">Moj status glasovalca</h2>
+        <h2 className="text-sm font-bold text-gnl-200">{t('tekme.pozicije.status.naslov')}</h2>
         {utez != null && (
           <span
-            title="Utež posameznega glasu — sešteje se z insider bonusom, če glasuješ za igralca svojega kluba."
+            title={t('tekme.pozicije.status.utezOpis')}
             className="znacka bg-white/10 text-slate-200"
           >
-            utež {utez.toFixed(2)}×
+            {t('tekme.pozicije.status.utez', { utez: utez.toFixed(2) })}
             {tocnost && tocnost.resolved > 0 && (
               <span className="ml-1 text-[10px] text-slate-400">
-                ({tocnost.correct}/{tocnost.resolved} točnih)
+                {t('tekme.pozicije.status.tocnih', { pravilni: tocnost.correct, vsi: tocnost.resolved })}
               </span>
             )}
           </span>
@@ -490,8 +490,7 @@ function MojStatus({
       </div>
       <label className="block text-sm">
         <span className="mb-1 block text-xs text-slate-400">
-          Klub, ki ga dobro poznam (poznavalec) — moj glas za igralce tega kluba
-          šteje več:
+          {t('tekme.pozicije.status.klubPoznam')}
         </span>
         <select
           value={insiderTeamId ?? ''}
@@ -500,7 +499,7 @@ function MojStatus({
           }
           className="w-full max-w-md rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-slate-100"
         >
-          <option value="">— nisem poznavalec nobenega kluba —</option>
+          <option value="">{t('tekme.pozicije.status.nisemPoznavalec')}</option>
           {klubi.map((t) => (
             <option key={t.id} value={t.id}>
               {t.name}
@@ -509,9 +508,7 @@ function MojStatus({
         </select>
       </label>
       <p className="text-[11px] leading-snug text-slate-500">
-        Poznavalec označi le en klub. Uteži se s časom umirijo — če se tvoji
-        glasovi kažejo za napačne, se zaupanje niža. Zaupanje se preračuna iz
-        preteklih glasov, ko je pozicija znana.
+        {t('tekme.pozicije.status.opomba')}
       </p>
       {prosnja}
     </div>
@@ -595,9 +592,12 @@ function IgralecKartica({
             {prikazniIme(igralec.full_name)}
           </Link>
           <div className="text-xs text-slate-500">
-            {mnozina(igralec.matches ?? 0, TEKME)} · {igralec.minutes ?? 0} min ·{' '}
-            {mnozina(igralec.goals ?? 0, GOLI)} · {igralec.clean_sheets ?? 0} brez
-            prejetega
+            {t('tekme.pozicije.igralec.statistika', {
+              tekme: mnozina(igralec.matches ?? 0, TEKME),
+              minute: igralec.minutes ?? 0,
+              goli: mnozina(igralec.goals ?? 0, GOLI),
+              cs: igralec.clean_sheets ?? 0,
+            })}
           </div>
         </div>
 
@@ -606,10 +606,10 @@ function IgralecKartica({
             className={`znacka ${igralec.position ? `poz-${igralec.position}` : 'poz-none'}`}
             title={
               izZapisnika
-                ? 'Iz zapisnika — vratar je označen z (V)'
+                ? t('tekme.pozicije.igralec.izZapisnika')
                 : ugibano
-                  ? 'Iz statistike (št. dresa, goli, kartoni) — glasovi jo lahko popravijo'
-                  : 'Potrdila skupnost'
+                  ? t('tekme.pozicije.igralec.izStatistike')
+                  : t('tekme.pozicije.igralec.potrdilaSkupnost')
             }
           >
             <span aria-hidden="true">
@@ -620,26 +620,26 @@ function IgralecKartica({
                 {KRATKA_POZICIJA[igralec.position]}
               </abbr>
             )}
-            {izZapisnika && ' · zapisnik'}
+            {izZapisnika && t('tekme.pozicije.igralec.zapisnik')}
           </span>
         )}
 
         {cakaUveljavitve && (
           <span
             className="znacka bg-amber-400/20 text-amber-200"
-            title="Pozicije se uveljavijo enkrat na teden, v ponedeljek zjutraj — tako se liga med tednom ne spreminja pod prsti."
+            title={t('tekme.pozicije.igralec.uveljavitevOpis')}
           >
-            <span aria-hidden="true">⏳</span> izglasovano:{' '}
-            {KRATKA_POZICIJA[vodilna[0]]} · v ponedeljek
+            <span aria-hidden="true">⏳</span>{' '}
+            {t('tekme.pozicije.igralec.izglasovano', { pozicija: KRATKA_POZICIJA[vodilna[0]] })}
           </span>
         )}
 
         {igralec.active === false && (
           <span
             className="znacka bg-slate-700/60 text-slate-300"
-            title="Ne igra več — ni na trgu. Če se pojavi v zapisniku, se vrne sam."
+            title={t('tekme.pozicije.igralec.neIgraOpis')}
           >
-            ne igra več
+            {t('tekme.pozicije.igralec.neIgra')}
           </span>
         )}
         {poznavalecLige &&
@@ -647,37 +647,41 @@ function IgralecKartica({
             <button
               onClick={() => onOdhod(igralec.id, false)}
               className="gumb-tih text-xs"
-              title="Vrni igralca med aktivne"
+              title={t('tekme.pozicije.igralec.vrniOpis')}
             >
-              vrni
+              {t('tekme.pozicije.igralec.vrni')}
             </button>
           ) : (
             <button
               onClick={() => onOdhod(igralec.id, true)}
               className="text-xs text-slate-400 hover:text-rose-300"
-              title="Igralec pri tem klubu ne igra več — umakne ga s trga. Nastop v zapisniku ga vrne sam."
+              title={t('tekme.pozicije.igralec.odhodOpis')}
             >
-              ne igra več
+              {t('tekme.pozicije.igralec.neIgra')}
             </button>
           ))}
       </div>
 
       {!zaklenjeno && priorVodilna && priorVodilna[1] >= 0.30 && (
         <p className="mt-2 text-xs text-slate-500">
-          Statistika kaže na{' '}
-          <strong className="text-slate-300">
-            {IME_POZICIJE[priorVodilna[0]]} ({Math.round(priorVodilna[1] * 100)}%)
-          </strong>
-          {' '}— glas v tej smeri se šteje z nižjim pragom{' '}
-          ({pragZaPrior(priorVodilna[1])} namesto {prag}).
+          {tx(
+            'tekme.pozicije.igralec.statistikaKaze',
+            {
+              pozicija: IME_POZICIJE[priorVodilna[0]],
+              odstotek: Math.round(priorVodilna[1] * 100),
+              nizji: pragZaPrior(priorVodilna[1]),
+              prag,
+            },
+            { b: (v) => <strong className="text-slate-300">{v}</strong> },
+          )}
         </p>
       )}
 
       {!zaklenjeno && potrjeno && !priorVodilna && (
         <p className="mt-2 text-xs text-slate-500">
           {ugibano
-            ? 'Pozicija je določena iz statistike — če ni prava, klikni pravo.'
-            : 'Pozicijo je določila skupnost — z glasovi jo je mogoče popraviti.'}
+            ? t('tekme.pozicije.igralec.dolocenaIzStatistike')
+            : t('tekme.pozicije.igralec.dolocilaSkupnost')}
         </p>
       )}
 
@@ -699,9 +703,11 @@ function IgralecKartica({
                 disabled={!omogoceno}
                 aria-pressed={izbran}
                 title={
-                  `Utež ${weight.toFixed(1)} / prag ${pragZa}` +
-                  (priorZa ? ` · prior ${Math.round(priorZa * 100)}%` : '') +
-                  (insiderVelja ? ' · tvoj glas kot poznavalec šteje več' : '')
+                  t('tekme.pozicije.igralec.gumbUtez', { utez: weight.toFixed(1), prag: pragZa }) +
+                  (priorZa
+                    ? t('tekme.pozicije.igralec.gumbPrior', { odstotek: Math.round(priorZa * 100) })
+                    : '') +
+                  (insiderVelja ? t('tekme.pozicije.igralec.gumbPoznavalec') : '')
                 }
                 className={`relative overflow-hidden rounded-xl px-3 py-2 text-sm font-semibold transition disabled:opacity-40 ${
                   izbran
@@ -742,8 +748,11 @@ function IgralecKartica({
 
       {!potrjeno && vodilna && (
         <p className="mt-2 text-xs text-slate-500">
-          Vodi {IME_POZICIJE[vodilna[0]]} — utež {vodilna[1].toFixed(1)} /{' '}
-          {pragZaPrior(prior?.[vodilna[0]] ?? 0)}
+          {t('tekme.pozicije.igralec.vodi', {
+            pozicija: IME_POZICIJE[vodilna[0]],
+            utez: vodilna[1].toFixed(1),
+            prag: pragZaPrior(prior?.[vodilna[0]] ?? 0),
+          })}
         </p>
       )}
     </li>

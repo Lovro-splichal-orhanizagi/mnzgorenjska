@@ -13,6 +13,7 @@ import {
   namestnikJeVskocil,
   type VrsticaTuje,
 } from '../lib/tujaEkipa'
+import { t } from '../i18n'
 
 interface Krog {
   id: number
@@ -47,7 +48,7 @@ export default function Ekipa() {
   const [kazen, setKazen] = useState(0)
   const [neto, setNeto] = useState<number | null>(null)
   const [napaka, setNapaka] = useState<string | null>(null)
-  useNaslov(ekipa?.team_name ?? 'Ekipa')
+  useNaslov(ekipa?.team_name ?? t('lestvice.ekipa.naslov'))
 
   // --- ekipa in njeni zaklenjeni krogi -------------------------------------
   useEffect(() => {
@@ -62,7 +63,7 @@ export default function Ekipa() {
         .maybeSingle()
       if (!veljavno) return
       if (error || !e) {
-        setNapaka('Te ekipe ni.')
+        setNapaka(t('lestvice.ekipa.niEkipe'))
         setNalaganje(false)
         return
       }
@@ -129,7 +130,7 @@ export default function Ekipa() {
       // Migracija in koda potujeta vsaka po svoji poti. Ce funkcije se ni,
       // naj stran pove, da je slo kaj narobe — prazna postava in okvara
       // nista isto.
-      setOkvara(error ? 'Postave ni bilo mogoce naloziti.' : null)
+      setOkvara(error ? t('lestvice.ekipa.okvara') : null)
       setVrstice(error ? [] : ((data ?? []) as VrsticaTuje[]))
       setKazen(Number(krogTocke?.penalty ?? 0))
       setNeto(krogTocke ? Number(krogTocke.points) : null)
@@ -163,13 +164,13 @@ export default function Ekipa() {
     )
   }
 
-  if (nalaganje) return <p className="p-4 text-slate-400">Nalaganje …</p>
+  if (nalaganje) return <p className="p-4 text-slate-400">{t('skupno.nalaganje')}</p>
   if (napaka)
     return (
       <div className="p-4">
         <p className="text-slate-300">{napaka}</p>
         <Link to="/lestvica" className="text-gnl-400 underline">
-          Nazaj na lestvico
+          {t('lestvice.ekipa.nazaj')}
         </Link>
       </div>
     )
@@ -178,19 +179,20 @@ export default function Ekipa() {
     <div className="space-y-4 p-4">
       <header>
         <h1 className="text-2xl font-black naslov sm:text-3xl">
-          {ekipa?.team_name ?? 'Ekipa'}
+          {ekipa?.team_name ?? t('lestvice.ekipa.naslov')}
         </h1>
         <p className="text-sm text-slate-400">
-          {prikazniIme(ekipa?.owner_name)} · skupaj{' '}
-          {formatirajTocke(ekipa?.total_points)}{' '}
-          {tockZ(ekipa?.total_points)}
+          {prikazniIme(ekipa?.owner_name)} ·{' '}
+          {t('lestvice.ekipa.skupaj', {
+            tocke: formatirajTocke(ekipa?.total_points),
+            beseda: tockZ(ekipa?.total_points),
+          })}
         </p>
       </header>
 
       {krogi.length === 0 ? (
         <p className="rounded-lg bg-slate-800/60 p-4 text-slate-300">
-          V tej ligi se še ni zaključil noben krog. Tuje ekipe se pokažejo, ko
-          mine rok — do takrat jih ne vidi nihče.
+          {t('lestvice.ekipa.brezKrogov')}
         </p>
       ) : (
         <>
@@ -205,7 +207,7 @@ export default function Ekipa() {
                     : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
                 }`}
               >
-                {k.number}. krog
+                {t('lestvice.krog', { n: k.number })}
                 {vecSezon && k.season && (
                   <span className="ml-1 font-normal opacity-70">{k.season}</span>
                 )}
@@ -214,12 +216,12 @@ export default function Ekipa() {
           </div>
 
           {nalaganjePostave ? (
-            <p className="text-slate-400">Nalaganje postave …</p>
+            <p className="text-slate-400">{t('lestvice.ekipa.nalaganjePostave')}</p>
           ) : okvara ? (
             <p className="rounded-lg bg-rose-500/10 p-4 text-rose-200">{okvara}</p>
           ) : vrstice.length === 0 ? (
             <p className="rounded-lg bg-slate-800/60 p-4 text-slate-300">
-              Ta ekipa v izbranem krogu ni imela postave.
+              {t('lestvice.ekipa.brezPostave')}
             </p>
           ) : (
             <>
@@ -228,11 +230,11 @@ export default function Ekipa() {
                   {formatirajTocke(neto ?? skupaj)}
                 </span>
                 <span className="text-sm text-slate-400">
-                  {tockZ(neto ?? skupaj)} v tem krogu
+                  {t('lestvice.ekipa.vTemKrogu', { beseda: tockZ(neto ?? skupaj) })}
                 </span>
                 {kazen > 0 && (
                   <span className="text-sm text-rose-400">
-                    (−{kazen} za prestope)
+                    {t('lestvice.ekipa.kazen', { kazen })}
                   </span>
                 )}
               </div>
@@ -241,14 +243,14 @@ export default function Ekipa() {
 
               {vskocil && (
                 <p className="text-sm text-slate-400">
-                  Kapetan ni igral, zato je množitelj prevzel namestnik.
+                  {t('lestvice.ekipa.namestnik')}
                 </p>
               )}
 
               {klop.length > 0 && (
                 <section>
                   <h2 className="mb-1.5 text-sm font-bold uppercase tracking-wide text-slate-400">
-                    Klop
+                    {t('lestvice.ekipa.klop')}
                   </h2>
                   <ul className="divide-y divide-slate-800 rounded-lg bg-slate-800/40">
                     {klop.map((v) => (

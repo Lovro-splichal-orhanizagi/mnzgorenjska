@@ -2,7 +2,8 @@
 //
 // Deli jo igralec sam ali starši: "moj je v 8. krogu zabil dva". Tu so
 // besedila in mere; risanje je v `src/components/KarticaIgralca.tsx`.
-import { mnozina, oblika, GOLI, IME_POZICIJE } from './pomozno'
+import { mnozina, oblika, GOLI, IME_POZICIJE, TOCKE } from './pomozno'
+import { t } from '../i18n/jedro.ts'
 import type { Pozicija } from './tipi'
 
 export const SIRINA_K = 1080
@@ -36,14 +37,6 @@ export interface PodatkiKartice {
   ekip: number | null
 }
 
-const ASISTENCE: [string, string, string, string] = ['asistenca', 'asistenci', 'asistence', 'asistenc']
-const OBRAMBE: [string, string, string, string] = [
-  'obranjena enajstmetrovka',
-  'obranjeni enajstmetrovki',
-  'obranjene enajstmetrovke',
-  'obranjenih enajstmetrovk',
-]
-
 /**
  * Kaj je igralec naredil na tekmi — samo tisto, s čimer se kdo pohvali.
  * Kartoni in avtogoli ne sodijo na kartico, ki jo objavi mama.
@@ -53,11 +46,11 @@ export function dosezkiNastopa(n: NastopZaKartico, pozicija: Pozicija | null): s
   const goli = n.goli ?? 0
   const asist = n.asistence ?? 0
   const obr = n.obranjene ?? 0
-  if (goli > 0) out.push(goli === 1 ? 'gol' : mnozina(goli, GOLI))
-  if (asist > 0) out.push(asist === 1 ? 'asistenca' : mnozina(asist, ASISTENCE))
-  if (obr > 0) out.push(obr === 1 ? OBRAMBE[0] : mnozina(obr, OBRAMBE))
-  if (n.cistaMreza && (pozicija === 'GK' || pozicija === 'DEF')) out.push('mreža brez gola')
-  if ((n.minute ?? 0) > 0) out.push(`${n.minute} min`)
+  if (goli > 0) out.push(goli === 1 ? oblika(1, GOLI) : mnozina(goli, GOLI))
+  if (asist > 0) out.push(asist === 1 ? t('igralci.kartica.asistenca') : t('igralci.kartica.asistence', { n: asist }))
+  if (obr > 0) out.push(obr === 1 ? t('igralci.kartica.obramba') : t('igralci.kartica.obrambe', { n: obr }))
+  if (n.cistaMreza && (pozicija === 'GK' || pozicija === 'DEF')) out.push(t('igralci.kartica.mrezaBrezGola'))
+  if ((n.minute ?? 0) > 0) out.push(t('igralci.kartica.minut', { n: n.minute }))
   return out
 }
 
@@ -74,19 +67,19 @@ export function vrsticaTekme(
 }
 
 export function imePozicije(p: Pozicija | null): string {
-  return p ? IME_POZICIJE[p] : 'Igralec'
+  return p ? IME_POZICIJE[p] : t('igralci.kartica.igralec')
 }
 
 /** "točk v 8. krogu" / "točke v sezoni" — beseda za veliko številko. */
 export function podnapisTock(tocke: number, krog: number | null): string {
-  const beseda = oblika(tocke, ['točka', 'točki', 'točke', 'točk'])
-  return krog ? `${beseda} v ${krog}. krogu` : `${beseda} v sezoni`
+  const beseda = oblika(tocke, TOCKE)
+  return krog ? t('igralci.kartica.tockVKrogu', { beseda, krog }) : t('igralci.kartica.tockVSezoni', { beseda })
 }
 
 /** "V 34 fantasy ekipah" — kolikim je ta igralec v ekipi. */
 export function stavekEkip(n: number | null): string | null {
   if (!n || n < 1) return null
-  return `V ${n} ${oblika(n, ['fantasy ekipi', 'fantasy ekipah', 'fantasy ekipah', 'fantasy ekipah'])}`
+  return t('igralci.kartica.vEkipah', { n })
 }
 
 /**
@@ -105,11 +98,11 @@ export function velikostPriimka(
 }
 
 export function imeDatotekeKartice(ime: string, priimek: string, krog: number | null): string {
-  const cist = `${ime}-${priimek}${krog ? `-${krog}-krog` : ''}`
+  const cist = `${ime}-${priimek}${krog ? `-${t('igralci.kartica.datotekaKrog', { krog })}` : ''}`
     .normalize('NFKD')
     .replace(/[̀-ͯ]/g, '')
     .replace(/[^a-zA-Z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
     .toLowerCase()
-  return `slff-${cist || 'igralec'}.png`
+  return `slff-${cist || t('igralci.kartica.datotekaIgralec')}.png`
 }

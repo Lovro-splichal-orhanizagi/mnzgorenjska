@@ -1,4 +1,5 @@
 import { useId, useState } from 'react'
+import { t } from '../i18n'
 
 /**
  * Drobna crta (sparkline) za eno samo vrsto podatkov.
@@ -45,7 +46,9 @@ export default function Crta({
         viewBox={`0 0 ${S} ${V}`}
         className="h-14 w-full"
         role="img"
-        aria-label={`Gibanje: ${tocke.map((t) => `${t.oznaka} ${t.vrednost}${enota}`).join(', ')}`}
+        aria-label={t('aplikacija.crta.gibanje', {
+          seznam: tocke.map((d) => `${d.oznaka} ${d.vrednost}${enota}`).join(', '),
+        })}
         onMouseLeave={() => setNad(null)}
       >
         <defs>

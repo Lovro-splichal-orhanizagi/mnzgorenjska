@@ -11,6 +11,7 @@ import { useState } from 'react'
 import { useNastavitev } from '../lib/nastavitve'
 import { prikazniIme, razredPozicije, KRATKA_POZICIJA } from '../lib/pomozno'
 import type { Pozicija } from '../lib/tipi'
+import { t, tx } from '../i18n'
 
 /** Gol, o katerem skupnost glasuje o asistenci. */
 export interface Gol {
@@ -167,15 +168,15 @@ export default function GolZaGlasovanje({
     name: domaci ? tekma?.home_name : tekma?.away_name,
   }
 
-  const ime = prikazniIme(gol.scorer?.full_name) || 'neznan strelec'
+  const ime = prikazniIme(gol.scorer?.full_name) || t('tekme.gol.neznanStrelec')
 
   if (gol.is_own_goal)
     return (
       <Zakljucek
         gol={gol}
         ikona="🙈"
-        besedilo={`Avtogol — ${ime}`}
-        opomba="brez asistence"
+        besedilo={t('tekme.gol.avtogol', { ime })}
+        opomba={t('tekme.gol.brezAsistenceOpomba')}
       />
     )
 
@@ -186,8 +187,8 @@ export default function GolZaGlasovanje({
       <Zakljucek
         gol={gol}
         ikona="⚽"
-        besedilo={`${ime} — enajstmetrovka`}
-        opomba="brez asistence"
+        besedilo={t('tekme.gol.enajstmetrovka', { ime })}
+        opomba={t('tekme.gol.brezAsistenceOpomba')}
       />
     )
 
@@ -217,7 +218,7 @@ export default function GolZaGlasovanje({
                 {prikazniIme(gol.assist?.full_name)}
               </div>
               <div className="text-xs text-gnl-400/80">
-                asistenca potrjena — zaklenjeno
+                {t('tekme.gol.potrjena')}
               </div>
             </div>
           </div>
@@ -225,9 +226,9 @@ export default function GolZaGlasovanje({
 
         {!potrjeno && brezAsistence && (
           <div className="rounded-xl bg-white/5 px-3 py-2 text-sm ring-1 ring-white/10">
-            <div className="font-bold text-slate-200">Brez asistence</div>
+            <div className="font-bold text-slate-200">{t('tekme.gol.brezAsistence')}</div>
             <div className="text-xs text-slate-500">
-              tako je odločila skupnost
+              {t('tekme.gol.odlocilaSkupnost')}
             </div>
           </div>
         )}
@@ -237,9 +238,13 @@ export default function GolZaGlasovanje({
             onClick={() => setOdprto(!odprto)}
             disabled={!omogoceno}
             className={odprto ? 'gumb-tih' : 'gumb-glavni'}
-            title={omogoceno ? undefined : 'Za glasovanje se moraš prijaviti'}
+            title={omogoceno ? undefined : t('tekme.gol.morasSePrijaviti')}
           >
-            {odprto ? 'Zapri' : mojGlas !== undefined ? 'Spremeni glas' : 'Kdo je podal?'}
+            {odprto
+              ? t('skupno.zapri')
+              : mojGlas !== undefined
+                ? t('tekme.gol.spremeniGlas')
+                : t('tekme.gol.kdoJePodal')}
           </button>
         )}
       </div>
@@ -251,25 +256,28 @@ export default function GolZaGlasovanje({
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <div className="text-sm">
               {vodilni.player_id == null ? (
-                <strong className="text-slate-200">Vodi »brez asistence«</strong>
+                <strong className="text-slate-200">{t('tekme.gol.vodiBrez')}</strong>
               ) : (
-                <>
-                  Vodi{' '}
-                  <strong className="text-gnl-200">
-                    {stDresa[String(vodilni.player_id)] != null &&
-                      `${stDresa[String(vodilni.player_id)]} — `}
-                    {prikazniIme(
-                      kandidati.find((k) => k.player_id === vodilni.player_id)
-                        ?.players?.full_name,
-                    ) || 'igralec brez zapisa'}
-                  </strong>
-                </>
+                tx(
+                  'tekme.gol.vodi',
+                  {
+                    ime:
+                      (stDresa[String(vodilni.player_id)] != null
+                        ? `${stDresa[String(vodilni.player_id)]} — `
+                        : '') +
+                      (prikazniIme(
+                        kandidati.find((k) => k.player_id === vodilni.player_id)
+                          ?.players?.full_name,
+                      ) || t('tekme.gol.igralecBrezZapisa')),
+                  },
+                  { b: (v) => <strong className="text-gnl-200">{v}</strong> },
+                )
               )}
             </div>
             <span className="tabular-nums text-sm font-black text-gnl-300">
               {vodilni.votes} / {prag}{' '}
               <span className="text-xs font-normal text-slate-500">
-                — še {Math.max(0, prag - vodilni.votes)} do odločitve
+                {t('tekme.gol.doOdlocitve', { n: Math.max(0, prag - vodilni.votes) })}
               </span>
             </span>
           </div>
@@ -283,12 +291,12 @@ export default function GolZaGlasovanje({
           </div>
           {glasovi.length > 1 && (
             <div className="text-xs text-slate-500">
-              Ostali:{' '}
+              {t('tekme.gol.ostali')}{' '}
               {glasovi
                 .slice(1)
                 .map((g) =>
                   g.player_id == null
-                    ? `brez (${g.votes})`
+                    ? t('tekme.gol.brezGlasovi', { n: g.votes })
                     : `${
                         stDresa[String(g.player_id)] != null
                           ? `${stDresa[String(g.player_id)]} — `
@@ -309,7 +317,7 @@ export default function GolZaGlasovanje({
       {odprto && !zakljuceno && (
         <div className="animiraj-vstop border-t border-white/10 bg-slate-950/40 p-4">
           <p className="mb-3 text-xs uppercase tracking-wide text-slate-400">
-            Izberi podajalca — {ekipa?.name}
+            {t('tekme.gol.izberiPodajalca', { ekipa: ekipa?.name })}
           </p>
           <div className="grid gap-2 sm:grid-cols-2">
             {kandidati.map((k) => {
@@ -352,7 +360,7 @@ export default function GolZaGlasovanje({
                 : 'bg-white/5 hover:bg-white/10'
             }`}
           >
-            Nihče — gol brez asistence
+            {t('tekme.gol.nihce')}
           </button>
         </div>
       )}

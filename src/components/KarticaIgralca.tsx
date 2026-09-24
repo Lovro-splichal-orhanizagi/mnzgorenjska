@@ -18,6 +18,7 @@ import {
   type PodatkiKartice,
 } from '../lib/karticaIgralca'
 import { formatirajTocke, KRATKA_POZICIJA } from '../lib/pomozno'
+import { t } from '../i18n'
 
 const M = 2
 const OZKA = '"Barlow Condensed", "Arial Narrow", sans-serif'
@@ -100,13 +101,13 @@ const vBlob = (p: HTMLCanvasElement) => new Promise<Blob | null>((r) => p.toBlob
 function statistika(p: PodatkiKartice): Array<[string, string]> {
   const n = p.nastop
   const out: Array<[string, string]> = [
-    [String(n?.goli ?? 0), 'GOL'],
-    [String(n?.asistence ?? 0), 'AST'],
-    [String(n?.minute ?? 0), 'MIN'],
+    [String(n?.goli ?? 0), t('igralci.kartica.stat.gol')],
+    [String(n?.asistence ?? 0), t('igralci.kartica.stat.ast')],
+    [String(n?.minute ?? 0), t('igralci.kartica.stat.min')],
   ]
-  if (p.krog) out.push([String(p.krog), 'KROG'])
-  if (p.sezona) out.push([formatirajTocke(p.sezona.tocke), 'SEZ'])
-  if (p.ekip) out.push([String(p.ekip), 'EKIP'])
+  if (p.krog) out.push([String(p.krog), t('igralci.kartica.stat.krog')])
+  if (p.sezona) out.push([formatirajTocke(p.sezona.tocke), t('igralci.kartica.stat.sez')])
+  if (p.ekip) out.push([String(p.ekip), t('igralci.kartica.stat.ekip')])
   return out.slice(0, 6)
 }
 
@@ -304,7 +305,7 @@ export async function narisiKartico(p: PodatkiKartice, foto: FotoKartice | null 
 
   // zunaj kartice: krog in liga zgoraj, izid spodaj
   c.fillStyle = 'rgba(242,232,207,.75)'
-  napisi(c, `${p.krog ? `${p.krog}. krog · ` : ''}${p.liga}`, W / 2, 84, W - 160, (v) => sans(600, v), 32, 22)
+  napisi(c, p.krog ? t('igralci.kartica.krogInLiga', { krog: p.krog, liga: p.liga }) : p.liga, W / 2, 84, W - 160, (v) => sans(600, v), 32, 22)
   if (p.tekma) {
     c.fillStyle = 'rgba(242,232,207,.85)'
     napisi(c, p.tekma, W / 2, H - 132, W - 160, (v) => sans(700, v), 32, 22)
@@ -370,7 +371,7 @@ export default function KarticaIgralca({
       const f = await naloziFoto(datoteka)
       setFoto({ ...f, x: 0, y: 0, povecava: 1, id: Date.now() })
     } catch {
-      setNapakaFoto('Te fotografije ni mogoče odpreti. Poskusi z drugo (JPG ali PNG).')
+      setNapakaFoto(t('igralci.kartica.napakaFoto'))
     }
   }
 
@@ -392,8 +393,13 @@ export default function KarticaIgralca({
 
   const ime = `${podatki.ime} ${podatki.priimek}`.trim()
   const besedilo = podatki.krog
-    ? `${ime} (${podatki.klub}): ${formatirajTocke(podatki.tocke ?? 0)} fantasy točk v ${podatki.krog}. krogu.`
-    : `${ime} (${podatki.klub}) v fantasy ligi SLFF.`
+    ? t('igralci.kartica.deliKrog', {
+        ime,
+        klub: podatki.klub,
+        tocke: formatirajTocke(podatki.tocke ?? 0),
+        krog: podatki.krog,
+      })
+    : t('igralci.kartica.deliSezona', { ime, klub: podatki.klub })
 
   return (
     <div className="grid gap-4 sm:grid-cols-[minmax(0,15rem)_1fr] sm:items-start">
@@ -410,7 +416,7 @@ export default function KarticaIgralca({
         {predogled ? (
           <img
             src={predogled}
-            alt={`Kartica igralca ${ime}`}
+            alt={t('igralci.kartica.alt', { ime })}
             draggable={false}
             className="pointer-events-none block aspect-[4/5] w-full"
           />
@@ -420,8 +426,7 @@ export default function KarticaIgralca({
       </div>
       <div className="space-y-3">
         <p className="text-sm text-slate-300">
-          Kartica za objavo — za igralca, starše in navijače. Na telefonu jo pošlješ naravnost v
-          WhatsApp, Instagram ali Facebook.
+          {t('igralci.kartica.uvod')}
         </p>
         <DeliSliko
           narisi={() => narisiKartico(podatki, fotoRef.current)}
@@ -434,18 +439,18 @@ export default function KarticaIgralca({
         <div className="space-y-2 border-t border-white/5 pt-3">
           <div className="flex flex-wrap items-center gap-2">
             <label className="gumb-tih cursor-pointer px-3 py-2 text-sm">
-              {foto ? 'Zamenjaj fotografijo' : 'Dodaj fotografijo'}
+              {foto ? t('igralci.kartica.zamenjajFoto') : t('igralci.kartica.dodajFoto')}
               <input type="file" accept="image/*" onChange={izberi} className="sr-only" />
             </label>
             {foto && (
               <button type="button" onClick={() => setFoto(null)} className="gumb-tih px-3 py-2 text-sm">
-                Odstrani
+                {t('igralci.kartica.odstrani')}
               </button>
             )}
           </div>
           {foto && (
             <label className="flex items-center gap-3 text-xs text-slate-400">
-              Povečava
+              {t('igralci.kartica.povecava')}
               <input
                 type="range"
                 min={1}
@@ -458,10 +463,8 @@ export default function KarticaIgralca({
             </label>
           )}
           <p className="text-xs text-slate-500">
-            {foto
-              ? 'Povleci fotografijo na kartici, da jo namestiš. '
-              : ''}
-            Fotografija ostane na tvoji napravi — nikamor je ne naložimo in na strani je ne vidi nihče.
+            {foto ? t('igralci.kartica.povleci') : ''}
+            {t('igralci.kartica.zasebnost')}
           </p>
           {napakaFoto && <p className="text-xs text-rose-300">{napakaFoto}</p>}
         </div>

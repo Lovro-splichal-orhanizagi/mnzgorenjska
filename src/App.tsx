@@ -29,17 +29,16 @@ import Administracija from './pages/Administracija'
 import VstopVMiniLigo from './pages/VstopVMiniLigo'
 import Opomniki from './pages/Opomniki'
 import { useKanonicni, useNaslov } from './lib/naslov'
+import { t } from './i18n'
 
 function NiStrani() {
-  useNaslov('Stran ne obstaja')
+  useNaslov(t('aplikacija.niStrani.naslov'))
   return (
     <div className="space-y-3">
-      <h1 className="text-3xl font-black naslov">Stran ne obstaja</h1>
-      <p className="text-slate-400">
-        Povezava je morda zastarela ali pa je v naslovu tipkarska napaka.
-      </p>
+      <h1 className="text-3xl font-black naslov">{t('aplikacija.niStrani.naslov')}</h1>
+      <p className="text-slate-400">{t('aplikacija.niStrani.opis')}</p>
       <Link to="/" className="inline-block text-gnl-300 underline">
-        Nazaj na začetno stran
+        {t('aplikacija.niStrani.nazaj')}
       </Link>
     </div>
   )
@@ -88,7 +87,7 @@ export default function App() {
           <Podpora />
           <footer className="border-t border-white/10 py-6 text-center text-xs text-slate-400">
             <Link to="/pravno" className="underline hover:text-slate-200">
-              Zasebnost in pogoji
+              {t('aplikacija.noga.zasebnost')}
             </Link>
             <VirPodatkov />
           </footer>

@@ -16,6 +16,7 @@ import {
   DOLZINA_KODE,
   type MiniVrstica,
 } from '../lib/miniLige'
+import { t, tx } from '../i18n'
 
 const MEDALJE = ['🥇', '🥈', '🥉']
 
@@ -43,7 +44,7 @@ export default function MiniLige() {
   const { session, loading: nalaganjePrijave } = useAuth()
   const uporabnikId = session?.user.id
   const { pathname, search } = useLocation()
-  useNaslov('Mini lige')
+  useNaslov(t('lestvice.miniLige.naslov'))
   // Vstop prek povezave pripelje sem z ?liga=ID&vstop=nov|ze.
   const [params, setParams] = useSearchParams()
   const [lige, setLige] = useState<MojaLiga[]>([])
@@ -64,8 +65,8 @@ export default function MiniLige() {
     const liga = params.get('liga')
     if (!vstop && !liga) return
     if (liga) setIzbrana(Number(liga))
-    if (vstop === 'nov') setSporocilo('Pridružen. Dobrodošel v ligi.')
-    else if (vstop === 'ze') setSporocilo('Ta ekipa je v tej mini ligi že od prej.')
+    if (vstop === 'nov') setSporocilo(t('lestvice.miniLige.pridruzenDobrodosel'))
+    else if (vstop === 'ze') setSporocilo(t('lestvice.miniLige.zeOdPrej'))
     // Odstranimo le svoja parametra — `?t=` nosi izbrano ligo in brez njega
     // bi se ta tiho zamenjala.
     setParams(
@@ -159,7 +160,7 @@ export default function MiniLige() {
     setNapaka(null)
     setSporocilo(null)
     const ime = (podanoIme ?? imeNove).trim()
-    if (ime.length < 2) return setNapaka('Ime mini lige naj ima vsaj 2 znaka.')
+    if (ime.length < 2) return setNapaka(t('lestvice.miniLige.prekratkoIme'))
     setDela(true)
     // Ekipo podamo ze ob ustvarjanju: brez tega bi se moral clovek v svojo
     // ligo pridruziti s svojo kodo, kar je videti kot okvara.
@@ -172,7 +173,7 @@ export default function MiniLige() {
     if (error) return setNapaka(error.message)
     const nova = Array.isArray(data) ? data[0] : data
     setImeNove('')
-    setSporocilo(`Mini liga "${ime}" je ustvarjena. Koda: ${nova?.code}`)
+    setSporocilo(t('lestvice.miniLige.ustvarjena', { ime, koda: String(nova?.code) }))
     await naloziSvoje()
     if (nova?.id) setIzbrana(nova.id as number)
   }
@@ -182,7 +183,7 @@ export default function MiniLige() {
     setSporocilo(null)
     const razlog = zakajNiVeljavna(koda)
     if (razlog) return setNapaka(razlog)
-    if (zEkipo == null) return setNapaka('Najprej si sestavi ekipo v kateri od lig.')
+    if (zEkipo == null) return setNapaka(t('lestvice.miniLige.najprejEkipa'))
     setDela(true)
     const { data, error } = await supabase.rpc('pridruzi_mini_ligi', {
       p_koda: ocistiKodo(koda),
@@ -195,7 +196,7 @@ export default function MiniLige() {
     // "Pridruzen." ob ekipi, ki je bila clan ze prej, je potrditev brez
     // ucinka — lestvica se ne spremeni in videti je kot okvara.
     setSporocilo(
-      izid?.dodano ? 'Pridružen.' : 'Ta ekipa je v tej mini ligi že od prej.',
+      izid?.dodano ? t('lestvice.miniLige.pridruzen') : t('lestvice.miniLige.zeOdPrej'),
     )
     await naloziSvoje()
     if (izid?.mini_liga_id) setIzbrana(izid.mini_liga_id as number)
@@ -204,27 +205,29 @@ export default function MiniLige() {
   if (!session && !nalaganjePrijave)
     return (
       <div className="space-y-4">
-        <h1 className="text-2xl font-black naslov sm:text-3xl">Mini lige</h1>
+        <h1 className="text-2xl font-black naslov sm:text-3xl">{t('lestvice.miniLige.naslov')}</h1>
         <p className="kartica p-6 text-center text-slate-400">
-          Za mini ligo se je treba{' '}
-          <Link
-            to={povezavaNaPrijavo(pathname + search)}
-            className="font-semibold text-gnl-300 underline hover:text-gnl-200"
-          >
-            prijaviti
-          </Link>
-          .
+          {tx('lestvice.miniLige.prijava', {}, {
+            prijava: (b) => (
+              <Link
+                to={povezavaNaPrijavo(pathname + search)}
+                className="font-semibold text-gnl-300 underline hover:text-gnl-200"
+              >
+                {b}
+              </Link>
+            ),
+          })}
         </p>
       </div>
     )
-  if (nalaganje || nalaganjePrijave) return <p className="animiraj-utrip text-slate-400">Nalaganje …</p>
+  if (nalaganje || nalaganjePrijave) return <p className="animiraj-utrip text-slate-400">{t('skupno.nalaganje')}</p>
 
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-2xl font-black naslov sm:text-3xl">Mini lige</h1>
+        <h1 className="text-2xl font-black naslov sm:text-3xl">{t('lestvice.miniLige.naslov')}</h1>
         <p className="mt-1 text-sm text-slate-400">
-          Zasebno tekmovanje med znanci. Ekipe so lahko iz različnih lig.
+          {t('lestvice.miniLige.opis')}
         </p>
       </div>
 
@@ -233,11 +236,11 @@ export default function MiniLige() {
 
       <div className="grid gap-3 sm:grid-cols-2">
         <section className="kartica space-y-2 p-4">
-          <h2 className="font-bold">Ustvari</h2>
+          <h2 className="font-bold">{t('lestvice.miniLige.ustvari')}</h2>
           <input
             value={imeNove}
             onChange={(e) => setImeNove(e.target.value)}
-            placeholder="Ime mini lige"
+            placeholder={t('lestvice.miniLige.imeLige')}
             maxLength={40}
             className="w-full rounded-lg bg-white/5 px-3 py-2 text-sm outline-none ring-1 ring-white/10"
           />
@@ -256,16 +259,16 @@ export default function MiniLige() {
             </select>
           )}
           <button onClick={() => ustvari()} disabled={dela} className="gumb-glavni w-full text-sm">
-            Ustvari mini ligo
+            {t('lestvice.miniLige.ustvariLigo')}
           </button>
         </section>
 
         <section className="kartica space-y-2 p-4">
-          <h2 className="font-bold">Pridruži se</h2>
+          <h2 className="font-bold">{t('lestvice.miniLige.pridruziSe')}</h2>
           <input
             value={koda}
             onChange={(e) => setKoda(e.target.value)}
-            placeholder={`Koda (${DOLZINA_KODE} znakov)`}
+            placeholder={t('lestvice.miniLige.koda', { n: DOLZINA_KODE })}
             maxLength={12}
             className="w-full rounded-lg bg-white/5 px-3 py-2 font-mono text-sm uppercase outline-none ring-1 ring-white/10"
           />
@@ -284,7 +287,7 @@ export default function MiniLige() {
             </select>
           )}
           <button onClick={pridruzi} disabled={dela} className="gumb-glavni w-full text-sm">
-            Pridruži se
+            {t('lestvice.miniLige.pridruziSe')}
           </button>
         </section>
       </div>
@@ -292,7 +295,7 @@ export default function MiniLige() {
       {lige.length === 0 ? (
         <div className="kartica space-y-3 p-6 text-center">
           <p className="text-slate-400">
-            Nisi še v nobeni mini ligi. Kdo je boljši manager — ti ali tvoja družba?
+            {t('lestvice.miniLige.nisiVNobeni')}
           </p>
           {zEkipo != null ? (
             <button
@@ -300,11 +303,11 @@ export default function MiniLige() {
               disabled={dela}
               className="gumb-glavni text-sm"
             >
-              Ustvari ligo »{privzetoImeLige(vzdevek)}«
+              {t('lestvice.miniLige.ustvariLigoIme', { ime: privzetoImeLige(vzdevek) })}
             </button>
           ) : (
             <Link to="/moja-ekipa" className="gumb-glavni inline-block text-sm">
-              Najprej sestavi ekipo
+              {t('lestvice.miniLige.najprejSestavi')}
             </Link>
           )}
         </div>
@@ -329,35 +332,38 @@ export default function MiniLige() {
           {trenutna && (
             <div className="kartica flex flex-wrap items-center justify-between gap-2 p-3 text-sm">
               <span className="min-w-0 text-slate-400">
-                Povabilo:{' '}
-                <span className="font-mono text-gnl-300">
-                  {povezavaVabila(trenutna.code, window.location.host)}
-                </span>
-                <span className="ml-2 text-xs text-slate-400">koda {trenutna.code}</span>
+                {tx(
+                  'lestvice.miniLige.povabilo',
+                  { povezava: povezavaVabila(trenutna.code, window.location.host), koda: trenutna.code },
+                  {
+                    povezava: (b) => <span className="font-mono text-gnl-300">{b}</span>,
+                    koda: (b) => <span className="ml-2 text-xs text-slate-400">{b}</span>,
+                  },
+                )}
               </span>
               <button
                 onClick={async () => {
                   const izid = await deliVabilo(trenutna.name, trenutna.code)
                   setSporocilo(
                     izid === 'deljeno'
-                      ? 'Povabilo je poslano.'
+                      ? t('lestvice.miniLige.poslano')
                       : izid === 'kopirano'
-                        ? 'Povabilo je kopirano — prilepi ga v skupino.'
+                        ? t('lestvice.miniLige.kopirano')
                         : izid === 'preklicano'
                           ? null
-                          : 'Deljenje ni uspelo.',
+                          : t('lestvice.miniLige.neuspelo'),
                   )
                 }}
                 className="gumb-glavni text-xs"
               >
-                Deli povabilo
+                {t('lestvice.miniLige.deliPovabilo')}
               </button>
             </div>
           )}
 
           {urejena.length === 0 ? (
             <p className="kartica p-6 text-center text-slate-400">
-              V tej mini ligi še ni nobene ekipe.
+              {t('lestvice.miniLige.prazna')}
             </p>
           ) : (
             <ul className="space-y-1">
@@ -368,7 +374,7 @@ export default function MiniLige() {
                 >
                   <span className="w-7 shrink-0 text-center text-sm font-black text-slate-400">
                     {v.mesto <= 3 ? (
-                      <span role="img" aria-label={`${v.mesto}. mesto`}>
+                      <span role="img" aria-label={t('lestvice.mesto', { mesto: v.mesto })}>
                         {MEDALJE[v.mesto - 1]}
                       </span>
                     ) : (

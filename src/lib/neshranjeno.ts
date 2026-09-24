@@ -2,6 +2,8 @@
 // namesto konteksta: berejo jo le deli vmesnika, ki sami zapustijo stran
 // (izbirnik lige, odjava), in ob branju ni treba ničesar ponovno izrisati.
 
+import { t } from '../i18n/jedro.ts'
+
 let neshranjeno = false
 
 export function nastaviNeshranjeno(v: boolean): void {
@@ -12,7 +14,7 @@ export function jeNeshranjeno(): boolean {
   return neshranjeno
 }
 
-export const VPRASANJE_ZAPUSTITVE = 'Imaš neshranjene spremembe ekipe. Res zapustiš stran?'
+export const VPRASANJE_ZAPUSTITVE = t('mojaEkipa.vprasanjeZapustitve')
 
 /** true, če ni neshranjenih sprememb ali jih uporabnik potrdi, da jih zavrže. */
 export function potrdiZapustitev(): boolean {

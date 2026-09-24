@@ -205,10 +205,35 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
 
 ## Smernice za razvoj
 
-- Vsi uporabniško vidni nizi naj bodo v **slovenščini**.
+- Uporabniško vidni nizi **niso v komponentah**, ampak v slovarju
+  `src/i18n/sl/<področje>.ts` in se berejo s `t('področje.ključ', { … })`
+  (glej *Prevodi* spodaj). Slovenščina je izvor; nov niz vedno dodaj tja.
 - Ohrani kodo preprosto in berljivo; to je skupnostni projekt, ne enterprise.
 - Preden dodaš novo odvisnost, preveri ali je res potrebna.
 - Ob spremembi podatkovnega modela posodobi tudi README in to datoteko.
+
+## Prevodi
+
+`src/i18n/index.tsx` je celoten sistem, brez knjižnice:
+
+- `t(kljuc, parametri)` — ključ je tipiziran (napačen javi `typecheck`),
+  `{ime}` v nizu se zamenja s parametrom. Kliče se lahko kjerkoli, tudi zunaj
+  Reacta (slike na platnu, `lib/`, konstante): jezik se izbere ob nalaganju
+  strani in se med obiskom ne menja.
+- Množina je objekt oblik po `Intl.PluralRules` (`one/two/few/other`) in se
+  izbere po `n`: `t('skupno.besede.tocke', { n })`. Za "4 točke" je v
+  `lib/pomozno` `mnozina(n, TOCKE)`. **Ne sestavljaj končnic sam.**
+- `tx(kljuc, parametri, oznake)` za stavek z elementom (povezava, krepko):
+  niz `"Preberi <pogoji>pogoje</pogoji>."`, oznaka vrne element. Stavka ne
+  trgaj na kose, prevajalec mora imeti celoto.
+- Datume in števila oblikuj z `datum`, `datumUra`, `ura`, `stevilo` iz
+  `src/i18n` — nikoli `toLocaleString('sl-SI')`.
+- Drugi jezik (`src/i18n/hr/`) je lahko delen; manjkajoče pride iz
+  slovenščine. `npm run prevodi -- hr` izpiše, kaj manjka. Brskalnik izbere
+  jezik sam šele, ko je v `PRIPRAVLJENI`.
+- Nizi iz baze (razlogi `razlog_neveljavne_ekipe`, napake RPC), e-pošta
+  opomnikov in `index.html` so še slovenski — ob novem jeziku jih je treba
+  urediti posebej. Administracija ostaja slovenska.
 
 ## TypeScript
 

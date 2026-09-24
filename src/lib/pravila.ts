@@ -6,7 +6,8 @@
 // spoštuje spodnje in zgornje meje po pozicijah.
 
 import type { IgralecVKadru, IgralecZaPravila, Pozicija } from './tipi'
-import { formatirajCeno, oblika, prikazniIme } from './pomozno.ts'
+import { formatirajCeno, prikazniIme } from './pomozno.ts'
+import { t } from '../i18n/jedro.ts'
 
 export const VELIKOST_EKIPE = 15
 export const STEVILO_PRVIH = 11
@@ -38,10 +39,10 @@ interface PravilaPozicije {
 }
 
 export const POZICIJE: Record<Pozicija, PravilaPozicije> = {
-  GK: { naslov: 'Vratarji', kader: 2, min: 1, max: 1, privzeto: 1 },
-  DEF: { naslov: 'Branilci', kader: 5, min: 3, max: 5, privzeto: 4 },
-  MID: { naslov: 'Vezisti', kader: 5, min: 2, max: 5, privzeto: 4 },
-  FWD: { naslov: 'Napadalci', kader: 3, min: 1, max: 3, privzeto: 2 },
+  GK: { naslov: t('mojaEkipa.pravila.pozicije.GK'), kader: 2, min: 1, max: 1, privzeto: 1 },
+  DEF: { naslov: t('mojaEkipa.pravila.pozicije.DEF'), kader: 5, min: 3, max: 5, privzeto: 4 },
+  MID: { naslov: t('mojaEkipa.pravila.pozicije.MID'), kader: 5, min: 2, max: 5, privzeto: 4 },
+  FWD: { naslov: t('mojaEkipa.pravila.pozicije.FWD'), kader: 3, min: 1, max: 3, privzeto: 2 },
 }
 
 /** Od zadnje do prve vrste igrišča — vrstni red uporabljamo povsod enako. */
@@ -89,21 +90,24 @@ export function zakajNeGre(
   preostalo: number,
 ): string | null {
   if (izbrani.length >= VELIKOST_EKIPE)
-    return `Kader je poln (${VELIKOST_EKIPE} igralcev).`
+    return t('mojaEkipa.pravila.kaderPoln', { n: VELIKOST_EKIPE })
 
   if (igralec.position) {
     const p = POZICIJE[igralec.position]
     const n = poPozicijah(izbrani)[igralec.position]
     if (n >= p.kader)
-      return `${p.naslov.toLowerCase()}: v kadru jih imaš že ${p.kader}.`
+      return t('mojaEkipa.pravila.pozicijaPolna', { pozicija: p.naslov.toLowerCase(), n: p.kader })
   }
 
   if (Number(igralec.value ?? 0) > preostalo)
-    return `Premalo proračuna — igralec stane ${formatirajCeno(igralec.value)}, na voljo imaš ${formatirajCeno(preostalo)}.`
+    return t('mojaEkipa.pravila.premaloProracuna', {
+      cena: formatirajCeno(igralec.value),
+      preostalo: formatirajCeno(preostalo),
+    })
 
   const izKluba = izbrani.filter((s) => s.team_id === igralec.team_id).length
   if (izKluba >= MAX_IZ_KLUBA)
-    return `Iz kluba ${igralec.team_name ?? ''} imaš že ${MAX_IZ_KLUBA} igralce.`.replace(
+    return t('mojaEkipa.pravila.izKluba', { klub: igralec.team_name ?? '', n: MAX_IZ_KLUBA }).replace(
       '  ',
       ' ',
     )
@@ -126,33 +130,30 @@ export function preveriEkipo(
 
   if (izbrani.length !== VELIKOST_EKIPE)
     napake.push(
-      `Ekipa mora šteti ${VELIKOST_EKIPE} igralcev (trenutno ${izbrani.length}).`,
+      t('mojaEkipa.pravila.velikostEkipe', { n: VELIKOST_EKIPE, trenutno: izbrani.length }),
     )
 
   if (prvi.length !== STEVILO_PRVIH)
     napake.push(
-      `V prvi postavi mora biti ${STEVILO_PRVIH} igralcev (trenutno ${prvi.length}).`,
+      t('mojaEkipa.pravila.velikostPostave', { n: STEVILO_PRVIH, trenutno: prvi.length }),
     )
 
   // Pozicije nekaterih igralcev še niso izglasovane — brez njih postave
   // ni mogoče preveriti, zato na to posebej opozorimo.
   const manjkaPozicija = brezPozicije(izbrani).length
   if (manjkaPozicija > 0)
-    napake.push(
-      `${manjkaPozicija} ${oblika(manjkaPozicija, [
-        'izbrani igralec še nima',
-        'izbrana igralca še nimata',
-        'izbrani igralci še nimajo',
-        'izbranih igralcev še nima',
-      ])} potrjene pozicije — pomagaj v razdelku Pozicije.`,
-    )
+    napake.push(t('mojaEkipa.pravila.brezPozicije', { n: manjkaPozicija }))
 
   // Neaktivnega igralca (klub letos ne igra, igralec je odšel) baza v
   // `roster_je_veljaven` zavrne — brez tega opozorila bi ekipa tiho ostala
   // brez točk.
   for (const i of izbrani)
     if (i.active === false)
-      napake.push(`${prikazniIme(i.full_name) || 'Igralec'} ni več v ligi — zamenjaj ga.`)
+      napake.push(
+        t('mojaEkipa.pravila.niVecVLigi', {
+          ime: prikazniIme(i.full_name) || t('mojaEkipa.igralec'),
+        }),
+      )
 
   const vKadru = poPozicijah(izbrani)
   const vPostavi = poPozicijah(prvi)
@@ -160,22 +161,24 @@ export function preveriEkipo(
     const p = POZICIJE[koda]
     if (vKadru[koda] !== p.kader)
       napake.push(
-        `${p.naslov} v kadru: ${vKadru[koda]} — biti jih mora ${p.kader}.`,
+        t('mojaEkipa.pravila.pozicijaVKadru', { pozicija: p.naslov, n: vKadru[koda], kader: p.kader }),
       )
     const n = vPostavi[koda]
     if (n < p.min || n > p.max)
-      napake.push(`${p.naslov} v prvi postavi: ${n} — dovoljeno ${p.min}–${p.max}.`)
+      napake.push(
+        t('mojaEkipa.pravila.pozicijaVPostavi', { pozicija: p.naslov, n, min: p.min, max: p.max }),
+      )
   }
 
   const kapetanov = prvi.filter((i) => i.is_captain).length
   if (kapetanov !== 1)
     napake.push(
       kapetanov === 0
-        ? `Določi kapetana — v krogu prinese ${KAPETAN_MNOZITELJ}-kratne točke.`
-        : 'Kapetan je lahko le eden.',
+        ? t('mojaEkipa.pravila.dolociKapetana', { n: KAPETAN_MNOZITELJ })
+        : t('mojaEkipa.pravila.enKapetan'),
     )
   if (prvi.filter((i) => i.is_vice).length !== 1)
-    napake.push('Določi namestnika, ki prevzame trak, če kapetan ne igra.')
+    napake.push(t('mojaEkipa.pravila.dolociNamestnika'))
 
   const poKlubih: Record<string, number> = {}
   for (const i of izbrani) {
@@ -183,15 +186,13 @@ export function preveriEkipo(
     poKlubih[kljuc] = (poKlubih[kljuc] ?? 0) + 1
   }
   if (Object.values(poKlubih).some((n) => n > MAX_IZ_KLUBA))
-    napake.push(`Iz istega kluba lahko izbereš največ ${MAX_IZ_KLUBA} igralce.`)
+    napake.push(t('mojaEkipa.pravila.istiKlub', { n: MAX_IZ_KLUBA }))
 
   const denar = preostalo ??
     proracun - izbrani.reduce((v, i) => v + Number(i.value ?? 0), 0)
   const primanjkljaj = Math.round(-denar * 100) / 100
   if (primanjkljaj > 0)
-    napake.push(
-      `Presegel si proračun za ${formatirajCeno(primanjkljaj)}.`,
-    )
+    napake.push(t('mojaEkipa.pravila.presegelProracun', { cena: formatirajCeno(primanjkljaj) }))
 
   return napake
 }

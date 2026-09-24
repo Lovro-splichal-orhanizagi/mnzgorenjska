@@ -32,6 +32,7 @@ import {
 } from '../components/Odsotnost'
 import { tockeZaNastop } from '../lib/tockovanje'
 import type { Pozicija, Postavka } from '../lib/tipi'
+import { t, tx } from '../i18n'
 
 /** Vrstica pogleda `player_overview` — profil igralca. */
 type Profil = Record<string, any> & {
@@ -104,7 +105,7 @@ export default function Igralec() {
   // Za kartico: tekma zadnjega nastopa in v koliko ekipah je igralec.
   const [tekmaKartice, setTekmaKartice] = useState<string | null>(null)
   const [ekipZIgralcem, setEkipZIgralcem] = useState<number | null>(null)
-  useNaslov(igralec ? prikazniIme(igralec.full_name) || 'Igralec' : 'Igralec')
+  useNaslov(igralec ? prikazniIme(igralec.full_name) || t('igralci.profil.naslov') : t('igralci.profil.naslov'))
 
   useEffect(() => {
     let preklican = false
@@ -153,7 +154,7 @@ export default function Igralec() {
         })
       } else setSezonsko(null)
 
-      const [{ data: c }, { data: g }, { data: t }] = await Promise.all([
+      const [{ data: c }, { data: g }, { data: tek }] = await Promise.all([
         // Samo spremembe cen v TEKOČI sezoni — sicer se pokažejo lanski
         // krogi brez konteksta in delujejo kot "napovedi" za prihodnost.
         supabase
@@ -203,7 +204,7 @@ export default function Igralec() {
       if (preklican) return
       setIzhodisce(zac?.value_start != null ? Number(zac.value_start) : null)
       setZadnjiKrog(Number((zk as any)?.number ?? 0))
-      setTekme((t ?? []) as any[])
+      setTekme((tek ?? []) as any[])
       setGlasovi(
         Object.fromEntries(
           ((g ?? []) as any[]).map((v) => [String(v.position), Number(v.votes)]),
@@ -306,8 +307,8 @@ export default function Igralec() {
   async function objaviPorocilo(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     if (!session) return
-    const t = besediloPorocila.trim()
-    if (!t) return
+    const vsebina = besediloPorocila.trim()
+    if (!vsebina) return
     setPosiljamPorocilo(true)
     setNapaka(null)
     const { data, error } = await supabase
@@ -316,7 +317,7 @@ export default function Igralec() {
         player_id: igralecId,
         user_id: session.user.id,
         kind: vrstaPorocila,
-        content: t,
+        content: vsebina,
       })
       .select('id')
       .single()
@@ -329,7 +330,7 @@ export default function Igralec() {
           player_id: igralecId,
           user_id: session.user.id,
           kind: vrstaPorocila,
-          content: t,
+          content: vsebina,
           created_at: new Date().toISOString(),
         },
         ...prej,
@@ -373,7 +374,7 @@ export default function Igralec() {
       if (prejsnji) nov[prejsnji] = Math.max(0, (nov[prejsnji] ?? 0) - 1)
       return nov
     })
-    setSporocilo('Hvala — sporočilo je zabeleženo. Ko se zbere dovolj enakih, se pozicija popravi.')
+    setSporocilo(t('igralci.profil.hvalaGlas'))
 
     // Pravo stanje vseeno preberemo iz baze: medtem je lahko glasoval še kdo,
     // uteži pa niso vse enake, zato ocene ne gre puščati na naši aritmetiki.
@@ -414,9 +415,9 @@ export default function Igralec() {
         supabase.from('player_standings').select('owners').eq('id', igralecId).maybeSingle(),
       ])
       if (!veljavno) return
-      const t = rTekma.data as any
+      const tk = rTekma.data as any
       setTekmaKartice(
-        t ? vrsticaTekme(t.domaci?.name ?? null, t.gostje?.name ?? null, t.home_goals, t.away_goals) : null,
+        tk ? vrsticaTekme(tk.domaci?.name ?? null, tk.gostje?.name ?? null, tk.home_goals, tk.away_goals) : null,
       )
       setEkipZIgralcem(rEkip.data?.owners != null ? Number(rEkip.data.owners) : null)
     })()
@@ -426,14 +427,14 @@ export default function Igralec() {
   }, [tekmaZadnjega, igralecId])
 
   if (nalaganje)
-    return <p className="animiraj-utrip text-slate-400">Nalaganje …</p>
-  if (napaka) return <p className="text-rose-400">Napaka: {napaka}</p>
+    return <p className="animiraj-utrip text-slate-400">{t('skupno.nalaganje')}</p>
+  if (napaka) return <p className="text-rose-400">{t('skupno.napaka', { sporocilo: napaka })}</p>
   if (!igralec)
-    return <p className="kartica p-6 text-center text-slate-400">Igralca ni.</p>
+    return <p className="kartica p-6 text-center text-slate-400">{t('igralci.profil.niIgralca')}</p>
 
   // Povezave naprej vodijo v ligo igralca, ne v tisto, ki je izbrana v meniju
   // — igralec iz deljene povezave je lahko iz druge lige.
-  const slugLige = tekmovanja.find((t) => t.id === igralec.competition_id)?.slug
+  const slugLige = tekmovanja.find((tm) => tm.id === igralec.competition_id)?.slug
   const vLigo = slugLige ? `?t=${encodeURIComponent(slugLige)}` : ''
 
   const zadnjaSprememba = cene[0]
@@ -444,7 +445,7 @@ export default function Igralec() {
   return (
     <div className="space-y-5">
       <Link to={`/igralci${vLigo}`} className="text-sm text-slate-400 hover:text-white">
-        ← Vsi igralci
+        {t('igralci.profil.vsiIgralci')}
       </Link>
 
       {/* glava */}
@@ -461,7 +462,7 @@ export default function Igralec() {
           </h1>
           <p className="text-sm text-slate-400">
             {igralec.team_name}
-            {igralec.shirt_number != null && ` · št. ${igralec.shirt_number}`}
+            {igralec.shirt_number != null && t('igralci.profil.stevilkaDresa', { st: igralec.shirt_number })}
           </p>
         </div>
         <div className="text-right">
@@ -469,7 +470,7 @@ export default function Igralec() {
             {formatirajCeno(igralec.value)}
           </div>
           <div className="text-xs uppercase tracking-wide text-slate-500">
-            cena
+            {t('igralci.profil.cena')}
             {premik !== 0 && (
               <span className={premik > 0 ? 'text-gnl-300' : 'text-rose-400'}>
                 {' '}
@@ -484,24 +485,27 @@ export default function Igralec() {
       <div className="space-y-2">
         {sezonsko && (
           <h2 className="text-xs font-bold uppercase tracking-wide text-slate-400">
-            Sezona {sezonsko.season}
+            {t('igralci.profil.sezona', { sezona: sezonsko.season })}
           </h2>
         )}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Stevilka
-            oznaka="Točke"
+            oznaka={t('igralci.profil.stevilke.tocke')}
             vrednost={formatirajTocke((sezonsko ?? igralec).points)}
           />
-          <Stevilka oznaka="Tekem" vrednost={(sezonsko ?? igralec).matches ?? 0} />
-          <Stevilka oznaka="Golov" vrednost={(sezonsko ?? igralec).goals ?? 0} />
-          <Stevilka oznaka="Minut" vrednost={(sezonsko ?? igralec).minutes ?? 0} />
+          <Stevilka oznaka={t('igralci.profil.stevilke.tekem')} vrednost={(sezonsko ?? igralec).matches ?? 0} />
+          <Stevilka oznaka={t('igralci.profil.stevilke.golov')} vrednost={(sezonsko ?? igralec).goals ?? 0} />
+          <Stevilka oznaka={t('igralci.profil.stevilke.minut')} vrednost={(sezonsko ?? igralec).minutes ?? 0} />
         </div>
         {sezonsko && (
           <p className="text-xs text-slate-500">
-            Skupaj vse sezone: {formatirajTocke(igralec.points)}{' '}
-            {oblika(Number(igralec.points ?? 0), TOCKE)} ·{' '}
-            {mnozina(igralec.matches ?? 0, TEKME)} ·{' '}
-            {mnozina(igralec.goals ?? 0, GOLI)} · {igralec.minutes ?? 0} min
+            {t('igralci.profil.skupajVseSezone', {
+              tocke: formatirajTocke(igralec.points),
+              tockeBeseda: oblika(Number(igralec.points ?? 0), TOCKE),
+              tekme: mnozina(igralec.matches ?? 0, TEKME),
+              goli: mnozina(igralec.goals ?? 0, GOLI),
+              minute: igralec.minutes ?? 0,
+            })}
           </p>
         )}
       </div>
@@ -509,7 +513,7 @@ export default function Igralec() {
       {/* kartica za objavo — za igralca, starše in navijače */}
       {(zadnjiNastop || (sezonsko && (sezonsko.matches ?? 0) > 0)) && (
         <section className="kartica space-y-3 p-4">
-          <h2 className="text-sm font-bold text-slate-200">Deli kartico igralca</h2>
+          <h2 className="text-sm font-bold text-slate-200">{t('igralci.profil.deliKartico')}</h2>
           <KarticaIgralca
             podatki={{
               ime: igralec.first_name ?? '',
@@ -519,7 +523,7 @@ export default function Igralec() {
               klub: igralec.team_name ?? '',
               klubKratko: igralec.team_short ?? null,
               grb: igralec.team_logo ?? null,
-              liga: tekmovanja.find((t) => t.id === igralec.competition_id)?.name ?? '',
+              liga: tekmovanja.find((tm) => tm.id === igralec.competition_id)?.name ?? '',
               krog: zadnjiNastop?.number ?? null,
               tocke: zadnjiNastop ? zadnjiNastop.skupaj : Number(sezonsko?.points ?? 0),
               dosezki: zadnjiNastop ? dosezkiNastopa(zadnjiNastop.nastop, igralec.position ?? null) : [],
@@ -551,11 +555,11 @@ export default function Igralec() {
               {igralec.position ? IKONA[igralec.position] : '❔'}
             </span>{' '}
             {(igralec.position && IME_POZICIJE[igralec.position]) ??
-              'Pozicija ni znana'}
+              t('igralci.profil.pozicijaNeznana')}
           </span>
           {igralec.position_source === 'zapisnik' && (
             <span className="text-xs text-slate-500">
-              iz zapisnika (vratar je uradno označen)
+              {t('igralci.profil.izZapisnika')}
             </span>
           )}
         </div>
@@ -564,8 +568,8 @@ export default function Igralec() {
           <>
             <p className="text-xs text-slate-400">
               {session
-                ? 'Kje po tvoje igra? Klikni pravo pozicijo. Utežena zbirka glasov skupnosti odloči.'
-                : 'Prijavljeni uporabniki lahko glasujejo o poziciji.'}
+                ? t('igralci.profil.glasujVprasanje')
+                : t('igralci.profil.glasujPrijavljeni')}
             </p>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {POZICIJE.map((p) => {
@@ -598,19 +602,23 @@ export default function Igralec() {
             </div>
             {!session && (
               <p className="text-xs text-slate-500">
-                Za glasovanje se{' '}
-                <Link to={prijava} className="underline">
-                  prijavi
-                </Link>
-                .
+                {tx('igralci.profil.zaGlasovanjePrijava', {}, {
+                  povezava: (b) => (
+                    <Link to={prijava} className="underline">
+                      {b}
+                    </Link>
+                  ),
+                })}
               </p>
             )}
             <p className="text-[11px] text-slate-500">
-              Podroben pregled vseh igralcev in uteži je na strani{' '}
-              <Link to={`/pozicije${vLigo}`} className="underline hover:text-gnl-300">
-                Pozicije
-              </Link>
-              .
+              {tx('igralci.profil.podrobenPregled', {}, {
+                povezava: (b) => (
+                  <Link to={`/pozicije${vLigo}`} className="underline hover:text-gnl-300">
+                    {b}
+                  </Link>
+                ),
+              })}
             </p>
           </>
         )}
@@ -621,26 +629,29 @@ export default function Igralec() {
       {tekme.length > 0 && (
         <section className="kartica p-4">
           <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-400">
-            Naslednje tekme
+            {t('igralci.profil.naslednjeTekme')}
           </h2>
           <ul className="flex flex-wrap gap-2">
-            {tekme.map((t, n) => (
+            {tekme.map((tk, n) => (
               <li
                 key={n}
                 className="flex items-center gap-2 rounded-xl bg-white/5 px-3 py-2 text-sm"
-                title={`${t.round_number}. krog — ${t.doma ? 'doma' : 'v gosteh'} proti ${t.opponent_name}`}
+                title={t(tk.doma ? 'igralci.profil.tekmaDoma' : 'igralci.profil.tekmaVGosteh', {
+                  krog: tk.round_number,
+                  nasprotnik: tk.opponent_name,
+                })}
               >
                 <Grb
-                  ime={t.opponent_name}
-                  kratko={t.opponent_short}
-                  logo={t.opponent_logo}
+                  ime={tk.opponent_name}
+                  kratko={tk.opponent_short}
+                  logo={tk.opponent_logo}
                   velikost={20}
                 />
-                <span className="font-semibold">{t.opponent_short}</span>
+                <span className="font-semibold">{tk.opponent_short}</span>
                 <span
-                  className={`text-xs ${t.doma ? 'text-gnl-300' : 'text-slate-500'}`}
+                  className={`text-xs ${tk.doma ? 'text-gnl-300' : 'text-slate-500'}`}
                 >
-                  {t.doma ? 'D' : 'G'}
+                  {tk.doma ? t('igralci.profil.domaKratko') : t('igralci.profil.vGostehKratko')}
                 </span>
               </li>
             ))}
@@ -652,16 +663,16 @@ export default function Igralec() {
       <section className="kartica p-3 sm:p-4">
         <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="text-xs font-bold uppercase tracking-wide text-slate-400">
-            Odsotnosti in poškodbe
+            {t('igralci.odsotnosti.naslov')}
           </h2>
           <Link to={`/odsotnosti${vLigo}`} className="text-xs text-gnl-300 hover:underline">
-            vsa poročila →
+            {t('igralci.profil.vsaPorocila')}
           </Link>
         </div>
 
         {porocila.length === 0 ? (
           <p className="py-2 text-sm text-slate-500">
-            Ni poročil. Če veš, da igralec manjka, povej spodaj.
+            {t('igralci.profil.niPorocil')}
           </p>
         ) : (
           <ul className="space-y-2">
@@ -702,7 +713,7 @@ export default function Igralec() {
                 value={besediloPorocila}
                 onChange={(e) => setBesediloPorocila(e.target.value)}
                 maxLength={500}
-                placeholder="Npr. poškodba kolena, tri tedne."
+                placeholder={t('igralci.profil.porociloPrimer')}
                 className="flex-1 rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm"
               />
               <button
@@ -710,21 +721,22 @@ export default function Igralec() {
                 disabled={posiljamPorocilo || !besediloPorocila.trim()}
                 className="gumb-glavni px-4 text-sm"
               >
-                Objavi
+                {t('igralci.odsotnosti.objavi')}
               </button>
             </div>
             <p className="text-[11px] text-slate-400">
-              Informacija za druge — igralca ne odstrani s trga in ne vpliva na
-              točke.
+              {t('igralci.profil.samoInformacija')}
             </p>
           </form>
         ) : (
           <p className="mt-3 text-xs text-slate-500">
-            Za objavo se{' '}
-            <Link to={prijava} className="underline hover:text-gnl-300">
-              prijavi
-            </Link>
-            .
+            {tx('igralci.profil.zaObjavoPrijava', {}, {
+              povezava: (b) => (
+                <Link to={prijava} className="underline hover:text-gnl-300">
+                  {b}
+                </Link>
+              ),
+            })}
           </p>
         )}
       </section>
@@ -733,10 +745,10 @@ export default function Igralec() {
       {razlage.length > 0 && (
         <section className="kartica p-3 sm:p-4">
           <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-400">
-            Točke po krogih
+            {t('igralci.profil.tockePoKrogih')}
           </h2>
           <p className="mb-3 text-[11px] text-slate-500">
-            Klikni krog za razlago, iz kje točke prihajajo.
+            {t('igralci.profil.klikniKrog')}
           </p>
           <ul className="space-y-1">
             {razlage.map((r) => {
@@ -751,10 +763,10 @@ export default function Igralec() {
                   >
                     <span className="text-slate-300">
                       <strong className="text-slate-100">
-                        {r.number}. krog
+                        {t('igralci.krog', { krog: r.number })}
                       </strong>
                       <span className="ml-2 text-xs text-slate-500">
-                        {r.season} · {r.minute} min
+                        {t('igralci.profil.sezonaMinute', { sezona: r.season, minute: r.minute })}
                       </span>
                     </span>
                     <span className="flex items-center gap-2">
@@ -778,7 +790,7 @@ export default function Igralec() {
                     <div className="border-t border-white/5 px-3 py-2">
                       {r.postavke.length === 0 ? (
                         <p className="text-xs text-slate-500">
-                          Ni igralnega časa — 0 točk.
+                          {t('igralci.profil.niIgralnegaCasa')}
                         </p>
                       ) : (
                         <ul className="space-y-1 text-xs">
@@ -801,7 +813,7 @@ export default function Igralec() {
                             </li>
                           ))}
                           <li className="mt-1 flex justify-between gap-3 border-t border-white/10 pt-1 text-slate-300">
-                            <span className="font-semibold">Skupaj</span>
+                            <span className="font-semibold">{t('igralci.profil.skupaj')}</span>
                             <span className="font-black tabular-nums">
                               {formatirajTocke(r.skupaj)}
                             </span>
@@ -821,7 +833,7 @@ export default function Igralec() {
       {cene.length > 0 && (
         <section className="kartica p-4">
           <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-400">
-            Gibanje cene
+            {t('igralci.info.gibanjeCene')}
           </h2>
           {(() => {
             if (izhodisce == null) return null
@@ -840,7 +852,7 @@ export default function Igralec() {
               <div className="mb-3">
                 <div className="mb-1 flex items-baseline justify-between text-xs tabular-nums text-slate-400">
                   <span>
-                    {formatirajCeno(serija[0].cena)} ob postavitvi lige
+                    {t('igralci.profil.obPostavitvi', { cena: formatirajCeno(serija[0].cena) })}
                   </span>
                   <span>
                     <strong className="text-slate-200">
@@ -864,7 +876,7 @@ export default function Igralec() {
                   viewBox="0 0 160 40"
                   className="h-12 w-full"
                   preserveAspectRatio="none"
-                  aria-label={`Cena od ${serija[0].cena} do ${serija[serija.length - 1].cena}`}
+                  aria-label={t('igralci.profil.cenaOdDo', { od: serija[0].cena, do: serija[serija.length - 1].cena })}
                 >
                   <path
                     d={crta(serija, 160, 40)}
@@ -877,8 +889,8 @@ export default function Igralec() {
                   />
                 </svg>
                 <div className="flex justify-between text-[10px] text-slate-400">
-                  <span>začetek sezone</span>
-                  <span>{serija[serija.length - 1].krog}. krog</span>
+                  <span>{t('igralci.profil.zacetekSezone')}</span>
+                  <span>{t('igralci.krog', { krog: serija[serija.length - 1].krog })}</span>
                 </div>
               </div>
             )
@@ -891,7 +903,7 @@ export default function Igralec() {
                   key={n}
                   className="flex items-center justify-between gap-3 rounded-lg bg-white/5 px-3 py-1.5 text-sm"
                 >
-                  <span className="text-slate-400">{c.rounds?.number}. krog</span>
+                  <span className="text-slate-400">{t('igralci.krog', { krog: c.rounds?.number })}</span>
                   <span className="tabular-nums">
                     {formatirajCeno(c.old_value)} →{' '}
                     <strong>{formatirajCeno(c.new_value)}</strong>

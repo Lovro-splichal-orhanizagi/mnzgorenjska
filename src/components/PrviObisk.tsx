@@ -25,6 +25,7 @@ import { supabase } from '../lib/supabase'
 import { vseVrstice } from '../lib/strani'
 import { mnozina, EKIPE } from '../lib/pomozno'
 import { poZvezah } from './IzbirnikLige'
+import { t } from '../i18n'
 
 const KLJUC_PRESKOKA = 'slff-prvi-obisk'
 
@@ -148,11 +149,10 @@ export default function PrviObisk() {
         tabIndex={-1}
         className="animiraj-vstop w-full max-w-md rounded-2xl border border-white/10 bg-slate-900 p-5 shadow-2xl outline-none"
       >
-        <h2 id="prvi-obisk-naslov" className="text-xl font-black naslov">Kje želiš igrati?</h2>
-        <p className="mt-1 text-sm text-slate-400">
-          Izberi ligo, v kateri boš sestavil ekipo in tekmoval. Pokažemo ti
-          njene igralce in lestvico; pozneje jo lahko kadarkoli zamenjaš zgoraj.
-        </p>
+        <h2 id="prvi-obisk-naslov" className="text-xl font-black naslov">
+          {t('aplikacija.prviObisk.naslov')}
+        </h2>
+        <p className="mt-1 text-sm text-slate-400">{t('aplikacija.prviObisk.opis')}</p>
 
         {potrebnaDrzava ? (
           <div className="mt-4 space-y-1.5">
@@ -173,24 +173,24 @@ export default function PrviObisk() {
                 <div className="px-1 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-500">
                   {s.naslov}
                 </div>
-                {s.lige.map((t) => {
-                  const n = ekip[t.id] ?? 0
+                {s.lige.map((liga) => {
+                  const n = ekip[liga.id] ?? 0
                   return (
                     <button
-                      key={t.slug}
+                      key={liga.slug}
                       onClick={() => {
-                        nastavi(t.slug)
+                        nastavi(liga.slug)
                         zapri()
                       }}
                       className="mb-1 flex w-full items-center gap-2 rounded-xl bg-white/5 px-3 py-2 text-left text-sm hover:bg-gnl-500/20"
                     >
-                      <span className="min-w-0 flex-1 truncate">{t.name}</span>
+                      <span className="min-w-0 flex-1 truncate">{liga.name}</span>
                       <span
                         className={`shrink-0 text-xs tabular-nums ${
                           n >= 5 ? 'text-gnl-300' : 'text-slate-500'
                         }`}
                       >
-                        {n === 0 ? 'še brez ekip' : mnozina(n, EKIPE)}
+                        {n === 0 ? t('aplikacija.prviObisk.brezEkip') : mnozina(n, EKIPE)}
                       </span>
                     </button>
                   )
@@ -206,13 +206,13 @@ export default function PrviObisk() {
               onClick={() => setDrzava(null)}
               className="text-xs text-slate-400 hover:text-slate-200"
             >
-              ← Nazaj
+              {t('aplikacija.prviObisk.nazaj')}
             </button>
           ) : (
             <span />
           )}
           <button onClick={zapri} className="text-xs text-slate-500 hover:text-slate-300">
-            Preskoči
+            {t('aplikacija.prviObisk.preskoci')}
           </button>
         </div>
       </div>

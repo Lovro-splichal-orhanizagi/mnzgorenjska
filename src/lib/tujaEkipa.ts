@@ -6,6 +6,7 @@
 // igralec ekipi v resnici prinesel.
 import { VRSTNI_RED } from './pravila'
 import type { Pozicija } from './tipi'
+import { t } from '../i18n/jedro.ts'
 import type { IgralecEnajsterice } from '../components/EnajstericaNaIgriscu'
 
 /** Vrstica, kot jo vrne `tuja_postava`. */
@@ -57,8 +58,8 @@ export function razdeli(vrstice: VrsticaTuje[]): {
  * "N" ob dresu po nepotrebnem izenacil s kapetanom.
  */
 export function oznaka(v: VrsticaTuje): string | null {
-  if (v.je_kapetan) return 'K'
-  if (v.je_namestnik) return 'N'
+  if (v.je_kapetan) return t('mojaEkipa.oznaka.kapetan')
+  if (v.je_namestnik) return t('mojaEkipa.oznaka.namestnik')
   return null
 }
 

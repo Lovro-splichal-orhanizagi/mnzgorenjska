@@ -12,6 +12,7 @@ import {
   type DrzavnaVrstica,
   type Razvrstitev,
 } from '../lib/drzavna'
+import { t } from '../i18n'
 
 const MEDALJE = ['🥇', '🥈', '🥉']
 
@@ -28,7 +29,7 @@ export default function Slovenija() {
   const [nalaganje, setNalaganje] = useState(true)
   const [napaka, setNapaka] = useState<string | null>(null)
   const [seNiPripravljena, setSeNiPripravljena] = useState(false)
-  useNaslov('Državna lestvica')
+  useNaslov(t('lestvice.slovenija.naslovStrani'))
 
   useEffect(() => {
     let veljavno = true
@@ -75,14 +76,14 @@ export default function Slovenija() {
   const urejene = useMemo(() => zMesti(razvrsti(vrstice, kako), kako), [vrstice, kako])
   const skupaj = useMemo(() => povzetek(vrstice), [vrstice])
 
-  if (nalaganje) return <p className="animiraj-utrip text-slate-400">Nalaganje …</p>
-  if (napaka) return <p className="text-rose-400">Napaka: {napaka}</p>
+  if (nalaganje) return <p className="animiraj-utrip text-slate-400">{t('skupno.nalaganje')}</p>
+  if (napaka) return <p className="text-rose-400">{t('skupno.napaka', { sporocilo: napaka })}</p>
   if (seNiPripravljena)
     return (
       <div className="space-y-4">
-        <h1 className="text-2xl font-black naslov sm:text-3xl">Slovenija</h1>
+        <h1 className="text-2xl font-black naslov sm:text-3xl">{t('lestvice.slovenija.naslov')}</h1>
         <p className="kartica p-6 text-center text-slate-400">
-          Državna lestvica se pripravlja. Poskusi čez nekaj minut.
+          {t('lestvice.slovenija.pripravlja')}
         </p>
       </div>
     )
@@ -90,19 +91,21 @@ export default function Slovenija() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-2xl font-black naslov sm:text-3xl">Slovenija</h1>
+        <h1 className="text-2xl font-black naslov sm:text-3xl">{t('lestvice.slovenija.naslov')}</h1>
         <p className="mt-1 text-sm text-slate-400">
-          Vse ekipe vseh lig skupaj — {mnozina(skupaj.ekip, EKIPE)} iz{' '}
-          {mnozina(skupaj.lig, ['lige', 'lig', 'lig', 'lig'])} in{' '}
-          {mnozina(skupaj.zvez, ['zveze', 'zvez', 'zvez', 'zvez'])}.
+          {t('lestvice.slovenija.povzetek', {
+            ekip: mnozina(skupaj.ekip, EKIPE),
+            lig: t('lestvice.slovenija.lig', { n: skupaj.lig }),
+            zvez: t('lestvice.slovenija.zvez', { n: skupaj.zvez }),
+          })}
         </p>
       </div>
 
       <div className="flex gap-2">
         {(
           [
-            ['skupno', 'Skupno'],
-            ['povprecje', 'Na krog'],
+            ['skupno', t('lestvice.slovenija.skupno')],
+            ['povprecje', t('lestvice.slovenija.naKrog')],
           ] as [Razvrstitev, string][]
         ).map(([k, naslov]) => (
           <button
@@ -119,14 +122,9 @@ export default function Slovenija() {
 
       {kako === 'povprecje' && (
         <p className="text-xs text-slate-500">
-          Lige ne začnejo hkrati, zato ekipa iz lige, ki je začela prej, zbere več
-          točk že zaradi tega. Povprečje to izravna; štejejo ekipe z vsaj{' '}
-          {mnozina(NAJMANJ_KROGOV_ZA_POVPRECJE, [
-            'odigranim krogom',
-            'odigranima krogoma',
-            'odigranimi krogi',
-            'odigranimi krogi',
-          ])}.
+          {t('lestvice.slovenija.povprecjeRazlaga', {
+            krogov: t('lestvice.slovenija.zOdigranimiKrogi', { n: NAJMANJ_KROGOV_ZA_POVPRECJE }),
+          })}
         </p>
       )}
 
@@ -137,8 +135,10 @@ export default function Slovenija() {
               zato, ker ne bi igral nihče. Prva različica je trdila slednje in
               je bila videti kot okvara. */}
           {kako === 'povprecje' && vrstice.length > 0
-            ? `Za povprečje mora ekipa odigrati vsaj ${mnozina(NAJMANJ_KROGOV_ZA_POVPRECJE, ['krog', 'kroga', 'kroge', 'krogov'])} — toliko jih še ni odigrala nobena.`
-            : 'Nobena ekipa še nima odigranega kroga.'}
+            ? t('lestvice.slovenija.premaloKrogov', {
+                krogov: t('lestvice.slovenija.krogovTozilnik', { n: NAJMANJ_KROGOV_ZA_POVPRECJE }),
+              })
+            : t('lestvice.slovenija.nobenaEkipa')}
         </p>
       ) : (
         <ul className="space-y-1">
@@ -180,7 +180,7 @@ export default function Slovenija() {
 
       <p className="text-xs text-slate-500">
         <Link to="/lestvica" className="underline hover:text-slate-300">
-          Lestvica svoje lige
+          {t('lestvice.slovenija.lestvicaLige')}
         </Link>
       </p>
     </div>

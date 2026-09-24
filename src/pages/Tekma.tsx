@@ -5,7 +5,7 @@ import { PRAG_ASISTENCE_PRIVZETO } from '../components/GolZaGlasovanje'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { useNaslov } from '../lib/naslov'
 import { povezavaNaPrijavo } from '../lib/prijava'
-import { mnozina, oblika, GOLI } from '../lib/pomozno'
+import { t, datum } from '../i18n'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import type { Pozicija } from '../lib/tipi'
@@ -26,9 +26,9 @@ type NastopTekme = NastopNaTekmi &
     players?: { full_name?: string | null; position?: Pozicija | null } | null
   }
 
-const datum = (d?: string | null) =>
+const datumTekme = (d?: string | null) =>
   d
-    ? new Date(d).toLocaleDateString('sl-SI', {
+    ? datum(d, {
         day: 'numeric',
         month: 'long',
         year: 'numeric',
@@ -50,7 +50,7 @@ export default function Tekma() {
     'prag_glasov_asistenca',
     PRAG_ASISTENCE_PRIVZETO,
   )
-  useNaslov(tekma ? `${tekma.home_short} – ${tekma.away_short}` : 'Tekma')
+  useNaslov(tekma ? `${tekma.home_short} – ${tekma.away_short}` : t('tekme.tekma.naslov'))
   const [nastopi, setNastopi] = useState<NastopTekme[]>([])
   const [goli, setGoli] = useState<Gol[]>([])
   // goal_id -> glasovi, razvrsceni padajoce
@@ -207,14 +207,14 @@ export default function Tekma() {
   }
 
   if (nalaganje)
-    return <p className="animiraj-utrip text-slate-400">Nalaganje …</p>
+    return <p className="animiraj-utrip text-slate-400">{t('skupno.nalaganje')}</p>
 
   if (!tekma)
     return (
       <div className="space-y-3">
-        <p className="text-slate-400">Te tekme ni v zapisnikih.</p>
+        <p className="text-slate-400">{t('tekme.tekma.niTekme')}</p>
         <Link to="/rezultati" className="gumb-tih inline-block">
-          ← Rezultati
+          {t('tekme.tekma.nazaj')}
         </Link>
       </div>
     )
@@ -231,11 +231,11 @@ export default function Tekma() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Link to="/rezultati" className="text-sm text-slate-400 hover:text-gnl-300">
-          ← Rezultati
+          {t('tekme.tekma.nazaj')}
         </Link>
         <span className="text-sm text-slate-500">
-          {tekma.round_number}. krog · {tekma.season}
-          {tekma.played_on && ` · ${datum(tekma.played_on)}`}
+          {t('tekme.krog', { n: tekma.round_number })} · {tekma.season}
+          {tekma.played_on && ` · ${datumTekme(tekma.played_on)}`}
         </span>
       </div>
 
@@ -255,14 +255,12 @@ export default function Tekma() {
 
       {nastopi.length === 0 ? (
         <p className="kartica p-4 text-slate-400">
-          Zapisnik te tekme ne navaja postav, zato točk po igralcih ni mogoče
-          prikazati.
+          {t('tekme.tekma.brezPostav')}
         </p>
       ) : (
         <>
           <p className="text-sm text-slate-400">
-            Na dresu piše, koliko točk je igralec zaslužil na tej tekmi.
-            Klik na igralca odpre njegovo stran.
+            {t('tekme.tekma.naDresu')}
           </p>
           <div className="grid gap-5 lg:grid-cols-2">
             <IgrisceTocke
@@ -287,23 +285,20 @@ export default function Tekma() {
 
       {cakajocih > 0 && (
         <p className="rounded-2xl bg-amber-400/10 p-4 text-sm text-amber-200 ring-1 ring-amber-400/30">
-          <span aria-hidden="true">🅰️</span> {mnozina(cakajocih, GOLI)} na tej
-          tekmi {oblika(cakajocih, ['čaka', 'čakata', 'čakajo', 'čaka'])} na
-          asistenco — dokler je ni, podajalec ostane brez +3 točk. Povej spodaj,
-          kdo je podal.
+          <span aria-hidden="true">🅰️</span> {t('tekme.tekma.cakajo', { n: cakajocih })}
         </p>
       )}
 
       {goli.length > 0 && (
         <section className="space-y-3">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="text-xl font-bold">Goli in asistence</h2>
+            <h2 className="text-xl font-bold">{t('tekme.tekma.goliInAsistence')}</h2>
             {!session && (
               <Link
                 to={povezavaNaPrijavo(lokacija.pathname + lokacija.search)}
                 className="text-sm text-gnl-300 underline"
               >
-                Prijavi se za glasovanje
+                {t('tekme.tekma.prijaviSe')}
               </Link>
             )}
           </div>
@@ -330,7 +325,7 @@ export default function Tekma() {
           </ul>
         </section>
       )}
-      {napaka && <p className="text-sm text-rose-400">Napaka: {napaka}</p>}
+      {napaka && <p className="text-sm text-rose-400">{t('skupno.napaka', { sporocilo: napaka })}</p>}
     </div>
   )
 }

@@ -3,6 +3,8 @@
 // Ločeno od strani, da jih preverja `npm run smoke` brez omrežja: normalizacija
 // kode in razvrstitev lestvice odločata, ali se človek pridruži in kdo je prvi.
 
+import { t } from '../i18n/jedro.ts'
+
 /** Vrstica pogleda `mini_liga_lestvica`. */
 export interface MiniVrstica {
   fantasy_team_id: number | null
@@ -50,12 +52,12 @@ export function kodaJeVeljavna(vnos: string): boolean {
  */
 export function zakajNiVeljavna(vnos: string): string | null {
   const k = ocistiKodo(vnos)
-  if (k.length === 0) return 'Vpiši kodo mini lige.'
+  if (k.length === 0) return t('lestvice.miniLige.vpisiKodo')
   if (k.length !== DOLZINA_KODE)
-    return `Koda ima ${DOLZINA_KODE} znakov, ti si jih vpisal ${k.length}.`
+    return t('lestvice.miniLige.dolzinaKode', { dolzina: DOLZINA_KODE, vpisal: k.length })
   const slabi = [...new Set([...k].filter((z) => !ZNAKI_KODE.includes(z)))]
   if (slabi.length)
-    return `Koda ne vsebuje znakov ${slabi.join(', ')} — poglej, ali si zamenjal 0 in O ali 1 in I.`
+    return t('lestvice.miniLige.slabiZnaki', { znaki: slabi.join(', ') })
   return null
 }
 
@@ -71,9 +73,9 @@ export function razvrstiMini(vrstice: MiniVrstica[]): (MiniVrstica & { mesto: nu
   let zadnji: number | null = null
   let mesto = 0
   return urejene.map((v, i) => {
-    const t = st(v.total_points)
-    if (zadnji === null || t !== zadnji) mesto = i + 1
-    zadnji = t
+    const tock = st(v.total_points)
+    if (zadnji === null || tock !== zadnji) mesto = i + 1
+    zadnji = tock
     return { ...v, mesto }
   })
 }
@@ -101,7 +103,7 @@ export function povezavaVabila(koda: string, naslov: string): string {
  * tja. Kratko in z izzivom — "premagaj me" je razlog, da kdo klikne.
  */
 export function besediloVabila(ime: string, koda: string, naslov: string): string {
-  return `Pridi v mojo mini ligo "${ime}" v SLFF in me premagaj: ${povezavaVabila(koda, naslov)}`
+  return t('lestvice.miniLige.besediloVabila', { ime, povezava: povezavaVabila(koda, naslov) })
 }
 
 /**
@@ -116,7 +118,7 @@ export async function deliVabilo(
   const besedilo = besediloVabila(ime, koda, naslov)
   if (navigator.share) {
     try {
-      await navigator.share({ title: `Mini liga ${ime} — SLFF`, text: besedilo })
+      await navigator.share({ title: t('lestvice.miniLige.naslovVabila', { ime }), text: besedilo })
       return 'deljeno'
     } catch (e) {
       if ((e as Error).name === 'AbortError') return 'preklicano'
@@ -165,6 +167,6 @@ export function pozabiVabilo(): void {
 /** Privzeto ime nove lige: "Jernej in prijatelji" — en klik, brez tipkanja. */
 export function privzetoImeLige(vzdevek: string | null | undefined): string {
   const v = (vzdevek ?? '').trim().split(/\s+/)[0]
-  const ime = v ? `${v} in prijatelji` : 'Moja mini liga'
+  const ime = v ? t('lestvice.miniLige.privzetoIme', { ime: v }) : t('lestvice.miniLige.privzetoImeBrez')
   return ime.length > 40 ? ime.slice(0, 40) : ime
 }

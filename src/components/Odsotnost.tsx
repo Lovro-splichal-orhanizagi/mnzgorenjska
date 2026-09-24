@@ -6,6 +6,7 @@
 // prijava postala orodje proti tekmecu in bi rabili prag glasov, kot ga
 // imata asistenca in pozicija.
 import type { ReactNode } from 'react'
+import { t, datum } from '../i18n'
 
 /** Vrsta poročila; ujema se s `check` v tabeli `player_reports`. */
 export type VrstaPorocila = 'poskodba' | 'odsotnost' | 'vrnitev' | 'drugo'
@@ -25,17 +26,17 @@ export interface Porocilo {
 }
 
 export const VRSTE: Array<{ kljuc: VrstaPorocila; oznaka: string; ikona: string }> = [
-  { kljuc: 'poskodba', oznaka: 'Poškodba', ikona: '🩹' },
-  { kljuc: 'odsotnost', oznaka: 'Odsotnost', ikona: '🚫' },
-  { kljuc: 'vrnitev', oznaka: 'Vrnitev', ikona: '✅' },
-  { kljuc: 'drugo', oznaka: 'Drugo', ikona: '💬' },
+  { kljuc: 'poskodba', oznaka: t('igralci.vrstePorocil.poskodba'), ikona: '🩹' },
+  { kljuc: 'odsotnost', oznaka: t('igralci.vrstePorocil.odsotnost'), ikona: '🚫' },
+  { kljuc: 'vrnitev', oznaka: t('igralci.vrstePorocil.vrnitev'), ikona: '✅' },
+  { kljuc: 'drugo', oznaka: t('igralci.vrstePorocil.drugo'), ikona: '💬' },
 ]
 
 const PO_KLJUCU: Record<VrstaPorocila, { oznaka: string; ikona: string; barva: string }> = {
-  poskodba: { oznaka: 'Poškodba', ikona: '🩹', barva: 'bg-rose-500/15 text-rose-200' },
-  odsotnost: { oznaka: 'Odsotnost', ikona: '🚫', barva: 'bg-amber-500/15 text-amber-200' },
-  vrnitev: { oznaka: 'Vrnitev', ikona: '✅', barva: 'bg-gnl-500/15 text-gnl-200' },
-  drugo: { oznaka: 'Drugo', ikona: '💬', barva: 'bg-white/10 text-slate-300' },
+  poskodba: { oznaka: t('igralci.vrstePorocil.poskodba'), ikona: '🩹', barva: 'bg-rose-500/15 text-rose-200' },
+  odsotnost: { oznaka: t('igralci.vrstePorocil.odsotnost'), ikona: '🚫', barva: 'bg-amber-500/15 text-amber-200' },
+  vrnitev: { oznaka: t('igralci.vrstePorocil.vrnitev'), ikona: '✅', barva: 'bg-gnl-500/15 text-gnl-200' },
+  drugo: { oznaka: t('igralci.vrstePorocil.drugo'), ikona: '💬', barva: 'bg-white/10 text-slate-300' },
 }
 
 export function ZnackaVrste({ vrsta }: { vrsta: VrstaPorocila }) {
@@ -50,11 +51,11 @@ export function ZnackaVrste({ vrsta }: { vrsta: VrstaPorocila }) {
 /** "pred 3 h", "pred 2 d" — enako kot v klepetu. */
 export function relativniCas(iso: string): string {
   const s = Math.round((Date.now() - new Date(iso).getTime()) / 1000)
-  if (s < 60) return 'zdaj'
-  if (s < 3600) return `pred ${Math.floor(s / 60)} min`
-  if (s < 86400) return `pred ${Math.floor(s / 3600)} h`
-  if (s < 604800) return `pred ${Math.floor(s / 86400)} d`
-  return new Date(iso).toLocaleDateString('sl-SI', { day: 'numeric', month: 'numeric' })
+  if (s < 60) return t('igralci.relativniCas.zdaj')
+  if (s < 3600) return t('igralci.relativniCas.min', { n: Math.floor(s / 60) })
+  if (s < 86400) return t('igralci.relativniCas.h', { n: Math.floor(s / 3600) })
+  if (s < 604800) return t('igralci.relativniCas.d', { n: Math.floor(s / 86400) })
+  return datum(iso, { day: 'numeric', month: 'numeric' })
 }
 
 /**
@@ -80,7 +81,7 @@ export function VrsticaPorocila({
           {naIzbris && (
             <button
               onClick={naIzbris}
-              title="Izbriši poročilo"
+              title={t('igralci.porocilo.izbrisi')}
               className="ml-2 text-slate-500 hover:text-rose-400"
             >
               ✕

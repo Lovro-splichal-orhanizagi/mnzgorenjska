@@ -23,7 +23,8 @@
     "preizkus-tock-krogov": "docker exec -i supabase_db_mnzgorenjska psql -U postgres -d postgres -v ON_ERROR_STOP=1 < scripts/preizkus-tock-krogov.sql",
     "preizkus-opozoril": "docker exec -i supabase_db_mnzgorenjska psql -U postgres -d postgres -v ON_ERROR_STOP=1 < scripts/preizkus-opozoril.sql",
     "preizkus-zivosti": "docker exec -i supabase_db_mnzgorenjska psql -U postgres -d postgres -v ON_ERROR_STOP=1 < scripts/preizkus-zivosti.sql",
-    "preveri-predlog": "vite-node scripts/preveri-predlog.mjs"
+    "preveri-predlog": "vite-node scripts/preveri-predlog.mjs",
+    "prevodi": "vite-node scripts/prevodi.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",

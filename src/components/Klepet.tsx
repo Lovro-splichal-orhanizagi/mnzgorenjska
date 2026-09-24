@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { povezavaNaPrijavo } from '../lib/prijava'
 import type { FormEvent } from 'react'
 import { useAuth } from '../lib/useAuth'
+import { t, tx, datum } from '../i18n'
 
 // Anonimni klepet — sporočila so javna, avtor pa skrit za psevdonimom, ki se
 // deterministično izpelje iz user_id, tako da ista oseba vedno "govori" kot
@@ -39,7 +40,7 @@ function stringHash(s: string): number {
 }
 
 export function psevdonim(userId?: string | null): string {
-  if (!userId) return 'Gost'
+  if (!userId) return t('aplikacija.klepet.gost')
   const h = stringHash(userId)
   const p = PRIDEVNIKI[h % PRIDEVNIKI.length]
   const s = SAMOSTALNIKI[Math.floor(h / PRIDEVNIKI.length) % SAMOSTALNIKI.length]
@@ -49,11 +50,11 @@ export function psevdonim(userId?: string | null): string {
 
 function relativniCas(iso: string): string {
   const s = Math.round((Date.now() - new Date(iso).getTime()) / 1000)
-  if (s < 60) return 'zdaj'
-  if (s < 3600) return `${Math.floor(s / 60)} min`
-  if (s < 86400) return `${Math.floor(s / 3600)} h`
-  if (s < 604800) return `${Math.floor(s / 86400)} d`
-  return new Date(iso).toLocaleDateString('sl-SI', {
+  if (s < 60) return t('aplikacija.klepet.zdaj')
+  if (s < 3600) return t('aplikacija.klepet.minut', { n: Math.floor(s / 60) })
+  if (s < 86400) return t('aplikacija.klepet.ur', { n: Math.floor(s / 3600) })
+  if (s < 604800) return t('aplikacija.klepet.dni', { n: Math.floor(s / 86400) })
+  return datum(iso, {
     day: 'numeric',
     month: 'numeric',
   })
@@ -116,16 +117,16 @@ export default function Klepet() {
 
   async function posljem(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (!session) return setNapaka('Za objavo se moraš prijaviti.')
-    const t = besedilo.trim()
-    if (!t) return
-    if (t.length > 500)
-      return setNapaka('Sporočilo je predolgo (največ 500 znakov).')
+    if (!session) return setNapaka(t('aplikacija.klepet.morasSePrijaviti'))
+    const vsebina = besedilo.trim()
+    if (!vsebina) return
+    if (vsebina.length > 500)
+      return setNapaka(t('aplikacija.klepet.predolgo'))
     setPosiljam(true)
     setNapaka(null)
     const { data, error } = await supabase
       .from('chat_messages')
-      .insert({ user_id: session.user.id, content: t, alias: mojPsev })
+      .insert({ user_id: session.user.id, content: vsebina, alias: mojPsev })
       .select('id, content, alias, created_at')
       .single()
     setPosiljam(false)
@@ -135,7 +136,7 @@ export default function Klepet() {
   }
 
   async function izbrisi(id: number) {
-    if (!confirm('Izbrišem sporočilo?')) return
+    if (!confirm(t('aplikacija.klepet.izbrisiVprasanje'))) return
     const { error } = await supabase.from('chat_messages').delete().eq('id', id)
     if (error) return setNapaka(error.message)
     setSporocila((prej) => prej.filter((s) => s.id !== id))
@@ -147,27 +148,26 @@ export default function Klepet() {
         <div className="flex flex-wrap items-center gap-2">
           <span aria-hidden="true" className="text-2xl">💬</span>
           <h2 className="text-xl font-black text-fuchsia-100 sm:text-2xl">
-            Pomagaj nam izboljšati!
+            {t('aplikacija.klepet.naslov')}
           </h2>
           <span className="znacka bg-white/10 text-[10px] text-slate-300">
-            anonimno
+            {t('aplikacija.klepet.anonimno')}
           </span>
         </div>
         <p className="text-sm text-slate-200">
-          Kaj te moti? Kaj bi rad videl? Kaj pogrešaš? Tvoj vtis nam ogromno
-          pomeni — <strong className="text-fuchsia-200">povej</strong>. Klepet
-          je anonimen; nihče ne vidi, kdo je kaj napisal.
+          {tx('aplikacija.klepet.uvod', {}, {
+            krepko: (b) => <strong className="text-fuchsia-200">{b}</strong>,
+          })}
         </p>
         {session ? (
           <p className="text-xs text-slate-400">
-            V klepetu se prikažeš kot{' '}
-            <strong className="text-fuchsia-200">{mojPsev}</strong>. Tvoje
-            registrirano ime ostane skrito.
+            {tx('aplikacija.klepet.prikazesKot', { ime: mojPsev }, {
+              ime: (b) => <strong className="text-fuchsia-200">{b}</strong>,
+            })}
           </p>
         ) : (
           <p className="text-xs text-slate-400">
-            Za pisanje se prijavi (branje je javno). Tvoje registrirano ime
-            ostane skrito, pojaviš se pod naključnim psevdonimom.
+            {t('aplikacija.klepet.zaPisanje')}
           </p>
         )}
       </div>
@@ -175,7 +175,7 @@ export default function Klepet() {
       <div className="max-h-80 space-y-2 overflow-y-auto rounded-xl bg-slate-950/40 p-2">
         {sporocila.length === 0 ? (
           <p className="p-6 text-center text-sm text-slate-500">
-            Bodi prvi, ki napiše sporočilo.
+            {t('aplikacija.klepet.bodiPrvi')}
           </p>
         ) : (
           sporocila.map((s) => {
@@ -197,8 +197,8 @@ export default function Klepet() {
                       <button
                         onClick={() => izbrisi(s.id)}
                         className="ml-2 text-slate-500 hover:text-rose-400"
-                        title="Izbriši sporočilo"
-                        aria-label="Izbriši sporočilo"
+                        title={t('aplikacija.klepet.izbrisi')}
+                        aria-label={t('aplikacija.klepet.izbrisi')}
                       >
                         ✕
                       </button>
@@ -219,7 +219,7 @@ export default function Klepet() {
           <input
             value={besedilo}
             onChange={(e) => setBesedilo(e.target.value)}
-            placeholder="Napiši sporočilo …"
+            placeholder={t('aplikacija.klepet.napisi')}
             maxLength={500}
             className="flex-1 rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm"
           />
@@ -228,23 +228,27 @@ export default function Klepet() {
             disabled={posiljam || !besedilo.trim()}
             className="gumb-glavni px-4 py-2 text-sm"
           >
-            Pošlji
+            {t('aplikacija.klepet.poslji')}
           </button>
         </form>
       ) : (
         <p className="text-center text-xs text-slate-500">
-          Za objavo se{' '}
-          <Link
-            to={povezavaNaPrijavo(pathname + search)}
-            className="underline hover:text-gnl-300"
-          >
-            prijavi
-          </Link>
-          .
+          {tx('aplikacija.klepet.zaObjavo', {}, {
+            prijava: (b) => (
+              <Link
+                to={povezavaNaPrijavo(pathname + search)}
+                className="underline hover:text-gnl-300"
+              >
+                {b}
+              </Link>
+            ),
+          })}
         </p>
       )}
 
-      {napaka && <p className="text-xs text-rose-400">Napaka: {napaka}</p>}
+      {napaka && (
+        <p className="text-xs text-rose-400">{t('skupno.napaka', { sporocilo: napaka })}</p>
+      )}
     </section>
   )
 }

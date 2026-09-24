@@ -5,6 +5,7 @@
 // "Deli povezavo" pošlje povezavo — Facebook in WhatsApp iz nje sama naredita
 // predogled.
 import { useEffect, useRef, useState } from 'react'
+import { t } from '../i18n'
 
 function znaDelitiSliko(): boolean {
   try {
@@ -65,7 +66,7 @@ export default function DeliSliko({
   async function deliPovezavo() {
     if (navigator.share) {
       try {
-        await navigator.share({ title: `${naslov} — SLFF`, text: besedilo, url: povezava })
+        await navigator.share({ title: t('lestvice.deliSliko.naslov', { naslov }), text: besedilo, url: povezava })
       } catch {
         // Uporabnik je meni zaprl — to ni napaka.
       }
@@ -73,7 +74,7 @@ export default function DeliSliko({
     }
     try {
       await navigator.clipboard.writeText(`${besedilo} ${povezava}`)
-      setSporocilo('Povezava je kopirana.')
+      setSporocilo(t('lestvice.deliSliko.kopirana'))
     } catch {
       setSporocilo(povezava)
     }
@@ -91,7 +92,7 @@ export default function DeliSliko({
       }
     }
     if (!blob) {
-      setSporocilo('Slike ni bilo mogoče pripraviti.')
+      setSporocilo(t('lestvice.deliSliko.niPripravljena'))
       return
     }
     const datoteka = new File([blob], imeSlike, { type: 'image/png' })
@@ -104,7 +105,7 @@ export default function DeliSliko({
       // Brskalnik je zavrnil (risanje je trajalo predolgo) — slika je zdaj
       // pripravljena, drugi pritisk jo deli takoj.
       pripravljena.current = { kljuc, blob }
-      setSporocilo('Pritisni še enkrat, da odpreš meni za deljenje.')
+      setSporocilo(t('lestvice.deliSliko.seEnkrat'))
     }
   }
 
@@ -113,7 +114,7 @@ export default function DeliSliko({
     setSporocilo(null)
     try {
       const blob = await narisi()
-      if (!blob) throw new Error('slike ni bilo mogoče izrisati')
+      if (!blob) throw new Error(t('lestvice.deliSliko.niIzrisa'))
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
@@ -126,9 +127,9 @@ export default function DeliSliko({
         URL.revokeObjectURL(url)
         a.remove()
       }, 30000)
-      setSporocilo('Slika je shranjena — objavi jo na Instagramu, Facebooku ali WhatsAppu.')
+      setSporocilo(t('lestvice.deliSliko.shranjena'))
     } catch (e) {
-      setSporocilo(`Slike ni bilo mogoče pripraviti: ${(e as Error).message}`)
+      setSporocilo(t('lestvice.deliSliko.napaka', { napaka: (e as Error).message }))
     } finally {
       setDela(false)
     }
@@ -139,24 +140,24 @@ export default function DeliSliko({
       <div className="flex flex-wrap gap-2">
         {delitevSlike ? (
           <button onClick={deliSliko} disabled={dela} className="gumb-glavni px-3 py-2 text-sm disabled:opacity-60">
-            {dela ? 'Pripravljam …' : 'Deli sliko'}
+            {dela ? t('lestvice.deliSliko.pripravljam') : t('lestvice.deliSliko.deliSliko')}
           </button>
         ) : (
           <button onClick={prenesi} disabled={dela} className="gumb-tih px-3 py-2 text-sm disabled:opacity-60">
-            {dela ? 'Pripravljam …' : 'Prenesi sliko za objavo'}
+            {dela ? t('lestvice.deliSliko.pripravljam') : t('lestvice.deliSliko.prenesi')}
           </button>
         )}
         <button onClick={deliPovezavo} className="gumb-tih px-3 py-2 text-sm">
-          Deli povezavo
+          {t('lestvice.deliSliko.deliPovezavo')}
         </button>
         {delitevSlike && (
           <button onClick={prenesi} disabled={dela} className="gumb-tih px-3 py-2 text-sm disabled:opacity-60">
-            Shrani sliko
+            {t('lestvice.deliSliko.shrani')}
           </button>
         )}
       </div>
       {delitevSlike && !sporocilo && (
-        <p className="text-xs text-slate-500">WhatsApp, Instagram, Facebook … — izberi v meniju, ki se odpre.</p>
+        <p className="text-xs text-slate-500">{t('lestvice.deliSliko.namig')}</p>
       )}
       {sporocilo && <p className="text-xs text-slate-400">{sporocilo}</p>}
     </div>

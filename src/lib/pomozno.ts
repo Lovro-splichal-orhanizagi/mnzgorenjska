@@ -1,19 +1,20 @@
 // Skupne pomožne funkcije za prikaz.
 
 import type { Pozicija } from './tipi'
+import { t, stevilo, type Kljuc } from '../i18n/jedro.ts'
 
 export const IME_POZICIJE: Record<Pozicija, string> = {
-  GK: 'Vratar',
-  DEF: 'Branilec',
-  MID: 'Vezist',
-  FWD: 'Napadalec',
+  GK: t('skupno.pozicija.GK'),
+  DEF: t('skupno.pozicija.DEF'),
+  MID: t('skupno.pozicija.MID'),
+  FWD: t('skupno.pozicija.FWD'),
 }
 
 export const KRATKA_POZICIJA: Record<Pozicija, string> = {
-  GK: 'VRA',
-  DEF: 'BRA',
-  MID: 'VEZ',
-  FWD: 'NAP',
+  GK: t('skupno.pozicijaKratko.GK'),
+  DEF: t('skupno.pozicijaKratko.DEF'),
+  MID: t('skupno.pozicijaKratko.MID'),
+  FWD: t('skupno.pozicijaKratko.FWD'),
 }
 
 /** Iz "Priimek Ime" naredi "Ime Priimek" za prijaznejši prikaz. */
@@ -37,46 +38,42 @@ export const formatirajTocke = (t: number | string | null | undefined): string =
  * Cena v obliki valute: 5.5 -> "5,5 M€". Točke in cene se sicer izpisujejo z
  * isto funkcijo in ju je bilo na zaslonu težko ločiti.
  */
-export const formatirajCeno = (v: number | string | null | undefined): string => {
-  const n = Number(v ?? 0)
-  return `${n.toFixed(1).replace('.', ',')} M€`
-}
+export const formatirajCeno = (v: number | string | null | undefined): string =>
+  t('skupno.cena', { v: stevilo(Number(v ?? 0), { minimumFractionDigits: 1, maximumFractionDigits: 1 }) })
 
 /**
- * Slovenska števna oblika. Odloča ostanek pri 100, ne pri 10:
- * 1, 101 → ednina; 2, 102 → dvojina; 3–4, 103–104 → množina; ostalo (tudi 11–14, 21) → rodilnik.
- * `oblike` = [ena, dve, tri-štiri, pet+], npr. ['točka', 'točki', 'točke', 'točk'].
+ * Števna beseda iz slovarja (`skupno.besede`). Obliko izbere jezik: slovenščina
+ * loči ednino, dvojino, 3–4 in ostalo po ostanku pri 100, hrvaščina drugače.
  */
-export function oblika(n: number, oblike: [string, string, string, string]): string {
-  const o = Math.abs(Math.trunc(n)) % 100
-  if (o === 1) return oblike[0]
-  if (o === 2) return oblike[1]
-  if (o === 3 || o === 4) return oblike[2]
-  return oblike[3]
+export type StevnaBeseda = Extract<Kljuc, `skupno.besede.${string}`>
+
+/** Beseda v obliki za število: oblika(4, TOCKE) → "točke". */
+export function oblika(n: number, beseda: StevnaBeseda): string {
+  return t(beseda, { n })
 }
 
 /** Število z besedo v pravilni obliki: mnozina(4, TOCKE) → "4 točke". */
-export function mnozina(n: number, oblike: [string, string, string, string]): string {
-  return `${n} ${oblika(n, oblike)}`
+export function mnozina(n: number, beseda: StevnaBeseda): string {
+  return `${n} ${oblika(n, beseda)}`
 }
 
-export const TOCKE: [string, string, string, string] = ['točka', 'točki', 'točke', 'točk']
+export const TOCKE: StevnaBeseda = 'skupno.besede.tocke'
 /** Rodilnik ("odbitek 1 točke, 2 točk"). */
-export const TOCK_RODILNIK: [string, string, string, string] = ['točke', 'točk', 'točk', 'točk']
+export const TOCK_RODILNIK: StevnaBeseda = 'skupno.besede.tockRodilnik'
 /** Tožilnik ("prinesla 1 točko, 2 točki"). */
-export const TOCKE_TOZILNIK: [string, string, string, string] = ['točko', 'točki', 'točke', 'točk']
+export const TOCKE_TOZILNIK: StevnaBeseda = 'skupno.besede.tockeTozilnik'
 
 /**
  * Beseda za točke ob številu. Dogovor: neceli seštevki (kapetan, polovičke)
- * so vedno "točke" ("2.5 točke") — povsod enako, kot je bilo na Domov.
+ * so vedno "točke" ("2.5 točke") — pravila množine za necela števila to v
+ * slovenščini dajo sama.
  */
 export function tockZ(t: number | string | null | undefined): string {
-  const n = Number(t ?? 0)
-  return Number.isInteger(n) ? oblika(n, TOCKE) : 'točke'
+  return oblika(Number(t ?? 0), TOCKE)
 }
-export const IGRALCI: [string, string, string, string] = ['igralec', 'igralca', 'igralci', 'igralcev']
-export const EKIPE: [string, string, string, string] = ['ekipa', 'ekipi', 'ekipe', 'ekip']
-export const TEKME: [string, string, string, string] = ['tekma', 'tekmi', 'tekme', 'tekem']
-export const GOLI: [string, string, string, string] = ['gol', 'gola', 'goli', 'golov']
-export const GLASOVI: [string, string, string, string] = ['glas', 'glasova', 'glasovi', 'glasov']
-export const KROGI: [string, string, string, string] = ['krog', 'kroga', 'krogi', 'krogov']
+export const IGRALCI: StevnaBeseda = 'skupno.besede.igralci'
+export const EKIPE: StevnaBeseda = 'skupno.besede.ekipe'
+export const TEKME: StevnaBeseda = 'skupno.besede.tekme'
+export const GOLI: StevnaBeseda = 'skupno.besede.goli'
+export const GLASOVI: StevnaBeseda = 'skupno.besede.glasovi'
+export const KROGI: StevnaBeseda = 'skupno.besede.krogi'

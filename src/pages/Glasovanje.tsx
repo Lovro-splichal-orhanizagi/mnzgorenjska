@@ -5,6 +5,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { useNaslov } from '../lib/naslov'
 import { povezavaNaPrijavo } from '../lib/prijava'
 import { mnozina, GOLI } from '../lib/pomozno'
+import { t, tx } from '../i18n'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import { useTekmovanje } from '../lib/tekmovanje'
@@ -21,7 +22,7 @@ export default function Glasovanje() {
   const { session, loading } = useAuth()
   const uporabnikId = session?.user.id ?? null
   const lokacija = useLocation()
-  useNaslov('Asistence')
+  useNaslov(t('tekme.glasovanje.naslov'))
   const { id: tekmovanjeId, tekmovanje } = useTekmovanje()
   const zveza = imeZveze(tekmovanje)
   const pragAsistence = useNastavitev()(
@@ -257,7 +258,7 @@ export default function Glasovanje() {
   }
 
   if (loading || nalaganje)
-    return <p className="animiraj-utrip text-slate-400">Nalaganje …</p>
+    return <p className="animiraj-utrip text-slate-400">{t('skupno.nalaganje')}</p>
 
   const nepotrjenih = goli.filter((g) => caka(g, glasovi[g.id] ?? [], pragAsistence)).length
 
@@ -265,7 +266,7 @@ export default function Glasovanje() {
     <div className="space-y-6">
       <header className="space-y-2">
         <h1 className="text-3xl font-black naslov">
-          Kdo je podal?
+          {t('tekme.glasovanje.kdoJePodal')}
           {tekmovanje && (
             <span className="ml-2 align-middle text-base font-bold text-slate-500">
               {tekmovanje.short_name}
@@ -273,24 +274,24 @@ export default function Glasovanje() {
           )}
         </h1>
         <p className="max-w-2xl text-slate-400">
-          Zapisniki {zveza} beležijo strelce, asistenc pa ne. Določi jih
-          skupnost: ko isti igralec pri golu zbere{' '}
-          <strong className="text-gnl-300">
-            {mnozina(pragAsistence, ['glas', 'glasova', 'glasove', 'glasov'])}
-          </strong>
-          , se mu
-          asistenca prizna in prinese <strong className="text-gnl-300">+3 točke</strong>.
+          {tx(
+            'tekme.glasovanje.uvod',
+            {
+              zveza,
+              glasov: t('tekme.glasovanje.pragGlasov', { n: pragAsistence }),
+            },
+            { b: (v) => <strong className="text-gnl-300">{v}</strong> },
+          )}
         </p>
       </header>
 
       {tekme.length === 0 && (
         <div className="kartica p-6 text-center text-sm text-slate-300">
           <p className="mb-2 text-lg font-semibold">
-            V trenutni sezoni še ni odigranih tekem <span aria-hidden="true">🎯</span>
+            {t('tekme.glasovanje.niTekem')} <span aria-hidden="true">🎯</span>
           </p>
           <p className="text-slate-400">
-            Glasovanje o asistencah se odpre takoj, ko bo prvi krog
-            odigran. Vrni se, ko bodo zapisniki prispeli.
+            {t('tekme.glasovanje.niTekemOpis')}
           </p>
         </div>
       )}
@@ -315,7 +316,7 @@ export default function Glasovanje() {
               {sz}
               {sz !== sezone[0] && (
                 <span className="ml-1.5 text-[10px] uppercase opacity-70">
-                  arhiv
+                  {t('tekme.glasovanje.arhiv')}
                 </span>
               )}
             </button>
@@ -325,15 +326,14 @@ export default function Glasovanje() {
 
       {sezona && sezona !== sezone[0] && (
         <p className="kartica border-amber-400/30 bg-amber-400/10 p-3 text-sm text-amber-200">
-          Glasuješ o pretekli sezoni. Na točke tekoče lige to ne vpliva —
-          popravi le zgodovino.
+          {t('tekme.glasovanje.preteklaSezona')}
         </p>
       )}
 
       {/* 1. korak: krog */}
       <div className="space-y-2">
         <h2 className="text-xs font-bold uppercase tracking-wide text-slate-400">
-          1. Izberi krog
+          {t('tekme.glasovanje.izberiKrog')}
         </h2>
         <div className="flex gap-1.5 overflow-x-auto pb-1">
           {krogi.map((k) => (
@@ -346,7 +346,7 @@ export default function Glasovanje() {
                   : 'kartica text-slate-300'
               }`}
             >
-              {k.number}. krog
+              {t('tekme.krog', { n: k.number })}
               {k.brez_asistence > 0 && k.odprt && (
                 <span
                   className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-black ${
@@ -366,35 +366,35 @@ export default function Glasovanje() {
       {/* 2. korak: tekma v krogu */}
       <div className="space-y-2">
         <h2 className="text-xs font-bold uppercase tracking-wide text-slate-400">
-          2. Izberi tekmo
+          {t('tekme.glasovanje.izberiTekmo')}
         </h2>
         <ul className="grid gap-2 sm:grid-cols-2">
-          {tekmeVKrogu.map((t) => (
-            <li key={t.match_id}>
+          {tekmeVKrogu.map((tk) => (
+            <li key={tk.match_id}>
               <button
-                onClick={() => setTekmaId(t.match_id)}
+                onClick={() => setTekmaId(tk.match_id)}
                 className={`flex w-full items-center gap-2 rounded-2xl p-2.5 text-left transition ${
-                  tekmaId === t.match_id
+                  tekmaId === tk.match_id
                     ? 'bg-gnl-500/15 ring-1 ring-gnl-400/50'
                     : 'kartica kartica-hover'
                 }`}
               >
-                <Grb ime={t.home_name} kratko={t.home_short} logo={t.home_logo} velikost={22} />
+                <Grb ime={tk.home_name} kratko={tk.home_short} logo={tk.home_logo} velikost={22} />
                 <span className="min-w-0 flex-1 truncate text-sm font-semibold">
-                  {t.home_short} – {t.away_short}
+                  {tk.home_short} – {tk.away_short}
                 </span>
-                <Grb ime={t.away_name} kratko={t.away_short} logo={t.away_logo} velikost={22} />
+                <Grb ime={tk.away_name} kratko={tk.away_short} logo={tk.away_logo} velikost={22} />
                 <span className="rounded-lg bg-slate-950/60 px-2 py-0.5 text-sm font-black tabular-nums">
-                  {t.home_goals}:{t.away_goals}
+                  {tk.home_goals}:{tk.away_goals}
                 </span>
-                {Number(t.brez_asistence ?? 0) === 0 ? (
-                  <span className="znacka bg-gnl-400/20 text-gnl-200" aria-label="Vse potrjeno">✓</span>
-                ) : t.glasovanje_odprto ? (
+                {Number(tk.brez_asistence ?? 0) === 0 ? (
+                  <span className="znacka bg-gnl-400/20 text-gnl-200" aria-label={t('tekme.glasovanje.vsePotrjeno')}>✓</span>
+                ) : tk.glasovanje_odprto ? (
                   <span className="znacka bg-amber-400/20 text-amber-300">
-                    {t.brez_asistence}
+                    {tk.brez_asistence}
                   </span>
                 ) : (
-                  <span className="znacka bg-white/5 text-slate-500">zaprto</span>
+                  <span className="znacka bg-white/5 text-slate-500">{t('tekme.glasovanje.zaprto')}</span>
                 )}
               </button>
             </li>
@@ -404,14 +404,16 @@ export default function Glasovanje() {
 
       {!session && (
         <p className="kartica border-amber-400/30 bg-amber-400/10 p-3 text-sm text-amber-200">
-          Za glasovanje se moraš{' '}
-          <Link
-            to={povezavaNaPrijavo(lokacija.pathname + lokacija.search)}
-            className="font-semibold underline hover:text-amber-100"
-          >
-            prijaviti
-          </Link>
-          .
+          {tx('tekme.moraPrijava', {}, {
+            prijava: (v) => (
+              <Link
+                to={povezavaNaPrijavo(lokacija.pathname + lokacija.search)}
+                className="font-semibold underline hover:text-amber-100"
+              >
+                {v}
+              </Link>
+            ),
+          })}
         </p>
       )}
 
@@ -437,21 +439,21 @@ export default function Glasovanje() {
             to={`/tekma/${tekma.match_id}`}
             className="text-sm text-slate-400 underline hover:text-gnl-300"
           >
-            Poglej postavi in točke te tekme →
+            {t('tekme.glasovanje.poglejTekmo')}
           </Link>
         </p>
       )}
 
       {goli.length === 0 ? (
-        <p className="text-slate-400">Na tej tekmi ni bilo golov.</p>
+        <p className="text-slate-400">{t('tekme.glasovanje.niGolov')}</p>
       ) : (
         <>
           <p className="text-sm text-slate-400">
             {nepotrjenih === 0
-              ? 'Vse asistence na tej tekmi so potrjene. 🎉'
+              ? t('tekme.glasovanje.vsePotrjene')
               : tekma?.glasovanje_odprto === false
-                ? 'Glasovanje o tej tekmi je zaprto — odprto je do roka naslednjega kroga.'
-                : `Brez potrjene asistence: ${mnozina(nepotrjenih, GOLI)}.`}
+                ? t('tekme.glasovanje.zaprtoOpis')
+                : t('tekme.glasovanje.brezPotrjene', { goli: mnozina(nepotrjenih, GOLI) })}
           </p>
 
           <ul className="space-y-4">
@@ -478,7 +480,7 @@ export default function Glasovanje() {
         </>
       )}
 
-      {napaka && <p className="text-sm text-rose-400">Napaka: {napaka}</p>}
+      {napaka && <p className="text-sm text-rose-400">{t('skupno.napaka', { sporocilo: napaka })}</p>}
     </div>
   )
 }

@@ -1,14 +1,15 @@
 // Naslov zavihka po strani. SPA ima sicer en sam <title> iz index.html in vsak
 // zavihek, zaznamek ter zadetek v iskalniku se imenuje enako.
 import { useEffect } from 'react'
+import { t } from '../i18n/jedro.ts'
 
-const OSNOVA = 'SLFF — Sunday League Fantasy Football'
+const OSNOVA = t('aplikacija.naslovStrani.osnova')
 
 /** Nastavi `document.title` na "{naslov} · SLFF"; brez naslova ostane osnovni. */
 export function useNaslov(naslov: string | null | undefined): void {
   useEffect(() => {
     if (typeof document === 'undefined') return
-    document.title = naslov ? `${naslov} · SLFF` : OSNOVA
+    document.title = naslov ? t('aplikacija.naslovStrani.zStranjo', { naslov }) : OSNOVA
   }, [naslov])
 }
 

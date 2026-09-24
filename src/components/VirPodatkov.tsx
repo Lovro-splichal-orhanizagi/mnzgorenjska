@@ -7,6 +7,7 @@
 // Tekmovanje brez znane zveze ne dobi izmišljenega vira: takrat trditve
 // preprosto ni.
 import { useTekmovanje, type Tekmovanje } from '../lib/tekmovanje'
+import { t, tx } from '../i18n'
 
 export interface Vir {
   ime: string
@@ -26,6 +27,9 @@ export function virPodatkov(t: Tekmovanje | null | undefined): Vir | null {
   return { ime: t.federation_name, url: t.federation_url ?? null }
 }
 
+// `imeZveze` ima parameter `t`, ki zakrije prevod.
+const splosnaZveza = () => t('aplikacija.noga.zvezeSplosno')
+
 /**
  * Ime zveze za sredi stavka ("Statistika iz uradnih zapisnikov {X}.").
  *
@@ -33,7 +37,7 @@ export function virPodatkov(t: Tekmovanje | null | undefined): Vir | null {
  * cel, prazna vrzel bi bila slabša od nenatančnosti.
  */
 export function imeZveze(t: Tekmovanje | null | undefined): string {
-  return virPodatkov(t)?.ime ?? 'zveze'
+  return virPodatkov(t)?.ime ?? splosnaZveza()
 }
 
 /** Ime zveze za trenutno izbrano ligo. */
@@ -50,18 +54,24 @@ export default function VirPodatkov() {
   return (
     <>
       {' · '}
-      Podatki: uradni zapisniki{' '}
-      {vir.url ? (
-        <a
-          href={vir.url}
-          className="underline hover:text-slate-400"
-          target="_blank"
-          rel="noreferrer"
-        >
-          {vir.ime}
-        </a>
-      ) : (
-        vir.ime
+      {tx(
+        'aplikacija.noga.vir',
+        { ime: vir.ime },
+        {
+          vir: (b) =>
+            vir.url ? (
+              <a
+                href={vir.url}
+                className="underline hover:text-slate-400"
+                target="_blank"
+                rel="noreferrer"
+              >
+                {b}
+              </a>
+            ) : (
+              b
+            ),
+        },
       )}
     </>
   )

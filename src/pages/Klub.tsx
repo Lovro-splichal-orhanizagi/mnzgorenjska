@@ -14,9 +14,9 @@ import {
   razredPozicije,
   KRATKA_POZICIJA,
   mnozina,
-  oblika,
   IGRALCI,
 } from '../lib/pomozno'
+import { t, tx } from '../i18n'
 import { useNaslov } from '../lib/naslov'
 import { VRSTNI_RED } from '../lib/pravila'
 import type { Pozicija } from '../lib/tipi'
@@ -45,25 +45,25 @@ export default function Klub() {
   const [igralci, setIgralci] = useState<Igralec[]>([])
   const [nalaganje, setNalaganje] = useState(true)
   const [napaka, setNapaka] = useState<string | null>(null)
-  useNaslov(klub?.name ?? 'Klub')
+  useNaslov(klub?.name ?? t('lestvice.klub.naslov'))
 
   useEffect(() => {
     if (!id) return
     let veljavno = true
     ;(async () => {
       setNalaganje(true)
-      const { data: t, error: eKlub } = await supabase
+      const { data: klubVrstica, error: eKlub } = await supabase
         .from('teams')
         .select('name, logo_url, short_name')
         .eq('id', Number(id))
         .maybeSingle()
       if (!veljavno) return
-      if (eKlub || !t) {
-        setNapaka('Tega kluba ni.')
+      if (eKlub || !klubVrstica) {
+        setNapaka(t('lestvice.klub.niKluba'))
         setNalaganje(false)
         return
       }
-      setKlub(t)
+      setKlub(klubVrstica)
 
       // Klub lahko igra v vec tekmovanjih (clani, mladinci); vzamemo tisto z
       // najvec njegovimi igralci, da stran pokaze glavno mostvo. Neaktivne
@@ -77,7 +77,7 @@ export default function Klub() {
       const aktivna = vse.filter((t2) => t2.competitions?.active)
       const tekmovanja = aktivna.length ? aktivna : vse
       if (!tekmovanja.length) {
-        setNapaka('Ta klub letos ne igra v nobeni ligi, ki jo spremljamo.')
+        setNapaka(t('lestvice.klub.brezLige'))
         setNalaganje(false)
         return
       }
@@ -137,12 +137,12 @@ export default function Klub() {
   // CTA pelje v ligo kluba, ne v tisto, ki jo ima obiskovalec izbrano.
   const ligaParam = liga?.slug ? `?t=${encodeURIComponent(liga.slug)}` : ''
 
-  if (nalaganje) return <p className="p-4 text-slate-400">Nalaganje …</p>
+  if (nalaganje) return <p className="p-4 text-slate-400">{t('skupno.nalaganje')}</p>
   if (napaka)
     return (
       <div className="space-y-2 p-4">
         <p className="text-slate-300">{napaka}</p>
-        <Link to="/" className="text-gnl-400 underline">Na naslovnico</Link>
+        <Link to="/" className="text-gnl-400 underline">{t('lestvice.klub.naNaslovnico')}</Link>
       </div>
     )
 
@@ -153,31 +153,37 @@ export default function Klub() {
         <div className="min-w-0">
           <h1 className="truncate text-2xl font-black naslov sm:text-3xl">{klub?.name}</h1>
           <p className="text-sm text-slate-400">
-            {liga?.name ?? 'Liga'} · {mnozina(igralci.length, IGRALCI)} v igri
+            {t('lestvice.klub.podnaslov', {
+              liga: liga?.name ?? t('lestvice.klub.liga'),
+              igralci: mnozina(igralci.length, IGRALCI),
+            })}
           </p>
         </div>
       </header>
 
       <section className="kartica border-gnl-400/30 bg-gnl-500/5 p-4">
         <p className="text-sm leading-relaxed text-slate-200">
-          Igralci {klub?.name} so del <strong>SLFF</strong> — fantasy lige za{' '}
-          {liga?.name ?? 'to ligo'}. Navijači sestavijo svojo ekipo iz pravih
-          igralcev, točke pa prihajajo iz <strong>uradnih zapisnikov</strong>:
-          goli, minute, ohranjene mreže, kartoni.
+          {tx(
+            'lestvice.klub.uvod',
+            { klub: klub?.name, liga: liga?.name ?? t('lestvice.klub.toLigo') },
+            { b: (v) => <strong>{v}</strong> },
+          )}
         </p>
         {izbranih > 0 && (
           <p className="mt-2 text-sm text-gnl-200">
-            Vaše igralce {oblika(izbranih, ['ima', 'imata', 'imajo', 'ima'])} v
-            svoji ekipi trenutno{' '}
-            <strong>{navijacev(izbranih)}</strong>.
+            {tx(
+              'lestvice.klub.navijaci',
+              { n: izbranih, navijacev: navijacev(izbranih) },
+              { b: (v) => <strong>{v}</strong> },
+            )}
           </p>
         )}
         <div className="mt-3 flex flex-wrap gap-2">
           <Link to={`/moja-ekipa${ligaParam}`} className="gumb-glavni px-3 py-2 text-sm">
-            Sestavi svojo ekipo
+            {t('lestvice.klub.sestaviEkipo')}
           </Link>
           <Link to={`/lestvica${ligaParam}`} className="gumb-tih px-3 py-2 text-sm">
-            Lestvica
+            {t('lestvice.klub.lestvica')}
           </Link>
         </div>
 
@@ -185,7 +191,7 @@ export default function Klub() {
             Instagram, kjer povezave ne delujejo. */}
         <div className="mt-3 space-y-3 border-t border-white/10 pt-3">
           <div>
-            <div className="mb-1.5 text-xs text-slate-400">Napoved — za objavo ob zagonu</div>
+            <div className="mb-1.5 text-xs text-slate-400">{t('lestvice.klub.napoved')}</div>
             <Plakat
               podatki={{
                 vrsta: 'napoved',
@@ -197,7 +203,7 @@ export default function Klub() {
             />
           </div>
           <div>
-            <div className="mb-1.5 text-xs text-slate-400">Naši igralci — s točkami</div>
+            <div className="mb-1.5 text-xs text-slate-400">{t('lestvice.klub.nasiIgralci')}</div>
             <Plakat
               podatki={{
                 vrsta: 'klub',
@@ -214,12 +220,12 @@ export default function Klub() {
       </section>
 
       {igralci.length === 0 ? (
-        <p className="text-slate-400">Za ta klub letos še ni statistike.</p>
+        <p className="text-slate-400">{t('lestvice.klub.brezStatistike')}</p>
       ) : (
         poPoziciji.map(([poz, seznam]) => (
           <section key={poz}>
             <h2 className="mb-1.5 text-sm font-bold uppercase tracking-wide text-slate-400">
-              {poz === 'GK' ? 'Vratarji' : poz === 'DEF' ? 'Branilci' : poz === 'MID' ? 'Vezisti' : 'Napadalci'}
+              {t(`lestvice.klub.pozicije.${poz}`)}
             </h2>
             <ul className="divide-y divide-white/5 overflow-hidden rounded-xl bg-white/5">
               {seznam.map((i) => (
@@ -231,7 +237,8 @@ export default function Klub() {
                     {prikazniIme(i.full_name)}
                   </Link>
                   <span className="shrink-0 text-xs text-slate-500">
-                    {i.goals ? `${i.goals} G · ` : ''}{i.minutes ?? 0} min
+                    {i.goals ? t('lestvice.klub.goli', { n: i.goals }) : ''}
+                    {t('lestvice.klub.minute', { n: i.minutes ?? 0 })}
                   </span>
                   <span className="w-12 shrink-0 text-right font-bold tabular-nums">
                     {formatirajTocke(i.points)}
@@ -247,8 +254,7 @@ export default function Klub() {
       )}
 
       <p className="text-xs text-slate-500">
-        Točke so izračunane iz uradnih zapisnikov. Če kaj ne drži, nam povejte —
-        podatke popravimo.
+        {t('lestvice.klub.opomba')}
       </p>
     </div>
   )

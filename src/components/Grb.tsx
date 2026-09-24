@@ -1,5 +1,6 @@
 // Grb kluba. Če klub nima logotipa, narišemo ščit z začetnicami — barva izhaja
 // iz imena, tako da ima vsak klub svojo in je enaka povsod v aplikaciji.
+import { t } from '../i18n'
 
 const BARVE: Array<[string, string]> = [
   ['#38bdf8', '#0c4a6e'],
@@ -44,7 +45,7 @@ export default function Grb({
   velikost?: number
   naslov?: string | null
 }) {
-  const opis = naslov ?? ime ?? 'klub'
+  const opis = naslov ?? ime ?? t('aplikacija.grb.klub')
 
   if (logo)
     return (
