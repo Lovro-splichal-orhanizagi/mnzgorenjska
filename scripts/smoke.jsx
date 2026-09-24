@@ -1560,6 +1560,17 @@ preveri(
     const tekme = pt.zapisnikiIzKroga(vzorec(primeri[0].datoteka))
     const penal = tekme.find((t) => t.domaci.ime === 'Makole Bar Miha')?.goli.find((g) => g.enajstmetrovka)
     preveri('zapisniki Ptuj: oznaka 11m ob minuti', penal?.st === 14 && penal.minuta === 53 && penal.regSt === 55647)
+    // Ptuj piše "(avtogol) 26'", ne "(AG)"; prej je bil to navaden gol strelca.
+    const krog1 = pt.zapisnikiIzKroga(vzorec('zapisniki-ptuj-liga3-kolo1.html'))
+    const bukovci = krog1.find((t) => t.domaci.ime === 'Bukovci')
+    const agPt = bukovci?.goli.find((g) => g.avtogol)
+    const nastopAg = bukovci && pt.nastopi(bukovci).find((n) => n.ekipaIdx === 1 && n.st === 2)
+    preveri('zapisniki Ptuj: oznaka (avtogol) ob minuti',
+      agPt?.ekipaIdx === 1 && agPt.st === 2 && agPt.regSt === 102370 && agPt.minuta === 26 &&
+      nastopAg?.avtogoli === 1 && nastopAg.goli === 0)
+    preveri('zapisniki Ptuj: krog z avtogolom brez opozoril',
+      krog1.length === 6 && krog1.every((t) => t.opozorila.length === 0),
+      krog1.flatMap((t) => t.opozorila).join(' | '))
     const izvirnik = vzorec(primeri[0].datoteka)
     const regPriGolu = izvirnik.replace('>82184</td>', '></td>')
       .replace('<th>Minuta</th>', '<th>Minuta</th><th>Reg. št.</th>')

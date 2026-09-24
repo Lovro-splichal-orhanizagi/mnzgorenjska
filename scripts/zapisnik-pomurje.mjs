@@ -153,9 +153,13 @@ function igralciTabele(tabela, vrsta, opozorila) {
       continue
     }
     const da = (n) => /^(da|yes|1|x)$/i.test(besedilo(n)) || Boolean(n && /check|tick/i.test(slike(n)))
+    // Ptuj oznako izpiše v celoti, "(avtogol) 53'". Izraz je poznal le "(AG)",
+    // zato je vsak ptujski avtogol pristal v bazi kot gol strelca: igralec je
+    // namesto -2 dobil do +10 točk, uvoz pa ni javil ničesar, ker se je
+    // neskladje z rezultatom le prikazalo med opozorili.
     izhod.push({ st, ime, regSt, minuta,
       rezultat: izidIz(besedilo(celica(/^rezultat$/))),
-      avtogol: da(celica(/^(ag|avtogol)$/)) || /\(AG\)/i.test(vrednosti.join(' ')),
+      avtogol: da(celica(/^(ag|avtogol)$/)) || /\((AG|avtogol)\)/i.test(vrednosti.join(' ')),
       enajstmetrovka: da(celica(/^11\s*m$/)) || /\(11\s*m\)/i.test(vrednosti.join(' ')),
       smer: /(?:\/|_)out\.(?:gif|svg|png)/i.test(oznake) ? 'ven'
         : /(?:\/|_)in\.(?:gif|svg|png)/i.test(oznake) ? 'noter' : null,
