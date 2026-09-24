@@ -109,7 +109,7 @@ rezervnih igralcev.
 | `competitions` | Ligi: `clani` in `mladinci` (šifra vira, prvi fantasy krog) |
 | `teams` | Klubi — **skupni** obema ligama (grb, ime) |
 | `players` | Igralci ene lige (cena, pozicija, vir pozicije); ista oseba je v obeh ligah dve vrstici |
-| `rounds` / `matches` | Krogi in tekme (z izvorom: `zapisnik_id`, `source_url`) |
+| `rounds` / `matches` | Krogi in tekme (z izvorom: `zapisnik_id`, `source_url`); `borza_po_starem` zapre krog pred ponovnim obračunom cen po novih pravilih |
 | `appearances` | Nastop igralca na tekmi: minute, goli, kartoni, prejeti goli |
 | `goals` | Posamezni gol (strelec, minuta, 11m, avtogol, potrjena asistenca) |
 | `assist_votes` | Glasovi skupnosti o asistenci |

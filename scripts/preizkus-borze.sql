@@ -25,6 +25,10 @@ declare
   klub_caka_g bigint;
   n_uvozenih int;
   n_cakajocih int;
+  tekma_uvozena bigint;
+  tekma_caka bigint;
+  strelec bigint;
+  dvig numeric;
 begin
   -- --- priprava ------------------------------------------------------------
   select c.id, max(r.season) into tekmovanje, sezona
@@ -59,9 +63,36 @@ begin
   returning id into krog;
 
   insert into matches (round_id, home_team_id, away_team_id, home_goals, away_goals, played_on, imported_at)
-  values (krog, klub_uvozen_d, klub_uvozen_g, 1, 0, current_date - 1, now());
+  values (krog, klub_uvozen_d, klub_uvozen_g, 3, 0, current_date - 1, now())
+  returning id into tekma_uvozena;
   insert into matches (round_id, home_team_id, away_team_id, played_on, imported_at)
-  values (krog, klub_caka_d, klub_caka_g, current_date - 1, null);
+  values (krog, klub_caka_d, klub_caka_g, current_date - 1, null)
+  returning id into tekma_caka;
+
+  -- Borza od migracije 20260924100000 premakne predvsem tiste, ki so igrali:
+  -- odsotnost kaznuje sele drugi zaporedni krog. Zato na vsaki tekmi igra po
+  -- en igralec vsakega kluba in zabije gol, domaci pa hat-trick. Izberemo
+  -- igralca z znano pozicijo (brez nje gol nima tock) in z dovolj prostora
+  -- do zgornje meje, da dvig ni odrezan.
+  insert into appearances (match_id, player_id, team_id, started, minutes_played, goals)
+  select t.match_id, x.id, x.team_id, true, 90, case when t.hattrick then 3 else 1 end
+    from (values (tekma_uvozena, klub_uvozen_d, true), (tekma_uvozena, klub_uvozen_g, false),
+                 (tekma_caka, klub_caka_d, false), (tekma_caka, klub_caka_g, false))
+         t(match_id, team_id, hattrick)
+    cross join lateral (
+      select p.id, p.team_id from players p
+       where p.team_id = t.team_id and p.competition_id = tekmovanje
+         and not p.value_locked and p.position is not null
+         and p.value + 1.0 <= least((select najvisja from meje_borze()),
+                                    coalesce(p.value_start, p.value) + (select odmik from meje_borze()))
+       order by p.id limit 1
+    ) x;
+  select a.player_id into strelec from appearances a
+   where a.match_id = tekma_uvozena and a.goals = 3;
+  if strelec is null then
+    raise exception 'preizkus potrebuje igralca z dovolj prostora za dvig cene';
+  end if;
+  perform recompute_round_scores(krog);
 
   -- --- 1. krog s prvim zapisnikom je odigran -------------------------------
   if not krog_je_odigran(krog) then
@@ -99,7 +130,14 @@ begin
     raise exception '4. po prihodu zapisnika naj bodo ovrednoteni tudi ti, ovrednotenih je 0';
   end if;
 
-  -- --- 5. prvi obracun se ne ponovi ----------------------------------------
+  -- --- 5. hat-trick dvigne ceno bolj kot stari najvecji korak -------------
+  select pc.new_value - pc.old_value into dvig
+    from price_changes pc where pc.round_id = krog and pc.player_id = strelec;
+  if coalesce(dvig, 0) <= 0.3 then
+    raise exception '5. hat-trick naj dvigne ceno za vec kot 0.3, dvig je %', coalesce(dvig, 0);
+  end if;
+
+  -- --- 6. prvi obracun se ne ponovi ----------------------------------------
   -- Kdor je ceno ze dobil, je ne dobi dvakrat za isti krog.
   select count(*) into n_uvozenih
     from price_changes pc join players p on p.id = pc.player_id
@@ -107,10 +145,20 @@ begin
   perform preracunaj_cene(krog);
   if (select count(*) from price_changes pc join players p on p.id = pc.player_id
        where pc.round_id = krog and p.team_id in (klub_uvozen_d, klub_uvozen_g)) <> n_uvozenih then
-    raise exception '5. ponovni obracun ne sme dodati vrstic';
+    raise exception '6. ponovni obracun ne sme dodati vrstic';
   end if;
 
-  raise notice 'preizkus borze: vseh 5 trditev drzi (cakajo posamezniki, ne liga)';
+  -- --- 7. krog, odigran pred novimi pravili, se ne obracuna znova ---------
+  -- Nocni cron vsak dan znova obracuna odigrane kroge zadnjih 14 dni. Brez
+  -- zapore bi nova pravila za ze odigrani krog naknadno podelila dvige.
+  delete from price_changes where round_id = krog;
+  update rounds set borza_po_starem = true where id = krog;
+  perform preracunaj_cene(krog);
+  if exists (select 1 from price_changes where round_id = krog) then
+    raise exception '7. krog z borza_po_starem ne sme dobiti premikov cen';
+  end if;
+
+  raise notice 'preizkus borze: vseh 7 trditev drzi (cakajo posamezniki, hat-trick se pozna, brez obracuna za nazaj)';
 end $$;
 
 rollback;

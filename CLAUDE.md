@@ -167,6 +167,13 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   beleži čas shranjevanja. `shrani_ekipo` pred spremembo zajame zapadle kroge;
   shranjevanje, zaklep in urejanje pripomočkov si delijo transakcijski zaklep lige.
 - `rounds` → krogi sezone, `matches` → tekme (z izvorom `zapisnik_id`)
+- borza (`preracunaj_cene`, nočno `uveljavi_zapadle_cene`) premakne ceno po
+  točkah kroga (+0.1 na dve točki nad osnovnima dvema, največ +1.0; forma
+  treh krogov je spodnja meja), odsotnost pa kaznuje šele drugi zaporedni krog.
+  Cron vsak dan znova obračuna odigrane kroge zadnjih 14 dni, zato sprememba
+  pravil **ne sme seči nazaj**: `rounds.borza_po_starem` zapre kroge, odigrane
+  pred zadnjo spremembo (migracija 20260924100000). Ob naslednji spremembi
+  pravil jih zapri enako.
 - `appearances` → nastop igralca na tekmi (minute, goli, kartoni, prejeti goli)
 - `goals` → posamezen gol; nosi tudi potrjeno asistenco
 - `assist_votes`, `position_votes` → glasovanje skupnosti (prag v `settings`)

@@ -2305,6 +2305,7 @@ export type Database = {
       }
       rounds: {
         Row: {
+          borza_po_starem: boolean
           competition_id: number
           deadline_at: string | null
           id: number
@@ -2316,6 +2317,7 @@ export type Database = {
           voting_opens_at: string | null
         }
         Insert: {
+          borza_po_starem?: boolean
           competition_id?: number
           deadline_at?: string | null
           id?: never
@@ -2327,6 +2329,7 @@ export type Database = {
           voting_opens_at?: string | null
         }
         Update: {
+          borza_po_starem?: boolean
           competition_id?: number
           deadline_at?: string | null
           id?: never
