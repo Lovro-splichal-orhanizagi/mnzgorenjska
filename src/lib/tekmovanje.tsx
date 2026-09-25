@@ -9,12 +9,14 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
 } from 'react'
 import { useLocation, useSearchParams } from 'react-router-dom'
 import { supabase } from './supabase'
+import { drzavaObiskovalca, ligeDrzave, privzetaLiga } from './drzava'
 
 export const PRIVZETO = 'clani'
 const KLJUC = 'slff-tekmovanje'
@@ -115,7 +117,11 @@ interface KontekstVrednost {
   slug: string
   id: number | null
   tekmovanje: Tekmovanje | null
+  /** Lige države, ki jo obiskovalec gleda — lige drugih držav so skrite. */
   tekmovanja: Tekmovanje[]
+  /** Vse aktivne lige vseh držav: za vstop s povezave `/sk` in administracijo. */
+  vsaTekmovanja: Tekmovanje[]
+  drzava: string
   nastavi: (slug: string) => void
 }
 
@@ -124,6 +130,8 @@ const Kontekst = createContext<KontekstVrednost>({
   id: null,
   tekmovanje: null,
   tekmovanja: [],
+  vsaTekmovanja: [],
+  drzava: 'SI',
   nastavi: () => {},
 })
 
@@ -241,11 +249,17 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
     }
   }, [iskanje, pathname, slug, setIskanje])
 
-  // Neznana liga v naslovu (tipkarska napaka, stara povezava) naj ne pusti
-  // strani prazne — vrnemo se na privzeto.
+  // Nov obiskovalec brez izbire dobi privzeto ligo SVOJE države (Slovak ne
+  // pristane na Gorenjski). Kdor ligo že ima, tega ne doživi — izbira je
+  // izrecna in država sledi ligi. Za Slovenijo je privzeta ista kot doslej.
+  // Ista pot velja za neznano ligo v naslovu (tipkarska napaka, stara
+  // povezava), da stran ne ostane prazna.
   useEffect(() => {
     if (!tekmovanja.length) return
-    if (!tekmovanja.some((t) => t.slug === slug)) setSlug(PRIVZETO)
+    const znana = tekmovanja.some((t) => t.slug === slug)
+    if (znana && izrecno.current) return
+    const privzeta = privzetaLiga(tekmovanja, drzavaObiskovalca())
+    if (privzeta !== slug || !znana) setSlug(tekmovanja.some((t) => t.slug === privzeta) ? privzeta : PRIVZETO)
   }, [tekmovanja, slug])
 
   useEffect(() => {
@@ -258,6 +272,10 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
   }, [slug])
 
   const tekmovanje = tekmovanja.find((t) => t.slug === slug) ?? null
+  const { drzava, lige } = useMemo(
+    () => ligeDrzave(tekmovanja, slug, drzavaObiskovalca()),
+    [tekmovanja, slug],
+  )
 
   return (
     <Kontekst.Provider
@@ -265,7 +283,9 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
         slug,
         id: tekmovanje?.id ?? null,
         tekmovanje,
-        tekmovanja,
+        tekmovanja: lige,
+        vsaTekmovanja: tekmovanja,
+        drzava,
         nastavi,
       }}
     >

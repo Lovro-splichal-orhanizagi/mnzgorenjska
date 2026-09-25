@@ -170,7 +170,7 @@ function razdeliIme(polno) {
 async function igralecId(
   teamId,
   polnoIme,
-  { vratar, st, dvoumno = false, zasedeni = null, regSt = null },
+  { vratar, st, dvoumno = false, zasedeni = null, regSt = null, pozicija = null },
 ) {
   // Registrska stevilka NZS je edina zanesljiva identiteta, kar jih vir lahko
   // da: enolicna je za cloveka, prezivi prestop in menjavo dresa. Kjer je na
@@ -196,6 +196,11 @@ async function igralecId(
       if (vratar && poReg.position_source !== 'admin') {
         popravek.position = 'GK'
         popravek.position_source = 'zapisnik'
+      } else if (pozicija && ['neznano', 'ugibanje'].includes(poReg.position_source)) {
+        // Vir, ki pozicijo zapiše (Slovaška), jo da namesto ugibanja. Glasov
+        // skupnosti in odločitve admina ne povozi.
+        popravek.position = pozicija
+        popravek.position_source = 'zapisnik'
       }
       if (Object.keys(popravek).length)
         await db.from('players').update(popravek).eq('id', poReg.id)
@@ -214,8 +219,8 @@ async function igralecId(
         first_name: ime,
         shirt_number: st,
         reg_st: regSt,
-        position: vratar ? 'GK' : null,
-        position_source: vratar ? 'zapisnik' : 'neznano',
+        position: vratar ? 'GK' : pozicija,
+        position_source: vratar || pozicija ? 'zapisnik' : 'neznano',
       })
       .select('id')
       .single()
@@ -605,6 +610,7 @@ for (const { id, z, url } of zapisniki) {
         dvoumno: jeDvoumno(x),
         zasedeni,
         regSt: x.regSt ?? null,
+        pozicija: x.pozicija ?? null,
       })
       zasedeni.add(pId)
       idPoStevilki.set(`${x.ekipaIdx}|${x.st}`, pId)

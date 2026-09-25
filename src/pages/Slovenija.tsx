@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { formatirajTocke, mnozina, EKIPE, KROGI } from '../lib/pomozno'
 import { vseVrstice } from '../lib/strani'
 import { useNaslov } from '../lib/naslov'
+import { useTekmovanje } from '../lib/tekmovanje'
 import {
   razvrsti,
   zMesti,
@@ -24,7 +25,7 @@ const MEDALJE = ['🥇', '🥈', '🥉']
  * sebe ne napolni. Ta stran mu da nasprotnike takoj.
  */
 export default function Slovenija() {
-  const [vrstice, setVrstice] = useState<DrzavnaVrstica[]>([])
+  const [vseVrsticeDrzav, setVrstice] = useState<DrzavnaVrstica[]>([])
   const [kako, setKako] = useState<Razvrstitev>('skupno')
   const [nalaganje, setNalaganje] = useState(true)
   const [napaka, setNapaka] = useState<string | null>(null)
@@ -72,6 +73,15 @@ export default function Slovenija() {
       veljavno = false
     }
   }, [])
+
+  // Pogled združi vse aktivne lige vseh držav. Državna lestvica je lestvica
+  // DRŽAVE, ki jo obiskovalec gleda — Slovenec slovaških ekip ne vidi. Filter
+  // je tu in ne v poizvedbi, da stran ne pade, če koda pride pred migracijo.
+  const { tekmovanja } = useTekmovanje()
+  const vrstice = useMemo(() => {
+    const lige = new Set(tekmovanja.map((l) => l.slug))
+    return lige.size ? vseVrsticeDrzav.filter((v) => v.competition_slug != null && lige.has(v.competition_slug)) : vseVrsticeDrzav
+  }, [vseVrsticeDrzav, tekmovanja])
 
   const urejene = useMemo(() => zMesti(razvrsti(vrstice, kako), kako), [vrstice, kako])
   const skupaj = useMemo(() => povzetek(vrstice), [vrstice])
