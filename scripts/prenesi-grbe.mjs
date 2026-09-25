@@ -311,6 +311,26 @@ const GRBI = {
     'https://www.nzs.si/sites/default/files/media/image/Zavrc.svg',
   'zgornja polskava':
     'https://www.nzs.si/sites/default/files/media/image/DTVZGPolskava.svg',
+
+  // Manj gotovi: zdruzene ekipe dobijo grb enega od klubov, veterani grb
+  // matičnega kluba, Kovinar grb, ki mu ga dodeli MNZ Maribor (nk_tezno.png).
+  // Dodani, ker je grb iz začetnic slabši od skoraj pravega; napako javijo.
+  'makole majsperk':
+    'https://www.nzs.si/sites/default/files/media/image/Makole.svg',
+  'mojstrovina bistrica':
+    'https://www.nzs.si/sites/default/files/media/image/NKBistrica.svg',
+  'nafta veterani':
+    'https://www.nzs.si/sites/default/files/media/image/NKNafta.svg',
+  'nd mozirje zdruzena savinjska':
+    'https://www.nzs.si/sites/default/files/media/image/Mozirje.svg',
+  'nd polzela zdruzena savinjska':
+    'https://www.nzs.si/sites/default/files/media/image/Polzela.svg',
+  'nk kovinar maribor':
+    'https://mnzmaribor.si/wp-content/uploads/2020/06/nk_tezno.png',
+  'nk zalec sentjur':
+    'https://www.nkzalec.si/wp-content/uploads/2017/08/nkzalec_grb.png',
+  'ns svoboda kisovec zagorje':
+    'https://www.mnzljubljana-zveza.si/source/grbi/167_NK%20Zagorje.gif',
 }
 
 // Pomanjša datoteko na kvadrat NAJVECJA_STRANICA px (ohrani razmerje, ne
