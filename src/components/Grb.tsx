@@ -1,5 +1,6 @@
 // Grb kluba. Če klub nima logotipa, narišemo ščit z začetnicami — barva izhaja
 // iz imena, tako da ima vsak klub svojo in je enaka povsod v aplikaciji.
+import { useState } from 'react'
 import { t } from '../i18n'
 
 const BARVE: Array<[string, string]> = [
@@ -46,8 +47,11 @@ export default function Grb({
   naslov?: string | null
 }) {
   const opis = naslov ?? ime ?? t('aplikacija.grb.klub')
+  // Slika, ki se ne naloži (vir je izginil, nov grb še ni objavljen), pokaže
+  // ščit z začetnicami namesto prazne ikone.
+  const [pokvarjen, setPokvarjen] = useState<string | null>(null)
 
-  if (logo)
+  if (logo && pokvarjen !== logo)
     return (
       <img
         src={logo}
@@ -56,6 +60,7 @@ export default function Grb({
         width={velikost}
         height={velikost}
         loading="lazy"
+        onError={() => setPokvarjen(logo)}
         className="shrink-0 rounded object-contain"
         style={{ width: velikost, height: velikost }}
       />

@@ -433,7 +433,8 @@ if (!existsSync(MAPA)) mkdirSync(MAPA, { recursive: true })
 let preneseno = 0
 for (const n of nacrt) {
   try {
-    const odgovor = await fetch(n.vir)
+    // Nekateri klubski strezniki (NK Šoštanj) zavrnejo zahtevo brez brskalnika.
+    const odgovor = await fetch(n.vir, { headers: { 'User-Agent': 'Mozilla/5.0 (SLFF grbi)' } })
     if (!odgovor.ok) throw new Error(`${odgovor.status}`)
     const slika = Buffer.from(await odgovor.arrayBuffer())
     const datoteka = `${MAPA}/${n.pot.split('/').pop()}`
