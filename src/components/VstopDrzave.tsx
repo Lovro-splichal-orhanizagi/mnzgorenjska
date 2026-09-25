@@ -15,7 +15,7 @@ import { useTekmovanje } from '../lib/tekmovanje'
 import { privzetaLiga, zapomniDrzavo } from '../lib/drzava'
 
 export default function VstopDrzave({ drzava }: { drzava: string }) {
-  const { tekmovanja } = useTekmovanje()
+  const { vsaTekmovanja: tekmovanja } = useTekmovanje()
 
   useEffect(() => {
     zapomniDrzavo(drzava)

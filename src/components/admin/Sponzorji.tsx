@@ -54,7 +54,7 @@ const PRAZEN = {
 }
 
 export default function Sponzorji() {
-  const { tekmovanja } = useTekmovanje()
+  const { vsaTekmovanja: tekmovanja } = useTekmovanje()
   const [sponzorji, setSponzorji] = useState<Sponzor[] | null>(null)
   const [vidni, setVidni] = useState(false)
   const [nov, setNov] = useState(PRAZEN)

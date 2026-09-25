@@ -2883,6 +2883,12 @@ preveri(
   preveri('privzeta: neznan ostane clani', D.privzetaLiga(lige, null) === 'clani')
   preveri('privzeta: Slovak dobi svojo ligo', D.privzetaLiga(lige, 'SK') === 'sk-ssfz-4liga')
   preveri('privzeta: Slovaska brez aktivne lige = clani', D.privzetaLiga(brezSk, 'SK') === 'clani')
+  const slugi = (r) => r.lige.map((l) => l.slug).join(',')
+  preveri('lige: Slovenec ne vidi slovaske', slugi(D.ligeDrzave(lige, 'clani', 'SK')) === 'clani,lj-1-liga')
+  preveri('lige: Slovak vidi le svojo', slugi(D.ligeDrzave(lige, 'sk-ssfz-4liga', null)) === 'sk-ssfz-4liga')
+  preveri('lige: dokler liga ni znana, velja ugib', D.ligeDrzave(lige, 'neznana', 'SK').drzava === 'SK')
+  preveri('lige: brez ugiba Slovenija', D.ligeDrzave(lige, 'neznana', null).drzava === 'SI')
+  preveri('lige: Slovak brez aktivne slovaske lige vidi slovenske', slugi(D.ligeDrzave(brezSk, 'clani', 'SK')) === 'clani,lj-1-liga')
 }
 
 // --- vir sportnet (Slovaška) -----------------------------------------------

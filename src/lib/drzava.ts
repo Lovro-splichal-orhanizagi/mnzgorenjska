@@ -77,3 +77,25 @@ export function privzetaLiga(tekmovanja: readonly Tekmovanje[], drzava: string |
   if (!drzava || drzava === 'SI') return PRIVZETO
   return tekmovanja.find((t) => t.country_code === drzava)?.slug ?? PRIVZETO
 }
+
+/**
+ * Država, ki jo obiskovalec gleda, in lige, ki jih vidi.
+ *
+ * Lige druge države so skrite: Slovenec slovaških ne vidi v izbirniku, oknu
+ * prvega obiska ali državni lestvici. Država sledi ligi — kdor odpre
+ * slovaško ligo (povezava `/sk`, deljena povezava s `?t=`), je v Slovaški in
+ * vidi njene lige. Dokler liga ni znana, velja ugib, nato Slovenija.
+ */
+export function ligeDrzave(
+  vse: readonly Tekmovanje[],
+  slug: string,
+  ugib: string | null,
+): { drzava: string; lige: Tekmovanje[] } {
+  const drzava = vse.find((t) => t.slug === slug)?.country_code ?? ugib ?? 'SI'
+  const lige = vse.filter((t) => t.country_code === drzava)
+  // Država brez aktivnih lig (ugib za Slovaka, dokler je njihova liga
+  // neaktivna) ne sme pustiti izbirnika praznega.
+  if (lige.length) return { drzava, lige }
+  const slovenske = vse.filter((t) => t.country_code === 'SI')
+  return { drzava: 'SI', lige: slovenske.length ? slovenske : [...vse] }
+}

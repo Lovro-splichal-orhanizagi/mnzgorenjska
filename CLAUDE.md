@@ -134,7 +134,11 @@ produkcijo ne uvaža, dokler ga ni.
 
 ### Država obiskovalca
 
-Domena je ena. Država sledi ligi: kdor ligo ima (`?t=` ali shranjena), ostane
+Domena je ena, **lige druge države so skrite**: `useTekmovanje().tekmovanja`
+vrne le lige države, ki jo obiskovalec gleda (izbirnik, okno prvega obiska,
+državna lestvica); vse lige so v `vsaTekmovanja` (vstop `/sk`, admin). Nova
+stran, ki našteva lige ali ekipe več lig, mora filtrirati po državi.
+Država sledi ligi: kdor ligo ima (`?t=` ali shranjena), ostane
 pri njej. Le nov obiskovalec brez izbire dobi privzeto ligo države, ki jo
 ugane `src/lib/drzava.ts` (povezava `/sk`, jezik brskalnika, časovni pas).
 Slovenija in neznana država ostaneta pri `PRIVZETO`, država brez aktivne lige

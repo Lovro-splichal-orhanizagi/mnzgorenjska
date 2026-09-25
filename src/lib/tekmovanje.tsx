@@ -9,13 +9,14 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
 } from 'react'
 import { useLocation, useSearchParams } from 'react-router-dom'
 import { supabase } from './supabase'
-import { drzavaObiskovalca, privzetaLiga } from './drzava'
+import { drzavaObiskovalca, ligeDrzave, privzetaLiga } from './drzava'
 
 export const PRIVZETO = 'clani'
 const KLJUC = 'slff-tekmovanje'
@@ -116,7 +117,11 @@ interface KontekstVrednost {
   slug: string
   id: number | null
   tekmovanje: Tekmovanje | null
+  /** Lige države, ki jo obiskovalec gleda — lige drugih držav so skrite. */
   tekmovanja: Tekmovanje[]
+  /** Vse aktivne lige vseh držav: za vstop s povezave `/sk` in administracijo. */
+  vsaTekmovanja: Tekmovanje[]
+  drzava: string
   nastavi: (slug: string) => void
 }
 
@@ -125,6 +130,8 @@ const Kontekst = createContext<KontekstVrednost>({
   id: null,
   tekmovanje: null,
   tekmovanja: [],
+  vsaTekmovanja: [],
+  drzava: 'SI',
   nastavi: () => {},
 })
 
@@ -265,6 +272,10 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
   }, [slug])
 
   const tekmovanje = tekmovanja.find((t) => t.slug === slug) ?? null
+  const { drzava, lige } = useMemo(
+    () => ligeDrzave(tekmovanja, slug, drzavaObiskovalca()),
+    [tekmovanja, slug],
+  )
 
   return (
     <Kontekst.Provider
@@ -272,7 +283,9 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
         slug,
         id: tekmovanje?.id ?? null,
         tekmovanje,
-        tekmovanja,
+        tekmovanja: lige,
+        vsaTekmovanja: tekmovanja,
+        drzava,
         nastavi,
       }}
     >
