@@ -15,6 +15,7 @@ import {
 } from 'react'
 import { useLocation, useSearchParams } from 'react-router-dom'
 import { supabase } from './supabase'
+import { drzavaObiskovalca, privzetaLiga } from './drzava'
 
 export const PRIVZETO = 'clani'
 const KLJUC = 'slff-tekmovanje'
@@ -241,11 +242,17 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
     }
   }, [iskanje, pathname, slug, setIskanje])
 
-  // Neznana liga v naslovu (tipkarska napaka, stara povezava) naj ne pusti
-  // strani prazne — vrnemo se na privzeto.
+  // Nov obiskovalec brez izbire dobi privzeto ligo SVOJE države (Slovak ne
+  // pristane na Gorenjski). Kdor ligo že ima, tega ne doživi — izbira je
+  // izrecna in država sledi ligi. Za Slovenijo je privzeta ista kot doslej.
+  // Ista pot velja za neznano ligo v naslovu (tipkarska napaka, stara
+  // povezava), da stran ne ostane prazna.
   useEffect(() => {
     if (!tekmovanja.length) return
-    if (!tekmovanja.some((t) => t.slug === slug)) setSlug(PRIVZETO)
+    const znana = tekmovanja.some((t) => t.slug === slug)
+    if (znana && izrecno.current) return
+    const privzeta = privzetaLiga(tekmovanja, drzavaObiskovalca())
+    if (privzeta !== slug || !znana) setSlug(tekmovanja.some((t) => t.slug === privzeta) ? privzeta : PRIVZETO)
   }, [tekmovanja, slug])
 
   useEffect(() => {

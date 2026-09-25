@@ -15,6 +15,7 @@ import mnzle from './mnzle.mjs'
 import mnzmb from './mnzmb.mjs'
 import mnzng from './mnzng.mjs'
 import nzs from './nzs.mjs'
+import sportnet from './sportnet.mjs'
 
 const VIRI = {
   mnzg,
@@ -27,6 +28,8 @@ const VIRI = {
   mnzng,
   // Edini vir, ki ni medobcinska zveza: drzavne lige na nzs.si.
   nzs,
+  // Prvi vir zunaj Slovenije: Slovaška (SFZ) prek javnega API-ja Sportneta.
+  sportnet,
 }
 
 /**

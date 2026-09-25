@@ -26,21 +26,31 @@ interface Skupina {
   lige: Tekmovanje[]
 }
 
-/** Razvrsti tekmovanja po zvezi; tista brez zveze pridejo na konec. */
-export function poZvezah(tekmovanja: Tekmovanje[]): Skupina[] {
+/**
+ * Razvrsti tekmovanja po zvezi; tista brez zveze pridejo na konec.
+ *
+ * `prvaDrzava` je država lige, ki jo uporabnik gleda: njene zveze so na vrhu,
+ * zveze druge države pa na dnu in z imenom države ob sebi — Slovenec sicer
+ * ne ve, kaj je "SsFZ".
+ */
+export function poZvezah(tekmovanja: Tekmovanje[], prvaDrzava: string | null = null): Skupina[] {
   const skupine = new Map<string, Skupina>()
+  const tuja = (t: Tekmovanje) => Boolean(prvaDrzava && t.country_code && t.country_code !== prvaDrzava)
   for (const t of tekmovanja) {
     const kljuc = t.federation_code ?? '—'
-    const naslov = t.federation_short ?? t.country_name ?? prevod('aplikacija.izbirnikLige.ostalo')
+    const osnova = t.federation_short ?? t.country_name ?? prevod('aplikacija.izbirnikLige.ostalo')
+    const naslov = tuja(t) && t.country_name && t.federation_short ? `${osnova} (${t.country_name})` : osnova
     if (!skupine.has(kljuc)) skupine.set(kljuc, { kljuc, naslov, lige: [] })
     skupine.get(kljuc)!.lige.push(t)
   }
   return [...skupine.values()].sort((a, b) => {
     if (a.kljuc === '—') return 1
     if (b.kljuc === '—') return -1
+    const at = tuja(a.lige[0]) ? 1 : 0
+    const bt = tuja(b.lige[0]) ? 1 : 0
     const as = a.lige[0]?.federation_sort ?? 0
     const bs = b.lige[0]?.federation_sort ?? 0
-    return as - bs || a.naslov.localeCompare(b.naslov, 'sl')
+    return at - bt || as - bs || a.naslov.localeCompare(b.naslov, 'sl')
   })
 }
 
@@ -93,8 +103,8 @@ export default function IzbirnikLige() {
 
   const skupine = useMemo(() => {
     const vidne = tekmovanja.filter((t) => ustreza(t, iskanje))
-    return poZvezah(vidne)
-  }, [tekmovanja, iskanje])
+    return poZvezah(vidne, tekmovanje?.country_code ?? null)
+  }, [tekmovanja, iskanje, tekmovanje?.country_code])
 
   // Ravno zaporedje, kot ga vidi oko — po njem se premikata puščici.
   const zaporedje = useMemo(() => skupine.flatMap((s) => s.lige), [skupine])

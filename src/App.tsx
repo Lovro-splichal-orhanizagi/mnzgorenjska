@@ -8,6 +8,7 @@ import RokKroga from './components/RokKroga'
 import OpozoriloEkipe from './components/OpozoriloEkipe'
 import NapakaOprijem from './components/NapakaOprijem'
 import Podpora from './components/Podpora'
+import VstopDrzave from './components/VstopDrzave'
 import Domov from './pages/Domov'
 import Igralci from './pages/Igralci'
 import Igralec from './pages/Igralec'
@@ -61,6 +62,9 @@ export default function App() {
             <NapakaOprijem key={pathname}>
             <Routes>
               <Route path="/" element={<Domov />} />
+              {/* Vstopni povezavi za državo (kampanje, objave): slff.eu/sk */}
+              <Route path="/sk" element={<VstopDrzave drzava="SK" />} />
+              <Route path="/si" element={<VstopDrzave drzava="SI" />} />
               <Route path="/moja-ekipa" element={<MojaEkipa />} />
               <Route path="/glasovanje" element={<Glasovanje />} />
               <Route path="/pozicije" element={<Pozicije />} />

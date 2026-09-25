@@ -25,6 +25,7 @@ import { supabase } from '../lib/supabase'
 import { vseVrstice } from '../lib/strani'
 import { mnozina, EKIPE } from '../lib/pomozno'
 import { poZvezah } from './IzbirnikLige'
+import { drzavaObiskovalca } from '../lib/drzava'
 import { t } from '../i18n'
 
 const KLJUC_PRESKOKA = 'slff-prvi-obisk'
@@ -53,12 +54,14 @@ function zapomniSi() {
 const ZAMIK_MS = 1500
 
 export default function PrviObisk() {
-  const { tekmovanja, nastavi } = useTekmovanje()
+  const { tekmovanja, tekmovanje, nastavi } = useTekmovanje()
   const [skrit, setSkrit] = useState(() => zeVprasan())
   const [cas, setCas] = useState(false)
   const [drzava, setDrzava] = useState<string | null>(null)
+  // Obiskovalec je sam zahteval izbiro države — ugib tedaj ne velja več.
+  const [brezUgiba, setBrezUgiba] = useState(false)
   const [ekip, setEkip] = useState<Record<number, number>>({})
-  const { pathname } = useLocation()
+  const { pathname, search } = useLocation()
   // Povezava na klub, igralca, ekipo ali povabilo v mini ligo že pove, kam
   // človek gre — okno bi ga le zmotilo.
   const vabljen =
@@ -127,9 +130,20 @@ export default function PrviObisk() {
     return [...m.entries()]
   }, [tekmovanja])
 
+  // Državo izberemo vnaprej, kadar jo poznamo — korak z izbiro države ostane
+  // le za tiste, ki jih ne. Liga v naslovu (deljena povezava) pove državo
+  // natančneje kot brskalnik; sicer velja ugib (jezik, časovni pas, povezava
+  // /sk). Beremo ga ob odprtju okna, ne ob nalaganju: vstop s /sk državo
+  // zapiše šele malo pozneje. Gumb "Nazaj" vrne izbiro države.
+  const ugib = useMemo(
+    () => (prikazan ? (new URLSearchParams(search).get('t') ? tekmovanje?.country_code ?? null : drzavaObiskovalca()) : null),
+    [prikazan, search, tekmovanje?.country_code],
+  )
+  const izbrana = drzava ?? (!brezUgiba && drzave.some(([k]) => k === ugib) ? ugib : null)
+
   const skupine = useMemo(
-    () => poZvezah(tekmovanja.filter((t) => !drzava || t.country_code === drzava)),
-    [tekmovanja, drzava],
+    () => poZvezah(tekmovanja.filter((t) => !izbrana || t.country_code === izbrana)),
+    [tekmovanja, izbrana],
   )
 
   // Dokler se lige ne naložijo ali dokler ne mine zamik, ni kaj pokazati.
@@ -137,7 +151,7 @@ export default function PrviObisk() {
 
   // Ena sama država: koraka za državo ne pokažemo, ker ni izbire. Ko jih bo
   // več, se pojavi sam.
-  const potrebnaDrzava = drzave.length > 1 && !drzava
+  const potrebnaDrzava = drzave.length > 1 && !izbrana
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur">
@@ -201,9 +215,12 @@ export default function PrviObisk() {
         )}
 
         <div className="mt-4 flex items-center justify-between">
-          {drzava && drzave.length > 1 ? (
+          {izbrana && drzave.length > 1 ? (
             <button
-              onClick={() => setDrzava(null)}
+              onClick={() => {
+                setDrzava(null)
+                setBrezUgiba(true)
+              }}
               className="text-xs text-slate-400 hover:text-slate-200"
             >
               {t('aplikacija.prviObisk.nazaj')}

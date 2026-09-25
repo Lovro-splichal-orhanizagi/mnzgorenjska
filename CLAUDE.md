@@ -115,6 +115,32 @@ največ 3 iz kluba je pet klubov spodnja meja brez izbire.
 | pt-mladinci | `2026:53` | `2025:71`, `2024:71` (šifra Mladine se s sezono menja) |
 | ms-mladinci | `2026:115` | `2025:115`, `2024:115` |
 
+### Slovaška (poskus, neaktivna)
+
+Vir `sportnet` (`scripts/viri/sportnet.mjs`) bere **javni API**, ki ga
+uporablja futbalnet.sk (`sutaze.api.sportnet.online/api/v2`), ne HTML. Šifra
+lige je `<appSpace>/<competitionId>`; vsaka sezona ima svoj competitionId
+(seznam: `/public/<appSpace>/competitions`). Zapisnik prinese pozicijo in
+šifro ISSF vsakega igralca, zato Slovaška ne čaka na glasovanje o pozicijah;
+asistenc ni, kot pri nas. Avtogol je `goal` z vrsto `dropped` in je zapisan pri
+ekipi strelca.
+
+| liga | tekoča 2026/27 | arhiv 2025/26 |
+|---|---|---|
+| sk-ssfz-4liga | `SsFZ/6a154cf844ff24612e07e083` | `SsFZ/68431237eba10c40f78a669c` |
+
+**Dovoljenje SFZ/Sportnet še ni potrjeno** — liga ostane neaktivna in se v
+produkcijo ne uvaža, dokler ga ni.
+
+### Država obiskovalca
+
+Domena je ena. Država sledi ligi: kdor ligo ima (`?t=` ali shranjena), ostane
+pri njej. Le nov obiskovalec brez izbire dobi privzeto ligo države, ki jo
+ugane `src/lib/drzava.ts` (povezava `/sk`, jezik brskalnika, časovni pas).
+Slovenija in neznana država ostaneta pri `PRIVZETO`, država brez aktivne lige
+prav tako — dokler je slovaška liga neaktivna, se za nikogar nič ne spremeni.
+Vstopni povezavi `slff.eu/sk` in `/si` sta za kampanje.
+
 Nova Gorica menija za pretekle sezone nima — stara sezona je svoje tekmovanje
 s svojo šifro in do nje ne vodi nobena povezava, zato jih je treba prečesati.
 Neznana šifra vrne privzeto stran s **statusom 200**, ne 404, zato je iz

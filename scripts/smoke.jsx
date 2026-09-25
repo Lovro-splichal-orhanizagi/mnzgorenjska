@@ -2862,5 +2862,42 @@ preveri(
   preveri('kartica: ime datoteke', K.imeDatotekeKartice('Žan', 'Bunić', 8) === 'slff-zan-bunic-8-krog.png')
 }
 
+// --- država obiskovalca in privzeta liga -----------------------------------
+// Slovenski tok se ne sme spremeniti: kdor ni prepoznan kot Slovak, dobi
+// Gorenjsko kot doslej, tudi ko je slovaška liga aktivna.
+{
+  const D = await import('../src/lib/drzava.ts')
+  const lige = [
+    { slug: 'clani', country_code: 'SI' },
+    { slug: 'lj-1-liga', country_code: 'SI' },
+    { slug: 'sk-ssfz-4liga', country_code: 'SK' },
+  ]
+  const brezSk = lige.filter((l) => l.country_code === 'SI')
+  preveri('drzava: slovenski brskalnik', D.ugibajDrzavo({ jeziki: ['sl-SI', 'en'], casovniPas: 'Europe/Ljubljana' }) === 'SI')
+  preveri('drzava: slovaski brskalnik', D.ugibajDrzavo({ jeziki: ['sk-SK'], casovniPas: 'Europe/Bratislava' }) === 'SK')
+  preveri('drzava: anglesko v Bratislavi', D.ugibajDrzavo({ jeziki: ['en-US'], casovniPas: 'Europe/Bratislava' }) === 'SK')
+  preveri('drzava: slovensko v Bratislavi (jezik velja)', D.ugibajDrzavo({ jeziki: ['sl'], casovniPas: 'Europe/Bratislava' }) === 'SI')
+  preveri('drzava: neznan obiskovalec', D.ugibajDrzavo({ jeziki: ['de-DE'], casovniPas: 'Europe/Berlin' }) === null)
+  preveri('drzava: povezava /sk povozi jezik', D.ugibajDrzavo({ shranjena: 'SK', jeziki: ['sl'] }) === 'SK')
+  preveri('privzeta: Slovenija ostane clani', D.privzetaLiga(lige, 'SI') === 'clani')
+  preveri('privzeta: neznan ostane clani', D.privzetaLiga(lige, null) === 'clani')
+  preveri('privzeta: Slovak dobi svojo ligo', D.privzetaLiga(lige, 'SK') === 'sk-ssfz-4liga')
+  preveri('privzeta: Slovaska brez aktivne lige = clani', D.privzetaLiga(brezSk, 'SK') === 'clani')
+}
+
+// --- vir sportnet (Slovaška) -----------------------------------------------
+{
+  const S = await import('./viri/sportnet.mjs')
+  preveri('sportnet: sezona', S.sezonaIz('2026/2027') === '2026/27')
+  preveri('sportnet: ime v "Priimek Ime"', S.vPriimekIme('Matúš Ráček') === 'Ráček Matúš')
+  preveri('sportnet: slovaski cas', S.lokalniCas('2026-09-19T13:00:00.000Z').datum === '2026-09-19' && S.lokalniCas('2026-09-19T13:00:00.000Z').ura === '15:00')
+  const tekma = JSON.parse(readFileSync(new URL('./vzorci/sportnet-tekma.json', import.meta.url), 'utf8'))
+  const z = S.vZapisnik(tekma)
+  const n = S.nastopi(z)
+  preveri('sportnet: zapisnik', z && z.krog === 7 && z.rezultat.domaci === 1 && z.rezultat.gostje === 0 && !z.opozorila.length)
+  preveri('sportnet: vsak nastop ima ISSF in pozicijo', n.length > 22 && n.every((x) => x.regSt && x.pozicija))
+  preveri('sportnet: strelec', n.some((x) => x.ime === 'Šemik Tomáš' && x.goli === 1))
+}
+
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)
 process.exit(napak === 0 ? 0 : 1)
