@@ -142,6 +142,9 @@ export default function Igralec() {
           .from('player_season_standings')
           .select('season, points, matches, goals, minutes')
           .eq('id', igralecId)
+          // Liga mora biti v filtru: pogled racuna rank() po ligi in sezoni in
+          // brez nje izracuna lestvico vseh lig (6,6 s namesto 0,05 s).
+          .eq('competition_id', p?.competition_id ?? 0)
           .eq('season', tekocaSez)
           .maybeSingle()
         if (preklican) return
@@ -399,6 +402,7 @@ export default function Igralec() {
   // Kartica igralca: zadnji nastop tekoče sezone, tekma in v koliko ekipah je.
   const zadnjiNastop = sezonsko ? razlage.find((r) => r.season === sezonsko.season) ?? null : null
   const tekmaZadnjega = zadnjiNastop?.match_id ?? null
+  const ligaIgralca = igralec?.competition_id ?? null
   useEffect(() => {
     let veljavno = true
     ;(async () => {
@@ -412,7 +416,15 @@ export default function Igralec() {
               .eq('id', tekmaZadnjega)
               .maybeSingle()
           : Promise.resolve({ data: null }),
-        supabase.from('player_standings').select('owners').eq('id', igralecId).maybeSingle(),
+        // Z ligo v filtru pogled ne racuna lestvice vseh lig (0,8 s namesto 0,05 s).
+        ligaIgralca != null
+          ? supabase
+              .from('player_standings')
+              .select('owners')
+              .eq('id', igralecId)
+              .eq('competition_id', ligaIgralca)
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
       ])
       if (!veljavno) return
       const tk = rTekma.data as any
@@ -424,7 +436,7 @@ export default function Igralec() {
     return () => {
       veljavno = false
     }
-  }, [tekmaZadnjega, igralecId])
+  }, [tekmaZadnjega, igralecId, ligaIgralca])
 
   if (nalaganje)
     return <p className="animiraj-utrip text-slate-400">{t('skupno.nalaganje')}</p>

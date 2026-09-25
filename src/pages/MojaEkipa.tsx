@@ -2421,7 +2421,18 @@ function TrgIgralcev({
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-semibold">
-                    {prikazniIme(i.full_name)}
+                    {/* Profil v novem zavihku — neshranjen kader ostane. */}
+                    <Link
+                      to={`/igralec/${i.id}`}
+                      target="_blank"
+                      rel="noopener"
+                      onClick={(e) => e.stopPropagation()}
+                      onPointerDownCapture={(e) => e.stopPropagation()}
+                      title={t('mojaEkipa.trg.profilVNovemZavihku')}
+                      className="hover:text-gnl-300 hover:underline"
+                    >
+                      {prikazniIme(i.full_name)}
+                    </Link>
                     {odsotni[i.id] && (
                       <span
                         title={opisOdsotnosti(odsotni[i.id])}

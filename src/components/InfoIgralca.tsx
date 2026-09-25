@@ -103,6 +103,9 @@ export default function InfoIgralca({
                 'matches, minutes, goals, assists, clean_sheets, points, points_per_match, form, owners, value, season',
               )
               .eq('id', igralecId)
+              // Liga mora biti v filtru: pogled racuna rank() po ligi in sezoni
+              // in brez nje izracuna lestvico vseh lig (6,6 s namesto 0,05 s).
+              .eq('competition_id', tekmovanjeId)
               .eq('season', letos)
               .maybeSingle()
           : Promise.resolve({ data: null }),
@@ -299,8 +302,12 @@ export default function InfoIgralca({
               </section>
             )}
 
+            {/* Nov zavihek: okno je v Moji ekipi, kjer bi odhod zavrgel
+                neshranjene spremembe kadra. */}
             <Link
               to={`/igralec/${igralecId}`}
+              target="_blank"
+              rel="noopener"
               className="block rounded-lg bg-white/10 px-3 py-2 text-center text-sm font-semibold hover:bg-white/15"
             >
               {t('igralci.info.celProfil')}

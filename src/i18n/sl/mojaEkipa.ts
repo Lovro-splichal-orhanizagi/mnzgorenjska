@@ -247,6 +247,7 @@ export const mojaEkipa = {
     tockeZadnjiKrog: 'Točke v zadnjem odigranem krogu',
     podatki: 'Podatki o igralcu {ime}',
     podatkiNamig: 'Statistika, gibanje cene, naslednje tekme',
+    profilVNovemZavihku: 'Odpri profil igralca v novem zavihku',
     odstrani: '✕ odstrani',
     dodaj: '⊕ dodaj',
     prvih: 'Prikazanih prvih {n} — zoži izbor z iskanjem.',
