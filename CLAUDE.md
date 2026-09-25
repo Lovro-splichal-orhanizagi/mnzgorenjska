@@ -170,10 +170,16 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
 - borza (`preracunaj_cene`, nočno `uveljavi_zapadle_cene`) premakne ceno po
   točkah kroga (+0.1 na dve točki nad osnovnima dvema, največ +1.0; forma
   treh krogov je spodnja meja), odsotnost pa kaznuje šele drugi zaporedni krog.
+  Cena se giblje v razponu 4.0–14.0 (`meje_borze()`) in od izhodiščne
+  `value_start` ni omejena — kdor igra dobro vso sezono, lahko pride do vrha.
   Cron vsak dan znova obračuna odigrane kroge zadnjih 14 dni, zato sprememba
   pravil **ne sme seči nazaj**: `rounds.borza_po_starem` zapre kroge, odigrane
   pred zadnjo spremembo (migracija 20260924100000). Ob naslednji spremembi
-  pravil jih zapri enako.
+  pravil jih zapri enako. Kadar se spremenijo le meje cene, krog ne zapri,
+  ampak ga označi, da ga borza obračuna po starih mejah — tako je
+  `rounds.borza_z_odmikom` (20260925100000) ohranil odmik 3.0 od izhodiščne
+  za kroge, odigrane pred ukinitvijo, in igralci, ki čakajo na zapisnik,
+  premika ne izgubijo.
 - `appearances` → nastop igralca na tekmi (minute, goli, kartoni, prejeti goli)
 - `goals` → posamezen gol; nosi tudi potrjeno asistenco
 - `assist_votes`, `position_votes` → glasovanje skupnosti (prag v `settings`)

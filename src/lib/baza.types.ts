@@ -2306,6 +2306,7 @@ export type Database = {
       rounds: {
         Row: {
           borza_po_starem: boolean
+          borza_z_odmikom: boolean
           competition_id: number
           deadline_at: string | null
           id: number
@@ -2318,6 +2319,7 @@ export type Database = {
         }
         Insert: {
           borza_po_starem?: boolean
+          borza_z_odmikom?: boolean
           competition_id?: number
           deadline_at?: string | null
           id?: never
@@ -2330,6 +2332,7 @@ export type Database = {
         }
         Update: {
           borza_po_starem?: boolean
+          borza_z_odmikom?: boolean
           competition_id?: number
           deadline_at?: string | null
           id?: never
@@ -4593,7 +4596,6 @@ export type Database = {
         Returns: {
           najnizja: number
           najvisja: number
-          odmik: number
         }[]
       }
       mini_liga_po_kodi: {

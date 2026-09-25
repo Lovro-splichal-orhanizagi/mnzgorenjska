@@ -875,7 +875,7 @@ preveri(
   const decimalna = ovrednoti(['--tedensko', '--pisi'], {
     igralci: { 2: { value: 4.3, value_start: 7.3 } },
   })
-  preveri('premik: premik sidra ohrani odmik 3.0 tudi pri decimalni ceni',
+  preveri('premik: premik sidra ohrani razliko do cene tudi pri decimalni ceni',
     decimalna.igralci?.[1].value === 5 && decimalna.igralci?.[1].value_start === 8,
     JSON.stringify(decimalna.igralci?.[1]))
   const odmik = ovrednoti(['--tedensko', '--pisi'], {

@@ -29,6 +29,7 @@ declare
   tekma_caka bigint;
   strelec bigint;
   dvig numeric;
+  stara numeric;
 begin
   -- --- priprava ------------------------------------------------------------
   select c.id, max(r.season) into tekmovanje, sezona
@@ -83,8 +84,7 @@ begin
       select p.id, p.team_id from players p
        where p.team_id = t.team_id and p.competition_id = tekmovanje
          and not p.value_locked and p.position is not null
-         and p.value + 1.0 <= least((select najvisja from meje_borze()),
-                                    coalesce(p.value_start, p.value) + (select odmik from meje_borze()))
+         and p.value + 1.0 <= (select najvisja from meje_borze())
        order by p.id limit 1
     ) x;
   select a.player_id into strelec from appearances a
@@ -148,6 +148,31 @@ begin
     raise exception '6. ponovni obracun ne sme dodati vrstic';
   end if;
 
+  -- --- 8. krog, odigran pred 20260925100000, obdrzi odmik 3.0 od sidra ----
+  -- Strelca postavimo 0.2 pod staro mejo; hat-trick ga po starem ne sme cez.
+  select pc.old_value into stara from price_changes pc
+   where pc.round_id = krog and pc.player_id = strelec;
+  delete from price_changes where round_id = krog and player_id = strelec;
+  update players set value = stara, value_start = stara - 2.8 where id = strelec;
+  update rounds set borza_z_odmikom = true where id = krog;
+  perform preracunaj_cene(krog);
+  select pc.new_value - pc.old_value into dvig
+    from price_changes pc where pc.round_id = krog and pc.player_id = strelec;
+  if coalesce(dvig, 0) <> 0.2 then
+    raise exception '8. star krog naj ostane pri odmiku 3.0 od sidra, dvig je %', coalesce(dvig, 0);
+  end if;
+
+  -- --- 9. nov krog odmika od sidra ne pozna vec ---------------------------
+  delete from price_changes where round_id = krog and player_id = strelec;
+  update players set value = stara where id = strelec;
+  update rounds set borza_z_odmikom = false where id = krog;
+  perform preracunaj_cene(krog);
+  select pc.new_value - pc.old_value into dvig
+    from price_changes pc where pc.round_id = krog and pc.player_id = strelec;
+  if coalesce(dvig, 0) <= 0.3 then
+    raise exception '9. nov krog naj ne bo omejen z odmikom od sidra, dvig je %', coalesce(dvig, 0);
+  end if;
+
   -- --- 7. krog, odigran pred novimi pravili, se ne obracuna znova ---------
   -- Nocni cron vsak dan znova obracuna odigrane kroge zadnjih 14 dni. Brez
   -- zapore bi nova pravila za ze odigrani krog naknadno podelila dvige.
@@ -158,7 +183,7 @@ begin
     raise exception '7. krog z borza_po_starem ne sme dobiti premikov cen';
   end if;
 
-  raise notice 'preizkus borze: vseh 7 trditev drzi (cakajo posamezniki, hat-trick se pozna, brez obracuna za nazaj)';
+  raise notice 'preizkus borze: vseh 9 trditev drzi (cakajo posamezniki, hat-trick se pozna, stari krogi po starih mejah, brez obracuna za nazaj)';
 end $$;
 
 rollback;

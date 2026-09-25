@@ -104,8 +104,8 @@ const sezona = arg('sezona')
 // Tedenski zagon: cene ne postavi na novo, ampak jih priblizuje izracunani —
 // najvec za `--najvec` (privzeto 1.0) na zagon. Brez tega bi igralec, ki je
 // jeseni pri 4.5 nabral minute, cez noc stal 9.0, uporabnik pa ga ima v ekipi
-// po stari ceni. Sidro borze (`value_start`) potuje z njim, sicer bi cena
-// takoj trcila ob mejo 3.0 od sidra.
+// po stari ceni. Izhodisce borze (`value_start`) potuje z njim, sicer bi
+// gibanje cene pokazalo tedenski popravek kot dvig ali padec na borzi.
 const tedensko = process.argv.includes('--tedensko')
 // `--znova` povozi tedensko varovalo; za popravke, kadar je prvi zagon
 // napravil kaj narobe in cene res morajo iti se enkrat.
@@ -322,7 +322,7 @@ for (const p of igralci ?? []) {
 
   vrednost = zaokrozi(Math.min(zgornja, Math.max(spodnja, vrednost)))
 
-  // `value_start` je sidro borze (cena se od njega lahko oddalji največ 3.0).
+  // `value_start` je izhodisce borze (od njega se meri gibanje cene).
   // Postavimo ga le, kadar ga še ni IN imamo dovolj podatkov — sicer bi
   // novega Ljubljancana z 90 min zasidrali na 4.5 in do konca sezone borza
   // ne bi imela manevrskega prostora, kljub temu da bo cez cez pet krogov
@@ -330,8 +330,7 @@ for (const p of igralci ?? []) {
   const popravek = { value: vrednost }
   // Liga, ki se ni zazivela, nima borzne zgodovine — takrat sme sidro slediti
   // izracunu. Brez tega ponovni zagon med postavljanjem lige premakne ceno,
-  // sidro pa pusti pri miru in cena konca vec kot 3.0 od njega, kar preverba
-  // upraviceno javi kot napako.
+  // sidro pa pusti pri miru in gibanje cene pokaze premik, ki ga ni bilo.
   // Liga, ki se ni vklopljena, nima ekip — nihce teh igralcev nima v kadru,
   // zato sme sidro slediti izracunu tudi, ce je nocni posel ceno ze premaknil.
   // Pri vklopljeni ligi to stori le, kadar igralec se ni bil na borzi.

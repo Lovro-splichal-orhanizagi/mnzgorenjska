@@ -66,6 +66,9 @@ Cena (4.0–12.0) se izračuna iz statistike prejšnje sezone: goli na 90 minut,
 delež tekem brez prejetega gola, rednost nastopanja in disciplina. Igralci z
 manj kot 270 minutami dobijo privzeto ceno, da jih en dober nastop ne preceni.
 
+Med sezono ceno premika borza po točkah vsakega kroga, v razponu 4.0–14.0.
+Od začetne cene ni omejena: kdor igra dobro vso sezono, lahko pride do 14.0.
+
 > Vrednotenje namenoma **ne** izhaja iz fantasy točk, ker so te odvisne od
 > pozicije — dokler skupnost pozicij ne izglasuje, bi to precenilo vratarje
 > (edine z znano pozicijo iz zapisnika).
@@ -109,7 +112,7 @@ rezervnih igralcev.
 | `competitions` | Ligi: `clani` in `mladinci` (šifra vira, prvi fantasy krog) |
 | `teams` | Klubi — **skupni** obema ligama (grb, ime) |
 | `players` | Igralci ene lige (cena, pozicija, vir pozicije); ista oseba je v obeh ligah dve vrstici |
-| `rounds` / `matches` | Krogi in tekme (z izvorom: `zapisnik_id`, `source_url`); `borza_po_starem` zapre krog pred ponovnim obračunom cen po novih pravilih |
+| `rounds` / `matches` | Krogi in tekme (z izvorom: `zapisnik_id`, `source_url`); `borza_po_starem` zapre krog pred ponovnim obračunom cen po novih pravilih, `borza_z_odmikom` ga obračuna po starih mejah (odmik 3.0) |
 | `appearances` | Nastop igralca na tekmi: minute, goli, kartoni, prejeti goli |
 | `goals` | Posamezni gol (strelec, minuta, 11m, avtogol, potrjena asistenca) |
 | `assist_votes` | Glasovi skupnosti o asistenci |
