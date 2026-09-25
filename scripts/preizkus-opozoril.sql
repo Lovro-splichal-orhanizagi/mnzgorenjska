@@ -20,6 +20,7 @@ declare
   klub_a bigint;
   vmesni_krog bigint;
   naslednji_krog bigint;
+  tretji_krog bigint;
   n int;
   besedilo text;
   poz text;
@@ -201,30 +202,48 @@ begin
   end if;
   update rounds set deadline_at = now() + interval '1 day' where id = krog;
 
-  -- --- 7. enkrat na tezavo, ne enkrat na krog -----------------------------
-  -- Kdor ekipe ne popravi, bi sicer dobival isto posto vsak teden do konca
-  -- sezone. Opozorilo, ki pride sestic, ni vec opozorilo.
+  -- --- 7. en mail na krog, najvec dva kroga zapored ---------------------
+  -- Mail za ta krog, poslan pred oknom (po starem tri dni prej), ne steje:
+  -- 24 ur pred rokom gre opozorilo vseeno.
   insert into email_log (user_id, email, vrsta, competition_id, round_id, poslano_at)
   values (a, 'c@opozorilo', 'opozorilo-postava', tekmovanje, krog, now() - interval '10 days');
-
   select count(*) into n from kandidati_za_opozorilo(tekmovanje, 2) where team_id = ekipa;
-  if n <> 0 then
-    raise exception '7. kdor je opozorilo ze dobil in ni popravil, naj ga ne dobi znova (kandidatov %)', n;
+  if n <> 1 then
+    raise exception '7a. mail pred oknom naj ne ustavi opozorila v oknu (kandidatov %)', n;
   end if;
 
-  -- Tisina mora zdrzati tudi v NASLEDNJEM krogu — prav to je razlika med
-  -- "enkrat na tezavo" in "enkrat na krog". Zato tu nastane nov krog, ne le
-  -- premaknjen rok starega: sicer bi trditev veljala tudi za staro pravilo.
+  -- Mail v oknu tega kroga: drugega za isti krog ni.
+  insert into email_log (user_id, email, vrsta, competition_id, round_id, poslano_at)
+  values (a, 'c@opozorilo', 'opozorilo-postava', tekmovanje, krog, now() - interval '1 hour');
+  select count(*) into n from kandidati_za_opozorilo(tekmovanje, 2) where team_id = ekipa;
+  if n <> 0 then
+    raise exception '7b. za isti krog naj gre en sam mail (kandidatov %)', n;
+  end if;
+
+  -- Naslednji krog brez popravka: drugi zaporedni krog se dobi opozorilo.
   update rounds set deadline_at = now() + interval '5 days' where id = krog;
   insert into rounds (competition_id, season, number, deadline_at, played_on)
   select tekmovanje, sezona, coalesce(max(number), 0) + 1,
          now() + interval '1 day', current_date + 1
     from rounds where competition_id = tekmovanje and season = sezona
   returning id into naslednji_krog;
+  select count(*) into n from kandidati_za_opozorilo(tekmovanje, 2) where team_id = ekipa;
+  if n <> 1 then
+    raise exception '7c. drugi zaporedni krog naj se dobi opozorilo (kandidatov %)', n;
+  end if;
 
+  -- Tretji zaporedni krog: tisina, dokler se ekipa spet ne zaklene.
+  insert into email_log (user_id, email, vrsta, competition_id, round_id, poslano_at)
+  values (a, 'c@opozorilo', 'opozorilo-postava', tekmovanje, naslednji_krog, now() - interval '1 hour');
+  update rounds set deadline_at = now() + interval '6 days' where id = naslednji_krog;
+  insert into rounds (competition_id, season, number, deadline_at, played_on)
+  select tekmovanje, sezona, coalesce(max(number), 0) + 1,
+         now() + interval '1 day', current_date + 1
+    from rounds where competition_id = tekmovanje and season = sezona
+  returning id into tretji_krog;
   select count(*) into n from kandidati_za_opozorilo(tekmovanje, 2) where team_id = ekipa;
   if n <> 0 then
-    raise exception '7. tisina naj traja tudi v naslednjem krogu (kandidatov %)', n;
+    raise exception '7d. po dveh zaporednih krogih naj opozorila utihnejo (kandidatov %)', n;
   end if;
 
   -- --- 8. neuspela posta ne steje za poslano -------------------------------
@@ -241,7 +260,7 @@ begin
   -- nova tezava in novo opozorilo.
   insert into rounds (competition_id, season, number, deadline_at, played_on, lineups_locked_at)
   select tekmovanje, sezona, coalesce(max(number), 0) + 1,
-         now() - interval '2 days', current_date - 2, now() - interval '2 days'
+         now() - interval '1 minute', current_date, now() - interval '1 minute'
     from rounds where competition_id = tekmovanje and season = sezona
   returning id into vmesni_krog;
 
@@ -254,7 +273,7 @@ begin
     raise exception '9. po vmesnem zaklepu naj se opozorilo spet posilja, kandidatov je %', n;
   end if;
 
-  raise notice 'preizkus opozoril: vseh 9 trditev drzi';
+  raise notice 'preizkus opozoril: vseh 12 trditev drzi';
 end $$;
 
 rollback;

@@ -10,22 +10,22 @@ name: Opozorila pred rokom
 # ekipo s tremi igralci enega kluba cez noc spremeni v ekipo s stirimi. Tako
 # je 8 ekip izgubilo 4. krog pri clanih.
 #
-# Zato ta zagon vsak dan pogleda, katerim ligam rok pade v naslednjih dveh
-# dneh, in lastnikom takih ekip poslje eno posto — z razlogom, ne le z
-# "nekaj je narobe". Enkrat na krog, za kar skrbi `email_log.round_id`.
+# Zato ta zagon pogleda, katerim ligam rok pade v naslednjih 24 urah, in
+# lastnikom neveljavnih ekip poslje eno posto — z razlogom, ne le z "nekaj je
+# narobe". Enkrat na krog (`email_log.round_id`), a za vsak krog znova,
+# dokler ekipe ne popravi.
 #
 # Urnik je vklopljen, ker posta ni mnozicna: gre samo tistim, ki ekipo IMAJO
 # in se jim ne bo zaklenila. Opomnik vsem brez ekipe je druga stvar in ostaja
 # rocen (`opomniki.yml`).
 on:
   schedule:
-    # Dvakrat na dan, ker urnik GitHuba ni zanesljiv: uvozov cron `0 5 * * 1-4`
-    # se v praksi sprozi okoli 9:40 UTC, torej stiri ure in pol pozneje, nov
-    # urnik pa prvi dan sploh ni stekel. Opozorilo pride enkrat na tezavo, zato
-    # drugi termin ne pomeni vec poste — pomeni le, da izpusceni prvi ne pobere
-    # obljube "dva dni prej" s seboj.
-    - cron: '0 6 * * *'
-    - cron: '0 14 * * *'
+    # Vsako uro PREVERI, posta pa gre enkrat na krog: ob prvem teku, ko je do
+    # roka manj kot 24 ur. Pogosto zato, ker GitHub urnik zamika za ure (jutranji
+    # tek ob 8:00 je stekel ob 12:18, po roku ob 10:00), in ker ekipa, ki nastane
+    # ali se pokvari zvecer pred rokom, sicer ne bi dobila nicesar.
+    # Minuta 17, ker je ob polni uri GitHub najbolj zaseden.
+    - cron: '17 * * * *'
   workflow_dispatch:
     inputs:
       suho:
@@ -59,13 +59,8 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           VRSTA: opozorilo
-          # Okno je 3 dni, ne 2, ker zagon tece enkrat na dan ob 8:00.
-          # Pri dvodnevnem oknu bi liga z rokom ob 8:30 padla cez rob — zagon
-          # dva dni prej je ne bi zajel (8:30 > 8:00), naslednji pa sele dan
-          # pred rokom. Trije dnevi zagotovijo, da posta pride VSAJ dva dni
-          # prej. Ker opozorilo pride enkrat na tezavo, sirse okno ne pomeni
-          # vec poste — pomeni le zgodnejso.
-          DNI: 3
+          # En dan: opozorilo pride 24 ur pred rokom (oz. ob prvem teku po tem).
+          DNI: 1
           SUHO: ${{ github.event_name == 'workflow_dispatch' && inputs.suho || 'false' }}
         run: node scripts/posli-opomnike.mjs
 
