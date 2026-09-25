@@ -3,6 +3,7 @@
 //   npm run prevodi -- hr      # samo hrvaščina, s seznamom manjkajočih
 import { sl } from '../src/i18n/sl'
 import { hr } from '../src/i18n/hr'
+import { sk } from '../src/i18n/sk'
 
 type Drevo = { [k: string]: unknown }
 const jeList = (v: unknown) => typeof v === 'string' || (typeof v === 'object' && v !== null && 'other' in v)
@@ -20,7 +21,7 @@ function ima(d: Drevo, kljuc: string): boolean {
 }
 
 const vsi = listi(sl as Drevo)
-const jeziki: Record<string, Drevo> = { hr: hr as Drevo }
+const jeziki: Record<string, Drevo> = { hr: hr as Drevo, sk: sk as Drevo }
 const izbran = process.argv[2]
 for (const [j, slovar] of Object.entries(jeziki)) {
   if (izbran && izbran !== j) continue

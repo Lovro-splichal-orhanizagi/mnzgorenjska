@@ -97,7 +97,10 @@ if (!existsSync(MAPA)) mkdirSync(MAPA, { recursive: true })
 async function prenesi(url, datoteka, sveze = false) {
   const pot = `${MAPA}/${datoteka}`
   if (!sveze && existsSync(pot)) return readFileSync(pot, 'utf8')
-  const odgovor = await fetch(url)
+  // Vir lahko zahteva vljudnost: premor med zahtevki in glavo, ki pove, kdo
+  // bere (Sportnet). Slovenski viri tega nimajo in ostanejo, kot so bili.
+  if (vir.premorMs) await new Promise((r) => setTimeout(r, vir.premorMs))
+  const odgovor = await fetch(url, vir.glave ? { headers: vir.glave } : undefined)
   if (!odgovor.ok) {
     // Statusa ne pozremo, ga pa pripnemo: klicatelj mora znati lociti
     // "te strani (se) ni" od "vir je padel". Vir sam tega ne pove drugace.

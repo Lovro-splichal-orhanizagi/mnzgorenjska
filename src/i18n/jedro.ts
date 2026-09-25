@@ -20,11 +20,14 @@
 // hrvaščina: one/few/other) in se izbere po parametru `n`.
 import { sl } from './sl/index.ts'
 import { hr } from './hr/index.ts'
+import { sk } from './sk/index.ts'
+import { drzavaLige, JEZIK_DRZAVE } from '../lib/drzavaUgib.ts'
 
-export type Jezik = 'sl' | 'hr'
+export type Jezik = 'sl' | 'hr' | 'sk'
 
 /** Množinske oblike; `other` je obvezna, ostale po pravilih jezika. */
-export type Mnozina = { one?: string; two?: string; few?: string; other: string }
+// `many` rabi slovaščina za necela števila ("2,5 bodu").
+export type Mnozina = { one?: string; two?: string; few?: string; many?: string; other: string }
 type Vrednost = string | Mnozina
 type Drevo = { [k: string]: Vrednost | Drevo }
 
@@ -39,25 +42,39 @@ export type Kljuc = Poti<typeof sl>
 
 export type Parametri = Record<string, string | number | null | undefined>
 
-const SLOVARJI: Record<Jezik, Drevo> = { sl: sl as Drevo, hr: hr as Drevo }
-/** Jeziki, ki so dovolj prevedeni, da jih izberemo sami po brskalniku. */
-const PRIPRAVLJENI: Jezik[] = ['sl']
-const LOKALE: Record<Jezik, string> = { sl: 'sl-SI', hr: 'hr-HR' }
+const SLOVARJI: Record<Jezik, Drevo> = { sl: sl as Drevo, hr: hr as Drevo, sk: sk as Drevo }
+/** Jeziki, ki so dovolj prevedeni, da jih vmesnik izbere sam. */
+const PRIPRAVLJENI: Jezik[] = ['sl', 'sk']
+const LOKALE: Record<Jezik, string> = { sl: 'sl-SI', hr: 'hr-HR', sk: 'sk-SK' }
 const SHRAMBA = 'slff-jezik'
 
+export const jePripravljen = (j: string): j is Jezik => PRIPRAVLJENI.includes(j as Jezik)
+
+/**
+ * Jezik sledi DRŽAVI lige, ne brskalniku: Slovenec na slovaškem računalniku
+ * ostane v slovenščini, Slovak v slovaški ligi dobi slovaščino. Ob nalaganju
+ * seznama lig še ni, zato državo razberemo iz šifre lige (naslov, shranjena
+ * izbira) ali ugiba; kontekst lige jezik popravi, če se je zmotil.
+ */
 function izberi(): Jezik {
   // Skripte v Node (preveri-podatke …) so vedno slovenske in se localStorage
   // ne dotaknejo — Node ga ima, a ob branju izpiše opozorilo.
   if (typeof window === 'undefined') return 'sl'
+  let shranjen: string | null = null
+  let liga: string | null = null
+  let izbranaDrzava: string | null = null
   try {
-    const shranjen = localStorage.getItem(SHRAMBA)
-    if (shranjen === 'sl' || shranjen === 'hr') return shranjen
+    shranjen = localStorage.getItem(SHRAMBA)
+    liga = new URLSearchParams(location.search).get('t') || localStorage.getItem('slff-tekmovanje')
+    izbranaDrzava = localStorage.getItem('slff-drzava')
   } catch {}
-  try {
-    const brskalnik = navigator.language?.slice(0, 2)
-    if (PRIPRAVLJENI.includes(brskalnik as Jezik)) return brskalnik as Jezik
-  } catch {}
-  return 'sl'
+  if (shranjen && jePripravljen(shranjen)) return shranjen
+  // Brez lige in brez izbrane države (povezava /sk) ostane slovenščina, tudi
+  // na slovaškem brskalniku: Slovenec ne sme niti za hip videti slovaščine.
+  // Slovak brez povezave dobi slovaščino ob prvem popravku konteksta lige.
+  const drzava = liga ? drzavaLige(liga) : izbranaDrzava
+  const j = JEZIK_DRZAVE[drzava ?? 'SI'] ?? 'sl'
+  return jePripravljen(j) ? j : 'sl'
 }
 
 let izbran: Jezik | null = null
