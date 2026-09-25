@@ -84,7 +84,10 @@ console.log(`Tekmovanje: ${tekmovanje.name} (liga ${liga})`)
 async function prenesi(url, ime) {
   const pot = `${PREDPOMNILNIK}/${vir.ime}/${ime}`
   try {
-    const odgovor = await fetch(url)
+    // Vir lahko zahteva vljudnost: premor med zahtevki in glavo, ki pove, kdo
+    // bere (Sportnet). Slovenski viri tega nimajo in ostanejo, kot so bili.
+    if (vir.premorMs) await new Promise((r) => setTimeout(r, vir.premorMs))
+    const odgovor = await fetch(url, vir.glave ? { headers: vir.glave } : undefined)
     if (!odgovor.ok) throw new Error(`${odgovor.status} ${url}`)
     const html = await odgovor.text()
     // Ločeno po viru: šifre lig in dokumentov so last spletišča, ne sistema,

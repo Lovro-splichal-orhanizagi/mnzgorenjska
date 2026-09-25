@@ -16,7 +16,8 @@ import {
 } from 'react'
 import { useLocation, useSearchParams } from 'react-router-dom'
 import { supabase } from './supabase'
-import { drzavaObiskovalca, ligeDrzave, privzetaLiga } from './drzava'
+import { drzavaObiskovalca, ligeDrzave, privzetaLiga, JEZIK_DRZAVE } from './drzava'
+import { jezik, jePripravljen, nastaviJezik } from '../i18n/jedro.ts'
 
 export const PRIVZETO = 'clani'
 const KLJUC = 'slff-tekmovanje'
@@ -276,6 +277,18 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
     () => ligeDrzave(tekmovanja, slug, drzavaObiskovalca()),
     [tekmovanja, slug],
   )
+
+  // Jezik sledi državi lige. Ob nalaganju ga jedro prevodov ugane iz šifre
+  // lige; ko je seznam lig znan, ga tu po potrebi popravimo (en ponovni
+  // nalog). Za Slovenca je država Slovenija in jezik že slovenski — nič se ne
+  // zgodi.
+  useEffect(() => {
+    if (!tekmovanja.length) return
+    // Vstop s povezave /sk stran naloži znova sam — dvojni nalog bi le utripal.
+    if (pathname === '/sk' || pathname === '/si') return
+    const zeljen = JEZIK_DRZAVE[drzava]
+    if (zeljen && jePripravljen(zeljen) && zeljen !== jezik()) nastaviJezik(zeljen)
+  }, [tekmovanja.length, drzava, pathname])
 
   return (
     <Kontekst.Provider

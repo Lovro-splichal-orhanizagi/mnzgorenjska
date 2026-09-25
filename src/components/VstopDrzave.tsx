@@ -18,13 +18,12 @@ export default function VstopDrzave({ drzava }: { drzava: string }) {
   const { vsaTekmovanja: tekmovanja } = useTekmovanje()
 
   useEffect(() => {
-    zapomniDrzavo(drzava)
-  }, [drzava])
-
-  useEffect(() => {
     // Dokler se lige ne naložijo, ne vemo, ali ima država kakšno ligo.
     if (!tekmovanja.length) return
     const imaLige = tekmovanja.some((t) => t.country_code === drzava)
+    // Državo si zapomnimo le, če v njej kaj igramo — sicer bi obiskovalec
+    // dobil jezik države, v kateri nima kaj videti.
+    if (imaLige) zapomniDrzavo(drzava)
     window.location.replace(imaLige ? `/?t=${privzetaLiga(tekmovanja, drzava)}` : '/')
   }, [tekmovanja, drzava])
 

@@ -2891,6 +2891,35 @@ preveri(
   preveri('lige: Slovak brez aktivne slovaske lige vidi slovenske', slugi(D.ligeDrzave(brezSk, 'clani', 'SK')) === 'clani,lj-1-liga')
 }
 
+// --- prevodi: vsak prevod ima iste {parametre} in <oznake> kot izvirnik ------
+// Brez tega bi popravek slovenskega niza (nov parameter) v slovaščini tiho
+// pustil "{n}" na zaslonu ali izgubil povezavo.
+{
+  const { sl } = await import('../src/i18n/sl/index.ts')
+  const { sk } = await import('../src/i18n/sk/index.ts')
+  const listi = (d, pot = '') =>
+    Object.entries(d).flatMap(([k, v]) =>
+      typeof v === 'string' || (v && typeof v === 'object' && 'other' in v) ? [[pot + k, v]] : listi(v, `${pot}${k}.`),
+    )
+  const najdi = (d, kljuc) => kljuc.split('.').reduce((v, del) => (v && typeof v === 'object' ? v[del] : undefined), d)
+  const znaki = (v) => {
+    const besedila = typeof v === 'string' ? [v] : Object.values(v)
+    return besedila.map((b) => [...b.matchAll(/\{(\w+)\}|<(\w+)>/g)].map((m) => m[0]).sort().join(' '))
+  }
+  const napake = []
+  let manjka = 0
+  for (const [kljuc, izvirnik] of listi(sl)) {
+    const prevod = najdi(sk, kljuc)
+    if (prevod === undefined) { manjka++; continue }
+    const iz = new Set(znaki(izvirnik)), pr = new Set(znaki(prevod))
+    // Množinske oblike smejo {n} izpustiti le, kjer ga izvirnik izpusti v vseh.
+    const vsi = [...pr].every((z) => iz.has(z)) && [...iz].every((z) => pr.has(z) || typeof izvirnik !== 'string')
+    if (!vsi) napake.push(kljuc)
+  }
+  preveri('prevodi sk: vsi nizi prevedeni', manjka === 0, `manjka ${manjka}`)
+  preveri('prevodi sk: parametri in oznake kot v izvirniku', napake.length === 0, napake.slice(0, 5).join(', '))
+}
+
 // --- vir sportnet (Slovaška) -----------------------------------------------
 {
   const S = await import('./viri/sportnet.mjs')

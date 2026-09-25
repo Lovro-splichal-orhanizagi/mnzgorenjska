@@ -6,13 +6,17 @@
 // stalno šifro igralca (ISSF), dogodki z minuto. Zato tu ni razčlenjevanja
 // besedila, le preslikava v obliko, ki jo pričakuje `uvoz-zapisnikov`.
 //
-// Šifra lige je `<appSpace>/<competitionId>`, npr. `SsFZ/6a154cf844ff24612e07e083`
-// (appSpace je zveza: SFZ, SsFZ, ZsFZ, VsFZ, BFZ, ali ObFZ). Sezona je del
-// tekmovanja — vsaka sezona ima svoj competitionId.
+// Šifra lige je `<appSpace>/<competitionId>[/<partId>]`, npr.
+// `SsFZ/6a154cf844ff24612e07e083`. appSpace je zveza (SFZ, SsFZ, ZsFZ, VsFZ,
+// BFZ ali okresná zveza, npr. `obfz-zvolen.futbalnet.sk`). Sezona je del
+// tekmovanja — vsaka sezona ima svoj competitionId. Tekmovanje s skupinami
+// (V. liga SsFZ: Sever in Juh) je za fantasy več lig: skupino izbere `partId`,
+// sicer bi se ekipe obeh skupin znašle v isti ligi.
 //
-// POZOR: dovoljenje za uporabo podatkov še ni potrjeno. Dokler SFZ/Sportnet
-// ne odgovori, ta vir teče samo proti lokalni bazi; liga v produkciji ostane
-// neaktivna in je nočni uvoz ne vidi.
+// Podatki so javni (API brez prijave, ki ga bere futbalnet.sk), izrecnega
+// dovoljenja SFZ/Sportnet pa nimamo. Zato beremo odkrito (glava z imenom in
+// naslovom), počasi in le nove tekme, na strani lige pa navedemo vir s
+// povezavo. Če nas prosijo, naj nehamo, slovaške lige izklopimo.
 import { nastopi as skupniNastopi } from '../zapisnik.mjs'
 
 // Enako kot v zapisnik.mjs: sodniški podaljšek se ne šteje.
@@ -22,11 +26,11 @@ import { naredikljucKluba, kratkoIme, poenostavi } from '../klubi.mjs'
 const API = 'https://sutaze.api.sportnet.online/api/v2'
 const NA_STRAN = 100
 
-/** `SsFZ/<id>` → { appSpace, id }. */
+/** `SsFZ/<id>[/<partId>]` → { appSpace, id, del }. */
 export function razbijKodo(koda) {
-  const [appSpace, id] = String(koda).split('/')
-  if (!appSpace || !id) throw new Error(`sportnet: šifra lige mora biti <appSpace>/<competitionId>, ne "${koda}"`)
-  return { appSpace, id }
+  const [appSpace, id, del = null] = String(koda).split('/')
+  if (!appSpace || !id) throw new Error(`sportnet: šifra lige mora biti <appSpace>/<competitionId>[/<partId>], ne "${koda}"`)
+  return { appSpace, id, del }
 }
 
 /** "2026/2027" → "2026/27". */
@@ -194,7 +198,9 @@ async function vseTekme(koda, prenesi) {
     od = d.nextOffset
   }
   // Ista tekma na dveh straneh bi v bazi nastala dvakrat.
-  return [...new Map(vse.map((t) => [t._id, t])).values()]
+  const edinstvene = [...new Map(vse.map((t) => [t._id, t])).values()]
+  const { del } = razbijKodo(koda)
+  return del ? edinstvene.filter((t) => t.competitionPart?._id === del) : edinstvene
 }
 
 const vir = {
@@ -202,6 +208,11 @@ const vir = {
   polnoIme: 'Slovenský futbalový zväz (futbalnet.sk)',
   drzava: 'SK',
   osnovniNaslov: 'https://sportnet.sme.sk/futbalnet/',
+  // Beremo odkrito in vljudno: glava pove, kdo smo in kje nas najdejo, premor
+  // med zahtevki pa, da API ne čuti nočnega uvoza. Nespremenjenih zapisnikov
+  // uvoz tako ali tako ne bere znova (predpomnilnik).
+  glave: { 'User-Agent': 'SLFF fantasy (https://slff.eu)' },
+  premorMs: 300,
   // Sportnet ne objavlja delegiranja in zapisnikov o prestopih v obliki,
   // ki jo poznamo — skripti za to se ob tem viru končata brez dela.
   imaRegistracije: false,

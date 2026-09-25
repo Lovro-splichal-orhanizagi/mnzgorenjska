@@ -56,7 +56,7 @@ function useZapriZunaj(odprt: boolean, zapri: () => void) {
 
 export default function Navbar() {
   const { session } = useAuth()
-  const { id: tekmovanjeId, tekmovanje } = useTekmovanje()
+  const { id: tekmovanjeId, tekmovanje, drzava } = useTekmovanje()
   const [klubiLige, setKlubiLige] = useState<string[]>([])
   const [jeAdmin, setJeAdmin] = useState(false)
   const [ime, setIme] = useState<string | null>(null)
@@ -147,7 +147,10 @@ export default function Navbar() {
     }
   }, [uporabnikId])
 
-  const vec = jeAdmin ? [...ostale, { pot: '/admin', naslov: t('aplikacija.meni.admin') }] : ostale
+  // Glasovanje o pozicijah je nadomestek za zapisnik, ki pozicij ne pozna
+  // (Slovenija). Slovaški zapisnik jih ima, zato stran tam nima kaj početi.
+  const zaDrzavo = drzava === 'SI' ? ostale : ostale.filter((p) => p.pot !== '/pozicije')
+  const vec = jeAdmin ? [...zaDrzavo, { pot: '/admin', naslov: t('aplikacija.meni.admin') }] : zaDrzavo
   // Začetnica za avatar: iz vzdevka, sicer iz e-naslova.
   const zacetnica = (ime || session?.user.email || '?').trim().charAt(0).toUpperCase()
 

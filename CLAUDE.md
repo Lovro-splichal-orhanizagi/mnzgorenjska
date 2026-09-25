@@ -115,22 +115,40 @@ največ 3 iz kluba je pet klubov spodnja meja brez izbire.
 | pt-mladinci | `2026:53` | `2025:71`, `2024:71` (šifra Mladine se s sezono menja) |
 | ms-mladinci | `2026:115` | `2025:115`, `2024:115` |
 
-### Slovaška (poskus, neaktivna)
+### Slovaška
 
 Vir `sportnet` (`scripts/viri/sportnet.mjs`) bere **javni API**, ki ga
 uporablja futbalnet.sk (`sutaze.api.sportnet.online/api/v2`), ne HTML. Šifra
-lige je `<appSpace>/<competitionId>`; vsaka sezona ima svoj competitionId
-(seznam: `/public/<appSpace>/competitions`). Zapisnik prinese pozicijo in
-šifro ISSF vsakega igralca, zato Slovaška ne čaka na glasovanje o pozicijah;
-asistenc ni, kot pri nas. Avtogol je `goal` z vrsto `dropped` in je zapisan pri
-ekipi strelca.
+lige je `<appSpace>/<competitionId>[/<partId>]`; vsaka sezona ima svoj
+competitionId, tekmovanje s skupinami (V. liga Sever/Juh) pa je več lig in
+skupino izbere `partId`. Zapisnik prinese pozicijo in šifro ISSF vsakega
+igralca, zato Slovaška ne čaka na glasovanje o pozicijah (stran Pozicije je
+v meniju skrita); asistenc ni, kot pri nas. Avtogol je `goal` z vrsto
+`dropped` in je zapisan pri ekipi strelca.
 
-| liga | tekoča 2026/27 | arhiv 2025/26 |
-|---|---|---|
-| sk-ssfz-4liga | `SsFZ/6a154cf844ff24612e07e083` | `SsFZ/68431237eba10c40f78a669c` |
+Vpisane so vse lige odraslih Stredoslovenského FZ in enajstih okresov pod njim
+(27, migracija 20260926090000), **neaktivne**. Seznam lig z arhivom izpiše:
 
-**Dovoljenje SFZ/Sportnet še ni potrjeno** — liga ostane neaktivna in se v
-produkcijo ne uvaža, dokler ga ni.
+```bash
+node scripts/slovaske-lige.mjs ssfz          # regija, lige, šifre, arhiv 2025/26
+```
+
+Pri desetih ligah arhiva po imenu ni najti (sponzor ali skupina se je
+preimenovala) — šifro poišči ročno v `/public/<appSpace>/competitions`.
+
+**Vklop slovaške lige v produkciji:** delovni tok *Uvoz lige (rocno)* z
+`liga = sk-…`, `arhiv = <šifra 2025/26>`, `tekoca` in `cene`; nato
+`pripravljenost-lige` in `update competitions set active = true …`.
+
+Podatke beremo brez izrecnega dovoljenja SFZ/Sportnet, zato odkrito in
+vljudno: glava `User-Agent: SLFF fantasy (https://slff.eu)`, 300 ms med
+zahtevki, nespremenjenih zapisnikov ne beremo znova, vir (`vir_ime`,
+`vir_url` → futbalnet.sk) je v nogi vsake strani. Če nas prosijo, naj nehamo,
+slovaške lige izklopimo.
+
+Jezik vmesnika sledi državi lige (`src/i18n/sk/`, `JEZIK_DRZAVE`); šifra lige
+zunaj Slovenije se začne s kodo države (`sk-…`), da jezik ob nalaganju ve,
+katero državo gleda.
 
 ### Država obiskovalca
 

@@ -21,7 +21,7 @@
 import { sl } from './sl/index.ts'
 import { hr } from './hr/index.ts'
 import { sk } from './sk/index.ts'
-import { drzavaLige, drzavaObiskovalca, JEZIK_DRZAVE } from '../lib/drzavaUgib.ts'
+import { drzavaLige, JEZIK_DRZAVE } from '../lib/drzavaUgib.ts'
 
 export type Jezik = 'sl' | 'hr' | 'sk'
 
@@ -62,12 +62,17 @@ function izberi(): Jezik {
   if (typeof window === 'undefined') return 'sl'
   let shranjen: string | null = null
   let liga: string | null = null
+  let izbranaDrzava: string | null = null
   try {
     shranjen = localStorage.getItem(SHRAMBA)
     liga = new URLSearchParams(location.search).get('t') || localStorage.getItem('slff-tekmovanje')
+    izbranaDrzava = localStorage.getItem('slff-drzava')
   } catch {}
   if (shranjen && jePripravljen(shranjen)) return shranjen
-  const drzava = liga ? drzavaLige(liga) : drzavaObiskovalca()
+  // Brez lige in brez izbrane države (povezava /sk) ostane slovenščina, tudi
+  // na slovaškem brskalniku: Slovenec ne sme niti za hip videti slovaščine.
+  // Slovak brez povezave dobi slovaščino ob prvem popravku konteksta lige.
+  const drzava = liga ? drzavaLige(liga) : izbranaDrzava
   const j = JEZIK_DRZAVE[drzava ?? 'SI'] ?? 'sl'
   return jePripravljen(j) ? j : 'sl'
 }
