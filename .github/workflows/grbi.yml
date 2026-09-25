@@ -1,0 +1,62 @@
+name: Grbi klubov (rocni seznam)
+
+# `scripts/prenesi-grbe.mjs` ima rocno sestavljen seznam naslovov grbov za
+# klube, ki jih NZS ne objavlja (regionalne lige). Doslej je tekel le lokalno,
+# zato so grbi, dodani v seznam, ostali v lokalni bazi in jih produkcija ni
+# nikoli videla. Zivi servisni kljuc je samo tu.
+#
+# Privzeto samo nacrt; `pisi` prenese grbe v public/grbi, zapise logo_url in
+# nove datoteke potisne v git. Klubov, ki grb ze imajo, ne prepise.
+
+on:
+  workflow_dispatch:
+    inputs:
+      pisi:
+        description: 'Prenesi in zapisi (sicer samo nacrt)'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: grbi
+  cancel-in-progress: false
+
+jobs:
+  grbi:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Prenesi grbe in zapisi logo_url
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/prenesi-grbe.mjs ${{ inputs.pisi && '--pisi' || '' }}
+      - name: Zapisi nove grbe v git
+        if: inputs.pisi
+        run: |
+          set -euo pipefail
+          git add public/grbi
+          if git diff --cached --quiet; then echo "Ni novih grbov."; exit 0; fi
+          git config user.name "slff-bot"
+          git config user.email "slff-bot@users.noreply.github.com"
+          git commit -m "Grbi klubov ($(git diff --cached --numstat | wc -l | tr -d ' ') datotek)"
+          for i in 1 2 3 4 5; do
+            git pull --rebase origin main && git push && break
+            [ "$i" -lt 5 ] || { echo "push ni uspel po 5 poskusih"; exit 1; }
+            sleep $((i * 10))
+          done
+          gh workflow run ci.yml --ref main
+        env:
+          GH_TOKEN: ${{ github.token }}

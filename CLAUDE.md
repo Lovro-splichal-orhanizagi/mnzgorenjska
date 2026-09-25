@@ -314,8 +314,11 @@ razdelek *Dve ligi* zgoraj).
 
 Živi servisni ključ živi samo v GitHub Actions. Kar piše v produkcijo,
 teče tam: `uvoz-lige.yml` (uvoz ene lige), `grbi-nzs.yml` (grbi z NZS, ki
-jih sam zapiše v git) in `zdruzi-klube.yml` (dva podvojena kluba; najprej
-brez `pisi` za predogled). Shemo in poizvedbe potisne Supabase CLI, ki je
+jih sam zapiše v git), `grbi.yml` (ročni seznam grbov iz
+`prenesi-grbe.mjs` za regionalne lige; prepiše le klube brez grba, najprej
+brez `pisi` za načrt) in `zdruzi-klube.yml` (dva podvojena kluba; najprej
+brez `pisi` za predogled). Grb, dodan le v seznam in pognan lokalno, v
+produkcijo ne pride. Shemo in poizvedbe potisne Supabase CLI, ki je
 povezan s projektom: `npx supabase db push --linked`, `npx supabase db query
 --linked "<sql>"`.
 
