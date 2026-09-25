@@ -44,7 +44,7 @@ import Grb from '../components/Grb'
 import Odstevanje from '../components/Odstevanje'
 import EnajstericaNaIgriscu from '../components/EnajstericaNaIgriscu'
 import InfoIgralca from '../components/InfoIgralca'
-import { predlagajKader } from '../lib/predlogKadra'
+import { dopolniKader, predlagajKader } from '../lib/predlogKadra'
 import type { IgralecNaIgriscu } from '../components/Igrisce'
 import type { Pozicija } from '../lib/tipi'
 import { t, tx, datumUra } from '../i18n'
@@ -211,6 +211,8 @@ export default function MojaEkipa() {
   const [zacetniIds, setZacetniIds] = useState<Set<number>>(new Set())
   // Kader, kakršen je v bazi — po njem vemo, ali so spremembe neshranjene.
   const [shranjenKljuc, setShranjenKljuc] = useState(PRAZEN_KADER)
+  // Kader je iz gumba "Sestavi mi ekipo"; dokler ni shranjen, se sme žrebati znova.
+  const [izPredloga, setIzPredloga] = useState(false)
   const [krogi, setKrogi] = useState<KrogRok[]>([])
   const [naslednjiKrog, setNaslednjiKrog] = useState<KrogRok | null>(null)
   const [zadnjiKrog, setZadnjiKrog] = useState<KrogRok | null>(null)
@@ -395,6 +397,7 @@ export default function MojaEkipa() {
     setIzbranKrog('')
     setIzbrani([])
     setZacetniIds(new Set())
+    setIzPredloga(false)
     setShranjenKljuc(PRAZEN_KADER)
     setPripomocki([])
     setSezonaPripomockov(null)
@@ -869,6 +872,8 @@ export default function MojaEkipa() {
           odsotni[i.id]?.kind !== 'odsotnost',
       ),
       denarZaPredlog,
+      // Vsak klik drugačna ekipa — sicer bi vsi z gumbom igrali z isto.
+      Math.random,
     )
     if (!predlog) {
       return setSporocilo(t('mojaEkipa.sporocila.niPredloga'))
@@ -885,6 +890,47 @@ export default function MojaEkipa() {
       })),
     )
     setSporocilo(t('mojaEkipa.sporocila.predlogSestavljen'))
+    setIzPredloga(true)
+  }
+
+  /**
+   * Dopolni začet kader: kar je uporabnik že izbral, ostane, manjkajoča mesta
+   * se naključno zapolnijo v okviru denarja, ki mu je še ostal.
+   */
+  function dopolni() {
+    setSporocilo(null)
+    const dopolnjen = dopolniKader(
+      igralci.filter(
+        (i) =>
+          i.active !== false &&
+          odsotni[i.id]?.kind !== 'poskodba' &&
+          odsotni[i.id]?.kind !== 'odsotnost',
+      ),
+      izbraniPodrobno.map((s) => ({
+        id: s.player_id,
+        position: s.position,
+        team_id: s.team_id ?? null,
+        value: s.value ?? null,
+        je_zacetnik: s.is_starter,
+        je_kapetan: s.is_captain,
+        je_namestnik: s.is_vice,
+      })),
+      preostalo,
+      Math.random,
+    )
+    if (!dopolnjen) return setSporocilo(t('mojaEkipa.sporocila.niDopolnitve'))
+    const prej = new Map(izbrani.map((s) => [s.player_id, s]))
+    setRazveljavi(null)
+    setIzbrani(
+      dopolnjen.map((p) => ({
+        ...(prej.get(p.id) ?? { buy_value: p.value, buy_position: p.position, bench_order: null }),
+        player_id: p.id,
+        is_starter: p.je_zacetnik,
+        is_captain: p.je_kapetan,
+        is_vice: p.je_namestnik,
+      })),
+    )
+    setSporocilo(t('mojaEkipa.sporocila.kaderDopolnjen'))
   }
 
   function odstrani(igralec: IgralecTrga) {
@@ -1573,6 +1619,39 @@ export default function MojaEkipa() {
           )}
         </div>
       </div>
+
+      {/* Predlog še ni shranjen: nov žreb ne stane prestopov. */}
+      {izPredloga && zacetniIds.size === 0 && izbrani.length > 0 && (
+        <div className="kartica flex flex-wrap items-center gap-2 border-gnl-400/30 bg-gnl-500/5 p-2.5 text-sm">
+          <button
+            onClick={predlagaj}
+            disabled={zakajNiPredloga != null}
+            className="gumb-glavni px-3 py-2 text-sm disabled:opacity-50"
+          >
+            {t('mojaEkipa.zacetek.drugPredlog')}
+          </button>
+          <span className="min-w-0 flex-1 text-xs text-slate-400">
+            {zakajNiPredloga ?? t('mojaEkipa.zacetek.opisDrugegaPredloga')}
+          </span>
+        </div>
+      )}
+
+      {/* Začet, a nedokončan kader: zapolni manjkajoča mesta. */}
+      {izbrani.length > 0 && izbrani.length < VELIKOST_EKIPE && (
+        <div className="kartica flex flex-wrap items-center gap-2 border-gnl-400/30 bg-gnl-500/5 p-2.5 text-sm">
+          <button
+            onClick={dopolni}
+            disabled={zakajNiPredloga != null}
+            className="gumb-glavni px-3 py-2 text-sm disabled:opacity-50"
+          >
+            {t('mojaEkipa.zacetek.dopolni')}
+          </button>
+          <span className="min-w-0 flex-1 text-xs text-slate-400">
+            {zakajNiPredloga ??
+              t('mojaEkipa.zacetek.opisDopolnitve', { n: VELIKOST_EKIPE - izbrani.length })}
+          </span>
+        </div>
+      )}
 
       {/* Uvodni nasvet, ko ekipa še nima igralcev. */}
       {izbrani.length === 0 && (

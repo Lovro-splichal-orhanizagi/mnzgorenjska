@@ -36,10 +36,16 @@ export function najcenejsiKader(igralci: readonly IgralecZaKader[]): number | nu
  * število izbranih po pozicijah; kluba obdelamo enega za drugim, zato njegova
  * omejitev treh velja natanko enkrat. Ob enaki ceni obdrži vrstni red vhoda —
  * kdor poda igralce po kakovosti, dobi pri isti ceni boljšega.
+ *
+ * Z `omejitve` dopolni delno sestavljen kader: `kvote` so manjkajoča mesta po
+ * pozicijah, `zasedeno` pa, koliko igralcev iz kluba je v kadru že.
  */
-export function najcenejsiIzbor<T extends IgralecZaKader>(igralci: readonly T[]): T[] | null {
+export function najcenejsiIzbor<T extends IgralecZaKader>(
+  igralci: readonly T[],
+  omejitve?: { kvote?: Record<Pozicija, number>; zasedeno?: ReadonlyMap<number, number> },
+): T[] | null {
   const pozicije = Object.keys(POZICIJE) as Pozicija[]
-  const kvote = pozicije.map((p) => POZICIJE[p].kader)
+  const kvote = pozicije.map((p) => omejitve?.kvote?.[p] ?? POZICIJE[p].kader)
   const koraki: number[] = []
   let stanj = 1
   for (const kvota of kvote) {
@@ -71,11 +77,12 @@ export function najcenejsiIzbor<T extends IgralecZaKader>(igralci: readonly T[])
   cene[0] = 0
   // Za vsak klub: iz katerega stanja in s katero možnostjo smo prišli.
   const sledi: { klub: { cena: number; igralec: T }[][]; moznosti: Moznost[]; od: Int32Array; izbira: Int32Array }[] = []
-  for (const klub of klubi.values()) {
+  for (const [klubId, klub] of klubi) {
+    const meja = Math.max(0, MAX_IZ_KLUBA - (omejitve?.zasedeno?.get(klubId) ?? 0))
     for (const cenePozicije of klub) cenePozicije.sort((a, b) => a.cena - b.cena)
     const vsote = klub.map((cenePozicije) => {
       const vsota = [0]
-      for (const { cena } of cenePozicije.slice(0, MAX_IZ_KLUBA))
+      for (const { cena } of cenePozicije.slice(0, meja))
         vsota.push(vsota[vsota.length - 1] + cena)
       return vsota
     })
@@ -85,7 +92,7 @@ export function najcenejsiIzbor<T extends IgralecZaKader>(igralci: readonly T[])
         moznosti.push({ stevila: n, zamik, cena })
         return
       }
-      for (let k = 0; k <= Math.min(kvote[p], MAX_IZ_KLUBA - skupaj, vsote[p].length - 1); k++)
+      for (let k = 0; k <= Math.min(kvote[p], meja - skupaj, vsote[p].length - 1); k++)
         dodaj(p + 1, [...n, k], skupaj + k, zamik + k * koraki[p], cena + vsote[p][k])
     }
     dodaj(0, [], 0, 0, 0)

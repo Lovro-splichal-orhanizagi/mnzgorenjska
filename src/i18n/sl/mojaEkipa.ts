@@ -65,6 +65,9 @@ export const mojaEkipa = {
     pocakaj: 'Počakaj, da se shranjevanje konča.',
     niPredloga: 'Iz te lige zaenkrat ni mogoče sestaviti veljavne ekipe.',
     predlogSestavljen: 'Ekipa je sestavljena — zamenjaj, kogar hočeš, in pritisni Shrani.',
+    kaderDopolnjen: 'Manjkajoča mesta so zapolnjena — preveri in pritisni Shrani.',
+    niDopolnitve:
+      'Kadra ni mogoče dopolniti z denarjem, ki ti je ostal. Zamenjaj katerega od dragih igralcev in poskusi znova.',
     kapetanNaKlop: '{ime} je šel na klop — izberi novega kapetana.',
     namestnikNaKlop: '{ime} je šel na klop — izberi novega namestnika.',
     brezPozicije: 'Igralec še nima potrjene pozicije, zato ga ni mogoče postaviti na igrišče.',
@@ -136,9 +139,15 @@ export const mojaEkipa = {
   // Uvodni nasvet za prazno ekipo.
   zacetek: {
     naslov: 'Kje začeti?',
-    sestaviMi: '⚡ Sestavi mi ekipo',
+    sestaviMi: '🎲 Sestavi mi ekipo',
     opisPredloga:
-      'Postavimo veljavno ekipo v okviru proračuna. Nato zamenjaj, kogar hočeš, in shrani.',
+      'Naključno izberemo veljavno ekipo v okviru proračuna — vsak klik drugo. Nato zamenjaj, kogar hočeš, in shrani.',
+    drugPredlog: '🎲 Drug predlog',
+    opisDrugegaPredloga:
+      'Ni všeč? Izžrebaj novo ekipo — dokler je ne shraniš, je to zastonj.',
+    dopolni: '🎲 Dopolni ekipo',
+    opisDopolnitve:
+      'Prostih mest v kadru: {n}. Tvoje izbire ostanejo, preostala mesta naključno zapolnimo v okviru proračuna.',
     korak1: 'Vpiši ime ekipe zgoraj — brez njega shranjevanje ne bo delovalo.',
     korak2:
       'Klikni <krepko>＋</krepko> na praznem mestu igrišča. Na telefonu je v spodnjem pasu še gumb <krepko>＋ Dodaj</krepko>, na računalniku pa izbiraš s <krepko>trga igralcev</krepko> desno.',

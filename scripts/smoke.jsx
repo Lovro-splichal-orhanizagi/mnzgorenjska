@@ -50,7 +50,7 @@ import { vseVrstice } from './strani.mjs'
 import { premakniProti, NAJVECJI_TEDENSKI_PREMIK } from './premik-cene.mjs'
 import { oceniPripravljenost, najcenejsiKader } from '../src/lib/pripravljenost'
 import { serijaCen, premik, crta, zadnjiPremiki } from '../src/lib/gibanjeCene'
-import { predlagajKader } from '../src/lib/predlogKadra'
+import { dopolniKader, predlagajKader } from '../src/lib/predlogKadra'
 import { velikostImena, velikostEkipe, imeZaPlakat, najboljsiTrije, navijacev, stavekNavijacev, skrajsajIme, prilagodiVelikost, ligaVTozilniku, velikostLige, imeDatoteke } from '../src/lib/plakat'
 import { readFileSync } from 'node:fs'
 
@@ -2487,6 +2487,81 @@ preveri(
     skop === null || (skop.length === 15 &&
       skop.reduce((v, k) => v + k.value, 0) <= 61 + 1e-9),
     skop ? `${skop.reduce((v, k) => v + k.value, 0).toFixed(1)} M€` : 'null')
+
+  // Gumb uporablja nakljucje: vsak klik drugacen kader, a vsak veljaven.
+  let seme = 1
+  const nakljucje = () => ((seme = (seme * 16807) % 2147483647) / 2147483647)
+  const zrebi = Array.from({ length: 20 }, () => predlagajKader(liga, PRORACUN, nakljucje))
+  const napacni = zrebi.filter((k) => {
+    if (!k || k.length !== VELIKOST_EKIPE) return true
+    const poz = {}
+    const klub = {}
+    for (const x of k) {
+      poz[x.position] = (poz[x.position] ?? 0) + 1
+      klub[x.team_id] = (klub[x.team_id] ?? 0) + 1
+    }
+    return !Object.entries(POZICIJE).every(([p, pr]) => poz[p] === pr.kader) ||
+      Math.max(...Object.values(klub)) > MAX_IZ_KLUBA ||
+      k.reduce((v, x) => v + x.value, 0) > PRORACUN + 1e-9 ||
+      k.filter((x) => x.je_zacetnik).length !== STEVILO_PRVIH ||
+      k.filter((x) => x.je_kapetan && x.je_zacetnik).length !== 1 ||
+      k.filter((x) => x.je_namestnik && x.je_zacetnik).length !== 1
+  })
+  preveri('predlog: vsak nakljucni kader je veljaven', napacni.length === 0,
+    `${napacni.length} od ${zrebi.length} neveljavnih`)
+  const razlicnih = new Set(zrebi.map((k) => k.map((x) => x.id).sort((a, b) => a - b).join(','))).size
+  preveri('predlog: nakljucni kadri se razlikujejo', razlicnih >= 15,
+    `${razlicnih} razlicnih od ${zrebi.length}`)
+  // Nakljucje ne sme dati skopuske ekipe. Na pravi ligi (lj-1-liga, 541
+  // igralcev) je meja 60 menjav dala ekipe za 60 M€; ta majhna liga tega ne
+  // ponovi, zato je preverba le spodnja varovalka.
+  const najmanjPorabe = Math.min(...zrebi.map((k) => k.reduce((v, x) => v + x.value, 0)))
+  preveri('predlog: nakljucni kader porabi proracun', najmanjPorabe > PRORACUN * 0.9,
+    `najmanj ${najmanjPorabe.toFixed(1)} M€`)
+
+  // Dopolnitev: zacet kader ostane, manjkajoca mesta se zapolnijo.
+  const cenaOd = new Map(liga.map((i) => [i.id, Number(i.value)]))
+  const zacet = zrebi[0].slice(0, 6).map((x, i) => ({
+    ...x, je_zacetnik: i < 4, je_kapetan: i === 0, je_namestnik: false,
+  }))
+  const denarZacet = PRORACUN - zacet.reduce((v, x) => v + x.value, 0)
+  const dopolnjeni = Array.from({ length: 10 }, () => dopolniKader(liga, zacet, denarZacet, nakljucje))
+  const slabiDopolnjeni = dopolnjeni.filter((k) => {
+    if (!k || k.length !== VELIKOST_EKIPE) return true
+    const poz = {}
+    const klub = {}
+    for (const x of k) {
+      poz[x.position] = (poz[x.position] ?? 0) + 1
+      klub[x.team_id] = (klub[x.team_id] ?? 0) + 1
+    }
+    const vPostavi = {}
+    for (const x of k) if (x.je_zacetnik) vPostavi[x.position] = (vPostavi[x.position] ?? 0) + 1
+    return !Object.entries(POZICIJE).every(([p, pr]) =>
+        poz[p] === pr.kader && (vPostavi[p] ?? 0) >= pr.min && (vPostavi[p] ?? 0) <= pr.max) ||
+      Math.max(...Object.values(klub)) > MAX_IZ_KLUBA ||
+      k.filter((x) => !x.obstojeci).reduce((v, x) => v + x.value, 0) > denarZacet + 1e-9 ||
+      k.filter((x) => x.je_zacetnik).length !== STEVILO_PRVIH ||
+      k.filter((x) => x.je_kapetan && x.je_zacetnik).length !== 1 ||
+      k.filter((x) => x.je_namestnik && x.je_zacetnik).length !== 1
+  })
+  preveri('dopolni: vsak dopolnjen kader je veljaven', slabiDopolnjeni.length === 0,
+    `${slabiDopolnjeni.length} od ${dopolnjeni.length} neveljavnih`)
+  preveri('dopolni: izbrani igralci ostanejo, kapetan tudi',
+    dopolnjeni.every((k) => k && zacet.every((z) => k.some((x) => x.id === z.id && x.obstojeci)) &&
+      k.find((x) => x.je_kapetan)?.id === zacet[0].id))
+  preveri('dopolni: cene obstojecih se ne spremenijo',
+    dopolnjeni.every((k) => k && k.filter((x) => x.obstojeci).every((x) => x.value === cenaOd.get(x.id))))
+
+  // Poln klub: iz kluba s tremi izbranimi ne sme priti nihce vec.
+  const klubPoln = liga.find((i) => liga.filter((j) => j.team_id === i.team_id).length >= 4).team_id
+  const trije = liga.filter((i) => i.team_id === klubPoln && i.position !== 'GK').slice(0, 3)
+    .map((x) => ({ ...x, je_zacetnik: false, je_kapetan: false, je_namestnik: false }))
+  const sTremi = dopolniKader(liga, trije, PRORACUN - trije.reduce((v, x) => v + Number(x.value), 0), nakljucje)
+  preveri('dopolni: poln klub ne dobi cetrtega',
+    sTremi != null && sTremi.filter((x) => x.team_id === klubPoln).length === 3,
+    sTremi ? String(sTremi.filter((x) => x.team_id === klubPoln).length) : 'null')
+
+  preveri('dopolni: brez denarja vrne null', dopolniKader(liga, zacet, 1, nakljucje) === null)
 }
 
 // --- NZS: neodigrana tekma ne sme podreti uvoza ----------------------------
