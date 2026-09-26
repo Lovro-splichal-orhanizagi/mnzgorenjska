@@ -298,6 +298,7 @@ export type Database = {
       }
       chat_messages: {
         Row: {
+          country_code: string
           alias: string
           content: string
           created_at: string
@@ -305,6 +306,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          country_code?: string
           alias: string
           content: string
           created_at?: string
@@ -312,6 +314,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          country_code?: string
           alias?: string
           content?: string
           created_at?: string
@@ -3264,6 +3267,7 @@ export type Database = {
       }
       klepet_sporocila: {
         Row: {
+          country_code: string | null
           alias: string | null
           content: string | null
           created_at: string | null
