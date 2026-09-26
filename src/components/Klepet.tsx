@@ -4,7 +4,8 @@ import { supabase } from '../lib/supabase'
 import { povezavaNaPrijavo } from '../lib/prijava'
 import type { FormEvent } from 'react'
 import { useAuth } from '../lib/useAuth'
-import { t, tx, datum } from '../i18n'
+import { useTekmovanje } from '../lib/tekmovanje'
+import { t, tx, datum, jezik } from '../i18n'
 
 // Anonimni klepet — sporočila so javna, avtor pa skrit za psevdonimom, ki se
 // deterministično izpelje iz user_id, tako da ista oseba vedno "govori" kot
@@ -22,16 +23,34 @@ export interface Sporocilo {
   created_at: string
 }
 
-const PRIDEVNIKI = [
-  'Modri', 'Rdeči', 'Zeleni', 'Rumeni', 'Črni', 'Beli', 'Srebrni', 'Zlati',
-  'Hitri', 'Divji', 'Tihi', 'Ognjeni', 'Ledeni', 'Nočni', 'Jutranji',
-  'Železni', 'Bakreni', 'Sončni', 'Nebeški', 'Brezčutni',
-]
-const SAMOSTALNIKI = [
-  'Vratar', 'Branilec', 'Vezist', 'Napadalec', 'Kapetan', 'Sodnik', 'Trener',
-  'Navijač', 'Strelec', 'Podajalec', 'Rezervist', 'Vekar', 'Junak', 'Volk',
-  'Orel', 'Zmaj', 'Bik', 'Konj', 'Sokol', 'Ris',
-]
+// Psevdonim je v jeziku klepeta. Seznama nista v slovarju, ker se psevdonim
+// zapiše v bazo (`chat_messages.alias`) in se po objavi ne sme spreminjati.
+const BESEDE: Record<string, { pridevniki: string[]; samostalniki: string[] }> = {
+  sl: {
+    pridevniki: [
+      'Modri', 'Rdeči', 'Zeleni', 'Rumeni', 'Črni', 'Beli', 'Srebrni', 'Zlati',
+      'Hitri', 'Divji', 'Tihi', 'Ognjeni', 'Ledeni', 'Nočni', 'Jutranji',
+      'Železni', 'Bakreni', 'Sončni', 'Nebeški', 'Brezčutni',
+    ],
+    samostalniki: [
+      'Vratar', 'Branilec', 'Vezist', 'Napadalec', 'Kapetan', 'Sodnik', 'Trener',
+      'Navijač', 'Strelec', 'Podajalec', 'Rezervist', 'Vekar', 'Junak', 'Volk',
+      'Orel', 'Zmaj', 'Bik', 'Konj', 'Sokol', 'Ris',
+    ],
+  },
+  sk: {
+    pridevniki: [
+      'Modrý', 'Červený', 'Zelený', 'Žltý', 'Čierny', 'Biely', 'Strieborný', 'Zlatý',
+      'Rýchly', 'Divoký', 'Tichý', 'Ohnivý', 'Ľadový', 'Nočný', 'Ranný',
+      'Železný', 'Medený', 'Slnečný', 'Nebeský', 'Neľútostný',
+    ],
+    samostalniki: [
+      'Brankár', 'Obranca', 'Záložník', 'Útočník', 'Kapitán', 'Rozhodca', 'Tréner',
+      'Fanúšik', 'Strelec', 'Nahrávač', 'Náhradník', 'Veterán', 'Hrdina', 'Vlk',
+      'Orol', 'Drak', 'Býk', 'Kôň', 'Sokol', 'Rys',
+    ],
+  },
+}
 
 function stringHash(s: string): number {
   let h = 5381
@@ -42,8 +61,9 @@ function stringHash(s: string): number {
 export function psevdonim(userId?: string | null): string {
   if (!userId) return t('aplikacija.klepet.gost')
   const h = stringHash(userId)
-  const p = PRIDEVNIKI[h % PRIDEVNIKI.length]
-  const s = SAMOSTALNIKI[Math.floor(h / PRIDEVNIKI.length) % SAMOSTALNIKI.length]
+  const { pridevniki, samostalniki } = BESEDE[jezik()] ?? BESEDE.sl
+  const p = pridevniki[h % pridevniki.length]
+  const s = samostalniki[Math.floor(h / pridevniki.length) % samostalniki.length]
   const st = h % 100
   return `${p} ${s} ${st}`
 }
@@ -62,6 +82,9 @@ function relativniCas(iso: string): string {
 
 export default function Klepet() {
   const { session } = useAuth()
+  // Dokler liga ni naložena, država še ni znana (privzeta je Slovenija) —
+  // klepet bi za hip naložil sporočila napačne države.
+  const { drzava, id: ligaId } = useTekmovanje()
   const [sporocila, setSporocila] = useState<Sporocilo[]>([])
   const [besedilo, setBesedilo] = useState('')
   const [posiljam, setPosiljam] = useState(false)
@@ -70,13 +93,18 @@ export default function Klepet() {
   const { pathname, search } = useLocation()
 
   useEffect(() => {
+    if (!ligaId) return
     let preklican = false
+    // Nova država: prejšnja sporočila (tudi lastna) ne smejo ostati.
+    setSporocila([])
     async function nalozi() {
       // Beremo pogled, ne tabele: `user_id` ne zapusti baze, sicer bi se
       // dalo psevdonim prek `fantasy_teams.owner_id` pripisati ekipi.
       const { data, error } = await supabase
         .from('klepet_sporocila')
         .select('id, content, alias, created_at, je_moje')
+        // Vsaka država ima svoj klepet — Slovaki slovenskih sporočil ne vidijo.
+        .eq('country_code', drzava)
         .order('created_at', { ascending: false })
         .limit(30)
       if (preklican) return
@@ -113,7 +141,7 @@ export default function Klepet() {
       clearInterval(id)
       document.removeEventListener('visibilitychange', vidnost)
     }
-  }, [])
+  }, [drzava, ligaId])
 
   async function posljem(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -126,7 +154,7 @@ export default function Klepet() {
     setNapaka(null)
     const { data, error } = await supabase
       .from('chat_messages')
-      .insert({ user_id: session.user.id, content: vsebina, alias: mojPsev })
+      .insert({ user_id: session.user.id, content: vsebina, alias: mojPsev, country_code: drzava })
       .select('id, content, alias, created_at')
       .single()
     setPosiljam(false)
