@@ -21,7 +21,7 @@
 // sabo močno razlikujejo — v slabši ekipi ima najboljši strelec lahko manj
 // golov kot rezervni napadalec v najboljši.
 import { createClient } from '@supabase/supabase-js'
-import { vseVrstice } from './strani.mjs'
+import { vseVrstice, vrsticeIgralcevLige } from './strani.mjs'
 import { readFileSync } from 'node:fs'
 import {
   slugTekmovanja,
@@ -102,14 +102,7 @@ try {
 // le nastope te lige: ostale bi le brali zaman.
 let kartoni
 try {
-  kartoni = await vseVrstice((od, do_) =>
-    db
-      .from('appearances')
-      .select('player_id, yellow_cards, red_cards, players!inner(competition_id)')
-      .eq('players.competition_id', tekmovanje.id)
-      .order('id')
-      .range(od, do_),
-  )
+  kartoni = await vrsticeIgralcevLige(db, 'appearances', 'player_id, yellow_cards, red_cards', tekmovanje.id)
 } catch (e) {
   console.error(`Nastopov ni mogoče prebrati: ${e.message}`)
   process.exit(1)
@@ -315,15 +308,7 @@ console.log(`Zapisanih priorjev: ${zapisanihPriorjev} (${priori.length} igralcev
 // Brišemo po id-jih v paketih po 200, da naslov zahteve ne preraste meje.
 try {
   const znani = new Set(priori.map((p) => p.id))
-  const obstojeci = await vseVrstice((od, do_) =>
-    db
-      .from('position_priors')
-      .select('player_id, players!inner(competition_id)')
-      .eq('players.competition_id', tekmovanje.id)
-      .order('player_id')
-      .order('position')
-      .range(od, do_),
-  )
+  const obstojeci = await vrsticeIgralcevLige(db, 'position_priors', 'player_id', tekmovanje.id, ['player_id', 'position'])
   const odvecni = [...new Set(obstojeci.map((r) => r.player_id))].filter((id) => !znani.has(id))
   for (let i = 0; i < odvecni.length; i += 200) {
     const { error: eDel } = await db
