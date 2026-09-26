@@ -163,6 +163,11 @@ Slovenija in neznana država ostaneta pri `PRIVZETO`, država brez aktivne lige
 prav tako — dokler je slovaška liga neaktivna, se za nikogar nič ne spremeni.
 Vstopni povezavi `slff.eu/sk` in `/si` sta za kampanje.
 
+**Zaprta država** (`SAMO_S_POVEZAVO` v `src/lib/drzavaUgib.ts`): lige so
+vklopljene, a država se po brskalniku ne ugiba — vanjo pride le, kdor ima
+povezavo `/sk` ali `?t=sk-…`. Slovaška je zaprta, dokler je ne odstraniš s
+seznama.
+
 Nova Gorica menija za pretekle sezone nima — stara sezona je svoje tekmovanje
 s svojo šifro in do nje ne vodi nobena povezava, zato jih je treba prečesati.
 Neznana šifra vrne privzeto stran s **statusom 200**, ne 404, zato je iz

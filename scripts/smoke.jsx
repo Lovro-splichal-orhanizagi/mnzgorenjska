@@ -2874,8 +2874,9 @@ preveri(
   ]
   const brezSk = lige.filter((l) => l.country_code === 'SI')
   preveri('drzava: slovenski brskalnik', D.ugibajDrzavo({ jeziki: ['sl-SI', 'en'], casovniPas: 'Europe/Ljubljana' }) === 'SI')
-  preveri('drzava: slovaski brskalnik', D.ugibajDrzavo({ jeziki: ['sk-SK'], casovniPas: 'Europe/Bratislava' }) === 'SK')
-  preveri('drzava: anglesko v Bratislavi', D.ugibajDrzavo({ jeziki: ['en-US'], casovniPas: 'Europe/Bratislava' }) === 'SK')
+  // Slovaška je zaprta (SAMO_S_POVEZAVO): brskalnik je ne odpre, le povezava /sk.
+  preveri('drzava: slovaski brskalnik ne odpre zaprte Slovaske', D.ugibajDrzavo({ jeziki: ['sk-SK'], casovniPas: 'Europe/Bratislava' }) === null)
+  preveri('drzava: anglesko v Bratislavi ne odpre zaprte Slovaske', D.ugibajDrzavo({ jeziki: ['en-US'], casovniPas: 'Europe/Bratislava' }) === null)
   preveri('drzava: slovensko v Bratislavi (jezik velja)', D.ugibajDrzavo({ jeziki: ['sl'], casovniPas: 'Europe/Bratislava' }) === 'SI')
   preveri('drzava: neznan obiskovalec', D.ugibajDrzavo({ jeziki: ['de-DE'], casovniPas: 'Europe/Berlin' }) === null)
   preveri('drzava: povezava /sk povozi jezik', D.ugibajDrzavo({ shranjena: 'SK', jeziki: ['sl'] }) === 'SK')
