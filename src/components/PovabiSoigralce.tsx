@@ -122,7 +122,7 @@ export default function PovabiSoigralce({
               ? t('lestvice.povabiSoigralce.deliPovabilo')
               : t('lestvice.povabiSoigralce.ustvariInPovabi')}
         </button>
-        <Link to="/mini-lige" className="text-sm text-slate-400 hover:text-slate-200">
+        <Link to="/mini-leagues" className="text-sm text-slate-400 hover:text-slate-200">
           {t('lestvice.povabiSoigralce.miniLige')}
         </Link>
       </div>

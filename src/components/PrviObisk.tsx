@@ -62,12 +62,12 @@ export default function PrviObisk() {
   // Povezava na klub, igralca, ekipo ali povabilo v mini ligo že pove, kam
   // človek gre — okno bi ga le zmotilo.
   const vabljen =
-    pathname.startsWith('/klub/') ||
+    pathname.startsWith('/club/') ||
     pathname.startsWith('/l/') ||
     // Deljena kartica igralca ali plakat ekipe: kdor pride od tam (pogosto
     // starši), naj najprej vidi, kar mu je kdo poslal.
-    pathname.startsWith('/igralec/') ||
-    pathname.startsWith('/ekipa/')
+    pathname.startsWith('/player/') ||
+    pathname.startsWith('/team/')
   const okno = useRef<HTMLDivElement | null>(null)
 
   const zapri = () => {

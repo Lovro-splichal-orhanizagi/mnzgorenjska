@@ -306,7 +306,7 @@ export default function MiniLige() {
               {t('lestvice.miniLige.ustvariLigoIme', { ime: privzetoImeLige(vzdevek) })}
             </button>
           ) : (
-            <Link to="/moja-ekipa" className="gumb-glavni inline-block text-sm">
+            <Link to="/my-team" className="gumb-glavni inline-block text-sm">
               {t('lestvice.miniLige.najprejSestavi')}
             </Link>
           )}
@@ -383,7 +383,7 @@ export default function MiniLige() {
                   </span>
                   <div className="min-w-0 flex-1">
                     <Link
-                      to={`/ekipa/${v.fantasy_team_id}`}
+                      to={`/team/${v.fantasy_team_id}`}
                       className="block truncate font-bold hover:text-gnl-400"
                     >
                       {v.team_name}

@@ -62,7 +62,7 @@ export default function Opomniki() {
         <p className="text-slate-300">
           {tx('racun.opomniki.moraPrijava', {}, {
             prijava: (v) => (
-              <Link to={povezavaNaPrijavo('/opomniki')} className="text-gnl-300 underline">
+              <Link to={povezavaNaPrijavo('/reminders')} className="text-gnl-300 underline">
                 {v}
               </Link>
             ),

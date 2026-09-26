@@ -162,7 +162,7 @@ export default function Slovenija() {
               </span>
               <div className="min-w-0 flex-1">
                 <Link
-                  to={`/ekipa/${v.fantasy_team_id}`}
+                  to={`/team/${v.fantasy_team_id}`}
                   className="block truncate font-bold hover:text-gnl-400"
                 >
                   {v.team_name}
@@ -189,7 +189,7 @@ export default function Slovenija() {
       )}
 
       <p className="text-xs text-slate-500">
-        <Link to="/lestvica" className="underline hover:text-slate-300">
+        <Link to="/standings" className="underline hover:text-slate-300">
           {t('lestvice.slovenija.lestvicaLige')}
         </Link>
       </p>

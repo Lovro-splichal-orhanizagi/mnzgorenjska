@@ -1,4 +1,4 @@
-import { Routes, Route, Link, useLocation } from 'react-router-dom'
+import { Routes, Route, Link, Navigate, useLocation, useParams } from 'react-router-dom'
 import { AuthProvider } from './lib/useAuth'
 import { TekmovanjeProvider } from './lib/tekmovanje'
 import Navbar from './components/Navbar'
@@ -30,6 +30,33 @@ import Administracija from './pages/Administracija'
 import VstopVMiniLigo from './pages/VstopVMiniLigo'
 import Opomniki from './pages/Opomniki'
 import { useKanonicni, useNaslov } from './lib/naslov'
+
+// Poti so angleške, ker jih vidi vsaka država (slovaški obiskovalec ne
+// odpira "moja-ekipa"). Stari slovenski naslovi ostanejo kot preusmeritve.
+const STARE_POTI: [string, string][] = [
+  ['/moja-ekipa', '/my-team'],
+  ['/glasovanje', '/assists'],
+  ['/pozicije', '/positions'],
+  ['/odsotnosti', '/absences'],
+  ['/igralci', '/players'],
+  ['/igralec/:id', '/player/:id'],
+  ['/lestvica', '/standings'],
+  ['/slovenija', '/national'],
+  ['/mini-lige', '/mini-leagues'],
+  ['/ekipa/:id', '/team/:id'],
+  ['/klub/:id', '/club/:id'],
+  ['/rezultati', '/results'],
+  ['/tekma/:id', '/match/:id'],
+  ['/prijava', '/login'],
+  ['/pravno', '/legal'],
+  ['/opomniki', '/reminders'],
+]
+
+function StaraPot({ na }: { na: string }) {
+  const { id } = useParams()
+  const { search, hash } = useLocation()
+  return <Navigate to={{ pathname: na.replace(':id', id ?? ''), search, hash }} replace />
+}
 import { t } from './i18n'
 
 function NiStrani() {
@@ -65,24 +92,33 @@ export default function App() {
               {/* Vstopni povezavi za državo (kampanje, objave): slff.eu/sk */}
               <Route path="/sk" element={<VstopDrzave drzava="SK" />} />
               <Route path="/si" element={<VstopDrzave drzava="SI" />} />
-              <Route path="/moja-ekipa" element={<MojaEkipa />} />
-              <Route path="/glasovanje" element={<Glasovanje />} />
-              <Route path="/pozicije" element={<Pozicije />} />
-              <Route path="/odsotnosti" element={<Odsotnosti />} />
-              <Route path="/igralci" element={<Igralci />} />
-              <Route path="/igralec/:id" element={<Igralec />} />
-              <Route path="/lestvica" element={<Lestvica />} />
-              <Route path="/slovenija" element={<Slovenija />} />
-              <Route path="/mini-lige" element={<MiniLige />} />
+              <Route path="/my-team" element={<MojaEkipa />} />
+              <Route path="/assists" element={<Glasovanje />} />
+              <Route path="/positions" element={<Pozicije />} />
+              <Route path="/absences" element={<Odsotnosti />} />
+              <Route path="/players" element={<Igralci />} />
+              <Route path="/player/:id" element={<Igralec />} />
+              <Route path="/standings" element={<Lestvica />} />
+              <Route path="/national" element={<Slovenija />} />
+              <Route path="/mini-leagues" element={<MiniLige />} />
               <Route path="/l/:koda" element={<VstopVMiniLigo />} />
-              <Route path="/ekipa/:id" element={<Ekipa />} />
-              <Route path="/klub/:id" element={<Klub />} />
-              <Route path="/rezultati" element={<Rezultati />} />
-              <Route path="/tekma/:id" element={<Tekma />} />
-              <Route path="/prijava" element={<Prijava />} />
+              <Route path="/team/:id" element={<Ekipa />} />
+              <Route path="/club/:id" element={<Klub />} />
+              <Route path="/results" element={<Rezultati />} />
+              <Route path="/match/:id" element={<Tekma />} />
+              <Route path="/login" element={<Prijava />} />
+              <Route path="/new-password" element={<NovoGeslo />} />
+              {/* Povezava za ponastavitev gesla je vpisana pri Supabase in nosi
+                  žeton v #; preusmeritev bi ga lahko izgubila — stran velja na
+                  obeh naslovih. */}
               <Route path="/novo-geslo" element={<NovoGeslo />} />
-              <Route path="/pravno" element={<Pravno />} />
-              <Route path="/opomniki" element={<Opomniki />} />
+              <Route path="/legal" element={<Pravno />} />
+              <Route path="/reminders" element={<Opomniki />} />
+              {/* Stari slovenski naslovi (deljene povezave, e-pošta, iskalniki)
+                  vodijo na nove — s parametri, poizvedbo in #. */}
+              {STARE_POTI.map(([staro, novo]) => (
+                <Route key={staro} path={staro} element={<StaraPot na={novo} />} />
+              ))}
               <Route path="/admin" element={<Administracija />} />
               <Route path="*" element={<NiStrani />} />
             </Routes>
@@ -90,7 +126,7 @@ export default function App() {
           </main>
           <Podpora />
           <footer className="border-t border-white/10 py-6 text-center text-xs text-slate-400">
-            <Link to="/pravno" className="underline hover:text-slate-200">
+            <Link to="/legal" className="underline hover:text-slate-200">
               {t('aplikacija.noga.zasebnost')}
             </Link>
             <VirPodatkov />

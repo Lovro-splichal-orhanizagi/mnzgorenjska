@@ -347,7 +347,7 @@ export default function Odsotnosti() {
                     velikost={18}
                   />
                   <Link
-                    to={`/igralec/${p.player_id}`}
+                    to={`/player/${p.player_id}`}
                     className="truncate font-semibold hover:text-gnl-300"
                   >
                     {prikazniIme(p.player_name)}
@@ -381,7 +381,7 @@ export default function Odsotnosti() {
                       velikost={18}
                     />
                     <Link
-                      to={`/igralec/${p.player_id}`}
+                      to={`/player/${p.player_id}`}
                       className="truncate font-semibold hover:text-gnl-300"
                     >
                       {prikazniIme(p.player_name)}

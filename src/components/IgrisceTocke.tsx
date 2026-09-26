@@ -74,7 +74,7 @@ function Kartica({
   const znaki = dogodki(nastop)
   return (
     <Link
-      to={`/igralec/${nastop.player_id}`}
+      to={`/player/${nastop.player_id}`}
       title={opisNastopa(nastop)}
       className={`block w-[3.4rem] text-center transition duration-150
                   active:scale-95 lg:w-[4.4rem] lg:hover:-translate-y-0.5 ${

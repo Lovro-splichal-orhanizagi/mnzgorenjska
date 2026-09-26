@@ -389,7 +389,7 @@ export default function Lestvica() {
                     {e.rank}
                   </span>
                   <Link
-                    to={`/ekipa/${e.fantasy_team_id}`}
+                    to={`/team/${e.fantasy_team_id}`}
                     className="min-w-0 flex-1 truncate hover:text-gnl-400"
                   >
                     {e.team_name}
@@ -526,7 +526,7 @@ export default function Lestvica() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <Link
-                    to={`/ekipa/${e.fantasy_team_id}`}
+                    to={`/team/${e.fantasy_team_id}`}
                     className="block truncate font-bold hover:text-gnl-400"
                   >
                     {e.team_name}

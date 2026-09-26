@@ -36,7 +36,7 @@ export default function NovoGeslo() {
     const { error } = await supabase.auth.updateUser({ password: geslo })
     setPosiljam(false)
     if (error) return setNapaka(napakaPrijave(error.message))
-    navigate('/moja-ekipa')
+    navigate('/my-team')
   }
 
   return (
@@ -49,7 +49,7 @@ export default function NovoGeslo() {
         <p className="kartica p-4 text-sm text-slate-300">
           {tx('racun.novoGeslo.neveljavna', {}, {
             prijava: (v) => (
-              <Link to="/prijava" className="text-gnl-300 underline hover:text-gnl-200">
+              <Link to="/login" className="text-gnl-300 underline hover:text-gnl-200">
                 {v}
               </Link>
             ),

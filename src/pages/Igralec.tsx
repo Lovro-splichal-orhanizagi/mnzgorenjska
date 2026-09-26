@@ -456,7 +456,7 @@ export default function Igralec() {
 
   return (
     <div className="space-y-5">
-      <Link to={`/igralci${vLigo}`} className="text-sm text-slate-400 hover:text-white">
+      <Link to={`/players${vLigo}`} className="text-sm text-slate-400 hover:text-white">
         {t('igralci.profil.vsiIgralci')}
       </Link>
 
@@ -626,7 +626,7 @@ export default function Igralec() {
             <p className="text-[11px] text-slate-500">
               {tx('igralci.profil.podrobenPregled', {}, {
                 povezava: (b) => (
-                  <Link to={`/pozicije${vLigo}`} className="underline hover:text-gnl-300">
+                  <Link to={`/positions${vLigo}`} className="underline hover:text-gnl-300">
                     {b}
                   </Link>
                 ),
@@ -677,7 +677,7 @@ export default function Igralec() {
           <h2 className="text-xs font-bold uppercase tracking-wide text-slate-400">
             {t('igralci.odsotnosti.naslov')}
           </h2>
-          <Link to={`/odsotnosti${vLigo}`} className="text-xs text-gnl-300 hover:underline">
+          <Link to={`/absences${vLigo}`} className="text-xs text-gnl-300 hover:underline">
             {t('igralci.profil.vsaPorocila')}
           </Link>
         </div>

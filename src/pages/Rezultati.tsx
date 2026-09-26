@@ -146,7 +146,7 @@ export default function Rezultati() {
           {vKrogu.map((t) => (
             <li key={t.match_id}>
               <Link
-                to={`/tekma/${t.match_id}`}
+                to={`/match/${t.match_id}`}
                 className="kartica kartica-hover flex items-center gap-2 p-3"
               >
                 <Grb ime={t.home_name} kratko={t.home_short} logo={t.home_logo} velikost={24} />

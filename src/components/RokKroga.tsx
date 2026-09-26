@@ -105,7 +105,7 @@ export default function RokKroga() {
   return (
     <div className={slog}>
       <Link
-        to="/moja-ekipa"
+        to="/my-team"
         className="mx-auto flex max-w-6xl flex-wrap items-center justify-center
                    gap-x-2 gap-y-0.5 px-4 py-1.5 text-xs sm:text-sm"
         title={t('aplikacija.rokKroga.zaklepNaslov', { krog: krog.number, datum: kdaj })}

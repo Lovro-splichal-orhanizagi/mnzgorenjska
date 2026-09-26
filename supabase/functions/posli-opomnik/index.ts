@@ -332,13 +332,13 @@ async function posljiPoznavalcu(
         Točke vseh v ligi so odvisne od tega. Če se izkaže, da so podatki namerno napačni, poznavalca izgubiš.
       </p>
       <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">
-        Pozicije urejaš na strani <a href="https://slff.eu/pozicije" style="color:#15803d;">Pozicije</a>
+        Pozicije urejaš na strani <a href="https://slff.eu/positions" style="color:#15803d;">Pozicije</a>
         (uveljavijo se vsak ponedeljek zjutraj), asistence na strani
-        <a href="https://slff.eu/glasovanje" style="color:#15803d;">Asistence</a> (takoj).
+        <a href="https://slff.eu/assists" style="color:#15803d;">Asistence</a> (takoj).
         Igralca, ki pri klubu ne igra več, lahko označiš z "ne igra več".
       </p>
       <p style="text-align: center; margin: 24px 0;">
-        <a href="https://slff.eu/pozicije" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">
+        <a href="https://slff.eu/positions" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">
           Odpri Pozicije →
         </a>
       </p>
@@ -392,7 +392,7 @@ async function posljiEnega(
       <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">${uvod}</p>
       <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">${glavno}</p>
       <p style="text-align: center; margin: 24px 0;">
-        <a href="https://slff.eu/moja-ekipa" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">
+        <a href="https://slff.eu/my-team" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">
           Sestavi / popravi ekipo →
         </a>
       </p>
@@ -468,7 +468,7 @@ async function posljiOpozorilo(
           : ''
       }
       <p style="text-align: center; margin: 24px 0;">
-        <a href="https://slff.eu/moja-ekipa" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">
+        <a href="https://slff.eu/my-team" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">
           Popravi ekipo →
         </a>
       </p>

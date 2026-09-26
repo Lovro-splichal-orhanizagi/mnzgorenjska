@@ -15,7 +15,7 @@ export default function Prijava() {
   // Sprejmemo samo notranjo pot, da povezava ne more voditi drugam.
   const [params] = useSearchParams()
   const nazajParam = varnaPot(params.get('nazaj'))
-  const nazaj = nazajParam ?? '/moja-ekipa'
+  const nazaj = nazajParam ?? '/my-team'
   const [nacin, setNacin] = useState<Nacin>('prijava')
   const [email, setEmail] = useState('')
   const [geslo, setGeslo] = useState('')

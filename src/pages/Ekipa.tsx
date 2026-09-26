@@ -169,7 +169,7 @@ export default function Ekipa() {
     return (
       <div className="p-4">
         <p className="text-slate-300">{napaka}</p>
-        <Link to="/lestvica" className="text-gnl-400 underline">
+        <Link to="/standings" className="text-gnl-400 underline">
           {t('lestvice.ekipa.nazaj')}
         </Link>
       </div>
@@ -259,7 +259,7 @@ export default function Ekipa() {
                         className="flex items-center gap-2 px-3 py-1.5 text-sm"
                       >
                         <Link
-                          to={`/igralec/${v.player_id}`}
+                          to={`/player/${v.player_id}`}
                           className="min-w-0 flex-1 truncate hover:text-gnl-400"
                         >
                           {prikazniIme(v.ime)}

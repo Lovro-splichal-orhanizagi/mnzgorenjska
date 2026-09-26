@@ -436,7 +436,7 @@ export default function Glasovanje() {
       {tekma && (
         <p className="text-center">
           <Link
-            to={`/tekma/${tekma.match_id}`}
+            to={`/match/${tekma.match_id}`}
             className="text-sm text-slate-400 underline hover:text-gnl-300"
           >
             {t('tekme.glasovanje.poglejTekmo')}

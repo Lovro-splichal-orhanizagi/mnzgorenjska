@@ -26,7 +26,7 @@ export interface IgralecEnajsterice {
 function KarticaIgralca({ igralec }: { igralec: IgralecEnajsterice }) {
   return (
     <Link
-      to={`/igralec/${igralec.player_id ?? igralec.id}`}
+      to={`/player/${igralec.player_id ?? igralec.id}`}
       className="group relative w-[3.6rem] text-center transition sm:w-[5rem]"
     >
       <div className="relative flex justify-center">

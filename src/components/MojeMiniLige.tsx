@@ -78,7 +78,7 @@ export default function MojeMiniLige({ ekipaId }: { ekipaId: number | null }) {
         <span className="text-slate-400">
           {t('lestvice.mojeMiniLige.povabilo')}
         </span>
-        <Link to="/mini-lige" className="gumb-glavni text-xs">
+        <Link to="/mini-leagues" className="gumb-glavni text-xs">
           {t('lestvice.mojeMiniLige.ustvari')}
         </Link>
       </div>
@@ -88,7 +88,7 @@ export default function MojeMiniLige({ ekipaId }: { ekipaId: number | null }) {
     <div className="kartica space-y-2 p-3 sm:p-4">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-bold text-slate-300">{t('lestvice.mojeMiniLige.naslov')}</h2>
-        <Link to="/mini-lige" className="text-xs text-slate-500 hover:text-slate-300">
+        <Link to="/mini-leagues" className="text-xs text-slate-500 hover:text-slate-300">
           {t('lestvice.mojeMiniLige.vse')}
         </Link>
       </div>
@@ -103,7 +103,7 @@ export default function MojeMiniLige({ ekipaId }: { ekipaId: number | null }) {
               {v.mesto ? `${v.mesto}.` : '—'}
             </span>
             <div className="min-w-0 flex-1">
-              <Link to={`/mini-lige?liga=${v.id}`} className="block truncate font-bold hover:text-gnl-300">
+              <Link to={`/mini-leagues?liga=${v.id}`} className="block truncate font-bold hover:text-gnl-300">
                 {v.name}
               </Link>
               <div className="truncate text-xs text-slate-500">
