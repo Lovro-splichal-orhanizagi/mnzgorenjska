@@ -12,6 +12,14 @@ const DRZAVE: Record<string, { jeziki: string[]; pasovi: string[] }> = {
 export const znaneDrzave = () => Object.keys(DRZAVE)
 
 /**
+ * Države, ki so že vklopljene, a še zaprte: vanje pride le, kdor ima
+ * povezavo `slff.eu/sk` ali deljeno povezavo lige (`?t=sk-…`). Jezik in
+ * časovni pas brskalnika jih ne odpreta. Ko je država pripravljena za vse,
+ * jo odstrani s seznama.
+ */
+export const SAMO_S_POVEZAVO: string[] = ['SK']
+
+/**
  * Ugib iz podatkov brskalnika (brez dostopa do njega, da je preverljiv v
  * `npm run smoke`). Vrstni red: izbira s povezave, prvi jezik brskalnika, ki
  * ga poznamo, časovni pas. Kdor ne ustreza ničemur, dobi null — in s tem
@@ -27,12 +35,14 @@ export function ugibajDrzavo({
   casovniPas?: string | null
 }): string | null {
   if (shranjena && shranjena in DRZAVE) return shranjena
+  // Zaprte države se po brskalniku ne ugiba — vanje pride le, kdor ima povezavo.
+  const odprte = Object.entries(DRZAVE).filter(([k]) => !SAMO_S_POVEZAVO.includes(k))
   for (const j of jeziki ?? []) {
     const osnova = j.toLowerCase().slice(0, 2)
-    const d = Object.entries(DRZAVE).find(([, v]) => v.jeziki.includes(osnova))
+    const d = odprte.find(([, v]) => v.jeziki.includes(osnova))
     if (d) return d[0]
   }
-  const poPasu = Object.entries(DRZAVE).find(([, v]) => casovniPas && v.pasovi.includes(casovniPas))
+  const poPasu = odprte.find(([, v]) => casovniPas && v.pasovi.includes(casovniPas))
   return poPasu?.[0] ?? null
 }
 
