@@ -66,7 +66,7 @@ export default function OpozoriloEkipe() {
     }
   }, [uporabnikId, loading, pathname])
 
-  const naMojiEkipi = pathname.startsWith('/moja-ekipa')
+  const naMojiEkipi = pathname.startsWith('/my-team')
   const { napake, opozorila } = useMemo(
     () =>
       obvestilaEkip(ekipe ?? [], {
@@ -79,9 +79,9 @@ export default function OpozoriloEkipe() {
 
   if (loading || !session || ekipe === null) return null
   if (
-    pathname.startsWith('/prijava') ||
-    pathname.startsWith('/novo-geslo') ||
-    pathname.startsWith('/pravno')
+    pathname.startsWith('/login') ||
+    pathname.startsWith('/new-password') ||
+    pathname.startsWith('/legal')
   )
     return null
 
@@ -122,7 +122,7 @@ export default function OpozoriloEkipe() {
               )}
             </span>
             <Link
-              to="/moja-ekipa"
+              to="/my-team"
               className="shrink-0 rounded-lg bg-amber-400 px-3 py-1 text-xs font-black text-slate-950 hover:bg-amber-300"
             >
               {t('mojaEkipa.opozorila.sestavi')}
@@ -178,7 +178,7 @@ function Pas({
                 )}
               </span>
               <Link
-                to={`/moja-ekipa?t=${encodeURIComponent(o.slug)}`}
+                to={`/my-team?t=${encodeURIComponent(o.slug)}`}
                 className={`shrink-0 rounded-lg px-2.5 py-1 text-xs font-black text-slate-950 ${
                   napaka ? 'bg-rose-400 hover:bg-rose-300' : 'bg-amber-400 hover:bg-amber-300'
                 }`}

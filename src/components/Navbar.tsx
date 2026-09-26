@@ -17,18 +17,18 @@ interface Povezava {
 // pod "Več": enajst enakovrednih povezav je pomenilo, da nobena ne izstopa.
 // Grb vodi domov, zato "Domov" ne potrebuje svoje povezave.
 const glavne: Povezava[] = [
-  { pot: '/moja-ekipa', naslov: t('aplikacija.meni.mojaEkipa') },
-  { pot: '/igralci', naslov: t('aplikacija.meni.igralci') },
-  { pot: '/lestvica', naslov: t('aplikacija.meni.lestvica') },
-  { pot: '/rezultati', naslov: t('aplikacija.meni.rezultati') },
-  { pot: '/mini-lige', naslov: t('aplikacija.meni.miniLige') },
+  { pot: '/my-team', naslov: t('aplikacija.meni.mojaEkipa') },
+  { pot: '/players', naslov: t('aplikacija.meni.igralci') },
+  { pot: '/standings', naslov: t('aplikacija.meni.lestvica') },
+  { pot: '/results', naslov: t('aplikacija.meni.rezultati') },
+  { pot: '/mini-leagues', naslov: t('aplikacija.meni.miniLige') },
 ]
 
 const ostale: Povezava[] = [
-  { pot: '/glasovanje', naslov: t('aplikacija.meni.asistence') },
-  { pot: '/pozicije', naslov: t('aplikacija.meni.pozicije') },
-  { pot: '/odsotnosti', naslov: t('aplikacija.meni.odsotnosti') },
-  { pot: '/slovenija', naslov: t('aplikacija.meni.slovenija') },
+  { pot: '/assists', naslov: t('aplikacija.meni.asistence') },
+  { pot: '/positions', naslov: t('aplikacija.meni.pozicije') },
+  { pot: '/absences', naslov: t('aplikacija.meni.odsotnosti') },
+  { pot: '/national', naslov: t('aplikacija.meni.slovenija') },
 ]
 
 // Vabilo sestavimo iz izbrane lige in njenih klubov (glej `lib/vabilo.ts`).
@@ -149,7 +149,7 @@ export default function Navbar() {
 
   // Glasovanje o pozicijah je nadomestek za zapisnik, ki pozicij ne pozna
   // (Slovenija). Slovaški zapisnik jih ima, zato stran tam nima kaj početi.
-  const zaDrzavo = drzava === 'SI' ? ostale : ostale.filter((p) => p.pot !== '/pozicije')
+  const zaDrzavo = drzava === 'SI' ? ostale : ostale.filter((p) => p.pot !== '/positions')
   const vec = jeAdmin ? [...zaDrzavo, { pot: '/admin', naslov: t('aplikacija.meni.admin') }] : zaDrzavo
   // Začetnica za avatar: iz vzdevka, sicer iz e-naslova.
   const zacetnica = (ime || session?.user.email || '?').trim().charAt(0).toUpperCase()
@@ -221,7 +221,7 @@ export default function Navbar() {
                       onClick={() => setVecOdprt(false)}
                     >
                       {p.naslov}
-                      {p.pot === '/glasovanje' && znacka(cakaGlasov)}
+                      {p.pot === '/assists' && znacka(cakaGlasov)}
                     </NavLink>
                   ))}
                 </div>
@@ -252,7 +252,7 @@ export default function Navbar() {
                       {ime ?? session.user.email}
                     </div>
                     <NavLink
-                      to="/opomniki"
+                      to="/reminders"
                       role="menuitem"
                       className={vrsticaMenija}
                       onClick={() => setRacunOdprt(false)}
@@ -282,7 +282,7 @@ export default function Navbar() {
                 )}
               </div>
             ) : (
-              <NavLink to="/prijava" className="gumb-glavni whitespace-nowrap text-sm">
+              <NavLink to="/login" className="gumb-glavni whitespace-nowrap text-sm">
                 {t('aplikacija.meni.prijava')}
               </NavLink>
             )}
@@ -327,11 +327,11 @@ export default function Navbar() {
               {vec.map((p) => (
                 <NavLink key={p.pot} to={p.pot} className={slog} onClick={() => setOdprt(false)}>
                   {p.naslov}
-                  {p.pot === '/glasovanje' && znacka(cakaGlasov)}
+                  {p.pot === '/assists' && znacka(cakaGlasov)}
                 </NavLink>
               ))}
               {session && (
-                <NavLink to="/opomniki" className={slog} onClick={() => setOdprt(false)}>
+                <NavLink to="/reminders" className={slog} onClick={() => setOdprt(false)}>
                   {t('aplikacija.meni.opomniki')}
                 </NavLink>
               )}

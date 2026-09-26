@@ -428,7 +428,7 @@ export default function Igralci() {
                     </span>
                     <div className="min-w-0">
                       <Link
-                        to={`/igralec/${i.id}`}
+                        to={`/player/${i.id}`}
                         className="block truncate font-semibold hover:text-gnl-300"
                       >
                         {prikazniIme(i.full_name)}

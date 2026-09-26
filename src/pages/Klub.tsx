@@ -179,10 +179,10 @@ export default function Klub() {
           </p>
         )}
         <div className="mt-3 flex flex-wrap gap-2">
-          <Link to={`/moja-ekipa${ligaParam}`} className="gumb-glavni px-3 py-2 text-sm">
+          <Link to={`/my-team${ligaParam}`} className="gumb-glavni px-3 py-2 text-sm">
             {t('lestvice.klub.sestaviEkipo')}
           </Link>
-          <Link to={`/lestvica${ligaParam}`} className="gumb-tih px-3 py-2 text-sm">
+          <Link to={`/standings${ligaParam}`} className="gumb-tih px-3 py-2 text-sm">
             {t('lestvice.klub.lestvica')}
           </Link>
         </div>
@@ -233,7 +233,7 @@ export default function Klub() {
                   <span className={`znacka shrink-0 ${razredPozicije(i.position)}`}>
                     {(i.position && KRATKA_POZICIJA[i.position]) ?? '?'}
                   </span>
-                  <Link to={`/igralec/${i.id}`} className="min-w-0 flex-1 truncate font-semibold hover:text-gnl-400">
+                  <Link to={`/player/${i.id}`} className="min-w-0 flex-1 truncate font-semibold hover:text-gnl-400">
                     {prikazniIme(i.full_name)}
                   </Link>
                   <span className="shrink-0 text-xs text-slate-500">

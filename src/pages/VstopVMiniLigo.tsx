@@ -112,7 +112,7 @@ export default function VstopVMiniLigo() {
     if (error) return setNapaka(error.message)
     const izid = Array.isArray(data) ? data[0] : data
     pozabiVabilo()
-    navigate(`/mini-lige?liga=${izid?.mini_liga_id ?? ''}&vstop=${izid?.dodano ? 'nov' : 'ze'}`)
+    navigate(`/mini-leagues?liga=${izid?.mini_liga_id ?? ''}&vstop=${izid?.dodano ? 'nov' : 'ze'}`)
   }
 
   if (loading || liga === undefined)
@@ -125,7 +125,7 @@ export default function VstopVMiniLigo() {
         <p className="kartica p-4 text-sm text-slate-400">
           {tx('lestvice.vstop.niLigeOpis', {}, {
             ustvari: (b) => (
-              <Link to="/mini-lige" className="text-gnl-300 hover:underline">
+              <Link to="/mini-leagues" className="text-gnl-300 hover:underline">
                 {b}
               </Link>
             ),
@@ -179,7 +179,7 @@ export default function VstopVMiniLigo() {
         <p className="text-sm text-slate-400">
           {t('lestvice.vstop.potrebujesEkipo')}
         </p>
-        <Link to="/moja-ekipa" className="gumb-glavni block w-full text-center">
+        <Link to="/my-team" className="gumb-glavni block w-full text-center">
           {t('lestvice.vstop.sestaviEkipo')}
         </Link>
       </div>

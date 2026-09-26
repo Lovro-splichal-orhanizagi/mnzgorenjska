@@ -64,17 +64,17 @@ const preveri = (label, cond, extra = '') => {
 const strani = [
   ['Navbar', Navbar, '/'],
   ['Domov', Domov, '/'],
-  ['Moja ekipa', MojaEkipa, '/moja-ekipa'],
-  ['Odsotnosti', Odsotnosti, '/odsotnosti'],
-  ['Asistence', Glasovanje, '/glasovanje'],
-  ['Pozicije', Pozicije, '/pozicije'],
-  ['Igralci', Igralci, '/igralci'],
-  ['Lestvica', Lestvica, '/lestvica'],
-  ['Slovenija', Slovenija, '/slovenija'],
-  ['Mini lige', MiniLige, '/mini-lige'],
+  ['Moja ekipa', MojaEkipa, '/my-team'],
+  ['Odsotnosti', Odsotnosti, '/absences'],
+  ['Asistence', Glasovanje, '/assists'],
+  ['Pozicije', Pozicije, '/positions'],
+  ['Igralci', Igralci, '/players'],
+  ['Lestvica', Lestvica, '/standings'],
+  ['Slovenija', Slovenija, '/national'],
+  ['Mini lige', MiniLige, '/mini-leagues'],
   ['Vstop v mini ligo', VstopVMiniLigo, '/l/ABCDEF'],
-  ['Tuja ekipa', Ekipa, '/ekipa/1'],
-  ['Klub', Klub, '/klub/24'],
+  ['Tuja ekipa', Ekipa, '/team/1'],
+  ['Klub', Klub, '/club/24'],
   [
     'Info o igralcu',
     () => (
@@ -86,12 +86,12 @@ const strani = [
         naZapri={() => {}}
       />
     ),
-    '/moja-ekipa',
+    '/my-team',
   ],
   ['Zivost skupnosti', ZivostSkupnosti, '/admin'],
-  ['Rezultati', Rezultati, '/rezultati'],
-  ['Tekma', Tekma, '/tekma/1'],
-  ['Prijava', Prijava, '/prijava'],
+  ['Rezultati', Rezultati, '/results'],
+  ['Tekma', Tekma, '/match/1'],
+  ['Prijava', Prijava, '/login'],
   ['Administracija', Administracija, '/admin'],
 ]
 
@@ -1422,7 +1422,7 @@ preveri(
   let brezKroga = false
   try { vir.naslovZapisnika(3199, 267797) } catch { brezKroga = true }
   preveri('viri: Gorica ne ugiba manjkajočega kroga', brezKroga)
-  // `/rezultati` da SAMO odigrane kroge — ob uvozu 3. SNL Zahod jih je bilo 4
+  // `/results` da SAMO odigrane kroge — ob uvozu 3. SNL Zahod jih je bilo 4
   // od 26 — zato razpored beremo z `/razpored`. Seznam tekem ostane na
   // rezultatih, ker so povezave na zapisnike tam.
   preveri('viri: Gorica loci razpored od rezultatov',
@@ -2724,19 +2724,19 @@ preveri(
   const { varnaPot, napakaPrijave, povezavaNaPrijavo } = await import('../src/lib/prijava')
   const { kanonicni } = await import('../src/lib/naslov')
   const { default: Opomniki } = await import('../src/pages/Opomniki')
-  preveri('prijava: notranja pot je varna', varnaPot('/mini-lige?vstop=AB') === '/mini-lige?vstop=AB')
+  preveri('prijava: notranja pot je varna', varnaPot('/mini-leagues?vstop=AB') === '/mini-leagues?vstop=AB')
   preveri(
     'prijava: tuja ali relativna pot ni varna',
     [null, '', 'https://zlo.si', '//zlo.si', '/\\zlo.si', 'mini-lige'].every((p) => varnaPot(p) === null),
   )
-  preveri('prijava: povezava kodira pot', povezavaNaPrijavo('/pozicije?t=mladinci') === '/prijava?nazaj=%2Fpozicije%3Ft%3Dmladinci')
+  preveri('prijava: povezava kodira pot', povezavaNaPrijavo('/positions?t=mladinci') === '/login?nazaj=%2Fpositions%3Ft%3Dmladinci')
   preveri('prijava: napacno geslo po slovensko', napakaPrijave('Invalid login credentials') === 'Napačen e-naslov ali geslo.')
   preveri('prijava: neznana napaka ostane', napakaPrijave('Nekaj cudnega') === 'Nekaj cudnega')
-  preveri('naslov: kanonicni obdrzi le ligo', kanonicni('/igralci', '?t=mladinci&klub=3') === 'https://slff.eu/igralci?t=mladinci')
+  preveri('naslov: kanonicni obdrzi le ligo', kanonicni('/players', '?t=mladinci&klub=3') === 'https://slff.eu/players?t=mladinci')
   preveri('naslov: kanonicni brez lige', kanonicni('/', '') === 'https://slff.eu/')
   try {
     const html = renderToString(
-      <StaticRouter location="/opomniki">
+      <StaticRouter location="/reminders">
         <AuthProvider>
           <TekmovanjeProvider>
             <Opomniki />
@@ -2794,7 +2794,7 @@ preveri(
   for (const p of ['/\t/zlo.si', '/\n/zlo.si', '/\r/zlo.si', '//zlo.si', '/\\zlo.si', '/\u0000x', '/x\u007F'])
     preveri(`prijava: ${JSON.stringify(p)} ni varna`, varnaPot(p) === null, String(varnaPot(p)))
   preveri('prijava: /l/ABC?t=x ostane', varnaPot('/l/ABC?t=x') === '/l/ABC?t=x')
-  preveri('prijava: hash ostane', varnaPot('/moja-ekipa#status') === '/moja-ekipa#status')
+  preveri('prijava: hash ostane', varnaPot('/my-team#status') === '/my-team#status')
 
   const { mnozina, tockZ, TOCK_RODILNIK, TOCKE_TOZILNIK } = await import('../src/lib/pomozno')
   preveri('slovnica: odbitek 1 tocke', mnozina(1, TOCK_RODILNIK) === '1 točke')

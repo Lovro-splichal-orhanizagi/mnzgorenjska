@@ -249,7 +249,7 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   vhod v izračun **potrebuje svoj sprožilec**, sicer lestvica zaostaja do noči
   (`npm run preizkus-tock-krogov` primerja tabelo z izračunom).
 - `player_standings` → lestvica igralcev (točke, forma, na tekmo, izbranost)
-- stran Rezultati (`/rezultati`, `/tekma/:id`) sestavi postavi tekme iz
+- stran Rezultati (`/results`, `/match/:id`) sestavi postavi tekme iz
   `appearances` + `appearance_points`; nove sheme ne potrebuje
 - `match_assist_status` → odigrane tekme s številom golov brez asistence
   (stran Asistence izbira po korakih: krog → tekma → gol)
@@ -270,6 +270,15 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
 - Ohrani kodo preprosto in berljivo; to je skupnostni projekt, ne enterprise.
 - Preden dodaš novo odvisnost, preveri ali je res potrebna.
 - Ob spremembi podatkovnega modela posodobi tudi README in to datoteko.
+
+## Poti
+
+Poti so **angleške** (`/my-team`, `/players`, `/match/:id` …), ker jih vidi
+vsaka država. Stari slovenski naslovi (`/moja-ekipa` …) so v `STARE_POTI`
+v `src/App.tsx` in preusmerijo na nove s parametri, poizvedbo in #, zato
+deljene povezave in e-pošta ostanejo veljavne. `/novo-geslo` je izjema: je
+vpisana pri Supabase kot povratni naslov ponastavitve gesla in žeton nosi v
+#, zato stran velja na obeh naslovih. Nova stran dobi angleško pot.
 
 ## Prevodi
 
@@ -425,7 +434,7 @@ update competitions set active = true where slug in ('lj-1-liga','lj-2-liga');
   potrebujejo le lokalni Docker Postgres in migracije, ne uvoženih tekem.
   `SUPABASE_TEST_DB` lahko izbere izolirano testno bazo v istem kontejnerju.
 - Lastnik profila sme posodobiti le `display_name`, `insider_team_id` in
-  `brez_opomnikov` (odjava od opomnikov, stran `/opomniki`); `is_admin` je servisno polje. Lastnik ekipe sme pisati le vnosna polja ob
+  `brez_opomnikov` (odjava od opomnikov, stran `/reminders`); `is_admin` je servisno polje. Lastnik ekipe sme pisati le vnosna polja ob
   nastanku in ime ob spremembi. Za kader in denar vedno kliči `shrani_ekipo`.
   Brisanje ekipe je servisno opravilo, ker bi sicer obšlo zaklenjeno zgodovino.
 - Nove tabele in pogledi v `public` vlogama `anon`/`authenticated` **ne dajo

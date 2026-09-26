@@ -305,7 +305,7 @@ export default function InfoIgralca({
             {/* Nov zavihek: okno je v Moji ekipi, kjer bi odhod zavrgel
                 neshranjene spremembe kadra. */}
             <Link
-              to={`/igralec/${igralecId}`}
+              to={`/player/${igralecId}`}
               target="_blank"
               rel="noopener"
               className="block rounded-lg bg-white/10 px-3 py-2 text-center text-sm font-semibold hover:bg-white/15"

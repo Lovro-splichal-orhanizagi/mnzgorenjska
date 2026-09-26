@@ -479,7 +479,7 @@ export default function Domov() {
               {tx('domov.uvod.zamudniki', {}, {
                 krepko: (b) => <strong>{b}</strong>,
                 lestvica: (b) => (
-                  <Link to="/lestvica" className="underline">
+                  <Link to="/standings" className="underline">
                     {b}
                   </Link>
                 ),
@@ -487,13 +487,13 @@ export default function Domov() {
             </div>
           )}
           <div className="flex flex-wrap gap-3 pt-2">
-            <Link to="/moja-ekipa" className="gumb-glavni">
+            <Link to="/my-team" className="gumb-glavni">
               {t('domov.uvod.sestaviEkipo')}
             </Link>
-            <Link to="/glasovanje" className="gumb-tih">
+            <Link to="/assists" className="gumb-tih">
               {t('domov.uvod.glasuj')}
             </Link>
-            <Link to="/rezultati" className="gumb-tih">
+            <Link to="/results" className="gumb-tih">
               {t('domov.uvod.rezultati')}
             </Link>
           </div>
@@ -509,7 +509,7 @@ export default function Domov() {
       {/* glasovanje o asistencah je edino, kar liga potrebuje od ljudi */}
       {stat && stat.brezAsistence > 0 && (
         <Link
-          to="/glasovanje"
+          to="/assists"
           className="block overflow-hidden rounded-3xl bg-gradient-to-r from-amber-500/20 to-rose-500/10
                      p-5 ring-1 ring-amber-400/40 transition hover:ring-amber-300/70 sm:p-6"
         >
@@ -531,7 +531,7 @@ export default function Domov() {
       {/* odštevalnik do zaklepanja postave naslednjega kroga */}
       {naslednjiKrog?.deadline_at && (
         <Link
-          to="/moja-ekipa"
+          to="/my-team"
           className="block overflow-hidden rounded-3xl bg-gradient-to-r from-gnl-500/15 to-gnl-800/10 p-4 ring-1 ring-gnl-400/30 transition hover:ring-gnl-300/60 sm:p-5"
         >
           <div className="flex flex-wrap items-center gap-3">
@@ -559,7 +559,7 @@ export default function Domov() {
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h2 className="text-xl font-bold">{t('domov.zadnjiRezultati.naslov')}</h2>
             <Link
-              to="/rezultati"
+              to="/results"
               className="text-sm font-semibold text-gnl-300 hover:text-gnl-200"
             >
               {t('domov.zadnjiRezultati.vsi')}
@@ -602,7 +602,7 @@ export default function Domov() {
                       {tekme.map((tekma: any) => (
                         <li key={tekma.id}>
                           <Link
-                            to={`/tekma/${tekma.id}`}
+                            to={`/match/${tekma.id}`}
                             title={t('domov.zadnjiRezultati.poglejTekmo')}
                             className="flex items-center gap-2 rounded-lg bg-white/5 p-2 text-sm transition hover:bg-white/10"
                           >
@@ -668,7 +668,7 @@ export default function Domov() {
                 <span>{t('domov.najboljsi.igralecKroga', { krog: krog?.number })}</span>
               </div>
               <Link
-                to={`/igralec/${krogNajboljsi[0].player_id}`}
+                to={`/player/${krogNajboljsi[0].player_id}`}
                 className="mt-1 block break-words text-2xl font-black leading-tight text-white hover:text-gnl-200 sm:text-3xl md:text-4xl"
               >
                 {prikazniIme(krogNajboljsi[0].full_name)}
@@ -721,7 +721,7 @@ export default function Domov() {
                     velikost={22}
                   />
                   <Link
-                    to={`/igralec/${z.player_id}`}
+                    to={`/player/${z.player_id}`}
                     className="min-w-0 flex-1 truncate font-semibold hover:text-gnl-300"
                   >
                     {prikazniIme(z.full_name)}
@@ -750,7 +750,7 @@ export default function Domov() {
           {krogNajboljsi.length > 0 && (
             <p className="pt-1 text-right">
               <Link
-                to="/rezultati"
+                to="/results"
                 className="text-sm text-slate-500 underline hover:text-gnl-300"
               >
                 {t('domov.najboljsi.rezultatiKroga', { krog: krog?.number })}
@@ -810,7 +810,7 @@ export default function Domov() {
                 </span>
               </div>
               <Link
-                to={`/igralec/${igralecSezone[0].id}`}
+                to={`/player/${igralecSezone[0].id}`}
                 className="mt-1 block break-words text-2xl font-black leading-tight text-white hover:text-gnl-200 sm:text-3xl md:text-4xl"
               >
                 {prikazniIme(igralecSezone[0].full_name)}
@@ -859,7 +859,7 @@ export default function Domov() {
                       velikost={22}
                     />
                     <Link
-                      to={`/igralec/${z.id}`}
+                      to={`/player/${z.id}`}
                       className="min-w-0 flex-1 truncate font-semibold hover:text-gnl-300"
                     >
                       {prikazniIme(z.full_name)}
@@ -877,7 +877,7 @@ export default function Domov() {
 
             <p className="pt-1 text-right">
               <Link
-                to="/lestvica"
+                to="/standings"
                 className="text-sm text-slate-500 underline hover:text-gnl-300"
               >
                 {t('domov.najboljsi.celaLestvica')}
@@ -940,7 +940,7 @@ export default function Domov() {
           <div className="grid gap-3 sm:grid-cols-2">
             {stat.brezAsistence > 0 && (
               <Link
-                to="/glasovanje"
+                to="/assists"
                 className="kartica kartica-hover flex items-center gap-4 p-4"
               >
                 <span className="text-3xl" aria-hidden>🅰️</span>
@@ -956,7 +956,7 @@ export default function Domov() {
             )}
             {stat.brezPozicije > 0 && (
               <Link
-                to="/pozicije"
+                to="/positions"
                 className="kartica kartica-hover flex items-center gap-4 p-4"
               >
                 <span className="text-3xl" aria-hidden>🧭</span>
@@ -973,7 +973,7 @@ export default function Domov() {
               </Link>
             )}
             <Link
-              to="/odsotnosti"
+              to="/absences"
               className="kartica kartica-hover flex items-center gap-4 p-4"
             >
               <span className="text-3xl" aria-hidden>🩹</span>
@@ -1189,7 +1189,7 @@ function VrhLestvice({
               velikost={22}
             />
             <Link
-              to={`/igralec/${z.id}`}
+              to={`/player/${z.id}`}
               className="min-w-0 flex-1 truncate font-semibold hover:text-gnl-300"
             >
               {prikazniIme(z.full_name)}

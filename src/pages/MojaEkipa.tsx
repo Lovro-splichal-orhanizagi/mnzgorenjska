@@ -1169,7 +1169,7 @@ export default function MojaEkipa() {
       pozabiVabilo()
       const izidVstopa = Array.isArray(vstop) ? vstop[0] : vstop
       if (!eVstop && izidVstopa?.mini_liga_id) {
-        navigate(`/mini-lige?liga=${izidVstopa.mini_liga_id}&vstop=${izidVstopa.dodano ? 'nov' : 'ze'}`)
+        navigate(`/mini-leagues?liga=${izidVstopa.mini_liga_id}&vstop=${izidVstopa.dodano ? 'nov' : 'ze'}`)
         return
       }
     }
@@ -2423,7 +2423,7 @@ function TrgIgralcev({
                   <div className="truncate text-sm font-semibold">
                     {/* Profil v novem zavihku — neshranjen kader ostane. */}
                     <Link
-                      to={`/igralec/${i.id}`}
+                      to={`/player/${i.id}`}
                       target="_blank"
                       rel="noopener"
                       onClick={(e) => e.stopPropagation()}

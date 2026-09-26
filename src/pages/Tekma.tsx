@@ -213,7 +213,7 @@ export default function Tekma() {
     return (
       <div className="space-y-3">
         <p className="text-slate-400">{t('tekme.tekma.niTekme')}</p>
-        <Link to="/rezultati" className="gumb-tih inline-block">
+        <Link to="/results" className="gumb-tih inline-block">
           {t('tekme.tekma.nazaj')}
         </Link>
       </div>
@@ -230,7 +230,7 @@ export default function Tekma() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <Link to="/rezultati" className="text-sm text-slate-400 hover:text-gnl-300">
+        <Link to="/results" className="text-sm text-slate-400 hover:text-gnl-300">
           {t('tekme.tekma.nazaj')}
         </Link>
         <span className="text-sm text-slate-500">

@@ -7,7 +7,7 @@ export * from './jedro.ts'
 
 /**
  * Prevod z oznakami za dele, ki niso navaden tekst (povezava, krepko):
- * `tx('prijava.pogoji', {}, { povezava: (b) => <Link to="/pravno">{b}</Link> })`
+ * `tx('prijava.pogoji', {}, { povezava: (b) => <Link to="/legal">{b}</Link> })`
  * za niz "Strinjam se s <povezava>pogoji</povezava>." Tako stavek ostane
  * cel in ga prevajalec lahko preuredi.
  */

@@ -22,7 +22,7 @@ export function varnaPot(nazaj: string | null | undefined): string | null {
 
 /** Povezava na prijavo, ki uporabnika po prijavi vrne na `pot` (pot + iskanje). */
 export function povezavaNaPrijavo(pot: string): string {
-  return `/prijava?nazaj=${encodeURIComponent(pot)}`
+  return `/login?nazaj=${encodeURIComponent(pot)}`
 }
 
 /** Prevede pogoste napake Supabase Auth; neznano sporočilo vrne nespremenjeno. */

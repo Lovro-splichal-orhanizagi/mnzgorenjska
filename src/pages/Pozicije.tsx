@@ -586,7 +586,7 @@ function IgralecKartica({
         )}
         <div className="min-w-0 flex-1">
           <Link
-            to={`/igralec/${igralec.id}`}
+            to={`/player/${igralec.id}`}
             className="block truncate font-bold hover:text-gnl-300"
           >
             {prikazniIme(igralec.full_name)}
