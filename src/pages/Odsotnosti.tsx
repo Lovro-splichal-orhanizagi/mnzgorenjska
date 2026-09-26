@@ -41,7 +41,7 @@ interface IgralecIzbira {
 
 export default function Odsotnosti() {
   const { session } = useAuth()
-  const { id: tekmovanjeId, tekmovanje } = useTekmovanje()
+  const { id: tekmovanjeId, tekmovanje, tekmovanja } = useTekmovanje()
   const [porocila, setPorocila] = useState<Porocilo[]>([])
   // Kaj se dogaja v DRUGIH ligah. Pri petindvajsetih ligah in peščici poročil
   // je stran skoraj vedno prazna — in prazna stran ne pove, čemu služi.
@@ -66,6 +66,7 @@ export default function Odsotnosti() {
   useEffect(() => {
     if (!tekmovanjeId) return
     const ligaId = tekmovanjeId
+    const drugeLige = tekmovanja.map((l) => l.id).filter((id) => id !== ligaId)
     setNalaganje(true)
     setNapaka(null)
     let veljavno = true
@@ -77,10 +78,12 @@ export default function Odsotnosti() {
           .eq('competition_id', ligaId)
           .order('created_at', { ascending: false })
           .limit(100),
+        // "Drugod" pomeni druge lige ISTE države — slovaška poročila nimajo
+        // kaj iskati na slovenski strani in obratno.
         supabase
           .from('player_reports_view')
           .select('*')
-          .neq('competition_id', ligaId)
+          .in('competition_id', drugeLige.length ? drugeLige : [-1])
           .order('created_at', { ascending: false })
           .limit(5),
       ])
@@ -93,7 +96,7 @@ export default function Odsotnosti() {
     return () => {
       veljavno = false
     }
-  }, [tekmovanjeId])
+  }, [tekmovanjeId, tekmovanja])
 
   // Iskanje igralca ob objavi. Brez izbranega igralca poročilo nima smisla —
   // forum je urejen po igralcih, ne po prostem besedilu.
