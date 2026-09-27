@@ -11,6 +11,12 @@ name: Grbi klubov (rocni seznam)
 on:
   workflow_dispatch:
     inputs:
+      vir:
+        description: 'rocni = seznam v prenesi-grbe.mjs, sportnet = slovaski klubi s futbalnet.sk'
+        required: false
+        default: rocni
+        type: choice
+        options: [rocni, sportnet]
       pisi:
         description: 'Prenesi in zapisi (sicer samo nacrt)'
         required: false
@@ -42,7 +48,7 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: node scripts/prenesi-grbe.mjs ${{ inputs.pisi && '--pisi' || '' }}
+        run: node scripts/${{ inputs.vir == 'sportnet' && 'grbi-sportnet' || 'prenesi-grbe' }}.mjs ${{ inputs.pisi && '--pisi' || '' }}
       - name: Zapisi nove grbe v git
         if: inputs.pisi
         run: |

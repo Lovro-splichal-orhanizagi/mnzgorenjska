@@ -187,7 +187,7 @@ export function nastopi(z) {
 }
 
 /** Vse tekme tekmovanja (tudi neodigrane) — API jih vrača po sto. */
-async function vseTekme(koda, prenesi) {
+export async function vseTekme(koda, prenesi) {
   const { appSpace, id } = razbijKodo(koda)
   const vse = []
   for (let od = 0, stran = 0; stran < 50; stran++) {
