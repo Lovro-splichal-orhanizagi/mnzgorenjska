@@ -108,7 +108,11 @@ console.log(`Berem razpored: ${url}`)
 // Sifra lige gre v IME datoteke, vsebuje pa lahko `/` (Lendava:
 // `2026-27/mnl-lendava-26-27`). Brez ociscenja postane pot v mapo, ki je ni,
 // in uvoz pade z ENOENT sele po tem, ko je razpored ze prenesen.
-const html = await prenesi(url, `razpored-${sifra(liga)}.html`)
+const imeRazporeda = `razpored-${sifra(liga)}.html`
+// Zadnji razpored, ki se je dal razbrati — preden ga `prenesi` prepiše.
+const potRezerve = `${PREDPOMNILNIK}/${vir.ime}/${imeRazporeda}`
+const rezerva = existsSync(potRezerve) ? readFileSync(potRezerve, 'utf8') : null
+const html = await prenesi(url, imeRazporeda)
 
 // Stari CMS (Kranj, Ljubljana, Celje) postavi stran kot eno veliko tabelo:
 // naslov kroga ("1. krog  29.08.26"), pod njim pa vrstice "datum" in
@@ -124,9 +128,23 @@ const html = await prenesi(url, `razpored-${sifra(liga)}.html`)
 // Vir, pri katerem je razpored ostranjen, si ga pobere sam; ostali berejo
 // eno stran, kakor doslej.
 const razclenit = vir.razcleniRazpored ?? razcleniRazpored
-const veljavni = vir.razporedVseStrani
+let veljavni = vir.razporedVseStrani
   ? await vir.razporedVseStrani(liga, prenesi)
   : razclenit(vir.vBesedilo(html), html)
+
+// Stran brez krogov s statusom 200: zveza je za nekaj minut postregla prazno
+// ali vzdrževalno stran. 26. 9. zvečer se je to zgodilo Ptuju, Murski Soboti
+// in Novi Gorici hkrati in sedem lig je javilo napako, čeprav je bil razpored
+// uro pozneje spet v redu. Zato vzamemo zadnjega dobrega, stran pa ne sme
+// ostati v predpomnilniku namesto njega.
+if (!veljavni.length && rezerva && !vir.razporedVseStrani) {
+  const izRezerve = razclenit(vir.vBesedilo(rezerva), rezerva)
+  if (izRezerve.length) {
+    console.log('  stran je brez krogov — uporabim zadnji shranjeni razpored')
+    writeFileSync(potRezerve, rezerva)
+    veljavni = izRezerve
+  }
+}
 
 console.log(`Najdenih krogov: ${veljavni.length}`)
 if (!veljavni.length) {
