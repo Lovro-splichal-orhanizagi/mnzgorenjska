@@ -25,7 +25,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'node:fs'
 import { tekmovanje as najdiTekmovanje } from './tekmovanje.mjs'
-import { vseVrstice } from './strani.mjs'
+import { vseVrstice, vrsticeIgralcevLige } from './strani.mjs'
 import { premakniProti, NAJVECJI_TEDENSKI_PREMIK } from './premik-cene.mjs'
 import { isoTeden } from './cas.mjs'
 
@@ -155,13 +155,7 @@ const naSi = new Set((igralci ?? []).map((p) => p.id))
 const naBorzi = new Set()
 if (tedensko || tekmovanje.active) {
   try {
-    const zgodovina = await vseVrstice((od, do_) =>
-      db.from('price_changes')
-        .select('player_id, players!inner(competition_id)')
-        .eq('players.competition_id', tekmovanje.id)
-        .order('id')
-        .range(od, do_),
-    )
+    const zgodovina = await vrsticeIgralcevLige(db, 'price_changes', 'player_id', tekmovanje.id)
     for (const z of zgodovina) naBorzi.add(z.player_id)
   } catch (e) {
     console.error(`Borzne zgodovine ni mogoče prebrati: ${e.message}`)
