@@ -146,6 +146,10 @@ zahtevki, nespremenjenih zapisnikov ne beremo znova, vir (`vir_ime`,
 `vir_url` → futbalnet.sk) je v nogi vsake strani. Če nas prosijo, naj nehamo,
 slovaške lige izklopimo.
 
+Grbe slovaških klubov prinese `scripts/grbi-sportnet.mjs` (klub sam naloži grb
+v ISSF, `organization.logo_public_url`) — delovni tok *Grbi klubov* z
+`vir = sportnet`. Po uvozu nove slovaške lige ga poženi znova.
+
 Jezik vmesnika sledi državi lige (`src/i18n/sk/`, `JEZIK_DRZAVE`); šifra lige
 zunaj Slovenije se začne s kodo države (`sk-…`), da jezik ob nalaganju ve,
 katero državo gleda.
