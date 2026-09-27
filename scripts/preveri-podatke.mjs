@@ -107,6 +107,8 @@ const { data: zamujene, error: napakaZamud } = await db
   .from('matches')
   .select('id, played_on, imported_at, rounds!inner(competition_id, competitions!inner(slug, active))')
   .is('imported_at', null)
+  // Kontumacija nima zapisnika in ga ne bo (20260927220000).
+  .eq('kontumacija', false)
   .lt('played_on', new Date(Date.now() - PRAG_DNI * 86400000).toISOString().slice(0, 10))
   .order('played_on')
   .limit(200)

@@ -1322,6 +1322,18 @@ preveri(
   }
 
   {
+    // Kontumacija ima izid brez polčasa; odigrana tekma s polčasom ni.
+    const k = razcleniRazpored([
+      '5. krog 23.09.26', 'Niko Železniki : Tržič 2012', '3 : 0()',
+      'Polet : Topdom Dom Trade Bitnje', '5 : 0(3 : 0)', 'Britof : Sava Kranj',
+    ])
+    preveri('razpored: kontumacija "3 : 0()" označena, samo ta',
+      k[0].tekme.length === 3 && k[0].tekme[0].kontumacija === true &&
+        !k[0].tekme[1].kontumacija && !k[0].tekme[2].kontumacija,
+      JSON.stringify(k[0].tekme.map((t) => !!t.kontumacija)))
+  }
+
+  {
     const k = razcleniRazpored(vrstice('razpored-celje-1902.txt'))
     preveri('razpored Celje: 18 krogov', k.length === 18, String(k.length))
     preveri('razpored Celje: 10 klubov', klubi(k).size === 10, String(klubi(k).size))
