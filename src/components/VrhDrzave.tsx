@@ -48,9 +48,12 @@ export default function VrhDrzave({ drzava }: { drzava: string }) {
 
   return (
     <div className="space-y-5">
-      <p className="text-sm text-slate-400">
-        {t('lestvice.slovenija.vrhUvod', { sezona: vrstice[0].season })}
-      </p>
+      <div>
+        <h2 className="text-2xl font-black naslov">{t('lestvice.slovenija.vrhNaslov')}</h2>
+        <p className="mt-1 text-sm text-slate-400">
+          {t('lestvice.slovenija.vrhUvod', { sezona: vrstice[0].season })}
+        </p>
+      </div>
       <div className="grid gap-5 lg:grid-cols-2">
         {LESTVICE.map((l) => {
           const seznam = vrstice.filter((v) => v.kategorija === l.kljuc)
