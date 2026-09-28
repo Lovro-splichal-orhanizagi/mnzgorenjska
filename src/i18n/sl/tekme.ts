@@ -13,6 +13,7 @@ export const tekme = {
       asistenca: 'Asistenca',
       asistence: 'Asistence ({n})',
       brezPrejetega: 'Brez prejetega gola',
+      zmaga: 'Zmaga ekipe',
       prejetiGoli: 'Prejeti goli ({n})',
       obranjena: 'Obranjena enajstmetrovka ({n})',
       zgresena: 'Zgrešena enajstmetrovka ({n})',
@@ -31,9 +32,16 @@ export const tekme = {
       golNapadalca: 'Gol napadalca',
       asistenca: 'Asistenca',
       obramba: 'Obramba',
-      csVratarBranilec: 'Brez prejetega gola — vratar, branilec',
+      csVratar: 'Brez prejetega gola — vratar',
+      csBranilec: 'Brez prejetega gola — branilec',
       csVezist: 'Brez prejetega gola — vezist',
+      zmaga: 'Zmaga ekipe — vratar, branilec',
       prejeta2: 'Vsaka 2 prejeta gola — vratar, branilec',
+      // Pod tabelo pravil na naslovnici.
+      opomba:
+        'Obramba šteje ob vsaj 60 minutah, prejeti goli pa le tisti, ki padejo, ko je igralec na igrišču.',
+      novo:
+        'Novo: vratar dobi za čisto mrežo +5 (prej +4), vratar in branilec pa +2 za zmago ekipe. Prejeti goli se štejejo le, ko je igralec na igrišču. Krogi, ki so se začeli pred spremembo, ostanejo točkovani po starem.',
       obranjena:
         'Obranjena enajstmetrovka — vratar (zapisnik jo vodi kot zgrešeno enajstmetrovko nasprotnika)',
       kazni: 'Kazni',

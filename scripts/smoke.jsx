@@ -211,8 +211,12 @@ preveri('dva gola vezista = 10', t({ goli: 2 }, 'MID') === 2 + 10)
 preveri('asistenca = 3', t({ asistence: 1 }, 'FWD') === 2 + 3)
 
 preveri(
-  'clean sheet vratarja = 4',
-  t({ cleanSheet: true }, 'GK') === 2 + 4,
+  'clean sheet vratarja = 5',
+  t({ cleanSheet: true }, 'GK') === 2 + 5,
+)
+preveri(
+  'clean sheet vratarja v krogu s pravili 1 = 4',
+  t({ cleanSheet: true, pravila: 1 }, 'GK') === 2 + 4,
 )
 preveri(
   'clean sheet branilca = 4',
@@ -223,6 +227,21 @@ preveri('clean sheet napadalca = 0', t({ cleanSheet: true }, 'FWD') === 2)
 preveri(
   'clean sheet pod 60 minut se ne šteje',
   t({ minute: 45, cleanSheet: true }, 'DEF') === 1,
+)
+
+preveri('zmaga vratarja = 2', t({ zmaga: true }, 'GK') === 2 + 2)
+preveri('zmaga branilca = 2', t({ zmaga: true }, 'DEF') === 2 + 2)
+preveri('zmaga vezista = 0', t({ zmaga: true }, 'MID') === 2)
+preveri('zmaga napadalca = 0', t({ zmaga: true }, 'FWD') === 2)
+preveri('zmaga pod 60 minut se ne šteje', t({ minute: 45, zmaga: true }, 'GK') === 1)
+preveri('zmaga v krogu s pravili 1 = 0', t({ zmaga: true, pravila: 1 }, 'DEF') === 2)
+preveri(
+  'vratar, zmaga 1:0 = 2+5+2 = 9',
+  t({ cleanSheet: true, zmaga: true }, 'GK') === 9,
+)
+preveri(
+  'vratar, zmaga 4:2 = 2-1+2 = 3',
+  t({ prejetiGoli: 2, zmaga: true }, 'GK') === 3,
 )
 
 preveri(
@@ -254,10 +273,10 @@ preveri('avtogol = -2', t({ avtogoli: 1 }, 'DEF') === 2 - 2)
 preveri('rumeni karton = -1', t({ rumeni: 1 }, 'MID') === 2 - 1)
 preveri('rdeči karton = -3', t({ rdeci: 1 }, 'MID') === 2 - 3)
 
-// sestavljen primer: branilec, 90 min, gol, clean sheet, rumeni karton
+// sestavljen primer: branilec, 90 min, gol, clean sheet, zmaga, rumeni karton
 preveri(
-  'sestavljen primer: 2+6+4-1 = 11',
-  t({ goli: 1, cleanSheet: true, rumeni: 1 }, 'DEF') === 11,
+  'sestavljen primer: 2+6+4+2-1 = 13',
+  t({ goli: 1, cleanSheet: true, zmaga: true, rumeni: 1 }, 'DEF') === 13,
 )
 
 // --- pravila ekipe ---------------------------------------------------------

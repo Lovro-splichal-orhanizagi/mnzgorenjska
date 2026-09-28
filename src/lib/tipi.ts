@@ -46,6 +46,9 @@ export interface Nastop {
   avtogoli?: number | null
   rumeni?: number | null
   rdeci?: number | null
+  zmaga?: boolean | null
+  /** Različica pravil kroga (`rounds.pravila_tockovanja`); privzeto najnovejša. */
+  pravila?: number | null
 }
 
 /** Ena postavka v razčlenitvi točk ("Gol", "Rumeni karton" …). */

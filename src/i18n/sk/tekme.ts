@@ -14,6 +14,7 @@ export const tekme: NonNullable<Prevod['tekme']> = {
       asistenca: 'Asistencia',
       asistence: 'Asistencie ({n})',
       brezPrejetega: 'Čisté konto',
+      zmaga: 'Víťazstvo tímu',
       prejetiGoli: 'Inkasované góly ({n})',
       obranjena: 'Chytená penalta ({n})',
       zgresena: 'Nepremenená penalta ({n})',
@@ -32,9 +33,15 @@ export const tekme: NonNullable<Prevod['tekme']> = {
       golNapadalca: 'Gól útočníka',
       asistenca: 'Asistencia',
       obramba: 'Obrana',
-      csVratarBranilec: 'Čisté konto — brankár, obranca',
+      csVratar: 'Čisté konto — brankár',
+      csBranilec: 'Čisté konto — obranca',
       csVezist: 'Čisté konto — záložník',
+      zmaga: 'Víťazstvo tímu — brankár, obranca',
       prejeta2: 'Každé 2 inkasované góly — brankár, obranca',
+      opomba:
+        'Obrana sa počíta pri aspoň 60 minútach a inkasované góly len tie, ktoré padnú, keď je hráč na ihrisku.',
+      novo:
+        'Novinka: brankár dostane za čisté konto +5 (predtým +4), brankár a obranca +2 za víťazstvo tímu. Inkasované góly sa počítajú, len keď je hráč na ihrisku. Kolá, ktoré sa začali pred zmenou, zostávajú bodované po starom.',
       obranjena:
         'Chytená penalta — brankár (zápis o stretnutí ju vedie ako nepremenenú penaltu súpera)',
       kazni: 'Tresty',

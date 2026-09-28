@@ -47,8 +47,10 @@ Pri **5 glasovih** za istega kandidata se podatek potrdi in začne šteti.
 | Odigranih 60 minut ali več (brez sodniškega podaljška) | +2 |
 | Gol vratarja / branilca / vezista / napadalca | +10 / +6 / +5 / +4 |
 | Asistenca | +3 |
-| Brez prejetega gola (vsaj 60 min) — vratar, branilec | +4 |
+| Brez prejetega gola (vsaj 60 min) — vratar | +5 |
+| Brez prejetega gola (vsaj 60 min) — branilec | +4 |
 | Brez prejetega gola (vsaj 60 min) — vezist | +1 |
+| Zmaga ekipe (vsaj 60 min) — vratar, branilec | +2 |
 | Vsaka 2 prejeta gola — vratar, branilec | −1 |
 | Obranjena enajstmetrovka | +5 |
 | Zgrešena enajstmetrovka | −2 |
@@ -56,9 +58,17 @@ Pri **5 glasovih** za istega kandidata se podatek potrdi in začne šteti.
 | Rumeni karton | −1 |
 | Rdeči karton | −3 |
 
-Pravila so na enem mestu v [`src/lib/tockovanje.js`](src/lib/tockovanje.js)
+Prejeti goli (in s tem čista mreža) štejejo le tisti, ki padejo, ko je
+igralec na igrišču.
+
+Pravila so na enem mestu v [`src/lib/tockovanje.ts`](src/lib/tockovanje.ts)
 (prikaz) in v funkciji `tocke_za_nastop` (izračun v bazi). Vsako pravilo
 pokriva test v `npm run smoke`.
+
+Krog nosi različico pravil (`rounds.pravila_tockovanja`), da sprememba ne
+seže nazaj. Različica 1 (krogi, začeti pred migracijo 20260928100000) je dajala vratarju
+za čisto mrežo +4, za zmago nič, prejete gole pa je štela po izidu cele
+tekme.
 
 ## Vrednost igralcev
 

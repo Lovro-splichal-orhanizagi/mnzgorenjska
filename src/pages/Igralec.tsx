@@ -229,6 +229,12 @@ export default function Igralec() {
       const asistPoMatchu = new Map<number, number>()
       for (const gg of (asistGoli ?? []) as any[])
         asistPoMatchu.set(gg.match_id, (asistPoMatchu.get(gg.match_id) ?? 0) + 1)
+      // Zmago, prejete gole med igranjem in različico pravil kroga pove pogled.
+      const { data: izPogleda } = await supabase
+        .from('appearance_points')
+        .select('match_id, zmaga, prejeti_na_igriscu, cista_mreza, pravila')
+        .eq('player_id', igralecId)
+      const poMatchu = new Map((izPogleda ?? []).map((x) => [x.match_id, x]))
 
       // Brez potrjene pozicije tock ni mogoce razcleniti; privzamemo vezista,
       // kakor je racunala tudi prejsnja razlicica.
@@ -237,12 +243,15 @@ export default function Igralec() {
       for (const n of (nastopi ?? []) as any[]) {
         const r = n.matches?.rounds
         if (!r) continue
+        const v = poMatchu.get(n.match_id)
         const nastop = {
           minute: n.minutes_played,
           goli: n.goals,
           asistence: asistPoMatchu.get(n.match_id) ?? 0,
-          cleanSheet: n.clean_sheet,
-          prejetiGoli: n.goals_conceded,
+          cleanSheet: v?.cista_mreza ?? n.clean_sheet,
+          prejetiGoli: v?.prejeti_na_igriscu ?? n.goals_conceded,
+          zmaga: v?.zmaga,
+          pravila: v?.pravila,
           obranjeneEnajstmetrovke: n.penalties_saved,
           zgreseneEnajstmetrovke: n.penalties_missed,
           avtogoli: n.own_goals,
@@ -255,7 +264,7 @@ export default function Igralec() {
             minute: n.minutes_played,
             goli: n.goals,
             asistence: asistPoMatchu.get(n.match_id) ?? 0,
-            cistaMreza: n.clean_sheet,
+            cistaMreza: nastop.cleanSheet,
             obranjene: n.penalties_saved,
           },
           round_id: n.matches.round_id,

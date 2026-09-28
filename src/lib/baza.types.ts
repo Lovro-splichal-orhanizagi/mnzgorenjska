@@ -298,30 +298,44 @@ export type Database = {
       }
       chat_messages: {
         Row: {
-          country_code: string
           alias: string
           content: string
+          country_code: string
           created_at: string
           id: number
           user_id: string
         }
         Insert: {
-          country_code?: string
           alias: string
           content: string
+          country_code?: string
           created_at?: string
           id?: never
           user_id: string
         }
         Update: {
-          country_code?: string
           alias?: string
           content?: string
+          country_code?: string
           created_at?: string
           id?: never
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "chat_messages_country_code_fkey"
+            columns: ["country_code"]
+            isOneToOne: false
+            referencedRelation: "competitions_view"
+            referencedColumns: ["country_code"]
+          },
+          {
+            foreignKeyName: "chat_messages_country_code_fkey"
+            columns: ["country_code"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["code"]
+          },
           {
             foreignKeyName: "chat_messages_user_id_fkey"
             columns: ["user_id"]
@@ -335,17 +349,17 @@ export type Database = {
         Row: {
           competition_id: number
           key: string
-          value: Json
+          value: NonNullable<Json>
         }
         Insert: {
           competition_id: number
           key: string
-          value: Json
+          value: NonNullable<Json>
         }
         Update: {
           competition_id?: number
           key?: string
-          value?: Json
+          value?: NonNullable<Json>
         }
         Relationships: [
           {
@@ -2319,6 +2333,7 @@ export type Database = {
           lineups_locked_at: string | null
           number: number
           played_on: string | null
+          pravila_tockovanja: number
           season: string
           voting_closes_at: string | null
           voting_opens_at: string | null
@@ -2332,6 +2347,7 @@ export type Database = {
           lineups_locked_at?: string | null
           number: number
           played_on?: string | null
+          pravila_tockovanja?: number
           season: string
           voting_closes_at?: string | null
           voting_opens_at?: string | null
@@ -2345,6 +2361,7 @@ export type Database = {
           lineups_locked_at?: string | null
           number?: number
           played_on?: string | null
+          pravila_tockovanja?: number
           season?: string
           voting_closes_at?: string | null
           voting_opens_at?: string | null
@@ -2376,15 +2393,15 @@ export type Database = {
       settings: {
         Row: {
           key: string
-          value: Json
+          value: NonNullable<Json>
         }
         Insert: {
           key: string
-          value: Json
+          value: NonNullable<Json>
         }
         Update: {
           key?: string
-          value?: Json
+          value?: NonNullable<Json>
         }
         Relationships: []
       }
@@ -2674,6 +2691,7 @@ export type Database = {
         Row: {
           appearance_id: number | null
           assists: number | null
+          cista_mreza: boolean | null
           clean_sheet: boolean | null
           goals: number | null
           goals_conceded: number | null
@@ -2682,7 +2700,10 @@ export type Database = {
           player_id: number | null
           points: number | null
           position: string | null
+          pravila: number | null
+          prejeti_na_igriscu: number | null
           round_id: number | null
+          zmaga: boolean | null
         }
         Relationships: [
           {
@@ -3270,9 +3291,9 @@ export type Database = {
       }
       klepet_sporocila: {
         Row: {
-          country_code: string | null
           alias: string | null
           content: string | null
+          country_code: string | null
           created_at: string | null
           id: number | null
           je_moje: boolean | null
@@ -3280,6 +3301,7 @@ export type Database = {
         Insert: {
           alias?: string | null
           content?: string | null
+          country_code?: string | null
           created_at?: string | null
           id?: number | null
           je_moje?: never
@@ -3287,11 +3309,27 @@ export type Database = {
         Update: {
           alias?: string | null
           content?: string | null
+          country_code?: string | null
           created_at?: string | null
           id?: number | null
           je_moje?: never
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_country_code_fkey"
+            columns: ["country_code"]
+            isOneToOne: false
+            referencedRelation: "competitions_view"
+            referencedColumns: ["country_code"]
+          },
+          {
+            foreignKeyName: "chat_messages_country_code_fkey"
+            columns: ["country_code"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["code"]
+          },
+        ]
       }
       krog_najboljsi: {
         Row: {
@@ -4476,7 +4514,7 @@ export type Database = {
         Returns: undefined
       }
       admin_prosnje_poznavalcev: {
-        Args: never
+        Args: Record<PropertyKey, never>
         Returns: {
           competition_id: number
           competition_name: string
@@ -4506,7 +4544,7 @@ export type Database = {
         }[]
       }
       admin_sponzorji: {
-        Args: never
+        Args: Record<PropertyKey, never>
         Returns: {
           active: boolean
           claim: string
@@ -4555,7 +4593,7 @@ export type Database = {
         }[]
       }
       admin_zivost: {
-        Args: never
+        Args: Record<PropertyKey, never>
         Returns: {
           aktivnih_30dni: number
           aktivnih_7dni: number
@@ -4569,7 +4607,7 @@ export type Database = {
       }
       asistenca_odprta: { Args: { p_goal_id: number }; Returns: boolean }
       asistence_odprte_do: { Args: { p_match_id: number }; Returns: string }
-      is_admin: { Args: never; Returns: boolean }
+      is_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
       je_poznavalec_lige: {
         Args: { p_competition_id: number }
         Returns: boolean
@@ -4599,7 +4637,7 @@ export type Database = {
       }
       krog_je_odigran: { Args: { p_round_id: number }; Returns: boolean }
       meje_borze: {
-        Args: never
+        Args: Record<PropertyKey, never>
         Returns: {
           najnizja: number
           najvisja: number
@@ -4631,10 +4669,13 @@ export type Database = {
         Args: { p_competition_id: number; p_user_id: string }
         Returns: boolean
       }
-      nova_koda_mini_lige: { Args: never; Returns: string }
-      okno_preracuna_tock: { Args: never; Returns: string }
+      nova_koda_mini_lige: { Args: Record<PropertyKey, never>; Returns: string }
+      okno_preracuna_tock: { Args: Record<PropertyKey, never>; Returns: string }
       osvezi_tocke_krogov: { Args: { p_krogi: number[] }; Returns: undefined }
-      osvezi_vse_tocke_krogov: { Args: never; Returns: undefined }
+      osvezi_vse_tocke_krogov: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       oznaci_odhod_igralca: {
         Args: { p_odsel: boolean; p_player_id: number }
         Returns: undefined
@@ -4667,7 +4708,7 @@ export type Database = {
         Returns: number
       }
       preveri_podatke: {
-        Args: never
+        Args: Record<PropertyKey, never>
         Returns: {
           kljuc: string
           koliko: number
@@ -4697,7 +4738,7 @@ export type Database = {
         Args: { p_roster: Json; p_team_id: number }
         Returns: Json
       }
-      skupaj_uporabnikov: { Args: never; Returns: number }
+      skupaj_uporabnikov: { Args: Record<PropertyKey, never>; Returns: number }
       sponzorji_za: {
         Args: { p_competition_id: number }
         Returns: {
@@ -4711,7 +4752,7 @@ export type Database = {
       }
       stanje_lige: { Args: { p_competition_id: number }; Returns: Json }
       stanje_mojih_ekip: {
-        Args: never
+        Args: Record<PropertyKey, never>
         Returns: {
           brez_tock: boolean
           competition_id: number
@@ -4728,22 +4769,41 @@ export type Database = {
       }
       tekmovanje_id: { Args: { p_slug: string }; Returns: number }
       tekoca_sezona: { Args: { p_datum?: string }; Returns: string }
-      tocke_za_nastop: {
-        Args: {
-          p_assists: number
-          p_clean_sheet: boolean
-          p_conceded: number
-          p_goals: number
-          p_minutes: number
-          p_own_goals: number
-          p_pen_missed: number
-          p_pen_saved: number
-          p_position: string
-          p_red: number
-          p_yellow: number
-        }
-        Returns: number
-      }
+      tocke_za_nastop:
+        | {
+            Args: {
+              p_assists: number
+              p_clean_sheet: boolean
+              p_conceded: number
+              p_goals: number
+              p_minutes: number
+              p_own_goals: number
+              p_pen_missed: number
+              p_pen_saved: number
+              p_position: string
+              p_red: number
+              p_yellow: number
+            }
+            Returns: number
+          }
+        | {
+            Args: {
+              p_assists: number
+              p_clean_sheet: boolean
+              p_conceded: number
+              p_goals: number
+              p_minutes: number
+              p_own_goals: number
+              p_pen_missed: number
+              p_pen_saved: number
+              p_position: string
+              p_pravila: number
+              p_red: number
+              p_yellow: number
+              p_zmaga: boolean
+            }
+            Returns: number
+          }
       tuja_postava: {
         Args: { p_round: number; p_team: number }
         Returns: {
@@ -4773,7 +4833,7 @@ export type Database = {
         }[]
       }
       uveljavi_cene: { Args: { p_round_id: number }; Returns: number }
-      uveljavi_pozicije: { Args: never; Returns: number }
+      uveljavi_pozicije: { Args: Record<PropertyKey, never>; Returns: number }
       uveljavi_zapadle_cene: { Args: { p_okno?: string }; Returns: number }
       voter_weight: { Args: { p_voter_id: string }; Returns: number }
       zabelezi_sponzorja: {
@@ -4840,8 +4900,7 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
+    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
   TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
@@ -4865,8 +4924,7 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
+    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
   TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
@@ -4890,8 +4948,7 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
+    keyof DefaultSchema["Enums"] | { schema: keyof DatabaseWithoutInternals },
   EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
@@ -4930,4 +4987,3 @@ export const Constants = {
     Enums: {},
   },
 } as const
-

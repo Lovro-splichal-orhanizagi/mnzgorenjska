@@ -248,6 +248,13 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   posnetek se osveži sam, ko se spremeni pozicija igralca ali potrdi asistenca
   — pozicija odloča, koliko je vreden gol, zato bi brez tega lestvica kazala
   stanje ob uvozu, ko je pozicijo poznal samo vratar
+- `rounds.pravila_tockovanja` → različica pravil, po kateri se krog točkuje
+  (`tocke_za_nastop(…, zmaga, pravila)`, migracija 20260928100000). Nočni
+  preračun bi sicer spremembo pravil prenesel na že podeljene točke. Različica
+  2: vratar čista mreža +5, zmaga +2 za vratarja in branilca, prejeti goli le
+  med igranjem (`appearance_points.prejeti_na_igriscu`; `goals_conceded` in
+  `clean_sheet` ostaneta izid cele tekme). Ob novi spremembi dodaj različico
+  3, zapri začete kroge in jo prenesi v `src/lib/tockovanje.ts`
 - `ucinkovita_postava(ekipa, krog)` → postava po samodejnih menjavah z množitelji;
   iz nje računa `fantasy_round_points_izracun`. Izid hrani tabela `tocke_krogov`
   in `fantasy_round_points` (ter z njim obe lestvici) bere **tabelo**, ker je

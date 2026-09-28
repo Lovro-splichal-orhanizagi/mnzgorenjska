@@ -393,10 +393,15 @@ ok(
 )
 
 // --- 8. točkovanje po pravilih -----------------------------------------------
-// 90 minut + brez prejetega gola za vratarja = 2 + 4 = 6
+// 90 minut + brez prejetega gola za vratarja = 2 + 5 (+2 za zmago); v krogih
+// po pravilih 1 (začeti pred migracijo 20260928100000) 2 + 4 brez zmage.
+const vratarPricakovano = (n) => {
+  const nova = n.pravila >= 2
+  return 2 + (n.clean_sheet ? (nova ? 5 : 4) : 0) + (nova && n.zmaga ? 2 : 0)
+}
 const { data: vratarCS } = await anon
   .from('appearance_points')
-  .select('points, minutes_played, clean_sheet, goals, assists, goals_conceded')
+  .select('points, minutes_played, clean_sheet, goals, assists, goals_conceded, zmaga, pravila')
   .eq('position', 'GK')
   .eq('clean_sheet', true)
   .eq('minutes_played', 90)
@@ -407,9 +412,9 @@ const { data: vratarCS } = await anon
   .limit(1)
   .single()
 ok(
-  'vratar 90 min brez prejetega gola = 6 točk',
-  Number(vratarCS?.points) === 6,
-  `${vratarCS?.points}`,
+  'vratar 90 min brez prejetega gola = 2 + 5 (+2 za zmago)',
+  vratarCS != null && Number(vratarCS.points) === vratarPricakovano(vratarCS),
+  `${vratarCS?.points} (zmaga ${vratarCS?.zmaga}, pravila ${vratarCS?.pravila})`,
 )
 
 // prejeti goli: -1 za vsaka 2
@@ -436,7 +441,7 @@ let vratarPrejeti = null
 for (const a of cistiNastopi ?? []) {
   const { data: tocke } = await anon
     .from('appearance_points')
-    .select('points, goals_conceded, goals, assists, position, clean_sheet')
+    .select('points, goals_conceded, goals, assists, position, clean_sheet, zmaga, pravila')
     .eq('appearance_id', a.id)
     .maybeSingle()
   if (
@@ -452,7 +457,8 @@ for (const a of cistiNastopi ?? []) {
 }
 
 if (vratarPrejeti) {
-  const pricakovano = 2 - Math.floor(vratarPrejeti.goals_conceded / 2)
+  const pricakovano =
+    vratarPricakovano(vratarPrejeti) - Math.floor(vratarPrejeti.goals_conceded / 2)
   ok(
     'vratar: -1 za vsaka 2 prejeta gola',
     Number(vratarPrejeti.points) === pricakovano,
