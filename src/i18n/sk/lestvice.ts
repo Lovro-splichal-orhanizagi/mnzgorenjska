@@ -59,6 +59,7 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     zavihekEkipe: 'Tímy',
     zavihekIgralci: 'Hráči',
     vrhNaslov: 'Kto vládne Slovensku?',
+    vrhPoglejVse: 'Pozri najlepšiu 10 →',
     vrhUvod: 'Najlepšia 10 zo všetkých líg · sezóna {sezona}',
     vrhTocke: 'Najviac bodov',
     vrhGoli: 'Strelci',

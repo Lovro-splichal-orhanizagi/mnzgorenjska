@@ -22,6 +22,7 @@ import { useNastavitev } from '../lib/nastavitve'
 import { useNaslov } from '../lib/naslov'
 import { PRAG_ASISTENCE_PRIVZETO } from '../components/GolZaGlasovanje'
 import Grb from '../components/Grb'
+import VrhDrzavePas from '../components/VrhDrzavePas'
 import Klepet from '../components/Klepet'
 import Odstevanje from '../components/Odstevanje'
 import EnajstericaNaIgriscu from '../components/EnajstericaNaIgriscu'
@@ -74,7 +75,7 @@ function kratkaPozicija(p: string | null | undefined): string {
 
 export default function Domov() {
   useNaslov(null)
-  const { id: tekmovanjeId, tekmovanje, tekmovanja } = useTekmovanje()
+  const { id: tekmovanjeId, tekmovanje, tekmovanja, drzava } = useTekmovanje()
   const zveza = imeZveze(tekmovanje)
   const [klubiLige, setKlubiLige] = useState<string[]>([])
   const vabilo = vabiloMailto(sestaviVabilo(tekmovanje, klubiLige))
@@ -496,9 +497,14 @@ export default function Domov() {
             <Link to="/results" className="gumb-tih">
               {t('domov.uvod.rezultati')}
             </Link>
+            <Link to="/national?pogled=igralci" className="gumb-tih">
+              <span aria-hidden>👑</span> {t('lestvice.slovenija.vrhNaslov')}
+            </Link>
           </div>
         </div>
       </section>
+
+      <VrhDrzavePas drzava={drzava} />
 
       {napaka && (
         <p className="rounded-xl bg-rose-500/10 p-3 text-sm text-rose-300 ring-1 ring-rose-400/30">

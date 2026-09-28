@@ -11,7 +11,7 @@ type Vrstica = Database['public']['Functions']['vrh_drzave']['Returns'][number]
 // Vrstni red in oznake lestvic; ključ je `kategorija` iz `vrh_drzave`.
 // Asistenc ni (in točke so brez njih): potrdi jih glasovanje, ki živi skoraj
 // samo na Gorenjskem, zato lig med seboj ne bi primerjali pošteno.
-const LESTVICE = [
+export const LESTVICE = [
   { kljuc: 'tocke', naslov: () => t('lestvice.slovenija.vrhTocke'), ikona: '', tocke: true },
   { kljuc: 'goli', naslov: () => t('lestvice.slovenija.vrhGoli'), ikona: '⚽', tocke: false },
   { kljuc: 'ciste_mreze', naslov: () => t('lestvice.slovenija.vrhCisteMreze'), ikona: '🧤', tocke: false },

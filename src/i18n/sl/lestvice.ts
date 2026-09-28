@@ -63,6 +63,7 @@ export const lestvice = {
     zavihekEkipe: 'Ekipe',
     zavihekIgralci: 'Igralci',
     vrhNaslov: 'Kdo vlada Sloveniji?',
+    vrhPoglejVse: 'Poglej najboljših 10 →',
     vrhUvod: 'Najboljših 10 iz vseh lig · sezona {sezona}',
     vrhTocke: 'Največ točk',
     vrhGoli: 'Strelci',

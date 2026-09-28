@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { formatirajTocke, mnozina, EKIPE, KROGI } from '../lib/pomozno'
 import { vseVrstice } from '../lib/strani'
@@ -28,7 +28,16 @@ const MEDALJE = ['🥇', '🥈', '🥉']
 export default function Slovenija() {
   const [vseVrsticeDrzav, setVrstice] = useState<DrzavnaVrstica[]>([])
   const [kako, setKako] = useState<Razvrstitev>('skupno')
-  const [zavihek, setZavihek] = useState<'ekipe' | 'igralci'>('ekipe')
+  // Zavihek je v naslovu (`?pogled=igralci`), da naslovnica lahko pokaže
+  // naravnost na igralce in da je pogled deljiv. Ne `?t=` — ta menja ligo.
+  const [iskanje, setIskanje] = useSearchParams()
+  const zavihek = iskanje.get('pogled') === 'igralci' ? 'igralci' : 'ekipe'
+  const setZavihek = (k: 'ekipe' | 'igralci') => {
+    const novo = new URLSearchParams(iskanje)
+    if (k === 'igralci') novo.set('pogled', 'igralci')
+    else novo.delete('pogled')
+    setIskanje(novo, { replace: true })
+  }
   const [nalaganje, setNalaganje] = useState(true)
   const [napaka, setNapaka] = useState<string | null>(null)
   const [seNiPripravljena, setSeNiPripravljena] = useState(false)
