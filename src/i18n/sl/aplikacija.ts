@@ -90,15 +90,6 @@ export const aplikacija = {
     poslji: 'Pošlji',
     zaObjavo: 'Za objavo se <prijava>prijavi</prijava>.',
   },
-  prispevek: {
-    naslov: 'Tvoj prispevek',
-    opis: 'Pozicij in asistenc uradni zapisnik ne pove — označi samo vratarja. Vse ostalo ve liga zato, ker ste povedali vi.',
-    glasoviPozicij: '<st>{n}</st> glasov za pozicije',
-    glasoviAsistenc: '<st>{n}</st> glasov za asistence',
-    obveljalo: ' · {n} obveljalo',
-    obveljalEn: 'En tvoj glas je obveljal in je zdaj del statistike, ki jo vidijo vsi.',
-    obveljaloVec: '{n} tvojih glasov je obveljalo in so zdaj del statistike, ki jo vidijo vsi.',
-  },
   sponzor: {
     oznaka: 'Sponzor',
   },

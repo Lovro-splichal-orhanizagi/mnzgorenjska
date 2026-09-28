@@ -76,16 +76,6 @@ export const domov = {
     vRazporedu: '{tekme} v razporedu',
     proti: 'vs',
   },
-  stevilke: {
-    ligaVStevilkah: 'Liga v številkah',
-    izZgodovine: 'Iz zgodovine (pretekla sezona)',
-    vseSezone: 'vse sezone skupaj',
-    novaSezona: 'nova sezona še ni odigrana',
-    tekem: 'Tekem',
-    igralcev: 'Igralcev',
-    golov: 'Golov',
-    cakaGlasov: 'Čaka glasov',
-  },
   kakoIgras: {
     naslov: 'Kako igraš',
     registracija: '1. Registracija',

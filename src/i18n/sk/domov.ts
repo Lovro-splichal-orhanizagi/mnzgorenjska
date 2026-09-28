@@ -77,16 +77,6 @@ export const domov: NonNullable<Prevod['domov']> = {
     vRazporedu: '{tekme} v rozpise',
     proti: 'vs',
   },
-  stevilke: {
-    ligaVStevilkah: 'Liga v číslach',
-    izZgodovine: 'Z histórie (minulá sezóna)',
-    vseSezone: 'všetky sezóny spolu',
-    novaSezona: 'nová sezóna sa ešte nehrala',
-    tekem: 'Zápasy',
-    igralcev: 'Hráči',
-    golov: 'Góly',
-    cakaGlasov: 'Čaká na hlasy',
-  },
   kakoIgras: {
     naslov: 'Ako sa hrá',
     registracija: '1. Registrácia',

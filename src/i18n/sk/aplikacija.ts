@@ -91,15 +91,6 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     poslji: 'Odoslať',
     zaObjavo: 'Ak chceš písať, <prijava>prihlás sa</prijava>.',
   },
-  prispevek: {
-    naslov: 'Tvoj príspevok',
-    opis: 'Pozície a asistencie oficiálny zápis neuvádza — označí len brankára. Všetko ostatné liga vie preto, lebo ste to povedali vy.',
-    glasoviPozicij: '<st>{n}</st> hlasov za pozície',
-    glasoviAsistenc: '<st>{n}</st> hlasov za asistencie',
-    obveljalo: ' · {n} platí',
-    obveljalEn: 'Jeden tvoj hlas platí a je teraz súčasťou štatistík, ktoré vidia všetci.',
-    obveljaloVec: 'Tvoje hlasy ({n}) platia a sú teraz súčasťou štatistík, ktoré vidia všetci.',
-  },
   sponzor: {
     oznaka: 'Sponzor',
   },

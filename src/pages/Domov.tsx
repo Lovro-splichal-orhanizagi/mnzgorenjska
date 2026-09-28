@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import Prispevek from '../components/Prispevek'
 import { imeZveze } from '../components/VirPodatkov'
 import { sestaviVabilo, vabiloMailto } from '../lib/vabilo'
 import { Link } from 'react-router-dom'
@@ -30,11 +29,8 @@ import type { IgralecEnajsterice } from '../components/EnajstericaNaIgriscu'
 import type { Pozicija } from '../lib/tipi'
 import { t, tx, datum } from '../i18n'
 
-/** Stevilke v pasu na vrhu naslovnice. */
+/** Kar liga čaka od skupnosti (asistence, pozicije). */
 interface Statistika {
-  tekme: number
-  igralci: number
-  goli: number
   brezAsistence: number
   brezPozicije: number
 }
@@ -130,13 +126,8 @@ export default function Domov() {
       // Odvisna sta le dva — lestvice sezone (rabijo sezono) in najboljši
       // kroga (rabi id kroga) — in ta dva gresta skupaj v drugi val.
 
-      // Tekme in goli tekmovanja ne nosijo neposredno — do njega pridemo prek
-      // kroga, zato notranji spoj (`!inner`) namesto navadnega štetja.
       const [
         sezonaPodatek,
-        tekme,
-        igralci,
-        goli,
         brezAsistence,
         brezPozicije,
         nextRoundOdgovor,
@@ -152,24 +143,6 @@ export default function Domov() {
             .eq('competition_id', ligaId)
             .eq('tekoca', true)
             .maybeSingle(),
-          supabase
-            .from('matches')
-            .select('id, rounds!inner(competition_id)', {
-              count: 'exact',
-              head: true,
-            })
-            .eq('rounds.competition_id', ligaId),
-          supabase
-            .from('players')
-            .select('id', { count: 'exact', head: true })
-            .eq('competition_id', ligaId),
-          supabase
-            .from('goals')
-            .select('id, matches!inner(rounds!inner(competition_id))', {
-              count: 'exact',
-              head: true,
-            })
-            .eq('matches.rounds.competition_id', ligaId),
           // Samo tekme, ki so bile odigrane v zadnjih 21 dneh — sicer 704
           // nerešenih iz prejšnje sezone večno visijo v obvestilu.
           supabase
@@ -243,9 +216,6 @@ export default function Domov() {
       const tekocaSezona = sezonaPodatek.data?.season ?? ''
       setTekocaSezona(tekocaSezona)
       setStat({
-        tekme: tekme.count ?? 0,
-        igralci: igralci.count ?? 0,
-        goli: goli.count ?? 0,
         brezAsistence: ((brezAsistence.data ?? []) as any[]).reduce(
           (v: number, x) => v + Number(x.brez_asistence ?? 0),
           0,
@@ -1079,35 +1049,6 @@ export default function Domov() {
         </section>
       )}
 
-      {/* Prispevek glasovalca: pokaže se le, kdor je kdaj glasoval. */}
-      <Prispevek />
-
-      {/* številke — štetje zajame vse sezone lige, zato jih pred prvim
-          krogom označimo kot zgodovino; ko sezona teče, to ne drži več. */}
-      {stat && sezonaTece !== null && (
-        <section className="space-y-2">
-          <div className="flex items-baseline justify-between">
-            <h2 className="text-sm font-bold uppercase tracking-wide text-slate-400">
-              {sezonaTece ? t('domov.stevilke.ligaVStevilkah') : t('domov.stevilke.izZgodovine')}
-            </h2>
-            <span className="text-[10px] uppercase tracking-wide text-slate-400">
-              {sezonaTece ? t('domov.stevilke.vseSezone') : t('domov.stevilke.novaSezona')}
-            </span>
-          </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <Stevilka oznaka={t('domov.stevilke.tekem')} vrednost={stat.tekme} ikona="📋" />
-            <Stevilka oznaka={t('domov.stevilke.igralcev')} vrednost={stat.igralci} ikona="👥" />
-            <Stevilka oznaka={t('domov.stevilke.golov')} vrednost={stat.goli} ikona="⚽" />
-            <Stevilka
-              oznaka={t('domov.stevilke.cakaGlasov')}
-              vrednost={stat.brezAsistence}
-              ikona="🗳️"
-              poudari
-            />
-          </div>
-        </section>
-      )}
-
       {/* potek igre */}
       <section className="space-y-3">
         <h2 className="text-xl font-bold">{t('domov.kakoIgras.naslov')}</h2>
@@ -1211,31 +1152,5 @@ function VrhLestvice({
         ))}
       </ul>
     </section>
-  )
-}
-
-function Stevilka({
-  oznaka,
-  vrednost,
-  ikona,
-  poudari,
-}: {
-  oznaka: string
-  vrednost: number
-  ikona: string
-  poudari?: boolean
-}) {
-  return (
-    <div
-      className={`kartica p-4 ${poudari && vrednost > 0 ? 'ring-1 ring-gnl-400/40' : ''}`}
-    >
-      <div className="text-2xl" aria-hidden>
-        {ikona}
-      </div>
-      <div className="mt-1 text-2xl font-black tabular-nums">{vrednost}</div>
-      <div className="text-xs uppercase tracking-wide text-slate-500">
-        {oznaka}
-      </div>
-    </div>
   )
 }
