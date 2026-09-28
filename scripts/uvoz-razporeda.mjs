@@ -22,6 +22,7 @@ import { sifra } from './viri/zapisniki.mjs'
 import { razcleniRazpored, sezonaIz } from './razpored.mjs'
 import { rokKroga } from './razporedi.mjs'
 import { vseVrstice } from './strani.mjs'
+import { prenesiSPonovitvami } from './prenos.mjs'
 
 const PREDPOMNILNIK = 'scripts/.predpomnilnik'
 
@@ -86,8 +87,8 @@ async function prenesi(url, ime) {
   try {
     // Vir lahko zahteva vljudnost: premor med zahtevki in glavo, ki pove, kdo
     // bere (Sportnet). Slovenski viri tega nimajo in ostanejo, kot so bili.
-    if (vir.premorMs) await new Promise((r) => setTimeout(r, vir.premorMs))
-    const odgovor = await fetch(url, vir.glave ? { headers: vir.glave } : undefined)
+    // Prehodne motnje prenos sam ponovi; šele ko odpove vse, velja rezerva.
+    const odgovor = await prenesiSPonovitvami(url, { glave: vir.glave, premorMs: vir.premorMs })
     if (!odgovor.ok) throw new Error(`${odgovor.status} ${url}`)
     const html = await odgovor.text()
     // Ločeno po viru: šifre lig in dokumentov so last spletišča, ne sistema,
@@ -150,6 +151,40 @@ console.log(`Najdenih krogov: ${veljavni.length}`)
 if (!veljavni.length) {
   console.error('Razporeda ni bilo mogoče razbrati — se je stran spremenila?')
   process.exit(1)
+}
+
+// --- kontumacije pri virih, katerih razpored izida ne pokaže ---------------
+// Ptuj, Murska Sobota in Lendava tekmo brez borbe pokažejo le na strani z
+// zapisniki kroga (prazna kartica s 3:0). Brez oznake borza in preverba
+// nanjo čakata do konca sezone. Napaka tu ne sme ustaviti razporeda: brez
+// oznake je stanje enako kot doslej, ko jo je vpisal admin.
+if (vir.kontumacije) {
+  const danes = new Date().toISOString().slice(0, 10)
+  // Odločitev vodje tekmovanja pride tudi teden ali dva po tekmi. Krog,
+  // starejši od 45 dni, se ne spremeni več — zanj zadošča predpomnilnik
+  // (istega polni uvoz zapisnikov), sicer bi vsak zagon prebral celo sezono.
+  const meja = new Date(Date.now() - 45 * 86400000).toISOString().slice(0, 10)
+  const prenesiKrog = async (naslov, ime, zadnjiDatum) => {
+    const pot = `${PREDPOMNILNIK}/${vir.ime}/${ime}`
+    if (zadnjiDatum && zadnjiDatum < meja && existsSync(pot)) return readFileSync(pot, 'utf8')
+    return prenesi(naslov, ime)
+  }
+  try {
+    const najdene = await vir.kontumacije(liga, prenesiKrog, veljavni, danes)
+    let oznacenih = 0
+    for (const n of najdene) {
+      const krog = veljavni.find((k) => k.stevilka === n.krog)
+      const tekma = krog?.tekme.find(
+        (t) => vir.kljucKluba(t.domaci) === vir.kljucKluba(n.domaci) &&
+          vir.kljucKluba(t.gostje) === vir.kljucKluba(n.gostje),
+      )
+      if (tekma) { tekma.kontumacija = true; oznacenih++ }
+      else console.log(`  kontumacija ${n.domaci} : ${n.gostje} (${n.krog}. krog) ni v razporedu`)
+    }
+    if (najdene.length) console.log(`Kontumacij v razporedu: ${oznacenih}`)
+  } catch (e) {
+    console.log(`  kontumacij ni bilo mogoče prebrati (${e.message}) — nadaljujem brez njih`)
+  }
 }
 
 const prviDatum = veljavni[0].tekme.find((t) => t.datum)?.datum

@@ -274,6 +274,53 @@ export function zapisnikiIzKroga(html, { vir, url = null, sezona = null, krog = 
   })
 }
 
+/**
+ * Kontumacije kroga: tekme, ki niso bile odigrane, a imajo dodeljen izid.
+ *
+ * Na strani z zapisniki kroga so vse tri zveze tekmo brez borbe izpisale
+ * enako: izid 3:0 ali 0:3, brez sodnika ("Gl. sodnik: ()") in brez igralcev
+ * v obeh postavah. Polčas je različen — Ptuj ga pusti praznega ("3:0 ()",
+ * Mladina 2022/23, 12. kolo Podvinci : Cirkulane-Apače), Murska Sobota in
+ * Lendava ponovita izid ("3 : 0 (3 : 0)", MS mladinci 2025/26, 20. krog
+ * Tromejnik : Bakovci; MNL Lendava 2024/25, 3. krog Hotiza : Nafta
+ * veterani). Zato izida ne beremo po polčasu, ampak zahtevamo vse troje.
+ *
+ * Takšna kartica ni zapisnik (`zapisnikiIzKroga` je zavrže), a uvoz
+ * razporeda mora tekmo označiti, sicer borza nanjo čaka do konca sezone.
+ *
+ * @returns {{domaci: string, gostje: string, datum: string|null, krog: number|null}[]}
+ */
+export function kontumacijeIzKroga(html, { vir } = {}) {
+  if (vir && !VIRI[vir]) throw new Error(`Neznan vir zapisnikov: ${vir}`)
+  vir ??= prepoznajVir(html)
+  if (!vir) return []
+  const nastavitev = VIRI[vir]
+  const meje = [...html.matchAll(new RegExp(nastavitev.meja))]
+  const odseki = meje.map((m, i) => html.slice(m.index, meje[i + 1]?.index ?? html.length))
+  return odseki.flatMap((odsek) => {
+    const vrstice = vBesedilo(odsek)
+    // Ptuj piše "Kraj :", MS "1.pomočnik:" — presledke pred dvopičjem prezremo.
+    const podatek = (ime) => {
+      const i = vrstice.findIndex((v) => v.replace(/\s+/g, '') === ime.replace(/\s+/g, '') + ':')
+      return i < 0 ? null : vrstice[i + 1] ?? ''
+    }
+    const izid = (podatek('Rezultat') ?? '').match(/^(\d+)\s*:\s*(\d+)\s*\(\s*(?:\d+\s*:\s*\d+)?\s*\)$/)
+    if (!izid || ![['3', '0'], ['0', '3']].some(([a, b]) => izid[1] === a && izid[2] === b)) return []
+    const sodnik = podatek('Gl. sodnik')
+    // Prazen sodnik je "()"; če polja ni, je naslednja vrstica že naslednja oznaka.
+    if (sodnik === null || !(/^\(\s*\)$/.test(sodnik) || /:$/.test(sodnik))) return []
+    const imena = [podatek('Domači'), podatek('Gostje')]
+    if (imena.some((ime) => !ime)) return []
+    const opozorila = []
+    const igralcev = razdelki(drevo(odsek), nastavitev, imena)
+      .filter((d) => d.vrsta === 'postava' || d.vrsta === 'rezerve')
+      .reduce((n, d) => n + igralciTabele(d.tabela, d.vrsta, opozorila).length, 0)
+    if (igralcev > 0) return []
+    const krog = Number(vrstice.find((v) => KROG.test(v))?.match(KROG)?.[1]) || null
+    return [{ domaci: imena[0], gostje: imena[1], datum: datumIz(podatek('Datum') ?? ''), krog }]
+  })
+}
+
 /** Pri strani z več tekmami je zapisnikId obvezen, da ne uvozimo napačne tekme. */
 export function parsirajZapisnik(html, { zapisnikId = null, ...opts } = {}) {
   const vsi = zapisnikiIzKroga(html, opts)
@@ -305,6 +352,7 @@ export function razclenjevalnikZa(vir) {
   return {
     parsirajZapisnik: (html, opts) => parsirajZapisnik(html, { ...opts, vir }),
     zapisnikiIzKroga: (html, opts) => zapisnikiIzKroga(html, { ...opts, vir }),
+    kontumacijeIzKroga: (html) => kontumacijeIzKroga(html, { vir }),
     nastopi, vBesedilo,
   }
 }

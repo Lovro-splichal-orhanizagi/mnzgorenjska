@@ -1,5 +1,5 @@
 import { razporedMurskaSobota } from '../razporedi.mjs'
-import { poKrogih } from './zapisniki.mjs'
+import { poKrogih, kontumacijePoKrogih } from './zapisniki.mjs'
 import { razclenjevalnikZa } from '../zapisnik-pomurje.mjs'
 import { naredikljucKluba, kratkoIme, poenostavi } from '../klubi.mjs'
 
@@ -26,6 +26,8 @@ const vir = {
     return `${OSNOVNI}/arhiv?sezona=${sezona}&liga=${liga}&podatek=program`
   },
   zapisniki: (koda, prenesi) => poKrogih(vir, koda, prenesi),
+  // Razpored izida ne pokaže; kontumacije so prazne kartice na strani kroga.
+  kontumacije: (koda, prenesi, krogi, danes) => kontumacijePoKrogih(vir, koda, prenesi, krogi, danes),
   // Razpored te zveze ni v obliki "Domači : Gostje"; splošni
   // razčlenjevalnik bi vrnil nič krogov in uvoz bi se ustavil.
   razcleniRazpored: razporedMurskaSobota,

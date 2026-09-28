@@ -137,12 +137,61 @@ export function razporedLendava(vrstice) {
   })
 }
 
+const brezOznak = (s) => razpakiraj(String(s ?? '').replace(/<[^>]+>/g, ' ')).trim()
+
+/**
+ * MNZ Maribor iz HTML-ja: vrstica `<tr data-event_id>` pod naslovom
+ * `<h3>N. krog</h3>`, v celicah kraj, datum, ura, domači, izid, gostje.
+ *
+ * Besedilo ne zadošča, ker kontumacija nima ne kraja ne ure: prazni celici
+ * iz besedila izgineta in okno "kraj, datum, ura" tekme ne prepozna — tekma
+ * Dravograd : VOP Prepolje (2. članska 2025/26, 16. 5. 2026) je zato v
+ * razporedu sploh ni bilo.
+ *
+ * Kontumacija: izid brez polčasa IN prazen kraj. Preverjeno na zapisnikih:
+ * pri vseh petih takih tekmah je zapisnik prazen (brez sodnikov in postav),
+ * npr. event 198400, 203647; tudi sklep VT-29/2022-2023 (Jurovski Dol :
+ * Akumulator, "po uradni dolžnosti 3 : 0"). Izid brez polčasa S krajem pa je
+ * odigrana tekma, registrirana za zeleno mizo (Pohorje : Jarenina Pesnica,
+ * U19 2025/26, event 203535 — postavi sta polni) in ima zapisnik.
+ */
+export function razporedMariborHtml(html) {
+  const krogi = []
+  const deli = String(html).split(/<h3\b[^>]*>\s*(\d{1,2})\.\s*krog\s*<\/h3>/i)
+  for (let i = 1; i < deli.length; i += 2) {
+    const st = Number(deli[i])
+    let krog = krogi.find((k) => k.stevilka === st)
+    if (!krog) { krog = { stevilka: st, tekme: [] }; krogi.push(krog) }
+    for (const m of deli[i + 1].matchAll(/<tr\b[^>]*data-event_id="\d+"[^>]*>([\s\S]*?)<\/tr>/g)) {
+      const v = m[1]
+      const kraj = brezOznak(v.match(/<td\b[^>]*>([\s\S]*?)<\/td>/)?.[1])
+      const d = v.match(/class="date">([^<]*)</)?.[1]?.trim() ?? ''
+      const u = v.match(/class="time">([^<]*)</)?.[1]?.trim() ?? ''
+      const domaci = brezOznak(v.match(/<td class="team home_team">([\s\S]*?)<\/td>/)?.[1])
+      const gostje = brezOznak(v.match(/<td class="team guest_team">([\s\S]*?)<\/td>/)?.[1])
+      const izid = brezOznak(v.match(/<td class="score">([\s\S]*?)<\/td>/)?.[1])
+      if (!jeDatum(d) || !jeIme(domaci) || !jeIme(gostje)) continue
+      const tekma = { domaci, gostje, datum: datum(d), ura: jeUra(u) ? uraIz(u) : null }
+      if (/^\d+\s*:\s*\d+$/.test(izid) && !kraj) tekma.kontumacija = true
+      krog.tekme.push(tekma)
+    }
+  }
+  return krogi.filter((k) => k.tekme.length).sort((a, b) => a.stevilka - b.stevilka)
+}
+
 /**
  * MNZ Maribor — `/tekmovanje/<slug>/tekme`.
  * [par krajev, datum, ura, domači, izid, "(polčas)", gostje]; neodigrana
  * tekma izida nima, zato je dolžina skupine različna.
+ *
+ * Uvoz poda tudi HTML; tedaj beremo vrstice tabele (`razporedMariborHtml`),
+ * ki vidijo tudi tekmo brez kraja in ure. Besedilo ostane za stare klice.
  */
-export function razporedMaribor(vrstice) {
+export function razporedMaribor(vrstice, html) {
+  if (html && /data-event_id=/.test(html)) {
+    const izHtml = razporedMariborHtml(html)
+    if (izHtml.length) return izHtml
+  }
   return poKrogih(vrstice, (o) => {
     if (!jeDatum(o[1] ?? '') || !jeUra(o[2] ?? '') || !jeIme(o[3] ?? '')) return { porabljeno: 0 }
     // Za domačimi pride izid ("5 : 1") in polčas ("(2 : 0)"), oboje brez črk.

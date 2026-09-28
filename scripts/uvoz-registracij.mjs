@@ -28,6 +28,7 @@ import {
   tekmovanje as najdiTekmovanje,
 } from './tekmovanje.mjs'
 import { viraZa } from './viri/index.mjs'
+import { prenesiSPonovitvami } from './prenos.mjs'
 
 const PREDPOMNILNIK = 'scripts/.predpomnilnik'
 
@@ -169,7 +170,7 @@ function pdfVBesedilo(buf) {
 async function prenesi(url, ime) {
   const pot = `${PREDPOMNILNIK}/${vir.ime}/${ime}`
   if (existsSync(pot)) return readFileSync(pot)
-  const odgovor = await fetch(url)
+  const odgovor = await prenesiSPonovitvami(url, { glave: vir.glave, premorMs: vir.premorMs })
   if (!odgovor.ok) throw new Error(`${odgovor.status}`)
   const buf = Buffer.from(await odgovor.arrayBuffer())
   // Ločeno po viru: šifre lig in dokumentov so last spletišča, ne sistema,
@@ -193,7 +194,9 @@ if (vir.imaRegistracije === false || typeof vir.naslovRegistracij !== 'function'
   process.exit(0)
 }
 
-const stran = await (await fetch(vir.naslovRegistracij())).text()
+const odgovorSeznama = await prenesiSPonovitvami(vir.naslovRegistracij(), { glave: vir.glave, premorMs: vir.premorMs })
+if (!odgovorSeznama.ok) throw new Error(`${odgovorSeznama.status} ${vir.naslovRegistracij()}`)
+const stran = await odgovorSeznama.text()
 const dokumenti = [
   ...new Set(
     [...stran.matchAll(/href="(dokumenti\/[^"]*?-(\d{4})\.pdf)"/g)]

@@ -1360,6 +1360,18 @@ preveri(
       k.every((r) => r.tekme.length === 5), k.map((r) => r.tekme.length).join(','))
   }
 
+  {
+    // Celje kontumacijo piše "po uradni dolžnosti": "0 :3(u.d.)". Zapisnika
+    // obeh tekem sta prazna (brez sodnika in postav) — prava vzorca 2025/26.
+    const k = razcleniRazpored(vrstice('razpored-celje-1801.txt'))
+    const kont = k.flatMap((r) => r.tekme.filter((t) => t.kontumacija).map((t) => `${r.stevilka}:${t.domaci}:${t.gostje}`))
+    preveri('razpored Celje: kontumacija "(u.d.)" označena, samo ti dve',
+      kont.length === 2 && kont.includes('1:NK Šmarje pri Jelšah:NK Žalec - Združena Savinjska') &&
+        kont.includes('15:NK Šampion:Mons Claudius'), kont.join(' | '))
+    preveri('razpored Celje: odigrane tekme niso kontumacije',
+      k.flatMap((r) => r.tekme).filter((t) => !t.kontumacija).length > 80)
+  }
+
   preveri('razpored: datum z dvomestno letnico', datum('29.08.26') === '2026-08-29', datum('29.08.26'))
   preveri('razpored: datum s stirimestno letnico', datum('29.08.2026') === '2026-08-29', datum('29.08.2026'))
   preveri('razpored: sezona iz avgusta', sezonaIz('2026-08-29') === '2026/27', sezonaIz('2026-08-29'))
@@ -2964,6 +2976,164 @@ preveri(
   preveri('sportnet: zapisnik', z && z.krog === 7 && z.rezultat.domaci === 1 && z.rezultat.gostje === 0 && !z.opozorila.length)
   preveri('sportnet: vsak nastop ima ISSF in pozicijo', n.length > 22 && n.every((x) => x.regSt && x.pozicija))
   preveri('sportnet: strelec', n.some((x) => x.ime === 'Šemik Tomáš' && x.goli === 1))
+}
+
+// --- kontumacije: Ptuj, Murska Sobota, Lendava, Maribor ---------------------
+// Vsi vzorci so prave strani s tekmo brez borbe (scripts/vzorci/). Pri vsaki
+// zvezi mora biti označena natanko ta tekma in nobena odigrana.
+{
+  const beri = (f) => readFileSync(new URL(`./vzorci/${f}`, import.meta.url), 'utf8')
+  const { kontumacijeIzKroga } = await import('./zapisnik-pomurje.mjs')
+  const primeri = [
+    ['mnzpt', 'zapisniki-ptuj-mladina2022-kolo12.html', 'Podvinci:Cirkulane-Apače'],
+    ['mnzms', 'zapisniki-ms-liga115-sezona2025-kolo20.html', 'Tromejnik:Bakovci'],
+    ['mnzle', 'zapisniki-lendava-mnl2425-krog3.html', 'Hotiza:Nafta veterani'],
+  ]
+  for (const [vir, f, par] of primeri) {
+    const k = kontumacijeIzKroga(beri(f), { vir })
+    preveri(`kontumacija ${vir}: prazna kartica 3:0 brez sodnika in postav`,
+      k.length === 1 && `${k[0].domaci}:${k[0].gostje}` === par, JSON.stringify(k))
+    // Ista stran ima tudi odigrane tekme; te ostanejo zapisniki.
+    preveri(`kontumacija ${vir}: ni zapisnik, odigrane tekme so`,
+      viraZa({ source: vir }).zapisnikiIzKroga(beri(f), { vir }).every((z) => `${z.domaci.ime}:${z.gostje.ime}` !== par))
+  }
+  for (const [vir, f] of [['mnzpt', 'zapisniki-ptuj-liga3-kolo1.html'], ['mnzpt', 'zapisniki-ptuj-liga3-kolo2.html'],
+    ['mnzms', 'zapisniki-ms-liga113-kolo2.html'], ['mnzle', 'zapisniki-lendava-pnl-krog1.html']]) {
+    preveri(`kontumacija ${vir}: v odigranem krogu (${f}) je ni`, kontumacijeIzKroga(beri(f), { vir }).length === 0)
+  }
+
+  // Uvoz razporeda prebere le kroge, ki so že na vrsti.
+  const pt = viraZa({ source: 'mnzpt' })
+  const prebrani = []
+  const najdene = await pt.kontumacije('2022:71', async (url, ime, zadnji) => {
+    prebrani.push({ url, ime, zadnji })
+    return beri('zapisniki-ptuj-mladina2022-kolo12.html')
+  }, [
+    { stevilka: 12, tekme: [{ datum: '2023-05-07' }, { datum: '2023-05-10' }] },
+    { stevilka: 13, tekme: [{ datum: '2099-05-14' }] },
+  ], '2023-06-01')
+  preveri('kontumacija: prihodnji krog se ne bere', prebrani.length === 1 && prebrani[0].url.includes('kolo=12') && prebrani[0].zadnji === '2023-05-10',
+    JSON.stringify(prebrani))
+  preveri('kontumacija: najdena nosi krog razporeda', najdene.length === 1 && najdene[0].krog === 12, JSON.stringify(najdene))
+  preveri('kontumacija: ime v predpomnilniku je isto kot pri uvozu zapisnikov', prebrani[0].ime === 'mnzpt-2022_71-k12.html', prebrani[0].ime)
+
+  // Maribor: izid brez polčasa IN prazen kraj. Tekma brez kraja in ure je
+  // besedilnemu razčlenjevalniku izginila iz razporeda, zato beremo HTML.
+  const mb = viraZa({ source: 'mnzmb' })
+  const kont = (k) => k.flatMap((r) => r.tekme.filter((t) => t.kontumacija).map((t) => `${r.stevilka}:${t.domaci}:${t.gostje}`))
+  {
+    const h = beri('tekme-maribor-2clanska-2526.html')
+    const k = mb.razcleniRazpored(mb.vBesedilo(h), h)
+    preveri('kontumacija mnzmb: 2. članska ima dve, tudi brez kraja in ure',
+      JSON.stringify(kont(k)) === JSON.stringify(['19:Dravograd:VOP Prepolje', '20:TAB Akumulator:Duplek']), kont(k).join(' | '))
+    preveri('razpored mnzmb: HTML prebere vseh 132 tekem (besedilo le 130)',
+      k.reduce((n, r) => n + r.tekme.length, 0) === 132 && mb.razcleniRazpored(mb.vBesedilo(h)).reduce((n, r) => n + r.tekme.length, 0) === 130)
+  }
+  {
+    const h = beri('tekme-maribor-u19-2526.html')
+    const k = mb.razcleniRazpored(mb.vBesedilo(h), h)
+    const vse = kont(k)
+    preveri('kontumacija mnzmb: U19 ima tri, tudi s poznano uro',
+      vse.length === 3 && vse.includes('15:Kovinar Maribor:Starše – NŠ Dravsko polje') && vse.includes('13:Pobrežje:Miklavž'), vse.join(' | '))
+    // Pohorje : Jarenina Pesnica 3 : 0 brez polčasa, a s krajem: odigrana in
+    // registrirana za zeleno mizo, zapisnik ima polni postavi.
+    preveri('kontumacija mnzmb: zelena miza s krajem ni kontumacija',
+      !vse.some((x) => x.includes('Pohorje:Jarenina')))
+  }
+  {
+    const h = beri('tekme-maribor-1clanska.html')
+    const zHtml = mb.razcleniRazpored(mb.vBesedilo(h), h)
+    const brez = mb.razcleniRazpored(mb.vBesedilo(h))
+    preveri('razpored mnzmb: HTML in besedilo se ujemata, kjer kontumacij ni',
+      JSON.stringify(zHtml) === JSON.stringify(brez) && kont(zHtml).length === 0)
+  }
+}
+
+// --- prenos s ponovitvami (scripts/prenos.mjs) -------------------------------
+// Brez omrežja: lokalni strežnik, ki najprej odpove, in ponarejen fetch za DNS.
+{
+  const { prenesiSPonovitvami, jePrehodnaNapaka, retryAfterMs, pozabiPadle } = await import('./prenos.mjs')
+  const { createServer } = await import('node:http')
+  const hitro = { zamiki: [5, 5, 5], log: () => {} }
+
+  let klicev = 0
+  const streznik = createServer((req, res) => {
+    klicev++
+    if (req.url === '/nihaj' && klicev < 3) { res.writeHead(503); return res.end('pocakaj') }
+    if (req.url === '/omejeno' && klicev === 1) { res.writeHead(429, { 'Retry-After': '0' }); return res.end() }
+    if (req.url === '/ni') { res.writeHead(404); return res.end('ni') }
+    if (req.url === '/pade') { res.writeHead(500); return res.end() }
+    if (req.url === '/visi') return // nikoli ne odgovori
+    res.writeHead(200); res.end('razpored')
+  })
+  await new Promise((r) => streznik.listen(0, '127.0.0.1', r))
+  const osnova = `http://127.0.0.1:${streznik.address().port}`
+
+  klicev = 0
+  let o = await prenesiSPonovitvami(`${osnova}/nihaj`, hitro)
+  preveri('prenos: 503 ponovi in uspe', o.ok && (await o.text()) === 'razpored' && klicev === 3, String(klicev))
+  klicev = 0
+  o = await prenesiSPonovitvami(`${osnova}/omejeno`, hitro)
+  preveri('prenos: 429 z Retry-After ponovi', o.ok && klicev === 2, String(klicev))
+  klicev = 0
+  o = await prenesiSPonovitvami(`${osnova}/ni`, hitro)
+  preveri('prenos: 404 se ne ponavlja', o.status === 404 && klicev === 1, String(klicev))
+  klicev = 0
+  o = await prenesiSPonovitvami(`${osnova}/pade`, hitro)
+  preveri('prenos: trajni 500 vrne zadnji odgovor po 4 poskusih', o.status === 500 && klicev === 4, String(klicev))
+  klicev = 0
+  o = await prenesiSPonovitvami(`${osnova}/pade`, hitro)
+  preveri('prenos: padel gostitelj dobi le en poskus', o.status === 500 && klicev === 1, String(klicev))
+  klicev = 0
+  o = await prenesiSPonovitvami(`${osnova}/ni`, hitro)
+  klicev = 0
+  await prenesiSPonovitvami(`${osnova}/pade`, hitro)
+  preveri('prenos: uspeh gostitelja vrne vse poskuse', klicev === 4, String(klicev))
+  pozabiPadle()
+  klicev = 0
+  const vrstice = []
+  let napakaCasa = null
+  try {
+    await prenesiSPonovitvami(`${osnova}/visi`, { zamiki: [5], casovnaOmejitevMs: 100, log: (v) => vrstice.push(v) })
+  } catch (e) { napakaCasa = e }
+  preveri('prenos: časovna omejitev se ponovi, nato vrže', napakaCasa?.name === 'TimeoutError' && klicev === 2 && vrstice.length === 1,
+    `${napakaCasa?.name} ${klicev} ${vrstice.length}`)
+  streznik.closeAllConnections?.()
+  await new Promise((r) => streznik.close(r))
+
+  // DNS (EAI_AGAIN), kot je podrl ng-primorska: undici vrže TypeError s kodo v `cause`.
+  const dns = () => Object.assign(new TypeError('fetch failed'), { cause: Object.assign(new Error('getaddrinfo EAI_AGAIN mnzgorica.si'), { code: 'EAI_AGAIN' }) })
+  let poskusi = 0
+  const glave = []
+  const ponarejen = async (_url, init) => {
+    poskusi++
+    glave.push(init?.headers?.['User-Agent'])
+    if (poskusi < 3) throw dns()
+    return new Response('ok')
+  }
+  const log = []
+  o = await prenesiSPonovitvami('https://mnzgorica.si/x', { ...hitro, fetchFn: ponarejen, glave: { 'User-Agent': 'SLFF' }, log: (v) => log.push(v) })
+  preveri('prenos: EAI_AGAIN ponovi, glave ostanejo', o.ok && poskusi === 3 && glave.every((g) => g === 'SLFF'), `${poskusi} ${glave}`)
+  preveri('prenos: ponovitev javi v eni vrstici', log.length === 2 && log[0].includes('EAI_AGAIN') && log[0].includes('ponovim'), log.join(' | '))
+  poskusi = 0
+  let vrzena = null
+  try { await prenesiSPonovitvami('https://x', { ...hitro, fetchFn: async () => { poskusi++; throw dns() } }) } catch (e) { vrzena = e }
+  preveri('prenos: trajna omrežna napaka po 4 poskusih vrže izvirno', vrzena?.cause?.code === 'EAI_AGAIN' && poskusi === 4, String(poskusi))
+  pozabiPadle()
+  poskusi = 0
+  vrzena = null
+  try { await prenesiSPonovitvami('https://x', { ...hitro, fetchFn: async () => { poskusi++; throw new TypeError('Invalid URL') } }) } catch (e) { vrzena = e }
+  preveri('prenos: programska napaka se ne ponavlja', vrzena && poskusi === 1, String(poskusi))
+  preveri('prenos: prepozna UND_ERR in ECONNRESET',
+    jePrehodnaNapaka({ cause: { code: 'UND_ERR_SOCKET' } }) && jePrehodnaNapaka({ code: 'ECONNRESET' }) && !jePrehodnaNapaka(new Error('x')))
+  preveri('prenos: Retry-After v sekundah in kot datum',
+    retryAfterMs('3') === 3000 && retryAfterMs(new Date(10000).toUTCString(), 4000) === 6000 && retryAfterMs(null) === null)
+
+  // Premor vira (Sportnet `premorMs`) velja pred vsakim poskusom.
+  poskusi = 0
+  const zacetek = Date.now()
+  await prenesiSPonovitvami('https://x', { zamiki: [1], premorMs: 60, log: () => {}, fetchFn: async () => (++poskusi < 2 ? new Response('', { status: 502 }) : new Response('ok')) })
+  preveri('prenos: premor vira pred vsakim poskusom', Date.now() - zacetek >= 115 && poskusi === 2, `${Date.now() - zacetek} ms`)
 }
 
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)
