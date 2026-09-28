@@ -20,6 +20,7 @@ import { tekmovanje as najdiTekmovanje, sifraLige } from './tekmovanje.mjs'
 import { viraZa } from './viri/index.mjs'
 import { mapaKlubov } from './klubi.mjs'
 import { vseVrstice } from './strani.mjs'
+import { prenesiSPonovitvami } from './prenos.mjs'
 
 const PREDPOMNILNIK = 'scripts/.predpomnilnik'
 
@@ -99,8 +100,8 @@ async function prenesi(url, datoteka, sveze = false) {
   if (!sveze && existsSync(pot)) return readFileSync(pot, 'utf8')
   // Vir lahko zahteva vljudnost: premor med zahtevki in glavo, ki pove, kdo
   // bere (Sportnet). Slovenski viri tega nimajo in ostanejo, kot so bili.
-  if (vir.premorMs) await new Promise((r) => setTimeout(r, vir.premorMs))
-  const odgovor = await fetch(url, vir.glave ? { headers: vir.glave } : undefined)
+  // Prehodne motnje (DNS, 5xx) prenos sam ponovi — glej `prenos.mjs`.
+  const odgovor = await prenesiSPonovitvami(url, { glave: vir.glave, premorMs: vir.premorMs })
   if (!odgovor.ok) {
     // Statusa ne pozremo, ga pa pripnemo: klicatelj mora znati lociti
     // "te strani (se) ni" od "vir je padel". Vir sam tega ne pove drugace.

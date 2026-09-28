@@ -225,9 +225,16 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   shranjevanje, zaklep in urejanje pripomočkov si delijo transakcijski zaklep lige.
 - `rounds` → krogi sezone, `matches` → tekme (z izvorom `zapisnik_id`).
   `matches.kontumacija` = tekma ni bila odigrana, izid je dodeljen in
-  zapisnika ne bo; borza in preverba nanjo ne čakata. Označi jo uvoz razporeda
-  (Sportnet: `contumation`, stari CMS: izid brez polčasa `3 : 0()`), pri
-  drugih virih admin z `update matches set kontumacija = true where id = …`
+  zapisnika ne bo; borza in preverba nanjo ne čakata. Označi jo uvoz razporeda:
+  Sportnet `contumation`; stari CMS izid brez polčasa `3 : 0()` ali `(u.d.)`
+  (Celje); Maribor izid brez polčasa **in** brez kraja (s krajem je zelena
+  miza z zapisnikom); Ptuj, Murska Sobota, Lendava prazna kartica 3:0 brez
+  sodnika in postav na strani zapisnikov kroga (`vir.kontumacije`). Pri Novi
+  Gorici in NZS primera še nismo videli — tam admin z
+  `update matches set kontumacija = true where id = …`
+- Omrežje: uvozi berejo prek `prenesiSPonovitvami` (`scripts/prenos.mjs`) —
+  ponovi omrežne napake, 5xx in 429 (2 s, 6 s, 15 s), 4xx nikoli. Nov prenos
+  v uvozni skripti naj gre skozenj, ne mimo z golim `fetch`
 - borza (`preracunaj_cene`, nočno `uveljavi_zapadle_cene`) premakne ceno po
   točkah kroga (+0.1 na dve točki nad osnovnima dvema, največ +1.0; forma
   treh krogov je spodnja meja), odsotnost pa kaznuje šele drugi zaporedni krog.

@@ -61,7 +61,10 @@ export function razcleniRazpored(vrstice) {
 
     // Izid pod tekmo. Odigrana ima polčas ("8 : 1(5 : 0)"), kontumacija ga
     // nima ("3 : 0()") — zapisnika zanjo ne bo in borza nanjo ne sme čakati.
-    const mIzid = v.trim().match(/^(\d+)\s*:\s*(\d+)\s*\(\s*\)$/)
+    // Celje namesto praznih oklepajev piše "po uradni dolžnosti":
+    // "0 :3(u.d.)" (1801, 1. krog Šmarje pri Jelšah : Žalec) — zapisnik te
+    // tekme je prazen, brez sodnika in postav.
+    const mIzid = v.trim().match(/^(\d+)\s*:\s*(\d+)\s*\(\s*(?:u\.\s*d\.)?\s*\)$/i)
     if (mIzid && tekoci.tekme.length) {
       tekoci.tekme.at(-1).kontumacija = true
       continue

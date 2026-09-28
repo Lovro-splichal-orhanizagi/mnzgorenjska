@@ -79,7 +79,7 @@ export async function poKrogih(vir, koda, prenesi, { najvecKrogov = 40 } = {}) {
     const url = vir.naslovKroga(koda, krog)
     let html
     try {
-      html = await prenesi(url, `${vir.ime}-${koda.replace(/[^\w-]/g, '_')}-k${krog}.html`, krog > 1)
+      html = await prenesi(url, imeStraniKroga(vir, koda, krog), krog > 1)
     } catch {
       prazni++
       continue
@@ -111,6 +111,33 @@ export async function izPovezav(vir, koda, prenesi) {
       continue
     }
     if (z) out.push({ id: String(p.id), z, url })
+  }
+  return out
+}
+
+/** Ime strani kroga v predpomnilniku — enako kot pri `poKrogih`, da si ga delita. */
+export const imeStraniKroga = (vir, koda, krog) =>
+  `${vir.ime}-${String(koda).replace(/[^\w-]/g, '_')}-k${krog}.html`
+
+/**
+ * Ptuj, Murska Sobota, Lendava: kontumacije iz strani z zapisniki kroga.
+ *
+ * Razpored teh zvez izida ne pokaže, tekma brez borbe pa ima na strani
+ * kroga svojo prazno kartico (glej `kontumacijeIzKroga`). Beremo le kroge,
+ * ki so že na vrsti; `prenesi(url, ime, zadnjiDatum)` po zadnjem datumu
+ * kroga sam odloči, ali zadošča predpomnilnik.
+ *
+ * @param {{stevilka:number, tekme:{datum:string|null}[]}[]} krogi razpored
+ * @param {string} danes "YYYY-MM-DD"
+ * @returns {Promise<{krog:number, domaci:string, gostje:string}[]>}
+ */
+export async function kontumacijePoKrogih(vir, koda, prenesi, krogi, danes) {
+  const out = []
+  for (const k of krogi) {
+    const datumi = k.tekme.map((t) => t.datum).filter(Boolean).sort()
+    if (!datumi.length || datumi[0] > danes) continue
+    const html = await prenesi(vir.naslovKroga(koda, k.stevilka), imeStraniKroga(vir, koda, k.stevilka), datumi.at(-1))
+    for (const t of vir.kontumacijeIzKroga(html)) out.push({ ...t, krog: k.stevilka })
   }
   return out
 }
