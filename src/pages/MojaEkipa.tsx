@@ -39,6 +39,7 @@ import {
 import { useTekmovanje } from '../lib/tekmovanje'
 import Igrisce from '../components/Igrisce'
 import Plakat from '../components/Plakat'
+import ZgodbaKroga from '../components/ZgodbaKroga'
 import { najboljsiTrije, type VrsticaIgralca } from '../lib/plakat'
 import Grb from '../components/Grb'
 import Odstevanje from '../components/Odstevanje'
@@ -2215,6 +2216,19 @@ export default function MojaEkipa() {
                         position: s.position,
                       }))}
                     />
+                    {skupaj != null && ekipa && (
+                      <ZgodbaKroga
+                        ekipaId={ekipa.id}
+                        krogId={izbrani.round_id}
+                        ekipa={ekipa.name ?? (imeEkipe || t('mojaEkipa.naslov'))}
+                        liga={tekmovanje?.name ?? ''}
+                        povezava={
+                          typeof window !== 'undefined'
+                            ? `${window.location.origin}/team/${ekipa.id}?krog=${izbrani.round_id}`
+                            : ''
+                        }
+                      />
+                    )}
                     {skupaj != null && ekipa && (
                       <div className="border-t border-white/5 pt-3">
                         <div className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">

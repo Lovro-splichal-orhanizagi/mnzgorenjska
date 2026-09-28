@@ -325,6 +325,24 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     deliKrog: '{ekipa}: {tocke} {beseda} v {krog}. kole. Poskladaj si tím a poraz ma.',
   },
 
+  zgodba: {
+    naslov: 'Týždenný prehľad — {krog}. kolo',
+    opis: 'Obrázok do príbehu na Instagrame alebo vo WhatsAppe: body, miesto v lige, kapitán a najlepší hráč kola.',
+    deli: 'Zdieľať týždenný prehľad',
+    prenesi: 'Stiahnuť týždenný prehľad',
+    nadnaslov: 'TÝŽDENNÝ PREHĽAD · {krog}. KOLO',
+    vKrogu: 'v {krog}. kole',
+    gor: '▲ {n}',
+    dol: '▼ {n}',
+    enako: '=',
+    kapetan: 'KAPITÁN',
+    namestnik: 'ZÁSTUPCA KAPITÁNA',
+    kapetanInNajboljsi: '{trak} · NAJLEPŠÍ V TÍME',
+    najboljsi: 'NAJLEPŠÍ V TÍME',
+    deliBesedilo: '{ekipa}: {tocke} {beseda} v {krog}. kole. Poskladaj si tím a poraz ma.',
+    deliBesediloMesto: '{ekipa}: {tocke} {beseda} v {krog}. kole, {mesto}. miesto v lige. Poskladaj si tím a poraz ma.',
+  },
+
   deliSliko: {
     naslov: '{naslov} — SLFF',
     kopirana: 'Odkaz je skopírovaný.',
