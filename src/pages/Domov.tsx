@@ -1125,9 +1125,6 @@ export default function Domov() {
       {/* pravila */}
       <section className="space-y-3">
         <h2 className="text-xl font-bold">{t('domov.kakoSeTockuje')}</h2>
-        <p className="rounded-lg border border-gnl-400/30 bg-gnl-500/10 px-4 py-3 text-sm text-slate-200">
-          {t('tekme.tockovanje.pravila.novo')}
-        </p>
         <div className="grid gap-3 sm:grid-cols-2">
           {PRAVILA_OPIS.map((s) => (
             <div key={s.skupina} className="kartica p-4">

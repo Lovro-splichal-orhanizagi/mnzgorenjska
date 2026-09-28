@@ -40,8 +40,6 @@ export const tekme = {
       // Pod tabelo pravil na naslovnici.
       opomba:
         'Obramba šteje ob vsaj 60 minutah, prejeti goli pa le tisti, ki padejo, ko je igralec na igrišču.',
-      novo:
-        'Novo: vratar dobi za čisto mrežo +5 (prej +4), vratar in branilec pa +2 za zmago ekipe. Prejeti goli se štejejo le, ko je igralec na igrišču. Krogi, ki so se začeli pred spremembo, ostanejo točkovani po starem.',
       obranjena:
         'Obranjena enajstmetrovka — vratar (zapisnik jo vodi kot zgrešeno enajstmetrovko nasprotnika)',
       kazni: 'Kazni',
