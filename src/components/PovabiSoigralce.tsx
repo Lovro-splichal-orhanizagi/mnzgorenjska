@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
-import { deliVabilo, privzetoImeLige } from '../lib/miniLige'
+import { besediloVabila, deliVabilo, povezaveDeljenja, privzetoImeLige } from '../lib/miniLige'
 import { t } from '../i18n'
 
 interface Liga {
@@ -126,6 +126,26 @@ export default function PovabiSoigralce({
           {t('lestvice.povabiSoigralce.miniLige')}
         </Link>
       </div>
+      {liga && (
+        // Na računalniku ni sistemskega lista: WhatsApp in Viber naravnost.
+        <div className="flex flex-wrap gap-3 text-sm">
+          {(() => {
+            const { whatsapp, viber } = povezaveDeljenja(
+              besediloVabila(liga.name, liga.code, window.location.origin),
+            )
+            return (
+              <>
+                <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="font-semibold text-[#7ee2a4] hover:underline">
+                  {t('lestvice.deli.whatsapp')}
+                </a>
+                <a href={viber} className="font-semibold text-[#b7adff] hover:underline">
+                  {t('lestvice.deli.viber')}
+                </a>
+              </>
+            )
+          })()}
+        </div>
+      )}
       {sporocilo && <p className="text-sm text-gnl-300">{sporocilo}</p>}
     </div>
   )

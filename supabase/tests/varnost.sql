@@ -517,6 +517,79 @@ reset role;
 select pg_temp.preveri('navijaci_klubov tece s pravicami klicatelja',
   (select not prosecdef from pg_proc where oid='public.navijaci_klubov(bigint)'::regprocedure));
 
+-- Tedenski pregled mini lige: rocno izracunan primer v lastnem tekmovanju.
+-- Krog 1: A 1*3+5=8, B 5*3+3=18. Krog 2: A 10*3+2=32 (na klopi 7),
+-- B 2*3+4=10 (p4 ni igral, zamenja ga p5). Po 2. krogu A prehiti B.
+-- Krog 3 nima zapisnika, zato se ni v pregledu. Adut je p5 (samo pri B):
+-- p1 je tudi samo pri A, a je ze kapetan kroga.
+insert into competitions(id, slug, name, short_name, active, country_id, source) overriding system value
+values (-914001, 'test-pregled', 'Test pregleda', 'TP', false, (select id from countries where code='SI'), 'mnzg');
+insert into teams(id, name, short_name, country_id) overriding system value
+values (-914001, 'Pregled A', 'PA', (select id from countries where code='SI')),
+       (-914002, 'Pregled B', 'PB', (select id from countries where code='SI'));
+insert into players(id, team_id, competition_id, first_name, last_name, position,
+                    position_source, value, value_start, active) overriding system value
+select -914000-n, -914001-(n%2), -914001, 'Pregled', n::text, 'MID', 'admin', 5, 5, true
+  from generate_series(1,5) n;
+insert into rounds(id,season,number,deadline_at,competition_id) overriding system value
+values (-914001,'2098/99',1,now()-interval '10 days',-914001),
+       (-914002,'2098/99',2,now()-interval '3 days',-914001),
+       (-914003,'2098/99',3,now()-interval '1 day',-914001);
+insert into matches(id, round_id, home_team_id, away_team_id, played_on, zapisnik_id) overriding system value
+values (-914001,-914001,-914001,-914002,current_date-10,'test-pregled-1'),
+       (-914002,-914002,-914001,-914002,current_date-3,'test-pregled-2'),
+       (-914003,-914003,-914001,-914002,current_date-1,null);
+insert into fantasy_teams(id,owner_id,name,competition_id,created_at) overriding system value
+values (-914001,'b8a06635-2322-4444-8c42-44e419f912ab','Pregled A',-914001,now()-interval '30 days'),
+       (-914002,'b8a06635-2322-4444-8c42-44e419f912ac','Pregled B',-914001,now()-interval '30 days'),
+       (-914003,'b8a06635-2322-4444-8c42-44e419f912ad','Pregled C',-914001,now()-interval '30 days');
+insert into appearances(match_id, player_id, team_id, started, minutes_played)
+select m, -914000-p, -914001-(p%2), true, 90
+  from (values (-914001,1),(-914001,2),(-914001,4),
+               (-914002,1),(-914002,2),(-914002,3),(-914002,5)) v(m,p);
+insert into fantasy_lineups(round_id, fantasy_team_id, player_id, is_starter, is_captain, bench_order, position)
+select r, t, -914000-p, s, c, case when s then null else 1 end, 'MID'
+  from (values (-914001),(-914002),(-914003)) k(r)
+  cross join (values (-914001,1,true,true),(-914001,2,true,false),(-914001,3,false,false),
+                     (-914002,2,true,true),(-914002,4,true,false),(-914002,5,false,false)) v(t,p,s,c);
+insert into player_scores(round_id, player_id, points)
+values (-914001,-914001,1),(-914001,-914002,5),(-914001,-914004,3),
+       (-914002,-914001,10),(-914002,-914002,2),(-914002,-914003,7),(-914002,-914005,4);
+insert into mini_lige(id, name, code, owner_id) overriding system value
+values (-914001, 'Pregled', 'PREGLED914', 'b8a06635-2322-4444-8c42-44e419f912ab');
+insert into mini_liga_clani(mini_liga_id, fantasy_team_id) values (-914001,-914001),(-914001,-914002);
+
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
+create temporary table pregled as select tedenski_pregled_mini_lige(-914001) as j;
+select pg_temp.preveri('pregled: samo koncani krogi, privzeto zadnji',
+  (select j->'krogi' = '[2,1]'::jsonb and (j->>'krog')::int = 2 from pregled));
+select pg_temp.preveri('pregled: tocke kroga po samodejnih menjavah',
+  (select j->'vrstice'->0->>'ekipa' = 'Pregled A' and (j->'vrstice'->0->>'tocke')::numeric = 32
+      and (j->'vrstice'->1->>'tocke')::numeric = 10 from pregled));
+select pg_temp.preveri('pregled: A je skocil na prvo mesto, B padel',
+  (select (j->'vrstice'->0->>'premik')::int = 1 and (j->'vrstice'->1->>'premik')::int = -1
+      and (j->'vrstice'->0->>'mesto')::int = 1 from pregled));
+select pg_temp.preveri('pregled: kapetan, klop in adut',
+  (select (j->'kapetan'->>'igralec_id')::bigint = -914001 and (j->'kapetan'->>'skupaj')::numeric = 30
+      and (j->'klop'->>'ekipa_id')::bigint = -914001 and (j->'klop'->>'tocke')::numeric = 7
+      and (j->'adut'->>'igralec_id')::bigint = -914005 from pregled));
+select pg_temp.preveri('pregled: prvi krog nima premikov',
+  (select j->'vrstice'->0->'premik' = 'null'::jsonb and (j->'vrstice'->0->>'tocke')::numeric = 18
+     from (select tedenski_pregled_mini_lige(-914001, 1) as j) x));
+reset role;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+select pg_temp.preveri('pregled: tujec mini lige ne dobi nicesar',
+  tedenski_pregled_mini_lige(-914001) is null
+  and not exists (select 1 from koncani_krogi_mini_lige(-914001)));
+reset role;
+select set_config('request.jwt.claim.sub','',true);
+set local role anon;
+select pg_temp.zavrnjeno('pregled: anonimni ga ne more klicati',
+  $$select tedenski_pregled_mini_lige(-914001)$$);
+reset role;
+
 do $$
 declare v_napak int;
 begin

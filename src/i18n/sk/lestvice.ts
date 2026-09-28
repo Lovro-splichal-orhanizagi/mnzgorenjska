@@ -151,12 +151,66 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     privzetoImeBrez: 'Moja mini liga',
   },
 
+  deli: {
+    naslovNova: 'Liga stojí. Teraz potrebuje súperov!',
+    opisNova:
+      'Mini liga s jediným členom je denník, nie súťaž. Pošli odkaz do skupiny — kto klikne, je v lige za pár sekúnd, bez písania kódu.',
+    naslovSam: 'Sám proti sebe? Bez súpera niet víťazstva.',
+    opisSam: 'Pošli odkaz spoluhráčom, kolegom alebo tomu, kto pri každom zápase vie, kto mal hrať.',
+    naslov: 'Pozvi niekoho ďalšieho',
+    povezava: 'Odkaz na vstup',
+    deli: 'Zdieľať',
+    whatsapp: 'WhatsApp',
+    viber: 'Viber',
+    kopiraj: 'Kopírovať odkaz',
+    kopirano: 'Odkaz je skopírovaný — vlož ho do skupiny.',
+    koda: 'Kód na ručné zadanie: {koda}',
+  },
+
+  pregled: {
+    naslov: 'Týždenný prehľad',
+    krog: 'Kolo',
+    nalaganje: 'Prehrabávam sa v zápisoch …',
+    prazno:
+      'Keď sa odohrá prvé kolo, budú tu príbehy týždňa: kto vyhral, kto nechal kapitána na lavičke a kto si odniesol drevenú lyžicu.',
+    samoEna: 'Keď sa pridá ešte niekto, bude tu aj víťaz — aj porazený.',
+    tockeKroga: 'Body v kole',
+    deliPregled: 'Poslať do skupiny',
+    kopiran: 'Prehľad je skopírovaný — vlož ho do skupiny.',
+    sporociloNaslov: '📊 {ime} — {krog}. kolo',
+    manager: 'Manažér kola',
+    managerOpis: '{ekipa} · {tocke}. Právo chváliť sa platí do ďalšieho kola.',
+    kapetan: 'Kapitán kola',
+    kapetanOpis: '{igralec} priniesol s páskou {tocke} ({ekipa}).',
+    adut: 'Skryté eso',
+    adutOpis: '{igralec} ({tocke}) — v zostave ho nemal nikto okrem {ekipa}.',
+    skok: 'Výťah',
+    skokOpis: {
+      one: '{ekipa}: o {n} miesto vyššie, teraz {mesto}. miesto.',
+      few: '{ekipa}: o {n} miesta vyššie, teraz {mesto}. miesto.',
+      many: '{ekipa}: o {n} miesta vyššie, teraz {mesto}. miesto.',
+      other: '{ekipa}: o {n} miest vyššie, teraz {mesto}. miesto.',
+    },
+    padec: 'Voľný pád',
+    padecOpis: {
+      one: '{ekipa}: o {n} miesto nižšie, teraz {mesto}. miesto. Padák sa neotvoril.',
+      few: '{ekipa}: o {n} miesta nižšie, teraz {mesto}. miesto. Padák sa neotvoril.',
+      many: '{ekipa}: o {n} miesta nižšie, teraz {mesto}. miesto. Padák sa neotvoril.',
+      other: '{ekipa}: o {n} miest nižšie, teraz {mesto}. miesto. Padák sa neotvoril.',
+    },
+    klop: 'Zlato na lavičke',
+    klopOpis: '{ekipa} · {tocke} na lavičke. Tréner, kde si bol?',
+    zlica: 'Drevená lyžica',
+    zlicaOpis: '{ekipa} · {tocke}. Ďalšie kolo bude lepšie. Možno.',
+  },
+
   mojeMiniLige: {
     povabilo: 'Tabuľka medzi kamarátmi je väčšia zábava ako medzi cudzími.',
     ustvari: 'Vytvoriť mini ligu',
     naslov: 'Moje mini ligy',
     vse: 'všetky →',
     vodi: ' · vedie {ime}',
+    sam: '· si sám — pozvi niekoho →',
   },
 
   povabiSoigralce: {
@@ -178,7 +232,7 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
       'Odkaz je neúplný alebo bola liga zmazaná. Popros o nový, alebo si <ustvari>vytvor vlastnú</ustvari>.',
     ustvaril: 'Vytvoril {ime}',
     miniLiga: 'Mini liga',
-    prijaviSe: 'Prihlás sa alebo si vytvor účet. Po prihlásení ťa vrátime sem a pridáš sa jedným klikom.',
+    prijaviSe: 'Prihlás sa alebo si vytvor účet. Po prihlásení ťa vrátime sem a zapíšeme do ligy — kód nemusíš písať.',
     prijavaAliRegistracija: 'Prihlásenie alebo registrácia',
     nalaganjeEkip: 'Načítavajú sa tvoje tímy …',
     potrebujesEkipo:

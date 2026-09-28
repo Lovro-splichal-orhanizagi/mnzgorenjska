@@ -27,6 +27,9 @@ Pri **5 glasovih** za istega kandidata se podatek potrdi in začne šteti.
 - **Rezultati** — odigrane tekme; klik na tekmo pokaže obe postavi na igrišču in
   točke, ki jih je posamezen igralec na njej zaslužil.
 - **Lestvica** — skupna razvrstitev vseh fantasy ekip lige.
+- **Mini lige** — zasebna lestvica med znanci (tudi čez lige). Povabilo je povezava `/l/KODA`
+  (deljenje prek sistemskega lista, WhatsAppa, Viberja ali kopiranja); po vsakem končanem
+  krogu **tedenski pregled**: manager kroga, kapetan, skriti adut, dvigalo, klop in lesena žlica.
 - **Dve ligi** — v glavi se preklaplja med člani in mladinci; vsaka liga ima svoje igralce, svojo ekipo in svojo lestvico.
 - **Uporabniški računi** — registracija in prijava z e-pošto in geslom.
 - **Pregled kluba/igralcev** — seznam ekip in igralcev 1. GNL.

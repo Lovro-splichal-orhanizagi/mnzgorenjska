@@ -109,6 +109,11 @@ export default function MojeMiniLige({ ekipaId }: { ekipaId: number | null }) {
               <div className="truncate text-xs text-slate-500">
                 {t('lestvice.odEkip', { n: v.ekip })}
                 {v.mesto > 1 && v.vodilni ? t('lestvice.mojeMiniLige.vodi', { ime: v.vodilni }) : ''}
+                {v.ekip <= 1 && (
+                  <Link to={`/mini-leagues?liga=${v.id}`} className="ml-1 font-semibold text-gnl-300 hover:underline">
+                    {t('lestvice.mojeMiniLige.sam')}
+                  </Link>
+                )}
               </div>
             </div>
             <span className="shrink-0 font-black tabular-nums text-gnl-300">

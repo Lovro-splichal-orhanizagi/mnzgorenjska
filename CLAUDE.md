@@ -263,6 +263,12 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   `fantasy_chips`, `appearances` in `matches`; ponoči jo cron obnovi vso. Nov
   vhod v izračun **potrebuje svoj sprožilec**, sicer lestvica zaostaja do noči
   (`npm run preizkus-tock-krogov` primerja tabelo z izračunom).
+- `tedenski_pregled_mini_lige(liga, krog)` → zgodbe končanega kroga mini lige
+  (točke kroga, premiki na lestvici mini lige, kapetan, klop, adut) kot jsonb;
+  besedila sestavi `src/lib/miniLige.ts` (`zgodbeKroga`). Krog je **številka**
+  tekoče sezone, ker mini liga gre čez lige; končane kroge ekip da
+  `koncani_krogi_mini_lige`. Obe tečeta s pravicami klicatelja, zato tujec
+  mini lige (RLS na `mini_liga_clani`) dobi `null`
 - `player_standings` → lestvica igralcev (točke, forma, na tekmo, izbranost)
 - `vrh_drzave(drzava, koliko)` → vrh igralcev tekoče sezone vseh aktivnih lig
   države (točke brez asistenc, goli, čiste mreže vratarjev) za zavihek Igralci na

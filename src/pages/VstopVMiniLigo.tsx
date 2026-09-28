@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import { useNaslov } from '../lib/naslov'
@@ -35,6 +35,10 @@ interface Ekipa {
  *   - ima ekipo      -> en gumb
  * Kodo si zapomni v localStorage, ker se človek po prijavi ali sestavljanju
  * ne vrne prek pogovora, iz katerega je prišel.
+ *
+ * Prijava vrne na `/l/KODA?pridruzi=1`: kdor ima eno samo ekipo, je takrat
+ * vpisan brez klika — odločil se je že, ko je kliknil povezavo. Kdor ima
+ * več ekip, izbere, s katero.
  */
 export default function VstopVMiniLigo() {
   const { koda: surova } = useParams()
@@ -48,6 +52,9 @@ export default function VstopVMiniLigo() {
   const [zEkipo, setZEkipo] = useState<number | null>(null)
   const [napaka, setNapaka] = useState<string | null>(null)
   const [dela, setDela] = useState(false)
+  const [iskanje] = useSearchParams()
+  const samodejno = iskanje.get('pridruzi') === '1'
+  const poskusil = useRef(false)
 
   const veljavna = kodaJeVeljavna(koda)
   const uporabnikId = session?.user.id
@@ -115,6 +122,15 @@ export default function VstopVMiniLigo() {
     navigate(`/mini-leagues?liga=${izid?.mini_liga_id ?? ''}&vstop=${izid?.dodano ? 'nov' : 'ze'}`)
   }
 
+  // Vrnitev s prijave: z eno ekipo vstopimo sami, enkrat.
+  useEffect(() => {
+    if (!samodejno || poskusil.current || !session || !liga || ekipe?.length !== 1) return
+    poskusil.current = true
+    void pridruzi()
+    // `pridruzi` bere trenutno stanje; poženemo ga le ob prvem izpolnjenem pogoju.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [samodejno, session, liga, ekipe])
+
   if (loading || liga === undefined)
     return <p className="animiraj-utrip text-slate-400">{t('skupno.nalaganje')}</p>
 
@@ -156,7 +172,7 @@ export default function VstopVMiniLigo() {
           {t('lestvice.vstop.prijaviSe')}
         </p>
         <Link
-          to={povezavaNaPrijavo(`/l/${koda}`)}
+          to={povezavaNaPrijavo(`/l/${koda}?pridruzi=1`)}
           className="gumb-glavni block w-full text-center"
         >
           {t('lestvice.vstop.prijavaAliRegistracija')}
