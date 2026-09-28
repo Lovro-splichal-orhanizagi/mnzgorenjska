@@ -231,6 +231,27 @@ export const lestvice = {
     deliKrog: '{ekipa}: {tocke} {beseda} v {krog}. krogu. Sestavi svojo ekipo in me premagaj.',
   },
 
+  // Tedenski pregled ekipe — pokončna slika za zgodbo (Moja ekipa, tuja ekipa).
+  pregled: {
+    naslov: 'Tedenski pregled — {krog}. krog',
+    opis: 'Slika za zgodbo na Instagramu ali v WhatsAppu: točke, mesto v ligi, kapetan in najboljši igralec kroga.',
+    deli: 'Deli tedenski pregled',
+    prenesi: 'Prenesi tedenski pregled',
+    // Besedilo na platnu.
+    nadnaslov: 'TEDENSKI PREGLED · {krog}. KROG',
+    vKrogu: 'v {krog}. krogu',
+    gor: '▲ {n}',
+    dol: '▼ {n}',
+    enako: '=',
+    kapetan: 'KAPETAN',
+    namestnik: 'NAMESTNIK KAPETANA',
+    kapetanInNajboljsi: '{trak} · NAJBOLJŠI V EKIPI',
+    najboljsi: 'NAJBOLJŠI V EKIPI',
+    // Besedilo ob deljenju.
+    deliBesedilo: '{ekipa}: {tocke} {beseda} v {krog}. krogu. Sestavi svojo ekipo in me premagaj.',
+    deliBesediloMesto: '{ekipa}: {tocke} {beseda} v {krog}. krogu, {mesto}. mesto v ligi. Sestavi svojo ekipo in me premagaj.',
+  },
+
   deliSliko: {
     naslov: '{naslov} — SLFF',
     kopirana: 'Povezava je kopirana.',

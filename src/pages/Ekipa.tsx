@@ -4,6 +4,8 @@ import { supabase } from '../lib/supabase'
 import { formatirajTocke, prikazniIme, tockZ } from '../lib/pomozno'
 import { useNaslov } from '../lib/naslov'
 import EnajstericaNaIgriscu from '../components/EnajstericaNaIgriscu'
+import TedenskiPregled from '../components/TedenskiPregled'
+import { useTekmovanje } from '../lib/tekmovanje'
 import {
   razdeli,
   skupajTock,
@@ -49,6 +51,10 @@ export default function Ekipa() {
   const [neto, setNeto] = useState<number | null>(null)
   const [napaka, setNapaka] = useState<string | null>(null)
   useNaslov(ekipa?.team_name ?? t('lestvice.ekipa.naslov'))
+  // Liga ekipe, ne tista, ki je izbrana v meniju — povezava lahko pripelje
+  // do ekipe iz druge lige.
+  const { vsaTekmovanja } = useTekmovanje()
+  const liga = vsaTekmovanja.find((l) => l.id === ekipa?.competition_id)?.name ?? ''
 
   // --- ekipa in njeni zaklenjeni krogi -------------------------------------
   useEffect(() => {
@@ -238,6 +244,21 @@ export default function Ekipa() {
                   </span>
                 )}
               </div>
+
+              {/* Pokaže se sama, ko je krog končan. */}
+              {id && izbranKrog && (
+                <TedenskiPregled
+                  ekipaId={Number(id)}
+                  krogId={izbranKrog}
+                  ekipa={ekipa?.team_name ?? t('lestvice.ekipa.naslov')}
+                  liga={liga}
+                  povezava={
+                    typeof window !== 'undefined'
+                      ? `${window.location.origin}/team/${id}?krog=${izbranKrog}`
+                      : ''
+                  }
+                />
+              )}
 
               <EnajstericaNaIgriscu igralci={postava.map(zaIgrisce)} />
 

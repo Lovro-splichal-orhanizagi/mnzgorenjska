@@ -26,6 +26,8 @@ export default function DeliSliko({
   besedilo,
   povezava,
   imeSlike,
+  gumbDeli,
+  gumbPrenesi,
 }: {
   /** Izriše sliko; klic mora biti ponovljiv. */
   narisi: () => Promise<Blob | null>
@@ -35,6 +37,9 @@ export default function DeliSliko({
   besedilo: string
   povezava: string
   imeSlike: string
+  /** Napis na glavnem gumbu, kadar slika ni kar "slika" (npr. tedenski pregled). */
+  gumbDeli?: string
+  gumbPrenesi?: string
 }) {
   const [dela, setDela] = useState(false)
   const [sporocilo, setSporocilo] = useState<string | null>(null)
@@ -140,11 +145,11 @@ export default function DeliSliko({
       <div className="flex flex-wrap gap-2">
         {delitevSlike ? (
           <button onClick={deliSliko} disabled={dela} className="gumb-glavni px-3 py-2 text-sm disabled:opacity-60">
-            {dela ? t('lestvice.deliSliko.pripravljam') : t('lestvice.deliSliko.deliSliko')}
+            {dela ? t('lestvice.deliSliko.pripravljam') : gumbDeli ?? t('lestvice.deliSliko.deliSliko')}
           </button>
         ) : (
           <button onClick={prenesi} disabled={dela} className="gumb-tih px-3 py-2 text-sm disabled:opacity-60">
-            {dela ? t('lestvice.deliSliko.pripravljam') : t('lestvice.deliSliko.prenesi')}
+            {dela ? t('lestvice.deliSliko.pripravljam') : gumbPrenesi ?? t('lestvice.deliSliko.prenesi')}
           </button>
         )}
         <button onClick={deliPovezavo} className="gumb-tih px-3 py-2 text-sm">

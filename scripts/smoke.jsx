@@ -38,6 +38,7 @@ import {
 } from '../src/lib/pravila'
 import { tockeZaNastop } from '../src/lib/tockovanje'
 import { sestejOdKroga } from '../src/lib/lestvica'
+import { krogKoncan, mestoVLigi, igralciPregleda, postaviPregled, oznakaPremika, imeDatotekePregleda, KVADRAT, SIRINA_P, VISINA_P, ROB_P } from '../src/lib/tedenskiPregled'
 import { parsirajZapisnik, nastopi } from './zapisnik.mjs'
 import { poZvezah, ustreza, pokaziZvezo } from '../src/components/IzbirnikLige'
 import { virPodatkov, imeZveze } from '../src/components/VirPodatkov'
@@ -2643,6 +2644,102 @@ preveri(
     pove = /nobeden/.test(String(e.message))
   }
   preveri('NZS: sami 404 so napaka, ne normalno stanje', pove)
+}
+
+// --- tedenski pregled ------------------------------------------------------
+// Pokoncna slika, a vse bistveno mora ostati v sredinskem kvadratu, ker ga
+// predogled v klepetu in objava v viru obrezeta.
+{
+  // Krog je koncan, ko ima zapisnik vsaka ze odigrana tekma.
+  const tekma = (played_on, imported_at, kontumacija = false) => ({ played_on, imported_at, kontumacija })
+  preveri('pregled: krog brez zapisnikov ni koncan', !krogKoncan([tekma('2026-09-20', null)], '2026-09-28'))
+  preveri('pregled: vsi zapisniki — koncan', krogKoncan([tekma('2026-09-20', 'x'), tekma('2026-09-20', 'x')], '2026-09-28'))
+  preveri('pregled: manjkajoc zapisnik zadrzi', !krogKoncan([tekma('2026-09-20', 'x'), tekma('2026-09-20', null)], '2026-09-28'))
+  preveri('pregled: kontumacija ne zadrzi', krogKoncan([tekma('2026-09-20', 'x'), tekma('2026-09-20', null, true)], '2026-09-28'))
+  preveri('pregled: prelozena tekma v prihodnosti ne zadrzi', krogKoncan([tekma('2026-09-20', 'x'), tekma('2026-09-30', null)], '2026-09-28'))
+  preveri('pregled: tekma brez datuma in zapisnika zadrzi', !krogKoncan([tekma('2026-09-20', 'x'), tekma(null, null)], '2026-09-28'))
+
+  // Mesto po krogu in premik: krog 1 (id 11), krog 2 (id 12).
+  const krogi = new Map([[11, 1], [12, 2], [13, 3]])
+  const vr = [
+    { round_id: 11, fantasy_team_id: 1, points: 30 }, { round_id: 11, fantasy_team_id: 2, points: 20 }, { round_id: 11, fantasy_team_id: 3, points: 10 },
+    { round_id: 12, fantasy_team_id: 1, points: 0 }, { round_id: 12, fantasy_team_id: 2, points: 5 }, { round_id: 12, fantasy_team_id: 3, points: 40 },
+    { round_id: 13, fantasy_team_id: 3, points: 99 }, // prihodnji krog ne sme steti
+  ]
+  const m3 = mestoVLigi(vr, krogi, 3, 2)
+  preveri('pregled: mesto po krogu je skupno, ne kroga', m3.mesto === 1 && m3.odEkip === 3, JSON.stringify(m3))
+  preveri('pregled: premik iz 3. na 1. je +2', m3.premik === 2, JSON.stringify(m3))
+  const m1 = mestoVLigi(vr, krogi, 1, 2)
+  preveri('pregled: padec iz 1. na 2. je -1', m1.mesto === 2 && m1.premik === -1, JSON.stringify(m1))
+  preveri('pregled: v prvem krogu ni premika', mestoVLigi(vr, krogi, 1, 1).premik === null)
+  const izenaceni = mestoVLigi([{ round_id: 11, fantasy_team_id: 1, points: 10 }, { round_id: 11, fantasy_team_id: 2, points: 10 }], krogi, 2, 1)
+  preveri('pregled: izenaceni si delijo mesto', izenaceni.mesto === 1)
+  const nova = mestoVLigi([...vr, { round_id: 12, fantasy_team_id: 4, points: 1 }], krogi, 4, 2)
+  preveri('pregled: nova ekipa nima premika', nova.premik === null && nova.mesto === 4, JSON.stringify(nova))
+  preveri('pregled: oznake premika', oznakaPremika(2).besedilo === '▲ 2' && oznakaPremika(-1).besedilo === '▼ 1' && oznakaPremika(0).besedilo === '=' && oznakaPremika(null) === null)
+
+  // Kapetan in najboljsi.
+  const v = (player_id, ime, tocke, mnozitelj, je_kapetan = false, je_namestnik = false) =>
+    ({ player_id, ime, klub: 'NK Triglav Kranj', pozicija: 'MID', mnozitelj, je_kapetan, je_namestnik, je_zacetnik: true, tocke })
+  const ip = igralciPregleda([v(1, 'Novak Jan', 4, 3, true), v(2, 'Hodžić Harun', 9, 1), v(3, 'Kos Tim', 12, 0)])
+  preveri('pregled: kapetan s tockami x3', ip.kapetan.player_id === 1 && ip.kapetan.tocke === 12 && !ip.kapetan.namestnik, JSON.stringify(ip.kapetan))
+  preveri('pregled: najboljsi je med tistimi, ki so steli (ne s klopi)', ip.najboljsi.player_id === 2 && ip.najboljsi.ime === 'Harun Hodžić', JSON.stringify(ip.najboljsi))
+  const nam = igralciPregleda([v(1, 'Novak Jan', 0, 0, true), v(2, 'Hodžić Harun', 5, 3, false, true)])
+  preveri('pregled: namestnik s trakom, ko kapetan ni igral', nam.kapetan.player_id === 2 && nam.kapetan.namestnik && nam.kapetan.tocke === 15)
+  const brez = igralciPregleda([v(1, 'Novak Jan', 0, 0, true), v(2, 'Hodžić Harun', 0, 0, false, true)])
+  preveri('pregled: brez igre ostane kapetan z nic', brez.kapetan.player_id === 1 && brez.kapetan.tocke === 0 && brez.najboljsi === null)
+
+  // Postavitev: groba meritev (sirina crke ~0,6 pisave), kot pri plakatu.
+  const meri = (s, px, teza) => s.length * px * (teza >= 800 ? 0.62 : 0.55)
+  const osnova = {
+    ekipa: 'Gorenjski Orli', liga: '1. Gorenjska liga — člani', krog: 5, tocke: 64, mesto: 3, odEkip: 118, premik: 2,
+    kapetan: { player_id: 1, ime: 'Jan Novak', klub: 'NK Triglav Kranj', grb: null, tocke: 24, mnozitelj: 3, namestnik: false },
+    najboljsi: { player_id: 2, ime: 'Harun Hodžić', klub: 'NK Šenčur', grb: null, tocke: 13, mnozitelj: 1, namestnik: false },
+  }
+  const dolgo = {
+    ...osnova,
+    ekipa: 'FC Najdaljše ime ekipe v celi Sloveniji United',
+    liga: 'Stredoslovenský futbalový zväz — V. liga Sever, skupina A dospelí',
+    tocke: 112.5, mesto: 1234, odEkip: 1300, premik: -187,
+    kapetan: { ...osnova.kapetan, ime: 'Isaac Raphaël Tshima Omombo Tshipamba-Mulowayi', klub: 'ND Polzela - Združena Savinjska' },
+  }
+  for (const [ime, p] of [['obicajen', osnova], ['dolga imena', dolgo]]) {
+    const el = postaviPregled(p, meri)
+    const besedila = el.filter((e) => e.vrsta === 'besedilo')
+    const zunajKvadrata = el.filter((e) => !e.samoPokoncno && (e.y < KVADRAT.y + 40 || e.y > KVADRAT.y + KVADRAT.visina - 20))
+    preveri(`pregled (${ime}): vse bistveno je v sredinskem kvadratu`, zunajKvadrata.length === 0, zunajKvadrata.map((e) => e.id).join(', '))
+    preveri(`pregled (${ime}): nic ne pade s slike`, el.every((e) => e.y > 0 && e.y < VISINA_P))
+    const presirok = besedila.filter((e) => {
+      const w = meri(e.besedilo, e.px, e.teza)
+      const levo = e.poravnava === 'left' ? e.x : e.poravnava === 'right' ? e.x - w : e.x - w / 2
+      return levo < ROB_P - 10 || levo + w > SIRINA_P - ROB_P + 10
+    })
+    preveri(`pregled (${ime}): nobeno besedilo ne sega cez rob`, presirok.length === 0, presirok.map((e) => `${e.id} ${e.besedilo}`).join(' | '))
+    const id = (x) => besedila.find((e) => e.id === x)
+    preveri(`pregled (${ime}): ekipa, tocke, mesto, kapetan, najboljsi, liga, slff.eu`,
+      ['ekipa', 'tocke', 'mesto', 'kapetan.ime', 'najboljsi.ime', 'liga', 'splet', 'nadnaslov'].every((x) => id(x)))
+    const imeK = id('kapetan.ime'), tockeK = id('kapetan.tocke')
+    preveri(`pregled (${ime}): ime kapetana se ne zaleti v tocke`,
+      imeK.x + meri(imeK.besedilo, imeK.px, imeK.teza) < tockeK.x - meri(tockeK.besedilo, tockeK.px, tockeK.teza))
+    const mesto = id('mesto'), premik = id('premik')
+    preveri(`pregled (${ime}): premik stoji za mestom`, premik && premik.x >= mesto.x + meri(mesto.besedilo, mesto.px, mesto.teza))
+    // Vrstice si sledijo od zgoraj navzdol brez prekrivanja osnovnic.
+    const po = ['liga', 'nadnaslov', 'ekipa', 'tocke', 'mesto', 'kapetan.ime', 'najboljsi.ime', 'splet'].map((x) => id(x).y)
+    preveri(`pregled (${ime}): vrstni red od zgoraj navzdol`, po.every((y, i) => i === 0 || y > po[i - 1]), po.join(' < '))
+  }
+  const el = postaviPregled(osnova, meri)
+  preveri('pregled: kratko ime ekipe je vecje od dolgega',
+    el.find((e) => e.id === 'ekipa').px > postaviPregled(dolgo, meri).find((e) => e.id === 'ekipa').px)
+  const dolgaVrstici = postaviPregled(dolgo, meri).filter((e) => e.id.startsWith('ekipa')).map((e) => e.besedilo)
+  preveri('pregled: dolgo ime ekipe gre v dve vrstici, cele',
+    dolgaVrstici.length === 2 && dolgaVrstici.join(' ') === dolgo.ekipa.toUpperCase(), dolgaVrstici.join(' / '))
+  preveri('pregled: premik navzgor', el.find((e) => e.id === 'premik').besedilo === '▲ 2')
+  const isti = postaviPregled({ ...osnova, najboljsi: { ...osnova.kapetan, tocke: 8 } }, meri)
+  preveri('pregled: kapetan, ki je tudi najboljsi, je na sliki enkrat',
+    !isti.some((e) => e.id === 'najboljsi.ime') && isti.find((e) => e.id === 'kapetan.oznaka').besedilo.includes('NAJBOLJŠI'))
+  const brezMesta = postaviPregled({ ...osnova, mesto: null, premik: null, kapetan: null, najboljsi: null }, meri)
+  preveri('pregled: brez mesta in igralcev ostane slika cela', !brezMesta.some((e) => e.id === 'mesto' || e.id === 'kapetan.ime') && brezMesta.some((e) => e.id === 'tocke'))
+  preveri('pregled: ime datoteke', imeDatotekePregleda('Šenčurski Orli!', 5) === 'slff-sencurski-orli-5-krog.png', imeDatotekePregleda('Šenčurski Orli!', 5))
 }
 
 // --- plakat za objavo ------------------------------------------------------
