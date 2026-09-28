@@ -8,7 +8,7 @@
 //
 // Tu je racunski del: iz podatkov kroga sestavi seznam elementov z
 // ze izracunanimi polozaji in velikostmi pisave. Komponenta
-// `TedenskiPregled.tsx` jih le izrise; `npm run smoke` preveri, da nic ne
+// `ZgodbaKroga.tsx` jih le izrise; `npm run smoke` preveri, da nic ne
 // pade iz kvadrata in da se dolga imena ne prelijejo.
 
 import { t } from '../i18n/jedro.ts'

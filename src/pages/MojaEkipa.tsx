@@ -39,7 +39,7 @@ import {
 import { useTekmovanje } from '../lib/tekmovanje'
 import Igrisce from '../components/Igrisce'
 import Plakat from '../components/Plakat'
-import TedenskiPregled from '../components/TedenskiPregled'
+import ZgodbaKroga from '../components/ZgodbaKroga'
 import { najboljsiTrije, type VrsticaIgralca } from '../lib/plakat'
 import Grb from '../components/Grb'
 import Odstevanje from '../components/Odstevanje'
@@ -2067,7 +2067,7 @@ export default function MojaEkipa() {
                       }))}
                     />
                     {skupaj != null && ekipa && (
-                      <TedenskiPregled
+                      <ZgodbaKroga
                         ekipaId={ekipa.id}
                         krogId={izbrani.round_id}
                         ekipa={ekipa.name ?? (imeEkipe || t('mojaEkipa.naslov'))}

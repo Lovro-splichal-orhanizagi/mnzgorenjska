@@ -181,7 +181,7 @@ async function naloziPregled(
   }
 }
 
-export default function TedenskiPregled({
+export default function ZgodbaKroga({
   ekipaId,
   krogId,
   ekipa,

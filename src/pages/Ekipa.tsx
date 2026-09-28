@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { formatirajTocke, prikazniIme, tockZ } from '../lib/pomozno'
 import { useNaslov } from '../lib/naslov'
 import EnajstericaNaIgriscu from '../components/EnajstericaNaIgriscu'
-import TedenskiPregled from '../components/TedenskiPregled'
+import ZgodbaKroga from '../components/ZgodbaKroga'
 import { useTekmovanje } from '../lib/tekmovanje'
 import {
   razdeli,
@@ -247,7 +247,7 @@ export default function Ekipa() {
 
               {/* Pokaže se sama, ko je krog končan. */}
               {id && izbranKrog && (
-                <TedenskiPregled
+                <ZgodbaKroga
                   ekipaId={Number(id)}
                   krogId={izbranKrog}
                   ekipa={ekipa?.team_name ?? t('lestvice.ekipa.naslov')}
