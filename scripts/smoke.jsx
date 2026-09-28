@@ -1855,6 +1855,70 @@ preveri(
   preveri('mini: neveljavno povabilo se ne prebere', preberiVabilo() === null)
   pozabiVabilo()
   delete globalThis.localStorage
+
+  // Deljenje: WhatsApp in Viber dobita celo besedilo, pravilno kodirano.
+  const { povezaveDeljenja, zgodbeKroga, opisZgodbe, besediloPregleda } = await import('../src/lib/miniLige.ts')
+  const deljenje = povezaveDeljenja(vabilo)
+  preveri('mini: WhatsApp povezava nosi besedilo vabila',
+    deljenje.whatsapp.startsWith('https://wa.me/?text=') &&
+      decodeURIComponent(deljenje.whatsapp.split('text=')[1]) === vabilo, deljenje.whatsapp)
+  preveri('mini: Viber povezava nosi besedilo vabila',
+    deljenje.viber.startsWith('viber://forward?text=') &&
+      decodeURIComponent(deljenje.viber.split('text=')[1]) === vabilo, deljenje.viber)
+  preveri('mini: presledki in & v besedilu ne zlomijo povezave',
+    !/[ &]/.test(povezaveDeljenja('a & b ?c=d').whatsapp.split('text=')[1]))
+
+  // Tedenski pregled: isti primer kot v supabase/tests/varnost.sql.
+  const pregled = {
+    sezona: '2098/99', krog: 2, krogi: [2, 1], ekip: 2,
+    vrstice: [
+      { ekipa_id: 1, ekipa: 'Pregled A', lastnik: 'Ana', tocke: 32, mesto: 1, premik: 1 },
+      { ekipa_id: 2, ekipa: 'Pregled B', lastnik: 'Bor', tocke: 10, mesto: 2, premik: -1 },
+    ],
+    kapetan: { ekipa_id: 1, igralec_id: 11, igralec: 'Kapetan Kovač', tocke: 10, skupaj: 30 },
+    klop: { ekipa_id: 1, tocke: 7 },
+    adut: { ekipa_id: 2, igralec_id: 15, igralec: 'Peti Adut', tocke: 4 },
+  }
+  const zgodbe = zgodbeKroga(pregled)
+  preveri('pregled: vse zgodbe v bralnem vrstnem redu',
+    zgodbe.map((z) => z.vrsta).join(',') === 'manager,kapetan,adut,skok,padec,klop,zlica',
+    zgodbe.map((z) => z.vrsta).join(','))
+  preveri('pregled: manager je A, zlica B',
+    zgodbe[0].ekipa === 'Pregled A' && zgodbe.at(-1).ekipa === 'Pregled B' && zgodbe.at(-1).tocke === 10)
+  preveri('pregled: kapetan pove tocke z mnoziteljem',
+    opisZgodbe(zgodbe[1]).includes('30 točk') && opisZgodbe(zgodbe[1]).includes('Kapetan Kovač'),
+    opisZgodbe(zgodbe[1]))
+  preveri('pregled: skok ima pravo mnozino',
+    opisZgodbe({ vrsta: 'skok', ekipa: 'X', tocke: 0, mest: 2, mesto: 1 }).includes('2 mesti'),
+    opisZgodbe({ vrsta: 'skok', ekipa: 'X', tocke: 0, mest: 2, mesto: 1 }))
+  const sam = zgodbeKroga({ ...pregled, vrstice: [pregled.vrstice[0]], adut: null })
+  preveri('pregled: ena ekipa nima zmagovalca ne zlice',
+    sam.map((z) => z.vrsta).join(',') === 'kapetan,klop', sam.map((z) => z.vrsta).join(','))
+  const izenaceni = zgodbeKroga({ ...pregled, vrstice: pregled.vrstice.map((v) => ({ ...v, tocke: 5, premik: 0 })) })
+  preveri('pregled: pri izenacenju ni lesene zlice ne premikov',
+    !izenaceni.some((z) => ['zlica', 'skok', 'padec'].includes(z.vrsta)))
+  preveri('pregled: prazen pregled nima zgodb',
+    zgodbeKroga({ sezona: null, krog: null, krogi: [] }).length === 0 && zgodbeKroga(null).length === 0)
+  const sporocilo = besediloPregleda('Bratje', 2, zgodbe, '4ar7vz', 'https://slff.eu')
+  preveri('pregled: sporocilo za skupino ima ligo, krog, zgodbe in povezavo',
+    sporocilo.includes('Bratje') && sporocilo.includes('2. krog') && sporocilo.includes('Pregled A') &&
+      sporocilo.endsWith('https://slff.eu/l/4AR7VZ'), JSON.stringify(sporocilo))
+
+  const { default: DeliMiniLigo } = await import('../src/components/DeliMiniLigo.tsx')
+  const html = renderToString(<DeliMiniLigo ime="Bratje" koda="4AR7VZ" stanje="nova" />)
+  preveri('izris: deljenje mini lige ima WhatsApp, Viber in povezavo',
+    html.includes('https://wa.me/?text=') && html.includes('viber://forward?text=') && html.includes('/l/4AR7VZ'))
+  const { default: TedenskiPregledKartica } = await import('../src/components/TedenskiPregled.tsx')
+  try {
+    renderToString(
+      <StaticRouter location="/mini-leagues">
+        <TedenskiPregledKartica ligaId={1} ime="Bratje" koda="4AR7VZ" />
+      </StaticRouter>,
+    )
+    preveri('izris: tedenski pregled', true)
+  } catch (e) {
+    preveri('izris: tedenski pregled', false, e.message)
+  }
 }
 
 // --- drzavna lestvica -------------------------------------------------------

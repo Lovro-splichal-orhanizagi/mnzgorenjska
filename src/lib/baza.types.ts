@@ -4635,6 +4635,15 @@ export type Database = {
           user_id: string
         }[]
       }
+      koncani_krogi_mini_lige: {
+        Args: { p_liga: number }
+        Returns: {
+          fantasy_team_id: number
+          number: number
+          round_id: number
+          season: string
+        }[]
+      }
       krog_je_odigran: { Args: { p_round_id: number }; Returns: boolean }
       meje_borze: {
         Args: Record<PropertyKey, never>
@@ -4766,6 +4775,10 @@ export type Database = {
           team_name: string
           veljavna: boolean
         }[]
+      }
+      tedenski_pregled_mini_lige: {
+        Args: { p_krog?: number; p_liga: number }
+        Returns: Json
       }
       tekmovanje_id: { Args: { p_slug: string }; Returns: number }
       tekoca_sezona: { Args: { p_datum?: string }; Returns: string }
