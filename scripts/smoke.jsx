@@ -2881,6 +2881,75 @@ preveri(
   preveri('obvestila: naslov 3', naslovNapak(3) === '3 tvoje ekipe ne bodo dobile točk')
   preveri('obvestila: naslov 5', naslovNapak(5) === '5 tvojih ekip ne bo dobilo točk')
 
+  // --- namigi za prestope in gibanje cen (lib/namigiEkipe) ------------------
+  {
+    const N = await import('../src/lib/namigiEkipe')
+    // Kader 2-5-5-3: klubi 1-5, iz kluba 1 trije (en je vratar 1).
+    const poz = ['GK', 'GK', 'DEF', 'DEF', 'DEF', 'DEF', 'DEF', 'MID', 'MID', 'MID', 'MID', 'MID', 'FWD', 'FWD', 'FWD']
+    const klub = [1, 2, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 3, 4, 5]
+    const kader = poz.map((p, i) => ({ id: 100 + i, position: p, team_id: klub[i], team_name: `K${klub[i]}`, value: 5, active: true, is_starter: i !== 1 && i < 12 }))
+    const vsiKlubi = new Set([1, 2, 3, 4, 5, 6])
+    const brez = { klubiZTekmo: vsiKlubi, odsotni: {} }
+    preveri('namigi: poln kader brez tezav nima namigov', N.namigiZaPrestope(kader, [], 0, brez).length === 0)
+    preveri('namigi: neaktiven', N.razlogSibkosti({ id: 1, active: false }, brez) === 'neaktiven')
+    preveri('namigi: poskodovan', N.razlogSibkosti({ id: 1, team_id: 1 }, { ...brez, odsotni: { 1: 'poskodba' } }) === 'poskodba')
+    preveri('namigi: opomba ni odsotnost', N.razlogSibkosti({ id: 1, team_id: 1 }, { ...brez, odsotni: { 1: 'opomba' } }) === null)
+    preveri('namigi: klub brez tekme', N.razlogSibkosti({ id: 1, team_id: 9 }, brez) === 'brezTekme')
+    preveri('namigi: brez razporeda klub ni razlog', N.razlogSibkosti({ id: 1, team_id: 9 }, { klubiZTekmo: null, odsotni: {} }) === null)
+
+    // Klub 5 v krogu ne igra: trije igralci (DEF, MID, FWD) so sibki.
+    const brez5 = { klubiZTekmo: new Set([1, 2, 3, 4, 6]), odsotni: {} }
+    const trg = [
+      { id: 1, position: 'DEF', team_id: 6, value: 5.5, form: 4, points_per_match: 3, active: true },
+      { id: 2, position: 'DEF', team_id: 6, value: 5.6, form: 6, points_per_match: 3, active: true }, // predrag
+      { id: 3, position: 'DEF', team_id: 1, value: 4.5, form: 9, points_per_match: 5, active: true }, // klub 1 je poln
+      { id: 4, position: 'DEF', team_id: 5, value: 4.5, form: 9, points_per_match: 5, active: true }, // klub brez tekme
+      { id: 5, position: 'DEF', team_id: 6, value: 4.5, form: 7, points_per_match: 2, active: false }, // neaktiven
+      { id: 6, position: 'DEF', team_id: 6, value: 4.5, form: 8, points_per_match: 2, active: true }, // poskodovan
+      { id: 7, position: 'DEF', team_id: 6, value: 4.0, form: 2, points_per_match: 1, active: true },
+      { id: 8, position: 'DEF', team_id: 6, value: 4.0, form: 3, points_per_match: 1, active: true },
+      { id: 9, position: 'DEF', team_id: 6, value: 4.0, form: 3, points_per_match: 2, active: true },
+      { id: 10, position: 'MID', team_id: 6, value: 4.0, form: 10, points_per_match: 9, active: true }, // druga pozicija
+      { id: 11, position: 'FWD', team_id: 6, value: 5.0, form: 5, points_per_match: 4, active: true },
+    ]
+    const moz = { ...brez5, odsotni: { 6: 'poskodba' } }
+    // Prodaja branilca za 5.0 + 0.5 v blagajni = 5.5 na voljo.
+    const namigi = N.namigiZaPrestope(kader, trg, 0.5, moz)
+    const def = namigi.find((m) => m.igralec.id === 106)
+    const ids = def?.zamenjave.map((k) => k.id) ?? []
+    preveri('namigi: klub brez tekme da tri sibka mesta', namigi.length === 3 && namigi.every((m) => m.razlog === 'brezTekme'), JSON.stringify(namigi.map((m) => m.igralec.id)))
+    preveri('namigi: prva postava pred klopjo', namigi[namigi.length - 1].igralec.id === 114)
+    preveri('namigi: najvec tri zamenjave, po formi', ids.join(',') === '1,9,8', ids.join(','))
+    preveri('namigi: proracun steje prodajo (5.5 = 0.5 + 5.0)', ids.includes(1) && !ids.includes(2))
+    preveri('namigi: ne vec kot 3 iz kluba', !ids.includes(3))
+    preveri('namigi: kandidat mora imeti tekmo, biti aktiven in zdrav', !ids.includes(4) && !ids.includes(5) && !ids.includes(6))
+    preveri('namigi: le ista pozicija', !ids.includes(10))
+    // Prodaja igralca iz polnega kluba sprosti mesto za igralca istega kluba.
+    const iz1 = N.zamenjaveZa(kader[2], kader, trg, 0, brez)
+    preveri('namigi: prodan igralec sprosti mesto v klubu', iz1.some((k) => k.id === 3))
+    // Mesto v kadru steje po poziciji nakupa, ne po danasnji.
+    preveri('namigi: igralec brez pozicije nima zamenjav', N.zamenjaveZa({ ...kader[2], position: null }, kader, trg, 5, brez).length === 0)
+    const fwd = namigi.find((m) => m.igralec.id === 114)
+    preveri('namigi: napadalec dobi napadalca', fwd?.zamenjave.length === 1 && fwd.zamenjave[0].id === 11)
+    preveri('namigi: brez denarja ni zamenjave', N.zamenjaveZa(kader[6], kader, trg.map((k) => ({ ...k, value: 9 })), 0, brez5).length === 0)
+
+    const g = N.gibanjeCen([
+      { player_id: 1, old_value: 5.0, new_value: 5.2, changed_at: '2026-09-20T04:00:00Z' },
+      { player_id: 1, old_value: 5.2, new_value: 5.3, changed_at: '2026-09-27T04:00:00Z' },
+      { player_id: 2, old_value: 6.0, new_value: 5.9, changed_at: '2026-09-27T04:00:00Z' },
+      { player_id: 3, old_value: 4.5, new_value: 4.6, changed_at: '2026-09-20T04:00:00Z' },
+      { player_id: 3, old_value: 4.6, new_value: 4.5, changed_at: '2026-09-27T04:00:00Z' },
+    ])
+    preveri('gibanje: prva stara in zadnja nova cena', g.igralci[0].player_id === 1 && g.igralci[0].iz === 5 && g.igralci[0].v === 5.3 && g.igralci[0].razlikaC === 30)
+    preveri('gibanje: gor in nazaj dol ni premik', !g.igralci.some((i) => i.player_id === 3))
+    preveri('gibanje: vrednost ekipe v centih', g.skupajC === 20 && N.gibanjeCen([]).skupajC === 0)
+    const zdaj = Date.parse('2026-09-28T12:00:00Z')
+    preveri('obisk: brez zapisa zadnji teden', N.odKdaj(null, zdaj).od === '2026-09-21T12:00:00.000Z' && !N.odKdaj(null, zdaj).zadnjiObisk)
+    preveri('obisk: zadnji obisk', N.odKdaj('2026-09-27T08:00:00.000Z', zdaj).od === '2026-09-27T08:00:00.000Z' && N.odKdaj('2026-09-27T08:00:00.000Z', zdaj).zadnjiObisk)
+    preveri('obisk: pokvarjen ali prihodnji zapis', !N.odKdaj('smeti', zdaj).zadnjiObisk && !N.odKdaj('2027-01-01T00:00:00Z', zdaj).zadnjiObisk)
+    preveri('obisk: brez localStorage ne pade', N.preberiZadnjiOgled(1) === null && N.namigiSkriti(1, 2) === false)
+  }
+
   const K = await import('../src/lib/karticaIgralca')
   preveri('kartica: dva gola in asistenca', K.dosezkiNastopa({ minute: 90, goli: 2, asistence: 1, cistaMreza: false, obranjene: 0 }, 'FWD').join(', ') === '2 gola, asistenca, 90 min')
   preveri('kartica: en gol je "gol"', K.dosezkiNastopa({ minute: 70, goli: 1, asistence: 0, cistaMreza: false, obranjene: 0 }, 'MID')[0] === 'gol')

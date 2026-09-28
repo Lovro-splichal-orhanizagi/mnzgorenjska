@@ -45,6 +45,17 @@ import Odstevanje from '../components/Odstevanje'
 import EnajstericaNaIgriscu from '../components/EnajstericaNaIgriscu'
 import InfoIgralca from '../components/InfoIgralca'
 import { dopolniKader, predlagajKader } from '../lib/predlogKadra'
+import {
+  namigiZaPrestope,
+  gibanjeCen,
+  odKdaj,
+  preberiZadnjiOgled,
+  zapisiZadnjiOgled,
+  namigiSkriti,
+  skrijNamige,
+  type GibanjeIgralca,
+} from '../lib/namigiEkipe'
+import { NamigiZaPrestope, OdZadnjegaObiska } from '../components/NamigiEkipe'
 import type { IgralecNaIgriscu } from '../components/Igrisce'
 import type { Pozicija } from '../lib/tipi'
 import { t, tx, datumUra } from '../i18n'
@@ -61,6 +72,7 @@ interface IgralecTrga {
   value: number | null
   points?: number | null
   form?: number | null
+  points_per_match?: number | null
   minutes?: number | null
   goals?: number | null
   active?: boolean | null
@@ -267,6 +279,21 @@ export default function MojaEkipa() {
   const [info, setInfo] = useState<IgralecTrga | null>(null)
   const imeRef = useRef<HTMLInputElement | null>(null)
   const odsotni = useOdsotni(tekmovanjeId)
+  // Klubi s tekmo v naslednjem krogu; null, dokler razporeda kroga ne poznamo.
+  const [klubiZTekmo, setKlubiZTekmo] = useState<Set<number> | null>(null)
+  // Namigi za prestope, skriti za ta krog (localStorage, le udobje).
+  const [namigiZaprti, setNamigiZaprti] = useState(false)
+  // Gibanje cen igralcev v kadru od zadnjega obiska.
+  const [gibanje, setGibanje] = useState<{
+    igralci: GibanjeIgralca[]
+    skupajC: number
+    zadnjiObisk: boolean
+  } | null>(null)
+  // Čas prejšnjega obiska ekipe, prebran enkrat na obisk strani — StrictMode in
+  // ponovno branje po shranjevanju ne smeta videti že prepisanega časa.
+  const prejsnjiObisk = useRef(new Map<number, string | null>())
+  // Zaprto obvestilo se po shranjevanju (nov kader) ne vrne.
+  const gibanjeZaprto = useRef(new Set<number>())
   // Osvežitev roka potrebuje zadnjo ekipo in ligo, ne tistih iz časa, ko je
   // bil časovnik nastavljen.
   const ekipaIdRef = useRef<number | null>(null)
@@ -413,6 +440,7 @@ export default function MojaEkipa() {
     setSporocilo(null)
     setNapaka(null)
     setRazveljavi(null)
+    setGibanje(null)
     if (!uporabnikId) {
       setNalaganje(false)
       return
@@ -442,7 +470,7 @@ export default function MojaEkipa() {
           ? vseVrstice((od, do_) =>
               supabase
                 .from('player_season_standings')
-                .select('id, goals, minutes, points, form')
+                .select('id, goals, minutes, points, form, points_per_match')
                 .eq('competition_id', ligaId)
                 .eq('season', sezona)
                 .order('id')
@@ -464,6 +492,8 @@ export default function MojaEkipa() {
         // Točke za predlog kadra: letošnje, ne seštevek vseh sezon.
         points: letosPo.get(i.id)?.points ?? 0,
         form: letosPo.get(i.id)?.form ?? 0,
+        // Namigi za prestope rangirajo zamenjave po formi in točkah na tekmo.
+        points_per_match: letosPo.get(i.id)?.points_per_match ?? 0,
         goli_lani: laniPo.get(i.id)?.goals ?? 0,
       }))
     }
@@ -751,6 +781,69 @@ export default function MojaEkipa() {
     }
   }, [ekipaId, zgodovinaKrogId])
 
+  // Kateri klubi igrajo v naslednjem krogu — kdor nima tekme, ne dobi točk.
+  const naslednjiKrogId = naslednjiKrog?.id ?? null
+  useEffect(() => {
+    setKlubiZTekmo(null)
+    if (!naslednjiKrogId) return
+    let veljavno = true
+    supabase
+      .from('matches')
+      .select('home_team_id, away_team_id, kontumacija')
+      .eq('round_id', naslednjiKrogId)
+      .order('id')
+      .then(({ data, error }) => {
+        // Krog brez vpisanih tekem (razpored še ni uvožen) ne pomeni, da nihče
+        // ne igra — takrat klubov brez tekme ne označimo.
+        if (!veljavno || error || !data?.length) return
+        const klubi = new Set<number>()
+        for (const m of data) {
+          // Kontumacija: tekme ni in točk ne bo.
+          if (m.kontumacija) continue
+          klubi.add(m.home_team_id)
+          klubi.add(m.away_team_id)
+        }
+        setKlubiZTekmo(klubi)
+      })
+    return () => {
+      veljavno = false
+    }
+  }, [naslednjiKrogId])
+
+  useEffect(() => {
+    setNamigiZaprti(ekipaId != null && naslednjiKrogId != null && namigiSkriti(ekipaId, naslednjiKrogId))
+  }, [ekipaId, naslednjiKrogId])
+
+  // Od zadnjega obiska: spremembe cen igralcev, ki so v shranjenem kadru.
+  // Bere le do 15 igralcev ekipe, ne cele lige.
+  const kljucShranjenih = [...zacetniIds].sort((a, b) => a - b).join(',')
+  useEffect(() => {
+    if (!ekipaId || !kljucShranjenih || gibanjeZaprto.current.has(ekipaId)) return
+    const zdaj = Date.now()
+    if (!prejsnjiObisk.current.has(ekipaId)) {
+      prejsnjiObisk.current.set(ekipaId, preberiZadnjiOgled(ekipaId))
+      zapisiZadnjiOgled(ekipaId, zdaj)
+    }
+    const { od, zadnjiObisk } = odKdaj(prejsnjiObisk.current.get(ekipaId) ?? null, zdaj)
+    const ids = kljucShranjenih.split(',').map(Number)
+    let veljavno = true
+    supabase
+      .from('price_changes')
+      .select('player_id, old_value, new_value, changed_at')
+      .in('player_id', ids)
+      .gt('changed_at', od)
+      .order('changed_at')
+      .order('id')
+      .then(({ data, error }) => {
+        // Obvestilo je dodatek — ob napaki ga preprosto ni.
+        if (!veljavno || error) return
+        setGibanje({ ...gibanjeCen(data ?? []), zadnjiObisk })
+      })
+    return () => {
+      veljavno = false
+    }
+  }, [ekipaId, kljucShranjenih])
+
   const izbraniPodrobno = useMemo(
     () =>
       izbrani
@@ -939,6 +1032,28 @@ export default function MojaEkipa() {
     if (mesto < 0) return
     setRazveljavi({ vrstica: izbrani[mesto], mesto, ime: ime(igralec.id) })
     setIzbrani(izbrani.filter((s) => s.player_id !== igralec.id))
+  }
+
+  // Namig za prestop: novi igralec prevzame mesto, vlogo in trak starega.
+  // Menjava ostane v osnutku — shrani jo uporabnik sam.
+  function zamenjaj(stari: IgralecTrga, novi: IgralecTrga) {
+    setSporocilo(null)
+    const mesto = izbrani.findIndex((s) => s.player_id === stari.id)
+    if (mesto < 0 || izbrani.some((s) => s.player_id === novi.id)) return
+    const brezStarega = izbraniPodrobno.filter((s) => s.player_id !== stari.id)
+    const denar = (centi(preostalo) + centi(poId[stari.id]?.value)) / 100
+    const razlog = zakajNeGre(novi, brezStarega, denar)
+    if (razlog) return setSporocilo(razlog)
+    setRazveljavi(null)
+    const kopija = [...izbrani]
+    kopija[mesto] = {
+      ...izbrani[mesto],
+      player_id: novi.id,
+      buy_value: Number(novi.value ?? 0),
+      buy_position: novi.position ?? null,
+    }
+    setIzbrani(kopija)
+    setSporocilo(t('mojaEkipa.namigi.zamenjano', { novi: ime(novi.id), ime: ime(stari.id) }))
   }
 
   // Vrne odstranjenega na isto mesto in v isto vlogo — če je vloga medtem
@@ -1312,6 +1427,17 @@ export default function MojaEkipa() {
     ? 0
     : Math.max(0, prestopi - pravila.prosti) * pravila.kazen
 
+  // Namigi za prestope: le za shranjeno, popolno ekipo — med sestavljanjem
+  // so na vrsti navodila in "Sestavi mi ekipo". Računajo se iz osnutka, zato
+  // po vsaki menjavi namig za zamenjanega igralca izgine sam.
+  const mestaZaNamige =
+    ekipa?.id && naslednjiKrog && !namigiZaprti && izbrani.length === VELIKOST_EKIPE
+      ? namigiZaPrestope(izbraniPodrobno as IgralecTrga[], igralci, preostalo, {
+          klubiZTekmo,
+          odsotni: Object.fromEntries(Object.entries(odsotni).map(([id, o]) => [id, o.kind])),
+        })
+      : []
+
   const trg = (
     <TrgIgralcev
       vidni={vidni}
@@ -1439,6 +1565,30 @@ export default function MojaEkipa() {
           )}
         </div>
       )}
+
+      {/* Razloga za vrnitev: kaj se je s cenami zgodilo od zadnjič in koga
+          velja zamenjati pred rokom. Oboje se da zapreti. */}
+      {gibanje && (
+        <OdZadnjegaObiska
+          igralci={gibanje.igralci.map((g) => ({ ...g, ime: poId[g.player_id]?.full_name ?? null }))}
+          skupajC={gibanje.skupajC}
+          zadnjiObisk={gibanje.zadnjiObisk}
+          naZapri={() => {
+            if (ekipa?.id) gibanjeZaprto.current.add(ekipa.id)
+            setGibanje(null)
+          }}
+        />
+      )}
+
+      <NamigiZaPrestope
+        krog={naslednjiKrog?.number ?? null}
+        mesta={mestaZaNamige}
+        naZamenjaj={zamenjaj}
+        naSkrij={() => {
+          if (ekipa?.id && naslednjiKrog) skrijNamige(ekipa.id, naslednjiKrog.id)
+          setNamigiZaprti(true)
+        }}
+      />
 
       {/* Rdeč opozorilni pas s KONKRETNIMI napakami + katerim krogom velja. */}
       {izbrani.length > 0 && napakeEkipe.length > 0 && (

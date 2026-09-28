@@ -109,6 +109,35 @@ export const mojaEkipa = {
     },
   },
 
+  // Namigi za prestope (lib/namigiEkipe.ts) — kdo v naslednjem krogu ne bo
+  // igral in koga si lahko privoščiš namesto njega.
+  namigi: {
+    naslov: 'Namigi za prestope',
+    zaKrog: 'Kdo v {krog}. krogu verjetno ne bo igral in koga si lahko privoščiš namesto njega.',
+    razlog: {
+      neaktiven: 'ni več v ligi',
+      poskodba: 'poškodovan',
+      odsotnost: 'odsoten',
+      brezTekme: 'klub ne igra',
+    },
+    kandidat: '{cena} · forma {forma}',
+    zamenjajNamig: 'Namesto {ime} v kader postavi {novi}',
+    niZamenjave: 'Zamenjave, ki bi jo dovolila proračun in pravila, ni.',
+    opomba: 'Klik le pripravi menjavo — ekipo shraniš sam. Vsak namig velja zase.',
+    skrij: 'Skrij do naslednjega kroga',
+    zamenjano: '{novi} je v kadru namesto {ime}. Ko si zadovoljen, shrani ekipo.',
+  },
+
+  // Gibanje cen igralcev v kadru od zadnjega ogleda strani.
+  odZadnjegaObiska: {
+    naslov: 'Od zadnjega obiska',
+    naslovTeden: 'V zadnjem tednu',
+    vrednost: 'Vrednost ekipe <znesek>{znak}{cena}</znesek>',
+    gor: 'podražitev',
+    dol: 'pocenitev',
+    zapri: 'Zapri',
+  },
+
   // Rdeč pas, ko ekipa ne ustreza pravilom.
   neustreza: {
     naslov: 'Tvoja ekipa NE ustreza pravilom',
