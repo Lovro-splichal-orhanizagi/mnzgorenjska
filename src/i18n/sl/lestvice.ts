@@ -35,6 +35,55 @@ export const lestvice = {
     celotnaSezona: 'Celotna sezona',
     odKroga: 'Od {n}. kroga',
     igraOd: '· igra od {datum}',
+    zavihekEkipe: 'Ekipe',
+    zavihekNavijaci: 'Navijači klubov',
+  },
+
+  navijaciKlubov: {
+    naslov: 'Navijači klubov',
+    opis: 'Kateri klub ima najboljše managerje? Šteje povprečje točk navijačev, ki imajo ekipo v tej ligi.',
+    /** "Na lestvico se uvrsti klub z vsaj 3 navijači." */
+    pogoj: {
+      one: 'Na lestvico se uvrsti klub z vsaj {n} navijačem.',
+      two: 'Na lestvico se uvrsti klub z vsaj {n} navijačema.',
+      few: 'Na lestvico se uvrsti klub z vsaj {n} navijači.',
+      other: 'Na lestvico se uvrsti klub z vsaj {n} navijači.',
+    },
+    povprecjeSezona: 'Ø sezona',
+    povprecjeKroga: 'Ø {n}. krog',
+    navijaci: 'Navijači',
+    tvojKlub: 'tvoj klub',
+    premalo: 'Premalo navijačev',
+    brezNavijacev: 'Še brez navijačev: {klubi}',
+    prazno: 'V tej ligi še nihče ni izbral svojega kluba. Bodi prvi!',
+    izbira: {
+      naslov: 'Za kateri klub navijaš?',
+      opis: 'Izberi klub in tvoje točke bodo štele zanj na lestvici navijačev.',
+      izberi: '— izberi klub —',
+      shrani: 'Navijam za ta klub',
+      spremeni: 'Klub lahko kadarkoli zamenjaš tu, na lestvici navijačev.',
+      mojKlub: 'Navijaš za <b>{klub}</b>.',
+      zamenjaj: 'Zamenjaj klub',
+    },
+    klub: {
+      naslov: 'Navijači tega kluba',
+      mesto: '{mesto}. mesto',
+      odKlubov: {
+        one: 'od {n} kluba na lestvici navijačev',
+        two: 'od {n} klubov na lestvici navijačev',
+        few: 'od {n} klubov na lestvici navijačev',
+        other: 'od {n} klubov na lestvici navijačev',
+      },
+      manjka: {
+        one: 'Za mesto na lestvici navijačev manjka še {n} navijač.',
+        two: 'Za mesto na lestvici navijačev manjkata še {n} navijača.',
+        few: 'Za mesto na lestvici navijačev manjkajo še {n} navijači.',
+        other: 'Za mesto na lestvici navijačev manjka še {n} navijačev.',
+      },
+      brez: 'Ta klub v ligi še nima navijačev z ekipo.',
+      navijam: 'Navijam za {klub}',
+      vsiKlubi: 'Vsi klubi lige',
+    },
   },
 
   slovenija: {
