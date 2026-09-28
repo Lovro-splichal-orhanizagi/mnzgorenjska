@@ -4,6 +4,7 @@
 // kode in razvrstitev lestvice odločata, ali se človek pridruži in kdo je prvi.
 
 import { t } from '../i18n/jedro.ts'
+import { formatirajTocke, oblika, tockZ, TOCKE_TOZILNIK } from './pomozno.ts'
 
 /** Vrstica pogleda `mini_liga_lestvica`. */
 export interface MiniVrstica {
@@ -107,29 +108,55 @@ export function besediloVabila(ime: string, koda: string, naslov: string): strin
 }
 
 /**
- * Deli povabilo: na telefonu odpre sistemski list (naravnost v skupino),
+ * Povezavi, ki odpreta pogovor z že napisanim besedilom.
+ *
+ * Na računalniku sistemskega lista za deljenje ni (ali ne pozna Viberja),
+ * zato imata WhatsApp in Viber svoj gumb. `wa.me` dela tudi brez
+ * nameščenega WhatsAppa (odpre spletno različico); `viber://` le z
+ * nameščenim Viberjem, a tam, kjer ga ni, ga tudi nihče ne pogreša.
+ */
+export function povezaveDeljenja(besedilo: string): { whatsapp: string; viber: string } {
+  const b = encodeURIComponent(besedilo)
+  return {
+    whatsapp: `https://wa.me/?text=${b}`,
+    viber: `viber://forward?text=${b}`,
+  }
+}
+
+export type IzidDeljenja = 'deljeno' | 'kopirano' | 'preklicano' | 'neuspelo'
+
+/**
+ * Deli besedilo: na telefonu odpre sistemski list (naravnost v skupino),
  * sicer kopira. Vrne, kaj se je zgodilo, da stran pove pravo stvar.
  */
-export async function deliVabilo(
-  ime: string,
-  koda: string,
-): Promise<'deljeno' | 'kopirano' | 'preklicano' | 'neuspelo'> {
-  const naslov = window.location.origin
-  const besedilo = besediloVabila(ime, koda, naslov)
-  if (navigator.share) {
+export async function deliBesedilo(naslov: string, besedilo: string): Promise<IzidDeljenja> {
+  if (typeof navigator !== 'undefined' && navigator.share) {
     try {
-      await navigator.share({ title: t('lestvice.miniLige.naslovVabila', { ime }), text: besedilo })
+      await navigator.share({ title: naslov, text: besedilo })
       return 'deljeno'
     } catch (e) {
       if ((e as Error).name === 'AbortError') return 'preklicano'
     }
   }
+  return kopiraj(besedilo)
+}
+
+/** Kopira v odložišče; brez dovoljenja (stari brskalnik, iframe) vrne 'neuspelo'. */
+export async function kopiraj(besedilo: string): Promise<IzidDeljenja> {
   try {
     await navigator.clipboard.writeText(besedilo)
     return 'kopirano'
   } catch {
     return 'neuspelo'
   }
+}
+
+/** Deli povabilo v mini ligo (sistemski list ali odložišče). */
+export async function deliVabilo(ime: string, koda: string): Promise<IzidDeljenja> {
+  return deliBesedilo(
+    t('lestvice.miniLige.naslovVabila', { ime }),
+    besediloVabila(ime, koda, window.location.origin),
+  )
 }
 
 /**
@@ -169,4 +196,168 @@ export function privzetoImeLige(vzdevek: string | null | undefined): string {
   const v = (vzdevek ?? '').trim().split(/\s+/)[0]
   const ime = v ? t('lestvice.miniLige.privzetoIme', { ime: v }) : t('lestvice.miniLige.privzetoImeBrez')
   return ime.length > 40 ? ime.slice(0, 40) : ime
+}
+
+// --------------------------------------------------------------------------
+// Tedenski pregled
+// --------------------------------------------------------------------------
+
+/** Ekipa v krogu, kot jo vrne `tedenski_pregled_mini_lige`. */
+export interface VrsticaPregleda {
+  ekipa_id: number
+  ekipa: string
+  lastnik: string | null
+  tocke: number
+  mesto: number
+  /** Za koliko mest se je ekipa premaknila na lestvici mini lige; `null` v prvem krogu. */
+  premik: number | null
+}
+
+export interface TedenskiPregled {
+  sezona: string | null
+  krog: number | null
+  krogi: number[]
+  ekip?: number
+  vrstice?: VrsticaPregleda[]
+  kapetan?: { ekipa_id: number; igralec_id: number; igralec: string; tocke: number; skupaj: number } | null
+  klop?: { ekipa_id: number; tocke: number } | null
+  adut?: { ekipa_id: number; igralec_id: number; igralec: string; tocke: number } | null
+}
+
+export type VrstaZgodbe = 'manager' | 'zlica' | 'kapetan' | 'klop' | 'skok' | 'padec' | 'adut'
+
+export interface Zgodba {
+  vrsta: VrstaZgodbe
+  ekipaId: number
+  ekipa: string
+  lastnik: string | null
+  /** Točke, o katerih govori zgodba (ekipe, igralca ali klopi). */
+  tocke: number
+  igralec?: string
+  igralecId?: number
+  /** Kapetan: točke z množiteljem. */
+  skupaj?: number
+  /** Skok ali padec: za koliko mest in na katero mesto. */
+  mest?: number
+  mesto?: number
+}
+
+/**
+ * Iz surovega pregleda sestavi zgodbe kroga, v vrstnem redu, ki se bere kot
+ * poročilo: zmagovalec, kapetan, adut, dvigalo, klop in na koncu žlica.
+ *
+ * Zgodba brez tekmeca ni zgodba: pri eni sami ekipi ostanejo le kapetan in
+ * klop, žlica pa samo, kadar zadnji res zaostaja za prvim.
+ */
+export function zgodbeKroga(p: TedenskiPregled | null | undefined): Zgodba[] {
+  const vrstice = p?.vrstice ?? []
+  if (!p || vrstice.length === 0) return []
+  const poId = new Map(vrstice.map((v) => [v.ekipa_id, v]))
+  const ekipa = (id: number) => {
+    const v = poId.get(id)
+    return { ekipaId: id, ekipa: v?.ekipa ?? '', lastnik: v?.lastnik ?? null }
+  }
+  const st = (x: unknown) => Number(x ?? 0)
+  const urejene = [...vrstice].sort((a, b) => st(b.tocke) - st(a.tocke) || a.ekipa.localeCompare(b.ekipa, 'sl'))
+  const vec = urejene.length > 1
+  const zgodbe: Zgodba[] = []
+
+  const prvi = urejene[0]
+  if (vec) zgodbe.push({ vrsta: 'manager', ...ekipa(prvi.ekipa_id), tocke: st(prvi.tocke) })
+
+  if (p.kapetan)
+    zgodbe.push({
+      vrsta: 'kapetan',
+      ...ekipa(p.kapetan.ekipa_id),
+      tocke: st(p.kapetan.tocke),
+      skupaj: st(p.kapetan.skupaj),
+      igralec: p.kapetan.igralec,
+      igralecId: p.kapetan.igralec_id,
+    })
+
+  if (vec && p.adut)
+    zgodbe.push({
+      vrsta: 'adut',
+      ...ekipa(p.adut.ekipa_id),
+      tocke: st(p.adut.tocke),
+      igralec: p.adut.igralec,
+      igralecId: p.adut.igralec_id,
+    })
+
+  if (vec) {
+    // Največji skok in največji padec; ob enakem premiku zmaga višje mesto.
+    const s = urejene.filter((v) => (v.premik ?? 0) !== 0)
+    const gor = s.filter((v) => st(v.premik) > 0).sort((a, b) => st(b.premik) - st(a.premik) || a.mesto - b.mesto)[0]
+    const dol = s.filter((v) => st(v.premik) < 0).sort((a, b) => st(a.premik) - st(b.premik) || a.mesto - b.mesto)[0]
+    if (gor) zgodbe.push({ vrsta: 'skok', ...ekipa(gor.ekipa_id), tocke: st(gor.tocke), mest: st(gor.premik), mesto: gor.mesto })
+    if (dol) zgodbe.push({ vrsta: 'padec', ...ekipa(dol.ekipa_id), tocke: st(dol.tocke), mest: -st(dol.premik), mesto: dol.mesto })
+  }
+
+  if (p.klop && st(p.klop.tocke) > 0)
+    zgodbe.push({ vrsta: 'klop', ...ekipa(p.klop.ekipa_id), tocke: st(p.klop.tocke) })
+
+  const zadnji = urejene[urejene.length - 1]
+  if (vec && st(zadnji.tocke) < st(prvi.tocke))
+    zgodbe.push({ vrsta: 'zlica', ...ekipa(zadnji.ekipa_id), tocke: st(zadnji.tocke) })
+
+  return zgodbe
+}
+
+/** Ena vrstica zgodbe v jeziku bralca — za kartico in za sporočilo v skupino. */
+export function opisZgodbe(z: Zgodba): string {
+  const tocke = `${formatirajTocke(z.tocke)} ${tockZ(z.tocke)}`
+  switch (z.vrsta) {
+    case 'manager':
+      return t('lestvice.pregled.managerOpis', { ekipa: z.ekipa, tocke })
+    case 'kapetan':
+      return t('lestvice.pregled.kapetanOpis', {
+        ekipa: z.ekipa,
+        igralec: z.igralec ?? '',
+        // "prinesel 1 točko / 12 točk" — tožilnik.
+        tocke: `${formatirajTocke(z.skupaj ?? z.tocke)} ${oblika(Number(z.skupaj ?? z.tocke), TOCKE_TOZILNIK)}`,
+      })
+    case 'adut':
+      return t('lestvice.pregled.adutOpis', { ekipa: z.ekipa, igralec: z.igralec ?? '', tocke })
+    case 'skok':
+      return t('lestvice.pregled.skokOpis', { ekipa: z.ekipa, n: z.mest ?? 0, mesto: z.mesto ?? 0 })
+    case 'padec':
+      return t('lestvice.pregled.padecOpis', { ekipa: z.ekipa, n: z.mest ?? 0, mesto: z.mesto ?? 0 })
+    case 'klop':
+      return t('lestvice.pregled.klopOpis', { ekipa: z.ekipa, tocke })
+    case 'zlica':
+      return t('lestvice.pregled.zlicaOpis', { ekipa: z.ekipa, tocke })
+  }
+}
+
+/** Naslov zgodbe s sličico ("🏆 Manager kroga"). */
+export function naslovZgodbe(z: Zgodba): string {
+  return `${IKONE_ZGODB[z.vrsta]} ${t(`lestvice.pregled.${z.vrsta}`)}`
+}
+
+export const IKONE_ZGODB: Record<VrstaZgodbe, string> = {
+  manager: '🏆',
+  kapetan: '©️',
+  adut: '🃏',
+  skok: '🚀',
+  padec: '🪂',
+  klop: '🪑',
+  zlica: '🥄',
+}
+
+/**
+ * Pregled kroga kot sporočilo za skupino: naslov, zgodbe, povezava na ligo.
+ * Kdor ga dobi in še ni v ligi, pride noter prek iste povezave kot povabilo.
+ */
+export function besediloPregleda(
+  ime: string,
+  krog: number,
+  zgodbe: Zgodba[],
+  koda: string,
+  naslov: string,
+): string {
+  return [
+    t('lestvice.pregled.sporociloNaslov', { ime, krog }),
+    ...zgodbe.map((z) => `${IKONE_ZGODB[z.vrsta]} ${opisZgodbe(z)}`),
+    povezavaVabila(koda, naslov),
+  ].join('\n')
 }

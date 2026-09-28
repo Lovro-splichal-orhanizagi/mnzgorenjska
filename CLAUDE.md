@@ -225,9 +225,16 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   shranjevanje, zaklep in urejanje pripomočkov si delijo transakcijski zaklep lige.
 - `rounds` → krogi sezone, `matches` → tekme (z izvorom `zapisnik_id`).
   `matches.kontumacija` = tekma ni bila odigrana, izid je dodeljen in
-  zapisnika ne bo; borza in preverba nanjo ne čakata. Označi jo uvoz razporeda
-  (Sportnet: `contumation`, stari CMS: izid brez polčasa `3 : 0()`), pri
-  drugih virih admin z `update matches set kontumacija = true where id = …`
+  zapisnika ne bo; borza in preverba nanjo ne čakata. Označi jo uvoz razporeda:
+  Sportnet `contumation`; stari CMS izid brez polčasa `3 : 0()` ali `(u.d.)`
+  (Celje); Maribor izid brez polčasa **in** brez kraja (s krajem je zelena
+  miza z zapisnikom); Ptuj, Murska Sobota, Lendava prazna kartica 3:0 brez
+  sodnika in postav na strani zapisnikov kroga (`vir.kontumacije`). Pri Novi
+  Gorici in NZS primera še nismo videli — tam admin z
+  `update matches set kontumacija = true where id = …`
+- Omrežje: uvozi berejo prek `prenesiSPonovitvami` (`scripts/prenos.mjs`) —
+  ponovi omrežne napake, 5xx in 429 (2 s, 6 s, 15 s), 4xx nikoli. Nov prenos
+  v uvozni skripti naj gre skozenj, ne mimo z golim `fetch`
 - borza (`preracunaj_cene`, nočno `uveljavi_zapadle_cene`) premakne ceno po
   točkah kroga (+0.1 na dve točki nad osnovnima dvema, največ +1.0; forma
   treh krogov je spodnja meja), odsotnost pa kaznuje šele drugi zaporedni krog.
@@ -263,11 +270,24 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   `fantasy_chips`, `appearances` in `matches`; ponoči jo cron obnovi vso. Nov
   vhod v izračun **potrebuje svoj sprožilec**, sicer lestvica zaostaja do noči
   (`npm run preizkus-tock-krogov` primerja tabelo z izračunom).
+- `tedenski_pregled_mini_lige(liga, krog)` → zgodbe končanega kroga mini lige
+  (točke kroga, premiki na lestvici mini lige, kapetan, klop, adut) kot jsonb;
+  besedila sestavi `src/lib/miniLige.ts` (`zgodbeKroga`). Krog je **številka**
+  tekoče sezone, ker mini liga gre čez lige; končane kroge ekip da
+  `koncani_krogi_mini_lige`. Obe tečeta s pravicami klicatelja, zato tujec
+  mini lige (RLS na `mini_liga_clani`) dobi `null`
 - `player_standings` → lestvica igralcev (točke, forma, na tekmo, izbranost)
 - `vrh_drzave(drzava, koliko)` → vrh igralcev tekoče sezone vseh aktivnih lig
   države (točke brez asistenc, goli, čiste mreže vratarjev) za zavihek Igralci na
   strani Slovenija. Bere tabele (`player_scores`, `appearances`, `goals`), ne
   `appearance_points`: prek pogleda je poizvedba trajala 10 s, iz tabel ~150 ms
+- `navijaci_klubov(liga)` → klubi lige po povprečju točk navijačev (zavihek
+  Navijači klubov na Lestvici, `#fans`; razdelek na strani kluba). Navijač je
+  `profiles.navijam_team_id` — en klub na človeka, ne po ligah (klubi so
+  skupni); šteje le v ligi, kjer klub igra. Navijanje **ni** poznavalec
+  (`insider_team_id`, trikratna utež glasu za pozicije), zato povabilo piše
+  samo `navijam_team_id`; ob uvedbi je dobil klub vsak poznavalec. Mesto dobi klub z vsaj `min_navijacev_kluba` navijači
+  (privzeto 3). Točke bere iz `fantasy_round_points` (tabela), ne računa sproti
 - stran Rezultati (`/results`, `/match/:id`) sestavi postavi tekme iz
   `appearances` + `appearance_points`; nove sheme ne potrebuje
 - `match_assist_status` → odigrane tekme s številom golov brez asistence
@@ -318,9 +338,20 @@ vpisana pri Supabase kot povratni naslov ponastavitve gesla in žeton nosi v
 - Drugi jezik (`src/i18n/hr/`) je lahko delen; manjkajoče pride iz
   slovenščine. `npm run prevodi -- hr` izpiše, kaj manjka. Brskalnik izbere
   jezik sam šele, ko je v `PRIPRAVLJENI`.
-- Nizi iz baze (razlogi `razlog_neveljavne_ekipe`, napake RPC), e-pošta
-  opomnikov in `index.html` so še slovenski — ob novem jeziku jih je treba
-  urediti posebej. Administracija ostaja slovenska.
+- Nizi iz baze (razlogi `razlog_neveljavne_ekipe`, napake RPC) so še
+  slovenski — ob novem jeziku jih je treba urediti posebej. Administracija
+  ostaja slovenska.
+- **E-pošta.** Opomnike in opozorila (`supabase/functions/posli-opomnik/
+  sporocila.ts`) piše funkcija v jeziku **države lige** (ena liga na klic,
+  zato ima kdor igra v obeh državah dva maila); povezave nosijo `?t=<liga>`,
+  razlog iz baze se za slovaščino prevede po obliki stavka. Smoke preveri
+  obe različici. Nov jezik = nova veja v `sporocila.ts` in vrstica v
+  `JEZIK_DRZAVE` tam. Avtentikacijska pošta (`supabase/templates/`) izbere
+  jezik po `jezik` v metapodatkih uporabnika (vpiše ga registracija);
+  v gostujočem projektu predloge **niso** iz config.toml — prilepi jih v
+  Auth → Email Templates.
+- `index.html` je slovenski; `main.tsx` za drug jezik zamenja le `lang` in
+  opis strani, naslov nastavi `useNaslov`.
 
 ## TypeScript
 
@@ -452,8 +483,8 @@ update competitions set active = true where slug in ('lj-1-liga','lj-2-liga');
 - Po spremembi pravic ali rokov poženi tudi `npm run test:varnost`. Testi
   potrebujejo le lokalni Docker Postgres in migracije, ne uvoženih tekem.
   `SUPABASE_TEST_DB` lahko izbere izolirano testno bazo v istem kontejnerju.
-- Lastnik profila sme posodobiti le `display_name`, `insider_team_id` in
-  `brez_opomnikov` (odjava od opomnikov, stran `/reminders`); `is_admin` je servisno polje. Lastnik ekipe sme pisati le vnosna polja ob
+- Lastnik profila sme posodobiti le `display_name`, `insider_team_id`,
+  `navijam_team_id` in `brez_opomnikov` (odjava od opomnikov, stran `/reminders`); `is_admin` je servisno polje. Lastnik ekipe sme pisati le vnosna polja ob
   nastanku in ime ob spremembi. Za kader in denar vedno kliči `shrani_ekipo`.
   Brisanje ekipe je servisno opravilo, ker bi sicer obšlo zaklenjeno zgodovino.
 - Nove tabele in pogledi v `public` vlogama `anon`/`authenticated` **ne dajo

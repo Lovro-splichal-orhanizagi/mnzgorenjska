@@ -23,6 +23,7 @@ import type { Pozicija } from '../lib/tipi'
 import Grb from '../components/Grb'
 import Plakat from '../components/Plakat'
 import { najboljsiTrije, navijacev } from '../lib/plakat'
+import { NavijaciKluba } from '../components/NavijaciKlubov'
 
 interface Igralec {
   id: number
@@ -39,6 +40,8 @@ export default function Klub() {
   const { id } = useParams<{ id: string }>()
   const [klub, setKlub] = useState<{ name: string; logo_url: string | null; short_name: string | null } | null>(null)
   const [liga, setLiga] = useState<{ slug: string; name: string; short_name: string | null } | null>(null)
+  // Liga, katere navijače kaže stran — ista, iz katere so igralci.
+  const [ligaId, setLigaId] = useState<number | null>(null)
   // "1. liga MNZ Ljubljana" za plakat: ime lige v bazi je "1. liga — člani",
   // kar na plakatu brez zveze ne pove, KJE je ta liga.
   const [ligaZaPlakat, setLigaZaPlakat] = useState<string>('')
@@ -103,6 +106,7 @@ export default function Klub() {
       }
       if (!veljavno) return
       setLiga(najboljsi?.liga ?? null)
+      setLigaId(najboljsi?.id ?? null)
       setIgralci(najboljsi?.igralci ?? [])
       if (najboljsi) {
         const { data: v } = await supabase
@@ -218,6 +222,15 @@ export default function Klub() {
           </div>
         </div>
       </section>
+
+      {ligaId != null && id && (
+        <NavijaciKluba
+          tekmovanjeId={ligaId}
+          klubId={Number(id)}
+          klubIme={klub?.name ?? ''}
+          ligaSlug={liga?.slug ?? null}
+        />
+      )}
 
       {igralci.length === 0 ? (
         <p className="text-slate-400">{t('lestvice.klub.brezStatistike')}</p>

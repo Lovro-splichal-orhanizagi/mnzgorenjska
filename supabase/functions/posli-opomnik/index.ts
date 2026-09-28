@@ -18,10 +18,17 @@
 // funkcijam avtomatsko).
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4'
+import {
+  sestaviOpomnik,
+  sestaviOpozorilo,
+  sestaviPoznavalca,
+  type Liga,
+  type Sporocilo,
+} from './sporocila.ts'
 
-// Naslov strani; povezave v mailih in odjava vodijo sem.
-const SITE = 'https://slff.eu'
-const ODJAVA = `${SITE}/opomniki`
+// Besedila so v `sporocila.ts`, v jeziku DRŽAVE LIGE (slovaška liga →
+// slovaški mail). Povezave nosijo `?t=<liga>`, da se stran odpre v pravi ligi
+// in jeziku; odjava vodi na `/reminders?t=<liga>`.
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -132,10 +139,10 @@ Deno.serve(async (req) => {
     if (!vhod.user_id) return json({ error: 'Manjka user_id.' }, 400)
     if (!RESEND_KEY) return json({ error: 'Pomanjkljiva nastavitev: RESEND_API_KEY.' }, 500)
     const service0 = createClient(SUPABASE_URL, SERVICE_KEY)
-    const [{ data: u }, { data: pr }, { data: liga0 }] = await Promise.all([
+    const [{ data: u }, { data: pr }, liga0] = await Promise.all([
       service0.auth.admin.getUserById(vhod.user_id),
       service0.from('profiles').select('display_name, insider_team_id').eq('id', vhod.user_id).maybeSingle(),
-      service0.from('competitions').select('name').eq('id', competition_id).maybeSingle(),
+      preberiLigo(service0, competition_id),
     ])
     const email = u?.user?.email
     if (!email) return json({ error: 'Uporabnik nima e-naslova.' }, 404)
@@ -144,12 +151,18 @@ Deno.serve(async (req) => {
       const { data: t } = await service0.from('teams').select('name').eq('id', pr.insider_team_id).maybeSingle()
       klub = t?.name ?? null
     }
-    const rez = await posljiPoznavalcu(RESEND_KEY, EMAIL_FROM, email, {
-      display_name: pr?.display_name ?? null,
-      liga: liga0?.name ?? '',
-      obseg: vhod.obseg ?? 'liga',
-      klub,
-    })
+    const rez = await poslji(
+      RESEND_KEY,
+      EMAIL_FROM,
+      email,
+      sestaviPoznavalca(liga0, {
+        display_name: pr?.display_name ?? null,
+        obseg: vhod.obseg ?? 'liga',
+        klub,
+      }),
+      // Odgovor naj pride cloveku, ne na noreply: prosnja je pogovor.
+      Deno.env.get('EMAIL_REPLY_TO'),
+    )
     await service0.from('email_log').insert({
       email,
       vrsta: 'poznavalec',
@@ -173,23 +186,20 @@ Deno.serve(async (req) => {
   // človek admin, smo preverili zgoraj.
   const service = createClient(SUPABASE_URL, SERVICE_KEY)
 
-  // Podatek o ligi za predlogo
-  const { data: liga } = await service
-    .from('competitions')
-    .select('slug, name, short_name')
-    .eq('id', competition_id)
-    .maybeSingle()
-  const oznaka = liga?.short_name ?? ''
+  // Liga za predlogo: ime, šifra za povezave in država za jezik.
+  const liga = await preberiLigo(service, competition_id)
 
   // Test režim gre PRED branjem uporabnikov: testni gumb obstaja zato, da
   // preveri samo dostavo pošte, in ne sme pasti zaradi česa drugega.
   if (test_email) {
     if (!RESEND_KEY)
       return json({ error: 'Pomanjkljiva nastavitev: RESEND_API_KEY.' }, 500)
-    const rez = await posljiEnega(RESEND_KEY, EMAIL_FROM, test_email, oznaka, {
-      display_name: 'Test',
-      brez_ekipe: false,
-    })
+    const rez = await poslji(
+      RESEND_KEY,
+      EMAIL_FROM,
+      test_email,
+      sestaviOpomnik(liga, { display_name: 'Test', brez_ekipe: false }),
+    )
     // Tudi test zabeležimo — ko kdo reče "nisem dobil", je prazen dnevnik
     // najslabši možni odgovor.
     await service.from('email_log').insert({
@@ -272,13 +282,11 @@ Deno.serve(async (req) => {
       continue
     }
 
-    const rez =
+    const sporocilo =
       vrsta === 'opozorilo'
-        ? await posljiOpozorilo(RESEND_KEY, EMAIL_FROM, u.email, oznaka, u)
-        : await posljiEnega(RESEND_KEY, EMAIL_FROM, u.email, oznaka, {
-            display_name: u.display_name ?? '',
-            brez_ekipe: !u.team_id,
-          })
+        ? sestaviOpozorilo(liga, u)
+        : sestaviOpomnik(liga, { display_name: u.display_name, brez_ekipe: !u.team_id })
+    const rez = await poslji(RESEND_KEY!, EMAIL_FROM, u.email, sporocilo)
 
     await service.from('email_log').insert({
       user_id: u.user_id,
@@ -306,107 +314,32 @@ Deno.serve(async (req) => {
   })
 })
 
-/**
- * Odobrena prosnja za poznavalca. Pove, kaj je dobil, in postavi pravilo:
- * privilegij je zaupanje in se ob zlorabi vzame.
- */
-async function posljiPoznavalcu(
-  apiKey: string,
-  from: string,
-  to: string,
-  meta: { display_name: string | null; liga: string; obseg: 'klub' | 'liga'; klub: string | null },
-): Promise<{ id?: string; napaka?: string }> {
-  const naslov = `SLFF — odobrili smo tvojo prošnjo za poznavalca`
-  const uvod = meta.display_name ? `Živjo, ${esc(meta.display_name.split(' ')[0])}!` : 'Živjo!'
-  const kaj =
-    meta.obseg === 'liga'
-      ? `Od zdaj si <strong>poznavalec lige ${esc(meta.liga)}</strong>: tvoj glas sam potrdi pozicijo igralca ali asistenco, drugih glasov ni treba čakati.`
-      : `Od zdaj si <strong>poznavalec kluba ${esc(meta.klub ?? '')}</strong> v ligi ${esc(meta.liga)}: tvoj glas za igralce tega kluba šteje trojno.`
-
-  const html = `
-    <div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; color: #0f172a;">
-      <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">${uvod}</p>
-      <p style="font-size: 15px; line-height: 1.5; margin: 0 0 16px;">Hvala, da si se ponudil. ${kaj}</p>
-      <p style="font-size: 15px; line-height: 1.5; margin: 0 0 16px;">
-        Ena prošnja: to je zaupanje. Vnašaj samo tisto, kar zares veš, in ne prilagajaj podatkov svoji fantasy ekipi.
-        Točke vseh v ligi so odvisne od tega. Če se izkaže, da so podatki namerno napačni, poznavalca izgubiš.
-      </p>
-      <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">
-        Pozicije urejaš na strani <a href="https://slff.eu/positions" style="color:#15803d;">Pozicije</a>
-        (uveljavijo se vsak ponedeljek zjutraj), asistence na strani
-        <a href="https://slff.eu/assists" style="color:#15803d;">Asistence</a> (takoj).
-        Igralca, ki pri klubu ne igra več, lahko označiš z "ne igra več".
-      </p>
-      <p style="text-align: center; margin: 24px 0;">
-        <a href="https://slff.eu/positions" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">
-          Odpri Pozicije →
-        </a>
-      </p>
-      <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">
-        Če kaj ni jasno, odgovori na ta mail.
-      </p>
-      <p style="font-size: 12px; color: #94a3b8; margin: 24px 0 0;">
-        SLFF — Sunday League Fantasy Football · slff.eu
-      </p>
-    </div>
-  `
-  try {
-    const r = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        from, to, subject: naslov, html,
-        // Odgovor naj pride cloveku, ne na noreply: prosnja je pogovor.
-        ...(Deno.env.get('EMAIL_REPLY_TO') ? { reply_to: Deno.env.get('EMAIL_REPLY_TO') } : {}),
-      }),
-    })
-    const odgovor: ResendOdgovor = await r.json()
-    if (!r.ok) return { napaka: odgovor.message ?? `HTTP ${r.status}` }
-    return { id: odgovor.id }
-  } catch (e) {
-    return { napaka: String(e) }
+/** Liga za predlogo; država določa jezik mail in časovni pas roka. */
+async function preberiLigo(
+  // deno-lint-ignore no-explicit-any
+  db: any,
+  id: number,
+): Promise<Liga> {
+  const { data } = await db
+    .from('competitions_view')
+    .select('slug, name, short_name, country_code')
+    .eq('id', id)
+    .maybeSingle()
+  return {
+    slug: data?.slug ?? '',
+    oznaka: data?.short_name ?? '',
+    ime: data?.name ?? '',
+    drzava: data?.country_code ?? null,
   }
 }
 
-async function posljiEnega(
+async function poslji(
   apiKey: string,
   from: string,
   to: string,
-  ozn: string,
-  meta: { display_name: string; brez_ekipe: boolean },
+  s: Sporocilo,
+  replyTo?: string,
 ): Promise<{ id?: string; napaka?: string }> {
-  const naslov = meta.brez_ekipe
-    ? `SLFF ${ozn} — še nimaš ekipe za naslednji krog`
-    : `SLFF ${ozn} — dokončaj ekipo pred naslednjim krogom`
-
-  const uvod = meta.display_name
-    ? `Živjo, ${esc(meta.display_name.split(' ')[0])}!`
-    : 'Živjo!'
-
-  const glavno = meta.brez_ekipe
-    ? `V ${esc(ozn.toUpperCase())} še nimaš sestavljene fantasy ekipe. Brez nje v naslednjem krogu ne dobiš točk.`
-    : `Tvoja fantasy ekipa v ${esc(ozn.toUpperCase())} še ni popolna (manjka kader, kapetan, namestnik ali podobno). Brez veljavne ekipe v naslednjem krogu ne dobiš točk.`
-
-  const html = `
-    <div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; color: #0f172a;">
-      <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">${uvod}</p>
-      <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">${glavno}</p>
-      <p style="text-align: center; margin: 24px 0;">
-        <a href="https://slff.eu/my-team" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">
-          Sestavi / popravi ekipo →
-        </a>
-      </p>
-      <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">
-        Če opomnika ne rabiš (ekipe letos ne boš sestavil/a), lahko ta mail ignoriraš.
-        Naslednjič ti bomo pisali šele pred naslednjim krogom.
-      </p>
-      <p style="font-size: 12px; color: #94a3b8; margin: 24px 0 0;">
-        SLFF — Sunday League Fantasy Football · slff.eu ·
-        <a href="${ODJAVA}" style="color:#94a3b8;">Ne želim več opomnikov</a>
-      </p>
-    </div>
-  `
-
   try {
     const r = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -415,9 +348,10 @@ async function posljiEnega(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from, to, subject: naslov, html,
+        from, to, subject: s.naslov, html: s.html,
+        ...(replyTo ? { reply_to: replyTo } : {}),
         // Odjava z enim klikom v poštnem odjemalcu vodi na isto stran.
-        headers: { 'List-Unsubscribe': `<${ODJAVA}>` },
+        ...(s.odjava ? { headers: { 'List-Unsubscribe': `<${s.odjava}>` } } : {}),
       }),
     })
     const odgovor: ResendOdgovor = await r.json()
@@ -426,93 +360,6 @@ async function posljiEnega(
   } catch (e) {
     return { napaka: String(e) }
   }
-}
-
-async function posljiOpozorilo(
-  apiKey: string,
-  from: string,
-  to: string,
-  ozn: string,
-  u: Uporabnik,
-): Promise<{ id?: string; napaka?: string }> {
-  const uvod = u.display_name
-    ? `Živjo, ${esc(u.display_name.split(' ')[0])}!`
-    : 'Živjo!'
-  const krog = u.round_number ? `${u.round_number}. krog` : 'naslednji krog'
-  const rok = u.deadline_at
-    ? new Date(u.deadline_at).toLocaleString('sl-SI', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZone: 'Europe/Ljubljana',
-      })
-    : null
-
-  const naslov = `SLFF ${ozn} — tvoja ekipa se ${krog} ne bo zaklenila`
-
-  const html = `
-    <div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; color: #0f172a;">
-      <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">${uvod}</p>
-      <p style="font-size: 15px; line-height: 1.5; margin: 0 0 8px;">
-        Ekipa <strong>${esc(u.team_name ?? '')}</strong> se za ${krog} ne bo zaklenila,
-        zato v njem ne bi dobila točk.
-      </p>
-      <p style="font-size: 15px; line-height: 1.5; margin: 0 0 8px; padding: 12px; background: #fef2f2; border-left: 3px solid #f87171; border-radius: 6px;">
-        ${esc(u.razlog ?? 'Kader ni veljaven.')}
-      </p>
-      ${
-        rok
-          ? `<p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Popraviti jo je mogoče do <strong>${rok}</strong>.</p>`
-          : ''
-      }
-      <p style="text-align: center; margin: 24px 0;">
-        <a href="https://slff.eu/my-team" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">
-          Popravi ekipo →
-        </a>
-      </p>
-      <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">
-        Sicer se ekipa prenaša iz kroga v krog sama in ti ni treba storiti ničesar —
-        pišemo ti samo takrat, kadar se ne bo mogla.
-      </p>
-      <p style="font-size: 12px; color: #94a3b8; margin: 24px 0 0;">
-        SLFF — Sunday League Fantasy Football · slff.eu ·
-        <a href="${ODJAVA}" style="color:#94a3b8;">Ne želim več opomnikov</a>
-      </p>
-    </div>
-  `
-
-  try {
-    const r = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from, to, subject: naslov, html,
-        // Odjava z enim klikom v poštnem odjemalcu vodi na isto stran.
-        headers: { 'List-Unsubscribe': `<${ODJAVA}>` },
-      }),
-    })
-    const odgovor: ResendOdgovor = await r.json()
-    if (!r.ok) return { napaka: odgovor.message ?? `HTTP ${r.status}` }
-    return { id: odgovor.id }
-  } catch (e) {
-    return { napaka: String(e) }
-  }
-}
-
-// Ime, ime ekipe in razlog napiše uporabnik (ali izhajajo iz njegovih
-// podatkov), zato v HTML ne gredo surovi.
-function esc(s: string): string {
-  return s
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;')
 }
 
 function json(obj: unknown, status = 200) {

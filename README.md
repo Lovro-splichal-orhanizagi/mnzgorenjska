@@ -27,6 +27,9 @@ Pri **5 glasovih** za istega kandidata se podatek potrdi in začne šteti.
 - **Rezultati** — odigrane tekme; klik na tekmo pokaže obe postavi na igrišču in
   točke, ki jih je posamezen igralec na njej zaslužil.
 - **Lestvica** — skupna razvrstitev vseh fantasy ekip lige.
+- **Mini lige** — zasebna lestvica med znanci (tudi čez lige). Povabilo je povezava `/l/KODA`
+  (deljenje prek sistemskega lista, WhatsAppa, Viberja ali kopiranja); po vsakem končanem
+  krogu **tedenski pregled**: manager kroga, kapetan, skriti adut, dvigalo, klop in lesena žlica.
 - **Dve ligi** — v glavi se preklaplja med člani in mladinci; vsaka liga ima svoje igralce, svojo ekipo in svojo lestvico.
 - **Uporabniški računi** — registracija in prijava z e-pošto in geslom.
 - **Pregled kluba/igralcev** — seznam ekip in igralcev 1. GNL.
@@ -144,14 +147,16 @@ Pogledi: `appearance_points` (točke nastopa),
 `fantasy_team_standings`, `fantasy_team_budget`.
 Funkcija `ucinkovita_postava(ekipa, krog)` vrne igralce, ki v krogu dejansko prinesejo
 točke, in njihov množitelj. Funkcija `vrh_drzave(drzava, koliko)` vrne najboljše
-igralce tekoče sezone vseh lig države (stran Slovenija, zavihek Igralci).
+igralce tekoče sezone vseh lig države (stran Slovenija, zavihek Igralci). Funkcija
+`navijaci_klubov(liga)` vrne klube lige z navijači (`profiles.navijam_team_id`) in
+povprečjem njihovih fantasy točk (Lestvica, zavihek Navijači klubov; stran kluba).
 
 ### Varnost (RLS)
 
 - Klubi, igralci, krogi, točke in lestvica so **javno berljivi**.
 - Glasovi o asistencah in pozicijah so **javno vidni** (skupnost vidi napredek do praga), oddati pa jih je mogoče **le v svojem imenu**.
 - Asistenco in pozicijo potrdi **sprožilec v bazi**, ne odjemalec — praga ni mogoče obiti iz brskalnika.
-- Lastnik profila lahko spremeni le prikazno ime in svoj klub; `is_admin` in
+- Lastnik profila lahko spremeni le prikazno ime, klub poznavalca in klub, za katerega navija; `is_admin` in
   datum registracije ureja le servisna vloga.
 - Lastnik lahko ustvari in preimenuje fantasy ekipo. Denar, nakupne cene in
   kader spreminja izključno `shrani_ekipo`, ki preveri lastništvo in obračuna

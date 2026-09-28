@@ -1,0 +1,22 @@
+<!-- Ponastavitev gesla. Povezava za potrditev vodi nazaj na
+     /novo-geslo, kot jo zahteva Prijava.tsx — tega predloga ne spreminja.
+     Jezik izbere `jezik` v metapodatkih uporabnika; brez njega slovenščina.
+     Vsebino prilepi v Supabase → Auth → Email Templates → Reset Password. -->
+<div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; color: #0f172a;">
+{{ if eq (printf "%v" .Data.jezik) "sk" }}
+  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Obnovenie hesla</p>
+  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Niekto (dúfame, že ty) požiadal o nové heslo do SLFF. Klikni na tlačidlo a zadaj nové heslo.</p>
+  <p style="text-align: center; margin: 24px 0;">
+    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Nastaviť nové heslo →</a>
+  </p>
+  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Ak si o nové heslo nežiadal ty, tento e-mail ignoruj — staré heslo zostáva v platnosti.</p>
+{{ else }}
+  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Ponastavitev gesla</p>
+  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Nekdo (upamo, da ti) je zahteval novo geslo za SLFF. Klikni gumb in vpiši novo geslo.</p>
+  <p style="text-align: center; margin: 24px 0;">
+    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Nastavi novo geslo →</a>
+  </p>
+  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Če novega gesla nisi zahteval/a ti, ta mail prezri — staro geslo ostane veljavno.</p>
+{{ end }}
+  <p style="font-size: 12px; color: #94a3b8; margin: 24px 0 0;">SLFF — Sunday League Fantasy Football · slff.eu</p>
+</div>

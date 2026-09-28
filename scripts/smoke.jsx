@@ -38,6 +38,9 @@ import {
 } from '../src/lib/pravila'
 import { tockeZaNastop } from '../src/lib/tockovanje'
 import { sestejOdKroga } from '../src/lib/lestvica'
+import { zdruziNavijace } from '../src/lib/navijaci'
+import { TabelaNavijacev, KlubMedNavijaci, IzbiraKluba } from '../src/components/NavijaciKlubov'
+import { krogKoncan, mestoVLigi, igralciPregleda, postaviPregled, oznakaPremika, imeDatotekePregleda, KVADRAT, SIRINA_P, VISINA_P, ROB_P } from '../src/lib/tedenskiPregled'
 import { parsirajZapisnik, nastopi } from './zapisnik.mjs'
 import { poZvezah, ustreza, pokaziZvezo } from '../src/components/IzbirnikLige'
 import { virPodatkov, imeZveze } from '../src/components/VirPodatkov'
@@ -1360,6 +1363,18 @@ preveri(
       k.every((r) => r.tekme.length === 5), k.map((r) => r.tekme.length).join(','))
   }
 
+  {
+    // Celje kontumacijo piše "po uradni dolžnosti": "0 :3(u.d.)". Zapisnika
+    // obeh tekem sta prazna (brez sodnika in postav) — prava vzorca 2025/26.
+    const k = razcleniRazpored(vrstice('razpored-celje-1801.txt'))
+    const kont = k.flatMap((r) => r.tekme.filter((t) => t.kontumacija).map((t) => `${r.stevilka}:${t.domaci}:${t.gostje}`))
+    preveri('razpored Celje: kontumacija "(u.d.)" označena, samo ti dve',
+      kont.length === 2 && kont.includes('1:NK Šmarje pri Jelšah:NK Žalec - Združena Savinjska') &&
+        kont.includes('15:NK Šampion:Mons Claudius'), kont.join(' | '))
+    preveri('razpored Celje: odigrane tekme niso kontumacije',
+      k.flatMap((r) => r.tekme).filter((t) => !t.kontumacija).length > 80)
+  }
+
   preveri('razpored: datum z dvomestno letnico', datum('29.08.26') === '2026-08-29', datum('29.08.26'))
   preveri('razpored: datum s stirimestno letnico', datum('29.08.2026') === '2026-08-29', datum('29.08.2026'))
   preveri('razpored: sezona iz avgusta', sezonaIz('2026-08-29') === '2026/27', sezonaIz('2026-08-29'))
@@ -1855,6 +1870,70 @@ preveri(
   preveri('mini: neveljavno povabilo se ne prebere', preberiVabilo() === null)
   pozabiVabilo()
   delete globalThis.localStorage
+
+  // Deljenje: WhatsApp in Viber dobita celo besedilo, pravilno kodirano.
+  const { povezaveDeljenja, zgodbeKroga, opisZgodbe, besediloPregleda } = await import('../src/lib/miniLige.ts')
+  const deljenje = povezaveDeljenja(vabilo)
+  preveri('mini: WhatsApp povezava nosi besedilo vabila',
+    deljenje.whatsapp.startsWith('https://wa.me/?text=') &&
+      decodeURIComponent(deljenje.whatsapp.split('text=')[1]) === vabilo, deljenje.whatsapp)
+  preveri('mini: Viber povezava nosi besedilo vabila',
+    deljenje.viber.startsWith('viber://forward?text=') &&
+      decodeURIComponent(deljenje.viber.split('text=')[1]) === vabilo, deljenje.viber)
+  preveri('mini: presledki in & v besedilu ne zlomijo povezave',
+    !/[ &]/.test(povezaveDeljenja('a & b ?c=d').whatsapp.split('text=')[1]))
+
+  // Tedenski pregled: isti primer kot v supabase/tests/varnost.sql.
+  const pregled = {
+    sezona: '2098/99', krog: 2, krogi: [2, 1], ekip: 2,
+    vrstice: [
+      { ekipa_id: 1, ekipa: 'Pregled A', lastnik: 'Ana', tocke: 32, mesto: 1, premik: 1 },
+      { ekipa_id: 2, ekipa: 'Pregled B', lastnik: 'Bor', tocke: 10, mesto: 2, premik: -1 },
+    ],
+    kapetan: { ekipa_id: 1, igralec_id: 11, igralec: 'Kapetan Kovač', tocke: 10, skupaj: 30 },
+    klop: { ekipa_id: 1, tocke: 7 },
+    adut: { ekipa_id: 2, igralec_id: 15, igralec: 'Peti Adut', tocke: 4 },
+  }
+  const zgodbe = zgodbeKroga(pregled)
+  preveri('pregled: vse zgodbe v bralnem vrstnem redu',
+    zgodbe.map((z) => z.vrsta).join(',') === 'manager,kapetan,adut,skok,padec,klop,zlica',
+    zgodbe.map((z) => z.vrsta).join(','))
+  preveri('pregled: manager je A, zlica B',
+    zgodbe[0].ekipa === 'Pregled A' && zgodbe.at(-1).ekipa === 'Pregled B' && zgodbe.at(-1).tocke === 10)
+  preveri('pregled: kapetan pove tocke z mnoziteljem',
+    opisZgodbe(zgodbe[1]).includes('30 točk') && opisZgodbe(zgodbe[1]).includes('Kapetan Kovač'),
+    opisZgodbe(zgodbe[1]))
+  preveri('pregled: skok ima pravo mnozino',
+    opisZgodbe({ vrsta: 'skok', ekipa: 'X', tocke: 0, mest: 2, mesto: 1 }).includes('2 mesti'),
+    opisZgodbe({ vrsta: 'skok', ekipa: 'X', tocke: 0, mest: 2, mesto: 1 }))
+  const sam = zgodbeKroga({ ...pregled, vrstice: [pregled.vrstice[0]], adut: null })
+  preveri('pregled: ena ekipa nima zmagovalca ne zlice',
+    sam.map((z) => z.vrsta).join(',') === 'kapetan,klop', sam.map((z) => z.vrsta).join(','))
+  const izenaceni = zgodbeKroga({ ...pregled, vrstice: pregled.vrstice.map((v) => ({ ...v, tocke: 5, premik: 0 })) })
+  preveri('pregled: pri izenacenju ni lesene zlice ne premikov',
+    !izenaceni.some((z) => ['zlica', 'skok', 'padec'].includes(z.vrsta)))
+  preveri('pregled: prazen pregled nima zgodb',
+    zgodbeKroga({ sezona: null, krog: null, krogi: [] }).length === 0 && zgodbeKroga(null).length === 0)
+  const sporocilo = besediloPregleda('Bratje', 2, zgodbe, '4ar7vz', 'https://slff.eu')
+  preveri('pregled: sporocilo za skupino ima ligo, krog, zgodbe in povezavo',
+    sporocilo.includes('Bratje') && sporocilo.includes('2. krog') && sporocilo.includes('Pregled A') &&
+      sporocilo.endsWith('https://slff.eu/l/4AR7VZ'), JSON.stringify(sporocilo))
+
+  const { default: DeliMiniLigo } = await import('../src/components/DeliMiniLigo.tsx')
+  const html = renderToString(<DeliMiniLigo ime="Bratje" koda="4AR7VZ" stanje="nova" />)
+  preveri('izris: deljenje mini lige ima WhatsApp, Viber in povezavo',
+    html.includes('https://wa.me/?text=') && html.includes('viber://forward?text=') && html.includes('/l/4AR7VZ'))
+  const { default: TedenskiPregledKartica } = await import('../src/components/TedenskiPregled.tsx')
+  try {
+    renderToString(
+      <StaticRouter location="/mini-leagues">
+        <TedenskiPregledKartica ligaId={1} ime="Bratje" koda="4AR7VZ" />
+      </StaticRouter>,
+    )
+    preveri('izris: tedenski pregled', true)
+  } catch (e) {
+    preveri('izris: tedenski pregled', false, e.message)
+  }
 }
 
 // --- drzavna lestvica -------------------------------------------------------
@@ -2645,6 +2724,102 @@ preveri(
   preveri('NZS: sami 404 so napaka, ne normalno stanje', pove)
 }
 
+// --- tedenski pregled ------------------------------------------------------
+// Pokoncna slika, a vse bistveno mora ostati v sredinskem kvadratu, ker ga
+// predogled v klepetu in objava v viru obrezeta.
+{
+  // Krog je koncan, ko ima zapisnik vsaka ze odigrana tekma.
+  const tekma = (played_on, imported_at, kontumacija = false) => ({ played_on, imported_at, kontumacija })
+  preveri('pregled: krog brez zapisnikov ni koncan', !krogKoncan([tekma('2026-09-20', null)], '2026-09-28'))
+  preveri('pregled: vsi zapisniki — koncan', krogKoncan([tekma('2026-09-20', 'x'), tekma('2026-09-20', 'x')], '2026-09-28'))
+  preveri('pregled: manjkajoc zapisnik zadrzi', !krogKoncan([tekma('2026-09-20', 'x'), tekma('2026-09-20', null)], '2026-09-28'))
+  preveri('pregled: kontumacija ne zadrzi', krogKoncan([tekma('2026-09-20', 'x'), tekma('2026-09-20', null, true)], '2026-09-28'))
+  preveri('pregled: prelozena tekma v prihodnosti ne zadrzi', krogKoncan([tekma('2026-09-20', 'x'), tekma('2026-09-30', null)], '2026-09-28'))
+  preveri('pregled: tekma brez datuma in zapisnika zadrzi', !krogKoncan([tekma('2026-09-20', 'x'), tekma(null, null)], '2026-09-28'))
+
+  // Mesto po krogu in premik: krog 1 (id 11), krog 2 (id 12).
+  const krogi = new Map([[11, 1], [12, 2], [13, 3]])
+  const vr = [
+    { round_id: 11, fantasy_team_id: 1, points: 30 }, { round_id: 11, fantasy_team_id: 2, points: 20 }, { round_id: 11, fantasy_team_id: 3, points: 10 },
+    { round_id: 12, fantasy_team_id: 1, points: 0 }, { round_id: 12, fantasy_team_id: 2, points: 5 }, { round_id: 12, fantasy_team_id: 3, points: 40 },
+    { round_id: 13, fantasy_team_id: 3, points: 99 }, // prihodnji krog ne sme steti
+  ]
+  const m3 = mestoVLigi(vr, krogi, 3, 2)
+  preveri('pregled: mesto po krogu je skupno, ne kroga', m3.mesto === 1 && m3.odEkip === 3, JSON.stringify(m3))
+  preveri('pregled: premik iz 3. na 1. je +2', m3.premik === 2, JSON.stringify(m3))
+  const m1 = mestoVLigi(vr, krogi, 1, 2)
+  preveri('pregled: padec iz 1. na 2. je -1', m1.mesto === 2 && m1.premik === -1, JSON.stringify(m1))
+  preveri('pregled: v prvem krogu ni premika', mestoVLigi(vr, krogi, 1, 1).premik === null)
+  const izenaceni = mestoVLigi([{ round_id: 11, fantasy_team_id: 1, points: 10 }, { round_id: 11, fantasy_team_id: 2, points: 10 }], krogi, 2, 1)
+  preveri('pregled: izenaceni si delijo mesto', izenaceni.mesto === 1)
+  const nova = mestoVLigi([...vr, { round_id: 12, fantasy_team_id: 4, points: 1 }], krogi, 4, 2)
+  preveri('pregled: nova ekipa nima premika', nova.premik === null && nova.mesto === 4, JSON.stringify(nova))
+  preveri('pregled: oznake premika', oznakaPremika(2).besedilo === '▲ 2' && oznakaPremika(-1).besedilo === '▼ 1' && oznakaPremika(0).besedilo === '=' && oznakaPremika(null) === null)
+
+  // Kapetan in najboljsi.
+  const v = (player_id, ime, tocke, mnozitelj, je_kapetan = false, je_namestnik = false) =>
+    ({ player_id, ime, klub: 'NK Triglav Kranj', pozicija: 'MID', mnozitelj, je_kapetan, je_namestnik, je_zacetnik: true, tocke })
+  const ip = igralciPregleda([v(1, 'Novak Jan', 4, 3, true), v(2, 'Hodžić Harun', 9, 1), v(3, 'Kos Tim', 12, 0)])
+  preveri('pregled: kapetan s tockami x3', ip.kapetan.player_id === 1 && ip.kapetan.tocke === 12 && !ip.kapetan.namestnik, JSON.stringify(ip.kapetan))
+  preveri('pregled: najboljsi je med tistimi, ki so steli (ne s klopi)', ip.najboljsi.player_id === 2 && ip.najboljsi.ime === 'Harun Hodžić', JSON.stringify(ip.najboljsi))
+  const nam = igralciPregleda([v(1, 'Novak Jan', 0, 0, true), v(2, 'Hodžić Harun', 5, 3, false, true)])
+  preveri('pregled: namestnik s trakom, ko kapetan ni igral', nam.kapetan.player_id === 2 && nam.kapetan.namestnik && nam.kapetan.tocke === 15)
+  const brez = igralciPregleda([v(1, 'Novak Jan', 0, 0, true), v(2, 'Hodžić Harun', 0, 0, false, true)])
+  preveri('pregled: brez igre ostane kapetan z nic', brez.kapetan.player_id === 1 && brez.kapetan.tocke === 0 && brez.najboljsi === null)
+
+  // Postavitev: groba meritev (sirina crke ~0,6 pisave), kot pri plakatu.
+  const meri = (s, px, teza) => s.length * px * (teza >= 800 ? 0.62 : 0.55)
+  const osnova = {
+    ekipa: 'Gorenjski Orli', liga: '1. Gorenjska liga — člani', krog: 5, tocke: 64, mesto: 3, odEkip: 118, premik: 2,
+    kapetan: { player_id: 1, ime: 'Jan Novak', klub: 'NK Triglav Kranj', grb: null, tocke: 24, mnozitelj: 3, namestnik: false },
+    najboljsi: { player_id: 2, ime: 'Harun Hodžić', klub: 'NK Šenčur', grb: null, tocke: 13, mnozitelj: 1, namestnik: false },
+  }
+  const dolgo = {
+    ...osnova,
+    ekipa: 'FC Najdaljše ime ekipe v celi Sloveniji United',
+    liga: 'Stredoslovenský futbalový zväz — V. liga Sever, skupina A dospelí',
+    tocke: 112.5, mesto: 1234, odEkip: 1300, premik: -187,
+    kapetan: { ...osnova.kapetan, ime: 'Isaac Raphaël Tshima Omombo Tshipamba-Mulowayi', klub: 'ND Polzela - Združena Savinjska' },
+  }
+  for (const [ime, p] of [['obicajen', osnova], ['dolga imena', dolgo]]) {
+    const el = postaviPregled(p, meri)
+    const besedila = el.filter((e) => e.vrsta === 'besedilo')
+    const zunajKvadrata = el.filter((e) => !e.samoPokoncno && (e.y < KVADRAT.y + 40 || e.y > KVADRAT.y + KVADRAT.visina - 20))
+    preveri(`pregled (${ime}): vse bistveno je v sredinskem kvadratu`, zunajKvadrata.length === 0, zunajKvadrata.map((e) => e.id).join(', '))
+    preveri(`pregled (${ime}): nic ne pade s slike`, el.every((e) => e.y > 0 && e.y < VISINA_P))
+    const presirok = besedila.filter((e) => {
+      const w = meri(e.besedilo, e.px, e.teza)
+      const levo = e.poravnava === 'left' ? e.x : e.poravnava === 'right' ? e.x - w : e.x - w / 2
+      return levo < ROB_P - 10 || levo + w > SIRINA_P - ROB_P + 10
+    })
+    preveri(`pregled (${ime}): nobeno besedilo ne sega cez rob`, presirok.length === 0, presirok.map((e) => `${e.id} ${e.besedilo}`).join(' | '))
+    const id = (x) => besedila.find((e) => e.id === x)
+    preveri(`pregled (${ime}): ekipa, tocke, mesto, kapetan, najboljsi, liga, slff.eu`,
+      ['ekipa', 'tocke', 'mesto', 'kapetan.ime', 'najboljsi.ime', 'liga', 'splet', 'nadnaslov'].every((x) => id(x)))
+    const imeK = id('kapetan.ime'), tockeK = id('kapetan.tocke')
+    preveri(`pregled (${ime}): ime kapetana se ne zaleti v tocke`,
+      imeK.x + meri(imeK.besedilo, imeK.px, imeK.teza) < tockeK.x - meri(tockeK.besedilo, tockeK.px, tockeK.teza))
+    const mesto = id('mesto'), premik = id('premik')
+    preveri(`pregled (${ime}): premik stoji za mestom`, premik && premik.x >= mesto.x + meri(mesto.besedilo, mesto.px, mesto.teza))
+    // Vrstice si sledijo od zgoraj navzdol brez prekrivanja osnovnic.
+    const po = ['liga', 'nadnaslov', 'ekipa', 'tocke', 'mesto', 'kapetan.ime', 'najboljsi.ime', 'splet'].map((x) => id(x).y)
+    preveri(`pregled (${ime}): vrstni red od zgoraj navzdol`, po.every((y, i) => i === 0 || y > po[i - 1]), po.join(' < '))
+  }
+  const el = postaviPregled(osnova, meri)
+  preveri('pregled: kratko ime ekipe je vecje od dolgega',
+    el.find((e) => e.id === 'ekipa').px > postaviPregled(dolgo, meri).find((e) => e.id === 'ekipa').px)
+  const dolgaVrstici = postaviPregled(dolgo, meri).filter((e) => e.id.startsWith('ekipa')).map((e) => e.besedilo)
+  preveri('pregled: dolgo ime ekipe gre v dve vrstici, cele',
+    dolgaVrstici.length === 2 && dolgaVrstici.join(' ') === dolgo.ekipa.toUpperCase(), dolgaVrstici.join(' / '))
+  preveri('pregled: premik navzgor', el.find((e) => e.id === 'premik').besedilo === '▲ 2')
+  const isti = postaviPregled({ ...osnova, najboljsi: { ...osnova.kapetan, tocke: 8 } }, meri)
+  preveri('pregled: kapetan, ki je tudi najboljsi, je na sliki enkrat',
+    !isti.some((e) => e.id === 'najboljsi.ime') && isti.find((e) => e.id === 'kapetan.oznaka').besedilo.includes('NAJBOLJŠI'))
+  const brezMesta = postaviPregled({ ...osnova, mesto: null, premik: null, kapetan: null, najboljsi: null }, meri)
+  preveri('pregled: brez mesta in igralcev ostane slika cela', !brezMesta.some((e) => e.id === 'mesto' || e.id === 'kapetan.ime') && brezMesta.some((e) => e.id === 'tocke'))
+  preveri('pregled: ime datoteke', imeDatotekePregleda('Šenčurski Orli!', 5) === 'slff-sencurski-orli-5-krog.png', imeDatotekePregleda('Šenčurski Orli!', 5))
+}
+
 // --- plakat za objavo ------------------------------------------------------
 // Plakat je zgrajen kot program tekme: imena igralcev, ne stevilke.
 {
@@ -2881,6 +3056,75 @@ preveri(
   preveri('obvestila: naslov 3', naslovNapak(3) === '3 tvoje ekipe ne bodo dobile točk')
   preveri('obvestila: naslov 5', naslovNapak(5) === '5 tvojih ekip ne bo dobilo točk')
 
+  // --- namigi za prestope in gibanje cen (lib/namigiEkipe) ------------------
+  {
+    const N = await import('../src/lib/namigiEkipe')
+    // Kader 2-5-5-3: klubi 1-5, iz kluba 1 trije (en je vratar 1).
+    const poz = ['GK', 'GK', 'DEF', 'DEF', 'DEF', 'DEF', 'DEF', 'MID', 'MID', 'MID', 'MID', 'MID', 'FWD', 'FWD', 'FWD']
+    const klub = [1, 2, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 3, 4, 5]
+    const kader = poz.map((p, i) => ({ id: 100 + i, position: p, team_id: klub[i], team_name: `K${klub[i]}`, value: 5, active: true, is_starter: i !== 1 && i < 12 }))
+    const vsiKlubi = new Set([1, 2, 3, 4, 5, 6])
+    const brez = { klubiZTekmo: vsiKlubi, odsotni: {} }
+    preveri('namigi: poln kader brez tezav nima namigov', N.namigiZaPrestope(kader, [], 0, brez).length === 0)
+    preveri('namigi: neaktiven', N.razlogSibkosti({ id: 1, active: false }, brez) === 'neaktiven')
+    preveri('namigi: poskodovan', N.razlogSibkosti({ id: 1, team_id: 1 }, { ...brez, odsotni: { 1: 'poskodba' } }) === 'poskodba')
+    preveri('namigi: opomba ni odsotnost', N.razlogSibkosti({ id: 1, team_id: 1 }, { ...brez, odsotni: { 1: 'opomba' } }) === null)
+    preveri('namigi: klub brez tekme', N.razlogSibkosti({ id: 1, team_id: 9 }, brez) === 'brezTekme')
+    preveri('namigi: brez razporeda klub ni razlog', N.razlogSibkosti({ id: 1, team_id: 9 }, { klubiZTekmo: null, odsotni: {} }) === null)
+
+    // Klub 5 v krogu ne igra: trije igralci (DEF, MID, FWD) so sibki.
+    const brez5 = { klubiZTekmo: new Set([1, 2, 3, 4, 6]), odsotni: {} }
+    const trg = [
+      { id: 1, position: 'DEF', team_id: 6, value: 5.5, form: 4, points_per_match: 3, active: true },
+      { id: 2, position: 'DEF', team_id: 6, value: 5.6, form: 6, points_per_match: 3, active: true }, // predrag
+      { id: 3, position: 'DEF', team_id: 1, value: 4.5, form: 9, points_per_match: 5, active: true }, // klub 1 je poln
+      { id: 4, position: 'DEF', team_id: 5, value: 4.5, form: 9, points_per_match: 5, active: true }, // klub brez tekme
+      { id: 5, position: 'DEF', team_id: 6, value: 4.5, form: 7, points_per_match: 2, active: false }, // neaktiven
+      { id: 6, position: 'DEF', team_id: 6, value: 4.5, form: 8, points_per_match: 2, active: true }, // poskodovan
+      { id: 7, position: 'DEF', team_id: 6, value: 4.0, form: 2, points_per_match: 1, active: true },
+      { id: 8, position: 'DEF', team_id: 6, value: 4.0, form: 3, points_per_match: 1, active: true },
+      { id: 9, position: 'DEF', team_id: 6, value: 4.0, form: 3, points_per_match: 2, active: true },
+      { id: 10, position: 'MID', team_id: 6, value: 4.0, form: 10, points_per_match: 9, active: true }, // druga pozicija
+      { id: 11, position: 'FWD', team_id: 6, value: 5.0, form: 5, points_per_match: 4, active: true },
+    ]
+    const moz = { ...brez5, odsotni: { 6: 'poskodba' } }
+    // Prodaja branilca za 5.0 + 0.5 v blagajni = 5.5 na voljo.
+    const namigi = N.namigiZaPrestope(kader, trg, 0.5, moz)
+    const def = namigi.find((m) => m.igralec.id === 106)
+    const ids = def?.zamenjave.map((k) => k.id) ?? []
+    preveri('namigi: klub brez tekme da tri sibka mesta', namigi.length === 3 && namigi.every((m) => m.razlog === 'brezTekme'), JSON.stringify(namigi.map((m) => m.igralec.id)))
+    preveri('namigi: prva postava pred klopjo', namigi[namigi.length - 1].igralec.id === 114)
+    preveri('namigi: najvec tri zamenjave, po formi', ids.join(',') === '1,9,8', ids.join(','))
+    preveri('namigi: proracun steje prodajo (5.5 = 0.5 + 5.0)', ids.includes(1) && !ids.includes(2))
+    preveri('namigi: ne vec kot 3 iz kluba', !ids.includes(3))
+    preveri('namigi: kandidat mora imeti tekmo, biti aktiven in zdrav', !ids.includes(4) && !ids.includes(5) && !ids.includes(6))
+    preveri('namigi: le ista pozicija', !ids.includes(10))
+    // Prodaja igralca iz polnega kluba sprosti mesto za igralca istega kluba.
+    const iz1 = N.zamenjaveZa(kader[2], kader, trg, 0, brez)
+    preveri('namigi: prodan igralec sprosti mesto v klubu', iz1.some((k) => k.id === 3))
+    // Mesto v kadru steje po poziciji nakupa, ne po danasnji.
+    preveri('namigi: igralec brez pozicije nima zamenjav', N.zamenjaveZa({ ...kader[2], position: null }, kader, trg, 5, brez).length === 0)
+    const fwd = namigi.find((m) => m.igralec.id === 114)
+    preveri('namigi: napadalec dobi napadalca', fwd?.zamenjave.length === 1 && fwd.zamenjave[0].id === 11)
+    preveri('namigi: brez denarja ni zamenjave', N.zamenjaveZa(kader[6], kader, trg.map((k) => ({ ...k, value: 9 })), 0, brez5).length === 0)
+
+    const g = N.gibanjeCen([
+      { player_id: 1, old_value: 5.0, new_value: 5.2, changed_at: '2026-09-20T04:00:00Z' },
+      { player_id: 1, old_value: 5.2, new_value: 5.3, changed_at: '2026-09-27T04:00:00Z' },
+      { player_id: 2, old_value: 6.0, new_value: 5.9, changed_at: '2026-09-27T04:00:00Z' },
+      { player_id: 3, old_value: 4.5, new_value: 4.6, changed_at: '2026-09-20T04:00:00Z' },
+      { player_id: 3, old_value: 4.6, new_value: 4.5, changed_at: '2026-09-27T04:00:00Z' },
+    ])
+    preveri('gibanje: prva stara in zadnja nova cena', g.igralci[0].player_id === 1 && g.igralci[0].iz === 5 && g.igralci[0].v === 5.3 && g.igralci[0].razlikaC === 30)
+    preveri('gibanje: gor in nazaj dol ni premik', !g.igralci.some((i) => i.player_id === 3))
+    preveri('gibanje: vrednost ekipe v centih', g.skupajC === 20 && N.gibanjeCen([]).skupajC === 0)
+    const zdaj = Date.parse('2026-09-28T12:00:00Z')
+    preveri('obisk: brez zapisa zadnji teden', N.odKdaj(null, zdaj).od === '2026-09-21T12:00:00.000Z' && !N.odKdaj(null, zdaj).zadnjiObisk)
+    preveri('obisk: zadnji obisk', N.odKdaj('2026-09-27T08:00:00.000Z', zdaj).od === '2026-09-27T08:00:00.000Z' && N.odKdaj('2026-09-27T08:00:00.000Z', zdaj).zadnjiObisk)
+    preveri('obisk: pokvarjen ali prihodnji zapis', !N.odKdaj('smeti', zdaj).zadnjiObisk && !N.odKdaj('2027-01-01T00:00:00Z', zdaj).zadnjiObisk)
+    preveri('obisk: brez localStorage ne pade', N.preberiZadnjiOgled(1) === null && N.namigiSkriti(1, 2) === false)
+  }
+
   const K = await import('../src/lib/karticaIgralca')
   preveri('kartica: dva gola in asistenca', K.dosezkiNastopa({ minute: 90, goli: 2, asistence: 1, cistaMreza: false, obranjene: 0 }, 'FWD').join(', ') === '2 gola, asistenca, 90 min')
   preveri('kartica: en gol je "gol"', K.dosezkiNastopa({ minute: 70, goli: 1, asistence: 0, cistaMreza: false, obranjene: 0 }, 'MID')[0] === 'gol')
@@ -2964,6 +3208,301 @@ preveri(
   preveri('sportnet: zapisnik', z && z.krog === 7 && z.rezultat.domaci === 1 && z.rezultat.gostje === 0 && !z.opozorila.length)
   preveri('sportnet: vsak nastop ima ISSF in pozicijo', n.length > 22 && n.every((x) => x.regSt && x.pozicija))
   preveri('sportnet: strelec', n.some((x) => x.ime === 'Šemik Tomáš' && x.goli === 1))
+}
+
+// --- navijači klubov ----------------------------------------------------------
+// Vrstica `navijaci_klubov` je en navijač; klub brez navijačev ima eno vrstico
+// brez ekipe. Mesto ima le klub z vsaj `min_navijacev`.
+{
+  const klub = (team_id, ime, navijacev, sezona, krog, mesto) => ({
+    team_id, klub: ime, klub_kratko: null, grb: null, navijacev,
+    povprecje_sezona: sezona, povprecje_krog: krog, mesto, min_navijacev: 3,
+    round_number: 5, season: '2026/27',
+  })
+  const navijac = (k, id, ime, sezona, krog) => ({
+    ...k, fantasy_team_id: id, ekipa: ime, lastnik: `Lastnik ${id}`, tocke_sezona: sezona, tocke_krog: krog,
+  })
+  const rence = klub(1, 'ND Renče', 3, '40.0', '8.0', 1)
+  const leskovec = klub(2, 'ŠD Leskovec', 4, '35.5', '9.5', 2)
+  const bled = klub(3, 'Bled', 2, '60.0', '10.0', null)
+  const trzic = klub(4, 'Tržič', 0, null, null, null)
+  const vrstice = [
+    navijac(rence, 11, 'Renški orli', '30', '6'),
+    navijac(rence, 12, 'Soška fronta', '50', '10'),
+    navijac(rence, 13, 'Vipavski veter', '40.00', '8'),
+    navijac(leskovec, 21, 'Krški levi', 30, 9),
+    navijac(leskovec, 22, 'Posavje', 41, 10),
+    navijac(leskovec, 23, 'Leskovec A', 35, 9),
+    navijac(leskovec, 24, 'Leskovec B', 36, 10),
+    navijac(bled, 31, 'Jezero', 70, 12),
+    navijac(bled, 32, 'Otok', 50, 8),
+    { ...trzic, fantasy_team_id: null, ekipa: null, lastnik: null, tocke_sezona: null, tocke_krog: null },
+  ]
+  const n = zdruziNavijace(vrstice)
+  preveri('navijaci: uvrsceni po mestu', n.uvrsceni.map((k) => k.team_id).join() === '1,2')
+  preveri('navijaci: premalo navijacev brez mesta', n.premalo.map((k) => k.team_id).join() === '3')
+  preveri('navijaci: klub brez navijacev posebej', n.brez.map((k) => k.klub).join() === 'Tržič')
+  preveri('navijaci: navijaci po tockah sezone', n.uvrsceni[0].navijaci.map((x) => x.fantasy_team_id).join() === '12,13,11')
+  preveri('navijaci: stevila iz niza', n.uvrsceni[0].povprecje_sezona === 40 && n.uvrsceni[0].navijaci[1].tocke_sezona === 40)
+  preveri('navijaci: prag in krog', n.min === 3 && n.krog === 5)
+  const prazno = zdruziNavijace([])
+  preveri('navijaci: prazna liga', prazno.uvrsceni.length === 0 && prazno.min === 3 && prazno.krog === null)
+
+  const izris = (el) =>
+    renderToString(<StaticRouter location="/standings">{el}</StaticRouter>)
+  try {
+    const html = izris(<TabelaNavijacev podatki={n} mojKlub={2} />)
+    preveri(
+      'izris: navijaci klubov',
+      html.includes('ND Renče') && html.includes('Soška fronta') && html.includes('Premalo navijačev') &&
+        html.includes('Tržič') && html.includes('tvoj klub') && html.includes('/team/12'),
+    )
+    const nic = izris(<TabelaNavijacev podatki={prazno} />)
+    preveri('izris: navijaci klubov brez izbire', nic.includes('Bodi prvi'))
+  } catch (e) {
+    preveri('izris: navijaci klubov', false, e.message)
+  }
+  try {
+    const uvrscen = izris(<KlubMedNavijaci podatki={n} klubId={2} klubIme="ŠD Leskovec" ligaSlug="clani" />)
+    preveri('izris: navijaci kluba z mestom', uvrscen.includes('2. mesto') && uvrscen.includes('od 2 klubov') && uvrscen.includes('#fans'))
+    const premalo = izris(<KlubMedNavijaci podatki={n} klubId={3} klubIme="Bled" ligaSlug="clani" mojKlub={null} onNavijam={() => {}} />)
+    preveri('izris: navijaci kluba premalo', premalo.includes('manjka še 1 navijač') && premalo.includes('Navijam za Bled'))
+    const brez = izris(<KlubMedNavijaci podatki={n} klubId={4} klubIme="Tržič" ligaSlug={null} />)
+    preveri('izris: navijaci kluba brez', brez.includes('še nima navijačev'))
+    const izbira = izris(<IzbiraKluba klubi={[{ team_id: 1, klub: 'ND Renče' }]} onIzberi={() => {}} />)
+    preveri('izris: izbira kluba', izbira.includes('Za kateri klub navijaš?') && !izbira.includes('/positions') && !izbira.includes('glas'))
+  } catch (e) {
+    preveri('izris: navijaci kluba', false, e.message)
+  }
+}
+
+// --- e-pošta opomnikov v jeziku lige -----------------------------------------
+// Funkcija `posli-opomnik` izbere jezik po državi lige. Preverimo obe
+// različici, povezave na pravo ligo in odjavo ter to, da v slovaškem mailu ni
+// ostalo slovenskih besed (tudi razlog iz baze, ki je slovenski).
+{
+  const E = await import('../supabase/functions/posli-opomnik/sporocila.ts')
+  const { JEZIK_DRZAVE } = await import('../src/lib/drzavaUgib.ts')
+  preveri(
+    'e-pošta: jezik države kot v vmesniku',
+    Object.entries(E.JEZIK_DRZAVE).every(([d, j]) => JEZIK_DRZAVE[d] === j) &&
+      Object.keys(JEZIK_DRZAVE).every((d) => d in E.JEZIK_DRZAVE),
+  )
+  const si = { slug: 'clani', oznaka: 'Člani', ime: '1. Gorenjska liga', drzava: 'SI' }
+  const sk = { slug: 'sk-ssfz-4liga', oznaka: 'IV. liga', ime: 'IV. liga SsFZ', drzava: 'SK' }
+  const slovensko = /Živjo|ekip[aeo]|krog|točk|Popravi|opomnik/
+  const rok = '2026-10-03T08:00:00Z' // sobota 10:00 po obeh pasovih
+
+  const oSl = E.sestaviOpomnik(si, { display_name: 'Janez Novak', brez_ekipe: true })
+  const oSk = E.sestaviOpomnik(sk, { display_name: 'Ján Kováč', brez_ekipe: false })
+  preveri('e-pošta: opomnik sl', oSl.naslov.includes('še nimaš ekipe') && oSl.html.includes('Živjo, Janez!'))
+  preveri('e-pošta: opomnik sk', oSk.naslov.includes('dokonči tím') && oSk.html.includes('Ahoj, Ján!') && !slovensko.test(oSk.naslov + oSk.html), oSk.naslov)
+  preveri(
+    'e-pošta: povezave na ligo in odjava',
+    oSk.html.includes('https://slff.eu/my-team?t=sk-ssfz-4liga') &&
+      oSk.odjava === 'https://slff.eu/reminders?t=sk-ssfz-4liga' &&
+      oSk.html.includes(oSk.odjava) &&
+      oSl.html.includes('https://slff.eu/my-team?t=clani') && oSl.odjava === 'https://slff.eu/reminders?t=clani',
+  )
+  preveri('e-pošta: odjava v jeziku lige', oSk.html.includes('Nechcem už dostávať pripomienky') && oSl.html.includes('Ne želim več opomnikov'))
+
+  const razlog = 'Iz kluba Šenčur imas 4 igralce, dovoljeni so 3. To se zgodi tudi brez tvoje spremembe — ce igralec med sezono prestopi v klub, iz katerega jih ze imas.'
+  const zSl = E.sestaviOpozorilo(si, { display_name: null, team_name: 'Nedeljski <junaki>', round_number: 5, deadline_at: rok, razlog })
+  const zSk = E.sestaviOpozorilo(sk, { display_name: null, team_name: 'Nedeľní hrdinovia', round_number: 5, deadline_at: rok, razlog })
+  preveri('e-pošta: opozorilo sl', zSl.naslov.includes('5. krog ne bo zaklenila') && zSl.html.includes('Iz kluba Šenčur') && zSl.html.includes('sobota') && zSl.html.includes('10:00'), zSl.naslov)
+  preveri('e-pošta: opozorilo sl ubeži HTML', zSl.html.includes('Nedeljski &lt;junaki&gt;'))
+  preveri(
+    'e-pošta: opozorilo sk (rok po bratislavsko, razlog preveden)',
+    zSk.naslov.includes('5. kolo') && zSk.html.includes('sobota') && zSk.html.includes('10:00') &&
+      zSk.html.includes('Z klubu Šenčur máš 4 hráčov') && !slovensko.test(zSk.naslov + zSk.html),
+    zSk.naslov,
+  )
+  preveri('e-pošta: rok v časovnem pasu lige', E.izpisRoka(rok, sk).includes('10:00') && E.izpisRoka(rok, si).includes('10:00'))
+
+  const razlogi = [
+    'Ekipa je prazna — kadra ni.',
+    'V kadru je 3 igralcev namesto 15.',
+    'V kadru je 14 igralcev namesto 15.',
+    'V kadru ni vec aktivnih igralcev: Novak Janez, Kos Miha. Klub letos ne igra ali je igralec odsel.',
+    'Pri 1 igralcih ni znana pozicija.',
+    'Pri 2 igralcih ni znana pozicija.',
+    'Kader mora imeti 2 vratarja, 5 branilcev, 5 vezistov in 3 napadalce; ima 2-4-6-3.',
+    'V postavi je 10 igralcev namesto 11.',
+    'Ekipa nima natanko enega kapetana.',
+    'Ekipa nima natanko enega namestnika kapetana.',
+  ]
+  const prevodi = razlogi.map((r) => E.prevediRazlog(r, 'sk'))
+  const splosen = E.prevediRazlog('Neznan razlog.', 'sk')
+  preveri(
+    'e-pošta: vsi razlogi prevedeni v slovaščino',
+    prevodi.every((p) => p !== splosen && !/igralc|kader |ekip/i.test(p)),
+    prevodi.find((p) => p === splosen || /igralc|kader |ekip/i.test(p)),
+  )
+  preveri('e-pošta: množina razloga', prevodi[1] === 'V kádri sú 3 hráči namiesto 15.' && prevodi[2] === 'V kádri je 14 hráčov namiesto 15.')
+  preveri('e-pošta: sl razlog nespremenjen', E.prevediRazlog(razlogi[0], 'sl') === razlogi[0])
+
+  const pSk = E.sestaviPoznavalca(sk, { display_name: 'Ján', obseg: 'liga', klub: null })
+  const pSl = E.sestaviPoznavalca(si, { display_name: 'Janez', obseg: 'klub', klub: 'Šenčur' })
+  preveri('e-pošta: poznavalec sk', pSk.html.includes('znalcom ligy IV. liga SsFZ') && pSk.html.includes('/assists?t=sk-ssfz-4liga') && !slovensko.test(pSk.html) && !pSk.odjava)
+  preveri('e-pošta: poznavalec sl', pSl.html.includes('poznavalec kluba Šenčur') && pSl.html.includes('/positions?t=clani'))
+}
+
+// --- kontumacije: Ptuj, Murska Sobota, Lendava, Maribor ---------------------
+// Vsi vzorci so prave strani s tekmo brez borbe (scripts/vzorci/). Pri vsaki
+// zvezi mora biti označena natanko ta tekma in nobena odigrana.
+{
+  const beri = (f) => readFileSync(new URL(`./vzorci/${f}`, import.meta.url), 'utf8')
+  const { kontumacijeIzKroga } = await import('./zapisnik-pomurje.mjs')
+  const primeri = [
+    ['mnzpt', 'zapisniki-ptuj-mladina2022-kolo12.html', 'Podvinci:Cirkulane-Apače'],
+    ['mnzms', 'zapisniki-ms-liga115-sezona2025-kolo20.html', 'Tromejnik:Bakovci'],
+    ['mnzle', 'zapisniki-lendava-mnl2425-krog3.html', 'Hotiza:Nafta veterani'],
+  ]
+  for (const [vir, f, par] of primeri) {
+    const k = kontumacijeIzKroga(beri(f), { vir })
+    preveri(`kontumacija ${vir}: prazna kartica 3:0 brez sodnika in postav`,
+      k.length === 1 && `${k[0].domaci}:${k[0].gostje}` === par, JSON.stringify(k))
+    // Ista stran ima tudi odigrane tekme; te ostanejo zapisniki.
+    preveri(`kontumacija ${vir}: ni zapisnik, odigrane tekme so`,
+      viraZa({ source: vir }).zapisnikiIzKroga(beri(f), { vir }).every((z) => `${z.domaci.ime}:${z.gostje.ime}` !== par))
+  }
+  for (const [vir, f] of [['mnzpt', 'zapisniki-ptuj-liga3-kolo1.html'], ['mnzpt', 'zapisniki-ptuj-liga3-kolo2.html'],
+    ['mnzms', 'zapisniki-ms-liga113-kolo2.html'], ['mnzle', 'zapisniki-lendava-pnl-krog1.html']]) {
+    preveri(`kontumacija ${vir}: v odigranem krogu (${f}) je ni`, kontumacijeIzKroga(beri(f), { vir }).length === 0)
+  }
+
+  // Uvoz razporeda prebere le kroge, ki so že na vrsti.
+  const pt = viraZa({ source: 'mnzpt' })
+  const prebrani = []
+  const najdene = await pt.kontumacije('2022:71', async (url, ime, zadnji) => {
+    prebrani.push({ url, ime, zadnji })
+    return beri('zapisniki-ptuj-mladina2022-kolo12.html')
+  }, [
+    { stevilka: 12, tekme: [{ datum: '2023-05-07' }, { datum: '2023-05-10' }] },
+    { stevilka: 13, tekme: [{ datum: '2099-05-14' }] },
+  ], '2023-06-01')
+  preveri('kontumacija: prihodnji krog se ne bere', prebrani.length === 1 && prebrani[0].url.includes('kolo=12') && prebrani[0].zadnji === '2023-05-10',
+    JSON.stringify(prebrani))
+  preveri('kontumacija: najdena nosi krog razporeda', najdene.length === 1 && najdene[0].krog === 12, JSON.stringify(najdene))
+  preveri('kontumacija: ime v predpomnilniku je isto kot pri uvozu zapisnikov', prebrani[0].ime === 'mnzpt-2022_71-k12.html', prebrani[0].ime)
+
+  // Maribor: izid brez polčasa IN prazen kraj. Tekma brez kraja in ure je
+  // besedilnemu razčlenjevalniku izginila iz razporeda, zato beremo HTML.
+  const mb = viraZa({ source: 'mnzmb' })
+  const kont = (k) => k.flatMap((r) => r.tekme.filter((t) => t.kontumacija).map((t) => `${r.stevilka}:${t.domaci}:${t.gostje}`))
+  {
+    const h = beri('tekme-maribor-2clanska-2526.html')
+    const k = mb.razcleniRazpored(mb.vBesedilo(h), h)
+    preveri('kontumacija mnzmb: 2. članska ima dve, tudi brez kraja in ure',
+      JSON.stringify(kont(k)) === JSON.stringify(['19:Dravograd:VOP Prepolje', '20:TAB Akumulator:Duplek']), kont(k).join(' | '))
+    preveri('razpored mnzmb: HTML prebere vseh 132 tekem (besedilo le 130)',
+      k.reduce((n, r) => n + r.tekme.length, 0) === 132 && mb.razcleniRazpored(mb.vBesedilo(h)).reduce((n, r) => n + r.tekme.length, 0) === 130)
+  }
+  {
+    const h = beri('tekme-maribor-u19-2526.html')
+    const k = mb.razcleniRazpored(mb.vBesedilo(h), h)
+    const vse = kont(k)
+    preveri('kontumacija mnzmb: U19 ima tri, tudi s poznano uro',
+      vse.length === 3 && vse.includes('15:Kovinar Maribor:Starše – NŠ Dravsko polje') && vse.includes('13:Pobrežje:Miklavž'), vse.join(' | '))
+    // Pohorje : Jarenina Pesnica 3 : 0 brez polčasa, a s krajem: odigrana in
+    // registrirana za zeleno mizo, zapisnik ima polni postavi.
+    preveri('kontumacija mnzmb: zelena miza s krajem ni kontumacija',
+      !vse.some((x) => x.includes('Pohorje:Jarenina')))
+  }
+  {
+    const h = beri('tekme-maribor-1clanska.html')
+    const zHtml = mb.razcleniRazpored(mb.vBesedilo(h), h)
+    const brez = mb.razcleniRazpored(mb.vBesedilo(h))
+    preveri('razpored mnzmb: HTML in besedilo se ujemata, kjer kontumacij ni',
+      JSON.stringify(zHtml) === JSON.stringify(brez) && kont(zHtml).length === 0)
+  }
+}
+
+// --- prenos s ponovitvami (scripts/prenos.mjs) -------------------------------
+// Brez omrežja: lokalni strežnik, ki najprej odpove, in ponarejen fetch za DNS.
+{
+  const { prenesiSPonovitvami, jePrehodnaNapaka, retryAfterMs, pozabiPadle } = await import('./prenos.mjs')
+  const { createServer } = await import('node:http')
+  const hitro = { zamiki: [5, 5, 5], log: () => {} }
+
+  let klicev = 0
+  const streznik = createServer((req, res) => {
+    klicev++
+    if (req.url === '/nihaj' && klicev < 3) { res.writeHead(503); return res.end('pocakaj') }
+    if (req.url === '/omejeno' && klicev === 1) { res.writeHead(429, { 'Retry-After': '0' }); return res.end() }
+    if (req.url === '/ni') { res.writeHead(404); return res.end('ni') }
+    if (req.url === '/pade') { res.writeHead(500); return res.end() }
+    if (req.url === '/visi') return // nikoli ne odgovori
+    res.writeHead(200); res.end('razpored')
+  })
+  await new Promise((r) => streznik.listen(0, '127.0.0.1', r))
+  const osnova = `http://127.0.0.1:${streznik.address().port}`
+
+  klicev = 0
+  let o = await prenesiSPonovitvami(`${osnova}/nihaj`, hitro)
+  preveri('prenos: 503 ponovi in uspe', o.ok && (await o.text()) === 'razpored' && klicev === 3, String(klicev))
+  klicev = 0
+  o = await prenesiSPonovitvami(`${osnova}/omejeno`, hitro)
+  preveri('prenos: 429 z Retry-After ponovi', o.ok && klicev === 2, String(klicev))
+  klicev = 0
+  o = await prenesiSPonovitvami(`${osnova}/ni`, hitro)
+  preveri('prenos: 404 se ne ponavlja', o.status === 404 && klicev === 1, String(klicev))
+  klicev = 0
+  o = await prenesiSPonovitvami(`${osnova}/pade`, hitro)
+  preveri('prenos: trajni 500 vrne zadnji odgovor po 4 poskusih', o.status === 500 && klicev === 4, String(klicev))
+  klicev = 0
+  o = await prenesiSPonovitvami(`${osnova}/pade`, hitro)
+  preveri('prenos: padel gostitelj dobi le en poskus', o.status === 500 && klicev === 1, String(klicev))
+  klicev = 0
+  o = await prenesiSPonovitvami(`${osnova}/ni`, hitro)
+  klicev = 0
+  await prenesiSPonovitvami(`${osnova}/pade`, hitro)
+  preveri('prenos: uspeh gostitelja vrne vse poskuse', klicev === 4, String(klicev))
+  pozabiPadle()
+  klicev = 0
+  const vrstice = []
+  let napakaCasa = null
+  try {
+    await prenesiSPonovitvami(`${osnova}/visi`, { zamiki: [5], casovnaOmejitevMs: 100, log: (v) => vrstice.push(v) })
+  } catch (e) { napakaCasa = e }
+  preveri('prenos: časovna omejitev se ponovi, nato vrže', napakaCasa?.name === 'TimeoutError' && klicev === 2 && vrstice.length === 1,
+    `${napakaCasa?.name} ${klicev} ${vrstice.length}`)
+  streznik.closeAllConnections?.()
+  await new Promise((r) => streznik.close(r))
+
+  // DNS (EAI_AGAIN), kot je podrl ng-primorska: undici vrže TypeError s kodo v `cause`.
+  const dns = () => Object.assign(new TypeError('fetch failed'), { cause: Object.assign(new Error('getaddrinfo EAI_AGAIN mnzgorica.si'), { code: 'EAI_AGAIN' }) })
+  let poskusi = 0
+  const glave = []
+  const ponarejen = async (_url, init) => {
+    poskusi++
+    glave.push(init?.headers?.['User-Agent'])
+    if (poskusi < 3) throw dns()
+    return new Response('ok')
+  }
+  const log = []
+  o = await prenesiSPonovitvami('https://mnzgorica.si/x', { ...hitro, fetchFn: ponarejen, glave: { 'User-Agent': 'SLFF' }, log: (v) => log.push(v) })
+  preveri('prenos: EAI_AGAIN ponovi, glave ostanejo', o.ok && poskusi === 3 && glave.every((g) => g === 'SLFF'), `${poskusi} ${glave}`)
+  preveri('prenos: ponovitev javi v eni vrstici', log.length === 2 && log[0].includes('EAI_AGAIN') && log[0].includes('ponovim'), log.join(' | '))
+  poskusi = 0
+  let vrzena = null
+  try { await prenesiSPonovitvami('https://x', { ...hitro, fetchFn: async () => { poskusi++; throw dns() } }) } catch (e) { vrzena = e }
+  preveri('prenos: trajna omrežna napaka po 4 poskusih vrže izvirno', vrzena?.cause?.code === 'EAI_AGAIN' && poskusi === 4, String(poskusi))
+  pozabiPadle()
+  poskusi = 0
+  vrzena = null
+  try { await prenesiSPonovitvami('https://x', { ...hitro, fetchFn: async () => { poskusi++; throw new TypeError('Invalid URL') } }) } catch (e) { vrzena = e }
+  preveri('prenos: programska napaka se ne ponavlja', vrzena && poskusi === 1, String(poskusi))
+  preveri('prenos: prepozna UND_ERR in ECONNRESET',
+    jePrehodnaNapaka({ cause: { code: 'UND_ERR_SOCKET' } }) && jePrehodnaNapaka({ code: 'ECONNRESET' }) && !jePrehodnaNapaka(new Error('x')))
+  preveri('prenos: Retry-After v sekundah in kot datum',
+    retryAfterMs('3') === 3000 && retryAfterMs(new Date(10000).toUTCString(), 4000) === 6000 && retryAfterMs(null) === null)
+
+  // Premor vira (Sportnet `premorMs`) velja pred vsakim poskusom.
+  poskusi = 0
+  const zacetek = Date.now()
+  await prenesiSPonovitvami('https://x', { zamiki: [1], premorMs: 60, log: () => {}, fetchFn: async () => (++poskusi < 2 ? new Response('', { status: 502 }) : new Response('ok')) })
+  preveri('prenos: premor vira pred vsakim poskusom', Date.now() - zacetek >= 115 && poskusi === 2, `${Date.now() - zacetek} ms`)
 }
 
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)

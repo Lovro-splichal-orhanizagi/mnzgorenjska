@@ -1,5 +1,5 @@
 import { razporedPtuj } from '../razporedi.mjs'
-import { poKrogih } from './zapisniki.mjs'
+import { poKrogih, kontumacijePoKrogih } from './zapisniki.mjs'
 import { razclenjevalnikZa } from '../zapisnik-pomurje.mjs'
 import { naredikljucKluba, kratkoIme, poenostavi } from '../klubi.mjs'
 import { VZHOD } from './vzdevki-3snl.mjs'
@@ -24,6 +24,8 @@ const vir = {
     return `${OSNOVNI}/tekmovanja?sezona=${sezona}&liga=${liga}&podatek=program`
   },
   zapisniki: (koda, prenesi) => poKrogih(vir, koda, prenesi),
+  // Razpored izida ne pokaže; kontumacije so prazne kartice na strani kroga.
+  kontumacije: (koda, prenesi, krogi, danes) => kontumacijePoKrogih(vir, koda, prenesi, krogi, danes),
   // 3. SNL gre skozi dva vira (tekoca sezona in arhiv pri razlicnih
   // zvezah), zato morata oba priti do istega kljuca kluba.
   // Razpored te zveze ni v obliki "Domači : Gostje"; splošni

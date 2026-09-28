@@ -108,6 +108,32 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     },
   },
 
+  namigi: {
+    naslov: 'Tipy na prestupy',
+    zaKrog: 'Kto v {krog}. kole pravdepodobne nebude hrať a koho si môžeš dovoliť namiesto neho.',
+    razlog: {
+      neaktiven: 'už nie je v lige',
+      poskodba: 'zranený',
+      odsotnost: 'bude chýbať',
+      brezTekme: 'klub nehrá',
+    },
+    kandidat: '{cena} · forma {forma}',
+    zamenjajNamig: 'Namiesto hráča {ime} daj do kádra hráča {novi}',
+    niZamenjave: 'Náhrada, ktorú by dovolil rozpočet aj pravidlá, neexistuje.',
+    opomba: 'Kliknutie len pripraví výmenu — tím uložíš sám. Každý tip platí samostatne.',
+    skrij: 'Skryť do ďalšieho kola',
+    zamenjano: '{novi} je v kádri namiesto hráča {ime}. Keď budeš spokojný, ulož tím.',
+  },
+
+  odZadnjegaObiska: {
+    naslov: 'Od poslednej návštevy',
+    naslovTeden: 'Za posledný týždeň',
+    vrednost: 'Hodnota tímu <znesek>{znak}{cena}</znesek>',
+    gor: 'zdraženie',
+    dol: 'zlacnenie',
+    zapri: 'Zavrieť',
+  },
+
   neustreza: {
     naslov: 'Tvoj tím NESPĹŇA pravidlá',
     zaKrog: '<krepko>Za {krog}. kolo</krepko> v tomto stave <krepko>NEZÍSKAŠ body</krepko>.',

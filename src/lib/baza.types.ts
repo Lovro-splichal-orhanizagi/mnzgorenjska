@@ -2252,6 +2252,7 @@ export type Database = {
           insider_competition_id: number | null
           insider_team_id: number | null
           is_admin: boolean
+          navijam_team_id: number | null
         }
         Insert: {
           brez_opomnikov?: boolean
@@ -2261,6 +2262,7 @@ export type Database = {
           insider_competition_id?: number | null
           insider_team_id?: number | null
           is_admin?: boolean
+          navijam_team_id?: number | null
         }
         Update: {
           brez_opomnikov?: boolean
@@ -2270,6 +2272,7 @@ export type Database = {
           insider_competition_id?: number | null
           insider_team_id?: number | null
           is_admin?: boolean
+          navijam_team_id?: number | null
         }
         Relationships: [
           {
@@ -2317,6 +2320,34 @@ export type Database = {
           {
             foreignKeyName: "profiles_insider_team_id_fkey"
             columns: ["insider_team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_navijam_team_id_fkey"
+            columns: ["navijam_team_id"]
+            isOneToOne: false
+            referencedRelation: "competition_teams"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "profiles_navijam_team_id_fkey"
+            columns: ["navijam_team_id"]
+            isOneToOne: false
+            referencedRelation: "krog_najboljsi"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "profiles_navijam_team_id_fkey"
+            columns: ["navijam_team_id"]
+            isOneToOne: false
+            referencedRelation: "player_reports_view"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "profiles_navijam_team_id_fkey"
+            columns: ["navijam_team_id"]
             isOneToOne: false
             referencedRelation: "teams"
             referencedColumns: ["id"]
@@ -4635,6 +4666,15 @@ export type Database = {
           user_id: string
         }[]
       }
+      koncani_krogi_mini_lige: {
+        Args: { p_liga: number }
+        Returns: {
+          fantasy_team_id: number
+          number: number
+          round_id: number
+          season: string
+        }[]
+      }
       krog_je_odigran: { Args: { p_round_id: number }; Returns: boolean }
       meje_borze: {
         Args: Record<PropertyKey, never>
@@ -4664,6 +4704,28 @@ export type Database = {
       nastavitve_tekmovanja: {
         Args: { p_competition_id: number }
         Returns: Json
+      }
+      navijaci_klubov: {
+        Args: { p_competition_id: number }
+        Returns: {
+          ekipa: string
+          fantasy_team_id: number
+          grb: string
+          klub: string
+          klub_kratko: string
+          lastnik: string
+          mesto: number
+          min_navijacev: number
+          navijacev: number
+          povprecje_krog: number
+          povprecje_sezona: number
+          round_id: number
+          round_number: number
+          season: string
+          team_id: number
+          tocke_krog: number
+          tocke_sezona: number
+        }[]
       }
       nedavni_opomnik: {
         Args: { p_competition_id: number; p_user_id: string }
@@ -4766,6 +4828,10 @@ export type Database = {
           team_name: string
           veljavna: boolean
         }[]
+      }
+      tedenski_pregled_mini_lige: {
+        Args: { p_krog?: number; p_liga: number }
+        Returns: Json
       }
       tekmovanje_id: { Args: { p_slug: string }; Returns: number }
       tekoca_sezona: { Args: { p_datum?: string }; Returns: string }

@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import { useNaslov } from '../lib/naslov'
 import { napakaPrijave, varnaPot } from '../lib/prijava'
-import { t } from '../i18n'
+import { jezik, t } from '../i18n'
 
 type Nacin = 'prijava' | 'registracija' | 'pozabljeno'
 
@@ -73,7 +73,9 @@ export default function Prijava() {
             email,
             password: geslo,
             options: {
-              data: { display_name: ime || email.split('@')[0] },
+              // `jezik` izbere jezik potrditvenega maila in poznejše
+              // ponastavitve gesla (predloge v supabase/templates/).
+              data: { display_name: ime || email.split('@')[0], jezik: jezik() },
               emailRedirectTo: `${window.location.origin}${nazaj}`,
             },
           })

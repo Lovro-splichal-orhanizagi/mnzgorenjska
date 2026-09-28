@@ -35,6 +35,55 @@ export const lestvice = {
     celotnaSezona: 'Celotna sezona',
     odKroga: 'Od {n}. kroga',
     igraOd: '· igra od {datum}',
+    zavihekEkipe: 'Ekipe',
+    zavihekNavijaci: 'Navijači klubov',
+  },
+
+  navijaciKlubov: {
+    naslov: 'Navijači klubov',
+    opis: 'Kateri klub ima najboljše managerje? Šteje povprečje točk navijačev, ki imajo ekipo v tej ligi.',
+    /** "Na lestvico se uvrsti klub z vsaj 3 navijači." */
+    pogoj: {
+      one: 'Na lestvico se uvrsti klub z vsaj {n} navijačem.',
+      two: 'Na lestvico se uvrsti klub z vsaj {n} navijačema.',
+      few: 'Na lestvico se uvrsti klub z vsaj {n} navijači.',
+      other: 'Na lestvico se uvrsti klub z vsaj {n} navijači.',
+    },
+    povprecjeSezona: 'Ø sezona',
+    povprecjeKroga: 'Ø {n}. krog',
+    navijaci: 'Navijači',
+    tvojKlub: 'tvoj klub',
+    premalo: 'Premalo navijačev',
+    brezNavijacev: 'Še brez navijačev: {klubi}',
+    prazno: 'V tej ligi še nihče ni izbral svojega kluba. Bodi prvi!',
+    izbira: {
+      naslov: 'Za kateri klub navijaš?',
+      opis: 'Izberi klub in tvoje točke bodo štele zanj na lestvici navijačev.',
+      izberi: '— izberi klub —',
+      shrani: 'Navijam za ta klub',
+      spremeni: 'Klub lahko kadarkoli zamenjaš tu, na lestvici navijačev.',
+      mojKlub: 'Navijaš za <b>{klub}</b>.',
+      zamenjaj: 'Zamenjaj klub',
+    },
+    klub: {
+      naslov: 'Navijači tega kluba',
+      mesto: '{mesto}. mesto',
+      odKlubov: {
+        one: 'od {n} kluba na lestvici navijačev',
+        two: 'od {n} klubov na lestvici navijačev',
+        few: 'od {n} klubov na lestvici navijačev',
+        other: 'od {n} klubov na lestvici navijačev',
+      },
+      manjka: {
+        one: 'Za mesto na lestvici navijačev manjka še {n} navijač.',
+        two: 'Za mesto na lestvici navijačev manjkata še {n} navijača.',
+        few: 'Za mesto na lestvici navijačev manjkajo še {n} navijači.',
+        other: 'Za mesto na lestvici navijačev manjka še {n} navijačev.',
+      },
+      brez: 'Ta klub v ligi še nima navijačev z ekipo.',
+      navijam: 'Navijam za {klub}',
+      vsiKlubi: 'Vsi klubi lige',
+    },
   },
 
   slovenija: {
@@ -109,12 +158,68 @@ export const lestvice = {
     privzetoImeBrez: 'Moja mini liga',
   },
 
+  // Deljenje povabila (DeliMiniLigo): po ustvarjanju in na strani lige.
+  deli: {
+    naslovNova: 'Liga stoji. Zdaj rabi tekmece!',
+    opisNova:
+      'Mini liga z enim samim članom je dnevnik, ne tekmovanje. Pošlji povezavo v skupino — kdor klikne, je v ligi v nekaj sekundah, brez tipkanja kode.',
+    naslovSam: 'Sam proti sebi? Brez tekmeca ni zmage.',
+    opisSam: 'Pošlji povezavo soigralcem, sodelavcem ali tistemu, ki ob vsaki tekmi ve, kdo bi moral igrati.',
+    naslov: 'Povabi še koga',
+    povezava: 'Povezava za vstop',
+    deli: 'Deli',
+    whatsapp: 'WhatsApp',
+    viber: 'Viber',
+    kopiraj: 'Kopiraj povezavo',
+    kopirano: 'Povezava je kopirana — prilepi jo v skupino.',
+    koda: 'Koda za ročni vnos: {koda}',
+  },
+
+  // Tedenski pregled mini lige: zgodbe končanega kroga.
+  pregled: {
+    naslov: 'Tedenski pregled',
+    krog: 'Krog',
+    nalaganje: 'Brskam po zapisnikih …',
+    prazno:
+      'Ko se odigra prvi krog, bodo tu zgodbe tedna: kdo je zmagal, kdo je pustil kapetana na klopi in kdo je odnesel leseno žlico.',
+    samoEna: 'Ko se pridruži še kdo, bo tu tudi kdo zmagal — in kdo izgubil.',
+    tockeKroga: 'Točke kroga',
+    deliPregled: 'Pošlji v skupino',
+    kopiran: 'Pregled je kopiran — prilepi ga v skupino.',
+    sporociloNaslov: '📊 {ime} — {krog}. krog',
+    manager: 'Manager kroga',
+    managerOpis: '{ekipa} · {tocke}. Pravica do hvalisanja velja do naslednjega kroga.',
+    kapetan: 'Kapetan kroga',
+    kapetanOpis: '{igralec} je s trakom prinesel {tocke} ({ekipa}).',
+    adut: 'Skriti adut',
+    adutOpis: '{igralec} ({tocke}) — v postavi ga ni imel nihče drug kot {ekipa}.',
+    skok: 'Dvigalo',
+    skokOpis: {
+      one: '{ekipa}: {n} mesto navzgor, zdaj {mesto}. mesto.',
+      two: '{ekipa}: {n} mesti navzgor, zdaj {mesto}. mesto.',
+      few: '{ekipa}: {n} mesta navzgor, zdaj {mesto}. mesto.',
+      other: '{ekipa}: {n} mest navzgor, zdaj {mesto}. mesto.',
+    },
+    padec: 'Prosti pad',
+    padecOpis: {
+      one: '{ekipa}: {n} mesto navzdol, zdaj {mesto}. mesto. Padalo se ni odprlo.',
+      two: '{ekipa}: {n} mesti navzdol, zdaj {mesto}. mesto. Padalo se ni odprlo.',
+      few: '{ekipa}: {n} mesta navzdol, zdaj {mesto}. mesto. Padalo se ni odprlo.',
+      other: '{ekipa}: {n} mest navzdol, zdaj {mesto}. mesto. Padalo se ni odprlo.',
+    },
+    klop: 'Zlato na klopi',
+    klopOpis: '{ekipa} · {tocke} na klopi. Selektor, kje si bil?',
+    zlica: 'Lesena žlica',
+    zlicaOpis: '{ekipa} · {tocke}. Naslednji krog bo boljši. Mogoče.',
+  },
+
   mojeMiniLige: {
     povabilo: 'Lestvica med prijatelji je bolj zabavna kot med tujci.',
     ustvari: 'Ustvari mini ligo',
     naslov: 'Moje mini lige',
     vse: 'vse →',
     vodi: ' · vodi {ime}',
+    sam: '· sam si — povabi koga →',
   },
 
   povabiSoigralce: {
@@ -136,7 +241,7 @@ export const lestvice = {
       'Povezava je nepopolna ali je liga izbrisana. Prosi, naj ti pošljejo novo, ali si <ustvari>ustvari svojo</ustvari>.',
     ustvaril: 'Ustvaril {ime}',
     miniLiga: 'Mini liga',
-    prijaviSe: 'Prijavi se ali si ustvari račun. Po prijavi te vrnemo sem in vstopiš z enim klikom.',
+    prijaviSe: 'Prijavi se ali si ustvari račun. Po prijavi te vrnemo sem in te vpišemo v ligo — kode ti ni treba tipkati.',
     prijavaAliRegistracija: 'Prijava ali registracija',
     nalaganjeEkip: 'Nalaganje tvojih ekip …',
     potrebujesEkipo:
@@ -229,6 +334,27 @@ export const lestvice = {
       'Pridi sestavit ekipo! Fantasy liga za {liga} je odprta — brezplačno, s pravimi igralci {klub}.',
     deliLive: 'Fantasy liga za {liga} je live. Sestavi ekipo iz pravih igralcev — brezplačno.',
     deliKrog: '{ekipa}: {tocke} {beseda} v {krog}. krogu. Sestavi svojo ekipo in me premagaj.',
+  },
+
+  // Tedenski pregled ekipe — pokončna slika za zgodbo (Moja ekipa, tuja ekipa).
+  zgodba: {
+    naslov: 'Tedenski pregled — {krog}. krog',
+    opis: 'Slika za zgodbo na Instagramu ali v WhatsAppu: točke, mesto v ligi, kapetan in najboljši igralec kroga.',
+    deli: 'Deli tedenski pregled',
+    prenesi: 'Prenesi tedenski pregled',
+    // Besedilo na platnu.
+    nadnaslov: 'TEDENSKI PREGLED · {krog}. KROG',
+    vKrogu: 'v {krog}. krogu',
+    gor: '▲ {n}',
+    dol: '▼ {n}',
+    enako: '=',
+    kapetan: 'KAPETAN',
+    namestnik: 'NAMESTNIK KAPETANA',
+    kapetanInNajboljsi: '{trak} · NAJBOLJŠI V EKIPI',
+    najboljsi: 'NAJBOLJŠI V EKIPI',
+    // Besedilo ob deljenju.
+    deliBesedilo: '{ekipa}: {tocke} {beseda} v {krog}. krogu. Sestavi svojo ekipo in me premagaj.',
+    deliBesediloMesto: '{ekipa}: {tocke} {beseda} v {krog}. krogu, {mesto}. mesto v ligi. Sestavi svojo ekipo in me premagaj.',
   },
 
   deliSliko: {

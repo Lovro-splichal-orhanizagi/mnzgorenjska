@@ -22,6 +22,7 @@ import { tekmovanje as najdiTekmovanje, sifraLige } from './tekmovanje.mjs'
 import { viraZa } from './viri/index.mjs'
 import { sifra } from './viri/zapisniki.mjs'
 import { isoLjubljana } from './cas.mjs'
+import { prenesiSPonovitvami } from './prenos.mjs'
 
 const PREDPOMNILNIK = 'scripts/.predpomnilnik'
 
@@ -86,7 +87,7 @@ console.log(`Tekmovanje: ${tekmovanje.name} (liga ${liga}, pomak ${pomakUr}h)`)
 async function prenesi(url, ime, sveze = false) {
   const pot = `${PREDPOMNILNIK}/${vir.ime}/${ime}`
   if (!sveze && existsSync(pot)) return readFileSync(pot, 'utf8')
-  const odgovor = await fetch(url)
+  const odgovor = await prenesiSPonovitvami(url, { glave: vir.glave, premorMs: vir.premorMs })
   if (!odgovor.ok) throw new Error(`${odgovor.status} ${url}`)
   const html = await odgovor.text()
   // Ločeno po viru: šifre lig in dokumentov so last spletišča, ne sistema,

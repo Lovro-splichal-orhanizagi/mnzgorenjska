@@ -10,12 +10,12 @@ import {
   zakajNiVeljavna,
   razvrstiMini,
   vecLig,
-  deliVabilo,
-  povezavaVabila,
   privzetoImeLige,
   DOLZINA_KODE,
   type MiniVrstica,
 } from '../lib/miniLige'
+import DeliMiniLigo from '../components/DeliMiniLigo'
+import TedenskiPregled from '../components/TedenskiPregled'
 import { t, tx } from '../i18n'
 
 const MEDALJE = ['🥇', '🥈', '🥉']
@@ -51,6 +51,9 @@ export default function MiniLige() {
   const [ekipe, setEkipe] = useState<MojaEkipa[]>([])
   const [izbrana, setIzbrana] = useState<number | null>(null)
   const [lestvica, setLestvica] = useState<MiniVrstica[]>([])
+  // Za katero ligo je naložena lestvica — dokler nova ne pride, ne vemo,
+  // ali je liga prazna, in povabila ne kričimo na polno ligo.
+  const [lestvicaZa, setLestvicaZa] = useState<number | null>(null)
   const [imeNove, setImeNove] = useState('')
   const [koda, setKoda] = useState('')
   const [zEkipo, setZEkipo] = useState<number | null>(null)
@@ -59,6 +62,8 @@ export default function MiniLige() {
   const [nalaganje, setNalaganje] = useState(true)
   const [dela, setDela] = useState(false)
   const [vzdevek, setVzdevek] = useState<string | null>(null)
+  // Pravkar ustvarjena liga: povabilo je takrat glavna stvar na strani.
+  const [novaLiga, setNovaLiga] = useState<number | null>(null)
 
   useEffect(() => {
     const vstop = params.get('vstop')
@@ -145,7 +150,9 @@ export default function MiniLige() {
           'fantasy_team_id, team_name, owner_name, total_points, rounds_played, points_per_round, competition_short, federation_short',
         )
         .eq('mini_liga_id', izbrana)
-      if (veljavno) setLestvica((data as MiniVrstica[]) ?? [])
+      if (!veljavno) return
+      setLestvica((data as MiniVrstica[]) ?? [])
+      setLestvicaZa(izbrana)
     })()
     return () => {
       veljavno = false
@@ -155,6 +162,13 @@ export default function MiniLige() {
   const urejena = useMemo(() => razvrstiMini(lestvica), [lestvica])
   const kaziLigo = useMemo(() => vecLig(lestvica), [lestvica])
   const trenutna = lige.find((l) => l.id === izbrana) ?? null
+  // Liga z eno samo ekipo potrebuje tekmece bolj kot karkoli drugega.
+  const stanjeDeljenja: 'nova' | 'sam' | 'polna' =
+    trenutna && trenutna.id === novaLiga
+      ? 'nova'
+      : trenutna && lestvicaZa === trenutna.id && lestvica.length <= 1
+        ? 'sam'
+        : 'polna'
 
   async function ustvari(podanoIme?: string) {
     setNapaka(null)
@@ -175,7 +189,10 @@ export default function MiniLige() {
     setImeNove('')
     setSporocilo(t('lestvice.miniLige.ustvarjena', { ime, koda: String(nova?.code) }))
     await naloziSvoje()
-    if (nova?.id) setIzbrana(nova.id as number)
+    if (nova?.id) {
+      setIzbrana(nova.id as number)
+      setNovaLiga(nova.id as number)
+    }
   }
 
   async function pridruzi() {
@@ -329,36 +346,8 @@ export default function MiniLige() {
             ))}
           </div>
 
-          {trenutna && (
-            <div className="kartica flex flex-wrap items-center justify-between gap-2 p-3 text-sm">
-              <span className="min-w-0 text-slate-400">
-                {tx(
-                  'lestvice.miniLige.povabilo',
-                  { povezava: povezavaVabila(trenutna.code, window.location.host), koda: trenutna.code },
-                  {
-                    povezava: (b) => <span className="font-mono text-gnl-300">{b}</span>,
-                    koda: (b) => <span className="ml-2 text-xs text-slate-400">{b}</span>,
-                  },
-                )}
-              </span>
-              <button
-                onClick={async () => {
-                  const izid = await deliVabilo(trenutna.name, trenutna.code)
-                  setSporocilo(
-                    izid === 'deljeno'
-                      ? t('lestvice.miniLige.poslano')
-                      : izid === 'kopirano'
-                        ? t('lestvice.miniLige.kopirano')
-                        : izid === 'preklicano'
-                          ? null
-                          : t('lestvice.miniLige.neuspelo'),
-                  )
-                }}
-                className="gumb-glavni text-xs"
-              >
-                {t('lestvice.miniLige.deliPovabilo')}
-              </button>
-            </div>
+          {trenutna && stanjeDeljenja !== 'polna' && (
+            <DeliMiniLigo ime={trenutna.name} koda={trenutna.code} stanje={stanjeDeljenja} />
           )}
 
           {urejena.length === 0 ? (
@@ -402,6 +391,14 @@ export default function MiniLige() {
                 </li>
               ))}
             </ul>
+          )}
+
+          {trenutna && (
+            <TedenskiPregled ligaId={trenutna.id} ime={trenutna.name} koda={trenutna.code} />
+          )}
+
+          {trenutna && stanjeDeljenja === 'polna' && (
+            <DeliMiniLigo ime={trenutna.name} koda={trenutna.code} stanje="polna" />
           )}
         </>
       )}
