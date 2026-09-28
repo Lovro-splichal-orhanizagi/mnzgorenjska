@@ -48,19 +48,45 @@ export default function VrhDrzave({ drzava }: { drzava: string }) {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h2 className="text-2xl font-black naslov">{t('lestvice.slovenija.vrhNaslov')}</h2>
-        <p className="mt-1 text-sm text-slate-400">
-          {t('lestvice.slovenija.vrhUvod', { sezona: vrstice[0].season })}
-        </p>
-      </div>
-      <div className="grid gap-5 lg:grid-cols-2">
+      {/* Najboljši pod reflektorjem: izrez pokaže snop luči (zgornji del
+          fotografije), naslov stoji spodaj, kjer je slika temna. */}
+      <section className="relative flex min-h-48 items-end overflow-hidden rounded-3xl p-5 ring-1 ring-white/10 sm:min-h-64 sm:p-8">
+        <img
+          src="/foto/igrisce.jpg"
+          alt=""
+          aria-hidden
+          className="absolute inset-0 h-full w-full object-cover object-[50%_30%]"
+        />
+        <div
+          className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/50 to-transparent"
+          aria-hidden
+        />
+        <div className="relative">
+          <div className="text-3xl leading-none sm:text-4xl" aria-hidden>👑</div>
+          <h2 className="mt-2 text-3xl font-black leading-tight text-white drop-shadow-lg sm:text-5xl">
+            {t('lestvice.slovenija.vrhNaslov')}
+          </h2>
+          <p className="mt-1 text-sm font-semibold text-gnl-200 sm:text-base">
+            {t('lestvice.slovenija.vrhUvod', { sezona: vrstice[0].season })}
+          </p>
+        </div>
+      </section>
+      {/* Mobilno vodoravni vrtiljak kot na naslovnici: po ena lestvica, prst
+          povleče vstran do naslednje. lg: tri lestvice ena ob drugi. */}
+      <div
+        className="-mx-4 flex snap-x snap-mandatory items-start gap-4 overflow-x-auto px-4 pb-3
+                   sm:mx-0 sm:px-0
+                   lg:grid lg:snap-none lg:grid-cols-3 lg:overflow-visible lg:pb-0"
+      >
         {LESTVICE.map((l) => {
           const seznam = vrstice.filter((v) => v.kategorija === l.kljuc)
           // Lestvica brez vrstic (npr. brez vratarja s čisto mrežo) izostane.
           if (seznam.length === 0) return null
           return (
-            <section key={l.kljuc} className="space-y-2">
+            <section
+              key={l.kljuc}
+              className="kartica w-[86%] shrink-0 snap-start space-y-2 p-3 sm:w-[68%] lg:w-auto lg:shrink"
+            >
               <h2 className="text-lg font-bold">{l.naslov()}</h2>
               <ul className="space-y-1">
                 {seznam.map((v) => (
