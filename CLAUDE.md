@@ -331,9 +331,20 @@ vpisana pri Supabase kot povratni naslov ponastavitve gesla in žeton nosi v
 - Drugi jezik (`src/i18n/hr/`) je lahko delen; manjkajoče pride iz
   slovenščine. `npm run prevodi -- hr` izpiše, kaj manjka. Brskalnik izbere
   jezik sam šele, ko je v `PRIPRAVLJENI`.
-- Nizi iz baze (razlogi `razlog_neveljavne_ekipe`, napake RPC), e-pošta
-  opomnikov in `index.html` so še slovenski — ob novem jeziku jih je treba
-  urediti posebej. Administracija ostaja slovenska.
+- Nizi iz baze (razlogi `razlog_neveljavne_ekipe`, napake RPC) so še
+  slovenski — ob novem jeziku jih je treba urediti posebej. Administracija
+  ostaja slovenska.
+- **E-pošta.** Opomnike in opozorila (`supabase/functions/posli-opomnik/
+  sporocila.ts`) piše funkcija v jeziku **države lige** (ena liga na klic,
+  zato ima kdor igra v obeh državah dva maila); povezave nosijo `?t=<liga>`,
+  razlog iz baze se za slovaščino prevede po obliki stavka. Smoke preveri
+  obe različici. Nov jezik = nova veja v `sporocila.ts` in vrstica v
+  `JEZIK_DRZAVE` tam. Avtentikacijska pošta (`supabase/templates/`) izbere
+  jezik po `jezik` v metapodatkih uporabnika (vpiše ga registracija);
+  v gostujočem projektu predloge **niso** iz config.toml — prilepi jih v
+  Auth → Email Templates.
+- `index.html` je slovenski; `main.tsx` za drug jezik zamenja le `lang` in
+  opis strani, naslov nastavi `useNaslov`.
 
 ## TypeScript
 

@@ -5,6 +5,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
   naslovStrani: {
     osnova: 'SLFF — Sunday League Fantasy Football',
     zStranjo: '{naslov} · SLFF',
+    opis: 'Fantasy futbal pre regionálne a okresné futbalové súťaže. Zostav si tím, vyber kapitána a súťaž so susedmi.',
   },
   niStrani: {
     naslov: 'Stránka neexistuje',

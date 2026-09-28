@@ -1,0 +1,21 @@
+<!-- Prijava s povezavo. Jezik izbere `jezik` v metapodatkih uporabnika;
+     brez njega slovenščina. Vsebino prilepi v Supabase → Auth → Email
+     Templates → Magic Link. -->
+<div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; color: #0f172a;">
+{{ if eq (printf "%v" .Data.jezik) "sk" }}
+  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Prihlásenie do SLFF</p>
+  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Klikni na tlačidlo a prihlásiš sa. Odkaz platí jednu hodinu a dá sa použiť iba raz.</p>
+  <p style="text-align: center; margin: 24px 0;">
+    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Prihlásiť sa →</a>
+  </p>
+  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Ak si o prihlásenie nežiadal ty, tento e-mail ignoruj.</p>
+{{ else }}
+  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Prijava v SLFF</p>
+  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Klikni gumb in prijavljen/a si. Povezava velja eno uro in jo lahko uporabiš le enkrat.</p>
+  <p style="text-align: center; margin: 24px 0;">
+    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Prijavi se →</a>
+  </p>
+  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Če prijave nisi zahteval/a ti, ta mail prezri.</p>
+{{ end }}
+  <p style="font-size: 12px; color: #94a3b8; margin: 24px 0 0;">SLFF — Sunday League Fantasy Football · slff.eu</p>
+</div>
