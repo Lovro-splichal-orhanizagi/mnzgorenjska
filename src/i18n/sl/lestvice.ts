@@ -58,10 +58,12 @@ export const lestvice = {
     prazno: 'V tej ligi še nihče ni izbral svojega kluba. Bodi prvi!',
     izbira: {
       naslov: 'Za kateri klub navijaš?',
-      opis: 'Izberi klub in tvoje točke bodo štele zanj na lestvici navijačev. Isti klub je tudi tvoj klub poznavalca pri glasovanju o pozicijah — tam tvoj glas za njegove igralce šteje več.',
+      opis: 'Izberi klub in tvoje točke bodo štele zanj na lestvici navijačev.',
       izberi: '— izberi klub —',
       shrani: 'Navijam za ta klub',
-      spremeni: 'Klub lahko kadarkoli spremeniš na strani <pozicije>Pozicije</pozicije>.',
+      spremeni: 'Klub lahko kadarkoli zamenjaš tu, na lestvici navijačev.',
+      mojKlub: 'Navijaš za <b>{klub}</b>.',
+      zamenjaj: 'Zamenjaj klub',
     },
     klub: {
       naslov: 'Navijači tega kluba',

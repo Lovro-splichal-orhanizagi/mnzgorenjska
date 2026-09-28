@@ -3028,7 +3028,7 @@ preveri(
     const brez = izris(<KlubMedNavijaci podatki={n} klubId={4} klubIme="Tržič" ligaSlug={null} />)
     preveri('izris: navijaci kluba brez', brez.includes('še nima navijačev'))
     const izbira = izris(<IzbiraKluba klubi={[{ team_id: 1, klub: 'ND Renče' }]} onIzberi={() => {}} />)
-    preveri('izris: izbira kluba', izbira.includes('Za kateri klub navijaš?') && izbira.includes('/positions'))
+    preveri('izris: izbira kluba', izbira.includes('Za kateri klub navijaš?') && !izbira.includes('/positions') && !izbira.includes('glas'))
   } catch (e) {
     preveri('izris: navijaci kluba', false, e.message)
   }

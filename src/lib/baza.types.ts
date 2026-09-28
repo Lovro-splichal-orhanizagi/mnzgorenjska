@@ -2252,6 +2252,7 @@ export type Database = {
           insider_competition_id: number | null
           insider_team_id: number | null
           is_admin: boolean
+          navijam_team_id: number | null
         }
         Insert: {
           brez_opomnikov?: boolean
@@ -2261,6 +2262,7 @@ export type Database = {
           insider_competition_id?: number | null
           insider_team_id?: number | null
           is_admin?: boolean
+          navijam_team_id?: number | null
         }
         Update: {
           brez_opomnikov?: boolean
@@ -2270,6 +2272,7 @@ export type Database = {
           insider_competition_id?: number | null
           insider_team_id?: number | null
           is_admin?: boolean
+          navijam_team_id?: number | null
         }
         Relationships: [
           {
@@ -2317,6 +2320,34 @@ export type Database = {
           {
             foreignKeyName: "profiles_insider_team_id_fkey"
             columns: ["insider_team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_navijam_team_id_fkey"
+            columns: ["navijam_team_id"]
+            isOneToOne: false
+            referencedRelation: "competition_teams"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "profiles_navijam_team_id_fkey"
+            columns: ["navijam_team_id"]
+            isOneToOne: false
+            referencedRelation: "krog_najboljsi"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "profiles_navijam_team_id_fkey"
+            columns: ["navijam_team_id"]
+            isOneToOne: false
+            referencedRelation: "player_reports_view"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "profiles_navijam_team_id_fkey"
+            columns: ["navijam_team_id"]
             isOneToOne: false
             referencedRelation: "teams"
             referencedColumns: ["id"]

@@ -484,8 +484,23 @@ set local role anon;
 select pg_temp.zavrnjeno('anonimni ne bere stanja ekip', $$select * from stanje_mojih_ekip()$$);
 reset role;
 
--- Navijači klubov: javno branje brez obhoda RLS. Testni uporabnik je zgoraj
--- izbral klub -913001 in ima ekipo v -913001; en navijač je premalo za mesto.
+-- Klub, za katerega navijam: lastnik ga nastavi sebi, tujemu ne. Navijanje
+-- ni poznavalec — insider_team_id ostane, kakor je bil.
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ac',true);
+set local role authenticated;
+update profiles set navijam_team_id=-913002 where id='b8a06635-2322-4444-8c42-44e419f912ab';
+reset role;
+select pg_temp.preveri('tujec ne more nastaviti navijanja drugemu',
+  (select navijam_team_id is distinct from -913002 from profiles where id='b8a06635-2322-4444-8c42-44e419f912ab'));
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
+update profiles set navijam_team_id=-913001 where id=auth.uid();
+select pg_temp.preveri('lastnik lahko nastavi klub, za katerega navija',
+  (select navijam_team_id=-913001 and insider_team_id=-913001 from profiles where id=auth.uid()));
+reset role;
+
+-- Navijači klubov: javno branje brez obhoda RLS. Testni uporabnik navija za
+-- klub -913001 in ima ekipo v -913001; en navijač je premalo za mesto.
 select set_config('request.jwt.claim.sub','',true);
 set local role anon;
 select pg_temp.preveri('anonimni bere navijace klubov',

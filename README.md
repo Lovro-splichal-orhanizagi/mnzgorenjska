@@ -145,7 +145,7 @@ Pogledi: `appearance_points` (točke nastopa),
 Funkcija `ucinkovita_postava(ekipa, krog)` vrne igralce, ki v krogu dejansko prinesejo
 točke, in njihov množitelj. Funkcija `vrh_drzave(drzava, koliko)` vrne najboljše
 igralce tekoče sezone vseh lig države (stran Slovenija, zavihek Igralci). Funkcija
-`navijaci_klubov(liga)` vrne klube lige z navijači (`profiles.insider_team_id`) in
+`navijaci_klubov(liga)` vrne klube lige z navijači (`profiles.navijam_team_id`) in
 povprečjem njihovih fantasy točk (Lestvica, zavihek Navijači klubov; stran kluba).
 
 ### Varnost (RLS)
@@ -153,7 +153,7 @@ povprečjem njihovih fantasy točk (Lestvica, zavihek Navijači klubov; stran kl
 - Klubi, igralci, krogi, točke in lestvica so **javno berljivi**.
 - Glasovi o asistencah in pozicijah so **javno vidni** (skupnost vidi napredek do praga), oddati pa jih je mogoče **le v svojem imenu**.
 - Asistenco in pozicijo potrdi **sprožilec v bazi**, ne odjemalec — praga ni mogoče obiti iz brskalnika.
-- Lastnik profila lahko spremeni le prikazno ime in svoj klub; `is_admin` in
+- Lastnik profila lahko spremeni le prikazno ime, klub poznavalca in klub, za katerega navija; `is_admin` in
   datum registracije ureja le servisna vloga.
 - Lastnik lahko ustvari in preimenuje fantasy ekipo. Denar, nakupne cene in
   kader spreminja izključno `shrani_ekipo`, ki preveri lastništvo in obračuna

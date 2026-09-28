@@ -16,8 +16,9 @@ const povprecje = (n: number) =>
   stevilo(n, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 
 /**
- * Navijači klubov lige in klub prijavljenega (`profiles.insider_team_id`).
- * Isto izbiro kluba bere in piše stran Pozicije — navijač je poznavalec.
+ * Navijači klubov lige in klub prijavljenega (`profiles.navijam_team_id`).
+ * Navijanje ni poznavalec kluba (`insider_team_id`, stran Pozicije): ta
+ * daje glasu utež, zato ga to povabilo ne nastavlja.
  */
 function useNavijaci(tekmovanjeId: number | null) {
   const { session } = useAuth()
@@ -60,11 +61,11 @@ function useNavijaci(tekmovanjeId: number | null) {
     let veljavno = true
     supabase
       .from('profiles')
-      .select('insider_team_id')
+      .select('navijam_team_id')
       .eq('id', uporabnikId)
       .maybeSingle()
       .then(({ data }) => {
-        if (veljavno) setMojKlub(data?.insider_team_id ?? null)
+        if (veljavno) setMojKlub(data?.navijam_team_id ?? null)
       })
     return () => {
       veljavno = false
@@ -77,7 +78,7 @@ function useNavijaci(tekmovanjeId: number | null) {
       setNapaka(null)
       const { error } = await supabase
         .from('profiles')
-        .update({ insider_team_id: klubId })
+        .update({ navijam_team_id: klubId })
         .eq('id', uporabnikId)
       if (error) return setNapaka(error.message)
       setMojKlub(klubId)
@@ -128,15 +129,7 @@ export function IzbiraKluba({
           {t('lestvice.navijaciKlubov.izbira.shrani')}
         </button>
       </div>
-      <p className="text-xs text-slate-500">
-        {tx('lestvice.navijaciKlubov.izbira.spremeni', {}, {
-          pozicije: (v) => (
-            <Link to="/positions" className="underline hover:text-slate-300">
-              {v}
-            </Link>
-          ),
-        })}
-      </p>
+      <p className="text-xs text-slate-500">{t('lestvice.navijaciKlubov.izbira.spremeni')}</p>
     </div>
   )
 }
@@ -279,14 +272,32 @@ export function TabelaNavijacev({
 /** Vsi klubi lige — zavihek na Lestvici. */
 export default function NavijaciKlubov({ tekmovanjeId }: { tekmovanjeId: number | null }) {
   const { podatki, napaka, mojKlub, nastaviKlub } = useNavijaci(tekmovanjeId)
+  const [urejam, setUrejam] = useState(false)
   if (napaka) return <p className="text-sm text-rose-400">{t('skupno.napaka', { sporocilo: napaka })}</p>
   if (!podatki) return <p className="animiraj-utrip text-slate-400">{t('skupno.nalaganje')}</p>
   const klubi = [...podatki.uvrsceni, ...podatki.premalo, ...podatki.brez].sort((a, b) =>
     a.klub.localeCompare(b.klub),
   )
+  // Klub prijavljenega, če igra v tej ligi (navija lahko za klub druge lige).
+  const moj = mojKlub != null ? klubi.find((k) => k.team_id === mojKlub) : undefined
   return (
     <div className="space-y-3">
-      {mojKlub === null && <IzbiraKluba klubi={klubi} onIzberi={nastaviKlub} />}
+      {mojKlub === null || urejam ? (
+        <IzbiraKluba
+          klubi={klubi}
+          onIzberi={(id) => {
+            setUrejam(false)
+            nastaviKlub(id)
+          }}
+        />
+      ) : moj ? (
+        <p className="text-sm text-slate-300">
+          {tx('lestvice.navijaciKlubov.izbira.mojKlub', { klub: moj.klub }, { b: (v) => <strong>{v}</strong> })}{' '}
+          <button type="button" onClick={() => setUrejam(true)} className="text-xs text-gnl-400 underline">
+            {t('lestvice.navijaciKlubov.izbira.zamenjaj')}
+          </button>
+        </p>
+      ) : null}
       <TabelaNavijacev podatki={podatki} mojKlub={mojKlub} />
     </div>
   )

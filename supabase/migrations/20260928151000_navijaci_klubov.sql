@@ -4,9 +4,11 @@
 -- Leskovec 8) — ljudje igrajo za svoj klub. Ta funkcija da vsaki ligi
 -- lestvico klubov po povprečju točk njihovih navijačev.
 --
--- Navijač je, kdor ima v profilu izbran klub (`profiles.insider_team_id`,
--- izbira se na strani Pozicije) in ima v tej ligi fantasy ekipo. Klub je
--- en za človeka, ne po ligah: `teams` so skupni (Šenčur je isti klub pri
+-- Navijač je, kdor ima v profilu izbran klub (`profiles.navijam_team_id`)
+-- in ima v tej ligi fantasy ekipo. Navijanje ni isto kot poznavalec kluba
+-- (`insider_team_id`): ta da glasu za pozicije trikratno utež, zato ga ne
+-- ponujamo vsakemu, ki navija. Poznavalec pa zagotovo navija, zato se novo
+-- polje začne z njegovim klubom. Klub je en za človeka, ne po ligah: `teams` so skupni (Šenčur je isti klub pri
 -- članih in mladincih), zato ista izbira velja v vsaki ligi, kjer klub igra.
 -- Navijač kluba, ki v tej ligi ne igra, se tu ne šteje.
 --
@@ -21,9 +23,26 @@
 -- privzeto 3) — povprečje enega managerja ni klubska lestvica.
 --
 -- Vrne le javna polja: ime ekipe in prikazno ime lastnika sta že na lestvici,
--- izbira kluba pa je v `profiles` javno berljiva. Funkcija je
+-- izbira kluba pa je v `profiles` javno berljiva (kot `insider_team_id`). Funkcija je
 -- `security invoker`, zato velja RLS vsake tabele, ki jo bere.
 
+-- === 1. Klub, za katerega navijam ==========================================
+alter table public.profiles
+  add column if not exists navijam_team_id bigint references public.teams(id) on delete set null;
+create index if not exists profiles_navijam_team_idx on public.profiles (navijam_team_id);
+
+comment on column public.profiles.navijam_team_id is
+  'Klub, za katerega uporabnik navija (lestvica Navijači klubov). Brez vpliva na uteži glasovanja — to je insider_team_id.';
+
+update public.profiles
+   set navijam_team_id = insider_team_id
+ where insider_team_id is not null and navijam_team_id is null;
+
+-- Lastnik sme pisati le našteta polja (20260913100000, 20260923090000);
+-- politika "posodobi svoj profil" že omeji vrstico na auth.uid().
+grant update (navijam_team_id) on public.profiles to authenticated;
+
+-- === 2. Lestvica navijačev ==================================================
 create or replace function public.navijaci_klubov(p_competition_id bigint)
 returns table (
   team_id bigint,
@@ -62,14 +81,14 @@ as $$
      where ct.competition_id = p_competition_id
   ),
   navijaci as (
-    select pr.insider_team_id as team_id,
+    select pr.navijam_team_id as team_id,
            ft.id as fantasy_team_id,
            ft.name as ekipa,
            pr.display_name as lastnik
       from fantasy_teams ft
       join profiles pr on pr.id = ft.owner_id
      where ft.competition_id = p_competition_id
-       and pr.insider_team_id in (select k.team_id from klubi k)
+       and pr.navijam_team_id in (select k.team_id from klubi k)
   ),
   tocke as (
     select frp.fantasy_team_id,
@@ -118,7 +137,7 @@ as $$
 $$;
 
 comment on function public.navijaci_klubov(bigint) is
-  'Klubi lige z navijači (profiles.insider_team_id) in povprečjem njihovih fantasy točk v sezoni in zadnjem krogu. Mesto le pri vsaj min_navijacev navijačih.';
+  'Klubi lige z navijači (profiles.navijam_team_id) in povprečjem njihovih fantasy točk v sezoni in zadnjem krogu. Mesto le pri vsaj min_navijacev navijačih.';
 
 revoke all on function public.navijaci_klubov(bigint) from public;
 grant execute on function public.navijaci_klubov(bigint) to anon, authenticated;

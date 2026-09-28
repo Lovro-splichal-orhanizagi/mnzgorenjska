@@ -275,6 +275,13 @@ export default function Lestvica() {
     }
   }, [mojaEkipa, krog?.id])
 
+  // Povezava `#fans` pripelje do zavihkov, ki stojijo pod zmagovalci krogov.
+  // Brskalnik sam ne skoči, ker elementa ob nalaganju še ni.
+  useEffect(() => {
+    if (nalaganje || hash !== '#fans') return
+    document.getElementById('fans')?.scrollIntoView({ block: 'start' })
+  }, [nalaganje, hash])
+
   if (napaka) return <p className="text-rose-400">{t('skupno.napaka', { sporocilo: napaka })}</p>
   if (nalaganje)
     return <p className="animiraj-utrip text-slate-400">{t('skupno.nalaganje')}</p>
@@ -460,7 +467,7 @@ export default function Lestvica() {
       </section>
 
       {/* Ekipe ali navijači klubov: ljudje igrajo tudi za svoj klub. */}
-      <div role="tablist" className="flex gap-1.5">
+      <div id="fans" role="tablist" className="flex scroll-mt-20 gap-1.5">
         {(['ekipe', 'navijaci'] as const).map((z) => (
           <button
             key={z}

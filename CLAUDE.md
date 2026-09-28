@@ -270,9 +270,10 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   `appearance_points`: prek pogleda je poizvedba trajala 10 s, iz tabel ~150 ms
 - `navijaci_klubov(liga)` → klubi lige po povprečju točk navijačev (zavihek
   Navijači klubov na Lestvici, `#fans`; razdelek na strani kluba). Navijač je
-  `profiles.insider_team_id` — isti klub kot poznavalec pri glasovanju o
-  pozicijah, en na človeka, ne po ligah (klubi so skupni); šteje le v ligi,
-  kjer klub igra. Mesto dobi klub z vsaj `min_navijacev_kluba` navijači
+  `profiles.navijam_team_id` — en klub na človeka, ne po ligah (klubi so
+  skupni); šteje le v ligi, kjer klub igra. Navijanje **ni** poznavalec
+  (`insider_team_id`, trikratna utež glasu za pozicije), zato povabilo piše
+  samo `navijam_team_id`; ob uvedbi je dobil klub vsak poznavalec. Mesto dobi klub z vsaj `min_navijacev_kluba` navijači
   (privzeto 3). Točke bere iz `fantasy_round_points` (tabela), ne računa sproti
 - stran Rezultati (`/results`, `/match/:id`) sestavi postavi tekme iz
   `appearances` + `appearance_points`; nove sheme ne potrebuje
@@ -458,8 +459,8 @@ update competitions set active = true where slug in ('lj-1-liga','lj-2-liga');
 - Po spremembi pravic ali rokov poženi tudi `npm run test:varnost`. Testi
   potrebujejo le lokalni Docker Postgres in migracije, ne uvoženih tekem.
   `SUPABASE_TEST_DB` lahko izbere izolirano testno bazo v istem kontejnerju.
-- Lastnik profila sme posodobiti le `display_name`, `insider_team_id` in
-  `brez_opomnikov` (odjava od opomnikov, stran `/reminders`); `is_admin` je servisno polje. Lastnik ekipe sme pisati le vnosna polja ob
+- Lastnik profila sme posodobiti le `display_name`, `insider_team_id`,
+  `navijam_team_id` in `brez_opomnikov` (odjava od opomnikov, stran `/reminders`); `is_admin` je servisno polje. Lastnik ekipe sme pisati le vnosna polja ob
   nastanku in ime ob spremembi. Za kader in denar vedno kliči `shrani_ekipo`.
   Brisanje ekipe je servisno opravilo, ker bi sicer obšlo zaklenjeno zgodovino.
 - Nove tabele in pogledi v `public` vlogama `anon`/`authenticated` **ne dajo

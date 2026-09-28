@@ -55,10 +55,12 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     prazno: 'V tejto lige si zatiaľ nikto nevybral svoj klub. Buď prvý!',
     izbira: {
       naslov: 'Ktorému klubu fandíš?',
-      opis: 'Vyber si klub a tvoje body sa mu budú počítať v tabuľke fanúšikov. Ten istý klub je aj tvoj klub znalca pri hlasovaní o pozíciách — tam má tvoj hlas za jeho hráčov väčšiu váhu.',
+      opis: 'Vyber si klub a tvoje body sa mu budú počítať v tabuľke fanúšikov.',
       izberi: '— vyber klub —',
       shrani: 'Fandím tomuto klubu',
-      spremeni: 'Klub môžeš kedykoľvek zmeniť na stránke <pozicije>Pozície</pozicije>.',
+      spremeni: 'Klub môžeš kedykoľvek zmeniť tu, v tabuľke fanúšikov.',
+      mojKlub: 'Fandíš klubu <b>{klub}</b>.',
+      zamenjaj: 'Zmeniť klub',
     },
     klub: {
       naslov: 'Fanúšikovia tohto klubu',
