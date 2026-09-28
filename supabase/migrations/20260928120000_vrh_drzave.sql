@@ -14,8 +14,17 @@
 -- Tekoča sezona je zadnja sezona, ki jo ima katerakoli aktivna liga države;
 -- liga, ki te sezone še nima uvožene, ne prispeva ničesar (ne pa lanske
 -- statistike).
+--
+-- Asistenc ni: potrdi jih glasovanje, ki živi skoraj samo na Gorenjskem
+-- (septembra 2026 člani 73 od 164 golov, mladinci 52 od 132, 1. SNL, 2. SNL,
+-- Ptuj, Maribor … nič). Lestvica asistenc bi bila gorenjska, točke z njimi
+-- pa bi gorenjskim igralcem dale +3 za vsako. Zato so točke tu brez asistenc
+-- — samo tisto, kar pove zapisnik v vsaki ligi enako. Ko bo glasovanje živo
+-- povsod, se lahko vrneta.
 
-create or replace function vrh_drzave(p_drzava text, p_koliko int default 10)
+drop function if exists vrh_drzave(text, int);
+
+create function vrh_drzave(p_drzava text, p_koliko int default 10)
 returns table (
   kategorija text,
   mesto int,
@@ -29,6 +38,7 @@ returns table (
   competition_short text,
   vrednost numeric,
   minutes int,
+  tekem int,
   season text
 )
 language sql
@@ -54,6 +64,7 @@ as $$
   ),
   nastopi as (
     select a.player_id,
+           count(distinct a.match_id)::int as tekem,
            sum(a.minutes_played)::int as minutes,
            sum(a.goals) as goli,
            sum(case when a.clean_sheet and a.minutes_played >= 60 then 1 else 0 end) as ciste_mreze
@@ -77,22 +88,20 @@ as $$
      group by g.assist_player_id
   ),
   stat as (
-    select n.player_id, n.minutes, n.goli, n.ciste_mreze,
-           coalesce(t.tocke, 0) as tocke,
-           coalesce(a.asistence, 0) as asistence
+    select n.player_id, n.tekem, n.minutes, n.goli, n.ciste_mreze,
+           -- asistenca je vredna 3 točke na vsaki poziciji
+           coalesce(t.tocke, 0) - 3 * coalesce(a.asistence, 0) as tocke
       from nastopi n
       left join tocke t on t.player_id = n.player_id
       left join asistence a on a.player_id = n.player_id
   ),
   kategorije as (
-    select 'tocke' as kategorija, s.player_id, s.minutes, s.tocke::numeric as vrednost from stat s
+    select 'tocke' as kategorija, s.player_id, s.tekem, s.minutes, s.tocke::numeric as vrednost from stat s
     union all
-    select 'goli', s.player_id, s.minutes, s.goli from stat s
-    union all
-    select 'asistence', s.player_id, s.minutes, s.asistence from stat s
+    select 'goli', s.player_id, s.tekem, s.minutes, s.goli from stat s
     union all
     -- čista mreža je dosežek vratarja; branilci jo imajo le zraven
-    select 'ciste_mreze', s.player_id, s.minutes, s.ciste_mreze
+    select 'ciste_mreze', s.player_id, s.tekem, s.minutes, s.ciste_mreze
       from stat s join players p on p.id = s.player_id
      where p.position = 'GK'
   ),
@@ -107,7 +116,7 @@ as $$
   select x.kategorija, x.mesto::int, p.id, p.full_name, p.position,
          t.name, t.short_name, t.logo_url,
          l.slug, l.short_name,
-         x.vrednost, x.minutes, (select s from sezona)
+         x.vrednost, x.minutes, x.tekem, (select s from sezona)
     from razvrsceni x
     join players p on p.id = x.player_id
     join lige l on l.id = p.competition_id
@@ -117,7 +126,7 @@ as $$
 $$;
 
 comment on function vrh_drzave(text, int) is
-  'Vrh igralcev tekoče sezone vseh aktivnih lig države: tocke, goli, asistence, ciste_mreze (vratarji).';
+  'Vrh igralcev tekoče sezone vseh aktivnih lig države: tocke (brez asistenc), goli, ciste_mreze (vratarji).';
 
 -- Javni RPC: privzeto funkcije niso odprte (migracija 20260923090000).
 grant execute on function vrh_drzave(text, int) to anon, authenticated;

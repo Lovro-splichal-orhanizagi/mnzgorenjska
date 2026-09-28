@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { formatirajTocke, prikazniIme } from '../lib/pomozno'
+import { formatirajTocke, mnozina, prikazniIme, TEKME } from '../lib/pomozno'
 import Grb from './Grb'
 import { t } from '../i18n'
 import type { Database } from '../lib/baza.types'
@@ -9,16 +9,17 @@ import type { Database } from '../lib/baza.types'
 type Vrstica = Database['public']['Functions']['vrh_drzave']['Returns'][number]
 
 // Vrstni red in oznake lestvic; ključ je `kategorija` iz `vrh_drzave`.
+// Asistenc ni (in točke so brez njih): potrdi jih glasovanje, ki živi skoraj
+// samo na Gorenjskem, zato lig med seboj ne bi primerjali pošteno.
 const LESTVICE = [
   { kljuc: 'tocke', naslov: () => t('lestvice.slovenija.vrhTocke'), ikona: '', tocke: true },
   { kljuc: 'goli', naslov: () => t('lestvice.slovenija.vrhGoli'), ikona: '⚽', tocke: false },
-  { kljuc: 'asistence', naslov: () => t('lestvice.slovenija.vrhAsistence'), ikona: '🅰️', tocke: false },
   { kljuc: 'ciste_mreze', naslov: () => t('lestvice.slovenija.vrhCisteMreze'), ikona: '🧤', tocke: false },
 ]
 
 /**
- * Najboljši igralci vseh lig države v tekoči sezoni — točke, strelci,
- * asistence in čiste mreže vratarjev. Sešteje baza (`vrh_drzave`), da
+ * Najboljši igralci vseh lig države v tekoči sezoni — točke (brez asistenc),
+ * strelci in čiste mreže vratarjev. Sešteje baza (`vrh_drzave`), da
  * brskalniku ni treba brati vseh igralcev vseh lig.
  */
 export default function VrhDrzave({ drzava }: { drzava: string }) {
@@ -53,7 +54,7 @@ export default function VrhDrzave({ drzava }: { drzava: string }) {
       <div className="grid gap-5 lg:grid-cols-2">
         {LESTVICE.map((l) => {
           const seznam = vrstice.filter((v) => v.kategorija === l.kljuc)
-          // Lestvica brez vrstic (npr. asistence, dokler jih nihče ne potrdi) izostane.
+          // Lestvica brez vrstic (npr. brez vratarja s čisto mrežo) izostane.
           if (seznam.length === 0) return null
           return (
             <section key={l.kljuc} className="space-y-2">
@@ -78,7 +79,7 @@ export default function VrhDrzave({ drzava }: { drzava: string }) {
                         {prikazniIme(v.full_name)}
                       </Link>
                       <div className="truncate text-xs text-slate-500">
-                        {v.team_name} · {v.competition_short}
+                        {v.team_name} · {v.competition_short} · {mnozina(v.tekem, TEKME)}
                       </div>
                     </div>
                     <span className="shrink-0 font-black tabular-nums text-gnl-300">
@@ -92,6 +93,7 @@ export default function VrhDrzave({ drzava }: { drzava: string }) {
           )
         })}
       </div>
+      <p className="text-xs text-slate-500">{t('lestvice.slovenija.vrhOpomba')}</p>
     </div>
   )
 }

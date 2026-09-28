@@ -61,8 +61,9 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     vrhUvod: 'Najlepší hráči zo všetkých líg spolu, sezóna {sezona}.',
     vrhTocke: 'Najviac bodov',
     vrhGoli: 'Strelci',
-    vrhAsistence: 'Asistencie',
     vrhCisteMreze: 'Čisté kontá — brankári',
+    vrhOpomba:
+      'Body sú bez asistencií: asistencie potvrdzuje hlasovanie, ktoré vo väčšine líg ešte nebeží, takže ligy by neboli v rovnakom postavení. Ligy odohrali rôzny počet kôl.',
     vrhPrazno: 'V aktuálnej sezóne sa ešte neodohrali žiadne zápasy.',
   },
 

@@ -4851,6 +4851,7 @@ export type Database = {
           team_logo: string
           team_name: string
           team_short: string
+          tekem: number
           vrednost: number
         }[]
       }
