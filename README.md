@@ -143,7 +143,8 @@ Pogledi: `appearance_points` (točke nastopa),
 `minute_kroga`, `fantasy_round_points` (točke ekipe po krogih, z menjavami in kapetanom),
 `fantasy_team_standings`, `fantasy_team_budget`.
 Funkcija `ucinkovita_postava(ekipa, krog)` vrne igralce, ki v krogu dejansko prinesejo
-točke, in njihov množitelj.
+točke, in njihov množitelj. Funkcija `vrh_drzave(drzava, koliko)` vrne najboljše
+igralce tekoče sezone vseh lig države (stran Slovenija, zavihek Igralci).
 
 ### Varnost (RLS)
 

@@ -56,6 +56,14 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     krogovTozilnik: { one: '{n} kolo', few: '{n} kolá', many: '{n} kola', other: '{n} kôl' },
     nobenaEkipa: 'Žiadny tím ešte nemá odohraté kolo.',
     lestvicaLige: 'Tabuľka tvojej ligy',
+    zavihekEkipe: 'Tímy',
+    zavihekIgralci: 'Hráči',
+    vrhUvod: 'Najlepší hráči zo všetkých líg spolu, sezóna {sezona}.',
+    vrhTocke: 'Najviac bodov',
+    vrhGoli: 'Strelci',
+    vrhAsistence: 'Asistencie',
+    vrhCisteMreze: 'Čisté kontá — brankári',
+    vrhPrazno: 'V aktuálnej sezóne sa ešte neodohrali žiadne zápasy.',
   },
 
   miniLige: {

@@ -264,6 +264,10 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   vhod v izračun **potrebuje svoj sprožilec**, sicer lestvica zaostaja do noči
   (`npm run preizkus-tock-krogov` primerja tabelo z izračunom).
 - `player_standings` → lestvica igralcev (točke, forma, na tekmo, izbranost)
+- `vrh_drzave(drzava, koliko)` → vrh igralcev tekoče sezone vseh aktivnih lig
+  države (točke, goli, asistence, čiste mreže vratarjev) za zavihek Igralci na
+  strani Slovenija. Bere tabele (`player_scores`, `appearances`, `goals`), ne
+  `appearance_points`: prek pogleda je poizvedba trajala 10 s, iz tabel ~150 ms
 - stran Rezultati (`/results`, `/match/:id`) sestavi postavi tekme iz
   `appearances` + `appearance_points`; nove sheme ne potrebuje
 - `match_assist_status` → odigrane tekme s številom golov brez asistence

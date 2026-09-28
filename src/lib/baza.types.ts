@@ -4836,6 +4836,24 @@ export type Database = {
       uveljavi_pozicije: { Args: Record<PropertyKey, never>; Returns: number }
       uveljavi_zapadle_cene: { Args: { p_okno?: string }; Returns: number }
       voter_weight: { Args: { p_voter_id: string }; Returns: number }
+      vrh_drzave: {
+        Args: { p_drzava: string; p_koliko?: number }
+        Returns: {
+          competition_short: string
+          competition_slug: string
+          full_name: string
+          kategorija: string
+          mesto: number
+          minutes: number
+          player_id: number
+          position: string
+          season: string
+          team_logo: string
+          team_name: string
+          team_short: string
+          vrednost: number
+        }[]
+      }
       zabelezi_sponzorja: {
         Args: {
           p_competition_id?: number

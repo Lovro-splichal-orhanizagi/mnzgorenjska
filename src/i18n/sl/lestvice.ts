@@ -60,6 +60,14 @@ export const lestvice = {
     krogovTozilnik: { one: '{n} krog', two: '{n} kroga', few: '{n} kroge', other: '{n} krogov' },
     nobenaEkipa: 'Nobena ekipa še nima odigranega kroga.',
     lestvicaLige: 'Lestvica svoje lige',
+    zavihekEkipe: 'Ekipe',
+    zavihekIgralci: 'Igralci',
+    vrhUvod: 'Najboljši igralci vseh lig skupaj, sezona {sezona}.',
+    vrhTocke: 'Največ točk',
+    vrhGoli: 'Strelci',
+    vrhAsistence: 'Asistence',
+    vrhCisteMreze: 'Čiste mreže — vratarji',
+    vrhPrazno: 'V tekoči sezoni še ni odigranih tekem.',
   },
 
   miniLige: {

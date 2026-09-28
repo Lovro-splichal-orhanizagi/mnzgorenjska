@@ -5,6 +5,7 @@ import { formatirajTocke, mnozina, EKIPE, KROGI } from '../lib/pomozno'
 import { vseVrstice } from '../lib/strani'
 import { useNaslov } from '../lib/naslov'
 import { useTekmovanje } from '../lib/tekmovanje'
+import VrhDrzave from '../components/VrhDrzave'
 import {
   razvrsti,
   zMesti,
@@ -27,6 +28,7 @@ const MEDALJE = ['🥇', '🥈', '🥉']
 export default function Slovenija() {
   const [vseVrsticeDrzav, setVrstice] = useState<DrzavnaVrstica[]>([])
   const [kako, setKako] = useState<Razvrstitev>('skupno')
+  const [zavihek, setZavihek] = useState<'ekipe' | 'igralci'>('ekipe')
   const [nalaganje, setNalaganje] = useState(true)
   const [napaka, setNapaka] = useState<string | null>(null)
   const [seNiPripravljena, setSeNiPripravljena] = useState(false)
@@ -77,7 +79,7 @@ export default function Slovenija() {
   // Pogled združi vse aktivne lige vseh držav. Državna lestvica je lestvica
   // DRŽAVE, ki jo obiskovalec gleda — Slovenec slovaških ekip ne vidi. Filter
   // je tu in ne v poizvedbi, da stran ne pade, če koda pride pred migracijo.
-  const { tekmovanja } = useTekmovanje()
+  const { tekmovanja, drzava } = useTekmovanje()
   const vrstice = useMemo(() => {
     const lige = new Set(tekmovanja.map((l) => l.slug))
     return lige.size ? vseVrsticeDrzav.filter((v) => v.competition_slug != null && lige.has(v.competition_slug)) : vseVrsticeDrzav
@@ -100,29 +102,22 @@ export default function Slovenija() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-black naslov sm:text-3xl">{t('lestvice.slovenija.naslov')}</h1>
-        <p className="mt-1 text-sm text-slate-400">
-          {t('lestvice.slovenija.povzetek', {
-            ekip: mnozina(skupaj.ekip, EKIPE),
-            lig: t('lestvice.slovenija.lig', { n: skupaj.lig }),
-            zvez: t('lestvice.slovenija.zvez', { n: skupaj.zvez }),
-          })}
-        </p>
-      </div>
+      <h1 className="text-2xl font-black naslov sm:text-3xl">{t('lestvice.slovenija.naslov')}</h1>
 
-      <div className="flex gap-2">
+      <div className="flex gap-1 border-b border-white/10">
         {(
           [
-            ['skupno', t('lestvice.slovenija.skupno')],
-            ['povprecje', t('lestvice.slovenija.naKrog')],
-          ] as [Razvrstitev, string][]
+            ['ekipe', t('lestvice.slovenija.zavihekEkipe')],
+            ['igralci', t('lestvice.slovenija.zavihekIgralci')],
+          ] as const
         ).map(([k, naslov]) => (
           <button
             key={k}
-            onClick={() => setKako(k)}
-            className={`rounded-lg px-3 py-1.5 text-sm font-bold ${
-              kako === k ? 'bg-gnl-500/20 text-gnl-200 ring-1 ring-gnl-400/40' : 'bg-white/5 text-slate-400'
+            onClick={() => setZavihek(k)}
+            className={`-mb-px border-b-2 px-4 py-2 text-sm font-bold ${
+              zavihek === k
+                ? 'border-gnl-400 text-gnl-200'
+                : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
           >
             {naslov}
@@ -130,62 +125,95 @@ export default function Slovenija() {
         ))}
       </div>
 
-      {kako === 'povprecje' && (
-        <p className="text-xs text-slate-500">
-          {t('lestvice.slovenija.povprecjeRazlaga', {
-            krogov: t('lestvice.slovenija.zOdigranimiKrogi', { n: NAJMANJ_KROGOV_ZA_POVPRECJE }),
-          })}
-        </p>
-      )}
-
-      {urejene.length === 0 ? (
-        <p className="kartica p-6 text-center text-slate-400">
-          {/* Sporočilo mora povedati RESNICO: ob razvrstitvi po povprečju je
-              lestvica prazna zato, ker nihče še ni odigral dovolj krogov — ne
-              zato, ker ne bi igral nihče. Prva različica je trdila slednje in
-              je bila videti kot okvara. */}
-          {kako === 'povprecje' && vrstice.length > 0
-            ? t('lestvice.slovenija.premaloKrogov', {
-                krogov: t('lestvice.slovenija.krogovTozilnik', { n: NAJMANJ_KROGOV_ZA_POVPRECJE }),
-              })
-            : t('lestvice.slovenija.nobenaEkipa')}
-        </p>
+      {zavihek === 'igralci' ? (
+        <VrhDrzave drzava={drzava} />
       ) : (
-        <ul className="space-y-1">
-          {urejene.map((v) => (
-            <li
-              key={v.fantasy_team_id}
-              className="flex items-center gap-3 rounded-xl bg-white/5 px-3 py-2"
-            >
-              <span className="w-7 shrink-0 text-center text-sm font-black text-slate-400">
-                {v.mesto <= 3 ? MEDALJE[v.mesto - 1] : v.mesto}
-              </span>
-              <div className="min-w-0 flex-1">
-                <Link
-                  to={`/team/${v.fantasy_team_id}`}
-                  className="block truncate font-bold hover:text-gnl-400"
+        <>
+          <p className="text-sm text-slate-400">
+            {t('lestvice.slovenija.povzetek', {
+              ekip: mnozina(skupaj.ekip, EKIPE),
+              lig: t('lestvice.slovenija.lig', { n: skupaj.lig }),
+              zvez: t('lestvice.slovenija.zvez', { n: skupaj.zvez }),
+            })}
+          </p>
+
+          <div className="flex gap-2">
+            {(
+              [
+                ['skupno', t('lestvice.slovenija.skupno')],
+                ['povprecje', t('lestvice.slovenija.naKrog')],
+              ] as [Razvrstitev, string][]
+            ).map(([k, naslov]) => (
+              <button
+                key={k}
+                onClick={() => setKako(k)}
+                className={`rounded-lg px-3 py-1.5 text-sm font-bold ${
+                  kako === k ? 'bg-gnl-500/20 text-gnl-200 ring-1 ring-gnl-400/40' : 'bg-white/5 text-slate-400'
+                }`}
+              >
+                {naslov}
+              </button>
+            ))}
+          </div>
+
+          {kako === 'povprecje' && (
+            <p className="text-xs text-slate-500">
+              {t('lestvice.slovenija.povprecjeRazlaga', {
+                krogov: t('lestvice.slovenija.zOdigranimiKrogi', { n: NAJMANJ_KROGOV_ZA_POVPRECJE }),
+              })}
+            </p>
+          )}
+
+          {urejene.length === 0 ? (
+            <p className="kartica p-6 text-center text-slate-400">
+              {/* Sporočilo mora povedati RESNICO: ob razvrstitvi po povprečju je
+                  lestvica prazna zato, ker nihče še ni odigral dovolj krogov — ne
+                  zato, ker ne bi igral nihče. Prva različica je trdila slednje in
+                  je bila videti kot okvara. */}
+              {kako === 'povprecje' && vrstice.length > 0
+                ? t('lestvice.slovenija.premaloKrogov', {
+                    krogov: t('lestvice.slovenija.krogovTozilnik', { n: NAJMANJ_KROGOV_ZA_POVPRECJE }),
+                  })
+                : t('lestvice.slovenija.nobenaEkipa')}
+            </p>
+          ) : (
+            <ul className="space-y-1">
+              {urejene.map((v) => (
+                <li
+                  key={v.fantasy_team_id}
+                  className="flex items-center gap-3 rounded-xl bg-white/5 px-3 py-2"
                 >
-                  {v.team_name}
-                </Link>
-                <div className="truncate text-xs text-slate-500">
-                  {v.owner_name}
-                  {v.competition_short ? ` · ${v.competition_short}` : ''}
-                  {v.federation_short ? ` · ${v.federation_short}` : ''}
-                </div>
-              </div>
-              <div className="shrink-0 text-right">
-                <div className="font-black tabular-nums text-gnl-300">
-                  {formatirajTocke(
-                    kako === 'povprecje' ? v.points_per_round : v.total_points,
-                  )}
-                </div>
-                <div className="text-[11px] text-slate-500">
-                  {mnozina(Number(v.rounds_played ?? 0), KROGI)}
-                </div>
-              </div>
-            </li>
-          ))}
-        </ul>
+                  <span className="w-7 shrink-0 text-center text-sm font-black text-slate-400">
+                    {v.mesto <= 3 ? MEDALJE[v.mesto - 1] : v.mesto}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <Link
+                      to={`/team/${v.fantasy_team_id}`}
+                      className="block truncate font-bold hover:text-gnl-400"
+                    >
+                      {v.team_name}
+                    </Link>
+                    <div className="truncate text-xs text-slate-500">
+                      {v.owner_name}
+                      {v.competition_short ? ` · ${v.competition_short}` : ''}
+                      {v.federation_short ? ` · ${v.federation_short}` : ''}
+                    </div>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <div className="font-black tabular-nums text-gnl-300">
+                      {formatirajTocke(
+                        kako === 'povprecje' ? v.points_per_round : v.total_points,
+                      )}
+                    </div>
+                    <div className="text-[11px] text-slate-500">
+                      {mnozina(Number(v.rounds_played ?? 0), KROGI)}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
       )}
 
       <p className="text-xs text-slate-500">
