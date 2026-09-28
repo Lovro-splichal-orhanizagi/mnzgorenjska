@@ -34,7 +34,7 @@ const KONEC = /^REZULTATI\b/
 
 /**
  * @param {string[]} vrstice besedilo strani, vrstica za vrstico
- * @returns {{stevilka:number, tekme:{domaci:string,gostje:string,datum:string|null}[]}[]}
+ * @returns {{stevilka:number, tekme:{domaci:string,gostje:string,datum:string|null,kontumacija?:boolean}[]}[]}
  */
 export function razcleniRazpored(vrstice) {
   const krogi = []
@@ -56,6 +56,14 @@ export function razcleniRazpored(vrstice) {
     const mDatum = v.match(/^(\d{1,2}\.\d{1,2}\.\d{2,4})$/)
     if (mDatum) {
       zadnjiDatum = datum(mDatum[1])
+      continue
+    }
+
+    // Izid pod tekmo. Odigrana ima polčas ("8 : 1(5 : 0)"), kontumacija ga
+    // nima ("3 : 0()") — zapisnika zanjo ne bo in borza nanjo ne sme čakati.
+    const mIzid = v.trim().match(/^(\d+)\s*:\s*(\d+)\s*\(\s*\)$/)
+    if (mIzid && tekoci.tekme.length) {
+      tekoci.tekme.at(-1).kontumacija = true
       continue
     }
 

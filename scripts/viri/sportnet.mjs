@@ -232,7 +232,10 @@ const vir = {
       if (!Number.isInteger(stevilka) || !domaci || !gostje) continue
       const { datum, ura } = lokalniCas(t.startDate)
       if (!krogi.has(stevilka)) krogi.set(stevilka, { stevilka, tekme: [] })
-      krogi.get(stevilka).tekme.push({ domaci, gostje, datum, ura })
+      // Kontumacija (npr. "Ohlásená neúčasť hostí"): izid je dodeljen,
+      // zapisnika ni. Uvoz razporeda tekmo označi, da borza ne čaka.
+      const kontumacija = !!t.contumation?.isContumated
+      krogi.get(stevilka).tekme.push({ domaci, gostje, datum, ura, kontumacija })
     }
     return [...krogi.values()].sort((a, b) => a.stevilka - b.stevilka)
   },

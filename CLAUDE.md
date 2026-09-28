@@ -223,7 +223,11 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   odsotnost posnetka ni dovoljenje za poznejši zajem. `fantasy_teams.roster_updated_at`
   beleži čas shranjevanja. `shrani_ekipo` pred spremembo zajame zapadle kroge;
   shranjevanje, zaklep in urejanje pripomočkov si delijo transakcijski zaklep lige.
-- `rounds` → krogi sezone, `matches` → tekme (z izvorom `zapisnik_id`)
+- `rounds` → krogi sezone, `matches` → tekme (z izvorom `zapisnik_id`).
+  `matches.kontumacija` = tekma ni bila odigrana, izid je dodeljen in
+  zapisnika ne bo; borza in preverba nanjo ne čakata. Označi jo uvoz razporeda
+  (Sportnet: `contumation`, stari CMS: izid brez polčasa `3 : 0()`), pri
+  drugih virih admin z `update matches set kontumacija = true where id = …`
 - borza (`preracunaj_cene`, nočno `uveljavi_zapadle_cene`) premakne ceno po
   točkah kroga (+0.1 na dve točki nad osnovnima dvema, največ +1.0; forma
   treh krogov je spodnja meja), odsotnost pa kaznuje šele drugi zaporedni krog.

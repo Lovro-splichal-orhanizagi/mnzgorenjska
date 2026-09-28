@@ -1322,6 +1322,7 @@ export type Database = {
           id: number
           import_warnings: string[]
           imported_at: string | null
+          kontumacija: boolean
           played_on: string | null
           round_id: number
           source_url: string | null
@@ -1335,6 +1336,7 @@ export type Database = {
           id?: never
           import_warnings?: string[]
           imported_at?: string | null
+          kontumacija?: boolean
           played_on?: string | null
           round_id: number
           source_url?: string | null
@@ -1348,6 +1350,7 @@ export type Database = {
           id?: never
           import_warnings?: string[]
           imported_at?: string | null
+          kontumacija?: boolean
           played_on?: string | null
           round_id?: number
           source_url?: string | null

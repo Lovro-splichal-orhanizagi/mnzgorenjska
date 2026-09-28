@@ -282,7 +282,7 @@ for (const k of veljavni) {
     // je funkcija odporna tudi na že obstoječe podvojene vrstice.
     const { data: obstojTekme } = await db
       .from('matches')
-      .select('id, played_on, imported_at')
+      .select('id, played_on, imported_at, kontumacija')
       .eq('round_id', krogId)
       .eq('home_team_id', domaciId)
       .eq('away_team_id', gostjeId)
@@ -294,6 +294,11 @@ for (const k of veljavni) {
       // borza pa je zaradi nje zadrzala cel krog. Datum popravimo SAMO, dokler
       // tekma ni uvozena: odigrana tekma ima pravi datum iz zapisnika.
       const obstojeca = obstojTekme[0]
+      if (t.kontumacija && !obstojeca.kontumacija && !obstojeca.imported_at) {
+        const { error } = await db.from('matches').update({ kontumacija: true }).eq('id', obstojeca.id)
+        if (error) console.log(`  tekma ${t.domaci} : ${t.gostje}: ${error.message}`)
+        else console.log(`  kontumacija: ${t.domaci} : ${t.gostje}`)
+      }
       if (!obstojeca.imported_at && t.datum && obstojeca.played_on !== t.datum) {
         const { error } = await db
           .from('matches')
@@ -314,6 +319,7 @@ for (const k of veljavni) {
       away_team_id: gostjeId,
       played_on: t.datum,
       source_url: url,
+      kontumacija: !!t.kontumacija,
     })
     if (error) console.log(`  tekma ${t.domaci} : ${t.gostje}: ${error.message}`)
     else novihTekem++
