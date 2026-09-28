@@ -144,7 +144,9 @@ Pogledi: `appearance_points` (točke nastopa),
 `fantasy_team_standings`, `fantasy_team_budget`.
 Funkcija `ucinkovita_postava(ekipa, krog)` vrne igralce, ki v krogu dejansko prinesejo
 točke, in njihov množitelj. Funkcija `vrh_drzave(drzava, koliko)` vrne najboljše
-igralce tekoče sezone vseh lig države (stran Slovenija, zavihek Igralci).
+igralce tekoče sezone vseh lig države (stran Slovenija, zavihek Igralci). Funkcija
+`navijaci_klubov(liga)` vrne klube lige z navijači (`profiles.insider_team_id`) in
+povprečjem njihovih fantasy točk (Lestvica, zavihek Navijači klubov; stran kluba).
 
 ### Varnost (RLS)
 

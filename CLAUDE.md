@@ -268,6 +268,12 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   države (točke brez asistenc, goli, čiste mreže vratarjev) za zavihek Igralci na
   strani Slovenija. Bere tabele (`player_scores`, `appearances`, `goals`), ne
   `appearance_points`: prek pogleda je poizvedba trajala 10 s, iz tabel ~150 ms
+- `navijaci_klubov(liga)` → klubi lige po povprečju točk navijačev (zavihek
+  Navijači klubov na Lestvici, `#fans`; razdelek na strani kluba). Navijač je
+  `profiles.insider_team_id` — isti klub kot poznavalec pri glasovanju o
+  pozicijah, en na človeka, ne po ligah (klubi so skupni); šteje le v ligi,
+  kjer klub igra. Mesto dobi klub z vsaj `min_navijacev_kluba` navijači
+  (privzeto 3). Točke bere iz `fantasy_round_points` (tabela), ne računa sproti
 - stran Rezultati (`/results`, `/match/:id`) sestavi postavi tekme iz
   `appearances` + `appearance_points`; nove sheme ne potrebuje
 - `match_assist_status` → odigrane tekme s številom golov brez asistence

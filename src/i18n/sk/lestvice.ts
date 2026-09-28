@@ -33,6 +33,52 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     celotnaSezona: 'Celá sezóna',
     odKroga: 'Od {n}. kola',
     igraOd: '· hrá od {datum}',
+    zavihekEkipe: 'Tímy',
+    zavihekNavijaci: 'Fanúšikovia klubov',
+  },
+
+  navijaciKlubov: {
+    naslov: 'Fanúšikovia klubov',
+    opis: 'Ktorý klub má najlepších manažérov? Počíta sa priemer bodov fanúšikov, ktorí majú tím v tejto lige.',
+    pogoj: {
+      one: 'Do tabuľky sa dostane klub s aspoň {n} fanúšikom.',
+      few: 'Do tabuľky sa dostane klub s aspoň {n} fanúšikmi.',
+      many: 'Do tabuľky sa dostane klub s aspoň {n} fanúšika.',
+      other: 'Do tabuľky sa dostane klub s aspoň {n} fanúšikmi.',
+    },
+    povprecjeSezona: 'Ø sezóna',
+    povprecjeKroga: 'Ø {n}. kolo',
+    navijaci: 'Fanúšikovia',
+    tvojKlub: 'tvoj klub',
+    premalo: 'Málo fanúšikov',
+    brezNavijacev: 'Zatiaľ bez fanúšikov: {klubi}',
+    prazno: 'V tejto lige si zatiaľ nikto nevybral svoj klub. Buď prvý!',
+    izbira: {
+      naslov: 'Ktorému klubu fandíš?',
+      opis: 'Vyber si klub a tvoje body sa mu budú počítať v tabuľke fanúšikov. Ten istý klub je aj tvoj klub znalca pri hlasovaní o pozíciách — tam má tvoj hlas za jeho hráčov väčšiu váhu.',
+      izberi: '— vyber klub —',
+      shrani: 'Fandím tomuto klubu',
+      spremeni: 'Klub môžeš kedykoľvek zmeniť na stránke <pozicije>Pozície</pozicije>.',
+    },
+    klub: {
+      naslov: 'Fanúšikovia tohto klubu',
+      mesto: '{mesto}. miesto',
+      odKlubov: {
+        one: 'z {n} klubu v tabuľke fanúšikov',
+        few: 'z {n} klubov v tabuľke fanúšikov',
+        many: 'z {n} klubu v tabuľke fanúšikov',
+        other: 'z {n} klubov v tabuľke fanúšikov',
+      },
+      manjka: {
+        one: 'Do tabuľky fanúšikov chýba ešte {n} fanúšik.',
+        few: 'Do tabuľky fanúšikov chýbajú ešte {n} fanúšikovia.',
+        many: 'Do tabuľky fanúšikov chýba ešte {n} fanúšika.',
+        other: 'Do tabuľky fanúšikov chýba ešte {n} fanúšikov.',
+      },
+      brez: 'Tento klub zatiaľ nemá v lige fanúšikov s tímom.',
+      navijam: 'Fandím klubu {klub}',
+      vsiKlubi: 'Všetky kluby ligy',
+    },
   },
 
   slovenija: {

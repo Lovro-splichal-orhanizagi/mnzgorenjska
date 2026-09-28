@@ -4665,6 +4665,28 @@ export type Database = {
         Args: { p_competition_id: number }
         Returns: Json
       }
+      navijaci_klubov: {
+        Args: { p_competition_id: number }
+        Returns: {
+          ekipa: string
+          fantasy_team_id: number
+          grb: string
+          klub: string
+          klub_kratko: string
+          lastnik: string
+          mesto: number
+          min_navijacev: number
+          navijacev: number
+          povprecje_krog: number
+          povprecje_sezona: number
+          round_id: number
+          round_number: number
+          season: string
+          team_id: number
+          tocke_krog: number
+          tocke_sezona: number
+        }[]
+      }
       nedavni_opomnik: {
         Args: { p_competition_id: number; p_user_id: string }
         Returns: boolean

@@ -38,6 +38,8 @@ import {
 } from '../src/lib/pravila'
 import { tockeZaNastop } from '../src/lib/tockovanje'
 import { sestejOdKroga } from '../src/lib/lestvica'
+import { zdruziNavijace } from '../src/lib/navijaci'
+import { TabelaNavijacev, KlubMedNavijaci, IzbiraKluba } from '../src/components/NavijaciKlubov'
 import { parsirajZapisnik, nastopi } from './zapisnik.mjs'
 import { poZvezah, ustreza, pokaziZvezo } from '../src/components/IzbirnikLige'
 import { virPodatkov, imeZveze } from '../src/components/VirPodatkov'
@@ -2964,6 +2966,72 @@ preveri(
   preveri('sportnet: zapisnik', z && z.krog === 7 && z.rezultat.domaci === 1 && z.rezultat.gostje === 0 && !z.opozorila.length)
   preveri('sportnet: vsak nastop ima ISSF in pozicijo', n.length > 22 && n.every((x) => x.regSt && x.pozicija))
   preveri('sportnet: strelec', n.some((x) => x.ime === 'Šemik Tomáš' && x.goli === 1))
+}
+
+// --- navijači klubov ----------------------------------------------------------
+// Vrstica `navijaci_klubov` je en navijač; klub brez navijačev ima eno vrstico
+// brez ekipe. Mesto ima le klub z vsaj `min_navijacev`.
+{
+  const klub = (team_id, ime, navijacev, sezona, krog, mesto) => ({
+    team_id, klub: ime, klub_kratko: null, grb: null, navijacev,
+    povprecje_sezona: sezona, povprecje_krog: krog, mesto, min_navijacev: 3,
+    round_number: 5, season: '2026/27',
+  })
+  const navijac = (k, id, ime, sezona, krog) => ({
+    ...k, fantasy_team_id: id, ekipa: ime, lastnik: `Lastnik ${id}`, tocke_sezona: sezona, tocke_krog: krog,
+  })
+  const rence = klub(1, 'ND Renče', 3, '40.0', '8.0', 1)
+  const leskovec = klub(2, 'ŠD Leskovec', 4, '35.5', '9.5', 2)
+  const bled = klub(3, 'Bled', 2, '60.0', '10.0', null)
+  const trzic = klub(4, 'Tržič', 0, null, null, null)
+  const vrstice = [
+    navijac(rence, 11, 'Renški orli', '30', '6'),
+    navijac(rence, 12, 'Soška fronta', '50', '10'),
+    navijac(rence, 13, 'Vipavski veter', '40.00', '8'),
+    navijac(leskovec, 21, 'Krški levi', 30, 9),
+    navijac(leskovec, 22, 'Posavje', 41, 10),
+    navijac(leskovec, 23, 'Leskovec A', 35, 9),
+    navijac(leskovec, 24, 'Leskovec B', 36, 10),
+    navijac(bled, 31, 'Jezero', 70, 12),
+    navijac(bled, 32, 'Otok', 50, 8),
+    { ...trzic, fantasy_team_id: null, ekipa: null, lastnik: null, tocke_sezona: null, tocke_krog: null },
+  ]
+  const n = zdruziNavijace(vrstice)
+  preveri('navijaci: uvrsceni po mestu', n.uvrsceni.map((k) => k.team_id).join() === '1,2')
+  preveri('navijaci: premalo navijacev brez mesta', n.premalo.map((k) => k.team_id).join() === '3')
+  preveri('navijaci: klub brez navijacev posebej', n.brez.map((k) => k.klub).join() === 'Tržič')
+  preveri('navijaci: navijaci po tockah sezone', n.uvrsceni[0].navijaci.map((x) => x.fantasy_team_id).join() === '12,13,11')
+  preveri('navijaci: stevila iz niza', n.uvrsceni[0].povprecje_sezona === 40 && n.uvrsceni[0].navijaci[1].tocke_sezona === 40)
+  preveri('navijaci: prag in krog', n.min === 3 && n.krog === 5)
+  const prazno = zdruziNavijace([])
+  preveri('navijaci: prazna liga', prazno.uvrsceni.length === 0 && prazno.min === 3 && prazno.krog === null)
+
+  const izris = (el) =>
+    renderToString(<StaticRouter location="/standings">{el}</StaticRouter>)
+  try {
+    const html = izris(<TabelaNavijacev podatki={n} mojKlub={2} />)
+    preveri(
+      'izris: navijaci klubov',
+      html.includes('ND Renče') && html.includes('Soška fronta') && html.includes('Premalo navijačev') &&
+        html.includes('Tržič') && html.includes('tvoj klub') && html.includes('/team/12'),
+    )
+    const nic = izris(<TabelaNavijacev podatki={prazno} />)
+    preveri('izris: navijaci klubov brez izbire', nic.includes('Bodi prvi'))
+  } catch (e) {
+    preveri('izris: navijaci klubov', false, e.message)
+  }
+  try {
+    const uvrscen = izris(<KlubMedNavijaci podatki={n} klubId={2} klubIme="ŠD Leskovec" ligaSlug="clani" />)
+    preveri('izris: navijaci kluba z mestom', uvrscen.includes('2. mesto') && uvrscen.includes('od 2 klubov') && uvrscen.includes('#fans'))
+    const premalo = izris(<KlubMedNavijaci podatki={n} klubId={3} klubIme="Bled" ligaSlug="clani" mojKlub={null} onNavijam={() => {}} />)
+    preveri('izris: navijaci kluba premalo', premalo.includes('manjka še 1 navijač') && premalo.includes('Navijam za Bled'))
+    const brez = izris(<KlubMedNavijaci podatki={n} klubId={4} klubIme="Tržič" ligaSlug={null} />)
+    preveri('izris: navijaci kluba brez', brez.includes('še nima navijačev'))
+    const izbira = izris(<IzbiraKluba klubi={[{ team_id: 1, klub: 'ND Renče' }]} onIzberi={() => {}} />)
+    preveri('izris: izbira kluba', izbira.includes('Za kateri klub navijaš?') && izbira.includes('/positions'))
+  } catch (e) {
+    preveri('izris: navijaci kluba', false, e.message)
+  }
 }
 
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)

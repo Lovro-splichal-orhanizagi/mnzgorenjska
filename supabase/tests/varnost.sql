@@ -484,6 +484,24 @@ set local role anon;
 select pg_temp.zavrnjeno('anonimni ne bere stanja ekip', $$select * from stanje_mojih_ekip()$$);
 reset role;
 
+-- Navijači klubov: javno branje brez obhoda RLS. Testni uporabnik je zgoraj
+-- izbral klub -913001 in ima ekipo v -913001; en navijač je premalo za mesto.
+select set_config('request.jwt.claim.sub','',true);
+set local role anon;
+select pg_temp.preveri('anonimni bere navijace klubov',
+  exists(select 1 from navijaci_klubov(-913001)
+          where team_id=-913001 and fantasy_team_id=-913001 and navijacev=1));
+select pg_temp.preveri('klub s premalo navijaci nima mesta',
+  (select bool_and(mesto is null and min_navijacev=3) from navijaci_klubov(-913001)));
+select pg_temp.preveri('klub brez navijacev je na seznamu brez ekipe',
+  exists(select 1 from navijaci_klubov(-913001)
+          where team_id=-913002 and navijacev=0 and fantasy_team_id is null));
+select pg_temp.preveri('navijac se steje le v ligi, kjer njegov klub igra',
+  not exists(select 1 from navijaci_klubov(-913002) where fantasy_team_id is not null));
+reset role;
+select pg_temp.preveri('navijaci_klubov tece s pravicami klicatelja',
+  (select not prosecdef from pg_proc where oid='public.navijaci_klubov(bigint)'::regprocedure));
+
 do $$
 declare v_napak int;
 begin

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../lib/useAuth'
 import Plakat from '../components/Plakat'
 import { najboljsiTrije, type VrsticaIgralca } from '../lib/plakat'
@@ -11,6 +11,7 @@ import { useNaslov } from '../lib/naslov'
 import { useTekmovanje } from '../lib/tekmovanje'
 import { sestejOdKroga } from '../lib/lestvica'
 import MojeMiniLige from '../components/MojeMiniLige'
+import NavijaciKlubov from '../components/NavijaciKlubov'
 import { t, datum } from '../i18n'
 
 const MEDALJE = ['🥇', '🥈', '🥉']
@@ -76,6 +77,12 @@ export default function Lestvica() {
   // Napaka pri krogih (zmagovalec, lestvica kroga) ne sme skriti skupne lestvice.
   const [napakaKrogov, setNapakaKrogov] = useState<string | null>(null)
   const uporabnikId = session?.user.id
+  // Zavihek pod lestvico: ekipe ali navijači klubov. `#fans` odpre navijače
+  // (povezava s strani kluba).
+  const { hash } = useLocation()
+  const [zavihek, setZavihek] = useState<'ekipe' | 'navijaci'>(
+    hash === '#fans' ? 'navijaci' : 'ekipe',
+  )
   useNaslov(t('lestvice.lestvica.naslov'))
 
   useEffect(() => {
@@ -452,6 +459,31 @@ export default function Lestvica() {
         )}
       </section>
 
+      {/* Ekipe ali navijači klubov: ljudje igrajo tudi za svoj klub. */}
+      <div role="tablist" className="flex gap-1.5">
+        {(['ekipe', 'navijaci'] as const).map((z) => (
+          <button
+            key={z}
+            role="tab"
+            aria-selected={zavihek === z}
+            onClick={() => setZavihek(z)}
+            className={`znacka px-3 py-1.5 text-sm transition ${
+              zavihek === z
+                ? 'bg-gnl-500 text-slate-950'
+                : 'bg-white/5 text-slate-300 hover:bg-white/10'
+            }`}
+          >
+            {z === 'ekipe'
+              ? t('lestvice.lestvica.zavihekEkipe')
+              : t('lestvice.lestvica.zavihekNavijaci')}
+          </button>
+        ))}
+      </div>
+
+      {zavihek === 'navijaci' ? (
+        <NavijaciKlubov tekmovanjeId={tekmovanjeId} />
+      ) : (
+      <>
       {/* Selektor "od kroga X naprej" — če se ekipa priključi kasneje, ima
           še zmeraj svojo lestvico. */}
       <div className="space-y-2">
@@ -554,6 +586,8 @@ export default function Lestvica() {
           )
         })}
       </ul>
+      </>
+      )}
 
       {/* Sponzorsko mesto. Dokler `sponzorji_vidni` ni 1, se ne izriše nič —
           stoji pod lestvico, ne nad njo. */}
