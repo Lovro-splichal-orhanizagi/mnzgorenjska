@@ -2966,5 +2966,76 @@ preveri(
   preveri('sportnet: strelec', n.some((x) => x.ime === 'Šemik Tomáš' && x.goli === 1))
 }
 
+// --- e-pošta opomnikov v jeziku lige -----------------------------------------
+// Funkcija `posli-opomnik` izbere jezik po državi lige. Preverimo obe
+// različici, povezave na pravo ligo in odjavo ter to, da v slovaškem mailu ni
+// ostalo slovenskih besed (tudi razlog iz baze, ki je slovenski).
+{
+  const E = await import('../supabase/functions/posli-opomnik/sporocila.ts')
+  const { JEZIK_DRZAVE } = await import('../src/lib/drzavaUgib.ts')
+  preveri(
+    'e-pošta: jezik države kot v vmesniku',
+    Object.entries(E.JEZIK_DRZAVE).every(([d, j]) => JEZIK_DRZAVE[d] === j) &&
+      Object.keys(JEZIK_DRZAVE).every((d) => d in E.JEZIK_DRZAVE),
+  )
+  const si = { slug: 'clani', oznaka: 'Člani', ime: '1. Gorenjska liga', drzava: 'SI' }
+  const sk = { slug: 'sk-ssfz-4liga', oznaka: 'IV. liga', ime: 'IV. liga SsFZ', drzava: 'SK' }
+  const slovensko = /Živjo|ekip[aeo]|krog|točk|Popravi|opomnik/
+  const rok = '2026-10-03T08:00:00Z' // sobota 10:00 po obeh pasovih
+
+  const oSl = E.sestaviOpomnik(si, { display_name: 'Janez Novak', brez_ekipe: true })
+  const oSk = E.sestaviOpomnik(sk, { display_name: 'Ján Kováč', brez_ekipe: false })
+  preveri('e-pošta: opomnik sl', oSl.naslov.includes('še nimaš ekipe') && oSl.html.includes('Živjo, Janez!'))
+  preveri('e-pošta: opomnik sk', oSk.naslov.includes('dokonči tím') && oSk.html.includes('Ahoj, Ján!') && !slovensko.test(oSk.naslov + oSk.html), oSk.naslov)
+  preveri(
+    'e-pošta: povezave na ligo in odjava',
+    oSk.html.includes('https://slff.eu/my-team?t=sk-ssfz-4liga') &&
+      oSk.odjava === 'https://slff.eu/reminders?t=sk-ssfz-4liga' &&
+      oSk.html.includes(oSk.odjava) &&
+      oSl.html.includes('https://slff.eu/my-team?t=clani') && oSl.odjava === 'https://slff.eu/reminders?t=clani',
+  )
+  preveri('e-pošta: odjava v jeziku lige', oSk.html.includes('Nechcem už dostávať pripomienky') && oSl.html.includes('Ne želim več opomnikov'))
+
+  const razlog = 'Iz kluba Šenčur imas 4 igralce, dovoljeni so 3. To se zgodi tudi brez tvoje spremembe — ce igralec med sezono prestopi v klub, iz katerega jih ze imas.'
+  const zSl = E.sestaviOpozorilo(si, { display_name: null, team_name: 'Nedeljski <junaki>', round_number: 5, deadline_at: rok, razlog })
+  const zSk = E.sestaviOpozorilo(sk, { display_name: null, team_name: 'Nedeľní hrdinovia', round_number: 5, deadline_at: rok, razlog })
+  preveri('e-pošta: opozorilo sl', zSl.naslov.includes('5. krog ne bo zaklenila') && zSl.html.includes('Iz kluba Šenčur') && zSl.html.includes('sobota') && zSl.html.includes('10:00'), zSl.naslov)
+  preveri('e-pošta: opozorilo sl ubeži HTML', zSl.html.includes('Nedeljski &lt;junaki&gt;'))
+  preveri(
+    'e-pošta: opozorilo sk (rok po bratislavsko, razlog preveden)',
+    zSk.naslov.includes('5. kolo') && zSk.html.includes('sobota') && zSk.html.includes('10:00') &&
+      zSk.html.includes('Z klubu Šenčur máš 4 hráčov') && !slovensko.test(zSk.naslov + zSk.html),
+    zSk.naslov,
+  )
+  preveri('e-pošta: rok v časovnem pasu lige', E.izpisRoka(rok, sk).includes('10:00') && E.izpisRoka(rok, si).includes('10:00'))
+
+  const razlogi = [
+    'Ekipa je prazna — kadra ni.',
+    'V kadru je 3 igralcev namesto 15.',
+    'V kadru je 14 igralcev namesto 15.',
+    'V kadru ni vec aktivnih igralcev: Novak Janez, Kos Miha. Klub letos ne igra ali je igralec odsel.',
+    'Pri 1 igralcih ni znana pozicija.',
+    'Pri 2 igralcih ni znana pozicija.',
+    'Kader mora imeti 2 vratarja, 5 branilcev, 5 vezistov in 3 napadalce; ima 2-4-6-3.',
+    'V postavi je 10 igralcev namesto 11.',
+    'Ekipa nima natanko enega kapetana.',
+    'Ekipa nima natanko enega namestnika kapetana.',
+  ]
+  const prevodi = razlogi.map((r) => E.prevediRazlog(r, 'sk'))
+  const splosen = E.prevediRazlog('Neznan razlog.', 'sk')
+  preveri(
+    'e-pošta: vsi razlogi prevedeni v slovaščino',
+    prevodi.every((p) => p !== splosen && !/igralc|kader |ekip/i.test(p)),
+    prevodi.find((p) => p === splosen || /igralc|kader |ekip/i.test(p)),
+  )
+  preveri('e-pošta: množina razloga', prevodi[1] === 'V kádri sú 3 hráči namiesto 15.' && prevodi[2] === 'V kádri je 14 hráčov namiesto 15.')
+  preveri('e-pošta: sl razlog nespremenjen', E.prevediRazlog(razlogi[0], 'sl') === razlogi[0])
+
+  const pSk = E.sestaviPoznavalca(sk, { display_name: 'Ján', obseg: 'liga', klub: null })
+  const pSl = E.sestaviPoznavalca(si, { display_name: 'Janez', obseg: 'klub', klub: 'Šenčur' })
+  preveri('e-pošta: poznavalec sk', pSk.html.includes('znalcom ligy IV. liga SsFZ') && pSk.html.includes('/assists?t=sk-ssfz-4liga') && !slovensko.test(pSk.html) && !pSk.odjava)
+  preveri('e-pošta: poznavalec sl', pSl.html.includes('poznavalec kluba Šenčur') && pSl.html.includes('/positions?t=clani'))
+}
+
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)
 process.exit(napak === 0 ? 0 : 1)

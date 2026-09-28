@@ -4,6 +4,9 @@ export const aplikacija = {
   naslovStrani: {
     osnova: 'SLFF — Sunday League Fantasy Football',
     zStranjo: '{naslov} · SLFF',
+    // <meta name="description"> — v index.html je slovenski; drug jezik ga
+    // zamenja ob nalaganju (main.tsx).
+    opis: 'Fantasy football za slovenske medobčinske nogometne lige. Sestavi ekipo, izberi kapetana in tekmuj s sosedi.',
   },
   niStrani: {
     naslov: 'Stran ne obstaja',
