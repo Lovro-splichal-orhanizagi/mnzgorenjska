@@ -3339,6 +3339,15 @@ preveri(
     prevodi.find((p) => p === splosen || /igralc|kader |ekip/i.test(p)),
   )
   preveri('e-pošta: množina razloga', prevodi[1] === 'V kádri sú 3 hráči namiesto 15.' && prevodi[2] === 'V kádri je 14 hráčov namiesto 15.')
+  const bSl = E.sestaviOpomnikBrezLige(null, { display_name: 'Janez Novak' })
+  const bSk = E.sestaviOpomnikBrezLige('sk', { display_name: 'Ján' })
+  preveri('e-pošta: brez lige sl ne imenuje lige in vodi na izbiro',
+    bSl.naslov.includes('izberi svojo ligo') && !/GNL|1\. SNL — |\?t=/.test(bSl.naslov) &&
+      bSl.html.includes('href="https://slff.eu"') && !bSl.html.includes('?t=') && bSl.html.includes('Živjo, Janez!'))
+  preveri('e-pošta: brez lige sk v slovaščini na /sk',
+    bSk.naslov.includes('vyber si ligu') && bSk.html.includes('href="https://slff.eu/sk"') &&
+      !slovensko.test(bSk.html) && bSk.html.includes('Ahoj, Ján!'))
+  preveri('e-pošta: brez lige ima odjavo', bSl.odjava === 'https://slff.eu/reminders' && bSk.html.includes('/reminders'))
   preveri('e-pošta: sl razlog nespremenjen', E.prevediRazlog(razlogi[0], 'sl') === razlogi[0])
 
   const pSk = E.sestaviPoznavalca(sk, { display_name: 'Ján', obseg: 'liga', klub: null })

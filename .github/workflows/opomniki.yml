@@ -24,6 +24,11 @@ on:
         required: false
         default: true
         type: boolean
+      najvec_poslati:
+        description: 'Največ poslanih v tem zagonu (dnevna kvota ponudnika)'
+        required: false
+        default: '90'
+        type: string
 
 permissions:
   contents: read
@@ -38,6 +43,7 @@ jobs:
     timeout-minutes: 15
     env:
       SUHO: ${{ inputs.suho }}
+      NAJVEC_POSLATI: ${{ inputs.najvec_poslati }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

@@ -44,6 +44,10 @@ const vrsta = process.env.VRSTA === 'opozorilo' ? 'opozorilo' : 'opomnik'
 // posiljanje pomote dvajsetim ljudem je ne popravi.
 const NAJVEC_NA_LIGO = Number(process.env.NAJVEC_NA_LIGO ?? 25)
 const dni = Number(process.env.DNI ?? 2)
+// Dnevni proračun opomnikov čez VSE lige. Kampanja 3. 9. je obstala na dnevni
+// kvoti ponudnika; zato jih pošljemo največ toliko na dan, ostali pridejo ob
+// naslednjem zagonu (poslani so tri dni zaščiteni z `nedavni_opomnik`).
+let proracun = Number(process.env.NAJVEC_POSLATI ?? 90)
 
 const db = createClient(BASE, SERVICE, { auth: { persistSession: false } })
 const { data: lige, error } = await db
@@ -71,7 +75,7 @@ for (const liga of lige ?? []) {
     // po odgovoru, ko je bila posta ze poslana.
     body: JSON.stringify({
       competition_id: liga.id, suho, vrsta, dni,
-      ...(vrsta === 'opozorilo' ? { najvec: NAJVEC_NA_LIGO } : {}),
+      ...(vrsta === 'opozorilo' ? { najvec: NAJVEC_NA_LIGO } : { najvec_poslati: proracun }),
     }),
   })
   const izid = await odgovor.json().catch(() => ({}))
@@ -107,6 +111,7 @@ for (const liga of lige ?? []) {
     padlo++
   }
   skupaj += n
+  if (vrsta === 'opomnik' && !suho) proracun = Math.max(0, proracun - (izid.poslano ?? 0))
   console.log(
     `  ${liga.slug.padEnd(14)} kandidatov ${String(n).padStart(4)}` +
       (suho ? '' : ` · poslano ${izid.poslano ?? 0}, preskočeno ${izid.preskoceno ?? 0}`),
@@ -114,6 +119,8 @@ for (const liga of lige ?? []) {
 }
 
 console.log(`\nSkupaj kandidatov: ${skupaj}`)
+if (vrsta === 'opomnik' && !suho)
+  console.log(`Dnevni proračun porabljen do ${proracun} preostalih; ostali pridejo ob naslednjem zagonu.`)
 if (padlo) {
   console.error(`Lig z napako: ${padlo}`)
   process.exit(1)

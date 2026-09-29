@@ -154,6 +154,43 @@ export function sestaviOpomnik(
   return { naslov: B.naslov, html, odjava: p.odjava }
 }
 
+// --- opomnik brez lige: človek še nima nobene ekipe -------------------------
+// Kdor nima nobene ekipe, nima lige — "privzeta" liga je le najbolj živa, ne
+// njegova. Zato mail ne imenuje lige, ampak povabi k izbiri. Jezik je jezik
+// prijave (`jezik` v metapodatkih); slovaški prijavi vodita na /sk.
+
+export function sestaviOpomnikBrezLige(
+  jezik: string | null | undefined,
+  meta: { display_name: string | null },
+): Sporocilo {
+  const j: Jezik = jezik === 'sk' ? 'sk' : 'sl'
+  const vstop = j === 'sk' ? `${SITE}/sk` : SITE
+  const odjava = `${SITE}/reminders`
+  const B = j === 'sk'
+    ? {
+        naslov: 'SLFF — vyber si ligu a zostav tím',
+        glavno: 'Zaregistroval/a si sa, ale ešte nemáš fantasy tím. Vyber si ligu, ktorú sleduješ, zostav 15 hráčov a zbieraj body už v ďalšom kole.',
+        gumb: 'Vybrať ligu →',
+        opomba: 'Ak tím zostavovať nebudeš, tento e-mail môžeš ignorovať.',
+      }
+    : {
+        naslov: 'SLFF — izberi svojo ligo in sestavi ekipo',
+        glavno: 'Prijavil/a si se, a še nimaš fantasy ekipe. Izberi ligo, ki jo spremljaš — od 1. SNL do regionalnih lig po vsej Sloveniji — sestavi 15 igralcev in zbiraj točke že v naslednjem krogu.',
+        gumb: 'Izberi ligo →',
+        opomba: 'Če ekipe ne boš sestavil/a, lahko ta mail ignoriraš.',
+      }
+  const html = ovoj(
+    `<p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">${pozdrav(j, meta.display_name)}</p>
+      <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">${B.glavno}</p>
+      <p style="text-align: center; margin: 24px 0;">
+        <a href="${vstop}" style="${GUMB}">${B.gumb}</a>
+      </p>
+      <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">${B.opomba}</p>`,
+    nogaOdjave(j, odjava),
+  )
+  return { naslov: B.naslov, html, odjava }
+}
+
 // --- opozorilo: ekipa se ob roku ne bo zaklenila ----------------------------
 
 export function sestaviOpozorilo(
