@@ -20,6 +20,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4'
 import {
   sestaviOpomnik,
+  sestaviOpomnikBrezLige,
   sestaviOpozorilo,
   sestaviPopravekPozicije,
   sestaviPoznavalca,
@@ -57,6 +58,8 @@ interface Zahteva {
   // Varovalka: ce je kandidatov vec, ne poslje nicesar in vrne 409. Preveri
   // se PRED prvim mailom, ne po njem.
   najvec?: number
+  // Največ poslanih v tem klicu (dnevna kvota ponudnika); ostali naslednji dan.
+  najvec_poslati?: number
 }
 
 interface Uporabnik {
@@ -65,6 +68,8 @@ interface Uporabnik {
   display_name: string | null
   team_id: number | null
   ekipa_veljavna: boolean
+  // samo pri opomniku: jezik prijave (za mail brez lige)
+  jezik?: string | null
   // samo pri opozorilu
   team_name?: string | null
   round_id?: number | null
@@ -321,6 +326,7 @@ Deno.serve(async (req) => {
     if (error) return json({ error: error.message }, 500)
     kandidati = (data ?? []).map((u: {
       user_id: string; email: string; display_name: string | null; team_id: number | null
+      jezik: string | null
     }) => ({ ...u, ekipa_veljavna: false }))
   }
 
@@ -345,7 +351,17 @@ Deno.serve(async (req) => {
     razlog?: string
     resend_id?: string
   }> = []
+  // Dnevna kvota ponudnika (3. 9. je kampanja obstala na "daily email sending
+  // quota"). `najvec_poslati` omeji, koliko jih gre v tem klicu; ostali
+  // pridejo naslednji dan — `nedavni_opomnik` poskrbi, da poslani ne dobijo
+  // drugega. Premor drži hitrost pod omejitvijo Resenda (2 na sekundo).
+  const meja = typeof vhod.najvec_poslati === 'number' ? Math.max(0, vhod.najvec_poslati) : Infinity
+  let poslanih = 0
   for (const u of kandidati) {
+    if (poslanih >= meja) {
+      rezultati.push({ email: u.email, ok: false, razlog: 'dnevna meja' })
+      continue
+    }
     // Opozorilo se ne podvaja po krogu — za to poskrbi že
     // `kandidati_za_opozorilo`, ki pogleda v email_log. Opomnik pa po času.
     const { data: nedavni } =
@@ -363,8 +379,13 @@ Deno.serve(async (req) => {
     const sporocilo =
       vrsta === 'opozorilo'
         ? sestaviOpozorilo(liga, u)
-        : sestaviOpomnik(liga, { display_name: u.display_name, brez_ekipe: !u.team_id })
+        : !u.team_id
+          // Brez ekipe ni lige: povabilo k izbiri v jeziku prijave.
+          ? sestaviOpomnikBrezLige(u.jezik, { display_name: u.display_name })
+          : sestaviOpomnik(liga, { display_name: u.display_name, brez_ekipe: false })
+    if (poslanih > 0) await new Promise((r) => setTimeout(r, 600))
     const rez = await poslji(RESEND_KEY!, EMAIL_FROM, u.email, sporocilo)
+    if (!rez.napaka) poslanih++
 
     await service.from('email_log').insert({
       user_id: u.user_id,
