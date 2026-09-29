@@ -1,0 +1,45 @@
+name: Obvestilo o popravku pozicij
+
+# Enkratno obvestilo lastnikom ekip, ki imajo v kadru igralca s popravljeno
+# pozicijo (lazni vratarji, 29. 9. 2026). Samo rocni zagon: najprej s
+# `suho: true`, ki presteje ekipe, nato zares. Funkcija istemu lastniku v ligi
+# ne poslje dvakrat, zato ponovni zagon ne podvoji poste.
+on:
+  workflow_dispatch:
+    inputs:
+      suho:
+        description: 'Samo presteje, ne posilja'
+        required: false
+        default: true
+        type: boolean
+      igralci:
+        description: 'Id-ji igralcev, locenih z vejico (prazno = seznam iz skripte)'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: popravek-pozicij
+  cancel-in-progress: false
+
+jobs:
+  obvestilo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Poslji obvestila po ligah
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUHO: ${{ inputs.suho }}
+          IGRALCI: ${{ inputs.igralci }}
+        run: node scripts/posli-popravek-pozicij.mjs

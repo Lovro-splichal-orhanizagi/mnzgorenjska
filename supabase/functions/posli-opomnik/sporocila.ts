@@ -273,6 +273,79 @@ export function sestaviPoznavalca(
   return { naslov: B.naslov, html }
 }
 
+// --- popravek pozicije: lažni vratar ---------------------------------------
+//
+// Zapisnik je igralca iz polja enkrat označil z (V) in uvoz ga je prekrstil v
+// vratarja. Pozicijo smo popravili; lastnik, ki ga ima v kadru, mora vedeti,
+// da odslej zbira točke kot igralec iz polja. Kvota kadra se sodi po poziciji
+// ob nakupu, ki jo igralec obdrži, dokler ostane v kadru — ekipa ostane
+// veljavna, ob prodaji pa ga mora nadomestiti vratar.
+
+const POZICIJA_SL: Record<string, string> = { DEF: 'branilec', MID: 'vezist', FWD: 'napadalec' }
+const POZICIJA_SK: Record<string, string> = { DEF: 'obranca', MID: 'záložník', FWD: 'útočník' }
+
+export function sestaviPopravekPozicije(
+  liga: Liga,
+  meta: {
+    display_name: string | null
+    team_name: string | null
+    igralci: Array<{ ime: string; pozicija: string | null }>
+  },
+): Sporocilo {
+  const j = jezikLige(liga)
+  const p = povezave(liga.slug)
+  const ozn = liga.oznaka
+  const ekipa = esc(meta.team_name ?? '')
+  const kdo = meta.igralci
+    .map((i) => {
+      const poz = (j === 'sk' ? POZICIJA_SK : POZICIJA_SL)[i.pozicija ?? '']
+      const ime = `<strong>${esc(i.ime)}</strong>`
+      if (j === 'sk') return poz ? `${ime} (teraz ${poz})` : ime
+      return poz ? `${ime} (zdaj ${poz})` : ime
+    })
+    .join(', ')
+
+  const B = j === 'sk'
+    ? {
+        naslov: `SLFF ${ozn} — oprava pozície hráča v tvojom tíme`,
+        glavno:
+          `V tvojom tíme ${ekipa ? `<strong>${ekipa}</strong> ` : ''}máš hráča ${kdo}, ` +
+          'ktorého sme mali omylom vedeného ako brankára. Zápis zo zápasu ho raz označil ako brankára, ' +
+          'v skutočnosti však hrá v poli. Jeho pozíciu sme opravili.',
+        body:
+          'Čo to pre teba znamená: v tvojom kádri zostáva na mieste brankára, takže tím je naďalej platný ' +
+          'a nemusíš nič robiť. Body však odteraz získava ako hráč v poli — body posledného kola sú už ' +
+          'prepočítané. Ak ho predáš, na jeho miesto bude treba kúpiť brankára.',
+        gumb: 'Otvoriť môj tím →',
+        opomba: 'Ospravedlňujeme sa za chybu.',
+      }
+    : {
+        naslov: `SLFF ${ozn} — popravek pozicije igralca v tvoji ekipi`,
+        glavno:
+          `V tvoji ekipi ${ekipa ? `<strong>${ekipa}</strong> ` : ''}imaš igralca ${kdo}, ` +
+          'ki smo ga imeli pomotoma zapisanega kot vratarja. Zapisnik tekme ga je enkrat označil kot vratarja, ' +
+          'v resnici pa igra v polju. Njegovo pozicijo smo popravili.',
+        body:
+          'Kaj to pomeni zate: v tvojem kadru ostaja na mestu vratarja, zato je ekipa še vedno veljavna ' +
+          'in ti ni treba storiti ničesar. Točke pa odslej dobiva kot igralec iz polja — točke zadnjega ' +
+          'kroga so že preračunane. Če ga boš prodal/a, bo treba na njegovo mesto kupiti vratarja.',
+        gumb: 'Odpri mojo ekipo →',
+        opomba: 'Opravičujemo se za napako.',
+      }
+
+  const html = ovoj(
+    `<p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">${pozdrav(j, meta.display_name)}</p>
+      <p style="font-size: 15px; line-height: 1.5; margin: 0 0 12px;">${B.glavno}</p>
+      <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">${B.body}</p>
+      <p style="text-align: center; margin: 24px 0;">
+        <a href="${p.ekipa}" style="${GUMB}">${B.gumb}</a>
+      </p>
+      <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">${B.opomba}</p>`,
+    '',
+  )
+  return { naslov: B.naslov, html }
+}
+
 // --- razlog neveljavne ekipe ------------------------------------------------
 
 /** Slovaška množina: 1 / 2–4 / ostalo. */

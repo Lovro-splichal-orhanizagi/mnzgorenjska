@@ -21,6 +21,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4'
 import {
   sestaviOpomnik,
   sestaviOpozorilo,
+  sestaviPopravekPozicije,
   sestaviPoznavalca,
   type Liga,
   type Sporocilo,
@@ -44,8 +45,11 @@ interface Zahteva {
   // 'opomnik'   — kdor ekipe še nima
   // 'opozorilo' — kdor ekipo IMA, a se ob roku ne bo zaklenila
   // 'poznavalec' — odobrena prosnja: enemu cloveku (user_id), samo admin
-  vrsta?: 'opomnik' | 'opozorilo' | 'poznavalec'
+  // 'popravek-pozicije' — lastnikom ekip z igralci iz `player_ids`, ki smo
+  //   jim popravili napacno pozicijo (lazni vratarji); samo urnik
+  vrsta?: 'opomnik' | 'opozorilo' | 'poznavalec' | 'popravek-pozicije'
   user_id?: string
+  player_ids?: number[]
   obseg?: 'klub' | 'liga'
   // Koliko dni pred rokom opozarjamo. Privzeto 2; nastavljivo, da se da
   // suho preveriti, koga bi zajelo sirse okno.
@@ -210,6 +214,80 @@ Deno.serve(async (req) => {
       napaka: rez.napaka ?? null,
     })
     return json({ test: true, resend: rez })
+  }
+
+  // Popravek pozicije: en mail na ekipo, ki ima v kadru popravljenega
+  // igralca. Enkratno obvestilo, zato ga pošlje le stroj (delovni tok
+  // `popravek-pozicij.yml`), vsakemu lastniku v ligi največ enkrat.
+  if (vrsta === 'popravek-pozicije') {
+    if (!jeStroj) return json({ error: 'Popravek pozicij poslje samo delovni tok.' }, 403)
+    const ids = (vhod.player_ids ?? []).filter((x) => Number.isInteger(x))
+    if (!ids.length) return json({ error: 'Manjka player_ids.' }, 400)
+
+    const { data: vrstice, error } = await service
+      .from('fantasy_roster')
+      .select('fantasy_team_id, players!inner(full_name, position), fantasy_teams!inner(name, owner_id, competition_id)')
+      .in('player_id', ids)
+      .eq('fantasy_teams.competition_id', competition_id)
+    if (error) return json({ error: error.message }, 500)
+
+    const poEkipi = new Map<number, {
+      owner_id: string; team_name: string | null; igralci: Array<{ ime: string; pozicija: string | null }>
+    }>()
+    // deno-lint-ignore no-explicit-any
+    for (const v of (vrstice ?? []) as any[]) {
+      const e = poEkipi.get(v.fantasy_team_id) ??
+        { owner_id: v.fantasy_teams.owner_id, team_name: v.fantasy_teams.name, igralci: [] }
+      e.igralci.push({ ime: v.players.full_name, pozicija: v.players.position })
+      poEkipi.set(v.fantasy_team_id, e)
+    }
+
+    if (suho) return json({ suho: true, kandidati_stevilo: poEkipi.size })
+    if (typeof vhod.najvec === 'number' && poEkipi.size > vhod.najvec)
+      return json({ error: `Preveč ekip (${poEkipi.size}, meja ${vhod.najvec}). Nič ni bilo poslano.`, kandidati_stevilo: poEkipi.size }, 409)
+
+    const rezultati: Array<{ ekipa: number; ok: boolean; razlog?: string }> = []
+    for (const [ekipa, e] of poEkipi) {
+      const { data: ze } = await service
+        .from('email_log').select('id')
+        .eq('user_id', e.owner_id).eq('vrsta', 'popravek-pozicije')
+        .eq('competition_id', competition_id).is('napaka', null).limit(1)
+      if (ze?.length) {
+        rezultati.push({ ekipa, ok: false, razlog: 'že poslano' })
+        continue
+      }
+      const [{ data: u }, { data: pr }] = await Promise.all([
+        service.auth.admin.getUserById(e.owner_id),
+        service.from('profiles').select('display_name').eq('id', e.owner_id).maybeSingle(),
+      ])
+      const email = u?.user?.email
+      if (!email) {
+        rezultati.push({ ekipa, ok: false, razlog: 'brez e-naslova' })
+        continue
+      }
+      const rez = await poslji(
+        RESEND_KEY!,
+        EMAIL_FROM,
+        email,
+        sestaviPopravekPozicije(liga, { display_name: pr?.display_name ?? null, team_name: e.team_name, igralci: e.igralci }),
+        Deno.env.get('EMAIL_REPLY_TO'),
+      )
+      await service.from('email_log').insert({
+        user_id: e.owner_id,
+        email,
+        vrsta: 'popravek-pozicije',
+        competition_id,
+        resend_id: rez.id ?? null,
+        napaka: rez.napaka ?? null,
+      })
+      rezultati.push({ ekipa, ok: !rez.napaka, razlog: rez.napaka })
+    }
+    return json({
+      kandidati_stevilo: poEkipi.size,
+      poslano: rezultati.filter((r) => r.ok).length,
+      preskoceno: rezultati.filter((r) => !r.ok).length,
+      rezultati,
+    })
   }
 
   // Seznam: obe poti (človek in stroj) bereta isto funkcijo prek servisnega
