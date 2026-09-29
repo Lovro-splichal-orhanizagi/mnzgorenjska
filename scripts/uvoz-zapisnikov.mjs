@@ -558,6 +558,20 @@ for (const { id, z, url } of zapisniki) {
     // nastopi
     const n = vir.nastopi(z)
 
+    // Dva vratarja v začetni enajsterici sta pomota zapisnika, ne podatek.
+    // Žiri — Jezero Medvode (mladinci 26/27, 3. krog) je kapetana Milivojevića
+    // označil z (V) namesto (K) in uvoz ga je za vselej prekrstil v vratarja.
+    // Kateri od označenih je pravi, iz zapisnika ne vemo, zato na taki tekmi
+    // oznaki ne verjamemo pri nobenem; pravi vratar je GK že od prej.
+    for (const idx of [0, 1]) {
+      const oznaceni = n.filter((x) => x.ekipaIdx === idx && x.zacetnik && x.vratar)
+      if (oznaceni.length < 2) continue
+      for (const x of oznaceni) x.vratar = false
+      z.opozorila.push(
+        `${oznaceni[0].ekipa}: vratarjev v postavi je ${oznaceni.length} (${oznaceni.map((x) => x.ime).join(', ')}) — oznaka (V) prezrta`,
+      )
+    }
+
     // Strelec s klopi, ki mu zapisnik ne pripise menjave. Zgodi se: Maribor
     // je v enem zapisniku navedel gol Vukovica (rezerva, 47. minuta), menjave
     // zanj pa ne. Brez nastopa gol ne prinese tock nikomur, pri tem pa ni
