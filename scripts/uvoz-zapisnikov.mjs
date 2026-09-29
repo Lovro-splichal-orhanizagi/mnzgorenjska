@@ -563,10 +563,16 @@ for (const { id, z, url } of zapisniki) {
     // označil z (V) namesto (K) in uvoz ga je za vselej prekrstil v vratarja.
     // Kateri od označenih je pravi, iz zapisnika ne vemo, zato na taki tekmi
     // oznaki ne verjamemo pri nobenem; pravi vratar je GK že od prej.
+    // Sportnet da pozicijo vsakemu igralcu in klubi "goalkeeper" vpišejo tudi
+    // trem v isti postavi — tam gre stran še pozicija, sicer bi nov igralec
+    // postal GK prek nje.
     for (const idx of [0, 1]) {
       const oznaceni = n.filter((x) => x.ekipaIdx === idx && x.zacetnik && x.vratar)
       if (oznaceni.length < 2) continue
-      for (const x of oznaceni) x.vratar = false
+      for (const x of oznaceni) {
+        x.vratar = false
+        if (x.pozicija === 'GK') x.pozicija = null
+      }
       z.opozorila.push(
         `${oznaceni[0].ekipa}: vratarjev v postavi je ${oznaceni.length} (${oznaceni.map((x) => x.ime).join(', ')}) — oznaka (V) prezrta`,
       )
