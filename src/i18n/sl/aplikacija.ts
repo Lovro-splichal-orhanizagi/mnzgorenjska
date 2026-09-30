@@ -7,6 +7,12 @@ export const aplikacija = {
     // <meta name="description"> — v index.html je slovenski; drug jezik ga
     // zamenja ob nalaganju (main.tsx).
     opis: 'Fantasy football za slovenske medobčinske nogometne lige. Sestavi ekipo, izberi kapetana in tekmuj s sosedi.',
+    // Kartica ob deljenju (og:/twitter:). Iskalniki in Facebook JS ne poženejo,
+    // zato jo vite.config.ts zapiše v statični HTML: index.html (slovenski) in
+    // sk.html, ki ga Vercel vrne za `/sk` in povezave `?t=sk-…`.
+    deljenje:
+      'Fantasy liga za slovenske medobčinske lige. Sestavi ekipo iz pravih igralcev, točke prihajajo iz uradnih zapisnikov: goli, minute, ohranjene mreže.',
+    deljenjeKratko: 'Fantasy liga za slovenske medobčinske lige. Točke iz uradnih zapisnikov.',
   },
   niStrani: {
     naslov: 'Stran ne obstaja',

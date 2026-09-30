@@ -12,7 +12,7 @@
 //
 // Tu je racunski del; risanje je v `src/components/Plakat.tsx`.
 
-import { t } from '../i18n/jedro.ts'
+import { t, jezik, type Jezik } from '../i18n/jedro.ts'
 
 export const SIRINA = 1080
 export const VISINA = 1080
@@ -78,7 +78,9 @@ export function velikostLige(ime: string, vrstic: number): number {
  * "Fantasy liga za … je odprta". Sklanjamo samo "liga" -> "ligo"; ce oblike
  * ne prepoznamo, pustimo, kot je — napacen sklon je manjse zlo kot zmazek.
  */
-export function ligaVTozilniku(liga: string): string {
+export function ligaVTozilniku(liga: string, j: Jezik = jezik()): string {
+  // Slovaščina: "IV. liga — SsFZ" -> "IV. ligu", "I. trieda — Žilina" -> "I. triedu".
+  if (j === 'sk') return liga.replace(/(^|\s)liga(?=\s|$)/, '$1ligu').replace(/(^|\s)trieda(?=\s|$)/, '$1triedu')
   return liga.replace(/\bliga\b/, 'ligo')
 }
 

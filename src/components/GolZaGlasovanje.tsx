@@ -205,7 +205,9 @@ export default function GolZaGlasovanje({
             <strong className="truncate">{ime}</strong>
           </div>
           <div className="text-xs text-slate-500">
-            {ekipa?.name} · {gol.score_home}:{gol.score_away}
+            {ekipa?.name}
+            {/* Sportnet trenutnega izida ob golu ne da — brez njega ostane gola " · :". */}
+            {gol.score_home != null && gol.score_away != null && ` · ${gol.score_home}:${gol.score_away}`}
           </div>
         </div>
 

@@ -11,6 +11,7 @@ import { jezik, t } from './i18n'
 if (jezik() !== 'sl') {
   document.documentElement.lang = jezik()
   document.querySelector('meta[name="description"]')?.setAttribute('content', t('aplikacija.naslovStrani.opis'))
+  document.querySelector('meta[property="og:description"]')?.setAttribute('content', t('aplikacija.naslovStrani.deljenje'))
 }
 
 const koren = document.getElementById('root')

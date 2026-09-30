@@ -18,7 +18,7 @@ import { Link } from 'react-router-dom'
 import { POZICIJE } from '../lib/pravila'
 import { useTekmovanje } from '../lib/tekmovanje'
 import Grb from '../components/Grb'
-import { t, tx } from '../i18n'
+import { t, tx, lokale } from '../i18n'
 import type { Pozicija } from '../lib/tipi'
 
 /** Vrstica pogleda `player_season_standings` (+ igralci brez nastopov). */
@@ -272,7 +272,7 @@ export default function Igralci() {
   const klubi = useMemo(() => {
     const m = new Map()
     for (const i of igralci) if (i.team_name) m.set(i.team_id, i.team_name)
-    return [...m.entries()].sort((a, b) => a[1].localeCompare(b[1], 'sl'))
+    return [...m.entries()].sort((a, b) => a[1].localeCompare(b[1], lokale()))
   }, [igralci])
 
   const vidni = useMemo(() => {

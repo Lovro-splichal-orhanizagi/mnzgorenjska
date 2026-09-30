@@ -59,7 +59,7 @@ import {
 import { NamigiZaPrestope, OdZadnjegaObiska } from '../components/NamigiEkipe'
 import type { IgralecNaIgriscu } from '../components/Igrisce'
 import type { Pozicija } from '../lib/tipi'
-import { t, tx, datumUra } from '../i18n'
+import { t, tx, datumUra, lokale } from '../i18n'
 
 /** Igralec na trgu (`player_overview` / `player_season_standings`). */
 interface IgralecTrga {
@@ -908,7 +908,7 @@ export default function MojaEkipa() {
     for (const i of igralci)
       if (i.team_id != null && i.team_name && i.active !== false)
         m.set(i.team_id, i.team_name)
-    return [...m.entries()].sort((a, b) => a[1].localeCompare(b[1], 'sl'))
+    return [...m.entries()].sort((a, b) => a[1].localeCompare(b[1], lokale()))
   }, [igralci])
 
   const ime = (id: number) => prikazniIme(poId[id]?.full_name) || t('mojaEkipa.igralec')

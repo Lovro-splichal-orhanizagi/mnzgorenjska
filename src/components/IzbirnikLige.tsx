@@ -9,7 +9,7 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { useTekmovanje, type Tekmovanje } from '../lib/tekmovanje'
 import { potrdiZapustitev } from '../lib/neshranjeno'
-import { t as prevod } from '../i18n'
+import { t as prevod, lokale } from '../i18n'
 
 /** Brez šumnikov in velikih črk — da "zelezniki" najde "Železniki". */
 const poenostavi = (s: string) =>
@@ -40,7 +40,7 @@ export function poZvezah(tekmovanja: Tekmovanje[]): Skupina[] {
     if (b.kljuc === '—') return -1
     const as = a.lige[0]?.federation_sort ?? 0
     const bs = b.lige[0]?.federation_sort ?? 0
-    return as - bs || a.naslov.localeCompare(b.naslov, 'sl')
+    return as - bs || a.naslov.localeCompare(b.naslov, lokale())
   })
 }
 

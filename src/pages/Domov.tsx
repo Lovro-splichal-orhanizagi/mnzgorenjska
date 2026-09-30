@@ -9,6 +9,7 @@ import {
   prikazniIme,
   formatirajTocke,
   formatirajCeno,
+  formatirajPremik,
   mnozina,
   KRATKA_POZICIJA,
   GOLI,
@@ -315,8 +316,11 @@ export default function Domov() {
       if (!veljavno) return
 
       // Minute so povsod razsodnik ob izenačenju — enako kot prej v SQL.
+      // Igralec z 0 ne sodi na lestvico strelcev/podajalcev: dokler nihče ne
+      // potrdi asistence, bi bila "Najboljši podajalci" pet imen z ničlo.
       const vrh = (stolpec: 'goals' | 'assists' | 'clean_sheets' | 'points') =>
         [...(sezonaVrstice as any[])]
+          .filter((v) => stolpec === 'points' || Number(v[stolpec] ?? 0) > 0)
           .sort(
             (a, b) =>
               Number(b[stolpec] ?? 0) - Number(a[stolpec] ?? 0) ||
@@ -491,7 +495,9 @@ export default function Domov() {
         >
           <div className="flex flex-wrap items-center gap-4">
             <span className="text-4xl sm:text-5xl" aria-hidden>🅰️</span>
-            <div className="min-w-0 flex-1">
+            {/* min-w: na telefonu gumb pade v svojo vrstico, besedilo pa ne
+                ostane stisnjeno v ozek stolpec po eno besedo. */}
+            <div className="min-w-[12rem] flex-1">
               <h2 className="text-xl font-black text-amber-100 sm:text-2xl">
                 {t('domov.asistence.cakajo', { n: stat.brezAsistence })}
               </h2>
@@ -712,7 +718,7 @@ export default function Domov() {
                       }`}
                     >
                       {Number(z.price_delta) > 0 ? '▲' : '▼'}
-                      {Math.abs(Number(z.price_delta)).toFixed(1)}
+                      {formatirajPremik(z.price_delta)}
                     </span>
                   )}
                   <span className="w-12 text-right font-black tabular-nums">

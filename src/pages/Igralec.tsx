@@ -12,6 +12,7 @@ import {
   IME_POZICIJE,
   formatirajTocke,
   formatirajCeno,
+  formatirajPremik,
   mnozina,
   oblika,
   TOCKE,
@@ -182,7 +183,13 @@ export default function Igralec() {
           : Promise.resolve({ data: [] }),
       ])
       if (preklican) return
-      setCene((c ?? []) as any[])
+      // Po krogu, ne po času zapisa: borza ob popravku zapisnika krog obračuna
+      // znova in starejši krog dobi novejši `changed_at` (8., 6., 7. krog).
+      setCene(
+        ((c ?? []) as any[]).sort(
+          (a, b) => Number(b.rounds?.number ?? 0) - Number(a.rounds?.number ?? 0),
+        ),
+      )
 
       // Za crto rabimo izhodiscno ceno in zadnji ODIGRANI krog: med
       // premikoma cena ni neznana, ampak mirna, in ravno to je treba videti.
@@ -495,7 +502,7 @@ export default function Igralec() {
             {premik !== 0 && (
               <span className={premik > 0 ? 'text-gnl-300' : 'text-rose-400'}>
                 {' '}
-                {premik > 0 ? '▲' : '▼'} {Math.abs(premik).toFixed(1)}
+                {premik > 0 ? '▲' : '▼'} {formatirajPremik(premik)}
               </span>
             )}
           </div>
@@ -889,7 +896,7 @@ export default function Igralec() {
                       }`}
                     >
                       {dp > 0 ? '▲' : dp < 0 ? '▼' : '•'}{' '}
-                      {Math.abs(dp).toFixed(1)}
+                      {formatirajPremik(dp)}
                     </span>
                   </span>
                 </div>
@@ -931,7 +938,7 @@ export default function Igralec() {
                     <span
                       className={`ml-2 ${d > 0 ? 'text-gnl-300' : 'text-rose-400'}`}
                     >
-                      {d > 0 ? '▲' : '▼'} {Math.abs(d).toFixed(1)}
+                      {d > 0 ? '▲' : '▼'} {formatirajPremik(d)}
                     </span>
                   </span>
                 </li>

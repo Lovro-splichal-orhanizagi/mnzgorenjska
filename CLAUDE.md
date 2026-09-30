@@ -351,7 +351,11 @@ vpisana pri Supabase kot povratni naslov ponastavitve gesla in žeton nosi v
   v gostujočem projektu predloge **niso** iz config.toml — prilepi jih v
   Auth → Email Templates.
 - `index.html` je slovenski; `main.tsx` za drug jezik zamenja le `lang` in
-  opis strani, naslov nastavi `useNaslov`.
+  opis strani, naslov nastavi `useNaslov`. Kartica ob deljenju (og:) mora biti
+  v statičnem HTML, ker je Facebook/WhatsApp bereta brez JS: build zato zapiše
+  še `sk.html` (vtičnik `slovaskaKartica` v `vite.config.js`, besedila
+  `aplikacija.naslovStrani.deljenje`), `vercel.json` pa ga vrne za `/sk` in
+  poti z `?t=sk-…` (ne za `/` — tam Vercel najprej postreže index.html).
 
 ## TypeScript
 

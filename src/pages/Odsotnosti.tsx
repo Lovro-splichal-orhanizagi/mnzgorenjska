@@ -16,7 +16,7 @@ import { vseVrstice } from '../lib/strani'
 import { useNaslov } from '../lib/naslov'
 import { povezavaNaPrijavo } from '../lib/prijava'
 import Grb from '../components/Grb'
-import { t, tx } from '../i18n'
+import { t, tx, lokale } from '../i18n'
 import {
   VRSTE,
   VrsticaPorocila,
@@ -132,7 +132,7 @@ export default function Odsotnosti() {
     if (q.length < 2) return []
     return igralciLige
       .filter((i) => poenostavi(i.full_name ?? '').includes(q))
-      .sort((a, b) => (a.full_name ?? '').localeCompare(b.full_name ?? '', 'sl'))
+      .sort((a, b) => (a.full_name ?? '').localeCompare(b.full_name ?? '', lokale()))
       .slice(0, 8)
   }, [iskanje, igralciLige])
 
