@@ -551,7 +551,7 @@ export default function Lestvica() {
             <li
               key={e.fantasy_team_id}
               className={`kartica kartica-hover relative overflow-hidden p-4 ${
-                i === 0 ? 'ring-1 ring-amber-400/40' : ''
+                i === 0 && tocke > 0 ? 'ring-1 ring-amber-400/40' : ''
               }`}
             >
               <span
@@ -561,7 +561,9 @@ export default function Lestvica() {
               />
               <div className="relative flex items-center gap-3">
                 <span className="w-8 text-center text-lg font-black text-slate-400">
-                  {MEDALJE[i] ?? i + 1}
+                  {/* Medalja in mesto šele, ko je kaj točk: pri samih ničlah
+                      bi mesto določil le vrstni red vnosa. */}
+                  {tocke > 0 ? (MEDALJE[i] ?? i + 1) : '–'}
                 </span>
                 <div className="min-w-0 flex-1">
                   <Link
@@ -573,14 +575,15 @@ export default function Lestvica() {
                   <div className="text-xs text-slate-500">
                     {e.owner_name}
                     {(e.team_created_at ?? e.owner_registered_at) && (
-                      <span className="ml-2 text-slate-400">
+                      <span className={`${e.owner_name ? 'ml-2 ' : ''}text-slate-400`}>
+                        {/* Hišna ekipa nima imena lastnika — brez vodilne pike. */}
                         {t('lestvice.lestvica.igraOd', {
                           datum: datum((e.team_created_at ?? e.owner_registered_at) as string, {
                             day: 'numeric',
                             month: 'numeric',
                             year: 'numeric',
                           }),
-                        })}
+                        }).replace(/^·\s*/, e.owner_name ? '· ' : '')}
                       </span>
                     )}
                   </div>

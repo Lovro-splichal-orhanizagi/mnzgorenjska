@@ -188,7 +188,7 @@ export default function Ekipa() {
           {ekipa?.team_name ?? t('lestvice.ekipa.naslov')}
         </h1>
         <p className="text-sm text-slate-400">
-          {prikazniIme(ekipa?.owner_name)} ·{' '}
+          {ekipa?.owner_name ? <>{prikazniIme(ekipa.owner_name)} ·{' '}</> : null}
           {t('lestvice.ekipa.skupaj', {
             tocke: formatirajTocke(ekipa?.total_points),
             beseda: tockZ(ekipa?.total_points),
