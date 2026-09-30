@@ -10,6 +10,7 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { useTekmovanje, type Tekmovanje } from '../lib/tekmovanje'
 import { potrdiZapustitev } from '../lib/neshranjeno'
 import { t as prevod, lokale } from '../i18n'
+import IzbiraDrzave from './IzbiraDrzave'
 
 /** Brez šumnikov in velikih črk — da "zelezniki" najde "Železniki". */
 const poenostavi = (s: string) =>
@@ -203,6 +204,8 @@ export default function IzbirnikLige() {
           className="animiraj-vstop absolute left-0 z-30 mt-1 w-64 max-w-[calc(100vw-2rem)] rounded-xl border border-white/10
                      bg-slate-900 p-2 shadow-xl shadow-black/40"
         >
+          {/* Država nad ligami: kdor ga je ugib poslal v napačno, jo tu zamenja. */}
+          <IzbiraDrzave className="mb-2 border-b border-white/10 px-1 pb-2" />
           {/* Iskalno polje je zunaj seznama: v role=listbox smejo biti le možnosti. */}
           <input
             ref={poljeIskanja}

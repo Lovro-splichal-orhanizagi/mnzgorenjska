@@ -9,6 +9,7 @@ import OpozoriloEkipe from './components/OpozoriloEkipe'
 import NapakaOprijem from './components/NapakaOprijem'
 import Podpora from './components/Podpora'
 import VstopDrzave from './components/VstopDrzave'
+import IzbiraDrzave from './components/IzbiraDrzave'
 import Domov from './pages/Domov'
 import Igralci from './pages/Igralci'
 import Igralec from './pages/Igralec'
@@ -130,6 +131,7 @@ export default function App() {
               {t('aplikacija.noga.zasebnost')}
             </Link>
             <VirPodatkov />
+            <IzbiraDrzave className="mt-2" />
           </footer>
         </div>
       </TekmovanjeProvider>

@@ -50,12 +50,21 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     niZadetkov: 'Žiadne výsledky.',
     lige: 'Ligy',
   },
+  izbiraDrzave: {
+    oznaka: 'Krajina',
+    imena: {
+      SI: 'Slovenija',
+      SK: 'Slovensko',
+    },
+    preklopi: 'Prepnúť na {drzava}',
+  },
   prviObisk: {
     naslov: 'Kde chceš hrať?',
     opis: 'Vyber si ligu, v ktorej si poskladáš tím a budeš súťažiť. Ukážeme ti jej hráčov a tabuľku; neskôr ju môžeš kedykoľvek zmeniť hore.',
     brezEkip: 'zatiaľ bez tímov',
     nazaj: '← Späť',
     preskoci: 'Preskočiť',
+    drugaDrzava: '{drzava}?',
   },
   rokKroga: {
     dniUr: '{d} d {h} h',

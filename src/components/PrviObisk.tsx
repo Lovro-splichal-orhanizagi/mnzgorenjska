@@ -26,6 +26,11 @@ import { vseVrstice } from '../lib/strani'
 import { mnozina, EKIPE } from '../lib/pomozno'
 import { poZvezah } from './IzbirnikLige'
 import { t } from '../i18n'
+import { KLJUC_VSTOPA, drzaveZLigami, preklopiDrzavo, zastava } from '../lib/drzava'
+import { imeDrzave } from './IzbiraDrzave'
+
+// Vstop `/sk` doda ligo v naslov sam; to ni izbira obiskovalca.
+export { oznaciVstopDrzave } from '../lib/drzava'
 
 const KLJUC_PRESKOKA = 'slff-prvi-obisk'
 
@@ -52,24 +57,12 @@ function zapomniSi() {
 
 const ZAMIK_MS = 1500
 
-const KLJUC_VSTOPA = 'slff-vstop-drzave'
-
-/** Vstop `/sk` doda ligo v naslov sam; to ni izbira obiskovalca. */
-export function oznaciVstopDrzave() {
-  try {
-    sessionStorage.setItem(KLJUC_VSTOPA, '1')
-  } catch {
-    /* zasebno okno — okno se pač ne pokaže */
-  }
-}
-
 /** Ali je obiskovalec prišel s povezavo, ki že nosi ligo (`?t=…`). */
+// Oznako vstopa le preberemo; pobriše jo učinek ob prvem izrisu. Branje z
+// brisanjem je v StrictMode (dvojni klic začetne vrednosti) okno skrilo.
 function ligaVPovezavi(): boolean {
   try {
-    if (sessionStorage.getItem(KLJUC_VSTOPA)) {
-      sessionStorage.removeItem(KLJUC_VSTOPA)
-      return false
-    }
+    if (sessionStorage.getItem(KLJUC_VSTOPA)) return false
     return new URLSearchParams(window.location.search).has('t')
   } catch {
     return false
@@ -77,11 +70,18 @@ function ligaVPovezavi(): boolean {
 }
 
 export default function PrviObisk() {
-  const { tekmovanja, nastavi } = useTekmovanje()
+  const { tekmovanja, vsaTekmovanja, drzava: drzavaLige, nastavi } = useTekmovanje()
   // Povezava z ligo (`?t=sk-za-1trieda` v mailu klubu, deljena lestvica)
   // pove, katero ligo človek gleda — vprašanje "kje želiš igrati?" bi ga
   // le zmedlo. Bere se ob prvem izrisu, preden aplikacija sama doda `?t=`.
   const [skrit, setSkrit] = useState(() => zeVprasan() || ligaVPovezavi())
+  useEffect(() => {
+    try {
+      sessionStorage.removeItem(KLJUC_VSTOPA)
+    } catch {
+      /* zasebno okno */
+    }
+  }, [])
   const [cas, setCas] = useState(false)
   const [drzava, setDrzava] = useState<string | null>(null)
   const [ekip, setEkip] = useState<Record<number, number>>({})
@@ -167,6 +167,11 @@ export default function PrviObisk() {
   // več, se pojavi sam.
   const potrebnaDrzava = drzave.length > 1 && !drzava
 
+  // Okno kaže lige ugibane države; če se je ugib zmotil (Slovenec na
+  // slovaškem IP), je tu majhna povezava na drugo. Stran se naloži znova v
+  // jeziku te države in okno vpraša znova, z njenimi ligami.
+  const druge = drzaveZLigami(vsaTekmovanja).filter((d) => d !== drzavaLige)
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur">
       <div
@@ -236,6 +241,19 @@ export default function PrviObisk() {
             >
               {t('aplikacija.prviObisk.nazaj')}
             </button>
+          ) : druge.length ? (
+            <span className="flex gap-3">
+              {druge.map((koda) => (
+                <button
+                  key={koda}
+                  onClick={() => preklopiDrzavo(koda, vsaTekmovanja, { izberiLigo: false })}
+                  className="text-xs text-slate-400 hover:text-slate-200"
+                >
+                  <span aria-hidden="true">{zastava(koda)} </span>
+                  {t('aplikacija.prviObisk.drugaDrzava', { drzava: imeDrzave(koda) })}
+                </button>
+              ))}
+            </span>
           ) : (
             <span />
           )}

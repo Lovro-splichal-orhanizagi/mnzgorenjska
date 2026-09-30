@@ -160,17 +160,36 @@ Domena je ena, **lige druge države so skrite**: `useTekmovanje().tekmovanja`
 vrne le lige države, ki jo obiskovalec gleda (izbirnik, okno prvega obiska,
 državna lestvica); vse lige so v `vsaTekmovanja` (vstop `/sk`, admin). Nova
 stran, ki našteva lige ali ekipe več lig, mora filtrirati po državi.
-Država sledi ligi: kdor ligo ima (`?t=` ali shranjena), ostane
-pri njej. Le nov obiskovalec brez izbire dobi privzeto ligo države, ki jo
-ugane `src/lib/drzava.ts` (povezava `/sk`, jezik brskalnika, časovni pas).
-Slovenija in neznana država ostaneta pri `PRIVZETO`, država brez aktivne lige
-prav tako — dokler je slovaška liga neaktivna, se za nikogar nič ne spremeni.
-Vstopni povezavi `slff.eu/sk` in `/si` sta za kampanje.
+Država sledi ligi. Vrstni red (`zacetnaLiga` v `src/lib/drzava.ts`):
 
-**Zaprta država** (`SAMO_S_POVEZAVO` v `src/lib/drzavaUgib.ts`): lige so
-vklopljene, a država se po brskalniku ne ugiba — vanjo pride le, kdor ima
-povezavo `/sk` ali `?t=sk-…`. Slovaška je zaprta, dokler je ne odstraniš s
-seznama.
+1. **Kdor ligo ima** (`?t=` ali shranjena `slff-tekmovanje`), ostane pri njej —
+   ugib ga ne premakne, tudi če ima slovaški brskalnik ali IP.
+2. **Prijavljen brez shranjene lige** (nova naprava) dobi ligo svojih ekip
+   (`ligaEkip`: država z največ človeškimi ekipami, ob izenačenju prva ekipa).
+3. **Nov obiskovalec** dobi privzeto ligo ugibane države (`ugibajDrzavo`):
+   izbira s povezave `/sk` ali izbirnika (`slff-drzava`) → **IP** →
+   jezik brskalnika → časovni pas → nič (Slovenija, `PRIVZETO`).
+
+IP pove edge funkcija `api/drzava.ts` (glava `x-vercel-ip-country`, odgovor
+`{ drzava }`, `no-store`, nič ne beleži). Kliče jo le, kdor lige in države še
+nima, in po 800 ms odneha; `vite dev` funkcije nima (vrne index.html), zato
+lokalno ugib teče brez IP. SPA preusmeritev v `vercel.json` izpusti `/api/`.
+Tuj IP (AT, DE …) preskoči na jezik. Država brez aktivne lige ostane pri
+`PRIVZETO`. Jezik se popravi šele, ko je začetna liga odločena (`ustaljena`),
+sicer bi se stran med čakanjem na ugib naložila dvakrat.
+
+**Izbira države** (`src/components/IzbiraDrzave.tsx`, "🇸🇮 Slovenija · 🇸🇰
+Slovensko") je v nogi in na vrhu izbirnika lige; pokaže le države z aktivnimi
+ligami. `preklopiDrzavo` zapiše državo, privzeto ligo in jezik v brskalnik in
+naloži naslovnico nove države — ekip in strežnika se ne dotakne. Okno prvega
+obiska ima isto povezavo ("Slovenija?"), ki pa ligo pusti neizbrano, da okno
+vpraša znova z ligami nove države. Vstopni povezavi `slff.eu/sk` in `/si` sta
+za kampanje in ostajata.
+
+**Slovaška je odprta** za vse (ugib po IP in jeziku). **Državo zapreš** tako,
+da jo dodaš v `SAMO_S_POVEZAVO` v `src/lib/drzavaUgib.ts` (npr. `['SK']`):
+lige ostanejo vklopljene, a IP, jezik in pas je ne odprejo — vanjo pride le,
+kdor ima povezavo `/sk` ali `?t=sk-…` (ali jo izbere v izbirniku).
 
 Nova Gorica menija za pretekle sezone nima — stara sezona je svoje tekmovanje
 s svojo šifro in do nje ne vodi nobena povezava, zato jih je treba prečesati.

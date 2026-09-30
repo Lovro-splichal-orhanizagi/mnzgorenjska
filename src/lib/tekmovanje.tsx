@@ -16,7 +16,15 @@ import {
 } from 'react'
 import { useLocation, useSearchParams } from 'react-router-dom'
 import { supabase } from './supabase'
-import { drzavaObiskovalca, ligeDrzave, privzetaLiga, JEZIK_DRZAVE } from './drzava'
+import {
+  ugibajObiskovalca,
+  ligeDrzave,
+  ligaEkip,
+  zacetnaLiga,
+  oznaciVstopDrzave,
+  JEZIK_DRZAVE,
+} from './drzava'
+import { useAuth } from './useAuth'
 import { jezik, jePripravljen, nastaviJezik } from '../i18n/jedro.ts'
 
 export const PRIVZETO = 'clani'
@@ -250,18 +258,75 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
     }
   }, [iskanje, pathname, slug, setIskanje])
 
-  // Nov obiskovalec brez izbire dobi privzeto ligo SVOJE države (Slovak ne
-  // pristane na Gorenjski). Kdor ligo že ima, tega ne doživi — izbira je
-  // izrecna in država sledi ligi. Za Slovenijo je privzeta ista kot doslej.
-  // Ista pot velja za neznano ligo v naslovu (tipkarska napaka, stara
-  // povezava), da stran ne ostane prazna.
+  // Ugib države (IP, jezik, pas) potrebuje le, kdor lige nima — vprašamo ga
+  // enkrat ob nalaganju, vzporedno s seznamom lig. `undefined` = še čakamo;
+  // `drzavaPoIp` po 800 ms odneha, zato stran nikoli ne obvisi.
+  const [ugib, setUgib] = useState<string | null | undefined>(() =>
+    izrecno.current ? null : undefined,
+  )
+  useEffect(() => {
+    if (ugib !== undefined) return
+    let veljavno = true
+    ugibajObiskovalca().then((d) => {
+      if (veljavno) setUgib(d)
+    })
+    return () => {
+      veljavno = false
+    }
+  }, [ugib])
+
+  // Prijavljen uporabnik brez shranjene lige (nova naprava) dobi ligo svojih
+  // ekip — Slovenca s slovenskimi ekipami ugib po IP ali brskalniku ne sme
+  // odnesti na Slovaško. Kdor ima ligo izbrano, poizvedbe ne potrebuje.
+  const { session, loading: nalagaSeja } = useAuth()
+  const uporabnik = session?.user.id ?? null
+  const [ekipeLige, setEkipeLige] = useState<{ uporabnik: string; liga: string | null } | null>(null)
+  useEffect(() => {
+    if (!uporabnik || izrecno.current || !tekmovanja.length) return
+    let veljavno = true
+    supabase
+      .from('fantasy_teams')
+      .select('competition_id')
+      .eq('owner_id', uporabnik)
+      .eq('hisna', false)
+      .order('id')
+      .then(({ data }) => {
+        if (veljavno) setEkipeLige({ uporabnik, liga: ligaEkip(data ?? [], tekmovanja) })
+      })
+    return () => {
+      veljavno = false
+    }
+  }, [uporabnik, tekmovanja])
+
+  // Nov obiskovalec brez izbire dobi ligo svojih ekip ali privzeto ligo
+  // SVOJE države (Slovak ne pristane na Gorenjski). Kdor ligo že ima, tega ne
+  // doživi — izbira je izrecna in država sledi ligi. Za Slovenijo je privzeta
+  // ista kot doslej. Ista pot velja za neznano ligo v naslovu (tipkarska
+  // napaka, stara povezava), da stran ne ostane prazna.
+  // Dokler začetna liga ni odločena, jezika ne popravljamo: sicer bi
+  // slovaški obiskovalec med čakanjem na ugib (liga je še `clani`) dobil
+  // slovenščino in stran bi se naložila dvakrat.
+  const [ustaljena, setUstaljena] = useState(() => izrecno.current)
   useEffect(() => {
     if (!tekmovanja.length) return
     const znana = tekmovanja.some((t) => t.slug === slug)
-    if (znana && izrecno.current) return
-    const privzeta = privzetaLiga(tekmovanja, drzavaObiskovalca())
-    if (privzeta !== slug || !znana) setSlug(tekmovanja.some((t) => t.slug === privzeta) ? privzeta : PRIVZETO)
-  }, [tekmovanja, slug])
+    if (znana && izrecno.current) {
+      setUstaljena(true)
+      return
+    }
+    // Počakamo na sejo in (prijavljen) na njegove ekipe ter na ugib.
+    if (nalagaSeja || ugib === undefined) return
+    if (uporabnik && ekipeLige?.uporabnik !== uporabnik) return
+    const nova = zacetnaLiga({
+      vse: tekmovanja,
+      slug,
+      izrecno: izrecno.current,
+      ligaEkip: uporabnik ? (ekipeLige?.liga ?? null) : null,
+      ugib,
+    })
+    if (nova && nova !== slug) setSlug(nova)
+    setUstaljena(true)
+  }, [tekmovanja, slug, ugib, nalagaSeja, uporabnik, ekipeLige])
 
   useEffect(() => {
     if (!izrecno.current) return
@@ -274,8 +339,8 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
 
   const tekmovanje = tekmovanja.find((t) => t.slug === slug) ?? null
   const { drzava, lige } = useMemo(
-    () => ligeDrzave(tekmovanja, slug, drzavaObiskovalca()),
-    [tekmovanja, slug],
+    () => ligeDrzave(tekmovanja, slug, ugib ?? null),
+    [tekmovanja, slug, ugib],
   )
 
   // Jezik sledi državi lige. Ob nalaganju ga jedro prevodov ugane iz šifre
@@ -283,12 +348,17 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
   // nalog). Za Slovenca je država Slovenija in jezik že slovenski — nič se ne
   // zgodi.
   useEffect(() => {
-    if (!tekmovanja.length) return
+    if (!tekmovanja.length || !ustaljena) return
     // Vstop s povezave /sk stran naloži znova sam — dvojni nalog bi le utripal.
     if (pathname === '/sk' || pathname === '/si') return
     const zeljen = JEZIK_DRZAVE[drzava]
-    if (zeljen && jePripravljen(zeljen) && zeljen !== jezik()) nastaviJezik(zeljen)
-  }, [tekmovanja.length, drzava, pathname])
+    if (zeljen && jePripravljen(zeljen) && zeljen !== jezik()) {
+      // Ligo v naslovu je dodala aplikacija (ugib), ne obiskovalec — po
+      // ponovnem nalaganju naj vseeno dobi vprašanje, kje želi igrati.
+      if (!izrecno.current) oznaciVstopDrzave()
+      nastaviJezik(zeljen)
+    }
+  }, [tekmovanja.length, ustaljena, drzava, pathname])
 
   return (
     <Kontekst.Provider
