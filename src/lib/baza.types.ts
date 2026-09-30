@@ -953,6 +953,7 @@ export type Database = {
           cash: number
           competition_id: number
           created_at: string
+          hisna: boolean
           id: number
           name: string
           owner_id: string
@@ -963,6 +964,7 @@ export type Database = {
           cash?: number
           competition_id?: number
           created_at?: string
+          hisna?: boolean
           id?: never
           name: string
           owner_id: string
@@ -973,6 +975,7 @@ export type Database = {
           cash?: number
           competition_id?: number
           created_at?: string
+          hisna?: boolean
           id?: never
           name?: string
           owner_id?: string
@@ -3255,6 +3258,7 @@ export type Database = {
           best_round: number | null
           competition_id: number | null
           fantasy_team_id: number | null
+          hisna: boolean | null
           owner_name: string | null
           owner_registered_at: string | null
           rounds_played: number | null
@@ -4732,6 +4736,7 @@ export type Database = {
         Returns: boolean
       }
       nova_koda_mini_lige: { Args: Record<PropertyKey, never>; Returns: string }
+      odstrani_hisne_ekipe: { Args: { p_ids: number[] }; Returns: number }
       okno_preracuna_tock: { Args: Record<PropertyKey, never>; Returns: string }
       osvezi_tocke_krogov: { Args: { p_krogi: number[] }; Returns: undefined }
       osvezi_vse_tocke_krogov: {
@@ -4890,6 +4895,15 @@ export type Database = {
           mnozitelj: number
           player_id: number
         }[]
+      }
+      ustvari_hisno_ekipo: {
+        Args: {
+          p_competition_id: number
+          p_ime: string
+          p_owner: string
+          p_roster: Json
+        }
+        Returns: number
       }
       ustvari_mini_ligo: {
         Args: { p_ekipa?: number; p_ime: string }

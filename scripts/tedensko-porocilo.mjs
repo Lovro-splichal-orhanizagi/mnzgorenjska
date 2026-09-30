@@ -160,7 +160,7 @@ try {
   ;({ count: igralcev } = await poskusi('igralci', () =>
     db.from('players').select('id', { count: 'exact', head: true }).eq('active', true)))
   ;({ count: ekip } = await poskusi('ekipe', () =>
-    db.from('fantasy_teams').select('id', { count: 'exact', head: true })))
+    db.from('fantasy_teams').select('id', { count: 'exact', head: true }).eq('hisna', false)))
 } catch (e) {
   console.error(e.message)
   await javiNapako(e.message)

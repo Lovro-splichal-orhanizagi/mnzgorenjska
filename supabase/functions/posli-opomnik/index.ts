@@ -234,6 +234,8 @@ Deno.serve(async (req) => {
       .select('fantasy_team_id, players!inner(full_name, position), fantasy_teams!inner(name, owner_id, competition_id)')
       .in('player_id', ids)
       .eq('fantasy_teams.competition_id', competition_id)
+      // Hišne ekipe SLFF nimajo lastnika, ki bi mu pisali.
+      .eq('fantasy_teams.hisna', false)
     if (error) return json({ error: error.message }, 500)
 
     const poEkipi = new Map<number, {

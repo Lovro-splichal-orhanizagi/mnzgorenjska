@@ -147,7 +147,9 @@ export default function Igralci() {
         supabase
           .from('fantasy_team_standings')
           .select('fantasy_team_id', { count: 'exact', head: true })
-          .eq('competition_id', ligaId),
+          .eq('competition_id', ligaId)
+          // Izbranost hišnih ekip ne šteje (glej `owners`), zato tudi imenovalec ne.
+          .eq('hisna', false),
       ])
       if (!veljavno) return
       if (error) {
