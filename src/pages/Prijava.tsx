@@ -5,11 +5,15 @@ import { useAuth } from '../lib/useAuth'
 import { useNaslov } from '../lib/naslov'
 import { napakaPrijave, varnaPot } from '../lib/prijava'
 import { jezik, t } from '../i18n'
+import { useTekmovanje } from '../lib/tekmovanje'
+import { JEZIK_DRZAVE } from '../lib/drzava'
 
 type Nacin = 'prijava' | 'registracija' | 'pozabljeno'
 
 export default function Prijava() {
   const { session } = useAuth()
+  const { drzava } = useTekmovanje()
+  const jezikPoste = jezik() === 'en' ? (JEZIK_DRZAVE[drzava] ?? 'sl') : jezik()
   const navigate = useNavigate()
   // Kam po prijavi: povabilo v mini ligo pošlje človeka sem in ga hoče nazaj.
   // Sprejmemo samo notranjo pot, da povezava ne more voditi drugam.
@@ -75,7 +79,9 @@ export default function Prijava() {
             options: {
               // `jezik` izbere jezik potrditvenega maila in poznejše
               // ponastavitve gesla (predloge v supabase/templates/).
-              data: { display_name: ime || email.split('@')[0], jezik: jezik() },
+              // Pošta je le slovenska in slovaška: angleški obiskovalec dobi
+              // jezik države lige, ki jo gleda.
+              data: { display_name: ime || email.split('@')[0], jezik: jezikPoste },
               emailRedirectTo: `${window.location.origin}${nazaj}`,
             },
           })

@@ -10,6 +10,7 @@ import NapakaOprijem from './components/NapakaOprijem'
 import Podpora from './components/Podpora'
 import VstopDrzave from './components/VstopDrzave'
 import IzbiraDrzave from './components/IzbiraDrzave'
+import IzbiraJezika from './components/IzbiraJezika'
 import Domov from './pages/Domov'
 import Igralci from './pages/Igralci'
 import Igralec from './pages/Igralec'
@@ -131,7 +132,10 @@ export default function App() {
               {t('aplikacija.noga.zasebnost')}
             </Link>
             <VirPodatkov />
-            <IzbiraDrzave className="mt-2" />
+            <div className="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+              <IzbiraDrzave />
+              <IzbiraJezika />
+            </div>
           </footer>
         </div>
       </TekmovanjeProvider>

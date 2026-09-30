@@ -64,6 +64,12 @@ export const aplikacija = {
     },
     preklopi: 'Preklopi na {drzava}',
   },
+  izbiraJezika: {
+    /** Oznaka izbirnika "SL · SK · EN" (za bralnike zaslona). */
+    oznaka: 'Jezik',
+    /** Namig ob jeziku; ime jezika je vedno v njem samem (English). */
+    preklopi: 'Preklopi na {jezik}',
+  },
   prviObisk: {
     naslov: 'Kje želiš igrati?',
     opis: 'Izberi ligo, v kateri boš sestavil ekipo in tekmoval. Pokažemo ti njene igralce in lestvico; pozneje jo lahko kadarkoli zamenjaš zgoraj.',
@@ -72,6 +78,8 @@ export const aplikacija = {
     preskoci: 'Preskoči',
     /** Povezava na drugo državo, ko je ugib pokazal napačno. */
     drugaDrzava: '{drzava}?',
+    /** Korak države za tujca (IP iz države brez lig). */
+    drzavaOpis: 'Najprej izberi državo, nato ligo v njej.',
   },
   rokKroga: {
     dniUr: '{d} d {h} h',

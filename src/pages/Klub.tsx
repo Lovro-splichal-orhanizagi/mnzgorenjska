@@ -16,7 +16,7 @@ import {
   mnozina,
   IGRALCI,
 } from '../lib/pomozno'
-import { t, tx, jezik } from '../i18n'
+import { t, tx } from '../i18n'
 import { useNaslov } from '../lib/naslov'
 import { VRSTNI_RED } from '../lib/pravila'
 import type { Pozicija } from '../lib/tipi'
@@ -111,14 +111,15 @@ export default function Klub() {
       if (najboljsi) {
         const { data: v } = await supabase
           .from('competitions_view')
-          .select('name, federation_name')
+          .select('name, federation_name, country_code')
           .eq('id', najboljsi.id)
           .maybeSingle()
         if (!veljavno) return
         const kratko = (v?.name ?? '').replace(/\s*—\s*(člani|mladinci)\s*$/, '')
         // Slovaška imena lig regijo že nosijo ("I. trieda — Žilina"); zveza
         // zraven bi jo le ponovila ("… Žilina ObFZ Žilina").
-        const zeZRegijo = jezik() !== 'sl' && kratko.includes('—')
+        // Odloča država lige, ne jezik (angleščina je za obe državi).
+        const zeZRegijo = v?.country_code !== 'SI' && kratko.includes('—')
         setLigaZaPlakat(v?.federation_name && !zeZRegijo ? `${kratko} ${v.federation_name}` : kratko)
       }
       setNalaganje(false)

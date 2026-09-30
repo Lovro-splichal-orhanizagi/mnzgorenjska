@@ -80,6 +80,8 @@ export function velikostLige(ime: string, vrstic: number): number {
  */
 export function ligaVTozilniku(liga: string, j: Jezik = jezik()): string {
   // Slovaščina: "IV. liga — SsFZ" -> "IV. ligu", "I. trieda — Žilina" -> "I. triedu".
+  // Angleščina ne sklanja: "Fantasy league for 1. liga — člani is open".
+  if (j === 'en') return liga
   if (j === 'sk') return liga.replace(/(^|\s)liga(?=\s|$)/, '$1ligu').replace(/(^|\s)trieda(?=\s|$)/, '$1triedu')
   return liga.replace(/\bliga\b/, 'ligo')
 }

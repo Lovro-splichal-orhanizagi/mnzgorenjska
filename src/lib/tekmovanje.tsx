@@ -22,7 +22,13 @@ import {
   ligaEkip,
   zacetnaLiga,
   oznaciVstopDrzave,
-  JEZIK_DRZAVE,
+  drzaveZLigami,
+  jeTujIp,
+  jezikObiskovalca,
+  shranjenaDrzava,
+  tujec,
+  zapomniTujca,
+  type UgibObiskovalca,
 } from './drzava'
 import { useAuth } from './useAuth'
 import { jezik, jePripravljen, nastaviJezik } from '../i18n/jedro.ts'
@@ -131,6 +137,11 @@ interface KontekstVrednost {
   /** Vse aktivne lige vseh držav: za vstop s povezave `/sk` in administracijo. */
   vsaTekmovanja: Tekmovanje[]
   drzava: string
+  /**
+   * Tujec (IP iz države brez lig) še ni izbral države: okno prvega obiska ga
+   * najprej vpraša po njej.
+   */
+  vprasajDrzavo: boolean
   nastavi: (slug: string) => void
 }
 
@@ -141,6 +152,7 @@ const Kontekst = createContext<KontekstVrednost>({
   tekmovanja: [],
   vsaTekmovanja: [],
   drzava: 'SI',
+  vprasajDrzavo: false,
   nastavi: () => {},
 })
 
@@ -261,9 +273,13 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
   // Ugib države (IP, jezik, pas) potrebuje le, kdor lige nima — vprašamo ga
   // enkrat ob nalaganju, vzporedno s seznamom lig. `undefined` = še čakamo;
   // `drzavaPoIp` po 800 ms odneha, zato stran nikoli ne obvisi.
-  const [ugib, setUgib] = useState<string | null | undefined>(() =>
+  const [ugib, setUgib] = useState<UgibObiskovalca | null | undefined>(() =>
     izrecno.current ? null : undefined,
   )
+  // Tujec: IP iz države brez lig. Oznaka ostane v brskalniku (jezik), vprašanje
+  // po državi pa le, dokler je ne izbere (liga ali `slff-drzava`).
+  const [tujecKoda, setTujecKoda] = useState<string | null>(() => tujec())
+  const [imaDrzavo] = useState(() => Boolean(shranjenaDrzava()))
   useEffect(() => {
     if (ugib !== undefined) return
     let veljavno = true
@@ -317,12 +333,21 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
     // Počakamo na sejo in (prijavljen) na njegove ekipe ter na ugib.
     if (nalagaSeja || ugib === undefined) return
     if (uporabnik && ekipeLige?.uporabnik !== uporabnik) return
+    const ligaEkipZdaj = uporabnik ? (ekipeLige?.liga ?? null) : null
+    // Nov obiskovalec z IP-jem iz države brez lig ne pristane tiho v
+    // Sloveniji: zapomnimo si ga kot tujca (angleščina, vprašanje po državi).
+    // Liga ekip prijavljenega ima prednost; neuspel IP ni tujec.
+    const ip = ugib?.ip
+    if (!izrecno.current && !ligaEkipZdaj && ip && jeTujIp(ip, drzaveZLigami(tekmovanja))) {
+      zapomniTujca(ip)
+      setTujecKoda(ip)
+    }
     const nova = zacetnaLiga({
       vse: tekmovanja,
       slug,
       izrecno: izrecno.current,
-      ligaEkip: uporabnik ? (ekipeLige?.liga ?? null) : null,
-      ugib,
+      ligaEkip: ligaEkipZdaj,
+      ugib: ugib?.drzava ?? null,
     })
     if (nova && nova !== slug) setSlug(nova)
     setUstaljena(true)
@@ -339,26 +364,27 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
 
   const tekmovanje = tekmovanja.find((t) => t.slug === slug) ?? null
   const { drzava, lige } = useMemo(
-    () => ligeDrzave(tekmovanja, slug, ugib ?? null),
+    () => ligeDrzave(tekmovanja, slug, ugib?.drzava ?? null),
     [tekmovanja, slug, ugib],
   )
 
   // Jezik sledi državi lige. Ob nalaganju ga jedro prevodov ugane iz šifre
   // lige; ko je seznam lig znan, ga tu po potrebi popravimo (en ponovni
   // nalog). Za Slovenca je država Slovenija in jezik že slovenski — nič se ne
-  // zgodi.
+  // zgodi. Izbira z izbirnika jezika in tujec (angleščina) imata prednost
+  // (`jezikObiskovalca`).
   useEffect(() => {
     if (!tekmovanja.length || !ustaljena) return
     // Vstop s povezave /sk stran naloži znova sam — dvojni nalog bi le utripal.
     if (pathname === '/sk' || pathname === '/si') return
-    const zeljen = JEZIK_DRZAVE[drzava]
-    if (zeljen && jePripravljen(zeljen) && zeljen !== jezik()) {
+    const zeljen = jezikObiskovalca(drzava)
+    if (jePripravljen(zeljen) && zeljen !== jezik()) {
       // Ligo v naslovu je dodala aplikacija (ugib), ne obiskovalec — po
       // ponovnem nalaganju naj vseeno dobi vprašanje, kje želi igrati.
       if (!izrecno.current) oznaciVstopDrzave()
       nastaviJezik(zeljen)
     }
-  }, [tekmovanja.length, ustaljena, drzava, pathname])
+  }, [tekmovanja.length, ustaljena, drzava, pathname, tujecKoda])
 
   return (
     <Kontekst.Provider
@@ -369,6 +395,7 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
         tekmovanja: lige,
         vsaTekmovanja: tekmovanja,
         drzava,
+        vprasajDrzavo: Boolean(tujecKoda) && !imaDrzavo,
         nastavi,
       }}
     >

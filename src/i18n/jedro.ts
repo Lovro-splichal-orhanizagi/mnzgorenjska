@@ -17,13 +17,21 @@
 //
 // Niz lahko vsebuje {ime} za vstavljanje vrednosti. Množinski niz je objekt
 // z oblikami po `Intl.PluralRules` (slovenščina: one/two/few/other,
-// hrvaščina: one/few/other) in se izbere po parametru `n`.
+// hrvaščina: one/few/other, angleščina: one/other) in se izbere po parametru `n`.
 import { sl } from './sl/index.ts'
 import { hr } from './hr/index.ts'
 import { sk } from './sk/index.ts'
-import { drzavaLige, JEZIK_DRZAVE } from '../lib/drzavaUgib.ts'
+import { en } from './en/index.ts'
+import {
+  drzavaLige,
+  izbranJezik,
+  jezikTujca,
+  tujec,
+  zeljenJezik,
+  KLJUC_IZBRANEGA_JEZIKA,
+} from '../lib/drzavaUgib.ts'
 
-export type Jezik = 'sl' | 'hr' | 'sk'
+export type Jezik = 'sl' | 'hr' | 'sk' | 'en'
 
 /** Množinske oblike; `other` je obvezna, ostale po pravilih jezika. */
 // `many` rabi slovaščina za necela števila ("2,5 bodu").
@@ -42,10 +50,11 @@ export type Kljuc = Poti<typeof sl>
 
 export type Parametri = Record<string, string | number | null | undefined>
 
-const SLOVARJI: Record<Jezik, Drevo> = { sl: sl as Drevo, hr: hr as Drevo, sk: sk as Drevo }
+const SLOVARJI: Record<Jezik, Drevo> = { sl: sl as Drevo, hr: hr as Drevo, sk: sk as Drevo, en: en as Drevo }
 /** Jeziki, ki so dovolj prevedeni, da jih vmesnik izbere sam. */
-const PRIPRAVLJENI: Jezik[] = ['sl', 'sk']
-const LOKALE: Record<Jezik, string> = { sl: 'sl-SI', hr: 'hr-HR', sk: 'sk-SK' }
+export const PRIPRAVLJENI: Jezik[] = ['sl', 'sk', 'en']
+// Angleščina v britanski obliki: "3 Oct", 24-urni čas, decimalna pika.
+const LOKALE: Record<Jezik, string> = { sl: 'sl-SI', hr: 'hr-HR', sk: 'sk-SK', en: 'en-GB' }
 const SHRAMBA = 'slff-jezik'
 
 export const jePripravljen = (j: string): j is Jezik => PRIPRAVLJENI.includes(j as Jezik)
@@ -55,11 +64,20 @@ export const jePripravljen = (j: string): j is Jezik => PRIPRAVLJENI.includes(j 
  * ostane v slovenščini, Slovak v slovaški ligi dobi slovaščino. Ob nalaganju
  * seznama lig še ni, zato državo razberemo iz šifre lige (naslov, shranjena
  * izbira) ali ugiba; kontekst lige jezik popravi, če se je zmotil.
+ *
+ * Pred državo imata prednost izrecna izbira z izbirnika "SL · SK · EN" in
+ * tujec (IP iz države brez lig — angleščina, glej `drzavaUgib.ts`).
  */
 function izberi(): Jezik {
   // Skripte v Node (preveri-podatke …) so vedno slovenske in se localStorage
   // ne dotaknejo — Node ga ima, a ob branju izpiše opozorilo.
   if (typeof window === 'undefined') return 'sl'
+  const izbranJ = izbranJezik()
+  if (izbranJ && jePripravljen(izbranJ)) return izbranJ
+  if (tujec()) {
+    const j = jezikTujca(typeof navigator !== 'undefined' ? navigator.languages : null)
+    if (jePripravljen(j)) return j
+  }
   let shranjen: string | null = null
   let liga: string | null = null
   let izbranaDrzava: string | null = null
@@ -73,7 +91,7 @@ function izberi(): Jezik {
   // na slovaškem brskalniku: Slovenec ne sme niti za hip videti slovaščine.
   // Slovak brez povezave dobi slovaščino ob prvem popravku konteksta lige.
   const drzava = liga ? drzavaLige(liga) : izbranaDrzava
-  const j = JEZIK_DRZAVE[drzava ?? 'SI'] ?? 'sl'
+  const j = zeljenJezik({ drzava })
   return jePripravljen(j) ? j : 'sl'
 }
 
@@ -84,12 +102,26 @@ export function jezik(): Jezik {
 }
 export const lokale = (): string => LOKALE[jezik()]
 
-/** Zamenja jezik in naloži stran znova. */
+/**
+ * Zamenja jezik in naloži stran znova. To je samodejni popravek (kontekst
+ * lige); izbiro obiskovalca zapiše `izberiJezik`.
+ */
 export function nastaviJezik(j: Jezik) {
   try {
     localStorage.setItem(SHRAMBA, j)
   } catch {}
   location.reload()
+}
+
+/**
+ * Izbira z izbirnika jezika: obvelja pred državo lige in ugibom, dokler je
+ * obiskovalec ne zamenja. Le v brskalniku, stran se naloži znova.
+ */
+export function izberiJezik(j: Jezik) {
+  try {
+    localStorage.setItem(KLJUC_IZBRANEGA_JEZIKA, j)
+  } catch {}
+  nastaviJezik(j)
 }
 
 function poisci(drevo: Drevo, kljuc: string): Vrednost | undefined {

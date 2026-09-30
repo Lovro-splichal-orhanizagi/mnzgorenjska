@@ -3263,10 +3263,41 @@ preveri(
     vprasan = true
     return 'SI'
   })
-  preveri('ugib: shranjena drzava ne sprasuje IP', zIzbiro === 'SK' && !vprasan)
+  preveri('ugib: shranjena drzava ne sprasuje IP', zIzbiro.drzava === 'SK' && zIzbiro.ip === null && !vprasan)
   shramba.clear()
-  preveri('ugib: brez izbire velja IP', (await D.ugibajObiskovalca(async () => 'SK')) === 'SK')
-  preveri('ugib: brez IP-ja jezik ali pas tega okolja', [null, 'SI', 'SK'].includes(await D.ugibajObiskovalca(async () => null)))
+  const drzaveL = D.drzaveZLigami(lige)
+  const poSk = await D.ugibajObiskovalca(async () => 'SK')
+  preveri('ugib: brez izbire velja IP (SK → Slovaska, ne tujec)', poSk.drzava === 'SK' && poSk.ip === 'SK' && !D.jeTujIp(poSk.ip, drzaveL))
+  const poSi = await D.ugibajObiskovalca(async () => 'SI')
+  preveri('ugib: SI IP → Slovenija, ne tujec', poSi.drzava === 'SI' && !D.jeTujIp(poSi.ip, drzaveL))
+  const brezIp = await D.ugibajObiskovalca(async () => null)
+  preveri('ugib: brez IP-ja jezik ali pas tega okolja, brez vprasanja',
+    [null, 'SI', 'SK'].includes(brezIp.drzava) && brezIp.ip === null && !D.jeTujIp(brezIp.ip, drzaveL))
+
+  // Tujec: IP iz države brez lig (CZ) → vprašanje po državi in angleščina.
+  const poCz = await D.ugibajObiskovalca(async () => 'CZ')
+  preveri('tujec: CZ IP je tujec', poCz.ip === 'CZ' && D.jeTujIp(poCz.ip, drzaveL))
+  preveri('tujec: SK IP ni tujec, ce ima Slovaska lige', !D.jeTujIp('SK', drzaveL))
+  preveri('tujec: SK IP je tujec, ce Slovaska nima lig', D.jeTujIp('SK', D.drzaveZLigami(brezSk)))
+  preveri('tujec: brez lig ni vprasanja', !D.jeTujIp('CZ', []))
+  preveri('tujec: jezik angleski', D.jezikTujca(['cs-CZ', 'sk']) === 'en' && D.jezikTujca(['de-AT']) === 'en' && D.jezikTujca(null) === 'en')
+  preveri('tujec: prvi jezik sl/sk ostane', D.jezikTujca(['sl-SI', 'en']) === 'sl' && D.jezikTujca(['sk']) === 'sk')
+  preveri('tujec: sl ni prvi jezik = angleski', D.jezikTujca(['en-GB', 'sl']) === 'en')
+  // Jezik vmesnika: izbira > tujec > država lige.
+  const zj = (o) => D.zeljenJezik({ drzava: 'SI', ...o })
+  preveri('jezik: Slovenec slovensko, Slovak slovasko (brez spremembe)', zj({}) === 'sl' && zj({ drzava: 'SK' }) === 'sk' && zj({ drzava: null }) === 'sl')
+  preveri('jezik: tujec anglesko v obeh drzavah', zj({ tujec: 'CZ', jeziki: ['cs'] }) === 'en' && zj({ drzava: 'SK', tujec: 'CZ', jeziki: ['cs'] }) === 'en')
+  preveri('jezik: shranjena izbira povozi drzavo', zj({ drzava: 'SK', izbran: 'en' }) === 'en' && zj({ izbran: 'sk' }) === 'sk')
+  preveri('jezik: shranjena izbira povozi tujca', zj({ tujec: 'CZ', izbran: 'sl' }) === 'sl')
+  shramba.set('slff-tujec', 'CZ')
+  preveri('tujec: oznaka v brskalniku', D.tujec() === 'CZ' && D.jezikObiskovalca('SK') === 'en')
+  D.preklopiDrzavo('SK', lige, { pojdi: (u) => (cilj = u) })
+  preveri('tujec: izbira Slovaske ohrani anglescino', shramba.get('slff-jezik') === 'en' && cilj === '/?t=sk-ssfz-4liga', `${[...shramba]}`)
+  shramba.clear()
+  shramba.set('slff-jezik-izbran', 'en')
+  D.preklopiDrzavo('SI', lige, { pojdi: (u) => (cilj = u) })
+  preveri('jezik: izbrana anglescina ostane ob preklopu drzave', shramba.get('slff-jezik') === 'en' && D.izbranJezik() === 'en')
+  shramba.clear()
   if (staraShramba) Object.defineProperty(globalThis, 'localStorage', staraShramba)
   else delete globalThis.localStorage
 }
@@ -3277,6 +3308,7 @@ preveri(
 {
   const { sl } = await import('../src/i18n/sl/index.ts')
   const { sk } = await import('../src/i18n/sk/index.ts')
+  const { en } = await import('../src/i18n/en/index.ts')
   const listi = (d, pot = '') =>
     Object.entries(d).flatMap(([k, v]) =>
       typeof v === 'string' || (v && typeof v === 'object' && 'other' in v) ? [[pot + k, v]] : listi(v, `${pot}${k}.`),
@@ -3286,18 +3318,26 @@ preveri(
     const besedila = typeof v === 'string' ? [v] : Object.values(v)
     return besedila.map((b) => [...b.matchAll(/\{(\w+)\}|<(\w+)>/g)].map((m) => m[0]).sort().join(' '))
   }
-  const napake = []
-  let manjka = 0
-  for (const [kljuc, izvirnik] of listi(sl)) {
-    const prevod = najdi(sk, kljuc)
-    if (prevod === undefined) { manjka++; continue }
-    const iz = new Set(znaki(izvirnik)), pr = new Set(znaki(prevod))
-    // Množinske oblike smejo {n} izpustiti le, kjer ga izvirnik izpusti v vseh.
-    const vsi = [...pr].every((z) => iz.has(z)) && [...iz].every((z) => pr.has(z) || typeof izvirnik !== 'string')
-    if (!vsi) napake.push(kljuc)
+  for (const [ime, slovar] of [['sk', sk], ['en', en]]) {
+    const napake = []
+    let manjka = 0
+    for (const [kljuc, izvirnik] of listi(sl)) {
+      const prevod = najdi(slovar, kljuc)
+      if (prevod === undefined) { manjka++; continue }
+      const iz = new Set(znaki(izvirnik)), pr = new Set(znaki(prevod))
+      // Množinske oblike smejo {n} izpustiti le, kjer ga izvirnik izpusti v vseh.
+      const vsi = [...pr].every((z) => iz.has(z)) && [...iz].every((z) => pr.has(z) || typeof izvirnik !== 'string')
+      if (!vsi) napake.push(kljuc)
+    }
+    preveri(`prevodi ${ime}: vsi nizi prevedeni`, manjka === 0, `manjka ${manjka}`)
+    preveri(`prevodi ${ime}: parametri in oznake kot v izvirniku`, napake.length === 0, napake.slice(0, 5).join(', '))
   }
-  preveri('prevodi sk: vsi nizi prevedeni', manjka === 0, `manjka ${manjka}`)
-  preveri('prevodi sk: parametri in oznake kot v izvirniku', napake.length === 0, napake.slice(0, 5).join(', '))
+  // Angleške množine: le one/other (Intl.PluralRules('en')), vsaka z obema.
+  const slabeMnozine = listi(en).filter(
+    ([, v]) => typeof v === 'object' && (Object.keys(v).some((k) => k !== 'one' && k !== 'other') || !('one' in v)),
+  )
+  preveri('prevodi en: mnozine le one/other', slabeMnozine.length === 0, slabeMnozine.slice(0, 5).map(([k]) => k).join(', '))
+  preveri('prevodi en: cena v evrih', en.skupno.cena === '€{v}M')
 }
 
 // --- vir sportnet (Slovaška) -----------------------------------------------
@@ -3463,6 +3503,14 @@ preveri(
     prevodi.find((p) => p === splosen || /igralc|kader |ekip/i.test(p)),
   )
   preveri('e-pošta: množina razloga', prevodi[1] === 'V kádri sú 3 hráči namiesto 15.' && prevodi[2] === 'V kádri je 14 hráčov namiesto 15.')
+  // Angleški vmesnik bere iste razloge (pošta ostaja sl/sk).
+  const angl = razlogi.map((r) => E.prevediRazlog(r, 'en'))
+  const splosenEn = E.prevediRazlog('Neznan razlog.', 'en')
+  preveri(
+    'vmesnik: vsi razlogi prevedeni v anglescino',
+    angl.every((p) => p !== splosenEn && !/igralc|kader |ekip|hráč/i.test(p)),
+    angl.find((p) => p === splosenEn || /igralc|kader |ekip|hráč/i.test(p)),
+  )
   const bSl = E.sestaviOpomnikBrezLige(null, { display_name: 'Janez Novak' })
   const bSk = E.sestaviOpomnikBrezLige('sk', { display_name: 'Ján' })
   preveri('e-pošta: brez lige sl ne imenuje lige in vodi na izbiro',

@@ -50,6 +50,18 @@ const BESEDE: Record<string, { pridevniki: string[]; samostalniki: string[] }> =
       'Orol', 'Drak', 'Býk', 'Kôň', 'Sokol', 'Rys',
     ],
   },
+  en: {
+    pridevniki: [
+      'Blue', 'Red', 'Green', 'Yellow', 'Black', 'White', 'Silver', 'Golden',
+      'Swift', 'Wild', 'Quiet', 'Fiery', 'Icy', 'Night', 'Morning',
+      'Iron', 'Copper', 'Sunny', 'Heavenly', 'Ruthless',
+    ],
+    samostalniki: [
+      'Keeper', 'Defender', 'Midfielder', 'Striker', 'Captain', 'Referee', 'Coach',
+      'Fan', 'Shooter', 'Playmaker', 'Sub', 'Veteran', 'Hero', 'Wolf',
+      'Eagle', 'Dragon', 'Bull', 'Horse', 'Falcon', 'Lynx',
+    ],
+  },
 }
 
 function stringHash(s: string): number {

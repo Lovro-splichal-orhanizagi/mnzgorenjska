@@ -1,0 +1,136 @@
+// English translation of `aplikacija` (source: src/i18n/sl/aplikacija.ts).
+import type { Prevod } from '../jedro.ts'
+
+export const aplikacija: NonNullable<Prevod['aplikacija']> = {
+  naslovStrani: {
+    osnova: 'SLFF — Sunday League Fantasy Football',
+    zStranjo: '{naslov} · SLFF',
+    opis: 'Fantasy football for local amateur football leagues. Build a team, pick a captain and compete with your neighbours.',
+    deljenje:
+      'A fantasy league for local amateur football leagues. Build a team of real players; points come from the official match reports: goals, minutes, clean sheets.',
+    deljenjeKratko: 'A fantasy league for local amateur football leagues. Points from the official match reports.',
+  },
+  niStrani: {
+    naslov: 'Page not found',
+    opis: 'The link may be out of date, or there is a typo in the address.',
+    nazaj: 'Back to the home page',
+  },
+  noga: {
+    zasebnost: 'Privacy and terms',
+    vir: 'Data: official match reports of <vir>{ime}</vir>',
+    zvezeSplosno: 'the association',
+  },
+  meni: {
+    mojaEkipa: 'My team',
+    igralci: 'Players',
+    lestvica: 'Standings',
+    rezultati: 'Results',
+    miniLige: 'Mini-leagues',
+    asistence: 'Assists',
+    pozicije: 'Positions',
+    odsotnosti: 'Absences',
+    // English serves both countries, so the label stays neutral.
+    slovenija: 'National',
+    admin: 'Admin',
+    vec: 'More',
+    racun: 'Account',
+    opomniki: 'Reminders',
+    povabi: 'Invite a friend',
+    odjava: 'Log out',
+    prijava: 'Log in',
+    meni: 'Menu',
+    meniZGlasovi: 'Menu ({n} to vote on)',
+  },
+  izbirnikLige: {
+    ostalo: 'Other',
+    liga: 'League',
+    oznaka: 'League:',
+    isciPolje: 'Search leagues …',
+    isci: 'Search leagues',
+    niZadetkov: 'No results.',
+    lige: 'Leagues',
+  },
+  izbiraDrzave: {
+    oznaka: 'Country',
+    /** Country names in their own language — the same in every translation. */
+    imena: {
+      SI: 'Slovenija',
+      SK: 'Slovensko',
+    },
+    preklopi: 'Switch to {drzava}',
+  },
+  izbiraJezika: {
+    oznaka: 'Language',
+    preklopi: 'Switch to {jezik}',
+  },
+  prviObisk: {
+    naslov: 'Where do you want to play?',
+    opis: 'Choose the league where you will build your team and compete. We will show you its players and standings; you can change it at any time at the top.',
+    brezEkip: 'no teams yet',
+    nazaj: '← Back',
+    preskoci: 'Skip',
+    drugaDrzava: '{drzava}?',
+    drzavaOpis: 'Pick a country first, then a league in it.',
+  },
+  rokKroga: {
+    dniUr: '{d} d {h} h',
+    urMinut: '{h} h {m} min',
+    minutSekund: '{m} min {s} s',
+    sekund: '{s} s',
+    zaklepNaslov: 'Round {krog} locks: {datum}',
+    ligaKrog: '{liga} · round {krog}',
+    zaklenjen: 'locked — team changes now apply to the next round',
+    zaklepCez: 'locks in',
+    datumOklepaj: '({datum})',
+  },
+  odstevanje: {
+    dni: '{n}d',
+    ur: '{n}h',
+    minut: '{n}m',
+    zaklenjenoPred: 'locked {cas} ago',
+    se: '{cas} left',
+  },
+  klepet: {
+    gost: 'Guest',
+    zdaj: 'now',
+    minut: '{n} min',
+    ur: '{n} h',
+    dni: '{n} d',
+    morasSePrijaviti: 'You need to log in to post.',
+    predolgo: 'The message is too long (500 characters max).',
+    izbrisiVprasanje: 'Delete this message?',
+    naslov: 'Help us improve!',
+    anonimno: 'anonymous',
+    uvod: 'What bothers you? What would you like to see? What is missing? Your feedback means a lot to us — <krepko>tell us</krepko>. The chat is anonymous; nobody can see who wrote what.',
+    prikazesKot: 'In the chat you appear as <ime>{ime}</ime>. Your registered name stays hidden.',
+    zaPisanje: 'Log in to write (reading is public). Your registered name stays hidden; you appear under a random nickname.',
+    bodiPrvi: 'Be the first to write a message.',
+    izbrisi: 'Delete message',
+    napisi: 'Write a message …',
+    poslji: 'Send',
+    zaObjavo: '<prijava>Log in</prijava> to post.',
+  },
+  sponzor: {
+    oznaka: 'Sponsor',
+  },
+  napaka: {
+    naslov: 'The page got stuck',
+    opis: 'Something went wrong while showing this page. Refresh the page or go back to the start — if it keeps happening, write to us via the chat on the home page.',
+    nazaj: 'Back to the home page',
+    osvezi: 'Refresh page',
+  },
+  crta: {
+    gibanje: 'Movement: {seznam}',
+  },
+  grb: {
+    klub: 'club',
+  },
+  vabilo: {
+    nasaLiga: 'our league',
+    ligaZZvezo: '{liga} ({zveza})',
+    klubi: ' from our clubs ({seznam})',
+    zadeva: 'Fantasy league: {liga} — join in',
+    besedilo:
+      'Hi!\n\nI am playing a fantasy football league: {liga}. You build your own team from players{klubi} and compete with others.\n\nIt is completely free. Sign up at:\n{naslov}\n\nBuild a team, pick a captain and after every round check who scored the most points.\n\nSee you in the league!',
+  },
+}

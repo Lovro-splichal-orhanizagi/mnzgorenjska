@@ -1,8 +1,10 @@
 // Izpiše, koliko nizov je prevedenih in katerih ključev prevod še nima.
 //   npm run prevodi            # vsi jeziki
 //   npm run prevodi -- hr      # samo hrvaščina, s seznamom manjkajočih
+//   npm run prevodi -- en      # angleščina (mora biti popolna, kot sk)
 import { sl } from '../src/i18n/sl'
 import { hr } from '../src/i18n/hr'
+import { en } from '../src/i18n/en'
 import { sk } from '../src/i18n/sk'
 
 type Drevo = { [k: string]: unknown }
@@ -21,7 +23,7 @@ function ima(d: Drevo, kljuc: string): boolean {
 }
 
 const vsi = listi(sl as Drevo)
-const jeziki: Record<string, Drevo> = { hr: hr as Drevo, sk: sk as Drevo }
+const jeziki: Record<string, Drevo> = { hr: hr as Drevo, sk: sk as Drevo, en: en as Drevo }
 const izbran = process.argv[2]
 for (const [j, slovar] of Object.entries(jeziki)) {
   if (izbran && izbran !== j) continue
