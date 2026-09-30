@@ -203,6 +203,34 @@ export async function vseTekme(koda, prenesi) {
   return del ? edinstvene.filter((t) => t.competitionPart?._id === del) : edinstvene
 }
 
+// Kratko ime slovaškega kluba je KRAJ, ne začetnice. Uradna imena so dolga
+// in se začnejo z obliko društva ("Telovýchovná jednota JEDNOTA Bánová",
+// "ŠK Badín, občianske združenie"); začetnice so dale "TJJB", "ŠBOZ" in dva
+// različna kluba z isto "FT" (FK Terchová, FK Turie). Odstranimo obliko
+// društva in tradicionalna imena (Sokol, Slovan, Družstevník …), velike
+// črke ("OŠK BEŠEŇOVÁ") spremenimo v navadne. Oznaka moštva (B) ostane.
+const OBLIKE = new Set(['tj', 'fk', 'ofk', 'šk', 'ošk', 'mfk', 'mšk', 'fc', 'afc', 'tjd', 'dfk', 'šku', 'ok', 'obfz',
+  'telovýchovná', 'jednota', 'športový', 'futbalový', 'klub', 'obecný', 'mestský', 'mesta', 'o.z.', 'oz', 'fo'])
+const TRADICIJA = new Set(['sokol', 'slovan', 'družstevník', 'tatran', 'partizán', 'baník', 'iskra', 'štart', 'lokomotíva',
+  'spartak', 'dynamo', 'jednota', 'inter', 'rozvoj', 'hviezda', 'považan', 'fatran', 'kysučan', 'olympia', 'zornička',
+  'prameň', 'vinohrad', 'sklotatran', 'ipeľ', 'agro', 'druzstevnik', 'podnik', 'lesov', 'obecný', 'agrokomplex', 'máj', 'filjo'])
+const lepoVelike = (b) => (b.length > 3 && b === b.toUpperCase() ? b[0] + b.slice(1).toLowerCase() : b)
+export function kratkoImeSk(polno, { obdrziTradicijo = false } = {}) {
+  const glava = String(polno).split(',')[0].replace(/\s+-\s+[A-ZŠČŽÁÉÍÓÚÝĽŤŇĎ]{2,5}$/, '').replace(/"/g, '')
+  let besede = glava.split(/[\s-]+/).filter(Boolean)
+  // Oznaka moštva (Bánová B) ni del kraja.
+  const mostvo = /^[A-D]$/.test(besede.at(-1) ?? '') && besede.length > 2 ? besede.pop() : null
+  besede = besede.filter((b) => !/^\d+\.?$/.test(b) && !OBLIKE.has(b.toLowerCase()) &&
+    (obdrziTradicijo || !TRADICIJA.has(b.toLowerCase())))
+  // "Krásno nad Kysucou", "Hliník nad Hronom": kraj je beseda pred "nad".
+  const i = besede.findIndex((b) => ['nad', 'pod', 'pri'].includes(b.toLowerCase()))
+  let kraj = i > 0 ? besede.slice(i - 1, i) : besede
+  // Zadnji del je kraj; spredaj ostane lahko sponzor ali vzdevek ("Jupie").
+  if (kraj.length > 2) kraj = kraj.slice(-2)
+  const ime = [...kraj.map(lepoVelike), ...(mostvo ? [mostvo] : [])].join(' ')
+  return ime.length >= 3 ? ime : kratkoIme(polno)
+}
+
 const vir = {
   ime: 'sportnet',
   polnoIme: 'Slovenský futbalový zväz (futbalnet.sk)',
@@ -260,7 +288,7 @@ const vir = {
   vBesedilo: (s) => String(s ?? '').split('\n'),
 
   kljucKluba: naredikljucKluba({}),
-  kratkoIme,
+  kratkoIme: kratkoImeSk,
   poenostavi,
 }
 
