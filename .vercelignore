@@ -2,5 +2,8 @@
 .env.local
 node_modules
 dist
-supabase
+# Baza se na Vercel ne naloži — razen besedil e-pošte, ki jih uvaža
+# src/lib/stanjeEkip.ts (prevod razloga neveljavne ekipe).
+supabase/*
+!supabase/functions
 scripts/.predpomnilnik
