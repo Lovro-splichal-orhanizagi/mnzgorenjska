@@ -68,7 +68,9 @@ if (!Number.isInteger(NA_LIGO) || !Number.isInteger(RAZPON) || NA_LIGO - RAZPON 
 }
 
 const SISTEM_EMAIL = 'hisa@slff.eu'
-const SISTEM_IME = 'SLFF'
+// Brez imena: hišna ekipa v lestvici nima vrstice lastnika (ne "SLFF" ne
+// izmišljene osebe). `display_name` je obvezen, zato prazen niz.
+const SISTEM_IME = ''
 
 const db = createClient(BASE, SERVICE, { auth: { persistSession: false } })
 

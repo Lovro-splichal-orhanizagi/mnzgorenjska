@@ -11,7 +11,6 @@ import { useTekmovanje, type Tekmovanje } from '../lib/tekmovanje'
 import { potrdiZapustitev } from '../lib/neshranjeno'
 import { t as prevod, lokale } from '../i18n'
 import IzbiraDrzave from './IzbiraDrzave'
-import IzbiraJezika from './IzbiraJezika'
 
 /** Brez šumnikov in velikih črk — da "zelezniki" najde "Železniki". */
 const poenostavi = (s: string) =>
@@ -205,10 +204,10 @@ export default function IzbirnikLige() {
           className="animiraj-vstop absolute left-0 z-30 mt-1 w-64 max-w-[calc(100vw-2rem)] rounded-xl border border-white/10
                      bg-slate-900 p-2 shadow-xl shadow-black/40"
         >
-          {/* Država in jezik nad ligami: kdor ga je ugib poslal v napačno, ju tu zamenja. */}
-          <div className="mb-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-white/10 px-1 pb-2">
+          {/* Država nad ligami: kdor ga je ugib poslal v napačno, jo tu zamenja.
+              Jezik ni izbira lige — ta je v nogi strani. */}
+          <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-white/10 px-1 pb-2">
             <IzbiraDrzave />
-            <IzbiraJezika />
           </div>
           {/* Iskalno polje je zunaj seznama: v role=listbox smejo biti le možnosti. */}
           <input
