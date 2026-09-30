@@ -96,6 +96,26 @@ const IMENA = [
   'Dunajskí kormoráni', 'Ipeľskí sumci', 'Nitrianske čajky', 'FC Tri body', 'Kopec United',
 ]
 
+// Slovenske lige: enako igrive, izmišljene, brez imen resničnih klubov.
+const IMENA_SI = [
+  'Gorenjski volkovi', 'FK Kranjska klobasa', 'Štajerski petelini', 'Prekmurske štorklje', 'Primorski galebi',
+  'Dolenjski cvičkarji', 'Koroški medvedi', 'Notranjski risi', 'Posavski sulci', 'Savinjski hmeljarji',
+  'Pohorski divjaki', 'Kraški burjači', 'Zasavski knapi', 'Belokranjske breze', 'Haloški vinogradniki',
+  'FC Nedeljski junaki', 'Sobotni strelci', 'FC Zadnja minuta', 'NK Tretji polčas', 'Klop FC',
+  'FC Rezervisti', 'Ofsajd ekipa', 'Sodnik ni videl', 'FC Prečka', 'NK Vratnica',
+  'Kopačke iz kleti', 'FC Potica', 'Štruklji United', 'NK Kremšnita', 'Žganci FC',
+  'Prleški gibanjci', 'FC Prekmurska gibanica', 'Idrijski žlikrofi', 'NK Kislo zelje', 'FC Pršut',
+  'Vaška garda', 'Stara garda', 'FC Gasilci', 'NK Kmečki turizem', 'Veterani s klopi',
+  'FC Zlata žoga', 'Dvanajsti igralec', 'FC Enajstmetrovka', 'NK Kotiček', 'FC Podaja',
+  'Asistenti FC', 'FC Kapetan', 'NK Rdeči karton', 'Rumeni karton United', 'FC Podaljšek',
+  'Travnik Boys', 'FC Umetna trava', 'NK Blatno igrišče', 'Mreža FC', 'FC Prvi dotik',
+  'NK Protinapad', 'FC Visoki pritisk', 'Libero FC', 'NK Desetka', 'FC Devetka',
+  'Nedeljska liga', 'FC Pivo po tekmi', 'NK Kafe pa kremšnita', 'Čevapčiči FC', 'FC Burek',
+  'Kranjski orli', 'Triglavski gamsi', 'Soški postrvi', 'Blejski labodi', 'Ljubljanski barjani',
+  'Mariborski medvedki', 'Celjski vitezi', 'Ptujski kurenti', 'Novomeški cvički', 'Koprski mornarji',
+  'Murski sulci', 'Dravski splavarji', 'Savski brodarji', 'Kamniški planinci', 'Ribniški suhorobarji',
+]
+
 // Postave v mejah POZICIJE (vratar 1, branilci 3–5, vezisti 2–5, napadalci 1–3).
 const POSTAVE = [
   [4, 4, 2], [4, 3, 3], [3, 5, 2], [3, 4, 3], [5, 3, 2], [4, 5, 1], [5, 4, 1],
@@ -140,7 +160,15 @@ function premesaj(seznam, rnd) {
   return s
 }
 
-const ciljZaLigo = (slug) => NA_LIGO + (hash('cilj:' + slug) % (2 * RAZPON + 1)) - RAZPON
+// Cilj je VSE ekipe v ligi (prave + hišne), ne le hišne: liga, v kateri že
+// igra dovolj ljudi, ne dobi nobene, majhna se napolni. Z `--po-velikosti` se
+// cilj ravna po številu klubov (večja liga, več ekip), sicer je `na-ligo`.
+// Odmik ± razpon je iz šifre lige, da ponovni zagon le dopolni.
+const PO_VELIKOSTI = process.argv.includes('--po-velikosti')
+const ciljZaLigo = (slug, klubov) => {
+  const osnova = PO_VELIKOSTI ? Math.max(NA_LIGO - 2, Math.round(klubov * 1.3)) : NA_LIGO
+  return Math.min(40, osnova + (hash('cilj:' + slug) % (2 * RAZPON + 1)) - RAZPON)
+}
 const denar = (x) => Math.round(x * 10) / 10
 
 // ---------------------------------------------------------------------------
@@ -432,7 +460,7 @@ if (odstrani) {
 
 const { data: sezona, error: napakaSezone } = await db.rpc('tekoca_sezona')
 if (napakaSezone) throw new Error(napakaSezone.message)
-console.log(`Cilj ${NA_LIGO} ± ${RAZPON} hišnih ekip na ligo, sezona ${sezona}.\n`)
+console.log(`Cilj ${PO_VELIKOSTI ? '≈1,3 × klubov (najmanj ' + (NA_LIGO - 2) + ')' : NA_LIGO} ± ${RAZPON} ekip na ligo (prave + hišne), sezona ${sezona}.\n`)
 
 const lastnik = await zagotoviLastnika()
 if (!lastnik) console.log(`(sistemski uporabnik ${SISTEM_EMAIL} še ne obstaja — ustvaril bi ga)\n`)
@@ -441,10 +469,17 @@ let novih = 0
 let napak = 0
 for (const l of seznam) {
   const obstojece = await hisneEkipe(l.id)
-  const cilj = ciljZaLigo(l.slug)
-  const dodati = Math.max(0, cilj - obstojece.length)
+  const { count: vseh, error: eV } = await db
+    .from('fantasy_teams').select('id', { count: 'exact', head: true }).eq('competition_id', l.id)
+  if (eV) throw new Error(eV.message)
+  const { count: klubov, error: eKl } = await db
+    .from('competition_teams').select('team_id', { count: 'exact', head: true }).eq('competition_id', l.id)
+  if (eKl) throw new Error(eKl.message)
+  const pravih = (vseh ?? 0) - obstojece.length
+  const cilj = ciljZaLigo(l.slug, klubov ?? 0)
+  const dodati = Math.max(0, cilj - (vseh ?? 0))
   if (!dodati) {
-    console.log(`  ${l.slug.padEnd(22)} ${obstojece.length}/${cilj} — nič za dodati`)
+    console.log(`  ${l.slug.padEnd(22)} ${pravih} pravih + ${obstojece.length} hišnih / cilj ${cilj} — nič za dodati`)
     continue
   }
 
@@ -462,11 +497,11 @@ for (const l of seznam) {
     if (eK) throw new Error(eK.message)
     for (const r of kadri ?? []) izbranost.set(r.player_id, (izbranost.get(r.player_id) ?? 0) + 1)
   }
-  const imena = premesaj(IMENA, generator('imena:' + l.slug))
+  const imena = premesaj(DRZAVA === 'SI' ? IMENA_SI : IMENA, generator('imena:' + l.slug))
     .filter((i) => !zasedena.has(i.toLowerCase()))
 
   console.log(
-    `  ${l.slug.padEnd(22)} ${obstojece.length}/${cilj} → +${dodati}` +
+    `  ${l.slug.padEnd(22)} ${pravih} pravih + ${obstojece.length} hišnih / cilj ${cilj} (${klubov} klubov) → +${dodati}` +
     `  (nabor ${nabor.length} igralcev${samoLetosnji ? ', z letošnjimi minutami' : ', tudi brez letošnjih minut'})`,
   )
   for (let i = 0; i < dodati; i++) {

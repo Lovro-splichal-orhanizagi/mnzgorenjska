@@ -23,13 +23,24 @@ on:
         required: false
         type: boolean
         default: false
+      drzava:
+        description: 'Drzava (SK ali SI)'
+        required: false
+        type: choice
+        options: [SK, SI]
+        default: SK
+      po_velikosti:
+        description: 'Cilj po stevilu klubov (vecja liga, vec ekip)'
+        required: false
+        type: boolean
+        default: true
       liga:
-        description: 'Samo ena liga (slug, npr. sk-za-1trieda); prazno = vse aktivne lige SK'
+        description: 'Samo ena liga (slug); prazno = vse aktivne lige drzave'
         required: false
         type: string
         default: ''
       na_ligo:
-        description: 'Ciljno stevilo hisnih ekip na ligo (± 2)'
+        description: 'Ciljno stevilo vseh ekip na ligo (± 2); pri po_velikosti spodnja meja + 2'
         required: false
         type: number
         default: 10
@@ -50,6 +61,8 @@ jobs:
       PISI: ${{ inputs.pisi }}
       ODSTRANI: ${{ inputs.odstrani }}
       LIGA: ${{ inputs.liga }}
+      DRZAVA: ${{ inputs.drzava }}
+      PO_VELIKOSTI: ${{ inputs.po_velikosti }}
       NA_LIGO: ${{ inputs.na_ligo }}
     steps:
       - uses: actions/checkout@v4
@@ -66,11 +79,13 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           set -euo pipefail
-          args=(--drzava SK)
+          [[ "$DRZAVA" =~ ^(SK|SI)$ ]] || { echo "drzava mora biti SK ali SI"; exit 1; }
+          args=(--drzava "$DRZAVA")
           if [ -n "$LIGA" ]; then
-            [[ "$LIGA" =~ ^sk-[a-z0-9-]+$ ]] || { echo "liga mora biti slovaska (sk-…)"; exit 1; }
+            [[ "$LIGA" =~ ^[a-z0-9-]+$ ]] || { echo "neveljaven slug lige"; exit 1; }
             args+=(--liga "$LIGA")
           fi
+          [ "$PO_VELIKOSTI" = "true" ] && args+=(--po-velikosti)
           [[ "$NA_LIGO" =~ ^[0-9]+$ ]] || { echo "na_ligo mora biti stevilo"; exit 1; }
           args+=(--na-ligo "$NA_LIGO" --razpon 2)
           [ "$ODSTRANI" = "true" ] && args+=(--odstrani)
