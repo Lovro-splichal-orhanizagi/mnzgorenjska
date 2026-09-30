@@ -1,0 +1,78 @@
+name: Hisne ekipe
+
+# Hisne ekipe SLFF (sistemski lastnik "SLFF", hisa@slff.eu) v slovaskih
+# ligah, da lestvice niso prazne. `hisne-ekipe.mjs` sestavi veljaven kader
+# vsake ekipe, shrani ga baza prek `ustvari_hisno_ekipo` (-> shrani_ekipo).
+# Skripta potrebuje zivi kljuc, ki zivi samo tu — zato tece tu.
+#
+# Najprej brez `pisi` za nacrt (imena, postave, cene), nato z `pisi`.
+# Ponoven zagon ne podvaja: cilj na ligo je stalen, doda se le, kar manjka.
+# `odstrani` izbrise vse hisne ekipe v izbranih ligah (tudi to najprej brez
+# `pisi`); cloveskih ekip se ne dotakne — baza zavrne ves paket, ce je vmes
+# katera, ki ni hisna.
+on:
+  workflow_dispatch:
+    inputs:
+      pisi:
+        description: 'Zapisi (brez tega je samo nacrt)'
+        required: false
+        type: boolean
+        default: false
+      odstrani:
+        description: 'Odstrani hisne ekipe namesto dodajanja'
+        required: false
+        type: boolean
+        default: false
+      liga:
+        description: 'Samo ena liga (slug, npr. sk-za-1trieda); prazno = vse aktivne lige SK'
+        required: false
+        type: string
+        default: ''
+      na_ligo:
+        description: 'Ciljno stevilo hisnih ekip na ligo (± 2)'
+        required: false
+        type: number
+        default: 10
+
+permissions:
+  contents: read
+
+# Dva hkratna zagona bi oba videla isto stevilo ekip in oba dopolnila.
+concurrency:
+  group: hisne-ekipe
+  cancel-in-progress: false
+
+jobs:
+  hisne:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      PISI: ${{ inputs.pisi }}
+      ODSTRANI: ${{ inputs.odstrani }}
+      LIGA: ${{ inputs.liga }}
+      NA_LIGO: ${{ inputs.na_ligo }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      # Nobena odvisnost ne potrebuje namestitvenih skript (edina je fsevents
+      # za macOS); brez njih tuja koda ob namestitvi ne tece.
+      - run: npm ci --ignore-scripts
+      - name: Hisne ekipe
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          args=(--drzava SK)
+          if [ -n "$LIGA" ]; then
+            [[ "$LIGA" =~ ^sk-[a-z0-9-]+$ ]] || { echo "liga mora biti slovaska (sk-…)"; exit 1; }
+            args+=(--liga "$LIGA")
+          fi
+          [[ "$NA_LIGO" =~ ^[0-9]+$ ]] || { echo "na_ligo mora biti stevilo"; exit 1; }
+          args+=(--na-ligo "$NA_LIGO" --razpon 2)
+          [ "$ODSTRANI" = "true" ] && args+=(--odstrani)
+          [ "$PISI" = "true" ] && args+=(--pisi)
+          node scripts/hisne-ekipe.mjs "${args[@]}"

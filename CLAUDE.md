@@ -214,6 +214,8 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
 - `players` → realni igralci, vezani na realni klub (`teams`) in tekmovanje
 - `fantasy_teams` → ekipe uporabnikov, `fantasy_roster` → izbrani igralci
   (`is_starter`, `is_captain`, `is_vice`, `bench_order`)
+- `fantasy_teams.hisna` → **hišna ekipa**: odkrito ekipa SLFF, da slovaške
+  lige z eno ekipo niso prazne (glej *Hišne ekipe* spodaj)
 - `fantasy_chips` → vloženi pripomočki (`klop_plus`, `wildcard`), vsak enkrat na
   sezono: ključ je `(fantasy_team_id, chip, season)`, `season` vpiše sprožilec
   iz kroga. Vmesnik naj bere in briše pripomočke **s filtrom na sezono**.
@@ -433,10 +435,40 @@ teče tam: `uvoz-lige.yml` (uvoz ene lige), `grbi-nzs.yml` (grbi z NZS, ki
 jih sam zapiše v git), `grbi.yml` (ročni seznam grbov iz
 `prenesi-grbe.mjs` za regionalne lige; prepiše le klube brez grba, najprej
 brez `pisi` za načrt) in `zdruzi-klube.yml` (dva podvojena kluba; najprej
-brez `pisi` za predogled). Grb, dodan le v seznam in pognan lokalno, v
+brez `pisi` za predogled) in `hisne-ekipe.yml` (hišne ekipe SLFF; najprej
+brez `pisi`). Grb, dodan le v seznam in pognan lokalno, v
 produkcijo ne pride. Shemo in poizvedbe potisne Supabase CLI, ki je
 povezan s projektom: `npx supabase db push --linked`, `npx supabase db query
 --linked "<sql>"`.
+
+### Hišne ekipe
+
+V slovaških ligah (`sk-…`) je po 10 ± 2 **hišnih ekip** (`fantasy_teams.hisna`,
+migracija 20260930130000). Vse ima en sistemski lastnik, profil **SLFF**
+(`hisa@slff.eu`, `brez_opomnikov`, prijave ni) — nikoli izmišljeni ljudje. En
+lastnik ima zato več ekip v ligi: unikatni indeks ena-ekipa-na-ligo velja le
+`where not hisna`, sprožilec pa lastniku hišnih ekip prepove človeške ekipe (in
+obratno). V ligi štejejo povsod (lestvica, število ekip, točke kroga); **ne
+štejejo** v izbranosti (`owners` in imenovalec deleža na strani Igralci),
+državni lestvici, e-pošti (`kandidati_za_*`, popravek pozicij), mini ligah
+(sprožilec na `mini_liga_clani`), admin statistiki in `skupaj_uporabnikov`.
+Nova poizvedba, ki šteje ljudi ali ekipe čez lige, naj izpusti `hisna`.
+
+Ustvari in odstrani jih samo delovni tok *Hisne ekipe* (`hisne-ekipe.yml` →
+`scripts/hisne-ekipe.mjs`), najprej brez `pisi` za načrt. Kader shrani baza
+(`ustvari_hisno_ekipo` → `shrani_ekipo` kot sistemski lastnik) in zavrne
+neveljavnega. Točke zbirajo od prvega roka po nastanku, nazaj ne. Ponoven
+zagon le dopolni do cilja (cilj je stalen po ligi). **Odstranitev:** isti tok
+z `odstrani` (in `pisi`) → `odstrani_hisne_ekipe`, ki zavrne ves paket, če
+kateri id ni hišna ekipa. Lokalno:
+
+```bash
+node scripts/hisne-ekipe.mjs --liga sk-za-1trieda          # načrt
+node scripts/hisne-ekipe.mjs --odstrani --pisi             # vse SK hišne ekipe proč
+```
+
+Hišna ekipa, ki ji igralec odide, postane neveljavna in ostane brez točk;
+skripta jih ob zagonu našteje.
 
 Vrstni red ni izbiren: **arhiv → razpored → tekoča sezona → pozicije → cene**.
 Igralec pod 270 minutami dobi privzeto 4.5, zato bi liga brez arhiva imela vse
