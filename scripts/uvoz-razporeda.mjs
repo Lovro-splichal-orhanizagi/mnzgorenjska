@@ -245,6 +245,14 @@ let novihKrogov = 0
 let novihTekem = 0
 let prestavljenih = 0
 const letosnjiKlubi = new Set()
+// Odigrane tekme po klubih in koliko od njih je "odstopilo moštvo" (Sportnet
+// `ODSTUPENE_DRUZSTVO`). Klub, ki ima VSE odigrane tekme take, je iz lige
+// izstopil: tekme ostanejo v razporedu (kot kontumacije), igralci pa ne smejo
+// ostati na trgu — kdor jih kupi, ne dobi nobene točke. Septembra 2026 je tako
+// izstopilo pet slovaških klubov (Braväcovo, Podtureň, Olympia Bobrov, Iskra
+// Hnúšťa, Baník Ružiná).
+const odigranih = new Map() // klubId -> { vse, odstop }
+const danes = new Date().toISOString().slice(0, 10)
 // Pari (domači:gostje) vsakega kroga, kot jih razpored kaže ZDAJ — po njih
 // spodaj najdemo tekme, ki jih zveza iz kroga umakne.
 const pariKrogov = new Map() // krogId -> Set('domaci:gostje')
@@ -306,6 +314,14 @@ for (const k of veljavni) {
     const gostjeId = await klubId(t.gostje)
     letosnjiKlubi.add(domaciId)
     letosnjiKlubi.add(gostjeId)
+    if (t.datum && t.datum < danes) {
+      for (const id of [domaciId, gostjeId]) {
+        const o = odigranih.get(id) ?? { vse: 0, odstop: 0 }
+        o.vse++
+        if (t.odstop) o.odstop++
+        odigranih.set(id, o)
+      }
+    }
     if (!pariKrogov.has(krogId)) pariKrogov.set(krogId, new Set())
     pariKrogov.get(krogId).add(`${domaciId}:${gostjeId}`)
 
@@ -407,8 +423,12 @@ if (smemoDeaktivirati) {
   }
 }
 
+const izstopili = [...odigranih].filter(([, o]) => o.vse > 0 && o.odstop === o.vse).map(([id]) => id)
+if (izstopili.length) console.log(`Izstopili iz lige (vse odigrane tekme "odstopilo moštvo"): ${izstopili.length} klub(ov)`)
+
 if (smemoDeaktivirati) {
-  const seznam = [...letosnjiKlubi]
+  // Izstopljeni klubi so v razporedu (in v varovalu zgoraj), igrajo pa ne.
+  const seznam = [...letosnjiKlubi].filter((id) => !izstopili.includes(id))
   const { count: deaktiviranih, error: eDeakt } = await db
     .from('players')
     .update({ active: false }, { count: 'exact' })

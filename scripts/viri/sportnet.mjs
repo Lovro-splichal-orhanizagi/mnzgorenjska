@@ -232,10 +232,15 @@ const vir = {
       if (!Number.isInteger(stevilka) || !domaci || !gostje) continue
       const { datum, ura } = lokalniCas(t.startDate)
       if (!krogi.has(stevilka)) krogi.set(stevilka, { stevilka, tekme: [] })
-      // Kontumacija (npr. "Ohlásená neúčasť hostí"): izid je dodeljen,
-      // zapisnika ni. Uvoz razporeda tekmo označi, da borza ne čaka.
-      const kontumacija = !!t.contumation?.isContumated
-      krogi.get(stevilka).tekme.push({ domaci, gostje, datum, ura, kontumacija })
+      // Tekma brez igre: kontumacija (npr. "Ohlásená neúčasť hostí") ali
+      // odstop moštva iz tekmovanja. Izid je dodeljen, zapisnika ni; uvoz
+      // razporeda tekmo označi, da borza ne čaka. `__issfMatchStatus` je
+      // ODOHRATY (odigrana), KONTUMOVANY ali ODSTUPENE_DRUZSTVO — slednji ob
+      // zaključeni tekmi nima niti postav niti `contumation`.
+      const status = t.__issfMatchStatus
+      const odstop = status === 'ODSTUPENE_DRUZSTVO'
+      const kontumacija = !!t.contumation?.isContumated || status === 'KONTUMOVANY' || odstop
+      krogi.get(stevilka).tekme.push({ domaci, gostje, datum, ura, kontumacija, odstop })
     }
     return [...krogi.values()].sort((a, b) => a.stevilka - b.stevilka)
   },
