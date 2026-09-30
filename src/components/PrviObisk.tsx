@@ -52,9 +52,36 @@ function zapomniSi() {
 
 const ZAMIK_MS = 1500
 
+const KLJUC_VSTOPA = 'slff-vstop-drzave'
+
+/** Vstop `/sk` doda ligo v naslov sam; to ni izbira obiskovalca. */
+export function oznaciVstopDrzave() {
+  try {
+    sessionStorage.setItem(KLJUC_VSTOPA, '1')
+  } catch {
+    /* zasebno okno — okno se pač ne pokaže */
+  }
+}
+
+/** Ali je obiskovalec prišel s povezavo, ki že nosi ligo (`?t=…`). */
+function ligaVPovezavi(): boolean {
+  try {
+    if (sessionStorage.getItem(KLJUC_VSTOPA)) {
+      sessionStorage.removeItem(KLJUC_VSTOPA)
+      return false
+    }
+    return new URLSearchParams(window.location.search).has('t')
+  } catch {
+    return false
+  }
+}
+
 export default function PrviObisk() {
   const { tekmovanja, nastavi } = useTekmovanje()
-  const [skrit, setSkrit] = useState(() => zeVprasan())
+  // Povezava z ligo (`?t=sk-za-1trieda` v mailu klubu, deljena lestvica)
+  // pove, katero ligo človek gleda — vprašanje "kje želiš igrati?" bi ga
+  // le zmedlo. Bere se ob prvem izrisu, preden aplikacija sama doda `?t=`.
+  const [skrit, setSkrit] = useState(() => zeVprasan() || ligaVPovezavi())
   const [cas, setCas] = useState(false)
   const [drzava, setDrzava] = useState<string | null>(null)
   const [ekip, setEkip] = useState<Record<number, number>>({})
@@ -67,7 +94,8 @@ export default function PrviObisk() {
     // Deljena kartica igralca ali plakat ekipe: kdor pride od tam (pogosto
     // starši), naj najprej vidi, kar mu je kdo poslal.
     pathname.startsWith('/player/') ||
-    pathname.startsWith('/team/')
+    pathname.startsWith('/team/') ||
+    pathname.startsWith('/match/')
   const okno = useRef<HTMLDivElement | null>(null)
 
   const zapri = () => {

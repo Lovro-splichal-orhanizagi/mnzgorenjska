@@ -14,5 +14,13 @@
       ]
     }
   ],
-  "rewrites": [{ "source": "/((?!.*\\.).*)", "destination": "/index.html" }]
+  "rewrites": [
+    { "source": "/sk", "destination": "/sk.html" },
+    {
+      "source": "/((?!.*\\.).*)",
+      "has": [{ "type": "query", "key": "t", "value": "sk-.*" }],
+      "destination": "/sk.html"
+    },
+    { "source": "/((?!.*\\.).*)", "destination": "/index.html" }
+  ]
 }

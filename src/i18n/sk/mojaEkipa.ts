@@ -190,7 +190,7 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
 
   kajCe: {
     prinesla: 'Súčasná zostava by v <krog>{krog}. kole</krog> ({sezona}) priniesla',
-    opis: 'Prehľad „čo by bolo, keby" — nie je to skutočný výsledok, mení sa pri každej výmene. Skutočné body za odohrané kolá nájdeš v tabuľke a v zázname zostavy.',
+    opis: 'Prehľad „čo by bolo, keby“ — nie je to skutočný výsledok, mení sa pri každej výmene. Skutočné body za odohrané kolá nájdeš v tabuľke a v zázname zostavy.',
   },
 
   status: {
@@ -201,9 +201,9 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     shraniOsnutek: 'Uložiť koncept',
     imeObvezno: 'Názov tímu je povinný — kliknutím sa vrátiš na pole hore.',
     kajPomeni:
-      '<krepko>Čo znamená „Uložiť"?</krepko> Tvoje zmeny (káder, zostava, kapitán) sa zapíšu do databázy. Pre aktuálne kolo platí stav v čase uzávierky. Do uzávierky môžeš ľubovoľne meniť a znova stláčať Uložiť — platí posledná verzia. <krepko>„Uložiť koncept"</krepko> znamená to isté, len s poznámkou, že tím ešte nespĺňa všetky pravidlá (aby si získal body, treba to opraviť — pozri zoznam hore).',
+      '<krepko>Čo znamená „Uložiť“?</krepko> Tvoje zmeny (káder, zostava, kapitán) sa zapíšu do databázy. Pre aktuálne kolo platí stav v čase uzávierky. Do uzávierky môžeš ľubovoľne meniť a znova stláčať Uložiť — platí posledná verzia. <krepko>„Uložiť koncept“</krepko> znamená to isté, len s poznámkou, že tím ešte nespĺňa všetky pravidlá (aby si získal body, treba to opraviť — pozri zoznam hore).',
     kajPomeniRok:
-      '<krepko>Čo znamená „Uložiť"?</krepko> Tvoje zmeny (káder, zostava, kapitán) sa zapíšu do databázy. Pre aktuálne kolo platí stav v čase uzávierky (<krepko>{krog}. kolo — {rok}</krepko>). Do uzávierky môžeš ľubovoľne meniť a znova stláčať Uložiť — platí posledná verzia. <krepko>„Uložiť koncept"</krepko> znamená to isté, len s poznámkou, že tím ešte nespĺňa všetky pravidlá (aby si získal body, treba to opraviť — pozri zoznam hore).',
+      '<krepko>Čo znamená „Uložiť“?</krepko> Tvoje zmeny (káder, zostava, kapitán) sa zapíšu do databázy. Pre aktuálne kolo platí stav v čase uzávierky (<krepko>{krog}. kolo — {rok}</krepko>). Do uzávierky môžeš ľubovoľne meniť a znova stláčať Uložiť — platí posledná verzia. <krepko>„Uložiť koncept“</krepko> znamená to isté, len s poznámkou, že tím ešte nespĺňa všetky pravidlá (aby si získal body, treba to opraviť — pozri zoznam hore).',
   },
 
   pripomocki: {

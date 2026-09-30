@@ -16,13 +16,13 @@ import {
   mnozina,
   IGRALCI,
 } from '../lib/pomozno'
-import { t, tx } from '../i18n'
+import { t, tx, jezik } from '../i18n'
 import { useNaslov } from '../lib/naslov'
 import { VRSTNI_RED } from '../lib/pravila'
 import type { Pozicija } from '../lib/tipi'
 import Grb from '../components/Grb'
 import Plakat from '../components/Plakat'
-import { najboljsiTrije, navijacev } from '../lib/plakat'
+import { najboljsiTrije, navijacev, ligaVTozilniku } from '../lib/plakat'
 import { NavijaciKluba } from '../components/NavijaciKlubov'
 
 interface Igralec {
@@ -116,7 +116,10 @@ export default function Klub() {
           .maybeSingle()
         if (!veljavno) return
         const kratko = (v?.name ?? '').replace(/\s*—\s*(člani|mladinci)\s*$/, '')
-        setLigaZaPlakat(v?.federation_name ? `${kratko} ${v.federation_name}` : kratko)
+        // Slovaška imena lig regijo že nosijo ("I. trieda — Žilina"); zveza
+        // zraven bi jo le ponovila ("… Žilina ObFZ Žilina").
+        const zeZRegijo = jezik() !== 'sl' && kratko.includes('—')
+        setLigaZaPlakat(v?.federation_name && !zeZRegijo ? `${kratko} ${v.federation_name}` : kratko)
       }
       setNalaganje(false)
     })()
@@ -169,7 +172,8 @@ export default function Klub() {
         <p className="text-sm leading-relaxed text-slate-200">
           {tx(
             'lestvice.klub.uvod',
-            { klub: klub?.name, liga: liga?.name ?? t('lestvice.klub.toLigo') },
+            // "fantasy lige za 1. ligo" / "fantasy ligy pre IV. ligu" — oba jezika tožilnik.
+            { klub: klub?.name, liga: liga?.name ? ligaVTozilniku(liga.name) : t('lestvice.klub.toLigo') },
             { b: (v) => <strong>{v}</strong> },
           )}
         </p>
@@ -246,13 +250,17 @@ export default function Klub() {
                   <span className={`znacka shrink-0 ${razredPozicije(i.position)}`}>
                     {(i.position && KRATKA_POZICIJA[i.position]) ?? '?'}
                   </span>
-                  <Link to={`/player/${i.id}`} className="min-w-0 flex-1 truncate font-semibold hover:text-gnl-400">
-                    {prikazniIme(i.full_name)}
-                  </Link>
-                  <span className="shrink-0 text-xs text-slate-500">
-                    {i.goals ? t('lestvice.klub.goli', { n: i.goals }) : ''}
-                    {t('lestvice.klub.minute', { n: i.minutes ?? 0 })}
-                  </span>
+                  {/* Na telefonu gre statistika pod ime — v isti vrstici je
+                      ime ostalo pri treh črkah ("Joz…"). */}
+                  <div className="flex min-w-0 flex-1 flex-col sm:flex-row sm:items-center sm:gap-2">
+                    <Link to={`/player/${i.id}`} className="min-w-0 truncate font-semibold hover:text-gnl-400 sm:flex-1">
+                      {prikazniIme(i.full_name)}
+                    </Link>
+                    <span className="shrink-0 text-xs text-slate-500">
+                      {i.goals ? t('lestvice.klub.goli', { n: i.goals }) : ''}
+                      {t('lestvice.klub.minute', { n: i.minutes ?? 0 })}
+                    </span>
+                  </div>
                   <span className="w-12 shrink-0 text-right font-bold tabular-nums">
                     {formatirajTocke(i.points)}
                   </span>

@@ -29,10 +29,18 @@ export function razredPozicije(poz: Pozicija | null | undefined): string {
   return poz ? `poz-${poz}` : 'poz-none'
 }
 
+const ENA_DECIMALKA = { minimumFractionDigits: 1, maximumFractionDigits: 1 }
+
+// Decimalno ločilo po jeziku ("7,5"), kot pri ceni — `toFixed` je dal "7.5"
+// poleg "13,2 M€" v isti vrstici.
 export const formatirajTocke = (t: number | string | null | undefined): string => {
   const n = Number(t ?? 0)
-  return Number.isInteger(n) ? String(n) : n.toFixed(1)
+  return Number.isInteger(n) ? String(n) : stevilo(n, ENA_DECIMALKA)
 }
+
+/** Velikost premika cene brez predznaka: 0.3 -> "0,3" (puščica je posebej). */
+export const formatirajPremik = (d: number | string | null | undefined): string =>
+  stevilo(Math.abs(Number(d ?? 0)), ENA_DECIMALKA)
 
 /**
  * Cena v obliki valute: 5.5 -> "5,5 M€". Točke in cene se sicer izpisujejo z

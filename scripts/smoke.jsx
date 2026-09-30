@@ -2862,6 +2862,8 @@ preveri(
 
   preveri('plakat: "1. liga MNZ Ljubljana" v tozilniku', ligaVTozilniku('1. liga MNZ Ljubljana') === '1. ligo MNZ Ljubljana', ligaVTozilniku('1. liga MNZ Ljubljana'))
   preveri('plakat: "3. SNL — Zahod" brez besede liga ostane', ligaVTozilniku('3. SNL — Zahod') === '3. SNL — Zahod')
+  preveri('plakat: slovaško "IV. liga — SsFZ" v tožilniku', ligaVTozilniku('IV. liga — SsFZ', 'sk') === 'IV. ligu — SsFZ', ligaVTozilniku('IV. liga — SsFZ', 'sk'))
+  preveri('plakat: slovaško "I. trieda — Žilina" v tožilniku', ligaVTozilniku('I. trieda — Žilina', 'sk') === 'I. triedu — Žilina', ligaVTozilniku('I. trieda — Žilina', 'sk'))
 
   // "Je live": kratko ime lige ne sme zrasti cez rob, ce gre v dve vrstici.
   preveri('plakat live: kratko ime v eni vrstici je najvecje', velikostLige('3. SNL ZAHOD', 1) === 124)

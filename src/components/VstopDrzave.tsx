@@ -12,6 +12,7 @@
 // ponoven nalog ob vstopu s kampanje ni cena.
 import { useEffect } from 'react'
 import { useTekmovanje } from '../lib/tekmovanje'
+import { oznaciVstopDrzave } from './PrviObisk'
 import { privzetaLiga, zapomniDrzavo } from '../lib/drzava'
 
 export default function VstopDrzave({ drzava }: { drzava: string }) {
@@ -24,6 +25,9 @@ export default function VstopDrzave({ drzava }: { drzava: string }) {
     // Državo si zapomnimo le, če v njej kaj igramo — sicer bi obiskovalec
     // dobil jezik države, v kateri nima kaj videti.
     if (imaLige) zapomniDrzavo(drzava)
+    // Liga v naslovu je tu le ugib (prva liga države), ne izbira — novinec
+    // naj vseeno dobi vprašanje, kje želi igrati (PrviObisk).
+    oznaciVstopDrzave()
     window.location.replace(imaLige ? `/?t=${privzetaLiga(tekmovanja, drzava)}` : '/')
   }, [tekmovanja, drzava])
 
