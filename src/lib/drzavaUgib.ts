@@ -55,7 +55,7 @@ export function ugibajDrzavo({
   return poPasu?.[0] ?? null
 }
 
-function shranjenaDrzava(): string | null {
+export function shranjenaDrzava(): string | null {
   try {
     return localStorage.getItem(KLJUC)
   } catch {
@@ -115,16 +115,102 @@ export async function drzavaPoIp({
   }
 }
 
+/** Ugib za novega obiskovalca: država (za ozadje) in golo državo po IP. */
+export interface UgibObiskovalca {
+  /** Ugibana država (izbira → IP → jezik → pas) ali null (Slovenija). */
+  drzava: string | null
+  /** Država po IP, kakor jo je javil Vercel; null ob napaki ali brez vprašanja. */
+  ip: string | null
+}
+
 /**
  * Celoten ugib za novega obiskovalca: izbrana država ne potrebuje IP-ja (in
- * ga ne sprašuje), sicer IP, nato jezik in pas.
+ * ga ne sprašuje), sicer IP, nato jezik in pas. `ip` ostane zraven, da
+ * kontekst lige prepozna tujca (IP iz države brez lig).
  */
 export async function ugibajObiskovalca(
   poIp: () => Promise<string | null> = drzavaPoIp,
-): Promise<string | null> {
-  if (shranjenaDrzava()) return drzavaObiskovalca()
-  return drzavaObiskovalca(await poIp())
+): Promise<UgibObiskovalca> {
+  if (shranjenaDrzava()) return { drzava: drzavaObiskovalca(), ip: null }
+  const ip = await poIp()
+  return { drzava: drzavaObiskovalca(ip), ip }
 }
+
+// --- tujec in jezik vmesnika -----------------------------------------------
+//
+// Tujec je nov obiskovalec, čigar IP je iz države BREZ naših lig (CZ, AT,
+// DE …). Ne pristane tiho v Sloveniji: okno prvega obiska ga najprej vpraša po
+// državi, vmesnik pa je v angleščini (razen če je prvi jezik brskalnika
+// slovenski ali slovaški). Oznaka ostane v brskalniku, da jezik ostane isti
+// tudi, ko izbere ligo (in države ne ugibamo več).
+
+const KLJUC_TUJCA = 'slff-tujec'
+/** Izrecna izbira jezika z izbirnika "SL · SK · EN" — povozi vse ugibe. */
+export const KLJUC_IZBRANEGA_JEZIKA = 'slff-jezik-izbran'
+
+function beri(kljuc: string): string | null {
+  try {
+    return localStorage.getItem(kljuc)
+  } catch {
+    return null
+  }
+}
+
+/** Država po IP tujca, če je bil obiskovalec prepoznan kot tujec. */
+export const tujec = (): string | null => beri(KLJUC_TUJCA)
+
+export function zapomniTujca(ip: string) {
+  try {
+    localStorage.setItem(KLJUC_TUJCA, ip)
+  } catch {}
+}
+
+/** Jezik, ki ga je obiskovalec izbral sam (ali null). */
+export const izbranJezik = (): string | null => beri(KLJUC_IZBRANEGA_JEZIKA)
+
+/**
+ * Ali je IP tujca: znan, a iz države brez aktivnih lig. Neuspel IP (null)
+ * ni tujec — takrat velja stari ugib brez vprašanja.
+ */
+export const jeTujIp = (ip: string | null | undefined, drzaveZLigami: readonly string[]): boolean =>
+  Boolean(ip && drzaveZLigami.length && !drzaveZLigami.includes(ip))
+
+/** Jezik tujca: angleščina, razen če je prvi jezik brskalnika sl ali sk. */
+export function jezikTujca(jeziki: readonly string[] | null | undefined): string {
+  const prvi = (jeziki?.[0] ?? '').toLowerCase().slice(0, 2)
+  return prvi === 'sl' || prvi === 'sk' ? prvi : 'en'
+}
+
+/**
+ * Jezik vmesnika za obiskovalca, ki gleda `drzava`:
+ *   1. izrecna izbira z izbirnika jezika,
+ *   2. tujec → angleščina (ali sl/sk po prvem jeziku brskalnika),
+ *   3. jezik države lige (Slovenec slovenščino, Slovak slovaščino).
+ */
+export function zeljenJezik({
+  drzava,
+  izbran = null,
+  tujec: tuj = null,
+  jeziki = null,
+}: {
+  drzava: string | null
+  izbran?: string | null
+  tujec?: string | null
+  jeziki?: readonly string[] | null
+}): string {
+  if (izbran) return izbran
+  if (tuj) return jezikTujca(jeziki)
+  return JEZIK_DRZAVE[drzava ?? 'SI'] ?? 'sl'
+}
+
+/** `zeljenJezik` s podatki tega brskalnika. */
+export const jezikObiskovalca = (drzava: string | null): string =>
+  zeljenJezik({
+    drzava,
+    izbran: izbranJezik(),
+    tujec: tujec(),
+    jeziki: typeof navigator !== 'undefined' ? navigator.languages : null,
+  })
 
 /** Izbira države s povezave (`/sk`) — obvelja pred ugibanjem. */
 export function zapomniDrzavo(koda: string) {

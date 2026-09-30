@@ -9,11 +9,14 @@
 //   izbira s povezave `/sk` ali izbirnika → IP (`/api/drzava`) → jezik
 //   brskalnika → časovni pas → Slovenija.
 //
+// Tujec (IP iz države brez lig: CZ, AT, DE …) ne pristane tiho: okno prvega
+// obiska ga najprej vpraša po državi, vmesnik je v angleščini.
+//
 // Kdor pride s povezave `slff.eu/sk`, je državo izbral sam in ta obvelja pred
 // ugibanjem.
 import { PRIVZETO, type Tekmovanje } from './tekmovanje'
 
-import { JEZIK_DRZAVE, zapomniDrzavo } from './drzavaUgib.ts'
+import { jezikObiskovalca, zapomniDrzavo } from './drzavaUgib.ts'
 
 export {
   znaneDrzave,
@@ -22,8 +25,17 @@ export {
   drzavaPoIp,
   ugibajObiskovalca,
   zapomniDrzavo,
+  shranjenaDrzava,
   drzavaLige,
   JEZIK_DRZAVE,
+  jeTujIp,
+  jezikTujca,
+  zeljenJezik,
+  jezikObiskovalca,
+  tujec,
+  zapomniTujca,
+  izbranJezik,
+  type UgibObiskovalca,
 } from './drzavaUgib.ts'
 
 /**
@@ -141,8 +153,9 @@ export function preklopiDrzavo(
   const liga = privzetaLiga(vse, koda)
   zapomniDrzavo(koda)
   try {
-    const j = JEZIK_DRZAVE[koda]
-    if (j) localStorage.setItem(KLJUC_JEZIKA, j)
+    // Jezik države — razen če ga je obiskovalec izbral sam ali je tujec
+    // (angleščina ostane, tudi ko izbere državo).
+    localStorage.setItem(KLJUC_JEZIKA, jezikObiskovalca(koda))
     if (izberiLigo) localStorage.setItem(KLJUC_LIGE, liga)
     else localStorage.removeItem(KLJUC_LIGE)
   } catch {

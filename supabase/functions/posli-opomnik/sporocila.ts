@@ -393,9 +393,12 @@ const skMn = (n: number, one: string, few: string, other: string) =>
  * Razlog iz `razlog_neveljavne_ekipe` je slovenski stavek. Za slovaški mail
  * ga prepoznamo po obliki in prevedemo; neznano obliko (SQL se je spremenil)
  * nadomesti splošen stavek, da v slovaškem mailu ni slovenščine.
+ *
+ * `'en'` rabi le vmesnik (angleški obiskovalec) — pošta je vedno sl/sk.
  */
-export function prevediRazlog(razlog: string | null | undefined, j: Jezik): string {
+export function prevediRazlog(razlog: string | null | undefined, j: Jezik | 'en'): string {
   if (j === 'sl') return razlog ?? 'Kader ni veljaven.'
+  if (j === 'en') return razlogVAngliscini(razlog)
   if (!razlog) return 'Káder nie je platný.'
   const r = razlog.trim()
   let m: RegExpMatchArray | null
@@ -430,4 +433,31 @@ export function prevediRazlog(razlog: string | null | undefined, j: Jezik): stri
   if (r === 'Ekipa nima natanko enega namestnika kapetana.')
     return 'Tím nemá práve jedného zástupcu kapitána.'
   return 'Tím nespĺňa pravidlá — pozri si podrobnosti v sekcii Môj tím.'
+}
+
+/** Isti razlogi v angleščini (za angleški vmesnik). */
+function razlogVAngliscini(razlog: string | null | undefined): string {
+  if (!razlog) return 'The squad is not valid.'
+  const r = razlog.trim()
+  let m: RegExpMatchArray | null
+  const igralcev = (n: number) => (n === 1 ? '1 player' : `${n} players`)
+
+  if (r === 'Ekipa je prazna — kadra ni.') return 'The team is empty — there is no squad.'
+  if ((m = r.match(/^V kadru je (\d+) igralcev namesto (\d+)\.$/)))
+    return `The squad has ${igralcev(Number(m[1]))} instead of ${m[2]}.`
+  if ((m = r.match(/^V kadru ni vec aktivnih igralcev: (.*)\. Klub letos ne igra ali je igralec odsel\.$/s)))
+    return `Your squad has players who are no longer active: ${m[1]}. Their club isn't playing this season or the player has left.`
+  if ((m = r.match(/^Iz kluba (.+) imas (\d+) igralce, dovoljeni so (\d+)\./s)))
+    return `You have ${m[2]} players from ${m[1]}; ${m[3]} are allowed. ` +
+      'This can happen without any change of yours — if a player transfers mid-season to a club you already have players from.'
+  if ((m = r.match(/^Pri (\d+) igralcih ni znana pozicija\.$/)))
+    return `The position of ${igralcev(Number(m[1]))} is unknown.`
+  if ((m = r.match(/^Kader mora imeti 2 vratarja, 5 branilcev, 5 vezistov in 3 napadalce; ima ([\d-]+)\.$/)))
+    return `The squad must have 2 goalkeepers, 5 defenders, 5 midfielders and 3 forwards; it has ${m[1]}.`
+  if ((m = r.match(/^V postavi je (\d+) igralcev namesto (\d+)\.$/)))
+    return `The starting XI has ${igralcev(Number(m[1]))} instead of ${m[2]}.`
+  if (r === 'Ekipa nima natanko enega kapetana.') return 'The team does not have exactly one captain.'
+  if (r === 'Ekipa nima natanko enega namestnika kapetana.')
+    return 'The team does not have exactly one vice-captain.'
+  return 'The team breaks the rules — see My Team for details.'
 }

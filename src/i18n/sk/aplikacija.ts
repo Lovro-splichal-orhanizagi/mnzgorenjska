@@ -58,6 +58,10 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     },
     preklopi: 'Prepnúť na {drzava}',
   },
+  izbiraJezika: {
+    oznaka: 'Jazyk',
+    preklopi: 'Prepnúť na {jezik}',
+  },
   prviObisk: {
     naslov: 'Kde chceš hrať?',
     opis: 'Vyber si ligu, v ktorej si poskladáš tím a budeš súťažiť. Ukážeme ti jej hráčov a tabuľku; neskôr ju môžeš kedykoľvek zmeniť hore.',
@@ -65,6 +69,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     nazaj: '← Späť',
     preskoci: 'Preskočiť',
     drugaDrzava: '{drzava}?',
+    drzavaOpis: 'Najprv si vyber krajinu, potom ligu v nej.',
   },
   rokKroga: {
     dniUr: '{d} d {h} h',

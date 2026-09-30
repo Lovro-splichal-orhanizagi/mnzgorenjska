@@ -18,6 +18,10 @@
 // Ob vsaki ligi piše, koliko ekip že igra. Sedemnajst lig je in v trinajstih
 // je manj kot pet ekip — novinec, ki slepo izbere prazno, nima nasprotnikov in
 // se ne vrne. Število ni okras, ampak edino, kar mu to pove vnaprej.
+//
+// Tujec (IP iz države brez lig, `vprasajDrzavo`) najprej izbere državo
+// ("🇸🇮 Slovenija · 🇸🇰 Slovensko"), nato njeno ligo. Državi sta iz vseh
+// aktivnih lig, ker `tekmovanja` hrani le lige trenutne države.
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useTekmovanje } from '../lib/tekmovanje'
@@ -70,7 +74,7 @@ function ligaVPovezavi(): boolean {
 }
 
 export default function PrviObisk() {
-  const { tekmovanja, vsaTekmovanja, drzava: drzavaLige, nastavi } = useTekmovanje()
+  const { tekmovanja, vsaTekmovanja, drzava: drzavaLige, vprasajDrzavo, nastavi } = useTekmovanje()
   // Povezava z ligo (`?t=sk-za-1trieda` v mailu klubu, deljena lestvica)
   // pove, katero ligo človek gleda — vprašanje "kje želiš igrati?" bi ga
   // le zmedlo. Bere se ob prvem izrisu, preden aplikacija sama doda `?t=`.
@@ -115,7 +119,7 @@ export default function PrviObisk() {
   // zasulo, da je lestvica vsem padla na časovni omejitvi. Po straneh, ker bi
   // PostgREST seznam tiho odrezal pri tisoč vrsticah.
   useEffect(() => {
-    if (skrit || !tekmovanja.length) return
+    if (skrit || !vsaTekmovanja.length) return
     let veljavno = true
     vseVrstice<{ competition_id: number }>((od, do_) =>
       supabase.from('fantasy_teams').select('competition_id').order('id').range(od, do_),
@@ -123,7 +127,7 @@ export default function PrviObisk() {
       .then((vrstice) => {
         if (!veljavno) return
         const stevila: Record<number, number> = {}
-        for (const t of tekmovanja) stevila[t.id] = 0
+        for (const t of vsaTekmovanja) stevila[t.id] = 0
         for (const v of vrstice) stevila[v.competition_id] = (stevila[v.competition_id] ?? 0) + 1
         setEkip(stevila)
       })
@@ -132,9 +136,10 @@ export default function PrviObisk() {
     return () => {
       veljavno = false
     }
-  }, [skrit, tekmovanja])
+  }, [skrit, vsaTekmovanja])
 
-  const prikazan = !skrit && cas && !vabljen && tekmovanja.length >= 2
+  const prikazan =
+    !skrit && cas && !vabljen && (vprasajDrzavo ? vsaTekmovanja : tekmovanja).length >= 2
   useEffect(() => {
     if (!prikazan) return
     okno.current?.focus()
@@ -148,24 +153,21 @@ export default function PrviObisk() {
     return () => window.removeEventListener('keydown', tipka)
   }, [prikazan])
 
-  const drzave = useMemo(() => {
-    const m = new Map<string, string>()
-    for (const t of tekmovanja)
-      if (t.country_code) m.set(t.country_code, t.country_name ?? t.country_code)
-    return [...m.entries()]
-  }, [tekmovanja])
+  // Vse države z aktivnimi ligami — `tekmovanja` ima le lige ene države.
+  const drzave = useMemo(() => drzaveZLigami(vsaTekmovanja), [vsaTekmovanja])
 
   const skupine = useMemo(
-    () => poZvezah(tekmovanja.filter((t) => !drzava || t.country_code === drzava)),
-    [tekmovanja, drzava],
+    () =>
+      poZvezah(drzava ? vsaTekmovanja.filter((t) => t.country_code === drzava) : tekmovanja),
+    [tekmovanja, vsaTekmovanja, drzava],
   )
 
   // Dokler se lige ne naložijo ali dokler ne mine zamik, ni kaj pokazati.
   if (!prikazan) return null
 
-  // Ena sama država: koraka za državo ne pokažemo, ker ni izbire. Ko jih bo
-  // več, se pojavi sam.
-  const potrebnaDrzava = drzave.length > 1 && !drzava
+  // Korak države le za tujca (IP iz države brez lig) in le, ko je izbira.
+  // Ostali dobijo lige ugibane države, kot doslej.
+  const potrebnaDrzava = vprasajDrzavo && drzave.length > 1 && !drzava
 
   // Okno kaže lige ugibane države; če se je ugib zmotil (Slovenec na
   // slovaškem IP), je tu majhna povezava na drugo. Stran se naloži znova v
@@ -185,17 +187,20 @@ export default function PrviObisk() {
         <h2 id="prvi-obisk-naslov" className="text-xl font-black naslov">
           {t('aplikacija.prviObisk.naslov')}
         </h2>
-        <p className="mt-1 text-sm text-slate-400">{t('aplikacija.prviObisk.opis')}</p>
+        <p className="mt-1 text-sm text-slate-400">
+          {t(potrebnaDrzava ? 'aplikacija.prviObisk.drzavaOpis' : 'aplikacija.prviObisk.opis')}
+        </p>
 
         {potrebnaDrzava ? (
           <div className="mt-4 space-y-1.5">
-            {drzave.map(([koda, ime]) => (
+            {drzave.map((koda) => (
               <button
                 key={koda}
                 onClick={() => setDrzava(koda)}
                 className="block w-full rounded-xl bg-white/5 px-3 py-2.5 text-left text-sm font-semibold hover:bg-white/10"
               >
-                {ime}
+                <span aria-hidden="true">{zastava(koda)} </span>
+                {imeDrzave(koda)}
               </button>
             ))}
           </div>
@@ -234,14 +239,14 @@ export default function PrviObisk() {
         )}
 
         <div className="mt-4 flex items-center justify-between">
-          {drzava && drzave.length > 1 ? (
+          {vprasajDrzavo && drzava && drzave.length > 1 ? (
             <button
               onClick={() => setDrzava(null)}
               className="text-xs text-slate-400 hover:text-slate-200"
             >
               {t('aplikacija.prviObisk.nazaj')}
             </button>
-          ) : druge.length ? (
+          ) : druge.length && !potrebnaDrzava ? (
             <span className="flex gap-3">
               {druge.map((koda) => (
                 <button

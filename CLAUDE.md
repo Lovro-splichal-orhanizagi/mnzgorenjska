@@ -150,7 +150,8 @@ Grbe slovaških klubov prinese `scripts/grbi-sportnet.mjs` (klub sam naloži grb
 v ISSF, `organization.logo_public_url`) — delovni tok *Grbi klubov* z
 `vir = sportnet`. Po uvozu nove slovaške lige ga poženi znova.
 
-Jezik vmesnika sledi državi lige (`src/i18n/sk/`, `JEZIK_DRZAVE`); šifra lige
+Jezik vmesnika sledi državi lige (`src/i18n/sk/`, `JEZIK_DRZAVE`), razen izbire
+jezika in tujca (glej *Prevodi*); šifra lige
 zunaj Slovenije se začne s kodo države (`sk-…`), da jezik ob nalaganju ve,
 katero državo gleda.
 
@@ -174,9 +175,22 @@ IP pove edge funkcija `api/drzava.ts` (glava `x-vercel-ip-country`, odgovor
 `{ drzava }`, `no-store`, nič ne beleži). Kliče jo le, kdor lige in države še
 nima, in po 800 ms odneha; `vite dev` funkcije nima (vrne index.html), zato
 lokalno ugib teče brez IP. SPA preusmeritev v `vercel.json` izpusti `/api/`.
-Tuj IP (AT, DE …) preskoči na jezik. Država brez aktivne lige ostane pri
-`PRIVZETO`. Jezik se popravi šele, ko je začetna liga odločena (`ustaljena`),
-sicer bi se stran med čakanjem na ugib naložila dvakrat.
+Država brez aktivne lige ostane pri `PRIVZETO`. Jezik se popravi šele, ko je
+začetna liga odločena (`ustaljena`), sicer bi se stran med čakanjem na ugib
+naložila dvakrat.
+
+**Tujec** je nov obiskovalec (brez lige, brez `?t=`, `/sk`, `/si`, prijavljen
+brez ekip), čigar IP je iz države **brez aktivnih lig** (CZ, AT, DE, HR, GB …;
+`jeTujIp`). Ne pristane tiho v Sloveniji: kontekst lige zapiše `slff-tujec`
+(koda IP) in da `vprasajDrzavo`, okno prvega obiska pa najprej vpraša po
+državi ("🇸🇮 Slovenija · 🇸🇰 Slovensko", iz `vsaTekmovanja`), nato po ligi te
+države. Do izbire je za oknom ugibana država (za večino Slovenija). Vmesnik je
+v **angleščini**, razen če je prvi jezik brskalnika `sl` ali `sk`
+(`jezikTujca`); oznaka ostane v brskalniku, zato angleščina ostane tudi po
+izbiri lige ali države. Neuspel IP (napaka, 800 ms, `vite dev`) ni tujec —
+velja stari ugib brez vprašanja. SI in SK IP gresta naravnost v svojo državo.
+Lokalno tujca preizkusiš z `localStorage.setItem('slff-tujec', 'CZ')` v
+brskalniku brez shranjene lige.
 
 **Izbira države** (`src/components/IzbiraDrzave.tsx`, "🇸🇮 Slovenija · 🇸🇰
 Slovensko") je v nogi in na vrhu izbirnika lige; pokaže le države z aktivnimi
@@ -358,15 +372,34 @@ vpisana pri Supabase kot povratni naslov ponastavitve gesla in žeton nosi v
   `src/i18n` — nikoli `toLocaleString('sl-SI')`.
 - Drugi jezik (`src/i18n/hr/`) je lahko delen; manjkajoče pride iz
   slovenščine. `npm run prevodi -- hr` izpiše, kaj manjka. Brskalnik izbere
-  jezik sam šele, ko je v `PRIPRAVLJENI`.
-- Nizi iz baze (razlogi `razlog_neveljavne_ekipe`, napake RPC) so še
-  slovenski — ob novem jeziku jih je treba urediti posebej. Administracija
+  jezik sam šele, ko je v `PRIPRAVLJENI` (`sl`, `sk`, `en`). Slovaščina in
+  angleščina sta popolni — smoke preveri, da imata vse ključe ter iste
+  `{parametre}` in `<oznake>`; nov slovenski niz zato dodaj v vse tri.
+- **Kateri jezik** (`zeljenJezik` v `src/lib/drzavaUgib.ts`, isto pravilo v
+  `izberi()` ob nalaganju in v varovalu konteksta lige):
+  1. izbira z izbirnika **"SL · SK · EN"** (`IzbiraJezika`, v nogi in na vrhu
+     izbirnika lige; `izberiJezik` zapiše `slff-jezik-izbran` in stran naloži
+     znova),
+  2. tujec (glej *Država obiskovalca*) → angleščina, razen prvega jezika
+     brskalnika `sl`/`sk`,
+  3. jezik države lige (`JEZIK_DRZAVE`) — Slovenci in Slovaki kot doslej.
+  `slff-jezik` je le zadnji uporabljeni jezik (samodejni popravek), ne izbira.
+- **Angleščina** (`src/i18n/en/`, `en-GB`: "3 Oct", decimalna pika, cena
+  `€13.2M`) služi obema državama, zato niz ne imenuje države ("National",
+  ne "Slovenia"). Izrazi kot v FPL (squad, starting XI, bench, captain,
+  vice-captain, transfers), `krog` je vedno **round**. Imena lig, klubov in
+  igralcev se ne prevajajo, imena držav v izbirniku države ostanejo v svojem
+  jeziku (Slovenija, Slovensko).
+- Nizi iz baze (razlogi `razlog_neveljavne_ekipe`, napake RPC) so
+  slovenski. Razlog neveljavne ekipe vmesnik za sk in en prevede po obliki
+  stavka (`prevediRazlog`); napake RPC ostanejo slovenske. Administracija
   ostaja slovenska.
 - **E-pošta.** Opomnike in opozorila (`supabase/functions/posli-opomnik/
   sporocila.ts`) piše funkcija v jeziku **države lige** (ena liga na klic,
   zato ima kdor igra v obeh državah dva maila); povezave nosijo `?t=<liga>`,
   razlog iz baze se za slovaščino prevede po obliki stavka. Smoke preveri
-  obe različici. Nov jezik = nova veja v `sporocila.ts` in vrstica v
+  obe različici. Angleške pošte ni: registracija v angleškem vmesniku
+  zapiše `jezik` države lige, ki jo gleda. Nov jezik = nova veja v `sporocila.ts` in vrstica v
   `JEZIK_DRZAVE` tam. Avtentikacijska pošta (`supabase/templates/`) izbere
   jezik po `jezik` v metapodatkih uporabnika (vpiše ga registracija);
   v gostujočem projektu predloge **niso** iz config.toml — prilepi jih v
@@ -377,6 +410,8 @@ vpisana pri Supabase kot povratni naslov ponastavitve gesla in žeton nosi v
   še `sk.html` (vtičnik `slovaskaKartica` v `vite.config.js`, besedila
   `aplikacija.naslovStrani.deljenje`), `vercel.json` pa ga vrne za `/sk` in
   poti z `?t=sk-…` (ne za `/` — tam Vercel najprej postreže index.html).
+  Angleške kartice ni — angleški obiskovalec ob deljenju vidi slovensko
+  ali slovaško (po ligi v povezavi).
 
 ## TypeScript
 
