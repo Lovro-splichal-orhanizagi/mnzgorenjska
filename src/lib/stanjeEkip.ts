@@ -8,7 +8,11 @@
 //     kapetan, odsoten igralec v postavi). Da se skriti; skrito ostane skrito,
 //     dokler ne pride novo poročilo.
 import { prikazniIme } from './pomozno'
-import { t } from '../i18n/jedro.ts'
+import { t, jezik } from '../i18n/jedro.ts'
+// Razlog neveljavne ekipe pride iz baze (`razlog_neveljavne_ekipe`) v
+// slovenščini. Prevod je že v besedilih e-pošte; ista funkcija, da se mail in
+// pas na strani ne razideta.
+import { prevediRazlog } from '../../supabase/functions/posli-opomnik/sporocila.ts'
 
 export interface OpozoriloIgralca {
   player_id: number
@@ -67,7 +71,9 @@ export function obvestilaEkip(
   for (const e of ekipe) {
     if (moznosti.skrijLigo && e.slug === moznosti.skrijLigo) continue
     if (!e.veljavna) {
-      const razlog = e.razlog ?? t('mojaEkipa.opozorila.razlog')
+      const razlog = !e.razlog
+        ? t('mojaEkipa.opozorila.razlog')
+        : jezik() === 'sk' ? prevediRazlog(e.razlog, 'sk') : e.razlog
       if (e.brez_tock) {
         napake.push({
           kljuc: `napaka:${e.team_id}`,

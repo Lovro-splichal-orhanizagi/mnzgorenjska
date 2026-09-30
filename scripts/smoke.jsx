@@ -3208,6 +3208,26 @@ preveri(
   preveri('sportnet: zapisnik', z && z.krog === 7 && z.rezultat.domaci === 1 && z.rezultat.gostje === 0 && !z.opozorila.length)
   preveri('sportnet: vsak nastop ima ISSF in pozicijo', n.length > 22 && n.every((x) => x.regSt && x.pozicija))
   preveri('sportnet: strelec', n.some((x) => x.ime === 'Šemik Tomáš' && x.goli === 1))
+  {
+    // Status tekme: odstop moštva in kontumacija sta tekmi brez igre.
+    const tekma = (id, krog, dom, gos, status, extra = {}) => ({
+      _id: id, round: { name: String(krog) }, startDate: '2026-08-08T13:00:00.000Z', closed: true,
+      __issfMatchStatus: status,
+      teams: [{ name: dom, additionalProperties: { homeaway: 'home' } }, { name: gos, additionalProperties: { homeaway: 'away' } }],
+      ...extra,
+    })
+    const stran = JSON.stringify({ matches: [
+      tekma('a', 1, 'A', 'B', 'ODOHRATY'),
+      tekma('b', 1, 'C', 'D', 'ODSTUPENE_DRUZSTVO'),
+      tekma('c', 2, 'A', 'C', 'KONTUMOVANY'),
+      tekma('d', 2, 'B', 'D', 'ODOHRATY', { contumation: { isContumated: true } }),
+    ], nextOffset: null })
+    const k = await S.default.razporedVseStrani('X/1', async () => stran)
+    const t = Object.fromEntries(k.flatMap((r) => r.tekme).map((x) => [`${x.domaci}${x.gostje}`, x]))
+    preveri('sportnet: odigrana ni kontumacija', !t.AB.kontumacija && !t.AB.odstop)
+    preveri('sportnet: odstop moštva = kontumacija z odstopom', t.CD.kontumacija && t.CD.odstop)
+    preveri('sportnet: KONTUMOVANY in contumation sta kontumaciji', t.AC.kontumacija && !t.AC.odstop && t.BD.kontumacija)
+  }
 }
 
 // --- navijači klubov ----------------------------------------------------------
