@@ -17,10 +17,10 @@
   "rewrites": [
     { "source": "/sk", "destination": "/sk.html" },
     {
-      "source": "/((?!.*\\.).*)",
+      "source": "/((?!api/)(?!.*\\.).*)",
       "has": [{ "type": "query", "key": "t", "value": "sk-.*" }],
       "destination": "/sk.html"
     },
-    { "source": "/((?!.*\\.).*)", "destination": "/index.html" }
+    { "source": "/((?!api/)(?!.*\\.).*)", "destination": "/index.html" }
   ]
 }

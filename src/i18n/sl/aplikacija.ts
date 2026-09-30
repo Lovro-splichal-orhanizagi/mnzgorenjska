@@ -54,12 +54,24 @@ export const aplikacija = {
     niZadetkov: 'Ni zadetkov.',
     lige: 'Lige',
   },
+  izbiraDrzave: {
+    /** Oznaka pred izbirnikom (za bralnike zaslona in v nogi). */
+    oznaka: 'Država',
+    /** Imena držav v lastnem jeziku — v vseh prevodih enaka. */
+    imena: {
+      SI: 'Slovenija',
+      SK: 'Slovensko',
+    },
+    preklopi: 'Preklopi na {drzava}',
+  },
   prviObisk: {
     naslov: 'Kje želiš igrati?',
     opis: 'Izberi ligo, v kateri boš sestavil ekipo in tekmoval. Pokažemo ti njene igralce in lestvico; pozneje jo lahko kadarkoli zamenjaš zgoraj.',
     brezEkip: 'še brez ekip',
     nazaj: '← Nazaj',
     preskoci: 'Preskoči',
+    /** Povezava na drugo državo, ko je ugib pokazal napačno. */
+    drugaDrzava: '{drzava}?',
   },
   rokKroga: {
     dniUr: '{d} d {h} h',

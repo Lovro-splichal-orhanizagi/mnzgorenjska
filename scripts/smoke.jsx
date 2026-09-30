@@ -3140,33 +3140,135 @@ preveri(
 }
 
 // --- država obiskovalca in privzeta liga -----------------------------------
-// Slovenski tok se ne sme spremeniti: kdor ni prepoznan kot Slovak, dobi
-// Gorenjsko kot doslej, tudi ko je slovaška liga aktivna.
+// Slovenski tok se ne sme spremeniti: kdor ligo ima (shranjeno ali `?t=`),
+// ostane pri njej; prijavljen dobi ligo svojih ekip; šele nato ugib
+// (izbira s povezave → IP → jezik → pas), sicer Gorenjska kot doslej.
 {
   const D = await import('../src/lib/drzava.ts')
+  const U = await import('../src/lib/drzavaUgib.ts')
   const lige = [
-    { slug: 'clani', country_code: 'SI' },
-    { slug: 'lj-1-liga', country_code: 'SI' },
-    { slug: 'sk-ssfz-4liga', country_code: 'SK' },
+    { id: 1, slug: 'clani', country_code: 'SI' },
+    { id: 2, slug: 'lj-1-liga', country_code: 'SI' },
+    { id: 3, slug: 'sk-ssfz-4liga', country_code: 'SK' },
+    { id: 4, slug: 'sk-za-1trieda', country_code: 'SK' },
   ]
   const brezSk = lige.filter((l) => l.country_code === 'SI')
+  preveri('drzava: Slovaska je odprta (SAMO_S_POVEZAVO prazen)', U.SAMO_S_POVEZAVO.length === 0)
+  // Vrstni red ugiba.
   preveri('drzava: slovenski brskalnik', D.ugibajDrzavo({ jeziki: ['sl-SI', 'en'], casovniPas: 'Europe/Ljubljana' }) === 'SI')
-  // Slovaška je zaprta (SAMO_S_POVEZAVO): brskalnik je ne odpre, le povezava /sk.
-  preveri('drzava: slovaski brskalnik ne odpre zaprte Slovaske', D.ugibajDrzavo({ jeziki: ['sk-SK'], casovniPas: 'Europe/Bratislava' }) === null)
-  preveri('drzava: anglesko v Bratislavi ne odpre zaprte Slovaske', D.ugibajDrzavo({ jeziki: ['en-US'], casovniPas: 'Europe/Bratislava' }) === null)
-  preveri('drzava: slovensko v Bratislavi (jezik velja)', D.ugibajDrzavo({ jeziki: ['sl'], casovniPas: 'Europe/Bratislava' }) === 'SI')
+  preveri('drzava: slovaski brskalnik', D.ugibajDrzavo({ jeziki: ['sk-SK'], casovniPas: 'Europe/Bratislava' }) === 'SK')
+  preveri('drzava: anglesko v Bratislavi (pas je zadnji znak)', D.ugibajDrzavo({ jeziki: ['en-US'], casovniPas: 'Europe/Bratislava' }) === 'SK')
+  preveri('drzava: slovensko v Bratislavi (jezik pred pasom)', D.ugibajDrzavo({ jeziki: ['sl'], casovniPas: 'Europe/Bratislava' }) === 'SI')
+  preveri('drzava: nemski/angleski brskalnik v Ljubljani = Slovenija', D.ugibajDrzavo({ jeziki: ['de-DE', 'en'], casovniPas: 'Europe/Ljubljana' }) === 'SI')
   preveri('drzava: neznan obiskovalec', D.ugibajDrzavo({ jeziki: ['de-DE'], casovniPas: 'Europe/Berlin' }) === null)
-  preveri('drzava: povezava /sk povozi jezik', D.ugibajDrzavo({ shranjena: 'SK', jeziki: ['sl'] }) === 'SK')
+  preveri('drzava: IP pred jezikom (SI IP, slovaski brskalnik)', D.ugibajDrzavo({ ip: 'SI', jeziki: ['sk'], casovniPas: 'Europe/Bratislava' }) === 'SI')
+  preveri('drzava: IP pred jezikom (SK IP, angleski brskalnik)', D.ugibajDrzavo({ ip: 'SK', jeziki: ['en'], casovniPas: 'Europe/Ljubljana' }) === 'SK')
+  preveri('drzava: tuj IP (AT) preskoci na jezik', D.ugibajDrzavo({ ip: 'AT', jeziki: ['sk'] }) === 'SK')
+  preveri('drzava: tuj IP brez znakov = null (Slovenija)', D.ugibajDrzavo({ ip: 'DE', jeziki: ['de'], casovniPas: 'Europe/Berlin' }) === null)
+  preveri('drzava: povezava /sk povozi IP in jezik', D.ugibajDrzavo({ shranjena: 'SK', ip: 'SI', jeziki: ['sl'] }) === 'SK')
+  preveri('drzava: izbira Slovenije povozi slovaski IP', D.ugibajDrzavo({ shranjena: 'SI', ip: 'SK', jeziki: ['sk'] }) === 'SI')
+  // Zaprta država: seznam je zdaj prazen, a mehanizem mora še delovati.
+  U.SAMO_S_POVEZAVO.push('SK')
+  preveri('drzava: zaprte Slovaske ne odpre IP', D.ugibajDrzavo({ ip: 'SK', jeziki: ['en'] }) === null)
+  preveri('drzava: zaprte Slovaske ne odpre jezik', D.ugibajDrzavo({ jeziki: ['sk-SK'], casovniPas: 'Europe/Bratislava' }) === null)
+  preveri('drzava: zaprto Slovasko odpre povezava', D.ugibajDrzavo({ shranjena: 'SK' }) === 'SK')
+  U.SAMO_S_POVEZAVO.length = 0
+
+  // Država po IP: nikoli ne vrže in ne čaka predolgo.
+  const json = (telo, glave = { 'content-type': 'application/json' }) => async () =>
+    new Response(JSON.stringify(telo), { headers: glave })
+  preveri('ip: prebere drzavo', (await D.drzavaPoIp({ fetchFn: json({ drzava: 'SK' }) })) === 'SK')
+  preveri('ip: brez glave je null', (await D.drzavaPoIp({ fetchFn: json({ drzava: null }) })) === null)
+  preveri('ip: neveljavna koda je null', (await D.drzavaPoIp({ fetchFn: json({ drzava: '<script>' }) })) === null)
+  preveri('ip: vite dev vrne index.html = null', (await D.drzavaPoIp({ fetchFn: async () => new Response('<!doctype html>', { headers: { 'content-type': 'text/html' } }) })) === null)
+  preveri('ip: 404 = null', (await D.drzavaPoIp({ fetchFn: async () => new Response('', { status: 404 }) })) === null)
+  preveri('ip: omrezna napaka = null', (await D.drzavaPoIp({ fetchFn: async () => { throw new TypeError('Failed to fetch') } })) === null)
+  const zacetekIp = Date.now()
+  const pocasen = await D.drzavaPoIp({
+    casMs: 50,
+    fetchFn: (_u, o) =>
+      new Promise((r, z) => {
+        const u = setTimeout(() => r(new Response('{"drzava":"SK"}', { headers: { 'content-type': 'application/json' } })), 2000)
+        o?.signal?.addEventListener('abort', () => {
+          clearTimeout(u)
+          z(new Error('abort'))
+        })
+      }),
+  })
+  preveri('ip: pocasen odgovor po roku = null', pocasen === null && Date.now() - zacetekIp < 500, `${Date.now() - zacetekIp} ms`)
+
+  // Privzeta liga in lige države.
   preveri('privzeta: Slovenija ostane clani', D.privzetaLiga(lige, 'SI') === 'clani')
   preveri('privzeta: neznan ostane clani', D.privzetaLiga(lige, null) === 'clani')
   preveri('privzeta: Slovak dobi svojo ligo', D.privzetaLiga(lige, 'SK') === 'sk-ssfz-4liga')
   preveri('privzeta: Slovaska brez aktivne lige = clani', D.privzetaLiga(brezSk, 'SK') === 'clani')
   const slugi = (r) => r.lige.map((l) => l.slug).join(',')
   preveri('lige: Slovenec ne vidi slovaske', slugi(D.ligeDrzave(lige, 'clani', 'SK')) === 'clani,lj-1-liga')
-  preveri('lige: Slovak vidi le svojo', slugi(D.ligeDrzave(lige, 'sk-ssfz-4liga', null)) === 'sk-ssfz-4liga')
+  preveri('lige: Slovak vidi le svoje', slugi(D.ligeDrzave(lige, 'sk-ssfz-4liga', null)) === 'sk-ssfz-4liga,sk-za-1trieda')
   preveri('lige: dokler liga ni znana, velja ugib', D.ligeDrzave(lige, 'neznana', 'SK').drzava === 'SK')
   preveri('lige: brez ugiba Slovenija', D.ligeDrzave(lige, 'neznana', null).drzava === 'SI')
   preveri('lige: Slovak brez aktivne slovaske lige vidi slovenske', slugi(D.ligeDrzave(brezSk, 'clani', 'SK')) === 'clani,lj-1-liga')
+
+  // Liga ekip prijavljenega uporabnika.
+  preveri('ekipe: brez ekip ni lige', D.ligaEkip([], lige) === null)
+  preveri('ekipe: Slovenec z ljubljansko ekipo', D.ligaEkip([{ competition_id: 2 }], lige) === 'lj-1-liga')
+  preveri('ekipe: vec ekip v Sloveniji kot na Slovaskem', D.ligaEkip([{ competition_id: 3 }, { competition_id: 1 }, { competition_id: 2 }], lige) === 'clani')
+  preveri('ekipe: izenacenje dobi drzava prve ekipe', D.ligaEkip([{ competition_id: 4 }, { competition_id: 1 }], lige) === 'sk-za-1trieda')
+  preveri('ekipe: ekipa v neaktivni ligi ne steje', D.ligaEkip([{ competition_id: 99 }], lige) === null)
+
+  // Začetna liga: obstoječa liga > ekipe > ugib > clani.
+  const zl = (o) => D.zacetnaLiga({ vse: lige, slug: 'clani', izrecno: false, ligaEkip: null, ugib: null, ...o })
+  preveri('zacetna: shranjena clani ostane ob slovaskem ugibu', zl({ izrecno: true, ugib: 'SK' }) === null)
+  preveri('zacetna: ?t=lj-1-liga ostane ob slovaskem ugibu in ekipi', zl({ slug: 'lj-1-liga', izrecno: true, ugib: 'SK', ligaEkip: 'sk-za-1trieda' }) === null)
+  preveri('zacetna: prijavljen Slovenec brez lige, slovaski ugib → njegova liga', zl({ ligaEkip: 'lj-1-liga', ugib: 'SK' }) === 'lj-1-liga')
+  preveri('zacetna: prijavljen Slovak brez lige → njegova liga', zl({ ligaEkip: 'sk-za-1trieda' }) === 'sk-za-1trieda')
+  preveri('zacetna: nov obiskovalec s slovaskim ugibom', zl({ ugib: 'SK' }) === 'sk-ssfz-4liga')
+  preveri('zacetna: nov obiskovalec brez ugiba ostane clani', zl({}) === 'clani')
+  preveri('zacetna: nov Slovenec ostane clani', zl({ ugib: 'SI' }) === 'clani')
+  preveri('zacetna: neznana liga v naslovu gre po ugibu', zl({ slug: 'sk-stara', izrecno: true, ugib: 'SK' }) === 'sk-ssfz-4liga')
+  preveri('zacetna: slovaski ugib brez aktivne lige = clani', D.zacetnaLiga({ vse: brezSk, slug: 'clani', izrecno: false, ligaEkip: null, ugib: 'SK' }) === 'clani')
+
+  // Izbirnik države: le države z ligami; preklop piše le v brskalnik.
+  preveri('izbira: drzave z ligami, Slovenija prva', D.drzaveZLigami([...lige].reverse()).join() === 'SI,SK')
+  preveri('izbira: ena drzava = brez izbirnika', D.drzaveZLigami(brezSk).join() === 'SI')
+  preveri('izbira: zastavici', D.zastava('SI') === '🇸🇮' && D.zastava('SK') === '🇸🇰')
+  const shramba = new Map()
+  // Node ima svoj localStorage (z opozorilom ob branju) — zamenjamo opis
+  // lastnosti in ga na koncu vrnemo, ne da bi ga prebrali.
+  const staraShramba = Object.getOwnPropertyDescriptor(globalThis, 'localStorage')
+  Object.defineProperty(globalThis, 'localStorage', {
+    configurable: true,
+    value: {
+      getItem: (k) => shramba.get(k) ?? null,
+      setItem: (k, v) => shramba.set(k, String(v)),
+      removeItem: (k) => shramba.delete(k),
+    },
+  })
+  shramba.set('slff-tekmovanje', 'lj-1-liga')
+  let cilj = null
+  D.preklopiDrzavo('SK', lige, { pojdi: (u) => (cilj = u) })
+  preveri('izbira: na Slovasko — drzava, liga, jezik, naslov',
+    shramba.get('slff-drzava') === 'SK' && shramba.get('slff-tekmovanje') === 'sk-ssfz-4liga' &&
+      shramba.get('slff-jezik') === 'sk' && cilj === '/?t=sk-ssfz-4liga', `${[...shramba]} ${cilj}`)
+  D.preklopiDrzavo('SI', lige, { pojdi: (u) => (cilj = u) })
+  preveri('izbira: nazaj v Slovenijo — clani, slovenscina, /',
+    shramba.get('slff-drzava') === 'SI' && shramba.get('slff-tekmovanje') === 'clani' &&
+      shramba.get('slff-jezik') === 'sl' && cilj === '/', `${[...shramba]} ${cilj}`)
+  D.preklopiDrzavo('SK', lige, { izberiLigo: false, pojdi: (u) => (cilj = u) })
+  preveri('izbira: iz okna prvega obiska le drzava, liga ostane neizbrana',
+    shramba.get('slff-drzava') === 'SK' && !shramba.has('slff-tekmovanje') && cilj === '/', `${[...shramba]} ${cilj}`)
+  // Ugib s shranjeno državo ne sprašuje IP-ja.
+  let vprasan = false
+  const zIzbiro = await D.ugibajObiskovalca(async () => {
+    vprasan = true
+    return 'SI'
+  })
+  preveri('ugib: shranjena drzava ne sprasuje IP', zIzbiro === 'SK' && !vprasan)
+  shramba.clear()
+  preveri('ugib: brez izbire velja IP', (await D.ugibajObiskovalca(async () => 'SK')) === 'SK')
+  preveri('ugib: brez IP-ja jezik ali pas tega okolja', [null, 'SI', 'SK'].includes(await D.ugibajObiskovalca(async () => null)))
+  if (staraShramba) Object.defineProperty(globalThis, 'localStorage', staraShramba)
+  else delete globalThis.localStorage
 }
 
 // --- prevodi: vsak prevod ima iste {parametre} in <oznake> kot izvirnik ------
