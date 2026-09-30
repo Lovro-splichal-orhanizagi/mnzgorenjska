@@ -198,7 +198,7 @@ export default function GolZaGlasovanje({
         <span className="w-12 shrink-0 rounded-lg bg-slate-950 py-1 text-center font-black tabular-nums text-gnl-300">
           {gol.minute}&apos;
         </span>
-        <div className="min-w-0 flex-1">
+        <div className="min-w-[8rem] flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-lg" aria-hidden="true">⚽</span>
             <StDres st={stDresa[String(gol.scorer?.id)]} />
@@ -212,7 +212,7 @@ export default function GolZaGlasovanje({
         </div>
 
         {potrjeno && (
-          <div className="flex items-center gap-2 rounded-xl bg-gnl-500/15 px-3 py-2 ring-1 ring-gnl-400/30">
+          <div className="flex w-full items-center gap-2 rounded-xl bg-gnl-500/15 px-3 py-2 ring-1 ring-gnl-400/30 sm:w-auto">
             <span aria-hidden="true">🅰️</span>
             <div className="text-sm">
               <div className="flex items-center gap-1.5 font-bold text-gnl-200">
@@ -227,7 +227,7 @@ export default function GolZaGlasovanje({
         )}
 
         {!potrjeno && brezAsistence && (
-          <div className="rounded-xl bg-white/5 px-3 py-2 text-sm ring-1 ring-white/10">
+          <div className="w-full rounded-xl bg-white/5 px-3 py-2 text-sm ring-1 ring-white/10 sm:w-auto">
             <div className="font-bold text-slate-200">{t('tekme.gol.brezAsistence')}</div>
             <div className="text-xs text-slate-500">
               {t('tekme.gol.odlocilaSkupnost')}
