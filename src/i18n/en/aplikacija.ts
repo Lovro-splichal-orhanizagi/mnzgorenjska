@@ -112,6 +112,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
   },
   sponzor: {
     oznaka: 'Sponsor',
+    obisci: 'Visit website',
   },
   napaka: {
     naslov: 'The page got stuck',

@@ -49,6 +49,7 @@ const PRAZEN = {
   url: '',
   claim: '',
   logo_url: '',
+  slika_url: '',
   doseg: '',
   opomba: '',
 }
@@ -130,6 +131,8 @@ export default function Sponzorji() {
       return setNapaka('Povezava mora biti spletni naslov, ki se začne s http:// ali https://.')
     if (nov.logo_url.trim() && !jeLogotip(nov.logo_url.trim()))
       return setNapaka('Logotip mora biti pot na strani (/sponzorji/…) ali naslov http(s)://.')
+    if (nov.slika_url.trim() && !jeLogotip(nov.slika_url.trim()))
+      return setNapaka('Slika mora biti pot na strani (/sponzorji/…) ali naslov http(s)://.')
     const [vrsta, vrednost] = nov.doseg.split(':')
     let competition_id: number | null = null
     let federation_id: number | null = null
@@ -160,6 +163,7 @@ export default function Sponzorji() {
       url: nov.url.trim(),
       claim: nov.claim.trim() || null,
       logo_url: nov.logo_url.trim() || null,
+      slika_url: nov.slika_url.trim() || null,
       opomba: nov.opomba.trim() || null,
       competition_id,
       federation_id,
@@ -290,6 +294,12 @@ export default function Sponzorji() {
               value={nov.logo_url}
               onChange={(e) => setNov({ ...nov, logo_url: e.target.value })}
               placeholder="/sponzorji/logo.png (neobvezno)"
+              className="rounded-lg border border-white/10 bg-slate-900 px-2 py-1.5 text-sm"
+            />
+            <input
+              value={nov.slika_url}
+              onChange={(e) => setNov({ ...nov, slika_url: e.target.value })}
+              placeholder="/sponzorji/pasica.jpg — slika pasice (neobvezno)"
               className="rounded-lg border border-white/10 bg-slate-900 px-2 py-1.5 text-sm"
             />
             <select
