@@ -17,6 +17,21 @@ import Plakat from '../components/Plakat'
 // Koliko uporabnikov pokaže ena stran seznama.
 const UPORABNIKOV_NA_STRAN = 50
 
+/** Zastavica iz dvočrkovne kode države (SI → 🇸🇮). */
+const zastavica = (koda: string) =>
+  String.fromCodePoint(...[...koda.toUpperCase()].map((c) => 0x1f1a5 + c.charCodeAt(0)))
+
+/**
+ * Država uporabnika za filter: iz lig, v katerih ima ekipe; kdor ekipe nima,
+ * po jeziku ob registraciji (sk → SK, sicer SI). Kdor igra v obeh, šteje v obe.
+ */
+function drzaveUporabnika(u: { drzave?: string[] | null; jezik?: string | null }): string[] {
+  if (u.drzave?.length) return u.drzave
+  if (u.jezik === 'sk') return ['SK']
+  if (u.jezik === 'sl') return ['SI']
+  return []
+}
+
 // Med suhim tekom in pošiljanjem se lahko kdo registrira — toliko jih
 // funkcija sme zajeti več, kot jih je pokazal suhi tek. Kar je čez, zavrne.
 const REZERVA_OPOMNIKOV = 5
@@ -73,6 +88,8 @@ export default function Administracija() {
   const [ekipe, setEkipe] = useState<any[]>([])
   const [uporabniki, setUporabniki] = useState<any[]>([])
   const [filterNepopolne, setFilterNepopolne] = useState(false)
+  // 'vse' ali koda države (SI, SK); '?' = brez ekip in brez znanega jezika.
+  const [filterDrzava, setFilterDrzava] = useState('vse')
   const [stranUporabnikov, setStranUporabnikov] = useState(1)
   const [urediEkipa, setUrediEkipa] = useState<any | null>(null)
   const [urediUporabnik, setUrediUporabnik] = useState<any | null>(null)
@@ -588,6 +605,33 @@ export default function Administracija() {
               </span>
             )}
           </h2>
+          <div className="flex flex-wrap items-center gap-3">
+          <label className="flex items-center gap-2 text-xs text-slate-400">
+            Država
+            <select
+              value={filterDrzava}
+              onChange={(e) => {
+                setFilterDrzava(e.target.value)
+                setStranUporabnikov(1)
+              }}
+              className="rounded-lg bg-white/5 px-2 py-1 text-xs ring-1 ring-white/10"
+            >
+              <option value="vse">vse ({uporabniki.length})</option>
+              {(() => {
+                const st = new Map<string, number>()
+                for (const u of uporabniki)
+                  for (const d of drzaveUporabnika(u).length ? drzaveUporabnika(u) : ['?'])
+                    st.set(d, (st.get(d) ?? 0) + 1)
+                return [...st.entries()]
+                  .sort((a, b) => b[1] - a[1])
+                  .map(([d, n]) => (
+                    <option key={d} value={d}>
+                      {d === '?' ? 'neznana' : `${zastavica(d)} ${d}`} ({n})
+                    </option>
+                  ))
+              })()}
+            </select>
+          </label>
           <label className="flex items-center gap-2 text-xs text-slate-400">
             <input
               type="checkbox"
@@ -599,12 +643,16 @@ export default function Administracija() {
             />
             samo brez veljavne ekipe
           </label>
+          </div>
         </div>
 
         {(() => {
-          const seznam = filterNepopolne
-            ? uporabniki.filter((u) => !u.ekipa_veljavna && u.email)
-            : uporabniki
+          const seznam = uporabniki.filter((u) => {
+            if (filterNepopolne && !(!u.ekipa_veljavna && u.email)) return false
+            if (filterDrzava === 'vse') return true
+            const d = drzaveUporabnika(u)
+            return filterDrzava === '?' ? d.length === 0 : d.includes(filterDrzava)
+          })
           // Stran držimo v meji tudi, ko se seznam skrči (osvežitev, filter),
           // sicer bi zadnja stran ostala prazna.
           const stStrani = Math.max(1, Math.ceil(seznam.length / UPORABNIKOV_NA_STRAN))
@@ -684,6 +732,9 @@ export default function Administracija() {
                     <tr className="text-left text-slate-500">
                       <th className="pb-2 pr-2">Uporabnik</th>
                       <th className="pb-2 pr-2">E-pošta</th>
+                      <th className="pb-2 pr-2" title="Države lig, v katerih ima ekipe; brez ekipe jezik ob registraciji">
+                        Država
+                      </th>
                       <th className="pb-2 pr-2">Ekipa</th>
                       <th className="pb-2 pr-2 text-right">Kader</th>
                       <th className="pb-2 pr-2">Status</th>
@@ -725,6 +776,22 @@ export default function Administracija() {
                             <a href={`mailto:${u.email}`} className="hover:text-gnl-300">
                               {u.email}
                             </a>
+                          ) : (
+                            <span className="text-slate-600">—</span>
+                          )}
+                        </td>
+                        <td className="whitespace-nowrap py-1.5 pr-2">
+                          {u.drzave?.length ? (
+                            <span title={`Ekipe v ligah: ${u.drzave.join(', ')}`}>
+                              {u.drzave.map((d: string) => zastavica(d)).join(' ')}
+                            </span>
+                          ) : u.jezik ? (
+                            <span
+                              className="text-xs text-slate-500"
+                              title="Nima ekipe — jezik ob registraciji"
+                            >
+                              jezik {u.jezik}
+                            </span>
                           ) : (
                             <span className="text-slate-600">—</span>
                           )}

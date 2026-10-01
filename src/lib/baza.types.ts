@@ -4620,10 +4620,12 @@ export type Database = {
         Args: { p_competition_id?: number }
         Returns: {
           display_name: string
+          drzave: string[]
           ekipa_veljavna: boolean
           email: string
           insider_competition_id: number
           is_admin: boolean
+          jezik: string
           registered_at: string
           roster_stevilo: number
           team_id: number
