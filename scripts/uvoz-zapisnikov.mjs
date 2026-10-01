@@ -176,6 +176,15 @@ async function igralecId(
   polnoIme,
   { vratar, st, dvoumno = false, zasedeni = null, regSt = null, pozicija = null },
 ) {
+  // Oznaka vratarja iz enega zapisnika naredi vratarja le igralca, čigar
+  // pozicije še ne poznamo (ali je ugibana). Znanega igralca iz polja ne
+  // prekrsti: Labaška (Smrečany) je bil po eni oznaki vratar s 49 goli na 52
+  // tekmah, 32 takih je bilo oktobra 2026. Pravi prestop v vrata popravi
+  // admin ali glasovanje.
+  const smeVVrata = (p) =>
+    p.position_source !== 'admin' &&
+    (p.position == null || ['neznano', 'ugibanje'].includes(p.position_source))
+
   // Registrska stevilka NZS je edina zanesljiva identiteta, kar jih vir lahko
   // da: enolicna je za cloveka, prezivi prestop in menjavo dresa. Kjer je na
   // voljo (Ptuj, Murska Sobota, Lendava), ugibanje po imenu in dresu odpade —
@@ -197,7 +206,7 @@ async function igralecId(
       const popravek = {}
       if (poReg.team_id !== teamId) popravek.team_id = teamId
       if (st != null) popravek.shirt_number = st
-      if (vratar && poReg.position_source !== 'admin') {
+      if (vratar && smeVVrata(poReg)) {
         popravek.position = 'GK'
         popravek.position_source = 'zapisnik'
       } else if (pozicija && ['neznano', 'ugibanje'].includes(poReg.position_source)) {
@@ -329,7 +338,7 @@ async function igralecId(
   if (obstoj) {
     igralci.set(kljuc, obstoj.id)
     // vratar iz zapisnika povozi ugibanje
-    if (vratar && obstoj.position_source !== 'admin')
+    if (vratar && smeVVrata(obstoj))
       await db
         .from('players')
         .update({ position: 'GK', position_source: 'zapisnik', shirt_number: st })

@@ -281,6 +281,10 @@ Deno.serve(async (req) => {
         .eq('user_id', e.owner_id).eq('vrsta', vrsta)
         .eq('competition_id', competition_id).is('napaka', null)
       if (vrsta === 'izstop-kluba' && e.zadnjiIzstop) zeQ = zeQ.gte('poslano_at', e.zadnjiIzstop)
+      // Popravki pozicij pridejo v valovih (29. 9., 1. 10.) — lastnik dobi mail
+      // za vsak val; ponovni zagon istega dne ga ne podvoji.
+      if (vrsta === 'popravek-pozicije')
+        zeQ = zeQ.gte('poslano_at', new Date(Date.now() - 86400000).toISOString())
       const { data: ze } = await zeQ.limit(1)
       if (ze?.length) {
         rezultati.push({ ekipa, ok: false, razlog: 'že poslano' })

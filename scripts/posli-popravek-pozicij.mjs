@@ -6,7 +6,9 @@
 // polja — lastnik mora to izvedeti od nas, ne iz lestvice.
 //
 // Klice `posli-opomnik` z vrsto `popravek-pozicije`, po eno ligo naenkrat.
-// Funkcija istemu lastniku v ligi ne poslje dvakrat.
+// Funkcija istemu lastniku v ligi ne poslje dvakrat v 24 urah; drug val
+// popravkov (1. 10. 2026: vratarji z goli, glej preveri-vratarje --goli) se
+// poslje z `IGRALCI=...`.
 //
 //   SUPABASE_SERVICE_ROLE_KEY=... node scripts/posli-popravek-pozicij.mjs   # suho
 //   ... SUHO=false node scripts/posli-popravek-pozicij.mjs                  # poslje

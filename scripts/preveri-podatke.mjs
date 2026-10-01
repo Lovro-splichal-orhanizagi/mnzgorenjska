@@ -140,6 +140,40 @@ if (napakaZamud) {
   }
 }
 
+// --- vratar, ki zabija ------------------------------------------------------
+// Ena oznaka vratarja v zapisniku je igralca iz polja za vselej prekrstila v
+// vratarja (Labaška, Smrečany: 49 golov na 52 tekmah; oktobra 2026 jih je bilo
+// 32). Uvoz tega ne dela več, ostane pa namig: vratar s petimi goli je skoraj
+// gotovo pomota. Pravega vratarja, ki strelja enajstmetrovke, admin potrdi
+// (position_source = admin) in javljanje utihne.
+const PRAG_GOLOV_VRATARJA = 5
+const { data: strelci, error: napakaStrelcev } = await db
+  .from('player_overview')
+  .select('id, full_name, goals, competition_id')
+  .in('competition_id', (lige ?? []).map((l) => l.id))
+  .eq('position', 'GK')
+  .neq('position_source', 'admin')
+  .eq('active', true)
+  .gte('goals', PRAG_GOLOV_VRATARJA)
+  .order('goals', { ascending: false })
+if (napakaStrelcev)
+  tezave.push({
+    kljuc: 'vratar-strelec-neznano',
+    opis: 'Preverbe vratarjev z goli ni bilo mogoce pognati',
+    koliko: 1,
+    primer: napakaStrelcev.message,
+  })
+else if (strelci?.length) {
+  const p = strelci[0]
+  const slug = lige.find((l) => l.id === p.competition_id)?.slug
+  tezave.push({
+    kljuc: 'vratar-strelec',
+    opis: `Vratar z vsaj ${PRAG_GOLOV_VRATARJA} goli — verjetno igralec iz polja (node scripts/preveri-vratarje.mjs --goli ${PRAG_GOLOV_VRATARJA})`,
+    koliko: strelci.length,
+    primer: `${slug}: ${p.full_name} (${p.id}), ${p.goals} golov`,
+  })
+}
+
 // --- izpis ------------------------------------------------------------------
 if (!tezave.length) {
   console.log(`Vse v redu — ${(lige ?? []).length} vklopljenih lig, nobene težave.`)

@@ -25,9 +25,16 @@
 // Pomurski viri (Ptuj, Murska Sobota, Lendava) imajo en zapisnik za cel krog
 // in jih skripta ne bere — ostanejo za rocni pregled.
 //
+// Z `--goli <n>` je sumljiv vsak GK z vsaj n goli, ne glede na soigralce.
+// Labaška (Smrečany, sk-lm-7liga) je bil vratar s 49 goli na 52 tekmah:
+// Sportnet ga v vseh zapisnikih vodi kot napadalca (st. 6), GK je postal iz
+// ene same oznake in je bil sam "vratar" v postavi, zato ga osnovni vzorec ni
+// ujel. Razsodba bere VSE tekme, ki jih je zacel.
+//
 //   node scripts/preveri-vratarje.mjs                      # vse aktivne lige
 //   node scripts/preveri-vratarje.mjs --tekmovanje mladinci
 //   node scripts/preveri-vratarje.mjs --zapisniki          # z razsodbo
+//   node scripts/preveri-vratarje.mjs --goli 3             # vratarji z goli (z razsodbo)
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'node:fs'
 import { vseVrstice } from './strani.mjs'
@@ -84,7 +91,9 @@ const db = createClient(BASE, KLJUC, { auth: { persistSession: false } })
 
 const i = process.argv.indexOf('--tekmovanje')
 const samo = i > 0 ? process.argv[i + 1] : null
-const beriZapisnike = process.argv.includes('--zapisniki')
+const g = process.argv.indexOf('--goli')
+const goliMeja = g > 0 ? Number(process.argv[g + 1]) : null
+const beriZapisnike = process.argv.includes('--zapisniki') || goliMeja != null
 const razsodbe = { LAZEN: 0, VRATAR: 0, 'NI ZAPISNIKA': 0 }
 
 let q = db.from('competitions').select('id, slug').order('sort_order')
@@ -142,6 +151,33 @@ for (const liga of lige) {
     }
   }
 
+  if (goliMeja != null) {
+    const goli = new Map()
+    for (let k = 0; k < idji.length; k += 300) {
+      const kos = idji.slice(k, k + 300)
+      const vrstice = await vseVrstice((od, do_) =>
+        db.from('appearances').select('id, player_id, goals')
+          .in('player_id', kos).gt('goals', 0).order('id').range(od, do_),
+      )
+      for (const v of vrstice) goli.set(v.player_id, (goli.get(v.player_id) ?? 0) + v.goals)
+    }
+    const zGoli = [...goli.entries()].filter(([, n]) => n >= goliMeja).sort((a, b) => b[1] - a[1])
+    if (!zGoli.length) continue
+    console.log(`\n${liga.slug} — ${zGoli.length} vratarjev z vsaj ${goliMeja} goli`)
+    for (const [id, n] of zGoli) {
+      const p = poId.get(id)
+      const zacel = nastopi.filter((a) => a.player_id === id)
+      const razsodba = await razsodi(zacel)
+      console.log(
+        `  ${razsodba.padEnd(34)}  ${String(id).padStart(6)}  ${p.full_name.padEnd(28)} ` +
+        `${(p.teams?.name ?? '?').padEnd(26)} golov ${String(n).padStart(2)}, zacel ${zacel.length}` +
+        (p.position_source !== 'zapisnik' ? `  [${p.position_source}]` : ''),
+      )
+    }
+    skupaj += zGoli.length
+    continue
+  }
+
   const sumljivi = [...stevec.entries()]
     .filter(([, s]) => s.sam === 0 && s.zDrugim > 0)
     .sort((a, b) => b[1].zDrugim - a[1].zDrugim)
@@ -166,7 +202,7 @@ for (const liga of lige) {
 console.log(`\nskupaj ${skupaj} sumljivih vratarjev`)
 if (beriZapisnike) console.log(Object.entries(razsodbe).map(([k, v]) => `${k} ${v}`).join(', '))
 
-/** Kolikokrat zapisnik igralca oznaci za vratarja na tekmah z drugim GK. */
+/** Kolikokrat zapisnik igralca oznaci za vratarja (na podanih tekmah). */
 async function razsodi(nastopiIgralca) {
   const idji = [...new Set(nastopiIgralca.map((a) => a.match_id))]
   const { data: tekme, error: e } = await db

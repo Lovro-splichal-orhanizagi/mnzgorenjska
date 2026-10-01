@@ -1117,6 +1117,8 @@ preveri(
       // napake — zamude imajo svojo trditev nize.
       if (tabela === 'matches')
         return odgovor(moznosti.zamude ?? [])
+      // Vratarji z goli (preveri-podatke): privzeto jih ni.
+      if (tabela === 'player_overview') return odgovor(moznosti.strelci ?? [])
       if (tabela === 'players') {
         const od = Number(url.searchParams.get('offset') ?? 0)
         const koliko = Number(url.searchParams.get('limit') ?? 1000)
@@ -1166,6 +1168,14 @@ preveri(
     const izid = cli('preveri-podatke.mjs', [...igralci, ...vrhCenika], { zamude: zamuda })
     preveri('preverba javi tekmo, ki bi ze morala biti uvozena',
       izid.status === 1 && izid.stdout.includes('se ni uvozena'),
+      izid.stdout.trim().split('\n').slice(-1)[0])
+  }
+  // Vratar z goli je skoraj gotovo igralec iz polja (Labaška: 49 golov kot GK).
+  {
+    const strelci = [{ id: 22641, full_name: 'Labaška Martin', goals: 49, competition_id: 1 }]
+    const izid = cli('preveri-podatke.mjs', [...igralci, ...vrhCenika], { strelci })
+    preveri('preverba javi vratarja z goli',
+      izid.status === 1 && izid.stdout.includes('vratar-strelec') && izid.stdout.includes('Labaška'),
       izid.stdout.trim().split('\n').slice(-1)[0])
   }
 
