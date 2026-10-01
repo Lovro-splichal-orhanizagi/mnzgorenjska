@@ -953,6 +953,7 @@ export type Database = {
           cash: number
           competition_id: number
           created_at: string
+          display_name: string | null
           hisna: boolean
           id: number
           name: string
@@ -964,6 +965,7 @@ export type Database = {
           cash?: number
           competition_id?: number
           created_at?: string
+          display_name?: string | null
           hisna?: boolean
           id?: never
           name: string
@@ -975,6 +977,7 @@ export type Database = {
           cash?: number
           competition_id?: number
           created_at?: string
+          display_name?: string | null
           hisna?: boolean
           id?: never
           name?: string
@@ -4642,6 +4645,10 @@ export type Database = {
       }
       asistenca_odprta: { Args: { p_goal_id: number }; Returns: boolean }
       asistence_odprte_do: { Args: { p_match_id: number }; Returns: string }
+      ime_hisnega_lastnika: {
+        Args: { p_competition_id: number; p_id: number }
+        Returns: string
+      }
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
       je_poznavalec_lige: {
         Args: { p_competition_id: number }

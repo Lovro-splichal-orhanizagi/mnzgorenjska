@@ -1,4 +1,4 @@
-// Hišne ekipe: ekipe, ki jih odkrito vodi SLFF, da lige z eno samo ekipo
+// Hišne ekipe: ekipe, ki jih vodi SLFF, da lige z eno samo ekipo
 // niso prazne. Lastnik vseh je en sistemski profil "SLFF" (hisa@slff.eu,
 // brez prijave, brez pošte). V ligi štejejo kot vsaka druga ekipa; izbranost
 // igralcev, državna lestvica, e-pošta in mini lige jih ne vidijo (migracija
@@ -68,8 +68,8 @@ if (!Number.isInteger(NA_LIGO) || !Number.isInteger(RAZPON) || NA_LIGO - RAZPON 
 }
 
 const SISTEM_EMAIL = 'hisa@slff.eu'
-// Brez imena: hišna ekipa v lestvici nima vrstice lastnika (ne "SLFF" ne
-// izmišljene osebe). `display_name` je obvezen, zato prazen niz.
+// Sistemski profil ostane brez imena. Prikazni `display_name` vsaki hišni
+// ekipi ob nastanku dodeli baza (20260930160000); ne ustvari profila.
 const SISTEM_IME = ''
 
 const db = createClient(BASE, SERVICE, { auth: { persistSession: false } })
