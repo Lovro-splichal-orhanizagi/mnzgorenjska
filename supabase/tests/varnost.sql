@@ -634,9 +634,53 @@ insert into auth.users(id,email,raw_user_meta_data,created_at) values
  ('b8a06635-2322-4444-8c42-44e419f912ae','test-hisa@example.invalid','{"display_name":"SLFF"}',now()-interval '2 days');
 update profiles set brez_opomnikov=true where id='b8a06635-2322-4444-8c42-44e419f912ae';
 create temporary table uporabnikov_pred as select skupaj_uporabnikov() as n;
+-- Zaporedni ID-ji ne smejo ustvariti cele lige z istim priimkom ali samo polnimi imeni.
+create temporary table vzorec_hisnih_imen as
+select ime_hisnega_lastnika(n, -913001) as ime from generate_series(1,64) n;
+select pg_temp.preveri('hisna imena mesajo polna imena, vzdevke in stevilke',
+  (select count(*) filter (where ime like '% %') between 5 and 40
+      and count(*) filter (where ime !~ '[[:space:]]' and ime ~ '[0-9]') >= 5
+      and count(*) filter (where ime !~ '[[:space:]0-9]') >= 5
+      and count(distinct ime) >= 48 from vzorec_hisnih_imen));
+select pg_temp.preveri('zaporedne hisne ekipe imajo razlicne priimke',
+  (select count(distinct split_part(ime, ' ', 2)) >= 5
+     from vzorec_hisnih_imen where ime like '% %'));
 create temporary table hisne as
 select ustvari_hisno_ekipo('b8a06635-2322-4444-8c42-44e419f912ae', -913001, 'Hisna '||n, pg_temp.kader()) as id
   from generate_series(1,2) n;
+select pg_temp.preveri('nove hisne ekipe dobijo razlicni prikazni imeni',
+  (select count(distinct owner_name)=2 and bool_and(length(owner_name)>0 and owner_name<>'SLFF')
+     from fantasy_team_standings where fantasy_team_id in (select id from hisne)));
+update fantasy_teams set display_name='Testni Lastnik' where id=(select min(id) from hisne);
+select pg_temp.preveri('servis nastavi prikazno ime brez spremembe lastnistva',
+  (select owner_name='Testni Lastnik' from fantasy_team_standings where fantasy_team_id=(select min(id) from hisne))
+  and (select owner_id='b8a06635-2322-4444-8c42-44e419f912ae' from fantasy_teams where id=(select min(id) from hisne)));
+update fantasy_teams set display_name=null where id=(select min(id) from hisne);
+select pg_temp.preveri('hisna ekipa brez prikaznega imena ne pokaze sistemskega profila',
+  (select owner_name is null from fantasy_team_standings where fantasy_team_id=(select min(id) from hisne)));
+update fantasy_teams set display_name='Testni Lastnik' where id=(select min(id) from hisne);
+select pg_temp.preveri('cloveska ekipa ohrani ime profila',
+  (select owner_name='Adminov popravek' from fantasy_team_standings where fantasy_team_id=-913001)
+  and (select display_name is null from fantasy_teams where id=-913001));
+do $$
+begin
+  begin
+    update fantasy_teams set display_name='Prepovedano' where id=-913001;
+    raise exception 'Cloveska ekipa je sprejela display_name';
+  exception when check_violation then null;
+  end;
+  begin
+    update fantasy_teams set display_name='   ' where id=(select min(id) from hisne);
+    raise exception 'Prazno ime ni bilo zavrnjeno';
+  exception when check_violation then null;
+  end;
+end $$;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ae',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('niti lastnik hisne ekipe ne more urejati prikaznega imena',
+  $$update fantasy_teams set display_name='Napad' where owner_id=auth.uid()$$);
+reset role;
+select set_config('request.jwt.claim.sub','',true);
 select pg_temp.preveri('hisni lastnik ima vec ekip v isti ligi',
   (select count(*)=2 from fantasy_teams where hisna and competition_id=-913001
      and owner_id='b8a06635-2322-4444-8c42-44e419f912ae'));
@@ -657,6 +701,10 @@ select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab'
 set local role authenticated;
 select pg_temp.zavrnjeno('uporabnik si ne more ustvariti hisne ekipe',
   $$insert into fantasy_teams(owner_id,name,competition_id,hisna) values(auth.uid(),'Moja hisna',-913002,true)$$);
+select pg_temp.zavrnjeno('uporabnik ne more vpisati prikaznega imena ob nastanku',
+  $$insert into fantasy_teams(owner_id,name,competition_id,display_name) values(auth.uid(),'Napad',-913002,'Napad')$$);
+select pg_temp.zavrnjeno('uporabnik ne more urejati prikaznega imena',
+  $$update fantasy_teams set display_name='Napad' where id=-913001$$);
 select pg_temp.zavrnjeno('uporabnik ne more oznaciti ekipe za hisno',
   $$update fantasy_teams set hisna=true where id=-913001$$);
 select pg_temp.zavrnjeno('uporabnik ne more klicati ustvari_hisno_ekipo',
@@ -689,6 +737,15 @@ select zakleni_krog(-913004);
 select pg_temp.preveri('hisne ekipe so v posnetku naslednjega kroga',
   (select count(distinct fantasy_team_id)=2 from fantasy_lineups
     where round_id=-913004 and player_id=-913002 and fantasy_team_id in (select id from hisne)));
+insert into player_scores(player_id, round_id, points) values(-913001, -913004, 2)
+  on conflict(player_id, round_id) do update set points=excluded.points;
+select pg_temp.preveri('lestvica kroga prikaze isto hisno ime',
+  (select owner_name='Testni Lastnik' from fantasy_round_standings
+    where round_id=-913004 and fantasy_team_id=(select min(id) from hisne)));
+update fantasy_teams set display_name=null where id=(select min(id) from hisne);
+select pg_temp.preveri('lestvica kroga izpusti odstranjeno ime',
+  (select owner_name is null from fantasy_round_standings
+    where round_id=-913004 and fantasy_team_id=(select min(id) from hisne)));
 select pg_temp.preveri('hisne ekipe nimajo posnetka za nazaj',
   not exists (select 1 from fantasy_lineups fl join rounds r on r.id=fl.round_id
                where r.number < 5 and fl.fantasy_team_id in (select id from hisne)));

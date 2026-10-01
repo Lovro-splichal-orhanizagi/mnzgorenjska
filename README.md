@@ -130,7 +130,7 @@ rezervnih igralcev.
 | `goals` | Posamezni gol (strelec, minuta, 11m, avtogol, potrjena asistenca) |
 | `assist_votes` | Glasovi skupnosti o asistenci |
 | `position_votes` | Glasovi skupnosti o poziciji |
-| `fantasy_teams` / `fantasy_roster` | Ekipe uporabnikov in njihovi nabori (kapetan, namestnik, vrstni red klopi); `hisna` = hišna ekipa SLFF (glej CLAUDE.md) |
+| `fantasy_teams` / `fantasy_roster` | Ekipe uporabnikov in njihovi nabori (kapetan, namestnik, vrstni red klopi); `hisna` = hišna ekipa SLFF; neobvezni servisni `display_name` je prikazno ime lastnika samo te ekipe (glej CLAUDE.md) |
 | `fantasy_chips` | Vloženi pripomočki ekipe (`klop_plus`, `wildcard`) — vsak enkrat na sezono (`season` iz kroga) |
 | `fantasy_lineups` | Posnetek postave ob roku kroga — po njem preteklih krogov ni več mogoče popravljati |
 | `teams.logo_url` | Grb kluba; brez njega aplikacija nariše ščit z začetnicami |
