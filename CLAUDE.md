@@ -618,3 +618,10 @@ update competitions set active = true where slug in ('lj-1-liga','lj-2-liga');
   adminu, ne objava. Števci so dnevni seštevki v `sponsor_stats`, ne dogodki.
 - Na trg sodijo samo aktivni igralci (`player_overview.active`) — kader z
   neaktivnim igralcem `roster_je_veljaven` zavrne in ekipa tiho ostane brez točk.
+- **Klub izstopi med sezono** (Tržič 2012, mladinci, 2026/27): igralcev **ne**
+  deaktiviraj (cela ekipa bi izgubila točke kroga), ampak poženi delovni tok
+  *Izstop kluba* (`scripts/izstop-kluba.mjs`, najprej `suho`). `izstop_kluba()`
+  nastavi `players.izstopil_at` — kdor igralca ima, ga obdrži, `shrani_ekipo`
+  ga na novo ne proda nikomur, trg ga skrije, lastnik vidi opozorilo in dobi
+  e-mail — in izbriše neodigrane tekme kluba. Odigrane tekme in točke ostanejo,
+  tudi če zveza izide kluba na lestvici razveljavi.

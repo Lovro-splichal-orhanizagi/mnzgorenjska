@@ -77,8 +77,14 @@ interface IgralecTrga {
   minutes?: number | null
   goals?: number | null
   active?: boolean | null
+  /** Klub je izstopil iz lige: kdor igralca ima, ga obdrži, kupiti ga ne more nihče. */
+  izstopil_at?: string | null
   [k: string]: any
 }
+
+/** Ali se igralca da kupiti: aktiven in klub ni izstopil iz lige. */
+const naTrgu = (i: { active?: boolean | null; izstopil_at?: string | null }) =>
+  i.active !== false && !i.izstopil_at
 
 /** Vrstica kadra, kakor jo hrani stran pred shranjevanjem. */
 interface VrsticaKadra {
@@ -507,7 +513,7 @@ export default function MojaEkipa() {
           supabase
             .from('player_overview')
             .select(
-              'id, full_name, position, team_id, team_name, team_short, team_logo, value, points, goals, minutes, active',
+              'id, full_name, position, team_id, team_name, team_short, team_logo, value, points, goals, minutes, active, izstopil_at',
             )
             .eq('competition_id', ligaId)
             .order('value', { ascending: false })
@@ -906,7 +912,7 @@ export default function MojaEkipa() {
   const klubi = useMemo(() => {
     const m = new Map<number, string>()
     for (const i of igralci)
-      if (i.team_id != null && i.team_name && i.active !== false)
+      if (i.team_id != null && i.team_name && naTrgu(i))
         m.set(i.team_id, i.team_name)
     return [...m.entries()].sort((a, b) => a[1].localeCompare(b[1], lokale()))
   }, [igralci])
@@ -961,7 +967,7 @@ export default function MojaEkipa() {
     const predlog = predlagajKader(
       igralci.filter(
         (i) =>
-          i.active !== false &&
+          naTrgu(i) &&
           odsotni[i.id]?.kind !== 'poskodba' &&
           odsotni[i.id]?.kind !== 'odsotnost',
       ),
@@ -996,7 +1002,7 @@ export default function MojaEkipa() {
     const dopolnjen = dopolniKader(
       igralci.filter(
         (i) =>
-          i.active !== false &&
+          naTrgu(i) &&
           odsotni[i.id]?.kind !== 'poskodba' &&
           odsotni[i.id]?.kind !== 'odsotnost',
       ),
@@ -1386,11 +1392,12 @@ export default function MojaEkipa() {
     )
 
   // Neaktivnega igralca (klub letos ne igra, igralec je odšel) na trgu ni:
-  // kader z njim je neveljaven in ekipi tiho vzame vse točke kroga. V kadru,
-  // če je nekdo tja prišel prej, ostane viden — sicer bi z igrišča izginil.
+  // kader z njim je neveljaven in ekipi tiho vzame vse točke kroga. Igralca
+  // izstopljenega kluba tudi ne — ne bo več igral. V kadru, če je nekdo tja
+  // prišel prej, ostane viden — sicer bi z igrišča izginil.
   const vidni = igralci
     .filter((i) => {
-      if (i.active === false && !izbrani.some((s) => s.player_id === i.id))
+      if (!naTrgu(i) && !izbrani.some((s) => s.player_id === i.id))
         return false
       if (filterKlub !== 'vsi' && String(i.team_id) !== filterKlub) return false
       if (filterPoz !== 'vse' && i.position !== filterPoz) return false
@@ -2605,7 +2612,7 @@ function TrgIgralcev({
                         {odsotni[i.id].kind === 'poskodba' ? '🩹' : '🚫'}
                       </span>
                     )}
-                    {i.active === false && (
+                    {!naTrgu(i) && (
                       <span className="znacka ml-1.5 bg-rose-500/20 align-middle text-[10px] text-rose-200">
                         {t('mojaEkipa.trg.niVecVLigi')}
                       </span>

@@ -141,6 +141,30 @@ select pg_temp.preveri('drug zapis ID-ja ohrani prvotno nakupno ceno in pozicijo
 reset role;
 update players set value=6, position='GK' where id=-913001;
 
+-- Klub izstopi iz lige: kdor igralca ima, ga obdrzi (kader ostane veljaven),
+-- na novo ga ne kupi nihce — tudi ne isti lastnik, ko ga je enkrat prodal.
+update players set izstopil_at=now() where id=-913015;
+set local role authenticated;
+select shrani_ekipo(-913001, pg_temp.kader());
+select pg_temp.preveri('igralec izstopljenega kluba ostane v kadru, kader je veljaven',
+  roster_je_veljaven(-913001)
+  and exists(select 1 from fantasy_roster where fantasy_team_id=-913001 and player_id=-913015));
+select shrani_ekipo(-913001, (select jsonb_agg(e) from jsonb_array_elements(pg_temp.kader()) e
+                               where (e->>'player_id')::bigint <> -913015));
+do $$
+begin
+  perform shrani_ekipo(-913001, pg_temp.kader());
+  perform pg_temp.preveri('igralca izstopljenega kluba ni mogoce kupiti na novo', false);
+exception when others then
+  perform pg_temp.preveri('igralca izstopljenega kluba ni mogoce kupiti na novo',
+    sqlerrm like 'Klub je izstopil iz lige%');
+end $$;
+reset role;
+update players set izstopil_at=null where id=-913015;
+set local role authenticated;
+select shrani_ekipo(-913001, pg_temp.kader());
+reset role;
+
 -- Veljaven kader se mora posneti PRED prvim shranjevanjem po roku, tudi
 -- kadar cron se ni tekel. Naslednji kader je osnutek za prihodnji krog.
 update rounds set deadline_at=clock_timestamp()-interval '1 millisecond' where id=-913002;

@@ -17,7 +17,8 @@ import { prevediRazlog } from '../../supabase/functions/posli-opomnik/sporocila.
 export interface OpozoriloIgralca {
   player_id: number
   ime: string | null
-  vrsta: 'poskodba' | 'odsotnost'
+  /** `izstop`: klub je izstopil iz lige, igralec ne bo več igral. */
+  vrsta: 'poskodba' | 'odsotnost' | 'izstop'
   opis: string | null
   datum: string
   v_postavi: boolean
@@ -54,11 +55,11 @@ export function kljucOpozorila(ekipa: number, o: OpozoriloIgralca): string {
 
 function stavekIgralca(o: OpozoriloIgralca): { besedilo: string; posledica: string } {
   const ime = prikazniIme(o.ime) || t('mojaEkipa.igralec')
-  const vrsta = o.vrsta === 'poskodba' ? 'poskodba' : 'odsotnost'
+  const vrsta = o.vrsta === 'poskodba' || o.vrsta === 'izstop' ? o.vrsta : 'odsotnost'
   const vloga = o.kapetan ? 'kapetan' : o.namestnik ? 'namestnik' : o.v_postavi ? 'vPostavi' : 'naKlopi'
   return {
     besedilo: t(`mojaEkipa.opozorila.igralec.${vloga}.${vrsta}`, { ime }),
-    posledica: t(`mojaEkipa.opozorila.posledica.${vloga}`),
+    posledica: t(`mojaEkipa.opozorila.posledica.${vrsta === 'izstop' ? 'izstop' : vloga}`),
   }
 }
 

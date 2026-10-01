@@ -1743,6 +1743,7 @@ export type Database = {
           first_name: string
           full_name: string | null
           id: number
+          izstopil_at: string | null
           last_name: string
           nzs_birth_year: number | null
           nzs_confirmed_at: string | null
@@ -1768,6 +1769,7 @@ export type Database = {
           first_name: string
           full_name?: string | null
           id?: never
+          izstopil_at?: string | null
           last_name: string
           nzs_birth_year?: number | null
           nzs_confirmed_at?: string | null
@@ -1793,6 +1795,7 @@ export type Database = {
           first_name?: string
           full_name?: string | null
           id?: never
+          izstopil_at?: string | null
           last_name?: string
           nzs_birth_year?: number | null
           nzs_confirmed_at?: string | null
@@ -3816,6 +3819,7 @@ export type Database = {
           full_name: string | null
           goals: number | null
           id: number | null
+          izstopil_at: string | null
           last_name: string | null
           matches: number | null
           minutes: number | null
@@ -4643,6 +4647,10 @@ export type Database = {
       asistenca_odprta: { Args: { p_goal_id: number }; Returns: boolean }
       asistence_odprte_do: { Args: { p_match_id: number }; Returns: string }
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
+      izstop_kluba: {
+        Args: { p_competition_id: number; p_team_id: number }
+        Returns: Json
+      }
       je_poznavalec_lige: {
         Args: { p_competition_id: number }
         Returns: boolean
@@ -4652,6 +4660,7 @@ export type Database = {
         Returns: {
           display_name: string
           email: string
+          jezik: string
           team_id: number
           user_id: string
         }[]

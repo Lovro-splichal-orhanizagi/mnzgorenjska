@@ -352,18 +352,22 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
       kapetan: {
         poskodba: 'Kapitán {ime} je zranený.',
         odsotnost: 'Kapitán {ime} bude chýbať.',
+        izstop: 'Kapitán {ime} už nebude hrať — jeho klub odstúpil zo súťaže.',
       },
       namestnik: {
         poskodba: 'Zástupca kapitána {ime} je zranený.',
         odsotnost: 'Zástupca kapitána {ime} bude chýbať.',
+        izstop: 'Zástupca kapitána {ime} už nebude hrať — jeho klub odstúpil zo súťaže.',
       },
       vPostavi: {
         poskodba: '{ime} je zranený a je v základnej zostave.',
         odsotnost: '{ime} bude chýbať a je v základnej zostave.',
+        izstop: '{ime} v základnej zostave už nebude hrať — jeho klub odstúpil zo súťaže.',
       },
       naKlopi: {
         poskodba: '{ime} na lavičke je zranený.',
         odsotnost: '{ime} na lavičke bude chýbať.',
+        izstop: '{ime} na lavičke už nebude hrať — jeho klub odstúpil zo súťaže.',
       },
     },
     posledica: {
@@ -371,6 +375,7 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
       namestnik: 'Ak nehrá ani kapitán, ani jeho zástupca, trojnásobok bodov nebude.',
       vPostavi: 'Ak nehrá, nahradí ho prvý hráč z lavičky na rovnakej pozícii.',
       naKlopi: 'Pri automatickom striedaní ho systém preskočí, ak nehrá.',
+      izstop: 'Body za neho už nezískaš — vymeň ho. Tím s ním zostáva platný.',
     },
   },
 }

@@ -22,6 +22,7 @@ import {
   sestaviOpomnik,
   sestaviOpomnikBrezLige,
   sestaviOpozorilo,
+  sestaviIzstopKluba,
   sestaviPopravekPozicije,
   sestaviPoznavalca,
   type Liga,
@@ -48,7 +49,9 @@ interface Zahteva {
   // 'poznavalec' — odobrena prosnja: enemu cloveku (user_id), samo admin
   // 'popravek-pozicije' — lastnikom ekip z igralci iz `player_ids`, ki smo
   //   jim popravili napacno pozicijo (lazni vratarji); samo urnik
-  vrsta?: 'opomnik' | 'opozorilo' | 'poznavalec' | 'popravek-pozicije'
+  // 'izstop-kluba' — lastnikom ekip z igralci kluba, ki je izstopil iz lige
+  //   (`players.izstopil_at`); samo urnik
+  vrsta?: 'opomnik' | 'opozorilo' | 'poznavalec' | 'popravek-pozicije' | 'izstop-kluba'
   user_id?: string
   player_ids?: number[]
   obseg?: 'klub' | 'liga'
@@ -221,17 +224,30 @@ Deno.serve(async (req) => {
     return json({ test: true, resend: rez })
   }
 
-  // Popravek pozicije: en mail na ekipo, ki ima v kadru popravljenega
-  // igralca. Enkratno obvestilo, zato ga pošlje le stroj (delovni tok
-  // `popravek-pozicij.yml`), vsakemu lastniku v ligi največ enkrat.
-  if (vrsta === 'popravek-pozicije') {
-    if (!jeStroj) return json({ error: 'Popravek pozicij poslje samo delovni tok.' }, 403)
-    const ids = (vhod.player_ids ?? []).filter((x) => Number.isInteger(x))
+  // Enkratni obvestili lastnikom ekip z dolocenimi igralci v kadru — en mail
+  // na ekipo. Poslje ju le stroj (delovna tokova `popravek-pozicij.yml` in
+  // `izstop-kluba.yml`).
+  //   popravek-pozicije: igralci iz `player_ids` (lazni vratarji); vsakemu
+  //     lastniku v ligi najvec enkrat,
+  //   izstop-kluba: igralci z `izstopil_at`; lastniku znova le, ce je od
+  //     zadnjega maila izstopil se kak klub.
+  if (vrsta === 'popravek-pozicije' || vrsta === 'izstop-kluba') {
+    if (!jeStroj) return json({ error: 'Enkratno obvestilo poslje samo delovni tok.' }, 403)
+    let ids = (vhod.player_ids ?? []).filter((x) => Number.isInteger(x))
+    if (vrsta === 'izstop-kluba') {
+      const { data: izst, error: eIzst } = await service
+        .from('players').select('id')
+        .eq('competition_id', competition_id)
+        .not('izstopil_at', 'is', null)
+      if (eIzst) return json({ error: eIzst.message }, 500)
+      ids = (izst ?? []).map((x) => x.id)
+      if (!ids.length) return json({ suho, kandidati_stevilo: 0 })
+    }
     if (!ids.length) return json({ error: 'Manjka player_ids.' }, 400)
 
     const { data: vrstice, error } = await service
       .from('fantasy_roster')
-      .select('fantasy_team_id, players!inner(full_name, position), fantasy_teams!inner(name, owner_id, competition_id)')
+      .select('fantasy_team_id, players!inner(full_name, position, izstopil_at, teams(name)), fantasy_teams!inner(name, owner_id, competition_id)')
       .in('player_id', ids)
       .eq('fantasy_teams.competition_id', competition_id)
       // Hišne ekipe SLFF nimajo lastnika, ki bi mu pisali.
@@ -239,13 +255,18 @@ Deno.serve(async (req) => {
     if (error) return json({ error: error.message }, 500)
 
     const poEkipi = new Map<number, {
-      owner_id: string; team_name: string | null; igralci: Array<{ ime: string; pozicija: string | null }>
+      owner_id: string
+      team_name: string | null
+      igralci: Array<{ ime: string; pozicija: string | null; klub: string | null }>
+      zadnjiIzstop: string | null
     }>()
     // deno-lint-ignore no-explicit-any
     for (const v of (vrstice ?? []) as any[]) {
       const e = poEkipi.get(v.fantasy_team_id) ??
-        { owner_id: v.fantasy_teams.owner_id, team_name: v.fantasy_teams.name, igralci: [] }
-      e.igralci.push({ ime: v.players.full_name, pozicija: v.players.position })
+        { owner_id: v.fantasy_teams.owner_id, team_name: v.fantasy_teams.name, igralci: [], zadnjiIzstop: null }
+      e.igralci.push({ ime: v.players.full_name, pozicija: v.players.position, klub: v.players.teams?.name ?? null })
+      const izst: string | null = v.players.izstopil_at
+      if (izst && (!e.zadnjiIzstop || izst > e.zadnjiIzstop)) e.zadnjiIzstop = izst
       poEkipi.set(v.fantasy_team_id, e)
     }
 
@@ -255,10 +276,12 @@ Deno.serve(async (req) => {
 
     const rezultati: Array<{ ekipa: number; ok: boolean; razlog?: string }> = []
     for (const [ekipa, e] of poEkipi) {
-      const { data: ze } = await service
+      let zeQ = service
         .from('email_log').select('id')
-        .eq('user_id', e.owner_id).eq('vrsta', 'popravek-pozicije')
-        .eq('competition_id', competition_id).is('napaka', null).limit(1)
+        .eq('user_id', e.owner_id).eq('vrsta', vrsta)
+        .eq('competition_id', competition_id).is('napaka', null)
+      if (vrsta === 'izstop-kluba' && e.zadnjiIzstop) zeQ = zeQ.gte('poslano_at', e.zadnjiIzstop)
+      const { data: ze } = await zeQ.limit(1)
       if (ze?.length) {
         rezultati.push({ ekipa, ok: false, razlog: 'že poslano' })
         continue
@@ -276,13 +299,16 @@ Deno.serve(async (req) => {
         RESEND_KEY!,
         EMAIL_FROM,
         email,
-        sestaviPopravekPozicije(liga, { display_name: pr?.display_name ?? null, team_name: e.team_name, igralci: e.igralci }),
+        (vrsta === 'izstop-kluba' ? sestaviIzstopKluba : sestaviPopravekPozicije)(
+          liga,
+          { display_name: pr?.display_name ?? null, team_name: e.team_name, igralci: e.igralci },
+        ),
         Deno.env.get('EMAIL_REPLY_TO'),
       )
       await service.from('email_log').insert({
         user_id: e.owner_id,
         email,
-        vrsta: 'popravek-pozicije',
+        vrsta,
         competition_id,
         resend_id: rez.id ?? null,
         napaka: rez.napaka ?? null,

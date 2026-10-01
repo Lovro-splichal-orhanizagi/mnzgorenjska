@@ -1,0 +1,50 @@
+name: Izstop kluba
+
+# Klub je med sezono izstopil iz lige. Igralci ostanejo v kadrih (ekipa je
+# veljavna), kupiti jih ne more nihce vec, neodigrane tekme kluba se izbrisejo
+# in lastniki ekip z igralci kluba dobijo e-mail. Glej scripts/izstop-kluba.mjs.
+# Samo rocni zagon: najprej s `suho: true`, ki presteje, nato zares. Ponovni
+# zagon ne podvoji poste.
+on:
+  workflow_dispatch:
+    inputs:
+      liga:
+        description: 'Slug tekmovanja (npr. mladinci)'
+        required: true
+        type: string
+      klub:
+        description: 'Ime kluba (kot na lestvici, npr. Tržič 2012) ali njegov id'
+        required: true
+        type: string
+      suho:
+        description: 'Samo presteje, ne zapise in ne poslje'
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: izstop-kluba
+  cancel-in-progress: false
+
+jobs:
+  izstop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Izstop kluba
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          LIGA: ${{ inputs.liga }}
+          KLUB: ${{ inputs.klub }}
+          SUHO: ${{ inputs.suho }}
+        run: node scripts/izstop-kluba.mjs

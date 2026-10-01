@@ -383,6 +383,65 @@ export function sestaviPopravekPozicije(
   return { naslov: B.naslov, html }
 }
 
+// --- izstop kluba ------------------------------------------------------------
+//
+// Klub je med sezono izstopil iz lige (Tržič 2012, mladinci, 2026/27). Igralec
+// ostane v kadru in ekipa je z njim veljavna, točk pa ne bo več dobival —
+// lastnik mora to izvedeti, sicer igra z mrtvim mestom do konca sezone.
+
+export function sestaviIzstopKluba(
+  liga: Liga,
+  meta: {
+    display_name: string | null
+    team_name: string | null
+    igralci: Array<{ ime: string; klub?: string | null }>
+  },
+): Sporocilo {
+  const j = jezikLige(liga)
+  const p = povezave(liga.slug)
+  const ozn = liga.oznaka
+  const ekipa = esc(meta.team_name ?? '')
+  const klubi = [...new Set(meta.igralci.map((i) => i.klub).filter((k): k is string => !!k))]
+    .map((k) => `<strong>${esc(k)}</strong>`)
+    .join(', ')
+  const kdo = meta.igralci.map((i) => `<strong>${esc(i.ime)}</strong>`).join(', ')
+
+  const B = j === 'sk'
+    ? {
+        naslov: `SLFF ${ozn} — klub tvojho hráča odstúpil zo súťaže`,
+        glavno:
+          `Klub ${klubi} odstúpil zo súťaže. ` +
+          `${ekipa ? `V tíme <strong>${ekipa}</strong> máš` : 'V tíme máš'} jeho hráčov: ${kdo}.`,
+        body:
+          'Títo hráči už nebudú hrať, takže za nich už nezískaš body. Tím zostáva platný a ostatní hráči ' +
+          'body získavajú normálne — odporúčame ich však vymeniť pred najbližšou uzávierkou. ' +
+          'Body, ktoré už získali v odohraných zápasoch, ti zostávajú. Kúpiť ich už nemôže nikto.',
+        gumb: 'Vymeniť hráčov →',
+      }
+    : {
+        naslov: `SLFF ${ozn} — klub tvojega igralca je izstopil iz lige`,
+        glavno:
+          `Klub ${klubi} je izstopil iz lige. ` +
+          `${ekipa ? `V ekipi <strong>${ekipa}</strong> imaš` : 'V ekipi imaš'} njegove igralce: ${kdo}.`,
+        body:
+          'Ti igralci ne bodo več igrali, zato zanje ne boš več dobil točk. Ekipa ostane veljavna in ostali ' +
+          'igralci točke dobivajo normalno — priporočamo pa, da jih zamenjaš pred naslednjim rokom. ' +
+          'Točke, ki so jih že dobili na odigranih tekmah, ti ostanejo. Kupiti jih ne more nihče več.',
+        gumb: 'Zamenjaj igralce →',
+      }
+
+  const html = ovoj(
+    `<p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">${pozdrav(j, meta.display_name)}</p>
+      <p style="font-size: 15px; line-height: 1.5; margin: 0 0 12px;">${B.glavno}</p>
+      <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">${B.body}</p>
+      <p style="text-align: center; margin: 24px 0;">
+        <a href="${p.ekipa}" style="${GUMB}">${B.gumb}</a>
+      </p>`,
+    '',
+  )
+  return { naslov: B.naslov, html }
+}
+
 // --- razlog neveljavne ekipe ------------------------------------------------
 
 /** Slovaška množina: 1 / 2–4 / ostalo. */

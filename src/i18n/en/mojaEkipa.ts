@@ -358,18 +358,22 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
       kapetan: {
         poskodba: 'Captain {ime} is injured.',
         odsotnost: 'Captain {ime} is unavailable.',
+        izstop: 'Captain {ime} won’t play again — his club has withdrawn from the league.',
       },
       namestnik: {
         poskodba: 'Vice-captain {ime} is injured.',
         odsotnost: 'Vice-captain {ime} is unavailable.',
+        izstop: 'Vice-captain {ime} won’t play again — his club has withdrawn from the league.',
       },
       vPostavi: {
         poskodba: '{ime} is injured and in your starting XI.',
         odsotnost: '{ime} is unavailable and in your starting XI.',
+        izstop: '{ime} in your starting XI won’t play again — his club has withdrawn from the league.',
       },
       naKlopi: {
         poskodba: '{ime} on your bench is injured.',
         odsotnost: '{ime} on your bench is unavailable.',
+        izstop: '{ime} on your bench won’t play again — his club has withdrawn from the league.',
       },
     },
     posledica: {
@@ -377,6 +381,7 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
       namestnik: 'If neither the captain nor the vice-captain plays, there are no triple points.',
       vPostavi: 'If he doesn’t play, he’s replaced by the first bench player in the same position.',
       naKlopi: 'Automatic substitution will skip him if he doesn’t play.',
+      izstop: 'He won’t score any more points — replace him. Your team stays valid if you keep him.',
     },
   },
 }

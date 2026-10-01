@@ -345,6 +345,8 @@ async function naborLige(ligaId, sezona) {
       .select('id, full_name, team_id, position, value')
       .eq('competition_id', ligaId)
       .eq('active', true)
+      // Klub je izstopil iz lige: igralec ne bo vec igral, shrani_ekipo ga zavrne.
+      .is('izstopil_at', null)
       .not('position', 'is', null)
       .order('id')
       .range(od, do_),

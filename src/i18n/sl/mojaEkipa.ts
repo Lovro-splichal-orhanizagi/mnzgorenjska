@@ -364,18 +364,22 @@ export const mojaEkipa = {
       kapetan: {
         poskodba: 'Kapetan {ime} je poškodovan.',
         odsotnost: 'Kapetan {ime} je odsoten.',
+        izstop: 'Kapetan {ime} ne bo več igral — njegov klub je izstopil iz lige.',
       },
       namestnik: {
         poskodba: 'Namestnik kapetana {ime} je poškodovan.',
         odsotnost: 'Namestnik kapetana {ime} je odsoten.',
+        izstop: 'Namestnik kapetana {ime} ne bo več igral — njegov klub je izstopil iz lige.',
       },
       vPostavi: {
         poskodba: '{ime} je poškodovan in je v prvi postavi.',
         odsotnost: '{ime} je odsoten in je v prvi postavi.',
+        izstop: '{ime} v prvi postavi ne bo več igral — njegov klub je izstopil iz lige.',
       },
       naKlopi: {
         poskodba: '{ime} na klopi je poškodovan.',
         odsotnost: '{ime} na klopi je odsoten.',
+        izstop: '{ime} na klopi ne bo več igral — njegov klub je izstopil iz lige.',
       },
     },
     posledica: {
@@ -383,6 +387,7 @@ export const mojaEkipa = {
       namestnik: 'Če ne igrata ne kapetan ne namestnik, trojnih točk ni.',
       vPostavi: 'Če ne igra, ga zamenja prvi igralec z iste pozicije s klopi.',
       naKlopi: 'Pri samodejni menjavi ga bo sistem preskočil, če ne igra.',
+      izstop: 'Zanj ne boš več dobil točk — zamenjaj ga. Ekipa z njim ostane veljavna.',
     },
   },
 }
