@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useAuth } from '../lib/useAuth'
+import { jezik } from '../i18n/jedro.ts'
 
 /**
  * Klepet za podporo (HelpStack).
@@ -15,7 +16,15 @@ import { useAuth } from '../lib/useAuth'
  * treba vedeti, kdo pise, e-posta pa je vec, kot je za to potrebno. Kdor hoce
  * odgovor po posti, jo napise sam.
  */
-const WIDGET_ID = 'cmucx868b000cv2atsowgly81'
+// Vsak jezik ima svoj kanal v HelpStacku: slovaški ima slovaško bazo znanja
+// (pravila brez glasovanja o pozicijah — te pridejo iz zapisnika). Kdor
+// gleda slovaško ligo, dobi slovaški kanal; ostali (sl, en) slovenskega, ki
+// odgovarja v jeziku vprašanja.
+const KANALI: Record<string, string> = {
+  sl: 'cmucx868b000cv2atsowgly81',
+  sk: 'cmupjxbms00s0sz2cty78ex1j',
+}
+const WIDGET_ID = KANALI[jezik()] ?? KANALI.sl
 const SKRIPTA = `https://helpstack.eu/widget.js?id=${WIDGET_ID}`
 
 interface Klepet {
