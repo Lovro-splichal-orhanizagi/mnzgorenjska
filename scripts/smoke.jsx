@@ -1178,6 +1178,18 @@ preveri(
       izid.status === 1 && izid.stdout.includes('vratar-strelec') && izid.stdout.includes('Labaška'),
       izid.stdout.trim().split('\n').slice(-1)[0])
   }
+  // Igralec iz polja v vratih (Debeljak): uvoz ga ne prekrsti, preverba javi.
+  {
+    const zamude = [{
+      id: 2001, played_on: new Date().toISOString().slice(0, 10), imported_at: '2026-10-01',
+      import_warnings: ['v vratih, a vodimo ga v polju: Debeljak Matic (MID)'],
+      rounds: { competition_id: 1, competitions: { slug: 'preizkus', active: true } },
+    }]
+    const izid = cli('preveri-podatke.mjs', [...igralci, ...vrhCenika], { zamude })
+    preveri('preverba javi igralca iz polja v vratih',
+      izid.status === 1 && izid.stdout.includes('v-vratih-iz-polja') && izid.stdout.includes('Debeljak Matic (MID)'),
+      izid.stdout.trim().split('\n').slice(-1)[0])
+  }
 
   for (const moznosti of [{ napaka: true }, { prazno: true }, { brezIgralcev: true }]) {
     const izid = cli('pripravljenost-lige.mjs', [...igralci, ...vrhCenika], moznosti)

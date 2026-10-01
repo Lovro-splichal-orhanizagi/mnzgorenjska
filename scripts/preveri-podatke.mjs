@@ -174,6 +174,40 @@ else if (strelci?.length) {
   })
 }
 
+// Igralec iz polja, ki ga je zapisnik postavil v vrata (Debeljak, Polet). Uvoz
+// ga ne prekrsti več (ena pozicija na igralca), oznako pa zapiše med opozorila
+// tekme. Javimo zadnjih sedem dni, da se odloči človek.
+const { data: vVratih, error: napakaVVratih } = await db
+  .from('matches')
+  .select('id, played_on, import_warnings, rounds!inner(competitions!inner(slug, active))')
+  .gte('played_on', new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10))
+  .not('import_warnings', 'is', null)
+  .order('played_on', { ascending: false })
+  .limit(1000)
+if (napakaVVratih)
+  tezave.push({
+    kljuc: 'v-vratih-iz-polja-neznano',
+    opis: 'Preverbe igralcev iz polja v vratih ni bilo mogoce pognati',
+    koliko: 1,
+    primer: napakaVVratih.message,
+  })
+else {
+  const primeri = []
+  for (const m of vVratih ?? []) {
+    if (!m.rounds?.competitions?.active) continue
+    for (const o of m.import_warnings ?? [])
+      if (typeof o === 'string' && o.startsWith('v vratih, a vodimo ga v polju'))
+        primeri.push(`${m.rounds.competitions.slug}: ${o.split(': ').slice(1).join(': ')} (tekma ${m.id}, ${m.played_on})`)
+  }
+  if (primeri.length)
+    tezave.push({
+      kljuc: 'v-vratih-iz-polja',
+      opis: 'Igralec iz polja je bil v zapisniku vratar (zadnjih 7 dni) — pozicija ostane, preveri',
+      koliko: primeri.length,
+      primer: primeri.slice(0, 5).join('; '),
+    })
+}
+
 // --- izpis ------------------------------------------------------------------
 if (!tezave.length) {
   console.log(`Vse v redu — ${(lige ?? []).length} vklopljenih lig, nobene težave.`)

@@ -171,10 +171,13 @@ function razdeliIme(polno) {
  * zato ju v takem primeru ločimo še po številki dresa. Številke ne uporabimo
  * vedno, ker isti igralec med sezono lahko zamenja dres.
  */
+/** Začetek opozorila, ki ga preveri-podatke išče v `matches.import_warnings`. */
+const VRATAR_IZ_POLJA = 'v vratih, a vodimo ga v polju'
+
 async function igralecId(
   teamId,
   polnoIme,
-  { vratar, st, dvoumno = false, zasedeni = null, regSt = null, pozicija = null },
+  { vratar, st, dvoumno = false, zasedeni = null, regSt = null, pozicija = null, opozorila = null },
 ) {
   // Oznaka vratarja iz enega zapisnika naredi vratarja le igralca, čigar
   // pozicije še ne poznamo (ali je ugibana). Znanega igralca iz polja ne
@@ -184,6 +187,12 @@ async function igralecId(
   const smeVVrata = (p) =>
     p.position_source !== 'admin' &&
     (p.position == null || ['neznano', 'ugibanje'].includes(p.position_source))
+  // Igralec, ki je enkrat v vratih, drugič v polju (Debeljak, Polet), ima
+  // eno samo pozicijo. Oznako zabeležimo: preveri-podatke jo javi na Discord.
+  const javiVratarjaIzPolja = (p) => {
+    if (vratar && p.position && p.position !== 'GK' && !smeVVrata(p))
+      opozorila?.push(`${VRATAR_IZ_POLJA}: ${polnoIme} (${p.position})`)
+  }
 
   // Registrska stevilka NZS je edina zanesljiva identiteta, kar jih vir lahko
   // da: enolicna je za cloveka, prezivi prestop in menjavo dresa. Kjer je na
@@ -206,6 +215,7 @@ async function igralecId(
       const popravek = {}
       if (poReg.team_id !== teamId) popravek.team_id = teamId
       if (st != null) popravek.shirt_number = st
+      javiVratarjaIzPolja(poReg)
       if (vratar && smeVVrata(poReg)) {
         popravek.position = 'GK'
         popravek.position_source = 'zapisnik'
@@ -337,6 +347,7 @@ async function igralecId(
 
   if (obstoj) {
     igralci.set(kljuc, obstoj.id)
+    javiVratarjaIzPolja(obstoj)
     // vratar iz zapisnika povozi ugibanje
     if (vratar && smeVVrata(obstoj))
       await db
@@ -644,6 +655,7 @@ for (const { id, z, url } of zapisniki) {
         zasedeni,
         regSt: x.regSt ?? null,
         pozicija: x.pozicija ?? null,
+        opozorila: z.opozorila,
       })
       zasedeni.add(pId)
       idPoStevilki.set(`${x.ekipaIdx}|${x.st}`, pId)
