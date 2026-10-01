@@ -6,6 +6,10 @@
 //
 // Dokler nastavitev `sponzorji_vidni` ni 1, se na strani ne pokaze nic —
 // tukaj se sponzorje pripravi, vklopi pa jih stikalo.
+//
+// Mesta (domov, lestvica …) se nastavijo po sponzorju; ob vsakem je
+// statistika po mestih: prikazi (mesto vsaj do polovice na zaslonu), kliki,
+// delez klikov in zadnjih 7 dni.
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useTekmovanje } from '../../lib/tekmovanje'
@@ -28,7 +32,32 @@ interface Sponzor {
   opomba: string | null
   prikazov: number
   klikov: number
+  mesta: string[]
+  slika_url: string | null
 }
+
+interface PoMestu {
+  sponsor_id: number
+  mesto: string
+  prikazov: number
+  klikov: number
+  prikazov_7: number
+  klikov_7: number
+}
+
+// Vrstni red in imena mest; kljuci so isti kot v `sponsors.mesta`.
+const MESTA: [string, string][] = [
+  ['domov', 'Domov'],
+  ['lestvica', 'Lestvica'],
+  ['moja_ekipa', 'Moja ekipa'],
+  ['rezultati', 'Rezultati'],
+  ['igralci', 'Igralci'],
+]
+const imeMesta = (k: string) => MESTA.find(([m]) => m === k)?.[1] ?? k
+
+/** Delež klikov v odstotkih, na eno decimalko. */
+const delez = (klikov: number, prikazov: number) =>
+  prikazov ? `${((klikov / prikazov) * 100).toFixed(1).replace('.', ',')} %` : '—'
 
 // Povezava sponzorja se izriše kot <a href>: `javascript:` ali `data:` bi
 // na klik pognal kodo v strani. Zato le http(s).
@@ -52,12 +81,14 @@ const PRAZEN = {
   slika_url: '',
   doseg: '',
   opomba: '',
+  mesta: ['domov', 'lestvica'] as string[],
 }
 
 export default function Sponzorji() {
   const { vsaTekmovanja: tekmovanja } = useTekmovanje()
   const [sponzorji, setSponzorji] = useState<Sponzor[] | null>(null)
   const [vidni, setVidni] = useState(false)
+  const [poMestih, setPoMestih] = useState<PoMestu[]>([])
   const [nov, setNov] = useState(PRAZEN)
   const [napaka, setNapaka] = useState<string | null>(null)
   const [odprto, setOdprto] = useState(false)
@@ -66,12 +97,14 @@ export default function Sponzorji() {
   const [delam, setDelam] = useState(false)
 
   const nalozi = useCallback(async () => {
-    const [{ data, error }, { data: n }] = await Promise.all([
+    const [{ data, error }, { data: n }, { data: m }] = await Promise.all([
       supabase.rpc('admin_sponzorji'),
       supabase.from('settings').select('value').eq('key', 'sponzorji_vidni').maybeSingle(),
+      supabase.rpc('admin_sponzorji_po_mestih'),
     ])
     if (error) return setNapaka(error.message)
     setSponzorji((data ?? []) as Sponzor[])
+    setPoMestih((m ?? []) as PoMestu[])
     setVidni(String(n?.value ?? '0') === '1')
   }, [])
 
@@ -164,6 +197,7 @@ export default function Sponzorji() {
       claim: nov.claim.trim() || null,
       logo_url: nov.logo_url.trim() || null,
       slika_url: nov.slika_url.trim() || null,
+      mesta: nov.mesta,
       opomba: nov.opomba.trim() || null,
       competition_id,
       federation_id,
@@ -180,6 +214,19 @@ export default function Sponzorji() {
       const { error } = await supabase
         .from('sponsors')
         .update({ active: !s.active, updated_at: new Date().toISOString() })
+        .eq('id', s.id)
+      if (error) return setNapaka(error.message)
+      await nalozi()
+    })
+
+  const preklopiMesto = (s: Sponzor, mesto: string) =>
+    zDelom(async () => {
+      const mesta = s.mesta.includes(mesto)
+        ? s.mesta.filter((m) => m !== mesto)
+        : MESTA.map(([m]) => m).filter((m) => m === mesto || s.mesta.includes(m))
+      const { error } = await supabase
+        .from('sponsors')
+        .update({ mesta, updated_at: new Date().toISOString() })
         .eq('id', s.id)
       if (error) return setNapaka(error.message)
       await nalozi()
@@ -235,7 +282,7 @@ export default function Sponzorji() {
                 )}
               </div>
               <span className="shrink-0 text-xs text-slate-500 tabular-nums">
-                {s.prikazov} prikazov · {s.klikov} klikov
+                {s.prikazov} prikazov · {s.klikov} klikov · {delez(s.klikov, s.prikazov)}
               </span>
               <button
                 onClick={() => preklopi(s)}
@@ -251,6 +298,57 @@ export default function Sponzorji() {
               >
                 izbriši
               </button>
+              <div className="flex w-full flex-wrap items-center gap-1.5">
+                <span className="text-xs text-slate-500">Mesta:</span>
+                {MESTA.map(([m, ime]) => (
+                  <button
+                    key={m}
+                    onClick={() => preklopiMesto(s, m)}
+                    disabled={delam}
+                    aria-pressed={s.mesta.includes(m)}
+                    className={`rounded-full px-2 py-0.5 text-xs disabled:opacity-50 ${
+                      s.mesta.includes(m)
+                        ? 'bg-gnl-500/25 text-gnl-200'
+                        : 'bg-white/5 text-slate-500 hover:bg-white/10'
+                    }`}
+                  >
+                    {ime}
+                  </button>
+                ))}
+                {s.mesta.length === 0 && (
+                  <span className="text-xs text-amber-300">brez mesta — ni prikazan nikjer</span>
+                )}
+              </div>
+              {poMestih.some((v) => v.sponsor_id === s.id) && (
+                <div className="w-full overflow-x-auto">
+                  <table className="w-full min-w-[26rem] text-xs tabular-nums">
+                    <thead>
+                      <tr className="text-left text-slate-500">
+                        <th className="py-1 pr-2 font-semibold">Mesto</th>
+                        <th className="py-1 pr-2 text-right font-semibold">Prikazi</th>
+                        <th className="py-1 pr-2 text-right font-semibold">Kliki</th>
+                        <th className="py-1 pr-2 text-right font-semibold">Delež</th>
+                        <th className="py-1 text-right font-semibold">Zadnjih 7 dni</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5 text-slate-300">
+                      {poMestih
+                        .filter((v) => v.sponsor_id === s.id)
+                        .map((v) => (
+                          <tr key={v.mesto}>
+                            <td className="py-1 pr-2">{imeMesta(v.mesto)}</td>
+                            <td className="py-1 pr-2 text-right">{v.prikazov}</td>
+                            <td className="py-1 pr-2 text-right">{v.klikov}</td>
+                            <td className="py-1 pr-2 text-right">{delez(v.klikov, v.prikazov)}</td>
+                            <td className="py-1 text-right text-slate-400">
+                              {v.prikazov_7} / {v.klikov_7}
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
               {brisem === s.id && (
                 <div className="w-full">
                   <Potrditev
@@ -336,6 +434,26 @@ export default function Sponzorji() {
               placeholder="Interna opomba (kontakt, cena)"
               className="rounded-lg border border-white/10 bg-slate-900 px-2 py-1.5 text-sm"
             />
+          </div>
+          <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
+            <span>Mesta:</span>
+            {MESTA.map(([m, ime]) => (
+              <label key={m} className="flex items-center gap-1.5">
+                <input
+                  type="checkbox"
+                  checked={nov.mesta.includes(m)}
+                  onChange={(e) =>
+                    setNov({
+                      ...nov,
+                      mesta: e.target.checked
+                        ? MESTA.map(([k]) => k).filter((k) => k === m || nov.mesta.includes(k))
+                        : nov.mesta.filter((k) => k !== m),
+                    })
+                  }
+                />
+                {ime}
+              </label>
+            ))}
           </div>
           <div className="flex gap-2">
             <button onClick={dodaj} disabled={delam} className="gumb-glavni text-sm disabled:opacity-50">

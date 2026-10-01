@@ -601,7 +601,7 @@ export default function Lestvica() {
 
       {/* Sponzorsko mesto. Dokler `sponzorji_vidni` ni 1, se ne izriše nič —
           stoji pod lestvico, ne nad njo. */}
-      <Sponzor />
+      <Sponzor kje="lestvica" />
     </div>
   )
 }

@@ -623,7 +623,13 @@ update competitions set active = true where slug in ('lj-1-liga','lj-2-liga');
 - Sponzorska mesta (`sponsors`) imajo hierarhičen doseg: liga > zveza >
   država > vsi, najbolj določen zadetek zmaga (`sponzorji_za(liga)`). Nič se
   ne prikaže, dokler nastavitev `sponzorji_vidni` ni 1 — vklop je stikalo v
-  adminu, ne objava. Števci so dnevni seštevki v `sponsor_stats`, ne dogodki.
+  adminu, ne objava. Števci so dnevni seštevki v `sponsor_stats` po mestu,
+  ne dogodki. Mesta (`sponsors.mesta`: domov, lestvica, moja_ekipa,
+  rezultati, igralci) nastavi admin po sponzorju; na strani je
+  `<Sponzor kje="…" />`. Prikaz se šteje, ko je mesto vsaj do polovice na
+  zaslonu, klik ob kliku. Klic Supabase se izvede šele ob `then`/`await` —
+  `void supabase.rpc(…)` ne pošlje ničesar (tako so števci do oktobra 2026
+  ostali na nič).
 - Na trg sodijo samo aktivni igralci (`player_overview.active`) — kader z
   neaktivnim igralcem `roster_je_veljaven` zavrne in ekipa tiho ostane brez točk.
 - **Klub izstopi med sezono** (Tržič 2012, mladinci, 2026/27): igralcev **ne**

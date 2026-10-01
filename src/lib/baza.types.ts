@@ -2451,6 +2451,7 @@ export type Database = {
           dan: string
           id: number
           klikov: number
+          mesto: string | null
           prikazov: number
           sponsor_id: number
         }
@@ -2459,6 +2460,7 @@ export type Database = {
           dan: string
           id?: never
           klikov?: number
+          mesto?: string | null
           prikazov?: number
           sponsor_id: number
         }
@@ -2467,6 +2469,7 @@ export type Database = {
           dan?: string
           id?: never
           klikov?: number
+          mesto?: string | null
           prikazov?: number
           sponsor_id?: number
         }
@@ -2512,6 +2515,7 @@ export type Database = {
           federation_id: number | null
           id: number
           logo_url: string | null
+          mesta: string[]
           name: string
           opomba: string | null
           slika_url: string | null
@@ -2530,6 +2534,7 @@ export type Database = {
           federation_id?: number | null
           id?: never
           logo_url?: string | null
+          mesta?: string[]
           name: string
           opomba?: string | null
           slika_url?: string | null
@@ -2548,6 +2553,7 @@ export type Database = {
           federation_id?: number | null
           id?: never
           logo_url?: string | null
+          mesta?: string[]
           name?: string
           opomba?: string | null
           slika_url?: string | null
@@ -4601,12 +4607,25 @@ export type Database = {
           id: number
           klikov: number
           logo_url: string
+          mesta: string[]
           name: string
           opomba: string
           prikazov: number
+          slika_url: string
           starts_on: string
           url: string
           utez: number
+        }[]
+      }
+      admin_sponzorji_po_mestih: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          klikov: number
+          klikov_7: number
+          mesto: string
+          prikazov: number
+          prikazov_7: number
+          sponsor_id: number
         }[]
       }
       admin_tedenska_aktivnost: {
@@ -4828,7 +4847,7 @@ export type Database = {
       }
       skupaj_uporabnikov: { Args: Record<PropertyKey, never>; Returns: number }
       sponzorji_za: {
-        Args: { p_competition_id: number }
+        Args: { p_competition_id: number; p_mesto?: string }
         Returns: {
           claim: string
           doseg: string
@@ -4961,6 +4980,7 @@ export type Database = {
         Args: {
           p_competition_id?: number
           p_klik?: boolean
+          p_mesto?: string
           p_sponsor_id: number
         }
         Returns: undefined
