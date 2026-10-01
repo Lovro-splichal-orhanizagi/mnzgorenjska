@@ -9,6 +9,7 @@ import type { TekmaVrstica } from '../lib/tipi'
 import { vseVrstice } from '../lib/strani'
 import { useNaslov } from '../lib/naslov'
 import { t } from '../i18n'
+import Sponzor from '../components/Sponzor'
 
 export default function Rezultati() {
   const { id: tekmovanjeId, tekmovanje } = useTekmovanje()
@@ -165,6 +166,8 @@ export default function Rezultati() {
       )}
 
       {napaka && <p className="text-sm text-rose-400">{t('skupno.napaka', { sporocilo: napaka })}</p>}
+
+      <Sponzor kje="rezultati" />
     </div>
   )
 }

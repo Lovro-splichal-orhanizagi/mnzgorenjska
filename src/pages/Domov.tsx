@@ -29,6 +29,7 @@ import EnajstericaNaIgriscu from '../components/EnajstericaNaIgriscu'
 import type { IgralecEnajsterice } from '../components/EnajstericaNaIgriscu'
 import type { Pozicija } from '../lib/tipi'
 import { t, tx, datum } from '../i18n'
+import Sponzor from '../components/Sponzor'
 
 /** Kar liga čaka od skupnosti (asistence, pozicije). */
 interface Statistika {
@@ -1054,6 +1055,8 @@ export default function Domov() {
           </div>
         </section>
       )}
+
+      <Sponzor kje="domov" />
 
       {/* potek igre */}
       <section className="space-y-3">

@@ -20,6 +20,7 @@ import { useTekmovanje } from '../lib/tekmovanje'
 import Grb from '../components/Grb'
 import { t, tx, lokale } from '../i18n'
 import type { Pozicija } from '../lib/tipi'
+import Sponzor from '../components/Sponzor'
 
 /** Vrstica pogleda `player_season_standings` (+ igralci brez nastopov). */
 interface IgralecSezone {
@@ -506,6 +507,8 @@ export default function Igralci() {
           {t('igralci.seznam.prikazaniVsi', { igralci: mnozina(vidni.length, IGRALCI) })}
         </p>
       )}
+
+      <Sponzor kje="igralci" />
     </div>
   )
 }

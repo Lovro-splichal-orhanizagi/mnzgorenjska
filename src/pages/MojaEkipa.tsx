@@ -60,6 +60,7 @@ import { NamigiZaPrestope, OdZadnjegaObiska } from '../components/NamigiEkipe'
 import type { IgralecNaIgriscu } from '../components/Igrisce'
 import type { Pozicija } from '../lib/tipi'
 import { t, tx, datumUra, lokale } from '../i18n'
+import Sponzor from '../components/Sponzor'
 
 /** Igralec na trgu (`player_overview` / `player_season_standings`). */
 interface IgralecTrga {
@@ -2395,6 +2396,8 @@ export default function MojaEkipa() {
           </button>
         </div>
       </div>
+
+      <Sponzor kje="moja_ekipa" />
 
       {/* Podatki o igralcu — brez zapuscanja na pol sestavljene ekipe. */}
       {info && tekmovanjeId != null && (
