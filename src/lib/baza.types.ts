@@ -2514,6 +2514,7 @@ export type Database = {
           logo_url: string | null
           name: string
           opomba: string | null
+          slika_url: string | null
           starts_on: string | null
           updated_at: string
           url: string
@@ -2531,6 +2532,7 @@ export type Database = {
           logo_url?: string | null
           name: string
           opomba?: string | null
+          slika_url?: string | null
           starts_on?: string | null
           updated_at?: string
           url: string
@@ -2548,6 +2550,7 @@ export type Database = {
           logo_url?: string | null
           name?: string
           opomba?: string | null
+          slika_url?: string | null
           starts_on?: string | null
           updated_at?: string
           url?: string
@@ -4832,6 +4835,7 @@ export type Database = {
           id: number
           logo_url: string
           name: string
+          slika_url: string
           url: string
         }[]
       }

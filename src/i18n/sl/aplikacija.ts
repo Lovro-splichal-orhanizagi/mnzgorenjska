@@ -121,6 +121,7 @@ export const aplikacija = {
   },
   sponzor: {
     oznaka: 'Sponzor',
+    obisci: 'Obišči stran',
   },
   napaka: {
     naslov: 'Stran se je zataknila',
