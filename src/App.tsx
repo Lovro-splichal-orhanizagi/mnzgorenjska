@@ -32,6 +32,7 @@ import Administracija from './pages/Administracija'
 import VstopVMiniLigo from './pages/VstopVMiniLigo'
 import Opomniki from './pages/Opomniki'
 import { useKanonicni, useNaslov } from './lib/naslov'
+import { jeNativno } from './lib/platforma'
 
 // Poti so angleške, ker jih vidi vsaka država (slovaški obiskovalec ne
 // odpira "moja-ekipa"). Stari slovenski naslovi ostanejo kot preusmeritve.
@@ -121,7 +122,7 @@ export default function App() {
               {STARE_POTI.map(([staro, novo]) => (
                 <Route key={staro} path={staro} element={<StaraPot na={novo} />} />
               ))}
-              <Route path="/admin" element={<Administracija />} />
+              {!jeNativno() && <Route path="/admin" element={<Administracija />} />}
               <Route path="*" element={<NiStrani />} />
             </Routes>
             </NapakaOprijem>

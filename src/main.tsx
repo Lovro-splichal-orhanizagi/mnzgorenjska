@@ -4,6 +4,9 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import './index.css'
 import { jezik, t } from './i18n'
+import { pripraviNativno } from './lib/platforma'
+
+pripraviNativno()
 
 // index.html je slovenski (to vidijo iskalniki brez JS in kartice ob
 // deljenju). Drug jezik zamenja le jezik dokumenta in opis; slovenska stran
