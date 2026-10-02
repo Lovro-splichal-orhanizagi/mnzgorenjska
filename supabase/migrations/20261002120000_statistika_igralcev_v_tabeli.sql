@@ -96,11 +96,20 @@ begin
     return;
   end if;
 
-  -- Urejeno, da si dve hkratni osvežitvi zaklepov ne podajata navzkriž;
-  -- brez zaklepa bi druga po commitu prve vpisala iste ključe.
-  foreach v_igralec in array v_igralci loop
-    perform pg_advisory_xact_lock(hashtextextended('slff-statistika:' || v_igralec, 0));
-  end loop;
+  -- Brez zaklepa bi druga hkratna osvežitev po commitu prve vpisala iste
+  -- ključe. Zaklep na igralca, urejeno, da si dve osvežitvi ne podajata
+  -- navzkriž — a le za majhne nabore: vsak zaklep zasede mesto v tabeli
+  -- zaklepov in 34 000 igralcev v eni transakciji (nočna obnova, prva
+  -- polnitev) jo prekorači ("out of shared memory"). Velik nabor zato vzame
+  -- izključni skupni zaklep, majhni pa njegovo deljeno različico.
+  if cardinality(v_igralci) > 200 then
+    perform pg_advisory_xact_lock(hashtextextended('slff-statistika', 0));
+  else
+    perform pg_advisory_xact_lock_shared(hashtextextended('slff-statistika', 0));
+    foreach v_igralec in array v_igralci loop
+      perform pg_advisory_xact_lock(hashtextextended('slff-statistika:' || v_igralec, 0));
+    end loop;
+  end if;
 
   delete from statistika_igralcev where player_id = any (v_igralci);
 
