@@ -2,6 +2,7 @@
 //
 //   node scripts/slovaske-lige.mjs ssfz          # Stredoslovenský FZ in okresi pod njim
 //   node scripts/slovaske-lige.mjs ssfz --sql    # vrstice za `insert into competitions`
+//   node scripts/slovaske-lige.mjs ssfz --dorast # mladinske lige U19 (starší dorast)
 //
 // Regija je stran zveze na futbalnet.sk (`/futbalnet/z/<regija>/`), ki našteje
 // okresne zveze pod sabo. Vsaka zveza ima na Sportnetu svoj appSpace, iz
@@ -19,7 +20,13 @@ const enako = (a, b) => a.replace(/\s+/g, ' ').replace(/[\s.-]/g, '').toLowerCas
 // Zapis je ročen in poln tipkarskih napak ("prírpavka", "strata prípravka", "U 13").
 const IZPUSTI = /\bW?U[\s-]?\d|dorast|žiac|ženy|žien|futsal|pr[ií]p|prír|strata|pohár|pohar|mladš|starš|veteran|miniliga|internát|turnaj|baráž|kvalifik/i
 
+// U19 (starší dorast): brez U17, ženskih (WU19) in mlajših kategorij.
+const DORAST = /U\s?19|dorast/i
+const NE_DORAST = /U\s?1[0-7]\b|\bWU|žen|mladš|žiac|futsal|pohár|pohar/i
+
 const regija = process.argv[2] ?? 'ssfz'
+const dorast = process.argv.includes('--dorast')
+const izpusti = (ime) => (dorast ? !DORAST.test(ime) || NE_DORAST.test(ime) : IZPUSTI.test(ime))
 const sql = process.argv.includes('--sql')
 const pocakaj = () => new Promise((r) => setTimeout(r, 300))
 
@@ -74,7 +81,7 @@ for (const zveza of await zveze(regija)) {
   if (!prostor) continue
   const tekmovanja = (await json(`${API}/public/${encodeURIComponent(prostor)}/competitions?limit=200`)).competitions ?? []
   for (const c of tekmovanja) {
-    if (c.season?.name !== SEZONA || IZPUSTI.test(c.name)) continue
+    if (c.season?.name !== SEZONA || izpusti(c.name)) continue
     const tekme = (await json(`${API}/public/${encodeURIComponent(prostor)}/competitions/${c._id}/matches?limit=100`)).matches ?? []
     if (!tekme.length) continue
     const deli = new Map()
