@@ -6,6 +6,7 @@
 // predogled.
 import { useEffect, useRef, useState } from 'react'
 import { t } from '../i18n'
+import { jeNativno } from '../lib/platforma'
 
 function znaDelitiSliko(): boolean {
   try {
@@ -155,7 +156,8 @@ export default function DeliSliko({
         <button onClick={deliPovezavo} className="gumb-tih px-3 py-2 text-sm">
           {t('lestvice.deliSliko.deliPovezavo')}
         </button>
-        {delitevSlike && (
+        {/* V aplikaciji prenosa ni; sliko shrani sistemski list ("Shrani sliko"). */}
+        {delitevSlike && !jeNativno() && (
           <button onClick={prenesi} disabled={dela} className="gumb-tih px-3 py-2 text-sm disabled:opacity-60">
             {t('lestvice.deliSliko.shrani')}
           </button>

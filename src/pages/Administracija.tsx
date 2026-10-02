@@ -13,6 +13,7 @@ import RastLig from '../components/admin/RastLig'
 import Sponzorji from '../components/admin/Sponzorji'
 import Potrditev from '../components/admin/Potrditev'
 import Plakat from '../components/Plakat'
+import { izvor } from '../lib/platforma'
 
 // Koliko uporabnikov pokaže ena stran seznama.
 const UPORABNIKOV_NA_STRAN = 50
@@ -589,7 +590,7 @@ export default function Administracija() {
           </h2>
           <Plakat
             podatki={{ vrsta: 'live', liga: imeLigeZaPlakat }}
-            povezava={typeof window !== 'undefined' ? `${window.location.origin}/?t=${tekmovanje.slug}` : ''}
+            povezava={typeof window !== 'undefined' ? `${izvor()}/?t=${tekmovanje.slug}` : ''}
           />
         </section>
       )}

@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import { besediloVabila, deliVabilo, povezaveDeljenja, privzetoImeLige } from '../lib/miniLige'
 import { t } from '../i18n'
+import { izvor } from '../lib/platforma'
 
 interface Liga {
   id: number
@@ -131,7 +132,7 @@ export default function PovabiSoigralce({
         <div className="flex flex-wrap gap-3 text-sm">
           {(() => {
             const { whatsapp, viber } = povezaveDeljenja(
-              besediloVabila(liga.name, liga.code, window.location.origin),
+              besediloVabila(liga.name, liga.code, izvor()),
             )
             return (
               <>

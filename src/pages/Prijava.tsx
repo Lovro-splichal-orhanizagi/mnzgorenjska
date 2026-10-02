@@ -7,6 +7,7 @@ import { napakaPrijave, varnaPot } from '../lib/prijava'
 import { jezik, t } from '../i18n'
 import { useTekmovanje } from '../lib/tekmovanje'
 import { JEZIK_DRZAVE } from '../lib/drzava'
+import { izvor } from '../lib/platforma'
 
 type Nacin = 'prijava' | 'registracija' | 'pozabljeno'
 
@@ -42,7 +43,7 @@ export default function Prijava() {
     setNapaka(null)
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}${nazaj}` },
+      options: { redirectTo: `${izvor()}${nazaj}` },
     })
     // Dokler Google v Supabase ni vklopljen, vrne "provider is not enabled";
     // to uporabniku ne pove nic, zato ga usmerimo na e-posto.
@@ -64,7 +65,7 @@ export default function Prijava() {
     // /novo-geslo, kjer vpiše novo.
     if (nacin === 'pozabljeno') {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/novo-geslo`,
+        redirectTo: `${izvor()}/novo-geslo`,
       })
       setPosiljam(false)
       if (error) return setNapaka(napakaPrijave(error.message))
@@ -82,7 +83,7 @@ export default function Prijava() {
               // Pošta je le slovenska in slovaška: angleški obiskovalec dobi
               // jezik države lige, ki jo gleda.
               data: { display_name: ime || email.split('@')[0], jezik: jezikPoste },
-              emailRedirectTo: `${window.location.origin}${nazaj}`,
+              emailRedirectTo: `${izvor()}${nazaj}`,
             },
           })
         : await supabase.auth.signInWithPassword({ email, password: geslo })

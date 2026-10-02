@@ -13,6 +13,7 @@ import { sestejOdKroga } from '../lib/lestvica'
 import MojeMiniLige from '../components/MojeMiniLige'
 import NavijaciKlubov from '../components/NavijaciKlubov'
 import { t, datum } from '../i18n'
+import { izvor } from '../lib/platforma'
 
 const MEDALJE = ['🥇', '🥈', '🥉']
 
@@ -363,7 +364,7 @@ export default function Lestvica() {
               }}
               povezava={
                 typeof window !== 'undefined'
-                  ? `${window.location.origin}/ekipa/${mojRezultat.fantasy_team_id}`
+                  ? `${izvor()}/ekipa/${mojRezultat.fantasy_team_id}`
                   : ''
               }
             />

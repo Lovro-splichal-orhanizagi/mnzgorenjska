@@ -2,6 +2,7 @@
 // zavihek, zaznamek ter zadetek v iskalniku se imenuje enako.
 import { useEffect } from 'react'
 import { t } from '../i18n/jedro.ts'
+import { DOMENA } from './platforma.ts'
 
 const OSNOVA = t('aplikacija.naslovStrani.osnova')
 
@@ -13,7 +14,6 @@ export function useNaslov(naslov: string | null | undefined): void {
   }, [naslov])
 }
 
-const DOMENA = 'https://slff.eu'
 
 /**
  * Kanonični naslov strani: pot in izbrana liga (`?t=`), brez ostalih

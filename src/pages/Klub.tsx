@@ -24,6 +24,7 @@ import Grb from '../components/Grb'
 import Plakat from '../components/Plakat'
 import { najboljsiTrije, navijacev, ligaVTozilniku } from '../lib/plakat'
 import { NavijaciKluba } from '../components/NavijaciKlubov'
+import { izvor } from '../lib/platforma'
 
 interface Igralec {
   id: number
@@ -208,7 +209,7 @@ export default function Klub() {
                 liga: ligaZaPlakat || liga?.name || '',
                 grb: klub?.logo_url ?? null,
               }}
-              povezava={typeof window !== 'undefined' ? window.location.href : ''}
+              povezava={typeof window !== 'undefined' ? `${izvor()}${window.location.pathname}${window.location.search}` : ''}
             />
           </div>
           <div>
@@ -222,7 +223,7 @@ export default function Klub() {
                 igralci: najboljsiTrije(igralci),
                 navijacev: izbranih,
               }}
-              povezava={typeof window !== 'undefined' ? window.location.href : ''}
+              povezava={typeof window !== 'undefined' ? `${izvor()}${window.location.pathname}${window.location.search}` : ''}
             />
           </div>
         </div>

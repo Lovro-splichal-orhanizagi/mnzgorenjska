@@ -12,6 +12,8 @@ export default function handler(req: Request): Response {
     headers: {
       'content-type': 'application/json; charset=utf-8',
       'cache-control': 'private, no-store',
+      // Mobilna aplikacija kliče s svojega izvora (capacitor://localhost).
+      'access-control-allow-origin': '*',
     },
   })
 }

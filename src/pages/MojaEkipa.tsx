@@ -61,6 +61,7 @@ import type { IgralecNaIgriscu } from '../components/Igrisce'
 import type { Pozicija } from '../lib/tipi'
 import { t, tx, datumUra, lokale } from '../i18n'
 import Sponzor from '../components/Sponzor'
+import { izvor } from '../lib/platforma'
 
 /** Igralec na trgu (`player_overview` / `player_season_standings`). */
 interface IgralecTrga {
@@ -2232,7 +2233,7 @@ export default function MojaEkipa() {
                         liga={tekmovanje?.name ?? ''}
                         povezava={
                           typeof window !== 'undefined'
-                            ? `${window.location.origin}/team/${ekipa.id}?krog=${izbrani.round_id}`
+                            ? `${izvor()}/team/${ekipa.id}?krog=${izbrani.round_id}`
                             : ''
                         }
                       />
@@ -2255,7 +2256,7 @@ export default function MojaEkipa() {
                           }}
                           povezava={
                             typeof window !== 'undefined'
-                              ? `${window.location.origin}/ekipa/${ekipa.id}?krog=${izbrani.round_id}`
+                              ? `${izvor()}/ekipa/${ekipa.id}?krog=${izbrani.round_id}`
                               : ''
                           }
                         />
