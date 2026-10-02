@@ -35,6 +35,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     vec: 'Viac',
     racun: 'Účet',
     opomniki: 'Pripomienky',
+    izbrisRacuna: 'Zrušenie účtu',
     povabi: 'Pozvi kamaráta',
     odjava: 'Odhlásiť sa',
     prijava: 'Prihlásiť sa',
@@ -132,5 +133,11 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     zadeva: 'Fantasy liga: {liga} — poď do toho s nami',
     besedilo:
       'Ahoj!\n\nHrám fantasy futbalovú ligu: {liga}. Poskladáš si vlastný tím z hráčov{klubi} a súťažíš s ostatnými.\n\nÚplne zadarmo. Zaregistruj sa na:\n{naslov}\n\nPoskladaj tím, vyber kapitána a po každom kole sa pozri, kto nazbieral najviac bodov.\n\nVidíme sa v lige!',
+  },
+  // Mobilna aplikacija je prestara (PosodobiAplikacijo).
+  posodobi: {
+    naslov: 'Aktualizuj aplikáciu',
+    opis: 'Táto verzia SLFF už nie je podporovaná. Aktualizuj aplikáciu, aby si mohol ďalej upravovať tím.',
+    gumb: 'Aktualizovať',
   },
 }

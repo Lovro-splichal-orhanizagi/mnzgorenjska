@@ -8,6 +8,9 @@ import { Directory, Filesystem } from '@capacitor/filesystem'
 /** Javni naslov spletne strani; vanj vodijo vse povezave, ki gredo ven. */
 export const DOMENA = 'https://slff.eu'
 
+/** Shema za vrnitev v aplikacijo (prijava z Googlom/Applom), enaka appId. */
+export const SHEMA = 'eu.slff.app'
+
 /** Ali stran teče v mobilni aplikaciji (iOS, Android), ne v brskalniku. */
 export const jeNativno = (): boolean => Capacitor.isNativePlatform()
 

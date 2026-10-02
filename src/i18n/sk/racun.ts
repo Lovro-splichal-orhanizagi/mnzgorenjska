@@ -7,12 +7,14 @@ export const racun: NonNullable<Prevod['racun']> = {
     naslovRegistracija: 'Registrácia',
     naslovPozabljeno: 'Zabudnuté heslo',
     googleNiNaVoljo: 'Prihlásenie cez Google momentálne nie je k dispozícii. Použi e-mail.',
+    appleNiNaVoljo: 'Prihlásenie cez Apple momentálne nie je k dispozícii. Použi e-mail.',
     poslanaPonastavitev:
       'Poslali sme ti odkaz na obnovenie hesla. Skontroluj si e-mail (aj priečinok so spamom).',
     racunUstvarjen:
       'Účet je vytvorený. Na e-mail sme ti poslali potvrdzovací odkaz — otvor ho a vráť sa.',
     prijavljenKot: 'Si prihlásený ako {email}.',
     zGooglom: 'Pokračovať cez Google',
+    zApplom: 'Pokračovať cez Apple',
     aliZEposto: 'alebo cez e-mail',
     prikaznoIme: 'Zobrazované meno',
     eposta: 'E-mail',
@@ -57,6 +59,23 @@ export const racun: NonNullable<Prevod['racun']> = {
     shranjujem: 'Ukladá sa …',
     vklopljeni: 'Pripomienky sú zapnuté.',
     izklopljeni: 'Pripomienky ti už nebudeme posielať.',
+  },
+  // Povezava iz e-pošte (slff.eu/auth/confirm).
+  potrditev: {
+    naslov: 'Overujem …',
+    preverjam: 'Overujem odkaz …',
+    neveljavna: 'Odkaz už nie je platný alebo bol použitý. <prijava>Prihlás sa</prijava> alebo si vyžiadaj nový.',
+  },
+  // Izbris računa (slff.eu/account).
+  izbris: {
+    naslov: 'Zrušenie účtu',
+    moraPrijava: 'Na zrušenie účtu sa musíš <prijava>prihlásiť</prijava>.',
+    opis: 'Zrušíme účet {email}: profil, všetky tvoje tímy s históriou bodov, hlasy a minilgy, ktoré si vytvoril. Zrušenie sa nedá vrátiť.',
+    gumb: 'Zrušiť účet',
+    potrdi: 'Áno, zrušiť navždy',
+    preklici: 'Zrušiť',
+    brisem: 'Ruším …',
+    napaka: 'Účet sa nepodarilo zrušiť: {napaka}',
   },
   // Súkromie a podmienky. <b> je tučné písmo, ostatné značky sú odkazy.
   pravno: {

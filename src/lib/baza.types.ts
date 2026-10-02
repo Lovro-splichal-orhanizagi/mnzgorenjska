@@ -2363,6 +2363,35 @@ export type Database = {
           },
         ]
       }
+      push_tokens: {
+        Row: {
+          platforma: string
+          token: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          platforma: string
+          token: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          platforma?: string
+          token?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_tokens_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rounds: {
         Row: {
           borza_po_starem: boolean
@@ -4678,6 +4707,10 @@ export type Database = {
         Returns: string
       }
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
+      izbrisi_moj_racun: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       izstop_kluba: {
         Args: { p_competition_id: number; p_team_id: number }
         Returns: Json
@@ -4844,6 +4877,10 @@ export type Database = {
       shrani_ekipo: {
         Args: { p_roster: Json; p_team_id: number }
         Returns: Json
+      }
+      shrani_push_zeton: {
+        Args: { p_platforma: string; p_zeton: string }
+        Returns: undefined
       }
       skupaj_uporabnikov: { Args: Record<PropertyKey, never>; Returns: number }
       sponzorji_za: {

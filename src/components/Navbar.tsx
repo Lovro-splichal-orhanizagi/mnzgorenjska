@@ -239,8 +239,8 @@ export default function Navbar() {
                   onClick={() => setRacunOdprt(!racunOdprt)}
                   aria-haspopup="menu"
                   aria-expanded={racunOdprt}
-                  aria-label={t('aplikacija.meni.racun')}
-                  title={ime ?? session.user.email ?? t('aplikacija.meni.racun')}
+                  aria-label={t('aplikacija.meni.izbrisRacuna')}
+                  title={ime ?? session.user.email ?? t('aplikacija.meni.izbrisRacuna')}
                   className="flex h-9 w-9 items-center justify-center rounded-full bg-gnl-500/20 font-black text-gnl-200 ring-1 ring-gnl-400/40 hover:bg-gnl-500/30"
                 >
                   {zacetnica}
@@ -260,6 +260,14 @@ export default function Navbar() {
                       onClick={() => setRacunOdprt(false)}
                     >
                       {t('aplikacija.meni.opomniki')}
+                    </NavLink>
+                    <NavLink
+                      to="/account"
+                      role="menuitem"
+                      className={vrsticaMenija}
+                      onClick={() => setRacunOdprt(false)}
+                    >
+                      {t('aplikacija.meni.izbrisRacuna')}
                     </NavLink>
                     <a
                       href={vabilo}

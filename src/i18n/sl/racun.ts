@@ -6,12 +6,14 @@ export const racun = {
     naslovRegistracija: 'Registracija',
     naslovPozabljeno: 'Pozabljeno geslo',
     googleNiNaVoljo: 'Prijava z Googlom trenutno ni na voljo. Uporabi e-pošto.',
+    appleNiNaVoljo: 'Prijava z Applom trenutno ni na voljo. Uporabi e-pošto.',
     poslanaPonastavitev:
       'Poslali smo ti povezavo za ponastavitev gesla. Preveri e-pošto (tudi vsiljeno).',
     racunUstvarjen:
       'Račun je ustvarjen. Na e-pošto smo poslali potrditveno povezavo — odpri jo in se vrni.',
     prijavljenKot: 'Prijavljen si kot {email}.',
     zGooglom: 'Nadaljuj z Googlom',
+    zApplom: 'Nadaljuj z Applom',
     aliZEposto: 'ali z e-pošto',
     prikaznoIme: 'Prikazno ime',
     eposta: 'E-pošta',
@@ -57,6 +59,23 @@ export const racun = {
     shranjujem: 'Shranjujem …',
     vklopljeni: 'Opomniki so vklopljeni.',
     izklopljeni: 'Opomnikov ti ne bomo več pošiljali.',
+  },
+  // Povezava iz e-pošte (slff.eu/auth/confirm).
+  potrditev: {
+    naslov: 'Potrjujem …',
+    preverjam: 'Preverjam povezavo …',
+    neveljavna: 'Povezava ni več veljavna ali je že bila uporabljena. <prijava>Prijavi se</prijava> ali zahtevaj novo.',
+  },
+  // Izbris računa (slff.eu/account).
+  izbris: {
+    naslov: 'Izbris računa',
+    moraPrijava: 'Za izbris računa se moraš <prijava>prijaviti</prijava>.',
+    opis: 'Izbrisali bomo račun {email}: profil, vse tvoje ekipe z zgodovino točk, glasove in mini lige, ki si jih ustvaril. Izbrisa ni mogoče preklicati.',
+    gumb: 'Izbriši račun',
+    potrdi: 'Da, izbriši za vedno',
+    preklici: 'Prekliči',
+    brisem: 'Brišem …',
+    napaka: 'Računa ni bilo mogoče izbrisati: {napaka}',
   },
   // Zasebnost in pogoji. <b> je krepko, ostale oznake so povezave.
   pravno: {

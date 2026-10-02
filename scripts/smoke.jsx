@@ -2978,6 +2978,28 @@ preveri(
   } catch (e) {
     preveri('izris: Opomniki', false, e.message)
   }
+
+  // Strani mobilne aplikacije: izbris računa in povezava iz e-pošte.
+  const { default: Racun } = await import('../src/pages/Racun')
+  const { default: PotrditevPovezave } = await import('../src/pages/PotrditevPovezave')
+  const { izvor, DOMENA } = await import('../src/lib/platforma')
+  preveri('aplikacija: povezave brez okna gredo na slff.eu', izvor() === DOMENA && DOMENA === 'https://slff.eu')
+  for (const [ime, pot, Stran] of [['Racun', '/account', Racun], ['PotrditevPovezave', '/auth/confirm?type=signup', PotrditevPovezave]]) {
+    try {
+      const html = renderToString(
+        <StaticRouter location={pot}>
+          <AuthProvider>
+            <TekmovanjeProvider>
+              <Stran />
+            </TekmovanjeProvider>
+          </AuthProvider>
+        </StaticRouter>,
+      )
+      preveri(`izris: ${ime}`, Boolean(html && html.length))
+    } catch (e) {
+      preveri(`izris: ${ime}`, false, e.message)
+    }
+  }
 }
 
 // --- Moja ekipa: neaktiven igralec in predlog v ligi s petimi klubi --------

@@ -7,12 +7,14 @@ export const racun: NonNullable<Prevod['racun']> = {
     naslovRegistracija: 'Sign up',
     naslovPozabljeno: 'Forgotten password',
     googleNiNaVoljo: 'Logging in with Google is not available right now. Use email.',
+    appleNiNaVoljo: 'Logging in with Apple is not available right now. Use email.',
     poslanaPonastavitev:
       'We have sent you a link to reset your password. Check your email (including spam).',
     racunUstvarjen:
       'Your account has been created. We have sent a confirmation link to your email — open it and come back.',
     prijavljenKot: 'You are logged in as {email}.',
     zGooglom: 'Continue with Google',
+    zApplom: 'Continue with Apple',
     aliZEposto: 'or with email',
     prikaznoIme: 'Display name',
     eposta: 'Email',
@@ -57,6 +59,23 @@ export const racun: NonNullable<Prevod['racun']> = {
     shranjujem: 'Saving …',
     vklopljeni: 'Reminders are on.',
     izklopljeni: 'We will no longer send you reminders.',
+  },
+  // Povezava iz e-pošte (slff.eu/auth/confirm).
+  potrditev: {
+    naslov: 'Confirming …',
+    preverjam: 'Checking the link …',
+    neveljavna: 'This link is no longer valid or has already been used. <prijava>Log in</prijava> or request a new one.',
+  },
+  // Izbris računa (slff.eu/account).
+  izbris: {
+    naslov: 'Delete account',
+    moraPrijava: 'You need to <prijava>log in</prijava> to delete your account.',
+    opis: 'We will delete the account {email}: your profile, all your squads with their points history, your votes and the mini-leagues you created. This cannot be undone.',
+    gumb: 'Delete account',
+    potrdi: 'Yes, delete forever',
+    preklici: 'Cancel',
+    brisem: 'Deleting …',
+    napaka: 'The account could not be deleted: {napaka}',
   },
   pravno: {
     naslov: 'Privacy and terms',

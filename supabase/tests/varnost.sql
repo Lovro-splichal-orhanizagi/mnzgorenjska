@@ -777,6 +777,49 @@ select pg_temp.preveri('hisni lastnik ni kandidat za opomnik',
 select pg_temp.preveri('hisni lastnik ni med uporabniki',
   skupaj_uporabnikov() = (select n from uporabnikov_pred) - 1);
 
+-- Potisna obvestila: zeton zapise le RPC, prebere le servis; zeton naprave se
+-- ob prijavi drugega uporabnika preseli k njemu.
+insert into auth.users(id,email,raw_user_meta_data,created_at) values
+ ('b8a06635-2322-4444-8c42-44e419f912b0','test-izbris@example.invalid','{"display_name":"Izbris"}',now()-interval '2 days');
+insert into fantasy_teams(id,owner_id,name,competition_id,created_at) overriding system value
+values (-913090,'b8a06635-2322-4444-8c42-44e419f912b0','Ekipa za izbris',-913002,now()-interval '2 days');
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
+select shrani_push_zeton('test-zeton-naprave', 'ios');
+select pg_temp.zavrnjeno('uporabnik ne pise v push_tokens mimo RPC',
+  $$insert into push_tokens(token,user_id,platforma) values ('tuj','b8a06635-2322-4444-8c42-44e419f912ac','android')$$);
+select pg_temp.preveri('uporabnik ne bere push_tokens', not exists (select 1 from push_tokens));
+reset role;
+select pg_temp.pade('neveljavna platforma zetona pade', $$select shrani_push_zeton('x', 'windows')$$);
+set local role authenticated;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912b0',true);
+select shrani_push_zeton('test-zeton-naprave', 'android');
+reset role;
+select pg_temp.preveri('zeton naprave se preseli k novemu uporabniku',
+  (select user_id from push_tokens where token='test-zeton-naprave')='b8a06635-2322-4444-8c42-44e419f912b0');
+
+-- Izbris racuna: anon ne more, uporabnik izbrise samo sebe z vsem, kar ima.
+select set_config('request.jwt.claim.sub','',true);
+set local role anon;
+select pg_temp.zavrnjeno('anon ne klice izbrisi_moj_racun', $$select izbrisi_moj_racun()$$);
+reset role;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912b0',true);
+set local role authenticated;
+select izbrisi_moj_racun();
+reset role;
+select pg_temp.preveri('izbris racuna odstrani uporabnika, profil, ekipo in zeton',
+  not exists (select 1 from auth.users where id='b8a06635-2322-4444-8c42-44e419f912b0')
+  and not exists (select 1 from profiles where id='b8a06635-2322-4444-8c42-44e419f912b0')
+  and not exists (select 1 from fantasy_teams where id=-913090)
+  and not exists (select 1 from push_tokens where token='test-zeton-naprave'));
+select pg_temp.preveri('izbris racuna ne zadene drugih',
+  exists (select 1 from auth.users where id='b8a06635-2322-4444-8c42-44e419f912ab')
+  and exists (select 1 from fantasy_teams where id=-913001));
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ae',true);
+select pg_temp.pade('sistemskega lastnika hisnih ekip ni mogoce izbrisati', $$select izbrisi_moj_racun()$$);
+select set_config('request.jwt.claim.sub','',true);
+
+
 -- Odstranjevanje: samo hisne, in nic, ce je vmes cloveska.
 select pg_temp.pade('odstranjevanje zavrne cloveske ekipe',
   $$select odstrani_hisne_ekipe(array[-913001]::bigint[] || array(select id from hisne))$$);

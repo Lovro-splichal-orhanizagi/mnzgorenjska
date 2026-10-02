@@ -13,6 +13,9 @@
 // (glej funkcijo nedavni_opomnik), 2) za sledenje in reševanje težav, če
 // kdo reče "nisem dobil".
 //
+// Kdor ima mobilno aplikacijo, dobi isto sporočilo še kot potisno obvestilo
+// (push.ts, skrivnost FIREBASE_SERVICE_ACCOUNT).
+//
 // Skrivnosti pridemo iz Supabase env: RESEND_API_KEY, EMAIL_FROM, in privzeto
 // nastavljeni SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY (dodeljena vsem edge
 // funkcijam avtomatsko).
@@ -28,6 +31,7 @@ import {
   type Liga,
   type Sporocilo,
 } from './sporocila.ts'
+import { posljiPush, type Obvestilo } from './push.ts'
 
 // Besedila so v `sporocila.ts`, v jeziku DRŽAVE LIGE (slovaška liga →
 // slovaški mail). Povezave nosijo `?t=<liga>`, da se stran odpre v pravi ligi
@@ -299,16 +303,18 @@ Deno.serve(async (req) => {
         rezultati.push({ ekipa, ok: false, razlog: 'brez e-naslova' })
         continue
       }
+      const sporociloEkipi = (vrsta === 'izstop-kluba' ? sestaviIzstopKluba : sestaviPopravekPozicije)(
+        liga,
+        { display_name: pr?.display_name ?? null, team_name: e.team_name, igralci: e.igralci },
+      )
       const rez = await poslji(
         RESEND_KEY!,
         EMAIL_FROM,
         email,
-        (vrsta === 'izstop-kluba' ? sestaviIzstopKluba : sestaviPopravekPozicije)(
-          liga,
-          { display_name: pr?.display_name ?? null, team_name: e.team_name, igralci: e.igralci },
-        ),
+        sporociloEkipi,
         Deno.env.get('EMAIL_REPLY_TO'),
       )
+      if (!rez.napaka) await posljiPush(service, e.owner_id, vObvestilo(sporociloEkipi, `/my-team?t=${liga.slug}`))
       await service.from('email_log').insert({
         user_id: e.owner_id,
         email,
@@ -418,6 +424,9 @@ Deno.serve(async (req) => {
     if (poslanih > 0) await new Promise((r) => setTimeout(r, 600))
     const rez = await poslji(RESEND_KEY!, EMAIL_FROM, u.email, sporocilo)
     if (!rez.napaka) poslanih++
+    // Isto sporočilo še na telefon (mobilna aplikacija), če ga ima.
+    if (!rez.napaka)
+      await posljiPush(service, u.user_id, vObvestilo(sporocilo, u.team_id ? `/my-team?t=${liga.slug}` : '/'))
 
     await service.from('email_log').insert({
       user_id: u.user_id,
@@ -444,6 +453,12 @@ Deno.serve(async (req) => {
     rezultati,
   })
 })
+
+/** Zadeva maila "SLFF GNL — tvoja ekipa …" kot naslov in besedilo obvestila. */
+function vObvestilo(s: Sporocilo, url: string): Obvestilo {
+  const [naslov, ...ostalo] = s.naslov.split(' — ')
+  return { naslov, besedilo: ostalo.join(' — ') || s.naslov, url }
+}
 
 /** Liga za predlogo; država določa jezik mail in časovni pas roka. */
 async function preberiLigo(

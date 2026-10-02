@@ -7,7 +7,8 @@ import { napakaPrijave, varnaPot } from '../lib/prijava'
 import { jezik, t } from '../i18n'
 import { useTekmovanje } from '../lib/tekmovanje'
 import { JEZIK_DRZAVE } from '../lib/drzava'
-import { izvor } from '../lib/platforma'
+import { Browser } from '@capacitor/browser'
+import { izvor, jeNativno, SHEMA } from '../lib/platforma'
 
 type Nacin = 'prijava' | 'registracija' | 'pozabljeno'
 
@@ -36,23 +37,29 @@ export default function Prijava() {
         : t('racun.prijava.naslovPrijava')
   useNaslov(naslov)
 
-  // Prijava z Googlom: Supabase preusmeri na Google in nazaj; nov uporabnik
-  // dobi profil iz Googlovega imena (glej handle_new_user). Ista pot velja za
-  // prijavo in registracijo, zato je gumb v obeh nacinih.
-  async function zGooglom() {
+  // Prijava z Googlom ali Applom: Supabase preusmeri k ponudniku in nazaj; nov
+  // uporabnik dobi profil iz imena pri ponudniku (glej handle_new_user). Ista
+  // pot velja za prijavo in registracijo, zato sta gumba v obeh nacinih.
+  // V aplikaciji Google prijave v WebViewu ne dovoli: odpre se sistemski
+  // brskalnik, vrnitev na `eu.slff.app://auth` sejo preda NativnePovezave.
+  async function zPonudnikom(provider: 'google' | 'apple') {
     setNapaka(null)
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: `${izvor()}${nazaj}` },
+    const nativno = jeNativno()
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: nativno
+        ? { redirectTo: `${SHEMA}://auth?nazaj=${encodeURIComponent(nazaj)}`, skipBrowserRedirect: true }
+        : { redirectTo: `${izvor()}${nazaj}` },
     })
-    // Dokler Google v Supabase ni vklopljen, vrne "provider is not enabled";
+    // Dokler ponudnik v Supabase ni vklopljen, vrne "provider is not enabled";
     // to uporabniku ne pove nic, zato ga usmerimo na e-posto.
     if (error)
-      setNapaka(
+      return setNapaka(
         /not enabled/i.test(error.message)
-          ? t('racun.prijava.googleNiNaVoljo')
+          ? t(provider === 'google' ? 'racun.prijava.googleNiNaVoljo' : 'racun.prijava.appleNiNaVoljo')
           : napakaPrijave(error.message),
       )
+    if (nativno && data.url) await Browser.open({ url: data.url })
   }
 
   async function poslji(e: FormEvent<HTMLFormElement>) {
@@ -115,7 +122,7 @@ export default function Prijava() {
         <>
           <button
             type="button"
-            onClick={zGooglom}
+            onClick={() => zPonudnikom('google')}
             className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-white px-4 py-2.5 font-semibold text-slate-900 hover:bg-slate-100"
           >
             <svg aria-hidden="true" width="18" height="18" viewBox="0 0 48 48">
@@ -125,6 +132,16 @@ export default function Prijava() {
               <path fill="#34A853" d="M24 48c6.3 0 11.7-2.1 15.6-5.7l-7.7-6c-2.1 1.4-4.8 2.3-7.9 2.3-6.3 0-11.6-4.2-13.5-9.9l-7.9 6.1C6.5 42.6 14.6 48 24 48z" />
             </svg>
             {t('racun.prijava.zGooglom')}
+          </button>
+          <button
+            type="button"
+            onClick={() => zPonudnikom('apple')}
+            className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-black px-4 py-2.5 font-semibold text-white hover:bg-slate-900"
+          >
+            <svg aria-hidden="true" width="16" height="18" viewBox="0 0 814 1000" fill="currentColor">
+              <path d="M788 341c-6 4-108 62-108 190 0 149 130 201 134 202-1 3-21 72-69 142-43 62-88 123-156 123s-86-39-164-39c-77 0-104 41-167 41s-106-57-156-127C44 791 0 671 0 556c0-184 120-282 238-282 63 0 115 41 155 41 38 0 97-44 168-44 27 0 124 3 188 94zM554 169c29-35 50-83 50-131 0-7-1-14-2-19-48 2-104 32-138 71-27 30-51 78-51 127 0 7 1 15 2 17 3 1 8 1 13 1 43 0 96-29 126-66z" />
+            </svg>
+            {t('racun.prijava.zApplom')}
           </button>
           <div className="flex items-center gap-3 text-xs text-slate-500">
             <span className="h-px flex-1 bg-white/10" />
