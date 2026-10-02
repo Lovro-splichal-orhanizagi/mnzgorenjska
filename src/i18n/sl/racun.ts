@@ -80,7 +80,7 @@ export const racun = {
   // Zasebnost in pogoji. <b> je krepko, ostale oznake so povezave.
   pravno: {
     naslov: 'Zasebnost in pogoji',
-    zadnjaSprememba: 'Zadnja sprememba: 28. avgust 2026',
+    zadnjaSprememba: 'Zadnja sprememba: 2. oktober 2026',
     kajJeNaslov: 'Kaj je SLFF',
     kajJe:
       'SLFF (Sunday League Fantasy Football) je navijaška fantasy liga za slovenske medobčinske nogometne lige. Vodimo jo ljubiteljsko in ni povezana z medobčinskimi nogometnimi zvezami, NZS ali s klubi. Igra je brezplačna in brez denarnih vložkov ali nagrad.',
@@ -91,11 +91,13 @@ export const racun = {
       '<b>Prikazno ime in ime ekipe.</b> Vidna sta na lestvici. Če nočeš svojega imena, uporabi vzdevek.',
     podatkiEkipa:
       '<b>Tvoja ekipa in glasovi.</b> Sestava kadra, kapetan, prestopi in glasovi o asistencah ali pozicijah.',
+    podatkiNaprava:
+      '<b>Žeton naprave za obvestila.</b> Če v mobilni aplikaciji dovoliš obvestila, shranimo žeton, prek katerega ti pošljemo opomnik pred rokom kroga. Ob odjavi ga izbrišemo.',
     neHranimo:
       'Ne hranimo naslova, telefonske številke ali podatkov o plačilih. Piškotkov za sledenje in oglaševalskih orodij ne uporabljamo. V brskalniku sta shranjena tvoja prijavna seja in oznaka pogovora v klepetu za pomoč, če ga odpreš.',
     dostopNaslov: 'Komu so podatki dostopni',
     dostop:
-      'Podatki tečejo pri dveh ponudnikih: <b>Supabase</b> (baza in prijava, strežniki v EU) in <b>Vercel</b> (gostovanje strani). Potrditvena in ponastavitvena pošta gre prek <b>Resend</b>. Klepet za pomoč v spodnjem desnem kotu teče prek <b>HelpStack</b>: tja gre to, kar vanj napišeš, in — če si prijavljen — tvoje prikazno ime, da vemo, komu odgovarjamo. E-pošte mu ne posredujemo. Nikomur drugemu podatkov ne posredujemo in jih ne prodajamo.',
+      'Podatki tečejo pri dveh ponudnikih: <b>Supabase</b> (baza in prijava, strežniki v EU) in <b>Vercel</b> (gostovanje strani). Potrditvena in ponastavitvena pošta gre prek <b>Resend</b>, obvestila v mobilni aplikaciji prek <b>Google Firebase Cloud Messaging</b> (le žeton naprave in besedilo obvestila). Klepet za pomoč v spodnjem desnem kotu teče prek <b>HelpStack</b>: tja gre to, kar vanj napišeš, in — če si prijavljen — tvoje prikazno ime, da vemo, komu odgovarjamo. E-pošte mu ne posredujemo. Nikomur drugemu podatkov ne posredujemo in jih ne prodajamo.',
     statistikaNaslov: 'Statistika igralcev',
     statistika:
       'Podatki o nogometaših (nastopi, goli, kartoni) so povzeti po javno objavljenih zapisnikih medobčinskih nogometnih zvez; katere so za izbrano ligo, piše v nogi strani. Pozicije in asistence, ki jih zapisnik ne vsebuje, določi skupnost z glasovanjem — zato so lahko napačne. Če je kaj narobe, klikni igralca in nam sporoči.',
@@ -106,7 +108,7 @@ export const racun = {
       'Fotografija na naslovnici je delo Abigail Keenan in je objavljena na <unsplash>Unsplashu</unsplash> pod njihovo licenco, ki dovoljuje prosto uporabo. Ne prikazuje igralcev naših lig.',
     praviceNaslov: 'Tvoje pravice',
     pravice:
-      'Kadarkoli lahko zahtevaš izbris računa in vseh svojih podatkov ali popravek prikaznega imena. Piši nam na <eposta>info@slff.eu</eposta> in to uredimo. Ob izbrisu izgine tudi tvoja ekipa z lestvice.',
+      'Račun in vse svoje podatke lahko kadarkoli izbrišeš sam: v meniju računa izberi <b>Izbris računa</b> (slff.eu/account). Za popravek prikaznega imena ali če izbris ne uspe, nam piši na <eposta>info@slff.eu</eposta>. Ob izbrisu izgine tudi tvoja ekipa z lestvice.',
     pravilaNaslov: 'Pravila igranja',
     pravila:
       'En človek, en račun. Glasovanje o asistencah in pozicijah je namenjeno resničnim popravkom — namerno napačno glasovanje kvari igro vsem in lahko vodi do odstranitve računa. Točkovanje in cene se lahko med sezono spremenijo, če se izkaže, da je kaj krivično; take spremembe bomo objavili.',

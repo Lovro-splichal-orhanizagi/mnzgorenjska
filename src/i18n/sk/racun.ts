@@ -80,7 +80,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   // Súkromie a podmienky. <b> je tučné písmo, ostatné značky sú odkazy.
   pravno: {
     naslov: 'Súkromie a podmienky',
-    zadnjaSprememba: 'Posledná zmena: 28. augusta 2026',
+    zadnjaSprememba: 'Posledná zmena: 2. októbra 2026',
     kajJeNaslov: 'Čo je SLFF',
     kajJe:
       'SLFF (Sunday League Fantasy Football) je fanúšikovská fantasy liga pre amatérske futbalové súťaže. Prevádzkujeme ju amatérsky a nie je prepojená so Slovenským futbalovým zväzom (SFZ), regionálnymi ani oblastnými futbalovými zväzmi, ani s klubmi. Hra je bezplatná, bez peňažných vkladov a bez výhier.',
@@ -91,11 +91,13 @@ export const racun: NonNullable<Prevod['racun']> = {
       '<b>Zobrazované meno a názov tímu.</b> Sú viditeľné v rebríčku. Ak nechceš uvádzať svoje meno, použi prezývku.',
     podatkiEkipa:
       '<b>Tvoj tím a hlasy.</b> Zloženie kádra, kapitán, prestupy a hlasy o asistenciách alebo pozíciách.',
+    podatkiNaprava:
+      '<b>Token zariadenia pre upozornenia.</b> Ak v mobilnej aplikácii povolíš upozornenia, uložíme token, cez ktorý ti pošleme pripomienku pred uzávierkou kola. Pri odhlásení ho vymažeme.',
     neHranimo:
       'Neuchovávame adresu, telefónne číslo ani platobné údaje. Nepoužívame sledovacie cookies ani reklamné nástroje. V prehliadači je uložená tvoja prihlasovacia relácia a identifikátor konverzácie v chate podpory, ak ho otvoríš.',
     dostopNaslov: 'Kto má k údajom prístup',
     dostop:
-      'Údaje spracúvajú dvaja poskytovatelia: <b>Supabase</b> (databáza a prihlásenie, servery v EÚ) a <b>Vercel</b> (hosting stránky). Potvrdzovacie e-maily a e-maily na obnovenie hesla sa odosielajú cez <b>Resend</b>. Chat podpory v pravom dolnom rohu beží cez <b>HelpStack</b>: odovzdáva sa tam to, čo doň napíšeš, a — ak si prihlásený — tvoje zobrazované meno, aby sme vedeli, komu odpovedáme. Tvoj e-mail mu neposkytujeme. Nikomu inému údaje neposkytujeme a nepredávame ich.',
+      'Údaje spracúvajú dvaja poskytovatelia: <b>Supabase</b> (databáza a prihlásenie, servery v EÚ) a <b>Vercel</b> (hosting stránky). Potvrdzovacie e-maily a e-maily na obnovenie hesla sa odosielajú cez <b>Resend</b>, upozornenia v mobilnej aplikácii cez <b>Google Firebase Cloud Messaging</b> (iba token zariadenia a text upozornenia). Chat podpory v pravom dolnom rohu beží cez <b>HelpStack</b>: odovzdáva sa tam to, čo doň napíšeš, a — ak si prihlásený — tvoje zobrazované meno, aby sme vedeli, komu odpovedáme. Tvoj e-mail mu neposkytujeme. Nikomu inému údaje neposkytujeme a nepredávame ich.',
     statistikaNaslov: 'Štatistiky hráčov',
     statistika:
       'Údaje o futbalistoch (zostavy, pozície, nástupy, góly, karty) sú prevzaté z verejne zverejnených zápisov o stretnutí na futbalnet.sk; zdroj pre vybranú ligu je uvedený v päte stránky. Asistencie, ktoré zápis o stretnutí neobsahuje, určuje komunita hlasovaním — preto môžu byť nesprávne. Ak je niečo zle, klikni na hráča a daj nám vedieť.',
@@ -106,7 +108,7 @@ export const racun: NonNullable<Prevod['racun']> = {
       'Fotografia na titulnej stránke je dielom Abigail Keenan a je zverejnená na <unsplash>Unsplash</unsplash> pod ich licenciou, ktorá umožňuje voľné použitie. Nezobrazuje hráčov našich líg.',
     praviceNaslov: 'Tvoje práva',
     pravice:
-      'Kedykoľvek môžeš požiadať o vymazanie účtu a všetkých svojich údajov alebo o opravu zobrazovaného mena. Napíš nám na <eposta>info@slff.eu</eposta> a vybavíme to. Pri vymazaní zmizne z rebríčka aj tvoj tím.',
+      'Účet a všetky svoje údaje môžeš kedykoľvek zrušiť sám: v menu účtu zvoľ <b>Zrušenie účtu</b> (slff.eu/account). Ak chceš opraviť zobrazované meno alebo zrušenie nevyjde, napíš nám na <eposta>info@slff.eu</eposta>. Pri vymazaní zmizne z rebríčka aj tvoj tím.',
     pravilaNaslov: 'Pravidlá hry',
     pravila:
       'Jeden človek, jeden účet. Hlasovanie o asistenciách a pozíciách slúži na skutočné opravy — úmyselne nesprávne hlasovanie kazí hru všetkým a môže viesť k odstráneniu účtu. Bodovanie a ceny sa môžu počas sezóny zmeniť, ak sa ukáže, že niečo je nespravodlivé; takéto zmeny zverejníme.',

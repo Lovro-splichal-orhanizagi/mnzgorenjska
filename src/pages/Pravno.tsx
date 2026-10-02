@@ -30,6 +30,7 @@ export default function Pravno() {
           <li>{tx('racun.pravno.podatkiEposta', {}, krepko)}</li>
           <li>{tx('racun.pravno.podatkiIme', {}, krepko)}</li>
           <li>{tx('racun.pravno.podatkiEkipa', {}, krepko)}</li>
+          <li>{tx('racun.pravno.podatkiNaprava', {}, krepko)}</li>
         </ul>
         <p className="text-slate-300">{t('racun.pravno.neHranimo')}</p>
       </section>
@@ -67,6 +68,7 @@ export default function Pravno() {
         <h2 className="text-lg font-bold">{t('racun.pravno.praviceNaslov')}</h2>
         <p className="text-slate-300">
           {tx('racun.pravno.pravice', {}, {
+            ...krepko,
             eposta: (v) => (
               <a href="mailto:info@slff.eu" className="text-gnl-300 underline">
                 {v}

@@ -333,8 +333,35 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   tudi nepopoln) in igralci s poročilom o poškodbi/odsotnosti. Bere ga pas
   `OpozoriloEkipe` (rdeče napake, rumena opozorila, ki se dajo skriti);
   besedila sestavi `src/lib/stanjeEkip.ts`
+- `push_tokens` → žeton FCM naprave mobilne aplikacije (ključ je žeton, ob
+  prijavi drugega uporabnika na isti napravi se preseli). Vpiše ga le
+  `shrani_push_zeton`, bere servis: `posli-opomnik` pošlje isto sporočilo še
+  kot obvestilo (`push.ts`, skrivnost `FIREBASE_SERVICE_ACCOUNT`)
+- `izbrisi_moj_racun()` → uporabnik izbriše svoj račun (stran `/account`,
+  zahteva obeh trgovin); kaskada odnese profil, ekipe, glasove in mini lige
 - `teams.logo_url` → grb kluba; če je prazen, `src/components/Grb.jsx` nariše
   ščit z začetnicami
+
+## Mobilna aplikacija
+
+Capacitor zapakira `dist/` (`ios/`, `android/`; načrt in gradnja v
+`docs/mobilna-aplikacija.md`, objava v `docs/trgovine/`). Koda je ista kot na
+spletu; kar je drugače, je v `src/lib/platforma.ts`:
+
+- **Povezava, ki gre ven** (deljenje, vabila, e-pošta), se začne z `izvor()`,
+  ne z `window.location.origin` — v aplikaciji je izvor `capacitor://localhost`.
+- `navigator.share` je v aplikaciji nadomeščen s Capacitor Share (tudi slike),
+  zato deljenje kliče kar `navigator.share`.
+- E-poštne povezave vodijo na `/auth/confirm?token_hash=…` (predloge v
+  `supabase/templates/`), ne prek supabase.co — Universal/App Links ne sledijo
+  preusmeritvi. Prijava z Googlom/Applom v aplikaciji gre prek sistemskega
+  brskalnika in sheme `eu.slff.app://auth`; sejo prevzame `NativnePovezave`.
+- Administracija je v aplikaciji skrita (`jeNativno()`).
+- Koda v aplikaciji se posodobi le prek trgovine. Migracija, ki zlomi star
+  klic, gre v produkcijo šele, ko je nova aplikacija objavljena in
+  `settings.min_app_verzija` dvignjen na njeno številko gradnje.
+- `src/lib/platforma.ts` uvažajo tudi `src/lib` datoteke, ki jih berejo
+  skripte — tam ga uvažaj s končnico `.ts`.
 
 ## Smernice za razvoj
 

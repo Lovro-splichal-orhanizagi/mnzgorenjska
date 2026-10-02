@@ -136,6 +136,7 @@ rezervnih igralcev.
 | `teams.logo_url` | Grb kluba; brez njega aplikacija nariše ščit z začetnicami |
 | `player_scores` | Točke igralca po krogih |
 | `settings` | Pragova glasov (privzeto 5) |
+| `push_tokens` | Žetoni FCM naprav mobilne aplikacije; vpiše jih le `shrani_push_zeton`, bere le servis (`posli-opomnik`) |
 
 Vsi pogledi imajo stolpec `competition_id` — vmesnik po njem filtrira izbrano
 ligo. Pogled `competition_teams` pove, kateri klubi igrajo v kateri ligi.
@@ -169,6 +170,7 @@ povprečjem njihovih fantasy točk (Lestvica, zavihek Navijači klubov; stran kl
 - Klop+ in Wildcard lahko uporabnik doda, premakne ali prekliče samo pred
   določenim rokom kroga iste lige. Preverbo izvaja baza.
 - Kroge, klube in igralce urejajo **le administratorji** (`profiles.is_admin`).
+- Račun izbriše uporabnik sam z `izbrisi_moj_racun()` (stran `/account`); z njim gredo profil, ekipe z zgodovino, glasovi in njegove mini lige. Sistemskega lastnika hišnih ekip ni mogoče izbrisati.
 
 Migracijo `20260913100000_varnost_in_roki.sql` namesti pred novim frontendom,
 ker ta uporablja novi skrbniški RPC. Migracija ohrani obstoječe posnetke in
@@ -282,6 +284,17 @@ nikoli v git — v CI je shranjen med GitHub Secrets.
 
 Razvojni strežnik opozori, če je priklopljen na oddaljeno bazo, in
 `npm run testno-okolje` se proti nelokalnem URL-ju sploh ne zažene.
+
+## Mobilna aplikacija
+
+Ista spletna stran, zapakirana s Capacitorjem (`ios/`, `android/`,
+`capacitor.config.ts`). Gradnja in odločitve: `docs/mobilna-aplikacija.md`;
+objava v App Store in Google Play, besedila in grafike: `docs/trgovine/`.
+
+```bash
+npm run build && npx cap sync   # dist/ → ios/ in android/
+npx cap open ios                # Xcode
+```
 
 ## Objava (deploy)
 

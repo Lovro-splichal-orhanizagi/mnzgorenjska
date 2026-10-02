@@ -16,8 +16,25 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // Ključ za nalaganje v Google Play (upload key) je zunaj gita:
+    // android/keystore.properties (glej docs/trgovine.md). Brez datoteke se
+    // release zgradi nepodpisan.
+    def kljuc = rootProject.file('keystore.properties')
+    signingConfigs {
+        release {
+            if (kljuc.exists()) {
+                def p = new Properties()
+                kljuc.withInputStream { p.load(it) }
+                storeFile rootProject.file(p['storeFile'])
+                storePassword p['storePassword']
+                keyAlias p['keyAlias']
+                keyPassword p['keyPassword']
+            }
+        }
+    }
     buildTypes {
         release {
+            if (kljuc.exists()) signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
