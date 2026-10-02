@@ -145,9 +145,11 @@ export default function Igralci() {
           .eq('competition_id', ligaId)
           .order('points', { ascending: false })
           .limit(500),
+        // Šteje tabelo, ne pogleda lestvice: ta za vsako ekipo sešteje točke
+        // vseh krogov, tu pa rabimo le število ekip.
         supabase
-          .from('fantasy_team_standings')
-          .select('fantasy_team_id', { count: 'exact', head: true })
+          .from('fantasy_teams')
+          .select('id', { count: 'exact', head: true })
           .eq('competition_id', ligaId)
           // Izbranost hišnih ekip ne šteje (glej `owners`), zato tudi imenovalec ne.
           .eq('hisna', false),
