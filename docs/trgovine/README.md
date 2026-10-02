@@ -236,6 +236,9 @@ Demo account: review@slff.eu / <password>
 - [ ] Open `https://slff.eu/l/<code>` from Messages → opens the app on the invite
 - [ ] Android back button goes back, closes the app on the home page
 - [ ] Delete account → logged out, can't log in again
+      (if it fails with "permission denied for table users", the hosted
+      project doesn't let `postgres` delete from `auth.users`; tell me and I'll
+      move deletion to an edge function with `auth.admin.deleteUser`)
 - [ ] `insert into settings values ('min_app_verzija','999')` → app shows
       "Update the app"; then `delete from settings where key='min_app_verzija'`
 

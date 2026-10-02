@@ -1,7 +1,12 @@
 // Povezave, ki odprejo mobilno aplikacijo: slff.eu/… (Universal Links, App
 // Links — e-pošta, deljene povezave, povabila) in `eu.slff.app://auth` (vrnitev
 // iz prijave z Googlom/Applom v sistemskem brskalniku). Na spletu ne naredi nič.
-import { useEffect } from 'react'
+//
+// Seje iz povezave ne sprejmemo: kdorkoli lahko pošlje povezavo s svojimi
+// žetoni in žrtev bi tiho prijavil v svoj račun. Prijava v aplikaciji teče po
+// PKCE (src/lib/supabase.ts) — povratna povezava nosi le `code`, ki ga zamenja
+// samo naprava, ki je prijavo začela.
+import { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { App } from '@capacitor/app'
 import { Browser } from '@capacitor/browser'
@@ -11,38 +16,42 @@ import { varnaPot } from '../lib/prijava'
 
 export default function NativnePovezave() {
   const navigate = useNavigate()
+  // `navigate` se menja z vsako potjo; poslušalca nastavimo enkrat, sicer bi
+  // getLaunchUrl() ob vsakem kliku znova odprl povezavo, s katero se je
+  // aplikacija zagnala.
+  const pojdi = useRef(navigate)
+  pojdi.current = navigate
 
   useEffect(() => {
     if (!jeNativno()) return
+    // Hladen zagon sproži appUrlOpen in getLaunchUrl z istim naslovom.
+    const obdelani = new Set<string>()
     async function odpri(naslov: string) {
+      if (obdelani.has(naslov)) return
+      obdelani.add(naslov)
       let url: URL
       try {
         url = new URL(naslov)
       } catch {
         return
       }
-      // Seja iz prijave pride v # (implicitni tok Supabase), kot na spletu.
-      const hash = new URLSearchParams(url.hash.slice(1))
-      const access_token = hash.get('access_token')
-      const refresh_token = hash.get('refresh_token')
-      if (access_token && refresh_token) await supabase.auth.setSession({ access_token, refresh_token })
-
       if (url.protocol === `${SHEMA}:`) {
         void Browser.close().catch(() => {})
-        navigate(varnaPot(url.searchParams.get('nazaj')) ?? '/', { replace: true })
+        const koda = url.searchParams.get('code')
+        if (koda) await supabase.auth.exchangeCodeForSession(koda)
+        pojdi.current(varnaPot(url.searchParams.get('nazaj')) ?? '/', { replace: true })
         return
       }
-      navigate(varnaPot(url.pathname + url.search + (access_token ? '' : url.hash)) ?? '/')
+      pojdi.current(varnaPot(url.pathname + url.search) ?? '/')
     }
     const poslusalec = App.addListener('appUrlOpen', ({ url }) => void odpri(url))
-    // Hladen zagon s povezavo: dogodek je lahko prišel, preden je stran poslušala.
     void App.getLaunchUrl().then((z) => {
       if (z?.url) void odpri(z.url)
     })
     return () => {
       void poslusalec.then((p) => p.remove())
     }
-  }, [navigate])
+  }, [])
 
   return null
 }

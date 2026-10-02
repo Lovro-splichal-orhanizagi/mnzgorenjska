@@ -76,12 +76,14 @@ export async function posljiPush(
   userId: string,
   o: Obvestilo,
 ): Promise<number> {
-  const sa = servisniRacun()
-  if (!sa) return 0
-  const { data: naprave } = await db.from('push_tokens').select('token').eq('user_id', userId)
-  if (!naprave?.length) return 0
   let dostavljeno = 0
+  // Push nikoli ne sme podreti pošiljanja pošte (pokvarjena skrivnost, omrežje):
+  // napaka bi preskočila zapis v email_log in mail bi šel naslednjič še enkrat.
   try {
+    const sa = servisniRacun()
+    if (!sa) return 0
+    const { data: naprave } = await db.from('push_tokens').select('token').eq('user_id', userId)
+    if (!naprave?.length) return 0
     const zeton = await dostopniZeton(sa)
     for (const { token } of naprave as { token: string }[]) {
       const r = await fetch(`https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`, {

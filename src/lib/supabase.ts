@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { Capacitor } from '@capacitor/core'
 import type { Database } from './baza.types'
 
 const url = import.meta.env.VITE_SUPABASE_URL
@@ -21,4 +22,10 @@ if (import.meta.env.DEV && url && !/127\.0\.0\.1|localhost/.test(url)) {
   )
 }
 
-export const supabase = createClient<Database>(url ?? '', anonKey ?? '')
+// Mobilna aplikacija se prijavi po PKCE: povratna povezava `eu.slff.app://auth`
+// nosi le kodo, ki jo zamenja samo ta naprava (NativnePovezave). Žetonov v
+// povezavi bi ji lahko podtaknil kdorkoli, druga aplikacija z isto shemo pa
+// bi jih lahko prestregla. Splet ostane pri implicitnem toku.
+export const supabase = createClient<Database>(url ?? '', anonKey ?? '', {
+  auth: { flowType: Capacitor.isNativePlatform() ? 'pkce' : 'implicit' },
+})
