@@ -27,9 +27,12 @@ JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" \
 ```
 
 Build vzame `.env.production`, zato aplikacija teče proti produkcijski bazi.
-Ikona in splash: `assets/logo.png` →
-`npx @capacitor/assets generate --iconBackgroundColor '#2f6b4f' --splashBackgroundColor '#020617'`
-(ustvarjeni PWA ikone in manifest pobriši — splet jih ne uporablja).
+Ikona: maskota (`public/logo/slff-maskota.png`) na kremni podlagi, brez kroga —
+obliko da sistem (Android adaptivna ikona, iOS zaobljen kvadrat). Plasti so v
+`assets/` (`icon-foreground.png` maskota v višini 720/1024, da vrček ostane v
+varnem krogu; `icon-background.png`; `icon-only.png` za iOS), splash iz
+`assets/logo.png`. Na zlati podlagi se zlati vrček izgubi, na temni obrisi.
+Ponovna gradnja: `npx @capacitor/assets generate --android --ios`.
 
 Xcode 27 `npx cap run ios` ne najde simulatorja; namesti ročno:
 `xcrun simctl install booted ios/DerivedData/*/Build/Products/Debug-iphonesimulator/App.app && xcrun simctl launch booted eu.slff.app`.
