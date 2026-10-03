@@ -231,6 +231,31 @@ export function kratkoImeSk(polno, { obdrziTradicijo = false } = {}) {
   return ime.length >= 3 ? ime : kratkoIme(polno)
 }
 
+// Isti klub Sportnet zapiše različno — iz sezone v sezono in med ligami
+// istega kluba ("FK Nižná" v 7. ligi, "Futbalový klub Nižná" v 8. in U19;
+// "Futbalový klub Čadca" proti "FK Čadca"). Ključ zato pravno obliko na
+// začetku skrajša v kratico; brez tega je uvoz za vsako različico ustvaril
+// nov klub in tekme sezone razklal na dva (Čadca, Nižná, 2. 10. 2026).
+const PRAVNE_OBLIKE = [
+  ['obecný futbalový klub', 'ofk'],
+  ['obecný športový klub', 'ošk'],
+  ['mestský futbalový klub', 'mfk'],
+  ['mestský športový klub', 'mšk'],
+  ['telovýchovná jednota', 'tj'],
+  ['futbalový klub', 'fk'],
+  ['športový klub', 'šk'],
+]
+const kljucBrezOblike = naredikljucKluba({})
+export function kljucKlubaSk(ime) {
+  let s = String(ime ?? '').trim().toLowerCase()
+  for (const [dolgo, kratko] of PRAVNE_OBLIKE)
+    if (s.startsWith(dolgo + ' ')) {
+      s = kratko + s.slice(dolgo.length)
+      break
+    }
+  return kljucBrezOblike(s)
+}
+
 const vir = {
   ime: 'sportnet',
   polnoIme: 'Slovenský futbalový zväz (futbalnet.sk)',
@@ -292,7 +317,7 @@ const vir = {
   // Uvoz razporeda kliče `vBesedilo` le, kadar vir nima `razporedVseStrani`.
   vBesedilo: (s) => String(s ?? '').split('\n'),
 
-  kljucKluba: naredikljucKluba({}),
+  kljucKluba: kljucKlubaSk,
   kratkoIme: kratkoImeSk,
   poenostavi,
 }

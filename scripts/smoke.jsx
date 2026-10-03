@@ -3389,6 +3389,10 @@ preveri(
   const S = await import('./viri/sportnet.mjs')
   preveri('sportnet: sezona', S.sezonaIz('2026/2027') === '2026/27')
   preveri('sportnet: ime v "Priimek Ime"', S.vPriimekIme('Matúš Ráček') === 'Ráček Matúš')
+  // Isti klub pod polno in skrajšano pravno obliko (Nižná, Čadca 2026); B-ekipa ostane svoja.
+  preveri('sportnet: "Futbalový klub X" je "FK X"', S.kljucKlubaSk('Futbalový klub Nižná') === S.kljucKlubaSk('FK Nižná'))
+  preveri('sportnet: "Telovýchovná jednota X" je "TJ X"', S.kljucKlubaSk('Telovýchovná jednota Lovča') === S.kljucKlubaSk('TJ Lovča'))
+  preveri('sportnet: B-ekipa ni isti klub', S.kljucKlubaSk('TJ Sokol Medzibrod B') !== S.kljucKlubaSk('TJ Sokol Medzibrod'))
   preveri('sportnet: slovaski cas', S.lokalniCas('2026-09-19T13:00:00.000Z').datum === '2026-09-19' && S.lokalniCas('2026-09-19T13:00:00.000Z').ura === '15:00')
   const tekma = JSON.parse(readFileSync(new URL('./vzorci/sportnet-tekma.json', import.meta.url), 'utf8'))
   const z = S.vZapisnik(tekma)
