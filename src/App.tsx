@@ -31,7 +31,13 @@ import Odsotnosti from './pages/Odsotnosti'
 import Administracija from './pages/Administracija'
 import VstopVMiniLigo from './pages/VstopVMiniLigo'
 import Opomniki from './pages/Opomniki'
+import Racun from './pages/Racun'
+import PotrditevPovezave from './pages/PotrditevPovezave'
+import NativnePovezave from './components/NativnePovezave'
+import PosodobiAplikacijo from './components/PosodobiAplikacijo'
+import PotisnaObvestila from './components/PotisnaObvestila'
 import { useKanonicni, useNaslov } from './lib/naslov'
+import { jeNativno } from './lib/platforma'
 
 // Poti so angleške, ker jih vidi vsaka država (slovaški obiskovalec ne
 // odpira "moja-ekipa"). Stari slovenski naslovi ostanejo kot preusmeritve.
@@ -83,6 +89,9 @@ export default function App() {
     <AuthProvider>
       <TekmovanjeProvider>
         <div className="min-h-screen overflow-x-hidden">
+          <NativnePovezave />
+          <PosodobiAplikacijo />
+          <PotisnaObvestila />
           <PrviObisk />
           <RokKroga />
           <Navbar />
@@ -116,12 +125,14 @@ export default function App() {
               <Route path="/novo-geslo" element={<NovoGeslo />} />
               <Route path="/legal" element={<Pravno />} />
               <Route path="/reminders" element={<Opomniki />} />
+              <Route path="/account" element={<Racun />} />
+              <Route path="/auth/confirm" element={<PotrditevPovezave />} />
               {/* Stari slovenski naslovi (deljene povezave, e-pošta, iskalniki)
                   vodijo na nove — s parametri, poizvedbo in #. */}
               {STARE_POTI.map(([staro, novo]) => (
                 <Route key={staro} path={staro} element={<StaraPot na={novo} />} />
               ))}
-              <Route path="/admin" element={<Administracija />} />
+              {!jeNativno() && <Route path="/admin" element={<Administracija />} />}
               <Route path="*" element={<NiStrani />} />
             </Routes>
             </NapakaOprijem>

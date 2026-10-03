@@ -12,6 +12,7 @@ import {
   type TedenskiPregled as Pregled,
 } from '../lib/miniLige'
 import { t } from '../i18n'
+import { izvor } from '../lib/platforma'
 
 /**
  * Tedenski pregled mini lige: zgodbe končanega kroga.
@@ -129,7 +130,7 @@ export default function TedenskiPregled({ ligaId, ime, koda }: { ligaId: number;
                   setIzid(
                     await deliBesedilo(
                       t('lestvice.pregled.sporociloNaslov', { ime, krog: pregled.krog ?? '' }),
-                      besediloPregleda(ime, pregled.krog ?? 0, zgodbe, koda, window.location.origin),
+                      besediloPregleda(ime, pregled.krog ?? 0, zgodbe, koda, izvor()),
                     ),
                   )
                 }

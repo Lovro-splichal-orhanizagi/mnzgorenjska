@@ -34,6 +34,7 @@ import {
 import { tockeZaNastop } from '../lib/tockovanje'
 import type { Pozicija, Postavka } from '../lib/tipi'
 import { t, tx } from '../i18n'
+import { izvor } from '../lib/platforma'
 
 /** Vrstica pogleda `player_overview` — profil igralca. */
 type Profil = Record<string, any> & {
@@ -568,7 +569,7 @@ export default function Igralec() {
             }}
             povezava={
               typeof window !== 'undefined'
-                ? `${window.location.origin}/igralec/${igralec.id}${slugLige ? `?t=${slugLige}` : ''}`
+                ? `${izvor()}/igralec/${igralec.id}${slugLige ? `?t=${slugLige}` : ''}`
                 : ''
             }
           />

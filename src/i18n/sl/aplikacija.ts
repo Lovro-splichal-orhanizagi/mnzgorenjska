@@ -39,6 +39,7 @@ export const aplikacija = {
     vec: 'Več',
     racun: 'Račun',
     opomniki: 'Opomniki',
+    izbrisRacuna: 'Izbris računa',
     povabi: 'Povabi prijatelja',
     odjava: 'Odjava',
     prijava: 'Prijava',
@@ -142,5 +143,11 @@ export const aplikacija = {
     zadeva: 'Fantasy liga: {liga} — pridi zraven',
     besedilo:
       'Živjo!\n\nIgram fantasy nogometno ligo: {liga}. Sestaviš svojo ekipo iz igralcev{klubi} in tekmuješ z drugimi.\n\nPovsem brezplačno. Registriraj se na:\n{naslov}\n\nSestavi ekipo, določi kapetana in po vsakem krogu preveri, kdo je zbral največ točk.\n\nSe vidimo v ligi!',
+  },
+  // Mobilna aplikacija je prestara (PosodobiAplikacijo).
+  posodobi: {
+    naslov: 'Posodobi aplikacijo',
+    opis: 'Ta različica SLFF ni več podprta. Posodobi aplikacijo, da boš lahko še naprej urejal ekipo.',
+    gumb: 'Posodobi',
   },
 }

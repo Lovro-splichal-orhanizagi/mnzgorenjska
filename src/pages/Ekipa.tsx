@@ -16,6 +16,7 @@ import {
   type VrsticaTuje,
 } from '../lib/tujaEkipa'
 import { t } from '../i18n'
+import { izvor } from '../lib/platforma'
 
 interface Krog {
   id: number
@@ -254,7 +255,7 @@ export default function Ekipa() {
                   liga={liga}
                   povezava={
                     typeof window !== 'undefined'
-                      ? `${window.location.origin}/team/${id}?krog=${izbranKrog}`
+                      ? `${izvor()}/team/${id}?krog=${izbranKrog}`
                       : ''
                   }
                 />

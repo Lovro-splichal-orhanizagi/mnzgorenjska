@@ -2,6 +2,8 @@
 // (`src/i18n/jedro.ts`), ki ga uvažajo skripte v Node, zato tu ni Reacta ne
 // Supabase. Razlaga pravil je v `drzava.ts`.
 
+import { DOMENA, jeNativno } from './platforma.ts'
+
 const KLJUC = 'slff-drzava'
 
 /** Znane države: jezik in časovni pas, ki nanje kažeta. */
@@ -100,7 +102,7 @@ export async function drzavaPoIp({
   })
   const branje = (async () => {
     try {
-      const odg = await fetchFn('/api/drzava', { signal: prekini?.signal, cache: 'no-store' })
+      const odg = await fetchFn(`${jeNativno() ? DOMENA : ''}/api/drzava`, { signal: prekini?.signal, cache: 'no-store' })
       if (!odg.ok || !(odg.headers.get('content-type') ?? '').includes('json')) return null
       const { drzava } = (await odg.json()) as { drzava?: unknown }
       return typeof drzava === 'string' && /^[A-Z]{2}$/.test(drzava) ? drzava : null

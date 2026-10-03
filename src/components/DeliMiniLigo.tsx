@@ -8,6 +8,7 @@ import {
   type IzidDeljenja,
 } from '../lib/miniLige'
 import { t } from '../i18n'
+import { izvor } from '../lib/platforma'
 
 /**
  * Povabilo v mini ligo, ki se ga ne da spregledati.
@@ -38,7 +39,7 @@ export default function DeliMiniLigo({
   }, [])
   useEffect(() => setIzid(null), [koda])
 
-  const naslovStrani = typeof window !== 'undefined' ? window.location.origin : 'https://slff.eu'
+  const naslovStrani = izvor()
   const povezava = povezavaVabila(koda, naslovStrani)
   const besedilo = besediloVabila(ime, koda, naslovStrani)
   const { whatsapp, viber } = povezaveDeljenja(besedilo)

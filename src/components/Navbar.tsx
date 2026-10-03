@@ -5,6 +5,7 @@ import { useTekmovanje } from '../lib/tekmovanje'
 import { sestaviVabilo, vabiloMailto } from '../lib/vabilo'
 import { supabase } from '../lib/supabase'
 import { potrdiZapustitev } from '../lib/neshranjeno'
+import { jeNativno } from '../lib/platforma'
 import IzbirnikLige from './IzbirnikLige'
 import { t } from '../i18n'
 
@@ -150,7 +151,8 @@ export default function Navbar() {
   // Glasovanje o pozicijah je nadomestek za zapisnik, ki pozicij ne pozna
   // (Slovenija). Slovaški zapisnik jih ima, zato stran tam nima kaj početi.
   const zaDrzavo = drzava === 'SI' ? ostale : ostale.filter((p) => p.pot !== '/positions')
-  const vec = jeAdmin ? [...zaDrzavo, { pot: '/admin', naslov: t('aplikacija.meni.admin') }] : zaDrzavo
+  // Administracija je samo na spletu, mobilna aplikacija je za igralce.
+  const vec = jeAdmin && !jeNativno() ? [...zaDrzavo, { pot: '/admin', naslov: t('aplikacija.meni.admin') }] : zaDrzavo
   // Začetnica za avatar: iz vzdevka, sicer iz e-naslova.
   const zacetnica = (ime || session?.user.email || '?').trim().charAt(0).toUpperCase()
 
@@ -237,8 +239,8 @@ export default function Navbar() {
                   onClick={() => setRacunOdprt(!racunOdprt)}
                   aria-haspopup="menu"
                   aria-expanded={racunOdprt}
-                  aria-label={t('aplikacija.meni.racun')}
-                  title={ime ?? session.user.email ?? t('aplikacija.meni.racun')}
+                  aria-label={t('aplikacija.meni.izbrisRacuna')}
+                  title={ime ?? session.user.email ?? t('aplikacija.meni.izbrisRacuna')}
                   className="flex h-9 w-9 items-center justify-center rounded-full bg-gnl-500/20 font-black text-gnl-200 ring-1 ring-gnl-400/40 hover:bg-gnl-500/30"
                 >
                   {zacetnica}
@@ -258,6 +260,14 @@ export default function Navbar() {
                       onClick={() => setRacunOdprt(false)}
                     >
                       {t('aplikacija.meni.opomniki')}
+                    </NavLink>
+                    <NavLink
+                      to="/account"
+                      role="menuitem"
+                      className={vrsticaMenija}
+                      onClick={() => setRacunOdprt(false)}
+                    >
+                      {t('aplikacija.meni.izbrisRacuna')}
                     </NavLink>
                     <a
                       href={vabilo}

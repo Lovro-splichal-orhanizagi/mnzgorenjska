@@ -11,3 +11,7 @@ scripts/.predpomnilnik/
 
 # Produkcijski javni ključi so del repozitorija — brez njih deploy ne ve za bazo.
 !.env.production
+.gstack/
+
+# Posnetki za trgovini (18 MB), glej docs/trgovine/README.md
+docs/trgovine/posnetki/

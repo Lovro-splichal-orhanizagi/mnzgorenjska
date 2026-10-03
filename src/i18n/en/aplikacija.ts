@@ -35,6 +35,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     vec: 'More',
     racun: 'Account',
     opomniki: 'Reminders',
+    izbrisRacuna: 'Delete account',
     povabi: 'Invite a friend',
     odjava: 'Log out',
     prijava: 'Log in',
@@ -133,5 +134,11 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     zadeva: 'Fantasy league: {liga} — join in',
     besedilo:
       'Hi!\n\nI am playing a fantasy football league: {liga}. You build your own team from players{klubi} and compete with others.\n\nIt is completely free. Sign up at:\n{naslov}\n\nBuild a team, pick a captain and after every round check who scored the most points.\n\nSee you in the league!',
+  },
+  // Mobilna aplikacija je prestara (PosodobiAplikacijo).
+  posodobi: {
+    naslov: 'Update the app',
+    opis: 'This version of SLFF is no longer supported. Update the app to keep managing your squad.',
+    gumb: 'Update',
   },
 }

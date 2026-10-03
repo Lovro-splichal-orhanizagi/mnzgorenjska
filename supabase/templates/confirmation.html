@@ -1,20 +1,22 @@
 <!-- Potrditev registracije. Jezik izbere `jezik` v metapodatkih uporabnika
      (Prijava.tsx ga vpiše ob registraciji); brez njega ostane slovenščina.
      Vsebino te datoteke je treba ročno prilepiti v Supabase → Auth → Email
-     Templates → Confirm signup, config.toml velja le za lokalni stack. -->
+     Templates → Confirm signup, config.toml velja le za lokalni stack.
+     Povezava vodi naravnost na slff.eu/auth/confirm (PotrditevPovezave.tsx),
+     ne prek supabase.co: le tako jo telefon odpre v mobilni aplikaciji. -->
 <div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; color: #0f172a;">
 {{ if eq (printf "%v" .Data.jezik) "sk" }}
   <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Ahoj!</p>
   <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Ďakujeme za registráciu v SLFF. Kliknutím na tlačidlo potvrdíš svoju e-mailovú adresu a môžeš si začať zostavovať tím.</p>
   <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Potvrdiť e-mail →</a>
+    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Potvrdiť e-mail →</a>
   </p>
   <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Ak si sa neregistroval ty, tento e-mail ignoruj.</p>
 {{ else }}
   <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Živjo!</p>
   <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Hvala za registracijo v SLFF. S klikom na gumb potrdiš svoj e-naslov in lahko začneš sestavljati ekipo.</p>
   <p style="text-align: center; margin: 24px 0;">
-    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Potrdi e-naslov →</a>
+    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Potrdi e-naslov →</a>
   </p>
   <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Če se nisi registriral/a ti, ta mail prezri.</p>
 {{ end }}

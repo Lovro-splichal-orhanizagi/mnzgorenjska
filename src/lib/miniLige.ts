@@ -5,6 +5,7 @@
 
 import { t } from '../i18n/jedro.ts'
 import { formatirajTocke, oblika, tockZ, TOCKE_TOZILNIK } from './pomozno.ts'
+import { izvor } from './platforma.ts'
 
 /** Vrstica pogleda `mini_liga_lestvica`. */
 export interface MiniVrstica {
@@ -155,7 +156,7 @@ export async function kopiraj(besedilo: string): Promise<IzidDeljenja> {
 export async function deliVabilo(ime: string, koda: string): Promise<IzidDeljenja> {
   return deliBesedilo(
     t('lestvice.miniLige.naslovVabila', { ime }),
-    besediloVabila(ime, koda, window.location.origin),
+    besediloVabila(ime, koda, izvor()),
   )
 }
 
