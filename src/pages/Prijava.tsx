@@ -8,6 +8,7 @@ import { jezik, t } from '../i18n'
 import { useTekmovanje } from '../lib/tekmovanje'
 import { JEZIK_DRZAVE } from '../lib/drzava'
 import { Browser } from '@capacitor/browser'
+import { Capacitor } from '@capacitor/core'
 import { izvor, jeNativno, SHEMA } from '../lib/platforma'
 
 type Nacin = 'prijava' | 'registracija' | 'pozabljeno'
@@ -133,6 +134,9 @@ export default function Prijava() {
             </svg>
             {t('racun.prijava.zGooglom')}
           </button>
+          {/* Apple je zahteva App Stora (ob Googlu mora biti tudi Apple); splet
+              in Android imata Google in e-pošto. */}
+          {Capacitor.getPlatform() === 'ios' && (
           <button
             type="button"
             onClick={() => zPonudnikom('apple')}
@@ -143,6 +147,7 @@ export default function Prijava() {
             </svg>
             {t('racun.prijava.zApplom')}
           </button>
+          )}
           <div className="flex items-center gap-3 text-xs text-slate-500">
             <span className="h-px flex-1 bg-white/10" />
             {t('racun.prijava.aliZEposto')}

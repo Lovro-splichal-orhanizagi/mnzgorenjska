@@ -2629,6 +2629,121 @@ export type Database = {
           },
         ]
       }
+      statistika_igralcev: {
+        Row: {
+          assists: number
+          clean_sheets: number
+          competition_id: number
+          form: number
+          goals: number
+          last_round: number
+          matches: number
+          minutes: number
+          own_goals: number
+          player_id: number
+          points: number
+          red_cards: number
+          season: string
+          yellow_cards: number
+        }
+        Insert: {
+          assists: number
+          clean_sheets: number
+          competition_id: number
+          form?: number
+          goals: number
+          last_round?: number
+          matches: number
+          minutes: number
+          own_goals: number
+          player_id: number
+          points: number
+          red_cards: number
+          season: string
+          yellow_cards: number
+        }
+        Update: {
+          assists?: number
+          clean_sheets?: number
+          competition_id?: number
+          form?: number
+          goals?: number
+          last_round?: number
+          matches?: number
+          minutes?: number
+          own_goals?: number
+          player_id?: number
+          points?: number
+          red_cards?: number
+          season?: string
+          yellow_cards?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "statistika_igralcev_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "statistika_igralcev_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "statistika_igralcev_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "statistika_igralcev_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "krog_najboljsi"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "statistika_igralcev_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "player_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "statistika_igralcev_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "player_season_standings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "statistika_igralcev_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "player_standings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "statistika_igralcev_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "statistika_igralcev_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "pozicije_v_cakanju"
+            referencedColumns: ["player_id"]
+          },
+        ]
+      }
       teams: {
         Row: {
           country_id: number
@@ -4109,6 +4224,115 @@ export type Database = {
           season: string | null
           yellow_cards: number | null
         }
+        Insert: {
+          assists?: number | null
+          clean_sheets?: number | null
+          competition_id?: number | null
+          goals?: number | null
+          matches?: number | null
+          minutes?: number | null
+          own_goals?: number | null
+          player_id?: number | null
+          points?: number | null
+          red_cards?: number | null
+          season?: string | null
+          yellow_cards?: number | null
+        }
+        Update: {
+          assists?: number | null
+          clean_sheets?: number | null
+          competition_id?: number | null
+          goals?: number | null
+          matches?: number | null
+          minutes?: number | null
+          own_goals?: number | null
+          player_id?: number | null
+          points?: number | null
+          red_cards?: number | null
+          season?: string | null
+          yellow_cards?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "statistika_igralcev_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "statistika_igralcev_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "statistika_igralcev_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "statistika_igralcev_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "krog_najboljsi"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "statistika_igralcev_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "player_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "statistika_igralcev_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "player_season_standings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "statistika_igralcev_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "player_standings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "statistika_igralcev_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "statistika_igralcev_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "pozicije_v_cakanju"
+            referencedColumns: ["player_id"]
+          },
+        ]
+      }
+      player_season_stats_izracun: {
+        Row: {
+          assists: number | null
+          clean_sheets: number | null
+          competition_id: number | null
+          goals: number | null
+          matches: number | null
+          minutes: number | null
+          own_goals: number | null
+          player_id: number | null
+          points: number | null
+          red_cards: number | null
+          season: string | null
+          yellow_cards: number | null
+        }
         Relationships: [
           {
             foreignKeyName: "appearances_player_id_fkey"
@@ -4811,8 +5035,16 @@ export type Database = {
       nova_koda_mini_lige: { Args: Record<PropertyKey, never>; Returns: string }
       odstrani_hisne_ekipe: { Args: { p_ids: number[] }; Returns: number }
       okno_preracuna_tock: { Args: Record<PropertyKey, never>; Returns: string }
+      osvezi_statistiko_igralcev: {
+        Args: { p_igralci: number[] }
+        Returns: undefined
+      }
       osvezi_tocke_krogov: { Args: { p_krogi: number[] }; Returns: undefined }
       osvezi_vse_tocke_krogov: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      osvezi_vso_statistiko_igralcev: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
