@@ -312,6 +312,15 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   `koncani_krogi_mini_lige`. Obe tečeta s pravicami klicatelja, zato tujec
   mini lige (RLS na `mini_liga_clani`) dobi `null`
 - `player_standings` → lestvica igralcev (točke, forma, na tekmo, izbranost)
+- `statistika_igralcev` → statistika igralca po ligi in sezoni (nastopi,
+  minute, goli, kartoni, čiste mreže, točke, asistence, zadnji krog, forma).
+  `player_season_stats`, `player_overview` in `player_season_standings` jo
+  berejo namesto sprotnega seštevanja vseh nastopov (prej 0,7–2,5 s na klic,
+  tri četrtine časa baze; migracija 20261002120000). Izračun je
+  `player_season_stats_izracun`; tabelo osvežijo sprožilci na `appearances`,
+  `player_scores`, `goals`, `matches` (izid) in `players` (pozicija), ponoči
+  jo cron obnovi vso. Nov vhod v izračun **potrebuje svoj sprožilec**
+  (`npm run preizkus-statistike` primerja tabelo z izračunom)
 - `vrh_drzave(drzava, koliko)` → vrh igralcev tekoče sezone vseh aktivnih lig
   države (točke brez asistenc, goli, čiste mreže vratarjev) za zavihek Igralci na
   strani Slovenija. Bere tabele (`player_scores`, `appearances`, `goals`), ne
