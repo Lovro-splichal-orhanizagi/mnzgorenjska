@@ -155,6 +155,46 @@ jezika in tujca (glej *Prevodi*); šifra lige
 zunaj Slovenije se začne s kodo države (`sk-…`), da jezik ob nalaganju ve,
 katero državo gleda.
 
+### Hrvaška
+
+Vir `hns` (`scripts/viri/hns.mjs`) bere **HNS Semafor** (semafor.hns.family),
+javni prikaz COMET-a, v katerem HNS in vse županijske zveze (ŽNS, NS) vodijo
+tekmovanja. Zapisnik je enak od Treće NL do III. ŽNL: postavi s številko dresa
+in stalno šifro osebe (`data-personid` → `reg_st`), vratar označen, dogodki pri
+igralcu z minuto (gol, 11 m, avtogol, karton, menjava). Menjave niso v parih —
+vemo, kdaj je kdo prišel in šel, kar minutam zadošča. Pozicij razen vratarja
+ni, zato hrvaške lige čakajo na glasovanje o pozicijah kot slovenske.
+
+Šifra lige je **id tekmovanja** na Semaforju (`/natjecanja/<id>/`); vsaka
+sezona ima svoj id, tudi arhiv. Stran tekmovanja nosi ves razpored, stran
+tekme zapisnik. Vse lige po zvezah z arhivom in številom klubov izpiše:
+
+```bash
+node scripts/hrvaske-lige.mjs              # vse zveze
+node scripts/hrvaske-lige.mjs --zveza 40   # ena zveza (oid, 40 = Međimurje)
+```
+
+Vpisanih je 15 lig severozahoda (migracija 20261004163300), **neaktivnih**:
+
+| liga | tekoča 2026/27 | arhiv 2025/26 |
+|---|---|---|
+| hr-3nl-sjever / -zapad / -centar | `115183774` / `114647051` / `114608014` | `100970578` / `100585203` / `100580402` |
+| hr-mz-premier / -1mnl / -2mnl | `114562601` / `114562642` / `114563249` | `100660111` / `100663430` / `100664944` |
+| hr-vz-elitna / -1znl | `114667150` / `114669201` | `100608915` / `100609886` |
+| hr-kz-1znl | `114647266` | `100694508` |
+| hr-is-elitna / -1znl | `114701073` / `114703568` | `100703751` / `100704518` |
+| hr-ri-4nl | `114651788` | `100796651` |
+| hr-zg-1liga / -2liga | `114608298` / `114608605` | `100629221` / `100632300` |
+| hr-kc-elitna | `114703534` | `100712145` |
+
+Klubi se ujemajo le znotraj države vira (`mapaKlubov` po `vir.drzava`):
+"NK Polet" ali "NK Mladost" je v Sloveniji in na Hrvaškem drug klub. Ključ
+kluba ohrani ć in đ, ki ju slovenski `poenostavi` zavrže.
+
+Vmesnik v hrvaščini (`src/i18n/hr/`) še ni preveden — liga se vklopi šele,
+ko je. Beremo odkrito (`User-Agent: SLFF fantasy`, 500 ms med zahtevki,
+popolnih zapisnikov ne beremo znova), vir je v nogi vsake strani.
+
 ### Država obiskovalca
 
 Domena je ena, **lige druge države so skrite**: `useTekmovanje().tekmovanja`

@@ -16,6 +16,7 @@ import mnzmb from './mnzmb.mjs'
 import mnzng from './mnzng.mjs'
 import nzs from './nzs.mjs'
 import sportnet from './sportnet.mjs'
+import hns from './hns.mjs'
 
 const VIRI = {
   mnzg,
@@ -30,6 +31,8 @@ const VIRI = {
   nzs,
   // Prvi vir zunaj Slovenije: Slovaška (SFZ) prek javnega API-ja Sportneta.
   sportnet,
+  // Hrvaška (HNS in županijske zveze) prek HNS Semaforja.
+  hns,
 }
 
 /**

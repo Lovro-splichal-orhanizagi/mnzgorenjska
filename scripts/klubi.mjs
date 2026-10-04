@@ -93,12 +93,23 @@ export const kratkoIme = (polnoIme) =>
  *   drugi zvezi povsem drug klub.
  *
  * @param {import('@supabase/supabase-js').SupabaseClient} db
- * @param {{ ime: string, kljucKluba: (ime: string) => string }} vir
+ * @param {{ ime: string, drzava?: string, kljucKluba: (ime: string) => string }} vir
  */
 export async function mapaKlubov(db, vir) {
-  const vsi = await vseVrstice((od, do_) =>
-    db.from('teams').select('id, name').order('id').range(od, do_),
-  )
+  // Le klubi države vira: "NK Polet" ali "NK Mladost" je v Sloveniji in na
+  // Hrvaškem drug klub, natančno ime pa bi ju sicer združilo.
+  let drzavaId = null
+  if (vir.drzava) {
+    const { data: d, error: eD } = await db.from('countries').select('id').eq('code', vir.drzava).maybeSingle()
+    if (eD) throw new Error(`država vira ${vir.ime}: ${eD.message}`)
+    if (!d) throw new Error(`država ${vir.drzava} (vir ${vir.ime}) ni v tabeli countries`)
+    drzavaId = d.id
+  }
+  const vsi = await vseVrstice((od, do_) => {
+    let q = db.from('teams').select('id, name').order('id')
+    if (drzavaId != null) q = q.eq('country_id', drzavaId)
+    return q.range(od, do_)
+  })
 
   const { data: lige, error } = await db.from('competitions').select('id').eq('source', vir.ime)
   if (error) throw new Error(`lige vira ${vir.ime}: ${error.message}`)

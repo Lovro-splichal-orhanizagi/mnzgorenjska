@@ -3422,6 +3422,36 @@ preveri(
   }
 }
 
+// --- vir hns (Hrvaška, Semafor) ---------------------------------------------
+{
+  const H = await import('./viri/hns.mjs')
+  const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  preveri('hns: minuta s podaljškom', H.minuta("45+2'") === 45 && H.minuta("90+3'") === 90 && H.minuta("67'") === 67)
+  preveri('hns: datum in ura', H.datumUra('03.10.2026. 15:00').datum === '2026-10-03' && H.datumUra('03.10.2026. 15:00').ura === '15:00')
+  preveri('hns: sezona iz datuma', H.sezonaIzDatuma('2026-10-03') === '2026/27' && H.sezonaIzDatuma('2027-05-01') === '2026/27')
+  // ć in đ ostaneta v ključu (slovenski `poenostavi` ju zavrže).
+  preveri('hns: ključ kluba s ć/đ', H.kljucKlubaHr('NK Međimurje') !== H.kljucKlubaHr('NK Meimurje'))
+  preveri('hns: kratko ime', H.kratkoImeHr('NK Zelengaj 1948') === 'Zelengaj' && H.kratkoImeHr('NK Polet (SK)') === 'Polet SK')
+
+  const v = H.vrsticeRazporeda(beri('hns-natjecanje.html'))
+  preveri('hns: razpored', v.length === 16 && v.filter((x) => x.izid).length === 8)
+  preveri('hns: neodigrana tekma brez izida', v.some((x) => x.krog === 15 && !x.izid && x.datum === '2026-11-28' && x.ura === '13:30'))
+
+  const z = H.vZapisnik(beri('hns-tekma-11m.html'), { id: 'a' })
+  const n = H.nastopi(z)
+  preveri('hns: zapisnik', z && z.krog === 1 && z.rezultat.domaci === 5 && z.rezultat.gostje === 1 && !z.opozorila.length)
+  preveri('hns: gol z 11 m', z.goli.filter((g) => g.enajstmetrovka).length === 2)
+  preveri('hns: vsak nastop ima šifro osebe', n.length >= 22 && n.every((x) => x.regSt))
+  preveri('hns: en vratar na ekipo v postavi', [0, 1].every((e) => n.filter((x) => x.ekipaIdx === e && x.zacetnik && x.vratar).length === 1))
+  // Brez trenerja: tudi on je vrstica `match_lineup`, a s povezavo /treneri/.
+  preveri('hns: minute ekipe ~ 11 × 90', [0, 1].every((e) => {
+    const m = n.filter((x) => x.ekipaIdx === e).reduce((s, x) => s + x.minute, 0)
+    return m >= 900 && m <= 990
+  }))
+  const r = H.vZapisnik(beri('hns-tekma-rdeci.html'), { id: 'b' })
+  preveri('hns: rdeči karton', H.nastopi(r).some((x) => x.ime === 'Banović Davor' && x.rdeci === 1))
+}
+
 // --- navijači klubov ----------------------------------------------------------
 // Vrstica `navijaci_klubov` je en navijač; klub brez navijačev ima eno vrstico
 // brez ekipe. Mesto ima le klub z vsaj `min_navijacev`.
