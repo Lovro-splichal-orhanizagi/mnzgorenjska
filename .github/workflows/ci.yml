@@ -45,6 +45,14 @@ jobs:
       - name: Build
         run: npm run build
 
+      # Posodobitev mobilne aplikacije (OTA): pokvarjen zip bi aplikacija
+      # prenesla in se vrnila na staro — raje pade build.
+      - name: OTA svežnj
+        run: |
+          unzip -tq dist/app/*.zip
+          node -e "const j=require('./dist/app/latest.json'); if(!j.version||!j.checksum||!(j.minBuild>=1)) process.exit(1)"
+          unzip -l dist/app/*.zip | grep -q ' index.html$'
+
       # Smoke izriše vse strani na strežniku in preveri pravila točkovanja in
       # sestave ekipe. Baze ne potrebuje: poizvedbe ob izrisu ne blokirajo,
       # zato zadošča veljaven (a izmišljen) URL.

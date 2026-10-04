@@ -239,6 +239,19 @@ Demo account: review@slff.eu / <password>
 - [ ] `insert into settings values ('min_app_verzija','999')` → app shows
       "Update the app"; then `delete from settings where key='min_app_verzija'`
 
+## Updates without a store release (OTA)
+
+Web-only changes (React, texts, styles, logic) reach the app by themselves:
+every deploy of slff.eu publishes `/app/latest.json` + a zip, the app
+downloads it in the background and switches on the next launch (rolls back
+if the new code doesn't start). Check what is live:
+`curl -s https://slff.eu/app/latest.json`.
+
+A store release is needed only for **native** changes: a new Capacitor
+plugin, permissions, icon/splash, Firebase files, `capacitor.config.ts`.
+With such a release also raise `slff.otaMinBuild` in `package.json` to the
+new build number, so older installs don't receive code they can't run.
+
 ## Every next release
 
 1. Bump the version:

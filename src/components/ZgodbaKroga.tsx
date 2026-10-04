@@ -26,6 +26,7 @@ import {
   type ElementPregleda,
 } from '../lib/tedenskiPregled'
 import { t } from '../i18n'
+import { naslovSlike } from '../lib/platforma'
 
 const CRNILO = '#10251B'
 const pisava = (teza: number, px: number) => `${teza} ${px}px Inter, system-ui, sans-serif`
@@ -35,10 +36,10 @@ function naloziSliko(src: string): Promise<HTMLImageElement | null> {
     const s = new Image()
     // Grb z drugega streznika brez CORS bi platno "umazal" in toBlob bi
     // padel. Z `anonymous` se tak grb raje ne nalozi in dobi zacetnice.
-    if (/^https?:/.test(src)) s.crossOrigin = 'anonymous'
+    if (/^https?:/.test(naslovSlike(src))) s.crossOrigin = 'anonymous'
     s.onload = () => resolve(s)
     s.onerror = () => resolve(null)
-    s.src = src
+    s.src = naslovSlike(src)
   })
 }
 

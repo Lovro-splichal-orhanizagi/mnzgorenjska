@@ -36,6 +36,7 @@
     "@capacitor/share": "^8.0.3",
     "@capacitor/splash-screen": "^8.0.2",
     "@capacitor/status-bar": "^8.0.4",
+    "@capgo/capacitor-updater": "^8.52.1",
     "@supabase/supabase-js": "^2.45.0",
     "firebase": "^12.19.0",
     "react": "^18.3.1",
@@ -56,5 +57,8 @@
     "typescript": "^7.0.2",
     "vite": "^8.2.2",
     "vite-node": "^6.0.0"
+  },
+  "slff": {
+    "otaMinBuild": 1
   }
 }

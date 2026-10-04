@@ -25,6 +25,7 @@ import {
 } from '../lib/plakat'
 import { formatirajTocke, tockZ } from '../lib/pomozno'
 import { t } from '../i18n'
+import { naslovSlike } from '../lib/platforma'
 
 const KREM = '#F3EDE0'
 const ZLATA = '#D9A21B'
@@ -32,9 +33,11 @@ const ZLATA = '#D9A21B'
 function naloziSliko(src: string): Promise<HTMLImageElement | null> {
   return new Promise((resolve) => {
     const s = new Image()
+    // Grb s slff.eu v aplikaciji (naslovSlike) ne sme umazati platna.
+    if (/^https?:/.test(naslovSlike(src))) s.crossOrigin = 'anonymous'
     s.onload = () => resolve(s)
     s.onerror = () => resolve(null)
-    s.src = src
+    s.src = naslovSlike(src)
   })
 }
 
