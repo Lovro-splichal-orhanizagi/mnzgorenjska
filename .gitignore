@@ -15,3 +15,11 @@ scripts/.predpomnilnik/
 
 # Posnetki za trgovini (18 MB), glej docs/trgovine/README.md
 docs/trgovine/posnetki/
+
+# Ključi trgovin in servisnih računov — samo v skrivnostih GitHuba
+*.p8
+*.p12
+*.jks
+*.keystore
+*-firebase-adminsdk-*.json
+slff-cb58e-*.json

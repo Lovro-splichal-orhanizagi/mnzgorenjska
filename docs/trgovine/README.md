@@ -282,7 +282,8 @@ Claude Code "release 1.0.2 for review" with the release notes.
   (or `insert` the first time) and only then push the migration.
 
 Secrets (encrypted, repo settings): `ASC_KEY_ID`, `ASC_ISSUER_ID`,
-`ASC_KEY_P8` (App Store Connect API key *SLFF CI*, App Manager),
+`ASC_KEY_P8` (App Store Connect API key *SLFF CI Admin* — **Admin** is required
+for cloud-managed distribution certificates; App Manager can upload but not sign),
 `PLAY_SERVICE_ACCOUNT` (`play-release@slff-cb58e`), `ANDROID_UPLOAD_KEYSTORE`,
 `ANDROID_UPLOAD_PASSWORD`.
 
