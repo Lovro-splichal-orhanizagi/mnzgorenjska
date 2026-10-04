@@ -83,6 +83,14 @@ export function ligaVTozilniku(liga: string, j: Jezik = jezik()): string {
   // Angleščina ne sklanja: "Fantasy league for 1. liga — člani is open".
   if (j === 'en') return liga
   if (j === 'sk') return liga.replace(/(^|\s)liga(?=\s|$)/, '$1ligu').replace(/(^|\s)trieda(?=\s|$)/, '$1triedu')
+  // Hrvaščina: ženske besede imena pred " — " na -a dobijo -u: "Treća NL Sjever"
+  // -> "Treću NL Sjever", "Prva zagrebačka liga" -> "Prvu zagrebačku ligu".
+  // Zveza za pomišljajem ("— Varaždin") ostane v imenovalniku.
+  if (j === 'hr') {
+    const [ime, ...zveza] = liga.split(' — ')
+    const sklon = ime.replace(/(\p{L}+)a(?=\s|$)/gu, '$1u')
+    return [sklon, ...zveza].join(' — ')
+  }
   return liga.replace(/\bliga\b/, 'ligo')
 }
 

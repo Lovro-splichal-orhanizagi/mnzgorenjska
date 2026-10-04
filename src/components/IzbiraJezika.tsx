@@ -1,4 +1,4 @@
-// Izbira jezika: "SL · SK · EN".
+// Izbira jezika: "SL · HR · SK · EN".
 //
 // Jezik sicer sledi državi lige (tujec dobi angleščino); tu ga obiskovalec
 // izbere sam in izbira obvelja pred vsem drugim (`izberiJezik`, le v
@@ -9,6 +9,7 @@ import { potrdiZapustitev } from '../lib/neshranjeno'
 /** Ime jezika v njem samem — v vseh prevodih enako. */
 const IMENA: Partial<Record<Jezik, string>> = {
   sl: 'Slovenščina',
+  hr: 'Hrvatski',
   sk: 'Slovenčina',
   en: 'English',
 }

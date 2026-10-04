@@ -191,8 +191,9 @@ Klubi se ujemajo le znotraj države vira (`mapaKlubov` po `vir.drzava`):
 "NK Polet" ali "NK Mladost" je v Sloveniji in na Hrvaškem drug klub. Ključ
 kluba ohrani ć in đ, ki ju slovenski `poenostavi` zavrže.
 
-Vmesnik v hrvaščini (`src/i18n/hr/`) še ni preveden — liga se vklopi šele,
-ko je. Beremo odkrito (`User-Agent: SLFF fantasy`, 500 ms med zahtevki,
+Vmesnik je v hrvaščini (`src/i18n/hr/`, `JEZIK_DRZAVE.HR`), vstop je
+`slff.eu/hr`, kartica ob deljenju `hr.html`, pošta ima hrvaško vejo. Stran
+Pozicije je v meniju kot v Sloveniji. Beremo odkrito (`User-Agent: SLFF fantasy`, 500 ms med zahtevki,
 popolnih zapisnikov ne beremo znova), vir je v nogi vsake strani.
 
 ### Država obiskovalca
@@ -448,8 +449,8 @@ vpisana pri Supabase kot povratni naslov ponastavitve gesla in žeton nosi v
   `src/i18n` — nikoli `toLocaleString('sl-SI')`.
 - Drugi jezik (`src/i18n/hr/`) je lahko delen; manjkajoče pride iz
   slovenščine. `npm run prevodi -- hr` izpiše, kaj manjka. Brskalnik izbere
-  jezik sam šele, ko je v `PRIPRAVLJENI` (`sl`, `sk`, `en`). Slovaščina in
-  angleščina sta popolni — smoke preveri, da imata vse ključe ter iste
+  jezik sam šele, ko je v `PRIPRAVLJENI` (`sl`, `hr`, `sk`, `en`). Hrvaščina,
+  slovaščina in angleščina so popolne — smoke preveri, da imata vse ključe ter iste
   `{parametre}` in `<oznake>`; nov slovenski niz zato dodaj v vse tri.
 - **Kateri jezik** (`zeljenJezik` v `src/lib/drzavaUgib.ts`, isto pravilo v
   `izberi()` ob nalaganju in v varovalu konteksta lige):

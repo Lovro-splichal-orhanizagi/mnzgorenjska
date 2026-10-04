@@ -1,0 +1,90 @@
+// Hrvatski prijevod područja `domov` (izvor: src/i18n/sl/domov.ts).
+import type { Prevod } from '../jedro.ts'
+
+export const domov: NonNullable<Prevod['domov']> = {
+  napakaNalaganja: 'Podatke nije bilo moguće učitati.',
+  delNiNalozen: 'Dio podataka se nije učitao: {napaka}',
+  uvod: {
+    gorenjskaMladinci: 'Gorenjska nogometna liga — juniori',
+    gorenjskaClani: '1. Gorenjska nogometna liga',
+    geslo: 'Složi momčad. Skupljaj bodove. Pobijedi.',
+    opis: 'Bodovi dolaze iz službenih zapisnika {zveza} — golovi, minute, čiste mreže, kartoni. Sve osim asistencija, njih određuje zajednica.',
+    vecLig: 'Možeš igrati u više liga — <krepko>ligu biraš gore lijevo</krepko>, svaka ima svoju momčad i ljestvicu.',
+    zacetekSezone: '<krepko>Sezona počinje {datum}</krepko> — složi momčad prije roka.',
+    zamudniki: '<krepko>Propustio si početak? Nema veze.</krepko> Svako kolo ima svog pobjednika. Na <lestvica>Ljestvici</lestvica> odabereš "Od N. kola nadalje" i natječeš se od trenutka kad se pridružiš. Nikad nije prekasno.',
+    sestaviEkipo: 'Složi momčad',
+    glasuj: 'Glasaj o asistencijama',
+    rezultati: 'Rezultati i postave',
+  },
+  asistence: {
+    cakajo: {
+      one: '{n} gol čeka asistenciju',
+      few: '{n} gola čekaju asistenciju',
+      other: '{n} golova čeka asistenciju',
+    },
+    opis: 'Zapisnici ne bilježe asistencije — određuje ih zajednica. Bez tvojih glasova asistenti ne dobivaju <krepko>+3 boda</krepko>, a tvoja momčad ostaje bez njih.',
+    glasujZdaj: 'Glasaj sada →',
+  },
+  rok: {
+    seZaklene: '{krog}. kolo se zaključava',
+    opis: 'Zadnji trenutak za promjenu momčadi, kapetana i zamjenika. <uredi>Uredi momčad →</uredi>',
+  },
+  krog: '{krog}. kolo',
+  brezKroga: 'Bez kola',
+  minut: '{n} min',
+  zadnjiRezultati: {
+    naslov: 'Najnoviji rezultati',
+    vsi: 'Svi rezultati i postave →',
+    poglejTekmo: 'Pogledaj postave i bodove ove utakmice',
+  },
+  najboljsi: {
+    igralecKroga: 'Igrač {krog}. kola',
+    rezultatiKroga: '{krog}. kolo · rezultati utakmica →',
+    strelci: 'Najbolji strijelci sezone',
+    podajalci: 'Najbolji asistenti sezone',
+    ohranjeneMreze: 'Najviše čistih mreža',
+    igralecSezone: 'Igrač sezone',
+    igralecSezoneZ: 'Igrač sezone {sezona}',
+    celaLestvica: 'Cijela ljestvica igrača →',
+  },
+  idealna: {
+    naslov: 'Idealna momčad',
+    krogSezona: '{krog}. kolo · sezona {sezona}',
+    opis: 'Najboljih 11 igrača posljednjeg odigranog kola (1 VRA, 4 BRA, 4 VEZ, 2 NAP). Broj ispod dresa su bodovi koje je igrač skupio.',
+  },
+  povabi: {
+    naslov: 'Pozovi prijatelja u ligu',
+    opis: 'Što nas bude više, to će biti zabavnije. Klikni gumb i otvorit ćemo ti praznu e-poruku s već napisanim tekstom — samo dodaj primatelja.',
+    gumb: 'Otvori e-poštu',
+  },
+  skupnost: {
+    naslov: 'Pomozi zajednici',
+    brezAsistence: '{goli} bez asistencije',
+    povejKdo: {
+      one: 'Reci tko je asistirao — {n} glas potvrđuje',
+      few: 'Reci tko je asistirao — {n} glasa potvrđuju',
+      other: 'Reci tko je asistirao — {n} glasova potvrđuje',
+    },
+    ugibanaPozicija: '{igralci} s pretpostavljenom pozicijom',
+    pozicijaOdloca: 'Pozicija određuje koliko vrijedi gol',
+    odsotnosti: 'Ozljede i izostanci',
+    javi: 'Javi tko neće igrati — drugima ćeš spasiti kolo',
+  },
+  naslednje: {
+    naslov: 'Sljedeće utakmice',
+    vRazporedu: '{tekme} u rasporedu',
+    proti: 'vs',
+  },
+  kakoIgras: {
+    naslov: 'Kako se igra',
+    registracija: '1. Registracija',
+    registracijaOpis: 'Napravi račun preko Googlea ili e-pošte i lozinke te smisli ime momčadi.',
+    kader: '2. Složi momčad',
+    kaderOpis: 'Na terenu biraš 15 igrača: 2 vratara, 5 braniča, 5 veznih i 3 napadača — najviše 3 iz istog kluba, unutar proračuna od 100 mil.',
+    enajsterica: '3. Postavi prvih 11',
+    enajstericaOpis: 'Jedanaest ih ide na teren, četvorica na klupu. Kapetan donosi trostruke bodove; ako ne igra, traku preuzima zamjenik.',
+    poKrogu: '4. Nakon svakog kola',
+    poKroguOpis: 'Bodovi se računaju iz zapisnika. Igrača bez minuta automatski mijenja rezerva iste pozicije, a jednom u sezoni s Klupa+ možeš u bodove uračunati cijelu klupu.',
+  },
+  kakoSeTockuje: 'Kako se boduje',
+}

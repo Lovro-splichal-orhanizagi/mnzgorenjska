@@ -102,6 +102,7 @@ export default function App() {
               <Route path="/" element={<Domov />} />
               {/* Vstopni povezavi za državo (kampanje, objave): slff.eu/sk */}
               <Route path="/sk" element={<VstopDrzave drzava="SK" />} />
+              <Route path="/hr" element={<VstopDrzave drzava="HR" />} />
               <Route path="/si" element={<VstopDrzave drzava="SI" />} />
               <Route path="/my-team" element={<MojaEkipa />} />
               <Route path="/assists" element={<Glasovanje />} />
