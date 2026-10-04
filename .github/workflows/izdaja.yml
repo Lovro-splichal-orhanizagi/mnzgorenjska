@@ -1,0 +1,213 @@
+name: Izdaja v trgovini (iOS + Android)
+
+# Zgradi aplikacijo iz `main` in jo naloži v App Store Connect in Google Play.
+#   cilj=test     → TestFlight + interno testiranje na Playu
+#   cilj=pregled  → nova različica v App Store + produkcija na Playu, oddano v pregled
+# Številka gradnje je skupna obema (največja v trgovinah + 1), ker jo
+# primerjata min_app_verzija in slff.otaMinBuild.
+#
+# Potrebno le za NATIVNE spremembe (vtičnik, dovoljenje, ikona, Firebase);
+# vse ostalo pride v aplikacijo samo prek OTA ob objavi slff.eu. Ob nativni
+# spremembi dvigni `slff.otaMinBuild` v package.json na številko te gradnje.
+#
+# Skrivnosti: ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8, PLAY_SERVICE_ACCOUNT,
+# ANDROID_UPLOAD_KEYSTORE, ANDROID_UPLOAD_PASSWORD. Navodila: docs/trgovine/README.md.
+
+on:
+  workflow_dispatch:
+    inputs:
+      platforma:
+        description: 'Katera trgovina'
+        type: choice
+        options: [obe, ios, android]
+        default: obe
+      cilj:
+        description: 'test = TestFlight / interno; pregled = oddaja v pregled za objavo'
+        type: choice
+        options: [test, pregled]
+        default: test
+      verzija:
+        description: 'Različica za uporabnike, npr. 1.0.2 (pri pregledu mora biti nova)'
+        required: true
+      novosti:
+        description: 'Kaj je novega (obvezno pri pregledu)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: izdaja
+
+env:
+  FASTLANE_VERSION: '2.240.1'
+
+jobs:
+  stevilka:
+    name: Številka gradnje
+    runs-on: ubuntu-latest
+    outputs:
+      build: ${{ steps.n.outputs.build }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Preveri vnos
+        env:
+          CILJ: ${{ inputs.cilj }}
+          NOVOSTI: ${{ inputs.novosti }}
+          VERZIJA: ${{ inputs.verzija }}
+        run: |
+          [[ "$VERZIJA" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]] || { echo "::error::Različica mora biti oblike 1.0.2"; exit 1; }
+          if [ "$CILJ" = pregled ] && [ -z "$NOVOSTI" ]; then echo "::error::Pri pregledu napiši novosti."; exit 1; fi
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+      - run: gem install fastlane -v "$FASTLANE_VERSION" --no-document
+      - id: n
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          PLAY_SERVICE_ACCOUNT: ${{ secrets.PLAY_SERVICE_ACCOUNT }}
+        run: fastlane naslednja_gradnja
+
+  ios:
+    name: iOS
+    needs: stevilka
+    if: inputs.platforma != 'android'
+    runs-on: macos-26
+    timeout-minutes: 90
+    env:
+      BUILD: ${{ needs.stevilka.outputs.build }}
+      VERZIJA: ${{ inputs.verzija }}
+    steps:
+      - uses: actions/checkout@v4
+      # Izbrana izrecno: posodobitev slike runnerja ne sme tiho zamenjati prevajalnika.
+      - run: sudo xcode-select -s /Applications/Xcode_26.6.app && xcodebuild -version
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run build
+      - run: npx cap sync ios
+
+      - name: Ključ App Store Connect
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/kljuci"
+          printf '%s' "$ASC_KEY_P8" > "$RUNNER_TEMP/kljuci/AuthKey_$ASC_KEY_ID.p8"
+
+      # Podpis: Xcode ob ključu API sam ustvari distribucijski certifikat
+      # (v oblaku) in profil — v repozitoriju ni ničesar.
+      - name: Arhiv
+        working-directory: ios/App
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          AUTH=(-allowProvisioningUpdates
+                -authenticationKeyPath "$RUNNER_TEMP/kljuci/AuthKey_$ASC_KEY_ID.p8"
+                -authenticationKeyID "$ASC_KEY_ID"
+                -authenticationKeyIssuerID "$ASC_ISSUER_ID")
+          xcodebuild -project App.xcodeproj -scheme App -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/SLFF.xcarchive" \
+            CURRENT_PROJECT_VERSION="$BUILD" MARKETING_VERSION="$VERZIJA" \
+            "${AUTH[@]}" archive | tail -n 40
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>export</string>
+            <key>teamID</key><string>H8ZMYS5NUY</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>uploadSymbols</key><true/>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict></plist>
+          EOF
+          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/SLFF.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" -exportPath "$RUNNER_TEMP/izvoz" \
+            "${AUTH[@]}" | tail -n 20
+          ls "$RUNNER_TEMP/izvoz"/*.ipa
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+      - run: gem install fastlane -v "$FASTLANE_VERSION" --no-document
+      - name: Oddaja
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          CILJ: ${{ inputs.cilj }}
+          NOVOSTI: ${{ inputs.novosti }}
+        run: IPA=$(ls "$RUNNER_TEMP"/izvoz/*.ipa) fastlane ios_oddaj
+
+      - name: Pospravi ključ
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/kljuci"
+
+  android:
+    name: Android
+    needs: stevilka
+    if: inputs.platforma != 'ios'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      BUILD: ${{ needs.stevilka.outputs.build }}
+      VERZIJA: ${{ inputs.verzija }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm ci --ignore-scripts
+      - run: npm run build
+      - run: npx cap sync android
+
+      - name: Številka in različica
+        run: |
+          sed -i -E "s/versionCode [0-9]+/versionCode $BUILD/; s/versionName \"[^\"]*\"/versionName \"$VERZIJA\"/" android/app/build.gradle
+          grep -E "versionCode|versionName" android/app/build.gradle
+
+      - name: Ključ za nalaganje
+        env:
+          KEYSTORE: ${{ secrets.ANDROID_UPLOAD_KEYSTORE }}
+          GESLO: ${{ secrets.ANDROID_UPLOAD_PASSWORD }}
+        run: |
+          echo "$KEYSTORE" | base64 -d > "$RUNNER_TEMP/slff-upload.jks"
+          printf 'storeFile=%s\nstorePassword=%s\nkeyAlias=slff\nkeyPassword=%s\n' \
+            "$RUNNER_TEMP/slff-upload.jks" "$GESLO" "$GESLO" > android/keystore.properties
+
+      - name: Svežnj
+        working-directory: android
+        run: ./gradlew bundleRelease --no-daemon
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: slff-android-${{ env.VERZIJA }}-${{ env.BUILD }}
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 30
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+      - run: gem install fastlane -v "$FASTLANE_VERSION" --no-document
+      - name: Oddaja
+        env:
+          PLAY_SERVICE_ACCOUNT: ${{ secrets.PLAY_SERVICE_ACCOUNT }}
+          CILJ: ${{ inputs.cilj }}
+          NOVOSTI: ${{ inputs.novosti }}
+        run: AAB="$PWD/android/app/build/outputs/bundle/release/app-release.aab" fastlane android_oddaj
+
+      - name: Pospravi ključ
+        if: always()
+        run: rm -f "$RUNNER_TEMP/slff-upload.jks" android/keystore.properties
