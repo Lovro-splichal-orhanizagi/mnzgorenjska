@@ -76,3 +76,13 @@ export function izvor(): string {
   if (typeof window === 'undefined' || jeNativno()) return DOMENA
   return window.location.origin
 }
+
+/**
+ * Naslov slike za prikaz. Grbi (35 MB) niso v posodobitvi aplikacije mimo
+ * trgovine (ota.ts), zato jih aplikacija bere s slff.eu; tako novi grbi
+ * pridejo tudi brez nove različice.
+ */
+export function naslovSlike(src: string): string {
+  return src.startsWith('/grbi/') && jeNativno() ? DOMENA + src : src
+}
+

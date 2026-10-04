@@ -19,6 +19,7 @@ import {
 } from '../lib/karticaIgralca'
 import { formatirajTocke, KRATKA_POZICIJA } from '../lib/pomozno'
 import { t } from '../i18n'
+import { naslovSlike } from '../lib/platforma'
 
 const M = 2
 const OZKA = '"Barlow Condensed", "Arial Narrow", sans-serif'
@@ -55,9 +56,11 @@ function naloziPisavo(): Promise<void> {
 function slika(src: string): Promise<HTMLImageElement | null> {
   return new Promise((res) => {
     const s = new Image()
+    // Grb s slff.eu v aplikaciji (naslovSlike) ne sme umazati platna.
+    if (/^https?:/.test(naslovSlike(src))) s.crossOrigin = 'anonymous'
     s.onload = () => res(s)
     s.onerror = () => res(null)
-    s.src = src
+    s.src = naslovSlike(src)
   })
 }
 

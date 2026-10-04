@@ -2,6 +2,7 @@
 // iz imena, tako da ima vsak klub svojo in je enaka povsod v aplikaciji.
 import { useState } from 'react'
 import { t } from '../i18n'
+import { naslovSlike } from '../lib/platforma'
 
 const BARVE: Array<[string, string]> = [
   ['#38bdf8', '#0c4a6e'],
@@ -54,7 +55,7 @@ export default function Grb({
   if (logo && pokvarjen !== logo)
     return (
       <img
-        src={logo}
+        src={naslovSlike(logo)}
         alt={opis}
         title={opis}
         width={velikost}

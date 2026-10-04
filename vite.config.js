@@ -1,8 +1,10 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { execSync } from 'node:child_process'
-import { readFileSync, writeFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
+import { join, relative, resolve } from 'node:path'
+import { createHash } from 'node:crypto'
+import { crc32, deflateRawSync } from 'node:zlib'
 import { aplikacija as aplikacijaSk } from './src/i18n/sk/aplikacija.ts'
 import { aplikacija as aplikacijaHr } from './src/i18n/hr/aplikacija.ts'
 
@@ -15,8 +17,8 @@ import { aplikacija as aplikacijaHr } from './src/i18n/hr/aplikacija.ts'
  * produkcija je dva dni tiho stregla staro različico. Nič ni javilo napake —
  * deploy se preprosto ni zgodil. Zdaj to ujame `preveri-deploy` v CI.
  */
-function znamkaCommita() {
-  const sha =
+function shaCommita() {
+  return (
     process.env.VERCEL_GIT_COMMIT_SHA ||
     process.env.GITHUB_SHA ||
     (() => {
@@ -28,7 +30,11 @@ function znamkaCommita() {
         return ''
       }
     })()
+  )
+}
 
+function znamkaCommita() {
+  const sha = shaCommita()
   return {
     name: 'znamka-commita',
     transformIndexHtml(html) {
@@ -86,8 +92,79 @@ function karticeDrzav() {
   }
 }
 
+/** Najmanjši zip (deflate) brez odvisnosti: lokalne glave, imenik, konec. */
+function zip(datoteke) {
+  const deli = [], imenik = []
+  let odmik = 0
+  for (const { ime, vsebina } of datoteke) {
+    const imeB = Buffer.from(ime), stisnjeno = deflateRawSync(vsebina), crc = crc32(vsebina)
+    const glava = Buffer.alloc(30)
+    glava.writeUInt32LE(0x04034b50, 0); glava.writeUInt16LE(20, 4); glava.writeUInt16LE(0x0800, 6)
+    glava.writeUInt16LE(8, 8); glava.writeUInt32LE(crc, 14); glava.writeUInt32LE(stisnjeno.length, 18)
+    glava.writeUInt32LE(vsebina.length, 22); glava.writeUInt16LE(imeB.length, 26)
+    const c = Buffer.alloc(46)
+    c.writeUInt32LE(0x02014b50, 0); c.writeUInt16LE(20, 4); c.writeUInt16LE(20, 6); c.writeUInt16LE(0x0800, 8)
+    c.writeUInt16LE(8, 10); c.writeUInt32LE(crc, 16); c.writeUInt32LE(stisnjeno.length, 20)
+    c.writeUInt32LE(vsebina.length, 24); c.writeUInt16LE(imeB.length, 28); c.writeUInt32LE(odmik, 42)
+    deli.push(glava, imeB, stisnjeno); imenik.push(c, imeB)
+    odmik += 30 + imeB.length + stisnjeno.length
+  }
+  const im = Buffer.concat(imenik), konec = Buffer.alloc(22)
+  konec.writeUInt32LE(0x06054b50, 0); konec.writeUInt16LE(datoteke.length, 8); konec.writeUInt16LE(datoteke.length, 10)
+  konec.writeUInt32LE(im.length, 12); konec.writeUInt32LE(odmik, 16)
+  return Buffer.concat([...deli, im, konec])
+}
+
+/**
+ * Posodobitev mobilne aplikacije mimo trgovine (OTA, src/lib/ota.ts).
+ *
+ * Vsak build zapiše `dist/app/<commit>.zip` (vsa stran brez grbov — 35 MB, ki
+ * jih aplikacija bere s slff.eu) in `dist/app/latest.json`. Ob objavi na
+ * Vercel aplikacija najde novo različico in jo naloži ob naslednjem zagonu.
+ * `minBuild` (package.json `slff.otaMinBuild`) je najnižja številka gradnje
+ * iz trgovine, ki to kodo zmore — dvigni ga, ko koda zahteva nov vtičnik ali
+ * drugo nativno spremembo, sicer bi stara aplikacija naložila kodo, ki pri
+ * njej ne dela.
+ */
+function otaSvezenj() {
+  let izhod = 'dist'
+  return {
+    name: 'ota-svezenj',
+    apply: 'build',
+    configResolved(c) {
+      izhod = resolve(c.root, c.build.outDir)
+    },
+    closeBundle() {
+      const sha = shaCommita()
+      if (!sha) return
+      const izpusti = (rel) => /^(grbi|app|\.well-known)(\/|$)/.test(rel)
+      const datoteke = []
+      const beri = (mapa) => {
+        for (const ime of readdirSync(mapa)) {
+          const pot = join(mapa, ime)
+          const rel = relative(izhod, pot).split('\\').join('/')
+          if (izpusti(rel)) continue
+          if (statSync(pot).isDirectory()) beri(pot)
+          else datoteke.push({ ime: rel, vsebina: readFileSync(pot) })
+        }
+      }
+      beri(izhod)
+      const svezenj = zip(datoteke)
+      const { slff } = JSON.parse(readFileSync(resolve(izhod, '..', 'package.json'), 'utf8'))
+      mkdirSync(resolve(izhod, 'app'), { recursive: true })
+      writeFileSync(resolve(izhod, 'app', `${sha}.zip`), svezenj)
+      writeFileSync(resolve(izhod, 'app', 'latest.json'), JSON.stringify({
+        version: sha,
+        url: `https://slff.eu/app/${sha}.zip`,
+        checksum: createHash('sha256').update(svezenj).digest('hex'),
+        minBuild: slff.otaMinBuild,
+      }))
+    },
+  }
+}
+
 export default defineConfig({
-  plugins: [react(), znamkaCommita(), karticeDrzav()],
+  plugins: [react(), znamkaCommita(), karticeDrzav(), otaSvezenj()],
   server: {
     watch: {
       // Predpomnjeni zapisniki niso del aplikacije. Brez tega Vite ob vsakem

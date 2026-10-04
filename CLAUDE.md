@@ -407,9 +407,15 @@ spletu; kar je drugače, je v `src/lib/platforma.ts`:
   preusmeritvi. Prijava z Googlom/Applom v aplikaciji gre prek sistemskega
   brskalnika in sheme `eu.slff.app://auth`; sejo prevzame `NativnePovezave`.
 - Administracija je v aplikaciji skrita (`jeNativno()`).
-- Koda v aplikaciji se posodobi le prek trgovine. Migracija, ki zlomi star
-  klic, gre v produkcijo šele, ko je nova aplikacija objavljena in
-  `settings.min_app_verzija` dvignjen na njeno številko gradnje.
+- **OTA:** vsak build zapiše `dist/app/<commit>.zip` in `latest.json`
+  (`otaSvezenj` v `vite.config.js`); aplikacija (`src/lib/ota.ts`,
+  `@capgo/capacitor-updater`) novo kodo s slff.eu prenese sama in jo zamenja
+  ob naslednjem zagonu. Grbov ni v zipu — v aplikaciji se berejo s slff.eu
+  (`naslovSlike`). **Nativna sprememba** (nov vtičnik, dovoljenje, ikona) gre
+  le prek trgovine: takrat dvigni `slff.otaMinBuild` v `package.json` na
+  številko nove gradnje, sicer stara aplikacija dobi kodo, ki pri njej ne dela.
+- `settings.min_app_verzija` ostane varovalo za gradnje, ki jih OTA ne more
+  rešiti (prestara nativna različica).
 - `src/lib/platforma.ts` uvažajo tudi `src/lib` datoteke, ki jih berejo
   skripte — tam ga uvažaj s končnico `.ts`.
 
