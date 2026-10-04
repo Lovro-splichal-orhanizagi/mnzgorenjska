@@ -25,19 +25,18 @@ and screenshot `/?t=clani`, `/team/<id>`, `/standings`, `/players`,
 
 ---
 
-## 0. Values I need from you (3 placeholders in the code)
+## 0. Account values (filled in)
 
-| Placeholder | File | Where to find it |
-|---|---|---|
-| `APPLE_TEAM_ID` (2×) | `public/.well-known/apple-app-site-association` | developer.apple.com → Membership → Team ID (10 chars) |
-| `PLAY_APP_SIGNING_SHA256` | `public/.well-known/assetlinks.json` | Play Console → app → Test and release → App integrity → App signing → **SHA-256 of the app signing key** (step 5) |
-| `APPLE_APP_ID` | `src/components/PosodobiAplikacijo.tsx` | App Store Connect → app → App Information → Apple ID (digits, step 6) |
+| Value | Where it is used |
+|---|---|
+| Apple team **Indigo Labs d.o.o.** `H8ZMYS5NUY` | `DEVELOPMENT_TEAM` (Xcode), `apple-app-site-association` |
+| App Store Apple ID `6818746153` | `PosodobiAplikacijo.tsx` (update button) |
+| Play app signing SHA-256 `08:A0:67:…:10:83` + upload key `27:EF:03:…:2A:C7` | `assetlinks.json` |
+| Firebase project `slff-cb58e` (iOS + Android apps) | `GoogleService-Info.plist`, `google-services.json`, Supabase secret `FIREBASE_SERVICE_ACCOUNT` |
 
-Until they are filled in, `https://slff.eu/...` links won't open the app
-(they still open the web) and the "update the app" button on iOS points to a
-dead link. Nothing else breaks.
-
----
+Build numbers: iOS 1.0 (1), Android 1.0 (1) and 1.0.1 (2). Keep the next
+iOS build and Android versionCode on the **same number** (`min_app_verzija`
+compares that number on both platforms).
 
 ## 1. Apple Developer portal (developer.apple.com → Certificates, IDs & Profiles)
 

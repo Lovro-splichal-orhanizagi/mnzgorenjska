@@ -12,7 +12,7 @@ import { jeNativno } from '../lib/platforma'
 import { t } from '../i18n'
 
 const TRGOVINA = {
-  ios: 'https://apps.apple.com/app/idAPPLE_APP_ID',
+  ios: 'https://apps.apple.com/app/id6818746153',
   android: 'https://play.google.com/store/apps/details?id=eu.slff.app',
 }
 
