@@ -859,6 +859,8 @@ for (const { id, z, url } of zapisniki) {
 }
 
 console.log(`\n\nUvoženih tekem: ${uvozenih}, preskočenih: ${preskocenih}, napak: ${napak}`)
+// Delovni tok po tem ve, ali ima ugibanje pozicij za to ligo sploh kaj dela.
+if (arg('porocilo')) writeFileSync(arg('porocilo'), String(uvozenih))
 
 writeFileSync(ODTISI, JSON.stringify(noviOdtisi))
 
@@ -869,7 +871,14 @@ writeFileSync(ODTISI, JSON.stringify(noviOdtisi))
 const krogiQ = db.from('rounds').select('id, season, number, played_on').eq('competition_id', tekmovanje.id)
 const { data: vsiKrogi } = await krogiQ
 let krogi = vsiKrogi ?? []
-if (svezeDni != null) {
+// `--samo-dotaknjene` (urni uvoz ob vikendih): le krogi, ki jih je ta zagon
+// spremenil. Varnostni preračun zadnjih dni (če je prejšnji zagon padel) teče
+// v dnevnem jutranjem zagonu; v vsakem urnem je pri 77 ligah vzel 10 minut
+// za kroge, v katerih se ni nič zgodilo. Točke ob novi poziciji ali asistenci
+// osvežijo sprožilci v bazi, ne ta korak.
+if (process.argv.includes('--samo-dotaknjene')) {
+  krogi = krogi.filter((k) => dotaknjeniKrogi.has(k.id))
+} else if (svezeDni != null) {
   const meja = new Date(Date.now() - svezeDni * 86400000).toISOString().slice(0, 10)
   const danes = new Date().toISOString().slice(0, 10)
   krogi = krogi.filter((k) => dotaknjeniKrogi.has(k.id) || (k.played_on && k.played_on >= meja && k.played_on <= danes))
