@@ -52,7 +52,7 @@ export type Parametri = Record<string, string | number | null | undefined>
 
 const SLOVARJI: Record<Jezik, Drevo> = { sl: sl as Drevo, hr: hr as Drevo, sk: sk as Drevo, en: en as Drevo }
 /** Jeziki, ki so dovolj prevedeni, da jih vmesnik izbere sam. */
-export const PRIPRAVLJENI: Jezik[] = ['sl', 'sk', 'en']
+export const PRIPRAVLJENI: Jezik[] = ['sl', 'hr', 'sk', 'en']
 // Angleščina v britanski obliki: "3 Oct", 24-urni čas, decimalna pika.
 const LOKALE: Record<Jezik, string> = { sl: 'sl-SI', hr: 'hr-HR', sk: 'sk-SK', en: 'en-GB' }
 const SHRAMBA = 'slff-jezik'

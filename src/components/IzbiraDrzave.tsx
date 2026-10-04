@@ -15,6 +15,7 @@ import { t } from '../i18n'
 export function imeDrzave(koda: string): string {
   if (koda === 'SI') return t('aplikacija.izbiraDrzave.imena.SI')
   if (koda === 'SK') return t('aplikacija.izbiraDrzave.imena.SK')
+  if (koda === 'HR') return t('aplikacija.izbiraDrzave.imena.HR')
   return koda
 }
 

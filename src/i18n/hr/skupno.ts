@@ -27,7 +27,7 @@ export const skupno: NonNullable<Prevod['skupno']> = {
     glasovi: { one: 'glas', few: 'glasa', other: 'glasova' },
     krogi: { one: 'kolo', few: 'kola', other: 'kola' },
   },
-  cena: '{v} mil. €',
+  cena: '{v} M€',
   nalaganje: 'Učitavanje …',
   shrani: 'Spremi',
   preklici: 'Odustani',

@@ -74,7 +74,7 @@ export function obvestilaEkip(
     if (!e.veljavna) {
       const razlog = !e.razlog
         ? t('mojaEkipa.opozorila.razlog')
-        : jezik() === 'sk' || jezik() === 'en' ? prevediRazlog(e.razlog, jezik() as 'sk' | 'en') : e.razlog
+        : prevediRazlog(e.razlog, jezik())
       if (e.brez_tock) {
         napake.push({
           kljuc: `napaka:${e.team_id}`,

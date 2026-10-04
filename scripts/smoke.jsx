@@ -2886,6 +2886,14 @@ preveri(
   preveri('plakat: "3. SNL — Zahod" brez besede liga ostane', ligaVTozilniku('3. SNL — Zahod') === '3. SNL — Zahod')
   preveri('plakat: slovaško "IV. liga — SsFZ" v tožilniku', ligaVTozilniku('IV. liga — SsFZ', 'sk') === 'IV. ligu — SsFZ', ligaVTozilniku('IV. liga — SsFZ', 'sk'))
   preveri('plakat: slovaško "I. trieda — Žilina" v tožilniku', ligaVTozilniku('I. trieda — Žilina', 'sk') === 'I. triedu — Žilina', ligaVTozilniku('I. trieda — Žilina', 'sk'))
+  for (const [iz, v] of [
+    ['Treća NL Sjever', 'Treću NL Sjever'],
+    ['Prva zagrebačka liga', 'Prvu zagrebačku ligu'],
+    ['I. Međimurska nogometna liga', 'I. Međimursku nogometnu ligu'],
+    ['Elitna liga — Istra', 'Elitnu ligu — Istra'],
+    ['4. NL — NS Rijeka', '4. NL — NS Rijeka'],
+  ])
+    preveri(`plakat: hrvaško "${iz}" v tožilniku`, ligaVTozilniku(iz, 'hr') === v, ligaVTozilniku(iz, 'hr'))
 
   // "Je live": kratko ime lige ne sme zrasti cez rob, ce gre v dve vrstici.
   preveri('plakat live: kratko ime v eni vrstici je najvecje', velikostLige('3. SNL ZAHOD', 1) === 124)
@@ -3353,6 +3361,7 @@ preveri(
   const { sl } = await import('../src/i18n/sl/index.ts')
   const { sk } = await import('../src/i18n/sk/index.ts')
   const { en } = await import('../src/i18n/en/index.ts')
+  const { hr } = await import('../src/i18n/hr/index.ts')
   const listi = (d, pot = '') =>
     Object.entries(d).flatMap(([k, v]) =>
       typeof v === 'string' || (v && typeof v === 'object' && 'other' in v) ? [[pot + k, v]] : listi(v, `${pot}${k}.`),
@@ -3362,7 +3371,7 @@ preveri(
     const besedila = typeof v === 'string' ? [v] : Object.values(v)
     return besedila.map((b) => [...b.matchAll(/\{(\w+)\}|<(\w+)>/g)].map((m) => m[0]).sort().join(' '))
   }
-  for (const [ime, slovar] of [['sk', sk], ['en', en]]) {
+  for (const [ime, slovar] of [['sk', sk], ['en', en], ['hr', hr]]) {
     const napake = []
     let manjka = 0
     for (const [kljuc, izvirnik] of listi(sl)) {
@@ -3604,6 +3613,50 @@ preveri(
   const pSl = E.sestaviPoznavalca(si, { display_name: 'Janez', obseg: 'klub', klub: 'Šenčur' })
   preveri('e-pošta: poznavalec sk', pSk.html.includes('znalcom ligy IV. liga SsFZ') && pSk.html.includes('/assists?t=sk-ssfz-4liga') && !slovensko.test(pSk.html) && !pSk.odjava)
   preveri('e-pošta: poznavalec sl', pSl.html.includes('poznavalec kluba Šenčur') && pSl.html.includes('/positions?t=clani'))
+
+  // Hrvaška: isti maili v hrvaščini, rok po zagrebško, razlog preveden.
+  // ("Popravi" je tudi hrvaška beseda, zato svoj vzorec slovenščine.)
+  const hrL = { slug: 'hr-mz-1mnl', oznaka: '1. MNL', ime: '1. MNL Međimurje', drzava: 'HR' }
+  const slovenskoHr = /Živjo|ekip[aeo]|krog|točk|opomnik|igralc|kader|namesto|sestav/
+  const pomisljaj = /—/
+  const oHr = E.sestaviOpomnik(hrL, { display_name: 'Ivan Horvat', brez_ekipe: true })
+  const oHr2 = E.sestaviOpomnik(hrL, { display_name: null, brez_ekipe: false })
+  preveri('e-pošta: opomnik hr',
+    oHr.naslov.includes('još nemaš momčad') && oHr.html.includes('Bok, Ivan!') && oHr2.html.includes('Bok!') &&
+      oHr2.naslov.includes('dovrši momčad') && oHr.odjava === 'https://slff.eu/reminders?t=hr-mz-1mnl' &&
+      oHr.html.includes('https://slff.eu/my-team?t=hr-mz-1mnl') && oHr.html.includes('Ne želim više primati podsjetnike') &&
+      !slovenskoHr.test(oHr.naslov + oHr.html + oHr2.naslov + oHr2.html), oHr.naslov)
+  const zHr = E.sestaviOpozorilo(hrL, { display_name: 'Ivan', team_name: 'Nedjeljni junaci', round_number: 5, deadline_at: rok, razlog })
+  preveri('e-pošta: opozorilo hr (rok po zagrebško, razlog preveden)',
+    zHr.naslov.includes('5. kolo') && zHr.html.includes('subota') && zHr.html.includes('10:00') &&
+      zHr.html.includes('Iz kluba Šenčur imaš 4 igrača') && !slovenskoHr.test(zHr.naslov + zHr.html), zHr.naslov)
+  preveri('e-pošta: rok hr v časovnem pasu lige', E.izpisRoka(rok, hrL).includes('10:00'))
+  const prevodiHr = razlogi.map((r) => E.prevediRazlog(r, 'hr'))
+  const splosenHr = E.prevediRazlog('Neznan razlog.', 'hr')
+  preveri(
+    'e-pošta: vsi razlogi prevedeni v hrvaščino',
+    prevodiHr.every((p) => p !== splosenHr && !slovenskoHr.test(p) && !pomisljaj.test(p)),
+    prevodiHr.find((p) => p === splosenHr || slovenskoHr.test(p) || pomisljaj.test(p)),
+  )
+  preveri('e-pošta: množina razloga hr',
+    prevodiHr[1] === 'U sastavu su 3 igrača umjesto 15.' && prevodiHr[2] === 'U sastavu je 14 igrača umjesto 15.' &&
+      E.prevediRazlog('V postavi je 1 igralcev namesto 11.', 'hr') === 'U prvoj postavi je 1 igrač umjesto 11.',
+    `${prevodiHr[1]} | ${prevodiHr[2]}`)
+  const bHr = E.sestaviOpomnikBrezLige('hr', { display_name: 'Ivan' })
+  preveri('e-pošta: brez lige hr v hrvaščini',
+    bHr.naslov.includes('odaberi svoju ligu') && bHr.html.includes('href="https://slff.eu/hr"') &&
+      bHr.html.includes('Bok, Ivan!') && !slovenskoHr.test(bHr.html))
+  const pHr = E.sestaviPoznavalca(hrL, { display_name: 'Ivan', obseg: 'klub', klub: 'NK Polet' })
+  preveri('e-pošta: poznavalec hr', pHr.html.includes('poznavatelj kluba NK Polet') && pHr.html.includes('/positions?t=hr-mz-1mnl') && !slovenskoHr.test(pHr.html))
+  const popHr = E.sestaviPopravekPozicije(hrL, { display_name: 'Ivan', team_name: 'Junaci', igralci: [{ ime: 'Horvat Marko', pozicija: 'MID' }] })
+  const izHr = E.sestaviIzstopKluba(hrL, { display_name: 'Ivan', team_name: 'Junaci', igralci: [{ ime: 'Horvat Marko', klub: 'NK Polet' }] })
+  preveri('e-pošta: popravek pozicije in izstop kluba hr',
+    popHr.html.includes('(sada vezni)') && izHr.naslov.includes('istupio je iz lige') &&
+      !slovenskoHr.test(popHr.naslov + popHr.html + izHr.naslov + izHr.html), popHr.naslov)
+  // Novo hrvaško besedilo je brez pomišljajev (noga "SLFF — Sunday League" je skupna).
+  const brezNoge = (h) => h.replace('SLFF — Sunday League', '')
+  preveri('e-pošta: hr brez pomišljajev',
+    [oHr, oHr2, zHr, bHr, pHr, popHr, izHr].every((m) => !pomisljaj.test(m.naslov + brezNoge(m.html))))
 }
 
 // --- kontumacije: Ptuj, Murska Sobota, Lendava, Maribor ---------------------

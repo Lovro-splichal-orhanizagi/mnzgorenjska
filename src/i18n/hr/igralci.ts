@@ -72,7 +72,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       min: 'MIN',
       krog: 'KOLO',
       sez: 'SEZ',
-      ekip: 'MOMČ',
+      ekip: 'EKIPE',
     },
     krogInLiga: '{krog}. kolo · {liga}',
     napakaFoto: 'Ovu fotografiju nije moguće otvoriti. Pokušaj s drugom (JPG ili PNG).',
