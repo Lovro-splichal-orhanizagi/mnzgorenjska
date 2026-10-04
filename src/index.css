@@ -112,3 +112,17 @@
     }
   }
 }
+
+/* Klepet za podporo pokaže, kam klikniti (lib/podporaOrodja.ts). */
+.pomoc-poudarek {
+  outline: 3px solid var(--zlato);
+  outline-offset: 4px;
+  border-radius: 0.75rem;
+  animation: pomoc-utrip 1.1s ease-in-out 3;
+}
+@keyframes pomoc-utrip {
+  50% { outline-color: transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pomoc-poudarek { animation: none; }
+}
