@@ -110,27 +110,24 @@ Re-deploy after filling in the Team ID and SHA-256 (step 0).
 
 ## 5. Google Play
 
-### Upload key (once, keep it safe — losing it means a support ticket)
+### Upload key and build
 
-```bash
-keytool -genkeypair -v -keystore ~/slff-upload.jks -alias slff -keyalg RSA -keysize 2048 -validity 10000
-cat > android/keystore.properties <<EOF
-storeFile=/Users/<you>/slff-upload.jks
-storePassword=...
-keyAlias=slff
-keyPassword=...
-EOF
-```
+The upload key exists (`~/slff-upload.jks`, alias `slff`) and is stored as
+encrypted repo secrets `ANDROID_UPLOAD_KEYSTORE` (base64) and
+`ANDROID_UPLOAD_PASSWORD` — the repo is public, so it is **never** committed.
+Google holds the real app signing key (Play App Signing); a lost upload key
+can be reset in Play Console → App integrity.
 
-Both are gitignored. Store the `.jks` and passwords in the company password
-manager.
+**Build:** GitHub → Actions → *Android izdaja (.aab)* → Run workflow → download
+the `slff-android-aab` artifact → upload to Play Console. Bump `versionCode`
+and `versionName` in `android/app/build.gradle` first; Play rejects a number
+it has already seen.
 
-### Build
+Locally (needs `android/keystore.properties`, gitignored):
 
 ```bash
 npm run build && npx cap sync
 JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" ./android/gradlew -p android bundleRelease
-# → android/app/build/outputs/bundle/release/app-release.aab
 ```
 
 ### Play Console (play.google.com/console)

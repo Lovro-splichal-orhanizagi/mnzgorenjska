@@ -1,0 +1,70 @@
+name: Android izdaja (.aab)
+
+# Podpisan svežnj za Google Play. Ključ za nalaganje (upload key) živi samo v
+# skrivnostih repozitorija — repozitorij je javen, zato ga v git ne damo:
+#   ANDROID_UPLOAD_KEYSTORE  keystore v base64 (`base64 -i slff-upload.jks`)
+#   ANDROID_UPLOAD_PASSWORD  geslo keystora in ključa (alias `slff`)
+# Končni ključ, s katerim se aplikacija namesti, hrani Google (Play App Signing).
+#
+# Številko različice (versionCode / versionName) dvigni v
+# android/app/build.gradle, preden poženeš; Play iste številke ne sprejme dvakrat.
+# Svežnj se prenese kot artefakt teka in ga naložiš v Play Console.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-izdaja
+
+jobs:
+  aab:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - run: npm ci --ignore-scripts
+      - run: npm run build
+      - run: npx cap sync android
+
+      - name: Ključ za nalaganje
+        env:
+          KEYSTORE: ${{ secrets.ANDROID_UPLOAD_KEYSTORE }}
+          GESLO: ${{ secrets.ANDROID_UPLOAD_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE" ] || [ -z "$GESLO" ]; then
+            echo "::error::Manjkata skrivnosti ANDROID_UPLOAD_KEYSTORE in/ali ANDROID_UPLOAD_PASSWORD."
+            exit 1
+          fi
+          echo "$KEYSTORE" | base64 -d > "$RUNNER_TEMP/slff-upload.jks"
+          printf 'storeFile=%s\nstorePassword=%s\nkeyAlias=slff\nkeyPassword=%s\n' \
+            "$RUNNER_TEMP/slff-upload.jks" "$GESLO" "$GESLO" > android/keystore.properties
+
+      - name: Svežnj
+        working-directory: android
+        run: ./gradlew bundleRelease --no-daemon
+
+      - name: Je podpisan?
+        run: jarsigner -verify android/app/build/outputs/bundle/release/app-release.aab | grep -q "jar verified"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: slff-android-aab
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 30
+
+      - name: Pospravi ključ
+        if: always()
+        run: rm -f "$RUNNER_TEMP/slff-upload.jks" android/keystore.properties
