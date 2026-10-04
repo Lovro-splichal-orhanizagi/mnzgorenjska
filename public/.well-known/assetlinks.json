@@ -4,7 +4,10 @@
     "target": {
       "namespace": "android_app",
       "package_name": "eu.slff.app",
-      "sha256_cert_fingerprints": ["PLAY_APP_SIGNING_SHA256"]
+      "sha256_cert_fingerprints": [
+        "08:A0:67:40:AB:2E:1B:66:61:B9:6F:01:C0:AF:8A:81:52:6C:61:5B:69:53:FA:7B:E4:29:CD:72:80:BB:10:83",
+        "27:EF:03:0B:15:2E:A3:7B:47:74:88:94:E0:52:61:97:E8:50:25:6B:AF:B0:24:2F:3C:69:7E:98:C9:22:2A:C7"
+      ]
     }
   }
 ]
