@@ -2,7 +2,7 @@
   "applinks": {
     "details": [
       {
-        "appIDs": ["APPLE_TEAM_ID.eu.slff.app"],
+        "appIDs": ["H8ZMYS5NUY.eu.slff.app"],
         "components": [
           { "/": "/admin*", "exclude": true },
           { "/": "/api/*", "exclude": true },
@@ -11,5 +11,5 @@
       }
     ]
   },
-  "webcredentials": { "apps": ["APPLE_TEAM_ID.eu.slff.app"] }
+  "webcredentials": { "apps": ["H8ZMYS5NUY.eu.slff.app"] }
 }
