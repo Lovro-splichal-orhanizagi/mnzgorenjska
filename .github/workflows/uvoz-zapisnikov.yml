@@ -19,10 +19,13 @@ name: Uvoz zapisnikov
 # vzdevke klubov da `competitions.source` prek `scripts/viri/`.
 on:
   schedule:
+    # Minuta 17, ne 0: GitHub ob polni uri, ko se sprožijo vsi croni sveta,
+    # zagone zamika ali izpusti. Z '0 * …' je "urni" uvoz 3.–4. 10. 2026
+    # dejansko tekel na 3–6 ur in točke so ob vikendu zaostajale.
     # Petek (5), Sobota (6), Nedelja (0) — vsako uro
-    - cron: '0 * * * 5,6,0'
-    # Ponedeljek do četrtek — enkrat, ob 5:00 UTC (7:00 po naše)
-    - cron: '0 5 * * 1-4'
+    - cron: '17 * * * 5,6,0'
+    # Ponedeljek do četrtek — enkrat, ob 5:17 UTC (7:17 po naše)
+    - cron: '17 5 * * 1-4'
   workflow_dispatch:
 
 permissions:
