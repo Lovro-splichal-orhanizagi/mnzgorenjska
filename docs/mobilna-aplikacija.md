@@ -16,6 +16,14 @@ jo zapakira (`webDir: dist`), `ios/` in `android/` sta v gitu.
 - Objava **po vsem svetu**; tujec dobi angleški vmesnik kot na spletu.
 - **Administracija samo na spletu** — v aplikaciji ni ne povezave ne poti.
 - Samo iPhone in pokončno (brez posnetkov za iPad).
+- **Najnižji iOS je 18.4.** Xcode 27 je del Swift WebKita (`callAsyncJavaScript`,
+  ki ga uporablja OTA vtičnik) preselil v `WebKit.framework`; aplikacija z
+  nižjim ciljem se poveže na `/usr/lib/swift/libswiftWebKit.dylib`, ki ga
+  iOS 18.5 nima več, in se ob zagonu sesuje. Telefoni, ki ne zmorejo iOS 26
+  (iPhone XS/XR), imajo iOS 18.7, zato izpadejo le nikoli posodobljeni.
+- **OTA brez Capgo strežnika**: `statsUrl`, `updateUrl`, `channelUrl` so prazni
+  (`capacitor.config.ts`) — privzeto vtičnik pošilja statistiko in napake
+  WebViewa na plugin.capgo.app.
 
 ## Gradnja
 
