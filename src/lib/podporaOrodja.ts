@@ -12,7 +12,12 @@
 //
 // Cilji za `pokazi` so elementi z atributom `data-pomoc`. Nov cilj = atribut
 // na elementu + vrstica v CILJI spodaj (in v opisu orodja v HelpStacku).
+//
+// Neshranjen kader na Moji ekipi: orodji strani ne zapustita. Shranjevanje
+// namesto obiskovalca ne pride v poštev — dodatni prestopi stanejo točke in
+// kader je lahko še nepopoln. Osvetlita gumb Shrani in agentu povesta zakaj.
 import { supabase } from './supabase'
+import { jeNeshranjeno } from './neshranjeno'
 
 /** Strani, na katere sme agent peljati — ključ je to, kar pošlje agent. */
 export const STRANI: Record<string, string> = {
@@ -57,6 +62,19 @@ function najdi(cilj: string): HTMLElement | null {
   return vsi.find((el) => el.offsetParent !== null || el.getClientRects().length > 0) ?? null
 }
 
+/** Odgovor, ko bi odhod s strani zavrgel neshranjen kader. */
+function zadrzi() {
+  const gumb = najdi('shrani')
+  if (gumb) osvetli(gumb)
+  return {
+    odprto: false,
+    najdeno: false,
+    razlog: 'neshranjene_spremembe',
+    namig:
+      'Obiskovalec ima na Moji ekipi neshranjene spremembe; stran ni zamenjana, da se ne izgubijo. Gumb Shrani je osvetljen. Naj najprej shrani (ali spremembe zavrže), nato ponovi.',
+  }
+}
+
 function osvetli(el: HTMLElement) {
   el.scrollIntoView({ behavior: 'smooth', block: 'center' })
   el.classList.add(RAZRED)
@@ -93,6 +111,7 @@ export function prijaviOrodja(
       stran: s.pot,
       liga: s.liga ? { slug: s.liga.slug, ime: s.liga.ime } : null,
       prijavljen: s.prijavljen,
+      neshranjene_spremembe: jeNeshranjeno(),
       ekipa,
     }
   })
@@ -100,6 +119,8 @@ export function prijaviOrodja(
   helpstack('registerTool', 'odpri_stran', async (p) => {
     const kam = STRANI[String(p.stran ?? '')]
     if (!kam) return { odprto: false, razlog: 'neznana stran', mozne: Object.keys(STRANI) }
+    if (stanje().pot === kam) return { odprto: true, stran: p.stran, ze_tam: true }
+    if (jeNeshranjeno()) return zadrzi()
     pojdi(kam)
     return { odprto: true, stran: p.stran }
   })
@@ -109,6 +130,7 @@ export function prijaviOrodja(
     if (!(cilj in CILJI)) return { najdeno: false, razlog: 'neznan cilj', mozni: Object.keys(CILJI) }
     const stran = CILJI[cilj]
     if (stran && stanje().pot !== STRANI[stran]) {
+      if (jeNeshranjeno()) return zadrzi()
       pojdi(STRANI[stran])
       // Stran se izriše po navigaciji; počakamo, da se cilj pojavi.
       for (let i = 0; i < 20 && !najdi(cilj); i++) await new Promise((r) => setTimeout(r, 150))
