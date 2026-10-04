@@ -1,0 +1,77 @@
+# Oddaja v App Store in Google Play — kliče jo .github/workflows/izdaja.yml.
+# Ključi pridejo iz skrivnosti repozitorija prek okolja, nikoli iz datotek:
+#   ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8   (App Store Connect API, App Manager)
+#   PLAY_SERVICE_ACCOUNT                     (JSON servisnega računa play-release)
+# Lokalno se ne poganja; navodila so v docs/trgovine/README.md.
+
+PAKET = 'eu.slff.app'
+
+def asc_kljuc
+  app_store_connect_api_key(
+    key_id: ENV.fetch('ASC_KEY_ID'),
+    issuer_id: ENV.fetch('ASC_ISSUER_ID'),
+    key_content: ENV.fetch('ASC_KEY_P8'),
+  )
+end
+
+# Ena številka gradnje za obe platformi (min_app_verzija in slff.otaMinBuild
+# primerjata prav to številko): največja v TestFlightu ali na Playu + 1.
+lane :naslednja_gradnja do
+  asc_kljuc
+  ios = latest_testflight_build_number(app_identifier: PAKET, initial_build_number: 0).to_i
+  android = %w[internal alpha beta production].flat_map do |track|
+    google_play_track_version_codes(package_name: PAKET, track: track, json_key_data: ENV.fetch('PLAY_SERVICE_ACCOUNT'))
+  rescue StandardError
+    []
+  end.map(&:to_i).max.to_i
+  naslednja = [ios, android].max + 1
+  UI.message("TestFlight #{ios}, Play #{android} → gradnja #{naslednja}")
+  File.write(ENV['GITHUB_OUTPUT'], "build=#{naslednja}\n", mode: 'a') if ENV['GITHUB_OUTPUT']
+end
+
+# cilj=test → TestFlight; cilj=pregled → nova različica v App Store in oddaja v pregled.
+lane :ios_oddaj do
+  asc_kljuc
+  ipa = ENV.fetch('IPA')
+  if ENV.fetch('CILJ') == 'pregled'
+    novosti = ENV.fetch('NOVOSTI')
+    upload_to_app_store(
+      app_identifier: PAKET,
+      ipa: ipa,
+      app_version: ENV.fetch('VERZIJA'),
+      submit_for_review: true,
+      automatic_release: true,
+      force: true,
+      skip_screenshots: true,
+      skip_metadata: false,
+      release_notes: { 'en-GB' => novosti, 'sl' => novosti, 'sk' => novosti },
+      run_precheck_before_submit: false,
+      submission_information: { add_id_info_uses_idfa: false, export_compliance_uses_encryption: false },
+    )
+  else
+    upload_to_testflight(ipa: ipa, app_identifier: PAKET, skip_waiting_for_build_processing: true)
+  end
+end
+
+# cilj=test → interno testiranje; cilj=pregled → produkcija (Play jo pošlje v pregled).
+lane :android_oddaj do
+  build = ENV.fetch('BUILD')
+  metapodatki = File.join(Dir.tmpdir, 'play-metapodatki')
+  if (novosti = ENV['NOVOSTI'].to_s.strip) != ''
+    mapa = File.join(metapodatki, 'en-GB', 'changelogs')
+    FileUtils.mkdir_p(mapa)
+    File.write(File.join(mapa, "#{build}.txt"), novosti[0, 500])
+  end
+  upload_to_play_store(
+    package_name: PAKET,
+    json_key_data: ENV.fetch('PLAY_SERVICE_ACCOUNT'),
+    aab: ENV.fetch('AAB'),
+    track: ENV.fetch('CILJ') == 'pregled' ? 'production' : 'internal',
+    release_status: 'completed',
+    metadata_path: metapodatki,
+    skip_upload_metadata: true,
+    skip_upload_images: true,
+    skip_upload_screenshots: true,
+    skip_upload_changelogs: !File.directory?(metapodatki),
+  )
+end

@@ -117,10 +117,7 @@ encrypted repo secrets `ANDROID_UPLOAD_KEYSTORE` (base64) and
 Google holds the real app signing key (Play App Signing); a lost upload key
 can be reset in Play Console → App integrity.
 
-**Build:** GitHub → Actions → *Android izdaja (.aab)* → Run workflow → download
-the `slff-android-aab` artifact → upload to Play Console. Bump `versionCode`
-and `versionName` in `android/app/build.gradle` first; Play rejects a number
-it has already seen.
+**Build and upload:** the *Izdaja v trgovini* workflow (see "Every next release").
 
 Locally (needs `android/keystore.properties`, gitignored):
 
@@ -253,15 +250,41 @@ new build number, so older installs don't receive code they can't run.
 
 ## Every next release
 
-1. Bump the version:
-   - iOS: Xcode → target App → General → Version (`1.1`) and Build (`2`, +1 every upload)
-   - Android: `android/app/build.gradle` → `versionName "1.1"`, `versionCode 2`
-   - Keep **Build = versionCode** — `min_app_verzija` compares that number on both platforms.
-2. `npm run build && npx cap sync`, then archive / bundleRelease as above.
-3. When a migration breaks an old app (renamed RPC, changed columns the app
-   reads), release the new app first, wait until it's approved and live, then
-   `update settings set value = '<new build>' where key = 'min_app_verzija'`
-   (or `insert` the first time) and only then push the migration.
+Only needed for **native** changes — everything else ships by OTA on deploy.
+
+One workflow builds both apps from `main` and uploads them:
+
+```bash
+# TestFlight + Play internal testing
+gh workflow run izdaja.yml -f platforma=obe -f cilj=test -f verzija=1.0.2
+# new App Store version + Play production, submitted for review
+gh workflow run izdaja.yml -f platforma=obe -f cilj=pregled -f verzija=1.0.2 \
+  -f novosti="Faster standings, fixes"
+```
+
+(or GitHub → Actions → *Izdaja v trgovini* → Run workflow). Or just tell
+Claude Code "release 1.0.2 for review" with the release notes.
+
+- The **build number** is computed: highest in TestFlight / Play + 1, the same
+  on both platforms. Nothing to bump by hand; `versionCode` /
+  `CURRENT_PROJECT_VERSION` in the repo are only for local builds.
+- `pregled` on iOS creates the App Store version, attaches the build, sets
+  "What's New" (en-GB, sl, sk) and submits; it is released automatically after
+  approval. It fails if another version is still waiting for review.
+- `pregled` on Android puts the bundle on the production track; Play sends it
+  to review (release notes in en-GB).
+- With a native change, also raise `slff.otaMinBuild` in `package.json` to the
+  new build number (shown in the *Številka gradnje* job) and merge before the
+  release, so older installs don't receive code they can't run.
+- When a migration breaks an old app (renamed RPC, changed columns the app
+  reads), release the new app first, wait until it's approved and live, then
+  `update settings set value = '<new build>' where key = 'min_app_verzija'`
+  (or `insert` the first time) and only then push the migration.
+
+Secrets (encrypted, repo settings): `ASC_KEY_ID`, `ASC_ISSUER_ID`,
+`ASC_KEY_P8` (App Store Connect API key *SLFF CI*, App Manager),
+`PLAY_SERVICE_ACCOUNT` (`play-release@slff-cb58e`), `ANDROID_UPLOAD_KEYSTORE`,
+`ANDROID_UPLOAD_PASSWORD`.
 
 ## Known gaps (not blocking release)
 
