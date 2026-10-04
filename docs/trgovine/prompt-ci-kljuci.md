@@ -35,7 +35,7 @@ Team: **Indigo Labs d.o.o.** (Team ID `H8ZMYS5NUY`). If the account switcher
    the Account Holder — stop and tell me.
 3. Tab **Team Keys** → **Generate API Key** (or **+**):
    - Name: `SLFF CI`
-   - Access: **App Manager**
+   - Access: **Admin** (App Manager can upload but cannot sign in CI)
    - Generate.
 4. In the list, note the **Key ID** of `SLFF CI`, and at the top of the page
    the **Issuer ID** (a UUID).
@@ -78,7 +78,7 @@ Team: **Indigo Labs d.o.o.** (Team ID `H8ZMYS5NUY`). If the account switcher
 ```
 App Store Connect
   Team selected: Indigo Labs d.o.o. yes/no
-  Key name / access: SLFF CI / App Manager
+  Key name / access: SLFF CI / Admin
   Key ID:
   Issuer ID:
   .p8 file name in Downloads:
