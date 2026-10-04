@@ -1553,7 +1553,7 @@ export default function MojaEkipa() {
       {naslednjiKrog && <Rok krog={naslednjiKrog} />}
 
       {zaklenjenaPostava && (
-        <div className="kartica flex flex-wrap items-center gap-x-3 gap-y-1 p-3 text-sm">
+        <div data-pomoc="prestopi" className="kartica flex flex-wrap items-center gap-x-3 gap-y-1 p-3 text-sm">
           <span className="font-semibold">
             {t('mojaEkipa.prestopi.stevec', { n: prestopi, prosti: pravila.prosti })}
           </span>
@@ -1684,6 +1684,7 @@ export default function MojaEkipa() {
           </div>
           <div className="flex flex-col items-end gap-1">
             <button
+              data-pomoc="shrani"
               onClick={poskusiShraniti}
               disabled={shranjujem}
               className="gumb-glavni whitespace-nowrap px-4 py-2 text-sm disabled:cursor-wait disabled:opacity-60"
@@ -1760,6 +1761,7 @@ export default function MojaEkipa() {
             <>
               <input
                 id="ime-ekipe"
+                data-pomoc="ime-ekipe"
                 ref={imeRef}
                 value={imeEkipe}
                 maxLength={NAJDALJSE_IME}
@@ -1854,6 +1856,7 @@ export default function MojaEkipa() {
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-6">
         <div className="min-w-0 space-y-4 sm:space-y-6">
+          <div data-pomoc="igrisce">
           <Igrisce
             izbrani={izbraniPodrobno}
             naPreklopPrvo={preklopiPrvo}
@@ -1861,6 +1864,7 @@ export default function MojaEkipa() {
             naPraznoMesto={naPraznoMesto}
             naPremakniKlop={premakniNaKlopi}
           />
+          </div>
 
           {/* Trak (kapetan + namestnik) — takoj pod igriscem, ker se
               nanasa na igralce iz iste postave. */}
@@ -1973,7 +1977,8 @@ export default function MojaEkipa() {
 
                   <div className="hidden flex-wrap items-center gap-3 lg:flex">
                     <button
-                      onClick={poskusiShraniti}
+                      data-pomoc="shrani"
+              onClick={poskusiShraniti}
                       disabled={shranjujem}
                       className="gumb-glavni disabled:cursor-wait disabled:opacity-60"
                     >
@@ -2024,7 +2029,7 @@ export default function MojaEkipa() {
 
           {/* Pripomočki (Klop+ + Wildcard) — enkratni bonusi, spodaj pod
               glavnim tokom. */}
-          <section className="kartica p-3 sm:p-4">
+          <section data-pomoc="pripomocki" className="kartica p-3 sm:p-4">
             <div className="space-y-2">
               <h3 className="text-xs font-bold uppercase tracking-wide text-slate-400">
                 {t('mojaEkipa.pripomocki.klopPlusNaslov')}
@@ -2270,7 +2275,7 @@ export default function MojaEkipa() {
         </div>
 
         {/* trg — na velikih zaslonih stranski stolpec, ki ostane na mestu */}
-        <aside className="hidden lg:sticky lg:top-4 lg:block lg:max-h-[calc(100dvh-2rem)] lg:self-start lg:overflow-y-auto lg:pr-1">
+        <aside data-pomoc="trg" className="hidden lg:sticky lg:top-4 lg:block lg:max-h-[calc(100dvh-2rem)] lg:self-start lg:overflow-y-auto lg:pr-1">
           {trg}
         </aside>
       </div>
@@ -2368,6 +2373,7 @@ export default function MojaEkipa() {
             )}
           </div>
           <button
+            data-pomoc="dodaj"
             onClick={() => {
               setFilterPoz('vse')
               setTrgZIskanjem(true)
@@ -2378,7 +2384,8 @@ export default function MojaEkipa() {
             {t('mojaEkipa.telefon.dodaj')}
           </button>
           <button
-            onClick={poskusiShraniti}
+            data-pomoc="shrani"
+              onClick={poskusiShraniti}
             disabled={shranjujem}
             title={
               !imeEkipe.trim() || napakeEkipe.length

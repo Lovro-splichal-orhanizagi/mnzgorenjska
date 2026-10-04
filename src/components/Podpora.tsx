@@ -1,6 +1,9 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/useAuth'
+import { useTekmovanje } from '../lib/tekmovanje'
 import { jezik } from '../i18n/jedro.ts'
+import { prijaviOrodja, type StanjeStrani } from '../lib/podporaOrodja'
 
 /**
  * Klepet za podporo (HelpStack).
@@ -15,6 +18,9 @@ import { jezik } from '../i18n/jedro.ts'
  * Prijavljenega predstavimo s PRIKAZNIM IMENOM, ne z e-posto: v pogovoru je
  * treba vedeti, kdo pise, e-posta pa je vec, kot je za to potrebno. Kdor hoce
  * odgovor po posti, jo napise sam.
+ *
+ * Agent ima orodja v brskalniku (`lib/podporaOrodja.ts`): pogleda, kje je
+ * obiskovalec, ga pelje na stran in mu na njej pokaže, kam klikniti.
  */
 // Vsak jezik ima svoj kanal v HelpStacku: slovaški ima slovaško bazo znanja
 // (pravila brez glasovanja o pozicijah — te pridejo iz zapisnika). Kdor
@@ -44,8 +50,37 @@ function pocakajNaMirovanje(opravilo: () => void): () => void {
   return () => window.clearTimeout(id)
 }
 
+type UkazHelpStack = ((ukaz: 'registerTool', ime: string, fn: (p: Record<string, unknown>) => Promise<unknown>) => void) & {
+  q?: unknown[]
+}
+
 export default function Podpora() {
   const { session } = useAuth()
+  const { pathname } = useLocation()
+  const navigate = useNavigate()
+  const { id: ligaId, tekmovanje } = useTekmovanje()
+
+  // Orodja berejo stanje ob klicu, zato ga držimo v ref — prijavimo jih enkrat.
+  const stanje = useRef<StanjeStrani>({ pot: pathname, liga: null, prijavljen: false })
+  stanje.current = {
+    pot: pathname,
+    liga: ligaId && tekmovanje ? { id: ligaId, slug: tekmovanje.slug, ime: tekmovanje.name } : null,
+    prijavljen: Boolean(session),
+  }
+  const pojdi = useRef(navigate)
+  pojdi.current = navigate
+
+  useEffect(() => {
+    // Ukaze pred naložitvijo skripte widget pobere iz vrste (HelpStack.q).
+    const w = window as Window & { HelpStack?: UkazHelpStack }
+    if (!w.HelpStack) {
+      const vrsta: UkazHelpStack = (...args: unknown[]) => {
+        ;(vrsta.q = vrsta.q ?? []).push(args)
+      }
+      w.HelpStack = vrsta
+    }
+    prijaviOrodja(w.HelpStack, () => stanje.current, (pot) => pojdi.current(pot))
+  }, [])
 
   useEffect(() => {
     if (document.querySelector(`script[src="${SKRIPTA}"]`)) return

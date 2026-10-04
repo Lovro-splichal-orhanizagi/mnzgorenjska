@@ -331,7 +331,7 @@ export default function Glasovanje() {
       )}
 
       {/* 1. korak: krog */}
-      <div className="space-y-2">
+      <div data-pomoc="krogi" className="space-y-2">
         <h2 className="text-xs font-bold uppercase tracking-wide text-slate-400">
           {t('tekme.glasovanje.izberiKrog')}
         </h2>
@@ -364,7 +364,7 @@ export default function Glasovanje() {
       </div>
 
       {/* 2. korak: tekma v krogu */}
-      <div className="space-y-2">
+      <div data-pomoc="tekme" className="space-y-2">
         <h2 className="text-xs font-bold uppercase tracking-wide text-slate-400">
           {t('tekme.glasovanje.izberiTekmo')}
         </h2>
@@ -456,7 +456,7 @@ export default function Glasovanje() {
                 : t('tekme.glasovanje.brezPotrjene', { goli: mnozina(nepotrjenih, GOLI) })}
           </p>
 
-          <ul className="space-y-4">
+          <ul data-pomoc="goli" className="space-y-4">
             {goli.map((g) => (
               <GolZaGlasovanje
                 key={g.id}

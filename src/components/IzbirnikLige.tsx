@@ -176,6 +176,7 @@ export default function IzbirnikLige() {
     // hamburger potisnil čez rob (360 px).
     <div className="relative min-w-0 max-w-[50vw] sm:max-w-xs lg:max-w-[16rem]" ref={ovoj}>
       <button
+        data-pomoc="izbirnik-lige"
         ref={gumb}
         onClick={() => setOdprt(!odprt)}
         aria-haspopup="listbox"
