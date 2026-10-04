@@ -257,6 +257,41 @@ const danes = new Date().toISOString().slice(0, 10)
 // spodaj najdemo tekme, ki jih zveza iz kroga umakne.
 const pariKrogov = new Map() // krogId -> Set('domaci:gostje')
 
+// Kroge in tekme sezone preberemo naenkrat, ne po eno. Uvoz razporeda teče
+// vsako uro za vsako ligo in skoraj vedno ne spremeni ničesar; poizvedba za
+// vsak krog in vsako tekmo posebej (230 povratnih poti na ligo) je vzela pol
+// minute na ligo in pri 77 ligah polovico urnega zagona.
+const obstojeciKrogi = new Map(
+  (
+    await vseVrstice((od, do_) =>
+      db
+        .from('rounds')
+        .select('id, number, played_on, deadline_at, lineups_locked_at')
+        .eq('competition_id', tekmovanje.id)
+        .eq('season', sezona)
+        .order('id')
+        .range(od, do_),
+    )
+  ).map((r) => [r.number, r]),
+)
+const idKrogov = [...obstojeciKrogi.values()].map((r) => r.id)
+const obstojeceTekme = new Map() // 'krog:domaci:gostje' -> prva tekma (po id)
+if (idKrogov.length) {
+  const vrstice = await vseVrstice((od, do_) =>
+    db
+      .from('matches')
+      .select('id, round_id, home_team_id, away_team_id, played_on, imported_at, kontumacija')
+      .in('round_id', idKrogov)
+      .order('id')
+      .range(od, do_),
+  )
+  for (const m of vrstice) {
+    const kljuc = `${m.round_id}:${m.home_team_id}:${m.away_team_id}`
+    if (!obstojeceTekme.has(kljuc)) obstojeceTekme.set(kljuc, m)
+  }
+}
+const istiCas = (a, b) => (a == null || b == null ? a == b : new Date(a).getTime() === new Date(b).getTime())
+
 for (const k of veljavni) {
   const datumKroga = k.tekme.map((t) => t.datum).filter(Boolean).sort()[0]
   // Ura PRVE tekme tega dne, ne prve v seznamu: krog se lahko začne v soboto
@@ -267,14 +302,7 @@ for (const k of veljavni) {
     .sort()[0]
   const rok = rokKroga(datumKroga, uraKroga, pomakUr)
 
-  const { data: obstoj } = await db
-    .from('rounds')
-    .select('id')
-    .eq('competition_id', tekmovanje.id)
-    .eq('season', sezona)
-    .eq('number', k.stevilka)
-    .maybeSingle()
-
+  const obstoj = obstojeciKrogi.get(k.stevilka)
   let krogId = obstoj?.id
   if (!krogId) {
     const { data, error } = await db
@@ -294,10 +322,10 @@ for (const k of veljavni) {
     }
     krogId = data.id
     novihKrogov++
-  } else {
+  } else if (!obstoj.lineups_locked_at && (obstoj.played_on !== datumKroga || !istiCas(obstoj.deadline_at, rok))) {
     // Datum se lahko prestavi; rok mu sledi, dokler krog še ni zaklenjen.
     // Zaklenjenemu krogu roka ne premikamo: posnetki postav so ze zajeti in
-    // premaknjen rok bi obetal urejanje, ki ga ni vec.
+    // premaknjen rok bi obetal urejanje, ki ga ni vec. Pišemo le ob spremembi.
     const { error: eRok } = await db
       .from('rounds')
       .update({ played_on: datumKroga, deadline_at: rok })
@@ -331,14 +359,10 @@ for (const k of veljavni) {
     // Tak scenarij se je zgodil po združitvi klubov z različnim zapisom
     // imena (Bled-Bohinj). Zdaj beremo array in preverjamo dolžino, tako da
     // je funkcija odporna tudi na že obstoječe podvojene vrstice.
-    const { data: obstojTekme } = await db
-      .from('matches')
-      .select('id, played_on, imported_at, kontumacija')
-      .eq('round_id', krogId)
-      .eq('home_team_id', domaciId)
-      .eq('away_team_id', gostjeId)
-      .limit(1)
-    if (obstojTekme && obstojTekme.length > 0) {
+    const obstojTekme = obstojeceTekme.has(`${krogId}:${domaciId}:${gostjeId}`)
+      ? [obstojeceTekme.get(`${krogId}:${domaciId}:${gostjeId}`)]
+      : []
+    if (obstojTekme.length > 0) {
       // Tekma ze obstaja — a datum se lahko spremeni. Prestavljena tekma
       // (Termit Moravce : Vir, 11. 9. -> 14. 11.) je pri nas obdrzala stari
       // datum, preverba jo je stiri dni zapored javljala kot "ni uvozena",
@@ -364,16 +388,24 @@ for (const k of veljavni) {
       continue
     }
 
-    const { error } = await db.from('matches').insert({
-      round_id: krogId,
-      home_team_id: domaciId,
-      away_team_id: gostjeId,
-      played_on: t.datum,
-      source_url: url,
-      kontumacija: !!t.kontumacija,
-    })
+    const { data: nova, error } = await db
+      .from('matches')
+      .insert({
+        round_id: krogId,
+        home_team_id: domaciId,
+        away_team_id: gostjeId,
+        played_on: t.datum,
+        source_url: url,
+        kontumacija: !!t.kontumacija,
+      })
+      .select('id, round_id, home_team_id, away_team_id, played_on, imported_at, kontumacija')
+      .single()
     if (error) console.log(`  tekma ${t.domaci} : ${t.gostje}: ${error.message}`)
-    else novihTekem++
+    else {
+      novihTekem++
+      // Ista tekma dvakrat v razporedu ne sme dati dveh vrstic.
+      obstojeceTekme.set(`${krogId}:${domaciId}:${gostjeId}`, nova)
+    }
   }
 }
 
