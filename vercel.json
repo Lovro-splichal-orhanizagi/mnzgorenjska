@@ -6,42 +6,113 @@
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "Content-Security-Policy", "value": "frame-ancestors 'none'" },
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" }
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "frame-ancestors 'none'"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        }
       ]
     },
     {
       "source": "/app/latest.json",
       "headers": [
-        { "key": "Cache-Control", "value": "no-store" },
-        { "key": "Access-Control-Allow-Origin", "value": "*" }
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }
       ]
     },
     {
       "source": "/grbi/(.*)",
-      "headers": [{ "key": "Access-Control-Allow-Origin", "value": "*" }]
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }
+      ]
     },
     {
       "source": "/.well-known/apple-app-site-association",
-      "headers": [{ "key": "Content-Type", "value": "application/json" }]
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        }
+      ]
     }
   ],
   "rewrites": [
-    { "source": "/sk", "destination": "/sk.html" },
-    { "source": "/hr", "destination": "/hr.html" },
+    {
+      "source": "/sk",
+      "destination": "/sk.html"
+    },
+    {
+      "source": "/hr",
+      "destination": "/hr.html"
+    },
     {
       "source": "/((?!api/)(?!.*\\.).*)",
-      "has": [{ "type": "query", "key": "t", "value": "sk-.*" }],
+      "has": [
+        {
+          "type": "query",
+          "key": "t",
+          "value": "sk-.*"
+        }
+      ],
       "destination": "/sk.html"
     },
     {
       "source": "/((?!api/)(?!.*\\.).*)",
-      "has": [{ "type": "query", "key": "t", "value": "hr-.*" }],
+      "has": [
+        {
+          "type": "query",
+          "key": "t",
+          "value": "hr-.*"
+        }
+      ],
       "destination": "/hr.html"
     },
-    { "source": "/((?!api/)(?!.*\\.).*)", "destination": "/index.html" }
+    {
+      "source": "/((?!api/)(?!.*\\.).*)",
+      "destination": "/index.html"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/pivo",
+      "has": [
+        {
+          "type": "query",
+          "key": "src",
+          "value": "(?<src>[a-z0-9-]{1,30})"
+        }
+      ],
+      "destination": "https://buymeacoffee.com/slff?utm_source=slff&utm_medium=:src",
+      "permanent": false
+    },
+    {
+      "source": "/pivo",
+      "destination": "https://buymeacoffee.com/slff?utm_source=slff",
+      "permanent": false
+    }
   ]
 }
