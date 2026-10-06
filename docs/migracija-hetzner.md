@@ -168,9 +168,15 @@ takes about 1 minute and works at any time.
     `/srv/slff/releases/<sha>` as user `deploy` (secret `DEPLOY_SSH_KEY`, pinned host key in
     var `DEPLOY_KNOWN_HOSTS`), switches `current` atomically and keeps 5 releases. Until the
     DNS switch it deploys to **both** Vercel and the VM.
-  - **Switch:** in Cloudflare, change apex and `www` to A `2.31.6.53`, **proxied**.
-    Rollback: put the Vercel records back (`64.29.17.1`, `216.198.79.1`; www
-    `216.198.79.65`, `64.29.17.1`), DNS only.
+  - **Switched 2026-10-06 ~20:15 UTC:** apex and `www` are A `2.31.6.53`, **proxied**.
+    Checked through Cloudflare: commit, sk/hr cards, `latest.json` no-store, `.well-known`,
+    `/api/drzava` from `Cf-Ipcountry`.
+    **Rollback:** apex A `64.29.17.1` + `216.198.79.1`, www A `216.198.79.65` + `64.29.17.1`,
+    all DNS only, TTL Auto. Vercel gets every deploy until it is removed (**not before
+    2026-10-20**): delete the `objavi` job, the `VERCEL_*` secrets, `vercel.json` and
+    `api/drzava.ts`, then the Vercel project.
+  - Cloudflare's default Browser Cache TTL (4 h) overrides `max-age=0` on static files
+    (crests, robots). Set Caching → Browser Cache TTL to "Respect Existing Headers".
   - **Firewall:** 80/443 accept only Cloudflare's ranges (ufw, comment `cloudflare`, 22
     rules, 2026-10-06). SSH stays open. To test the origin, go through `ssh slff` and
     `curl -k --resolve slff.eu:443:127.0.0.1`. If Cloudflare adds ranges
