@@ -168,15 +168,32 @@ takes about 1 minute and works at any time.
     `/srv/slff/releases/<sha>` as user `deploy` (secret `DEPLOY_SSH_KEY`, pinned host key in
     var `DEPLOY_KNOWN_HOSTS`), switches `current` atomically and keeps 5 releases. Until the
     DNS switch it deploys to **both** Vercel and the VM.
-  - **Switch:** in Cloudflare, change apex and `www` to A `2.31.6.53`, **proxied**.
-    Rollback: put the Vercel records back (`64.29.17.1`, `216.198.79.1`; www
-    `216.198.79.65`, `64.29.17.1`), DNS only.
+  - **Switched 2026-10-06 ~20:15 UTC:** apex and `www` are A `2.31.6.53`, **proxied**.
+    Checked through Cloudflare: commit, sk/hr cards, `latest.json` no-store, `.well-known`,
+    `/api/drzava` from `Cf-Ipcountry`.
+    **Rollback:** apex A `64.29.17.1` + `216.198.79.1`, www A `216.198.79.65` + `64.29.17.1`,
+    all DNS only, TTL Auto. Vercel gets every deploy until it is removed (**not before
+    2026-10-20**): delete the `objavi` job, the `VERCEL_*` secrets, `vercel.json` and
+    `api/drzava.ts`, then the Vercel project.
+  - Cloudflare's default Browser Cache TTL (4 h) overrides `max-age=0` on static files
+    (crests, robots). Set Caching → Browser Cache TTL to "Respect Existing Headers".
   - **Firewall:** 80/443 accept only Cloudflare's ranges (ufw, comment `cloudflare`, 22
     rules, 2026-10-06). SSH stays open. To test the origin, go through `ssh slff` and
     `curl -k --resolve slff.eu:443:127.0.0.1`. If Cloudflare adds ranges
     (cloudflare.com/ips), add them too.
   - Caddy here is 2.6 (apt): no `handle_errors 404`. Also, a `-Header` delete defers its
     whole `header` block. Always `caddy validate` with `set -o pipefail` before replacing.
+- **P2 started 2026-10-06 ~20:10 UTC:** GitHub var `VITE_SUPABASE_URL` and secret
+  `SUPABASE_URL` = `https://api.slff.eu`, so the web, OTA and scheduled jobs go through the proxy.
+  Cloud auth per-IP limits were raised via the Management API (all users now arrive as the
+  VM's IP): `rate_limit_token_refresh` 150 → 1800, `rate_limit_verify` 30 → 360,
+  `rate_limit_otp` 30 → 360. `email_sent` (100/h, project-wide) is unchanged. CORS checked
+  for `https://slff.eu` and `capacitor://localhost`.
+  - OTA only updates when the commit changes. Redeploying the same SHA updates the web,
+    not the apps.
+  - Native builds too old for OTA keep calling supabase.co until they update. Before P4
+    check `settings.min_app_verzija` / `slff.otaMinBuild`, because after P4 Cloud is
+    read-only.
 - `src/lib/supabase.ts` pins `storageKey` (P2 trap 2). It is a no-op until the URL changes.
 - Still empty in secrets.env: Firebase, Discord webhook, Google and Apple secrets.
   `RESEND_API_KEY` is no longer needed.
