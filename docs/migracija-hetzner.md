@@ -203,6 +203,12 @@ takes about 1 minute and works at any time.
     *database* blocks the CLI's own login role, so no dump would be possible. Supabase
     reserves `supabase_auth_admin`, so Cloud GoTrue can still write logins. Only stale
     clients still calling supabase.co reach it.
+  - **Stale tabs:** browser tabs opened before the P2 deploy still call supabase.co, and
+    Cloud GoTrue keeps renewing their sessions (4 users in the first 35 min).
+    `scripts/hetzner/dohiti-seje.sh` copies sessions and refresh tokens changed on Cloud
+    since the cutover to the VM. Users and identities are only added, never overwritten.
+    The VM's `refresh_tokens_id_seq` was moved +10M so ids never collide. **Rerun it before
+    deleting Cloud.**
   - **Rollback** (only before real writes pile up on the VM, otherwise copy the delta back):
     Caddyfile `reverse_proxy https://cobtigdsmlftvpfqtnas.supabase.co` with
     `header_up Host {upstream_hostport}`, then on Cloud
