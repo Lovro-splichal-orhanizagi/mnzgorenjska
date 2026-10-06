@@ -159,8 +159,9 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     imeEkipe: 'Team name',
     fiksnoNamig: 'The team name is fixed after the first save — one label on the standings and in the history.',
     fiksno: '🔒 fixed',
+    privzetoIme: 'FC {ime}',
     primerImena: 'e.g. Sunday Heroes',
-    imeNamig: 'The name can’t be changed after the first save.',
+    imeNamig: 'You can change the name any time.',
   },
 
   // Starter tip for an empty team.
@@ -169,13 +170,14 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     sestaviMi: '🎲 Build me a team',
     opisPredloga:
       'We pick a random valid team within budget — different with every click. Then swap anyone you like and save.',
+    sam: 'I’d rather build it myself',
     drugPredlog: '🎲 Another suggestion',
     opisDrugegaPredloga:
       'Don’t like it? Draw a new team — it’s free until you save.',
     dopolni: '🎲 Complete my team',
     opisDopolnitve:
       'Empty squad spots: {n}. Your picks stay; we fill the rest at random within budget.',
-    korak1: 'Enter a team name above — saving won’t work without it.',
+    korak1: 'We suggested a team name above — change it any time.',
     korak2:
       'Click <krepko>＋</krepko> on an empty spot on the pitch. On a phone there’s also a <krepko>＋ Add</krepko> button in the bottom bar; on a computer you pick from the <krepko>player market</krepko> on the right.',
     korak3:

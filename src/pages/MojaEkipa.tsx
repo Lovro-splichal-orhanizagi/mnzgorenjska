@@ -10,6 +10,8 @@ import type { Odsotnost } from '../lib/odsotni'
 import { useAuth } from '../lib/useAuth'
 import { preberiVabilo, pozabiVabilo } from '../lib/miniLige'
 import PovabiSoigralce from '../components/PovabiSoigralce'
+import { zabeleziKorak } from '../lib/lijak'
+import { osvetliCilj } from '../lib/podporaOrodja'
 import {
   VELIKOST_EKIPE,
   STEVILO_PRVIH,
@@ -381,7 +383,9 @@ export default function MojaEkipa() {
 
   // Neshranjene spremembe: kader, postava, trak ali vrstni red klopi.
   const neshranjeno =
-    !nalaganje && !napakaNalaganja && kljucKadra(izbrani) !== shranjenKljuc
+    !nalaganje &&
+    !napakaNalaganja &&
+    (kljucKadra(izbrani) !== shranjenKljuc || (ekipa != null && imeEkipe.trim() !== ekipa.name))
 
   // Izbirnik lige in odjava v meniju vprašata sama (lib/neshranjeno).
   useEffect(() => {
@@ -723,6 +727,10 @@ export default function MojaEkipa() {
         setZaklenjenaPostava(postavaZaPrestope(posnetki, naslednji))
         setPosnetkiPoKrogih(zgod)
         setZgodovinaKrogId(zgod[0]?.round_id ?? null)
+      } else {
+        // Brez ekipe: ime predlagamo, da novinec ne obtiči ob praznem polju
+        // (ime je bilo pogoj za shranjevanje). Spremeni ga lahko kadarkoli.
+        setImeEkipe(privzetoImeEkipe())
       }
       setNalaganje(false)
     }
@@ -921,6 +929,14 @@ export default function MojaEkipa() {
 
   const ime = (id: number) => prikazniIme(poId[id]?.full_name) || t('mojaEkipa.igralec')
 
+  /** "FC Jernej" iz prikaznega imena ali e-naslova prijavljenega. */
+  function privzetoImeEkipe(): string {
+    const m = session?.user?.user_metadata ?? {}
+    const polno = String(m.display_name || m.full_name || m.name || session?.user?.email?.split('@')[0] || '').trim()
+    const prvo = polno.split(/\s+/)[0]
+    return prvo ? t('mojaEkipa.povzetek.privzetoIme', { ime: prvo }).slice(0, NAJDALJSE_IME) : ''
+  }
+
   function dodaj(igralec: IgralecTrga) {
     setSporocilo(null)
     const razlog = zakajNeGre(igralec, izbraniPodrobno, preostalo)
@@ -993,7 +1009,24 @@ export default function MojaEkipa() {
     )
     setSporocilo(t('mojaEkipa.sporocila.predlogSestavljen'))
     setIzPredloga(true)
+    zabeleziKorak('predlog')
+    // Naslednji korak je en sam: Shrani. Pokažemo ga, ko se igrišče izriše.
+    window.setTimeout(() => osvetliCilj('shrani'), 400)
   }
+
+  // Prazna ekipa: štejemo prihod (lijak začetka) in povezavi iz e-pošte
+  // (`?sestavi=1`) takoj sestavimo predlog — en korak manj do shranjene ekipe.
+  const zeSestavljeno = useRef(false)
+  useEffect(() => {
+    if (nalaganje || napakaNalaganja || !session || ekipa || izbrani.length > 0) return
+    zabeleziKorak('prazna_ekipa')
+    if (zeSestavljeno.current || !new URLSearchParams(lokacija.search).has('sestavi')) return
+    if (!igralci.length) return
+    zeSestavljeno.current = true
+    zabeleziKorak('sestavi_iz_maila')
+    predlagaj()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nalaganje, napakaNalaganja, session, ekipa, izbrani.length, igralci.length, lokacija.search])
 
   /**
    * Dopolni začet kader: kar je uporabnik že izbral, ostane, manjkajoča mesta
@@ -1209,6 +1242,7 @@ export default function MojaEkipa() {
       if (error) return setNapaka(napakaShranjevanja(error))
       ekipaId = data.id
       setEkipa(data)
+      zabeleziKorak('prva_shramba')
     } else if (imeEkipe.trim() !== ekipa.name) {
       const { error } = await supabase
         .from('fantasy_teams')
@@ -1745,19 +1779,9 @@ export default function MojaEkipa() {
           >
             {t('mojaEkipa.povzetek.imeEkipe')}
           </label>
-          {ekipa?.name ? (
-            <div className="mt-1 flex items-center gap-2 rounded-xl border border-white/10 bg-slate-900/60 px-3 py-2 text-sm">
-              <span className="flex-1 font-semibold text-slate-100">
-                {ekipa.name}
-              </span>
-              <span
-                title={t('mojaEkipa.povzetek.fiksnoNamig')}
-                className="znacka bg-white/10 text-[10px] text-slate-400"
-              >
-                {t('mojaEkipa.povzetek.fiksno')}
-              </span>
-            </div>
-          ) : (
+          {/* Ime je mogoče spremeniti kadarkoli (od 6. 10. 2026; prej je bilo po
+              prvi shranitvi fiksno). Lestvica kaže trenutno ime. */}
+          {(
             <>
               <input
                 id="ime-ekipe"
@@ -1820,37 +1844,41 @@ export default function MojaEkipa() {
         <div className="kartica border-gnl-400/30 bg-gnl-500/5 p-3 text-sm sm:p-4">
           <h2 className="mb-1 text-sm font-bold text-gnl-200">{t('mojaEkipa.zacetek.naslov')}</h2>
 
-          {/* Najhitrejša pot je ena. Navodila spodaj ostanejo za tiste, ki
-              hočejo ekipo sestaviti sami — ni pa več edina pot naprej. */}
-          <div className="mb-3 flex flex-wrap items-center gap-2 rounded-xl bg-slate-950/40 p-2.5">
-            <button
-              onClick={predlagaj}
-              disabled={zakajNiPredloga != null}
-              title={zakajNiPredloga ?? undefined}
-              className="gumb-glavni px-3 py-2 text-sm disabled:opacity-50"
-            >
-              {t('mojaEkipa.zacetek.sestaviMi')}
-            </button>
-            <span className="min-w-0 flex-1 text-xs text-slate-400">
-              {zakajNiPredloga ?? t('mojaEkipa.zacetek.opisPredloga')}
-            </span>
-          </div>
+          {/* Najhitrejša pot je ena in je glavni gumb strani. Navodila za
+              ročno sestavo so zložena — 4. 10. 2026 je bilo 57 % registriranih
+              brez ekipe, in prazno igrišče s štirimi koraki besedila jih ustavi. */}
+          <button
+            onClick={predlagaj}
+            disabled={zakajNiPredloga != null}
+            title={zakajNiPredloga ?? undefined}
+            className="gumb-glavni w-full px-4 py-3 text-base disabled:opacity-50"
+          >
+            {t('mojaEkipa.zacetek.sestaviMi')}
+          </button>
+          <p className="mt-2 text-xs text-slate-400">
+            {zakajNiPredloga ?? t('mojaEkipa.zacetek.opisPredloga')}
+          </p>
 
-          <ol className="ml-4 list-decimal space-y-1 text-slate-300">
-            <li>{t('mojaEkipa.zacetek.korak1')}</li>
-            <li>{tx('mojaEkipa.zacetek.korak2', {}, { krepko: belo })}</li>
-            <li>
-              {t('mojaEkipa.zacetek.korak3', {
-                n: VELIKOST_EKIPE,
-                gk: POZICIJE.GK.kader,
-                def: POZICIJE.DEF.kader,
-                mid: POZICIJE.MID.kader,
-                fwd: POZICIJE.FWD.kader,
-                klub: MAX_IZ_KLUBA,
-              })}
-            </li>
-            <li>{tx('mojaEkipa.zacetek.korak4', {}, { krepko: belo })}</li>
-          </ol>
+          <details className="mt-3 text-slate-300">
+            <summary className="cursor-pointer text-xs font-semibold text-slate-400 hover:text-slate-200">
+              {t('mojaEkipa.zacetek.sam')}
+            </summary>
+            <ol className="mt-2 ml-4 list-decimal space-y-1">
+              <li>{t('mojaEkipa.zacetek.korak1')}</li>
+              <li>{tx('mojaEkipa.zacetek.korak2', {}, { krepko: belo })}</li>
+              <li>
+                {t('mojaEkipa.zacetek.korak3', {
+                  n: VELIKOST_EKIPE,
+                  gk: POZICIJE.GK.kader,
+                  def: POZICIJE.DEF.kader,
+                  mid: POZICIJE.MID.kader,
+                  fwd: POZICIJE.FWD.kader,
+                  klub: MAX_IZ_KLUBA,
+                })}
+              </li>
+              <li>{tx('mojaEkipa.zacetek.korak4', {}, { krepko: belo })}</li>
+            </ol>
+          </details>
         </div>
       )}
 

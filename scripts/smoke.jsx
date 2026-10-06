@@ -3600,11 +3600,11 @@ preveri(
   )
   const bSl = E.sestaviOpomnikBrezLige(null, { display_name: 'Janez Novak' })
   const bSk = E.sestaviOpomnikBrezLige('sk', { display_name: 'Ján' })
-  preveri('e-pošta: brez lige sl ne imenuje lige in vodi na izbiro',
+  preveri('e-pošta: brez lige sl ne imenuje lige in vodi na sestavo ekipe',
     bSl.naslov.includes('izberi svojo ligo') && !/GNL|1\. SNL — |\?t=/.test(bSl.naslov) &&
-      bSl.html.includes('href="https://slff.eu"') && !bSl.html.includes('?t=') && bSl.html.includes('Živjo, Janez!'))
-  preveri('e-pošta: brez lige sk v slovaščini na /sk',
-    bSk.naslov.includes('vyber si ligu') && bSk.html.includes('href="https://slff.eu/sk"') &&
+      bSl.html.includes('href="https://slff.eu/my-team?sestavi=1"') && !bSl.html.includes('?t=') && bSl.html.includes('Živjo, Janez!'))
+  preveri('e-pošta: brez lige sk v slovaščini na sestavo ekipe',
+    bSk.naslov.includes('vyber si ligu') && bSk.html.includes('href="https://slff.eu/my-team?sestavi=1"') &&
       !slovensko.test(bSk.html) && bSk.html.includes('Ahoj, Ján!'))
   preveri('e-pošta: brez lige ima odjavo', bSl.odjava === 'https://slff.eu/reminders' && bSk.html.includes('/reminders'))
   preveri('e-pošta: sl razlog nespremenjen', E.prevediRazlog(razlogi[0], 'sl') === razlogi[0])
@@ -3644,8 +3644,8 @@ preveri(
     `${prevodiHr[1]} | ${prevodiHr[2]}`)
   const bHr = E.sestaviOpomnikBrezLige('hr', { display_name: 'Ivan' })
   preveri('e-pošta: brez lige hr v hrvaščini',
-    bHr.naslov.includes('odaberi svoju ligu') && bHr.html.includes('href="https://slff.eu/hr"') &&
-      bHr.html.includes('Bok, Ivan!') && !slovenskoHr.test(bHr.html))
+    bHr.naslov.includes('odaberi svoju ligu') && bHr.html.includes('href="https://slff.eu/my-team?sestavi=1"') &&
+      bHr.html.includes('Bok, Ivan!') && !slovenskoHr.test(bHr.html.replace(/href="[^"]*"/g, '')))
   const pHr = E.sestaviPoznavalca(hrL, { display_name: 'Ivan', obseg: 'klub', klub: 'NK Polet' })
   preveri('e-pošta: poznavalec hr', pHr.html.includes('poznavatelj kluba NK Polet') && pHr.html.includes('/positions?t=hr-mz-1mnl') && !slovenskoHr.test(pHr.html))
   const popHr = E.sestaviPopravekPozicije(hrL, { display_name: 'Ivan', team_name: 'Junaci', igralci: [{ ime: 'Horvat Marko', pozicija: 'MID' }] })

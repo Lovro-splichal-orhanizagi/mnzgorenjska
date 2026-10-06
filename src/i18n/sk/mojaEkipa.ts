@@ -156,8 +156,9 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     imeEkipe: 'Názov tímu',
     fiksnoNamig: 'Názov tímu sa po prvom uložení už nedá meniť — je to jednotné označenie v tabuľke aj v histórii.',
     fiksno: '🔒 nemenné',
+    privzetoIme: 'FC {ime}',
     primerImena: 'napr. Nedeľní hrdinovia',
-    imeNamig: 'Názov sa po prvom uložení už nedá zmeniť.',
+    imeNamig: 'Názov môžeš neskôr kedykoľvek zmeniť.',
   },
 
   zacetek: {
@@ -165,13 +166,14 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     sestaviMi: '🎲 Zostav mi tím',
     opisPredloga:
       'Náhodne vyberieme platný tím v rámci rozpočtu — pri každom kliknutí iný. Potom vymeň, koho chceš, a ulož.',
+    sam: 'Radšej si ho zostavím sám',
     drugPredlog: '🎲 Iný návrh',
     opisDrugegaPredloga:
       'Nepáči sa ti? Vyžrebuj nový tím — kým ho neuložíš, je to zadarmo.',
     dopolni: '🎲 Doplniť tím',
     opisDopolnitve:
       'Voľné miesta v kádri: {n}. Tvoje voľby zostanú, zvyšné miesta náhodne doplníme v rámci rozpočtu.',
-    korak1: 'Zadaj hore názov tímu — bez neho sa uložiť nedá.',
+    korak1: 'Názov tímu sme navrhli hore — môžeš ho kedykoľvek zmeniť.',
     korak2:
       'Klikni na <krepko>＋</krepko> na prázdnom mieste ihriska. Na mobile je v spodnom paneli ešte tlačidlo <krepko>＋ Pridať</krepko>, na počítači vyberáš z <krepko>trhu hráčov</krepko> vpravo.',
     korak3:

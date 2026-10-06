@@ -161,8 +161,9 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     imeEkipe: 'Ime momčadi',
     fiksnoNamig: 'Ime momčadi nakon prvog spremanja je trajno — jedinstvena oznaka na ljestvici i u povijesti.',
     fiksno: '🔒 trajno',
+    privzetoIme: 'FC {ime}',
     primerImena: 'npr. Nedjeljni Junaci',
-    imeNamig: 'Ime nakon prvog spremanja više nije moguće promijeniti.',
+    imeNamig: 'Ime možeš kasnije bilo kada promijeniti.',
   },
 
   // Uvodni savjet za praznu momčad.
@@ -171,13 +172,14 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     sestaviMi: '🎲 Složi mi momčad',
     opisPredloga:
       'Nasumično odaberemo valjanu momčad unutar proračuna — svaki klik drugu. Zatim zamijeni koga želiš i spremi.',
+    sam: 'Radije ću je složiti sam',
     drugPredlog: '🎲 Drugi prijedlog',
     opisDrugegaPredloga:
       'Ne sviđa ti se? Izvuci novu momčad — dok je ne spremiš, to je besplatno.',
     dopolni: '🎲 Popuni momčad',
     opisDopolnitve:
       'Slobodnih mjesta u momčadi: {n}. Tvoji odabiri ostaju, preostala mjesta nasumično popunjavamo unutar proračuna.',
-    korak1: 'Upiši ime momčadi gore — bez njega spremanje neće raditi.',
+    korak1: 'Ime momčadi predložili smo gore — možeš ga bilo kada promijeniti.',
     korak2:
       'Klikni <krepko>＋</krepko> na praznom mjestu na terenu. Na mobitelu je u donjoj traci i gumb <krepko>＋ Dodaj</krepko>, a na računalu biraš na <krepko>tržištu igrača</krepko> desno.',
     korak3:
