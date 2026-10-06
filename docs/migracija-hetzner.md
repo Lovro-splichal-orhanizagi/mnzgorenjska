@@ -210,9 +210,17 @@ takes about 1 minute and works at any time.
     `select cron.alter_job(jobid, active := true) from cron.job;`.
   - CI: `SUPABASE_DB_URL` = `postgresql://supabase_admin:…@127.0.0.1:5432/postgres` over the
     SSH tunnel (deploy key: `permitopen="127.0.0.1:5432"` only).
-  - **Backups:** `scripts/hetzner/varnostna.sh` runs hourly at :07 (`pg_dump -Fc`, ~14 MB),
-    keeps 48 h in `/opt/slff/backup` and 7 days off-box on the HelpStack mail server (user
-    `slffbackup`, restricted key). Failures go to Discord. Move it to the Storage Box once it exists.
+  - **Backups:** `scripts/hetzner/varnostna.sh` runs hourly at :07 (`pg_dump -Fc`, ~14 MB).
+    It keeps 48 h in `/opt/slff/backup`, plus the Hetzner **Storage Box** `slff-backup`
+    (`u685650@u685650.your-storagebox.de`, **SSH port 23**, FSN1, BX11 €3.20/month, key
+    `/root/.ssh/backup_ed25519`). On the box, `dumps/urne` mirrors the 48 hourly dumps and
+    `dumps/dnevne` keeps the 03:07 UTC one for 30 days. The box's shell has no `find`;
+    pruning uses the date in the file name. Failures go to Discord. Plus Hetzner's daily VM
+    snapshots.
+  - **Restore test 2026-10-06:** a box copy restored into a scratch DB with identical counts
+    (auth.users 1460, fantasy_teams 1293, player_scores 541329, players 38360). Repeat
+    monthly:
+    `pg_restore -U supabase_admin -d obnova_test --no-owner` (extension/role errors are noise).
   - Uptime: `.github/workflows/zivost.yml` checks slff.eu, auth and rest every 10 min and
     alerts Discord.
   - Old data dirs on the VM: `/opt/supabase/volumes/db/data.old-*` (rehearsals). Delete after a week.
