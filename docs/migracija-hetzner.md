@@ -171,6 +171,10 @@ takes about 1 minute and works at any time.
   - **Switch:** in Cloudflare, change apex and `www` to A `2.31.6.53`, **proxied**.
     Rollback: put the Vercel records back (`64.29.17.1`, `216.198.79.1`; www
     `216.198.79.65`, `64.29.17.1`), DNS only.
+  - **Firewall:** 80/443 accept only Cloudflare's ranges (ufw, comment `cloudflare`, 22
+    rules, 2026-10-06). SSH stays open. To test the origin, go through `ssh slff` and
+    `curl -k --resolve slff.eu:443:127.0.0.1`. If Cloudflare adds ranges
+    (cloudflare.com/ips), add them too.
   - Caddy here is 2.6 (apt): no `handle_errors 404`. Also, a `-Header` delete defers its
     whole `header` block. Always `caddy validate` with `set -o pipefail` before replacing.
 - `src/lib/supabase.ts` pins `storageKey` (P2 trap 2). It is a no-op until the URL changes.
