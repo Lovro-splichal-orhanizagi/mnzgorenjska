@@ -159,6 +159,20 @@ takes about 1 minute and works at any time.
   New mail is posted to Discord every 2 minutes (`/etc/cron.d/slff-info-discord` →
   `scripts/hetzner/info-v-discord.py`, IMAP keyword `SlffDiscord`, log
   `/var/log/slff-info-discord.log`).
+- **P3 prepared (website on the VM):** `scripts/hetzner/Caddyfile` (the whole VM Caddy
+  config) ports `vercel.json`, with the same headers, `sk`/`hr` cards, `.well-known` and SPA
+  fallback. `/api/drzava` is answered by Caddy from `Cf-Ipcountry`. Compared path by path
+  against Vercel. Two differences: `/assets/*` gets a one-year immutable cache, and
+  `/?t=sk-…` serves the Slovak card (Vercel served index.html there).
+  - CI job `objavi-vm` builds in Actions (vars `VITE_SUPABASE_URL`/`_ANON_KEY`), rsyncs to
+    `/srv/slff/releases/<sha>` as user `deploy` (secret `DEPLOY_SSH_KEY`, pinned host key in
+    var `DEPLOY_KNOWN_HOSTS`), switches `current` atomically and keeps 5 releases. Until the
+    DNS switch it deploys to **both** Vercel and the VM.
+  - **Switch:** in Cloudflare, change apex and `www` to A `2.31.6.53`, **proxied**.
+    Rollback: put the Vercel records back (`64.29.17.1`, `216.198.79.1`; www
+    `216.198.79.65`, `64.29.17.1`), DNS only.
+  - Caddy here is 2.6 (apt): no `handle_errors 404`. Also, a `-Header` delete defers its
+    whole `header` block. Always `caddy validate` with `set -o pipefail` before replacing.
 - `src/lib/supabase.ts` pins `storageKey` (P2 trap 2). It is a no-op until the URL changes.
 - Still empty in secrets.env: Firebase, Discord webhook, Google and Apple secrets.
   `RESEND_API_KEY` is no longer needed.

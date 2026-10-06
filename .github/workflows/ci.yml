@@ -208,9 +208,52 @@ jobs:
             exit 1
           }
 
+  # Selitev na Hetzner (docs/migracija-hetzner.md, P3): do preklopa DNS gre
+  # objava na oba, da je ta, na katerega kaže slff.eu, vedno svež, in je pot
+  # nazaj le sprememba DNS. Gradi se tu, ne na strežniku; strežnik dobi le
+  # dist/ v svojo mapo, `current` pa se premakne šele, ko je vse preneseno.
+  objavi-vm:
+    name: Objava na Hetzner VM
+    needs: [preveri, varnost, migracije]
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency: objava-vm
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci --ignore-scripts
+
+      - name: Build
+        env:
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          test -n "$VITE_SUPABASE_URL" && test -n "$VITE_SUPABASE_ANON_KEY"
+          npm run build
+
+      - name: Prenos in preklop
+        env:
+          KLJUC: ${{ secrets.DEPLOY_SSH_KEY }}
+          ZNANI: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$KLJUC" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$ZNANI" > ~/.ssh/known_hosts
+          CILJ=/srv/slff/releases/$GITHUB_SHA
+          rsync -a --delete dist/ "deploy@2.31.6.53:$CILJ/"
+          # mv -T je atomaren: ni trenutka brez `current`. Obdrži zadnjih 5.
+          ssh deploy@2.31.6.53 "ln -sfn $CILJ /srv/slff/current.nov && mv -Tf /srv/slff/current.nov /srv/slff/current \
+            && cd /srv/slff/releases && ls -1t | tail -n +6 | xargs -r rm -rf"
+
   preveri-deploy:
     name: Je nova različica res v zraku?
-    needs: objavi
+    needs: [objavi, objavi-vm]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 15
