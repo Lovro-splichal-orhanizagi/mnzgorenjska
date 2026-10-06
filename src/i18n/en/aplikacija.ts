@@ -15,6 +15,10 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     opis: 'The link may be out of date, or there is a typo in the address.',
     nazaj: 'Back to the home page',
   },
+  /** Gumb za podporo na naslovnici (components/Pivo.tsx). */
+  pivo: {
+    gumb: 'Buy us a beer',
+  },
   noga: {
     zasebnost: 'Privacy and terms',
     vir: 'Data: official match reports of <vir>{ime}</vir>',

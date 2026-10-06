@@ -15,6 +15,10 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     opis: 'Poveznica je možda zastarjela ili je u adresi tipfeler.',
     nazaj: 'Natrag na početnu stranicu',
   },
+  /** Gumb za podporo na naslovnici (components/Pivo.tsx). */
+  pivo: {
+    gumb: 'Počasti nas pivom',
+  },
   noga: {
     zasebnost: 'Privatnost i uvjeti',
     vir: 'Podaci: službeni zapisnici <vir>{ime}</vir>',
