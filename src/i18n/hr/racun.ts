@@ -96,7 +96,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     podatkiNaprava:
       '<b>Token uređaja za obavijesti.</b> Ako u mobilnoj aplikaciji dopustiš obavijesti, spremamo token preko kojeg ti šaljemo podsjetnik prije roka kola. Pri odjavi ga brišemo.',
     neHranimo:
-      'Ne čuvamo adresu, broj telefona ni podatke o plaćanjima. Ne koristimo kolačiće za praćenje ni oglašivačke alate. U pregledniku su spremljeni tvoja sesija prijave i oznaka razgovora u chatu za pomoć, ako ga otvoriš.',
+      'Ne čuvamo adresu, broj telefona ni podatke o plaćanjima. Ne koristimo kolačiće za praćenje ni oglašivačke alate. U pregledniku su spremljeni tvoja sesija prijave, oznaka razgovora u chatu za pomoć ako ga otvoriš, i oznake sesije kojima posjet stranici brojimo samo jednom. Koliko je ljudi otvorilo koju stranicu čuvamo samo kao dnevni zbroj — bez tvojeg imena, računa, uređaja ili IP adrese.',
     dostopNaslov: 'Kome su podaci dostupni',
     dostop:
       'Podaci se obrađuju kod dvaju pružatelja usluga: <b>Supabase</b> (baza i prijava, poslužitelji u EU) i <b>Vercel</b> (smještaj stranice). Pošta za potvrdu i ponovno postavljanje lozinke ide preko <b>Resenda</b>, obavijesti u mobilnoj aplikaciji preko <b>Google Firebase Cloud Messaginga</b> (samo token uređaja i tekst obavijesti). Chat za pomoć u donjem desnom kutu radi preko <b>HelpStacka</b>: tamo ide ono što u njega napišeš i — ako si prijavljen — tvoje prikazno ime, da znamo kome odgovaramo. Kad ti pomoćnik u chatu pomaže, može vidjeti i na kojoj si stranici i u kojoj ligi te je li tvoja momčad valjana. E-adresu mu ne prosljeđujemo. Nikome drugome podatke ne prosljeđujemo i ne prodajemo ih.',

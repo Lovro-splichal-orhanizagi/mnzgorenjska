@@ -94,7 +94,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     podatkiNaprava:
       '<b>Token zariadenia pre upozornenia.</b> Ak v mobilnej aplikácii povolíš upozornenia, uložíme token, cez ktorý ti pošleme pripomienku pred uzávierkou kola. Pri odhlásení ho vymažeme.',
     neHranimo:
-      'Neuchovávame adresu, telefónne číslo ani platobné údaje. Nepoužívame sledovacie cookies ani reklamné nástroje. V prehliadači je uložená tvoja prihlasovacia relácia a identifikátor konverzácie v chate podpory, ak ho otvoríš.',
+      'Neuchovávame adresu, telefónne číslo ani platobné údaje. Nepoužívame sledovacie cookies ani reklamné nástroje. V prehliadači je uložená tvoja prihlasovacia relácia, identifikátor konverzácie v chate podpory, ak ho otvoríš, a značky relácie, vďaka ktorým návštevu stránky počítame len raz. Koľko ľudí otvorilo ktorú stránku uchovávame len ako denný súčet — bez tvojho mena, účtu, zariadenia či IP adresy.',
     dostopNaslov: 'Kto má k údajom prístup',
     dostop:
       'Údaje spracúvajú dvaja poskytovatelia: <b>Supabase</b> (databáza a prihlásenie, servery v EÚ) a <b>Vercel</b> (hosting stránky). Potvrdzovacie e-maily a e-maily na obnovenie hesla sa odosielajú cez <b>Resend</b>, upozornenia v mobilnej aplikácii cez <b>Google Firebase Cloud Messaging</b> (iba token zariadenia a text upozornenia). Chat podpory v pravom dolnom rohu beží cez <b>HelpStack</b>: odovzdáva sa tam to, čo doň napíšeš, a — ak si prihlásený — tvoje zobrazované meno, aby sme vedeli, komu odpovedáme. Keď ti asistent v chate pomáha, môže si pozrieť aj to, na ktorej stránke a v ktorej lige si a či je tvoj tím platný. Tvoj e-mail mu neposkytujeme. Nikomu inému údaje neposkytujeme a nepredávame ich.',

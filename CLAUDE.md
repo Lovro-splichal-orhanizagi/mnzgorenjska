@@ -388,6 +388,17 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   `/my-team?sestavi=1` sestavi ekipo ob odprtju). Le števci, brez uporabnika;
   piše `zabelezi_korak`, bere admin. Ime ekipe se predlaga ("FC Ime") in se ga
   da spremeniti kadarkoli (od 6. 10. 2026; prej je bilo po prvi shrambi fiksno)
+- `obiski_dnevno` → obiski strani: dnevni seštevki po strani in starosti
+  računa (`nov` = registriran v zadnjih 7 dneh, `star`, `neprijavljen`).
+  Odgovarja na "kam gre tisti, ki ekipe ne sestavi" — lijak sam tega ne pove.
+  Piše `zabelezi_obisk(stran)`, bere admin. Šteje se **ena stran na sejo na
+  dan** (doseg, ne ogledi); ime strani določi `imeStrani()` v
+  `src/lib/obiski.ts`, dinamični deli poti (id igralca, koda mini lige)
+  odpadejo. Starost računa izračuna baza iz `auth.users.created_at`, zato je
+  odjemalec ne more lagati in v tabeli kljub temu ni uporabnika ne naprave.
+  **Nova stran se ne šteje sama**: dodaj jo v `PO_POTI`/`PO_PREDPONI` in v
+  seznam v `zabelezi_obisk()`, sicer se zapis tiho zavrže. Oboje skupaj kaže
+  razdelek *Kje ljudje obtičijo* v adminu (`src/components/admin/Lijak.tsx`)
 - `push_tokens` → žeton FCM naprave mobilne aplikacije (ključ je žeton, ob
   prijavi drugega uporabnika na isti napravi se preseli). Vpiše ga le
   `shrani_push_zeton`, bere servis: `posli-opomnik` pošlje isto sporočilo še

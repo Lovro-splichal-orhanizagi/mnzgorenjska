@@ -37,6 +37,7 @@ import NativnePovezave from './components/NativnePovezave'
 import PosodobiAplikacijo from './components/PosodobiAplikacijo'
 import PotisnaObvestila from './components/PotisnaObvestila'
 import { useKanonicni, useNaslov } from './lib/naslov'
+import { useObisk } from './lib/obiski'
 import { jeNativno } from './lib/platforma'
 
 // Poti so angleške, ker jih vidi vsaka država (slovaški obiskovalec ne
@@ -85,6 +86,9 @@ export default function App() {
   // ključ ob navigaciji oprijem ponastavi.
   const { pathname, search } = useLocation()
   useKanonicni(pathname, search)
+  // Katero stran človek po registraciji sploh odpre — dnevni seštevki, brez
+  // uporabnika in naprave (`src/lib/obiski.ts`).
+  useObisk()
   return (
     <AuthProvider>
       <TekmovanjeProvider>

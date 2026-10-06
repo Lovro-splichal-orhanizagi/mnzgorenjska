@@ -3,7 +3,8 @@
 // Registriranih je 354, a to je enkraten dogodek izpred treh tednov. Vprasanje
 // "koliko pravih uporabnikov imam" meri nekaj drugega: koliko jih vsak teden
 // kaj naredi. Stejejo dejanja — glas, sporocilo, prijava odsotnosti,
-// shranjena ekipa — ker obiskov ne merimo in se ta pogled ne pretvarja, da jih.
+// shranjena ekipa — in ne obiski: te od oktobra 2026 steje Lijak
+// (`obiski_dnevno`), a odprta stran se ni ziv clovek.
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 

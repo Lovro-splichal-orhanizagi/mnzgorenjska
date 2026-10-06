@@ -93,7 +93,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     podatkiNaprava:
       '<b>Device token for notifications.</b> If you allow notifications in the mobile app, we store a token we use to send you a reminder before the round deadline. It is deleted when you log out.',
     neHranimo:
-      'We do not store your address, phone number or payment details. We do not use tracking cookies or advertising tools. Your browser stores your login session and, if you open it, an identifier for the help chat conversation.',
+      'We do not store your address, phone number or payment details. We do not use tracking cookies or advertising tools. Your browser stores your login session, an identifier for the help chat conversation if you open it, and session marks that keep a page from being counted twice. How many people opened which page is kept only as a daily total — without your name, account, device or IP address.',
     dostopNaslov: 'Who can access the data',
     dostop:
       'The data is handled by two providers: <b>Supabase</b> (database and login, servers in the EU) and <b>Vercel</b> (hosting of the site). Confirmation and password-reset emails are sent via <b>Resend</b>, and notifications in the mobile app via <b>Google Firebase Cloud Messaging</b> (only the device token and the notification text). The help chat in the bottom right corner runs on <b>HelpStack</b>: it receives what you write in it and — if you are logged in — your display name, so we know who we are replying to. When the assistant in the chat helps you, it can also see which page and league you are on and whether your team is valid. We do not pass on your email address. We do not share your data with anyone else and we do not sell it.',

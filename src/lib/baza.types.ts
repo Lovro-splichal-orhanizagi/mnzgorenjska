@@ -1333,6 +1333,24 @@ export type Database = {
           },
         ]
       }
+      lijak_dnevno: {
+        Row: {
+          dan: string
+          korak: string
+          stevilo: number
+        }
+        Insert: {
+          dan?: string
+          korak: string
+          stevilo?: number
+        }
+        Update: {
+          dan?: string
+          korak?: string
+          stevilo?: number
+        }
+        Relationships: []
+      }
       matches: {
         Row: {
           away_goals: number
@@ -1569,6 +1587,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      obiski_dnevno: {
+        Row: {
+          dan: string
+          skupina: string
+          stevilo: number
+          stran: string
+        }
+        Insert: {
+          dan?: string
+          skupina: string
+          stevilo?: number
+          stran: string
+        }
+        Update: {
+          dan?: string
+          skupina?: string
+          stevilo?: number
+          stran?: string
+        }
+        Relationships: []
       }
       player_reports: {
         Row: {
@@ -5255,6 +5294,7 @@ export type Database = {
         Returns: undefined
       }
       zabelezi_korak: { Args: { p_korak: string }; Returns: undefined }
+      zabelezi_obisk: { Args: { p_stran: string }; Returns: undefined }
       zakleni_krog: { Args: { p_round_id: number }; Returns: number }
       zakleni_zapadle_kroge: { Args: { p_okno?: string }; Returns: number }
       zaprosi_za_poznavalca: {

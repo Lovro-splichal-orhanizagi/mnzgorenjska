@@ -94,7 +94,7 @@ export const racun = {
     podatkiNaprava:
       '<b>Žeton naprave za obvestila.</b> Če v mobilni aplikaciji dovoliš obvestila, shranimo žeton, prek katerega ti pošljemo opomnik pred rokom kroga. Ob odjavi ga izbrišemo.',
     neHranimo:
-      'Ne hranimo naslova, telefonske številke ali podatkov o plačilih. Piškotkov za sledenje in oglaševalskih orodij ne uporabljamo. V brskalniku sta shranjena tvoja prijavna seja in oznaka pogovora v klepetu za pomoč, če ga odpreš.',
+      'Ne hranimo naslova, telefonske številke ali podatkov o plačilih. Piškotkov za sledenje in oglaševalskih orodij ne uporabljamo. V brskalniku so shranjeni tvoja prijavna seja, oznaka pogovora v klepetu za pomoč, če ga odpreš, in oznake seje, s katerimi preštejemo obisk strani le enkrat. Koliko ljudi je odprlo katero stran, štejemo le kot dnevni seštevek — brez tvojega imena, računa, naprave ali naslova IP.',
     dostopNaslov: 'Komu so podatki dostopni',
     dostop:
       'Podatki tečejo pri dveh ponudnikih: <b>Supabase</b> (baza in prijava, strežniki v EU) in <b>Vercel</b> (gostovanje strani). Potrditvena in ponastavitvena pošta gre prek <b>Resend</b>, obvestila v mobilni aplikaciji prek <b>Google Firebase Cloud Messaging</b> (le žeton naprave in besedilo obvestila). Klepet za pomoč v spodnjem desnem kotu teče prek <b>HelpStack</b>: tja gre to, kar vanj napišeš, in — če si prijavljen — tvoje prikazno ime, da vemo, komu odgovarjamo. Ko ti pomočnik v klepetu pomaga, lahko pogleda tudi, na kateri strani in v kateri ligi si ter ali je tvoja ekipa veljavna. E-pošte mu ne posredujemo. Nikomur drugemu podatkov ne posredujemo in jih ne prodajamo.',
