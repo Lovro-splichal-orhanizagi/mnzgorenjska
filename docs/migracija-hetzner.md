@@ -183,6 +183,17 @@ takes about 1 minute and works at any time.
     (cloudflare.com/ips), add them too.
   - Caddy here is 2.6 (apt): no `handle_errors 404`. Also, a `-Header` delete defers its
     whole `header` block. Always `caddy validate` with `set -o pipefail` before replacing.
+- **P2 started 2026-10-06 ~20:10 UTC:** GitHub var `VITE_SUPABASE_URL` and secret
+  `SUPABASE_URL` = `https://api.slff.eu`, so the web, OTA and scheduled jobs go through the proxy.
+  Cloud auth per-IP limits were raised via the Management API (all users now arrive as the
+  VM's IP): `rate_limit_token_refresh` 150 → 1800, `rate_limit_verify` 30 → 360,
+  `rate_limit_otp` 30 → 360. `email_sent` (100/h, project-wide) is unchanged. CORS checked
+  for `https://slff.eu` and `capacitor://localhost`.
+  - OTA only updates when the commit changes. Redeploying the same SHA updates the web,
+    not the apps.
+  - Native builds too old for OTA keep calling supabase.co until they update. Before P4
+    check `settings.min_app_verzija` / `slff.otaMinBuild`, because after P4 Cloud is
+    read-only.
 - `src/lib/supabase.ts` pins `storageKey` (P2 trap 2). It is a no-op until the URL changes.
 - Still empty in secrets.env: Firebase, Discord webhook, Google and Apple secrets.
   `RESEND_API_KEY` is no longer needed.
