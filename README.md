@@ -38,9 +38,9 @@ Pri **5 glasovih** za istega kandidata se podatek potrdi in začne šteti.
 ## Tehnološki sklop
 
 - **Frontend:** React 18 + Vite + React Router
-- **Backend / baza:** Supabase (PostgreSQL + avtentikacija + PostgREST)
+- **Backend / baza:** Supabase, self-hosted (PostgreSQL + avtentikacija + PostgREST)
 - **Slog:** Tailwind CSS
-- **Gostovanje:** Vercel (frontend) + Supabase (baza)
+- **Gostovanje:** lasten strežnik pri Hetznerju — self-hosted Supabase in Caddy, spredaj Cloudflare (`docs/migracija-hetzner.md`)
 
 ## Točkovanje
 

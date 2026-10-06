@@ -199,7 +199,7 @@ JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" ./androi
 - No tracking, no data sold, no ads SDK (sponsor banners are our own images
   and links, counted as aggregate daily totals without user IDs).
 - Data is encrypted in transit: yes. Users can request deletion: yes (in app).
-- Google Play "Data shared with third parties": no (Supabase, Vercel, Resend,
+- Google Play "Data shared with third parties": no (Hetzner, Cloudflare, own mail server,
   Firebase, HelpStack are processors, not sharing).
 
 ## Review account
