@@ -1,0 +1,83 @@
+# SLFF: only what the app uses (no storage, realtime, studio, pooler, imgproxy).
+# Studio on demand: docker compose --profile off up -d studio meta (+ ssh tunnel to 8000).
+services:
+  studio:    { profiles: ["off"] }
+  realtime:  { profiles: ["off"] }
+  storage:   { profiles: ["off"] }
+  imgproxy:  { profiles: ["off"] }
+  supavisor: { profiles: ["off"] }
+  auth:
+    image: supabase/gotrue:v2.197.0  # >= Supabase Cloud, or the auth dump does not fit
+    extra_hosts:
+      - host.docker.internal:host-gateway  # Caddy serves the email templates there
+    # Production auth settings (`supabase config pull`, 2026-10-04).
+    environment:
+      GOTRUE_MAILER_OTP_LENGTH: 8
+      GOTRUE_MAILER_OTP_EXP: 3600
+      GOTRUE_SMTP_MAX_FREQUENCY: 1m
+      GOTRUE_MAILER_SECURE_EMAIL_CHANGE_ENABLED: "true"
+      GOTRUE_SECURITY_REFRESH_TOKEN_ROTATION_ENABLED: "true"
+      GOTRUE_SECURITY_REFRESH_TOKEN_REUSE_INTERVAL: 10
+      GOTRUE_MFA_TOTP_ENROLL_ENABLED: "true"
+      GOTRUE_MFA_TOTP_VERIFY_ENABLED: "true"
+      GOTRUE_MFA_MAX_ENROLLED_FACTORS: 10
+      GOTRUE_RATE_LIMIT_EMAIL_SENT: 100
+      GOTRUE_RATE_LIMIT_TOKEN_REFRESH: 150
+      GOTRUE_RATE_LIMIT_OTP: 30
+      GOTRUE_RATE_LIMIT_VERIFY: 30
+      # Without it every visitor shares one rate-limit bucket (they all arrive from Envoy).
+      GOTRUE_RATE_LIMIT_HEADER: ${RATE_LIMIT_HEADER:-}
+      GOTRUE_MAILER_TEMPLATES_CONFIRMATION: http://host.docker.internal:8089/confirmation.html
+      GOTRUE_MAILER_TEMPLATES_RECOVERY: http://host.docker.internal:8089/recovery.html
+      GOTRUE_MAILER_TEMPLATES_MAGIC_LINK: http://host.docker.internal:8089/magic_link.html
+      GOTRUE_MAILER_SUBJECTS_CONFIRMATION: '{{ if eq (printf "%v" .Data.jezik) "sk" }}SLFF — potvrď svoju e-mailovú adresu{{ else }}SLFF — potrdi svoj e-naslov{{ end }}'
+      GOTRUE_MAILER_SUBJECTS_RECOVERY: '{{ if eq (printf "%v" .Data.jezik) "sk" }}SLFF — obnovenie hesla{{ else }}SLFF — ponastavitev gesla{{ end }}'
+      GOTRUE_MAILER_SUBJECTS_MAGIC_LINK: '{{ if eq (printf "%v" .Data.jezik) "sk" }}SLFF — odkaz na prihlásenie{{ else }}SLFF — povezava za prijavo{{ end }}'
+      GOTRUE_EXTERNAL_GOOGLE_ENABLED: "true"
+      GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID: 397012484212-mf60iqk3v6gfti2hvub5s0bhqhrg5p6e.apps.googleusercontent.com  # own client in slff-cb58e
+      GOTRUE_EXTERNAL_GOOGLE_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI: ${API_EXTERNAL_URL}/callback
+      GOTRUE_EXTERNAL_APPLE_ENABLED: "true"
+      GOTRUE_EXTERNAL_APPLE_CLIENT_ID: eu.slff.app.signin,eu.slff.app
+      GOTRUE_EXTERNAL_APPLE_SECRET: ${APPLE_SECRET:-}
+      GOTRUE_EXTERNAL_APPLE_REDIRECT_URI: ${API_EXTERNAL_URL}/callback
+  rest:
+    environment:
+      PGRST_DB_MAX_ROWS: 5000  # production value, not the 1000 default
+  api-gw:
+    depends_on: !reset {}
+    ports: !override
+      - 127.0.0.1:8000:8000/tcp
+  functions:
+    environment:
+      SUPABASE_SECRET_KEY: ${SUPABASE_SECRET_KEY}
+      # Mail via Mailcow on mail.slff.eu (same server as HelpStack mail), port 465.
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      FIREBASE_SERVICE_ACCOUNT: ${FIREBASE_SERVICE_ACCOUNT:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
+      EMAIL_REPLY_TO: ${EMAIL_REPLY_TO:-}
+  db:
+    image: supabase/postgres:17.6.1.166
+    # ponytail: sized for the 4 GB VM; revisit after a rescale.
+    command:
+      - postgres
+      - -c
+      - config_file=/etc/postgresql/postgresql.conf
+      - -c
+      - log_min_messages=fatal
+      - -c
+      - shared_buffers=1GB
+      - -c
+      - effective_cache_size=2560MB
+      - -c
+      - work_mem=16MB
+      - -c
+      - maintenance_work_mem=256MB
+      - -c
+      - max_connections=100
+      - -c
+      - random_page_cost=1.1
+    ports:
+      - 127.0.0.1:5432:5432/tcp
