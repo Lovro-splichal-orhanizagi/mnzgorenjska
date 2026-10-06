@@ -194,6 +194,28 @@ takes about 1 minute and works at any time.
   - Native builds too old for OTA keep calling supabase.co until they update. Before P4
     check `settings.min_app_verzija` / `slff.otaMinBuild`, because after P4 Cloud is
     read-only.
+- **P4 DONE 2026-10-06 20:33 UTC** (`scripts/hetzner/preklop.sh ZARES`, 185 s). All 65
+  tables matched; `api.slff.eu` → `localhost:8000` (self-hosted). Real traffic was all
+  200/204 on the VM within a minute. Logins carry over: tested with a Cloud-issued access
+  token and a Cloud refresh token on the VM before the switch.
+  - **Cloud is frozen for the app, not entirely:** pg_cron is paused and the role
+    `authenticator` (PostgREST) has `default_transaction_read_only=on`. A read-only
+    *database* blocks the CLI's own login role, so no dump would be possible. Supabase
+    reserves `supabase_auth_admin`, so Cloud GoTrue can still write logins. Only stale
+    clients still calling supabase.co reach it.
+  - **Rollback** (only before real writes pile up on the VM, otherwise copy the delta back):
+    Caddyfile `reverse_proxy https://cobtigdsmlftvpfqtnas.supabase.co` with
+    `header_up Host {upstream_hostport}`, then on Cloud
+    `alter role authenticator reset default_transaction_read_only;` and
+    `select cron.alter_job(jobid, active := true) from cron.job;`.
+  - CI: `SUPABASE_DB_URL` = `postgresql://supabase_admin:…@127.0.0.1:5432/postgres` over the
+    SSH tunnel (deploy key: `permitopen="127.0.0.1:5432"` only).
+  - **Backups:** `scripts/hetzner/varnostna.sh` runs hourly at :07 (`pg_dump -Fc`, ~14 MB),
+    keeps 48 h in `/opt/slff/backup` and 7 days off-box on the HelpStack mail server (user
+    `slffbackup`, restricted key). Failures go to Discord. Move it to the Storage Box once it exists.
+  - Uptime: `.github/workflows/zivost.yml` checks slff.eu, auth and rest every 10 min and
+    alerts Discord.
+  - Old data dirs on the VM: `/opt/supabase/volumes/db/data.old-*` (rehearsals). Delete after a week.
 - `src/lib/supabase.ts` pins `storageKey` (P2 trap 2). It is a no-op until the URL changes.
 - Still empty in secrets.env: Firebase, Discord webhook, Google and Apple secrets.
   `RESEND_API_KEY` is no longer needed.

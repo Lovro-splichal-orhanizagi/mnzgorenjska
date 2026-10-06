@@ -118,7 +118,22 @@ jobs:
             echo "gremo=ne" >> "$GITHUB_OUTPUT"
           else
             echo "gremo=da" >> "$GITHUB_OUTPUT"
+            case "$SUPABASE_DB_URL" in *@127.0.0.1*) echo "tunel=da" >> "$GITHUB_OUTPUT";; esac
           fi
+
+      # Baza na Hetzner VM ni javna (Postgres posluša na 127.0.0.1). Ko
+      # SUPABASE_DB_URL kaže na 127.0.0.1, gre CI do nje skozi SSH tunel s
+      # ključem za objavo (ta sme odpreti samo 127.0.0.1:5432).
+      - name: Tunel do baze na VM
+        if: steps.baza.outputs.tunel == 'da'
+        env:
+          KLJUC: ${{ secrets.DEPLOY_SSH_KEY }}
+          ZNANI: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$KLJUC" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$ZNANI" > ~/.ssh/known_hosts
+          ssh -fN -o ExitOnForwardFailure=yes -L 5432:127.0.0.1:5432 deploy@2.31.6.53
 
       - name: Katere migracije čakajo
         if: steps.baza.outputs.gremo == 'da'

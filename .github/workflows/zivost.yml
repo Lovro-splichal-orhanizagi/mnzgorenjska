@@ -1,0 +1,41 @@
+name: Živost strani in API
+
+# Zunanji nadzor po selitvi na lasten strežnik (docs/migracija-hetzner.md):
+# Supabase in Vercel nista več tista, ki opazita izpad. Teče z GitHuba, torej
+# od zunaj, prek Cloudflara — tako kot obiskovalec. Ob izpadu po en poskus
+# znova, nato sporočilo na Discord (dokler izpad traja, vsakih 10 minut).
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  zivost:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Preveri
+        env:
+          KLJUC: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          preveri() {
+            NAPAKE=""
+            curl -fsS -m 20 https://slff.eu/ | grep -q 'name="slff-commit"' || NAPAKE="$NAPAKE slff.eu"
+            curl -fsS -m 20 https://api.slff.eu/auth/v1/health -H "apikey: $KLJUC" >/dev/null || NAPAKE="$NAPAKE auth"
+            curl -fsS -m 20 "https://api.slff.eu/rest/v1/competitions_view?select=slug&limit=1" -H "apikey: $KLJUC" | grep -q slug || NAPAKE="$NAPAKE rest"
+          }
+          preveri
+          if [ -n "$NAPAKE" ]; then sleep 30; preveri; fi
+          if [ -z "$NAPAKE" ]; then echo "vse živo"; exit 0; fi
+          echo "::error::Ne odziva se:$NAPAKE"
+          if [ -n "$DISCORD_WEBHOOK" ]; then
+            curl -fsS -H 'Content-Type: application/json' \
+              -d "{\"content\":\"🔴 SLFF izpad — ne odziva se:$NAPAKE ($(date -u +%H:%M) UTC). Strežnik: ssh slff\",\"allowed_mentions\":{\"parse\":[]}}" \
+              "$DISCORD_WEBHOOK"
+          fi
+          exit 1
