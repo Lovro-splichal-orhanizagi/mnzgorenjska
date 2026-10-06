@@ -16,11 +16,13 @@
 // Kdor ima mobilno aplikacijo, dobi isto sporočilo še kot potisno obvestilo
 // (push.ts, skrivnost FIREBASE_SERVICE_ACCOUNT).
 //
-// Skrivnosti pridemo iz Supabase env: RESEND_API_KEY, EMAIL_FROM, in privzeto
+// Pošta gre prek SMTP (Mailcow na mail.slff.eu, port 465 — Supabase
+// Cloud zapre 25 in 587). Skrivnosti iz env: SMTP_HOST, SMTP_USER, SMTP_PASS,
+// EMAIL_FROM (naslov mora biti SMTP_USER, sicer ga Mailcow zavrne), in privzeto
 // nastavljeni SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY (dodeljena vsem edge
 // funkcijam avtomatsko).
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4'
+import { createClient } from 'npm:@supabase/supabase-js@2.45.4'
 import {
   sestaviOpomnik,
   sestaviOpomnikBrezLige,
@@ -32,6 +34,7 @@ import {
   type Sporocilo,
 } from './sporocila.ts'
 import { posljiPush, type Obvestilo } from './push.ts'
+import nodemailer from 'npm:nodemailer@6.9.16'
 
 // Besedila so v `sporocila.ts`, v jeziku DRŽAVE LIGE (slovaška liga →
 // slovaški mail). Povezave nosijo `?t=<liga>`, da se stran odpre v pravi ligi
@@ -85,12 +88,6 @@ interface Uporabnik {
   razlog?: string | null
 }
 
-interface ResendOdgovor {
-  id?: string
-  message?: string
-  name?: string
-}
-
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: CORS })
   if (req.method !== 'POST')
@@ -102,8 +99,8 @@ Deno.serve(async (req) => {
   const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
   const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!
   const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-  const RESEND_KEY = Deno.env.get('RESEND_API_KEY')
-  const EMAIL_FROM = Deno.env.get('EMAIL_FROM') ?? 'SLFF <noreply@slff.eu>'
+  const SMTP_PASS = Deno.env.get('SMTP_PASS')
+  const EMAIL_FROM = Deno.env.get('EMAIL_FROM') || 'SLFF <noreply@slff.eu>'
 
   // 1) Kdo kliče?
   //
@@ -153,7 +150,7 @@ Deno.serve(async (req) => {
   if (vrsta === 'poznavalec') {
     if (jeStroj) return json({ error: 'Poznavalca odobri clovek, ne urnik.' }, 403)
     if (!vhod.user_id) return json({ error: 'Manjka user_id.' }, 400)
-    if (!RESEND_KEY) return json({ error: 'Pomanjkljiva nastavitev: RESEND_API_KEY.' }, 500)
+    if (!SMTP_PASS) return json({ error: 'Pomanjkljiva nastavitev: SMTP_PASS.' }, 500)
     const service0 = createClient(SUPABASE_URL, SERVICE_KEY)
     const [{ data: u }, { data: pr }, liga0] = await Promise.all([
       service0.auth.admin.getUserById(vhod.user_id),
@@ -168,7 +165,6 @@ Deno.serve(async (req) => {
       klub = t?.name ?? null
     }
     const rez = await poslji(
-      RESEND_KEY,
       EMAIL_FROM,
       email,
       sestaviPoznavalca(liga0, {
@@ -194,8 +190,8 @@ Deno.serve(async (req) => {
   // prav zato, da se pred vklopom urnika preverijo številke — če bi padel na
   // manjkajočem ključu, bi bila varovalka neuporabna ravno takrat, ko je
   // najbolj potrebna.
-  if (!RESEND_KEY && !suho)
-    return json({ error: 'Pomanjkljiva nastavitev: RESEND_API_KEY.' }, 500)
+  if (!SMTP_PASS && !suho)
+    return json({ error: 'Pomanjkljiva nastavitev: SMTP_PASS.' }, 500)
 
   // Service role rabimo za pisanje v email_log, za branje nastavitev in za
   // seznam kandidatov — `kandidati_*` so odprti samo servisni vlogi. Da je
@@ -208,10 +204,9 @@ Deno.serve(async (req) => {
   // Test režim gre PRED branjem uporabnikov: testni gumb obstaja zato, da
   // preveri samo dostavo pošte, in ne sme pasti zaradi česa drugega.
   if (test_email) {
-    if (!RESEND_KEY)
-      return json({ error: 'Pomanjkljiva nastavitev: RESEND_API_KEY.' }, 500)
+    if (!SMTP_PASS)
+      return json({ error: 'Pomanjkljiva nastavitev: SMTP_PASS.' }, 500)
     const rez = await poslji(
-      RESEND_KEY,
       EMAIL_FROM,
       test_email,
       sestaviOpomnik(liga, { display_name: 'Test', brez_ekipe: false }),
@@ -308,7 +303,6 @@ Deno.serve(async (req) => {
         { display_name: pr?.display_name ?? null, team_name: e.team_name, igralci: e.igralci },
       )
       const rez = await poslji(
-        RESEND_KEY!,
         EMAIL_FROM,
         email,
         sporociloEkipi,
@@ -392,7 +386,8 @@ Deno.serve(async (req) => {
   // Dnevna kvota ponudnika (3. 9. je kampanja obstala na "daily email sending
   // quota"). `najvec_poslati` omeji, koliko jih gre v tem klicu; ostali
   // pridejo naslednji dan — `nedavni_opomnik` poskrbi, da poslani ne dobijo
-  // drugega. Premor drži hitrost pod omejitvijo Resenda (2 na sekundo).
+  // drugega. Premor drži hitrost zmerno — strežnik mail.slff.eu nosi tudi pošto
+  // HelpStacka in ne sme izpasti kot pošiljatelj množične pošte.
   const meja = typeof vhod.najvec_poslati === 'number' ? Math.max(0, vhod.najvec_poslati) : Infinity
   let poslanih = 0
   for (const u of kandidati) {
@@ -422,7 +417,7 @@ Deno.serve(async (req) => {
           ? sestaviOpomnikBrezLige(u.jezik, { display_name: u.display_name })
           : sestaviOpomnik(liga, { display_name: u.display_name, brez_ekipe: false })
     if (poslanih > 0) await new Promise((r) => setTimeout(r, 600))
-    const rez = await poslji(RESEND_KEY!, EMAIL_FROM, u.email, sporocilo)
+    const rez = await poslji(EMAIL_FROM, u.email, sporocilo)
     if (!rez.napaka) poslanih++
     // Isto sporočilo še na telefon (mobilna aplikacija), če ga ima.
     if (!rez.napaka)
@@ -479,30 +474,30 @@ async function preberiLigo(
   }
 }
 
+// Ena povezava za ves paket (pool), ne nova za vsak mail.
+const smtp = nodemailer.createTransport({
+  host: Deno.env.get('SMTP_HOST') ?? 'mail.slff.eu',
+  port: 465,
+  secure: true,
+  pool: true,
+  auth: { user: Deno.env.get('SMTP_USER') ?? 'noreply@slff.eu', pass: Deno.env.get('SMTP_PASS') },
+})
+
+/** `id` je Message-ID; v email_log gre v stolpec `resend_id` (ime iz časa Resenda). */
 async function poslji(
-  apiKey: string,
   from: string,
   to: string,
   s: Sporocilo,
   replyTo?: string,
 ): Promise<{ id?: string; napaka?: string }> {
   try {
-    const r = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from, to, subject: s.naslov, html: s.html,
-        ...(replyTo ? { reply_to: replyTo } : {}),
-        // Odjava z enim klikom v poštnem odjemalcu vodi na isto stran.
-        ...(s.odjava ? { headers: { 'List-Unsubscribe': `<${s.odjava}>` } } : {}),
-      }),
+    const r = await smtp.sendMail({
+      from, to, subject: s.naslov, html: s.html,
+      ...(replyTo ? { replyTo } : {}),
+      // Odjava z enim klikom v poštnem odjemalcu vodi na isto stran.
+      ...(s.odjava ? { list: { unsubscribe: s.odjava } } : {}),
     })
-    const odgovor: ResendOdgovor = await r.json()
-    if (!r.ok) return { napaka: odgovor.message ?? `HTTP ${r.status}` }
-    return { id: odgovor.id }
+    return { id: r.messageId }
   } catch (e) {
     return { napaka: String(e) }
   }

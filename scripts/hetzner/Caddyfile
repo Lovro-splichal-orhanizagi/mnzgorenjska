@@ -1,0 +1,90 @@
+# Caddy on the VM (/etc/caddy/Caddyfile). Copy, then: caddy validate && systemctl reload caddy
+# Cloudflare proxies slff.eu, www and api (Full strict, Cloudflare Origin cert, key generated on the VM).
+
+(origin_tls) {
+	tls /etc/caddy/certs/slff-origin.pem /etc/caddy/certs/slff-origin.key
+}
+
+# Auth email templates for GoTrue only (reachable from containers, not the internet).
+http://172.17.0.1:8089 {
+	bind 172.17.0.1
+	root * /opt/supabase/volumes/templates
+	file_server
+}
+
+# API. P2: proxy to Supabase Cloud. P4 cutover: replace the reverse_proxy with `reverse_proxy localhost:8000`.
+api.slff.eu {
+	import origin_tls
+	reverse_proxy https://cobtigdsmlftvpfqtnas.supabase.co {
+		header_up Host {upstream_hostport}
+		header_up X-Forwarded-For {http.request.header.CF-Connecting-IP}
+	}
+}
+
+# Website: a 1:1 port of vercel.json. CI rsyncs dist/ to /srv/slff/releases/<sha> and moves `current`.
+slff.eu, www.slff.eu {
+	import origin_tls
+	root * /srv/slff/current
+	encode zstd gzip
+
+	# Vercel's defaults: every response may be read cross-origin and is revalidated.
+	# `?` = only if a more specific rule below didn't set it. No `-Server` here: a delete
+	# defers the whole block to the end, and it would overwrite the specific rules.
+	header {
+		Access-Control-Allow-Origin *
+		?Cache-Control "public, max-age=0, must-revalidate"
+		X-Frame-Options DENY
+		Content-Security-Policy "frame-ancestors 'none'"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+	}
+	header -Server
+	# Hashed by Vite; a new build means new names.
+	header /assets/* Cache-Control "public, max-age=31536000, immutable"
+	header /app/latest.json Cache-Control no-store
+	header /.well-known/apple-app-site-association Content-Type application/json
+
+	# Was api/drzava.ts on Vercel Edge: the visitor's country, from Cloudflare.
+	handle /api/drzava {
+		header Content-Type "application/json; charset=utf-8"
+		header Cache-Control "private, no-store"
+		@znana header_regexp drzava Cf-Ipcountry ^[A-Z]{2}$
+		respond @znana `{"drzava":"{re.drzava.0}"}` 200
+		respond `{"drzava":null}` 200
+	}
+	handle /api/* {
+		respond "Not Found" 404
+	}
+
+	handle {
+		# Static files win; only paths without a dot fall through to the SPA (vercel.json `(?!.*\.)`).
+		@datoteka file
+		@sk_vstop path /sk
+		@hr_vstop path /hr
+		@sk_liga {
+			not path *.*
+			expression `{query.t}.startsWith("sk-")`
+		}
+		@hr_liga {
+			not path *.*
+			expression `{query.t}.startsWith("hr-")`
+		}
+		@spa not path *.*
+		route {
+			file_server @datoteka
+			rewrite @sk_vstop /sk.html
+			rewrite @hr_vstop /hr.html
+			rewrite @sk_liga /sk.html
+			rewrite @hr_liga /hr.html
+			rewrite @spa /index.html
+			file_server
+		}
+	}
+
+	# Caddy 2.6 (apt) has no `handle_errors 404`; Vercel answers missing files with plain text.
+	handle_errors {
+		header Content-Type "text/plain; charset=utf-8"
+		respond "{err.status_code} {err.status_text}" {err.status_code}
+	}
+}
