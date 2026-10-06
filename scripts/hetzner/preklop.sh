@@ -112,7 +112,7 @@ if [[ $NACIN == ZARES ]]; then
       caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile 2>&1 | tail -1; systemctl reload caddy"
   korak "CI back on, against the VM database (over the SSH tunnel)"
   PW=$(vm "grep '^POSTGRES_PASSWORD=' /opt/supabase/.env | cut -d= -f2-")
-  printf 'postgresql://supabase_admin:%s@127.0.0.1:5432/postgres' "$PW" | gh secret set SUPABASE_DB_URL
+  printf 'postgresql://supabase_admin:%s@127.0.0.1:5432/postgres?sslmode=disable' "$PW" | gh secret set SUPABASE_DB_URL
   gh variable set MIGRACIJE_PREMOR --body 0
   xargs -r -n1 gh workflow enable < ~/.slff-preklop-workflows.txt && rm ~/.slff-preklop-workflows.txt
   echo; echo "DONE in $(( $(date +%s) - ZACETEK ))s. Cloud stays read-only (rollback: docs P4)."
