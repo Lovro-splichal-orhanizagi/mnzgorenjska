@@ -15,6 +15,10 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     opis: 'Odkaz je možno zastaraný alebo je v adrese preklep.',
     nazaj: 'Späť na úvodnú stránku',
   },
+  /** Gumb za podporo na naslovnici (components/Pivo.tsx). */
+  pivo: {
+    gumb: 'Kúp nám pivo',
+  },
   noga: {
     zasebnost: 'Súkromie a podmienky',
     vir: 'Údaje: oficiálne zápisy o stretnutí <vir>{ime}</vir>',

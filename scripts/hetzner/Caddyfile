@@ -45,6 +45,17 @@ slff.eu, www.slff.eu {
 	header /app/latest.json Cache-Control no-store
 	header /.well-known/apple-app-site-association Content-Type application/json
 
+	# Support link (components/Pivo.tsx) to Buy Me a Coffee: /pivo?src=<where> ->
+	# utm_medium=<where>, so the BMC dashboard shows where clicks come from. Only a short
+	# lowercase name is passed through (anything else would land unescaped in the URL).
+	# 302: the target may change.
+	@pivo_vir {
+		path /pivo
+		expression `{query.src}.matches("^[a-z0-9-]{1,30}$")`
+	}
+	redir @pivo_vir https://buymeacoffee.com/slff?utm_source=slff&utm_medium={query.src} 302
+	redir /pivo https://buymeacoffee.com/slff?utm_source=slff 302
+
 	# Was api/drzava.ts on Vercel Edge: the visitor's country, from Cloudflare.
 	handle /api/drzava {
 		header Content-Type "application/json; charset=utf-8"

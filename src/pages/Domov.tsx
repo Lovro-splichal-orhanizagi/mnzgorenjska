@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import Pivo from '../components/Pivo'
 import { imeZveze } from '../components/VirPodatkov'
 import { sestaviVabilo, vabiloMailto } from '../lib/vabilo'
 import { Link } from 'react-router-dom'
@@ -397,11 +398,14 @@ export default function Domov() {
           aria-hidden
         />
         <div className="relative space-y-4">
-          <img
-            src="/logo/slff-grb.png"
-            alt={t('aplikacija.naslovStrani.osnova')}
-            className="h-24 w-24 drop-shadow-xl sm:h-32 sm:w-32"
-          />
+          <div className="flex items-center justify-between gap-4">
+            <img
+              src="/logo/slff-grb.png"
+              alt={t('aplikacija.naslovStrani.osnova')}
+              className="h-24 w-24 drop-shadow-xl sm:h-32 sm:w-32"
+            />
+            <Pivo src="domov" />
+          </div>
           {/* Dokler se lige nalagajo, ne vemo, katera je izbrana — nevtralen
               obris namesto gorenjskega imena, ki bi obiskovalcu druge lige
               za hip pokazal napačno ligo. */}
