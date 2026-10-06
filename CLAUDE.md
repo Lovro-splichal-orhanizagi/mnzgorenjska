@@ -17,7 +17,11 @@ vratarja z (V), postave pa našteje po številkah dresov). Prag je 5 glasov.
 
 - Frontend: React + Vite + Tailwind CSS, **postopno v TypeScriptu**
 - Backend / baza / avtentikacija: Supabase (PostgreSQL)
-- Gostovanje: Vercel + Supabase
+- Gostovanje: **lasten strežnik** (Hetzner, `ssh slff`): self-hosted Supabase
+  v Dockerju (`/opt/supabase`), Caddy streže stran in `api.slff.eu`, spredaj
+  Cloudflare. Supabase Cloud in Vercel sta od 6. 10. 2026 le še rezerva in
+  gresta proč (`docs/migracija-hetzner.md`). Pošta gre prek Mailcowa
+  (`mail.slff.eu`, `noreply@slff.eu`), ne Resenda.
 
 Lokalni razvoj teče na Supabase CLI stacku v Dockerju (`npx supabase start`).
 
@@ -507,8 +511,8 @@ vpisana pri Supabase kot povratni naslov ponastavitve gesla in žeton nosi v
   opis strani, naslov nastavi `useNaslov`. Kartica ob deljenju (og:) mora biti
   v statičnem HTML, ker je Facebook/WhatsApp bereta brez JS: build zato zapiše
   še `sk.html` (vtičnik `slovaskaKartica` v `vite.config.js`, besedila
-  `aplikacija.naslovStrani.deljenje`), `vercel.json` pa ga vrne za `/sk` in
-  poti z `?t=sk-…` (ne za `/` — tam Vercel najprej postreže index.html).
+  `aplikacija.naslovStrani.deljenje`), Caddy (`scripts/hetzner/Caddyfile`,
+  prej `vercel.json`) pa ga vrne za `/sk` in poti z `?t=sk-…`, tudi za `/`.
   Angleške kartice ni — angleški obiskovalec ob deljenju vidi slovensko
   ali slovaško (po ligi v povezavi).
 
@@ -593,10 +597,17 @@ brez `pisi`). Grb, dodan le v seznam in pognan lokalno, v
 produkcijo ne pride. **Migracije uveljavi CI samodejno** ob vsakem pushu na main (posel
 *Migracije baze* v `ci.yml`, pred objavo strani) v bazo iz skrivnosti
 `SUPABASE_DB_URL`; ob selitvi baze se zamenja le ta skrivnost, med samo
-selitvijo pa spremenljivka `MIGRACIJE_PREMOR=1` migracije zadrži. Ročno
-(ali brez skrivnosti) ostane Supabase CLI, ki je
-povezan s projektom: `npx supabase db push --linked`, `npx supabase db query
---linked "<sql>"`.
+selitvijo pa spremenljivka `MIGRACIJE_PREMOR=1` migracije zadrži. Baza je na
+strežniku in ni javna: CI gre do nje skozi SSH tunel. **`--linked` kaže na
+zamrznjeni Supabase Cloud — ne uporabljaj ga več.** Ročno:
+
+```bash
+ssh -fN -L 54322:127.0.0.1:5432 slff        # tunel do baze na strežniku
+npx supabase db push --db-url "postgresql://supabase_admin:<geslo>@127.0.0.1:54322/postgres"
+ssh slff 'docker exec supabase-db psql -U supabase_admin -d postgres -c "<sql>"'
+```
+
+Geslo je `POSTGRES_PASSWORD` v `/opt/supabase/.env` na strežniku.
 
 ### Hišne ekipe
 
