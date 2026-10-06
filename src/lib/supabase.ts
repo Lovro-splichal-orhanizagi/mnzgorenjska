@@ -26,6 +26,11 @@ if (import.meta.env.DEV && url && !/127\.0\.0\.1|localhost/.test(url)) {
 // nosi le kodo, ki jo zamenja samo ta naprava (NativnePovezave). Žetonov v
 // povezavi bi ji lahko podtaknil kdorkoli, druga aplikacija z isto shemo pa
 // bi jih lahko prestregla. Splet ostane pri implicitnem toku.
+// storageKey je pripet na ime Supabase projekta: supabase-js ga sicer izpelje
+// iz naslova, in prehod na api.slff.eu bi vse odjavil (docs/migracija-hetzner.md).
 export const supabase = createClient<Database>(url ?? '', anonKey ?? '', {
-  auth: { flowType: Capacitor.isNativePlatform() ? 'pkce' : 'implicit' },
+  auth: {
+    flowType: Capacitor.isNativePlatform() ? 'pkce' : 'implicit',
+    storageKey: 'sb-cobtigdsmlftvpfqtnas-auth-token',
+  },
 })
