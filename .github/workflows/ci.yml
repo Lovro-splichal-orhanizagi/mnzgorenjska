@@ -83,9 +83,58 @@ jobs:
       - if: always()
         run: npx --yes supabase@2.117.0 stop --no-backup
 
+  # Migracije gredo v produkcijsko bazo samodejno, PRED objavo strani. 6. 10.
+  # 2026 je stran že brala tabelo `obiski_dnevno`, ki je baza še ni imela —
+  # koda se je objavila sama, migracijo pa bi moral nekdo pognati na roke.
+  #
+  # Kam: skrivnost SUPABASE_DB_URL (Postgres URI, npr.
+  # postgresql://postgres:<geslo>@<gostitelj>:5432/postgres). Ob selitvi na
+  # lasten strežnik se zamenja le ta skrivnost. Med selitvijo (dump → restore)
+  # nastavi spremenljivko repozitorija MIGRACIJE_PREMOR=1, da se nič ne zapiše
+  # v staro bazo, ki se ravno kopira.
+  #
+  # Migracije so v `varnost` že preizkušene na sveži bazi. `db push` uveljavi
+  # le tiste, ki jih baza še nima; vsaka teče v svoji transakciji.
+  migracije:
+    name: Migracije baze
+    needs: [preveri, varnost]
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ali je baza nastavljena?
+        id: baza
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          PREMOR: ${{ vars.MIGRACIJE_PREMOR }}
+        run: |
+          if [ "$PREMOR" = "1" ]; then
+            echo "::warning::MIGRACIJE_PREMOR=1 — migracije preskočene (selitev baze?)."
+            echo "gremo=ne" >> "$GITHUB_OUTPUT"
+          elif [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::warning::Manjka skrivnost SUPABASE_DB_URL — migracije niso uveljavljene, poženi db push na roke."
+            echo "gremo=ne" >> "$GITHUB_OUTPUT"
+          else
+            echo "gremo=da" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Katere migracije čakajo
+        if: steps.baza.outputs.gremo == 'da'
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: npx --yes supabase@2.117.0 db push --db-url "$SUPABASE_DB_URL" --dry-run
+
+      - name: Uveljavi migracije
+        if: steps.baza.outputs.gremo == 'da'
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: npx --yes supabase@2.117.0 db push --db-url "$SUPABASE_DB_URL" --yes
+
   objavi:
     name: Objava na Vercel
-    needs: [preveri, varnost]
+    needs: [preveri, varnost, migracije]
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 15

@@ -590,7 +590,11 @@ jih sam zapiše v git), `grbi.yml` (ročni seznam grbov iz
 brez `pisi` za načrt) in `zdruzi-klube.yml` (dva podvojena kluba; najprej
 brez `pisi` za predogled) in `hisne-ekipe.yml` (hišne ekipe SLFF; najprej
 brez `pisi`). Grb, dodan le v seznam in pognan lokalno, v
-produkcijo ne pride. Shemo in poizvedbe potisne Supabase CLI, ki je
+produkcijo ne pride. **Migracije uveljavi CI samodejno** ob vsakem pushu na main (posel
+*Migracije baze* v `ci.yml`, pred objavo strani) v bazo iz skrivnosti
+`SUPABASE_DB_URL`; ob selitvi baze se zamenja le ta skrivnost, med samo
+selitvijo pa spremenljivka `MIGRACIJE_PREMOR=1` migracije zadrži. Ročno
+(ali brez skrivnosti) ostane Supabase CLI, ki je
 povezan s projektom: `npx supabase db push --linked`, `npx supabase db query
 --linked "<sql>"`.
 
