@@ -161,8 +161,9 @@ export const mojaEkipa = {
     imeEkipe: 'Ime ekipe',
     fiksnoNamig: 'Ime ekipe je po prvi shranitvi fiksno — enotna oznaka na lestvici in v zgodovini.',
     fiksno: '🔒 fiksno',
+    privzetoIme: 'FC {ime}',
     primerImena: 'npr. Nedeljski Junaki',
-    imeNamig: 'Imena po prvi shranitvi ni več mogoče spremeniti.',
+    imeNamig: 'Ime lahko pozneje kadarkoli spremeniš.',
   },
 
   // Uvodni nasvet za prazno ekipo.
@@ -171,13 +172,14 @@ export const mojaEkipa = {
     sestaviMi: '🎲 Sestavi mi ekipo',
     opisPredloga:
       'Naključno izberemo veljavno ekipo v okviru proračuna — vsak klik drugo. Nato zamenjaj, kogar hočeš, in shrani.',
+    sam: 'Raje sestavim sam',
     drugPredlog: '🎲 Drug predlog',
     opisDrugegaPredloga:
       'Ni všeč? Izžrebaj novo ekipo — dokler je ne shraniš, je to zastonj.',
     dopolni: '🎲 Dopolni ekipo',
     opisDopolnitve:
       'Prostih mest v kadru: {n}. Tvoje izbire ostanejo, preostala mesta naključno zapolnimo v okviru proračuna.',
-    korak1: 'Vpiši ime ekipe zgoraj — brez njega shranjevanje ne bo delovalo.',
+    korak1: 'Ime ekipe smo predlagali zgoraj — spremeniš ga lahko kadarkoli.',
     korak2:
       'Klikni <krepko>＋</krepko> na praznem mestu igrišča. Na telefonu je v spodnjem pasu še gumb <krepko>＋ Dodaj</krepko>, na računalniku pa izbiraš s <krepko>trga igralcev</krepko> desno.',
     korak3:

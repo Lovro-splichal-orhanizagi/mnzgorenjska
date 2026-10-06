@@ -383,6 +383,11 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   tudi nepopoln) in igralci s poročilom o poškodbi/odsotnosti. Bere ga pas
   `OpozoriloEkipe` (rdeče napake, rumena opozorila, ki se dajo skriti);
   besedila sestavi `src/lib/stanjeEkip.ts`
+- `lijak_dnevno` → lijak začetka: dnevni seštevki korakov `prazna_ekipa`,
+  `predlog` ("Sestavi mi ekipo"), `prva_shramba`, `sestavi_iz_maila` (povezava
+  `/my-team?sestavi=1` sestavi ekipo ob odprtju). Le števci, brez uporabnika;
+  piše `zabelezi_korak`, bere admin. Ime ekipe se predlaga ("FC Ime") in se ga
+  da spremeniti kadarkoli (od 6. 10. 2026; prej je bilo po prvi shrambi fiksno)
 - `push_tokens` → žeton FCM naprave mobilne aplikacije (ključ je žeton, ob
   prijavi drugega uporabnika na isti napravi se preseli). Vpiše ga le
   `shrani_push_zeton`, bere servis: `posli-opomnik` pošlje isto sporočilo še

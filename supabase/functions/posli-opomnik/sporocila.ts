@@ -182,25 +182,27 @@ export function sestaviOpomnikBrezLige(
   meta: { display_name: string | null },
 ): Sporocilo {
   const j: Jezik = jezik === 'sk' || jezik === 'hr' ? jezik : 'sl'
-  const vstop = j === 'sl' ? SITE : `${SITE}/${j}`
+  // Naravnost na Mojo ekipo s predlogom (`?sestavi=1`): ekipa je ob odprtju
+  // že sestavljena, ostane le Shrani. Državo in ligo ugane stran (IP, jezik).
+  const vstop = `${SITE}/my-team?sestavi=1`
   const odjava = `${SITE}/reminders`
   const B = {
     sk: {
       naslov: 'SLFF — vyber si ligu a zostav tím',
-      glavno: 'Zaregistroval/a si sa, ale ešte nemáš fantasy tím. Vyber si ligu, ktorú sleduješ, zostav 15 hráčov a zbieraj body už v ďalšom kole.',
-      gumb: 'Vybrať ligu →',
+      glavno: 'Zaregistroval/a si sa, ale ešte nemáš fantasy tím. Tím ti zostavíme jedným klikom, vymeň, koho chceš, a ulož. Body zbieraš už v ďalšom kole.',
+      gumb: 'Zostav mi tím →',
       opomba: 'Ak tím zostavovať nebudeš, tento e-mail môžeš ignorovať.',
     },
     hr: {
       naslov: 'SLFF: odaberi svoju ligu i složi momčad',
-      glavno: 'Registrirao/la si se, ali još nemaš fantasy momčad. Odaberi ligu koju pratiš, složi 15 igrača i skupljaj bodove već u sljedećem kolu.',
-      gumb: 'Odaberi ligu →',
+      glavno: 'Registrirao/la si se, ali još nemaš fantasy momčad. Momčad ti složimo jednim klikom, zamijeni koga želiš i spremi. Bodove skupljaš već u sljedećem kolu.',
+      gumb: 'Složi mi momčad →',
       opomba: 'Ako nećeš slagati momčad, ovaj e-mail možeš zanemariti.',
     },
     sl: {
       naslov: 'SLFF — izberi svojo ligo in sestavi ekipo',
-      glavno: 'Prijavil/a si se, a še nimaš fantasy ekipe. Izberi ligo, ki jo spremljaš — od 1. SNL do regionalnih lig po vsej Sloveniji — sestavi 15 igralcev in zbiraj točke že v naslednjem krogu.',
-      gumb: 'Izberi ligo →',
+      glavno: 'Prijavil/a si se, a še nimaš fantasy ekipe. Ekipo ti sestavimo v enem kliku, zamenjaj, kogar hočeš, in shrani. Točke zbiraš že v naslednjem krogu.',
+      gumb: 'Sestavi mi ekipo →',
       opomba: 'Če ekipe ne boš sestavil/a, lahko ta mail ignoriraš.',
     },
   }[j]

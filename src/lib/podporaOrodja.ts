@@ -75,6 +75,13 @@ function zadrzi() {
   }
 }
 
+/** Osvetli cilj na trenutni strani (npr. gumb Shrani po predlogu ekipe). */
+export function osvetliCilj(cilj: string): boolean {
+  const el = najdi(cilj)
+  if (el) osvetli(el)
+  return Boolean(el)
+}
+
 function osvetli(el: HTMLElement) {
   el.scrollIntoView({ behavior: 'smooth', block: 'center' })
   el.classList.add(RAZRED)

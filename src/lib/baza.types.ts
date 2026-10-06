@@ -5254,6 +5254,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      zabelezi_korak: { Args: { p_korak: string }; Returns: undefined }
       zakleni_krog: { Args: { p_round_id: number }; Returns: number }
       zakleni_zapadle_kroge: { Args: { p_okno?: string }; Returns: number }
       zaprosi_za_poznavalca: {
