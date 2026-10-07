@@ -544,6 +544,115 @@ export function sestaviIzstopKluba(
   return { naslov: B.naslov, html }
 }
 
+// --- tedenski pregled: tvoj krog --------------------------------------------
+// Po končanem krogu: točke, mesto na lestvici lige, kapetan, najboljši igralec.
+// Brez čestitk za vsako ceno: pohvala le, če je ekipa zbrala največ v ligi.
+
+export interface PregledKroga {
+  display_name: string | null
+  ekipa: string
+  krog: number
+  tocke: number
+  mesto: number
+  /** Mesto pred krogom; null, če ekipa prej ni imela točk. */
+  mesto_prej: number | null
+  ekip: number
+  povprecje: number | null
+  najvec: number | null
+  kapetan: string | null
+  kapetan_tocke: number | null
+  najboljsi: string | null
+  najboljsi_tocke: number | null
+}
+
+/** Slovenska množina po zadnjih dveh mestih: 1 / 2 / 3–4 / ostalo. */
+const slMn = (n: number, ena: string, dve: string, tri: string, vec: string) => {
+  const s = Math.abs(n) % 100
+  return s === 1 ? ena : s === 2 ? dve : s === 3 || s === 4 ? tri : vec
+}
+
+export function sestaviTedenskiPregled(liga: Liga, m: PregledKroga): Sporocilo {
+  const j = jezikLige(liga)
+  const p = povezave(liga.slug)
+  const ozn = liga.oznaka
+  const OZN = esc(ozn.toUpperCase())
+  const st = (n: number) => n.toLocaleString(LOKALE[j], { maximumFractionDigits: 1 })
+  const cela = (n: number) => Number.isInteger(n) ? n : 5 // decimalke: množina "ostalo"
+  const tock = (n: number) =>
+    `${st(n)} ${
+      j === 'sk'
+        ? skMn(cela(n), 'bod', 'body', 'bodov')
+        : j === 'hr'
+          ? hrMn(cela(n), 'bod', 'boda', 'bodova')
+          : slMn(cela(n), 'točka', 'točki', 'točke', 'točk')
+    }`
+  const ekipa = `<strong>${esc(m.ekipa)}</strong>`
+  const premik = m.mesto_prej == null ? 0 : m.mesto_prej - m.mesto
+  const premikZnak = premik > 0 ? ` (+${premik})` : premik < 0 ? ` (${premik})` : ''
+  const najboljsiVLigi = m.najvec != null && m.tocke >= m.najvec && m.ekip > 1
+  const najboljsiNiKapetan = m.najboljsi && m.najboljsi !== m.kapetan
+
+  const B = {
+    sk: {
+      naslov: `SLFF ${ozn}: ${m.krog}. kolo, ${tock(m.tocke)}, ${m.mesto}. miesto${premikZnak}`,
+      glavno: `Tvoj tím ${ekipa} získal v ${m.krog}. kole v lige ${OZN} <strong>${tock(m.tocke)}</strong>.`,
+      liga: m.povprecje != null && m.najvec != null
+        ? `Priemer ligy: ${st(m.povprecje)}, najviac: ${st(m.najvec)}.` : '',
+      top: 'Najviac bodov v celej lige v tomto kole.',
+      mesto: `V tabuľke si na <strong>${m.mesto}. mieste</strong> z ${m.ekip}` +
+        (m.mesto_prej == null || premik === 0 ? '.' : ` (predtým ${m.mesto_prej}.).`),
+      kapetan: m.kapetan ? `Kapitán ${esc(m.kapetan)}: ${tock(m.kapetan_tocke ?? 0)}.` : '',
+      najboljsi: najboljsiNiKapetan ? `Najlepší v tíme: ${esc(m.najboljsi!)} (${tock(m.najboljsi_tocke ?? 0)}).` : '',
+      gumb: 'Priprav tím na ďalšie kolo →',
+      odjava: 'Nechcem už dostávať e-maily',
+    },
+    hr: {
+      naslov: `SLFF ${ozn}: ${m.krog}. kolo, ${tock(m.tocke)}, ${m.mesto}. mjesto${premikZnak}`,
+      glavno: `Tvoja momčad ${ekipa} osvojila je u ${m.krog}. kolu lige ${OZN} <strong>${tock(m.tocke)}</strong>.`,
+      liga: m.povprecje != null && m.najvec != null
+        ? `Prosjek lige: ${st(m.povprecje)}, najviše: ${st(m.najvec)}.` : '',
+      top: 'Najviše bodova u cijeloj ligi u ovom kolu.',
+      mesto: `Na ljestvici si <strong>${m.mesto}.</strong> od ${m.ekip}` +
+        (m.mesto_prej == null || premik === 0 ? '.' : ` (prije ${m.mesto_prej}.).`),
+      kapetan: m.kapetan ? `Kapetan ${esc(m.kapetan)}: ${tock(m.kapetan_tocke ?? 0)}.` : '',
+      najboljsi: najboljsiNiKapetan ? `Najbolji u momčadi: ${esc(m.najboljsi!)} (${tock(m.najboljsi_tocke ?? 0)}).` : '',
+      gumb: 'Pripremi momčad za sljedeće kolo →',
+      odjava: 'Ne želim više primati e-mailove',
+    },
+    sl: {
+      naslov: `SLFF ${ozn} — ${m.krog}. krog: ${tock(m.tocke)}, ${m.mesto}. mesto${premikZnak}`,
+      glavno: `Tvoja ekipa ${ekipa} je v ${m.krog}. krogu ${OZN} zbrala <strong>${tock(m.tocke)}</strong>.`,
+      liga: m.povprecje != null && m.najvec != null
+        ? `Povprečje lige: ${st(m.povprecje)}, največ: ${st(m.najvec)}.` : '',
+      top: 'Največ točk v vsej ligi v tem krogu.',
+      mesto: `Na lestvici si <strong>${m.mesto}.</strong> od ${m.ekip}` +
+        (m.mesto_prej == null || premik === 0 ? '.' : ` (prej ${m.mesto_prej}.).`),
+      kapetan: m.kapetan ? `Kapetan ${esc(m.kapetan)}: ${tock(m.kapetan_tocke ?? 0)}.` : '',
+      najboljsi: najboljsiNiKapetan ? `Najboljši v ekipi: ${esc(m.najboljsi!)} (${tock(m.najboljsi_tocke ?? 0)}).` : '',
+      gumb: 'Pripravi ekipo za naslednji krog →',
+      odjava: 'Ne želim več e-pošte',
+    },
+  }[j]
+
+  const vrstica = (t: string, slog = 'font-size: 15px; line-height: 1.5; margin: 0 0 10px;') =>
+    t ? `<p style="${slog}">${t}</p>` : ''
+  const html = ovoj(
+    `<p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">${pozdrav(j, m.display_name)}</p>
+      ${vrstica(B.glavno)}
+      ${najboljsiVLigi ? vrstica(`<strong>${B.top}</strong>`) : ''}
+      ${vrstica(B.liga, 'font-size: 13px; color: #64748b; margin: 0 0 16px;')}
+      ${vrstica(B.mesto)}
+      ${vrstica(B.kapetan)}
+      ${vrstica(B.najboljsi)}
+      <p style="text-align: center; margin: 24px 0;">
+        <a href="${p.ekipa}" style="${GUMB}">${B.gumb}</a>
+      </p>`,
+    ` ·
+        <a href="${p.odjava}" style="color:#94a3b8;">${B.odjava}</a>`,
+  )
+  return { naslov: B.naslov, html, odjava: p.odjava }
+}
+
 // --- razlog neveljavne ekipe ------------------------------------------------
 
 /** Slovaška množina: 1 / 2–4 / ostalo. */

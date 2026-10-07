@@ -37,9 +37,12 @@ if (!SERVICE) { console.error('Manjka SUPABASE_SERVICE_ROLE_KEY'); process.exit(
 // Suho je PRIVZETO. Pošiljanje pošte resničnim ljudem mora biti izrecna
 // izbira, ne privzeta posledica zagona.
 const suho = String(process.env.SUHO ?? 'true').toLowerCase() !== 'false'
-const vrsta = ['opozorilo', 'opomnik-push'].includes(process.env.VRSTA) ? process.env.VRSTA : 'opomnik'
-// Opozorilo in push opomnik tečeta po urniku; oba varuje meja na ligo.
+const vrsta = ['opozorilo', 'opomnik-push', 'tedenski-pregled'].includes(process.env.VRSTA) ? process.env.VRSTA : 'opomnik'
+// Opozorilo, push opomnik in tedenski pregled tečejo po urniku; varuje jih meja na ligo.
 const poUrniku = vrsta !== 'opomnik'
+// Opomnik in tedenski pregled gresta po pošti v velikem številu: oba omejuje
+// dnevni proračun (`NAJVEC_POSLATI`).
+const sProracunom = vrsta === 'opomnik' || vrsta === 'tedenski-pregled'
 
 // Varovalka za opozorila. Opozorilo naslavlja napako posameznika, zato jih je
 // obicajno nekaj na ligo. Ce jih je nenadoma cel kup, to skoraj gotovo ni
@@ -62,7 +65,7 @@ const { data: lige, error } = await db
 if (error) { console.error(`Lig ni bilo mogoče prebrati: ${error.message}`); process.exit(1) }
 
 console.log(
-  `${{ opozorilo: 'OPOZORILA (ekipa se ne bo zaklenila)', 'opomnik-push': 'PUSH OPOMNIKI (ni ekipe, rok jutri)', opomnik: 'OPOMNIKI (ni ekipe)' }[vrsta]} — ` +
+  `${{ opozorilo: 'OPOZORILA (ekipa se ne bo zaklenila)', 'opomnik-push': 'PUSH OPOMNIKI (ni ekipe, rok jutri)', opomnik: 'OPOMNIKI (ni ekipe)', 'tedenski-pregled': 'TEDENSKI PREGLED (tvoj krog)' }[vrsta]} — ` +
     (suho ? 'SUHI TEK, ne pošiljam.\n' : 'POŠILJAM.\n'),
 )
 
@@ -79,7 +82,8 @@ for (const liga of lige ?? []) {
     // po odgovoru, ko je bila posta ze poslana.
     body: JSON.stringify({
       competition_id: liga.id, suho, vrsta, dni,
-      ...(poUrniku ? { najvec: NAJVEC_NA_LIGO } : { najvec_poslati: proracun }),
+      ...(poUrniku ? { najvec: NAJVEC_NA_LIGO } : {}),
+      ...(sProracunom ? { najvec_poslati: proracun } : {}),
     }),
   })
   const izid = await odgovor.json().catch(() => ({}))
@@ -115,7 +119,7 @@ for (const liga of lige ?? []) {
     padlo++
   }
   skupaj += n
-  if (vrsta === 'opomnik' && !suho) proracun = Math.max(0, proracun - (izid.poslanih_mailov ?? izid.poslano ?? 0))
+  if (sProracunom && !suho) proracun = Math.max(0, proracun - (izid.poslanih_mailov ?? izid.poslano ?? 0))
   console.log(
     `  ${liga.slug.padEnd(14)} kandidatov ${String(n).padStart(4)}` +
       (suho ? '' : ` · poslano ${izid.poslano ?? 0}, preskočeno ${izid.preskoceno ?? 0}`),
@@ -123,7 +127,7 @@ for (const liga of lige ?? []) {
 }
 
 console.log(`\nSkupaj kandidatov: ${skupaj}`)
-if (vrsta === 'opomnik' && !suho)
+if (sProracunom && !suho)
   console.log(`Dnevni proračun porabljen do ${proracun} preostalih; ostali pridejo ob naslednjem zagonu.`)
 if (padlo) {
   console.error(`Lig z napako: ${padlo}`)

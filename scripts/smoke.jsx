@@ -3677,6 +3677,32 @@ preveri(
   const brezNoge = (h) => h.replace('SLFF — Sunday League', '')
   preveri('e-pošta: hr brez pomišljajev',
     [oHr, oHr2, zHr, bHr, pHr, popHr, izHr].every((m) => !pomisljaj.test(m.naslov + brezNoge(m.html))))
+
+  // Tedenski pregled "Tvoj krog".
+  const krog = {
+    display_name: 'Ana Novak', ekipa: 'Kranjski <orli>', krog: 5, tocke: 48, mesto: 3, mesto_prej: 5, ekip: 24,
+    povprecje: 37.4, najvec: 61, kapetan: 'Janez Kos', kapetan_tocke: 12, najboljsi: 'Miha Zupan', najboljsi_tocke: 9,
+  }
+  const tSi = E.sestaviTedenskiPregled(si, krog)
+  preveri('e-pošta: tedenski pregled sl',
+    tSi.naslov === 'SLFF Člani — 5. krog: 48 točk, 3. mesto (+2)' && tSi.html.includes('Kranjski &lt;orli&gt;') &&
+      tSi.html.includes('(prej 5.)') && tSi.html.includes('Kapetan Janez Kos: 12 točk') &&
+      tSi.html.includes('Miha Zupan (9 točk)') && !tSi.html.includes('Največ točk v vsej ligi') &&
+      tSi.odjava === 'https://slff.eu/reminders?t=clani', tSi.naslov)
+  const tSi1 = E.sestaviTedenskiPregled(si, { ...krog, tocke: 61, mesto: 1, mesto_prej: null, kapetan: 'Miha Zupan', kapetan_tocke: 2 })
+  preveri('e-pošta: tedenski pregled sl, prvi v krogu, brez prejšnjega mesta',
+    tSi1.naslov.endsWith('61 točk, 1. mesto') && tSi1.html.includes('Največ točk v vsej ligi') &&
+      !tSi1.html.includes('prej') && tSi1.html.includes('Kapetan Miha Zupan: 2 točki') && !tSi1.html.includes('Najboljši v ekipi'),
+    tSi1.naslov)
+  const tSk = E.sestaviTedenskiPregled(sk, { ...krog, tocke: 3, mesto: 7 })
+  preveri('e-pošta: tedenski pregled sk',
+    tSk.naslov === 'SLFF IV. liga: 5. kolo, 3 body, 7. miesto (-2)' && tSk.html.includes('Ahoj, Ana!') &&
+      !slovensko.test(tSk.naslov + tSk.html.replace(/href="[^"]*"/g, '')), tSk.naslov)
+  const tHr = E.sestaviTedenskiPregled(hrL, { ...krog, tocke: 22 })
+  preveri('e-pošta: tedenski pregled hr',
+    tHr.naslov === 'SLFF 1. MNL: 5. kolo, 22 boda, 3. mjesto (+2)' && tHr.html.includes('Bok, Ana!') &&
+      !slovenskoHr.test(tHr.naslov + tHr.html.replace(/href="[^"]*"/g, '')) &&
+      !pomisljaj.test(tHr.naslov + brezNoge(tHr.html)), tHr.naslov)
 }
 
 // --- kontumacije: Ptuj, Murska Sobota, Lendava, Maribor ---------------------
