@@ -33,13 +33,15 @@ import {
   sestaviPopravekPozicije,
   sestaviPoznavalca,
   sestaviPushOpomnik,
+  sestaviTedenskiPregled,
   type Liga,
+  type PregledKroga,
   type Sporocilo,
 } from './sporocila.ts'
 import { posljiPush, pushNastavljen, type Obvestilo } from './push.ts'
 import nodemailer from 'npm:nodemailer@6.9.16'
 
-const VRSTE = ['opomnik', 'opozorilo', 'poznavalec', 'popravek-pozicije', 'izstop-kluba', 'opomnik-push'] as const
+const VRSTE = ['opomnik', 'opozorilo', 'poznavalec', 'popravek-pozicije', 'izstop-kluba', 'opomnik-push', 'tedenski-pregled'] as const
 type Vrsta = (typeof VRSTE)[number]
 
 // Besedila so v `sporocila.ts`, v jeziku DRŽAVE LIGE (slovaška liga →
@@ -66,6 +68,8 @@ interface Zahteva {
   //   (`players.izstopil_at`); samo urnik
   // 'opomnik-push' — samo push: kdor v ligi nima ekipe, rok je v 24 urah;
   //   samo urnik
+  // 'tedenski-pregled' — po koncanem krogu vsakemu lastniku ekipe tocke,
+  //   mesto in kapetan (`tedenski_pregled_ekip`); samo urnik
   vrsta?: Vrsta
   user_id?: string
   player_ids?: number[]
@@ -151,7 +155,7 @@ Deno.serve(async (req) => {
   // Neznana vrsta se zavrne: starejša funkcija je vsako neznano vrsto obravnavala
   // kot množični opomnik po pošti. Ob neusklajeni namestitvi naj raje odpove.
   if (!VRSTE.includes(vrsta)) return json({ error: `Neznana vrsta: ${vrsta}.` }, 400)
-  if ((vrsta === 'opozorilo' || vrsta === 'opomnik-push') && !jeStroj)
+  if ((vrsta === 'opozorilo' || vrsta === 'opomnik-push' || vrsta === 'tedenski-pregled') && !jeStroj)
     return json(
       { error: 'Opozorilo poslje samo urnik (servisni kljuc).' },
       403,
@@ -273,6 +277,58 @@ Deno.serve(async (req) => {
       napaka: rez.napaka ?? null,
     })
     return json({ test: true, resend: rez })
+  }
+
+  // Tedenski pregled: po koncanem krogu en mail na ekipo. Kdo ga dobi in kaj
+  // pise, doloci `tedenski_pregled_ekip` (tudi da ga za isti krog ne dobi
+  // dvakrat). Le posta: potisno obvestilo za pregled bi bilo prevec.
+  if (vrsta === 'tedenski-pregled') {
+    const { data, error } = await service.rpc('tedenski_pregled_ekip', { p_competition_id: competition_id })
+    if (error) return json({ error: error.message }, 500)
+    const vrstice = (data ?? []) as Array<PregledKroga & {
+      user_id: string; email: string; fantasy_team_id: number; round_id: number
+    }>
+    if (suho) return json({ suho: true, kandidati_stevilo: vrstice.length, krog: vrstice[0]?.krog ?? null })
+    if (typeof vhod.najvec === 'number' && vrstice.length > vhod.najvec)
+      return json({ error: `Preveč ekip (${vrstice.length}, meja ${vhod.najvec}). Nič ni bilo poslano.`, kandidati_stevilo: vrstice.length }, 409)
+
+    // Dnevna mera za nov strežnik: ostali pridejo ob naslednjem zagonu
+    // (poslanim `tedenski_pregled_ekip` istega kroga ne vrne več).
+    const zdaj = typeof vhod.najvec_poslati === 'number' ? vrstice.slice(0, vhod.najvec_poslati) : vrstice
+    const rezultati: Array<{ ekipa: number; ok: boolean; razlog?: string }> = []
+    for (const v of zdaj) {
+      const rez = await poslji(
+        EMAIL_FROM,
+        v.email,
+        await sOdjavo(service, v.user_id, sestaviTedenskiPregled(liga, {
+          ...v,
+          tocke: Number(v.tocke),
+          povprecje: v.povprecje == null ? null : Number(v.povprecje),
+          najvec: v.najvec == null ? null : Number(v.najvec),
+          kapetan_tocke: v.kapetan_tocke == null ? null : Number(v.kapetan_tocke),
+          najboljsi_tocke: v.najboljsi_tocke == null ? null : Number(v.najboljsi_tocke),
+        })),
+        Deno.env.get('EMAIL_REPLY_TO'),
+      )
+      await service.from('email_log').insert({
+        user_id: v.user_id,
+        email: v.email,
+        vrsta,
+        competition_id,
+        round_id: v.round_id,
+        resend_id: rez.id ?? null,
+        napaka: rez.napaka ?? null,
+      })
+      rezultati.push({ ekipa: v.fantasy_team_id, ok: !rez.napaka, razlog: rez.napaka })
+    }
+    return json({
+      kandidati_stevilo: vrstice.length,
+      krog: vrstice[0]?.krog ?? null,
+      poslano: rezultati.filter((r) => r.ok).length,
+      preskoceno: rezultati.filter((r) => !r.ok).length,
+      odlozeno: vrstice.length - zdaj.length,
+      rezultati,
+    })
   }
 
   // Enkratni obvestili lastnikom ekip z dolocenimi igralci v kadru — en mail

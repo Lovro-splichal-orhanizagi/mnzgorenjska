@@ -543,7 +543,10 @@ vpisana pri Supabase kot povratni naslov ponastavitve gesla in žeton nosi v
   razlog iz baze se za slovaščino prevede po obliki stavka. Smoke preveri
   obe različici. Angleške pošte ni: registracija v angleškem vmesniku
   zapiše `jezik` države lige, ki jo gleda. Nov jezik = nova veja v `sporocila.ts` in vrstica v
-  `JEZIK_DRZAVE` tam. Avtentikacijska pošta (`supabase/templates/`) izbere
+  `JEZIK_DRZAVE` tam. Funkcij CI ne objavi: po združitvi
+  `scripts/hetzner/objavi-funkcije.sh` (rsync na VM, kopija prejšnje, ponovni
+  zagon). Tedenski mail "tvoj krog" (`tedenski-pregled.yml`, pon in tor
+  zvečer) bere `tedenski_pregled_ekip`. Avtentikacijska pošta (`supabase/templates/`) izbere
   jezik po `jezik` v metapodatkih uporabnika (vpiše ga registracija);
   v gostujočem projektu predloge **niso** iz config.toml — prilepi jih v
   Auth → Email Templates.

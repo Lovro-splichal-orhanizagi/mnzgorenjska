@@ -1,0 +1,61 @@
+name: Tedenski pregled (tvoj krog)
+
+# Po koncanem krogu vsakemu lastniku ekipe mail s tockami, mestom na lestvici
+# lige, kapetanom in najboljsim igralcem (`tedenski_pregled_ekip`).
+#
+# Krog je koncan, ko so vsi zapisniki zadnjega tedna v bazi; vecina jih pride
+# do ponedeljka. Zato ponedeljek zvecer in torek zvecer: kdor je v ponedeljek
+# ze dobil mail za krog, ga v torek ne dobi znova (email_log z round_id), torek
+# pa pobere lige s pozno vnesenimi zapisniki in ostanek dnevne mere.
+#
+# Mera: najvec 300 na zagon. mail.slff.eu je nov posiljatelj (glej opomniki.yml),
+# aktivnih lastnikov je ~500. Meja na ligo je le varovalka za napako (najvecja
+# liga ima ~120 ekip).
+#
+# Rocni zagon je privzeto suh: izpise, koliko bi jih slo po ligah.
+on:
+  schedule:
+    - cron: '7 17 * * 1'
+    - cron: '7 17 * * 2'
+  workflow_dispatch:
+    inputs:
+      suho:
+        description: 'Samo presteje, ne posilja'
+        required: false
+        default: true
+        type: boolean
+      najvec_poslati:
+        description: 'Največ poslanih v tem zagonu'
+        required: false
+        default: '300'
+        type: string
+
+permissions:
+  contents: read
+
+# Ista skupina kot opomniki: oba posiljata prek istega streznika.
+concurrency:
+  group: opomniki
+  cancel-in-progress: false
+
+jobs:
+  pregled:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SUHO: ${{ github.event_name == 'schedule' && 'false' || inputs.suho }}
+      NAJVEC_POSLATI: ${{ inputs.najvec_poslati || '300' }}
+      NAJVEC_NA_LIGO: '400'
+      VRSTA: tedenski-pregled
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Poslji tedenski pregled po ligah
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/posli-opomnike.mjs
