@@ -213,8 +213,8 @@ Posebnosti, ki jih je našel pregled pred vklopom (7. 10. 2026):
 - **Strelec s klopi brez menjave** (ŽNS Zagreb menjav ne vpisuje) dobi nastop
   z goli in kartoni (`dodajStrelceSKlopi` v `zapisnik.mjs`); prej je bil gol
   le v `goals` in točk ni prinesel.
-- `appearances.is_goalkeeper` je oznaka vratarja na tisti tekmi (od 8. 10.
-  2026). *Uskladi pozicije* z `vir = hns` po njej loči prave vratarje od
+- `appearances.is_goalkeeper` je oznaka vratarja na tisti tekmi (tekme,
+  uvožene od 7. 10. 2026 21:07 UTC). *Uskladi pozicije* z `vir = hns` po njej loči prave vratarje od
   enkratnih (Mezga: 1× vratar, 5 golov).
 - Nastop v letošnjem zapisniku igralca vrne med aktivne in ga prestavi v klub
   zadnje tekme; arhiv kluba ne prestavlja.
