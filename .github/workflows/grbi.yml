@@ -7,16 +7,30 @@ name: Grbi klubov (rocni seznam)
 #
 # Privzeto samo nacrt; `pisi` prenese grbe v public/grbi, zapise logo_url in
 # nove datoteke potisne v git. Klubov, ki grb ze imajo, ne prepise.
+#
+# `vir = hns`: hrvaski klubi z glave strani tekme na HNS Semaforju
+# (scripts/grbi-hns.mjs). `tekmovanje` omeji na eno ligo (npr. hr-mz-1mnl),
+# `prepisi` zamenja tudi obstojece grbe teh klubov.
 
 on:
   workflow_dispatch:
     inputs:
       vir:
-        description: 'rocni = seznam v prenesi-grbe.mjs, sportnet = slovaski klubi s futbalnet.sk'
+        description: 'rocni = seznam v prenesi-grbe.mjs, sportnet = slovaski klubi s futbalnet.sk, hns = hrvaski klubi s semafor.hns.family'
         required: false
         default: rocni
         type: choice
-        options: [rocni, sportnet]
+        options: [rocni, sportnet, hns]
+      tekmovanje:
+        description: 'Samo za hns: ena liga (slug, npr. hr-mz-1mnl); prazno = vse hrvaske lige'
+        required: false
+        default: ''
+        type: string
+      prepisi:
+        description: 'Samo za hns: prepisi tudi obstojece grbe'
+        required: false
+        default: false
+        type: boolean
       pisi:
         description: 'Prenesi in zapisi (sicer samo nacrt)'
         required: false
@@ -33,7 +47,8 @@ concurrency:
 jobs:
   grbi:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # hns brez `tekmovanje` bere ~500 strani tekem in ~1000 slik po 500 ms.
+    timeout-minutes: 60
     permissions:
       contents: write
       actions: write
@@ -48,7 +63,25 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: node scripts/${{ inputs.vir == 'sportnet' && 'grbi-sportnet' || 'prenesi-grbe' }}.mjs ${{ inputs.pisi && '--pisi' || '' }}
+          # Vnosi gredo skozi okolje, ne naravnost v ukaz.
+          VIR: ${{ inputs.vir }}
+          PISI: ${{ inputs.pisi }}
+          TEKMOVANJE: ${{ inputs.tekmovanje }}
+          PREPISI: ${{ inputs.prepisi }}
+        run: |
+          set -euo pipefail
+          case "$VIR" in
+            sportnet) skripta=grbi-sportnet ;;
+            hns) skripta=grbi-hns ;;
+            *) skripta=prenesi-grbe ;;
+          esac
+          args=()
+          if [ "$PISI" = "true" ]; then args+=(--pisi); fi
+          if [ "$VIR" = "hns" ]; then
+            if [ -n "$TEKMOVANJE" ]; then args+=(--tekmovanje "$TEKMOVANJE"); fi
+            if [ "$PREPISI" = "true" ]; then args+=(--prepisi); fi
+          fi
+          node "scripts/$skripta.mjs" "${args[@]}"
       - name: Zapisi nove grbe v git
         if: inputs.pisi
         run: |

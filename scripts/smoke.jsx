@@ -3474,6 +3474,43 @@ preveri(
   const opoz = dodajStrelceSKlopi(s8, n8)
   const goliNastopi = n8.filter((x) => x.ekipaIdx === 0).reduce((v, x) => v + x.goli, 0)
   preveri('hns: strelci s klopi dobijo gol', s8.menjave.length === 0 && opoz.length >= 1 && goliNastopi === 8)
+
+  // Grbi (scripts/grbi-hns.mjs): domači je `club1`, gostje `club2` v glavi;
+  // fotografije igralcev pod istim images_comet se ne štejejo.
+  const C = 'https://hns.family/files/images_comet'
+  const gk = H.grbiTekme(k)
+  preveri('hns grbi: domači in gostje po mestu v glavi',
+    gk.domaci?.src === `${C}/Club/_resized/919_-1510902320_80_80_wg.jpg` && gk.domaci.ime === 'NK Mladost Molve' &&
+    gk.gostje?.src === `${C}/45/0/_resized/450b28f38d266dfd86d9853b860ab699ccb5d44b_80_80_wg.png` && gk.gostje.ime === 'NK Prugovac')
+  const g11 = H.grbiTekme(beri('hns-tekma-11m.html'))
+  preveri('hns grbi: druga tekma (Tomislav : Borac)',
+    g11.domaci?.src.includes('86809c461377478e9d0e9cbe577bf2f2364c0d33') && g11.domaci.ime === 'NK Tomislav (DA)' &&
+    g11.gostje?.src.includes('eb5726f9d3dc1bac8a63a68da49babc8e65bf192') && g11.gostje.ime === 'NK Borac (KV)')
+  const vzorci = ['hns-tekma-11m.html', 'hns-tekma-rdeci.html', 'hns-tekma-kontumacija.html', 'hns-tekma-strelec-s-klopi.html']
+    .map((f) => H.grbiTekme(beri(f)))
+  preveri('hns grbi: vsak vzorec ima dva različna grba, nobeden ni nadomestni', vzorci.every((g) =>
+    g.domaci && g.gostje && g.domaci.src !== g.gostje.src && !H.jeNadomestniGrb(g.domaci.src) && !H.jeNadomestniGrb(g.gostje.src)))
+  // Mesto odloča, ne alt: zamenjan alt ne zamenja strani.
+  const zamenjan = k.replace('alt="NK Mladost Molve"', 'alt="NK Prugovac"')
+  preveri('hns grbi: alt ne odloča o strani', H.grbiTekme(zamenjan).domaci?.src.includes('/Club/_resized/919_'))
+  // Klub brez grba: Semafor da `logo nologo` brez slike (NK Miholjac, 10/2026).
+  const brezGrba = k.replace(/<li class="club2"><div class="logo"><img [^>]*><\/div>/, '<li class="club2"><div class="logo nologo"></div>')
+  const gb = H.grbiTekme(brezGrba)
+  preveri('hns grbi: "nologo" ni grb, domači ostane', brezGrba !== k && gb.gostje === null && gb.domaci?.src.includes('/Club/_resized/919_'))
+  preveri('hns grbi: stran brez glave nima grbov',!H.grbiTekme('<html><img src="x"></html>').domaci)
+  preveri('hns grbi: izvirnik namesto 80 px',
+    H.izvirnikGrba(`${C}/Club/_resized/919_-1510902320_80_80_wg.jpg`) === `${C}/Club/919_-1510902320.jpg` &&
+    H.izvirnikGrba(`${C}/45/0/_resized/450b28f38d266dfd86d9853b860ab699ccb5d44b_80_80_wg.png`) === `${C}/45/0/450b28f38d266dfd86d9853b860ab699ccb5d44b.png` &&
+    H.izvirnikGrba('https://semafor.hns.family/static/images/logo01.png') === null)
+  preveri('hns grbi: nadomestne slike',
+    H.jeNadomestniGrb('') && H.jeNadomestniGrb('/static/images/logo01.png') &&
+    H.jeNadomestniGrb('https://semafor.hns.family/static/images/footer/hns.png') &&
+    H.jeNadomestniGrb(`${C}/default_club_80_80_wg.png`) &&
+    !H.jeNadomestniGrb(`${C}/Club/_resized/614_f89f00a7-787b-41af-bf50-b7637da55a3d_80_80_wg.png`))
+  const deljeni = H.deljeniGrbi([
+    { klub: 1, kljuc: 'a' }, { klub: 2, kljuc: 'a' }, { klub: 3, kljuc: 'b' }, { klub: 3, kljuc: 'b' },
+  ])
+  preveri('hns grbi: ista slika pri dveh klubih je nadomestna, pri istem klubu ne', deljeni.has('a') && !deljeni.has('b'))
 }
 
 // --- navijači klubov ----------------------------------------------------------

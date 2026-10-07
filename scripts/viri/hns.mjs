@@ -212,6 +212,82 @@ export function vZapisnik(html, { id = null, url = null } = {}) {
   }
 }
 
+// --- grbi klubov -------------------------------------------------------------
+//
+// Glava strani tekme (`matchHeader`) ima `<li class="club1">` (domači) in
+// `<li class="club2">` (gostje), vsak z `<div class="logo"><img src alt>` in
+// `<div class="title">`. Stran ima še na desetine drugih slik (fotografije
+// igralcev pod istim `images_comet`, sponzorji), zato beremo samo ta dva
+// elementa in stran določi MESTO v glavi, ne `alt`: ime v bazi je lahko
+// drugačno od imena na Semaforju.
+
+const GRBI_COMET = /^https?:\/\/(?:www\.)?hns\.family\/files\/images_comet\//
+
+/** Grba domačih in gostov z glave strani tekme: { domaci, gostje }, vsak { src, ime } ali null. */
+export function grbiTekme(html) {
+  const s = String(html ?? '')
+  const zacetek = s.indexOf('matchHeader')
+  if (zacetek < 0) return { domaci: null, gostje: null }
+  const konec = s.indexOf('matchLineup', zacetek)
+  const glava = s.slice(zacetek, konec < 0 ? undefined : konec)
+  const beri = (k) => {
+    const li = glava.match(new RegExp(`<li class="${k}">([\\s\\S]*?)</li>`))?.[1]
+    // Klub brez grba: Semafor izriše `<div class="logo nologo"></div>` brez
+    // slike (NK Miholjac, utakmice/114701216, 10/2026).
+    if (!li || /class="logo[^"]*\bnologo\b/.test(li)) return null
+    const src = razpakiraj(li.match(/<div class="logo">\s*<img[^>]*\ssrc="([^"]*)"/)?.[1] ?? '')
+    const ime = besedilo(li.match(/<div class="title">([^<]*)</)?.[1])
+    return src ? { src, ime } : null
+  }
+  return { domaci: beri('club1'), gostje: beri('club2') }
+}
+
+/**
+ * Ali naslov NI grb kluba: prazen, zunaj COMET-ove mape slik (logotip HNS,
+ * sponzor, `/static/...` privzeta slika) ali z imenom privzete slike.
+ *
+ * Semafor nadomestne slike ne riše: klub brez grba ima v glavi
+ * `logo nologo` brez <img> (to ujame že `grbiTekme`). Pregled 7. 10. 2026
+ * (192 klubov 15 lig na roko, nato načrt za vseh 965 klubov) je našel en
+ * tak klub in nobene slike, ki bi si jo delilo več klubov; tudi
+ * `images_comet/Club/<id>_…` je pravi grb (Mladost Molve, Hrvatski
+ * Leskovac), ne nadomestek. To pravilo in `deljeniGrbi` sta varovalki, če
+ * COMET nadomestek kdaj uvede.
+ */
+export function jeNadomestniGrb(src) {
+  const u = String(src ?? '').trim()
+  if (!GRBI_COMET.test(u)) return true
+  return /(?:default|placeholder|no[-_]?logo|no[-_]?image|nema[-_]?grba|blank|empty)[^/]*$/i.test(u)
+}
+
+/**
+ * Izvirnik pomanjšanega grba: COMET hrani naloženo sliko, `_resized/…_80_80_wg`
+ * je izpeljanka. Drugih velikosti (`_256_256_wg` …) ni (404), izvirnik pa je
+ * 200–300 px. Vrne null, če naslov ni pomanjšana COMET-ova slika.
+ */
+export function izvirnikGrba(src) {
+  const u = String(src ?? '')
+  if (!GRBI_COMET.test(u)) return null
+  const m = u.match(/^(.*)\/_resized\/([^/]+?)_\d+_\d+_[a-z_]+(\.[a-z]+)$/i)
+  return m ? `${m[1]}/${m[2]}${m[3]}` : null
+}
+
+/**
+ * Ključi (naslov ali zgoščena vsebina), ki jih ima več RAZLIČNIH klubov —
+ * privzeta slika, ki jo COMET da klubu brez grba. Takega grba ne shranimo.
+ *
+ * @param {{ klub: unknown, kljuc: string }[]} pari
+ */
+export function deljeniGrbi(pari) {
+  const klubi = new Map()
+  for (const { klub, kljuc } of pari) {
+    if (!kljuc) continue
+    if (!klubi.has(kljuc)) klubi.set(kljuc, new Set())
+    klubi.get(kljuc).add(klub)
+  }
+  return new Set([...klubi].filter(([, k]) => k.size > 1).map(([kljuc]) => kljuc))
+}
+
 /** Nastopi s šifro osebe — igralca prepoznamo po njej, ne po imenu. */
 export function nastopi(z) {
   return skupniNastopi(z).map((n) => {
