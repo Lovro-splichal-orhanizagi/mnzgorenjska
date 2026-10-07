@@ -70,12 +70,14 @@ async function stran(url) {
   return o.text()
 }
 
-// `sips` je macOS, `convert` (ImageMagick) GitHub Actions; brez obeh ostane
-// izvirnik (pri Semaforju največ ~300 px, torej sprejemljivo).
+// `sips` je macOS, `magick`/`convert` (ImageMagick 7/6) GitHub Actions — tam ga
+// namesti grbi.yml, ker ga slike ubuntu-latest nimajo več. Prvi zagon 8. 10.
+// je zato pustil izvirnike (do 826 px).
 const manjka = new Set()
 function zmanjsaj(pot) {
   const orodja = [
     ['sips', ['--resampleHeightWidthMax', String(NAJVECJA_STRANICA), pot]],
+    ['magick', [pot, '-resize', `${NAJVECJA_STRANICA}x${NAJVECJA_STRANICA}>`, pot]],
     ['convert', [pot, '-resize', `${NAJVECJA_STRANICA}x${NAJVECJA_STRANICA}>`, pot]],
   ].filter(([ukaz]) => !manjka.has(ukaz))
   for (const [ukaz, a] of orodja) {

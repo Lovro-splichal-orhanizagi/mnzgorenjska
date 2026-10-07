@@ -59,6 +59,8 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci --ignore-scripts
+      # Za pomanjšanje grbov (sips je le na macOS); ubuntu-latest ga nima več.
+      - run: command -v convert || command -v magick || (sudo apt-get update -qq && sudo apt-get install -y -qq imagemagick)
       - name: Prenesi grbe in zapisi logo_url
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
