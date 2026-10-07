@@ -21,6 +21,13 @@ api.slff.eu {
 	}
 }
 
+# Umami dashboard. Proxied A record `stats` in Cloudflare; the origin cert must cover it
+# (it is *.slff.eu if `openssl x509 -in /etc/caddy/certs/slff-origin.pem -noout -ext subjectAltName` says so).
+stats.slff.eu {
+	import origin_tls
+	reverse_proxy localhost:3100
+}
+
 # Website: a 1:1 port of vercel.json. CI rsyncs dist/ to /srv/slff/releases/<sha> and moves `current`.
 slff.eu, www.slff.eu {
 	import origin_tls
@@ -55,6 +62,18 @@ slff.eu, www.slff.eu {
 	}
 	redir @pivo_vir https://buymeacoffee.com/slff?utm_source=slff&utm_medium={query.src} 302
 	redir /pivo https://buymeacoffee.com/slff?utm_source=slff 302
+
+	# Umami (statistika obiska) first-party: only the script and the collect endpoint,
+	# never the dashboard (that is stats.slff.eu). src/lib/analitika.ts loads /u/s.js.
+	@umami path /u/s.js /u/api/send
+	handle @umami {
+		uri strip_prefix /u
+		# The site block already sends Access-Control-Allow-Origin *; a second copy from
+		# Umami would make two values and the app (capacitor://localhost) would fail CORS.
+		reverse_proxy localhost:3100 {
+			header_down -Access-Control-Allow-Origin
+		}
+	}
 
 	# Was api/drzava.ts on Vercel Edge: the visitor's country, from Cloudflare.
 	handle /api/drzava {

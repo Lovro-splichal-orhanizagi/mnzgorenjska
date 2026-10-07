@@ -248,6 +248,8 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+          # Umami website id (stats.slff.eu); empty = no analytics script in the build.
+          VITE_UMAMI_ID: ${{ vars.VITE_UMAMI_ID }}
         run: |
           test -n "$VITE_SUPABASE_URL" && test -n "$VITE_SUPABASE_ANON_KEY"
           npm run build

@@ -7,6 +7,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { t } from '../i18n'
 import { jeNativno } from '../lib/platforma'
+import { dogodek } from '../lib/analitika'
 
 function znaDelitiSliko(): boolean {
   try {
@@ -70,6 +71,7 @@ export default function DeliSliko({
   }, [kljuc, delitevSlike])
 
   async function deliPovezavo() {
+    dogodek('deli', { kaj: 'povezava' })
     if (navigator.share) {
       try {
         await navigator.share({ title: t('lestvice.deliSliko.naslov', { naslov }), text: besedilo, url: povezava })
@@ -101,6 +103,7 @@ export default function DeliSliko({
       setSporocilo(t('lestvice.deliSliko.niPripravljena'))
       return
     }
+    dogodek('deli', { kaj: 'slika' })
     const datoteka = new File([blob], imeSlike, { type: 'image/png' })
     try {
       // Povezava gre v besedilo: ob sliki jo aplikacije (WhatsApp) obdržijo,

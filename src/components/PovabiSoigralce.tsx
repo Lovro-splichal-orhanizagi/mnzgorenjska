@@ -5,6 +5,7 @@ import { useAuth } from '../lib/useAuth'
 import { besediloVabila, deliVabilo, povezaveDeljenja, privzetoImeLige } from '../lib/miniLige'
 import { t } from '../i18n'
 import { izvor } from '../lib/platforma'
+import { dogodek } from '../lib/analitika'
 
 interface Liga {
   id: number
@@ -86,6 +87,7 @@ export default function PovabiSoigralce({
         setDela(false)
         return setSporocilo(error.message)
       }
+      dogodek('mini_liga_ustvarjena', { vir: 'povabi' })
       const nova = Array.isArray(data) ? data[0] : data
       l = { id: nova?.id as number, name: ime, code: nova?.code as string }
       setLiga(l)
