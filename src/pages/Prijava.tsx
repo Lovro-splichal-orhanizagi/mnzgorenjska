@@ -10,6 +10,7 @@ import { JEZIK_DRZAVE } from '../lib/drzava'
 import { Browser } from '@capacitor/browser'
 import { Capacitor } from '@capacitor/core'
 import { izvor, jeNativno, SHEMA } from '../lib/platforma'
+import { dogodek } from '../lib/analitika'
 
 type Nacin = 'prijava' | 'registracija' | 'pozabljeno'
 
@@ -45,6 +46,7 @@ export default function Prijava() {
   // brskalnik, vrnitev na `eu.slff.app://auth` sejo preda NativnePovezave.
   async function zPonudnikom(provider: 'google' | 'apple') {
     setNapaka(null)
+    dogodek('prijava_ponudnik', { ponudnik: provider })
     const nativno = jeNativno()
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider,
@@ -98,8 +100,10 @@ export default function Prijava() {
 
     setPosiljam(false)
     if (error) return setNapaka(napakaPrijave(error.message))
-    if (nacin === 'registracija')
+    if (nacin === 'registracija') {
+      dogodek('registracija', { nacin: 'eposta' })
       return setSporocilo(t('racun.prijava.racunUstvarjen'))
+    }
     navigate(nazaj)
   }
 

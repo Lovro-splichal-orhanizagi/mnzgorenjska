@@ -6,9 +6,11 @@ import './index.css'
 import { jezik, t } from './i18n'
 import { pripraviNativno } from './lib/platforma'
 import { pripraviOta } from './lib/ota'
+import { pripraviAnalitiko } from './lib/analitika'
 
 pripraviNativno()
 pripraviOta()
+pripraviAnalitiko()
 
 // index.html je slovenski (to vidijo iskalniki brez JS in kartice ob
 // deljenju). Drug jezik zamenja le jezik dokumenta in opis; slovenska stran

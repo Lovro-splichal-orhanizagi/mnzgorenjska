@@ -6,6 +6,8 @@
 interface ImportMetaEnv {
   readonly VITE_SUPABASE_URL: string
   readonly VITE_SUPABASE_ANON_KEY: string
+  /** Umami (statistika obiska); brez njega se skripta ne naloži. */
+  readonly VITE_UMAMI_ID?: string
 }
 
 interface ImportMeta {

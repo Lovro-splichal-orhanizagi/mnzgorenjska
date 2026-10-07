@@ -17,6 +17,7 @@ import {
 import DeliMiniLigo from '../components/DeliMiniLigo'
 import TedenskiPregled from '../components/TedenskiPregled'
 import { t, tx } from '../i18n'
+import { dogodek } from '../lib/analitika'
 
 const MEDALJE = ['🥇', '🥈', '🥉']
 
@@ -185,6 +186,7 @@ export default function MiniLige() {
     })
     setDela(false)
     if (error) return setNapaka(error.message)
+    dogodek('mini_liga_ustvarjena')
     const nova = Array.isArray(data) ? data[0] : data
     setImeNove('')
     setSporocilo(t('lestvice.miniLige.ustvarjena', { ime, koda: String(nova?.code) }))
@@ -208,6 +210,7 @@ export default function MiniLige() {
     })
     setDela(false)
     if (error) return setNapaka(error.message)
+    dogodek('mini_liga_pridruzitev', { vir: 'koda' })
     const izid = Array.isArray(data) ? data[0] : data
     setKoda('')
     // "Pridruzen." ob ekipi, ki je bila clan ze prej, je potrditev brez

@@ -370,6 +370,68 @@ Goal: nothing runs on Supabase Cloud, Vercel or Resend; everything is ours (VM +
 | Google Fonts | optional: self-host the font files |
 | Firebase FCM, GitHub (+Actions, iOS builds), Cloudflare, Discord | **stay**: push can't be self-hosted, iOS builds need macOS, Cloudflare is our edge |
 
+## 6c. Umami (statistika obiska, added 2026-10-07)
+
+Cookieless page views and a few events (`src/lib/analitika.ts`), on the VM.
+- **Dashboard:** `stats.slff.eu`.
+- **Script and collect endpoint:** first-party at `slff.eu/u/s.js` and `/u/api/send`, so ad blockers don't drop them.
+- **Data:** its own database `umami` in `supabase-db` (role `umami`).
+- **Memory:** one Node container, capped at 400 MB.
+
+The app is a no-op until the GitHub var `VITE_UMAMI_ID` exists.
+
+**One-time setup:**
+
+1. **Database role and database** (password into `/opt/umami/.env`, not git):
+   ```bash
+   P=$(openssl rand -hex 24)
+   ssh slff "docker exec -i supabase-db psql -U supabase_admin -d postgres" <<SQL
+   create role umami login password '$P';
+   create database umami owner umami;
+   SQL
+   ```
+2. **Service:**
+   - Files:
+     - Copy `scripts/hetzner/umami/docker-compose.yml` to `/opt/umami/`.
+     - Create `/opt/umami/.env` (chmod 600) with:
+       - `UMAMI_DB_PASS=$P`
+       - `UMAMI_APP_SECRET=$(openssl rand -hex 32)`
+       - `UMAMI_2FA_KEY=$(openssl rand -hex 32)`
+   - Check the network name with `docker network ls` (expected `supabase_default`).
+   - Run `docker compose up -d`, then `curl localhost:3100/api/heartbeat`.
+3. **Change the default login before anything is public.** Umami ships with `admin` / `umami`.
+   - Open it over a tunnel: `ssh -L 3100:127.0.0.1:3100 slff`, then http://localhost:3100.
+   - Set a long password (Keychain "stats.slff.eu"), and turn on 2FA.
+   - Add website `slff.eu` and copy its **Website ID**.
+4. **Cloudflare DNS:** proxied A record `stats` → `2.31.6.53`.
+   - Check that the origin cert covers `*.slff.eu`:
+     `openssl x509 -in /etc/caddy/certs/slff-origin.pem -noout -ext subjectAltName`
+   - If it doesn't, issue a new origin cert for `slff.eu, *.slff.eu`.
+5. **Caddy:**
+   - Copy `scripts/hetzner/Caddyfile` → `/etc/caddy/Caddyfile`.
+   - Run `caddy validate`, then `systemctl reload caddy`.
+   - Test that `curl -s https://slff.eu/u/s.js | head -c 80` returns JS.
+6. **App:**
+   - Set the GitHub var: `gh variable set VITE_UMAMI_ID --body <website id>`.
+   - The next deploy carries the script.
+   - The apps get it via OTA.
+
+**Events:**
+- `prazna_ekipa`, `predlog`, `prva_shramba` and `sestavi_iz_maila`: funnel steps (also counted in `lijak_dnevno`).
+- `pivo`.
+- `registracija`.
+- `prijava_ponudnik` {ponudnik}.
+- `mini_liga_ustvarjena` {vir}.
+- `mini_liga_pridruzitev` {vir}.
+- `deli` {kaj}.
+
+**URL cleanup:**
+- Only `t`, `utm_*` and `src` survive in URLs (`/auth/confirm` carries `token_hash`).
+- Ids in `/player`, `/match`, `/club`, `/team` and `/l` become `:id`.
+- "Do Not Track" turns it off.
+
+**Backups:** only Hetzner's daily VM backup covers it; `varnostna.sh` dumps `postgres` only. Losing analytics is acceptable.
+
 ## 7. Open items
 - Read the Supabase auth config (SMTP, templates, JWT expiry) via the Management API (P1).
 - A Hetzner Storage Box for backups: do we have one?

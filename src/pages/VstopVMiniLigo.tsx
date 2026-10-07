@@ -12,6 +12,7 @@ import {
   shraniVabilo,
 } from '../lib/miniLige'
 import { t, tx } from '../i18n'
+import { dogodek } from '../lib/analitika'
 
 interface Liga {
   id: number
@@ -117,6 +118,7 @@ export default function VstopVMiniLigo() {
     })
     setDela(false)
     if (error) return setNapaka(error.message)
+    dogodek('mini_liga_pridruzitev', { vir: 'povezava' })
     const izid = Array.isArray(data) ? data[0] : data
     pozabiVabilo()
     navigate(`/mini-leagues?liga=${izid?.mini_liga_id ?? ''}&vstop=${izid?.dodano ? 'nov' : 'ze'}`)

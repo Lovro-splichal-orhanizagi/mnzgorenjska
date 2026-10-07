@@ -1,0 +1,36 @@
+# Umami (statistika obiska) on the VM: /opt/umami/docker-compose.yml + /opt/umami/.env.
+# Data lives in its own database `umami` in supabase-db (role `umami`), so no
+# second Postgres and the same Hetzner VM backups. Setup: docs/migracija-hetzner.md, "Umami".
+#   cd /opt/umami && docker compose up -d
+services:
+  umami:
+    image: ghcr.io/umami-software/umami:3.4.0
+    container_name: umami
+    restart: unless-stopped
+    init: true
+    # Caddy proxies stats.slff.eu (dashboard) and slff.eu/u/ (script + collect) here.
+    ports:
+      - 127.0.0.1:3100:3000
+    # supabase-db listens only on the host's 127.0.0.1, so join its network and use `db`.
+    networks: [supabase]
+    environment:
+      DATABASE_URL: postgresql://umami:${UMAMI_DB_PASS}@db:5432/umami
+      APP_SECRET: ${UMAMI_APP_SECRET}
+      TWO_FACTOR_ENCRYPTION_KEY: ${UMAMI_2FA_KEY}
+      # Behind Cloudflare -> Caddy: the visitor is CF-Connecting-IP (used only for the
+      # daily-salted session hash and the country, never stored).
+      CLIENT_IP_HEADER: cf-connecting-ip
+      # Neutral names, so ad blockers don't drop the first-party script (slff.eu/u/s.js).
+      TRACKER_SCRIPT_NAME: s.js
+      DISABLE_TELEMETRY: 1
+    mem_limit: 400m
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:3000/api/heartbeat || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  supabase:
+    external: true
+    name: supabase_default  # check: docker network ls (project name of /opt/supabase)

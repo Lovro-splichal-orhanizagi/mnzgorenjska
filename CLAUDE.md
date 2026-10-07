@@ -403,6 +403,10 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   **Nova stran se ne šteje sama**: dodaj jo v `PO_POTI`/`PO_PREDPONI` in v
   seznam v `zabelezi_obisk()`, sicer se zapis tiho zavrže. Oboje skupaj kaže
   razdelek *Kje ljudje obtičijo* v adminu (`src/components/admin/Lijak.tsx`)
+- **Statistika obiska** je Umami na strežniku (`src/lib/analitika.ts`, `stats.slff.eu`, nastavitev v
+  `docs/migracija-hetzner.md` 6c): brez piškotkov, ogledi strani in nekaj dogodkov
+  (`dogodek('ime', {…})`). Vsak korak `zabeleziKorak` gre tudi tja. Nov dogodek naj nima
+  podatkov o uporabniku; parametri iz naslova se počistijo (ostanejo `t`, `utm_*`, `src`)
 - `push_tokens` → žeton FCM naprave mobilne aplikacije (ključ je žeton, ob
   prijavi drugega uporabnika na isti napravi se preseli). Vpiše ga le
   `shrani_push_zeton`, bere servis: `posli-opomnik` pošlje isto sporočilo še
