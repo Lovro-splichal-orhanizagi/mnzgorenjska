@@ -48,10 +48,12 @@ const pisi = process.argv.includes('--pisi')
 const vsePozicije = process.argv.includes('--vse-pozicije')
 // Vir: sportnet (pozicija v zapisniku) ali hns (zapisnik označi le vratarja).
 // Pri hns glasove da baza: `appearances.is_goalkeeper` na vsaki tekmi. Uvoz ga
-// polni šele od 8. 10. 2026; starejše vrstice so vse `false` in bi prave
-// vratarje prestavile v polje, zato štejemo le tekme, uvožene od takrat.
+// polni od združitve #93 (7. 10. 2026 21:06 UTC); starejše vrstice so vse
+// `false` in bi prave vratarje prestavile v polje, zato štejemo le tekme,
+// uvožene od takrat. (Prej '2026-10-08' = polnoč UTC: izpustilo bi ponovni
+// uvoz hrvaških lig, ki je tekel 7. 10. zvečer.)
 const VIR = arg('vir') ?? 'sportnet'
-const OZNAKA_VRATARJA_OD = '2026-10-08'
+const OZNAKA_VRATARJA_OD = '2026-10-07T21:07:00Z'
 const samo = arg('tekmovanje')
 
 const env = izEnv()
