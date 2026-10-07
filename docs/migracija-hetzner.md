@@ -198,8 +198,9 @@ takes about 1 minute and works at any time.
   tables matched; `api.slff.eu` → `localhost:8000` (self-hosted). Real traffic was all
   200/204 on the VM within a minute. Logins carry over: tested with a Cloud-issued access
   token and a Cloud refresh token on the VM before the switch.
-  - **Cloud is frozen for the app, not entirely:** pg_cron is paused and the role
-    `authenticator` (PostgREST) has `default_transaction_read_only=on`. A read-only
+  - **Cloud freeze (corrected 2026-10-07):** pg_cron is paused and API roles have no USAGE
+    on schema public (see INCIDENT below; the earlier `authenticator` read-only setting did
+    not stop writes). A read-only
     *database* blocks the CLI's own login role, so no dump would be possible. Supabase
     reserves `supabase_auth_admin`, so Cloud GoTrue can still write logins. Only stale
     clients still calling supabase.co reach it.
@@ -230,6 +231,23 @@ takes about 1 minute and works at any time.
   - Uptime: `.github/workflows/zivost.yml` checks slff.eu, auth and rest every 10 min and
     alerts Discord.
   - Old data dirs on the VM: `/opt/supabase/volumes/db/data.old-*` (rehearsals). Delete after a week.
+- **INCIDENT 2026-10-06 21:19 → 2026-10-07 07:10 UTC (split brain, ~10 h).** While adding
+  the `/pivo` redirect, the repo's `scripts/hetzner/Caddyfile` was copied to the VM. It still
+  had the P2 line (`api.slff.eu` → Supabase Cloud), so all API traffic went to Cloud again.
+  The Cloud "freeze" (`default_transaction_read_only` on `authenticator`) did **not** stop
+  PostgREST writes. Overnight user changes and Nejc's Croatian imports (~131k appearances)
+  therefore landed on Cloud, not the VM.
+  - Fixed: Caddyfile in the repo now points at `localhost:8000` (with a warning comment).
+    Cloud is really frozen with `revoke usage on schema public from public, anon,
+    authenticated, service_role`; API reads and writes are denied, `postgres` can still dump.
+    A second cutover (`preklop.sh ZARES`, 389 s, all 65 tables match) brought Cloud's data
+    over. VM-only logins (exported to `/opt/slff/vm-delta/`) were re-applied, the night jobs
+    rerun, and `preizkus-tock-krogov` / `preizkus-statistike` pass.
+  - Lost: VM data from 07:10–07:20 (no game writes; the import `hr-ob-prva-znl-ob` was
+    cancelled → rerun). Night-job results are recomputed.
+  - The script now freezes with the schema revoke and re-grants on the VM after the restore.
+  - **Rule:** before copying any config to the VM, diff it against the live file
+    (`ssh slff cat /etc/caddy/Caddyfile | diff - scripts/hetzner/Caddyfile`).
 - `src/lib/supabase.ts` pins `storageKey` (P2 trap 2). It is a no-op until the URL changes.
 - Still empty in secrets.env: Firebase, Discord webhook, Google and Apple secrets.
   `RESEND_API_KEY` is no longer needed.
