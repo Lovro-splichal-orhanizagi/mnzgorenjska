@@ -5,6 +5,8 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
   krog: '{n}. kolo',
   mesto: '{mesto}. miesto',
   odEkip: { one: 'z {n} tímu', few: 'z {n} tímov', many: 'z {n} tímu', other: 'z {n} tímov' },
+  pokaziVec: 'Zobraziť viac ({n})',
+  mojeMesto: 'Moje miesto ↓',
 
   lestvica: {
     naslov: 'Tabuľka',
@@ -50,6 +52,7 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     povprecjeKroga: 'Ø {n}. kolo',
     navijaci: 'Fanúšikovia',
     tvojKlub: 'tvoj klub',
+    stranKluba: 'Stránka klubu →',
     premalo: 'Málo fanúšikov',
     brezNavijacev: 'Zatiaľ bez fanúšikov: {klubi}',
     prazno: 'V tejto lige si zatiaľ nikto nevybral svoj klub. Buď prvý!',
@@ -130,6 +133,7 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     ustvari: 'Vytvoriť',
     imeLige: 'Názov mini ligy',
     ustvariLigo: 'Vytvoriť mini ligu',
+    novaAliKoda: 'Nová mini liga alebo pripojenie kódom',
     pridruziSe: 'Pridať sa',
     koda: 'Kód ({n} znakov)',
     nisiVNobeni: 'Zatiaľ nie si v žiadnej mini lige. Kto je lepší manažér — ty alebo tvoja partia?',

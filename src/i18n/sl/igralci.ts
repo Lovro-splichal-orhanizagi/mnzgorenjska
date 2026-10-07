@@ -163,6 +163,8 @@ export const igralci = {
     znanoPoRoku: 'Znano bo po prvem roku',
     pokaziVec: 'Pokaži več ({n})',
     prikazaniVsi: 'Prikazani so vsi ({igralci}).',
+    razvrsti: 'Razvrsti',
+    razvrstiPo: 'Razvrsti po: {stolpec}',
   },
   profil: {
     naslov: 'Igralec',

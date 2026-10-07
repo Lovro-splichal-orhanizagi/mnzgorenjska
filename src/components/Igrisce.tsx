@@ -3,8 +3,9 @@
 // rezervni igralci.
 //
 // Mere so mobile-first: na telefonu mora vrsta petih branilcev ostati v eni
-// vrstici (5 × 3.4rem + razmiki gredo v 360 px), zato so kartice majhne in se
-// od `sm` navzgor povečajo.
+// vrstici. Pri 360 px ostane za vrsto 312 px (main px-4, igrišče p-2), zato je
+// kartica največ (100vw − 3rem − 4 razmiki) / 5 = 20vw − 1.1rem; vzamemo
+// 1.25rem za rezervo pri zaokroževanju. Od `sm` navzgor se poveča.
 import { POZICIJE, VRSTNI_RED } from '../lib/pravila'
 import {
   KRATKA_POZICIJA,
@@ -37,10 +38,12 @@ function KarticaIgralca({
   naOdstrani,
   zatemnjen,
   premik,
+  naInfo,
 }: {
   igralec: IgralecNaIgriscu
   naKlik: () => void
   naOdstrani: () => void
+  naInfo?: () => void
   zatemnjen?: boolean
   /** Na klopi: premik v vrstnem redu menjav (null = na robu). */
   premik?: { gor: (() => void) | null; dol: (() => void) | null }
@@ -48,7 +51,7 @@ function KarticaIgralca({
   const ime = prikazniIme(igralec.full_name)
   return (
     <div
-      className={`group relative w-[3.4rem] text-center sm:w-[4.75rem] ${
+      className={`group relative w-[min(3.9rem,calc(20vw-1.25rem))] text-center sm:w-[4.75rem] ${
         zatemnjen ? 'opacity-70' : ''
       }`}
     >
@@ -67,7 +70,7 @@ function KarticaIgralca({
         <div className="flex justify-center">
           <Dres pozicija={igralec.position} razred="h-7 w-8 sm:h-9 sm:w-10" />
         </div>
-        <div className="mt-0.5 truncate rounded-t-md bg-slate-900/90 px-1 py-0.5 text-[10px] font-semibold leading-tight sm:text-[11px]">
+        <div className="mt-0.5 truncate rounded-t-md bg-slate-900/90 px-1 py-0.5 text-[11px] font-semibold leading-tight">
           {ime.split(' ').slice(-1)[0]}
         </div>
         {igralec.active === false && (
@@ -147,17 +150,32 @@ function KarticaIgralca({
         onClick={naOdstrani}
         title={t('mojaEkipa.igrisce.odstraniIzKadra')}
         aria-label={t('mojaEkipa.igrisce.odstrani', { ime })}
-        className="absolute -bottom-3 -right-3 flex h-9 w-9 items-center justify-center
+        className="absolute -bottom-2 -right-2 flex h-8 w-8 items-center justify-center
                    text-slate-300 hover:text-rose-400 focus-visible:flex lg:hidden lg:group-hover:flex"
       >
         <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-900/90 text-[10px] ring-1 ring-white/20">
           ✕
         </span>
       </button>
+      {/* Podatki o igralcu — spodaj levo, ker je zgoraj levo trak kapetana.
+          Ne sega čez rob kartice, da ne prekrije ✕ soseda na levi. */}
+      {naInfo && (
+        <button
+          onClick={naInfo}
+          aria-label={t('mojaEkipa.trg.podatki', { ime })}
+          title={t('mojaEkipa.trg.podatkiNamig')}
+          className="absolute -bottom-2 left-0 flex h-8 w-8 items-center justify-start
+                     text-slate-300 hover:text-white focus-visible:flex lg:hidden lg:group-hover:flex"
+        >
+          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-900/90 text-[10px] font-bold ring-1 ring-white/20">
+            i
+          </span>
+        </button>
+      )}
       </div>
 
-      {/* mt-3 = točno toliko, kolikor ✕ (-bottom-3) sega pod dres: se ne
-          prekrivata; z-20 pa puščici za vsak primer ostaneta na vrhu. */}
+      {/* mt-3 je več, kot ✕ (-bottom-2) sega pod dres: se ne prekrivata;
+          z-20 pa puščici za vsak primer ostaneta na vrhu. */}
       {premik && (
         <div className="relative z-20 mt-3 flex justify-center gap-1">
           <button
@@ -165,7 +183,7 @@ function KarticaIgralca({
             disabled={!premik.gor}
             aria-label={t('mojaEkipa.igrisce.prejIme', { ime })}
             title={t('mojaEkipa.igrisce.prej')}
-            className="h-7 w-7 rounded-md bg-white/10 text-xs text-slate-200 hover:bg-white/20 disabled:opacity-30"
+            className="h-9 min-w-0 flex-1 rounded-md bg-white/10 text-sm text-slate-200 hover:bg-white/20 disabled:opacity-30"
           >
             ←
           </button>
@@ -174,7 +192,7 @@ function KarticaIgralca({
             disabled={!premik.dol}
             aria-label={t('mojaEkipa.igrisce.poznejeIme', { ime })}
             title={t('mojaEkipa.igrisce.pozneje')}
-            className="h-7 w-7 rounded-md bg-white/10 text-xs text-slate-200 hover:bg-white/20 disabled:opacity-30"
+            className="h-9 min-w-0 flex-1 rounded-md bg-white/10 text-sm text-slate-200 hover:bg-white/20 disabled:opacity-30"
           >
             →
           </button>
@@ -197,7 +215,7 @@ function PraznoMesto({
       title={t('mojaEkipa.igrisce.izberi', {
         pozicija: POZICIJE[pozicija].naslov.toLowerCase(),
       })}
-      className="flex h-[3.6rem] w-[3.4rem] flex-col items-center justify-center gap-0.5
+      className="flex h-[3.6rem] w-[min(3.9rem,calc(20vw-1.25rem))] flex-col items-center justify-center gap-0.5
                  rounded-lg border-2 border-dashed border-white/25 text-white/60
                  transition active:scale-95 hover:border-gnl-300 hover:bg-white/10
                  hover:text-white sm:h-[4.6rem] sm:w-[4.75rem] sm:gap-1"
@@ -211,7 +229,7 @@ function PraznoMesto({
 }
 
 const Vrsta = ({ children }: { children: ReactNode }) => (
-  <div className="flex flex-wrap items-start justify-center gap-1.5 sm:gap-3">
+  <div className="flex flex-wrap items-start justify-center gap-2.5 sm:gap-3">
     {children}
   </div>
 )
@@ -222,6 +240,7 @@ export default function Igrisce({
   naOdstrani,
   naPraznoMesto,
   naPremakniKlop,
+  naInfo,
 }: {
   izbrani: IgralecNaIgriscu[]
   naPreklopPrvo: (i: IgralecNaIgriscu) => void
@@ -229,6 +248,8 @@ export default function Igrisce({
   naPraznoMesto: (p: Pozicija) => void
   /** Vrstni red klopi; brez njega se klop ne da preurejati. */
   naPremakniKlop?: (i: IgralecNaIgriscu, smer: -1 | 1) => void
+  /** Podatki o igralcu (statistika, cena) brez zapuščanja strani. */
+  naInfo?: (i: IgralecNaIgriscu) => void
 }) {
   const prvi = izbrani.filter((i) => i.is_starter && i.position)
   const klop = izbrani.filter((i) => !i.is_starter && i.position)
@@ -269,6 +290,7 @@ export default function Igrisce({
                     igralec={i}
                     naKlik={() => naPreklopPrvo(i)}
                     naOdstrani={() => naOdstrani(i)}
+                    naInfo={naInfo && (() => naInfo(i))}
                   />
                 ))}
               {Array.from({ length: naIgriscu[koda] }, (_, n) => (
@@ -295,6 +317,7 @@ export default function Igrisce({
               zatemnjen
               naKlik={() => naPreklopPrvo(i)}
               naOdstrani={() => naOdstrani(i)}
+              naInfo={naInfo && (() => naInfo(i))}
               premik={
                 naPremakniKlop && klop.length > 1
                   ? {
@@ -330,6 +353,7 @@ export default function Igrisce({
                 zatemnjen
                 naKlik={() => naPreklopPrvo(i)}
                 naOdstrani={() => naOdstrani(i)}
+                naInfo={naInfo && (() => naInfo(i))}
               />
             ))}
           </Vrsta>

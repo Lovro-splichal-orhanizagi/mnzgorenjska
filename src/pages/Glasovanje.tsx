@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNastavitev } from '../lib/nastavitve'
 import { imeZveze } from '../components/VirPodatkov'
 import { Link, useLocation } from 'react-router-dom'
@@ -44,6 +44,8 @@ export default function Glasovanje() {
   const [nalaganje, setNalaganje] = useState(true)
   const [napaka, setNapaka] = useState<string | null>(null)
   const [pravkarOddan, setPravkarOddan] = useState<number | null>(null)
+  // Na telefonu so goli pod seznamom tekem — ob izbiri tekme skočimo k njim.
+  const izbranaTekma = useRef<HTMLDivElement>(null)
 
   // Vse odigrane tekme naenkrat — samo TEKOČA sezona. Lanska liga ni bila
   // fantasy-aktivna, zato bi glasovanje o lanskih asistencah bilo brez smisla.
@@ -330,6 +332,21 @@ export default function Glasovanje() {
         </p>
       )}
 
+      {!session && (
+        <p className="kartica border-amber-400/30 bg-amber-400/10 p-3 text-sm text-amber-200">
+          {tx('tekme.moraPrijava', {}, {
+            prijava: (v) => (
+              <Link
+                to={povezavaNaPrijavo(lokacija.pathname + lokacija.search)}
+                className="font-semibold underline hover:text-amber-100"
+              >
+                {v}
+              </Link>
+            ),
+          })}
+        </p>
+      )}
+
       {/* 1. korak: krog */}
       <div data-pomoc="krogi" className="space-y-2">
         <h2 className="text-xs font-bold uppercase tracking-wide text-slate-400">
@@ -372,7 +389,10 @@ export default function Glasovanje() {
           {tekmeVKrogu.map((tk) => (
             <li key={tk.match_id}>
               <button
-                onClick={() => setTekmaId(tk.match_id)}
+                onClick={() => {
+                  setTekmaId(tk.match_id)
+                  izbranaTekma.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                }}
                 className={`flex w-full items-center gap-2 rounded-2xl p-2.5 text-left transition ${
                   tekmaId === tk.match_id
                     ? 'bg-gnl-500/15 ring-1 ring-gnl-400/50'
@@ -402,23 +422,10 @@ export default function Glasovanje() {
         </ul>
       </div>
 
-      {!session && (
-        <p className="kartica border-amber-400/30 bg-amber-400/10 p-3 text-sm text-amber-200">
-          {tx('tekme.moraPrijava', {}, {
-            prijava: (v) => (
-              <Link
-                to={povezavaNaPrijavo(lokacija.pathname + lokacija.search)}
-                className="font-semibold underline hover:text-amber-100"
-              >
-                {v}
-              </Link>
-            ),
-          })}
-        </p>
-      )}
-
       {tekma && (
-        <div className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-b from-gnl-800/50 to-slate-900/50 p-3 text-center ring-1 ring-white/10 sm:gap-4 sm:p-5">
+        <div
+          ref={izbranaTekma}
+          className="flex scroll-mt-24 items-center justify-center gap-2 rounded-2xl bg-gradient-to-b from-gnl-800/50 to-slate-900/50 p-3 text-center ring-1 ring-white/10 sm:gap-4 sm:p-5">
           <Grb ime={tekma.home_name} kratko={tekma.home_short} logo={tekma.home_logo} velikost={32} />
           <span className="min-w-0 flex-1 text-right text-sm font-bold sm:text-base">
             {tekma.home_name}
@@ -480,7 +487,24 @@ export default function Glasovanje() {
         </>
       )}
 
-      {napaka && <p className="text-sm text-rose-400">{t('skupno.napaka', { sporocilo: napaka })}</p>}
+      {/* Napaka glasu se pokaže ob robu zaslona, ne na dnu dolge strani. */}
+      {napaka && (
+        <div
+          role="alert"
+          className="fixed inset-x-4 z-50 mx-auto flex max-w-md items-start gap-3 rounded-xl bg-rose-950/95 p-3 text-sm text-rose-200 shadow-xl ring-1 ring-rose-400/40"
+          style={{ bottom: 'calc(1rem + var(--dno))' }}
+        >
+          <p className="flex-1">{t('skupno.napaka', { sporocilo: napaka })}</p>
+          <button
+            type="button"
+            onClick={() => setNapaka(null)}
+            aria-label={t('skupno.zapri')}
+            className="-m-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg"
+          >
+            ✕
+          </button>
+        </div>
+      )}
     </div>
   )
 }

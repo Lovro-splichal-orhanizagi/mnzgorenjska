@@ -473,20 +473,20 @@ export default function Igralec() {
 
   return (
     <div className="space-y-5">
-      <Link to={`/players${vLigo}`} className="text-sm text-slate-400 hover:text-white">
+      <Link to={`/players${vLigo}`} className="inline-flex min-h-11 items-center text-sm text-slate-400 hover:text-white">
         {t('igralci.profil.vsiIgralci')}
       </Link>
 
       {/* glava */}
-      <div className="kartica flex flex-wrap items-center gap-4 p-4 sm:p-5">
-        <Grb
-          ime={igralec.team_name}
-          kratko={igralec.team_short}
-          logo={igralec.team_logo}
-          velikost={56}
-        />
+      <div className="kartica flex flex-wrap items-center gap-3 p-4 sm:gap-4 sm:p-5">
+        <span className="sm:hidden">
+          <Grb ime={igralec.team_name} kratko={igralec.team_short} logo={igralec.team_logo} velikost={40} />
+        </span>
+        <span className="hidden sm:block">
+          <Grb ime={igralec.team_name} kratko={igralec.team_short} logo={igralec.team_logo} velikost={56} />
+        </span>
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-2xl font-black naslov sm:text-3xl">
+          <h1 className="line-clamp-2 break-words text-xl font-black naslov sm:text-3xl">
             {prikazniIme(igralec.full_name)}
           </h1>
           <p className="text-sm text-slate-400">
@@ -538,43 +538,6 @@ export default function Igralec() {
           </p>
         )}
       </div>
-
-      {/* kartica za objavo — za igralca, starše in navijače */}
-      {(zadnjiNastop || (sezonsko && (sezonsko.matches ?? 0) > 0)) && (
-        <section className="kartica space-y-3 p-4">
-          <h2 className="text-sm font-bold text-slate-200">{t('igralci.profil.deliKartico')}</h2>
-          <KarticaIgralca
-            podatki={{
-              ime: igralec.first_name ?? '',
-              priimek: igralec.last_name ?? prikazniIme(igralec.full_name),
-              stevilka: igralec.shirt_number ?? null,
-              pozicija: igralec.position ?? null,
-              klub: igralec.team_name ?? '',
-              klubKratko: igralec.team_short ?? null,
-              grb: igralec.team_logo ?? null,
-              liga: tekmovanja.find((tm) => tm.id === igralec.competition_id)?.name ?? '',
-              krog: zadnjiNastop?.number ?? null,
-              tocke: zadnjiNastop ? zadnjiNastop.skupaj : Number(sezonsko?.points ?? 0),
-              dosezki: zadnjiNastop ? dosezkiNastopa(zadnjiNastop.nastop, igralec.position ?? null) : [],
-              nastop: zadnjiNastop?.nastop ?? null,
-              tekma: zadnjiNastop ? tekmaKartice : null,
-              sezona: sezonsko
-                ? {
-                    tocke: Number(sezonsko.points ?? 0),
-                    tekem: Number(sezonsko.matches ?? 0),
-                    golov: Number(sezonsko.goals ?? 0),
-                  }
-                : null,
-              ekip: ekipZIgralcem,
-            }}
-            povezava={
-              typeof window !== 'undefined'
-                ? `${izvor()}/igralec/${igralec.id}${slugLige ? `?t=${slugLige}` : ''}`
-                : ''
-            }
-          />
-        </section>
-      )}
 
       {/* pozicija — s hitrim glasovanjem, brez preskoka na /pozicije */}
       <section className="kartica space-y-3 p-4">
@@ -855,6 +818,44 @@ export default function Igralec() {
               )
             })}
           </ul>
+        </section>
+      )}
+
+      {/* kartica za objavo — za igralca, starše in navijače; pod statistiko,
+          da na telefonu ne odrine podatkov za cel zaslon */}
+      {(zadnjiNastop || (sezonsko && (sezonsko.matches ?? 0) > 0)) && (
+        <section className="kartica space-y-3 p-4">
+          <h2 className="text-sm font-bold text-slate-200">{t('igralci.profil.deliKartico')}</h2>
+          <KarticaIgralca
+            podatki={{
+              ime: igralec.first_name ?? '',
+              priimek: igralec.last_name ?? prikazniIme(igralec.full_name),
+              stevilka: igralec.shirt_number ?? null,
+              pozicija: igralec.position ?? null,
+              klub: igralec.team_name ?? '',
+              klubKratko: igralec.team_short ?? null,
+              grb: igralec.team_logo ?? null,
+              liga: tekmovanja.find((tm) => tm.id === igralec.competition_id)?.name ?? '',
+              krog: zadnjiNastop?.number ?? null,
+              tocke: zadnjiNastop ? zadnjiNastop.skupaj : Number(sezonsko?.points ?? 0),
+              dosezki: zadnjiNastop ? dosezkiNastopa(zadnjiNastop.nastop, igralec.position ?? null) : [],
+              nastop: zadnjiNastop?.nastop ?? null,
+              tekma: zadnjiNastop ? tekmaKartice : null,
+              sezona: sezonsko
+                ? {
+                    tocke: Number(sezonsko.points ?? 0),
+                    tekem: Number(sezonsko.matches ?? 0),
+                    golov: Number(sezonsko.goals ?? 0),
+                  }
+                : null,
+              ekip: ekipZIgralcem,
+            }}
+            povezava={
+              typeof window !== 'undefined'
+                ? `${izvor()}/igralec/${igralec.id}${slugLige ? `?t=${slugLige}` : ''}`
+                : ''
+            }
+          />
         </section>
       )}
 

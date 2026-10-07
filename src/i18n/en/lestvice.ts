@@ -9,6 +9,8 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
   mesto: '#{mesto}',
   /** "of 5 teams". */
   odEkip: { one: 'of {n} team', other: 'of {n} teams' },
+  pokaziVec: 'Show more ({n})',
+  mojeMesto: 'My position ↓',
 
   lestvica: {
     naslov: 'Standings',
@@ -51,6 +53,7 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     povprecjeKroga: 'Ø round {n}',
     navijaci: 'Fans',
     tvojKlub: 'your club',
+    stranKluba: 'Club page →',
     premalo: 'Not enough fans',
     brezNavijacev: 'No fans yet: {klubi}',
     prazno: 'Nobody in this league has picked their club yet. Be the first!',
@@ -127,6 +130,7 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     ustvari: 'Create',
     imeLige: 'Mini-league name',
     ustvariLigo: 'Create a mini-league',
+    novaAliKoda: 'New mini-league or join with a code',
     pridruziSe: 'Join',
     koda: 'Code ({n} characters)',
     nisiVNobeni: 'You’re not in any mini-league yet. Who’s the better manager — you or your mates?',

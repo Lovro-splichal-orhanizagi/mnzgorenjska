@@ -145,6 +145,8 @@ export default function ProsnjaZaPoznavalca({
           value={sporocilo}
           onChange={(e) => setSporocilo(e.target.value.slice(0, 500))}
           placeholder={t('igralci.poznavalec.oSebiPrimer')}
+          autoComplete="off"
+          autoCapitalize="sentences"
           className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-100"
         />
       </label>

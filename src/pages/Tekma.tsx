@@ -236,7 +236,7 @@ export default function Tekma() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <Link to="/results" className="text-sm text-slate-400 hover:text-gnl-300">
+        <Link to="/results" className="inline-flex min-h-11 items-center text-sm text-slate-400 hover:text-gnl-300">
           {t('tekme.tekma.nazaj')}
         </Link>
         <span className="text-sm text-slate-500">
@@ -247,14 +247,16 @@ export default function Tekma() {
 
       <div className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-b from-gnl-800/50 to-slate-900/50 p-3 text-center ring-1 ring-white/10 sm:gap-4 sm:p-5">
         <Grb ime={tekma.home_name} kratko={tekma.home_short} logo={tekma.home_logo} velikost={32} />
-        <span className="min-w-0 flex-1 text-right text-sm font-bold sm:text-base">
-          {tekma.home_name}
+        <span className="min-w-0 flex-1 break-words text-right text-sm font-bold sm:text-base">
+          <span className="sm:hidden">{tekma.home_short ?? tekma.home_name}</span>
+          <span className="hidden sm:inline">{tekma.home_name}</span>
         </span>
         <span className="rounded-xl bg-slate-950 px-3 py-2 text-xl font-black tabular-nums sm:px-4 sm:text-2xl">
           {tekma.home_goals} : {tekma.away_goals}
         </span>
-        <span className="min-w-0 flex-1 text-left text-sm font-bold sm:text-base">
-          {tekma.away_name}
+        <span className="min-w-0 flex-1 break-words text-left text-sm font-bold sm:text-base">
+          <span className="sm:hidden">{tekma.away_short ?? tekma.away_name}</span>
+          <span className="hidden sm:inline">{tekma.away_name}</span>
         </span>
         <Grb ime={tekma.away_name} kratko={tekma.away_short} logo={tekma.away_logo} velikost={32} />
       </div>

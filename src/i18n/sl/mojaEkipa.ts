@@ -234,6 +234,7 @@ export const mojaEkipa = {
     krogSezona: '{krog}. krog ({sezona})',
     vlozi: 'Vloži',
     vloziZa: 'Vloži za {krog}. krog',
+    potrdiWildcard: 'Vložiš Wildcard za {krog}. krog? Na sezono ga imaš le enkrat.',
   },
 
   zgodovina: {

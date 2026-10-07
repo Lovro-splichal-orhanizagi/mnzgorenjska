@@ -381,11 +381,13 @@ export default function Domov() {
 
   // Pred prvim krogom: datum začetka iz naslednjega kroga (tekma ali rok).
   const zacetekSezone = naslednjiKrog?.played_on ?? naslednjiKrog?.deadline_at ?? null
+  // Navodila in točkovanje sta na širšem zaslonu odprta, na telefonu zaprta.
+  const siroko = typeof window !== 'undefined' && Boolean(window.matchMedia?.('(min-width: 640px)').matches)
 
   return (
     <div className="space-y-10">
       {/* uvod */}
-      <section className="relative overflow-hidden rounded-3xl p-6 ring-1 ring-white/10 sm:p-8">
+      <section className="relative overflow-hidden rounded-3xl p-4 ring-1 ring-white/10 sm:p-8">
         {/* Amaterska tekma pod reflektorji — natanko to, o čemer je liga. */}
         <img
           src="/foto/igrisce.jpg"
@@ -402,7 +404,7 @@ export default function Domov() {
             <img
               src="/logo/slff-grb.png"
               alt={t('aplikacija.naslovStrani.osnova')}
-              className="h-24 w-24 drop-shadow-xl sm:h-32 sm:w-32"
+              className="h-16 w-16 drop-shadow-xl sm:h-32 sm:w-32"
             />
             <Pivo src="domov" />
           </div>
@@ -433,9 +435,27 @@ export default function Domov() {
           <p className="text-lg font-semibold text-gnl-300">
             {t('domov.uvod.geslo')}
           </p>
+          {/* Gumbi takoj pod geslom, da je poziv na telefonu nad pregibom;
+              stranski gumbi so tam ena vrstica, ki se drsa vstran. */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <Link to="/my-team" className="gumb-glavni w-full text-center sm:w-auto">
+              {t('domov.uvod.sestaviEkipo')}
+            </Link>
+            <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:gap-3 sm:overflow-visible sm:px-0 sm:pb-0">
+              <Link to="/assists" className="gumb-tih shrink-0 whitespace-nowrap">
+                {t('domov.uvod.glasuj')}
+              </Link>
+              <Link to="/results" className="gumb-tih shrink-0 whitespace-nowrap">
+                {t('domov.uvod.rezultati')}
+              </Link>
+              <Link to="/national?pogled=igralci" className="gumb-tih shrink-0 whitespace-nowrap">
+                <span aria-hidden>👑</span> {t('lestvice.slovenija.vrhNaslov')}
+              </Link>
+            </div>
+          </div>
           <p className="max-w-xl text-slate-300">{t('domov.uvod.opis', { zveza })}</p>
           {tekmovanja.length > 1 && (
-            <p className="text-sm text-slate-400">
+            <p className="hidden text-sm text-slate-400 sm:block">
               <span aria-hidden>👉</span>{' '}
               {tx('domov.uvod.vecLig', {}, { krepko: (b) => <strong>{b}</strong> })}
             </p>
@@ -466,20 +486,6 @@ export default function Domov() {
               })}
             </div>
           )}
-          <div className="flex flex-wrap gap-3 pt-2">
-            <Link to="/my-team" className="gumb-glavni">
-              {t('domov.uvod.sestaviEkipo')}
-            </Link>
-            <Link to="/assists" className="gumb-tih">
-              {t('domov.uvod.glasuj')}
-            </Link>
-            <Link to="/results" className="gumb-tih">
-              {t('domov.uvod.rezultati')}
-            </Link>
-            <Link to="/national?pogled=igralci" className="gumb-tih">
-              <span aria-hidden>👑</span> {t('lestvice.slovenija.vrhNaslov')}
-            </Link>
-          </div>
         </div>
       </section>
 
@@ -1062,9 +1068,11 @@ export default function Domov() {
 
       <Sponzor kje="domov" />
 
-      {/* potek igre */}
-      <section className="space-y-3">
-        <h2 className="text-xl font-bold">{t('domov.kakoIgras.naslov')}</h2>
+      {/* potek igre — na telefonu zaprto, da naslovnica ni neskončna */}
+      <details open={siroko} className="space-y-3">
+        <summary className="cursor-pointer py-2">
+          <h2 className="inline text-xl font-bold">{t('domov.kakoIgras.naslov')}</h2>
+        </summary>
         <ol className="grid gap-3 sm:grid-cols-2">
           {[
             [t('domov.kakoIgras.registracija'), t('domov.kakoIgras.registracijaOpis')],
@@ -1080,11 +1088,13 @@ export default function Domov() {
             </li>
           ))}
         </ol>
-      </section>
+      </details>
 
       {/* pravila */}
-      <section className="space-y-3">
-        <h2 className="text-xl font-bold">{t('domov.kakoSeTockuje')}</h2>
+      <details open={siroko} className="space-y-3">
+        <summary className="cursor-pointer py-2">
+          <h2 className="inline text-xl font-bold">{t('domov.kakoSeTockuje')}</h2>
+        </summary>
         <div className="grid gap-3 sm:grid-cols-2">
           {PRAVILA_OPIS.map((s) => (
             <div key={s.skupina} className="kartica p-4">
@@ -1109,7 +1119,7 @@ export default function Domov() {
           ))}
         </div>
         <p className="text-xs text-slate-400">{t('tekme.tockovanje.pravila.opomba')}</p>
-      </section>
+      </details>
     </div>
   )
 }

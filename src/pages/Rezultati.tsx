@@ -10,6 +10,7 @@ import { vseVrstice } from '../lib/strani'
 import { useNaslov } from '../lib/naslov'
 import { t } from '../i18n'
 import Sponzor from '../components/Sponzor'
+import Pivo from '../components/Pivo'
 
 export default function Rezultati() {
   const { id: tekmovanjeId, tekmovanje } = useTekmovanje()
@@ -92,7 +93,7 @@ export default function Rezultati() {
   return (
     <div className="space-y-6">
       <header className="space-y-2">
-        <h1 className="text-3xl font-black naslov">
+        <h1 className="text-2xl font-black naslov sm:text-3xl">
           {t('tekme.rezultati.naslov')}
           {tekmovanje?.short_name
             ? ` — ${tekmovanje.short_name}`
@@ -168,6 +169,9 @@ export default function Rezultati() {
       {napaka && <p className="text-sm text-rose-400">{t('skupno.napaka', { sporocilo: napaka })}</p>}
 
       <Sponzor kje="rezultati" />
+      <div className="flex justify-center">
+        <Pivo src="rezultati" />
+      </div>
     </div>
   )
 }

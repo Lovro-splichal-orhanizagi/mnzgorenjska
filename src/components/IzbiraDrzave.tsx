@@ -42,7 +42,7 @@ export default function IzbiraDrzave({ className = '' }: { className?: string })
           <span key={koda}>
             {i > 0 && <span aria-hidden="true"> · </span>}
             {koda === drzava ? (
-              <span aria-current="true" className="font-semibold text-slate-200">
+              <span aria-current="true" className="px-1.5 font-semibold text-slate-200">
                 {oznaka}
               </span>
             ) : (
@@ -50,7 +50,7 @@ export default function IzbiraDrzave({ className = '' }: { className?: string })
                 type="button"
                 onClick={() => preklopi(koda)}
                 title={t('aplikacija.izbiraDrzave.preklopi', { drzava: ime })}
-                className="text-slate-400 underline-offset-2 hover:text-slate-200 hover:underline"
+                className="inline-flex min-h-[44px] items-center px-1.5 text-slate-400 underline-offset-2 hover:text-slate-200 hover:underline"
               >
                 {oznaka}
               </button>

@@ -7,6 +7,10 @@
     --teren: #0b3d2e;
     --teren-svetel: #14603f;
     --zlato: #ffd166;
+    /* Android (Capacitor SystemBars, insetsHandling: 'css') odmike vpiše v
+       --safe-area-inset-*, ker jih starejši WebView v env() nima. */
+    --vrh: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+    --dno: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
   }
 
   body {
@@ -17,8 +21,8 @@
     background-attachment: fixed;
     /* Mobilna aplikacija riše čez ves zaslon (viewport-fit=cover): vsebina
        se umakne izrezu in domači vrstici. V brskalniku je odmik večinoma 0. */
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-top: var(--vrh);
+    padding-bottom: var(--dno);
   }
 
   /* Pas pod vrstico stanja, da drseča vsebina ne teče pod uro in baterijo. */
@@ -26,9 +30,40 @@
     content: '';
     position: fixed;
     inset: 0 0 auto;
-    height: env(safe-area-inset-top);
+    height: var(--vrh);
     background: #020617;
     z-index: 30;
+  }
+
+  /* iOS ob dotiku polja, manjšega od 16px, poveča stran. */
+  @media (pointer: coarse) {
+    input,
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+  }
+}
+
+/* Klepet za podporo (HelpStack, glej Podpora.tsx): na telefonu mehurček
+   prekriva gumbe, zato ga skrijemo — klepet se odpre z "Pomoč" v meniju. */
+@media (max-width: 1023px) {
+  #chat-widget-bubble,
+  #chat-widget-branding,
+  #chat-widget-grabber,
+  #chat-widget-proactive {
+    display: none !important;
+  }
+}
+
+/* Odprt klepet je na telefonu čez ves zaslon: gumb za zapiranje naj ne
+   pade pod izrez, vnosno polje ne pod domačo vrstico. */
+@media (max-width: 768px) {
+  #chat-widget-container {
+    padding-top: var(--vrh);
+  }
+  #chat-widget-iframe {
+    max-height: calc(100dvh - var(--vrh) - var(--dno));
   }
 }
 

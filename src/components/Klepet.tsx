@@ -236,7 +236,7 @@ export default function Klepet() {
                     {mojeSporocilo && (
                       <button
                         onClick={() => izbrisi(s.id)}
-                        className="ml-2 text-slate-500 hover:text-rose-400"
+                        className="-my-2 ml-1 inline-flex h-8 w-8 items-center justify-center text-slate-500 hover:text-rose-400"
                         title={t('aplikacija.klepet.izbrisi')}
                         aria-label={t('aplikacija.klepet.izbrisi')}
                       >
@@ -255,7 +255,7 @@ export default function Klepet() {
       </div>
 
       {session ? (
-        <form onSubmit={posljem} className="flex gap-2">
+        <form onSubmit={posljem} className="mt-3 flex gap-2">
           <input
             value={besedilo}
             onChange={(e) => setBesedilo(e.target.value)}

@@ -5,6 +5,8 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
   krog: '{n}. kolo',
   mesto: '{mesto}. mjesto',
   odEkip: { one: 'od {n} momčadi', few: 'od {n} momčadi', other: 'od {n} momčadi' },
+  pokaziVec: 'Prikaži više ({n})',
+  mojeMesto: 'Moje mjesto ↓',
 
   lestvica: {
     naslov: 'Ljestvica',
@@ -49,6 +51,7 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     povprecjeKroga: 'Ø {n}. kolo',
     navijaci: 'Navijači',
     tvojKlub: 'tvoj klub',
+    stranKluba: 'Stranica kluba →',
     premalo: 'Premalo navijača',
     brezNavijacev: 'Još bez navijača: {klubi}',
     prazno: 'U ovoj ligi još nitko nije odabrao svoj klub. Budi prvi!',
@@ -128,6 +131,7 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     ustvari: 'Napravi',
     imeLige: 'Ime mini lige',
     ustvariLigo: 'Napravi mini ligu',
+    novaAliKoda: 'Nova mini liga ili pridruživanje kodom',
     pridruziSe: 'Pridruži se',
     koda: 'Kod ({n} znakova)',
     nisiVNobeni: 'Još nisi ni u jednoj mini ligi. Tko je bolji menadžer — ti ili tvoje društvo?',

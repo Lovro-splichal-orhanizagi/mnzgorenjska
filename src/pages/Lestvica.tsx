@@ -14,6 +14,7 @@ import MojeMiniLige from '../components/MojeMiniLige'
 import NavijaciKlubov from '../components/NavijaciKlubov'
 import { t, datum } from '../i18n'
 import { izvor } from '../lib/platforma'
+import Pivo from '../components/Pivo'
 
 const MEDALJE = ['🥇', '🥈', '🥉']
 
@@ -73,6 +74,10 @@ export default function Lestvica() {
   const [odigraneTocke, setOdigraneTocke] = useState<TockeKroga[]>([])
   // filter "od kroga N naprej"
   const [odKroga, setOdKroga] = useState(1)
+  // Dolga lestvica se na telefonu vleče v nedogled — najprej pokaže vrh.
+  const [koliko, setKoliko] = useState(50)
+  // Ekipa, do katere naj stran skoči, ko se izriše (gumb "Moje mesto").
+  const [skociNa, setSkociNa] = useState<number | null>(null)
   const [nalaganje, setNalaganje] = useState(true)
   const [napaka, setNapaka] = useState<string | null>(null)
   // Napaka pri krogih (zmagovalec, lestvica kroga) ne sme skriti skupne lestvice.
@@ -115,6 +120,7 @@ export default function Lestvica() {
     setNapaka(null)
     setNapakaKrogov(null)
     setOdKroga(1)
+    setKoliko(50)
     const ligaId = tekmovanjeId
     // Po straneh: velika liga ima lahko čez tisoč ekip.
     vseVrstice((od, do_) =>
@@ -283,6 +289,13 @@ export default function Lestvica() {
     document.getElementById('fans')?.scrollIntoView({ block: 'start' })
   }, [nalaganje, hash])
 
+  // Skok šele po izrisu: vrstica je morda za "Pokaži več" in je še ni.
+  useEffect(() => {
+    if (skociNa === null) return
+    document.getElementById(`ekipa-${skociNa}`)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    setSkociNa(null)
+  }, [skociNa, koliko])
+
   if (napaka) return <p className="text-rose-400">{t('skupno.napaka', { sporocilo: napaka })}</p>
   if (nalaganje)
     return <p className="animiraj-utrip text-slate-400">{t('skupno.nalaganje')}</p>
@@ -303,6 +316,9 @@ export default function Lestvica() {
     )
 
   const najvec = Math.max(...ekipe.map((e) => Number(e.total_points) || 0), 1)
+
+  const seznam = lestvicaOd ?? ekipe
+  const mojeMesto = mojaEkipa ? seznam.findIndex((e) => e.fantasy_team_id === mojaEkipa) : -1
 
   const zmagovalecKroga = krogLestvica[0]
   const mojRezultat = mojaEkipa
@@ -430,7 +446,166 @@ export default function Lestvica() {
         </section>
       )}
 
-      {/* Zmagovalci vseh odigranih krogov — pregled sezone. */}
+      {/* Ekipe ali navijači klubov: ljudje igrajo tudi za svoj klub. */}
+      <div id="fans" role="tablist" className="flex scroll-mt-20 gap-1.5 sm:max-w-md">
+        {(['ekipe', 'navijaci'] as const).map((z) => (
+          <button
+            key={z}
+            role="tab"
+            aria-selected={zavihek === z}
+            onClick={() => setZavihek(z)}
+            className={`znacka flex-1 justify-center px-3 py-2.5 text-center text-sm transition ${
+              zavihek === z
+                ? 'bg-gnl-500 text-slate-950'
+                : 'bg-white/5 text-slate-300 hover:bg-white/10'
+            }`}
+          >
+            {z === 'ekipe'
+              ? t('lestvice.lestvica.zavihekEkipe')
+              : t('lestvice.lestvica.zavihekNavijaci')}
+          </button>
+        ))}
+      </div>
+
+      {zavihek === 'navijaci' ? (
+        <NavijaciKlubov tekmovanjeId={tekmovanjeId} />
+      ) : (
+      <>
+      {/* Selektor "od kroga X naprej" — če se ekipa priključi kasneje, ima
+          še zmeraj svojo lestvico. */}
+      <div className="space-y-2">
+        <div className="flex flex-wrap items-baseline gap-2">
+          <h2 className="text-lg font-bold">
+            {odKroga === 1
+              ? t('lestvice.lestvica.skupnoSezona')
+              : t('lestvice.lestvica.odKrogaNaprej', { n: odKroga })}
+          </h2>
+          <span className="text-xs text-slate-500">
+            {t('lestvice.lestvica.pozneje')}
+          </span>
+          {mojeMesto >= 0 && (
+            <button
+              onClick={() => {
+                setKoliko((k) => Math.max(k, mojeMesto + 1))
+                setSkociNa(mojaEkipa)
+              }}
+              className="znacka ml-auto bg-gnl-500/15 px-3 py-2 text-xs text-gnl-200 hover:bg-gnl-500/25"
+            >
+              {t('lestvice.mojeMesto')}
+            </button>
+          )}
+        </div>
+        {vsiKrogiOdigrani.length === 0 ? (
+          <p className="rounded-xl bg-white/5 p-3 text-center text-xs text-slate-400">
+            {t('lestvice.lestvica.brezKrogov')}
+          </p>
+        ) : (
+          <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
+            <button
+              onClick={() => setOdKroga(1)}
+              className={`znacka shrink-0 py-2 transition ${
+                odKroga === 1
+                  ? 'bg-gnl-500 text-slate-950'
+                  : 'bg-white/5 text-slate-300 hover:bg-white/10'
+              }`}
+            >
+              {t('lestvice.lestvica.celotnaSezona')}
+            </button>
+            {vsiKrogiOdigrani
+              .filter((k) => k.number > 1)
+              .map((k) => (
+                <button
+                  key={k.id}
+                  onClick={() => setOdKroga(k.number)}
+                  className={`znacka shrink-0 py-2 transition ${
+                    odKroga === k.number
+                      ? 'bg-gnl-500 text-slate-950'
+                      : 'bg-white/5 text-slate-300 hover:bg-white/10'
+                  }`}
+                >
+                  {t('lestvice.lestvica.odKroga', { n: k.number })}
+                </button>
+              ))}
+          </div>
+        )}
+      </div>
+
+      <ul className="space-y-2">
+        {seznam.slice(0, koliko).map((e, i) => {
+          const tocke = lestvicaOd
+            ? Number(e.points ?? 0)
+            : Number(e.total_points ?? 0)
+          const najvecTock = lestvicaOd
+            ? Math.max(...(lestvicaOd.map((x) => Number(x.points) || 0)), 1)
+            : najvec
+          return (
+            <li
+              key={e.fantasy_team_id}
+              id={`ekipa-${e.fantasy_team_id}`}
+              className={`kartica kartica-hover relative scroll-mt-24 overflow-hidden ${
+                e.fantasy_team_id === mojaEkipa
+                  ? 'ring-2 ring-gnl-400'
+                  : i === 0 && tocke > 0
+                    ? 'ring-1 ring-amber-400/40'
+                    : ''
+              }`}
+            >
+              <span
+                className="absolute inset-y-0 left-0 bg-gnl-500/10"
+                style={{ width: `${(tocke / najvecTock) * 100}%` }}
+                aria-hidden
+              />
+              {/* Odmik je na notranjem bloku: povezava ga z ::after pokrije
+                  celega, da se tapne cela vrstica, ne le ime. */}
+              <div className="relative flex items-center gap-3 px-3 py-2.5 sm:p-4">
+                <span className="w-8 text-center text-lg font-black text-slate-400">
+                  {/* Medalja in mesto šele, ko je kaj točk: pri samih ničlah
+                      bi mesto določil le vrstni red vnosa. */}
+                  {tocke > 0 ? (MEDALJE[i] ?? i + 1) : '–'}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <Link
+                    to={`/team/${e.fantasy_team_id}`}
+                    className="block truncate font-bold after:absolute after:inset-0 after:content-[''] hover:text-gnl-400"
+                  >
+                    {e.team_name}
+                  </Link>
+                  <div className="text-xs text-slate-500">
+                    {e.owner_name}
+                    {(e.team_created_at ?? e.owner_registered_at) && (
+                      <span className={`${e.owner_name ? 'ml-2 ' : ''}hidden text-slate-400 sm:inline`}>
+                        {/* Hišna ekipa nima imena lastnika — brez vodilne pike. */}
+                        {t('lestvice.lestvica.igraOd', {
+                          datum: datum((e.team_created_at ?? e.owner_registered_at) as string, {
+                            day: 'numeric',
+                            month: 'numeric',
+                            year: 'numeric',
+                          }),
+                        }).replace(/^·\s*/, e.owner_name ? '· ' : '')}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <span className="text-lg font-black tabular-nums text-gnl-300 sm:text-xl">
+                  {formatirajTocke(tocke)}
+                </span>
+              </div>
+            </li>
+          )
+        })}
+      </ul>
+      {seznam.length > koliko && (
+        <div className="text-center">
+          <button onClick={() => setKoliko(koliko + 50)} className="gumb-tih">
+            {t('lestvice.pokaziVec', { n: seznam.length - koliko })}
+          </button>
+        </div>
+      )}
+      </>
+      )}
+
+      {/* Zmagovalci vseh odigranih krogov — pregled sezone. Pod lestvico, da
+          na telefonu ne odrine lestvice cel zaslon nižje. */}
       <section className="kartica space-y-2 p-3 sm:p-4">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="text-lg font-bold">{t('lestvice.lestvica.zmagovalciPoKrogih')}</h2>
@@ -467,142 +642,12 @@ export default function Lestvica() {
         )}
       </section>
 
-      {/* Ekipe ali navijači klubov: ljudje igrajo tudi za svoj klub. */}
-      <div id="fans" role="tablist" className="flex scroll-mt-20 gap-1.5">
-        {(['ekipe', 'navijaci'] as const).map((z) => (
-          <button
-            key={z}
-            role="tab"
-            aria-selected={zavihek === z}
-            onClick={() => setZavihek(z)}
-            className={`znacka px-3 py-1.5 text-sm transition ${
-              zavihek === z
-                ? 'bg-gnl-500 text-slate-950'
-                : 'bg-white/5 text-slate-300 hover:bg-white/10'
-            }`}
-          >
-            {z === 'ekipe'
-              ? t('lestvice.lestvica.zavihekEkipe')
-              : t('lestvice.lestvica.zavihekNavijaci')}
-          </button>
-        ))}
-      </div>
-
-      {zavihek === 'navijaci' ? (
-        <NavijaciKlubov tekmovanjeId={tekmovanjeId} />
-      ) : (
-      <>
-      {/* Selektor "od kroga X naprej" — če se ekipa priključi kasneje, ima
-          še zmeraj svojo lestvico. */}
-      <div className="space-y-2">
-        <div className="flex flex-wrap items-baseline gap-2">
-          <h2 className="text-lg font-bold">
-            {odKroga === 1
-              ? t('lestvice.lestvica.skupnoSezona')
-              : t('lestvice.lestvica.odKrogaNaprej', { n: odKroga })}
-          </h2>
-          <span className="text-xs text-slate-500">
-            {t('lestvice.lestvica.pozneje')}
-          </span>
-        </div>
-        {vsiKrogiOdigrani.length === 0 ? (
-          <p className="rounded-xl bg-white/5 p-3 text-center text-xs text-slate-400">
-            {t('lestvice.lestvica.brezKrogov')}
-          </p>
-        ) : (
-          <div className="flex flex-wrap gap-1.5">
-            <button
-              onClick={() => setOdKroga(1)}
-              className={`znacka transition ${
-                odKroga === 1
-                  ? 'bg-gnl-500 text-slate-950'
-                  : 'bg-white/5 text-slate-300 hover:bg-white/10'
-              }`}
-            >
-              {t('lestvice.lestvica.celotnaSezona')}
-            </button>
-            {vsiKrogiOdigrani
-              .filter((k) => k.number > 1)
-              .map((k) => (
-                <button
-                  key={k.id}
-                  onClick={() => setOdKroga(k.number)}
-                  className={`znacka transition ${
-                    odKroga === k.number
-                      ? 'bg-gnl-500 text-slate-950'
-                      : 'bg-white/5 text-slate-300 hover:bg-white/10'
-                  }`}
-                >
-                  {t('lestvice.lestvica.odKroga', { n: k.number })}
-                </button>
-              ))}
-          </div>
-        )}
-      </div>
-
-      <ul className="space-y-2">
-        {(lestvicaOd ?? ekipe).map((e, i) => {
-          const tocke = lestvicaOd
-            ? Number(e.points ?? 0)
-            : Number(e.total_points ?? 0)
-          const najvecTock = lestvicaOd
-            ? Math.max(...(lestvicaOd.map((x) => Number(x.points) || 0)), 1)
-            : najvec
-          return (
-            <li
-              key={e.fantasy_team_id}
-              className={`kartica kartica-hover relative overflow-hidden p-4 ${
-                i === 0 && tocke > 0 ? 'ring-1 ring-amber-400/40' : ''
-              }`}
-            >
-              <span
-                className="absolute inset-y-0 left-0 bg-gnl-500/10"
-                style={{ width: `${(tocke / najvecTock) * 100}%` }}
-                aria-hidden
-              />
-              <div className="relative flex items-center gap-3">
-                <span className="w-8 text-center text-lg font-black text-slate-400">
-                  {/* Medalja in mesto šele, ko je kaj točk: pri samih ničlah
-                      bi mesto določil le vrstni red vnosa. */}
-                  {tocke > 0 ? (MEDALJE[i] ?? i + 1) : '–'}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <Link
-                    to={`/team/${e.fantasy_team_id}`}
-                    className="block truncate font-bold hover:text-gnl-400"
-                  >
-                    {e.team_name}
-                  </Link>
-                  <div className="text-xs text-slate-500">
-                    {e.owner_name}
-                    {(e.team_created_at ?? e.owner_registered_at) && (
-                      <span className={`${e.owner_name ? 'ml-2 ' : ''}text-slate-400`}>
-                        {/* Hišna ekipa nima imena lastnika — brez vodilne pike. */}
-                        {t('lestvice.lestvica.igraOd', {
-                          datum: datum((e.team_created_at ?? e.owner_registered_at) as string, {
-                            day: 'numeric',
-                            month: 'numeric',
-                            year: 'numeric',
-                          }),
-                        }).replace(/^·\s*/, e.owner_name ? '· ' : '')}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <span className="text-xl font-black tabular-nums text-gnl-300">
-                  {formatirajTocke(tocke)}
-                </span>
-              </div>
-            </li>
-          )
-        })}
-      </ul>
-      </>
-      )}
-
       {/* Sponzorsko mesto. Dokler `sponzorji_vidni` ni 1, se ne izriše nič —
           stoji pod lestvico, ne nad njo. */}
       <Sponzor kje="lestvica" />
+      <div className="flex justify-center">
+        <Pivo src="lestvica" />
+      </div>
     </div>
   )
 }

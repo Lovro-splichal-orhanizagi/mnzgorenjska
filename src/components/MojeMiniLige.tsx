@@ -94,7 +94,7 @@ export default function MojeMiniLige({ ekipaId }: { ekipaId: number | null }) {
       </div>
       <ul className="divide-y divide-white/5">
         {vrstice.map((v) => (
-          <li key={v.id} className="flex items-center gap-3 py-2">
+          <li key={v.id} className="relative flex items-center gap-3 py-2">
             <span
               className={`w-9 shrink-0 text-center text-lg font-black ${
                 v.mesto === 1 ? 'text-gnl-300' : 'text-slate-400'
@@ -103,14 +103,14 @@ export default function MojeMiniLige({ ekipaId }: { ekipaId: number | null }) {
               {v.mesto ? `${v.mesto}.` : '—'}
             </span>
             <div className="min-w-0 flex-1">
-              <Link to={`/mini-leagues?liga=${v.id}`} className="block truncate font-bold hover:text-gnl-300">
+              <Link to={`/mini-leagues?liga=${v.id}`} className="block truncate font-bold after:absolute after:inset-0 after:content-[''] hover:text-gnl-300">
                 {v.name}
               </Link>
               <div className="truncate text-xs text-slate-500">
                 {t('lestvice.odEkip', { n: v.ekip })}
                 {v.mesto > 1 && v.vodilni ? t('lestvice.mojeMiniLige.vodi', { ime: v.vodilni }) : ''}
                 {v.ekip <= 1 && (
-                  <Link to={`/mini-leagues?liga=${v.id}`} className="ml-1 font-semibold text-gnl-300 hover:underline">
+                  <Link to={`/mini-leagues?liga=${v.id}`} className="relative z-10 ml-1 font-semibold text-gnl-300 hover:underline">
                     {t('lestvice.mojeMiniLige.sam')}
                   </Link>
                 )}

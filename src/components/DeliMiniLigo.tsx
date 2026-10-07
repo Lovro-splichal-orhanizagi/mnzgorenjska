@@ -64,7 +64,8 @@ export default function DeliMiniLigo({
       )}
       {!poudarjeno && <h2 className="text-sm font-bold text-slate-300">{t('lestvice.deli.naslov')}</h2>}
 
-      <div className="min-w-0 rounded-lg bg-black/20 px-3 py-2">
+      {/* Na telefonu je dolga povezava le šum — gumbi spodaj jo delijo. */}
+      <div className="hidden min-w-0 rounded-lg bg-black/20 px-3 py-2 sm:block">
         <div className="text-[11px] text-slate-500">{t('lestvice.deli.povezava')}</div>
         <div className="truncate font-mono text-sm text-gnl-300">{povezava}</div>
       </div>

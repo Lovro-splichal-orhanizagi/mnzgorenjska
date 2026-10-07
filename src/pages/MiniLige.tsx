@@ -242,6 +242,84 @@ export default function MiniLige() {
     )
   if (nalaganje || nalaganjePrijave) return <p className="animiraj-utrip text-slate-400">{t('skupno.nalaganje')}</p>
 
+  // Kdor lige že ima, obrazca rabi redko — stojita pod lestvico, zložena.
+  const obrazca = (
+    <div className="grid gap-3 sm:grid-cols-2">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault()
+          ustvari()
+        }}
+        className="kartica space-y-2 p-4"
+      >
+        <h2 className="font-bold">{t('lestvice.miniLige.ustvari')}</h2>
+        <input
+          value={imeNove}
+          onChange={(e) => setImeNove(e.target.value)}
+          placeholder={t('lestvice.miniLige.imeLige')}
+          maxLength={40}
+          className="w-full rounded-lg bg-white/5 px-3 py-2 text-sm outline-none ring-1 ring-white/10"
+        />
+        {ekipe.length > 1 && (
+          <select
+            value={zEkipo ?? ''}
+            onChange={(e) => setZEkipo(Number(e.target.value))}
+            className="w-full rounded-lg bg-white/5 px-3 py-2 text-sm outline-none ring-1 ring-white/10"
+          >
+            {ekipe.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.name}
+                {e.competition_short ? ` · ${e.competition_short}` : ''}
+              </option>
+            ))}
+          </select>
+        )}
+        <button type="submit" disabled={dela} className="gumb-glavni w-full text-sm">
+          {t('lestvice.miniLige.ustvariLigo')}
+        </button>
+      </form>
+
+      <form
+        onSubmit={(e) => {
+          e.preventDefault()
+          pridruzi()
+        }}
+        className="kartica space-y-2 p-4"
+      >
+        <h2 className="font-bold">{t('lestvice.miniLige.pridruziSe')}</h2>
+        <input
+          value={koda}
+          onChange={(e) => setKoda(e.target.value)}
+          placeholder={t('lestvice.miniLige.koda', { n: DOLZINA_KODE })}
+          maxLength={12}
+          autoCapitalize="characters"
+          autoCorrect="off"
+          autoComplete="off"
+          spellCheck={false}
+          enterKeyHint="go"
+          className="w-full rounded-lg bg-white/5 px-3 py-2 font-mono text-sm uppercase outline-none ring-1 ring-white/10"
+        />
+        {ekipe.length > 1 && (
+          <select
+            value={zEkipo ?? ''}
+            onChange={(e) => setZEkipo(Number(e.target.value))}
+            className="w-full rounded-lg bg-white/5 px-3 py-2 text-sm outline-none ring-1 ring-white/10"
+          >
+            {ekipe.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.name}
+                {e.competition_short ? ` · ${e.competition_short}` : ''}
+              </option>
+            ))}
+          </select>
+        )}
+        <button type="submit" disabled={dela} className="gumb-glavni w-full text-sm">
+          {t('lestvice.miniLige.pridruziSe')}
+        </button>
+      </form>
+    </div>
+  )
+
   return (
     <div className="space-y-5">
       <div>
@@ -254,63 +332,7 @@ export default function MiniLige() {
       {napaka && <p className="kartica p-3 text-sm text-rose-400">{napaka}</p>}
       {sporocilo && <p className="kartica p-3 text-sm text-gnl-300">{sporocilo}</p>}
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <section className="kartica space-y-2 p-4">
-          <h2 className="font-bold">{t('lestvice.miniLige.ustvari')}</h2>
-          <input
-            value={imeNove}
-            onChange={(e) => setImeNove(e.target.value)}
-            placeholder={t('lestvice.miniLige.imeLige')}
-            maxLength={40}
-            className="w-full rounded-lg bg-white/5 px-3 py-2 text-sm outline-none ring-1 ring-white/10"
-          />
-          {ekipe.length > 1 && (
-            <select
-              value={zEkipo ?? ''}
-              onChange={(e) => setZEkipo(Number(e.target.value))}
-              className="w-full rounded-lg bg-white/5 px-3 py-2 text-sm outline-none ring-1 ring-white/10"
-            >
-              {ekipe.map((e) => (
-                <option key={e.id} value={e.id}>
-                  {e.name}
-                  {e.competition_short ? ` · ${e.competition_short}` : ''}
-                </option>
-              ))}
-            </select>
-          )}
-          <button onClick={() => ustvari()} disabled={dela} className="gumb-glavni w-full text-sm">
-            {t('lestvice.miniLige.ustvariLigo')}
-          </button>
-        </section>
-
-        <section className="kartica space-y-2 p-4">
-          <h2 className="font-bold">{t('lestvice.miniLige.pridruziSe')}</h2>
-          <input
-            value={koda}
-            onChange={(e) => setKoda(e.target.value)}
-            placeholder={t('lestvice.miniLige.koda', { n: DOLZINA_KODE })}
-            maxLength={12}
-            className="w-full rounded-lg bg-white/5 px-3 py-2 font-mono text-sm uppercase outline-none ring-1 ring-white/10"
-          />
-          {ekipe.length > 1 && (
-            <select
-              value={zEkipo ?? ''}
-              onChange={(e) => setZEkipo(Number(e.target.value))}
-              className="w-full rounded-lg bg-white/5 px-3 py-2 text-sm outline-none ring-1 ring-white/10"
-            >
-              {ekipe.map((e) => (
-                <option key={e.id} value={e.id}>
-                  {e.name}
-                  {e.competition_short ? ` · ${e.competition_short}` : ''}
-                </option>
-              ))}
-            </select>
-          )}
-          <button onClick={pridruzi} disabled={dela} className="gumb-glavni w-full text-sm">
-            {t('lestvice.miniLige.pridruziSe')}
-          </button>
-        </section>
-      </div>
+      {lige.length === 0 && obrazca}
 
       {lige.length === 0 ? (
         <div className="kartica space-y-3 p-6 text-center">
@@ -333,12 +355,12 @@ export default function MiniLige() {
         </div>
       ) : (
         <>
-          <div className="flex flex-wrap gap-2">
+          <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
             {lige.map((l) => (
               <button
                 key={l.id}
                 onClick={() => setIzbrana(l.id)}
-                className={`rounded-lg px-3 py-1.5 text-sm font-bold ${
+                className={`shrink-0 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-bold ${
                   izbrana === l.id
                     ? 'bg-gnl-500/20 text-gnl-200 ring-1 ring-gnl-400/40'
                     : 'bg-white/5 text-slate-400'
@@ -362,7 +384,7 @@ export default function MiniLige() {
               {urejena.map((v) => (
                 <li
                   key={v.fantasy_team_id}
-                  className="flex items-center gap-3 rounded-xl bg-white/5 px-3 py-2"
+                  className="relative flex items-center gap-3 rounded-xl bg-white/5 px-3 py-2"
                 >
                   <span className="w-7 shrink-0 text-center text-sm font-black text-slate-400">
                     {v.mesto <= 3 ? (
@@ -376,7 +398,7 @@ export default function MiniLige() {
                   <div className="min-w-0 flex-1">
                     <Link
                       to={`/team/${v.fantasy_team_id}`}
-                      className="block truncate font-bold hover:text-gnl-400"
+                      className="block truncate font-bold after:absolute after:inset-0 after:content-[''] hover:text-gnl-400"
                     >
                       {v.team_name}
                     </Link>
@@ -403,6 +425,16 @@ export default function MiniLige() {
           {trenutna && stanjeDeljenja === 'polna' && (
             <DeliMiniLigo ime={trenutna.name} koda={trenutna.code} stanje="polna" />
           )}
+
+          <details className="group">
+            <summary className="flex cursor-pointer list-none items-center justify-between rounded-xl bg-white/5 px-4 py-3 text-sm font-bold text-slate-300 [&::-webkit-details-marker]:hidden">
+              {t('lestvice.miniLige.novaAliKoda')}
+              <span aria-hidden className="transition group-open:rotate-180">
+                ▾
+              </span>
+            </summary>
+            <div className="mt-3">{obrazca}</div>
+          </details>
         </>
       )}
     </div>

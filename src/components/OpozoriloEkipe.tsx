@@ -123,7 +123,7 @@ export default function OpozoriloEkipe() {
             </span>
             <Link
               to="/my-team"
-              className="shrink-0 rounded-lg bg-amber-400 px-3 py-1 text-xs font-black text-slate-950 hover:bg-amber-300"
+              className="inline-flex min-h-[40px] shrink-0 items-center rounded-lg bg-amber-400 px-3 py-1 text-xs font-black text-slate-950 hover:bg-amber-300"
             >
               {t('mojaEkipa.opozorila.sestavi')}
             </Link>
@@ -179,7 +179,7 @@ function Pas({
               </span>
               <Link
                 to={`/my-team?t=${encodeURIComponent(o.slug)}`}
-                className={`shrink-0 rounded-lg px-2.5 py-1 text-xs font-black text-slate-950 ${
+                className={`inline-flex min-h-[36px] shrink-0 items-center rounded-lg px-2.5 py-1 text-xs font-black text-slate-950 ${
                   napaka ? 'bg-rose-400 hover:bg-rose-300' : 'bg-amber-400 hover:bg-amber-300'
                 }`}
               >
@@ -191,7 +191,7 @@ function Pas({
                   onClick={() => naSkrij(o)}
                   aria-label={t('mojaEkipa.opozorila.skrij', { besedilo: o.besedilo })}
                   title={t('mojaEkipa.opozorila.skrijNamig')}
-                  className="-my-1 shrink-0 rounded-lg px-2 py-1 text-amber-200/70 hover:bg-amber-400/10 hover:text-amber-100"
+                  className="-my-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-amber-200/70 hover:bg-amber-400/10 hover:text-amber-100"
                 >
                   ✕
                 </button>

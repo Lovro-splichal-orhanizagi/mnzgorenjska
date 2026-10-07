@@ -29,7 +29,7 @@ export default function IzbiraJezika({ className = '' }: { className?: string })
           <span key={j}>
             {i > 0 && <span aria-hidden="true"> · </span>}
             {j === zdaj ? (
-              <span aria-current="true" lang={j} title={ime} className="font-semibold text-slate-200">
+              <span aria-current="true" lang={j} title={ime} className="px-1.5 font-semibold text-slate-200">
                 {j.toUpperCase()}
               </span>
             ) : (
@@ -39,7 +39,7 @@ export default function IzbiraJezika({ className = '' }: { className?: string })
                 onClick={() => preklopi(j)}
                 title={t('aplikacija.izbiraJezika.preklopi', { jezik: ime })}
                 aria-label={ime}
-                className="text-slate-400 underline-offset-2 hover:text-slate-200 hover:underline"
+                className="inline-flex min-h-[44px] items-center px-1.5 text-slate-400 underline-offset-2 hover:text-slate-200 hover:underline"
               >
                 {j.toUpperCase()}
               </button>

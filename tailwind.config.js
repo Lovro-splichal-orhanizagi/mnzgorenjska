@@ -4,6 +4,8 @@ export default {
   // ob migraciji na TypeScript bi bili vsi razredi iz pretvorjenih datotek
   // odstranjeni — build in typecheck bi bila zelena, stran pa brez slogov.
   content: ['./index.html', './src/**/*.{js,jsx,ts,tsx}'],
+  // hover: le na napravah, ki ga imajo — na telefonu sicer obvisi po dotiku.
+  future: { hoverOnlyWhenSupported: true },
   theme: {
     extend: {
       colors: {
