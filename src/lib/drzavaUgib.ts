@@ -168,6 +168,13 @@ export function zapomniTujca(ip: string) {
   } catch {}
 }
 
+/** Država tujca je dobila lige (Hrvaška ob vklopu): oznaka ne velja več. */
+export function pozabiTujca() {
+  try {
+    localStorage.removeItem(KLJUC_TUJCA)
+  } catch {}
+}
+
 /** Jezik, ki ga je obiskovalec izbral sam (ali null). */
 export const izbranJezik = (): string | null => beri(KLJUC_IZBRANEGA_JEZIKA)
 

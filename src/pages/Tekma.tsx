@@ -15,6 +15,7 @@ import GolZaGlasovanje, { caka } from '../components/GolZaGlasovanje'
 import type { Gol, Glas, Kandidat } from '../components/GolZaGlasovanje'
 import type { NastopNaTekmi } from '../components/IgrisceTocke'
 import type { TekmaVrstica } from '../lib/tipi'
+import { prevediNapako } from '../lib/napake'
 
 /**
  * Nastop na tekmi, kot ga sestavi ta stran: vrstica `appearances` z vlozenim
@@ -174,7 +175,7 @@ export default function Tekma() {
       { goal_id: golId, voter_id: session.user.id, player_id: playerId },
       { onConflict: 'goal_id,voter_id' },
     )
-    if (error) return setNapaka(error.message)
+    if (error) return setNapaka(prevediNapako(error.message))
 
     setMojiGlasovi({ ...mojiGlasovi, [String(golId)]: playerId })
     setPravkarOddan(golId)

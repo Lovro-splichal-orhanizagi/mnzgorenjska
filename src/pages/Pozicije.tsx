@@ -18,6 +18,7 @@ import { useNaslov } from '../lib/naslov'
 import { povezavaNaPrijavo } from '../lib/prijava'
 import type { Pozicija } from '../lib/tipi'
 import { t, tx } from '../i18n'
+import { prevediNapako } from '../lib/napake'
 
 /** Klub v izbirniku. */
 interface Klub {
@@ -254,7 +255,7 @@ export default function Pozicije() {
       .from('profiles')
       .update({ insider_team_id: id })
       .eq('id', session.user.id)
-    if (error) return setNapaka(error.message)
+    if (error) return setNapaka(prevediNapako(error.message))
     setInsiderTeamId(id)
   }
 
@@ -266,7 +267,7 @@ export default function Pozicije() {
       p_player_id: playerId,
       p_odsel: odsel,
     })
-    if (error) return setNapaka(error.message)
+    if (error) return setNapaka(prevediNapako(error.message))
     setIgralci((prev) => prev.map((i) => (i.id === playerId ? { ...i, active: !odsel } : i)))
   }
 
@@ -278,7 +279,7 @@ export default function Pozicije() {
       { player_id: playerId, voter_id: session.user.id, position: pozicija },
       { onConflict: 'player_id,voter_id' },
     )
-    if (error) return setNapaka(error.message)
+    if (error) return setNapaka(prevediNapako(error.message))
 
     setMojiGlasovi({ ...mojiGlasovi, [String(playerId)]: pozicija })
 

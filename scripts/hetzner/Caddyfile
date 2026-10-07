@@ -90,8 +90,8 @@ slff.eu, www.slff.eu {
 	handle {
 		# Static files win; only paths without a dot fall through to the SPA (vercel.json `(?!.*\.)`).
 		@datoteka file
-		@sk_vstop path /sk
-		@hr_vstop path /hr
+		@sk_vstop path /sk /sk/
+		@hr_vstop path /hr /hr/
 		@sk_liga {
 			not path *.*
 			expression `{query.t}.startsWith("sk-")`

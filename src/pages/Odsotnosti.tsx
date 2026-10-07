@@ -23,6 +23,7 @@ import {
   type Porocilo,
   type VrstaPorocila,
 } from '../components/Odsotnost'
+import { prevediNapako } from '../lib/napake'
 
 /** Brez šumnikov in velikih črk — "zeleznik" najde "Železnik" (kot izbirnik lige). */
 const poenostavi = (s: string) =>
@@ -88,7 +89,7 @@ export default function Odsotnosti() {
           .limit(5),
       ])
       if (!veljavno) return
-      if (error) setNapaka(error.message)
+      if (error) setNapaka(prevediNapako(error.message))
       else setPorocila((data ?? []) as Porocilo[])
       setDrugod((ostalo ?? []) as Porocilo[])
       setNalaganje(false)
@@ -161,7 +162,7 @@ export default function Odsotnosti() {
       .select('id')
       .single()
     setPosiljam(false)
-    if (error) return setNapaka(error.message)
+    if (error) return setNapaka(prevediNapako(error.message))
 
     // Vstavimo na vrh brez ponovnega branja — pogled bi zahteval dodatno
     // poizvedbo samo za ime igralca, ki ga že imamo.
@@ -188,7 +189,7 @@ export default function Odsotnosti() {
 
   async function izbrisi(id: number) {
     const { error } = await supabase.from('player_reports').delete().eq('id', id)
-    if (error) return setNapaka(error.message)
+    if (error) return setNapaka(prevediNapako(error.message))
     setPorocila((prej) => prej.filter((p) => p.id !== id))
   }
 

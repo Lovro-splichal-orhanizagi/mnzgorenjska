@@ -118,6 +118,24 @@ const IMENA_SI = [
   'Murski sulci', 'Dravski splavarji', 'Savski brodarji', 'Kamniški planinci', 'Ribniški suhorobarji',
 ]
 
+// Hrvaške lige: igrive, izmišljene, brez imen resničnih klubov.
+const IMENA_HR = [
+  'Zagorski vukovi', 'Međimurski rodovi', 'Slavonski sokolovi', 'Dalmatinski galebovi', 'Istarski bumbari',
+  'Lički medvjedi', 'Podravski šarani', 'Prigorski jastrebovi', 'Kvarnerski dupini', 'Baranjski labudovi',
+  'Posavski somovi', 'Moslavački risovi', 'Turopoljski hrastovi', 'Kordunaški orlovi', 'Bilogorski jeleni',
+  'NK Nedjeljni junaci', 'Subotnji strijelci', 'NK Zadnja minuta', 'NK Treće poluvrijeme', 'Klupa FC',
+  'NK Rezervisti', 'Ekipa iz zaleđa', 'Sudac nije vidio', 'NK Prečka', 'NK Vratnica',
+  'Kopačke iz podruma', 'NK Štrukli', 'Fritule United', 'NK Kremšnita', 'Čobanac FC',
+  'NK Kulen', 'Fiš paprikaš FC', 'NK Paški sir', 'Sarma United', 'NK Pršut',
+  'Seoska garda', 'Stara garda', 'NK Vatrogasci', 'NK Vinogradari', 'Veterani s klupe',
+  'NK Zlatna lopta', 'Dvanaesti igrač', 'NK Jedanaesterac', 'NK Korner', 'NK Asistencija',
+  'Asistenti FC', 'NK Kapetan', 'NK Crveni karton', 'Žuti karton United', 'NK Produžeci',
+  'Travnjak Boys', 'NK Umjetna trava', 'NK Blatno igralište', 'Mreža FC', 'NK Prvi dodir',
+  'NK Protunapad', 'NK Visoki presing', 'Libero FC', 'NK Desetka', 'NK Devetka',
+  'Nedjeljna liga', 'NK Pivo nakon utakmice', 'NK Kava i kremšnita', 'Ćevapi FC', 'NK Burek',
+  'Velebitski orlovi', 'Dravski splavari', 'Savski brodari', 'Kupski pastrvi', 'Neretvanski žabari',
+]
+
 // Postave v mejah POZICIJE (vratar 1, branilci 3–5, vezisti 2–5, napadalci 1–3).
 const POSTAVE = [
   [4, 4, 2], [4, 3, 3], [3, 5, 2], [3, 4, 3], [5, 3, 2], [4, 5, 1], [5, 4, 1],
@@ -501,7 +519,7 @@ for (const l of seznam) {
     if (eK) throw new Error(eK.message)
     for (const r of kadri ?? []) izbranost.set(r.player_id, (izbranost.get(r.player_id) ?? 0) + 1)
   }
-  const imena = premesaj(DRZAVA === 'SI' ? IMENA_SI : IMENA, generator('imena:' + l.slug))
+  const imena = premesaj({ SI: IMENA_SI, HR: IMENA_HR }[DRZAVA] ?? IMENA, generator('imena:' + l.slug))
     .filter((i) => !zasedena.has(i.toLowerCase()))
 
   console.log(

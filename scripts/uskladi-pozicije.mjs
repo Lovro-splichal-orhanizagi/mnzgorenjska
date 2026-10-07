@@ -46,6 +46,12 @@ const arg = (ime) => {
 }
 const pisi = process.argv.includes('--pisi')
 const vsePozicije = process.argv.includes('--vse-pozicije')
+// Vir: sportnet (pozicija v zapisniku) ali hns (zapisnik označi le vratarja).
+// Pri hns glasove da baza: `appearances.is_goalkeeper` na vsaki tekmi. Uvoz ga
+// polni šele od 8. 10. 2026; starejše vrstice so vse `false` in bi prave
+// vratarje prestavile v polje, zato štejemo le tekme, uvožene od takrat.
+const VIR = arg('vir') ?? 'sportnet'
+const OZNAKA_VRATARJA_OD = '2026-10-08'
 const samo = arg('tekmovanje')
 
 const env = izEnv()
@@ -65,11 +71,11 @@ if (eSezona || !sezona) {
   process.exit(1)
 }
 
-let q = db.from('competitions').select('id, slug').eq('source', 'sportnet').order('sort_order')
+let q = db.from('competitions').select('id, slug').eq('source', VIR).order('sort_order')
 if (samo) q = q.eq('slug', samo)
 const { data: lige, error } = await q
 if (error) { console.error(error.message); process.exit(1) }
-if (!lige?.length) { console.error(`ni sportnet lige ${samo ?? ''}`); process.exit(1) }
+if (!lige?.length) { console.error(`ni ${VIR} lige ${samo ?? ''}`); process.exit(1) }
 
 console.log(
   `Sezona ${sezona}, lig: ${lige.length}, ${vsePozicije ? 'vse pozicije' : 'le vratarji'}` +
@@ -78,7 +84,59 @@ console.log(
 let skupaj = 0
 let zapisanih = 0
 
+/**
+ * HNS: vratar ali igralec iz polja po večini tekem (vse sezone, uvožene od
+ * OZNAKA_VRATARJA_OD). GK, ki je večinoma v polju, gre na ugib (MID,
+ * ugibanje — ugani-pozicije ga razvrsti), večinski vratar pa postane GK.
+ */
+async function uskladiHns(liga) {
+  const igralci = await vseVrstice((od, do_) =>
+    db.from('players')
+      .select('id, full_name, position, position_source, teams(name)')
+      .eq('competition_id', liga.id).in('position_source', ['zapisnik', 'ugibanje', 'neznano'])
+      .order('id').range(od, do_),
+  )
+  const poId = new Map(igralci.map((p) => [p.id, p]))
+  const glasovi = new Map()
+  const idji = [...poId.keys()]
+  for (let k = 0; k < idji.length; k += 300) {
+    const nastopi = await vseVrstice((od, do_) =>
+      db.from('appearances')
+        .select('player_id, is_goalkeeper, matches!inner(imported_at)')
+        .in('player_id', idji.slice(k, k + 300))
+        .gte('matches.imported_at', OZNAKA_VRATARJA_OD)
+        .order('id').range(od, do_),
+    )
+    for (const a of nastopi) {
+      const g = glasovi.get(a.player_id) ?? { GK: 0, POLJE: 0 }
+      g[a.is_goalkeeper ? 'GK' : 'POLJE']++
+      glasovi.set(a.player_id, g)
+    }
+  }
+  const popravki = []
+  for (const [id, g] of glasovi) {
+    const p = poId.get(id)
+    const vseh = g.GK + g.POLJE
+    if (p.position === 'GK' && g.POLJE >= NAJMANJ_GLASOV && g.POLJE * 2 > vseh)
+      popravki.push({ p, nova: { position: 'MID', position_source: 'ugibanje' }, g })
+    else if (p.position !== 'GK' && g.GK >= NAJMANJ_GLASOV && g.GK * 2 > vseh)
+      popravki.push({ p, nova: { position: 'GK', position_source: 'zapisnik' }, g })
+  }
+  if (!popravki.length) return
+  console.log(`\n${liga.slug}`)
+  for (const { p, nova, g } of popravki)
+    console.log(`  ${p.full_name} (${p.teams?.name ?? '?'}, id ${p.id}): ${p.position} → ${nova.position}   [GK ${g.GK}, polje ${g.POLJE}]`)
+  skupaj += popravki.length
+  if (!pisi) return
+  for (const { p, nova } of popravki) {
+    const { error: eP } = await db.from('players').update(nova).eq('id', p.id).eq('position_source', p.position_source)
+    if (eP) { console.error(`  ${p.full_name}: ${eP.message}`); process.exitCode = 1 }
+    else zapisanih++
+  }
+}
+
 for (const liga of lige) {
+  if (VIR === 'hns') { await uskladiHns(liga); continue }
   const tekme = await vseVrstice((od, do_) =>
     db.from('matches')
       .select('id, source_url, rounds!inner(season, competition_id)')

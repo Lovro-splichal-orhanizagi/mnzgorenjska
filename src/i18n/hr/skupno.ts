@@ -34,4 +34,18 @@ export const skupno: NonNullable<Prevod['skupno']> = {
   zapri: 'Zatvori',
   nazaj: 'Natrag',
   napaka: 'Greška: {sporocilo}',
+  // Napake iz baze (RPC), prevedene v src/lib/napake.ts.
+  napakeRpc: {
+    miniLigaNi: 'Mini lige s tim kodom nema.',
+    niTvojaEkipa: 'To nije tvoja momčad.',
+    imeMiniLige: 'Ime mini lige treba imati između 2 i 40 znakova.',
+    prijavaMiniLiga: 'Za mini ligu se trebaš prijaviti.',
+    niDovoljenja: 'Nemaš dopuštenje za uređivanje ove momčadi.',
+    kodaNeUstvarjena: 'Kod mini lige nije bilo moguće stvoriti. Pokušaj ponovno.',
+    golOdlocen: 'O ovom golu je već odlučeno, glasanje je završeno.',
+    zePoznavalec: 'Već si poznavatelj ove lige.',
+    prosnjaCaka: 'Tvoj zahtjev za ovu ligu već čeka.',
+    prosnjaZavrnjena: 'Zahtjev za ovu ligu nedavno je odbijen. Novi možeš poslati 14 dana nakon odbijanja.',
+    klubNeIgra: 'Odabrani klub ne igra u ovoj ligi.',
+  },
 }

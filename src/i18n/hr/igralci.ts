@@ -72,7 +72,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       min: 'MIN',
       krog: 'KOLO',
       sez: 'SEZ',
-      ekip: 'EKIPE',
+      ekip: 'MOMČADI',
     },
     krogInLiga: '{krog}. kolo · {liga}',
     napakaFoto: 'Ovu fotografiju nije moguće otvoriti. Pokušaj s drugom (JPG ili PNG).',
@@ -146,7 +146,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       izbran: 'Odabran',
       izbranOpis: 'Broj fantasy momčadi s igračem u zadnjem zaključanom kolu',
     },
-    uvod: 'Statistika iz službenih zapisnika {zveza}. Klikni stupac za sortiranje.',
+    uvod: 'Statistika iz službenih zapisnika ({zveza}). Klikni stupac za sortiranje.',
     tekoca: 'tekuća',
     sezonaNiZacela: 'sezona još nije počela — ispod nema podataka',
     odigranih: {
@@ -167,7 +167,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
   },
   profil: {
     naslov: 'Igrač',
-    hvalaGlas: 'Hvala — poruka je zabilježena. Kad se skupi dovoljno istih, pozicija se ispravlja.',
+    hvalaGlas: 'Hvala, glas je zabilježen. Kad se skupi dovoljno istih, pozicija se ispravlja.',
     niIgralca: 'Igrač ne postoji.',
     vsiIgralci: '← Svi igrači',
     stevilkaDresa: ' · br. {st}',

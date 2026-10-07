@@ -8,7 +8,7 @@ export const domov: NonNullable<Prevod['domov']> = {
     gorenjskaMladinci: 'Gorenjska nogometna liga — juniori',
     gorenjskaClani: '1. Gorenjska nogometna liga',
     geslo: 'Složi momčad. Skupljaj bodove. Pobijedi.',
-    opis: 'Bodovi dolaze iz službenih zapisnika {zveza} — golovi, minute, čiste mreže, kartoni. Sve osim asistencija, njih određuje zajednica.',
+    opis: 'Bodovi dolaze iz službenih zapisnika ({zveza}): golovi, minute, čiste mreže, kartoni. Sve osim asistencija, njih određuje zajednica.',
     vecLig: 'Možeš igrati u više liga — <krepko>ligu biraš gore lijevo</krepko>, svaka ima svoju momčad i ljestvicu.',
     zacetekSezone: '<krepko>Sezona počinje {datum}</krepko> — složi momčad prije roka.',
     zamudniki: '<krepko>Propustio si početak? Nema veze.</krepko> Svako kolo ima svog pobjednika. Na <lestvica>Ljestvici</lestvica> odabereš "Od N. kola nadalje" i natječeš se od trenutka kad se pridružiš. Nikad nije prekasno.',

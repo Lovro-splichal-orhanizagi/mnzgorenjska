@@ -7,12 +7,12 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     zStranjo: '{naslov} · SLFF',
     opis: 'Fantasy nogomet za amaterske nogometne lige. Složi momčad, odaberi kapetana i natječi se sa susjedima.',
     deljenje:
-      'Fantasy liga za amaterske nogometne lige. Složi momčad od pravih igrača, bodovi dolaze iz službenih zapisnika: golovi, minute, sačuvane mreže.',
+      'Fantasy liga za amaterske nogometne lige. Složi momčad od pravih igrača, bodovi dolaze iz službenih zapisnika: golovi, minute, čiste mreže.',
     deljenjeKratko: 'Fantasy liga za amaterske nogometne lige. Bodovi iz službenih zapisnika.',
   },
   niStrani: {
     naslov: 'Stranica ne postoji',
-    opis: 'Poveznica je možda zastarjela ili je u adresi tipfeler.',
+    opis: 'Poveznica je možda zastarjela ili je u adresi pogreška.',
     nazaj: 'Natrag na početnu stranicu',
   },
   /** Gumb za podporo na naslovnici (components/Pivo.tsx). */
@@ -21,7 +21,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
   },
   noga: {
     zasebnost: 'Privatnost i uvjeti',
-    vir: 'Podaci: službeni zapisnici <vir>{ime}</vir>',
+    vir: 'Podaci: službeni zapisnici (<vir>{ime}</vir>)',
     /** Naziv saveza usred rečenice, kad ga ne znamo. */
     zvezeSplosno: 'saveza',
   },
@@ -63,11 +63,11 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
       SK: 'Slovensko',
       HR: 'Hrvatska',
     },
-    preklopi: 'Prebaci na {drzava}',
+    preklopi: 'Prebaci: {drzava}',
   },
   izbiraJezika: {
     oznaka: 'Jezik',
-    preklopi: 'Prebaci na {jezik}',
+    preklopi: 'Prebaci: {jezik}',
   },
   prviObisk: {
     naslov: 'Gdje želiš igrati?',

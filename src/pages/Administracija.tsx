@@ -31,6 +31,7 @@ function drzaveUporabnika(u: { drzave?: string[] | null; jezik?: string | null }
   if (u.drzave?.length) return u.drzave
   if (u.jezik === 'sk') return ['SK']
   if (u.jezik === 'sl') return ['SI']
+  if (u.jezik === 'hr') return ['HR']
   return []
 }
 

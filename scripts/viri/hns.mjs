@@ -82,6 +82,26 @@ export function vrsticeRazporeda(html) {
   return [...tekme.values()].filter((t) => t.domaci && t.gostje)
 }
 
+/**
+ * Kontumacija: Semafor pri dodeljeni zmagi (3:0) vnese postavo le ekipe, ki je
+ * prišla, druga ostane prazna (Mladost Molve : Prugovac, kc-elitna 23. 8. 2026).
+ * Taka tekma zapisnika nikoli ne dobi, zato jo razpored označi, da je preverba
+ * in borza ne čakata, izid pa vzame iz razporeda.
+ */
+const mozna3do0 = (izid) => !!izid && Math.min(izid.domaci, izid.gostje) === 0 && Math.max(izid.domaci, izid.gostje) === 3
+
+export function jeKontumacija(html, izid) {
+  if (!mozna3do0(izid)) return false
+  const sestava = html.slice(Math.max(0, html.indexOf('matchLineup')))
+  const iDoma = sestava.indexOf('homeTeam playerslist')
+  const iGost = sestava.indexOf('awayTeam playerslist')
+  if (iDoma < 0 || iGost < 0) return false
+  const stej = (blok) => (blok.match(/class="row match_lineup"/g) ?? []).length
+  const doma = stej(sestava.slice(iDoma, iGost))
+  const gost = stej(sestava.slice(iGost))
+  return (doma === 0) !== (gost === 0)
+}
+
 /** Igralci ene ekipe (blok `homeTeam` ali `awayTeam`) z dogodki. */
 function igralciEkipe(blok) {
   const [zacetni, ostalo = ''] = blok.split('Pričuvni igrači')
@@ -224,6 +244,9 @@ export function kratkoImeHr(polno) {
   return ime.length >= 2 ? ime : razpakiraj(polno)
 }
 
+/** Dni od datuma tekme ('YYYY-MM-DD'); brez datuma 0, da se tekma prebere. */
+const starostDni = (datum) => (datum ? (Date.now() - Date.parse(`${datum}T00:00:00Z`)) / 86400000 : 0)
+
 const vir = {
   ime: 'hns',
   polnoIme: 'Hrvatski nogometni savez (semafor.hns.family)',
@@ -241,7 +264,15 @@ const vir = {
     const krogi = new Map()
     for (const t of vrsticeRazporeda(html)) {
       if (!krogi.has(t.krog)) krogi.set(t.krog, { stevilka: t.krog, tekme: [] })
-      krogi.get(t.krog).tekme.push({ domaci: t.domaci, gostje: t.gostje, datum: t.datum, ura: t.ura, kontumacija: false })
+      // Le 3:0 / 0:3 je lahko kontumacija; stran tekme je v predpomnilniku
+      // (prebere jo tudi uvoz zapisnikov), zato to ne pomeni novih zahtevkov.
+      const kontumacija = mozna3do0(t.izid)
+        ? jeKontumacija(await prenesi(naslovTekme(t.id), `tekma-${t.id}.html`), t.izid)
+        : false
+      krogi.get(t.krog).tekme.push({
+        domaci: t.domaci, gostje: t.gostje, datum: t.datum, ura: t.ura, kontumacija,
+        ...(kontumacija ? { izid: t.izid } : {}),
+      })
     }
     return [...krogi.values()].sort((a, b) => a.stevilka - b.stevilka)
   },
@@ -255,7 +286,10 @@ const vir = {
       // Tekma v predpomnilniku brez postav (zapisnik še ni bil vnesen) se
       // prebere znova; popolna se ne spreminja več.
       let z = vZapisnik(await prenesi(url, ime), { id: t.id, url })
-      if (!z) z = vZapisnik(await prenesi(url, ime, true), { id: t.id, url })
+      // Znova le tekmo zadnjih deset dni: starejša brez postav je kontumacija
+      // ali zveza zapisnikov ne vnaša (1. ŽNL Karlovac) — vsako uro bi jih
+      // sicer brali na stotine zastonj.
+      if (!z && starostDni(t.datum) <= 10) z = vZapisnik(await prenesi(url, ime, true), { id: t.id, url })
       if (z) out.push({ id: z.zapisnikId, z, url })
     }
     return out

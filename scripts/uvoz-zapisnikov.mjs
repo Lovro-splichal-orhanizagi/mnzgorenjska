@@ -21,6 +21,7 @@ import { viraZa } from './viri/index.mjs'
 import { mapaKlubov } from './klubi.mjs'
 import { vseVrstice } from './strani.mjs'
 import { prenesiSPonovitvami } from './prenos.mjs'
+import { dodajStrelceSKlopi } from './zapisnik.mjs'
 
 const PREDPOMNILNIK = 'scripts/.predpomnilnik'
 
@@ -86,6 +87,8 @@ const virIme = arg('vir')
 const vir = viraZa(virIme ? { source: virIme, slug: tekmovanje.slug } : tekmovanje)
 if (virIme) console.log(`Vir povožen: ${virIme}`)
 const liga = arg('liga', sifraLige(tekmovanje, '1502'))
+// Arhiv (prejšnja sezona) igralca ne vrača med aktivne; nastop v tekoči sezoni ga.
+const tekocaSezona = liga === sifraLige(tekmovanje, '1502')
 console.log(`Tekmovanje: ${tekmovanje.name} (liga ${liga})`)
 
 // --- prenos s predpomnilnikom ---------------------------------------------
@@ -122,6 +125,7 @@ async function prenesi(url, datoteka, sveze = false) {
 // tega vira (glej `mapaKlubov`).
 const klubi = await mapaKlubov(db, vir) // ključ kluba -> id
 const igralci = new Map() // Dres mora lociti soimenjake tudi pri samostojnem nastopu.
+const klubPoReg = new Map() // `reg|<st>` -> { team, datum } zadnje tekme v tem zagonu
 
 async function klubId(ime) {
   const kljuc = vir.kljucKluba(ime)
@@ -177,7 +181,7 @@ const VRATAR_IZ_POLJA = 'v vratih, a vodimo ga v polju'
 async function igralecId(
   teamId,
   polnoIme,
-  { vratar, st, dvoumno = false, zasedeni = null, regSt = null, pozicija = null, opozorila = null },
+  { vratar, st, dvoumno = false, zasedeni = null, regSt = null, pozicija = null, opozorila = null, datum = null },
 ) {
   // Oznaka vratarja iz enega zapisnika naredi vratarja le igralca, čigar
   // pozicije še ne poznamo (ali je ugibana). Znanega igralca iz polja ne
@@ -200,11 +204,20 @@ async function igralecId(
   // in z njim cela druzina napak s soimenjaki.
   if (regSt != null) {
     const kljucReg = `reg|${regSt}`
-    if (igralci.has(kljucReg)) return igralci.get(kljucReg)
+    if (igralci.has(kljucReg)) {
+      // Isti igralec na več tekmah tega zagona: klub da najnovejša tekma, ne
+      // prva prebrana (Vitić: NK Zagreb -> Zagreb 041, 42 takih na Hrvaškem).
+      const znan = klubPoReg.get(kljucReg)
+      if (tekocaSezona && znan && znan.team !== teamId && (datum ?? '') >= (znan.datum ?? '')) {
+        await db.from('players').update({ team_id: teamId }).eq('id', igralci.get(kljucReg))
+        klubPoReg.set(kljucReg, { team: teamId, datum })
+      }
+      return igralci.get(kljucReg)
+    }
 
     const { data: poReg } = await db
       .from('players')
-      .select('id, position, position_source, team_id')
+      .select('id, position, position_source, team_id, active, odsel_at, izstopil_at')
       .eq('competition_id', tekmovanje.id)
       .eq('reg_st', regSt)
       .maybeSingle()
@@ -213,7 +226,13 @@ async function igralecId(
       // Prestop ali nova stevilka dresa: zapisnik je najzanesljivejsi dokaz,
       // zato oboje popravimo po njem.
       const popravek = {}
-      if (poReg.team_id !== teamId) popravek.team_id = teamId
+      // Arhiv (lanska sezona) kluba ne prestavlja nazaj; prestop pove le letošnji zapisnik.
+      if (poReg.team_id !== teamId && tekocaSezona) popravek.team_id = teamId
+      // Uvoz razporeda deaktivira igralca, čigar klub (lanski) ni v ligi; ko ga
+      // letošnji zapisnik pokaže pri klubu lige, mora spet na trg. Brez tega je
+      // bilo na Hrvaškem 265 rednih igralcev neaktivnih (Antoljak, Čepin, 27
+      // nastopov). Kdor je odšel (odsel_at) ali čigar klub je izstopil, ostane.
+      if (tekocaSezona && poReg.active === false && !poReg.odsel_at && !poReg.izstopil_at) popravek.active = true
       if (st != null) popravek.shirt_number = st
       javiVratarjaIzPolja(poReg)
       if (vratar && smeVVrata(poReg)) {
@@ -228,6 +247,7 @@ async function igralecId(
       if (Object.keys(popravek).length)
         await db.from('players').update(popravek).eq('id', poReg.id)
       igralci.set(kljucReg, poReg.id)
+      klubPoReg.set(kljucReg, { team: popravek.team_id ?? poReg.team_id, datum })
       return poReg.id
     }
 
@@ -249,6 +269,7 @@ async function igralecId(
       .single()
     if (eNov) throw new Error(`igralec ${polnoIme} (reg ${regSt}): ${eNov.message}`)
     igralci.set(kljucReg, nov.id)
+    klubPoReg.set(kljucReg, { team: teamId, datum })
     return nov.id
   }
 
@@ -603,37 +624,7 @@ for (const { id, z, url } of zapisniki) {
     // zanj pa ne. Brez nastopa gol ne prinese tock nikomur, pri tem pa ni
     // sporno, da je igral — gol je dokaz. Vstop postavimo na minuto gola in
     // to zapisemo med opozorila, da ostane vidno, da je podatek nepopoln.
-    for (const g of z.goli) {
-      if (g.st == null) continue
-      if (n.some((x) => x.ekipaIdx === g.ekipaIdx && x.st === g.st)) continue
-      const ekipa = g.ekipaIdx === 0 ? z.domaci : z.gostje
-      const kdo = (ekipa.rezerve ?? []).find((r) => r.st === g.st)
-      if (!kdo) continue
-      const od = g.minuta ?? 0
-      n.push({
-        ekipaIdx: g.ekipaIdx,
-        ekipa: ekipa.ime,
-        st: kdo.st,
-        ime: kdo.ime,
-        regSt: kdo.regSt ?? null,
-        vratar: Boolean(kdo.vratar),
-        zacetnik: false,
-        minutaOd: od,
-        minutaDo: 90,
-        minute: Math.max(0, 90 - od),
-        goli: 0,
-        goliIzEnajstmetrovke: 0,
-        avtogoli: 0,
-        zgreseneEnajstmetrovke: 0,
-        rumeni: 0,
-        rdeci: 0,
-        prejetiGoli: 0,
-        cleanSheet: false,
-      })
-      z.opozorila.push(
-        `strelec ${kdo.ime} (dres ${kdo.st}) je na klopi, menjave zanj ni — vstop postavljen na ${od}. minuto`,
-      )
-    }
+    for (const opozorilo of dodajStrelceSKlopi(z, n)) z.opozorila.push(opozorilo)
 
     // imena, ki se v isti ekipi pojavijo večkrat (soimenjaki)
     const stejIme = new Map()
@@ -656,6 +647,7 @@ for (const { id, z, url } of zapisniki) {
         regSt: x.regSt ?? null,
         pozicija: x.pozicija ?? null,
         opozorila: z.opozorila,
+        datum: z.datum ?? null,
       })
       zasedeni.add(pId)
       idPoStevilki.set(`${x.ekipaIdx}|${x.st}`, pId)
@@ -676,6 +668,9 @@ for (const { id, z, url } of zapisniki) {
         red_cards: x.rdeci,
         goals_conceded: x.prejetiGoli,
         clean_sheet: x.cleanSheet,
+        // Oznaka vratarja na TEJ tekmi (ne pozicija igralca): uskladi-pozicije
+        // iz nje po večini tekem loči prave vratarje od enkratnih.
+        is_goalkeeper: Boolean(x.vratar),
       })
     }
     // Zadnja varovalka pri soimenjakih: dva nastopa ne smeta pokazati na
@@ -749,7 +744,7 @@ for (const { id, z, url } of zapisniki) {
       .select(
         'match_id, player_id, team_id, shirt_number, started, minute_on, minute_off, minutes_played, ' +
           'goals, own_goals, penalties_scored, penalties_missed, penalties_saved, yellow_cards, red_cards, ' +
-          'goals_conceded, clean_sheet',
+          'goals_conceded, clean_sheet, is_goalkeeper',
       )
       .eq('match_id', tekma.id)
       .order('id')

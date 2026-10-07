@@ -204,7 +204,28 @@ kluba ohrani ć in đ, ki ju slovenski `poenostavi` zavrže.
 
 Vmesnik je v hrvaščini (`src/i18n/hr/`, `JEZIK_DRZAVE.HR`), vstop je
 `slff.eu/hr`, kartica ob deljenju `hr.html`, pošta ima hrvaško vejo. Stran
-Pozicije je v meniju kot v Sloveniji. Beremo odkrito (`User-Agent: SLFF fantasy`, 500 ms med zahtevki,
+Pozicije je v meniju kot v Sloveniji.
+
+Posebnosti, ki jih je našel pregled pred vklopom (7. 10. 2026):
+
+- **Kontumacija**: Semafor pri 3:0 vnese postavo le ekipe, ki je prišla
+  (`jeKontumacija` v `hns.mjs`); razpored tekmo označi in vpiše izid.
+- **Strelec s klopi brez menjave** (ŽNS Zagreb menjav ne vpisuje) dobi nastop
+  z goli in kartoni (`dodajStrelceSKlopi` v `zapisnik.mjs`); prej je bil gol
+  le v `goals` in točk ni prinesel.
+- `appearances.is_goalkeeper` je oznaka vratarja na tisti tekmi (od 8. 10.
+  2026). *Uskladi pozicije* z `vir = hns` po njej loči prave vratarje od
+  enkratnih (Mezga: 1× vratar, 5 golov).
+- Nastop v letošnjem zapisniku igralca vrne med aktivne in ga prestavi v klub
+  zadnje tekme; arhiv kluba ne prestavlja.
+- Kratko ime je v državi enolično (oznaka županije in raven: "MZ I.",
+  "VŽ Elitna"), ker stoji brez zveze v roku, rezultatih in zadevi maila.
+- 1. ŽNL Karlovac zapisnikov na Semafor ne vnaša — ostane izklopljena.
+- **Vklop sredi sezone**: borza neaktivnih lig ne premika; ob vklopu postavi
+  `prvi_fantasy_krog` na naslednji krog, da borza starejših krogov ne
+  obračuna (začetna cena jih že vsebuje).
+
+Beremo odkrito (`User-Agent: SLFF fantasy`, 500 ms med zahtevki,
 popolnih zapisnikov ne beremo znova), vir je v nogi vsake strani.
 
 ### Država obiskovalca

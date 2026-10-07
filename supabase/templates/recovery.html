@@ -11,6 +11,13 @@
     <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Nastaviť nové heslo →</a>
   </p>
   <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Ak si o nové heslo nežiadal ty, tento e-mail ignoruj — staré heslo zostáva v platnosti.</p>
+{{ else if eq (printf "%v" .Data.jezik) "hr" }}
+  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Nova lozinka</p>
+  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Netko (nadamo se ti) zatražio je novu lozinku za SLFF. Klikni gumb i upiši novu lozinku.</p>
+  <p style="text-align: center; margin: 24px 0;">
+    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Postavi novu lozinku →</a>
+  </p>
+  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Ako nisi ti zatražio/la novu lozinku, zanemari ovaj e-mail. Stara lozinka ostaje važeća.</p>
 {{ else }}
   <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Ponastavitev gesla</p>
   <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Nekdo (upamo, da ti) je zahteval novo geslo za SLFF. Klikni gumb in vpiši novo geslo.</p>

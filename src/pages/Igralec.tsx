@@ -35,6 +35,7 @@ import { tockeZaNastop } from '../lib/tockovanje'
 import type { Pozicija, Postavka } from '../lib/tipi'
 import { t, tx } from '../i18n'
 import { izvor } from '../lib/platforma'
+import { prevediNapako } from '../lib/napake'
 
 /** Vrstica pogleda `player_overview` — profil igralca. */
 type Profil = Record<string, any> & {
@@ -119,7 +120,7 @@ export default function Igralec() {
         .maybeSingle()
       if (preklican) return
       if (error) {
-        setNapaka(error.message)
+        setNapaka(prevediNapako(error.message))
         setNalaganje(false)
         return
       }
@@ -342,7 +343,7 @@ export default function Igralec() {
       .select('id')
       .single()
     setPosiljamPorocilo(false)
-    if (error) return setNapaka(error.message)
+    if (error) return setNapaka(prevediNapako(error.message))
     if (data)
       setPorocila((prej) => [
         {
@@ -360,7 +361,7 @@ export default function Igralec() {
 
   async function izbrisiPorocilo(id: number) {
     const { error } = await supabase.from('player_reports').delete().eq('id', id)
-    if (error) return setNapaka(error.message)
+    if (error) return setNapaka(prevediNapako(error.message))
     setPorocila((prej) => prej.filter((p) => p.id !== id))
   }
 
@@ -381,7 +382,7 @@ export default function Igralec() {
         },
         { onConflict: 'player_id,voter_id' },
       )
-    if (error) return setNapaka(error.message)
+    if (error) return setNapaka(prevediNapako(error.message))
 
     // Glas je en sam (upsert na player_id,voter_id): ob premisleku se prestavi,
     // ne prišteje. Brez odštevanja prejšnjega bi po nekaj klikih vsaka pozicija

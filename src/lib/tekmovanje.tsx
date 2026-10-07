@@ -28,6 +28,7 @@ import {
   shranjenaDrzava,
   tujec,
   zapomniTujca,
+  pozabiTujca,
   type UgibObiskovalca,
 } from './drzava'
 import { useAuth } from './useAuth'
@@ -223,6 +224,8 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
         .eq('active', true)
         .order('federation_sort')
         .order('sort_order')
+        // Enak sort_order (hrvaške lige) ne sme dati vsakič druge privzete lige.
+        .order('id')
       if (!polno.error) return (polno.data as Tekmovanje[] | null) ?? []
 
       // Migracija za zveze še ni stekla — beri po stari shemi, da vmesnik
@@ -279,6 +282,15 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
   // Tujec: IP iz države brez lig. Oznaka ostane v brskalniku (jezik), vprašanje
   // po državi pa le, dokler je ne izbere (liga ali `slff-drzava`).
   const [tujecKoda, setTujecKoda] = useState<string | null>(() => tujec())
+  // Kdor je prišel iz države brez lig, preden je ta dobila lige (Hrvat pred
+  // vklopom hrvaških lig), bi sicer za vedno ostal tujec: angleščina in
+  // vprašanje po državi. Ko ima njegova država lige, oznaka odpade.
+  useEffect(() => {
+    if (tujecKoda && tekmovanja.length && drzaveZLigami(tekmovanja).includes(tujecKoda)) {
+      pozabiTujca()
+      setTujecKoda(null)
+    }
+  }, [tujecKoda, tekmovanja])
   const [imaDrzavo] = useState(() => Boolean(shranjenaDrzava()))
   useEffect(() => {
     if (ugib !== undefined) return

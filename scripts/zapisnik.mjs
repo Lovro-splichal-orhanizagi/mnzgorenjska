@@ -421,7 +421,8 @@ export function nastopi(z) {
       const minute = Math.max(0, Math.min(do_, DOLZINA_TEKME) - od)
 
       const rdec = z.rdeci.find((k) => k.ekipaIdx === idx && k.st === ig.st)
-      if (rdec) do_ = Math.min(do_, rdec.minuta)
+      // Rdeč karton brez minute (Istra, 10/2026) ne sme pobrati vseh minut.
+      if (rdec && rdec.minuta != null) do_ = Math.min(do_, rdec.minuta)
 
       const goliIgralca = z.goli.filter(
         (g) => g.ekipaIdx === idx && g.st === ig.st,
@@ -464,4 +465,54 @@ export function nastopi(z) {
   }
 
   return out
+}
+
+/**
+ * Strelec s klopi, ki mu zapisnik ne pripiše menjave (Maribor: Vukovic, 47.
+ * minuta; ŽNS Zagreb menjav sploh ne vpisuje). Gol je dokaz, da je igral, zato
+ * mu dodamo nastop od minute prvega gola z goli in kartoni kot vsakemu drugemu.
+ * Spremeni `n` (nastopi) in vrne opozorila za zapisnik.
+ */
+export function dodajStrelceSKlopi(z, n) {
+  const opozorila = []
+  for (const g of z.goli) {
+    if (g.st == null) continue
+    if (n.some((x) => x.ekipaIdx === g.ekipaIdx && x.st === g.st)) continue
+    const ekipa = g.ekipaIdx === 0 ? z.domaci : z.gostje
+    const kdo = (ekipa.rezerve ?? []).find((r) => r.st === g.st)
+    if (!kdo) continue
+    // Vstop na najzgodnejši gol igralca; goli, kartoni in prejeti goli kot
+    // pri vsakem drugem nastopu. Prej so bili goli tu 0: gol je stal v
+    // tabeli goals, točk zanj pa strelec ni dobil (985 golov na Hrvaškem,
+    // kjer ŽNS Zagreb menjav sploh ne vpisuje, in 10 tekem v Sloveniji).
+    const njegovi = z.goli.filter((x) => x.ekipaIdx === g.ekipaIdx && x.st === g.st)
+    const od = Math.min(...njegovi.map((x) => x.minuta ?? 0))
+    const rdec = (z.rdeci ?? []).find((k) => k.ekipaIdx === g.ekipaIdx && k.st === g.st)
+    const do_ = rdec?.minuta != null ? Math.max(od, Math.min(rdec.minuta, 90)) : 90
+    const prejeti = g.ekipaIdx === 0 ? z.rezultat.gostje : z.rezultat.domaci
+    n.push({
+      ekipaIdx: g.ekipaIdx,
+      ekipa: ekipa.ime,
+      st: kdo.st,
+      ime: kdo.ime,
+      regSt: kdo.regSt ?? null,
+      vratar: Boolean(kdo.vratar),
+      zacetnik: false,
+      minutaOd: od,
+      minutaDo: do_,
+      minute: Math.max(0, do_ - od),
+      goli: njegovi.filter((x) => !x.avtogol).length,
+      goliIzEnajstmetrovke: njegovi.filter((x) => !x.avtogol && x.enajstmetrovka).length,
+      avtogoli: njegovi.filter((x) => x.avtogol).length,
+      zgreseneEnajstmetrovke: (z.zgresene ?? []).filter((x) => x.ekipaIdx === g.ekipaIdx && x.st === g.st).length,
+      rumeni: (z.rumeni ?? []).filter((k) => k.ekipaIdx === g.ekipaIdx && k.st === g.st).length,
+      rdeci: rdec ? 1 : 0,
+      prejetiGoli: prejeti,
+      cleanSheet: prejeti === 0,
+    })
+    opozorila.push(
+      `strelec ${kdo.ime} (dres ${kdo.st}) je na klopi, menjave zanj ni — vstop postavljen na ${od}. minuto`,
+    )
+  }
+  return opozorila
 }
