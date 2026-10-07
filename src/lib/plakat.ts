@@ -86,9 +86,18 @@ export function ligaVTozilniku(liga: string, j: Jezik = jezik()): string {
   // Hrvaščina: ženske besede imena pred " — " na -a dobijo -u: "Treća NL Sjever"
   // -> "Treću NL Sjever", "Prva zagrebačka liga" -> "Prvu zagrebačku ligu".
   // Zveza za pomišljajem ("— Varaždin") ostane v imenovalniku.
+  // Sklanjamo le do samostalnika lige (liga, NL, ŽNL …): kraj za njim ostane
+  // ("Druga ŽNL Županja" -> "Drugu ŽNL Županja", ne "Županju").
   if (j === 'hr') {
     const [ime, ...zveza] = liga.split(' — ')
-    const sklon = ime.replace(/(\p{L}+)a(?=\s|$)/gu, '$1u')
+    const besede = ime.split(' ')
+    let glava = -1
+    besede.forEach((b, i) => {
+      if (/^(liga|NL|ŽNL|MNL|ŽL|LNS)$/i.test(b)) glava = i
+    })
+    const sklon = besede
+      .map((b, i) => (i <= glava ? b.replace(/^(\p{L}+)a$/u, '$1u') : b))
+      .join(' ')
     return [sklon, ...zveza].join(' — ')
   }
   return liga.replace(/\bliga\b/, 'ligo')

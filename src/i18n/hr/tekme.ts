@@ -55,7 +55,7 @@ export const tekme: NonNullable<Prevod['tekme']> = {
   rezultati: {
     naslov: 'Rezultati',
     uvod:
-      'Odigrane utakmice iz zapisnika {zveza}. Klikni na utakmicu i vidjet ćeš obje postave na terenu — na svakom dresu bodove koje je igrač zaradio.',
+      'Odigrane utakmice iz službenih zapisnika ({zveza}). Klikni na utakmicu i vidjet ćeš obje postave na terenu — na svakom dresu bodove koje je igrač zaradio.',
     niZacetka: 'Sezona još nije počela.',
     prazenKrog: 'U ovom kolu nema odigranih utakmica.',
   },
@@ -82,7 +82,7 @@ export const tekme: NonNullable<Prevod['tekme']> = {
     naslov: 'Asistencije',
     kdoJePodal: 'Tko je asistirao?',
     uvod:
-      'Zapisnici {zveza} bilježe strijelce, ali ne i asistencije. Određuje ih zajednica: kad isti igrač kod gola skupi <b>{glasov}</b>, asistencija mu se priznaje i donosi <b>+3 boda</b>.',
+      'Službeni zapisnici ({zveza}) bilježe strijelce, ali ne i asistencije. Određuje ih zajednica: kad isti igrač kod gola skupi <b>{glasov}</b>, asistencija mu se priznaje i donosi <b>+3 boda</b>.',
     // Akuzativ: "skupi 3 glasa".
     pragGlasov: { one: '{n} glas', few: '{n} glasa', other: '{n} glasova' },
     niTekem: 'U trenutnoj sezoni još nema odigranih utakmica',
@@ -114,7 +114,7 @@ export const tekme: NonNullable<Prevod['tekme']> = {
     morasSePrijaviti: 'Za glasovanje se moraš prijaviti',
     spremeniGlas: 'Promijeni glas',
     kdoJePodal: 'Tko je asistirao?',
-    vodiBrez: 'Vodi »bez asistencije«',
+    vodiBrez: 'Vodi „bez asistencije“',
     vodi: 'Vodi <b>{ime}</b>',
     igralecBrezZapisa: 'igrač bez zapisa',
     doOdlocitve: '— još {n} do odluke',

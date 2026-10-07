@@ -34,4 +34,18 @@ export const skupno: NonNullable<Prevod['skupno']> = {
   zapri: 'Zavrieť',
   nazaj: 'Späť',
   napaka: 'Chyba: {sporocilo}',
+  // Napake iz baze (RPC), prevedene v src/lib/napake.ts.
+  napakeRpc: {
+    miniLigaNi: 'Mini liga s týmto kódom neexistuje.',
+    niTvojaEkipa: 'To nie je tvoj tím.',
+    imeMiniLige: 'Názov mini ligy musí mať 2 až 40 znakov.',
+    prijavaMiniLiga: 'Pre mini ligu sa musíš prihlásiť.',
+    niDovoljenja: 'Nemáš oprávnenie upravovať tento tím.',
+    kodaNeUstvarjena: 'Kód mini ligy sa nepodarilo vytvoriť. Skús znova.',
+    golOdlocen: 'O tomto góle je už rozhodnuté, hlasovanie sa skončilo.',
+    zePoznavalec: 'Už si znalec tejto ligy.',
+    prosnjaCaka: 'Tvoja žiadosť pre túto ligu už čaká.',
+    prosnjaZavrnjena: 'Žiadosť pre túto ligu bola nedávno zamietnutá. Novú môžeš poslať 14 dní po zamietnutí.',
+    klubNeIgra: 'Vybraný klub nehrá v tejto lige.',
+  },
 }

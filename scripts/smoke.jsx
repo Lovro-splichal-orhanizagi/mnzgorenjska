@@ -41,7 +41,7 @@ import { sestejOdKroga } from '../src/lib/lestvica'
 import { zdruziNavijace } from '../src/lib/navijaci'
 import { TabelaNavijacev, KlubMedNavijaci, IzbiraKluba } from '../src/components/NavijaciKlubov'
 import { krogKoncan, mestoVLigi, igralciPregleda, postaviPregled, oznakaPremika, imeDatotekePregleda, KVADRAT, SIRINA_P, VISINA_P, ROB_P } from '../src/lib/tedenskiPregled'
-import { parsirajZapisnik, nastopi } from './zapisnik.mjs'
+import { parsirajZapisnik, nastopi, dodajStrelceSKlopi } from './zapisnik.mjs'
 import { poZvezah, ustreza, pokaziZvezo } from '../src/components/IzbirnikLige'
 import { virPodatkov, imeZveze } from '../src/components/VirPodatkov'
 import { sestaviVabilo, vabiloMailto } from '../src/lib/vabilo'
@@ -2886,6 +2886,8 @@ preveri(
   preveri('plakat: "3. SNL — Zahod" brez besede liga ostane', ligaVTozilniku('3. SNL — Zahod') === '3. SNL — Zahod')
   preveri('plakat: slovaško "IV. liga — SsFZ" v tožilniku', ligaVTozilniku('IV. liga — SsFZ', 'sk') === 'IV. ligu — SsFZ', ligaVTozilniku('IV. liga — SsFZ', 'sk'))
   preveri('plakat: slovaško "I. trieda — Žilina" v tožilniku', ligaVTozilniku('I. trieda — Žilina', 'sk') === 'I. triedu — Žilina', ligaVTozilniku('I. trieda — Žilina', 'sk'))
+  preveri('plakat: hrvaško kraj za ligo ostane', ligaVTozilniku('Druga ŽNL Županja — Vukovar', 'hr') === 'Drugu ŽNL Županja — Vukovar', ligaVTozilniku('Druga ŽNL Županja — Vukovar', 'hr'))
+  preveri('plakat: hrvaško "Prva zagrebačka liga"', ligaVTozilniku('Prva zagrebačka liga', 'hr') === 'Prvu zagrebačku ligu')
   for (const [iz, v] of [
     ['Treća NL Sjever', 'Treću NL Sjever'],
     ['Prva zagrebačka liga', 'Prvu zagrebačku ligu'],
@@ -3459,6 +3461,19 @@ preveri(
   }))
   const r = H.vZapisnik(beri('hns-tekma-rdeci.html'), { id: 'b' })
   preveri('hns: rdeči karton', H.nastopi(r).some((x) => x.ime === 'Banović Davor' && x.rdeci === 1))
+
+  // Kontumacija (Mladost Molve : Prugovac, 3:0): postava le domačih, zapisnika ni.
+  const k = beri('hns-tekma-kontumacija.html')
+  preveri('hns: kontumacija prepoznana', H.jeKontumacija(k, { domaci: 3, gostje: 0 }) && !H.vZapisnik(k))
+  preveri('hns: odigrana tekma ni kontumacija', !H.jeKontumacija(beri('hns-tekma-11m.html'), { domaci: 3, gostje: 0 }))
+
+  // ŽNS Zagreb menjav ne vpisuje: strelca s klopi (Hrvatski Leskovac : Croatia 98, 8:0)
+  // dobita nastop IN gol; prej je bil gol v tabeli goals, točk zanj pa ni bilo.
+  const s8 = H.vZapisnik(beri('hns-tekma-strelec-s-klopi.html'), { id: 's' })
+  const n8 = H.nastopi(s8)
+  const opoz = dodajStrelceSKlopi(s8, n8)
+  const goliNastopi = n8.filter((x) => x.ekipaIdx === 0).reduce((v, x) => v + x.goli, 0)
+  preveri('hns: strelci s klopi dobijo gol', s8.menjave.length === 0 && opoz.length >= 1 && goliNastopi === 8)
 }
 
 // --- navijači klubov ----------------------------------------------------------

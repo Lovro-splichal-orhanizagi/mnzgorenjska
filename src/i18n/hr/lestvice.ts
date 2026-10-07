@@ -135,7 +135,7 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     pridruziSe: 'Pridruži se',
     koda: 'Kod ({n} znakova)',
     nisiVNobeni: 'Još nisi ni u jednoj mini ligi. Tko je bolji menadžer — ti ili tvoje društvo?',
-    ustvariLigoIme: 'Napravi ligu »{ime}«',
+    ustvariLigoIme: 'Napravi ligu „{ime}“',
     najprejSestavi: 'Najprije složi momčad',
     povabilo: 'Pozivnica: <povezava>{povezava}</povezava><koda>kod {koda}</koda>',
     deliPovabilo: 'Podijeli pozivnicu',
@@ -190,7 +190,7 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     kapetanOpis: '{igralec} je s trakom donio {tocke} ({ekipa}).',
     adut: 'Skriveni adut',
     adutOpis: '{igralec} ({tocke}) — u postavi ga nije imao nitko osim {ekipa}.',
-    skok: 'Lift',
+    skok: 'Skok',
     skokOpis: {
       one: '{ekipa}: {n} mjesto gore, sada {mesto}. mjesto.',
       few: '{ekipa}: {n} mjesta gore, sada {mesto}. mjesto.',

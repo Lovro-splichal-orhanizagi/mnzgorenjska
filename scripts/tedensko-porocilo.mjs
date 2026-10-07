@@ -185,17 +185,16 @@ if (process.argv.includes('--discord')) {
       ? `📋 **Tedensko poročilo** — podatki v redu, ${zamude.length} lig čaka na statistiko`
       : `✅ **Tedensko poročilo** — vse v redu`
 
-  const telo = [
-    `${lige?.length ?? 0} lig · ${igralcev ?? 0} igralcev · ${ekip ?? 0} fantasy ekip`,
-    '',
-    ...vrstice.map((v) =>
-      `${v.polno ? '·' : '⚠'} **${v.liga}** ${v.krog} — uvoženih ${v.uvoz}` +
-      (v.manjka ? ` · **${v.manjka} tekem brez statistike**` : '') +
-      ` · rok ${v.rok}`),
-  ]
+  // Težave najprej: Discord sprejme 2000 znakov, vrstica na ligo pa jih ima
+  // ~80 — pri 150 ligah bi seznam lig izrinil težave. Lige le tiste z zamudo.
+  const telo = [`${lige?.length ?? 0} lig · ${igralcev ?? 0} igralcev · ${ekip ?? 0} fantasy ekip`]
   if (tezave?.length) {
     telo.push('', '**Težave:**')
     for (const t of tezave) telo.push(`• ${t.opis} — ${t.koliko}× (\`${t.primer}\`)`)
+  }
+  if (zamude.length) {
+    telo.push('', '**Lige s tekmami brez statistike:**')
+    for (const v of zamude) telo.push(`⚠ **${v.liga}** ${v.krog} — **${v.manjka}** brez statistike · rok ${v.rok}`)
   }
 
   try {

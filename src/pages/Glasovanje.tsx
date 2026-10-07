@@ -16,6 +16,7 @@ import GolZaGlasovanje, {
 } from '../components/GolZaGlasovanje'
 import type { Gol, Glas, Kandidat } from '../components/GolZaGlasovanje'
 import type { TekmaVrstica } from '../lib/tipi'
+import { prevediNapako } from '../lib/napake'
 
 
 export default function Glasovanje() {
@@ -80,7 +81,7 @@ export default function Glasovanje() {
           .order('played_on', { ascending: false })
           .order('match_id')
         if (!veljavno) return
-        if (error) setNapaka(error.message)
+        if (error) setNapaka(prevediNapako(error.message))
         samoTekoca = (data ?? []) as TekmaVrstica[]
       }
       setTekme(samoTekoca)
@@ -227,7 +228,7 @@ export default function Glasovanje() {
       { goal_id: golId, voter_id: session.user.id, player_id: playerId },
       { onConflict: 'goal_id,voter_id' },
     )
-    if (error) return setNapaka(error.message)
+    if (error) return setNapaka(prevediNapako(error.message))
 
     setMojiGlasovi({ ...mojiGlasovi, [golId]: playerId })
     setPravkarOddan(golId)

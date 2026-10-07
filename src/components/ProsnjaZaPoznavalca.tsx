@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import { t, tx } from '../i18n'
+import { prevediNapako } from '../lib/napake'
 
 interface Klub {
   id: number
@@ -69,7 +70,7 @@ export default function ProsnjaZaPoznavalca({
       p_sporocilo: sporocilo || undefined,
     })
     setDela(false)
-    if (error) return setNapaka(error.message)
+    if (error) return setNapaka(prevediNapako(error.message))
     setStatus('caka')
     setOdprto(false)
   }

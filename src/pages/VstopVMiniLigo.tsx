@@ -13,6 +13,7 @@ import {
 } from '../lib/miniLige'
 import { t, tx } from '../i18n'
 import { dogodek } from '../lib/analitika'
+import { prevediNapako } from '../lib/napake'
 
 interface Liga {
   id: number
@@ -117,7 +118,7 @@ export default function VstopVMiniLigo() {
       p_ekipa: zEkipo,
     })
     setDela(false)
-    if (error) return setNapaka(error.message)
+    if (error) return setNapaka(prevediNapako(error.message))
     dogodek('mini_liga_pridruzitev', { vir: 'povezava' })
     const izid = Array.isArray(data) ? data[0] : data
     pozabiVabilo()

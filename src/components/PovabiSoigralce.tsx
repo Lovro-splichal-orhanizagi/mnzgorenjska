@@ -6,6 +6,7 @@ import { besediloVabila, deliVabilo, povezaveDeljenja, privzetoImeLige } from '.
 import { t } from '../i18n'
 import { izvor } from '../lib/platforma'
 import { dogodek } from '../lib/analitika'
+import { prevediNapako } from '../lib/napake'
 
 interface Liga {
   id: number
@@ -85,7 +86,7 @@ export default function PovabiSoigralce({
       })
       if (error) {
         setDela(false)
-        return setSporocilo(error.message)
+        return setSporocilo(prevediNapako(error.message))
       }
       dogodek('mini_liga_ustvarjena', { vir: 'povabi' })
       const nova = Array.isArray(data) ? data[0] : data

@@ -33,4 +33,18 @@ export const skupno = {
   zapri: 'Zapri',
   nazaj: 'Nazaj',
   napaka: 'Napaka: {sporocilo}',
+  // Napake iz baze (RPC), prevedene v src/lib/napake.ts.
+  napakeRpc: {
+    miniLigaNi: 'Mini lige s to kodo ni.',
+    niTvojaEkipa: 'To ni tvoja ekipa.',
+    imeMiniLige: 'Ime mini lige naj ima med 2 in 40 znaki.',
+    prijavaMiniLiga: 'Za mini ligo se je treba prijaviti.',
+    niDovoljenja: 'Ni dovoljenja za urejanje te ekipe.',
+    kodaNeUstvarjena: 'Kode mini lige ni bilo mogoče ustvariti. Poskusi znova.',
+    golOdlocen: 'O tem golu je že odločeno, glasovanje je zaključeno.',
+    zePoznavalec: 'Že si poznavalec te lige.',
+    prosnjaCaka: 'Tvoja prošnja za to ligo že čaka.',
+    prosnjaZavrnjena: 'Prošnja za to ligo je bila nedavno zavrnjena. Novo lahko oddaš 14 dni po zavrnitvi.',
+    klubNeIgra: 'Izbrani klub ne igra v tej ligi.',
+  },
 }

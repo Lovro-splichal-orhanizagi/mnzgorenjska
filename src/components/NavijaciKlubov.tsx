@@ -8,6 +8,7 @@ import { navijacev } from '../lib/plakat'
 import { zdruziNavijace, type KlubNavijacev, type NavijaciLige, type VrsticaNavijacev } from '../lib/navijaci'
 import Grb from './Grb'
 import { t, tx, stevilo } from '../i18n'
+import { prevediNapako } from '../lib/napake'
 
 const MEDALJE = ['🥇', '🥈', '🥉']
 
@@ -80,7 +81,7 @@ function useNavijaci(tekmovanjeId: number | null) {
         .from('profiles')
         .update({ navijam_team_id: klubId })
         .eq('id', uporabnikId)
-      if (error) return setNapaka(error.message)
+      if (error) return setNapaka(prevediNapako(error.message))
       setMojKlub(klubId)
       setOsvezi((n) => n + 1)
     },

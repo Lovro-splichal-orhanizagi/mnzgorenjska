@@ -370,7 +370,9 @@ for (const k of veljavni) {
       // tekma ni uvozena: odigrana tekma ima pravi datum iz zapisnika.
       const obstojeca = obstojTekme[0]
       if (t.kontumacija && !obstojeca.kontumacija && !obstojeca.imported_at) {
-        const { error } = await db.from('matches').update({ kontumacija: true }).eq('id', obstojeca.id)
+        // Izid dodeljene zmage, kjer ga vir pove (HNS); sicer ostane, kot je.
+        const izid = t.izid ? { home_goals: t.izid.domaci, away_goals: t.izid.gostje } : {}
+        const { error } = await db.from('matches').update({ kontumacija: true, ...izid }).eq('id', obstojeca.id)
         if (error) console.log(`  tekma ${t.domaci} : ${t.gostje}: ${error.message}`)
         else console.log(`  kontumacija: ${t.domaci} : ${t.gostje}`)
       }
@@ -397,6 +399,7 @@ for (const k of veljavni) {
         played_on: t.datum,
         source_url: url,
         kontumacija: !!t.kontumacija,
+        ...(t.kontumacija && t.izid ? { home_goals: t.izid.domaci, away_goals: t.izid.gostje } : {}),
       })
       .select('id, round_id, home_team_id, away_team_id, played_on, imported_at, kontumacija')
       .single()

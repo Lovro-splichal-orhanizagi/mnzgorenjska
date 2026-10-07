@@ -34,6 +34,7 @@ export {
   jezikObiskovalca,
   tujec,
   zapomniTujca,
+  pozabiTujca,
   izbranJezik,
   type UgibObiskovalca,
 } from './drzavaUgib.ts'
