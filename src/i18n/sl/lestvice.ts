@@ -7,6 +7,8 @@ export const lestvice = {
   mesto: '{mesto}. mesto',
   /** Rodilnik za "od 5 ekip". */
   odEkip: { one: 'od {n} ekipe', two: 'od {n} ekip', few: 'od {n} ekip', other: 'od {n} ekip' },
+  pokaziVec: 'Pokaži več ({n})',
+  mojeMesto: 'Moje mesto ↓',
 
   lestvica: {
     naslov: 'Lestvica',
@@ -53,6 +55,7 @@ export const lestvice = {
     povprecjeKroga: 'Ø {n}. krog',
     navijaci: 'Navijači',
     tvojKlub: 'tvoj klub',
+    stranKluba: 'Stran kluba →',
     premalo: 'Premalo navijačev',
     brezNavijacev: 'Še brez navijačev: {klubi}',
     prazno: 'V tej ligi še nihče ni izbral svojega kluba. Bodi prvi!',
@@ -135,6 +138,7 @@ export const lestvice = {
     ustvari: 'Ustvari',
     imeLige: 'Ime mini lige',
     ustvariLigo: 'Ustvari mini ligo',
+    novaAliKoda: 'Nova mini liga ali pridružitev s kodo',
     pridruziSe: 'Pridruži se',
     koda: 'Koda ({n} znakov)',
     nisiVNobeni: 'Nisi še v nobeni mini ligi. Kdo je boljši manager — ti ali tvoja družba?',

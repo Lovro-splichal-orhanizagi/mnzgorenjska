@@ -35,6 +35,22 @@ const SKRIPTA = `https://helpstack.eu/widget.js?id=${WIDGET_ID}`
 
 interface Klepet {
   identify?: (identiteta: unknown, podatki?: unknown) => void
+  open?: () => void
+}
+
+/**
+ * Odpre klepet ("Pomoč" v meniju). Na telefonu je mehurček skrit
+ * (index.css), zato je to edina pot do klepeta. Skripta se morda še nalaga:
+ * počakamo, da widget postavi okno, in ga odpremo, največ 10 s.
+ */
+export function odpriPodporo() {
+  const zacetek = Date.now()
+  const poskusi = () => {
+    const klepet = (window as Window & { ChatWidget?: Klepet }).ChatWidget
+    if (klepet?.open && document.getElementById('chat-widget-container')) klepet.open()
+    else if (Date.now() - zacetek < 10000) window.setTimeout(poskusi, 300)
+  }
+  poskusi()
 }
 
 function pocakajNaMirovanje(opravilo: () => void): () => void {

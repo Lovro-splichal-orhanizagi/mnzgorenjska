@@ -175,14 +175,14 @@ export default function PrviObisk() {
   const druge = drzaveZLigami(vsaTekmovanja).filter((d) => d !== drzavaLige)
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 pb-[max(1rem,var(--dno))] pt-[max(1rem,var(--vrh))] backdrop-blur">
       <div
         ref={okno}
         role="dialog"
         aria-modal="true"
         aria-labelledby="prvi-obisk-naslov"
         tabIndex={-1}
-        className="animiraj-vstop w-full max-w-md rounded-2xl border border-white/10 bg-slate-900 p-5 shadow-2xl outline-none"
+        className="animiraj-vstop max-h-full w-full max-w-md overflow-y-auto rounded-2xl border border-white/10 bg-slate-900 p-5 shadow-2xl outline-none"
       >
         <h2 id="prvi-obisk-naslov" className="text-xl font-black naslov">
           {t('aplikacija.prviObisk.naslov')}
@@ -242,7 +242,7 @@ export default function PrviObisk() {
           {vprasajDrzavo && drzava && drzave.length > 1 ? (
             <button
               onClick={() => setDrzava(null)}
-              className="text-xs text-slate-400 hover:text-slate-200"
+              className="inline-flex min-h-[44px] items-center px-2 text-sm text-slate-400 hover:text-slate-200"
             >
               {t('aplikacija.prviObisk.nazaj')}
             </button>
@@ -252,7 +252,7 @@ export default function PrviObisk() {
                 <button
                   key={koda}
                   onClick={() => preklopiDrzavo(koda, vsaTekmovanja, { izberiLigo: false })}
-                  className="text-xs text-slate-400 hover:text-slate-200"
+                  className="inline-flex min-h-[44px] items-center px-2 text-sm text-slate-400 hover:text-slate-200"
                 >
                   <span aria-hidden="true">{zastava(koda)} </span>
                   {t('aplikacija.prviObisk.drugaDrzava', { drzava: imeDrzave(koda) })}
@@ -262,7 +262,7 @@ export default function PrviObisk() {
           ) : (
             <span />
           )}
-          <button onClick={zapri} className="text-xs text-slate-500 hover:text-slate-300">
+          <button onClick={zapri} className="inline-flex min-h-[44px] items-center px-2 text-sm text-slate-500 hover:text-slate-300">
             {t('aplikacija.prviObisk.preskoci')}
           </button>
         </div>

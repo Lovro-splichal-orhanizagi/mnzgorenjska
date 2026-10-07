@@ -1,4 +1,4 @@
-// Gumb "Časti pivo" na naslovnici. SLFF je brezplačen in brez oglasov; pivo le
+// Gumb "Časti pivo" (naslovnica, noga vsake strani, lestvica, rezultati). SLFF je brezplačen in brez oglasov; pivo le
 // pomaga pokriti strežnik in domeno in na igro ne vpliva.
 //
 // Samo povezava: brez skripte in gradnika Buy Me a Coffee, torej brez tujih

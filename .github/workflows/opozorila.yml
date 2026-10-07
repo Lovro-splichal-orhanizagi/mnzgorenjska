@@ -18,6 +18,11 @@ name: Opozorila pred rokom
 # Urnik je vklopljen, ker posta ni mnozicna: gre samo tistim, ki ekipo IMAJO
 # in se jim ne bo zaklenila. Opomnik vsem brez ekipe je druga stvar in ostaja
 # rocen (`opomniki.yml`).
+#
+# Drugi korak poslje potisno obvestilo (samo mobilna aplikacija) tistim, ki
+# v ligi se nimajo ekipe ali imajo prazno, 24 ur pred rokom, enkrat na krog
+# (`kandidati_za_push_opomnik`). Ni mnozicno: le kdor ima aplikacijo in push
+# vklopljen (`profiles.brez_push`).
 on:
   schedule:
     # Vsako uro PREVERI, posta pa gre enkrat na krog: ob prvem teku, ko je do
@@ -61,6 +66,17 @@ jobs:
           VRSTA: opozorilo
           # En dan: opozorilo pride 24 ur pred rokom (oz. ob prvem teku po tem).
           DNI: 1
+          SUHO: ${{ github.event_name == 'workflow_dispatch' && inputs.suho || 'false' }}
+        run: node scripts/posli-opomnike.mjs
+
+      - name: Poslji push opomnike (ni ekipe)
+        if: success() || failure()
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          VRSTA: opomnik-push
+          # Ljudi brez ekipe je vec kot pokvarjenih ekip; meja le lovi napako.
+          NAJVEC_NA_LIGO: 300
           SUHO: ${{ github.event_name == 'workflow_dispatch' && inputs.suho || 'false' }}
         run: node scripts/posli-opomnike.mjs
 

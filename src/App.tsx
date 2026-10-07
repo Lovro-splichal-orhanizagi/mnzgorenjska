@@ -8,6 +8,7 @@ import RokKroga from './components/RokKroga'
 import OpozoriloEkipe from './components/OpozoriloEkipe'
 import NapakaOprijem from './components/NapakaOprijem'
 import Podpora from './components/Podpora'
+import Pivo from './components/Pivo'
 import VstopDrzave from './components/VstopDrzave'
 import IzbiraDrzave from './components/IzbiraDrzave'
 import IzbiraJezika from './components/IzbiraJezika'
@@ -92,7 +93,7 @@ export default function App() {
   return (
     <AuthProvider>
       <TekmovanjeProvider>
-        <div className="min-h-screen overflow-x-hidden">
+        <div className="min-h-screen overflow-x-clip">
           <NativnePovezave />
           <PosodobiAplikacijo />
           <PotisnaObvestila />
@@ -144,6 +145,12 @@ export default function App() {
           </main>
           <Podpora />
           <footer className="border-t border-white/10 py-6 text-center text-xs text-slate-400">
+            {/* Pivo je v nogi vsake strani; v aplikaciji ga ni (glej Pivo.tsx). */}
+            {!jeNativno() && (
+              <div className="mb-4 flex justify-center">
+                <Pivo src="noga" />
+              </div>
+            )}
             <Link to="/legal" className="underline hover:text-slate-200">
               {t('aplikacija.noga.zasebnost')}
             </Link>

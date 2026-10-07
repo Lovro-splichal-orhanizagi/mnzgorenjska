@@ -28,6 +28,7 @@ const MEDALJE = ['🥇', '🥈', '🥉']
 export default function Slovenija() {
   const [vseVrsticeDrzav, setVrstice] = useState<DrzavnaVrstica[]>([])
   const [kako, setKako] = useState<Razvrstitev>('skupno')
+  const [koliko, setKoliko] = useState(50)
   // Zavihek je v naslovu (`?pogled=igralci`), da naslovnica lahko pokaže
   // naravnost na igralce in da je pogled deljiv. Ne `?t=` — ta menja ligo.
   const [iskanje, setIskanje] = useSearchParams()
@@ -123,7 +124,7 @@ export default function Slovenija() {
           <button
             key={k}
             onClick={() => setZavihek(k)}
-            className={`-mb-px border-b-2 px-4 py-2 text-sm font-bold ${
+            className={`-mb-px flex-1 border-b-2 px-4 py-2.5 text-center text-sm font-bold sm:flex-none ${
               zavihek === k
                 ? 'border-gnl-400 text-gnl-200'
                 : 'border-transparent text-slate-400 hover:text-slate-200'
@@ -187,10 +188,10 @@ export default function Slovenija() {
             </p>
           ) : (
             <ul className="space-y-1">
-              {urejene.map((v) => (
+              {urejene.slice(0, koliko).map((v) => (
                 <li
                   key={v.fantasy_team_id}
-                  className="flex items-center gap-3 rounded-xl bg-white/5 px-3 py-2"
+                  className="relative flex items-center gap-3 rounded-xl bg-white/5 px-3 py-2"
                 >
                   <span className="w-7 shrink-0 text-center text-sm font-black text-slate-400">
                     {v.mesto <= 3 ? MEDALJE[v.mesto - 1] : v.mesto}
@@ -198,7 +199,7 @@ export default function Slovenija() {
                   <div className="min-w-0 flex-1">
                     <Link
                       to={`/team/${v.fantasy_team_id}`}
-                      className="block truncate font-bold hover:text-gnl-400"
+                      className="block truncate font-bold after:absolute after:inset-0 after:content-[''] hover:text-gnl-400"
                     >
                       {v.team_name}
                     </Link>
@@ -221,6 +222,13 @@ export default function Slovenija() {
                 </li>
               ))}
             </ul>
+          )}
+          {urejene.length > koliko && (
+            <div className="text-center">
+              <button onClick={() => setKoliko(koliko + 50)} className="gumb-tih">
+                {t('lestvice.pokaziVec', { n: urejene.length - koliko })}
+              </button>
+            </div>
           )}
         </>
       )}

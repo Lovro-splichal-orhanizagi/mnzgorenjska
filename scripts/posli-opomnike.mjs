@@ -9,10 +9,12 @@
 //   SUPABASE_SERVICE_ROLE_KEY=... node scripts/posli-opomnike.mjs        # suho
 //   ... SUHO=false node scripts/posli-opomnike.mjs                       # pošlje
 //   ... VRSTA=opozorilo node scripts/posli-opomnike.mjs                  # opozorila
+//   ... VRSTA=opomnik-push node scripts/posli-opomnike.mjs               # push "še nimaš ekipe"
 //
 // Opomnik gre vsem brez ekipe (353 ljudi) in je zato ročna odločitev.
 // Opozorilo gre samo tistim, ki ekipo IMAJO in se jim ne bo zaklenila — to
-// je nekaj ljudi na krog in teče po urniku.
+// je nekaj ljudi na krog in teče po urniku. Push opomnik (samo telefon, dan
+// pred rokom, enkrat na krog) prav tako.
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'node:fs'
 
@@ -35,7 +37,9 @@ if (!SERVICE) { console.error('Manjka SUPABASE_SERVICE_ROLE_KEY'); process.exit(
 // Suho je PRIVZETO. Pošiljanje pošte resničnim ljudem mora biti izrecna
 // izbira, ne privzeta posledica zagona.
 const suho = String(process.env.SUHO ?? 'true').toLowerCase() !== 'false'
-const vrsta = process.env.VRSTA === 'opozorilo' ? 'opozorilo' : 'opomnik'
+const vrsta = ['opozorilo', 'opomnik-push'].includes(process.env.VRSTA) ? process.env.VRSTA : 'opomnik'
+// Opozorilo in push opomnik tečeta po urniku; oba varuje meja na ligo.
+const poUrniku = vrsta !== 'opomnik'
 
 // Varovalka za opozorila. Opozorilo naslavlja napako posameznika, zato jih je
 // obicajno nekaj na ligo. Ce jih je nenadoma cel kup, to skoraj gotovo ni
@@ -58,8 +62,8 @@ const { data: lige, error } = await db
 if (error) { console.error(`Lig ni bilo mogoče prebrati: ${error.message}`); process.exit(1) }
 
 console.log(
-  `${vrsta === 'opozorilo' ? 'OPOZORILA (ekipa se ne bo zaklenila)' : 'OPOMNIKI (ni ekipe)'} — ` +
-    (suho ? 'SUHI TEK, pošte ne pošiljam.\n' : 'POŠILJAM pošto.\n'),
+  `${{ opozorilo: 'OPOZORILA (ekipa se ne bo zaklenila)', 'opomnik-push': 'PUSH OPOMNIKI (ni ekipe, rok jutri)', opomnik: 'OPOMNIKI (ni ekipe)' }[vrsta]} — ` +
+    (suho ? 'SUHI TEK, ne pošiljam.\n' : 'POŠILJAM.\n'),
 )
 
 let skupaj = 0
@@ -75,7 +79,7 @@ for (const liga of lige ?? []) {
     // po odgovoru, ko je bila posta ze poslana.
     body: JSON.stringify({
       competition_id: liga.id, suho, vrsta, dni,
-      ...(vrsta === 'opozorilo' ? { najvec: NAJVEC_NA_LIGO } : { najvec_poslati: proracun }),
+      ...(poUrniku ? { najvec: NAJVEC_NA_LIGO } : { najvec_poslati: proracun }),
     }),
   })
   const izid = await odgovor.json().catch(() => ({}))
@@ -95,7 +99,7 @@ for (const liga of lige ?? []) {
   const n = izid.kandidati_stevilo ?? 0
   // Suhi tek ne posilja, zato ga funkcija ne ustavi; mejo pa vseeno pokazemo,
   // da se vidi, katera liga bi se ob pravem zagonu ustavila.
-  if (vrsta === 'opozorilo' && n > NAJVEC_NA_LIGO && suho) {
+  if (poUrniku && n > NAJVEC_NA_LIGO && suho) {
     console.error(
       `  ${liga.slug.padEnd(14)} BI USTAVILO: ${n} kandidatov (meja ${NAJVEC_NA_LIGO}).`,
     )
@@ -103,7 +107,7 @@ for (const liga of lige ?? []) {
   // Pravi zagon nad mejo, ki ga funkcija NI ustavila: objavljena je stara
   // razlicica brez `najvec` in je sporocila ze poslala. Ustaviti ne moremo
   // vec, zagon pa mora biti rdec, da se opazi.
-  if (vrsta === 'opozorilo' && n > NAJVEC_NA_LIGO && !suho) {
+  if (poUrniku && n > NAJVEC_NA_LIGO && !suho) {
     console.error(
       `::error::${liga.slug}: ${n} kandidatov nad mejo ${NAJVEC_NA_LIGO}, funkcija pa ni ustavila ` +
         'posiljanja — objavljena je stara razlicica brez `najvec`. Objavi funkcijo znova.',
@@ -111,7 +115,7 @@ for (const liga of lige ?? []) {
     padlo++
   }
   skupaj += n
-  if (vrsta === 'opomnik' && !suho) proracun = Math.max(0, proracun - (izid.poslano ?? 0))
+  if (vrsta === 'opomnik' && !suho) proracun = Math.max(0, proracun - (izid.poslanih_mailov ?? izid.poslano ?? 0))
   console.log(
     `  ${liga.slug.padEnd(14)} kandidatov ${String(n).padStart(4)}` +
       (suho ? '' : ` · poslano ${izid.poslano ?? 0}, preskočeno ${izid.preskoceno ?? 0}`),

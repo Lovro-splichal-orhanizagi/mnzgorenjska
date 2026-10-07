@@ -15,15 +15,19 @@ export default function NovoGeslo() {
   const [pripravljen, setPripravljen] = useState<boolean | null>(null)
   const [napaka, setNapaka] = useState<string | null>(null)
   const [posiljam, setPosiljam] = useState(false)
+  // E-pošta seje: skrito polje, da upravitelj gesel novo geslo shrani k pravemu računu.
+  const [email, setEmail] = useState('')
   useNaslov(t('racun.novoGeslo.naslov'))
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       // Dogodek iz povezave je lahko prišel prej — takrat ne povozimo `true`.
       setPripravljen((prej) => prej || Boolean(data.session))
+      if (data.session?.user.email) setEmail(data.session.user.email)
     })
     const { data: sub } = supabase.auth.onAuthStateChange((_, s) => {
       if (s) setPripravljen(true)
+      if (s?.user.email) setEmail(s.user.email)
     })
     return () => sub.subscription.unsubscribe()
   }, [])
@@ -57,6 +61,9 @@ export default function NovoGeslo() {
         </p>
       ) : (
         <form onSubmit={poslji} className="space-y-3">
+          {email && (
+            <input type="email" autoComplete="username" value={email} readOnly hidden />
+          )}
           <label className="block text-sm text-slate-400">
             {t('racun.novoGeslo.novoGeslo')}
             <input
@@ -65,6 +72,7 @@ export default function NovoGeslo() {
               minLength={6}
               value={geslo}
               onChange={(e) => setGeslo(e.target.value)}
+              autoComplete="new-password"
               className="mt-1 w-full rounded-xl border border-white/10 bg-slate-900 px-3 py-2"
             />
           </label>
@@ -76,6 +84,7 @@ export default function NovoGeslo() {
               minLength={6}
               value={ponovi}
               onChange={(e) => setPonovi(e.target.value)}
+              autoComplete="new-password"
               className="mt-1 w-full rounded-xl border border-white/10 bg-slate-900 px-3 py-2"
             />
           </label>

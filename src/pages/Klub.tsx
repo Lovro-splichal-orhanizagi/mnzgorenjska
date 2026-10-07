@@ -146,17 +146,17 @@ export default function Klub() {
   // CTA pelje v ligo kluba, ne v tisto, ki jo ima obiskovalec izbrano.
   const ligaParam = liga?.slug ? `?t=${encodeURIComponent(liga.slug)}` : ''
 
-  if (nalaganje) return <p className="p-4 text-slate-400">{t('skupno.nalaganje')}</p>
+  if (nalaganje) return <p className="text-slate-400">{t('skupno.nalaganje')}</p>
   if (napaka)
     return (
-      <div className="space-y-2 p-4">
+      <div className="space-y-2">
         <p className="text-slate-300">{napaka}</p>
         <Link to="/" className="text-gnl-400 underline">{t('lestvice.klub.naNaslovnico')}</Link>
       </div>
     )
 
   return (
-    <div className="space-y-5 p-4">
+    <div className="space-y-5">
       <header className="flex items-center gap-3">
         <Grb ime={klub?.name} kratko={klub?.short_name} logo={klub?.logo_url} velikost={44} />
         <div className="min-w-0">

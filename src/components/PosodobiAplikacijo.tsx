@@ -31,7 +31,7 @@ export default function PosodobiAplikacijo() {
 
   if (!zastarela) return null
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950 p-6">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950 p-6 pb-[max(1.5rem,var(--dno))] pt-[max(1.5rem,var(--vrh))]">
       <div className="max-w-sm space-y-4 text-center">
         <img src="/logo/slff-grb.png" alt="" className="mx-auto h-24 w-24" />
         <h1 className="text-2xl font-black naslov">{t('aplikacija.posodobi.naslov')}</h1>

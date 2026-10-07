@@ -10,6 +10,9 @@ const config: CapacitorConfig = {
   backgroundColor: '#020617',
   plugins: {
     SplashScreen: { launchShowDuration: 0, backgroundColor: '#020617' },
+    // Starejši Android WebView (< 140) env(safe-area-inset-*) ne pozna; tako
+    // dobi spremenljivke --safe-area-inset-*, ki jih bere src/index.css.
+    SystemBars: { insetsHandling: 'css' },
     // Obvestilo se pokaže tudi, ko je aplikacija odprta.
     FirebaseMessaging: { presentationOptions: ['alert', 'badge', 'sound'] },
     // OTA brez Capgo strežnika: kdaj in kaj prenesti, odloči src/lib/ota.ts.

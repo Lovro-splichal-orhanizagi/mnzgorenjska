@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { formatirajTocke } from '../lib/pomozno'
@@ -47,6 +47,14 @@ export default function TedenskiPregled({ ligaId, ime, koda }: { ligaId: number;
 
   const zgodbe = useMemo(() => zgodbeKroga(pregled), [pregled])
 
+  // Vrstica krogov drsi vodoravno; izbrani krog naj bo viden.
+  const vrsticaKrogov = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const vrsta = vrsticaKrogov.current
+    const gumb = vrsta?.querySelector<HTMLElement>('[aria-pressed="true"]')
+    if (vrsta && gumb) vrsta.scrollLeft = gumb.offsetLeft - (vrsta.clientWidth - gumb.offsetWidth) / 2
+  }, [pregled])
+
   if (pregled === null) return null
 
   return (
@@ -54,13 +62,18 @@ export default function TedenskiPregled({ ligaId, ime, koda }: { ligaId: number;
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-lg font-black naslov">{t('lestvice.pregled.naslov')}</h2>
         {pregled && pregled.krogi.length > 0 && (
-          <div className="flex flex-wrap gap-1" role="group" aria-label={t('lestvice.pregled.krog')}>
+          <div
+            ref={vrsticaKrogov}
+            className="relative flex min-w-0 max-w-full gap-1 overflow-x-auto pb-1"
+            role="group"
+            aria-label={t('lestvice.pregled.krog')}
+          >
             {pregled.krogi.map((k) => (
               <button
                 key={k}
                 onClick={() => setKrog(k)}
                 aria-pressed={k === pregled.krog}
-                className={`rounded-md px-2 py-1 text-xs font-bold tabular-nums ${
+                className={`shrink-0 whitespace-nowrap rounded-md px-2.5 py-2 text-xs font-bold tabular-nums ${
                   k === pregled.krog
                     ? 'bg-gnl-500/20 text-gnl-200 ring-1 ring-gnl-400/40'
                     : 'bg-white/5 text-slate-400 hover:text-slate-200'

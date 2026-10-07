@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { formatirajTocke, prikazniIme, tockZ } from '../lib/pomozno'
@@ -51,6 +51,8 @@ export default function Ekipa() {
   const [kazen, setKazen] = useState(0)
   const [neto, setNeto] = useState<number | null>(null)
   const [napaka, setNapaka] = useState<string | null>(null)
+  // Vrstica krogov drsi vodoravno; izbrani krog naj bo viden.
+  const vrsticaKrogov = useRef<HTMLDivElement>(null)
   useNaslov(ekipa?.team_name ?? t('lestvice.ekipa.naslov'))
   // Liga ekipe, ne tista, ki je izbrana v meniju — povezava lahko pripelje
   // do ekipe iz druge lige.
@@ -171,10 +173,17 @@ export default function Ekipa() {
     )
   }
 
-  if (nalaganje) return <p className="p-4 text-slate-400">{t('skupno.nalaganje')}</p>
+  useEffect(() => {
+    const vrsta = vrsticaKrogov.current
+    const gumb = vrsta?.querySelector<HTMLElement>('[aria-pressed="true"]')
+    // Le vodoravno: scrollIntoView bi premaknil še stran.
+    if (vrsta && gumb) vrsta.scrollLeft = gumb.offsetLeft - (vrsta.clientWidth - gumb.offsetWidth) / 2
+  }, [izbranKrog, krogi, nalaganje])
+
+  if (nalaganje) return <p className="text-slate-400">{t('skupno.nalaganje')}</p>
   if (napaka)
     return (
-      <div className="p-4">
+      <div>
         <p className="text-slate-300">{napaka}</p>
         <Link to="/standings" className="text-gnl-400 underline">
           {t('lestvice.ekipa.nazaj')}
@@ -183,7 +192,7 @@ export default function Ekipa() {
     )
 
   return (
-    <div className="space-y-4 p-4">
+    <div className="space-y-4">
       <header>
         <h1 className="text-2xl font-black naslov sm:text-3xl">
           {ekipa?.team_name ?? t('lestvice.ekipa.naslov')}
@@ -203,12 +212,13 @@ export default function Ekipa() {
         </p>
       ) : (
         <>
-          <div className="flex flex-wrap gap-1.5">
+          <div ref={vrsticaKrogov} className="relative flex gap-1.5 overflow-x-auto pb-1">
             {krogi.map((k) => (
               <button
                 key={k.id}
                 onClick={() => izberi(k.id)}
-                className={`rounded-md px-2.5 py-1 text-sm font-bold transition ${
+                aria-pressed={k.id === izbranKrog}
+                className={`shrink-0 whitespace-nowrap rounded-md px-2.5 py-2 text-sm font-bold transition ${
                   k.id === izbranKrog
                     ? 'bg-gnl-500 text-slate-950'
                     : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
@@ -245,21 +255,6 @@ export default function Ekipa() {
                   </span>
                 )}
               </div>
-
-              {/* Pokaže se sama, ko je krog končan. */}
-              {id && izbranKrog && (
-                <ZgodbaKroga
-                  ekipaId={Number(id)}
-                  krogId={izbranKrog}
-                  ekipa={ekipa?.team_name ?? t('lestvice.ekipa.naslov')}
-                  liga={liga}
-                  povezava={
-                    typeof window !== 'undefined'
-                      ? `${izvor()}/team/${id}?krog=${izbranKrog}`
-                      : ''
-                  }
-                />
-              )}
 
               <EnajstericaNaIgriscu igralci={postava.map(zaIgrisce)} />
 
@@ -301,6 +296,22 @@ export default function Ekipa() {
                     ))}
                   </ul>
                 </section>
+              )}
+
+              {/* Pokaže se sama, ko je krog končan — pod igriščem, da ob
+                  nalaganju ne potisne postave navzdol. */}
+              {id && izbranKrog && (
+                <ZgodbaKroga
+                  ekipaId={Number(id)}
+                  krogId={izbranKrog}
+                  ekipa={ekipa?.team_name ?? t('lestvice.ekipa.naslov')}
+                  liga={liga}
+                  povezava={
+                    typeof window !== 'undefined'
+                      ? `${izvor()}/team/${id}?krog=${izbranKrog}`
+                      : ''
+                  }
+                />
               )}
             </>
           )}

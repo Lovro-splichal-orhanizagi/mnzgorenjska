@@ -64,6 +64,8 @@ import type { Pozicija } from '../lib/tipi'
 import { t, tx, datumUra, lokale } from '../i18n'
 import Sponzor from '../components/Sponzor'
 import { izvor } from '../lib/platforma'
+import { useZaklepPomika } from '../lib/zaklepPomika'
+import { registrirajPush } from '../components/PotisnaObvestila'
 
 /** Igralec na trgu (`player_overview` / `player_season_standings`). */
 interface IgralecTrga {
@@ -1243,6 +1245,9 @@ export default function MojaEkipa() {
       ekipaId = data.id
       setEkipa(data)
       zabeleziKorak('prva_shramba')
+      // Prva shramba je trenutek, ko opomnik pred rokom očitno pomaga: v
+      // aplikaciji takrat (le prvič) vprašamo za potisna obvestila.
+      void registrirajPush(true)
     } else if (imeEkipe.trim() !== ekipa.name) {
       const { error } = await supabase
         .from('fantasy_teams')
@@ -1503,11 +1508,14 @@ export default function MojaEkipa() {
   )
 
   return (
-    <div className="space-y-4 pb-20 sm:space-y-6 lg:pb-0">
+    <div className="space-y-4 pb-[calc(7rem+var(--dno))] sm:space-y-6 lg:pb-0">
       {/* Obvestila — en sklad pod navbarjem, da se ne prekrivajo. Napaka
           ostane, dokler je uporabnik ne zapre; potrditev izgine sama. */}
       {(sporocilo || napaka || razveljavi) && (
-        <div className="fixed inset-x-0 top-16 z-[60] mx-auto flex max-w-md flex-col gap-2 px-3">
+        <div
+          className="fixed inset-x-0 z-[60] mx-auto flex max-w-md flex-col gap-2 px-3"
+          style={{ top: 'calc(4.5rem + var(--vrh))' }}
+        >
           {napaka && (
             <div
               role="alert"
@@ -1517,7 +1525,7 @@ export default function MojaEkipa() {
               <button
                 onClick={() => setNapaka(null)}
                 aria-label={t('mojaEkipa.sporocila.zapriOpozorilo')}
-                className="shrink-0 rounded-lg px-2 py-0.5 text-white/80 hover:bg-black/10"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white/80 hover:bg-black/10"
               >
                 ✕
               </button>
@@ -1533,7 +1541,7 @@ export default function MojaEkipa() {
               <button
                 onClick={() => setSporocilo(null)}
                 aria-label={t('mojaEkipa.sporocila.zapriObvestilo')}
-                className="shrink-0 rounded-lg px-2 py-0.5 text-slate-950/70 hover:bg-black/10"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-950/70 hover:bg-black/10"
               >
                 ✕
               </button>
@@ -1567,6 +1575,50 @@ export default function MojaEkipa() {
           </span>
         )}
       </h1>
+
+      {/* Uvodni nasvet, ko ekipa še nima igralcev — takoj pod naslovom, da
+          je na telefonu glavni gumb na prvem zaslonu. */}
+      {izbrani.length === 0 && (
+        <div className="kartica border-gnl-400/30 bg-gnl-500/5 p-3 text-sm sm:p-4">
+          <h2 className="mb-1 text-sm font-bold text-gnl-200">{t('mojaEkipa.zacetek.naslov')}</h2>
+
+          {/* Najhitrejša pot je ena in je glavni gumb strani. Navodila za
+              ročno sestavo so zložena — 4. 10. 2026 je bilo 57 % registriranih
+              brez ekipe, in prazno igrišče s štirimi koraki besedila jih ustavi. */}
+          <button
+            onClick={predlagaj}
+            disabled={zakajNiPredloga != null}
+            title={zakajNiPredloga ?? undefined}
+            className="gumb-glavni w-full px-4 py-3 text-base disabled:opacity-50"
+          >
+            {t('mojaEkipa.zacetek.sestaviMi')}
+          </button>
+          <p className="mt-2 text-xs text-slate-400">
+            {zakajNiPredloga ?? t('mojaEkipa.zacetek.opisPredloga')}
+          </p>
+
+          <details className="mt-3 text-slate-300">
+            <summary className="cursor-pointer text-xs font-semibold text-slate-400 hover:text-slate-200">
+              {t('mojaEkipa.zacetek.sam')}
+            </summary>
+            <ol className="mt-2 ml-4 list-decimal space-y-1">
+              <li>{t('mojaEkipa.zacetek.korak1')}</li>
+              <li>{tx('mojaEkipa.zacetek.korak2', {}, { krepko: belo })}</li>
+              <li>
+                {t('mojaEkipa.zacetek.korak3', {
+                  n: VELIKOST_EKIPE,
+                  gk: POZICIJE.GK.kader,
+                  def: POZICIJE.DEF.kader,
+                  mid: POZICIJE.MID.kader,
+                  fwd: POZICIJE.FWD.kader,
+                  klub: MAX_IZ_KLUBA,
+                })}
+              </li>
+              <li>{tx('mojaEkipa.zacetek.korak4', {}, { krepko: belo })}</li>
+            </ol>
+          </details>
+        </div>
+      )}
 
       {/* V vsaki ligi se igra s svojo ekipo — to je pogosto presenečenje, zato
           je zapisano nad rokom in ne kje v drobnem tisku. */}
@@ -1610,33 +1662,10 @@ export default function MojaEkipa() {
         </div>
       )}
 
-      {/* Razloga za vrnitev: kaj se je s cenami zgodilo od zadnjič in koga
-          velja zamenjati pred rokom. Oboje se da zapreti. */}
-      {gibanje && (
-        <OdZadnjegaObiska
-          igralci={gibanje.igralci.map((g) => ({ ...g, ime: poId[g.player_id]?.full_name ?? null }))}
-          skupajC={gibanje.skupajC}
-          zadnjiObisk={gibanje.zadnjiObisk}
-          naZapri={() => {
-            if (ekipa?.id) gibanjeZaprto.current.add(ekipa.id)
-            setGibanje(null)
-          }}
-        />
-      )}
-
-      <NamigiZaPrestope
-        krog={naslednjiKrog?.number ?? null}
-        mesta={mestaZaNamige}
-        naZamenjaj={zamenjaj}
-        naSkrij={() => {
-          if (ekipa?.id && naslednjiKrog) skrijNamige(ekipa.id, naslednjiKrog.id)
-          setNamigiZaprti(true)
-        }}
-      />
-
-      {/* Rdeč opozorilni pas s KONKRETNIMI napakami + katerim krogom velja. */}
+      {/* Rdeč opozorilni pas s KONKRETNIMI napakami + katerim krogom velja.
+          Na telefonu skrit: spodnji pas izpiše napako in vodi na #status-ekipe. */}
       {izbrani.length > 0 && napakeEkipe.length > 0 && (
-        <div className="kartica animiraj-utrip border-2 border-rose-400/60 bg-rose-500/10 p-3 sm:p-4">
+        <div className="kartica animiraj-utrip hidden border-2 border-rose-400/60 bg-rose-500/10 p-3 sm:block sm:p-4">
           <div className="flex items-start gap-3">
             <span className="text-2xl">🚨</span>
             <div className="min-w-0 flex-1 space-y-2">
@@ -1792,7 +1821,7 @@ export default function MojaEkipa() {
                 aria-describedby="ime-ekipe-namig"
                 onChange={(e) => setImeEkipe(e.target.value)}
                 placeholder={t('mojaEkipa.povzetek.primerImena')}
-                className={`mt-1 w-full rounded-xl border bg-slate-900 px-3 py-2 text-sm ${
+                className={`mt-1 w-full rounded-xl border bg-slate-900 px-3 py-2 text-base sm:text-sm ${
                   !imeEkipe.trim() && napaka
                     ? 'border-rose-400/60 ring-1 ring-rose-400/30'
                     : 'border-white/10'
@@ -1839,49 +1868,6 @@ export default function MojaEkipa() {
         </div>
       )}
 
-      {/* Uvodni nasvet, ko ekipa še nima igralcev. */}
-      {izbrani.length === 0 && (
-        <div className="kartica border-gnl-400/30 bg-gnl-500/5 p-3 text-sm sm:p-4">
-          <h2 className="mb-1 text-sm font-bold text-gnl-200">{t('mojaEkipa.zacetek.naslov')}</h2>
-
-          {/* Najhitrejša pot je ena in je glavni gumb strani. Navodila za
-              ročno sestavo so zložena — 4. 10. 2026 je bilo 57 % registriranih
-              brez ekipe, in prazno igrišče s štirimi koraki besedila jih ustavi. */}
-          <button
-            onClick={predlagaj}
-            disabled={zakajNiPredloga != null}
-            title={zakajNiPredloga ?? undefined}
-            className="gumb-glavni w-full px-4 py-3 text-base disabled:opacity-50"
-          >
-            {t('mojaEkipa.zacetek.sestaviMi')}
-          </button>
-          <p className="mt-2 text-xs text-slate-400">
-            {zakajNiPredloga ?? t('mojaEkipa.zacetek.opisPredloga')}
-          </p>
-
-          <details className="mt-3 text-slate-300">
-            <summary className="cursor-pointer text-xs font-semibold text-slate-400 hover:text-slate-200">
-              {t('mojaEkipa.zacetek.sam')}
-            </summary>
-            <ol className="mt-2 ml-4 list-decimal space-y-1">
-              <li>{t('mojaEkipa.zacetek.korak1')}</li>
-              <li>{tx('mojaEkipa.zacetek.korak2', {}, { krepko: belo })}</li>
-              <li>
-                {t('mojaEkipa.zacetek.korak3', {
-                  n: VELIKOST_EKIPE,
-                  gk: POZICIJE.GK.kader,
-                  def: POZICIJE.DEF.kader,
-                  mid: POZICIJE.MID.kader,
-                  fwd: POZICIJE.FWD.kader,
-                  klub: MAX_IZ_KLUBA,
-                })}
-              </li>
-              <li>{tx('mojaEkipa.zacetek.korak4', {}, { krepko: belo })}</li>
-            </ol>
-          </details>
-        </div>
-      )}
-
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-6">
         <div className="min-w-0 space-y-4 sm:space-y-6">
           <div data-pomoc="igrisce">
@@ -1891,6 +1877,7 @@ export default function MojaEkipa() {
             naOdstrani={(i) => odstrani(i as IgralecTrga)}
             naPraznoMesto={naPraznoMesto}
             naPremakniKlop={premakniNaKlopi}
+            naInfo={(i) => setInfo(i as IgralecTrga)}
           />
           </div>
 
@@ -1916,6 +1903,31 @@ export default function MojaEkipa() {
               {t('mojaEkipa.trak.opis')}
             </p>
           </section>
+
+          {/* Razloga za vrnitev: kaj se je s cenami zgodilo od zadnjič in koga
+              velja zamenjati pred rokom. Oboje se da zapreti. Pod igriščem,
+              da igrišče na telefonu ni tri zaslone nizko. */}
+          {gibanje && (
+            <OdZadnjegaObiska
+              igralci={gibanje.igralci.map((g) => ({ ...g, ime: poId[g.player_id]?.full_name ?? null }))}
+              skupajC={gibanje.skupajC}
+              zadnjiObisk={gibanje.zadnjiObisk}
+              naZapri={() => {
+                if (ekipa?.id) gibanjeZaprto.current.add(ekipa.id)
+                setGibanje(null)
+              }}
+            />
+          )}
+
+          <NamigiZaPrestope
+            krog={naslednjiKrog?.number ?? null}
+            mesta={mestaZaNamige}
+            naZamenjaj={zamenjaj}
+            naSkrij={() => {
+              if (ekipa?.id && naslednjiKrog) skrijNamige(ekipa.id, naslednjiKrog.id)
+              setNamigiZaprti(true)
+            }}
+          />
 
           {/* "Kaj-če" scenarij: vsota točk zdajšnjih starterjev, izračunana
               iz zadnje odigrane runde. Zamenjava igralca to številko
@@ -2084,7 +2096,7 @@ export default function MojaEkipa() {
                           <button
                             onClick={() => prekliciPripomocek('klop_plus')}
                             disabled={shranjujem}
-                            className="text-xs text-slate-400 underline hover:text-rose-400"
+                            className="-my-1 px-2 py-2 text-xs text-slate-400 underline hover:text-rose-400"
                           >
                             {t('mojaEkipa.pripomocki.preklici')}
                           </button>
@@ -2106,7 +2118,7 @@ export default function MojaEkipa() {
                     value={izbranKrogPripomocka ? izbranKrog : ''}
                     disabled={!krogiZaPripomocek.length}
                     onChange={(e) => setIzbranKrog(e.target.value)}
-                    className="min-w-0 flex-1 rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm"
+                    className="min-w-0 flex-1 rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-base sm:text-sm"
                   >
                     <option value="">{krogiZaPripomocek.length
                         ? t('mojaEkipa.pripomocki.izberiKrog')
@@ -2155,7 +2167,7 @@ export default function MojaEkipa() {
                           <button
                             onClick={() => prekliciPripomocek('wildcard')}
                             disabled={shranjujem}
-                            className="text-xs text-slate-400 underline hover:text-rose-400"
+                            className="-my-1 px-2 py-2 text-xs text-slate-400 underline hover:text-rose-400"
                           >
                             {t('mojaEkipa.pripomocki.preklici')}
                           </button>
@@ -2173,12 +2185,17 @@ export default function MojaEkipa() {
                 })()
               ) : (
                 <button
-                  onClick={() =>
-                    vloziPripomocek(
-                      'wildcard',
-                      Number(naslednjiZaPripomocek?.id),
+                  onClick={() => {
+                    // Wildcard je en na sezono — en dotik naj ga ne porabi.
+                    if (
+                      naslednjiZaPripomocek &&
+                      !window.confirm(
+                        t('mojaEkipa.pripomocki.potrdiWildcard', { krog: naslednjiZaPripomocek.number }),
+                      )
                     )
-                  }
+                      return
+                    vloziPripomocek('wildcard', Number(naslednjiZaPripomocek?.id))
+                  }}
                   disabled={!naslednjiZaPripomocek || shranjujem}
                   className="gumb-tih w-full disabled:cursor-not-allowed disabled:opacity-50"
                 >
@@ -2215,7 +2232,7 @@ export default function MojaEkipa() {
                     <button
                       key={p.round_id}
                       onClick={() => setZgodovinaKrogId(p.round_id)}
-                      className={`znacka transition ${
+                      className={`znacka px-3 py-1.5 transition ${
                         zgodovinaKrogId === p.round_id
                           ? 'bg-gnl-500 text-slate-950'
                           : 'bg-white/5 text-slate-300 hover:bg-white/10'
@@ -2356,8 +2373,9 @@ export default function MojaEkipa() {
           kaj narobe, zgoraj v pasu izpisemo prvo napako, da uporabnik
           vidi razlog, zakaj ne dobi tock v naslednjem krogu. */}
       <div
+        data-spodnji-pas
         className="fixed inset-x-0 bottom-0 z-20 border-t border-white/10 bg-slate-950/95 backdrop-blur lg:hidden"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        style={{ paddingBottom: 'var(--dno)' }}
       >
         {izbrani.length > 0 && napakeEkipe.length > 0 && (
           <button
@@ -2366,7 +2384,7 @@ export default function MojaEkipa() {
                 .getElementById('status-ekipe')
                 ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
             }
-            className="flex w-full items-center gap-2 border-b border-rose-400/40 bg-rose-500/15 px-3 py-1.5 text-left text-[11px] text-rose-100 hover:bg-rose-500/25"
+            className="flex min-h-[40px] w-full items-center gap-2 border-b border-rose-400/40 bg-rose-500/15 px-3 py-2 text-left text-xs text-rose-100 hover:bg-rose-500/25"
           >
             <span className="shrink-0 text-sm">⚠</span>
             <span className="min-w-0 flex-1 truncate">
@@ -2383,19 +2401,19 @@ export default function MojaEkipa() {
         )}
         <div className="flex items-center gap-2 px-3 py-1.5">
           <div className="min-w-0 flex-1 tabular-nums leading-tight">
-            <span className="text-[10px] text-slate-500">{t('mojaEkipa.telefon.ostane')} </span>
+            <span className="text-[11px] text-slate-500">{t('mojaEkipa.telefon.ostane')} </span>
             <span
-              className={`text-xs font-black ${
+              className={`text-sm font-black ${
                 preostalo < 0 ? 'text-rose-400' : 'text-gnl-300'
               }`}
             >
               {formatirajCeno(preostalo)}
             </span>
-            <span className="ml-2 text-[10px] text-slate-500">
+            <span className="ml-2 text-[11px] text-slate-500">
               {izbrani.length}/{VELIKOST_EKIPE} · {prvi.length}/{STEVILO_PRVIH}
             </span>
             {neshranjeno && (
-              <span className="ml-2 text-[10px] font-semibold text-amber-300">
+              <span className="ml-2 text-[11px] font-semibold text-amber-300">
                 {t('mojaEkipa.telefon.neshranjeno')}
               </span>
             )}
@@ -2407,7 +2425,7 @@ export default function MojaEkipa() {
               setTrgZIskanjem(true)
               setOdprtTrg(true)
             }}
-            className="gumb-tih shrink-0 px-3 py-2 text-xs"
+            className="gumb-tih min-h-[44px] shrink-0 px-4 text-sm"
           >
             {t('mojaEkipa.telefon.dodaj')}
           </button>
@@ -2420,7 +2438,7 @@ export default function MojaEkipa() {
                 ? t('mojaEkipa.telefon.osnutekNamig')
                 : undefined
             }
-            className="gumb-glavni relative shrink-0 px-3 py-2 text-xs disabled:cursor-wait disabled:opacity-60"
+            className="gumb-glavni relative min-h-[44px] shrink-0 px-4 text-sm disabled:cursor-wait disabled:opacity-60"
           >
             {shranjujem ? t('mojaEkipa.povzetek.shranjujem') : t('skupno.shrani')}
             {!shranjujem && (!imeEkipe.trim() || napakeEkipe.length > 0) && (
@@ -2541,10 +2559,10 @@ function TrgIgralcev({
           )}
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-1.5">
           <button
             onClick={() => setFilterPoz('vse')}
-            className={`znacka whitespace-nowrap px-2 py-1 transition ${
+            className={`znacka min-h-[40px] flex-1 justify-center whitespace-nowrap px-1.5 py-2 transition ${
               filterPoz === 'vse'
                 ? 'bg-white/15 text-white'
                 : 'bg-white/5 text-slate-400'
@@ -2557,7 +2575,7 @@ function TrgIgralcev({
               key={koda}
               onClick={() => setFilterPoz(koda)}
               title={POZICIJE[koda].naslov}
-              className={`znacka whitespace-nowrap px-2 py-1 transition ${
+              className={`znacka min-h-[40px] flex-1 justify-center whitespace-nowrap px-1.5 py-2 transition ${
                 filterPoz === koda
                   ? razredPozicije(koda)
                   : 'bg-white/5 text-slate-400'
@@ -2571,7 +2589,7 @@ function TrgIgralcev({
         <select
           value={filterKlub}
           onChange={(e) => setFilterKlub(e.target.value)}
-          className="w-full rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm"
+          className="w-full rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-base sm:text-sm"
         >
           <option value="vsi">{t('mojaEkipa.trg.vsiKlubi')}</option>
           {klubi.map(([id, ime]) => (
@@ -2631,18 +2649,19 @@ function TrgIgralcev({
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-semibold">
-                    {/* Profil v novem zavihku — neshranjen kader ostane. */}
-                    <Link
-                      to={`/player/${i.id}`}
-                      target="_blank"
-                      rel="noopener"
-                      onClick={(e) => e.stopPropagation()}
+                    {/* Podatki v plošči — nov zavihek v aplikaciji ne obstaja,
+                        odhod pa bi zavrgel neshranjen kader. Cel profil je v plošči. */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        naInfo(i)
+                      }}
                       onPointerDownCapture={(e) => e.stopPropagation()}
-                      title={t('mojaEkipa.trg.profilVNovemZavihku')}
-                      className="hover:text-gnl-300 hover:underline"
+                      title={t('mojaEkipa.trg.podatkiNamig')}
+                      className="max-w-full truncate text-left hover:text-gnl-300 hover:underline"
                     >
                       {prikazniIme(i.full_name)}
-                    </Link>
+                    </button>
                     {odsotni[i.id] && (
                       <span
                         title={opisOdsotnosti(odsotni[i.id])}
@@ -2709,7 +2728,7 @@ function TrgIgralcev({
                     title={razlog ?? undefined}
                     className={`${
                       jeIzbran ? 'gumb-tih' : 'gumb-glavni'
-                    } px-3 py-1 text-sm`}
+                    } min-h-[40px] min-w-[4.5rem] px-3 py-2 text-sm`}
                   >
                     {jeIzbran ? t('mojaEkipa.trg.odstrani') : t('mojaEkipa.trg.dodaj')}
                   </button>
@@ -2754,6 +2773,8 @@ function PredalTrga({
     // Fokus na okno, da bralnik zaslona in tipkovnica začneta v njem.
     ref.current?.focus()
   }, [])
+  // Stran pod oknom naj se ne pomika (na telefonu sicer drsi skozi).
+  useZaklepPomika()
   useEffect(() => {
     if (!escapeZanj) return
     const tipka = (e: KeyboardEvent) => {
@@ -2790,7 +2811,7 @@ function PredalTrga({
             </button>
           </div>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-4">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-[calc(1rem+var(--dno))]">
           {children}
         </div>
       </div>
@@ -2846,7 +2867,7 @@ function IzborTraku({
       <select
         value={vrednost}
         onChange={(e) => naIzbor(e.target.value)}
-        className="min-w-0 flex-1 rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm"
+        className="min-w-0 flex-1 rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-base sm:text-sm"
       >
         <option value="">{t('mojaEkipa.trak.nihce')}</option>
         {moznosti.map((s) => (

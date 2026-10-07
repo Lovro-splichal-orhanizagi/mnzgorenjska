@@ -227,6 +227,7 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     krogSezona: '{krog}. kolo ({sezona})',
     vlozi: 'Aktivovať',
     vloziZa: 'Aktivovať na {krog}. kolo',
+    potrdiWildcard: 'Aktivovať Wildcard na {krog}. kolo? Máš ho len raz za sezónu.',
   },
 
   zgodovina: {

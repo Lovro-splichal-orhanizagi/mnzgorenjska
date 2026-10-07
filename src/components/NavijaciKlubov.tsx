@@ -175,16 +175,16 @@ function VrsticaKluba({
   const moj = mojKlub === klub.team_id
   return (
     <li className={`kartica p-3 ${moj ? 'ring-1 ring-gnl-400/50' : ''}`}>
-      <details>
-        <summary className="flex cursor-pointer list-none items-center gap-3">
+      <details className="group">
+        <summary className="flex cursor-pointer list-none items-center gap-3 [&::-webkit-details-marker]:hidden">
           <span className="w-8 shrink-0 text-center text-lg font-black text-slate-400">
             {klub.mesto != null ? (MEDALJE[klub.mesto - 1] ?? klub.mesto) : '–'}
           </span>
           <Grb ime={klub.klub} kratko={klub.klub_kratko} logo={klub.grb} velikost={28} />
           <div className="min-w-0 flex-1">
-            <Link to={`/club/${klub.team_id}`} className="block truncate font-bold hover:text-gnl-400">
-              {klub.klub}
-            </Link>
+            {/* Povezava v <summary> bi tap na ime odpeljal stran namesto odprl
+                seznam — zato je spodaj, v odprtem delu. */}
+            <span className="block truncate font-bold">{klub.klub}</span>
             <div className="text-xs text-slate-500">
               {navijacev(klub.navijacev)}
               {moj && (
@@ -212,9 +212,18 @@ function VrsticaKluba({
               {povprecje(klub.povprecje_sezona)}
             </span>
           </span>
+          <span aria-hidden className="shrink-0 text-slate-500 transition group-open:rotate-180">
+            ▾
+          </span>
         </summary>
-        <div className="mt-2">
+        <div className="mt-2 space-y-2">
           <SeznamNavijacev klub={klub} krog={krog} />
+          <Link
+            to={`/club/${klub.team_id}`}
+            className="inline-flex min-h-11 items-center text-sm font-semibold text-gnl-300 hover:text-gnl-200"
+          >
+            {t('lestvice.navijaciKlubov.stranKluba')}
+          </Link>
         </div>
       </details>
     </li>

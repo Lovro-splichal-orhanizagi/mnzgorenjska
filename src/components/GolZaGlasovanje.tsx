@@ -7,7 +7,10 @@
 //   - skupnost je z dovolj glasovi rekla »nihče« — gol ostane brez asistence
 //     in prav tako ne čaka več,
 //   - gol je bil iz enajstmetrovke ali avtogol — asistence po pravilih ni.
-import { useState } from 'react'
+import { useRef, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
+import { useAuth } from '../lib/useAuth'
+import { povezavaNaPrijavo } from '../lib/prijava'
 import { useNastavitev } from '../lib/nastavitve'
 import { prikazniIme, razredPozicije, KRATKA_POZICIJA } from '../lib/pomozno'
 import type { Pozicija } from '../lib/tipi'
@@ -143,6 +146,16 @@ export default function GolZaGlasovanje({
   onGlasuj: (golId: number, playerId: number | null) => void
 }) {
   const [odprto, setOdprto] = useState(false)
+  const { session } = useAuth()
+  const lokacija = useLocation()
+  const kartica = useRef<HTMLLIElement>(null)
+  // Po glasu seznam zapremo in kartico vrnemo na zaslon — na telefonu je
+  // seznam podajalcev daljši od zaslona.
+  const glasuj = (playerId: number | null) => {
+    onGlasuj(gol.id, playerId)
+    setOdprto(false)
+    kartica.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }
   const potrjeno = Boolean(gol.assist_player_id)
   const stGlasov: Record<string, number> = Object.fromEntries(
     glasovi.map((v) => [String(v.player_id), v.votes]),
@@ -193,7 +206,7 @@ export default function GolZaGlasovanje({
     )
 
   return (
-    <li className={`kartica overflow-hidden ${pravkar ? 'animiraj-pulz' : ''}`}>
+    <li ref={kartica} className={`kartica overflow-hidden ${pravkar ? 'animiraj-pulz' : ''}`}>
       <div className="flex flex-wrap items-center gap-3 p-4">
         <span className="w-12 shrink-0 rounded-lg bg-slate-950 py-1 text-center font-black tabular-nums text-gnl-300">
           {gol.minute}&apos;
@@ -235,7 +248,16 @@ export default function GolZaGlasovanje({
           </div>
         )}
 
-        {!zakljuceno && (
+        {!zakljuceno && !session && (
+          <Link
+            to={povezavaNaPrijavo(lokacija.pathname + lokacija.search)}
+            className="gumb-glavni w-full text-center sm:w-auto"
+          >
+            {t('tekme.tekma.prijaviSe')}
+          </Link>
+        )}
+
+        {!zakljuceno && session && (
           <button
             onClick={() => setOdprto(!odprto)}
             disabled={!omogoceno}
@@ -328,7 +350,7 @@ export default function GolZaGlasovanje({
               return (
                 <button
                   key={k.player_id}
-                  onClick={() => onGlasuj(gol.id, k.player_id)}
+                  onClick={() => glasuj(k.player_id)}
                   aria-pressed={izbran}
                   className={`flex items-center gap-2 rounded-xl px-3 py-2 text-left text-sm transition ${
                     izbran
@@ -353,7 +375,7 @@ export default function GolZaGlasovanje({
           </div>
 
           <button
-            onClick={() => onGlasuj(gol.id, null)}
+            onClick={() => glasuj(null)}
             // mojGlas je null, če je uporabnik glasoval za "nihče",
             // in undefined, če še ni glasoval
             className={`mt-3 w-full rounded-xl px-3 py-2 text-sm transition ${

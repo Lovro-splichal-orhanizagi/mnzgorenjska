@@ -159,6 +159,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     znanoPoRoku: 'Known after the first deadline',
     pokaziVec: 'Show more ({n})',
     prikazaniVsi: 'Showing all ({igralci}).',
+    razvrsti: 'Sort',
+    razvrstiPo: 'Sort by: {stolpec}',
   },
   profil: {
     naslov: 'Player',

@@ -165,6 +165,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     znanoPoRoku: 'Bude známe po prvej uzávierke',
     pokaziVec: 'Zobraziť viac ({n})',
     prikazaniVsi: 'Zobrazení sú všetci ({igralci}).',
+    razvrsti: 'Zoradiť',
+    razvrstiPo: 'Zoradiť podľa: {stolpec}',
   },
   profil: {
     naslov: 'Hráč',

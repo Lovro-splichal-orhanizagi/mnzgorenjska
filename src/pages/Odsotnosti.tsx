@@ -264,6 +264,7 @@ export default function Odsotnosti() {
                   setIskanje(e.target.value)
                 }}
                 placeholder={t('igralci.odsotnosti.isciIgralca')}
+                autoComplete="off"
                 className="mt-1 w-full rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm"
               />
             </label>
@@ -276,7 +277,7 @@ export default function Odsotnosti() {
                       onClick={() => {
                         setIzbran(z)
                       }}
-                      className="w-full rounded-lg bg-white/5 px-3 py-1.5 text-left text-sm hover:bg-white/10"
+                      className="w-full rounded-lg bg-white/5 px-3 py-3 text-left text-sm hover:bg-white/10"
                     >
                       {prikazniIme(z.full_name)}
                       <span className="ml-2 text-xs text-slate-500">{z.team_name}</span>
@@ -293,7 +294,8 @@ export default function Odsotnosti() {
                 key={v.kljuc}
                 type="button"
                 onClick={() => setVrsta(v.kljuc)}
-                className={`znacka transition ${
+                aria-pressed={vrsta === v.kljuc}
+                className={`inline-flex min-h-11 items-center gap-1 rounded-xl px-3 py-2 text-sm font-semibold transition ${
                   vrsta === v.kljuc
                     ? 'bg-gnl-500 text-slate-950'
                     : 'bg-white/5 text-slate-300 hover:bg-white/10'

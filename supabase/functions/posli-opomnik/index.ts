@@ -14,7 +14,9 @@
 // kdo reče "nisem dobil".
 //
 // Kdor ima mobilno aplikacijo, dobi isto sporočilo še kot potisno obvestilo
-// (push.ts, skrivnost FIREBASE_SERVICE_ACCOUNT).
+// (push.ts, skrivnost FIREBASE_SERVICE_ACCOUNT). Kanala sta neodvisna:
+// pošta gre, če ni `profiles.brez_opomnikov`, push, če ni `brez_push`.
+// `opomnik-push` je samo potisno obvestilo ("še nimaš ekipe", dan pred rokom).
 //
 // Pošta gre prek SMTP (Mailcow na mail.slff.eu, port 465 — Supabase
 // Cloud zapre 25 in 587). Skrivnosti iz env: SMTP_HOST, SMTP_USER, SMTP_PASS,
@@ -30,11 +32,15 @@ import {
   sestaviIzstopKluba,
   sestaviPopravekPozicije,
   sestaviPoznavalca,
+  sestaviPushOpomnik,
   type Liga,
   type Sporocilo,
 } from './sporocila.ts'
-import { posljiPush, type Obvestilo } from './push.ts'
+import { posljiPush, pushNastavljen, type Obvestilo } from './push.ts'
 import nodemailer from 'npm:nodemailer@6.9.16'
+
+const VRSTE = ['opomnik', 'opozorilo', 'poznavalec', 'popravek-pozicije', 'izstop-kluba', 'opomnik-push'] as const
+type Vrsta = (typeof VRSTE)[number]
 
 // Besedila so v `sporocila.ts`, v jeziku DRŽAVE LIGE (slovaška liga →
 // slovaški mail). Povezave nosijo `?t=<liga>`, da se stran odpre v pravi ligi
@@ -58,7 +64,9 @@ interface Zahteva {
   //   jim popravili napacno pozicijo (lazni vratarji); samo urnik
   // 'izstop-kluba' — lastnikom ekip z igralci kluba, ki je izstopil iz lige
   //   (`players.izstopil_at`); samo urnik
-  vrsta?: 'opomnik' | 'opozorilo' | 'poznavalec' | 'popravek-pozicije' | 'izstop-kluba'
+  // 'opomnik-push' — samo push: kdor v ligi nima ekipe, rok je v 24 urah;
+  //   samo urnik
+  vrsta?: Vrsta
   user_id?: string
   player_ids?: number[]
   obseg?: 'klub' | 'liga'
@@ -74,7 +82,10 @@ interface Zahteva {
 
 interface Uporabnik {
   user_id: string
-  email: string
+  email: string | null
+  // vklopljena kanala (glej `kandidati_za_*`)
+  email_vklop: boolean
+  push_vklop: boolean
   display_name: string | null
   team_id: number | null
   ekipa_veljavna: boolean
@@ -137,7 +148,10 @@ Deno.serve(async (req) => {
   }
   const { competition_id, test_email, suho } = vhod
   const vrsta = vhod.vrsta ?? 'opomnik'
-  if (vrsta === 'opozorilo' && !jeStroj)
+  // Neznana vrsta se zavrne: starejša funkcija je vsako neznano vrsto obravnavala
+  // kot množični opomnik po pošti. Ob neusklajeni namestitvi naj raje odpove.
+  if (!VRSTE.includes(vrsta)) return json({ error: `Neznana vrsta: ${vrsta}.` }, 400)
+  if ((vrsta === 'opozorilo' || vrsta === 'opomnik-push') && !jeStroj)
     return json(
       { error: 'Opozorilo poslje samo urnik (servisni kljuc).' },
       403,
@@ -184,6 +198,44 @@ Deno.serve(async (req) => {
     })
     if (rez.napaka) return json({ error: rez.napaka }, 502)
     return json({ poslano: true, resend: rez })
+  }
+
+  // Samo push: pošte ne pošilja, zato ne potrebuje SMTP_PASS.
+  if (vrsta === 'opomnik-push') {
+    const service1 = createClient(SUPABASE_URL, SERVICE_KEY)
+    const { data, error } = await service1.rpc('kandidati_za_push_opomnik', {
+      p_competition_id: competition_id,
+    })
+    if (error) return json({ error: error.message }, 500)
+    const kand = (data ?? []) as Array<{
+      user_id: string; email: string; display_name: string | null; deadline_at: string; round_id: number
+      jezik: string | null; ima_ekipo: boolean
+    }>
+    if (suho) return json({ suho: true, kandidati_stevilo: kand.length })
+    // Brez Firebase skrivnosti ni kaj poslati — ne polni dnevnika z napakami vsako uro.
+    if (!pushNastavljen()) return json({ error: 'Push ni nastavljen (FIREBASE_SERVICE_ACCOUNT).' }, 500)
+    if (typeof vhod.najvec === 'number' && kand.length > vhod.najvec)
+      return json({ error: `Preveč kandidatov (${kand.length}, meja ${vhod.najvec}). Nič ni bilo poslano.`, kandidati_stevilo: kand.length }, 409)
+    const liga1 = await preberiLigo(service1, competition_id)
+    let poslano = 0
+    for (const u of kand) {
+      // Kdor nima ekipe nikjer, ni "v" privzeti ligi: isto povabilo kot mail brez lige.
+      const o = u.ima_ekipo
+        ? { ...sestaviPushOpomnik(liga1, u.deadline_at), url: `/my-team?t=${liga1.slug}` }
+        : vObvestilo(sestaviOpomnikBrezLige(u.jezik, { display_name: u.display_name }), '/my-team?sestavi=1')
+      const n = await posljiPush(service1, u.user_id, o)
+      if (n) poslano++
+      await service1.from('email_log').insert({
+        user_id: u.user_id,
+        email: u.email,
+        vrsta: 'opomnik-push',
+        kanal: 'push',
+        competition_id,
+        round_id: u.round_id,
+        napaka: n ? null : 'push ni dostavljen',
+      })
+    }
+    return json({ kandidati_stevilo: kand.length, poslano, preskoceno: kand.length - poslano })
   }
 
   // Ključ za pošto zahtevamo šele, kadar bomo res pošiljali. Suhi tek obstaja
@@ -291,33 +343,32 @@ Deno.serve(async (req) => {
       }
       const [{ data: u }, { data: pr }] = await Promise.all([
         service.auth.admin.getUserById(e.owner_id),
-        service.from('profiles').select('display_name').eq('id', e.owner_id).maybeSingle(),
+        service.from('profiles').select('display_name, brez_opomnikov, brez_push').eq('id', e.owner_id).maybeSingle(),
       ])
-      const email = u?.user?.email
-      if (!email) {
-        rezultati.push({ ekipa, ok: false, razlog: 'brez e-naslova' })
+      const email = u?.user?.email ?? null
+      const zaPosto = !!email && !pr?.brez_opomnikov
+      if (!zaPosto && pr?.brez_push) {
+        rezultati.push({ ekipa, ok: false, razlog: 'odjavljen' })
         continue
       }
       const sporociloEkipi = (vrsta === 'izstop-kluba' ? sestaviIzstopKluba : sestaviPopravekPozicije)(
         liga,
         { display_name: pr?.display_name ?? null, team_name: e.team_name, igralci: e.igralci },
       )
-      const rez = await poslji(
-        EMAIL_FROM,
-        email,
-        sporociloEkipi,
-        Deno.env.get('EMAIL_REPLY_TO'),
-      )
-      if (!rez.napaka) await posljiPush(service, e.owner_id, vObvestilo(sporociloEkipi, `/my-team?t=${liga.slug}`))
+      const rez: { id?: string; napaka?: string } = zaPosto
+        ? await poslji(EMAIL_FROM, email!, sporociloEkipi, Deno.env.get('EMAIL_REPLY_TO'))
+        : {}
+      const push = pr?.brez_push ? 0 : await posljiPush(service, e.owner_id, vObvestilo(sporociloEkipi, `/my-team?t=${liga.slug}`))
+      const izid = izidKanalov(zaPosto, rez, push)
       await service.from('email_log').insert({
         user_id: e.owner_id,
-        email,
+        email: email ?? '',
         vrsta,
         competition_id,
         resend_id: rez.id ?? null,
-        napaka: rez.napaka ?? null,
+        ...izid,
       })
-      rezultati.push({ ekipa, ok: !rez.napaka, razlog: rez.napaka })
+      rezultati.push({ ekipa, ok: !izid.napaka, razlog: izid.napaka ?? undefined })
     }
     return json({
       kandidati_stevilo: poEkipi.size,
@@ -341,7 +392,9 @@ Deno.serve(async (req) => {
     if (error) return json({ error: error.message }, 500)
     kandidati = (data ?? []).map((u: Record<string, unknown>) => ({
       user_id: u.user_id as string,
-      email: u.email as string,
+      email: (u.email as string) ?? null,
+      email_vklop: u.email_vklop as boolean,
+      push_vklop: u.push_vklop as boolean,
       display_name: (u.display_name as string) ?? null,
       team_id: (u.team_id as number) ?? null,
       ekipa_veljavna: false,
@@ -357,8 +410,8 @@ Deno.serve(async (req) => {
     })
     if (error) return json({ error: error.message }, 500)
     kandidati = (data ?? []).map((u: {
-      user_id: string; email: string; display_name: string | null; team_id: number | null
-      jezik: string | null
+      user_id: string; email: string | null; display_name: string | null; team_id: number | null
+      jezik: string | null; email_vklop: boolean; push_vklop: boolean
     }) => ({ ...u, ekipa_veljavna: false }))
   }
 
@@ -378,7 +431,7 @@ Deno.serve(async (req) => {
 
   // 4) Za vsakega: preveri, ali je nedavno dobil isti opomnik; če ne, pošlji.
   const rezultati: Array<{
-    email: string
+    email: string | null
     ok: boolean
     razlog?: string
     resend_id?: string
@@ -391,7 +444,8 @@ Deno.serve(async (req) => {
   const meja = typeof vhod.najvec_poslati === 'number' ? Math.max(0, vhod.najvec_poslati) : Infinity
   let poslanih = 0
   for (const u of kandidati) {
-    if (poslanih >= meja) {
+    // Kvota velja samo za pošto; kdor je le na pushu, gre skozi.
+    if (u.email_vklop && poslanih >= meja) {
       rezultati.push({ email: u.email, ok: false, razlog: 'dnevna meja' })
       continue
     }
@@ -416,27 +470,33 @@ Deno.serve(async (req) => {
           // Brez ekipe ni lige: povabilo k izbiri v jeziku prijave.
           ? sestaviOpomnikBrezLige(u.jezik, { display_name: u.display_name })
           : sestaviOpomnik(liga, { display_name: u.display_name, brez_ekipe: false })
-    if (poslanih > 0) await new Promise((r) => setTimeout(r, 600))
-    const rez = await poslji(EMAIL_FROM, u.email, sporocilo)
-    if (!rez.napaka) poslanih++
-    // Isto sporočilo še na telefon (mobilna aplikacija), če ga ima.
-    if (!rez.napaka)
-      await posljiPush(service, u.user_id, vObvestilo(sporocilo, u.team_id ? `/my-team?t=${liga.slug}` : '/'))
+    let rez: { id?: string; napaka?: string } = {}
+    const zaPosto = u.email_vklop && !!u.email
+    if (zaPosto) {
+      if (poslanih > 0) await new Promise((r) => setTimeout(r, 600))
+      rez = await poslji(EMAIL_FROM, u.email!, sporocilo)
+      if (!rez.napaka) poslanih++
+    }
+    // Isto sporočilo še na telefon (mobilna aplikacija), neodvisno od pošte.
+    const push = u.push_vklop
+      ? await posljiPush(service, u.user_id, vObvestilo(sporocilo, u.team_id ? `/my-team?t=${liga.slug}` : '/'))
+      : 0
+    const izid = izidKanalov(zaPosto, rez, push)
 
     await service.from('email_log').insert({
       user_id: u.user_id,
-      email: u.email,
+      email: u.email ?? '',
       vrsta: vrsta === 'opozorilo' ? 'opozorilo-postava' : 'opomnik-ekipa',
       competition_id,
       round_id: u.round_id ?? null,
       resend_id: rez.id ?? null,
-      napaka: rez.napaka ?? null,
+      ...izid,
     })
 
     rezultati.push({
       email: u.email,
-      ok: !rez.napaka,
-      razlog: rez.napaka,
+      ok: !izid.napaka,
+      razlog: izid.napaka ?? undefined,
       resend_id: rez.id,
     })
   }
@@ -444,10 +504,28 @@ Deno.serve(async (req) => {
   return json({
     kandidati_stevilo: kandidati.length,
     poslano: rezultati.filter((r) => r.ok).length,
+    // Proračun pošte šteje le maile; push ga ne porablja.
+    poslanih_mailov: poslanih,
     preskoceno: rezultati.filter((r) => !r.ok).length,
     rezultati,
   })
 })
+
+/**
+ * Kanal in napaka za email_log. Vrstica brez napake šteje za poslano (enkrat
+ * na krog oz. tri dni), zato je napaka le, kadar ni prišlo NIČ.
+ */
+function izidKanalov(
+  zaPosto: boolean,
+  rez: { napaka?: string },
+  push: number,
+): { kanal: 'email' | 'push' | 'oba'; napaka: string | null } {
+  const mail = zaPosto && !rez.napaka
+  return {
+    kanal: mail ? (push ? 'oba' : 'email') : push ? 'push' : 'email',
+    napaka: mail || push ? null : (rez.napaka ?? 'push ni dostavljen'),
+  }
+}
 
 /** Zadeva maila "SLFF GNL — tvoja ekipa …" kot naslov in besedilo obvestila. */
 function vObvestilo(s: Sporocilo, url: string): Obvestilo {

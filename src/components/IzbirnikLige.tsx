@@ -88,7 +88,8 @@ export default function IzbirnikLige() {
   }, [odprt])
 
   useEffect(() => {
-    if (odprt) poljeIskanja.current?.focus()
+    // Na dotik bi fokus odprl tipkovnico čez seznam lig, ki ga človek hoče videti.
+    if (odprt && window.matchMedia('(hover: hover)').matches) poljeIskanja.current?.focus()
     else setIskanje('')
   }, [odprt])
 
@@ -255,7 +256,7 @@ export default function IzbirnikLige() {
                         aria-selected={t.slug === slug}
                         onClick={() => izberi(t)}
                         onMouseEnter={() => setAktivna(zaporedje.indexOf(t))}
-                        className={`block w-full cursor-pointer truncate rounded-lg px-2 py-1.5 text-left text-xs ${
+                        className={`block w-full cursor-pointer truncate rounded-lg px-2 py-2.5 text-left text-sm sm:py-1.5 sm:text-xs ${
                           t.slug === slug
                             ? 'bg-gnl-500/25 font-bold text-gnl-200'
                             : jeAktivna

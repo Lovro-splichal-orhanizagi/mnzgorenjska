@@ -92,7 +92,7 @@ export default function VrhDrzave({ drzava }: { drzava: string }) {
                 {seznam.map((v) => (
                   <li
                     key={v.player_id}
-                    className="flex items-center gap-2 rounded-xl bg-white/5 px-3 py-2 sm:gap-3"
+                    className="relative flex items-center gap-2 rounded-xl bg-white/5 px-3 py-2 sm:gap-3"
                   >
                     <span className="w-6 shrink-0 text-center text-sm font-black text-slate-500">
                       {v.mesto}
@@ -103,7 +103,7 @@ export default function VrhDrzave({ drzava }: { drzava: string }) {
                           ligo, stran igralca pa bere po ligi igralca. */}
                       <Link
                         to={`/player/${v.player_id}`}
-                        className="block truncate font-semibold hover:text-gnl-300"
+                        className="block truncate font-semibold after:absolute after:inset-0 after:content-[''] hover:text-gnl-300"
                       >
                         {prikazniIme(v.full_name)}
                       </Link>

@@ -167,6 +167,8 @@ export default function Prijava() {
             <input
               value={ime}
               onChange={(e) => setIme(e.target.value)}
+              autoComplete="nickname"
+              autoCapitalize="words"
               className="mt-1 w-full rounded-xl border border-white/10 bg-slate-900 px-3 py-2"
             />
           </label>
@@ -178,6 +180,11 @@ export default function Prijava() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            enterKeyHint={nacin === 'pozabljeno' ? 'send' : 'next'}
             className="mt-1 w-full rounded-xl border border-white/10 bg-slate-900 px-3 py-2"
           />
         </label>
@@ -190,6 +197,8 @@ export default function Prijava() {
               minLength={6}
               value={geslo}
               onChange={(e) => setGeslo(e.target.value)}
+              autoComplete={nacin === 'registracija' ? 'new-password' : 'current-password'}
+              enterKeyHint="go"
               className="mt-1 w-full rounded-xl border border-white/10 bg-slate-900 px-3 py-2"
             />
           </label>
@@ -213,12 +222,13 @@ export default function Prijava() {
 
       <div className="flex flex-col gap-1">
         <button
+          type="button"
           onClick={() => {
             setNacin(nacin === 'registracija' ? 'prijava' : 'registracija')
             setNapaka(null)
             setSporocilo(null)
           }}
-          className="text-left text-sm text-gnl-300 hover:underline"
+          className="gumb-tih min-h-11 w-full py-3 text-sm text-gnl-300"
         >
           {nacin === 'registracija'
             ? t('racun.prijava.zeImasRacun')
@@ -226,23 +236,25 @@ export default function Prijava() {
         </button>
         {nacin !== 'pozabljeno' ? (
           <button
+            type="button"
             onClick={() => {
               setNacin('pozabljeno')
               setNapaka(null)
               setSporocilo(null)
             }}
-            className="text-left text-sm text-slate-400 hover:underline"
+            className="min-h-11 py-3 text-left text-sm text-slate-400 hover:underline"
           >
             {t('racun.prijava.pozabljenoGeslo')}
           </button>
         ) : (
           <button
+            type="button"
             onClick={() => {
               setNacin('prijava')
               setNapaka(null)
               setSporocilo(null)
             }}
-            className="text-left text-sm text-slate-400 hover:underline"
+            className="min-h-11 py-3 text-left text-sm text-slate-400 hover:underline"
           >
             {t('racun.prijava.nazajNaPrijavo')}
           </button>

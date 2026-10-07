@@ -27,6 +27,9 @@ function servisniRacun(): ServisniRacun | null {
   return racun
 }
 
+/** Ali je Firebase sploh nastavljen (brez skrivnosti push ne gre nikamor). */
+export const pushNastavljen = (): boolean => servisniRacun() != null
+
 const b64url = (b: ArrayBuffer | Uint8Array | string) =>
   btoa(typeof b === 'string' ? b : String.fromCharCode(...new Uint8Array(b)))
     .replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_')

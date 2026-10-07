@@ -35,6 +35,12 @@ export default function Racun() {
   return (
     <div className="max-w-md space-y-4">
       <h1 className="text-3xl font-black naslov">{t('racun.izbris.naslov')}</h1>
+      {session && (
+        <Link to="/reminders" className="kartica flex min-h-[44px] items-center justify-between p-4 font-semibold">
+          {t('racun.opomniki.povezava')}
+          <span aria-hidden="true">→</span>
+        </Link>
+      )}
       {!session ? (
         <p className="text-slate-300">
           {tx('racun.izbris.moraPrijava', {}, {

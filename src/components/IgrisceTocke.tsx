@@ -76,7 +76,7 @@ function Kartica({
     <Link
       to={`/player/${nastop.player_id}`}
       title={opisNastopa(nastop)}
-      className={`block w-[3.4rem] text-center transition duration-150
+      className={`block w-[3.8rem] text-center transition duration-150
                   active:scale-95 lg:w-[4.4rem] lg:hover:-translate-y-0.5 ${
                     zatemnjen ? 'opacity-70' : ''
                   }`}
@@ -108,7 +108,7 @@ function Kartica({
 }
 
 const Vrsta = ({ children }: { children: ReactNode }) => (
-  <div className="flex flex-wrap items-start justify-center gap-1.5 lg:gap-2.5">
+  <div className="flex flex-wrap items-start justify-center gap-1 lg:gap-2.5">
     {children}
   </div>
 )

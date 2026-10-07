@@ -12,6 +12,7 @@ import { serijaCen, premik, crta, zadnjiPremiki } from '../lib/gibanjeCene'
 import type { SpremembaCene } from '../lib/gibanjeCene'
 import Grb from './Grb'
 import { t } from '../i18n'
+import { useZaklepPomika } from '../lib/zaklepPomika'
 
 interface Sezona {
   matches: number | null
@@ -64,6 +65,8 @@ export default function InfoIgralca({
   useEffect(() => {
     okno.current?.focus()
   }, [])
+  // Stran pod oknom naj se ne pomika (na telefonu sicer drsi skozi).
+  useZaklepPomika()
   useEffect(() => {
     const tipka = (e: KeyboardEvent) => {
       if (e.key === 'Escape') naZapri()
@@ -177,7 +180,7 @@ export default function InfoIgralca({
         aria-modal="true"
         aria-label={t('igralci.info.ariaOkno', { ime: prikazniIme(ime) })}
         tabIndex={-1}
-        className="relative max-h-[88dvh] w-full overflow-y-auto overscroll-contain rounded-t-2xl border-t border-white/15 bg-slate-950 p-4 shadow-2xl outline-none sm:max-w-md sm:rounded-2xl sm:border"
+        className="relative max-h-[88dvh] w-full overflow-y-auto overscroll-contain rounded-t-2xl border-t border-white/15 bg-slate-950 p-4 pb-[calc(1rem+var(--dno))] shadow-2xl outline-none sm:max-w-md sm:pb-4 sm:rounded-2xl sm:border"
       >
         <div className="mb-3 flex items-start gap-2">
           <Grb ime={klub} kratko={klubKratko} logo={klubLogo} velikost={26} />

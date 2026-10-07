@@ -399,7 +399,7 @@ export default function Pozicije() {
             ))}
           </select>
         </label>
-        <label className="flex items-center gap-2 pb-2 text-sm text-slate-300">
+        <label className="flex min-h-11 items-center gap-2 py-2 text-sm text-slate-300">
           <input
             type="checkbox"
             checked={samoNepotrjene}
@@ -646,7 +646,7 @@ function IgralecKartica({
           (igralec.active === false ? (
             <button
               onClick={() => onOdhod(igralec.id, false)}
-              className="gumb-tih text-xs"
+              className="gumb-tih min-h-11 px-3 text-sm"
               title={t('tekme.pozicije.igralec.vrniOpis')}
             >
               {t('tekme.pozicije.igralec.vrni')}
@@ -654,7 +654,7 @@ function IgralecKartica({
           ) : (
             <button
               onClick={() => onOdhod(igralec.id, true)}
-              className="text-xs text-slate-400 hover:text-rose-300"
+              className="min-h-11 px-3 py-2 text-sm text-slate-400 hover:text-rose-300"
               title={t('tekme.pozicije.igralec.odhodOpis')}
             >
               {t('tekme.pozicije.igralec.neIgra')}

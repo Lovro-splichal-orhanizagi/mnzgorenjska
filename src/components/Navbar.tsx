@@ -7,6 +7,7 @@ import { supabase } from '../lib/supabase'
 import { potrdiZapustitev } from '../lib/neshranjeno'
 import { jeNativno } from '../lib/platforma'
 import IzbirnikLige from './IzbirnikLige'
+import { odpriPodporo } from './Podpora'
 import { t } from '../i18n'
 
 interface Povezava {
@@ -39,16 +40,16 @@ function useZapriZunaj(odprt: boolean, zapri: () => void) {
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (!odprt) return
-    const klik = (e: MouseEvent) => {
+    const klik = (e: PointerEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) zapri()
     }
     const tipka = (e: KeyboardEvent) => {
       if (e.key === 'Escape') zapri()
     }
-    document.addEventListener('mousedown', klik)
+    document.addEventListener('pointerdown', klik)
     document.addEventListener('keydown', tipka)
     return () => {
-      document.removeEventListener('mousedown', klik)
+      document.removeEventListener('pointerdown', klik)
       document.removeEventListener('keydown', tipka)
     }
   }, [odprt, zapri])
@@ -161,6 +162,9 @@ export default function Navbar() {
       ? 'whitespace-nowrap rounded-lg bg-white/10 px-3 py-1.5 font-semibold text-gnl-300'
       : 'whitespace-nowrap rounded-lg px-3 py-1.5 text-slate-400 hover:bg-white/5 hover:text-slate-100'
 
+  // Na telefonu so vrstice menija višje, da jih prst zadene.
+  const slogMobilni = (a: { isActive: boolean }) => slog(a).replace('py-1.5', 'py-2.5')
+
   const znacka = (n: number) =>
     n > 0 && (
       <span className="ml-1.5 rounded-full bg-amber-400/25 px-1.5 py-0.5 text-[10px] font-black text-amber-200">
@@ -172,7 +176,7 @@ export default function Navbar() {
     'block whitespace-nowrap rounded-lg px-3 py-2 text-left text-slate-300 hover:bg-white/5 hover:text-slate-100'
 
   return (
-    <header className="sticky top-0 z-20 border-b border-white/10 bg-slate-950/80 backdrop-blur">
+    <header className="sticky top-[var(--vrh)] z-20 border-b border-white/10 bg-slate-950/80 backdrop-blur">
       <nav className="mx-auto max-w-6xl px-4 py-3">
         <div className="flex items-center gap-3 lg:gap-4">
           <NavLink to="/" className="flex shrink-0 items-center gap-2 font-black">
@@ -241,7 +245,7 @@ export default function Navbar() {
                   aria-expanded={racunOdprt}
                   aria-label={t('aplikacija.meni.izbrisRacuna')}
                   title={ime ?? session.user.email ?? t('aplikacija.meni.izbrisRacuna')}
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-gnl-500/20 font-black text-gnl-200 ring-1 ring-gnl-400/40 hover:bg-gnl-500/30"
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-gnl-500/20 font-black text-gnl-200 ring-1 ring-gnl-400/40 hover:bg-gnl-500/30"
                 >
                   {zacetnica}
                 </button>
@@ -277,6 +281,17 @@ export default function Navbar() {
                     >
                       {t('aplikacija.meni.povabi')}
                     </a>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setRacunOdprt(false)
+                        odpriPodporo()
+                      }}
+                      className={`w-full ${vrsticaMenija}`}
+                    >
+                      {t('aplikacija.meni.pomoc')}
+                    </button>
                     <button
                       type="button"
                       role="menuitem"
@@ -328,26 +343,36 @@ export default function Navbar() {
           <div className="animiraj-vstop mt-3 border-t border-white/10 pt-3 text-base lg:hidden">
             <div className="grid grid-cols-2 gap-1.5">
               {glavne.map((p) => (
-                <NavLink key={p.pot} to={p.pot} className={slog} onClick={() => setOdprt(false)}>
+                <NavLink key={p.pot} to={p.pot} className={slogMobilni} onClick={() => setOdprt(false)}>
                   {p.naslov}
                 </NavLink>
               ))}
             </div>
             <div className="mt-3 grid grid-cols-2 gap-1.5 border-t border-white/5 pt-3 text-sm">
               {vec.map((p) => (
-                <NavLink key={p.pot} to={p.pot} className={slog} onClick={() => setOdprt(false)}>
+                <NavLink key={p.pot} to={p.pot} className={slogMobilni} onClick={() => setOdprt(false)}>
                   {p.naslov}
                   {p.pot === '/assists' && znacka(cakaGlasov)}
                 </NavLink>
               ))}
               {session && (
-                <NavLink to="/reminders" className={slog} onClick={() => setOdprt(false)}>
+                <NavLink to="/reminders" className={slogMobilni} onClick={() => setOdprt(false)}>
                   {t('aplikacija.meni.opomniki')}
                 </NavLink>
               )}
+              <button
+                type="button"
+                className={`${slogMobilni({ isActive: false })} text-left`}
+                onClick={() => {
+                  setOdprt(false)
+                  odpriPodporo()
+                }}
+              >
+                {t('aplikacija.meni.pomoc')}
+              </button>
               <a
                 href={vabilo}
-                className="col-span-2 rounded-lg px-3 py-1.5 text-center text-slate-400 hover:bg-white/5"
+                className="col-span-2 rounded-lg px-3 py-2.5 text-center text-slate-400 hover:bg-white/5"
                 onClick={() => setOdprt(false)}
               >
                 {t('aplikacija.meni.povabi')}

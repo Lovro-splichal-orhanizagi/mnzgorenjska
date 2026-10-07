@@ -69,13 +69,15 @@ type Stolpec = keyof Pick<
 
 // Tabela vseh igralcev lige s tekočimi točkami — po kateremkoli stolpcu se da
 // razvrstiti, da je razvidno, kdo je v sezoni ali v zadnjih krogih najboljši.
-const STOLPCI: Array<{ kljuc: Stolpec; naslov: string; opis: string }> = [
+// `mobilno: false` stolpec na ozkem zaslonu skrije, da točke ostanejo vidne.
+const STOLPCI: Array<{ kljuc: Stolpec; naslov: string; opis: string; mobilno?: false }> = [
   { kljuc: 'points', naslov: t('igralci.seznam.stolpci.tocke'), opis: t('igralci.seznam.stolpci.tockeOpis') },
   { kljuc: 'form', naslov: t('igralci.seznam.stolpci.forma'), opis: t('igralci.seznam.stolpci.formaOpis') },
   {
     kljuc: 'last_round',
     naslov: t('igralci.seznam.stolpci.zadnjiKrog'),
     opis: t('igralci.seznam.stolpci.zadnjiKrogOpis'),
+    mobilno: false,
   },
   {
     kljuc: 'points_per_match',
@@ -86,10 +88,11 @@ const STOLPCI: Array<{ kljuc: Stolpec; naslov: string; opis: string }> = [
     kljuc: 'points_per_value',
     naslov: t('igralci.seznam.stolpci.naCeno'),
     opis: t('igralci.seznam.stolpci.naCenoOpis'),
+    mobilno: false,
   },
   { kljuc: 'value', naslov: t('igralci.seznam.stolpci.cena'), opis: t('igralci.seznam.stolpci.cenaOpis') },
   { kljuc: 'goals', naslov: t('igralci.seznam.stolpci.goli'), opis: t('igralci.seznam.stolpci.goliOpis') },
-  { kljuc: 'minutes', naslov: t('igralci.seznam.stolpci.minute'), opis: t('igralci.seznam.stolpci.minuteOpis') },
+  { kljuc: 'minutes', naslov: t('igralci.seznam.stolpci.minute'), opis: t('igralci.seznam.stolpci.minuteOpis'), mobilno: false },
   {
     kljuc: 'owners',
     naslov: t('igralci.seznam.stolpci.izbran'),
@@ -356,17 +359,17 @@ export default function Igralci() {
         </p>
       )}
 
-      <div className="kartica flex flex-wrap gap-2 p-3">
+      <div className="kartica grid grid-cols-2 gap-2 p-3 sm:flex sm:flex-wrap">
         <input
           value={iskanje}
           onChange={(e) => setIskanje(e.target.value)}
           placeholder={t('igralci.seznam.isci')}
-          className="min-w-40 flex-1 rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm"
+          className="col-span-2 min-w-40 flex-1 rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm"
         />
         <select
           value={filterKlub}
           onChange={(e) => setFilterKlub(e.target.value)}
-          className="rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm"
+          className="w-full rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm sm:w-auto"
         >
           <option value="vsi">{t('igralci.seznam.vsiKlubi')}</option>
           {klubi.map(([id, ime]) => (
@@ -378,7 +381,7 @@ export default function Igralci() {
         <select
           value={filterPoz}
           onChange={(e) => setFilterPoz(e.target.value as Pozicija | 'vse')}
-          className="rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm"
+          className="w-full rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm sm:w-auto"
         >
           <option value="vse">{t('igralci.seznam.vsePozicije')}</option>
           {Object.entries(POZICIJE).map(([k, p]) => (
@@ -387,16 +390,37 @@ export default function Igralci() {
             </option>
           ))}
         </select>
+        {/* Na telefonu so gumbi v glavi tabele drobni in delno zunaj zaslona. */}
+        <select
+          value={urejanje}
+          onChange={(e) => setUrejanje(e.target.value as Stolpec)}
+          aria-label={t('igralci.seznam.razvrsti')}
+          className="col-span-2 w-full rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm sm:hidden"
+        >
+          {/* Le stolpci, ki jih telefon kaže: razvrščanje po skriti vrednosti zmede. */}
+          {STOLPCI.filter((s) => s.mobilno !== false).map((s) => (
+            <option key={s.kljuc} value={s.kljuc}>
+              {t('igralci.seznam.razvrstiPo', { stolpec: s.naslov })}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="kartica overflow-x-auto">
-        <table className="w-full min-w-[46rem] text-sm">
+        <table className="w-full min-w-[30rem] text-sm sm:min-w-[46rem]">
           <thead>
             <tr className="border-b border-white/10 text-xs uppercase tracking-wide text-slate-400">
-              <th className="px-3 py-2 text-left font-semibold">#</th>
-              <th className="px-3 py-2 text-left font-semibold">{t('igralci.seznam.igralec')}</th>
+              <th className="hidden px-3 py-2 text-left font-semibold sm:table-cell">#</th>
+              <th className="sticky left-0 z-10 bg-slate-950 px-3 py-2 text-left font-semibold sm:static sm:bg-transparent">
+                {t('igralci.seznam.igralec')}
+              </th>
               {STOLPCI.map((s) => (
-                <th key={s.kljuc} className="px-2 py-2 text-right font-semibold">
+                <th
+                  key={s.kljuc}
+                  className={`px-2 py-2 text-right font-semibold ${
+                    s.mobilno === false ? 'hidden sm:table-cell' : ''
+                  }`}
+                >
                   <button
                     onClick={() => setUrejanje(s.kljuc)}
                     title={s.opis}
@@ -417,10 +441,10 @@ export default function Igralci() {
                 key={i.id}
                 className="border-b border-white/5 transition hover:bg-white/5"
               >
-                <td className="px-3 py-2 text-xs font-black text-slate-400">
+                <td className="hidden px-3 py-2 text-xs font-black text-slate-400 sm:table-cell">
                   {idx + 1}
                 </td>
-                <td className="px-3 py-2">
+                <td className="sticky left-0 z-10 bg-slate-950 px-3 py-2 sm:static sm:max-w-none sm:bg-transparent">
                   <div className="flex items-center gap-2">
                     <Grb
                       ime={i.team_name}
@@ -431,7 +455,7 @@ export default function Igralci() {
                     <span className={`znacka ${razredPozicije(i.position)}`}>
                       {(i.position && KRATKA_POZICIJA[i.position]) ?? '?'}
                     </span>
-                    <div className="min-w-0">
+                    <div className="min-w-0 max-w-[8.5rem] sm:max-w-none">
                       <Link
                         to={`/player/${i.id}`}
                         className="block truncate font-semibold hover:text-gnl-300"
@@ -448,7 +472,7 @@ export default function Igralci() {
                           </span>
                         )}
                       </Link>
-                      <div className="text-xs text-slate-500">
+                      <div className="truncate text-xs text-slate-500">
                         {i.team_short} · {mnozina(Number(i.matches ?? 0), TEKME)}
                       </div>
                     </div>
@@ -460,13 +484,13 @@ export default function Igralci() {
                 <td className="px-2 py-2 text-right tabular-nums text-slate-300">
                   {formatirajTocke(i.form)}
                 </td>
-                <td className="px-2 py-2 text-right tabular-nums text-slate-300">
+                <td className="hidden px-2 py-2 text-right tabular-nums text-slate-300 sm:table-cell">
                   {formatirajTocke(i.last_round)}
                 </td>
                 <td className="px-2 py-2 text-right tabular-nums text-slate-400">
                   {formatirajTocke(i.points_per_match)}
                 </td>
-                <td className="px-2 py-2 text-right tabular-nums text-slate-400">
+                <td className="hidden px-2 py-2 text-right tabular-nums text-slate-400 sm:table-cell">
                   {formatirajTocke(i.points_per_value)}
                 </td>
                 <td className="px-2 py-2 text-right font-bold tabular-nums text-gnl-300">
@@ -475,7 +499,7 @@ export default function Igralci() {
                 <td className="px-2 py-2 text-right tabular-nums text-slate-400">
                   {i.goals}
                 </td>
-                <td className="px-2 py-2 text-right tabular-nums text-slate-400">
+                <td className="hidden px-2 py-2 text-right tabular-nums text-slate-400 sm:table-cell">
                   {i.minutes}
                 </td>
                 <td className="px-2 py-2 text-right tabular-nums text-slate-400">

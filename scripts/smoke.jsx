@@ -3608,6 +3608,11 @@ preveri(
       !slovensko.test(bSk.html) && bSk.html.includes('Ahoj, Ján!'))
   preveri('e-pošta: brez lige ima odjavo', bSl.odjava === 'https://slff.eu/reminders' && bSk.html.includes('/reminders'))
   preveri('e-pošta: sl razlog nespremenjen', E.prevediRazlog(razlogi[0], 'sl') === razlogi[0])
+  const pushSl = E.sestaviPushOpomnik(si, rok)
+  const pushSk = E.sestaviPushOpomnik(sk, rok)
+  preveri('push: opomnik brez ekipe v jeziku lige',
+    pushSl.naslov.includes('še nimaš ekipe') && pushSk.naslov.includes('ešte nemáš tím') &&
+      !slovensko.test(pushSk.besedilo) && /\d/.test(pushSl.besedilo))
 
   const pSk = E.sestaviPoznavalca(sk, { display_name: 'Ján', obseg: 'liga', klub: null })
   const pSl = E.sestaviPoznavalca(si, { display_name: 'Janez', obseg: 'klub', klub: 'Šenčur' })

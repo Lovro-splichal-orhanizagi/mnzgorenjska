@@ -103,11 +103,11 @@ export default function PovabiSoigralce({
       <button
         onClick={naZapri}
         aria-label={t('skupno.zapri')}
-        className="absolute right-2 top-2 rounded-lg px-2 py-0.5 text-slate-500 hover:bg-white/5 hover:text-slate-200"
+        className="absolute right-1 top-1 flex h-11 w-11 items-center justify-center rounded-lg text-slate-500 hover:bg-white/5 hover:text-slate-200"
       >
         <span aria-hidden="true">✕</span>
       </button>
-      <h2 className="font-bold text-gnl-200">
+      <h2 className="pr-10 font-bold text-gnl-200">
         {liga
           ? t('lestvice.povabiSoigralce.naslovLiga', { ime: liga.name })
           : t('lestvice.povabiSoigralce.naslovNova')}
