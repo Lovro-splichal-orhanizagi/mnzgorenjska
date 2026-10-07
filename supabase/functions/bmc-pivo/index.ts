@@ -73,7 +73,10 @@ Deno.serve(async (req) => {
   }
   const vsebina = besedilo(dogodek)
   // Drugi dogodki (članstva ipd.) so izklopljeni; potrdimo prejem, da BMC ne ponavlja.
-  if (!vsebina) return new Response('ignored', { status: 200 })
+  if (!vsebina) {
+    console.log(`bmc-pivo: ignored event type ${JSON.stringify(dogodek.type)}`)
+    return new Response('ignored', { status: 200 })
+  }
 
   const r = await fetch(discord, {
     method: 'POST',
