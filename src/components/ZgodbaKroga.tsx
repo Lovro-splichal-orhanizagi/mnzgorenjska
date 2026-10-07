@@ -218,7 +218,7 @@ export default function ZgodbaKroga({
       ? t('lestvice.zgodba.deliBesediloMesto', { ekipa, tocke, beseda: tockZ(podatki.tocke), krog: podatki.krog, mesto: podatki.mesto })
       : t('lestvice.zgodba.deliBesedilo', { ekipa, tocke, beseda: tockZ(podatki.tocke), krog: podatki.krog })
   return (
-    <section className="kartica space-y-2 border-gnl-400/30 bg-gnl-500/5 p-3 sm:p-4">
+    <section className="kartica space-y-2 p-3 sm:p-4">
       <h2 className="text-sm font-bold uppercase tracking-wide text-gnl-300">
         {t('lestvice.zgodba.naslov', { krog: podatki.krog })}
       </h2>

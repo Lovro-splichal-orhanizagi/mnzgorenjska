@@ -98,6 +98,9 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   locenaLiga:
     'Momčad u ligi <liga>{liga}</liga> odvojena je od momčadi u drugim ligama — sa svojim proračunom i svojom ljestvicom. Bodovi se računaju od {krog}. kola nadalje jer se do tada još događaju transferi i prelasci između selekcija.',
 
+  /** Zloženi razdelek pod igriščem. */
+  vec: 'Više: pomagala, povijest, pravila',
+
   prestopi: {
     stevec: 'Prijelazi: {n}/{prosti}',
     wildcard: 'wildcard — bez kazne',
@@ -138,45 +141,30 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     zapri: 'Zatvori',
   },
 
-  // Crvena traka kad momčad ne odgovara pravilima.
-  neustreza: {
-    naslov: 'Tvoja momčad NE odgovara pravilima',
-    zaKrog: '<krepko>Za {krog}. kolo</krepko> u ovom stanju <krepko>NEĆEŠ dobiti bodove</krepko>.',
-    zaKrogRok:
-      '<krepko>Za {krog}. kolo</krepko> (rok: {rok}) u ovom stanju <krepko>NEĆEŠ dobiti bodove</krepko>.',
-    konkretne: 'Konkretne greške:',
-    pogosto:
-      'To se često dogodi jer glasovanje o poziciji premjesti igrača (npr. iz napadača u veznog) i poremeti ti momčad. Popravi sada, dok rok nije istekao.',
-  },
-
   povzetek: {
-    naVoljo: 'Preostalo',
+    urediIme: 'Uredi ime momčadi {ime}',
     bogastvo:
       'bogatstvo <vrednost>{bogastvo}</vrednost><razlika></razlika> · momčad {kader} <placano>plaćeno</placano>',
     razlika: '({znak}{cena})',
     shranjujem: 'Spremam …',
     shraniEkipo: 'Spremi momčad',
     neshranjeno: 'Nespremljene promjene',
-    stevec: '{n}/{igralcev} · postava {prvi}/{prvih}',
     imeEkipe: 'Ime momčadi',
-    fiksnoNamig: 'Ime momčadi nakon prvog spremanja je trajno — jedinstvena oznaka na ljestvici i u povijesti.',
-    fiksno: '🔒 trajno',
     privzetoIme: 'FC {ime}',
     primerImena: 'npr. Nedjeljni Junaci',
-    imeNamig: 'Ime možeš kasnije bilo kada promijeniti.',
   },
 
   // Uvodni savjet za praznu momčad.
   zacetek: {
     naslov: 'Gdje početi?',
-    sestaviMi: '🎲 Složi mi momčad',
+    sestaviMi: 'Složi mi momčad',
     opisPredloga:
       'Nasumično odaberemo valjanu momčad unutar proračuna — svaki klik drugu. Zatim zamijeni koga želiš i spremi.',
     sam: 'Radije ću je složiti sam',
-    drugPredlog: '🎲 Drugi prijedlog',
+    drugPredlog: 'Drugi prijedlog',
     opisDrugegaPredloga:
       'Ne sviđa ti se? Izvuci novu momčad — dok je ne spremiš, to je besplatno.',
-    dopolni: '🎲 Popuni momčad',
+    dopolni: 'Popuni momčad',
     opisDopolnitve:
       'Slobodnih mjesta u momčadi: {n}. Tvoji odabiri ostaju, preostala mjesta nasumično popunjavamo unutar proračuna.',
     korak1: 'Ime momčadi predložili smo gore — možeš ga bilo kada promijeniti.',
@@ -192,7 +180,6 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     naslov: 'Traka',
     kapetan: 'Kapetan (×{n})',
     namestnik: 'Zamjenik',
-    opis: 'Kapetan donosi trostruke bodove. Ako ne igra, traku preuzima zamjenik.',
     nihce: '— nitko —',
   },
 
@@ -203,12 +190,10 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   },
 
   status: {
-    pripravljena: 'Momčad je spremna za spremanje.',
     manjka: 'Za konačno spremanje još nešto nedostaje:',
     vpisiIme: 'Upiši ime momčadi (u polje gore).',
     osnutekZdaj: 'Skicu možeš spremiti i sada — pravila ćeš ispuniti kasnije.',
-    shraniOsnutek: 'Spremi skicu',
-    imeObvezno: 'Ime momčadi je obavezno — klik te vraća na polje gore.',
+    brezTock: '<krepko>Za {krog}. kolo</krepko> u ovom stanju <krepko>NEĆEŠ dobiti bodove</krepko>.',
     kajPomeni:
       '<krepko>Što znači "Spremi"?</krepko> Tvoje promjene (momčad, postava, kapetan) zapisuju se u bazu. Za trenutno kolo vrijedi stanje u trenutku roka. Do roka možeš mijenjati koliko želiš i ponovno pritiskati Spremi — vrijedi zadnja verzija. <krepko>"Spremi skicu"</krepko> znači isto, samo s napomenom da momčad još ne ispunjava sva pravila (za bodove trebaš ispravke — vidi popis gore).',
     kajPomeniRok:
@@ -226,7 +211,7 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     wildcardVlozen: 'Wildcard je već aktiviran — prijelazi u njemu su besplatni.',
     wildcardOpis:
       'Jednom u sezoni: u tom kolu možeš zamijeniti koliko god igrača želiš, bez odbitka bodova.',
-    zaklenjen: '🔒 zaključano',
+    zaklenjen: 'zaključano',
     preklici: 'otkaži',
     prekliciDo: 'Otkazati možeš do <odstevanje></odstevanje>',
     izberiKrog: 'Odaberi kolo …',
@@ -290,8 +275,6 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     potekel: 'Rok je istekao — <krepko>{rok}</krepko>',
     rok: 'Rok: <krepko>{rok}</krepko>',
     niDolocen: 'Rok još nije određen.',
-    naslednji: 'Promjene sada vrijede za sljedeće kolo.',
-    obRoku: 'U trenutku roka postava se snima — dok ne istekne, slobodno mijenjaj.',
   },
 
   // Teren pri slaganju momčadi (components/Igrisce.tsx).

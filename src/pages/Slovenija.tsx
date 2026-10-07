@@ -104,14 +104,14 @@ export default function Slovenija() {
     return (
       <div className="space-y-4">
         <h1 className="text-2xl font-black naslov sm:text-3xl">{t('lestvice.slovenija.naslov')}</h1>
-        <p className="kartica p-6 text-center text-slate-400">
+        <p className="text-sm text-slate-400">
           {t('lestvice.slovenija.pripravlja')}
         </p>
       </div>
     )
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <h1 className="text-2xl font-black naslov sm:text-3xl">{t('lestvice.slovenija.naslov')}</h1>
 
       <div className="flex gap-1 border-b border-white/10">
@@ -139,7 +139,8 @@ export default function Slovenija() {
         <VrhDrzave drzava={drzava} />
       ) : (
         <>
-          <p className="text-sm text-slate-400">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs text-slate-500">
             {t('lestvice.slovenija.povzetek', {
               ekip: mnozina(skupaj.ekip, EKIPE),
               lig: t('lestvice.slovenija.lig', { n: skupaj.lig }),
@@ -147,7 +148,7 @@ export default function Slovenija() {
             })}
           </p>
 
-          <div className="flex gap-2">
+          <div className="inline-flex rounded-lg bg-white/5 p-0.5">
             {(
               [
                 ['skupno', t('lestvice.slovenija.skupno')],
@@ -157,13 +158,14 @@ export default function Slovenija() {
               <button
                 key={k}
                 onClick={() => setKako(k)}
-                className={`rounded-lg px-3 py-1.5 text-sm font-bold ${
-                  kako === k ? 'bg-gnl-500/20 text-gnl-200 ring-1 ring-gnl-400/40' : 'bg-white/5 text-slate-400'
+                className={`rounded-md px-3 py-1.5 text-sm font-semibold transition ${
+                  kako === k ? 'bg-gnl-500 text-slate-950' : 'text-slate-300 hover:text-white'
                 }`}
               >
                 {naslov}
               </button>
             ))}
+          </div>
           </div>
 
           {kako === 'povprecje' && (
@@ -175,7 +177,7 @@ export default function Slovenija() {
           )}
 
           {urejene.length === 0 ? (
-            <p className="kartica p-6 text-center text-slate-400">
+            <p className="text-sm text-slate-400">
               {/* Sporočilo mora povedati RESNICO: ob razvrstitvi po povprečju je
                   lestvica prazna zato, ker nihče še ni odigral dovolj krogov — ne
                   zato, ker ne bi igral nihče. Prva različica je trdila slednje in
@@ -187,19 +189,19 @@ export default function Slovenija() {
                 : t('lestvice.slovenija.nobenaEkipa')}
             </p>
           ) : (
-            <ul className="space-y-1">
+            <ol className="kartica divide-y divide-white/10 overflow-hidden">
               {urejene.slice(0, koliko).map((v) => (
                 <li
                   key={v.fantasy_team_id}
-                  className="relative flex items-center gap-3 rounded-xl bg-white/5 px-3 py-2"
+                  className="relative flex min-h-[52px] items-center gap-3 px-3 py-2 transition hover:bg-white/5 sm:px-4"
                 >
-                  <span className="w-7 shrink-0 text-center text-sm font-black text-slate-400">
+                  <span className="w-7 shrink-0 text-center text-sm font-bold text-slate-400">
                     {v.mesto <= 3 ? MEDALJE[v.mesto - 1] : v.mesto}
                   </span>
                   <div className="min-w-0 flex-1">
                     <Link
                       to={`/team/${v.fantasy_team_id}`}
-                      className="block truncate font-bold after:absolute after:inset-0 after:content-[''] hover:text-gnl-400"
+                      className="block truncate text-sm font-semibold after:absolute after:inset-0 after:content-[''] hover:text-gnl-400"
                     >
                       {v.team_name}
                     </Link>
@@ -210,7 +212,7 @@ export default function Slovenija() {
                     </div>
                   </div>
                   <div className="shrink-0 text-right">
-                    <div className="font-black tabular-nums text-gnl-300">
+                    <div className="font-bold tabular-nums text-gnl-300">
                       {formatirajTocke(
                         kako === 'povprecje' ? v.points_per_round : v.total_points,
                       )}
@@ -221,11 +223,11 @@ export default function Slovenija() {
                   </div>
                 </li>
               ))}
-            </ul>
+            </ol>
           )}
           {urejene.length > koliko && (
             <div className="text-center">
-              <button onClick={() => setKoliko(koliko + 50)} className="gumb-tih">
+              <button onClick={() => setKoliko(koliko + 50)} className="gumb-tih text-sm">
                 {t('lestvice.pokaziVec', { n: urejene.length - koliko })}
               </button>
             </div>

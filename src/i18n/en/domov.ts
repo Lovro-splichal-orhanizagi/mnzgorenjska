@@ -12,9 +12,8 @@ export const domov: NonNullable<Prevod['domov']> = {
     opis: 'Points come from the official match reports of {zveza} — goals, minutes, clean sheets, cards. Everything except assists, which the community decides.',
     vecLig: 'You can play in several leagues — <krepko>pick a league at the top left</krepko>; each has its own team and standings.',
     zacetekSezone: '<krepko>The season starts on {datum}</krepko> — build your team before the deadline.',
-    zamudniki: '<krepko>Missed the start? No problem.</krepko> Every round has its own winner. In <lestvica>Standings</lestvica> choose "From round N onwards" and compete from the moment you join. It is never too late.',
+    zamudniki: '<krepko>Missed the start?</krepko> In <lestvica>Standings</lestvica> you compete from the round you join.',
     sestaviEkipo: 'Build your team',
-    glasuj: 'Vote on assists',
     rezultati: 'Results and line-ups',
   },
   asistence: {
@@ -22,43 +21,36 @@ export const domov: NonNullable<Prevod['domov']> = {
       one: '{n} goal is waiting for an assist',
       other: '{n} goals are waiting for an assist',
     },
-    opis: 'Match reports do not record assists — the community decides them. Without your votes, the providers miss out on <krepko>+3 points</krepko>, and so does your team.',
-    glasujZdaj: 'Vote now →',
   },
   rok: {
     seZaklene: 'Round {krog} locks',
-    opis: 'Last chance to change your team, captain and vice-captain. <uredi>Edit team →</uredi>',
   },
   krog: 'Round {krog}',
   brezKroga: 'No round',
   minut: '{n} min',
   zadnjiRezultati: {
     naslov: 'Latest results',
-    vsi: 'All results and line-ups →',
+    vsi: 'All results →',
     poglejTekmo: 'See the line-ups and points for this match',
   },
   najboljsi: {
-    igralecKroga: 'Player of round {krog}',
-    rezultatiKroga: 'Round {krog} · match results →',
-    strelci: 'Top scorers this season',
-    podajalci: 'Top assist providers this season',
-    ohranjeneMreze: 'Most clean sheets',
     igralecSezone: 'Player of the season',
-    igralecSezoneZ: 'Player of the season {sezona}',
     celaLestvica: 'Full player rankings →',
+    vodilni: {
+      strelec: 'Top scorer',
+      podajalec: 'Top assister',
+      mreze: 'Most clean sheets',
+    },
   },
   idealna: {
     naslov: 'Team of the round',
     krogSezona: 'Round {krog} · season {sezona}',
-    opis: 'The best 11 players of the last round played (1 GK, 4 DEF, 4 MID, 2 FWD). The number under the shirt is the points the player scored.',
+    opis: 'Best 11 of the last round; points under each shirt.',
   },
   povabi: {
     naslov: 'Invite a friend to the league',
-    opis: 'The more of us, the more fun. Click the button and we will open a blank email with the message already written — just add the recipient.',
-    gumb: 'Open email',
   },
   skupnost: {
-    naslov: 'Help the community',
     brezAsistence: '{goli} without an assist',
     povejKdo: {
       one: 'Tell us who set it up — {n} vote confirms it',
@@ -71,7 +63,6 @@ export const domov: NonNullable<Prevod['domov']> = {
   },
   naslednje: {
     naslov: 'Upcoming matches',
-    vRazporedu: '{tekme} scheduled',
     proti: 'vs',
   },
   kakoIgras: {
@@ -86,4 +77,12 @@ export const domov: NonNullable<Prevod['domov']> = {
     poKroguOpis: 'Points are calculated from the match reports. A player without minutes is automatically replaced by a substitute in the same position, and once a season you can use Bench+ to count your whole bench.',
   },
   kakoSeTockuje: 'How scoring works',
+  moja: {
+    tocke: 'Points',
+    mesto: 'Rank',
+    mestoOd: '{mesto} of {n}',
+    uredi: 'My team →',
+  },
+  taTeden: 'This week',
+  klepet: 'Chat and ideas',
 }

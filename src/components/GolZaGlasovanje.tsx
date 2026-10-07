@@ -109,16 +109,16 @@ function Zakljucek({
   opomba: string
 }) {
   return (
-    <li className="kartica p-4 opacity-70">
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="w-12 shrink-0 text-center font-black tabular-nums text-slate-500">
+    <li className="px-3 py-2.5 opacity-70 sm:px-4">
+      <div className="flex items-center gap-2.5 text-sm">
+        <span className="w-9 shrink-0 font-bold tabular-nums text-slate-500">
           {gol.minute}&apos;
         </span>
-        <span className="text-lg" aria-hidden="true">{ikona}</span>
+        <span aria-hidden="true">{ikona}</span>
         <span className="min-w-0 flex-1 truncate text-slate-300">
           {besedilo}
         </span>
-        <span className="znacka bg-white/10 text-slate-400">{opomba}</span>
+        <span className="shrink-0 text-xs text-slate-500">{opomba}</span>
       </div>
     </li>
   )
@@ -206,16 +206,15 @@ export default function GolZaGlasovanje({
     )
 
   return (
-    <li ref={kartica} className={`kartica overflow-hidden ${pravkar ? 'animiraj-pulz' : ''}`}>
-      <div className="flex flex-wrap items-center gap-3 p-4">
-        <span className="w-12 shrink-0 rounded-lg bg-slate-950 py-1 text-center font-black tabular-nums text-gnl-300">
+    <li ref={kartica} className={`overflow-hidden ${pravkar ? 'animiraj-pulz' : ''}`}>
+      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2 px-3 py-2.5 sm:px-4">
+        <span className="w-9 shrink-0 text-sm font-bold tabular-nums text-gnl-300">
           {gol.minute}&apos;
         </span>
         <div className="min-w-[8rem] flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-lg" aria-hidden="true">⚽</span>
+          <div className="flex flex-wrap items-center gap-1.5 text-sm">
             <StDres st={stDresa[String(gol.scorer?.id)]} />
-            <strong className="truncate">{ime}</strong>
+            <strong className="truncate font-semibold">{ime}</strong>
           </div>
           <div className="text-xs text-slate-500">
             {ekipa?.name}
@@ -225,33 +224,24 @@ export default function GolZaGlasovanje({
         </div>
 
         {potrjeno && (
-          <div className="flex w-full items-center gap-2 rounded-xl bg-gnl-500/15 px-3 py-2 ring-1 ring-gnl-400/30 sm:w-auto">
-            <span aria-hidden="true">🅰️</span>
-            <div className="text-sm">
-              <div className="flex items-center gap-1.5 font-bold text-gnl-200">
-                <StDres st={stDresa[String(gol.assist_player_id)]} />
-                {prikazniIme(gol.assist?.full_name)}
-              </div>
-              <div className="text-xs text-gnl-400/80">
-                {t('tekme.gol.potrjena')}
-              </div>
-            </div>
+          <div className="flex w-full items-center gap-1.5 pl-[2.875rem] text-sm sm:w-auto sm:pl-0">
+            <StDres st={stDresa[String(gol.assist_player_id)]} />
+            <span className="font-semibold text-gnl-200">{prikazniIme(gol.assist?.full_name)}</span>
+            <span className="text-xs text-gnl-400/80">· {t('tekme.gol.potrjena')}</span>
           </div>
         )}
 
         {!potrjeno && brezAsistence && (
-          <div className="w-full rounded-xl bg-white/5 px-3 py-2 text-sm ring-1 ring-white/10 sm:w-auto">
-            <div className="font-bold text-slate-200">{t('tekme.gol.brezAsistence')}</div>
-            <div className="text-xs text-slate-500">
-              {t('tekme.gol.odlocilaSkupnost')}
-            </div>
+          <div className="w-full pl-[2.875rem] text-sm sm:w-auto sm:pl-0">
+            <span className="font-semibold text-slate-200">{t('tekme.gol.brezAsistence')}</span>{' '}
+            <span className="text-xs text-slate-500">· {t('tekme.gol.odlocilaSkupnost')}</span>
           </div>
         )}
 
         {!zakljuceno && !session && (
           <Link
             to={povezavaNaPrijavo(lokacija.pathname + lokacija.search)}
-            className="gumb-glavni w-full text-center sm:w-auto"
+            className="text-sm font-semibold text-gnl-300 hover:underline"
           >
             {t('tekme.tekma.prijaviSe')}
           </Link>
@@ -261,7 +251,7 @@ export default function GolZaGlasovanje({
           <button
             onClick={() => setOdprto(!odprto)}
             disabled={!omogoceno}
-            className={odprto ? 'gumb-tih' : 'gumb-glavni'}
+            className={`${odprto ? 'gumb-tih' : 'gumb-glavni'} px-3 py-1.5 text-sm`}
             title={omogoceno ? undefined : t('tekme.gol.morasSePrijaviti')}
           >
             {odprto
@@ -276,7 +266,7 @@ export default function GolZaGlasovanje({
       {/* Napredek do praga je viden tudi pod pragom, da uporabnik ve, koliko
           glasov je zbranih in kdo vodi. */}
       {!zakljuceno && vodilni && (
-        <div className="space-y-2 border-t border-white/5 bg-slate-950/30 px-4 pb-3 pt-3">
+        <div className="space-y-2 border-t border-white/5 px-3 pb-3 pt-3 sm:px-4">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <div className="text-sm">
               {vodilni.player_id == null ? (
@@ -339,7 +329,7 @@ export default function GolZaGlasovanje({
       )}
 
       {odprto && !zakljuceno && (
-        <div className="animiraj-vstop border-t border-white/10 bg-slate-950/40 p-4">
+        <div className="animiraj-vstop border-t border-white/10 p-3 sm:p-4">
           <p className="mb-3 text-xs uppercase tracking-wide text-slate-400">
             {t('tekme.gol.izberiPodajalca', { ekipa: ekipa?.name })}
           </p>

@@ -46,23 +46,23 @@ export default function DeliMiniLigo({
   const poudarjeno = stanje !== 'polna'
 
   const gumb =
-    'inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-bold ring-1 transition'
+    'inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold ring-1 transition'
 
   return (
     <section
-      className={`kartica space-y-3 p-4 ${poudarjeno ? 'border-gnl-400/40 bg-gnl-500/10' : ''}`}
+      className={`space-y-3 ${poudarjeno ? 'rounded-2xl bg-gnl-500/5 p-3 ring-1 ring-gnl-400/20 sm:p-4' : ''}`}
     >
       {poudarjeno && (
         <div className="space-y-1">
-          <h2 className="text-lg font-black text-gnl-200">
+          <h2 className="text-base font-bold text-gnl-200">
             {stanje === 'nova' ? t('lestvice.deli.naslovNova') : t('lestvice.deli.naslovSam')}
           </h2>
-          <p className="text-sm text-slate-300">
+          <p className="hidden text-sm text-slate-300 sm:block">
             {stanje === 'nova' ? t('lestvice.deli.opisNova') : t('lestvice.deli.opisSam')}
           </p>
         </div>
       )}
-      {!poudarjeno && <h2 className="text-sm font-bold text-slate-300">{t('lestvice.deli.naslov')}</h2>}
+      {!poudarjeno && <h2 className="text-base font-bold">{t('lestvice.deli.naslov')}</h2>}
 
       {/* Na telefonu je dolga povezava le šum — gumbi spodaj jo delijo. */}
       <div className="hidden min-w-0 rounded-lg bg-black/20 px-3 py-2 sm:block">
@@ -70,13 +70,13 @@ export default function DeliMiniLigo({
         <div className="truncate font-mono text-sm text-gnl-300">{povezava}</div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+      <div className="flex flex-wrap gap-2">
         {lahkoDeli && (
           <button
             onClick={async () =>
               setIzid(await deliBesedilo(t('lestvice.miniLige.naslovVabila', { ime }), besedilo))
             }
-            className="gumb-glavni col-span-2 text-sm sm:col-span-1"
+            className="gumb-glavni px-3 py-1.5 text-sm"
           >
             {t('lestvice.deli.deli')}
           </button>
@@ -97,7 +97,7 @@ export default function DeliMiniLigo({
         </a>
         <button
           onClick={async () => setIzid(await kopiraj(povezava))}
-          className={`${gumb} col-span-2 bg-white/5 text-slate-200 ring-white/10 hover:bg-white/10 sm:col-span-1`}
+          className={`${gumb} bg-white/5 text-slate-200 ring-white/10 hover:bg-white/10`}
         >
           {t('lestvice.deli.kopiraj')}
         </button>

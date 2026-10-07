@@ -14,10 +14,8 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     napakaKrogov:
       'Výsledky po kolách sa nepodarilo načítať ({napaka}). Celková tabuľka nižšie je aj tak správna.',
     tvojRezultatZadnji: 'Tvoj výsledok v poslednom kole',
-    tvojRezultatKrog: 'Tvoj výsledok v kole',
     mojaEkipa: 'Môj tím',
     zmagovalecKroga: 'Víťaz {krog}. kola',
-    kazen: 'Prestupy: {prestopi} — trest {kazen}',
     zmagovalciPoKrogih: 'Víťazi po kolách',
     odigraniKrogi: {
       one: '{n} odohraté kolo',
@@ -25,13 +23,7 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
       many: '{n} odohratého kola',
       other: '{n} odohratých kôl',
     },
-    brezZmagovalcev:
-      'Prvé kolo sa ešte neodohralo. Keď sa odohrá, bude sa tu každý týždeň objavovať víťaz (napr. „16. kolo 🏆 Novák“).',
-    skupnoSezona: 'Celkovo (celá sezóna)',
-    odKrogaNaprej: 'Od {n}. kola ďalej',
     pozneje: 'Pridal si sa neskôr? Vyber si svoje kolo a súťaž odtiaľ.',
-    brezKrogov:
-      'Keď sa odohrajú kolá, objavia sa tu tlačidlá „Od 2. kola“, „Od 3. kola“ atď. — príď kedykoľvek a maj vlastnú tabuľku.',
     celotnaSezona: 'Celá sezóna',
     odKroga: 'Od {n}. kola',
     igraOd: '· hrá od {datum}',
@@ -281,6 +273,7 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     },
     sestaviEkipo: 'Poskladaj si tím',
     lestvica: 'Tabuľka',
+    zaObjavo: 'Obrázky na zdieľanie',
     napoved: 'Upútavka — na zverejnenie pri štarte',
     nasiIgralci: 'Naši hráči — s bodmi',
     brezStatistike: 'Pre tento klub tento rok ešte nie je štatistika.',

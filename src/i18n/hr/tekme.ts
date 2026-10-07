@@ -58,6 +58,8 @@ export const tekme: NonNullable<Prevod['tekme']> = {
       'Odigrane utakmice iz zapisnika {zveza}. Klikni na utakmicu i vidjet ćeš obje postave na terenu — na svakom dresu bodove koje je igrač zaradio.',
     niZacetka: 'Sezona još nije počela.',
     prazenKrog: 'U ovom kolu nema odigranih utakmica.',
+    prejsnji: 'Prethodno kolo',
+    naslednji: 'Sljedeće kolo',
   },
 
   tekma: {

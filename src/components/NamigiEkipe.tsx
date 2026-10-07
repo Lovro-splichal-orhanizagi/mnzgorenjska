@@ -1,4 +1,4 @@
-// Dva majhna okvirčka na vrhu Moje ekipe: gibanje cen od zadnjega obiska in
+// Dva razdelka pod igriščem Moje ekipe: gibanje cen od zadnjega obiska in
 // namigi za prestope. Oba se dasta zapreti; podatke in odločitve pripravi
 // stran (`lib/namigiEkipe.ts`), tu je le izris.
 import { useState } from 'react'
@@ -47,7 +47,7 @@ export function OdZadnjegaObiska({
 }) {
   if (igralci.length === 0) return null
   return (
-    <section className="kartica p-3 text-sm">
+    <section className="border-t border-white/10 pt-3 text-sm">
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
           <h2 className="text-xs font-bold uppercase tracking-wide text-slate-400">
@@ -123,11 +123,11 @@ export function NamigiZaPrestope<T extends IgralecNamiga>({
   if (mesta.length === 0) return null
   const vidna = vse ? mesta : mesta.slice(0, NAJVEC_MEST)
   return (
-    <section className="kartica border-amber-400/25 p-3 text-sm">
+    <section className="border-t border-white/10 pt-3 text-sm">
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
           <h2 className="text-xs font-bold uppercase tracking-wide text-amber-200">
-            💡 {t('mojaEkipa.namigi.naslov')}
+            {t('mojaEkipa.namigi.naslov')}
           </h2>
           {krog != null && (
             <p className="mt-0.5 text-xs text-slate-400">{t('mojaEkipa.namigi.zaKrog', { krog })}</p>

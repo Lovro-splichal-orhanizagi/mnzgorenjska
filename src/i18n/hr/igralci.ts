@@ -163,7 +163,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     pokaziVec: 'Prikaži više ({n})',
     prikazaniVsi: 'Prikazani su svi ({igralci}).',
     razvrsti: 'Poredaj',
-    razvrstiPo: 'Poredaj po: {stolpec}',
   },
   profil: {
     naslov: 'Igrač',

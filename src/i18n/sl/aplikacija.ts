@@ -19,7 +19,7 @@ export const aplikacija = {
     opis: 'Povezava je morda zastarela ali pa je v naslovu tipkarska napaka.',
     nazaj: 'Nazaj na začetno stran',
   },
-  /** Gumb za podporo: naslovnica, noga, lestvica, rezultati (components/Pivo.tsx). */
+  /** Gumb za podporo: naslovnica in noga vsake strani (components/Pivo.tsx). */
   pivo: {
     gumb: 'Časti pivo',
   },

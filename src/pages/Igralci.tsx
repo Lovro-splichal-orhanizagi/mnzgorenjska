@@ -100,6 +100,9 @@ const STOLPCI: Array<{ kljuc: Stolpec; naslov: string; opis: string; mobilno?: f
   },
 ]
 
+const selectRazred =
+  'min-w-0 rounded-lg border border-white/10 bg-slate-900 px-2 py-1.5 text-sm text-slate-200'
+
 export default function Igralci() {
   const { id: tekmovanjeId, tekmovanje } = useTekmovanje()
   const odsotni = useOdsotni(tekmovanjeId)
@@ -312,101 +315,97 @@ export default function Igralci() {
   const ekip = Math.max(ekipVLigi ?? 0, 1)
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-black naslov sm:text-3xl">
           {tekmovanje?.short_name
             ? t('igralci.seznam.naslovZLigo', { liga: tekmovanje.short_name })
             : t('igralci.seznam.naslov')}
         </h1>
+        {/* Na telefonu le stanje sezone: brez njega ni jasno, ali je sezona že stekla. */}
         <p className="mt-1 text-sm text-slate-400">
-          {t('igralci.seznam.uvod', { zveza })}
+          <span className="hidden sm:inline">{t('igralci.seznam.uvod', { zveza })}</span>
+          {sezonaPodatki && (
+            <>
+              <span className="hidden sm:inline">{' · '}</span>
+              {sezonaPodatki.odigranih === 0
+                ? t('igralci.seznam.sezonaNiZacela')
+                : t('igralci.seznam.odigranih', { n: sezonaPodatki.odigranih })}
+            </>
+          )}
         </p>
       </div>
 
-      {/* Sezona — brez tega ni jasno, ali gledaš letošnjo ali lansko statistiko. */}
-      <div className="flex flex-wrap items-center gap-2">
-        {sezone.map((s) => (
-          <button
-            key={s.season}
-            onClick={() => setSezona(s.season)}
-            className={`rounded-xl px-3 py-1.5 text-sm font-semibold transition ${
-              sezona === s.season
-                ? 'bg-gnl-500 text-slate-950'
-                : 'kartica text-slate-300'
-            }`}
+      <div className="space-y-3">
+        {/* Filtri v dveh vrsticah: iskanje s sezono (brez sezone ni jasno, ali
+            gledaš letošnjo ali lansko statistiko), nato klub, pozicija, vrstni red. */}
+        <div className="flex gap-2">
+          <input
+            value={iskanje}
+            onChange={(e) => setIskanje(e.target.value)}
+            placeholder={t('igralci.seznam.isci')}
+            className="min-w-0 flex-1 rounded-lg border border-white/10 bg-slate-900 px-3 py-1.5 text-sm"
+          />
+          {sezone.length > 0 && (
+            <select
+              value={sezona ?? ''}
+              onChange={(e) => setSezona(e.target.value)}
+              className={selectRazred}
+            >
+              {sezone.map((s) => (
+                <option key={s.season} value={s.season}>
+                  {s.season}
+                  {s.tekoca ? ` · ${t('igralci.seznam.tekoca')}` : ''}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+        <div className="grid grid-cols-3 gap-2 sm:flex">
+          <select value={filterKlub} onChange={(e) => setFilterKlub(e.target.value)} className={`${selectRazred} w-full sm:w-auto`}>
+            <option value="vsi">{t('igralci.seznam.vsiKlubi')}</option>
+            {klubi.map(([id, ime]) => (
+              <option key={id} value={id}>
+                {ime}
+              </option>
+            ))}
+          </select>
+          <select
+            value={filterPoz}
+            onChange={(e) => setFilterPoz(e.target.value as Pozicija | 'vse')}
+            className={`${selectRazred} w-full sm:w-auto`}
           >
-            {s.season}
-            {s.tekoca && (
-              <span className="ml-1.5 text-[10px] font-black uppercase opacity-70">
-                {t('igralci.seznam.tekoca')}
-              </span>
-            )}
-          </button>
-        ))}
-        {sezonaPodatki && (
-          <span className="text-xs text-slate-500">
-            {sezonaPodatki.odigranih === 0
-              ? t('igralci.seznam.sezonaNiZacela')
-              : t('igralci.seznam.odigranih', { n: sezonaPodatki.odigranih })}
-          </span>
-        )}
+            <option value="vse">{t('igralci.seznam.vsePozicije')}</option>
+            {Object.entries(POZICIJE).map(([k, p]) => (
+              <option key={k} value={k}>
+                {p.naslov}
+              </option>
+            ))}
+          </select>
+          {/* Na telefonu so gumbi v glavi tabele drobni in delno zunaj zaslona. */}
+          <select
+            value={urejanje}
+            onChange={(e) => setUrejanje(e.target.value as Stolpec)}
+            aria-label={t('igralci.seznam.razvrsti')}
+            className={`${selectRazred} w-full sm:hidden`}
+          >
+            {/* Le stolpci, ki jih telefon kaže: razvrščanje po skriti vrednosti zmede. */}
+            {STOLPCI.filter((s) => s.mobilno !== false).map((s) => (
+              <option key={s.kljuc} value={s.kljuc}>
+                {`↓ ${s.naslov}`}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {jeLanska && (
-        <p className="kartica border-amber-400/30 bg-amber-400/10 p-3 text-sm text-amber-200">
+        <p className="text-sm text-amber-200">
           {tx('igralci.seznam.lanska', { sezona }, { krepko: (b) => <strong>{b}</strong> })}
         </p>
       )}
 
-      <div className="kartica grid grid-cols-2 gap-2 p-3 sm:flex sm:flex-wrap">
-        <input
-          value={iskanje}
-          onChange={(e) => setIskanje(e.target.value)}
-          placeholder={t('igralci.seznam.isci')}
-          className="col-span-2 min-w-40 flex-1 rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm"
-        />
-        <select
-          value={filterKlub}
-          onChange={(e) => setFilterKlub(e.target.value)}
-          className="w-full rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm sm:w-auto"
-        >
-          <option value="vsi">{t('igralci.seznam.vsiKlubi')}</option>
-          {klubi.map(([id, ime]) => (
-            <option key={id} value={id}>
-              {ime}
-            </option>
-          ))}
-        </select>
-        <select
-          value={filterPoz}
-          onChange={(e) => setFilterPoz(e.target.value as Pozicija | 'vse')}
-          className="w-full rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm sm:w-auto"
-        >
-          <option value="vse">{t('igralci.seznam.vsePozicije')}</option>
-          {Object.entries(POZICIJE).map(([k, p]) => (
-            <option key={k} value={k}>
-              {p.naslov}
-            </option>
-          ))}
-        </select>
-        {/* Na telefonu so gumbi v glavi tabele drobni in delno zunaj zaslona. */}
-        <select
-          value={urejanje}
-          onChange={(e) => setUrejanje(e.target.value as Stolpec)}
-          aria-label={t('igralci.seznam.razvrsti')}
-          className="col-span-2 w-full rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm sm:hidden"
-        >
-          {/* Le stolpci, ki jih telefon kaže: razvrščanje po skriti vrednosti zmede. */}
-          {STOLPCI.filter((s) => s.mobilno !== false).map((s) => (
-            <option key={s.kljuc} value={s.kljuc}>
-              {t('igralci.seznam.razvrstiPo', { stolpec: s.naslov })}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="kartica overflow-x-auto">
+      <div className="overflow-x-auto rounded-2xl border border-white/10">
         <table className="w-full min-w-[30rem] text-sm sm:min-w-[46rem]">
           <thead>
             <tr className="border-b border-white/10 text-xs uppercase tracking-wide text-slate-400">
@@ -452,9 +451,6 @@ export default function Igralci() {
                       logo={i.team_logo}
                       velikost={24}
                     />
-                    <span className={`znacka ${razredPozicije(i.position)}`}>
-                      {(i.position && KRATKA_POZICIJA[i.position]) ?? '?'}
-                    </span>
                     <div className="min-w-0 max-w-[8.5rem] sm:max-w-none">
                       <Link
                         to={`/player/${i.id}`}
@@ -473,6 +469,9 @@ export default function Igralci() {
                         )}
                       </Link>
                       <div className="truncate text-xs text-slate-500">
+                        <span className={`mr-1 rounded px-1 text-[10px] font-bold ${razredPozicije(i.position)}`}>
+                          {(i.position && KRATKA_POZICIJA[i.position]) ?? '?'}
+                        </span>
                         {i.team_short} · {mnozina(Number(i.matches ?? 0), TEKME)}
                       </div>
                     </div>
@@ -524,7 +523,7 @@ export default function Igralci() {
 
       {vidni.length > koliko ? (
         <div className="text-center">
-          <button onClick={() => setKoliko(koliko + 50)} className="gumb-tih">
+          <button onClick={() => setKoliko(koliko + 50)} className="gumb-tih text-sm">
             {t('igralci.seznam.pokaziVec', { n: vidni.length - koliko })}
           </button>
         </div>

@@ -101,17 +101,15 @@ export function IzbiraKluba({
   const [izbran, setIzbran] = useState<number | null>(null)
   if (!klubi.length) return null
   return (
-    <div className="kartica space-y-2 border-gnl-400/30 bg-gnl-500/5 p-3 text-sm">
-      <div className="font-bold text-gnl-200">
-        <span aria-hidden="true">📣</span> {t('lestvice.navijaciKlubov.izbira.naslov')}
-      </div>
-      <p className="text-slate-300">{t('lestvice.navijaciKlubov.izbira.opis')}</p>
+    <div className="space-y-2 rounded-2xl bg-gnl-500/5 p-3 text-sm ring-1 ring-gnl-400/20">
+      <div className="font-semibold text-gnl-200">{t('lestvice.navijaciKlubov.izbira.naslov')}</div>
+      <p className="hidden text-slate-400 sm:block">{t('lestvice.navijaciKlubov.izbira.opis')}</p>
       <div className="flex flex-wrap gap-2">
         <select
           value={izbran ?? ''}
           onChange={(e) => setIzbran(e.target.value ? Number(e.target.value) : null)}
           aria-label={t('lestvice.navijaciKlubov.izbira.naslov')}
-          className="min-w-48 flex-1 rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-slate-100"
+          className="min-w-40 flex-1 rounded-lg border border-white/10 bg-slate-900 px-2 py-1.5 text-slate-100"
         >
           <option value="">{t('lestvice.navijaciKlubov.izbira.izberi')}</option>
           {klubi.map((k) => (
@@ -124,12 +122,12 @@ export function IzbiraKluba({
           type="button"
           disabled={izbran == null}
           onClick={() => izbran != null && onIzberi(izbran)}
-          className="gumb-glavni px-3 py-2 text-sm disabled:opacity-50"
+          className="gumb-glavni px-3 py-1.5 text-sm disabled:opacity-50"
         >
           {t('lestvice.navijaciKlubov.izbira.shrani')}
         </button>
       </div>
-      <p className="text-xs text-slate-500">{t('lestvice.navijaciKlubov.izbira.spremeni')}</p>
+      <p className="hidden text-xs text-slate-500 sm:block">{t('lestvice.navijaciKlubov.izbira.spremeni')}</p>
     </div>
   )
 }
@@ -137,9 +135,9 @@ export function IzbiraKluba({
 /** Navijači enega kluba: njihove ekipe s točkami. */
 function SeznamNavijacev({ klub, krog }: { klub: KlubNavijacev; krog: number | null }) {
   return (
-    <ul className="divide-y divide-white/5 overflow-hidden rounded-lg bg-white/5">
+    <ul className="divide-y divide-white/5">
       {klub.navijaci.map((n) => (
-        <li key={n.fantasy_team_id} className="flex items-center gap-2 px-3 py-1.5 text-sm">
+        <li key={n.fantasy_team_id} className="flex items-center gap-2 py-1.5 text-sm">
           <div className="min-w-0 flex-1">
             <Link to={`/team/${n.fantasy_team_id}`} className="block truncate font-semibold hover:text-gnl-400">
               {n.ekipa}
@@ -174,53 +172,41 @@ function VrsticaKluba({
 }) {
   const moj = mojKlub === klub.team_id
   return (
-    <li className={`kartica p-3 ${moj ? 'ring-1 ring-gnl-400/50' : ''}`}>
+    <li className={moj ? 'bg-gnl-500/10 shadow-[inset_3px_0_0_theme(colors.gnl.400)]' : ''}>
       <details className="group">
-        <summary className="flex cursor-pointer list-none items-center gap-3 [&::-webkit-details-marker]:hidden">
-          <span className="w-8 shrink-0 text-center text-lg font-black text-slate-400">
+        <summary className="flex cursor-pointer list-none items-center gap-3 px-3 py-2.5 hover:bg-white/5 sm:px-4 [&::-webkit-details-marker]:hidden">
+          <span className="w-7 shrink-0 text-center text-sm font-bold text-slate-400">
             {klub.mesto != null ? (MEDALJE[klub.mesto - 1] ?? klub.mesto) : '–'}
           </span>
-          <Grb ime={klub.klub} kratko={klub.klub_kratko} logo={klub.grb} velikost={28} />
+          <Grb ime={klub.klub} kratko={klub.klub_kratko} logo={klub.grb} velikost={24} />
           <div className="min-w-0 flex-1">
             {/* Povezava v <summary> bi tap na ime odpeljal stran namesto odprl
                 seznam — zato je spodaj, v odprtem delu. */}
-            <span className="block truncate font-bold">{klub.klub}</span>
+            <span className="block truncate text-sm font-semibold">{klub.klub}</span>
             <div className="text-xs text-slate-500">
               {navijacev(klub.navijacev)}
               {moj && (
-                <span className="znacka ml-2 bg-gnl-400/15 text-[10px] text-gnl-200">
-                  {t('lestvice.navijaciKlubov.tvojKlub')}
-                </span>
+                <span className="ml-1 text-gnl-300">· {t('lestvice.navijaciKlubov.tvojKlub')}</span>
               )}
             </div>
           </div>
           {krog != null && (
-            <span className="hidden w-16 shrink-0 text-right sm:block">
-              <span className="block text-[10px] uppercase tracking-wide text-slate-500">
-                {t('lestvice.navijaciKlubov.povprecjeKroga', { n: krog })}
-              </span>
-              <span className="text-sm font-semibold tabular-nums text-slate-300">
-                {povprecje(klub.povprecje_krog)}
-              </span>
+            <span className="hidden w-16 shrink-0 text-right text-sm tabular-nums text-slate-300 sm:block">
+              {povprecje(klub.povprecje_krog)}
             </span>
           )}
-          <span className="w-16 shrink-0 text-right">
-            <span className="block text-[10px] uppercase tracking-wide text-slate-500">
-              {t('lestvice.navijaciKlubov.povprecjeSezona')}
-            </span>
-            <span className="text-xl font-black tabular-nums text-gnl-300">
-              {povprecje(klub.povprecje_sezona)}
-            </span>
+          <span className="w-14 shrink-0 text-right font-bold tabular-nums text-gnl-300">
+            {povprecje(klub.povprecje_sezona)}
           </span>
-          <span aria-hidden className="shrink-0 text-slate-500 transition group-open:rotate-180">
+          <span aria-hidden className="w-3 shrink-0 text-xs text-slate-500 transition group-open:rotate-180">
             ▾
           </span>
         </summary>
-        <div className="mt-2 space-y-2">
+        <div className="space-y-1 px-3 pb-2 pl-[3.25rem] sm:px-4 sm:pl-14">
           <SeznamNavijacev klub={klub} krog={krog} />
           <Link
             to={`/club/${klub.team_id}`}
-            className="inline-flex min-h-11 items-center text-sm font-semibold text-gnl-300 hover:text-gnl-200"
+            className="inline-flex min-h-10 items-center text-sm font-semibold text-gnl-300 hover:text-gnl-200"
           >
             {t('lestvice.navijaciKlubov.stranKluba')}
           </Link>
@@ -241,15 +227,26 @@ export function TabelaNavijacev({
   const { uvrsceni, premalo, brez, min, krog } = podatki
   return (
     <div className="space-y-3">
-      <p className="text-sm text-slate-400">
-        {t('lestvice.navijaciKlubov.opis')} {t('lestvice.navijaciKlubov.pogoj', { n: min })}
+      <p className="text-xs text-slate-500">
+        <span className="hidden sm:inline">{t('lestvice.navijaciKlubov.opis')} </span>
+        {t('lestvice.navijaciKlubov.pogoj', { n: min })}
       </p>
       {uvrsceni.length === 0 && premalo.length === 0 ? (
-        <p className="kartica p-6 text-center text-slate-400">{t('lestvice.navijaciKlubov.prazno')}</p>
+        <p className="text-sm text-slate-400">{t('lestvice.navijaciKlubov.prazno')}</p>
       ) : (
         <>
           {uvrsceni.length > 0 && (
-            <ul className="space-y-2">
+            <ul className="kartica divide-y divide-white/10 overflow-hidden">
+              <li aria-hidden className="flex gap-3 px-3 py-1.5 text-[11px] uppercase tracking-wide text-slate-500 sm:px-4">
+                <span className="flex-1" />
+                {krog != null && (
+                  <span className="hidden w-16 text-right sm:block">
+                    {t('lestvice.navijaciKlubov.povprecjeKroga', { n: krog })}
+                  </span>
+                )}
+                <span className="w-14 text-right">{t('lestvice.navijaciKlubov.povprecjeSezona')}</span>
+                <span className="w-3" />
+              </li>
               {uvrsceni.map((k) => (
                 <VrsticaKluba key={k.team_id} klub={k} krog={krog} mojKlub={mojKlub} />
               ))}
@@ -257,10 +254,10 @@ export function TabelaNavijacev({
           )}
           {premalo.length > 0 && (
             <section className="space-y-2">
-              <h3 className="text-sm font-bold uppercase tracking-wide text-slate-400">
+              <h3 className="text-sm font-semibold text-slate-400">
                 {t('lestvice.navijaciKlubov.premalo')}
               </h3>
-              <ul className="space-y-2 opacity-80">
+              <ul className="kartica divide-y divide-white/10 overflow-hidden opacity-80">
                 {premalo.map((k) => (
                   <VrsticaKluba key={k.team_id} klub={k} krog={krog} mojKlub={mojKlub} />
                 ))}
@@ -352,10 +349,10 @@ export function KlubMedNavijaci({
   const manjka = klub ? Math.max(podatki.min - klub.navijacev, 0) : podatki.min
   const ligaParam = ligaSlug ? `?t=${encodeURIComponent(ligaSlug)}` : ''
   return (
-    <section className="kartica space-y-3 p-4">
+    <section className="space-y-3">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-lg font-bold">
-          <span aria-hidden="true">📣</span> {t('lestvice.navijaciKlubov.klub.naslov')}
+        <h2 className="text-base font-bold">
+          {t('lestvice.navijaciKlubov.klub.naslov')}
         </h2>
         <Link to={`/standings${ligaParam}#fans`} className="text-xs text-gnl-400 underline">
           {t('lestvice.navijaciKlubov.klub.vsiKlubi')}
@@ -363,7 +360,7 @@ export function KlubMedNavijaci({
       </div>
       {klub?.mesto != null ? (
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <span className="text-2xl font-black text-gnl-300">
+          <span className="text-xl font-black text-gnl-300">
             {MEDALJE[klub.mesto - 1] ? `${MEDALJE[klub.mesto - 1]} ` : ''}
             {t('lestvice.navijaciKlubov.klub.mesto', { mesto: klub.mesto })}
           </span>

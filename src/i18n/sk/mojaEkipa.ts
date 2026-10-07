@@ -96,6 +96,9 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   locenaLiga:
     'Tím v lige <liga>{liga}</liga> je oddelený od tímov v iných ligách — má vlastný rozpočet a vlastnú tabuľku. Body sa počítajú od {krog}. kola, lebo dovtedy ešte prebiehajú prestupy a presuny medzi kategóriami.',
 
+  /** Zloženi razdelek pod igriščem. */
+  vec: 'Viac: pomôcky, história, pravidlá',
+
   prestopi: {
     stevec: 'Prestupy: {n}/{prosti}',
     wildcard: 'wildcard — bez trestu',
@@ -134,43 +137,29 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     zapri: 'Zavrieť',
   },
 
-  neustreza: {
-    naslov: 'Tvoj tím NESPĹŇA pravidlá',
-    zaKrog: '<krepko>Za {krog}. kolo</krepko> v tomto stave <krepko>NEZÍSKAŠ body</krepko>.',
-    zaKrogRok:
-      '<krepko>Za {krog}. kolo</krepko> (uzávierka: {rok}) v tomto stave <krepko>NEZÍSKAŠ body</krepko>.',
-    konkretne: 'Konkrétne chyby:',
-    pogosto:
-      'Často sa to stane, keď hlasovanie o pozícii presunie hráča (napr. z útočníka na záložníka) a rozhodí ti káder. Oprav to teraz, kým neuplynie uzávierka.',
-  },
-
   povzetek: {
-    naVoljo: 'K dispozícii ešte',
+    urediIme: 'Upraviť názov tímu {ime}',
     bogastvo:
       'hodnota <vrednost>{bogastvo}</vrednost><razlika></razlika> · káder {kader} <placano>zaplatené</placano>',
     razlika: '({znak}{cena})',
     shranjujem: 'Ukladám …',
     shraniEkipo: 'Uložiť tím',
     neshranjeno: 'Neuložené zmeny',
-    stevec: '{n}/{igralcev} · zostava {prvi}/{prvih}',
     imeEkipe: 'Názov tímu',
-    fiksnoNamig: 'Názov tímu sa po prvom uložení už nedá meniť — je to jednotné označenie v tabuľke aj v histórii.',
-    fiksno: '🔒 nemenné',
     privzetoIme: 'FC {ime}',
     primerImena: 'napr. Nedeľní hrdinovia',
-    imeNamig: 'Názov môžeš neskôr kedykoľvek zmeniť.',
   },
 
   zacetek: {
     naslov: 'Kde začať?',
-    sestaviMi: '🎲 Zostav mi tím',
+    sestaviMi: 'Zostav mi tím',
     opisPredloga:
       'Náhodne vyberieme platný tím v rámci rozpočtu — pri každom kliknutí iný. Potom vymeň, koho chceš, a ulož.',
     sam: 'Radšej si ho zostavím sám',
-    drugPredlog: '🎲 Iný návrh',
+    drugPredlog: 'Iný návrh',
     opisDrugegaPredloga:
       'Nepáči sa ti? Vyžrebuj nový tím — kým ho neuložíš, je to zadarmo.',
-    dopolni: '🎲 Doplniť tím',
+    dopolni: 'Doplniť tím',
     opisDopolnitve:
       'Voľné miesta v kádri: {n}. Tvoje voľby zostanú, zvyšné miesta náhodne doplníme v rámci rozpočtu.',
     korak1: 'Názov tímu sme navrhli hore — môžeš ho kedykoľvek zmeniť.',
@@ -186,7 +175,6 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     naslov: 'Kapitánska páska',
     kapetan: 'Kapitán (×{n})',
     namestnik: 'Zástupca kapitána',
-    opis: 'Kapitán prináša trojnásobok bodov. Ak nehrá, pásku preberá zástupca kapitána.',
     nihce: '— nikto —',
   },
 
@@ -196,12 +184,10 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   },
 
   status: {
-    pripravljena: 'Tím je pripravený na uloženie.',
     manjka: 'Na finálne uloženie ešte niečo chýba:',
     vpisiIme: 'Zadaj názov tímu (v poli hore).',
     osnutekZdaj: 'Koncept môžeš uložiť aj teraz — pravidlá splníš neskôr.',
-    shraniOsnutek: 'Uložiť koncept',
-    imeObvezno: 'Názov tímu je povinný — kliknutím sa vrátiš na pole hore.',
+    brezTock: '<krepko>Za {krog}. kolo</krepko> v tomto stave <krepko>NEZÍSKAŠ body</krepko>.',
     kajPomeni:
       '<krepko>Čo znamená „Uložiť“?</krepko> Tvoje zmeny (káder, zostava, kapitán) sa zapíšu do databázy. Pre aktuálne kolo platí stav v čase uzávierky. Do uzávierky môžeš ľubovoľne meniť a znova stláčať Uložiť — platí posledná verzia. <krepko>„Uložiť koncept“</krepko> znamená to isté, len s poznámkou, že tím ešte nespĺňa všetky pravidlá (aby si získal body, treba to opraviť — pozri zoznam hore).',
     kajPomeniRok:
@@ -219,7 +205,7 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     wildcardVlozen: 'Wildcard je už aktivovaný — prestupy v tomto kole sú zadarmo.',
     wildcardOpis:
       'Raz za sezónu: v tomto kole môžeš vymeniť koľkokoľvek hráčov bez odpočtu bodov.',
-    zaklenjen: '🔒 uzamknuté',
+    zaklenjen: 'uzamknuté',
     preklici: 'zrušiť',
     prekliciDo: 'Zrušiť môžeš ešte <odstevanje></odstevanje>',
     izberiKrog: 'Vyber kolo …',
@@ -283,8 +269,6 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     potekel: 'Uzávierka uplynula — <krepko>{rok}</krepko>',
     rok: 'Uzávierka: <krepko>{rok}</krepko>',
     niDolocen: 'Uzávierka ešte nie je stanovená.',
-    naslednji: 'Zmeny teraz platia pre nasledujúce kolo.',
-    obRoku: 'V čase uzávierky sa zostava uloží natrvalo — dovtedy ju môžeš voľne meniť.',
   },
 
   igrisce: {

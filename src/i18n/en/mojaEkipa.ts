@@ -97,6 +97,9 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   locenaLiga:
     'Your team in <liga>{liga}</liga> is separate from your teams in other leagues — with its own budget and its own standings. Points count from round {krog} onwards, because transfers and moves between age groups are still happening until then.',
 
+  /** Zloženi razdelek pod igriščem. */
+  vec: 'More: chips, history, rules',
+
   prestopi: {
     stevec: 'Transfers: {n}/{prosti}',
     wildcard: 'wildcard — no penalty',
@@ -136,45 +139,30 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     zapri: 'Close',
   },
 
-  // Red banner when the team breaks the rules.
-  neustreza: {
-    naslov: 'Your team does NOT meet the rules',
-    zaKrog: 'In this state you <krepko>WON’T score points</krepko> <krepko>for round {krog}</krepko>.',
-    zaKrogRok:
-      'In this state you <krepko>WON’T score points</krepko> <krepko>for round {krog}</krepko> (deadline: {rok}).',
-    konkretne: 'Specific problems:',
-    pogosto:
-      'This often happens when a position vote moves a player (e.g. from forward to midfielder) and breaks your squad. Fix it now, before the deadline.',
-  },
-
   povzetek: {
-    naVoljo: 'Remaining',
+    urediIme: 'Edit team name {ime}',
     bogastvo:
       'wealth <vrednost>{bogastvo}</vrednost><razlika></razlika> · squad {kader} <placano>paid</placano>',
     razlika: '({znak}{cena})',
     shranjujem: 'Saving …',
     shraniEkipo: 'Save team',
     neshranjeno: 'Unsaved changes',
-    stevec: '{n}/{igralcev} · XI {prvi}/{prvih}',
     imeEkipe: 'Team name',
-    fiksnoNamig: 'The team name is fixed after the first save — one label on the standings and in the history.',
-    fiksno: '🔒 fixed',
     privzetoIme: 'FC {ime}',
     primerImena: 'e.g. Sunday Heroes',
-    imeNamig: 'You can change the name any time.',
   },
 
   // Starter tip for an empty team.
   zacetek: {
     naslov: 'Where to start?',
-    sestaviMi: '🎲 Build me a team',
+    sestaviMi: 'Build me a team',
     opisPredloga:
       'We pick a random valid team within budget — different with every click. Then swap anyone you like and save.',
     sam: 'I’d rather build it myself',
-    drugPredlog: '🎲 Another suggestion',
+    drugPredlog: 'Another suggestion',
     opisDrugegaPredloga:
       'Don’t like it? Draw a new team — it’s free until you save.',
-    dopolni: '🎲 Complete my team',
+    dopolni: 'Complete my team',
     opisDopolnitve:
       'Empty squad spots: {n}. Your picks stay; we fill the rest at random within budget.',
     korak1: 'We suggested a team name above — change it any time.',
@@ -190,7 +178,6 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     naslov: 'Armband',
     kapetan: 'Captain (×{n})',
     namestnik: 'Vice-captain',
-    opis: 'The captain scores triple points. If he doesn’t play, the vice-captain takes the armband.',
     nihce: '— nobody —',
   },
 
@@ -201,12 +188,10 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   },
 
   status: {
-    pripravljena: 'Your team is ready to save.',
     manjka: 'A few things are still needed for a final save:',
     vpisiIme: 'Enter a team name (in the field above).',
     osnutekZdaj: 'You can save a draft now too — and sort out the rules later.',
-    shraniOsnutek: 'Save draft',
-    imeObvezno: 'A team name is required — clicking takes you back to the field above.',
+    brezTock: 'In this state you <krepko>WON’T score points</krepko> <krepko>for round {krog}</krepko>.',
     kajPomeni:
       '<krepko>What does "Save" do?</krepko> Your changes (squad, lineup, captain) are written to the database. For the current round, the state at the deadline counts. Until the deadline you can change things and press Save as often as you like — the last version counts. <krepko>"Save draft"</krepko> does the same, just noting that the team doesn’t meet all the rules yet (you need fixes to score points — see the list above).',
     kajPomeniRok:
@@ -224,7 +209,7 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     wildcardVlozen: 'Wildcard is already played — transfers in it are free.',
     wildcardOpis:
       'Once a season: in this round you can replace as many players as you like, with no points deduction.',
-    zaklenjen: '🔒 locked',
+    zaklenjen: 'locked',
     preklici: 'cancel',
     prekliciDo: 'You can cancel until <odstevanje></odstevanje>',
     izberiKrog: 'Choose a round …',
@@ -287,8 +272,6 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     potekel: 'Deadline passed — <krepko>{rok}</krepko>',
     rok: 'Deadline: <krepko>{rok}</krepko>',
     niDolocen: 'No deadline set yet.',
-    naslednji: 'Changes now apply to the next round.',
-    obRoku: 'Your lineup is captured at the deadline — change it freely until then.',
   },
 
   // Pitch in the team builder (components/Igrisce.tsx).

@@ -60,7 +60,7 @@ export default function TedenskiPregled({ ligaId, ime, koda }: { ligaId: number;
   return (
     <section className="kartica space-y-3 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-lg font-black naslov">{t('lestvice.pregled.naslov')}</h2>
+        <h2 className="text-lg font-bold">{t('lestvice.pregled.naslov')}</h2>
         {pregled && pregled.krogi.length > 0 && (
           <div
             ref={vrsticaKrogov}
@@ -93,20 +93,21 @@ export default function TedenskiPregled({ ligaId, ime, koda }: { ligaId: number;
       ) : (
         <>
           {zgodbe.length > 0 && (
-            <ul className="grid gap-2 sm:grid-cols-2">
+            // Zgodbe so vrstice z ločnico, ne kartice v kartici; slabo novico
+            // pove le barva naslova.
+            <ul className="divide-y divide-white/10 sm:grid sm:grid-cols-2 sm:gap-x-6 sm:divide-y-0">
               {zgodbe.map((z) => (
-                <li
-                  key={z.vrsta}
-                  className={`rounded-xl p-3 ring-1 ${
-                    z.vrsta === 'zlica' || z.vrsta === 'padec' || z.vrsta === 'klop'
-                      ? 'bg-rose-500/5 ring-rose-400/15'
-                      : 'bg-gnl-500/10 ring-gnl-400/20'
-                  }`}
-                >
-                  <div className="text-xs font-bold uppercase tracking-wide text-slate-400">
+                <li key={z.vrsta} className="py-2">
+                  <div
+                    className={`text-xs font-bold uppercase tracking-wide ${
+                      z.vrsta === 'zlica' || z.vrsta === 'padec' || z.vrsta === 'klop'
+                        ? 'text-rose-300'
+                        : 'text-gnl-300'
+                    }`}
+                  >
                     {naslovZgodbe(z)}
                   </div>
-                  <p className="mt-1 text-sm text-slate-100">{opisZgodbe(z)}</p>
+                  <p className="mt-0.5 text-sm text-slate-100">{opisZgodbe(z)}</p>
                   {z.lastnik && <p className="mt-0.5 truncate text-xs text-slate-500">{z.lastnik}</p>}
                 </li>
               ))}

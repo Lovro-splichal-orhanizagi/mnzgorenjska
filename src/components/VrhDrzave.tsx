@@ -44,13 +44,13 @@ export default function VrhDrzave({ drzava }: { drzava: string }) {
   if (nalaganje) return <p className="animiraj-utrip text-slate-400">{t('skupno.nalaganje')}</p>
   if (napaka) return <p className="text-rose-400">{t('skupno.napaka', { sporocilo: napaka })}</p>
   if (vrstice.length === 0)
-    return <p className="kartica p-6 text-center text-slate-400">{t('lestvice.slovenija.vrhPrazno')}</p>
+    return <p className="text-sm text-slate-400">{t('lestvice.slovenija.vrhPrazno')}</p>
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Najboljši pod reflektorjem: izrez pokaže snop luči (zgornji del
           fotografije), naslov stoji spodaj, kjer je slika temna. */}
-      <section className="relative flex min-h-48 items-end overflow-hidden rounded-3xl p-5 ring-1 ring-white/10 sm:min-h-64 sm:p-8">
+      <section className="relative flex min-h-32 items-end overflow-hidden rounded-2xl p-4 ring-1 ring-white/10 sm:min-h-48 sm:p-6">
         <img
           src="/foto/igrisce.jpg"
           alt=""
@@ -62,11 +62,10 @@ export default function VrhDrzave({ drzava }: { drzava: string }) {
           aria-hidden
         />
         <div className="relative">
-          <div className="text-3xl leading-none sm:text-4xl" aria-hidden>👑</div>
-          <h2 className="mt-2 text-3xl font-black leading-tight text-white drop-shadow-lg sm:text-5xl">
+          <h2 className="text-2xl font-black leading-tight text-white sm:text-4xl">
             {t('lestvice.slovenija.vrhNaslov')}
           </h2>
-          <p className="mt-1 text-sm font-semibold text-gnl-200 sm:text-base">
+          <p className="mt-1 text-sm text-gnl-200">
             {t('lestvice.slovenija.vrhUvod', { sezona: vrstice[0].season })}
           </p>
         </div>
@@ -85,14 +84,14 @@ export default function VrhDrzave({ drzava }: { drzava: string }) {
           return (
             <section
               key={l.kljuc}
-              className="kartica w-[86%] shrink-0 snap-start space-y-2 p-3 sm:w-[68%] lg:w-auto lg:shrink"
+              className="w-[86%] shrink-0 snap-start space-y-2 sm:w-[68%] lg:w-auto lg:shrink"
             >
-              <h2 className="text-lg font-bold">{l.naslov()}</h2>
-              <ul className="space-y-1">
+              <h2 className="text-base font-bold">{l.naslov()}</h2>
+              <ul className="kartica divide-y divide-white/10 overflow-hidden">
                 {seznam.map((v) => (
                   <li
                     key={v.player_id}
-                    className="relative flex items-center gap-2 rounded-xl bg-white/5 px-3 py-2 sm:gap-3"
+                    className="relative flex min-h-[52px] items-center gap-2 px-3 py-2 sm:gap-3"
                   >
                     <span className="w-6 shrink-0 text-center text-sm font-black text-slate-500">
                       {v.mesto}
@@ -103,7 +102,7 @@ export default function VrhDrzave({ drzava }: { drzava: string }) {
                           ligo, stran igralca pa bere po ligi igralca. */}
                       <Link
                         to={`/player/${v.player_id}`}
-                        className="block truncate font-semibold after:absolute after:inset-0 after:content-[''] hover:text-gnl-300"
+                        className="block truncate text-sm font-semibold after:absolute after:inset-0 after:content-[''] hover:text-gnl-300"
                       >
                         {prikazniIme(v.full_name)}
                       </Link>
@@ -111,7 +110,7 @@ export default function VrhDrzave({ drzava }: { drzava: string }) {
                         {v.team_name} · {v.competition_short} · {mnozina(v.tekem, TEKME)}
                       </div>
                     </div>
-                    <span className="shrink-0 font-black tabular-nums text-gnl-300">
+                    <span className="shrink-0 font-bold tabular-nums text-gnl-300">
                       {l.tocke ? formatirajTocke(v.vrednost) : v.vrednost}
                       {l.ikona && <span aria-hidden> {l.ikona}</span>}
                     </span>

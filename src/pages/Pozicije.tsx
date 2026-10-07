@@ -338,7 +338,7 @@ export default function Pozicije() {
   return (
     <div className="space-y-6">
       <header className="space-y-2">
-        <h1 className="text-3xl font-black naslov">
+        <h1 className="text-2xl font-black naslov sm:text-3xl">
           {t('tekme.pozicije.kjeKdoIgra')}
           {tekmovanje && (
             <span className="ml-2 align-middle text-base font-bold text-slate-500">
@@ -346,15 +346,14 @@ export default function Pozicije() {
             </span>
           )}
         </h1>
-        <p className="max-w-2xl text-slate-400">
+        <p className="max-w-2xl text-sm text-slate-400">
           {tx(
             'tekme.pozicije.uvod',
             { prag, minPrag },
             { b: (v) => <strong className="text-gnl-300">{v}</strong> },
           )}
         </p>
-        <p className="max-w-2xl rounded-xl bg-white/5 p-3 text-sm text-slate-400">
-          <span aria-hidden="true">⏳</span>{' '}
+        <p className="hidden max-w-2xl text-xs text-slate-500 sm:block">
           {tx('tekme.pozicije.enkratNaTeden', {}, {
             b: (v) => <strong>{v}</strong>,
             ikona: (v) => <span aria-hidden="true">{v}</span>,
@@ -381,15 +380,13 @@ export default function Pozicije() {
         />
       )}
 
-      <div className="kartica flex flex-wrap items-end gap-3 p-3">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
         <label className="min-w-48 flex-1">
-          <span className="block text-xs font-semibold uppercase tracking-wide text-slate-400">
-            {t('tekme.pozicije.klub')}
-          </span>
+          <span className="sr-only">{t('tekme.pozicije.klub')}</span>
           <select
             value={klubId ?? ''}
             onChange={(e) => setKlubId(Number(e.target.value))}
-            className="mt-1 w-full rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-slate-100"
+            className="w-full rounded-lg border border-white/10 bg-slate-900 px-2 py-1.5 text-sm text-slate-100"
           >
             {klubi.map((k) => (
               <option key={k.id} value={k.id}>
@@ -411,7 +408,7 @@ export default function Pozicije() {
       </div>
 
       {!session && (
-        <p className="kartica border-amber-400/30 bg-amber-400/10 p-3 text-sm text-amber-200">
+        <p className="text-sm text-amber-200">
           {tx('tekme.moraPrijava', {}, {
             prijava: (v) => (
               <Link
@@ -426,13 +423,13 @@ export default function Pozicije() {
       )}
 
       {vidni.length === 0 ? (
-        <p className="kartica p-6 text-center text-slate-400">
+        <p className="text-sm text-slate-400">
           {samoNepotrjene
             ? t('tekme.pozicije.vsiPotrjeni')
             : t('tekme.pozicije.niIgralcev')}
         </p>
       ) : (
-        <ul className="space-y-3">
+        <ul className="kartica divide-y divide-white/10 overflow-hidden">
           {vidni.map((i) => (
             <IgralecKartica
               key={i.id}
@@ -471,7 +468,7 @@ function MojStatus({
   prosnja?: React.ReactNode
 }) {
   return (
-    <div className="kartica space-y-3 border-gnl-400/20 bg-gnl-500/5 p-3 sm:p-4">
+    <div className="space-y-3 rounded-2xl bg-gnl-500/5 p-3 ring-1 ring-gnl-400/20 sm:p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-sm font-bold text-gnl-200">{t('tekme.pozicije.status.naslov')}</h2>
         {utez != null && (
@@ -497,7 +494,7 @@ function MojStatus({
           onChange={(e) =>
             onNastaviInsider(e.target.value ? Number(e.target.value) : null)
           }
-          className="w-full max-w-md rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-slate-100"
+          className="w-full max-w-md rounded-lg border border-white/10 bg-slate-900 px-2 py-1.5 text-sm text-slate-100"
         >
           <option value="">{t('tekme.pozicije.status.nisemPoznavalec')}</option>
           {klubi.map((t) => (
@@ -571,7 +568,7 @@ function IgralecKartica({
     vodilna[1] >= pragZaPrior(prior?.[vodilna[0]] ?? 0)
 
   return (
-    <li className="kartica kartica-hover p-4">
+    <li className="p-3 sm:p-4">
       <div className="flex flex-wrap items-center gap-3">
         <Grb
           ime={igralec.team_name}
@@ -580,14 +577,14 @@ function IgralecKartica({
           velikost={28}
         />
         {igralec.shirt_number != null && (
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-950 font-black tabular-nums text-slate-400">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/5 text-sm font-bold tabular-nums text-slate-400">
             {igralec.shirt_number}
           </span>
         )}
         <div className="min-w-0 flex-1">
           <Link
             to={`/player/${igralec.id}`}
-            className="block truncate font-bold hover:text-gnl-300"
+            className="block truncate text-sm font-semibold hover:text-gnl-300"
           >
             {prikazniIme(igralec.full_name)}
           </Link>
@@ -686,7 +683,7 @@ function IgralecKartica({
       )}
 
       {!zaklenjeno && (
-        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="mt-2.5 grid grid-cols-4 gap-2 sm:max-w-lg">
           {POZICIJE.map((p) => {
             const g = glasovi[p]
             const votes = g?.votes ?? 0
@@ -709,7 +706,7 @@ function IgralecKartica({
                     : '') +
                   (insiderVelja ? t('tekme.pozicije.igralec.gumbPoznavalec') : '')
                 }
-                className={`relative overflow-hidden rounded-xl px-3 py-2 text-sm font-semibold transition disabled:opacity-40 ${
+                className={`relative overflow-hidden rounded-lg px-2 py-1.5 text-sm font-semibold transition disabled:opacity-40 ${
                   izbran
                     ? 'ring-2 ring-gnl-400'
                     : potrjenBiVajino
@@ -732,7 +729,7 @@ function IgralecKartica({
                   />
                 )}
                 <span className="relative flex items-center justify-center gap-1">
-                  <span aria-hidden="true">{IKONA[p]}</span> {KRATKA_POZICIJA[p]}
+                  {KRATKA_POZICIJA[p]}
                   {votes > 0 && (
                     <span className="tabular-nums opacity-70">
                       {weight.toFixed(1)}

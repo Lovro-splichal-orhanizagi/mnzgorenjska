@@ -193,8 +193,8 @@ export default function Navbar() {
               </NavLink>
             ))}
 
-            {/* "Več": vse, kar ni tedensko. Značka za asistence se prenese na
-                gumb, da opomnik ne izgine v meniju. */}
+            {/* "Več": vse, kar ni tedensko. Pika za asistence se prenese na
+                gumb, da opomnik ne izgine v meniju; število je ob povezavi. */}
             <div ref={vecRef} className="relative">
               <button
                 type="button"
@@ -206,7 +206,9 @@ export default function Navbar() {
                 }`}
               >
                 {t('aplikacija.meni.vec')}
-                {znacka(cakaGlasov)}
+                {cakaGlasov > 0 && (
+                  <span aria-hidden="true" className="ml-1.5 inline-block h-1.5 w-1.5 rounded-full bg-amber-400 align-middle" />
+                )}
                 <span aria-hidden="true" className="ml-1 text-[10px]">
                   ▾
                 </span>
@@ -313,8 +315,8 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Značka asistenc je tudi na hamburgerju: na telefonu je meni zaprt
-              in opomnik bi sicer ostal skrit. */}
+          {/* Golov brez asistence je na hamburgerju le pika (število je v
+              meniju ob Asistencah): številka "20" je glavo delala glasno. */}
           <button
             onClick={() => setOdprt(!odprt)}
             aria-label={
@@ -323,18 +325,15 @@ export default function Navbar() {
                 : t('aplikacija.meni.meni')
             }
             aria-expanded={odprt}
-            className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border
-                       border-white/15 bg-white/5 text-2xl leading-none text-slate-200
+            className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-2xl leading-none text-slate-200 hover:bg-white/5
                        active:scale-95 lg:hidden"
           >
             <span aria-hidden="true">☰</span>
             {cakaGlasov > 0 && (
               <span
                 aria-hidden="true"
-                className="absolute -right-1.5 -top-1.5 rounded-full bg-amber-400 px-1.5 py-0.5 text-[10px] font-black leading-none text-slate-950"
-              >
-                {cakaGlasov}
-              </span>
+                className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-amber-400"
+              />
             )}
           </button>
         </div>

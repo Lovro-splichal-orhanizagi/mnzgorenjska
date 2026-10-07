@@ -58,6 +58,8 @@ export const tekme: NonNullable<Prevod['tekme']> = {
       'Matches played, from the {zveza} match reports. Click a match to see both lineups on the pitch — each shirt shows the points the player earned.',
     niZacetka: 'The season hasn’t started yet.',
     prazenKrog: 'No matches have been played in this round.',
+    prejsnji: 'Previous round',
+    naslednji: 'Next round',
   },
 
   tekma: {

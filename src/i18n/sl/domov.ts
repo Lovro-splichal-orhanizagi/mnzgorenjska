@@ -10,9 +10,8 @@ export const domov = {
     opis: 'Točke prihajajo iz uradnih zapisnikov {zveza} — goli, minute, ohranjene mreže, kartoni. Vse razen asistenc, ki jih določi skupnost.',
     vecLig: 'Igraš lahko v več ligah — <krepko>ligo izbereš zgoraj levo</krepko>, vsaka ima svojo ekipo in lestvico.',
     zacetekSezone: '<krepko>Sezona se začne {datum}</krepko> — sestavi ekipo pred rokom.',
-    zamudniki: '<krepko>Zamudil si štart? Nič hudega.</krepko> Vsak krog ima svojega zmagovalca. Na <lestvica>Lestvici</lestvica> izbereš "Od N. kroga naprej" in tekmuješ od trenutka, ko se pridružiš. Nič ni prepozno.',
+    zamudniki: '<krepko>Zamudil si štart?</krepko> Na <lestvica>Lestvici</lestvica> tekmuješ od kroga, ko se pridružiš.',
     sestaviEkipo: 'Sestavi ekipo',
-    glasuj: 'Glasuj o asistencah',
     rezultati: 'Rezultati in postave',
   },
   asistence: {
@@ -22,43 +21,36 @@ export const domov = {
       few: '{n} goli čakajo na asistenco',
       other: '{n} golov čaka na asistenco',
     },
-    opis: 'Zapisniki asistenc ne beležijo — določi jih skupnost. Brez tvojih glasov podajalci ne dobijo <krepko>+3 točk</krepko>, tvoja ekipa pa ostane brez njih.',
-    glasujZdaj: 'Glasuj zdaj →',
   },
   rok: {
     seZaklene: '{krog}. krog se zaklene',
-    opis: 'Zadnji trenutek za spremembo ekipe, kapetana in namestnika. <uredi>Uredi ekipo →</uredi>',
   },
   krog: '{krog}. krog',
   brezKroga: 'Brez kroga',
   minut: '{n} min',
   zadnjiRezultati: {
     naslov: 'Zadnji rezultati',
-    vsi: 'Vsi rezultati in postave →',
+    vsi: 'Vsi rezultati →',
     poglejTekmo: 'Poglej postavi in točke te tekme',
   },
   najboljsi: {
-    igralecKroga: 'Igralec {krog}. kroga',
-    rezultatiKroga: '{krog}. krog · rezultati tekem →',
-    strelci: 'Najboljši strelci sezone',
-    podajalci: 'Najboljši podajalci sezone',
-    ohranjeneMreze: 'Največ ohranjenih mrež',
     igralecSezone: 'Igralec sezone',
-    igralecSezoneZ: 'Igralec sezone {sezona}',
     celaLestvica: 'Cela lestvica igralcev →',
+    vodilni: {
+      strelec: 'Prvi strelec',
+      podajalec: 'Prvi podajalec',
+      mreze: 'Največ čistih mrež',
+    },
   },
   idealna: {
     naslov: 'Idealna enajsterica',
     krogSezona: '{krog}. krog · sezona {sezona}',
-    opis: 'Najboljših 11 igralcev zadnjega odigranega kroga (1 VRA, 4 BRA, 4 VEZ, 2 NAP). Številka pod dresom so točke, ki jih je igralec zbral.',
+    opis: 'Najboljših 11 zadnjega kroga; pod dresom so točke.',
   },
   povabi: {
     naslov: 'Povabi prijatelja v ligo',
-    opis: 'Več nas kot bo, bolj zabavno bo. Klikni gumb in ti odpremo prazno e-pošto z že napisanim sporočilom — samo dodaj naslovnika.',
-    gumb: 'Odpri e-pošto',
   },
   skupnost: {
-    naslov: 'Pomagaj skupnosti',
     brezAsistence: '{goli} brez asistence',
     povejKdo: {
       one: 'Povej, kdo je podal — {n} glas potrdi',
@@ -73,7 +65,6 @@ export const domov = {
   },
   naslednje: {
     naslov: 'Naslednje tekme',
-    vRazporedu: '{tekme} v razporedu',
     proti: 'vs',
   },
   kakoIgras: {
@@ -88,4 +79,12 @@ export const domov = {
     poKroguOpis: 'Točke se izračunajo iz zapisnikov. Igralca brez minut samodejno zamenja rezervni iste pozicije, enkrat na sezono pa lahko s Klop+ v točke šteješ vso klop.',
   },
   kakoSeTockuje: 'Kako se točkuje',
+  moja: {
+    tocke: 'Točke',
+    mesto: 'Mesto',
+    mestoOd: '{mesto}. od {n}',
+    uredi: 'Moja ekipa →',
+  },
+  taTeden: 'Ta teden',
+  klepet: 'Klepet in predlogi',
 }

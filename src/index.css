@@ -81,15 +81,14 @@
 }
 
 @layer components {
-  /* Kartica igralca — osnovni gradnik vmesnika */
+  /* Kartica — en predmet (skupina vrstic, tekma). Tiha: brez sence, da se
+     strani ne zlijejo v kup škatel; razdelke ločuje razmik, ne obroba. */
   .kartica {
-    @apply rounded-2xl border border-white/10 bg-white/5 backdrop-blur
-           shadow-lg shadow-black/20;
+    @apply rounded-2xl border border-white/10 bg-white/[0.04];
   }
 
   .kartica-hover {
-    @apply transition duration-150 hover:border-gnl-400/50 hover:bg-white/10
-           hover:shadow-xl hover:shadow-gnl-500/10 hover:-translate-y-0.5;
+    @apply transition duration-150 hover:border-gnl-400/40 hover:bg-white/[0.07];
   }
 
   .gumb {
@@ -98,8 +97,7 @@
   }
 
   .gumb-glavni {
-    @apply gumb bg-gradient-to-b from-gnl-400 to-gnl-600 text-slate-950
-           shadow-lg shadow-gnl-500/25 hover:from-gnl-300 hover:to-gnl-500;
+    @apply gumb bg-gnl-400 text-slate-950 hover:bg-gnl-300;
   }
 
   .gumb-tih {

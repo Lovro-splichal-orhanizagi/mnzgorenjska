@@ -11,9 +11,8 @@ export const domov: NonNullable<Prevod['domov']> = {
     opis: 'Body sa počítajú z oficiálnych zápisov o stretnutí {zveza} — góly, minúty, čisté kontá, karty. Všetko okrem asistencií, o tých rozhoduje komunita.',
     vecLig: 'Môžeš hrať vo viacerých ligách — <krepko>ligu si vyberieš vľavo hore</krepko>, každá má vlastný tím a tabuľku.',
     zacetekSezone: '<krepko>Sezóna začína {datum}</krepko> — poskladaj si tím pred uzávierkou.',
-    zamudniki: '<krepko>Zmeškal si štart? Nevadí.</krepko> Každé kolo má svojho víťaza. V <lestvica>Tabuľke</lestvica> si vyberieš „Od N. kola“ a súťažíš od chvíle, keď sa pridáš. Nikdy nie je neskoro.',
+    zamudniki: '<krepko>Zmeškal si štart?</krepko> V <lestvica>Tabuľke</lestvica> súťažíš od kola, keď sa pridáš.',
     sestaviEkipo: 'Poskladaj tím',
-    glasuj: 'Hlasuj o asistenciách',
     rezultati: 'Výsledky a zostavy',
   },
   asistence: {
@@ -23,43 +22,36 @@ export const domov: NonNullable<Prevod['domov']> = {
       many: '{n} gólu čaká na asistenciu',
       other: '{n} gólov čaká na asistenciu',
     },
-    opis: 'Zápisy asistencie neevidujú — určuje ich komunita. Bez tvojich hlasov nahrávači nedostanú <krepko>+3 body</krepko> a tvoj tím príde o ne.',
-    glasujZdaj: 'Hlasuj teraz →',
   },
   rok: {
     seZaklene: '{krog}. kolo sa uzavrie',
-    opis: 'Posledná šanca zmeniť tím, kapitána a zástupcu. <uredi>Uprav tím →</uredi>',
   },
   krog: '{krog}. kolo',
   brezKroga: 'Bez kola',
   minut: '{n} min',
   zadnjiRezultati: {
     naslov: 'Posledné výsledky',
-    vsi: 'Všetky výsledky a zostavy →',
+    vsi: 'Všetky výsledky →',
     poglejTekmo: 'Pozri si zostavy a body z tohto zápasu',
   },
   najboljsi: {
-    igralecKroga: 'Hráč {krog}. kola',
-    rezultatiKroga: '{krog}. kolo · výsledky zápasov →',
-    strelci: 'Najlepší strelci sezóny',
-    podajalci: 'Najlepší nahrávači sezóny',
-    ohranjeneMreze: 'Najviac čistých kont',
     igralecSezone: 'Hráč sezóny',
-    igralecSezoneZ: 'Hráč sezóny {sezona}',
     celaLestvica: 'Celé poradie hráčov →',
+    vodilni: {
+      strelec: 'Najlepší strelec',
+      podajalec: 'Najlepší nahrávač',
+      mreze: 'Najviac čistých kont',
+    },
   },
   idealna: {
     naslov: 'Ideálna jedenástka',
     krogSezona: '{krog}. kolo · sezóna {sezona}',
-    opis: 'Najlepších 11 hráčov posledného odohraného kola (1 BRA, 4 OBR, 4 ZÁL, 2 ÚTO). Číslo pod dresom sú body, ktoré hráč získal.',
+    opis: 'Najlepších 11 posledného kola; pod dresom sú body.',
   },
   povabi: {
     naslov: 'Pozvi kamaráta do ligy',
-    opis: 'Čím viac nás bude, tým väčšia zábava. Klikni na tlačidlo a otvoríme ti prázdny e-mail s už napísanou správou — stačí doplniť adresáta.',
-    gumb: 'Otvoriť e-mail',
   },
   skupnost: {
-    naslov: 'Pomôž komunite',
     brezAsistence: '{goli} bez asistencie',
     povejKdo: {
       one: 'Povedz, kto nahral — {n} hlas potvrdí',
@@ -74,7 +66,6 @@ export const domov: NonNullable<Prevod['domov']> = {
   },
   naslednje: {
     naslov: 'Najbližšie zápasy',
-    vRazporedu: '{tekme} v rozpise',
     proti: 'vs',
   },
   kakoIgras: {
@@ -89,4 +80,12 @@ export const domov: NonNullable<Prevod['domov']> = {
     poKroguOpis: 'Body sa vypočítajú zo zápisov. Hráča bez odohraných minút automaticky nahradí náhradník na rovnakej pozícii a raz za sezónu môžeš s Lavičkou+ započítať body celej lavičky.',
   },
   kakoSeTockuje: 'Ako sa získavajú body',
+  moja: {
+    tocke: 'Body',
+    mesto: 'Miesto',
+    mestoOd: '{mesto}. z {n}',
+    uredi: 'Môj tím →',
+  },
+  taTeden: 'Tento týždeň',
+  klepet: 'Chat a návrhy',
 }

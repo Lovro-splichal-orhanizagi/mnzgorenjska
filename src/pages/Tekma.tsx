@@ -245,29 +245,28 @@ export default function Tekma() {
         </span>
       </div>
 
-      <div className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-b from-gnl-800/50 to-slate-900/50 p-3 text-center ring-1 ring-white/10 sm:gap-4 sm:p-5">
-        <Grb ime={tekma.home_name} kratko={tekma.home_short} logo={tekma.home_logo} velikost={32} />
-        <span className="min-w-0 flex-1 break-words text-right text-sm font-bold sm:text-base">
-          <span className="sm:hidden">{tekma.home_short ?? tekma.home_name}</span>
-          <span className="hidden sm:inline">{tekma.home_name}</span>
+      {/* Izid: grb nad imenom, da ime na telefonu ni skrajšano na kratico. */}
+      <div className="flex items-start justify-center gap-3 text-center sm:gap-6">
+        <div className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
+          <Grb ime={tekma.home_name} kratko={tekma.home_short} logo={tekma.home_logo} velikost={36} />
+          <span className="text-sm font-semibold leading-tight sm:text-base">{tekma.home_name}</span>
+        </div>
+        <span className="pt-1 text-3xl font-black tabular-nums sm:text-4xl">
+          {tekma.home_goals}:{tekma.away_goals}
         </span>
-        <span className="rounded-xl bg-slate-950 px-3 py-2 text-xl font-black tabular-nums sm:px-4 sm:text-2xl">
-          {tekma.home_goals} : {tekma.away_goals}
-        </span>
-        <span className="min-w-0 flex-1 break-words text-left text-sm font-bold sm:text-base">
-          <span className="sm:hidden">{tekma.away_short ?? tekma.away_name}</span>
-          <span className="hidden sm:inline">{tekma.away_name}</span>
-        </span>
-        <Grb ime={tekma.away_name} kratko={tekma.away_short} logo={tekma.away_logo} velikost={32} />
+        <div className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
+          <Grb ime={tekma.away_name} kratko={tekma.away_short} logo={tekma.away_logo} velikost={36} />
+          <span className="text-sm font-semibold leading-tight sm:text-base">{tekma.away_name}</span>
+        </div>
       </div>
 
       {nastopi.length === 0 ? (
-        <p className="kartica p-4 text-slate-400">
+        <p className="text-sm text-slate-400">
           {t('tekme.tekma.brezPostav')}
         </p>
       ) : (
         <>
-          <p className="text-sm text-slate-400">
+          <p className="hidden text-sm text-slate-400 sm:block">
             {t('tekme.tekma.naDresu')}
           </p>
           <div className="grid gap-5 lg:grid-cols-2">
@@ -292,15 +291,15 @@ export default function Tekma() {
       )}
 
       {cakajocih > 0 && (
-        <p className="rounded-2xl bg-amber-400/10 p-4 text-sm text-amber-200 ring-1 ring-amber-400/30">
-          <span aria-hidden="true">🅰️</span> {t('tekme.tekma.cakajo', { n: cakajocih })}
+        <p className="text-sm text-amber-200">
+          {t('tekme.tekma.cakajo', { n: cakajocih })}
         </p>
       )}
 
       {goli.length > 0 && (
         <section className="space-y-3">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="text-xl font-bold">{t('tekme.tekma.goliInAsistence')}</h2>
+            <h2 className="text-lg font-bold">{t('tekme.tekma.goliInAsistence')}</h2>
             {!session && (
               <Link
                 to={povezavaNaPrijavo(lokacija.pathname + lokacija.search)}
@@ -310,7 +309,7 @@ export default function Tekma() {
               </Link>
             )}
           </div>
-          <ul className="space-y-3">
+          <ul className="kartica divide-y divide-white/10 overflow-hidden">
             {goli.map((g) => (
               <GolZaGlasovanje
                 key={g.id}
