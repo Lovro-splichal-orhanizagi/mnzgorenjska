@@ -130,6 +130,13 @@ igralca, zato Slovaška ne čaka na glasovanje o pozicijah (stran Pozicije je
 v meniju skrita); asistenc ni, kot pri nas. Avtogol je `goal` z vrsto
 `dropped` in je zapisan pri ekipi strelca.
 
+Uvoz vzame pozicijo iz **prvega** zapisnika, ki igralca vidi, in je ne spreminja:
+kdor je bil lani drugje vratar, ostane GK (Ádám Erik, Želovce, 10/2026).
+`scripts/uskladi-pozicije.mjs` (delovni tok *Uskladi pozicije*, najprej brez
+`pisi`) jo popravi po večini letošnjih zapisnikov (vsaj dva glasova), privzeto
+le vratar ↔ polje; DEF/MID/FWD med sabo le z `vse_pozicije`, ker klubi te
+oznake pišejo ohlapno in menjava preračuna točke zadnjih 14 dni.
+
 Vpisane so vse lige odraslih Stredoslovenského FZ in enajstih okresov pod njim
 (27, migracija 20260926090000), **neaktivne**. Seznam lig z arhivom izpiše:
 

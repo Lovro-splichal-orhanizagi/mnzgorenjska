@@ -1,0 +1,57 @@
+name: Uskladi pozicije (Sportnet)
+
+# Pozicije slovaških igralcev po večini letošnjih zapisnikov
+# (scripts/uskladi-pozicije.mjs). Najprej brez `pisi` za seznam.
+on:
+  workflow_dispatch:
+    inputs:
+      tekmovanje:
+        description: 'Slug lige (prazno = vse sportnet lige)'
+        required: false
+        type: string
+      vse_pozicije:
+        description: 'Tudi DEF/MID/FWD med sabo (privzeto le vratar <-> polje)'
+        required: false
+        type: boolean
+        default: false
+      pisi:
+        description: 'Zapiši spremembe (sicer le seznam)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: uskladi-pozicije
+  cancel-in-progress: false
+
+jobs:
+  uskladi:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      TEKMOVANJE: ${{ inputs.tekmovanje }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Uskladi
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ inputs.pisi && secrets.SUPABASE_SERVICE_ROLE_KEY || '' }}
+          SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          set -euo pipefail
+          args=()
+          if [ -n "$TEKMOVANJE" ]; then
+            [[ "$TEKMOVANJE" =~ ^[a-z0-9-]+$ ]] || { echo "Neveljaven slug"; exit 1; }
+            args+=(--tekmovanje "$TEKMOVANJE")
+          fi
+          ${{ inputs.vse_pozicije && 'args+=(--vse-pozicije)' || 'true' }}
+          ${{ inputs.pisi && 'args+=(--pisi)' || 'true' }}
+          node scripts/uskladi-pozicije.mjs ${args[@]+"${args[@]}"}
