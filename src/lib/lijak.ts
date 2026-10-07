@@ -3,7 +3,7 @@
 // enkrat na dan, da osvežitev strani ne napihne številk.
 import { supabase } from './supabase'
 
-export type KorakLijaka = 'prazna_ekipa' | 'predlog' | 'prva_shramba' | 'sestavi_iz_maila'
+export type KorakLijaka = 'prazna_ekipa' | 'predlog' | 'prva_shramba' | 'sestavi_iz_maila' | 'pivo'
 
 export function zabeleziKorak(korak: KorakLijaka) {
   const kljuc = `slff-lijak-${korak}-${new Date().toISOString().slice(0, 10)}`

@@ -57,6 +57,9 @@ services:
       SMTP_PASS: ${SMTP_PASS}
       FIREBASE_SERVICE_ACCOUNT: ${FIREBASE_SERVICE_ACCOUNT:-}
       EMAIL_FROM: ${EMAIL_FROM:-}
+      # bmc-pivo: Buy Me a Coffee webhook -> Discord
+      DISCORD_WEBHOOK: ${DISCORD_WEBHOOK:-}
+      BMC_WEBHOOK_SECRET: ${BMC_WEBHOOK_SECRET:-}
       EMAIL_REPLY_TO: ${EMAIL_REPLY_TO:-}
   db:
     image: supabase/postgres:17.6.1.166
