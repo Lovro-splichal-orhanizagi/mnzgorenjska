@@ -56,6 +56,7 @@ async function prenesi(url) {
 function zmanjsaj(pot) {
   for (const [ukaz, arg] of [
     ['sips', ['--resampleHeightWidthMax', String(NAJVECJA_STRANICA), pot]],
+    ['magick', [pot, '-resize', `${NAJVECJA_STRANICA}x${NAJVECJA_STRANICA}>`, pot]],
     ['convert', [pot, '-resize', `${NAJVECJA_STRANICA}x${NAJVECJA_STRANICA}>`, pot]],
   ]) {
     try {
@@ -88,6 +89,7 @@ const poId = new Map(vrstice.map((k) => [k.id, k]))
 
 // id kluba -> naslov grba (prvi, ki ga najdemo)
 const grbi = new Map()
+const ppoKluba = new Map() // klub -> id profila na Sportnetu (za grbIzProfila)
 const brez = new Set()
 for (const l of lige) {
   if (!l.source_league_code) continue
@@ -104,9 +106,21 @@ for (const l of lige) {
       if (!id || grbi.has(id)) continue
       const url = e.organization?.logo_public_url
       if (url) grbi.set(id, url)
+      if (url && e.organization?._id) ppoKluba.set(id, e.organization._id)
       else brez.add(e.name)
     }
   console.log(`${l.slug}: ${tekme.length} tekem, grbov doslej ${grbi.size}`)
+}
+
+// Naslov grba v podatkih tekme je pri ~60 klubih zastarel (404, 8. 10. 2026);
+// profil kluba (/v1/ppo/<id>) ima veljavnega. Ob 404 vprašamo profil.
+async function grbIzProfila(id) {
+  const ppo = ppoKluba.get(id)
+  if (!ppo) return null
+  await pocakaj()
+  const o = await fetch(`https://api.sportnet.online/v1/ppo/${encodeURIComponent(ppo)}`, { headers: vir.glave })
+  if (!o.ok) return null
+  return (await o.json()).logo_public_url ?? null
 }
 
 const nacrt = [...grbi]
@@ -131,7 +145,14 @@ let preneseno = 0
 for (const n of nacrt) {
   try {
     await pocakaj()
-    const o = await fetch(n.url, { headers: vir.glave })
+    let o = await fetch(n.url, { headers: vir.glave })
+    if (o.status === 404) {
+      const zdaj = await grbIzProfila(n.klub.id)
+      if (zdaj && zdaj !== n.url) {
+        await pocakaj()
+        o = await fetch(zdaj, { headers: vir.glave })
+      }
+    }
     if (!o.ok) throw new Error(String(o.status))
     const datoteka = `${MAPA}/${n.pot.split('/').pop()}`
     writeFileSync(datoteka, Buffer.from(await o.arrayBuffer()))
