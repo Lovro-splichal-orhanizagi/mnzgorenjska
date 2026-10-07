@@ -101,7 +101,7 @@ export default function App() {
           <RokKroga />
           <Navbar />
           <OpozoriloEkipe />
-          <main className="mx-auto max-w-5xl px-4 py-8">
+          <main className="mx-auto max-w-5xl px-4 pb-32 pt-8 lg:pb-8">
             <NapakaOprijem key={pathname}>
             <Routes>
               <Route path="/" element={<Domov />} />

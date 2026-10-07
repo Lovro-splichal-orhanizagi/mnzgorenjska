@@ -39,8 +39,8 @@ interface Klepet {
 }
 
 /**
- * Odpre klepet ("Pomoč" v meniju). Na telefonu je mehurček skrit
- * (index.css), zato je to edina pot do klepeta. Skripta se morda še nalaga:
+ * Odpre klepet ("Pomoč" v meniju) — druga pot poleg mehurčka, ki se med
+ * odprtim oknom čez ves zaslon umakne (index.css). Skripta se morda še nalaga:
  * počakamo, da widget postavi okno, in ga odpremo, največ 10 s.
  */
 export function odpriPodporo() {
