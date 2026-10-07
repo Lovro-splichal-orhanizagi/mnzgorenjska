@@ -12,11 +12,11 @@ http://172.17.0.1:8089 {
 	file_server
 }
 
-# API. P2: proxy to Supabase Cloud. P4 cutover: replace the reverse_proxy with `reverse_proxy localhost:8000`.
+# API: self-hosted Supabase on this VM (since the P4 cutover, 2026-10-06 20:33 UTC).
+# This file is the source of truth for /etc/caddy/Caddyfile: never point it back at Cloud.
 api.slff.eu {
 	import origin_tls
-	reverse_proxy https://cobtigdsmlftvpfqtnas.supabase.co {
-		header_up Host {upstream_hostport}
+	reverse_proxy localhost:8000 {
 		header_up X-Forwarded-For {http.request.header.CF-Connecting-IP}
 	}
 }

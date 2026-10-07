@@ -40,17 +40,18 @@ if [[ $NACIN == ZARES ]]; then
     | grep -v '/ci.yml$' >> "$WF" || true
   sort -u -o "$WF" "$WF"; xargs -r -n1 gh workflow disable < "$WF" || true
   korak "Freeze: Cloud read-only (reads keep working), pg_cron off"
-  # Only PostgREST's role goes read-only: a read-only DATABASE also blocks the CLI's own
-  # login role (no dump possible), and Supabase reserves GoTrue's role. Logins may still
-  # write for the few minutes of the copy; at worst a user logs in again.
+  # Take the API roles' access to schema public away: blocks reads, writes and RPCs through
+  # PostgREST, while the CLI (postgres) can still dump. Learned the hard way (2026-10-07):
+  # `default_transaction_read_only` on authenticator does NOT stop PostgREST writes, and
+  # Supabase reserves authenticator / supabase_auth_admin (no NOLOGIN, no settings on auth).
   cloud "select cron.alter_job(jobid, active := false) from cron.job;
-         alter role authenticator set default_transaction_read_only = on;
+         revoke usage on schema public from public, anon, authenticated, service_role;
          select count(pg_terminate_backend(pid)) from pg_stat_activity
           where datname = 'postgres' and usename = 'authenticator';"
 else
   korak "Rehearsal: can we freeze Cloud? (checked inside a rolled-back transaction)"
   cloud "begin; select cron.alter_job(jobid, active := false) from cron.job;
-         alter role authenticator set default_transaction_read_only = on; rollback;" >/dev/null
+         revoke usage on schema public from public, anon, authenticated, service_role; rollback;" >/dev/null
   echo "ok — the role may alter the database and pg_cron"
 fi
 
@@ -87,6 +88,9 @@ vm "set -e; cd /opt/supabase; docker compose stop >/dev/null 2>&1
 korak "VM: restore"
 vm "docker cp $VM_DIR/. supabase-db:/tmp/dump/"
 vmsql "-c 'set session_replication_role = replica' -f /tmp/dump/roles.f.sql -f /tmp/dump/schema.sql -f /tmp/dump/mig_schema.sql -f /tmp/dump/data.f.sql -f /tmp/dump/mig_data.sql" >/dev/null
+
+korak "VM: undo the Cloud freeze that the dump carried over (schema grants, role setting)"
+vmsql "-c 'grant usage on schema public to public, anon, authenticated, service_role' -c 'alter role authenticator reset default_transaction_read_only'"
 
 korak "VM: what a dump can't carry (cron jobs, Vault secret)"
 vm "docker exec -i supabase-db psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 < /opt/slff/po-obnovi.sql >/dev/null
