@@ -3,7 +3,7 @@
 // brez_opomnikov` in `brez_push` sta zapisana nikalno, da novi profili brez
 // vrednosti dobivajo obvestila. Pot ostane `/reminders` (povezava v mailih).
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import { useNaslov } from '../lib/naslov'
@@ -16,7 +16,45 @@ const profili = () => supabase.from('profiles')
 
 type Stolpec = 'brez_opomnikov' | 'brez_push'
 
+/**
+ * Odjava s povezave v mailu (?u=<uporabnik>&z=<žeton>), brez prijave. Izklopi
+ * e-pošto (`brez_opomnikov`). Odjavi šele gumb: pregledovalniki povezav v
+ * poštnih predalih odprejo stran, ne kliknejo pa gumba.
+ */
+function OdjavaIzMaila({ u, z }: { u: string; z: string }) {
+  const [stanje, setStanje] = useState<'caka' | 'dela' | 'ok' | 'napaka'>('caka')
+  async function odjavi() {
+    setStanje('dela')
+    const { data, error } = await supabase.rpc('odjavi_z_zetonom', { p_user: u, p_zeton: z })
+    setStanje(!error && data ? 'ok' : 'napaka')
+  }
+  return (
+    <div className="max-w-md space-y-4">
+      <h1 className="text-3xl font-black naslov">{t('racun.opomniki.naslov')}</h1>
+      {stanje === 'ok' ? (
+        <p className="text-gnl-300">{t('racun.opomniki.izklopljeni')}</p>
+      ) : (
+        <>
+          <p className="text-slate-300">{t('racun.opomniki.odjavaVprasanje')}</p>
+          <button type="button" onClick={odjavi} disabled={stanje === 'dela'} className="gumb-glavni">
+            {t('racun.opomniki.odjavaGumb')}
+          </button>
+          {stanje === 'napaka' && <p className="text-sm text-rose-400">{t('racun.opomniki.odjavaNapaka')}</p>}
+        </>
+      )}
+    </div>
+  )
+}
+
 export default function Opomniki() {
+  const [iskanje] = useSearchParams()
+  const u = iskanje.get('u')
+  const z = iskanje.get('z')
+  if (u && z) return <OdjavaIzMaila u={u} z={z} />
+  return <NastavitveObvestil />
+}
+
+function NastavitveObvestil() {
   const { session, loading } = useAuth()
   const uporabnik = session?.user.id ?? null
   // Ključ je stolpec, vrednost pove, ali je kanal VKLOPLJEN (nasprotno od stolpca).

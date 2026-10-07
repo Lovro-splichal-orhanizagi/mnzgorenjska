@@ -5129,6 +5129,10 @@ export type Database = {
       nova_koda_mini_lige: { Args: Record<PropertyKey, never>; Returns: string }
       odstrani_hisne_ekipe: { Args: { p_ids: number[] }; Returns: number }
       okno_preracuna_tock: { Args: Record<PropertyKey, never>; Returns: string }
+      odjavi_z_zetonom: {
+        Args: { p_user: string; p_zeton: string }
+        Returns: boolean
+      }
       osvezi_statistiko_igralcev: {
         Args: { p_igralci: number[] }
         Returns: undefined
