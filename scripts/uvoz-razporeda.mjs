@@ -530,7 +530,14 @@ if (smemoDeaktivirati) {
   // pod obrnjenim parom. Neuvoženo tekmo, ki je razpored v svojem krogu ne
   // pozna več, zato odstranimo. Krog, ki ima v razporedu manj tekem, kot jih
   // liga premore, je okrnjen (vir je vrnil pol strani) — tam ne brišemo.
-  const polnKrog = Math.floor(letosnjiKlubi.size / 2)
+  // Poln krog je najpogostejša velikost kroga v tem razporedu (okrnjena stran
+  // odreže zadnje kroge, ne vseh), največ klubi / 2. Samo klubi / 2 ne gre:
+  // Nova Gorica (ng-primorska 26/27) ima 12 klubov in po 5 tekem na krog, zato
+  // ni bil poln noben krog in obrnjen par Bistrc : Jadran (5. in 18. krog) je ostal.
+  const velikosti = new Map()
+  for (const pari of pariKrogov.values()) velikosti.set(pari.size, (velikosti.get(pari.size) ?? 0) + 1)
+  const obicajen = [...velikosti].sort((a, b) => b[1] - a[1] || b[0] - a[0])[0]?.[0] ?? 0
+  const polnKrog = Math.max(1, Math.min(Math.floor(letosnjiKlubi.size / 2), obicajen))
   const preverjeniKrogi = [...pariKrogov].filter(([, pari]) => pari.size >= polnKrog).map(([id]) => id)
   if (preverjeniKrogi.length) {
     const { data: neuvozene, error: eBeri } = await db
