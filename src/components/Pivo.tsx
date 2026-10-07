@@ -1,4 +1,4 @@
-// Gumb "Časti pivo" (naslovnica, noga vsake strani, lestvica, rezultati). SLFF je brezplačen in brez oglasov; pivo le
+// Gumb "Časti pivo" (naslovnica in noga vsake strani). SLFF je brezplačen in brez oglasov; pivo le
 // pomaga pokriti strežnik in domeno in na igro ne vpliva.
 //
 // Samo povezava: brez skripte in gradnika Buy Me a Coffee, torej brez tujih
@@ -20,7 +20,7 @@ export default function Pivo({ src }: { src: string }) {
       target="_blank"
       rel="noopener noreferrer"
       onClick={() => zabeleziKorak('pivo')}
-      className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-gnl-500 px-4 py-2 text-sm font-bold text-white shadow-lg transition-colors hover:bg-gnl-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gnl-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+      className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/5 px-3.5 py-1.5 text-sm font-semibold text-slate-100 ring-1 ring-white/15 transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gnl-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
     >
       <span aria-hidden>🍺</span>
       {t('aplikacija.pivo.gumb')}

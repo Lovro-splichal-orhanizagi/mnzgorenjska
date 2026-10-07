@@ -97,6 +97,9 @@ export const mojaEkipa = {
   locenaLiga:
     'Ekipa v ligi <liga>{liga}</liga> je ločena od ekip v drugih ligah — s svojim proračunom in svojo lestvico. Točke štejejo od {krog}. kroga naprej, ker se do takrat še vrstijo prestopi in prehodi med selekcijami.',
 
+  /** Zloženi razdelek pod igriščem. */
+  vec: 'Več: pripomočki, zgodovina, pravila',
+
   prestopi: {
     stevec: 'Prestopi: {n}/{prosti}',
     wildcard: 'wildcard — brez kazni',
@@ -138,45 +141,30 @@ export const mojaEkipa = {
     zapri: 'Zapri',
   },
 
-  // Rdeč pas, ko ekipa ne ustreza pravilom.
-  neustreza: {
-    naslov: 'Tvoja ekipa NE ustreza pravilom',
-    zaKrog: '<krepko>Za {krog}. krog</krepko> v tem stanju <krepko>NE boš dobil točk</krepko>.',
-    zaKrogRok:
-      '<krepko>Za {krog}. krog</krepko> (rok: {rok}) v tem stanju <krepko>NE boš dobil točk</krepko>.',
-    konkretne: 'Konkretne napake:',
-    pogosto:
-      'Pogosto se to zgodi, ker glasovanje o poziciji premakne igralca (npr. iz napadalca v vezista) in ti poruši kader. Popravi zdaj, dokler rok ni potekel.',
-  },
-
   povzetek: {
-    naVoljo: 'Na voljo še',
+    urediIme: 'Uredi ime ekipe {ime}',
     bogastvo:
       'bogastvo <vrednost>{bogastvo}</vrednost><razlika></razlika> · kader {kader} <placano>plačano</placano>',
     razlika: '({znak}{cena})',
     shranjujem: 'Shranjujem …',
     shraniEkipo: 'Shrani ekipo',
     neshranjeno: 'Neshranjene spremembe',
-    stevec: '{n}/{igralcev} · postava {prvi}/{prvih}',
     imeEkipe: 'Ime ekipe',
-    fiksnoNamig: 'Ime ekipe je po prvi shranitvi fiksno — enotna oznaka na lestvici in v zgodovini.',
-    fiksno: '🔒 fiksno',
     privzetoIme: 'FC {ime}',
     primerImena: 'npr. Nedeljski Junaki',
-    imeNamig: 'Ime lahko pozneje kadarkoli spremeniš.',
   },
 
   // Uvodni nasvet za prazno ekipo.
   zacetek: {
     naslov: 'Kje začeti?',
-    sestaviMi: '🎲 Sestavi mi ekipo',
+    sestaviMi: 'Sestavi mi ekipo',
     opisPredloga:
       'Naključno izberemo veljavno ekipo v okviru proračuna — vsak klik drugo. Nato zamenjaj, kogar hočeš, in shrani.',
     sam: 'Raje sestavim sam',
-    drugPredlog: '🎲 Drug predlog',
+    drugPredlog: 'Drug predlog',
     opisDrugegaPredloga:
       'Ni všeč? Izžrebaj novo ekipo — dokler je ne shraniš, je to zastonj.',
-    dopolni: '🎲 Dopolni ekipo',
+    dopolni: 'Dopolni ekipo',
     opisDopolnitve:
       'Prostih mest v kadru: {n}. Tvoje izbire ostanejo, preostala mesta naključno zapolnimo v okviru proračuna.',
     korak1: 'Ime ekipe smo predlagali zgoraj — spremeniš ga lahko kadarkoli.',
@@ -192,7 +180,6 @@ export const mojaEkipa = {
     naslov: 'Trak',
     kapetan: 'Kapetan (×{n})',
     namestnik: 'Namestnik',
-    opis: 'Kapetan prinese trojne točke. Če ne igra, trak prevzame namestnik.',
     nihce: '— nihče —',
   },
 
@@ -203,12 +190,10 @@ export const mojaEkipa = {
   },
 
   status: {
-    pripravljena: 'Ekipa je pripravljena za shranjevanje.',
     manjka: 'Za dokončno shranitev je še nekaj potrebnega:',
     vpisiIme: 'Vpiši ime ekipe (v polju zgoraj).',
     osnutekZdaj: 'Osnutek lahko shraniš tudi zdaj — pravila boš dopolnil pozneje.',
-    shraniOsnutek: 'Shrani osnutek',
-    imeObvezno: 'Ime ekipe je obvezno — klik te vrne na polje zgoraj.',
+    brezTock: '<krepko>Za {krog}. krog</krepko> v tem stanju <krepko>NE boš dobil točk</krepko>.',
     kajPomeni:
       '<krepko>Kaj pomeni "Shrani"?</krepko> Tvoje spremembe (kader, postava, kapetan) se zapišejo v bazo. Za trenutni krog velja stanje ob roku. Do roka lahko poljubno spreminjaš in ponovno pritiskaš Shrani — velja zadnja verzija. <krepko>"Shrani osnutek"</krepko> pomeni isto, samo z opombo, da ekipa še ne izpolnjuje vseh pravil (za točke rabiš popravke — glej seznam zgoraj).',
     kajPomeniRok:
@@ -226,7 +211,7 @@ export const mojaEkipa = {
     wildcardVlozen: 'Wildcard je že vložen — prestopi v njem so brezplačni.',
     wildcardOpis:
       'Enkrat na sezono: v tem krogu lahko zamenjaš kolikor igralcev hočeš, brez odbitka točk.',
-    zaklenjen: '🔒 zaklenjen',
+    zaklenjen: 'zaklenjen',
     preklici: 'prekliči',
     prekliciDo: 'Prekliči lahko do <odstevanje></odstevanje>',
     izberiKrog: 'Izberi krog …',
@@ -291,8 +276,6 @@ export const mojaEkipa = {
     potekel: 'Rok je potekel — <krepko>{rok}</krepko>',
     rok: 'Rok: <krepko>{rok}</krepko>',
     niDolocen: 'Rok še ni določen.',
-    naslednji: 'Spremembe zdaj veljajo za naslednji krog.',
-    obRoku: 'Ob roku se postava posname — dokler ni potekel, prosto spreminjaj.',
   },
 
   // Igrišče pri sestavi ekipe (components/Igrisce.tsx).

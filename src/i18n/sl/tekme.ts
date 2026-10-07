@@ -56,6 +56,8 @@ export const tekme = {
       'Odigrane tekme iz zapisnikov {zveza}. Klikni na tekmo in vidiš obe postavi na igrišču — na vsakem dresu točke, ki jih je igralec zaslužil.',
     niZacetka: 'Sezona se še ni začela.',
     prazenKrog: 'V tem krogu ni odigranih tekem.',
+    prejsnji: 'Prejšnji krog',
+    naslednji: 'Naslednji krog',
   },
 
   tekma: {

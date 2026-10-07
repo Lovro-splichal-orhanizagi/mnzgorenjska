@@ -268,7 +268,7 @@ export default function Glasovanje() {
   return (
     <div className="space-y-6">
       <header className="space-y-2">
-        <h1 className="text-3xl font-black naslov">
+        <h1 className="text-2xl font-black naslov sm:text-3xl">
           {t('tekme.glasovanje.kdoJePodal')}
           {tekmovanje && (
             <span className="ml-2 align-middle text-base font-bold text-slate-500">
@@ -276,7 +276,7 @@ export default function Glasovanje() {
             </span>
           )}
         </h1>
-        <p className="max-w-2xl text-slate-400">
+        <p className="max-w-2xl text-sm text-slate-400">
           {tx(
             'tekme.glasovanje.uvod',
             {
@@ -289,10 +289,8 @@ export default function Glasovanje() {
       </header>
 
       {tekme.length === 0 && (
-        <div className="kartica p-6 text-center text-sm text-slate-300">
-          <p className="mb-2 text-lg font-semibold">
-            {t('tekme.glasovanje.niTekem')} <span aria-hidden="true">🎯</span>
-          </p>
+        <div className="text-sm">
+          <p className="font-semibold text-slate-200">{t('tekme.glasovanje.niTekem')}</p>
           <p className="text-slate-400">
             {t('tekme.glasovanje.niTekemOpis')}
           </p>
@@ -312,8 +310,8 @@ export default function Glasovanje() {
                 const katerakoli = tekme.find((t) => t.season === sz)
                 setKrogId((prva ?? katerakoli)?.round_id ?? null)
               }}
-              className={`rounded-xl px-3 py-1.5 text-sm font-semibold transition ${
-                sezona === sz ? 'bg-gnl-500 text-slate-950' : 'kartica text-slate-300'
+              className={`rounded-md px-3 py-1.5 text-sm font-semibold transition ${
+                sezona === sz ? 'bg-gnl-500 text-slate-950' : 'text-slate-400 hover:bg-white/5 hover:text-white'
               }`}
             >
               {sz}
@@ -328,13 +326,13 @@ export default function Glasovanje() {
       )}
 
       {sezona && sezona !== sezone[0] && (
-        <p className="kartica border-amber-400/30 bg-amber-400/10 p-3 text-sm text-amber-200">
+        <p className="text-sm text-amber-200">
           {t('tekme.glasovanje.preteklaSezona')}
         </p>
       )}
 
       {!session && (
-        <p className="kartica border-amber-400/30 bg-amber-400/10 p-3 text-sm text-amber-200">
+        <p className="text-sm text-amber-200">
           {tx('tekme.moraPrijava', {}, {
             prijava: (v) => (
               <Link
@@ -350,7 +348,7 @@ export default function Glasovanje() {
 
       {/* 1. korak: krog */}
       <div data-pomoc="krogi" className="space-y-2">
-        <h2 className="text-xs font-bold uppercase tracking-wide text-slate-400">
+        <h2 className="text-base font-bold">
           {t('tekme.glasovanje.izberiKrog')}
         </h2>
         <div className="flex gap-1.5 overflow-x-auto pb-1">
@@ -358,10 +356,10 @@ export default function Glasovanje() {
             <button
               key={k.id}
               onClick={() => setKrogId(k.id)}
-              className={`shrink-0 rounded-xl px-3 py-2 text-sm font-semibold transition ${
+              className={`shrink-0 rounded-md px-3 py-1.5 text-sm font-semibold transition ${
                 krogId === k.id
                   ? 'bg-gnl-500 text-slate-950'
-                  : 'kartica text-slate-300'
+                  : 'text-slate-400 hover:bg-white/5 hover:text-white'
               }`}
             >
               {t('tekme.krog', { n: k.number })}
@@ -383,10 +381,10 @@ export default function Glasovanje() {
 
       {/* 2. korak: tekma v krogu */}
       <div data-pomoc="tekme" className="space-y-2">
-        <h2 className="text-xs font-bold uppercase tracking-wide text-slate-400">
+        <h2 className="text-base font-bold">
           {t('tekme.glasovanje.izberiTekmo')}
         </h2>
-        <ul className="grid gap-2 sm:grid-cols-2">
+        <ul className="kartica divide-y divide-white/10 overflow-hidden">
           {tekmeVKrogu.map((tk) => (
             <li key={tk.match_id}>
               <button
@@ -394,18 +392,18 @@ export default function Glasovanje() {
                   setTekmaId(tk.match_id)
                   izbranaTekma.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                 }}
-                className={`flex w-full items-center gap-2 rounded-2xl p-2.5 text-left transition ${
+                aria-pressed={tekmaId === tk.match_id}
+                className={`flex min-h-12 w-full items-center gap-2 px-3 py-2 text-left transition ${
                   tekmaId === tk.match_id
-                    ? 'bg-gnl-500/15 ring-1 ring-gnl-400/50'
-                    : 'kartica kartica-hover'
+                    ? 'bg-gnl-500/10 shadow-[inset_3px_0_0_theme(colors.gnl.400)]'
+                    : 'hover:bg-white/5'
                 }`}
               >
                 <Grb ime={tk.home_name} kratko={tk.home_short} logo={tk.home_logo} velikost={22} />
                 <span className="min-w-0 flex-1 truncate text-sm font-semibold">
-                  {tk.home_short} – {tk.away_short}
+                  {tk.home_name} – {tk.away_name}
                 </span>
-                <Grb ime={tk.away_name} kratko={tk.away_short} logo={tk.away_logo} velikost={22} />
-                <span className="rounded-lg bg-slate-950/60 px-2 py-0.5 text-sm font-black tabular-nums">
+                <span className="text-sm font-black tabular-nums">
                   {tk.home_goals}:{tk.away_goals}
                 </span>
                 {Number(tk.brez_asistence ?? 0) === 0 ? (
@@ -424,36 +422,31 @@ export default function Glasovanje() {
       </div>
 
       {tekma && (
-        <div
-          ref={izbranaTekma}
-          className="flex scroll-mt-24 items-center justify-center gap-2 rounded-2xl bg-gradient-to-b from-gnl-800/50 to-slate-900/50 p-3 text-center ring-1 ring-white/10 sm:gap-4 sm:p-5">
-          <Grb ime={tekma.home_name} kratko={tekma.home_short} logo={tekma.home_logo} velikost={32} />
-          <span className="min-w-0 flex-1 text-right text-sm font-bold sm:text-base">
-            {tekma.home_name}
-          </span>
-          <span className="rounded-xl bg-slate-950 px-3 py-2 text-xl font-black tabular-nums sm:px-4 sm:text-2xl">
-            {tekma.home_goals} : {tekma.away_goals}
-          </span>
-          <span className="min-w-0 flex-1 text-left text-sm font-bold sm:text-base">
-            {tekma.away_name}
-          </span>
-          <Grb ime={tekma.away_name} kratko={tekma.away_short} logo={tekma.away_logo} velikost={32} />
-        </div>
-      )}
-
-      {tekma && (
-        <p className="text-center">
+        <div ref={izbranaTekma} className="scroll-mt-24 space-y-1 text-center">
+          <div className="flex items-center justify-center gap-3">
+            <span className="min-w-0 flex-1 text-right text-sm font-semibold sm:text-base">
+              {tekma.home_name}
+            </span>
+            <Grb ime={tekma.home_name} kratko={tekma.home_short} logo={tekma.home_logo} velikost={28} />
+            <span className="text-2xl font-black tabular-nums">
+              {tekma.home_goals}:{tekma.away_goals}
+            </span>
+            <Grb ime={tekma.away_name} kratko={tekma.away_short} logo={tekma.away_logo} velikost={28} />
+            <span className="min-w-0 flex-1 text-left text-sm font-semibold sm:text-base">
+              {tekma.away_name}
+            </span>
+          </div>
           <Link
             to={`/match/${tekma.match_id}`}
-            className="text-sm text-slate-400 underline hover:text-gnl-300"
+            className="text-xs text-slate-400 underline hover:text-gnl-300"
           >
             {t('tekme.glasovanje.poglejTekmo')}
           </Link>
-        </p>
+        </div>
       )}
 
       {goli.length === 0 ? (
-        <p className="text-slate-400">{t('tekme.glasovanje.niGolov')}</p>
+        <p className="text-sm text-slate-400">{t('tekme.glasovanje.niGolov')}</p>
       ) : (
         <>
           <p className="text-sm text-slate-400">
@@ -464,7 +457,7 @@ export default function Glasovanje() {
                 : t('tekme.glasovanje.brezPotrjene', { goli: mnozina(nepotrjenih, GOLI) })}
           </p>
 
-          <ul data-pomoc="goli" className="space-y-4">
+          <ul data-pomoc="goli" className="kartica divide-y divide-white/10 overflow-hidden">
             {goli.map((g) => (
               <GolZaGlasovanje
                 key={g.id}

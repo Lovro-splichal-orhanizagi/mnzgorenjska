@@ -164,7 +164,6 @@ export const igralci = {
     pokaziVec: 'Pokaži več ({n})',
     prikazaniVsi: 'Prikazani so vsi ({igralci}).',
     razvrsti: 'Razvrsti',
-    razvrstiPo: 'Razvrsti po: {stolpec}',
   },
   profil: {
     naslov: 'Igralec',

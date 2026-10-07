@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import Pivo from '../components/Pivo'
 import { imeZveze } from '../components/VirPodatkov'
 import { sestaviVabilo, vabiloMailto } from '../lib/vabilo'
@@ -9,21 +9,16 @@ import { PRAVILA_OPIS } from '../lib/tockovanje'
 import {
   prikazniIme,
   formatirajTocke,
-  formatirajCeno,
-  formatirajPremik,
   mnozina,
   KRATKA_POZICIJA,
-  GOLI,
   IGRALCI,
-  TEKME,
-  tockZ,
 } from '../lib/pomozno'
 import { useTekmovanje } from '../lib/tekmovanje'
+import { useAuth } from '../lib/useAuth'
 import { useNastavitev } from '../lib/nastavitve'
 import { useNaslov } from '../lib/naslov'
 import { PRAG_ASISTENCE_PRIVZETO } from '../components/GolZaGlasovanje'
 import Grb from '../components/Grb'
-import VrhDrzavePas from '../components/VrhDrzavePas'
 import Klepet from '../components/Klepet'
 import Odstevanje from '../components/Odstevanje'
 import EnajstericaNaIgriscu from '../components/EnajstericaNaIgriscu'
@@ -74,7 +69,8 @@ function kratkaPozicija(p: string | null | undefined): string {
 
 export default function Domov() {
   useNaslov(null)
-  const { id: tekmovanjeId, tekmovanje, tekmovanja, drzava } = useTekmovanje()
+  const { id: tekmovanjeId, tekmovanje, tekmovanja } = useTekmovanje()
+  const { session, loading: avtNalaganje } = useAuth()
   const zveza = imeZveze(tekmovanje)
   const [klubiLige, setKlubiLige] = useState<string[]>([])
   const vabilo = vabiloMailto(sestaviVabilo(tekmovanje, klubiLige))
@@ -100,7 +96,6 @@ export default function Domov() {
   const [podajalci, setPodajalci] = useState<VrhIgralec[]>([])
   const [obrambe, setObrambe] = useState<VrhIgralec[]>([])
   const [krog, setKrog] = useState<KrogPodatek | null>(null)
-  const [krogNajboljsi, setKrogNajboljsi] = useState<any[]>([])
   const [igralecSezone, setIgralecSezone] = useState<any[]>([])
   const [idealnaPostava, setIdealnaPostava] = useState<IgralecEnajsterice[]>(
     [],
@@ -108,7 +103,6 @@ export default function Domov() {
   const [naslednjeTekme, setNaslednjeTekme] = useState<any[]>([])
   const [zadnjiRezultati, setZadnjiRezultati] = useState<any[]>([])
   const [naslednjiKrog, setNaslednjiKrog] = useState<KrogPodatek | null>(null)
-  const [tekocaSezona, setTekocaSezona] = useState('')
   // Ali je tekoča sezona že odigrala vsaj en krog. `null`, dokler ne vemo —
   // takrat ne kažemo ne predsezonske kartice ne poziva za zamudnike.
   const [sezonaTece, setSezonaTece] = useState<boolean | null>(null)
@@ -217,7 +211,6 @@ export default function Domov() {
         ])
       if (!veljavno) return
       const tekocaSezona = sezonaPodatek.data?.season ?? ''
-      setTekocaSezona(tekocaSezona)
       setStat({
         brezAsistence: ((brezAsistence.data ?? []) as any[]).reduce(
           (v: number, x) => v + Number(x.brez_asistence ?? 0),
@@ -336,7 +329,6 @@ export default function Domov() {
 
       if (krogOk) {
         const najboljsi = najboljsiOdgovor.data
-        setKrogNajboljsi(((najboljsi ?? []) as any[]).slice(0, 5))
 
         // Idealna enajsterica: 1 GK + top 4 DEF + top 4 MID + top 2 FWD
         // po točkah v zadnjem odigranem krogu. Če je pozicij premalo,
@@ -366,7 +358,6 @@ export default function Domov() {
         }
         setIdealnaPostava(izbrani as IgralecEnajsterice[])
       } else {
-        setKrogNajboljsi([])
         setIdealnaPostava([])
       }
     }
@@ -379,117 +370,122 @@ export default function Domov() {
     }
   }, [tekmovanjeId])
 
+
   // Pred prvim krogom: datum začetka iz naslednjega kroga (tekma ali rok).
   const zacetekSezone = naslednjiKrog?.played_on ?? naslednjiKrog?.deadline_at ?? null
   // Navodila in točkovanje sta na širšem zaslonu odprta, na telefonu zaprta.
   const siroko = typeof window !== 'undefined' && Boolean(window.matchMedia?.('(min-width: 640px)').matches)
 
-  return (
-    <div className="space-y-10">
-      {/* uvod */}
-      <section className="relative overflow-hidden rounded-3xl p-4 ring-1 ring-white/10 sm:p-8">
-        {/* Amaterska tekma pod reflektorji — natanko to, o čemer je liga. */}
-        <img
-          src="/foto/igrisce.jpg"
-          alt=""
-          aria-hidden
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-        <div
-          className="absolute inset-0 bg-gradient-to-br from-slate-950/85 via-slate-950/75 to-gnl-900/80"
-          aria-hidden
-        />
-        <div className="relative space-y-4">
-          <div className="flex items-center justify-between gap-4">
-            <img
-              src="/logo/slff-grb.png"
-              alt={t('aplikacija.naslovStrani.osnova')}
-              className="h-16 w-16 drop-shadow-xl sm:h-32 sm:w-32"
-            />
-            <Pivo src="domov" />
-          </div>
-          {/* Dokler se lige nalagajo, ne vemo, katera je izbrana — nevtralen
-              obris namesto gorenjskega imena, ki bi obiskovalcu druge lige
-              za hip pokazal napačno ligo. */}
-          {!tekmovanje ? (
-            <span
-              className="znacka inline-block h-6 w-48 animate-pulse bg-white/10"
-              aria-hidden
-            />
-          ) : (
-            <span className="znacka bg-gnl-400/20 text-gnl-200">
-              {/* Gorenjski besedili sta oglasni in ostaneta natanko taki, kot
-                  sta bili; druga zveza dobi ime svoje lige. */}
-              {tekmovanje.federation_code === 'mnzg'
-                ? tekmovanje.slug === 'mladinci'
-                  ? t('domov.uvod.gorenjskaMladinci')
-                  : t('domov.uvod.gorenjskaClani')
-                : tekmovanje.name}
-            </span>
-          )}
-          <h1 className="text-4xl font-black leading-tight naslov sm:text-5xl">
-            Sunday League
-            <br />
-            Fantasy Football
-          </h1>
-          <p className="text-lg font-semibold text-gnl-300">
-            {t('domov.uvod.geslo')}
-          </p>
-          {/* Gumbi takoj pod geslom, da je poziv na telefonu nad pregibom;
-              stranski gumbi so tam ena vrstica, ki se drsa vstran. */}
-          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-            <Link to="/my-team" className="gumb-glavni w-full text-center sm:w-auto">
-              {t('domov.uvod.sestaviEkipo')}
-            </Link>
-            <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:gap-3 sm:overflow-visible sm:px-0 sm:pb-0">
-              <Link to="/assists" className="gumb-tih shrink-0 whitespace-nowrap">
-                {t('domov.uvod.glasuj')}
-              </Link>
-              <Link to="/results" className="gumb-tih shrink-0 whitespace-nowrap">
-                {t('domov.uvod.rezultati')}
-              </Link>
-              <Link to="/national?pogled=igralci" className="gumb-tih shrink-0 whitespace-nowrap">
-                <span aria-hidden>👑</span> {t('lestvice.slovenija.vrhNaslov')}
-              </Link>
-            </div>
-          </div>
-          <p className="max-w-xl text-slate-300">{t('domov.uvod.opis', { zveza })}</p>
-          {tekmovanja.length > 1 && (
-            <p className="hidden text-sm text-slate-400 sm:block">
-              <span aria-hidden>👉</span>{' '}
-              {tx('domov.uvod.vecLig', {}, { krepko: (b) => <strong>{b}</strong> })}
-            </p>
-          )}
-          {/* Pred sezono: kdaj se začne in do kdaj sestaviti ekipo. */}
-          {sezonaTece === false && zacetekSezone && (
-            <div className="rounded-2xl border border-gnl-400/40 bg-gnl-500/10 p-3 text-sm text-gnl-100 backdrop-blur">
-              <span aria-hidden>📅</span>{' '}
-              {tx(
-                'domov.uvod.zacetekSezone',
-                { datum: datum(zacetekSezone, { day: 'numeric', month: 'long', year: 'numeric' }) },
-                { krepko: (b) => <strong>{b}</strong> },
-              )}
-            </div>
-          )}
-          {/* Poziv za zamudnike — v hero, da ga vidi vsak prvič obiskovalec.
-              Smisel ima šele, ko je odigran vsaj prvi krog. */}
-          {sezonaTece && (
-            <div className="rounded-2xl border border-gnl-400/40 bg-gnl-500/10 p-3 text-sm text-gnl-100 backdrop-blur">
-              <span aria-hidden>🏁</span>{' '}
-              {tx('domov.uvod.zamudniki', {}, {
-                krepko: (b) => <strong>{b}</strong>,
-                lestvica: (b) => (
-                  <Link to="/standings" className="underline">
-                    {b}
-                  </Link>
-                ),
-              })}
-            </div>
-          )}
-        </div>
-      </section>
+  // Na naslovnici le en krog rezultatov in en krog razporeda — ostalo je na
+  // strani Rezultati. Prej sta bila po dva oz. tri kroge in stran je bila
+  // na telefonu dolga čez 5000 px.
+  const zadnjiKrog = poKrogih(zadnjiRezultati, -1)
+  const prihodnjiKrog = poKrogih(naslednjeTekme, 1)
 
-      <VrhDrzavePas drzava={drzava} />
+  // Vodilni po golih, asistencah in čistih mrežah — po ena vrstica, cele
+  // lestvice so na strani Igralci.
+  const vodilni = [
+    { naslov: t('domov.najboljsi.vodilni.strelec'), z: zvezde[0], vrednost: zvezde[0]?.goals },
+    { naslov: t('domov.najboljsi.vodilni.podajalec'), z: podajalci[0], vrednost: podajalci[0]?.assists },
+    { naslov: t('domov.najboljsi.vodilni.mreze'), z: obrambe[0], vrednost: obrambe[0]?.clean_sheets },
+  ].filter((v): v is { naslov: string; z: VrhIgralec; vrednost: number } => v.z != null)
+
+  return (
+    <div className="space-y-8">
+      {/* Prijavljen ne rabi oglasnega uvoda: ime lige, njegova ekipa in
+          ena povezava. Obiskovalec dobi cel uvod. Dokler seja ni znana, nič,
+          da uvod ne utripne in izgine. */}
+      {avtNalaganje ? null : session ? (
+        <MojaGlava
+          ligaId={tekmovanjeId}
+          liga={tekmovanje?.name ?? null}
+          uporabnikId={session.user.id}
+          krog={sezonaTece ? krog : null}
+        />
+      ) : (
+        <section className="relative overflow-hidden rounded-3xl p-4 ring-1 ring-white/10 sm:p-8">
+          {/* Amaterska tekma pod reflektorji — natanko to, o čemer je liga. */}
+          <img
+            src="/foto/igrisce.jpg"
+            alt=""
+            aria-hidden
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <div
+            className="absolute inset-0 bg-gradient-to-br from-slate-950/90 via-slate-950/80 to-slate-950/70"
+            aria-hidden
+          />
+          <div className="relative space-y-3 sm:space-y-4">
+            <div className="flex items-center justify-between gap-4">
+              <img
+                src="/logo/slff-grb.png"
+                alt={t('aplikacija.naslovStrani.osnova')}
+                className="h-12 w-12 sm:h-24 sm:w-24"
+              />
+              <Pivo src="domov" />
+            </div>
+            {/* Dokler se lige nalagajo, ne vemo, katera je izbrana — nevtralen
+                obris namesto gorenjskega imena, ki bi obiskovalcu druge lige
+                za hip pokazal napačno ligo. */}
+            {!tekmovanje ? (
+              <span className="block h-4 w-48 animate-pulse rounded bg-white/10" aria-hidden />
+            ) : (
+              <p className="text-xs font-bold uppercase tracking-wide text-gnl-300">
+                {/* Gorenjski besedili sta oglasni in ostaneta natanko taki, kot
+                    sta bili; druga zveza dobi ime svoje lige. */}
+                {tekmovanje.federation_code === 'mnzg'
+                  ? tekmovanje.slug === 'mladinci'
+                    ? t('domov.uvod.gorenjskaMladinci')
+                    : t('domov.uvod.gorenjskaClani')
+                  : tekmovanje.name}
+              </p>
+            )}
+            <h1 className="text-3xl font-black leading-tight text-white sm:text-5xl">
+              Sunday League
+              <br />
+              Fantasy Football
+            </h1>
+            <p className="font-semibold text-gnl-300 sm:text-lg">{t('domov.uvod.geslo')}</p>
+            <p className="hidden max-w-xl text-slate-300 sm:block">{t('domov.uvod.opis', { zveza })}</p>
+            {/* En poziv; rezultati so tiha povezava ob njem. */}
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-1">
+              <Link to="/my-team" className="gumb-glavni">
+                {t('domov.uvod.sestaviEkipo')}
+              </Link>
+              <Link to="/results" className="text-sm font-semibold text-slate-200 hover:text-white">
+                {t('domov.uvod.rezultati')} →
+              </Link>
+            </div>
+            {tekmovanja.length > 1 && (
+              <p className="hidden text-sm text-slate-400 sm:block">
+                {tx('domov.uvod.vecLig', {}, { krepko: (b) => <strong>{b}</strong> })}
+              </p>
+            )}
+            {/* Pred sezono: kdaj se začne. Po prvem krogu: poziv za zamudnike. */}
+            {sezonaTece === false && zacetekSezone && (
+              <p className="text-sm text-gnl-100">
+                {tx(
+                  'domov.uvod.zacetekSezone',
+                  { datum: datum(zacetekSezone, { day: 'numeric', month: 'long', year: 'numeric' }) },
+                  { krepko: (b) => <strong>{b}</strong> },
+                )}
+              </p>
+            )}
+            {sezonaTece && (
+              <p className="text-sm text-slate-300">
+                {tx('domov.uvod.zamudniki', {}, {
+                  krepko: (b) => <strong className="text-slate-100">{b}</strong>,
+                  lestvica: (b) => (
+                    <Link to="/standings" className="underline">
+                      {b}
+                    </Link>
+                  ),
+                })}
+              </p>
+            )}
+          </div>
+        </section>
+      )}
 
       {napaka && (
         <p className="rounded-xl bg-rose-500/10 p-3 text-sm text-rose-300 ring-1 ring-rose-400/30">
@@ -497,616 +493,201 @@ export default function Domov() {
         </p>
       )}
 
-      {/* glasovanje o asistencah je edino, kar liga potrebuje od ljudi */}
-      {stat && stat.brezAsistence > 0 && (
-        <Link
-          to="/assists"
-          className="block overflow-hidden rounded-3xl bg-gradient-to-r from-amber-500/20 to-rose-500/10
-                     p-5 ring-1 ring-amber-400/40 transition hover:ring-amber-300/70 sm:p-6"
-        >
-          <div className="flex flex-wrap items-center gap-4">
-            <span className="text-4xl sm:text-5xl" aria-hidden>🅰️</span>
-            {/* min-w: na telefonu gumb pade v svojo vrstico, besedilo pa ne
-                ostane stisnjeno v ozek stolpec po eno besedo. */}
-            <div className="min-w-[12rem] flex-1">
-              <h2 className="text-xl font-black text-amber-100 sm:text-2xl">
-                {t('domov.asistence.cakajo', { n: stat.brezAsistence })}
-              </h2>
-              <p className="mt-1 text-sm text-amber-100/80">
-                {tx('domov.asistence.opis', {}, { krepko: (b) => <strong>{b}</strong> })}
-              </p>
-            </div>
-            <span className="gumb-glavni shrink-0">{t('domov.asistence.glasujZdaj')}</span>
-          </div>
-        </Link>
-      )}
-
-      {/* odštevalnik do zaklepanja postave naslednjega kroga */}
-      {naslednjiKrog?.deadline_at && (
-        <Link
-          to="/my-team"
-          className="block overflow-hidden rounded-3xl bg-gradient-to-r from-gnl-500/15 to-gnl-800/10 p-4 ring-1 ring-gnl-400/30 transition hover:ring-gnl-300/60 sm:p-5"
-        >
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="text-3xl" aria-hidden>⏱️</span>
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-baseline gap-2 text-sm">
-                <span className="font-bold text-gnl-200">
-                  {t('domov.rok.seZaklene', { krog: naslednjiKrog.number })}
-                </span>
-                <Odstevanje do={naslednjiKrog.deadline_at} />
-              </div>
-              <p className="mt-1 text-xs text-slate-400">
-                {tx('domov.rok.opis', {}, {
-                  uredi: (b) => <span className="underline">{b}</span>,
-                })}
-              </p>
-            </div>
-          </div>
-        </Link>
-      )}
-
-      {/* zadnji rezultati — odigrane tekme zadnjih 14 dni */}
-      {zadnjiRezultati.length > 0 && (
-        <section className="space-y-3">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="text-xl font-bold">{t('domov.zadnjiRezultati.naslov')}</h2>
-            <Link
-              to="/results"
-              className="text-sm font-semibold text-gnl-300 hover:text-gnl-200"
-            >
-              {t('domov.zadnjiRezultati.vsi')}
-            </Link>
-          </div>
-          <div className="space-y-4">
-            {(() => {
-              const poKrogu = new Map()
-              for (const tekma of zadnjiRezultati) {
-                const key = tekma.krog?.id ?? 0
-                if (!poKrogu.has(key))
-                  poKrogu.set(key, { krog: tekma.krog, tekme: [] })
-                poKrogu.get(key).tekme.push(tekma)
-              }
-              return [...poKrogu.values()]
-                .sort((a, b) => (b.krog?.number ?? 0) - (a.krog?.number ?? 0))
-                .slice(0, 2)
-                .map(({ krog, tekme }) => (
-                  <div key={krog?.id ?? 'brez'} className="kartica p-3 sm:p-4">
-                    <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-                      <span className="text-sm font-bold text-gnl-300">
-                        {krog ? t('domov.krog', { krog: krog.number }) : t('domov.brezKroga')}
-                        {krog?.season && (
-                          <span className="ml-2 font-normal text-slate-500">
-                            {krog.season}
-                          </span>
-                        )}
-                      </span>
-                      {krog?.played_on && (
-                        <span className="text-xs text-slate-500">
-                          {datum(krog.played_on, {
-                            weekday: 'short',
-                            day: 'numeric',
-                            month: 'numeric',
-                          })}
-                        </span>
-                      )}
-                    </div>
-                    <ul className="space-y-1.5">
-                      {tekme.map((tekma: any) => (
-                        <li key={tekma.id}>
-                          <Link
-                            to={`/match/${tekma.id}`}
-                            title={t('domov.zadnjiRezultati.poglejTekmo')}
-                            className="flex items-center gap-2 rounded-lg bg-white/5 p-2 text-sm transition hover:bg-white/10"
-                          >
-                            <div className="flex flex-1 items-center justify-end gap-2 truncate">
-                              <span className="truncate font-semibold">
-                                {tekma.home?.name ?? '?'}
-                              </span>
-                              <Grb
-                                ime={tekma.home?.name}
-                                kratko={tekma.home?.short_name}
-                                logo={tekma.home?.logo_url}
-                                velikost={22}
-                              />
-                            </div>
-                            <span className="shrink-0 rounded-lg bg-slate-950/60 px-2 py-0.5 text-sm font-black tabular-nums">
-                              {tekma.home_goals}:{tekma.away_goals}
-                            </span>
-                            <div className="flex flex-1 items-center gap-2 truncate">
-                              <Grb
-                                ime={tekma.away?.name}
-                                kratko={tekma.away?.short_name}
-                                logo={tekma.away?.logo_url}
-                                velikost={22}
-                              />
-                              <span className="truncate font-semibold">
-                                {tekma.away?.name ?? '?'}
-                              </span>
-                            </div>
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))
-            })()}
-          </div>
-        </section>
-      )}
-
-      {/* Igralec kroga + sezonske lestvice + igralec sezone.
-          Mobilno: vodoravni "carousel" — po eno kartico naenkrat, prst povleče
-          vstran (snap). Prej so se vse zložile ena pod drugo in nastal je
-          en neskončen seznam "kot Excel".
-          lg: mreža 2×2, kot doslej. */}
-      {(krogNajboljsi.length > 0 ||
-        zvezde.length > 0 ||
-        podajalci.length > 0 ||
-        obrambe.length > 0 ||
-        igralecSezone.length > 0) && (
-      <section
-        className="-mx-4 flex snap-x snap-mandatory items-start gap-4 overflow-x-auto px-4 pb-3
-                   sm:mx-0 sm:px-0
-                   lg:grid lg:snap-none lg:grid-cols-2 lg:overflow-visible lg:pb-0"
-      >
-        {krogNajboljsi.length > 0 && (
-        <div className="w-[86%] shrink-0 snap-start space-y-2 sm:w-[68%] lg:w-auto lg:shrink">
-          {/* Igralec kroga — header (zvezda + oznaka), ime čez celo širino,
-              spodaj klub+meta levo, točke desno. */}
-          {krogNajboljsi[0] && (
-            <section className="relative overflow-hidden rounded-3xl border border-amber-300/40 bg-gradient-to-br from-amber-500/20 via-slate-950/60 to-fuchsia-500/10 p-4 shadow-lg shadow-black/40 sm:p-6">
-              <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-amber-200/80 sm:text-xs">
-                <span className="text-lg leading-none sm:text-xl" aria-hidden>🌟</span>
-                <span>{t('domov.najboljsi.igralecKroga', { krog: krog?.number })}</span>
-              </div>
-              <Link
-                to={`/player/${krogNajboljsi[0].player_id}`}
-                className="mt-1 block break-words text-2xl font-black leading-tight text-white hover:text-gnl-200 sm:text-3xl md:text-4xl"
-              >
-                {prikazniIme(krogNajboljsi[0].full_name)}
-              </Link>
-              <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
-                <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-300 sm:text-sm">
-                  <Grb
-                    ime={krogNajboljsi[0].team_name}
-                    kratko={krogNajboljsi[0].team_short}
-                    logo={krogNajboljsi[0].team_logo}
-                    velikost={18}
-                  />
-                  <span className="truncate">{krogNajboljsi[0].team_name}</span>
-                  <span
-                    className={`znacka poz-${krogNajboljsi[0].position}`}
-                  >
-                    {kratkaPozicija(krogNajboljsi[0].position)}
-                  </span>
-                  <span className="text-slate-500">
-                    · {t('domov.minut', { n: krogNajboljsi[0].minutes })}
-                  </span>
-                </div>
-                <div className="flex items-baseline gap-1 leading-none">
-                  <span className="text-3xl font-black tabular-nums text-amber-200 sm:text-5xl">
-                    {formatirajTocke(krogNajboljsi[0].points)}
-                  </span>
-                  <span className="text-[10px] uppercase tracking-wide text-slate-400 sm:text-xs">
-                    {tockZ(krogNajboljsi[0].points)}
-                  </span>
-                </div>
-              </div>
-            </section>
-          )}
-
-          {/* Za zvezdo kroga se lestvica nadaljuje: 2., 3., 4. … */}
-          {krogNajboljsi.length > 1 && (
-            <ul className="space-y-1.5">
-              {krogNajboljsi.slice(1).map((z, i) => (
-                <li
-                  key={z.player_id}
-                  className="kartica kartica-hover flex items-center gap-2 p-2.5 sm:gap-3"
-                >
-                  <span className="w-6 text-center font-black text-slate-500">
-                    {i + 2}
-                  </span>
-                  <Grb
-                    ime={z.team_name}
-                    kratko={z.team_short}
-                    logo={z.team_logo}
-                    velikost={22}
-                  />
-                  <Link
-                    to={`/player/${z.player_id}`}
-                    className="min-w-0 flex-1 truncate font-semibold hover:text-gnl-300"
-                  >
-                    {prikazniIme(z.full_name)}
-                  </Link>
-                  <span className="hidden text-xs text-slate-500 sm:inline">
-                    {t('domov.minut', { n: z.minutes })}
-                  </span>
-                  {Number(z.price_delta) !== 0 && (
-                    <span
-                      className={`text-xs font-bold ${
-                        Number(z.price_delta) > 0 ? 'text-gnl-300' : 'text-rose-400'
-                      }`}
-                    >
-                      {Number(z.price_delta) > 0 ? '▲' : '▼'}
-                      {formatirajPremik(z.price_delta)}
-                    </span>
-                  )}
-                  <span className="w-12 text-right font-black tabular-nums">
-                    {formatirajTocke(z.points)}
-                  </span>
-                </li>
-              ))}
+      {/* Na širšem zaslonu razdelki v dveh stolpcih, na telefonu drug pod drugim. */}
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:items-start">
+        {/* Ta teden: rok in kar liga čaka od ljudi — vrstice v eni skupini
+            namesto štirih kartic. Asistence so edino, brez česar liga ne
+            deluje, zato so poudarjene. */}
+        {(naslednjiKrog?.deadline_at || stat) && (
+          <Razdelek naslov={t('domov.taTeden')}>
+            <ul className="kartica divide-y divide-white/10">
+              {naslednjiKrog?.deadline_at && (
+                <Naloga
+                  to="/my-team"
+                  naslov={t('domov.rok.seZaklene', { krog: naslednjiKrog.number })}
+                  opis={<Odstevanje do={naslednjiKrog.deadline_at} />}
+                />
+              )}
+              {stat && stat.brezAsistence > 0 && (
+                <Naloga
+                  to="/assists"
+                  naslov={t('domov.asistence.cakajo', { n: stat.brezAsistence })}
+                  opis={t('domov.skupnost.povejKdo', { n: prag })}
+                  poudarek
+                />
+              )}
+              {stat && stat.brezPozicije > 0 && (
+                <Naloga
+                  to="/positions"
+                  naslov={t('domov.skupnost.ugibanaPozicija', {
+                    igralci: mnozina(stat.brezPozicije, IGRALCI),
+                  })}
+                  opis={t('domov.skupnost.pozicijaOdloca')}
+                />
+              )}
+              {stat && (
+                <Naloga
+                  to="/absences"
+                  naslov={t('domov.skupnost.odsotnosti')}
+                  opis={t('domov.skupnost.javi')}
+                />
+              )}
             </ul>
-          )}
-
-          {krogNajboljsi.length > 0 && (
-            <p className="pt-1 text-right">
-              <Link
-                to="/results"
-                className="text-sm text-slate-500 underline hover:text-gnl-300"
-              >
-                {t('domov.najboljsi.rezultatiKroga', { krog: krog?.number })}
-              </Link>
-            </p>
-          )}
-        </div>
+          </Razdelek>
         )}
 
-        {zvezde.length > 0 && (
-          <div className="w-[86%] shrink-0 snap-start sm:w-[68%] lg:w-auto lg:shrink">
-            <VrhLestvice
-              naslov={t('domov.najboljsi.strelci')}
-              ikona="⚽"
-              znacka="bg-rose-400/15 text-rose-200"
-              kljuc="goals"
-              seznam={zvezde}
-            />
-          </div>
-        )}
-
-        {podajalci.length > 0 && (
-          <div className="w-[86%] shrink-0 snap-start sm:w-[68%] lg:w-auto lg:shrink">
-            <VrhLestvice
-              naslov={t('domov.najboljsi.podajalci')}
-              ikona="🅰️"
-              znacka="bg-gnl-400/15 text-gnl-200"
-              kljuc="assists"
-              seznam={podajalci}
-            />
-          </div>
-        )}
-
-        {obrambe.length > 0 && (
-          <div className="w-[86%] shrink-0 snap-start sm:w-[68%] lg:w-auto lg:shrink">
-            <VrhLestvice
-              naslov={t('domov.najboljsi.ohranjeneMreze')}
-              ikona="🧤"
-              znacka="bg-sky-400/15 text-sky-200"
-              kljuc="clean_sheets"
-              seznam={obrambe}
-            />
-          </div>
-        )}
-
-        {/* Igralec sezone — največ fantasy točk doslej. Poudarjen vrh kot pri
-            igralcu kroga, pod njim 2.–5. */}
-        {igralecSezone.length > 0 && (
-          <div className="w-[86%] shrink-0 snap-start space-y-2 sm:w-[68%] lg:w-auto lg:shrink">
-            <section className="relative overflow-hidden rounded-3xl border border-emerald-300/40 bg-gradient-to-br from-emerald-500/20 via-slate-950/60 to-gnl-500/10 p-4 shadow-lg shadow-black/40 sm:p-6">
-              <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-emerald-200/80 sm:text-xs">
-                <span className="text-lg leading-none sm:text-xl" aria-hidden>🏆</span>
-                <span>
-                  {tekocaSezona
-                    ? t('domov.najboljsi.igralecSezoneZ', { sezona: tekocaSezona })
-                    : t('domov.najboljsi.igralecSezone')}
-                </span>
-              </div>
-              <Link
-                to={`/player/${igralecSezone[0].id}`}
-                className="mt-1 block break-words text-2xl font-black leading-tight text-white hover:text-gnl-200 sm:text-3xl md:text-4xl"
-              >
-                {prikazniIme(igralecSezone[0].full_name)}
-              </Link>
-              <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
-                <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-300 sm:text-sm">
-                  <Grb
-                    ime={igralecSezone[0].team_name}
-                    kratko={igralecSezone[0].team_short}
-                    logo={igralecSezone[0].team_logo}
-                    velikost={18}
-                  />
-                  <span className="truncate">{igralecSezone[0].team_name}</span>
-                  <span className={`znacka poz-${igralecSezone[0].position}`}>
-                    {kratkaPozicija(igralecSezone[0].position)}
-                  </span>
-                  <span className="text-slate-500">
-                    · {mnozina(Number(igralecSezone[0].matches ?? 0), TEKME)}
-                  </span>
-                </div>
-                <div className="flex items-baseline gap-1 leading-none">
-                  <span className="text-3xl font-black tabular-nums text-emerald-200 sm:text-5xl">
-                    {formatirajTocke(igralecSezone[0].points)}
-                  </span>
-                  <span className="text-[10px] uppercase tracking-wide text-slate-400 sm:text-xs">
-                    {tockZ(igralecSezone[0].points)}
-                  </span>
-                </div>
-              </div>
-            </section>
-
-            {igralecSezone.length > 1 && (
-              <ul className="space-y-1.5">
-                {igralecSezone.slice(1).map((z, i) => (
-                  <li
-                    key={z.id}
-                    className="kartica kartica-hover flex items-center gap-2 p-2.5 sm:gap-3"
-                  >
-                    <span className="w-6 text-center font-black text-slate-500">
-                      {i + 2}
-                    </span>
-                    <Grb
-                      ime={z.team_name}
-                      kratko={z.team_short}
-                      logo={z.team_logo}
-                      velikost={22}
-                    />
+        {/* zadnji rezultati — zadnji odigrani krog */}
+        {zadnjiKrog && (
+          <Razdelek
+            naslov={t('domov.zadnjiRezultati.naslov')}
+            povezava={{ to: '/results', besedilo: t('domov.zadnjiRezultati.vsi') }}
+          >
+            <div className="kartica">
+              <GlavaKroga krog={zadnjiKrog.krog} />
+              <ul className="divide-y divide-white/10">
+                {zadnjiKrog.tekme.map((tekma) => (
+                  <li key={tekma.id}>
                     <Link
-                      to={`/player/${z.id}`}
-                      className="min-w-0 flex-1 truncate font-semibold hover:text-gnl-300"
+                      to={`/match/${tekma.id}`}
+                      title={t('domov.zadnjiRezultati.poglejTekmo')}
+                      className="block px-3 py-2 transition hover:bg-white/5"
                     >
-                      {prikazniIme(z.full_name)}
+                      <VrsticaTekme tekma={tekma}>
+                        <span className="font-black tabular-nums">
+                          {tekma.home_goals}:{tekma.away_goals}
+                        </span>
+                      </VrsticaTekme>
                     </Link>
-                    <span className="hidden text-xs text-slate-500 sm:inline">
-                      {t('domov.minut', { n: z.minutes })}
-                    </span>
-                    <span className="w-12 text-right font-black tabular-nums">
-                      {formatirajTocke(z.points)}
-                    </span>
                   </li>
                 ))}
               </ul>
-            )}
-
-            <p className="pt-1 text-right">
-              <Link
-                to="/standings"
-                className="text-sm text-slate-500 underline hover:text-gnl-300"
-              >
-                {t('domov.najboljsi.celaLestvica')}
-              </Link>
-            </p>
-          </div>
+            </div>
+          </Razdelek>
         )}
-      </section>
-      )}
 
-      {/* idealna enajsterica zadnjega kroga — na igrišču */}
-      {idealnaPostava.length > 0 && (
-        <section className="space-y-3">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="text-xl font-bold">{t('domov.idealna.naslov')}</h2>
-            <span className="text-xs text-slate-500">
-              {t('domov.idealna.krogSezona', { krog: krog?.number, sezona: krog?.season })}
-            </span>
-          </div>
-          <p className="text-xs text-slate-500">{t('domov.idealna.opis')}</p>
-          <EnajstericaNaIgriscu igralci={idealnaPostava} />
-        </section>
-      )}
-
-      {/* Povabi prijatelja — pomaga rasti bazi uporabnikov. Email-only,
-          da uporabnik izbere prejemnika (privzeto brez WhatsApp preskoka). */}
-      <section className="kartica overflow-hidden border-gnl-400/30 bg-gradient-to-br from-gnl-500/10 via-slate-950/50 to-fuchsia-500/10 p-4 sm:p-5">
-        <div className="flex flex-wrap items-center gap-4">
-          <span className="text-3xl" aria-hidden>📧</span>
-          <div className="min-w-0 flex-1">
-            <h2 className="text-base font-bold text-gnl-100 sm:text-lg">
-              {t('domov.povabi.naslov')}
-            </h2>
-            <p className="mt-1 text-sm text-slate-300">
-              {t('domov.povabi.opis')}
-            </p>
-          </div>
-          <a
-            href={vabilo}
-            className="gumb-glavni shrink-0"
+        {/* idealna enajsterica zadnjega kroga — na igrišču */}
+        {idealnaPostava.length > 0 && (
+          <Razdelek
+            naslov={t('domov.idealna.naslov')}
+            povezava={{ to: '/results', besedilo: t('domov.krog', { krog: krog?.number }) }}
           >
-            {t('domov.povabi.gumb')}
-          </a>
-        </div>
-      </section>
+            <p className="text-xs text-slate-400">{t('domov.idealna.opis')}</p>
+            <EnajstericaNaIgriscu igralci={idealnaPostava} />
+          </Razdelek>
+        )}
 
-      {/* klepet — anonimni prostor za pogovor */}
-      <Klepet />
-
-      {/* Naloge za skupnost.
-          Pozicij tu dolgo ni bilo, ker jih postavi statistika in jih
-          glasovanje le popravi. Potem je v klepetu nekdo prosil "dajte
-          naredit da se lahko glasuje za pravo pozicijo igralcev" — za stran,
-          ki obstaja in je v meniju. Prosnja za nekaj, kar ze imamo, ni
-          prosnja za funkcijo, ampak podatek, da je ne najdejo. Isto velja za
-          odsotnosti: stran je bila, prijav ni bilo nobene. */}
-      {stat && (stat.brezAsistence > 0 || stat.brezPozicije > 0) && (
-        <section className="space-y-3">
-          <h2 className="text-xl font-bold">{t('domov.skupnost.naslov')}</h2>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {stat.brezAsistence > 0 && (
-              <Link
-                to="/assists"
-                className="kartica kartica-hover flex items-center gap-4 p-4"
-              >
-                <span className="text-3xl" aria-hidden>🅰️</span>
-                <div className="min-w-0">
-                  <div className="font-bold">
-                    {t('domov.skupnost.brezAsistence', { goli: mnozina(stat.brezAsistence, GOLI) })}
-                  </div>
-                  <div className="text-sm text-slate-400">
-                    {t('domov.skupnost.povejKdo', { n: prag })}
-                  </div>
-                </div>
-              </Link>
+        {/* Igralci sezone: vrh po točkah, pod njim vodilni po golih,
+            asistencah in mrežah. Najboljše kroga kaže idealna enajsterica. */}
+        {igralecSezone.length > 0 && (
+          <Razdelek
+            naslov={t('domov.najboljsi.igralecSezone')}
+            povezava={{ to: '/standings', besedilo: t('domov.najboljsi.celaLestvica') }}
+          >
+            <ol className="kartica divide-y divide-white/10">
+              {igralecSezone.map((z, i) => (
+                <VrsticaIgralca
+                  key={z.id}
+                  mesto={i + 1}
+                  id={z.id}
+                  igralec={z}
+                  desno={formatirajTocke(z.points)}
+                />
+              ))}
+            </ol>
+            {vodilni.length > 0 && (
+              <ul className="kartica divide-y divide-white/10">
+                {vodilni.map(({ naslov, z, vrednost }) => (
+                  <VrsticaIgralca
+                    key={naslov}
+                    id={z.id}
+                    igralec={z}
+                    oznaka={naslov}
+                    desno={String(vrednost)}
+                  />
+                ))}
+              </ul>
             )}
-            {stat.brezPozicije > 0 && (
-              <Link
-                to="/positions"
-                className="kartica kartica-hover flex items-center gap-4 p-4"
-              >
-                <span className="text-3xl" aria-hidden>🧭</span>
-                <div className="min-w-0">
-                  <div className="font-bold">
-                    {t('domov.skupnost.ugibanaPozicija', {
-                      igralci: mnozina(stat.brezPozicije, IGRALCI),
-                    })}
-                  </div>
-                  <div className="text-sm text-slate-400">
-                    {t('domov.skupnost.pozicijaOdloca')}
-                  </div>
-                </div>
-              </Link>
-            )}
+            {/* Vrh države ima svojo stran; tu le povezava, da ni dvojnika. */}
             <Link
-              to="/absences"
-              className="kartica kartica-hover flex items-center gap-4 p-4"
+              to="/national?pogled=igralci"
+              className="block pt-1 text-sm font-semibold text-gnl-300 hover:text-gnl-200"
             >
-              <span className="text-3xl" aria-hidden>🩹</span>
-              <div className="min-w-0">
-                <div className="font-bold">{t('domov.skupnost.odsotnosti')}</div>
-                <div className="text-sm text-slate-400">
-                  {t('domov.skupnost.javi')}
-                </div>
-              </div>
+              {t('lestvice.slovenija.vrhNaslov')} →
             </Link>
-          </div>
-        </section>
-      )}
+          </Razdelek>
+        )}
 
-      {/* naslednje tekme — razpored, da uporabniki vedo kaj prihaja */}
-      {naslednjeTekme.length > 0 && (
-        <section className="space-y-3">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="text-xl font-bold">{t('domov.naslednje.naslov')}</h2>
-            <span className="text-xs text-slate-500">
-              {t('domov.naslednje.vRazporedu', { tekme: mnozina(naslednjeTekme.length, TEKME) })}
-            </span>
-          </div>
-          <div className="space-y-4">
-            {(() => {
-              const poKrogu = new Map()
-              for (const tekma of naslednjeTekme) {
-                const key = tekma.krog?.id ?? 0
-                if (!poKrogu.has(key))
-                  poKrogu.set(key, { krog: tekma.krog, tekme: [] })
-                poKrogu.get(key).tekme.push(tekma)
-              }
-              return [...poKrogu.values()]
-                .sort((a, b) => (a.krog?.number ?? 0) - (b.krog?.number ?? 0))
-                .slice(0, 3)
-                .map(({ krog, tekme }) => (
-                  <div key={krog?.id ?? 'brez'} className="kartica p-3 sm:p-4">
-                    <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-                      <span className="text-sm font-bold text-gnl-300">
-                        {krog ? t('domov.krog', { krog: krog.number }) : t('domov.brezKroga')}
-                        {krog?.season && (
-                          <span className="ml-2 font-normal text-slate-500">
-                            {krog.season}
-                          </span>
-                        )}
+        {/* naslednje tekme — prvi krog razporeda */}
+        {prihodnjiKrog && (
+          <Razdelek naslov={t('domov.naslednje.naslov')}>
+            <div className="kartica">
+              <GlavaKroga krog={prihodnjiKrog.krog} />
+              <ul className="divide-y divide-white/10">
+                {prihodnjiKrog.tekme.map((tekma) => (
+                  <li key={tekma.id} className="px-3 py-2">
+                    <VrsticaTekme tekma={tekma}>
+                      <span className="text-xs text-slate-400">
+                        {/* Datum le, kadar se razlikuje od dneva kroga v glavi. */}
+                        {tekma.played_on && tekma.played_on !== prihodnjiKrog.krog?.played_on
+                          ? datum(tekma.played_on, { day: 'numeric', month: 'numeric' })
+                          : t('domov.naslednje.proti')}
                       </span>
-                      {krog?.played_on && (
-                        <span className="text-xs text-slate-500">
-                          {datum(krog.played_on, {
-                            weekday: 'short',
-                            day: 'numeric',
-                            month: 'numeric',
-                          })}
-                        </span>
-                      )}
-                    </div>
-                    <ul className="space-y-1.5">
-                      {tekme.map((tekma: any) => (
-                        <li
-                          key={tekma.id}
-                          className="flex items-center gap-2 rounded-lg bg-white/5 p-2 text-sm"
-                        >
-                          <div className="flex flex-1 items-center justify-end gap-2 truncate">
-                            <span className="truncate font-semibold">
-                              {tekma.home?.name ?? '?'}
-                            </span>
-                            <Grb
-                              ime={tekma.home?.name}
-                              kratko={tekma.home?.short_name}
-                              logo={tekma.home?.logo_url}
-                              velikost={22}
-                            />
-                          </div>
-                          <span className="shrink-0 text-slate-500">
-                            {tekma.played_on
-                              ? datum(tekma.played_on, { day: 'numeric', month: 'numeric' })
-                              : t('domov.naslednje.proti')}
-                          </span>
-                          <div className="flex flex-1 items-center gap-2 truncate">
-                            <Grb
-                              ime={tekma.away?.name}
-                              kratko={tekma.away?.short_name}
-                              logo={tekma.away?.logo_url}
-                              velikost={22}
-                            />
-                            <span className="truncate font-semibold">
-                              {tekma.away?.name ?? '?'}
-                            </span>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))
-            })()}
-          </div>
-        </section>
-      )}
+                    </VrsticaTekme>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </Razdelek>
+        )}
+
+      </div>
 
       <Sponzor kje="domov" />
 
+      {/* Klepet je dolg; na telefonu je zaprt, kot navodila spodaj. Na
+          širšem zaslonu je odprt in brez dvojnega naslova. */}
+      {siroko ? (
+        <Klepet />
+      ) : (
+        <details className="group">
+          <Povzetek>{t('domov.klepet')}</Povzetek>
+          <div className="mt-3">
+            <Klepet />
+          </div>
+        </details>
+      )}
+
       {/* potek igre — na telefonu zaprto, da naslovnica ni neskončna */}
-      <details open={siroko} className="space-y-3">
-        <summary className="cursor-pointer py-2">
-          <h2 className="inline text-xl font-bold">{t('domov.kakoIgras.naslov')}</h2>
-        </summary>
-        <ol className="grid gap-3 sm:grid-cols-2">
+      <details open={siroko} className="group">
+        <Povzetek>{t('domov.kakoIgras.naslov')}</Povzetek>
+        <ol className="mt-3 grid gap-x-8 gap-y-4 sm:grid-cols-2">
           {[
             [t('domov.kakoIgras.registracija'), t('domov.kakoIgras.registracijaOpis')],
             [t('domov.kakoIgras.kader'), t('domov.kakoIgras.kaderOpis')],
             [t('domov.kakoIgras.enajsterica'), t('domov.kakoIgras.enajstericaOpis')],
             [t('domov.kakoIgras.poKrogu'), t('domov.kakoIgras.poKroguOpis')],
           ].map(([naslov, opis]) => (
-            <li key={naslov} className="kartica p-4">
-              <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-gnl-300">
-                {naslov}
-              </h3>
-              <p className="text-sm text-slate-300">{opis}</p>
+            <li key={naslov}>
+              <h3 className="text-sm font-bold text-gnl-300">{naslov}</h3>
+              <p className="mt-0.5 text-sm text-slate-300">{opis}</p>
             </li>
           ))}
         </ol>
       </details>
 
       {/* pravila */}
-      <details open={siroko} className="space-y-3">
-        <summary className="cursor-pointer py-2">
-          <h2 className="inline text-xl font-bold">{t('domov.kakoSeTockuje')}</h2>
-        </summary>
-        <div className="grid gap-3 sm:grid-cols-2">
+      <details open={siroko} className="group">
+        <Povzetek>{t('domov.kakoSeTockuje')}</Povzetek>
+        <div className="mt-3 grid gap-x-8 gap-y-5 sm:grid-cols-2">
           {PRAVILA_OPIS.map((s) => (
-            <div key={s.skupina} className="kartica p-4">
-              <h3 className="mb-2 text-sm font-bold uppercase tracking-wide text-gnl-300">
-                {s.skupina}
-              </h3>
-              <ul className="space-y-1 text-sm">
+            <div key={s.skupina}>
+              <h3 className="mb-1 text-sm font-bold text-gnl-300">{s.skupina}</h3>
+              <ul className="divide-y divide-white/5 text-sm">
                 {s.vrstice.map(([opis, tocke]) => (
-                  <li key={opis} className="flex justify-between gap-3">
+                  <li key={opis} className="flex justify-between gap-3 py-1">
                     <span className="text-slate-300">{opis}</span>
                     <span
-                      className={`shrink-0 font-black tabular-nums ${
+                      className={`shrink-0 font-bold tabular-nums ${
                         tocke.startsWith('−') ? 'text-rose-400' : 'text-gnl-300'
                       }`}
                     >
@@ -1118,62 +699,292 @@ export default function Domov() {
             </div>
           ))}
         </div>
-        <p className="text-xs text-slate-400">{t('tekme.tockovanje.pravila.opomba')}</p>
+        <p className="mt-3 text-xs text-slate-400">{t('tekme.tockovanje.pravila.opomba')}</p>
       </details>
+
+      {/* Povabilo je tiha povezava na koncu, ne svoja kartica. */}
+      <p className="text-center text-sm">
+        <a href={vabilo} className="font-semibold text-gnl-300 hover:text-gnl-200">
+          {t('domov.povabi.naslov')} →
+        </a>
+      </p>
     </div>
   )
 }
 
-// Vrh sezonske lestvice po enem statu (goli, asistence, ohranjene mreže) —
-// isti vzorec za vse tri, da lestvice na prvi pogled izgledajo kot ena
-// družina, ne tri različne komponente.
-function VrhLestvice({
+/** Tekme združi po krogu in vrne prvi krog v smeri `smer` (-1 zadnji, 1 prvi). */
+function poKrogih(tekme: any[], smer: 1 | -1): { krog: any; tekme: any[] } | null {
+  const poKrogu = new Map<unknown, { krog: any; tekme: any[] }>()
+  for (const tekma of tekme) {
+    const key = tekma.krog?.id ?? 0
+    if (!poKrogu.has(key)) poKrogu.set(key, { krog: tekma.krog, tekme: [] })
+    poKrogu.get(key)!.tekme.push(tekma)
+  }
+  return (
+    [...poKrogu.values()].sort(
+      (a, b) => smer * ((a.krog?.number ?? 0) - (b.krog?.number ?? 0)),
+    )[0] ?? null
+  )
+}
+
+/** Razdelek naslovnice: majhen naslov (in povezava desno), pod njim vsebina. */
+function Razdelek({
   naslov,
-  ikona,
-  znacka,
-  kljuc,
-  seznam,
+  povezava,
+  children,
 }: {
   naslov: string
-  ikona: string
-  znacka: string
-  kljuc: 'goals' | 'assists' | 'clean_sheets'
-  seznam: VrhIgralec[]
+  povezava?: { to: string; besedilo: string }
+  children: ReactNode
 }) {
-  if (seznam.length === 0) return null
+  return (
+    <section className="space-y-2">
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="text-xl font-bold">{naslov}</h2>
+        {povezava && (
+          <Link
+            to={povezava.to}
+            className="shrink-0 text-sm font-semibold text-gnl-300 hover:text-gnl-200"
+          >
+            {povezava.besedilo}
+          </Link>
+        )}
+      </div>
+      {children}
+    </section>
+  )
+}
+
+/** Naslov zložljivega razdelka, z oznako, ki se ob odprtju obrne. */
+function Povzetek({ children }: { children: ReactNode }) {
+  return (
+    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 border-t border-white/10 pt-3 [&::-webkit-details-marker]:hidden">
+      <h2 className="text-lg font-bold">{children}</h2>
+      <span aria-hidden className="text-slate-500 transition group-open:rotate-180">
+        ▾
+      </span>
+    </summary>
+  )
+}
+
+/** Vrstica v skupini "Ta teden": naslov, kratka vrstica pod njim, puščica. */
+function Naloga({
+  to,
+  naslov,
+  opis,
+  poudarek,
+}: {
+  to: string
+  naslov: string
+  opis: ReactNode
+  poudarek?: boolean
+}) {
+  return (
+    <li>
+      <Link to={to} className="flex items-center gap-3 px-3 py-2.5 transition hover:bg-white/5">
+        {poudarek && <span aria-hidden className="h-2 w-2 shrink-0 rounded-full bg-amber-400" />}
+        <span className="min-w-0 flex-1">
+          <span className={`block font-semibold ${poudarek ? 'text-amber-100' : ''}`}>{naslov}</span>
+          <span className="block truncate text-xs text-slate-400">{opis}</span>
+        </span>
+        <span aria-hidden className="text-slate-500">›</span>
+      </Link>
+    </li>
+  )
+}
+
+/** Glava kroga v skupini tekem: "7. krog · sob, 3. 10." */
+function GlavaKroga({ krog }: { krog: any }) {
+  return (
+    <div className="flex items-baseline justify-between gap-2 border-b border-white/10 px-3 py-2 text-xs">
+      <span className="font-bold text-gnl-300">
+        {krog ? t('domov.krog', { krog: krog.number }) : t('domov.brezKroga')}
+      </span>
+      {krog?.played_on && (
+        <span className="text-slate-400">
+          {datum(krog.played_on, { weekday: 'short', day: 'numeric', month: 'numeric' })}
+        </span>
+      )}
+    </div>
+  )
+}
+
+/** Domači — sredina (izid ali datum) — gostje. */
+function VrsticaTekme({ tekma, children }: { tekma: any; children: ReactNode }) {
+  return (
+    <div className="flex items-center gap-2 text-sm">
+      <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
+        <span className="truncate">{tekma.home?.name ?? '?'}</span>
+        <Grb ime={tekma.home?.name} kratko={tekma.home?.short_name} logo={tekma.home?.logo_url} velikost={20} />
+      </div>
+      <span className="w-11 shrink-0 text-center">{children}</span>
+      <div className="flex min-w-0 flex-1 items-center gap-2">
+        <Grb ime={tekma.away?.name} kratko={tekma.away?.short_name} logo={tekma.away?.logo_url} velikost={20} />
+        <span className="truncate">{tekma.away?.name ?? '?'}</span>
+      </div>
+    </div>
+  )
+}
+
+/** Vrstica igralca v seznamu: mesto ali oznaka, grb, ime, klub, vrednost. */
+function VrsticaIgralca({
+  mesto,
+  oznaka,
+  id,
+  igralec,
+  desno,
+}: {
+  mesto?: number
+  oznaka?: string
+  id: number
+  igralec: { full_name: string | null; team_name?: string | null; team_short?: string | null; team_logo?: string | null; position?: string | null }
+  desno: string
+}) {
+  return (
+    <li>
+      <Link to={`/player/${id}`} className="flex items-center gap-3 px-3 py-2 transition hover:bg-white/5">
+        {mesto != null && (
+          <span className={`w-4 text-center text-sm font-bold ${mesto === 1 ? 'text-amber-300' : 'text-slate-500'}`}>
+            {mesto}
+          </span>
+        )}
+        <Grb ime={igralec.team_name} kratko={igralec.team_short} logo={igralec.team_logo} velikost={20} />
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-sm font-semibold">{prikazniIme(igralec.full_name)}</span>
+          <span className="block truncate text-xs text-slate-400">
+            {oznaka ?? `${igralec.team_name ?? ''} · ${kratkaPozicija(igralec.position)}`}
+          </span>
+        </span>
+        <span className="shrink-0 font-bold tabular-nums text-gnl-300">{desno}</span>
+      </Link>
+    </li>
+  )
+}
+
+/** Glava naslovnice za prijavljenega: liga, njegova ekipa (točke, zadnji
+ *  krog, mesto) in ena povezava; brez ekipe le poziv, naj jo sestavi. */
+function MojaGlava({
+  ligaId,
+  liga,
+  uporabnikId,
+  krog,
+}: {
+  ligaId: number | null
+  liga: string | null
+  uporabnikId: string
+  krog: KrogPodatek | null
+}) {
+  // undefined = nalaganje, null = brez ekipe v tej ligi, false = napaka branja
+  const [ekipa, setEkipa] = useState<
+    { ime: string; tocke: number; krog: number | null; mesto: number; od: number } | null | false | undefined
+  >(undefined)
+  const krogId = krog?.id ?? null
+
+  useEffect(() => {
+    if (!ligaId) return
+    let veljavno = true
+    setEkipa(undefined)
+    async function nalozi(liga: number) {
+      const { data: moja, error } = await supabase
+        .from('fantasy_teams')
+        .select('id, name')
+        .eq('competition_id', liga)
+        .eq('owner_id', uporabnikId)
+        .eq('hisna', false)
+        .maybeSingle()
+      // Napaka ni "brez ekipe": ne vabi k sestavi tistega, ki ekipo ima.
+      if (error) throw error
+      if (!moja) return null
+      const { data: vrsta } = await supabase
+        .from('fantasy_team_standings')
+        .select('total_points')
+        .eq('fantasy_team_id', moja.id)
+        .maybeSingle()
+      const tocke = Number(vrsta?.total_points ?? 0)
+      // Mesto = koliko ekip ima več točk + 1; štejemo v bazi, ne beremo lestvice.
+      const [boljsi, vse, kroga] = await Promise.all([
+        supabase
+          .from('fantasy_team_standings')
+          .select('fantasy_team_id', { count: 'exact', head: true })
+          .eq('competition_id', liga)
+          .gt('total_points', tocke),
+        supabase
+          .from('fantasy_team_standings')
+          .select('fantasy_team_id', { count: 'exact', head: true })
+          .eq('competition_id', liga),
+        krogId
+          ? supabase
+              .from('fantasy_round_standings')
+              .select('points')
+              .eq('fantasy_team_id', moja.id)
+              .eq('round_id', krogId)
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
+      ])
+      return {
+        ime: moja.name,
+        tocke,
+        krog: kroga.data?.points ?? null,
+        mesto: (boljsi.count ?? 0) + 1,
+        od: vse.count ?? 0,
+      }
+    }
+    nalozi(ligaId)
+      .then((e) => {
+        if (veljavno) setEkipa(e)
+      })
+      // Ob napaki glave ne kažemo: ne vemo, ali ekipo ima.
+      .catch(() => {
+        if (veljavno) setEkipa(false)
+      })
+    return () => {
+      veljavno = false
+    }
+  }, [ligaId, uporabnikId, krogId])
+
+  if (ekipa === false) return null
   return (
     <section className="space-y-3">
-      <h2 className="text-xl font-bold">{naslov}</h2>
-      <ul className="space-y-2">
-        {seznam.map((z, i) => (
-          <li
-            key={z.id}
-            className="kartica kartica-hover flex items-center gap-2 p-3 sm:gap-3"
-          >
-            <span className="w-6 text-center font-black text-slate-500">
-              {i + 1}
-            </span>
-            <Grb
-              ime={z.team_name}
-              kratko={z.team_short}
-              logo={z.team_logo}
-              velikost={22}
-            />
-            <Link
-              to={`/player/${z.id}`}
-              className="min-w-0 flex-1 truncate font-semibold hover:text-gnl-300"
-            >
-              {prikazniIme(z.full_name)}
-            </Link>
-            <span className={`znacka ${znacka}`}>
-              {z[kljuc]} <span aria-hidden>{ikona}</span>
-            </span>
-            <span className="w-20 text-right font-black tabular-nums text-gnl-300">
-              {formatirajCeno(z.value)}
-            </span>
-          </li>
-        ))}
-      </ul>
+      <div className="flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate text-xs font-bold uppercase tracking-wide text-gnl-300">{liga}</p>
+          <h1 className="truncate text-2xl font-black">
+            {ekipa ? ekipa.ime : t('aplikacija.meni.mojaEkipa')}
+          </h1>
+        </div>
+        {ekipa && (
+          <Link to="/my-team" className="shrink-0 pb-1 text-sm font-semibold text-gnl-300 hover:text-gnl-200">
+            {t('domov.moja.uredi')}
+          </Link>
+        )}
+      </div>
+      {ekipa === undefined ? (
+        <div className="kartica h-[66px] animate-pulse" aria-hidden />
+      ) : ekipa ? (
+        <dl className="kartica grid grid-cols-3 divide-x divide-white/10 text-center">
+          {[
+            [t('domov.moja.tocke'), formatirajTocke(ekipa.tocke)],
+            [
+              krog ? t('domov.krog', { krog: krog.number }) : t('domov.brezKroga'),
+              ekipa.krog == null ? '–' : formatirajTocke(ekipa.krog),
+            ],
+            // Pred prvimi točkami mesta ni (kot "–" na lestvici).
+            [
+              t('domov.moja.mesto'),
+              ekipa.tocke > 0 ? t('domov.moja.mestoOd', { mesto: ekipa.mesto, n: ekipa.od }) : '–',
+            ],
+          ].map(([oznaka, vrednost]) => (
+            <div key={oznaka} className="px-2 py-2.5">
+              <dt className="truncate text-xs text-slate-400">{oznaka}</dt>
+              <dd className="text-lg font-bold tabular-nums">{vrednost}</dd>
+            </div>
+          ))}
+        </dl>
+      ) : (
+        <Link to="/my-team" className="gumb-glavni inline-block">
+          {t('domov.uvod.sestaviEkipo')}
+        </Link>
+      )}
     </section>
   )
 }

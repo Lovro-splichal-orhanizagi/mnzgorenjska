@@ -227,7 +227,7 @@ export default function MiniLige() {
     return (
       <div className="space-y-4">
         <h1 className="text-2xl font-black naslov sm:text-3xl">{t('lestvice.miniLige.naslov')}</h1>
-        <p className="kartica p-6 text-center text-slate-400">
+        <p className="text-sm text-slate-400">
           {tx('lestvice.miniLige.prijava', {}, {
             prijava: (b) => (
               <Link
@@ -251,9 +251,9 @@ export default function MiniLige() {
           e.preventDefault()
           ustvari()
         }}
-        className="kartica space-y-2 p-4"
+        className="kartica space-y-2 p-3"
       >
-        <h2 className="font-bold">{t('lestvice.miniLige.ustvari')}</h2>
+        <h2 className="text-sm font-semibold">{t('lestvice.miniLige.ustvari')}</h2>
         <input
           value={imeNove}
           onChange={(e) => setImeNove(e.target.value)}
@@ -285,9 +285,9 @@ export default function MiniLige() {
           e.preventDefault()
           pridruzi()
         }}
-        className="kartica space-y-2 p-4"
+        className="kartica space-y-2 p-3"
       >
-        <h2 className="font-bold">{t('lestvice.miniLige.pridruziSe')}</h2>
+        <h2 className="text-sm font-semibold">{t('lestvice.miniLige.pridruziSe')}</h2>
         <input
           value={koda}
           onChange={(e) => setKoda(e.target.value)}
@@ -322,22 +322,22 @@ export default function MiniLige() {
   )
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-black naslov sm:text-3xl">{t('lestvice.miniLige.naslov')}</h1>
-        <p className="mt-1 text-sm text-slate-400">
+        <p className="mt-1 hidden text-sm text-slate-400 sm:block">
           {t('lestvice.miniLige.opis')}
         </p>
       </div>
 
-      {napaka && <p className="kartica p-3 text-sm text-rose-400">{napaka}</p>}
-      {sporocilo && <p className="kartica p-3 text-sm text-gnl-300">{sporocilo}</p>}
+      {napaka && <p role="alert" className="text-sm text-rose-400">{napaka}</p>}
+      {sporocilo && <p role="status" className="text-sm text-gnl-300">{sporocilo}</p>}
 
       {lige.length === 0 && obrazca}
 
       {lige.length === 0 ? (
-        <div className="kartica space-y-3 p-6 text-center">
-          <p className="text-slate-400">
+        <div className="space-y-3">
+          <p className="text-sm text-slate-400">
             {t('lestvice.miniLige.nisiVNobeni')}
           </p>
           {zEkipo != null ? (
@@ -361,10 +361,10 @@ export default function MiniLige() {
               <button
                 key={l.id}
                 onClick={() => setIzbrana(l.id)}
-                className={`shrink-0 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-bold ${
+                className={`shrink-0 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-semibold transition ${
                   izbrana === l.id
-                    ? 'bg-gnl-500/20 text-gnl-200 ring-1 ring-gnl-400/40'
-                    : 'bg-white/5 text-slate-400'
+                    ? 'bg-gnl-500 text-slate-950'
+                    : 'text-slate-400 hover:bg-white/5 hover:text-white'
                 }`}
               >
                 {l.name}
@@ -377,17 +377,17 @@ export default function MiniLige() {
           )}
 
           {urejena.length === 0 ? (
-            <p className="kartica p-6 text-center text-slate-400">
+            <p className="text-sm text-slate-400">
               {t('lestvice.miniLige.prazna')}
             </p>
           ) : (
-            <ul className="space-y-1">
+            <ol className="kartica divide-y divide-white/10 overflow-hidden">
               {urejena.map((v) => (
                 <li
                   key={v.fantasy_team_id}
-                  className="relative flex items-center gap-3 rounded-xl bg-white/5 px-3 py-2"
+                  className="relative flex min-h-[52px] items-center gap-3 px-3 py-2 transition hover:bg-white/5 sm:px-4"
                 >
-                  <span className="w-7 shrink-0 text-center text-sm font-black text-slate-400">
+                  <span className="w-7 shrink-0 text-center text-sm font-bold text-slate-400">
                     {v.mesto <= 3 ? (
                       <span role="img" aria-label={t('lestvice.mesto', { mesto: v.mesto })}>
                         {MEDALJE[v.mesto - 1]}
@@ -399,7 +399,7 @@ export default function MiniLige() {
                   <div className="min-w-0 flex-1">
                     <Link
                       to={`/team/${v.fantasy_team_id}`}
-                      className="block truncate font-bold after:absolute after:inset-0 after:content-[''] hover:text-gnl-400"
+                      className="block truncate text-sm font-semibold after:absolute after:inset-0 after:content-[''] hover:text-gnl-400"
                     >
                       {v.team_name}
                     </Link>
@@ -409,14 +409,14 @@ export default function MiniLige() {
                     </div>
                   </div>
                   <div className="shrink-0 text-right">
-                    <div className="font-black tabular-nums text-gnl-300">
+                    <div className="font-bold tabular-nums text-gnl-300">
                       {formatirajTocke(v.total_points)}
                     </div>
                     <div className="text-[11px] text-slate-500">{mnozina(v.rounds_played ?? 0, KROGI)}</div>
                   </div>
                 </li>
               ))}
-            </ul>
+            </ol>
           )}
 
           {trenutna && (
@@ -428,11 +428,11 @@ export default function MiniLige() {
           )}
 
           <details className="group">
-            <summary className="flex cursor-pointer list-none items-center justify-between rounded-xl bg-white/5 px-4 py-3 text-sm font-bold text-slate-300 [&::-webkit-details-marker]:hidden">
-              {t('lestvice.miniLige.novaAliKoda')}
-              <span aria-hidden className="transition group-open:rotate-180">
-                ▾
+            <summary className="cursor-pointer list-none py-1 text-sm font-semibold text-slate-300 hover:text-white [&::-webkit-details-marker]:hidden">
+              <span aria-hidden className="mr-1 inline-block text-slate-500 transition group-open:rotate-90">
+                ›
               </span>
+              {t('lestvice.miniLige.novaAliKoda')}
             </summary>
             <div className="mt-3">{obrazca}</div>
           </details>

@@ -11,8 +11,6 @@ import {
   formatirajCeno,
   formatirajTocke,
   prikazniIme,
-  razredPozicije,
-  KRATKA_POZICIJA,
   mnozina,
   IGRALCI,
 } from '../lib/pomozno'
@@ -156,7 +154,7 @@ export default function Klub() {
     )
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <header className="flex items-center gap-3">
         <Grb ime={klub?.name} kratko={klub?.short_name} logo={klub?.logo_url} velikost={44} />
         <div className="min-w-0">
@@ -170,36 +168,90 @@ export default function Klub() {
         </div>
       </header>
 
-      <section className="kartica border-gnl-400/30 bg-gnl-500/5 p-4">
-        <p className="text-sm leading-relaxed text-slate-200">
+      <section className="space-y-3">
+        <p className="text-sm leading-relaxed text-slate-400">
           {tx(
             'lestvice.klub.uvod',
             // "fantasy lige za 1. ligo" / "fantasy ligy pre IV. ligu" — oba jezika tožilnik.
             { klub: klub?.name, liga: liga?.name ? ligaVTozilniku(liga.name) : t('lestvice.klub.toLigo') },
-            { b: (v) => <strong>{v}</strong> },
+            { b: (v) => <strong className="text-slate-200">{v}</strong> },
+          )}
+          {izbranih > 0 && (
+            <>
+              {' '}
+              <span className="text-gnl-200">
+                {tx(
+                  'lestvice.klub.navijaci',
+                  { n: izbranih, navijacev: navijacev(izbranih) },
+                  { b: (v) => <strong>{v}</strong> },
+                )}
+              </span>
+            </>
           )}
         </p>
-        {izbranih > 0 && (
-          <p className="mt-2 text-sm text-gnl-200">
-            {tx(
-              'lestvice.klub.navijaci',
-              { n: izbranih, navijacev: navijacev(izbranih) },
-              { b: (v) => <strong>{v}</strong> },
-            )}
-          </p>
-        )}
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Link to={`/my-team${ligaParam}`} className="gumb-glavni px-3 py-2 text-sm">
+        <div className="flex flex-wrap gap-2">
+          <Link to={`/my-team${ligaParam}`} className="gumb-glavni px-3 py-1.5 text-sm">
             {t('lestvice.klub.sestaviEkipo')}
           </Link>
-          <Link to={`/standings${ligaParam}`} className="gumb-tih px-3 py-2 text-sm">
+          <Link to={`/standings${ligaParam}`} className="gumb-tih px-3 py-1.5 text-sm">
             {t('lestvice.klub.lestvica')}
           </Link>
         </div>
+      </section>
 
-        {/* Klubu damo tisto, kar je prosil: povezavo za FB in sliko za
-            Instagram, kjer povezave ne delujejo. */}
-        <div className="mt-3 space-y-3 border-t border-white/10 pt-3">
+      {igralci.length === 0 ? (
+        <p className="text-sm text-slate-400">{t('lestvice.klub.brezStatistike')}</p>
+      ) : (
+        poPoziciji.map(([poz, seznam]) => (
+          <section key={poz}>
+            <h2 className="mb-2 text-base font-bold">
+              {t(`lestvice.klub.pozicije.${poz}`)}
+            </h2>
+            <ul className="kartica divide-y divide-white/10 overflow-hidden">
+              {seznam.map((i) => (
+                <li key={i.id} className="flex min-h-12 items-center gap-2 px-3 py-2 text-sm">
+                  {/* Na telefonu gre statistika pod ime — v isti vrstici je
+                      ime ostalo pri treh črkah ("Joz…"). */}
+                  <div className="flex min-w-0 flex-1 flex-col sm:flex-row sm:items-center sm:gap-2">
+                    <Link to={`/player/${i.id}`} className="min-w-0 truncate font-semibold hover:text-gnl-400 sm:flex-1">
+                      {prikazniIme(i.full_name)}
+                    </Link>
+                    <span className="shrink-0 text-xs text-slate-500">
+                      {i.goals ? t('lestvice.klub.goli', { n: i.goals }) : ''}
+                      {t('lestvice.klub.minute', { n: i.minutes ?? 0 })}
+                    </span>
+                  </div>
+                  <span className="w-12 shrink-0 text-right font-bold tabular-nums">
+                    {formatirajTocke(i.points)}
+                  </span>
+                  <span className="w-16 shrink-0 whitespace-nowrap text-right tabular-nums text-gnl-300">
+                    {formatirajCeno(i.value)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))
+      )}
+
+
+      {ligaId != null && id && (
+        <NavijaciKluba
+          tekmovanjeId={ligaId}
+          klubId={Number(id)}
+          klubIme={klub?.name ?? ''}
+          ligaSlug={liga?.slug ?? null}
+        />
+      )}
+
+      {/* Klubu damo tisto, kar je prosil: povezavo za FB in sliko za
+          Instagram, kjer povezave ne delujejo. Zaprto, da ne odrine igralcev. */}
+      <details className="group">
+        <summary className="cursor-pointer list-none text-base font-bold hover:text-gnl-300">
+          <span className="mr-1 inline-block text-slate-500 transition group-open:rotate-90">›</span>
+          {t('lestvice.klub.zaObjavo')}
+        </summary>
+        <div className="mt-3 space-y-4">
           <div>
             <div className="mb-1.5 text-xs text-slate-400">{t('lestvice.klub.napoved')}</div>
             <Plakat
@@ -227,54 +279,7 @@ export default function Klub() {
             />
           </div>
         </div>
-      </section>
-
-      {ligaId != null && id && (
-        <NavijaciKluba
-          tekmovanjeId={ligaId}
-          klubId={Number(id)}
-          klubIme={klub?.name ?? ''}
-          ligaSlug={liga?.slug ?? null}
-        />
-      )}
-
-      {igralci.length === 0 ? (
-        <p className="text-slate-400">{t('lestvice.klub.brezStatistike')}</p>
-      ) : (
-        poPoziciji.map(([poz, seznam]) => (
-          <section key={poz}>
-            <h2 className="mb-1.5 text-sm font-bold uppercase tracking-wide text-slate-400">
-              {t(`lestvice.klub.pozicije.${poz}`)}
-            </h2>
-            <ul className="divide-y divide-white/5 overflow-hidden rounded-xl bg-white/5">
-              {seznam.map((i) => (
-                <li key={i.id} className="flex items-center gap-2 px-3 py-2 text-sm">
-                  <span className={`znacka shrink-0 ${razredPozicije(i.position)}`}>
-                    {(i.position && KRATKA_POZICIJA[i.position]) ?? '?'}
-                  </span>
-                  {/* Na telefonu gre statistika pod ime — v isti vrstici je
-                      ime ostalo pri treh črkah ("Joz…"). */}
-                  <div className="flex min-w-0 flex-1 flex-col sm:flex-row sm:items-center sm:gap-2">
-                    <Link to={`/player/${i.id}`} className="min-w-0 truncate font-semibold hover:text-gnl-400 sm:flex-1">
-                      {prikazniIme(i.full_name)}
-                    </Link>
-                    <span className="shrink-0 text-xs text-slate-500">
-                      {i.goals ? t('lestvice.klub.goli', { n: i.goals }) : ''}
-                      {t('lestvice.klub.minute', { n: i.minutes ?? 0 })}
-                    </span>
-                  </div>
-                  <span className="w-12 shrink-0 text-right font-bold tabular-nums">
-                    {formatirajTocke(i.points)}
-                  </span>
-                  <span className="w-16 shrink-0 whitespace-nowrap text-right tabular-nums text-gnl-300">
-                    {formatirajCeno(i.value)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))
-      )}
+      </details>
 
       <p className="text-xs text-slate-500">
         {t('lestvice.klub.opomba')}

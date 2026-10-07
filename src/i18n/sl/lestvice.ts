@@ -16,10 +16,8 @@ export const lestvice = {
     napakaKrogov:
       'Rezultatov po krogih ni bilo mogoče naložiti ({napaka}). Skupna lestvica spodaj je vseeno točna.',
     tvojRezultatZadnji: 'Tvoj rezultat v zadnjem krogu',
-    tvojRezultatKrog: 'Tvoj rezultat v krogu',
     mojaEkipa: 'Moja ekipa',
     zmagovalecKroga: 'Zmagovalec {krog}. kroga',
-    kazen: 'Prestopi: {prestopi} — kazen {kazen}',
     zmagovalciPoKrogih: 'Zmagovalci po krogih',
     odigraniKrogi: {
       one: '{n} odigran krog',
@@ -27,13 +25,7 @@ export const lestvice = {
       few: '{n} odigrani krogi',
       other: '{n} odigranih krogov',
     },
-    brezZmagovalcev:
-      'Prvi krog še ni odigran. Ko bo, se tu vsak teden pojavi zmagovalec (npr. "16. krog 🏆 Jenko").',
-    skupnoSezona: 'Skupno (celotna sezona)',
-    odKrogaNaprej: 'Od {n}. kroga naprej',
     pozneje: 'Priključil si se pozneje? Izberi svoj krog in tekmuj od tam.',
-    brezKrogov:
-      'Ko bodo odigrani krogi, se tu pojavijo gumbi "Od 2. kroga", "Od 3. kroga" itd — pridi kadarkoli in imej svojo lestvico.',
     celotnaSezona: 'Celotna sezona',
     odKroga: 'Od {n}. kroga',
     igraOd: '· igra od {datum}',
@@ -290,6 +282,7 @@ export const lestvice = {
     },
     sestaviEkipo: 'Sestavi svojo ekipo',
     lestvica: 'Lestvica',
+    zaObjavo: 'Slike za objavo',
     napoved: 'Napoved — za objavo ob zagonu',
     nasiIgralci: 'Naši igralci — s točkami',
     brezStatistike: 'Za ta klub letos še ni statistike.',

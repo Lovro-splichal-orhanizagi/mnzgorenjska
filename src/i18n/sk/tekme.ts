@@ -56,6 +56,8 @@ export const tekme: NonNullable<Prevod['tekme']> = {
       'Odohrané zápasy zo zápisov o stretnutí {zveza}. Klikni na zápas a uvidíš obe zostavy na ihrisku — na každom drese body, ktoré hráč získal.',
     niZacetka: 'Sezóna sa ešte nezačala.',
     prazenKrog: 'V tomto kole sa neodohrali žiadne zápasy.',
+    prejsnji: 'Predchádzajúce kolo',
+    naslednji: 'Nasledujúce kolo',
   },
 
   tekma: {

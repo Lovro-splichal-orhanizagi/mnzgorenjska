@@ -70,12 +70,9 @@ interface Razlaga {
 }
 
 const POZICIJE: Pozicija[] = ['GK', 'DEF', 'MID', 'FWD']
-const IKONA: Record<Pozicija, string> = {
-  GK: '🧤',
-  DEF: '🛡️',
-  MID: '⚙️',
-  FWD: '🎯',
-}
+
+/** Naslov razdelka — enak povsod na strani. */
+const NASLOV = 'mb-2 text-base font-bold text-slate-100'
 
 export default function Igralec() {
   const { id } = useParams()
@@ -473,13 +470,13 @@ export default function Igralec() {
     : 0
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <Link to={`/players${vLigo}`} className="inline-flex min-h-11 items-center text-sm text-slate-400 hover:text-white">
         {t('igralci.profil.vsiIgralci')}
       </Link>
 
       {/* glava */}
-      <div className="kartica flex flex-wrap items-center gap-3 p-4 sm:gap-4 sm:p-5">
+      <div className="-mt-3 flex items-center gap-3 sm:gap-4">
         <span className="sm:hidden">
           <Grb ime={igralec.team_name} kratko={igralec.team_short} logo={igralec.team_logo} velikost={40} />
         </span>
@@ -487,7 +484,7 @@ export default function Igralec() {
           <Grb ime={igralec.team_name} kratko={igralec.team_short} logo={igralec.team_logo} velikost={56} />
         </span>
         <div className="min-w-0 flex-1">
-          <h1 className="line-clamp-2 break-words text-xl font-black naslov sm:text-3xl">
+          <h1 className="line-clamp-2 break-words text-2xl font-black naslov sm:text-3xl">
             {prikazniIme(igralec.full_name)}
           </h1>
           <p className="text-sm text-slate-400">
@@ -496,10 +493,10 @@ export default function Igralec() {
           </p>
         </div>
         <div className="text-right">
-          <div className="text-2xl font-black tabular-nums text-gnl-300">
+          <div className="text-xl font-black tabular-nums text-gnl-300 sm:text-2xl">
             {formatirajCeno(igralec.value)}
           </div>
-          <div className="text-xs uppercase tracking-wide text-slate-500">
+          <div className="whitespace-nowrap text-xs text-slate-500">
             {t('igralci.profil.cena')}
             {premik !== 0 && (
               <span className={premik > 0 ? 'text-gnl-300' : 'text-rose-400'}>
@@ -518,7 +515,7 @@ export default function Igralec() {
             {t('igralci.profil.sezona', { sezona: sezonsko.season })}
           </h2>
         )}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="kartica grid grid-cols-4 divide-x divide-white/10">
           <Stevilka
             oznaka={t('igralci.profil.stevilke.tocke')}
             vrednost={formatirajTocke((sezonsko ?? igralec).points)}
@@ -541,12 +538,9 @@ export default function Igralec() {
       </div>
 
       {/* pozicija — s hitrim glasovanjem, brez preskoka na /pozicije */}
-      <section className="kartica space-y-3 p-4">
+      <section className="space-y-3">
         <div className="flex flex-wrap items-center gap-3">
           <span className={`znacka ${razredPozicije(igralec.position)}`}>
-            <span aria-hidden="true">
-              {igralec.position ? IKONA[igralec.position] : '❔'}
-            </span>{' '}
             {(igralec.position && IME_POZICIJE[igralec.position]) ??
               t('igralci.profil.pozicijaNeznana')}
           </span>
@@ -564,7 +558,7 @@ export default function Igralec() {
                 ? t('igralci.profil.glasujVprasanje')
                 : t('igralci.profil.glasujPrijavljeni')}
             </p>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div className="grid grid-cols-4 gap-2 sm:max-w-md">
               {POZICIJE.map((p) => {
                 const izbran = mojGlas === p
                 const glasov = glasovi[p] ?? 0
@@ -574,14 +568,14 @@ export default function Igralec() {
                     onClick={() => glasuj(p)}
                     disabled={!session}
                     aria-pressed={izbran}
-                    className={`relative rounded-xl px-3 py-2 text-sm font-semibold transition disabled:opacity-40 ${
+                    className={`relative rounded-lg px-2 py-1.5 text-sm font-semibold transition disabled:opacity-40 ${
                       izbran
                         ? 'ring-2 ring-gnl-400'
                         : 'ring-1 ring-white/10 hover:ring-white/30'
                     } poz-${p}`}
                   >
                     <span className="flex items-center justify-center gap-1">
-                      <span aria-hidden="true">{IKONA[p]}</span> {KRATKA_POZICIJA[p]}
+                      {KRATKA_POZICIJA[p]}
                       {glasov > 0 && (
                         <span className="tabular-nums opacity-70">
                           {glasov}
@@ -604,7 +598,7 @@ export default function Igralec() {
                 })}
               </p>
             )}
-            <p className="text-[11px] text-slate-500">
+            <p className="hidden text-[11px] text-slate-500 sm:block">
               {tx('igralci.profil.podrobenPregled', {}, {
                 povezava: (b) => (
                   <Link to={`/positions${vLigo}`} className="underline hover:text-gnl-300">
@@ -620,15 +614,13 @@ export default function Igralec() {
 
       {/* prihodnji nasprotniki */}
       {tekme.length > 0 && (
-        <section className="kartica p-4">
-          <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-400">
-            {t('igralci.profil.naslednjeTekme')}
-          </h2>
-          <ul className="flex flex-wrap gap-2">
+        <section>
+          <h2 className={NASLOV}>{t('igralci.profil.naslednjeTekme')}</h2>
+          <ul className="flex flex-wrap gap-x-4 gap-y-2">
             {tekme.map((tk, n) => (
               <li
                 key={n}
-                className="flex items-center gap-2 rounded-xl bg-white/5 px-3 py-2 text-sm"
+                className="flex items-center gap-1.5 text-sm"
                 title={t(tk.doma ? 'igralci.profil.tekmaDoma' : 'igralci.profil.tekmaVGosteh', {
                   krog: tk.round_number,
                   nasprotnik: tk.opponent_name,
@@ -653,18 +645,16 @@ export default function Igralec() {
       )}
 
       {/* odsotnosti in poškodbe — informativno, ne vpliva na sestavo ekipe */}
-      <section className="kartica p-3 sm:p-4">
-        <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-xs font-bold uppercase tracking-wide text-slate-400">
-            {t('igralci.odsotnosti.naslov')}
-          </h2>
+      <section>
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className={NASLOV}>{t('igralci.odsotnosti.naslov')}</h2>
           <Link to={`/absences${vLigo}`} className="text-xs text-gnl-300 hover:underline">
             {t('igralci.profil.vsaPorocila')}
           </Link>
         </div>
 
         {porocila.length === 0 ? (
-          <p className="py-2 text-sm text-slate-500">
+          <p className="text-sm text-slate-500">
             {t('igralci.profil.niPorocil')}
           </p>
         ) : (
@@ -707,22 +697,22 @@ export default function Igralec() {
                 onChange={(e) => setBesediloPorocila(e.target.value)}
                 maxLength={500}
                 placeholder={t('igralci.profil.porociloPrimer')}
-                className="flex-1 rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm"
+                className="min-w-0 flex-1 rounded-lg border border-white/10 bg-slate-900 px-3 py-1.5 text-sm"
               />
               <button
                 type="submit"
                 disabled={posiljamPorocilo || !besediloPorocila.trim()}
-                className="gumb-glavni px-4 text-sm"
+                className="gumb-glavni px-3 py-1.5 text-sm"
               >
                 {t('igralci.odsotnosti.objavi')}
               </button>
             </div>
-            <p className="text-[11px] text-slate-400">
+            <p className="hidden text-[11px] text-slate-400 sm:block">
               {t('igralci.profil.samoInformacija')}
             </p>
           </form>
         ) : (
-          <p className="mt-3 text-xs text-slate-500">
+          <p className="mt-2 text-xs text-slate-500">
             {tx('igralci.profil.zaObjavoPrijava', {}, {
               povezava: (b) => (
                 <Link to={prijava} className="underline hover:text-gnl-300">
@@ -736,23 +726,21 @@ export default function Igralec() {
 
       {/* zadnji krogi + razlaga točk */}
       {razlage.length > 0 && (
-        <section className="kartica p-3 sm:p-4">
-          <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-400">
-            {t('igralci.profil.tockePoKrogih')}
-          </h2>
-          <p className="mb-3 text-[11px] text-slate-500">
+        <section>
+          <h2 className={NASLOV}>{t('igralci.profil.tockePoKrogih')}</h2>
+          <p className="mb-2 hidden text-xs text-slate-500 sm:block">
             {t('igralci.profil.klikniKrog')}
           </p>
-          <ul className="space-y-1">
+          <ul className="kartica divide-y divide-white/10 overflow-hidden">
             {razlage.map((r) => {
               const odprto = odprtRazlaga === r.round_id
               return (
-                <li key={r.round_id} className="rounded-lg bg-white/5">
+                <li key={r.round_id}>
                   <button
                     onClick={() =>
                       setOdprtRazlaga(odprto ? null : r.round_id)
                     }
-                    className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm"
+                    className="flex min-h-11 w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm hover:bg-white/5"
                   >
                     <span className="text-slate-300">
                       <strong className="text-slate-100">
@@ -780,7 +768,7 @@ export default function Igralec() {
                     </span>
                   </button>
                   {odprto && (
-                    <div className="border-t border-white/5 px-3 py-2">
+                    <div className="px-3 pb-3">
                       {r.postavke.length === 0 ? (
                         <p className="text-xs text-slate-500">
                           {t('igralci.profil.niIgralnegaCasa')}
@@ -825,8 +813,8 @@ export default function Igralec() {
       {/* kartica za objavo — za igralca, starše in navijače; pod statistiko,
           da na telefonu ne odrine podatkov za cel zaslon */}
       {(zadnjiNastop || (sezonsko && (sezonsko.matches ?? 0) > 0)) && (
-        <section className="kartica space-y-3 p-4">
-          <h2 className="text-sm font-bold text-slate-200">{t('igralci.profil.deliKartico')}</h2>
+        <section>
+          <h2 className={NASLOV}>{t('igralci.profil.deliKartico')}</h2>
           <KarticaIgralca
             podatki={{
               ime: igralec.first_name ?? '',
@@ -862,10 +850,8 @@ export default function Igralec() {
 
       {/* gibanje cene */}
       {cene.length > 0 && (
-        <section className="kartica p-4">
-          <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-400">
-            {t('igralci.info.gibanjeCene')}
-          </h2>
+        <section>
+          <h2 className={NASLOV}>{t('igralci.info.gibanjeCene')}</h2>
           {(() => {
             if (izhodisce == null) return null
             const serija = serijaCen(
@@ -926,13 +912,13 @@ export default function Igralec() {
               </div>
             )
           })()}
-          <ul className="space-y-1">
+          <ul className="divide-y divide-white/10">
             {cene.slice(0, 5).map((c, n) => {
               const d = Number(c.new_value) - Number(c.old_value)
               return (
                 <li
                   key={n}
-                  className="flex items-center justify-between gap-3 rounded-lg bg-white/5 px-3 py-1.5 text-sm"
+                  className="flex items-center justify-between gap-3 py-2 text-sm"
                 >
                   <span className="text-slate-400">{t('igralci.krog', { krog: c.rounds?.number })}</span>
                   <span className="tabular-nums">
@@ -962,9 +948,9 @@ function Stevilka({
   vrednost: ReactNode
 }) {
   return (
-    <div className="kartica p-3 text-center">
-      <div className="text-xl font-black tabular-nums">{vrednost}</div>
-      <div className="text-[10px] uppercase tracking-wide text-slate-500">
+    <div className="px-1 py-3 text-center">
+      <div className="text-lg font-black tabular-nums sm:text-xl">{vrednost}</div>
+      <div className="text-[11px] text-slate-500">
         {oznaka}
       </div>
     </div>

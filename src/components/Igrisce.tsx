@@ -3,20 +3,20 @@
 // rezervni igralci.
 //
 // Mere so mobile-first: na telefonu mora vrsta petih branilcev ostati v eni
-// vrstici. Pri 360 px ostane za vrsto 312 px (main px-4, igrišče p-2), zato je
-// kartica največ (100vw − 3rem − 4 razmiki) / 5 = 20vw − 1.1rem; vzamemo
-// 1.25rem za rezervo pri zaokroževanju. Od `sm` navzgor se poveča.
+// vrstici. Širina kartice je zato del širine VRSTE, ne zaslona: pet kartic in
+// štirje razmiki (gap-2.5) dajo (100% − 2.5rem) / 5 = 20% − 0.5rem; vzamemo
+// 0.55rem za rezervo pri zaokroževanju. `vw` je štel tudi drsnik in robove,
+// zato se je vrsta pri 375–390 px prelomila. Od `sm` navzgor se poveča.
 import { POZICIJE, VRSTNI_RED } from '../lib/pravila'
 import {
   KRATKA_POZICIJA,
   prikazniIme,
-  formatirajCeno,
 } from '../lib/pomozno'
 import type { ReactNode } from 'react'
 import type { IgralecVKadru, Pozicija } from '../lib/tipi'
 import Grb from './Grb'
 import Dres from './Dres'
-import { t } from '../i18n'
+import { t, stevilo } from '../i18n'
 
 /** Igralec na igriscu — kader plus polja, ki jih potrebuje prikaz. */
 export interface IgralecNaIgriscu extends IgralecVKadru {
@@ -51,12 +51,15 @@ function KarticaIgralca({
   const ime = prikazniIme(igralec.full_name)
   return (
     <div
-      className={`group relative w-[min(3.9rem,calc(20vw-1.25rem))] text-center sm:w-[4.75rem] ${
+      className={`group relative w-[min(3.9rem,calc(20%-0.55rem))] text-center sm:w-[4.75rem] ${
         zatemnjen ? 'opacity-70' : ''
       }`}
     >
-      {/* Dres z značkami in ✕ je svoj relativni okvir: ✕ se sidra nanj, ne na
-          celo kartico — sicer bi na klopi prekril puščici pod njim. */}
+      {/* Dres z značkami je svoj relativni okvir: ✕ se sidra nanj, ne na
+          celo kartico — sicer bi na klopi prekril puščici pod njim.
+          Kartica ima dve dejanji brez dodatnih gumbov: dres prestavi med
+          postavo in klopjo, ime s ceno odpre podatke (tam je tudi
+          "Odstrani"). ✕ je le bližnjica ob lebdenju na računalniku. */}
       <div className="relative">
       <button
         onClick={naKlik}
@@ -65,12 +68,20 @@ function KarticaIgralca({
             ? t('mojaEkipa.igrisce.naKlop')
             : t('mojaEkipa.igrisce.vPostavo')
         }
-        className="block w-full transition duration-150 active:scale-95 sm:hover:-translate-y-0.5"
+        aria-label={`${ime}: ${
+          igralec.is_starter ? t('mojaEkipa.igrisce.naKlop') : t('mojaEkipa.igrisce.vPostavo')
+        }`}
+        className="flex w-full justify-center pb-0.5 transition duration-150 active:scale-95 sm:hover:-translate-y-0.5"
       >
-        <div className="flex justify-center">
-          <Dres pozicija={igralec.position} razred="h-7 w-8 sm:h-9 sm:w-10" />
-        </div>
-        <div className="mt-0.5 truncate rounded-t-md bg-slate-900/90 px-1 py-0.5 text-[11px] font-semibold leading-tight">
+        <Dres pozicija={igralec.position} razred="h-7 w-8 sm:h-9 sm:w-10" />
+      </button>
+      <button
+        onClick={naInfo ?? naKlik}
+        aria-label={naInfo ? t('mojaEkipa.trg.podatki', { ime }) : undefined}
+        title={naInfo ? t('mojaEkipa.trg.podatkiNamig') : undefined}
+        className="block w-full transition duration-150 active:scale-95"
+      >
+        <div className="truncate rounded-t-md bg-slate-900/90 px-1 py-0.5 text-[11px] font-semibold leading-tight">
           {ime.split(' ').slice(-1)[0]}
         </div>
         {igralec.active === false && (
@@ -91,14 +102,15 @@ function KarticaIgralca({
               : t('mojaEkipa.igrisce.odsoten')}
           </div>
         )}
-        <div className="flex items-center justify-center gap-1 rounded-b-md bg-gnl-500/90 px-1 py-0.5 text-[9px] font-bold leading-tight tabular-nums text-slate-950 sm:text-[10px]">
+        {/* Brez "M€": na ozki kartici bi se cena prelomila v dve vrstici. */}
+        <div className="flex items-center justify-center gap-1 whitespace-nowrap rounded-b-md bg-gnl-500/90 px-1 py-0.5 text-[10px] font-bold leading-tight tabular-nums text-slate-950">
           <Grb
             ime={igralec.team_name}
             kratko={igralec.team_short}
             logo={igralec.team_logo}
             velikost={11}
           />
-          {formatirajCeno(igralec.value)}
+          {stevilo(Number(igralec.value ?? 0), { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
         </div>
       </button>
 
@@ -141,43 +153,23 @@ function KarticaIgralca({
         </span>
       )}
 
-      {/* Gumb za odstranitev — vedno v istem kotu (spodaj desno), ne glede
-          na to, ali ima igralec točke. Prej dinamičen položaj, kar je
-          zmedlo uporabnike. */}
-      {/* Vidni krožec je majhen, površina za dotik pa 36 px — sicer prst
-          zadene dres in igralca premakne na klop. */}
+      {/* Na računalniku ✕ ob lebdenju; na dotik je "Odstrani" v podatkih igralca. */}
       <button
         onClick={naOdstrani}
         title={t('mojaEkipa.igrisce.odstraniIzKadra')}
         aria-label={t('mojaEkipa.igrisce.odstrani', { ime })}
-        className="absolute -bottom-2 -right-2 flex h-8 w-8 items-center justify-center
-                   text-slate-300 hover:text-rose-400 focus-visible:flex lg:hidden lg:group-hover:flex"
+        className="absolute -right-2 top-5 hidden h-8 w-8 items-center justify-center
+                   text-slate-300 hover:text-rose-400 lg:group-hover:flex"
       >
         <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-900/90 text-[10px] ring-1 ring-white/20">
           ✕
         </span>
       </button>
-      {/* Podatki o igralcu — spodaj levo, ker je zgoraj levo trak kapetana.
-          Ne sega čez rob kartice, da ne prekrije ✕ soseda na levi. */}
-      {naInfo && (
-        <button
-          onClick={naInfo}
-          aria-label={t('mojaEkipa.trg.podatki', { ime })}
-          title={t('mojaEkipa.trg.podatkiNamig')}
-          className="absolute -bottom-2 left-0 flex h-8 w-8 items-center justify-start
-                     text-slate-300 hover:text-white focus-visible:flex lg:hidden lg:group-hover:flex"
-        >
-          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-900/90 text-[10px] font-bold ring-1 ring-white/20">
-            i
-          </span>
-        </button>
-      )}
       </div>
 
-      {/* mt-3 je več, kot ✕ (-bottom-2) sega pod dres: se ne prekrivata;
-          z-20 pa puščici za vsak primer ostaneta na vrhu. */}
+      {/* z-20: puščici ostaneta nad ✕ soseda. */}
       {premik && (
-        <div className="relative z-20 mt-3 flex justify-center gap-1">
+        <div className="relative z-20 mt-1.5 flex justify-center gap-1">
           <button
             onClick={premik.gor ?? undefined}
             disabled={!premik.gor}
@@ -215,7 +207,7 @@ function PraznoMesto({
       title={t('mojaEkipa.igrisce.izberi', {
         pozicija: POZICIJE[pozicija].naslov.toLowerCase(),
       })}
-      className="flex h-[3.6rem] w-[min(3.9rem,calc(20vw-1.25rem))] flex-col items-center justify-center gap-0.5
+      className="flex h-[3.6rem] w-[min(3.9rem,calc(20%-0.55rem))] flex-col items-center justify-center gap-0.5
                  rounded-lg border-2 border-dashed border-white/25 text-white/60
                  transition active:scale-95 hover:border-gnl-300 hover:bg-white/10
                  hover:text-white sm:h-[4.6rem] sm:w-[4.75rem] sm:gap-1"
@@ -301,14 +293,14 @@ export default function Igrisce({
         </div>
       </div>
 
-      {/* klop */}
-      <div className="kartica p-2 sm:p-3">
-        <h3 className="text-xs font-bold uppercase tracking-wide text-slate-400">
+      {/* klop — pas pod igriščem; pravilo menjav je v razdelku "Več" in v namigu */}
+      <div>
+        <h3
+          title={t('mojaEkipa.igrisce.klopOpis')}
+          className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400"
+        >
           {t('mojaEkipa.igrisce.klop')}
         </h3>
-        <p className="mb-2 text-[11px] text-slate-500">
-          {t('mojaEkipa.igrisce.klopOpis')}
-        </p>
         <Vrsta>
           {klop.map((i, n) => (
             <KarticaIgralca
@@ -341,7 +333,7 @@ export default function Igrisce({
       </div>
 
       {neuvrsceni.length > 0 && (
-        <div className="kartica p-2 sm:p-3">
+        <div>
           <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">
             {t('mojaEkipa.igrisce.brezPozicije')}
           </h3>

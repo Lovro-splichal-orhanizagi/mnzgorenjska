@@ -192,7 +192,7 @@ export default function Ekipa() {
     )
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <header>
         <h1 className="text-2xl font-black naslov sm:text-3xl">
           {ekipa?.team_name ?? t('lestvice.ekipa.naslov')}
@@ -207,7 +207,7 @@ export default function Ekipa() {
       </header>
 
       {krogi.length === 0 ? (
-        <p className="rounded-lg bg-slate-800/60 p-4 text-slate-300">
+        <p className="text-sm text-slate-400">
           {t('lestvice.ekipa.brezKrogov')}
         </p>
       ) : (
@@ -218,10 +218,10 @@ export default function Ekipa() {
                 key={k.id}
                 onClick={() => izberi(k.id)}
                 aria-pressed={k.id === izbranKrog}
-                className={`shrink-0 whitespace-nowrap rounded-md px-2.5 py-2 text-sm font-bold transition ${
+                className={`shrink-0 whitespace-nowrap rounded-md px-2.5 py-1.5 text-sm font-semibold transition ${
                   k.id === izbranKrog
                     ? 'bg-gnl-500 text-slate-950'
-                    : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                    : 'text-slate-400 hover:bg-white/5 hover:text-white'
                 }`}
               >
                 {t('lestvice.krog', { n: k.number })}
@@ -235,15 +235,15 @@ export default function Ekipa() {
           {nalaganjePostave ? (
             <p className="text-slate-400">{t('lestvice.ekipa.nalaganjePostave')}</p>
           ) : okvara ? (
-            <p className="rounded-lg bg-rose-500/10 p-4 text-rose-200">{okvara}</p>
+            <p className="text-sm text-rose-300">{okvara}</p>
           ) : vrstice.length === 0 ? (
-            <p className="rounded-lg bg-slate-800/60 p-4 text-slate-300">
+            <p className="text-sm text-slate-400">
               {t('lestvice.ekipa.brezPostave')}
             </p>
           ) : (
             <>
               <div className="flex flex-wrap items-baseline gap-2">
-                <span className="text-3xl font-black tabular-nums text-gnl-400">
+                <span className="text-2xl font-black tabular-nums text-gnl-300">
                   {formatirajTocke(neto ?? skupaj)}
                 </span>
                 <span className="text-sm text-slate-400">
@@ -266,14 +266,12 @@ export default function Ekipa() {
 
               {klop.length > 0 && (
                 <section>
-                  <h2 className="mb-1.5 text-sm font-bold uppercase tracking-wide text-slate-400">
-                    {t('lestvice.ekipa.klop')}
-                  </h2>
-                  <ul className="divide-y divide-slate-800 rounded-lg bg-slate-800/40">
+                  <h2 className="mb-2 text-base font-bold">{t('lestvice.ekipa.klop')}</h2>
+                  <ul className="kartica divide-y divide-white/10 overflow-hidden">
                     {klop.map((v) => (
                       <li
                         key={v.player_id}
-                        className="flex items-center gap-2 px-3 py-1.5 text-sm"
+                        className="flex min-h-11 items-center gap-2 px-3 py-2 text-sm"
                       >
                         <Link
                           to={`/player/${v.player_id}`}

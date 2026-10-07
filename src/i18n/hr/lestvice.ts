@@ -14,23 +14,15 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     napakaKrogov:
       'Rezultate po kolima nije bilo moguće učitati ({napaka}). Ukupna ljestvica ispod je svejedno točna.',
     tvojRezultatZadnji: 'Tvoj rezultat u zadnjem kolu',
-    tvojRezultatKrog: 'Tvoj rezultat u kolu',
     mojaEkipa: 'Moja momčad',
     zmagovalecKroga: 'Pobjednik {krog}. kola',
-    kazen: 'Prijelazi: {prestopi} — kazna {kazen}',
     zmagovalciPoKrogih: 'Pobjednici po kolima',
     odigraniKrogi: {
       one: '{n} odigrano kolo',
       few: '{n} odigrana kola',
       other: '{n} odigranih kola',
     },
-    brezZmagovalcev:
-      'Prvo kolo još nije odigrano. Kad bude, ovdje će se svaki tjedan pojaviti pobjednik (npr. "16. kolo 🏆 Horvat").',
-    skupnoSezona: 'Ukupno (cijela sezona)',
-    odKrogaNaprej: 'Od {n}. kola nadalje',
     pozneje: 'Pridružio si se kasnije? Odaberi svoje kolo i natječi se od tamo.',
-    brezKrogov:
-      'Kad kola budu odigrana, ovdje će se pojaviti gumbi "Od 2. kola", "Od 3. kola" itd. — dođi bilo kad i imaj svoju ljestvicu.',
     celotnaSezona: 'Cijela sezona',
     odKroga: 'Od {n}. kola',
     igraOd: '· igra od {datum}',
@@ -280,6 +272,7 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     },
     sestaviEkipo: 'Složi svoju momčad',
     lestvica: 'Ljestvica',
+    zaObjavo: 'Slike za objavu',
     napoved: 'Najava — za objavu pri pokretanju',
     nasiIgralci: 'Naši igrači — s bodovima',
     brezStatistike: 'Za ovaj klub ove godine još nema statistike.',

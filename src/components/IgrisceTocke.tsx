@@ -137,13 +137,13 @@ export default function IgrisceTocke({
     <div className="space-y-2">
       <div className="flex items-center gap-2 px-1">
         <Grb ime={ekipa.ime} kratko={ekipa.kratko} logo={ekipa.logo} velikost={26} />
-        <h3 className="min-w-0 flex-1 truncate font-bold">{ekipa.ime}</h3>
-        <span className="znacka bg-gnl-400/20 text-gnl-200">
+        <h3 className="min-w-0 flex-1 truncate font-semibold">{ekipa.ime}</h3>
+        <span className="shrink-0 text-sm font-bold text-gnl-300">
           {t('mojaEkipa.igrisceTocke.skupaj', { tocke: formatirajTocke(skupaj) })}
         </span>
       </div>
 
-      <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-[#14603f] to-[#0b3d2e] p-2 shadow-xl shadow-black/30 sm:rounded-3xl sm:p-3">
+      <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-[#14603f] to-[#0b3d2e] p-2 sm:rounded-3xl sm:p-3">
         <div className="igrisce pointer-events-none absolute inset-0" />
         <div className="pointer-events-none absolute inset-2 rounded-lg border-2 border-white/20 sm:rounded-xl" />
         <div className="pointer-events-none absolute left-1/2 top-2 h-14 w-28 -translate-x-1/2 rounded-b-lg border-x-2 border-b-2 border-white/20 sm:h-20 sm:w-40" />
@@ -177,7 +177,7 @@ export default function IgrisceTocke({
       </div>
 
       {menjave.length > 0 && (
-        <div className="kartica p-2">
+        <div className="pt-1">
           <h4 className="mb-2 px-1 text-[11px] font-bold uppercase tracking-wide text-slate-400">
             {t('mojaEkipa.igrisceTocke.klop')}
             {igrale.length > 0 && (

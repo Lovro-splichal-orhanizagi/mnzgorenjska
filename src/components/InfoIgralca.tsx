@@ -44,6 +44,7 @@ export default function InfoIgralca({
   klubKratko,
   klubLogo,
   naZapri,
+  dejanja,
 }: {
   igralecId: number
   tekmovanjeId: number
@@ -52,6 +53,8 @@ export default function InfoIgralca({
   klubKratko?: string | null
   klubLogo?: string | null
   naZapri: () => void
+  /** Dejanja nad igralcem v kadru (npr. "Odstrani") — igrišče nima svojih gumbov. */
+  dejanja?: React.ReactNode
 }) {
   const [sezona, setSezona] = useState<Sezona | null>(null)
   const [spremembe, setSpremembe] = useState<SpremembaCene[]>([])
@@ -196,6 +199,8 @@ export default function InfoIgralca({
             ✕
           </button>
         </div>
+
+        {dejanja && <div className="mb-3">{dejanja}</div>}
 
         {nalaganje ? (
           <p className="py-6 text-center text-slate-400">{t('skupno.nalaganje')}</p>

@@ -100,7 +100,7 @@ export default function PovabiSoigralce({
   if (liga === undefined) return null
 
   return (
-    <div className="kartica relative space-y-2 border-gnl-400/30 bg-gnl-500/10 p-4">
+    <div className="kartica relative space-y-2 p-4">
       <button
         onClick={naZapri}
         aria-label={t('skupno.zapri')}

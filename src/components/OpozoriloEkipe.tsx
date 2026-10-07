@@ -108,7 +108,6 @@ export default function OpozoriloEkipe() {
       {brezEkipe && (
         <div className="border-b border-amber-400/40 bg-amber-500/15">
           <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-4 py-2 text-sm text-amber-100 sm:gap-3">
-            <span aria-hidden className="text-lg leading-none">⚠</span>
             <span className="min-w-0 flex-1 font-semibold">
               {tx(
                 'mojaEkipa.opozorila.nimasEkipe',

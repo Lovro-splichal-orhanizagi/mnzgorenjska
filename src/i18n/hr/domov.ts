@@ -11,9 +11,8 @@ export const domov: NonNullable<Prevod['domov']> = {
     opis: 'Bodovi dolaze iz službenih zapisnika ({zveza}): golovi, minute, čiste mreže, kartoni. Sve osim asistencija, njih određuje zajednica.',
     vecLig: 'Možeš igrati u više liga — <krepko>ligu biraš gore lijevo</krepko>, svaka ima svoju momčad i ljestvicu.',
     zacetekSezone: '<krepko>Sezona počinje {datum}</krepko> — složi momčad prije roka.',
-    zamudniki: '<krepko>Propustio si početak? Nema veze.</krepko> Svako kolo ima svog pobjednika. Na <lestvica>Ljestvici</lestvica> odabereš "Od N. kola nadalje" i natječeš se od trenutka kad se pridružiš. Nikad nije prekasno.',
+    zamudniki: '<krepko>Propustio si početak?</krepko> Na <lestvica>Ljestvici</lestvica> natječeš se od kola kad se pridružiš.',
     sestaviEkipo: 'Složi momčad',
-    glasuj: 'Glasaj o asistencijama',
     rezultati: 'Rezultati i postave',
   },
   asistence: {
@@ -22,43 +21,36 @@ export const domov: NonNullable<Prevod['domov']> = {
       few: '{n} gola čekaju asistenciju',
       other: '{n} golova čeka asistenciju',
     },
-    opis: 'Zapisnici ne bilježe asistencije — određuje ih zajednica. Bez tvojih glasova asistenti ne dobivaju <krepko>+3 boda</krepko>, a tvoja momčad ostaje bez njih.',
-    glasujZdaj: 'Glasaj sada →',
   },
   rok: {
     seZaklene: '{krog}. kolo se zaključava',
-    opis: 'Zadnji trenutak za promjenu momčadi, kapetana i zamjenika. <uredi>Uredi momčad →</uredi>',
   },
   krog: '{krog}. kolo',
   brezKroga: 'Bez kola',
   minut: '{n} min',
   zadnjiRezultati: {
     naslov: 'Najnoviji rezultati',
-    vsi: 'Svi rezultati i postave →',
+    vsi: 'Svi rezultati →',
     poglejTekmo: 'Pogledaj postave i bodove ove utakmice',
   },
   najboljsi: {
-    igralecKroga: 'Igrač {krog}. kola',
-    rezultatiKroga: '{krog}. kolo · rezultati utakmica →',
-    strelci: 'Najbolji strijelci sezone',
-    podajalci: 'Najbolji asistenti sezone',
-    ohranjeneMreze: 'Najviše čistih mreža',
     igralecSezone: 'Igrač sezone',
-    igralecSezoneZ: 'Igrač sezone {sezona}',
     celaLestvica: 'Cijela ljestvica igrača →',
+    vodilni: {
+      strelec: 'Prvi strijelac',
+      podajalec: 'Prvi asistent',
+      mreze: 'Najviše čistih mreža',
+    },
   },
   idealna: {
     naslov: 'Idealna momčad',
     krogSezona: '{krog}. kolo · sezona {sezona}',
-    opis: 'Najboljih 11 igrača posljednjeg odigranog kola (1 VRA, 4 BRA, 4 VEZ, 2 NAP). Broj ispod dresa su bodovi koje je igrač skupio.',
+    opis: 'Najboljih 11 posljednjeg kola; ispod dresa su bodovi.',
   },
   povabi: {
     naslov: 'Pozovi prijatelja u ligu',
-    opis: 'Što nas bude više, to će biti zabavnije. Klikni gumb i otvorit ćemo ti praznu e-poruku s već napisanim tekstom — samo dodaj primatelja.',
-    gumb: 'Otvori e-poštu',
   },
   skupnost: {
-    naslov: 'Pomozi zajednici',
     brezAsistence: '{goli} bez asistencije',
     povejKdo: {
       one: 'Reci tko je asistirao — {n} glas potvrđuje',
@@ -72,7 +64,6 @@ export const domov: NonNullable<Prevod['domov']> = {
   },
   naslednje: {
     naslov: 'Sljedeće utakmice',
-    vRazporedu: '{tekme} u rasporedu',
     proti: 'vs',
   },
   kakoIgras: {
@@ -87,4 +78,12 @@ export const domov: NonNullable<Prevod['domov']> = {
     poKroguOpis: 'Bodovi se računaju iz zapisnika. Igrača bez minuta automatski mijenja rezerva iste pozicije, a jednom u sezoni s Klupa+ možeš u bodove uračunati cijelu klupu.',
   },
   kakoSeTockuje: 'Kako se boduje',
+  moja: {
+    tocke: 'Bodovi',
+    mesto: 'Mjesto',
+    mestoOd: '{mesto}. od {n}',
+    uredi: 'Moja momčad →',
+  },
+  taTeden: 'Ovaj tjedan',
+  klepet: 'Chat i prijedlozi',
 }

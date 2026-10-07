@@ -74,36 +74,34 @@ export default function MojeMiniLige({ ekipaId }: { ekipaId: number | null }) {
 
   if (vrstice.length === 0)
     return (
-      <div className="kartica flex flex-wrap items-center justify-between gap-2 p-3 text-sm">
-        <span className="text-slate-400">
-          {t('lestvice.mojeMiniLige.povabilo')}
-        </span>
-        <Link to="/mini-leagues" className="gumb-glavni text-xs">
-          {t('lestvice.mojeMiniLige.ustvari')}
+      <p className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-sm text-slate-400">
+        <span>{t('lestvice.mojeMiniLige.povabilo')}</span>
+        <Link to="/mini-leagues" className="font-semibold text-gnl-300 hover:underline">
+          {t('lestvice.mojeMiniLige.ustvari')} →
         </Link>
-      </div>
+      </p>
     )
 
   return (
-    <div className="kartica space-y-2 p-3 sm:p-4">
+    <div className="space-y-1">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-bold text-slate-300">{t('lestvice.mojeMiniLige.naslov')}</h2>
+        <h2 className="text-sm font-semibold text-slate-300">{t('lestvice.mojeMiniLige.naslov')}</h2>
         <Link to="/mini-leagues" className="text-xs text-slate-500 hover:text-slate-300">
           {t('lestvice.mojeMiniLige.vse')}
         </Link>
       </div>
-      <ul className="divide-y divide-white/5">
+      <ul className="divide-y divide-white/10">
         {vrstice.map((v) => (
           <li key={v.id} className="relative flex items-center gap-3 py-2">
             <span
-              className={`w-9 shrink-0 text-center text-lg font-black ${
+              className={`w-7 shrink-0 text-center text-sm font-bold ${
                 v.mesto === 1 ? 'text-gnl-300' : 'text-slate-400'
               }`}
             >
               {v.mesto ? `${v.mesto}.` : '—'}
             </span>
             <div className="min-w-0 flex-1">
-              <Link to={`/mini-leagues?liga=${v.id}`} className="block truncate font-bold after:absolute after:inset-0 after:content-[''] hover:text-gnl-300">
+              <Link to={`/mini-leagues?liga=${v.id}`} className="block truncate text-sm font-semibold after:absolute after:inset-0 after:content-[''] hover:text-gnl-300">
                 {v.name}
               </Link>
               <div className="truncate text-xs text-slate-500">
@@ -116,7 +114,7 @@ export default function MojeMiniLige({ ekipaId }: { ekipaId: number | null }) {
                 )}
               </div>
             </div>
-            <span className="shrink-0 font-black tabular-nums text-gnl-300">
+            <span className="shrink-0 font-bold tabular-nums text-gnl-300">
               {formatirajTocke(v.tocke)}
             </span>
           </li>

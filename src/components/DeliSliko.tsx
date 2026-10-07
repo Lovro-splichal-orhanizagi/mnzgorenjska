@@ -146,34 +146,32 @@ export default function DeliSliko({
 
   return (
     <div className="space-y-2">
-      <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+      <div className="flex flex-wrap gap-2">
         {delitevSlike ? (
           <button
             onClick={deliSliko}
             disabled={dela}
-            className={`gumb-glavni px-3 py-2.5 text-sm disabled:opacity-60 ${
-              jeNativno() ? '' : 'col-span-2 sm:col-span-1'
-            }`}
+            className="gumb-glavni px-3 py-1.5 text-sm disabled:opacity-60"
           >
             {dela ? t('lestvice.deliSliko.pripravljam') : gumbDeli ?? t('lestvice.deliSliko.deliSliko')}
           </button>
         ) : (
-          <button onClick={prenesi} disabled={dela} className="gumb-tih px-3 py-2.5 text-sm disabled:opacity-60">
+          <button onClick={prenesi} disabled={dela} className="gumb-tih px-3 py-1.5 text-sm disabled:opacity-60">
             {dela ? t('lestvice.deliSliko.pripravljam') : gumbPrenesi ?? t('lestvice.deliSliko.prenesi')}
           </button>
         )}
-        <button onClick={deliPovezavo} className="gumb-tih px-3 py-2.5 text-sm">
+        <button onClick={deliPovezavo} className="gumb-tih px-3 py-1.5 text-sm">
           {t('lestvice.deliSliko.deliPovezavo')}
         </button>
         {/* V aplikaciji prenosa ni; sliko shrani sistemski list ("Shrani sliko"). */}
         {delitevSlike && !jeNativno() && (
-          <button onClick={prenesi} disabled={dela} className="gumb-tih px-3 py-2.5 text-sm disabled:opacity-60">
+          <button onClick={prenesi} disabled={dela} className="gumb-tih px-3 py-1.5 text-sm disabled:opacity-60">
             {t('lestvice.deliSliko.shrani')}
           </button>
         )}
       </div>
       {delitevSlike && !sporocilo && (
-        <p className="text-xs text-slate-500">{t('lestvice.deliSliko.namig')}</p>
+        <p className="hidden text-xs text-slate-500 sm:block">{t('lestvice.deliSliko.namig')}</p>
       )}
       {sporocilo && <p className="text-xs text-slate-400">{sporocilo}</p>}
     </div>

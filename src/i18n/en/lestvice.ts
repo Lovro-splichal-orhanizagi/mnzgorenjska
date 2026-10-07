@@ -18,22 +18,14 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     napakaKrogov:
       'Round results could not be loaded ({napaka}). The overall standings below are still correct.',
     tvojRezultatZadnji: 'Your score in the last round',
-    tvojRezultatKrog: 'Your score in the round',
     mojaEkipa: 'My team',
     zmagovalecKroga: 'Round {krog} winner',
-    kazen: 'Transfers: {prestopi} — penalty {kazen}',
     zmagovalciPoKrogih: 'Round winners',
     odigraniKrogi: {
       one: '{n} round played',
       other: '{n} rounds played',
     },
-    brezZmagovalcev:
-      'The first round hasn’t been played yet. Once it is, each week’s winner will appear here (e.g. "Round 16 🏆 Jenko").',
-    skupnoSezona: 'Overall (whole season)',
-    odKrogaNaprej: 'From round {n} onwards',
     pozneje: 'Joined later? Pick your round and compete from there.',
-    brezKrogov:
-      'Once rounds have been played, buttons like "From round 2", "From round 3" and so on will appear here — join any time and have your own standings.',
     celotnaSezona: 'Whole season',
     odKroga: 'From round {n}',
     igraOd: '· playing since {datum}',
@@ -276,6 +268,7 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     },
     sestaviEkipo: 'Build your team',
     lestvica: 'Standings',
+    zaObjavo: 'Images to share',
     napoved: 'Announcement — for posting at launch',
     nasiIgralci: 'Our players — with points',
     brezStatistike: 'No stats for this club this season yet.',

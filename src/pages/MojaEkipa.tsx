@@ -291,6 +291,12 @@ export default function MojaEkipa() {
   // Igralec, za katerega je odprta plosca s podatki.
   const [info, setInfo] = useState<IgralecTrga | null>(null)
   const imeRef = useRef<HTMLInputElement | null>(null)
+  // Ime se ureja v pasu povzetka; polje se pokaže šele na klik.
+  const [urejamIme, setUrejamIme] = useState(false)
+  // "Več" (pripomočki, zgodovina): na telefonu zaprto, na računalniku odprto.
+  const [odprtoVec, setOdprtoVec] = useState(
+    () => typeof window !== 'undefined' && !!window.matchMedia?.('(min-width: 1024px)').matches,
+  )
   const odsotni = useOdsotni(tekmovanjeId)
   // Klubi s tekmo v naslednjem krogu; null, dokler razporeda kroga ne poznamo.
   const [klubiZTekmo, setKlubiZTekmo] = useState<Set<number> | null>(null)
@@ -433,6 +439,7 @@ export default function MojaEkipa() {
     setNapakaNalaganja(null)
     setEkipa(null)
     setImeEkipe('')
+    setUrejamIme(false)
     setKrogi([])
     setNaslednjiKrog(null)
     setZadnjiKrog(null)
@@ -1202,13 +1209,21 @@ export default function MojaEkipa() {
     setOdprtTrg(true)
   }
 
+  // Polje imena se izriše šele, ko urejanje začne — fokus po izrisu.
+  function urediIme(premakni = false) {
+    setUrejamIme(true)
+    requestAnimationFrame(() => {
+      imeRef.current?.focus()
+      if (premakni) imeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    })
+  }
+
   function poskusiShraniti() {
     if (shranjujem) return
     if (!imeEkipe.trim()) {
       setSporocilo(null)
       setNapaka(t('mojaEkipa.napake.vpisiIme'))
-      imeRef.current?.focus()
-      imeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      urediIme(true)
       return
     }
     setShranjujem(true)
@@ -1470,6 +1485,8 @@ export default function MojaEkipa() {
   const prestopi = zaklenjenaPostava
     ? izbrani.filter((s) => !zaklenjenaPostava.includes(s.player_id)).length
     : 0
+  const rokPotekel =
+    naslednjiKrog?.deadline_at != null && Date.parse(naslednjiKrog.deadline_at) <= zdaj
   const wildcardVelja =
     wildcard && naslednjiKrog && wildcard.round_id === naslednjiKrog.id
   const kazen = wildcardVelja
@@ -1508,7 +1525,7 @@ export default function MojaEkipa() {
   )
 
   return (
-    <div className="space-y-4 pb-[calc(7rem+var(--dno))] sm:space-y-6 lg:pb-0">
+    <div className="space-y-4 pb-[calc(7rem+var(--dno))] sm:space-y-5 lg:pb-0">
       {/* Obvestila — en sklad pod navbarjem, da se ne prekrivajo. Napaka
           ostane, dokler je uporabnik ne zapre; potrditev izgine sama. */}
       {(sporocilo || napaka || razveljavi) && (
@@ -1567,24 +1584,191 @@ export default function MojaEkipa() {
         </div>
       )}
 
-      <h1 className="text-2xl font-black naslov sm:text-3xl">
+      <h1 className="text-xl font-black naslov sm:text-3xl">
         {t('mojaEkipa.naslov')}
         {tekmovanje && (
-          <span className="ml-2 align-middle text-base font-bold text-slate-500">
+          <span className="ml-2 align-middle text-sm font-bold text-slate-500 sm:text-base">
             {tekmovanje.short_name}
           </span>
         )}
       </h1>
 
-      {/* Uvodni nasvet, ko ekipa še nima igralcev — takoj pod naslovom, da
-          je na telefonu glavni gumb na prvem zaslonu. */}
-      {izbrani.length === 0 && (
-        <div className="kartica border-gnl-400/30 bg-gnl-500/5 p-3 text-sm sm:p-4">
-          <h2 className="mb-1 text-sm font-bold text-gnl-200">{t('mojaEkipa.zacetek.naslov')}</h2>
+      {pokaziVabilo && ekipa?.id && (
+        <PovabiSoigralce ekipaId={ekipa.id} naZapri={() => setPokaziVabilo(false)} />
+      )}
 
-          {/* Najhitrejša pot je ena in je glavni gumb strani. Navodila za
-              ročno sestavo so zložena — 4. 10. 2026 je bilo 57 % registriranih
-              brez ekipe, in prazno igrišče s štirimi koraki besedila jih ustavi. */}
+      {/* Povzetek v enem pasu: ime, denar, prestopi in rok. Igrišče je tako na
+          telefonu takoj pod njim. Ime se ureja na klik, shrani pa se z ekipo. */}
+      <section className="space-y-1 border-b border-white/10 pb-3 lg:sticky lg:top-2 lg:z-30 lg:bg-slate-950/90 lg:pt-2 lg:backdrop-blur">
+        <div className="flex items-center gap-2">
+          {/* Ime je mogoče spremeniti kadarkoli (od 6. 10. 2026); lestvica kaže trenutno. */}
+          <div data-pomoc="ime-ekipe" className="flex min-w-0 flex-1 items-center">
+            {urejamIme ? (
+              <>
+                <label htmlFor="ime-ekipe" className="sr-only">
+                  {t('mojaEkipa.povzetek.imeEkipe')}
+                </label>
+                <input
+                  id="ime-ekipe"
+                  ref={imeRef}
+                  value={imeEkipe}
+                  maxLength={NAJDALJSE_IME}
+                  onChange={(e) => setImeEkipe(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') e.currentTarget.blur()
+                  }}
+                  onBlur={() => {
+                    if (imeEkipe.trim()) setUrejamIme(false)
+                  }}
+                  placeholder={t('mojaEkipa.povzetek.primerImena')}
+                  className={`min-w-0 flex-1 rounded-lg border bg-slate-900 px-2.5 py-1.5 text-base font-bold sm:text-sm ${
+                    !imeEkipe.trim() && napaka
+                      ? 'border-rose-400/60 ring-1 ring-rose-400/30'
+                      : 'border-white/15'
+                  }`}
+                />
+              </>
+            ) : (
+              <button
+                onClick={() => urediIme()}
+                aria-label={t('mojaEkipa.povzetek.urediIme', { ime: imeEkipe.trim() })}
+                className="-my-1 flex min-h-[40px] min-w-0 items-center gap-2 text-left"
+              >
+                <span
+                  className={`truncate text-base font-bold ${imeEkipe.trim() ? 'text-white' : 'text-slate-500'}`}
+                >
+                  {imeEkipe.trim() || t('mojaEkipa.povzetek.imeEkipe')}
+                </span>
+                <span aria-hidden className="shrink-0 text-sm text-slate-500">
+                  ✎
+                </span>
+              </button>
+            )}
+          </div>
+          {/* Na računalniku spodnjega pasu ni — Shrani je tu in ostane pri vrhu. */}
+          <div className="hidden shrink-0 items-center gap-3 lg:flex">
+            {neshranjeno && (
+              <span className="text-xs font-semibold text-amber-300">
+                {t('mojaEkipa.povzetek.neshranjeno')}
+              </span>
+            )}
+            <button
+              data-pomoc="shrani"
+              onClick={poskusiShraniti}
+              disabled={shranjujem}
+              className="gumb-glavni whitespace-nowrap px-4 py-2 text-sm disabled:cursor-wait disabled:opacity-60"
+            >
+              {shranjujem ? t('mojaEkipa.povzetek.shranjujem') : t('mojaEkipa.povzetek.shraniEkipo')}
+            </button>
+          </div>
+        </div>
+
+        <p className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-slate-400 sm:text-sm">
+          <strong className={`tabular-nums ${preostalo < 0 ? 'text-rose-400' : 'text-gnl-300'}`}>
+            {formatirajCeno(preostalo)}
+          </strong>
+          {zaklenjenaPostava && (
+            <>
+              <span aria-hidden className="text-slate-600">·</span>
+              <span
+                data-pomoc="prestopi"
+                title={
+                  wildcardVelja
+                    ? t('mojaEkipa.prestopi.wildcard')
+                    : kazen > 0
+                      ? t('mojaEkipa.prestopi.odbitek', { tock: mnozina(kazen, TOCK_RODILNIK) })
+                      : t('mojaEkipa.prestopi.prosti', {
+                          n: pravila.prosti - prestopi,
+                          kazen: mnozina(pravila.kazen, TOCKE),
+                        })
+                }
+              >
+                {t('mojaEkipa.prestopi.stevec', { n: prestopi, prosti: pravila.prosti })}
+                {wildcardVelja ? (
+                  <span className="ml-1 text-gnl-300">{t('mojaEkipa.prestopi.wildcard')}</span>
+                ) : kazen > 0 ? (
+                  <span className="ml-1 font-semibold text-rose-400">
+                    {t('mojaEkipa.prestopi.odbitek', { tock: mnozina(kazen, TOCK_RODILNIK) })}
+                  </span>
+                ) : null}
+              </span>
+            </>
+          )}
+          {naslednjiKrog && (
+            <>
+              <span aria-hidden className="text-slate-600">·</span>
+              <span className={rokPotekel ? 'text-rose-300' : undefined}>
+                {t('mojaEkipa.rok.krog', { krog: naslednjiKrog.number })}
+              </span>
+              <span aria-hidden className="text-slate-600">·</span>
+              <span className={rokPotekel ? 'text-rose-300' : undefined}>
+                {naslednjiKrog.deadline_at
+                  ? tx(
+                      rokPotekel ? 'mojaEkipa.rok.potekel' : 'mojaEkipa.rok.rok',
+                      { rok: izpisRoka(naslednjiKrog.deadline_at) },
+                      { krepko: (b) => <span className="text-slate-200">{b}</span> },
+                    )
+                  : t('mojaEkipa.rok.niDolocen')}
+              </span>
+            </>
+          )}
+        </p>
+
+        {/* Na večjem zaslonu je prostora še za vrednost ekipe in zasedenost mest. */}
+        <div className="hidden flex-wrap items-center justify-between gap-2 text-xs text-slate-500 sm:flex">
+          <span>
+            {tx(
+              'mojaEkipa.povzetek.bogastvo',
+              { bogastvo: formatirajCeno(bogastvo), kader: formatirajCeno(porabljeno) },
+              {
+                vrednost: (b) => (
+                  <strong className={razlikaC > 0 ? 'text-gnl-300' : razlikaC < 0 ? 'text-rose-300' : 'text-slate-300'}>
+                    {b}
+                  </strong>
+                ),
+                razlika: () =>
+                  razlikaC !== 0 && (
+                    <span className={razlikaC > 0 ? 'text-gnl-300' : 'text-rose-300'}>
+                      {' '}
+                      {t('mojaEkipa.povzetek.razlika', {
+                        znak: razlikaC > 0 ? '+' : '−',
+                        cena: formatirajCeno(Math.abs(razlikaC) / 100),
+                      })}
+                    </span>
+                  ),
+                placano: (b) => <span className="text-slate-500">{b}</span>,
+              },
+            )}
+          </span>
+          <span className="flex flex-wrap gap-1">
+            {VRSTNI_RED.map((koda) => (
+              <span
+                key={koda}
+                className={`znacka ${vKadru[koda] === POZICIJE[koda].kader ? razredPozicije(koda) : 'poz-none'}`}
+              >
+                {KRATKA_POZICIJA[koda]} {vKadru[koda]}/{POZICIJE[koda].kader}
+              </span>
+            ))}
+          </span>
+        </div>
+      </section>
+
+      {/* Prazna ekipa: najhitrejša pot je ena in je glavni gumb strani — Shrani
+          brez igralcev nima česa shraniti. Navodila za ročno sestavo so zložena:
+          4. 10. 2026 je bilo 57 % registriranih brez ekipe, in prazno igrišče s
+          štirimi koraki besedila jih ustavi. */}
+      {izbrani.length === 0 && (
+        <section className="space-y-2 text-sm">
+          {/* V vsaki ligi se igra s svojo ekipo — pogosto presenečenje za novinca. */}
+          {tekmovanje?.prvi_fantasy_krog != null && tekmovanje.prvi_fantasy_krog > 1 && !ekipa && (
+            <p className="text-xs text-slate-400">
+              {tx(
+                'mojaEkipa.locenaLiga',
+                { liga: tekmovanje.short_name, krog: tekmovanje.prvi_fantasy_krog },
+                { liga: (b) => <strong className="text-slate-200">{b}</strong> },
+              )}
+            </p>
+          )}
           <button
             onClick={predlagaj}
             disabled={zakajNiPredloga != null}
@@ -1593,15 +1777,14 @@ export default function MojaEkipa() {
           >
             {t('mojaEkipa.zacetek.sestaviMi')}
           </button>
-          <p className="mt-2 text-xs text-slate-400">
+          <p className="text-xs text-slate-400">
             {zakajNiPredloga ?? t('mojaEkipa.zacetek.opisPredloga')}
           </p>
-
-          <details className="mt-3 text-slate-300">
-            <summary className="cursor-pointer text-xs font-semibold text-slate-400 hover:text-slate-200">
+          <details className="text-slate-300">
+            <summary className="cursor-pointer py-1 text-xs font-semibold text-slate-400 hover:text-slate-200">
               {t('mojaEkipa.zacetek.sam')}
             </summary>
-            <ol className="mt-2 ml-4 list-decimal space-y-1">
+            <ol className="mt-1 ml-4 list-decimal space-y-1 text-xs">
               <li>{t('mojaEkipa.zacetek.korak1')}</li>
               <li>{tx('mojaEkipa.zacetek.korak2', {}, { krepko: belo })}</li>
               <li>
@@ -1617,251 +1800,35 @@ export default function MojaEkipa() {
               <li>{tx('mojaEkipa.zacetek.korak4', {}, { krepko: belo })}</li>
             </ol>
           </details>
-        </div>
+        </section>
       )}
 
-      {/* V vsaki ligi se igra s svojo ekipo — to je pogosto presenečenje, zato
-          je zapisano nad rokom in ne kje v drobnem tisku. */}
-      {tekmovanje?.prvi_fantasy_krog != null && tekmovanje.prvi_fantasy_krog > 1 && (
-        <p className="kartica p-3 text-sm text-slate-300">
-          {tx(
-            'mojaEkipa.locenaLiga',
-            { liga: tekmovanje.short_name, krog: tekmovanje.prvi_fantasy_krog },
-            { liga: (b) => <strong>{b}</strong> },
-          )}
-        </p>
-      )}
-
-      {pokaziVabilo && ekipa?.id && (
-        <PovabiSoigralce ekipaId={ekipa.id} naZapri={() => setPokaziVabilo(false)} />
-      )}
-
-      {naslednjiKrog && <Rok krog={naslednjiKrog} />}
-
-      {zaklenjenaPostava && (
-        <div data-pomoc="prestopi" className="kartica flex flex-wrap items-center gap-x-3 gap-y-1 p-3 text-sm">
-          <span className="font-semibold">
-            {t('mojaEkipa.prestopi.stevec', { n: prestopi, prosti: pravila.prosti })}
-          </span>
-          {wildcardVelja ? (
-            <span className="znacka bg-gnl-400/20 text-gnl-200">
-              {t('mojaEkipa.prestopi.wildcard')}
-            </span>
-          ) : kazen > 0 ? (
-            <span className="text-rose-400">
-              {t('mojaEkipa.prestopi.odbitek', { tock: mnozina(kazen, TOCK_RODILNIK) })}
-            </span>
-          ) : (
-            <span className="text-slate-400">
-              {t('mojaEkipa.prestopi.prosti', {
-                n: pravila.prosti - prestopi,
-                kazen: mnozina(pravila.kazen, TOCKE),
-              })}
-            </span>
-          )}
-        </div>
-      )}
-
-      {/* Rdeč opozorilni pas s KONKRETNIMI napakami + katerim krogom velja.
-          Na telefonu skrit: spodnji pas izpiše napako in vodi na #status-ekipe. */}
-      {izbrani.length > 0 && napakeEkipe.length > 0 && (
-        <div className="kartica animiraj-utrip hidden border-2 border-rose-400/60 bg-rose-500/10 p-3 sm:block sm:p-4">
-          <div className="flex items-start gap-3">
-            <span className="text-2xl">🚨</span>
-            <div className="min-w-0 flex-1 space-y-2">
-              <div className="text-sm font-black text-rose-100 sm:text-base">
-                {t('mojaEkipa.neustreza.naslov')}
-              </div>
-              {naslednjiKrog && (
-                <div className="text-xs text-rose-100/90">
-                  {tx(
-                    naslednjiKrog.deadline_at
-                      ? 'mojaEkipa.neustreza.zaKrogRok'
-                      : 'mojaEkipa.neustreza.zaKrog',
-                    {
-                      krog: naslednjiKrog.number,
-                      rok: naslednjiKrog.deadline_at ? izpisRoka(naslednjiKrog.deadline_at) : null,
-                    },
-                    { krepko: (b) => <strong>{b}</strong> },
-                  )}
-                </div>
-              )}
-              <div className="text-xs text-rose-100/90">
-                {t('mojaEkipa.neustreza.konkretne')}
-                <ul className="mt-1 space-y-0.5 pl-4">
-                  {napakeEkipe.map((n) => (
-                    <li key={n} className="list-disc">
-                      {n}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <p className="text-[11px] text-rose-100/70">
-                {t('mojaEkipa.neustreza.pogosto')}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Povzetek — na desktopu sticky pri vrhu, na mobilnem samo naslovni pas.
-          Mobilni ima že fiksno spodnjo vrstico s proračunom in shrani gumbom,
-          zato tu ne rabi ponovno velike sticky kartice. */}
-      <div className="kartica space-y-3 p-3 sm:sticky sm:top-2 sm:z-30 sm:p-4 sm:shadow-lg sm:shadow-black/30 sm:backdrop-blur">
-        <div className="hidden sm:grid sm:grid-cols-[1fr_auto] sm:items-start sm:gap-3">
-          <div>
-            <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-              {t('mojaEkipa.povzetek.naVoljo')}
-            </div>
-            <div
-              className={`text-3xl font-black tabular-nums leading-none sm:text-4xl ${
-                preostalo < 0 ? 'text-rose-400' : 'text-gnl-300'
-              }`}
-            >
-              {formatirajCeno(preostalo)}
-            </div>
-            <div className="mt-1 text-xs text-slate-400">
-              {tx(
-                'mojaEkipa.povzetek.bogastvo',
-                { bogastvo: formatirajCeno(bogastvo), kader: formatirajCeno(porabljeno) },
-                {
-                  vrednost: (b) => (
-                    <strong className={razlikaC > 0 ? 'text-gnl-300' : razlikaC < 0 ? 'text-rose-300' : 'text-slate-300'}>
-                      {b}
-                    </strong>
-                  ),
-                  razlika: () =>
-                    razlikaC !== 0 && (
-                      <span className={razlikaC > 0 ? 'text-gnl-300' : 'text-rose-300'}>
-                        {' '}
-                        {t('mojaEkipa.povzetek.razlika', {
-                          znak: razlikaC > 0 ? '+' : '−',
-                          cena: formatirajCeno(Math.abs(razlikaC) / 100),
-                        })}
-                      </span>
-                    ),
-                  placano: (b) => <span className="text-slate-500">{b}</span>,
-                },
-              )}
-            </div>
-          </div>
-          <div className="flex flex-col items-end gap-1">
-            <button
-              data-pomoc="shrani"
-              onClick={poskusiShraniti}
-              disabled={shranjujem}
-              className="gumb-glavni whitespace-nowrap px-4 py-2 text-sm disabled:cursor-wait disabled:opacity-60"
-            >
-              {shranjujem ? t('mojaEkipa.povzetek.shranjujem') : t('mojaEkipa.povzetek.shraniEkipo')}
-            </button>
-            {neshranjeno && (
-              <span className="text-[11px] font-semibold text-amber-300">
-                {t('mojaEkipa.povzetek.neshranjeno')}
-              </span>
-            )}
-          </div>
-        </div>
-
-        <div className="hidden sm:block">
-          <div className="h-2 overflow-hidden rounded-full bg-white/10">
-            <div
-              className={`h-full rounded-full transition-all duration-300 ${
-                preostalo < 0
-                  ? 'bg-rose-500'
-                  : 'bg-gradient-to-r from-gnl-500 to-gnl-300'
-              }`}
-              style={{
-                width: `${Math.min(100, (porabljeno / proracun) * 100)}%`,
-              }}
-            />
-          </div>
-          <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
-            <span>
-              {t('mojaEkipa.povzetek.stevec', {
-                n: izbrani.length,
-                igralcev: mnozina(VELIKOST_EKIPE, IGRALCI),
-                prvi: prvi.length,
-                prvih: STEVILO_PRVIH,
-              })}
-            </span>
-            <span className="flex flex-wrap gap-1">
-              {VRSTNI_RED.map((koda) => (
-                <span
-                  key={koda}
-                  className={`znacka ${
-                    vKadru[koda] === POZICIJE[koda].kader
-                      ? razredPozicije(koda)
-                      : 'poz-none'
-                  }`}
-                >
-                  {KRATKA_POZICIJA[koda]} {vKadru[koda]}/{POZICIJE[koda].kader}
-                </span>
-              ))}
-            </span>
-          </div>
-        </div>
-
-        <div className="block">
-          <label
-            htmlFor="ime-ekipe"
-            className="text-[10px] font-semibold uppercase tracking-wide text-slate-500"
-          >
-            {t('mojaEkipa.povzetek.imeEkipe')}
-          </label>
-          {/* Ime je mogoče spremeniti kadarkoli (od 6. 10. 2026; prej je bilo po
-              prvi shranitvi fiksno). Lestvica kaže trenutno ime. */}
-          {(
-            <>
-              <input
-                id="ime-ekipe"
-                data-pomoc="ime-ekipe"
-                ref={imeRef}
-                value={imeEkipe}
-                maxLength={NAJDALJSE_IME}
-                aria-describedby="ime-ekipe-namig"
-                onChange={(e) => setImeEkipe(e.target.value)}
-                placeholder={t('mojaEkipa.povzetek.primerImena')}
-                className={`mt-1 w-full rounded-xl border bg-slate-900 px-3 py-2 text-base sm:text-sm ${
-                  !imeEkipe.trim() && napaka
-                    ? 'border-rose-400/60 ring-1 ring-rose-400/30'
-                    : 'border-white/10'
-                }`}
-              />
-              <p id="ime-ekipe-namig" className="mt-1 text-[11px] text-slate-500">
-                {t('mojaEkipa.povzetek.imeNamig')}
-              </p>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Predlog še ni shranjen: nov žreb ne stane prestopov. */}
+      {/* Nov žreb, dokler predlog ni shranjen (zastonj), ali dopolnitev začetega
+          kadra — vrstica, ne kartica: Shrani ostane edino glavno dejanje. */}
       {izPredloga && zacetniIds.size === 0 && izbrani.length > 0 && (
-        <div className="kartica flex flex-wrap items-center gap-2 border-gnl-400/30 bg-gnl-500/5 p-2.5 text-sm">
+        <div className="flex items-center gap-3 text-xs text-slate-400">
           <button
             onClick={predlagaj}
             disabled={zakajNiPredloga != null}
-            className="gumb-glavni px-3 py-2 text-sm disabled:opacity-50"
+            className="gumb-tih shrink-0 px-3 py-2 text-sm disabled:opacity-50"
           >
             {t('mojaEkipa.zacetek.drugPredlog')}
           </button>
-          <span className="min-w-0 flex-1 text-xs text-slate-400">
+          <span className="min-w-0 flex-1">
             {zakajNiPredloga ?? t('mojaEkipa.zacetek.opisDrugegaPredloga')}
           </span>
         </div>
       )}
-
-      {/* Začet, a nedokončan kader: zapolni manjkajoča mesta. */}
       {izbrani.length > 0 && izbrani.length < VELIKOST_EKIPE && (
-        <div className="kartica flex flex-wrap items-center gap-2 border-gnl-400/30 bg-gnl-500/5 p-2.5 text-sm">
+        <div className="flex items-center gap-3 text-xs text-slate-400">
           <button
             onClick={dopolni}
             disabled={zakajNiPredloga != null}
-            className="gumb-glavni px-3 py-2 text-sm disabled:opacity-50"
+            className="gumb-tih shrink-0 px-3 py-2 text-sm disabled:opacity-50"
           >
             {t('mojaEkipa.zacetek.dopolni')}
           </button>
-          <span className="min-w-0 flex-1 text-xs text-slate-400">
+          <span className="min-w-0 flex-1">
             {zakajNiPredloga ??
               t('mojaEkipa.zacetek.opisDopolnitve', { n: VELIKOST_EKIPE - izbrani.length })}
           </span>
@@ -1869,7 +1836,7 @@ export default function MojaEkipa() {
       )}
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-6">
-        <div className="min-w-0 space-y-4 sm:space-y-6">
+        <div className="min-w-0 space-y-5">
           <div data-pomoc="igrisce">
           <Igrisce
             izbrani={izbraniPodrobno}
@@ -1881,32 +1848,76 @@ export default function MojaEkipa() {
           />
           </div>
 
-          {/* Trak (kapetan + namestnik) — takoj pod igriscem, ker se
-              nanasa na igralce iz iste postave. */}
-          <section className="kartica space-y-2 p-3 sm:p-4">
-            <h3 className="text-xs font-bold uppercase tracking-wide text-slate-400">
-              {t('mojaEkipa.trak.naslov')}
-            </h3>
-            <IzborTraku
-              oznaka={t('mojaEkipa.trak.kapetan', { n: KAPETAN_MNOZITELJ })}
-              vrednost={prvi.find((s) => s.is_captain)?.id ?? ''}
-              moznosti={prvi}
-              naIzbor={(v) => nastaviTrak(v, 'is_captain')}
-            />
-            <IzborTraku
-              oznaka={t('mojaEkipa.trak.namestnik')}
-              vrednost={prvi.find((s) => s.is_vice)?.id ?? ''}
-              moznosti={prvi}
-              naIzbor={(v) => nastaviTrak(v, 'is_vice')}
-            />
-            <p className="text-xs text-slate-500">
-              {t('mojaEkipa.trak.opis')}
-            </p>
-          </section>
+          {/* Kaj še manjka — edino mesto s celim seznamom. Spodnji pas na
+              telefonu izpiše prvo napako in vodi sem. */}
+          {(() => {
+            const brezImena = !imeEkipe.trim()
+            if (izbrani.length === 0 || (!brezImena && napakeEkipe.length === 0)) return null
+            return (
+              <section id="status-ekipe" className="text-sm">
+                <h2 className="text-xs font-bold uppercase tracking-wide text-amber-300">
+                  {t('mojaEkipa.status.manjka')}
+                </h2>
+                <ul className="mt-1 divide-y divide-white/5 text-amber-100/90">
+                  {brezImena && <li className="py-1.5">{t('mojaEkipa.status.vpisiIme')}</li>}
+                  {napakeEkipe.map((n) => (
+                    <li key={n} className="py-1.5">
+                      {n}
+                    </li>
+                  ))}
+                </ul>
+                {/* Shranjena ekipa, ki ne ustreza (prestop, glas o poziciji): brez
+                    tega stavka ne izve, da krog ostane brez točk. */}
+                {ekipa?.id && naslednjiKrog && napakeEkipe.length > 0 && (
+                  <p className="mt-1 text-rose-300">
+                    {tx('mojaEkipa.status.brezTock', { krog: naslednjiKrog.number }, {
+                      krepko: (v) => <strong>{v}</strong>,
+                    })}
+                  </p>
+                )}
+                {!brezImena && (
+                  <p className="mt-1 text-xs text-slate-500">{t('mojaEkipa.status.osnutekZdaj')}</p>
+                )}
+              </section>
+            )
+          })()}
 
-          {/* Razloga za vrnitev: kaj se je s cenami zgodilo od zadnjič in koga
-              velja zamenjati pred rokom. Oboje se da zapreti. Pod igriščem,
-              da igrišče na telefonu ni tri zaslone nizko. */}
+          {/* Trak (kapetan + namestnik) — takoj pod igriščem, ker se nanaša na
+              igralce iz iste postave. */}
+          {izbrani.length > 0 && (
+            <section className="space-y-2">
+              <h2 className="text-xs font-bold uppercase tracking-wide text-slate-400">
+                {t('mojaEkipa.trak.naslov')}
+              </h2>
+              <div className="grid grid-cols-2 gap-2">
+                <IzborTraku
+                  oznaka={t('mojaEkipa.trak.kapetan', { n: KAPETAN_MNOZITELJ })}
+                  vrednost={prvi.find((s) => s.is_captain)?.id ?? ''}
+                  moznosti={prvi}
+                  naIzbor={(v) => nastaviTrak(v, 'is_captain')}
+                />
+                <IzborTraku
+                  oznaka={t('mojaEkipa.trak.namestnik')}
+                  vrednost={prvi.find((s) => s.is_vice)?.id ?? ''}
+                  moznosti={prvi}
+                  naIzbor={(v) => nastaviTrak(v, 'is_vice')}
+                />
+              </div>
+            </section>
+          )}
+
+          {/* Razloga za vrnitev: koga velja zamenjati pred rokom in kaj se je s
+              cenami zgodilo od zadnjič. Oboje se da zapreti. */}
+          <NamigiZaPrestope
+            krog={naslednjiKrog?.number ?? null}
+            mesta={mestaZaNamige}
+            naZamenjaj={zamenjaj}
+            naSkrij={() => {
+              if (ekipa?.id && naslednjiKrog) skrijNamige(ekipa.id, naslednjiKrog.id)
+              setNamigiZaprti(true)
+            }}
+          />
+
           {gibanje && (
             <OdZadnjegaObiska
               igralci={gibanje.igralci.map((g) => ({ ...g, ime: poId[g.player_id]?.full_name ?? null }))}
@@ -1919,404 +1930,315 @@ export default function MojaEkipa() {
             />
           )}
 
-          <NamigiZaPrestope
-            krog={naslednjiKrog?.number ?? null}
-            mesta={mestaZaNamige}
-            naZamenjaj={zamenjaj}
-            naSkrij={() => {
-              if (ekipa?.id && naslednjiKrog) skrijNamige(ekipa.id, naslednjiKrog.id)
-              setNamigiZaprti(true)
-            }}
-          />
+          {/* Vse, kar ni sestava ekipe, je zloženo: na telefonu zaprto, na
+              računalniku odprto. */}
+          <details
+            open={odprtoVec}
+            onToggle={(e) => setOdprtoVec(e.currentTarget.open)}
+            className="group border-t border-white/10 text-sm"
+          >
+            <summary
+              data-pomoc="pripomocki"
+              className="flex cursor-pointer list-none items-center justify-between gap-2 py-3 text-xs font-bold uppercase tracking-wide text-slate-400 hover:text-slate-200 [&::-webkit-details-marker]:hidden"
+            >
+              {t('mojaEkipa.vec')}
+              <span aria-hidden className="transition group-open:rotate-180">
+                ▾
+              </span>
+            </summary>
 
-          {/* "Kaj-če" scenarij: vsota točk zdajšnjih starterjev, izračunana
-              iz zadnje odigrane runde. Zamenjava igralca to številko
-              spremeni — zato je pomembno, da naslov jasno pove, da NI
-              zgodovinski rezultat te ekipe. Historičen rezultat je v
-              lestvici in posnetku postave; ta vrstica je za oceno "kaj
-              bi bilo, če bi imel zdajsnji kader tudi tam".
-              Skrijemo, ce fantasy scoring v tem tekmovanju še ni začel
-              (mladinci: prvi krog se ne šteje, zato tega prikaza ne
-              rabimo). */}
-          {zadnjiKrog &&
-            Object.keys(tockeZadnjiKrog).length > 0 &&
-            (!tekmovanje?.prvi_fantasy_krog ||
-              Number(zadnjiKrog.number ?? 0) >= tekmovanje.prvi_fantasy_krog) && (
-              <section className="kartica p-3 text-sm sm:p-4">
-                <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <span className="text-slate-400">
-                    {tx(
-                      'mojaEkipa.kajCe.prinesla',
-                      { krog: zadnjiKrog.number ?? 0, sezona: zadnjiKrog.season },
-                      { krog: (b) => <strong className="text-slate-200">{b}</strong> },
-                    )}
-                  </span>
-                  <span className="text-lg font-black tabular-nums text-gnl-300">
-                    {mnozina(
-                      Math.round(
-                        izbraniPodrobno
-                          .filter((s) => s.is_starter)
-                          .reduce(
-                            (v, s) =>
-                              v +
-                              (s.tocke_krog ?? 0) *
-                                (s.is_captain ? KAPETAN_MNOZITELJ : 1),
-                            0,
-                          ),
-                      ),
-                      TOCKE_TOZILNIK,
-                    )}
-                  </span>
-                </div>
-                <p className="mt-1 text-[11px] text-slate-500">
-                  {t('mojaEkipa.kajCe.opis')}
-                </p>
-              </section>
-            )}
-
-          {/* status ekipe in shranjevanje */}
-          <section id="status-ekipe" className="kartica p-3 sm:p-4">
-            {(() => {
-              const brezImena = !imeEkipe.trim()
-              const pripravljena = !brezImena && napakeEkipe.length === 0
-              return (
-                <div className="space-y-3">
-                  <div
-                    className={`flex items-start gap-2 rounded-xl border p-3 text-sm ${
-                      pripravljena
-                        ? 'border-gnl-400/40 bg-gnl-500/10 text-gnl-200'
-                        : 'border-amber-400/30 bg-amber-500/5 text-amber-200'
-                    }`}
-                  >
-                    <span className="text-lg leading-none">
-                      {pripravljena ? '✅' : 'ℹ️'}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <div className="font-semibold">
-                        {pripravljena
-                          ? t('mojaEkipa.status.pripravljena')
-                          : t('mojaEkipa.status.manjka')}
-                      </div>
-                      {!pripravljena && (
-                        <ul className="mt-2 space-y-1 text-amber-100/90">
-                          {brezImena && (
-                            <li>• {t('mojaEkipa.status.vpisiIme')}</li>
-                          )}
-                          {napakeEkipe.map((n) => (
-                            <li key={n}>• {n}</li>
-                          ))}
-                        </ul>
-                      )}
-                      {!pripravljena && !brezImena && (
-                        <div className="mt-2 text-xs text-slate-400">
-                          {t('mojaEkipa.status.osnutekZdaj')}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="hidden flex-wrap items-center gap-3 lg:flex">
-                    <button
-                      data-pomoc="shrani"
-              onClick={poskusiShraniti}
-                      disabled={shranjujem}
-                      className="gumb-glavni disabled:cursor-wait disabled:opacity-60"
-                    >
-                      {shranjujem
-                        ? t('mojaEkipa.povzetek.shranjujem')
-                        : pripravljena
-                          ? t('mojaEkipa.povzetek.shraniEkipo')
-                          : t('mojaEkipa.status.shraniOsnutek')}
-                    </button>
-                    {neshranjeno && (
-                      <span className="text-xs font-semibold text-amber-300">
-                        {t('mojaEkipa.povzetek.neshranjeno')}
-                      </span>
-                    )}
-                    {brezImena && (
-                      <span className="text-xs text-rose-300">
-                        {t('mojaEkipa.status.imeObvezno')}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Kaj se pravzaprav zgodi ob shranjevanju — jasno pojasnilo. */}
-                  <div className="rounded-xl bg-slate-950/40 p-3 text-[11px] leading-snug text-slate-400">
-                    {tx(
-                      naslednjiKrog?.deadline_at
-                        ? 'mojaEkipa.status.kajPomeniRok'
-                        : 'mojaEkipa.status.kajPomeni',
-                      {
-                        krog: naslednjiKrog?.number,
-                        rok: naslednjiKrog?.deadline_at ? izpisRoka(naslednjiKrog.deadline_at) : null,
-                      },
-                      { krepko: (b) => <strong className="text-slate-300">{b}</strong> },
-                    )}
-                  </div>
-
-                  {sporocilo && (
-                    <p className="text-sm text-gnl-300">{sporocilo}</p>
-                  )}
-                  {napaka && (
-                    <p className="text-sm text-rose-400">
-                      {t('skupno.napaka', { sporocilo: napaka })}
-                    </p>
-                  )}
-                </div>
-              )
-            })()}
-          </section>
-
-          {/* Pripomočki (Klop+ + Wildcard) — enkratni bonusi, spodaj pod
-              glavnim tokom. */}
-          <section data-pomoc="pripomocki" className="kartica p-3 sm:p-4">
-            <div className="space-y-2">
-              <h3 className="text-xs font-bold uppercase tracking-wide text-slate-400">
-                {t('mojaEkipa.pripomocki.klopPlusNaslov')}
-              </h3>
-              {klopPlus ? (
-                (() => {
-                  const zaklenjen = !lahkoUrejasPripomocek(krogPripomocka, tekmovanjeId, zdaj)
-                  return (
-                    <div className="space-y-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-sm text-gnl-300">
-                          {krogPripomocka
-                            ? t('mojaEkipa.pripomocki.klopPlusVlozenZa', {
-                                krog: krogPripomocka.number,
-                                sezona: krogPripomocka.season,
-                              })
-                            : t('mojaEkipa.pripomocki.klopPlusVlozen')}
-                        </p>
-                        {zaklenjen ? (
-                          <span className="znacka bg-white/10 text-[10px] text-slate-400">
-                            {t('mojaEkipa.pripomocki.zaklenjen')}
-                          </span>
-                        ) : (
-                          <button
-                            onClick={() => prekliciPripomocek('klop_plus')}
-                            disabled={shranjujem}
-                            className="-my-1 px-2 py-2 text-xs text-slate-400 underline hover:text-rose-400"
-                          >
-                            {t('mojaEkipa.pripomocki.preklici')}
-                          </button>
+            <div className="divide-y divide-white/5">
+              {/* "Kaj-če": vsota točk zdajšnjih starterjev v zadnjem odigranem
+                  krogu. NI zgodovinski rezultat te ekipe — ta je na lestvici in
+                  v posnetku postave. Skrito, dokler fantasy točkovanje v ligi še
+                  ni začelo (mladinci: prvi krog se ne šteje). */}
+              {zadnjiKrog &&
+                Object.keys(tockeZadnjiKrog).length > 0 &&
+                (!tekmovanje?.prvi_fantasy_krog ||
+                  Number(zadnjiKrog.number ?? 0) >= tekmovanje.prvi_fantasy_krog) && (
+                  <div className="py-3">
+                    <div className="flex flex-wrap items-baseline justify-between gap-2">
+                      <span className="text-slate-400">
+                        {tx(
+                          'mojaEkipa.kajCe.prinesla',
+                          { krog: zadnjiKrog.number ?? 0, sezona: zadnjiKrog.season },
+                          { krog: (b) => <strong className="text-slate-200">{b}</strong> },
                         )}
-                      </div>
-                      {!zaklenjen && krogPripomocka?.deadline_at && (
-                        <p className="text-[11px] text-slate-500">
+                      </span>
+                      <span className="font-black tabular-nums text-gnl-300">
+                        {mnozina(
+                          Math.round(
+                            izbraniPodrobno
+                              .filter((s) => s.is_starter)
+                              .reduce(
+                                (v, s) =>
+                                  v + (s.tocke_krog ?? 0) * (s.is_captain ? KAPETAN_MNOZITELJ : 1),
+                                0,
+                              ),
+                          ),
+                          TOCKE_TOZILNIK,
+                        )}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs text-slate-500">{t('mojaEkipa.kajCe.opis')}</p>
+                  </div>
+                )}
+
+              {/* Pripomočki (Klop+ in Wildcard) — enkratni bonusi. */}
+              <div className="space-y-1.5 py-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="min-w-0 flex-1 font-semibold text-slate-200">
+                    {t('mojaEkipa.pripomocki.klopPlusNaslov')}
+                  </h3>
+                  {klopPlus &&
+                    (!lahkoUrejasPripomocek(krogPripomocka, tekmovanjeId, zdaj) ? (
+                      <span className="text-xs text-slate-500">{t('mojaEkipa.pripomocki.zaklenjen')}</span>
+                    ) : (
+                      <button
+                        onClick={() => prekliciPripomocek('klop_plus')}
+                        disabled={shranjujem}
+                        className="-my-2 px-2 py-2 text-xs text-slate-400 underline hover:text-rose-400"
+                      >
+                        {t('mojaEkipa.pripomocki.preklici')}
+                      </button>
+                    ))}
+                </div>
+                {klopPlus ? (
+                  <>
+                    <p className="text-gnl-300">
+                      {krogPripomocka
+                        ? t('mojaEkipa.pripomocki.klopPlusVlozenZa', {
+                            krog: krogPripomocka.number,
+                            sezona: krogPripomocka.season,
+                          })
+                        : t('mojaEkipa.pripomocki.klopPlusVlozen')}
+                    </p>
+                    {lahkoUrejasPripomocek(krogPripomocka, tekmovanjeId, zdaj) &&
+                      krogPripomocka?.deadline_at && (
+                        <p className="text-xs text-slate-500">
                           {tx('mojaEkipa.pripomocki.prekliciDo', {}, {
                             odstevanje: () => <Odstevanje do={krogPripomocka.deadline_at} />,
                           })}
                         </p>
                       )}
-                    </div>
-                  )
-                })()
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  <select
-                    value={izbranKrogPripomocka ? izbranKrog : ''}
-                    disabled={!krogiZaPripomocek.length}
-                    onChange={(e) => setIzbranKrog(e.target.value)}
-                    className="min-w-0 flex-1 rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-base sm:text-sm"
-                  >
-                    <option value="">{krogiZaPripomocek.length
-                        ? t('mojaEkipa.pripomocki.izberiKrog')
-                        : t('mojaEkipa.pripomocki.niKroga')}</option>
-                    {krogiZaPripomocek.map((k) => (
-                      <option key={k.id} value={k.id}>
-                        {t('mojaEkipa.pripomocki.krogSezona', { krog: k.number, sezona: k.season })}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    onClick={() => vloziPripomocek('klop_plus', Number(izbranKrog))}
-                    disabled={!izbranKrogPripomocka || shranjujem}
-                    className="gumb-tih disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {shranjujem ? t('mojaEkipa.povzetek.shranjujem') : t('mojaEkipa.pripomocki.vlozi')}
-                  </button>
-                </div>
-              )}
-              <p className="text-xs text-slate-500">
-                {t('mojaEkipa.pripomocki.klopPlusOpis')}
-              </p>
-
-              <h3 className="pt-2 text-xs font-bold uppercase tracking-wide text-slate-400">
-                {t('mojaEkipa.pripomocki.wildcardNaslov')}
-              </h3>
-              {wildcard ? (
-                (() => {
-                  const zaklenjen = !lahkoUrejasPripomocek(krogWildcard, tekmovanjeId, zdaj)
-                  return (
-                    <div className="space-y-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-sm text-gnl-300">
-                          {krogWildcard
-                            ? t('mojaEkipa.pripomocki.wildcardVlozenZa', {
-                                krog: krogWildcard.number,
-                                sezona: krogWildcard.season,
-                              })
-                            : t('mojaEkipa.pripomocki.wildcardVlozen')}
-                        </p>
-                        {zaklenjen ? (
-                          <span className="znacka bg-white/10 text-[10px] text-slate-400">
-                            {t('mojaEkipa.pripomocki.zaklenjen')}
-                          </span>
-                        ) : (
-                          <button
-                            onClick={() => prekliciPripomocek('wildcard')}
-                            disabled={shranjujem}
-                            className="-my-1 px-2 py-2 text-xs text-slate-400 underline hover:text-rose-400"
-                          >
-                            {t('mojaEkipa.pripomocki.preklici')}
-                          </button>
-                        )}
-                      </div>
-                      {!zaklenjen && krogWildcard?.deadline_at && (
-                        <p className="text-[11px] text-slate-500">
-                          {tx('mojaEkipa.pripomocki.prekliciDo', {}, {
-                            odstevanje: () => <Odstevanje do={krogWildcard.deadline_at} />,
-                          })}
-                        </p>
-                      )}
-                    </div>
-                  )
-                })()
-              ) : (
-                <button
-                  onClick={() => {
-                    // Wildcard je en na sezono — en dotik naj ga ne porabi.
-                    if (
-                      naslednjiZaPripomocek &&
-                      !window.confirm(
-                        t('mojaEkipa.pripomocki.potrdiWildcard', { krog: naslednjiZaPripomocek.number }),
-                      )
-                    )
-                      return
-                    vloziPripomocek('wildcard', Number(naslednjiZaPripomocek?.id))
-                  }}
-                  disabled={!naslednjiZaPripomocek || shranjujem}
-                  className="gumb-tih w-full disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {shranjujem
-                    ? t('mojaEkipa.povzetek.shranjujem')
-                    : naslednjiZaPripomocek
-                      ? t('mojaEkipa.pripomocki.vloziZa', { krog: naslednjiZaPripomocek.number })
-                      : t('mojaEkipa.pripomocki.niKroga')}
-                </button>
-              )}
-              <p className="text-xs text-slate-500">
-                {t('mojaEkipa.pripomocki.wildcardOpis')}
-              </p>
-            </div>
-          </section>
-
-          {/* Zgodovina postav — na koncu, za pregled preteklih krogov. */}
-          {posnetkiPoKrogih.length > 0 && (
-            <section className="kartica space-y-3 p-3 sm:p-4">
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <h2 className="text-sm font-bold uppercase tracking-wide text-slate-400">
-                  {t('mojaEkipa.zgodovina.naslov')}
-                </h2>
-                <span className="text-xs text-slate-500">
-                  {t('mojaEkipa.zgodovina.posnetkov', { n: posnetkiPoKrogih.length })}
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {[...posnetkiPoKrogih]
-                  .sort(
-                    (a, b) => (a.krog?.number ?? 0) - (b.krog?.number ?? 0),
-                  )
-                  .map((p) => (
-                    <button
-                      key={p.round_id}
-                      onClick={() => setZgodovinaKrogId(p.round_id)}
-                      className={`znacka px-3 py-1.5 transition ${
-                        zgodovinaKrogId === p.round_id
-                          ? 'bg-gnl-500 text-slate-950'
-                          : 'bg-white/5 text-slate-300 hover:bg-white/10'
-                      }`}
+                  </>
+                ) : (
+                  <div className="flex gap-2">
+                    <select
+                      value={izbranKrogPripomocka ? izbranKrog : ''}
+                      disabled={!krogiZaPripomocek.length}
+                      onChange={(e) => setIzbranKrog(e.target.value)}
+                      className="min-w-0 flex-1 rounded-lg border border-white/10 bg-slate-900 px-2.5 py-2 text-base sm:text-sm"
                     >
-                      {t('mojaEkipa.zgodovina.krog', { krog: p.krog?.number })}
+                      <option value="">
+                        {krogiZaPripomocek.length
+                          ? t('mojaEkipa.pripomocki.izberiKrog')
+                          : t('mojaEkipa.pripomocki.niKroga')}
+                      </option>
+                      {krogiZaPripomocek.map((k) => (
+                        <option key={k.id} value={k.id}>
+                          {t('mojaEkipa.pripomocki.krogSezona', { krog: k.number, sezona: k.season })}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => vloziPripomocek('klop_plus', Number(izbranKrog))}
+                      disabled={!izbranKrogPripomocka || shranjujem}
+                      className="gumb-tih shrink-0 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {shranjujem ? t('mojaEkipa.povzetek.shranjujem') : t('mojaEkipa.pripomocki.vlozi')}
                     </button>
-                  ))}
+                  </div>
+                )}
+                <p className="text-xs text-slate-500">{t('mojaEkipa.pripomocki.klopPlusOpis')}</p>
               </div>
-              {(() => {
-                const izbrani = posnetkiPoKrogih.find(
-                  (p) => p.round_id === zgodovinaKrogId,
-                )
-                if (!izbrani) return null
-                const starterji = izbrani.igralci.filter(
-                  (i: any) => i.is_starter,
-                )
-                // Točke kroga iz lestvice: s samodejnimi menjavami, trakom
-                // namestnika in odbitkom za prestope.
-                const skupaj =
-                  izbrani.skupaj != null ? Math.round(Number(izbrani.skupaj)) : null
-                return (
+
+              <div className="space-y-1.5 py-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="min-w-0 flex-1 font-semibold text-slate-200">
+                    {t('mojaEkipa.pripomocki.wildcardNaslov')}
+                  </h3>
+                  {wildcard ? (
+                    !lahkoUrejasPripomocek(krogWildcard, tekmovanjeId, zdaj) ? (
+                      <span className="text-xs text-slate-500">{t('mojaEkipa.pripomocki.zaklenjen')}</span>
+                    ) : (
+                      <button
+                        onClick={() => prekliciPripomocek('wildcard')}
+                        disabled={shranjujem}
+                        className="-my-2 px-2 py-2 text-xs text-slate-400 underline hover:text-rose-400"
+                      >
+                        {t('mojaEkipa.pripomocki.preklici')}
+                      </button>
+                    )
+                  ) : (
+                    <button
+                      onClick={() => {
+                        // Wildcard je en na sezono — en dotik naj ga ne porabi.
+                        if (
+                          naslednjiZaPripomocek &&
+                          !window.confirm(
+                            t('mojaEkipa.pripomocki.potrdiWildcard', { krog: naslednjiZaPripomocek.number }),
+                          )
+                        )
+                          return
+                        vloziPripomocek('wildcard', Number(naslednjiZaPripomocek?.id))
+                      }}
+                      disabled={!naslednjiZaPripomocek || shranjujem}
+                      className="gumb-tih shrink-0 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {shranjujem
+                        ? t('mojaEkipa.povzetek.shranjujem')
+                        : naslednjiZaPripomocek
+                          ? t('mojaEkipa.pripomocki.vloziZa', { krog: naslednjiZaPripomocek.number })
+                          : t('mojaEkipa.pripomocki.niKroga')}
+                    </button>
+                  )}
+                </div>
+                {wildcard && (
                   <>
-                    <div className="text-xs text-slate-500">
-                      {tx(
-                        skupaj != null
-                          ? 'mojaEkipa.zgodovina.podrobnostSkupaj'
-                          : 'mojaEkipa.zgodovina.podrobnost',
-                        {
-                          krog: izbrani.krog?.number,
-                          sezona: izbrani.krog?.season,
-                          tocke: skupaj != null ? mnozina(skupaj, TOCKE) : null,
-                        },
-                        { krepko: (b) => <strong className="text-gnl-300">{b}</strong> },
-                      )}
-                    </div>
-                    <EnajstericaNaIgriscu
-                      igralci={starterji.map((s: any) => ({
-                        ...s,
-                        position: s.position,
-                      }))}
-                    />
-                    {skupaj != null && ekipa && (
-                      <ZgodbaKroga
-                        ekipaId={ekipa.id}
-                        krogId={izbrani.round_id}
-                        ekipa={ekipa.name ?? (imeEkipe || t('mojaEkipa.naslov'))}
-                        liga={tekmovanje?.name ?? ''}
-                        povezava={
-                          typeof window !== 'undefined'
-                            ? `${izvor()}/team/${ekipa.id}?krog=${izbrani.round_id}`
-                            : ''
-                        }
-                      />
-                    )}
-                    {skupaj != null && ekipa && (
-                      <div className="border-t border-white/5 pt-3">
-                        <div className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">
-                          {t('mojaEkipa.zgodovina.deli', { krog: izbrani.krog?.number })}
-                        </div>
-                        <Plakat
-                          podatki={{
-                            vrsta: 'krog',
-                            ekipa: ekipa.name ?? (imeEkipe || t('mojaEkipa.naslov')),
-                            liga: tekmovanje?.name ?? '',
-                            tocke: formatirajTocke(skupaj),
-                            krog: izbrani.krog?.number ?? 0,
-                            mesto: delitevKroga?.round_id === izbrani.round_id ? delitevKroga?.mesto ?? null : null,
-                            odEkip: delitevKroga?.round_id === izbrani.round_id ? delitevKroga?.odEkip ?? null : null,
-                            igralci: delitevKroga?.round_id === izbrani.round_id ? delitevKroga?.igralci ?? [] : [],
-                          }}
-                          povezava={
-                            typeof window !== 'undefined'
-                              ? `${izvor()}/ekipa/${ekipa.id}?krog=${izbrani.round_id}`
-                              : ''
-                          }
-                        />
-                      </div>
+                    <p className="text-gnl-300">
+                      {krogWildcard
+                        ? t('mojaEkipa.pripomocki.wildcardVlozenZa', {
+                            krog: krogWildcard.number,
+                            sezona: krogWildcard.season,
+                          })
+                        : t('mojaEkipa.pripomocki.wildcardVlozen')}
+                    </p>
+                    {lahkoUrejasPripomocek(krogWildcard, tekmovanjeId, zdaj) && krogWildcard?.deadline_at && (
+                      <p className="text-xs text-slate-500">
+                        {tx('mojaEkipa.pripomocki.prekliciDo', {}, {
+                          odstevanje: () => <Odstevanje do={krogWildcard.deadline_at} />,
+                        })}
+                      </p>
                     )}
                   </>
-                )
-              })()}
-            </section>
-          )}
+                )}
+                <p className="text-xs text-slate-500">{t('mojaEkipa.pripomocki.wildcardOpis')}</p>
+              </div>
+
+              {/* Pravilo samodejnih menjav — na igrišču ostane le napis "Klop". */}
+              <p className="py-3 text-xs text-slate-500">
+                <strong className="text-slate-300">{t('mojaEkipa.igrisce.klop')}:</strong>{' '}
+                {t('mojaEkipa.igrisce.klopOpis')}
+              </p>
+
+              {/* Kaj se pravzaprav zgodi ob shranjevanju. */}
+              <p className="py-3 text-xs leading-snug text-slate-500">
+                {tx(
+                  naslednjiKrog?.deadline_at ? 'mojaEkipa.status.kajPomeniRok' : 'mojaEkipa.status.kajPomeni',
+                  {
+                    krog: naslednjiKrog?.number,
+                    rok: naslednjiKrog?.deadline_at ? izpisRoka(naslednjiKrog.deadline_at) : null,
+                  },
+                  { krepko: (b) => <strong className="text-slate-300">{b}</strong> },
+                )}
+              </p>
+
+              {tekmovanje?.prvi_fantasy_krog != null && tekmovanje.prvi_fantasy_krog > 1 && (
+                <p className="py-3 text-xs text-slate-500">
+                  {tx(
+                    'mojaEkipa.locenaLiga',
+                    { liga: tekmovanje.short_name, krog: tekmovanje.prvi_fantasy_krog },
+                    { liga: (b) => <strong className="text-slate-300">{b}</strong> },
+                  )}
+                </p>
+              )}
+
+              {/* Zgodovina postav — pregled preteklih krogov. */}
+              {posnetkiPoKrogih.length > 0 && (
+                <div className="space-y-3 py-3">
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <h3 className="font-semibold text-slate-200">{t('mojaEkipa.zgodovina.naslov')}</h3>
+                    <span className="text-xs text-slate-500">
+                      {t('mojaEkipa.zgodovina.posnetkov', { n: posnetkiPoKrogih.length })}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[...posnetkiPoKrogih]
+                      .sort((a, b) => (a.krog?.number ?? 0) - (b.krog?.number ?? 0))
+                      .map((p) => (
+                        <button
+                          key={p.round_id}
+                          onClick={() => setZgodovinaKrogId(p.round_id)}
+                          className={`znacka px-3 py-1.5 transition ${
+                            zgodovinaKrogId === p.round_id
+                              ? 'bg-gnl-500 text-slate-950'
+                              : 'bg-white/5 text-slate-300 hover:bg-white/10'
+                          }`}
+                        >
+                          {t('mojaEkipa.zgodovina.krog', { krog: p.krog?.number })}
+                        </button>
+                      ))}
+                  </div>
+                  {(() => {
+                    const izbrani = posnetkiPoKrogih.find((p) => p.round_id === zgodovinaKrogId)
+                    if (!izbrani) return null
+                    const starterji = izbrani.igralci.filter((i: any) => i.is_starter)
+                    // Točke kroga iz lestvice: s samodejnimi menjavami, trakom
+                    // namestnika in odbitkom za prestope.
+                    const skupaj = izbrani.skupaj != null ? Math.round(Number(izbrani.skupaj)) : null
+                    return (
+                      <>
+                        <div className="text-xs text-slate-500">
+                          {tx(
+                            skupaj != null
+                              ? 'mojaEkipa.zgodovina.podrobnostSkupaj'
+                              : 'mojaEkipa.zgodovina.podrobnost',
+                            {
+                              krog: izbrani.krog?.number,
+                              sezona: izbrani.krog?.season,
+                              tocke: skupaj != null ? mnozina(skupaj, TOCKE) : null,
+                            },
+                            { krepko: (b) => <strong className="text-gnl-300">{b}</strong> },
+                          )}
+                        </div>
+                        <EnajstericaNaIgriscu
+                          igralci={starterji.map((s: any) => ({ ...s, position: s.position }))}
+                        />
+                        {skupaj != null && ekipa && (
+                          <ZgodbaKroga
+                            ekipaId={ekipa.id}
+                            krogId={izbrani.round_id}
+                            ekipa={ekipa.name ?? (imeEkipe || t('mojaEkipa.naslov'))}
+                            liga={tekmovanje?.name ?? ''}
+                            povezava={
+                              typeof window !== 'undefined'
+                                ? `${izvor()}/team/${ekipa.id}?krog=${izbrani.round_id}`
+                                : ''
+                            }
+                          />
+                        )}
+                        {skupaj != null && ekipa && (
+                          <div className="border-t border-white/5 pt-3">
+                            <div className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">
+                              {t('mojaEkipa.zgodovina.deli', { krog: izbrani.krog?.number })}
+                            </div>
+                            <Plakat
+                              podatki={{
+                                vrsta: 'krog',
+                                ekipa: ekipa.name ?? (imeEkipe || t('mojaEkipa.naslov')),
+                                liga: tekmovanje?.name ?? '',
+                                tocke: formatirajTocke(skupaj),
+                                krog: izbrani.krog?.number ?? 0,
+                                mesto: delitevKroga?.round_id === izbrani.round_id ? delitevKroga?.mesto ?? null : null,
+                                odEkip: delitevKroga?.round_id === izbrani.round_id ? delitevKroga?.odEkip ?? null : null,
+                                igralci: delitevKroga?.round_id === izbrani.round_id ? delitevKroga?.igralci ?? [] : [],
+                              }}
+                              povezava={
+                                typeof window !== 'undefined'
+                                  ? `${izvor()}/ekipa/${ekipa.id}?krog=${izbrani.round_id}`
+                                  : ''
+                              }
+                            />
+                          </div>
+                        )}
+                      </>
+                    )
+                  })()}
+                </div>
+              )}
+            </div>
+          </details>
         </div>
 
         {/* trg — na velikih zaslonih stranski stolpec, ki ostane na mestu */}
@@ -2400,8 +2322,9 @@ export default function MojaEkipa() {
           </button>
         )}
         <div className="flex items-center gap-2 px-3 py-1.5">
-          <div className="min-w-0 flex-1 tabular-nums leading-tight">
-            <span className="text-[11px] text-slate-500">{t('mojaEkipa.telefon.ostane')} </span>
+          {/* Ena vrstica tudi pri 360 px: postava se izpiše le, ko ni polna. */}
+          <div className="min-w-0 flex-1 truncate whitespace-nowrap tabular-nums leading-tight">
+            <span className="sr-only">{t('mojaEkipa.telefon.ostane')} </span>
             <span
               className={`text-sm font-black ${
                 preostalo < 0 ? 'text-rose-400' : 'text-gnl-300'
@@ -2409,11 +2332,12 @@ export default function MojaEkipa() {
             >
               {formatirajCeno(preostalo)}
             </span>
-            <span className="ml-2 text-[11px] text-slate-500">
-              {izbrani.length}/{VELIKOST_EKIPE} · {prvi.length}/{STEVILO_PRVIH}
+            <span className="ml-1.5 text-[11px] text-slate-500">
+              {izbrani.length}/{VELIKOST_EKIPE}
+              {prvi.length !== STEVILO_PRVIH && ` · ${prvi.length}/${STEVILO_PRVIH}`}
             </span>
             {neshranjeno && (
-              <span className="ml-2 text-[11px] font-semibold text-amber-300">
+              <span className="ml-1.5 text-[11px] font-semibold text-amber-300">
                 {t('mojaEkipa.telefon.neshranjeno')}
               </span>
             )}
@@ -2463,6 +2387,19 @@ export default function MojaEkipa() {
           klubKratko={info.team_short}
           klubLogo={info.team_logo}
           naZapri={() => setInfo(null)}
+          dejanja={
+            izbrani.some((s) => s.player_id === info.id) && (
+              <button
+                onClick={() => {
+                  odstrani(info)
+                  setInfo(null)
+                }}
+                className="gumb-tih w-full text-sm text-rose-200"
+              >
+                {t('mojaEkipa.igrisce.odstraniIzKadra')}
+              </button>
+            )
+          }
         />
       )}
     </div>
@@ -2601,7 +2538,7 @@ function TrgIgralcev({
       </div>
 
       {vidni.length === 0 && (
-        <div className="kartica space-y-2 p-4 text-center text-sm text-slate-400">
+        <div className="space-y-2 py-4 text-center text-sm text-slate-400">
           <p>{t('mojaEkipa.trg.niZadetkov')}</p>
           <button
             onClick={() => {
@@ -2616,7 +2553,7 @@ function TrgIgralcev({
         </div>
       )}
 
-      <ul className="space-y-1.5">
+      <ul className="divide-y divide-white/5">
         {vidni.slice(0, 60).map((i) => {
           const jeIzbran = izbrani.some((s) => s.player_id === i.id)
           const razlog = jeIzbran
@@ -2633,8 +2570,8 @@ function TrgIgralcev({
           return (
             <li
               key={i.id}
-              className={`kartica p-2 ${
-                jeIzbran ? 'ring-1 ring-gnl-400/40' : ''
+              className={`py-2 ${
+                jeIzbran ? '-mx-2 rounded-lg bg-gnl-500/10 px-2' : ''
               } ${razlog ? 'opacity-70' : ''}`}
             >
               <div className="flex items-center gap-2">
@@ -2819,37 +2756,6 @@ function PredalTrga({
   )
 }
 
-function Rok({ krog }: { krog: KrogRok }) {
-  const rok = krog.deadline_at ? new Date(krog.deadline_at) : null
-  const zapadel = rok ? rok.getTime() <= Date.now() : false
-  return (
-    <div className="kartica flex flex-wrap items-center gap-x-3 gap-y-1 p-3 text-sm">
-      <span className="znacka bg-gnl-400/20 text-gnl-200">
-        {t('mojaEkipa.rok.krog', { krog: krog.number })}
-      </span>
-      {rok ? (
-        <>
-          <span className="text-slate-300">
-            {tx(
-              zapadel ? 'mojaEkipa.rok.potekel' : 'mojaEkipa.rok.rok',
-              { rok: izpisRoka(krog.deadline_at!) },
-              { krepko: (b) => <strong className="font-semibold">{b}</strong> },
-            )}
-          </span>
-          <Odstevanje do={krog.deadline_at} ozadje />
-        </>
-      ) : (
-        <span className="text-slate-400">{t('mojaEkipa.rok.niDolocen')}</span>
-      )}
-      <span className="w-full text-xs text-slate-500">
-        {zapadel
-          ? t('mojaEkipa.rok.naslednji')
-          : t('mojaEkipa.rok.obRoku')}
-      </span>
-    </div>
-  )
-}
-
 function IzborTraku({
   oznaka,
   vrednost,
@@ -2862,12 +2768,12 @@ function IzborTraku({
   naIzbor: (v: string) => void
 }) {
   return (
-    <label className="flex items-center gap-2 text-sm">
-      <span className="w-24 shrink-0 text-slate-400 sm:w-28">{oznaka}</span>
+    <label className="block min-w-0 text-xs text-slate-400">
+      {oznaka}
       <select
         value={vrednost}
         onChange={(e) => naIzbor(e.target.value)}
-        className="min-w-0 flex-1 rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-base sm:text-sm"
+        className="mt-1 block w-full rounded-lg border border-white/10 bg-slate-900 px-2.5 py-2 text-base text-slate-100 sm:text-sm"
       >
         <option value="">{t('mojaEkipa.trak.nihce')}</option>
         {moznosti.map((s) => (
