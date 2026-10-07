@@ -228,6 +228,14 @@ Posebnosti, ki jih je našel pregled pred vklopom (7. 10. 2026):
 Beremo odkrito (`User-Agent: SLFF fantasy`, 500 ms med zahtevki,
 popolnih zapisnikov ne beremo znova), vir je v nogi vsake strani.
 
+Grbe hrvaških klubov prinese `scripts/grbi-hns.mjs` z glave strani tekme
+(`club1` domači, `club2` gostje — po mestu, ne po `alt`; izvirnik namesto
+80 px, v `public/grbi/hr-*`) — delovni tok *Grbi klubov* z `vir = hns`,
+najprej brez `pisi`, po želji `tekmovanje`. Klub brez grba ima na Semaforju
+`logo nologo` brez slike in ostane pri grbu iz začetnic. Načrt (brez
+`--pisi`) dela tudi z javnim anon ključem. Po uvozu nove hrvaške lige ga
+poženi znova.
+
 ### Država obiskovalca
 
 Domena je ena, **lige druge države so skrite**: `useTekmovanje().tekmovanja`
