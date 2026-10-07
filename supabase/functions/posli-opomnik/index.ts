@@ -351,10 +351,10 @@ Deno.serve(async (req) => {
         rezultati.push({ ekipa, ok: false, razlog: 'odjavljen' })
         continue
       }
-      const sporociloEkipi = (vrsta === 'izstop-kluba' ? sestaviIzstopKluba : sestaviPopravekPozicije)(
+      const sporociloEkipi = await sOdjavo(service, e.owner_id, (vrsta === 'izstop-kluba' ? sestaviIzstopKluba : sestaviPopravekPozicije)(
         liga,
         { display_name: pr?.display_name ?? null, team_name: e.team_name, igralci: e.igralci },
-      )
+      ))
       const rez: { id?: string; napaka?: string } = zaPosto
         ? await poslji(EMAIL_FROM, email!, sporociloEkipi, Deno.env.get('EMAIL_REPLY_TO'))
         : {}
@@ -463,13 +463,16 @@ Deno.serve(async (req) => {
       continue
     }
 
-    const sporocilo =
+    const sporocilo = await sOdjavo(
+      service,
+      u.user_id,
       vrsta === 'opozorilo'
         ? sestaviOpozorilo(liga, u)
         : !u.team_id
           // Brez ekipe ni lige: povabilo k izbiri v jeziku prijave.
           ? sestaviOpomnikBrezLige(u.jezik, { display_name: u.display_name })
-          : sestaviOpomnik(liga, { display_name: u.display_name, brez_ekipe: false })
+          : sestaviOpomnik(liga, { display_name: u.display_name, brez_ekipe: false }),
+    )
     let rez: { id?: string; napaka?: string } = {}
     const zaPosto = u.email_vklop && !!u.email
     if (zaPosto) {
@@ -524,6 +527,28 @@ function izidKanalov(
   return {
     kanal: mail ? (push ? 'oba' : 'email') : push ? 'push' : 'email',
     napaka: mail || push ? null : (rez.napaka ?? 'push ni dostavljen'),
+  }
+}
+
+/**
+ * Odjava brez prijave: povezavi v nogi (in glavi List-Unsubscribe) doda
+ * uporabnika in podpisan žeton (`zeton_odjave`, ključ vidi le baza). Stran
+ * /reminders z njima pokaže gumb za odjavo. Brez žetona ostane stara povezava,
+ * ki zahteva prijavo.
+ */
+// deno-lint-ignore no-explicit-any
+async function sOdjavo(db: any, userId: string, s: Sporocilo): Promise<Sporocilo> {
+  if (!s.odjava) return s
+  const { data: z } = await db.rpc('zeton_odjave', { p_user: userId })
+  if (typeof z !== 'string' || !z) return s
+  const url = new URL(s.odjava)
+  url.searchParams.set('u', userId)
+  url.searchParams.set('z', z)
+  const nova = url.toString()
+  return {
+    ...s,
+    odjava: nova,
+    html: s.html.split(`href="${s.odjava}"`).join(`href="${nova.replaceAll('&', '&amp;')}"`),
   }
 }
 

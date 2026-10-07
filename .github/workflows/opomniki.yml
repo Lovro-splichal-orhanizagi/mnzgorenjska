@@ -5,18 +5,18 @@ name: Opomniki brez ekipe
 # zato, ker bi bil pokvarjen, ampak ker ga ni nihce pritisnil. Uporabniki brez
 # ekipe so najvecje puscanje, v novih ligah pa so to skoraj vsi.
 #
-# URNIK JE NAMENOMA IZKLOPLJEN.
+# URNIK JE VKLOPLJEN 7. 10. 2026 (odlocitev lastnika): 852 racunov je bilo brez
+# ekipe in nihce ni dobil maila. Vsak dan ob 8:17 UTC najvec 150 mailov, ker
+# je mail.slff.eu nov posiljatelj in si mora ugled pri Gmailu ustvariti
+# postopoma (strezik nosi tudi posto HelpStacka).
 #
-# Ta tok posilja posto ZIVIM uporabnikom (353 racunov). Vklop takega posiljanja
-# ni odlocitev razvijalca, zato je tu samo `workflow_dispatch`. Preden se urnik
-# vklopi, ga pozeni ROCNO s `suho: true` in poglej stevilke — funkcija takrat
-# samo presteje, komu bi pisala, in ne poslje nicesar.
-#
-# Funkcija sama ze varuje pred podvajanjem: istemu cloveku ne poslje dvakrat v
-# treh dneh (`nedavni_opomnik`).
+# Varovala: istemu cloveku najvec trikrat skupaj in ne pogosteje kot na sedem
+# dni (`nedavni_opomnik`); vsak mail ima odjavo brez prijave (`odjavi_z_zetonom`),
+# kdor se odjavi (`brez_opomnikov`), ne dobi nicesar vec.
+# Rocni zagon je se vedno privzeto suh.
 on:
-  # schedule:
-  #   - cron: '0 8 * * 3'   # sreda zjutraj, dan pred vikend krogom
+  schedule:
+    - cron: '17 8 * * *'
   workflow_dispatch:
     inputs:
       suho:
@@ -27,7 +27,7 @@ on:
       najvec_poslati:
         description: 'Največ poslanih v tem zagonu (dnevna kvota ponudnika)'
         required: false
-        default: '90'
+        default: '150'
         type: string
 
 permissions:
@@ -42,8 +42,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      SUHO: ${{ inputs.suho }}
-      NAJVEC_POSLATI: ${{ inputs.najvec_poslati }}
+      # Po urniku posilja (inputs so takrat prazni), rocno privzeto suho.
+      SUHO: ${{ github.event_name == 'schedule' && 'false' || inputs.suho }}
+      NAJVEC_POSLATI: ${{ inputs.najvec_poslati || '150' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
