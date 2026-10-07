@@ -172,6 +172,22 @@ export function sestaviOpomnik(
   return { naslov: B.naslov, html, odjava: p.odjava }
 }
 
+// --- push opomnik: še nimaš ekipe, rok je jutri -----------------------------
+// Samo potisno obvestilo (brez maila), zato le naslov in kratko besedilo.
+
+export function sestaviPushOpomnik(
+  liga: Liga,
+  rok: string,
+): { naslov: string; besedilo: string } {
+  const kdaj = izpisRoka(rok, liga)
+  const ozn = liga.oznaka
+  return {
+    sk: { naslov: `SLFF ${ozn}: ešte nemáš tím`, besedilo: `Uzávierka kola je ${kdaj}. Zostav tím, aby si získal body.` },
+    hr: { naslov: `SLFF ${ozn}: još nemaš momčad`, besedilo: `Rok za kolo je ${kdaj}. Složi momčad da skupljaš bodove.` },
+    sl: { naslov: `SLFF ${ozn}: še nimaš ekipe`, besedilo: `Rok za krog je ${kdaj}. Sestavi ekipo, da dobiš točke.` },
+  }[jezikLige(liga)]
+}
+
 // --- opomnik brez lige: človek še nima nobene ekipe -------------------------
 // Kdor nima nobene ekipe, nima lige — "privzeta" liga je le najbolj živa, ne
 // njegova. Zato mail ne imenuje lige, ampak povabi k izbiri. Jezik je jezik

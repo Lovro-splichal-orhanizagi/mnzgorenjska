@@ -417,7 +417,15 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
 - `push_tokens` → žeton FCM naprave mobilne aplikacije (ključ je žeton, ob
   prijavi drugega uporabnika na isti napravi se preseli). Vpiše ga le
   `shrani_push_zeton`, bere servis: `posli-opomnik` pošlje isto sporočilo še
-  kot obvestilo (`push.ts`, skrivnost `FIREBASE_SERVICE_ACCOUNT`)
+  kot obvestilo (`push.ts`, skrivnost `FIREBASE_SERVICE_ACCOUNT`). Kanala sta
+  neodvisna: pošta gre, če ni `profiles.brez_opomnikov`, push, če ni
+  `profiles.brez_push` (oboje stran `/reminders`, naslov "Obvestila");
+  kandidati vrnejo `email_vklop`/`push_vklop`, `email_log.kanal` pove, kaj je
+  prišlo. Za dovoljenje telefona vpraša šele stikalo na tej strani, ne prijava
+- `kandidati_za_push_opomnik(liga)` → samo push "še nimaš ekipe": kdor ima
+  napravo in v ligi nima ekipe (ali ima prazno; brez ekipe šteje domača liga
+  kot pri opomniku), 24 ur pred rokom, enkrat na krog (`email_log` vrsta
+  `opomnik-push`). Teče vsako uro v `opozorila.yml` (`VRSTA=opomnik-push`)
 - `izbrisi_moj_racun()` → uporabnik izbriše svoj račun (stran `/account`,
   zahteva obeh trgovin); kaskada odnese profil, ekipe, glasove in mini lige
 - `teams.logo_url` → grb kluba; če je prazen, `src/components/Grb.jsx` nariše
@@ -707,7 +715,8 @@ update competitions set active = true where slug in ('lj-1-liga','lj-2-liga');
   potrebujejo le lokalni Docker Postgres in migracije, ne uvoženih tekem.
   `SUPABASE_TEST_DB` lahko izbere izolirano testno bazo v istem kontejnerju.
 - Lastnik profila sme posodobiti le `display_name`, `insider_team_id`,
-  `navijam_team_id` in `brez_opomnikov` (odjava od opomnikov, stran `/reminders`); `is_admin` je servisno polje. Lastnik ekipe sme pisati le vnosna polja ob
+  `navijam_team_id`, `brez_opomnikov` in `brez_push` (odjava od e-pošte in
+  pusha, stran `/reminders`); `is_admin` je servisno polje. Lastnik ekipe sme pisati le vnosna polja ob
   nastanku in ime ob spremembi. Za kader in denar vedno kliči `shrani_ekipo`.
   Brisanje ekipe je servisno opravilo, ker bi sicer obšlo zaklenjeno zgodovino.
 - Nove tabele in pogledi v `public` vlogama `anon`/`authenticated` **ne dajo

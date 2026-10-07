@@ -19,7 +19,7 @@ export const aplikacija = {
     opis: 'Povezava je morda zastarela ali pa je v naslovu tipkarska napaka.',
     nazaj: 'Nazaj na začetno stran',
   },
-  /** Gumb za podporo na naslovnici (components/Pivo.tsx). */
+  /** Gumb za podporo: naslovnica, noga, lestvica, rezultati (components/Pivo.tsx). */
   pivo: {
     gumb: 'Časti pivo',
   },
@@ -42,9 +42,10 @@ export const aplikacija = {
     admin: 'Admin',
     vec: 'Več',
     racun: 'Račun',
-    opomniki: 'Opomniki',
+    opomniki: 'Obvestila',
     izbrisRacuna: 'Izbris računa',
     povabi: 'Povabi prijatelja',
+    pomoc: 'Pomoč',
     odjava: 'Odjava',
     prijava: 'Prijava',
     meni: 'Meni',

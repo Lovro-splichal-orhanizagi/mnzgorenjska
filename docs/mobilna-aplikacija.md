@@ -69,7 +69,7 @@ Xcode 27 `npx cap run ios` ne najde simulatorja; namesti ročno:
 4. ✅ **Varovalo različice** — `min_app_verzija`, zaslon "Posodobi" s povezavo v trgovino.
 5. ✅ **Potisna obvestila** — `@capacitor-firebase/messaging`, Firebase projekt
    (APNs ključ naložen v Firebase), tabela `push_tokens` (RLS: lastnik),
-   `posli-opomnik` pošlje tudi push; `brez_opomnikov` velja za oba kanala.
+   `posli-opomnik` pošlje tudi push; `brez_opomnikov` velja za pošto, `brez_push` za push.
 6. ✅ **Trgovini** — opisi sl/sk/en, posnetki zaslona, zasebnost (`/pravno`),
    Apple privacy labels, Google Data safety, TestFlight + zaprto testiranje, pregled.
 7. **CI (pozneje)** — GitHub Actions + fastlane, ko je prva različica odobrena.

@@ -55,6 +55,7 @@ export type Database = {
           team_id: number
           yellow_cards: number
         }
+        ComputedFields: never
         Insert: {
           clean_sheet?: boolean
           goals?: number
@@ -190,6 +191,7 @@ export type Database = {
           player_id: number | null
           voter_id: string
         }
+        ComputedFields: never
         Insert: {
           created_at?: string
           goal_id: number
@@ -274,6 +276,7 @@ export type Database = {
           reason: string | null
           voter_id: string | null
         }
+        ComputedFields: never
         Insert: {
           created_at?: string | null
           deleted_at?: string
@@ -305,6 +308,7 @@ export type Database = {
           id: number
           user_id: string
         }
+        ComputedFields: never
         Insert: {
           alias: string
           content: string
@@ -351,6 +355,7 @@ export type Database = {
           key: string
           value: NonNullable<Json>
         }
+        ComputedFields: never
         Insert: {
           competition_id: number
           key: string
@@ -403,6 +408,7 @@ export type Database = {
           vir_ime: string | null
           vir_url: string | null
         }
+        ComputedFields: never
         Insert: {
           active?: boolean
           country_id: number
@@ -462,6 +468,7 @@ export type Database = {
           name: string
           sort_order: number
         }
+        ComputedFields: never
         Insert: {
           active?: boolean
           code: string
@@ -483,6 +490,7 @@ export type Database = {
           competition_id: number | null
           email: string
           id: number
+          kanal: string
           napaka: string | null
           poslano_at: string
           resend_id: string | null
@@ -490,10 +498,12 @@ export type Database = {
           user_id: string | null
           vrsta: string
         }
+        ComputedFields: never
         Insert: {
           competition_id?: number | null
           email: string
           id?: never
+          kanal?: string
           napaka?: string | null
           poslano_at?: string
           resend_id?: string | null
@@ -505,6 +515,7 @@ export type Database = {
           competition_id?: number | null
           email?: string
           id?: never
+          kanal?: string
           napaka?: string | null
           poslano_at?: string
           resend_id?: string | null
@@ -572,6 +583,7 @@ export type Database = {
           round_id: number
           season: string
         }
+        ComputedFields: never
         Insert: {
           chip: string
           fantasy_team_id: number
@@ -678,6 +690,7 @@ export type Database = {
           position: string | null
           round_id: number
         }
+        ComputedFields: never
         Insert: {
           bench_order?: number | null
           captured_at?: string
@@ -833,6 +846,7 @@ export type Database = {
           is_vice: boolean
           player_id: number
         }
+        ComputedFields: never
         Insert: {
           bench_order?: number | null
           buy_position?: string | null
@@ -960,6 +974,7 @@ export type Database = {
           owner_id: string
           roster_updated_at: string
         }
+        ComputedFields: never
         Insert: {
           budget?: number
           cash?: number
@@ -1024,6 +1039,7 @@ export type Database = {
           round_id: number
           transfers: number
         }
+        ComputedFields: never
         Insert: {
           created_at?: string
           fantasy_team_id: number
@@ -1131,6 +1147,7 @@ export type Database = {
           site_url: string | null
           sort_order: number
         }
+        ComputedFields: never
         Insert: {
           active?: boolean
           code: string
@@ -1176,6 +1193,7 @@ export type Database = {
           scorer_id: number | null
           team_id: number
         }
+        ComputedFields: never
         Insert: {
           assist_confirmed_at?: string | null
           assist_none_confirmed_at?: string | null
@@ -1339,6 +1357,7 @@ export type Database = {
           korak: string
           stevilo: number
         }
+        ComputedFields: never
         Insert: {
           dan?: string
           korak: string
@@ -1366,6 +1385,7 @@ export type Database = {
           source_url: string | null
           zapisnik_id: string | null
         }
+        ComputedFields: never
         Insert: {
           away_goals?: number
           away_team_id: number
@@ -1487,6 +1507,7 @@ export type Database = {
           joined_at: string
           mini_liga_id: number
         }
+        ComputedFields: never
         Insert: {
           fantasy_team_id: number
           joined_at?: string
@@ -1564,6 +1585,7 @@ export type Database = {
           name: string
           owner_id: string
         }
+        ComputedFields: never
         Insert: {
           code: string
           created_at?: string
@@ -1595,6 +1617,7 @@ export type Database = {
           stevilo: number
           stran: string
         }
+        ComputedFields: never
         Insert: {
           dan?: string
           skupina: string
@@ -1618,6 +1641,7 @@ export type Database = {
           player_id: number
           user_id: string
         }
+        ComputedFields: never
         Insert: {
           content: string
           created_at?: string
@@ -1693,6 +1717,7 @@ export type Database = {
           points: number
           round_id: number
         }
+        ComputedFields: never
         Insert: {
           computed_at?: string
           player_id: number
@@ -1805,6 +1830,7 @@ export type Database = {
           value_locked: boolean
           value_start: number | null
         }
+        ComputedFields: never
         Insert: {
           active?: boolean
           competition_id?: number
@@ -1923,6 +1949,7 @@ export type Database = {
           score: number
           updated_at: string
         }
+        ComputedFields: never
         Insert: {
           player_id: number
           position: string
@@ -1988,6 +2015,7 @@ export type Database = {
           position: string
           voter_id: string
         }
+        ComputedFields: never
         Insert: {
           created_at?: string
           id?: never
@@ -2065,6 +2093,7 @@ export type Database = {
           reason: string | null
           voter_id: string | null
         }
+        ComputedFields: never
         Insert: {
           created_at?: string | null
           deleted_at?: string
@@ -2100,6 +2129,7 @@ export type Database = {
           user_id: string
           vloga: string
         }
+        ComputedFields: never
         Insert: {
           competition_id: number
           created_at?: string
@@ -2200,6 +2230,7 @@ export type Database = {
           player_id: number
           round_id: number
         }
+        ComputedFields: never
         Insert: {
           changed_at?: string
           form: number
@@ -2294,6 +2325,7 @@ export type Database = {
       profiles: {
         Row: {
           brez_opomnikov: boolean
+          brez_push: boolean
           created_at: string
           display_name: string
           id: string
@@ -2302,8 +2334,10 @@ export type Database = {
           is_admin: boolean
           navijam_team_id: number | null
         }
+        ComputedFields: never
         Insert: {
           brez_opomnikov?: boolean
+          brez_push?: boolean
           created_at?: string
           display_name: string
           id: string
@@ -2314,6 +2348,7 @@ export type Database = {
         }
         Update: {
           brez_opomnikov?: boolean
+          brez_push?: boolean
           created_at?: string
           display_name?: string
           id?: string
@@ -2409,6 +2444,7 @@ export type Database = {
           updated_at: string
           user_id: string
         }
+        ComputedFields: never
         Insert: {
           platforma: string
           token: string
@@ -2446,6 +2482,7 @@ export type Database = {
           voting_closes_at: string | null
           voting_opens_at: string | null
         }
+        ComputedFields: never
         Insert: {
           borza_po_starem?: boolean
           borza_z_odmikom?: boolean
@@ -2503,6 +2540,7 @@ export type Database = {
           key: string
           value: NonNullable<Json>
         }
+        ComputedFields: never
         Insert: {
           key: string
           value: NonNullable<Json>
@@ -2523,6 +2561,7 @@ export type Database = {
           prikazov: number
           sponsor_id: number
         }
+        ComputedFields: never
         Insert: {
           competition_id?: number | null
           dan: string
@@ -2592,6 +2631,7 @@ export type Database = {
           url: string
           utez: number
         }
+        ComputedFields: never
         Insert: {
           active?: boolean
           claim?: string | null
@@ -2685,6 +2725,7 @@ export type Database = {
           season: string
           yellow_cards: number
         }
+        ComputedFields: never
         Insert: {
           assists: number
           clean_sheets: number
@@ -2718,27 +2759,6 @@ export type Database = {
           yellow_cards?: number
         }
         Relationships: [
-          {
-            foreignKeyName: "statistika_igralcev_competition_id_fkey"
-            columns: ["competition_id"]
-            isOneToOne: false
-            referencedRelation: "competitions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "statistika_igralcev_competition_id_fkey"
-            columns: ["competition_id"]
-            isOneToOne: false
-            referencedRelation: "competitions_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "statistika_igralcev_competition_id_fkey"
-            columns: ["competition_id"]
-            isOneToOne: false
-            referencedRelation: "lestvica_drzavna"
-            referencedColumns: ["competition_id"]
-          },
           {
             foreignKeyName: "statistika_igralcev_player_id_fkey"
             columns: ["player_id"]
@@ -2791,6 +2811,7 @@ export type Database = {
           name: string
           short_name: string | null
         }
+        ComputedFields: never
         Insert: {
           country_id: number
           id?: never
@@ -2823,6 +2844,7 @@ export type Database = {
           round_id: number
           transfers: number
         }
+        ComputedFields: never
         Insert: {
           fantasy_team_id: number
           penalty: number
@@ -2937,6 +2959,7 @@ export type Database = {
           round_id: number | null
           zmaga: boolean | null
         }
+        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "appearances_match_id_fkey"
@@ -3030,6 +3053,7 @@ export type Database = {
           player_id: number | null
           votes: number | null
         }
+        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "assist_votes_goal_id_fkey"
@@ -3090,6 +3114,7 @@ export type Database = {
           short_name: string | null
           team_id: number | null
         }
+        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "players_competition_id_fkey"
@@ -3139,6 +3164,7 @@ export type Database = {
           vir_ime: string | null
           vir_url: string | null
         }
+        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "competitions_country_id_fkey"
@@ -3167,6 +3193,7 @@ export type Database = {
           season: string | null
           transfers: number | null
         }
+        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "fantasy_teams_competition_id_fkey"
@@ -3279,6 +3306,7 @@ export type Database = {
           season: string | null
           transfers: number | null
         }
+        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "fantasy_teams_competition_id_fkey"
@@ -3317,6 +3345,7 @@ export type Database = {
           team_name: string | null
           transfers: number | null
         }
+        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "fantasy_teams_competition_id_fkey"
@@ -3427,6 +3456,7 @@ export type Database = {
           remaining: number | null
           spent: number | null
         }
+        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "fantasy_teams_competition_id_fkey"
@@ -3464,6 +3494,7 @@ export type Database = {
           team_name: string | null
           total_points: number | null
         }
+        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "fantasy_teams_competition_id_fkey"
@@ -3498,6 +3529,7 @@ export type Database = {
           starting_budget: number | null
           total_wealth: number | null
         }
+        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "fantasy_teams_competition_id_fkey"
@@ -3531,6 +3563,7 @@ export type Database = {
           id: number | null
           je_moje: boolean | null
         }
+        ComputedFields: never
         Insert: {
           alias?: string | null
           content?: string | null
@@ -3583,6 +3616,7 @@ export type Database = {
           team_short: string | null
           value: number | null
         }
+        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "player_scores_round_id_fkey"
@@ -3651,6 +3685,7 @@ export type Database = {
           team_name: string | null
           total_points: number | null
         }
+        ComputedFields: never
         Relationships: []
       }
       match_assist_status: {
@@ -3676,6 +3711,7 @@ export type Database = {
           round_number: number | null
           season: string | null
         }
+        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "matches_away_team_id_fkey"
@@ -3798,6 +3834,7 @@ export type Database = {
           team_name: string | null
           total_points: number | null
         }
+        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "mini_liga_clani_mini_liga_id_fkey"
@@ -3814,6 +3851,7 @@ export type Database = {
           player_id: number | null
           round_id: number | null
         }
+        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "appearances_player_id_fkey"
@@ -3895,6 +3933,7 @@ export type Database = {
           obveljalo_pozicij: number | null
           voter_id: string | null
         }
+        ComputedFields: never
         Relationships: []
       }
       naslednji_krog: {
@@ -3906,6 +3945,7 @@ export type Database = {
           played_on: string | null
           season: string | null
         }
+        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "rounds_competition_id_fkey"
@@ -3938,6 +3978,7 @@ export type Database = {
           kind: string | null
           player_id: number | null
         }
+        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "player_reports_player_id_fkey"
@@ -4029,6 +4070,7 @@ export type Database = {
           team_short: string | null
           value: number | null
         }
+        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "players_competition_id_fkey"
@@ -4097,6 +4139,7 @@ export type Database = {
           team_short: string | null
           user_id: string | null
         }
+        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "player_reports_player_id_fkey"
@@ -4196,6 +4239,7 @@ export type Database = {
           team_short: string | null
           value: number | null
         }
+        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "players_competition_id_fkey"
@@ -4263,6 +4307,7 @@ export type Database = {
           season: string | null
           yellow_cards: number | null
         }
+        ComputedFields: never
         Insert: {
           assists?: number | null
           clean_sheets?: number | null
@@ -4292,27 +4337,6 @@ export type Database = {
           yellow_cards?: number | null
         }
         Relationships: [
-          {
-            foreignKeyName: "statistika_igralcev_competition_id_fkey"
-            columns: ["competition_id"]
-            isOneToOne: false
-            referencedRelation: "competitions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "statistika_igralcev_competition_id_fkey"
-            columns: ["competition_id"]
-            isOneToOne: false
-            referencedRelation: "competitions_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "statistika_igralcev_competition_id_fkey"
-            columns: ["competition_id"]
-            isOneToOne: false
-            referencedRelation: "lestvica_drzavna"
-            referencedColumns: ["competition_id"]
-          },
           {
             foreignKeyName: "statistika_igralcev_player_id_fkey"
             columns: ["player_id"]
@@ -4372,6 +4396,7 @@ export type Database = {
           season: string | null
           yellow_cards: number | null
         }
+        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "appearances_player_id_fkey"
@@ -4463,6 +4488,7 @@ export type Database = {
           team_short: string | null
           value: number | null
         }
+        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "players_competition_id_fkey"
@@ -4520,6 +4546,7 @@ export type Database = {
           players: number | null
           position_source: string | null
         }
+        ComputedFields: never
         Relationships: []
       }
       position_prior_leader: {
@@ -4528,6 +4555,7 @@ export type Database = {
           leader_score: number | null
           player_id: number | null
         }
+        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "position_priors_player_id_fkey"
@@ -4579,6 +4607,7 @@ export type Database = {
           position: string | null
           votes: number | null
         }
+        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "position_votes_player_id_fkey"
@@ -4631,6 +4660,7 @@ export type Database = {
           votes: number | null
           weight: number | null
         }
+        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "position_votes_player_id_fkey"
@@ -4688,6 +4718,7 @@ export type Database = {
           trenutna: string | null
           utez: number | null
         }
+        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "players_competition_id_fkey"
@@ -4755,6 +4786,7 @@ export type Database = {
           season: string | null
           team_id: number | null
         }
+        ComputedFields: never
         Relationships: []
       }
       sezone: {
@@ -4766,6 +4798,7 @@ export type Database = {
           tekoca: boolean | null
           zadnji_dan: string | null
         }
+        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "rounds_competition_id_fkey"
@@ -4796,6 +4829,7 @@ export type Database = {
           resolved: number | null
           voter_id: string | null
         }
+        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "position_votes_voter_id_fkey"
@@ -4814,6 +4848,7 @@ export type Database = {
           played_on: string | null
           season: string | null
         }
+        ComputedFields: never
         Relationships: [
           {
             foreignKeyName: "rounds_competition_id_fkey"
@@ -4987,7 +5022,9 @@ export type Database = {
         Returns: {
           display_name: string
           email: string
+          email_vklop: boolean
           jezik: string
+          push_vklop: boolean
           team_id: number
           user_id: string
         }[]
@@ -4998,11 +5035,27 @@ export type Database = {
           deadline_at: string
           display_name: string
           email: string
+          email_vklop: boolean
+          push_vklop: boolean
           razlog: string
           round_id: number
           round_number: number
           team_id: number
           team_name: string
+          user_id: string
+        }[]
+      }
+      kandidati_za_push_opomnik: {
+        Args: { p_competition_id: number }
+        Returns: {
+          deadline_at: string
+          display_name: string
+          email: string
+          ima_ekipo: boolean
+          jezik: string
+          round_id: number
+          round_number: number
+          team_id: number
           user_id: string
         }[]
       }
@@ -5016,6 +5069,7 @@ export type Database = {
         }[]
       }
       krog_je_odigran: { Args: { p_round_id: number }; Returns: boolean }
+      liga: { Args: { liga: string }; Returns: Json }
       meje_borze: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -5033,6 +5087,7 @@ export type Database = {
         }[]
       }
       najcenejsi_kader: { Args: { p_igralci: Json }; Returns: number }
+      najdi_igralca: { Args: { ime: string; liga?: string }; Returns: Json }
       nastavitev_int: {
         Args: { p_key: string; p_privzeto: number }
         Returns: number
@@ -5090,6 +5145,13 @@ export type Database = {
       oznaci_odhod_igralca: {
         Args: { p_odsel: boolean; p_player_id: number }
         Returns: undefined
+      }
+      podpora_brez_sumnikov: { Args: { t: string }; Returns: string }
+      podpora_lige: { Args: { liga: string }; Returns: number[] }
+      podpora_najdaljsa_beseda: { Args: { iskanje: string }; Returns: string }
+      podpora_ujema: {
+        Args: { besedilo: string; iskanje: string }
+        Returns: boolean
       }
       poenostavljeno_ime: { Args: { p_ime: string }; Returns: string }
       postava_kroga: {
@@ -5187,6 +5249,7 @@ export type Database = {
         Args: { p_krog?: number; p_liga: number }
         Returns: Json
       }
+      tekme_kluba: { Args: { klub: string; liga?: string }; Returns: Json }
       tekmovanje_id: { Args: { p_slug: string }; Returns: number }
       tekoca_sezona: { Args: { p_datum?: string }; Returns: string }
       tocke_za_nastop:
@@ -5284,6 +5347,8 @@ export type Database = {
           vrednost: number
         }[]
       }
+      zabelezi_korak: { Args: { p_korak: string }; Returns: undefined }
+      zabelezi_obisk: { Args: { p_stran: string }; Returns: undefined }
       zabelezi_sponzorja: {
         Args: {
           p_competition_id?: number
@@ -5293,8 +5358,6 @@ export type Database = {
         }
         Returns: undefined
       }
-      zabelezi_korak: { Args: { p_korak: string }; Returns: undefined }
-      zabelezi_obisk: { Args: { p_stran: string }; Returns: undefined }
       zakleni_krog: { Args: { p_round_id: number }; Returns: number }
       zakleni_zapadle_kroge: { Args: { p_okno?: string }; Returns: number }
       zaprosi_za_poznavalca: {

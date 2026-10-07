@@ -441,6 +441,15 @@ update profiles set brez_opomnikov=true where id='b8a06635-2322-4444-8c42-44e419
 reset role;
 select pg_temp.preveri('odjava drugega ni spremenila nicesar',
   (select not brez_opomnikov from profiles where id='b8a06635-2322-4444-8c42-44e419f912ac'));
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
+update profiles set brez_push=true where id=auth.uid();
+select pg_temp.preveri('lastnik sam izklopi potisna obvestila',
+  (select brez_push from profiles where id=auth.uid()));
+update profiles set brez_push=true where id='b8a06635-2322-4444-8c42-44e419f912ac';
+reset role;
+select pg_temp.preveri('izklop pusha drugemu ni spremenil nicesar',
+  (select not brez_push from profiles where id='b8a06635-2322-4444-8c42-44e419f912ac'));
 
 -- Pripomocek je enkrat na sezono: klop_plus iz sezone 2099/00 ne zapre 2100/01.
 insert into rounds(id,season,number,deadline_at,competition_id) overriding system value
@@ -770,6 +779,11 @@ update profiles set brez_opomnikov=false where id='b8a06635-2322-4444-8c42-44e41
 delete from fantasy_roster where fantasy_team_id in (select id from hisne) and player_id=-913015;
 select pg_temp.preveri('hisne ekipe niso kandidati za opozorilo',
   not exists (select 1 from kandidati_za_opozorilo(-913001, 5) k
+               where k.user_id='b8a06635-2322-4444-8c42-44e419f912ae'));
+insert into push_tokens(token,user_id,platforma)
+values ('test-hisa-zeton','b8a06635-2322-4444-8c42-44e419f912ae','android');
+select pg_temp.preveri('hisni lastnik ni kandidat za push opomnik',
+  not exists (select 1 from competitions c cross join lateral kandidati_za_push_opomnik(c.id) k
                where k.user_id='b8a06635-2322-4444-8c42-44e419f912ae'));
 select pg_temp.preveri('hisni lastnik ni kandidat za opomnik',
   not exists (select 1 from competitions c cross join lateral kandidati_za_opomnik(c.id) k

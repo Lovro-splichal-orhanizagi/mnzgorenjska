@@ -121,7 +121,7 @@ rezervnih igralcev.
 
 | Tabela | Opis |
 |---|---|
-| `profiles` | Profili uporabnikov, zastavica `is_admin`, odjava od opomnikov `brez_opomnikov` |
+| `profiles` | Profili uporabnikov, zastavica `is_admin`, odjava od e-poštnih opomnikov `brez_opomnikov` in od potisnih obvestil `brez_push` |
 | `competitions` | Ligi: `clani` in `mladinci` (šifra vira, prvi fantasy krog) |
 | `teams` | Klubi — **skupni** obema ligama (grb, ime) |
 | `players` | Igralci ene lige (cena, pozicija, vir pozicije); ista oseba je v obeh ligah dve vrstici |
