@@ -31,6 +31,10 @@ const KANALI: Record<string, string> = {
   sl: 'cmucx868b000cv2atsowgly81',
   sk: 'cmupjxbms00s0sz2cty78ex1j',
   hr: 'cmuymww46001dtk2c4j207tbd',
+  // Češkega kanala v HelpStacku še ni: češki obiskovalci dobijo slovenskega,
+  // ki odgovarja v jeziku vprašanja. Ko kanal (s češko bazo znanja) nastane,
+  // se tu njegov id zamenja.
+  cs: 'cmucx868b000cv2atsowgly81',
 }
 const skripta = (id: string) => `https://helpstack.eu/widget.js?id=${id}`
 

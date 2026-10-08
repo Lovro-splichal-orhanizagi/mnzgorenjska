@@ -277,6 +277,17 @@ tekmovanje (ročník 2026 = 2026/27), zato se UUID ob novi sezoni vpiše ročno.
 Beremo odkrito (`User-Agent: SLFF fantasy`, 1 s med zahtevki, zaključenih
 zapisnikov ne beremo znova). Dovoljenja FAČR še nimamo.
 
+Država `CZ` ("Česko", migracija 20261008213100) ima vmesnik v češčini
+(`src/i18n/cs/`, jezik `cs`, `JEZIK_DRZAVE.CZ`), vstop `slff.eu/cz`, kartico
+ob deljenju `cz.html` (Caddy jo vrne za `/cz` in `?t=cz-…`), češko vejo pošte
+(`sporocila.ts`, avtentikacijske predloge in zadeve v
+`docker-compose.slff.yml`) in češka imena lastnikov hišnih ekip. **Šifra
+češke lige se začne s `cz-`** (koda države, ne jezika), sicer jezik ob
+nalaganju ne ve, da gleda Češko. Ugib: brskalnik `cs`, pas `Europe/Prague`.
+Stran Pozicije je v meniju kot v Sloveniji in na Hrvaškem (če češki vir
+pozicije prinese, jo skrij v `Navbar.tsx` kot za SK). Češkega kanala v
+HelpStacku še ni: `Podpora.tsx` za `cs` uporabi slovenskega.
+
 ### Država obiskovalca
 
 Domena je ena, **lige druge države so skrite**: `useTekmovanje().tekmovanja`
@@ -550,7 +561,7 @@ besedilom). **Obvezno, vsakič:**
    istega pošiljatelja po 3+ dneh je v redu).
 2. **Po** poslanem mailu: `node scripts/stiki-klubov.mjs zabelezi --za <naslov>
    --vrsta prvi|opomnik --poslal <ime> --zadeva "…" --telo-datoteka <datoteka>`
-   (nov naslov še `--klub "…" --drzava SI|SK|HR [--liga …]`). Pri paketih
+   (nov naslov še `--klub "…" --drzava SI|SK|HR|CZ [--liga …]`). Pri paketih
    beleži sproti, po vsakem mailu, ne na koncu.
 3. Odgovor kluba: `zabelezi --vrsta odgovor --opomba "<povzetek>"`; dogovor ali
    zavrnitev: `nastavi --za … --stanje sodeluje|ne_zeli`.
@@ -586,9 +597,9 @@ vpisana pri Supabase kot povratni naslov ponastavitve gesla in žeton nosi v
   `src/i18n` — nikoli `toLocaleString('sl-SI')`.
 - Drugi jezik (`src/i18n/hr/`) je lahko delen; manjkajoče pride iz
   slovenščine. `npm run prevodi -- hr` izpiše, kaj manjka. Brskalnik izbere
-  jezik sam šele, ko je v `PRIPRAVLJENI` (`sl`, `hr`, `sk`, `en`). Hrvaščina,
-  slovaščina in angleščina so popolne — smoke preveri, da imata vse ključe ter iste
-  `{parametre}` in `<oznake>`; nov slovenski niz zato dodaj v vse tri.
+  jezik sam šele, ko je v `PRIPRAVLJENI` (`sl`, `hr`, `sk`, `cs`, `en`). Hrvaščina,
+  slovaščina, češčina in angleščina so popolne — smoke preveri, da imajo vse ključe ter iste
+  `{parametre}` in `<oznake>`; nov slovenski niz zato dodaj v vse štiri.
 - **Kateri jezik** (`zeljenJezik` v `src/lib/drzavaUgib.ts`, isto pravilo v
   `izberi()` ob nalaganju in v varovalu konteksta lige):
   1. izbira z izbirnika **"SL · SK · EN"** (`IzbiraJezika`, v nogi in na vrhu

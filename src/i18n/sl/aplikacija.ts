@@ -68,6 +68,7 @@ export const aplikacija = {
       SI: 'Slovenija',
       SK: 'Slovensko',
       HR: 'Hrvatska',
+      CZ: 'Česko',
     },
     preklopi: 'Preklopi na {drzava}',
   },

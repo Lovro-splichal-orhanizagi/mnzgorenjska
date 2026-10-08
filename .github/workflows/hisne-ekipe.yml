@@ -24,10 +24,10 @@ on:
         type: boolean
         default: false
       drzava:
-        description: 'Drzava (SK, SI ali HR)'
+        description: 'Drzava (SK, SI, HR ali CZ)'
         required: false
         type: choice
-        options: [SK, SI, HR]
+        options: [SK, SI, HR, CZ]
         default: SK
       po_velikosti:
         description: 'Cilj po stevilu klubov (vecja liga, vec ekip)'
@@ -79,7 +79,7 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           set -euo pipefail
-          [[ "$DRZAVA" =~ ^(SK|SI|HR)$ ]] || { echo "drzava mora biti SK, SI ali HR"; exit 1; }
+          [[ "$DRZAVA" =~ ^(SK|SI|HR|CZ)$ ]] || { echo "drzava mora biti SK, SI, HR ali CZ"; exit 1; }
           args=(--drzava "$DRZAVA")
           if [ -n "$LIGA" ]; then
             [[ "$LIGA" =~ ^[a-z0-9-]+$ ]] || { echo "neveljaven slug lige"; exit 1; }

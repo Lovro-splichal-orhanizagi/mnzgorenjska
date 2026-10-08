@@ -70,6 +70,10 @@
       "destination": "/hr.html"
     },
     {
+      "source": "/cz",
+      "destination": "/cz.html"
+    },
+    {
       "source": "/((?!api/)(?!.*\\.).*)",
       "has": [
         {
@@ -90,6 +94,17 @@
         }
       ],
       "destination": "/hr.html"
+    },
+    {
+      "source": "/((?!api/)(?!.*\\.).*)",
+      "has": [
+        {
+          "type": "query",
+          "key": "t",
+          "value": "cz-.*"
+        }
+      ],
+      "destination": "/cz.html"
     },
     {
       "source": "/((?!api/)(?!.*\\.).*)",

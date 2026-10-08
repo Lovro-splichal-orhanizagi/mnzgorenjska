@@ -2896,6 +2896,14 @@ preveri(
     ['4. NL — NS Rijeka', '4. NL — NS Rijeka'],
   ])
     preveri(`plakat: hrvaško "${iz}" v tožilniku`, ligaVTozilniku(iz, 'hr') === v, ligaVTozilniku(iz, 'hr'))
+  for (const [iz, v] of [
+    ['I. A třída — Středočeský KFS', 'I. A třídu — Středočeský KFS'],
+    ['Krajská soutěž', 'Krajskou soutěž'],
+    ['Divize A', 'Divizi A'],
+    ['Okresní přebor Kladno', 'Okresní přebor Kladno'],
+    ['Pražská liga', 'Pražskou ligu'],
+  ])
+    preveri(`plakat: češko "${iz}" v tožilniku`, ligaVTozilniku(iz, 'cs') === v, ligaVTozilniku(iz, 'cs'))
 
   // "Je live": kratko ime lige ne sme zrasti cez rob, ce gre v dve vrstici.
   preveri('plakat live: kratko ime v eni vrstici je najvecje', velikostLige('3. SNL ZAHOD', 1) === 124)
@@ -3334,15 +3342,21 @@ preveri(
   preveri('tujec: SK IP ni tujec, ce ima Slovaska lige', !D.jeTujIp('SK', drzaveL))
   preveri('tujec: SK IP je tujec, ce Slovaska nima lig', D.jeTujIp('SK', D.drzaveZLigami(brezSk)))
   preveri('tujec: brez lig ni vprasanja', !D.jeTujIp('CZ', []))
-  preveri('tujec: jezik angleski', D.jezikTujca(['cs-CZ', 'sk']) === 'en' && D.jezikTujca(['de-AT']) === 'en' && D.jezikTujca(null) === 'en')
+  preveri('tujec: jezik angleski', D.jezikTujca(['pl-PL', 'sk']) === 'en' && D.jezikTujca(['de-AT']) === 'en' && D.jezikTujca(null) === 'en')
   preveri('tujec: prvi jezik sl/sk ostane', D.jezikTujca(['sl-SI', 'en']) === 'sl' && D.jezikTujca(['sk']) === 'sk')
+  preveri('tujec: prvi jezik cs ostane (Češka še brez lig)', D.jezikTujca(['cs-CZ', 'en']) === 'cs' && D.jezikTujca(['en', 'cs']) === 'en')
   preveri('tujec: sl ni prvi jezik = angleski', D.jezikTujca(['en-GB', 'sl']) === 'en')
   // Jezik vmesnika: izbira > tujec > država lige.
   const zj = (o) => D.zeljenJezik({ drzava: 'SI', ...o })
   preveri('jezik: Slovenec slovensko, Slovak slovasko (brez spremembe)', zj({}) === 'sl' && zj({ drzava: 'SK' }) === 'sk' && zj({ drzava: null }) === 'sl')
-  preveri('jezik: tujec anglesko v obeh drzavah', zj({ tujec: 'CZ', jeziki: ['cs'] }) === 'en' && zj({ drzava: 'SK', tujec: 'CZ', jeziki: ['cs'] }) === 'en')
+  preveri('jezik: tujec anglesko v obeh drzavah', zj({ tujec: 'AT', jeziki: ['de'] }) === 'en' && zj({ drzava: 'SK', tujec: 'AT', jeziki: ['de'] }) === 'en')
   preveri('jezik: shranjena izbira povozi drzavo', zj({ drzava: 'SK', izbran: 'en' }) === 'en' && zj({ izbran: 'sk' }) === 'sk')
   preveri('jezik: shranjena izbira povozi tujca', zj({ tujec: 'CZ', izbran: 'sl' }) === 'sl')
+  // Češka: jezik cs, ugib po brskalniku in pasu, liga cz-… je češka.
+  preveri('jezik: Čeh češko', zj({ drzava: 'CZ' }) === 'cs' && zj({ tujec: 'CZ', jeziki: ['cs-CZ'] }) === 'cs')
+  preveri('drzava: češki brskalnik', D.ugibajDrzavo({ jeziki: ['cs-CZ'], casovniPas: 'Europe/Prague' }) === 'CZ')
+  preveri('drzava: anglesko v Pragi (pas)', D.ugibajDrzavo({ jeziki: ['en-US'], casovniPas: 'Europe/Prague' }) === 'CZ')
+  preveri('drzava: liga cz-… je češka', D.drzavaLige('cz-praha-prebor') === 'CZ')
   shramba.set('slff-tujec', 'CZ')
   preveri('tujec: oznaka v brskalniku', D.tujec() === 'CZ' && D.jezikObiskovalca('SK') === 'en')
   D.preklopiDrzavo('SK', lige, { pojdi: (u) => (cilj = u) })
@@ -3364,6 +3378,7 @@ preveri(
   const { sk } = await import('../src/i18n/sk/index.ts')
   const { en } = await import('../src/i18n/en/index.ts')
   const { hr } = await import('../src/i18n/hr/index.ts')
+  const { cs } = await import('../src/i18n/cs/index.ts')
   const listi = (d, pot = '') =>
     Object.entries(d).flatMap(([k, v]) =>
       typeof v === 'string' || (v && typeof v === 'object' && 'other' in v) ? [[pot + k, v]] : listi(v, `${pot}${k}.`),
@@ -3373,7 +3388,7 @@ preveri(
     const besedila = typeof v === 'string' ? [v] : Object.values(v)
     return besedila.map((b) => [...b.matchAll(/\{(\w+)\}|<(\w+)>/g)].map((m) => m[0]).sort().join(' '))
   }
-  for (const [ime, slovar] of [['sk', sk], ['en', en], ['hr', hr]]) {
+  for (const [ime, slovar] of [['sk', sk], ['en', en], ['hr', hr], ['cs', cs]]) {
     const napake = []
     let manjka = 0
     for (const [kljuc, izvirnik] of listi(sl)) {
@@ -3393,6 +3408,19 @@ preveri(
   )
   preveri('prevodi en: mnozine le one/other', slabeMnozine.length === 0, slabeMnozine.slice(0, 5).map(([k]) => k).join(', '))
   preveri('prevodi en: cena v evrih', en.skupno.cena === '€{v}M')
+  // Češke množine: vse štiri oblike Intl.PluralRules('cs') (one/few/many/other),
+  // "many" za necela števila ("2,5 bodu").
+  const kategorijeCs = new Intl.PluralRules('cs').resolvedOptions().pluralCategories
+  const slabeCs = listi(cs).filter(
+    ([, v]) => typeof v === 'object' && (Object.keys(v).some((k) => !kategorijeCs.includes(k)) || kategorijeCs.some((k) => !(k in v))),
+  )
+  preveri('prevodi cs: mnozine one/few/many/other', slabeCs.length === 0, slabeCs.slice(0, 5).map(([k]) => k).join(', '))
+  // Češki nizi so brez pomišljajev (—, –); naslov strani "SLFF - Sunday League" je izjema le po obliki.
+  const crticeCs = listi(cs).filter(([, v]) => (typeof v === 'string' ? [v] : Object.values(v)).some((b) => /[—–]/.test(b)))
+  preveri('prevodi cs: brez pomisljajev', crticeCs.length === 0, crticeCs.slice(0, 5).map(([k]) => k).join(', '))
+  preveri('prevodi cs: drzava Česko v vseh jezikih',
+    [sl, sk, en, hr, cs].every((d) => d.aplikacija.izbiraDrzave.imena.CZ === 'Česko'))
+  preveri('prevodi cs: tocke v mnozini', cs.skupno.besede.tocke.few === 'body' && cs.skupno.besede.tocke.other === 'bodů')
 }
 
 // --- vir sportnet (Slovaška) -----------------------------------------------
@@ -3762,6 +3790,52 @@ preveri(
   const brezNoge = (h) => h.replace('SLFF — Sunday League', '')
   preveri('e-pošta: hr brez pomišljajev',
     [oHr, oHr2, zHr, bHr, pHr, popHr, izHr].every((m) => !pomisljaj.test(m.naslov + brezNoge(m.html))))
+
+  // Češka: isti maili v češčini, rok po praško, razlog preveden.
+  const czL = { slug: 'cz-ok-kladno', oznaka: 'OP Kladno', ime: 'Okresní přebor Kladno', drzava: 'CZ' }
+  const slovenskoCs = /Živjo|ekip[aeo]|krog|točk|opomnik|igralc|kader|namesto|sestavi |Popravi/
+  const oCs = E.sestaviOpomnik(czL, { display_name: 'Jan Novák', brez_ekipe: true })
+  const oCs2 = E.sestaviOpomnik(czL, { display_name: null, brez_ekipe: false })
+  preveri('e-pošta: opomnik cs',
+    oCs.naslov.includes('ještě nemáš tým') && oCs.html.includes('Ahoj, Jan!') && oCs2.html.includes('Ahoj!') &&
+      oCs2.naslov.includes('dokonči tým') && oCs.odjava === 'https://slff.eu/reminders?t=cz-ok-kladno' &&
+      oCs.html.includes('https://slff.eu/my-team?t=cz-ok-kladno') && oCs.html.includes('Nechci už dostávat připomínky') &&
+      !slovenskoCs.test(oCs.naslov + oCs.html + oCs2.naslov + oCs2.html), oCs.naslov)
+  const zCs = E.sestaviOpozorilo(czL, { display_name: 'Jan', team_name: 'Nedělní hrdinové', round_number: 5, deadline_at: rok, razlog })
+  preveri('e-pošta: opozorilo cs (rok po praško, razlog preveden)',
+    zCs.naslov.includes('5. kolo') && zCs.html.includes('sobota') && zCs.html.includes('10:00') &&
+      zCs.html.includes('Z klubu Šenčur máš 4 hráčů') && !slovenskoCs.test(zCs.naslov + zCs.html), zCs.naslov)
+  preveri('e-pošta: rok cs v časovnem pasu lige', E.izpisRoka(rok, czL).includes('10:00'))
+  const prevodiCs = razlogi.map((r) => E.prevediRazlog(r, 'cs'))
+  const splosenCs = E.prevediRazlog('Neznan razlog.', 'cs')
+  preveri(
+    'e-pošta: vsi razlogi prevedeni v češčino',
+    prevodiCs.every((p) => p !== splosenCs && !slovenskoCs.test(p) && !pomisljaj.test(p)),
+    prevodiCs.find((p) => p === splosenCs || slovenskoCs.test(p) || pomisljaj.test(p)),
+  )
+  preveri('e-pošta: množina razloga cs',
+    prevodiCs[1] === 'Na soupisce jsou 3 hráči místo 15.' && prevodiCs[2] === 'Na soupisce je 14 hráčů místo 15.' &&
+      E.prevediRazlog('V postavi je 1 igralcev namesto 11.', 'cs') === 'V základní sestavě je 1 hráč místo 11.',
+    `${prevodiCs[1]} | ${prevodiCs[2]}`)
+  const bCs = E.sestaviOpomnikBrezLige('cs', { display_name: 'Jan' })
+  preveri('e-pošta: brez lige cs v češčini',
+    bCs.naslov.includes('vyber si ligu') && bCs.html.includes('href="https://slff.eu/my-team?sestavi=1"') &&
+      bCs.html.includes('Ahoj, Jan!') && !slovenskoCs.test(bCs.html.replace(/href="[^"]*"/g, '')))
+  const pCs = E.sestaviPoznavalca(czL, { display_name: 'Jan', obseg: 'klub', klub: 'SK Kladno' })
+  preveri('e-pošta: poznavalec cs', pCs.html.includes('znalcem klubu SK Kladno') && pCs.html.includes('/positions?t=cz-ok-kladno') && !slovenskoCs.test(pCs.html))
+  const popCs = E.sestaviPopravekPozicije(czL, { display_name: 'Jan', team_name: 'Hrdinové', igralci: [{ ime: 'Novák Petr', pozicija: 'MID' }] })
+  const izCs = E.sestaviIzstopKluba(czL, { display_name: 'Jan', team_name: 'Hrdinové', igralci: [{ ime: 'Novák Petr', klub: 'SK Kladno' }] })
+  const pushCs = E.sestaviPushOpomnik(czL, rok)
+  const tCs = E.sestaviTedenskiPregled(czL, {
+    display_name: 'Jan', ekipa: 'Hrdinové', krog: 5, tocke: 2.5, mesto: 3, mesto_prej: 5, ekip: 12,
+    povprecje: 30, najvec: 60, kapetan: 'Novák Petr', kapetan_tocke: 4, najboljsi: null, najboljsi_tocke: null,
+  })
+  preveri('e-pošta: popravek pozicije, izstop, push in tedenski pregled cs',
+    popCs.html.includes('(nyní záložník)') && izCs.naslov.includes('odstoupil ze soutěže') &&
+      pushCs.naslov.includes('ještě nemáš tým') && tCs.naslov.includes('2,5 bodu') && tCs.html.includes('4 body') &&
+      !slovenskoCs.test(popCs.naslov + popCs.html + izCs.naslov + izCs.html + pushCs.besedilo + tCs.naslov + tCs.html), tCs.naslov)
+  preveri('e-pošta: cs brez pomišljajev',
+    [oCs, oCs2, zCs, bCs, pCs, popCs, izCs, tCs].every((m) => !pomisljaj.test(m.naslov + brezNoge(m.html))))
 
   // Tedenski pregled "Tvoj krog".
   const krog = {

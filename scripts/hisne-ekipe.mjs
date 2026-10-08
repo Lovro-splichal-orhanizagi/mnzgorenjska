@@ -136,6 +136,24 @@ const IMENA_HR = [
   'Velebitski orlovi', 'Dravski splavari', 'Savski brodari', 'Kupski pastrvi', 'Neretvanski žabari',
 ]
 
+// Češke lige: igrive, izmišljene, brez imen resničnih klubov.
+const IMENA_CZ = [
+  'Krkonošští vlci', 'Šumavští rysové', 'Beskydští medvědi', 'Jizerští sokoli', 'Hanáčtí býci',
+  'Polabští kapři', 'Vysočinští jeleni', 'Brdští kamzíci', 'Jesenští orli', 'Podještědští jezevci',
+  'Pošumavští bobři', 'Slovácští čápi', 'Valašští beránci', 'Chodští dudáci', 'Táborští husité',
+  'FK Nedělní hrdinové', 'Sobotní kanonýři', 'FK Poslední minuta', 'SK Třetí poločas', 'Lavička FC',
+  'FK Náhradníci', 'Ofsajd tým', 'Rozhodčí neviděl', 'FK Břevno', 'SK Tyčka',
+  'Kopačky ze sklepa', 'FK Knedlík', 'Svíčková United', 'SK Utopenec', 'Klobása FC',
+  'FK Bramborák', 'Koláče United', 'SK Tvarůžky', 'Smažák FC', 'FK Gulášek',
+  'Vesnická garda', 'Stará garda', 'SK Hasiči', 'FK Sokolovna', 'Veteráni z lavičky',
+  'FK Zlatý míč', 'Dvanáctý hráč', 'FK Penalta', 'SK Roháček', 'FK Přihrávka',
+  'Asistenti FC', 'FK Kapitán', 'SK Červená karta', 'Žlutá karta United', 'FK Nastavení',
+  'Trávník Boys', 'FK Umělka', 'SK Blátivé hřiště', 'Síť FC', 'FK První dotek',
+  'SK Brejk', 'FK Vysoký presink', 'Libero FC', 'SK Desítka', 'FK Devítka',
+  'Okresní přeborníci', 'FK Pivo po zápase', 'SK Hospoda U hřiště', 'Párek FC', 'FK Tatranka',
+  'Vltavští plavci', 'Labští voraři', 'Moravští vinaři', 'Oherští pstruzi', 'Sázavští rybáři',
+]
+
 // Postave v mejah POZICIJE (vratar 1, branilci 3–5, vezisti 2–5, napadalci 1–3).
 const POSTAVE = [
   [4, 4, 2], [4, 3, 3], [3, 5, 2], [3, 4, 3], [5, 3, 2], [4, 5, 1], [5, 4, 1],
@@ -519,7 +537,7 @@ for (const l of seznam) {
     if (eK) throw new Error(eK.message)
     for (const r of kadri ?? []) izbranost.set(r.player_id, (izbranost.get(r.player_id) ?? 0) + 1)
   }
-  const imena = premesaj({ SI: IMENA_SI, HR: IMENA_HR }[DRZAVA] ?? IMENA, generator('imena:' + l.slug))
+  const imena = premesaj({ SI: IMENA_SI, HR: IMENA_HR, CZ: IMENA_CZ }[DRZAVA] ?? IMENA, generator('imena:' + l.slug))
     .filter((i) => !zasedena.has(i.toLowerCase()))
 
   console.log(

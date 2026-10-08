@@ -96,6 +96,7 @@ slff.eu, www.slff.eu {
 		@datoteka file
 		@sk_vstop path /sk /sk/
 		@hr_vstop path /hr /hr/
+		@cz_vstop path /cz /cz/
 		@sk_liga {
 			not path *.*
 			expression `{query.t}.startsWith("sk-")`
@@ -104,13 +105,19 @@ slff.eu, www.slff.eu {
 			not path *.*
 			expression `{query.t}.startsWith("hr-")`
 		}
+		@cz_liga {
+			not path *.*
+			expression `{query.t}.startsWith("cz-")`
+		}
 		@spa not path *.*
 		route {
 			file_server @datoteka
 			rewrite @sk_vstop /sk.html
 			rewrite @hr_vstop /hr.html
+			rewrite @cz_vstop /cz.html
 			rewrite @sk_liga /sk.html
 			rewrite @hr_liga /hr.html
+			rewrite @cz_liga /cz.html
 			rewrite @spa /index.html
 			file_server
 		}
