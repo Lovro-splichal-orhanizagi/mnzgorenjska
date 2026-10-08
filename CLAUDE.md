@@ -301,6 +301,11 @@ ne nove seje ali IP-ji, ne brskalnik brez glave). Češke lige ostanejo
 neaktivne, nočni uvoz jih zato ne bere. Naprej le z dovoljenjem ali dostopom
 FAČR (API, seznam dovoljenih IP-jev); vir, posrednik in lige so pripravljeni.
 
+9. 10. je CAPTCHA izginila (zapisnik spet 200) — verjetno jo je sprožil
+tempo (1 s med zahtevki). Vir zdaj čaka **8 s** med stranmi, lige se uvažajo
+**ena za drugo**, in ob prvi preusmeritvi na `security-valid.aspx` uvoz
+vrže `FacrPreverba` in se ustavi. Če se to zgodi, Češka spet čaka na FAČR.
+
 Država `CZ` ("Česko", migracija 20261008233100) ima vmesnik v češčini
 (`src/i18n/cs/`, jezik `cs`, `JEZIK_DRZAVE.CZ`), vstop `slff.eu/cz`, kartico
 ob deljenju `cz.html` (Caddy jo vrne za `/cz` in `?t=cz-…`), češko vejo pošte

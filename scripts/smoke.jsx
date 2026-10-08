@@ -3614,6 +3614,21 @@ preveri(
   preveri('facr: razpored', v.length === 120 && v.every((t) => t.id && t.krog && t.domaci && t.gostje) && v.filter((t) => t.izid).length === 47)
   preveri('facr: neodigrana tekma brez izida', v.some((t) => t.krog === 2 && !t.izid && t.datum === '2025-11-16' && t.ura === '11:15'))
   preveri('facr: ime brez mesta na lestvici', !v.some((t) => /\(\d+\)/.test(t.domaci + t.gostje)))
+  // CAPTCHA (security-valid.aspx) ustavi uvoz in se ne ponavlja (8. 10. 2026).
+  {
+    const pravi = globalThis.fetch
+    let klicev = 0
+    globalThis.fetch = async (u) => {
+      klicev++
+      return String(u).includes('zapas=')
+        ? new Response('', { status: 302, headers: { location: 'https://is.fotbal.cz/public/security-valid.aspx?ret=x' } })
+        : new Response('', { status: 200, headers: { 'set-cookie': 'ASP.NET_SessionId=x; path=/' } })
+    }
+    let ustavljen = false
+    try { await F.facrFetch('https://is.fotbal.cz/public/zapasy/zapis-o-utkani-report.aspx?zapas=a') } catch (e) { ustavljen = e instanceof F.FacrPreverba }
+    globalThis.fetch = pravi
+    preveri('facr: CAPTCHA ustavi uvoz brez ponavljanja', ustavljen && klicev <= 2)
+  }
 }
 
 // --- navijači klubov ----------------------------------------------------------
