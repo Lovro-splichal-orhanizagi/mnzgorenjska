@@ -125,6 +125,8 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          # Ceske lige: is.fotbal.cz doseze le posrednik v EU (scripts/hetzner/facr-posrednik.sh).
+          FACR_PROXY: ${{ secrets.FACR_PROXY }}
         run: |
           set -euo pipefail
           node scripts/aktivna-tekmovanja.mjs --vsa > /tmp/vse-lige.txt
@@ -137,6 +139,8 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          # Ceske lige: is.fotbal.cz doseze le posrednik v EU (scripts/hetzner/facr-posrednik.sh).
+          FACR_PROXY: ${{ secrets.FACR_PROXY }}
         run: |
           set -euo pipefail
           # Sifra je lahko "<koda>" ali "<koda>@<vir>". Drugo obliko potrebuje
@@ -165,6 +169,8 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          # Ceske lige: is.fotbal.cz doseze le posrednik v EU (scripts/hetzner/facr-posrednik.sh).
+          FACR_PROXY: ${{ secrets.FACR_PROXY }}
         run: node scripts/uvoz-zapisnikov.mjs --tekmovanje "$LIGA" --zapisnik "$ZAPISNIK"
 
       - name: Razpored in zapisniki tekoce sezone
@@ -172,6 +178,8 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          # Ceske lige: is.fotbal.cz doseze le posrednik v EU (scripts/hetzner/facr-posrednik.sh).
+          FACR_PROXY: ${{ secrets.FACR_PROXY }}
         run: |
           set -euo pipefail
           node scripts/uvoz-razporeda.mjs   --tekmovanje "$LIGA" --pisi ${DOVOLI_MANJ_KLUBOV:+"$DOVOLI_MANJ_KLUBOV"}
@@ -185,6 +193,8 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          # Ceske lige: is.fotbal.cz doseze le posrednik v EU (scripts/hetzner/facr-posrednik.sh).
+          FACR_PROXY: ${{ secrets.FACR_PROXY }}
         run: |
           set -euo pipefail
           node scripts/ugani-pozicije.mjs    --tekmovanje "$LIGA" --pisi $DOVOLI_AKTIVNO
@@ -196,4 +206,6 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          # Ceske lige: is.fotbal.cz doseze le posrednik v EU (scripts/hetzner/facr-posrednik.sh).
+          FACR_PROXY: ${{ secrets.FACR_PROXY }}
         run: node scripts/pripravljenost-lige.mjs --tekmovanje "$LIGA"

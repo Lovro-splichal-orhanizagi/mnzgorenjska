@@ -88,7 +88,7 @@ async function prenesi(url, ime) {
     // Vir lahko zahteva vljudnost: premor med zahtevki in glavo, ki pove, kdo
     // bere (Sportnet). Slovenski viri tega nimajo in ostanejo, kot so bili.
     // Prehodne motnje prenos sam ponovi; šele ko odpove vse, velja rezerva.
-    const odgovor = await prenesiSPonovitvami(url, { glave: vir.glave, premorMs: vir.premorMs })
+    const odgovor = await prenesiSPonovitvami(url, { glave: vir.glave, premorMs: vir.premorMs, fetchFn: vir.fetch })
     if (!odgovor.ok) throw new Error(`${odgovor.status} ${url}`)
     const html = await odgovor.text()
     // Ločeno po viru: šifre lig in dokumentov so last spletišča, ne sistema,

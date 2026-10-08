@@ -65,7 +65,7 @@ export function retryAfterMs(vrednost, zdaj = Date.now()) {
  *   premorMs?: number,              // vljudnost vira: premor pred VSAKIM zahtevkom
  *   zamiki?: number[],              // premori med poskusi
  *   casovnaOmejitevMs?: number,
- *   fetchFn?: typeof fetch,         // za preizkus
+ *   fetchFn?: typeof fetch,         // za preizkus; vir s sejo ali posrednikom (FAČR) da svojega
  *   log?: (vrstica: string) => void,
  * }} [moznosti]
  * @returns {Promise<Response>}
