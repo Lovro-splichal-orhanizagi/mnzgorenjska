@@ -277,7 +277,7 @@ tekmovanje (ročník 2026 = 2026/27), zato se UUID ob novi sezoni vpiše ročno.
 Beremo odkrito (`User-Agent: SLFF fantasy`, 1 s med zahtevki, zaključenih
 zapisnikov ne beremo znova). Dovoljenja FAČR še nimamo.
 
-Država `CZ` ("Česko", migracija 20261008213100) ima vmesnik v češčini
+Država `CZ` ("Česko", migracija 20261008233100) ima vmesnik v češčini
 (`src/i18n/cs/`, jezik `cs`, `JEZIK_DRZAVE.CZ`), vstop `slff.eu/cz`, kartico
 ob deljenju `cz.html` (Caddy jo vrne za `/cz` in `?t=cz-…`), češko vejo pošte
 (`sporocila.ts`, avtentikacijske predloge in zadeve v
