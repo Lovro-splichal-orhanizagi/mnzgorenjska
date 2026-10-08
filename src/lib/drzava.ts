@@ -146,12 +146,14 @@ const KLJUC_LIGE = 'slff-tekmovanje'
 export function preklopiDrzavo(
   koda: string,
   vse: readonly Tekmovanje[],
-  { izberiLigo = true, pojdi = (url: string) => window.location.assign(url) }: {
+  { izberiLigo = true, liga: zeljena, pojdi = (url: string) => window.location.assign(url) }: {
     izberiLigo?: boolean
+    /** Določena liga te države (izbirnik lige); sicer njena privzeta. */
+    liga?: string
     pojdi?: (url: string) => void
   } = {},
 ): string {
-  const liga = privzetaLiga(vse, koda)
+  const liga = zeljena ?? privzetaLiga(vse, koda)
   zapomniDrzavo(koda)
   try {
     // Jezik države — razen če ga je obiskovalec izbral sam ali je tujec

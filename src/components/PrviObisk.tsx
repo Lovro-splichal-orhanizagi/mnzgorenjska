@@ -30,7 +30,8 @@ import { vseVrstice } from '../lib/strani'
 import { mnozina, EKIPE } from '../lib/pomozno'
 import { poZvezah } from './IzbirnikLige'
 import { t } from '../i18n'
-import { KLJUC_VSTOPA, drzaveZLigami, preklopiDrzavo, zastava } from '../lib/drzava'
+import { KLJUC_VSTOPA, drzaveZLigami, preklopiDrzavo } from '../lib/drzava'
+import Zastava from './Zastava'
 import { imeDrzave } from './IzbiraDrzave'
 
 // Vstop `/sk` doda ligo v naslov sam; to ni izbira obiskovalca.
@@ -197,9 +198,9 @@ export default function PrviObisk() {
               <button
                 key={koda}
                 onClick={() => setDrzava(koda)}
-                className="block w-full rounded-xl bg-white/5 px-3 py-2.5 text-left text-sm font-semibold hover:bg-white/10"
+                className="flex w-full items-center gap-2 rounded-xl bg-white/5 px-3 py-2.5 text-left text-sm font-semibold hover:bg-white/10"
               >
-                <span aria-hidden="true">{zastava(koda)} </span>
+                <Zastava koda={koda} />
                 {imeDrzave(koda)}
               </button>
             ))}
@@ -242,7 +243,7 @@ export default function PrviObisk() {
           {vprasajDrzavo && drzava && drzave.length > 1 ? (
             <button
               onClick={() => setDrzava(null)}
-              className="inline-flex min-h-[44px] items-center px-2 text-sm text-slate-400 hover:text-slate-200"
+              className="inline-flex min-h-[44px] items-center gap-1.5 px-2 text-sm text-slate-400 hover:text-slate-200"
             >
               {t('aplikacija.prviObisk.nazaj')}
             </button>
@@ -252,9 +253,9 @@ export default function PrviObisk() {
                 <button
                   key={koda}
                   onClick={() => preklopiDrzavo(koda, vsaTekmovanja, { izberiLigo: false })}
-                  className="inline-flex min-h-[44px] items-center px-2 text-sm text-slate-400 hover:text-slate-200"
+                  className="inline-flex min-h-[44px] items-center gap-1.5 px-2 text-sm text-slate-400 hover:text-slate-200"
                 >
-                  <span aria-hidden="true">{zastava(koda)} </span>
+                  <Zastava koda={koda} />
                   {t('aplikacija.prviObisk.drugaDrzava', { drzava: imeDrzave(koda) })}
                 </button>
               ))}
@@ -262,7 +263,7 @@ export default function PrviObisk() {
           ) : (
             <span />
           )}
-          <button onClick={zapri} className="inline-flex min-h-[44px] items-center px-2 text-sm text-slate-500 hover:text-slate-300">
+          <button onClick={zapri} className="inline-flex min-h-[44px] items-center gap-1.5 px-2 text-sm text-slate-500 hover:text-slate-300">
             {t('aplikacija.prviObisk.preskoci')}
           </button>
         </div>

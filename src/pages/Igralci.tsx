@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { imeZveze } from '../components/VirPodatkov'
 import { supabase } from '../lib/supabase'
 import { useOdsotni, opisOdsotnosti } from '../lib/odsotni'
@@ -40,10 +40,23 @@ interface IgralecSezone {
   points_per_value: number | null
   owners: number | null
   goals: number | null
+  assists: number | null
   minutes: number | null
   matches: number | null
   clean_sheets: number | null
   rank: number | null
+}
+
+/** Vrstica pogleda `krog_najboljsi` — najboljši zadnjega odigranega kroga. */
+interface KrogIgralec {
+  player_id: number
+  full_name: string | null
+  position: Pozicija | null
+  team_name?: string | null
+  team_short?: string | null
+  team_logo?: string | null
+  points: number | null
+  minutes: number | null
 }
 
 /** Vrstica pogleda `sezone`. */
@@ -63,6 +76,7 @@ type Stolpec = keyof Pick<
   | 'points_per_value'
   | 'value'
   | 'goals'
+  | 'clean_sheets'
   | 'minutes'
   | 'owners'
 >
@@ -92,6 +106,11 @@ const STOLPCI: Array<{ kljuc: Stolpec; naslov: string; opis: string; mobilno?: f
   },
   { kljuc: 'value', naslov: t('igralci.seznam.stolpci.cena'), opis: t('igralci.seznam.stolpci.cenaOpis') },
   { kljuc: 'goals', naslov: t('igralci.seznam.stolpci.goli'), opis: t('igralci.seznam.stolpci.goliOpis') },
+  {
+    kljuc: 'clean_sheets',
+    naslov: t('igralci.seznam.stolpci.mreze'),
+    opis: t('igralci.seznam.stolpci.mrezeOpis'),
+  },
   { kljuc: 'minutes', naslov: t('igralci.seznam.stolpci.minute'), opis: t('igralci.seznam.stolpci.minuteOpis'), mobilno: false },
   {
     kljuc: 'owners',
@@ -120,7 +139,45 @@ export default function Igralci() {
   // Število ekip v ligi — imenovalec za "Izbran %". Največje število
   // lastnikov enega igralca ni isto: tudi najbolj izbranega nima vsak.
   const [ekipVLigi, setEkipVLigi] = useState<number | null>(null)
+  // Najboljših pet zadnjega odigranega kroga, za vrh lige nad tabelo.
+  const [krogVrh, setKrogVrh] = useState<{
+    stevilka: number | null
+    sezona: string | null
+    igralci: KrogIgralec[]
+  } | null>(null)
   useNaslov(t('igralci.seznam.naslov'))
+
+  // Zadnji odigrani krog gre mimo tabele: stran se izriše brez njega.
+  useEffect(() => {
+    if (!tekmovanjeId) return
+    let veljavno = true
+    setKrogVrh(null)
+    const ligaId = tekmovanjeId
+    ;(async () => {
+      const { data: krog } = await supabase
+        .from('zadnji_odigrani_krog')
+        .select('id, season, number')
+        .eq('competition_id', ligaId)
+        .maybeSingle()
+      if (!veljavno || !krog?.id) return
+      const { data } = await supabase
+        .from('krog_najboljsi')
+        .select('player_id, full_name, position, team_name, team_short, team_logo, points, minutes')
+        .eq('round_id', krog.id)
+        .order('points', { ascending: false })
+        .order('minutes', { ascending: false })
+        .limit(5)
+      if (!veljavno) return
+      setKrogVrh({
+        stevilka: krog.number ?? null,
+        sezona: krog.season ?? null,
+        igralci: (data ?? []) as KrogIgralec[],
+      })
+    })()
+    return () => {
+      veljavno = false
+    }
+  }, [tekmovanjeId])
 
   // Sezone in prva stran lestvice gresta hkrati: čakanje na seznam sezon, da
   // sploh vemo, katero lestvico naložiti, je podvojilo čas do prvega izrisa.
@@ -146,7 +203,7 @@ export default function Igralci() {
         supabase
           .from('player_season_standings')
           .select(
-            'id, full_name, position, team_id, team_name, team_short, team_logo, value, season, points, form, last_round, points_per_match, points_per_value, owners, goals, minutes, matches, clean_sheets, rank',
+            'id, full_name, position, team_id, team_name, team_short, team_logo, value, season, points, form, last_round, points_per_match, points_per_value, owners, goals, assists, minutes, matches, clean_sheets, rank',
           )
           .eq('competition_id', ligaId)
           .order('points', { ascending: false })
@@ -212,7 +269,7 @@ export default function Igralci() {
           supabase
             .from('player_season_standings')
             .select(
-              'id, full_name, position, team_id, team_name, team_short, team_logo, value, season, points, form, last_round, points_per_match, points_per_value, owners, goals, minutes, matches, clean_sheets, rank',
+              'id, full_name, position, team_id, team_name, team_short, team_logo, value, season, points, form, last_round, points_per_match, points_per_value, owners, goals, assists, minutes, matches, clean_sheets, rank',
             )
             .eq('competition_id', ligaId)
             .eq('season', izbranaSezona)
@@ -265,6 +322,7 @@ export default function Igralci() {
             points_per_value: 0,
             owners: 0,
             goals: 0,
+            assists: 0,
             minutes: 0,
             matches: 0,
             clean_sheets: 0,
@@ -302,6 +360,27 @@ export default function Igralci() {
     )
   }, [igralci, iskanje, filterPoz, filterKlub, urejanje])
 
+  // Vrh lige iz vseh igralcev izbrane sezone, ne glede na filtre. Kdor ima
+  // 0 golov ali mrež, ne sodi med strelce oz. obrambe. Minute razsodijo izenačenje.
+  const vrh = useMemo(() => {
+    const prvih = (stolpec: 'points' | 'goals' | 'assists' | 'clean_sheets' | 'value') =>
+      igralci
+        .filter((i) => Number(i[stolpec] ?? 0) > 0)
+        .sort(
+          (a, b) =>
+            Number(b[stolpec] ?? 0) - Number(a[stolpec] ?? 0) ||
+            Number(b.minutes ?? 0) - Number(a.minutes ?? 0),
+        )
+        .slice(0, 5)
+    return {
+      tocke: prvih('points'),
+      goli: prvih('goals'),
+      podaje: prvih('assists'),
+      mreze: prvih('clean_sheets'),
+      cena: prvih('value'),
+    }
+  }, [igralci])
+
   const sezonaPodatki = sezone.find((s) => s.season === sezona)
   const jeLanska = Boolean(sezonaPodatki) && !sezonaPodatki?.tekoca
 
@@ -335,6 +414,43 @@ export default function Igralci() {
           )}
         </p>
       </div>
+
+      {/* Vrh lige: kratke lestvice v eni vrstici (vrtiljak), cela tabela je
+          spodaj. Igralec kroga le, če je zadnji krog iz izbrane sezone. */}
+      {/* Igralec sezone: največ točk v ligi, poudarjen nad vrtiljakom. */}
+      {vrh.tocke[0] && <PrviIgralec igralec={vrh.tocke[0]} sezona={sezona} />}
+
+      <VrhLige
+        lestvice={[
+          {
+            naslov: t('igralci.vrh.igralecSezone'),
+            vrstice: vrh.tocke.map((i) => ({ id: i.id, igralec: i, desno: formatirajTocke(i.points) })),
+          },
+          {
+            naslov: t('igralci.vrh.igralecKroga', { krog: krogVrh?.stevilka }),
+            vrstice:
+              krogVrh && krogVrh.sezona === sezona
+                ? krogVrh.igralci.map((i) => ({ id: i.player_id, igralec: i, desno: formatirajTocke(i.points) }))
+                : [],
+          },
+          {
+            naslov: t('igralci.vrh.strelci'),
+            vrstice: vrh.goli.map((i) => ({ id: i.id, igralec: i, desno: String(i.goals) })),
+          },
+          {
+            naslov: t('igralci.vrh.podajalci'),
+            vrstice: vrh.podaje.map((i) => ({ id: i.id, igralec: i, desno: String(i.assists) })),
+          },
+          {
+            naslov: t('igralci.vrh.mreze'),
+            vrstice: vrh.mreze.map((i) => ({ id: i.id, igralec: i, desno: String(i.clean_sheets) })),
+          },
+          {
+            naslov: t('igralci.vrh.cena'),
+            vrstice: vrh.cena.map((i) => ({ id: i.id, igralec: i, desno: formatirajCeno(i.value) })),
+          },
+        ]}
+      />
 
       <div className="space-y-3">
         {/* Filtri v dveh vrsticah: iskanje s sezono (brez sezone ni jasno, ali
@@ -535,5 +651,150 @@ export default function Igralci() {
 
       <Sponzor kje="igralci" />
     </div>
+  )
+}
+
+/** Ena kratka lestvica vrha lige. */
+interface VrhVrstica {
+  id: number
+  igralec: {
+    full_name: string | null
+    position: Pozicija | null
+    team_name?: string | null
+    team_short?: string | null
+    team_logo?: string | null
+  }
+  desno: string
+}
+
+/** Vrh lige kot vrtiljak: lestvice v eni vrstici, na telefonu s potegom,
+ *  povsod tudi s puščicama. Prazne lestvice izpade. */
+function VrhLige({ lestvice }: { lestvice: Array<{ naslov: string; vrstice: VrhVrstica[] }> }) {
+  const trak = useRef<HTMLDivElement>(null)
+  const [rob, setRob] = useState({ zacetek: true, konec: false })
+  const polne = lestvice.filter((l) => l.vrstice.length > 0)
+
+  const osvezi = useCallback(() => {
+    const el = trak.current
+    if (!el) return
+    setRob({
+      zacetek: el.scrollLeft <= 4,
+      konec: el.scrollLeft + el.clientWidth >= el.scrollWidth - 4,
+    })
+  }, [])
+  useEffect(() => {
+    osvezi()
+    window.addEventListener('resize', osvezi)
+    return () => window.removeEventListener('resize', osvezi)
+  }, [osvezi, polne.length])
+
+  if (polne.length === 0) return null
+  const premakni = (smer: 1 | -1) => {
+    const el = trak.current
+    if (!el) return
+    // Po eno lestvico: širina kartice in razmik (gap-3).
+    const kartica = (el.firstElementChild as HTMLElement | null)?.offsetWidth ?? el.clientWidth
+    el.scrollBy({ left: smer * (kartica + 12), behavior: 'smooth' })
+  }
+  const gumb =
+    'flex h-8 w-8 items-center justify-center rounded-full pb-0.5 text-xl leading-none border border-white/10 bg-slate-900 text-slate-200 transition hover:bg-white/10 disabled:opacity-30 disabled:hover:bg-slate-900'
+
+  return (
+    <section className="space-y-2">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-xl font-bold">{t('igralci.vrh.naslov')}</h2>
+        <div className="flex gap-1.5">
+          <button type="button" onClick={() => premakni(-1)} disabled={rob.zacetek} className={gumb} aria-label="←">
+            ‹
+          </button>
+          <button type="button" onClick={() => premakni(1)} disabled={rob.konec} className={gumb} aria-label="→">
+            ›
+          </button>
+        </div>
+      </div>
+      <div
+        ref={trak}
+        onScroll={osvezi}
+        className="-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:scroll-px-0 sm:px-0 [&::-webkit-scrollbar]:hidden"
+      >
+        {polne.map((l) => (
+          <div
+            key={l.naslov}
+            className="w-[85%] shrink-0 snap-start space-y-1.5 sm:w-[calc((100%-0.75rem)/2)] lg:w-[calc((100%-1.5rem)/3)]"
+          >
+            <h3 className="truncate text-sm font-semibold text-slate-300">{l.naslov}</h3>
+            <ol className="kartica divide-y divide-white/10">
+              {l.vrstice.map(({ id, igralec, desno }, i) => (
+                <li key={id}>
+                  <Link to={`/player/${id}`} className="flex items-center gap-3 px-3 py-2 transition hover:bg-white/5">
+                    <span className={`w-4 text-center text-sm font-bold ${i === 0 ? 'text-amber-300' : 'text-slate-500'}`}>
+                      {i + 1}
+                    </span>
+                    <Grb ime={igralec.team_name} kratko={igralec.team_short} logo={igralec.team_logo} velikost={20} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-semibold">{prikazniIme(igralec.full_name)}</span>
+                      <span className="block truncate text-xs text-slate-400">
+                        {igralec.team_name ?? ''}
+                        {igralec.position ? ` · ${KRATKA_POZICIJA[igralec.position]}` : ''}
+                      </span>
+                    </span>
+                    <span className="shrink-0 font-bold tabular-nums text-gnl-300">{desno}</span>
+                  </Link>
+                </li>
+              ))}
+            </ol>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+/** Igralec z največ točkami v ligi — velika kartica, da se ga res vidi. */
+function PrviIgralec({ igralec, sezona }: { igralec: IgralecSezone; sezona: string | null }) {
+  const stat: Array<[string, number | null]> = [
+    [t('igralci.seznam.stolpci.goli'), igralec.goals],
+    [t('igralci.vrh.asistence'), igralec.assists],
+    [t('igralci.seznam.stolpci.mreze'), igralec.clean_sheets],
+    [t('igralci.vrh.tekme'), igralec.matches],
+  ]
+  return (
+    <Link
+      to={`/player/${igralec.id}`}
+      className="block overflow-hidden rounded-2xl border border-amber-300/40 bg-gradient-to-br from-amber-500/15 via-slate-900 to-slate-900 p-4 transition hover:border-amber-300/70 sm:p-6"
+    >
+      <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-amber-200/90">
+        <span aria-hidden>🏆</span>
+        <span>{t('igralci.vrh.prvi', { sezona: sezona ?? '' })}</span>
+      </div>
+      <div className="mt-2 flex items-center gap-4">
+        <Grb ime={igralec.team_name} kratko={igralec.team_short} logo={igralec.team_logo} velikost={56} />
+        <div className="min-w-0 flex-1">
+          <div className="break-words text-2xl font-black leading-tight text-white sm:text-4xl">
+            {prikazniIme(igralec.full_name)}
+          </div>
+          <div className="mt-1 truncate text-sm text-slate-300">
+            {igralec.team_name ?? ''}
+            {igralec.position ? ` · ${KRATKA_POZICIJA[igralec.position]}` : ''}
+          </div>
+        </div>
+        <div className="shrink-0 text-right leading-none">
+          <div className="text-4xl font-black tabular-nums text-amber-200 sm:text-6xl">
+            {formatirajTocke(igralec.points)}
+          </div>
+          <div className="mt-1 text-xs uppercase tracking-wide text-slate-400">
+            {t('igralci.seznam.stolpci.tocke')}
+          </div>
+        </div>
+      </div>
+      <dl className="mt-4 grid grid-cols-4 divide-x divide-white/10 rounded-xl bg-white/5 text-center">
+        {stat.map(([oznaka, vrednost]) => (
+          <div key={oznaka} className="px-1 py-2">
+            <dt className="truncate text-[11px] text-slate-400 sm:text-xs">{oznaka}</dt>
+            <dd className="text-lg font-bold tabular-nums">{vrednost ?? 0}</dd>
+          </div>
+        ))}
+      </dl>
+    </Link>
   )
 }

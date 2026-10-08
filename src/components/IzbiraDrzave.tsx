@@ -7,7 +7,8 @@
 //
 // Pokaže le države z aktivnimi ligami; pri eni sami ni kaj izbirati.
 import { useTekmovanje } from '../lib/tekmovanje'
-import { drzaveZLigami, preklopiDrzavo, zastava } from '../lib/drzava'
+import { drzaveZLigami, preklopiDrzavo } from '../lib/drzava'
+import Zastava from './Zastava'
 import { potrdiZapustitev } from '../lib/neshranjeno'
 import { t } from '../i18n'
 
@@ -35,14 +36,14 @@ export default function IzbiraDrzave({ className = '' }: { className?: string })
         const ime = imeDrzave(koda)
         const oznaka = (
           <>
-            <span aria-hidden="true">{zastava(koda)}</span> {ime}
+            <Zastava koda={koda} className="h-3" /> {ime}
           </>
         )
         return (
           <span key={koda}>
             {i > 0 && <span aria-hidden="true"> · </span>}
             {koda === drzava ? (
-              <span aria-current="true" className="px-1.5 font-semibold text-slate-200">
+              <span aria-current="true" className="inline-flex items-center gap-1 px-1.5 font-semibold text-slate-200">
                 {oznaka}
               </span>
             ) : (
@@ -50,7 +51,7 @@ export default function IzbiraDrzave({ className = '' }: { className?: string })
                 type="button"
                 onClick={() => preklopi(koda)}
                 title={t('aplikacija.izbiraDrzave.preklopi', { drzava: ime })}
-                className="inline-flex min-h-[44px] items-center px-1.5 text-slate-400 underline-offset-2 hover:text-slate-200 hover:underline"
+                className="inline-flex min-h-[44px] items-center gap-1 px-1.5 text-slate-400 underline-offset-2 hover:text-slate-200 hover:underline"
               >
                 {oznaka}
               </button>

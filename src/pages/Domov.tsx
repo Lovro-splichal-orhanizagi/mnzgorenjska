@@ -581,7 +581,7 @@ export default function Domov() {
         {igralecSezone.length > 0 && (
           <Razdelek
             naslov={t('domov.najboljsi.igralecSezone')}
-            povezava={{ to: '/standings', besedilo: t('domov.najboljsi.celaLestvica') }}
+            povezava={{ to: '/players', besedilo: t('domov.najboljsi.celaLestvica') }}
           >
             <ol className="kartica divide-y divide-white/10">
               {igralecSezone.map((z, i) => (
@@ -968,15 +968,28 @@ function MojaGlava({
               krog ? t('domov.krog', { krog: krog.number }) : t('domov.brezKroga'),
               ekipa.krog == null ? '–' : formatirajTocke(ekipa.krog),
             ],
-            // Pred prvimi točkami mesta ni (kot "–" na lestvici).
+            // Pred prvimi točkami mesta ni (kot "–" na lestvici). Mesto vodi
+            // na lestvico ekip; povezava razpne čez celo celico.
             [
               t('domov.moja.mesto'),
               ekipa.tocke > 0 ? t('domov.moja.mestoOd', { mesto: ekipa.mesto, n: ekipa.od }) : '–',
+              '/standings',
             ],
-          ].map(([oznaka, vrednost]) => (
-            <div key={oznaka} className="px-2 py-2.5">
+          ].map(([oznaka, vrednost, pot]) => (
+            <div
+              key={oznaka}
+              className={`relative px-2 py-2.5 ${pot ? 'transition hover:bg-white/5' : ''}`}
+            >
               <dt className="truncate text-xs text-slate-400">{oznaka}</dt>
-              <dd className="text-lg font-bold tabular-nums">{vrednost}</dd>
+              <dd className="text-lg font-bold tabular-nums">
+                {pot ? (
+                  <Link to={pot} className="after:absolute after:inset-0 hover:text-gnl-200">
+                    {vrednost}
+                  </Link>
+                ) : (
+                  vrednost
+                )}
+              </dd>
             </div>
           ))}
         </dl>
