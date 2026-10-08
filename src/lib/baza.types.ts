@@ -1351,6 +1351,114 @@ export type Database = {
           },
         ]
       }
+      klub_stik: {
+        Row: {
+          created_at: string
+          drzava: string
+          email: string | null
+          id: number
+          klub: string
+          kontakt: string | null
+          liga_slug: string | null
+          mailov: number
+          odgovorni: string | null
+          opomba: string | null
+          stanje: string
+          team_id: number | null
+          updated_at: string
+          updated_by: string | null
+          vir_url: string | null
+          zadnji_mail_at: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          drzava: string
+          email?: string | null
+          id?: never
+          klub: string
+          kontakt?: string | null
+          liga_slug?: string | null
+          mailov?: number
+          odgovorni?: string | null
+          opomba?: string | null
+          stanje?: string
+          team_id?: number | null
+          updated_at?: string
+          updated_by?: string | null
+          vir_url?: string | null
+          zadnji_mail_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          drzava?: string
+          email?: string | null
+          id?: never
+          klub?: string
+          kontakt?: string | null
+          liga_slug?: string | null
+          mailov?: number
+          odgovorni?: string | null
+          opomba?: string | null
+          stanje?: string
+          team_id?: number | null
+          updated_at?: string
+          updated_by?: string | null
+          vir_url?: string | null
+          zadnji_mail_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "klub_stik_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      klub_stik_posta: {
+        Row: {
+          created_by: string | null
+          id: number
+          opomba: string | null
+          poslal: string | null
+          poslano_at: string
+          stik_id: number
+          vrsta: string
+          zadeva: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          created_by?: string | null
+          id?: never
+          opomba?: string | null
+          poslal?: string | null
+          poslano_at?: string
+          stik_id: number
+          vrsta?: string
+          zadeva?: string | null
+        }
+        Update: {
+          created_by?: string | null
+          id?: never
+          opomba?: string | null
+          poslal?: string | null
+          poslano_at?: string
+          stik_id?: number
+          vrsta?: string
+          zadeva?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "klub_stik_posta_stik_id_fkey"
+            columns: ["stik_id"]
+            isOneToOne: false
+            referencedRelation: "klub_stik"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lijak_dnevno: {
         Row: {
           dan: string
