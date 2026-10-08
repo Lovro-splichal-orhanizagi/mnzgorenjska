@@ -50,6 +50,18 @@ const BESEDE: Record<string, { pridevniki: string[]; samostalniki: string[] }> =
       'Orol', 'Drak', 'Býk', 'Kôň', 'Sokol', 'Rys',
     ],
   },
+  cs: {
+    pridevniki: [
+      'Modrý', 'Červený', 'Zelený', 'Žlutý', 'Černý', 'Bílý', 'Stříbrný', 'Zlatý',
+      'Rychlý', 'Divoký', 'Tichý', 'Ohnivý', 'Ledový', 'Noční', 'Ranní',
+      'Železný', 'Měděný', 'Sluneční', 'Nebeský', 'Nelítostný',
+    ],
+    samostalniki: [
+      'Brankář', 'Obránce', 'Záložník', 'Útočník', 'Kapitán', 'Rozhodčí', 'Trenér',
+      'Fanoušek', 'Střelec', 'Nahrávač', 'Náhradník', 'Veterán', 'Hrdina', 'Vlk',
+      'Orel', 'Drak', 'Býk', 'Kůň', 'Sokol', 'Rys',
+    ],
+  },
   en: {
     pridevniki: [
       'Blue', 'Red', 'Green', 'Yellow', 'Black', 'White', 'Silver', 'Golden',

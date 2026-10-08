@@ -100,6 +100,24 @@ export function ligaVTozilniku(liga: string, j: Jezik = jezik()): string {
       .join(' ')
     return [sklon, ...zveza].join(' — ')
   }
+  // Češčina: ženski samostalnik lige v tožilniku (liga -> ligu, třída ->
+  // třídu, divize -> divizi), pridevnik pred njim na -á dobi -ou ("Krajská
+  // soutěž" -> "Krajskou soutěž"). "Okresní přebor" (moški, -í) ostane.
+  // Kraj za samostalnikom in zveza za " — " ostaneta v imenovalniku.
+  if (j === 'cs') {
+    const [ime, ...zveza] = liga.split(' — ')
+    const besede = ime.split(' ')
+    const glava = besede.findIndex((b) => /^(liga|třída|soutěž|divize)$/i.test(b))
+    if (glava < 0) return liga
+    const sklon = besede
+      .map((b, i) => {
+        if (i > glava) return b
+        if (i === glava) return b.replace(/a$/u, 'u').replace(/^(divize)$/iu, (d) => d.slice(0, -1) + 'i')
+        return b.replace(/^(\p{L}+)á$/u, '$1ou')
+      })
+      .join(' ')
+    return [sklon, ...zveza].join(' — ')
+  }
   return liga.replace(/\bliga\b/, 'ligo')
 }
 

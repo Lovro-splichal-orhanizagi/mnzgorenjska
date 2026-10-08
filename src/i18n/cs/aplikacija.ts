@@ -1,0 +1,150 @@
+// Český překlad oblasti `aplikacija` (zdroj: src/i18n/sl/aplikacija.ts).
+import type { Prevod } from '../jedro.ts'
+
+export const aplikacija: NonNullable<Prevod['aplikacija']> = {
+  naslovStrani: {
+    osnova: 'SLFF - Sunday League Fantasy Football',
+    zStranjo: '{naslov} · SLFF',
+    opis: 'Fantasy fotbal pro krajské a okresní soutěže. Sestav si tým, vyber kapitána a porovnej se se sousedy.',
+    deljenje:
+      'Fantasy fotbal pro krajské a okresní soutěže. Sestav si tým ze skutečných hráčů, body se počítají z oficiálních zápisů o utkání: góly, minuty, čistá konta.',
+    deljenjeKratko: 'Fantasy fotbal pro krajské a okresní soutěže. Body z oficiálních zápisů o utkání.',
+  },
+  niStrani: {
+    naslov: 'Stránka neexistuje',
+    opis: 'Odkaz je možná zastaralý, nebo je v adrese překlep.',
+    nazaj: 'Zpět na úvodní stránku',
+  },
+  /** Gumb za podporo na naslovnici (components/Pivo.tsx). */
+  pivo: {
+    gumb: 'Kup nám pivo',
+  },
+  noga: {
+    zasebnost: 'Soukromí a podmínky',
+    vir: 'Data: oficiální zápisy o utkání <vir>{ime}</vir>',
+    /** Ime zveze sredi stavka, ko je ne poznamo. */
+    zvezeSplosno: 'svazu',
+  },
+  meni: {
+    mojaEkipa: 'Můj tým',
+    igralci: 'Hráči',
+    lestvica: 'Žebříček',
+    rezultati: 'Výsledky',
+    miniLige: 'Miniligy',
+    asistence: 'Asistence',
+    pozicije: 'Pozice',
+    odsotnosti: 'Absence',
+    slovenija: 'Česko',
+    admin: 'Admin',
+    vec: 'Více',
+    racun: 'Účet',
+    opomniki: 'Upozornění',
+    izbrisRacuna: 'Zrušení účtu',
+    povabi: 'Pozvi kamaráda',
+    pomoc: 'Pomoc',
+    odjava: 'Odhlásit se',
+    prijava: 'Přihlásit se',
+    meni: 'Menu',
+    meniZGlasovi: 'Menu ({n} k hlasování)',
+  },
+  izbirnikLige: {
+    ostalo: 'Ostatní',
+    liga: 'Liga',
+    oznaka: 'Liga:',
+    isciPolje: 'Hledej ligu …',
+    isci: 'Hledat ligu',
+    niZadetkov: 'Žádné výsledky.',
+    lige: 'Ligy',
+  },
+  izbiraDrzave: {
+    oznaka: 'Země',
+    imena: {
+      SI: 'Slovenija',
+      SK: 'Slovensko',
+      HR: 'Hrvatska',
+      CZ: 'Česko',
+    },
+    preklopi: 'Přepnout na {drzava}',
+  },
+  izbiraJezika: {
+    oznaka: 'Jazyk',
+    preklopi: 'Přepnout na {jezik}',
+  },
+  prviObisk: {
+    naslov: 'Kde chceš hrát?',
+    opis: 'Vyber si ligu, ve které si sestavíš tým a budeš soutěžit. Ukážeme ti její hráče a žebříček; později ji můžeš kdykoli změnit nahoře.',
+    brezEkip: 'zatím bez týmů',
+    nazaj: '← Zpět',
+    preskoci: 'Přeskočit',
+    drugaDrzava: '{drzava}?',
+    drzavaOpis: 'Nejdřív si vyber zemi, potom ligu v ní.',
+  },
+  rokKroga: {
+    dniUr: '{d} d {h} h',
+    urMinut: '{h} h {m} min',
+    minutSekund: '{m} min {s} s',
+    sekund: '{s} s',
+    zaklepNaslov: 'Uzávěrka {krog}. kola: {datum}',
+    ligaKrog: '{liga} · {krog}. kolo',
+    zaklenjen: 'uzavřeno, změny týmu teď platí pro další kolo',
+    zaklepCez: 'uzávěrka za',
+    datumOklepaj: '({datum})',
+  },
+  odstevanje: {
+    dni: '{n}d',
+    ur: '{n}h',
+    minut: '{n}m',
+    zaklenjenoPred: 'uzavřeno před {cas}',
+    se: 'ještě {cas}',
+  },
+  klepet: {
+    gost: 'Host',
+    zdaj: 'teď',
+    minut: '{n} min',
+    ur: '{n} h',
+    dni: '{n} d',
+    morasSePrijaviti: 'Pro zveřejnění se musíš přihlásit.',
+    predolgo: 'Zpráva je příliš dlouhá (nejvýš 500 znaků).',
+    izbrisiVprasanje: 'Smazat zprávu?',
+    naslov: 'Pomoz nám to zlepšit!',
+    anonimno: 'anonymně',
+    uvod: 'Co tě štve? Co bys chtěl vidět? Co ti chybí? Tvůj názor pro nás hodně znamená, <krepko>řekni nám ho</krepko>. Chat je anonymní; nikdo nevidí, kdo co napsal.',
+    prikazesKot: 'V chatu se zobrazuješ jako <ime>{ime}</ime>. Tvoje registrované jméno zůstává skryté.',
+    zaPisanje: 'Pokud chceš psát, přihlas se (číst může kdokoli). Tvoje registrované jméno zůstává skryté, zobrazíš se pod náhodnou přezdívkou.',
+    bodiPrvi: 'Buď první, kdo napíše zprávu.',
+    izbrisi: 'Smazat zprávu',
+    napisi: 'Napiš zprávu …',
+    poslji: 'Odeslat',
+    zaObjavo: 'Pokud chceš psát, <prijava>přihlas se</prijava>.',
+  },
+  sponzor: {
+    oznaka: 'Sponzor',
+    obisci: 'Navštívit stránku',
+  },
+  napaka: {
+    naslov: 'Stránka se zasekla',
+    opis: 'Při zobrazení této stránky se něco pokazilo. Obnov stránku nebo se vrať na začátek. Pokud se to opakuje, napiš nám přes chat na úvodní stránce.',
+    nazaj: 'Zpět na úvodní stránku',
+    osvezi: 'Obnovit stránku',
+  },
+  crta: {
+    gibanje: 'Vývoj: {seznam}',
+  },
+  grb: {
+    klub: 'klub',
+  },
+  vabilo: {
+    nasaLiga: 'naši ligu',
+    ligaZZvezo: '{liga} ({zveza})',
+    klubi: ' našich klubů ({seznam})',
+    zadeva: 'Fantasy liga: {liga}, přidej se k nám',
+    besedilo:
+      'Ahoj!\n\nHraju fantasy fotbalovou ligu: {liga}. Sestavíš si vlastní tým z hráčů{klubi} a soutěžíš s ostatními.\n\nÚplně zdarma. Zaregistruj se na:\n{naslov}\n\nSestav tým, vyber kapitána a po každém kole se podívej, kdo nasbíral nejvíc bodů.\n\nUvidíme se v lize!',
+  },
+  // Mobilna aplikacija je prestara (PosodobiAplikacijo).
+  posodobi: {
+    naslov: 'Aktualizuj aplikaci',
+    opis: 'Tato verze SLFF už není podporovaná. Aktualizuj aplikaci, abys mohl dál upravovat tým.',
+    gumb: 'Aktualizovat',
+  },
+}

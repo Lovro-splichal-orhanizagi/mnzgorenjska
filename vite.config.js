@@ -7,6 +7,7 @@ import { createHash } from 'node:crypto'
 import { crc32, deflateRawSync } from 'node:zlib'
 import { aplikacija as aplikacijaSk } from './src/i18n/sk/aplikacija.ts'
 import { aplikacija as aplikacijaHr } from './src/i18n/hr/aplikacija.ts'
+import { aplikacija as aplikacijaCs } from './src/i18n/cs/aplikacija.ts'
 
 /**
  * V zgrajeno stran zapiše commit, iz katerega je nastala.
@@ -48,7 +49,7 @@ function znamkaCommita() {
 }
 
 /**
- * Različice `index.html` za kartico ob deljenju (sk.html, hr.html).
+ * Različice `index.html` za kartico ob deljenju (sk.html, hr.html, cz.html).
  *
  * Facebook, WhatsApp in iskalniki JS ne poženejo in vidijo le statični HTML —
  * slovenski. Klub, ki deli povezavo `slff.eu/club/…?t=sk-…`, bi objavil
@@ -64,6 +65,8 @@ function karticeDrzav() {
   const DRZAVE = [
     { koda: 'sk', jezik: 'sk', locale: 'sk_SK', n: aplikacijaSk.naslovStrani },
     { koda: 'hr', jezik: 'hr', locale: 'hr_HR', n: aplikacijaHr.naslovStrani },
+    // Češka: datoteka po kodi države (/cz, ?t=cz-…), jezik je cs.
+    { koda: 'cz', jezik: 'cs', locale: 'cs_CZ', n: aplikacijaCs.naslovStrani },
   ]
   const zamenjaj = (html, datoteka, atribut, ime, vsebina) => {
     const re = new RegExp(`(<meta ${atribut}="${ime}" content=")[^"]*(")`)
