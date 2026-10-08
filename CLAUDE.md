@@ -293,6 +293,14 @@ igralce druge skupine. Seznam tekmovanj okraja je na www.fotbal.cz
 Beremo odkrito (`User-Agent: SLFF fantasy`, 1 s med zahtevki, zaključenih
 zapisnikov ne beremo znova). Dovoljenja FAČR še nimamo.
 
+**USTAVLJENO (8. 10. 2026, 23:03).** Prvi pravi uvoz (cz-bn-op) je padel:
+vsak zapisnik zdaj preusmeri na `security-valid.aspx` ("Bezpečnostní ověření
+… ověřte že nejste robot", CAPTCHA), tudi tisti, ki se je nekaj ur prej
+odprl. To je zaščita pred roboti — **ne obhajaj je** (ne reševanje CAPTCHA,
+ne nove seje ali IP-ji, ne brskalnik brez glave). Češke lige ostanejo
+neaktivne, nočni uvoz jih zato ne bere. Naprej le z dovoljenjem ali dostopom
+FAČR (API, seznam dovoljenih IP-jev); vir, posrednik in lige so pripravljeni.
+
 Država `CZ` ("Česko", migracija 20261008233100) ima vmesnik v češčini
 (`src/i18n/cs/`, jezik `cs`, `JEZIK_DRZAVE.CZ`), vstop `slff.eu/cz`, kartico
 ob deljenju `cz.html` (Caddy jo vrne za `/cz` in `?t=cz-…`), češko vejo pošte
