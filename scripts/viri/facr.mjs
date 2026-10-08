@@ -336,6 +336,15 @@ async function odpriSejo(signal) {
 const jePreusmeritevNaZacetek = (o) => o.status >= 300 && o.status < 400 && /redir=v4/.test(o.headers.get('location') ?? '')
 
 /**
+ * IS FAČR postavi zapisnike za CAPTCHO (`security-valid.aspx`, "ověřte že
+ * nejste robot"), ko bere kdo prehitro: 8. 10. 2026 ob 23:03 je to sprožil
+ * prvi uvoz s premorom 1 s, naslednji dan je izginila. Tu se uvoz USTAVI —
+ * zaščite ne obhajamo (ne nove seje, ne reševanje, ne drug IP).
+ */
+export class FacrPreverba extends Error {}
+const jePreverba = (o) => o.status >= 300 && o.status < 400 && /security-valid\.aspx/i.test(o.headers.get('location') ?? '')
+
+/**
  * `fetch` za IS FAČR: prek posrednika (če je nastavljen) in s sejo. Ko seja
  * poteče, IS preusmeri na naslovnico; takrat odpremo novo in poskusimo enkrat.
  */
@@ -343,6 +352,10 @@ export async function facrFetch(url, init = {}) {
   for (let poskus = 0; poskus < 2; poskus++) {
     if (!piskotki) await odpriSejo(init.signal)
     const o = await osnovniFetch(url, { ...init, headers: { ...GLAVE, ...(init.headers ?? {}), Cookie: piskotki }, redirect: 'manual' })
+    if (jePreverba(o)) {
+      await o.body?.cancel().catch(() => {})
+      throw new FacrPreverba(`facr: IS FAČR zahteva preverbo, da nismo robot (CAPTCHA) — uvoz ustavljen, ne obhajaj: ${url}`)
+    }
     if (!jePreusmeritevNaZacetek(o)) return o
     await o.body?.cancel().catch(() => {})
     piskotki = null
@@ -389,8 +402,10 @@ const vir = {
   osnovniNaslov: OSNOVNI,
   glave: GLAVE,
   fetch: facrFetch,
-  // Ena stran na sekundo: IS je državni sistem, ne CDN.
-  premorMs: 1000,
+  // Osem sekund med stranmi. Pri eni sekundi je IS po nekaj sto straneh
+  // postavil CAPTCHO (8. 10. 2026); arhiv lige (~180 zapisnikov) zdaj traja
+  // ~25 minut, kar je za nočni uvoz sprejemljivo.
+  premorMs: 8000,
   imaRegistracije: false,
 
   naslovRazporeda: naslovTekmovanja,
