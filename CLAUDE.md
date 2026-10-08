@@ -508,8 +508,10 @@ Klubom pišemo trije (vsak s svojim Claudom). Skupni seznam je v bazi
 besedilom). **Obvezno, vsakič:**
 
 1. **Pred** mailom klubu: `node scripts/stiki-klubov.mjs preveri <klub ali naslov>`.
-   Če je klub v zadnjih 7 dneh že dobil mail od kogarkoli, ali je stanje
-   `ne_zeli` / `napacen_mail` / `sodeluje`, **ne piši** in povej človeku.
+   **Ne piši** (in povej človeku), če je stanje `odgovoril` / `ne_zeli` /
+   `napacen_mail` / `sodeluje`, če je klub v zadnjih 7 dneh dobil mail od
+   **koga drugega** ali v zadnjih 3 dneh od kogarkoli (načrtovan opomnik
+   istega pošiljatelja po 3+ dneh je v redu).
 2. **Po** poslanem mailu: `node scripts/stiki-klubov.mjs zabelezi --za <naslov>
    --vrsta prvi|opomnik --poslal <ime> --zadeva "…" --telo-datoteka <datoteka>`
    (nov naslov še `--klub "…" --drzava SI|SK|HR [--liga …]`). Pri paketih
