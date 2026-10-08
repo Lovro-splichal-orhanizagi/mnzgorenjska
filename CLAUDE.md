@@ -501,6 +501,26 @@ spletu; kar je drugače, je v `src/lib/platforma.ts`:
 - Preden dodaš novo odvisnost, preveri ali je res potrebna.
 - Ob spremembi podatkovnega modela posodobi tudi README in to datoteko.
 
+## Pošta klubom (stiki)
+
+Klubom pišemo trije (vsak s svojim Claudom). Skupni seznam je v bazi
+(`klub_stik` = naslov kluba s stanjem, `klub_stik_posta` = vsak mail z
+besedilom). **Obvezno, vsakič:**
+
+1. **Pred** mailom klubu: `node scripts/stiki-klubov.mjs preveri <klub ali naslov>`.
+   Če je klub v zadnjih 7 dneh že dobil mail od kogarkoli, ali je stanje
+   `ne_zeli` / `napacen_mail` / `sodeluje`, **ne piši** in povej človeku.
+2. **Po** poslanem mailu: `node scripts/stiki-klubov.mjs zabelezi --za <naslov>
+   --vrsta prvi|opomnik --poslal <ime> --zadeva "…" --telo-datoteka <datoteka>`
+   (nov naslov še `--klub "…" --drzava SI|SK|HR [--liga …]`). Pri paketih
+   beleži sproti, po vsakem mailu, ne na koncu.
+3. Odgovor kluba: `zabelezi --vrsta odgovor --opomba "<povzetek>"`; dogovor ali
+   zavrnitev: `nastavi --za … --stanje sodeluje|ne_zeli`.
+
+Ključ stikov je v `~/.config/slff/stiki-kljuc` ali `SLFF_STIKI_KLJUC` (da ga
+admin; **repo je javen, ključ in naslovi nikoli v git**). Brez ključa ne
+pošiljaj — vprašaj človeka. Funkcije: migracija `20261008143100_stiki_kljuc`.
+
 ## Poti
 
 Poti so **angleške** (`/my-team`, `/players`, `/match/:id` …), ker jih vidi
