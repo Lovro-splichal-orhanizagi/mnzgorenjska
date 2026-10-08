@@ -87,7 +87,7 @@ console.log(`Tekmovanje: ${tekmovanje.name} (liga ${liga}, pomak ${pomakUr}h)`)
 async function prenesi(url, ime, sveze = false) {
   const pot = `${PREDPOMNILNIK}/${vir.ime}/${ime}`
   if (!sveze && existsSync(pot)) return readFileSync(pot, 'utf8')
-  const odgovor = await prenesiSPonovitvami(url, { glave: vir.glave, premorMs: vir.premorMs })
+  const odgovor = await prenesiSPonovitvami(url, { glave: vir.glave, premorMs: vir.premorMs, fetchFn: vir.fetch })
   if (!odgovor.ok) throw new Error(`${odgovor.status} ${url}`)
   const html = await odgovor.text()
   // Ločeno po viru: šifre lig in dokumentov so last spletišča, ne sistema,
