@@ -306,6 +306,11 @@ tempo (1 s med zahtevki). Vir zdaj čaka **8 s** med stranmi, lige se uvažajo
 **ena za drugo**, in ob prvi preusmeritvi na `security-valid.aspx` uvoz
 vrže `FacrPreverba` in se ustavi. Če se to zgodi, Češka spet čaka na FAČR.
 
+**Zgodilo se je takoj** (9. 10. ob 00:18): prvi zapisnik prvega uvoza je
+spet vrnil CAPTCHO, kljub 8 s premora. Zapora torej ni odvisna od tempa.
+**Češka čaka na odgovor FAČR; do takrat k is.fotbal.cz ne pošiljamo NIČESAR**,
+tudi posameznih preizkusov ne.
+
 Država `CZ` ("Česko", migracija 20261008233100) ima vmesnik v češčini
 (`src/i18n/cs/`, jezik `cs`, `JEZIK_DRZAVE.CZ`), vstop `slff.eu/cz`, kartico
 ob deljenju `cz.html` (Caddy jo vrne za `/cz` in `?t=cz-…`), češko vejo pošte
