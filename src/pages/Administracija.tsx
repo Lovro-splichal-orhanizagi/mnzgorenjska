@@ -12,6 +12,7 @@ import ProsnjePoznavalcev from '../components/admin/ProsnjePoznavalcev'
 import RastLig from '../components/admin/RastLig'
 import Lijak from '../components/admin/Lijak'
 import Sponzorji from '../components/admin/Sponzorji'
+import KlubiStiki from '../components/admin/KlubiStiki'
 import Potrditev from '../components/admin/Potrditev'
 import Plakat from '../components/Plakat'
 import { izvor } from '../lib/platforma'
@@ -583,6 +584,7 @@ export default function Administracija() {
       <ProsnjePoznavalcev />
       <RastLig />
       <Sponzorji />
+      <KlubiStiki />
 
       {/* Promo za izbrano ligo — "je live". SLFF znacka je subjekt, liga je
           junak; brez kluba, za nas kanal. Ime lige pride iz izbirnika: pri
