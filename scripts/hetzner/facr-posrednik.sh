@@ -12,12 +12,13 @@
 # Zagon (enkrat):
 #   ssh SLFF 'bash -s' < scripts/hetzner/facr-posrednik.sh
 #   ssh SLFF cat /root/facr-proxy-url | gh secret set FACR_PROXY
-# Ponoven zagon ustvari novo geslo — takrat znova nastavi skrivnost.
+# Ponoven zagon ohrani geslo (iz /root/facr-proxy-url), skrivnost ostane veljavna.
 set -euo pipefail
 
 DEBIAN_FRONTEND=noninteractive apt-get install -y -qq tinyproxy >/dev/null
 umask 077
-GESLO=$(openssl rand -hex 24)
+GESLO=$(sed -nE 's|^http://slff:([0-9a-f]+)@.*|\1|p' /root/facr-proxy-url 2>/dev/null || true)
+[ -n "$GESLO" ] || GESLO=$(openssl rand -hex 24)
 
 cat > /etc/tinyproxy/tinyproxy.conf <<EOF
 # SLFF: posrednik SAMO za is.fotbal.cz (FAČR). Glej scripts/hetzner/facr-posrednik.sh.
@@ -42,6 +43,12 @@ echo '^is\.fotbal\.cz$' > /etc/tinyproxy/dovoljeni
 chown root:tinyproxy /etc/tinyproxy/tinyproxy.conf /etc/tinyproxy/dovoljeni
 chmod 640 /etc/tinyproxy/tinyproxy.conf /etc/tinyproxy/dovoljeni
 
+# Ubuntujev profil AppArmor tinyproxyju dovoli brati le tinyproxy.conf; brez
+# tega pade ob zagonu z "filter file: Permission denied" (8. 10. 2026).
+mkdir -p /etc/apparmor.d/local
+echo 'file r /etc/tinyproxy/dovoljeni,' > /etc/apparmor.d/local/tinyproxy
+apparmor_parser -r /etc/apparmor.d/tinyproxy
+
 mkdir -p /etc/systemd/system/tinyproxy.service.d
 printf '[Service]\nCPUQuota=20%%\nMemoryMax=64M\nNice=10\n' > /etc/systemd/system/tinyproxy.service.d/omejitve.conf
 
@@ -55,7 +62,7 @@ systemctl restart tinyproxy
 ufw allow 31288/tcp comment 'tinyproxy FACR' >/dev/null
 
 sleep 1
-systemctl is-active tinyproxy
+systemctl is-active tinyproxy || { journalctl -u tinyproxy -n 5 --no-pager; exit 1; }
 # Preverba: is.fotbal.cz gre skozi, vse drugo ne.
 U=$(cat /root/facr-proxy-url)
 echo "is.fotbal.cz: $(curl -s -o /dev/null -w '%{http_code}' -m 20 -x "$U" https://is.fotbal.cz/public/?sport=fotbal)"
