@@ -6,7 +6,11 @@
 }
 
 # Auth email templates for GoTrue only (reachable from containers, not the internet).
-http://172.17.0.1:8089 {
+# GoTrue asks for host.docker.internal:8089 (docker-compose.slff.yml); a site block
+# that matched only 172.17.0.1 answered that Host with an EMPTY 200, so from
+# 2026-10-07 every confirmation and password email went out blank (0 of 44
+# sign-ups confirmed). Both names, and `bind` keeps it off the internet.
+http://172.17.0.1:8089, http://host.docker.internal:8089 {
 	bind 172.17.0.1
 	root * /opt/supabase/volumes/templates
 	file_server
