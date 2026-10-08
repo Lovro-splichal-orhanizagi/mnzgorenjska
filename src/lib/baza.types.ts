@@ -1420,33 +1420,42 @@ export type Database = {
       klub_stik_posta: {
         Row: {
           created_by: string | null
+          gmail_nit: string | null
           id: number
           opomba: string | null
           poslal: string | null
           poslano_at: string
           stik_id: number
           vrsta: string
+          za: string | null
+          telo: string | null
           zadeva: string | null
         }
         ComputedFields: never
         Insert: {
           created_by?: string | null
+          gmail_nit?: string | null
           id?: never
           opomba?: string | null
           poslal?: string | null
           poslano_at?: string
           stik_id: number
           vrsta?: string
+          za?: string | null
+          telo?: string | null
           zadeva?: string | null
         }
         Update: {
           created_by?: string | null
+          gmail_nit?: string | null
           id?: never
           opomba?: string | null
           poslal?: string | null
           poslano_at?: string
           stik_id?: number
           vrsta?: string
+          za?: string | null
+          telo?: string | null
           zadeva?: string | null
         }
         Relationships: [
