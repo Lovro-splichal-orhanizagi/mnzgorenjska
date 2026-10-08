@@ -71,8 +71,14 @@ console.log(
 
 let skupaj = 0
 let padlo = 0
-for (const liga of lige ?? []) {
-  const odgovor = await fetch(`${BASE}/functions/v1/posli-opomnik`, {
+// Edge funkcija ima 60 s casa (main/index.ts na VM), mail pa traja ~4 s:
+// 8. 10. je clani s 986 kandidati poslal 7 mailov in padel s 500. Zato
+// posiljamo po kosih (KOS mailov na klic) in klicemo znova, dokler liga ni
+// pocena ali proracun porabljen. Ponovni klic ne podvaja: opomnik istemu
+// cloveku ne gre dvakrat v 7 dneh, tedenski pregled ne dvakrat za isti krog.
+const KOS = Number(process.env.KOS ?? 10)
+const poklici = (liga, najvecPoslati) =>
+  fetch(`${BASE}/functions/v1/posli-opomnik`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${SERVICE}`,
@@ -83,10 +89,34 @@ for (const liga of lige ?? []) {
     body: JSON.stringify({
       competition_id: liga.id, suho, vrsta, dni,
       ...(poUrniku ? { najvec: NAJVEC_NA_LIGO } : {}),
-      ...(sProracunom ? { najvec_poslati: proracun } : {}),
+      ...(najvecPoslati != null ? { najvec_poslati: najvecPoslati } : {}),
     }),
   })
-  const izid = await odgovor.json().catch(() => ({}))
+
+for (const liga of lige ?? []) {
+  const poKosih = sProracunom && !suho
+  let odgovor = await poklici(liga, poKosih ? Math.min(KOS, proracun) : sProracunom ? proracun : null)
+  let izid = await odgovor.json().catch(() => ({}))
+  if (poKosih && odgovor.ok) {
+    const kandidatov = izid.kandidati_stevilo ?? 0
+    let poslano = izid.poslanih_mailov ?? izid.poslano ?? 0
+    let skupajLiga = poslano
+    let preskoceno = izid.preskoceno ?? 0
+    proracun = Math.max(0, proracun - poslano)
+    // Kandidatov je po vsakem kosu manj (poslani izpadejo); nehamo, ko kos ne
+    // poslje nicesar (ostali so preskoceni ali pa jih ni vec).
+    while (odgovor.ok && poslano > 0 && proracun > 0 && (izid.kandidati_stevilo ?? 0) > poslano) {
+      odgovor = await poklici(liga, Math.min(KOS, proracun))
+      izid = await odgovor.json().catch(() => ({}))
+      if (!odgovor.ok) break
+      poslano = izid.poslanih_mailov ?? izid.poslano ?? 0
+      skupajLiga += poslano
+      preskoceno = izid.preskoceno ?? preskoceno
+      proracun = Math.max(0, proracun - poslano)
+    }
+    // Izpis spodaj sesteje vse kose lige.
+    if (odgovor.ok) izid = { ...izid, kandidati_stevilo: kandidatov, poslano: skupajLiga, preskoceno }
+  }
   if (odgovor.status === 409) {
     console.error(
       `  ${liga.slug.padEnd(14)} USTAVLJENO: ${izid.kandidati_stevilo ?? '?'} kandidatov (meja ${NAJVEC_NA_LIGO}).` +
@@ -119,7 +149,7 @@ for (const liga of lige ?? []) {
     padlo++
   }
   skupaj += n
-  if (sProracunom && !suho) proracun = Math.max(0, proracun - (izid.poslanih_mailov ?? izid.poslano ?? 0))
+  // proracun je pri posiljanju ze zmanjsan med kosi
   console.log(
     `  ${liga.slug.padEnd(14)} kandidatov ${String(n).padStart(4)}` +
       (suho ? '' : ` · poslano ${izid.poslano ?? 0}, preskočeno ${izid.preskoceno ?? 0}`),
