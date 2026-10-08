@@ -386,6 +386,32 @@ Preizkus vira na Zala I 2025/26 (`65/20/31672`): 26 krogov, 182 tekem,
 3 kontumacije, 179 zapisnikov, 714 golov (= izidi), 358/358 postav po 11,
 1173 nastopov s klopi, vsi nastopi s šifro.
 
+Vpisanih je 19 lig vármegyei I. osztály (migracija 20261009021100),
+**neaktivnih**. Tolna I. osztály 2026/27 še nima (le kvalifikacija). Arhiv je
+osnovno tekmovanje 2025/26 (ev 65, ne 66):
+
+| liga | tekoča 2026/27 | arhiv 2025/26 |
+|---|---|---|
+| hu-bk-1 | `67/1/33671` | `65/1/31503` |
+| hu-ba-1 | `67/2/33837` | `65/2/31434` |
+| hu-be-1 | `67/3/33830` | `65/3/31544` |
+| hu-baz-1 | `67/4/33596` | `65/4/31346` |
+| hu-bp-1 | `67/5/33753` | `65/5/31531` |
+| hu-cs-1 | `67/6/33870` | `65/6/31523` |
+| hu-fe-1 | `67/7/34106` | `65/7/31898` |
+| hu-gy-1 | `67/8/33888` | `65/8/31658` |
+| hu-hb-1 | `67/9/33901` | `65/9/31597` |
+| hu-he-1 | `67/10/33860` | `65/10/31643` |
+| hu-jn-1 | `67/11/33736` | `65/11/31489` |
+| hu-ke-1 | `67/12/33789` | `65/12/31687` |
+| hu-no-1 | `67/13/33928` | `65/13/31712` |
+| hu-pe-1 | `67/14/33660` | `65/14/31445` |
+| hu-so-1 | `67/15/33702` | `65/15/31582` |
+| hu-sz-1 | `67/16/33809` | `65/16/31415` |
+| hu-va-1 | `67/18/34394` | `65/18/31701` |
+| hu-ve-1 | `67/19/34160` | `65/19/32093` |
+| hu-za-1 | `67/20/33915` | `65/20/31672` |
+
 ### Država obiskovalca
 
 Domena je ena, **lige druge države so skrite**: `useTekmovanje().tekmovanja`
