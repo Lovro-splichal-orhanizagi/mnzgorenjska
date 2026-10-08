@@ -63,6 +63,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
       SK: 'Slovensko',
       HR: 'Hrvatska',
       CZ: 'Česko',
+      HU: 'Magyarország',
     },
     preklopi: 'Prepnúť na {drzava}',
   },

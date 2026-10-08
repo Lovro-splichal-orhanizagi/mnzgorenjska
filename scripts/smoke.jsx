@@ -2904,6 +2904,9 @@ preveri(
     ['Pražská liga', 'Pražskou ligu'],
   ])
     preveri(`plakat: češko "${iz}" v tožilniku`, ligaVTozilniku(iz, 'cs') === v, ligaVTozilniku(iz, 'cs'))
+  // Madžarščina ne sklanja: ime lige stoji v stavku samostojno (imenovalnik).
+  for (const iz of ['Megyei I. osztály — Pest VLSZ', 'Megyei II. osztály', 'NB III Közép'])
+    preveri(`plakat: madžarsko "${iz}" ostane v imenovalniku`, ligaVTozilniku(iz, 'hu') === iz, ligaVTozilniku(iz, 'hu'))
 
   // "Je live": kratko ime lige ne sme zrasti cez rob, ce gre v dve vrstici.
   preveri('plakat live: kratko ime v eni vrstici je najvecje', velikostLige('3. SNL ZAHOD', 1) === 124)
@@ -3357,6 +3360,12 @@ preveri(
   preveri('drzava: češki brskalnik', D.ugibajDrzavo({ jeziki: ['cs-CZ'], casovniPas: 'Europe/Prague' }) === 'CZ')
   preveri('drzava: anglesko v Pragi (pas)', D.ugibajDrzavo({ jeziki: ['en-US'], casovniPas: 'Europe/Prague' }) === 'CZ')
   preveri('drzava: liga cz-… je češka', D.drzavaLige('cz-praha-prebor') === 'CZ')
+  // Madžarska: jezik hu, ugib po brskalniku in pasu, liga hu-… je madžarska.
+  preveri('jezik: Madžar madžarsko', zj({ drzava: 'HU' }) === 'hu' && zj({ tujec: 'HU', jeziki: ['hu-HU'] }) === 'hu')
+  preveri('tujec: prvi jezik hu ostane', D.jezikTujca(['hu-HU', 'en']) === 'hu' && D.jezikTujca(['en', 'hu']) === 'en')
+  preveri('drzava: madžarski brskalnik', D.ugibajDrzavo({ jeziki: ['hu-HU'], casovniPas: 'Europe/Budapest' }) === 'HU')
+  preveri('drzava: anglesko v Budimpešti (pas)', D.ugibajDrzavo({ jeziki: ['en-US'], casovniPas: 'Europe/Budapest' }) === 'HU')
+  preveri('drzava: liga hu-… je madžarska', D.drzavaLige('hu-pest-megye1') === 'HU' && D.JEZIK_DRZAVE.HU === 'hu')
   shramba.set('slff-tujec', 'CZ')
   preveri('tujec: oznaka v brskalniku', D.tujec() === 'CZ' && D.jezikObiskovalca('SK') === 'en')
   D.preklopiDrzavo('SK', lige, { pojdi: (u) => (cilj = u) })
@@ -3379,6 +3388,7 @@ preveri(
   const { en } = await import('../src/i18n/en/index.ts')
   const { hr } = await import('../src/i18n/hr/index.ts')
   const { cs } = await import('../src/i18n/cs/index.ts')
+  const { hu } = await import('../src/i18n/hu/index.ts')
   const listi = (d, pot = '') =>
     Object.entries(d).flatMap(([k, v]) =>
       typeof v === 'string' || (v && typeof v === 'object' && 'other' in v) ? [[pot + k, v]] : listi(v, `${pot}${k}.`),
@@ -3388,7 +3398,7 @@ preveri(
     const besedila = typeof v === 'string' ? [v] : Object.values(v)
     return besedila.map((b) => [...b.matchAll(/\{(\w+)\}|<(\w+)>/g)].map((m) => m[0]).sort().join(' '))
   }
-  for (const [ime, slovar] of [['sk', sk], ['en', en], ['hr', hr], ['cs', cs]]) {
+  for (const [ime, slovar] of [['sk', sk], ['en', en], ['hr', hr], ['cs', cs], ['hu', hu]]) {
     const napake = []
     let manjka = 0
     for (const [kljuc, izvirnik] of listi(sl)) {
@@ -3421,6 +3431,18 @@ preveri(
   preveri('prevodi cs: drzava Česko v vseh jezikih',
     [sl, sk, en, hr, cs].every((d) => d.aplikacija.izbiraDrzave.imena.CZ === 'Česko'))
   preveri('prevodi cs: tocke v mnozini', cs.skupno.besede.tocke.few === 'body' && cs.skupno.besede.tocke.other === 'bodů')
+  // Madžarske množine: Intl.PluralRules('hu') pozna le one/other.
+  const kategorijeHu = new Intl.PluralRules('hu').resolvedOptions().pluralCategories
+  const slabeHu = listi(hu).filter(
+    ([, v]) => typeof v === 'object' && (Object.keys(v).some((k) => !kategorijeHu.includes(k)) || kategorijeHu.some((k) => !(k in v))),
+  )
+  preveri('prevodi hu: mnozine one/other', slabeHu.length === 0, slabeHu.slice(0, 5).map(([k]) => k).join(', '))
+  const crticeHu = listi(hu).filter(([, v]) => (typeof v === 'string' ? [v] : Object.values(v)).some((b) => /[—–]/.test(b)))
+  preveri('prevodi hu: brez pomisljajev', crticeHu.length === 0, crticeHu.slice(0, 5).map(([k]) => k).join(', '))
+  preveri('prevodi hu: drzava Magyarország v vseh jezikih',
+    [sl, sk, en, hr, cs, hu].every((d) => d.aplikacija.izbiraDrzave.imena.HU === 'Magyarország'))
+  preveri('prevodi hu: tocke za stevilom v ednini', hu.skupno.besede.tocke.one === 'pont' && hu.skupno.besede.tocke.other === 'pont')
+  preveri('prevodi hu: liga na plakatu v imenovalniku', /: \{liga\}/.test(hu.lestvice.plakat.jeOdprta), hu.lestvice.plakat.jeOdprta)
 }
 
 // --- vir sportnet (Slovaška) -----------------------------------------------
@@ -3841,6 +3863,63 @@ preveri(
       !slovenskoCs.test(popCs.naslov + popCs.html + izCs.naslov + izCs.html + pushCs.besedilo + tCs.naslov + tCs.html), tCs.naslov)
   preveri('e-pošta: cs brez pomišljajev',
     [oCs, oCs2, zCs, bCs, pCs, popCs, izCs, tCs].every((m) => !pomisljaj.test(m.naslov + brezNoge(m.html))))
+
+  // Madžarska: isti maili v madžarščini, rok po budimpeštansko, razlog preveden.
+  const huL = { slug: 'hu-pest-megye1', oznaka: 'Pest I.', ime: 'Megyei I. osztály Pest', drzava: 'HU' }
+  const slovenskoHu = /Živjo|ekip[aeo]|krog|točk|opomnik|igralc|kader|namesto|sestavi |Popravi|Ahoj|Bok/
+  const oHu = E.sestaviOpomnik(huL, { display_name: 'Péter Nagy', brez_ekipe: true })
+  const oHu2 = E.sestaviOpomnik(huL, { display_name: null, brez_ekipe: false })
+  preveri('e-pošta: opomnik hu',
+    oHu.naslov.includes('még nincs csapatod') && oHu.html.includes('Szia, Péter!') && oHu2.html.includes('Szia!') &&
+      oHu2.naslov.includes('fejezd be a csapatodat') && oHu.odjava === 'https://slff.eu/reminders?t=hu-pest-megye1' &&
+      oHu.html.includes('https://slff.eu/my-team?t=hu-pest-megye1') && oHu.html.includes('Nem kérek több emlékeztetőt') &&
+      !slovenskoHu.test(oHu.naslov + oHu.html + oHu2.naslov + oHu2.html), oHu.naslov)
+  const zHu = E.sestaviOpozorilo(huL, { display_name: 'Péter', team_name: 'Vasárnapi hősök', round_number: 5, deadline_at: rok, razlog })
+  preveri('e-pošta: opozorilo hu (rok po budimpeštansko, razlog preveden)',
+    zHu.naslov.includes('5. forduló') && zHu.html.includes('szombat') && zHu.html.includes('10:00') &&
+      zHu.html.includes('4 játékosod van ugyanabból a klubból (Šenčur)') && !slovenskoHu.test(zHu.naslov + zHu.html), zHu.naslov)
+  preveri('e-pošta: rok hu v časovnem pasu lige', E.izpisRoka(rok, huL).includes('10:00'))
+  const prevodiHu = razlogi.map((r) => E.prevediRazlog(r, 'hu'))
+  const splosenHu = E.prevediRazlog('Neznan razlog.', 'hu')
+  preveri(
+    'e-pošta: vsi razlogi prevedeni v madžarščino',
+    prevodiHu.every((p) => p !== splosenHu && !slovenskoHu.test(p) && !pomisljaj.test(p)),
+    prevodiHu.find((p) => p === splosenHu || slovenskoHu.test(p) || pomisljaj.test(p)),
+  )
+  preveri('e-pošta: razlog hu (samostalnik za številom v ednini)',
+    prevodiHu[1] === 'A keretben 3 játékos van 15 helyett.' && prevodiHu[7] === 'A kezdőcsapatban 10 játékos van 11 helyett.',
+    `${prevodiHu[1]} | ${prevodiHu[7]}`)
+  const bHu = E.sestaviOpomnikBrezLige('hu', { display_name: 'Péter' })
+  preveri('e-pošta: brez lige hu v madžarščini',
+    bHu.naslov.includes('válaszd ki a bajnokságodat') && bHu.html.includes('href="https://slff.eu/my-team?sestavi=1"') &&
+      bHu.html.includes('Szia, Péter!') && !slovenskoHu.test(bHu.html.replace(/href="[^"]*"/g, '')))
+  const pHu = E.sestaviPoznavalca(huL, { display_name: 'Péter', obseg: 'klub', klub: 'Bakonyi SE' })
+  preveri('e-pošta: poznavalec hu', pHu.html.includes('Bakonyi SE klub szakértője') && pHu.html.includes('/positions?t=hu-pest-megye1') && !slovenskoHu.test(pHu.html))
+  const popHu = E.sestaviPopravekPozicije(huL, { display_name: 'Péter', team_name: 'Hősök', igralci: [{ ime: 'Nagy Péter', pozicija: 'MID' }] })
+  const izHu = E.sestaviIzstopKluba(huL, { display_name: 'Péter', team_name: 'Hősök', igralci: [{ ime: 'Nagy Péter', klub: 'Bakonyi SE' }] })
+  const pushHu = E.sestaviPushOpomnik(huL, rok)
+  const tHu = E.sestaviTedenskiPregled(huL, {
+    display_name: 'Péter', ekipa: 'Hősök', krog: 5, tocke: 2.5, mesto: 3, mesto_prej: 5, ekip: 12,
+    povprecje: 30, najvec: 60, kapetan: 'Nagy Péter', kapetan_tocke: 4, najboljsi: null, najboljsi_tocke: null,
+  })
+  preveri('e-pošta: popravek pozicije, izstop, push in tedenski pregled hu',
+    popHu.html.includes('(mostantól középpályás)') && izHu.naslov.includes('visszalépett a bajnokságból') &&
+      pushHu.naslov.includes('még nincs csapatod') && tHu.naslov.includes('2,5 pont') && tHu.html.includes('2,5 pontot') &&
+      tHu.html.includes('4 pont') && !slovenskoHu.test(popHu.naslov + popHu.html + izHu.naslov + izHu.html + pushHu.besedilo + tHu.naslov + tHu.html), tHu.naslov)
+  preveri('e-pošta: hu brez pomišljajev',
+    [oHu, oHu2, zHu, bHu, pHu, popHu, izHu, tHu].every((m) => !pomisljaj.test(m.naslov + brezNoge(m.html))) &&
+      !pomisljaj.test(pushHu.naslov + pushHu.besedilo))
+  // Avtentikacijska pošta: madžarska veja predlog in zadev brez slovenščine in pomišljajev.
+  const vejeHu = ['confirmation', 'magic_link', 'recovery'].map((ime) => {
+    const h = readFileSync(new URL(`../supabase/templates/${ime}.html`, import.meta.url), 'utf8')
+    const m = h.match(/"hu" }}([\s\S]*?){{ else/)
+    return m ? m[1].replace(/href="[^"]*"/g, '') : null
+  })
+  const zadeveHu = [...readFileSync(new URL('../scripts/hetzner/docker-compose.slff.yml', import.meta.url), 'utf8')
+    .matchAll(/"hu" }}([^{]*){{/g)].map((m) => m[1])
+  preveri('e-pošta: avtentikacijske predloge in zadeve hu',
+    vejeHu.every((v) => v && !slovenskoHu.test(v) && !pomisljaj.test(v)) && zadeveHu.length === 3 &&
+      zadeveHu.every((z) => !slovenskoHu.test(z) && !pomisljaj.test(z)), zadeveHu.join(' | '))
 
   // Tedenski pregled "Tvoj krog".
   const krog = {

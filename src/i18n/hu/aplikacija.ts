@@ -1,0 +1,151 @@
+// Magyar fordítás: `aplikacija` (forrás: src/i18n/sl/aplikacija.ts).
+import type { Prevod } from '../jedro.ts'
+
+export const aplikacija: NonNullable<Prevod['aplikacija']> = {
+  naslovStrani: {
+    osnova: 'SLFF - Sunday League Fantasy Football',
+    zStranjo: '{naslov} · SLFF',
+    opis: 'Fantasy foci a megyei és a városi amatőr bajnokságokhoz. Rakd össze a csapatod, válassz csapatkapitányt, és mérd össze magad a szomszédokkal.',
+    deljenje:
+      'Fantasy foci a megyei amatőr bajnokságokhoz. Rakd össze a csapatod valódi játékosokból, a pontok a hivatalos jegyzőkönyvekből jönnek: gólok, játékpercek, kapott gól nélküli meccsek.',
+    deljenjeKratko: 'Fantasy foci a megyei amatőr bajnokságokhoz. Pontok a hivatalos jegyzőkönyvekből.',
+  },
+  niStrani: {
+    naslov: 'Az oldal nem létezik',
+    opis: 'Lehet, hogy a link elavult, vagy elírás van a címben.',
+    nazaj: 'Vissza a kezdőlapra',
+  },
+  /** Gumb za podporo na naslovnici (components/Pivo.tsx). */
+  pivo: {
+    gumb: 'Fizess nekünk egy sört',
+  },
+  noga: {
+    zasebnost: 'Adatvédelem és feltételek',
+    vir: 'Adatok: <vir>{ime}</vir>, hivatalos jegyzőkönyvek',
+    zvezeSplosno: 'szövetség',
+  },
+  meni: {
+    mojaEkipa: 'Csapatom',
+    igralci: 'Játékosok',
+    lestvica: 'Tabella',
+    rezultati: 'Eredmények',
+    miniLige: 'Miniligák',
+    asistence: 'Gólpasszok',
+    pozicije: 'Posztok',
+    odsotnosti: 'Hiányzók',
+    slovenija: 'Magyarország',
+    admin: 'Admin',
+    vec: 'Több',
+    racun: 'Fiók',
+    opomniki: 'Értesítések',
+    izbrisRacuna: 'Fiók törlése',
+    povabi: 'Hívd meg egy barátod',
+    pomoc: 'Súgó',
+    odjava: 'Kijelentkezés',
+    prijava: 'Bejelentkezés',
+    meni: 'Menü',
+    meniZGlasovi: 'Menü ({n} szavazásra vár)',
+  },
+  izbirnikLige: {
+    ostalo: 'Egyéb',
+    liga: 'Bajnokság',
+    oznaka: 'Bajnokság:',
+    isciPolje: 'Bajnokság keresése …',
+    isci: 'Bajnokság keresése',
+    niZadetkov: 'Nincs találat.',
+    lige: 'Bajnokságok',
+  },
+  izbiraDrzave: {
+    oznaka: 'Ország',
+    /** Imena držav v lastnem jeziku, v vseh prevodih enaka. */
+    imena: {
+      SI: 'Slovenija',
+      SK: 'Slovensko',
+      HR: 'Hrvatska',
+      CZ: 'Česko',
+      HU: 'Magyarország',
+    },
+    preklopi: 'Váltás: {drzava}',
+  },
+  izbiraJezika: {
+    oznaka: 'Nyelv',
+    preklopi: 'Váltás: {jezik}',
+  },
+  prviObisk: {
+    naslov: 'Hol szeretnél játszani?',
+    opis: 'Válaszd ki a bajnokságot, amelyben összerakod a csapatod és versenyzel. Megmutatjuk a játékosait és a tabelláját; később bármikor átválthatsz fent.',
+    brezEkip: 'még nincs csapat',
+    nazaj: '← Vissza',
+    preskoci: 'Kihagyom',
+    drugaDrzava: '{drzava}?',
+    drzavaOpis: 'Először válassz országot, aztán abban egy bajnokságot.',
+  },
+  rokKroga: {
+    dniUr: '{d} nap {h} óra',
+    urMinut: '{h} óra {m} perc',
+    minutSekund: '{m} perc {s} mp',
+    sekund: '{s} mp',
+    zaklepNaslov: 'A(z) {krog}. forduló zárása: {datum}',
+    ligaKrog: '{liga} · {krog}. forduló',
+    zaklenjen: 'lezárva, a csapatmódosítások most már a következő fordulóra érvényesek',
+    zaklepCez: 'zárásig',
+    datumOklepaj: '({datum})',
+  },
+  odstevanje: {
+    dni: '{n} n',
+    ur: '{n} ó',
+    minut: '{n} p',
+    zaklenjenoPred: 'lezárva ennyi ideje: {cas}',
+    se: 'még {cas}',
+  },
+  klepet: {
+    gost: 'Vendég',
+    zdaj: 'most',
+    minut: '{n} perc',
+    ur: '{n} óra',
+    dni: '{n} nap',
+    morasSePrijaviti: 'Íráshoz be kell jelentkezned.',
+    predolgo: 'Az üzenet túl hosszú (legfeljebb 500 karakter).',
+    izbrisiVprasanje: 'Törlöd az üzenetet?',
+    naslov: 'Segíts jobbá tenni!',
+    anonimno: 'névtelenül',
+    uvod: 'Mi zavar? Mit látnál szívesen? Mi hiányzik? A véleményed nagyon sokat jelent nekünk, <krepko>mondd el</krepko>. A chat névtelen; senki sem látja, ki mit írt.',
+    prikazesKot: 'A chatben így jelensz meg: <ime>{ime}</ime>. A regisztrált neved rejtve marad.',
+    zaPisanje: 'Íráshoz jelentkezz be (olvasni bárki tud). A regisztrált neved rejtve marad, egy véletlen becenév alatt jelensz meg.',
+    bodiPrvi: 'Írd meg te az első üzenetet.',
+    izbrisi: 'Üzenet törlése',
+    napisi: 'Írj üzenetet …',
+    poslji: 'Küldés',
+    zaObjavo: 'Íráshoz <prijava>jelentkezz be</prijava>.',
+  },
+  sponzor: {
+    oznaka: 'Szponzor',
+    obisci: 'Weboldal megnyitása',
+  },
+  napaka: {
+    naslov: 'Az oldal elakadt',
+    opis: 'Valami hiba történt az oldal megjelenítésekor. Frissítsd az oldalt, vagy menj vissza a kezdőlapra. Ha újra előfordul, írj nekünk a kezdőlapi chaten.',
+    nazaj: 'Vissza a kezdőlapra',
+    osvezi: 'Oldal frissítése',
+  },
+  crta: {
+    gibanje: 'Változás: {seznam}',
+  },
+  grb: {
+    klub: 'klub',
+  },
+  vabilo: {
+    nasaLiga: 'a bajnokságunk',
+    ligaZZvezo: '{liga} ({zveza})',
+    klubi: ' (klubjaink: {seznam})',
+    zadeva: 'Fantasy bajnokság: {liga}, gyere te is',
+    besedilo:
+      'Szia!\n\nFantasy foci bajnokságban játszom: {liga}. Összerakod a saját csapatod a játékosokból{klubi}, és versenyzel a többiekkel.\n\nTeljesen ingyenes. Itt tudsz regisztrálni:\n{naslov}\n\nRakd össze a csapatod, válassz csapatkapitányt, és minden forduló után nézd meg, ki szerezte a legtöbb pontot.\n\nTalálkozunk a bajnokságban!',
+  },
+  // Mobilna aplikacija je prestara (PosodobiAplikacijo).
+  posodobi: {
+    naslov: 'Frissítsd az alkalmazást',
+    opis: 'Az SLFF ezen verziója már nem támogatott. Frissítsd az alkalmazást, hogy továbbra is kezelhesd a csapatod.',
+    gumb: 'Frissítés',
+  },
+}

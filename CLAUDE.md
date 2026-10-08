@@ -312,6 +312,24 @@ Stran Pozicije je v meniju kot v Sloveniji in na Hrvaškem (če češki vir
 pozicije prinese, jo skrij v `Navbar.tsx` kot za SK). Češkega kanala v
 HelpStacku še ni: `Podpora.tsx` za `cs` uporabi slovenskega.
 
+### Madžarska
+
+Država `HU` ("Magyarország", migracija 20261009011100) ima vmesnik v
+madžarščini (`src/i18n/hu/`, jezik `hu`, `hu-HU`, `JEZIK_DRZAVE.HU`), vstop
+`slff.eu/hu`, kartico ob deljenju `hu.html` (Caddy jo vrne za `/hu` in
+`?t=hu-…`), madžarsko vejo pošte (`sporocila.ts`, avtentikacijske predloge in
+zadeve v `docker-compose.slff.yml`) in madžarska imena lastnikov hišnih ekip
+(priimek pred imenom, "Nagy Péter"). **Šifra madžarske lige se začne s
+`hu-`.** Ugib: brskalnik `hu`, pas `Europe/Budapest`. Zveze, tekmovanja in vir
+vpiše svoja migracija. Madžarščina ime lige sklanja s priponami, zato ga
+`ligaVTozilniku` pusti v imenovalniku in madžarski stavki ga postavijo
+samostojno ("Megnyílt a fantasy liga: {liga}."); enako ime kluba in številke
+(člen a/az je odvisen od izgovora). Za številom je samostalnik v ednini
+("3 pont"), zato imata množinski obliki `one` in `other` isto besedo. Stran
+Pozicije je v meniju kot v Sloveniji (če madžarski vir pozicije prinese, jo
+skrij v `Navbar.tsx` kot za SK). Madžarskega kanala v HelpStacku še ni:
+`Podpora.tsx` za `hu` uporabi slovenskega.
+
 ### Država obiskovalca
 
 Domena je ena, **lige druge države so skrite**: `useTekmovanje().tekmovanja`
@@ -585,7 +603,7 @@ besedilom). **Obvezno, vsakič:**
    istega pošiljatelja po 3+ dneh je v redu).
 2. **Po** poslanem mailu: `node scripts/stiki-klubov.mjs zabelezi --za <naslov>
    --vrsta prvi|opomnik --poslal <ime> --zadeva "…" --telo-datoteka <datoteka>`
-   (nov naslov še `--klub "…" --drzava SI|SK|HR|CZ [--liga …]`). Pri paketih
+   (nov naslov še `--klub "…" --drzava SI|SK|HR|CZ|HU [--liga …]`). Pri paketih
    beleži sproti, po vsakem mailu, ne na koncu.
 3. Odgovor kluba: `zabelezi --vrsta odgovor --opomba "<povzetek>"`; dogovor ali
    zavrnitev: `nastavi --za … --stanje sodeluje|ne_zeli`.
@@ -621,9 +639,9 @@ vpisana pri Supabase kot povratni naslov ponastavitve gesla in žeton nosi v
   `src/i18n` — nikoli `toLocaleString('sl-SI')`.
 - Drugi jezik (`src/i18n/hr/`) je lahko delen; manjkajoče pride iz
   slovenščine. `npm run prevodi -- hr` izpiše, kaj manjka. Brskalnik izbere
-  jezik sam šele, ko je v `PRIPRAVLJENI` (`sl`, `hr`, `sk`, `cs`, `en`). Hrvaščina,
-  slovaščina, češčina in angleščina so popolne — smoke preveri, da imajo vse ključe ter iste
-  `{parametre}` in `<oznake>`; nov slovenski niz zato dodaj v vse štiri.
+  jezik sam šele, ko je v `PRIPRAVLJENI` (`sl`, `hr`, `sk`, `cs`, `hu`, `en`). Hrvaščina,
+  slovaščina, češčina, madžarščina in angleščina so popolne — smoke preveri, da imajo vse ključe ter iste
+  `{parametre}` in `<oznake>`; nov slovenski niz zato dodaj v vseh pet.
 - **Kateri jezik** (`zeljenJezik` v `src/lib/drzavaUgib.ts`, isto pravilo v
   `izberi()` ob nalaganju in v varovalu konteksta lige):
   1. izbira z izbirnika **"SL · SK · EN"** (`IzbiraJezika`, v nogi in na vrhu

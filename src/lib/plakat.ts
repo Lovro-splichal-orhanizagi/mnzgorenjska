@@ -82,6 +82,11 @@ export function ligaVTozilniku(liga: string, j: Jezik = jezik()): string {
   // Slovaščina: "IV. liga — SsFZ" -> "IV. ligu", "I. trieda — Žilina" -> "I. triedu".
   // Angleščina ne sklanja: "Fantasy league for 1. liga — člani is open".
   if (j === 'en') return liga
+  // Madžarščina bi ime lige sklanjala s priponami ("megyei I. osztályt"), ki
+  // sledijo samoglasniški harmoniji; zato madžarski stavki ime lige postavijo
+  // samostojno ("Elindult a fantasy liga: Megyei I. osztály") in ostane v
+  // imenovalniku.
+  if (j === 'hu') return liga
   if (j === 'sk') return liga.replace(/(^|\s)liga(?=\s|$)/, '$1ligu').replace(/(^|\s)trieda(?=\s|$)/, '$1triedu')
   // Hrvaščina: ženske besede imena pred " — " na -a dobijo -u: "Treća NL Sjever"
   // -> "Treću NL Sjever", "Prva zagrebačka liga" -> "Prvu zagrebačku ligu".
