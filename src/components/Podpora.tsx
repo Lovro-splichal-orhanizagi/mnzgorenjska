@@ -23,12 +23,14 @@ import { prijaviOrodja, type StanjeStrani } from '../lib/podporaOrodja'
  * obiskovalec, ga pelje na stran in mu na njej pokaže, kam klikniti.
  */
 // Vsak jezik ima svoj kanal v HelpStacku: slovaški ima slovaško bazo znanja
-// (pravila brez glasovanja o pozicijah — te pridejo iz zapisnika). Kdor
-// gleda slovaško ligo, dobi slovaški kanal; ostali (sl, en) slovenskega, ki
+// (pravila brez glasovanja o pozicijah — te pridejo iz zapisnika), hrvaški
+// hrvaško (vratar iz zapisnika, ostale pozicije glasovanje kot v Sloveniji).
+// Kdor gleda ligo države, dobi njen kanal; ostali (sl, en) slovenskega, ki
 // odgovarja v jeziku vprašanja.
 const KANALI: Record<string, string> = {
   sl: 'cmucx868b000cv2atsowgly81',
   sk: 'cmupjxbms00s0sz2cty78ex1j',
+  hr: 'cmuymww46001dtk2c4j207tbd',
 }
 const WIDGET_ID = KANALI[jezik()] ?? KANALI.sl
 const SKRIPTA = `https://helpstack.eu/widget.js?id=${WIDGET_ID}`

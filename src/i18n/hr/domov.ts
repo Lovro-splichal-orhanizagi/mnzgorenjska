@@ -8,7 +8,7 @@ export const domov: NonNullable<Prevod['domov']> = {
     gorenjskaMladinci: 'Gorenjska nogometna liga — juniori',
     gorenjskaClani: '1. Gorenjska nogometna liga',
     geslo: 'Složi momčad. Skupljaj bodove. Pobijedi.',
-    opis: 'Bodovi dolaze iz službenih zapisnika ({zveza}): golovi, minute, čiste mreže, kartoni. Sve osim asistencija, njih određuje zajednica.',
+    opis: 'Bodovi dolaze iz službenih zapisnika ({zveza}): golovi, minute, čiste mreže, kartoni. Asistencije i pozicije igrača u polju određuje zajednica.',
     vecLig: 'Možeš igrati u više liga — <krepko>ligu biraš gore lijevo</krepko>, svaka ima svoju momčad i ljestvicu.',
     zacetekSezone: '<krepko>Sezona počinje {datum}</krepko> — složi momčad prije roka.',
     zamudniki: '<krepko>Propustio si početak?</krepko> Na <lestvica>Ljestvici</lestvica> natječeš se od kola kad se pridružiš.',
@@ -69,7 +69,7 @@ export const domov: NonNullable<Prevod['domov']> = {
   kakoIgras: {
     naslov: 'Kako se igra',
     registracija: '1. Registracija',
-    registracijaOpis: 'Napravi račun preko Googlea ili e-pošte i lozinke te smisli ime momčadi.',
+    registracijaOpis: 'Napravi račun preko Googlea, Applea ili e-pošte i lozinke te smisli ime momčadi.',
     kader: '2. Složi momčad',
     kaderOpis: 'Na terenu biraš 15 igrača: 2 vratara, 5 braniča, 5 veznih i 3 napadača — najviše 3 iz istog kluba, unutar proračuna od 100 mil.',
     enajsterica: '3. Postavi prvih 11',

@@ -96,7 +96,7 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   prijavaPotrebna: 'Za slaganje momčadi moraš se prijaviti.',
   prijava: 'Prijava',
   locenaLiga:
-    'Momčad u ligi <liga>{liga}</liga> odvojena je od momčadi u drugim ligama — sa svojim proračunom i svojom ljestvicom. Bodovi se računaju od {krog}. kola nadalje jer se do tada još događaju transferi i prelasci između selekcija.',
+    'Momčad u ligi <liga>{liga}</liga> odvojena je od momčadi u drugim ligama — sa svojim proračunom i svojom ljestvicom. Liga je uključena usred sezone, pa se bodovi računaju od {krog}. kola nadalje. Ranije odigrana kola ne broje se nikome.',
 
   /** Zloženi razdelek pod igriščem. */
   vec: 'Više: pomagala, povijest, pravila',
@@ -186,7 +186,7 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   // "Što ako": koliko bi sadašnja postava donijela u zadnjem kolu.
   kajCe: {
     prinesla: 'Sadašnja postava bi u <krog>{krog}. kolu</krog> ({sezona}) donijela',
-    opis: '"Što ako" pregled — nije povijesni rezultat, mijenja se sa svakom zamjenom. Stvarne bodove za prošla kola naći ćeš na ljestvici i u snimci postave.',
+    opis: '„Što ako“ pregled — nije povijesni rezultat, mijenja se sa svakom zamjenom. Stvarne bodove za prošla kola naći ćeš na ljestvici i u snimci postave.',
   },
 
   status: {
