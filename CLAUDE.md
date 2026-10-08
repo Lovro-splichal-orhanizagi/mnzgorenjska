@@ -340,6 +340,52 @@ Pozicije je v meniju kot v Sloveniji (če madžarski vir pozicije prinese, jo
 skrij v `Navbar.tsx` kot za SK). Madžarskega kanala v HelpStacku še ni:
 `Podpora.tsx` za `hu` uporabi slovenskega.
 
+Vir `mlsz` (`scripts/viri/mlsz.mjs`) bere **MLSZ adatbank**
+(adatbank.mlsz.hu), kjer MLSZ in vseh dvajset županijskih zvez objavljata
+vsa tekmovanja. Brez zaščite pred roboti, robots.txt branje dovoli
+(ada1bank: `Crawl-delay: 1`), posrednika ni treba. Beremo odkrito
+(`User-Agent: SLFF fantasy`, 1,5 s med stranmi, popolnih zapisnikov ne
+beremo znova). **Če se pojavi izziv ali CAPTCHA, ustavi — ne obhajaj.**
+
+- **Šifra lige** je `<évad>/<szervezet>/<verseny>`, npr. `67/20/33915`
+  (Zala Vármegyei I. osztály 2026/27). Évad je id sezone, ne letnica, in ni
+  enakomeren: 67 = 2026/27, 65 = 2025/26, 63 = 2024/25, 61 = 2023/24
+  (`SEZONE` v viru; zapisnik sezono pove sam z izbrano možnostjo izbirnika).
+  Szervezet je zveza: 0 MLSZ, 1–20 županije (5 Budapest, 20 Zala). Verseny
+  je id tekmovanja in se **z vsako sezono zamenja**, tudi arhiv ima svojega
+  (Zala I 2025/26 = `65/20/31672`).
+- **Strani**: krog `league/<évad>/<sz>/<verseny>/<krog>.html` (`#match_panel`,
+  koliko krogov je, pove izbirnik `Forduló`; pod razporedom kroga je še ves
+  razpored ene ekipe, zato se bere le panel in le tekme s tem krogom v
+  povezavi; `szabadnap` je prost krog), zapisnik
+  `match/<évad>/<sz>/<verseny>/<krog>/<id>.html` (lahko preusmeri na
+  ada1bank, ista stran). Seznam lig zveze vrne
+  `POST ada1bank.mlsz.hu/libs/ajax.php` (`type=getHeaderFilderData`).
+- **Zapisnik**: `#left_team` domači, `#right_team` gostje; pred `CSERÉK`
+  začetniki, za njim klop (tudi neuporabljene rezerve), od `VEZETŐEDZŐ`
+  vodstvo ekipe, katerega kartoni ne štejejo. Šifra igralca iz
+  `player/<id>.html` → `reg_st`. Menjave so v parih (`match_players_changeup`),
+  rezerva lahko gre noter in ven. Avtogol je pri igralcu, ki ga je dal.
+  Minute 91–96 se odrežejo na 90.
+- **Vratar NI označen.** Prvi začetnik je poseben (ostalih deset je urejenih
+  po dresu, prvi v 168 od 358 postav ne), v praksi vratar: rezerva, ki pride
+  namesto njega, ima skoraj vedno dres 1. Uvoz zato prvemu začetniku in
+  njegovi zamenjavi da `vratar` (→ GK, `is_goalkeeper`) — **le kot namig**;
+  ostali so brez pozicije in čakajo na glasovanje kot v Sloveniji. Napačen
+  namig popravi *Uskladi pozicije* z `vir = mlsz` (večina tekem).
+- **Kontumacija**: 3:0 (0:0) brez postav (Zala I 2025/26 tri). Razpored jo
+  označi (pri obeh praznih postavah po tednu dni, kot hns), zapisnik vrne null.
+- Vzdevek kluba: `ZVFC` (2025/26) = `Zalaszentgróti VFC` (2026/27).
+- **Delitve sezone so ločene lige**: felsőház/alsóház, rájátszás 1–6 / 7–12
+  (npr. Zala III. Északi rájátszás `33546`/`33548`, Veszprém II. felsőház
+  `33478`) imajo vsaka svoj verseny z ekipami več skupin. Za arhiv osnovne
+  lige jih **ne** uvažaj — enako kot nadstavbo Plzeň-jih — sicer v ligo
+  pripeljejo igralce drugih skupin.
+
+Preizkus vira na Zala I 2025/26 (`65/20/31672`): 26 krogov, 182 tekem,
+3 kontumacije, 179 zapisnikov, 714 golov (= izidi), 358/358 postav po 11,
+1173 nastopov s klopi, vsi nastopi s šifro.
+
 ### Država obiskovalca
 
 Domena je ena, **lige druge države so skrite**: `useTekmovanje().tekmovanja`
