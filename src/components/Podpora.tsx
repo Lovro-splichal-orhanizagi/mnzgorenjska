@@ -32,8 +32,25 @@ const KANALI: Record<string, string> = {
   sk: 'cmupjxbms00s0sz2cty78ex1j',
   hr: 'cmuymww46001dtk2c4j207tbd',
 }
-const WIDGET_ID = KANALI[jezik()] ?? KANALI.sl
-const SKRIPTA = `https://helpstack.eu/widget.js?id=${WIDGET_ID}`
+const skripta = (id: string) => `https://helpstack.eu/widget.js?id=${id}`
+
+/**
+ * Kanal jezika, a le če je v HelpStacku nastavljen. Kanal brez shranjenega
+ * videza (8. 10. 2026 hrvaški) vrne "Widget not configured" in widget ne
+ * pokaže NIČESAR — hrvaški obiskovalci so ostali brez klepeta. Takrat raje
+ * slovenski kanal (odgovarja v jeziku vprašanja) kot nič.
+ */
+async function izberiKanal(): Promise<string> {
+  const id = KANALI[jezik()] ?? KANALI.sl
+  if (id === KANALI.sl) return id
+  try {
+    const o = await fetch(`https://helpstack.eu/api/widget/${id}/config`)
+    const j = await o.json()
+    return j?.success ? id : KANALI.sl
+  } catch {
+    return id
+  }
+}
 
 interface Klepet {
   identify?: (identiteta: unknown, podatki?: unknown) => void
@@ -101,12 +118,15 @@ export default function Podpora() {
   }, [])
 
   useEffect(() => {
-    if (document.querySelector(`script[src="${SKRIPTA}"]`)) return
+    if (document.querySelector('script[src^="https://helpstack.eu/widget.js"]')) return
     return pocakajNaMirovanje(() => {
-      const s = document.createElement('script')
-      s.src = SKRIPTA
-      s.async = true
-      document.body.appendChild(s)
+      izberiKanal().then((id) => {
+        if (document.querySelector('script[src^="https://helpstack.eu/widget.js"]')) return
+        const s = document.createElement('script')
+        s.src = skripta(id)
+        s.async = true
+        document.body.appendChild(s)
+      })
     })
   }, [])
 
