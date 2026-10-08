@@ -223,7 +223,12 @@ Posebnosti, ki jih je našel pregled pred vklopom (7. 10. 2026):
 - 1. ŽNL Karlovac zapisnikov na Semafor ne vnaša — ostane izklopljena.
 - **Vklop sredi sezone**: borza neaktivnih lig ne premika; ob vklopu postavi
   `prvi_fantasy_krog` na naslednji krog, da borza starejših krogov ne
-  obračuna (začetna cena jih že vsebuje).
+  obračuna (začetna cena jih že vsebuje). **Naslednji krog = prvi krog za
+  zadnjim krogom z zapisniki**, ne "najnižji krog z rokom v prihodnosti":
+  krog s prestavljeno tekmo ima lahko rok čez mesec (Koprivnica, krog 5 z
+  rokom 31. 10., 6 in 7 že odigrana; vklop 8. 10. je izbral 5, popravek
+  `20261008033100`). Pred vklopom preveri, da noben krog ≥ prvega nima
+  zapisnikov.
 
 Beremo odkrito (`User-Agent: SLFF fantasy`, 500 ms med zahtevki,
 popolnih zapisnikov ne beremo znova), vir je v nogi vsake strani.
