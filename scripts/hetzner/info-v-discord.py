@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """New mail in info@slff.eu -> Discord (sender, subject, start of the text).
 
-Runs on the VM every 2 minutes (/etc/cron.d/slff-info-discord). Each posted message
-gets the IMAP keyword SlffDiscord, so reading it in a mail client doesn't matter and
-nothing is posted twice. Secrets come from /opt/slff/secrets.env
-(INFO_IMAP_PASS, DISCORD_WEBHOOK).
+Runs ON THE MAIL SERVER (ssh HelpStackUtils, /etc/cron.d/slff-info-discord) every
+2 minutes and reads the mailbox with doveadm, so it needs no mailbox password.
+Until 2026-10-08 it ran on the SLFF VM over IMAP: when the info@ password changed,
+the stale password failed every 2 minutes and fail2ban nearly banned the VM, which
+would have stopped all app mail. Each posted message gets the keyword SlffDiscord,
+so reading it in a mail client doesn't matter and nothing is posted twice.
+Secret: DISCORD_WEBHOOK in /opt/slff-info/secrets.env (root only).
 """
 import email
-import imaplib
+import subprocess
 import json
 import urllib.request
 from email.header import decode_header, make_header
@@ -16,7 +19,7 @@ from email.policy import default
 ZNACKA = 'SlffDiscord'
 
 env = {}
-for vrstica in open('/opt/slff/secrets.env'):
+for vrstica in open('/opt/slff-info/secrets.env'):
     if '=' in vrstica and not vrstica.startswith('#'):
         k, v = vrstica.rstrip('\n').split('=', 1)
         env[k] = v.strip('"\'')
@@ -44,15 +47,22 @@ def v_discord(od, zadeva, odlomek):
     urllib.request.urlopen(zahteva, timeout=15)
 
 
-imap = imaplib.IMAP4_SSL('mail.slff.eu')
-imap.login('info@slff.eu', env['INFO_IMAP_PASS'])
-imap.select('INBOX')
-_, ids = imap.uid('search', None, f'UNKEYWORD {ZNACKA}')
-for uid in ids[0].split():
-    _, podatki = imap.uid('fetch', uid, '(BODY.PEEK[])')
-    sporocilo = email.message_from_bytes(podatki[0][1], policy=default)
+DOVECOT = 'mailcowdockerized-dovecot-mailcow-1'
+UPORABNIK = 'info@slff.eu'
+
+
+def doveadm(*argumenti):
+    return subprocess.run(['docker', 'exec', DOVECOT, 'doveadm', *argumenti],
+                          check=True, capture_output=True).stdout
+
+
+najdeni = doveadm('search', '-u', UPORABNIK, 'mailbox', 'INBOX', 'NOT', 'KEYWORD', ZNACKA)
+for vrstica in najdeni.decode().splitlines():
+    uid = vrstica.split()[1]
+    surovo = doveadm('fetch', '-u', UPORABNIK, 'text', 'mailbox', 'INBOX', 'uid', uid)
+    surovo = surovo.split(b'\n', 1)[1] if surovo.startswith(b'text:') else surovo
+    sporocilo = email.message_from_bytes(surovo, policy=default)
     od = str(make_header(decode_header(sporocilo.get('From', '?'))))
     zadeva = str(make_header(decode_header(sporocilo.get('Subject', '(brez zadeve)'))))
     v_discord(od, zadeva, besedilo(sporocilo))
-    imap.uid('store', uid, '+FLAGS', f'({ZNACKA})')
-imap.logout()
+    doveadm('flags', 'add', '-u', UPORABNIK, ZNACKA, 'mailbox', 'INBOX', 'uid', uid)
