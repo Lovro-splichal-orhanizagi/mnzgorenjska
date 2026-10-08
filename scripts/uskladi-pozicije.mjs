@@ -46,7 +46,8 @@ const arg = (ime) => {
 }
 const pisi = process.argv.includes('--pisi')
 const vsePozicije = process.argv.includes('--vse-pozicije')
-// Vir: sportnet (pozicija v zapisniku) ali hns (zapisnik označi le vratarja).
+// Vir: sportnet (pozicija v zapisniku), hns (zapisnik označi le vratarja) ali
+// mlsz (vratar je namig: prvi začetnik, glej scripts/viri/mlsz.mjs).
 // Pri hns glasove da baza: `appearances.is_goalkeeper` na vsaki tekmi. Uvoz ga
 // polni od združitve #93 (7. 10. 2026 21:06 UTC); starejše vrstice so vse
 // `false` in bi prave vratarje prestavile v polje, zato štejemo le tekme,
@@ -138,7 +139,9 @@ async function uskladiHns(liga) {
 }
 
 for (const liga of lige) {
-  if (VIR === 'hns') { await uskladiHns(liga); continue }
+  // MLSZ vratarja ne označi; `is_goalkeeper` je namig (prvi začetnik), ki ga
+  // večina tekem potrdi ali ovrže enako kot oznako HNS.
+  if (VIR === 'hns' || VIR === 'mlsz') { await uskladiHns(liga); continue }
   const tekme = await vseVrstice((od, do_) =>
     db.from('matches')
       .select('id, source_url, rounds!inner(season, competition_id)')

@@ -18,6 +18,7 @@ import nzs from './nzs.mjs'
 import sportnet from './sportnet.mjs'
 import hns from './hns.mjs'
 import facr from './facr.mjs'
+import mlsz from './mlsz.mjs'
 
 const VIRI = {
   mnzg,
@@ -36,6 +37,8 @@ const VIRI = {
   hns,
   // Češka (FAČR) prek javnega dela IS FAČR; doseže ga le posrednik v EU.
   facr,
+  // Madžarska (MLSZ in županijske zveze) prek MLSZ adatbank.
+  mlsz,
 }
 
 /**

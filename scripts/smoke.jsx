@@ -3616,6 +3616,118 @@ preveri(
   preveri('facr: ime brez mesta na lestvici', !v.some((t) => /\(\d+\)/.test(t.domaci + t.gostje)))
 }
 
+// --- vir mlsz (Madžarska, MLSZ adatbank) ---------------------------------------
+{
+  const M = await import('./viri/mlsz.mjs')
+  const { default: viri } = await import('./viri/index.mjs')
+  const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  preveri('mlsz: vir je vpisan', viri.mlsz === M.default && M.default.drzava === 'HU' && M.default.imaRegistracije === false)
+  preveri('mlsz: datum in ura (krog in zapisnik)',
+    M.datumUra('2026. 10. 03. <span> 15:00</span>').datum === '2026-10-03' && M.datumUra('2026. 10. 03. <span> 15:00</span>').ura === '15:00' &&
+    M.datumUra('2025.10.04 - 15:00').datum === '2025-10-04' && M.datumUra('2025.10.04 - 15:00').ura === '15:00')
+  preveri('mlsz: minuta s podaljškom', M.minuta('75&apos;') === 75 && M.minuta("93'") === 90)
+  preveri('mlsz: sezona iz šifre in datuma', M.sezonaIzKode('67/20/33915') === '2026/27' && M.sezonaIzKode('65/20/31672') === '2025/26' &&
+    M.sezonaIzKode('63/5/1') === '2024/25' && M.sezonaIzDatuma('2027-05-01') === '2026/27')
+  preveri('mlsz: šifra lige', M.razbijKodo('67/20/33915').verseny === 33915 && M.razbijKodo(' 65/5/31000 ').sz === 5 &&
+    (() => { try { M.razbijKodo('33915'); return false } catch { return true } })())
+  preveri('mlsz: naslovi', M.default.naslovRazporeda('67/20/33915') === 'https://adatbank.mlsz.hu/league/67/20/33915/1.html' &&
+    M.naslovTekme('65/20/31672', 7, '2090962') === 'https://adatbank.mlsz.hu/match/65/20/31672/7/2090962.html')
+  preveri('mlsz: ime igralca', M.lepoIme('GERENCSÉR  DÁNIEL') === 'Gerencsér Dániel' && M.lepoIme('SZABÓ-NAGY ŐRS') === 'Szabó-Nagy Őrs')
+  preveri('mlsz: kratko ime', M.kratkoImeHu('CSESZTREGI KSE') === 'Csesztregi' && M.kratkoImeHu(' OWI ZALA Bt. LETENYE SE') === 'Letenye' &&
+    M.kratkoImeHu('ZNET TELEKOM BECSEHELY SE') === 'Becsehely' && M.kratkoImeHu('ZTE FC II.') === 'ZTE II.' &&
+    M.kratkoImeHu('Tarr Andráshida SC') === 'Tarr Andráshida' && M.kratkoImeHu('MAGNETIC ANDRÁSHIDA TE') === 'Magnetic Andráshida' &&
+    M.kratkoImeHu('swisspor LENTI TE ') === 'Swisspor Lenti' && M.kratkoImeHu('ZVFC') === 'ZVFC' && M.kratkoImeHu('Semjénháza Se') === 'Semjénháza')
+  preveri('mlsz: ključ kluba (velikost črk, naglasi, vzdevek)',
+    M.kljucKlubaHu('KISKANIZSAI SÁSKÁK') === M.kljucKlubaHu('Kiskanizsai Sáskák') && M.kljucKlubaHu('Hévíz SK') !== M.kljucKlubaHu('Heviz SK') &&
+    M.kljucKlubaHu('ZVFC') === M.kljucKlubaHu('Zalaszentgróti VFC'))
+
+  // Stran kroga: Zala I 2025/26, 7. krog — pod razporedom kroga je še razpored
+  // ene ekipe čez vso sezono (tudi 2090965 iz 7. kroga, ki se ne sme podvojiti).
+  const k7 = beri('hu-adatbank-krog-65-20-31672-7.html')
+  const v = M.vrsticeKroga(k7, 7)
+  preveri('mlsz: stran kroga — le ta krog', v.length === 7 && v.every((t) => t.krog === 7 && t.id && t.izid) &&
+    new Set(v.map((t) => t.id)).size === 7 && v.some((t) => t.id === '2090962' && t.izid.domaci === 3 && t.izid.gostje === 4))
+  preveri('mlsz: stran kroga — datum, ura, prestavljena tekma', v.some((t) => t.id === '2090962' && t.datum === '2025-10-04' && t.ura === '15:00') &&
+    v.some((t) => t.id === '2090965' && t.datum === '2025-10-24'))
+  preveri('mlsz: krogi in sezona iz izbirnikov', M.krogiStrani(k7).length === 26 && M.krogiStrani(k7).at(-1) === 26 && M.sezonaStrani(k7) === '2025/26')
+  const k3 = M.vrsticeKroga(beri('hu-adatbank-krog-67-20-33918-7.html'), 7)
+  preveri('mlsz: prost krog (szabadnap) ni tekma', k3.length === 5 && !k3.some((t) => /szabadnap/i.test(t.domaci + t.gostje)))
+  const k8 = M.vrsticeKroga(beri('hu-adatbank-krog-67-20-33915-8.html'), 8)
+  preveri('mlsz: neodigrane tekme brez izida', k8.length === 6 && k8.every((t) => !t.izid && t.id) &&
+    k8.some((t) => t.datum === '2026-10-11' && t.ura === '15:00' && t.domaci === 'Semjénháza Se'))
+
+  // Zapisnik: Csesztreg : Zalakomár 3:4 (1:1) — 11 m, avtogol, rdeči rezervi, karton trenerja.
+  const z = M.vZapisnik(beri('hu-adatbank-tekma-65-20-31672-2090962.html'), { id: '2090962' })
+  const n = M.nastopi(z)
+  const kdo = (ime) => n.find((x) => x.ime === ime)
+  preveri('mlsz: zapisnik', z && z.sezona === '2025/26' && z.krog === 7 && z.datum === '2025-10-04' && z.domaci.ime === 'CSESZTREGI KSE' &&
+    z.rezultat.domaci === 3 && z.rezultat.gostje === 4 && z.polcas.domaci === 1 && !z.opozorila.length)
+  preveri('mlsz: postave po 11, klop posebej', z.domaci.postava.length === 11 && z.gostje.postava.length === 11 &&
+    z.domaci.rezerve.length === 1 && z.gostje.rezerve.length === 3)
+  const zaEkipo = (idx) => z.goli.filter((g) => (g.avtogol ? 1 - g.ekipaIdx : g.ekipaIdx) === idx).length
+  preveri('mlsz: goli z 11 m in avtogolom = izid', z.goli.length === 7 && zaEkipo(0) === 3 && zaEkipo(1) === 4 &&
+    z.goli.some((g) => g.ime === 'Neubauer Kevin' && g.enajstmetrovka && g.ekipaIdx === 1 && g.minuta === 25) &&
+    z.goli.some((g) => g.ime === 'Szabó Kornél' && g.avtogol && g.ekipaIdx === 0))
+  preveri('mlsz: nastopi z goli', kdo('Kovács Erik').goli === 2 && kdo('Neubauer Kevin').goliIzEnajstmetrovke === 1 &&
+    kdo('Szabó Kornél').avtogoli === 1 && kdo('Szabó Kornél').goli === 0)
+  preveri('mlsz: kartoni brez trenerja', z.rumeni.length === 3 && z.rdeci.length === 1 && !z.rumeni.some((k) => /Bazsika/i.test(k.ime)) &&
+    kdo('Biharvári Roland').rumeni === 1)
+  preveri('mlsz: rdeči rezervi skrajša nastop', kdo('Kocsis Márk').rdeci === 1 && kdo('Kocsis Márk').minutaOd === 46 && kdo('Kocsis Márk').minute === 40)
+  preveri('mlsz: menjave v parih', z.menjave.length === 4 &&
+    z.menjave.some((m) => m.minuta === 60 && m.ven.ime === 'Madarász Zoltán' && m.noter.ime === 'Tinó Ronald János' && m.noter.st === 12))
+  preveri('mlsz: minute menjav', kdo('Madarász Zoltán').minute === 60 && kdo('Tinó Ronald János').minute === 30 && kdo('Tinó Ronald János').goli === 1 &&
+    kdo('Őr Gergő').minute === 46 && n.filter((x) => !x.zacetnik).length === 4)
+  preveri('mlsz: minute ekipe ~ 11 × 90', [0, 1].every((e) => {
+    const m = n.filter((x) => x.ekipaIdx === e).reduce((s, x) => s + x.minute, 0)
+    return m >= 900 && m <= 990
+  }))
+  preveri('mlsz: vsak nastop ima šifro igralca', n.length === 26 && n.every((x) => Number.isInteger(x.regSt)) && kdo('Kovács Erik').regSt === 525643)
+  preveri('mlsz: namig za vratarja je prvi začetnik', [0, 1].every((e) => n.filter((x) => x.ekipaIdx === e && x.zacetnik && x.vratar).length === 1) &&
+    kdo('Szmolicza Levente').vratar && kdo('Szmolicza Levente').pozicija === 'GK' && kdo('Lucz Boldizsár Károly').vratar &&
+    n.filter((x) => !x.vratar).every((x) => x.pozicija === null))
+
+  // Rezerva noter v 12. in ven v 87. (Horváth János, Lenti : Zalakomár 1:3).
+  const z5 = M.vZapisnik(beri('hu-adatbank-tekma-65-20-31672-2090950.html'), { id: '2090950' })
+  const hj = M.nastopi(z5).find((x) => x.ime === 'Horváth János')
+  preveri('mlsz: rezerva noter in ven', hj && !hj.zacetnik && hj.minutaOd === 12 && hj.minutaDo === 87 && hj.minute === 75 && hj.goli === 2)
+
+  // Kontumacija: ZTE FC II. : Zalakomár 3:0 (0:0), obe postavi prazni.
+  const kz = beri('hu-adatbank-tekma-kontumacija-65-20-31672-2091004.html')
+  preveri('mlsz: kontumacija prepoznana', M.jeKontumacija(kz) && M.brezPostav(kz) && M.vZapisnik(kz) === null)
+  preveri('mlsz: odigrana tekma ni kontumacija', !M.jeKontumacija(beri('hu-adatbank-tekma-65-20-31672-2090962.html'), { domaci: 3, gostje: 0 }) &&
+    !M.jeKontumacija(kz, { domaci: 2, gostje: 0 }))
+
+  // Sestavljen zapisnik: menjava vratarja (prvi začetnik ven, rezerva noter je
+  // nov vratar), leteča menjava (ven v 30., nazaj v 60.), rdeči trenerju.
+  const ev = (vrsta, m) => `<span style="background-image: url(https://ada1bank.mlsz.hu/meccs-center/img/timeline/event_${vrsta}.png)">${m}&apos;</span>`
+  const vrstica = (id, st, ime, par = null, dog = '') =>
+    `<tr class="template-tr-selectable"><td class="match_players_num"><a href="https://adatbank.mlsz.hu/player/${id}.html" title="${ime}"><span class="playerNum">${st}</span></a>` +
+    (par ? `<a href='https://adatbank.mlsz.hu/player/${par[0]}.html' class='match_players_changeup' title='${par[2]}'><span class='playerNum'>${par[1]}</span></a>` : '') +
+    `</td><td class="match_players_name"><a href="https://adatbank.mlsz.hu/player/${id}.html" title="${ime}">${ime}</a></td><td class="match_players_cards">${dog}</td></tr>`
+  const ekipa = (stran, ime, zacetni, klop) =>
+    `<div id="${stran}_team"><h2 class="pointer">${ime}</h2><table>${zacetni.join('')}</table><table class="replacement">` +
+    `<tr><td colspan="3" class="match_table_subhead">CSERÉK</td></tr>${klop.join('')}</table><table class="replacement coach">` +
+    `<tr><td class="match_table_subhead" colspan="2">VEZETŐEDZŐ</td></tr><tr><td class="match_table_coach">EDZŐ</td><td class="match_players_cards">${ev('redcard', 50)}</td></tr></table></div>`
+  const polje = (od) => Array.from({ length: 10 }, (_, i) => vrstica(od + i, i + 2, `IGRALEC ${od + i}`))
+  const sestavljen =
+    `<option selected value=67>2026/2027</option><p class="match_data_date">2026.10.03 - 15:00</p><h1 id="headerText">X 8. forduló</h1>` +
+    `<div class="match-result"><span>0 - 0</span><p>(0 - 0)</p></div>` +
+    ekipa('left', 'A SE', [vrstica(1, 1, 'KAPUS ELSŐ', [9, 12, 'KAPUS MÁSIK'], ev('swap', 70)), ...polje(100).map((r, i) => (i === 0 ? r.replace('</td></tr>', `${ev('swap', 60)}${ev('swap', 30)}</td></tr>`) : r))],
+      [vrstica(9, 12, 'KAPUS MÁSIK', [1, 1, 'KAPUS ELSŐ'], ev('swap', 70)), vrstica(8, 13, 'NEM JÁTSZOTT')]) +
+    ekipa('right', 'B FC', [vrstica(2, 1, 'MÁSIK KAPUS'), ...polje(200)], []) +
+    '<div class="team_tabella"></div>'
+  const zs = M.vZapisnik(sestavljen, { id: 's' })
+  const ns = M.nastopi(zs)
+  const s = (ime) => ns.find((x) => x.ime === ime)
+  preveri('mlsz: menjava vratarja — nov vratar je namig', s('Kapus Első').vratar && s('Kapus Első').minute === 70 && s('Kapus Másik').vratar &&
+    s('Kapus Másik').minute === 20 && !s('Igralec 101').vratar && !ns.some((x) => x.ime === 'Nem Játszott'))
+  preveri('mlsz: leteča menjava (ven in nazaj)', s('Igralec 100').minute === 60 && s('Igralec 100').zacetnik && s('Igralec 100').minutaDo === 90)
+  // Domači: 9 × 90 + 70 + 20 (vratarja) + 60 (leteča menjava, med 30. in 60. nihče).
+  const minuteEkipe = (e) => ns.filter((x) => x.ekipaIdx === e).reduce((a, x) => a + x.minute, 0)
+  preveri('mlsz: sestavljen zapisnik brez kartonov trenerja', zs.sezona === '2026/27' && zs.krog === 8 && zs.rdeci.length === 0 &&
+    minuteEkipe(0) === 960 && minuteEkipe(1) === 990)
+}
+
 // --- navijači klubov ----------------------------------------------------------
 // Vrstica `navijaci_klubov` je en navijač; klub brez navijačev ima eno vrstico
 // brez ekipe. Mesto ima le klub z vsaj `min_navijacev`.
