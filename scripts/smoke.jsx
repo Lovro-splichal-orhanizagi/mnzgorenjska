@@ -3541,6 +3541,54 @@ preveri(
   preveri('hns grbi: ista slika pri dveh klubih je nadomestna, pri istem klubu ne', deljeni.has('a') && !deljeni.has('b'))
 }
 
+// --- vir facr (Češka, IS FAČR) ----------------------------------------------
+{
+  const F = await import('./viri/facr.mjs')
+  const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  preveri('facr: datum in ura', F.datumUra('22.08.2026 10:00').datum === '2026-08-22' && F.datumUra('2.8.2026 9:30').ura === '09:30')
+  preveri('facr: ročník je leto začetka sezone', F.sezonaIzRocnika('2026') === '2026/27' && F.sezonaIzRocnika('2024') === '2024/25')
+  preveri('facr: šifra lige je UUID', (() => { try { F.razbijKodo('2026211A1A'); return false } catch { return true } })() &&
+    F.razbijKodo('CBF505A1-6540-4545-BC28-39CDE178C18A').id === 'cbf505a1-6540-4545-bc28-39cde178c18a')
+  preveri('facr: kratko ime', F.kratkoImeCz('TJ Sokol Ostředek') === 'Ostředek' && F.kratkoImeCz('SK POLABAN Nymburk') === 'Polaban Nymburk')
+  // Leteče menjave: začetnik ven v 30., nazaj v 60. = 60 minut; rezerva noter 20., ven 50. = 30.
+  preveri('facr: minute iz letečih menjav',
+    F.minuteIzPreklopov(true, [30, 60]).minute === 60 && F.minuteIzPreklopov(false, [20, 50]).minute === 30 &&
+    F.minuteIzPreklopov(true, []).minute === 90 && F.minuteIzPreklopov(false, [46]).minute === 44)
+
+  // Okresní přebor Benešov (8. liga), Ostředek : Popovice 0:2, 3. kolo 2026/27.
+  const z = F.vZapisnik(beri('cz-is-zapis-2026211A1A0303.html'), { id: 'a' })
+  const n = F.nastopi(z)
+  preveri('facr: zapisnik okresní přebor', z && z.sezona === '2026/27' && z.krog === 3 && z.datum === '2026-08-22' &&
+    z.rezultat.domaci === 0 && z.rezultat.gostje === 2 && !z.opozorila.length)
+  preveri('facr: postave po 11, klop posebej', z.domaci.postava.length === 11 && z.gostje.postava.length === 11 &&
+    z.domaci.rezerve.length === 3 && z.gostje.rezerve.length === 6)
+  preveri('facr: gol z 11 m', z.goli.length === 2 && z.goli.filter((g) => g.enajstmetrovka).length === 1 && z.goli.every((g) => g.ekipaIdx === 1))
+  preveri('facr: vsak nastop ima šifro FAČR', n.length === 28 && n.every((x) => x.regSt))
+  preveri('facr: šifra z vodilno ničlo', n.some((x) => x.ime === 'Procházka David' && x.regSt === 4090478))
+  preveri('facr: en vratar na ekipo v postavi', [0, 1].every((e) => n.filter((x) => x.ekipaIdx === e && x.zacetnik && x.vratar).length === 1))
+  preveri('facr: kapetan brez oznake v imenu', n.some((x) => x.ime === 'Horák Jakub') && !n.some((x) => /\(K\)|\(EU\)/.test(x.ime)))
+  // Menjave se berejo: s klopi jih je 6, neuporabljene rezerve (Blažka, Šrejma, Kaucký Jan) ne nastopijo.
+  preveri('facr: nastopi s klopi', n.filter((x) => !x.zacetnik).length === 6 && !n.some((x) => x.ime === 'Blažka Martin'))
+  preveri('facr: minute ekipe ~ 11 × 90', [0, 1].every((e) => {
+    const m = n.filter((x) => x.ekipaIdx === e).reduce((s, x) => s + x.minute, 0)
+    return m >= 900 && m <= 990
+  }))
+  preveri('facr: menjava v 46.', n.some((x) => x.ime === 'Procházka David' && x.minute === 46) && n.some((x) => x.ime === 'Nepraš Zdeněk' && x.minute === 44))
+  preveri('facr: rumeni karton', z.rumeni.length === 1 && z.rumeni[0].ime === 'Schärfer David' && z.rumeni[0].minuta === 24)
+
+  // 1. A třída Královéhradecký kraj, Kostelec : Broumov 9:0, rdeči v 17.
+  const r = F.vZapisnik(beri('cz-is-zapis-2024520A2A2602.html'), { id: 'b' })
+  const nr = F.nastopi(r)
+  preveri('facr: 9:0 z rdečim', r.sezona === '2024/25' && r.krog === 26 && r.goli.length === 9 && !r.opozorila.length)
+  preveri('facr: rdeči skrajša nastop', nr.some((x) => x.ime === 'Pokorný Jiří' && x.rdeci === 1 && x.minute === 17))
+
+  // Razpored (dorost, 2025): krogi po datumu, ne po številki; neodigrana brez izida.
+  const v = F.vrsticeRazporeda(beri('cz-is-soutez-2025003C2D.html'))
+  preveri('facr: razpored', v.length === 120 && v.every((t) => t.id && t.krog && t.domaci && t.gostje) && v.filter((t) => t.izid).length === 47)
+  preveri('facr: neodigrana tekma brez izida', v.some((t) => t.krog === 2 && !t.izid && t.datum === '2025-11-16' && t.ura === '11:15'))
+  preveri('facr: ime brez mesta na lestvici', !v.some((t) => /\(\d+\)/.test(t.domaci + t.gostje)))
+}
+
 // --- navijači klubov ----------------------------------------------------------
 // Vrstica `navijaci_klubov` je en navijač; klub brez navijačev ima eno vrstico
 // brez ekipe. Mesto ima le klub z vsaj `min_navijacev`.

@@ -243,6 +243,40 @@ poženi znova.
 
 ### Češka
 
+Vir `facr` (`scripts/viri/facr.mjs`) bere **javni del IS FAČR**
+(is.fotbal.cz/public), sistem, v katerem FAČR ter krajske in okrajne zveze
+vodijo vsa tekmovanja do IV. třídy. Zapisnik je na vseh ravneh enak: postavi
+s številko dresa in **šifro igralca FAČR** (osem števk, → `reg_st`; vodilna
+ničla odpade), vratar `B`, menjava, rumeni (dva stolpca) in rdeči z minuto,
+strelci v svoji tabeli s tipom (`Branka`, `Pokutový kop`, vlastní). Vrstice
+`po1`–`po11` so začetniki, od `po12` klop.
+
+- **Leteče menjave**: nižje lige dovolijo, da gre igralec ven in nazaj. Stolpec
+  `Stř.` ima zato dve celici — zaporedni spremembi stanja. `nastopi` v
+  `facr.mjs` sešteje minute iz obeh (`minuteIzPreklopov`).
+- **Ime kluba iz razporeda**: razpored lahko piše kratko ("Vyškov"), zapisnik
+  polno; uvoz vzame ime iz razporeda, sicer bi klub nastal dvakrat.
+- Krogi so na strani tekmovanja razvrščeni po datumu, ne po številki
+  (prestavljen krog stoji kasneje) — številka pride iz naslova `N. kolo`.
+
+**Dostop.** IS odgovarja le iz EU: GitHubovi tekači (Microsoft, ZDA) ne dobijo
+povezave, strežnik SLFF (Hetzner) jo dobi. Zato zahtevki tečejo prek
+posrednika na strežniku (`scripts/hetzner/facr-posrednik.sh`, tinyproxy, samo
+is.fotbal.cz:443, geslo, omejen CPU in RAM), naslov je skrivnost `FACR_PROXY`.
+Uvoz sam teče na GitHubu kot vsi drugi. Vsak zahtevek potrebuje sejo (piškotka
+z naslovnice); brez nje IS preusmeri na `/public/?redir=v4` — to ureja
+`facrFetch`. **www.fotbal.cz je za Cloudflarovim izzivom: ne beremo ga in ga
+ne obhajamo.** Iskanja tekem (CAPTCHA) ne uporabljamo; iskalnik tekmovanj
+nam ne vrne ničesar, tudi z izbrano okrajno zvezo.
+
+**Šifra lige je UUID tekmovanja** (`detail-souteze.aspx?req=<UUID>`), isti kot
+v naslovu `www.fotbal.cz/souteze/turnaje/hlavni/<UUID>`. Vsaka sezona je svoje
+tekmovanje (ročník 2026 = 2026/27), zato se UUID ob novi sezoni vpiše ročno.
+Številka tekmovanja `2026211A1A` = ročník, zveza (211 = OFS Benešov), koda.
+
+Beremo odkrito (`User-Agent: SLFF fantasy`, 1 s med zahtevki, zaključenih
+zapisnikov ne beremo znova). Dovoljenja FAČR še nimamo.
+
 Država `CZ` ("Česko", migracija 20261008213100) ima vmesnik v češčini
 (`src/i18n/cs/`, jezik `cs`, `JEZIK_DRZAVE.CZ`), vstop `slff.eu/cz`, kartico
 ob deljenju `cz.html` (Caddy jo vrne za `/cz` in `?t=cz-…`), češko vejo pošte

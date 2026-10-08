@@ -104,7 +104,7 @@ async function prenesi(url, datoteka, sveze = false) {
   // Vir lahko zahteva vljudnost: premor med zahtevki in glavo, ki pove, kdo
   // bere (Sportnet). Slovenski viri tega nimajo in ostanejo, kot so bili.
   // Prehodne motnje (DNS, 5xx) prenos sam ponovi — glej `prenos.mjs`.
-  const odgovor = await prenesiSPonovitvami(url, { glave: vir.glave, premorMs: vir.premorMs })
+  const odgovor = await prenesiSPonovitvami(url, { glave: vir.glave, premorMs: vir.premorMs, fetchFn: vir.fetch })
   if (!odgovor.ok) {
     // Statusa ne pozremo, ga pa pripnemo: klicatelj mora znati lociti
     // "te strani (se) ni" od "vir je padel". Vir sam tega ne pove drugace.

@@ -17,6 +17,7 @@ import mnzng from './mnzng.mjs'
 import nzs from './nzs.mjs'
 import sportnet from './sportnet.mjs'
 import hns from './hns.mjs'
+import facr from './facr.mjs'
 
 const VIRI = {
   mnzg,
@@ -33,6 +34,8 @@ const VIRI = {
   sportnet,
   // Hrvaška (HNS in županijske zveze) prek HNS Semaforja.
   hns,
+  // Češka (FAČR) prek javnega dela IS FAČR; doseže ga le posrednik v EU.
+  facr,
 }
 
 /**
