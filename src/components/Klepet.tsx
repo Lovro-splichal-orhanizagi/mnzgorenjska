@@ -62,6 +62,18 @@ const BESEDE: Record<string, { pridevniki: string[]; samostalniki: string[] }> =
       'Orel', 'Drak', 'Býk', 'Kůň', 'Sokol', 'Rys',
     ],
   },
+  hu: {
+    pridevniki: [
+      'Kék', 'Piros', 'Zöld', 'Sárga', 'Fekete', 'Fehér', 'Ezüst', 'Arany',
+      'Gyors', 'Vad', 'Csendes', 'Tüzes', 'Jeges', 'Éjszakai', 'Hajnali',
+      'Vas', 'Réz', 'Napos', 'Égi', 'Könyörtelen',
+    ],
+    samostalniki: [
+      'Kapus', 'Védő', 'Középpályás', 'Csatár', 'Kapitány', 'Bíró', 'Edző',
+      'Szurkoló', 'Gólvágó', 'Irányító', 'Csere', 'Veterán', 'Hős', 'Farkas',
+      'Sas', 'Sárkány', 'Bika', 'Csikó', 'Sólyom', 'Hiúz',
+    ],
+  },
   en: {
     pridevniki: [
       'Blue', 'Red', 'Green', 'Yellow', 'Black', 'White', 'Silver', 'Golden',

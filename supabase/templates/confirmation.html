@@ -26,6 +26,13 @@
     <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Potvrdit e-mail →</a>
   </p>
   <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Pokud ses neregistroval/a ty, tento e-mail ignoruj.</p>
+{{ else if eq (printf "%v" .Data.jezik) "hu" }}
+  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Szia!</p>
+  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Köszönjük, hogy regisztráltál az SLFF-re. A gombra kattintva megerősíted az e-mail-címedet, és már rakhatod is össze a csapatodat.</p>
+  <p style="text-align: center; margin: 24px 0;">
+    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">E-mail-cím megerősítése →</a>
+  </p>
+  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Ha nem te regisztráltál, hagyd figyelmen kívül ezt az e-mailt.</p>
 {{ else }}
   <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Živjo!</p>
   <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Hvala za registracijo v SLFF. S klikom na gumb potrdiš svoj e-naslov in lahko začneš sestavljati ekipo.</p>

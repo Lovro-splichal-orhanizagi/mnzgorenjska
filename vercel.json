@@ -74,6 +74,10 @@
       "destination": "/cz.html"
     },
     {
+      "source": "/hu",
+      "destination": "/hu.html"
+    },
+    {
       "source": "/((?!api/)(?!.*\\.).*)",
       "has": [
         {
@@ -105,6 +109,17 @@
         }
       ],
       "destination": "/cz.html"
+    },
+    {
+      "source": "/((?!api/)(?!.*\\.).*)",
+      "has": [
+        {
+          "type": "query",
+          "key": "t",
+          "value": "hu-.*"
+        }
+      ],
+      "destination": "/hu.html"
     },
     {
       "source": "/((?!api/)(?!.*\\.).*)",

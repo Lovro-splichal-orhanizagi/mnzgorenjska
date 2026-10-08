@@ -11,18 +11,19 @@
 // vmesnik, ko odpre povezavo `?t=sk-…`. Kdor ima ekipi v obeh državah, dobi
 // dva ločena maila, vsakega v jeziku svoje lige.
 
-export type Jezik = 'sl' | 'sk' | 'hr' | 'cs'
+export type Jezik = 'sl' | 'sk' | 'hr' | 'cs' | 'hu'
 
 /** Jezik države lige (enako kot `JEZIK_DRZAVE` v vmesniku). */
-export const JEZIK_DRZAVE: Record<string, Jezik> = { SI: 'sl', SK: 'sk', HR: 'hr', CZ: 'cs' }
+export const JEZIK_DRZAVE: Record<string, Jezik> = { SI: 'sl', SK: 'sk', HR: 'hr', CZ: 'cs', HU: 'hu' }
 /** Časovni pas, v katerem so roki lige. */
 export const PAS_DRZAVE: Record<string, string> = {
   SI: 'Europe/Ljubljana',
   SK: 'Europe/Bratislava',
   HR: 'Europe/Zagreb',
   CZ: 'Europe/Prague',
+  HU: 'Europe/Budapest',
 }
-const LOKALE: Record<Jezik, string> = { sl: 'sl-SI', sk: 'sk-SK', hr: 'hr-HR', cs: 'cs-CZ' }
+const LOKALE: Record<Jezik, string> = { sl: 'sl-SI', sk: 'sk-SK', hr: 'hr-HR', cs: 'cs-CZ', hu: 'hu-HU' }
 
 export const SITE = 'https://slff.eu'
 
@@ -87,6 +88,7 @@ const pozdrav = (j: Jezik, ime: string | null | undefined) => {
   const prvo = ime?.trim().split(' ')[0]
   if (j === 'sk' || j === 'cs') return prvo ? `Ahoj, ${esc(prvo)}!` : 'Ahoj!'
   if (j === 'hr') return prvo ? `Bok, ${esc(prvo)}!` : 'Bok!'
+  if (j === 'hu') return prvo ? `Szia, ${esc(prvo)}!` : 'Szia!'
   return prvo ? `Živjo, ${esc(prvo)}!` : 'Živjo!'
 }
 
@@ -109,6 +111,7 @@ const ODJAVA: Record<Jezik, string> = {
   sk: 'Nechcem už dostávať pripomienky',
   hr: 'Ne želim više primati podsjetnike',
   cs: 'Nechci už dostávat připomínky',
+  hu: 'Nem kérek több emlékeztetőt',
 }
 
 const nogaOdjave = (j: Jezik, odjava: string) =>
@@ -160,6 +163,18 @@ export function sestaviOpomnik(
       opomba:
         'Pokud připomínku nepotřebuješ (tým v této sezóně skládat nebudeš), tento e-mail můžeš ignorovat. Příště ti napíšeme až před dalším kolem.',
     },
+    // Madžarščina: ime lige stoji samostojno, da ga ni treba sklanjati.
+    hu: {
+      naslov: meta.brez_ekipe
+        ? `SLFF ${ozn}: még nincs csapatod a következő fordulóra`
+        : `SLFF ${ozn}: fejezd be a csapatodat a következő forduló előtt`,
+      glavno: meta.brez_ekipe
+        ? `Még nem raktad össze a fantasy csapatodat ebben a bajnokságban: ${OZN}. Enélkül a következő fordulóban nem szerzel pontot.`
+        : `A fantasy csapatod még nem teljes ebben a bajnokságban: ${OZN} (hiányzik a keret, a csapatkapitány, az alkapitány vagy hasonló). Érvényes csapat nélkül a következő fordulóban nem szerzel pontot.`,
+      gumb: 'Csapat összeállítása / javítása →',
+      opomba:
+        'Ha nincs szükséged az emlékeztetőre (idén nem raksz össze csapatot), nyugodtan hagyd figyelmen kívül ezt az e-mailt. Legközelebb csak a következő forduló előtt írunk.',
+    },
     sl: {
       naslov: meta.brez_ekipe
         ? `SLFF ${ozn} — še nimaš ekipe za naslednji krog`
@@ -198,6 +213,7 @@ export function sestaviPushOpomnik(
     sk: { naslov: `SLFF ${ozn}: ešte nemáš tím`, besedilo: `Uzávierka kola je ${kdaj}. Zostav tím, aby si získal body.` },
     hr: { naslov: `SLFF ${ozn}: još nemaš momčad`, besedilo: `Rok za kolo je ${kdaj}. Složi momčad kako bi skupljao bodove.` },
     cs: { naslov: `SLFF ${ozn}: ještě nemáš tým`, besedilo: `Uzávěrka kola je ${kdaj}. Sestav tým, abys získal body.` },
+    hu: { naslov: `SLFF ${ozn}: még nincs csapatod`, besedilo: `A forduló határideje: ${kdaj}. Rakd össze a csapatodat, hogy pontot szerezz.` },
     sl: { naslov: `SLFF ${ozn}: še nimaš ekipe`, besedilo: `Rok za krog je ${kdaj}. Sestavi ekipo, da dobiš točke.` },
   }[jezikLige(liga)]
 }
@@ -211,7 +227,7 @@ export function sestaviOpomnikBrezLige(
   jezik: string | null | undefined,
   meta: { display_name: string | null },
 ): Sporocilo {
-  const j: Jezik = jezik === 'sk' || jezik === 'hr' || jezik === 'cs' ? jezik : 'sl'
+  const j: Jezik = jezik === 'sk' || jezik === 'hr' || jezik === 'cs' || jezik === 'hu' ? jezik : 'sl'
   // Naravnost na Mojo ekipo s predlogom (`?sestavi=1`): ekipa je ob odprtju
   // že sestavljena, ostane le Shrani. Državo in ligo ugane stran (IP, jezik).
   const vstop = `${SITE}/my-team?sestavi=1`
@@ -234,6 +250,12 @@ export function sestaviOpomnikBrezLige(
       glavno: 'Zaregistroval/a ses, ale ještě nemáš fantasy tým. Tým ti sestavíme jedním kliknutím, vyměň, koho chceš, a ulož. Body sbíráš už v dalším kole.',
       gumb: 'Sestav mi tým →',
       opomba: 'Pokud tým skládat nebudeš, tento e-mail můžeš ignorovat.',
+    },
+    hu: {
+      naslov: 'SLFF: válaszd ki a bajnokságodat, és rakd össze a csapatodat',
+      glavno: 'Regisztráltál, de még nincs fantasy csapatod. Egy kattintással összerakunk neked egyet, cseréld le, akit szeretnél, és mentsd el. A pontokat már a következő fordulóban gyűjtheted.',
+      gumb: 'Csapatot kérek →',
+      opomba: 'Ha nem szeretnél csapatot összerakni, nyugodtan hagyd figyelmen kívül ezt az e-mailt.',
     },
     sl: {
       naslov: 'SLFF — izberi svojo ligo in sestavi ekipo',
@@ -305,6 +327,17 @@ export function sestaviOpozorilo(
         gumb: 'Oprav tým →',
         opomba:
           'Jinak se tým přenáší z kola do kola sám a nemusíš dělat nic. Píšeme ti jen tehdy, když to nejde.',
+      }
+    },
+    hu: () => {
+      const kolo = u.round_number ? `${u.round_number}. forduló` : 'következő forduló'
+      return {
+        naslov: `SLFF ${ozn}, ${kolo}: a csapatod nem szerez pontot`,
+        glavno: `A csapatod (${ekipa}) nem felel meg a szabályoknak, ezért nem zárul le erre a fordulóra (${kolo}), és nem szerez benne pontot.`,
+        rok: rok && `A határidőig javíthatod: ${rok}.`,
+        gumb: 'Csapat javítása →',
+        opomba:
+          'Egyébként a csapatod magától átkerül fordulóról fordulóra, és semmit sem kell tenned. Csak akkor írunk, ha ez nem lehetséges.',
       }
     },
     sl: () => {
@@ -398,6 +431,23 @@ export function sestaviPoznavalca(
       gumbUrl: p.pozicije,
       vprasanja: 'Pokud ti něco není jasné, odpověz na tento e-mail.',
     },
+    hu: {
+      naslov: 'SLFF: jóváhagytuk a szakértői kérelmedet',
+      kaj:
+        meta.obseg === 'liga'
+          ? `Mostantól <strong>szakértő vagy ebben a bajnokságban: ${imeLige}</strong>. A szavazatod egymagában megerősíti a játékos posztját vagy a gólpasszt, nem kell más szavazatokra várni.`
+          : `Mostantól <strong>${klub} klub szakértője vagy</strong> ebben a bajnokságban: ${imeLige}. A klub játékosaira leadott szavazatod háromszoros súllyal számít.`,
+      hvala: 'Köszönjük, hogy jelentkeztél.',
+      prosnja:
+        'Egy kérésünk van: ez bizalmi feladat. Csak azt rögzítsd, amit biztosan tudsz, és ne a saját fantasy csapatodhoz igazítsd az adatokat. Ezen múlik a bajnokság összes résztvevőjének pontszáma. Ha kiderül, hogy szándékosan hibás adatokat adtál meg, elveszíted a szakértői státuszt.',
+      kje: `A posztokat a <a href="${p.pozicije}" style="color:#15803d;">Posztok</a> oldalon szerkesztheted
+        (minden hétfő reggel lépnek érvénybe), a gólpasszokat a
+        <a href="${p.asistence}" style="color:#15803d;">Gólpasszok</a> oldalon (azonnal).
+        Azt a játékost, aki már nem játszik a klubban, megjelölheted "már nem játszik" jelöléssel.`,
+      gumb: 'Posztok megnyitása →',
+      gumbUrl: p.pozicije,
+      vprasanja: 'Ha valami nem világos, válaszolj erre az e-mailre.',
+    },
     sl: {
       naslov: 'SLFF — odobrili smo tvojo prošnjo za poznavalca',
       kaj:
@@ -443,7 +493,8 @@ const POZICIJA_SL: Record<string, string> = { DEF: 'branilec', MID: 'vezist', FW
 const POZICIJA_SK: Record<string, string> = { DEF: 'obranca', MID: 'záložník', FWD: 'útočník' }
 const POZICIJA_HR: Record<string, string> = { DEF: 'branič', MID: 'vezni', FWD: 'napadač' }
 const POZICIJA_CS: Record<string, string> = { DEF: 'obránce', MID: 'záložník', FWD: 'útočník' }
-const POZICIJA: Record<Jezik, Record<string, string>> = { sl: POZICIJA_SL, sk: POZICIJA_SK, hr: POZICIJA_HR, cs: POZICIJA_CS }
+const POZICIJA_HU: Record<string, string> = { DEF: 'védő', MID: 'középpályás', FWD: 'támadó' }
+const POZICIJA: Record<Jezik, Record<string, string>> = { sl: POZICIJA_SL, sk: POZICIJA_SK, hr: POZICIJA_HR, cs: POZICIJA_CS, hu: POZICIJA_HU }
 
 export function sestaviPopravekPozicije(
   liga: Liga,
@@ -464,6 +515,7 @@ export function sestaviPopravekPozicije(
       if (j === 'sk') return poz ? `${ime} (teraz ${poz})` : ime
       if (j === 'hr') return poz ? `${ime} (sada ${poz})` : ime
       if (j === 'cs') return poz ? `${ime} (nyní ${poz})` : ime
+      if (j === 'hu') return poz ? `${ime} (mostantól ${poz})` : ime
       return poz ? `${ime} (zdaj ${poz})` : ime
     })
     .join(', ')
@@ -507,6 +559,19 @@ export function sestaviPopravekPozicije(
         'přepočítané. Pokud ho prodáš, na jeho místo bude potřeba koupit brankáře.',
       gumb: 'Otevřít můj tým →',
       opomba: 'Omlouváme se za chybu.',
+    },
+    hu: {
+      naslov: `SLFF ${ozn}: javítottuk egy játékosod posztját`,
+      glavno:
+        `A csapatodban ${ekipa ? `(<strong>${ekipa}</strong>) ` : ''}szerepel ${kdo}, ` +
+        'akit tévedésből kapusként tartottunk nyilván. A mérkőzés jegyzőkönyve egyszer kapusként jelölte, ' +
+        'valójában azonban mezőnyjátékos. A posztját kijavítottuk.',
+      body:
+        'Mit jelent ez számodra: a keretedben továbbra is a kapus helyén marad, így a csapatod érvényes ' +
+        'marad, és semmit sem kell tenned. Pontot viszont mostantól mezőnyjátékosként szerez, az utolsó ' +
+        'forduló pontjait már újraszámoltuk. Ha eladod, a helyére kapust kell venned.',
+      gumb: 'Csapatom megnyitása →',
+      opomba: 'Elnézést kérünk a hibáért.',
     },
     sl: {
       naslov: `SLFF ${ozn} — popravek pozicije igralca v tvoji ekipi`,
@@ -593,6 +658,17 @@ export function sestaviIzstopKluba(
         'Body, které už získali v odehraných zápasech, ti zůstávají. Koupit je už nemůže nikdo.',
       gumb: 'Vyměnit hráče →',
     },
+    hu: {
+      naslov: `SLFF ${ozn}: egy játékosod klubja visszalépett a bajnokságból`,
+      glavno:
+        `${klubi} csapata visszalépett a bajnokságból. ` +
+        `${ekipa ? `A csapatodban (<strong>${ekipa}</strong>)` : 'A csapatodban'} ott vannak a játékosai: ${kdo}.`,
+      body:
+        'Ezek a játékosok már nem fognak játszani, így utánuk nem kapsz több pontot. A csapatod érvényes marad, ' +
+        'a többi játékos rendesen gyűjti a pontokat, de azt javasoljuk, hogy a következő határidő előtt cseréld le őket. ' +
+        'A már lejátszott meccseken szerzett pontjaik megmaradnak. Őket már senki sem veheti meg.',
+      gumb: 'Játékosok cseréje →',
+    },
     sl: {
       naslov: `SLFF ${ozn} — klub tvojega igralca je izstopil iz lige`,
       glavno:
@@ -660,7 +736,9 @@ export function sestaviTedenskiPregled(liga: Liga, m: PregledKroga): Sporocilo {
           ? hrMn(cela(n), 'bod', 'boda', 'bodova')
           : j === 'cs'
             ? (Number.isInteger(n) ? skMn(n, 'bod', 'body', 'bodů') : 'bodu')
-            : slMn(cela(n), 'točka', 'točki', 'točke', 'točk')
+            : j === 'hu'
+              ? 'pont' // madžarščina za številom ne pozna množine
+              : slMn(cela(n), 'točka', 'točki', 'točke', 'točk')
     }`
   const ekipa = `<strong>${esc(m.ekipa)}</strong>`
   const premik = m.mesto_prej == null ? 0 : m.mesto_prej - m.mesto
@@ -708,6 +786,21 @@ export function sestaviTedenskiPregled(liga: Liga, m: PregledKroga): Sporocilo {
       gumb: 'Připrav tým na další kolo →',
       odjava: 'Nechci už dostávat e-maily',
     },
+    // Madžarščina: člen a/az pred številko je odvisen od izgovora, zato
+    // stavki številko postavijo brez člena.
+    hu: {
+      naslov: `SLFF ${ozn}: ${m.krog}. forduló, ${tock(m.tocke)}, ${m.mesto}. hely${premikZnak}`,
+      glavno: `${m.krog}. forduló (${OZN}): a csapatod, ${ekipa}, <strong>${tock(m.tocke)}ot</strong> szerzett.`,
+      liga: m.povprecje != null && m.najvec != null
+        ? `A bajnokság átlaga: ${st(m.povprecje)}, a legtöbb: ${st(m.najvec)}.` : '',
+      top: 'Ebben a fordulóban a te csapatod szerezte a legtöbb pontot az egész bajnokságban.',
+      mesto: `Helyezésed a tabellán: <strong>${m.mesto}.</strong> hely ${m.ekip} csapat közül` +
+        (m.mesto_prej == null || premik === 0 ? '.' : ` (korábban ${m.mesto_prej}.).`),
+      kapetan: m.kapetan ? `Csapatkapitány (${esc(m.kapetan)}): ${tock(m.kapetan_tocke ?? 0)}.` : '',
+      najboljsi: najboljsiNiKapetan ? `Legjobb a csapatban: ${esc(m.najboljsi!)} (${tock(m.najboljsi_tocke ?? 0)}).` : '',
+      gumb: 'Készítsd fel a csapatodat a következő fordulóra →',
+      odjava: 'Nem kérek több e-mailt',
+    },
     sl: {
       naslov: `SLFF ${ozn} — ${m.krog}. krog: ${tock(m.tocke)}, ${m.mesto}. mesto${premikZnak}`,
       glavno: `Tvoja ekipa ${ekipa} je v ${m.krog}. krogu ${OZN} zbrala <strong>${tock(m.tocke)}</strong>.`,
@@ -753,13 +846,14 @@ const skMn = (n: number, one: string, few: string, other: string) =>
  * ga prepoznamo po obliki in prevedemo; neznano obliko (SQL se je spremenil)
  * nadomesti splošen stavek, da v slovaškem mailu ni slovenščine.
  *
- * `'en'` rabi le vmesnik (angleški obiskovalec) — pošta je vedno sl/sk/hr/cs.
+ * `'en'` rabi le vmesnik (angleški obiskovalec) — pošta je vedno sl/sk/hr/cs/hu.
  */
 export function prevediRazlog(razlog: string | null | undefined, j: Jezik | 'en'): string {
   if (j === 'sl') return razlog ?? 'Kader ni veljaven.'
   if (j === 'en') return razlogVAngliscini(razlog)
   if (j === 'hr') return razlogVHrvascini(razlog)
   if (j === 'cs') return razlogVCestini(razlog)
+  if (j === 'hu') return razlogVMadzarscini(razlog)
   if (!razlog) return 'Káder nie je platný.'
   const r = razlog.trim()
   let m: RegExpMatchArray | null
@@ -887,4 +981,34 @@ function razlogVCestini(razlog: string | null | undefined): string {
   if (r === 'Ekipa nima natanko enega namestnika kapetana.')
     return 'Tým nemá právě jednoho zástupce kapitána.'
   return 'Tým nesplňuje pravidla. Podrobnosti najdeš v sekci Můj tým.'
+}
+
+/**
+ * Isti razlogi v madžarščini (za madžarski mail). Samostalnik za številom je
+ * v ednini ("3 játékos"), zato množine ni; ime kluba stoji v oklepaju, da mu
+ * ni treba dodajati pripon.
+ */
+function razlogVMadzarscini(razlog: string | null | undefined): string {
+  if (!razlog) return 'A keret nem érvényes.'
+  const r = razlog.trim()
+  let m: RegExpMatchArray | null
+
+  if (r === 'Ekipa je prazna — kadra ni.') return 'A csapat üres, nincs benne egyetlen játékos sem.'
+  if ((m = r.match(/^V kadru je (\d+) igralcev namesto (\d+)\.$/)))
+    return `A keretben ${m[1]} játékos van ${m[2]} helyett.`
+  if ((m = r.match(/^V kadru ni vec aktivnih igralcev: (.*)\. Klub letos ne igra ali je igralec odsel\.$/s)))
+    return `A keretedben olyan játékosok vannak, akik már nem aktívak: ${m[1]}. A klubjuk idén nem játszik, vagy a játékos távozott.`
+  if ((m = r.match(/^Iz kluba (.+) imas (\d+) igralce, dovoljeni so (\d+)\./s)))
+    return `${m[2]} játékosod van ugyanabból a klubból (${m[1]}), de legfeljebb ${m[3]} megengedett. ` +
+      'Ez a te módosításod nélkül is előfordulhat: ha egy játékos a szezon közben olyan klubba igazol, ahonnan már vannak játékosaid.'
+  if ((m = r.match(/^Pri (\d+) igralcih ni znana pozicija\.$/)))
+    return `${m[1]} játékos posztja ismeretlen.`
+  if ((m = r.match(/^Kader mora imeti 2 vratarja, 5 branilcev, 5 vezistov in 3 napadalce; ima ([\d-]+)\.$/)))
+    return `A keretben 2 kapusnak, 5 védőnek, 5 középpályásnak és 3 támadónak kell lennie; jelenleg: ${m[1]}.`
+  if ((m = r.match(/^V postavi je (\d+) igralcev namesto (\d+)\.$/)))
+    return `A kezdőcsapatban ${m[1]} játékos van ${m[2]} helyett.`
+  if (r === 'Ekipa nima natanko enega kapetana.') return 'A csapatban nincs pontosan egy csapatkapitány.'
+  if (r === 'Ekipa nima natanko enega namestnika kapetana.')
+    return 'A csapatban nincs pontosan egy alkapitány.'
+  return 'A csapat nem felel meg a szabályoknak. A részleteket a Csapatom oldalon találod.'
 }

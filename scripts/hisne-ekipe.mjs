@@ -154,6 +154,24 @@ const IMENA_CZ = [
   'Vltavští plavci', 'Labští voraři', 'Moravští vinaři', 'Oherští pstruzi', 'Sázavští rybáři',
 ]
 
+// Madžarske lige: igrive, izmišljene, brez imen resničnih klubov.
+const IMENA_HU = [
+  'Bakonyi farkasok', 'Mátrai sasok', 'Bükki medvék', 'Balatoni harcsák', 'Tiszai pontyok',
+  'Alföldi bikák', 'Hortobágyi csikósok', 'Dunai hajósok', 'Zalai szarvasok', 'Mecseki hiúzok',
+  'Pilisi vaddisznók', 'Őrségi baglyok', 'Nyírségi sólymok', 'Kiskunsági darvak', 'Zempléni rókák',
+  'Vasárnapi hősök', 'Szombati ágyúsok', 'FC Utolsó perc', 'Harmadik félidő SE', 'Kispad FC',
+  'Cserejátékosok SC', 'Les FC', 'A bíró nem látta', 'Kapufa SE', 'FC Léc',
+  'Pincéből előkerült stoplik', 'FC Lángos', 'Pörkölt United', 'Kolbász SE', 'Pogácsa FC',
+  'Gulyás United', 'FC Rétes', 'Paprika SE', 'Túrós csusza FC', 'Halászlé United',
+  'Falusi gárda', 'Öregfiúk SE', 'Tűzoltó SE', 'Kultúrház FC', 'Kispadi veteránok',
+  'FC Aranylabda', 'Tizenkettedik játékos', 'FC Tizenegyes', 'Sarokzászló SE', 'FC Kulcspassz',
+  'Gólpassz FC', 'FC Csapatkapitány', 'Piros lap SE', 'Sárga lap United', 'FC Hosszabbítás',
+  'Gyepszőnyeg Boys', 'Műfüves FC', 'Sáros pálya SE', 'Hálószaggatók', 'FC Első érintés',
+  'Kontra SE', 'FC Letámadás', 'Söprögető FC', 'Tízes SE', 'FC Kilences',
+  'Megyei bajnokok', 'Meccs utáni sör FC', 'Kocsma a pálya mellett SE', 'Virsli FC', 'FC Túrógombóc',
+  'Dunai evezősök', 'Tiszai halászok', 'Tokaji borászok', 'Szegedi paprikások', 'Velencei vitorlázók',
+]
+
 // Postave v mejah POZICIJE (vratar 1, branilci 3–5, vezisti 2–5, napadalci 1–3).
 const POSTAVE = [
   [4, 4, 2], [4, 3, 3], [3, 5, 2], [3, 4, 3], [5, 3, 2], [4, 5, 1], [5, 4, 1],
@@ -537,7 +555,7 @@ for (const l of seznam) {
     if (eK) throw new Error(eK.message)
     for (const r of kadri ?? []) izbranost.set(r.player_id, (izbranost.get(r.player_id) ?? 0) + 1)
   }
-  const imena = premesaj({ SI: IMENA_SI, HR: IMENA_HR, CZ: IMENA_CZ }[DRZAVA] ?? IMENA, generator('imena:' + l.slug))
+  const imena = premesaj({ SI: IMENA_SI, HR: IMENA_HR, CZ: IMENA_CZ, HU: IMENA_HU }[DRZAVA] ?? IMENA, generator('imena:' + l.slug))
     .filter((i) => !zasedena.has(i.toLowerCase()))
 
   console.log(

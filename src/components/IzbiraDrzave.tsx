@@ -18,6 +18,7 @@ export function imeDrzave(koda: string): string {
   if (koda === 'SK') return t('aplikacija.izbiraDrzave.imena.SK')
   if (koda === 'HR') return t('aplikacija.izbiraDrzave.imena.HR')
   if (koda === 'CZ') return t('aplikacija.izbiraDrzave.imena.CZ')
+  if (koda === 'HU') return t('aplikacija.izbiraDrzave.imena.HU')
   return koda
 }
 
