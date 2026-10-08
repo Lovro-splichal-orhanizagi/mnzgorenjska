@@ -73,6 +73,7 @@ export default function KlubiStiki() {
   const [mail, setMail] = useState({ vrsta: 'prvi', zadeva: '', telo: '', poslal: '', opomba: '' })
   const [nov, setNov] = useState<NovStik | null>(null)
   const [delam, setDelam] = useState(false)
+  const [uvozeno, setUvozeno] = useState<string | null>(null)
 
   const nalozi = useCallback(async () => {
     const { data, error } = await supabase
@@ -198,6 +199,66 @@ export default function KlubiStiki() {
     await nalozi()
   }
 
+  // Uvoz poslanih mailov iz JSON datoteke (ko pošiljamo v paketu, npr. iz
+  // Claude Code). Datoteka ne gre v git — naslovi klubov niso za javni repo.
+  // Vrstica: { klub, drzava, liga_slug?, email, vir_url?, kontakt?, opomba?,
+  //   stanje?, posta: [{ poslano_at, vrsta?, zadeva?, telo?, poslal?, gmail_nit? }] }
+  // Naslov, ki je že na seznamu, se ne podvoji; mail z isto nitjo Gmaila se
+  // ne vpiše dvakrat, zato je ponoven uvoz iste datoteke varen.
+  async function uvozi(datoteka: File) {
+    setDelam(true)
+    setNapaka(null)
+    try {
+      const vrstice = JSON.parse(await datoteka.text()) as (NovStik & {
+        vir_url?: string; opomba?: string; stanje?: string
+        posta?: { poslano_at: string; vrsta?: string; zadeva?: string; telo?: string; poslal?: string; gmail_nit?: string }[]
+      })[]
+      const poNaslovu = new Map((stiki ?? []).filter((s) => s.email).map((s) => [s.email!.toLowerCase(), s]))
+      let novih = 0
+      let mailov = 0
+      for (const v of vrstice) {
+        const email = v.email.trim()
+        let s = poNaslovu.get(email.toLowerCase())
+        if (!s) {
+          const { data, error } = await supabase
+            .from('klub_stik')
+            .insert({
+              klub: v.klub, drzava: v.drzava, liga_slug: v.liga_slug || null, email,
+              kontakt: v.kontakt || null, vir_url: v.vir_url || null, opomba: v.opomba || null,
+            })
+            .select()
+            .single()
+          if (error) throw new Error(`${v.klub}: ${error.message}`)
+          s = data
+          poNaslovu.set(email.toLowerCase(), s)
+          novih++
+        }
+        const { data: ze } = await supabase.from('klub_stik_posta').select('gmail_nit').eq('stik_id', s.id)
+        const zeNiti = new Set((ze ?? []).map((p) => p.gmail_nit))
+        const nove = (v.posta ?? []).filter((p) => !p.gmail_nit || !zeNiti.has(p.gmail_nit))
+        if (nove.length) {
+          const { error } = await supabase.from('klub_stik_posta').insert(
+            nove.map((p) => ({
+              stik_id: s!.id, za: email, poslano_at: p.poslano_at, vrsta: p.vrsta ?? 'prvi',
+              zadeva: p.zadeva ?? null, telo: p.telo ?? null, poslal: p.poslal ?? null, gmail_nit: p.gmail_nit ?? null,
+            })),
+          )
+          if (error) throw new Error(`${v.klub}: ${error.message}`)
+          mailov += nove.length
+        }
+        // Stanje iz datoteke (npr. napacen_mail ob vrnjenem mailu) za sprožilcem pošte.
+        if (v.stanje) await supabase.from('klub_stik').update({ stanje: v.stanje }).eq('id', s.id)
+      }
+      await nalozi()
+      setUvozeno(`Uvoženo: ${novih} novih naslovov, ${mailov} mailov.`)
+    } catch (e) {
+      setNapaka(`Uvoz ni uspel: ${(e as Error).message}`)
+      await nalozi()
+    } finally {
+      setDelam(false)
+    }
+  }
+
   const novZa = (g?: Klub): NovStik => ({
     klub: g?.klub ?? '', drzava: g?.drzava ?? (drzava || 'SI'), liga_slug: g?.liga_slug ?? '',
     email: '', kontakt: '', team_id: g?.team_id ?? null,
@@ -234,12 +295,30 @@ export default function KlubiStiki() {
             {klubi.length} klubov · {stiki?.length ?? 0} naslovov · {(stiki ?? []).reduce((v, s) => v + s.mailov, 0)} mailov
           </span>
         </h2>
-        {!nov && (
-          <button onClick={() => setNov(novZa())} className="gumb-tih text-xs">
-            + klub
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          <label className={`gumb-tih cursor-pointer text-xs ${delam ? 'opacity-50' : ''}`}>
+            {delam ? 'Uvažam …' : 'Uvozi poslane maile'}
+            <input
+              type="file"
+              accept=".json,application/json"
+              className="hidden"
+              disabled={delam}
+              onChange={(e) => {
+                const f = e.target.files?.[0]
+                e.target.value = ''
+                if (f) uvozi(f)
+              }}
+            />
+          </label>
+          {!nov && (
+            <button onClick={() => setNov(novZa())} className="gumb-tih text-xs">
+              + klub
+            </button>
+          )}
+        </div>
       </div>
+
+      {uvozeno && <p className="text-sm text-gnl-300">{uvozeno}</p>}
 
       {nov && !nov.team_id && !klubi.some((g) => g.klub === nov.klub && nov.klub) && obrazec}
 
