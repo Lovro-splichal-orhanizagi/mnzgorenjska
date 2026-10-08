@@ -14,6 +14,7 @@ import Lijak from '../components/admin/Lijak'
 import Sponzorji from '../components/admin/Sponzorji'
 import KlubiStiki from '../components/admin/KlubiStiki'
 import Potrditev from '../components/admin/Potrditev'
+import Razdelek from '../components/admin/Razdelek'
 import Plakat from '../components/Plakat'
 import { izvor } from '../lib/platforma'
 
@@ -575,21 +576,36 @@ export default function Administracija() {
         <Kazalnik oznaka="Opozoril iz uvoza" vrednost={opozorila.length} opozori />
       </section>
 
+      {/* Vsak razdelek je zložljiv, da je stran pregledna — glej Razdelek. */}
+      <div className="space-y-3">
       {/* zivost — koliko ljudi je res aktivnih */}
-      <ZivostSkupnosti />
+      <Razdelek id="zivost" naslov="Živost skupnosti">
+        <ZivostSkupnosti />
+      </Razdelek>
 
       {/* kje ljudje obticijo — lijak zacetka in obiskane strani */}
-      <Lijak />
+      <Razdelek id="lijak" naslov="Kje ljudje obtičijo">
+        <Lijak />
+      </Razdelek>
 
-      <ProsnjePoznavalcev />
-      <RastLig />
-      <Sponzorji />
-      <KlubiStiki />
+      <Razdelek id="poznavalci" naslov="Prošnje poznavalcev">
+        <ProsnjePoznavalcev />
+      </Razdelek>
+      <Razdelek id="rast" naslov="Rast lig">
+        <RastLig />
+      </Razdelek>
+      <Razdelek id="sponzorji" naslov="Sponzorji">
+        <Sponzorji />
+      </Razdelek>
+      <Razdelek id="stiki" naslov="Stiki s klubi">
+        <KlubiStiki />
+      </Razdelek>
 
       {/* Promo za izbrano ligo — "je live". SLFF znacka je subjekt, liga je
           junak; brez kluba, za nas kanal. Ime lige pride iz izbirnika: pri
           "1. liga — člani" tega ne pove, zato zvezo dodamo. */}
       {tekmovanje && (
+        <Razdelek id="promo" naslov="Promo: liga je live">
         <section className="kartica space-y-2 p-3 sm:p-4">
           <h2 className="font-bold">
             Promo: liga je live
@@ -600,9 +616,11 @@ export default function Administracija() {
             povezava={typeof window !== 'undefined' ? `${izvor()}/?t=${tekmovanje.slug}` : ''}
           />
         </section>
+        </Razdelek>
       )}
 
       {/* uporabniki + e-pošte za opomnik */}
+      <Razdelek id="uporabniki" naslov={`Uporabniki (${uporabniki.length})`}>
       <section className="kartica space-y-3 p-3 sm:p-4">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="font-bold">
@@ -955,8 +973,10 @@ export default function Administracija() {
           </details>
         )}
       </section>
+      </Razdelek>
 
       {/* Fantasy ekipe — vrednost, cash, veljavnost rosterja */}
+      <Razdelek id="ekipe" naslov={`Fantasy ekipe (${ekipe.length})`}>
       <section className="kartica space-y-3 p-3 sm:p-4">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="font-bold">Fantasy ekipe ({ekipe.length})</h2>
@@ -1058,7 +1078,9 @@ export default function Administracija() {
           </div>
         )}
       </section>
+      </Razdelek>
 
+      <Razdelek id="tocke" naslov="Točke">
       <section className="kartica space-y-3 p-4">
         <h2 className="font-bold">Točke</h2>
         <p className="text-sm text-slate-400">
@@ -1084,10 +1106,14 @@ export default function Administracija() {
           </Potrditev>
         )}
       </section>
+      </Razdelek>
 
-      <UpravljanjeLig />
+      <Razdelek id="lige" naslov="Upravljanje lig">
+        <UpravljanjeLig />
+      </Razdelek>
 
       {/* uvoz */}
+      <Razdelek id="uvoz" naslov="Uvoz zapisnikov">
       <section className="kartica space-y-2 p-4">
         <h2 className="font-bold">Uvoz zapisnikov</h2>
         <p className="text-sm text-slate-400">
@@ -1103,9 +1129,11 @@ SUPABASE_SERVICE_ROLE_KEY=... node scripts/ovrednoti-igralce.mjs --tekmovanje ${
 } --pisi`}
         </pre>
       </section>
+      </Razdelek>
 
       {/* opozorila iz zapisnikov */}
       {opozorila.length > 0 && (
+        <Razdelek id="nepopolni" naslov={`Nepopolni zapisniki (${opozorila.length})`}>
         <section className="space-y-2">
           <h2 className="font-bold">Nepopolni zapisniki</h2>
           <p className="text-sm text-slate-400">
@@ -1135,9 +1163,11 @@ SUPABASE_SERVICE_ROLE_KEY=... node scripts/ovrednoti-igralce.mjs --tekmovanje ${
             ))}
           </ul>
         </section>
+        </Razdelek>
       )}
 
       {/* igralci: pozicija in NZS */}
+      <Razdelek id="igralec" naslov="Igralec — pozicija in NZS">
       <section className="kartica space-y-3 p-4">
         <h2 className="font-bold">Igralec — pozicija in NZS</h2>
         <p className="text-sm text-slate-400">
@@ -1265,6 +1295,8 @@ SUPABASE_SERVICE_ROLE_KEY=... node scripts/ovrednoti-igralce.mjs --tekmovanje ${
           ))}
         </ul>
       </section>
+      </Razdelek>
+      </div>
 
       {sporocilo && <p className="text-sm text-gnl-300">{sporocilo}</p>}
       {napaka && <p className="text-sm text-rose-400">Napaka: {napaka}</p>}
