@@ -3494,6 +3494,11 @@ preveri(
   const k = beri('hns-tekma-kontumacija.html')
   preveri('hns: kontumacija prepoznana', H.jeKontumacija(k, { domaci: 3, gostje: 0 }) && !H.vZapisnik(k))
   preveri('hns: odigrana tekma ni kontumacija', !H.jeKontumacija(beri('hns-tekma-11m.html'), { domaci: 3, gostje: 0 }))
+  // Kontumacija brez obeh postav (Sunjski : Posavina, 3:0, hr-sm-2-znl 27. 9. 2026).
+  const bp = beri('hns-tekma-kontumacija-brez-postav.html')
+  preveri('hns: kontumacija brez postav', H.brezPostav(bp, { domaci: 3, gostje: 0 }) && !H.jeKontumacija(bp, { domaci: 3, gostje: 0 }) && !H.vZapisnik(bp))
+  preveri('hns: tekma s postavami ni brez postav', !H.brezPostav(beri('hns-tekma-11m.html'), { domaci: 3, gostje: 0 }) && !H.brezPostav(k, { domaci: 3, gostje: 0 }))
+  preveri('hns: brez postav le pri 3:0', !H.brezPostav(bp, { domaci: 2, gostje: 0 }))
 
   // ŽNS Zagreb menjav ne vpisuje: strelca s klopi (Hrvatski Leskovac : Croatia 98, 8:0)
   // dobita nastop IN gol; prej je bil gol v tabeli goals, točk zanj pa ni bilo.

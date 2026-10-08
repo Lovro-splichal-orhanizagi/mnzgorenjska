@@ -102,6 +102,18 @@ export function jeKontumacija(html, izid) {
   return (doma === 0) !== (gost === 0)
 }
 
+/**
+ * Obe postavi prazni, izid 3:0 — kontumacija, pri kateri Semafor ne vnese
+ * nobene postave (NK Sunjski : Posavina, hr-sm-2-znl 27. 9. 2026). Sama po
+ * sebi bi bila to lahko tudi tekma z zamujenim zapisnikom, zato jo za
+ * kontumacijo štejemo šele teden dni po tekmi (glej `razporedVseStrani`).
+ */
+export function brezPostav(html, izid) {
+  if (!mozna3do0(izid)) return false
+  const sestava = String(html ?? '').slice(Math.max(0, String(html ?? '').indexOf('matchLineup')))
+  return sestava.includes('homeTeam playerslist') && !/class="row match_lineup"/.test(sestava)
+}
+
 /** Igralci ene ekipe (blok `homeTeam` ali `awayTeam`) z dogodki. */
 function igralciEkipe(blok) {
   const [zacetni, ostalo = ''] = blok.split('Pričuvni igrači')
@@ -342,9 +354,18 @@ const vir = {
       if (!krogi.has(t.krog)) krogi.set(t.krog, { stevilka: t.krog, tekme: [] })
       // Le 3:0 / 0:3 je lahko kontumacija; stran tekme je v predpomnilniku
       // (prebere jo tudi uvoz zapisnikov), zato to ne pomeni novih zahtevkov.
-      const kontumacija = mozna3do0(t.izid)
-        ? jeKontumacija(await prenesi(naslovTekme(t.id), `tekma-${t.id}.html`), t.izid)
-        : false
+      let kontumacija = false
+      if (mozna3do0(t.izid)) {
+        const ime = `tekma-${t.id}.html`
+        let stran = await prenesi(naslovTekme(t.id), ime)
+        kontumacija = jeKontumacija(stran, t.izid)
+        // Prazna stran v predpomnilniku je lahko starejša od zapisnika: preden
+        // tekmo razglasimo za kontumacijo, jo preberemo znova.
+        if (!kontumacija && brezPostav(stran, t.izid) && starostDni(t.datum) > 7) {
+          stran = await prenesi(naslovTekme(t.id), ime, true)
+          kontumacija = jeKontumacija(stran, t.izid) || brezPostav(stran, t.izid)
+        }
+      }
       krogi.get(t.krog).tekme.push({
         domaci: t.domaci, gostje: t.gostje, datum: t.datum, ura: t.ura, kontumacija,
         ...(kontumacija ? { izid: t.izid } : {}),
@@ -362,10 +383,12 @@ const vir = {
       // Tekma v predpomnilniku brez postav (zapisnik še ni bil vnesen) se
       // prebere znova; popolna se ne spreminja več.
       let z = vZapisnik(await prenesi(url, ime), { id: t.id, url })
-      // Znova le tekmo zadnjih deset dni: starejša brez postav je kontumacija
-      // ali zveza zapisnikov ne vnaša (1. ŽNL Karlovac) — vsako uro bi jih
-      // sicer brali na stotine zastonj.
-      if (!z && starostDni(t.datum) <= 10) z = vZapisnik(await prenesi(url, ime, true), { id: t.id, url })
+      // Znova le tekmo zadnjih 45 dni: starejša brez postav je kontumacija
+      // ali zveza zapisnikov ne vnaša — vsako uro bi jih sicer brali na
+      // stotine zastonj. Deset dni je bilo premalo: zveze zapisnik vnesejo
+      // tudi mesec dni pozneje (NK Sokol : Nacional, hr-sm-1-znl, tekma
+      // 6. 9., zapisnik po 18. 9.) in tak ni prišel nikoli.
+      if (!z && starostDni(t.datum) <= 45) z = vZapisnik(await prenesi(url, ime, true), { id: t.id, url })
       if (z) out.push({ id: z.zapisnikId, z, url })
     }
     return out
