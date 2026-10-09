@@ -3572,6 +3572,60 @@ preveri(
   preveri('hns: razpored', v.length === 16 && v.filter((x) => x.izid).length === 8)
   preveri('hns: neodigrana tekma brez izida', v.some((x) => x.krog === 15 && !x.izid && x.datum === '2026-11-28' && x.ura === '13:30'))
   {
+    // Isto ime, drug klub: "NK Polet (SK)" je Sveta Klara (605), Semafor pa
+    // tako (in "NK Polet (Sk)") piše tudi Polet iz Skrada (2573). Uvoz ju je
+    // vpisal v isti zapis; Skrad zdaj dobi ime po šifri kluba.
+    preveri('hns trk: Sveta Klara (605) ostane "NK Polet (SK)"',
+      v[0].domaciId === '605' && v[0].domaci === 'NK Polet (SK)', `${v[0].domaciId} ${v[0].domaci}`)
+    const r = H.vrsticeRazporeda(beri('hns-natjecanje-trk.html'))
+    const skrad = r.flatMap((t) => [[t.domaciId, t.domaci], [t.gostjeId, t.gostje]]).filter(([id]) => id === '2573')
+    preveri('hns trk: Skrad (2573) dobi ime po šifri',
+      r.length === 3 && skrad.length === 3 && skrad.every(([, ime]) => ime === 'NK Polet (Skrad)'), JSON.stringify(skrad))
+    preveri('hns trk: ključa obeh Poletov sta različna',
+      H.kljucKlubaHr(r[0].gostje) !== H.kljucKlubaHr(v[0].domaci) && H.kljucKlubaHr('NK Polet (Sk)') === H.kljucKlubaHr(v[0].domaci))
+    preveri('hns trk: druga imena ostanejo, kot jih piše Semafor',
+      r[0].domaci === 'NK Gomirje' && v.every((t) => !H.IME_KLUBA[t.domaciId] && !H.IME_KLUBA[t.gostjeId]))
+    // Glava strani tekme šifre kluba nima: zapisnik vzame ime iz razporeda,
+    // sicer bi razpored tekmo vpisal "NK Polet (Skrad)", zapisnik pa "NK Polet (Sk)".
+    const zt = H.sImenomIzRazporeda(H.vZapisnik(beri('hns-tekma-11m.html'), { id: 'a' }), r[0])
+    preveri('hns trk: zapisnik dobi ime preimenovanega kluba iz razporeda',
+      zt.gostje.ime === 'NK Polet (Skrad)' && zt.domaci.ime === 'NK Tomislav (DA)', `${zt.domaci.ime} / ${zt.gostje.ime}`)
+    const zn = H.sImenomIzRazporeda(H.vZapisnik(beri('hns-tekma-11m.html'), { id: 'a' }), v[0])
+    preveri('hns trk: brez preimenovanja zapisnik ohrani ime iz glave',
+      zn.domaci.ime === 'NK Tomislav (DA)' && zn.gostje.ime === 'NK Borac (KV)')
+    preveri('hns trk: zapisniki() pošljejo ime iz razporeda',
+      (await H.default.zapisniki('1', async (url) => (url.includes('/natjecanja/') ? beri('hns-natjecanje-trk.html') : beri('hns-tekma-11m.html'))))
+        .every((x) => [x.z.domaci.ime, x.z.gostje.ime].includes('NK Polet (Skrad)')))
+  }
+  {
+    // mapaKlubov: natančno ime v abecedi vira. Slovenski `poenostavi` je
+    // "NK Tomislav (Đ)" (Đulovac) skrčil v "nk tomislav" in uvoz je vanj
+    // vpisal NK Tomislav iz Drnja.
+    const { mapaKlubov } = await import('./klubi.mjs')
+    const tabele = {
+      countries: [{ id: 3, code: 'HR' }],
+      teams: [{ id: 950, name: 'NK Tomislav (Đ)', country_id: 3 }, { id: 951, name: 'NK Međimurje', country_id: 3 }],
+      competitions: [{ id: 7, source: 'hns' }],
+      competition_teams: [{ team_id: 950, competition_id: 7 }, { team_id: 951, competition_id: 7 }],
+    }
+    const poizvedba = (vrstice) => {
+      const q = {
+        select: () => q, order: () => q,
+        eq: (s, x) => poizvedba(vrstice.filter((v) => v[s] === x)),
+        in: (s, xs) => poizvedba(vrstice.filter((v) => xs.includes(v[s]))),
+        range: async () => ({ data: vrstice, error: null }),
+        maybeSingle: async () => ({ data: vrstice[0] ?? null, error: null }),
+        then: (ok) => ok({ data: vrstice, error: null }),
+      }
+      return q
+    }
+    const db = { from: (t) => poizvedba(tabele[t]) }
+    const m = await mapaKlubov(db, H.default)
+    preveri('mapaKlubov: "NK Tomislav" ni "NK Tomislav (Đ)"', !m.has(H.kljucKlubaHr('NK Tomislav')), JSON.stringify([...m]))
+    preveri('mapaKlubov: natančno ime s ć/đ najde klub',
+      m.get(H.kljucKlubaHr('NK Tomislav (Đ)')) === 950 && m.get(H.kljucKlubaHr('NK Međimurje')) === 951)
+  }
+  {
     // Razpored pove, katera tekma ima izid; 3:0 bere še stran tekme (kontumacija).
     const stran = beri('hns-natjecanje.html')
     const k = await H.default.razporedVseStrani('1', async (url) => (url.includes('/natjecanja/') ? stran : beri('hns-tekma-11m.html')))
