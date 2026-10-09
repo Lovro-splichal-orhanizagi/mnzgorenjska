@@ -114,9 +114,9 @@ export const racun: NonNullable<Prevod['racun']> = {
     statistika:
       'U fotbalistů soutěží, které pokrýváme, zobrazujeme jméno, klub, číslo dresu, starty, minuty, góly a karty. Zdrojem jsou veřejně zveřejněné oficiální zápisy o utkání svazu uvedeného v patičce stránky. Pozice a asistence, které zápis neobsahuje, určuje komunita hlasováním, a proto můžou být nesprávné. Z toho počítáme body a cenu hráče ve hře. Pokud je něco špatně, klikni na hráče a dej nám vědět.',
     statistikaPodlaga:
-      'Účelem je bezplatná fantasy hra pro fanoušky. Právním základem je oprávněný zájem (čl. 6 odst. 1 písm. f GDPR): umožnit fanouškům hru se zveřejněnými výsledky jejich soutěže. Údaje zobrazujeme, dokud hráč nastupuje v soutěži, kterou pokrýváme; 18 měsíců po jeho posledním startu jeho jméno skryjeme.',
+      'Účelem je bezplatná fantasy hra pro fanoušky. Právním základem je oprávněný zájem (čl. 6 odst. 1 písm. f GDPR): umožnit fanouškům hru se zveřejněnými výsledky jejich soutěže. Údaje zobrazujeme, dokud hráč nastupuje v soutěži, kterou pokrýváme. V rakouských soutěžích, stejně jako ÖFB, jméno hráče skryjeme 18 měsíců po jeho posledním startu.',
     statistikaUgovor:
-      'Hráč může proti zpracování vznést námitku nebo žádat výmaz: napiš na <eposta>info@slff.eu</eposta> a přidej odkaz na stránku hráče. Do 14 dnů jeho jméno všude nahradíme neutrálním označením, statistiky zůstanou bez jména. Totéž uděláme na žádost svazu.',
+      'Hráč může proti zpracování vznést námitku nebo žádat výmaz: napiš na <eposta>info@slff.eu</eposta> a přidej odkaz na stránku hráče. Do 14 dnů jeho jméno nahradíme neutrálním označením ve všech našich soutěžích dané země, kde ho najdeme, i při pozdějších importech. Statistiky zůstanou bez jména. Totéž uděláme na žádost svazu.',
     grbi:
       'Znaky klubů jsou majetkem jednotlivých klubů a zobrazují se výhradně pro identifikaci týmu. Klub, který si to nepřeje, nám může napsat a znak odstraníme.',
     fotografijeNaslov: 'Fotografie',

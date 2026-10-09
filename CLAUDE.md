@@ -515,9 +515,9 @@ postav utemelji z javnim interesom (Information für Spieler, 26. 4. 2026).
 **Avstrijske lige ostanejo neaktivne, dokler ÖFB (office@oefb.at, v vednost
 KFV in StFV) ne odgovori**. Pogoji GDPR, ki smo jih obljubili, so urejeni
 (glej `players.anonimiziran_at`): obvestilo po čl. 14 z ugovorom igralca na
-`/legal`, anonimizacija na zahtevo igralca ali zveze, 18 mesecev po zadnjem
-nastopu ime skrijemo. **Kako oefb.at pokaže igralca, ki je pri ÖFB zahteval
-anonimizacijo, še ne vemo** — v vzorcih ima vsak igralec ime in
+`/legal`, anonimizacija na zahtevo igralca ali zveze (vse vrstice osebe v državi),
+v avstrijskih ligah 18 mesecev po zadnjem nastopu ime skrijemo. **Kako
+oefb.at pokaže igralca, ki je pri ÖFB zahteval anonimizacijo, še ne vemo** — v vzorcih ima vsak igralec ime in
 `/Profile/Spieler/<id>`. Ko tak primer najdemo (ime brez profila, "anonym"
 …), naj ga vir izpusti in uvoz igralca s to šifro anonimizira
 (`anonimiziraj_igralca(id, 'ugovor')`); do takrat anonimizacijo ÖFB, ki
@@ -776,20 +776,28 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   zahteva obeh trgovin); kaskada odnese profil, ekipe, glasove in mini lige
 - `players.anonimiziran_at` → igralcu je ime skrito (GDPR, migracija
   20261009180000, obvestilo po čl. 14 na strani `/legal`). `full_name` in
-  `last_name` postaneta `#<id>`, `first_name`, `nzs_url`, `nzs_birth_year`
-  in poročila o poškodbah gredo proč; statistika, točke in cena ostanejo.
-  Vse strani berejo ime iz `players`, zato anonimizacija velja povsod.
-  `anonimiziraj_igralca(id, razlog)` je servisna, admin jo kliče prek
-  `admin_anonimiziraj_igralca(id)` (Administracija → Igralec, iskanje tudi
-  po id-ju). `anonimiziran_razlog`: `ugovor` (igralec ali zveza, info@slff.eu,
-  v 14 dneh) je dokončen; `neaktiven` nastavi nočni cron
-  `anonimiziraj_neaktivne()` (03:30) igralcu brez nastopa 18 mesecev, v vseh
-  državah, razen kdor je v katerem koli kadru ali sploh še ni nastopil.
-  **Uvoz imena nikoli ne povozi**; letošnji nastop vrne ime le `neaktiven`
-  igralcu. Viri s šifro (`reg_st`) najdejo igralca po njej; viri brez nje po
-  `sha256("<competition_id>|<ime>")` v zaprti tabeli `anonimizirani_igralci`
-  (RLS brez pravic, ker je `players` javen) — `imeHash` v
-  `scripts/anonimizacija.mjs` mora ostati enak SQL-u (smoke in `test:varnost`)
+  `last_name` postaneta `#<id>`; `first_name`, `reg_st` (javna šifra osebe
+  pri viru, z njo bi se ime dalo poiskati), `nzs_*` in poročila o poškodbah
+  gredo proč. Statistika, točke in cena ostanejo. Vse strani berejo ime iz
+  `players`, zato anonimizacija velja povsod.
+  `anonimiziraj_igralca(id, razlog)` je servisna. Ugovor (igralec ali zveza,
+  info@slff.eu, v 14 dneh) admin vnese v Administracija → Igralec (iskanje
+  čez vse lige, tudi po id-ju): `admin_ista_oseba(id)` našteje druge vrstice
+  iste osebe v isti državi, `admin_anonimiziraj_igralca(ids[])` anonimizira
+  izbrane in **vse z isto šifro** v državi; soimenjake brez šifre admin
+  odkljuka ročno. `anonimiziran_razlog`: `ugovor` je dokončen; `neaktiven`
+  nastavi nočni cron `anonimiziraj_neaktivne()` (04:30, ne 03:30 zaradi
+  `uveljavi-cene`) **le v Avstriji** (obljuba ÖFB), neaktivnemu igralcu brez
+  nastopa 18 mesecev, ki ni v nobenem kadru.
+  **Uvoz imena in šifre nikoli ne povozi.** Anonimiziranega igralca najde po
+  zgoščenih ključih `sha256("<country_id>|<ime>")` in
+  `sha256("<country_id>|reg|<reg_st>")` v zaprti tabeli
+  `anonimizirani_igralci` (RLS brez pravic, ker je `players` javen); nov
+  igralec, ki se ujema s ključem igralca z ugovorom, nastane že anonimiziran.
+  Letošnji nastop vrne ime (in šifro) le `neaktiven` igralcu, ključe pobriše
+  šele po uspešni posodobitvi. `imeHash`/`regHash` v
+  `scripts/anonimizacija.mjs` morata ostati enaka SQL
+  `anonimizacijski_kljuc` (smoke in `test:varnost`)
 - `teams.logo_url` → grb kluba; če je prazen, `src/components/Grb.jsx` nariše
   ščit z začetnicami
 

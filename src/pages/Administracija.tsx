@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import { FunctionsHttpError } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import type { Pozicija } from '../lib/tipi'
+import type { Database } from '../lib/baza.types'
+
+type IstaOseba = Database['public']['Functions']['admin_ista_oseba']['Returns'][number]
 import { useAuth } from '../lib/useAuth'
 import { prikazniIme, IME_POZICIJE, formatirajTocke, formatirajCeno } from '../lib/pomozno'
 import { POZICIJE, VELIKOST_EKIPE, STEVILO_PRVIH, MAX_IZ_KLUBA, VRSTNI_RED, poPozicijah } from '../lib/pravila'
@@ -77,7 +80,7 @@ function zaVseKroge(n: number): string {
 
 export default function Administracija() {
   const { session, loading } = useAuth()
-  const { id: tekmovanjeId, tekmovanje } = useTekmovanje()
+  const { id: tekmovanjeId, tekmovanje, vsaTekmovanja } = useTekmovanje()
   const imeLigeZaPlakat = (() => {
     if (!tekmovanje) return ''
     const kratko = (tekmovanje.name ?? '').replace(/\s*—\s*(člani|mladinci)\s*$/, '')
@@ -121,7 +124,7 @@ export default function Administracija() {
   const [cakaIgralec, setCakaIgralec] = useState<
     | { id: number; vrsta: 'pozicija'; pozicija: Pozicija }
     | { id: number; vrsta: 'klub'; klubId: number }
-    | { id: number; vrsta: 'anonimizacija' }
+    | { id: number; vrsta: 'anonimizacija'; ista: IstaOseba[]; izbrani: number[] }
     | null
   >(null)
   const [shranjujemIgralca, setShranjujemIgralca] = useState(false)
@@ -491,13 +494,14 @@ export default function Administracija() {
     setCakaIgralec(null)
     const niz = iskanje.trim()
     if (!niz) return setZadetki([])
+    // Iskanje gre čez vse lige (ugovor velja za osebo); pozicijo, klub in NZS
+    // se ureja le pri igralcih izbrane lige. Številka je id igralca (prošnja
+    // za anonimizacijo navede povezavo /player/<id>).
     let q = supabase
       .from('player_overview')
-      .select('id, full_name, team_id, team_name, position, value, minutes, goals')
-      .eq('competition_id', tekmovanjeId as number)
-    // Številka je id igralca (prošnja za anonimizacijo navede povezavo /player/<id>).
+      .select('id, full_name, team_id, team_name, position, value, minutes, goals, competition_id')
     q = /^\d+$/.test(niz) ? q.eq('id', Number(niz)) : q.ilike('full_name', `%${niz}%`)
-    const { data } = await q.order('full_name').limit(15)
+    const { data } = await q.order('full_name').limit(30)
     setZadetki(data ?? [])
   }
 
@@ -520,15 +524,24 @@ export default function Administracija() {
     setSporocilo(`Igralec prestavljen v klub ${novoIme}.`)
   }
 
-  async function anonimiziraj(id: number) {
+  // Ista oseba v drugih vrsticah: z isto šifro gre zraven sama, soimenjake
+  // admin odkljuka.
+  async function pripraviAnonimizacijo(id: number) {
+    setNapaka(null)
+    const { data, error } = await supabase.rpc('admin_ista_oseba', { p_player_id: id })
+    if (error) return setNapaka(error.message)
+    setCakaIgralec({ id, vrsta: 'anonimizacija', ista: data ?? [], izbrani: [] })
+  }
+
+  async function anonimiziraj(ids: number[]) {
     setNapaka(null)
     setShranjujemIgralca(true)
-    const { error } = await supabase.rpc('admin_anonimiziraj_igralca', { p_player_id: id })
+    const { data, error } = await supabase.rpc('admin_anonimiziraj_igralca', { p_player_ids: ids })
     setShranjujemIgralca(false)
     setCakaIgralec(null)
     if (error) return setNapaka(error.message)
-    setZadetki(zadetki.map((z) => (z.id === id ? { ...z, full_name: `#${id}` } : z)))
-    setSporocilo(`Igralec #${id} anonimiziran.`)
+    setZadetki([])
+    setSporocilo(`Anonimiziranih vrstic: ${data}.`)
   }
 
   async function nastaviPozicijo(id: number, pozicija: Pozicija) {
@@ -1208,7 +1221,9 @@ SUPABASE_SERVICE_ROLE_KEY=... node scripts/ovrednoti-igralce.mjs --tekmovanje ${
                 <span className="flex-1 font-semibold">
                   {prikazniIme(z.full_name)}
                 </span>
-                <span className="text-xs text-slate-500">{z.team_name}</span>
+                <span className="text-xs text-slate-500">
+                  {z.team_name} · {vsaTekmovanja.find((tm) => tm.id === z.competition_id)?.short_name ?? '?'}
+                </span>
                 <span className="text-xs text-slate-400">
                   {z.position
                     ? IME_POZICIJE[z.position as Pozicija]
@@ -1217,6 +1232,7 @@ SUPABASE_SERVICE_ROLE_KEY=... node scripts/ovrednoti-igralce.mjs --tekmovanje ${
                   {formatirajTocke(z.value)}
                 </span>
               </div>
+              {z.competition_id === tekmovanjeId && (
               <div className="mt-2 flex flex-wrap gap-1">
                 {(['GK', 'DEF', 'MID', 'FWD'] as Pozicija[]).map((p) => (
                   <button
@@ -1233,7 +1249,9 @@ SUPABASE_SERVICE_ROLE_KEY=... node scripts/ovrednoti-igralce.mjs --tekmovanje ${
                   </button>
                 ))}
               </div>
+              )}
               <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                {z.competition_id === tekmovanjeId && (<>
                 <span className="text-slate-500">Prestavi v klub:</span>
                 <select
                   value={z.team_id ?? ''}
@@ -1251,9 +1269,10 @@ SUPABASE_SERVICE_ROLE_KEY=... node scripts/ovrednoti-igralce.mjs --tekmovanje ${
                     </option>
                   ))}
                 </select>
+                </>)}
                 {!z.full_name?.startsWith('#') && (
                   <button
-                    onClick={() => setCakaIgralec({ id: z.id, vrsta: 'anonimizacija' })}
+                    onClick={() => pripraviAnonimizacijo(z.id)}
                     disabled={shranjujemIgralca}
                     className="ml-auto text-red-300 underline disabled:opacity-50"
                   >
@@ -1273,7 +1292,7 @@ SUPABASE_SERVICE_ROLE_KEY=... node scripts/ovrednoti-igralce.mjs --tekmovanje ${
                             ? nastaviPozicijo(z.id, c.pozicija)
                             : c.vrsta === 'klub'
                               ? premakniKlub(z.id, c.klubId)
-                              : anonimiziraj(z.id)
+                              : anonimiziraj([z.id, ...c.izbrani])
                         }
                         preklici={() => setCakaIgralec(null)}
                         zaseden={shranjujemIgralca}
@@ -1288,8 +1307,34 @@ SUPABASE_SERVICE_ROLE_KEY=... node scripts/ovrednoti-igralce.mjs --tekmovanje ${
                         ) : c.vrsta === 'anonimizacija' ? (
                           <>
                             Ime igralca {prikazniIme(z.full_name)} (id {z.id}) zamenjam z{' '}
-                            <strong>#{z.id}</strong>? Za vedno — tudi uvoz ga ne vrne.
-                            Statistika in točke ostanejo.
+                            <strong>#{z.id}</strong>? Za vedno — tudi uvoz ga ne vrne, nov
+                            igralec z istim imenom ali šifro v tej državi nastane že
+                            anonimiziran. Statistika in točke ostanejo.
+                            {c.ista.length > 0 && (
+                              <ul className="mt-2 space-y-1">
+                                {c.ista.map((o) => (
+                                  <li key={o.id}>
+                                    <label className="flex items-center gap-2">
+                                      <input
+                                        type="checkbox"
+                                        checked={o.po_sifri || c.izbrani.includes(o.id)}
+                                        disabled={o.po_sifri}
+                                        onChange={(e) =>
+                                          setCakaIgralec({
+                                            ...c,
+                                            izbrani: e.target.checked
+                                              ? [...c.izbrani, o.id]
+                                              : c.izbrani.filter((x) => x !== o.id),
+                                          })
+                                        }
+                                      />
+                                      {prikazniIme(o.full_name)} · {o.klub} · {o.liga}
+                                      {o.po_sifri ? ' (ista šifra, gre zraven)' : ' (le isto ime)'}
+                                    </label>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
                           </>
                         ) : (
                           <>
@@ -1302,6 +1347,7 @@ SUPABASE_SERVICE_ROLE_KEY=... node scripts/ovrednoti-igralce.mjs --tekmovanje ${
                     </div>
                   )
                 })()}
+              {z.competition_id === tekmovanjeId && (
               <div className="mt-2 flex flex-wrap gap-2">
                 <select
                   onChange={(e) =>
@@ -1325,6 +1371,7 @@ SUPABASE_SERVICE_ROLE_KEY=... node scripts/ovrednoti-igralce.mjs --tekmovanje ${
                   className="w-40 rounded-lg border border-white/10 bg-slate-900 px-2 py-1 text-xs"
                 />
               </div>
+              )}
             </li>
           ))}
         </ul>

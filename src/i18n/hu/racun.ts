@@ -112,9 +112,9 @@ export const racun: NonNullable<Prevod['racun']> = {
     statistika:
       'Az általunk követett bajnokságok labdarúgóinál a nevet, a klubot, a mezszámot, a pályára lépéseket, a perceket, a gólokat és a lapokat mutatjuk. A forrás az oldal alján megnevezett szövetség nyilvánosan közzétett hivatalos jegyzőkönyvei. A posztokat és a gólpasszokat, amelyek nincsenek a jegyzőkönyvben, a közösség szavazással dönti el, ezért tévesek is lehetnek. Ebből számoljuk a játékos pontjait és árát a játékban. Ha valami nem stimmel, kattints a játékosra, és jelezd nekünk.',
     statistikaPodlaga:
-      'A cél egy ingyenes fantasy játék szurkolóknak. A jogalap a jogos érdek (GDPR 6. cikk (1) bekezdés f) pont): hogy a szurkolók a bajnokságuk közzétett eredményeivel játszhassanak. Az adatokat addig mutatjuk, amíg a játékos egy általunk követett bajnokságban szerepel; az utolsó pályára lépése után 18 hónappal elrejtjük a nevét.',
+      'A cél egy ingyenes fantasy játék szurkolóknak. A jogalap a jogos érdek (GDPR 6. cikk (1) bekezdés f) pont): hogy a szurkolók a bajnokságuk közzétett eredményeivel játszhassanak. Az adatokat addig mutatjuk, amíg a játékos egy általunk követett bajnokságban szerepel. Az osztrák bajnokságokban, ahogy az ÖFB is, a játékos nevét az utolsó pályára lépése után 18 hónappal elrejtjük.',
     statistikaUgovor:
-      'A játékos tiltakozhat az adatkezelés ellen, vagy kérheti a törlést: írj az <eposta>info@slff.eu</eposta> címre, és csatold a játékos oldalának linkjét. 14 napon belül a nevét mindenhol semleges jelölésre cseréljük, a statisztika név nélkül marad. Ugyanezt tesszük a szövetség kérésére is.',
+      'A játékos tiltakozhat az adatkezelés ellen, vagy kérheti a törlést: írj az <eposta>info@slff.eu</eposta> címre, és csatold a játékos oldalának linkjét. 14 napon belül a nevét semleges jelölésre cseréljük az adott ország összes általunk követett bajnokságában, ahol megtaláljuk, a későbbi importoknál is. A statisztika név nélkül marad. Ugyanezt tesszük a szövetség kérésére is.',
     grbi:
       'A klubcímerek az egyes klubok tulajdonai, és csak a csapat felismerését szolgálják. Ha egy klub ezt nem szeretné, írjon nekünk, és eltávolítjuk a címert.',
     fotografijeNaslov: 'Fényképek',

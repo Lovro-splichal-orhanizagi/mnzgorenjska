@@ -36,61 +36,58 @@ export type Database = {
     Tables: {
       anonimizirani_igralci: {
         Row: {
-          competition_id: number
-          ime_hash: string
+          kljuc: string
           player_id: number
         }
         ComputedFields: never
         Insert: {
-          competition_id: number
-          ime_hash: string
+          kljuc: string
           player_id: number
         }
         Update: {
-          competition_id?: number
-          ime_hash?: string
+          kljuc?: string
           player_id?: number
         }
         Relationships: [
           {
             foreignKeyName: "anonimizirani_igralci_player_id_fkey"
             columns: ["player_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "krog_najboljsi"
             referencedColumns: ["player_id"]
           },
           {
             foreignKeyName: "anonimizirani_igralci_player_id_fkey"
             columns: ["player_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "player_overview"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "anonimizirani_igralci_player_id_fkey"
             columns: ["player_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "player_season_standings"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "anonimizirani_igralci_player_id_fkey"
             columns: ["player_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "player_standings"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "anonimizirani_igralci_player_id_fkey"
             columns: ["player_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "players"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "anonimizirani_igralci_player_id_fkey"
             columns: ["player_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "pozicije_v_cakanju"
             referencedColumns: ["player_id"]
           },
@@ -5124,8 +5121,18 @@ export type Database = {
         Returns: number
       }
       admin_anonimiziraj_igralca: {
+        Args: { p_player_ids: number[] }
+        Returns: number
+      }
+      admin_ista_oseba: {
         Args: { p_player_id: number }
-        Returns: undefined
+        Returns: {
+          full_name: string
+          id: number
+          klub: string
+          liga: string
+          po_sifri: boolean
+        }[]
       }
       admin_nastavi_poznavalca: {
         Args: { p_competition_id?: number; p_user_id: string }
@@ -5246,6 +5253,7 @@ export type Database = {
           z_veljavno_ekipo: number
         }[]
       }
+      anonimizacijski_kljuc: { Args: { p: string }; Returns: string }
       anonimiziraj_igralca: {
         Args: { p_player_id: number; p_razlog?: string }
         Returns: undefined

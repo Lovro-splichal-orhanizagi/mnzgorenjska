@@ -112,9 +112,9 @@ export const racun = {
     statistika:
       'Za nogometaše lig, ki jih pokrivamo, prikazujemo ime, klub, številko dresa, nastope, minute, gole in kartone. Vir so javno objavljeni uradni zapisniki tekem zveze, ki je navedena v nogi strani. Pozicije in asistence, ki jih zapisnik ne vsebuje, določi skupnost z glasovanjem, zato so lahko napačne. Iz tega izračunamo točke in ceno igralca v igri. Če je kaj narobe, klikni igralca in nam sporoči.',
     statistikaPodlaga:
-      'Namen je brezplačna navijaška fantasy igra. Pravna podlaga je zakoniti interes (člen 6(1)(f) GDPR): navijačem omogočiti igro z javno objavljenimi rezultati njihove lige. Podatke prikazujemo, dokler igralec nastopa v ligi, ki jo pokrivamo; 18 mesecev po zadnjem nastopu njegovo ime skrijemo.',
+      'Namen je brezplačna navijaška fantasy igra. Pravna podlaga je zakoniti interes (člen 6(1)(f) GDPR): navijačem omogočiti igro z javno objavljenimi rezultati njihove lige. Podatke prikazujemo, dokler igralec nastopa v ligi, ki jo pokrivamo. V avstrijskih ligah, tako kot ÖFB, ime igralca skrijemo 18 mesecev po njegovem zadnjem nastopu.',
     statistikaUgovor:
-      'Igralec lahko obdelavi ugovarja ali zahteva izbris: piši na <eposta>info@slff.eu</eposta> in dodaj povezavo na stran igralca. V 14 dneh njegovo ime povsod zamenjamo z nevtralno oznako, statistika ostane brez imena. Enako storimo na zahtevo zveze.',
+      'Igralec lahko obdelavi ugovarja ali zahteva izbris: piši na <eposta>info@slff.eu</eposta> in dodaj povezavo na stran igralca. V 14 dneh njegovo ime zamenjamo z nevtralno oznako v vseh naših ligah te države, v katerih ga najdemo, tudi ob poznejših uvozih. Statistika ostane brez imena. Enako storimo na zahtevo zveze.',
     grbi:
       'Grbi klubov so last posameznih klubov in so prikazani zgolj za prepoznavo ekipe. Klub, ki tega ne želi, naj nam piše in grb bomo odstranili.',
     fotografijeNaslov: 'Fotografije',

@@ -111,9 +111,9 @@ export const racun: NonNullable<Prevod['racun']> = {
     statistika:
       'For footballers in the leagues we cover, we show their name, club, shirt number, appearances, minutes, goals and cards. The source is the publicly available official match reports of the football association named in the page footer. Positions and assists, which the match reports do not contain, are decided by the community through voting, so they may be wrong. From this we calculate the player\'s points and price in the game. If something is wrong, click the player and let us know.',
     statistikaPodlaga:
-      'The purpose is a free fantasy game for fans. The legal basis is legitimate interest (Art. 6(1)(f) GDPR): letting fans play a game based on the published results of their league. We show the data while the player plays in a league we cover; 18 months after their last appearance we hide their name.',
+      'The purpose is a free fantasy game for fans. The legal basis is legitimate interest (Art. 6(1)(f) GDPR): letting fans play a game based on the published results of their league. We show the data while the player plays in a league we cover. In Austrian leagues, as the ÖFB does, we hide a player\'s name 18 months after their last appearance.',
     statistikaUgovor:
-      'A player can object to the processing or ask for erasure: write to <eposta>info@slff.eu</eposta> with a link to the player\'s page. Within 14 days we replace their name everywhere with a neutral label; the statistics stay, without a name. We do the same at the request of the football association.',
+      'A player can object to the processing or ask for erasure: write to <eposta>info@slff.eu</eposta> with a link to the player\'s page. Within 14 days we replace their name with a neutral label in all our leagues of that country where we find them, also in later imports. The statistics stay, without a name. We do the same at the request of the football association.',
     grbi:
       'Club crests are the property of the individual clubs and are shown only to identify the team. A club that does not want this can write to us and we will remove the crest.',
     fotografijeNaslov: 'Photos',

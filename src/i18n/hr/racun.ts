@@ -114,9 +114,9 @@ export const racun: NonNullable<Prevod['racun']> = {
     statistika:
       'Za nogometaše liga koje pratimo prikazujemo ime, klub, broj dresa, nastupe, minute, golove i kartone. Izvor su javno objavljeni službeni zapisnici utakmica saveza navedenog u podnožju stranice. Pozicije i asistencije, kojih u zapisniku nema, određuje zajednica glasovanjem, zato mogu biti pogrešne. Iz toga računamo bodove i cijenu igrača u igri. Ako nešto nije u redu, klikni igrača i javi nam.',
     statistikaPodlaga:
-      'Svrha je besplatna navijačka fantasy igra. Pravna osnova je legitimni interes (članak 6. stavak 1. točka (f) GDPR-a): omogućiti navijačima igru s javno objavljenim rezultatima njihove lige. Podatke prikazujemo dok igrač nastupa u ligi koju pratimo; 18 mjeseci nakon njegova zadnjeg nastupa skrivamo mu ime.',
+      'Svrha je besplatna navijačka fantasy igra. Pravna osnova je legitimni interes (članak 6. stavak 1. točka (f) GDPR-a): omogućiti navijačima igru s javno objavljenim rezultatima njihove lige. Podatke prikazujemo dok igrač nastupa u ligi koju pratimo. U austrijskim ligama, kao i ÖFB, ime igrača skrivamo 18 mjeseci nakon njegova zadnjeg nastupa.',
     statistikaUgovor:
-      'Igrač može uložiti prigovor na obradu ili zatražiti brisanje: piši na <eposta>info@slff.eu</eposta> i dodaj poveznicu na stranicu igrača. U roku od 14 dana njegovo ime svugdje zamjenjujemo neutralnom oznakom, statistika ostaje bez imena. Isto činimo na zahtjev saveza.',
+      'Igrač može uložiti prigovor na obradu ili zatražiti brisanje: piši na <eposta>info@slff.eu</eposta> i dodaj poveznicu na stranicu igrača. U roku od 14 dana njegovo ime zamjenjujemo neutralnom oznakom u svim našim ligama te države u kojima ga nađemo, i pri kasnijim uvozima. Statistika ostaje bez imena. Isto činimo na zahtjev saveza.',
     grbi:
       'Grbovi klubova vlasništvo su pojedinih klubova i prikazani su samo radi prepoznavanja momčadi. Klub koji to ne želi neka nam piše i uklonit ćemo grb.',
     fotografijeNaslov: 'Fotografije',

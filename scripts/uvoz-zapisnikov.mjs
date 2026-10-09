@@ -22,7 +22,7 @@ import { mapaKlubov } from './klubi.mjs'
 import { vseVrstice } from './strani.mjs'
 import { prenesiSPonovitvami } from './prenos.mjs'
 import { dodajStrelceSKlopi } from './zapisnik.mjs'
-import { imeHash } from './anonimizacija.mjs'
+import { imeHash, regHash } from './anonimizacija.mjs'
 
 const PREDPOMNILNIK = 'scripts/.predpomnilnik'
 
@@ -168,13 +168,59 @@ function razdeliIme(polno) {
   return { priimek: deli[0], ime: deli.slice(1).join(' ') }
 }
 
-// Ime, ki ga je skrila neaktivnost (18 mesecev brez nastopa), vrne letošnji
-// nastop. Ime, skrito na ugovor (`ugovor`), ostane skrito za vedno.
-async function vrniImeNeaktivnemu(p, polnoIme) {
-  if (!tekocaSezona || p.anonimiziran_razlog !== 'neaktiven') return {}
-  await db.from('anonimizirani_igralci').delete().eq('player_id', p.id)
+// --- anonimizirani igralci (GDPR, scripts/anonimizacija.mjs) ---------------
+// Uvoz imena in šifre igralcu nikoli ne povozi. Anonimiziran igralec ima ime
+// "#<id>" in nima šifre, zato ga najdemo po zgoščenem ključu (le enoličen
+// zadetek v tej ligi), sicer bi zapisnik ustvaril dvojnika s pravim imenom.
+const POLJA_IGRALCA = 'id, position, position_source, team_id, active, odsel_at, izstopil_at, anonimiziran_razlog'
+async function anonimiziranVLigi(kljuc) {
+  const { data, error } = await db
+    .from('anonimizirani_igralci')
+    .select(`players!inner(${POLJA_IGRALCA})`)
+    .eq('kljuc', kljuc)
+    .eq('players.competition_id', tekmovanje.id)
+    .limit(2)
+  if (error) throw new Error(`anonimizirani igralci: ${error.message}`)
+  return data?.length === 1 ? data[0].players : null
+}
+
+// Ime (in šifro), ki ju je skrila neaktivnost (18 mesecev), vrne letošnji
+// nastop. Ugovor ostane za vedno.
+function vrnjenoIme(p, polnoIme, regSt) {
+  if (!tekocaSezona || p.anonimiziran_razlog !== 'neaktiven') return null
   const { priimek, ime } = razdeliIme(polnoIme)
-  return { full_name: polnoIme, last_name: priimek, first_name: ime, anonimiziran_at: null, anonimiziran_razlog: null }
+  return {
+    full_name: polnoIme, last_name: priimek, first_name: ime,
+    ...(regSt != null ? { reg_st: regSt } : {}),
+    anonimiziran_at: null, anonimiziran_razlog: null,
+  }
+}
+
+// Ključe pobrišemo šele, ko je ime vrnjeno: če posodobitev pade, mora
+// naslednji uvoz igralca še najti.
+async function posodobiIgralca(id, popravek, vrnjeno) {
+  if (!Object.keys(popravek).length) return
+  const { error } = await db.from('players').update(popravek).eq('id', id)
+  if (error) throw new Error(`igralec ${id}: ${error.message}`)
+  if (vrnjeno) await db.from('anonimizirani_igralci').delete().eq('player_id', id)
+}
+
+// Ugovor velja za osebo, ne za vrstico: nov igralec z isto šifro ali imenom
+// v isti državi (prestop, druga liga) nastane že anonimiziran.
+async function preveriUgovor(id, polnoIme, regSt) {
+  const kljuci = [imeHash(tekmovanje.country_id, polnoIme)]
+  if (regSt != null) kljuci.push(regHash(tekmovanje.country_id, regSt))
+  const { data, error } = await db
+    .from('anonimizirani_igralci')
+    .select('player_id, players!inner(anonimiziran_razlog)')
+    .in('kljuc', kljuci)
+    .eq('players.anonimiziran_razlog', 'ugovor')
+    .limit(1)
+  if (error) throw new Error(`ugovor: ${error.message}`)
+  if (!data?.length) return
+  const { error: eA } = await db.rpc('anonimiziraj_igralca', { p_player_id: id, p_razlog: 'ugovor' })
+  if (eA) throw new Error(`anonimizacija ${id}: ${eA.message}`)
+  console.log(`  nov igralec ${id} anonimiziran (ugovor)`)
 }
 
 /**
@@ -225,18 +271,19 @@ async function igralecId(
       return igralci.get(kljucReg)
     }
 
-    const { data: poReg } = await db
+    let { data: poReg } = await db
       .from('players')
-      .select('id, position, position_source, team_id, active, odsel_at, izstopil_at, anonimiziran_razlog')
+      .select(POLJA_IGRALCA)
       .eq('competition_id', tekmovanje.id)
       .eq('reg_st', regSt)
       .maybeSingle()
+    poReg ??= await anonimiziranVLigi(regHash(tekmovanje.country_id, regSt))
 
     if (poReg) {
       // Prestop ali nova stevilka dresa: zapisnik je najzanesljivejsi dokaz,
       // zato oboje popravimo po njem.
-      // Ime iz zapisnika igralcu sicer nikoli ne povozimo (anonimizacija).
-      const popravek = await vrniImeNeaktivnemu(poReg, polnoIme)
+      const vrnjeno = vrnjenoIme(poReg, polnoIme, regSt)
+      const popravek = { ...vrnjeno }
       // Arhiv (lanska sezona) kluba ne prestavlja nazaj; prestop pove le letošnji zapisnik.
       if (poReg.team_id !== teamId && tekocaSezona) popravek.team_id = teamId
       // Uvoz razporeda deaktivira igralca, čigar klub (lanski) ni v ligi; ko ga
@@ -255,8 +302,7 @@ async function igralecId(
         popravek.position = pozicija
         popravek.position_source = 'zapisnik'
       }
-      if (Object.keys(popravek).length)
-        await db.from('players').update(popravek).eq('id', poReg.id)
+      await posodobiIgralca(poReg.id, popravek, vrnjeno)
       igralci.set(kljucReg, poReg.id)
       klubPoReg.set(kljucReg, { team: popravek.team_id ?? poReg.team_id, datum })
       return poReg.id
@@ -279,6 +325,7 @@ async function igralecId(
       .select('id')
       .single()
     if (eNov) throw new Error(`igralec ${polnoIme} (reg ${regSt}): ${eNov.message}`)
+    await preveriUgovor(nov.id, polnoIme, regSt)
     igralci.set(kljucReg, nov.id)
     klubPoReg.set(kljucReg, { team: teamId, datum })
     return nov.id
@@ -377,20 +424,13 @@ async function igralecId(
     }
   }
 
-  // Anonimiziran igralec ima ime "#<id>" in ga po imenu ni več. Brez tega bi
-  // naslednji zapisnik ustvaril dvojnika s pravim imenom. Prepozna ga
-  // zgoščeno izvirno ime (le enolično zadetek, kot posvojitev zgoraj).
+  // Anonimiziran igralec: po imenu ga ni več (glej anonimiziranVLigi).
   if (!obstoj && !dvoumno) {
-    const { data: anon } = await db
-      .from('anonimizirani_igralci')
-      .select('players(id, position, position_source, anonimiziran_razlog)')
-      .eq('competition_id', tekmovanje.id)
-      .eq('ime_hash', imeHash(tekmovanje.id, polnoIme))
-      .limit(2)
-    if (anon?.length === 1 && anon[0].players) {
-      obstoj = anon[0].players
-      const ime = await vrniImeNeaktivnemu(obstoj, polnoIme)
-      await db.from('players').update({ team_id: teamId, shirt_number: st, ...ime }).eq('id', obstoj.id)
+    const anon = await anonimiziranVLigi(imeHash(tekmovanje.country_id, polnoIme))
+    if (anon) {
+      obstoj = anon
+      const vrnjeno = vrnjenoIme(anon, polnoIme, null)
+      await posodobiIgralca(anon.id, { team_id: teamId, shirt_number: st, ...vrnjeno }, vrnjeno)
     }
   }
 
@@ -422,6 +462,7 @@ async function igralecId(
     .select('id')
     .single()
   if (error) throw new Error(`igralec ${polnoIme}: ${error.message}`)
+  await preveriUgovor(data.id, polnoIme, null)
   igralci.set(kljuc, data.id)
   return data.id
 }
