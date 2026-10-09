@@ -92,7 +92,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   // Zasebnost in pogoji. <b> je krepko, ostale oznake so povezave.
   pravno: {
     naslov: 'Soukromí a podmínky',
-    zadnjaSprememba: 'Poslední změna: 2. října 2026',
+    zadnjaSprememba: 'Poslední změna: 9. října 2026',
     kajJeNaslov: 'Co je SLFF',
     kajJe:
       'SLFF (Sunday League Fantasy Football) je fanouškovská fantasy liga pro amatérské fotbalové soutěže. Provozujeme ji amatérsky a není propojená s Fotbalovou asociací České republiky (FAČR), krajskými ani okresními fotbalovými svazy, ani s kluby. Hra je zdarma, bez peněžních vkladů a bez výher.',
@@ -110,9 +110,13 @@ export const racun: NonNullable<Prevod['racun']> = {
     dostopNaslov: 'Kdo má k údajům přístup',
     dostop:
       'Údaje jsou uložené na našem serveru u poskytovatele <b>Hetzner</b> (Německo, EU), provoz k němu jde přes <b>Cloudflare</b> (ochrana a doručování stránky). Potvrzovací e-maily a e-maily pro obnovení hesla se odesílají z našeho poštovního serveru (také Hetzner), oznámení v mobilní aplikaci přes <b>Google Firebase Cloud Messaging</b> (jen token zařízení a text oznámení). Chat podpory v pravém dolním rohu běží přes <b>HelpStack</b>: předává se tam to, co do něj napíšeš, a pokud jsi přihlášený, také tvoje zobrazované jméno, abychom věděli, komu odpovídáme. Když ti asistent v chatu pomáhá, může se podívat i na to, na které stránce a v které lize jsi a jestli je tvůj tým platný. Tvůj e-mail mu nepředáváme. Nikomu jinému údaje nepředáváme a neprodáváme je.',
-    statistikaNaslov: 'Statistiky hráčů',
+    statistikaNaslov: 'Údaje o fotbalistech',
     statistika:
-      'Údaje o fotbalistech (starty, góly, karty) jsou převzaté z veřejně zveřejněných zápisů o utkání; zdroj pro vybranou ligu je uvedený v patičce stránky. Pozice a asistence, které zápis o utkání neobsahuje, určuje komunita hlasováním, a proto můžou být nesprávné. Pokud je něco špatně, klikni na hráče a dej nám vědět.',
+      'U fotbalistů soutěží, které pokrýváme, zobrazujeme jméno, klub, číslo dresu, starty, minuty, góly a karty. Zdrojem jsou veřejně zveřejněné oficiální zápisy o utkání svazu uvedeného v patičce stránky. Pozice a asistence, které zápis neobsahuje, určuje komunita hlasováním, a proto můžou být nesprávné. Z toho počítáme body a cenu hráče ve hře. Pokud je něco špatně, klikni na hráče a dej nám vědět.',
+    statistikaPodlaga:
+      'Účelem je bezplatná fantasy hra pro fanoušky. Právním základem je oprávněný zájem (čl. 6 odst. 1 písm. f GDPR): umožnit fanouškům hru se zveřejněnými výsledky jejich soutěže. Údaje zobrazujeme, dokud hráč nastupuje v soutěži, kterou pokrýváme. V rakouských soutěžích, stejně jako ÖFB, jméno hráče skryjeme 18 měsíců po jeho posledním startu.',
+    statistikaUgovor:
+      'Hráč může proti zpracování vznést námitku nebo žádat výmaz: napiš na <eposta>info@slff.eu</eposta> a přidej odkaz na stránku hráče. Do 14 dnů jeho jméno nahradíme neutrálním označením ve všech našich soutěžích dané země, kde ho najdeme, i při pozdějších importech. Statistiky zůstanou bez jména. Totéž uděláme na žádost svazu.',
     grbi:
       'Znaky klubů jsou majetkem jednotlivých klubů a zobrazují se výhradně pro identifikaci týmu. Klub, který si to nepřeje, nám může napsat a znak odstraníme.',
     fotografijeNaslov: 'Fotografie',

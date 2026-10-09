@@ -89,7 +89,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   },
   pravno: {
     naslov: 'Privacy and terms',
-    zadnjaSprememba: 'Last updated: 2 October 2026',
+    zadnjaSprememba: 'Last updated: 9 October 2026',
     kajJeNaslov: 'What SLFF is',
     kajJe:
       'SLFF (Sunday League Fantasy Football) is a fan-made fantasy league for local amateur football leagues. It is run by volunteers and is not affiliated with the regional football associations, the national football association or the clubs. The game is free, with no stakes or prizes.',
@@ -107,9 +107,13 @@ export const racun: NonNullable<Prevod['racun']> = {
     dostopNaslov: 'Who can access the data',
     dostop:
       'The data is stored on our own server at <b>Hetzner</b> (Germany, EU); traffic to it passes through <b>Cloudflare</b> (protection and delivery of the site). Confirmation and password-reset emails are sent from our own mail server (also at Hetzner), and notifications in the mobile app via <b>Google Firebase Cloud Messaging</b> (only the device token and the notification text). The help chat in the bottom right corner runs on <b>HelpStack</b>: it receives what you write in it and — if you are logged in — your display name, so we know who we are replying to. When the assistant in the chat helps you, it can also see which page and league you are on and whether your team is valid. We do not pass on your email address. We do not share your data with anyone else and we do not sell it.',
-    statistikaNaslov: 'Player statistics',
+    statistikaNaslov: 'Data about footballers',
     statistika:
-      'Data about footballers (appearances, goals, cards) is taken from the publicly available match reports of the regional football associations; the ones for the selected league are listed in the page footer. Positions and assists, which the match reports do not contain, are decided by the community through voting — so they may be wrong. If something is wrong, click the player and let us know.',
+      'For footballers in the leagues we cover, we show their name, club, shirt number, appearances, minutes, goals and cards. The source is the publicly available official match reports of the football association named in the page footer. Positions and assists, which the match reports do not contain, are decided by the community through voting, so they may be wrong. From this we calculate the player\'s points and price in the game. If something is wrong, click the player and let us know.',
+    statistikaPodlaga:
+      'The purpose is a free fantasy game for fans. The legal basis is legitimate interest (Art. 6(1)(f) GDPR): letting fans play a game based on the published results of their league. We show the data while the player plays in a league we cover. In Austrian leagues, as the ÖFB does, we hide a player\'s name 18 months after their last appearance.',
+    statistikaUgovor:
+      'A player can object to the processing or ask for erasure: write to <eposta>info@slff.eu</eposta> with a link to the player\'s page. Within 14 days we replace their name with a neutral label in all our leagues of that country where we find them, also in later imports. The statistics stay, without a name. We do the same at the request of the football association.',
     grbi:
       'Club crests are the property of the individual clubs and are shown only to identify the team. A club that does not want this can write to us and we will remove the crest.',
     fotografijeNaslov: 'Photos',

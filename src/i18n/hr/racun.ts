@@ -92,7 +92,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   // Privatnost i uvjeti. <b> je podebljano, ostale oznake su poveznice.
   pravno: {
     naslov: 'Privatnost i uvjeti',
-    zadnjaSprememba: 'Zadnja izmjena: 2. listopada 2026.',
+    zadnjaSprememba: 'Zadnja izmjena: 9. listopada 2026.',
     kajJeNaslov: 'Što je SLFF',
     kajJe:
       'SLFF (Sunday League Fantasy Football) je navijačka fantasy liga za amaterske nogometne lige. Vodimo je amaterski i nije povezana s Hrvatskim nogometnim savezom (HNS), županijskim nogometnim savezima ni s klubovima. Igra je besplatna, bez novčanih uloga i nagrada.',
@@ -110,9 +110,13 @@ export const racun: NonNullable<Prevod['racun']> = {
     dostopNaslov: 'Kome su podaci dostupni',
     dostop:
       'Podaci su pohranjeni na našem poslužitelju kod pružatelja <b>Hetzner</b> (Njemačka, EU), a promet do njega ide preko <b>Cloudflarea</b> (zaštita i isporuka stranice). Pošta za potvrdu i ponovno postavljanje lozinke ide s našeg poslužitelja pošte (također Hetzner), obavijesti u mobilnoj aplikaciji preko <b>Google Firebase Cloud Messaginga</b> (samo token uređaja i tekst obavijesti). Chat za pomoć u donjem desnom kutu radi preko <b>HelpStacka</b>: tamo ide ono što u njega napišeš i — ako si prijavljen — tvoje prikazno ime, da znamo kome odgovaramo. Kad ti pomoćnik u chatu pomaže, može vidjeti i na kojoj si stranici i u kojoj ligi te je li tvoja momčad valjana. E-adresu mu ne prosljeđujemo. Nikome drugome podatke ne prosljeđujemo i ne prodajemo ih.',
-    statistikaNaslov: 'Statistika igrača',
+    statistikaNaslov: 'Podaci o nogometašima',
     statistika:
-      'Podaci o nogometašima (nastupi, golovi, kartoni) preuzeti su iz javno objavljenih zapisnika nogometnih saveza; koji su za odabranu ligu, piše u podnožju stranice. Pozicije i asistencije, kojih u zapisniku nema, određuje zajednica glasovanjem — zato mogu biti pogrešne. Ako nešto nije u redu, klikni igrača i javi nam.',
+      'Za nogometaše liga koje pratimo prikazujemo ime, klub, broj dresa, nastupe, minute, golove i kartone. Izvor su javno objavljeni službeni zapisnici utakmica saveza navedenog u podnožju stranice. Pozicije i asistencije, kojih u zapisniku nema, određuje zajednica glasovanjem, zato mogu biti pogrešne. Iz toga računamo bodove i cijenu igrača u igri. Ako nešto nije u redu, klikni igrača i javi nam.',
+    statistikaPodlaga:
+      'Svrha je besplatna navijačka fantasy igra. Pravna osnova je legitimni interes (članak 6. stavak 1. točka (f) GDPR-a): omogućiti navijačima igru s javno objavljenim rezultatima njihove lige. Podatke prikazujemo dok igrač nastupa u ligi koju pratimo. U austrijskim ligama, kao i ÖFB, ime igrača skrivamo 18 mjeseci nakon njegova zadnjeg nastupa.',
+    statistikaUgovor:
+      'Igrač može uložiti prigovor na obradu ili zatražiti brisanje: piši na <eposta>info@slff.eu</eposta> i dodaj poveznicu na stranicu igrača. U roku od 14 dana njegovo ime zamjenjujemo neutralnom oznakom u svim našim ligama te države u kojima ga nađemo, i pri kasnijim uvozima. Statistika ostaje bez imena. Isto činimo na zahtjev saveza.',
     grbi:
       'Grbovi klubova vlasništvo su pojedinih klubova i prikazani su samo radi prepoznavanja momčadi. Klub koji to ne želi neka nam piše i uklonit ćemo grb.',
     fotografijeNaslov: 'Fotografije',

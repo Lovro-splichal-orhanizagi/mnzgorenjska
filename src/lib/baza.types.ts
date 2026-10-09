@@ -34,12 +34,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      anonimizirani_igralci: {
+        Row: {
+          kljuc: string
+          player_id: number
+        }
+        ComputedFields: never
+        Insert: {
+          kljuc: string
+          player_id: number
+        }
+        Update: {
+          kljuc?: string
+          player_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anonimizirani_igralci_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "krog_najboljsi"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "anonimizirani_igralci_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "player_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anonimizirani_igralci_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "player_season_standings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anonimizirani_igralci_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "player_standings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anonimizirani_igralci_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anonimizirani_igralci_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "pozicije_v_cakanju"
+            referencedColumns: ["player_id"]
+          },
+        ]
+      }
       appearances: {
         Row: {
           clean_sheet: boolean
           goals: number
           goals_conceded: number
           id: number
+          is_goalkeeper: boolean
           match_id: number
           minute_off: number
           minute_on: number
@@ -61,6 +121,7 @@ export type Database = {
           goals?: number
           goals_conceded?: number
           id?: never
+          is_goalkeeper?: boolean
           match_id: number
           minute_off?: number
           minute_on?: number
@@ -81,6 +142,7 @@ export type Database = {
           goals?: number
           goals_conceded?: number
           id?: never
+          is_goalkeeper?: boolean
           match_id?: number
           minute_off?: number
           minute_on?: number
@@ -1412,6 +1474,27 @@ export type Database = {
             foreignKeyName: "klub_stik_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
+            referencedRelation: "competition_teams"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "klub_stik_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "krog_najboljsi"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "klub_stik_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "player_reports_view"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "klub_stik_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
             referencedRelation: "teams"
             referencedColumns: ["id"]
           },
@@ -1426,9 +1509,9 @@ export type Database = {
           poslal: string | null
           poslano_at: string
           stik_id: number
+          telo: string | null
           vrsta: string
           za: string | null
-          telo: string | null
           zadeva: string | null
         }
         ComputedFields: never
@@ -1440,9 +1523,9 @@ export type Database = {
           poslal?: string | null
           poslano_at?: string
           stik_id: number
+          telo?: string | null
           vrsta?: string
           za?: string | null
-          telo?: string | null
           zadeva?: string | null
         }
         Update: {
@@ -1453,9 +1536,9 @@ export type Database = {
           poslal?: string | null
           poslano_at?: string
           stik_id?: number
+          telo?: string | null
           vrsta?: string
           za?: string | null
-          telo?: string | null
           zadeva?: string | null
         }
         Relationships: [
@@ -1752,6 +1835,22 @@ export type Database = {
         }
         Relationships: []
       }
+      odjava_kljuc: {
+        Row: {
+          id: number
+          kljuc: string
+        }
+        ComputedFields: never
+        Insert: {
+          id?: number
+          kljuc: string
+        }
+        Update: {
+          id?: number
+          kljuc?: string
+        }
+        Relationships: []
+      }
       player_reports: {
         Row: {
           content: string
@@ -1926,6 +2025,8 @@ export type Database = {
       players: {
         Row: {
           active: boolean
+          anonimiziran_at: string | null
+          anonimiziran_razlog: string | null
           competition_id: number
           first_name: string
           full_name: string | null
@@ -1953,6 +2054,8 @@ export type Database = {
         ComputedFields: never
         Insert: {
           active?: boolean
+          anonimiziran_at?: string | null
+          anonimiziran_razlog?: string | null
           competition_id?: number
           first_name: string
           full_name?: string | null
@@ -1979,6 +2082,8 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          anonimiziran_at?: string | null
+          anonimiziran_razlog?: string | null
           competition_id?: number
           first_name?: string
           full_name?: string | null
@@ -2922,6 +3027,22 @@ export type Database = {
             referencedColumns: ["player_id"]
           },
         ]
+      }
+      stiki_kljuc: {
+        Row: {
+          id: number
+          kljuc: string
+        }
+        ComputedFields: never
+        Insert: {
+          id?: number
+          kljuc: string
+        }
+        Update: {
+          id?: number
+          kljuc?: string
+        }
+        Relationships: []
       }
       teams: {
         Row: {
@@ -4999,6 +5120,20 @@ export type Database = {
         Args: { p_player_id: number; p_position: string }
         Returns: number
       }
+      admin_anonimiziraj_igralca: {
+        Args: { p_player_ids: number[] }
+        Returns: number
+      }
+      admin_ista_oseba: {
+        Args: { p_player_id: number }
+        Returns: {
+          full_name: string
+          id: number
+          klub: string
+          liga: string
+          po_sifri: boolean
+        }[]
+      }
       admin_nastavi_poznavalca: {
         Args: { p_competition_id?: number; p_user_id: string }
         Returns: undefined
@@ -5117,6 +5252,15 @@ export type Database = {
           z_ekipo: number
           z_veljavno_ekipo: number
         }[]
+      }
+      anonimizacijski_kljuc: { Args: { p: string }; Returns: string }
+      anonimiziraj_igralca: {
+        Args: { p_player_id: number; p_razlog?: string }
+        Returns: undefined
+      }
+      anonimiziraj_neaktivne: {
+        Args: Record<PropertyKey, never>
+        Returns: number
       }
       asistenca_odprta: { Args: { p_goal_id: number }; Returns: boolean }
       asistence_odprte_do: { Args: { p_match_id: number }; Returns: string }
@@ -5247,12 +5391,12 @@ export type Database = {
         Returns: boolean
       }
       nova_koda_mini_lige: { Args: Record<PropertyKey, never>; Returns: string }
-      odstrani_hisne_ekipe: { Args: { p_ids: number[] }; Returns: number }
-      okno_preracuna_tock: { Args: Record<PropertyKey, never>; Returns: string }
       odjavi_z_zetonom: {
         Args: { p_user: string; p_zeton: string }
         Returns: boolean
       }
+      odstrani_hisne_ekipe: { Args: { p_ids: number[] }; Returns: number }
+      okno_preracuna_tock: { Args: Record<PropertyKey, never>; Returns: string }
       osvezi_statistiko_igralcev: {
         Args: { p_igralci: number[] }
         Returns: undefined
@@ -5367,6 +5511,69 @@ export type Database = {
           team_id: number
           team_name: string
           veljavna: boolean
+        }[]
+      }
+      stiki_klubov: {
+        Args: {
+          p_drzava?: string
+          p_iskanje?: string
+          p_kljuc: string
+          p_omejitev?: number
+          p_stanje?: string
+          p_team_id?: number
+          p_z_besedilom?: boolean
+        }
+        Returns: Json
+      }
+      stiki_nastavi: {
+        Args: {
+          p_email: string
+          p_kljuc: string
+          p_odgovorni?: string
+          p_opomba?: string
+          p_stanje?: string
+        }
+        Returns: Json
+      }
+      stiki_preveri_kljuc: { Args: { p_kljuc: string }; Returns: undefined }
+      stiki_zabelezi: {
+        Args: {
+          p_drzava?: string
+          p_email: string
+          p_gmail_nit?: string
+          p_kdaj?: string
+          p_kljuc: string
+          p_klub?: string
+          p_liga?: string
+          p_opomba?: string
+          p_poslal: string
+          p_team_id?: number
+          p_telo?: string
+          p_vrsta: string
+          p_zadeva?: string
+        }
+        Returns: Json
+      }
+      tedenski_pregled_ekip: {
+        Args: { p_competition_id: number }
+        Returns: {
+          display_name: string
+          ekip: number
+          ekipa: string
+          email: string
+          fantasy_team_id: number
+          kapetan: string
+          kapetan_tocke: number
+          krog: number
+          mesto: number
+          mesto_prej: number
+          najboljsi: string
+          najboljsi_tocke: number
+          najvec: number
+          povprecje: number
+          round_id: number
+          tocke: number
+          user_id: string
         }[]
       }
       tedenski_pregled_mini_lige: {
@@ -5493,6 +5700,7 @@ export type Database = {
         }
         Returns: number
       }
+      zeton_odjave: { Args: { p_user: string }; Returns: string }
     }
     Enums: {
       [_ in never]: never

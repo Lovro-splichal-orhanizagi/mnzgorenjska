@@ -845,6 +845,99 @@ select pg_temp.preveri('odstranjevanje odstrani natanko hisne ekipe',
   and not exists (select 1 from tocke_krogov where fantasy_team_id in (select id from hisne))
   and (select count(*) from fantasy_lineups where round_id=-913004) = (select n from cloveski_posnetki));
 
+-- Anonimizacija igralcev (GDPR, migracija 20261009180000).
+reset role;
+-- -913040 in -913042 sta ista oseba (ista šifra) v dveh ligah, -913043 le
+-- soimenjak brez šifre. -913041 je star igralec v Sloveniji, -913044/-913045
+-- v Avstriji (neaktiven / aktiven).
+insert into competitions(id, slug, name, short_name, active, country_id, source) overriding system value
+values (-913003, 'test-varnost-at', 'Test AT', 'TAT', false, (select id from countries where code='AT'), 'oefb');
+insert into players(id, team_id, competition_id, first_name, last_name, full_name, reg_st, position,
+                    position_source, value, value_start, active) overriding system value
+values (-913040, -913001, -913001, 'Šime', 'Test', 'Test Šime', 913040, 'MID', 'admin', 5, 5, true),
+       (-913042, -913002, -913002, 'Šime', 'Test', 'Test Šime', 913040, 'MID', 'admin', 5, 5, true),
+       (-913043, -913003, -913002, 'Šime', 'Test', 'Test Šime', null, 'MID', 'admin', 5, 5, true),
+       (-913041, -913001, -913001, 'Stari', 'Test', 'Test Stari', null, 'MID', 'admin', 5, 5, false),
+       (-913044, -913001, -913003, 'Alt', 'Test', 'Test Alt', null, 'MID', 'admin', 5, 5, false),
+       (-913045, -913001, -913003, 'Aktiv', 'Test', 'Test Aktiv', null, 'MID', 'admin', 5, 5, true);
+insert into player_reports(player_id, user_id, kind, content)
+values (-913040, 'b8a06635-2322-4444-8c42-44e419f912ab', 'poskodba', 'Šime je poškodovan');
+select set_config('request.jwt.claim.sub','',true);
+set local role anon;
+select pg_temp.zavrnjeno('anonimni ne more anonimizirati igralca',
+  $$select anonimiziraj_igralca(-913040)$$);
+select pg_temp.zavrnjeno('anonimni ne bere zgoscenih kljucev',
+  $$select * from anonimizirani_igralci$$);
+reset role;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('uporabnik ne more klicati servisne anonimizacije',
+  $$select anonimiziraj_igralca(-913040)$$);
+select pg_temp.zavrnjeno('uporabnik ne more klicati skrbniske anonimizacije',
+  $$select admin_anonimiziraj_igralca(array[-913040]::bigint[])$$);
+select pg_temp.zavrnjeno('uporabnik ne vidi skrbniskega seznama iste osebe',
+  $$select * from admin_ista_oseba(-913040)$$);
+select pg_temp.zavrnjeno('uporabnik ne bere zgoscenih kljucev',
+  $$select * from anonimizirani_igralci$$);
+reset role;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+select pg_temp.preveri('ista oseba: ista sifra samodejno, soimenjak le na seznamu',
+  (select array_agg(id::text || ':' || po_sifri::text order by id) from admin_ista_oseba(-913040))
+  = array['-913043:false', '-913042:true']);
+select pg_temp.preveri('admin anonimizira izbrano vrstico in vse z isto sifro',
+  admin_anonimiziraj_igralca(array[-913040]::bigint[]) = 2);
+reset role;
+select pg_temp.preveri('anonimizacija zamenja ime, odstrani sifro in porocila',
+  (select bool_and(full_name='#'||id and first_name='' and last_name='#'||id and reg_st is null
+                   and anonimiziran_razlog='ugovor' and anonimiziran_at is not null)
+     from players where id in (-913040, -913042))
+  and not exists (select 1 from player_reports where player_id=-913040));
+select pg_temp.preveri('soimenjak brez sifre ostane, dokler ga admin ne odkljuka',
+  (select full_name='Test Šime' and anonimiziran_at is null from players where id=-913043));
+-- Isti ključi so v smoke (imeHash, regHash): uvoz in baza morata zgostiti enako.
+select pg_temp.preveri('kljuc baze je enak kljucu uvoza',
+  anonimizacijski_kljuc('7|Test Šime') = '558e773d490d37ef3d185b90d5f8e2017391b71b5e5c14d74888dc3e874f514c'
+  and anonimizacijski_kljuc('7|reg|913040') = '0977c5f2629986f97d714990a002b776017db2c12c201af132af556ae48780d7');
+select pg_temp.preveri('anonimizacija hrani kljuca imena in sifre za uvoz',
+  (select count(*) = 2 from anonimizirani_igralci a where a.player_id=-913040
+     and a.kljuc in (anonimizacijski_kljuc((select id from countries where code='SI') || '|Test Šime'),
+                     anonimizacijski_kljuc((select id from countries where code='SI') || '|reg|913040'))));
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
+update players set full_name='Test Šime', anonimiziran_at=null where id=-913040;
+reset role;
+select pg_temp.preveri('uporabnik ne more vrniti imena anonimiziranemu',
+  (select full_name='#-913040' and anonimiziran_at is not null from players where id=-913040));
+select anonimiziraj_igralca(-913040, 'neaktiven');
+select pg_temp.preveri('ugovor prevlada nad neaktivnostjo, kljuca ostaneta',
+  (select anonimiziran_razlog='ugovor' from players where id=-913040)
+  and (select count(*) = 2 from anonimizirani_igralci where player_id=-913040));
+
+-- 18 mesecev brez nastopa: le Avstrija, le neaktivni, ne igralec v kadru.
+insert into rounds(id,season,number,deadline_at,played_on,competition_id) overriding system value
+values (-913040,'2020/21',1,'2020-09-01','2020-09-01',-913001),
+       (-913041,'2020/21',1,'2020-09-01','2020-09-01',-913003);
+insert into matches(id, round_id, home_team_id, away_team_id, played_on) overriding system value
+values (-913040,-913040,-913001,-913002,'2020-09-01'),
+       (-913041,-913041,-913001,-913002,'2020-09-01');
+insert into appearances(match_id, player_id, team_id)
+values (-913040,-913041,-913001), (-913041,-913044,-913001), (-913041,-913045,-913001);
+-- -913046: neaktiven avstrijski igralec, a v kadru hišne ekipe.
+insert into players(id, team_id, competition_id, first_name, last_name, full_name, position,
+                    position_source, value, value_start, active) overriding system value
+values (-913046, -913001, -913003, 'Kader', 'Test', 'Test Kader', 'MID', 'admin', 5, 5, false);
+insert into fantasy_teams(id,owner_id,name,competition_id,created_at) overriding system value
+values (-913046,'b8a06635-2322-4444-8c42-44e419f912ac','Kader AT',-913003,now());
+insert into fantasy_roster(fantasy_team_id, player_id, is_starter) values (-913046, -913046, true);
+insert into appearances(match_id, player_id, team_id) values (-913041, -913046, -913001);
+select anonimiziraj_neaktivne();
+select pg_temp.preveri('nocna anonimizacija skrije neaktivnega avstrijskega igralca po 18 mesecih',
+  (select full_name='#-913044' and anonimiziran_razlog='neaktiven' from players where id=-913044));
+select pg_temp.preveri('nocna anonimizacija izpusti Slovenijo, aktivne in igralce v kadru',
+  (select bool_and(anonimiziran_at is null) from players
+    where id in (-913041, -913045, -913046)));
+
 do $$
 declare v_napak int;
 begin

@@ -89,7 +89,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   },
   pravno: {
     naslov: 'Datenschutz und Nutzungsbedingungen',
-    zadnjaSprememba: 'Zuletzt geändert: 2. Oktober 2026',
+    zadnjaSprememba: 'Zuletzt geändert: 9. Oktober 2026',
     kajJeNaslov: 'Was SLFF ist',
     kajJe:
       'SLFF (Sunday League Fantasy Football) ist eine Fantasy-Liga von Fans für den regionalen Amateurfußball. Sie wird von Freiwilligen betrieben und steht in keiner Verbindung zu den Landes- oder Regionalverbänden, zum nationalen Fußballverband oder zu den Klubs. Das Spiel ist gratis, ohne Einsätze und ohne Preise.',
@@ -107,9 +107,13 @@ export const racun: NonNullable<Prevod['racun']> = {
     dostopNaslov: 'Wer Zugriff auf die Daten hat',
     dostop:
       'Die Daten liegen auf unserem eigenen Server bei <b>Hetzner</b> (Deutschland, EU); der Verkehr dorthin läuft über <b>Cloudflare</b> (Schutz und Auslieferung der Seite). E-Mails zur Bestätigung und zum Zurücksetzen des Passworts verschicken wir über unseren eigenen Mailserver (ebenfalls bei Hetzner), Benachrichtigungen in der mobilen App über <b>Google Firebase Cloud Messaging</b> (nur Gerätetoken und Text der Benachrichtigung). Der Hilfe-Chat rechts unten läuft über <b>HelpStack</b>: er bekommt, was du hineinschreibst, und, wenn du angemeldet bist, deinen Anzeigenamen, damit wir wissen, wem wir antworten. Wenn dir der Assistent im Chat hilft, sieht er auch, auf welcher Seite und in welcher Liga du bist und ob dein Team gültig ist. Deine E-Mail-Adresse geben wir nicht weiter. Wir teilen deine Daten mit niemandem sonst und verkaufen sie nicht.',
-    statistikaNaslov: 'Spielerstatistik',
+    statistikaNaslov: 'Daten über die Fußballer',
     statistika:
-      'Die Daten über die Fußballer (Einsätze, Tore, Karten) stammen aus den öffentlich zugänglichen Spielberichten der Verbände; die für die gewählte Liga stehen in der Fußzeile der Seite. Positionen und Torvorlagen, die in den Spielberichten nicht stehen, bestimmt die Community per Abstimmung, deshalb können sie falsch sein. Wenn etwas nicht stimmt, klick auf den Spieler und sag es uns.',
+      'Für die Fußballer der Ligen, die wir abdecken, zeigen wir Name, Klub, Rückennummer, Einsätze, Minuten, Tore und Karten. Quelle sind die öffentlich zugänglichen offiziellen Spielberichte des Verbands, der in der Fußzeile der Seite genannt ist. Positionen und Torvorlagen, die in den Spielberichten nicht stehen, bestimmt die Community per Abstimmung, deshalb können sie falsch sein. Daraus berechnen wir Punkte und Preis des Spielers im Spiel. Wenn etwas nicht stimmt, klick auf den Spieler und sag es uns.',
+    statistikaPodlaga:
+      'Zweck ist ein kostenloses Fantasy-Spiel von Fans für Fans. Rechtsgrundlage ist das berechtigte Interesse (Art. 6 Abs. 1 lit. f DSGVO): Fans ein Spiel mit den veröffentlichten Ergebnissen ihrer Liga zu ermöglichen. Wir zeigen die Daten, solange der Spieler in einer von uns abgedeckten Liga spielt. In österreichischen Ligen blenden wir, wie der ÖFB, den Namen 18 Monate nach dem letzten Einsatz aus.',
+    statistikaUgovor:
+      'Ein Spieler kann der Verarbeitung widersprechen oder die Löschung verlangen: schreib an <eposta>info@slff.eu</eposta> mit einem Link zur Seite des Spielers. Innerhalb von 14 Tagen ersetzen wir seinen Namen durch eine neutrale Kennung, in allen unseren Ligen dieses Landes, in denen wir ihn finden, auch bei späteren Importen. Die Statistik bleibt ohne Namen. Dasselbe tun wir auf Verlangen des Verbands.',
     grbi:
       'Die Klubwappen sind Eigentum der jeweiligen Klubs und werden nur zur Kennzeichnung der Mannschaft gezeigt. Ein Klub, der das nicht möchte, kann uns schreiben, und wir entfernen das Wappen.',
     fotografijeNaslov: 'Fotos',
