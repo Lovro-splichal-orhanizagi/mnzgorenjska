@@ -3831,6 +3831,16 @@ preveri(
     minuteEkipe(0) === 960 && minuteEkipe(1) === 990)
 }
 
+// --- anonimizacija (GDPR) ---------------------------------------------------------
+// Uvoz najde anonimiziranega igralca po zgoščenem imenu; vrednost je ista kot
+// v supabase/tests/varnost.sql (SQL anonimiziraj_igralca). Če se razideta,
+// uvoz po imenu ustvari dvojnika s pravim imenom.
+{
+  const { imeHash } = await import('./anonimizacija.mjs')
+  preveri('anonimizacija: uvoz zgosti ime enako kot baza',
+    imeHash(-913001, 'Test Šime') === '11e6590546e900163616a55cf870c88a6d5e685e6f4f3a054c90e582680eddca')
+}
+
 // --- vir oefb (Avstrija, oefb.at) ------------------------------------------------
 {
   const O = await import('./viri/oefb.mjs')

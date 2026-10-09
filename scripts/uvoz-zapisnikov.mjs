@@ -22,6 +22,7 @@ import { mapaKlubov } from './klubi.mjs'
 import { vseVrstice } from './strani.mjs'
 import { prenesiSPonovitvami } from './prenos.mjs'
 import { dodajStrelceSKlopi } from './zapisnik.mjs'
+import { imeHash } from './anonimizacija.mjs'
 
 const PREDPOMNILNIK = 'scripts/.predpomnilnik'
 
@@ -167,6 +168,15 @@ function razdeliIme(polno) {
   return { priimek: deli[0], ime: deli.slice(1).join(' ') }
 }
 
+// Ime, ki ga je skrila neaktivnost (18 mesecev brez nastopa), vrne letošnji
+// nastop. Ime, skrito na ugovor (`ugovor`), ostane skrito za vedno.
+async function vrniImeNeaktivnemu(p, polnoIme) {
+  if (!tekocaSezona || p.anonimiziran_razlog !== 'neaktiven') return {}
+  await db.from('anonimizirani_igralci').delete().eq('player_id', p.id)
+  const { priimek, ime } = razdeliIme(polnoIme)
+  return { full_name: polnoIme, last_name: priimek, first_name: ime, anonimiziran_at: null, anonimiziran_razlog: null }
+}
+
 /**
  * Vrne id igralca; po potrebi ga ustvari.
  *
@@ -217,7 +227,7 @@ async function igralecId(
 
     const { data: poReg } = await db
       .from('players')
-      .select('id, position, position_source, team_id, active, odsel_at, izstopil_at')
+      .select('id, position, position_source, team_id, active, odsel_at, izstopil_at, anonimiziran_razlog')
       .eq('competition_id', tekmovanje.id)
       .eq('reg_st', regSt)
       .maybeSingle()
@@ -225,7 +235,8 @@ async function igralecId(
     if (poReg) {
       // Prestop ali nova stevilka dresa: zapisnik je najzanesljivejsi dokaz,
       // zato oboje popravimo po njem.
-      const popravek = {}
+      // Ime iz zapisnika igralcu sicer nikoli ne povozimo (anonimizacija).
+      const popravek = await vrniImeNeaktivnemu(poReg, polnoIme)
       // Arhiv (lanska sezona) kluba ne prestavlja nazaj; prestop pove le letošnji zapisnik.
       if (poReg.team_id !== teamId && tekocaSezona) popravek.team_id = teamId
       // Uvoz razporeda deaktivira igralca, čigar klub (lanski) ni v ligi; ko ga
@@ -363,6 +374,23 @@ async function igralecId(
     } else if (drugje?.length > 1) {
       // Vec soimenjakov — ne ugibamo, raje nov zapis in opozorilo.
       console.log(`  soimenjaki: ${polnoIme} — ustvarjam novega igralca`)
+    }
+  }
+
+  // Anonimiziran igralec ima ime "#<id>" in ga po imenu ni več. Brez tega bi
+  // naslednji zapisnik ustvaril dvojnika s pravim imenom. Prepozna ga
+  // zgoščeno izvirno ime (le enolično zadetek, kot posvojitev zgoraj).
+  if (!obstoj && !dvoumno) {
+    const { data: anon } = await db
+      .from('anonimizirani_igralci')
+      .select('players(id, position, position_source, anonimiziran_razlog)')
+      .eq('competition_id', tekmovanje.id)
+      .eq('ime_hash', imeHash(tekmovanje.id, polnoIme))
+      .limit(2)
+    if (anon?.length === 1 && anon[0].players) {
+      obstoj = anon[0].players
+      const ime = await vrniImeNeaktivnemu(obstoj, polnoIme)
+      await db.from('players').update({ team_id: teamId, shirt_number: st, ...ime }).eq('id', obstoj.id)
     }
   }
 

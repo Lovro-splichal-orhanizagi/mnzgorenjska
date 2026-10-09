@@ -121,6 +121,7 @@ export default function Administracija() {
   const [cakaIgralec, setCakaIgralec] = useState<
     | { id: number; vrsta: 'pozicija'; pozicija: Pozicija }
     | { id: number; vrsta: 'klub'; klubId: number }
+    | { id: number; vrsta: 'anonimizacija' }
     | null
   >(null)
   const [shranjujemIgralca, setShranjujemIgralca] = useState(false)
@@ -488,14 +489,15 @@ export default function Administracija() {
   async function isciIgralca(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setCakaIgralec(null)
-    if (!iskanje.trim()) return setZadetki([])
-    const { data } = await supabase
+    const niz = iskanje.trim()
+    if (!niz) return setZadetki([])
+    let q = supabase
       .from('player_overview')
       .select('id, full_name, team_id, team_name, position, value, minutes, goals')
       .eq('competition_id', tekmovanjeId as number)
-      .ilike('full_name', `%${iskanje.trim()}%`)
-      .order('full_name')
-      .limit(15)
+    // Številka je id igralca (prošnja za anonimizacijo navede povezavo /player/<id>).
+    q = /^\d+$/.test(niz) ? q.eq('id', Number(niz)) : q.ilike('full_name', `%${niz}%`)
+    const { data } = await q.order('full_name').limit(15)
     setZadetki(data ?? [])
   }
 
@@ -516,6 +518,17 @@ export default function Administracija() {
       ),
     )
     setSporocilo(`Igralec prestavljen v klub ${novoIme}.`)
+  }
+
+  async function anonimiziraj(id: number) {
+    setNapaka(null)
+    setShranjujemIgralca(true)
+    const { error } = await supabase.rpc('admin_anonimiziraj_igralca', { p_player_id: id })
+    setShranjujemIgralca(false)
+    setCakaIgralec(null)
+    if (error) return setNapaka(error.message)
+    setZadetki(zadetki.map((z) => (z.id === id ? { ...z, full_name: `#${id}` } : z)))
+    setSporocilo(`Igralec #${id} anonimiziran.`)
   }
 
   async function nastaviPozicijo(id: number, pozicija: Pozicija) {
@@ -1175,7 +1188,8 @@ SUPABASE_SERVICE_ROLE_KEY=... node scripts/ovrednoti-igralce.mjs --tekmovanje ${
         <h2 className="font-bold">Igralec — pozicija in NZS</h2>
         <p className="text-sm text-slate-400">
           Administratorjeva pozicija povozi glasovanje. Podatke z NZS vnesi
-          ročno — iskalnik NZS robotom ni dostopen.
+          ročno — iskalnik NZS robotom ni dostopen. Ugovor igralca ali zveze
+          (GDPR): poišči ga po imenu ali id-ju in ga anonimiziraj.
         </p>
         <form onSubmit={isciIgralca} className="flex gap-2">
           <input
@@ -1237,6 +1251,15 @@ SUPABASE_SERVICE_ROLE_KEY=... node scripts/ovrednoti-igralce.mjs --tekmovanje ${
                     </option>
                   ))}
                 </select>
+                {!z.full_name?.startsWith('#') && (
+                  <button
+                    onClick={() => setCakaIgralec({ id: z.id, vrsta: 'anonimizacija' })}
+                    disabled={shranjujemIgralca}
+                    className="ml-auto text-red-300 underline disabled:opacity-50"
+                  >
+                    Anonimiziraj (ugovor)
+                  </button>
+                )}
               </div>
               {cakaIgralec?.id === z.id &&
                 (() => {
@@ -1248,7 +1271,9 @@ SUPABASE_SERVICE_ROLE_KEY=... node scripts/ovrednoti-igralce.mjs --tekmovanje ${
                         potrdi={() =>
                           c.vrsta === 'pozicija'
                             ? nastaviPozicijo(z.id, c.pozicija)
-                            : premakniKlub(z.id, c.klubId)
+                            : c.vrsta === 'klub'
+                              ? premakniKlub(z.id, c.klubId)
+                              : anonimiziraj(z.id)
                         }
                         preklici={() => setCakaIgralec(null)}
                         zaseden={shranjujemIgralca}
@@ -1259,6 +1284,12 @@ SUPABASE_SERVICE_ROLE_KEY=... node scripts/ovrednoti-igralce.mjs --tekmovanje ${
                             Igralcu {prikazniIme(z.full_name)} nastavim pozicijo{' '}
                             <strong>{IME_POZICIJE[c.pozicija]}</strong>? Povozi
                             glasovanje in spremeni točke za gole ter kvote v kadrih.
+                          </>
+                        ) : c.vrsta === 'anonimizacija' ? (
+                          <>
+                            Ime igralca {prikazniIme(z.full_name)} (id {z.id}) zamenjam z{' '}
+                            <strong>#{z.id}</strong>? Za vedno — tudi uvoz ga ne vrne.
+                            Statistika in točke ostanejo.
                           </>
                         ) : (
                           <>

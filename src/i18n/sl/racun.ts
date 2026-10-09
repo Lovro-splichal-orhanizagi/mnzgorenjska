@@ -90,7 +90,7 @@ export const racun = {
   // Zasebnost in pogoji. <b> je krepko, ostale oznake so povezave.
   pravno: {
     naslov: 'Zasebnost in pogoji',
-    zadnjaSprememba: 'Zadnja sprememba: 2. oktober 2026',
+    zadnjaSprememba: 'Zadnja sprememba: 9. oktober 2026',
     kajJeNaslov: 'Kaj je SLFF',
     kajJe:
       'SLFF (Sunday League Fantasy Football) je navijaška fantasy liga za slovenske medobčinske nogometne lige. Vodimo jo ljubiteljsko in ni povezana z medobčinskimi nogometnimi zvezami, NZS ali s klubi. Igra je brezplačna in brez denarnih vložkov ali nagrad.',
@@ -108,9 +108,13 @@ export const racun = {
     dostopNaslov: 'Komu so podatki dostopni',
     dostop:
       'Podatki so na našem strežniku pri ponudniku <b>Hetzner</b> (Nemčija, EU), promet do njega gre prek <b>Cloudflare</b> (zaščita in dostava strani). Potrditvena in ponastavitvena pošta gre prek našega poštnega strežnika (prav tako Hetzner), obvestila v mobilni aplikaciji prek <b>Google Firebase Cloud Messaging</b> (le žeton naprave in besedilo obvestila). Klepet za pomoč v spodnjem desnem kotu teče prek <b>HelpStack</b>: tja gre to, kar vanj napišeš, in — če si prijavljen — tvoje prikazno ime, da vemo, komu odgovarjamo. Ko ti pomočnik v klepetu pomaga, lahko pogleda tudi, na kateri strani in v kateri ligi si ter ali je tvoja ekipa veljavna. E-pošte mu ne posredujemo. Nikomur drugemu podatkov ne posredujemo in jih ne prodajamo.',
-    statistikaNaslov: 'Statistika igralcev',
+    statistikaNaslov: 'Podatki o nogometaših',
     statistika:
-      'Podatki o nogometaših (nastopi, goli, kartoni) so povzeti po javno objavljenih zapisnikih medobčinskih nogometnih zvez; katere so za izbrano ligo, piše v nogi strani. Pozicije in asistence, ki jih zapisnik ne vsebuje, določi skupnost z glasovanjem — zato so lahko napačne. Če je kaj narobe, klikni igralca in nam sporoči.',
+      'Za nogometaše lig, ki jih pokrivamo, prikazujemo ime, klub, številko dresa, nastope, minute, gole in kartone. Vir so javno objavljeni uradni zapisniki tekem zveze, ki je navedena v nogi strani. Pozicije in asistence, ki jih zapisnik ne vsebuje, določi skupnost z glasovanjem, zato so lahko napačne. Iz tega izračunamo točke in ceno igralca v igri. Če je kaj narobe, klikni igralca in nam sporoči.',
+    statistikaPodlaga:
+      'Namen je brezplačna navijaška fantasy igra. Pravna podlaga je zakoniti interes (člen 6(1)(f) GDPR): navijačem omogočiti igro z javno objavljenimi rezultati njihove lige. Podatke prikazujemo, dokler igralec nastopa v ligi, ki jo pokrivamo; 18 mesecev po zadnjem nastopu njegovo ime skrijemo.',
+    statistikaUgovor:
+      'Igralec lahko obdelavi ugovarja ali zahteva izbris: piši na <eposta>info@slff.eu</eposta> in dodaj povezavo na stran igralca. V 14 dneh njegovo ime povsod zamenjamo z nevtralno oznako, statistika ostane brez imena. Enako storimo na zahtevo zveze.',
     grbi:
       'Grbi klubov so last posameznih klubov in so prikazani zgolj za prepoznavo ekipe. Klub, ki tega ne želi, naj nam piše in grb bomo odstranili.',
     fotografijeNaslov: 'Fotografije',

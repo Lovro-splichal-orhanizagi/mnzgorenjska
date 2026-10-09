@@ -90,7 +90,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   // Súkromie a podmienky. <b> je tučné písmo, ostatné značky sú odkazy.
   pravno: {
     naslov: 'Súkromie a podmienky',
-    zadnjaSprememba: 'Posledná zmena: 2. októbra 2026',
+    zadnjaSprememba: 'Posledná zmena: 9. októbra 2026',
     kajJeNaslov: 'Čo je SLFF',
     kajJe:
       'SLFF (Sunday League Fantasy Football) je fanúšikovská fantasy liga pre amatérske futbalové súťaže. Prevádzkujeme ju amatérsky a nie je prepojená so Slovenským futbalovým zväzom (SFZ), regionálnymi ani oblastnými futbalovými zväzmi, ani s klubmi. Hra je bezplatná, bez peňažných vkladov a bez výhier.',
@@ -108,9 +108,13 @@ export const racun: NonNullable<Prevod['racun']> = {
     dostopNaslov: 'Kto má k údajom prístup',
     dostop:
       'Údaje sú uložené na našom serveri u poskytovateľa <b>Hetzner</b> (Nemecko, EÚ), prevádzka k nemu ide cez <b>Cloudflare</b> (ochrana a doručovanie stránky). Potvrdzovacie e-maily a e-maily na obnovenie hesla sa odosielajú z nášho poštového servera (tiež Hetzner), upozornenia v mobilnej aplikácii cez <b>Google Firebase Cloud Messaging</b> (iba token zariadenia a text upozornenia). Chat podpory v pravom dolnom rohu beží cez <b>HelpStack</b>: odovzdáva sa tam to, čo doň napíšeš, a — ak si prihlásený — tvoje zobrazované meno, aby sme vedeli, komu odpovedáme. Keď ti asistent v chate pomáha, môže si pozrieť aj to, na ktorej stránke a v ktorej lige si a či je tvoj tím platný. Tvoj e-mail mu neposkytujeme. Nikomu inému údaje neposkytujeme a nepredávame ich.',
-    statistikaNaslov: 'Štatistiky hráčov',
+    statistikaNaslov: 'Údaje o futbalistoch',
     statistika:
-      'Údaje o futbalistoch (zostavy, pozície, nástupy, góly, karty) sú prevzaté z verejne zverejnených zápisov o stretnutí na futbalnet.sk; zdroj pre vybranú ligu je uvedený v päte stránky. Asistencie, ktoré zápis o stretnutí neobsahuje, určuje komunita hlasovaním — preto môžu byť nesprávne. Ak je niečo zle, klikni na hráča a daj nám vedieť.',
+      'O futbalistoch líg, ktoré pokrývame, zobrazujeme meno, klub, číslo dresu, pozíciu, nástupy, minúty, góly a karty. Zdrojom sú verejne zverejnené oficiálne zápisy o stretnutí zväzu uvedeného v päte stránky. Asistencie, ktoré zápis neobsahuje, určuje komunita hlasovaním, preto môžu byť nesprávne. Z toho vypočítame body a cenu hráča v hre. Ak je niečo zle, klikni na hráča a daj nám vedieť.',
+    statistikaPodlaga:
+      'Účelom je bezplatná fantasy hra pre fanúšikov. Právnym základom je oprávnený záujem (čl. 6 ods. 1 písm. f GDPR): umožniť fanúšikom hru so zverejnenými výsledkami ich ligy. Údaje zobrazujeme, kým hráč nastupuje v lige, ktorú pokrývame; 18 mesiacov po jeho poslednom nástupe jeho meno skryjeme.',
+    statistikaUgovor:
+      'Hráč môže proti spracúvaniu namietať alebo žiadať výmaz: napíš na <eposta>info@slff.eu</eposta> a pridaj odkaz na stránku hráča. Do 14 dní jeho meno všade nahradíme neutrálnym označením, štatistiky zostanú bez mena. To isté urobíme na žiadosť zväzu.',
     grbi:
       'Erby klubov sú vlastníctvom jednotlivých klubov a zobrazujú sa výlučne na identifikáciu tímu. Klub, ktorý si to neželá, nám môže napísať a erb odstránime.',
     fotografijeNaslov: 'Fotografie',

@@ -5,6 +5,11 @@ import { t, tx } from '../i18n'
 import type { ReactNode } from 'react'
 
 const krepko = { b: (v: ReactNode) => <strong>{v}</strong> }
+const eposta = (v: ReactNode) => (
+  <a href="mailto:info@slff.eu" className="text-gnl-300 underline">
+    {v}
+  </a>
+)
 
 export default function Pravno() {
   useNaslov(t('racun.pravno.naslov'))
@@ -43,6 +48,8 @@ export default function Pravno() {
       <section className="space-y-3">
         <h2 className="text-lg font-bold">{t('racun.pravno.statistikaNaslov')}</h2>
         <p className="text-slate-300">{t('racun.pravno.statistika')}</p>
+        <p className="text-slate-300">{t('racun.pravno.statistikaPodlaga')}</p>
+        <p className="text-slate-300">{tx('racun.pravno.statistikaUgovor', {}, { eposta })}</p>
         <p className="text-slate-300">{t('racun.pravno.grbi')}</p>
       </section>
 
@@ -69,11 +76,7 @@ export default function Pravno() {
         <p className="text-slate-300">
           {tx('racun.pravno.pravice', {}, {
             ...krepko,
-            eposta: (v) => (
-              <a href="mailto:info@slff.eu" className="text-gnl-300 underline">
-                {v}
-              </a>
-            ),
+            eposta,
           })}
         </p>
       </section>
