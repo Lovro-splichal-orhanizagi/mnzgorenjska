@@ -21,6 +21,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
   },
   noga: {
     zasebnost: 'Soukromí a podmínky',
+    facebook: 'Sleduj nás na Facebooku',
     vir: 'Data: oficiální zápisy o utkání <vir>{ime}</vir>',
     /** Ime zveze sredi stavka, ko je ne poznamo. */
     zvezeSplosno: 'svazu',

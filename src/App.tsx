@@ -9,6 +9,7 @@ import OpozoriloEkipe from './components/OpozoriloEkipe'
 import NapakaOprijem from './components/NapakaOprijem'
 import Podpora from './components/Podpora'
 import Pivo from './components/Pivo'
+import Facebook from './components/Facebook'
 import VstopDrzave from './components/VstopDrzave'
 import IzbiraDrzave from './components/IzbiraDrzave'
 import IzbiraJezika from './components/IzbiraJezika'
@@ -149,11 +150,10 @@ export default function App() {
           <Podpora />
           <footer className="border-t border-white/10 py-6 text-center text-xs text-slate-400">
             {/* Pivo je v nogi vsake strani; v aplikaciji ga ni (glej Pivo.tsx). */}
-            {!jeNativno() && (
-              <div className="mb-4 flex justify-center">
-                <Pivo src="noga" />
-              </div>
-            )}
+            <div className="mb-4 flex flex-wrap justify-center gap-2">
+              {!jeNativno() && <Pivo src="noga" />}
+              <Facebook />
+            </div>
             <Link to="/legal" className="underline hover:text-slate-200">
               {t('aplikacija.noga.zasebnost')}
             </Link>

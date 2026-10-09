@@ -25,6 +25,7 @@ export const aplikacija = {
   },
   noga: {
     zasebnost: 'Zasebnost in pogoji',
+    facebook: 'Sledi nam na Facebooku',
     vir: 'Podatki: uradni zapisniki <vir>{ime}</vir>',
     /** Ime zveze sredi stavka, kadar je ne poznamo. */
     zvezeSplosno: 'zveze',
