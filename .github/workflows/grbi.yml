@@ -11,23 +11,27 @@ name: Grbi klubov (rocni seznam)
 # `vir = hns`: hrvaski klubi z glave strani tekme na HNS Semaforju
 # (scripts/grbi-hns.mjs). `tekmovanje` omeji na eno ligo (npr. hr-mz-1mnl),
 # `prepisi` zamenja tudi obstojece grbe teh klubov.
+#
+# `vir = oefb`: avstrijski klubi z oefb.at (scripts/grbi-oefb.mjs), id grba iz
+# razporeda lige. /oefb2/images/ robots.txt prepoveduje — beremo ga le z
+# izrecnim dovoljenjem OFB (9. 10. 2026). Brez `tekmovanje` vse aktivne at- lige.
 
 on:
   workflow_dispatch:
     inputs:
       vir:
-        description: 'rocni = seznam v prenesi-grbe.mjs, sportnet = slovaski klubi s futbalnet.sk, hns = hrvaski klubi s semafor.hns.family'
+        description: 'rocni = seznam v prenesi-grbe.mjs, sportnet = slovaski klubi s futbalnet.sk, hns = hrvaski klubi s semafor.hns.family, oefb = avstrijski klubi z oefb.at'
         required: false
         default: rocni
         type: choice
-        options: [rocni, sportnet, hns]
+        options: [rocni, sportnet, hns, oefb]
       tekmovanje:
-        description: 'Samo za hns: ena liga (slug, npr. hr-mz-1mnl); prazno = vse hrvaske lige'
+        description: 'Samo za hns/oefb: ena liga (slug, npr. hr-mz-1mnl, at-k-kaerntner-liga); prazno = vse hrvaske / vse aktivne avstrijske lige'
         required: false
         default: ''
         type: string
       prepisi:
-        description: 'Samo za hns: prepisi tudi obstojece grbe'
+        description: 'Samo za hns/oefb: prepisi tudi obstojece grbe'
         required: false
         default: false
         type: boolean
@@ -75,11 +79,12 @@ jobs:
           case "$VIR" in
             sportnet) skripta=grbi-sportnet ;;
             hns) skripta=grbi-hns ;;
+            oefb) skripta=grbi-oefb ;;
             *) skripta=prenesi-grbe ;;
           esac
           args=()
           if [ "$PISI" = "true" ]; then args+=(--pisi); fi
-          if [ "$VIR" = "hns" ]; then
+          if [ "$VIR" = "hns" ] || [ "$VIR" = "oefb" ]; then
             if [ -n "$TEKMOVANJE" ]; then args+=(--tekmovanje "$TEKMOVANJE"); fi
             if [ "$PREPISI" = "true" ]; then args+=(--prepisi); fi
           fi

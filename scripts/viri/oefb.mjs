@@ -32,7 +32,7 @@
 // tekmovanja (`saisonen`).
 //
 // robots.txt splošnim robotom branje dovoli (prepove /blueContent/, slike,
-// /Suche). Beremo odkrito in počasi (1,5 s med stranmi), popolnih zapisnikov
+// /Suche). Slike (grbe) beremo le z dovoljenjem ÖFB, glej grbi-oefb.mjs. Beremo odkrito in počasi (1,5 s med stranmi), popolnih zapisnikov
 // ne beremo znova. Če se kdaj pojavi izziv ali CAPTCHA, se ustavi — ne obhajaj.
 import { razpakiraj } from '../klubi.mjs'
 import { minuteIzPreklopov } from './facr.mjs'
@@ -49,6 +49,10 @@ export function razbijKodo(koda) {
 
 export const naslovRazporeda = (koda) => `${OSNOVNI}/bewerbe/Bewerb/Spielplan/${razbijKodo(koda).id}/`
 export const naslovTekme = (id) => `${OSNOVNI}/bewerbe/Spiel/Spielbericht/${id}/`
+// Grb (logo) kluba: id slike iz razporeda; strežnik jo pomanjša na želeno
+// velikost. Pot /oefb2/images/ robots.txt splošnim robotom prepove — beremo jo
+// le z izrecnim dovoljenjem ÖFB (scripts/grbi-oefb.mjs).
+export const naslovGrba = (id, px = 256) => `${OSNOVNI}/oefb2/images/1278650591628556536_${id}-1,0-${px}x${px}-${px}x${px}.png`
 const imeRazporeda = (koda) => `spielplan-${razbijKodo(koda).id}.html`
 const imeTekme = (id) => `spiel-${id}.html`
 
@@ -157,6 +161,8 @@ export function vrsticeRazporeda(html) {
       ura,
       domaci: imeEkipe(t.heimMannschaft, t.heimMannschaftUrl),
       gostje: imeEkipe(t.gastMannschaft, t.gastMannschaftUrl),
+      grbDomaci: t.heimMannschaftLogo || null,
+      grbGostje: t.gastMannschaftLogo || null,
       izid: izid(t.ergebnis)?.rezultat ?? null,
       status: t.status ?? null,
       // Kontumacija: namesto povezave na zapisnik "strafverifiziert" (#).
