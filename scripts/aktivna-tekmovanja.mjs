@@ -8,6 +8,8 @@
 // Uporaba:
 //   node scripts/aktivna-tekmovanja.mjs           # aktivna tekmovanja
 //   node scripts/aktivna-tekmovanja.mjs --vsa     # tudi neaktivna (za pripravo lige)
+//   node scripts/aktivna-tekmovanja.mjs --drzava HR   # le lige te države (nočni uvoz
+//                                                     # teče po državah vzporedno); brez lig konča z 0
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'node:fs'
 
@@ -43,12 +45,15 @@ const db = createClient(BASE, KLJUC, { auth: { persistSession: false } })
 // Vrstni red naj bo določen, da je dnevnik uvoza med zagoni primerljiv.
 // Namenoma se ne naslanjamo na `federation_id`: skripta mora delovati tudi
 // proti bazi, kjer migracija za zveze še ni stekla.
+const iDrzava = process.argv.indexOf('--drzava')
+const drzava = iDrzava > -1 ? process.argv[iDrzava + 1]?.toUpperCase() : null
 let q = db
   .from('competitions')
-  .select('slug, active, sort_order')
+  .select(drzava ? 'slug, active, sort_order, countries!inner(code)' : 'slug, active, sort_order')
   .order('sort_order')
   .order('slug')
 if (!process.argv.includes('--vsa')) q = q.eq('active', true)
+if (drzava) q = q.eq('countries.code', drzava)
 
 const { data, error } = await q
 if (error) {
@@ -56,6 +61,8 @@ if (error) {
   process.exit(1)
 }
 if (!data?.length) {
+  // Država brez vklopljenih lig (Madžarska pred vklopom) ni napaka.
+  if (drzava) process.exit(0)
   console.error('Ni nobenega tekmovanja za uvoz.')
   process.exit(1)
 }

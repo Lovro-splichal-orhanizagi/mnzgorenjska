@@ -13,6 +13,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'node:fs'
 import { vseVrstice } from './strani.mjs'
+import { sezonaIz } from './razpored.mjs'
 import { VELIKOST_EKIPE, PRORACUN } from '../src/lib/pravila.ts'
 import { najcenejsiKader } from '../src/lib/pripravljenost.ts'
 
@@ -171,14 +172,18 @@ if (napakaZamud) {
 // 32). Uvoz tega ne dela več, ostane pa namig: vratar s petimi goli je skoraj
 // gotovo pomota. Pravega vratarja, ki strelja enajstmetrovke, admin potrdi
 // (position_source = admin) in javljanje utihne.
+//
+// Šteje le gole TEKOČE sezone. Mladinec, ki je lani igral v napadu, letos pa
+// stoji v vratih (Tomovič, Kohár, Slovaška U19), bi sicer alarmiral vso
+// sezono, potrditev "admin" pa bi ga zaklenila v vrata tudi, ko se vrne v polje.
 const PRAG_GOLOV_VRATARJA = 5
 const { data: strelci, error: napakaStrelcev } = await db
-  .from('player_overview')
+  .from('player_season_standings')
   .select('id, full_name, goals, competition_id')
   .in('competition_id', (lige ?? []).map((l) => l.id))
+  .eq('season', sezonaIz(new Date().toISOString().slice(0, 10)))
   .eq('position', 'GK')
   .neq('position_source', 'admin')
-  .eq('active', true)
   .gte('goals', PRAG_GOLOV_VRATARJA)
   .order('goals', { ascending: false })
 if (napakaStrelcev)
