@@ -10,7 +10,8 @@
 //     eni ligi, tekme in krogi tudi. Uvoza dveh držav se ne dotakneta istih
 //     vrstic, zato tečeta hkrati.
 //   - ročni uvoz NEVKLOPLJENE lige se nočnega ne dotakne (nočni bere le
-//     vklopljene) in obratno; čaka le na ročne uvoze iste države.
+//     vklopljene): ne čakata drug na drugega. Ročni uvozi iste države
+//     čakajo drug na drugega.
 //   - zdruzi-klube in tedensko-cene segata čez vse lige: nanju čaka vsak.
 //
 // Uporaba (v delovnem toku, z GH_TOKEN in ključem baze):
@@ -61,9 +62,13 @@ function seKrize(tok, naslov) {
   if (tok === 'zdruzi-klube.yml' || tok === 'tedensko-cene.yml') return true
   if (tok === 'uvoz-lige.yml') {
     const slug = /^Uvoz lige (\S+)$/.exec(naslov ?? '')?.[1]
-    const drzava = slug ? ligaPoSlugu.get(slug)?.drzava : null
-    if (!drzava || !mojaDrzava) return true
-    return drzava === mojaDrzava
+    const liga = slug ? ligaPoSlugu.get(slug) : null
+    if (!liga || !mojaDrzava) return true
+    // Nočni uvoz bere le vklopljene lige, zato ga ročni uvoz nevklopljene ne
+    // zadeva (madžarske lige pred vklopom: sicer bi vsak urni zagon čakal
+    // na tekoči ročni uvoz).
+    if (!mojaLiga && !liga.aktivna) return false
+    return liga.drzava === mojaDrzava
   }
   // Nočni uvoz piše le v vklopljene lige. Ročni uvoz nevklopljene ga ne moti;
   // med seboj pa nočne zagone vrsti že skupina `uvoz-zapisnikov`.
