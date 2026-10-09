@@ -512,8 +512,12 @@ prepovedujejo** (`Disallow: /bewerbe/Spiel/`, `/bewerbe/Spieler/`) — beremo
 avtorsko varovana; tveganje je pravica baze (UrhG § 76d, sistematično
 izvlečenje) — najverjetneje poziv k prenehanju, ne odškodnina. ÖFB sam objavo
 postav utemelji z javnim interesom (Information für Spieler, 26. 4. 2026).
-**Avstrijske lige ostanejo neaktivne, dokler ÖFB (office@oefb.at, v vednost
-KFV in StFV) ne odgovori**. Pogoji GDPR, ki smo jih obljubili, so urejeni
+**Avstrija je v živo pred odgovorom ÖFB** (odločitev lastnika, 9. 10. 2026;
+prošnja na office@oefb.at, v vednost KFV in StFV). **Če ÖFB, KFV ali StFV
+prepove ali nas blokira: vse `at-` lige izklopi** (`update competitions set
+active = false where slug like 'at-%'`) in nočni uvoz jih ne bere več. Vklop
+lige: migracija `…_vklop_at_…`, prvi fantasy krog = prvi krog za zadnjim
+krogom z zapisniki, ki ima rok še pred sabo. Pogoji GDPR, ki smo jih obljubili, so urejeni
 (glej `players.anonimiziran_at`): obvestilo po čl. 14 z ugovorom igralca na
 `/legal`, anonimizacija na zahtevo igralca ali zveze (vse vrstice osebe v državi),
 v avstrijskih ligah 18 mesecev po zadnjem nastopu ime skrijemo. **Kako
