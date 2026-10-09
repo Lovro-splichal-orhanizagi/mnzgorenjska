@@ -235,6 +235,16 @@ async function klubId(ime) {
     })
     .select('id')
     .single()
+  if (error?.code === '23505') {
+    // Vzporeden uvoz (liga druge dežele) je isti klub vpisal vmes: vzemi njegovega.
+    let vmesQ = db.from('teams').select('id').eq('name', polnoIme)
+    if (tekmovanje.country_id != null) vmesQ = vmesQ.eq('country_id', tekmovanje.country_id)
+    const { data: vmes } = await vmesQ.order('id').limit(1)
+    if (vmes?.length) {
+      klubi.set(kljuc, vmes[0].id)
+      return vmes[0].id
+    }
+  }
   if (error) throw new Error(`klub ${polnoIme}: ${error.message}`)
   console.log(`  nov klub: ${polnoIme}`)
   klubi.set(kljuc, data.id)

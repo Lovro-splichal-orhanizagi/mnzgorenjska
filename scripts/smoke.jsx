@@ -4786,7 +4786,22 @@ preveri(
   preveri('vrsta: vse vklopljene ali preskočene = konec', o.koncano && o.zazeni === null)
   o = odloci({ vrsta, lige, od, zagoni: [z('at-x', null, '2026-10-10T10:05:00Z', 'queued')] })
   preveri('vrsta: čaka tudi na uvoz at- lige zunaj seznama', o.tece && o.zazeni === null)
-}
+
+  {
+    const vz = ['at-k1', 'at-k2', 'at-s1', 'at-t1', 'at-bl', 'at-b1'].map((slug) => ({ slug, arhiv: '1' }))
+    const nic = new Map(vz.map((l) => [l.slug, false]))
+    const zveze = new Map([['at-k1', 'kfv'], ['at-k2', 'kfv'], ['at-s1', 'stfv'], ['at-t1', 'tfv'], ['at-bl', 'oefb'], ['at-b1', 'bfv']])
+    const imena = (o) => o.zazeniVse.map((l) => l.slug).join()
+    let v = odloci({ vrsta: vz, lige: nic, od, zveze, zagoni: [] })
+    preveri('vrsta: vzporedno 3 iz različnih dežel', imena(v) === 'at-k1,at-s1,at-t1', imena(v))
+    v = odloci({ vrsta: vz, lige: nic, od, zveze, zagoni: [z('at-k1', null, '2026-10-10T10:05:00Z', 'in_progress')] })
+    preveri('vrsta: med uvozom dežele še dva drugih dežel', imena(v) === 'at-s1,at-t1', imena(v))
+    const dz = [{ slug: 'at-bl', arhiv: '1' }, ...vz.filter((l) => l.slug !== 'at-bl')]
+    v = odloci({ vrsta: dz, lige: nic, od, zveze, zagoni: [] })
+    preveri('vrsta: državna liga teče sama', imena(v) === 'at-bl', imena(v))
+    v = odloci({ vrsta: dz, lige: nic, od, zveze, zagoni: [z('at-s1', null, '2026-10-10T10:05:00Z', 'in_progress')] })
+    preveri('vrsta: državna na vrsti zadrži ostale', imena(v) === '', imena(v))
+  }}
 
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)
 process.exit(napak === 0 ? 0 : 1)

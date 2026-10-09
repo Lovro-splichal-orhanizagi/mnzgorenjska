@@ -602,9 +602,15 @@ zapisnikov. Seznam za uvozno verigo je `scripts/avstrija-lige.txt` (`<slug>
 **Vrsta uvozov** je delovni tok *Uvoz Avstrije (vrsta)* (`uvoz-avstrije.yml`
 → `scripts/vrsta-avstrije.mjs`, vsakih 15 minut, seznam
 `scripts/avstrija-vrsta.txt`). Tik je brez spomina: stanje razbere iz zagonov
-*Uvoz lige* (naslov `Uvoz lige <slug>`, štejejo tudi ročni) in baze. Ko noben
-uvoz `at-` lige ne teče, zažene prvo nevklopljeno ligo brez zagona ali z enim
-padcem (z `cene`); po dveh padcih jo preskoči in javi na Discord. Ligo z novim
+*Uvoz lige* (naslov `Uvoz lige <slug>`, štejejo tudi ročni) in baze. Hkrati
+tečejo največ trije uvozi, **iz vsake deželne zveze en**; državna (`oefb`:
+Bundesliga, 2. Liga, Regionalliga) meša dežele in teče sama, in če je na vrsti,
+se za njo ne zažene nič. Deželne zveze nimajo skupnih klubov, zato
+`cakaj-na-uvoze.mjs` v Avstriji (`LOCENE_ZVEZE`) ročna uvoza nevklopljenih lig
+dveh dežel pusti teči hkrati; hkraten vpis istega novega kluba ujame `klubId`
+(23505 → obstoječi klub). Zažene nevklopljene lige brez zagona ali z enim
+padcem (z `cene`); po dveh padcih ligo preskoči in javi na Discord. Ligo z
+uspelim uvozom poskusi vklopiti vsak tik. Ligo z novim
 uspelim uvozom vklopi servisna `vklopi_ligo_sredi_sezone(slug)` (gol brez
 nastopa zavrne, prvi krog kot zgoraj, varovalka vklopa; vrne `vklopljena`,
 `razlog`, `prvi_krog`, `razlika` izidi − goli) in zažene *Hisne ekipe* (AT)
