@@ -495,7 +495,7 @@ const vir = {
           kontumacija = jeKontumacija(stran, t.izid) && (!brezPostav(stran, t.izid) || starostDni(t.datum) > 7)
         }
         tekme.push({
-          domaci: t.domaci, gostje: t.gostje, datum: t.datum, ura: t.ura, kontumacija,
+          domaci: t.domaci, gostje: t.gostje, datum: t.datum, ura: t.ura, kontumacija, odigrana: !!t.izid,
           ...(kontumacija ? { izid: t.izid } : {}),
         })
       }

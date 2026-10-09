@@ -19,7 +19,7 @@ import { tekmovanje as najdiTekmovanje, sifraLige } from './tekmovanje.mjs'
 import { viraZa } from './viri/index.mjs'
 import { mapaKlubov } from './klubi.mjs'
 import { sifra } from './viri/zapisniki.mjs'
-import { razcleniRazpored, sezonaIz } from './razpored.mjs'
+import { razcleniRazpored, sezonaIz, oznakaBrezIzida } from './razpored.mjs'
 import { rokKroga } from './razporedi.mjs'
 import { vseVrstice } from './strani.mjs'
 import { prenesiSPonovitvami } from './prenos.mjs'
@@ -244,6 +244,7 @@ async function klubId(ime) {
 let novihKrogov = 0
 let novihTekem = 0
 let prestavljenih = 0
+let brezIzidaOznacenih = 0
 const letosnjiKlubi = new Set()
 // Odigrane tekme po klubih in koliko od njih je "odstopilo moštvo" (Sportnet
 // `ODSTUPENE_DRUZSTVO`). Klub, ki ima VSE odigrane tekme take, je iz lige
@@ -280,7 +281,7 @@ if (idKrogov.length) {
   const vrstice = await vseVrstice((od, do_) =>
     db
       .from('matches')
-      .select('id, round_id, home_team_id, away_team_id, played_on, imported_at, kontumacija')
+      .select('id, round_id, home_team_id, away_team_id, played_on, imported_at, kontumacija, vir_brez_izida')
       .in('round_id', idKrogov)
       .order('id')
       .range(od, do_),
@@ -291,6 +292,12 @@ if (idKrogov.length) {
   }
 }
 const istiCas = (a, b) => (a == null || b == null ? a == b : new Date(a).getTime() === new Date(b).getTime())
+
+// Ali vir za minulo tekmo pravi, da je brez izida — zveza jo je prestavila,
+// ne da bi ji dala nov datum (glej `oznakaBrezIzida` v razpored.mjs).
+const { brezIzida: brezIzidaPriViru, pokvarjen: brezIzidaPokvarjen } = oznakaBrezIzida(veljavni, danes)
+if (brezIzidaPokvarjen)
+  console.log('::warning::Razpored nima izida pri nobeni minuli tekmi — tekem brez izida ne označim.')
 
 for (const k of veljavni) {
   const datumKroga = k.tekme.map((t) => t.datum).filter(Boolean).sort()[0]
@@ -376,15 +383,26 @@ for (const k of veljavni) {
         if (error) console.log(`  tekma ${t.domaci} : ${t.gostje}: ${error.message}`)
         else console.log(`  kontumacija: ${t.domaci} : ${t.gostje}`)
       }
+      // Oznaka "vir brez izida" velja le za neuvoženo tekmo; pišemo jo samo ob
+      // spremembi, ker vsak zapis v `matches` preračuna točke kroga.
+      const brezIzida = obstojeca.imported_at ? null : brezIzidaPriViru(t)
+      const novaOznaka = brezIzida !== null && brezIzida !== !!obstojeca.vir_brez_izida
       if (!obstojeca.imported_at && t.datum && obstojeca.played_on !== t.datum) {
         const { error } = await db
           .from('matches')
-          .update({ played_on: t.datum })
+          .update({ played_on: t.datum, ...(novaOznaka ? { vir_brez_izida: brezIzida } : {}) })
           .eq('id', obstojeca.id)
         if (error) console.log(`  tekma ${t.domaci} : ${t.gostje}: ${error.message}`)
         else {
           console.log(`  prestavljena: ${t.domaci} : ${t.gostje}  ${obstojeca.played_on} -> ${t.datum}`)
           prestavljenih++
+        }
+      } else if (novaOznaka) {
+        const { error } = await db.from('matches').update({ vir_brez_izida: brezIzida }).eq('id', obstojeca.id)
+        if (error) console.log(`  tekma ${t.domaci} : ${t.gostje}: ${error.message}`)
+        else if (brezIzida) {
+          console.log(`  brez izida pri viru (prestavljena brez datuma?): ${t.domaci} : ${t.gostje}  ${t.datum}`)
+          brezIzidaOznacenih++
         }
       }
       continue
@@ -399,9 +417,10 @@ for (const k of veljavni) {
         played_on: t.datum,
         source_url: url,
         kontumacija: !!t.kontumacija,
+        vir_brez_izida: brezIzidaPriViru(t) === true,
         ...(t.kontumacija && t.izid ? { home_goals: t.izid.domaci, away_goals: t.izid.gostje } : {}),
       })
-      .select('id, round_id, home_team_id, away_team_id, played_on, imported_at, kontumacija')
+      .select('id, round_id, home_team_id, away_team_id, played_on, imported_at, kontumacija, vir_brez_izida')
       .single()
     if (error) console.log(`  tekma ${t.domaci} : ${t.gostje}: ${error.message}`)
     else {
@@ -412,7 +431,10 @@ for (const k of veljavni) {
   }
 }
 
-console.log(`\nNovih krogov: ${novihKrogov}, novih tekem: ${novihTekem}, prestavljenih: ${prestavljenih}`)
+console.log(
+  `\nNovih krogov: ${novihKrogov}, novih tekem: ${novihTekem}, prestavljenih: ${prestavljenih}` +
+    (brezIzidaOznacenih ? `, na novo brez izida pri viru: ${brezIzidaOznacenih}` : ''),
+)
 
 // --- kdo letos sploh igra ---------------------------------------------------
 // Razpored pove, kateri klubi so v ligi. Igralci klubov, ki jih letos ni,

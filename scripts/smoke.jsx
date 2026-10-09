@@ -48,7 +48,7 @@ import { sestaviVabilo, vabiloMailto } from '../src/lib/vabilo'
 import { viraZa, znaniViri } from './viri/index.mjs'
 import { caka, brezAsistencePotrjeno, PRAG_ASISTENCE_PRIVZETO } from '../src/components/GolZaGlasovanje'
 import { adaptivniPrag } from '../src/pages/Pozicije'
-import { razcleniRazpored, datum, sezonaIz } from './razpored.mjs'
+import { razcleniRazpored, datum, sezonaIz, oznakaBrezIzida } from './razpored.mjs'
 import { vseVrstice } from './strani.mjs'
 import { premakniProti, NAJVECJI_TEDENSKI_PREMIK } from './premik-cene.mjs'
 import { oceniPripravljenost, najcenejsiKader } from '../src/lib/pripravljenost'
@@ -1363,6 +1363,11 @@ preveri(
     preveri('razpored Kranj: 13 klubov', klubi(k).size === 13, String(klubi(k).size))
     preveri('razpored Kranj: vsak krog ima 6 tekem',
       k.every((r) => r.tekme.length === 6), k.map((r) => r.tekme.length).join(','))
+    // Vzorec ima izide le pri 1. krogu; izidi pod blokom REZULTATI ne štejejo.
+    preveri('razpored Kranj: odigranih je 6 tekem 1. kroga',
+      k.flatMap((r) => r.tekme).filter((t) => t.odigrana).length === 6 &&
+        k[0].tekme.every((t) => t.odigrana),
+      String(k.flatMap((r) => r.tekme).filter((t) => t.odigrana).length))
   }
 
   {
@@ -1375,6 +1380,41 @@ preveri(
       k[0].tekme.length === 3 && k[0].tekme[0].kontumacija === true &&
         !k[0].tekme[1].kontumacija && !k[0].tekme[2].kontumacija,
       JSON.stringify(k[0].tekme.map((t) => !!t.kontumacija)))
+    // Izid pove, ali je tekma pri viru odigrana; tekma brez njega je
+    // prestavljena (lahko brez novega datuma) ali še na vrsti.
+    preveri('razpored: odigrana = izid pod tekmo',
+      k[0].tekme.map((t) => t.odigrana).join(',') === 'true,true,false',
+      JSON.stringify(k[0].tekme.map((t) => t.odigrana)))
+  }
+
+  {
+    // Bled Bohinj : Sava Kranj (mladinci 1603, 6. krog 4. 10. 2026) je
+    // prestavljena brez novega datuma: stoji pri starem, izida nima.
+    const k = razcleniRazpored([
+      '6. krog 04.10.26', '04.10.26', 'Bled Bohinj : Sava Kranj', '04.10.26',
+      'Kranj : Šenčur', '2 : 1(1 : 0)', '05.10.26', 'Tržič : Naklo', '3 : 3',
+      'Britof : Preddvor', '17:30', 'Žiri : Jesenice', '0 :3(u.d.)',
+    ])
+    const t = Object.fromEntries(k[0].tekme.map((x) => [x.domaci, x]))
+    preveri('razpored: prestavljena brez datuma ni odigrana',
+      t['Bled Bohinj'].odigrana === false && t['Bled Bohinj'].datum === '2026-10-04')
+    preveri('razpored: izid s polčasom ali brez je odigrana',
+      t.Kranj.odigrana === true && t['Tržič'].odigrana === true)
+    preveri('razpored: ura "17:30" ni izid', t.Britof.odigrana === false)
+    preveri('razpored: kontumacija "(u.d.)" je odigrana', t['Žiri'].odigrana === true && t['Žiri'].kontumacija === true)
+
+    // Oznaka za uvoz: minula brez izida da true, prihodnja false, vir brez
+    // podatka null; razpored brez enega samega izida je pokvarjen (null).
+    const o = oznakaBrezIzida(k, '2026-10-09')
+    preveri('brez izida: minula neodigrana tekma je označena',
+      o.brezIzida(t['Bled Bohinj']) === true && o.brezIzida(t.Kranj) === false && !o.pokvarjen)
+    preveri('brez izida: prihodnja tekma ni označena',
+      o.brezIzida({ datum: '2026-10-20', odigrana: false }) === false)
+    const brezPodatka = oznakaBrezIzida([{ tekme: [{ datum: '2026-10-01' }, { datum: '2026-10-02' }] }], '2026-10-09')
+    preveri('brez izida: vir brez podatka ne pove nič', brezPodatka.brezIzida({ datum: '2026-10-01' }) === null)
+    const nicIzidov = oznakaBrezIzida([{ tekme: ['01', '02', '03'].map((d) => ({ datum: `2026-10-${d}`, odigrana: false })) }], '2026-10-09')
+    preveri('brez izida: razpored brez enega izida je pokvarjen in ne označi',
+      nicIzidov.pokvarjen && nicIzidov.brezIzida({ datum: '2026-10-01', odigrana: false }) === null)
   }
 
   {
@@ -3480,6 +3520,16 @@ preveri(
     preveri('sportnet: odigrana ni kontumacija', !t.AB.kontumacija && !t.AB.odstop)
     preveri('sportnet: odstop moštva = kontumacija z odstopom', t.CD.kontumacija && t.CD.odstop)
     preveri('sportnet: KONTUMOVANY in contumation sta kontumaciji', t.AC.kontumacija && !t.AC.odstop && t.BD.kontumacija)
+    preveri('sportnet: zaključene tekme so odigrane', [t.AB, t.CD, t.AC, t.BD].every((x) => x.odigrana === true))
+    // Prosiek : Východná (sk-lm-8liga, 4. 10. 2026): nezaključena, le razpisana.
+    const neodigrane = JSON.stringify({ matches: [
+      tekma('e', 3, 'A', 'D', 'VYGENEROVANY', { closed: false }),
+      tekma('f', 3, 'B', 'C', 'PRERUSENY', { closed: false }),
+    ], nextOffset: null })
+    const k2 = await S.default.razporedVseStrani('X/1', async () => neodigrane)
+    const t2 = Object.fromEntries(k2.flatMap((r) => r.tekme).map((x) => [`${x.domaci}${x.gostje}`, x]))
+    preveri('sportnet: razpisana nezaključena tekma ni odigrana', t2.AD.odigrana === false)
+    preveri('sportnet: drugo stanje nezaključene šteje kot odigrano', t2.BC.odigrana === true)
   }
 }
 
@@ -3497,6 +3547,15 @@ preveri(
   const v = H.vrsticeRazporeda(beri('hns-natjecanje.html'))
   preveri('hns: razpored', v.length === 16 && v.filter((x) => x.izid).length === 8)
   preveri('hns: neodigrana tekma brez izida', v.some((x) => x.krog === 15 && !x.izid && x.datum === '2026-11-28' && x.ura === '13:30'))
+  {
+    // Razpored pove, katera tekma ima izid; 3:0 bere še stran tekme (kontumacija).
+    const stran = beri('hns-natjecanje.html')
+    const k = await H.default.razporedVseStrani('1', async (url) => (url.includes('/natjecanja/') ? stran : beri('hns-tekma-11m.html')))
+    const tekme = k.flatMap((r) => r.tekme)
+    preveri('hns: razpored — odigrana natanko pri tekmah z izidom',
+      tekme.length === 16 && tekme.filter((t) => t.odigrana === true).length === 8 && tekme.filter((t) => t.odigrana === false).length === 8,
+      tekme.map((t) => t.odigrana).join(','))
+  }
 
   const z = H.vZapisnik(beri('hns-tekma-11m.html'), { id: 'a' })
   const n = H.nastopi(z)
@@ -3521,6 +3580,11 @@ preveri(
   preveri('hns: kontumacija brez postav', H.brezPostav(bp, { domaci: 3, gostje: 0 }) && !H.jeKontumacija(bp, { domaci: 3, gostje: 0 }) && !H.vZapisnik(bp))
   preveri('hns: tekma s postavami ni brez postav', !H.brezPostav(beri('hns-tekma-11m.html'), { domaci: 3, gostje: 0 }) && !H.brezPostav(k, { domaci: 3, gostje: 0 }))
   preveri('hns: brez postav le pri 3:0', !H.brezPostav(bp, { domaci: 2, gostje: 0 }))
+  // Ekipa s šestimi igralci (Suhopolje : Crnac, 3:0, Premijer ŽNL Virovitica
+  // 9. 5. 2026): obe postavi, nobenega dogodka — tekma ni bila odigrana.
+  const pm = beri('hns-tekma-kontumacija-premalo.html')
+  preveri('hns: kontumacija s premalo igralci', H.jeKontumacija(pm, { domaci: 3, gostje: 0 }) && H.vZapisnik(pm) === null)
+  preveri('hns: premalo igralcev le pri 3:0', !H.jeKontumacija(pm, { domaci: 2, gostje: 0 }))
 
   // ŽNS Zagreb menjav ne vpisuje: strelca s klopi (Hrvatski Leskovac : Croatia 98, 8:0)
   // dobita nastop IN gol; prej je bil gol v tabeli goals, točk zanj pa ni bilo.

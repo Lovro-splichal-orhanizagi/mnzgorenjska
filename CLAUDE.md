@@ -209,7 +209,10 @@ Pozicije je v meniju kot v Sloveniji.
 Posebnosti, ki jih je našel pregled pred vklopom (7. 10. 2026):
 
 - **Kontumacija**: Semafor pri 3:0 vnese postavo le ekipe, ki je prišla
-  (`jeKontumacija` v `hns.mjs`); razpored tekmo označi in vpiše izid.
+  (`jeKontumacija` v `hns.mjs`); razpored tekmo označi in vpiše izid. Tudi
+  3:0 z obema postavama, a ena ima manj kot sedem začetnikov in dogodkov ni
+  (Suhopolje : Crnac, Crnac s šestimi, 9. 5. 2026) je kontumacija — tekma se
+  ni začela; `vZapisnik` zanjo vrne null.
 - **Strelec s klopi brez menjave** (ŽNS Zagreb menjav ne vpisuje) dobi nastop
   z goli in kartoni (`dodajStrelceSKlopi` v `zapisnik.mjs`); prej je bil gol
   le v `goals` in točk ni prinesel.
@@ -554,6 +557,15 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   sodnika in postav na strani zapisnikov kroga (`vir.kontumacije`). Pri Novi
   Gorici in NZS primera še nismo videli — tam admin z
   `update matches set kontumacija = true where id = …`
+- `matches.vir_brez_izida` → vir ob zadnjem uvozu razporeda za to minulo,
+  neuvoženo tekmo ni kazal izida: zveza jo je prestavila brez novega datuma
+  (Bled Bohinj : Sava Kranj, 4. 10. 2026). Piše jo uvoz razporeda iz
+  `odigrana`, ki ga dajo razčlenjevalniki starega CMS-a (Kranj, Ljubljana,
+  Celje), hns, sportnet, mlsz in facr (`oznakaBrezIzida` v `razpored.mjs`);
+  ostali viri ga nimajo in tekme ostanejo neoznačene. Preverba podatkov takih
+  tekem ne javi kot `tekma-ni-uvozena`, šele po 30 dneh kot `tekma-brez-izida`
+  (človek odloči: kontumacija ali izbris). Nov vir naj tekmi da `odigrana`
+  (ali ima vir izid), kadar ga razpored pozna.
 - Omrežje: uvozi berejo prek `prenesiSPonovitvami` (`scripts/prenos.mjs`) —
   ponovi omrežne napake, 5xx in 429 (2 s, 6 s, 15 s), 4xx nikoli. Nov prenos
   v uvozni skripti naj gre skozenj, ne mimo z golim `fetch`

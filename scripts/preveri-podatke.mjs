@@ -101,15 +101,28 @@ for (const l of lige ?? []) {
 // osvezila, podatki v bazi pa so bili ves cas brezhibni in preverba tiha.
 //
 // Tri dni je namenoma velikodusno: zapisnik pride nekaj ur po tekmi, prelozena
-// tekma pa dobi nov datum, zato stara vrstica ne ostane viseti.
+// tekma pa navadno dobi nov datum, zato stara vrstica ne ostane viseti.
+//
+// Navadno, ne vedno: zveza tekmo lahko prestavi brez novega datuma (Bled
+// Bohinj : Sava Kranj, mladinci 4. 10. 2026). Tako tekmo uvoz razporeda
+// oznaci (`vir_brez_izida`: vir pri njej ne kaze izida) in je tu ne javimo —
+// nic ni zamujeno, dokler je vir sam ne pokaze kot odigrane. Javimo jo sele,
+// ko je tako ze PRAG_BREZ_IZIDA dni: takrat naj clovek odloci (kontumacija,
+// izbris). Neuvozena tekma ni nedolzna: borza igralcem obeh klubov kroga in
+// dveh naslednjih ne obracuna (20260916140000), dokler zapisnika ni.
 const PRAG_DNI = 3
+const PRAG_BREZ_IZIDA = 30
+const doDne = (dni) => new Date(Date.now() - dni * 86400000).toISOString().slice(0, 10)
 const { data: zamujene, error: napakaZamud } = await db
   .from('matches')
-  .select('id, played_on, imported_at, rounds!inner(competition_id, competitions!inner(slug, active))')
+  .select('id, played_on, imported_at, vir_brez_izida, rounds!inner(competition_id, competitions!inner(slug, active))')
   .is('imported_at', null)
   // Kontumacija nima zapisnika in ga ne bo (20260927220000).
   .eq('kontumacija', false)
-  .lt('played_on', new Date(Date.now() - PRAG_DNI * 86400000).toISOString().slice(0, 10))
+  .lt('played_on', doDne(PRAG_DNI))
+  // Tekma brez izida pri viru pride zraven sele po PRAG_BREZ_IZIDA dneh, da ne
+  // izpodrine pravih zamud iz omejenega odgovora.
+  .or(`vir_brez_izida.eq.false,played_on.lt.${doDne(PRAG_BREZ_IZIDA)}`)
   .order('played_on')
   .limit(200)
 
@@ -123,9 +136,14 @@ if (napakaZamud) {
   })
 } else {
   const poLigi = new Map()
+  const brezIzida = []
   for (const m of zamujene ?? []) {
     const liga = m.rounds?.competitions
     if (!liga?.active) continue
+    if (m.vir_brez_izida) {
+      brezIzida.push({ ...m, slug: liga.slug })
+      continue
+    }
     const seznam = poLigi.get(liga.slug) ?? []
     seznam.push(m)
     poLigi.set(liga.slug, seznam)
@@ -138,6 +156,13 @@ if (napakaZamud) {
       primer: `${slug}: ${seznam[0].played_on} (tekma ${seznam[0].id})`,
     })
   }
+  if (brezIzida.length)
+    tezave.push({
+      kljuc: 'tekma-brez-izida',
+      opis: `Tekma je pri viru ze vec kot ${PRAG_BREZ_IZIDA} dni brez izida in novega datuma — kontumacija ali izbris?`,
+      koliko: brezIzida.length,
+      primer: brezIzida.slice(0, 3).map((m) => `${m.slug}: ${m.played_on} (tekma ${m.id})`).join('; '),
+    })
 }
 
 // --- vratar, ki zabija ------------------------------------------------------
