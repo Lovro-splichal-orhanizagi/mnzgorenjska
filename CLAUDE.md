@@ -928,6 +928,36 @@ Vpisanih je pet lig (migracija 20261010000100), **neaktivnih**. Zveza `fsb`.
 | rs-bg-pbl-b | `prva-beogradska-liga-grupa-b` | `prva-beogradska-liga-grupa-b-2025-26` |
 | rs-bg-pbl-c | `prva-beogradska-liga-grupa-c-2` | `prva-beogradska-liga-grupa-c-2-2025-26` |
 
+Nižje lige (migracija 20261010030100, neaktivne), arhiv dveh sezon, ker so
+majhne (7–12 klubov):
+
+| liga | tekoča 2026/27 | arhiv 2025/26 | arhiv 2024/25 |
+|---|---|---|---|
+| rs-bg-mol-a | `medjuopstinska-liga-grupa-a` | `…-grupa-a-2025-26` | `…-grupa-a-2024-25` |
+| rs-bg-mol-b | `medjuopstinska-liga-grupa-b` | `…-grupa-b-2025-26` | `…-grupa-b-2024-25` |
+| rs-bg-mol-c | `medjuopstinska-liga-grupa-c` | `…-grupa-c-2025-26` | `…-grupa-c-2024-25` |
+| rs-bg-lazarevac-2 | `druga-opstinska-liga-fsol-2026-2027` | `druga-opstinska-liga-fso-lazarevac-2025-2026` | `druga-opstinska-liga-lazarevac-2024-25` |
+| rs-bg-mladenovac | `opstinska-liga-mladenovac-2026-2027` | `opstinska-liga-mladenovac-2` | `opstinska-liga-mladenovac-2024-25` |
+| rs-bg-obrenovac | `opstinska-liga-obrenovac-2026-2027` | `opstinska-liga-obrenovac` | `opstinska-liga-obrenovac-2024-2025` |
+
+(`…` = `medjuopstinska-liga`.) **Ni vpisanih**: Prva opštinska liga FSOL
+(2026/27) in Opštinska liga Sopot (obe sezoni) imata po dva kluba MLADOST v
+isti ligi, stran lige ju ne loči. Trki imen med ligami (10. 10. 2026, kraj
+iz "Mesto:"): BUDUĆNOST/JEDINSTVO/SLOGA v Obrenovcu (Zvečka, Dren, Ratari),
+NAPREDAK/SLOGA v Mladenovcu (kraja ne piše), BSK/MLADOST/SLOGA/ŠUMADIJA v
+Lazarevcu (Brajkovac, Cvetovac, Lukavica, Mali Crljeni), BSK v MOL A
+(Batajnica), HAJDUK v MOL C (Kamendol; HAJDUK v MOL B je beograjski iz PBL A
+2025/26). Ostala ponovljena imena so isti klub, ki je napredoval ali izpadel
+(SREM Jakovo, OMLADINAC Rajkovac …).
+
+**Ostale regije Srbije ne objavljajo zapisnikov** (preverjeno 10. 10. 2026):
+FS Vojvodine (fsv.rs, FS Novog Sada fsgns.rs), FS regiona Zapadne Srbije
+(fsrzs.com, le PDF lestvice in strelci) in FS regiona Istočne Srbije
+(fsris.org.rs, razpored in izidi s šiframi klubov) kažejo le izide in
+lestvice. Vse zveze vodijo podatke v COMET (comet.fss.rs, za prijavo); javni
+API "areports" zahteva ključ FSS — ključa s tujih strani ne uporabljamo.
+Pot naprej je prošnja FSS za ključ.
+
 Uvoz (ena za drugo): `gh workflow run uvoz-lige.yml -f liga=rs-bg-srpska -f
 arhiv=srpska-liga-beograd-2025-26 -f cene=true`. Arhiv ~180 zapisnikov po 2 s
 je okoli 7 minut na ligo.

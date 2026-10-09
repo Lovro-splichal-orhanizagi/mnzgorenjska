@@ -3949,6 +3949,12 @@ preveri(
   preveri('fsb: isto ime, drug klub (po ligi)', F.imeKluba('BORAC', 'zonska-liga-beograd') === 'BORAC (Ostružnica)' &&
     F.imeKluba('BORAC', 'prva-beogradska-liga-grupa-b') === 'BORAC' &&
     F.kljucKlubaRs(F.imeKluba('OMLADINAC', 'zonska-liga-beograd')) !== F.kljucKlubaRs(F.imeKluba('OMLADINAC', 'prva-beogradska-liga-grupa-c-2')))
+  preveri('fsb: nižje lige — kraj ima klub nižje lige, isti v vseh treh sezonah',
+    F.imeKluba('SLOGA', 'opstinska-liga-obrenovac') === 'SLOGA (Ratari)' &&
+    F.imeKluba('SLOGA', 'opstinska-liga-obrenovac-2024-2025') === 'SLOGA (Ratari)' &&
+    F.imeKluba('HAJDUK', 'medjuopstinska-liga-grupa-b') === 'HAJDUK' &&
+    F.imeKluba('HAJDUK', 'medjuopstinska-liga-grupa-c') === 'HAJDUK (Kamendol)' &&
+    F.imeKluba('Budućnost', 'srpska-liga-beograd') === 'Budućnost')
 
   // Stran lige 2026/27 med 8. krogom: harmonika pokaže le 2 odigrani tekmi
   // kroga, "Aktuelno kolo" vseh 7.
