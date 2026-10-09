@@ -422,29 +422,36 @@ osnovno tekmovanje 2025/26 (ev 65, ne 66):
 skupinami in BLSZ II., **neaktivnih**. Tolna II. 2026/27 nima (kvalifikacija
 I-II). Seznam tekmovanj zveze in sezone vrne `POST
 ada1bank.mlsz.hu/libs/ajax.php` z `type=getHeaderFilderData&season=<évad>&federationId=<sz>&leagueId=0&changedType=first`
-(`leagues[]`: id, ime, `isCup`). Kjer je županija skupine preuredila, dobi
-vsaka skupina arhive **vseh** lanskih skupin II. (prva je lastna/najbližja);
-klube zunaj lige uvoz razporeda deaktivira.
+(`leagues[]`: id, ime, `isCup`).
 
-| liga | tekoča 2026/27 | arhiv 2025/26 |
+**Arhiva ne moreta deliti dve ligi**: `matches.zapisnik_id` je enoličen, drugi
+uvoz istega arhiva pade (`matches_zapisnik_id_key`, hu-bk-2-eszak 9. 10.).
+Kjer je županija skupine preuredila, dobi vsaka skupina svojo lansko skupino,
+manjkajočo pa iz 2024/25 (évad 63), ki je ne uporablja nihče drug. Sezone pred
+2025/26 adatbank preusmeri na živi ada1bank, ki občasno vrne 43-bajtni
+ostanek; vir ga prebere znova, vztrajen ostanek ustavi uvoz (`stranKroga`).
+
+| liga | tekoča 2026/27 | arhiv |
 |---|---|---|
-| hu-bk-2-del / -eszak | `67/1/33672` / `33675` | `65/1/31504` (lani ena skupina) |
+| hu-bk-2-del / -eszak | `67/1/33672` / `33675` | `65/1/31504` / `63/1/29300` (2024/25 Észak) |
 | hu-ba-2 | `67/2/33838` | `65/2/31435` |
 | hu-be-2 | `67/3/33831` | `65/3/31546` |
-| hu-baz-2-eszak / -kelet / -kozep | `67/4/34085` / `34086` / `34087` | `65/4/31788`, `31789`, `31790` |
+| hu-baz-2-eszak / -kelet / -kozep | `67/4/34085` / `34086` / `34087` | `65/4/31788` / `31789` / `31790` |
 | hu-bp-2 | `67/5/33754` | `65/5/31532` |
 | hu-cs-2 | `67/6/33873` | `65/6/31524` |
-| hu-fe-2-eszak / -del | `67/7/34109` / `34111` | `65/7/31902`, `31933` |
-| hu-gy-2-kelet / -eszak / -nyugat | `67/8/33890` / `34176` / `34179` | `65/8/31660`, `31866`, `31868` (brez felső/alsóháza) |
-| hu-hb-2-eszak / -del | `67/9/34117` / `34119` | `65/9/31600`, `31602` |
+| hu-fe-2-eszak / -del | `67/7/34109` / `34111` | `65/7/31902` / `31933` |
+| hu-gy-2-kelet / -eszak / -nyugat | `67/8/33890` / `34176` / `34179` | `65/8/31660` / `31866` / `31868` (brez felső/alsóháza) |
+| hu-hb-2-eszak / -del | `67/9/34117` / `34119` | `65/9/31600` / `31602` |
 | hu-he-2 | `67/10/33864` | `65/10/31644` |
 | hu-jn-2 | `67/11/33737` | `65/11/31490` |
 | hu-ke-2 | `67/12/33790` | `65/12/31688` |
 | hu-no-2 | `67/13/33936` | `65/13/31713` |
-| hu-pe-2-eszak / -del | `67/14/34067` / `34068` | `65/14/31815`, `31816` |
+| hu-pe-2-eszak / -del | `67/14/34067` / `34068` | `65/14/31815` / `31816` |
 | hu-so-2 | `67/15/33708` | `65/15/31584` |
-| hu-sz-2-1 / -2 | `67/16/33811` / `34157` | `65/16/31417`, `31839`, `31842` (lani tri skupine) |
-| hu-va-2-szombathely / -kormend / -sarvar | `67/18/34047` / `34043` / `34046` | `65/18/31703`, `31957` (lani Észak/Dél) |
+| hu-sz-2-1 / -2 | `67/16/33811` / `34157` | `65/16/31417` / `31839,31842` |
+| hu-va-2-szombathely | `67/18/34047` | `65/18/31703,31704` (II. Észak + III. Szombathely) |
+| hu-va-2-kormend | `67/18/34043` | `65/18/31957,31949` (II. Dél + III. Körmend) |
+| hu-va-2-sarvar | `67/18/34046` | `65/18/31952`, `63/18/29547,29693` (III. Sárvár + II. 2024/25) |
 | hu-ve-2 | `67/19/33719` | `65/19/32270` (alapszakasz, brez felső/alsóháza) |
 | hu-za-2 | `67/20/33916` | `65/20/31673` |
 

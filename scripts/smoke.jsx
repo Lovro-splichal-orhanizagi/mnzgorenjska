@@ -3829,6 +3829,24 @@ preveri(
   const minuteEkipe = (e) => ns.filter((x) => x.ekipaIdx === e).reduce((a, x) => a + x.minute, 0)
   preveri('mlsz: sestavljen zapisnik brez kartonov trenerja', zs.sezona === '2026/27' && zs.krog === 8 && zs.rdeci.length === 0 &&
     minuteEkipe(0) === 960 && minuteEkipe(1) === 990)
+
+  // ada1bank občasno vrne 43-bajtni ostanek namesto strani kroga (arhiv
+  // 63/1/29300 je tako tiho dal 0 zapisnikov). Ostanek se prebere še enkrat,
+  // vztrajen ostanek ustavi uvoz.
+  const pravaStran = beri('hu-adatbank-krog-67-20-33915-8.html')
+  const ostanek = '<html><body></body></html>'.padEnd(43, ' ')
+  preveri('mlsz: ostanek ni stran kroga', M.jeStranKroga(pravaStran) && !M.jeStranKroga(ostanek))
+  let klicev = 0
+  const enkratOstanek = async () => (++klicev === 1 ? ostanek : pravaStran)
+  const krogi = await M.default.razporedVseStrani('67/20/33915', enkratOstanek)
+  preveri('mlsz: ostanek na 1. krogu se prebere znova', klicev > 2 && krogi.some((k) => k.stevilka === 8 && k.tekme.length > 0))
+  let napaka = null
+  try {
+    await M.default.zapisniki('63/1/29300', async () => ostanek)
+  } catch (e) {
+    napaka = e
+  }
+  preveri('mlsz: vztrajen ostanek ustavi uvoz (ne 0 zapisnikov)', /ni stran kroga/.test(napaka?.message ?? ''))
 }
 
 // --- anonimizacija (GDPR) ---------------------------------------------------------
