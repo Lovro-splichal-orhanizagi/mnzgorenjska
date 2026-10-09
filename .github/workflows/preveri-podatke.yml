@@ -18,6 +18,8 @@ on:
 
 permissions:
   contents: read
+  # Ali uvoz ravno piše (gh run list).
+  actions: read
 
 jobs:
   preveri:
@@ -32,7 +34,22 @@ jobs:
       # Nobena odvisnost ne potrebuje namestitvenih skript (edina je fsevents
       # za macOS); brez njih tuja koda ob namestitvi ne tece.
       - run: npm ci --ignore-scripts
+      # Med uvozom so tekme napol zapisane in preverba javi lažne težave.
+      # Konec uvoza jo sproži znova (workflow_run), zato tu le preskočimo.
+      - name: Ali uvoz ravno piše
+        id: uvoz
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set +e
+          node scripts/cakaj-na-uvoze.mjs --tece
+          k=$?
+          [ "$k" -eq 3 ] && echo "tece=1" >> "$GITHUB_OUTPUT" && exit 0
+          exit $k
       - name: Trditve o podatkih
+        if: steps.uvoz.outputs.tece != '1'
         id: trditve
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -76,5 +93,5 @@ jobs:
           path: tezave.txt
           key: preverba-javljeno-${{ steps.trditve.outputs.odtis }}
       - name: Izid
-        if: steps.trditve.outputs.ok != '1'
+        if: steps.uvoz.outputs.tece != '1' && steps.trditve.outputs.ok != '1'
         run: exit 1
