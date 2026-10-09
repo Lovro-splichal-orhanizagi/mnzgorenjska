@@ -190,6 +190,24 @@ const IMENA_AT = [
   'Donauruderer', 'Innfischer', 'Wachauer Winzer', 'Grazer Kernölpresser', 'Neusiedler Segler',
 ]
 
+// Srbske lige: igrive, izmišljene, brez imen resničnih klubov.
+const IMENA_RS = [
+  'Dunavski šarani', 'Moravski somovi', 'Šumadijski vukovi', 'Sremski orlovi', 'Banatski konji',
+  'Bački rodovi', 'Zlatiborski sokolovi', 'Fruškogorski jeleni', 'Kopaonički medvedi', 'Tarski risovi',
+  'Drinski splavari', 'Timočki vinari', 'Mačvanski bikovi', 'Pomoravski golubovi', 'Homoljski orlovi',
+  'Nedeljni junaci', 'Subotnji topdžije', 'FK Sudijska nadoknada', 'Treće poluvreme', 'FK Rezervna klupa',
+  'Izmene FK', 'FK Ofsajd', 'Sudija nije video', 'FK Stativa', 'FK Prečka',
+  'Kopačke iz podruma', 'FK Pljeskavica', 'Ćevapi junajted', 'Burek FK', 'FK Gibanica',
+  'Sarma junajted', 'FK Kajmak', 'Proja FK', 'Ajvar junajted', 'FK Pasulj',
+  'Seoska selekcija', 'Stara garda FK', 'Vatrogasci FK', 'Dom kulture FK', 'Večiti rezervisti',
+  'FK Zlatna kopačka', 'Dvanaesti igrač', 'FK Penal', 'Korner zastavica', 'FK Ključni pas',
+  'Asistencija FK', 'FK Kapitenska traka', 'Crveni karton FK', 'Žuti karton junajted', 'FK Produžeci',
+  'Travnjak bojs', 'FK Veštačka trava', 'Blatnjavi teren FK', 'Cepači mreže', 'FK Prvi dodir',
+  'Kontranapad FK', 'FK Presing', 'Libero FK', 'Desetka FK', 'FK Devetka',
+  'Okružni šampioni', 'Pivo posle utakmice FK', 'Kafana pored terena', 'FK Roštilj', 'FK Vanilice',
+  'Dunavski veslači', 'Savski ribari', 'Moravski ribolovci', 'Vršački vinogradari', 'Palićki jedriličari',
+]
+
 // Postave v mejah POZICIJE (vratar 1, branilci 3–5, vezisti 2–5, napadalci 1–3).
 const POSTAVE = [
   [4, 4, 2], [4, 3, 3], [3, 5, 2], [3, 4, 3], [5, 3, 2], [4, 5, 1], [5, 4, 1],
@@ -573,7 +591,7 @@ for (const l of seznam) {
     if (eK) throw new Error(eK.message)
     for (const r of kadri ?? []) izbranost.set(r.player_id, (izbranost.get(r.player_id) ?? 0) + 1)
   }
-  const imena = premesaj({ SI: IMENA_SI, HR: IMENA_HR, CZ: IMENA_CZ, HU: IMENA_HU, AT: IMENA_AT }[DRZAVA] ?? IMENA, generator('imena:' + l.slug))
+  const imena = premesaj({ SI: IMENA_SI, HR: IMENA_HR, CZ: IMENA_CZ, HU: IMENA_HU, AT: IMENA_AT, RS: IMENA_RS }[DRZAVA] ?? IMENA, generator('imena:' + l.slug))
     .filter((i) => !zasedena.has(i.toLowerCase()))
 
   console.log(

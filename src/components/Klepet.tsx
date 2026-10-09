@@ -74,6 +74,18 @@ const BESEDE: Record<string, { pridevniki: string[]; samostalniki: string[] }> =
       'Sas', 'Sárkány', 'Bika', 'Csikó', 'Sólyom', 'Hiúz',
     ],
   },
+  sr: {
+    pridevniki: [
+      'Plavi', 'Crveni', 'Zeleni', 'Žuti', 'Crni', 'Beli', 'Srebrni', 'Zlatni',
+      'Brzi', 'Divlji', 'Tihi', 'Vatreni', 'Ledeni', 'Noćni', 'Jutarnji',
+      'Gvozdeni', 'Bakarni', 'Sunčani', 'Nebeski', 'Nemilosrdni',
+    ],
+    samostalniki: [
+      'Golman', 'Štoper', 'Vezista', 'Napadač', 'Kapiten', 'Sudija', 'Trener',
+      'Navijač', 'Strelac', 'Plejmejker', 'Rezervista', 'Veteran', 'Junak', 'Vuk',
+      'Orao', 'Zmaj', 'Bik', 'Konj', 'Soko', 'Ris',
+    ],
+  },
   de: {
     pridevniki: [
       'Blauer', 'Roter', 'Grüner', 'Gelber', 'Schwarzer', 'Weißer', 'Silberner', 'Goldener',

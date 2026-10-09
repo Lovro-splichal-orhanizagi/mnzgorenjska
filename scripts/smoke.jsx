@@ -2951,6 +2951,15 @@ preveri(
   // Nemščina ne sklanja: ime lige stoji za dvopičjem.
   for (const iz of ['Landesliga — Steiermark', '1. Klasse Mitte', 'Gebietsliga West'])
     preveri(`plakat: nemško "${iz}" ostane nespremenjeno`, ligaVTozilniku(iz, 'de') === iz, ligaVTozilniku(iz, 'de'))
+  // Srbščina sklanja kot hrvaščina, glava je lahko še "zona".
+  for (const [iz, v] of [
+    ['Srpska liga Beograd', 'Srpsku ligu Beograd'],
+    ['Zona Dunav', 'Zonu Dunav'],
+    ['Međuopštinska liga — Kragujevac', 'Međuopštinsku ligu — Kragujevac'],
+    ['Okružna liga Pirot', 'Okružnu ligu Pirot'],
+    ['PFL Novi Sad', 'PFL Novi Sad'],
+  ])
+    preveri(`plakat: srbsko "${iz}" v tožilniku`, ligaVTozilniku(iz, 'sr') === v, ligaVTozilniku(iz, 'sr'))
 
   // "Je live": kratko ime lige ne sme zrasti cez rob, ce gre v dve vrstici.
   preveri('plakat live: kratko ime v eni vrstici je najvecje', velikostLige('3. SNL ZAHOD', 1) === 124)
@@ -3417,6 +3426,12 @@ preveri(
   preveri('drzava: anglesko na Dunaju (pas)', D.ugibajDrzavo({ jeziki: ['en-US'], casovniPas: 'Europe/Vienna' }) === 'AT')
   preveri('drzava: nemški brskalnik sam ni Avstrija', D.ugibajDrzavo({ jeziki: ['de-DE'], casovniPas: 'Europe/Berlin' }) === null && D.ugibajDrzavo({ jeziki: ['de'], casovniPas: 'Europe/Vienna' }) === 'AT')
   preveri('drzava: liga at-… je avstrijska', D.drzavaLige('at-stmk-landesliga') === 'AT' && D.JEZIK_DRZAVE.AT === 'de')
+  // Srbija: jezik sr, ugib po brskalniku (sr, sr-Latn-RS) in pasu, liga rs-… je srbska.
+  preveri('jezik: Srb srbsko', zj({ drzava: 'RS' }) === 'sr' && zj({ tujec: 'RS', jeziki: ['sr-RS'] }) === 'sr')
+  preveri('tujec: prvi jezik sr ostane', D.jezikTujca(['sr-Latn-RS', 'en']) === 'sr' && D.jezikTujca(['en', 'sr']) === 'en')
+  preveri('drzava: srbski brskalnik', D.ugibajDrzavo({ jeziki: ['sr-Latn-RS'], casovniPas: 'Europe/Belgrade' }) === 'RS')
+  preveri('drzava: anglesko v Beogradu (pas)', D.ugibajDrzavo({ jeziki: ['en-US'], casovniPas: 'Europe/Belgrade' }) === 'RS')
+  preveri('drzava: liga rs-… je srbska', D.drzavaLige('rs-beograd-zona') === 'RS' && D.JEZIK_DRZAVE.RS === 'sr')
   shramba.set('slff-tujec', 'CZ')
   preveri('tujec: oznaka v brskalniku', D.tujec() === 'CZ' && D.jezikObiskovalca('SK') === 'en')
   D.preklopiDrzavo('SK', lige, { pojdi: (u) => (cilj = u) })
@@ -3441,6 +3456,7 @@ preveri(
   const { cs } = await import('../src/i18n/cs/index.ts')
   const { hu } = await import('../src/i18n/hu/index.ts')
   const { de } = await import('../src/i18n/de/index.ts')
+  const { sr } = await import('../src/i18n/sr/index.ts')
   const listi = (d, pot = '') =>
     Object.entries(d).flatMap(([k, v]) =>
       typeof v === 'string' || (v && typeof v === 'object' && 'other' in v) ? [[pot + k, v]] : listi(v, `${pot}${k}.`),
@@ -3450,7 +3466,7 @@ preveri(
     const besedila = typeof v === 'string' ? [v] : Object.values(v)
     return besedila.map((b) => [...b.matchAll(/\{(\w+)\}|<(\w+)>/g)].map((m) => m[0]).sort().join(' '))
   }
-  for (const [ime, slovar] of [['sk', sk], ['en', en], ['hr', hr], ['cs', cs], ['hu', hu], ['de', de]]) {
+  for (const [ime, slovar] of [['sk', sk], ['en', en], ['hr', hr], ['cs', cs], ['hu', hu], ['de', de], ['sr', sr]]) {
     const napake = []
     let manjka = 0
     for (const [kljuc, izvirnik] of listi(sl)) {
@@ -3507,6 +3523,21 @@ preveri(
     [sl, sk, en, hr, cs, hu, de].every((d) => d.aplikacija.izbiraDrzave.imena.AT === 'Österreich'))
   preveri('prevodi de: tocke', de.skupno.besede.tocke.one === 'Punkt' && de.skupno.besede.tocke.other === 'Punkte')
   preveri('prevodi de: liga na plakatu za dvopičjem', /: \{liga\}/.test(de.lestvice.plakat.jeOdprta), de.lestvice.plakat.jeOdprta)
+  // Srbske množine: Intl.PluralRules('sr') pozna one/few/other kot hrvaščina.
+  const kategorijeSr = new Intl.PluralRules('sr-Latn-RS').resolvedOptions().pluralCategories
+  const slabeSr = listi(sr).filter(
+    ([, v]) => typeof v === 'object' && (Object.keys(v).some((k) => !kategorijeSr.includes(k)) || kategorijeSr.some((k) => !(k in v))),
+  )
+  preveri('prevodi sr: mnozine one/few/other', slabeSr.length === 0, slabeSr.slice(0, 5).map(([k]) => k).join(', '))
+  const crticeSr = listi(sr).filter(([, v]) => (typeof v === 'string' ? [v] : Object.values(v)).some((b) => /[—–]/.test(b)))
+  preveri('prevodi sr: brez pomisljajev', crticeSr.length === 0, crticeSr.slice(0, 5).map(([k]) => k).join(', '))
+  preveri('prevodi sr: drzava Srbija v vseh jezikih',
+    [sl, sk, en, hr, cs, hu, de, sr].every((d) => d.aplikacija.izbiraDrzave.imena.RS === 'Srbija'))
+  preveri('prevodi sr: tocke v mnozini', sr.skupno.besede.tocke.few === 'boda' && sr.skupno.besede.tocke.other === 'bodova')
+  // Ekavica in srbski izrazi, ne hrvaški (mjesto, momčad, vratar, ljestvica, nogomet …).
+  const hrvaskoSr = listi(sr).filter(([, v]) => (typeof v === 'string' ? [v] : Object.values(v))
+    .some((b) => /mjest|momčad|vratar|ljestvic|nogomet|tjed|sljede|uvijek|prije\b|vrijem|\btko\b|poveznic/i.test(b)))
+  preveri('prevodi sr: ekavica, brez hrvaških izrazov', hrvaskoSr.length === 0, hrvaskoSr.slice(0, 5).map(([k]) => k).join(', '))
 }
 
 // --- vir sportnet (Slovaška) -----------------------------------------------
@@ -4328,6 +4359,64 @@ preveri(
   preveri('e-pošta: avtentikacijske predloge in zadeve de',
     vejeDe.every((v) => v && !slovenskoDe.test(v) && !pomisljaj.test(v)) && zadeveDe.length === 3 &&
       zadeveDe.every((z) => !slovenskoDe.test(z) && !pomisljaj.test(z)), zadeveDe.join(' | '))
+
+  // Srbija: isti maili v srbščini (ekavica, latinica), rok po beograjsko, razlog preveden.
+  const rsL = { slug: 'rs-beograd-zona', oznaka: 'BG Zona', ime: 'Zona Beograd', drzava: 'RS' }
+  // Slovenščina ali hrvaščina v srbskem mailu ("Popravi" je tudi srbsko, zato ga ni).
+  const slovenskoSr = /Živjo|ekip[aeo]|krog|točk|opomnik|igralc|kader|namesto|sestavi |Ahoj|Bok|Szia|Servus|momčad|mjest|sljede|prije\b|vratar/
+  const oSr = E.sestaviOpomnik(rsL, { display_name: 'Nikola Jovanović', brez_ekipe: true })
+  const oSr2 = E.sestaviOpomnik(rsL, { display_name: null, brez_ekipe: false })
+  preveri('e-pošta: opomnik sr',
+    oSr.naslov.includes('još nemaš tim') && oSr.html.includes('Zdravo, Nikola!') && oSr2.html.includes('Zdravo!') &&
+      oSr2.naslov.includes('dovrši tim') && oSr.odjava === 'https://slff.eu/reminders?t=rs-beograd-zona' &&
+      oSr.html.includes('https://slff.eu/my-team?t=rs-beograd-zona') && oSr.html.includes('Ne želim više da primam podsetnike') &&
+      !slovenskoSr.test(oSr.naslov + oSr.html + oSr2.naslov + oSr2.html), oSr.naslov)
+  const zSr = E.sestaviOpozorilo(rsL, { display_name: 'Nikola', team_name: 'Nedeljni junaci', round_number: 5, deadline_at: rok, razlog })
+  preveri('e-pošta: opozorilo sr (rok po beograjsko, razlog preveden)',
+    zSr.naslov.includes('5. kolo') && zSr.html.includes('subota') && zSr.html.includes('10:00') &&
+      zSr.html.includes('Iz kluba Šenčur imaš 4 igrača') && !slovenskoSr.test(zSr.naslov + zSr.html), zSr.naslov)
+  preveri('e-pošta: rok sr v latinici in časovnem pasu lige', E.izpisRoka(rok, rsL).includes('10:00') && !/[\u0400-\u04FF]/.test(E.izpisRoka(rok, rsL)), E.izpisRoka(rok, rsL))
+  const prevodiSr = razlogi.map((r) => E.prevediRazlog(r, 'sr'))
+  const splosenSr = E.prevediRazlog('Neznan razlog.', 'sr')
+  preveri(
+    'e-pošta: vsi razlogi prevedeni v srbščino',
+    prevodiSr.every((p) => p !== splosenSr && !slovenskoSr.test(p) && !pomisljaj.test(p)),
+    prevodiSr.find((p) => p === splosenSr || slovenskoSr.test(p) || pomisljaj.test(p)),
+  )
+  preveri('e-pošta: razlog sr (množina kot hrvaška)',
+    prevodiSr[1] === 'U sastavu su 3 igrača umesto 15.' && prevodiSr[7] === 'U prvoj postavi je 10 igrača umesto 11.',
+    `${prevodiSr[1]} | ${prevodiSr[7]}`)
+  const bSr = E.sestaviOpomnikBrezLige('sr', { display_name: 'Nikola' })
+  preveri('e-pošta: brez lige sr v srbščini',
+    bSr.naslov.includes('izaberi svoju ligu') && bSr.html.includes('href="https://slff.eu/my-team?sestavi=1"') &&
+      bSr.html.includes('Zdravo, Nikola!') && !slovenskoSr.test(bSr.html.replace(/href="[^"]*"/g, '')))
+  const pSr = E.sestaviPoznavalca(rsL, { display_name: 'Nikola', obseg: 'klub', klub: 'FK Sloga' })
+  preveri('e-pošta: poznavalec sr', pSr.html.includes('poznavalac kluba FK Sloga') && pSr.html.includes('/positions?t=rs-beograd-zona') && !slovenskoSr.test(pSr.html))
+  const popSr = E.sestaviPopravekPozicije(rsL, { display_name: 'Nikola', team_name: 'Junaci', igralci: [{ ime: 'Nikola Jovanović', pozicija: 'MID' }] })
+  const izSr = E.sestaviIzstopKluba(rsL, { display_name: 'Nikola', team_name: 'Junaci', igralci: [{ ime: 'Nikola Jovanović', klub: 'FK Sloga' }] })
+  const pushSr = E.sestaviPushOpomnik(rsL, rok)
+  const tSr = E.sestaviTedenskiPregled(rsL, {
+    display_name: 'Nikola', ekipa: 'Junaci', krog: 5, tocke: 2.5, mesto: 3, mesto_prej: 5, ekip: 12,
+    povprecje: 30, najvec: 60, kapetan: 'Nikola Jovanović', kapetan_tocke: 3, najboljsi: null, najboljsi_tocke: null,
+  })
+  preveri('e-pošta: popravek pozicije, izstop, push in tedenski pregled sr',
+    popSr.html.includes('(sada vezni)') && izSr.naslov.includes('istupio je iz lige') &&
+      pushSr.naslov.includes('još nemaš tim') && tSr.naslov.includes('2,5 bodova') && tSr.html.includes('3 boda') &&
+      !slovenskoSr.test(popSr.naslov + popSr.html + izSr.naslov + izSr.html + pushSr.besedilo + tSr.naslov + tSr.html), tSr.naslov)
+  preveri('e-pošta: sr brez pomišljajev',
+    [oSr, oSr2, zSr, bSr, pSr, popSr, izSr, tSr].every((m) => !pomisljaj.test(m.naslov + brezNoge(m.html))) &&
+      !pomisljaj.test(pushSr.naslov + pushSr.besedilo))
+  // Avtentikacijska pošta: srbska veja predlog in zadev brez slovenščine in pomišljajev.
+  const vejeSr = ['confirmation', 'magic_link', 'recovery'].map((ime) => {
+    const h = readFileSync(new URL(`../supabase/templates/${ime}.html`, import.meta.url), 'utf8')
+    const m = h.match(/"sr" }}([\s\S]*?){{ else/)
+    return m ? m[1].replace(/href="[^"]*"/g, '') : null
+  })
+  const zadeveSr = [...readFileSync(new URL('../scripts/hetzner/docker-compose.slff.yml', import.meta.url), 'utf8')
+    .matchAll(/"sr" }}([^{]*){{/g)].map((m) => m[1])
+  preveri('e-pošta: avtentikacijske predloge in zadeve sr',
+    vejeSr.every((v) => v && !slovenskoSr.test(v) && !pomisljaj.test(v)) && zadeveSr.length === 3 &&
+      zadeveSr.every((z) => !slovenskoSr.test(z) && !pomisljaj.test(z)), zadeveSr.join(' | '))
 
   // Tedenski pregled "Tvoj krog".
   const krog = {

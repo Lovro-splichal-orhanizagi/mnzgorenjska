@@ -96,12 +96,15 @@ export function ligaVTozilniku(liga: string, j: Jezik = jezik()): string {
   // Zveza za pomišljajem ("— Varaždin") ostane v imenovalniku.
   // Sklanjamo le do samostalnika lige (liga, NL, ŽNL …): kraj za njim ostane
   // ("Druga ŽNL Županja" -> "Drugu ŽNL Županja", ne "Županju").
-  if (j === 'hr') {
+  // Srbščina sklanja enako, glava je lahko še "zona" ("Zona Dunav" -> "Zonu
+  // Dunav", "Srpska liga Beograd" -> "Srpsku ligu Beograd").
+  if (j === 'hr' || j === 'sr') {
     const [ime, ...zveza] = liga.split(' — ')
     const besede = ime.split(' ')
+    const glave = j === 'sr' ? /^(liga|zona)$/i : /^(liga|NL|ŽNL|MNL|ŽL|LNS)$/i
     let glava = -1
     besede.forEach((b, i) => {
-      if (/^(liga|NL|ŽNL|MNL|ŽL|LNS)$/i.test(b)) glava = i
+      if (glave.test(b)) glava = i
     })
     const sklon = besede
       .map((b, i) => (i <= glava ? b.replace(/^(\p{L}+)a$/u, '$1u') : b))

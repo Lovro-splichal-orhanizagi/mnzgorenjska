@@ -40,6 +40,10 @@ const KANALI: Record<string, string> = {
   hu: 'cmucx868b000cv2atsowgly81',
   // Nemškega (avstrijskega) kanala tudi še ni: dobijo slovenskega.
   de: 'cmucx868b000cv2atsowgly81',
+  // Srbskega kanala še ni: srbski obiskovalci dobijo hrvaškega (jezik je
+  // blizu, baza znanja in odgovori v hrvaščini jim ustrezajo bolje od
+  // slovenskih). Ko kanal (s srbsko bazo znanja) nastane, gre tu njegov id.
+  sr: 'cmuymww46001dtk2c4j207tbd',
 }
 const skripta = (id: string) => `https://helpstack.eu/widget.js?id=${id}`
 
