@@ -200,7 +200,20 @@ Vpisanih je 15 lig severozahoda (migracija 20261004163300), **neaktivnih**:
 
 Klubi se ujemajo le znotraj države vira (`mapaKlubov` po `vir.drzava`):
 "NK Polet" ali "NK Mladost" je v Sloveniji in na Hrvaškem drug klub. Ključ
-kluba ohrani ć in đ, ki ju slovenski `poenostavi` zavrže.
+kluba ohrani ć in đ, ki ju slovenski `poenostavi` zavrže — tudi natančno ime
+v `mapaKlubov` gre skozi `vir.poenostavi` (prej slovenski: "NK Tomislav (Đ)"
+je bil "nk tomislav" in vanj je padel NK Tomislav iz Drnja).
+
+**Isto ime, drug klub.** Semafor istoimenskim klubom večinoma doda oznako
+("NK Tomislav (DA)"), ne vedno: "NK Ponikve" je Zagreb in Ston, "NK Polet
+(SK)" Sveta Klara in Skrad. Uvoz ju je vpisal v isti zapis (grb, stran
+kluba, navijači). `IME_KLUBA` v `hns.mjs` enega preimenuje po šifri kluba
+na Semaforju (`data-id` v razporedu; glava strani tekme šifre nima, zato
+zapisnik vzame ime iz razporeda). Pregled 9. 10. 2026 je našel sedem
+zapisov, migracija `20261009235300` jih je razdelila. `node
+scripts/hrvaske-lige.mjs` na koncu izpiše nove trke — dodaj jih v
+`IME_KLUBA`, preden ligo uvoziš, in preimenuj le klub, ki v bazi zapisa s
+tem imenom še nima.
 
 Vmesnik je v hrvaščini (`src/i18n/hr/`, `JEZIK_DRZAVE.HR`), vstop je
 `slff.eu/hr`, kartica ob deljenju `hr.html`, pošta ima hrvaško vejo. Stran

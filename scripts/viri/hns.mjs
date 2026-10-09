@@ -56,6 +56,28 @@ export function minuta(s) {
 
 const besedilo = (html) => razpakiraj(String(html ?? '').replace(/<[^>]+>/g, ' '))
 
+// Isto ime, drug klub. Semafor da istoimenskim klubom različnih županij
+// večinoma oznako ("NK Tomislav (DA)", "NK Polet (SK)"), ne pa vedno: "NK
+// Ponikve" je klub iz Zagreba in klub iz Stona. Klub je v bazi enoličen po
+// imenu znotraj države, zato je uvoz oba vpisal v isti zapis (grb, stran
+// kluba, navijači so si jih delili). Kot pri oefb (`IME_DRUSTVA`) enega
+// preimenujemo po stalni šifri kluba na Semaforju (`data-id` v razporedu,
+// `/klubovi/<id>/`); drugi ostane, kot je. Pregled vseh 82 lig in arhivov
+// (9. 10. 2026) je našel teh šest; zapise je razdelila migracija
+// 20261009235300. Nov trk izpiše `node scripts/hrvaske-lige.mjs` — dodaj ga
+// sem, PREDEN se liga uvozi, in le klub, ki v bazi še nima zapisa s tem imenom.
+export const IME_KLUBA = {
+  617: 'NK Ponikve (Zagreb)', // "NK Ponikve" ostane klub iz Stona (1017)
+  2573: 'NK Polet (Skrad)', // "NK Polet (SK)" ostane Sveta Klara (605)
+  1329: 'NK Sveti Đurađ (Virovitica)', // "NK Sveti Đurađ" ostane Donji Miholjac (762)
+  209: 'NK Dragovoljac (Poličnik)', // "NK Dragovoljac" ostane Bočkovec (943)
+  178362: 'NK Borac (Novo Selo)', // "NK Borac" ostane Imbriovec (955)
+  40074: 'NK Podravac (Sesvete Ludbreške)', // "NK Podravac" ostane Virje (917)
+}
+
+/** Ime kluba za bazo: trk imen razreši šifra kluba na Semaforju. */
+export const imeKluba = (ime, id) => IME_KLUBA[id] ?? ime
+
 /** Vrstice razporeda s strani tekmovanja — vsaka tekma enkrat. */
 export function vrsticeRazporeda(html) {
   const blok = html.slice(Math.max(0, html.indexOf('current_results')))
@@ -64,7 +86,11 @@ export function vrsticeRazporeda(html) {
   for (const m of blok.matchAll(re)) {
     const [, krog, id, v] = m
     if (tekme.has(id)) continue
-    const ime = (k) => besedilo(v.match(new RegExp(`<div class="${k}"[^>]*><a[^>]*>([^<]*)`))?.[1])
+    const klub = (k) => v.match(new RegExp(`<div class="${k}"(?: data-id="(\\d+)")?[^>]*><a[^>]*>([^<]*)`))
+    const ime = (k) => {
+      const x = klub(k)
+      return x ? imeKluba(besedilo(x[2]), x[1]) : ''
+    }
     const r1 = v.match(/<div class="res1">([^<]*)</)?.[1]?.trim()
     const r2 = v.match(/<div class="res2">([^<]*)</)?.[1]?.trim()
     const { datum, ura } = datumUra(v.match(/<div class="date">([^<]*)</)?.[1])
@@ -76,6 +102,8 @@ export function vrsticeRazporeda(html) {
       ura,
       domaci: ime('club1'),
       gostje: ime('club2'),
+      domaciId: klub('club1')?.[1] ?? null,
+      gostjeId: klub('club2')?.[1] ?? null,
       izid: odigrana ? { domaci: Number(r1), gostje: Number(r2) } : null,
     })
   }
@@ -357,6 +385,17 @@ export function kratkoImeHr(polno) {
   return ime.length >= 2 ? ime : razpakiraj(polno)
 }
 
+/**
+ * Glava strani tekme šifre kluba nima, zato preimenovani klub (`IME_KLUBA`)
+ * dobi ime iz vrstice razporeda — sicer bi razpored tekmo vpisal enemu
+ * klubu, zapisnik pa drugemu. Ostala imena ostanejo, kot jih piše glava.
+ */
+export function sImenomIzRazporeda(z, t) {
+  if (IME_KLUBA[t.domaciId]) z.domaci.ime = t.domaci
+  if (IME_KLUBA[t.gostjeId]) z.gostje.ime = t.gostje
+  return z
+}
+
 /** Dni od datuma tekme ('YYYY-MM-DD'); brez datuma 0, da se tekma prebere. */
 const starostDni = (datum) => (datum ? (Date.now() - Date.parse(`${datum}T00:00:00Z`)) / 86400000 : 0)
 
@@ -417,7 +456,7 @@ const vir = {
       // tudi mesec dni pozneje (NK Sokol : Nacional, hr-sm-1-znl, tekma
       // 6. 9., zapisnik po 18. 9.) in tak ni prišel nikoli.
       if (!z && starostDni(t.datum) <= 45) z = vZapisnik(await prenesi(url, ime, true), { id: t.id, url })
-      if (z) out.push({ id: z.zapisnikId, z, url })
+      if (z) out.push({ id: z.zapisnikId, z: sImenomIzRazporeda(z, t), url })
     }
     return out
   },
