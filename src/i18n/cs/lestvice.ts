@@ -101,6 +101,11 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     lestvicaLige: 'Žebříček tvé ligy',
     zavihekEkipe: 'Týmy',
     zavihekIgralci: 'Hráči',
+    zavihekKlubi: 'Kluby',
+    klubiUvod: 'Skutečné kluby, ne fantasy týmy: součet bodů všech hráčů klubu ze všech soutěží · sezóna {sezona}',
+    klubiIgralcev: { one: '{n} hráč', few: '{n} hráči', many: '{n} hráče', other: '{n} hráčů' },
+    klubiOpomba:
+      'Dospělí a dorost klubu se sčítají. Body jsou bez asistencí; hráč se počítá klubu, za který hraje teď. Kluby s více družstvy a soutěže s více odehranými koly nasbírají víc.',
     vrhNaslov: 'Kdo vládne Česku?',
     vrhPoglejVse: 'Zobrazit nejlepších 10 →',
     vrhUvod: 'Nejlepších 10 ze všech lig · sezóna {sezona}',

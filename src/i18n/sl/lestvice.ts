@@ -106,6 +106,11 @@ export const lestvice = {
     lestvicaLige: 'Lestvica svoje lige',
     zavihekEkipe: 'Ekipe',
     zavihekIgralci: 'Igralci',
+    zavihekKlubi: 'Klubi',
+    klubiUvod: 'Pravi klubi, ne fantasy ekipe: seštevek točk vseh igralcev kluba iz vseh lig · sezona {sezona}',
+    klubiIgralcev: { one: '{n} igralec', two: '{n} igralca', few: '{n} igralci', other: '{n} igralcev' },
+    klubiOpomba:
+      'Člani in mladinci kluba se seštejejo. Točke so brez asistenc; igralec šteje pri klubu, za katerega igra zdaj. Klub z več selekcijami in lige z več odigranimi krogi zberejo več.',
     vrhNaslov: 'Kdo vlada Sloveniji?',
     vrhPoglejVse: 'Poglej najboljših 10 →',
     vrhUvod: 'Najboljših 10 iz vseh lig · sezona {sezona}',

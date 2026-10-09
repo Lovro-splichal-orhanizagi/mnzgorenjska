@@ -98,6 +98,11 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     lestvicaLige: 'Your league’s standings',
     zavihekEkipe: 'Teams',
     zavihekIgralci: 'Players',
+    zavihekKlubi: 'Clubs',
+    klubiUvod: 'Real clubs, not fantasy teams: points of all a club’s players across all leagues · season {sezona}',
+    klubiIgralcev: { one: '{n} player', other: '{n} players' },
+    klubiOpomba:
+      'A club’s senior and youth sides are added together. Points exclude assists; a player counts for the club they play for now. Clubs with more sides and leagues with more rounds played collect more.',
     vrhNaslov: 'Who’s top nationally?',
     vrhPoglejVse: 'See the top 10 →',
     vrhUvod: 'Top 10 from all leagues · season {sezona}',

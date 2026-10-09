@@ -99,6 +99,11 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     lestvicaLige: 'A bajnokságod tabellája',
     zavihekEkipe: 'Csapatok',
     zavihekIgralci: 'Játékosok',
+    zavihekKlubi: 'Klubok',
+    klubiUvod: 'Valódi klubok, nem fantasy csapatok: a klub összes játékosának pontjai minden bajnokságból · {sezona}-es idény',
+    klubiIgralcev: { one: '{n} játékos', other: '{n} játékos' },
+    klubiOpomba:
+      'A klub felnőtt és ifjúsági csapata összeadódik. A pontok gólpasszok nélkül értendők; a játékos annál a klubnál számít, ahol most játszik. A több csapattal rendelkező klubok és a több lejátszott fordulóval rendelkező bajnokságok többet gyűjtenek.',
     vrhNaslov: 'Ki a legjobb országosan?',
     vrhPoglejVse: 'Nézd meg a top 10-et →',
     vrhUvod: 'Top 10 az összes bajnokságból · {sezona} szezon',

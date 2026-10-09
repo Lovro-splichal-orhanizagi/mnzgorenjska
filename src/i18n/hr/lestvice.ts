@@ -99,6 +99,11 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     lestvicaLige: 'Ljestvica svoje lige',
     zavihekEkipe: 'Momčadi',
     zavihekIgralci: 'Igrači',
+    zavihekKlubi: 'Klubovi',
+    klubiUvod: 'Pravi klubovi, ne fantasy ekipe: zbroj bodova svih igrača kluba iz svih liga · sezona {sezona}',
+    klubiIgralcev: { one: '{n} igrač', few: '{n} igrača', other: '{n} igrača' },
+    klubiOpomba:
+      'Seniori i juniori kluba se zbrajaju. Bodovi su bez asistencija; igrač se broji za klub za koji sada igra. Klubovi s više selekcija i lige s više odigranih kola skupe više.',
     vrhNaslov: 'Tko vlada Hrvatskom?',
     vrhPoglejVse: 'Pogledaj najboljih 10 →',
     vrhUvod: 'Najboljih 10 iz svih liga · sezona {sezona}',

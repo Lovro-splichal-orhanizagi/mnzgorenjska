@@ -6,6 +6,7 @@ import { vseVrstice } from '../lib/strani'
 import { useNaslov } from '../lib/naslov'
 import { useTekmovanje } from '../lib/tekmovanje'
 import VrhDrzave from '../components/VrhDrzave'
+import VrhKlubov from '../components/VrhKlubov'
 import {
   razvrsti,
   zMesti,
@@ -29,14 +30,15 @@ export default function Slovenija() {
   const [vseVrsticeDrzav, setVrstice] = useState<DrzavnaVrstica[]>([])
   const [kako, setKako] = useState<Razvrstitev>('skupno')
   const [koliko, setKoliko] = useState(50)
-  // Zavihek je v naslovu (`?pogled=igralci`), da naslovnica lahko pokaže
-  // naravnost na igralce in da je pogled deljiv. Ne `?t=` — ta menja ligo.
+  // Zavihek je v naslovu (`?pogled=igralci`, `?pogled=klubi`), da naslovnica
+  // lahko pokaže naravnost na igralce in da je pogled deljiv. Ne `?t=` — ta menja ligo.
   const [iskanje, setIskanje] = useSearchParams()
-  const zavihek = iskanje.get('pogled') === 'igralci' ? 'igralci' : 'ekipe'
-  const setZavihek = (k: 'ekipe' | 'igralci') => {
+  const pogled = iskanje.get('pogled')
+  const zavihek = pogled === 'igralci' || pogled === 'klubi' ? pogled : 'ekipe'
+  const setZavihek = (k: 'ekipe' | 'igralci' | 'klubi') => {
     const novo = new URLSearchParams(iskanje)
-    if (k === 'igralci') novo.set('pogled', 'igralci')
-    else novo.delete('pogled')
+    if (k === 'ekipe') novo.delete('pogled')
+    else novo.set('pogled', k)
     setIskanje(novo, { replace: true })
   }
   const [nalaganje, setNalaganje] = useState(true)
@@ -119,6 +121,7 @@ export default function Slovenija() {
           [
             ['ekipe', t('lestvice.slovenija.zavihekEkipe')],
             ['igralci', t('lestvice.slovenija.zavihekIgralci')],
+            ['klubi', t('lestvice.slovenija.zavihekKlubi')],
           ] as const
         ).map(([k, naslov]) => (
           <button
@@ -137,6 +140,8 @@ export default function Slovenija() {
 
       {zavihek === 'igralci' ? (
         <VrhDrzave drzava={drzava} />
+      ) : zavihek === 'klubi' ? (
+        <VrhKlubov drzava={drzava} />
       ) : (
         <>
           <div className="flex flex-wrap items-center justify-between gap-2">

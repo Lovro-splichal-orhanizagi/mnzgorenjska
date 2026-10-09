@@ -5678,6 +5678,21 @@ export type Database = {
           vrednost: number
         }[]
       }
+      vrh_klubov_drzave: {
+        Args: { p_drzava: string; p_koliko?: number }
+        Returns: {
+          goli: number
+          igralcev: number
+          lige: string
+          mesto: number
+          season: string
+          team_id: number
+          team_logo: string
+          team_name: string
+          team_short: string
+          tocke: number
+        }[]
+      }
       zabelezi_korak: { Args: { p_korak: string }; Returns: undefined }
       zabelezi_obisk: { Args: { p_stran: string }; Returns: undefined }
       zabelezi_sponzorja: {
