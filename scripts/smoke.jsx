@@ -4087,6 +4087,8 @@ preveri(
   preveri('oefb: faze — krogi 1–32 po 6 tekem', faze.length === 192 && new Set(faze.map((t) => t.krog)).size === 32 &&
     Math.max(...faze.map((t) => t.krog)) === 32 && [1, 22, 23, 32].every((k) => naKrog(k).length === 6) &&
     naKrog(23).every((t) => t.datum >= '2026-03-13') && naKrog(22).every((t) => t.datum < '2026-03-13'))
+  preveri('oefb: faza brez skupnega kluba pade', (() => {
+    try { O.vrsticeFaz([bl(231808), bl(231372)]); return false } catch (e) { return /nobenega kluba/.test(e.message) } })())
   const krogiBl = await O.default.razporedVseStrani('227113+231372+231373', async (_u, ime) =>
     (ime.startsWith('spielplan') ? bl(ime.match(/\d+/)[0]) : ''))
   preveri('oefb: faze — en krog za obe skupini', krogiBl.length === 32 && krogiBl.at(-1).stevilka === 32 &&

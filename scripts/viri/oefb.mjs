@@ -198,6 +198,10 @@ export function vrsticeFaz(strani) {
     const vrstice = vrsticeRazporeda(html)
     const klubi = new Set(vrstice.flatMap((t) => [kljucKlubaAt(t.domaci), kljucKlubaAt(t.gostje)]))
     const prej = faze.filter((f) => [...klubi].some((k) => f.klubi.has(k)))
+    // Poznejša faza brez enega skupnega kluba (napačna šifra, preimenovan klub)
+    // bi dobila kroge 1..N in prepisala tekme prve faze — raje padi.
+    if (faze.length && !prej.length && vrstice.length)
+      throw new Error(`oefb: faza ${faze.length + 1} nima nobenega kluba iz prejšnjih faz — preveri šifro lige`)
     const zamik = Math.max(0, ...prej.map((f) => f.zadnji))
     const premaknjene = vrstice.map((t) => (t.krog == null ? t : { ...t, krog: t.krog + zamik }))
     faze.push({ klubi, zadnji: Math.max(zamik, ...premaknjene.map((t) => t.krog ?? 0)) })
