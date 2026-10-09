@@ -6,8 +6,8 @@
 // Šteje vsak zagon, tudi ročnega ali z drugega računalnika.
 //
 // Na vsak tik:
-//   1. če kak uvoz `at-` lige še teče ali čaka, ne zažene novega;
-//   2. sicer zažene PRVO nevklopljeno ligo iz scripts/avstrija-vrsta.txt, ki še
+//   1. hkrati največ NAJVEC_HKRATI uvozov, iz vsake deželne zveze en, državna sama;
+//   2. zažene naslednje nevklopljene lige iz scripts/avstrija-vrsta.txt, ki še
 //      nima zagona ali ji je padel le enkrat (ponovitev); po dveh padcih jo
 //      preskoči in to enkrat javi na Discord;
 //   3. ligo, katere zadnji uvoz je uspel od prejšnjega tika, vklopi
@@ -37,9 +37,19 @@ export function preberiVrsto(besedilo) {
 // Čista odločitev tika. `zagoni`: [{ slug, status, conclusion, createdAt, updatedAt }],
 // `lige`: Map slug → active, `od`: ISO čas prejšnjega tika (kar je končano
 // pozneje, je novo in se vklopi ali javi enkrat).
-export function odloci({ vrsta, zagoni, lige, od }) {
-  const tece = zagoni.some((z) => z.status !== 'completed')
-  const izid = { tece, zazeni: null, vklopi: [], novi: [], javi: [], log: [], koncano: false }
+// Hkrati teče največ NAJVEC_HKRATI uvozov, iz vsake deželne zveze le eden;
+// liga državne zveze (Bundesliga, Regionalliga) meša dežele in teče sama.
+// Zveza, ki je ne poznamo, šteje kot državna (varno). Če je naslednja liga v
+// vrsti državna, se za njo ne zažene nič več, da ne čaka do konca.
+export const NAJVEC_HKRATI = 3
+export function odloci({ vrsta, zagoni, lige, od, zveze = new Map(), drzavna = 'oefb', najvec = NAJVEC_HKRATI }) {
+  const tekoci = zagoni.filter((z) => z.status !== 'completed')
+  const tece = tekoci.length > 0
+  const zveza = (slug) => zveze.get(slug) ?? drzavna
+  const zasedene = new Set(tekoci.map((z) => zveza(z.slug)))
+  let prosto = najvec - tekoci.length
+  let ustavi = false
+  const izid = { tece, zazeni: null, zazeniVse: [], vklopi: [], novi: [], javi: [], log: [], koncano: false }
   let odprtih = 0
   for (const liga of vrsta) {
     const aktivna = lige.get(liga.slug)
@@ -70,8 +80,18 @@ export function odloci({ vrsta, zagoni, lige, od }) {
       continue
     }
     odprtih++
-    if (!tece && !izid.zazeni) izid.zazeni = { ...liga, ponovitev: padli === 1 }
+    if (ustavi || prosto <= 0) continue
+    const zv = zveza(liga.slug)
+    const lahko = zv === drzavna ? zasedene.size === 0 : !zasedene.has(drzavna) && !zasedene.has(zv)
+    if (!lahko) {
+      if (zv === drzavna) ustavi = true
+      continue
+    }
+    izid.zazeniVse.push({ ...liga, ponovitev: padli === 1 })
+    zasedene.add(zv)
+    prosto--
   }
+  izid.zazeni = izid.zazeniVse[0] ?? null
   izid.koncano = odprtih === 0 && !tece && izid.novi.length === 0
   return izid
 }
@@ -101,9 +121,10 @@ async function main() {
 
   const { createClient } = await import('@supabase/supabase-js')
   const db = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } })
-  const { data, error } = await db.from('competitions').select('slug, active').in('slug', vrsta.map((l) => l.slug))
+  const { data, error } = await db.from('competitions').select('slug, active, federations(code)').in('slug', vrsta.map((l) => l.slug))
   if (error) throw new Error(`Lig ni mogoče prebrati: ${error.message}`)
   const lige = new Map(data.map((l) => [l.slug, l.active]))
+  const zveze = new Map(data.map((l) => [l.slug, l.federations?.code ?? null]).filter(([, z]) => z))
 
   const zagoni = ghJson('run', 'list', '--workflow', 'uvoz-lige.yml', '--limit', '1000',
     '--json', 'status,conclusion,displayTitle,createdAt,updatedAt')
@@ -118,7 +139,7 @@ async function main() {
   } catch {}
   const od = prejsnji ?? new Date(Date.now() - 20 * 60_000).toISOString()
 
-  const izid = odloci({ vrsta, zagoni, lige, od })
+  const izid = odloci({ vrsta, zagoni, lige, od, zveze })
   for (const v of izid.log) console.log(v)
   if (suho) {
     console.log(JSON.stringify({ od, ...izid }, null, 2))
@@ -146,11 +167,11 @@ async function main() {
     console.log(`Vklopljene: ${vklopljene.join(', ')}; zagnani hišne ekipe in grbi.`)
   }
 
-  if (izid.zazeni) {
-    const { slug, arhiv, ponovitev } = izid.zazeni
+  for (const { slug, arhiv, ponovitev } of izid.zazeniVse) {
     gh('workflow', 'run', 'uvoz-lige.yml', '-f', `liga=${slug}`, '-f', `arhiv=${arhiv}`, '-f', 'cene=true')
     console.log(`Zagnan uvoz ${slug}${ponovitev ? ' (ponovitev)' : ''}.`)
-  } else if (izid.tece) {
+  }
+  if (!izid.zazeniVse.length && izid.tece) {
     console.log('Uvoz at- lige še teče — čakam.')
   }
   if (izid.koncano) console.log('Avstrija končana.')

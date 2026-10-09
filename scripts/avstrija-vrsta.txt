@@ -1,3 +1,8 @@
+at-bundesliga 227113+231372+231373
+at-2-liga 227112
+at-regionalliga-ost 226510
+at-regionalliga-nord 226374,226774,226368,226782
+at-regionalliga-west 226774,226430,226852
 at-st-gebietsliga-mitte 226269,221200
 at-st-gebietsliga-west 226283,221199
 at-st-gebietsliga-sued 226276,221176
@@ -5,11 +10,6 @@ at-st-gebietsliga-ost 226291,221182
 at-st-gebietsliga-mur 226281,221191
 at-st-gebietsliga-muerz 226279,221185
 at-st-gebietsliga-enns 226266,221190
-at-bundesliga 227113+231372+231373
-at-2-liga 227112
-at-regionalliga-ost 226510
-at-regionalliga-nord 226374,226774,226368,226782
-at-regionalliga-west 226774,226430,226852
 at-b-landesliga 226443
 at-b-ii-liga-nord 226451
 at-b-ii-liga-mitte 226446

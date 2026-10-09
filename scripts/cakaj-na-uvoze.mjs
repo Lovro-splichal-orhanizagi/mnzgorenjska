@@ -38,6 +38,8 @@ const mojaLiga = arg('--liga')
 const samoTece = process.argv.includes('--tece')
 let mojaDrzava = arg('--drzava')?.toUpperCase() ?? null
 const NAJVEC_MIN = Number(arg('--najvec') ?? 120)
+// Države, kjer zveze pod državno nimajo skupnih klubov: država → državna zveza.
+const LOCENE_ZVEZE = { AT: 'oefb' }
 
 const { GITHUB_RUN_ID, GITHUB_REPOSITORY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = process.env
 if (!GITHUB_RUN_ID || !GITHUB_REPOSITORY) {
@@ -46,19 +48,23 @@ if (!GITHUB_RUN_ID || !GITHUB_REPOSITORY) {
 }
 const db = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } })
 
-const { data: lige, error } = await db.from('competitions').select('slug, active, countries!inner(code)')
+const { data: lige, error } = await db.from('competitions').select('slug, active, countries!inner(code), federations(code)')
 if (error) {
   console.error(`Lig ni mogoče prebrati: ${error.message}`)
   process.exit(1)
 }
-const ligaPoSlugu = new Map(lige.map((l) => [l.slug, { aktivna: l.active, drzava: l.countries.code }]))
+const ligaPoSlugu = new Map(
+  lige.map((l) => [l.slug, { aktivna: l.active, drzava: l.countries.code, zveza: l.federations?.code ?? null }]),
+)
 
 let mojaJeAktivna = true
+let mojaZveza = null
 if (mojaLiga) {
   const l = ligaPoSlugu.get(mojaLiga)
   // Neznana liga: korak "Preveri, da liga obstaja" jo zavrne; tu čakamo kot prej.
   mojaDrzava = l?.drzava ?? null
   mojaJeAktivna = l?.aktivna ?? true
+  mojaZveza = l?.zveza ?? null
 }
 
 const gh = (...a) => execFileSync('gh', [...a, '-R', GITHUB_REPOSITORY], { encoding: 'utf8' })
@@ -76,7 +82,16 @@ function seKrize(tok, naslov) {
     // zadeva (madžarske lige pred vklopom: sicer bi vsak urni zagon čakal
     // na tekoči ročni uvoz).
     if (!mojaLiga && !liga.aktivna) return false
-    return liga.drzava === mojaDrzava
+    if (liga.drzava !== mojaDrzava) return false
+    // V Avstriji je vsaka deželna zveza svoja piramida klubov: ročna uvoza
+    // nevklopljenih lig dveh dežel ne pišeta v iste klube in tečeta hkrati
+    // (Avstrija, 9. 10. 2026). Državna zveza (Bundesliga, Regionalliga) meša
+    // dežele, zato čaka na vse. Hkratni vpis istega novega kluba (redko, npr. obe
+    // Regionalligi Süd uvozita isti mešani arhiv) ujame klubId.
+    const drzavna = LOCENE_ZVEZE[mojaDrzava]
+    if (drzavna && mojaLiga && !mojaJeAktivna && !liga.aktivna && mojaZveza && liga.zveza &&
+        mojaZveza !== liga.zveza && mojaZveza !== drzavna && liga.zveza !== drzavna) return false
+    return true
   }
   // Nočni uvoz piše le v vklopljene lige. Ročni uvoz nevklopljene ga ne moti;
   // med seboj pa nočne zagone vrsti že skupina `uvoz-zapisnikov`.
