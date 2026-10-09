@@ -19,7 +19,7 @@ update public.matches
    set kontumacija = true,
        imported_at = null,
        zapisnik_id = null,
-       import_warnings = null
+       import_warnings = '{}'
  where id = 66768
    and zapisnik_id = '100982308'
    and home_goals = 3 and away_goals = 0;
