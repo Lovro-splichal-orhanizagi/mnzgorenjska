@@ -605,7 +605,8 @@ zapisnikov. Seznam za uvozno verigo je `scripts/avstrija-lige.txt` (`<slug>
 *Uvoz lige* (naslov `Uvoz lige <slug>`, štejejo tudi ročni) in baze. Hkrati
 tečejo največ trije uvozi, **iz vsake deželne zveze en**; državna (`oefb`:
 Bundesliga, 2. Liga, Regionalliga) meša dežele in teče sama, in če je na vrsti,
-se za njo ne zažene nič. Deželne zveze nimajo skupnih klubov, zato
+se za njo ne zažene nič. Deželne zveze skoraj nimajo skupnih klubov (izjema:
+obe Regionalligi Süd uvozita isti arhiv mešane Regionallige `226374`, `221198`), zato
 `cakaj-na-uvoze.mjs` v Avstriji (`LOCENE_ZVEZE`) ročna uvoza nevklopljenih lig
 dveh dežel pusti teči hkrati; hkraten vpis istega novega kluba ujame `klubId`
 (23505 → obstoječi klub). Zažene nevklopljene lige brez zagona ali z enim

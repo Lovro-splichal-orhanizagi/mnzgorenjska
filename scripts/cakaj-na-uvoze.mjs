@@ -86,7 +86,8 @@ function seKrize(tok, naslov) {
     // V Avstriji je vsaka deželna zveza svoja piramida klubov: ročna uvoza
     // nevklopljenih lig dveh dežel ne pišeta v iste klube in tečeta hkrati
     // (Avstrija, 9. 10. 2026). Državna zveza (Bundesliga, Regionalliga) meša
-    // dežele, zato čaka na vse. Hkratni vpis istega novega kluba ujame klubId.
+    // dežele, zato čaka na vse. Hkratni vpis istega novega kluba (redko, npr. obe
+    // Regionalligi Süd uvozita isti mešani arhiv) ujame klubId.
     const drzavna = LOCENE_ZVEZE[mojaDrzava]
     if (drzavna && mojaLiga && !mojaJeAktivna && !liga.aktivna && mojaZveza && liga.zveza &&
         mojaZveza !== liga.zveza && mojaZveza !== drzavna && liga.zveza !== drzavna) return false
