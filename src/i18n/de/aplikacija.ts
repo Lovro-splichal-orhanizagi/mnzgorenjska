@@ -21,6 +21,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
   },
   noga: {
     zasebnost: 'Datenschutz und Nutzungsbedingungen',
+    facebook: 'Folge uns auf Facebook',
     vir: 'Daten: offizielle Spielberichte von <vir>{ime}</vir>',
     zvezeSplosno: 'dem Verband',
   },
