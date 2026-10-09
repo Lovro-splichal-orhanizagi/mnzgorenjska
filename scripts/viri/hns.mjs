@@ -99,7 +99,28 @@ export function jeKontumacija(html, izid) {
   const stej = (blok) => (blok.match(/class="row match_lineup"/g) ?? []).length
   const doma = stej(sestava.slice(iDoma, iGost))
   const gost = stej(sestava.slice(iGost))
-  return (doma === 0) !== (gost === 0)
+  if ((doma === 0) !== (gost === 0)) return true
+  return premaloIgralcev(sestava.slice(iDoma, iGost), sestava.slice(iGost))
+}
+
+// Tekma se ne sme začeti, če ima ekipa manj kot sedem igralcev (17 pravil
+// igre, 3. pravilo).
+const NAJMANJ_IGRALCEV = 7
+
+/**
+ * Ekipa je prišla s premalo igralci: Semafor vnese obe postavi, ena ima manj
+ * kot sedem začetnikov, dogodkov ni nobenega, izid je dodeljen 3:0 (NK
+ * Suhopolje : NK Crnac, Premijer ŽNL Virovitica 9. 5. 2026, Crnac s šestimi).
+ * Tekma ni bila odigrana — vsi bi sicer dobili 90 minut in čisto mrežo.
+ * Klicatelj preveri izid (3:0).
+ */
+function premaloIgralcev(blokDoma, blokGost) {
+  const ekipi = [igralciEkipe(blokDoma), igralciEkipe(blokGost)]
+  const zacetnikov = ekipi.map((e) => e.postava.length)
+  if (Math.min(...zacetnikov) === 0 || Math.min(...zacetnikov) >= NAJMANJ_IGRALCEV) return false
+  const goli = ekipi.flatMap((e) => [...e.postava, ...e.rezerve]).flatMap((i) => i.dogodki)
+    .filter((d) => d.vrsta === 'goal' || d.vrsta === 'penalty' || d.vrsta === 'own_goal')
+  return goli.length === 0
 }
 
 /**
@@ -149,7 +170,8 @@ function igralciEkipe(blok) {
 
 /**
  * Stran tekme v obliko zapisnika, kot jo dajo slovenski viri.
- * Vrne null, če tekma nima izida ali postav (zapisnik še ni vnesen).
+ * Vrne null, če tekma nima izida ali postav (zapisnik še ni vnesen) ali je
+ * kontumacija (glej `jeKontumacija`).
  */
 export function vZapisnik(html, { id = null, url = null } = {}) {
   const glava = html.slice(html.indexOf('matchHeader'), html.indexOf('matchLineup'))
@@ -169,6 +191,9 @@ export function vZapisnik(html, { id = null, url = null } = {}) {
     { ime: ime('club2'), ...igralciEkipe(sestava.slice(iGost)) },
   ]
   if (ekipe.some((e) => !e.postava.length)) return null
+  // Kontumacija s postavama (ekipa s premalo igralci) zapisnika nima.
+  if (mozna3do0({ domaci: Number(r1), gostje: Number(r2) }) &&
+    premaloIgralcev(sestava.slice(iDoma, iGost), sestava.slice(iGost))) return null
 
   const goli = []
   const zgresene = []
@@ -366,8 +391,11 @@ const vir = {
           kontumacija = jeKontumacija(stran, t.izid) || brezPostav(stran, t.izid)
         }
       }
+      // `odigrana`: Semafor pokaže izid ("- : -" je neodigrana). Tekma, ki jo
+      // zveza prestavi brez novega datuma (Mladost 1977 : Vatrogasac, 6. 9.
+      // 2026), ostane pri starem datumu brez izida — preverba je ne javlja.
       krogi.get(t.krog).tekme.push({
-        domaci: t.domaci, gostje: t.gostje, datum: t.datum, ura: t.ura, kontumacija,
+        domaci: t.domaci, gostje: t.gostje, datum: t.datum, ura: t.ura, kontumacija, odigrana: !!t.izid,
         ...(kontumacija ? { izid: t.izid } : {}),
       })
     }

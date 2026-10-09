@@ -34,7 +34,7 @@ const KONEC = /^REZULTATI\b/
 
 /**
  * @param {string[]} vrstice besedilo strani, vrstica za vrstico
- * @returns {{stevilka:number, tekme:{domaci:string,gostje:string,datum:string|null,kontumacija?:boolean}[]}[]}
+ * @returns {{stevilka:number, tekme:{domaci:string,gostje:string,datum:string|null,kontumacija?:boolean,odigrana:boolean}[]}[]}
  */
 export function razcleniRazpored(vrstice) {
   const krogi = []
@@ -67,6 +67,16 @@ export function razcleniRazpored(vrstice) {
     const mIzid = v.trim().match(/^(\d+)\s*:\s*(\d+)\s*\(\s*(?:u\.\s*d\.)?\s*\)$/i)
     if (mIzid && tekoci.tekme.length) {
       tekoci.tekme.at(-1).kontumacija = true
+      tekoci.tekme.at(-1).odigrana = true
+      continue
+    }
+    // Izid odigrane tekme ("8 : 1(5 : 0)", tudi brez polčasa). Tekma brez
+    // njega pri viru še ni odigrana — zveza jo lahko prestavi, ne da bi ji
+    // dala nov datum (Bled Bohinj : Sava Kranj, mladinci 4. 10. 2026), in
+    // preverba je ne sme javljati kot zamujen uvoz.
+    // Presledek ob dvopičju loči izid od ure ("17:30").
+    if (/^\d+(?:\s+:\s*|\s*:\s+)\d+\s*(?:\([^)]*\))?$/.test(v.trim()) && tekoci.tekme.length) {
+      tekoci.tekme.at(-1).odigrana = true
       continue
     }
 
@@ -77,9 +87,41 @@ export function razcleniRazpored(vrstice) {
         domaci: mTekma[1].trim(),
         gostje: mTekma[2].trim(),
         datum: datum(v) ?? zadnjiDatum,
+        odigrana: false,
       })
     }
   }
 
   return krogi.filter((k) => k.tekme.length)
+}
+
+/**
+ * Katera minula tekma je pri viru brez izida.
+ *
+ * Zveza tekmo lahko prestavi, ne da bi ji dala nov datum (Bled Bohinj : Sava
+ * Kranj, mladinci 4. 10. 2026; Infostyle Šmartno : Svoboda, lj-mladinci
+ * 5. 9.): vrstica ostane pri starem datumu brez zapisnika in preverba bi jo
+ * javljala vsak dan do konca sezone. Uvoz razporeda jo zato označi
+ * (`matches.vir_brez_izida`), preverba pa javi le tekmo, ki ima pri viru
+ * izid, pri nas pa zapisnika ne.
+ *
+ * Razčlenjevalnik, ki izid pozna, tekmi doda `odigrana`. Vir brez tega
+ * podatka (Ptuj, Maribor, NZS …) da `null` — preverba zanj dela kot doslej.
+ * Razpored, v katerem ni odigrana NOBENA od vsaj treh minulih tekem, je
+ * skoraj gotovo razčlenjevalnik, ki izida ne najde več (zveza je spremenila
+ * stran): tudi tedaj `null`, sicer bi preverba utihnila prav ob pokvarjenem
+ * uvozu.
+ *
+ * @param {{tekme:{datum:string|null, odigrana?:boolean}[]}[]} krogi
+ * @param {string} danes 'YYYY-MM-DD'
+ * @returns {{ brezIzida: (t: {datum:string|null, odigrana?:boolean}) => boolean|null, pokvarjen: boolean }}
+ */
+export function oznakaBrezIzida(krogi, danes) {
+  const tekme = krogi.flatMap((k) => k.tekme)
+  const minule = tekme.filter((t) => t.datum && t.datum < danes)
+  const vePove = tekme.some((t) => typeof t.odigrana === 'boolean')
+  const pokvarjen = vePove && minule.length >= 3 && !minule.some((t) => t.odigrana)
+  const brezIzida = (t) =>
+    !vePove || pokvarjen || typeof t.odigrana !== 'boolean' ? null : !t.odigrana && !!t.datum && t.datum < danes
+  return { brezIzida, pokvarjen }
 }

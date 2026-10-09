@@ -419,7 +419,7 @@ const vir = {
       // Kontumacijo IS zapiše v opombo ("kontumace"); izid takrat velja brez zapisnika.
       const kontumacija = /kontum/i.test(t.opomba)
       krogi.get(t.krog).tekme.push({
-        domaci: t.domaci, gostje: t.gostje, datum: t.datum, ura: t.ura, kontumacija,
+        domaci: t.domaci, gostje: t.gostje, datum: t.datum, ura: t.ura, kontumacija, odigrana: !!t.izid || kontumacija,
         ...(kontumacija && t.izid ? { izid: t.izid } : {}),
       })
     }

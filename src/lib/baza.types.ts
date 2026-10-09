@@ -1500,6 +1500,7 @@ export type Database = {
           played_on: string | null
           round_id: number
           source_url: string | null
+          vir_brez_izida: boolean
           zapisnik_id: string | null
         }
         ComputedFields: never
@@ -1515,6 +1516,7 @@ export type Database = {
           played_on?: string | null
           round_id: number
           source_url?: string | null
+          vir_brez_izida?: boolean
           zapisnik_id?: string | null
         }
         Update: {
@@ -1529,6 +1531,7 @@ export type Database = {
           played_on?: string | null
           round_id?: number
           source_url?: string | null
+          vir_brez_izida?: boolean
           zapisnik_id?: string | null
         }
         Relationships: [

@@ -293,7 +293,12 @@ const vir = {
       const status = t.__issfMatchStatus
       const odstop = status === 'ODSTUPENE_DRUZSTVO'
       const kontumacija = !!t.contumation?.isContumated || status === 'KONTUMOVANY' || odstop
-      krogi.get(stevilka).tekme.push({ domaci, gostje, datum, ura, kontumacija, odstop })
+      // Neodigrana tekma je nezaključena s stanjem VYGENEROVANY (le
+      // razpisana); prestavljena brez novega datuma ostane taka pri starem
+      // datumu (Prosiek : Východná, 4. 10. 2026). Vse drugo štejemo za
+      // odigrano, da preverba raje javi preveč kot premalo.
+      const odigrana = !(t.closed === false && status === 'VYGENEROVANY')
+      krogi.get(stevilka).tekme.push({ domaci, gostje, datum, ura, kontumacija, odstop, odigrana })
     }
     return [...krogi.values()].sort((a, b) => a.stevilka - b.stevilka)
   },
