@@ -454,20 +454,25 @@ const starostDni = (datum) => (datum ? (Date.now() - Date.parse(`${datum}T00:00:
  * je. `sveze` = vsako stran preberi znova (razpored); sicer stran kroga iz
  * predpomnilnika velja, dokler nima tekme brez izida, ki je že na vrsti.
  */
-// Starejše sezone (2024/25 in prej) adatbank preusmeri na živi ada1bank, ki
-// občasno vrne 43-bajtni ostanek namesto strani. Brez preverbe je bil tak
-// ostanek na 1. krogu "liga brez krogov": arhiv hu-bk-2-eszak (63/1/29300) je
-// 9. 10. 2026 uvozil 0 zapisnikov brez ene same napake. Stran kroga mora imeti
-// panel tekem; če ga nima, jo preberemo še enkrat, nato uvoz pade.
+// Adatbank del strani (vse starejše sezone in del 2025/26) preusmeri na živi
+// ada1bank. Ko je ta preobremenjen, vrne 43 bajtov: `SQLSTATE[08004] [1040]
+// Too many connections` (njihova baza, ne zavrnitev nas). Brez preverbe je bil
+// tak ostanek na 1. krogu "liga brez krogov" (hu-bk-2-eszak 9. 10. 2026: 0
+// zapisnikov brez napake), drugje pa tiho manjkajoči krogi (hu-sz-1 22/30).
+// Stran kroga mora imeti panel tekem. Ob ostanku se umaknemo vse dlje, da
+// preobremenjenemu strežniku ne dodajamo bremena; nato uvoz pade.
 export const jeStranKroga = (html) => String(html ?? '').includes('id="match_panel"')
+export const UMIK_MS = [20_000, 60_000, 180_000]
 
-async function stranKroga(koda, krog, prenesi, sveze) {
+export async function stranKroga(koda, krog, prenesi, sveze, umik = UMIK_MS) {
   let html = await prenesi(naslovKroga(koda, krog), imeKroga(koda, krog), sveze)
+  for (const ms of umik) {
+    if (jeStranKroga(html)) return html
+    await new Promise((r) => setTimeout(r, ms))
+    html = await prenesi(naslovKroga(koda, krog), imeKroga(koda, krog), true)
+  }
   if (jeStranKroga(html)) return html
-  await new Promise((r) => setTimeout(r, 5000))
-  html = await prenesi(naslovKroga(koda, krog), imeKroga(koda, krog), true)
-  if (jeStranKroga(html)) return html
-  throw new Error(`mlsz: ${koda} krog ${krog} ni stran kroga (${String(html ?? '').length} B) — uvoz ustavljen`)
+  throw new Error(`mlsz: ${koda} krog ${krog} ni stran kroga (${String(html ?? '').length} B: ${String(html ?? '').slice(0, 60)}) — uvoz ustavljen`)
 }
 
 async function straniKrogov(koda, prenesi, sveze) {

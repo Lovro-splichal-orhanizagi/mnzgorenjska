@@ -3830,23 +3830,23 @@ preveri(
   preveri('mlsz: sestavljen zapisnik brez kartonov trenerja', zs.sezona === '2026/27' && zs.krog === 8 && zs.rdeci.length === 0 &&
     minuteEkipe(0) === 960 && minuteEkipe(1) === 990)
 
-  // ada1bank občasno vrne 43-bajtni ostanek namesto strani kroga (arhiv
-  // 63/1/29300 je tako tiho dal 0 zapisnikov). Ostanek se prebere še enkrat,
-  // vztrajen ostanek ustavi uvoz.
+  // ada1bank ob preobremenitvi vrne 43 bajtov ("Too many connections") namesto
+  // strani kroga (arhiv 63/1/29300 je tako tiho dal 0 zapisnikov). Ostanek se
+  // prebere znova po umiku, vztrajen ostanek ustavi uvoz.
   const pravaStran = beri('hu-adatbank-krog-67-20-33915-8.html')
-  const ostanek = '<html><body></body></html>'.padEnd(43, ' ')
-  preveri('mlsz: ostanek ni stran kroga', M.jeStranKroga(pravaStran) && !M.jeStranKroga(ostanek))
+  const ostanek = 'SQLSTATE[08004] [1040] Too many connections'
+  preveri('mlsz: ostanek ni stran kroga', M.jeStranKroga(pravaStran) && !M.jeStranKroga(ostanek) && M.UMIK_MS.length >= 2)
   let klicev = 0
-  const enkratOstanek = async () => (++klicev === 1 ? ostanek : pravaStran)
-  const krogi = await M.default.razporedVseStrani('67/20/33915', enkratOstanek)
-  preveri('mlsz: ostanek na 1. krogu se prebere znova', klicev > 2 && krogi.some((k) => k.stevilka === 8 && k.tekme.length > 0))
+  const dvakratOstanek = async () => (++klicev <= 2 ? ostanek : pravaStran)
+  const stran = await M.stranKroga('67/20/33915', 8, dvakratOstanek, false, [0, 0, 0])
+  preveri('mlsz: ostanek se po umiku prebere znova', klicev === 3 && M.jeStranKroga(stran))
   let napaka = null
   try {
-    await M.default.zapisniki('63/1/29300', async () => ostanek)
+    await M.stranKroga('63/1/29300', 1, async () => ostanek, false, [0, 0])
   } catch (e) {
     napaka = e
   }
-  preveri('mlsz: vztrajen ostanek ustavi uvoz (ne 0 zapisnikov)', /ni stran kroga/.test(napaka?.message ?? ''))
+  preveri('mlsz: vztrajen ostanek ustavi uvoz (ne 0 zapisnikov)', /ni stran kroga.*Too many connections/.test(napaka?.message ?? ''))
 }
 
 // --- anonimizacija (GDPR) ---------------------------------------------------------
