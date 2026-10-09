@@ -454,15 +454,32 @@ const starostDni = (datum) => (datum ? (Date.now() - Date.parse(`${datum}T00:00:
  * je. `sveze` = vsako stran preberi znova (razpored); sicer stran kroga iz
  * predpomnilnika velja, dokler nima tekme brez izida, ki je že na vrsti.
  */
+// Starejše sezone (2024/25 in prej) adatbank preusmeri na živi ada1bank, ki
+// občasno vrne 43-bajtni ostanek namesto strani. Brez preverbe je bil tak
+// ostanek na 1. krogu "liga brez krogov": arhiv hu-bk-2-eszak (63/1/29300) je
+// 9. 10. 2026 uvozil 0 zapisnikov brez ene same napake. Stran kroga mora imeti
+// panel tekem; če ga nima, jo preberemo še enkrat, nato uvoz pade.
+export const jeStranKroga = (html) => String(html ?? '').includes('id="match_panel"')
+
+async function stranKroga(koda, krog, prenesi, sveze) {
+  let html = await prenesi(naslovKroga(koda, krog), imeKroga(koda, krog), sveze)
+  if (jeStranKroga(html)) return html
+  await new Promise((r) => setTimeout(r, 5000))
+  html = await prenesi(naslovKroga(koda, krog), imeKroga(koda, krog), true)
+  if (jeStranKroga(html)) return html
+  throw new Error(`mlsz: ${koda} krog ${krog} ni stran kroga (${String(html ?? '').length} B) — uvoz ustavljen`)
+}
+
 async function straniKrogov(koda, prenesi, sveze) {
-  const prva = await prenesi(naslovKroga(koda, 1), imeKroga(koda, 1), true)
+  const prva = await stranKroga(koda, 1, prenesi, true)
   const krogi = krogiStrani(prva)
+  if (!krogi.length) throw new Error(`mlsz: ${koda} nima izbirnika krogov — uvoz ustavljen`)
   const out = [{ krog: 1, html: prva }]
   const danes = new Date().toISOString().slice(0, 10)
   for (const krog of krogi.filter((k) => k !== 1)) {
-    let html = await prenesi(naslovKroga(koda, krog), imeKroga(koda, krog), sveze)
+    let html = await stranKroga(koda, krog, prenesi, sveze)
     const zastarela = vrsticeKroga(html, krog).some((t) => !t.izid && (!t.datum || t.datum <= danes))
-    if (!sveze && zastarela) html = await prenesi(naslovKroga(koda, krog), imeKroga(koda, krog), true)
+    if (!sveze && zastarela) html = await stranKroga(koda, krog, prenesi, true)
     out.push({ krog, html })
   }
   return out
