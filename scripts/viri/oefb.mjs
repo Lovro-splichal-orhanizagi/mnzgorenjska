@@ -110,6 +110,29 @@ const idTekme = (t) =>
 
 // --- razpored ----------------------------------------------------------------
 
+// Razpored piše kratko ime kraja, zato imata dva različna kluba iz dveh dežel
+// lahko isto ime ("Rust" je na Gradiščanskem in v Spodnji Avstriji). Klub je
+// v bazi enoličen po imenu znotraj države, zato enega preimenujemo — po šifri
+// društva iz povezave `vereine.oefb.at/<društvo>/`, ki je stalna. Koroški in
+// štajerski klubi (lige, vpisane prve) ohranijo ime. Pregled vseh lig
+// odraslih 2026/27 (9. 10. 2026) je našel teh šest trkov; nov trk dodaj sem.
+const IME_DRUSTVA = {
+  SCFreistadtRust: 'Rust (Bgld.)',
+  RustSv: 'Rust (NÖ)',
+  UfcMannersdorf: 'Mannersdorf (Bgld.)',
+  MannersdorfAsk: 'Mannersdorf (NÖ)',
+  SCSparkasseGmuend: 'Gmünd (NÖ)',
+  UnionReichenauOttenschlagHaibach: 'Reichenau (OÖ)',
+  SportfreundeBerg: 'Berg (NÖ)',
+  FC_Pischelsdorf: 'Pischelsdorf (OÖ)',
+}
+
+/** Ime ekipe iz vrstice razporeda; trk imen razreši šifra društva. */
+export function imeEkipe(ime, url) {
+  const drustvo = String(url ?? '').match(/vereine\.oefb\.at\/([^/]+)\//)?.[1]
+  return IME_DRUSTVA[drustvo] ?? razpakiraj(ime ?? '')
+}
+
 /** Podatki razporeda s strani Spielplan (objekt z `ergebnisse` in `spiele`). */
 function podatkiRazporeda(html) {
   return predhodniPodatki(html).find((x) => Array.isArray(x.ergebnisse) && Array.isArray(x.spiele)) ?? null
@@ -132,8 +155,8 @@ export function vrsticeRazporeda(html) {
       krog: Number(t.runde) || null,
       datum,
       ura,
-      domaci: razpakiraj(t.heimMannschaft ?? ''),
-      gostje: razpakiraj(t.gastMannschaft ?? ''),
+      domaci: imeEkipe(t.heimMannschaft, t.heimMannschaftUrl),
+      gostje: imeEkipe(t.gastMannschaft, t.gastMannschaftUrl),
       izid: izid(t.ergebnis)?.rezultat ?? null,
       status: t.status ?? null,
       // Kontumacija: namesto povezave na zapisnik "strafverifiziert" (#).

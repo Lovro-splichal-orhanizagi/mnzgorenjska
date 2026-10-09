@@ -3863,6 +3863,12 @@ preveri(
     O.kljucKlubaAt('SV Straßwalchen') !== O.kljucKlubaAt('SV Strasswalchen') && O.kljucKlubaAt('Völkermarkt') === 'völkermarkt' &&
     O.kratkoImeAt('SV Straßwalchen') === 'Straßwalchen' && O.kratkoImeAt('USV 1960 Berndorf') === 'Berndorf' && O.kratkoImeAt('Dellach / Gail') === 'Dellach / Gail' &&
     O.kratkoImeAt('SV') === 'SV')
+  // Trk imen dveh dežel: "Rust" (Bgld.) in "Rust" (NÖ) loči šifra društva; koroški klub ostane, kot je.
+  preveri('oefb: isto ime, drugo društvo', O.imeEkipe('Rust', 'https://vereine.oefb.at/RustSv/Mannschaften/Saison-2026-27/KM/Kader/') === 'Rust (NÖ)' &&
+    O.imeEkipe('Rust', 'https://vereine.oefb.at/SCFreistadtRust/Mannschaften/Saison-2026-27/KM/Kader/') === 'Rust (Bgld.)' &&
+    O.imeEkipe('Gmünd', 'https://vereine.oefb.at/AskoeGmuend/Mannschaften/Saison-2026-27/KM/Kader/') === 'Gmünd' &&
+    O.imeEkipe('Dellach / Gail', null) === 'Dellach / Gail' &&
+    O.kljucKlubaAt(O.imeEkipe('Berg', 'https://vereine.oefb.at/SportfreundeBerg/x/')) !== O.kljucKlubaAt('Berg'))
 
   // Razpored: Salzburger Liga 2026/27 po 10. krogu. Thalgau : Straßwalchen (4. krog)
   // je "Neuaustragung" — ponovitev je Straßwalchen : Thalgau 5:0, 8. 9.
