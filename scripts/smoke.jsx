@@ -4777,9 +4777,9 @@ preveri(
   o = odloci({ vrsta, lige, od: '2026-10-10T11:00:00Z', zagoni: [z('at-b', 'failure', '2026-10-10T09:00:00Z'), z('at-b', 'failure', '2026-10-10T10:05:00Z')] })
   preveri('vrsta: star preskok se ne javi znova', o.zazeni?.slug === 'at-c' && o.javi.length === 0)
   o = odloci({ vrsta, lige, od, zagoni: [z('at-b', 'failure', '2026-10-10T09:00:00Z'), z('at-b', 'success', '2026-10-10T10:05:00Z')] })
-  preveri('vrsta: nov uspeh = vklop, naprej gre naslednja', o.vklopi.join() === 'at-b' && o.zazeni?.slug === 'at-c', JSON.stringify(o))
+  preveri('vrsta: nov uspeh = vklop, naprej gre naslednja', o.vklopi.join() === 'at-b' && o.novi.join() === 'at-b' && o.zazeni?.slug === 'at-c', JSON.stringify(o))
   o = odloci({ vrsta, lige, od, zagoni: [z('at-b', 'success', '2026-10-10T09:00:00Z')] })
-  preveri('vrsta: star uspeh brez vklopa se ne vklaplja znova', o.vklopi.length === 0 && o.zazeni?.slug === 'at-c')
+  preveri('vrsta: star uspeh se vklopi tiho (zavrnitev se ne javi znova)', o.vklopi.join() === 'at-b' && o.novi.length === 0 && o.zazeni?.slug === 'at-c')
   const vse = new Map([['at-a', true], ['at-b', true], ['at-c', true], ['at-d', false]])
   const padca = [z('at-d', 'failure', '2026-10-10T08:00:00Z'), z('at-d', 'failure', '2026-10-10T09:00:00Z')]
   o = odloci({ vrsta, lige: vse, od, zagoni: padca })

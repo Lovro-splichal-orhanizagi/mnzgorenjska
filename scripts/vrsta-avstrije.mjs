@@ -39,7 +39,7 @@ export function preberiVrsto(besedilo) {
 // pozneje, je novo in se vklopi ali javi enkrat).
 export function odloci({ vrsta, zagoni, lige, od }) {
   const tece = zagoni.some((z) => z.status !== 'completed')
-  const izid = { tece, zazeni: null, vklopi: [], javi: [], log: [], koncano: false }
+  const izid = { tece, zazeni: null, vklopi: [], novi: [], javi: [], log: [], koncano: false }
   let odprtih = 0
   for (const liga of vrsta) {
     const aktivna = lige.get(liga.slug)
@@ -57,8 +57,11 @@ export function odloci({ vrsta, zagoni, lige, od }) {
     // Vsak neuspeh šteje, tudi preklican ali prekinjen zagon.
     const padli = moji.filter((z) => z.conclusion !== 'success').length
     if (zadnji?.conclusion === 'success') {
-      if (zadnji.updatedAt > od) izid.vklopi.push(liga.slug)
-      else izid.log.push(`${liga.slug}: uvoz uspel, liga ni vklopljena — odloči človek`)
+      // Vklop poskusi vsak tik (funkcija je idempotentna), da liga, ki je uspela
+      // pred prvim tikom ali med izpadom urnika, ne obvisi. Zavrnitev se javi
+      // le za uspeh, novejši od prejšnjega tika.
+      izid.vklopi.push(liga.slug)
+      if (zadnji.updatedAt > od) izid.novi.push(liga.slug)
       continue
     }
     if (padli >= 2) {
@@ -69,7 +72,7 @@ export function odloci({ vrsta, zagoni, lige, od }) {
     odprtih++
     if (!tece && !izid.zazeni) izid.zazeni = { ...liga, ponovitev: padli === 1 }
   }
-  izid.koncano = odprtih === 0 && !tece && izid.vklopi.length === 0
+  izid.koncano = odprtih === 0 && !tece && izid.novi.length === 0
   return izid
 }
 
@@ -131,7 +134,7 @@ async function main() {
     console.log(`${slug}: ${JSON.stringify(r)}`)
     if (r.vklopljena) vklopljene.push(slug)
     // Ligo je medtem vklopil kdo drug (ročno ali stara zanka) — ni kaj javiti.
-    else if (r.razlog !== 'Liga je že vklopljena.') {
+    else if (izid.novi.includes(slug) && r.razlog !== 'Liga je že vklopljena.') {
       await javi(`${slug}: vklop zavrnjen — ${r.razlog} (prvi krog ${r.prvi_krog ?? '–'}, izidi − goli ${r.razlika ?? '–'}). Odloči človek.`)
     }
   }
