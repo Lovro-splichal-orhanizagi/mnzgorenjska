@@ -4,11 +4,17 @@
 //   node scripts/hrvaske-lige.mjs --zveza 40      # ena zveza (oid, npr. 40 = ŽNS međimurski)
 //   node scripts/hrvaske-lige.mjs --sql           # vrstice za `insert into competitions`
 //
+// Na koncu izpiše še trke imen: isto ime (ključ kluba) pri dveh klubih z
+// različno šifro na Semaforju. Uvoz bi ju vpisal v isti zapis — enega
+// preimenuj v `IME_KLUBA` (viri/hns.mjs), preden ligo uvoziš.
+//
 // Semafor tekmovanja našteje po sezoni in zvezi (`/handlers/getCompetitions/`,
 // isti klic kot izbirnik na strani). Zveze so HNS (1), pet nogometnih središč
 // in županijske zveze (ŽNS, NS) — vse v istem COMET-u. Mladinske, ženske,
 // futsal, pokalne in kvalifikacije izpustimo. Arhiv (lanska sezona) poiščemo
 // po imenu brez letnice, ker ima vsaka sezona svoj id.
+import { IME_KLUBA, imeKluba, kljucKlubaHr } from './viri/hns.mjs'
+
 const OSNOVNI = 'https://semafor.hns.family'
 const GLAVE = { 'User-Agent': 'SLFF fantasy (https://slff.eu)' }
 const SEZONA = '2026/2027'
@@ -55,13 +61,23 @@ async function tekmovanja(sezona, oid) {
   return l.map((c) => ({ id: String(c.id), ime: razpakiraj(c.value) })).filter((c) => !IZPUSTI.test(c.ime))
 }
 
+// ključ kluba -> šifra kluba na Semaforju -> { ime, lige }
+const poKljucu = new Map()
+
 /** Klubi in odigrane tekme s strani tekmovanja. */
 async function obseg(id) {
   const html = await besedilo(`${OSNOVNI}/natjecanja/${id}/x/`)
   const blok = html.slice(Math.max(0, html.indexOf('current_results')))
   const vrstice = new Map()
   for (const m of blok.matchAll(/data-match="(\d+)">[\s\S]*?<div class="res1">([^<]*)</g)) vrstice.set(m[1], m[2].trim())
-  const klubi = new Set([...blok.matchAll(/<div class="club[12]" data-id="(\d+)"/g)].map((m) => m[1]))
+  const klubi = new Set()
+  for (const [, klub, ime] of blok.matchAll(/<div class="club[12]" data-id="(\d+)"><a[^>]*>([^<]*)/g)) {
+    klubi.add(klub)
+    const kljuc = kljucKlubaHr(imeKluba(razpakiraj(ime), klub))
+    if (!poKljucu.has(kljuc)) poKljucu.set(kljuc, new Map())
+    if (!poKljucu.get(kljuc).has(klub)) poKljucu.get(kljuc).set(klub, { ime: razpakiraj(ime), lige: new Set() })
+    poKljucu.get(kljuc).get(klub).lige.add(id)
+  }
   return { klubov: klubi.size, tekem: vrstice.size, odigranih: [...vrstice.values()].filter((r) => /^\d+$/.test(r)).length }
 }
 
@@ -82,4 +98,11 @@ for (const z of vse) {
         `  ${l.ime.padEnd(42)} ${l.id}  arhiv ${(arhiv?.id ?? '—').padEnd(10)} klubov ${String(o.klubov).padStart(2)}  tekem ${o.odigranih}/${o.tekem}`,
       )
   }
+}
+
+const trki = [...poKljucu.values()].filter((k) => k.size > 1)
+if (trki.length) {
+  console.log(`\nIsto ime, drug klub (${trki.length}) — uvoz bi ju združil; enega dodaj v IME_KLUBA (viri/hns.mjs):`)
+  for (const k of trki)
+    console.log('  ' + [...k].map(([klub, v]) => `${v.ime} [${klub}${IME_KLUBA[klub] ? ' ✓' : ''}] lige ${[...v.lige].join(',')}`).join('  |  '))
 }
