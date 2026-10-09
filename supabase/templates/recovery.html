@@ -32,6 +32,13 @@
     <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Új jelszó megadása →</a>
   </p>
   <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Ha nem te kértél új jelszót, hagyd figyelmen kívül ezt az e-mailt. A régi jelszavad továbbra is érvényes.</p>
+{{ else if eq (printf "%v" .Data.jezik) "de" }}
+  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Neues Passwort</p>
+  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Jemand (hoffentlich du) hat ein neues Passwort für SLFF angefordert. Klick auf den Button und gib dein neues Passwort ein.</p>
+  <p style="text-align: center; margin: 24px 0;">
+    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Neues Passwort festlegen →</a>
+  </p>
+  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Wenn du kein neues Passwort angefordert hast, ignorier diese E-Mail einfach. Dein altes Passwort bleibt gültig.</p>
 {{ else }}
   <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Ponastavitev gesla</p>
   <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Nekdo (upamo, da ti) je zahteval novo geslo za SLFF. Klikni gumb in vpiši novo geslo.</p>

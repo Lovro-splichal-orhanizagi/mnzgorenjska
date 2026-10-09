@@ -30,6 +30,13 @@
     <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Belépés →</a>
   </p>
   <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Ha nem te kérted a belépést, hagyd figyelmen kívül ezt az e-mailt.</p>
+{{ else if eq (printf "%v" .Data.jezik) "de" }}
+  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Anmeldung bei SLFF</p>
+  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Klick auf den Button und du bist angemeldet. Der Link gilt eine Stunde und funktioniert nur einmal.</p>
+  <p style="text-align: center; margin: 24px 0;">
+    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Anmelden →</a>
+  </p>
+  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Wenn du die Anmeldung nicht angefordert hast, ignorier diese E-Mail einfach.</p>
 {{ else }}
   <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Prijava v SLFF</p>
   <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Klikni gumb in prijavljen/a si. Povezava velja eno uro in jo lahko uporabiš le enkrat.</p>
