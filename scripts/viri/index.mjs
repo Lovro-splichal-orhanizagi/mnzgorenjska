@@ -19,6 +19,7 @@ import sportnet from './sportnet.mjs'
 import hns from './hns.mjs'
 import facr from './facr.mjs'
 import mlsz from './mlsz.mjs'
+import oefb from './oefb.mjs'
 
 const VIRI = {
   mnzg,
@@ -39,6 +40,8 @@ const VIRI = {
   facr,
   // Madžarska (MLSZ in županijske zveze) prek MLSZ adatbank.
   mlsz,
+  // Avstrija (ÖFB in deželne zveze) prek oefb.at.
+  oefb,
 }
 
 /**
