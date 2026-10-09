@@ -6,13 +6,18 @@ import { DOMENA, jeNativno } from './platforma.ts'
 
 const KLJUC = 'slff-drzava'
 
-/** Znane države: jezik in časovni pas, ki nanje kažeta. */
+/**
+ * Znane države: jezik in časovni pas, ki nanje kažeta. Jezik je osnova
+ * (`sk`) ali cela oznaka z regijo (`de-at`): nemščina sama je tudi Nemčija
+ * in Švica, zato na Avstrijo kaže le `de-AT` ali pas `Europe/Vienna`.
+ */
 const DRZAVE: Record<string, { jeziki: string[]; pasovi: string[] }> = {
   SI: { jeziki: ['sl'], pasovi: ['Europe/Ljubljana'] },
   SK: { jeziki: ['sk'], pasovi: ['Europe/Bratislava'] },
   HR: { jeziki: ['hr', 'bs'], pasovi: ['Europe/Zagreb'] },
   CZ: { jeziki: ['cs'], pasovi: ['Europe/Prague'] },
   HU: { jeziki: ['hu'], pasovi: ['Europe/Budapest'] },
+  AT: { jeziki: ['de-at'], pasovi: ['Europe/Vienna'] },
 }
 export const znaneDrzave = () => Object.keys(DRZAVE)
 
@@ -52,8 +57,8 @@ export function ugibajDrzavo({
   // Zaprte države se ne ugiba — vanje pride le, kdor ima povezavo.
   const odprte = Object.entries(DRZAVE).filter(([k]) => jeOdprta(k))
   for (const j of jeziki ?? []) {
-    const osnova = j.toLowerCase().slice(0, 2)
-    const d = odprte.find(([, v]) => v.jeziki.includes(osnova))
+    const oznaka = j.toLowerCase()
+    const d = odprte.find(([, v]) => v.jeziki.includes(oznaka.slice(0, 2)) || v.jeziki.includes(oznaka))
     if (d) return d[0]
   }
   const poPasu = odprte.find(([, v]) => casovniPas && v.pasovi.includes(casovniPas))
@@ -187,10 +192,10 @@ export const izbranJezik = (): string | null => beri(KLJUC_IZBRANEGA_JEZIKA)
 export const jeTujIp = (ip: string | null | undefined, drzaveZLigami: readonly string[]): boolean =>
   Boolean(ip && drzaveZLigami.length && !drzaveZLigami.includes(ip))
 
-/** Jezik tujca: angleščina, razen če je prvi jezik brskalnika sl, sk, hr, cs ali hu. */
+/** Jezik tujca: angleščina, razen če je prvi jezik brskalnika sl, sk, hr, cs, hu ali de. */
 export function jezikTujca(jeziki: readonly string[] | null | undefined): string {
   const prvi = (jeziki?.[0] ?? '').toLowerCase().slice(0, 2)
-  return prvi === 'sl' || prvi === 'sk' || prvi === 'hr' || prvi === 'cs' || prvi === 'hu' ? prvi : 'en'
+  return prvi === 'sl' || prvi === 'sk' || prvi === 'hr' || prvi === 'cs' || prvi === 'hu' || prvi === 'de' ? prvi : 'en'
 }
 
 /**
@@ -243,4 +248,4 @@ export function drzavaLige(slug: string | null | undefined): string | null {
 }
 
 /** Jezik vmesnika za državo. */
-export const JEZIK_DRZAVE: Record<string, string> = { SI: 'sl', SK: 'sk', HR: 'hr', CZ: 'cs', HU: 'hu' }
+export const JEZIK_DRZAVE: Record<string, string> = { SI: 'sl', SK: 'sk', HR: 'hr', CZ: 'cs', HU: 'hu', AT: 'de' }

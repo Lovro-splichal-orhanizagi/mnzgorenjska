@@ -87,6 +87,9 @@ export function ligaVTozilniku(liga: string, j: Jezik = jezik()): string {
   // samostojno ("Elindult a fantasy liga: Megyei I. osztály") in ostane v
   // imenovalniku.
   if (j === 'hu') return liga
+  // Nemščina ime lige prav tako postavi samostojno za dvopičje
+  // ("Die Fantasy-Liga ist eröffnet: Landesliga") in ga ne sklanja.
+  if (j === 'de') return liga
   if (j === 'sk') return liga.replace(/(^|\s)liga(?=\s|$)/, '$1ligu').replace(/(^|\s)trieda(?=\s|$)/, '$1triedu')
   // Hrvaščina: ženske besede imena pred " — " na -a dobijo -u: "Treća NL Sjever"
   // -> "Treću NL Sjever", "Prva zagrebačka liga" -> "Prvu zagrebačku ligu".

@@ -1,0 +1,152 @@
+// Deutsche Übersetzung von `aplikacija` (Quelle: src/i18n/sl/aplikacija.ts).
+import type { Prevod } from '../jedro.ts'
+
+export const aplikacija: NonNullable<Prevod['aplikacija']> = {
+  naslovStrani: {
+    osnova: 'SLFF - Sunday League Fantasy Football',
+    zStranjo: '{naslov} · SLFF',
+    opis: 'Fantasy-Fußball für den regionalen Amateurfußball. Stell dein Team zusammen, wähl einen Kapitän und miss dich mit den Leuten aus deiner Gegend.',
+    deljenje:
+      'Fantasy-Liga für den regionalen Amateurfußball. Stell ein Team aus echten Spielern zusammen, die Punkte kommen aus den offiziellen Spielberichten: Tore, Minuten, weiße Westen.',
+    deljenjeKratko: 'Fantasy-Liga für den regionalen Amateurfußball. Punkte aus den offiziellen Spielberichten.',
+  },
+  niStrani: {
+    naslov: 'Seite nicht gefunden',
+    opis: 'Vielleicht ist der Link veraltet oder in der Adresse steckt ein Tippfehler.',
+    nazaj: 'Zurück zur Startseite',
+  },
+  /** Gumb za podporo na naslovnici (components/Pivo.tsx). */
+  pivo: {
+    gumb: 'Spendier uns ein Bier',
+  },
+  noga: {
+    zasebnost: 'Datenschutz und Nutzungsbedingungen',
+    vir: 'Daten: offizielle Spielberichte von <vir>{ime}</vir>',
+    zvezeSplosno: 'dem Verband',
+  },
+  meni: {
+    mojaEkipa: 'Mein Team',
+    igralci: 'Spieler',
+    lestvica: 'Tabelle',
+    rezultati: 'Ergebnisse',
+    miniLige: 'Mini-Ligen',
+    asistence: 'Torvorlagen',
+    pozicije: 'Positionen',
+    odsotnosti: 'Ausfälle',
+    slovenija: 'Österreich',
+    admin: 'Administration',
+    vec: 'Mehr',
+    racun: 'Konto',
+    opomniki: 'Benachrichtigungen',
+    izbrisRacuna: 'Konto löschen',
+    povabi: 'Freunde einladen',
+    pomoc: 'Hilfe',
+    odjava: 'Abmelden',
+    prijava: 'Anmelden',
+    meni: 'Menü',
+    meniZGlasovi: 'Menü ({n} zum Abstimmen)',
+  },
+  izbirnikLige: {
+    ostalo: 'Sonstige',
+    liga: 'Liga',
+    oznaka: 'Liga:',
+    isciPolje: 'Liga suchen …',
+    isci: 'Ligen suchen',
+    niZadetkov: 'Keine Treffer.',
+    lige: 'Ligen',
+  },
+  izbiraDrzave: {
+    oznaka: 'Land',
+    /** Ländernamen in der eigenen Sprache, in jeder Übersetzung gleich. */
+    imena: {
+      SI: 'Slovenija',
+      SK: 'Slovensko',
+      HR: 'Hrvatska',
+      CZ: 'Česko',
+      HU: 'Magyarország',
+      AT: 'Österreich',
+    },
+    preklopi: 'Wechseln zu {drzava}',
+  },
+  izbiraJezika: {
+    oznaka: 'Sprache',
+    preklopi: 'Wechseln zu {jezik}',
+  },
+  prviObisk: {
+    naslov: 'Wo willst du spielen?',
+    opis: 'Wähl die Liga, in der du dein Team zusammenstellst und mitspielst. Wir zeigen dir ihre Spieler und die Tabelle; ändern kannst du sie jederzeit oben.',
+    brezEkip: 'noch keine Teams',
+    nazaj: '← Zurück',
+    preskoci: 'Überspringen',
+    drugaDrzava: '{drzava}?',
+    drzavaOpis: 'Wähl zuerst ein Land, dann eine Liga darin.',
+  },
+  rokKroga: {
+    dniUr: '{d} T {h} Std.',
+    urMinut: '{h} Std. {m} Min.',
+    minutSekund: '{m} Min. {s} Sek.',
+    sekund: '{s} Sek.',
+    zaklepNaslov: 'Runde {krog} wird gesperrt: {datum}',
+    ligaKrog: '{liga} · Runde {krog}',
+    zaklenjen: 'gesperrt: Änderungen am Team gelten ab der nächsten Runde',
+    zaklepCez: 'Sperre in',
+    datumOklepaj: '({datum})',
+  },
+  odstevanje: {
+    dni: '{n} T',
+    ur: '{n} Std.',
+    minut: '{n} Min.',
+    zaklenjenoPred: 'gesperrt vor {cas}',
+    se: 'noch {cas}',
+  },
+  klepet: {
+    gost: 'Gast',
+    zdaj: 'jetzt',
+    minut: '{n} Min.',
+    ur: '{n} Std.',
+    dni: '{n} T',
+    morasSePrijaviti: 'Zum Schreiben musst du angemeldet sein.',
+    predolgo: 'Die Nachricht ist zu lang (höchstens 500 Zeichen).',
+    izbrisiVprasanje: 'Diese Nachricht löschen?',
+    naslov: 'Hilf uns, besser zu werden!',
+    anonimno: 'anonym',
+    uvod: 'Was stört dich? Was wünschst du dir? Was fehlt? Deine Meinung ist uns wichtig, <krepko>schreib sie uns</krepko>. Der Chat ist anonym, niemand sieht, wer was geschrieben hat.',
+    prikazesKot: 'Im Chat erscheinst du als <ime>{ime}</ime>. Dein registrierter Name bleibt verborgen.',
+    zaPisanje: 'Melde dich an, um zu schreiben (lesen kann jeder). Dein registrierter Name bleibt verborgen, du erscheinst unter einem zufälligen Spitznamen.',
+    bodiPrvi: 'Schreib als Erster eine Nachricht.',
+    izbrisi: 'Nachricht löschen',
+    napisi: 'Schreib eine Nachricht …',
+    poslji: 'Senden',
+    zaObjavo: '<prijava>Melde dich an</prijava>, um zu schreiben.',
+  },
+  sponzor: {
+    oznaka: 'Sponsor',
+    obisci: 'Zur Website',
+  },
+  napaka: {
+    naslov: 'Die Seite hängt',
+    opis: 'Beim Anzeigen dieser Seite ist etwas schiefgelaufen. Lade die Seite neu oder geh zurück zum Start. Wenn es wieder passiert, schreib uns im Chat auf der Startseite.',
+    nazaj: 'Zurück zur Startseite',
+    osvezi: 'Seite neu laden',
+  },
+  crta: {
+    gibanje: 'Verlauf: {seznam}',
+  },
+  grb: {
+    klub: 'Klub',
+  },
+  vabilo: {
+    nasaLiga: 'unsere Liga',
+    ligaZZvezo: '{liga} ({zveza})',
+    klubi: ' aus unseren Klubs ({seznam})',
+    zadeva: 'Fantasy-Liga {liga}: mach mit',
+    besedilo:
+      'Servus!\n\nIch spiele in einer Fantasy-Fußballliga: {liga}. Du stellst dein eigenes Team aus Spielern{klubi} zusammen und trittst gegen andere an.\n\nEs ist komplett gratis. Anmelden kannst du dich hier:\n{naslov}\n\nStell ein Team zusammen, wähl einen Kapitän und schau nach jeder Runde, wer die meisten Punkte geholt hat.\n\nWir sehen uns in der Liga!',
+  },
+  // Mobilna aplikacija je prestara (PosodobiAplikacijo).
+  posodobi: {
+    naslov: 'App aktualisieren',
+    opis: 'Diese Version von SLFF wird nicht mehr unterstützt. Aktualisiere die App, um deinen Kader weiter zu verwalten.',
+    gumb: 'Aktualisieren',
+  },
+}

@@ -445,6 +445,25 @@ klube zunaj lige uvoz razporeda deaktivira.
 | hu-ve-2 | `67/19/33719` | `65/19/32270` (alapszakasz, brez felső/alsóháza) |
 | hu-za-2 | `67/20/33916` | `65/20/31673` |
 
+### Avstrija
+
+Država `AT` ("Österreich", migracija 20261009160000) ima vmesnik v nemščini
+(`src/i18n/de/`, jezik `de`, `de-AT`, `JEZIK_DRZAVE.AT`), vstop `slff.eu/at`,
+kartico ob deljenju `at.html` (Caddy jo vrne za `/at` in `?t=at-…`), nemško
+vejo pošte (`sporocila.ts`, avtentikacijske predloge in zadeve v
+`docker-compose.slff.yml`, pozdrav "Servus") in avstrijska imena lastnikov
+hišnih ekip ("Lukas Gruber"). **Šifra avstrijske lige se začne s `at-`.**
+Ugib: brskalnik `de-AT` ali pas `Europe/Vienna` — sama nemščina (`de`,
+`de-DE`) ni Avstrija, ker je tudi Nemčija in Švica; tujec z nemškim
+brskalnikom pa dobi nemščino. Izrazi kot v FPL: Kader, Startelf, Bank,
+Kapitän, Vizekapitän, Transfers, `krog` je vedno **Runde**, vratar je
+"Tormann", pripomoček `klop_plus` je "Bank+". Ime lige stoji za dvopičjem
+("Die Fantasy-Liga ist eröffnet: {liga}"), `ligaVTozilniku` ga pusti. Zveze,
+tekmovanja in vir vpiše svoja migracija. Stran Pozicije je v meniju kot v
+Sloveniji (če avstrijski vir pozicije prinese, jo skrij v `Navbar.tsx` kot za
+SK). Nemškega kanala v HelpStacku še ni: `Podpora.tsx` za `de` uporabi
+slovenskega.
+
 ### Država obiskovalca
 
 Domena je ena, **lige druge države so skrite**: `useTekmovanje().tekmovanja`
@@ -727,7 +746,7 @@ besedilom). **Obvezno, vsakič:**
    istega pošiljatelja po 3+ dneh je v redu).
 2. **Po** poslanem mailu: `node scripts/stiki-klubov.mjs zabelezi --za <naslov>
    --vrsta prvi|opomnik --poslal <ime> --zadeva "…" --telo-datoteka <datoteka>`
-   (nov naslov še `--klub "…" --drzava SI|SK|HR|CZ|HU [--liga …]`). Pri paketih
+   (nov naslov še `--klub "…" --drzava SI|SK|HR|CZ|HU|AT [--liga …]`). Pri paketih
    beleži sproti, po vsakem mailu, ne na koncu.
 3. Odgovor kluba: `zabelezi --vrsta odgovor --opomba "<povzetek>"`; dogovor ali
    zavrnitev: `nastavi --za … --stanje sodeluje|ne_zeli`.
@@ -763,9 +782,9 @@ vpisana pri Supabase kot povratni naslov ponastavitve gesla in žeton nosi v
   `src/i18n` — nikoli `toLocaleString('sl-SI')`.
 - Drugi jezik (`src/i18n/hr/`) je lahko delen; manjkajoče pride iz
   slovenščine. `npm run prevodi -- hr` izpiše, kaj manjka. Brskalnik izbere
-  jezik sam šele, ko je v `PRIPRAVLJENI` (`sl`, `hr`, `sk`, `cs`, `hu`, `en`). Hrvaščina,
-  slovaščina, češčina, madžarščina in angleščina so popolne — smoke preveri, da imajo vse ključe ter iste
-  `{parametre}` in `<oznake>`; nov slovenski niz zato dodaj v vseh pet.
+  jezik sam šele, ko je v `PRIPRAVLJENI` (`sl`, `hr`, `sk`, `cs`, `hu`, `de`, `en`). Hrvaščina,
+  slovaščina, češčina, madžarščina, nemščina in angleščina so popolne — smoke preveri, da imajo vse ključe ter iste
+  `{parametre}` in `<oznake>`; nov slovenski niz zato dodaj v vseh šest.
 - **Kateri jezik** (`zeljenJezik` v `src/lib/drzavaUgib.ts`, isto pravilo v
   `izberi()` ob nalaganju in v varovalu konteksta lige):
   1. izbira z izbirnika **"SL · SK · EN"** (`IzbiraJezika`, v nogi in na vrhu

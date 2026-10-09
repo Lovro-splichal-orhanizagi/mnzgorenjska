@@ -38,6 +38,8 @@ const KANALI: Record<string, string> = {
   // Madžarskega kanala tudi še ni: madžarski obiskovalci dobijo slovenskega.
   // Ko kanal (z madžarsko bazo znanja) nastane, gre tu njegov id.
   hu: 'cmucx868b000cv2atsowgly81',
+  // Nemškega (avstrijskega) kanala tudi še ni: dobijo slovenskega.
+  de: 'cmucx868b000cv2atsowgly81',
 }
 const skripta = (id: string) => `https://helpstack.eu/widget.js?id=${id}`
 

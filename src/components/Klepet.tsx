@@ -74,6 +74,18 @@ const BESEDE: Record<string, { pridevniki: string[]; samostalniki: string[] }> =
       'Sas', 'Sárkány', 'Bika', 'Csikó', 'Sólyom', 'Hiúz',
     ],
   },
+  de: {
+    pridevniki: [
+      'Blauer', 'Roter', 'Grüner', 'Gelber', 'Schwarzer', 'Weißer', 'Silberner', 'Goldener',
+      'Schneller', 'Wilder', 'Stiller', 'Feuriger', 'Eisiger', 'Nächtlicher', 'Flinker',
+      'Eiserner', 'Kupferner', 'Sonniger', 'Himmlischer', 'Gnadenloser',
+    ],
+    samostalniki: [
+      'Tormann', 'Verteidiger', 'Mittelfeldspieler', 'Stürmer', 'Kapitän', 'Schiri', 'Trainer',
+      'Fan', 'Knipser', 'Spielmacher', 'Joker', 'Veteran', 'Held', 'Wolf',
+      'Adler', 'Drache', 'Stier', 'Hengst', 'Falke', 'Luchs',
+    ],
+  },
   en: {
     pridevniki: [
       'Blue', 'Red', 'Green', 'Yellow', 'Black', 'White', 'Silver', 'Golden',
