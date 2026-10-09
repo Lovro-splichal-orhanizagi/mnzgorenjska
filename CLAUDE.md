@@ -773,10 +773,94 @@ brskalnik `sr` ali pas `Europe/Belgrade`. Prevod izhaja iz hrvaškega, a z
 ekavico in srbskimi izrazi: tim (ne momčad), golman, odbrambeni, tabela,
 fudbal, nalog, imejl. Množine one/few/other in sklanjanje imena lige
 (`ligaVTozilniku`, glava `liga` ali `zona`) kot v hrvaščini. Stran Pozicije
-je v meniju kot v Sloveniji. Zveze, tekmovanja in vir še **niso vpisani**
-(ni lig, zato je država v izbirniku še ni). Manjka še: srbski kanal v
-HelpStacku (`Podpora.tsx` za `sr` uporabi slovenskega), pregled prevoda pri
-naravnem govorcu in `RS` v matriki nočnega uvoza, ko pridejo lige.
+je v meniju kot v Sloveniji. Zveze, tekmovanja in vir vpiše svoja migracija
+(spodaj). Manjka še: srbski kanal v HelpStacku (`Podpora.tsx` za `sr`
+uporabi slovenskega) in pregled prevoda pri naravnem govorcu. `RS` je v
+matriki nočnega uvoza.
+
+### Srbija — vir `fsb`
+
+Vir `fsb` (`scripts/viri/fsb.mjs`) bere **www.fsb.org.rs** (Fudbalski savez
+Beograda), WordPress stran, na kateri FSB objavlja vsa svoja tekmovanja od
+Srpske lige Beograd do opštinskih lig. Brez zaščite pred roboti; beremo
+odkrito (`User-Agent: SLFF fantasy`, **2 s** med zahtevki, popolnih zapisnikov
+ne beremo znova). **Če se pojavi izziv ali CAPTCHA, ustavi — ne obhajaj.**
+
+- **Šifra lige je slug strani lige** (`/takmicenje/<slug>/`); vsaka sezona ima
+  svojega, tudi arhiv. Slugi niso pravilni (`…-grupa-c-2`, arhiv
+  `…-grupa-c-2-2025-26`), zato se vpišejo ročno. Seznam tekočih lig je na
+  `/takmicenja/`, arhiv na `/arhiva-takmicenja/sezona-2025-2026/`.
+- **Stran lige nosi vse**: krogi so `div.accordion-item` "Kolo: N", tekma sta
+  dve vrstici (domača: datum **brez letnice** "23.08", ime, izid, status
+  Odigrana / Zakazana / U toku s povezavo `/izvestaj/?pid=N`; gostujoča: ura,
+  ime, izid). Leto pride iz sezone v naslovu strani. Najprej odstrani
+  komentarje (zakomentirane podvojene vrstice). Lestvica (`id="tabela"`) je v
+  zadnjem krogu — razčlenjevalnik se ustavi pred njo.
+- **Krog, ki teče, je v harmoniki okrnjen**: neodigrane tekme tega kroga
+  harmonika skrije (Srpska liga 9. 10. 2026: krog 8 z 2 od 7 tekem). Razdelek
+  "Aktuelno kolo: N" nad njo jih ima vse in vir ju združi. Manjkajoča tekma
+  NI izbrisana tekma; uvoz razporeda okrnjenega kroga tako ali tako ne čisti
+  (manj tekem kot poln krog).
+- Nižje lige objavijo razpored nekaj krogov naprej; ostali krogi pridejo z
+  naslednjimi uvozi razporeda.
+- **Zapisnik** `/izvestaj/?pid=N`: domači in gostje v blokih
+  `<!-- Home team -->` / `<!-- Away team -->`, začetniki v prvi tabeli, klop za
+  "Rezervni igrači". Uvažamo **le status "Odigrana"**; "U toku" je delni
+  zapisnik tekme v živo. Neveljaven pid vrne 200 s prazno predlogo — veljavnost
+  presodi vsebina. "Kolo:" v zapisniku je ograda ("ubaciti"), krog pride s
+  strani lige, ime kluba prav tako (zapisnik ga lahko piše drugače: "OFK
+  BORAC" proti "BORAC").
+- **Dogodki** so ikone z minuto ("45+1'" → 45, "90+6'" → 90): gol, penal,
+  autogol (pri strelcu v **njegovi** ekipi), zuti, crveni (direkten), drugi-zuti
+  (prvi rumeni ostane v rumeni celici), izmena — **le pri rezervi, ki je
+  prišla v igro**. Kdo je šel ven, vir ne pove.
+- **Minute (odločitev lastnika, 9. 10. 2026)**: začetnik 90 (ali do minute
+  rdečega kartona); rezerva 90 − minuta vstopa (ali do rdečega). Zamenjani
+  začetnik ima zato **90**, ker ga vir ne označi — minute začetnikov so
+  precenjene (ekipa ima čez 990 minut), minute rezerv pravilne.
+- **Vratar**: značka `bg-info` (tudi rezervni vratar) → `vratar` in GK kot
+  namig; `bg-danger` je kapetan — kapetan-vratar na tisti tekmi ni označen.
+  Ostali čakajo na glasovanje o pozicijah. *Uskladi pozicije* z `vir = fsb`.
+- **Identiteta**: vir **nima šifer igralcev ne klubov**. Igralec je ime + klub,
+  soimenjaka na isti tekmi loči dres (Studentski grad 2026/27: dva "PERIŠIĆ
+  Nikola", 5 in 8) — isti stroj kot pri slovenskih MNZ (`igralecId`).
+  Dresi se med tekmami menjajo; isto ime v drugem klubu je prestop (kot v
+  Sloveniji). Ime je "PRIIMEK Ime" v latinici; prečrkovanje iz cirilice ima
+  napake ("NemanJa", "VelJko"), `lepoIme` jih popravi v "Nemanja".
+- **Isto ime, drug klub.** Klubi so napisani brez kraja; 2026/27 imata BORAC
+  (Zonska = Ostružnica, PBL B drug) in OMLADINAC (Zonska = Veliko Polje, PBL C
+  drug) dva kluba v isti sezoni. `IME_V_LIGI` v viru jih preimenuje po šifri
+  lige ("BORAC (Ostružnica)"); kraj potrdi "Mesto:" v zapisniku domače tekme.
+  Ob novi ligi preveri trke imen vseh lig iste sezone. BORAC v PBL A 2025/26
+  ostane neopredeljen (deli vrstico `teams` z BORAC iz PBL B; igralci so
+  ločeni po ligi). Dva kluba z istim imenom v ISTI ligi (Opštinska liga Sopot
+  2025/26: dva "MLADOST") ustavita uvoz z napako.
+- **Kontumacija**: status Odigrana, izid "---", zapisnik prazen ali z eno
+  postavo (tudi z obema in brez izida: BASK : Zvezdara 2025/26). Starejša od
+  tedna dni je kontumacija; izid (3:0) vir izpelje iz lestvice (goli kluba
+  minus znani izidi, n × 3:0 ali n × 0:3), sicer ostane brez izida. Mlajša je
+  le `odigrana: false` (izid morda še ni vnesen). Imena na lestvici nosijo
+  odbitek točk ("BASK -1"), ki se odreže.
+- Rdeči karton rezervi, ki ni vstopila, ne šteje (ni nastopa).
+
+Preizkus vira (predpomnilnik pregleda 9. 10. 2026 in v živo): vseh 10 strani
+(5 lig × 2 sezoni) se razčleni v 26 krogov po 7 tekem (PBL B 2025/26: 22 po
+6), kontumacije z izidom z lestvice; vsi prebrani zapisniki imajo 11 + 11
+začetnikov in gole = izid, brez opozoril.
+
+Vpisanih je pet lig (migracija 20261010000100), **neaktivnih**. Zveza `fsb`.
+
+| liga | tekoča 2026/27 | arhiv 2025/26 |
+|---|---|---|
+| rs-bg-srpska | `srpska-liga-beograd` | `srpska-liga-beograd-2025-26` |
+| rs-bg-zonska | `zonska-liga-beograd` | `zonska-liga-beograd-2025-26` |
+| rs-bg-pbl-a | `prva-beogradska-liga-grupa-a` | `prva-beogradska-liga-grupa-a-2025-26` |
+| rs-bg-pbl-b | `prva-beogradska-liga-grupa-b` | `prva-beogradska-liga-grupa-b-2025-26` |
+| rs-bg-pbl-c | `prva-beogradska-liga-grupa-c-2` | `prva-beogradska-liga-grupa-c-2-2025-26` |
+
+Uvoz (ena za drugo): `gh workflow run uvoz-lige.yml -f liga=rs-bg-srpska -f
+arhiv=srpska-liga-beograd-2025-26 -f cene=true`. Arhiv ~180 zapisnikov po 2 s
+je okoli 7 minut na ligo.
 
 ### Država obiskovalca
 
@@ -894,7 +978,7 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   neuvoženo tekmo ni kazal izida: zveza jo je prestavila brez novega datuma
   (Bled Bohinj : Sava Kranj, 4. 10. 2026). Piše jo uvoz razporeda iz
   `odigrana`, ki ga dajo razčlenjevalniki starega CMS-a (Kranj, Ljubljana,
-  Celje), hns, sportnet, mlsz in facr (`oznakaBrezIzida` v `razpored.mjs`);
+  Celje), hns, sportnet, mlsz, facr in fsb (`oznakaBrezIzida` v `razpored.mjs`);
   ostali viri ga nimajo in tekme ostanejo neoznačene. Preverba podatkov takih
   tekem ne javi kot `tekma-ni-uvozena`, šele po 30 dneh kot `tekma-brez-izida`
   (človek odloči: kontumacija ali izbris). Nov vir naj tekmi da `odigrana`

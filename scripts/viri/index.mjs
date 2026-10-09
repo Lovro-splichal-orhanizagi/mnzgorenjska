@@ -20,6 +20,7 @@ import hns from './hns.mjs'
 import facr from './facr.mjs'
 import mlsz from './mlsz.mjs'
 import oefb from './oefb.mjs'
+import fsb from './fsb.mjs'
 
 const VIRI = {
   mnzg,
@@ -42,6 +43,8 @@ const VIRI = {
   mlsz,
   // Avstrija (ÖFB in deželne zveze) prek oefb.at.
   oefb,
+  // Srbija: Fudbalski savez Beograda (fsb.org.rs), brez šifer igralcev.
+  fsb,
 }
 
 /**
