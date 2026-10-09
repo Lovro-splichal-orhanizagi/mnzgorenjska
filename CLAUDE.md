@@ -603,13 +603,49 @@ Posebnosti:
 
 - **Bundesliga** 2026/27 je `Grunddurchgang` (12 klubov, 22 krogov); po njem
   se razdeli na Meister- in Qualifikationsgruppe, ki sta pri ÖFB **svoji
-  tekmovanji z novima šiframa**. Fantasy liga sledi Grunddurchgangu in se po
-  22. krogu konča, dokler nadaljevanja ne dodamo. Arhiv je le Grunddurchgang.
+  tekmovanji z novima šiframa** (glej *Lige z več fazami* spodaj). Arhiv
+  2025/26 je vse tri faze: `227113+231372+231373`.
   Rezultati in zapisniki Bundeslige so na oefb.at v istem JSON kot nižje lige
   (preverjeno: krog 7, 20. 9. 2026), zato drugega vira (bundesliga.at) ne
   potrebujemo.
 - **Regionalliga Süd** (Koroška 8, Štajerska 8 klubov, 14 krogov) je jesenski
-  del; spomladi je nadaljevanje svoje tekmovanje. Enako kot Bundesliga.
+  del; spomladi je nadaljevanje svoje tekmovanje. Lani je bila Regionalliga
+  Mitte ena liga brez delitve, zato oblike pomladi še ne poznamo: je pomlad
+  skupna liga obeh dežel, jo *Nove faze* javi kot mešano (ročni pregled) —
+  pripeti jo pomeni pripeljati štajerske klube v koroško ligo.
+
+**Lige z več fazami.** `source_league_code` vira `oefb` sme našteti več
+tekmovanj s `+`: `232246+<meister>+<quali>`. `vrsticeFaz` (viri/oefb.mjs)
+prebere vse razporede po vrsti in kroge poznejšega tekmovanja zamakne za
+zadnji krog faze, iz katere so prišli njegovi klubi; vzporedni skupini (brez
+skupnega kluba) si zato delita številke — Meister- in Qualifikationsgruppe
+sta obe kroga 23–32, v enem krogu z enim rokom (najzgodnejša tekma obeh).
+Ena šifra deluje kot prej. Play-off za Evropo in Relegation se ne pripneta.
+Ista oblika velja za arhiv (`uvoz-lige.yml`, `arhiv`: vejica loči sezone,
+`+` faze ene sezone) — brez nje bi arhivska Meistergruppe pristala v krogih
+1–10 ob Grunddurchgangu.
+
+Novo fazo javi delovni tok *Preverba podatkov* (dnevni zagon, korak *Nove
+faze avstrijskih lig* → `scripts/nova-faza-oefb.mjs`): za vsako aktivno `at-`
+ligo poišče njeno skupino pri zvezi (en seznam skupin na zvezo, nato seznami
+tekmovanj skupin, dokler ne najde vseh lig) in tekmovanje, ki ga nobena naša
+liga ne bere in katerega klubi so vsi iz lige. Na Discord pošlje točen SQL
+(`update competitions set source_league_code = '…+…' where slug = '…';`),
+baze ne spreminja; brez novosti molči. **Ko javi:** SQL vpiši z migracijo
+**pred rokom prvega kroga nove faze** (zaklep zajame le kroge z rokom v
+zadnjih 7 dneh), nato naj steče uvoz razporeda (urni ali ročni). Krogi se
+dodajo za obstoječimi; `prvi_fantasy_krog`, borza, hišne ekipe in roki se ne
+spremenijo. Preizkus na lanski delitvi: `--jahr 2026`.
+
+Delitve v sezoni 2025/26 (pregled vseh skupin odraslih vseh devetih zvez,
+9. 10. 2026): le **Bundesliga** (Grunddurchgang `227113` → Meistergruppe
+`231372`, Qualifikationsgruppe `231373`) in **Salzburg 2. Klasse Süd**
+(Grunddurchgang A `226773` in B `226783` → Oberes Play-Off `229101`, Unteres
+`229102`; 2026/27 sta ločeni ligi brez delitve, arhiv ostane Grunddurchgang).
+Brez delitve: 2. Liga, vse Regionallige (lani Mitte, Ost, West, Tirol) in vse
+deželne lige. Ostalo so Relegation in Play-off (NÖFV `232356` z
+Europacup-Playoffom, KFV, OÖFV, SFV, StFV, VFV).
+
 - **Prenovljene lige dobijo arhive vseh lanskih lig, iz katerih so prišli
   vsaj dva kluba** (kot Madžarska): Regionalliga Nord (lani Mitte, West, OÖ
   Liga, Salzburger Liga), West (lani West, Regionalliga Tirol, Eliteliga),
@@ -633,7 +669,7 @@ turnirji, legende, Salzburger `Reserven`.
 
 | liga | klubov | tekoča 2026/27 | arhiv (2025/26; pri ≤ 10 klubih še 2024/25) |
 |---|---|---|---|
-| at-bundesliga | 12 | `232246` | `227113` |
+| at-bundesliga | 12 | `232246` | `227113+231372+231373` |
 | at-2-liga | 16 | `232245` | `227112` |
 | at-regionalliga-ost | 16 | `231974` | `226510` |
 | at-regionalliga-nord | 15 | `232371` | `226374`, `226774`, `226368`, `226782` |

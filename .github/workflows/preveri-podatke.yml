@@ -92,6 +92,17 @@ jobs:
         with:
           path: tezave.txt
           key: preverba-javljeno-${{ steps.trditve.outputs.odtis }}
+      # Razdeljena avstrijska liga (Bundesliga: Meister-/Qualifikationsgruppe)
+      # dobi nadaljevanje kot novo tekmovanje pri ÖFB. Le javi z SQL, baze ne
+      # spreminja; brez novosti molči. Enkrat na dan, ne po vsakem uvozu.
+      - name: Nove faze avstrijskih lig
+        if: github.event_name != 'workflow_run'
+        continue-on-error: true
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: node scripts/nova-faza-oefb.mjs
       - name: Izid
         if: steps.uvoz.outputs.tece != '1' && steps.trditve.outputs.ok != '1'
         run: exit 1
