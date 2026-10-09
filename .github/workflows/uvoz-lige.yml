@@ -1,4 +1,7 @@
 name: Uvoz lige (rocno)
+# Liga v imenu zagona: po njej drugi uvozi vedo, katere drzave se dotika
+# (scripts/cakaj-na-uvoze.mjs).
+run-name: Uvoz lige ${{ inputs.liga }}
 
 # Postavitev NOVE lige: arhiv prejsnjih sezon, razpored, tekoca sezona,
 # pozicije in cene — vse proti produkciji, s kljucem, ki nikoli ne zapusti
@@ -88,30 +91,17 @@ jobs:
       - run: npm ci --ignore-scripts
 
       # Druzina uvozov (uvoz-zapisnikov, uvoz-lige, zdruzi-klube,
-      # tedensko-cene) pise v iste tabele: klube, igralce, tekme, cene. Zato
-      # tecejo po vrsti — po casu zacetka, brez izpodrivanja.
+      # tedensko-cene) pise v iste tabele: klube, igralce, tekme, cene. Kar se
+      # krizi (ista drzava, skupni posli), tece po vrsti — po casu zacetka,
+      # brez izpodrivanja; razlicne drzave tecejo hkrati.
       - name: Pocakaj na starejse uvoze
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          MOJ=$(gh run view "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" --json startedAt --jq .startedAt)
-          for i in $(seq 1 120); do
-            n=0
-            for wf in uvoz-zapisnikov.yml uvoz-lige.yml zdruzi-klube.yml tedensko-cene.yml; do
-              # Brez --status: tudi cakajoci (queued) starejsi zagon mora priti
-              # prvi. Zato vec kot 20 — koncani zagoni zasedejo del seznama.
-              k=$(gh run list -R "$GITHUB_REPOSITORY" --workflow "$wf" --limit 50 \
-                --json databaseId,startedAt,status \
-                --jq "[.[] | select(.status != \"completed\" and .databaseId != $GITHUB_RUN_ID and .startedAt > \"2000\" and (.startedAt < \"$MOJ\" or (.startedAt == \"$MOJ\" and .databaseId < $GITHUB_RUN_ID)))] | length")
-              n=$((n + k))
-            done
-            [ "$n" -eq 0 ] && exit 0
-            echo "Pred mano tece se $n uvozov — cakam ($i/120 min)"
-            sleep 60
-          done
-          echo "::error::Starejsi uvoz tece ze dve uri."
-          exit 1
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        # Na rocne uvoze iste drzave, na nocni le pri vklopljeni ligi, na
+        # zdruzi-klube/tedensko-cene vedno (glej skripto).
+        run: node scripts/cakaj-na-uvoze.mjs --liga "$LIGA"
 
       - name: Predpomnilnik zapisnikov
         uses: actions/cache@v4

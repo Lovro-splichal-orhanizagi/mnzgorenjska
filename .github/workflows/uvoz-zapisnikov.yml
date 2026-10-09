@@ -50,7 +50,16 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Vsaka država v svojem poslu, vsi hkrati. Viri so različna spletišča (vsako
+  # s svojim tempom), klubi so enolični po državi, igralci po ligi — posla se
+  # ne dotakneta istih vrstic. Zaporedno je 103 lig 9. 10. porabilo 212 minut
+  # in zagon je padel na 240-minutni meji; ob vikendih teče vsako uro.
   uvoz:
+    strategy:
+      fail-fast: false
+      matrix:
+        drzava: [SI, HR, SK, HU, CZ]
+    name: uvoz ${{ matrix.drzava }}
     runs-on: ubuntu-latest
     # 17 lig je 13. septembra porabilo 43 minut ze pred zadnjo ligo.
     # Ura pusti prostor se za njen uvoz, predpomnilnik in obcasno pocasne vire.
@@ -73,30 +82,16 @@ jobs:
       - run: npm ci --ignore-scripts
 
       # Druzina uvozov (uvoz-zapisnikov, uvoz-lige, zdruzi-klube,
-      # tedensko-cene) pise v iste tabele: klube, igralce, tekme, cene. Zato
-      # tecejo po vrsti — po casu zacetka, brez izpodrivanja.
+      # tedensko-cene) pise v iste tabele: klube, igralce, tekme, cene. Kar se
+      # krizi (ista drzava, skupni posli), tece po vrsti — po casu zacetka,
+      # brez izpodrivanja; razlicne drzave tecejo hkrati.
       - name: Pocakaj na starejse uvoze
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          MOJ=$(gh run view "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" --json startedAt --jq .startedAt)
-          for i in $(seq 1 120); do
-            n=0
-            for wf in uvoz-zapisnikov.yml uvoz-lige.yml zdruzi-klube.yml tedensko-cene.yml; do
-              # Brez --status: tudi cakajoci (queued) starejsi zagon mora priti
-              # prvi. Zato vec kot 20 — koncani zagoni zasedejo del seznama.
-              k=$(gh run list -R "$GITHUB_REPOSITORY" --workflow "$wf" --limit 50 \
-                --json databaseId,startedAt,status \
-                --jq "[.[] | select(.status != \"completed\" and .databaseId != $GITHUB_RUN_ID and .startedAt > \"2000\" and (.startedAt < \"$MOJ\" or (.startedAt == \"$MOJ\" and .databaseId < $GITHUB_RUN_ID)))] | length")
-              n=$((n + k))
-            done
-            [ "$n" -eq 0 ] && exit 0
-            echo "Pred mano tece se $n uvozov — cakam ($i/120 min)"
-            sleep 60
-          done
-          echo "::error::Starejsi uvoz tece ze dve uri."
-          exit 1
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        # Le na uvoze iste države ter zdruzi-klube/tedensko-cene (glej skripto).
+        run: node scripts/cakaj-na-uvoze.mjs --drzava ${{ matrix.drzava }}
 
       # Predpomnilnik prihrani ponovno pobiranje že prebranih zapisnikov —
       # tako ob vsakem zagonu s strani MNZ potegnemo le nove tekme.
@@ -104,8 +99,10 @@ jobs:
         uses: actions/cache@v4
         with:
           path: scripts/.predpomnilnik
-          key: zapisniki-${{ github.run_id }}
-          restore-keys: zapisniki-
+          key: zapisniki-${{ matrix.drzava }}-${{ github.run_id }}
+          restore-keys: |
+            zapisniki-${{ matrix.drzava }}-
+            zapisniki-
 
       # === Vse vklopljene lige ===========================================
       # Napake posamezne lige zberemo, obdelamo tudi ostale in na koncu
@@ -118,8 +115,9 @@ jobs:
           FACR_PROXY: ${{ secrets.FACR_PROXY }}
         run: |
           set -euo pipefail
-          node scripts/aktivna-tekmovanja.mjs > /tmp/lige.txt
+          node scripts/aktivna-tekmovanja.mjs --drzava ${{ matrix.drzava }} > /tmp/lige.txt
           echo "Lige za uvoz: $(tr '\n' ' ' < /tmp/lige.txt)"
+          [ -s /tmp/lige.txt ] || { echo "Država ${{ matrix.drzava }} nima vklopljenih lig."; exit 0; }
           # Ena liga ne sme podreti ostalih. Spletisca zvez so razlicno
           # zanesljiva: Nova Gorica je zvecer strezla okrnjeno stran, Ljubljana
           # in NZS sta obcasno pocasni. Pod `set -e` je prva taka napaka
@@ -170,7 +168,28 @@ jobs:
             exit 1
           fi
 
-      # === Skupno za vse lige ============================================
+      # Rdec zagon v GitHubu ni alarm, dokler ga kdo ne vidi. Uvoz je dvakrat
+      # padel in dva dni ni opazil nihce.
+      - name: Javi padec na Discord
+        if: failure()
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_TEDENSKO }}
+        run: node scripts/javi-napako.mjs "Uvoz zapisnikov ${{ matrix.drzava }}"
+
+  # === Skupno za vse lige ============================================
+  # Ko so vse države končale (tudi neuspešno).
+  skupno:
+    needs: uvoz
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
       # Združi duplikate: ključ je `competition_id|full_name`, tako nikoli ne
       # pomeša vrstic iz dveh lig — mladinec X in član X ostaneta ločena,
       # četudi je oseba ista. Poganja se enkrat.
@@ -182,11 +201,3 @@ jobs:
           FACR_PROXY: ${{ secrets.FACR_PROXY }}
         run: node scripts/zdruzi-duplikate.mjs --pisi
         continue-on-error: true
-
-      # Rdec zagon v GitHubu ni alarm, dokler ga kdo ne vidi. Uvoz je dvakrat
-      # padel in dva dni ni opazil nihce.
-      - name: Javi padec na Discord
-        if: failure()
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_TEDENSKO }}
-        run: node scripts/javi-napako.mjs "Uvoz zapisnikov"

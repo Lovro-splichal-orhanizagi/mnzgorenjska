@@ -1117,8 +1117,9 @@ preveri(
       // napake — zamude imajo svojo trditev nize.
       if (tabela === 'matches')
         return odgovor(moznosti.zamude ?? [])
-      // Vratarji z goli (preveri-podatke): privzeto jih ni.
-      if (tabela === 'player_overview') return odgovor(moznosti.strelci ?? [])
+      // Vratarji z goli tekoče sezone (preveri-podatke): privzeto jih ni.
+      if (tabela === 'player_season_standings') return odgovor(moznosti.strelci ?? [])
+      if (tabela === 'player_overview') return odgovor([])
       if (tabela === 'players') {
         const od = Number(url.searchParams.get('offset') ?? 0)
         const koliko = Number(url.searchParams.get('limit') ?? 1000)
