@@ -538,9 +538,11 @@ prepovedujejo** (`Disallow: /bewerbe/Spiel/`, `/bewerbe/Spieler/`) — beremo
 avtorsko varovana; tveganje je pravica baze (UrhG § 76d, sistematično
 izvlečenje) — najverjetneje poziv k prenehanju, ne odškodnina. ÖFB sam objavo
 postav utemelji z javnim interesom (Information für Spieler, 26. 4. 2026).
-**Avstrija je v živo pred odgovorom ÖFB** (odločitev lastnika, 9. 10. 2026;
-prošnja na office@oefb.at, v vednost KFV in StFV). **Če ÖFB, KFV ali StFV
-prepove ali nas blokira: vse `at-` lige izklopi** (`update competitions set
+**ÖFB je uporabo dovolil** (odgovor na prošnjo z office@oefb.at, v vednost
+KFV in StFV, 9. 10. 2026): podatke iz zapisnikov in grbe klubov. Grbe beremo
+z `/oefb2/images/`, ki ga robots.txt splošnim robotom prepoveduje — **samo
+zaradi tega dovoljenja**. Avstrija je v živo. **Če ÖFB, KFV ali StFV dovoljenje
+umakne ali nas blokira: vse `at-` lige izklopi** (`update competitions set
 active = false where slug like 'at-%'`) in nočni uvoz jih ne bere več. Vklop
 lige: migracija `…_vklop_at_…`, prvi fantasy krog = prvi krog za zadnjim
 krogom z zapisniki, ki ima rok še pred sabo. Pogoji GDPR, ki smo jih obljubili, so urejeni
