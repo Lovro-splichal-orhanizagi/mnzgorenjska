@@ -558,6 +558,17 @@ Beremo odkrito (`User-Agent: SLFF fantasy`, 1,5 s med stranmi, popolnih
 zapisnikov ne beremo znova). **Če se pojavi izziv ali CAPTCHA, ustavi — ne
 obhajaj.** Odziv je počasen (2–7 s na stran): arhiv ene lige je ~20 minut.
 
+Grbe avstrijskih klubov prinese `scripts/grbi-oefb.mjs`: id grba je v
+razporedu lige (`heimMannschaftLogo`/`gastMannschaftLogo`, ena stran na ligo,
+ime ekipe prek `imeEkipe` kot pri uvozu), slika je
+`/oefb2/images/1278650591628556536_<id>-1,0-256x256-256x256.png` (strežnik jo
+pomanjša sam), shrani se v `public/grbi/at-*`. To pot robots.txt splošnim
+robotom **prepoveduje** — beremo jo **le zaradi izrecnega dovoljenja ÖFB**
+(odgovor lastniku, 9. 10. 2026); če ga umaknejo, skripte ne poganjaj več.
+Delovni tok *Grbi klubov* z `vir = oefb`, najprej brez `pisi`; brez
+`tekmovanje` vse **aktivne** `at-` lige. Po vklopu nove avstrijske lige ga
+poženi znova (vzame le klube brez grba).
+
 Preizkus vira na Kärntner Liga 2025/26 (`226828`): 30 krogov, 240 tekem,
 0 kontumacij, 240 zapisnikov, 795 golov (= izidi), 480/480 postav po 11,
 1695 nastopov s klopi, 0 nastopov brez šifre, 0 opozoril. Skupine je

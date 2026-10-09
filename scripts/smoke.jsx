@@ -4058,6 +4058,11 @@ preveri(
   preveri('oefb: razpored — neodigrane brez izida, krogi 1–30', v.filter((t) => !t.izid).every((t) => t.id && t.datum) &&
     Math.min(...v.map((t) => t.krog)) === 1 && Math.max(...v.map((t) => t.krog)) === 30 &&
     v.some((t) => t.id === '4114979' && t.krog === 11 && !t.izid && t.domaci === 'SV Straßwalchen'))
+  // Grbi (scripts/grbi-oefb.mjs): id grba iz razporeda, en na klub.
+  const grbiV = new Map(v.flatMap((t) => [[t.domaci, t.grbDomaci], [t.gostje, t.grbGostje]]))
+  preveri('oefb grbi: id grba iz razporeda', grbiV.size === 16 && new Set(grbiV.values()).size === 16 &&
+    [...grbiV.values()].every((g) => /^[0-9a-f]{20}$/.test(g)) &&
+    O.naslovGrba('cf368b4fbac63edc9495') === 'https://www.oefb.at/oefb2/images/1278650591628556536_cf368b4fbac63edc9495-1,0-256x256-256x256.png')
 
   // Kontumacija: Gebietsliga Süd 2025/26 — dve tekmi "strafverifiziert" brez zapisnika.
   const vs = O.vrsticeRazporeda(beri('at-oefb-spielplan-226276.html'))
