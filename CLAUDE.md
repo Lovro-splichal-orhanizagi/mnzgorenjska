@@ -325,7 +325,10 @@ Stran Pozicije je v meniju kot v Sloveniji in na Hrvaškem (če češki vir
 pozicije prinese, jo skrij v `Navbar.tsx` kot za SK). Češkega kanala v
 HelpStacku še ni: `Podpora.tsx` za `cs` uporabi slovenskega.
 
-### Madžarska
+#**Nočni uvoz teče po državah** (matrika `drzava` v `.github/workflows/uvoz-zapisnikov.yml`).
+Nova država mora na ta seznam, sicer se njene vklopljene lige ponoči ne uvažajo — brez napake.
+
+## Madžarska
 
 Država `HU` ("Magyarország", migracija 20261009011100) ima vmesnik v
 madžarščini (`src/i18n/hu/`, jezik `hu`, `hu-HU`, `JEZIK_DRZAVE.HU`), vstop
