@@ -502,10 +502,20 @@ strani (`/proxy/oefb3/1469066385635312874_<ključ>?proxyUrl=<…>`) z
 in `…/bewerbe/<skupina>;homepage=1473983024629548524;runden=true`
 (zveza: KFV `07383705631a73ec5a03`, StFV `2b343dd0b84af271a9ea`).
 
-**Pravice.** robots.txt splošnim robotom branje dovoli (prepove le
-`/blueContent/`, slike, `/Suche`), izrecno pa zapre AI-robote in
-"Datenbank Crawler". Stran oglašuje **ÖFB Datenservice** (podatke morda
-prodaja) — ali jih sme SLFF brati brezplačno, je poslovna odločitev lastnika.
+**Pravice (pregled 9. 10. 2026, ni pravni nasvet).** robots.txt oefb.at
+splošnim robotom `/bewerbe/` dovoli; "Datenbank Crawler" je le ime v skupini
+AI-robotov, ne velja za nas. "Datenservice" ni prodaja podatkov, ampak pot
+strani tekmovanj. Pogojev uporabe za anonimne obiskovalce ni (Nutzungsbedingungen
+veljajo le za prijavo SSO). **Strani KFV in StFV pa z istim zapisnikom
+prepovedujejo** (`Disallow: /bewerbe/Spiel/`, `/bewerbe/Spieler/`) — beremo
+**samo oefb.at**, nikoli kfv-fussball.at ali stfv.at. Dejstva tekme niso
+avtorsko varovana; tveganje je pravica baze (UrhG § 76d, sistematično
+izvlečenje) — najverjetneje poziv k prenehanju, ne odškodnina. ÖFB sam objavo
+postav utemelji z javnim interesom (Information für Spieler, 26. 4. 2026).
+**Avstrijske lige ostanejo neaktivne, dokler ÖFB (office@oefb.at, v vednost
+KFV in StFV) ne odgovori**; pred vklopom še: obvestilo po čl. 14 GDPR z
+ugovorom igralca, upoštevanje anonimizacij ÖFB, 18 mesecev po koncu kariere
+igralca ne prikazujemo. Če prosijo, naj nehamo, ali nas blokirajo — nehamo.
 Beremo odkrito (`User-Agent: SLFF fantasy`, 1,5 s med stranmi, popolnih
 zapisnikov ne beremo znova). **Če se pojavi izziv ali CAPTCHA, ustavi — ne
 obhajaj.** Odziv je počasen (2–7 s na stran): arhiv ene lige je ~20 minut.
