@@ -4073,6 +4073,27 @@ preveri(
     kontS.every((t) => t.gostje === 'Raiffeisen Pertlstein / Fehring II' && t.izid.domaci === 3 && t.odigrana) &&
     vs.filter((t) => t.kontumacija).every((t) => t.id === null) && tekmeS.every((t) => t.odigrana))
 
+  // Več faz: Bundesliga 2025/26 = Grunddurchgang (22 krogov) + Meister- in
+  // Qualifikationsgruppe (po 10). Vzporedni skupini si delita kroge 23–32.
+  preveri('oefb: šifra več faz', O.razbijKodo('227113+231372+231373').idji.length === 3 && O.razbijKodo('227113+231372').id === '227113' &&
+    O.default.naslovRazporeda('227113+231372') === O.default.naslovRazporeda('227113') &&
+    (() => { try { O.razbijKodo('227113+'); return false } catch { return true } })() &&
+    O.naslovPodatkov('gruppen/x;jahr=2027').includes('1469066385635312874_gruppen_x_jahr_2027?proxyUrl=http%3A%2F%2Fportale-datenservice'))
+  const enaFaza = O.vrsticeFaz([beri('at-oefb-spielplan-231808.html')])
+  preveri('oefb: ena faza ostane, kot je', JSON.stringify(enaFaza) === JSON.stringify(v))
+  const bl = (id) => beri(`at-oefb-spielplan-${id}.html`)
+  const faze = O.vrsticeFaz([bl(227113), bl(231372), bl(231373)])
+  const naKrog = (k) => faze.filter((t) => t.krog === k)
+  preveri('oefb: faze — krogi 1–32 po 6 tekem', faze.length === 192 && new Set(faze.map((t) => t.krog)).size === 32 &&
+    Math.max(...faze.map((t) => t.krog)) === 32 && [1, 22, 23, 32].every((k) => naKrog(k).length === 6) &&
+    naKrog(23).every((t) => t.datum >= '2026-03-13') && naKrog(22).every((t) => t.datum < '2026-03-13'))
+  preveri('oefb: faza brez skupnega kluba pade', (() => {
+    try { O.vrsticeFaz([bl(231808), bl(231372)]); return false } catch (e) { return /nobenega kluba/.test(e.message) } })())
+  const krogiBl = await O.default.razporedVseStrani('227113+231372+231373', async (_u, ime) =>
+    (ime.startsWith('spielplan') ? bl(ime.match(/\d+/)[0]) : ''))
+  preveri('oefb: faze — en krog za obe skupini', krogiBl.length === 32 && krogiBl.at(-1).stevilka === 32 &&
+    krogiBl.find((k) => k.stevilka === 23).tekme.length === 6)
+
   // Zapisnik s skupinami: KAC 1909 : ATSV Wolfsberg 0:3 (Kärntner Liga 2025/26, 1. krog) — 11 m, karton trenerja.
   const z = O.vZapisnik(beri('at-oefb-spiel-3844106.html'), { id: '3844106' })
   const n = O.nastopi(z)

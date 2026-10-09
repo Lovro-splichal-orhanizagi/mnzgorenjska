@@ -27,7 +27,7 @@ on:
         required: true
         type: string
       arhiv:
-        description: 'Sifre arhivskih sezon, locene z vejico (npr. 1904,1804). Za arhiv pri drugi zvezi pripni @vir (npr. 2025-26/3-snl-v-25-26@mnzle). Prazno = brez arhiva.'
+        description: 'Sifre arhivskih sezon, locene z vejico (npr. 1904,1804). Za arhiv pri drugi zvezi pripni @vir (npr. 2025-26/3-snl-v-25-26@mnzle). Faze ene sezone (oefb) z +, npr. 227113+231372+231373. Prazno = brez arhiva.'
         required: false
         type: string
       zapisnik:

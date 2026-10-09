@@ -41,10 +41,15 @@ const OSNOVNI = 'https://www.oefb.at'
 // Enako kot v zapisnik.mjs: sodniški podaljšek se ne šteje.
 const DOLZINA_TEKME = 90
 
+// Liga, ki se med sezono razdeli (Bundesliga: Grunddurchgang, nato Meister-
+// in Qualifikationsgruppe), ima pri ÖFB za vsako fazo svoje tekmovanje. Šifra
+// lige jih zato lahko našteje s "+" ("232246+<meister>+<quali>"); `id` je
+// prvo (osnovno) tekmovanje, `idji` vsa po vrsti.
 export function razbijKodo(koda) {
-  const id = String(koda ?? '').trim()
-  if (!/^\d+$/.test(id)) throw new Error(`oefb: šifra lige je id tekmovanja (Bewerb, število), ne "${koda}"`)
-  return { id }
+  const idji = String(koda ?? '').trim().split('+')
+  if (!idji.every((x) => /^\d+$/.test(x)))
+    throw new Error(`oefb: šifra lige je id tekmovanja (Bewerb, število) ali več z "+", ne "${koda}"`)
+  return { id: idji[0], idji }
 }
 
 export const naslovRazporeda = (koda) => `${OSNOVNI}/bewerbe/Bewerb/Spielplan/${razbijKodo(koda).id}/`
@@ -53,6 +58,13 @@ export const naslovTekme = (id) => `${OSNOVNI}/bewerbe/Spiel/Spielbericht/${id}/
 // velikost. Pot /oefb2/images/ robots.txt splošnim robotom prepove — beremo jo
 // le z izrecnim dovoljenjem ÖFB (scripts/grbi-oefb.mjs).
 export const naslovGrba = (id, px = 256) => `${OSNOVNI}/oefb2/images/1278650591628556536_${id}-1,0-${px}x${px}-${px}x${px}.png`
+
+// Javni posrednik izbirnika zvez in lig (`/bewerbe/`): `pot` je del za
+// `…/datenservice/`, npr. `gruppen/<zveza>;jahr=2027;homepage=…`; ključ v
+// naslovu je ista pot z "_" namesto "/;=:".
+export const naslovPodatkov = (pot) =>
+  `${OSNOVNI}/proxy/oefb3/1469066385635312874_${pot.replace(/[/;=:]/g, '_')}?proxyUrl=` +
+  encodeURIComponent(`http://portale-datenservice:8080/datenservice/rest/oefb/datenservice/${pot}`)
 const imeRazporeda = (koda) => `spielplan-${razbijKodo(koda).id}.html`
 const imeTekme = (id) => `spiel-${id}.html`
 
@@ -168,6 +180,32 @@ export function vrsticeRazporeda(html) {
       // Kontumacija: namesto povezave na zapisnik "strafverifiziert" (#).
       kontumacija: (t.links ?? []).some((l) => /strafverifiziert/i.test(l.bezeichnung ?? '')),
     })
+  }
+  return out
+}
+
+/**
+ * Vrstice več tekmovanj ene lige (strani razporeda po vrsti šifre). Krogi
+ * poznejše faze se nadaljujejo za fazo, iz katere so prišli njeni klubi:
+ * Meistergruppe (klubi Grunddurchganga, 22 krogov) ima kroge 23–32, enako
+ * Qualifikationsgruppe — vzporedni skupini si delita številke, ker nimata
+ * skupnega kluba. Eno tekmovanje ostane, kot je.
+ */
+export function vrsticeFaz(strani) {
+  const faze = []
+  const out = []
+  for (const html of strani) {
+    const vrstice = vrsticeRazporeda(html)
+    const klubi = new Set(vrstice.flatMap((t) => [kljucKlubaAt(t.domaci), kljucKlubaAt(t.gostje)]))
+    const prej = faze.filter((f) => [...klubi].some((k) => f.klubi.has(k)))
+    // Poznejša faza brez enega skupnega kluba (napačna šifra, preimenovan klub)
+    // bi dobila kroge 1..N in prepisala tekme prve faze — raje padi.
+    if (faze.length && !prej.length && vrstice.length)
+      throw new Error(`oefb: faza ${faze.length + 1} nima nobenega kluba iz prejšnjih faz — preveri šifro lige`)
+    const zamik = Math.max(0, ...prej.map((f) => f.zadnji))
+    const premaknjene = vrstice.map((t) => (t.krog == null ? t : { ...t, krog: t.krog + zamik }))
+    faze.push({ klubi, zadnji: Math.max(zamik, ...premaknjene.map((t) => t.krog ?? 0)) })
+    out.push(...premaknjene)
   }
   return out
 }
@@ -409,6 +447,13 @@ export function kratkoImeAt(polno) {
 /** Dni od datuma tekme ('YYYY-MM-DD'); brez datuma 0, da se tekma prebere. */
 const starostDni = (datum) => (datum ? (Date.now() - Date.parse(`${datum}T00:00:00Z`)) / 86400000 : 0)
 
+/** Razpored vseh faz lige (glej `vrsticeFaz`), vsaka stran sveža. */
+async function razpored(koda, prenesi) {
+  const strani = []
+  for (const id of razbijKodo(koda).idji) strani.push(await prenesi(naslovRazporeda(id), imeRazporeda(id), true))
+  return vrsticeFaz(strani)
+}
+
 const vir = {
   ime: 'oefb',
   polnoIme: 'Österreichischer Fußball-Bund (oefb.at)',
@@ -422,9 +467,8 @@ const vir = {
   naslovZapisnika: (_koda, sifra) => naslovTekme(sifra),
 
   async razporedVseStrani(koda, prenesi) {
-    const html = await prenesi(naslovRazporeda(koda), imeRazporeda(koda), true)
     const krogi = new Map()
-    for (const t of vrsticeRazporeda(html)) {
+    for (const t of await razpored(koda, prenesi)) {
       if (t.krog == null) continue
       if (!krogi.has(t.krog)) krogi.set(t.krog, { stevilka: t.krog, tekme: [] })
       // Le 3:0 / 0:3 ali več je lahko kontumacija; stran tekme prebere tudi
@@ -444,9 +488,8 @@ const vir = {
   },
 
   async zapisniki(koda, prenesi) {
-    const html = await prenesi(naslovRazporeda(koda), imeRazporeda(koda), true)
     const out = []
-    for (const t of vrsticeRazporeda(html).filter((x) => x.izid && x.id)) {
+    for (const t of (await razpored(koda, prenesi)).filter((x) => x.izid && x.id)) {
       const url = naslovTekme(t.id)
       const ime = imeTekme(t.id)
       // Nepotrjen zapisnik (`inbearbeitung`) ima lahko postavo brez strelcev
