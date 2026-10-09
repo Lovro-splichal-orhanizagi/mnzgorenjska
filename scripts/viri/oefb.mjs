@@ -231,6 +231,7 @@ export function vZapisnik(html, { id = null, url = null } = {}) {
       const noter = najdi(ekipaIdx, d.url, d.playerPrimary)
       const ven = najdi(ekipaIdx, d.urlSecondary, d.playerSecondary)
       if (!noter && !ven) continue
+      if (!noter || !ven) opozorila.push(`menjava v ${m}. minuti: ${!noter ? 'vstopnega' : 'izstopnega'} igralca ni v postavi`)
       menjave.push({
         ekipaIdx,
         minuta: m,
@@ -419,7 +420,10 @@ const vir = {
     for (const t of vrsticeRazporeda(html).filter((x) => x.izid && x.id)) {
       const url = naslovTekme(t.id)
       const ime = imeTekme(t.id)
-      let z = vZapisnik(await prenesi(url, ime), { id: t.id, url })
+      // Nepotrjen zapisnik (`inbearbeitung`) ima lahko postavo brez strelcev
+      // in menjav: ne zamrzni ga v predpomnilniku, dokler ga zveza ne potrdi.
+      const svez = t.status !== 'bestaetigt' && starostDni(t.datum) <= 45
+      let z = vZapisnik(await prenesi(url, ime, svez), { id: t.id, url })
       // Znova le tekmo zadnjih 45 dni: starejša brez postav je kontumacija
       // ali klub postave ni vnesel.
       if (!z && starostDni(t.datum) <= 45) z = vZapisnik(await prenesi(url, ime, true), { id: t.id, url })

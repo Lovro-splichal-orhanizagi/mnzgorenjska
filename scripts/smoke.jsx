@@ -3922,7 +3922,8 @@ preveri(
   const ns = O.nastopi(zs)
   const s = (ime) => ns.find((x) => x.ime === ime)
   preveri('oefb: sestavljen — zamenjava vratarja brez dresa', s('Vratar Prvi').minute === 70 && s('Vratar Prvi').vratar && s('Vratar Drugi').vratar &&
-    s('Vratar Drugi').minute === 20 && s('Vratar Drugi').minutaOd === 70 && !s('Igral Ni') && zs.krog === 10 && !zs.opozorila.length)
+    s('Vratar Drugi').minute === 20 && s('Vratar Drugi').minutaOd === 70 && !s('Igral Ni') && zs.krog === 10 &&
+    zs.opozorila.join('|') === 'menjava v 30. minuti: vstopnega igralca ni v postavi|menjava v 60. minuti: izstopnega igralca ni v postavi')
   preveri('oefb: sestavljen — leteča menjava', s('N100 Igralec').minute === 60 && s('N100 Igralec').minutaDo === 90 &&
     ns.filter((x) => x.ekipaIdx === 0).reduce((a, x) => a + x.minute, 0) === 960)
   const kont = stran(ekipa('A', [igr('1', 'Prvi Vratar', 1), ...polje(100)], []), ekipa('B', [], []), '3:0 (0:0)', [])
