@@ -3928,6 +3928,53 @@ preveri(
     regHash(7, 913040) === '0977c5f2629986f97d714990a002b776017db2c12c201af132af556ae48780d7')
 }
 
+// --- vir fss (Srbija, državni ligi FSS; vratar s prvaliga.rs) ------------------
+{
+  const F = await import('./viri/fss.mjs')
+  const { default: viri } = await import('./viri/index.mjs')
+  const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  preveri('fss: vir je vpisan', viri.fss === F.default && F.default.drzava === 'RS' && F.default.imaRegistracije === false &&
+    F.default.premorMs >= 2000 && F.default.glave['User-Agent'] === 'SLFF fantasy (https://slff.eu)')
+  preveri('fss: naslovi (latinica)', F.default.naslovRazporeda('mozzart-bet-prva-liga-srbije-26-27') === 'https://fss.rs/takmicenje/mozzart-bet-prva-liga-srbije-26-27/?script=lat' &&
+    F.default.naslovZapisnika('x', '75808250') === 'https://fss.rs/izvestaj-sa-utakmice/75808250/?script=lat' &&
+    F.naslovVratarjev('75808250') === 'https://www.prvaliga.rs/arhiva/izvestaj-utakmice/75808250/')
+  preveri('fss: datum z in brez pike, minuta', F.datumUra('14.08.2026. 20:00').datum === '2026-08-14' && F.datumUra('01.08.2026 20:00').ura === '20:00' &&
+    F.minuta("90+3'") === 90 && F.minuta("77'") === 77)
+  preveri('fss: državni klub z imenom beograjskega dobi kraj', F.imeKluba('MLADOST') === 'MLADOST (Lučani)' && F.imeKluba('NAPREDAK') === 'NAPREDAK (Kruševac)' &&
+    F.imeKluba('RADNIČKI 1923') === 'RADNIČKI 1923' && F.imeKluba('TELEOPTIK') === 'TELEOPTIK')
+
+  const stran = beri('rs-fss-liga-prva-2026-27.html')
+  const t = F.tekmeStrani(stran)
+  const poKrogu = new Map()
+  for (const x of t) poKrogu.set(x.krog, (poKrogu.get(x.krog) ?? 0) + 1)
+  // Prva harmonika ponovi tekoči krog: brati se sme le enkrat (30 krogov po 8).
+  preveri('fss: stran lige — 30 krogov po 8, tekoči krog ni podvojen', poKrogu.size === 30 && [...poKrogu.values()].every((n) => n === 8) &&
+    new Set(t.flatMap((x) => [x.domaci, x.gostje])).size === 16)
+  const n3 = t.find((x) => x.id === '75808250')
+  preveri('fss: tekma s strani lige (izid, polčas, kraj)', n3?.krog === 3 && n3.datum === '2026-08-14' && n3.ura === '20:00' &&
+    n3.domaci === 'NAPREDAK (Kruševac)' && n3.izid?.domaci === 2 && n3.izid?.gostje === 1 && n3.polcas?.gostje === 1)
+  const razpored = F.razcleniRazpored([], stran)
+  preveri('fss: razpored — odigrane le z izidom, brez kontumacij', razpored.length === 30 &&
+    razpored.flatMap((k) => k.tekme).filter((x) => x.odigrana).length === 96 && !razpored.flatMap((k) => k.tekme).some((x) => x.kontumacija))
+
+  const vr = F.dresiVratarjev(beri('rs-fss-vratarji-75576384.html'))
+  preveri('fss: vratarji s prvaliga.rs, tudi kapetan-vratar "(C) (G)"', vr && [...vr[0]].sort().join() === '1,12' && [...vr[1]].sort().join() === '1,89')
+  const z = F.vZapisnik(beri('rs-fss-izvestaj-75576384-kapetan-vratar.html'), { id: '75576384', vratarji: vr })
+  const n = F.nastopi(z)
+  const minute = (i) => n.filter((x) => x.ekipaIdx === i).reduce((a, x) => a + x.minute, 0)
+  preveri('fss: zapisnik — postavi, klop, goli = izid, minute 990, brez opozoril', z.domaci.postava.length === 11 && z.gostje.postava.length === 11 &&
+    z.rezultat.domaci === 2 && z.rezultat.gostje === 1 && z.goli.length === 3 && minute(0) === 990 && minute(1) === 990 && z.opozorila.length === 0)
+  preveri('fss: vratar začetne postave pri obeh', n.filter((x) => x.vratar && x.zacetnik).map((x) => x.st).join() === '12,89')
+  const zamenjan = n.find((x) => x.zacetnik && x.minute < 90)
+  preveri('fss: začetnik z izstopom ima minute do izstopa', !!zamenjan && n.some((x) => !x.zacetnik && x.ekipaIdx === zamenjan.ekipaIdx && x.minutaOd === zamenjan.minutaDo))
+
+  const z2 = F.vZapisnik(beri('rs-fss-izvestaj-60996193-drugi-rumeni.html'), { vratarji: F.dresiVratarjev(beri('rs-fss-vratarji-60996193.html')) })
+  const n2 = F.nastopi(z2)
+  const gajic = n2.find((x) => x.ime === 'Gajić Uroš')
+  preveri('fss: drugi rumeni je izključitev (minute do nje)', z2.rdeci.length === 1 && gajic?.rdeci === 1 && gajic.minute === 50 && z2.opozorila.length === 0)
+  preveri('fss: prazna predloga je null', F.vZapisnik('<html><div class="fss-rez__title"></div></html>') === null && F.tekmeStrani('<html></html>').length === 0)
+}
+
 // --- vir fsb (Srbija, Fudbalski savez Beograda) ---------------------------------
 {
   const F = await import('./viri/fsb.mjs')
