@@ -17,6 +17,13 @@
 // Uporaba (v delovnem toku, z GH_TOKEN in ključem baze):
 //   node scripts/cakaj-na-uvoze.mjs --drzava HR    # nočni uvoz, posel ene države
 //   node scripts/cakaj-na-uvoze.mjs --liga hu-za-2 # ročni uvoz lige
+//   node scripts/cakaj-na-uvoze.mjs --tece         # preverba podatkov: izhod 3, če
+//                                                  # kak uvoz vklopljenih lig ravno piše
+//
+// Preverba podatkov, ki teče med uvozom, vidi napol zapisane tekme (gol brez
+// nastopa, posnetek točk pred preračunom) in javi lažne težave — 9. 10. se je
+// to zgodilo prvič, ko so države začele teči hkrati. Konec uvoza jo tako ali
+// tako sproži znova (workflow_run).
 //
 // Ročni uvoz nosi ligo v imenu zagona (`run-name: Uvoz lige <slug>`); zagon
 // brez nje (starejši) šteje kot uvoz neznane države in nanj se čaka.
@@ -28,6 +35,7 @@ const arg = (ime) => {
   return i > -1 ? process.argv[i + 1] : null
 }
 const mojaLiga = arg('--liga')
+const samoTece = process.argv.includes('--tece')
 let mojaDrzava = arg('--drzava')?.toUpperCase() ?? null
 const NAJVEC_MIN = Number(arg('--najvec') ?? 120)
 
@@ -54,7 +62,7 @@ if (mojaLiga) {
 }
 
 const gh = (...a) => execFileSync('gh', [...a, '-R', GITHUB_REPOSITORY], { encoding: 'utf8' })
-const moj = JSON.parse(gh('run', 'view', GITHUB_RUN_ID, '--json', 'startedAt')).startedAt
+const moj = samoTece ? null : JSON.parse(gh('run', 'view', GITHUB_RUN_ID, '--json', 'startedAt')).startedAt
 const mojId = Number(GITHUB_RUN_ID)
 
 // Ali zagon drugega toka piše v iste vrstice kot ta?
@@ -74,6 +82,23 @@ function seKrize(tok, naslov) {
   // med seboj pa nočne zagone vrsti že skupina `uvoz-zapisnikov`.
   if (tok === 'uvoz-zapisnikov.yml') return mojaLiga ? mojaJeAktivna : false
   return true
+}
+
+if (samoTece) {
+  const tecejo = []
+  for (const tok of ['uvoz-zapisnikov.yml', 'uvoz-lige.yml', 'zdruzi-klube.yml', 'tedensko-cene.yml']) {
+    const zagoni = JSON.parse(gh('run', 'list', '--workflow', tok, '--limit', '50', '--json', 'databaseId,status,displayTitle'))
+    for (const z of zagoni) {
+      if (z.status === 'completed') continue
+      // Ročni uvoz nevklopljene lige ne piše v nič, kar preverba gleda.
+      const slug = /^Uvoz lige (\S+)$/.exec(z.displayTitle ?? '')?.[1]
+      if (tok === 'uvoz-lige.yml' && slug && ligaPoSlugu.get(slug)?.aktivna === false) continue
+      tecejo.push(`${z.displayTitle} (${z.databaseId})`)
+    }
+  }
+  if (!tecejo.length) process.exit(0)
+  console.log(`Uvoz še teče: ${tecejo.join(', ')}`)
+  process.exit(3)
 }
 
 for (let min = 1; min <= NAJVEC_MIN; min++) {
