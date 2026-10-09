@@ -18,6 +18,7 @@ const DRZAVE: Record<string, { jeziki: string[]; pasovi: string[] }> = {
   CZ: { jeziki: ['cs'], pasovi: ['Europe/Prague'] },
   HU: { jeziki: ['hu'], pasovi: ['Europe/Budapest'] },
   AT: { jeziki: ['de-at'], pasovi: ['Europe/Vienna'] },
+  RS: { jeziki: ['sr'], pasovi: ['Europe/Belgrade'] },
 }
 export const znaneDrzave = () => Object.keys(DRZAVE)
 
@@ -192,10 +193,10 @@ export const izbranJezik = (): string | null => beri(KLJUC_IZBRANEGA_JEZIKA)
 export const jeTujIp = (ip: string | null | undefined, drzaveZLigami: readonly string[]): boolean =>
   Boolean(ip && drzaveZLigami.length && !drzaveZLigami.includes(ip))
 
-/** Jezik tujca: angleščina, razen če je prvi jezik brskalnika sl, sk, hr, cs, hu ali de. */
+/** Jezik tujca: angleščina, razen če je prvi jezik brskalnika sl, sk, hr, cs, hu, de ali sr. */
 export function jezikTujca(jeziki: readonly string[] | null | undefined): string {
   const prvi = (jeziki?.[0] ?? '').toLowerCase().slice(0, 2)
-  return prvi === 'sl' || prvi === 'sk' || prvi === 'hr' || prvi === 'cs' || prvi === 'hu' || prvi === 'de' ? prvi : 'en'
+  return prvi === 'sl' || prvi === 'sk' || prvi === 'hr' || prvi === 'cs' || prvi === 'hu' || prvi === 'de' || prvi === 'sr' ? prvi : 'en'
 }
 
 /**
@@ -248,4 +249,4 @@ export function drzavaLige(slug: string | null | undefined): string | null {
 }
 
 /** Jezik vmesnika za državo. */
-export const JEZIK_DRZAVE: Record<string, string> = { SI: 'sl', SK: 'sk', HR: 'hr', CZ: 'cs', HU: 'hu', AT: 'de' }
+export const JEZIK_DRZAVE: Record<string, string> = { SI: 'sl', SK: 'sk', HR: 'hr', CZ: 'cs', HU: 'hu', AT: 'de', RS: 'sr' }
