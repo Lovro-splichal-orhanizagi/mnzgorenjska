@@ -544,7 +544,7 @@ z `/oefb2/images/`, ki ga robots.txt splošnim robotom prepoveduje — **samo
 zaradi tega dovoljenja**. Avstrija je v živo. **Če ÖFB, KFV ali StFV dovoljenje
 umakne ali nas blokira: vse `at-` lige izklopi** (`update competitions set
 active = false where slug like 'at-%'`) in nočni uvoz jih ne bere več. Vklop
-lige: migracija `…_vklop_at_…`, prvi fantasy krog = prvi krog za zadnjim
+lige: `vklopi_ligo_sredi_sezone` (prej migracija `…_vklop_at_…`), prvi fantasy krog = prvi krog za zadnjim
 krogom z zapisniki, ki ima rok še pred sabo. Pogoji GDPR, ki smo jih obljubili, so urejeni
 (glej `players.anonimiziran_at`): obvestilo po čl. 14 z ugovorom igralca na
 `/legal`, anonimizacija na zahtevo igralca ali zveze (vse vrstice osebe v državi),
@@ -598,6 +598,20 @@ Pregled 9. 10. 2026 (en zapisnik na ligo, zadnja odigrana tekma z goli):
 menjavami — tudi najnižje Klasse in DSG. Nobena liga ni izpuščena zaradi
 zapisnikov. Seznam za uvozno verigo je `scripts/avstrija-lige.txt` (`<slug>
 <arhivi>`, vrstni red: državna raven, nato po deželah od vrha navzdol).
+
+**Vrsta uvozov** je delovni tok *Uvoz Avstrije (vrsta)* (`uvoz-avstrije.yml`
+→ `scripts/vrsta-avstrije.mjs`, vsakih 15 minut, seznam
+`scripts/avstrija-vrsta.txt`). Tik je brez spomina: stanje razbere iz zagonov
+*Uvoz lige* (naslov `Uvoz lige <slug>`, štejejo tudi ročni) in baze. Ko noben
+uvoz `at-` lige ne teče, zažene prvo nevklopljeno ligo brez zagona ali z enim
+padcem (z `cene`); po dveh padcih jo preskoči in javi na Discord. Ligo z novim
+uspelim uvozom vklopi servisna `vklopi_ligo_sredi_sezone(slug)` (gol brez
+nastopa zavrne, prvi krog kot zgoraj, varovalka vklopa; vrne `vklopljena`,
+`razlog`, `prvi_krog`, `razlika` izidi − goli) in zažene *Hisne ekipe* (AT)
+in *Grbi klubov* (oefb). Zavrnjen vklop se javi enkrat — odloči človek.
+**Premor ali konec: delovni tok izklopi** (Actions → Disable workflow); ko
+izpiše "Avstrija končana", ga izklopi. Preizkus: `node
+scripts/vrsta-avstrije.mjs --suho`. Funkcija je splošna, uporabna za vsako ligo.
 
 Posebnosti:
 

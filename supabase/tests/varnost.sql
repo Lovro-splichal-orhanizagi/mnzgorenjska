@@ -868,9 +868,13 @@ select pg_temp.zavrnjeno('anonimni ne more anonimizirati igralca',
   $$select anonimiziraj_igralca(-913040)$$);
 select pg_temp.zavrnjeno('anonimni ne bere zgoscenih kljucev',
   $$select * from anonimizirani_igralci$$);
+select pg_temp.zavrnjeno('anonimni ne more vklopiti lige',
+  $$select vklopi_ligo_sredi_sezone('test-varnost')$$);
 reset role;
 select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
 set local role authenticated;
+select pg_temp.zavrnjeno('uporabnik ne more vklopiti lige',
+  $$select vklopi_ligo_sredi_sezone('test-varnost')$$);
 select pg_temp.zavrnjeno('uporabnik ne more klicati servisne anonimizacije',
   $$select anonimiziraj_igralca(-913040)$$);
 select pg_temp.zavrnjeno('uporabnik ne more klicati skrbniske anonimizacije',

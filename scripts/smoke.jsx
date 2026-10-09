@@ -4759,5 +4759,34 @@ preveri(
   preveri('prenos: premor vira pred vsakim poskusom', Date.now() - zacetek >= 115 && poskusi === 2, `${Date.now() - zacetek} ms`)
 }
 
+// Vrsta avstrijskih uvozov: kaj naredi tik.
+{
+  const { odloci, preberiVrsto } = await import('./vrsta-avstrije.mjs')
+  const vrsta = preberiVrsto('at-a 1,2\nat-b 3\nat-c 4+5\nat-d 6\n')
+  const z = (slug, conclusion, cas, status = 'completed') => ({ slug, status, conclusion, createdAt: cas, updatedAt: cas })
+  const od = '2026-10-10T10:00:00Z'
+  const lige = new Map([['at-a', true], ['at-b', false], ['at-c', false], ['at-d', false]])
+  let o = odloci({ vrsta, lige, od, zagoni: [] })
+  preveri('vrsta: brez zagonov zažene prvo nevklopljeno', o.zazeni?.slug === 'at-b' && o.zazeni.arhiv === '3' && !o.zazeni.ponovitev, JSON.stringify(o.zazeni))
+  o = odloci({ vrsta, lige, od, zagoni: [z('at-b', null, '2026-10-10T10:05:00Z', 'in_progress')] })
+  preveri('vrsta: med uvozom ne zažene ničesar', o.tece && o.zazeni === null && !o.koncano)
+  o = odloci({ vrsta, lige, od, zagoni: [z('at-b', 'failure', '2026-10-10T09:00:00Z')] })
+  preveri('vrsta: en padec = ponovitev', o.zazeni?.slug === 'at-b' && o.zazeni.ponovitev, JSON.stringify(o.zazeni))
+  o = odloci({ vrsta, lige, od, zagoni: [z('at-b', 'failure', '2026-10-10T09:00:00Z'), z('at-b', 'cancelled', '2026-10-10T10:05:00Z')] })
+  preveri('vrsta: dva padca = preskok in enkratna prijava', o.zazeni?.slug === 'at-c' && o.zazeni.arhiv === '4+5' && o.javi.length === 1, JSON.stringify(o))
+  o = odloci({ vrsta, lige, od: '2026-10-10T11:00:00Z', zagoni: [z('at-b', 'failure', '2026-10-10T09:00:00Z'), z('at-b', 'failure', '2026-10-10T10:05:00Z')] })
+  preveri('vrsta: star preskok se ne javi znova', o.zazeni?.slug === 'at-c' && o.javi.length === 0)
+  o = odloci({ vrsta, lige, od, zagoni: [z('at-b', 'failure', '2026-10-10T09:00:00Z'), z('at-b', 'success', '2026-10-10T10:05:00Z')] })
+  preveri('vrsta: nov uspeh = vklop, naprej gre naslednja', o.vklopi.join() === 'at-b' && o.novi.join() === 'at-b' && o.zazeni?.slug === 'at-c', JSON.stringify(o))
+  o = odloci({ vrsta, lige, od, zagoni: [z('at-b', 'success', '2026-10-10T09:00:00Z')] })
+  preveri('vrsta: star uspeh se vklopi tiho (zavrnitev se ne javi znova)', o.vklopi.join() === 'at-b' && o.novi.length === 0 && o.zazeni?.slug === 'at-c')
+  const vse = new Map([['at-a', true], ['at-b', true], ['at-c', true], ['at-d', false]])
+  const padca = [z('at-d', 'failure', '2026-10-10T08:00:00Z'), z('at-d', 'failure', '2026-10-10T09:00:00Z')]
+  o = odloci({ vrsta, lige: vse, od, zagoni: padca })
+  preveri('vrsta: vse vklopljene ali preskočene = konec', o.koncano && o.zazeni === null)
+  o = odloci({ vrsta, lige, od, zagoni: [z('at-x', null, '2026-10-10T10:05:00Z', 'queued')] })
+  preveri('vrsta: čaka tudi na uvoz at- lige zunaj seznama', o.tece && o.zazeni === null)
+}
+
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)
 process.exit(napak === 0 ? 0 : 1)
