@@ -412,6 +412,36 @@ osnovno tekmovanje 2025/26 (ev 65, ne 66):
 | hu-ve-1 | `67/19/34160` | `65/19/32093` |
 | hu-za-1 | `67/20/33915` | `65/20/31672` |
 
+**Drugi val** (migracija 20261009103100): 30 lig vármegyei II. osztály s
+skupinami in BLSZ II., **neaktivnih**. Tolna II. 2026/27 nima (kvalifikacija
+I-II). Seznam tekmovanj zveze in sezone vrne `POST
+ada1bank.mlsz.hu/libs/ajax.php` z `type=getHeaderFilderData&season=<évad>&federationId=<sz>&leagueId=0&changedType=first`
+(`leagues[]`: id, ime, `isCup`). Kjer je županija skupine preuredila, dobi
+vsaka skupina arhive **vseh** lanskih skupin II. (prva je lastna/najbližja);
+klube zunaj lige uvoz razporeda deaktivira.
+
+| liga | tekoča 2026/27 | arhiv 2025/26 |
+|---|---|---|
+| hu-bk-2-del / -eszak | `67/1/33672` / `33675` | `65/1/31504` (lani ena skupina) |
+| hu-ba-2 | `67/2/33838` | `65/2/31435` |
+| hu-be-2 | `67/3/33831` | `65/3/31546` |
+| hu-baz-2-eszak / -kelet / -kozep | `67/4/34085` / `34086` / `34087` | `65/4/31788`, `31789`, `31790` |
+| hu-bp-2 | `67/5/33754` | `65/5/31532` |
+| hu-cs-2 | `67/6/33873` | `65/6/31524` |
+| hu-fe-2-eszak / -del | `67/7/34109` / `34111` | `65/7/31902`, `31933` |
+| hu-gy-2-kelet / -eszak / -nyugat | `67/8/33890` / `34176` / `34179` | `65/8/31660`, `31866`, `31868` (brez felső/alsóháza) |
+| hu-hb-2-eszak / -del | `67/9/34117` / `34119` | `65/9/31600`, `31602` |
+| hu-he-2 | `67/10/33864` | `65/10/31644` |
+| hu-jn-2 | `67/11/33737` | `65/11/31490` |
+| hu-ke-2 | `67/12/33790` | `65/12/31688` |
+| hu-no-2 | `67/13/33936` | `65/13/31713` |
+| hu-pe-2-eszak / -del | `67/14/34067` / `34068` | `65/14/31815`, `31816` |
+| hu-so-2 | `67/15/33708` | `65/15/31584` |
+| hu-sz-2-1 / -2 | `67/16/33811` / `34157` | `65/16/31417`, `31839`, `31842` (lani tri skupine) |
+| hu-va-2-szombathely / -kormend / -sarvar | `67/18/34047` / `34043` / `34046` | `65/18/31703`, `31957` (lani Észak/Dél) |
+| hu-ve-2 | `67/19/33719` | `65/19/32270` (alapszakasz, brez felső/alsóháza) |
+| hu-za-2 | `67/20/33916` | `65/20/31673` |
+
 ### Država obiskovalca
 
 Domena je ena, **lige druge države so skrite**: `useTekmovanje().tekmovanja`
