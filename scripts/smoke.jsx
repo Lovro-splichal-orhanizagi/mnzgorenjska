@@ -3830,6 +3830,107 @@ preveri(
     minuteEkipe(0) === 960 && minuteEkipe(1) === 990)
 }
 
+// --- vir oefb (Avstrija, oefb.at) ------------------------------------------------
+{
+  const O = await import('./viri/oefb.mjs')
+  const { default: viri } = await import('./viri/index.mjs')
+  const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  preveri('oefb: vir je vpisan', viri.oefb === O.default && O.default.drzava === 'AT' && O.default.premorMs >= 1500)
+  preveri('oefb: minuta', O.minuta('67') === 67 && O.minuta('HZ') === 45 && O.minuta('45+2') === 45 && O.minuta('90+5') === 90 &&
+    O.minuta('93') === 90 && O.minuta('SE') === 90 && O.minuta(null) === null)
+  preveri('oefb: izid', O.izid('2:0 (1:0)').rezultat.domaci === 2 && O.izid('2:0 (1:0)').polcas.domaci === 1 && O.izid('-:- (-:-)') === null)
+  preveri('oefb: datum po dunajskem času', O.datumUra(1791122400000).datum === '2026-10-04' && O.datumUra(1791122400000).ura === '16:00' &&
+    O.datumUra(1786125600000).ura === '20:00' && O.sezonaIzDatuma('2027-05-01') === '2026/27')
+  preveri('oefb: šifra lige in naslovi', O.razbijKodo(' 226828 ').id === '226828' &&
+    (() => { try { O.razbijKodo('67/20/1'); return false } catch { return true } })() &&
+    O.default.naslovRazporeda('226828') === 'https://www.oefb.at/bewerbe/Bewerb/Spielplan/226828/' &&
+    O.default.naslovZapisnika('226828', '3844106') === 'https://www.oefb.at/bewerbe/Spiel/Spielbericht/3844106/')
+  preveri('oefb: ime igralca "Priimek Ime"', O.priimekIme('Julian Di Ronza', 'Di Ronza') === 'Di Ronza Julian' && O.priimekIme('Elias Pitterka', 'Pitterka') === 'Pitterka Elias' &&
+    O.priimekIme('Pele', 'Pele') === 'Pele')
+  preveri('oefb: ključ in kratko ime kluba', O.kljucKlubaAt('Dellach / Gail') === O.kljucKlubaAt('Dellach/Gail') &&
+    O.kljucKlubaAt('SV Straßwalchen') !== O.kljucKlubaAt('SV Strasswalchen') && O.kljucKlubaAt('Völkermarkt') === 'völkermarkt' &&
+    O.kratkoImeAt('SV Straßwalchen') === 'Straßwalchen' && O.kratkoImeAt('USV 1960 Berndorf') === 'Berndorf' && O.kratkoImeAt('Dellach / Gail') === 'Dellach / Gail' &&
+    O.kratkoImeAt('SV') === 'SV')
+
+  // Razpored: Salzburger Liga 2026/27 po 10. krogu. Thalgau : Straßwalchen (4. krog)
+  // je "Neuaustragung" — ponovitev je Straßwalchen : Thalgau 5:0, 8. 9.
+  const v = O.vrsticeRazporeda(beri('at-oefb-spielplan-231808.html'))
+  preveri('oefb: razpored — vse tekme, brez razveljavljene', v.length === 240 && v.filter((t) => t.izid).length === 80 &&
+    new Set(v.map((t) => t.id)).size === 240 && !v.some((t) => t.krog === 4 && t.domaci === 'UFV Thalgau' && t.gostje === 'SV Straßwalchen') &&
+    v.some((t) => t.krog === 4 && t.domaci === 'SV Straßwalchen' && t.datum === '2026-09-08' && t.izid?.domaci === 5))
+  preveri('oefb: razpored — neodigrane brez izida, krogi 1–30', v.filter((t) => !t.izid).every((t) => t.id && t.datum) &&
+    Math.min(...v.map((t) => t.krog)) === 1 && Math.max(...v.map((t) => t.krog)) === 30 &&
+    v.some((t) => t.id === '4114979' && t.krog === 11 && !t.izid && t.domaci === 'SV Straßwalchen'))
+
+  // Kontumacija: Gebietsliga Süd 2025/26 — dve tekmi "strafverifiziert" brez zapisnika.
+  const vs = O.vrsticeRazporeda(beri('at-oefb-spielplan-226276.html'))
+  const krogiS = await O.default.razporedVseStrani('226276', async (_u, ime) => (ime.startsWith('spielplan') ? beri('at-oefb-spielplan-226276.html') : ''))
+  const tekmeS = krogiS.flatMap((k) => k.tekme)
+  const kontS = tekmeS.filter((t) => t.kontumacija)
+  preveri('oefb: kontumacija iz razporeda', vs.length === 182 && tekmeS.length === 182 && krogiS.length === 26 && kontS.length === 2 &&
+    kontS.every((t) => t.gostje === 'Raiffeisen Pertlstein / Fehring II' && t.izid.domaci === 3 && t.odigrana) &&
+    vs.filter((t) => t.kontumacija).every((t) => t.id === null) && tekmeS.every((t) => t.odigrana))
+
+  // Zapisnik s skupinami: KAC 1909 : ATSV Wolfsberg 0:3 (Kärntner Liga 2025/26, 1. krog) — 11 m, karton trenerja.
+  const z = O.vZapisnik(beri('at-oefb-spiel-3844106.html'), { id: '3844106' })
+  const n = O.nastopi(z)
+  const kdo = (ime, nn = n) => nn.find((x) => x.ime === ime)
+  preveri('oefb: zapisnik', z && z.sezona === '2025/26' && z.krog === 1 && z.datum === '2025-08-01' && z.domaci.ime === 'KAC 1909' &&
+    z.rezultat.gostje === 3 && z.polcas.gostje === 0 && !z.opozorila.length && z.domaci.postava.length === 11 && z.gostje.rezerve.length === 5)
+  preveri('oefb: pozicije iz skupin', kdo('Magnes Florian').pozicija === 'GK' && kdo('Magnes Florian').vratar && kdo('Wallner Manuel').pozicija === 'DEF' &&
+    kdo('Legner Patrick').pozicija === 'MID' && kdo('Topcagic Mihret').pozicija === 'FWD' && n.filter((x) => x.vratar).length === 2)
+  preveri('oefb: 11 m in strelci', kdo('Alegöz Berat').goliIzEnajstmetrovke === 1 && kdo('Ejoor John').goli === 1 && kdo('Radl Raphael Dennis').goli === 1)
+  preveri('oefb: menjave in minute', kdo('Zuschlag Paul').minute === 59 && kdo('Trimi Patrick').minutaOd === 59 && kdo('Trimi Patrick').minute === 31 &&
+    !kdo('Trimi Patrick').zacetnik && n.filter((x) => !x.zacetnik).length === 6 && !kdo('Niederdorfer Marcel Alexander') &&
+    [0, 1].every((e) => n.filter((x) => x.ekipaIdx === e).reduce((s, x) => s + x.minute, 0) === 990))
+  preveri('oefb: karton trenerja ne šteje', z.rumeni.length === 4 && !z.rumeni.some((k) => /Perz/.test(k.ime ?? '')))
+  preveri('oefb: šifra igralca', n.every((x) => Number.isInteger(x.regSt)) && kdo('Magnes Florian').regSt === 752388)
+
+  // Brez skupin, vratar z dresom "T": Lanzendorf : Stixneusiedl 1:5 (2. Klasse Ost, NÖ) — rdeči.
+  const z8 = O.vZapisnik(beri('at-oefb-spiel-4109260.html'))
+  const n8 = O.nastopi(z8)
+  preveri('oefb: vratar "T" je namig, ostali brez pozicije', kdo('Aklanoglu Oktay', n8).vratar && kdo('Aklanoglu Oktay', n8).pozicija === 'GK' &&
+    kdo('Aklanoglu Oktay', n8).st === null && kdo('Hartl Fabian', n8).vratar && n8.filter((x) => x.vratar).length === 2 &&
+    n8.filter((x) => !x.vratar).every((x) => x.pozicija === null) && !z8.opozorila.length)
+  preveri('oefb: menjava ob polčasu in rdeči', kdo('Fidan Eyyub', n8).minutaOd === 45 && kdo('Fidan Eyyub', n8).minute === 45 &&
+    kdo('Bauer Niklas', n8).rdeci === 1 && kdo('Bauer Niklas', n8).minute === 89 && kdo('Pajducak Dominik', n8).goli === 3)
+
+  // Avtogol (Ebner, Ferlach : Wolfsberg 1:3) šteje nasprotniku; rumeno-rdeči (Revelant, Matrei : Dellach 3:0).
+  const za = O.vZapisnik(beri('at-oefb-spiel-3843953.html'))
+  const na = O.nastopi(za)
+  preveri('oefb: avtogol', !za.opozorila.length && kdo('Ebner Stefan', na).avtogoli === 1 && kdo('Ebner Stefan', na).goli === 0 &&
+    kdo('Stoni Marcel Maximilian', na).goli === 2 && kdo('Stoni Marcel Maximilian', na).goliIzEnajstmetrovke === 1)
+  const zr = O.vZapisnik(beri('at-oefb-spiel-3844002.html'))
+  const nr = O.nastopi(zr)
+  preveri('oefb: rumeno-rdeči skrajša nastop', kdo('Revelant Fabio', nr).rumeni === 1 && kdo('Revelant Fabio', nr).rdeci === 1 &&
+    kdo('Revelant Fabio', nr).minute === 85 && !zr.opozorila.length && nr.filter((x) => x.ekipaIdx === 0).every((x) => x.pozicija === null))
+
+  // Sestavljen: vratar brez dresa ("T") zamenjan z "ET", leteča menjava, kontumacija.
+  const igr = (st, ime, id) => ({ rueckennummer: st, name: ime, nachname: ime.split(' ').at(-1), url: `https://www.oefb.at/Profile/Spieler/${id}?x` })
+  const polje = (od) => Array.from({ length: 10 }, (_, i) => igr(String(i + 2), `Igralec N${od + i}`, od + i))
+  const dog = (type, team, min, id, id2 = null) => ({ type, team, minuteString: min, url: `https://www.oefb.at/Profile/Spieler/${id}?x`,
+    urlSecondary: id2 ? `https://www.oefb.at/Profile/Spieler/${id2}?x` : null, eigentor: false, hinweis: null })
+  const stran = (heim, gast, ergebnis, gameData) =>
+    `SG.container.appPreloads['1']=[${JSON.stringify({ spielUid: '9', datum: 1791122400000, ergebnis, runde: '10. Runde', heimMannschaft: 'A', gastMannschaft: 'B', ergebnisZusatz: null })}];\n` +
+    `SG.container.appPreloads['2']=[${JSON.stringify({ heimAufstellung: heim, gastAufstellung: gast, gameData })}];\n`
+  const ekipa = (ime, zac, klop) => ({ vereinName: ime, tor: [], abwehr: [], mittelfeld: [], sturm: [], weitere: zac, ersatz: klop })
+  const html = stran(ekipa('A', [igr('T', 'Prvi Vratar', 1), ...polje(100)], [igr('ET', 'Drugi Vratar', 2), igr('14', 'Ni Igral', 3)]),
+    ekipa('B', [igr('1', 'Tretji Vratar', 4), ...polje(200)], []),
+    '1:0 (0:0)', [dog('playerchange', 'a', '70', 2, 1), dog('playerchange', 'a', '30', 999, 100), dog('playerchange', 'a', '60', 100, 998),
+      { ...dog('goal', 'a', '80', 101), spielstand: '1:0' }])
+  const zs = O.vZapisnik(html)
+  const ns = O.nastopi(zs)
+  const s = (ime) => ns.find((x) => x.ime === ime)
+  preveri('oefb: sestavljen — zamenjava vratarja brez dresa', s('Vratar Prvi').minute === 70 && s('Vratar Prvi').vratar && s('Vratar Drugi').vratar &&
+    s('Vratar Drugi').minute === 20 && s('Vratar Drugi').minutaOd === 70 && !s('Igral Ni') && zs.krog === 10 &&
+    zs.opozorila.join('|') === 'menjava v 30. minuti: vstopnega igralca ni v postavi|menjava v 60. minuti: izstopnega igralca ni v postavi')
+  preveri('oefb: sestavljen — leteča menjava', s('N100 Igralec').minute === 60 && s('N100 Igralec').minutaDo === 90 &&
+    ns.filter((x) => x.ekipaIdx === 0).reduce((a, x) => a + x.minute, 0) === 960)
+  const kont = stran(ekipa('A', [igr('1', 'Prvi Vratar', 1), ...polje(100)], []), ekipa('B', [], []), '3:0 (0:0)', [])
+  preveri('oefb: kontumacija (ena postava prazna)', O.jeKontumacija(kont) && O.vZapisnik(kont) === null && !O.jeKontumacija(html) &&
+    !O.jeKontumacija(beri('at-oefb-spiel-3844106.html')) && !O.jeKontumacija(beri('at-oefb-spiel-3844002.html')))
+}
+
 // --- navijači klubov ----------------------------------------------------------
 // Vrstica `navijaci_klubov` je en navijač; klub brez navijačev ima eno vrstico
 // brez ekipe. Mesto ima le klub z vsaj `min_navijacev`.

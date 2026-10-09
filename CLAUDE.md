@@ -464,6 +464,70 @@ Sloveniji (če avstrijski vir pozicije prinese, jo skrij v `Navbar.tsx` kot za
 SK). Nemškega kanala v HelpStacku še ni: `Podpora.tsx` za `de` uporabi
 slovenskega.
 
+### Avstrija — vir `oefb`
+
+Vir `oefb` (`scripts/viri/oefb.mjs`) bere **oefb.at** (Ligen & Bewerbe), kjer
+ÖFB in vseh devet deželnih zvez vodijo vsa tekmovanja do najnižje Klasse.
+Strani izriše JavaScript, podatki pa so v strani kot JSON
+(`SG.container.appPreloads['…']=[{…}];`) — beremo JSON, ne HTML.
+
+- **Šifra lige je id tekmovanja** (Bewerb, `/bewerbe/Bewerb/<id>/`); vsaka
+  sezona ima svojega, seznam sezon je na strani tekmovanja (`saisonen`).
+- **Razpored** `/bewerbe/Bewerb/Spielplan/<id>/`: `ergebnisse` + `spiele`, vse
+  tekme z `runde`, `anstoss` (ms, dunajski čas) in izidom. `Neuaustragung` je
+  razveljavljena tekma, ki se ponovi (ponovitev je svoja vrstica, lahko z
+  zamenjanim domačinom) — izpustimo jo. **Kontumacija** ima izid in namesto
+  zapisnika povezavo `strafverifiziert` (`#`); v arhivih 14 lig pet takih.
+  Kot rezerva šteje še 3:0 s prazno postavo po tednu dni.
+- **Zapisnik** `/bewerbe/Spiel/Spielbericht/<id>/`: začetniki v skupinah
+  `tor`/`abwehr`/`mittelfeld`/`sturm` ali vsi v `weitere`, klop v `ersatz`,
+  šifra igralca iz `/Profile/Spieler/<id>` → `reg_st`. Dogodki: `goal`
+  (`eigentor` je pri ekipi strelca, `hinweis: "Strafstoß"` = 11 m),
+  `playerchange` (primary noter, secondary ven), `card-yellow`,
+  `card-yellow-red` (prvi rumeni je svoj dogodek), `card-red`. Minuta je
+  `minuteString` ("67", "HZ" = 45, "90+5" → 90, "SE" = po koncu → 90).
+  Kartoni trenerjev (niso v postavi) ne štejejo.
+- **Pozicije**: skupine vnese **klub sam**, zato jih ima na isti tekmi ena
+  ekipa, druga ne. S skupinami → GK/DEF/MID/FWD iz zapisnika; brez njih je
+  vratar le, če ima dres "T" (rezervni "ET") — namig kot pri mlsz, ostali na
+  glasovanje. *Uskladi pozicije* z `vir = oefb`.
+- **Nastopi gredo po šifri igralca, ne po dresu** (`nastopi` v viru):
+  vratar "T" nima številke. Leteče menjave šteje `minuteIzPreklopov`.
+- Ime igralca je "Ime Priimek" s poljem `nachname`; uvoz dobi "Priimek Ime".
+  Ključ kluba ohrani ä, ö, ü, ß; razpored piše kratko ime, uvoz ga vzame od tam.
+
+**Kje najti šifre.** Izbirnik zvez in lig na oefb.at kliče javni posrednik
+strani (`/proxy/oefb3/1469066385635312874_<ključ>?proxyUrl=<…>`) z
+`…/datenservice/saisonen/<zveza>`, `…/gruppen/<zveza>;jahr=<leto2>;homepage=1473983024629548524`
+in `…/bewerbe/<skupina>;homepage=1473983024629548524;runden=true`
+(zveza: KFV `07383705631a73ec5a03`, StFV `2b343dd0b84af271a9ea`).
+
+**Pravice.** robots.txt splošnim robotom branje dovoli (prepove le
+`/blueContent/`, slike, `/Suche`), izrecno pa zapre AI-robote in
+"Datenbank Crawler". Stran oglašuje **ÖFB Datenservice** (podatke morda
+prodaja) — ali jih sme SLFF brati brezplačno, je poslovna odločitev lastnika.
+Beremo odkrito (`User-Agent: SLFF fantasy`, 1,5 s med stranmi, popolnih
+zapisnikov ne beremo znova). **Če se pojavi izziv ali CAPTCHA, ustavi — ne
+obhajaj.** Odziv je počasen (2–7 s na stran): arhiv ene lige je ~20 minut.
+
+Preizkus vira na Kärntner Liga 2025/26 (`226828`): 30 krogov, 240 tekem,
+0 kontumacij, 240 zapisnikov, 795 golov (= izidi), 480/480 postav po 11,
+1695 nastopov s klopi, 0 nastopov brez šifre, 0 opozoril. Skupine je
+vneslo okoli pol klubov: vratar je znan v 257 od 480 postav, pozicija v
+2834 od 6975 nastopov.
+
+Vpisanih je 14 lig (migracija 20261009170000), **neaktivnih**. Lige so velike
+(11–16 klubov), ena arhivska sezona naj zadošča; 2024/25 je za rezervo.
+Unterliga Mitte obstaja šele od 2025/26.
+
+| liga | tekoča 2026/27 | arhiv 2025/26 | arhiv 2024/25 |
+|---|---|---|---|
+| at-k-kaerntner-liga | `231665` | `226828` | `221445` |
+| at-k-unterliga-ost / -mitte / -west | `231652` / `231657` / `231656` | `226819` / `227197` / `226827` | `221449` / — / `221441` |
+| at-st-oberliga-mitte-west / -sued-ost / -nord | `231501` / `231521` / `231503` | `226278` / `226272` / `226273` | `221194` / `221178` / `221180` |
+| at-st-gebietsliga-mitte / -west / -sued / -ost | `231500` / `231520` / `231523` / `231524` | `226269` / `226283` / `226276` / `226291` | `221200` / `221199` / `221176` / `221182` |
+| at-st-gebietsliga-mur / -muerz / -enns | `231502` / `231508` / `231512` | `226281` / `226279` / `226266` | `221191` / `221185` / `221190` |
+
 ### Država obiskovalca
 
 Domena je ena, **lige druge države so skrite**: `useTekmovanje().tekmovanja`

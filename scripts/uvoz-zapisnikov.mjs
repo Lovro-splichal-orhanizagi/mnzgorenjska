@@ -634,7 +634,12 @@ for (const { id, z, url } of zapisniki) {
     }
     const jeDvoumno = (x) => (stejIme.get(`${x.ekipaIdx}|${x.ime}`) ?? 0) > 1
 
-    const idPoStevilki = new Map() // `${ekipaIdx}|${st}` -> player_id
+    const idPoStevilki = new Map() // `${ekipaIdx}|${st}` in `${ekipaIdx}|r${regSt}` -> player_id
+    // Brez dresa (oefb: vratar "T") ni ključa, sicer gol brez strelca pristane pri njem.
+    const zapomni = (x, pId) => {
+      if (x.st != null) idPoStevilki.set(`${x.ekipaIdx}|${x.st}`, pId)
+      if (x.regSt) idPoStevilki.set(`${x.ekipaIdx}|r${x.regSt}`, pId)
+    }
     const zasedeni = new Set() // igralci, ze porabljeni na TEJ tekmi
     const vrstice = []
     for (const x of n) {
@@ -650,7 +655,7 @@ for (const { id, z, url } of zapisniki) {
         datum: z.datum ?? null,
       })
       zasedeni.add(pId)
-      idPoStevilki.set(`${x.ekipaIdx}|${x.st}`, pId)
+      zapomni(x, pId)
       vrstice.push({
         match_id: tekma.id,
         player_id: pId,
@@ -729,7 +734,7 @@ for (const { id, z, url } of zapisniki) {
       zasedeni.add(nov.id)
       // Naslednja tekma mora uporabiti popravljeni pripis, ne starega trka.
       igralci.set(`${v.team_id}|${x.ime}#${x.st}`, nov.id)
-      idPoStevilki.set(`${x.ekipaIdx}|${x.st}`, nov.id)
+      zapomni(x, nov.id)
       z.opozorila.push(
         `soimenjaka ${x.ime} (dres ${x.st}) ni bilo mogoče ločiti — ${novZapis ? 'ustvarjen nov zapis' : 'uporabljen prost soimenjak'}`,
       )
@@ -768,8 +773,11 @@ for (const { id, z, url } of zapisniki) {
     const goliVrstice = []
     for (const g of z.goli) {
       const tId = g.ekipaIdx === 0 ? domaciId : gostjeId
-      let pId = idPoStevilki.get(`${g.ekipaIdx}|${g.st}`)
-      if (!pId) pId = await igralecId(tId, g.ime, { vratar: false, st: g.st })
+      let pId =
+        (g.regSt && idPoStevilki.get(`${g.ekipaIdx}|r${g.regSt}`)) ||
+        (g.st != null && idPoStevilki.get(`${g.ekipaIdx}|${g.st}`)) ||
+        null
+      if (!pId && g.ime) pId = await igralecId(tId, g.ime, { vratar: false, st: g.st })
       goliVrstice.push({
         match_id: tekma.id,
         scorer_id: pId,
