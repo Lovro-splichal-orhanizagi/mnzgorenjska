@@ -100,10 +100,13 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     zavihekEkipe: 'Csapatok',
     zavihekIgralci: 'Játékosok',
     zavihekKlubi: 'Klubok',
-    klubiUvod: 'Valódi klubok, nem fantasy csapatok: a klub összes játékosának pontjai minden bajnokságból · {sezona}-es idény',
+    klubiUvod: 'Valódi klubcsapatok, nem fantasy: a játékosok által a csapatnak szerzett pontok · {sezona}-es idény',
     klubiIgralcev: { one: '{n} játékos', other: '{n} játékos' },
+    klubiPovprecje:
+      'A bajnokságok nem egyszerre kezdődnek, ezért a fordulónkénti átlag kiegyenlít; azok a csapatok számítanak, amelyeknek legalább ennyi van: {krogov}.',
+    klubiVec: 'Több mutatása',
     klubiOpomba:
-      'A klub felnőtt és ifjúsági csapata összeadódik. A pontok gólpasszok nélkül értendők; a játékos annál a klubnál számít, ahol most játszik. A több csapattal rendelkező klubok és a több lejátszott fordulóval rendelkező bajnokságok többet gyűjtenek.',
+      'Egy klub felnőtt és ifjúsági csapata külön szerepel. A pontok gólpasszok nélkül értendők. Az átigazolt játékos az új klubnál nulláról indul; a korábban szerzett pontjai a régi klubnál maradnak.',
     vrhNaslov: 'Ki a legjobb országosan?',
     vrhPoglejVse: 'Nézd meg a top 10-et →',
     vrhUvod: 'Top 10 az összes bajnokságból · {sezona} szezon',

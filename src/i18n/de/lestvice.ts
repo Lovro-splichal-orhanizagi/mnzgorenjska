@@ -99,10 +99,13 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     zavihekEkipe: 'Teams',
     zavihekIgralci: 'Spieler',
     zavihekKlubi: 'Vereine',
-    klubiUvod: 'Echte Vereine, keine Fantasy-Teams: Punkte aller Spieler eines Vereins aus allen Ligen · Saison {sezona}',
+    klubiUvod: 'Echte Vereinsteams, keine Fantasy-Teams: Punkte, die Spieler für das Team geholt haben · Saison {sezona}',
     klubiIgralcev: { one: '{n} Spieler', other: '{n} Spieler' },
+    klubiPovprecje:
+      'Die Ligen starten nicht gleichzeitig, der Schnitt pro Runde gleicht das aus; es zählen Teams mit mindestens {krogov}.',
+    klubiVec: 'Mehr anzeigen',
     klubiOpomba:
-      'Kampfmannschaft und Nachwuchs eines Vereins werden addiert. Punkte ohne Assists; ein Spieler zählt für den Verein, für den er jetzt spielt. Vereine mit mehreren Teams und Ligen mit mehr gespielten Runden sammeln mehr.',
+      'Kampfmannschaft und Nachwuchs eines Vereins stehen getrennt. Punkte ohne Assists. Wer wechselt, beginnt beim neuen Verein bei null; zuvor geholte Punkte bleiben beim alten Verein.',
     vrhNaslov: 'Wer ist landesweit vorne?',
     vrhPoglejVse: 'Die Top 10 ansehen →',
     vrhUvod: 'Top 10 aus allen Ligen · Saison {sezona}',

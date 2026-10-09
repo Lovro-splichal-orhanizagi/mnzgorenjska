@@ -99,10 +99,13 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     zavihekEkipe: 'Teams',
     zavihekIgralci: 'Players',
     zavihekKlubi: 'Clubs',
-    klubiUvod: 'Real clubs, not fantasy teams: points of all a club’s players across all leagues · season {sezona}',
+    klubiUvod: 'Real club sides, not fantasy teams: points players earned for the side · season {sezona}',
     klubiIgralcev: { one: '{n} player', other: '{n} players' },
+    klubiPovprecje:
+      'Leagues don’t start together, so points per round even this out; sides with at least {krogov} count.',
+    klubiVec: 'Show more',
     klubiOpomba:
-      'A club’s senior and youth sides are added together. Points exclude assists; a player counts for the club they play for now. Clubs with more sides and leagues with more rounds played collect more.',
+      'A club’s senior and youth sides are listed separately. Points exclude assists. A player who transfers starts from zero at the new club; points earned before stay with the old one.',
     vrhNaslov: 'Who’s top nationally?',
     vrhPoglejVse: 'See the top 10 →',
     vrhUvod: 'Top 10 from all leagues · season {sezona}',

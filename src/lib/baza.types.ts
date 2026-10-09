@@ -5679,12 +5679,20 @@ export type Database = {
         }[]
       }
       vrh_klubov_drzave: {
-        Args: { p_drzava: string; p_koliko?: number }
+        Args: {
+          p_drzava: string
+          p_koliko?: number
+          p_na_krog?: boolean
+          p_najmanj_krogov?: number
+        }
         Returns: {
+          competition_short: string
+          competition_slug: string
           goli: number
           igralcev: number
-          lige: string
+          krogov: number
           mesto: number
+          na_krog: number
           season: string
           team_id: number
           team_logo: string

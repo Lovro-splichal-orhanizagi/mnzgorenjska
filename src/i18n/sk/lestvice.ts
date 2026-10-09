@@ -102,10 +102,13 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     zavihekEkipe: 'Tímy',
     zavihekIgralci: 'Hráči',
     zavihekKlubi: 'Kluby',
-    klubiUvod: 'Skutočné kluby, nie fantasy tímy: súčet bodov všetkých hráčov klubu zo všetkých líg · sezóna {sezona}',
+    klubiUvod: 'Skutočné klubové družstvá, nie fantasy: body, ktoré hráči získali za družstvo · sezóna {sezona}',
     klubiIgralcev: { one: '{n} hráč', few: '{n} hráči', many: '{n} hráča', other: '{n} hráčov' },
+    klubiPovprecje:
+      'Ligy nezačínajú naraz, preto priemer na kolo rozdiel vyrovná; počítajú sa družstvá s aspoň {krogov}.',
+    klubiVec: 'Zobraziť viac',
     klubiOpomba:
-      'Dospelí a dorast klubu sa sčítajú. Body sú bez asistencií; hráč sa počíta klubu, za ktorý hrá teraz. Kluby s viacerými družstvami a ligy s viac odohranými kolami nazbierajú viac.',
+      'Dospelí a dorast toho istého klubu sú každý zvlášť. Body sú bez asistencií. Hráč, ktorý prestúpi, začína v novom klube od nuly; skôr získané body zostávajú starému klubu.',
     vrhNaslov: 'Kto vládne Slovensku?',
     vrhPoglejVse: 'Pozri najlepších 10 →',
     vrhUvod: 'Najlepších 10 zo všetkých líg · sezóna {sezona}',
