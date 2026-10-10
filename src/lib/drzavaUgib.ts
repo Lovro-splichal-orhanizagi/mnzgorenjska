@@ -169,11 +169,12 @@ function beri(kljuc: string): string | null {
 }
 
 /**
- * Gola naslovnica: pot `/` brez `?t=` in brez shranjene lige. Le tu je tujec
- * tujec (angleščina, vprašanje po državi); vsaka druga stran je v jeziku
- * države svoje lige, da ima naslov en sam jezik — tudi za iskalnik, ki
- * pride z ameriškega IP-ja. Velja stanje ob nalaganju strani, ker se jezik
- * med obiskom ne menja; v Node (smoke) se bere sproti.
+ * Gola naslovnica: pot `/` brez `?t=` in brez shranjene lige. Le tu se
+ * odločimo, ali je obiskovalec tujec (oznaka `slff-tujec`, vprašanje po
+ * državi). Kdor pride naravnost na stran lige ali entitete (iskalnik z
+ * ameriškega IP-ja, brez shrambe), oznake ne dobi in vidi jezik lige — vsak
+ * naslov ima en jezik. Že shranjena oznaka velja povsod. Velja stanje ob
+ * nalaganju strani; v Node (smoke) se bere sproti.
  */
 const golaNaslovnica = (pot: string, iskanje: string): boolean =>
   pot === '/' && !new URLSearchParams(iskanje).has('t') && !beri('slff-tekmovanje')
@@ -181,10 +182,12 @@ const golaObNalaganju =
   typeof location === 'undefined' ? null : golaNaslovnica(location.pathname, location.search)
 export const naGoliNaslovnici = (): boolean => golaObNalaganju ?? golaNaslovnica('/', '')
 
-/** Država po IP tujca — le na goli naslovnici (`naGoliNaslovnici`). */
-export const tujec = (): string | null => (naGoliNaslovnici() ? beri(KLJUC_TUJCA) : null)
+/** Država po IP tujca, če je bil obiskovalec prepoznan kot tujec. */
+export const tujec = (): string | null => beri(KLJUC_TUJCA)
 
+/** Zapiše oznako tujca — le na goli naslovnici (`naGoliNaslovnici`). */
 export function zapomniTujca(ip: string) {
+  if (!naGoliNaslovnici()) return
   try {
     localStorage.setItem(KLJUC_TUJCA, ip)
   } catch {}
