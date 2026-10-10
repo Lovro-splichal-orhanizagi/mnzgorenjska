@@ -93,7 +93,7 @@ export const kratkoIme = (polnoIme) =>
  *   drugi zvezi povsem drug klub.
  *
  * @param {import('@supabase/supabase-js').SupabaseClient} db
- * @param {{ ime: string, drzava?: string, kljucKluba: (ime: string) => string }} vir
+ * @param {{ ime: string, drzava?: string, kljucKluba: (ime: string) => string, poenostavi?: (ime: string) => string }} vir
  */
 export async function mapaKlubov(db, vir) {
   // Le klubi države vira: "NK Polet" ali "NK Mladost" je v Sloveniji in na
@@ -128,9 +128,13 @@ export async function mapaKlubov(db, vir) {
     for (const v of vrstice) nasi.add(v.team_id)
   }
 
+  // Natančno ime v abecedi vira (`vir.poenostavi`), ne slovenski `poenostavi`:
+  // ta zavrže vse razen a–ž, zato je bil "NK Tomislav (Đ)" (Đulovac) pod
+  // ključem "nk tomislav" in uvoz je vanj vpisal še NK Tomislav iz Drnja.
+  const natancno = vir.poenostavi ?? poenostavi
   const mapa = new Map()
   for (const k of vsi) {
-    const kljuc = poenostavi(k.name)
+    const kljuc = natancno(k.name)
     if (!mapa.has(kljuc)) mapa.set(kljuc, k.id)
   }
   for (const k of vsi) {
