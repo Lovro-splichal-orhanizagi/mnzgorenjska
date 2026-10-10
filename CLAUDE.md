@@ -1056,14 +1056,15 @@ Lazarevcu (Brajkovac, Cvetovac, Lukavica, Mali Crljeni), BSK v MOL A
 2025/26). Ostala ponovljena imena so isti klub, ki je napredoval ali izpadel
 (SREM Jakovo, OMLADINAC Rajkovac …).
 
-**Ostale regije Srbije ne objavljajo zapisnikov** (preverjeno 10. 10. 2026):
-FS Vojvodine (fsv.rs, FS Novog Sada fsgns.rs), FS regiona Zapadne Srbije
-(fsrzs.com, le PDF lestvice in strelci) in FS regiona Istočne Srbije
-(fsris.org.rs, razpored in izidi s šiframi klubov) kažejo le izide in
-lestvice. Tudi Srpska liga Vojvodina, Zapad in Istok nimajo zapisnikov
-nikjer javno; državni ligi bere vir `fss` (spodaj). Vse zveze vodijo podatke v COMET (comet.fss.rs, za prijavo); javni
-API "areports" zahteva ključ FSS — ključa s tujih strani ne uporabljamo.
-Pot naprej je prošnja FSS za ključ.
+**Ostale regije Srbije na svojih straneh ne objavljajo zapisnikov**
+(preverjeno 10. 10. 2026): FS Vojvodine (fsv.rs, FS Novog Sada fsgns.rs), FS
+regiona Zapadne Srbije (fsrzs.com, le PDF lestvice in strelci) in FS regiona
+Istočne Srbije (fsris.org.rs, razpored in izidi s šiframi klubov) kažejo le
+izide, razpored in lestvice. Vse zveze vodijo podatke v COMET (comet.fss.rs,
+za prijavo), **fss.rs pa izriše zapisnik vsake tekme COMET po šifri** — tudi
+Srpske lige Istok, Zapad in Vojvodina; te bere vir `fssid` (spodaj), državni
+ligi vir `fss`. Javni API "areports" zahteva ključ FSS — ključa s tujih strani
+ne uporabljamo.
 
 Uvoz (ena za drugo): `gh workflow run uvoz-lige.yml -f liga=rs-bg-srpska -f
 arhiv=srpska-liga-beograd-2025-26 -f cene=true`. Arhiv ~180 zapisnikov po 2 s
@@ -1072,7 +1073,8 @@ je okoli 7 minut na ligo.
 ### Srbija — vir `fss`
 
 Vir `fss` (`scripts/viri/fss.mjs`) bere **fss.rs** (Fudbalski savez Srbije)
-za državni ligi; Srpska liga in nižje so pri regijskih zvezah (zgoraj).
+za državni ligi; Srpska liga Beograd in nižje beograjske so pri `fsb`
+(zgoraj), Srpska liga Istok, Zapad in Vojvodina pri `fssid` (spodaj).
 WordPress za Cloudflarom, ki je strani do zdaj vračal brez izziva;
 robots.txt zapre le /wp-admin/. Beremo odkrito (2 s, popolnih zapisnikov
 ne beremo znova). **Če se pojavi izziv ali CAPTCHA, ustavi — ne obhajaj.**
@@ -1113,6 +1115,83 @@ Vpisani ligi (migracija 20261010153300, **neaktivni**), zveza `fss`:
 | rs-prva-liga | `mozzart-bet-prva-liga-srbije-26-27` (16) | `mozzart-bet-prva-liga-srbije-25-26` (16) |
 
 Arhiv je 240 zapisnikov in 240 strani prvaliga.rs po 2 s — okoli 20 minut na ligo.
+
+### Srbija — vir `fssid`
+
+Vir `fssid` (`scripts/viri/fssid.mjs`) bere regijske lige (Srpska liga Istok,
+Zapad, Vojvodina) z **fss.rs po šifri tekme COMET**. Regijske zveze zapisnikov
+ne objavljajo in strani lige na fss.rs za te lige ni, a
+`/izvestaj-sa-utakmice/<id>/?script=lat` izriše vsako tekmo COMET. Razčlenjevanje
+zapisnika, minute in nastopi so iz `fss.mjs`. Beremo odkrito (2 s, User-Agent
+SLFF); **izziv ali CAPTCHA ustavi uvoz — ne obhajaj.**
+
+- **Blok šifer**: tekmovanje-sezona je strnjen blok N×(N−1) šifer, urejen po
+  krogih (N/2 na krog). Šifra lige je `<od>-<do>`. Stran tekme ima tri stanja:
+  "Utakmica ne postoji", "Utakmica nije odigrana ili podaci nisu uneti" (le
+  imeni klubov, **brez datuma in kroga**) in poln zapisnik ("N. kolo", datum,
+  postavi, dogodki z minutami). Krog odigrane je iz zapisnika, neodigrane iz
+  mesta v bloku. Preverba 10. 10. 2026: pri vseh 209 odigranih treh lig je
+  krog iz zapisnika enak krogu po mestu (0 neujemanj), v blokih ni manjkajočih
+  šifer. Neujemanje in manjkajoče šifre vir izpiše.
+- **Nov blok (nova sezona)**: poišči eno šifro lige (npr. s strani regijske
+  zveze ali iz bližine lanskega bloka) in poženi `node scripts/srbija-blok.mjs
+  <šifra>` — poišče meji bloka, preveri N×(N−1), izpiše klube 1. kroga in ali je
+  liga članska. **Članska ima v zapisniku "Četvrti sudija" in "Kontrolor
+  suđenja"**; mladinske (Omladinska/Kadetska liga, ista imena klubov, akademije,
+  tekme sredi tedna) ju nimajo. Tako sta bila bloka `75908331` in `75910179`
+  (Zapad, skoraj isti klubi, z Radničkim 1923, Novim Pazarjem, Jedinstvom Ub)
+  mladinska; članska Srpska liga Zapad je `75859176`. Šifre lige se vpišejo z
+  migracijo, za vir datumov še vrstica v `DATUMI`.
+- **Datumi neodigranih tekem** (fss.rs jih nima): kjer jih ima regijska zveza,
+  so iz nje (`DATUMI`): **fsris.org.rs** za Istok (stran lige in strani krogov
+  `?kolo=<id>&sezona=19`, ime kluba iz `title` povezave) in **fsv.rs** za
+  Vojvodino (ena stran, cirilica, harmonika `comet-acc`). Obe objavita jesenski
+  del (krogi 1–15) z datumi in uro, pomladi še ne; robots.txt dovoli, brez
+  prijave. Tekmo vira najde `ujemiZVirom` po krogu in besedah imen (Radnički
+  (P) ≠ Radnički (S)); 10. 10. so se ujele vse prebrane. fsrzs.com (Zapad) ima le
+  PDF — **Zapad je brez vira datumov**.
+- **Ocena**: krog brez znanega datuma dobi datum prejšnjega znanega kroga iste
+  polovice sezone + 7 dni na krog, premaknjen na najpogostejši dan, z
+  najpogostejšo uro, in `rounds.datum_ocenjen = true` (piše ga uvoz razporeda
+  le za vir z `ocenjeniDatumi`). Krog druge polovice (po zimskem premoru) brez
+  znanega datuma se ne oceni in ne vpiše — pride, ko ga zveza objavi ali se
+  odigra. **Tveganje**: rok ocenjenega kroga je približen. Krog sredi tedna
+  (Zapad 7. krog, sreda 23. 9.) ali prestavljen krog ocena zgreši; če je tekma
+  prej, se lahko ekipe urejajo po začetku, če pozneje, se krog zaklene prezgodaj
+  in zaklenjenemu krogu se rok ne premika več. Pred vklopom lige brez vira
+  datumov (Zapad) preveri `datum_ocenjen` naslednjih krogov.
+- **Predpomnilnik** (`scripts/.predpomnilnik/fssid`): odigrana tekma se ne bere
+  znova (uvoz zapisnikov jo prve 3 dni bere sveže, zapisnik brez postav do 45
+  dni), neodigrana, ko je na vrsti (od dneva pred datumom, vsako uro do 14 dni
+  po njem, nato dnevno), sicer enkrat na teden; "ne postoji" enkrat na teden;
+  strani zvez 12 ur. Prvi uvoz bloka prebere vseh 240 strani (~8–15 minut).
+- **Vratar**: prvaliga.rs (`(G)`, ista šifra COMET) kot pri `fss`; če ga tam ni,
+  je vratar prvi začetnik (COMET vratarja našteje prvega; 30/30 preverjenih
+  tekem enako kot prvaliga.rs). *Uskladi pozicije* z `vir = fssid`.
+- **Napake vira**: v 7 od 209 zapisnikov je gol vpisan dvema igralcema v isti
+  minuti (goli iz dogodkov > izid, opozorilo `goli iz dogodkov …`); izid ostane
+  izid zapisnika. Izid za zeleno mizo (fsv: Dinamo 1945 : Mladost Apa 3:0*,
+  na igrišču 1:3) COMET ne pozna — uvoz ima izid igrišča.
+- **Imena klubov** so iz COMET s krajem; podvojen kraj ("KABEL (Novi Sad) (Novi
+  Sad)") se odreže. Izpadla kluba Prve lige imata ime državne lige
+  (`IME_DRZAVNE`: TRAJAL, TEKSTILAC); FAP in KABEL (Novi Sad) se ujemata sama.
+
+Vpisane lige (migracija 20261010233100, **neaktivne**, zveze `fsris`, `fsrzs`,
+`fsv`, vir v nogi FSS). **Arhiva ni** (šifre 2025/26 niso znane; arhiv 2022/23
+bi se dal najti prek `data-match_id` na straneh delegiranja fss.rs, a je star tri
+sezone) — cene so le iz tekoče sezone:
+
+| liga | tekoča 2026/27 | klubov | datumi |
+|---|---|---|---|
+| rs-srpska-istok | `75912381-75912620` | 16 | fsris.org.rs (jesen), sicer ocena |
+| rs-srpska-zapad | `75859176-75859415` | 16 | ocena |
+| rs-srpska-vojvodina | `75952376-75952615` | 16 | fsv.rs (jesen), sicer ocena |
+
+Preizkus (10. 10. 2026, krogi 1–10): Istok 67, Zapad 79, Vojvodina 63
+odigranih; vsi 11 + 11, goli = izid razen 7 zgoraj, nobena kontumacija.
+Igralcev z vsaj 270 minutami je 50–57 % (ostali dobijo privzeto 4.5) — pod
+mejo 70 % privzetih v `pripravljenost.ts`. Uvoz: `gh workflow run
+uvoz-lige.yml -f liga=rs-srpska-istok -f cene=true` (brez arhiva).
 
 ### Romunija
 

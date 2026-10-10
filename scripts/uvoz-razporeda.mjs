@@ -277,7 +277,8 @@ const obstojeciKrogi = new Map(
     await vseVrstice((od, do_) =>
       db
         .from('rounds')
-        .select('id, number, played_on, deadline_at, lineups_locked_at')
+        // `datum_ocenjen` beremo le pri viru, ki datume ocenjuje (fssid).
+        .select(`id, number, played_on, deadline_at, lineups_locked_at${vir.ocenjeniDatumi ? ', datum_ocenjen' : ''}`)
         .eq('competition_id', tekmovanje.id)
         .eq('season', sezona)
         .order('id')
@@ -318,6 +319,9 @@ for (const k of veljavni) {
     .map((t) => t.ura)
     .sort()[0]
   const rok = rokKroga(datumKroga, uraKroga, pomakUr)
+  // Vir brez datumov neodigranih krogov (fssid) krog z oceno označi; oznako
+  // vidita rok in admin. Ostali viri stolpca ne pišejo.
+  const ocena = vir.ocenjeniDatumi ? { datum_ocenjen: !!k.ocenjen } : {}
 
   const obstoj = obstojeciKrogi.get(k.stevilka)
   let krogId = obstoj?.id
@@ -330,6 +334,7 @@ for (const k of veljavni) {
         number: k.stevilka,
         played_on: datumKroga,
         deadline_at: rok,
+        ...ocena,
       })
       .select('id')
       .single()
@@ -339,13 +344,17 @@ for (const k of veljavni) {
     }
     krogId = data.id
     novihKrogov++
-  } else if (!obstoj.lineups_locked_at && (obstoj.played_on !== datumKroga || !istiCas(obstoj.deadline_at, rok))) {
+  } else if (
+    !obstoj.lineups_locked_at &&
+    (obstoj.played_on !== datumKroga || !istiCas(obstoj.deadline_at, rok) ||
+      (vir.ocenjeniDatumi && !!obstoj.datum_ocenjen !== !!k.ocenjen))
+  ) {
     // Datum se lahko prestavi; rok mu sledi, dokler krog še ni zaklenjen.
     // Zaklenjenemu krogu roka ne premikamo: posnetki postav so ze zajeti in
     // premaknjen rok bi obetal urejanje, ki ga ni vec. Pišemo le ob spremembi.
     const { error: eRok } = await db
       .from('rounds')
-      .update({ played_on: datumKroga, deadline_at: rok })
+      .update({ played_on: datumKroga, deadline_at: rok, ...ocena })
       .eq('id', krogId)
       .is('lineups_locked_at', null)
     if (eRok) {
