@@ -1206,7 +1206,7 @@ Igralcev z vsaj 270 minutami je 50–57 % (ostali dobijo privzeto 4.5) — pod
 mejo 70 % privzetih v `pripravljenost.ts`. Uvoz: `gh workflow run
 uvoz-lige.yml -f liga=rs-srpska-istok -f cene=true` (brez arhiva).
 
-**Zone, Vojvođanske in nižje lige** (migracija 20261011185100, 47 lig,
+**Zone, Vojvođanske in nižje lige** (migracija 20261011203100, 47 lig,
 **neaktivne**, brez arhiva). Bloke je našlo pometanje šifer fss.rs (11. 10.
 2026, 100 blokov). Izpuščeni so mladinski (akademije, mladinske ekipe velikih
 klubov, jutranje ali medtedenske tekme, klubi iz članskega bloka iste regije,
