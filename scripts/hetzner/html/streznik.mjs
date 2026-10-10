@@ -68,8 +68,9 @@ export function prevajalnik(besede, jezik) {
 
 /**
  * Kanonični naslov kot `kanonicni` v src/lib/naslov.ts: strani ene lige
- * (igralec, klub, tekma) nosijo ligo vsebine in privzeta liga `?t=` nima,
- * seznami (lestvica, rezultati …) pa `?t=` iz naslova.
+ * nosijo ligo vsebine in privzeta liga `?t=` nima. Pri seznamih (lestvica,
+ * rezultati …) vmesnik `?t=clani` ali neaktivno ligo iz naslova zbriše
+ * (uskladiTekmovanje), zato kanonični ostane brez nje.
  */
 const kanonicni = (pot, slug) => `${DOMENA}${pot}${slug ? `?t=${encodeURIComponent(slug)}` : ''}`
 const zLigo = (pot, liga) => `${pot}?t=${encodeURIComponent(liga.slug)}`
@@ -338,7 +339,7 @@ export async function stran(pot, t, { rest, lige, besede }) {
   const liga = izT ?? lige.find((l) => l.slug === PRIVZETO)
   if (!liga) return null
   const j = b(liga)
-  const url = kanonicni(pot, izT ? izT.slug : null)
+  const url = kanonicni(pot, brezPrivzete(liga))
   const s = await seznam(liga, { rest, j, url })
   return {
     status: 200,
@@ -416,6 +417,13 @@ export function obdelovalec({ koren, rest, rok = 800 }) {
     return lige.seznam
   }
 
+  // Zadnja prebrana predloga: če /srv/slff/current izgine ali se ne da brati,
+  // gre ven ta (200), ne napaka.
+  let zadnja = null
+  try {
+    zadnja = readFileSync(join(koren, 'index.html'), 'utf8')
+  } catch {}
+
   return async function (req, res) {
     const naslov = new URL(req.url ?? '/', DOMENA)
     const pot = naslov.pathname
@@ -424,17 +432,22 @@ export function obdelovalec({ koren, rest, rok = 800 }) {
     try {
       const izvor = realpathSync(koren)
       const i = izdaja(izvor)
-      const kljuc = `${pot}?t=${t ?? ''}`
-      odgovor = predpomnilnik.get(kljuc)
-      if (odgovor && odgovor.do > Date.now()) {
-        predpomnilnik.delete(kljuc)
-        predpomnilnik.set(kljuc, odgovor)
-      } else {
-        try {
-          const signal = AbortSignal.timeout(rok)
+      try {
+        const signal = AbortSignal.timeout(rok)
+        const vse = await seznamLig(signal)
+        // V ključu je `?t=` le, kadar je znana liga in ga stran rabi (klub, seznami);
+        // sicer le predpona države (jezik strani 404). Naključen ?t= ne obide predpomnilnika.
+        const predpona = /^([a-z]{2})-/.exec(t ?? '')?.[1] ?? ''
+        const sT = !/^\/(player|match)\//.test(pot) && vse.some((l) => l.slug === t)
+        const kljuc = `${pot}?t=${sT ? t : predpona}`
+        odgovor = predpomnilnik.get(kljuc)
+        if (odgovor && odgovor.do > Date.now()) {
+          predpomnilnik.delete(kljuc)
+          predpomnilnik.set(kljuc, odgovor)
+        } else {
           const r = (p, telo) => rest(p, telo, signal)
-          const s = await stran(pot, t, { rest: r, lige: await seznamLig(signal), besede: i.besede })
-          const jezik = JEZIK[s?.liga?.country_code] ?? JEZIK[/^([a-z]{2})-/.exec(t ?? '')?.[1]?.toUpperCase()] ?? 'sl'
+          const s = await stran(pot, t, { rest: r, lige: vse, besede: i.besede })
+          const jezik = JEZIK[s?.liga?.country_code] ?? JEZIK[predpona.toUpperCase()] ?? 'sl'
           const ime = s?.liga ? predlogaZa(s.liga.country_code) : predlogaPoT(t)
           odgovor = {
             status: s?.status ?? 200,
@@ -444,16 +457,20 @@ export function obdelovalec({ koren, rest, rok = 800 }) {
           }
           predpomnilnik.set(kljuc, odgovor)
           if (predpomnilnik.size > NAJVEC) predpomnilnik.delete(predpomnilnik.keys().next().value)
-        } catch (e) {
-          // Varovalo: nespremenjena predloga, ne v predpomnilnik.
-          console.error(`${pot}: ${e?.message ?? e}`)
-          odgovor = { status: 200, html: predloga(i, izvor, predlogaPoT(t)), vir: 'varovalo', zasebno: true }
         }
+      } catch (e) {
+        // Varovalo: nespremenjena predloga, ne v predpomnilnik.
+        console.error(`${pot}: ${e?.message ?? e}`)
+        odgovor = { status: 200, html: predloga(i, izvor, predlogaPoT(t)), vir: 'varovalo', zasebno: true }
       }
+      zadnja = i.predloge['index.html'] ?? zadnja
     } catch (e) {
       console.error(`${pot}: brez predloge: ${e?.message ?? e}`)
-      res.writeHead(503, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' })
-      return res.end('503')
+      if (!zadnja) {
+        res.writeHead(503, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' })
+        return res.end('503')
+      }
+      odgovor = { status: 200, html: zadnja, vir: 'varovalo', zasebno: true }
     }
     res.writeHead(odgovor.status, {
       'Content-Type': 'text/html; charset=utf-8',

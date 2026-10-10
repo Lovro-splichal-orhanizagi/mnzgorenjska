@@ -1544,12 +1544,13 @@ dodaj v `KLJUCI` tam).
 
 - **Varovalo**: PostgREST ima 800 ms za vse poizvedbe strani; ob napaki ali
   zamudi gre ven nespremenjena predloga s 200 (`X-Slff-Html: varovalo`,
-  brez predpomnjenja). Če strežnik ne teče, Caddy postreže isto predlogo z
-  `127.0.0.1:3201` (statično, kartica po `?t=`).
-- **Predpomnilnik**: v pomnilniku 5 min (ključ pot + `?t=`, nova objava ga
-  izprazni) in `Cache-Control: public, max-age=300, s-maxage=3600`. Strani so
+  brez predpomnjenja). Če strežnik ne teče ali v 1,5 s ne odgovori, Caddy
+  postreže isto predlogo z `:3201` (statično, kartica po `?t=`; blok brez
+  imena gostitelja, ker proxy pošlje `Host: slff.eu`).
+- **Predpomnilnik**: v pomnilniku 5 min (ključ pot + `?t=` le, kadar je znana
+  liga in jo stran rabi; nova objava ga izprazni) in `Cache-Control: public, max-age=300, s-maxage=3600`. Strani so
   javne, piškotkov ne bere. Ker star HTML kaže na stare `/assets/*`, objava v CI
-  prenese v novo izdajo še sredstva zadnjega dne.
+  prenese v novo izdajo še lastna sredstva vseh ohranjenih izdaj (`assets/.lastna`).
 - **Objava**: `scripts/hetzner/objavi-html.sh` (iz main; preizkus, kopija
   prejšnje, `docker compose up -d` v `/opt/slff-html`). CI ga ne objavi.
 - Preizkus brez baze: `npm run preizkus-html`. Lokalno proti bazi:

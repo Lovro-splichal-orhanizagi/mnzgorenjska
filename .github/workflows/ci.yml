@@ -272,9 +272,15 @@ jobs:
           CILJ=/srv/slff/releases/$GITHUB_SHA
           rsync -a --delete dist/ "deploy@2.31.6.53:$CILJ/"
           # HTML strani igralca, kluba … sme biti predpomnjen (strežnik HTML: brskalnik 5 min,
-          # Cloudflare do ure) in kaže na stare /assets/*: zadnji dan starih sledi v novo objavo.
+          # Cloudflare do ure) in kaže na stare /assets/*. Nova izdaja zato dobi še LASTNA
+          # sredstva vseh ohranjenih izdaj (assets/.lastna; izdaja brez seznama ima le
+          # lastna), ne prenesenih — tako je izdaja največ šestkrat večja, ne raste.
+          ssh deploy@2.31.6.53 "cd $CILJ/assets && ls -1 > .lastna && for r in /srv/slff/releases/*/assets; do \
+              [ \"\$r\" = $CILJ/assets ] && continue; \
+              if [ -f \$r/.lastna ]; then (cd \$r && xargs -r cp -pn -t $CILJ/assets/ < .lastna); else cp -pn \$r/* $CILJ/assets/ 2>/dev/null; fi; \
+            done; true"
           # mv -T je atomaren: ni trenutka brez `current`. Obdrži zadnjih 5.
-          ssh deploy@2.31.6.53 "find /srv/slff/current/assets -type f -mmin -1440 -exec cp -pn -t $CILJ/assets/ {} + ; ln -sfn $CILJ /srv/slff/current.nov && mv -Tf /srv/slff/current.nov /srv/slff/current \
+          ssh deploy@2.31.6.53 "ln -sfn $CILJ /srv/slff/current.nov && mv -Tf /srv/slff/current.nov /srv/slff/current \
             && cd /srv/slff/releases && ls -1t | tail -n +6 | xargs -r rm -rf"
 
   preveri-deploy:

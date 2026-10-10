@@ -1,7 +1,7 @@
 // Preizkus strežnika HTML brez omrežja in baze: lažen PostgREST, prava
 // predloga v začasni mapi. `npm run preizkus-html`.
 import assert from 'node:assert/strict'
-import { mkdtempSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { esc, izrisi, obdelovalec, prevajalnik, stran } from './streznik.mjs'
@@ -121,10 +121,14 @@ for (const pot of ['/player/9', '/player/abc']) {
   assert.match(html, /Strelci: Janez Novak 12&#39;/)
 }
 
-// Lestvica: ?t= iz naslova ostane v kanoničnem (kot na strani), vrstice s povezavami.
+// Lestvica: vmesnik ?t=clani iz naslova zbriše, zato ga kanonični nima; druga liga ga ima.
 {
   const { s, html } = await izris('/table', 'clani')
-  assert.equal(s.kanonicni, 'https://slff.eu/table?t=clani')
+  assert.equal(s.kanonicni, 'https://slff.eu/table')
+  assert.equal((await stran('/table', 'sk-za-1', { rest, lige: LIGE, besede: BESEDE })).kanonicni, 'https://slff.eu/table?t=sk-za-1')
+  // Neaktivna liga: vmesnik pokaže privzeto in ?t= zbriše.
+  const lige = [...LIGE, { id: 3, slug: 'lj-1-liga', name: 'LJ', active: false, country_code: 'SI', country_name: 'Slovenija' }]
+  assert.equal((await stran('/table', 'lj-1-liga', { rest, lige, besede: BESEDE })).kanonicni, 'https://slff.eu/table')
   assert.equal(vzemi(html, /<title>(.*?)<\/title>/), '1. GNL · lestvica · SLFF')
   assert.match(html, /<td><a href="\/club\/3\?t=clani">Šenčur<\/a><\/td>/)
   assert.match(s.opis, /MNZ Gorenjska\. 1\. Šenčur \(13\)\./)
@@ -165,6 +169,9 @@ assert.equal(esc(`<a href="x">'&`), '&lt;a href=&quot;x&quot;&gt;&#39;&amp;')
   const prej = klicev
   await zahtevaj('/player/8?utm_source=x')
   assert.equal(klicev, prej, 'drugi zahtevek ne gre v PostgREST')
+  // Naključen ?t= na strani igralca ne obide predpomnilnika.
+  await zahtevaj('/player/8?t=xyz123')
+  assert.equal(klicev, prej, '?t= igralca ni v ključu')
   const ni = await zahtevaj('/player/9', 'HEAD')
   assert.equal(ni.status, 404)
   assert.equal(ni.telo, undefined, 'HEAD brez telesa')
@@ -174,6 +181,16 @@ assert.equal(esc(`<a href="x">'&`), '&lt;a href=&quot;x&quot;&gt;&#39;&amp;')
   assert.equal(varovalo.telo, SK, 'ob napaki nespremenjena kartica države')
   assert.equal(varovalo.glave['X-Slff-Html'], 'varovalo')
   assert.equal(varovalo.glave['Cache-Control'], 'public, max-age=0, must-revalidate')
+  // Predloge ni več (mapa objave izginila): zadnja prebrana, 200.
+  const brez = obdelovalec({ koren, rest: prek })
+  await (async () => { let st; await brez({ url: '/', method: 'GET' }, { writeHead: (x) => (st = x), end: () => {} }); assert.equal(st, 200) })()
+  rmSync(koren, { recursive: true })
+  const izgubljena = { status: 0, telo: '' }
+  await brez({ url: '/table', method: 'GET' }, { writeHead: (x) => (izgubljena.status = x), end: (b) => (izgubljena.telo = b) })
+  assert.equal(izgubljena.status, 200)
+  assert.equal(izgubljena.telo, PREDLOGA)
+  mkdirSync(koren)
+  writeFileSync(join(koren, 'index.html'), PREDLOGA)
   // Počasen PostgREST: rok odreže, varovalo.
   const pocasen = obdelovalec({ koren, rok: 50, rest: (p, b, signal) => new Promise((_, ne) => signal.addEventListener('abort', () => ne(signal.reason))) })
   let status, telo

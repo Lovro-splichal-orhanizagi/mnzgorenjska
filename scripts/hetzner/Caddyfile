@@ -149,8 +149,10 @@ slff.eu {
 
 	# Strani igralca, kluba, tekme in lig: strežnik HTML (scripts/hetzner/html/, kontejner
 	# slff-html) vpiše naslov, opis, kanonični naslov, JSON-LD in povzetek v predlogo.
-	# Ob napaki sam vrne nespremenjeno predlogo; če sploh ne teče (dial), gre zahtevek
-	# na 127.0.0.1:3201 spodaj — isto statično predlogo kot pred njim.
+	# Ob napaki sam vrne nespremenjeno predlogo. Če ne teče (dial) ali v 1,5 s ne
+	# odgovori, gre zahtevek na 127.0.0.1:3201 spodaj — isto statično predlogo kot
+	# pred njim — in strežnik je 30 s izločen. Caddy 2.6 ponovi po napaki odgovora
+	# le zahtevke iz lb_retry_match (privzeto samo GET), zato še HEAD.
 	@html_strani {
 		method GET HEAD
 		path / /table /results /standings /players /player/* /club/* /match/*
@@ -158,11 +160,14 @@ slff.eu {
 	handle @html_strani {
 		reverse_proxy 127.0.0.1:3200 127.0.0.1:3201 {
 			lb_policy first
-			lb_try_duration 1s
+			lb_try_duration 2s
+			lb_retry_match {
+				method GET HEAD
+			}
 			fail_duration 30s
 			transport http {
 				dial_timeout 300ms
-				response_header_timeout 3s
+				response_header_timeout 1500ms
 			}
 		}
 	}
@@ -262,7 +267,9 @@ slff.eu {
 
 # Rezerva strežnika HTML (@html_strani zgoraj): predloga kot v slff.eu — kartica države
 # po predponi `?t=sk-…`, sicer index.html. Le na 127.0.0.1, glave doda slff.eu.
-http://127.0.0.1:3201 {
+# Naslov brez imena (`:3201`): reverse_proxy pošlje Host slff.eu, blok samo za
+# 127.0.0.1 bi ga ujel le prazen 200 (kot predloge pošte 7. 10. zgoraj).
+http://:3201 {
 	bind 127.0.0.1
 	root * /srv/slff/current
 	map {query.t} {html_predloga} {
