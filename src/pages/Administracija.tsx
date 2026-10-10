@@ -18,7 +18,9 @@ import Lijak from '../components/admin/Lijak'
 import Sponzorji from '../components/admin/Sponzorji'
 import KlubiStiki from '../components/admin/KlubiStiki'
 import Potrditev from '../components/admin/Potrditev'
-import Razdelek from '../components/admin/Razdelek'
+import Razdelek, { AktivenRazdelek } from '../components/admin/Razdelek'
+import { Link } from '../components/Povezava'
+import { useLocation, useNavigate } from 'react-router-dom'
 import Plakat from '../components/Plakat'
 import { izvor } from '../lib/platforma'
 
@@ -84,6 +86,8 @@ function zaVseKroge(n: number): string {
 export default function Administracija() {
   const { session, loading } = useAuth()
   const { id: tekmovanjeId, tekmovanje, vsaTekmovanja } = useTekmovanje()
+  const lokacija = useLocation()
+  const pojdi = useNavigate()
   const imeLigeZaPlakat = (() => {
     if (!tekmovanje) return ''
     const kratko = (tekmovanje.name ?? '').replace(/\s*—\s*(člani|mladinci)\s*$/, '')
@@ -585,6 +589,50 @@ export default function Administracija() {
       </p>
     )
 
+  // Meni razdelkov. Izbrani je v # naslova (/admin#uporabniki), da se ga da
+  // deliti in preživi osvežitev; # ne potrebuje novih poti ne Caddyja.
+  const meni: { skupina: string; razdelki: { id: string; naslov: string }[] }[] = [
+    {
+      skupina: 'Pregled',
+      razdelki: [
+        { id: 'rast', naslov: 'Rast: uporabniki in namestitve' },
+        { id: 'zivost', naslov: 'Živost skupnosti' },
+        { id: 'lijak', naslov: 'Kje ljudje obtičijo' },
+        { id: 'rast-lig', naslov: 'Rast lig' },
+      ],
+    },
+    {
+      skupina: 'Lige',
+      razdelki: [
+        { id: 'lige', naslov: 'Upravljanje lig' },
+        { id: 'tocke', naslov: 'Točke' },
+        { id: 'uvoz', naslov: 'Uvoz zapisnikov' },
+        ...(opozorila.length > 0
+          ? [{ id: 'nepopolni', naslov: `Nepopolni zapisniki (${opozorila.length})` }]
+          : []),
+        ...(tekmovanje ? [{ id: 'promo', naslov: 'Promo: liga je live' }] : []),
+      ],
+    },
+    { skupina: 'Igralci', razdelki: [{ id: 'igralec', naslov: 'Igralec — pozicija in NZS' }] },
+    {
+      skupina: 'Uporabniki',
+      razdelki: [
+        { id: 'uporabniki', naslov: `Uporabniki (${uporabniki.length})` },
+        { id: 'ekipe', naslov: `Fantasy ekipe (${ekipe.length})` },
+        { id: 'poznavalci', naslov: 'Prošnje poznavalcev' },
+      ],
+    },
+    {
+      skupina: 'Klubi',
+      razdelki: [
+        { id: 'stiki', naslov: 'Stiki s klubi' },
+        { id: 'sponzorji', naslov: 'Sponzorji' },
+      ],
+    },
+  ]
+  const izbran = lokacija.hash.slice(1)
+  const aktiven = meni.some((s) => s.razdelki.some((r) => r.id === izbran)) ? izbran : 'rast'
+
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-black naslov">
@@ -608,32 +656,77 @@ export default function Administracija() {
         <Kazalnik oznaka="Opozoril iz uvoza" vrednost={opozorila.length} opozori />
       </section>
 
-      {/* Vsak razdelek je zložljiv, da je stran pregledna — glej Razdelek. */}
-      <div className="space-y-3">
+      {/* Meni: na telefonu izbirnik, na računalniku stolpec levo. Izriše se
+          le izbrani razdelek — glej Razdelek. */}
+      <div className="md:flex md:items-start md:gap-6">
+      <select
+        value={aktiven}
+        onChange={(e) => pojdi({ search: lokacija.search, hash: e.target.value })}
+        aria-label="Razdelek"
+        className="mb-4 w-full rounded-lg bg-white/5 px-3 py-2 font-bold ring-1 ring-white/10 md:hidden"
+      >
+        {meni.map((s) => (
+          <optgroup key={s.skupina} label={s.skupina}>
+            {s.razdelki.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.naslov}
+              </option>
+            ))}
+          </optgroup>
+        ))}
+      </select>
+      <nav className="sticky top-24 hidden max-h-[calc(100vh-7rem)] w-56 shrink-0 space-y-4 overflow-y-auto md:block">
+        {meni.map((s) => (
+          <div key={s.skupina}>
+            <p className="px-3 text-xs font-bold uppercase tracking-wide text-slate-500">
+              {s.skupina}
+            </p>
+            <ul className="mt-1 space-y-0.5">
+              {s.razdelki.map((r) => (
+                <li key={r.id}>
+                  <Link
+                    to={{ search: lokacija.search, hash: r.id }}
+                    aria-current={r.id === aktiven ? 'page' : undefined}
+                    className={`block rounded-lg px-3 py-1.5 text-sm ${
+                      r.id === aktiven
+                        ? 'bg-white/10 font-bold text-white'
+                        : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+                    }`}
+                  >
+                    {r.naslov}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </nav>
+      <div className="min-w-0 flex-1">
+      <AktivenRazdelek.Provider value={aktiven}>
       {/* zivost — koliko ljudi je res aktivnih */}
-      <Razdelek id="zivost" naslov="Živost skupnosti">
+      <Razdelek id="zivost">
         <ZivostSkupnosti />
       </Razdelek>
 
-      <Razdelek id="rast-aplikacije" naslov="Rast: uporabniki in namestitve">
+      <Razdelek id="rast">
         <Rast />
       </Razdelek>
 
       {/* kje ljudje obticijo — lijak zacetka in obiskane strani */}
-      <Razdelek id="lijak" naslov="Kje ljudje obtičijo">
+      <Razdelek id="lijak">
         <Lijak />
       </Razdelek>
 
-      <Razdelek id="poznavalci" naslov="Prošnje poznavalcev">
+      <Razdelek id="poznavalci">
         <ProsnjePoznavalcev />
       </Razdelek>
-      <Razdelek id="rast" naslov="Rast lig">
+      <Razdelek id="rast-lig">
         <RastLig />
       </Razdelek>
-      <Razdelek id="sponzorji" naslov="Sponzorji">
+      <Razdelek id="sponzorji">
         <Sponzorji />
       </Razdelek>
-      <Razdelek id="stiki" naslov="Stiki s klubi">
+      <Razdelek id="stiki">
         <KlubiStiki />
       </Razdelek>
 
@@ -641,7 +734,7 @@ export default function Administracija() {
           junak; brez kluba, za nas kanal. Ime lige pride iz izbirnika: pri
           "1. liga — člani" tega ne pove, zato zvezo dodamo. */}
       {tekmovanje && (
-        <Razdelek id="promo" naslov="Promo: liga je live">
+        <Razdelek id="promo">
         <section className="kartica space-y-2 p-3 sm:p-4">
           <h2 className="font-bold">
             Promo: liga je live
@@ -656,7 +749,7 @@ export default function Administracija() {
       )}
 
       {/* uporabniki + e-pošte za opomnik */}
-      <Razdelek id="uporabniki" naslov={`Uporabniki (${uporabniki.length})`}>
+      <Razdelek id="uporabniki">
       <section className="kartica space-y-3 p-3 sm:p-4">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="font-bold">
@@ -1012,7 +1105,7 @@ export default function Administracija() {
       </Razdelek>
 
       {/* Fantasy ekipe — vrednost, cash, veljavnost rosterja */}
-      <Razdelek id="ekipe" naslov={`Fantasy ekipe (${ekipe.length})`}>
+      <Razdelek id="ekipe">
       <section className="kartica space-y-3 p-3 sm:p-4">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="font-bold">Fantasy ekipe ({ekipe.length})</h2>
@@ -1116,7 +1209,7 @@ export default function Administracija() {
       </section>
       </Razdelek>
 
-      <Razdelek id="tocke" naslov="Točke">
+      <Razdelek id="tocke">
       <section className="kartica space-y-3 p-4">
         <h2 className="font-bold">Točke</h2>
         <p className="text-sm text-slate-400">
@@ -1144,12 +1237,12 @@ export default function Administracija() {
       </section>
       </Razdelek>
 
-      <Razdelek id="lige" naslov="Upravljanje lig">
+      <Razdelek id="lige">
         <UpravljanjeLig />
       </Razdelek>
 
       {/* uvoz */}
-      <Razdelek id="uvoz" naslov="Uvoz zapisnikov">
+      <Razdelek id="uvoz">
       <section className="kartica space-y-2 p-4">
         <h2 className="font-bold">Uvoz zapisnikov</h2>
         <p className="text-sm text-slate-400">
@@ -1169,7 +1262,7 @@ SUPABASE_SERVICE_ROLE_KEY=... node scripts/ovrednoti-igralce.mjs --tekmovanje ${
 
       {/* opozorila iz zapisnikov */}
       {opozorila.length > 0 && (
-        <Razdelek id="nepopolni" naslov={`Nepopolni zapisniki (${opozorila.length})`}>
+        <Razdelek id="nepopolni">
         <section className="space-y-2">
           <h2 className="font-bold">Nepopolni zapisniki</h2>
           <p className="text-sm text-slate-400">
@@ -1203,7 +1296,7 @@ SUPABASE_SERVICE_ROLE_KEY=... node scripts/ovrednoti-igralce.mjs --tekmovanje ${
       )}
 
       {/* igralci: pozicija in NZS */}
-      <Razdelek id="igralec" naslov="Igralec — pozicija in NZS">
+      <Razdelek id="igralec">
       <section className="kartica space-y-3 p-4">
         <h2 className="font-bold">Igralec — pozicija in NZS</h2>
         <p className="text-sm text-slate-400">
@@ -1384,6 +1477,8 @@ SUPABASE_SERVICE_ROLE_KEY=... node scripts/ovrednoti-igralce.mjs --tekmovanje ${
         </ul>
       </section>
       </Razdelek>
+      </AktivenRazdelek.Provider>
+      </div>
       </div>
 
       {sporocilo && <p className="text-sm text-gnl-300">{sporocilo}</p>}
