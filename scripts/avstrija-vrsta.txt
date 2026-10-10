@@ -93,8 +93,9 @@ at-s-2-klasse-nord-a 226780,221323
 at-s-2-klasse-nord-b 226778,221321
 at-s-2-klasse-sued 226773,221328
 at-s-2-klasse-sued-west 226783,222172
-at-st-regionalliga-sued 226374,226282,221198,221195
+# Landesliga pred Regionalligo Süd: 226282 je njen edini arhiv, Regionalliga ima še tri
 at-st-landesliga 226282
+at-st-regionalliga-sued 226374,226282,221198,221195
 at-st-unterliga-mitte 226294
 at-st-unterliga-west 226271
 at-st-unterliga-sued 226288
