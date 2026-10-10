@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom'
 import { Link } from './components/Povezava'
 import { AuthProvider } from './lib/useAuth'
@@ -15,34 +16,37 @@ import VstopDrzave from './components/VstopDrzave'
 import IzbiraDrzave from './components/IzbiraDrzave'
 import IzbiraJezika from './components/IzbiraJezika'
 import Domov from './pages/Domov'
-import Igralci from './pages/Igralci'
-import Igralec from './pages/Igralec'
-import Lestvica from './pages/Lestvica'
-import Slovenija from './pages/Slovenija'
-import MiniLige from './pages/MiniLige'
-import Ekipa from './pages/Ekipa'
-import Klub from './pages/Klub'
-import Rezultati from './pages/Rezultati'
-import Tabela from './pages/Tabela'
-import Tekma from './pages/Tekma'
-import Prijava from './pages/Prijava'
-import NovoGeslo from './pages/NovoGeslo'
-import Pravno from './pages/Pravno'
-import MojaEkipa from './pages/MojaEkipa'
-import Glasovanje from './pages/Glasovanje'
-import Pozicije from './pages/Pozicije'
-import Odsotnosti from './pages/Odsotnosti'
-import Administracija from './pages/Administracija'
-import VstopVMiniLigo from './pages/VstopVMiniLigo'
-import Opomniki from './pages/Opomniki'
-import Racun from './pages/Racun'
-import PotrditevPovezave from './pages/PotrditevPovezave'
 import NativnePovezave from './components/NativnePovezave'
 import PosodobiAplikacijo from './components/PosodobiAplikacijo'
 import PotisnaObvestila from './components/PotisnaObvestila'
 import { useKanonicni, useNaslov, useNoindex } from './lib/naslov'
 import { useObisk } from './lib/obiski'
 import { jeNativno } from './lib/platforma'
+
+// Strani razen naslovnice so svoji kosi: obiskovalec naslovnice ne prenaša
+// administracije in Moje ekipe. Kos pride ob prvem obisku strani.
+const Igralci = lazy(() => import('./pages/Igralci'))
+const Igralec = lazy(() => import('./pages/Igralec'))
+const Lestvica = lazy(() => import('./pages/Lestvica'))
+const Slovenija = lazy(() => import('./pages/Slovenija'))
+const MiniLige = lazy(() => import('./pages/MiniLige'))
+const Ekipa = lazy(() => import('./pages/Ekipa'))
+const Klub = lazy(() => import('./pages/Klub'))
+const Rezultati = lazy(() => import('./pages/Rezultati'))
+const Tabela = lazy(() => import('./pages/Tabela'))
+const Tekma = lazy(() => import('./pages/Tekma'))
+const Prijava = lazy(() => import('./pages/Prijava'))
+const NovoGeslo = lazy(() => import('./pages/NovoGeslo'))
+const Pravno = lazy(() => import('./pages/Pravno'))
+const MojaEkipa = lazy(() => import('./pages/MojaEkipa'))
+const Glasovanje = lazy(() => import('./pages/Glasovanje'))
+const Pozicije = lazy(() => import('./pages/Pozicije'))
+const Odsotnosti = lazy(() => import('./pages/Odsotnosti'))
+const Administracija = lazy(() => import('./pages/Administracija'))
+const VstopVMiniLigo = lazy(() => import('./pages/VstopVMiniLigo'))
+const Opomniki = lazy(() => import('./pages/Opomniki'))
+const Racun = lazy(() => import('./pages/Racun'))
+const PotrditevPovezave = lazy(() => import('./pages/PotrditevPovezave'))
 
 // Poti so angleške, ker jih vidi vsaka država (slovaški obiskovalec ne
 // odpira "moja-ekipa"). Stari slovenski naslovi ostanejo kot preusmeritve.
@@ -105,7 +109,14 @@ export default function App() {
           <RokKroga />
           <Navbar />
           <OpozoriloEkipe />
-          <main className="mx-auto max-w-5xl px-4 pb-32 pt-8 lg:pb-8">
+          {/* min-h-screen: noga je pod robom zaslona, dokler se stran nalaga, in
+              ne skače navzdol, ko pridejo podatki (premik postavitve, CLS). */}
+          <main className="mx-auto min-h-screen max-w-5xl px-4 pb-32 pt-8 lg:pb-8">
+            {/* Suspense zunaj oprijema s ključem poti: ob prehodu (React Router ga
+                da v startTransition) ostane prejšnja stran, dokler kos nove ne
+                pride, namesto praznega <main>. Ob prvem izrisu nadomestka ni —
+                <main> že drži višino zaslona. */}
+            <Suspense fallback={null}>
             <NapakaOprijem key={pathname}>
             <Routes>
               <Route path="/" element={<Domov />} />
@@ -152,6 +163,7 @@ export default function App() {
               <Route path="*" element={<NiStrani />} />
             </Routes>
             </NapakaOprijem>
+            </Suspense>
           </main>
           <Podpora />
           <footer className="border-t border-white/10 py-6 text-center text-xs text-slate-400">

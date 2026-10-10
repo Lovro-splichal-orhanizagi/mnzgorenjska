@@ -39,10 +39,10 @@ interface PravilaPozicije {
 }
 
 export const POZICIJE: Record<Pozicija, PravilaPozicije> = {
-  GK: { naslov: t('mojaEkipa.pravila.pozicije.GK'), kader: 2, min: 1, max: 1, privzeto: 1 },
-  DEF: { naslov: t('mojaEkipa.pravila.pozicije.DEF'), kader: 5, min: 3, max: 5, privzeto: 4 },
-  MID: { naslov: t('mojaEkipa.pravila.pozicije.MID'), kader: 5, min: 2, max: 5, privzeto: 4 },
-  FWD: { naslov: t('mojaEkipa.pravila.pozicije.FWD'), kader: 3, min: 1, max: 3, privzeto: 2 },
+  GK: { get naslov() { return t('mojaEkipa.pravila.pozicije.GK') }, kader: 2, min: 1, max: 1, privzeto: 1 },
+  DEF: { get naslov() { return t('mojaEkipa.pravila.pozicije.DEF') }, kader: 5, min: 3, max: 5, privzeto: 4 },
+  MID: { get naslov() { return t('mojaEkipa.pravila.pozicije.MID') }, kader: 5, min: 2, max: 5, privzeto: 4 },
+  FWD: { get naslov() { return t('mojaEkipa.pravila.pozicije.FWD') }, kader: 3, min: 1, max: 3, privzeto: 2 },
 }
 
 /** Od zadnje do prve vrste igrišča — vrstni red uporabljamo povsod enako. */

@@ -85,37 +85,37 @@ type Stolpec = keyof Pick<
 // razvrstiti, da je razvidno, kdo je v sezoni ali v zadnjih krogih najboljši.
 // `mobilno: false` stolpec na ozkem zaslonu skrije, da točke ostanejo vidne.
 const STOLPCI: Array<{ kljuc: Stolpec; naslov: string; opis: string; mobilno?: false }> = [
-  { kljuc: 'points', naslov: t('igralci.seznam.stolpci.tocke'), opis: t('igralci.seznam.stolpci.tockeOpis') },
-  { kljuc: 'form', naslov: t('igralci.seznam.stolpci.forma'), opis: t('igralci.seznam.stolpci.formaOpis') },
+  { kljuc: 'points', get naslov() { return t('igralci.seznam.stolpci.tocke') }, get opis() { return t('igralci.seznam.stolpci.tockeOpis') } },
+  { kljuc: 'form', get naslov() { return t('igralci.seznam.stolpci.forma') }, get opis() { return t('igralci.seznam.stolpci.formaOpis') } },
   {
     kljuc: 'last_round',
-    naslov: t('igralci.seznam.stolpci.zadnjiKrog'),
-    opis: t('igralci.seznam.stolpci.zadnjiKrogOpis'),
+    get naslov() { return t('igralci.seznam.stolpci.zadnjiKrog') },
+    get opis() { return t('igralci.seznam.stolpci.zadnjiKrogOpis') },
     mobilno: false,
   },
   {
     kljuc: 'points_per_match',
-    naslov: t('igralci.seznam.stolpci.naTekmo'),
-    opis: t('igralci.seznam.stolpci.naTekmoOpis'),
+    get naslov() { return t('igralci.seznam.stolpci.naTekmo') },
+    get opis() { return t('igralci.seznam.stolpci.naTekmoOpis') },
   },
   {
     kljuc: 'points_per_value',
-    naslov: t('igralci.seznam.stolpci.naCeno'),
-    opis: t('igralci.seznam.stolpci.naCenoOpis'),
+    get naslov() { return t('igralci.seznam.stolpci.naCeno') },
+    get opis() { return t('igralci.seznam.stolpci.naCenoOpis') },
     mobilno: false,
   },
-  { kljuc: 'value', naslov: t('igralci.seznam.stolpci.cena'), opis: t('igralci.seznam.stolpci.cenaOpis') },
-  { kljuc: 'goals', naslov: t('igralci.seznam.stolpci.goli'), opis: t('igralci.seznam.stolpci.goliOpis') },
+  { kljuc: 'value', get naslov() { return t('igralci.seznam.stolpci.cena') }, get opis() { return t('igralci.seznam.stolpci.cenaOpis') } },
+  { kljuc: 'goals', get naslov() { return t('igralci.seznam.stolpci.goli') }, get opis() { return t('igralci.seznam.stolpci.goliOpis') } },
   {
     kljuc: 'clean_sheets',
-    naslov: t('igralci.seznam.stolpci.mreze'),
-    opis: t('igralci.seznam.stolpci.mrezeOpis'),
+    get naslov() { return t('igralci.seznam.stolpci.mreze') },
+    get opis() { return t('igralci.seznam.stolpci.mrezeOpis') },
   },
-  { kljuc: 'minutes', naslov: t('igralci.seznam.stolpci.minute'), opis: t('igralci.seznam.stolpci.minuteOpis'), mobilno: false },
+  { kljuc: 'minutes', get naslov() { return t('igralci.seznam.stolpci.minute') }, get opis() { return t('igralci.seznam.stolpci.minuteOpis') }, mobilno: false },
   {
     kljuc: 'owners',
-    naslov: t('igralci.seznam.stolpci.izbran'),
-    opis: t('igralci.seznam.stolpci.izbranOpis'),
+    get naslov() { return t('igralci.seznam.stolpci.izbran') },
+    get opis() { return t('igralci.seznam.stolpci.izbranOpis') },
   },
 ]
 
@@ -423,7 +423,7 @@ export default function Igralci() {
       <VrhLige
         lestvice={[
           {
-            naslov: t('igralci.vrh.igralecSezone'),
+            get naslov() { return t('igralci.vrh.igralecSezone') },
             vrstice: vrh.tocke.map((i) => ({ id: i.id, igralec: i, desno: formatirajTocke(i.points) })),
           },
           {
@@ -434,19 +434,19 @@ export default function Igralci() {
                 : [],
           },
           {
-            naslov: t('igralci.vrh.strelci'),
+            get naslov() { return t('igralci.vrh.strelci') },
             vrstice: vrh.goli.map((i) => ({ id: i.id, igralec: i, desno: String(i.goals) })),
           },
           {
-            naslov: t('igralci.vrh.podajalci'),
+            get naslov() { return t('igralci.vrh.podajalci') },
             vrstice: vrh.podaje.map((i) => ({ id: i.id, igralec: i, desno: String(i.assists) })),
           },
           {
-            naslov: t('igralci.vrh.mreze'),
+            get naslov() { return t('igralci.vrh.mreze') },
             vrstice: vrh.mreze.map((i) => ({ id: i.id, igralec: i, desno: String(i.clean_sheets) })),
           },
           {
-            naslov: t('igralci.vrh.cena'),
+            get naslov() { return t('igralci.vrh.cena') },
             vrstice: vrh.cena.map((i) => ({ id: i.id, igralec: i, desno: formatirajCeno(i.value) })),
           },
         ]}

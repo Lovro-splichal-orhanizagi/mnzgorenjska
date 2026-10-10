@@ -228,6 +228,17 @@ function otaSvezenj() {
 
 export default defineConfig({
   plugins: [react(), znamkaCommita(), karticeDrzav(), besedeZaHtml(), otaSvezenj()],
+  build: {
+    rolldownOptions: {
+      output: {
+        // Knjižnice so svoj kos: menjajo se redko, zato ga brskalnik ob novi
+        // objavi aplikacije ne prenaša znova (ime kosa ostane isto).
+        codeSplitting: {
+          groups: [{ name: 'knjiznice', test: /node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler|@supabase)[\\/]/ }],
+        },
+      },
+    },
+  },
   server: {
     watch: {
       // Predpomnjeni zapisniki niso del aplikacije. Brez tega Vite ob vsakem

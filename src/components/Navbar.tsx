@@ -20,20 +20,20 @@ interface Povezava {
 // pod "Več": enajst enakovrednih povezav je pomenilo, da nobena ne izstopa.
 // Grb vodi domov, zato "Domov" ne potrebuje svoje povezave.
 const glavne: Povezava[] = [
-  { pot: '/my-team', naslov: t('aplikacija.meni.mojaEkipa') },
-  { pot: '/players', naslov: t('aplikacija.meni.igralci') },
-  { pot: '/standings', naslov: t('aplikacija.meni.lestvica') },
-  { pot: '/results', naslov: t('aplikacija.meni.rezultati') },
-  { pot: '/mini-leagues', naslov: t('aplikacija.meni.miniLige') },
+  { pot: '/my-team', get naslov() { return t('aplikacija.meni.mojaEkipa') } },
+  { pot: '/players', get naslov() { return t('aplikacija.meni.igralci') } },
+  { pot: '/standings', get naslov() { return t('aplikacija.meni.lestvica') } },
+  { pot: '/results', get naslov() { return t('aplikacija.meni.rezultati') } },
+  { pot: '/mini-leagues', get naslov() { return t('aplikacija.meni.miniLige') } },
 ]
 
 const ostale: Povezava[] = [
   // Prava lestvica lige (ne fantasy) — iščejo jo iskalniki, tedensko je ne odpira vsak.
-  { pot: '/table', naslov: t('aplikacija.meni.tabela') },
-  { pot: '/assists', naslov: t('aplikacija.meni.asistence') },
-  { pot: '/positions', naslov: t('aplikacija.meni.pozicije') },
-  { pot: '/absences', naslov: t('aplikacija.meni.odsotnosti') },
-  { pot: '/national', naslov: t('aplikacija.meni.slovenija') },
+  { pot: '/table', get naslov() { return t('aplikacija.meni.tabela') } },
+  { pot: '/assists', get naslov() { return t('aplikacija.meni.asistence') } },
+  { pot: '/positions', get naslov() { return t('aplikacija.meni.pozicije') } },
+  { pot: '/absences', get naslov() { return t('aplikacija.meni.odsotnosti') } },
+  { pot: '/national', get naslov() { return t('aplikacija.meni.slovenija') } },
 ]
 
 // Vabilo sestavimo iz izbrane lige in njenih klubov (glej `lib/vabilo.ts`).
@@ -156,7 +156,7 @@ export default function Navbar() {
   // (Slovenija, Hrvaška, Češka, Madžarska, Avstrija, Srbija, Romunija). Slovaški zapisnik jih ima, zato stran tam nima kaj početi.
   const zaDrzavo = drzava === 'SI' || drzava === 'HR' || drzava === 'CZ' || drzava === 'HU' || drzava === 'AT' || drzava === 'RS' || drzava === 'RO' ? ostale : ostale.filter((p) => p.pot !== '/positions')
   // Administracija je samo na spletu, mobilna aplikacija je za igralce.
-  const vec = jeAdmin && !jeNativno() ? [...zaDrzavo, { pot: '/admin', naslov: t('aplikacija.meni.admin') }] : zaDrzavo
+  const vec = jeAdmin && !jeNativno() ? [...zaDrzavo, { pot: '/admin', get naslov() { return t('aplikacija.meni.admin') } }] : zaDrzavo
   // Začetnica za avatar: iz vzdevka, sicer iz e-naslova.
   const zacetnica = (ime || session?.user.email || '?').trim().charAt(0).toUpperCase()
 

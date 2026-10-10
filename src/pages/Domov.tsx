@@ -5,7 +5,7 @@ import { sestaviVabilo, vabiloMailto } from '../lib/vabilo'
 import { Link } from '../components/Povezava'
 import { supabase } from '../lib/supabase'
 import { vseVrstice } from '../lib/strani'
-import { PRAVILA_OPIS } from '../lib/tockovanje'
+import { pravilaOpis } from '../lib/tockovanje'
 import {
   prikazniIme,
   formatirajTocke,
@@ -68,7 +68,7 @@ function kratkaPozicija(p: string | null | undefined): string {
 }
 
 export default function Domov() {
-  const { id: tekmovanjeId, slug, tekmovanje, tekmovanja } = useTekmovanje()
+  const { id: tekmovanjeId, slug, tekmovanje, tekmovanja, brezLig } = useTekmovanje()
   // Naslovnica privzete lige ima osnovni naslov; druge lige svojega, sicer bi
   // bile vse naslovnice za iskalnik ista stran.
   useNaslov(slug === PRIVZETO ? null : tekmovanje?.name)
@@ -501,7 +501,14 @@ export default function Domov() {
       )}
 
       {/* Na širšem zaslonu razdelki v dveh stolpcih, na telefonu drug pod drugim. */}
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:items-start">
+      {/* Dokler prvi val ne pride (`sezonaTece` je null), razdelki držijo
+          zaslon prostora: sicer bi sponzor, klepet in navodila pod njimi
+          najprej stali tik pod uvodom in nato skočili navzdol (CLS). */}
+      <div
+        className={`grid grid-cols-1 gap-8 lg:grid-cols-2 lg:items-start ${
+          sezonaTece === null && !napaka && !brezLig ? 'min-h-screen' : ''
+        }`}
+      >
         {/* Ta teden: rok in kar liga čaka od ljudi — vrstice v eni skupini
             namesto štirih kartic. Asistence so edino, brez česar liga ne
             deluje, zato so poudarjene. */}
@@ -686,7 +693,7 @@ export default function Domov() {
       <details open={siroko} className="group">
         <Povzetek>{t('domov.kakoSeTockuje')}</Povzetek>
         <div className="mt-3 grid gap-x-8 gap-y-5 sm:grid-cols-2">
-          {PRAVILA_OPIS.map((s) => (
+          {pravilaOpis().map((s) => (
             <div key={s.skupina}>
               <h3 className="mb-1 text-sm font-bold text-gnl-300">{s.skupina}</h3>
               <ul className="divide-y divide-white/5 text-sm">

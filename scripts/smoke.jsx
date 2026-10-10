@@ -59,12 +59,20 @@ import { velikostImena, velikostEkipe, imeZaPlakat, najboljsiTrije, navijacev, s
 import { readFileSync } from 'node:fs'
 import { xmlEscape, urlset, sitemapIndex, nasloviLige, datotekeLige } from './sitemap.mjs'
 import { imeStrani } from '../src/lib/obiski'
+import { prezgodnjiKljuci, naloziSlovar } from '../src/i18n/jedro.ts'
+// Vsa aplikacija (tudi strani, ki jih smoke ne izriše), da se izvede vrh vseh modulov.
+import '../src/App'
 
 let napak = 0
 const preveri = (label, cond, extra = '') => {
   console.log(`${cond ? 'PASS' : 'FAIL'}  ${label}${extra ? ' — ' + extra : ''}`)
   if (!cond) napak++
 }
+
+// Slovar drugega jezika pride šele pred izrisom (main.tsx). Niz, preveden na
+// vrhu modula (konstanta), bi zato v hrvaščini ali angleščini ostal slovenski.
+preveri('prevodi: noben t() na vrhu modula', prezgodnjiKljuci().length === 0, prezgodnjiKljuci().join(', '))
+await naloziSlovar()
 
 // --- izris strani ----------------------------------------------------------
 const strani = [

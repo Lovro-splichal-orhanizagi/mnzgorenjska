@@ -119,10 +119,10 @@ export function tockeZaNastop(n: Nastop, pozicija: Pozicija): IzracunTock {
 }
 
 /** Kratek opis pravil za prikaz uporabnikom. */
-export const PRAVILA_OPIS: Array<{
+export const pravilaOpis = (): Array<{
   skupina: string
   vrstice: Array<[string, string]>
-}> = [
+}> => [
   { skupina: t('tekme.tockovanje.pravila.igralniCas'), vrstice: [
     [t('tekme.tockovanje.pravila.nastopDo60'), '+1'],
     [t('tekme.tockovanje.pravila.nastopOd60'), '+2'],

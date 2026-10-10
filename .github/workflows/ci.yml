@@ -257,6 +257,9 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
           # Umami website id (stats.slff.eu); empty = no analytics script in the build.
           VITE_UMAMI_ID: ${{ vars.VITE_UMAMI_ID }}
+          # "1" = on slff.eu the browser calls the API same-origin (Caddy proxies /rest/v1 etc.).
+          # Set the repo variable only after the Caddy block is live; empty = api.slff.eu as before.
+          VITE_API_ISTI_IZVOR: ${{ vars.VITE_API_ISTI_IZVOR }}
         run: |
           test -n "$VITE_SUPABASE_URL" && test -n "$VITE_SUPABASE_ANON_KEY"
           npm run build

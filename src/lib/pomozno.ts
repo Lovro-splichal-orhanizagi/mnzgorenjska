@@ -4,17 +4,17 @@ import type { Pozicija } from './tipi'
 import { t, stevilo, type Kljuc } from '../i18n/jedro.ts'
 
 export const IME_POZICIJE: Record<Pozicija, string> = {
-  GK: t('skupno.pozicija.GK'),
-  DEF: t('skupno.pozicija.DEF'),
-  MID: t('skupno.pozicija.MID'),
-  FWD: t('skupno.pozicija.FWD'),
+  get GK() { return t('skupno.pozicija.GK') },
+  get DEF() { return t('skupno.pozicija.DEF') },
+  get MID() { return t('skupno.pozicija.MID') },
+  get FWD() { return t('skupno.pozicija.FWD') },
 }
 
 export const KRATKA_POZICIJA: Record<Pozicija, string> = {
-  GK: t('skupno.pozicijaKratko.GK'),
-  DEF: t('skupno.pozicijaKratko.DEF'),
-  MID: t('skupno.pozicijaKratko.MID'),
-  FWD: t('skupno.pozicijaKratko.FWD'),
+  get GK() { return t('skupno.pozicijaKratko.GK') },
+  get DEF() { return t('skupno.pozicijaKratko.DEF') },
+  get MID() { return t('skupno.pozicijaKratko.MID') },
+  get FWD() { return t('skupno.pozicijaKratko.FWD') },
 }
 
 /** Iz "Priimek Ime" naredi "Ime Priimek" za prijaznejši prikaz. */
