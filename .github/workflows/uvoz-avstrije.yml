@@ -11,6 +11,12 @@ on:
   schedule:
     - cron: '7,22,37,52 * * * *'
   workflow_dispatch:
+    inputs:
+      po_uvozu:
+        description: 'Sprožil ga je konec uvoza (počakaj, da se zagon zaključi)'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -33,6 +39,11 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci --ignore-scripts
+      # Sprožen s konca uvoza: tisti zagon se zaključi šele nekaj sekund pozneje
+      # in bi ga tik sicer videl kot "še teče".
+      - name: Pocakaj na konec uvoza
+        if: inputs.po_uvozu
+        run: sleep 60
       - name: Naslednji korak vrste
         env:
           GH_TOKEN: ${{ github.token }}
