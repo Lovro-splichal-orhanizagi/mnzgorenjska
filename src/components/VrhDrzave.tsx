@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from './Povezava'
+import { zLigo } from '../lib/tekmovanje'
 import { supabase } from '../lib/supabase'
 import { formatirajTocke, mnozina, prikazniIme, TEKME } from '../lib/pomozno'
 import Grb from './Grb'
@@ -103,10 +104,10 @@ export default function VrhDrzave({ drzava }: { drzava: string }) {
                     </span>
                     <Grb ime={v.team_name} kratko={v.team_short} logo={v.team_logo} velikost={22} />
                     <div className="min-w-0 flex-1">
-                      {/* Brez `?t=`: ta bi obiskovalcu trajno zamenjal izbrano
-                          ligo, stran igralca pa bere po ligi igralca. */}
+                      {/* Liga igralca v naslovu: iskalnik naj igralca najde
+                          v njegovi ligi, ne v izbrani. */}
                       <Link
-                        to={`/player/${v.player_id}`}
+                        to={zLigo(`/player/${v.player_id}`, v.competition_slug)}
                         className="block truncate text-sm font-semibold after:absolute after:inset-0 after:content-[''] hover:text-gnl-300"
                       >
                         {prikazniIme(v.full_name)}

@@ -3,7 +3,8 @@
 // vodijo sem naravnost, ne prek supabase.co: le tako telefon povezavo odpre
 // v aplikaciji (Universal/App Links ne sledijo preusmeritvi).
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Link } from '../components/Povezava'
 import type { EmailOtpType } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import { useNaslov } from '../lib/naslov'

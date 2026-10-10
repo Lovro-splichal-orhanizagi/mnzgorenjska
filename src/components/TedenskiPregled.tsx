@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from './Povezava'
 import { supabase } from '../lib/supabase'
 import { formatirajTocke } from '../lib/pomozno'
 import {

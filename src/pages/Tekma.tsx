@@ -2,8 +2,10 @@
 import { useEffect, useState } from 'react'
 import { useNastavitev } from '../lib/nastavitve'
 import { PRAG_ASISTENCE_PRIVZETO } from '../components/GolZaGlasovanje'
-import { Link, useLocation, useParams } from 'react-router-dom'
-import { useNaslov } from '../lib/naslov'
+import { useLocation, useParams } from 'react-router-dom'
+import { Link } from '../components/Povezava'
+import { useNaslov, useNoindex } from '../lib/naslov'
+import { useKanonicnaLiga, useTekmovanje, zLigo } from '../lib/tekmovanje'
 import { povezavaNaPrijavo } from '../lib/prijava'
 import { t, datum } from '../i18n'
 import { supabase } from '../lib/supabase'
@@ -36,6 +38,30 @@ const datumTekme = (d?: string | null) =>
       })
     : ''
 
+/** Grb in ime kluba v izidu; ime vodi na stran kluba v ligi tekme. */
+function Klub({ ime, kratko, logo, id, liga }: {
+  ime: string | null
+  kratko: string | null
+  logo: string | null
+  id: number | null
+  liga: string | null
+}) {
+  const vsebina = (
+    <>
+      <Grb ime={ime} kratko={kratko} logo={logo} velikost={36} />
+      <span className="text-sm font-semibold leading-tight sm:text-base">{ime}</span>
+    </>
+  )
+  const slog = 'flex min-w-0 flex-1 flex-col items-center gap-1.5'
+  return id ? (
+    <Link to={zLigo(`/club/${id}`, liga)} className={`${slog} hover:text-gnl-300`}>
+      {vsebina}
+    </Link>
+  ) : (
+    <span className={slog}>{vsebina}</span>
+  )
+}
+
 export default function Tekma() {
   const { id } = useParams()
   // Iz naslova pride niz; stolpec je stevilcen. Doslej je pretvorbo tiho
@@ -51,7 +77,11 @@ export default function Tekma() {
     'prag_glasov_asistenca',
     PRAG_ASISTENCE_PRIVZETO,
   )
-  useNaslov(tekma ? `${tekma.home_short} – ${tekma.away_short}` : t('tekme.tekma.naslov'))
+  // Povezave naprej vodijo v ligo tekme, ne v izbrano.
+  const liga = useTekmovanje().vsaTekmovanja.find((l) => l.id === tekma?.competition_id)
+  const slugLige = liga?.slug ?? null
+  useKanonicnaLiga(slugLige)
+  useNaslov(tekma ? `${tekma.home_name} : ${tekma.away_name}` : t('tekme.tekma.naslov'), liga?.name)
   const [nastopi, setNastopi] = useState<NastopTekme[]>([])
   const [goli, setGoli] = useState<Gol[]>([])
   // goal_id -> glasovi, razvrsceni padajoce
@@ -213,6 +243,8 @@ export default function Tekma() {
       )
   }
 
+  useNoindex(!nalaganje && !tekma)
+
   if (nalaganje)
     return <p className="animiraj-utrip text-slate-400">{t('skupno.nalaganje')}</p>
 
@@ -237,7 +269,10 @@ export default function Tekma() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <Link to="/results" className="inline-flex min-h-11 items-center text-sm text-slate-400 hover:text-gnl-300">
+        <Link
+          to={zLigo(tekma.round_id ? `/results?krog=${tekma.round_id}` : '/results', slugLige)}
+          className="inline-flex min-h-11 items-center text-sm text-slate-400 hover:text-gnl-300"
+        >
           {t('tekme.tekma.nazaj')}
         </Link>
         <span className="text-sm text-slate-500">
@@ -246,20 +281,15 @@ export default function Tekma() {
         </span>
       </div>
 
-      {/* Izid: grb nad imenom, da ime na telefonu ni skrajšano na kratico. */}
-      <div className="flex items-start justify-center gap-3 text-center sm:gap-6">
-        <div className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
-          <Grb ime={tekma.home_name} kratko={tekma.home_short} logo={tekma.home_logo} velikost={36} />
-          <span className="text-sm font-semibold leading-tight sm:text-base">{tekma.home_name}</span>
-        </div>
+      {/* Izid: grb nad imenom, da ime na telefonu ni skrajšano na kratico.
+          Ves izid je naslov strani (h1): "Domači 2:1 Gostje". */}
+      <h1 className="flex items-start justify-center gap-3 text-center sm:gap-6">
+        <Klub ime={tekma.home_name} kratko={tekma.home_short} logo={tekma.home_logo} id={tekma.home_team_id} liga={slugLige} />
         <span className="pt-1 text-3xl font-black tabular-nums sm:text-4xl">
           {tekma.home_goals}:{tekma.away_goals}
         </span>
-        <div className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
-          <Grb ime={tekma.away_name} kratko={tekma.away_short} logo={tekma.away_logo} velikost={36} />
-          <span className="text-sm font-semibold leading-tight sm:text-base">{tekma.away_name}</span>
-        </div>
-      </div>
+        <Klub ime={tekma.away_name} kratko={tekma.away_short} logo={tekma.away_logo} id={tekma.away_team_id} liga={slugLige} />
+      </h1>
 
       {nastopi.length === 0 ? (
         <p className="text-sm text-slate-400">

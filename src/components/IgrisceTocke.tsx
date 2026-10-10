@@ -4,7 +4,7 @@
 // postava pride iz zapisnika, na dresu pa piše, koliko točk je igralec na tej
 // tekmi zaslužil. Dve takšni igrišči stojita eno ob drugem — domači levo,
 // gostje desno.
-import { Link } from 'react-router-dom'
+import { Link } from './Povezava'
 import { VRSTNI_RED } from '../lib/pravila'
 import { prikazniIme, formatirajTocke } from '../lib/pomozno'
 import type { ReactNode } from 'react'

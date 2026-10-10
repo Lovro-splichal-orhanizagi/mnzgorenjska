@@ -8,7 +8,8 @@
 //     in prav tako ne čaka več,
 //   - gol je bil iz enajstmetrovke ali avtogol — asistence po pravilih ni.
 import { useRef, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
+import { Link } from './Povezava'
 import { useAuth } from '../lib/useAuth'
 import { povezavaNaPrijavo } from '../lib/prijava'
 import { useNastavitev } from '../lib/nastavitve'

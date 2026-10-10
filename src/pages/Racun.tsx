@@ -2,7 +2,8 @@
 // najde in izvede sam; Google Play ta naslov (slff.eu/account) navede tudi v
 // opisu aplikacije. Brisanje opravi `izbrisi_moj_racun` v bazi.
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
+import { Link } from '../components/Povezava'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import { useNaslov } from '../lib/naslov'

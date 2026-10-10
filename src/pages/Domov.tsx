@@ -2,7 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import Pivo from '../components/Pivo'
 import { imeZveze } from '../components/VirPodatkov'
 import { sestaviVabilo, vabiloMailto } from '../lib/vabilo'
-import { Link } from 'react-router-dom'
+import { Link } from '../components/Povezava'
 import { supabase } from '../lib/supabase'
 import { vseVrstice } from '../lib/strani'
 import { PRAVILA_OPIS } from '../lib/tockovanje'
@@ -13,7 +13,7 @@ import {
   KRATKA_POZICIJA,
   IGRALCI,
 } from '../lib/pomozno'
-import { useTekmovanje } from '../lib/tekmovanje'
+import { PRIVZETO, useTekmovanje } from '../lib/tekmovanje'
 import { useAuth } from '../lib/useAuth'
 import { useNastavitev } from '../lib/nastavitve'
 import { useNaslov } from '../lib/naslov'
@@ -68,8 +68,10 @@ function kratkaPozicija(p: string | null | undefined): string {
 }
 
 export default function Domov() {
-  useNaslov(null)
-  const { id: tekmovanjeId, tekmovanje, tekmovanja } = useTekmovanje()
+  const { id: tekmovanjeId, slug, tekmovanje, tekmovanja } = useTekmovanje()
+  // Naslovnica privzete lige ima osnovni naslov; druge lige svojega, sicer bi
+  // bile vse naslovnice za iskalnik ista stran.
+  useNaslov(slug === PRIVZETO ? null : tekmovanje?.name)
   const { session, loading: avtNalaganje } = useAuth()
   const zveza = imeZveze(tekmovanje)
   const [klubiLige, setKlubiLige] = useState<string[]>([])

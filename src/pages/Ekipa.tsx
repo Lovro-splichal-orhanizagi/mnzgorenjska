@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
+import { Link } from '../components/Povezava'
 import { supabase } from '../lib/supabase'
 import { formatirajTocke, prikazniIme, tockZ } from '../lib/pomozno'
-import { useNaslov } from '../lib/naslov'
+import { useNaslov, useNoindex } from '../lib/naslov'
 import EnajstericaNaIgriscu from '../components/EnajstericaNaIgriscu'
 import ZgodbaKroga from '../components/ZgodbaKroga'
-import { useTekmovanje } from '../lib/tekmovanje'
+import { useKanonicnaLiga, useTekmovanje, zLigo } from '../lib/tekmovanje'
 import {
   razdeli,
   skupajTock,
@@ -53,11 +54,14 @@ export default function Ekipa() {
   const [napaka, setNapaka] = useState<string | null>(null)
   // Vrstica krogov drsi vodoravno; izbrani krog naj bo viden.
   const vrsticaKrogov = useRef<HTMLDivElement>(null)
-  useNaslov(ekipa?.team_name ?? t('lestvice.ekipa.naslov'))
   // Liga ekipe, ne tista, ki je izbrana v meniju — povezava lahko pripelje
   // do ekipe iz druge lige.
   const { vsaTekmovanja } = useTekmovanje()
-  const liga = vsaTekmovanja.find((l) => l.id === ekipa?.competition_id)?.name ?? ''
+  const tekmovanjeEkipe = vsaTekmovanja.find((l) => l.id === ekipa?.competition_id)
+  const liga = tekmovanjeEkipe?.name ?? ''
+  useNaslov(ekipa?.team_name ?? t('lestvice.ekipa.naslov'), liga)
+  useNoindex(!nalaganje && Boolean(napaka) && !ekipa)
+  useKanonicnaLiga(tekmovanjeEkipe?.slug)
 
   // --- ekipa in njeni zaklenjeni krogi -------------------------------------
   useEffect(() => {
@@ -274,7 +278,7 @@ export default function Ekipa() {
                         className="flex min-h-11 items-center gap-2 px-3 py-2 text-sm"
                       >
                         <Link
-                          to={`/player/${v.player_id}`}
+                          to={zLigo(`/player/${v.player_id}`, tekmovanjeEkipe?.slug)}
                           className="min-w-0 flex-1 truncate hover:text-gnl-400"
                         >
                           {prikazniIme(v.ime)}

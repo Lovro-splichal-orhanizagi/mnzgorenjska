@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Link } from '../components/Povezava'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import { useNaslov } from '../lib/naslov'

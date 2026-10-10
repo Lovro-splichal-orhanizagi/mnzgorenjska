@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
+import { Link } from './Povezava'
 import { supabase } from '../lib/supabase'
 import { povezavaNaPrijavo } from '../lib/prijava'
 import type { FormEvent } from 'react'

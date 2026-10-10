@@ -1271,6 +1271,18 @@ deljene povezave in e-pošta ostanejo veljavne. `/novo-geslo` je izjema: je
 vpisana pri Supabase kot povratni naslov ponastavitve gesla in žeton nosi v
 #, zato stran velja na obeh naslovih. Nova stran dobi angleško pot.
 
+Iste preusmeritve naredi tudi Caddy s statusom 301 (razen `/novo-geslo`), in
+pot, ki ni nobena stran v `<Routes>`, dobi SPA s **statusom 404** (`@ni_strani`
+v `scripts/hetzner/Caddyfile`) — **nova stran gre tudi na ta seznam**, sicer
+iskalnik dobi 404. Neznan id (`/player/999999999`) ostane 200, stran pa nastavi
+`useNoindex`.
+
+Notranje povezave uvažajo `Link`/`NavLink` iz `src/components/Povezava.tsx`,
+ne iz `react-router-dom`: ta doda izbrano ligo (`?t=`), da iskalnik ne pristane
+v privzeti. Povezava na igralca, klub, tekmo ali ekipo druge lige ligo poda
+sama z `zLigo(pot, slug)`; stran entitete z `useKanonicnaLiga(slug)` pove
+kanonični `?t=` po svoji ligi.
+
 ## Prevodi
 
 `src/i18n/index.tsx` je celoten sistem, brez knjižnice:

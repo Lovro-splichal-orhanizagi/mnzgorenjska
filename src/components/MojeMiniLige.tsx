@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from './Povezava'
 import { supabase } from '../lib/supabase'
 import { formatirajTocke } from '../lib/pomozno'
 import { razvrstiMini, type MiniVrstica } from '../lib/miniLige'
