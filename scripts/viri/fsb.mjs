@@ -101,9 +101,34 @@ export function lepoIme(ime) {
 // Polje, OMLADINAC v PBL C je drug). Kraj potrjuje "Mesto:" v zapisniku
 // domače tekme. Preimenujemo po šifri lige; ob novi ligi preveri trke znova
 // (imena vseh lig iste sezone) in nov trk dodaj sem.
+//
+// Nižje lige (10. 10. 2026): kraj ima klub NIŽJE lige, višja ostane brez.
+// Opštinska liga Mladenovac kraja ne piše ("Mesto: ---"), zato tam občina.
+const OBRENOVAC = { BUDUĆNOST: 'BUDUĆNOST (Zvečka)', JEDINSTVO: 'JEDINSTVO (Dren)', SLOGA: 'SLOGA (Ratari)' }
+const MLADENOVAC = { NAPREDAK: 'NAPREDAK (Mladenovac)', SLOGA: 'SLOGA (Mladenovac)' }
+const LAZAREVAC_2 = {
+  BSK: 'BSK (Brajkovac)', MLADOST: 'MLADOST (Cvetovac)', SLOGA: 'SLOGA (Lukavica)', ŠUMADIJA: 'ŠUMADIJA (Mali Crljeni)',
+}
+const MOL_A = { BSK: 'BSK (Batajnica)' }
+const MOL_C = { HAJDUK: 'HAJDUK (Kamendol)' }
 const IME_V_LIGI = {
   'zonska-liga-beograd': { BORAC: 'BORAC (Ostružnica)', OMLADINAC: 'OMLADINAC (Veliko Polje)' },
   'zonska-liga-beograd-2025-26': { OMLADINAC: 'OMLADINAC (Veliko Polje)' },
+  'opstinska-liga-obrenovac-2026-2027': OBRENOVAC,
+  'opstinska-liga-obrenovac': OBRENOVAC,
+  'opstinska-liga-obrenovac-2024-2025': OBRENOVAC,
+  'opstinska-liga-mladenovac-2026-2027': MLADENOVAC,
+  'opstinska-liga-mladenovac-2': MLADENOVAC,
+  'opstinska-liga-mladenovac-2024-25': MLADENOVAC,
+  'druga-opstinska-liga-fsol-2026-2027': LAZAREVAC_2,
+  'druga-opstinska-liga-fso-lazarevac-2025-2026': LAZAREVAC_2,
+  'druga-opstinska-liga-lazarevac-2024-25': LAZAREVAC_2,
+  'medjuopstinska-liga-grupa-a': MOL_A,
+  'medjuopstinska-liga-grupa-a-2025-26': MOL_A,
+  'medjuopstinska-liga-grupa-a-2024-25': MOL_A,
+  'medjuopstinska-liga-grupa-c': MOL_C,
+  'medjuopstinska-liga-grupa-c-2025-26': MOL_C,
+  'medjuopstinska-liga-grupa-c-2024-25': MOL_C,
 }
 
 /** Ime kluba, kot ga uvoz vidi (s preimenovanjem v tej ligi). */

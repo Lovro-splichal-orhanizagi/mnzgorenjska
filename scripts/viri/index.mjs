@@ -21,6 +21,7 @@ import facr from './facr.mjs'
 import mlsz from './mlsz.mjs'
 import oefb from './oefb.mjs'
 import fsb from './fsb.mjs'
+import fss from './fss.mjs'
 
 const VIRI = {
   mnzg,
@@ -45,6 +46,8 @@ const VIRI = {
   oefb,
   // Srbija: Fudbalski savez Beograda (fsb.org.rs), brez šifer igralcev.
   fsb,
+  // Srbija: državni ligi FSS (fss.rs), vratar s prvaliga.rs.
+  fss,
 }
 
 /**

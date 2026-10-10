@@ -928,9 +928,85 @@ Vpisanih je pet lig (migracija 20261010000100), **neaktivnih**. Zveza `fsb`.
 | rs-bg-pbl-b | `prva-beogradska-liga-grupa-b` | `prva-beogradska-liga-grupa-b-2025-26` |
 | rs-bg-pbl-c | `prva-beogradska-liga-grupa-c-2` | `prva-beogradska-liga-grupa-c-2-2025-26` |
 
+Nižje lige (migracija 20261010153100, neaktivne), arhiv dveh sezon, ker so
+majhne (7–12 klubov):
+
+| liga | tekoča 2026/27 | arhiv 2025/26 | arhiv 2024/25 |
+|---|---|---|---|
+| rs-bg-mol-a | `medjuopstinska-liga-grupa-a` | `…-grupa-a-2025-26` | `…-grupa-a-2024-25` |
+| rs-bg-mol-b | `medjuopstinska-liga-grupa-b` | `…-grupa-b-2025-26` | `…-grupa-b-2024-25` |
+| rs-bg-mol-c | `medjuopstinska-liga-grupa-c` | `…-grupa-c-2025-26` | `…-grupa-c-2024-25` |
+| rs-bg-lazarevac-2 | `druga-opstinska-liga-fsol-2026-2027` | `druga-opstinska-liga-fso-lazarevac-2025-2026` | `druga-opstinska-liga-lazarevac-2024-25` |
+| rs-bg-mladenovac | `opstinska-liga-mladenovac-2026-2027` | `opstinska-liga-mladenovac-2` | `opstinska-liga-mladenovac-2024-25` |
+| rs-bg-obrenovac | `opstinska-liga-obrenovac-2026-2027` | `opstinska-liga-obrenovac` | `opstinska-liga-obrenovac-2024-2025` |
+
+(`…` = `medjuopstinska-liga`.) **Ni vpisanih**: Prva opštinska liga FSOL
+(2026/27) in Opštinska liga Sopot (obe sezoni) imata po dva kluba MLADOST v
+isti ligi, stran lige ju ne loči. Trki imen med ligami (10. 10. 2026, kraj
+iz "Mesto:"): BUDUĆNOST/JEDINSTVO/SLOGA v Obrenovcu (Zvečka, Dren, Ratari),
+NAPREDAK/SLOGA v Mladenovcu (kraja ne piše), BSK/MLADOST/SLOGA/ŠUMADIJA v
+Lazarevcu (Brajkovac, Cvetovac, Lukavica, Mali Crljeni), BSK v MOL A
+(Batajnica), HAJDUK v MOL C (Kamendol; HAJDUK v MOL B je beograjski iz PBL A
+2025/26). Ostala ponovljena imena so isti klub, ki je napredoval ali izpadel
+(SREM Jakovo, OMLADINAC Rajkovac …).
+
+**Ostale regije Srbije ne objavljajo zapisnikov** (preverjeno 10. 10. 2026):
+FS Vojvodine (fsv.rs, FS Novog Sada fsgns.rs), FS regiona Zapadne Srbije
+(fsrzs.com, le PDF lestvice in strelci) in FS regiona Istočne Srbije
+(fsris.org.rs, razpored in izidi s šiframi klubov) kažejo le izide in
+lestvice. Tudi Srpska liga Vojvodina, Zapad in Istok nimajo zapisnikov
+nikjer javno; državni ligi bere vir `fss` (spodaj). Vse zveze vodijo podatke v COMET (comet.fss.rs, za prijavo); javni
+API "areports" zahteva ključ FSS — ključa s tujih strani ne uporabljamo.
+Pot naprej je prošnja FSS za ključ.
+
 Uvoz (ena za drugo): `gh workflow run uvoz-lige.yml -f liga=rs-bg-srpska -f
 arhiv=srpska-liga-beograd-2025-26 -f cene=true`. Arhiv ~180 zapisnikov po 2 s
 je okoli 7 minut na ligo.
+
+### Srbija — vir `fss`
+
+Vir `fss` (`scripts/viri/fss.mjs`) bere **fss.rs** (Fudbalski savez Srbije)
+za državni ligi; Srpska liga in nižje so pri regijskih zvezah (zgoraj).
+WordPress za Cloudflarom, ki je strani do zdaj vračal brez izziva;
+robots.txt zapre le /wp-admin/. Beremo odkrito (2 s, popolnih zapisnikov
+ne beremo znova). **Če se pojavi izziv ali CAPTCHA, ustavi — ne obhajaj.**
+
+- **Šifra lige je slug** (`/takmicenje/<slug>/`), vsaka sezona svojega;
+  `?script=lat` da latinico (privzeto je cirilica). Play-off in play-out sta
+  svoji tekmovanji (`…-25-26-play-off`) — za arhiv ju **ne** uvažaj.
+- **Stran lige**: harmonika krogov `fss-rezultati__title` "N. kolo". Prva
+  harmonika (`accordion_current`) **ponovi tekoči krog**, beremo le
+  `id="accordion"`. Tekma: datum ("01.08.2026 20:00" ali s piko za letnico),
+  dve `col-6` imeni (brez kraja), povezava `/izvestaj-sa-utakmice/<id>` (id
+  COMET) pri odigrani in štiri številke izida v izvornem vrstnem redu:
+  domači, gostje, polčas domači, polčas gostje ("/" = ni izida).
+- **Zapisnik** `/izvestaj-sa-utakmice/<id>/?script=lat`: štirje bloki
+  `fss-rez__oneteam` (začetniki domačih, gostov, klop domačih, gostov),
+  dogodki pred imenom in dresom: goal, penalty, own_goal (v ekipi strelca),
+  penalty_failed_miss, yellow, second_yellow in red (izključitev), substitution
+  (vstop, pri rezervi), substitution_out (izstop, pri začetniku) — **minute so
+  točne**. Neveljaven id vrne 200 s prazno predlogo (veljaven ima
+  `fss-rez__start`). Šifer igralcev ni: identiteta ime + klub kot pri fsb.
+- **Vratarja fss.rs ne označi.** Isto tekmo (isti id COMET) pokaže
+  **prvaliga.rs** `/arhiva/izvestaj-utakmice/<id>/` z "(G)" pri dresu (tudi
+  za Superligo in tekočo sezono; kapetan-vratar je "(C) (G)"). Iz nje vzamemo
+  le dres vratarja; imena so tam okrnjena. superliga.rs ima isto, a robots.txt
+  prepove `/arhiva/` — tja ne hodimo. *Uskladi pozicije* z `vir = fss`.
+- **Isto ime, drug klub**: državni klubi z imenom beograjskega dobijo kraj
+  (`IME` v viru): JEDINSTVO (Ub), MLADOST (Lučani), NAPREDAK (Kruševac),
+  RADNIČKI (Niš). UŠĆE NOVI BEOGRAD in TELEOPTIK sta v obeh virih isti klub.
+
+Preizkus v živo (10. 10. 2026, 20 naključnih zapisnikov štirih strani):
+vsi 11 + 11, goli = izid, 990 minut na ekipo, vratar znan pri vseh.
+
+Vpisani ligi (migracija 20261010153300, **neaktivni**), zveza `fss`:
+
+| liga | tekoča 2026/27 | arhiv 2025/26 |
+|---|---|---|
+| rs-superliga | `mozzart-bet-super-liga-srbije-26-27` (14 klubov) | `mozzart-bet-super-liga-srbije-25-26` (16) |
+| rs-prva-liga | `mozzart-bet-prva-liga-srbije-26-27` (16) | `mozzart-bet-prva-liga-srbije-25-26` (16) |
+
+Arhiv je 240 zapisnikov in 240 strani prvaliga.rs po 2 s — okoli 20 minut na ligo.
 
 ### Država obiskovalca
 
