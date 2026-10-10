@@ -23,6 +23,10 @@ import { vseVrstice } from './strani.mjs'
 import { prenesiSPonovitvami } from './prenos.mjs'
 import { dodajStrelceSKlopi } from './zapisnik.mjs'
 import { imeHash, regHash } from './anonimizacija.mjs'
+import { NEPOPOLN } from './viri/frf.mjs'
+
+/** Nepopolna tekma: prvo opozorilo se začne z `NEPOPOLN` (glej viri/frf.mjs). */
+const jeNepopolna = (opozorila) => Array.isArray(opozorila) && String(opozorila[0] ?? '').startsWith(NEPOPOLN)
 
 const PREDPOMNILNIK = 'scripts/.predpomnilnik'
 
@@ -596,10 +600,12 @@ if (svezeDni != null && zapisniki.length) {
   for (let i = 0; i < idji.length; i += 200) {
     const { data } = await db
       .from('matches')
-      .select('zapisnik_id')
+      .select('zapisnik_id, imported_at, import_warnings')
       .in('zapisnik_id', idji.slice(i, i + 200))
-      .not('imported_at', 'is', null)
-    for (const m of data ?? []) uvozene.add(String(m.zapisnik_id))
+    // Nepopolna tekma (frf: klub postave še ni vnesel) nima `imported_at`, a
+    // je zapisana; nespremenjeno je ne pišemo vsako uro znova.
+    for (const m of data ?? [])
+      if (m.imported_at || jeNepopolna(m.import_warnings)) uvozene.add(String(m.zapisnik_id))
   }
   const prej = zapisniki.length
   zapisniki = zapisniki.filter((x) => !(uvozene.has(String(x.id)) && odtisi[x.id] === odtisZapisnika(x.z)))
@@ -608,6 +614,13 @@ if (svezeDni != null && zapisniki.length) {
 const dotaknjeniKrogi = new Set()
 
 let uvozenih = 0
+// Nepopolni zapisniki (vir jih označi z `z.nepopoln`, zdaj le frf): ekipa brez
+// postave ali le z igralci, ki imajo dogodek. Tekoča sezona: izid in znane
+// nastope zapišemo, `imported_at` ostane prazen — nočni uvoz tekmo bere znova,
+// borza na klube čaka, preveri-podatke jo javi (`zapisnik-nepopoln`). Arhiv:
+// ne uvozimo (dopolnil ga ne bo nihče, prazna vrstica bi le motila preverbo).
+let nepopolnih = 0
+let nepopolnihArhiv = 0
 let preskocenih = 0
 let preskocenihDrugje = 0 // zapisnik je že v drugi ligi (skupen arhiv)
 // Prava napaka (baza, razclenitev) — v nasprotju s preskokom zapisnika brez
@@ -621,6 +634,11 @@ const vsaOpozorila = []
 for (const { id, z, url } of zapisniki) {
   if (!z.sezona || z.krog == null) {
     console.log(`  ${id}: manjka sezona ali krog — preskočeno`)
+    preskocenih++
+    continue
+  }
+  if (z.nepopoln && !tekocaSezona) {
+    nepopolnihArhiv++
     preskocenih++
     continue
   }
@@ -941,12 +959,13 @@ for (const { id, z, url } of zapisniki) {
     const { error: eKonec } = await db
       .from('matches')
       .update({
-        imported_at: new Date().toISOString(),
+        imported_at: z.nepopoln ? null : new Date().toISOString(),
         import_warnings: z.opozorila,
       })
       .eq('id', tekma.id)
     if (eKonec) throw new Error(eKonec.message)
 
+    if (z.nepopoln) nepopolnih++
     uvozenih++
     noviOdtisi[id] = odtisZapisnika(z)
     if (z.opozorila.length)
@@ -961,6 +980,9 @@ for (const { id, z, url } of zapisniki) {
 }
 
 console.log(`\n\nUvoženih tekem: ${uvozenih}, preskočenih: ${preskocenih}, napak: ${napak}`)
+if (nepopolnih)
+  console.warn(`  OPOZORILO: ${nepopolnih} nepopolnih zapisnikov (izid in znani nastopi zapisani, tekma čaka na dopolnitev)`)
+if (nepopolnihArhiv) console.warn(`  OPOZORILO: ${nepopolnihArhiv} nepopolnih zapisnikov arhiva preskočenih`)
 if (preskocenihDrugje)
   console.warn(`  OPOZORILO: ${preskocenihDrugje} zapisnikov je že v drugi ligi (skupen arhiv) — njihovi igralci v tej ligi nimajo teh minut`)
 // Delovni tok po tem ve, ali ima ugibanje pozicij za to ligo sploh kaj dela.
