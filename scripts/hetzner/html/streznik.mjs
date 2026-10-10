@@ -16,7 +16,7 @@
 //
 // Brez odvisnosti (Node 22). Preizkus: scripts/hetzner/html/preizkus.mjs.
 import { createServer } from 'node:http'
-import { readFileSync, realpathSync } from 'node:fs'
+import { readFileSync, realpathSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -394,12 +394,16 @@ export function obdelovalec({ koren, rest, rok = 800 }) {
   const izdaje = new Map()
   let lige = { do: 0, seznam: null }
 
+  // Ključ je mapa IN čas index.html: ponovna objava istega commita (ročni
+  // zagon ci.yml, 10. 10. 2026) piše v isto mapo in bi sicer ostala stara
+  // predloga s kosi JS, ki jih ni več.
   const izdaja = (pot) => {
-    let i = izdaje.get(pot)
+    const kljuc = `${pot}:${statSync(join(pot, 'index.html')).mtimeMs}`
+    let i = izdaje.get(kljuc)
     if (!i) {
       i = { predloge: {}, besede: (() => { try { return JSON.parse(readFileSync(join(pot, 'html-besede.json'), 'utf8')) } catch { return {} } })() }
       izdaje.clear() // stara objava ni več v zraku
-      izdaje.set(pot, i)
+      izdaje.set(kljuc, i)
       predpomnilnik.clear()
     }
     return i
