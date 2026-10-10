@@ -46,6 +46,13 @@
     <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Postavi novu lozinku →</a>
   </p>
   <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Ako nisi ti zatražio/la novu lozinku, zanemari ovaj imejl. Stara lozinka i dalje važi.</p>
+{{ else if eq (printf "%v" .Data.jezik) "ro" }}
+  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Parolă nouă</p>
+  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Cineva (sperăm că tu) a cerut o parolă nouă pentru SLFF. Apasă butonul și scrie parola nouă.</p>
+  <p style="text-align: center; margin: 24px 0;">
+    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Setează parola nouă →</a>
+  </p>
+  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Dacă nu tu ai cerut o parolă nouă, ignoră acest e-mail. Parola veche rămâne valabilă.</p>
 {{ else }}
   <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Ponastavitev gesla</p>
   <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Nekdo (upamo, da ti) je zahteval novo geslo za SLFF. Klikni gumb in vpiši novo geslo.</p>

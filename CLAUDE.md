@@ -1008,6 +1008,29 @@ Vpisani ligi (migracija 20261010153300, **neaktivni**), zveza `fss`:
 
 Arhiv je 240 zapisnikov in 240 strani prvaliga.rs po 2 s — okoli 20 minut na ligo.
 
+### Romunija
+
+Država `RO` ("România", migracija 20261010190000) ima vmesnik v romunščini
+(`src/i18n/ro/`, jezik `ro`, `ro-RO`, `JEZIK_DRZAVE.RO`), vstop `slff.eu/ro`,
+kartico ob deljenju `ro.html` (Caddy jo vrne za `/ro` in `?t=ro-…`), romunsko
+vejo pošte (`sporocila.ts`, avtentikacijske predloge in zadeve v
+`docker-compose.slff.yml`, pozdrav "Salut") in romunska imena lastnikov
+hišnih ekip ("Andrei Popescu"). **Šifra romunske lige se začne z `ro-`.**
+Ugib: brskalnik `ro` ali pas `Europe/Bucharest`. Izrazi kot v romunskem
+amaterskem nogometu: echipă, `krog` je vedno **etapă**, lot, formație de
+start, bancă, portar, fundaș, mijlocaș, atacant, căpitan, vicecăpitan,
+transferuri, clasament, pasă decisivă, cartonaș, poziții; pripomoček
+`klop_plus` je "Bancă+". **ș in ț z vejico spodaj** (ne s cedilo ş ţ; smoke
+preveri). Množine one/few/other: `few` je 0, 2–19 in decimalke, `other` (20
+in več) dobi "de" ("20 de puncte"), zato se števne besede v `skupno.besede`
+za `other` začnejo z "de". Ime lige stoji za dvopičjem ("Liga fantasy s-a
+deschis: {liga}"), `ligaVTozilniku` ga pusti. Psevdonim v klepetu ima
+pridevnik za samostalnikom ("Portar Albastru 42"). Stran Pozicije je v meniju
+kot v Sloveniji. Zveze, tekmovanja in vir vpiše svoja migracija. Manjka še:
+romunski kanal v HelpStacku (`Podpora.tsx` za `ro` uporabi slovenskega),
+pregled prevoda pri naravnem govorcu in `RO` v matriki nočnega uvoza, ko
+pridejo lige.
+
 ### Država obiskovalca
 
 Domena je ena, **lige druge države so skrite**: `useTekmovanje().tekmovanja`
@@ -1329,7 +1352,7 @@ besedilom). **Obvezno, vsakič:**
    istega pošiljatelja po 3+ dneh je v redu).
 2. **Po** poslanem mailu: `node scripts/stiki-klubov.mjs zabelezi --za <naslov>
    --vrsta prvi|opomnik --poslal <ime> --zadeva "…" --telo-datoteka <datoteka>`
-   (nov naslov še `--klub "…" --drzava SI|SK|HR|CZ|HU|AT|RS [--liga …]`). Pri paketih
+   (nov naslov še `--klub "…" --drzava SI|SK|HR|CZ|HU|AT|RS|RO [--liga …]`). Pri paketih
    beleži sproti, po vsakem mailu, ne na koncu.
 3. Odgovor kluba: `zabelezi --vrsta odgovor --opomba "<povzetek>"`; dogovor ali
    zavrnitev: `nastavi --za … --stanje sodeluje|ne_zeli`.
@@ -1365,9 +1388,9 @@ vpisana pri Supabase kot povratni naslov ponastavitve gesla in žeton nosi v
   `src/i18n` — nikoli `toLocaleString('sl-SI')`.
 - Drugi jezik (`src/i18n/hr/`) je lahko delen; manjkajoče pride iz
   slovenščine. `npm run prevodi -- hr` izpiše, kaj manjka. Brskalnik izbere
-  jezik sam šele, ko je v `PRIPRAVLJENI` (`sl`, `hr`, `sk`, `cs`, `hu`, `de`, `sr`, `en`). Hrvaščina,
-  slovaščina, češčina, madžarščina, nemščina, srbščina in angleščina so popolne — smoke preveri, da imajo vse ključe ter iste
-  `{parametre}` in `<oznake>`; nov slovenski niz zato dodaj v vseh sedem.
+  jezik sam šele, ko je v `PRIPRAVLJENI` (`sl`, `hr`, `sk`, `cs`, `hu`, `de`, `sr`, `ro`, `en`). Hrvaščina,
+  slovaščina, češčina, madžarščina, nemščina, srbščina, romunščina in angleščina so popolne — smoke preveri, da imajo vse ključe ter iste
+  `{parametre}` in `<oznake>`; nov slovenski niz zato dodaj v vseh osem.
 - **Kateri jezik** (`zeljenJezik` v `src/lib/drzavaUgib.ts`, isto pravilo v
   `izberi()` ob nalaganju in v varovalu konteksta lige):
   1. izbira z izbirnika **"SL · SK · EN"** (`IzbiraJezika`, v nogi in na vrhu

@@ -11,6 +11,7 @@ import { aplikacija as aplikacijaCs } from './src/i18n/cs/aplikacija.ts'
 import { aplikacija as aplikacijaHu } from './src/i18n/hu/aplikacija.ts'
 import { aplikacija as aplikacijaDe } from './src/i18n/de/aplikacija.ts'
 import { aplikacija as aplikacijaSr } from './src/i18n/sr/aplikacija.ts'
+import { aplikacija as aplikacijaRo } from './src/i18n/ro/aplikacija.ts'
 
 /**
  * V zgrajeno stran zapiše commit, iz katerega je nastala.
@@ -52,7 +53,7 @@ function znamkaCommita() {
 }
 
 /**
- * Različice `index.html` za kartico ob deljenju (sk.html, hr.html, cz.html, hu.html, at.html, rs.html).
+ * Različice `index.html` za kartico ob deljenju (sk.html, hr.html, cz.html, hu.html, at.html, rs.html, ro.html).
  *
  * Facebook, WhatsApp in iskalniki JS ne poženejo in vidijo le statični HTML —
  * slovenski. Klub, ki deli povezavo `slff.eu/club/…?t=sk-…`, bi objavil
@@ -76,6 +77,8 @@ function karticeDrzav() {
     { koda: 'at', jezik: 'de', locale: 'de_AT', n: aplikacijaDe.naslovStrani },
     // Srbija: datoteka po kodi države (/rs, ?t=rs-…), jezik je sr v latinici.
     { koda: 'rs', jezik: 'sr-Latn', locale: 'sr_RS', n: aplikacijaSr.naslovStrani },
+    // Romunija: datoteka po kodi države (/ro, ?t=ro-…), jezik je ro.
+    { koda: 'ro', jezik: 'ro', locale: 'ro_RO', n: aplikacijaRo.naslovStrani },
   ]
   const zamenjaj = (html, datoteka, atribut, ime, vsebina) => {
     const re = new RegExp(`(<meta ${atribut}="${ime}" content=")[^"]*(")`)
