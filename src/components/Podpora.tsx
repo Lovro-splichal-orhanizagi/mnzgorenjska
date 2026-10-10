@@ -1,16 +1,18 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/useAuth'
 import { useTekmovanje } from '../lib/tekmovanje'
 import { jezik } from '../i18n/jedro.ts'
+import { t } from '../i18n'
 import { prijaviOrodja, type StanjeStrani } from '../lib/podporaOrodja'
 
 /**
  * Klepet za podporo (HelpStack).
  *
- * Skripta se nalozi sele po prvem izrisu in z `requestIdleCallback`, ker
- * podpora ni razlog, da bi lestvica cakala nanjo: gre za 65 kB tuje kode,
- * ki jo potrebuje eden od stotih obiskovalcev.
+ * Skripta se nalozi sele ob prvem kliku na nas gumb (ali "Pomoč" v meniju):
+ * widget s seboj pripelje 70 kB kode in dve sliki po 1,1 MB, potrebuje pa ga
+ * eden od stotih obiskovalcev. Do klika je v kotu le nas gumb, ki ga ob
+ * pojavu mehurčka widgeta skrije CSS (index.css, `[data-podpora]`).
  *
  * Widget ID ni skrivnost — stoji v naslovu skripte na vsaki strani, ki jo
  * vkljuci — zato je tu in ne v okoljski spremenljivki.
@@ -70,32 +72,45 @@ interface Klepet {
   open?: () => void
 }
 
-/**
- * Odpre klepet ("Pomoč" v meniju) — druga pot poleg mehurčka, ki se med
- * odprtim oknom čez ves zaslon umakne (index.css). Skripta se morda še nalaga:
- * počakamo, da widget postavi okno, in ga odpremo, največ 10 s.
- */
-export function odpriPodporo() {
-  const zacetek = Date.now()
-  const poskusi = () => {
-    const klepet = (window as Window & { ChatWidget?: Klepet }).ChatWidget
-    if (klepet?.open && document.getElementById('chat-widget-container')) klepet.open()
-    else if (Date.now() - zacetek < 10000) window.setTimeout(poskusi, 300)
-  }
-  poskusi()
+let nalozen = false
+function naloziKlepet() {
+  if (nalozen) return
+  nalozen = true
+  izberiKanal().then((id) => {
+    const s = document.createElement('script')
+    s.src = skripta(id)
+    s.async = true
+    // Brez omrežja naj naslednji klik poskusi znova.
+    s.onerror = () => {
+      nalozen = false
+      s.remove()
+    }
+    document.body.appendChild(s)
+  })
 }
 
-function pocakajNaMirovanje(opravilo: () => void): () => void {
-  const w = window as Window & {
-    requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number
-    cancelIdleCallback?: (id: number) => void
-  }
-  if (w.requestIdleCallback) {
-    const id = w.requestIdleCallback(opravilo, { timeout: 5000 })
-    return () => w.cancelIdleCallback?.(id)
-  }
-  const id = window.setTimeout(opravilo, 3000)
-  return () => window.clearTimeout(id)
+// Ime prijavljenega, ki ga widget dobi, ko se naloži (glej Podpora spodaj).
+let imeObiskovalca: string | undefined
+
+/**
+ * Odpre klepet (nas gumb, "Pomoč" v meniju). Skripto naloži ob prvem klicu,
+ * počaka, da widget postavi okno, in ga odpre, največ 15 s.
+ */
+export function odpriPodporo(): Promise<void> {
+  naloziKlepet()
+  const zacetek = Date.now()
+  return new Promise((koncano) => {
+    const poskusi = () => {
+      const klepet = (window as Window & { ChatWidget?: Klepet }).ChatWidget
+      if (klepet?.open && document.getElementById('chat-widget-container')) {
+        if (imeObiskovalca) klepet.identify?.({ name: imeObiskovalca })
+        klepet.open()
+        koncano()
+      } else if (Date.now() - zacetek < 15000) window.setTimeout(poskusi, 300)
+      else koncano()
+    }
+    poskusi()
+  })
 }
 
 type UkazHelpStack = ((ukaz: 'registerTool', ime: string, fn: (p: Record<string, unknown>) => Promise<unknown>) => void) & {
@@ -130,41 +145,32 @@ export default function Podpora() {
     prijaviOrodja(w.HelpStack, () => stanje.current, (pot) => pojdi.current(pot))
   }, [])
 
-  useEffect(() => {
-    if (document.querySelector('script[src^="https://helpstack.eu/widget.js"]')) return
-    return pocakajNaMirovanje(() => {
-      izberiKanal().then((id) => {
-        if (document.querySelector('script[src^="https://helpstack.eu/widget.js"]')) return
-        const s = document.createElement('script')
-        s.src = skripta(id)
-        s.async = true
-        document.body.appendChild(s)
-      })
-    })
-  }, [])
-
   // Ime povemo, ko je znano — tudi ce se je uporabnik prijavil sele pozneje.
-  // Odvisni smo od imena, ne od seje: seja je ob vsakem osveženju žetona nov
-  // objekt in bi interval zagnala znova.
   const ime =
     (session?.user?.user_metadata?.display_name as string | undefined) ??
     (session?.user?.user_metadata?.name as string | undefined)
   useEffect(() => {
-    if (!ime) return
-    let ustavljeno = false
-    // Skripta se nalaga v ozadju; ko se javi, ji povemo, kdo pise.
-    const cakaj = window.setInterval(() => {
-      const klepet = (window as Window & { ChatWidget?: Klepet }).ChatWidget
-      if (ustavljeno || !klepet?.identify) return
-      klepet.identify({ name: ime })
-      window.clearInterval(cakaj)
-    }, 1000)
-    window.setTimeout(() => window.clearInterval(cakaj), 30000)
-    return () => {
-      ustavljeno = true
-      window.clearInterval(cakaj)
-    }
+    imeObiskovalca = ime
+    if (ime) (window as Window & { ChatWidget?: Klepet }).ChatWidget?.identify?.({ name: ime })
   }, [ime])
 
-  return null
+  const [nalaga, setNalaga] = useState(false)
+  return (
+    <button
+      type="button"
+      data-podpora
+      aria-label={t('aplikacija.meni.pomoc')}
+      title={t('aplikacija.meni.pomoc')}
+      disabled={nalaga}
+      onClick={() => {
+        setNalaga(true)
+        void odpriPodporo().then(() => setNalaga(false))
+      }}
+      className="fixed bottom-5 right-5 z-40 grid h-[60px] w-[60px] place-items-center rounded-full bg-[#2F6B4F] text-white shadow-lg transition hover:brightness-110 disabled:opacity-70"
+    >
+      <svg viewBox="0 0 24 24" className={`h-7 w-7 ${nalaga ? 'animiraj-utrip' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" />
+      </svg>
+    </button>
+  )
 }

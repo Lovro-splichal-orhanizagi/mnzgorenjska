@@ -51,12 +51,17 @@ export default function VrhDrzave({ drzava }: { drzava: string }) {
       {/* Najboljši pod reflektorjem: izrez pokaže snop luči (zgornji del
           fotografije), naslov stoji spodaj, kjer je slika temna. */}
       <section className="relative flex min-h-32 items-end overflow-hidden rounded-2xl p-4 ring-1 ring-white/10 sm:min-h-48 sm:p-6">
-        <img
-          src="/foto/igrisce.jpg"
-          alt=""
-          aria-hidden
-          className="absolute inset-0 h-full w-full object-cover object-[50%_30%]"
-        />
+        <picture>
+          <source srcSet="/foto/igrisce.webp" type="image/webp" />
+          <img
+            src="/foto/igrisce.jpg"
+            alt=""
+            aria-hidden
+            width={1600}
+            height={1067}
+            className="absolute inset-0 h-full w-full object-cover object-[50%_30%]"
+          />
+        </picture>
         <div
           className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/50 to-transparent"
           aria-hidden

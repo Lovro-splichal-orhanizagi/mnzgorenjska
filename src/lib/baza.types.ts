@@ -5064,6 +5064,36 @@ export type Database = {
           },
         ]
       }
+      stevilo_ekip_lig: {
+        Row: {
+          competition_id: number | null
+          ekip: number | null
+        }
+        ComputedFields: never
+        Relationships: [
+          {
+            foreignKeyName: "fantasy_teams_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fantasy_teams_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fantasy_teams_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["competition_id"]
+          },
+        ]
+      }
       voter_position_accuracy: {
         Row: {
           correct: number | null

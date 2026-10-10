@@ -54,6 +54,12 @@ slff.eu, www.slff.eu {
 	# Hashed by Vite; a new build means new names.
 	header /assets/* Cache-Control "public, max-age=31536000, immutable"
 	header /app/latest.json Cache-Control no-store
+
+	# Static images (crests, photos, logos, sponsors, share cards) are not hashed, but
+	# rarely change: a week in the browser and on Cloudflare, then revalidated in the
+	# background. A replaced crest shows up within a week at the latest.
+	@staticne_slike path /grbi/* /foto/* /logo/* /sponzorji/* /og/*
+	header @staticne_slike Cache-Control "public, max-age=604800, stale-while-revalidate=86400"
 	header /.well-known/apple-app-site-association Content-Type application/json
 
 	# Support link (components/Pivo.tsx) to Buy Me a Coffee: /pivo?src=<where> ->

@@ -103,7 +103,20 @@ const db = createClient(BASE, KLJUC, { auth: { persistSession: false } })
 // ENI sliki (nenavaden format) pa ne sme izklopiti manjšanja za vse naslednje.
 const manjka = new Set()
 let opozorjeno = false
+// SVG ni za sips/convert: svgo ga stisne (vektorski grb je po gzip nekaj deset kB).
+// SVG z vgrajeno sliko ostane velik — ta se izpiše in ga je treba rastrirati ročno.
+function stisniSvg(pot) {
+  try {
+    execFileSync('npx', ['--yes', 'svgo@4.0.0', '--multipass', '--quiet', pot], { stdio: 'ignore' })
+  } catch (e) {
+    console.log(`  (svgo ni stisnil ${pot.split('/').pop()}: ${e.message.split('\n')[0]})`)
+  }
+  const kb = Math.round(statSync(pot).size / 1024)
+  if (kb > 100) console.log(`  (${pot.split('/').pop()} ima po svgo še ${kb} kB — vgrajena slika?)`)
+}
+
 function zmanjsaj(pot) {
+  if (pot.endsWith('.svg')) return stisniSvg(pot)
   const orodja = [
     ['sips', ['--resampleHeightWidthMax', String(NAJVECJA_STRANICA), pot]],
     ['convert', [pot, '-resize', `${NAJVECJA_STRANICA}x${NAJVECJA_STRANICA}>`, pot]],
@@ -213,8 +226,7 @@ for (const n of nacrt) {
     const slika = Buffer.from(await o.arrayBuffer())
     const datoteka = `${MAPA}/${n.pot.split('/').pop()}`
     writeFileSync(datoteka, slika)
-    // SVG je vektorski; `sips` ga ne zna in ga tudi ni treba manjšati.
-    if (!n.pot.endsWith('.svg')) zmanjsaj(datoteka)
+    zmanjsaj(datoteka)
     const { error: e2 } = await db.from('teams').update({ logo_url: n.pot }).eq('id', n.klub.id)
     if (e2) throw new Error(e2.message)
     console.log(`  ✓ ${n.klub.name} (${Math.round(statSync(datoteka).size / 1024)} kB)`)

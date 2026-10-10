@@ -146,7 +146,8 @@ Pogledi: `appearance_points` (točke nastopa),
 `player_overview`, `player_season_stats`,
 `player_standings` (lestvica igralcev: točke, forma, na tekmo, izbranost),
 `minute_kroga`, `fantasy_round_points` (točke ekipe po krogih, z menjavami in kapetanom),
-`fantasy_team_standings`, `fantasy_team_budget`.
+`fantasy_team_standings`, `fantasy_team_budget`,
+`stevilo_ekip_lig` (število ekip po ligah, tudi hišnih; okno prvega obiska).
 Funkcija `ucinkovita_postava(ekipa, krog)` vrne igralce, ki v krogu dejansko prinesejo
 točke, in njihov množitelj. Funkcija `vrh_drzave(drzava, koliko)` vrne najboljše
 igralce tekoče sezone vseh lig države (stran Slovenija, zavihek Igralci). Funkcija

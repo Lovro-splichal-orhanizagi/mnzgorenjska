@@ -337,7 +337,20 @@ const GRBI = {
 // poveča manjših). `sips` je na macOS, `convert` (ImageMagick) na ubuntu-latest
 // v GitHub Actions, kjer skripta tece z zivim kljucem. Brez obeh ostane izvirnik.
 const manjka = new Set()
+// SVG ni za sips/convert: svgo ga stisne (vektorski grb je po gzip nekaj deset kB).
+// SVG z vgrajeno sliko ostane velik — ta se izpiše in ga je treba rastrirati ročno.
+function stisniSvg(pot) {
+  try {
+    execFileSync('npx', ['--yes', 'svgo@4.0.0', '--multipass', '--quiet', pot], { stdio: 'ignore' })
+  } catch (e) {
+    console.log(`  (svgo ni stisnil ${pot.split('/').pop()}: ${e.message.split('\n')[0]})`)
+  }
+  const kb = Math.round(statSync(pot).size / 1024)
+  if (kb > 100) console.log(`  (${pot.split('/').pop()} ima po svgo še ${kb} kB — vgrajena slika?)`)
+}
+
 function zmanjsaj(pot) {
+  if (pot.endsWith('.svg')) return stisniSvg(pot)
   const orodja = [
     ['sips', ['--resampleHeightWidthMax', String(NAJVECJA_STRANICA), pot]],
     ['convert', [pot, '-resize', `${NAJVECJA_STRANICA}x${NAJVECJA_STRANICA}>`, pot]],

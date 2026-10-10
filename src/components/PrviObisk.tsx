@@ -26,7 +26,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useTekmovanje } from '../lib/tekmovanje'
 import { supabase } from '../lib/supabase'
-import { vseVrstice } from '../lib/strani'
 import { mnozina, EKIPE } from '../lib/pomozno'
 import { poZvezah } from './IzbirnikLige'
 import { t } from '../i18n'
@@ -115,25 +114,24 @@ export default function PrviObisk() {
   }, [skrit])
 
   // Število ekip naložimo takoj, da je ob prikazu že tu in se okno ne dopolnjuje
-  // pred očmi. Beremo tabelo `fantasy_teams`, ne pogleda lestvice: ta za vsako
-  // ligo sešteje točke vseh krogov in petindvajset hkratnih štetij je bazo
-  // zasulo, da je lestvica vsem padla na časovni omejitvi. Po straneh, ker bi
-  // PostgREST seznam tiho odrezal pri tisoč vrsticah.
+  // pred očmi. Beremo pogled `stevilo_ekip_lig` (ena vrstica na ligo), ne
+  // pogleda lestvice: ta za vsako ligo sešteje točke vseh krogov in
+  // petindvajset hkratnih štetij je bazo zasulo. Lig je manj kot tisoč, zato
+  // brez strani.
   useEffect(() => {
     if (skrit || !vsaTekmovanja.length) return
     let veljavno = true
-    vseVrstice<{ competition_id: number }>((od, do_) =>
-      supabase.from('fantasy_teams').select('competition_id').order('id').range(od, do_),
-    )
-      .then((vrstice) => {
-        if (!veljavno) return
+    supabase
+      .from('stevilo_ekip_lig')
+      .select('competition_id, ekip')
+      .then(({ data }) => {
+        if (!veljavno || !data) return
         const stevila: Record<number, number> = {}
         for (const t of vsaTekmovanja) stevila[t.id] = 0
-        for (const v of vrstice) stevila[v.competition_id] = (stevila[v.competition_id] ?? 0) + 1
+        for (const v of data) if (v.competition_id != null) stevila[v.competition_id] = v.ekip ?? 0
         setEkip(stevila)
-      })
-      // Brez števil je okno še vedno uporabno; ne kaži napake.
-      .catch(() => {})
+        // Brez števil je okno še vedno uporabno; ne kaži napake.
+      }, () => {})
     return () => {
       veljavno = false
     }

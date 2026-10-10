@@ -962,6 +962,15 @@ select pg_temp.preveri('lestvica lige: privzeta sezona je zadnja z odigrano tekm
   (select bool_and(sezona = '2099/00') from lestvica_lige(-913001)));
 reset role;
 
+select pg_temp.preveri('stevilo_ekip_lig: anon in authenticated le bereta',
+  has_table_privilege('anon', 'stevilo_ekip_lig', 'select')
+  and has_table_privilege('authenticated', 'stevilo_ekip_lig', 'select')
+  and not has_table_privilege('anon', 'stevilo_ekip_lig', 'insert,update,delete,truncate')
+  and not has_table_privilege('authenticated', 'stevilo_ekip_lig', 'insert,update,delete,truncate'));
+select pg_temp.preveri('stevilo_ekip_lig steje vse ekipe lige, tudi hisne',
+  (select ekip = (select count(*) from fantasy_teams where competition_id = -913003)
+     from stevilo_ekip_lig where competition_id = -913003));
+
 do $$
 declare v_napak int;
 begin
