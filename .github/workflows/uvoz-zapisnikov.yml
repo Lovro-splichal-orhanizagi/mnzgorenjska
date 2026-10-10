@@ -81,6 +81,10 @@ jobs:
       # Nobena odvisnost ne potrebuje namestitvenih skript (edina je fsevents
       # za macOS); brez njih tuja koda ob namestitvi ne tece.
       - run: npm ci --ignore-scripts
+      # Vir hlf (hailafotbal.ro) bere stran v brskalniku brez glave (Playwright).
+      - name: Chromium za vir hlf
+        if: matrix.drzava == 'RO'
+        run: npx playwright install chromium --only-shell --with-deps
 
       # Druzina uvozov (uvoz-zapisnikov, uvoz-lige, zdruzi-klube,
       # tedensko-cene) pise v iste tabele: klube, igralce, tekme, cene. Kar se
