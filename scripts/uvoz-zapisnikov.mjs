@@ -609,6 +609,7 @@ const dotaknjeniKrogi = new Set()
 
 let uvozenih = 0
 let preskocenih = 0
+let preskocenihDrugje = 0 // zapisnik je že v drugi ligi (skupen arhiv)
 // Prava napaka (baza, razclenitev) — v nasprotju s preskokom zapisnika brez
 // sezone ali kroga, ki je pri viru obicajen. Brez tega je bil uvoz vedno
 // zelen, tudi ce ni uvozil nicesar.
@@ -659,6 +660,25 @@ for (const { id, z, url } of zapisniki) {
       )
       .select('id')
       .single()
+    // Zapisnik je lahko le v eni ligi. Arhiv, ki si ga delita dve ligi
+    // (preurejena liga dobi arhive vseh lanskih, iz katerih je prišla — npr.
+    // Regionalliga Nord in West, 10. 10. 2026), uvozi prva; druga ga preskoči.
+    if (eTekma?.code === '23505' && /zapisnik_id/.test(eTekma.message)) {
+      const { data: drugje } = await db
+        .from('matches')
+        .select('rounds!inner(competition_id, competitions!inner(source))')
+        .eq('zapisnik_id', id)
+        .neq('rounds.competition_id', tekmovanje.id)
+        // Le isti vir: šifre zapisnikov dveh virov se lahko ujamejo (FSB raste
+        // proti razponu HNS) in take tekme ne smemo tiho izpustiti.
+        .in('rounds.competitions.source', [...new Set([virIme, tekmovanje.source].filter(Boolean))])
+        .limit(1)
+      if (drugje?.length) {
+        preskocenihDrugje++
+        preskocenih++
+        continue
+      }
+    }
     if (eTekma) throw new Error(eTekma.message)
 
     // POMEMBNO: goli in nastopi se PREPIŠEJO le, če se je vsebina spremenila.
@@ -941,6 +961,8 @@ for (const { id, z, url } of zapisniki) {
 }
 
 console.log(`\n\nUvoženih tekem: ${uvozenih}, preskočenih: ${preskocenih}, napak: ${napak}`)
+if (preskocenihDrugje)
+  console.warn(`  OPOZORILO: ${preskocenihDrugje} zapisnikov je že v drugi ligi (skupen arhiv) — njihovi igralci v tej ligi nimajo teh minut`)
 // Delovni tok po tem ve, ali ima ugibanje pozicij za to ligo sploh kaj dela.
 if (arg('porocilo')) writeFileSync(arg('porocilo'), String(uvozenih))
 
