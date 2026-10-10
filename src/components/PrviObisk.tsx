@@ -29,7 +29,7 @@ import { supabase } from '../lib/supabase'
 import { mnozina, EKIPE } from '../lib/pomozno'
 import { poZvezah } from './IzbirnikLige'
 import { t } from '../i18n'
-import { KLJUC_VSTOPA, drzaveZLigami, naGoliNaslovnici, preklopiDrzavo } from '../lib/drzava'
+import { KLJUC_VSTOPA, drzaveZLigami, preklopiDrzavo, zaznajTujca } from '../lib/drzava'
 import Zastava from './Zastava'
 import { imeDrzave } from './IzbiraDrzave'
 
@@ -77,7 +77,7 @@ export default function PrviObisk() {
   const { tekmovanja, vsaTekmovanja, drzava: drzavaLige, vprasajDrzavo: tujec, nastavi } = useTekmovanje()
   // Po državi vpraša le gola naslovnica; stran lige ali entitete je v jeziku
   // svoje lige in brez koraka države (iskalnik z ameriškega IP-ja).
-  const vprasajDrzavo = tujec && naGoliNaslovnici()
+  const vprasajDrzavo = tujec && zaznajTujca()
   // Povezava z ligo (`?t=sk-za-1trieda` v mailu klubu, deljena lestvica)
   // pove, katero ligo človek gleda — vprašanje "kje želiš igrati?" bi ga
   // le zmedlo. Bere se ob prvem izrisu, preden aplikacija sama doda `?t=`.

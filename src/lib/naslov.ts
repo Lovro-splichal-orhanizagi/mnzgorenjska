@@ -88,7 +88,8 @@ export function useLigaStrani(slug: string | null | undefined): void {
 }
 
 /** Zasebne strani (ekipa, račun, prijava, povabila): iskalnik jih ne indeksira. */
-const ZASEBNE = ['/my-team', '/mini-leagues', '/login', '/account', '/reminders', '/new-password', '/novo-geslo', '/auth/', '/team/', '/l/']
+// Isti seznam ima Caddy (scripts/hetzner/Caddyfile).
+const ZASEBNE = ['/my-team', '/mini-leagues', '/mini-leagues/', '/login', '/account', '/reminders', '/new-password', '/novo-geslo', '/admin', '/auth/', '/team/', '/l/']
 
 export const jeZasebna = (pot: string): boolean =>
   ZASEBNE.some((p) => (p.endsWith('/') ? pot.startsWith(p) : pot === p || pot === `${p}/`))

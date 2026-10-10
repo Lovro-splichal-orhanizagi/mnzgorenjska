@@ -1262,7 +1262,8 @@ v **angleščini**, razen če je prvi jezik brskalnika eden od naših
 (`jezikTujca`). **Odločitev o tujcu pade le na goli naslovnici** — pot `/`
 brez `?t=` in brez shranjene lige ob nalaganju strani (`naGoliNaslovnici` v
 `drzavaUgib.ts`): le tam se zapiše `slff-tujec` in le tam okno vpraša po
-državi. Kdor pride naravnost na drugo stran (`/player/*`, `/club/*`,
+državi. Robot (`jeRobot` po `navigator.userAgent`: Googlebot, bingbot,
+facebookexternalhit …) ni nikoli tujec (`zaznajTujca`). Kdor pride naravnost na drugo stran (`/player/*`, `/club/*`,
 `/match/*`, `/table`, `/players`, `/results`, `/standings` …) brez oznake,
 vidi jezik države lige (privzeta liga = slovenščina) — tako ima vsak naslov
 en jezik tudi za iskalnik z ameriškega IP-ja (Googlebot strani ne hrani

@@ -28,6 +28,7 @@ import {
   shranjenaDrzava,
   tujec,
   zapomniTujca,
+  zaznajTujca,
   pozabiTujca,
   type UgibObiskovalca,
 } from './drzava'
@@ -359,7 +360,7 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
     // Sloveniji: zapomnimo si ga kot tujca (angleščina, vprašanje po državi).
     // Liga ekip prijavljenega ima prednost; neuspel IP ni tujec.
     const ip = ugib?.ip
-    if (!izrecno.current && !ligaEkipZdaj && ip && jeTujIp(ip, drzaveZLigami(tekmovanja))) {
+    if (!izrecno.current && !ligaEkipZdaj && ip && zaznajTujca() && jeTujIp(ip, drzaveZLigami(tekmovanja))) {
       zapomniTujca(ip)
       setTujecKoda(ip)
     }

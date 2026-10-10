@@ -3087,7 +3087,7 @@ preveri(
   preveri('naslov: kanonicni obdrzi le ligo', kanonicni('/players', '?t=mladinci&klub=3') === 'https://slff.eu/players?t=mladinci')
   preveri('naslov: kanonicni brez lige', kanonicni('/', '') === 'https://slff.eu/')
   preveri('naslov: kanonicni brez koncne posevnice', kanonicni('/players/', '?t=x') === 'https://slff.eu/players?t=x' && kanonicni('/', '') === 'https://slff.eu/')
-  preveri('naslov: zasebne strani noindex', ['/my-team', '/my-team/', '/mini-leagues', '/login', '/account', '/reminders', '/new-password', '/team/5', '/l/AB12'].every(jeZasebna) && !jeZasebna('/players') && !jeZasebna('/'))
+  preveri('naslov: zasebne strani noindex', ['/my-team', '/my-team/', '/mini-leagues', '/login', '/account', '/reminders', '/new-password', '/team/5', '/l/AB12', '/admin', '/mini-leagues/3'].every(jeZasebna) && !jeZasebna('/players') && !jeZasebna('/'))
   preveri('naslov: kanonicni strani brez lige nima ?t=', kanonicni('/legal', '?t=mladinci') === 'https://slff.eu/legal')
   const { zLigo } = await import('../src/lib/tekmovanje')
   preveri('povezava: liga v naslovu', zLigo('/player/5', 'sk-za-1trieda') === '/player/5?t=sk-za-1trieda')
@@ -3511,6 +3511,10 @@ preveri(
   shramba.delete('slff-tekmovanje')
   D.zapomniTujca('CZ')
   preveri('tujec: na goli naslovnici se oznaka zapise', D.tujec() === 'CZ')
+  preveri('tujec: roboti niso tujci',
+    D.jeRobot('Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)') &&
+      D.jeRobot('facebookexternalhit/1.1') && D.jeRobot('Mozilla/5.0 (compatible; bingbot/2.0)') &&
+      !D.jeRobot('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/130.0 Safari/537.36') && !D.jeRobot(null))
   shramba.clear()
   shramba.set('slff-jezik-izbran', 'en')
   D.preklopiDrzavo('SI', lige, { pojdi: (u) => (cilj = u) })
