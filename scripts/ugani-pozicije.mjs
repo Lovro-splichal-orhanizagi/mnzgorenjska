@@ -102,16 +102,18 @@ try {
 // le nastope te lige: ostale bi le brali zaman.
 let kartoni
 try {
-  kartoni = await vrsticeIgralcevLige(db, 'appearances', 'player_id, yellow_cards, red_cards', tekmovanje.id)
+  kartoni = await vrsticeIgralcevLige(db, 'appearances', 'player_id, yellow_cards, red_cards, started, minutes_played', tekmovanje.id)
 } catch (e) {
   console.error(`Nastopov ni mogoče prebrati: ${e.message}`)
   process.exit(1)
 }
 const poIgralcu = new Map()
 for (const a of kartoni ?? []) {
-  const t = poIgralcu.get(a.player_id) ?? { rumeni: 0, rdeci: 0 }
+  const t = poIgralcu.get(a.player_id) ?? { rumeni: 0, rdeci: 0, polne: 0 }
   t.rumeni += a.yellow_cards ?? 0
   t.rdeci += a.red_cards ?? 0
+  // začel in odigral do konca: vratarja skoraj nikoli ne zamenjajo
+  if (a.started && (a.minutes_played ?? 0) >= 90) t.polne++
   poIgralcu.set(a.player_id, t)
 }
 
@@ -133,7 +135,34 @@ for (const p of igralci) {
   poKlubih.set(p.team_id, k)
 }
 
-const predlogi = []
+// --- vratarji brez oznake v zapisniku ----------------------------------------
+// Romunski zapisniki (vir frf) vratarja ne označijo in nimajo številk dresov,
+// zato liga brez enega samega vratarja iz zapisnika ne bi imela veljavne
+// ekipe. V taki ligi za vsak klub ugibamo enega: največ tekem od začetka do
+// konca, brez gola, ob izenačenju manj kartonov in več minut. Velja le, dokler
+// skupnost (glasovanje) ali admin ne povesta drugače — position_source ostane
+// 'ugibanje'. Lige z oznako vratarja (vse ostale) se to ne dotakne.
+const zanesljivi = ['zapisnik', 'admin', 'glasovanje']
+const ligaBrezVratarjev = !igralci.some((p) => p.position === 'GK' && zanesljivi.includes(p.position_source))
+const klubiZVratarjem = new Set(
+  igralci.filter((p) => p.position === 'GK' && (zanesljivi.includes(p.position_source) || samoNove)).map((p) => p.team_id),
+)
+const ugibaniVratarji = []
+if (ligaBrezVratarjev) {
+  for (const [klub, kader] of poKlubih) {
+    if (klubiZVratarjem.has(klub)) continue
+    const kandidati = kader
+      .map((p) => ({ ...p, polne: poIgralcu.get(p.id)?.polne ?? 0 }))
+      .filter((p) => (p.goals ?? 0) === 0 && p.polne >= 2)
+      .sort((a, b) => b.polne - a.polne || a.kartoniNa90 - b.kartoniNa90 || (b.minutes ?? 0) - (a.minutes ?? 0))
+    const vratar = kandidati[0]
+    if (!vratar) continue
+    ugibaniVratarji.push({ ...vratar, drugi: kandidati[1] })
+    poKlubih.set(klub, kader.filter((p) => p.id !== vratar.id))
+  }
+}
+
+const predlogi = ugibaniVratarji.map((p) => ({ ...p, ugibanje: 'GK' }))
 for (const [, kader] of poKlubih) {
   const n = kader.length
   if (n < 4) continue
@@ -180,6 +209,15 @@ for (const p of predlogi)
 console.log(`Igralcev z dovolj minutami (>=${MIN_MINUT}): ${predlogi.length}`)
 console.log('Predlagana razporeditev:')
 for (const [k, v] of Object.entries(steviloPo)) console.log(`  ${k}: ${v}`)
+
+if (ugibaniVratarji.length) {
+  console.log(`\nUgibani vratarji (${ugibaniVratarji.length} klubov, zapisnik jih ne označi) — preglej:`)
+  for (const p of [...ugibaniVratarji].sort((a, b) => a.team_name.localeCompare(b.team_name)))
+    console.log(
+      `  ${p.team_name.padEnd(32)} ${p.full_name.padEnd(28)} ${String(p.polne).padStart(2)} polnih tekem` +
+        (p.drugi ? `   (2.: ${p.drugi.full_name}, ${p.drugi.polne})` : ''),
+    )
+}
 
 console.log('\nPrimeri (najbolj izraziti):')
 const vzorec = [
