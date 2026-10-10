@@ -73,7 +73,7 @@ jobs:
     timeout-minutes: 180
     permissions:
       contents: read
-      actions: read
+      actions: write
     env:
       LIGA: ${{ inputs.liga }}
       ARHIV: ${{ inputs.arhiv }}
@@ -199,3 +199,12 @@ jobs:
           # Ceske lige: is.fotbal.cz doseze le posrednik v EU (scripts/hetzner/facr-posrednik.sh).
           FACR_PROXY: ${{ secrets.FACR_PROXY }}
         run: node scripts/pripravljenost-lige.mjs --tekmovanje "$LIGA"
+
+      # Vrsta Avstrije (uvoz-avstrije.yml) ne sme čakati na cron, ki ga GitHub
+      # pogosto izpusti (10. 10. 2026: dva tika v desetih urah): vsak konec
+      # uvoza at- lige sproži naslednji tik, tudi ob padcu.
+      - name: Sprozi vrsto Avstrije
+        if: always() && startsWith(inputs.liga, 'at-')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run uvoz-avstrije.yml -f po_uvozu=true || true
