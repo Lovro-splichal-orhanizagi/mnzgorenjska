@@ -1,0 +1,46 @@
+name: Zemljevid strani (sitemap)
+
+# scripts/sitemap.mjs našteje strani aktivnih lig (lestvice, klubi, igralci,
+# tekme) z javnim anon ključem; datoteke gredo na strežnik v /srv/slff/sitemap/,
+# od koder jih Caddy streže kot /sitemap-index.xml in /sitemap-<liga>.xml
+# (scripts/hetzner/Caddyfile). Ne v git in ne v dist/: vsak commit bi sprožil
+# objavo, objava pa bi mapo izdaje (`current`) zamenjala in zemljevid izbrisala.
+
+on:
+  schedule:
+    - cron: '30 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sitemap
+  cancel-in-progress: false
+
+jobs:
+  sitemap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Sestavi
+        env:
+          SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+        run: node scripts/sitemap.mjs --izhod zemljevid
+      - name: Prenesi na strežnik
+        env:
+          KLJUC: ${{ secrets.DEPLOY_SSH_KEY }}
+          ZNANI: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$KLJUC" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$ZNANI" > ~/.ssh/known_hosts
+          # --delete: liga, ki ni več aktivna, izgine iz zemljevida.
+          rsync -a --delete zemljevid/ deploy@2.31.6.53:/srv/slff/sitemap/

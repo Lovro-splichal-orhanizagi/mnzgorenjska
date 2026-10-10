@@ -942,6 +942,26 @@ select pg_temp.preveri('nocna anonimizacija izpusti Slovenijo, aktivne in igralc
   (select bool_and(anonimiziran_at is null) from players
     where id in (-913041, -913045, -913046)));
 
+-- Lestvica prave lige: kontumacija šteje z izidom, razpored brez izida ne,
+-- klub iz razporeda je v lestvici z ničlami; anon jo sme brati.
+reset role;
+insert into rounds(id,season,number,deadline_at,competition_id) overriding system value
+select -913050-n, '2098/99', 50+n, now()+interval '9 days', -913001 from generate_series(0,2) n;
+insert into matches(id, round_id, home_team_id, away_team_id, played_on, home_goals, away_goals,
+                    imported_at, kontumacija) overriding system value
+values (-913050,-913050,-913001,-913002,'2099-08-01',2,0,now(),false),
+       (-913051,-913051,-913003,-913001,'2099-08-08',1,1,now(),false),
+       (-913052,-913051,-913002,-913004,'2099-08-08',3,0,null,true),
+       (-913053,-913052,-913005,-913001,'2099-08-15',0,0,null,false);
+set local role anon;
+select pg_temp.preveri('lestvica lige: točke, goli, forma in vrstni red',
+  (select string_agg(format('%s:%s:%s:%s-%s:%s', mesto, team_id, tocke, dani, prejeti, forma), ' ' order by mesto)
+     from lestvica_lige(-913001, '2098/99'))
+  = '1:-913001:4:3-1:WD 2:-913002:3:3-2:LW 3:-913003:1:1-1:D 4:-913005:0:0-0: 5:-913004:0:0-3:L');
+select pg_temp.preveri('lestvica lige: privzeta sezona je zadnja z odigrano tekmo, ne starejša',
+  (select bool_and(sezona = '2099/00') from lestvica_lige(-913001)));
+reset role;
+
 do $$
 declare v_napak int;
 begin

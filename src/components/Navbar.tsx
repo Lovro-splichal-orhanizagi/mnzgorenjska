@@ -27,6 +27,8 @@ const glavne: Povezava[] = [
 ]
 
 const ostale: Povezava[] = [
+  // Prava lestvica lige (ne fantasy) — iščejo jo iskalniki, tedensko je ne odpira vsak.
+  { pot: '/table', naslov: t('aplikacija.meni.tabela') },
   { pot: '/assists', naslov: t('aplikacija.meni.asistence') },
   { pot: '/positions', naslov: t('aplikacija.meni.pozicije') },
   { pot: '/absences', naslov: t('aplikacija.meni.odsotnosti') },

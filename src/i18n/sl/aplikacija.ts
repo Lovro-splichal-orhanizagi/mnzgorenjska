@@ -35,6 +35,7 @@ export const aplikacija = {
     igralci: 'Igralci',
     lestvica: 'Lestvica',
     rezultati: 'Rezultati',
+    tabela: 'Lestvica lige',
     miniLige: 'Mini lige',
     asistence: 'Asistence',
     pozicije: 'Pozicije',

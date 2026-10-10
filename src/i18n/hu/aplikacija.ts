@@ -30,6 +30,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     igralci: 'Játékosok',
     lestvica: 'Tabella',
     rezultati: 'Eredmények',
+    tabela: 'Bajnoki tabella',
     miniLige: 'Miniligák',
     asistence: 'Gólpasszok',
     pozicije: 'Posztok',

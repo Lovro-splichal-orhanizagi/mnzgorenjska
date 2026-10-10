@@ -152,6 +152,8 @@ točke, in njihov množitelj. Funkcija `vrh_drzave(drzava, koliko)` vrne najbolj
 igralce tekoče sezone vseh lig države (stran Slovenija, zavihek Igralci). Funkcija
 `navijaci_klubov(liga)` vrne klube lige z navijači (`profiles.navijam_team_id`) in
 povprečjem njihovih fantasy točk (Lestvica, zavihek Navijači klubov; stran kluba).
+Funkcija `lestvica_lige(liga, sezona)` vrne pravo lestvico lige iz izidov tekem
+(stran `/table`, ne fantasy lestvica).
 
 ### Varnost (RLS)
 

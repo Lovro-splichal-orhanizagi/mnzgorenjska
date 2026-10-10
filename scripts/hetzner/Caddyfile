@@ -91,6 +91,16 @@ slff.eu, www.slff.eu {
 		respond "Not Found" 404
 	}
 
+	# Sitemaps per league: written nightly by .github/workflows/sitemap.yml
+	# (scripts/sitemap.mjs) into /srv/slff/sitemap/, outside the release dir, which every
+	# deploy replaces. The static /sitemap.xml stays in dist/ (public/sitemap.xml).
+	@sitemap path /sitemap-index.xml /sitemap-*.xml
+	handle @sitemap {
+		root * /srv/slff/sitemap
+		header Cache-Control "public, max-age=3600"
+		file_server
+	}
+
 	handle {
 		# Static files win; only paths without a dot fall through to the SPA (vercel.json `(?!.*\.)`).
 		@datoteka file

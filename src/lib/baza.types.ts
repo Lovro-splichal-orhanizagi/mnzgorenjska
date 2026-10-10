@@ -5333,6 +5333,26 @@ export type Database = {
         }[]
       }
       krog_je_odigran: { Args: { p_round_id: number }; Returns: boolean }
+      lestvica_lige: {
+        Args: { p_competition_id: number; p_sezona?: string }
+        Returns: {
+          dani: number
+          forma: string
+          grb: string
+          ime: string
+          kratko: string
+          mesto: number
+          porazi: number
+          prejeti: number
+          razlika: number
+          remiji: number
+          sezona: string
+          team_id: number
+          tekme: number
+          tocke: number
+          zmage: number
+        }[]
+      }
       liga: { Args: { liga: string }; Returns: Json }
       meje_borze: {
         Args: Record<PropertyKey, never>
@@ -5658,6 +5678,7 @@ export type Database = {
       uveljavi_cene: { Args: { p_round_id: number }; Returns: number }
       uveljavi_pozicije: { Args: Record<PropertyKey, never>; Returns: number }
       uveljavi_zapadle_cene: { Args: { p_okno?: string }; Returns: number }
+      vklopi_ligo_sredi_sezone: { Args: { p_slug: string }; Returns: Json }
       voter_weight: { Args: { p_voter_id: string }; Returns: number }
       vrh_drzave: {
         Args: { p_drzava: string; p_koliko?: number }

@@ -60,6 +60,46 @@ export const tekme: NonNullable<Prevod['tekme']> = {
     naslednji: 'Nasledujúce kolo',
   },
 
+  // Stran Lestvica lige (/table): prava lestvica iz izidov in strelci.
+  tabela: {
+    naslov: 'Tabuľka',
+    zavihek: '{liga} · tabuľka',
+    uvod: 'Tabuľka sezóny {sezona}, vypočítaná z výsledkov zápasov v zápisoch o stretnutí {zveza}.',
+    opomba: 'Približne: výhra 3 body, remíza 1; pri rovnosti bodov rozhoduje gólový rozdiel, potom strelené góly. Zväzy môžu mať iné pravidlá (vzájomné zápasy, odpočítané body), oficiálna tabuľka je pri zväze ({zveza}).',
+    niTekem: 'Táto liga ešte nemá odohrané zápasy.',
+    stolpci: {
+      klub: 'Klub',
+      tekme: 'Z',
+      zmage: 'V',
+      remiji: 'R',
+      porazi: 'P',
+      goli: 'Skóre',
+      razlika: '+/-',
+      tocke: 'B',
+      forma: 'Forma',
+    },
+    stolpciOpis: {
+      tekme: 'Odohrané zápasy',
+      zmage: 'Výhry',
+      remiji: 'Remízy',
+      porazi: 'Prehry',
+      goli: 'Strelené : inkasované góly',
+      razlika: 'Gólový rozdiel',
+      tocke: 'Body',
+    },
+    forma: { W: 'V', D: 'R', L: 'P' },
+    formaOpis: { W: 'výhra', D: 'remíza', L: 'prehra' },
+    strelci: 'Strelci',
+    niStrelcev: 'V tejto sezóne ešte nie sú strelci.',
+    stolpciStrelcev: {
+      igralec: 'Hráč',
+      klub: 'Klub',
+      goli: 'Góly',
+      tekme: 'Zápasy',
+      minute: 'Min',
+    },
+  },
+
   tekma: {
     naslov: 'Zápas',
     niTekme: 'Tento zápas v zápisoch o stretnutí nie je.',
