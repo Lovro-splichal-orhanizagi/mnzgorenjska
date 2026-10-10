@@ -666,9 +666,12 @@ for (const { id, z, url } of zapisniki) {
     if (eTekma?.code === '23505' && /zapisnik_id/.test(eTekma.message)) {
       const { data: drugje } = await db
         .from('matches')
-        .select('rounds!inner(competition_id)')
+        .select('rounds!inner(competition_id, competitions!inner(source))')
         .eq('zapisnik_id', id)
         .neq('rounds.competition_id', tekmovanje.id)
+        // Le isti vir: šifre zapisnikov dveh virov se lahko ujamejo (FSB raste
+        // proti razponu HNS) in take tekme ne smemo tiho izpustiti.
+        .in('rounds.competitions.source', [...new Set([virIme, tekmovanje.source].filter(Boolean))])
         .limit(1)
       if (drugje?.length) {
         preskocenihDrugje++
@@ -958,7 +961,8 @@ for (const { id, z, url } of zapisniki) {
 }
 
 console.log(`\n\nUvoženih tekem: ${uvozenih}, preskočenih: ${preskocenih}, napak: ${napak}`)
-if (preskocenihDrugje) console.log(`  od tega že v drugi ligi (skupen arhiv): ${preskocenihDrugje}`)
+if (preskocenihDrugje)
+  console.warn(`  OPOZORILO: ${preskocenihDrugje} zapisnikov je že v drugi ligi (skupen arhiv) — njihovi igralci v tej ligi nimajo teh minut`)
 // Delovni tok po tem ve, ali ima ugibanje pozicij za to ligo sploh kaj dela.
 if (arg('porocilo')) writeFileSync(arg('porocilo'), String(uvozenih))
 
