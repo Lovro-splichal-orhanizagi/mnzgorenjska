@@ -1,7 +1,7 @@
 // Preizkus strežnika HTML brez omrežja in baze: lažen PostgREST, prava
 // predloga v začasni mapi. `npm run preizkus-html`.
 import assert from 'node:assert/strict'
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, utimesSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { esc, izrisi, obdelovalec, prevajalnik, stran } from './streznik.mjs'
@@ -175,6 +175,12 @@ assert.equal(esc(`<a href="x">'&`), '&lt;a href=&quot;x&quot;&gt;&#39;&amp;')
   const ni = await zahtevaj('/player/9', 'HEAD')
   assert.equal(ni.status, 404)
   assert.equal(ni.telo, undefined, 'HEAD brez telesa')
+  // Ponovna objava istega commita v isto mapo: nova predloga, prazen predpomnilnik.
+  await zahtevaj('/')
+  writeFileSync(join(koren, 'index.html'), PREDLOGA.replace('</head>', '<meta name="nova-objava"></head>'))
+  utimesSync(join(koren, 'index.html'), new Date(), new Date(Date.now() + 5000))
+  assert.match((await zahtevaj('/')).telo, /nova-objava/, 'nova predloga v isti mapi')
+  writeFileSync(join(koren, 'index.html'), PREDLOGA)
   pokvarjen = true
   const varovalo = await zahtevaj('/match/5?t=sk-za-1')
   assert.equal(varovalo.status, 200)
