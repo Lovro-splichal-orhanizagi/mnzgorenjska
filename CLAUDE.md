@@ -455,6 +455,18 @@ ostanek; vir ga prebere znova, vztrajen ostanek ustavi uvoz (`stranKroga`).
 | hu-ve-2 | `67/19/33719` | `65/19/32270` (alapszakasz, brez felső/alsóháza) |
 | hu-za-2 | `67/20/33916` | `65/20/31673` |
 
+**NB I in NB II** (migracija 20261010230100, **neaktivni**) sta v Adatbank pod
+zvezo 0, a s **sponzorskim imenom**, zato ju iskanje "NB I" ne najde:
+2026/27 `67/0/33586` OTP Bank Liga (NB I, 33 krogov) in `67/0/33587`
+Merkantil Bank Liga (NB II, 30); arhiv 2025/26 `65/0/31362` (takrat "Fizz
+Liga") in `65/0/31363`. Ime se menja s sponzorjem — išči po šifri. Zapisnik je
+enak županijskim, vratar prav tako ni označen.
+
+robots.txt ada1bank ima od oktobra 2026 poleg `Crawl-delay: 1` še
+`Disallow: /` za imenovane AI pajke (GPTBot, ClaudeBot, CCBot …). Uvoz s
+`User-Agent: SLFF fantasy` ni med njimi, a če se seznam razširi na vse, uvoz
+ustavi.
+
 **Tretji val** (migracija 20261010191100): 67 lig, **neaktivnih** — NB III
 (4 skupine, zveza `mlsz` = državna raven), vármegyei III. osztály vseh
 županij s skupinami (49, tudi Tolna, nova zveza `mlsz-to`), IV. osztály
