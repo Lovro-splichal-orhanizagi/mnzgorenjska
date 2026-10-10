@@ -8,7 +8,7 @@ import { useTekmovanje } from '../lib/tekmovanje'
 import Grb from '../components/Grb'
 import type { TekmaVrstica } from '../lib/tipi'
 import { vseVrstice } from '../lib/strani'
-import { useNaslov } from '../lib/naslov'
+import { useNaslov, zDrzavo } from '../lib/naslov'
 import { t } from '../i18n'
 import Sponzor from '../components/Sponzor'
 
@@ -52,7 +52,7 @@ export default function Rezultati() {
   const izNaslova = Number(iskanje.get('krog')) || null
   const [nalaganje, setNalaganje] = useState(true)
   const [napaka, setNapaka] = useState<string | null>(null)
-  useNaslov(tekmovanje?.name, t('tekme.rezultati.naslov'))
+  useNaslov(zDrzavo(tekmovanje), t('tekme.rezultati.naslov'))
 
   useEffect(() => {
     if (!tekmovanjeId) return

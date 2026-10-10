@@ -9,6 +9,10 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     deljenje:
       'Fantasy fotbal pro krajské a okresní soutěže. Sestav si tým ze skutečných hráčů, body se počítají z oficiálních zápisů o utkání: góly, minuty, čistá konta.',
     deljenjeKratko: 'Fantasy fotbal pro krajské a okresní soutěže. Body z oficiálních zápisů o utkání.',
+    ligeDrzave: 'Fantasy ligy ({drzava}): {lige}.',
+  },
+  vstopDrzave: {
+    uvod: 'Vyber si soutěž a sestav tým.',
   },
   niStrani: {
     naslov: 'Stránka neexistuje',

@@ -22,6 +22,7 @@
 import { sl } from './sl/index.ts'
 import {
   drzavaLige,
+  drzavaVstopa,
   izbranJezik,
   jezikTujca,
   tujec,
@@ -134,6 +135,12 @@ function izberi(): Jezik {
     liga = new URLSearchParams(location.search).get('t') || localStorage.getItem('slff-tekmovanje')
     izbranaDrzava = localStorage.getItem('slff-drzava')
   } catch {}
+  // Vstopna stran države (/at) je v jeziku te države, tudi za iskalnik.
+  const vstop = drzavaVstopa(location.pathname)
+  if (vstop) {
+    const j = zeljenJezik({ drzava: vstop })
+    if (jePripravljen(j)) return j
+  }
   if (shranjen && jePripravljen(shranjen)) return shranjen
   // Brez lige in brez izbrane države (povezava /sk) ostane slovenščina, tudi
   // na slovaškem brskalniku: Slovenec ne sme niti za hip videti slovaščine.

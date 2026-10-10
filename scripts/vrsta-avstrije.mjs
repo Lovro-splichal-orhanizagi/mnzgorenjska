@@ -11,7 +11,7 @@
 //      nima zagona ali ji je padel le enkrat (ponovitev); po dveh padcih jo
 //      preskoči in to enkrat javi na Discord;
 //   3. ligo, katere zadnji uvoz je uspel od prejšnjega tika, vklopi
-//      (`vklopi_ligo_sredi_sezone`) in zažene hišne ekipe in grbe; zavrnjen
+//      (`vklopi_ligo_sredi_sezone`) in zažene hišne ekipe, grbe in zemljevid; zavrnjen
 //      vklop javi enkrat in ga ne ponavlja — odloči človek.
 // Ko je vsaka liga vklopljena ali preskočena: "Avstrija končana".
 //
@@ -177,7 +177,9 @@ async function main() {
     // `grbi` hrani le en čakajoči zagon: več lig naenkrat = vse aktivne at- lige.
     const tekmovanje = vklopljene.length === 1 ? vklopljene[0] : ''
     gh('workflow', 'run', 'grbi.yml', '-f', 'vir=oefb', '-f', 'pisi=true', '-f', `tekmovanje=${tekmovanje}`)
-    console.log(`Vklopljene: ${vklopljene.join(', ')}; zagnani hišne ekipe in grbi.`)
+    // Zemljevid strani sicer pride šele ob nočnem zagonu (04:30).
+    gh('workflow', 'run', 'sitemap.yml')
+    console.log(`Vklopljene: ${vklopljene.join(', ')}; zagnani hišne ekipe, grbi in zemljevid strani.`)
   }
 
   for (const { slug, arhiv, ponovitev } of izid.zazeniVse) {

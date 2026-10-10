@@ -9,6 +9,10 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     deljenje:
       'Fantasy foci a megyei amatőr bajnokságokhoz. Rakd össze a csapatod valódi játékosokból, a pontok a hivatalos jegyzőkönyvekből jönnek: gólok, játékpercek, kapott gól nélküli meccsek.',
     deljenjeKratko: 'Fantasy foci a megyei amatőr bajnokságokhoz. Pontok a hivatalos jegyzőkönyvekből.',
+    ligeDrzave: 'Fantasy ligák ({drzava}): {lige}.',
+  },
+  vstopDrzave: {
+    uvod: 'Válassz bajnokságot, és állítsd össze a csapatod.',
   },
   niStrani: {
     naslov: 'Az oldal nem létezik',

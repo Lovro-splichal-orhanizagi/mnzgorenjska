@@ -278,3 +278,9 @@ export function drzavaLige(slug: string | null | undefined): string | null {
 
 /** Jezik vmesnika za državo. */
 export const JEZIK_DRZAVE: Record<string, string> = { SI: 'sl', SK: 'sk', HR: 'hr', CZ: 'cs', HU: 'hu', AT: 'de', RS: 'sr', RO: 'ro' }
+
+/** Država vstopne strani (`/at` → 'AT'), sicer null. */
+export function drzavaVstopa(pot: string): string | null {
+  const koda = /^\/([a-z]{2})\/?$/.exec(pot)?.[1]?.toUpperCase()
+  return koda && koda in JEZIK_DRZAVE ? koda : null
+}

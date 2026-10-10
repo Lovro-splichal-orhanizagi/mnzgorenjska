@@ -13,6 +13,12 @@ export const aplikacija = {
     deljenje:
       'Fantasy liga za slovenske medobčinske lige. Sestavi ekipo iz pravih igralcev, točke prihajajo iz uradnih zapisnikov: goli, minute, ohranjene mreže.',
     deljenjeKratko: 'Fantasy liga za slovenske medobčinske lige. Točke iz uradnih zapisnikov.',
+    // Opis vstopne strani države (/at …) v strežniku HTML: ime države in lige.
+    ligeDrzave: 'Fantasy lige ({drzava}): {lige}.',
+  },
+  // Vstopna stran države (/at): seznam lig te države.
+  vstopDrzave: {
+    uvod: 'Izberi ligo in sestavi ekipo.',
   },
   niStrani: {
     naslov: 'Stran ne obstaja',

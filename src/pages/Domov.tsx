@@ -16,7 +16,7 @@ import {
 import { PRIVZETO, useTekmovanje } from '../lib/tekmovanje'
 import { useAuth } from '../lib/useAuth'
 import { useNastavitev } from '../lib/nastavitve'
-import { useNaslov } from '../lib/naslov'
+import { useNaslov, zDrzavo } from '../lib/naslov'
 import { PRAG_ASISTENCE_PRIVZETO } from '../components/GolZaGlasovanje'
 import Grb from '../components/Grb'
 import Klepet from '../components/Klepet'
@@ -71,7 +71,7 @@ export default function Domov() {
   const { id: tekmovanjeId, slug, tekmovanje, tekmovanja, brezLig } = useTekmovanje()
   // Naslovnica privzete lige ima osnovni naslov; druge lige svojega, sicer bi
   // bile vse naslovnice za iskalnik ista stran.
-  useNaslov(slug === PRIVZETO ? null : tekmovanje?.name)
+  useNaslov(slug === PRIVZETO ? null : zDrzavo(tekmovanje))
   const { session, loading: avtNalaganje } = useAuth()
   const zveza = imeZveze(tekmovanje)
   const [klubiLige, setKlubiLige] = useState<string[]>([])

@@ -78,6 +78,16 @@ slff.eu {
 		}
 	}
 
+	# The same page with a trailing slash (/players/): one address for search engines,
+	# 301 to the canonical one without it, query kept (same trick as @stara_pot).
+	@posevnica path_regexp ^/(my-team|assists|positions|absences|players|standings|national|mini-leagues|results|table|login|legal|reminders|account|admin|si|sk|hr|cz|hu|at|rs|ro)/$
+	handle @posevnica {
+		route {
+			uri path_regexp ^(/[a-z-]+)/$ $1
+			redir * https://slff.eu{uri} 301
+		}
+	}
+
 	# Vercel's defaults: every response may be read cross-origin and is revalidated.
 	# `?` = only if a more specific rule below didn't set it. No `-Server` here: a delete
 	# defers the whole block to the end, and it would overwrite the specific rules.
@@ -91,6 +101,10 @@ slff.eu {
 		Permissions-Policy "camera=(), microphone=(), geolocation=()"
 	}
 	header -Server
+	# Private or per-user pages stay out of search results (they are not in the sitemap
+	# either). Keep in sync with the routes in src/App.tsx.
+	@zasebne path /my-team /mini-leagues /login /account /reminders /new-password /novo-geslo /admin /auth/* /team/* /l/*
+	header @zasebne X-Robots-Tag "noindex"
 	# Hashed by Vite; a new build means new names.
 	header /assets/* Cache-Control "public, max-age=31536000, immutable"
 	header /app/latest.json Cache-Control no-store
@@ -163,7 +177,7 @@ slff.eu {
 		file_server
 	}
 
-	# Strani igralca, kluba, tekme in lig: strežnik HTML (scripts/hetzner/html/, kontejner
+	# Strani igralca, kluba, tekme, lig in vstopne strani držav (/si, /at …): strežnik HTML (scripts/hetzner/html/, kontejner
 	# slff-html) vpiše naslov, opis, kanonični naslov, JSON-LD in povzetek v predlogo.
 	# Ob napaki sam vrne nespremenjeno predlogo. Če ne teče (dial) ali v 1,5 s ne
 	# odgovori, gre zahtevek na 127.0.0.1:3201 spodaj — isto statično predlogo kot
@@ -171,7 +185,7 @@ slff.eu {
 	# le zahtevke iz lb_retry_match (privzeto samo GET), zato še HEAD.
 	@html_strani {
 		method GET HEAD
-		path / /table /results /standings /players /player/* /club/* /match/*
+		path / /table /results /standings /players /player/* /club/* /match/* /si /sk /hr /cz /hu /at /rs /ro
 	}
 	handle @html_strani {
 		reverse_proxy 127.0.0.1:3200 127.0.0.1:3201 {
@@ -232,10 +246,8 @@ slff.eu {
 		# Missing ids (/player/999999999) stay 200; the page sets noindex itself.
 		@ni_strani {
 			not path *.*
-			not path / /sk /sk/ /hr /hr/ /cz /cz/ /hu /hu/ /at /at/ /rs /rs/ /si /si/
+			not path / /sk /hr /cz /hu /at /rs /ro /si
 			not path /my-team /assists /positions /absences /players /standings /national /mini-leagues /results /table
-			# Ista stran s poševnico na koncu (/players/) ni 404; kanonični naslov je brez nje.
-			not path_regexp ^/(my-team|assists|positions|absences|players|standings|national|mini-leagues|results|table|login|legal|reminders|account|admin)/$
 			not path /player/* /team/* /club/* /match/* /l/*
 			not path /login /new-password /novo-geslo /legal /reminders /account /auth/confirm /admin
 		}
@@ -282,7 +294,7 @@ slff.eu {
 }
 
 # Rezerva strežnika HTML (@html_strani zgoraj): predloga kot v slff.eu — kartica države
-# po predponi `?t=sk-…`, sicer index.html. Le na 127.0.0.1, glave doda slff.eu.
+# za vstop (/sk) ali po predponi `?t=sk-…`, sicer index.html. Le na 127.0.0.1, glave doda slff.eu.
 # Naslov brez imena (`:3201`): reverse_proxy pošlje Host slff.eu, blok samo za
 # 127.0.0.1 bi ga ujel le prazen 200 (kot predloge pošte 7. 10. zgoraj).
 http://:3201 {
@@ -292,6 +304,13 @@ http://:3201 {
 		~^(sk|hr|cz|hu|at|rs|ro)- /${1}.html
 		default /index.html
 	}
-	rewrite * {html_predloga}
-	file_server
+	@vstop path_regexp vstop ^/(sk|hr|cz|hu|at|rs|ro)$
+	handle @vstop {
+		rewrite * /{re.vstop.1}.html
+		file_server
+	}
+	handle {
+		rewrite * {html_predloga}
+		file_server
+	}
 }

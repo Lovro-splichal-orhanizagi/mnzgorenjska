@@ -1369,8 +1369,19 @@ Slovensko") je v nogi in na vrhu izbirnika lige; pokaže le države z aktivnimi
 ligami. `preklopiDrzavo` zapiše državo, privzeto ligo in jezik v brskalnik in
 naloži naslovnico nove države — ekip in strežnika se ne dotakne. Okno prvega
 obiska ima isto povezavo ("Slovenija?"), ki pa ligo pusti neizbrano, da okno
-vpraša znova z ligami nove države. Vstopni povezavi `slff.eu/sk` in `/si` sta
-za kampanje in ostajata.
+vpraša znova z ligami nove države.
+
+**Vstopne povezave** `slff.eu/si`, `/sk`, `/at` … (`VstopDrzave.tsx`) so
+prave strani: ime države in vse aktivne lige po zvezah (domača stran in
+lestvica), v jeziku države (`drzavaVstopa` v `izberi()`), kanonični `/at`,
+brez okna prvega obiska. Ligo izbere
+klik (`/?t=…`, shrani se kot vsaka izbira); kontekst lige na njih `?t=` ne
+piše. **Kampanja** (`?src=…` ali
+`utm_*`) gre po starem naravnost v privzeto ligo države (`location.replace`).
+Država brez aktivne lige preusmeri na `/` (strežnik HTML: 404 z `noindex`).
+Isto vsebino za iskalnike izriše strežnik HTML (`drzava` v `streznik.mjs`).
+**Kampanjska povezava mora nositi `src` ali `utm_*`**, sicer kaže vstopno
+stran, ne lige; države si vstopna stran ne zapomni, le kampanja.
 
 **Slovaška je odprta** za vse (ugib po IP in jeziku). **Državo zapreš** tako,
 da jo dodaš v `SAMO_S_POVEZAVO` v `src/lib/drzavaUgib.ts` (npr. `['SK']`):
@@ -1521,13 +1532,15 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   → dani goli → ime. Medsebojnih tekem in odvzetih točk ne pozna — stran to
   pove kot približek. Privzeta sezona je zadnja z odigrano tekmo. Pod njo
   strelci iz `player_season_standings`
-- **Zemljevid strani**: `public/sitemap.xml` ima le stalne poti; po ligah ga
+- **Zemljevid strani**: `public/sitemap.xml` ima le stalne poti brez lige (`/`, `/table` … privzete lige so v `sitemap-clani.xml`); po ligah ga
   ponoči sestavi `scripts/sitemap.mjs` (delovni tok `sitemap.yml`, anon ključ:
-  strani lige s `?t=`, klubi, igralci z minutami letos ali lani, odigrane
-  tekme) in ga z rsync prenese v `/srv/slff/sitemap/` na strežniku — ne v
+  strani lige s `?t=` — privzeta liga `clani` brez njega, kot kanonični —,
+  klubi, igralci z minutami letos ali lani, odigrane tekme, v
+  `sitemap-drzave.xml` še vstopne strani držav z aktivno ligo) in ga z rsync prenese v `/srv/slff/sitemap/` na strežniku — ne v
   repozitorij in ne v `dist/`, ker objava zamenja mapo izdaje. Caddy streže
   `/sitemap-index.xml` in `/sitemap-*.xml` iz te mape. Nova javna stran lige
-  sodi tudi v `STRANI_LIGE` v skripti
+  sodi tudi v `STRANI_LIGE` v skripti. *Uvoz Avstrije (vrsta)* ga po vklopu
+  lige zažene takoj, ne šele ponoči
 - `match_assist_status` → odigrane tekme s številom golov brez asistence
   (stran Asistence izbira po korakih: krog → tekma → gol)
 - `naslednji_krog` → prvi krog, ki se še ni zaklenil (rok na strani Moja ekipa)
@@ -1641,6 +1654,23 @@ kanonični naslov (isto pravilo kot `kanonicni` v `src/lib/naslov.ts`), JSON-LD
 ga build zapiše iz slovarjev (`besedeZaHtml` v `vite.config.js` — nov ključ
 dodaj v `KLJUCI` tam).
 
+- **Vstopne strani držav** (`/si`, `/at` … za vsako državo z aktivno ligo;
+  `drzava` v `streznik.mjs`): naslov je ime države, kanonični nase, v
+  `#root` vse aktivne lige po zvezah (domača stran in lestvica, privzeta liga
+  brez `?t=`). Predloga je kartica države (`at.html`), og:/twitter: opis
+  ostane s kartice. Država brez aktivne lige dobi nespremenjeno predlogo.
+  Vmesnik izriše isto stran (glej *Država obiskovalca*). `/` (domov) povezuje vse vstopne
+  strani, prva drobtina (BreadcrumbList) kaže nanje.
+- **Naslovi strani lige** (domov, lestvica lige, fantasy lestvica, rezultati,
+  igralci) imajo za imenom lige državo: "Bundesliga (Österreich)", ker ima
+  ime, kot je "Bundesliga" ali "2. Liga", več držav. Pravilo je preprosto:
+  vedno, razen če ime lige državo že vsebuje (`zDrzavo` v `src/lib/naslov.ts`,
+  kopija v `streznik.mjs`, ker kontejner nima `src/`; smoke ju primerja).
+  Isto velja za `useNaslov` teh strani v vmesniku. Opis teh strani je
+  po ligi (zveza, sezona, vrh lestvice ali zadnji izidi).
+- Poševnica na koncu (`/table/`) je ista stran: strežnik jo za kanonični
+  odreže, Caddy pa strani s seznama `@posevnica` preusmeri s 301 brez nje.
+
 - **Varovalo**: PostgREST ima 800 ms za vse poizvedbe strani; ob napaki ali
   zamudi gre ven nespremenjena predloga s 200 (`X-Slff-Html: varovalo`,
   brez predpomnjenja). Če strežnik ne teče ali v 1,5 s ne odgovori, Caddy
@@ -1701,7 +1731,9 @@ Iste preusmeritve naredi tudi Caddy s statusom 301 (razen `/novo-geslo`), in
 pot, ki ni nobena stran v `<Routes>`, dobi SPA s **statusom 404** (`@ni_strani`
 v `scripts/hetzner/Caddyfile`) — **nova stran gre tudi na ta seznam**, sicer
 iskalnik dobi 404. Neznan id (`/player/999999999`) ostane 200, stran pa nastavi
-`useNoindex`.
+`useNoindex`. Zasebne strani in strani uporabnikov (`/my-team`,
+`/mini-leagues`, `/login`, `/account`, `/team/*`, `/l/*` …, `@zasebne`) dobijo
+glavo `X-Robots-Tag: noindex`; nova taka stran gre tudi tja.
 
 Notranje povezave uvažajo `Link`/`NavLink` iz `src/components/Povezava.tsx`,
 ne iz `react-router-dom`: ta doda izbrano ligo (`?t=`), da iskalnik ne pristane

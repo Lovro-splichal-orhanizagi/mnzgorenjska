@@ -59,6 +59,10 @@ import { velikostImena, velikostEkipe, imeZaPlakat, najboljsiTrije, navijacev, s
 import { readFileSync } from 'node:fs'
 import { xmlEscape, urlset, sitemapIndex, nasloviLige, datotekeLige } from './sitemap.mjs'
 import { imeStrani } from '../src/lib/obiski'
+import { zDrzavo } from '../src/lib/naslov'
+import { zDrzavo as zDrzavoStreznika } from './hetzner/html/streznik.mjs'
+import { drzavaVstopa } from '../src/lib/drzavaUgib'
+import VstopDrzave from '../src/components/VstopDrzave'
 import { prezgodnjiKljuci, naloziSlovar } from '../src/i18n/jedro.ts'
 // Vsa aplikacija (tudi strani, ki jih smoke ne izriše), da se izvede vrh vseh modulov.
 import '../src/App'
@@ -167,14 +171,45 @@ try {
     ],
   })
   const po = Object.fromEntries(n.map((x) => [x.loc, x.lastmod ?? null]))
-  preveri('sitemap: strani lige, klubi, igralci in tekme z ?t=',
-    n.length === 5 + 2 + 1 + 2 && po['https://slff.eu/table?t=clani'] === '2026-09-08'
-      && po['https://slff.eu/club/9?t=clani'] === '2026-09-01' && po['https://slff.eu/club/10?t=clani'] === '2026-09-08'
-      && 'https://slff.eu/player/5?t=clani' in po && po['https://slff.eu/match/1?t=clani'] === '2026-09-01')
+  preveri('sitemap: privzeta liga brez ?t=, klubi, igralci in tekme',
+    n.length === 5 + 2 + 1 + 2 && po['https://slff.eu/table'] === '2026-09-08' && 'https://slff.eu/' in po
+      && po['https://slff.eu/club/9'] === '2026-09-01' && po['https://slff.eu/club/10'] === '2026-09-08'
+      && 'https://slff.eu/player/5' in po && po['https://slff.eu/match/1'] === '2026-09-01')
+  preveri('sitemap: druga liga z ?t=', nasloviLige('sk-za-1', { klubi: [9], igralci: [], tekme: [] })
+    .map((x) => x.loc).includes('https://slff.eu/club/9?t=sk-za-1'))
   const d = datotekeLige('x', Array.from({ length: 5 }, (_, i) => ({ loc: String(i) })), 2)
   preveri('sitemap: liga nad mejo se razdeli', d.map((k) => `${k.ime}:${k.naslovi.length}`).join(' ')
     === 'sitemap-x.xml:2 sitemap-x-2.xml:2 sitemap-x-3.xml:1')
   preveri('obisk: /table se šteje kot tabela', imeStrani('/table') === 'tabela')
+}
+
+// --- vstopna stran države in ime lige z državo -----------------------------
+{
+  const primeri = [
+    { name: 'Bundesliga', country_name: 'Österreich' },
+    { name: 'Slovenija open', country_name: 'Slovenija' },
+    { name: '1. GNL', country_name: 'Slovenija' },
+    { name: 'Liga', country_name: null },
+  ]
+  preveri('naslov: zDrzavo v vmesniku in strežniku HTML enako',
+    primeri.every((l) => zDrzavo(l) === zDrzavoStreznika(l)) && zDrzavo(primeri[0]) === 'Bundesliga (Österreich)'
+      && zDrzavo(primeri[1]) === 'Slovenija open', primeri.map((l) => zDrzavo(l)).join(' | '))
+  preveri('vstop: /at in /si/ sta vstopni strani, /xx in /at/1 ne',
+    drzavaVstopa('/at') === 'AT' && drzavaVstopa('/si/') === 'SI' && drzavaVstopa('/xx') === null && drzavaVstopa('/at/1') === null)
+  try {
+    renderToString(
+      <StaticRouter location="/at">
+        <AuthProvider>
+          <TekmovanjeProvider>
+            <VstopDrzave drzava="AT" />
+          </TekmovanjeProvider>
+        </AuthProvider>
+      </StaticRouter>,
+    )
+    preveri('izris: vstopna stran države', true)
+  } catch (e) {
+    preveri('izris: vstopna stran države', false, e.message)
+  }
 }
 
 // --- preklop med ligama ----------------------------------------------------

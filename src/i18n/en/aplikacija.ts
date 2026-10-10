@@ -9,6 +9,10 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     deljenje:
       'A fantasy league for local amateur football leagues. Build a team of real players; points come from the official match reports: goals, minutes, clean sheets.',
     deljenjeKratko: 'A fantasy league for local amateur football leagues. Points from the official match reports.',
+    ligeDrzave: 'Fantasy leagues ({drzava}): {lige}.',
+  },
+  vstopDrzave: {
+    uvod: 'Pick a league and build your squad.',
   },
   niStrani: {
     naslov: 'Page not found',

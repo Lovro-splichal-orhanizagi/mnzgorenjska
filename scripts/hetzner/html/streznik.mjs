@@ -41,8 +41,8 @@ const absolutno = (url) => (!url ? undefined : /^https?:/.test(url) ? url : DOME
 
 /** Datoteka predloge za državo (koda države ali predpona šifre lige). */
 export const predlogaZa = (koda) => (KARTICE.includes(String(koda).toLowerCase()) ? `${String(koda).toLowerCase()}.html` : 'index.html')
-/** Kot Caddy: kartica po predponi `?t=sk-…`, sicer index.html. */
-const predlogaPoT = (t) => predlogaZa(/^([a-z]{2})-/.exec(t ?? '')?.[1] ?? '')
+/** Kot Caddy: kartica po vstopu države (`/at`) ali predponi `?t=sk-…`, sicer index.html. */
+const predlogaPoT = (pot, t) => predlogaZa(/^\/([a-z]{2})\/?$/.exec(pot)?.[1] ?? /^([a-z]{2})-/.exec(t ?? '')?.[1] ?? '')
 
 /** `t(ključ, parametri)` nad dist/html-besede.json; kar manjka, pride iz slovenščine. */
 export function prevajalnik(besede, jezik) {
@@ -75,6 +75,18 @@ export function prevajalnik(besede, jezik) {
 const kanonicni = (pot, slug) => `${DOMENA}${pot}${slug ? `?t=${encodeURIComponent(slug)}` : ''}`
 const zLigo = (pot, liga) => `${pot}?t=${encodeURIComponent(liga.slug)}`
 const brezPrivzete = (liga) => (liga.slug === PRIVZETO ? null : liga.slug)
+/** Povezava na stran lige v obliki kanoničnega naslova: privzeta liga brez `?t=`. */
+const vLigi = (pot, liga) => (liga.slug === PRIVZETO ? pot : zLigo(pot, liga))
+/**
+ * Ime lige v naslovih strani lige: "Bundesliga (Österreich)". Imena, kot so
+ * "Bundesliga", "2. Liga" ali "1. SNL", imajo lige več držav, zato država
+ * pride zraven vedno, razen če jo ime že vsebuje. Kopija `zDrzavo` iz
+ * src/lib/naslov.ts (kontejner ima le svoje datoteke); smoke ju primerja.
+ */
+export const zDrzavo = (liga) =>
+  liga.country_name && !liga.name.toLowerCase().includes(liga.country_name.toLowerCase()) ? `${liga.name} (${liga.country_name})` : liga.name
+/** Države z aktivno ligo po vrsti lig: [[koda, ime], …]. */
+const drzaveZLigo = (lige) => [...new Map(lige.filter((l) => l.active && l.country_code).map((l) => [l.country_code, l.country_name ?? l.country_code]))]
 
 const povezava = (href, besedilo) => `<a href="${esc(href)}">${esc(besedilo)}</a>`
 const SLOG = 'max-width:56rem;margin:0 auto;padding:1.5rem 1rem;color:#cbd5e1;font:15px/1.6 system-ui,sans-serif'
@@ -180,7 +192,7 @@ async function klub(id, { rest, lige, b, t }) {
         sport: 'Soccer',
         url,
         ...(k.logo_url && { logo: absolutno(k.logo_url) }),
-        memberOf: { '@type': 'SportsOrganization', name: liga.name, url: kanonicni('/table', liga.slug) },
+        memberOf: { '@type': 'SportsOrganization', name: liga.name, url: kanonicni('/table', brezPrivzete(liga)) },
         athlete: igralci.slice(0, 40).map((p) => ({ '@type': 'Person', name: prikazniIme(p.full_name), url: kanonicni(`/player/${p.id}`, brezPrivzete(liga)) })),
       },
       drobtine(liga, [{ ime: k.name, url }]),
@@ -228,12 +240,13 @@ async function tekma(id, { rest, lige, b }) {
         sport: 'Soccer',
         url,
         ...(m.played_on && { startDate: m.played_on }),
+        eventStatus: 'https://schema.org/EventScheduled',
         homeTeam: ekipa(m.home_name, m.home_team_id),
         awayTeam: ekipa(m.away_name, m.away_team_id),
         competitor: [ekipa(m.home_name, m.home_team_id), ekipa(m.away_name, m.away_team_id)],
-        superEvent: { '@type': 'SportsEvent', name: `${liga.name} ${m.season ?? ''}`.trim(), url: kanonicni('/results', liga.slug) },
+        superEvent: { '@type': 'SportsEvent', name: `${liga.name} ${m.season ?? ''}`.trim(), url: kanonicni('/results', brezPrivzete(liga)) },
       },
-      drobtine(liga, [{ ime: j.t('tekme.rezultati.naslov'), url: kanonicni('/results', liga.slug) }, { ime: `${m.home_name} : ${m.away_name}`, url }]),
+      drobtine(liga, [{ ime: j.t('tekme.rezultati.naslov'), url: kanonicni('/results', brezPrivzete(liga)) }, { ime: `${m.home_name} : ${m.away_name}`, url }]),
     ],
     vsebina: ovij(
       `<h1>${povezava(zLigo(`/club/${m.home_team_id}`, liga), m.home_name)} ${esc(m.home_goals)} : ${esc(m.away_goals)} ${povezava(zLigo(`/club/${m.away_team_id}`, liga), m.away_name)}</h1>` +
@@ -249,7 +262,7 @@ async function tabela(liga, { rest, j, url }) {
   const s = (k) => esc(j.t(`tekme.tabela.stolpci.${k}`))
   const vrh = vrstice.slice(0, 3).map((v) => `${v.mesto}. ${v.ime} (${v.tocke})`).join(', ')
   return {
-    naslov: j.t('tekme.tabela.zavihek', { liga: liga.name }),
+    naslov: j.t('tekme.tabela.zavihek', { liga: zDrzavo(liga) }),
     opis: `${j.t('tekme.tabela.uvod', { sezona, zveza: zveza(liga, j) })}${vrh ? ` ${vrh}.` : ''}`,
     drobtina: { ime: j.t('tekme.tabela.naslov'), url },
     vsebina:
@@ -265,10 +278,13 @@ async function tabela(liga, { rest, j, url }) {
 }
 
 async function rezultati(liga, { rest, j, url }) {
-  const tekme = await rest(`match_assist_status?competition_id=eq.${liga.id}&order=played_on.desc,match_id&limit=30&select=match_id,played_on,home_name,away_name,home_goals,away_goals`)
+  const tekme = await rest(`match_assist_status?competition_id=eq.${liga.id}&order=played_on.desc,match_id&limit=30&select=match_id,season,played_on,home_name,away_name,home_goals,away_goals`)
+  const zadnje = tekme.slice(0, 3).map((m) => `${m.home_name} ${m.home_goals} : ${m.away_goals} ${m.away_name}`)
   return {
-    naslov: `${liga.name} · ${j.t('tekme.rezultati.naslov')}`,
-    opis: j.t('tekme.rezultati.uvod', { zveza: zveza(liga, j) }),
+    naslov: `${zDrzavo(liga)} · ${j.t('tekme.rezultati.naslov')}`,
+    opis: zadnje.length
+      ? `${j.t('tekme.rezultati.naslov')} — ${liga.name} (${zveza(liga, j)})${tekme[0].season ? `, ${tekme[0].season}` : ''}: ${zadnje.join(', ')}.`
+      : j.t('tekme.rezultati.uvod', { zveza: zveza(liga, j) }),
     drobtina: { ime: j.t('tekme.rezultati.naslov'), url },
     vsebina:
       `<h1>${esc(j.t('tekme.rezultati.naslov'))} — ${esc(liga.name)}</h1><ul>` +
@@ -284,7 +300,7 @@ async function igralci(liga, { rest, j, url }) {
     : []
   const naslov = j.t('igralci.seznam.naslov')
   return {
-    naslov: `${liga.name} · ${naslov}`,
+    naslov: `${zDrzavo(liga)} · ${naslov}`,
     opis: vrsta.length ? `${naslov} — ${liga.name}, ${sezona}: ${vrsta.slice(0, 3).map((p) => `${prikazniIme(p.full_name)} (${j.mn('tocke', Number(p.points))})`).join(', ')}.` : undefined,
     drobtina: { ime: naslov, url },
     vsebina:
@@ -298,7 +314,10 @@ async function lestvica(liga, { rest, j, url }) {
   const ekipe = await rest(`fantasy_team_standings?competition_id=eq.${liga.id}&order=total_points.desc,fantasy_team_id&limit=20&select=fantasy_team_id,team_name,total_points`)
   const naslov = j.t('lestvice.lestvica.naslov')
   return {
-    naslov: `${liga.name} · ${naslov}`,
+    naslov: `${zDrzavo(liga)} · ${naslov}`,
+    opis: ekipe.length
+      ? `${naslov} — ${liga.name} (${zveza(liga, j)}): ${ekipe.slice(0, 3).map((e, i) => `${i + 1}. ${e.team_name} (${j.mn('tocke', Number(e.total_points))})`).join(', ')}.`
+      : undefined,
     drobtina: { ime: naslov, url },
     vsebina:
       `<h1>${esc(naslov)} — ${esc(liga.name)}</h1><ol>` +
@@ -307,7 +326,9 @@ async function lestvica(liga, { rest, j, url }) {
   }
 }
 
-async function domov(liga, { j }) {
+async function domov(liga, { rest, j, lige }) {
+  const vrstice = await rest('rpc/lestvica_lige', { p_competition_id: liga.id })
+  const vrh = vrstice.slice(0, 3).map((v) => `${v.mesto}. ${v.ime} (${v.tocke})`).join(', ')
   const menu = [
     ['/table', j.t('tekme.tabela.naslov')],
     ['/results', j.t('tekme.rezultati.naslov')],
@@ -315,8 +336,40 @@ async function domov(liga, { j }) {
     ['/standings', j.t('lestvice.lestvica.naslov')],
   ]
   return {
-    naslov: liga.slug === PRIVZETO ? null : liga.name,
-    vsebina: `<h1>${esc(liga.name)}</h1><nav><ul>${menu.map(([p, ime]) => `<li>${povezava(zLigo(p, liga), ime)}</li>`).join('')}</ul></nav>`,
+    naslov: liga.slug === PRIVZETO ? null : zDrzavo(liga),
+    opis: `${zDrzavo(liga)} — ${zveza(liga, j)}. ${j.t('aplikacija.naslovStrani.deljenjeKratko')}${vrh ? ` ${vrstice[0].sezona}: ${vrh}.` : ''}`,
+    vsebina:
+      `<h1>${esc(liga.name)}</h1><nav><ul>${menu.map(([p, ime]) => `<li>${povezava(vLigi(p, liga), ime)}</li>`).join('')}</ul></nav>` +
+      // Vstopne strani držav: iskalnik od tu pride do vseh aktivnih lig.
+      `<nav><ul>${drzaveZLigo(lige).map(([koda, ime]) => `<li>${povezava(`/${koda.toLowerCase()}`, ime)}</li>`).join('')}</ul></nav>`,
+  }
+}
+
+/** Vstopna stran države (/at): vse aktivne lige po zvezah, z domačo stranjo in lestvico. */
+function drzava(koda, { lige, b }) {
+  const aktivne = lige.filter((l) => l.active && l.country_code === koda)
+  if (!aktivne.length) return null
+  const j = b(aktivne[0])
+  const ime = aktivne[0].country_name ?? koda
+  const imena = aktivne.map((l) => l.name)
+  const tabela = j.t('tekme.tabela.naslov')
+  // Kot poZvezah v src/components/IzbirnikLige.tsx: kratko ime zveze.
+  const skupine = [...Map.groupBy(aktivne, (l) => l.federation_short ?? l.country_name ?? '')]
+  return {
+    status: 200,
+    drzava: koda,
+    naslov: ime,
+    opis: j.t('aplikacija.naslovStrani.ligeDrzave', { drzava: ime, lige: imena.slice(0, 10).join(', ') + (imena.length > 10 ? ', …' : '') }),
+    // og:/twitter: opis ostane s kartice države (at.html …).
+    ohraniKartico: true,
+    kanonicni: `${DOMENA}/${koda.toLowerCase()}`,
+    jsonld: [],
+    vsebina: ovij(
+      `<h1>${esc(ime)}</h1>` +
+        skupine
+          .map(([zv, ls]) => `${zv ? `<h2>${esc(zv)}</h2>` : ''}<ul>${ls.map((l) => `<li>${povezava(vLigi('/', l), l.name)} · ${povezava(vLigi('/table', l), tabela)}</li>`).join('')}</ul>`)
+          .join(''),
+    ),
   }
 }
 
@@ -326,6 +379,15 @@ const ENTITETE = { player: igralec, club: klub, match: tekma }
 /** Podatki strani za pot in `?t=`; `rest(pot, telo?)` vrne vrstice PostgREST. */
 export async function stran(pot, t, { rest, lige, besede }) {
   const b = (liga) => prevajalnik(besede, JEZIK[liga?.country_code] ?? JEZIK[/^([a-z]{2})-/.exec(t ?? '')?.[1]?.toUpperCase()] ?? 'sl')
+  // Poševnica na koncu (/table/) je ista stran; kanonični je brez nje.
+  if (pot.length > 1) pot = pot.replace(/\/+$/, '')
+  const vstop = /^\/([a-z]{2})$/.exec(pot)
+  if (vstop) {
+    const koda = vstop[1].toUpperCase()
+    if (!JEZIK[koda]) return null
+    // Država brez aktivne lige: vmesnik preusmeri na /, iskalnik dobi 404.
+    return drzava(koda, { lige, b }) ?? { ...ni(b({ country_code: koda }).t('aplikacija.niStrani.naslov')), drzava: koda }
+  }
   const e = /^\/(player|club|match)\/([^/]+)$/.exec(pot)
   if (e) {
     const id = /^\d{1,12}$/.test(e[2]) ? Number(e[2]) : null
@@ -340,7 +402,7 @@ export async function stran(pot, t, { rest, lige, besede }) {
   if (!liga) return null
   const j = b(liga)
   const url = kanonicni(pot, brezPrivzete(liga))
-  const s = await seznam(liga, { rest, j, url })
+  const s = await seznam(liga, { rest, j, url, lige })
   return {
     status: 200,
     liga,
@@ -365,8 +427,10 @@ export function izrisi(predloga, s, b) {
   meta('name', 'twitter:title', naslov)
   if (s.opis) {
     meta('name', 'description', s.opis)
-    meta('property', 'og:description', s.opis)
-    meta('name', 'twitter:description', s.opis)
+    if (!s.ohraniKartico) {
+      meta('property', 'og:description', s.opis)
+      meta('name', 'twitter:description', s.opis)
+    }
   }
   if (s.kanonicni) meta('property', 'og:url', s.kanonicni)
   const glava = [
@@ -413,7 +477,7 @@ export function obdelovalec({ koren, rest, rok = 800 }) {
   async function seznamLig(signal) {
     if (lige.seznam && lige.do > Date.now()) return lige.seznam
     try {
-      const seznam = await rest('competitions_view?select=id,slug,name,active,country_code,country_name,vir_ime,federation_name&order=id', undefined, signal)
+      const seznam = await rest('competitions_view?select=id,slug,name,active,country_code,country_name,vir_ime,federation_name,federation_short&order=federation_sort,sort_order,id', undefined, signal)
       lige = { do: Date.now() + 600_000, seznam }
     } catch (e) {
       if (!lige.seznam) throw e // star seznam je boljši kot nič
@@ -451,8 +515,9 @@ export function obdelovalec({ koren, rest, rok = 800 }) {
         } else {
           const r = (p, telo) => rest(p, telo, signal)
           const s = await stran(pot, t, { rest: r, lige: vse, besede: i.besede })
-          const jezik = JEZIK[s?.liga?.country_code] ?? JEZIK[predpona.toUpperCase()] ?? 'sl'
-          const ime = s?.liga ? predlogaZa(s.liga.country_code) : predlogaPoT(t)
+          const koda = s?.liga?.country_code ?? s?.drzava
+          const jezik = JEZIK[koda] ?? JEZIK[predpona.toUpperCase()] ?? 'sl'
+          const ime = koda ? predlogaZa(koda) : predlogaPoT(pot, t)
           odgovor = {
             status: s?.status ?? 200,
             html: izrisi(predloga(i, izvor, ime), s, prevajalnik(i.besede, jezik)),
@@ -465,7 +530,7 @@ export function obdelovalec({ koren, rest, rok = 800 }) {
       } catch (e) {
         // Varovalo: nespremenjena predloga, ne v predpomnilnik.
         console.error(`${pot}: ${e?.message ?? e}`)
-        odgovor = { status: 200, html: predloga(i, izvor, predlogaPoT(t)), vir: 'varovalo', zasebno: true }
+        odgovor = { status: 200, html: predloga(i, izvor, predlogaPoT(pot, t)), vir: 'varovalo', zasebno: true }
       }
       zadnja = i.predloge['index.html'] ?? zadnja
     } catch (e) {
