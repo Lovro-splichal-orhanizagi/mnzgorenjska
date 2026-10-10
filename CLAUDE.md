@@ -455,6 +455,100 @@ ostanek; vir ga prebere znova, vztrajen ostanek ustavi uvoz (`stranKroga`).
 | hu-ve-2 | `67/19/33719` | `65/19/32270` (alapszakasz, brez felső/alsóháza) |
 | hu-za-2 | `67/20/33916` | `65/20/31673` |
 
+**Tretji val** (migracija 20261010191100): 67 lig, **neaktivnih** — NB III
+(4 skupine, zveza `mlsz` = državna raven), vármegyei III. osztály vseh
+županij s skupinami (49, tudi Tolna, nova zveza `mlsz-to`), IV. osztály
+(8: Csongrád 2, Pest 4, Somogy 2) in BLSZ III./IV. (po 3). Le odrasli moški na
+velikem igrišču. Kjer je županija skupine preuredila, je arhiv izbran po skupnih
+klubih (1. krog obeh sezon); vsak arhiv ima ena sama liga. Vas III. 2025/26
+že uvažajo lige Vas II., zato Vas III. dobi 2024/25 (évad 63).
+
+Izpuščeno: Győr *Tartalék* (Kelet, Nyugat A — rezervne ekipe), BLSZ *Old
+Boys*, mestne amaterske lige (Fejér: Alba Liga, DLSZ Diablo/Varázskép;
+Csongrád: III.A/B/C IHS/KÉSZ/GNX — niso vármegyei), Pannon Egyetemi Házi
+(univerzitetna), Neumann Football Liga, Tolna I-II. Kvalifikáció, vse
+mladinske, ženske, futsal, kispályás, pokali, osztályozó, felsőház/alsóház
+in rájátszás. Veszprém III. 2026/27 je *Alapszakasz* — nadaljevanje bo svoje
+tekmovanje (kot Veszprém II.).
+
+Preverba arhivov (10. 10. 2026, zadnji krog vsakega od 69 arhivov): število
+krogov se ujema s seznamom zveze, zadnji krog je odigran (trije s po eno
+neodigrano tekmo), prvi zapisnik z izidom se razčleni (11 + 11, dvakrat
+ekipa z 10 oz. 9 začetniki; goli = izid, vsi nastopi s šifro); 14 vzorcev je bilo kontumacij zadnjega kroga
+(zapisnik null, pričakovano). Adatbank je ta dan pogosto vračal `SQLSTATE
+[1040] Too many connections` — počakaj in ponovi, ne pospešuj.
+
+
+| liga | tekoča 2026/27 | arhiv |
+|---|---|---|
+| hu-nb3-eszak-kelet | `67/0/33588` | `65/0/31364` |
+| hu-nb3-del-kelet | `67/0/34054` | `65/0/31782` |
+| hu-nb3-eszak-nyugat | `67/0/34055` | `65/0/31783` |
+| hu-nb3-del-nyugat | `67/0/34056` | `65/0/31784` |
+| hu-bk-3-del | `67/1/33674` | `65/1/31506` |
+| hu-bk-3-eszak | `67/1/33676` | `65/1/31507` |
+| hu-bk-3-kozep | `67/1/33677` | `65/1/31508` |
+| hu-bk-3-nyugat | `67/1/33678` | `65/1/31509` |
+| hu-ba-3-a | `67/2/34398` | `65/2/32145`, `65/2/32144` (Csík + Czibulka) |
+| hu-ba-3-b | `67/2/34399` | `65/2/32147` (Dárdai) |
+| hu-be-3-eszak | `67/3/33832` | `65/3/31548` |
+| hu-be-3-del | `67/3/34173` | `65/3/31901` |
+| hu-baz-3-eszak | `67/4/34090` | `65/4/31791` |
+| hu-baz-3-kelet | `67/4/34089` | `65/4/31792` |
+| hu-baz-3-del | `67/4/34091` | `65/4/31793` |
+| hu-bp-3-1 | `67/5/33755` | `65/5/31533` |
+| hu-bp-3-2 | `67/5/34211` | `65/5/31946` |
+| hu-bp-3-3 | `67/5/34212` | `65/5/31947` |
+| hu-bp-4-1 | `67/5/34214` | `65/5/31535` |
+| hu-bp-4-2 | `67/5/34213` | `65/5/31997` |
+| hu-bp-4-3 | `67/5/33756` | `65/5/31998` |
+| hu-cs-3 | `67/6/33875` | `65/6/31530` |
+| hu-cs-4-tisza-maros | `67/6/33879` | `65/6/31832` |
+| hu-cs-4-homokhat | `67/6/34084` | `65/6/31550` |
+| hu-fe-3-eszak | `67/7/34113` | `65/7/31951` |
+| hu-fe-3-del | `67/7/34115` | `65/7/31960`, `65/7/31961` (Kelet + Dél) |
+| hu-gy-3-kelet-a | `67/8/33892` | `65/8/31871` |
+| hu-gy-3-kelet-b | `67/8/34181` | `65/8/31662` |
+| hu-gy-3-eszak | `67/8/34182` | `65/8/31872` |
+| hu-gy-3-nyugat-a | `67/8/34183` | `65/8/31874` (brez felső/alsóháza) |
+| hu-gy-3-nyugat-b | `67/8/34185` | `65/8/31876` |
+| hu-hb-3-eszak | `67/9/34121` | `65/9/31604` |
+| hu-hb-3-del | `67/9/34122` | `65/9/31605` |
+| hu-he-3 | `67/10/33863` | `65/10/31645` |
+| hu-jn-3 | `67/11/33738` | `65/11/31491` |
+| hu-ke-3-del | `67/12/33791` | `65/12/31689` |
+| hu-ke-3-eszak | `67/12/34204` | `65/12/31948` |
+| hu-no-3-kelet | `67/13/33940` | `65/13/31714` |
+| hu-no-3-nyugat | `67/13/34057` | `65/13/31811` |
+| hu-pe-3-eszak | `67/14/34069` | `65/14/31818` |
+| hu-pe-3-del | `67/14/34070` | `65/14/31819` |
+| hu-pe-3-kelet | `67/14/34071` | `65/14/31820` |
+| hu-pe-4-eszak | `67/14/34072` | `65/14/31822` |
+| hu-pe-4-delkelet | `67/14/34073` | `65/14/31824` |
+| hu-pe-4-kelet | `67/14/34074` | `65/14/31825` (Közép) |
+| hu-pe-4-nyugat | `67/14/34075` | `65/14/31823` (Déli) |
+| hu-so-3-eszak | `67/15/33709` | `65/15/31585` |
+| hu-so-3-del | `67/15/34170` | `63/15/29430` (III. 2024/25; 2025/26 je bila ena skupina) |
+| hu-so-4-eszak | `67/15/33710` | `65/15/31586` |
+| hu-so-4-del | `67/15/34107` | `65/15/31856` |
+| hu-sz-3-nyugat | `67/16/33814` | `65/16/31419` |
+| hu-sz-3-kozep | `67/16/34163` | `65/16/31845` |
+| hu-sz-3-kelet | `67/16/34164` | `65/16/31846` |
+| hu-to-3-kelet | `67/17/33957` | `65/17/31529` (Dél) |
+| hu-to-3-nyugat | `67/17/34465` | `65/17/31528` (Észak) |
+| hu-va-3-szombathely | `67/18/33771` | `63/18/29548` (2024/25; 2025/26 ima Vas II.) |
+| hu-va-3-kormend | `67/18/34049` | `63/18/29695` (2024/25) |
+| hu-va-3-sarvar | `67/18/34050` | `63/18/29696` (2024/25) |
+| hu-ve-3-eszak | `67/19/34241` | `65/19/31919` |
+| hu-ve-3-kelet | `67/19/34242` | `65/19/31920` |
+| hu-ve-3-nyugat | `67/19/34243` | `65/19/31931` |
+| hu-ve-3-del | `67/19/34246` | `65/19/31932` |
+| hu-za-3-eszak | `67/20/33917` | `65/20/31674` |
+| hu-za-3-del | `67/20/33918` | `65/20/31675` |
+| hu-za-3-kelet | `67/20/33919` | `65/20/31677` |
+| hu-za-3-nyugat | `67/20/33920` | `65/20/31676` |
+| hu-za-3-kozep | `67/20/34240` | `63/20/29515` (Nyugat 2024/25; nova skupina) |
+
 ### Avstrija
 
 Država `AT` ("Österreich", migracija 20261009160000) ima vmesnik v nemščini
