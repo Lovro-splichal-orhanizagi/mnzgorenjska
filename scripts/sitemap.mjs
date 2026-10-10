@@ -137,9 +137,10 @@ async function glavna() {
     const klubi = await vseVrstice((od, do_) =>
       db.from('competition_teams').select('team_id').eq('competition_id', liga.id).order('team_id').range(od, do_),
     )
+    // Koledarske lige (Estonija) imajo sezono "2026", zato še letnici.
     const igralci = await vseVrstice((od, do_) =>
       db.from('player_season_standings').select('id, season')
-        .eq('competition_id', liga.id).in('season', [tekoca, lani]).gt('minutes', 0)
+        .eq('competition_id', liga.id).in('season', [tekoca, lani, danes.slice(0, 4), String(Number(danes.slice(0, 4)) - 1)]).gt('minutes', 0)
         .order('id').order('season').range(od, do_),
     )
     const tekme = await vseVrstice((od, do_) =>

@@ -188,7 +188,7 @@ if (vir.kontumacije) {
 }
 
 const prviDatum = veljavni[0].tekme.find((t) => t.datum)?.datum
-const sezona = sezonaIz(prviDatum)
+const sezona = sezonaIz(prviDatum, tekmovanje.sezona_koledarska)
 console.log(`Sezona: ${sezona}`)
 for (const k of veljavni.slice(0, 3))
   console.log(

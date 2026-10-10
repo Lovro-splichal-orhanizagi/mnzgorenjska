@@ -1522,6 +1522,7 @@ preveri(
   preveri('razpored: datum s stirimestno letnico', datum('29.08.2026') === '2026-08-29', datum('29.08.2026'))
   preveri('razpored: sezona iz avgusta', sezonaIz('2026-08-29') === '2026/27', sezonaIz('2026-08-29'))
   preveri('razpored: sezona iz marca', sezonaIz('2027-03-13') === '2026/27', sezonaIz('2027-03-13'))
+  preveri('razpored: koledarska sezona iz marca', sezonaIz('2027-03-13', true) === '2027', sezonaIz('2027-03-13', true))
 }
 
 // Gorica potrebuje svoj parser: goli nimajo številk dresov, menjave pa so
@@ -3043,6 +3044,9 @@ preveri(
   // Romunščina ne sklanja: ime lige stoji za dvopičjem.
   for (const iz of ['Liga a IV-a Ilfov', 'Liga 3 — Seria 5', 'Liga a V-a București'])
     preveri(`plakat: romunsko "${iz}" ostane nespremenjeno`, ligaVTozilniku(iz, 'ro') === iz, ligaVTozilniku(iz, 'ro'))
+  // Estonščina (14 sklonov) ne sklanja: ime lige stoji za dvopičjem.
+  for (const iz of ['Esiliiga', 'II liiga Põhi/Lääs', 'Harju maakonna liiga'])
+    preveri(`plakat: estonsko "${iz}" ostane nespremenjeno`, ligaVTozilniku(iz, 'et') === iz, ligaVTozilniku(iz, 'et'))
 
   // "Je live": kratko ime lige ne sme zrasti cez rob, ce gre v dve vrstici.
   preveri('plakat live: kratko ime v eni vrstici je najvecje', velikostLige('3. SNL ZAHOD', 1) === 124)
@@ -3532,6 +3536,12 @@ preveri(
   preveri('drzava: romunski brskalnik', D.ugibajDrzavo({ jeziki: ['ro-RO'], casovniPas: 'Europe/Bucharest' }) === 'RO')
   preveri('drzava: anglesko v Bukarešti (pas)', D.ugibajDrzavo({ jeziki: ['en-US'], casovniPas: 'Europe/Bucharest' }) === 'RO')
   preveri('drzava: liga ro-… je romunska', D.drzavaLige('ro-if-liga4') === 'RO' && D.JEZIK_DRZAVE.RO === 'ro')
+  // Estonija: jezik et, ugib po brskalniku (et, et-EE) in pasu, liga ee-… je estonska.
+  preveri('jezik: Estonec estonsko', zj({ drzava: 'EE' }) === 'et' && zj({ tujec: 'EE', jeziki: ['et-EE'] }) === 'et')
+  preveri('tujec: prvi jezik et ostane', D.jezikTujca(['et-EE', 'en']) === 'et' && D.jezikTujca(['en', 'et']) === 'en')
+  preveri('drzava: estonski brskalnik', D.ugibajDrzavo({ jeziki: ['et-EE'], casovniPas: 'Europe/Tallinn' }) === 'EE')
+  preveri('drzava: anglesko v Talinu (pas)', D.ugibajDrzavo({ jeziki: ['en-US'], casovniPas: 'Europe/Tallinn' }) === 'EE')
+  preveri('drzava: liga ee-… je estonska', D.drzavaLige('ee-esiliiga') === 'EE' && D.JEZIK_DRZAVE.EE === 'et' && drzavaVstopa('/ee') === 'EE')
   shramba.set('slff-tujec', 'CZ')
   // Jezik tujca je odvisen od jezika okolja (Node ima navigator.languages).
   const jezikTujcaTu = D.jezikTujca(globalThis.navigator?.languages)
@@ -3572,6 +3582,7 @@ preveri(
   const { de } = await import('../src/i18n/de/index.ts')
   const { sr } = await import('../src/i18n/sr/index.ts')
   const { ro } = await import('../src/i18n/ro/index.ts')
+  const { et } = await import('../src/i18n/et/index.ts')
   const listi = (d, pot = '') =>
     Object.entries(d).flatMap(([k, v]) =>
       typeof v === 'string' || (v && typeof v === 'object' && 'other' in v) ? [[pot + k, v]] : listi(v, `${pot}${k}.`),
@@ -3581,7 +3592,7 @@ preveri(
     const besedila = typeof v === 'string' ? [v] : Object.values(v)
     return besedila.map((b) => [...b.matchAll(/\{(\w+)\}|<(\w+)>/g)].map((m) => m[0]).sort().join(' '))
   }
-  for (const [ime, slovar] of [['sk', sk], ['en', en], ['hr', hr], ['cs', cs], ['hu', hu], ['de', de], ['sr', sr], ['ro', ro]]) {
+  for (const [ime, slovar] of [['sk', sk], ['en', en], ['hr', hr], ['cs', cs], ['hu', hu], ['de', de], ['sr', sr], ['ro', ro], ['et', et]]) {
     const napake = []
     let manjka = 0
     for (const [kljuc, izvirnik] of listi(sl)) {
@@ -3670,6 +3681,19 @@ preveri(
   preveri('prevodi ro: tocke v mnozini',
     ro.skupno.besede.tocke.one === 'punct' && ro.skupno.besede.tocke.few === 'puncte' && ro.skupno.besede.tocke.other === 'de puncte')
   preveri('prevodi ro: liga na plakatu za dvopičjem', /: \{liga\}/.test(ro.lestvice.plakat.jeOdprta), ro.lestvice.plakat.jeOdprta)
+  // Estonske množine: Intl.PluralRules('et') pozna le one/other; za številom
+  // je samostalnik v delilniku ednine ("3 punkti").
+  const kategorijeEt = new Intl.PluralRules('et-EE').resolvedOptions().pluralCategories
+  const slabeEt = listi(et).filter(
+    ([, v]) => typeof v === 'object' && (Object.keys(v).some((k) => !kategorijeEt.includes(k)) || kategorijeEt.some((k) => !(k in v))),
+  )
+  preveri('prevodi et: mnozine one/other', slabeEt.length === 0, slabeEt.slice(0, 5).map(([k]) => k).join(', '))
+  const crticeEt = listi(et).filter(([, v]) => (typeof v === 'string' ? [v] : Object.values(v)).some((b) => /[—–]/.test(b)))
+  preveri('prevodi et: brez pomisljajev', crticeEt.length === 0, crticeEt.slice(0, 5).map(([k]) => k).join(', '))
+  preveri('prevodi et: drzava Eesti v vseh jezikih',
+    [sl, sk, en, hr, cs, hu, de, sr, ro, et].every((d) => d.aplikacija.izbiraDrzave.imena.EE === 'Eesti'))
+  preveri('prevodi et: tocke', et.skupno.besede.tocke.one === 'punkt' && et.skupno.besede.tocke.other === 'punkti')
+  preveri('prevodi et: liga na plakatu za dvopičjem', /: \{liga\}/.test(et.lestvice.plakat.jeOdprta), et.lestvice.plakat.jeOdprta)
 }
 
 // --- vir sportnet (Slovaška) -----------------------------------------------
@@ -4961,6 +4985,66 @@ preveri(
   preveri('e-pošta: avtentikacijske predloge in zadeve ro',
     vejeRo.every((v) => v && !slovenskoRo.test(v) && !pomisljaj.test(v)) && zadeveRo.length === 3 &&
       zadeveRo.every((z) => !slovenskoRo.test(z) && !pomisljaj.test(z)), zadeveRo.join(' | '))
+
+  // Estonija: isti maili v estonščini, rok po talinsko, razlog preveden.
+  const eeL = { slug: 'ee-esiliiga', oznaka: 'Esiliiga', ime: 'Esiliiga', drzava: 'EE' }
+  // Slovenščina ali pozdravi drugih jezikov v estonskem mailu.
+  const slovenskoEt = /Živjo|ekip[aeo]|krog|točk|opomnik|igralc|kader|namesto|sestavi |Ahoj|Bok|Szia|Servus|Zdravo|Salut/
+  const oEt = E.sestaviOpomnik(eeL, { display_name: 'Martin Tamm', brez_ekipe: true })
+  const oEt2 = E.sestaviOpomnik(eeL, { display_name: null, brez_ekipe: false })
+  preveri('e-pošta: opomnik et',
+    oEt.naslov.includes('sul pole veel järgmiseks vooruks meeskonda') && oEt.html.includes('Tere, Martin!') && oEt2.html.includes('Tere!') &&
+      oEt2.naslov.includes('täienda oma meeskonda') && oEt.odjava === 'https://slff.eu/reminders?t=ee-esiliiga' &&
+      oEt.html.includes('https://slff.eu/my-team?t=ee-esiliiga') && oEt.html.includes('Ma ei soovi enam meeldetuletusi') &&
+      !slovenskoEt.test(oEt.naslov + oEt.html + oEt2.naslov + oEt2.html), oEt.naslov)
+  const zEt = E.sestaviOpozorilo(eeL, { display_name: 'Martin', team_name: 'Saaremaa Hülged', round_number: 5, deadline_at: rok, razlog })
+  preveri('e-pošta: opozorilo et (rok po talinsko, razlog preveden)',
+    zEt.naslov.includes('5. voorus') && zEt.html.includes('11:00') &&
+      zEt.html.includes('Klubist Šenčur on sul 4 mängijat') && !slovenskoEt.test(zEt.naslov + zEt.html), zEt.naslov)
+  preveri('e-pošta: rok et v časovnem pasu lige (ura pred Ljubljano)', E.izpisRoka(rok, eeL).includes('11:00'), E.izpisRoka(rok, eeL))
+  const prevodiEt = razlogi.map((r) => E.prevediRazlog(r, 'et'))
+  const splosenEt = E.prevediRazlog('Neznan razlog.', 'et')
+  preveri(
+    'e-pošta: vsi razlogi prevedeni v estonščino',
+    prevodiEt.every((p) => p !== splosenEt && !slovenskoEt.test(p) && !pomisljaj.test(p)),
+    prevodiEt.find((p) => p === splosenEt || slovenskoEt.test(p) || pomisljaj.test(p)),
+  )
+  preveri('e-pošta: razlog et (množina one/other)',
+    prevodiEt[1] === 'Koosseisus on 3 mängijat 15 asemel.' && prevodiEt[7] === 'Algkoosseisus on 10 mängijat 11 asemel.' &&
+      E.prevediRazlog('V kadru je 1 igralcev namesto 15.', 'et') === 'Koosseisus on 1 mängija 15 asemel.',
+    `${prevodiEt[1]} | ${prevodiEt[7]}`)
+  const bEt = E.sestaviOpomnikBrezLige('et', { display_name: 'Martin' })
+  preveri('e-pošta: brez lige et v estonščini',
+    bEt.naslov.includes('vali oma liiga') && bEt.html.includes('href="https://slff.eu/my-team?sestavi=1"') &&
+      bEt.html.includes('Tere, Martin!') && !slovenskoEt.test(bEt.html.replace(/href="[^"]*"/g, '')))
+  const pEt = E.sestaviPoznavalca(eeL, { display_name: 'Martin', obseg: 'klub', klub: 'JK Kalev' })
+  preveri('e-pošta: poznavalec et', pEt.html.includes('klubi <strong>JK Kalev</strong> asjatundja') && pEt.html.includes('/positions?t=ee-esiliiga') && !slovenskoEt.test(pEt.html))
+  const popEt = E.sestaviPopravekPozicije(eeL, { display_name: 'Martin', team_name: 'Hülged', igralci: [{ ime: 'Martin Tamm', pozicija: 'MID' }] })
+  const izEt = E.sestaviIzstopKluba(eeL, { display_name: 'Martin', team_name: 'Hülged', igralci: [{ ime: 'Martin Tamm', klub: 'JK Kalev' }] })
+  const pushEt = E.sestaviPushOpomnik(eeL, rok)
+  const tEt = E.sestaviTedenskiPregled(eeL, {
+    display_name: 'Martin', ekipa: 'Hülged', krog: 5, tocke: 2.5, mesto: 3, mesto_prej: 5, ekip: 12,
+    povprecje: 30, najvec: 60, kapetan: 'Martin Tamm', kapetan_tocke: 1, najboljsi: 'Rasmus Saar', najboljsi_tocke: 24,
+  })
+  preveri('e-pošta: popravek pozicije, izstop, push in tedenski pregled et',
+    popEt.html.includes('(nüüd poolkaitsja)') && izEt.naslov.includes('lahkus liigast') &&
+      pushEt.naslov.includes('sul pole veel meeskonda') && tEt.naslov.includes('2,5 punkti') && tEt.html.includes('1 punkt.') &&
+      tEt.html.includes('24 punkti') &&
+      !slovenskoEt.test(popEt.naslov + popEt.html + izEt.naslov + izEt.html + pushEt.besedilo + tEt.naslov + tEt.html), tEt.naslov)
+  preveri('e-pošta: et brez pomišljajev',
+    [oEt, oEt2, zEt, bEt, pEt, popEt, izEt, tEt].every((m) => !pomisljaj.test(m.naslov + brezNoge(m.html))) &&
+      !pomisljaj.test(pushEt.naslov + pushEt.besedilo))
+  // Avtentikacijska pošta: estonska veja predlog in zadev brez slovenščine in pomišljajev.
+  const vejeEt = ['confirmation', 'magic_link', 'recovery'].map((ime) => {
+    const h = readFileSync(new URL(`../supabase/templates/${ime}.html`, import.meta.url), 'utf8')
+    const m = h.match(/"et" }}([\s\S]*?){{ else/)
+    return m ? m[1].replace(/href="[^"]*"/g, '') : null
+  })
+  const zadeveEt = [...readFileSync(new URL('../scripts/hetzner/docker-compose.slff.yml', import.meta.url), 'utf8')
+    .matchAll(/"et" }}([^{]*){{/g)].map((m) => m[1])
+  preveri('e-pošta: avtentikacijske predloge in zadeve et',
+    vejeEt.every((v) => v && !slovenskoEt.test(v) && !pomisljaj.test(v)) && zadeveEt.length === 3 &&
+      zadeveEt.every((z) => !slovenskoEt.test(z) && !pomisljaj.test(z)), zadeveEt.join(' | '))
 
   // Tedenski pregled "Tvoj krog".
   const krog = {

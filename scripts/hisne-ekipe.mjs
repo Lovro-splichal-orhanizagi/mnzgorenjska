@@ -226,6 +226,21 @@ const IMENA_RO = [
   'Vâslașii Dunării', 'Pescarii de pe Olt', 'Podgorenii de la Cotnari', 'Navigatorii de la Snagov', 'Ciocârliile Bărăganului',
 ]
 
+// Eesti liigad: mängulised, väljamõeldud, ilma päris klubide nimedeta.
+const IMENA_EE = [
+  'Saaremaa Hülged', 'Peipsi Kalurid', 'Toompea Tuvid', 'Hiiumaa Tuuled', 'Rabahundid',
+  'Soomaa Põdrad', 'Emajõe Haugid', 'Võru Karud', 'Pärnu Kajakad', 'Lõuna Ilvesed',
+  'Kalevipoja Pojad', 'Pühapäevakangelased', 'Laupäevased Legendid', 'Lisaaja FC', 'Varupingi Vennad',
+  'Ofsaid FC', 'Latiraksud', 'Ristlatt FC', 'Nurgalipp United', 'Penaltipunkt FC',
+  'Kollane Kaart FC', 'Punane Kaart United', 'Kaptenipael FC', 'Kunstmuru Poisid', 'Mudaväljaku FC',
+  'Vasturünnak FC', 'Pressing FC', 'Libero FC', 'Kümnes Number', 'Üheksas Number',
+  'Kiluvõileib FC', 'Verivorst United', 'Mulgipuder FC', 'Kama FC', 'Rukkileib United',
+  'Kohuke FC', 'Sült FC', 'Pirukad FC', 'Kringel United', 'Kartulisalat FC',
+  'Maakonna Meistrid', 'Mängujärgne Õlu FC', 'Saunaklubi FC', 'Grillipidu United', 'Jaanituli FC',
+  'Küla Koondis', 'Vana Kaardivägi', 'Tuletõrjujad FC', 'Rahvamaja FC', 'Igavesed Varumängijad',
+  'Kaheteistkümnes Mängija', 'Resultatiivne Sööt FC', 'Kuldne Puutsakas', 'Esimene Puude FC', 'Rabarebased',
+]
+
 // Postave v mejah POZICIJE (vratar 1, branilci 3–5, vezisti 2–5, napadalci 1–3).
 const POSTAVE = [
   [4, 4, 2], [4, 3, 3], [3, 5, 2], [3, 4, 3], [5, 3, 2], [4, 5, 1], [5, 4, 1],
@@ -595,7 +610,11 @@ for (const l of seznam) {
     continue
   }
 
-  const { nabor, samoLetosnji } = await naborLige(l.id, sezona)
+  // Koledarska liga (Estonija) ima sezono "2026", ne "2026/27".
+  const { data: sezonaLige, error: eSz } = await db.rpc('sezona_lige', { p_competition_id: l.id })
+  if (eSz) throw new Error(eSz.message)
+  const sezonaL = sezonaLige ?? sezona
+  const { nabor, samoLetosnji } = await naborLige(l.id, sezonaL)
 
   // Zasedena imena (vse ekipe lige) in izbranost med hišnimi ekipami.
   const { data: vseEkipe, error: eE } = await db
@@ -609,12 +628,12 @@ for (const l of seznam) {
     if (eK) throw new Error(eK.message)
     for (const r of kadri ?? []) izbranost.set(r.player_id, (izbranost.get(r.player_id) ?? 0) + 1)
   }
-  const imena = premesaj({ SI: IMENA_SI, HR: IMENA_HR, CZ: IMENA_CZ, HU: IMENA_HU, AT: IMENA_AT, RS: IMENA_RS, RO: IMENA_RO }[DRZAVA] ?? IMENA, generator('imena:' + l.slug))
+  const imena = premesaj({ SI: IMENA_SI, HR: IMENA_HR, CZ: IMENA_CZ, HU: IMENA_HU, AT: IMENA_AT, RS: IMENA_RS, RO: IMENA_RO, EE: IMENA_EE }[DRZAVA] ?? IMENA, generator('imena:' + l.slug))
     .filter((i) => !zasedena.has(i.toLowerCase()))
 
   console.log(
     `  ${l.slug.padEnd(22)} ${pravih} pravih + ${obstojece.length} hišnih / cilj ${cilj} (${klubov} klubov) → +${dodati}` +
-    `  (nabor ${nabor.length} igralcev${samoLetosnji ? ', z letošnjimi minutami' : ', tudi brez letošnjih minut'})`,
+    `  (sezona ${sezonaL}, nabor ${nabor.length} igralcev${samoLetosnji ? ', z letošnjimi minutami' : ', tudi brez letošnjih minut'})`,
   )
   for (let i = 0; i < dodati; i++) {
     const ime = imena[i]

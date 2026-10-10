@@ -153,8 +153,8 @@ export default function Navbar() {
   }, [uporabnikId])
 
   // Glasovanje o pozicijah je nadomestek za zapisnik, ki pozicij ne pozna
-  // (Slovenija, Hrvaška, Češka, Madžarska, Avstrija, Srbija, Romunija). Slovaški zapisnik jih ima, zato stran tam nima kaj početi.
-  const zaDrzavo = drzava === 'SI' || drzava === 'HR' || drzava === 'CZ' || drzava === 'HU' || drzava === 'AT' || drzava === 'RS' || drzava === 'RO' ? ostale : ostale.filter((p) => p.pot !== '/positions')
+  // (Slovenija, Hrvaška, Češka, Madžarska, Avstrija, Srbija, Romunija, Estonija). Slovaški zapisnik jih ima, zato stran tam nima kaj početi.
+  const zaDrzavo = drzava === 'SI' || drzava === 'HR' || drzava === 'CZ' || drzava === 'HU' || drzava === 'AT' || drzava === 'RS' || drzava === 'RO' || drzava === 'EE' ? ostale : ostale.filter((p) => p.pot !== '/positions')
   // Administracija je samo na spletu, mobilna aplikacija je za igralce.
   const vec = jeAdmin && !jeNativno() ? [...zaDrzavo, { pot: '/admin', get naslov() { return t('aplikacija.meni.admin') } }] : zaDrzavo
   // Začetnica za avatar: iz vzdevka, sicer iz e-naslova.

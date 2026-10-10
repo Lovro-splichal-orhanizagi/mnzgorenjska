@@ -54,6 +54,13 @@
     <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Confirmă e-mailul →</a>
   </p>
   <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Dacă nu tu te-ai înregistrat, ignoră acest e-mail.</p>
+{{ else if eq (printf "%v" .Data.jezik) "et" }}
+  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Tere!</p>
+  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Aitäh, et registreerusid SLFF-is. Vajuta nupule, et kinnitada oma e-posti aadress, ja saad kohe meeskonna kokku panna.</p>
+  <p style="text-align: center; margin: 24px 0;">
+    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Kinnita e-post →</a>
+  </p>
+  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Kui sa ise ei registreerunud, jäta see kiri tähelepanuta.</p>
 {{ else }}
   <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Živjo!</p>
   <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Hvala za registracijo v SLFF. S klikom na gumb potrdiš svoj e-naslov in lahko začneš sestavljati ekipo.</p>

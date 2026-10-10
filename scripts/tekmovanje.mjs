@@ -61,7 +61,14 @@ export async function tekmovanje(db, slug = slugTekmovanja()) {
       `tekmovanje "${slug}" ne obstaja${nasteti ? ` — na voljo so ${nasteti}` : ''}`,
     )
   }
-  return data
+  // Koledarska sezona (20261011140100) se bere posebej: če migracija še ni
+  // stekla, je liga pač sezonska, vir in šifra pa ostaneta.
+  const { data: kol, error: eKol } = await db
+    .from('competitions')
+    .select('sezona_koledarska')
+    .eq('id', data.id)
+    .maybeSingle()
+  return { ...data, sezona_koledarska: !eKol && Boolean(kol?.sezona_koledarska) }
 }
 
 /**

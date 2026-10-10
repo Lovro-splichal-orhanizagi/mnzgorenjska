@@ -50,6 +50,10 @@ const KANALI: Record<string, string> = {
   // odgovarja v jeziku vprašanja. Ko kanal (z romunsko bazo znanja) nastane,
   // gre tu njegov id.
   ro: 'cmucx868b000cv2atsowgly81',
+  // Estonskega kanala še ni: estonski obiskovalci dobijo slovenskega, ki
+  // odgovarja v jeziku vprašanja. Ko kanal (z estonsko bazo znanja) nastane,
+  // gre tu njegov id.
+  et: 'cmucx868b000cv2atsowgly81',
 }
 const skripta = (id: string) => `https://helpstack.eu/widget.js?id=${id}`
 

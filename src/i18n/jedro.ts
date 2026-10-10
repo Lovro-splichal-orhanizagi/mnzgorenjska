@@ -18,7 +18,7 @@
 // Niz lahko vsebuje {ime} za vstavljanje vrednosti. Množinski niz je objekt
 // z oblikami po `Intl.PluralRules` (slovenščina: one/two/few/other,
 // hrvaščina, srbščina in romunščina: one/few/other, slovaščina in češčina: one/few/many/other,
-// angleščina, madžarščina in nemščina: one/other) in se izbere po parametru `n`.
+// angleščina, madžarščina, nemščina in estonščina: one/other) in se izbere po parametru `n`.
 import { sl } from './sl/index.ts'
 import {
   drzavaLige,
@@ -30,7 +30,7 @@ import {
   KLJUC_IZBRANEGA_JEZIKA,
 } from '../lib/drzavaUgib.ts'
 
-export type Jezik = 'sl' | 'hr' | 'sk' | 'cs' | 'hu' | 'de' | 'sr' | 'ro' | 'en'
+export type Jezik = 'sl' | 'hr' | 'sk' | 'cs' | 'hu' | 'de' | 'sr' | 'ro' | 'et' | 'en'
 
 /** Množinske oblike; `other` je obvezna, ostale po pravilih jezika. */
 // `many` rabi slovaščina za necela števila ("2,5 bodu").
@@ -60,6 +60,7 @@ const NALAGALNIKI: Record<Exclude<Jezik, 'sl'>, () => Promise<Drevo>> = {
   de: () => import('./de/index.ts').then((m) => m.de as Drevo),
   sr: () => import('./sr/index.ts').then((m) => m.sr as Drevo),
   ro: () => import('./ro/index.ts').then((m) => m.ro as Drevo),
+  et: () => import('./et/index.ts').then((m) => m.et as Drevo),
   en: () => import('./en/index.ts').then((m) => m.en as Drevo),
 }
 const SL = sl as Drevo
@@ -99,10 +100,10 @@ export async function naloziSlovar(rokMs = 3000): Promise<void> {
   jezikVRabi = d ? j : 'sl'
 }
 /** Jeziki, ki so dovolj prevedeni, da jih vmesnik izbere sam. */
-export const PRIPRAVLJENI: Jezik[] = ['sl', 'hr', 'sk', 'cs', 'hu', 'de', 'sr', 'ro', 'en']
+export const PRIPRAVLJENI: Jezik[] = ['sl', 'hr', 'sk', 'cs', 'hu', 'de', 'sr', 'ro', 'et', 'en']
 // Angleščina v britanski obliki: "3 Oct", 24-urni čas, decimalna pika.
 // Srbščina v latinici (`sr-Latn-RS`): sama `sr-RS` bi datume pisala v cirilici.
-const LOKALE: Record<Jezik, string> = { sl: 'sl-SI', hr: 'hr-HR', sk: 'sk-SK', cs: 'cs-CZ', hu: 'hu-HU', de: 'de-AT', sr: 'sr-Latn-RS', ro: 'ro-RO', en: 'en-GB' }
+const LOKALE: Record<Jezik, string> = { sl: 'sl-SI', hr: 'hr-HR', sk: 'sk-SK', cs: 'cs-CZ', hu: 'hu-HU', de: 'de-AT', sr: 'sr-Latn-RS', ro: 'ro-RO', et: 'et-EE', en: 'en-GB' }
 const SHRAMBA = 'slff-jezik'
 
 export const jePripravljen = (j: string): j is Jezik => PRIPRAVLJENI.includes(j as Jezik)

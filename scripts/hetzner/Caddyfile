@@ -80,7 +80,7 @@ slff.eu {
 
 	# The same page with a trailing slash (/players/): one address for search engines,
 	# 301 to the canonical one without it, query kept (same trick as @stara_pot).
-	@posevnica path_regexp ^/(my-team|assists|positions|absences|players|standings|national|mini-leagues|results|table|login|legal|reminders|account|admin|si|sk|hr|cz|hu|at|rs|ro)/$
+	@posevnica path_regexp ^/(my-team|assists|positions|absences|players|standings|national|mini-leagues|results|table|login|legal|reminders|account|admin|si|sk|hr|cz|hu|at|rs|ro|ee)/$
 	handle @posevnica {
 		route {
 			uri path_regexp ^(/[a-z-]+)/$ $1
@@ -185,7 +185,7 @@ slff.eu {
 	# le zahtevke iz lb_retry_match (privzeto samo GET), zato še HEAD.
 	@html_strani {
 		method GET HEAD
-		path / /table /results /standings /players /player/* /club/* /match/* /si /sk /hr /cz /hu /at /rs /ro
+		path / /table /results /standings /players /player/* /club/* /match/* /si /sk /hr /cz /hu /at /rs /ro /ee
 	}
 	handle @html_strani {
 		reverse_proxy 127.0.0.1:3200 127.0.0.1:3201 {
@@ -212,6 +212,7 @@ slff.eu {
 		@at_vstop path /at /at/
 		@rs_vstop path /rs /rs/
 		@ro_vstop path /ro /ro/
+		@ee_vstop path /ee /ee/
 		@sk_liga {
 			not path *.*
 			expression `{query.t}.startsWith("sk-")`
@@ -240,13 +241,17 @@ slff.eu {
 			not path *.*
 			expression `{query.t}.startsWith("ro-")`
 		}
+		@ee_liga {
+			not path *.*
+			expression `{query.t}.startsWith("ee-")`
+		}
 		@spa not path *.*
 		# Real 404s: a path that is no route of src/App.tsx gets the SPA (NiStrani) with
 		# status 404 (handle_errors below). Keep this list in sync with <Routes>.
 		# Missing ids (/player/999999999) stay 200; the page sets noindex itself.
 		@ni_strani {
 			not path *.*
-			not path / /sk /hr /cz /hu /at /rs /ro /si
+			not path / /sk /hr /cz /hu /at /rs /ro /ee /si
 			not path /my-team /assists /positions /absences /players /standings /national /mini-leagues /results /table
 			not path /player/* /team/* /club/* /match/* /l/*
 			not path /login /new-password /novo-geslo /legal /reminders /account /auth/confirm /admin
@@ -261,6 +266,7 @@ slff.eu {
 			rewrite @at_vstop /at.html
 			rewrite @rs_vstop /rs.html
 			rewrite @ro_vstop /ro.html
+			rewrite @ee_vstop /ee.html
 			rewrite @sk_liga /sk.html
 			rewrite @hr_liga /hr.html
 			rewrite @cz_liga /cz.html
@@ -268,6 +274,7 @@ slff.eu {
 			rewrite @at_liga /at.html
 			rewrite @rs_liga /rs.html
 			rewrite @ro_liga /ro.html
+			rewrite @ee_liga /ee.html
 			rewrite @spa /index.html
 			file_server
 		}
@@ -301,10 +308,10 @@ http://:3201 {
 	bind 127.0.0.1
 	root * /srv/slff/current
 	map {query.t} {html_predloga} {
-		~^(sk|hr|cz|hu|at|rs|ro)- /${1}.html
+		~^(sk|hr|cz|hu|at|rs|ro|ee)- /${1}.html
 		default /index.html
 	}
-	@vstop path_regexp vstop ^/(sk|hr|cz|hu|at|rs|ro)$
+	@vstop path_regexp vstop ^/(sk|hr|cz|hu|at|rs|ro|ee)$
 	handle @vstop {
 		rewrite * /{re.vstop.1}.html
 		file_server

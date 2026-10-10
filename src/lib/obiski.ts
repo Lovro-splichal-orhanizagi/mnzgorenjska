@@ -22,6 +22,7 @@ const PO_POTI: Record<string, string> = {
   '/at': 'vstop_drzave',
   '/rs': 'vstop_drzave',
   '/ro': 'vstop_drzave',
+  '/ee': 'vstop_drzave',
   '/si': 'vstop_drzave',
   '/my-team': 'moja_ekipa',
   '/players': 'igralci',

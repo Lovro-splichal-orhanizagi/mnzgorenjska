@@ -1319,6 +1319,47 @@ Câmpia Turzii je vpisana s 3/5 polnih.
 Uvoz (ena za drugo, **brez arhiva**): `gh workflow run uvoz-lige.yml -f
 liga=ro-liga3-s1 -f cene=true`. Liga ~1–2 minuti.
 
+### Estonija
+
+Država `EE` ("Eesti", migracija 20261011140000) ima vmesnik v estonščini
+(`src/i18n/et/`, jezik `et`, `et-EE`, `JEZIK_DRZAVE.EE`), vstop `slff.eu/ee`,
+kartico ob deljenju `ee.html` (Caddy jo vrne za `/ee` in `?t=ee-…`), estonsko
+vejo pošte (`sporocila.ts`, avtentikacijske predloge in zadeve v
+`docker-compose.slff.yml`, pozdrav "Tere") in estonska imena lastnikov hišnih
+ekip ("Martin Tamm"). **Šifra estonske lige se začne z `ee-`** (koda države;
+jezik je `et`). Ugib: brskalnik `et` ali pas `Europe/Tallinn`. Izrazi:
+meeskond, koosseis, algkoosseis, pink, kapten, asekapten, üleminekud,
+väravavaht, kaitsja, poolkaitsja, ründaja, edetabel, liigatabel,
+resultatiivne sööt, kaart, nullimäng; `krog` je vedno **voor** ("5. voor"),
+pripomoček `klop_plus` je "Pink+". Množine one/other (`Intl.PluralRules('et')`);
+za številom je samostalnik v delilniku ednine ("3 punkti", "12 mängijat"),
+v mestniku/izhodniku pa ednina za obe obliki ("12 meeskonnast"). Estonščina
+ima 14 sklonov, zato ime lige **ostane v imenovalniku** in stoji samostojno
+za dvopičjem ali v oklepaju ("Fantaasialiiga on avatud: {liga}", "liiga:
+{liga}"); `ligaVTozilniku` ga pusti. Tako tudi ime zveze (`{zveza}` v
+oklepaju) in klub ("klubi {klub}"). Brez pomišljajev (smoke). Psevdonim v
+klepetu ima pridevnik pred samostalnikom ("Sinine Väravavaht 42"). Stran
+Pozicije je v meniju kot v Sloveniji. `EE` je v matriki nočnega uvoza.
+Manjka še: estonski kanal v HelpStacku (`Podpora.tsx` za `et` uporabi
+slovenskega) in **pregled prevoda pri naravnem govorcu**.
+
+**Koledarska sezona.** Estonske lige igrajo od marca do novembra, zato je
+sezona leto: `rounds.season = '2026'`, ne `'2026/27'` (arhiv `'2025'`).
+Ligo označi `competitions.sezona_koledarska = true` (migracija
+20261011140100, privzeto false — obstoječe lige ostanejo pri meji 1. julija).
+Tekočo sezono lige da SQL `sezona_lige(liga[, datum])`; nanjo gledata
+`stanje_lige` (pripravljenost) in `vklopi_ligo_sredi_sezone`. Uvoz razporeda
+oznako izračuna s `sezonaIz(datum, tekmovanje.sezona_koledarska)`
+(`scripts/razpored.mjs`; zastavico prebere `scripts/tekmovanje.mjs` s
+posebno poizvedbo, da manjkajoč stolpec ne odnese vira), **vir mora v
+zapisniku (`z.sezona`) dati isto obliko** (`'2026'`). Hišne ekipe in
+*Uskladi pozicije* berejo `sezona_lige` po ligi, preverba podatkov in
+zemljevid strani vzameta obe obliki, `competitions_view` nosi
+`sezona_koledarska` (Igralci po njej ugane tekočo sezono). Vse ostalo sezono
+le primerja ali razvršča in z obliko "2026" deluje brez sprememb. Globalna
+`tekoca_sezona()` ostane "2026/27" — nov klic naj bo `sezona_lige(liga)`.
+`ovrednoti-igralce --sezona 2025` za arhiv.
+
 ### Država obiskovalca
 
 Domena je ena, **lige druge države so skrite**: `useTekmovanje().tekmovanja`
@@ -1726,7 +1767,7 @@ besedilom). **Obvezno, vsakič:**
    istega pošiljatelja po 3+ dneh je v redu).
 2. **Po** poslanem mailu: `node scripts/stiki-klubov.mjs zabelezi --za <naslov>
    --vrsta prvi|opomnik --poslal <ime> --zadeva "…" --telo-datoteka <datoteka>`
-   (nov naslov še `--klub "…" --drzava SI|SK|HR|CZ|HU|AT|RS|RO [--liga …]`). Pri paketih
+   (nov naslov še `--klub "…" --drzava SI|SK|HR|CZ|HU|AT|RS|RO|EE [--liga …]`). Pri paketih
    beleži sproti, po vsakem mailu, ne na koncu.
 3. Odgovor kluba: `zabelezi --vrsta odgovor --opomba "<povzetek>"`; dogovor ali
    zavrnitev: `nastavi --za … --stanje sodeluje|ne_zeli`.
@@ -1784,9 +1825,9 @@ kanonični `?t=` po svoji ligi.
   `src/i18n` — nikoli `toLocaleString('sl-SI')`.
 - Drugi jezik (`src/i18n/hr/`) je lahko delen; manjkajoče pride iz
   slovenščine. `npm run prevodi -- hr` izpiše, kaj manjka. Brskalnik izbere
-  jezik sam šele, ko je v `PRIPRAVLJENI` (`sl`, `hr`, `sk`, `cs`, `hu`, `de`, `sr`, `ro`, `en`). Hrvaščina,
-  slovaščina, češčina, madžarščina, nemščina, srbščina, romunščina in angleščina so popolne — smoke preveri, da imajo vse ključe ter iste
-  `{parametre}` in `<oznake>`; nov slovenski niz zato dodaj v vseh osem.
+  jezik sam šele, ko je v `PRIPRAVLJENI` (`sl`, `hr`, `sk`, `cs`, `hu`, `de`, `sr`, `ro`, `et`, `en`). Hrvaščina,
+  slovaščina, češčina, madžarščina, nemščina, srbščina, romunščina, estonščina in angleščina so popolne — smoke preveri, da imajo vse ključe ter iste
+  `{parametre}` in `<oznake>`; nov slovenski niz zato dodaj v vseh devet.
 - **Kateri jezik** (`zeljenJezik` v `src/lib/drzavaUgib.ts`, isto pravilo v
   `izberi()` ob nalaganju in v varovalu konteksta lige):
   1. izbira z izbirnika **"SL · SK · EN"** (`IzbiraJezika`, v nogi in na vrhu

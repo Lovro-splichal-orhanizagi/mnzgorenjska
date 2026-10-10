@@ -462,6 +462,7 @@ export type Database = {
           name: string
           prvi_fantasy_krog: number
           rok_pomak_ur: number
+          sezona_koledarska: boolean
           short_name: string
           slug: string
           sort_order: number
@@ -480,6 +481,7 @@ export type Database = {
           name: string
           prvi_fantasy_krog?: number
           rok_pomak_ur?: number
+          sezona_koledarska?: boolean
           short_name: string
           slug: string
           sort_order?: number
@@ -497,6 +499,7 @@ export type Database = {
           name?: string
           prvi_fantasy_krog?: number
           rok_pomak_ur?: number
+          sezona_koledarska?: boolean
           short_name?: string
           slug?: string
           sort_order?: number
@@ -3441,6 +3444,7 @@ export type Database = {
           name: string | null
           prvi_fantasy_krog: number | null
           rok_pomak_ur: number | null
+          sezona_koledarska: boolean | null
           short_name: string | null
           slug: string | null
           sort_order: number | null
@@ -5530,6 +5534,7 @@ export type Database = {
       }
       potrdi_asistenco: { Args: { p_goal_id: number }; Returns: undefined }
       potrdi_pozicijo: { Args: { p_player_id: number }; Returns: undefined }
+      povzetek_rasti: { Args: Record<PropertyKey, never>; Returns: string }
       preracunaj_cene: {
         Args: { p_round_id: number }
         Returns: {
@@ -5570,6 +5575,10 @@ export type Database = {
       }
       roster_je_veljaven: { Args: { p_team_id: number }; Returns: boolean }
       sem_v_mini_ligi: { Args: { p_liga: number }; Returns: boolean }
+      sezona_lige: {
+        Args: { p_competition_id: number; p_datum?: string }
+        Returns: string
+      }
       shrani_ekipo: {
         Args: { p_roster: Json; p_team_id: number }
         Returns: Json

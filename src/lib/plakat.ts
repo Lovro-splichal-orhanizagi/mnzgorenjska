@@ -94,6 +94,9 @@ export function ligaVTozilniku(liga: string, j: Jezik = jezikSlovarja()): string
   // stavki pa ime lige vseeno postavijo samostojno za dvopičje
   // ("Liga fantasy s-a deschis: Liga a IV-a Ilfov").
   if (j === 'ro') return liga
+  // Estonščina ima 14 sklonov; ime lige ostane v imenovalniku in stoji
+  // samostojno za dvopičjem ("Fantaasialiiga on avatud: Esiliiga").
+  if (j === 'et') return liga
   if (j === 'sk') return liga.replace(/(^|\s)liga(?=\s|$)/, '$1ligu').replace(/(^|\s)trieda(?=\s|$)/, '$1triedu')
   // Hrvaščina: ženske besede imena pred " — " na -a dobijo -u: "Treća NL Sjever"
   // -> "Treću NL Sjever", "Prva zagrebačka liga" -> "Prvu zagrebačku ligu".

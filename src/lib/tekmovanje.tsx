@@ -77,6 +77,8 @@ export interface Tekmovanje {
   vir_url: string | null
   country_code: string | null
   country_name: string | null
+  /** Sezona je koledarsko leto ("2026", Estonija); manjka v starem odgovoru in shrambi. */
+  sezona_koledarska?: boolean
 }
 
 /** Ukaz, ki ga vrne `uskladiTekmovanje` — kdo popravi koga. */
@@ -194,7 +196,7 @@ function shranjeno(): string | null {
 // dodatek k izpisu, zato je varno, da ju manjkajoča migracija odnese skupaj.
 const STOLPCI_ZVEZE =
   'federation_code, federation_name, federation_short, federation_url, federation_sort,' +
-  ' vir_ime, vir_url'
+  ' vir_ime, vir_url, sezona_koledarska'
 const STOLPCI_OSNOVNI =
   'id, slug, name, short_name, prvi_fantasy_krog, country_code, country_name'
 
