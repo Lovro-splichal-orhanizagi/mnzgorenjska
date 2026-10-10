@@ -55,6 +55,23 @@ import { minuteIzPreklopov } from './facr.mjs'
 import { sifra } from './zapisniki.mjs'
 
 const OSNOVNI = 'https://www.frf-ajf.ro'
+
+// Dostop: Cloudflare pred frf-ajf.ro vrne 403 omrežjem ameriških podatkovnih
+// centrov (GitHubovi tekači, 10. 10. 2026), z našega strežnika v EU in z
+// istim odkritim User-Agentom pa 200 — zemljepisna omejitev, ne izziv.
+// Zahtevki zato tečejo prek istega posrednika kot FAČR (`FACR_PROXY`,
+// scripts/hetzner/facr-posrednik.sh, ki dovoli tudi www.frf-ajf.ro). Izziva
+// ali CAPTCHE ne obhajamo: `jeIzziv` ustavi uvoz.
+let posrednik
+async function frfFetch(url, init = {}) {
+  if (posrednik === undefined) {
+    const naslov = process.env.FACR_PROXY
+    posrednik = naslov ? new (await import('undici')).ProxyAgent(naslov) : null
+  }
+  if (!posrednik) return fetch(url, init)
+  const { fetch: f } = await import('undici')
+  return f(url, { ...init, dispatcher: posrednik })
+}
 const DOLZINA_TEKME = 90
 /** Začetek opozorila nepopolne tekme; preveri-podatke ga išče v `import_warnings`. */
 export const NEPOPOLN = 'zapisnik nepopoln'
@@ -529,6 +546,7 @@ const vir = {
   osnovniNaslov: OSNOVNI,
   // Dogovorjeno besedilo: kdo bere in kako nas dobijo. Drugega naslova ne.
   glave: { 'User-Agent': 'SLFF fantasy (slff.eu; splih.94@gmail.com)' },
+  fetch: frfFetch,
   premorMs: 1600,
   imaRegistracije: false,
 

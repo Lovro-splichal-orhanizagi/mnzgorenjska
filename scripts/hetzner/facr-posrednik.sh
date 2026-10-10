@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Posrednik za IS FAČR (is.fotbal.cz) na strežniku SLFF.
+# Posrednik za IS FAČR (is.fotbal.cz) in frf-ajf.ro na strežniku SLFF.
 #
 # IS FAČR odgovarja le z omrežij v EU; GitHubovi tekači (Microsoft, ZDA) ne
 # dobijo niti povezave. Uvoz zato še vedno teče na GitHubu, le zahtevki k
 # is.fotbal.cz gredo prek tega posrednika (FACR_PROXY v skrivnostih GitHuba).
 #
 # Strežnika to ne obremeni: tinyproxy samo prepušča šifrirano povezavo
-# (CONNECT), vsebine ne odpira. Dovoli le is.fotbal.cz:443, zahteva geslo,
+# (CONNECT), vsebine ne odpira. Dovoli le is.fotbal.cz:443 in www.frf-ajf.ro:443, zahteva geslo,
 # največ 5 hkratnih povezav, systemd ga omeji na 20 % enega jedra in 64 MB.
 #
 # Zagon (enkrat):
@@ -39,7 +39,9 @@ FilterType ere
 FilterDefaultDeny Yes
 DisableViaHeader Yes
 EOF
-echo '^is\.fotbal\.cz$' > /etc/tinyproxy/dovoljeni
+# is.fotbal.cz (FAČR) in www.frf-ajf.ro (Romunija: Cloudflare zavrne ameriške
+# podatkovne centre, 10. 10. 2026).
+printf '%s\n' '^is\.fotbal\.cz$' '^www\.frf-ajf\.ro$' > /etc/tinyproxy/dovoljeni
 chown root:tinyproxy /etc/tinyproxy/tinyproxy.conf /etc/tinyproxy/dovoljeni
 chmod 640 /etc/tinyproxy/tinyproxy.conf /etc/tinyproxy/dovoljeni
 
