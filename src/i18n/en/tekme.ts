@@ -62,6 +62,46 @@ export const tekme: NonNullable<Prevod['tekme']> = {
     naslednji: 'Next round',
   },
 
+  // Stran Lestvica lige (/table): prava lestvica iz izidov in strelci.
+  tabela: {
+    naslov: 'League table',
+    zavihek: '{liga} · table',
+    uvod: 'The {sezona} table, calculated from the match results in the {zveza} match reports.',
+    opomba: 'Approximation: 3 points for a win, 1 for a draw; teams level on points are separated by goal difference, then goals scored. Federations may use other rules (head-to-head, point deductions); the official table is at {zveza}.',
+    niTekem: 'No matches have been played in this league yet.',
+    stolpci: {
+      klub: 'Club',
+      tekme: 'P',
+      zmage: 'W',
+      remiji: 'D',
+      porazi: 'L',
+      goli: 'Goals',
+      razlika: 'GD',
+      tocke: 'Pts',
+      forma: 'Form',
+    },
+    stolpciOpis: {
+      tekme: 'Played',
+      zmage: 'Won',
+      remiji: 'Drawn',
+      porazi: 'Lost',
+      goli: 'Goals for : against',
+      razlika: 'Goal difference',
+      tocke: 'Points',
+    },
+    forma: { W: 'W', D: 'D', L: 'L' },
+    formaOpis: { W: 'win', D: 'draw', L: 'loss' },
+    strelci: 'Top scorers',
+    niStrelcev: 'No goals scored yet this season.',
+    stolpciStrelcev: {
+      igralec: 'Player',
+      klub: 'Club',
+      goli: 'Goals',
+      tekme: 'Apps',
+      minute: 'Min',
+    },
+  },
+
   tekma: {
     naslov: 'Match',
     niTekme: 'This match isn’t in the match reports.',

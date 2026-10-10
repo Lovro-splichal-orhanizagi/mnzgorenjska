@@ -30,6 +30,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     igralci: 'Players',
     lestvica: 'Standings',
     rezultati: 'Results',
+    tabela: 'League table',
     miniLige: 'Mini-leagues',
     asistence: 'Assists',
     pozicije: 'Positions',

@@ -22,6 +22,7 @@ import MiniLige from './pages/MiniLige'
 import Ekipa from './pages/Ekipa'
 import Klub from './pages/Klub'
 import Rezultati from './pages/Rezultati'
+import Tabela from './pages/Tabela'
 import Tekma from './pages/Tekma'
 import Prijava from './pages/Prijava'
 import NovoGeslo from './pages/NovoGeslo'
@@ -127,6 +128,7 @@ export default function App() {
               <Route path="/team/:id" element={<Ekipa />} />
               <Route path="/club/:id" element={<Klub />} />
               <Route path="/results" element={<Rezultati />} />
+              <Route path="/table" element={<Tabela />} />
               <Route path="/match/:id" element={<Tekma />} />
               <Route path="/login" element={<Prijava />} />
               <Route path="/new-password" element={<NovoGeslo />} />

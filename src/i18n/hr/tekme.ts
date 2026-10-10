@@ -62,6 +62,46 @@ export const tekme: NonNullable<Prevod['tekme']> = {
     naslednji: 'Sljedeće kolo',
   },
 
+  // Stran Lestvica lige (/table): prava lestvica iz izidov in strelci.
+  tabela: {
+    naslov: 'Tablica',
+    zavihek: '{liga} · tablica',
+    uvod: 'Tablica sezone {sezona}, izračunana iz rezultata utakmica u zapisnicima ({zveza}).',
+    opomba: 'Približno: pobjeda 3 boda, neriješeno 1; kod jednakog broja bodova odlučuje gol razlika, zatim postignuti golovi. Savezi mogu imati drugačija pravila (međusobne utakmice, oduzeti bodovi), službena tablica je kod saveza ({zveza}).',
+    niTekem: 'Ova liga još nema odigranih utakmica.',
+    stolpci: {
+      klub: 'Klub',
+      tekme: 'Ut',
+      zmage: 'P',
+      remiji: 'N',
+      porazi: 'I',
+      goli: 'Gol',
+      razlika: 'GR',
+      tocke: 'Bod',
+      forma: 'Forma',
+    },
+    stolpciOpis: {
+      tekme: 'Odigrane utakmice',
+      zmage: 'Pobjede',
+      remiji: 'Neriješeno',
+      porazi: 'Porazi',
+      goli: 'Postignuti : primljeni golovi',
+      razlika: 'Gol razlika',
+      tocke: 'Bodovi',
+    },
+    forma: { W: 'P', D: 'N', L: 'I' },
+    formaOpis: { W: 'pobjeda', D: 'neriješeno', L: 'poraz' },
+    strelci: 'Strijelci',
+    niStrelcev: 'U ovoj sezoni još nema strijelaca.',
+    stolpciStrelcev: {
+      igralec: 'Igrač',
+      klub: 'Klub',
+      goli: 'Golovi',
+      tekme: 'Utakmice',
+      minute: 'Min',
+    },
+  },
+
   tekma: {
     naslov: 'Utakmica',
     niTekme: 'Ove utakmice nema u zapisnicima.',

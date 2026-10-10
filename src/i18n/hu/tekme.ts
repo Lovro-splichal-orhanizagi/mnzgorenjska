@@ -62,6 +62,46 @@ export const tekme: NonNullable<Prevod['tekme']> = {
     naslednji: 'Következő forduló',
   },
 
+  // Stran Lestvica lige (/table): prava lestvica iz izidov in strelci.
+  tabela: {
+    naslov: 'Tabella',
+    zavihek: '{liga} · tabella',
+    uvod: 'A {sezona} idény tabellája, a jegyzőkönyvek eredményeiből számolva ({zveza}).',
+    opomba: 'Közelítés: győzelem 3 pont, döntetlen 1; azonos pontszámnál a gólkülönbség, majd a lőtt gólok döntenek. A szövetségek szabályai eltérhetnek (egymás elleni eredmény, pontlevonás), a hivatalos tabella a szövetségnél található ({zveza}).',
+    niTekem: 'Ebben a bajnokságban még nincs lejátszott meccs.',
+    stolpci: {
+      klub: 'Csapat',
+      tekme: 'M',
+      zmage: 'GY',
+      remiji: 'D',
+      porazi: 'V',
+      goli: 'Gólok',
+      razlika: 'GK',
+      tocke: 'P',
+      forma: 'Forma',
+    },
+    stolpciOpis: {
+      tekme: 'Lejátszott meccsek',
+      zmage: 'Győzelmek',
+      remiji: 'Döntetlenek',
+      porazi: 'Vereségek',
+      goli: 'Lőtt : kapott gólok',
+      razlika: 'Gólkülönbség',
+      tocke: 'Pontok',
+    },
+    forma: { W: 'GY', D: 'D', L: 'V' },
+    formaOpis: { W: 'győzelem', D: 'döntetlen', L: 'vereség' },
+    strelci: 'Góllövőlista',
+    niStrelcev: 'Ebben az idényben még nincs góllövő.',
+    stolpciStrelcev: {
+      igralec: 'Játékos',
+      klub: 'Csapat',
+      goli: 'Gól',
+      tekme: 'Meccs',
+      minute: 'Perc',
+    },
+  },
+
   tekma: {
     naslov: 'Meccs',
     niTekme: 'Ez a meccs nem szerepel a jegyzőkönyvekben.',

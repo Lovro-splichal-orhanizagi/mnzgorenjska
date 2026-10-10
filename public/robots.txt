@@ -3,3 +3,4 @@ Allow: /
 Disallow: /admin
 
 Sitemap: https://slff.eu/sitemap.xml
+Sitemap: https://slff.eu/sitemap-index.xml

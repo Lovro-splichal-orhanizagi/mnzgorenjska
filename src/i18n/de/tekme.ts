@@ -62,6 +62,46 @@ export const tekme: NonNullable<Prevod['tekme']> = {
     naslednji: 'Nächste Runde',
   },
 
+  // Stran Lestvica lige (/table): prava lestvica iz izidov in strelci.
+  tabela: {
+    naslov: 'Tabelle',
+    zavihek: '{liga} · Tabelle',
+    uvod: 'Tabelle der Saison {sezona}, berechnet aus den Ergebnissen der Spielberichte von {zveza}.',
+    opomba: 'Näherung: Sieg 3 Punkte, Unentschieden 1; bei Punktgleichheit entscheidet die Tordifferenz, dann die erzielten Tore. Verbände können andere Regeln haben (direkter Vergleich, Punkteabzug), die offizielle Tabelle gibt es bei {zveza}.',
+    niTekem: 'In dieser Liga wurde noch kein Spiel gespielt.',
+    stolpci: {
+      klub: 'Verein',
+      tekme: 'Sp',
+      zmage: 'S',
+      remiji: 'U',
+      porazi: 'N',
+      goli: 'Tore',
+      razlika: 'Diff',
+      tocke: 'Pkt',
+      forma: 'Form',
+    },
+    stolpciOpis: {
+      tekme: 'Spiele',
+      zmage: 'Siege',
+      remiji: 'Unentschieden',
+      porazi: 'Niederlagen',
+      goli: 'Tore : Gegentore',
+      razlika: 'Tordifferenz',
+      tocke: 'Punkte',
+    },
+    forma: { W: 'S', D: 'U', L: 'N' },
+    formaOpis: { W: 'Sieg', D: 'Unentschieden', L: 'Niederlage' },
+    strelci: 'Torschützen',
+    niStrelcev: 'In dieser Saison gibt es noch keine Torschützen.',
+    stolpciStrelcev: {
+      igralec: 'Spieler',
+      klub: 'Verein',
+      goli: 'Tore',
+      tekme: 'Spiele',
+      minute: 'Min',
+    },
+  },
+
   tekma: {
     naslov: 'Spiel',
     niTekme: 'Dieses Spiel ist in den Spielberichten nicht vorhanden.',

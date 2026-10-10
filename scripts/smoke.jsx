@@ -10,6 +10,7 @@ import Domov from '../src/pages/Domov'
 import Igralci from '../src/pages/Igralci'
 import Lestvica from '../src/pages/Lestvica'
 import Rezultati from '../src/pages/Rezultati'
+import Tabela from '../src/pages/Tabela'
 import Tekma from '../src/pages/Tekma'
 import Prijava from '../src/pages/Prijava'
 import MojaEkipa from '../src/pages/MojaEkipa'
@@ -56,6 +57,8 @@ import { serijaCen, premik, crta, zadnjiPremiki } from '../src/lib/gibanjeCene'
 import { dopolniKader, predlagajKader } from '../src/lib/predlogKadra'
 import { velikostImena, velikostEkipe, imeZaPlakat, najboljsiTrije, navijacev, stavekNavijacev, skrajsajIme, prilagodiVelikost, ligaVTozilniku, velikostLige, imeDatoteke } from '../src/lib/plakat'
 import { readFileSync } from 'node:fs'
+import { xmlEscape, urlset, sitemapIndex, nasloviLige, datotekeLige } from './sitemap.mjs'
+import { imeStrani } from '../src/lib/obiski'
 
 let napak = 0
 const preveri = (label, cond, extra = '') => {
@@ -93,6 +96,7 @@ const strani = [
   ],
   ['Zivost skupnosti', ZivostSkupnosti, '/admin'],
   ['Rezultati', Rezultati, '/results'],
+  ['Lestvica lige', Tabela, '/table'],
   ['Tekma', Tekma, '/match/1'],
   ['Prijava', Prijava, '/login'],
   ['Administracija', Administracija, '/admin'],
@@ -130,6 +134,39 @@ try {
   preveri('izris: pas z rokom kroga', true)
 } catch (e) {
   preveri('izris: pas z rokom kroga', false, e.message)
+}
+
+// --- zemljevid strani (scripts/sitemap.mjs) --------------------------------
+{
+  preveri('sitemap: posebni znaki so ubežani',
+    xmlEscape(`a&b<c>"d'`) === 'a&amp;b&lt;c&gt;&quot;d&apos;')
+  const xml = urlset([{ loc: 'https://slff.eu/x?a=1&b=<2>' }, { loc: 'https://slff.eu/y', lastmod: '2026-10-03' }])
+  // Brez razčlenjevalnika: vsak & je začetek entitete, < in > sta le v oznakah.
+  const besedilo = xml.replace(/<[^<>]*>/g, '')
+  preveri('sitemap: urlset je dobro oblikovan',
+    xml.startsWith('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">')
+      && xml.trimEnd().endsWith('</urlset>')
+      && !/[<>]/.test(besedilo) && !/&(?!amp;|lt;|gt;|quot;|apos;)/.test(besedilo)
+      && (xml.match(/<url>/g) ?? []).length === 2 && xml.includes('<lastmod>2026-10-03</lastmod>'))
+  preveri('sitemap: kazalo', sitemapIndex([{ loc: 'https://slff.eu/sitemap-a.xml' }]).includes(
+    '<sitemap><loc>https://slff.eu/sitemap-a.xml</loc></sitemap>'))
+  const n = nasloviLige('clani', {
+    klubi: [9, 10],
+    igralci: [5],
+    tekme: [
+      { id: 1, played_on: '2026-09-01', home_team_id: 9, away_team_id: 11 },
+      { id: 2, played_on: '2026-09-08', home_team_id: 11, away_team_id: 10 },
+    ],
+  })
+  const po = Object.fromEntries(n.map((x) => [x.loc, x.lastmod ?? null]))
+  preveri('sitemap: strani lige, klubi, igralci in tekme z ?t=',
+    n.length === 5 + 2 + 1 + 2 && po['https://slff.eu/table?t=clani'] === '2026-09-08'
+      && po['https://slff.eu/club/9?t=clani'] === '2026-09-01' && po['https://slff.eu/club/10?t=clani'] === '2026-09-08'
+      && 'https://slff.eu/player/5?t=clani' in po && po['https://slff.eu/match/1?t=clani'] === '2026-09-01')
+  const d = datotekeLige('x', Array.from({ length: 5 }, (_, i) => ({ loc: String(i) })), 2)
+  preveri('sitemap: liga nad mejo se razdeli', d.map((k) => `${k.ime}:${k.naslovi.length}`).join(' ')
+    === 'sitemap-x.xml:2 sitemap-x-2.xml:2 sitemap-x-3.xml:1')
+  preveri('obisk: /table se šteje kot tabela', imeStrani('/table') === 'tabela')
 }
 
 // --- preklop med ligama ----------------------------------------------------

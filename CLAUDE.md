@@ -1120,6 +1120,19 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   (privzeto 3). Točke bere iz `fantasy_round_points` (tabela), ne računa sproti
 - stran Rezultati (`/results`, `/match/:id`) sestavi postavi tekme iz
   `appearances` + `appearance_points`; nove sheme ne potrebuje
+- `lestvica_lige(liga, sezona)` → **prava** lestvica lige (stran `/table`, meni
+  "Lestvica lige"; `/standings` je fantasy). Iz `matches`: odigrana = ima
+  zapisnik ali je kontumacija (z dodeljenim izidom); 3/1/0, točke → gol razlika
+  → dani goli → ime. Medsebojnih tekem in odvzetih točk ne pozna — stran to
+  pove kot približek. Privzeta sezona je zadnja z odigrano tekmo. Pod njo
+  strelci iz `player_season_standings`
+- **Zemljevid strani**: `public/sitemap.xml` ima le stalne poti; po ligah ga
+  ponoči sestavi `scripts/sitemap.mjs` (delovni tok `sitemap.yml`, anon ključ:
+  strani lige s `?t=`, klubi, igralci z minutami letos ali lani, odigrane
+  tekme) in ga z rsync prenese v `/srv/slff/sitemap/` na strežniku — ne v
+  repozitorij in ne v `dist/`, ker objava zamenja mapo izdaje. Caddy streže
+  `/sitemap-index.xml` in `/sitemap-*.xml` iz te mape. Nova javna stran lige
+  sodi tudi v `STRANI_LIGE` v skripti
 - `match_assist_status` → odigrane tekme s številom golov brez asistence
   (stran Asistence izbira po korakih: krog → tekma → gol)
 - `naslednji_krog` → prvi krog, ki se še ni zaklenil (rok na strani Moja ekipa)
