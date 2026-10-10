@@ -15,23 +15,26 @@ name: Grbi klubov (rocni seznam)
 # `vir = oefb`: avstrijski klubi z oefb.at (scripts/grbi-oefb.mjs), id grba iz
 # razporeda lige. /oefb2/images/ robots.txt prepoveduje — beremo ga le z
 # izrecnim dovoljenjem OFB (9. 10. 2026). Brez `tekmovanje` vse aktivne at- lige.
+#
+# `vir = jalgpall`: estonski klubi z glave zapisnika na jalgpall.ee
+# (scripts/grbi-jalgpall.mjs). Brez `tekmovanje` vse ee- lige.
 
 on:
   workflow_dispatch:
     inputs:
       vir:
-        description: 'rocni = seznam v prenesi-grbe.mjs, sportnet = slovaski klubi s futbalnet.sk, hns = hrvaski klubi s semafor.hns.family, oefb = avstrijski klubi z oefb.at'
+        description: 'rocni = seznam v prenesi-grbe.mjs, sportnet = slovaski klubi s futbalnet.sk, hns = hrvaski klubi s semafor.hns.family, oefb = avstrijski klubi z oefb.at, jalgpall = estonski klubi z jalgpall.ee'
         required: false
         default: rocni
         type: choice
-        options: [rocni, sportnet, hns, oefb]
+        options: [rocni, sportnet, hns, oefb, jalgpall]
       tekmovanje:
-        description: 'Samo za hns/oefb: ena liga (slug, npr. hr-mz-1mnl, at-k-kaerntner-liga); prazno = vse hrvaske / vse aktivne avstrijske lige'
+        description: 'Samo za hns/oefb/jalgpall: ena liga (slug, npr. hr-mz-1mnl, at-k-kaerntner-liga); prazno = vse hrvaske / vse aktivne avstrijske lige'
         required: false
         default: ''
         type: string
       prepisi:
-        description: 'Samo za hns/oefb: prepisi tudi obstojece grbe'
+        description: 'Samo za hns/oefb/jalgpall: prepisi tudi obstojece grbe'
         required: false
         default: false
         type: boolean
@@ -80,11 +83,12 @@ jobs:
             sportnet) skripta=grbi-sportnet ;;
             hns) skripta=grbi-hns ;;
             oefb) skripta=grbi-oefb ;;
+            jalgpall) skripta=grbi-jalgpall ;;
             *) skripta=prenesi-grbe ;;
           esac
           args=()
           if [ "$PISI" = "true" ]; then args+=(--pisi); fi
-          if [ "$VIR" = "hns" ] || [ "$VIR" = "oefb" ]; then
+          if [ "$VIR" = "hns" ] || [ "$VIR" = "oefb" ] || [ "$VIR" = "jalgpall" ]; then
             if [ -n "$TEKMOVANJE" ]; then args+=(--tekmovanje "$TEKMOVANJE"); fi
             if [ "$PREPISI" = "true" ]; then args+=(--prepisi); fi
           fi
