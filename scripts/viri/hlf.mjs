@@ -484,7 +484,15 @@ export class Seja {
       odg = await this.stran.goto(url, { waitUntil: 'domcontentloaded', timeout: 90000 })
     }
     if (odg && [401, 403, 429].includes(odg.status())) throw new Error(`hlf: ${url} -> HTTP ${odg.status()} — uvoz ustavljen`)
-    await this.cakajNa((o) => o.ime === 'GetMatches' && o.zahteva?.TourRoundId, 45000)
+    // Stran naloži ~6 MB filtrov; na GitHubovem tekaču zna krog priti šele po
+    // minuti (Liga 2, 10. 10. 2026). Če ga ni, stran enkrat naložimo znova.
+    const imaKrog = (o) => o.ime === 'GetMatches' && o.zahteva?.TourRoundId && o.telo?.responseData
+    if (!(await this.cakajNa(imaKrog, 90000))) {
+      this.log(`  hlf: krog se ni naložil v 90 s — nalagam znova`)
+      await this.vljudno()
+      await this.stran.reload({ waitUntil: 'domcontentloaded', timeout: 90000 })
+      await this.cakajNa(imaKrog, 90000)
+    }
     await this.preveriStran()
     // Stran lahko naloži kroge več lig zveze; prava je tista, katere tekme so
     // na karticah strani.
