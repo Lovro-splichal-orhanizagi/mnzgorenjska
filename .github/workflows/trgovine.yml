@@ -1,0 +1,28 @@
+name: Trgovine (stanje in namestitve)
+
+# Stanje iOS različice in mejniki namestitev na Discord (scripts/trgovine.mjs).
+on:
+  schedule:
+    - cron: '30 7 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  trgovine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/trgovine.mjs
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          ASC_VENDOR: ${{ vars.ASC_VENDOR }}
+          PLAY_SERVICE_ACCOUNT: ${{ secrets.PLAY_SERVICE_ACCOUNT }}
+          PLAY_BUCKET: ${{ vars.PLAY_BUCKET }}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
