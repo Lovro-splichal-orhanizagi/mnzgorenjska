@@ -23,10 +23,10 @@ import { fileURLToPath } from 'node:url'
 const DOMENA = 'https://slff.eu'
 const PRIVZETO = 'clani'
 // Kot JEZIK_DRZAVE v src/lib/drzavaUgib.ts in LOKALE v src/i18n/jedro.ts.
-const JEZIK = { SI: 'sl', SK: 'sk', HR: 'hr', CZ: 'cs', HU: 'hu', AT: 'de', RS: 'sr', RO: 'ro' }
-const LOKALE = { sl: 'sl-SI', sk: 'sk-SK', hr: 'hr-HR', cs: 'cs-CZ', hu: 'hu-HU', de: 'de-AT', sr: 'sr-Latn-RS', ro: 'ro-RO' }
+const JEZIK = { SI: 'sl', SK: 'sk', HR: 'hr', CZ: 'cs', HU: 'hu', AT: 'de', RS: 'sr', RO: 'ro', EE: 'et' }
+const LOKALE = { sl: 'sl-SI', sk: 'sk-SK', hr: 'hr-HR', cs: 'cs-CZ', hu: 'hu-HU', de: 'de-AT', sr: 'sr-Latn-RS', ro: 'ro-RO', et: 'et-EE' }
 // Kartice držav, ki jih zapiše vite.config.js (karticeDrzav); Slovenija je index.html.
-const KARTICE = ['sk', 'hr', 'cz', 'hu', 'at', 'rs', 'ro']
+const KARTICE = ['sk', 'hr', 'cz', 'hu', 'at', 'rs', 'ro', 'ee']
 
 export const esc = (s) =>
   String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])

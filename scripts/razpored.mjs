@@ -12,9 +12,13 @@ export function datum(slovenski) {
   return `${leto}-${String(mes).padStart(2, '0')}-${String(d).padStart(2, '0')}`
 }
 
-/** Sezona iz datuma prvega kroga: avgust 2026 → "2026/27". */
-export function sezonaIz(datumIso) {
+/**
+ * Sezona iz datuma prvega kroga: avgust 2026 → "2026/27". Liga s koledarsko
+ * sezono (`competitions.sezona_koledarska`, Estonija) ima leto: "2026".
+ */
+export function sezonaIz(datumIso, koledarska = false) {
   const [leto, mesec] = datumIso.split('-').map(Number)
+  if (koledarska) return String(leto)
   const zacetek = mesec >= 7 ? leto : leto - 1
   return `${zacetek}/${String((zacetek + 1) % 100).padStart(2, '0')}`
 }

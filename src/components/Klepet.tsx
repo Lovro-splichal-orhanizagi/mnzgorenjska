@@ -100,6 +100,18 @@ const BESEDE: Record<string, { pridevniki: string[]; samostalniki: string[] }> =
       'Vultur', 'Dragon', 'Taur', 'Cal', 'Șoim', 'Râs',
     ],
   },
+  et: {
+    pridevniki: [
+      'Sinine', 'Punane', 'Roheline', 'Kollane', 'Must', 'Valge', 'Hõbedane', 'Kuldne',
+      'Kiire', 'Metsik', 'Vaikne', 'Tuline', 'Jäine', 'Öine', 'Hommikune',
+      'Raudne', 'Vasest', 'Päikeseline', 'Taevane', 'Halastamatu',
+    ],
+    samostalniki: [
+      'Väravavaht', 'Kaitsja', 'Poolkaitsja', 'Ründaja', 'Kapten', 'Kohtunik', 'Treener',
+      'Fänn', 'Väravakütt', 'Söötja', 'Varumängija', 'Veteran', 'Kangelane', 'Hunt',
+      'Kotkas', 'Draakon', 'Härg', 'Hobune', 'Pistrik', 'Ilves',
+    ],
+  },
   de: {
     pridevniki: [
       'Blauer', 'Roter', 'Grüner', 'Gelber', 'Schwarzer', 'Weißer', 'Silberner', 'Goldener',

@@ -51,6 +51,13 @@
     <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Autentifică-te →</a>
   </p>
   <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Dacă nu tu ai cerut autentificarea, ignoră acest e-mail.</p>
+{{ else if eq (printf "%v" .Data.jezik) "et" }}
+  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Sisselogimine SLFF-i</p>
+  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Vajuta nupule ja oled sisse logitud. Link kehtib ühe tunni ja seda saab kasutada ainult üks kord.</p>
+  <p style="text-align: center; margin: 24px 0;">
+    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Logi sisse →</a>
+  </p>
+  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Kui sa ise sisselogimist ei taotlenud, jäta see kiri tähelepanuta.</p>
 {{ else }}
   <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Prijava v SLFF</p>
   <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Klikni gumb in prijavljen/a si. Povezava velja eno uro in jo lahko uporabiš le enkrat.</p>

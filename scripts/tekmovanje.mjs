@@ -14,8 +14,9 @@ export function slugTekmovanja(privzeto = 'clani') {
   return v && !v.startsWith('--') ? v : privzeto
 }
 
-// Stolpci, ki obstajajo šele po migraciji 20260905090000 (države in viri).
-const NOVI = 'source, source_league_code, country_id'
+// Stolpci, ki obstajajo šele po migracijah 20260905090000 (države in viri)
+// in 20261011140100 (koledarska sezona).
+const NOVI = 'source, source_league_code, country_id, sezona_koledarska'
 const STARI = 'id, slug, name, short_name, mnzg_liga, prvi_fantasy_krog, rok_pomak_ur, active'
 
 /**

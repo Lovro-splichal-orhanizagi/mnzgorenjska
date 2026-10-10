@@ -90,6 +90,10 @@
       "destination": "/ro.html"
     },
     {
+      "source": "/ee",
+      "destination": "/ee.html"
+    },
+    {
       "source": "/((?!api/)(?!.*\\.).*)",
       "has": [
         {
@@ -165,6 +169,17 @@
         }
       ],
       "destination": "/ro.html"
+    },
+    {
+      "source": "/((?!api/)(?!.*\\.).*)",
+      "has": [
+        {
+          "type": "query",
+          "key": "t",
+          "value": "ee-.*"
+        }
+      ],
+      "destination": "/ee.html"
     },
     {
       "source": "/((?!api/)(?!.*\\.).*)",

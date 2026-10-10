@@ -11,10 +11,10 @@
 // vmesnik, ko odpre povezavo `?t=sk-…`. Kdor ima ekipi v obeh državah, dobi
 // dva ločena maila, vsakega v jeziku svoje lige.
 
-export type Jezik = 'sl' | 'sk' | 'hr' | 'cs' | 'hu' | 'de' | 'sr' | 'ro'
+export type Jezik = 'sl' | 'sk' | 'hr' | 'cs' | 'hu' | 'de' | 'sr' | 'ro' | 'et'
 
 /** Jezik države lige (enako kot `JEZIK_DRZAVE` v vmesniku). */
-export const JEZIK_DRZAVE: Record<string, Jezik> = { SI: 'sl', SK: 'sk', HR: 'hr', CZ: 'cs', HU: 'hu', AT: 'de', RS: 'sr', RO: 'ro' }
+export const JEZIK_DRZAVE: Record<string, Jezik> = { SI: 'sl', SK: 'sk', HR: 'hr', CZ: 'cs', HU: 'hu', AT: 'de', RS: 'sr', RO: 'ro', EE: 'et' }
 /** Časovni pas, v katerem so roki lige. */
 export const PAS_DRZAVE: Record<string, string> = {
   SI: 'Europe/Ljubljana',
@@ -25,8 +25,9 @@ export const PAS_DRZAVE: Record<string, string> = {
   AT: 'Europe/Vienna',
   RS: 'Europe/Belgrade',
   RO: 'Europe/Bucharest',
+  EE: 'Europe/Tallinn',
 }
-const LOKALE: Record<Jezik, string> = { sl: 'sl-SI', sk: 'sk-SK', hr: 'hr-HR', cs: 'cs-CZ', hu: 'hu-HU', de: 'de-AT', sr: 'sr-Latn-RS', ro: 'ro-RO' }
+const LOKALE: Record<Jezik, string> = { sl: 'sl-SI', sk: 'sk-SK', hr: 'hr-HR', cs: 'cs-CZ', hu: 'hu-HU', de: 'de-AT', sr: 'sr-Latn-RS', ro: 'ro-RO', et: 'et-EE' }
 
 export const SITE = 'https://slff.eu'
 
@@ -95,6 +96,7 @@ const pozdrav = (j: Jezik, ime: string | null | undefined) => {
   if (j === 'de') return prvo ? `Servus, ${esc(prvo)}!` : 'Servus!'
   if (j === 'sr') return prvo ? `Zdravo, ${esc(prvo)}!` : 'Zdravo!'
   if (j === 'ro') return prvo ? `Salut, ${esc(prvo)}!` : 'Salut!'
+  if (j === 'et') return prvo ? `Tere, ${esc(prvo)}!` : 'Tere!'
   return prvo ? `Živjo, ${esc(prvo)}!` : 'Živjo!'
 }
 
@@ -121,6 +123,7 @@ const ODJAVA: Record<Jezik, string> = {
   de: 'Keine Erinnerungen mehr',
   sr: 'Ne želim više da primam podsetnike',
   ro: 'Nu mai vreau mementouri',
+  et: 'Ma ei soovi enam meeldetuletusi',
 }
 
 const nogaOdjave = (j: Jezik, odjava: string) =>
@@ -220,6 +223,18 @@ export function sestaviOpomnik(
       opomba:
         'Dacă nu ai nevoie de memento (nu îți faci echipă în acest sezon), poți ignora acest e-mail. Data viitoare îți scriem abia înainte de etapa următoare.',
     },
+    // Estonščina: ime lige stoji samostojno za dvopičjem, da ga ni treba sklanjati.
+    et: {
+      naslov: meta.brez_ekipe
+        ? `SLFF ${ozn}: sul pole veel järgmiseks vooruks meeskonda`
+        : `SLFF ${ozn}: täienda oma meeskonda enne järgmist vooru`,
+      glavno: meta.brez_ekipe
+        ? `Sul pole veel fantaasiameeskonda (liiga: ${OZN}). Ilma selleta ei saa sa järgmises voorus punkte.`
+        : `Sinu fantaasiameeskond (liiga: ${OZN}) pole veel täielik (puudub koosseis, kapten, asekapten vms). Nõuetekohase meeskonnata ei saa sa järgmises voorus punkte.`,
+      gumb: 'Pane kokku / paranda meeskond →',
+      opomba:
+        'Kui sul meeldetuletust vaja pole (sel hooajal sa meeskonda kokku ei pane), võid selle kirja tähelepanuta jätta. Järgmine kord kirjutame sulle alles enne järgmist vooru.',
+    },
     sl: {
       naslov: meta.brez_ekipe
         ? `SLFF ${ozn} — še nimaš ekipe za naslednji krog`
@@ -262,6 +277,7 @@ export function sestaviPushOpomnik(
     de: { naslov: `SLFF ${ozn}: du hast noch kein Team`, besedilo: `Deadline der Runde: ${kdaj}. Stell dein Team zusammen, damit du Punkte holst.` },
     sr: { naslov: `SLFF ${ozn}: još nemaš tim`, besedilo: `Rok za kolo je ${kdaj}. Sastavi tim da bi osvajao bodove.` },
     ro: { naslov: `SLFF ${ozn}: încă nu ai echipă`, besedilo: `Termenul etapei: ${kdaj}. Fă-ți echipa ca să strângi puncte.` },
+    et: { naslov: `SLFF ${ozn}: sul pole veel meeskonda`, besedilo: `Vooru tähtaeg: ${kdaj}. Pane meeskond kokku, et punkte koguda.` },
     sl: { naslov: `SLFF ${ozn}: še nimaš ekipe`, besedilo: `Rok za krog je ${kdaj}. Sestavi ekipo, da dobiš točke.` },
   }[jezikLige(liga)]
 }
@@ -275,7 +291,7 @@ export function sestaviOpomnikBrezLige(
   jezik: string | null | undefined,
   meta: { display_name: string | null },
 ): Sporocilo {
-  const j: Jezik = jezik === 'sk' || jezik === 'hr' || jezik === 'cs' || jezik === 'hu' || jezik === 'de' || jezik === 'sr' || jezik === 'ro' ? jezik : 'sl'
+  const j: Jezik = jezik === 'sk' || jezik === 'hr' || jezik === 'cs' || jezik === 'hu' || jezik === 'de' || jezik === 'sr' || jezik === 'ro' || jezik === 'et' ? jezik : 'sl'
   // Naravnost na Mojo ekipo s predlogom (`?sestavi=1`): ekipa je ob odprtju
   // že sestavljena, ostane le Shrani. Državo in ligo ugane stran (IP, jezik).
   const vstop = `${SITE}/my-team?sestavi=1`
@@ -322,6 +338,12 @@ export function sestaviOpomnikBrezLige(
       glavno: 'Te-ai înregistrat, dar încă nu ai o echipă fantasy. Îți facem echipa dintr-un clic, schimbă pe cine vrei și salvează. Strângi puncte chiar din etapa următoare.',
       gumb: 'Fă-mi echipa →',
       opomba: 'Dacă nu vrei să-ți faci echipă, poți ignora acest e-mail.',
+    },
+    et: {
+      naslov: 'SLFF: vali oma liiga ja pane meeskond kokku',
+      glavno: 'Registreerusid, kuid sul pole veel fantaasiameeskonda. Paneme sulle meeskonna kokku ühe klõpsuga, vaheta kedagi, kui tahad, ja salvesta. Punkte kogud juba järgmises voorus.',
+      gumb: 'Pane mulle meeskond kokku →',
+      opomba: 'Kui sa ei taha meeskonda kokku panna, võid selle kirja tähelepanuta jätta.',
     },
     sl: {
       naslov: 'SLFF — izberi svojo ligo in sestavi ekipo',
@@ -437,6 +459,17 @@ export function sestaviOpozorilo(
         gumb: 'Corectează echipa →',
         opomba:
           'Altfel echipa trece singură de la o etapă la alta și nu trebuie să faci nimic. Îți scriem doar când asta nu e posibil.',
+      }
+    },
+    et: () => {
+      const voorus = u.round_number ? `${u.round_number}. voorus` : 'järgmises voorus'
+      return {
+        naslov: `SLFF ${ozn}: sinu meeskond ei saa ${voorus} punkte`,
+        glavno: `Meeskond ${ekipa} ei vasta reeglitele, seega see ei lukustu ja ei saa ${voorus} punkte.`,
+        rok: rok && `Saad selle parandada kuni tähtajani: ${rok}.`,
+        gumb: 'Paranda meeskond →',
+        opomba:
+          'Muidu kandub meeskond voorust vooru ise edasi ja sa ei pea midagi tegema. Kirjutame sulle ainult siis, kui see pole võimalik.',
       }
     },
     sl: () => {
@@ -598,6 +631,23 @@ export function sestaviPoznavalca(
       gumbUrl: p.pozicije,
       vprasanja: 'Dacă ceva nu e clar, răspunde la acest e-mail.',
     },
+    et: {
+      naslov: 'SLFF: kinnitasime sinu asjatundja taotluse',
+      kaj:
+        meta.obseg === 'liga'
+          ? `Nüüdsest oled liiga <strong>${imeLige}</strong> asjatundja: sinu hääl üksi kinnitab mängija positsiooni või resultatiivse söödu, teisi hääli pole vaja oodata.`
+          : `Nüüdsest oled klubi <strong>${klub}</strong> asjatundja (liiga: ${imeLige}): sinu hääl selle klubi mängijate üle loeb kolmekordselt.`,
+      hvala: 'Aitäh, et pakkusid end appi.',
+      prosnja:
+        'Üks palve: see on usalduse märk. Sisesta ainult seda, mida tõesti tead, ja ära sobita andmeid oma fantaasiameeskonna järgi. Sellest sõltuvad kõigi liiga mängijate punktid. Kui selgub, et andmed on meelega valed, kaotad asjatundja staatuse.',
+      kje: `Positsioone muudad lehel <a href="${p.pozicije}" style="color:#15803d;">Positsioonid</a>
+        (jõustuvad iga esmaspäeva hommikul), resultatiivseid sööte lehel
+        <a href="${p.asistence}" style="color:#15803d;">Resultatiivsed söödud</a> (kohe).
+        Mängija, kes klubis enam ei mängi, saad märkida "enam ei mängi".`,
+      gumb: 'Ava Positsioonid →',
+      gumbUrl: p.pozicije,
+      vprasanja: 'Kui midagi on ebaselge, vasta sellele kirjale.',
+    },
     sl: {
       naslov: 'SLFF — odobrili smo tvojo prošnjo za poznavalca',
       kaj:
@@ -647,7 +697,8 @@ const POZICIJA_HU: Record<string, string> = { DEF: 'védő', MID: 'középpály�
 const POZICIJA_DE: Record<string, string> = { DEF: 'Verteidiger', MID: 'Mittelfeldspieler', FWD: 'Stürmer' }
 const POZICIJA_SR: Record<string, string> = { DEF: 'odbrambeni', MID: 'vezni', FWD: 'napadač' }
 const POZICIJA_RO: Record<string, string> = { DEF: 'fundaș', MID: 'mijlocaș', FWD: 'atacant' }
-const POZICIJA: Record<Jezik, Record<string, string>> = { sl: POZICIJA_SL, sk: POZICIJA_SK, hr: POZICIJA_HR, cs: POZICIJA_CS, hu: POZICIJA_HU, de: POZICIJA_DE, sr: POZICIJA_SR, ro: POZICIJA_RO }
+const POZICIJA_ET: Record<string, string> = { DEF: 'kaitsja', MID: 'poolkaitsja', FWD: 'ründaja' }
+const POZICIJA: Record<Jezik, Record<string, string>> = { sl: POZICIJA_SL, sk: POZICIJA_SK, hr: POZICIJA_HR, cs: POZICIJA_CS, hu: POZICIJA_HU, de: POZICIJA_DE, sr: POZICIJA_SR, ro: POZICIJA_RO, et: POZICIJA_ET }
 
 export function sestaviPopravekPozicije(
   liga: Liga,
@@ -671,6 +722,7 @@ export function sestaviPopravekPozicije(
       if (j === 'hu') return poz ? `${ime} (mostantól ${poz})` : ime
       if (j === 'de') return poz ? `${ime} (jetzt ${poz})` : ime
       if (j === 'ro') return poz ? `${ime} (acum ${poz})` : ime
+      if (j === 'et') return poz ? `${ime} (nüüd ${poz})` : ime
       return poz ? `${ime} (zdaj ${poz})` : ime
     })
     .join(', ')
@@ -766,6 +818,19 @@ export function sestaviPopravekPozicije(
         'etape sunt deja recalculate. Dacă îl vinzi, în locul lui va trebui să cumperi un portar.',
       gumb: 'Deschide echipa mea →',
       opomba: 'Ne cerem scuze pentru greșeală.',
+    },
+    et: {
+      naslov: `SLFF ${ozn}: parandasime sinu meeskonna mängija positsiooni`,
+      glavno:
+        `Sinu meeskonnas ${ekipa ? `<strong>${ekipa}</strong> ` : ''}on mängija ${kdo}, ` +
+        'kes oli meil ekslikult väravavahina kirjas. Ühe mängu protokoll märkis ta korra väravavahiks, ' +
+        'kuid tegelikult mängib ta väljakul. Parandasime tema positsiooni.',
+      body:
+        'Mida see sinu jaoks tähendab: sinu koosseisus jääb ta väravavahi kohale, nii et meeskond vastab endiselt reeglitele ' +
+        'ja sa ei pea midagi tegema. Nüüdsest saab ta aga punkte väljakumängijana ja viimase vooru punktid ' +
+        'on juba ümber arvutatud. Kui ta müüd, pead tema asemele ostma väravavahi.',
+      gumb: 'Ava minu meeskond →',
+      opomba: 'Vabandame vea pärast.',
     },
     sl: {
       naslov: `SLFF ${ozn} — popravek pozicije igralca v tvoji ekipi`,
@@ -896,6 +961,17 @@ export function sestaviIzstopKluba(
         'Punctele pe care le-au strâns deja în meciurile jucate îți rămân. Nimeni nu-i mai poate cumpăra.',
       gumb: 'Schimbă jucătorii →',
     },
+    et: {
+      naslov: `SLFF ${ozn}: sinu mängija klubi lahkus liigast`,
+      glavno:
+        `Klubi ${klubi} lahkus liigast. ` +
+        `${ekipa ? `Meeskonnas <strong>${ekipa}</strong> on sul` : 'Meeskonnas on sul'} selle klubi mängijaid: ${kdo}.`,
+      body:
+        'Need mängijad enam ei mängi, seega sa nende eest enam punkte ei saa. Meeskond jääb nõuetekohaseks ja teised ' +
+        'mängijad saavad punkte tavapäraselt. Siiski soovitame nad enne järgmist tähtaega välja vahetada. ' +
+        'Punktid, mis nad mängitud mängudes juba kogusid, jäävad sulle. Keegi ei saa neid enam osta.',
+      gumb: 'Vaheta mängijad →',
+    },
     sl: {
       naslov: `SLFF ${ozn} — klub tvojega igralca je izstopil iz lige`,
       glavno:
@@ -969,7 +1045,9 @@ export function sestaviTedenskiPregled(liga: Liga, m: PregledKroga): Sporocilo {
                 ? (n === 1 ? 'Punkt' : 'Punkte')
                 : j === 'ro'
                   ? roMn(cela(n), 'punct', 'puncte', 'de puncte')
-                  : slMn(cela(n), 'točka', 'točki', 'točke', 'točk')
+                  : j === 'et'
+                    ? (n === 1 ? 'punkt' : 'punkti')
+                    : slMn(cela(n), 'točka', 'točki', 'točke', 'točk')
     }`
   const ekipa = `<strong>${esc(m.ekipa)}</strong>`
   const premik = m.mesto_prej == null ? 0 : m.mesto_prej - m.mesto
@@ -1071,6 +1149,19 @@ export function sestaviTedenskiPregled(liga: Liga, m: PregledKroga): Sporocilo {
       gumb: 'Pregătește echipa pentru etapa următoare →',
       odjava: 'Nu mai vreau e-mailuri',
     },
+    et: {
+      naslov: `SLFF ${ozn}: ${m.krog}. voor, ${tock(m.tocke)}, ${m.mesto}. koht${premikZnak}`,
+      glavno: `Sinu meeskond ${ekipa} kogus ${m.krog}. voorus <strong>${tock(m.tocke)}</strong> (liiga: ${OZN}).`,
+      liga: m.povprecje != null && m.najvec != null
+        ? `Liiga keskmine: ${st(m.povprecje)}, parim: ${st(m.najvec)}.` : '',
+      top: 'Kogu liiga kõige rohkem punkte selles voorus.',
+      mesto: `Edetabelis oled <strong>${m.mesto}. kohal</strong> ${m.ekip} meeskonnast` +
+        (m.mesto_prej == null || premik === 0 ? '.' : ` (enne ${m.mesto_prej}. kohal).`),
+      kapetan: m.kapetan ? `Kapten ${esc(m.kapetan)}: ${tock(m.kapetan_tocke ?? 0)}.` : '',
+      najboljsi: najboljsiNiKapetan ? `Meeskonna parim: ${esc(m.najboljsi!)} (${tock(m.najboljsi_tocke ?? 0)}).` : '',
+      gumb: 'Valmista meeskond järgmiseks vooruks ette →',
+      odjava: 'Ma ei soovi enam kirju',
+    },
     sl: {
       naslov: `SLFF ${ozn} — ${m.krog}. krog: ${tock(m.tocke)}, ${m.mesto}. mesto${premikZnak}`,
       glavno: `Tvoja ekipa ${ekipa} je v ${m.krog}. krogu ${OZN} zbrala <strong>${tock(m.tocke)}</strong>.`,
@@ -1116,7 +1207,7 @@ const skMn = (n: number, one: string, few: string, other: string) =>
  * ga prepoznamo po obliki in prevedemo; neznano obliko (SQL se je spremenil)
  * nadomesti splošen stavek, da v slovaškem mailu ni slovenščine.
  *
- * `'en'` rabi le vmesnik (angleški obiskovalec) — pošta je vedno sl/sk/hr/cs/hu/de/sr/ro.
+ * `'en'` rabi le vmesnik (angleški obiskovalec) — pošta je vedno sl/sk/hr/cs/hu/de/sr/ro/et.
  */
 export function prevediRazlog(razlog: string | null | undefined, j: Jezik | 'en'): string {
   if (j === 'sl') return razlog ?? 'Kader ni veljaven.'
@@ -1127,6 +1218,7 @@ export function prevediRazlog(razlog: string | null | undefined, j: Jezik | 'en'
   if (j === 'de') return razlogVNemscini(razlog)
   if (j === 'sr') return razlogVSrbscini(razlog)
   if (j === 'ro') return razlogVRomunscini(razlog)
+  if (j === 'et') return razlogVEstonscini(razlog)
   if (!razlog) return 'Káder nie je platný.'
   const r = razlog.trim()
   let m: RegExpMatchArray | null
@@ -1377,4 +1469,31 @@ function razlogVRomunscini(razlog: string | null | undefined): string {
   if (r === 'Ekipa nima natanko enega namestnika kapetana.')
     return 'Echipa nu are exact un vicecăpitan.'
   return 'Echipa nu respectă regulile. Vezi detaliile în secțiunea Echipa mea.'
+}
+
+/** Isti razlogi v estonščini (za estonski mail in vmesnik). Za številom je samostalnik v delilniku ednine. */
+function razlogVEstonscini(razlog: string | null | undefined): string {
+  if (!razlog) return 'Koosseis ei vasta reeglitele.'
+  const r = razlog.trim()
+  let m: RegExpMatchArray | null
+  const mangijat = (n: number) => `${n} ${n === 1 ? 'mängija' : 'mängijat'}`
+
+  if (r === 'Ekipa je prazna — kadra ni.') return 'Meeskond on tühi, koosseisus pole ühtegi mängijat.'
+  if ((m = r.match(/^V kadru je (\d+) igralcev namesto (\d+)\.$/)))
+    return `Koosseisus on ${mangijat(Number(m[1]))} ${m[2]} asemel.`
+  if ((m = r.match(/^V kadru ni vec aktivnih igralcev: (.*)\. Klub letos ne igra ali je igralec odsel\.$/s)))
+    return `Koosseisus on mängijaid, kes pole enam aktiivsed: ${m[1]}. Nende klubi ei mängi sel hooajal või mängija on lahkunud.`
+  if ((m = r.match(/^Iz kluba (.+) imas (\d+) igralce, dovoljeni so (\d+)\./s)))
+    return `Klubist ${m[1]} on sul ${mangijat(Number(m[2]))}, lubatud on kõige rohkem ${m[3]}. ` +
+      'See võib juhtuda ka ilma sinu muudatuseta: kui mängija läheb hooaja jooksul üle klubisse, kust sul juba on mängijaid.'
+  if ((m = r.match(/^Pri (\d+) igralcih ni znana pozicija\.$/)))
+    return `Positsioon pole teada: ${mangijat(Number(m[1]))}.`
+  if ((m = r.match(/^Kader mora imeti 2 vratarja, 5 branilcev, 5 vezistov in 3 napadalce; ima ([\d-]+)\.$/)))
+    return `Koosseisus peab olema 2 väravavahti, 5 kaitsjat, 5 poolkaitsjat ja 3 ründajat; praegu on ${m[1]}.`
+  if ((m = r.match(/^V postavi je (\d+) igralcev namesto (\d+)\.$/)))
+    return `Algkoosseisus on ${mangijat(Number(m[1]))} ${m[2]} asemel.`
+  if (r === 'Ekipa nima natanko enega kapetana.') return 'Meeskonnal pole täpselt ühte kaptenit.'
+  if (r === 'Ekipa nima natanko enega namestnika kapetana.')
+    return 'Meeskonnal pole täpselt ühte asekaptenit.'
+  return 'Meeskond ei vasta reeglitele. Vaata üksikasju jaotises Minu meeskond.'
 }
