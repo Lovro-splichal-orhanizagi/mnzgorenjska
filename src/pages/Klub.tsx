@@ -25,6 +25,7 @@ import Plakat from '../components/Plakat'
 import { najboljsiTrije, navijacev, ligaVTozilniku } from '../lib/plakat'
 import { NavijaciKluba } from '../components/NavijaciKlubov'
 import { izvor } from '../lib/platforma'
+import { NalaganjeZaBralnik, Skelet } from '../components/Skelet'
 
 interface Igralec {
   id: number
@@ -49,6 +50,8 @@ export default function Klub() {
   const [igralci, setIgralci] = useState<Igralec[]>([])
   const [nalaganje, setNalaganje] = useState(true)
   const [napaka, setNapaka] = useState<string | null>(null)
+  // Plakata se rišeta (platno, PNG) šele, ko kdo odpre razdelek "Za objavo".
+  const [objavaOdprta, setObjavaOdprta] = useState(false)
   const { slug: izbranSlug } = useTekmovanje()
   useNaslov(klub?.name ?? t('lestvice.klub.naslov'), liga?.name)
   useNoindex(!nalaganje && Boolean(napaka) && !klub)
@@ -59,11 +62,19 @@ export default function Klub() {
     let veljavno = true
     ;(async () => {
       setNalaganje(true)
-      const { data: klubVrstica, error: eKlub } = await supabase
-        .from('teams')
-        .select('name, logo_url, short_name')
-        .eq('id', Number(id))
-        .maybeSingle()
+      setObjavaOdprta(false)
+      // Klub in njegove lige gresta hkrati; nato vse lige naenkrat.
+      const [{ data: klubVrstica, error: eKlub }, { data: ct }] = await Promise.all([
+        supabase.from('teams').select('name, logo_url, short_name').eq('id', Number(id)).maybeSingle(),
+        // Klub lahko igra v vec tekmovanjih (clani, mladinci); vzamemo tisto z
+        // najvec njegovimi igralci, da stran pokaze glavno mostvo. Neaktivne
+        // lige (se v pripravi) pridejo v postev le, ce aktivne ni nobene —
+        // sicer bi CTA vodil v ligo, ki je v meniju ni.
+        supabase
+          .from('competition_teams')
+          .select('competition_id, competitions(slug, name, short_name, federation_id, active)')
+          .eq('team_id', Number(id)),
+      ])
       if (!veljavno) return
       if (eKlub || !klubVrstica) {
         setNapaka(t('lestvice.klub.niKluba'))
@@ -72,14 +83,6 @@ export default function Klub() {
       }
       setKlub(klubVrstica)
 
-      // Klub lahko igra v vec tekmovanjih (clani, mladinci); vzamemo tisto z
-      // najvec njegovimi igralci, da stran pokaze glavno mostvo. Neaktivne
-      // lige (se v pripravi) pridejo v postev le, ce aktivne ni nobene —
-      // sicer bi CTA vodil v ligo, ki je v meniju ni.
-      const { data: ct } = await supabase
-        .from('competition_teams')
-        .select('competition_id, competitions(slug, name, short_name, federation_id, active)')
-        .eq('team_id', Number(id))
       const vse = (ct ?? []) as Array<{ competition_id: number; competitions: any }>
       const aktivna = vse.filter((t2) => t2.competitions?.active)
       // Liga iz naslova (`?t=`) ima prednost, če klub v njej igra: povezava z
@@ -92,36 +95,41 @@ export default function Klub() {
         return
       }
 
-      let najboljsi: { id: number; igralci: Igralec[]; liga: any } | null = null
-      for (const t2 of tekmovanja) {
-        const { data: sez } = await supabase
-          .from('sezone')
-          .select('season')
-          .eq('competition_id', t2.competition_id)
-          .eq('tekoca', true)
-          .maybeSingle()
-        const { data: p } = await supabase
-          .from('player_season_standings')
-          .select('id, full_name, position, value, points, goals, minutes, owners')
-          .eq('team_id', Number(id))
-          .eq('competition_id', t2.competition_id)
-          .eq('season', sez?.season ?? '')
-          .order('points', { ascending: false })
-        const seznam = (p ?? []) as Igralec[]
-        if (!najboljsi || seznam.length > najboljsi.igralci.length)
-          najboljsi = { id: t2.competition_id, igralci: seznam, liga: t2.competitions }
-      }
-      if (!veljavno) return
-      setLiga(najboljsi?.liga ?? null)
-      setLigaId(najboljsi?.id ?? null)
-      setIgralci(najboljsi?.igralci ?? [])
-      if (najboljsi) {
-        const { data: v } = await supabase
+      const [seznami, { data: imena }] = await Promise.all([
+        Promise.all(
+          tekmovanja.map(async (t2) => {
+            const { data: sez } = await supabase
+              .from('sezone')
+              .select('season')
+              .eq('competition_id', t2.competition_id)
+              .eq('tekoca', true)
+              .maybeSingle()
+            const { data: p } = await supabase
+              .from('player_season_standings')
+              .select('id, full_name, position, value, points, goals, minutes, owners')
+              .eq('team_id', Number(id))
+              .eq('competition_id', t2.competition_id)
+              .eq('season', sez?.season ?? '')
+              .order('points', { ascending: false })
+            return (p ?? []) as Igralec[]
+          }),
+        ),
+        supabase
           .from('competitions_view')
-          .select('name, federation_name, country_code')
-          .eq('id', najboljsi.id)
-          .maybeSingle()
-        if (!veljavno) return
+          .select('id, name, federation_name, country_code')
+          .in('id', tekmovanja.map((t2) => t2.competition_id)),
+      ])
+      if (!veljavno) return
+      let izbran: { id: number; igralci: Igralec[]; liga: any } | null = null
+      for (const [i, t2] of tekmovanja.entries())
+        if (!izbran || seznami[i].length > izbran.igralci.length)
+          izbran = { id: t2.competition_id, igralci: seznami[i], liga: t2.competitions }
+      setLiga(izbran?.liga ?? null)
+      setLigaId(izbran?.id ?? null)
+      setIgralci(izbran?.igralci ?? [])
+      if (izbran) {
+        const izbranId = izbran.id
+        const v = (imena ?? []).find((x) => x.id === izbranId)
         const kratko = (v?.name ?? '').replace(/\s*—\s*(člani|mladinci)\s*$/, '')
         // Slovaška imena lig regijo že nosijo ("I. trieda — Žilina"); zveza
         // zraven bi jo le ponovila ("… Žilina ObFZ Žilina").
@@ -152,7 +160,20 @@ export default function Klub() {
   // CTA pelje v ligo kluba, ne v tisto, ki jo ima obiskovalec izbrano.
   const ligaParam = liga?.slug ? `?t=${encodeURIComponent(liga.slug)}` : ''
 
-  if (nalaganje) return <p className="text-slate-400">{t('skupno.nalaganje')}</p>
+  if (nalaganje)
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <Skelet className="h-11 w-11 shrink-0 rounded-full" />
+          <div className="min-w-0 flex-1">
+            <Skelet className="h-8 max-w-xs sm:h-9" />
+            <Skelet className="h-5 max-w-sm" />
+          </div>
+        </div>
+        <Skelet className="h-36" />
+        <NalaganjeZaBralnik />
+      </div>
+    )
   if (napaka)
     return (
       <div className="space-y-2">
@@ -254,12 +275,12 @@ export default function Klub() {
 
       {/* Klubu damo tisto, kar je prosil: povezavo za FB in sliko za
           Instagram, kjer povezave ne delujejo. Zaprto, da ne odrine igralcev. */}
-      <details className="group">
+      <details className="group" onToggle={(e) => e.currentTarget.open && setObjavaOdprta(true)}>
         <summary className="cursor-pointer list-none text-base font-bold hover:text-gnl-300">
           <span className="mr-1 inline-block text-slate-500 transition group-open:rotate-90">›</span>
           {t('lestvice.klub.zaObjavo')}
         </summary>
-        <div className="mt-3 space-y-4">
+        {objavaOdprta && <div className="mt-3 space-y-4">
           <div>
             <div className="mb-1.5 text-xs text-slate-400">{t('lestvice.klub.napoved')}</div>
             <Plakat
@@ -286,7 +307,7 @@ export default function Klub() {
               povezava={typeof window !== 'undefined' ? `${izvor()}${window.location.pathname}${window.location.search}` : ''}
             />
           </div>
-        </div>
+        </div>}
       </details>
 
       <p className="text-xs text-slate-500">
