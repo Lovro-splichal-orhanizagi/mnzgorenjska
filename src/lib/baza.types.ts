@@ -3180,6 +3180,50 @@ export type Database = {
           },
         ]
       }
+      trgovine_dnevno: {
+        Row: {
+          dan: string
+          novi: number | null
+          skupaj: number
+          trgovina: string
+        }
+        ComputedFields: never
+        Insert: {
+          dan: string
+          novi?: number | null
+          skupaj: number
+          trgovina: string
+        }
+        Update: {
+          dan?: string
+          novi?: number | null
+          skupaj?: number
+          trgovina?: string
+        }
+        Relationships: []
+      }
+      trgovine_stanje: {
+        Row: {
+          mejnik: number | null
+          posodobljeno: string
+          stanje: string | null
+          trgovina: string
+        }
+        ComputedFields: never
+        Insert: {
+          mejnik?: number | null
+          posodobljeno?: string
+          stanje?: string | null
+          trgovina: string
+        }
+        Update: {
+          mejnik?: number | null
+          posodobljeno?: string
+          stanje?: string | null
+          trgovina?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       appearance_points: {
@@ -5193,6 +5237,7 @@ export type Database = {
           vloga: string
         }[]
       }
+      admin_rast: { Args: { p_od?: string }; Returns: Json }
       admin_rast_lig: {
         Args: { p_tednov?: number }
         Returns: {

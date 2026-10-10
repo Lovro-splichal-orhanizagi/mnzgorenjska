@@ -287,6 +287,29 @@ for cloud-managed distribution certificates; App Manager can upload but not sign
 `PLAY_SERVICE_ACCOUNT` (`play-release@slff-cb58e`), `ANDROID_UPLOAD_KEYSTORE`,
 `ANDROID_UPLOAD_PASSWORD`.
 
+## Install numbers and milestones (workflow *Trgovine*)
+
+`.github/workflows/trgovine.yml` runs `scripts/trgovine.mjs` daily at 07:30
+UTC: stores installs per day in `trgovine_dnevno`, the iOS version state in
+`trgovine_stanje` (admin → *Rast*), and posts to Discord (`DISCORD_WEBHOOK`)
+for every new multiple of 10 installs per store and every iOS state change.
+Dry run: `node scripts/trgovine.mjs --suho` (needs `SUPABASE_URL` and
+`SUPABASE_SERVICE_ROLE_KEY`; reads, writes nothing, posts nothing).
+
+Repo **variables** (not secrets):
+
+| Variable | Value | Where to find it |
+|---|---|---|
+| `ASC_VENDOR` | `92674287` | App Store Connect → Payments and Financial Reports → vendor number, top left |
+| `PLAY_BUCKET` | `pubsite__rev_11705386705605157888` | Play Console → Download reports → Statistics → "Copy Cloud Storage URI" (`gs://<bucket>/stats/installs/`; use only the bucket name) |
+
+The Play service account (`play-release@slff-cb58e`) needs **View app
+information and download bulk reports** in Play Console → Users and
+permissions. After granting it, Google can take up to 24 h; until then the
+script logs a 403 warning and continues. Apple returns no sales report until
+the app is live — those days count as 0. Google publishes the monthly CSV a
+few days after the first installs.
+
 ## Known gaps (not blocking release)
 
 - Android notification icon is the app icon (shows as a white circle). A

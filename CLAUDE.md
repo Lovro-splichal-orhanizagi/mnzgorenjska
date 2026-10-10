@@ -1567,6 +1567,20 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   **Nova stran se ne šteje sama**: dodaj jo v `PO_POTI`/`PO_PREDPONI` in v
   seznam v `zabelezi_obisk()`, sicer se zapis tiho zavrže. Oboje skupaj kaže
   razdelek *Kje ljudje obtičijo* v adminu (`src/components/admin/Lijak.tsx`)
+- `trgovine_dnevno` (trgovina `ios`/`android`, dan, `skupaj`, `novi`) in
+  `trgovine_stanje` (zadnje stanje različice iOS) → namestitve aplikacije.
+  Piše le delovni tok *Trgovine* (`scripts/trgovine.mjs`, vsak dan 07:30 UTC,
+  servisni ključ; RLS brez pravic za anon/authenticated). iOS: dnevna
+  prodajna poročila ASC, zadnjih 8 dni znova; Android: vse mesečne datoteke
+  `stats/installs/` v vedru Play. Discord javi vsak nov mejnik po 10
+  namestitev (nad `trgovine_stanje.mejnik`, najvišjim že javljenim, zato
+  padec seštevka ne javi znova) in spremembo stanja iOS. `--suho` ne piše in
+  ne javlja
+- `admin_rast(od)` → po dnevih (ljubljanski dan): novi in skupni uporabniki
+  (kot `skupaj_uporabnikov()`, brez hišnega profila), nove ne-hišne ekipe,
+  `obiskovalcev` (najbolj obiskana stran dneva iz `obiski_dnevno`, spodnja
+  meja sej) in namestitve; plus `stanje` trgovin. Le admin. Razdelek *Rast*
+  v adminu (`src/components/admin/Rast.tsx`)
 - **Statistika obiska** je Umami na strežniku (`src/lib/analitika.ts`, `stats.slff.eu`, nastavitev v
   `docs/migracija-hetzner.md` 6c): brez piškotkov, ogledi strani in nekaj dogodkov
   (`dogodek('ime', {…})`). Vsak korak `zabeleziKorak` gre tudi tja. Nov dogodek naj nima

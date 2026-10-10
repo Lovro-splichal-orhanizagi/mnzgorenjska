@@ -13,6 +13,7 @@ import UpravljanjeLig from '../components/admin/UpravljanjeLig'
 import ZivostSkupnosti from '../components/admin/Zivost'
 import ProsnjePoznavalcev from '../components/admin/ProsnjePoznavalcev'
 import RastLig from '../components/admin/RastLig'
+import Rast from '../components/admin/Rast'
 import Lijak from '../components/admin/Lijak'
 import Sponzorji from '../components/admin/Sponzorji'
 import KlubiStiki from '../components/admin/KlubiStiki'
@@ -612,6 +613,10 @@ export default function Administracija() {
       {/* zivost — koliko ljudi je res aktivnih */}
       <Razdelek id="zivost" naslov="Živost skupnosti">
         <ZivostSkupnosti />
+      </Razdelek>
+
+      <Razdelek id="rast-aplikacije" naslov="Rast: uporabniki in namestitve">
+        <Rast />
       </Razdelek>
 
       {/* kje ljudje obticijo — lijak zacetka in obiskane strani */}
