@@ -1228,6 +1228,85 @@ arhiva strežnik sestavlja **~10 s** (tekoče < 1 s), zato je arhiv 240
 zapisnikov ~45 minut na ligo — en arhiv naenkrat. Nato pozicije (glasovanje, vratarji!),
 `pripravljenost-lige` in `vklopi_ligo_sredi_sezone`.
 
+### Romunija — vir `hlf`
+
+Vir `hlf` (`scripts/viri/hlf.mjs`) bere **hailafotbal.ro**, uradno platformo
+rezultatov FRF. Od sezone 2026/27 zveze tam vnašajo **digitalne zapisnike**:
+postava in klop z dresi, registrirana pozicija ("Portar" = vratar → GK),
+kapetan, goli z vrsto (11 m, avtogol), kartoni, menjave z minuto, polčas in
+stalna šifra igralca FRF (UUID → `reg_st`, prvih 13 šestnajstiških števk).
+Bistveno boljši od `frf`: vratar je znan, zapisniki so skoraj vsi polni.
+Lastnik je vir odobril (10. 10. 2026). robots.txt stran nima.
+
+- **Dostop.** Stran je Angularjeva aplikacija; podatke (JSON z
+  `api.datalake.frf.ro`) si naloži sama po žetonu. **Javni JS ima vgrajeno
+  uporabniško ime in geslo za API — tega ne beremo, ne uporabljamo in API-ja
+  ne kličemo sami.** Stran odpre Chromium brez glave (Playwright) kot
+  obiskovalec, menja krog v izbirniku "Etapă", klikne tekmo in pobere
+  odgovore, ki jih stran sama zahteva. Slike, pisave in tuji gostitelji so
+  blokirani. **Ob izzivu, CAPTCHI, 401/403/429 ali prijavi se uvoz ustavi —
+  ne obhajaj.** User-Agent je Chromov s pripono `SLFF fantasy (slff.eu;
+  splih.94@gmail.com)`, 2 s med dejanji, popolnih zapisnikov in zaključenih
+  krogov ne beremo znova (`scripts/.predpomnilnik/hlf/`, brez fotografij in
+  osebja). Uvozna tokova namestita Chromium le za Romunijo (`ro-`).
+- **Šifra lige** je pot strani brez kroga:
+  `judetean/<județ>/fotbal/<sezona>/<tekmovanje>/<faza>/<skupina>` ali
+  `national/fotbal/<sezona>/…`. Sezona je del šifre. Seznam lig županij s
+  podatki in polnost zapisnikov zadnjega kroga izpiše:
+
+  ```bash
+  node scripts/hailafotbal-lige.mjs                        # županije s podatki
+  node scripts/hailafotbal-lige.mjs national cluj --preveri
+  ```
+- **Arhiva ni.** Digitalni zapisniki so šele od 2026/27; stran za 2025/26 vrne
+  tekočo sezono. Arhiva s `frf` ne mešaj: šifre igralcev so druge, nastopi bi
+  pristali na podvojenih igralcih. Cene dajo minute tekoče sezone (uvoz brez
+  `arhiv`, s `cene`) — oktobra ima redni igralec že 600+ minut.
+- **Nepopolni zapisniki** ("nu există o versiune salvată a foii de joc") kot
+  pri `frf`: izid se zapiše, `imported_at` ostane prazen, 45 dni se bere
+  znova. Kontumacija: 3:0 brez zapisnika, starejša od tedna dni.
+- Čas tekme je bukareški (`startDate`), uvoz ga pretvori v ljubljanskega;
+  00:00 pomeni, da ure ni.
+
+- **Stran je počasna in asinhrona.** `TourRoundId` je skupen vsem ligam
+  zveze, zato se odgovor kroga izbere tudi po `SeriesId`; krogi pridejo za
+  vso zvezo (SuperLiga je LPF, ne FRF) in se vzame odgovor s serijo lige. Po
+  menjavi kroga odgovor pride pred karticami — `karticeKazejo` počaka, da
+  kartice kažejo tekme odgovora, tekmo pa poišče po imenih klubov, ne po
+  mestu (Cluj L5 Gherla je klikal napačne tekme).
+
+Preizkus (10. 10. 2026): Liga 3 Serie 1 — 22 krogov, 132 tekem z uro, 48
+zapisnikov, vsi polni, goli = izidi (158), 1460 nastopov, vsi s šifro;
+vratar pri vsaki ekipi. Ekipa ima 990 minut razen pri rdečem kartonu.
+Napaka vira: USV-CSM Iași, 1. krog, igralec dvakrat vstopi (opozorilo).
+Cluj L5 Gherla — 24 zapisnikov, goli = izidi (112).
+
+**Pokritost** (pregled vseh 41 županij in Bukarešte, 10. 10. 2026): podatke
+imajo le državna raven in osem županij (Alba, Bihor, Caraș-Severin, Cluj,
+Galați, Hunedoara, Prahova, Sibiu); ostalim stran ne naloži nobene lige.
+Vpisanih je 26 lig (migracija 20261010220000), **neaktivnih**, sezona
+2026/27 (šifra je v migraciji, `<pot>` = `…/2026-2027/…`):
+
+| liga | šifra (brez `/fotbal/2026-2027`) |
+|---|---|
+| ro-superliga (LPF) | `national superliga/sezon-regular/serie-1` |
+| ro-liga2 | `national liga-2-casa-pariurilor/sezon-regular/seria-1` |
+| ro-liga3-s1 … s8 | `national superscore-liga-3/sezon-regular/serie-1` … `serie-8` |
+| ro-ab-superliga, -l4-s1/-s2, -l5-s1/-s2 | `judetean/alba superliga-ajf-alba/sezon-regular/1`, `liga-4/…/serie-1/2`, `liga-5/…/serie-1/2` |
+| ro-bh-l4 | `judetean/bihor liga-4/sezon-regular/tur-preliminar` (13 krogov, nato nova faza) |
+| ro-cj-l4, -l5-g1, -l5-g2, -l5-gherla, -l5-dej, -l5-campia-turzii | `judetean/cluj liga-4-cluj/…`, `liga-5-cluj-grupa-1/2`, `liga-5-gherla`, `liga-5-dej`, `liga-5-campia-turzii` |
+| ro-hd-l4, -l5 | `judetean/hunedoara liga-4/sezon-regular/serie-1`, `liga-5/campionat/serie-1` |
+| ro-ph-l4 | `judetean/prahova liga-a-4-a-prahova/sezon-regular/serie-1` |
+| ro-sb-superliga | `judetean/sibiu superliga/sezon-regular/serie-1` |
+
+Ni vpisanih: Bihor Liga 5 (1/3 in 0/1 polnih), Sibiu Liga 4 in Liga 5 (2/6,
+0/5, 0/6 — `ro-sb-l4` in `ro-sb-l5-medias` ostaneta na `frf`), Galați (krogi
+brez izidov), Prahova Liga 6 in Caraș-Severin (nič odigranega). Cluj L5
+Câmpia Turzii je vpisana s 3/5 polnih.
+
+Uvoz (ena za drugo, **brez arhiva**): `gh workflow run uvoz-lige.yml -f
+liga=ro-liga3-s1 -f cene=true`. Liga ~1–2 minuti.
+
 ### Država obiskovalca
 
 Domena je ena, **lige druge države so skrite**: `useTekmovanje().tekmovanja`

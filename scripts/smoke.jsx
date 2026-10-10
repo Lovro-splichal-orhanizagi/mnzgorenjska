@@ -4122,6 +4122,45 @@ preveri(
     zs.some((x) => x.id === '1227060' && x.z.krog === 7 && !x.z.nepopoln) && zs.some((x) => x.id === '1227058' && x.z.nepopoln && x.z.krog === 6))
 }
 
+// --- vir hlf (Romunija, uradna platforma FRF hailafotbal.ro) ----------------------
+{
+  const H = await import('./viri/hlf.mjs')
+  const { default: viri } = await import('./viri/index.mjs')
+  const json = (ime) => JSON.parse(readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8'))
+  const koda = 'national/fotbal/2026-2027/superscore-liga-3/sezon-regular/serie-1'
+  preveri('hlf: vir je vpisan', viri.hlf === H.default && H.default.drzava === 'RO' && H.default.imaRegistracije === false &&
+    H.PREMOR_MS >= 2000 && H.PRIPONA_UA === 'SLFF fantasy (slff.eu; splih.94@gmail.com)')
+  preveri('hlf: šifra, sezona, naslov kroga', H.razbijKodo(koda).raven === 'national' && H.sezonaIzKode(koda) === '2026/27' &&
+    H.razbijKodo('judetean/cluj/fotbal/2026-2027/liga-4-cluj/sezon-regular/grupa-a').judet === 'cluj' &&
+    H.naslovKroga(koda, 3) === `https://hailafotbal.ro/rezultate/${koda}/etapa-3`)
+  let slabaSifra = null
+  try { H.razbijKodo('cluj/liga-4') } catch (e) { slabaSifra = e.message }
+  preveri('hlf: napačna šifra ustavi uvoz', /judetean/.test(slabaSifra ?? ''))
+  preveri('hlf: slug, UUID → reg_st, čas (Bukarešta → Ljubljana), minuta', H.slug('Victoria Viişoara') === 'victoria-viisoara' &&
+    H.regIzUuid('dfc7539c-6eb3-4d25-a205-ac2e6d4ef55d') === parseInt('dfc7539c6eb34', 16) && H.regIzUuid('00000000-0000-0000-0000-000000000000') === null &&
+    H.casTekme('2026-09-12T17:00:00').ura === '16:00' && H.casTekme('2026-09-12T00:00:00').ura === null &&
+    H.minutaDogodka({ minute: 90, minuteExtra: 4 }) === 90)
+  preveri('hlf: izziv ustavi, navadna stran ne', H.jeIzziv('<title>Just a moment...</title>') && !H.jeIzziv('<html><title>Hai la fotbal</title></html>'))
+
+  const krog = json('ro-hlf-krog-liga3-s1-3.json')
+  const list = json('ro-hlf-list-dfc7539c.json')
+  const t = H.tekmeKroga(krog)[0]
+  const z = H.vZapisnik(t, krog, list, { stevilka: 3 })
+  const n = H.nastopi(z)
+  const minute = (i) => n.filter((x) => x.ekipaIdx === i).reduce((a, x) => a + x.minute, 0)
+  preveri('hlf: zapisnik — 11 + 11, izid, polčas, ura, brez opozoril', z.domaci.postava.length === 11 && z.gostje.postava.length === 11 &&
+    z.rezultat.domaci === 2 && z.rezultat.gostje === 2 && z.polcas?.gostje === 1 && z.datum === '2026-09-12' && z.ura === '16:00' &&
+    !z.nepopoln && z.opozorila.length === 0)
+  preveri('hlf: avtogol in enajstmetrovka', z.goli.length === 4 && z.goli.filter((g) => g.avtogol).length === 1 && z.goli.filter((g) => g.enajstmetrovka).length === 1)
+  preveri('hlf: vratar ("Portar") in kapetan pri obeh, vsi s šifro', n.filter((x) => x.vratar && x.zacetnik).length === 2 &&
+    n.filter((x) => x.kapetan).length === 2 && n.every((x) => x.regSt != null))
+  preveri('hlf: minute — 990 in 970 (rdeči v 70.)', minute(0) === 990 && minute(1) === 970 && z.rdeci.length === 1 && z.rdeci[0].minuta === 70)
+  const brez = H.vZapisnik(t, krog, null, { stevilka: 3 })
+  preveri('hlf: brez zapisnika — izid ostane, nepopoln, brez nastopov', brez.nepopoln && brez.prazen && H.nastopi(brez).length === 0 &&
+    brez.opozorila[0].startsWith(H.NEPOPOLN))
+  preveri('hlf: v predpomnilnik gredo brez fotografij in osebja', !JSON.stringify(H.brezSlik({ a: { photo: 'x', staff: [1], b: 1 } })).includes('photo'))
+}
+
 // --- vir fsb (Srbija, Fudbalski savez Beograda) ---------------------------------
 {
   const F = await import('./viri/fsb.mjs')

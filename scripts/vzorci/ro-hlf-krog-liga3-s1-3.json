@@ -1,0 +1,277 @@
+{
+ "hasErrors": false,
+ "erorrMessages": [],
+ "responseData": {
+  "seasonId": 11,
+  "competitionId": "73b994af-fd1a-499f-a64d-d41d3a5e7223",
+  "stageId": "a4cd2136-a695-48ce-bccf-f7fafd137952",
+  "seriesId": "91e5da84-f4cf-4424-8904-59f91185358b",
+  "tourId": "4bf586fd-eab7-4c26-ab46-9b2979e2716a",
+  "temporaryEliminations": [],
+  "rankings": null,
+  "matches": [
+   {
+    "startDate": "2026-09-12T00:00:00",
+    "list": [
+     {
+      "matchId": "dfc7539c-6eb3-4d25-a205-ac2e6d4ef55d",
+      "startDate": "2026-09-12T17:00:00",
+      "homeGoals": 2,
+      "homeMatchGoals": null,
+      "awayGoals": 2,
+      "awayMatchGoals": null,
+      "allowExtraTimeYn": false,
+      "homeGoalsHalfTime": 0,
+      "awayGoalsHalfTime": 1,
+      "homeExtrafGoals": null,
+      "awayExtraGoals": null,
+      "homePenaltyGoals": null,
+      "awayPenaltyGoals": null,
+      "sysCompetitionMatchStatusId": 3,
+      "sysMatchTypeId": null,
+      "tourRoundId": "4bf586fd-eab7-4c26-ab46-9b2979e2716a",
+      "tourRoundOrderDisplay": 3,
+      "homeClub": {
+       "clubId": "aa7c90a0-18d5-4c03-96d3-b41100839954",
+       "name": "CSM Adjud 1946",
+       "abbreviation": "CSM Adjud 1946"
+      },
+      "awayClub": {
+       "clubId": "3e8d6813-1504-43b1-beef-4118d343f2c7",
+       "name": "KSE Târgu Secuiesc",
+       "abbreviation": "KSE Târgu Secuiesc"
+      },
+      "stadium": {
+       "stadiumId": "42d40d57-e5a9-4806-9a07-be2012c8d80f",
+       "name": "Complexul Sportiv – Baza sportivă a Municipiului Adjud",
+       "town": "ADJUD",
+       "county": "VRANCEA",
+       "countyCode": "VN",
+       "townFull": "ADJUD (localitate) - municipiu ADJUD",
+       "planFilePath": ""
+      }
+     }
+    ]
+   }
+  ],
+  "goals": [
+   {
+    "matchId": "dfc7539c-6eb3-4d25-a205-ac2e6d4ef55d",
+    "clubId": "aa7c90a0-18d5-4c03-96d3-b41100839954",
+    "personId": "bf7ebe8b-b8c6-41f0-af70-c69b46bf2abd",
+    "playerId": "50a5ef49-8bb8-4165-9cdd-d2eb7ff34136",
+    "player": "Ungurenaşu Dragoş",
+    "shirtNo": 17,
+    "minute": 39,
+    "minuteExtra": 0,
+    "sysGoalTypeId": 3
+   },
+   {
+    "matchId": "dfc7539c-6eb3-4d25-a205-ac2e6d4ef55d",
+    "clubId": "aa7c90a0-18d5-4c03-96d3-b41100839954",
+    "personId": "b7066a9d-d8d4-4343-89fe-332a3402bda4",
+    "playerId": "a1d0f04b-5aaf-4852-a8f9-6cdb7e7680c4",
+    "player": "Antal Norbert",
+    "shirtNo": 10,
+    "minute": 76,
+    "minuteExtra": 0,
+    "sysGoalTypeId": 2
+   },
+   {
+    "matchId": "dfc7539c-6eb3-4d25-a205-ac2e6d4ef55d",
+    "clubId": "aa7c90a0-18d5-4c03-96d3-b41100839954",
+    "personId": "29a13a8e-74f3-4e9a-8c0c-163011fcc193",
+    "playerId": "00930349-1e36-41fc-a798-315b132fe1ee",
+    "player": "Predoiu Gabriel",
+    "shirtNo": 9,
+    "minute": 84,
+    "minuteExtra": 0,
+    "sysGoalTypeId": 1
+   },
+   {
+    "matchId": "dfc7539c-6eb3-4d25-a205-ac2e6d4ef55d",
+    "clubId": "3e8d6813-1504-43b1-beef-4118d343f2c7",
+    "personId": "b0a46bed-0ef3-4eaf-8fbb-e0abbdc4e703",
+    "playerId": "0c66faae-0d44-4345-990b-8cb51e000e2c",
+    "player": "Nicoloiu Andrei",
+    "shirtNo": 14,
+    "minute": 90,
+    "minuteExtra": 2,
+    "sysGoalTypeId": 1
+   }
+  ],
+  "yellowCards": [
+   {
+    "matchId": "dfc7539c-6eb3-4d25-a205-ac2e6d4ef55d",
+    "clubId": "3e8d6813-1504-43b1-beef-4118d343f2c7",
+    "personId": "6f19e5f8-d000-4a0c-9f26-a910594f673a",
+    "playerId": "a2a0b01c-63d6-4ee7-ac95-0fad9b0be42d",
+    "player": "Neamțu Ionuț",
+    "shirtNo": 6,
+    "minute": 49,
+    "minuteExtra": 0
+   },
+   {
+    "matchId": "dfc7539c-6eb3-4d25-a205-ac2e6d4ef55d",
+    "clubId": "3e8d6813-1504-43b1-beef-4118d343f2c7",
+    "personId": "6f19e5f8-d000-4a0c-9f26-a910594f673a",
+    "playerId": "a2a0b01c-63d6-4ee7-ac95-0fad9b0be42d",
+    "player": "Neamțu Ionuț",
+    "shirtNo": 6,
+    "minute": 70,
+    "minuteExtra": 0
+   },
+   {
+    "matchId": "dfc7539c-6eb3-4d25-a205-ac2e6d4ef55d",
+    "clubId": "aa7c90a0-18d5-4c03-96d3-b41100839954",
+    "personId": "4ae8830e-e9b1-4c84-9316-d87718cbdcc8",
+    "playerId": "a58f4c82-35cd-43f3-9eb2-796d00d3063c",
+    "player": "Amaechi Christopher",
+    "shirtNo": 18,
+    "minute": 78,
+    "minuteExtra": 0
+   }
+  ],
+  "redCards": [
+   {
+    "matchId": "dfc7539c-6eb3-4d25-a205-ac2e6d4ef55d",
+    "clubId": "3e8d6813-1504-43b1-beef-4118d343f2c7",
+    "personId": "6f19e5f8-d000-4a0c-9f26-a910594f673a",
+    "playerId": "a2a0b01c-63d6-4ee7-ac95-0fad9b0be42d",
+    "player": "Neamțu Ionuț",
+    "shirtNo": 6,
+    "minute": 70,
+    "minuteExtra": 0
+   }
+  ],
+  "replacements": [
+   {
+    "matchId": "dfc7539c-6eb3-4d25-a205-ac2e6d4ef55d",
+    "clubId": "aa7c90a0-18d5-4c03-96d3-b41100839954",
+    "personOutId": "53e755ea-da27-44c8-a6f2-f9f0aaabe658",
+    "personInId": "b7066a9d-d8d4-4343-89fe-332a3402bda4",
+    "playerOutId": "6fcb2c5d-dfae-4e8a-9943-91b63d6c009a",
+    "playerOut": "Maeschi Rareş",
+    "playerInId": "a1d0f04b-5aaf-4852-a8f9-6cdb7e7680c4",
+    "playerIn": "Antal Norbert",
+    "shirtNoOut": 11,
+    "shirtNoIn": 10,
+    "minute": 45,
+    "minuteExtra": 0,
+    "sysGameMomentId": 2
+   },
+   {
+    "matchId": "dfc7539c-6eb3-4d25-a205-ac2e6d4ef55d",
+    "clubId": "aa7c90a0-18d5-4c03-96d3-b41100839954",
+    "personOutId": "fadee59b-1af0-4520-81ae-13fe4e2f99a8",
+    "personInId": "8cb6b613-dca0-48d7-ab53-24b157fcc6e9",
+    "playerOutId": "be24bac6-0855-43b6-9e33-010136466a12",
+    "playerOut": "Ngong Charm Desmond",
+    "playerInId": "600a07c7-e71b-4362-be42-716d597cb0f9",
+    "playerIn": "Adeniji Kolade",
+    "shirtNoOut": 16,
+    "shirtNoIn": 19,
+    "minute": 45,
+    "minuteExtra": 0,
+    "sysGameMomentId": 2
+   },
+   {
+    "matchId": "dfc7539c-6eb3-4d25-a205-ac2e6d4ef55d",
+    "clubId": "3e8d6813-1504-43b1-beef-4118d343f2c7",
+    "personOutId": "9a508d23-7880-48d5-a570-698de546ffbe",
+    "personInId": "db3139a6-a255-4577-a59d-849e78c5fc2c",
+    "playerOutId": "bc737e8a-07ad-4752-bce3-272acd30321f",
+    "playerOut": "Varga Máté",
+    "playerInId": "ac774cd8-145d-4989-b48d-ff25327d4e54",
+    "playerIn": "Gajdó Tamás",
+    "shirtNoOut": 13,
+    "shirtNoIn": 17,
+    "minute": 68,
+    "minuteExtra": 0,
+    "sysGameMomentId": 1
+   },
+   {
+    "matchId": "dfc7539c-6eb3-4d25-a205-ac2e6d4ef55d",
+    "clubId": "3e8d6813-1504-43b1-beef-4118d343f2c7",
+    "personOutId": "cb868bec-c92e-4bd9-8e4d-2d6db23d1451",
+    "personInId": "0d4412f4-453b-40b8-b9bc-b19ee8ee8850",
+    "playerOutId": "5364a00b-40cc-4fbf-9d98-1bdd00b8995d",
+    "playerOut": "Nechita-Meiu Iulian",
+    "playerInId": "bce5751f-825e-49b8-9fe0-291d60a8eb9b",
+    "playerIn": "Trombitás Dávid",
+    "shirtNoOut": 9,
+    "shirtNoIn": 18,
+    "minute": 72,
+    "minuteExtra": 0,
+    "sysGameMomentId": 1
+   },
+   {
+    "matchId": "dfc7539c-6eb3-4d25-a205-ac2e6d4ef55d",
+    "clubId": "aa7c90a0-18d5-4c03-96d3-b41100839954",
+    "personOutId": "3b0fccd2-ba18-4e39-84a8-2392946cbc72",
+    "personInId": "a67e9e67-15d0-4988-8ae7-4e4925c69534",
+    "playerOutId": "d116803b-4551-4045-af77-3afb855b2e06",
+    "playerOut": "Butuc David",
+    "playerInId": "cbcadd14-f1f9-4561-b933-ace342950f31",
+    "playerIn": "Şchiopu Mihai",
+    "shirtNoOut": 14,
+    "shirtNoIn": 7,
+    "minute": 72,
+    "minuteExtra": 0,
+    "sysGameMomentId": 1
+   },
+   {
+    "matchId": "dfc7539c-6eb3-4d25-a205-ac2e6d4ef55d",
+    "clubId": "aa7c90a0-18d5-4c03-96d3-b41100839954",
+    "personOutId": "72beaf0a-d815-4b44-9466-dd9284ff47b5",
+    "personInId": "993f2bc8-8310-46f5-91fb-05f92f140bae",
+    "playerOutId": "436e4a41-df12-475d-9428-d09f4a66bd13",
+    "playerOut": "Lupu Lorian",
+    "playerInId": "c5905fe4-c78a-4c39-adad-ccd557b105be",
+    "playerIn": "Bacoiu Luca",
+    "shirtNoOut": 20,
+    "shirtNoIn": 21,
+    "minute": 72,
+    "minuteExtra": 0,
+    "sysGameMomentId": 1
+   },
+   {
+    "matchId": "dfc7539c-6eb3-4d25-a205-ac2e6d4ef55d",
+    "clubId": "aa7c90a0-18d5-4c03-96d3-b41100839954",
+    "personOutId": "4ae8830e-e9b1-4c84-9316-d87718cbdcc8",
+    "personInId": "29a13a8e-74f3-4e9a-8c0c-163011fcc193",
+    "playerOutId": "a58f4c82-35cd-43f3-9eb2-796d00d3063c",
+    "playerOut": "Amaechi Christopher",
+    "playerInId": "00930349-1e36-41fc-a798-315b132fe1ee",
+    "playerIn": "Predoiu Gabriel",
+    "shirtNoOut": 18,
+    "shirtNoIn": 9,
+    "minute": 82,
+    "minuteExtra": 0,
+    "sysGameMomentId": 1
+   },
+   {
+    "matchId": "dfc7539c-6eb3-4d25-a205-ac2e6d4ef55d",
+    "clubId": "3e8d6813-1504-43b1-beef-4118d343f2c7",
+    "personOutId": "0c931e53-21ed-483f-973f-1f86620ac001",
+    "personInId": "b0a46bed-0ef3-4eaf-8fbb-e0abbdc4e703",
+    "playerOutId": "d5872baa-e0e6-4add-86f1-09cf1585c402",
+    "playerOut": "Budâu Ștefan",
+    "playerInId": "0c66faae-0d44-4345-990b-8cb51e000e2c",
+    "playerIn": "Nicoloiu Andrei",
+    "shirtNoOut": 3,
+    "shirtNoIn": 14,
+    "minute": 88,
+    "minuteExtra": 0,
+    "sysGameMomentId": 1
+   }
+  ],
+  "medicalReplacements": []
+ },
+ "responseCount": 2,
+ "queryCount": 2,
+ "pagesCount": 1,
+ "pageSize": 2,
+ "currentPage": 1,
+ "apiQueryDateTime": "2026-10-10T21:01:40.3285148"
+}

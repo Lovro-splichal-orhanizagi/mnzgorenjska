@@ -1,0 +1,515 @@
+{
+ "matchId": "dfc7539c-6eb3-4d25-a205-ac2e6d4ef55d",
+ "matchSheetId": "8fc3e9ea-3374-41c1-b4f1-31b7580ab4c0",
+ "rules": null,
+ "homeClub": {
+  "club": {
+   "id": "aa7c90a0-18d5-4c03-96d3-b41100839954",
+   "name": "Clubul Sportiv Municipal Adjud 1946",
+   "abbreviation": "CSM Adjud 1946"
+  },
+  "players": {
+   "players": [
+    {
+     "player": {
+      "playerId": "eaa06386-5cb9-4195-81d1-d948c90302bf",
+      "firstName": "Mario",
+      "lastName": "Feraru",
+      "shirtNo": 3,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Fundaș central"
+     }
+    },
+    {
+     "player": {
+      "playerId": "1a18c62b-0819-418b-b2a3-bab829887b1e",
+      "firstName": "Robert Vasilică",
+      "lastName": "Necula",
+      "shirtNo": 4,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Mijlocaș central"
+     }
+    },
+    {
+     "player": {
+      "playerId": "aa6def4e-4f2d-4e7e-9385-32473389a2d6",
+      "firstName": "Sorin Petruţ",
+      "lastName": "Săpunaru",
+      "shirtNo": 6,
+      "isTeamCaptainYn": true,
+      "groupNo": null,
+      "playerPosition": "Mijlocaș central"
+     }
+    },
+    {
+     "player": {
+      "playerId": "6fcb2c5d-dfae-4e8a-9943-91b63d6c009a",
+      "firstName": "Rareş Ionuţ",
+      "lastName": "Maeschi",
+      "shirtNo": 11,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Mijlocaș central"
+     }
+    },
+    {
+     "player": {
+      "playerId": "d116803b-4551-4045-af77-3afb855b2e06",
+      "firstName": "David",
+      "lastName": "Butuc",
+      "shirtNo": 14,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Mijlocaș central"
+     }
+    },
+    {
+     "player": {
+      "playerId": "249f0874-7f24-448a-8e0f-45bfeb860eaf",
+      "firstName": "Oloche Israel",
+      "lastName": "Adobunu",
+      "shirtNo": 15,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Fundaș central"
+     }
+    },
+    {
+     "player": {
+      "playerId": "be24bac6-0855-43b6-9e33-010136466a12",
+      "firstName": "Desmond",
+      "lastName": "Ngong Charm",
+      "shirtNo": 16,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Atacant central"
+     }
+    },
+    {
+     "player": {
+      "playerId": "50a5ef49-8bb8-4165-9cdd-d2eb7ff34136",
+      "firstName": "Dragoş Adrian",
+      "lastName": "Ungurenaşu",
+      "shirtNo": 17,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Mijlocaș central"
+     }
+    },
+    {
+     "player": {
+      "playerId": "a58f4c82-35cd-43f3-9eb2-796d00d3063c",
+      "firstName": "Christopher",
+      "lastName": "Amaechi",
+      "shirtNo": 18,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Atacant central"
+     }
+    },
+    {
+     "player": {
+      "playerId": "436e4a41-df12-475d-9428-d09f4a66bd13",
+      "firstName": "Lorian Andrei",
+      "lastName": "Lupu",
+      "shirtNo": 20,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Mijlocaș central"
+     }
+    },
+    {
+     "player": {
+      "playerId": "946329b9-7b2c-4725-b48b-9bc7eeb5779d",
+      "firstName": "Rareş Codrin",
+      "lastName": "Iosub",
+      "shirtNo": 99,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Portar"
+     }
+    }
+   ]
+  },
+  "reserves": {
+   "players": [
+    {
+     "player": {
+      "playerId": "e2e5d2e4-2090-4096-b851-66638c88b613",
+      "firstName": "George Vlad ",
+      "lastName": "Mocanu",
+      "shirtNo": 5,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Fundaș central"
+     }
+    },
+    {
+     "player": {
+      "playerId": "cbcadd14-f1f9-4561-b933-ace342950f31",
+      "firstName": "Mihai",
+      "lastName": "Şchiopu",
+      "shirtNo": 7,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Mijlocaș central"
+     }
+    },
+    {
+     "player": {
+      "playerId": "41a79416-22fc-4c96-8de7-639087bbf343",
+      "firstName": "Alin Valentin",
+      "lastName": "Dascălu",
+      "shirtNo": 8,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Mijlocaș central"
+     }
+    },
+    {
+     "player": {
+      "playerId": "00930349-1e36-41fc-a798-315b132fe1ee",
+      "firstName": "Gabriel Mădălin",
+      "lastName": "Predoiu",
+      "shirtNo": 9,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Atacant central"
+     }
+    },
+    {
+     "player": {
+      "playerId": "a1d0f04b-5aaf-4852-a8f9-6cdb7e7680c4",
+      "firstName": "Norbert Constantin",
+      "lastName": "Antal",
+      "shirtNo": 10,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Mijlocaș central"
+     }
+    },
+    {
+     "player": {
+      "playerId": "b71a75ab-d595-4833-84bf-1a355a9f0d34",
+      "firstName": "Nicolae",
+      "lastName": "Mazilu",
+      "shirtNo": 12,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Portar"
+     }
+    },
+    {
+     "player": {
+      "playerId": "600a07c7-e71b-4362-be42-716d597cb0f9",
+      "firstName": "Kolade Samson",
+      "lastName": "Adeniji",
+      "shirtNo": 19,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Atacant central"
+     }
+    },
+    {
+     "player": {
+      "playerId": "c5905fe4-c78a-4c39-adad-ccd557b105be",
+      "firstName": "Luca Răzvan",
+      "lastName": "Bacoiu",
+      "shirtNo": 21,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Mijlocaș central"
+     }
+    },
+    {
+     "player": {
+      "playerId": "b4a76e25-5926-4fee-a1bf-ecc44832a78c",
+      "firstName": "Marcel Mario",
+      "lastName": "Turbea",
+      "shirtNo": 22,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Mijlocaș central"
+     }
+    }
+   ]
+  },
+  "reservesExtra": {
+   "players": [
+    {
+     "player": {
+      "playerId": "f8458bdb-c480-4ce1-92de-f9d85edfe49f",
+      "firstName": "Dennis Mihail",
+      "lastName": "Humă",
+      "shirtNo": 2,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Mijlocaș central"
+     }
+    },
+    {
+     "player": {
+      "playerId": "da7fa4f1-f6b0-44f2-9b12-82c20dff293f",
+      "firstName": "Andrei",
+      "lastName": "Ciobanu",
+      "shirtNo": 13,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Fundaș central"
+     }
+    },
+    {
+     "player": {
+      "playerId": "70b42d59-5d0f-4c0f-a0b3-4522c081c436",
+      "firstName": "Mihnea Teodor",
+      "lastName": "Dănilă",
+      "shirtNo": 25,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Mijlocaș central"
+     }
+    }
+   ]
+  }
+ },
+ "awayClub": {
+  "club": {
+   "id": "3e8d6813-1504-43b1-beef-4118d343f2c7",
+   "name": "Asociaţia Clubul Sportiv KSE Târgu Secuiesc",
+   "abbreviation": "KSE Târgu Secuiesc"
+  },
+  "players": {
+   "players": [
+    {
+     "player": {
+      "playerId": "d35a27ea-5820-4dc9-bdfe-b8aa36171383",
+      "firstName": "Rareş",
+      "lastName": "Minea ",
+      "shirtNo": 1,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Portar"
+     }
+    },
+    {
+     "player": {
+      "playerId": "817966c5-43fb-427e-bf77-98edc547830b",
+      "firstName": "Raul Ioan",
+      "lastName": "Rusu",
+      "shirtNo": 2,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Fundaș central"
+     }
+    },
+    {
+     "player": {
+      "playerId": "d5872baa-e0e6-4add-86f1-09cf1585c402",
+      "firstName": "Ștefan Vlad",
+      "lastName": "Budâu",
+      "shirtNo": 3,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Fundaș central"
+     }
+    },
+    {
+     "player": {
+      "playerId": "95cdc052-7a6b-4f25-88c1-84bbb557990f",
+      "firstName": "Marius Mihai",
+      "lastName": "Burlacu",
+      "shirtNo": 4,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Fundaș central"
+     }
+    },
+    {
+     "player": {
+      "playerId": "a2a0b01c-63d6-4ee7-ac95-0fad9b0be42d",
+      "firstName": "Ionuț Răzvan",
+      "lastName": "Neamțu",
+      "shirtNo": 6,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Fundaș central"
+     }
+    },
+    {
+     "player": {
+      "playerId": "5cf37838-a2ec-4a88-a903-7267d952bcff",
+      "firstName": "Alpar",
+      "lastName": "Gergely",
+      "shirtNo": 7,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Atacant central"
+     }
+    },
+    {
+     "player": {
+      "playerId": "59db1186-b124-4cfc-8c4b-7c41ec2fe224",
+      "firstName": "Raul Andrei",
+      "lastName": "Drugă",
+      "shirtNo": 8,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Mijlocaș central"
+     }
+    },
+    {
+     "player": {
+      "playerId": "5364a00b-40cc-4fbf-9d98-1bdd00b8995d",
+      "firstName": "Iulian",
+      "lastName": "Nechita-Meiu",
+      "shirtNo": 9,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Atacant central"
+     }
+    },
+    {
+     "player": {
+      "playerId": "4be3c2e9-c841-4f4e-949a-46b7cc543fc4",
+      "firstName": "Robert Levente",
+      "lastName": "Fábián",
+      "shirtNo": 10,
+      "isTeamCaptainYn": true,
+      "groupNo": null,
+      "playerPosition": "Mijlocaș central"
+     }
+    },
+    {
+     "player": {
+      "playerId": "bc737e8a-07ad-4752-bce3-272acd30321f",
+      "firstName": "Máté Hunor",
+      "lastName": "Varga",
+      "shirtNo": 13,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Fundaș central"
+     }
+    },
+    {
+     "player": {
+      "playerId": "7f6a40b6-e56a-46a3-8765-9d0912ee1922",
+      "firstName": "Tudor",
+      "lastName": "Banciu",
+      "shirtNo": 23,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Fundaș central"
+     }
+    }
+   ]
+  },
+  "reserves": {
+   "players": [
+    {
+     "player": {
+      "playerId": "5ccd547a-32ef-43b4-983c-8492d8b5d3d7",
+      "firstName": "Zsolt",
+      "lastName": "Dobos",
+      "shirtNo": 11,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Mijlocaș central"
+     }
+    },
+    {
+     "player": {
+      "playerId": "379fa7e8-04d5-4388-8306-355d0266ae79",
+      "firstName": "Petruţ Gabriel",
+      "lastName": "Bunduc",
+      "shirtNo": 12,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Portar"
+     }
+    },
+    {
+     "player": {
+      "playerId": "0c66faae-0d44-4345-990b-8cb51e000e2c",
+      "firstName": "Andrei Daniel",
+      "lastName": "Nicoloiu",
+      "shirtNo": 14,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Atacant central"
+     }
+    },
+    {
+     "player": {
+      "playerId": "3074deec-07f9-492a-ae73-13611c2bff78",
+      "firstName": "Valentin Gabriel",
+      "lastName": "Ureche",
+      "shirtNo": 15,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Fundaș central"
+     }
+    },
+    {
+     "player": {
+      "playerId": "0e46d29c-ff91-4980-9a73-1648d3ce1ba3",
+      "firstName": "Norbert",
+      "lastName": "Barta",
+      "shirtNo": 16,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Mijlocaș central"
+     }
+    },
+    {
+     "player": {
+      "playerId": "ac774cd8-145d-4989-b48d-ff25327d4e54",
+      "firstName": "Tamás",
+      "lastName": "Gajdó",
+      "shirtNo": 17,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Fundaș central"
+     }
+    },
+    {
+     "player": {
+      "playerId": "bce5751f-825e-49b8-9fe0-291d60a8eb9b",
+      "firstName": "Dávid Krisztián",
+      "lastName": "Trombitás",
+      "shirtNo": 18,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Mijlocaș central"
+     }
+    },
+    {
+     "player": {
+      "playerId": "8463f64b-b509-4436-a3dc-bc62fec38ab6",
+      "firstName": "Álmos Árpád",
+      "lastName": "Bandi",
+      "shirtNo": 19,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Atacant central"
+     }
+    },
+    {
+     "player": {
+      "playerId": "6b315473-e3ff-42ff-ba01-122b5bd143a0",
+      "firstName": "Ákos",
+      "lastName": "Kapusi",
+      "shirtNo": 20,
+      "isTeamCaptainYn": false,
+      "groupNo": null,
+      "playerPosition": "Fundaș central"
+     }
+    }
+   ]
+  },
+  "reservesExtra": {
+   "players": []
+  }
+ }
+}

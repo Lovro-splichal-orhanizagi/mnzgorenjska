@@ -23,6 +23,7 @@ import oefb from './oefb.mjs'
 import fsb from './fsb.mjs'
 import fss from './fss.mjs'
 import frf from './frf.mjs'
+import hlf from './hlf.mjs'
 
 const VIRI = {
   mnzg,
@@ -51,6 +52,9 @@ const VIRI = {
   fss,
   // Romunija: portal županijskih zvez (frf-ajf.ro), brez dresov in vratarja.
   frf,
+  // Romunija: uradna platforma FRF (hailafotbal.ro), digitalni zapisniki od 2026/27,
+  // z dresi, vratarjem in šifro igralca; bere jo brskalnik brez glave.
+  hlf,
 }
 
 /**
