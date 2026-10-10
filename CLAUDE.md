@@ -1139,7 +1139,7 @@ zapisnika, minute in nastopi so iz `fss.mjs`. Beremo odkrito (2 s, User-Agent
 SLFF); **izziv ali CAPTCHA ustavi uvoz — ne obhajaj.**
 
 - **Blok šifer**: tekmovanje-sezona je strnjen blok N×(N−1) šifer, urejen po
-  krogih (N/2 na krog). Šifra lige je `<od>-<do>`. Stran tekme ima tri stanja:
+  krogih (N/2 na krog; pri lihem N (N−1)/2). Šifra lige je `<od>-<do>`. Stran tekme ima tri stanja:
   "Utakmica ne postoji", "Utakmica nije odigrana ili podaci nisu uneti" (le
   imeni klubov, **brez datuma in kroga**) in poln zapisnik ("N. kolo", datum,
   postavi, dogodki z minutami). Krog odigrane je iz zapisnika, neodigrane iz
@@ -1205,6 +1205,89 @@ odigranih; vsi 11 + 11, goli = izid razen 7 zgoraj, nobena kontumacija.
 Igralcev z vsaj 270 minutami je 50–57 % (ostali dobijo privzeto 4.5) — pod
 mejo 70 % privzetih v `pripravljenost.ts`. Uvoz: `gh workflow run
 uvoz-lige.yml -f liga=rs-srpska-istok -f cene=true` (brez arhiva).
+
+**Zone, Vojvođanske in nižje lige** (migracija 20261011203100, 47 lig,
+**neaktivne**, brez arhiva). Bloke je našlo pometanje šifer fss.rs (11. 10.
+2026, 100 blokov). Izpuščeni so mladinski (akademije, mladinske ekipe velikih
+klubov, jutranje ali medtedenske tekme, klubi iz članskega bloka iste regije,
+izidi kot 8:10), veteranski (ponedeljek, brez delegata), ženski, beograjski
+(vir `fsb`), majhni ali nepravilni bloki in podvojeni Zaječar `76159661`
+(isti klubi kot `76162366`, nobena tekma ni vnesena). **Članski test s
+četrtim sodnikom velja le za Srpske lige** — zone in VFL imajo kontrolorja
+sojenja, nižje lige le sodnika (pogosto brez pomočnikov) in delegata; tam
+odločijo vikend popoldne, vaški klubi in klubi, ki niso v drugem bloku.
+
+- **Liho število klubov** (Gradski ligi Kruševac, 13): blok N×(N−1), vsak krog
+  en klub prost, (N−1)/2 tekem na krog, 2N krogov (`razberiKodo`); prva
+  polovica sezone so krogi do `krogov / 2`.
+- **Isto ime, drug klub**: COMET v nižjih ligah piše ime brez kraja (MLADOST v
+  štirih ligah, HAJDUK, RUDAR, BSK v treh …), bare JEDINSTVO/MLADOST/NAPREDAK pa
+  `fss.mjs` preslika v državni klub (Ub, Lučani, Kruševac). `IME_V_BLOKU` v
+  `fssid.mjs` jim da kraj po bloku (s strani zveze ali stadiona domačih tekem);
+  pregled zajame vse bloke fssid in vsa imena RS v bazi (11. 10. 2026). Klub
+  dvakrat v istem krogu bloka ustavi uvoz. **Ob novem bloku ali sezoni preveri
+  trke znova.**
+- Kraj iz stadiona ni vedno sedež (DUNAVAC iz Petke igra v Kostolcu, POLET (T)
+  v MOFL Istok "Takovo" po prizorišču); HAJDUK (Rujevica) le po agregatorju in
+  prizorišču v Sokobanji.
+
+| liga | blok | klubov | ime (zveza) | datumi |
+|---|---|---|---|---|
+| rs-vfl-sever | `75938263-75938444` | 14 | Vojvođanska fudbalska liga Sever (FSV) | fsv.rs (jesen) |
+| rs-vfl-istok | `75963094-75963275` | 14 | VFL Istok (FSV) | fsv.rs (jesen) |
+| rs-vfl-jug | `75940439-75940620` | 14 | VFL Jug (FSV) | fsv.rs (jesen) |
+| rs-pancevo-pfl | `75849222-75849403` | 14 | Prva južnobanatska područna liga (FS područja Pančevo, fspp.rs) | ocena |
+| rs-subotica-pfl | `75879887-75880126` | 16 | Područna fudbalska liga Subotica (PFS Subotica) | ocena (COMET PDF jesen) |
+| rs-sombor-pfl | `75897207-75897446` | 16 | PFL Sombor (PFS Sombor) | ocena |
+| rs-zrenjanin-pfl | `76054893-76055132` | 16 | Područna fudbalska liga Zrenjanin (FSP Zrenjanin) | ocena (HTML, vikend kroga) |
+| rs-srem-pfl | `76051146-76051385` | 16 | Sremska liga / COMET PFL Srem (PFS Srem, sfs.org.rs) | ocena (COMET PDF jesen) |
+| rs-ns-prva | `76038544-76038783` | 16 | Prva novosadska liga (FSGNS) | ocena (PDF jesen) |
+| rs-srem-mfl-zapad | `76097001-76097182` | 14 | MFL Srem Zapad (PFS Srem) | ocena (COMET PDF jesen) |
+| rs-sombor-mfl | `75954296-75954477` | 14 | MFL Sombor 1. razred (GFS Sombor; ime iz medijev) | ocena |
+| rs-backa-palanka | `76033904-76034085` | 14 | Liga Bačka Palanka (**ime nepotrjeno**) | ocena |
+| rs-zona-drina | `75863516-75863647` | 12 | Zonska liga "Drina", preliminarni del (FSRZS) | ocena (COMET PDF) |
+| rs-zona-dunav | `75862803-75862934` | 12 | Zonska liga "Dunav" (FSRZS) | ocena (COMET PDF) |
+| rs-zona-morava | `75862092-75862223` | 12 | Zonska liga "Morava" (FSRZS) | ocena (COMET PDF) |
+| rs-kolubara-okruzna | `75882160-75882341` | 14 | Okružna liga Kolubara (FS Kolubarskog okruga, fsko.rs) | ocena (COMET PDF jesen) |
+| rs-kolubara-mofl-istok | `75902301-75902482` | 14 | MOFL Istok (FSKO) | ocena (COMET PDF jesen) |
+| rs-kolubara-mofl-zapad | `75946952-75947133` | 14 | MOFL Zapad (FSKO) | ocena (COMET PDF jesen) |
+| rs-macva-okruzna | `76148843-76149024` | 14 | Mačvanska okružna liga (FS Mačvanskog okruga, fsmo.rs) | ocena |
+| rs-macva-mfl-jadar | `76187411-76187592` | 14 | Međuopštinska liga Jadar (FSMO) | ocena |
+| rs-macva-mfl-macva | `76219059-76219240` | 14 | Međuopštinska liga Mačva (FSMO) | ocena |
+| rs-macva-mfl-pocerina | `76217686-76217867` | 14 | Međuopštinska liga Pocerina (FSMO) | ocena |
+| rs-moravica-okruzna | `75969523-75969704` | 14 | Okružna Moravička liga (FS Moravičkog okruga, fsmo.info) | ocena (COMET PDF jesen) |
+| rs-sumadija-okruzna | `76126804-76126985` | 14 | Šumadijska okružna liga (FS Šumadijskog okruga) | ocena (COMET PDF **vseh 26 krogov**) |
+| rs-kg-prva / -druga / -treca | `76022530-76022711` / `76024362-76024493` / `76025757-76025938` | 14 / 12 / 14 | Prva / Druga / Treća gradska liga (FS grada Kragujevca, fsgkg.org.rs) | ocena (HTML jesen) |
+| rs-topola | `76174925-76175056` | 12 | Liga Topola (**ime nepotrjeno**, agregatorji: Opštinska liga Topola) | ocena |
+| rs-podunavlje-okruzna | `75900760-75900941` | 14 | Podunavska okružna fudbalska liga (FS Podunavskog okruga) | ocena |
+| rs-branicevo-okruzna | `76144655-76144836` | 14 | Braničevska okružna liga (FSBO, fsbo.rs) | ocena (COMET PDF jesen) |
+| rs-branicevo-mfl-dunav | `76146941-76147122` | 14 | MFL Dunav (FSBO) | ocena (COMET PDF jesen) |
+| rs-branicevo-mfl-mlava | `76155052-76155233` | 14 | MFL Mlava (FSBO) | ocena (COMET PDF jesen) |
+| rs-zona-zapad | `75975050-75975181` | 12 | Zona Zapad (FSRIS) | fsris.org.rs |
+| rs-zona-centar | `75976635-75976766` | 12 | Zona Centar (FSRIS) | fsris.org.rs (izbirnik brez 18. kroga) |
+| rs-zona-istok | `76044412-76044543` | 12 | Zona Istok (FSRIS) | fsris.org.rs |
+| rs-zona-jug | `75920107-75920238` | 12 | Zona Jug (FSRIS) | fsris.org.rs |
+| rs-pomoravlje-okruzna | `75992166-75992471` | 18 | Okružna fudbalska liga (FS Pomoravskog okruga, fspo.org.rs) | ocena (tekme tudi ob sredah!) |
+| rs-pomoravlje-mfl-sever | `75995108-75995347` | 16 | Međuopštinska liga Sever (FSPO) | ocena |
+| rs-pomoravlje-mfl-jug | `75993822-75994061` | 16 | Međuopštinska liga Jug (FSPO) | ocena |
+| rs-rasina-prva | `76045363-76045602` | 16 | Rasinska Prva liga (FS Rasinskog okruga, fsro.org.rs) | ocena |
+| rs-rasina-druga-zapad | `76046778-76046909` | 12 | Rasinska Druga liga Zapad (FSRO) | ocena (1. krog prestavljen na 8. 11.) |
+| rs-rasina-druga-istok | `76049679-76049860` | 14 | Rasinska Druga liga Istok (FSRO) | ocena (tabela 9. 10. brez OFK Orašje — preveri) |
+| rs-krusevac-morava | `75957933-75958088` | 13 | Gradska liga Morava (FS grada Kruševca, fsgks.rs) | ocena (HTML jesen) |
+| rs-krusevac-rasina | `75959913-75960068` | 13 | Gradska liga Rasina (FSG Kruševca) | ocena (HTML jesen) |
+| rs-zajecar-okruzna | `76162366-76162605` | 16 | Zaječarska okružna liga (ime iz medijev) | ocena; malo vnesenih zapisnikov |
+| rs-bor-okruzna | `76083154-76083335` | 14 | Okružna liga Bor (ime iz medijev) | ocena |
+| rs-pirot-okruzna | `76156082-76156171` | 10 | Liga Pirotski okrug (**ime nepotrjeno**) | ocena |
+
+Zveza v izbirniku je regijska (`fsv`, `fsrzs`, `fsris`), organizator je v
+tabeli. Datume z vira bereta le `fsv` (VFL) in `fsris` (zone) — ista oblika
+kot pri Srpskih ligah. Drugod jih zveze objavljajo v PDF (COMET "Raspored
+takmičenja" z datumom, uro in prizoriščem; fsrzs.com ima tak PDF celo za
+Srpsko ligo Zapad) ali HTML (fsgkg.org.rs, fsgks.rs), a vir jih še ne bere:
+**ocena** — pred vklopom preveri `datum_ocenjen` naslednjih krogov. Zone so
+"preliminarni del" (FSRIS: nato play-off in play-out kot svoji tekmovanji).
+Uvoz: `gh workflow run uvoz-lige.yml -f liga=rs-zona-drina -f cene=true`;
+seznam v vrstnem redu je v PR.
 
 ### Romunija
 

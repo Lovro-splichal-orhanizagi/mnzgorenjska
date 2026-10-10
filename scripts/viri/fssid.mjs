@@ -1,5 +1,6 @@
-// Vir: regijske lige Srbije (Srpska liga Istok, Zapad, Vojvodina) po šifri
-// tekme COMET na fss.rs.
+// Vir: regijske in nižje lige Srbije (Srpske lige Istok, Zapad, Vojvodina,
+// zone, Vojvođanske lige, okružne, područne, međuopštinske in gradske lige) po
+// šifri tekme COMET na fss.rs.
 //
 // Regijske zveze (FSRIS, FSRZS, FSV) zapisnikov ne objavljajo, FSS pa na
 // `/izvestaj-sa-utakmice/<id>/?script=lat` izriše KATERO KOLI tekmo COMET, tudi
@@ -9,6 +10,7 @@
 // BLOK ŠIFER
 // - Tekmovanje-sezona je EN strnjen blok N×(N−1) šifer (dvokrožna liga z N
 //   klubi), urejen po krogih: N/2 šifer na krog, krog = (id − od) div (N/2) + 1.
+//   Pri lihem N je vsak krog en klub prost: (N−1)/2 šifer na krog, 2N krogov.
 //   Šifra lige je "<od>-<do>" (npr. `75912381-75912620`, Srpska liga Istok
 //   2026/27, 16 klubov, 240 tekem).
 // - Stran tekme ima tri stanja: "Utakmica ne postoji" (šifre ni), "Utakmica
@@ -49,6 +51,16 @@ export const DATUMI = {
   '75912381-75912620': { vir: 'fsris', naslov: 'https://fsris.org.rs/takmicenja/srpska-liga-istok/', sezona: 19 },
   // Srpska liga Vojvodina 2026/27: fsv.rs, en sam seznam vseh krogov (cirilica).
   '75952376-75952615': { vir: 'fsv', naslov: 'https://fsv.rs/srpska-liga-vojvodina-rezultati-i-tabela/' },
+  // Vojvođanska liga Sever, Istok, Jug 2026/27: ista oblika strani kot Srpska
+  // liga Vojvodina (vsi krogi, jesen z datumi).
+  '75938263-75938444': { vir: 'fsv', naslov: 'https://fsv.rs/vojvodjanska-fudbalska-liga-sever-rezultati-i-tabela/' },
+  '75963094-75963275': { vir: 'fsv', naslov: 'https://fsv.rs/vojvodjanska-fudbalska-liga-istok-rezultati-i-tabela/' },
+  '75940439-75940620': { vir: 'fsv', naslov: 'https://fsv.rs/vojvodjanska-fudbalska-liga-jug-rezultati-i-tabela/' },
+  // Zone FSRIS 2026/27: ista oblika kot Srpska liga Istok, sezona 19.
+  '75975050-75975181': { vir: 'fsris', naslov: 'https://fsris.org.rs/takmicenja/zona-zapad/', sezona: 19 },
+  '75976635-75976766': { vir: 'fsris', naslov: 'https://fsris.org.rs/takmicenja/zona-centar/', sezona: 19 },
+  '76044412-76044543': { vir: 'fsris', naslov: 'https://fsris.org.rs/takmicenja/zona-istok/', sezona: 19 },
+  '75920107-75920238': { vir: 'fsris', naslov: 'https://fsris.org.rs/takmicenja/zona-jug/', sezona: 19 },
 }
 
 // --- blok ----------------------------------------------------------------------
@@ -61,9 +73,12 @@ export function razberiKodo(koda) {
   const do_ = Number(m[2])
   const tekem = do_ - od + 1
   const klubov = (1 + Math.sqrt(1 + 4 * tekem)) / 2
-  if (!(tekem > 0) || !Number.isInteger(klubov) || klubov % 2)
-    throw new Error(`fssid: blok ${koda} ima ${tekem} šifer, kar ni N×(N−1) za sodo število klubov N`)
-  return { od, do: do_, tekem, klubov, naKrog: klubov / 2, krogov: 2 * (klubov - 1) }
+  if (!(tekem > 0) || !Number.isInteger(klubov) || klubov < 3)
+    throw new Error(`fssid: blok ${koda} ima ${tekem} šifer, kar ni N×(N−1) za N klubov`)
+  // Liho število klubov: vsak krog en klub prost, (N−1)/2 tekem na krog in 2N
+  // krogov (opštinske lige s 13 klubi; preverjeno na predpomnjenih zapisnikih).
+  const naKrog = Math.floor(klubov / 2)
+  return { od, do: do_, tekem, klubov, naKrog, krogov: tekem / naKrog }
 }
 
 /** Krog po mestu šifre v bloku. */
@@ -92,12 +107,50 @@ const IME_DRZAVNE = {
   'TEKSTILAC (Odžaci)': 'TEKSTILAC',
 }
 
+// Isto ime, drug klub: COMET v nižjih ligah piše ime brez kraja ("MLADOST",
+// "HAJDUK"), ki ga ima več klubov v različnih ligah iste sezone ali klub v
+// bazi (fsb, fss). Klubi so v bazi enolični po imenu v državi, zato bi se
+// zlili — in "MLADOST" bi brez tega postal MLADOST (Lučani) iz Superlige.
+// Kraj je s strani zveze ali iz stadiona domačih tekem. Pregled 11. 10. 2026
+// (vsi bloki fssid in vsa imena klubov RS v bazi); ob novem bloku preveri znova.
+const IME_V_BLOKU = {
+  '75938263-75938444': { HAJDUK: 'HAJDUK (Stapar)', PROLETER: 'PROLETER (Ravno Selo)' }, // VFL Sever
+  '75879887-75880126': { PROLETER: 'PROLETER (Njegoševo)' }, // PFL Subotica
+  '75897207-75897446': { BSK: 'BSK (Bački Brestovac)' }, // PFL Sombor
+  '75954296-75954477': { // MFL Sombor
+    BORAC: 'BORAC (Bački Gračac)', DUNAV: 'DUNAV (Bački Monoštor)', MLADOST: 'MLADOST (Kruščić)',
+    OMLADINAC: 'OMLADINAC (Deronje)', ZADRUGAR: 'ZADRUGAR (Srpski Miletić)',
+  },
+  '75862092-75862223': { MLADOST: 'MLADOST (Preljina)', RUDAR: 'RUDAR (Baljevac)' }, // Zona Morava
+  '75862803-75862934': { TRNAVA: 'TRNAVA (Donja Trnava)' }, // Zona Dunav
+  '75902301-75902482': { 'POLET (T)': 'POLET (Takovo)' }, // MOFL Istok
+  '75946952-75947133': { NAPREDAK: 'NAPREDAK (Kadina Luka)' }, // MOFL Zapad
+  '75900760-75900941': { RADNIK: 'RADNIK (Smederevska Palanka)' }, // Podunavska okružna
+  '75969523-75969704': { // Okružna Moravička liga
+    JEDINSTVO: 'JEDINSTVO (Gornja Gorevnica)', 'POLET (T)': 'POLET (Trbušani)', RUDAR: 'RUDAR (Bresnica)',
+    ZADRUGAR: 'ZADRUGAR (Donja Trepča)',
+  },
+  '76126804-76126985': { ŠUMADIJA: 'ŠUMADIJA (Aranđelovac)', ŠUMADINAC: 'ŠUMADINAC (Stojnik)' }, // Šumadijska okružna
+  '76146941-76147122': { DUNAVAC: 'DUNAVAC (Petka)' }, // MFL Dunav
+  '76148843-76149024': { BUDUĆNOST: 'BUDUĆNOST (Dobrić)' }, // Mačvanska okružna
+  '76219059-76219240': { JEDINSTVO: 'JEDINSTVO (Štitar)' }, // MFL Mačva
+  '76174925-76175056': { BSK: 'BSK (Belosavci)' }, // Topola
+  '75920107-75920238': { BSK: 'BSK (Bujanovac)' }, // Zona Jug
+  '75975050-75975181': { NAPREDAK: 'NAPREDAK (Drenovac)' }, // Zona Zapad
+  '75992166-75992471': { // Pomoravska okružna
+    MLADOST: 'MLADOST (Gornja Mutnica)', PARTIZAN: 'PARTIZAN (Majur)', SINĐELIĆ: 'SINĐELIĆ (Grabovac)', TRNAVA: 'TRNAVA (Jagodina)',
+  },
+  '75993822-75994061': { BUDUĆNOST: 'BUDUĆNOST (Miliva)', HAJDUK: 'HAJDUK (Čepure)', RUDAR: 'RUDAR (Plažane)' }, // MFL Jug
+  '76045363-76045602': { MLADOST: 'MLADOST (Donji Katun)', OMLADINAC: 'OMLADINAC (Pojate)' }, // Rasinska prva
+  '76162366-76162605': { HAJDUK: 'HAJDUK (Rujevica)' }, // Zaječarska okružna
+}
+
 /**
  * Ime kluba, kot ga piše COMET, počiščeno: podvojen kraj ("KABEL (Novi Sad)
  * (Novi Sad)") enkrat, kraj z velikimi črkami ("(SVILAJNAC)") z veliko
  * začetnico. Kratice v oklepaju ("(VA)", "(P)") ostanejo.
  */
-export function imeKluba(ime) {
+export function imeKluba(ime, koda) {
   let s = razpakiraj(ime)
   let prej
   do {
@@ -109,11 +162,11 @@ export function imeKluba(ime) {
       ? `(${kraj.toLowerCase().replace(/(^|[\s.-])(\p{L})/gu, (_, a, c) => a + c.toUpperCase())})`
       : cel,
   )
-  return IME_DRZAVNE[s] ?? imeKlubaFss(s)
+  return IME_V_BLOKU[String(koda ?? '').trim()]?.[s] ?? IME_DRZAVNE[s] ?? imeKlubaFss(s)
 }
 
 /** Glava strani tekme: klubi, izid, polčas, krog, datum, ura (kar je). */
-export function glavaStrani(html) {
+export function glavaStrani(html, koda) {
   const s = brezSkript(html)
   const glava = s.match(/class="fss-rez__title">\s*<span[^>]*>([\s\S]*?)<\/span>\s*<span[^>]*>([\s\S]*?)<\/span>/)
   const rez = s.match(/fss-rez__rez">\s*<div[^>]*><span>\s*(\d+)\s*<\/span><\/div>\s*<div[^>]*><span>\s*(\d+)\s*<\/span>/)
@@ -122,8 +175,8 @@ export function glavaStrani(html) {
   const info = a < 0 ? '' : besedilo(s.slice(a, b < 0 ? a + 4000 : b))
   const { datum, ura } = datumUra(info)
   return {
-    domaci: glava ? imeKluba(besedilo(glava[1])) : null,
-    gostje: glava ? imeKluba(besedilo(glava[2])) : null,
+    domaci: glava ? imeKluba(besedilo(glava[1]), koda) : null,
+    gostje: glava ? imeKluba(besedilo(glava[2]), koda) : null,
     izid: rez ? { domaci: Number(rez[1]), gostje: Number(rez[2]) } : null,
     krog: Number(info.match(/(\d+)\.\s*(?:kolo|коло)/i)?.[1]) || null,
     datum,
@@ -313,7 +366,7 @@ export function sestaviBlok(blok, strani, vrstice = [], { danes = Date.now() } =
     const stanje = html == null ? 'neprebrana' : stanjeStrani(html)
     if (stanje === 'ne-postoji') { neObstaja.push(id); continue }
     if (stanje !== 'neodigrana' && stanje !== 'odigrana') continue
-    const g = glavaStrani(html)
+    const g = glavaStrani(html, `${blok.od}-${blok.do}`)
     const mesto = krogPoMestu(id, blok)
     if (stanje === 'odigrana' && g.krog && g.krog !== mesto) neujemanjaKrogov.push({ id, krog: g.krog, mesto })
     tekme.push({
@@ -328,6 +381,18 @@ export function sestaviBlok(blok, strani, vrstice = [], { danes = Date.now() } =
       html,
     })
   }
+
+  // Klub dvakrat v istem krogu bloka (po mestu šifre): dva kluba z istim
+  // imenom (COMET ime brez kraja) — preimenuj ju v IME_V_BLOKU, sicer bi se zlila.
+  const vKrogu = new Set()
+  for (const t of tekme)
+    for (const k of [t.domaci, t.gostje]) {
+      const mesto = krogPoMestu(t.id, blok)
+      const kljuc = `${mesto}|${k}`
+      if (vKrogu.has(kljuc))
+        throw new Error(`fssid: ${blok.od}-${blok.do} — klub "${k}" igra v ${mesto}. krogu bloka dvakrat (dva kluba z istim imenom?); dodaj ga v IME_V_BLOKU`)
+      vKrogu.add(kljuc)
+    }
 
   const { ujete, neujetih } = ujemiZVirom(tekme, vrstice)
   let datumVira = 0
@@ -352,7 +417,7 @@ export function sestaviBlok(blok, strani, vrstice = [], { danes = Date.now() } =
   const znani = krogi.filter((k) => k.datum)
   const dan = najpogostejsi(znani.map((k) => danVTednu(k.datum)))
   const ura = najpogostejsi(znani.map((k) => k.ura).filter(Boolean))
-  const polovica = (k) => (k <= blok.klubov - 1 ? 1 : 2)
+  const polovica = (k) => (k <= blok.krogov / 2 ? 1 : 2)
   let zadnji = null
   for (const k of krogi) {
     if (k.datum) { zadnji = k; continue }

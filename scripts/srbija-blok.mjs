@@ -1,12 +1,13 @@
 // Iz ene znane šifre tekme COMET poišče blok tekmovanja-sezone na fss.rs
 // (vir `fssid`) in izpiše šifro lige, število klubov, klube 1. kroga in ali je
 // liga članska (zapisnik ima četrtega sodnika in kontrolorja sojenja —
-// mladinske lige jih nimajo).
+// mladinske lige jih nimajo; nižje članske lige — zone, okružne, opštinske —
+// jih tudi ne, tam odločijo dan in ura tekem ter klubi, glej CLAUDE.md).
 //
 //   node scripts/srbija-blok.mjs 75912400
 //
 // Meja: od šifre navzven v korakih 1, 2, 4, … do prve "Utakmica ne postoji",
-// nato bisekcija. Blok mora imeti N×(N−1) šifer; če jih nima, sta se zlila dva
+// nato bisekcija. Blok mora imeti N×(N−1) šifer (N je lahko lih); če jih nima, sta se zlila dva
 // bloka ali ima blok luknjo — preveri ročno. Vljudno: 3 s med zahtevki, strani
 // se hranijo v scripts/.predpomnilnik/fssid (iste kot pri uvozu).
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
