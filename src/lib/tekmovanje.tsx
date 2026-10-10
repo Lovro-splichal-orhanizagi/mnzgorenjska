@@ -38,6 +38,17 @@ import { jeBrezLige, useLigaStrani } from './naslov'
 
 export const PRIVZETO = 'clani'
 const KLJUC = 'slff-tekmovanje'
+// Seznam lig iz prejšnjega obiska: stran se izriše takoj, svež seznam pride v ozadju.
+const KLJUC_LIG = 'slff-lige'
+
+function shranjeneLige(): Tekmovanje[] {
+  try {
+    const v = JSON.parse(localStorage.getItem(KLJUC_LIG) ?? 'null')
+    return Array.isArray(v) ? v : []
+  } catch {
+    return []
+  }
+}
 
 /** Tekmovanje, kot ga bere vmesnik (podmnožica stolpcev `competitions`). */
 export interface Tekmovanje {
@@ -204,7 +215,7 @@ export function brezZveze(v: Record<string, unknown>): Tekmovanje {
 
 export function TekmovanjeProvider({ children }: { children: ReactNode }) {
   const [iskanje, setIskanje] = useSearchParams()
-  const [tekmovanja, setTekmovanja] = useState<Tekmovanje[]>([])
+  const [tekmovanja, setTekmovanja] = useState<Tekmovanje[]>(shranjeneLige)
   const [ligeNalozene, setLigeNalozene] = useState(false)
   const [slug, setSlug] = useState<string>(
     () => iskanje.get('t') || shranjeno() || PRIVZETO,
@@ -232,7 +243,15 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
         .order('sort_order')
         // Enak sort_order (hrvaške lige) ne sme dati vsakič druge privzete lige.
         .order('id')
-      if (!polno.error) return (polno.data as Tekmovanje[] | null) ?? []
+      if (!polno.error) {
+        const sveze = (polno.data as Tekmovanje[] | null) ?? []
+        try {
+          localStorage.setItem(KLJUC_LIG, JSON.stringify(sveze))
+        } catch {
+          /* brez shrambe naslednji obisk spet čaka na seznam */
+        }
+        return sveze
+      }
 
       // Migracija za zveze še ni stekla — beri po stari shemi, da vmesnik
       // vseeno dobi lige.
@@ -247,7 +266,12 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
       .catch(() => [] as Tekmovanje[])
       .then((t) => {
         if (!veljavno) return
-        setTekmovanja(t)
+        // Neuspel prenos ne pobriše lig iz shrambe; nespremenjen seznam ne
+        // sproži učinkov znova. Svež seznam ponovno preveri izbrano ligo
+        // (učinek spodaj): ugasnjena liga iz shrambe dobi zamenjavo.
+        setTekmovanja((prej) =>
+          !t.length || JSON.stringify(t) === JSON.stringify(prej) ? prej : t,
+        )
         setLigeNalozene(true)
       })
     return () => {

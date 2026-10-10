@@ -7,6 +7,7 @@
 // Ločeno od `Administracija.tsx`, ker je ta že skoraj tisoč vrstic.
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import { vseVrstice } from '../../lib/strani'
 import { oceniPripravljenost, type Ocena, type IgralecZaKader } from '../../lib/pripravljenost'
 import type { Pozicija } from '../../lib/tipi'
 import Potrditev from './Potrditev'
@@ -84,21 +85,36 @@ export default function UpravljanjeLig() {
     const vse = (data ?? []) as Liga[]
     setLige(vse)
 
+    // Nastavitve vseh lig v eni poizvedbi, stanja vzporedno po osem — zaporedno
+    // je bilo za ~450 lig ~900 zahtevkov drug za drugim.
+    // ponytail: osem hkrati; skupni RPC ni smiseln, ker vsako stanje nosi vse igralce lige.
     const s: Record<number, Stanje> = {}
     const n: Record<number, Record<string, number>> = {}
-    for (const l of vse) {
-      const [{ data: st }, { data: na }] = await Promise.all([
-        supabase.rpc('stanje_lige', { p_competition_id: l.id }),
+    for (const l of vse) n[l.id] = {}
+    try {
+      const vrstice = await vseVrstice((od, do_) =>
         supabase
           .from('competition_settings')
-          .select('key, value')
-          .eq('competition_id', l.id),
-      ])
-      if (st) s[l.id] = st as unknown as Stanje
-      n[l.id] = Object.fromEntries(
-        ((na ?? []) as { key: string; value: unknown }[]).map((v) => [v.key, Number(v.value)]),
+          .select('competition_id, key, value')
+          .order('competition_id')
+          .order('key')
+          .range(od, do_),
       )
+      for (const v of vrstice as { competition_id: number; key: string; value: unknown }[])
+        (n[v.competition_id] ??= {})[v.key] = Number(v.value)
+    } catch (e) {
+      setNapaka((e as Error).message)
     }
+    let naslednja = 0
+    await Promise.all(
+      Array.from({ length: 8 }, async () => {
+        while (naslednja < vse.length) {
+          const l = vse[naslednja++]
+          const { data: st } = await supabase.rpc('stanje_lige', { p_competition_id: l.id })
+          if (st) s[l.id] = st as unknown as Stanje
+        }
+      }),
+    )
     setStanja(s)
     setNastavitve(n)
   }, [])

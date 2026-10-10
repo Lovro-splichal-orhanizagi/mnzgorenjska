@@ -67,6 +67,7 @@ import Sponzor from '../components/Sponzor'
 import { izvor } from '../lib/platforma'
 import { useZaklepPomika } from '../lib/zaklepPomika'
 import { registrirajPush } from '../components/PotisnaObvestila'
+import { EKIPA_SHRANJENA } from '../components/OpozoriloEkipe'
 
 /** Igralec na trgu (`player_overview` / `player_season_standings`). */
 interface IgralecTrga {
@@ -1289,6 +1290,9 @@ export default function MojaEkipa() {
       p_team_id: ekipaId,
       p_roster: roster,
     })
+    // Pas z opozorili ne bere več ob vsaki menjavi strani. Tudi ob napaki:
+    // ekipa je lahko pravkar nastala (prazna).
+    window.dispatchEvent(new Event(EKIPA_SHRANJENA))
     if (error) return setNapaka(napakaShranjevanja(error))
 
     const izid = rezultat as {

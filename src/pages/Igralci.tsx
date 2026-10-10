@@ -179,8 +179,9 @@ export default function Igralci() {
     }
   }, [tekmovanjeId])
 
-  // Sezone in prva stran lestvice gresta hkrati: čakanje na seznam sezon, da
-  // sploh vemo, katero lestvico naložiti, je podvojilo čas do prvega izrisa.
+  // Najprej le sezone (majhne); lestvica izbrane sezone in igralci brez
+  // nastopov nato gresta hkrati v spodnjem učinku. Prej je šla zraven še
+  // lestvica vseh sezon (500 vrstic), ki jo je spodnji učinek prenesel znova.
   useEffect(() => {
     if (!tekmovanjeId) return
     // Nova liga: klubi, sezone in napaka prejšnje ne veljajo več, njeni
@@ -194,20 +195,12 @@ export default function Igralci() {
     setEkipVLigi(null)
     const ligaId = tekmovanjeId
     async function nalozi() {
-      const [{ data: vse, error }, { data: privzeta }, { count }] = await Promise.all([
+      const [{ data: vse, error }, { count }] = await Promise.all([
         supabase
           .from('sezone')
           .select('season, odigranih, tekoca')
           .eq('competition_id', ligaId)
           .order('season', { ascending: false }),
-        supabase
-          .from('player_season_standings')
-          .select(
-            'id, full_name, position, team_id, team_name, team_short, team_logo, value, season, points, form, last_round, points_per_match, points_per_value, owners, goals, assists, minutes, matches, clean_sheets, rank',
-          )
-          .eq('competition_id', ligaId)
-          .order('points', { ascending: false })
-          .limit(500),
         // Šteje tabelo, ne pogleda lestvice: ta za vsako ekipo sešteje točke
         // vseh krogov, tu pa rabimo le število ekip.
         supabase
@@ -231,15 +224,6 @@ export default function Igralci() {
           sezone.find((s) => s.odigranih > 0) ??
           sezone[0])?.season
       setSezona(izbrana ?? null)
-      // Iz enega prenosa vzamemo vrstice izbrane sezone; ob preklopu sezone
-      // spodnji učinek po potrebi donese ostalo.
-      const zeImamo = ((privzeta ?? []) as IgralecSezone[]).filter(
-        (i) => i.season === izbrana,
-      )
-      if (zeImamo.length) {
-        setIgralci(zeImamo)
-        setNalaganje(false)
-      }
       // Liga brez ene same odigrane tekme (sveže dodano tekmovanje, sezona
       // pred prvim krogom) nima sezone, ki bi jo spodnji učinek naložil —
       // brez tega bi stran za vedno obtičala na "Nalaganje …".
@@ -264,6 +248,20 @@ export default function Igralci() {
     ;(async () => {
       // Po straneh: velika liga ima v sezoni lahko čez tisoč igralcev.
       let standings: IgralecSezone[]
+      // Igralci brez nastopov ne čakajo na lestvico — oba prenosa gresta hkrati.
+      const aktivniObljuba = jeTekoca
+        ? vseVrstice((od, do_) =>
+            supabase
+              .from('players')
+              .select(
+                'id, full_name, position, team_id, value, active, teams!inner(name, short_name, logo_url)',
+              )
+              .eq('competition_id', ligaId)
+              .eq('active', true)
+              .order('id')
+              .range(od, do_),
+          ).catch(() => [])
+        : null
       try {
         standings = await vseVrstice((od, do_) =>
           supabase
@@ -289,18 +287,8 @@ export default function Igralci() {
       // še nimajo nastopov — sicer novi igralec (npr. sveži prestop) ne
       // bo viden na tej strani, dokler ne odigra prve tekme.
       let vsi = standings
-      if (jeTekoca) {
-        const aktivni = await vseVrstice((od, do_) =>
-          supabase
-            .from('players')
-            .select(
-              'id, full_name, position, team_id, value, active, teams!inner(name, short_name, logo_url)',
-            )
-            .eq('competition_id', ligaId)
-            .eq('active', true)
-            .order('id')
-            .range(od, do_),
-        ).catch(() => [])
+      if (aktivniObljuba) {
+        const aktivni = await aktivniObljuba
         if (!veljavno) return
         const znani = new Set(vsi.map((i) => i.id))
         const brezStatistike: IgralecSezone[] = ((aktivni ?? []) as any[])
