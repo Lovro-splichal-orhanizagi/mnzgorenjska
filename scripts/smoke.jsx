@@ -4236,6 +4236,89 @@ preveri(
   preveri('hlf: v predpomnilnik gredo brez fotografij in osebja', !JSON.stringify(H.brezSlik({ a: { photo: 'x', staff: [1], b: 1 } })).includes('photo'))
 }
 
+// --- vir jalgpall (Estonija, jalgpall.ee) -----------------------------------------
+{
+  const J = await import('./viri/jalgpall.mjs')
+  const { default: viri } = await import('./viri/index.mjs')
+  const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  preveri('jalgpall: vir je vpisan, Crawl-Delay 5 s', viri.jalgpall === J.default && J.default.drzava === 'EE' &&
+    J.default.imaRegistracije === false && J.default.premorMs >= 5000 && J.default.glave['User-Agent'] === 'SLFF fantasy (https://slff.eu)')
+  preveri('jalgpall: šifra in naslovi', J.razbijKodo('52/2026').liga === '52' && J.razbijKodo('52/2026').leto === '2026' &&
+    J.default.naslovRazporeda('536/2025') === 'https://jalgpall.ee/voistlused/536/liigad/calendar?season=2025' &&
+    J.default.naslovZapisnika('52/2026', '141546') === 'https://jalgpall.ee/voistlused/protocol/141546')
+  let slabaSifra = null
+  try { J.razbijKodo('52') } catch (e) { slabaSifra = e.message }
+  preveri('jalgpall: šifra brez leta ustavi uvoz', /<id lige>\/<leto>/.test(slabaSifra ?? ''))
+  preveri('jalgpall: minuta, datum (Tallinn → Ljubljana), pozicija', J.minuta('45+2′') === 45 && J.minuta('90+4′') === 90 &&
+    J.datumUra('28.02.2025 19:00').ura === '18:00' && J.datumUra('01.03.2025 00:30').datum === '2025-02-28' &&
+    J.pozicija('Väravavaht') === 'GK' && J.pozicija('Kaitsev keskpoolkaitsja') === 'MID' && J.pozicija('Parem keskkaitsja') === 'DEF' &&
+    J.pozicija('Tipuründaja') === 'FWD' && J.pozicija('Vasak ründav poolkaitsja') === 'MID')
+  preveri('jalgpall: izid in kontumacija', J.izidRazporeda('2 - 1').izid?.gostje === 1 && !J.izidRazporeda('2 - 1').kontumacija &&
+    J.izidRazporeda('+ : -').izid?.domaci === 3 && J.izidRazporeda('- : +').izid?.gostje === 3 &&
+    J.izidRazporeda('- : -').kontumacija && J.izidRazporeda('- : -').izid === null && J.izidRazporeda(' - ').izid === null)
+  preveri('jalgpall: ključ in kratko ime kluba', J.kljucKlubaEe('Nõmme Kalju FC') === 'nõmme kalju fc' &&
+    J.kratkoImeEe('Tallinna FC Flora U21') === 'Flora U21' && J.kratkoImeEe('Nõmme Kalju FC') === 'Nõmme Kalju' &&
+    J.kratkoImeEe('Paide Linnameeskond') === 'Paide Linnameeskond' && J.kratkoImeEe('JK Tallinna Kalev III') === 'Tallinna Kalev III')
+  preveri('jalgpall: navadna stran ni izziv, izziv je', !J.jeIzziv(beri('ee-jalgpall-protokoll-141546.html')) && J.jeIzziv('<title>Just a moment...</title>'))
+
+  const koledar = beri('ee-jalgpall-koledar-53-2026.html')
+  const v = J.vrsticeRazporeda(koledar)
+  preveri('jalgpall: razpored — Esiliiga 2026: 36 krogov, 180 tekem, 10 klubov, 160 zapisnikov', J.sezonaStrani(koledar) === '2026' &&
+    v.length === 180 && new Set(v.map((t) => t.krog)).size === 36 && new Set(v.flatMap((t) => [t.domaci, t.gostje])).size === 10 &&
+    v.filter((t) => t.id).length === 160)
+  const kont = v.filter((t) => t.kontumacija)
+  preveri('jalgpall: razpored — kontumacije izstopa kluba (+ : -, 4 : -), tudi brez datuma', kont.length === 9 &&
+    kont.every((t) => /Maardu/.test(t.domaci + t.gostje)) && kont.find((t) => t.krog === 28)?.izid?.domaci === 4 &&
+    kont.find((t) => t.krog === 29)?.izid?.gostje === 3 && kont.filter((t) => !t.datum).length === 5)
+  const krogi = J.razcleniRazpored(null, koledar)
+  preveri('jalgpall: razpored — ura v ljubljanskem času, neodigrana', krogi.length === 36 && krogi[0].tekme[0].ura === '18:00' &&
+    krogi.at(-1).tekme.at(-1).odigrana === false && krogi.at(-1).tekme.at(-1).datum === '2026-11-08')
+
+  const z = J.vZapisnik(beri('ee-jalgpall-protokoll-141546.html'), { id: '141546' })
+  const n = J.nastopi(z)
+  const minute = (nn, i) => nn.filter((x) => x.ekipaIdx === i).reduce((a, x) => a + x.minute, 0)
+  preveri('jalgpall: zapisnik — glava, krog, izid, polčas, 11 + 11, klop, brez opozoril', z.domaci.ime === 'Tartu JK Tammeka' &&
+    z.gostje.ime === 'FC Nõmme United' && z.krog === 30 && z.datum === '2026-10-10' && z.sezona === '2026' &&
+    z.rezultat.domaci === 4 && z.polcas?.domaci === 2 && z.domaci.postava.length === 11 && z.gostje.postava.length === 11 &&
+    z.domaci.rezerve.length === 8 && z.opozorila.length === 0)
+  preveri('jalgpall: goli = izid, 11-metrovka, asistenca ni strelec', z.goli.length === 4 && z.goli.filter((g) => g.enajstmetrovka).length === 1 &&
+    z.goli[0].regSt === 32740 && z.goli.every((g) => g.ekipaIdx === 0 && !g.avtogol))
+  preveri('jalgpall: pozicije vseh začetnikov, vratar (VV), šifre', [...z.domaci.postava, ...z.gostje.postava].every((i) => i.pozicija) &&
+    z.domaci.postava.find((i) => i.vratar)?.pozicija === 'GK' && z.domaci.postava.find((i) => i.st === 7)?.pozicija === 'MID' &&
+    z.gostje.postava.find((i) => i.st === 20)?.pozicija === 'FWD' && n.every((x) => x.regSt))
+  preveri('jalgpall: menjave in kartoni, 990 minut na ekipo, ime Priimek Ime', z.menjave.length === 10 && z.rumeni.length === 5 &&
+    minute(n, 0) === 990 && minute(n, 1) === 990 && n.length === 32 && z.domaci.postava[0].ime === 'Lapa Kristen')
+  preveri('jalgpall: grba iz glave zapisnika', J.grbiZapisnika(beri('ee-jalgpall-protokoll-141546.html')).gostje?.src ===
+    'https://jalgpall.ee/images/logos/5C7E20E45CE3FC3318DB9A2BF36EACA6')
+
+  const iv = J.vZapisnik(beri('ee-jalgpall-protokoll-136427.html'))
+  preveri('jalgpall: IV liiga brez postavitve — pozicija le vratarjema', iv.domaci.postava.length === 11 &&
+    [...iv.domaci.postava, ...iv.gostje.postava].filter((i) => i.pozicija).map((i) => i.pozicija).join() === 'GK,GK' &&
+    iv.goli.length === 5 && iv.opozorila.length === 0)
+  const zg = J.vZapisnik(beri('ee-jalgpall-protokoll-136363.html'))
+  preveri('jalgpall: zgrešena 11-metrovka', zg.zgresene.length === 1 && J.nastopi(zg).filter((x) => x.zgreseneEnajstmetrovke).length === 1 &&
+    zg.goli.length === 1 && zg.opozorila.length === 0)
+  const av = J.vZapisnik(beri('ee-jalgpall-protokoll-127489.html'))
+  preveri('jalgpall: avtogol (po stanju) šteje nasprotniku, je pri strelčevi ekipi', av.goli.filter((g) => g.avtogol).length === 1 &&
+    av.goli.find((g) => g.avtogol)?.ekipaIdx === 1 && J.nastopi(av).find((x) => x.avtogoli)?.ekipaIdx === 1 && av.opozorila.length === 0)
+  const rk = J.vZapisnik(beri('ee-jalgpall-protokoll-127732.html'))
+  preveri('jalgpall: rdeči karton (68.) — minute do izključitve', rk.rdeci.length === 1 && rk.rdeci[0].minuta === 68 &&
+    minute(J.nastopi(rk), 0) === 968 && rk.opozorila.length === 0)
+  const vr = J.vZapisnik(beri('ee-jalgpall-protokoll-127641.html'))
+  preveri('jalgpall: gol, ki ga je razveljavil VAR, ne šteje', vr.goli.length === 5 && vr.opozorila.length === 0)
+  preveri('jalgpall: prazen zapisnik (kontumacija) je null', J.vZapisnik(beri('ee-jalgpall-protokoll-142294-prazen.html')) === null)
+
+  // zapisniki(): kontumacije in tekme brez zapisnika izpuščene, napačna sezona ustavi.
+  const zs = await J.default.zapisniki('53/2026', async (url) =>
+    url.includes('calendar') ? koledar : beri('ee-jalgpall-protokoll-141546.html'))
+  const prva = zs.find((x) => x.id === '136135')
+  preveri('jalgpall: zapisniki() — brez kontumacij, ime, krog in sezona iz razporeda', zs.length === 151 &&
+    !zs.some((x) => x.id === '141699') && prva?.z.domaci.ime === 'Tartu JK Welco' && prva.z.krog === 1 && prva.z.sezona === '2026')
+  let napacnaSezona = null
+  try { await J.default.zapisniki('53/2025', async () => koledar) } catch (e) { napacnaSezona = e.message }
+  preveri('jalgpall: stran z drugo sezono ustavi uvoz', /kaže sezono 2026, ne 2025/.test(napacnaSezona ?? ''))
+}
+
 // --- vir fsb (Srbija, Fudbalski savez Beograda) ---------------------------------
 {
   const F = await import('./viri/fsb.mjs')
