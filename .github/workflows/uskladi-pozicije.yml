@@ -6,10 +6,10 @@ on:
   workflow_dispatch:
     inputs:
       vir:
-        description: 'Vir lig: sportnet (Slovaska), hns (Hrvaska), mlsz (Madzarska), oefb (Avstrija), fsb ali fss (Srbija)'
+        description: 'Vir lig: sportnet (Slovaska), hns (Hrvaska), mlsz (Madzarska), oefb (Avstrija), fsb ali fss (Srbija), jalgpall (Estonija)'
         required: false
         type: choice
-        options: [sportnet, hns, mlsz, oefb, fsb, fss]
+        options: [sportnet, hns, mlsz, oefb, fsb, fss, jalgpall]
         default: sportnet
       tekmovanje:
         description: 'Slug lige (prazno = vse lige vira)'
