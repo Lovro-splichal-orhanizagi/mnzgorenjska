@@ -11,7 +11,7 @@ export const lestvice = {
   mojeMesto: 'Moje mesto ↓',
 
   lestvica: {
-    naslov: 'Lestvica',
+    naslov: 'Fantasy lestvica',
     prazna: 'Lestvica je še prazna — sestavi prvo ekipo!',
     napakaKrogov:
       'Rezultatov po krogih ni bilo mogoče naložiti ({napaka}). Skupna lestvica spodaj je vseeno točna.',

@@ -16,7 +16,7 @@
 // ugibanjem.
 import { PRIVZETO, type Tekmovanje } from './tekmovanje'
 
-import { jezikObiskovalca, zapomniDrzavo } from './drzavaUgib.ts'
+import { izbranJezik, jezikObiskovalca, zapomniDrzavo, zeljenJezik } from './drzavaUgib.ts'
 
 export {
   znaneDrzave,
@@ -33,6 +33,7 @@ export {
   zeljenJezik,
   jezikObiskovalca,
   tujec,
+  naGoliNaslovnici,
   zapomniTujca,
   pozabiTujca,
   izbranJezik,
@@ -156,9 +157,12 @@ export function preklopiDrzavo(
   const liga = zeljena ?? privzetaLiga(vse, koda)
   zapomniDrzavo(koda)
   try {
-    // Jezik države — razen če ga je obiskovalec izbral sam ali je tujec
-    // (angleščina ostane, tudi ko izbere državo).
-    localStorage.setItem(KLJUC_JEZIKA, jezikObiskovalca(koda))
+    // Jezik države — razen če ga je obiskovalec izbral sam. Tujec ostane v
+    // angleščini le, če ga čaka gola naslovnica (država brez lige).
+    localStorage.setItem(
+      KLJUC_JEZIKA,
+      izberiLigo ? zeljenJezik({ drzava: koda, izbran: izbranJezik() }) : jezikObiskovalca(koda),
+    )
     if (izberiLigo) localStorage.setItem(KLJUC_LIGE, liga)
     else localStorage.removeItem(KLJUC_LIGE)
   } catch {

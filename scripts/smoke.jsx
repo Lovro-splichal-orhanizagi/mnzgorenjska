@@ -3074,7 +3074,7 @@ preveri(
 // --- prijava, opomniki, kanonicni naslov -------------------------------------
 {
   const { varnaPot, napakaPrijave, povezavaNaPrijavo } = await import('../src/lib/prijava')
-  const { kanonicni } = await import('../src/lib/naslov')
+  const { kanonicni, jeZasebna } = await import('../src/lib/naslov')
   const { default: Opomniki } = await import('../src/pages/Opomniki')
   preveri('prijava: notranja pot je varna', varnaPot('/mini-leagues?vstop=AB') === '/mini-leagues?vstop=AB')
   preveri(
@@ -3086,6 +3086,8 @@ preveri(
   preveri('prijava: neznana napaka ostane', napakaPrijave('Nekaj cudnega') === 'Nekaj cudnega')
   preveri('naslov: kanonicni obdrzi le ligo', kanonicni('/players', '?t=mladinci&klub=3') === 'https://slff.eu/players?t=mladinci')
   preveri('naslov: kanonicni brez lige', kanonicni('/', '') === 'https://slff.eu/')
+  preveri('naslov: kanonicni brez koncne posevnice', kanonicni('/players/', '?t=x') === 'https://slff.eu/players?t=x' && kanonicni('/', '') === 'https://slff.eu/')
+  preveri('naslov: zasebne strani noindex', ['/my-team', '/my-team/', '/mini-leagues', '/login', '/account', '/reminders', '/new-password', '/team/5', '/l/AB12'].every(jeZasebna) && !jeZasebna('/players') && !jeZasebna('/'))
   preveri('naslov: kanonicni strani brez lige nima ?t=', kanonicni('/legal', '?t=mladinci') === 'https://slff.eu/legal')
   const { zLigo } = await import('../src/lib/tekmovanje')
   preveri('povezava: liga v naslovu', zLigo('/player/5', 'sk-za-1trieda') === '/player/5?t=sk-za-1trieda')
@@ -3496,9 +3498,15 @@ preveri(
   preveri('drzava: anglesko v Bukarešti (pas)', D.ugibajDrzavo({ jeziki: ['en-US'], casovniPas: 'Europe/Bucharest' }) === 'RO')
   preveri('drzava: liga ro-… je romunska', D.drzavaLige('ro-if-liga4') === 'RO' && D.JEZIK_DRZAVE.RO === 'ro')
   shramba.set('slff-tujec', 'CZ')
-  preveri('tujec: oznaka v brskalniku', D.tujec() === 'CZ' && D.jezikObiskovalca('SK') === 'en')
+  // Jezik tujca je odvisen od jezika okolja (Node ima navigator.languages).
+  const jezikTujcaTu = D.jezikTujca(globalThis.navigator?.languages)
+  preveri('tujec: oznaka v brskalniku', D.tujec() === 'CZ' && D.jezikObiskovalca('SK') === jezikTujcaTu)
   D.preklopiDrzavo('SK', lige, { pojdi: (u) => (cilj = u) })
-  preveri('tujec: izbira Slovaske ohrani anglescino', shramba.get('slff-jezik') === 'en' && cilj === '/?t=sk-ssfz-4liga', `${[...shramba]}`)
+  preveri('tujec: izbira Slovaske z ligo da slovascino', shramba.get('slff-jezik') === 'sk' && cilj === '/?t=sk-ssfz-4liga', `${[...shramba]}`)
+  preveri('tujec: s shranjeno ligo ni tujec (en jezik na naslov)', D.tujec() === null && D.jezikObiskovalca('SI') === 'sl')
+  shramba.delete('slff-tekmovanje')
+  D.preklopiDrzavo('SK', lige, { izberiLigo: false, pojdi: (u) => (cilj = u) })
+  preveri('tujec: izbira drzave brez lige ohrani jezik tujca', shramba.get('slff-jezik') === jezikTujcaTu && cilj === '/', `${[...shramba]}`)
   shramba.clear()
   shramba.set('slff-jezik-izbran', 'en')
   D.preklopiDrzavo('SI', lige, { pojdi: (u) => (cilj = u) })

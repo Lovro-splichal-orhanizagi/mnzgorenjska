@@ -33,10 +33,14 @@ export function jeBrezLige(pot: string): boolean {
  * parametrov (filtri, izbrani krog), da iskalnik ne šteje vsake kombinacije
  * za svojo stran. Strani brez lige (`jeBrezLige`) ga nimajo.
  */
+// `/players/` in `/players` sta ista stran (isto pravilo v streznik.mjs).
+const brezPosevnice = (pot: string): string => pot.replace(/(.)\/+$/, '$1')
+
 export function kanonicni(pot: string, iskanje: string): string {
+  pot = brezPosevnice(pot)
   const t = jeBrezLige(pot)
     ? null
-    : ligaStrani?.pot === pot
+    : ligaStrani && brezPosevnice(ligaStrani.pot) === pot
       ? ligaStrani.slug
       : new URLSearchParams(iskanje).get('t')
   return `${DOMENA}${pot}${t ? `?t=${encodeURIComponent(t)}` : ''}`
@@ -82,6 +86,12 @@ export function useLigaStrani(slug: string | null | undefined): void {
     }
   }, [slug])
 }
+
+/** Zasebne strani (ekipa, račun, prijava, povabila): iskalnik jih ne indeksira. */
+const ZASEBNE = ['/my-team', '/mini-leagues', '/login', '/account', '/reminders', '/new-password', '/novo-geslo', '/auth/', '/team/', '/l/']
+
+export const jeZasebna = (pot: string): boolean =>
+  ZASEBNE.some((p) => (p.endsWith('/') ? pot.startsWith(p) : pot === p || pot === `${p}/`))
 
 /**
  * Strani, ki je ni (neznan igralec, klub, tekma, ekipa): Caddy vrne 200, ker

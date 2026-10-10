@@ -168,8 +168,21 @@ function beri(kljuc: string): string | null {
   }
 }
 
-/** Država po IP tujca, če je bil obiskovalec prepoznan kot tujec. */
-export const tujec = (): string | null => beri(KLJUC_TUJCA)
+/**
+ * Gola naslovnica: pot `/` brez `?t=` in brez shranjene lige. Le tu je tujec
+ * tujec (angleščina, vprašanje po državi); vsaka druga stran je v jeziku
+ * države svoje lige, da ima naslov en sam jezik — tudi za iskalnik, ki
+ * pride z ameriškega IP-ja. Velja stanje ob nalaganju strani, ker se jezik
+ * med obiskom ne menja; v Node (smoke) se bere sproti.
+ */
+const golaNaslovnica = (pot: string, iskanje: string): boolean =>
+  pot === '/' && !new URLSearchParams(iskanje).has('t') && !beri('slff-tekmovanje')
+const golaObNalaganju =
+  typeof location === 'undefined' ? null : golaNaslovnica(location.pathname, location.search)
+export const naGoliNaslovnici = (): boolean => golaObNalaganju ?? golaNaslovnica('/', '')
+
+/** Država po IP tujca — le na goli naslovnici (`naGoliNaslovnici`). */
+export const tujec = (): string | null => (naGoliNaslovnici() ? beri(KLJUC_TUJCA) : null)
 
 export function zapomniTujca(ip: string) {
   try {
