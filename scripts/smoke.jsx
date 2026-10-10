@@ -4002,6 +4002,109 @@ preveri(
   preveri('fss: prazna predloga je null', F.vZapisnik('<html><div class="fss-rez__title"></div></html>') === null && F.tekmeStrani('<html></html>').length === 0)
 }
 
+// --- vir frf (Romunija, portal županijskih zvez frf-ajf.ro) --------------------
+{
+  const F = await import('./viri/frf.mjs')
+  const { default: viri } = await import('./viri/index.mjs')
+  const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  preveri('frf: vir je vpisan', viri.frf === F.default && F.default.drzava === 'RO' && F.default.imaRegistracije === false &&
+    F.default.premorMs >= 1500 && F.default.glave['User-Agent'] === 'SLFF fantasy (slff.eu; splih.94@gmail.com)')
+  preveri('frf: šifra in naslovi', F.razbijKodo('timis/liga-a-iv-a-16445').judet === 'timis' && F.razbijKodo('timis/liga-a-iv-a-16445').id === 16445 &&
+    F.default.naslovRazporeda('timis/liga-a-iv-a-16445') === 'https://www.frf-ajf.ro/timis/competitii-fotbal/liga-a-iv-a-16445/program' &&
+    F.naslovKroga('timis/liga-a-iv-a-16445', 8) === 'https://www.frf-ajf.ro/timis/competitii-fotbal/liga-a-iv-a-16445/meciuri/etapa-8')
+  let slabaSifra = null
+  try { F.razbijKodo('16445') } catch (e) { slabaSifra = e.message }
+  preveri('frf: šifra brez županije ustavi uvoz', /judet/.test(slabaSifra ?? ''))
+  preveri('frf: datum, ura (Bukarešta → Ljubljana), minuta', F.datumRo('Sambata, 3  Octombrie 2026') === '2026-10-03' &&
+    F.vLjubljanskiCas('2026-10-03', '11:00').ura === '10:00' && F.vLjubljanskiCas('2026-10-03', '00:30').datum === '2026-10-02' &&
+    F.minuta("92'") === 90 && F.minuta("46'") === 46)
+  preveri('frf: ș ț z vejico, ime igralca, ključ kluba brez diakritike', F.lepoIme('Bucur Vladut - Stefan') === 'Bucur Vladut-Stefan' &&
+    F.imeKluba('Flacăra Mălăeşti', 'prahova') === 'Flacăra Mălăești' && F.kljucKlubaRo('CS Sânandrei Timiș') === F.kljucKlubaRo('CS Sanandrei Timis') &&
+    F.kratkoImeRo('CS Sânandrei Timiș') === 'Sânandrei Timiș')
+  preveri('frf: navadna stran ni izziv, izziv je', !F.jeIzziv(beri('ro-frf-meci-timis-polni.html')) &&
+    F.jeIzziv('<html><head><title>Just a moment...</title></head></html>'))
+
+  // Program: vse tekme sezone na eni strani.
+  const program = beri('ro-frf-program-timis-16445.html')
+  const tekme = F.tekmePrograma(program, 'timis')
+  preveri('frf: program — 240 tekem, 30 krogov, 16 klubov, sezona', tekme.length === 240 && new Set(tekme.map((t) => t.krog)).size === 30 &&
+    new Set(tekme.flatMap((t) => [t.domaci, t.gostje])).size === 16 && F.sezonaStrani(program) === '2026/27')
+  const t1 = tekme.find((t) => t.id === '1227012')
+  preveri('frf: program — tekma z izidom, neodigrana brez datuma (1970-01-01)', t1?.krog === 1 && t1.datum === '2026-08-22' &&
+    t1.domaci === 'CS Sânandrei Timiș' && t1.izid?.domaci === 2 && t1.izid?.gostje === 1 &&
+    tekme.filter((t) => t.krog === 30).every((t) => t.datum === null && t.izid === null))
+  let dvoumno = null
+  const zLocilom = program.replace('<b>CS Sânandrei Timiș - CS Avântul Periam</b>', '<b>CS Sânandrei - Timiș - CS Avântul Periam</b>')
+  try { F.tekmePrograma(zLocilom, 'timis') } catch (e) { dvoumno = e.message }
+  preveri('frf: dvoumno "A - B - C" ustavi, lestvica ga razreši', /ne znam razdeliti/.test(dvoumno ?? '') &&
+    F.tekmePrograma(zLocilom, 'timis', ['CS Sânandrei - Timiș', 'CS Avântul Periam'])[0].domaci === 'CS Sânandrei - Timiș' &&
+    F.imenaLestvice(beri('ro-frf-clasament-timis.html')).length === 16)
+  const ure = F.ureKroga(beri('ro-frf-etapa-timis-8.html'))
+  preveri('frf: ure s strani kroga', ure.size === 8 && ure.get('1227068')?.ura === '16:00' && ure.get('1227070')?.datum === '2026-10-10')
+
+  // Razpored: program + stran prihajajočega kroga + stran 3:0 (kontumacija).
+  const strani = new Map([
+    ['program', program], ['etapa-8', beri('ro-frf-etapa-timis-8.html')],
+    ['1227015', beri('ro-frf-meci-1227015-kontumacija.html')],
+  ])
+  const prenesi = async (url) => {
+    for (const [k, v] of strani) if (url.includes(k)) return v
+    return beri('ro-frf-meci-1227058-prazen.html')
+  }
+  const krogi = await F.default.razporedVseStrani('timis/liga-a-iv-a-16445', prenesi, { danes: '2026-10-10' })
+  const vse = krogi.flatMap((k) => k.tekme)
+  const k8 = krogi.find((k) => k.stevilka === 8)
+  preveri('frf: razpored — le razpisani krogi, ura v ljubljanskem času, kontumacija 3:0 brez postav', krogi.length === 8 &&
+    k8?.tekme.find((t) => t.domaci === 'CSC Belinț')?.ura === '10:00' &&
+    vse.filter((t) => t.kontumacija).length === 1 && vse.find((t) => t.kontumacija)?.izid?.domaci === 3 &&
+    vse.filter((t) => t.odigrana).length === 62)
+
+  // Poln zapisnik: Sânandrei : Recaș 2:1 (Timiș IV, 7. krog), avtogol, menjave.
+  const z = F.vZapisnik(beri('ro-frf-meci-timis-polni.html'), { id: '1227060', judet: 'timis' })
+  const n = F.nastopi(z)
+  const minute = (i) => n.filter((x) => x.ekipaIdx === i).reduce((a, x) => a + x.minute, 0)
+  preveri('frf: zapisnik — glava, krog, izid, polčas, datum, ura', z.domaci.ime === 'CS Sânandrei Timiș' && z.gostje.ime === 'AS Recaș' &&
+    z.krog === 7 && z.rezultat.domaci === 2 && z.rezultat.gostje === 1 && z.polcas.domaci === 0 && z.datum === '2026-10-03' &&
+    z.ura === '10:00' && z.sezona === '2026/27' && !z.nepopoln && z.opozorila.length === 0)
+  preveri('frf: postave in klop, šifra igralca, brez dresa in vratarja', z.domaci.postava.length === 11 && z.domaci.rezerve.length === 7 &&
+    z.gostje.postava.length === 11 && z.gostje.rezerve.length === 8 && n.every((x) => x.regSt != null && x.st === null && !x.vratar))
+  preveri('frf: goli = izid, avtogol pri strelčevi ekipi šteje nasprotniku', z.goli.length === 3 &&
+    z.goli.some((g) => g.avtogol && g.ime === 'Firan Andrei' && g.ekipaIdx === 1 && g.minuta === 72) &&
+    n.find((x) => x.ime === 'Firan Andrei')?.avtogoli === 1 && n.find((x) => x.ime === 'Boghian Adrian')?.goli === 1)
+  preveri('frf: menjave z minutami (gostje v zrcalni postavitvi), 990 minut na ekipo', minute(0) === 990 && minute(1) === 990 &&
+    n.find((x) => x.ime === 'Badauta Alexandru Catalin')?.minute === 46 && n.find((x) => x.ime === 'Szalkai Robert')?.minutaOd === 46 &&
+    n.find((x) => x.ime === 'Bejerea Misi')?.minute === 75 && n.find((x) => x.ime === 'Ozsvath Laurentiu Robert')?.rumeni === 1 &&
+    !n.some((x) => x.ime === 'Radac Andrei'))
+  preveri('frf: zapisnik ne nosi datuma rojstva ne izkaznice', !JSON.stringify(z).match(/Carnet|\d{2}-\d{2}-(19|20)\d{2}/))
+
+  // Nepopolni: prazen (4:1 brez postav), le dogodki (Prahova), kontumacija.
+  const p = F.vZapisnik(beri('ro-frf-meci-1227058-prazen.html'), { judet: 'timis' })
+  preveri('frf: prazen zapisnik — izid je, nepopoln, brez nastopov', p.nepopoln && p.prazen && p.rezultat.domaci === 4 &&
+    F.nastopi(p).length === 0 && p.opozorila[0].startsWith(F.NEPOPOLN) && !F.jeKontumacija(p))
+  const d = F.vZapisnik(beri('ro-frf-meci-prahova-le-dogodki.html'), { judet: 'prahova' })
+  preveri('frf: "le dogodki" (strelci brez postave) ni postava', d.nepopoln && !d.prazen && F.nastopi(d).length === 0 && d.goli.length === 0 &&
+    d.opozorila.every((o) => /le igralci z dogodki/.test(o)))
+  const k = F.vZapisnik(beri('ro-frf-meci-1227015-kontumacija.html'), { judet: 'timis' })
+  preveri('frf: 3:0 brez postav je kontumacija', F.jeKontumacija(k) && k.prazen)
+  // Ena ekipa s postavo, druga brez: nastopi le znane ekipe, tekma nepopolna.
+  const html = beri('ro-frf-meci-timis-polni.html')
+  const brezGostov = html.slice(0, html.indexOf('<h3 class="tbk__title ">AS Recaș')) + html.slice(html.indexOf('<h3 class="tbk__title ">În aceea'))
+  const e = F.vZapisnik(brezGostov, { judet: 'timis' })
+  preveri('frf: ena postava — nastopi domačih, gostje brez, nepopolna', e.nepopoln && !e.prazen &&
+    F.nastopi(e).every((x) => x.ekipaIdx === 0) && F.nastopi(e).length === 14 && e.opozorila[0] === `${F.NEPOPOLN}: AS Recaș — brez postave`)
+  preveri('frf: stran brez glave tekme ni zapisnik', F.vZapisnik(beri('ro-frf-clasament-timis.html')) === null)
+
+  // zapisniki(): krog in imena s programa, kontumacija izpuščena.
+  const zs = await F.default.zapisniki('timis/liga-a-iv-a-16445', async (url) => {
+    if (url.endsWith('/program')) return program.replace(/<tr class="blueColored2?"><td><b>(?![^<]*(?:CS Sânandrei Timiș - AS Recaș|CSM Lugoj - CSO Deta|CSC Săcălaz - CSU))[\s\S]*?<\/tr>/g, '')
+    if (url.includes('1227015')) return beri('ro-frf-meci-1227015-kontumacija.html')
+    if (url.includes('1227058')) return beri('ro-frf-meci-1227058-prazen.html')
+    return beri('ro-frf-meci-timis-polni.html')
+  })
+  preveri('frf: zapisniki() — poln, prazen nepopoln, kontumacija izpuščena', zs.length === 2 &&
+    zs.some((x) => x.id === '1227060' && x.z.krog === 7 && !x.z.nepopoln) && zs.some((x) => x.id === '1227058' && x.z.nepopoln && x.z.krog === 6))
+}
+
 // --- vir fsb (Srbija, Fudbalski savez Beograda) ---------------------------------
 {
   const F = await import('./viri/fsb.mjs')

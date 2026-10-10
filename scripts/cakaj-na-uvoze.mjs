@@ -39,7 +39,9 @@ const samoTece = process.argv.includes('--tece')
 let mojaDrzava = arg('--drzava')?.toUpperCase() ?? null
 const NAJVEC_MIN = Number(arg('--najvec') ?? 120)
 // Države, kjer zveze pod državno nimajo skupnih klubov: država → državna zveza.
-const LOCENE_ZVEZE = { AT: 'oefb' }
+// Romunija: vsaka županijska zveza (AJF) je svoja piramida; državne zveze v
+// SLFF ni, 'frf' je le vir (nobena liga nima zveze s to šifro).
+const LOCENE_ZVEZE = { AT: 'oefb', RO: 'frf' }
 
 const { GITHUB_RUN_ID, GITHUB_REPOSITORY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = process.env
 if (!GITHUB_RUN_ID || !GITHUB_REPOSITORY) {

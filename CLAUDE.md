@@ -1121,9 +1121,112 @@ za `other` začnejo z "de". Ime lige stoji za dvopičjem ("Liga fantasy s-a
 deschis: {liga}"), `ligaVTozilniku` ga pusti. Psevdonim v klepetu ima
 pridevnik za samostalnikom ("Portar Albastru 42"). Stran Pozicije je v meniju
 kot v Sloveniji. Zveze, tekmovanja in vir vpiše svoja migracija. Manjka še:
-romunski kanal v HelpStacku (`Podpora.tsx` za `ro` uporabi slovenskega),
-pregled prevoda pri naravnem govorcu in `RO` v matriki nočnega uvoza, ko
-pridejo lige.
+romunski kanal v HelpStacku (`Podpora.tsx` za `ro` uporabi slovenskega) in
+pregled prevoda pri naravnem govorcu. `RO` je v matriki nočnega uvoza.
+
+### Romunija — vir `frf`
+
+Vir `frf` (`scripts/viri/frf.mjs`) bere **www.frf-ajf.ro**, en portal vseh 41
+županijskih zvez (AJF) in Bukarešte, od Lige IV navzdol. HTML iz strežnika,
+spredaj Cloudflare brez izziva, robots.txt prazen. **Pogoji portala
+prepovedujejo reprodukcijo brez pisnega dovoljenja** — prošnja je poslana;
+do odgovora so vse lige **neaktivne** in jih ne uvažamo v produkcijo. Če nas
+prosijo, naj nehamo, ali nas blokirajo — nehamo. Beremo odkrito
+(`User-Agent: SLFF fantasy (slff.eu; splih.94@gmail.com)` — drugega naslova
+ne, 1,6 s med zahtevki, popolnih zapisnikov ne beremo znova). **Ob izzivu,
+CAPTCHI ali 403 se uvoz ustavi (`jeIzziv`) — ne obhajaj.** Navadne strani
+nosijo Cloudflarov skript `/cdn-cgi/challenge-platform/…/jsd/` — to ni izziv.
+
+- **Šifra lige** je `<judet>/<slug>-<id>` (`timis/liga-a-iv-a-16445`), kot v
+  naslovu `/<judet>/competitii-fotbal/<slug>-<id>`. Vsaka sezona ima svoj id
+  (2026/27 ~16xxx–17xxx, 2025/26 ~14xxx–15xxx). Tekoča tekmovanja so v meniju
+  županije, arhiv na `/<judet>/competitii-fotbal/2025` (mreža "Detalii").
+  Seznam z arhivi izpiše:
+
+  ```bash
+  node scripts/romunske-lige.mjs valcea sibiu          # liga, šifra 2026/27, arhiv 2025/26
+  node scripts/romunske-lige.mjs valcea --preveri      # še zapisniki zadnjega kroga: polni/nepopolni/prazni
+  node scripts/romunske-lige.mjs --trki                # isto ime kluba v dveh županijah
+  ```
+- **Program** (`…/program`) je ena stran z vsemi tekmami sezone: "Domači -
+  Gostje", krog, datum ISO (prazen ali `1970-01-01`, dokler krog ni razpisan),
+  izid ("2-1", neodigrana "-"), povezava `/<judet>/meciuri/<…>-<id>.html`.
+  Ure tu ni: razpored jo prebere s strani prihajajočega kroga
+  (`…/meciuri/etapa-<N>`, "Sambata, 10 Octombrie 2026, 11:00") in jo pretvori
+  v ljubljanski čas (−1 h). Razpored vrne le razpisane kroge. Če ima ime kluba
+  " - ", odloči lestvica (`…/clasament`), sicer uvoz pade.
+- **Zapisnik** (stran tekme): izid `<h2>`, "Pauza", datum in ura (bukareška),
+  krog v drobtinah ("Etapa 7"). Ekipa je `<h3 class="tbk__title">`, pod njo
+  `Titulari` in `Rezerve`; **gostje so zrcalni** (stolpec dogodkov pred
+  imenom). Med ekipama je časovnica (Intră/Iese, CG, Gol) — za preverjanje,
+  ne beremo je. Za ekipama "În aceeași etapă" — tam nehamo. Igralec:
+  `/jucatori/<slug>-<id>.html` → `reg_st`; ime je "Priimek Ime", ş ţ →
+  ș ț, "Vladut - Stefan" → "Vladut-Stefan". **"Carnet" (izkaznica) in datuma
+  rojstva ne beremo in ne hranimo**; vzorci v `scripts/vzorci/ro-frf-*` so
+  počiščeni (repo je javen).
+- **Dogodki** (ikone z minuto, "92'" → 90): `goal.png` (pripona `(a)` =
+  avtogol pri strelcu v njegovi ekipi; `(p)` bi bila 11 m — videli je še
+  nismo), `yellow_card.png`, `redCard.png` (title pove, ali je drugi rumeni;
+  prvi rumeni takrat ni posebej vpisan), `outHome.gif` pri začetniku in
+  `inHome.gif` pri rezervi — **minute so točne**, leteče menjave šteje
+  `minuteIzPreklopov`. Strelec s klopi brez vstopa dobi nastop od gola.
+- **Dresov, vratarja in pozicij ni.** Vse pozicije, tudi GK, določi
+  glasovanje (stran Pozicije je v meniju); `ugani-pozicije` brez dresov vratarja
+  ne ugane. **Liga brez vratarjev ni pripravljena na vklop** (`kader-nemogoc`)
+  — pred vklopom potrebuje glasove ali admina. *Uskladi pozicije* za `frf` ni
+  (ni oznake vratarja, po kateri bi štel).
+- **Nepopolni zapisniki.** Zapisnik vnaša klub: v isti ligi so polni, prazni
+  (izid brez postav), z eno postavo ali "le dogodki" (pod Titulari so samo
+  strelci in kartonirani, brez klopi — Prahova, Ialomița). Ekipa ima postavo,
+  če ima vsaj 7 začetnikov in ni "le dogodkov"; sicer njeni igralci ne dobijo
+  nastopov. Tekma brez postave ene ali obeh ekip je `nepopoln`: **uvoz zapiše
+  izid in nastope znane ekipe, `imported_at` ostane prazen** (lestvica lige je
+  ne šteje, borza na oba kluba čaka), prvo opozorilo se začne z `zapisnik
+  nepopoln` (`NEPOPOLN`). Nespremenjeno nepopolno tekmo uvoz preskoči (odtis),
+  vir jo 45 dni bere svežo; preveri-podatke jo po 3 dneh javi kot
+  `zapisnik-nepopoln`, ne kot zamudo. **Arhiva nepopolnih ne uvažamo.**
+  Kontumacija: 3:0 brez obeh postav, starejša od tedna dni (razpored jo
+  označi, zapisnik jo izpusti). Splošno: `z.nepopoln` lahko da vsak vir.
+- **Isto ime, drug klub**: ime kluba je enolično v državi, AJF pa ločene
+  piramide. Trk med županijama se doda v `IME_V_ZUPANIJI` (`<judet>|<ime>` →
+  "Ime (Županija)"); pregled 10. 10. 2026 vpisanih lig trkov ni našel. Ključ
+  kluba je brez diakritike (vir piše ş in ș). Grbe ima portal
+  (`/upload/echipe/<id>.jpg`), a brez dovoljenja jih ne beremo — skripte za
+  grbe ni.
+
+Preizkus v živo (10. 10. 2026, brez pisanja v bazo):
+Timiș IV 2026/27 — 8 krogov, 62 odigranih, 1 kontumacija, 61 zapisnikov: 54
+polnih, 7 praznih (6 iz današnjega kroga), goli polnih 191 / izidi 193, 990
+minut na ekipo pri polnih. Timiș IV 2025/26 (arhiv) — 239 zapisnikov, 238
+polnih, 1 prazen, goli 877 / izidi 881, vsi nastopi s šifro. Vâlcea V 2026/27 —
+50 odigranih, 1 kontumacija, 47 polnih, 2 prazna, goli = izidi (191).
+Ostalih lig preizkus ni zajel (le zadnji krog ob izbiri).
+Prahova (vseh 7 lig) in Ialomița (4) objavljata le dogodke — **niso vpisane**;
+Vâlcea Liga IV ima prazne zapisnike — ni vpisana.
+
+Vpisanih je 12 lig sedmih županij (migracija 20261010210000), **neaktivnih**,
+zveze `ajf-<judet>`:
+
+| liga | tekoča 2026/27 | arhiv 2025/26 |
+|---|---|---|
+| ro-ag-l5-centru | `arges/liga-5-centru-16780` | — (nova liga) |
+| ro-ag-l5-nord | `arges/liga-5-nord-16691` | `arges/liga-5-nord-15410` |
+| ro-ag-l5-sud | `arges/liga-5-sud-16692` | `arges/liga-5-sud-15405` |
+| ro-bn-l4 | `bistrita-nasaud/liga-4-16002` | — (redni del 2025/26 ni v arhivu; play-off `16003` ima 6 klubov) |
+| ro-bt-l4 | `botosani/liga-a-iv-a-givova-16401` | `botosani/liga-a-iv-a-givova-14932` |
+| ro-gl-l4 | `galati/liga-a-iv-a-16549` | `galati/liga-a-iv-a-15250` |
+| ro-sb-l4 | `sibiu/liga-4-16532` | `sibiu/liga-4-sezon-regular-liga-a-4-a-15027` (brez play-offa) |
+| ro-sb-l5-medias | `sibiu/liga-5-seria-medias-16568` | `sibiu/liga-a-5-a-liga-a-5-a-seria-medias-15057` |
+| ro-tm-l4 | `timis/liga-a-iv-a-16445` | `timis/liga-a-iv-a-14975` |
+| ro-vl-l5 | `valcea/liga-a-v-a-16574` | `valcea/liga-a-v-a-15193` |
+| ro-vl-l6-nord | `valcea/liga-a-vi-a-seria-nord-16615` | `valcea/liga-a-vi-a-seria-nord-15213` |
+| ro-vl-l6-sud | `valcea/liga-a-vi-a-seria-sud-16618` | `valcea/liga-a-vi-a-seria-sud-15214` |
+
+Uvoz (**šele z dovoljenjem**, ena za drugo): `gh workflow run uvoz-lige.yml -f
+liga=ro-tm-l4 -f arhiv=timis/liga-a-iv-a-14975 -f cene=true`. Strani tekem
+arhiva strežnik sestavlja **~10 s** (tekoče < 1 s), zato je arhiv 240
+zapisnikov ~45 minut na ligo — en arhiv naenkrat. Nato pozicije (glasovanje, vratarji!),
+`pripravljenost-lige` in `vklopi_ligo_sredi_sezone`.
 
 ### Država obiskovalca
 
@@ -1241,7 +1344,7 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   neuvoženo tekmo ni kazal izida: zveza jo je prestavila brez novega datuma
   (Bled Bohinj : Sava Kranj, 4. 10. 2026). Piše jo uvoz razporeda iz
   `odigrana`, ki ga dajo razčlenjevalniki starega CMS-a (Kranj, Ljubljana,
-  Celje), hns, sportnet, mlsz, facr in fsb (`oznakaBrezIzida` v `razpored.mjs`);
+  Celje), hns, sportnet, mlsz, facr, fsb in frf (`oznakaBrezIzida` v `razpored.mjs`);
   ostali viri ga nimajo in tekme ostanejo neoznačene. Preverba podatkov takih
   tekem ne javi kot `tekma-ni-uvozena`, šele po 30 dneh kot `tekma-brez-izida`
   (človek odloči: kontumacija ali izbris). Nov vir naj tekmi da `odigrana`

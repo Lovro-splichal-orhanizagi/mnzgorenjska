@@ -16,6 +16,7 @@ import { vseVrstice } from './strani.mjs'
 import { sezonaIz } from './razpored.mjs'
 import { VELIKOST_EKIPE, PRORACUN } from '../src/lib/pravila.ts'
 import { najcenejsiKader } from '../src/lib/pripravljenost.ts'
+import { NEPOPOLN } from './viri/frf.mjs'
 
 function izEnv() {
   try {
@@ -116,7 +117,7 @@ const PRAG_BREZ_IZIDA = 30
 const doDne = (dni) => new Date(Date.now() - dni * 86400000).toISOString().slice(0, 10)
 const { data: zamujene, error: napakaZamud } = await db
   .from('matches')
-  .select('id, played_on, imported_at, vir_brez_izida, rounds!inner(competition_id, competitions!inner(slug, active))')
+  .select('id, played_on, imported_at, vir_brez_izida, import_warnings, rounds!inner(competition_id, competitions!inner(slug, active))')
   .is('imported_at', null)
   // Kontumacija nima zapisnika in ga ne bo (20260927220000).
   .eq('kontumacija', false)
@@ -138,9 +139,16 @@ if (napakaZamud) {
 } else {
   const poLigi = new Map()
   const brezIzida = []
+  const nepopolne = []
   for (const m of zamujene ?? []) {
     const liga = m.rounds?.competitions
     if (!liga?.active) continue
+    // Zapisnik je prebran, a klub postave (ali obeh) ni vnesel (frf, Romunija):
+    // izid je zapisan, uvoz tekmo bere znova vsako noč. Ni zamuda uvoza.
+    if (String(m.import_warnings?.[0] ?? '').startsWith(NEPOPOLN)) {
+      nepopolne.push({ ...m, slug: liga.slug })
+      continue
+    }
     if (m.vir_brez_izida) {
       brezIzida.push({ ...m, slug: liga.slug })
       continue
@@ -157,6 +165,13 @@ if (napakaZamud) {
       primer: `${slug}: ${seznam[0].played_on} (tekma ${seznam[0].id})`,
     })
   }
+  if (nepopolne.length)
+    tezave.push({
+      kljuc: 'zapisnik-nepopoln',
+      opis: `Zapisnik je vec kot ${PRAG_DNI} dni nepopoln (klub ni vnesel postave) — izid je, nastopov ni; uvoz ga bere znova`,
+      koliko: nepopolne.length,
+      primer: nepopolne.slice(0, 3).map((m) => `${m.slug}: ${m.played_on} (tekma ${m.id}) ${m.import_warnings[0]}`).join('; '),
+    })
   if (brezIzida.length)
     tezave.push({
       kljuc: 'tekma-brez-izida',
