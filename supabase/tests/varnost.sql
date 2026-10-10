@@ -971,6 +971,23 @@ select pg_temp.preveri('stevilo_ekip_lig steje vse ekipe lige, tudi hisne',
   (select ekip = (select count(*) from fantasy_teams where competition_id = -913003)
      from stevilo_ekip_lig where competition_id = -913003));
 
+select pg_temp.preveri('trgovine_dnevno/stanje: anon in authenticated nimata nobene pravice',
+  not has_table_privilege('anon', 'trgovine_dnevno', 'select,insert,update,delete')
+  and not has_table_privilege('authenticated', 'trgovine_dnevno', 'select,insert,update,delete')
+  and not has_table_privilege('anon', 'trgovine_stanje', 'select,insert,update,delete')
+  and not has_table_privilege('authenticated', 'trgovine_stanje', 'select,insert,update,delete'));
+select pg_temp.preveri('admin_rast: anon ne sme klicati',
+  not has_function_privilege('anon', 'admin_rast(date)', 'execute'));
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('admin_rast: prijavljen ne-admin dobi napako', $$select admin_rast()$$);
+reset role;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+select pg_temp.preveri('admin_rast: admin dobi dneve',
+  jsonb_array_length(admin_rast(current_date - 6)->'dnevi') >= 7);
+reset role;
+
 do $$
 declare v_napak int;
 begin

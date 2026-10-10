@@ -1,6 +1,7 @@
 name: Trgovine (stanje in namestitve)
 
-# Stanje iOS različice in mejniki namestitev na Discord (scripts/trgovine.mjs).
+# Stanje iOS različice in namestitve po dnevih v bazo (admin: Rast), mejniki
+# namestitev na Discord (scripts/trgovine.mjs).
 on:
   schedule:
     - cron: '30 7 * * *'
@@ -17,8 +18,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
       - run: node scripts/trgovine.mjs
         env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
