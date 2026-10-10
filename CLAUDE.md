@@ -1623,6 +1623,9 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   šele po uspešni posodobitvi. `imeHash`/`regHash` v
   `scripts/anonimizacija.mjs` morata ostati enaka SQL
   `anonimizacijski_kljuc` (smoke in `test:varnost`)
+- `povzetek_rasti()` → ena vrstica številk (uporabniki, novi v 7 dneh, ekipe,
+  aktivne lige, namestitve) pod vsakim poročilom na Discord (mejnik uporabnikov,
+  `scripts/trgovine.mjs`). Le servis
 - `teams.logo_url` → grb kluba; če je prazen, `src/components/Grb.jsx` nariše
   ščit z začetnicami
 

@@ -37,7 +37,10 @@ function jwt(glava, telo, kljuc, alg) {
   return `${vsebina}.${b64(podpis)}`
 }
 
+// Vsako poročilo dobi še vrstico številk (povzetek_rasti v bazi); brez nje gre samo sporočilo.
 async function javi(besedilo) {
+  const { data: povzetek } = await db.rpc('povzetek_rasti')
+  if (povzetek) besedilo += `\n${povzetek}`
   console.log(besedilo)
   if (suho || !env.DISCORD_WEBHOOK) return
   await fetch(env.DISCORD_WEBHOOK, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ content: besedilo }) })
