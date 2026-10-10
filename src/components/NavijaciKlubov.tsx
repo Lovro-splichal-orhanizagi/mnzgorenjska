@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from './Povezava'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import { vseVrstice } from '../lib/strani'

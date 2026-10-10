@@ -3078,6 +3078,15 @@ preveri(
   preveri('prijava: neznana napaka ostane', napakaPrijave('Nekaj cudnega') === 'Nekaj cudnega')
   preveri('naslov: kanonicni obdrzi le ligo', kanonicni('/players', '?t=mladinci&klub=3') === 'https://slff.eu/players?t=mladinci')
   preveri('naslov: kanonicni brez lige', kanonicni('/', '') === 'https://slff.eu/')
+  preveri('naslov: kanonicni strani brez lige nima ?t=', kanonicni('/legal', '?t=mladinci') === 'https://slff.eu/legal')
+  const { zLigo } = await import('../src/lib/tekmovanje')
+  preveri('povezava: liga v naslovu', zLigo('/player/5', 'sk-za-1trieda') === '/player/5?t=sk-za-1trieda')
+  preveri('povezava: liga ob poizvedbi in #', zLigo('/standings?x=1#fans', 'mladinci') === '/standings?x=1&t=mladinci#fans')
+  preveri('povezava: obstojeca liga ostane', zLigo('/my-team?t=clani', 'mladinci') === '/my-team?t=clani')
+  preveri(
+    'povezava: brez lige ostane',
+    zLigo('/players', null) === '/players' && zLigo('/login?nazaj=%2F', 'mladinci') === '/login?nazaj=%2F' && zLigo('https://x.si/a', 'mladinci') === 'https://x.si/a',
+  )
   try {
     const html = renderToString(
       <StaticRouter location="/reminders">

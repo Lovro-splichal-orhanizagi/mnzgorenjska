@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
+import { Link } from '../components/Povezava'
 import { useAuth } from '../lib/useAuth'
 import Plakat from '../components/Plakat'
 import { najboljsiTrije, type VrsticaIgralca } from '../lib/plakat'
@@ -59,6 +60,7 @@ type ZmagovalecKroga = TockeKroga & { round_number: number; season: string }
 
 export default function Lestvica() {
   const { id: tekmovanjeId, tekmovanje } = useTekmovanje()
+  useNaslov(tekmovanje?.name, t('lestvice.lestvica.naslov'))
   const { session } = useAuth()
   const [ekipe, setEkipe] = useState<VrsticaLestvice[]>([])
   const [krog, setKrog] = useState<Krog | null>(null)
@@ -88,7 +90,6 @@ export default function Lestvica() {
   const [zavihek, setZavihek] = useState<'ekipe' | 'navijaci'>(
     hash === '#fans' ? 'navijaci' : 'ekipe',
   )
-  useNaslov(t('lestvice.lestvica.naslov'))
 
   useEffect(() => {
     if (!uporabnikId || !tekmovanjeId) {

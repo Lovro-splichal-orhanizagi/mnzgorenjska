@@ -1,7 +1,7 @@
 // Prikaz idealne enajsterice na risanem igrišču. Podobno videzu Igrisca v
 // Moji ekipi, ampak le za pregled — brez interakcije, s točkami namesto cene.
 import type { ReactNode } from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from './Povezava'
 import { prikazniIme, formatirajTocke } from '../lib/pomozno'
 import { VRSTNI_RED } from '../lib/pravila'
 import type { Pozicija } from '../lib/tipi'

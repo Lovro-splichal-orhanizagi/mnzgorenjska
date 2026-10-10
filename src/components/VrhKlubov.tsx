@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from './Povezava'
+import { zLigo } from '../lib/tekmovanje'
 import { supabase } from '../lib/supabase'
 import { formatirajTocke, mnozina, KROGI } from '../lib/pomozno'
 import { NAJMANJ_KROGOV_ZA_POVPRECJE, type Razvrstitev } from '../lib/drzavna'
@@ -103,7 +104,7 @@ export default function VrhKlubov({ drzava }: { drzava: string }) {
               <Grb ime={v.team_name} kratko={v.team_short} logo={v.team_logo} velikost={26} />
               <div className="min-w-0 flex-1">
                 <Link
-                  to={`/club/${v.team_id}`}
+                  to={zLigo(`/club/${v.team_id}`, v.competition_slug)}
                   className="block truncate text-sm font-semibold after:absolute after:inset-0 after:content-[''] hover:text-gnl-400"
                 >
                   {v.team_name}

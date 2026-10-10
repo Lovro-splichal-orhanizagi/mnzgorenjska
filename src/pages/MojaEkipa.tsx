@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { Link } from '../components/Povezava'
 import { supabase } from '../lib/supabase'
 import { vseVrstice } from '../lib/strani'
 import { povezavaNaPrijavo } from '../lib/prijava'
@@ -220,12 +221,12 @@ function odsotnostZaIgrisce(o: PorociloOdsotnosti | undefined): IgralecNaIgriscu
 
 export default function MojaEkipa() {
   const { session, loading } = useAuth()
-  useNaslov(t('mojaEkipa.naslov'))
   // Ob osvežitvi žetona (in ob vrnitvi v zavihek) useAuth nastavi NOV objekt
   // seje za istega človeka. Nalaganje zato visi na id-ju, ne na seji — sicer
   // bi vsaka osvežitev pobrisala nesharanjen kader.
   const uporabnikId = session?.user.id ?? null
   const { id: tekmovanjeId, tekmovanje } = useTekmovanje()
+  useNaslov(tekmovanje?.name, t('mojaEkipa.naslov'))
   const [ekipa, setEkipa] = useState<any | null>(null)
   const [imeEkipe, setImeEkipe] = useState('')
   const [igralci, setIgralci] = useState<IgralecTrga[]>([])

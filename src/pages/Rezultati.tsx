@@ -1,7 +1,8 @@
 // Rezultati odigranih tekem. Klik na tekmo odpre obe postavi s točkami.
 import { useEffect, useMemo, useState } from 'react'
 import { imeZveze } from '../components/VirPodatkov'
-import { Link } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
+import { Link } from '../components/Povezava'
 import { supabase } from '../lib/supabase'
 import { useTekmovanje } from '../lib/tekmovanje'
 import Grb from '../components/Grb'
@@ -14,15 +15,44 @@ import Sponzor from '../components/Sponzor'
 const selectRazred =
   'rounded-lg border border-white/10 bg-slate-900 px-2 py-1.5 text-sm text-slate-200'
 
+/** Puščica na sosednji krog: prava povezava, brez soseda onemogočena. */
+function SosedniKrog({ pot, oznaka, children }: { pot: string | null; oznaka: string; children: string }) {
+  const slog = 'rounded-lg px-2.5 py-1.5 text-slate-300'
+  if (!pot)
+    return (
+      <span aria-disabled className={`${slog} opacity-30`}>
+        {children}
+      </span>
+    )
+  return (
+    <Link to={pot} replace aria-label={oznaka} className={`${slog} hover:bg-white/5`}>
+      {children}
+    </Link>
+  )
+}
+
+function ImeKluba({ id, ime, className = '' }: { id: number | null; ime: string | null; className?: string }) {
+  const slog = `min-w-0 flex-1 truncate font-semibold ${className}`
+  if (!id) return <span className={slog}>{ime}</span>
+  return (
+    <Link to={`/club/${id}`} className={`relative z-10 hover:text-gnl-300 hover:underline ${slog}`}>
+      {ime}
+    </Link>
+  )
+}
+
 export default function Rezultati() {
   const { id: tekmovanjeId, tekmovanje } = useTekmovanje()
   const zveza = imeZveze(tekmovanje)
   const [tekme, setTekme] = useState<TekmaVrstica[]>([])
   const [sezona, setSezona] = useState<string | null>(null)
-  const [krogId, setKrogId] = useState<number | null>(null)
+  // Izbrani krog je v naslovu (`?krog=<id kroga>`), da je vsak krog svoja
+  // povezava, ki ji iskalnik lahko sledi. Brez njega velja zadnji krog.
+  const [iskanje, setIskanje] = useSearchParams()
+  const izNaslova = Number(iskanje.get('krog')) || null
   const [nalaganje, setNalaganje] = useState(true)
   const [napaka, setNapaka] = useState<string | null>(null)
-  useNaslov(t('tekme.rezultati.naslov'))
+  useNaslov(tekmovanje?.name, t('tekme.rezultati.naslov'))
 
   useEffect(() => {
     if (!tekmovanjeId) return
@@ -56,7 +86,6 @@ export default function Rezultati() {
         .sort()
         .reverse()
       setSezona(sezone[0] ?? null)
-      setKrogId(vrstice.find((t) => t.season === sezone[0])?.round_id ?? null)
       setNalaganje(false)
     }
     nalozi()
@@ -75,14 +104,27 @@ export default function Rezultati() {
     [tekme],
   )
 
+  // Krog iz naslova, če je v tej ligi; sicer zadnji krog izbrane sezone.
+  const izbran = tekme.find((t) => t.round_id != null && t.round_id === izNaslova)
+  const krogId = izbran?.round_id ?? tekme.find((t) => t.season === sezona)?.round_id ?? null
+  const sezonaKroga = izbran?.season ?? sezona
+  const naKrog = (id: number | null) => {
+    const novo = new URLSearchParams(iskanje)
+    if (id) novo.set('krog', String(id))
+    else novo.delete('krog')
+    return `/results?${novo}`
+  }
+  const izberiKrog = (id: number | null) =>
+    setIskanje(new URLSearchParams(naKrog(id).split('?')[1]), { replace: true })
+
   const krogi = useMemo(() => {
     const m = new Map<number, { id: number; number: number }>()
-    for (const t of tekme.filter((t) => t.season === sezona)) {
+    for (const t of tekme.filter((t) => t.season === sezonaKroga)) {
       if (t.round_id == null) continue
       m.set(t.round_id, { id: t.round_id, number: t.round_number ?? 0 })
     }
     return [...m.values()].sort((a, b) => b.number - a.number)
-  }, [tekme, sezona])
+  }, [tekme, sezonaKroga])
 
   const vKrogu = useMemo(
     () => tekme.filter((t) => t.round_id === krogId),
@@ -117,11 +159,11 @@ export default function Rezultati() {
           <div className="flex items-center gap-2">
             {sezone.length > 1 && (
               <select
-                value={sezona ?? ''}
+                value={sezonaKroga ?? ''}
                 onChange={(e) => {
                   const sz = e.target.value
                   setSezona(sz)
-                  setKrogId(tekme.find((t) => t.season === sz)?.round_id ?? null)
+                  izberiKrog(tekme.find((t) => t.season === sz)?.round_id ?? null)
                 }}
                 className={selectRazred}
               >
@@ -133,17 +175,12 @@ export default function Rezultati() {
               </select>
             )}
             <div className="flex items-center gap-1">
-              <button
-                onClick={() => sosed && setKrogId(sosed.prej)}
-                disabled={!sosed?.prej}
-                aria-label={t('tekme.rezultati.prejsnji')}
-                className="rounded-lg px-2.5 py-1.5 text-slate-300 hover:bg-white/5 disabled:opacity-30"
-              >
+              <SosedniKrog pot={sosed?.prej ? naKrog(sosed.prej) : null} oznaka={t('tekme.rezultati.prejsnji')}>
                 ‹
-              </button>
+              </SosedniKrog>
               <select
                 value={krogId ?? ''}
-                onChange={(e) => setKrogId(Number(e.target.value))}
+                onChange={(e) => izberiKrog(Number(e.target.value))}
                 className={selectRazred}
               >
                 {krogi.map((k) => (
@@ -152,14 +189,9 @@ export default function Rezultati() {
                   </option>
                 ))}
               </select>
-              <button
-                onClick={() => sosed && setKrogId(sosed.naslednji)}
-                disabled={!sosed?.naslednji}
-                aria-label={t('tekme.rezultati.naslednji')}
-                className="rounded-lg px-2.5 py-1.5 text-slate-300 hover:bg-white/5 disabled:opacity-30"
-              >
+              <SosedniKrog pot={sosed?.naslednji ? naKrog(sosed.naslednji) : null} oznaka={t('tekme.rezultati.naslednji')}>
                 ›
-              </button>
+              </SosedniKrog>
             </div>
           </div>
 
@@ -168,19 +200,22 @@ export default function Rezultati() {
           ) : (
             <ul className="kartica divide-y divide-white/10 overflow-hidden">
               {vKrogu.map((t) => (
-                <li key={t.match_id}>
+                // Vrstica vodi na tekmo (izid razpne povezavo čez vrstico),
+                // imeni klubov pa na stran kluba.
+                <li
+                  key={t.match_id}
+                  className="relative flex min-h-[52px] items-center gap-2 px-3 py-2 text-sm transition hover:bg-white/5"
+                >
+                  <ImeKluba id={t.home_team_id} ime={t.home_name} className="text-right" />
+                  <Grb ime={t.home_name} kratko={t.home_short} logo={t.home_logo} velikost={22} />
                   <Link
                     to={`/match/${t.match_id}`}
-                    className="flex min-h-[52px] items-center gap-2 px-3 py-2 text-sm transition hover:bg-white/5"
+                    className="w-12 shrink-0 text-center font-black tabular-nums after:absolute after:inset-0 after:content-['']"
                   >
-                    <span className="min-w-0 flex-1 truncate text-right font-semibold">{t.home_name}</span>
-                    <Grb ime={t.home_name} kratko={t.home_short} logo={t.home_logo} velikost={22} />
-                    <span className="w-12 shrink-0 text-center font-black tabular-nums">
-                      {t.home_goals}:{t.away_goals}
-                    </span>
-                    <Grb ime={t.away_name} kratko={t.away_short} logo={t.away_logo} velikost={22} />
-                    <span className="min-w-0 flex-1 truncate font-semibold">{t.away_name}</span>
+                    {t.home_goals}:{t.away_goals}
                   </Link>
+                  <Grb ime={t.away_name} kratko={t.away_short} logo={t.away_logo} velikost={22} />
+                  <ImeKluba id={t.away_team_id} ime={t.away_name} />
                 </li>
               ))}
             </ul>

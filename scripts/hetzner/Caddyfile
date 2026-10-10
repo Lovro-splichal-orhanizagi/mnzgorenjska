@@ -32,11 +32,51 @@ stats.slff.eu {
 	reverse_proxy localhost:3100
 }
 
+# www is the same site twice for search engines: one address, a permanent redirect.
+www.slff.eu {
+	import origin_tls
+	header Strict-Transport-Security "max-age=31536000"
+	redir https://slff.eu{uri} 301
+}
+
 # Website: a 1:1 port of vercel.json. CI rsyncs dist/ to /srv/slff/releases/<sha> and moves `current`.
-slff.eu, www.slff.eu {
+slff.eu {
 	import origin_tls
 	root * /srv/slff/current
 	encode zstd gzip
+
+	# HTTPS only, for a year. Without includeSubDomains: mail.slff.eu (Mailcow) and the
+	# rest are not ours to promise for here; no preload either (hard to undo).
+	header Strict-Transport-Security "max-age=31536000"
+
+	# Old Slovenian paths (STARE_POTI in src/App.tsx) as real 301s, query kept; the SPA
+	# redirect stays for the app and for # fragments (never sent to the server).
+	# NOT /novo-geslo: Supabase sends password resets there with the token in #.
+	@stara_pot path /moja-ekipa /glasovanje /pozicije /odsotnosti /igralci /lestvica /slovenija /mini-lige /rezultati /prijava /pravno /opomniki /igralec/* /ekipa/* /klub/* /tekma/*
+	# `handle`, not a bare `route`: handles run before routes, so the SPA catch-all
+	# below would win. Caddy 2.6 has no {?query}: rename the path in place (`route`
+	# keeps this order), then {uri} carries the query.
+	handle @stara_pot {
+		route {
+			uri path_regexp ^/moja-ekipa$ /my-team
+			uri path_regexp ^/glasovanje$ /assists
+			uri path_regexp ^/pozicije$ /positions
+			uri path_regexp ^/odsotnosti$ /absences
+			uri path_regexp ^/igralci$ /players
+			uri path_regexp ^/lestvica$ /standings
+			uri path_regexp ^/slovenija$ /national
+			uri path_regexp ^/mini-lige$ /mini-leagues
+			uri path_regexp ^/rezultati$ /results
+			uri path_regexp ^/prijava$ /login
+			uri path_regexp ^/pravno$ /legal
+			uri path_regexp ^/opomniki$ /reminders
+			uri path_regexp ^/igralec/ /player/
+			uri path_regexp ^/ekipa/ /team/
+			uri path_regexp ^/klub/ /club/
+			uri path_regexp ^/tekma/ /match/
+			redir * https://slff.eu{uri} 301
+		}
+	}
 
 	# Vercel's defaults: every response may be read cross-origin and is revalidated.
 	# `?` = only if a more specific rule below didn't set it. No `-Server` here: a delete
@@ -146,8 +186,21 @@ slff.eu, www.slff.eu {
 			expression `{query.t}.startsWith("ro-")`
 		}
 		@spa not path *.*
+		# Real 404s: a path that is no route of src/App.tsx gets the SPA (NiStrani) with
+		# status 404 (handle_errors below). Keep this list in sync with <Routes>.
+		# Missing ids (/player/999999999) stay 200; the page sets noindex itself.
+		@ni_strani {
+			not path *.*
+			not path / /sk /sk/ /hr /hr/ /cz /cz/ /hu /hu/ /at /at/ /rs /rs/ /si /si/
+			not path /my-team /assists /positions /absences /players /standings /national /mini-leagues /results /table
+			# Ista stran s poševnico na koncu (/players/) ni 404; kanonični naslov je brez nje.
+			not path_regexp ^/(my-team|assists|positions|absences|players|standings|national|mini-leagues|results|table|login|legal|reminders|account|admin)/$
+			not path /player/* /team/* /club/* /match/* /l/*
+			not path /login /new-password /novo-geslo /legal /reminders /account /auth/confirm /admin
+		}
 		route {
 			file_server @datoteka
+			error @ni_strani 404
 			rewrite @sk_vstop /sk.html
 			rewrite @hr_vstop /hr.html
 			rewrite @cz_vstop /cz.html
@@ -168,8 +221,21 @@ slff.eu, www.slff.eu {
 	}
 
 	# Caddy 2.6 (apt) has no `handle_errors 404`; Vercel answers missing files with plain text.
+	# A missing page (no dot, @ni_strani above) gets the SPA instead: file_server in an
+	# error route keeps the error's status, so it is index.html with 404.
 	handle_errors {
-		header Content-Type "text/plain; charset=utf-8"
-		respond "{err.status_code} {err.status_text}" {err.status_code}
+		@spa_404 {
+			not path *.*
+			expression `{err.status_code} == 404`
+		}
+		handle @spa_404 {
+			header Strict-Transport-Security "max-age=31536000"
+			rewrite * /index.html
+			file_server
+		}
+		handle {
+			header Content-Type "text/plain; charset=utf-8"
+			respond "{err.status_code} {err.status_text}" {err.status_code}
+		}
 	}
 }

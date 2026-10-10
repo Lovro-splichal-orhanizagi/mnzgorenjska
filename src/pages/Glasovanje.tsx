@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNastavitev } from '../lib/nastavitve'
 import { imeZveze } from '../components/VirPodatkov'
-import { Link, useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
+import { Link } from '../components/Povezava'
 import { useNaslov } from '../lib/naslov'
 import { povezavaNaPrijavo } from '../lib/prijava'
 import { mnozina, GOLI } from '../lib/pomozno'
@@ -23,8 +24,8 @@ export default function Glasovanje() {
   const { session, loading } = useAuth()
   const uporabnikId = session?.user.id ?? null
   const lokacija = useLocation()
-  useNaslov(t('tekme.glasovanje.naslov'))
   const { id: tekmovanjeId, tekmovanje } = useTekmovanje()
+  useNaslov(tekmovanje?.name, t('tekme.glasovanje.naslov'))
   const zveza = imeZveze(tekmovanje)
   const pragAsistence = useNastavitev()(
     'prag_glasov_asistenca',

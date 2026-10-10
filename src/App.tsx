@@ -1,4 +1,5 @@
-import { Routes, Route, Link, Navigate, useLocation, useParams } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom'
+import { Link } from './components/Povezava'
 import { AuthProvider } from './lib/useAuth'
 import { TekmovanjeProvider } from './lib/tekmovanje'
 import Navbar from './components/Navbar'
@@ -39,7 +40,7 @@ import PotrditevPovezave from './pages/PotrditevPovezave'
 import NativnePovezave from './components/NativnePovezave'
 import PosodobiAplikacijo from './components/PosodobiAplikacijo'
 import PotisnaObvestila from './components/PotisnaObvestila'
-import { useKanonicni, useNaslov } from './lib/naslov'
+import { useKanonicni, useNaslov, useNoindex } from './lib/naslov'
 import { useObisk } from './lib/obiski'
 import { jeNativno } from './lib/platforma'
 
@@ -73,6 +74,7 @@ import { t } from './i18n'
 
 function NiStrani() {
   useNaslov(t('aplikacija.niStrani.naslov'))
+  useNoindex(true)
   return (
     <div className="space-y-3">
       <h1 className="text-3xl font-black naslov">{t('aplikacija.niStrani.naslov')}</h1>

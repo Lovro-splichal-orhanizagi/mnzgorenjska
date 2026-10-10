@@ -33,6 +33,7 @@ import {
 } from './drzava'
 import { useAuth } from './useAuth'
 import { jezik, jePripravljen, nastaviJezik } from '../i18n/jedro.ts'
+import { jeBrezLige, useLigaStrani } from './naslov'
 
 export const PRIVZETO = 'clani'
 const KLJUC = 'slff-tekmovanje'
@@ -414,6 +415,24 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
       {children}
     </Kontekst.Provider>
   )
+}
+
+/**
+ * Pot z ligo v naslovu (`?t=<slug>`), da jo iskalnik in deljena povezava
+ * odpreta v pravi ligi, ne v privzeti. Pot, ki ligo že ima, ostane; strani
+ * brez lige (`jeBrezLige`) in povezave ven je ne dobijo.
+ */
+export function zLigo(pot: string, slug: string | null | undefined): string {
+  if (!slug || !pot.startsWith('/') || jeBrezLige(pot.split(/[?#]/)[0])) return pot
+  const u = new URL(pot, 'http://x')
+  if (u.searchParams.has('t')) return pot
+  u.searchParams.set('t', slug)
+  return u.pathname + u.search + u.hash
+}
+
+/** Kanonični naslov strani nosi ligo vsebine (`useLigaStrani`); privzeta je brez `?t=`. */
+export function useKanonicnaLiga(slug: string | null | undefined): void {
+  useLigaStrani(slug == null ? undefined : slug === PRIVZETO ? null : slug)
 }
 
 /**

@@ -13,7 +13,8 @@ import {
 import { useTekmovanje } from '../lib/tekmovanje'
 import ProsnjaZaPoznavalca from '../components/ProsnjaZaPoznavalca'
 import Grb from '../components/Grb'
-import { Link, useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
+import { Link } from '../components/Povezava'
 import { useNaslov } from '../lib/naslov'
 import { povezavaNaPrijavo } from '../lib/prijava'
 import type { Pozicija } from '../lib/tipi'
@@ -77,8 +78,8 @@ export default function Pozicije() {
   const { session, loading } = useAuth()
   const uporabnikId = session?.user.id ?? null
   const { id: tekmovanjeId, tekmovanje } = useTekmovanje()
+  useNaslov(tekmovanje?.name, t('tekme.pozicije.naslov'))
   const lokacija = useLocation()
-  useNaslov(t('tekme.pozicije.naslov'))
   const nastavitev = useNastavitev()
   const prag = nastavitev('prag_glasov_pozicija', PRAG_PRIVZETO)
   const minPrag = nastavitev('min_prag_glasov_pozicija', MIN_PRAG_PRIVZETO)

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { NavLink, useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
+import { NavLink } from './Povezava'
 import { useAuth } from '../lib/useAuth'
 import { useTekmovanje } from '../lib/tekmovanje'
 import { sestaviVabilo, vabiloMailto } from '../lib/vabilo'
@@ -181,7 +182,7 @@ export default function Navbar() {
     <header className="sticky top-[var(--vrh)] z-20 border-b border-white/10 bg-slate-950/80 backdrop-blur">
       <nav className="mx-auto max-w-6xl px-4 py-3">
         <div className="flex items-center gap-3 lg:gap-4">
-          <NavLink to="/" className="flex shrink-0 items-center gap-2 font-black">
+          <NavLink to="/" aria-label="SLFF" className="flex shrink-0 items-center gap-2 font-black">
             <img src="/logo/slff-grb.png" alt="" className="h-8 w-8" />
             <span className="naslov hidden sm:inline">SLFF</span>
           </NavLink>

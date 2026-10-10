@@ -14,7 +14,7 @@ import {
 } from '../lib/pomozno'
 import { vseVrstice } from '../lib/strani'
 import { useNaslov } from '../lib/naslov'
-import { Link } from 'react-router-dom'
+import { Link } from '../components/Povezava'
 import { POZICIJE } from '../lib/pravila'
 import { useTekmovanje } from '../lib/tekmovanje'
 import Grb from '../components/Grb'
@@ -124,6 +124,7 @@ const selectRazred =
 
 export default function Igralci() {
   const { id: tekmovanjeId, tekmovanje } = useTekmovanje()
+  useNaslov(tekmovanje?.name, t('igralci.seznam.naslov'))
   const odsotni = useOdsotni(tekmovanjeId)
   const zveza = imeZveze(tekmovanje)
   const [igralci, setIgralci] = useState<IgralecSezone[]>([])
@@ -145,7 +146,6 @@ export default function Igralci() {
     sezona: string | null
     igralci: KrogIgralec[]
   } | null>(null)
-  useNaslov(t('igralci.seznam.naslov'))
 
   // Zadnji odigrani krog gre mimo tabele: stran se izriše brez njega.
   useEffect(() => {

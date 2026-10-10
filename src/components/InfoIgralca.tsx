@@ -5,7 +5,7 @@
 // plosca pokaze isto, kar odloca ob nakupu: kaj je letos naredil, kam gre
 // cena in koga njegov klub igra naslednjic.
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from './Povezava'
 import { supabase } from '../lib/supabase'
 import { formatirajCeno, formatirajTocke, prikazniIme } from '../lib/pomozno'
 import { serijaCen, premik, crta, zadnjiPremiki } from '../lib/gibanjeCene'

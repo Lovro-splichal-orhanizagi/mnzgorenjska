@@ -7,7 +7,8 @@
 // Informacija je SAMO informacija: nič od tega ne označi igralca za
 // nedosegljivega in ne vpliva na sestavo ekipe.
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
+import { Link } from '../components/Povezava'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import { useTekmovanje } from '../lib/tekmovanje'
@@ -43,6 +44,7 @@ interface IgralecIzbira {
 export default function Odsotnosti() {
   const { session } = useAuth()
   const { id: tekmovanjeId, tekmovanje, tekmovanja } = useTekmovanje()
+  useNaslov(tekmovanje?.name, t('igralci.odsotnosti.naslov'))
   const [porocila, setPorocila] = useState<Porocilo[]>([])
   // Kaj se dogaja v DRUGIH ligah. Pri petindvajsetih ligah in peščici poročil
   // je stran skoraj vedno prazna — in prazna stran ne pove, čemu služi.
@@ -62,7 +64,6 @@ export default function Odsotnosti() {
   const [besedilo, setBesedilo] = useState('')
   const [posiljam, setPosiljam] = useState(false)
   const { pathname, search } = useLocation()
-  useNaslov(t('igralci.odsotnosti.naslov'))
 
   useEffect(() => {
     if (!tekmovanjeId) return

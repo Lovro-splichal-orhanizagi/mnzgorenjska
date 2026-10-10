@@ -5,8 +5,10 @@
 // so o njih in v enem kliku preverljivi. Zato ta stran ne potrebuje prijave in
 // ne govori o aplikaciji, ampak o klubu.
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
+import { Link } from '../components/Povezava'
 import { supabase } from '../lib/supabase'
+import { useKanonicnaLiga, useTekmovanje } from '../lib/tekmovanje'
 import {
   formatirajCeno,
   formatirajTocke,
@@ -15,7 +17,7 @@ import {
   IGRALCI,
 } from '../lib/pomozno'
 import { t, tx } from '../i18n'
-import { useNaslov } from '../lib/naslov'
+import { useNaslov, useNoindex } from '../lib/naslov'
 import { VRSTNI_RED } from '../lib/pravila'
 import type { Pozicija } from '../lib/tipi'
 import Grb from '../components/Grb'
@@ -47,7 +49,10 @@ export default function Klub() {
   const [igralci, setIgralci] = useState<Igralec[]>([])
   const [nalaganje, setNalaganje] = useState(true)
   const [napaka, setNapaka] = useState<string | null>(null)
-  useNaslov(klub?.name ?? t('lestvice.klub.naslov'))
+  const { slug: izbranSlug } = useTekmovanje()
+  useNaslov(klub?.name ?? t('lestvice.klub.naslov'), liga?.name)
+  useNoindex(!nalaganje && Boolean(napaka) && !klub)
+  useKanonicnaLiga(liga?.slug)
 
   useEffect(() => {
     if (!id) return
@@ -77,7 +82,10 @@ export default function Klub() {
         .eq('team_id', Number(id))
       const vse = (ct ?? []) as Array<{ competition_id: number; competitions: any }>
       const aktivna = vse.filter((t2) => t2.competitions?.active)
-      const tekmovanja = aktivna.length ? aktivna : vse
+      // Liga iz naslova (`?t=`) ima prednost, če klub v njej igra: povezava z
+      // lestvice mladincev naj pokaže mladince, ne članov.
+      const izbrana = aktivna.filter((t2) => t2.competitions?.slug === izbranSlug)
+      const tekmovanja = izbrana.length ? izbrana : aktivna.length ? aktivna : vse
       if (!tekmovanja.length) {
         setNapaka(t('lestvice.klub.brezLige'))
         setNalaganje(false)
@@ -126,7 +134,7 @@ export default function Klub() {
     return () => {
       veljavno = false
     }
-  }, [id])
+  }, [id, izbranSlug])
 
   const izbranih = useMemo(
     () => igralci.reduce((v, i) => v + Number(i.owners ?? 0), 0),

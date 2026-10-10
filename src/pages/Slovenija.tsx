@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
+import { Link } from '../components/Povezava'
 import { supabase } from '../lib/supabase'
 import { formatirajTocke, mnozina, EKIPE, KROGI } from '../lib/pomozno'
 import { vseVrstice } from '../lib/strani'
 import { useNaslov } from '../lib/naslov'
-import { useTekmovanje } from '../lib/tekmovanje'
+import { useTekmovanje, zLigo } from '../lib/tekmovanje'
 import VrhDrzave from '../components/VrhDrzave'
 import VrhKlubov from '../components/VrhKlubov'
 import {
@@ -205,7 +206,7 @@ export default function Slovenija() {
                   </span>
                   <div className="min-w-0 flex-1">
                     <Link
-                      to={`/team/${v.fantasy_team_id}`}
+                      to={zLigo(`/team/${v.fantasy_team_id}`, v.competition_slug)}
                       className="block truncate text-sm font-semibold after:absolute after:inset-0 after:content-[''] hover:text-gnl-400"
                     >
                       {v.team_name}

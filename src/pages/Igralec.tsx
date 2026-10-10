@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { useParams, Link, useLocation } from 'react-router-dom'
-import { useNaslov } from '../lib/naslov'
+import { useParams, useLocation } from 'react-router-dom'
+import { Link } from '../components/Povezava'
+import { useNaslov, useNoindex } from '../lib/naslov'
 import { povezavaNaPrijavo } from '../lib/prijava'
-import { useTekmovanje } from '../lib/tekmovanje'
+import { useKanonicnaLiga, useTekmovanje, zLigo } from '../lib/tekmovanje'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import {
@@ -82,7 +83,7 @@ export default function Igralec() {
   const uporabnikId = session?.user.id ?? null
   const lokacija = useLocation()
   const prijava = povezavaNaPrijavo(lokacija.pathname + lokacija.search)
-  const { tekmovanja } = useTekmovanje()
+  const { vsaTekmovanja } = useTekmovanje()
   const [igralec, setIgralec] = useState<Profil | null>(null)
   // Številke tekoče sezone; `igralec` (player_overview) je seštevek vseh sezon.
   const [sezonsko, setSezonsko] = useState<Sezonsko | null>(null)
@@ -105,7 +106,14 @@ export default function Igralec() {
   // Za kartico: tekma zadnjega nastopa in v koliko ekipah je igralec.
   const [tekmaKartice, setTekmaKartice] = useState<string | null>(null)
   const [ekipZIgralcem, setEkipZIgralcem] = useState<number | null>(null)
-  useNaslov(igralec ? prikazniIme(igralec.full_name) || t('igralci.profil.naslov') : t('igralci.profil.naslov'))
+  // "Ime Priimek (Klub)": isto ime v drugem klubu je drug igralec.
+  useNaslov(
+    igralec
+      ? `${prikazniIme(igralec.full_name) || t('igralci.profil.naslov')}${igralec.team_name ? ` (${igralec.team_name})` : ''}`
+      : t('igralci.profil.naslov'),
+  )
+  useNoindex(!nalaganje && !igralec)
+  useKanonicnaLiga(vsaTekmovanja.find((tm) => tm.id === igralec?.competition_id)?.slug)
 
   useEffect(() => {
     let preklican = false
@@ -174,7 +182,7 @@ export default function Igralec() {
         p?.team_id
           ? supabase
               .from('prihodnje_tekme')
-              .select('round_number, played_on, opponent_short, opponent_name, opponent_logo, doma')
+              .select('round_number, played_on, opponent_id, opponent_short, opponent_name, opponent_logo, doma')
               .eq('competition_id', p.competition_id ?? 0)
               .eq('team_id', p.team_id)
               .order('played_on')
@@ -461,7 +469,7 @@ export default function Igralec() {
 
   // Povezave naprej vodijo v ligo igralca, ne v tisto, ki je izbrana v meniju
   // — igralec iz deljene povezave je lahko iz druge lige.
-  const slugLige = tekmovanja.find((tm) => tm.id === igralec.competition_id)?.slug
+  const slugLige = vsaTekmovanja.find((tm) => tm.id === igralec.competition_id)?.slug
   const vLigo = slugLige ? `?t=${encodeURIComponent(slugLige)}` : ''
 
   const zadnjaSprememba = cene[0]
@@ -488,7 +496,13 @@ export default function Igralec() {
             {prikazniIme(igralec.full_name)}
           </h1>
           <p className="text-sm text-slate-400">
-            {igralec.team_name}
+            {igralec.team_id ? (
+              <Link to={zLigo(`/club/${igralec.team_id}`, slugLige)} className="hover:text-gnl-300 hover:underline">
+                {igralec.team_name}
+              </Link>
+            ) : (
+              igralec.team_name
+            )}
             {igralec.shirt_number != null && t('igralci.profil.stevilkaDresa', { st: igralec.shirt_number })}
           </p>
         </div>
@@ -632,7 +646,13 @@ export default function Igralec() {
                   logo={tk.opponent_logo}
                   velikost={20}
                 />
-                <span className="font-semibold">{tk.opponent_short}</span>
+                {tk.opponent_id ? (
+                  <Link to={zLigo(`/club/${tk.opponent_id}`, slugLige)} className="font-semibold hover:text-gnl-300 hover:underline">
+                    {tk.opponent_short}
+                  </Link>
+                ) : (
+                  <span className="font-semibold">{tk.opponent_short}</span>
+                )}
                 <span
                   className={`text-xs ${tk.doma ? 'text-gnl-300' : 'text-slate-500'}`}
                 >
@@ -824,7 +844,7 @@ export default function Igralec() {
               klub: igralec.team_name ?? '',
               klubKratko: igralec.team_short ?? null,
               grb: igralec.team_logo ?? null,
-              liga: tekmovanja.find((tm) => tm.id === igralec.competition_id)?.name ?? '',
+              liga: vsaTekmovanja.find((tm) => tm.id === igralec.competition_id)?.name ?? '',
               krog: zadnjiNastop?.number ?? null,
               tocke: zadnjiNastop ? zadnjiNastop.skupaj : Number(sezonsko?.points ?? 0),
               dosezki: zadnjiNastop ? dosezkiNastopa(zadnjiNastop.nastop, igralec.position ?? null) : [],
@@ -841,7 +861,7 @@ export default function Igralec() {
             }}
             povezava={
               typeof window !== 'undefined'
-                ? `${izvor()}/igralec/${igralec.id}${slugLige ? `?t=${slugLige}` : ''}`
+                ? `${izvor()}/player/${igralec.id}${slugLige ? `?t=${slugLige}` : ''}`
                 : ''
             }
           />

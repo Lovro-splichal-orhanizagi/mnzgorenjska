@@ -3,7 +3,8 @@
 // brez_opomnikov` in `brez_push` sta zapisana nikalno, da novi profili brez
 // vrednosti dobivajo obvestila. Pot ostane `/reminders` (povezava v mailih).
 import { useEffect, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
+import { Link } from '../components/Povezava'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import { useNaslov } from '../lib/naslov'
