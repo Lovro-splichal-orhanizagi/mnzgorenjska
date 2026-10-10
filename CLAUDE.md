@@ -928,7 +928,7 @@ Vpisanih je pet lig (migracija 20261010000100), **neaktivnih**. Zveza `fsb`.
 | rs-bg-pbl-b | `prva-beogradska-liga-grupa-b` | `prva-beogradska-liga-grupa-b-2025-26` |
 | rs-bg-pbl-c | `prva-beogradska-liga-grupa-c-2` | `prva-beogradska-liga-grupa-c-2-2025-26` |
 
-Nižje lige (migracija 20261010030100, neaktivne), arhiv dveh sezon, ker so
+Nižje lige (migracija 20261010153100, neaktivne), arhiv dveh sezon, ker so
 majhne (7–12 klubov):
 
 | liga | tekoča 2026/27 | arhiv 2025/26 | arhiv 2024/25 |
@@ -999,7 +999,7 @@ ne beremo znova). **Če se pojavi izziv ali CAPTCHA, ustavi — ne obhajaj.**
 Preizkus v živo (10. 10. 2026, 20 naključnih zapisnikov štirih strani):
 vsi 11 + 11, goli = izid, 990 minut na ekipo, vratar znan pri vseh.
 
-Vpisani ligi (migracija 20261010033100, **neaktivni**), zveza `fss`:
+Vpisani ligi (migracija 20261010153300, **neaktivni**), zveza `fss`:
 
 | liga | tekoča 2026/27 | arhiv 2025/26 |
 |---|---|---|
