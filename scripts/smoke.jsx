@@ -167,10 +167,12 @@ try {
     ],
   })
   const po = Object.fromEntries(n.map((x) => [x.loc, x.lastmod ?? null]))
-  preveri('sitemap: strani lige, klubi, igralci in tekme z ?t=',
-    n.length === 5 + 2 + 1 + 2 && po['https://slff.eu/table?t=clani'] === '2026-09-08'
-      && po['https://slff.eu/club/9?t=clani'] === '2026-09-01' && po['https://slff.eu/club/10?t=clani'] === '2026-09-08'
-      && 'https://slff.eu/player/5?t=clani' in po && po['https://slff.eu/match/1?t=clani'] === '2026-09-01')
+  preveri('sitemap: privzeta liga brez ?t=, klubi, igralci in tekme',
+    n.length === 5 + 2 + 1 + 2 && po['https://slff.eu/table'] === '2026-09-08' && 'https://slff.eu/' in po
+      && po['https://slff.eu/club/9'] === '2026-09-01' && po['https://slff.eu/club/10'] === '2026-09-08'
+      && 'https://slff.eu/player/5' in po && po['https://slff.eu/match/1'] === '2026-09-01')
+  preveri('sitemap: druga liga z ?t=', nasloviLige('sk-za-1', { klubi: [9], igralci: [], tekme: [] })
+    .map((x) => x.loc).includes('https://slff.eu/club/9?t=sk-za-1'))
   const d = datotekeLige('x', Array.from({ length: 5 }, (_, i) => ({ loc: String(i) })), 2)
   preveri('sitemap: liga nad mejo se razdeli', d.map((k) => `${k.ime}:${k.naslovi.length}`).join(' ')
     === 'sitemap-x.xml:2 sitemap-x-2.xml:2 sitemap-x-3.xml:1')

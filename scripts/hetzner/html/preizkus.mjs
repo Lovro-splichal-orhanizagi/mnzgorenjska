@@ -21,11 +21,14 @@ const PREDLOGA = `<!doctype html>
     <div id="root"></div>
   </body>
 </html>`
-const SK = PREDLOGA.replace('lang="sl"', 'lang="sk"')
+const SK = PREDLOGA.replace('lang="sl"', 'lang="sk"').replace('star og', 'kartica sk')
 const BESEDE = {
   sl: {
     'aplikacija.naslovStrani.osnova': 'SLFF — Sunday League Fantasy Football',
     'aplikacija.naslovStrani.zStranjo': '{naslov} · SLFF',
+    'aplikacija.naslovStrani.deljenjeKratko': 'Točke iz zapisnikov.',
+    'aplikacija.naslovStrani.ligeDrzave': 'Fantasy lige — {drzava}: {lige}.',
+    'lestvice.lestvica.naslov': 'Fantasy lestvica',
     'skupno.besede': {
       tocke: { one: 'točka', two: 'točki', few: 'točke', other: 'točk' },
       tekme: { one: 'tekma', two: 'tekmi', few: 'tekme', other: 'tekem' },
@@ -41,11 +44,14 @@ const BESEDE = {
     'tekme.rezultati.naslov': 'Rezultati',
     'igralci.profil.naslov': 'Igralec',
   },
-  sk: { 'aplikacija.naslovStrani.zStranjo': '{naslov} · SLFF', 'skupno.besede': { tocke: { one: 'bod', few: 'body', many: 'bodu', other: 'bodov' } } },
+  sk: { 'aplikacija.naslovStrani.zStranjo': '{naslov} · SLFF', 'aplikacija.naslovStrani.ligeDrzave': 'Fantasy ligy — {drzava}: {lige}.', 'skupno.besede': { tocke: { one: 'bod', few: 'body', many: 'bodu', other: 'bodov' } } },
 }
 const LIGE = [
   { id: 1, slug: 'clani', name: '1. GNL', active: true, country_code: 'SI', country_name: 'Slovenija', federation_name: 'MNZ Gorenjska' },
   { id: 2, slug: 'sk-za-1', name: 'I. trieda <Žilina>', active: true, country_code: 'SK', country_name: 'Slovensko' },
+  { id: 4, slug: 'mladinci', name: 'Mladinci', active: true, country_code: 'SI', country_name: 'Slovenija', federation_name: 'MNZ Gorenjska' },
+  { id: 5, slug: 'lj-2-liga', name: 'LJ 1', active: true, country_code: 'SI', country_name: 'Slovenija', federation_name: 'MNZ Ljubljana' },
+  { id: 6, slug: 'cz-x', name: 'CZ', active: false, country_code: 'CZ', country_name: 'Česko' },
 ]
 
 // Lažen PostgREST: pot -> vrstice.
@@ -59,6 +65,8 @@ const PODATKI = {
   'player_season_standings?id=eq.8': [{ points: 1, matches: 1, goals: 0, minutes: 90 }],
   'match_assist_status?match_id=eq.5': [{ match_id: 5, season: '2026/27', played_on: '2026-09-13', home_name: 'Šenčur', away_name: 'Bled', home_goals: 2, away_goals: 1, home_team_id: 3, away_team_id: 6, competition_id: 1 }],
   'goals?match_id=eq.5': [{ minute: 12, team_id: 3, scorer: { full_name: 'Novak Janez' } }],
+  'match_assist_status?competition_id=eq.1': [{ match_id: 5, season: '2026/27', played_on: '2026-09-13', home_name: 'Šenčur', away_name: 'Bled', home_goals: 2, away_goals: 1 }],
+  'fantasy_team_standings?competition_id=eq.1': [{ fantasy_team_id: 11, team_name: 'FC Luka', total_points: 40 }],
   'rpc/lestvica_lige': [{ mesto: 1, team_id: 3, ime: 'Šenčur', tekme: 5, zmage: 4, remiji: 1, porazi: 0, dani: 12, prejeti: 3, tocke: 13, sezona: '2026/27' }],
 }
 const rest = async (pot) => {
@@ -118,6 +126,8 @@ for (const pot of ['/player/9', '/player/abc']) {
   assert.equal(dogodek.homeTeam.name, 'Šenčur')
   assert.equal(dogodek.awayTeam.url, 'https://slff.eu/club/6')
   assert.equal(dogodek.description, 'Šenčur 2 : 1 Bled')
+  assert.deepEqual(dogodek.location, { '@type': 'Place', name: 'Šenčur' })
+  assert.equal(dogodek.eventStatus, 'https://schema.org/EventScheduled')
   assert.match(html, /Strelci: Janez Novak 12&#39;/)
 }
 
@@ -129,12 +139,53 @@ for (const pot of ['/player/9', '/player/abc']) {
   // Neaktivna liga: vmesnik pokaže privzeto in ?t= zbriše.
   const lige = [...LIGE, { id: 3, slug: 'lj-1-liga', name: 'LJ', active: false, country_code: 'SI', country_name: 'Slovenija' }]
   assert.equal((await stran('/table', 'lj-1-liga', { rest, lige, besede: BESEDE })).kanonicni, 'https://slff.eu/table')
-  assert.equal(vzemi(html, /<title>(.*?)<\/title>/), '1. GNL · lestvica · SLFF')
+  assert.equal(vzemi(html, /<title>(.*?)<\/title>/), '1. GNL (Slovenija) · lestvica · SLFF')
+  // Poševnica na koncu: ista stran, kanonični brez nje.
+  assert.equal((await stran('/table/', null, { rest, lige: LIGE, besede: BESEDE })).kanonicni, 'https://slff.eu/table')
   assert.match(html, /<td><a href="\/club\/3\?t=clani">Šenčur<\/a><\/td>/)
   assert.match(s.opis, /MNZ Gorenjska\. 1\. Šenčur \(13\)\./)
   // Neznana liga: privzeta, kanonični brez ?t=.
   const neznana = await stran('/table', 'ni-lige', { rest, lige: LIGE, besede: BESEDE })
   assert.equal(neznana.kanonicni, 'https://slff.eu/table')
+}
+
+// Rezultati in fantasy lestvica: opis po ligi, naslov z državo.
+{
+  const r = await stran('/results', null, { rest, lige: LIGE, besede: BESEDE })
+  assert.equal(r.naslov, '1. GNL (Slovenija) · Rezultati')
+  assert.equal(r.opis, 'Rezultati — 1. GNL (MNZ Gorenjska), 2026/27: Šenčur 2 : 1 Bled.')
+  const l = await stran('/standings', null, { rest, lige: LIGE, besede: BESEDE })
+  assert.equal(l.opis, 'Fantasy lestvica — 1. GNL (MNZ Gorenjska): 1. FC Luka (40 točk).')
+}
+
+// Domov: opis po ligi, povezave privzete lige brez ?t=, vstopne strani držav.
+{
+  const { s, html } = await izris('/', null)
+  assert.equal(s.naslov, null)
+  assert.equal(s.opis, '1. GNL (Slovenija) — MNZ Gorenjska. Točke iz zapisnikov. 2026/27: 1. Šenčur (13).')
+  assert.match(html, /href="\/table">/)
+  assert.ok(!html.includes('?t=clani'), 'privzeta liga brez ?t=')
+  assert.match(html, /href="\/si">Slovenija<\/a>.*href="\/sk">Slovensko<\/a>/)
+  assert.ok(!html.includes('href="/cz"'), 'država brez aktivne lige')
+  const sk = await stran('/', 'sk-za-1', { rest, lige: LIGE, besede: BESEDE })
+  assert.equal(sk.naslov, 'I. trieda <Žilina> (Slovensko)')
+  assert.match(sk.vsebina, /href="\/table\?t=sk-za-1"/)
+}
+
+// Vstopna stran države: lige po zvezah, kanonični nase, kartica države ostane.
+{
+  const { s, html } = await izris('/si', null)
+  assert.equal(s.kanonicni, 'https://slff.eu/si')
+  assert.equal(vzemi(html, /<title>(.*?)<\/title>/), 'Slovenija · SLFF')
+  assert.equal(s.opis, 'Fantasy lige — Slovenija: 1. GNL, Mladinci, LJ 1.')
+  assert.match(html, /<h2>MNZ Gorenjska<\/h2><ul><li><a href="\/">1\. GNL<\/a> · <a href="\/table">Lestvica<\/a><\/li><li><a href="\/\?t=mladinci">Mladinci<\/a>/)
+  assert.match(html, /<h2>MNZ Ljubljana<\/h2><ul><li><a href="\/\?t=lj-2-liga">LJ 1<\/a> · <a href="\/table\?t=lj-2-liga">/)
+  assert.equal(vzemi(html, /og:description" content="(.*?)"/), 'star og', 'og: opis ostane s kartice')
+  assert.equal(await stran('/cz', null, { rest, lige: LIGE, besede: BESEDE }), null, 'brez aktivne lige')
+  assert.equal(await stran('/xx', null, { rest, lige: LIGE, besede: BESEDE }), null)
+  // Drobtina 1 kaže na vstopno stran države.
+  const igr = await stran('/player/8', null, { rest, lige: LIGE, besede: BESEDE })
+  assert.equal(igr.jsonld[1].itemListElement[0].item, 'https://slff.eu/sk')
 }
 
 // Neznana pot: predloga ostane nespremenjena.
@@ -166,6 +217,11 @@ assert.equal(esc(`<a href="x">'&`), '&lt;a href=&quot;x&quot;&gt;&#39;&amp;')
   assert.equal(sk.status, 200)
   assert.match(sk.telo, /<html lang="sk">/, 'slovaški igralec dobi sk.html')
   assert.equal(sk.glave['Cache-Control'], 'public, max-age=300, s-maxage=3600')
+  const hub = await zahtevaj('/sk')
+  assert.match(hub.telo, /<html lang="sk">/, '/sk dobi sk.html')
+  assert.match(hub.telo, /<title>Slovensko · SLFF<\/title>/)
+  assert.match(hub.telo, /og:description" content="kartica sk"/)
+  assert.match(hub.telo, /name="description" content="Fantasy ligy — Slovensko: I\. trieda &lt;Žilina&gt;\."/)
   const prej = klicev
   await zahtevaj('/player/8?utm_source=x')
   assert.equal(klicev, prej, 'drugi zahtevek ne gre v PostgREST')
@@ -190,6 +246,8 @@ assert.equal(esc(`<a href="x">'&`), '&lt;a href=&quot;x&quot;&gt;&#39;&amp;')
   // Predloge ni več (mapa objave izginila): zadnja prebrana, 200.
   const brez = obdelovalec({ koren, rest: prek })
   await (async () => { let st; await brez({ url: '/', method: 'GET' }, { writeHead: (x) => (st = x), end: () => {} }); assert.equal(st, 200) })()
+  // Varovalo vstopa države (/sk/): kartica države, kot Caddy.
+  await (async () => { let telo; await brez({ url: '/sk/', method: 'GET' }, { writeHead: () => {}, end: (x) => (telo = x) }); assert.equal(telo, SK) })()
   rmSync(koren, { recursive: true })
   const izgubljena = { status: 0, telo: '' }
   await brez({ url: '/table', method: 'GET' }, { writeHead: (x) => (izgubljena.status = x), end: (b) => (izgubljena.telo = b) })

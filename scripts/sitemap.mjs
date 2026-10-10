@@ -3,6 +3,7 @@
 // public/sitemap.xml ima le deset stalnih poti, lig pa je ~300 in vsaka ima
 // svoje klube, igralce in tekme. Ta skripta za vsako AKTIVNO ligo našteje:
 //   - strani lige (domov, lestvica, rezultati, igralci, lestvica lige) s ?t=
+//     (privzeta liga brez njega)
 //   - klube lige (/club/:id), igralce z minutami v tekoči ali lanski sezoni
 //     (/player/:id) in odigrane tekme (/match/:id)
 // <lastmod> je datum zadnje odigrane tekme (lige, kluba) oz. tekme.
@@ -24,6 +25,8 @@ export const DOMENA = 'https://slff.eu'
 // Meja protokola: 50.000 naslovov in 50 MB na datoteko.
 export const NAJVEC_NASLOVOV = 50000
 const STRANI_LIGE = ['/', '/standings', '/results', '/players', '/table']
+// Privzeta liga nima ?t= (kanonični naslov ga zbriše), kot PRIVZETO v src/lib/tekmovanje.tsx.
+export const PRIVZETO = 'clani'
 
 export function xmlEscape(s) {
   return String(s)
@@ -67,7 +70,7 @@ const najkasnejsi = (a, b) => (!a ? b : !b ? a : a > b ? a : b)
  * @param {{klubi: number[], igralci: number[], tekme: {id:number, played_on:string|null, home_team_id:number, away_team_id:number}[]}} p
  */
 export function nasloviLige(slug, { klubi, igralci, tekme }) {
-  const q = `?t=${encodeURIComponent(slug)}`
+  const q = slug === PRIVZETO ? '' : `?t=${encodeURIComponent(slug)}`
   let zadnja = null
   const poKlubu = new Map()
   for (const m of tekme) {
@@ -120,7 +123,7 @@ async function glavna() {
 
   const { data: lige, error } = await db
     .from('competitions_view')
-    .select('id, slug')
+    .select('id, slug, country_code')
     .eq('active', true)
     .order('id')
   if (error) throw new Error(error.message)
@@ -157,8 +160,11 @@ async function glavna() {
     skupaj += naslovi.length
     console.log(`${liga.slug}: ${naslovi.length} naslovov`)
   }
+  // Vstopne strani držav z aktivno ligo (/si, /at …; strežnik HTML jih izriše).
+  const drzave = [...new Set((lige ?? []).map((l) => String(l.country_code ?? '').toLowerCase()).filter((k) => /^[a-z]{2}$/.test(k)))]
+  writeFileSync(join(izhod, 'sitemap-drzave.xml'), urlset(drzave.map((k) => ({ loc: `${DOMENA}/${k}` }))))
   // Stalne strani (public/sitemap.xml) so v kazalu prve.
-  writeFileSync(join(izhod, 'sitemap-index.xml'), sitemapIndex([{ loc: `${DOMENA}/sitemap.xml` }, ...kazalo]))
+  writeFileSync(join(izhod, 'sitemap-index.xml'), sitemapIndex([{ loc: `${DOMENA}/sitemap.xml` }, { loc: `${DOMENA}/sitemap-drzave.xml` }, ...kazalo]))
   console.log(`Skupaj ${skupaj} naslovov v ${kazalo.length} datotekah (${izhod}).`)
 }
 
