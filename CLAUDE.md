@@ -1387,10 +1387,17 @@ sezona so opisani zgoraj (`competitions.sezona_koledarska`).
 - **Zapisnik**: "Põhikoosseis" in "Vahetusmängijad" (`ul.left` domači,
   `ul.right` gostje), dres, **stalna šifra osebe** (`/voistlused/player/<id>`
   → `reg_st`), "(VV)" vratar, "(K)" kapetan. Časovnica "Mängu sündmused" z
-  minuto: gol (stanje po golu pove, kateri ekipi je štel — iz tega avtogol),
-  11 m (`penalty football`), avtogol (`goal red football`), zgrešena in
-  ubranjena 11-metrovka, rumeni in rdeči karton, menjava (prvi noter, drugi
-  ven), **`football var` = gol, ki ga je razveljavil VAR (ne šteje)**.
+  minuto: gol, 11 m (`penalty football`), avtogol (`goal red football`, po
+  legendi strani "Omavärav"; stanje po golu je le preverba z opozorilom),
+  zgrešena in ubranjena 11-metrovka, rumeni in rdeči karton, menjava (prvi
+  noter, drugi ven), **`football var` = gol, ki ga je razveljavil VAR (ne
+  šteje)**. Drugi rumeni je v zapisniku rumeni + rdeči ob isti minuti
+  ("Teise hoiatuse saamine"); vir rumenega odstrani, da je kot pri drugih
+  virih 1 rumeni + 1 rdeči. Dogodek brez minute je opozorilo.
+- **Šifra zapisnika v bazi je `ee<id>`** (`sifraZapisnika`): številke
+  jalgpall.ee (127xxx–143xxx) se prekrivajo s šiframi starega CMS-a (MNZ,
+  100049–161136), `matches.zapisnik_id` pa je enoličen čez vse vire. Naslov
+  (`naslovZapisnika`) predpono odreže; `--zapisnik` uvoza vzame `ee…`.
   Asistenca je pri golu, a je ne uvažamo (asistence določi glasovanje).
   Ime je "Ime Priimek" → uvoz dobi "Priimek Ime" (`vPriimekIme`, priimek je
   zadnja beseda; igralca prepoznamo po šifri).
@@ -1413,12 +1420,19 @@ na straneh. Pogojev uporabe ni; stran ima le pravilnik o zasebnosti
 licenčne pogodbe z igralci, "võidakse avalikustada kodulehel või meedias") in
 nogo "Kõik õigused kaitstud". Dovoljenja EJL še nimamo. Datuma rojstva ne
 beremo. Beremo odkrito (User-Agent SLFF, zapisnikov, starejših od tedna, ne
-beremo znova). **Ob izzivu, CAPTCHI ali 403 se uvoz ustavi — ne obhajaj.** Če
-nas EJL prosi, naj nehamo, `ee-` lige izklopimo.
+beremo znova). **Ob izzivu, CAPTCHI, 403 ali 429 se uvoz ustavi — ne
+obhajaj**: vir vrže `JalgpallZavrnitev`, uvoz razporeda tedaj NE vzame
+shranjene strani, izziv ne gre v predpomnilnik, skripta konča z izhodom 4 in
+nočna zanka Estonije (`uvoz-zapisnikov.yml`) ostalih lig ne bere več.
+**Proračun branja je skupen**: `cakaj-na-uvoze.mjs` (`SKUPEN_VIR`) za EE
+križa vsak zagon iste države — nočni, ročni (tudi nevklopljene lige) in
+*Grbi klubov* z `vir = jalgpall` (čaka na prej začete uvoze; run-name
+`Grbi klubov <vir>`), da dva zagona ne bereta hkrati. Če nas EJL prosi, naj
+nehamo, `ee-` lige izklopimo.
 
 Grbe prinese `scripts/grbi-jalgpall.mjs` z glave zapisnika (`/images/clubs/…`,
-`/images/logos/…`; robots.txt slike dovoli) — delovni tok *Grbi klubov* z
-`vir = jalgpall`, najprej brez `pisi`.
+`/images/logos/…`; robots.txt slike dovoli; SVG preskoči, ob 403/429 se
+ustavi) — delovni tok *Grbi klubov* z `vir = jalgpall`, najprej brez `pisi`.
 
 Seznam lig in preizkus:
 

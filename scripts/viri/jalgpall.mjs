@@ -61,12 +61,30 @@ export const naslovRazporeda = (koda) => {
   const { liga, leto } = razbijKodo(koda)
   return `${OSNOVNI}/voistlused/${liga}/liigad/calendar?season=${leto}`
 }
-export const naslovZapisnika = (id) => `${OSNOVNI}/voistlused/protocol/${id}`
+// Šifra zapisnika v bazi je `ee<id>`: številke jalgpall.ee (127xxx–143xxx)
+// se prekrivajo s šiframi starega CMS-a (MNZ, 100049–161136), `matches.zapisnik_id`
+// pa je enoličen čez vse vire. V naslovu je id brez predpone.
+export const sifraZapisnika = (id) => `ee${String(id).replace(/^ee/, '')}`
+export const naslovZapisnika = (id) => `${OSNOVNI}/voistlused/protocol/${String(id).replace(/^ee/, '')}`
 const imeRazporeda = (koda) => `koledar-${String(koda).replace('/', '-')}.html`
 const imeZapisnika = (id) => `protokoll-${id}.html`
 
 const cisto = (s) => String(s ?? '').replace(/<script[\s\S]*?<\/script>/g, '').replace(/<!--[\s\S]*?-->/g, '').replace(/\s+/g, ' ').replace(/> </g, '><')
 const besedilo = (html) => razpakiraj(String(html ?? '').replace(/<[^>]+>/g, ' '))
+
+/**
+ * Zavrnitev (403, 429) ali izziv: uvoz se ustavi in ne vzame shranjene strani.
+ * `status` nosi HTTP status, če ga je.
+ */
+export class JalgpallZavrnitev extends Error {
+  constructor(sporocilo, status = null) {
+    super(sporocilo)
+    this.name = 'JalgpallZavrnitev'
+    this.status = status
+    this.zavrnitev = true
+  }
+}
+export const jeZavrnitev = (status) => status === 403 || status === 429
 
 export const jeIzziv = (html) =>
   /<title>\s*(Just a moment|Attention Required)|cf_chl_opt|cf-turnstile|g-recaptcha|hcaptcha|captcha/i.test(String(html ?? ''))
@@ -211,7 +229,7 @@ function pozicije(s) {
   })
 }
 
-/** Dogodki časovnice: [{ minuta, vrsta, igralci: [{ regSt, klub }], stanje }]. */
+/** Dogodki časovnice: [{ minuta, vrsta, razlog, igralci: [{ regSt, klub }], stanje }]. */
 function casovnica(s) {
   const i = s.indexOf('<p>Mängu sündmused</p>')
   if (i < 0) return []
@@ -225,6 +243,8 @@ function casovnica(s) {
     return {
       minuta: minuta(li.match(/<div class="order col">([^<]*)/)?.[1]),
       vrsta: status?.[1] ?? '',
+      // Razlog kartona ("Teise hoiatuse saamine" = drugi rumeni).
+      razlog: razpakiraj(li.match(/<p class="position">([^<]*)<\/p>/)?.[1] ?? ''),
       igralci,
       stanje: stanje ? [Number(stanje[1]), Number(stanje[2])] : null,
     }
@@ -275,12 +295,19 @@ export function vZapisnik(html, { id = null, url = null } = {}) {
     const prvi = kdo(d.igralci[0], d.minuta)
     // `football var`: gol, ki ga je VAR razveljavil (brez stanja) — ne šteje.
     if (v.includes('var')) continue
+    if (d.minuta == null) opozorila.push(`dogodek "${d.vrsta}" brez minute`)
     if (v.includes('football')) {
-      // Kateri ekipi je gol štel, pove stanje po golu; strelec iz druge ekipe = avtogol.
-      const za = d.stanje ? (d.stanje[0] > stanje[0] ? 0 : d.stanje[1] > stanje[1] ? 1 : null) : null
+      // Avtogol pove oznaka (`goal red` = Omavärav po legendi strani). Stanje po
+      // golu je le preverba: šteti mora ekipi, ki ji gol pripada.
+      const avtogol = v.includes('goal') && v.includes('red')
+      const za = !d.stanje ? null
+        : d.stanje[0] > stanje[0] && d.stanje[1] === stanje[1] ? 0
+        : d.stanje[1] > stanje[1] && d.stanje[0] === stanje[0] ? 1 : null
+      if (d.stanje && za == null) opozorila.push(`gol v ${d.minuta}. minuti: stanje ${stanje.join(':')} → ${d.stanje.join(':')} ne pove, kateri ekipi je štel`)
       if (d.stanje) stanje = d.stanje
       if (!prvi) { opozorila.push(`gol v ${d.minuta}. minuti: strelca ni v postavi`); continue }
-      const avtogol = za != null ? za !== prvi.ekipaIdx : /own|oma/.test(d.vrsta)
+      if (za != null && za !== (avtogol ? 1 - prvi.ekipaIdx : prvi.ekipaIdx))
+        opozorila.push(`gol v ${d.minuta}. minuti (${prvi.ime}): stanje ga pripiše drugi ekipi${avtogol ? '' : ' — avtogol brez oznake?'}`)
       goli.push({ ...prvi, avtogol, enajstmetrovka: v.includes('penalty') && !avtogol })
     } else if (v.includes('switch')) {
       const noter = kdo(d.igralci[0], d.minuta)
@@ -298,6 +325,14 @@ export function vZapisnik(html, { id = null, url = null } = {}) {
       // Karton trenerja: ni v postavi, ne šteje.
       if (!prvi) continue
       if (v.includes('red')) {
+        // Drugi rumeni: zapisnik vpiše še rumeni ob isti minuti. Kot pri drugih
+        // virih ostane prvi rumeni in rdeči; drugega rumenega odstranimo.
+        if (/teise hoiatuse/i.test(d.razlog)) {
+          const jaz = (r) => r.ekipaIdx === prvi.ekipaIdx && r.regSt === prvi.regSt
+          const i = rumeni.findLastIndex((r) => jaz(r) && r.minuta === prvi.minuta)
+          const j = i >= 0 ? i : rumeni.filter(jaz).length > 1 ? rumeni.findLastIndex(jaz) : -1
+          if (j >= 0) rumeni.splice(j, 1)
+        }
         if (!rdeci.some((r) => r.ekipaIdx === prvi.ekipaIdx && r.regSt === prvi.regSt)) rdeci.push(prvi)
       } else rumeni.push(prvi)
     } else if ((v.includes('penalty') && v.includes('red')) || v.includes('saved-penalty')) {
@@ -388,8 +423,14 @@ const starostDni = (datum) => (datum ? (Date.now() - Date.parse(`${datum}T00:00:
 
 /** Prenos, ki se ob izzivu ustavi (namesto da bi izziv razčlenil kot prazno stran). */
 async function beri(prenesi, url, ime, sveze) {
-  const html = await prenesi(url, ime, sveze)
-  if (jeIzziv(html)) throw new Error(`jalgpall: ${url} vrne izziv (CAPTCHA) — uvoz ustavljen, ne obhajamo ga`)
+  let html
+  try {
+    html = await prenesi(url, ime, sveze)
+  } catch (e) {
+    if (jeZavrnitev(e.status)) throw new JalgpallZavrnitev(`jalgpall: ${url} → HTTP ${e.status} — uvoz ustavljen, ne obhajamo`, e.status)
+    throw e
+  }
+  if (jeIzziv(html)) throw new JalgpallZavrnitev(`jalgpall: ${url} vrne izziv (CAPTCHA) — uvoz ustavljen, ne obhajamo ga`)
   return html
 }
 
@@ -414,6 +455,9 @@ const vir = {
 
   naslovRazporeda,
   naslovZapisnika: (_koda, id) => naslovZapisnika(id),
+  // Uvozne skripte: izziv ne gre v predpomnilnik, zavrnitev ustavi uvoz (izhod 4).
+  jeIzziv,
+  zavrnitev: (sporocilo, status = null) => new JalgpallZavrnitev(`jalgpall: ${sporocilo} — uvoz ustavljen, ne obhajamo`, status),
 
   async razporedVseStrani(koda, prenesi) {
     return razcleniRazpored(null, await razpored(koda, prenesi))
@@ -435,7 +479,8 @@ const vir = {
       z.datum ??= t.datum
       if (z.rezultat.domaci !== t.izid.domaci || z.rezultat.gostje !== t.izid.gostje)
         z.opozorila.push(`izid zapisnika ${z.rezultat.domaci}:${z.rezultat.gostje} ni izid razporeda ${t.izid.domaci}:${t.izid.gostje}`)
-      out.push({ id: t.id, z, url })
+      z.zapisnikId = sifraZapisnika(t.id)
+      out.push({ id: z.zapisnikId, z, url })
     }
     return out
   },

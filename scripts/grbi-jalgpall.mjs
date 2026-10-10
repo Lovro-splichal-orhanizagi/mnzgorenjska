@@ -87,7 +87,7 @@ function zmanjsaj(pot) {
 
 const imeDatoteke = (ime) =>
   'ee-' + ime.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60)
-const KONCNICE = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/webp': 'webp', 'image/svg+xml': 'svg' }
+const KONCNICE = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/webp': 'webp' }
 
 // --- lige in klubi -------------------------------------------------------------
 let q = db.from('competitions').select('id, slug, source_league_code').eq('source', 'jalgpall').order('slug')
@@ -166,8 +166,14 @@ let padlo = 0
 for (const n of nacrt) {
   try {
     const o = await prenesi(n.src)
+    if (o.status === 403 || o.status === 429) {
+      console.error(`Ustavljeno: ${n.src} -> ${o.status} (zavrnitev — ne obhajamo)`)
+      process.exit(2)
+    }
     const vrsta = (o.headers.get('content-type') ?? '').split(';')[0].trim()
     if (!o.ok || !vrsta.startsWith('image/')) throw new Error(`HTTP ${o.status} ${vrsta}`)
+    // SVG ne shranjujemo (kot pri drugih virih grbov): ne pomanjšamo ga in lahko nosi skript.
+    if (vrsta === 'image/svg+xml') throw new Error('SVG — preskočeno')
     const buf = Buffer.from(await o.arrayBuffer())
     if (buf.length < 200) throw new Error('prazna slika')
     preneseni.push({ ...n, buf, konc: KONCNICE[vrsta] ?? 'png', hash: createHash('sha1').update(buf).digest('hex') })
@@ -184,7 +190,7 @@ for (const p of preneseni) {
   if (deljeneVsebine.has(p.hash)) { console.log(`  – ${p.klub.name}: ista slika kot pri drugem klubu — preskočeno`); continue }
   const pot = `/grbi/${imeDatoteke(p.klub.name)}-${p.klub.id}.${p.konc}`
   writeFileSync(`public${pot}`, p.buf)
-  if (p.konc !== 'svg') zmanjsaj(`public${pot}`)
+  zmanjsaj(`public${pot}`)
   let zapis = db.from('teams').update({ logo_url: pot }).eq('id', p.klub.id)
   if (!prepisi) zapis = zapis.or('logo_url.is.null,logo_url.eq.')
   const { error } = await zapis

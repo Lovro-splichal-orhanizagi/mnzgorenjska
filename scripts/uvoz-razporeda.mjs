@@ -24,6 +24,13 @@ import { rokKroga } from './razporedi.mjs'
 import { vseVrstice } from './strani.mjs'
 import { prenesiSPonovitvami } from './prenos.mjs'
 
+// Vir je zavrnil (jalgpall: 403, 429, izziv): izhod 4, da nočna zanka države
+// ne bere naprej (uvoz-zapisnikov.yml). Ostale napake ostanejo izhod 1.
+process.on('uncaughtException', (e) => {
+  console.error(e)
+  process.exit(e?.zavrnitev ? 4 : 1)
+})
+
 const PREDPOMNILNIK = 'scripts/.predpomnilnik'
 
 function izEnv() {
@@ -89,14 +96,22 @@ async function prenesi(url, ime) {
     // bere (Sportnet). Slovenski viri tega nimajo in ostanejo, kot so bili.
     // Prehodne motnje prenos sam ponovi; šele ko odpove vse, velja rezerva.
     const odgovor = await prenesiSPonovitvami(url, { glave: vir.glave, premorMs: vir.premorMs, fetchFn: vir.fetch })
-    if (!odgovor.ok) throw new Error(`${odgovor.status} ${url}`)
+    if (!odgovor.ok) {
+      const e = new Error(`${odgovor.status} ${url}`)
+      e.status = odgovor.status
+      throw e
+    }
     const html = await odgovor.text()
+    // Izziv (CAPTCHA) ne sme v predpomnilnik namesto razporeda.
+    if (vir.jeIzziv?.(html)) throw vir.zavrnitev(`${url} vrne izziv (CAPTCHA)`)
     // Ločeno po viru: šifre lig in dokumentov so last spletišča, ne sistema,
     // in dve zvezi bi si lahko delili isto ime datoteke.
     mkdirSync(`${PREDPOMNILNIK}/${vir.ime}`, { recursive: true })
     writeFileSync(pot, html)
     return html
   } catch (e) {
+    // Zavrnitve vira (jalgpall: 403, 429, izziv) ne obidemo s shranjeno stranjo.
+    if (e.zavrnitev || (vir.zavrnitev && [403, 429].includes(e.status))) throw vir.zavrnitev(e.message, e.status)
     if (!existsSync(pot)) throw e
     console.log(`  vir ni dosegljiv (${e.message}) — uporabim zadnji shranjeni razpored`)
     return readFileSync(pot, 'utf8')

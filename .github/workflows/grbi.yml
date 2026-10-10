@@ -1,4 +1,7 @@
 name: Grbi klubov (rocni seznam)
+# Vir v imenu zagona: uvozi Estonije po njem vedo, da bere jalgpall.ee
+# (scripts/cakaj-na-uvoze.mjs, SKUPEN_VIR).
+run-name: Grbi klubov ${{ inputs.vir }}
 
 # `scripts/prenesi-grbe.mjs` ima rocno sestavljen seznam naslovov grbov za
 # klube, ki jih NZS ne objavlja (regionalne lige). Doslej je tekel le lokalno,
@@ -68,6 +71,15 @@ jobs:
       - run: npm ci --ignore-scripts
       # Za pomanjšanje grbov (sips je le na macOS); ubuntu-latest ga nima več.
       - run: command -v convert || command -v magick || (sudo apt-get update -qq && sudo apt-get install -y -qq imagemagick)
+      # jalgpall.ee ima en proračun branja (Crawl-Delay 5 s): grbi ne berejo
+      # hkrati z uvozom Estonije, ki je začel prej (in obratno, glej skripto).
+      - name: Pocakaj na uvoze Estonije
+        if: inputs.vir == 'jalgpall'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/cakaj-na-uvoze.mjs --drzava EE --najvec 45
       - name: Prenesi grbe in zapisi logo_url
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}

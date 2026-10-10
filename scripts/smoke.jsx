@@ -4302,8 +4302,9 @@ preveri(
   preveri('jalgpall: avtogol (po stanju) šteje nasprotniku, je pri strelčevi ekipi', av.goli.filter((g) => g.avtogol).length === 1 &&
     av.goli.find((g) => g.avtogol)?.ekipaIdx === 1 && J.nastopi(av).find((x) => x.avtogoli)?.ekipaIdx === 1 && av.opozorila.length === 0)
   const rk = J.vZapisnik(beri('ee-jalgpall-protokoll-127732.html'))
-  preveri('jalgpall: rdeči karton (68.) — minute do izključitve', rk.rdeci.length === 1 && rk.rdeci[0].minuta === 68 &&
-    minute(J.nastopi(rk), 0) === 968 && rk.opozorila.length === 0)
+  const adebayo = J.nastopi(rk).find((x) => x.regSt === 61146)
+  preveri('jalgpall: drugi rumeni (68.) — 1 rumeni + 1 rdeči, minute do izključitve', rk.rdeci.length === 1 && rk.rdeci[0].minuta === 68 &&
+    adebayo?.rumeni === 1 && adebayo.rdeci === 1 && adebayo.minute === 68 && minute(J.nastopi(rk), 0) === 968 && rk.opozorila.length === 0)
   const vr = J.vZapisnik(beri('ee-jalgpall-protokoll-127641.html'))
   preveri('jalgpall: gol, ki ga je razveljavil VAR, ne šteje', vr.goli.length === 5 && vr.opozorila.length === 0)
   preveri('jalgpall: prazen zapisnik (kontumacija) je null', J.vZapisnik(beri('ee-jalgpall-protokoll-142294-prazen.html')) === null)
@@ -4311,9 +4312,19 @@ preveri(
   // zapisniki(): kontumacije in tekme brez zapisnika izpuščene, napačna sezona ustavi.
   const zs = await J.default.zapisniki('53/2026', async (url) =>
     url.includes('calendar') ? koledar : beri('ee-jalgpall-protokoll-141546.html'))
-  const prva = zs.find((x) => x.id === '136135')
+  const prva = zs.find((x) => x.id === 'ee136135')
   preveri('jalgpall: zapisniki() — brez kontumacij, ime, krog in sezona iz razporeda', zs.length === 151 &&
-    !zs.some((x) => x.id === '141699') && prva?.z.domaci.ime === 'Tartu JK Welco' && prva.z.krog === 1 && prva.z.sezona === '2026')
+    !zs.some((x) => x.id === 'ee141699') && prva?.z.domaci.ime === 'Tartu JK Welco' && prva.z.krog === 1 && prva.z.sezona === '2026')
+  preveri('jalgpall: šifra zapisnika ima predpono ee (stari CMS ima iste številke), naslov je brez nje',
+    zs.every((x) => /^ee\d+$/.test(x.id) && x.z.zapisnikId === x.id && /\/protocol\/\d+$/.test(x.url)) &&
+    J.sifraZapisnika('136135') === 'ee136135' && J.sifraZapisnika('ee136135') === 'ee136135' &&
+    J.default.naslovZapisnika(null, 'ee136135') === 'https://jalgpall.ee/voistlused/protocol/136135')
+  let zavrnjen = null
+  try { await J.default.zapisniki('53/2026', async () => { const e = new Error('HTTP 403'); e.status = 403; throw e }) } catch (e) { zavrnjen = e }
+  let izziv = null
+  try { await J.default.zapisniki('53/2026', async () => '<title>Just a moment...</title>') } catch (e) { izziv = e }
+  preveri('jalgpall: 403 in izziv vržeta JalgpallZavrnitev (uvoz izhod 4)', zavrnjen instanceof J.JalgpallZavrnitev && zavrnjen.status === 403 &&
+    izziv instanceof J.JalgpallZavrnitev && izziv.zavrnitev === true && J.default.zavrnitev('x', 429).zavrnitev === true)
   let napacnaSezona = null
   try { await J.default.zapisniki('53/2025', async () => koledar) } catch (e) { napacnaSezona = e.message }
   preveri('jalgpall: stran z drugo sezono ustavi uvoz', /kaže sezono 2026, ne 2025/.test(napacnaSezona ?? ''))
