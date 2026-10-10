@@ -1527,6 +1527,37 @@ spletu; kar je drugače, je v `src/lib/platforma.ts`:
 - `src/lib/platforma.ts` uvažajo tudi `src/lib` datoteke, ki jih berejo
   skripte — tam ga uvažaj s končnico `.ts`.
 
+## Strežnik HTML (iskalniki, kartice)
+
+SPA vsem naslovom vrne isti prazen `index.html`. Za `/`, `/table`, `/results`,
+`/standings`, `/players`, `/player/*`, `/club/*`, `/match/*` (GET/HEAD) Caddy
+(`@html_strani`) vpraša **strežnik HTML** (`scripts/hetzner/html/streznik.mjs`,
+Node 22 brez odvisnosti, kontejner `slff-html` na 127.0.0.1:3200). Ta vzame
+predlogo iz `/srv/slff/current` (index.html ali kartico države lige, kot Caddy),
+prebere podatke iz PostgREST z anon ključem in vpiše `<title>`, opis, og:,
+kanonični naslov (isto pravilo kot `kanonicni` v `src/lib/naslov.ts`), JSON-LD
+(Person, SportsTeam, SportsEvent, BreadcrumbList) in povzetek s povezavami v
+`<div id="root">`, ki ga React ob zagonu zamenja (brez hidracije). Neznan id →
+404 z `noindex`. Reacta ne izriše; nizi pridejo iz `dist/html-besede.json`, ki
+ga build zapiše iz slovarjev (`besedeZaHtml` v `vite.config.js` — nov ključ
+dodaj v `KLJUCI` tam).
+
+- **Varovalo**: PostgREST ima 800 ms za vse poizvedbe strani; ob napaki ali
+  zamudi gre ven nespremenjena predloga s 200 (`X-Slff-Html: varovalo`,
+  brez predpomnjenja). Če strežnik ne teče ali v 1,5 s ne odgovori, Caddy
+  postreže isto predlogo z `:3201` (statično, kartica po `?t=`; blok brez
+  imena gostitelja, ker proxy pošlje `Host: slff.eu`).
+- **Predpomnilnik**: v pomnilniku 5 min (ključ pot + `?t=` le, kadar je znana
+  liga in jo stran rabi; nova objava ga izprazni) in `Cache-Control: public, max-age=300, s-maxage=3600`. Strani so
+  javne, piškotkov ne bere. Ker star HTML kaže na stare `/assets/*`, objava v CI
+  prenese v novo izdajo še lastna sredstva vseh ohranjenih izdaj (`assets/.lastna`).
+- **Objava**: `scripts/hetzner/objavi-html.sh` (iz main; preizkus, kopija
+  prejšnje, `docker compose up -d` v `/opt/slff-html`). CI ga ne objavi.
+- Preizkus brez baze: `npm run preizkus-html`. Lokalno proti bazi:
+  `KOREN=dist SUPABASE_URL=http://127.0.0.1:54321 SUPABASE_ANON_KEY=… PORT=3299 node scripts/hetzner/html/streznik.mjs`.
+- Nova javna stran, ki jo iskalniki morajo videti: funkcija v `SEZNAMI` ali
+  `ENTITETE` v `streznik.mjs` in pot v `@html_strani`.
+
 ## Smernice za razvoj
 
 - Uporabniško vidni nizi **niso v komponentah**, ampak v slovarju

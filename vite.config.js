@@ -12,6 +12,14 @@ import { aplikacija as aplikacijaHu } from './src/i18n/hu/aplikacija.ts'
 import { aplikacija as aplikacijaDe } from './src/i18n/de/aplikacija.ts'
 import { aplikacija as aplikacijaSr } from './src/i18n/sr/aplikacija.ts'
 import { aplikacija as aplikacijaRo } from './src/i18n/ro/aplikacija.ts'
+import { sl } from './src/i18n/sl/index.ts'
+import { sk } from './src/i18n/sk/index.ts'
+import { hr } from './src/i18n/hr/index.ts'
+import { cs } from './src/i18n/cs/index.ts'
+import { hu } from './src/i18n/hu/index.ts'
+import { de } from './src/i18n/de/index.ts'
+import { sr } from './src/i18n/sr/index.ts'
+import { ro } from './src/i18n/ro/index.ts'
 
 /**
  * V zgrajeno stran zapiše commit, iz katerega je nastala.
@@ -107,6 +115,46 @@ function karticeDrzav() {
   }
 }
 
+/**
+ * Nizi za strežnik HTML (scripts/hetzner/html/streznik.mjs): naslov, opis in
+ * povzetek strani igralca, kluba, tekme in lestvice v jeziku države lige.
+ * Strežnik slovarjev v .ts ne bere, zato build zapiše le te ključe v
+ * `dist/html-besede.json`; kar jeziku manjka, pride iz slovenščine.
+ */
+function besedeZaHtml() {
+  const KLJUCI = [
+    'aplikacija.naslovStrani.osnova', 'aplikacija.naslovStrani.zStranjo', 'aplikacija.noga.zvezeSplosno',
+    'skupno.besede', 'skupno.pozicija',
+    'tekme.tabela.naslov', 'tekme.tabela.zavihek', 'tekme.tabela.uvod', 'tekme.tabela.stolpci', 'tekme.tabela.stolpciStrelcev', 'tekme.tabela.strelci',
+    'tekme.rezultati.naslov', 'tekme.rezultati.uvod', 'tekme.tekma.naslov',
+    'igralci.seznam.naslov', 'igralci.profil.naslov', 'lestvice.lestvica.naslov', 'lestvice.klub.naslov',
+  ]
+  const SLOVARJI = { sl, sk, hr, cs, hu, de, sr, ro }
+  const vzemi = (drevo, kljuc) => kljuc.split('.').reduce((d, k) => d?.[k], drevo)
+  let izhod = 'dist'
+  return {
+    name: 'besede-za-html',
+    apply: 'build',
+    configResolved(c) {
+      izhod = resolve(c.root, c.build.outDir)
+    },
+    closeBundle() {
+      const besede = {}
+      for (const [jezik, slovar] of Object.entries(SLOVARJI)) {
+        besede[jezik] = {}
+        for (const k of KLJUCI) {
+          const izvor = vzemi(sl, k)
+          if (izvor === undefined) throw new Error(`besede-za-html: ključa ${k} ni v slovenščini`)
+          const prevod = vzemi(slovar, k)
+          // Veja (stolpci, pozicije) se dopolni po listih, list pride cel.
+          besede[jezik][k] = typeof izvor === 'object' && !('other' in izvor) ? { ...izvor, ...prevod } : (prevod ?? izvor)
+        }
+      }
+      writeFileSync(resolve(izhod, 'html-besede.json'), JSON.stringify(besede))
+    },
+  }
+}
+
 /** Najmanjši zip (deflate) brez odvisnosti: lokalne glave, imenik, konec. */
 function zip(datoteke) {
   const deli = [], imenik = []
@@ -179,7 +227,7 @@ function otaSvezenj() {
 }
 
 export default defineConfig({
-  plugins: [react(), znamkaCommita(), karticeDrzav(), otaSvezenj()],
+  plugins: [react(), znamkaCommita(), karticeDrzav(), besedeZaHtml(), otaSvezenj()],
   server: {
     watch: {
       // Predpomnjeni zapisniki niso del aplikacije. Brez tega Vite ob vsakem

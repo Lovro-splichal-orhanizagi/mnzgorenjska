@@ -53,6 +53,13 @@ jobs:
           node -e "const j=require('./dist/app/latest.json'); if(!j.version||!j.checksum||!(j.minBuild>=1)) process.exit(1)"
           unzip -l dist/app/*.zip | grep -q ' index.html$'
 
+      # Strežnik HTML (scripts/hetzner/html/): vpis v predlogo, 404, varovalo; in da
+      # build zapiše nize zanj.
+      - name: Strežnik HTML
+        run: |
+          npm run preizkus-html
+          node -e "const b=require('./dist/html-besede.json'); if(!b.sk?.['tekme.tabela.zavihek']) process.exit(1)"
+
       # Smoke izriše vse strani na strežniku in preveri pravila točkovanja in
       # sestave ekipe. Baze ne potrebuje: poizvedbe ob izrisu ne blokirajo,
       # zato zadošča veljaven (a izmišljen) URL.
@@ -264,6 +271,14 @@ jobs:
           printf '%s\n' "$ZNANI" > ~/.ssh/known_hosts
           CILJ=/srv/slff/releases/$GITHUB_SHA
           rsync -a --delete dist/ "deploy@2.31.6.53:$CILJ/"
+          # HTML strani igralca, kluba … sme biti predpomnjen (strežnik HTML: brskalnik 5 min,
+          # Cloudflare do ure) in kaže na stare /assets/*. Nova izdaja zato dobi še LASTNA
+          # sredstva vseh ohranjenih izdaj (assets/.lastna; izdaja brez seznama ima le
+          # lastna), ne prenesenih — tako je izdaja največ šestkrat večja, ne raste.
+          ssh deploy@2.31.6.53 "cd $CILJ/assets && ls -1 > .lastna && for r in /srv/slff/releases/*/assets; do \
+              [ \"\$r\" = $CILJ/assets ] && continue; \
+              if [ -f \$r/.lastna ]; then (cd \$r && xargs -r cp -pn -t $CILJ/assets/ < .lastna); else cp -pn \$r/* $CILJ/assets/ 2>/dev/null; fi; \
+            done; true"
           # mv -T je atomaren: ni trenutka brez `current`. Obdrži zadnjih 5.
           ssh deploy@2.31.6.53 "ln -sfn $CILJ /srv/slff/current.nov && mv -Tf /srv/slff/current.nov /srv/slff/current \
             && cd /srv/slff/releases && ls -1t | tail -n +6 | xargs -r rm -rf"

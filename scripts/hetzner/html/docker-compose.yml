@@ -1,0 +1,33 @@
+# Strežnik HTML (streznik.mjs) na VM: /opt/slff-html/{docker-compose.yml,streznik.mjs,.env}.
+# Objava: scripts/hetzner/objavi-html.sh (VM nima Node; slika node:22-alpine je že tam).
+# Caddy (scripts/hetzner/Caddyfile, @html_strani) pošlje sem strani igralca, kluba,
+# tekme in lig; če ne odgovori, postreže statično datoteko kot prej.
+services:
+  html:
+    image: node:22-alpine
+    container_name: slff-html
+    restart: unless-stopped
+    init: true
+    # Gostiteljevo omrežje: PostgREST prek envoy na 127.0.0.1:8000, posluša le 127.0.0.1:3200.
+    network_mode: host
+    user: node
+    working_dir: /app
+    command: ["node", "streznik.mjs"]
+    environment:
+      PORT: 3200
+      NASLOV: 127.0.0.1
+      KOREN: /srv/slff/current
+      SUPABASE_URL: http://127.0.0.1:8000
+      # Javni anon ključ (isti kot v zgrajeni strani), iz /opt/supabase/.env.
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+    volumes:
+      - ./streznik.mjs:/app/streznik.mjs:ro
+      # Celo /srv/slff: `current` je symlink na releases/<sha>.
+      - /srv/slff:/srv/slff:ro
+    mem_limit: 128m
+    cpus: 0.5
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO /dev/null http://127.0.0.1:3200/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
