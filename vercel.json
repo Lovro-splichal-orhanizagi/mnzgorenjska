@@ -86,6 +86,10 @@
       "destination": "/rs.html"
     },
     {
+      "source": "/ro",
+      "destination": "/ro.html"
+    },
+    {
       "source": "/((?!api/)(?!.*\\.).*)",
       "has": [
         {
@@ -150,6 +154,17 @@
         }
       ],
       "destination": "/rs.html"
+    },
+    {
+      "source": "/((?!api/)(?!.*\\.).*)",
+      "has": [
+        {
+          "type": "query",
+          "key": "t",
+          "value": "ro-.*"
+        }
+      ],
+      "destination": "/ro.html"
     },
     {
       "source": "/((?!api/)(?!.*\\.).*)",

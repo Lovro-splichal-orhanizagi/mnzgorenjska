@@ -41,6 +41,7 @@ function drzaveUporabnika(u: { drzave?: string[] | null; jezik?: string | null }
   if (u.jezik === 'hu') return ['HU']
   if (u.jezik === 'de') return ['AT']
   if (u.jezik === 'sr') return ['RS']
+  if (u.jezik === 'ro') return ['RO']
   return []
 }
 

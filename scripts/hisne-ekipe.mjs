@@ -208,6 +208,24 @@ const IMENA_RS = [
   'Dunavski veslači', 'Savski ribari', 'Moravski ribolovci', 'Vršački vinogradari', 'Palićki jedriličari',
 ]
 
+// Romunske lige: igrive, izmišljene, brez imen resničnih klubov.
+const IMENA_RO = [
+  'Lupii Carpaților', 'Vulturii Bărăganului', 'Urșii Bucegilor', 'Zimbrii Moldovei', 'Șoimii Olteniei',
+  'Cerbii Apusenilor', 'Pescarii Deltei', 'Corbii Maramureșului', 'Râșii Făgărașului', 'Caprele Negre',
+  'Plutașii Bistriței', 'Vierii Dealu Mare', 'Ciobanii Mioriței', 'Lebedele Dunării', 'Mistrețul Bihorean',
+  'Eroii de Duminică', 'Tunarii de Sâmbătă', 'AS Prelungiri', 'Repriza a Treia', 'AS Banca de Rezerve',
+  'Schimbările FC', 'AS Ofsaid', 'Arbitrul n-a Văzut', 'AS Bara', 'AS Transversala',
+  'Ghetele din Pod', 'AS Mici cu Muștar', 'Sarmale United', 'FC Cozonac', 'AS Papanași',
+  'Mămăliga United', 'AS Zacuscă', 'Covrigii FC', 'Ciorba de Burtă FC', 'AS Plăcintă',
+  'Selecționata Satului', 'Vechea Gardă FC', 'Pompierii FC', 'Căminul Cultural FC', 'Eternii Rezerviști',
+  'AS Gheata de Aur', 'Al Doisprezecelea Jucător', 'AS Penalty', 'Steagul de Corner', 'AS Pasă Decisivă',
+  'Pasa de Gol FC', 'AS Banderola', 'Cartonașul Roșu FC', 'Cartonașul Galben United', 'AS Lovitura Liberă',
+  'Gazonul Boys', 'AS Gazon Sintetic', 'Terenul cu Noroi FC', 'Rupătorii de Plase', 'AS Prima Atingere',
+  'Contraatac FC', 'AS Presing', 'Libero FC', 'Decarul FC', 'AS Nouarul',
+  'Campionii Județului', 'Berea de După Meci FC', 'Terasa de lângă Teren', 'AS Grătarul', 'AS Gogoși',
+  'Vâslașii Dunării', 'Pescarii de pe Olt', 'Podgorenii de la Cotnari', 'Navigatorii de la Snagov', 'Ciocârliile Bărăganului',
+]
+
 // Postave v mejah POZICIJE (vratar 1, branilci 3–5, vezisti 2–5, napadalci 1–3).
 const POSTAVE = [
   [4, 4, 2], [4, 3, 3], [3, 5, 2], [3, 4, 3], [5, 3, 2], [4, 5, 1], [5, 4, 1],
@@ -591,7 +609,7 @@ for (const l of seznam) {
     if (eK) throw new Error(eK.message)
     for (const r of kadri ?? []) izbranost.set(r.player_id, (izbranost.get(r.player_id) ?? 0) + 1)
   }
-  const imena = premesaj({ SI: IMENA_SI, HR: IMENA_HR, CZ: IMENA_CZ, HU: IMENA_HU, AT: IMENA_AT, RS: IMENA_RS }[DRZAVA] ?? IMENA, generator('imena:' + l.slug))
+  const imena = premesaj({ SI: IMENA_SI, HR: IMENA_HR, CZ: IMENA_CZ, HU: IMENA_HU, AT: IMENA_AT, RS: IMENA_RS, RO: IMENA_RO }[DRZAVA] ?? IMENA, generator('imena:' + l.slug))
     .filter((i) => !zasedena.has(i.toLowerCase()))
 
   console.log(

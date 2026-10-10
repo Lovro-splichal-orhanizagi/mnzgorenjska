@@ -86,6 +86,19 @@ const BESEDE: Record<string, { pridevniki: string[]; samostalniki: string[] }> =
       'Orao', 'Zmaj', 'Bik', 'Konj', 'Soko', 'Ris',
     ],
   },
+  // Romunščina: pridevnik stoji za samostalnikom (glej psevdonim spodaj).
+  ro: {
+    pridevniki: [
+      'Albastru', 'Roșu', 'Verde', 'Galben', 'Negru', 'Alb', 'Argintiu', 'Auriu',
+      'Rapid', 'Sălbatic', 'Tăcut', 'Înfocat', 'Înghețat', 'Nocturn', 'Matinal',
+      'de Fier', 'de Cupru', 'Însorit', 'Ceresc', 'Neîndurător',
+    ],
+    samostalniki: [
+      'Portar', 'Fundaș', 'Mijlocaș', 'Atacant', 'Căpitan', 'Arbitru', 'Antrenor',
+      'Suporter', 'Golgheter', 'Pasator', 'Rezervist', 'Veteran', 'Erou', 'Lup',
+      'Vultur', 'Dragon', 'Taur', 'Cal', 'Șoim', 'Râs',
+    ],
+  },
   de: {
     pridevniki: [
       'Blauer', 'Roter', 'Grüner', 'Gelber', 'Schwarzer', 'Weißer', 'Silberner', 'Goldener',
@@ -125,7 +138,8 @@ export function psevdonim(userId?: string | null): string {
   const p = pridevniki[h % pridevniki.length]
   const s = samostalniki[Math.floor(h / pridevniki.length) % samostalniki.length]
   const st = h % 100
-  return `${p} ${s} ${st}`
+  // Romunski pridevnik stoji za samostalnikom ("Portar Albastru 42").
+  return jezik() === 'ro' ? `${s} ${p} ${st}` : `${p} ${s} ${st}`
 }
 
 function relativniCas(iso: string): string {

@@ -17,7 +17,7 @@
 //
 // Niz lahko vsebuje {ime} za vstavljanje vrednosti. Množinski niz je objekt
 // z oblikami po `Intl.PluralRules` (slovenščina: one/two/few/other,
-// hrvaščina in srbščina: one/few/other, slovaščina in češčina: one/few/many/other,
+// hrvaščina, srbščina in romunščina: one/few/other, slovaščina in češčina: one/few/many/other,
 // angleščina, madžarščina in nemščina: one/other) in se izbere po parametru `n`.
 import { sl } from './sl/index.ts'
 import { hr } from './hr/index.ts'
@@ -25,6 +25,7 @@ import { cs } from './cs/index.ts'
 import { hu } from './hu/index.ts'
 import { de } from './de/index.ts'
 import { sr } from './sr/index.ts'
+import { ro } from './ro/index.ts'
 import { sk } from './sk/index.ts'
 import { en } from './en/index.ts'
 import {
@@ -36,7 +37,7 @@ import {
   KLJUC_IZBRANEGA_JEZIKA,
 } from '../lib/drzavaUgib.ts'
 
-export type Jezik = 'sl' | 'hr' | 'sk' | 'cs' | 'hu' | 'de' | 'sr' | 'en'
+export type Jezik = 'sl' | 'hr' | 'sk' | 'cs' | 'hu' | 'de' | 'sr' | 'ro' | 'en'
 
 /** Množinske oblike; `other` je obvezna, ostale po pravilih jezika. */
 // `many` rabi slovaščina za necela števila ("2,5 bodu").
@@ -55,12 +56,12 @@ export type Kljuc = Poti<typeof sl>
 
 export type Parametri = Record<string, string | number | null | undefined>
 
-const SLOVARJI: Record<Jezik, Drevo> = { sl: sl as Drevo, hr: hr as Drevo, sk: sk as Drevo, cs: cs as Drevo, hu: hu as Drevo, de: de as Drevo, sr: sr as Drevo, en: en as Drevo }
+const SLOVARJI: Record<Jezik, Drevo> = { sl: sl as Drevo, hr: hr as Drevo, sk: sk as Drevo, cs: cs as Drevo, hu: hu as Drevo, de: de as Drevo, sr: sr as Drevo, ro: ro as Drevo, en: en as Drevo }
 /** Jeziki, ki so dovolj prevedeni, da jih vmesnik izbere sam. */
-export const PRIPRAVLJENI: Jezik[] = ['sl', 'hr', 'sk', 'cs', 'hu', 'de', 'sr', 'en']
+export const PRIPRAVLJENI: Jezik[] = ['sl', 'hr', 'sk', 'cs', 'hu', 'de', 'sr', 'ro', 'en']
 // Angleščina v britanski obliki: "3 Oct", 24-urni čas, decimalna pika.
 // Srbščina v latinici (`sr-Latn-RS`): sama `sr-RS` bi datume pisala v cirilici.
-const LOKALE: Record<Jezik, string> = { sl: 'sl-SI', hr: 'hr-HR', sk: 'sk-SK', cs: 'cs-CZ', hu: 'hu-HU', de: 'de-AT', sr: 'sr-Latn-RS', en: 'en-GB' }
+const LOKALE: Record<Jezik, string> = { sl: 'sl-SI', hr: 'hr-HR', sk: 'sk-SK', cs: 'cs-CZ', hu: 'hu-HU', de: 'de-AT', sr: 'sr-Latn-RS', ro: 'ro-RO', en: 'en-GB' }
 const SHRAMBA = 'slff-jezik'
 
 export const jePripravljen = (j: string): j is Jezik => PRIPRAVLJENI.includes(j as Jezik)

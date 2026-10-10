@@ -2997,6 +2997,9 @@ preveri(
     ['PFL Novi Sad', 'PFL Novi Sad'],
   ])
     preveri(`plakat: srbsko "${iz}" v tožilniku`, ligaVTozilniku(iz, 'sr') === v, ligaVTozilniku(iz, 'sr'))
+  // Romunščina ne sklanja: ime lige stoji za dvopičjem.
+  for (const iz of ['Liga a IV-a Ilfov', 'Liga 3 — Seria 5', 'Liga a V-a București'])
+    preveri(`plakat: romunsko "${iz}" ostane nespremenjeno`, ligaVTozilniku(iz, 'ro') === iz, ligaVTozilniku(iz, 'ro'))
 
   // "Je live": kratko ime lige ne sme zrasti cez rob, ce gre v dve vrstici.
   preveri('plakat live: kratko ime v eni vrstici je najvecje', velikostLige('3. SNL ZAHOD', 1) === 124)
@@ -3469,6 +3472,12 @@ preveri(
   preveri('drzava: srbski brskalnik', D.ugibajDrzavo({ jeziki: ['sr-Latn-RS'], casovniPas: 'Europe/Belgrade' }) === 'RS')
   preveri('drzava: anglesko v Beogradu (pas)', D.ugibajDrzavo({ jeziki: ['en-US'], casovniPas: 'Europe/Belgrade' }) === 'RS')
   preveri('drzava: liga rs-… je srbska', D.drzavaLige('rs-beograd-zona') === 'RS' && D.JEZIK_DRZAVE.RS === 'sr')
+  // Romunija: jezik ro, ugib po brskalniku (ro, ro-RO) in pasu, liga ro-… je romunska.
+  preveri('jezik: Romun romunsko', zj({ drzava: 'RO' }) === 'ro' && zj({ tujec: 'RO', jeziki: ['ro-RO'] }) === 'ro')
+  preveri('tujec: prvi jezik ro ostane', D.jezikTujca(['ro-RO', 'en']) === 'ro' && D.jezikTujca(['en', 'ro']) === 'en')
+  preveri('drzava: romunski brskalnik', D.ugibajDrzavo({ jeziki: ['ro-RO'], casovniPas: 'Europe/Bucharest' }) === 'RO')
+  preveri('drzava: anglesko v Bukarešti (pas)', D.ugibajDrzavo({ jeziki: ['en-US'], casovniPas: 'Europe/Bucharest' }) === 'RO')
+  preveri('drzava: liga ro-… je romunska', D.drzavaLige('ro-if-liga4') === 'RO' && D.JEZIK_DRZAVE.RO === 'ro')
   shramba.set('slff-tujec', 'CZ')
   preveri('tujec: oznaka v brskalniku', D.tujec() === 'CZ' && D.jezikObiskovalca('SK') === 'en')
   D.preklopiDrzavo('SK', lige, { pojdi: (u) => (cilj = u) })
@@ -3494,6 +3503,7 @@ preveri(
   const { hu } = await import('../src/i18n/hu/index.ts')
   const { de } = await import('../src/i18n/de/index.ts')
   const { sr } = await import('../src/i18n/sr/index.ts')
+  const { ro } = await import('../src/i18n/ro/index.ts')
   const listi = (d, pot = '') =>
     Object.entries(d).flatMap(([k, v]) =>
       typeof v === 'string' || (v && typeof v === 'object' && 'other' in v) ? [[pot + k, v]] : listi(v, `${pot}${k}.`),
@@ -3503,7 +3513,7 @@ preveri(
     const besedila = typeof v === 'string' ? [v] : Object.values(v)
     return besedila.map((b) => [...b.matchAll(/\{(\w+)\}|<(\w+)>/g)].map((m) => m[0]).sort().join(' '))
   }
-  for (const [ime, slovar] of [['sk', sk], ['en', en], ['hr', hr], ['cs', cs], ['hu', hu], ['de', de], ['sr', sr]]) {
+  for (const [ime, slovar] of [['sk', sk], ['en', en], ['hr', hr], ['cs', cs], ['hu', hu], ['de', de], ['sr', sr], ['ro', ro]]) {
     const napake = []
     let manjka = 0
     for (const [kljuc, izvirnik] of listi(sl)) {
@@ -3575,6 +3585,23 @@ preveri(
   const hrvaskoSr = listi(sr).filter(([, v]) => (typeof v === 'string' ? [v] : Object.values(v))
     .some((b) => /mjest|momčad|vratar|ljestvic|nogomet|tjed|sljede|uvijek|prije\b|vrijem|\btko\b|poveznic/i.test(b)))
   preveri('prevodi sr: ekavica, brez hrvaških izrazov', hrvaskoSr.length === 0, hrvaskoSr.slice(0, 5).map(([k]) => k).join(', '))
+  // Romunske množine: Intl.PluralRules('ro') pozna one/few/other; "other"
+  // (20 in več) dobi "de" ("20 de puncte").
+  const kategorijeRo = new Intl.PluralRules('ro-RO').resolvedOptions().pluralCategories
+  const slabeRo = listi(ro).filter(
+    ([, v]) => typeof v === 'object' && (Object.keys(v).some((k) => !kategorijeRo.includes(k)) || kategorijeRo.some((k) => !(k in v))),
+  )
+  preveri('prevodi ro: mnozine one/few/other', slabeRo.length === 0, slabeRo.slice(0, 5).map(([k]) => k).join(', '))
+  const crticeRo = listi(ro).filter(([, v]) => (typeof v === 'string' ? [v] : Object.values(v)).some((b) => /[—–]/.test(b)))
+  preveri('prevodi ro: brez pomisljajev', crticeRo.length === 0, crticeRo.slice(0, 5).map(([k]) => k).join(', '))
+  // Romunščina piše ș in ț z vejico spodaj, ne s cedilo (ş, ţ).
+  const cedilaRo = listi(ro).filter(([, v]) => (typeof v === 'string' ? [v] : Object.values(v)).some((b) => /[şţŞŢ]/.test(b)))
+  preveri('prevodi ro: ș in ț z vejico, ne s cedilo', cedilaRo.length === 0, cedilaRo.slice(0, 5).map(([k]) => k).join(', '))
+  preveri('prevodi ro: drzava România v vseh jezikih',
+    [sl, sk, en, hr, cs, hu, de, sr, ro].every((d) => d.aplikacija.izbiraDrzave.imena.RO === 'România'))
+  preveri('prevodi ro: tocke v mnozini',
+    ro.skupno.besede.tocke.one === 'punct' && ro.skupno.besede.tocke.few === 'puncte' && ro.skupno.besede.tocke.other === 'de puncte')
+  preveri('prevodi ro: liga na plakatu za dvopičjem', /: \{liga\}/.test(ro.lestvice.plakat.jeOdprta), ro.lestvice.plakat.jeOdprta)
 }
 
 // --- vir sportnet (Slovaška) -----------------------------------------------
@@ -4663,6 +4690,67 @@ preveri(
   preveri('e-pošta: avtentikacijske predloge in zadeve sr',
     vejeSr.every((v) => v && !slovenskoSr.test(v) && !pomisljaj.test(v)) && zadeveSr.length === 3 &&
       zadeveSr.every((z) => !slovenskoSr.test(z) && !pomisljaj.test(z)), zadeveSr.join(' | '))
+
+  // Romunija: isti maili v romunščini, rok po bukareško, razlog preveden.
+  const roL = { slug: 'ro-if-liga4', oznaka: 'Liga 4 IF', ime: 'Liga a IV-a Ilfov', drzava: 'RO' }
+  // Slovenščina, pozdravi drugih jezikov ali ş/ţ s cedilo v romunskem mailu.
+  const slovenskoRo = /Živjo|ekip[aeo]|krog|točk|opomnik|igralc|kader|namesto|sestavi |Ahoj|Bok|Szia|Servus|Zdravo|[şţŞŢ]/
+  const oRo = E.sestaviOpomnik(roL, { display_name: 'Andrei Popescu', brez_ekipe: true })
+  const oRo2 = E.sestaviOpomnik(roL, { display_name: null, brez_ekipe: false })
+  preveri('e-pošta: opomnik ro',
+    oRo.naslov.includes('încă nu ai echipă') && oRo.html.includes('Salut, Andrei!') && oRo2.html.includes('Salut!') &&
+      oRo2.naslov.includes('completează-ți echipa') && oRo.odjava === 'https://slff.eu/reminders?t=ro-if-liga4' &&
+      oRo.html.includes('https://slff.eu/my-team?t=ro-if-liga4') && oRo.html.includes('Nu mai vreau mementouri') &&
+      !slovenskoRo.test(oRo.naslov + oRo.html + oRo2.naslov + oRo2.html), oRo.naslov)
+  const zRo = E.sestaviOpozorilo(roL, { display_name: 'Andrei', team_name: 'Eroii de Duminică', round_number: 5, deadline_at: rok, razlog })
+  preveri('e-pošta: opozorilo ro (rok po bukareško, razlog preveden)',
+    zRo.naslov.includes('etapa 5') && zRo.html.includes('sâmbătă') && zRo.html.includes('11:00') &&
+      zRo.html.includes('De la clubul Šenčur ai 4 jucători') && !slovenskoRo.test(zRo.naslov + zRo.html), zRo.naslov)
+  preveri('e-pošta: rok ro v časovnem pasu lige (ura pred Ljubljano)', E.izpisRoka(rok, roL).includes('11:00'), E.izpisRoka(rok, roL))
+  const prevodiRo = razlogi.map((r) => E.prevediRazlog(r, 'ro'))
+  const splosenRo = E.prevediRazlog('Neznan razlog.', 'ro')
+  preveri(
+    'e-pošta: vsi razlogi prevedeni v romunščino',
+    prevodiRo.every((p) => p !== splosenRo && !slovenskoRo.test(p) && !pomisljaj.test(p)),
+    prevodiRo.find((p) => p === splosenRo || slovenskoRo.test(p) || pomisljaj.test(p)),
+  )
+  preveri('e-pošta: razlog ro (množina one/few/other)',
+    prevodiRo[1] === 'În lot sunt 3 jucători în loc de 15.' && prevodiRo[7] === 'În formația de start sunt 10 jucători în loc de 11.' &&
+      E.prevediRazlog('V kadru je 1 igralcev namesto 15.', 'ro') === 'În lot este 1 jucător în loc de 15.' &&
+      E.prevediRazlog('V kadru je 20 igralcev namesto 15.', 'ro') === 'În lot sunt 20 de jucători în loc de 15.',
+    `${prevodiRo[1]} | ${prevodiRo[7]}`)
+  const bRo = E.sestaviOpomnikBrezLige('ro', { display_name: 'Andrei' })
+  preveri('e-pošta: brez lige ro v romunščini',
+    bRo.naslov.includes('alege-ți liga') && bRo.html.includes('href="https://slff.eu/my-team?sestavi=1"') &&
+      bRo.html.includes('Salut, Andrei!') && !slovenskoRo.test(bRo.html.replace(/href="[^"]*"/g, '')))
+  const pRo = E.sestaviPoznavalca(roL, { display_name: 'Andrei', obseg: 'klub', klub: 'AS Voința' })
+  preveri('e-pošta: poznavalec ro', pRo.html.includes('cunoscător al clubului AS Voința') && pRo.html.includes('/positions?t=ro-if-liga4') && !slovenskoRo.test(pRo.html))
+  const popRo = E.sestaviPopravekPozicije(roL, { display_name: 'Andrei', team_name: 'Eroii', igralci: [{ ime: 'Andrei Popescu', pozicija: 'MID' }] })
+  const izRo = E.sestaviIzstopKluba(roL, { display_name: 'Andrei', team_name: 'Eroii', igralci: [{ ime: 'Andrei Popescu', klub: 'AS Voința' }] })
+  const pushRo = E.sestaviPushOpomnik(roL, rok)
+  const tRo = E.sestaviTedenskiPregled(roL, {
+    display_name: 'Andrei', ekipa: 'Eroii', krog: 5, tocke: 2.5, mesto: 3, mesto_prej: 5, ekip: 12,
+    povprecje: 30, najvec: 60, kapetan: 'Andrei Popescu', kapetan_tocke: 1, najboljsi: 'Vlad Ionescu', najboljsi_tocke: 24,
+  })
+  preveri('e-pošta: popravek pozicije, izstop, push in tedenski pregled ro',
+    popRo.html.includes('(acum mijlocaș)') && izRo.naslov.includes('s-a retras din ligă') &&
+      pushRo.naslov.includes('încă nu ai echipă') && tRo.naslov.includes('2,5 puncte') && tRo.html.includes('1 punct') &&
+      tRo.html.includes('24 de puncte') &&
+      !slovenskoRo.test(popRo.naslov + popRo.html + izRo.naslov + izRo.html + pushRo.besedilo + tRo.naslov + tRo.html), tRo.naslov)
+  preveri('e-pošta: ro brez pomišljajev',
+    [oRo, oRo2, zRo, bRo, pRo, popRo, izRo, tRo].every((m) => !pomisljaj.test(m.naslov + brezNoge(m.html))) &&
+      !pomisljaj.test(pushRo.naslov + pushRo.besedilo))
+  // Avtentikacijska pošta: romunska veja predlog in zadev brez slovenščine in pomišljajev.
+  const vejeRo = ['confirmation', 'magic_link', 'recovery'].map((ime) => {
+    const h = readFileSync(new URL(`../supabase/templates/${ime}.html`, import.meta.url), 'utf8')
+    const m = h.match(/"ro" }}([\s\S]*?){{ else/)
+    return m ? m[1].replace(/href="[^"]*"/g, '') : null
+  })
+  const zadeveRo = [...readFileSync(new URL('../scripts/hetzner/docker-compose.slff.yml', import.meta.url), 'utf8')
+    .matchAll(/"ro" }}([^{]*){{/g)].map((m) => m[1])
+  preveri('e-pošta: avtentikacijske predloge in zadeve ro',
+    vejeRo.every((v) => v && !slovenskoRo.test(v) && !pomisljaj.test(v)) && zadeveRo.length === 3 &&
+      zadeveRo.every((z) => !slovenskoRo.test(z) && !pomisljaj.test(z)), zadeveRo.join(' | '))
 
   // Tedenski pregled "Tvoj krog".
   const krog = {
