@@ -37,6 +37,7 @@ import type { Pozicija, Postavka } from '../lib/tipi'
 import { t, tx } from '../i18n'
 import { izvor } from '../lib/platforma'
 import { prevediNapako } from '../lib/napake'
+import { NalaganjeZaBralnik, Skelet } from '../components/Skelet'
 
 /** Vrstica pogleda `player_overview` — profil igralca. */
 type Profil = Record<string, any> & {
@@ -68,6 +69,8 @@ interface Razlaga {
   skupaj: number
   /** Surove številke nastopa — za kartico igralca. */
   nastop: NastopZaKartico
+  /** "Domači 2 : 1 Gostje" — za kartico igralca. */
+  tekma: string | null
 }
 
 const POZICIJE: Pozicija[] = ['GK', 'DEF', 'MID', 'FWD']
@@ -103,8 +106,7 @@ export default function Igralec() {
   const [besediloPorocila, setBesediloPorocila] = useState('')
   const [posiljamPorocilo, setPosiljamPorocilo] = useState(false)
   const [nalaganje, setNalaganje] = useState(true)
-  // Za kartico: tekma zadnjega nastopa in v koliko ekipah je igralec.
-  const [tekmaKartice, setTekmaKartice] = useState<string | null>(null)
+  // Za kartico: v koliko ekipah je igralec.
   const [ekipZIgralcem, setEkipZIgralcem] = useState<number | null>(null)
   // "Ime Priimek (Klub)": isto ime v drugem klubu je drug igralec.
   useNaslov(
@@ -118,6 +120,47 @@ export default function Igralec() {
   useEffect(() => {
     let preklican = false
     async function nalozi() {
+      // Kar rabi le id igralca, gre takoj, vzporedno s profilom; kar rabi
+      // ligo ali klub, takoj za njim v enem krogu. Prej je bilo devet
+      // zaporednih korakov (~670 ms).
+      const poIdju = Promise.all([
+        supabase
+          .from('position_vote_counts')
+          .select('position, votes')
+          .eq('player_id', igralecId),
+        // Za crto rabimo izhodiscno ceno.
+        supabase
+          .from('players')
+          .select('value_start')
+          .eq('id', igralecId)
+          .maybeSingle(),
+        // Razlaga točk per krog — nastopi + goli + asistence; tekma nosi še
+        // izid in klube za kartico.
+        supabase
+          .from('appearances')
+          .select(
+            'match_id, minutes_played, goals, own_goals, penalties_missed, penalties_saved, yellow_cards, red_cards, goals_conceded, clean_sheet, matches(round_id, home_goals, away_goals, domaci:teams!matches_home_team_id_fkey(name), gostje:teams!matches_away_team_id_fkey(name), rounds(number, season, played_on))',
+          )
+          .eq('player_id', igralecId),
+        // Asistence: število golov, kjer je ta igralec confirmed asistent
+        supabase
+          .from('goals')
+          .select('match_id')
+          .eq('assist_player_id', igralecId),
+        // Zmago, prejete gole med igranjem in različico pravil kroga pove pogled.
+        supabase
+          .from('appearance_points')
+          .select('match_id, zmaga, prejeti_na_igriscu, cista_mreza, pravila')
+          .eq('player_id', igralecId),
+        uporabnikId
+          ? supabase
+              .from('position_votes')
+              .select('position')
+              .eq('player_id', igralecId)
+              .eq('voter_id', uporabnikId)
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
+      ])
       const { data: p, error } = await supabase
         .from('player_overview')
         .select('*')
@@ -130,95 +173,98 @@ export default function Igralec() {
         return
       }
       setIgralec((p as Profil | null) ?? null)
-
-      // Trenutna sezona — potrebujemo, da price_changes filtriramo nanjo.
+      if (!p) {
+        setNalaganje(false)
+        return
+      }
       // Ligo poberemo kar iz igralca: stran je dosegljiva tudi neposredno s
       // povezavo, brez izbranega tekmovanja v naslovu.
-      const { data: sez } = await supabase
-        .from('sezone')
-        .select('season')
-        .eq('competition_id', p?.competition_id ?? 0)
-        .eq('tekoca', true)
-        .maybeSingle()
-      if (preklican) return
-      const tekocaSez = sez?.season ?? ''
+      const ligaId = p.competition_id ?? 0
 
-      // Kartice s številkami kažejo tekočo sezono — lanske točke so zgodovina
-      // in izhodišče za ceno, ne forma, po kateri se izbira ekipa.
-      if (tekocaSez) {
-        const { data: ss } = await supabase
-          .from('player_season_standings')
-          .select('season, points, matches, goals, minutes')
-          .eq('id', igralecId)
-          // Liga mora biti v filtru: pogled racuna rank() po ligi in sezoni in
-          // brez nje izracuna lestvico vseh lig (6,6 s namesto 0,05 s).
-          .eq('competition_id', p?.competition_id ?? 0)
-          .eq('season', tekocaSez)
-          .maybeSingle()
-        if (preklican) return
-        setSezonsko({
-          season: tekocaSez,
-          points: ss?.points ?? 0,
-          matches: ss?.matches ?? 0,
-          goals: ss?.goals ?? 0,
-          minutes: ss?.minutes ?? 0,
-        })
-      } else setSezonsko(null)
-
-      const [{ data: c }, { data: g }, { data: tek }] = await Promise.all([
-        // Samo spremembe cen v TEKOČI sezoni — sicer se pokažejo lanski
-        // krogi brez konteksta in delujejo kot "napovedi" za prihodnost.
-        supabase
-          .from('price_changes')
-          .select('old_value, new_value, changed_at, rounds!inner(number, season)')
-          .eq('player_id', igralecId)
-          .eq('rounds.season', tekocaSez)
-          .order('changed_at', { ascending: false }),
-        supabase
-          .from('position_vote_counts')
-          .select('position, votes')
-          .eq('player_id', igralecId),
+      const [
+        [{ data: g }, { data: zac }, { data: nastopi }, { data: asistGoli }, { data: izPogleda }, { data: moj }],
+        { data: tek },
+        [tekocaSez, ss, c, zk],
+      ] = await Promise.all([
+        poIdju,
         // Naslednje tekme kluba — pomaga pri odločitvi, koga vzeti.
-        p?.team_id
+        p.team_id
           ? supabase
               .from('prihodnje_tekme')
               .select('round_number, played_on, opponent_id, opponent_short, opponent_name, opponent_logo, doma')
-              .eq('competition_id', p.competition_id ?? 0)
+              .eq('competition_id', ligaId)
               .eq('team_id', p.team_id)
               .order('played_on')
               .limit(5)
           : Promise.resolve({ data: [] }),
+        // Trenutna sezona — nanjo filtriramo številke, cene in zadnji krog.
+        supabase
+          .from('sezone')
+          .select('season')
+          .eq('competition_id', ligaId)
+          .eq('tekoca', true)
+          .maybeSingle()
+          .then(async ({ data: sez }) => {
+            const s = sez?.season ?? ''
+            if (!s) return [s, null, [], null] as const
+            const [r1, r2, r3] = await Promise.all([
+              // Kartice s številkami kažejo tekočo sezono — lanske točke so
+              // zgodovina in izhodišče za ceno, ne forma, po kateri se izbira
+              // ekipa. `owners` (v koliko ekipah) gre na kartico; prej je šel
+              // posebej v `player_standings`, ki računa vso ligo.
+              supabase
+                .from('player_season_standings')
+                .select('season, points, matches, goals, minutes, owners')
+                .eq('id', igralecId)
+                // Liga mora biti v filtru: pogled racuna rank() po ligi in sezoni in
+                // brez nje izracuna lestvico vseh lig (6,6 s namesto 0,05 s).
+                .eq('competition_id', ligaId)
+                .eq('season', s)
+                .maybeSingle(),
+              // Samo spremembe cen v TEKOČI sezoni — sicer se pokažejo lanski
+              // krogi brez konteksta in delujejo kot "napovedi" za prihodnost.
+              supabase
+                .from('price_changes')
+                .select('old_value, new_value, changed_at, rounds!inner(number, season)')
+                .eq('player_id', igralecId)
+                .eq('rounds.season', s)
+                .order('changed_at', { ascending: false }),
+              // Zadnji ODIGRANI krog: med premikoma cena ni neznana, ampak
+              // mirna, in ravno to je treba videti.
+              supabase
+                .from('rounds')
+                .select('number, matches!inner(imported_at)')
+                .eq('competition_id', ligaId)
+                .eq('season', s)
+                .not('matches.imported_at', 'is', null)
+                .order('number', { ascending: false })
+                .limit(1)
+                .maybeSingle(),
+            ])
+            return [s, r1.data, r2.data ?? [], r3.data] as const
+          }),
       ])
       if (preklican) return
+
+      setSezonsko(
+        tekocaSez
+          ? {
+              season: tekocaSez,
+              points: ss?.points ?? 0,
+              matches: ss?.matches ?? 0,
+              goals: ss?.goals ?? 0,
+              minutes: ss?.minutes ?? 0,
+            }
+          : null,
+      )
+      setEkipZIgralcem(ss?.owners != null ? Number(ss.owners) : null)
       // Po krogu, ne po času zapisa: borza ob popravku zapisnika krog obračuna
       // znova in starejši krog dobi novejši `changed_at` (8., 6., 7. krog).
       setCene(
-        ((c ?? []) as any[]).sort(
+        ([...c] as any[]).sort(
           (a, b) => Number(b.rounds?.number ?? 0) - Number(a.rounds?.number ?? 0),
         ),
       )
-
-      // Za crto rabimo izhodiscno ceno in zadnji ODIGRANI krog: med
-      // premikoma cena ni neznana, ampak mirna, in ravno to je treba videti.
-      const [{ data: zac }, { data: zk }] = await Promise.all([
-        supabase
-          .from('players')
-          .select('value_start')
-          .eq('id', igralecId)
-          .maybeSingle(),
-        tekocaSez
-          ? supabase
-              .from('rounds')
-              .select('number, matches!inner(imported_at)')
-              .eq('competition_id', p?.competition_id ?? 0)
-              .eq('season', tekocaSez)
-              .not('matches.imported_at', 'is', null)
-              .order('number', { ascending: false })
-              .limit(1)
-              .maybeSingle()
-          : Promise.resolve({ data: null }),
-      ])
-      if (preklican) return
       setIzhodisce(zac?.value_start != null ? Number(zac.value_start) : null)
       setZadnjiKrog(Number((zk as any)?.number ?? 0))
       setTekme((tek ?? []) as any[])
@@ -227,27 +273,11 @@ export default function Igralec() {
           ((g ?? []) as any[]).map((v) => [String(v.position), Number(v.votes)]),
         ),
       )
+      setMojGlas((moj?.position as Pozicija | null) ?? null)
 
-      // Razlaga točk per krog — nastopi + goli + asistence
-      const { data: nastopi } = await supabase
-        .from('appearances')
-        .select(
-          'match_id, minutes_played, goals, own_goals, penalties_missed, penalties_saved, yellow_cards, red_cards, goals_conceded, clean_sheet, matches(round_id, rounds(number, season, played_on))',
-        )
-        .eq('player_id', igralecId)
-      // Asistence: število golov, kjer je ta igralec confirmed asistent
-      const { data: asistGoli } = await supabase
-        .from('goals')
-        .select('match_id')
-        .eq('assist_player_id', igralecId)
       const asistPoMatchu = new Map<number, number>()
       for (const gg of (asistGoli ?? []) as any[])
         asistPoMatchu.set(gg.match_id, (asistPoMatchu.get(gg.match_id) ?? 0) + 1)
-      // Zmago, prejete gole med igranjem in različico pravil kroga pove pogled.
-      const { data: izPogleda } = await supabase
-        .from('appearance_points')
-        .select('match_id, zmaga, prejeti_na_igriscu, cista_mreza, pravila')
-        .eq('player_id', igralecId)
       const poMatchu = new Map((izPogleda ?? []).map((x) => [x.match_id, x]))
 
       // Brez potrjene pozicije tock ni mogoce razcleniti; privzamemo vezista,
@@ -281,6 +311,7 @@ export default function Igralec() {
             cistaMreza: nastop.cleanSheet,
             obranjene: n.penalties_saved,
           },
+          tekma: vrsticaTekme(n.matches.domaci?.name ?? null, n.matches.gostje?.name ?? null, n.matches.home_goals, n.matches.away_goals),
           round_id: n.matches.round_id,
           number: r.number,
           season: r.season,
@@ -293,16 +324,6 @@ export default function Igralec() {
       }
       raz.sort((a, b) => (b.played_on ?? '').localeCompare(a.played_on ?? ''))
       setRazlage(raz)
-
-      if (uporabnikId) {
-        const { data: moj } = await supabase
-          .from('position_votes')
-          .select('position')
-          .eq('player_id', igralecId)
-          .eq('voter_id', uporabnikId)
-          .maybeSingle()
-        if (!preklican) setMojGlas((moj?.position as Pozicija | null) ?? null)
-      } else setMojGlas(null)
       setNalaganje(false)
     }
     nalozi()
@@ -424,45 +445,28 @@ export default function Igralec() {
 
   // Kartica igralca: zadnji nastop tekoče sezone, tekma in v koliko ekipah je.
   const zadnjiNastop = sezonsko ? razlage.find((r) => r.season === sezonsko.season) ?? null : null
-  const tekmaZadnjega = zadnjiNastop?.match_id ?? null
-  const ligaIgralca = igralec?.competition_id ?? null
-  useEffect(() => {
-    let veljavno = true
-    ;(async () => {
-      const [rTekma, rEkip] = await Promise.all([
-        tekmaZadnjega
-          ? supabase
-              .from('matches')
-              .select(
-                'home_goals, away_goals, domaci:teams!matches_home_team_id_fkey(name), gostje:teams!matches_away_team_id_fkey(name)',
-              )
-              .eq('id', tekmaZadnjega)
-              .maybeSingle()
-          : Promise.resolve({ data: null }),
-        // Z ligo v filtru pogled ne racuna lestvice vseh lig (0,8 s namesto 0,05 s).
-        ligaIgralca != null
-          ? supabase
-              .from('player_standings')
-              .select('owners')
-              .eq('id', igralecId)
-              .eq('competition_id', ligaIgralca)
-              .maybeSingle()
-          : Promise.resolve({ data: null }),
-      ])
-      if (!veljavno) return
-      const tk = rTekma.data as any
-      setTekmaKartice(
-        tk ? vrsticaTekme(tk.domaci?.name ?? null, tk.gostje?.name ?? null, tk.home_goals, tk.away_goals) : null,
-      )
-      setEkipZIgralcem(rEkip.data?.owners != null ? Number(rEkip.data.owners) : null)
-    })()
-    return () => {
-      veljavno = false
-    }
-  }, [tekmaZadnjega, igralecId, ligaIgralca])
 
+  // Skelet v obliki glave in številk: povezava je takoj prava, nič ne skoči.
   if (nalaganje)
-    return <p className="animiraj-utrip text-slate-400">{t('skupno.nalaganje')}</p>
+    return (
+      <div className="space-y-6">
+        <Link to="/players" className="inline-flex min-h-11 items-center text-sm text-slate-400 hover:text-white">
+          {t('igralci.profil.vsiIgralci')}
+        </Link>
+        <div className="-mt-3 flex items-center gap-3 sm:gap-4">
+          <Skelet className="h-10 w-10 shrink-0 rounded-full sm:h-14 sm:w-14" />
+          <div className="min-w-0 flex-1">
+            <Skelet className="h-8 max-w-xs sm:h-9" />
+            <Skelet className="h-5 max-w-[12rem]" />
+          </div>
+          <Skelet className="h-11 w-16" />
+        </div>
+        {/* višini sta izmerjeni na telefonu: številke s sezono (119 px), pozicija */}
+        <Skelet className="h-[7.4375rem]" />
+        <Skelet className="h-12" />
+        <NalaganjeZaBralnik />
+      </div>
+    )
   if (napaka) return <p className="text-rose-400">{t('skupno.napaka', { sporocilo: napaka })}</p>
   if (!igralec)
     return <p className="kartica p-6 text-center text-slate-400">{t('igralci.profil.niIgralca')}</p>
@@ -849,7 +853,7 @@ export default function Igralec() {
               tocke: zadnjiNastop ? zadnjiNastop.skupaj : Number(sezonsko?.points ?? 0),
               dosezki: zadnjiNastop ? dosezkiNastopa(zadnjiNastop.nastop, igralec.position ?? null) : [],
               nastop: zadnjiNastop?.nastop ?? null,
-              tekma: zadnjiNastop ? tekmaKartice : null,
+              tekma: zadnjiNastop?.tekma ?? null,
               sezona: sezonsko
                 ? {
                     tocke: Number(sezonsko.points ?? 0),

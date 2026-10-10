@@ -8,6 +8,7 @@ import { imeZveze } from '../components/VirPodatkov'
 import Grb from '../components/Grb'
 import { useNaslov } from '../lib/naslov'
 import { t } from '../i18n'
+import { NalaganjeZaBralnik, Skelet } from '../components/Skelet'
 import type { Database } from '../lib/baza.types'
 
 type Vrstica = Database['public']['Functions']['lestvica_lige']['Returns'][number]
@@ -75,8 +76,6 @@ export default function Tabela() {
     }
   }, [tekmovanjeId])
 
-  if (nalaganje) return <p className="animiraj-utrip text-slate-400">{t('skupno.nalaganje')}</p>
-
   const liga = `?t=${encodeURIComponent(slug)}`
   const sezona = vrstice[0]?.sezona ?? ''
   const odigrano = vrstice.some((v) => v.tekme > 0)
@@ -90,12 +89,24 @@ export default function Tabela() {
           {t('tekme.tabela.naslov')}
           {tekmovanje?.short_name ? ` — ${tekmovanje.short_name}` : ''}
         </h1>
-        {odigrano && (
-          <p className="max-w-2xl text-sm text-slate-400">{t('tekme.tabela.uvod', { sezona, zveza })}</p>
+        {/* Med nalaganjem nevidno besedilo z namestno sezono: vrstice se
+            prelomijo enako kot pravo, zato opomba pod njim ne skoči. */}
+        {(nalaganje || odigrano) && (
+          <p className={`max-w-2xl text-sm text-slate-400 ${nalaganje ? 'invisible' : ''}`}>
+            {t('tekme.tabela.uvod', { sezona: nalaganje ? '0000/00' : sezona, zveza })}
+          </p>
         )}
+        {/* Opomba ne čaka podatkov: z njo je LCP že ob prvem izrisu. Pod
+            lestvico je ni, ker je višina lestvice znana šele s podatki. */}
+        <p className="max-w-2xl pt-1 text-xs text-slate-500">{t('tekme.tabela.opomba', { zveza })}</p>
       </header>
 
-      {!odigrano && !napaka ? (
+      {nalaganje ? (
+        <>
+          <NalaganjeZaBralnik />
+          <Skelet className="h-[34rem]" />
+        </>
+      ) : !odigrano && !napaka ? (
         <p className="text-sm text-slate-400">{t('tekme.tabela.niTekem')}</p>
       ) : (
         <div className="kartica overflow-x-auto">
@@ -151,9 +162,7 @@ export default function Tabela() {
         </div>
       )}
 
-      {odigrano && <p className="text-xs text-slate-500">{t('tekme.tabela.opomba', { zveza })}</p>}
-
-      {odigrano && (
+      {!nalaganje && odigrano && (
         <section className="space-y-3">
           <h2 className="text-xl font-black naslov">{t('tekme.tabela.strelci')}</h2>
           {strelci.length === 0 ? (

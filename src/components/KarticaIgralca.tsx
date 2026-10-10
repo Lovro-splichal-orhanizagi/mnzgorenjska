@@ -341,15 +341,40 @@ export default function KarticaIgralca({
   const [predogled, setPredogled] = useState<string | null>(null)
   const vlecenje = useRef<{ px: number; py: number; x: number; y: number } | null>(null)
   const okvir = useRef<HTMLDivElement | null>(null)
+  const koren = useRef<HTMLDivElement | null>(null)
   const fotoRef = useRef(foto)
   fotoRef.current = foto
+  // Risanje (pisave, grbi, platno, PNG) je dolgo opravilo; ob nalaganju strani
+  // je zadrževalo glavno nit 1,6 s. Kartica je pod statistiko, zato se riše
+  // šele, ko se ji zaslon približa.
+  const [vidna, setVidna] = useState(false)
+  useEffect(() => {
+    const el = koren.current
+    if (vidna || !el) return
+    if (typeof IntersectionObserver === 'undefined') return setVidna(true)
+    const io = new IntersectionObserver((e) => e.some((v) => v.isIntersecting) && setVidna(true), {
+      rootMargin: '200px',
+    })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [vidna])
+  // Predogled in gumb za deljenje si delita eno risbo na vsebino.
+  const risba = useRef<{ kljuc: string; blob: Promise<Blob | null> } | null>(null)
+  function narisi() {
+    if (risba.current?.kljuc !== kljuc) risba.current = { kljuc, blob: narisiKartico(podatki, fotoRef.current) }
+    return risba.current.blob
+  }
+  const narisiRef = useRef(narisi)
+  narisiRef.current = narisi
 
   useEffect(() => {
+    if (!vidna) return
     let veljavno = true
     let url: string | null = null
     // Kratek zamik: med vlečenjem ali povečevanjem se riše šele, ko se roka ustavi.
     const t = window.setTimeout(() => {
-      narisiKartico(podatki, fotoRef.current)
+      narisiRef
+        .current()
         .then((blob) => {
           if (!veljavno || !blob) return
           url = URL.createObjectURL(blob)
@@ -363,7 +388,7 @@ export default function KarticaIgralca({
       if (url) URL.revokeObjectURL(url)
     }
     // `kljuc` vsebuje podatke in stanje fotografije, primerjano po vsebini.
-  }, [kljuc])
+  }, [kljuc, vidna])
 
   async function izberi(e: ChangeEvent<HTMLInputElement>) {
     const datoteka = e.target.files?.[0]
@@ -405,7 +430,7 @@ export default function KarticaIgralca({
     : t('igralci.kartica.deliSezona', { ime, klub: podatki.klub })
 
   return (
-    <div className="grid gap-4 sm:grid-cols-[minmax(0,15rem)_1fr] sm:items-start">
+    <div ref={koren} className="grid gap-4 sm:grid-cols-[minmax(0,15rem)_1fr] sm:items-start">
       <div
         ref={okvir}
         onPointerDown={zacni}
@@ -431,14 +456,20 @@ export default function KarticaIgralca({
         <p className="text-sm text-slate-300">
           {t('igralci.kartica.uvod')}
         </p>
-        <DeliSliko
-          narisi={() => narisiKartico(podatki, fotoRef.current)}
-          kljuc={kljuc}
-          naslov={ime}
-          besedilo={besedilo}
-          povezava={povezava}
-          imeSlike={imeDatotekeKartice(podatki.ime, podatki.priimek, podatki.krog)}
-        />
+        {/* DeliSliko sliko pripravi vnaprej (iOS), zato pride šele z risbo;
+            do takrat prazen prostor iste višine. */}
+        {vidna ? (
+          <DeliSliko
+            narisi={narisi}
+            kljuc={kljuc}
+            naslov={ime}
+            besedilo={besedilo}
+            povezava={povezava}
+            imeSlike={imeDatotekeKartice(podatki.ime, podatki.priimek, podatki.krog)}
+          />
+        ) : (
+          <div className="h-8" aria-hidden />
+        )}
         <div className="space-y-2 border-t border-white/5 pt-3">
           <div className="flex flex-wrap items-center gap-2">
             <label className="gumb-tih cursor-pointer px-3 py-2 text-sm">
