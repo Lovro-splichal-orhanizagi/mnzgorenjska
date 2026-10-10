@@ -13,7 +13,7 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
   mojeMesto: 'Mein Platz ↓',
 
   lestvica: {
-    naslov: 'Tabelle',
+    naslov: 'Fantasy-Tabelle',
     prazna: 'Die Tabelle ist noch leer. Stell das erste Team auf!',
     napakaKrogov:
       'Die Ergebnisse der Runden konnten nicht geladen werden ({napaka}). Die Gesamttabelle unten stimmt trotzdem.',

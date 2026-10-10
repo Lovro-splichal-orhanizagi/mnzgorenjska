@@ -168,10 +168,37 @@ function beri(kljuc: string): string | null {
   }
 }
 
+/**
+ * Gola naslovnica: pot `/` brez `?t=` in brez shranjene lige. Le tu se
+ * odločimo, ali je obiskovalec tujec (oznaka `slff-tujec`, vprašanje po
+ * državi). Kdor pride naravnost na stran lige ali entitete (iskalnik z
+ * ameriškega IP-ja, brez shrambe), oznake ne dobi in vidi jezik lige — vsak
+ * naslov ima en jezik. Že shranjena oznaka velja povsod. Velja stanje ob
+ * nalaganju strani; v Node (smoke) se bere sproti.
+ */
+const golaNaslovnica = (pot: string, iskanje: string): boolean =>
+  pot === '/' && !new URLSearchParams(iskanje).has('t') && !beri('slff-tekmovanje')
+const golaObNalaganju =
+  typeof location === 'undefined' ? null : golaNaslovnica(location.pathname, location.search)
+const naGoliNaslovnici = (): boolean => golaObNalaganju ?? golaNaslovnica('/', '')
+
+/** Iskalniki in pregledovalniki povezav: zanje tujca nikoli ne zaznamo. */
+export const jeRobot = (ua: string | null | undefined): boolean =>
+  /bot|crawl|spider|slurp|Googlebot|bingbot|DuckDuckBot|YandexBot|Baiduspider|facebookexternalhit|Twitterbot|LinkedInBot|Applebot/i.test(ua ?? '')
+
+/**
+ * Ali sme ta obisk odločiti, da je obiskovalec tujec: gola naslovnica in ne
+ * robot (Googlebot z ameriškega IP-ja naj vidi slovensko naslovnico).
+ */
+export const zaznajTujca = (): boolean =>
+  naGoliNaslovnici() && !jeRobot(typeof navigator !== 'undefined' ? navigator.userAgent : null)
+
 /** Država po IP tujca, če je bil obiskovalec prepoznan kot tujec. */
 export const tujec = (): string | null => beri(KLJUC_TUJCA)
 
+/** Zapiše oznako tujca — le na goli naslovnici in ne za robota (`zaznajTujca`). */
 export function zapomniTujca(ip: string) {
+  if (!zaznajTujca()) return
   try {
     localStorage.setItem(KLJUC_TUJCA, ip)
   } catch {}

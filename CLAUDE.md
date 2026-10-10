@@ -1337,9 +1337,17 @@ brez ekip), čigar IP je iz države **brez aktivnih lig** (CZ, AT, DE, HR, GB �
 (koda IP) in da `vprasajDrzavo`, okno prvega obiska pa najprej vpraša po
 državi ("🇸🇮 Slovenija · 🇸🇰 Slovensko", iz `vsaTekmovanja`), nato po ligi te
 države. Do izbire je za oknom ugibana država (za večino Slovenija). Vmesnik je
-v **angleščini**, razen če je prvi jezik brskalnika `sl` ali `sk`
-(`jezikTujca`); oznaka ostane v brskalniku, zato angleščina ostane tudi po
-izbiri lige ali države. Neuspel IP (napaka, 800 ms, `vite dev`) ni tujec —
+v **angleščini**, razen če je prvi jezik brskalnika eden od naših
+(`jezikTujca`). **Odločitev o tujcu pade le na goli naslovnici** — pot `/`
+brez `?t=` in brez shranjene lige ob nalaganju strani (`naGoliNaslovnici` v
+`drzavaUgib.ts`): le tam se zapiše `slff-tujec` in le tam okno vpraša po
+državi. Robot (`jeRobot` po `navigator.userAgent`: Googlebot, bingbot,
+facebookexternalhit …) ni nikoli tujec (`zaznajTujca`). Kdor pride naravnost na drugo stran (`/player/*`, `/club/*`,
+`/match/*`, `/table`, `/players`, `/results`, `/standings` …) brez oznake,
+vidi jezik države lige (privzeta liga = slovenščina) — tako ima vsak naslov
+en jezik tudi za iskalnik z ameriškega IP-ja (Googlebot strani ne hrani
+shrambe). Že zapisana oznaka velja povsod: angleščina ostane tudi po izbiri
+lige ali države. Neuspel IP (napaka, 800 ms, `vite dev`) ni tujec —
 velja stari ugib brez vprašanja. SI in SK IP gresta naravnost v svojo državo.
 Lokalno tujca preizkusiš z `localStorage.setItem('slff-tujec', 'CZ')` v
 brskalniku brez shranjene lige.
@@ -1723,8 +1731,8 @@ kanonični `?t=` po svoji ligi.
   1. izbira z izbirnika **"SL · SK · EN"** (`IzbiraJezika`, v nogi in na vrhu
      izbirnika lige; `izberiJezik` zapiše `slff-jezik-izbran` in stran naloži
      znova),
-  2. tujec (glej *Država obiskovalca*) → angleščina, razen prvega jezika
-     brskalnika `sl`/`sk`,
+  2. tujec (oznaka se zapiše le na goli naslovnici, glej *Država
+     obiskovalca*) → angleščina, razen prvega jezika brskalnika, ki ga imamo,
   3. jezik države lige (`JEZIK_DRZAVE`) — Slovenci in Slovaki kot doslej.
   `slff-jezik` je le zadnji uporabljeni jezik (samodejni popravek), ne izbira.
 - **Angleščina** (`src/i18n/en/`, `en-GB`: "3 Oct", decimalna pika, cena

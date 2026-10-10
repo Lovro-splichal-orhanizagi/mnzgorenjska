@@ -113,7 +113,8 @@ export const jePripravljen = (j: string): j is Jezik => PRIPRAVLJENI.includes(j 
  * izbira) ali ugiba; kontekst lige jezik popravi, če se je zmotil.
  *
  * Pred državo imata prednost izrecna izbira z izbirnika "SL · SK · EN" in
- * tujec (IP iz države brez lig — angleščina, glej `drzavaUgib.ts`).
+ * tujec (IP iz države brez lig — angleščina; oznako dobi le na goli
+ * naslovnici, glej `drzavaUgib.ts`).
  */
 function izberi(): Jezik {
   // Skripte v Node (preveri-podatke …) so vedno slovenske in se localStorage

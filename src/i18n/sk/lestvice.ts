@@ -9,7 +9,7 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
   mojeMesto: 'Moje miesto ↓',
 
   lestvica: {
-    naslov: 'Tabuľka',
+    naslov: 'Fantasy tabuľka',
     prazna: 'Tabuľka je zatiaľ prázdna — poskladaj prvý tím!',
     napakaKrogov:
       'Výsledky po kolách sa nepodarilo načítať ({napaka}). Celková tabuľka nižšie je aj tak správna.',

@@ -33,6 +33,8 @@ export {
   zeljenJezik,
   jezikObiskovalca,
   tujec,
+  zaznajTujca,
+  jeRobot,
   zapomniTujca,
   pozabiTujca,
   izbranJezik,

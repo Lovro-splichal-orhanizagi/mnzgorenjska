@@ -14,7 +14,7 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
   mojeMesto: 'Az én helyezésem ↓',
 
   lestvica: {
-    naslov: 'Tabella',
+    naslov: 'Fantasy tabella',
     prazna: 'A tabella még üres. Rakd össze az első csapatot!',
     napakaKrogov:
       'A fordulók eredményeit nem sikerült betölteni ({napaka}). Az alábbi összesített tabella ettől még pontos.',

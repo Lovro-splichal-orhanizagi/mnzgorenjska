@@ -19,7 +19,7 @@ import Domov from './pages/Domov'
 import NativnePovezave from './components/NativnePovezave'
 import PosodobiAplikacijo from './components/PosodobiAplikacijo'
 import PotisnaObvestila from './components/PotisnaObvestila'
-import { useKanonicni, useNaslov, useNoindex } from './lib/naslov'
+import { jeZasebna, useKanonicni, useNaslov, useNoindex } from './lib/naslov'
 import { useObisk } from './lib/obiski'
 import { jeNativno } from './lib/platforma'
 
@@ -95,6 +95,7 @@ export default function App() {
   // ključ ob navigaciji oprijem ponastavi.
   const { pathname, search } = useLocation()
   useKanonicni(pathname, search)
+  useNoindex(jeZasebna(pathname))
   // Katero stran človek po registraciji sploh odpre — dnevni seštevki, brez
   // uporabnika in naprave (`src/lib/obiski.ts`).
   useObisk()
