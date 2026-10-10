@@ -68,7 +68,7 @@ function kratkaPozicija(p: string | null | undefined): string {
 }
 
 export default function Domov() {
-  const { id: tekmovanjeId, slug, tekmovanje, tekmovanja } = useTekmovanje()
+  const { id: tekmovanjeId, slug, tekmovanje, tekmovanja, brezLig } = useTekmovanje()
   // Naslovnica privzete lige ima osnovni naslov; druge lige svojega, sicer bi
   // bile vse naslovnice za iskalnik ista stran.
   useNaslov(slug === PRIVZETO ? null : tekmovanje?.name)
@@ -506,7 +506,7 @@ export default function Domov() {
           najprej stali tik pod uvodom in nato skočili navzdol (CLS). */}
       <div
         className={`grid grid-cols-1 gap-8 lg:grid-cols-2 lg:items-start ${
-          sezonaTece === null && !napaka ? 'min-h-screen' : ''
+          sezonaTece === null && !napaka && !brezLig ? 'min-h-screen' : ''
         }`}
       >
         {/* Ta teden: rok in kar liga čaka od ljudi — vrstice v eni skupini

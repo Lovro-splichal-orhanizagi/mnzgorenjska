@@ -39,6 +39,9 @@ if (import.meta.env.DEV && url && !/127\.0\.0\.1|localhost/.test(url)) {
 // bi jih lahko prestregla. Splet ostane pri implicitnem toku.
 // storageKey je pripet na ime Supabase projekta: supabase-js ga sicer izpelje
 // iz naslova, in prehod na api.slff.eu bi vse odjavil (docs/migracija-hetzner.md).
+/** Naslov API-ja, ki ga uporablja odjemalec — za klice mimo supabase-js. */
+export const API_URL = url ?? ''
+
 export const supabase = createClient<Database>(url ?? '', anonKey ?? '', {
   auth: {
     flowType: Capacitor.isNativePlatform() ? 'pkce' : 'implicit',

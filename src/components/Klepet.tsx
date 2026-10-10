@@ -6,7 +6,7 @@ import { povezavaNaPrijavo } from '../lib/prijava'
 import type { FormEvent } from 'react'
 import { useAuth } from '../lib/useAuth'
 import { useTekmovanje } from '../lib/tekmovanje'
-import { t, tx, datum, jezik } from '../i18n'
+import { t, tx, datum, jezikSlovarja } from '../i18n'
 
 // Anonimni klepet — sporočila so javna, avtor pa skrit za psevdonimom, ki se
 // deterministično izpelje iz user_id, tako da ista oseba vedno "govori" kot
@@ -135,12 +135,12 @@ function stringHash(s: string): number {
 export function psevdonim(userId?: string | null): string {
   if (!userId) return t('aplikacija.klepet.gost')
   const h = stringHash(userId)
-  const { pridevniki, samostalniki } = BESEDE[jezik()] ?? BESEDE.sl
+  const { pridevniki, samostalniki } = BESEDE[jezikSlovarja()] ?? BESEDE.sl
   const p = pridevniki[h % pridevniki.length]
   const s = samostalniki[Math.floor(h / pridevniki.length) % samostalniki.length]
   const st = h % 100
   // Romunski pridevnik stoji za samostalnikom ("Portar Albastru 42").
-  return jezik() === 'ro' ? `${s} ${p} ${st}` : `${p} ${s} ${st}`
+  return jezikSlovarja() === 'ro' ? `${s} ${p} ${st}` : `${p} ${s} ${st}`
 }
 
 function relativniCas(iso: string): string {

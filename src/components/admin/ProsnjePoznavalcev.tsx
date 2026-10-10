@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { supabase } from '../../lib/supabase'
+import { supabase, API_URL } from '../../lib/supabase'
 
 interface Prosnja {
   id: number
@@ -65,7 +65,7 @@ export default function ProsnjePoznavalcev() {
     if (odlocitev === 'zavrnjeno') return
     // Odobritev pove cloveku po mailu: kaj je dobil in da je to zaupanje.
     const { data: seja } = await supabase.auth.getSession()
-    const r = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/posli-opomnik`, {
+    const r = await fetch(`${API_URL}/functions/v1/posli-opomnik`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${seja.session?.access_token ?? ''}`,

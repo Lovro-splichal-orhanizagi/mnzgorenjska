@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import './index.css'
-import { jezik, naloziSlovar, t } from './i18n'
+import { jezikSlovarja, naloziSlovar, t } from './i18n'
 import { pripraviNativno } from './lib/platforma'
 import { pripraviOta } from './lib/ota'
 import { pripraviAnalitiko } from './lib/analitika'
@@ -32,8 +32,8 @@ void naloziSlovar().then(() => {
   // index.html je slovenski (to vidijo iskalniki brez JS in kartice ob
   // deljenju). Drug jezik zamenja le jezik dokumenta in opis; slovenska stran
   // ostane natanko taka, kot je.
-  if (jezik() !== 'sl') {
-    document.documentElement.lang = jezik()
+  if (jezikSlovarja() !== 'sl') {
+    document.documentElement.lang = jezikSlovarja()
     document.querySelector('meta[name="description"]')?.setAttribute('content', t('aplikacija.naslovStrani.opis'))
     document.querySelector('meta[property="og:description"]')?.setAttribute('content', t('aplikacija.naslovStrani.deljenje'))
   }

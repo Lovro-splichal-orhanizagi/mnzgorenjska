@@ -144,6 +144,8 @@ interface KontekstVrednost {
    * najprej vpraša po njej.
    */
   vprasajDrzavo: boolean
+  /** Seznam lig je naložen in prazen (ali ni prišel): lige ne bo, ne držimo ji prostora. */
+  brezLig: boolean
   nastavi: (slug: string) => void
 }
 
@@ -155,6 +157,7 @@ const Kontekst = createContext<KontekstVrednost>({
   vsaTekmovanja: [],
   drzava: 'SI',
   vprasajDrzavo: false,
+  brezLig: false,
   nastavi: () => {},
 })
 
@@ -201,6 +204,7 @@ export function brezZveze(v: Record<string, unknown>): Tekmovanje {
 export function TekmovanjeProvider({ children }: { children: ReactNode }) {
   const [iskanje, setIskanje] = useSearchParams()
   const [tekmovanja, setTekmovanja] = useState<Tekmovanje[]>([])
+  const [ligeNalozene, setLigeNalozene] = useState(false)
   const [slug, setSlug] = useState<string>(
     () => iskanje.get('t') || shranjeno() || PRIVZETO,
   )
@@ -238,9 +242,13 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
         .order('sort_order')
       return ((staro.data as Record<string, unknown>[] | null) ?? []).map(brezZveze)
     }
-    naloziti().then((t) => {
-      if (veljavno) setTekmovanja(t)
-    })
+    naloziti()
+      .catch(() => [] as Tekmovanje[])
+      .then((t) => {
+        if (!veljavno) return
+        setTekmovanja(t)
+        setLigeNalozene(true)
+      })
     return () => {
       veljavno = false
     }
@@ -409,6 +417,7 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
         vsaTekmovanja: tekmovanja,
         drzava,
         vprasajDrzavo: Boolean(tujecKoda) && !imaDrzavo,
+        brezLig: ligeNalozene && !tekmovanja.length,
         nastavi,
       }}
     >

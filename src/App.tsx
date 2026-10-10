@@ -112,9 +112,12 @@ export default function App() {
           {/* min-h-screen: noga je pod robom zaslona, dokler se stran nalaga, in
               ne skače navzdol, ko pridejo podatki (premik postavitve, CLS). */}
           <main className="mx-auto min-h-screen max-w-5xl px-4 pb-32 pt-8 lg:pb-8">
-            <NapakaOprijem key={pathname}>
-            {/* Brez nadomestka: <main> že drži višino zaslona. */}
+            {/* Suspense zunaj oprijema s ključem poti: ob prehodu (React Router ga
+                da v startTransition) ostane prejšnja stran, dokler kos nove ne
+                pride, namesto praznega <main>. Ob prvem izrisu nadomestka ni —
+                <main> že drži višino zaslona. */}
             <Suspense fallback={null}>
+            <NapakaOprijem key={pathname}>
             <Routes>
               <Route path="/" element={<Domov />} />
               {/* Vstopni povezavi za državo (kampanje, objave): slff.eu/sk */}
@@ -159,8 +162,8 @@ export default function App() {
               {!jeNativno() && <Route path="/admin" element={<Administracija />} />}
               <Route path="*" element={<NiStrani />} />
             </Routes>
-            </Suspense>
             </NapakaOprijem>
+            </Suspense>
           </main>
           <Podpora />
           <footer className="border-t border-white/10 py-6 text-center text-xs text-slate-400">

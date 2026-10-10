@@ -38,7 +38,7 @@ function niz(ms: number) {
 }
 
 export default function RokKroga() {
-  const { id: tekmovanjeId, tekmovanje } = useTekmovanje()
+  const { id: tekmovanjeId, tekmovanje, brezLig } = useTekmovanje()
   // undefined = še se nalaga (pas že drži prostor), null = roka ni.
   const [krog, setKrog] = useState<NaslednjiKrog | null | undefined>(undefined)
   const [zdaj, setZdaj] = useState(() => Date.now())
@@ -82,7 +82,7 @@ export default function RokKroga() {
 
   // Med nalaganjem prazen pas iste višine: pas, ki se pojavi nad glavo,
   // bi sicer potisnil vso stran navzdol (premik postavitve, CLS).
-  if (krog === undefined) return <div className="h-7 bg-gnl-500/10 sm:h-8" aria-hidden />
+  if (krog === undefined && !brezLig) return <div className="h-7 bg-gnl-500/10 sm:h-8" aria-hidden />
   if (!krog?.deadline_at || preostanek == null) return null
 
   const nujno = !zapadel && preostanek < 2 * 3600000 // manj kot 2 uri

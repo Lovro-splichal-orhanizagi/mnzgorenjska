@@ -69,18 +69,33 @@ let slovar: Drevo | null = null
 const prezgodnji = new Set<string>()
 export const prezgodnjiKljuci = (): string[] => [...prezgodnji]
 
+// Jezik slovarja, ki je res v rabi; po njem gredo datumi in množina, da
+// slovenski nadomestek ne dobi madžarskih oblik. null = še ni naložen.
+let jezikVRabi: Jezik | null = null
+/** Jezik nizov na zaslonu: izbrani, ali 'sl', če njegov slovar ni prišel. */
+export const jezikSlovarja = (): Jezik => jezikVRabi ?? jezik()
+
 /**
- * Naloži slovar izbranega jezika. Kliče se enkrat, pred izrisom; če kos ne
- * pride (brez omrežja), ostane slovenščina.
+ * Naloži slovar izbranega jezika. Kliče se enkrat, pred izrisom. Če kos ne
+ * pride v `rokMs` (zastalo omrežje) ali sploh ne, ostane slovenščina za ves
+ * obisk — pozen slovar bi sredi strani zamenjal jezik.
  */
-export async function naloziSlovar(): Promise<void> {
+export async function naloziSlovar(rokMs = 3000): Promise<void> {
   const j = jezik()
-  try {
-    slovar = j === 'sl' ? SL : await NALAGALNIKI[j]()
-  } catch (e) {
-    console.error('Slovarja ni bilo mogoče naložiti:', j, e)
-    slovar = SL
+  let d: Drevo | null = null
+  if (j !== 'sl') {
+    try {
+      d = await Promise.race([
+        NALAGALNIKI[j](),
+        new Promise<null>((r) => setTimeout(() => r(null), rokMs)),
+      ])
+      if (!d) console.error('Slovar ni prišel pravočasno, ostane slovenščina:', j)
+    } catch (e) {
+      console.error('Slovarja ni bilo mogoče naložiti:', j, e)
+    }
   }
+  slovar = d ?? SL
+  jezikVRabi = d ? j : 'sl'
 }
 /** Jeziki, ki so dovolj prevedeni, da jih vmesnik izbere sam. */
 export const PRIPRAVLJENI: Jezik[] = ['sl', 'hr', 'sk', 'cs', 'hu', 'de', 'sr', 'ro', 'en']
@@ -132,7 +147,7 @@ export function jezik(): Jezik {
   if (!izbran) izbran = izberi()
   return izbran
 }
-export const lokale = (): string => LOKALE[jezik()]
+export const lokale = (): string => LOKALE[jezikSlovarja()]
 
 /**
  * Zamenja jezik in naloži stran znova. To je samodejni popravek (kontekst
