@@ -62,6 +62,7 @@ export default function Klub() {
     let veljavno = true
     ;(async () => {
       setNalaganje(true)
+      setObjavaOdprta(false)
       // Klub in njegove lige gresta hkrati; nato vse lige naenkrat.
       const [{ data: klubVrstica, error: eKlub }, { data: ct }] = await Promise.all([
         supabase.from('teams').select('name, logo_url, short_name').eq('id', Number(id)).maybeSingle(),

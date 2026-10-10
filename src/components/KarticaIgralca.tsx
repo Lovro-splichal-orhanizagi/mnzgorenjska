@@ -361,7 +361,14 @@ export default function KarticaIgralca({
   // Predogled in gumb za deljenje si delita eno risbo na vsebino.
   const risba = useRef<{ kljuc: string; blob: Promise<Blob | null> } | null>(null)
   function narisi() {
-    if (risba.current?.kljuc !== kljuc) risba.current = { kljuc, blob: narisiKartico(podatki, fotoRef.current) }
+    if (risba.current?.kljuc !== kljuc) {
+      const zdaj = { kljuc, blob: narisiKartico(podatki, fotoRef.current) }
+      // Neuspele risbe ne hranimo: naslednji pritisk riše znova.
+      zdaj.blob.catch(() => {
+        if (risba.current === zdaj) risba.current = null
+      })
+      risba.current = zdaj
+    }
     return risba.current.blob
   }
   const narisiRef = useRef(narisi)

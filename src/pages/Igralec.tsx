@@ -258,6 +258,19 @@ export default function Igralec() {
           : null,
       )
       setEkipZIgralcem(ss?.owners != null ? Number(ss.owners) : null)
+      // Brez letošnjega nastopa igralec v player_season_standings nima vrstice,
+      // v ekipah pa je lahko vseeno. Le takrat vprašamo player_standings (z
+      // ligo v filtru) — mimo nalaganja, ker kartica na to ne čaka.
+      if (!ss)
+        supabase
+          .from('player_standings')
+          .select('owners')
+          .eq('id', igralecId)
+          .eq('competition_id', ligaId)
+          .maybeSingle()
+          .then(({ data }) => {
+            if (!preklican) setEkipZIgralcem(data?.owners != null ? Number(data.owners) : null)
+          })
       // Po krogu, ne po času zapisa: borza ob popravku zapisnika krog obračuna
       // znova in starejši krog dobi novejši `changed_at` (8., 6., 7. krog).
       setCene(

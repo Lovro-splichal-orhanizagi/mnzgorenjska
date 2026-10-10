@@ -98,7 +98,9 @@ export default function Tabela() {
         )}
         {/* Opomba ne čaka podatkov: z njo je LCP že ob prvem izrisu. Pod
             lestvico je ni, ker je višina lestvice znana šele s podatki. */}
-        <p className="max-w-2xl pt-1 text-xs text-slate-500">{t('tekme.tabela.opomba', { zveza })}</p>
+        {(nalaganje || odigrano) && (
+          <p className="max-w-2xl pt-1 text-xs text-slate-500">{t('tekme.tabela.opomba', { zveza })}</p>
+        )}
       </header>
 
       {nalaganje ? (
