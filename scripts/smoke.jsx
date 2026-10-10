@@ -5091,8 +5091,12 @@ preveri(
     const zveze = new Map([['at-k1', 'kfv'], ['at-k2', 'kfv'], ['at-s1', 'stfv'], ['at-t1', 'tfv'], ['at-bl', 'oefb'], ['at-b1', 'bfv']])
     const imena = (o) => o.zazeniVse.map((l) => l.slug).join()
     let v = odloci({ vrsta: vz, lige: nic, od, zveze, zagoni: [] })
-    preveri('vrsta: vzporedno 3 iz različnih dežel', imena(v) === 'at-k1,at-s1,at-t1', imena(v))
+    preveri('vrsta: privzeto po dva iz dežele', imena(v) === 'at-k1,at-k2,at-s1,at-t1', imena(v))
     v = odloci({ vrsta: vz, lige: nic, od, zveze, zagoni: [z('at-k1', null, '2026-10-10T10:05:00Z', 'in_progress')] })
+    preveri('vrsta: tekoči uvoz dežele zasede eno od dveh mest', imena(v) === 'at-k2,at-s1,at-t1', imena(v))
+    v = odloci({ vrsta: vz, lige: nic, od, zveze, zagoni: [], najvec: 3, naZvezo: 1 })
+    preveri('vrsta: vzporedno 3 iz različnih dežel', imena(v) === 'at-k1,at-s1,at-t1', imena(v))
+    v = odloci({ vrsta: vz, lige: nic, od, zveze, zagoni: [z('at-k1', null, '2026-10-10T10:05:00Z', 'in_progress')], najvec: 3, naZvezo: 1 })
     preveri('vrsta: med uvozom dežele še dva drugih dežel', imena(v) === 'at-s1,at-t1', imena(v))
     const dz = [{ slug: 'at-bl', arhiv: '1' }, ...vz.filter((l) => l.slug !== 'at-bl')]
     v = odloci({ vrsta: dz, lige: nic, od, zveze, zagoni: [] })

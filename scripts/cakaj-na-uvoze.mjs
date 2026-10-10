@@ -85,14 +85,14 @@ function seKrize(tok, naslov) {
     // na tekoči ročni uvoz).
     if (!mojaLiga && !liga.aktivna) return false
     if (liga.drzava !== mojaDrzava) return false
-    // V Avstriji je vsaka deželna zveza svoja piramida klubov: ročna uvoza
-    // nevklopljenih lig dveh dežel ne pišeta v iste klube in tečeta hkrati
-    // (Avstrija, 9. 10. 2026). Državna zveza (Bundesliga, Regionalliga) meša
-    // dežele, zato čaka na vse. Hkratni vpis istega novega kluba (redko, npr. obe
-    // Regionalligi Süd uvozita isti mešani arhiv) ujame klubId.
+    // Ročna uvoza nevklopljenih lig pišeta vsak v svoje igralce in tečeta
+    // hkrati, tudi iz iste dežele (od 10. 10. 2026; prej le iz različnih).
+    // Hkratni vpis istega novega kluba ujame klubId, isto tekmo skupnega arhiva
+    // preskok tekme druge lige. Državna zveza (Bundesliga, Regionalliga) meša
+    // dežele, zato čaka na vse. Koliko jih teče, omeji vrsta Avstrije.
     const drzavna = LOCENE_ZVEZE[mojaDrzava]
     if (drzavna && mojaLiga && !mojaJeAktivna && !liga.aktivna && mojaZveza && liga.zveza &&
-        mojaZveza !== liga.zveza && mojaZveza !== drzavna && liga.zveza !== drzavna) return false
+        mojaZveza !== drzavna && liga.zveza !== drzavna) return false
     return true
   }
   // Nočni uvoz piše le v vklopljene lige. Ročni uvoz nevklopljene ga ne moti;

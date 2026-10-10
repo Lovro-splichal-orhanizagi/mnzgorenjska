@@ -6,7 +6,7 @@
 // Šteje vsak zagon, tudi ročnega ali z drugega računalnika.
 //
 // Na vsak tik:
-//   1. hkrati največ NAJVEC_HKRATI uvozov, iz vsake deželne zveze en, državna sama;
+//   1. hkrati največ NAJVEC_HKRATI uvozov, iz vsake deželne zveze NAJVEC_NA_ZVEZO, državna sama;
 //   2. zažene naslednje nevklopljene lige iz scripts/avstrija-vrsta.txt, ki še
 //      nima zagona ali ji je padel le enkrat (ponovitev); po dveh padcih jo
 //      preskoči in to enkrat javi na Discord;
@@ -37,16 +37,21 @@ export function preberiVrsto(besedilo) {
 // Čista odločitev tika. `zagoni`: [{ slug, status, conclusion, createdAt, updatedAt }],
 // `lige`: Map slug → active, `od`: ISO čas prejšnjega tika (kar je končano
 // pozneje, je novo in se vklopi ali javi enkrat).
-// Hkrati teče največ NAJVEC_HKRATI uvozov, iz vsake deželne zveze le eden;
+// Hkrati teče največ NAJVEC_HKRATI uvozov, iz vsake deželne zveze največ
+// NAJVEC_NA_ZVEZO (hkraten vpis istega kluba ujame klubId, skupen arhiv
+// preskok tekme druge lige — 10. 10. 2026 dvignjeno z ena na dva);
 // liga državne zveze (Bundesliga, Regionalliga) meša dežele in teče sama.
 // Zveza, ki je ne poznamo, šteje kot državna (varno). Če je naslednja liga v
 // vrsti državna, se za njo ne zažene nič več, da ne čaka do konca.
-export const NAJVEC_HKRATI = 3
-export function odloci({ vrsta, zagoni, lige, od, zveze = new Map(), drzavna = 'oefb', najvec = NAJVEC_HKRATI }) {
+export const NAJVEC_HKRATI = 6
+export const NAJVEC_NA_ZVEZO = 2
+export function odloci({ vrsta, zagoni, lige, od, zveze = new Map(), drzavna = 'oefb', najvec = NAJVEC_HKRATI, naZvezo = NAJVEC_NA_ZVEZO }) {
   const tekoci = zagoni.filter((z) => z.status !== 'completed')
   const tece = tekoci.length > 0
   const zveza = (slug) => zveze.get(slug) ?? drzavna
-  const zasedene = new Set(tekoci.map((z) => zveza(z.slug)))
+  const zasedene = new Map()
+  const zasedi = (zv) => zasedene.set(zv, (zasedene.get(zv) ?? 0) + 1)
+  for (const z of tekoci) zasedi(zveza(z.slug))
   let prosto = najvec - tekoci.length
   let ustavi = false
   const izid = { tece, zazeni: null, zazeniVse: [], vklopi: [], novi: [], javi: [], log: [], koncano: false }
@@ -82,13 +87,13 @@ export function odloci({ vrsta, zagoni, lige, od, zveze = new Map(), drzavna = '
     odprtih++
     if (ustavi || prosto <= 0) continue
     const zv = zveza(liga.slug)
-    const lahko = zv === drzavna ? zasedene.size === 0 : !zasedene.has(drzavna) && !zasedene.has(zv)
+    const lahko = zv === drzavna ? zasedene.size === 0 : !zasedene.has(drzavna) && (zasedene.get(zv) ?? 0) < naZvezo
     if (!lahko) {
       if (zv === drzavna) ustavi = true
       continue
     }
     izid.zazeniVse.push({ ...liga, ponovitev: padli === 1 })
-    zasedene.add(zv)
+    zasedi(zv)
     prosto--
   }
   izid.zazeni = izid.zazeniVse[0] ?? null
