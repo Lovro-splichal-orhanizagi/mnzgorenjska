@@ -64,7 +64,7 @@ const besedilo = (html) => razpakiraj(String(html ?? '').replace(/<[^>]+>/g, ' '
 // preimenujemo po stalni šifri kluba na Semaforju (`data-id` v razporedu,
 // `/klubovi/<id>/`); drugi ostane, kot je. Pregled vseh 82 lig in arhivov
 // (9. 10. 2026) je našel teh šest; zapise je razdelila migracija
-// 20261009235300. Nov trk izpiše `node scripts/hrvaske-lige.mjs` — dodaj ga
+// 20261011184300. Nov trk izpiše `node scripts/hrvaske-lige.mjs` — dodaj ga
 // sem, PREDEN se liga uvozi, in le klub, ki v bazi še nima zapisa s tem imenom.
 export const IME_KLUBA = {
   617: 'NK Ponikve (Zagreb)', // "NK Ponikve" ostane klub iz Stona (1017)

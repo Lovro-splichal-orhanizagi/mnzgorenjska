@@ -210,7 +210,7 @@ je bil "nk tomislav" in vanj je padel NK Tomislav iz Drnja).
 kluba, navijači). `IME_KLUBA` v `hns.mjs` enega preimenuje po šifri kluba
 na Semaforju (`data-id` v razporedu; glava strani tekme šifre nima, zato
 zapisnik vzame ime iz razporeda). Pregled 9. 10. 2026 je našel sedem
-zapisov, migracija `20261009235300` jih je razdelila. `node
+zapisov, migracija `20261011184300` jih je razdelila. `node
 scripts/hrvaske-lige.mjs` na koncu izpiše nove trke — dodaj jih v
 `IME_KLUBA`, preden ligo uvoziš, in preimenuj le klub, ki v bazi zapisa s
 tem imenom še nima.
