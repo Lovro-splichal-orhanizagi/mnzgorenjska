@@ -20,14 +20,6 @@
 // hrvaščina, srbščina in romunščina: one/few/other, slovaščina in češčina: one/few/many/other,
 // angleščina, madžarščina in nemščina: one/other) in se izbere po parametru `n`.
 import { sl } from './sl/index.ts'
-import { hr } from './hr/index.ts'
-import { cs } from './cs/index.ts'
-import { hu } from './hu/index.ts'
-import { de } from './de/index.ts'
-import { sr } from './sr/index.ts'
-import { ro } from './ro/index.ts'
-import { sk } from './sk/index.ts'
-import { en } from './en/index.ts'
 import {
   drzavaLige,
   izbranJezik,
@@ -56,7 +48,40 @@ export type Kljuc = Poti<typeof sl>
 
 export type Parametri = Record<string, string | number | null | undefined>
 
-const SLOVARJI: Record<Jezik, Drevo> = { sl: sl as Drevo, hr: hr as Drevo, sk: sk as Drevo, cs: cs as Drevo, hu: hu as Drevo, de: de as Drevo, sr: sr as Drevo, ro: ro as Drevo, en: en as Drevo }
+// Slovenščina je v glavnem svežnju (izvor in rezerva), drugi jeziki so vsak
+// svoj kos, ki ga `naloziSlovar` prenese pred prvim izrisom (main.tsx). Obiskovalec
+// tako ne prenaša sedmih slovarjev, ki jih ne bo nikoli videl.
+const NALAGALNIKI: Record<Exclude<Jezik, 'sl'>, () => Promise<Drevo>> = {
+  hr: () => import('./hr/index.ts').then((m) => m.hr as Drevo),
+  sk: () => import('./sk/index.ts').then((m) => m.sk as Drevo),
+  cs: () => import('./cs/index.ts').then((m) => m.cs as Drevo),
+  hu: () => import('./hu/index.ts').then((m) => m.hu as Drevo),
+  de: () => import('./de/index.ts').then((m) => m.de as Drevo),
+  sr: () => import('./sr/index.ts').then((m) => m.sr as Drevo),
+  ro: () => import('./ro/index.ts').then((m) => m.ro as Drevo),
+  en: () => import('./en/index.ts').then((m) => m.en as Drevo),
+}
+const SL = sl as Drevo
+// null = slovar še ni naložen; `t` do takrat vrača slovenščino.
+let slovar: Drevo | null = null
+// Ključi, prevedeni pred `naloziSlovar` — konstanta na vrhu modula, ki bi v
+// drugem jeziku ostala slovenska. Smoke zahteva, da je seznam prazen.
+const prezgodnji = new Set<string>()
+export const prezgodnjiKljuci = (): string[] => [...prezgodnji]
+
+/**
+ * Naloži slovar izbranega jezika. Kliče se enkrat, pred izrisom; če kos ne
+ * pride (brez omrežja), ostane slovenščina.
+ */
+export async function naloziSlovar(): Promise<void> {
+  const j = jezik()
+  try {
+    slovar = j === 'sl' ? SL : await NALAGALNIKI[j]()
+  } catch (e) {
+    console.error('Slovarja ni bilo mogoče naložiti:', j, e)
+    slovar = SL
+  }
+}
 /** Jeziki, ki so dovolj prevedeni, da jih vmesnik izbere sam. */
 export const PRIPRAVLJENI: Jezik[] = ['sl', 'hr', 'sk', 'cs', 'hu', 'de', 'sr', 'ro', 'en']
 // Angleščina v britanski obliki: "3 Oct", 24-urni čas, decimalna pika.
@@ -158,7 +183,8 @@ function vstavi(niz: string, p?: Parametri): string {
  * `t('skupno.tock', { n: 4 })` → "4 točke".
  */
 export function t(kljuc: Kljuc, p?: Parametri): string {
-  const v = poisci(SLOVARJI[jezik()], kljuc) ?? poisci(SLOVARJI.sl, kljuc)
+  if (!slovar) prezgodnji.add(kljuc)
+  const v = (slovar && poisci(slovar, kljuc)) ?? poisci(SL, kljuc)
   if (v === undefined) return kljuc
   if (typeof v === 'string') return vstavi(v, p)
   return vstavi(oblikaZa(v, Number(p?.n ?? 0)), p)

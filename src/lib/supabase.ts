@@ -2,7 +2,18 @@ import { createClient } from '@supabase/supabase-js'
 import { Capacitor } from '@capacitor/core'
 import type { Database } from './baza.types'
 
-const url = import.meta.env.VITE_SUPABASE_URL
+// Na slff.eu brskalnik API kliče na istem izvoru (Caddy na slff.eu posreduje
+// /rest/v1, /auth/v1 … istemu Kongu kot api.slff.eu): brez CORS predpoizvedbe
+// (OPTIONS) pred vsakim klicem, ki na telefonu stane cel krog do strežnika.
+// Aplikacija (capacitor://localhost), predogledi in razvoj ostanejo pri
+// VITE_SUPABASE_URL. Vklopi `VITE_API_ISTI_IZVOR=1` šele, ko Caddy blok teče.
+const url =
+  import.meta.env.VITE_API_ISTI_IZVOR === '1' &&
+  !Capacitor.isNativePlatform() &&
+  typeof location !== 'undefined' &&
+  location.origin === 'https://slff.eu'
+    ? location.origin
+    : import.meta.env.VITE_SUPABASE_URL
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 if (!url || !anonKey) {

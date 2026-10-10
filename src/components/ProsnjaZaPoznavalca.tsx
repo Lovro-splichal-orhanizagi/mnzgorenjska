@@ -9,7 +9,7 @@ interface Klub {
   name: string | null
 }
 
-const VLOGE: Array<[string, string]> = [
+const vloge = (): Array<[string, string]> => [
   ['igralec', t('igralci.poznavalec.vloge.igralec')],
   ['trener', t('igralci.poznavalec.vloge.trener')],
   ['vodstvo', t('igralci.poznavalec.vloge.vodstvo')],
@@ -117,7 +117,7 @@ export default function ProsnjaZaPoznavalca({
             onChange={(e) => setVloga(e.target.value)}
             className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-100"
           >
-            {VLOGE.map(([k, v]) => (
+            {vloge().map(([k, v]) => (
               <option key={k} value={k}>
                 {v}
               </option>

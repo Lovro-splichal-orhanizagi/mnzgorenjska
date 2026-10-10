@@ -4,7 +4,6 @@ import { useEffect } from 'react'
 import { t } from '../i18n/jedro.ts'
 import { DOMENA } from './platforma.ts'
 
-const OSNOVA = t('aplikacija.naslovStrani.osnova')
 
 /**
  * Nastavi `document.title` na "{deli, ločeni s ·} · SLFF"; brez naslova ostane
@@ -14,7 +13,7 @@ export function useNaslov(...deli: Array<string | null | undefined>): void {
   const naslov = deli.filter(Boolean).join(' · ')
   useEffect(() => {
     if (typeof document === 'undefined') return
-    document.title = naslov ? t('aplikacija.naslovStrani.zStranjo', { naslov }) : OSNOVA
+    document.title = naslov ? t('aplikacija.naslovStrani.zStranjo', { naslov }) : t('aplikacija.naslovStrani.osnova')
   }, [naslov])
 }
 

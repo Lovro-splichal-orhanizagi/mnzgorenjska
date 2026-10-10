@@ -14,11 +14,11 @@ export function jeNeshranjeno(): boolean {
   return neshranjeno
 }
 
-export const VPRASANJE_ZAPUSTITVE = t('mojaEkipa.vprasanjeZapustitve')
+export const vprasanjeZapustitve = () => t('mojaEkipa.vprasanjeZapustitve')
 
 /** true, če ni neshranjenih sprememb ali jih uporabnik potrdi, da jih zavrže. */
 export function potrdiZapustitev(): boolean {
   if (!neshranjeno) return true
   if (typeof window === 'undefined') return true
-  return window.confirm(VPRASANJE_ZAPUSTITVE)
+  return window.confirm(vprasanjeZapustitve())
 }

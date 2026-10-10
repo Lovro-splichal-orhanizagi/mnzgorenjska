@@ -26,17 +26,17 @@ export interface Porocilo {
 }
 
 export const VRSTE: Array<{ kljuc: VrstaPorocila; oznaka: string; ikona: string }> = [
-  { kljuc: 'poskodba', oznaka: t('igralci.vrstePorocil.poskodba'), ikona: '🩹' },
-  { kljuc: 'odsotnost', oznaka: t('igralci.vrstePorocil.odsotnost'), ikona: '🚫' },
-  { kljuc: 'vrnitev', oznaka: t('igralci.vrstePorocil.vrnitev'), ikona: '✅' },
-  { kljuc: 'drugo', oznaka: t('igralci.vrstePorocil.drugo'), ikona: '💬' },
+  { kljuc: 'poskodba', get oznaka() { return t('igralci.vrstePorocil.poskodba') }, ikona: '🩹' },
+  { kljuc: 'odsotnost', get oznaka() { return t('igralci.vrstePorocil.odsotnost') }, ikona: '🚫' },
+  { kljuc: 'vrnitev', get oznaka() { return t('igralci.vrstePorocil.vrnitev') }, ikona: '✅' },
+  { kljuc: 'drugo', get oznaka() { return t('igralci.vrstePorocil.drugo') }, ikona: '💬' },
 ]
 
 const PO_KLJUCU: Record<VrstaPorocila, { oznaka: string; ikona: string; barva: string }> = {
-  poskodba: { oznaka: t('igralci.vrstePorocil.poskodba'), ikona: '🩹', barva: 'bg-rose-500/15 text-rose-200' },
-  odsotnost: { oznaka: t('igralci.vrstePorocil.odsotnost'), ikona: '🚫', barva: 'bg-amber-500/15 text-amber-200' },
-  vrnitev: { oznaka: t('igralci.vrstePorocil.vrnitev'), ikona: '✅', barva: 'bg-gnl-500/15 text-gnl-200' },
-  drugo: { oznaka: t('igralci.vrstePorocil.drugo'), ikona: '💬', barva: 'bg-white/10 text-slate-300' },
+  poskodba: { get oznaka() { return t('igralci.vrstePorocil.poskodba') }, ikona: '🩹', barva: 'bg-rose-500/15 text-rose-200' },
+  odsotnost: { get oznaka() { return t('igralci.vrstePorocil.odsotnost') }, ikona: '🚫', barva: 'bg-amber-500/15 text-amber-200' },
+  vrnitev: { get oznaka() { return t('igralci.vrstePorocil.vrnitev') }, ikona: '✅', barva: 'bg-gnl-500/15 text-gnl-200' },
+  drugo: { get oznaka() { return t('igralci.vrstePorocil.drugo') }, ikona: '💬', barva: 'bg-white/10 text-slate-300' },
 }
 
 export function ZnackaVrste({ vrsta }: { vrsta: VrstaPorocila }) {

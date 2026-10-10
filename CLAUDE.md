@@ -1616,8 +1616,16 @@ kanonični `?t=` po svoji ligi.
 
 - `t(kljuc, parametri)` — ključ je tipiziran (napačen javi `typecheck`),
   `{ime}` v nizu se zamenja s parametrom. Kliče se lahko kjerkoli, tudi zunaj
-  Reacta (slike na platnu, `lib/`, konstante): jezik se izbere ob nalaganju
-  strani in se med obiskom ne menja.
+  Reacta (slike na platnu, `lib/`): jezik se izbere ob nalaganju strani in se
+  med obiskom ne menja.
+- **Slovar drugega jezika je svoj kos** (`NALAGALNIKI` v `jedro.ts`), ki ga
+  `main.tsx` naloži pred prvim izrisom (`naloziSlovar`); v svežnju je le
+  slovenščina. Zato **ne kliči `t()` na vrhu modula** (konstanta ob uvozu bi
+  ostala slovenska): napiši funkcijo ali getter (`get naslov() { return t(…) }`).
+  Smoke to preveri (`prezgodnjiKljuci`).
+- Strani razen naslovnice so v `App.tsx` `lazy()` kosi; nova stran naj bo prav
+  tako. Po objavi stari kosi izginejo, zato `main.tsx` ob `vite:preloadError`
+  stran naloži znova.
 - Množina je objekt oblik po `Intl.PluralRules` (`one/two/few/other`) in se
   izbere po `n`: `t('skupno.besede.tocke', { n })`. Za "4 točke" je v
   `lib/pomozno` `mnozina(n, TOCKE)`. **Ne sestavljaj končnic sam.**

@@ -125,6 +125,22 @@ slff.eu {
 		}
 	}
 
+	# Supabase API on the site's own origin (src/lib/supabase.ts, VITE_API_ISTI_IZVOR=1): the
+	# browser then skips the CORS preflight (OPTIONS) it sends before calls to api.slff.eu.
+	# The same Kong as api.slff.eu, which stays exactly as it is (mobile app, old builds,
+	# scripts, edge functions, OAuth callbacks registered at Google/Apple).
+	@supabase_api path /rest/v1/* /auth/v1/* /storage/v1/* /functions/v1/* /realtime/v1/*
+	handle @supabase_api {
+		# Answers are per user: never the site default "public" from the header block above.
+		header Cache-Control "private, no-store"
+		reverse_proxy localhost:8000 {
+			header_up X-Forwarded-For {http.request.header.CF-Connecting-IP}
+			# Kong echoes the origin; the site block already sends Access-Control-Allow-Origin *,
+			# and two values would fail CORS for anyone still calling cross-origin.
+			header_down -Access-Control-Allow-Origin
+		}
+	}
+
 	# Was api/drzava.ts on Vercel Edge: the visitor's country, from Cloudflare.
 	handle /api/drzava {
 		header Content-Type "application/json; charset=utf-8"

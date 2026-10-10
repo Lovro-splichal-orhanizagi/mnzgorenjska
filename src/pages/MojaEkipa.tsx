@@ -4,7 +4,7 @@ import { Link } from '../components/Povezava'
 import { supabase } from '../lib/supabase'
 import { vseVrstice } from '../lib/strani'
 import { povezavaNaPrijavo } from '../lib/prijava'
-import { nastaviNeshranjeno, VPRASANJE_ZAPUSTITVE } from '../lib/neshranjeno'
+import { nastaviNeshranjeno, vprasanjeZapustitve } from '../lib/neshranjeno'
 import { useOdsotni, opisOdsotnosti, type Odsotnost as PorociloOdsotnosti } from '../lib/odsotni'
 import { useNaslov } from '../lib/naslov'
 import type { Odsotnost } from '../lib/odsotni'
@@ -423,7 +423,7 @@ export default function MojaEkipa() {
       if (!a || a.target === '_blank' || a.hasAttribute('download') || a.origin !== window.location.origin) return
       // Pot in iskanje: /moja-ekipa?t=druga je druga liga in zavrže kader.
       if (a.pathname + a.search === window.location.pathname + window.location.search) return
-      if (!window.confirm(VPRASANJE_ZAPUSTITVE)) {
+      if (!window.confirm(vprasanjeZapustitve())) {
         e.preventDefault()
         e.stopPropagation()
       }
