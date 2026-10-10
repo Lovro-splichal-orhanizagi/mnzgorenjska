@@ -4232,6 +4232,22 @@ preveri(
     !raz.find((k) => k.stevilka === 1).ocenjen)
   // Izid brez postav, starejši od tedna, je kontumacija z izidom.
   preveri('fssid: izid brez postav je kontumacija', raz.find((k) => k.stevilka === 1).tekme.every((t) => t.kontumacija && t.izid))
+
+  // Liho število klubov (13): 6 tekem na krog, 26 krogov, prva polovica do 13.
+  const lih = F.razberiKodo('75957933-75958088')
+  preveri('fssid: blok z lihim številom klubov — 13 klubov, 26 krogov po 6', lih.klubov === 13 && lih.naKrog === 6 && lih.krogov === 26 &&
+    F.krogPoMestu(75957938, lih) === 1 && F.krogPoMestu(75957939, lih) === 2 && F.krogPoMestu(75958088, lih) === 26)
+  const lihi = F.razberiKodo('2000-2005') // 3 klubi, 6 krogov po 1
+  const sl = F.sestaviBlok(lihi, new Map([[2000, tekma('A', 'B', [1, 0], 1, '15.08.2026.')], [2001, tekma('C', 'A')], [2002, tekma('B', 'C')]]), [],
+    { danes: Date.parse('2026-08-16T12:00:00Z') })
+  preveri('fssid: lih blok — ocena le v prvi polovici (krogi 1–3)', sl.krogi.filter((k) => k.datum).map((k) => k.stevilka).join() === '1,2,3' &&
+    sl.krogi[1].datum === '2026-08-22' && sl.krogi[1].ocenjen)
+  // Isto ime dvakrat v krogu bloka ustavi uvoz (dva kluba z istim imenom).
+  let dvakrat = null
+  try { F.sestaviBlok(mali, new Map([[1000, tekma('A', 'B')], [1001, tekma('A', 'D')]]), []) } catch (e) { dvakrat = e.message }
+  preveri('fssid: klub dvakrat v istem krogu bloka je napaka', /dvakrat/.test(dvakrat ?? ''))
+  preveri('fssid: ime v bloku — kraj za ime brez kraja, drugje ostane', F.imeKluba('MLADOST', '75862092-75862223') === 'MLADOST (Preljina)' &&
+    F.imeKluba('MLADOST') === 'MLADOST (Lučani)' && F.imeKluba('HAJDUK', '75912381-75912620') === 'HAJDUK')
 }
 
 // --- vir frf (Romunija, portal županijskih zvez frf-ajf.ro) --------------------
