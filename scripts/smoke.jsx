@@ -5086,7 +5086,7 @@ preveri(
   preveri('vrsta: čaka tudi na uvoz at- lige zunaj seznama', o.tece && o.zazeni === null)
 
   {
-    const vz = ['at-k1', 'at-k2', 'at-s1', 'at-t1', 'at-bl', 'at-b1'].map((slug) => ({ slug, arhiv: '1' }))
+    const vz = ['at-k1', 'at-k2', 'at-s1', 'at-t1', 'at-bl', 'at-b1'].map((slug, i) => ({ slug, arhiv: String(i + 1) }))
     const nic = new Map(vz.map((l) => [l.slug, false]))
     const zveze = new Map([['at-k1', 'kfv'], ['at-k2', 'kfv'], ['at-s1', 'stfv'], ['at-t1', 'tfv'], ['at-bl', 'oefb'], ['at-b1', 'bfv']])
     const imena = (o) => o.zazeniVse.map((l) => l.slug).join()
@@ -5094,6 +5094,11 @@ preveri(
     preveri('vrsta: privzeto po dva iz dežele', imena(v) === 'at-k1,at-k2,at-s1,at-t1', imena(v))
     v = odloci({ vrsta: vz, lige: nic, od, zveze, zagoni: [z('at-k1', null, '2026-10-10T10:05:00Z', 'in_progress')] })
     preveri('vrsta: tekoči uvoz dežele zasede eno od dveh mest', imena(v) === 'at-k2,at-s1,at-t1', imena(v))
+    const sa = [{ slug: 'at-k1', arhiv: '7,8' }, { slug: 'at-k2', arhiv: '9+8' }, { slug: 'at-s1', arhiv: '5' }]
+    v = odloci({ vrsta: sa, lige: nic, od, zveze, zagoni: [] })
+    preveri('vrsta: skupen arhiv ne teče hkrati', imena(v) === 'at-k1,at-s1', imena(v))
+    v = odloci({ vrsta: sa, lige: nic, od, zveze, zagoni: [z('at-k1', null, '2026-10-10T10:05:00Z', 'in_progress')] })
+    preveri('vrsta: skupen arhiv čaka na tekoči uvoz', imena(v) === 'at-s1', imena(v))
     v = odloci({ vrsta: vz, lige: nic, od, zveze, zagoni: [], najvec: 3, naZvezo: 1 })
     preveri('vrsta: vzporedno 3 iz različnih dežel', imena(v) === 'at-k1,at-s1,at-t1', imena(v))
     v = odloci({ vrsta: vz, lige: nic, od, zveze, zagoni: [z('at-k1', null, '2026-10-10T10:05:00Z', 'in_progress')], najvec: 3, naZvezo: 1 })

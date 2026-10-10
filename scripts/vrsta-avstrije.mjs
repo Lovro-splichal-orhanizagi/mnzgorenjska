@@ -52,6 +52,12 @@ export function odloci({ vrsta, zagoni, lige, od, zveze = new Map(), drzavna = '
   const zasedene = new Map()
   const zasedi = (zv) => zasedene.set(zv, (zasedene.get(zv) ?? 0) + 1)
   for (const z of tekoci) zasedi(zveza(z.slug))
+  // Ligi s skupnim arhivom ne tečeta hkrati: tekmo arhiva dobi, kdor jo prvi
+  // zapiše, in arhiv bi se naključno razdelil med obe. Ročni zagon (cakaj-na-uvoze)
+  // arhiva ne vidi v naslovu in te varovalke nima.
+  const arhivi = (l) => (l?.arhiv ?? '').split(/[,+]/).filter(Boolean)
+  const poSlugu = new Map(vrsta.map((l) => [l.slug, l]))
+  const zasedeniArhivi = new Set(tekoci.flatMap((z) => arhivi(poSlugu.get(z.slug))))
   let prosto = najvec - tekoci.length
   let ustavi = false
   const izid = { tece, zazeni: null, zazeniVse: [], vklopi: [], novi: [], javi: [], log: [], koncano: false }
@@ -88,12 +94,14 @@ export function odloci({ vrsta, zagoni, lige, od, zveze = new Map(), drzavna = '
     if (ustavi || prosto <= 0) continue
     const zv = zveza(liga.slug)
     const lahko = zv === drzavna ? zasedene.size === 0 : !zasedene.has(drzavna) && (zasedene.get(zv) ?? 0) < naZvezo
+    if (lahko && arhivi(liga).some((a) => zasedeniArhivi.has(a))) continue
     if (!lahko) {
       if (zv === drzavna) ustavi = true
       continue
     }
     izid.zazeniVse.push({ ...liga, ponovitev: padli === 1 })
     zasedi(zv)
+    for (const a of arhivi(liga)) zasedeniArhivi.add(a)
     prosto--
   }
   izid.zazeni = izid.zazeniVse[0] ?? null
