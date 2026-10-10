@@ -122,6 +122,83 @@ const STOLPCI: Array<{ kljuc: Stolpec; naslov: string; opis: string; mobilno?: f
 const selectRazred =
   'min-w-0 rounded-lg border border-white/10 bg-slate-900 px-2 py-1.5 text-sm text-slate-200'
 
+/** Sezona, ki je po koledarju tekoča (isto pravilo kot SQL `tekoca_sezona`). */
+function koledarskaSezona(d = new Date()): string {
+  // ponytail: krajevni datum namesto ljubljanskega; zgreši le ob polnoči 1. julija.
+  const leto = d.getFullYear() - (d.getMonth() < 6 ? 1 : 0)
+  return `${leto}/${String((leto + 1) % 100).padStart(2, '0')}`
+}
+
+/**
+ * Lestvica sezone in (za tekočo) še aktivni igralci brez nastopov, oboje
+ * hkrati in po straneh: velika liga ima v sezoni lahko čez tisoč igralcev.
+ * Napaka lestvice se vrže, napaka igralcev ne.
+ */
+async function naloziSezono(
+  ligaId: number,
+  sezona: string,
+  jeTekoca: boolean,
+): Promise<IgralecSezone[]> {
+  const aktivniObljuba = jeTekoca
+    ? vseVrstice((od, do_) =>
+        supabase
+          .from('players')
+          .select(
+            'id, full_name, position, team_id, value, active, teams!inner(name, short_name, logo_url)',
+          )
+          .eq('competition_id', ligaId)
+          .eq('active', true)
+          .order('id')
+          .range(od, do_),
+      ).catch(() => [])
+    : null
+  const standings = (await vseVrstice((od, do_) =>
+    supabase
+      .from('player_season_standings')
+      .select(
+        'id, full_name, position, team_id, team_name, team_short, team_logo, value, season, points, form, last_round, points_per_match, points_per_value, owners, goals, assists, minutes, matches, clean_sheets, rank',
+      )
+      .eq('competition_id', ligaId)
+      .eq('season', sezona)
+      .order('points', { ascending: false })
+      .order('id')
+      .range(od, do_),
+  )) as IgralecSezone[]
+  if (!aktivniObljuba) return standings
+
+  // Za TEKOČO sezono pokažimo tudi na novo registrirane igralce, ki
+  // še nimajo nastopov — sicer novi igralec (npr. sveži prestop) ne
+  // bo viden na tej strani, dokler ne odigra prve tekme.
+  const aktivni = await aktivniObljuba
+  const znani = new Set(standings.map((i) => i.id))
+  const brezStatistike: IgralecSezone[] = ((aktivni ?? []) as any[])
+    .filter((p) => !znani.has(p.id))
+    .map((p) => ({
+      id: p.id,
+      full_name: p.full_name,
+      position: p.position,
+      team_id: p.team_id,
+      team_name: p.teams?.name,
+      team_short: p.teams?.short_name,
+      team_logo: p.teams?.logo_url,
+      value: p.value,
+      season: sezona,
+      points: 0,
+      form: 0,
+      last_round: 0,
+      points_per_match: 0,
+      points_per_value: 0,
+      owners: 0,
+      goals: 0,
+      assists: 0,
+      minutes: 0,
+      matches: 0,
+      clean_sheets: 0,
+      rank: null,
+    }))
+  return [...standings, ...brezStatistike]
+}
+
 export default function Igralci() {
   const { id: tekmovanjeId, tekmovanje } = useTekmovanje()
   useNaslov(tekmovanje?.name, t('igralci.seznam.naslov'))
@@ -179,9 +256,9 @@ export default function Igralci() {
     }
   }, [tekmovanjeId])
 
-  // Najprej le sezone (majhne); lestvica izbrane sezone in igralci brez
-  // nastopov nato gresta hkrati v spodnjem učinku. Prej je šla zraven še
+  // Sezone in lestvica verjetne sezone gresta hkrati. Prej je šla zraven
   // lestvica vseh sezon (500 vrstic), ki jo je spodnji učinek prenesel znova.
+  const predhodno = useRef<{ kljuc: string; obljuba: Promise<IgralecSezone[]> } | null>(null)
   useEffect(() => {
     if (!tekmovanjeId) return
     // Nova liga: klubi, sezone in napaka prejšnje ne veljajo več, njeni
@@ -194,6 +271,12 @@ export default function Igralci() {
     setSezone([])
     setEkipVLigi(null)
     const ligaId = tekmovanjeId
+    // Lestvica verjetne sezone (tekoča po koledarju) ne čaka na seznam sezon;
+    // če seznam izbere drugo, jo spodnji učinek naloži znova.
+    const verjetna = koledarskaSezona()
+    const obljuba = naloziSezono(ligaId, verjetna, true)
+    obljuba.catch(() => {})
+    predhodno.current = { kljuc: `${ligaId}|${verjetna}|true`, obljuba }
     async function nalozi() {
       const [{ data: vse, error }, { count }] = await Promise.all([
         supabase
@@ -242,85 +325,25 @@ export default function Igralci() {
     if (!sezona || !tekmovanjeId) return
     let veljavno = true
     setNalaganje(true)
-    const ligaId = tekmovanjeId
-    const izbranaSezona = sezona
-    const jeTekoca = sezone.find((s) => s.season === sezona)?.tekoca
-    ;(async () => {
-      // Po straneh: velika liga ima v sezoni lahko čez tisoč igralcev.
-      let standings: IgralecSezone[]
-      // Igralci brez nastopov ne čakajo na lestvico — oba prenosa gresta hkrati.
-      const aktivniObljuba = jeTekoca
-        ? vseVrstice((od, do_) =>
-            supabase
-              .from('players')
-              .select(
-                'id, full_name, position, team_id, value, active, teams!inner(name, short_name, logo_url)',
-              )
-              .eq('competition_id', ligaId)
-              .eq('active', true)
-              .order('id')
-              .range(od, do_),
-          ).catch(() => [])
-        : null
-      try {
-        standings = await vseVrstice((od, do_) =>
-          supabase
-            .from('player_season_standings')
-            .select(
-              'id, full_name, position, team_id, team_name, team_short, team_logo, value, season, points, form, last_round, points_per_match, points_per_value, owners, goals, assists, minutes, matches, clean_sheets, rank',
-            )
-            .eq('competition_id', ligaId)
-            .eq('season', izbranaSezona)
-            .order('points', { ascending: false })
-            .order('id')
-            .range(od, do_),
-        ) as IgralecSezone[]
-      } catch (e) {
+    const kljuc = `${tekmovanjeId}|${sezona}|${Boolean(sezone.find((s) => s.season === sezona)?.tekoca)}`
+    const predhodna = predhodno.current
+    predhodno.current = null
+    const obljuba =
+      predhodna?.kljuc === kljuc
+        ? predhodna.obljuba
+        : naloziSezono(tekmovanjeId, sezona, kljuc.endsWith('true'))
+    obljuba.then(
+      (vsi) => {
         if (!veljavno) return
-        setNapaka((e as Error).message)
+        setIgralci(vsi)
         setNalaganje(false)
-        return
-      }
-      if (!veljavno) return
-
-      // Za TEKOČO sezono pokažimo tudi na novo registrirane igralce, ki
-      // še nimajo nastopov — sicer novi igralec (npr. sveži prestop) ne
-      // bo viden na tej strani, dokler ne odigra prve tekme.
-      let vsi = standings
-      if (aktivniObljuba) {
-        const aktivni = await aktivniObljuba
+      },
+      (e: Error) => {
         if (!veljavno) return
-        const znani = new Set(vsi.map((i) => i.id))
-        const brezStatistike: IgralecSezone[] = ((aktivni ?? []) as any[])
-          .filter((p) => !znani.has(p.id))
-          .map((p) => ({
-            id: p.id,
-            full_name: p.full_name,
-            position: p.position,
-            team_id: p.team_id,
-            team_name: p.teams?.name,
-            team_short: p.teams?.short_name,
-            team_logo: p.teams?.logo_url,
-            value: p.value,
-            season: izbranaSezona,
-            points: 0,
-            form: 0,
-            last_round: 0,
-            points_per_match: 0,
-            points_per_value: 0,
-            owners: 0,
-            goals: 0,
-            assists: 0,
-            minutes: 0,
-            matches: 0,
-            clean_sheets: 0,
-            rank: null,
-          }))
-        vsi = [...vsi, ...brezStatistike]
-      }
-      setIgralci(vsi)
-      setNalaganje(false)
-    })()
+        setNapaka(e.message)
+        setNalaganje(false)
+      },
+    )
     return () => {
       veljavno = false
     }

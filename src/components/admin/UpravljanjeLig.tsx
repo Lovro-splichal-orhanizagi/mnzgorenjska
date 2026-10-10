@@ -110,8 +110,13 @@ export default function UpravljanjeLig() {
       Array.from({ length: 8 }, async () => {
         while (naslednja < vse.length) {
           const l = vse[naslednja++]
-          const { data: st } = await supabase.rpc('stanje_lige', { p_competition_id: l.id })
-          if (st) s[l.id] = st as unknown as Stanje
+          // Ena padla liga ne sme pobrati ostalih; brez stanja dobi NEZNANO.
+          try {
+            const { data: st } = await supabase.rpc('stanje_lige', { p_competition_id: l.id })
+            if (st) s[l.id] = st as unknown as Stanje
+          } catch {
+            /* omrežna napaka: liga ostane brez stanja */
+          }
         }
       }),
     )

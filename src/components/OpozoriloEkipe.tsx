@@ -18,8 +18,9 @@ import { naslovNapak, obvestilaEkip, type Obvestilo, type StanjeEkipe } from '..
  *
  * Ekipe se zaklenejo same ob roku, zato je pas edino mesto, kjer človek izve,
  * da z eno od njih nekaj ni prav. Stanje pride iz enega klica baze
- * (`stanje_mojih_ekip`), osveži se ob shranjeni ekipi (dogodek
- * `EKIPA_SHRANJENA`) in ob vrnitvi v zavihek, a največ na pet minut.
+ * (`stanje_mojih_ekip`), osveži se ob shranjeni ekipi ali poročilu o
+ * odsotnosti (dogodek `EKIPA_SHRANJENA`) in ob vrnitvi v zavihek ali
+ * aplikacijo, a takrat največ na pet minut.
  */
 export const EKIPA_SHRANJENA = 'slff:ekipa-shranjena'
 const OSVEZI_OB_FOKUSU_MS = 5 * 60 * 1000
@@ -69,16 +70,20 @@ export default function OpozoriloEkipe() {
         setEkipe(error ? null : ((data ?? []) as unknown as StanjeEkipe[]))
       })
     }
+    // Fokus okna na spletu, vidnost tudi ob vrnitvi v aplikacijo (Capacitor).
     const obFokusu = () => {
-      if (Date.now() - zadnjic > OSVEZI_OB_FOKUSU_MS) osvezi()
+      if (document.visibilityState === 'visible' && Date.now() - zadnjic > OSVEZI_OB_FOKUSU_MS)
+        osvezi()
     }
     osvezi()
     window.addEventListener(EKIPA_SHRANJENA, osvezi)
     window.addEventListener('focus', obFokusu)
+    document.addEventListener('visibilitychange', obFokusu)
     return () => {
       veljavno = false
       window.removeEventListener(EKIPA_SHRANJENA, osvezi)
       window.removeEventListener('focus', obFokusu)
+      document.removeEventListener('visibilitychange', obFokusu)
     }
   }, [uporabnikId, loading])
 
