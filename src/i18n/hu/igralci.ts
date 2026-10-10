@@ -155,6 +155,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     lanska: 'Ez a(z) <krepko>{sezona}</krepko> szezon statisztikája, nem az aktuálisé. A fantasy játékosárak ebből származnak, amíg az új szezonban nem lesz elég meccs.',
     isci: 'Keresés név szerint …',
+    drugeLige: 'Találatok más bajnokságokban:',
     vsiKlubi: 'Minden klub',
     vsePozicije: 'Minden poszt',
     igralec: 'Játékos',

@@ -154,7 +154,9 @@ igralce tekoče sezone vseh lig države (stran Slovenija, zavihek Igralci). Funk
 `navijaci_klubov(liga)` vrne klube lige z navijači (`profiles.navijam_team_id`) in
 povprečjem njihovih fantasy točk (Lestvica, zavihek Navijači klubov; stran kluba).
 Funkcija `lestvica_lige(liga, sezona)` vrne pravo lestvico lige iz izidov tekem
-(stran `/table`, ne fantasy lestvica).
+(stran `/table`, ne fantasy lestvica). Funkcija `isci_igralce(iskanje, omejitev)`
+poišče igralce vseh aktivnih lig po imenu, brez šumnikov in z dopuščeno tipkarsko
+napako (izbirnik lige, stran Igralci).
 
 ### Varnost (RLS)
 

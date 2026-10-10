@@ -5348,6 +5348,22 @@ export type Database = {
         Returns: string
       }
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
+      isci_igralce: {
+        Args: { iskanje: string; omejitev?: number }
+        Returns: {
+          aktiven: boolean
+          cena: number
+          drzava: string
+          full_name: string
+          id: number
+          klub: string
+          liga: string
+          liga_aktivna: boolean
+          liga_ime: string
+          podobno: boolean
+          pozicija: string
+        }[]
+      }
       izbrisi_moj_racun: {
         Args: Record<PropertyKey, never>
         Returns: undefined

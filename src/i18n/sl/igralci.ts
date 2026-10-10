@@ -159,6 +159,7 @@ export const igralci = {
     },
     lanska: 'To je statistika sezone <krepko>{sezona}</krepko>, ne tekoče. Cene igralcev v fantasy ligi izhajajo prav iz nje, dokler nova sezona ne nabere dovolj tekem.',
     isci: 'Išči po imenu …',
+    drugeLige: 'Najdeno v drugih ligah:',
     vsiKlubi: 'Vsi klubi',
     vsePozicije: 'Vse pozicije',
     igralec: 'Igralec',

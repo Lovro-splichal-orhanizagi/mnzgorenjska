@@ -161,6 +161,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     lanska: 'Toto je štatistika sezóny <krepko>{sezona}</krepko>, nie aktuálnej. Ceny hráčov vo fantasy lige vychádzajú práve z nej, kým nová sezóna nenazbiera dosť zápasov.',
     isci: 'Hľadať podľa mena …',
+    drugeLige: 'Nájdené v iných ligách:',
     vsiKlubi: 'Všetky kluby',
     vsePozicije: 'Všetky pozície',
     igralec: 'Hráč',

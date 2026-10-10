@@ -44,6 +44,7 @@ import { TabelaNavijacev, KlubMedNavijaci, IzbiraKluba } from '../src/components
 import { krogKoncan, mestoVLigi, igralciPregleda, postaviPregled, oznakaPremika, imeDatotekePregleda, KVADRAT, SIRINA_P, VISINA_P, ROB_P } from '../src/lib/tedenskiPregled'
 import { parsirajZapisnik, nastopi, dodajStrelceSKlopi } from './zapisnik.mjs'
 import { poZvezah, ustreza, pokaziZvezo } from '../src/components/IzbirnikLige'
+import { dovoljZaIskanje, ujemaIme, opisIgralca, potIgralca, izDrugihLig } from '../src/lib/iskanjeIgralcev'
 import { virPodatkov, imeZveze } from '../src/components/VirPodatkov'
 import { sestaviVabilo, vabiloMailto } from '../src/lib/vabilo'
 import { viraZa, znaniViri } from './viri/index.mjs'
@@ -715,6 +716,25 @@ preveri(
   preveri('izbirnik: iskanje brez sumnikov', ustreza(lige[0], 'clani') || ustreza(lige[0], 'GNL'), 'GNL')
   preveri('izbirnik: prazno iskanje najde vse', lige.every((l) => ustreza(l, '')))
   preveri('izbirnik: nesmisel ne najde nic', !lige.some((l) => ustreza(l, 'xyzzy')))
+
+  // Iskanje igralcev čez vse lige (isci_igralce): baza zavrne krajše od treh
+  // znakov, vmesnik zato tudi ne pošlje poizvedbe.
+  preveri('iskanje igralcev: dva znaka ne iščeta', !dovoljZaIskanje('ab') && !dovoljZaIskanje(' a b '))
+  preveri('iskanje igralcev: trije znaki iščejo', dovoljZaIskanje('kos'))
+  preveri('iskanje igralcev: brez šumnikov in v poljubnem vrstnem redu',
+    ujemaIme('Seljak Žan', 'zan seljak') && ujemaIme('Suchoň Šimon', 'SUCHON'))
+  preveri('iskanje igralcev: vsaka beseda mora stati v imenu', !ujemaIme('Seljak Žan', 'zan novak'))
+  const zadetek = (id, liga, klub = 'Visoko', ligaIme = 'Člani') => ({
+    id, full_name: 'Seljak Žan', klub, liga, liga_ime: ligaIme, drzava: 'SI', pozicija: 'MID',
+    cena: 4.4, aktiven: true, liga_aktivna: true, podobno: false,
+  })
+  preveri('iskanje igralcev: vrstica je ime · klub · liga',
+    opisIgralca(zadetek(1, 'clani')) === 'Žan Seljak · Visoko · Člani', opisIgralca(zadetek(1, 'clani')))
+  preveri('iskanje igralcev: povezava nosi ligo igralca',
+    potIgralca(zadetek(7, 'sk-za-1trieda')) === '/player/7?t=sk-za-1trieda')
+  const drugje = izDrugihLig([zadetek(1, 'clani'), zadetek(2, 'lj-1'), zadetek(3, 'mladinci'), zadetek(4, 'lj-1')], 'clani', 2)
+  preveri('iskanje igralcev: druge lige brez izbrane, največ n',
+    drugje.length === 2 && drugje.every((z) => z.liga !== 'clani'), drugje.map((z) => z.id).join(','))
 
   // Noga navaja vir podatkov. Dokler je bila ena zveza, je bil zapisan v kodi;
   // ob ljubljanski ligi bi trdil, da so podatki iz Kranja, kar ni res.

@@ -155,6 +155,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     lanska: 'These are stats for the <krepko>{sezona}</krepko> season, not the current one. Fantasy player prices are based on them until the new season has enough matches.',
     isci: 'Search by name …',
+    drugeLige: 'Found in other leagues:',
     vsiKlubi: 'All clubs',
     vsePozicije: 'All positions',
     igralec: 'Player',

@@ -7,12 +7,24 @@
 // Nad ligami so države kot zavihki. Zavihek le brska; šele izbira lige druge
 // države preklopi državo (in jezik, zato stran naloži znova).
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useTekmovanje, type Tekmovanje } from '../lib/tekmovanje'
 import { potrdiZapustitev } from '../lib/neshranjeno'
 import { drzaveZLigami, preklopiDrzavo } from '../lib/drzava'
 import { t as prevod, lokale } from '../i18n'
 import { imeDrzave } from './IzbiraDrzave'
 import Zastava from './Zastava'
+import {
+  dovoljZaIskanje,
+  opisIgralca,
+  potIgralca,
+  useIskanjeIgralcev,
+  type NajdenIgralec,
+} from '../lib/iskanjeIgralcev'
+import { prikazniIme } from '../lib/pomozno'
+
+/** Toliko igralcev pokaže razdelek "Igralci" pod ligami. */
+const IGRALCEV_V_IZBIRNIKU = 6
 
 /** Brez šumnikov in velikih črk — da "zelezniki" najde "Železniki". */
 const poenostavi = (s: string) =>
@@ -84,6 +96,7 @@ export default function IzbirnikLige() {
   const ovoj = useRef<HTMLDivElement | null>(null)
   const poljeIskanja = useRef<HTMLInputElement | null>(null)
   const gumb = useRef<HTMLButtonElement | null>(null)
+  const pojdi = useNavigate()
 
   const drzave = useMemo(() => drzaveZLigami(vsaTekmovanja), [vsaTekmovanja])
   const vecDrzav = drzave.length > 1
@@ -132,6 +145,16 @@ export default function IzbirnikLige() {
   // Ravno zaporedje, kot ga vidi oko — po njem se premikata puščici.
   const zaporedje = useMemo(() => skupine.flatMap((s) => s.lige), [skupine])
 
+  // Od treh znakov naprej iskanje najde še igralce vseh aktivnih lig; pod
+  // ligami jih pokaže razdelek "Igralci". Puščici gresta čez lige in igralce
+  // (najprej vse lige, nato igralci).
+  const iskanjeIgralcev = odprt && dovoljZaIskanje(iskanje)
+  const { zadetki: igralci, nalaganje: iscemIgralce } = useIskanjeIgralcev(iskanje, {
+    omejitev: IGRALCEV_V_IZBIRNIKU,
+    vklopljeno: iskanjeIgralcev,
+  })
+  const vsehMoznosti = zaporedje.length + igralci.length
+
   // Ob odprtju in ob vsakem novem iskanju začni pri izbrani ligi, sicer pri prvi.
   useEffect(() => {
     const i = zaporedje.findIndex((t) => t.slug === slug)
@@ -152,13 +175,14 @@ export default function IzbirnikLige() {
     return () => document.removeEventListener('keydown', tipkaDok)
   }, [odprt])
 
-  // Liga pod tipkovnico mora ostati vidna, ko jo puščica premakne pod rob seznama.
+  // Možnost pod tipkovnico mora ostati vidna, ko jo puščica premakne pod rob seznama.
   useEffect(() => {
     if (!odprt) return
     const t = zaporedje[aktivna]
-    if (!t) return
-    document.getElementById(`liga-${t.slug}`)?.scrollIntoView?.({ block: 'nearest' })
-  }, [odprt, aktivna, zaporedje])
+    const z = igralci[aktivna - zaporedje.length]
+    const idEl = t ? `liga-${t.slug}` : z ? `igralec-${z.id}` : null
+    if (idEl) document.getElementById(idEl)?.scrollIntoView?.({ block: 'nearest' })
+  }, [odprt, aktivna, zaporedje, igralci])
 
   // Ena sama liga povsod: izbirati ni česa.
   if (vsaTekmovanja.length < 2 && tekmovanja.length < 2) return null
@@ -191,22 +215,44 @@ export default function IzbirnikLige() {
     gumb.current?.focus()
   }
 
+  // Igralec: liga postane njegova, stran pa njegova stran v tej ligi.
+  const izberiIgralca = (z: NajdenIgralec) => {
+    if (!potrdiZapustitev()) return
+    const pot = potIgralca(z)
+    if (z.drzava && z.drzava !== drzava) {
+      // Druga država: jezik se zamenja le ob nalaganju strani.
+      preklopiDrzavo(z.drzava, vsaTekmovanja, { liga: z.liga, pojdi: () => window.location.assign(pot) })
+      return
+    }
+    nastavi(z.liga)
+    setOdprt(false)
+    pojdi(pot)
+  }
+
   const tipka = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault()
-      if (!zaporedje.length) return
+      if (!vsehMoznosti) return
       const korak = e.key === 'ArrowDown' ? 1 : -1
-      setAktivna((a) => (a + korak + zaporedje.length) % zaporedje.length)
+      setAktivna((a) => (Math.min(a, vsehMoznosti - 1) + korak + vsehMoznosti) % vsehMoznosti)
     } else if (e.key === 'Enter') {
       e.preventDefault()
       const t = zaporedje[aktivna]
+      const z = igralci[aktivna - zaporedje.length]
       if (t) izberi(t)
+      else if (z) izberiIgralca(z)
     }
     // Escape ujame poslušalec na dokumentu (zgoraj).
   }
 
   const idMoznosti = (t: Tekmovanje) => `liga-${t.slug}`
   const aktivnaLiga = zaporedje[aktivna]
+  const aktivniIgralec = igralci[aktivna - zaporedje.length]
+  const aktivnaMoznost = aktivnaLiga
+    ? idMoznosti(aktivnaLiga)
+    : aktivniIgralec
+      ? `igralec-${aktivniIgralec.id}`
+      : undefined
 
   return (
     // min-w-0 + max-w: gumb se na ozkem zaslonu skrajša, namesto da bi
@@ -293,75 +339,117 @@ export default function IzbirnikLige() {
               aria-expanded="true"
               aria-controls="seznam-lig"
               aria-autocomplete="list"
-              aria-activedescendant={aktivnaLiga ? idMoznosti(aktivnaLiga) : undefined}
+              aria-activedescendant={aktivnaMoznost}
               className="w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm placeholder:text-slate-500"
             />
           </div>
 
-          {skupine.length === 0 ? (
-            <p className="px-3 py-6 text-center text-sm text-slate-500">
-              {prevod('aplikacija.izbirnikLige.niZadetkov')}
+          {vsehMoznosti === 0 ? (
+            <p className="px-3 py-6 text-center text-sm text-slate-500" aria-live="polite">
+              {iscemIgralce
+                ? prevod('aplikacija.izbirnikLige.iscemIgralce')
+                : prevod('aplikacija.izbirnikLige.niZadetkov')}
             </p>
           ) : (
-            <div
-              id="seznam-lig"
-              role="listbox"
-              aria-label={prevod('aplikacija.izbirnikLige.lige')}
-              className="max-h-[min(60vh,26rem)] overflow-y-auto overscroll-contain pb-1.5"
-            >
-              {skupine.map((s) => {
-                const koda = s.lige[0]?.country_code ?? null
-                return (
-                  <div key={s.kljuc} role="group" aria-label={s.naslov}>
-                    {/* Glava skupine ostane vidna, ko se seznam pomika. */}
+            // Stanje iskanja igralcev ni možnost, zato stoji zunaj listboxa.
+            <div className="max-h-[min(60vh,26rem)] overflow-y-auto overscroll-contain pb-1.5">
+              <div id="seznam-lig" role="listbox" aria-label={prevod('aplikacija.izbirnikLige.lige')}>
+                {skupine.map((s) => {
+                  const koda = s.lige[0]?.country_code ?? null
+                  return (
+                    <div key={s.kljuc} role="group" aria-label={s.naslov}>
+                      {/* Glava skupine ostane vidna, ko se seznam pomika. */}
+                      <div
+                        aria-hidden="true"
+                        className="sticky top-0 z-10 flex items-center gap-1.5 bg-slate-900 px-3 pb-1 pt-2.5 text-[10px] font-bold uppercase tracking-wide text-slate-400"
+                      >
+                        {isce && vecDrzav && koda && <Zastava koda={koda} className="h-3" />}
+                        <span className="truncate">{s.naslov}</span>
+                        <span className="ml-auto font-semibold text-slate-600">{s.lige.length}</span>
+                      </div>
+                      <div className="px-1.5">
+                        {s.lige.map((t) => {
+                          const jeAktivna = aktivnaLiga?.slug === t.slug
+                          const izbrana = t.slug === slug
+                          return (
+                            <div
+                              key={t.slug}
+                              id={idMoznosti(t)}
+                              role="option"
+                              aria-selected={izbrana}
+                              onClick={() => izberi(t)}
+                              onMouseEnter={() => setAktivna(zaporedje.indexOf(t))}
+                              className={`flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2.5 text-sm sm:py-2 ${
+                                izbrana
+                                  ? 'bg-gnl-500/15 font-bold text-gnl-200'
+                                  : jeAktivna
+                                    ? 'bg-white/10 text-slate-100'
+                                    : 'text-slate-300'
+                              }`}
+                            >
+                              <span className="min-w-0 flex-1 truncate">{t.name}</span>
+                              {izbrana && (
+                                <svg aria-hidden="true" viewBox="0 0 12 12" className="h-3.5 w-3.5 shrink-0 text-gnl-300">
+                                  <path
+                                    d="M2.5 6.5 5 9l4.5-6"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="1.8"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                </svg>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                })}
+                {igralci.length > 0 && (
+                  <div role="group" aria-label={prevod('aplikacija.izbirnikLige.igralci')}>
                     <div
                       aria-hidden="true"
                       className="sticky top-0 z-10 flex items-center gap-1.5 bg-slate-900 px-3 pb-1 pt-2.5 text-[10px] font-bold uppercase tracking-wide text-slate-400"
                     >
-                      {isce && vecDrzav && koda && <Zastava koda={koda} className="h-3" />}
-                      <span className="truncate">{s.naslov}</span>
-                      <span className="ml-auto font-semibold text-slate-600">{s.lige.length}</span>
+                      <span className="truncate">{prevod('aplikacija.izbirnikLige.igralci')}</span>
+                      <span className="ml-auto font-semibold text-slate-600">{igralci.length}</span>
                     </div>
                     <div className="px-1.5">
-                      {s.lige.map((t) => {
-                        const jeAktivna = aktivnaLiga?.slug === t.slug
-                        const izbrana = t.slug === slug
+                      {igralci.map((z, i) => {
+                        const jeAktiven = aktivniIgralec?.id === z.id
+                        const podrobno = [z.klub, z.liga_ime].filter(Boolean).join(' · ')
                         return (
                           <div
-                            key={t.slug}
-                            id={idMoznosti(t)}
+                            key={z.id}
+                            id={`igralec-${z.id}`}
                             role="option"
-                            aria-selected={izbrana}
-                            onClick={() => izberi(t)}
-                            onMouseEnter={() => setAktivna(zaporedje.indexOf(t))}
-                            className={`flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2.5 text-sm sm:py-2 ${
-                              izbrana
-                                ? 'bg-gnl-500/15 font-bold text-gnl-200'
-                                : jeAktivna
-                                  ? 'bg-white/10 text-slate-100'
-                                  : 'text-slate-300'
+                            aria-selected={false}
+                            aria-label={opisIgralca(z)}
+                            onClick={() => izberiIgralca(z)}
+                            onMouseEnter={() => setAktivna(zaporedje.length + i)}
+                            className={`flex cursor-pointer items-baseline gap-2 rounded-lg px-2.5 py-2.5 text-sm sm:py-2 ${
+                              jeAktiven ? 'bg-white/10 text-slate-100' : 'text-slate-300'
                             }`}
                           >
-                            <span className="min-w-0 flex-1 truncate">{t.name}</span>
-                            {izbrana && (
-                              <svg aria-hidden="true" viewBox="0 0 12 12" className="h-3.5 w-3.5 shrink-0 text-gnl-300">
-                                <path
-                                  d="M2.5 6.5 5 9l4.5-6"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="1.8"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                              </svg>
+                            <span className="max-w-[60%] shrink-0 truncate font-semibold">{prikazniIme(z.full_name)}</span>
+                            <span className="min-w-0 flex-1 truncate text-xs text-slate-500">{podrobno}</span>
+                            {vecDrzav && z.drzava && z.drzava !== drzava && (
+                              <Zastava koda={z.drzava} className="h-3 shrink-0 self-center" />
                             )}
                           </div>
                         )
                       })}
                     </div>
                   </div>
-                )
-              })}
+                )}
+              </div>
+              {iscemIgralce && igralci.length === 0 && (
+                <p className="px-3 pt-2 text-xs text-slate-500" aria-live="polite">
+                  {prevod('aplikacija.izbirnikLige.iscemIgralce')}
+                </p>
+              )}
             </div>
           )}
         </div>

@@ -21,6 +21,7 @@ import Grb from '../components/Grb'
 import { t, tx, lokale } from '../i18n'
 import type { Pozicija } from '../lib/tipi'
 import Sponzor from '../components/Sponzor'
+import { izDrugihLig, potIgralca, ujemaIme, useIskanjeIgralcev } from '../lib/iskanjeIgralcev'
 
 /** Vrstica pogleda `player_season_standings` (+ igralci brez nastopov). */
 interface IgralecSezone {
@@ -360,17 +361,22 @@ export default function Igralci() {
     const f = igralci.filter((i) => {
       if (filterPoz !== 'vse' && i.position !== filterPoz) return false
       if (filterKlub !== 'vsi' && String(i.team_id) !== filterKlub) return false
-      if (
-        iskanje &&
-        !(i.full_name ?? '').toLowerCase().includes(iskanje.toLowerCase())
-      )
-        return false
+      if (!ujemaIme(i.full_name, iskanje)) return false
       return true
     })
     return [...f].sort(
       (a, b) => Number(b[urejanje] ?? 0) - Number(a[urejanje] ?? 0),
     )
   }, [igralci, iskanje, filterPoz, filterKlub, urejanje])
+
+  // Iskanje po imenu v ligi ne najde nikogar (ne glede na klub in pozicijo):
+  // morda igra v drugi ligi. Pokažemo do pet zadetkov drugih aktivnih lig.
+  const niVLigi = !nalaganje && !igralci.some((i) => ujemaIme(i.full_name, iskanje))
+  const { zadetki: najdeniDrugje, nalaganje: iscemDrugje } = useIskanjeIgralcev(iskanje, {
+    omejitev: 10,
+    vklopljeno: niVLigi,
+  })
+  const drugje = niVLigi ? izDrugihLig(najdeniDrugje, tekmovanje?.slug ?? null, 5) : []
 
   // Vrh lige iz vseh igralcev izbrane sezone, ne glede na filtre. Kdor ima
   // 0 golov ali mrež, ne sodi med strelce oz. obrambe. Minute razsodijo izenačenje.
@@ -648,6 +654,36 @@ export default function Igralci() {
           </tbody>
         </table>
       </div>
+
+      {drugje.length > 0 ? (
+        <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-3">
+          <p className="px-2 text-sm font-semibold text-slate-300">{t('igralci.seznam.drugeLige')}</p>
+          <ul className="mt-1.5">
+            {drugje.map((z) => (
+              <li key={z.id}>
+                <Link
+                  to={potIgralca(z)}
+                  className="flex items-baseline gap-2 rounded-lg px-2 py-2 text-sm transition hover:bg-white/5"
+                >
+                  <span className="max-w-[60%] shrink-0 truncate font-semibold hover:text-gnl-300">
+                    {prikazniIme(z.full_name)}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-xs text-slate-500">
+                    {[z.klub, z.liga_ime].filter(Boolean).join(' · ')}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        niVLigi &&
+        iscemDrugje && (
+          <p className="text-center text-xs text-slate-500" aria-live="polite">
+            {t('aplikacija.izbirnikLige.iscemIgralce')}
+          </p>
+        )
+      )}
 
       {vidni.length > koliko ? (
         <div className="text-center">

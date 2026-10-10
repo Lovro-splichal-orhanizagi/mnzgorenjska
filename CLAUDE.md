@@ -1760,6 +1760,16 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   `player_scores`, `goals`, `matches` (izid) in `players` (pozicija), ponoči
   jo cron obnovi vso. Nov vhod v izračun **potrebuje svoj sprožilec**
   (`npm run preizkus-statistike` primerja tabelo z izračunom)
+- `isci_igralce(iskanje, omejitev)` → igralci **vseh aktivnih lig** po imenu
+  (javna, anon): id, ime, klub, liga (šifra, kratko ime, država), pozicija,
+  cena, `podobno`. Brez šumnikov, vrstni red besed poljuben, od treh znakov;
+  najprej natančno (vsaka beseda v imenu), šele brez zadetka podobnost
+  (pg_trgm `%` in `<%`, kazalo `players_ime_brez_sumnikov_trgm`). Brez
+  anonimiziranih in neaktivnih lig. Bere jo izbirnik lige (razdelek Igralci
+  pod ligami, izbira preklopi ligo in odpre `/player/<id>?t=<liga>`) in stran
+  Igralci, ko iskanje v ligi ne najde nikogar ("Najdeno v drugih ligah").
+  Odjemalec: `src/lib/iskanjeIgralcev.ts`. V produkciji (125k igralcev)
+  najslabši primer "ric" ~210 ms, običajno 1–40 ms
 - `vrh_drzave(drzava, koliko)` → vrh igralcev tekoče sezone vseh aktivnih lig
   države (točke brez asistenc, goli, čiste mreže vratarjev) za zavihek Igralci na
   strani Slovenija. Bere tabele (`player_scores`, `appearances`, `goals`), ne
