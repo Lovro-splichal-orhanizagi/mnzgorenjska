@@ -147,6 +147,26 @@ slff.eu {
 		file_server
 	}
 
+	# Strani igralca, kluba, tekme in lig: strežnik HTML (scripts/hetzner/html/, kontejner
+	# slff-html) vpiše naslov, opis, kanonični naslov, JSON-LD in povzetek v predlogo.
+	# Ob napaki sam vrne nespremenjeno predlogo; če sploh ne teče (dial), gre zahtevek
+	# na 127.0.0.1:3201 spodaj — isto statično predlogo kot pred njim.
+	@html_strani {
+		method GET HEAD
+		path / /table /results /standings /players /player/* /club/* /match/*
+	}
+	handle @html_strani {
+		reverse_proxy 127.0.0.1:3200 127.0.0.1:3201 {
+			lb_policy first
+			lb_try_duration 1s
+			fail_duration 30s
+			transport http {
+				dial_timeout 300ms
+				response_header_timeout 3s
+			}
+		}
+	}
+
 	handle {
 		# Static files win; only paths without a dot fall through to the SPA (vercel.json `(?!.*\.)`).
 		@datoteka file
@@ -238,4 +258,17 @@ slff.eu {
 			respond "{err.status_code} {err.status_text}" {err.status_code}
 		}
 	}
+}
+
+# Rezerva strežnika HTML (@html_strani zgoraj): predloga kot v slff.eu — kartica države
+# po predponi `?t=sk-…`, sicer index.html. Le na 127.0.0.1, glave doda slff.eu.
+http://127.0.0.1:3201 {
+	bind 127.0.0.1
+	root * /srv/slff/current
+	map {query.t} {html_predloga} {
+		~^(sk|hr|cz|hu|at|rs|ro)- /${1}.html
+		default /index.html
+	}
+	rewrite * {html_predloga}
+	file_server
 }

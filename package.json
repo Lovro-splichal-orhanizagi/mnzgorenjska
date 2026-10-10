@@ -25,7 +25,8 @@
     "preizkus-opozoril": "docker exec -i supabase_db_mnzgorenjska psql -U postgres -d postgres -v ON_ERROR_STOP=1 < scripts/preizkus-opozoril.sql",
     "preizkus-zivosti": "docker exec -i supabase_db_mnzgorenjska psql -U postgres -d postgres -v ON_ERROR_STOP=1 < scripts/preizkus-zivosti.sql",
     "preveri-predlog": "vite-node scripts/preveri-predlog.mjs",
-    "prevodi": "vite-node scripts/prevodi.ts"
+    "prevodi": "vite-node scripts/prevodi.ts",
+    "preizkus-html": "node scripts/hetzner/html/preizkus.mjs"
   },
   "dependencies": {
     "@capacitor-firebase/messaging": "^8.5.2",
