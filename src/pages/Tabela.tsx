@@ -1,7 +1,7 @@
 // Lestvica prave lige (ne fantasy): izračun iz izidov tekem (`lestvica_lige`)
 // in strelci sezone. To ljudje iščejo ("1. GNL lestvica", "Tabelle").
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from '../components/Povezava'
 import { supabase } from '../lib/supabase'
 import { useTekmovanje } from '../lib/tekmovanje'
 import { imeZveze } from '../components/VirPodatkov'

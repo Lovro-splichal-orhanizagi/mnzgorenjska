@@ -187,7 +187,9 @@ slff.eu {
 		@ni_strani {
 			not path *.*
 			not path / /sk /sk/ /hr /hr/ /cz /cz/ /hu /hu/ /at /at/ /rs /rs/ /si /si/
-			not path /my-team /assists /positions /absences /players /standings /national /mini-leagues /results
+			not path /my-team /assists /positions /absences /players /standings /national /mini-leagues /results /table
+			# Ista stran s poševnico na koncu (/players/) ni 404; kanonični naslov je brez nje.
+			not path_regexp ^/(my-team|assists|positions|absences|players|standings|national|mini-leagues|results|table|login|legal|reminders|account|admin)/$
 			not path /player/* /team/* /club/* /match/* /l/*
 			not path /login /new-password /novo-geslo /legal /reminders /account /auth/confirm /admin
 		}
