@@ -1136,6 +1136,8 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
 - `match_assist_status` → odigrane tekme s številom golov brez asistence
   (stran Asistence izbira po korakih: krog → tekma → gol)
 - `naslednji_krog` → prvi krog, ki se še ni zaklenil (rok na strani Moja ekipa)
+- `stevilo_ekip_lig` → število ekip po ligah (s hišnimi) za okno prvega
+  obiska; `security_invoker`, le branje. Prej je odjemalec prenesel vse ekipe
 - `stanje_mojih_ekip()` → za prijavljenega vse njegove ekipe v aktivnih ligah:
   veljavnost, razlog, ali bo ob roku brez točk (prvi fantasy krog se zaklene
   tudi nepopoln) in igralci s poročilom o poškodbi/odsotnosti. Bere ga pas

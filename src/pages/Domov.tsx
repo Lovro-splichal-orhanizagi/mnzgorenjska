@@ -405,12 +405,17 @@ export default function Domov() {
       ) : (
         <section className="relative overflow-hidden rounded-3xl p-4 ring-1 ring-white/10 sm:p-8">
           {/* Amaterska tekma pod reflektorji — natanko to, o čemer je liga. */}
-          <img
-            src="/foto/igrisce.jpg"
-            alt=""
-            aria-hidden
-            className="absolute inset-0 h-full w-full object-cover"
-          />
+          <picture>
+            <source srcSet="/foto/igrisce.webp" type="image/webp" />
+            <img
+              src="/foto/igrisce.jpg"
+              alt=""
+              aria-hidden
+              width={1600}
+              height={1067}
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          </picture>
           <div
             className="absolute inset-0 bg-gradient-to-br from-slate-950/90 via-slate-950/80 to-slate-950/70"
             aria-hidden

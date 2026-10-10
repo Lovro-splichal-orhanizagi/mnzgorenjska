@@ -6,6 +6,8 @@
     <link rel="icon" type="image/png" sizes="180x180" href="/logo/slff-ikona-180.png" />
     <link rel="apple-touch-icon" href="/logo/slff-ikona-180.png" />
     <meta name="theme-color" content="#020617" />
+    <!-- Fotografija v uvodu naslovnice (Domov.tsx) je LCP, a jo brskalnik sicer najde šele po JS. -->
+    <link rel="preload" as="image" href="/foto/igrisce.webp" type="image/webp" fetchpriority="high" />
     <title>SLFF — Sunday League Fantasy Football</title>
     <!-- Kanonični naslov ustvari App.tsx (useKanonicni) ob vsaki navigaciji za trenutno pot;
          statičen "/" bi iskalnikom brez JS vse podstrani označil za naslovnico. -->

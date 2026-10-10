@@ -49,20 +49,27 @@
    a ne sme prekrivati gumbov: upošteva domačo vrstico, nad spodnjim pasom
    Moje ekipe se dvigne, med odprtim oknom čez ves zaslon (trg, podatki
    igralca) pa se umakne. Dno strani ima zanj prostor (<main> v App.tsx). */
+/* Naš gumb stoji na mestu mehurčka, dokler se widget ne naloži. */
+body:has(#chat-widget-bubble) [data-podpora] {
+  display: none;
+}
 @media (max-width: 1023px) {
-  #chat-widget-bubble {
+  #chat-widget-bubble,
+  [data-podpora] {
     bottom: calc(60px + var(--dno)) !important;
   }
   #chat-widget-branding {
     bottom: calc(20px + var(--dno)) !important;
   }
-  body:has([data-spodnji-pas]) #chat-widget-bubble {
+  body:has([data-spodnji-pas]) #chat-widget-bubble,
+  body:has([data-spodnji-pas]) [data-podpora] {
     bottom: calc(164px + var(--dno)) !important;
   }
   body:has([data-spodnji-pas]) #chat-widget-branding {
     bottom: calc(124px + var(--dno)) !important;
   }
   body:has([aria-modal='true']) #chat-widget-bubble,
+  body:has([aria-modal='true']) [data-podpora],
   body:has([aria-modal='true']) #chat-widget-branding,
   body:has([aria-modal='true']) #chat-widget-proactive {
     display: none !important;
