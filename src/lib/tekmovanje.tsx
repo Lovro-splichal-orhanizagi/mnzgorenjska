@@ -292,12 +292,15 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const vNaslovu = iskanje.get('t')
-    const ukaz = uskladiTekmovanje({
-      vNaslovu,
-      zadnjiVNaslovu: zadnjiVNaslovu.current,
-      slug,
-      potSeJeSpremenila: pathname !== zadnjaPot.current,
-    })
+    // Vstopna stran države je ena za vse lige: shranjene lige ne piše v naslov.
+    const ukaz: UskladitevUkaz = drzavaVstopa(pathname)
+      ? { dejanje: 'nic' }
+      : uskladiTekmovanje({
+          vNaslovu,
+          zadnjiVNaslovu: zadnjiVNaslovu.current,
+          slug,
+          potSeJeSpremenila: pathname !== zadnjaPot.current,
+        })
     zadnjiVNaslovu.current = vNaslovu
     zadnjaPot.current = pathname
 

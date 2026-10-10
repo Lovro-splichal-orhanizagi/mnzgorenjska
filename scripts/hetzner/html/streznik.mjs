@@ -353,7 +353,8 @@ function drzava(koda, { lige, b }) {
   const ime = aktivne[0].country_name ?? koda
   const imena = aktivne.map((l) => l.name)
   const tabela = j.t('tekme.tabela.naslov')
-  const skupine = [...Map.groupBy(aktivne, (l) => l.federation_name ?? '')]
+  // Kot poZvezah v src/components/IzbirnikLige.tsx: kratko ime zveze.
+  const skupine = [...Map.groupBy(aktivne, (l) => l.federation_short ?? l.country_name ?? '')]
   return {
     status: 200,
     drzava: koda,
@@ -381,7 +382,12 @@ export async function stran(pot, t, { rest, lige, besede }) {
   // Poševnica na koncu (/table/) je ista stran; kanonični je brez nje.
   if (pot.length > 1) pot = pot.replace(/\/+$/, '')
   const vstop = /^\/([a-z]{2})$/.exec(pot)
-  if (vstop) return drzava(vstop[1].toUpperCase(), { lige, b })
+  if (vstop) {
+    const koda = vstop[1].toUpperCase()
+    if (!JEZIK[koda]) return null
+    // Država brez aktivne lige: vmesnik preusmeri na /, iskalnik dobi 404.
+    return drzava(koda, { lige, b }) ?? { ...ni(b({ country_code: koda }).t('aplikacija.niStrani.naslov')), drzava: koda }
+  }
   const e = /^\/(player|club|match)\/([^/]+)$/.exec(pot)
   if (e) {
     const id = /^\d{1,12}$/.test(e[2]) ? Number(e[2]) : null
@@ -471,7 +477,7 @@ export function obdelovalec({ koren, rest, rok = 800 }) {
   async function seznamLig(signal) {
     if (lige.seznam && lige.do > Date.now()) return lige.seznam
     try {
-      const seznam = await rest('competitions_view?select=id,slug,name,active,country_code,country_name,vir_ime,federation_name&order=federation_sort,sort_order,id', undefined, signal)
+      const seznam = await rest('competitions_view?select=id,slug,name,active,country_code,country_name,vir_ime,federation_name,federation_short&order=federation_sort,sort_order,id', undefined, signal)
       lige = { do: Date.now() + 600_000, seznam }
     } catch (e) {
       if (!lige.seznam) throw e // star seznam je boljši kot nič

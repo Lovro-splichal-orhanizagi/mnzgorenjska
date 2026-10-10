@@ -47,10 +47,10 @@ const BESEDE = {
   sk: { 'aplikacija.naslovStrani.zStranjo': '{naslov} · SLFF', 'aplikacija.naslovStrani.ligeDrzave': 'Fantasy ligy — {drzava}: {lige}.', 'skupno.besede': { tocke: { one: 'bod', few: 'body', many: 'bodu', other: 'bodov' } } },
 }
 const LIGE = [
-  { id: 1, slug: 'clani', name: '1. GNL', active: true, country_code: 'SI', country_name: 'Slovenija', federation_name: 'MNZ Gorenjska' },
+  { id: 1, slug: 'clani', name: '1. GNL', active: true, country_code: 'SI', country_name: 'Slovenija', federation_name: 'MNZ Gorenjska', federation_short: 'MNZ Gorenjska' },
   { id: 2, slug: 'sk-za-1', name: 'I. trieda <Žilina>', active: true, country_code: 'SK', country_name: 'Slovensko' },
-  { id: 4, slug: 'mladinci', name: 'Mladinci', active: true, country_code: 'SI', country_name: 'Slovenija', federation_name: 'MNZ Gorenjska' },
-  { id: 5, slug: 'lj-2-liga', name: 'LJ 1', active: true, country_code: 'SI', country_name: 'Slovenija', federation_name: 'MNZ Ljubljana' },
+  { id: 4, slug: 'mladinci', name: 'Mladinci', active: true, country_code: 'SI', country_name: 'Slovenija', federation_name: 'MNZ Gorenjska', federation_short: 'MNZ Gorenjska' },
+  { id: 5, slug: 'lj-2-liga', name: 'LJ 1', active: true, country_code: 'SI', country_name: 'Slovenija', federation_name: 'MNZ Ljubljana', federation_short: 'MNZ Ljubljana' },
   { id: 6, slug: 'cz-x', name: 'CZ', active: false, country_code: 'CZ', country_name: 'Česko' },
 ]
 
@@ -182,7 +182,10 @@ for (const pot of ['/player/9', '/player/abc']) {
   assert.match(html, /<h2>MNZ Gorenjska<\/h2><ul><li><a href="\/">1\. GNL<\/a> · <a href="\/table">Lestvica<\/a><\/li><li><a href="\/\?t=mladinci">Mladinci<\/a>/)
   assert.match(html, /<h2>MNZ Ljubljana<\/h2><ul><li><a href="\/\?t=lj-2-liga">LJ 1<\/a> · <a href="\/table\?t=lj-2-liga">/)
   assert.equal(vzemi(html, /og:description" content="(.*?)"/), 'star og', 'og: opis ostane s kartice')
-  assert.equal(await stran('/cz', null, { rest, lige: LIGE, besede: BESEDE }), null, 'brez aktivne lige')
+  const cz = await stran('/cz', null, { rest, lige: LIGE, besede: BESEDE })
+  assert.equal(cz.status, 404, 'brez aktivne lige: 404 z noindex')
+  assert.equal(cz.drzava, 'CZ')
+  assert.equal(cz.kanonicni, undefined)
   assert.equal(await stran('/xx', null, { rest, lige: LIGE, besede: BESEDE }), null)
   // Drobtina 1 kaže na vstopno stran države.
   const igr = await stran('/player/8', null, { rest, lige: LIGE, besede: BESEDE })

@@ -123,7 +123,7 @@ function karticeDrzav() {
  */
 function besedeZaHtml() {
   const KLJUCI = [
-    'aplikacija.naslovStrani.osnova', 'aplikacija.naslovStrani.zStranjo', 'aplikacija.naslovStrani.deljenjeKratko', 'aplikacija.naslovStrani.ligeDrzave', 'aplikacija.noga.zvezeSplosno',
+    'aplikacija.naslovStrani.osnova', 'aplikacija.naslovStrani.zStranjo', 'aplikacija.naslovStrani.deljenjeKratko', 'aplikacija.naslovStrani.ligeDrzave', 'aplikacija.niStrani.naslov', 'aplikacija.noga.zvezeSplosno',
     'skupno.besede', 'skupno.pozicija',
     'tekme.tabela.naslov', 'tekme.tabela.zavihek', 'tekme.tabela.uvod', 'tekme.tabela.stolpci', 'tekme.tabela.stolpciStrelcev', 'tekme.tabela.strelci',
     'tekme.rezultati.naslov', 'tekme.rezultati.uvod', 'tekme.tekma.naslov',

@@ -1374,11 +1374,14 @@ vpraša znova z ligami nove države.
 **Vstopne povezave** `slff.eu/si`, `/sk`, `/at` … (`VstopDrzave.tsx`) so
 prave strani: ime države in vse aktivne lige po zvezah (domača stran in
 lestvica), v jeziku države (`drzavaVstopa` v `izberi()`), kanonični `/at`,
-brez okna prvega obiska. Državo si zapomnijo (`zapomniDrzavo`), ligo izbere
-klik (`/?t=…`, shrani se kot vsaka izbira). **Kampanja** (`?src=…` ali
+brez okna prvega obiska. Ligo izbere
+klik (`/?t=…`, shrani se kot vsaka izbira); kontekst lige na njih `?t=` ne
+piše. **Kampanja** (`?src=…` ali
 `utm_*`) gre po starem naravnost v privzeto ligo države (`location.replace`).
-Država brez aktivne lige preusmeri na `/`. Isto vsebino za iskalnike izriše
-strežnik HTML (`drzava` v `streznik.mjs`).
+Država brez aktivne lige preusmeri na `/` (strežnik HTML: 404 z `noindex`).
+Isto vsebino za iskalnike izriše strežnik HTML (`drzava` v `streznik.mjs`).
+**Kampanjska povezava mora nositi `src` ali `utm_*`**, sicer kaže vstopno
+stran, ne lige; države si vstopna stran ne zapomni, le kampanja.
 
 **Slovaška je odprta** za vse (ugib po IP in jeziku). **Državo zapreš** tako,
 da jo dodaš v `SAMO_S_POVEZAVO` v `src/lib/drzavaUgib.ts` (npr. `['SK']`):
