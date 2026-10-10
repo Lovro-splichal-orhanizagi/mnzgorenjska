@@ -16,11 +16,12 @@ comment on table public.trgovine_dnevno is
 
 create table public.trgovine_stanje (
   trgovina text primary key check (trgovina in ('ios', 'android')),
-  stanje text not null,
-  posodobljeno timestamptz not null default now()
+  stanje text,
+  posodobljeno timestamptz not null default now(),
+  mejnik int -- null = mejnika še nismo javljali
 );
 comment on table public.trgovine_stanje is
-  'Zadnje stanje različice v trgovini (iOS: "1.0.1: WAITING_FOR_REVIEW"). Piše scripts/trgovine.mjs.';
+  'Stanje različice v trgovini (iOS: "1.0.1: WAITING_FOR_REVIEW"), čas zadnje preverbe in najvišji javljeni mejnik namestitev. Piše scripts/trgovine.mjs.';
 
 alter table public.trgovine_dnevno enable row level security;
 alter table public.trgovine_stanje enable row level security;
@@ -41,6 +42,7 @@ as $$
 declare
   v_danes date := (now() at time zone 'Europe/Ljubljana')::date;
 begin
+  p_od := greatest(coalesce(p_od, v_danes - 365), date '2026-01-01');
   if not is_admin() then
     raise exception 'Samo administrator lahko bere rast.' using errcode = '42501';
   end if;
@@ -63,7 +65,7 @@ begin
       ekipe as (
         select (created_at at time zone 'Europe/Ljubljana')::date as dan, count(*)::int as n
           from fantasy_teams
-         where not hisna and created_at >= p_od
+         where not hisna and (created_at at time zone 'Europe/Ljubljana')::date >= p_od
          group by 1
       ),
       obiski as (

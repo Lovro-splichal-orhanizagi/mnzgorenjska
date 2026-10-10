@@ -3204,19 +3204,22 @@ export type Database = {
       }
       trgovine_stanje: {
         Row: {
+          mejnik: number | null
           posodobljeno: string
-          stanje: string
+          stanje: string | null
           trgovina: string
         }
         ComputedFields: never
         Insert: {
+          mejnik?: number | null
           posodobljeno?: string
-          stanje: string
+          stanje?: string | null
           trgovina: string
         }
         Update: {
+          mejnik?: number | null
           posodobljeno?: string
-          stanje?: string
+          stanje?: string | null
           trgovina?: string
         }
         Relationships: []

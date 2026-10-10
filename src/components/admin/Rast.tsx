@@ -22,8 +22,9 @@ interface Dan {
 
 interface Stanje {
   trgovina: string
-  stanje: string
+  stanje: string | null
   posodobljeno: string
+  mejnik: number | null
 }
 
 interface Rast {
@@ -67,7 +68,7 @@ function Stolpci({ tocke, barva = '#34d399' }: { tocke: Tocka[]; barva?: string 
             const h = (t.vrednost / najvec) * 78
             return (
               <rect
-                key={t.oznaka}
+                key={i}
                 x={i * sirina + sirina * 0.1}
                 y={80 - h}
                 width={sirina * 0.8}
@@ -162,7 +163,7 @@ export default function Rast() {
         <Kpi
           oznaka="iOS namestitev"
           vrednost={ios.at(-1)?.vrednost ?? 0}
-          opomba={iosStanje?.stanje}
+          opomba={iosStanje?.stanje ?? undefined}
         />
         <Kpi oznaka="Android namestitev" vrednost={android.at(-1)?.vrednost ?? 0} />
       </div>

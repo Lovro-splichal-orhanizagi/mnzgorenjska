@@ -7,6 +7,9 @@ on:
     - cron: '30 7 * * *'
   workflow_dispatch:
 
+concurrency:
+  group: trgovine
+
 permissions:
   contents: read
 

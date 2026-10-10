@@ -1573,8 +1573,9 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   servisni ključ; RLS brez pravic za anon/authenticated). iOS: dnevna
   prodajna poročila ASC, zadnjih 8 dni znova; Android: vse mesečne datoteke
   `stats/installs/` v vedru Play. Discord javi vsak nov mejnik po 10
-  namestitev (zadnji seštevek v bazi pred zagonom proti po njem) in spremembo
-  stanja iOS. `--suho` ne piše in ne javlja
+  namestitev (nad `trgovine_stanje.mejnik`, najvišjim že javljenim, zato
+  padec seštevka ne javi znova) in spremembo stanja iOS. `--suho` ne piše in
+  ne javlja
 - `admin_rast(od)` → po dnevih (ljubljanski dan): novi in skupni uporabniki
   (kot `skupaj_uporabnikov()`, brez hišnega profila), nove ne-hišne ekipe,
   `obiskovalcev` (najbolj obiskana stran dneva iz `obiski_dnevno`, spodnja

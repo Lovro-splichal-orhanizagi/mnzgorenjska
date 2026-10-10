@@ -6,7 +6,7 @@
 // "Total User Installs" in "Daily User Installs").
 // Dneve zapiše v `trgovine_dnevno`, stanje iOS v `trgovine_stanje` (admin: Rast).
 // Na Discord javi spremembo stanja iOS in vsak nov mejnik po MEJNIK namestitev
-// (zadnji seštevek v bazi pred zagonom proti zadnjemu po njem).
+// (nad najvišjim že javljenim, `trgovine_stanje.mejnik`).
 //
 //   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 //   ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8, ASC_VENDOR (številka ponudnika, za prodajna poročila)
@@ -65,12 +65,19 @@ async function zapisi(trgovina, vrstice) {
 }
 
 // ---------- mejniki ----------
-// `prej` null = prvi zagon: javimo le zadnji dosežen mejnik, ne vseh zgodovinskih.
-async function mejniki(ime, prej, zdaj) {
-  console.log(`${ime}: ${prej ?? '—'} → ${zdaj}`)
-  const prvi = prej === null ? Math.max(MEJNIK, Math.floor(zdaj / MEJNIK) * MEJNIK) : (Math.floor(prej / MEJNIK) + 1) * MEJNIK
-  for (let m = prvi; m <= zdaj; m += MEJNIK) {
-    await javi(`📱 ${ime}: ${m} namestitev (skupaj ${zdaj}).`)
+// Primerja z najvišjim že javljenim mejnikom (`trgovine_stanje.mejnik`, null = še nič), zato
+// seštevek, ki pade in znova zraste (Play odšteje odstranitve), ne javi dvakrat.
+// Prvi zagon javi le zadnji dosežen mejnik, ne vseh zgodovinskih.
+async function mejniki(ime, trgovina, zdaj) {
+  const { data, error } = await db.from('trgovine_stanje').select('mejnik').eq('trgovina', trgovina).maybeSingle()
+  if (error) throw new Error(error.message)
+  const dosezen = Math.floor(zdaj / MEJNIK) * MEJNIK
+  const javljen = data?.mejnik ?? null
+  console.log(`${ime}: skupaj ${zdaj}, javljen mejnik ${javljen ?? '—'}`)
+  const prvi = javljen === null ? Math.max(MEJNIK, dosezen) : javljen + MEJNIK
+  for (let m = prvi; m <= dosezen; m += MEJNIK) await javi(`📱 ${ime}: ${m} namestitev (skupaj ${zdaj}).`)
+  if (!suho && (javljen === null || dosezen > javljen)) {
+    await preveri(await db.from('trgovine_stanje').upsert({ trgovina, mejnik: Math.max(dosezen, javljen ?? 0) }))
   }
 }
 
@@ -88,7 +95,9 @@ async function asc(pot, surovo = false) {
 
 async function stanjeIos() {
   const v = await asc(`/v1/apps/${APP_ID}/appStoreVersions?limit=5&fields[appStoreVersions]=versionString,appStoreState,createdDate`)
-  return v.data.map((x) => `${x.attributes.versionString}: ${x.attributes.appStoreState}`)
+  return v.data
+    .sort((a, b) => (b.attributes.createdDate ?? '').localeCompare(a.attributes.createdDate ?? ''))
+    .map((x) => `${x.attributes.versionString}: ${x.attributes.appStoreState}`)
 }
 
 // Prvi prenosi (vrste izdelka 1, 1F, 1T …) v enem poročilu.
@@ -108,6 +117,7 @@ async function prenosiPorocila(frekvenca, datum) {
   const vrstice = gunzipSync(Buffer.from(await r.arrayBuffer())).toString('utf8').trim().split('\n')
   const glava = vrstice[0].split('\t')
   const [iTip, iEnote, iId] = ['Product Type Identifier', 'Units', 'Apple Identifier'].map((s) => glava.indexOf(s))
+  if (Math.min(iTip, iEnote, iId) < 0) throw new Error(`ASC poročilo ${frekvenca} ${datum}: manjka stolpec (${vrstice[0]})`)
   return vrstice.slice(1).map((v) => v.split('\t'))
     .filter((c) => c[iId] === APP_ID && /^1/.test(c[iTip]))
     .reduce((s, c) => s + Number(c[iEnote] || 0), 0)
@@ -133,7 +143,7 @@ async function prenosiIos() {
     vrstice.push({ dan: d, skupaj, novi })
   }
   await zapisi('ios', vrstice)
-  await mejniki('App Store', zadnji?.skupaj ?? null, vrstice.at(-1)?.skupaj ?? zadnji?.skupaj ?? 0)
+  await mejniki('App Store', 'ios', vrstice.at(-1)?.skupaj ?? zadnji?.skupaj ?? 0)
 }
 
 // ---------- Android ----------
@@ -173,19 +183,24 @@ async function namestitveAndroid() {
     if (!r.ok) throw new Error(`Play ${ime}: ${r.status} ${(await r.text()).slice(0, 300)}`)
     const buf = Buffer.from(await r.arrayBuffer())
     const besedilo = (buf[0] === 0xff && buf[1] === 0xfe ? buf.subarray(2).toString('utf16le') : buf.toString('utf8')).replace(/^\uFEFF/, '')
-    const [prva, ...ostalo] = besedilo.trim().split(/\r?\n/)
+    const [prva = '', ...ostalo] = besedilo.trim().split(/\r?\n/)
+    if (!prva) continue // prazna datoteka
     const st = prva.split(',')
     const [iDan, iSkupaj, iNovi] = ['Date', 'Total User Installs', 'Daily User Installs'].map((s) => st.indexOf(s))
     if (iDan < 0 || iSkupaj < 0) throw new Error(`Play ${ime}: ni stolpcev Date / Total User Installs (${prva})`)
     for (const v of ostalo) {
       const c = v.split(',')
+      if (!c[iDan]) continue
       vrstice.push({ dan: c[iDan], skupaj: Number(c[iSkupaj] || 0), novi: iNovi < 0 ? null : Number(c[iNovi] || 0) })
     }
   }
-  const prej = (await shranjeno('android')).at(-1)?.skupaj ?? null
+  if (!vrstice.length) {
+    console.log('Google Play: datoteke so prazne')
+    return
+  }
   vrstice.sort((a, b) => a.dan.localeCompare(b.dan))
   await zapisi('android', vrstice)
-  await mejniki('Google Play', prej, vrstice.at(-1).skupaj)
+  await mejniki('Google Play', 'android', vrstice.at(-1).skupaj)
 }
 
 let napaka = false
@@ -195,8 +210,9 @@ try {
   const zadnja = stanje[0] ?? ''
   const { data: prej, error } = await db.from('trgovine_stanje').select('stanje').eq('trgovina', 'ios').maybeSingle()
   if (error) throw new Error(error.message)
-  if (prej && prej.stanje !== zadnja) await javi(`🍎 App Store: ${zadnja} (prej ${prej.stanje})`)
-  if (!suho && prej?.stanje !== zadnja) {
+  if (prej?.stanje && prej.stanje !== zadnja) await javi(`🍎 App Store: ${zadnja} (prej ${prej.stanje})`)
+  // `posodobljeno` = zadnja preverba, zato pišemo ob vsakem zagonu.
+  if (!suho) {
     await preveri(await db.from('trgovine_stanje').upsert({ trgovina: 'ios', stanje: zadnja, posodobljeno: new Date().toISOString() }))
   }
 } catch (e) {
