@@ -158,6 +158,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     lanska: 'Ovo je statistika sezone <krepko>{sezona}</krepko>, ne tekuće. Cijene igrača u fantasy ligi proizlaze upravo iz nje, dok nova sezona ne skupi dovoljno utakmica.',
     isci: 'Traži po imenu …',
+    drugeLige: 'Pronađeno u drugim ligama:',
     vsiKlubi: 'Svi klubovi',
     vsePozicije: 'Sve pozicije',
     igralec: 'Igrač',

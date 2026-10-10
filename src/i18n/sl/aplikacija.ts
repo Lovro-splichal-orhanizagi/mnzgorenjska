@@ -63,10 +63,13 @@ export const aplikacija = {
     ostalo: 'Ostalo',
     liga: 'Liga',
     oznaka: 'Liga:',
-    isciPolje: 'Išči ligo …',
-    isci: 'Išči ligo',
+    isciPolje: 'Išči ligo ali igralca …',
+    isci: 'Išči ligo ali igralca',
     niZadetkov: 'Ni zadetkov.',
     lige: 'Lige',
+    /** Razdelek z igralci vseh lig pod ligami (iskanje od treh znakov). */
+    igralci: 'Igralci',
+    iscemIgralce: 'Iščem igralce …',
   },
   izbiraDrzave: {
     /** Oznaka pred izbirnikom (za bralnike zaslona in v nogi). */

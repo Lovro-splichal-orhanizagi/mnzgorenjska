@@ -155,6 +155,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     lanska: 'See on hooaja <krepko>{sezona}</krepko> statistika, mitte praeguse. Fantaasiamängijate hinnad põhinevad sellel, kuni uues hooajas on piisavalt mänge.',
     isci: 'Otsi nime järgi …',
+    drugeLige: 'Leitud teistest liigadest:',
     vsiKlubi: 'Kõik klubid',
     vsePozicije: 'Kõik positsioonid',
     igralec: 'Mängija',

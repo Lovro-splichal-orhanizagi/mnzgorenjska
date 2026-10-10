@@ -158,6 +158,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     },
     lanska: 'Acestea sunt statisticile sezonului <krepko>{sezona}</krepko>, nu ale celui curent. Prețurile jucătorilor din liga fantasy pornesc de la ele până când noul sezon adună destule meciuri.',
     isci: 'Caută după nume …',
+    drugeLige: 'Găsiți în alte ligi:',
     vsiKlubi: 'Toate cluburile',
     vsePozicije: 'Toate pozițiile',
     igralec: 'Jucător',
