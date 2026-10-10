@@ -18,7 +18,9 @@ import Lijak from '../components/admin/Lijak'
 import Sponzorji from '../components/admin/Sponzorji'
 import KlubiStiki from '../components/admin/KlubiStiki'
 import Potrditev from '../components/admin/Potrditev'
-import Razdelek from '../components/admin/Razdelek'
+import Razdelek, { AktivenRazdelek } from '../components/admin/Razdelek'
+import { Link } from '../components/Povezava'
+import { useLocation, useNavigate } from 'react-router-dom'
 import Plakat from '../components/Plakat'
 import { izvor } from '../lib/platforma'
 
@@ -84,6 +86,15 @@ function zaVseKroge(n: number): string {
 export default function Administracija() {
   const { session, loading } = useAuth()
   const { id: tekmovanjeId, tekmovanje, vsaTekmovanja } = useTekmovanje()
+  const lokacija = useLocation()
+  const pojdi = useNavigate()
+
+  // Nov razdelek začne na vrhu in brez sporočil prejšnjega.
+  useEffect(() => {
+    setSporocilo(null)
+    setNapaka(null)
+    window.scrollTo(0, 0)
+  }, [lokacija.hash])
   const imeLigeZaPlakat = (() => {
     if (!tekmovanje) return ''
     const kratko = (tekmovanje.name ?? '').replace(/\s*—\s*(člani|mladinci)\s*$/, '')
@@ -585,6 +596,48 @@ export default function Administracija() {
       </p>
     )
 
+  // Meni razdelkov. Izbrani je v # naslova (/admin#uporabniki), da se ga da
+  // deliti in preživi osvežitev; # ne potrebuje novih poti ne Caddyja.
+  const meni: { skupina: string; razdelki: { id: string; naslov: string }[] }[] = [
+    {
+      skupina: 'Pregled',
+      razdelki: [
+        { id: 'rast', naslov: 'Rast: uporabniki in namestitve' },
+        { id: 'zivost', naslov: 'Živost skupnosti' },
+        { id: 'lijak', naslov: 'Kje ljudje obtičijo' },
+        { id: 'rast-lig', naslov: 'Rast lig' },
+      ],
+    },
+    {
+      skupina: 'Lige',
+      razdelki: [
+        { id: 'lige', naslov: 'Upravljanje lig' },
+        { id: 'tocke', naslov: 'Točke' },
+        { id: 'uvoz', naslov: 'Uvoz zapisnikov' },
+        { id: 'nepopolni', naslov: `Nepopolni zapisniki (${opozorila.length})` },
+        ...(tekmovanje ? [{ id: 'promo', naslov: 'Promo: liga je live' }] : []),
+      ],
+    },
+    { skupina: 'Igralci', razdelki: [{ id: 'igralec', naslov: 'Igralec — pozicija in NZS' }] },
+    {
+      skupina: 'Uporabniki',
+      razdelki: [
+        { id: 'uporabniki', naslov: `Uporabniki (${uporabniki.length})` },
+        { id: 'ekipe', naslov: `Fantasy ekipe (${ekipe.length})` },
+        { id: 'poznavalci', naslov: 'Prošnje poznavalcev' },
+      ],
+    },
+    {
+      skupina: 'Klubi',
+      razdelki: [
+        { id: 'stiki', naslov: 'Stiki s klubi' },
+        { id: 'sponzorji', naslov: 'Sponzorji' },
+      ],
+    },
+  ]
+  const izbran = lokacija.hash.slice(1)
+  const aktiven = meni.some((s) => s.razdelki.some((r) => r.id === izbran)) ? izbran : 'rast'
+
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-black naslov">
@@ -608,782 +661,833 @@ export default function Administracija() {
         <Kazalnik oznaka="Opozoril iz uvoza" vrednost={opozorila.length} opozori />
       </section>
 
-      {/* Vsak razdelek je zložljiv, da je stran pregledna — glej Razdelek. */}
-      <div className="space-y-3">
-      {/* zivost — koliko ljudi je res aktivnih */}
-      <Razdelek id="zivost" naslov="Živost skupnosti">
-        <ZivostSkupnosti />
-      </Razdelek>
+      {/* Meni: na telefonu izbirnik, na računalniku stolpec levo. Izriše se
+          le izbrani razdelek — glej Razdelek. */}
+      <div className="md:flex md:items-start md:gap-6">
+        <select
+          value={aktiven}
+          onChange={(e) => pojdi({ search: lokacija.search, hash: e.target.value })}
+          aria-label="Razdelek"
+          className="mb-4 w-full rounded-lg bg-white/5 px-3 py-2 font-bold ring-1 ring-white/10 md:hidden"
+        >
+          {meni.map((s) => (
+            <optgroup key={s.skupina} label={s.skupina}>
+              {s.razdelki.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.naslov}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+        <nav aria-label="Razdelki administracije" className="sticky top-24 hidden max-h-[calc(100vh-7rem)] w-56 shrink-0 space-y-4 overflow-y-auto md:block">
+          {meni.map((s) => (
+            <div key={s.skupina}>
+              <p
+                id={`admin-skupina-${s.skupina}`}
+                className="px-3 text-xs font-bold uppercase tracking-wide text-slate-500"
+              >
+                {s.skupina}
+              </p>
+              <ul aria-labelledby={`admin-skupina-${s.skupina}`} className="mt-1 space-y-0.5">
+                {s.razdelki.map((r) => (
+                  <li key={r.id}>
+                    <Link
+                      to={{ search: lokacija.search, hash: r.id }}
+                      aria-current={r.id === aktiven ? 'location' : undefined}
+                      className={`block rounded-lg px-3 py-1.5 text-sm ${
+                      r.id === aktiven
+                        ? 'bg-white/10 font-bold text-white'
+                        : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+                    }`}
+                    >
+                      {r.naslov}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </nav>
+        <div className="min-w-0 flex-1">
+          <AktivenRazdelek.Provider value={aktiven}>
+            {/* zivost — koliko ljudi je res aktivnih */}
+            <Razdelek id="zivost">
+              <ZivostSkupnosti />
+            </Razdelek>
 
-      <Razdelek id="rast-aplikacije" naslov="Rast: uporabniki in namestitve">
-        <Rast />
-      </Razdelek>
+            <Razdelek id="rast">
+              <Rast />
+            </Razdelek>
 
-      {/* kje ljudje obticijo — lijak zacetka in obiskane strani */}
-      <Razdelek id="lijak" naslov="Kje ljudje obtičijo">
-        <Lijak />
-      </Razdelek>
+            {/* kje ljudje obticijo — lijak zacetka in obiskane strani */}
+            <Razdelek id="lijak">
+              <Lijak />
+            </Razdelek>
 
-      <Razdelek id="poznavalci" naslov="Prošnje poznavalcev">
-        <ProsnjePoznavalcev />
-      </Razdelek>
-      <Razdelek id="rast" naslov="Rast lig">
-        <RastLig />
-      </Razdelek>
-      <Razdelek id="sponzorji" naslov="Sponzorji">
-        <Sponzorji />
-      </Razdelek>
-      <Razdelek id="stiki" naslov="Stiki s klubi">
-        <KlubiStiki />
-      </Razdelek>
+            <Razdelek id="poznavalci">
+              <ProsnjePoznavalcev />
+            </Razdelek>
+            <Razdelek id="rast-lig">
+              <RastLig />
+            </Razdelek>
+            <Razdelek id="sponzorji">
+              <Sponzorji />
+            </Razdelek>
+            <Razdelek id="stiki">
+              <KlubiStiki />
+            </Razdelek>
 
-      {/* Promo za izbrano ligo — "je live". SLFF znacka je subjekt, liga je
-          junak; brez kluba, za nas kanal. Ime lige pride iz izbirnika: pri
-          "1. liga — člani" tega ne pove, zato zvezo dodamo. */}
-      {tekmovanje && (
-        <Razdelek id="promo" naslov="Promo: liga je live">
-        <section className="kartica space-y-2 p-3 sm:p-4">
-          <h2 className="font-bold">
-            Promo: liga je live
-            <span className="ml-2 text-xs font-normal text-slate-500">{imeLigeZaPlakat}</span>
-          </h2>
-          <Plakat
-            podatki={{ vrsta: 'live', liga: imeLigeZaPlakat }}
-            povezava={typeof window !== 'undefined' ? `${izvor()}/?t=${tekmovanje.slug}` : ''}
-          />
-        </section>
-        </Razdelek>
-      )}
-
-      {/* uporabniki + e-pošte za opomnik */}
-      <Razdelek id="uporabniki" naslov={`Uporabniki (${uporabniki.length})`}>
-      <section className="kartica space-y-3 p-3 sm:p-4">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="font-bold">
-            Uporabniki ({uporabniki.length})
-            {filterNepopolne && (
-              <span className="ml-2 text-xs font-normal text-amber-300">
-                — brez veljavne ekipe: {uporabniki.filter((u) => !u.ekipa_veljavna).length}
-              </span>
-            )}
-          </h2>
-          <div className="flex flex-wrap items-center gap-3">
-          <label className="flex items-center gap-2 text-xs text-slate-400">
-            Država
-            <select
-              value={filterDrzava}
-              onChange={(e) => {
-                setFilterDrzava(e.target.value)
-                setStranUporabnikov(1)
-              }}
-              className="rounded-lg bg-white/5 px-2 py-1 text-xs ring-1 ring-white/10"
-            >
-              <option value="vse">vse ({uporabniki.length})</option>
-              {(() => {
-                const st = new Map<string, number>()
-                for (const u of uporabniki)
-                  for (const d of drzaveUporabnika(u).length ? drzaveUporabnika(u) : ['?'])
-                    st.set(d, (st.get(d) ?? 0) + 1)
-                return [...st.entries()]
-                  .sort((a, b) => b[1] - a[1])
-                  .map(([d, n]) => (
-                    <option key={d} value={d}>
-                      {d === '?' ? 'neznana' : `${zastavica(d)} ${d}`} ({n})
-                    </option>
-                  ))
-              })()}
-            </select>
-          </label>
-          <label className="flex items-center gap-2 text-xs text-slate-400">
-            <input
-              type="checkbox"
-              checked={filterNepopolne}
-              onChange={(e) => {
-                setFilterNepopolne(e.target.checked)
-                setStranUporabnikov(1)
-              }}
-            />
-            samo brez veljavne ekipe
-          </label>
-          </div>
-        </div>
-
-        {(() => {
-          const seznam = uporabniki.filter((u) => {
-            if (filterNepopolne && !(!u.ekipa_veljavna && u.email)) return false
-            if (filterDrzava === 'vse') return true
-            const d = drzaveUporabnika(u)
-            return filterDrzava === '?' ? d.length === 0 : d.includes(filterDrzava)
-          })
-          // Stran držimo v meji tudi, ko se seznam skrči (osvežitev, filter),
-          // sicer bi zadnja stran ostala prazna.
-          const stStrani = Math.max(1, Math.ceil(seznam.length / UPORABNIKOV_NA_STRAN))
-          const stran = Math.min(stranUporabnikov, stStrani)
-          const zacetek = (stran - 1) * UPORABNIKOV_NA_STRAN
-          const naStrani = seznam.slice(zacetek, zacetek + UPORABNIKOV_NA_STRAN)
-          return (
-            <>
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  onClick={pripraviOpomnike}
-                  disabled={posiljam || kandidatiOpomnika != null}
-                  className="gumb-glavni text-xs disabled:opacity-50"
-                >
-                  {posiljam ? 'Delam …' : '📨 Pošlji opomnike'}
-                </button>
-
-                {/* Vnos naslova stoji na strani, ne v pogovornem oknu —
-                    window.prompt na telefonu marsikje sploh ne skoči. */}
-                <input
-                  type="email"
-                  value={testniNaslov}
-                  onChange={(e) => setTestniNaslov(e.target.value)}
-                  placeholder={session?.user?.email ?? 'naslov@primer.si'}
-                  className="w-48 rounded-lg bg-white/5 px-2 py-1.5 text-xs
-                             ring-1 ring-white/10 placeholder:text-slate-600"
+            {/* Promo za izbrano ligo — "je live". SLFF znacka je subjekt, liga je
+                junak; brez kluba, za nas kanal. Ime lige pride iz izbirnika: pri
+                "1. liga — člani" tega ne pove, zato zvezo dodamo. */}
+            {tekmovanje && (
+              <Razdelek id="promo">
+              <section className="kartica space-y-2 p-3 sm:p-4">
+                <h2 className="font-bold">
+                  Promo: liga je live
+                  <span className="ml-2 text-xs font-normal text-slate-500">{imeLigeZaPlakat}</span>
+                </h2>
+                <Plakat
+                  podatki={{ vrsta: 'live', liga: imeLigeZaPlakat }}
+                  povezava={typeof window !== 'undefined' ? `${izvor()}/?t=${tekmovanje.slug}` : ''}
                 />
-                <button
-                  onClick={() =>
-                    posljiTestniMail(testniNaslov || (session?.user?.email ?? ''))
-                  }
-                  disabled={posiljam}
-                  className="gumb-tih text-xs disabled:opacity-50"
-                >
-                  🧪 Testni mail
-                </button>
-                <button
-                  onClick={() =>
-                    kopirajEmaile(
-                      uporabniki.filter((u) => !u.ekipa_veljavna && u.email),
-                    )
-                  }
-                  className="gumb-tih text-xs"
-                >
-                  {kopirano ? '✓ kopirano' : 'Kopiraj e-pošte'}
-                </button>
-                <a
-                  href={mailtoNepopolnim(
-                    uporabniki.filter((u) => !u.ekipa_veljavna && u.email),
+              </section>
+              </Razdelek>
+            )}
+
+            {/* uporabniki + e-pošte za opomnik */}
+            <Razdelek id="uporabniki">
+            <section className="kartica space-y-3 p-3 sm:p-4">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h2 className="font-bold">
+                  Uporabniki ({uporabniki.length})
+                  {filterNepopolne && (
+                    <span className="ml-2 text-xs font-normal text-amber-300">
+                      — brez veljavne ekipe: {uporabniki.filter((u) => !u.ekipa_veljavna).length}
+                    </span>
                   )}
-                  className="gumb-tih text-xs"
+                </h2>
+                <div className="flex flex-wrap items-center gap-3">
+                <label className="flex items-center gap-2 text-xs text-slate-400">
+                  Država
+                  <select
+                    value={filterDrzava}
+                    onChange={(e) => {
+                      setFilterDrzava(e.target.value)
+                      setStranUporabnikov(1)
+                    }}
+                    className="rounded-lg bg-white/5 px-2 py-1 text-xs ring-1 ring-white/10"
+                  >
+                    <option value="vse">vse ({uporabniki.length})</option>
+                    {(() => {
+                      const st = new Map<string, number>()
+                      for (const u of uporabniki)
+                        for (const d of drzaveUporabnika(u).length ? drzaveUporabnika(u) : ['?'])
+                          st.set(d, (st.get(d) ?? 0) + 1)
+                      return [...st.entries()]
+                        .sort((a, b) => b[1] - a[1])
+                        .map(([d, n]) => (
+                          <option key={d} value={d}>
+                            {d === '?' ? 'neznana' : `${zastavica(d)} ${d}`} ({n})
+                          </option>
+                        ))
+                    })()}
+                  </select>
+                </label>
+                <label className="flex items-center gap-2 text-xs text-slate-400">
+                  <input
+                    type="checkbox"
+                    checked={filterNepopolne}
+                    onChange={(e) => {
+                      setFilterNepopolne(e.target.checked)
+                      setStranUporabnikov(1)
+                    }}
+                  />
+                  samo brez veljavne ekipe
+                </label>
+                </div>
+              </div>
+
+              {(() => {
+                const seznam = uporabniki.filter((u) => {
+                  if (filterNepopolne && !(!u.ekipa_veljavna && u.email)) return false
+                  if (filterDrzava === 'vse') return true
+                  const d = drzaveUporabnika(u)
+                  return filterDrzava === '?' ? d.length === 0 : d.includes(filterDrzava)
+                })
+                // Stran držimo v meji tudi, ko se seznam skrči (osvežitev, filter),
+                // sicer bi zadnja stran ostala prazna.
+                const stStrani = Math.max(1, Math.ceil(seznam.length / UPORABNIKOV_NA_STRAN))
+                const stran = Math.min(stranUporabnikov, stStrani)
+                const zacetek = (stran - 1) * UPORABNIKOV_NA_STRAN
+                const naStrani = seznam.slice(zacetek, zacetek + UPORABNIKOV_NA_STRAN)
+                return (
+                  <>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        onClick={pripraviOpomnike}
+                        disabled={posiljam || kandidatiOpomnika != null}
+                        className="gumb-glavni text-xs disabled:opacity-50"
+                      >
+                        {posiljam ? 'Delam …' : '📨 Pošlji opomnike'}
+                      </button>
+
+                      {/* Vnos naslova stoji na strani, ne v pogovornem oknu —
+                          window.prompt na telefonu marsikje sploh ne skoči. */}
+                      <input
+                        type="email"
+                        value={testniNaslov}
+                        onChange={(e) => setTestniNaslov(e.target.value)}
+                        placeholder={session?.user?.email ?? 'naslov@primer.si'}
+                        className="w-48 rounded-lg bg-white/5 px-2 py-1.5 text-xs
+                                   ring-1 ring-white/10 placeholder:text-slate-600"
+                      />
+                      <button
+                        onClick={() =>
+                          posljiTestniMail(testniNaslov || (session?.user?.email ?? ''))
+                        }
+                        disabled={posiljam}
+                        className="gumb-tih text-xs disabled:opacity-50"
+                      >
+                        🧪 Testni mail
+                      </button>
+                      <button
+                        onClick={() =>
+                          kopirajEmaile(
+                            uporabniki.filter((u) => !u.ekipa_veljavna && u.email),
+                          )
+                        }
+                        className="gumb-tih text-xs"
+                      >
+                        {kopirano ? '✓ kopirano' : 'Kopiraj e-pošte'}
+                      </button>
+                      <a
+                        href={mailtoNepopolnim(
+                          uporabniki.filter((u) => !u.ekipa_veljavna && u.email),
+                        )}
+                        className="gumb-tih text-xs"
+                      >
+                        ✉️ Mailto (BCC)
+                      </a>
+                      <button onClick={naloziUporabnike} className="text-xs text-slate-400 underline hover:text-gnl-300">
+                        osveži
+                      </button>
+                    </div>
+
+                    {kandidatiOpomnika != null && (
+                      <Potrditev
+                        potrdi={posljiOpomnike}
+                        preklici={() => setKandidatiOpomnika(null)}
+                        zaseden={posiljam}
+                        gumb="Da, pošlji"
+                      >
+                        Poslati opomnik <strong>{kandidatiOpomnika}</strong>{' '}
+                        {uporabnikom(kandidatiOpomnika)} te lige brez veljavne ekipe? Kdor ga je dobil v
+                        zadnjih 3 dneh, bo preskočen. Če jih je medtem več kot{' '}
+                        {kandidatiOpomnika + REZERVA_OPOMNIKOV}, funkcija ne pošlje nič.
+                      </Potrditev>
+                    )}
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs sm:text-sm">
+                        <thead>
+                          <tr className="text-left text-slate-500">
+                            <th className="pb-2 pr-2">Uporabnik</th>
+                            <th className="pb-2 pr-2">E-pošta</th>
+                            <th className="pb-2 pr-2" title="Države lig, v katerih ima ekipe; brez ekipe jezik ob registraciji">
+                              Država
+                            </th>
+                            <th className="pb-2 pr-2">Ekipa</th>
+                            <th className="pb-2 pr-2 text-right">Kader</th>
+                            <th className="pb-2 pr-2">Status</th>
+                            <th className="pb-2 pr-2">Poznavalec</th>
+                            <th className="pb-2 pr-2">Registracija</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {naStrani.map((u) => (
+                            <tr key={u.user_id} className="border-t border-white/5 align-top">
+                              <td className="py-1.5 pr-2 font-semibold">
+                                {urediUporabnik?.user_id === u.user_id ? (
+                                  <VrsticaZaUrejanje
+                                    zacetna={urediUporabnik.display_name ?? ''}
+                                    nashrani={(v) => preimenujUporabnika(u.user_id, v)}
+                                    naprekini={() => setUrediUporabnik(null)}
+                                  />
+                                ) : (
+                                  <button
+                                    onClick={() =>
+                                      setUrediUporabnik({
+                                        user_id: u.user_id,
+                                        display_name: u.display_name ?? '',
+                                      })
+                                    }
+                                    className="text-left hover:text-gnl-300"
+                                    title="Preimenuj uporabnika"
+                                  >
+                                    {u.display_name || <span className="text-slate-500">—</span>}
+                                    <span className="ml-1 text-slate-600">✎</span>
+                                    {u.is_admin && (
+                                      <span className="znacka ml-2 bg-gnl-400/20 text-gnl-200">admin</span>
+                                    )}
+                                  </button>
+                                )}
+                              </td>
+                              <td className="py-1.5 pr-2 text-slate-400">
+                                {u.email ? (
+                                  <a href={`mailto:${u.email}`} className="hover:text-gnl-300">
+                                    {u.email}
+                                  </a>
+                                ) : (
+                                  <span className="text-slate-600">—</span>
+                                )}
+                              </td>
+                              <td className="whitespace-nowrap py-1.5 pr-2">
+                                {u.drzave?.length ? (
+                                  <span title={`Ekipe v ligah: ${u.drzave.join(', ')}`}>
+                                    {u.drzave.map((d: string) => zastavica(d)).join(' ')}
+                                  </span>
+                                ) : u.jezik ? (
+                                  <span
+                                    className="text-xs text-slate-500"
+                                    title="Nima ekipe — jezik ob registraciji"
+                                  >
+                                    jezik {u.jezik}
+                                  </span>
+                                ) : (
+                                  <span className="text-slate-600">—</span>
+                                )}
+                              </td>
+                              <td className="py-1.5 pr-2">
+                                {u.team_id ? (
+                                  urediEkipa?.id === u.team_id ? (
+                                    <VrsticaZaUrejanje
+                                      zacetna={urediEkipa.name ?? ''}
+                                      nashrani={(v) => preimenujEkipo(u.team_id, v)}
+                                      naprekini={() => setUrediEkipa(null)}
+                                    />
+                                  ) : (
+                                    <button
+                                      onClick={() =>
+                                        setUrediEkipa({ id: u.team_id, name: u.team_name })
+                                      }
+                                      className="text-left hover:text-gnl-300"
+                                      title="Preimenuj ekipo"
+                                    >
+                                      {u.team_name}
+                                      <span className="ml-1 text-slate-600">✎</span>
+                                    </button>
+                                  )
+                                ) : (
+                                  <span className="text-slate-600">nima ekipe</span>
+                                )}
+                              </td>
+                              <td className="py-1.5 pr-2 text-right tabular-nums">
+                                {u.team_id ? `${u.roster_stevilo}/${VELIKOST_EKIPE}` : '—'}
+                              </td>
+                              <td className="py-1.5 pr-2">
+                                {!u.team_id ? (
+                                  <span className="znacka bg-amber-400/20 text-amber-200">
+                                    brez ekipe
+                                  </span>
+                                ) : u.ekipa_veljavna ? (
+                                  <span className="znacka bg-gnl-400/20 text-gnl-200">
+                                    ✓ ok
+                                  </span>
+                                ) : (
+                                  <span className="znacka bg-rose-400/20 text-rose-200">
+                                    nepopolna
+                                  </span>
+                                )}
+                              </td>
+                              <td className="py-1.5 pr-2">
+                                {u.insider_competition_id === tekmovanjeId ? (
+                                  <button
+                                    onClick={() => nastaviPoznavalca(u.user_id, false)}
+                                    disabled={poznavalecDelam}
+                                    className="znacka disabled:opacity-50 bg-sky-400/20 text-sky-200 hover:bg-sky-400/30"
+                                    title="Poznavalec te lige — klik odvzame"
+                                  >
+                                    ★ te lige
+                                  </button>
+                                ) : u.insider_competition_id ? (
+                                  <span className="text-xs text-slate-500" title="Poznavalec druge lige">
+                                    druge lige
+                                  </span>
+                                ) : (
+                                  <button
+                                    onClick={() => nastaviPoznavalca(u.user_id, true)}
+                                    disabled={poznavalecDelam}
+                                    className="disabled:opacity-50 text-xs text-slate-600 hover:text-sky-200"
+                                    title="Dodeli kot poznavalca te lige: en njegov glas potrdi pozicijo ali asistenco"
+                                  >
+                                    dodeli
+                                  </button>
+                                )}
+                              </td>
+                              <td className="py-1.5 pr-2 text-xs text-slate-500">
+                                {u.registered_at
+                                  ? new Date(u.registered_at).toLocaleDateString('sl-SI', {
+                                      day: 'numeric',
+                                      month: 'numeric',
+                                      year: '2-digit',
+                                    })
+                                  : '—'}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {stStrani > 1 && (
+                      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
+                        <span className="tabular-nums">
+                          {zacetek + 1}–{zacetek + naStrani.length} od {seznam.length}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setStranUporabnikov(stran - 1)}
+                            disabled={stran === 1}
+                            className="gumb-tih text-xs disabled:opacity-40"
+                          >
+                            ← Prejšnja
+                          </button>
+                          <span className="tabular-nums">
+                            Stran {stran} / {stStrani}
+                          </span>
+                          <button
+                            onClick={() => setStranUporabnikov(stran + 1)}
+                            disabled={stran === stStrani}
+                            className="gumb-tih text-xs disabled:opacity-40"
+                          >
+                            Naslednja →
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {filterNepopolne && seznam.length === 0 && (
+                      <p className="text-sm text-slate-500">
+                        Vsi uporabniki imajo veljavno ekipo — nič za pošiljati.
+                      </p>
+                    )}
+                  </>
+                )
+              })()}
+
+              {logMailov.length > 0 && (
+                <details className="mt-2 rounded-xl bg-white/5 p-3 text-xs">
+                  <summary className="cursor-pointer font-semibold text-slate-300">
+                    Zgodovina poslanih opomnikov (zadnjih {logMailov.length})
+                  </summary>
+                  <ul className="mt-2 space-y-1">
+                    {logMailov.map((l) => (
+                      <li key={l.id} className="flex items-center justify-between gap-2">
+                        <span className={l.napaka ? 'text-rose-300' : 'text-slate-300'}>
+                          {l.napaka ? '✗' : '✓'} {l.email}
+                        </span>
+                        <span className="text-slate-500">
+                          {new Date(l.poslano_at).toLocaleString('sl-SI', {
+                            day: 'numeric',
+                            month: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                          {l.napaka && (
+                            <span
+                              title={l.napaka}
+                              className="ml-2 text-rose-300"
+                            >
+                              napaka
+                            </span>
+                          )}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+            </section>
+            </Razdelek>
+
+            {/* Fantasy ekipe — vrednost, cash, veljavnost rosterja */}
+            <Razdelek id="ekipe">
+            <section className="kartica space-y-3 p-3 sm:p-4">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h2 className="font-bold">Fantasy ekipe ({ekipe.length})</h2>
+                <button
+                  onClick={naloziEkipe}
+                  className="text-xs text-slate-400 underline hover:text-gnl-300"
                 >
-                  ✉️ Mailto (BCC)
-                </a>
-                <button onClick={naloziUporabnike} className="text-xs text-slate-400 underline hover:text-gnl-300">
                   osveži
                 </button>
               </div>
-
-              {kandidatiOpomnika != null && (
-                <Potrditev
-                  potrdi={posljiOpomnike}
-                  preklici={() => setKandidatiOpomnika(null)}
-                  zaseden={posiljam}
-                  gumb="Da, pošlji"
-                >
-                  Poslati opomnik <strong>{kandidatiOpomnika}</strong>{' '}
-                  {uporabnikom(kandidatiOpomnika)} te lige brez veljavne ekipe? Kdor ga je dobil v
-                  zadnjih 3 dneh, bo preskočen. Če jih je medtem več kot{' '}
-                  {kandidatiOpomnika + REZERVA_OPOMNIKOV}, funkcija ne pošlje nič.
-                </Potrditev>
-              )}
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs sm:text-sm">
-                  <thead>
-                    <tr className="text-left text-slate-500">
-                      <th className="pb-2 pr-2">Uporabnik</th>
-                      <th className="pb-2 pr-2">E-pošta</th>
-                      <th className="pb-2 pr-2" title="Države lig, v katerih ima ekipe; brez ekipe jezik ob registraciji">
-                        Država
-                      </th>
-                      <th className="pb-2 pr-2">Ekipa</th>
-                      <th className="pb-2 pr-2 text-right">Kader</th>
-                      <th className="pb-2 pr-2">Status</th>
-                      <th className="pb-2 pr-2">Poznavalec</th>
-                      <th className="pb-2 pr-2">Registracija</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {naStrani.map((u) => (
-                      <tr key={u.user_id} className="border-t border-white/5 align-top">
-                        <td className="py-1.5 pr-2 font-semibold">
-                          {urediUporabnik?.user_id === u.user_id ? (
-                            <VrsticaZaUrejanje
-                              zacetna={urediUporabnik.display_name ?? ''}
-                              nashrani={(v) => preimenujUporabnika(u.user_id, v)}
-                              naprekini={() => setUrediUporabnik(null)}
-                            />
-                          ) : (
-                            <button
-                              onClick={() =>
-                                setUrediUporabnik({
-                                  user_id: u.user_id,
-                                  display_name: u.display_name ?? '',
-                                })
-                              }
-                              className="text-left hover:text-gnl-300"
-                              title="Preimenuj uporabnika"
-                            >
-                              {u.display_name || <span className="text-slate-500">—</span>}
-                              <span className="ml-1 text-slate-600">✎</span>
-                              {u.is_admin && (
-                                <span className="znacka ml-2 bg-gnl-400/20 text-gnl-200">admin</span>
-                              )}
-                            </button>
-                          )}
-                        </td>
-                        <td className="py-1.5 pr-2 text-slate-400">
-                          {u.email ? (
-                            <a href={`mailto:${u.email}`} className="hover:text-gnl-300">
-                              {u.email}
-                            </a>
-                          ) : (
-                            <span className="text-slate-600">—</span>
-                          )}
-                        </td>
-                        <td className="whitespace-nowrap py-1.5 pr-2">
-                          {u.drzave?.length ? (
-                            <span title={`Ekipe v ligah: ${u.drzave.join(', ')}`}>
-                              {u.drzave.map((d: string) => zastavica(d)).join(' ')}
-                            </span>
-                          ) : u.jezik ? (
-                            <span
-                              className="text-xs text-slate-500"
-                              title="Nima ekipe — jezik ob registraciji"
-                            >
-                              jezik {u.jezik}
-                            </span>
-                          ) : (
-                            <span className="text-slate-600">—</span>
-                          )}
-                        </td>
-                        <td className="py-1.5 pr-2">
-                          {u.team_id ? (
-                            urediEkipa?.id === u.team_id ? (
-                              <VrsticaZaUrejanje
-                                zacetna={urediEkipa.name ?? ''}
-                                nashrani={(v) => preimenujEkipo(u.team_id, v)}
-                                naprekini={() => setUrediEkipa(null)}
-                              />
-                            ) : (
-                              <button
-                                onClick={() =>
-                                  setUrediEkipa({ id: u.team_id, name: u.team_name })
-                                }
-                                className="text-left hover:text-gnl-300"
-                                title="Preimenuj ekipo"
-                              >
-                                {u.team_name}
-                                <span className="ml-1 text-slate-600">✎</span>
-                              </button>
-                            )
-                          ) : (
-                            <span className="text-slate-600">nima ekipe</span>
-                          )}
-                        </td>
-                        <td className="py-1.5 pr-2 text-right tabular-nums">
-                          {u.team_id ? `${u.roster_stevilo}/${VELIKOST_EKIPE}` : '—'}
-                        </td>
-                        <td className="py-1.5 pr-2">
-                          {!u.team_id ? (
-                            <span className="znacka bg-amber-400/20 text-amber-200">
-                              brez ekipe
-                            </span>
-                          ) : u.ekipa_veljavna ? (
-                            <span className="znacka bg-gnl-400/20 text-gnl-200">
-                              ✓ ok
-                            </span>
-                          ) : (
-                            <span className="znacka bg-rose-400/20 text-rose-200">
-                              nepopolna
-                            </span>
-                          )}
-                        </td>
-                        <td className="py-1.5 pr-2">
-                          {u.insider_competition_id === tekmovanjeId ? (
-                            <button
-                              onClick={() => nastaviPoznavalca(u.user_id, false)}
-                              disabled={poznavalecDelam}
-                              className="znacka disabled:opacity-50 bg-sky-400/20 text-sky-200 hover:bg-sky-400/30"
-                              title="Poznavalec te lige — klik odvzame"
-                            >
-                              ★ te lige
-                            </button>
-                          ) : u.insider_competition_id ? (
-                            <span className="text-xs text-slate-500" title="Poznavalec druge lige">
-                              druge lige
-                            </span>
-                          ) : (
-                            <button
-                              onClick={() => nastaviPoznavalca(u.user_id, true)}
-                              disabled={poznavalecDelam}
-                              className="disabled:opacity-50 text-xs text-slate-600 hover:text-sky-200"
-                              title="Dodeli kot poznavalca te lige: en njegov glas potrdi pozicijo ali asistenco"
-                            >
-                              dodeli
-                            </button>
-                          )}
-                        </td>
-                        <td className="py-1.5 pr-2 text-xs text-slate-500">
-                          {u.registered_at
-                            ? new Date(u.registered_at).toLocaleDateString('sl-SI', {
-                                day: 'numeric',
-                                month: 'numeric',
-                                year: '2-digit',
-                              })
-                            : '—'}
-                        </td>
+              {ekipe.length === 0 ? (
+                <p className="text-sm text-slate-500">Ni ekip.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs sm:text-sm">
+                    <thead>
+                      <tr className="text-left text-slate-500">
+                        <th className="pb-2 pr-2">Ekipa</th>
+                        <th className="pb-2 pr-2">Lastnik</th>
+                        <th className="pb-2 pr-2 text-right">Cash</th>
+                        <th className="pb-2 pr-2 text-right">Kader</th>
+                        <th className="pb-2 pr-2 text-right">Bogastvo</th>
+                        <th className="pb-2 pr-2">Postava</th>
+                        <th className="pb-2 pr-2">GK/DEF/MID/FWD</th>
+                        <th className="pb-2 pr-2">Kap/Nam</th>
+                        <th className="pb-2 pr-2">Status</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {stStrani > 1 && (
-                <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
-                  <span className="tabular-nums">
-                    {zacetek + 1}–{zacetek + naStrani.length} od {seznam.length}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setStranUporabnikov(stran - 1)}
-                      disabled={stran === 1}
-                      className="gumb-tih text-xs disabled:opacity-40"
-                    >
-                      ← Prejšnja
-                    </button>
-                    <span className="tabular-nums">
-                      Stran {stran} / {stStrani}
-                    </span>
-                    <button
-                      onClick={() => setStranUporabnikov(stran + 1)}
-                      disabled={stran === stStrani}
-                      className="gumb-tih text-xs disabled:opacity-40"
-                    >
-                      Naslednja →
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {filterNepopolne && seznam.length === 0 && (
-                <p className="text-sm text-slate-500">
-                  Vsi uporabniki imajo veljavno ekipo — nič za pošiljati.
-                </p>
-              )}
-            </>
-          )
-        })()}
-
-        {logMailov.length > 0 && (
-          <details className="mt-2 rounded-xl bg-white/5 p-3 text-xs">
-            <summary className="cursor-pointer font-semibold text-slate-300">
-              Zgodovina poslanih opomnikov (zadnjih {logMailov.length})
-            </summary>
-            <ul className="mt-2 space-y-1">
-              {logMailov.map((l) => (
-                <li key={l.id} className="flex items-center justify-between gap-2">
-                  <span className={l.napaka ? 'text-rose-300' : 'text-slate-300'}>
-                    {l.napaka ? '✗' : '✓'} {l.email}
-                  </span>
-                  <span className="text-slate-500">
-                    {new Date(l.poslano_at).toLocaleString('sl-SI', {
-                      day: 'numeric',
-                      month: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                    {l.napaka && (
-                      <span
-                        title={l.napaka}
-                        className="ml-2 text-rose-300"
-                      >
-                        napaka
-                      </span>
-                    )}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </details>
-        )}
-      </section>
-      </Razdelek>
-
-      {/* Fantasy ekipe — vrednost, cash, veljavnost rosterja */}
-      <Razdelek id="ekipe" naslov={`Fantasy ekipe (${ekipe.length})`}>
-      <section className="kartica space-y-3 p-3 sm:p-4">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="font-bold">Fantasy ekipe ({ekipe.length})</h2>
-          <button
-            onClick={naloziEkipe}
-            className="text-xs text-slate-400 underline hover:text-gnl-300"
-          >
-            osveži
-          </button>
-        </div>
-        {ekipe.length === 0 ? (
-          <p className="text-sm text-slate-500">Ni ekip.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs sm:text-sm">
-              <thead>
-                <tr className="text-left text-slate-500">
-                  <th className="pb-2 pr-2">Ekipa</th>
-                  <th className="pb-2 pr-2">Lastnik</th>
-                  <th className="pb-2 pr-2 text-right">Cash</th>
-                  <th className="pb-2 pr-2 text-right">Kader</th>
-                  <th className="pb-2 pr-2 text-right">Bogastvo</th>
-                  <th className="pb-2 pr-2">Postava</th>
-                  <th className="pb-2 pr-2">GK/DEF/MID/FWD</th>
-                  <th className="pb-2 pr-2">Kap/Nam</th>
-                  <th className="pb-2 pr-2">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ekipe.map((e) => (
-                  <tr
-                    key={e.fantasy_team_id}
-                    className={`border-t border-white/5 ${
+                    </thead>
+                    <tbody>
+                      {ekipe.map((e) => (
+                        <tr
+                          key={e.fantasy_team_id}
+                          className={`border-t border-white/5 ${
                       e.napake.length > 0 ? 'bg-rose-500/5' : ''
                     }`}
-                  >
-                    <td className="py-1.5 pr-2 font-semibold">{e.name}</td>
-                    <td className="py-1.5 pr-2 text-slate-400">{e.owner}</td>
-                    <td className="py-1.5 pr-2 text-right tabular-nums">
-                      {formatirajCeno(e.cash)}
-                    </td>
-                    <td className="py-1.5 pr-2 text-right tabular-nums">
-                      {formatirajCeno(e.roster_value)}
-                    </td>
-                    <td className="py-1.5 pr-2 text-right font-bold tabular-nums">
-                      <span
-                        className={
-                          Number(e.total_wealth) > Number(e.starting_budget)
-                            ? 'text-gnl-300'
-                            : Number(e.total_wealth) < Number(e.starting_budget)
-                              ? 'text-rose-300'
-                              : ''
-                        }
-                      >
-                        {formatirajCeno(e.total_wealth)}
-                      </span>
-                    </td>
-                    <td className="py-1.5 pr-2 tabular-nums">
-                      {e.stStarterjev}/{STEVILO_PRVIH}
-                    </td>
-                    <td className="py-1.5 pr-2 tabular-nums">
-                      {VRSTNI_RED.map((k) => e.kaderPoPoz[k]).join('/')}
-                    </td>
-                    <td className="py-1.5 pr-2 tabular-nums text-slate-400">
-                      {e.stKapetanov}/{e.stNamestnikov}
-                    </td>
-                    <td className="py-1.5 pr-2">
-                      {e.napake.length === 0 ? (
-                        <span className="znacka bg-gnl-400/20 text-gnl-200">
-                          ✓ ok
-                        </span>
-                      ) : (
-                        <span
-                          title={e.napake.join('\n')}
-                          className="znacka bg-rose-400/20 text-rose-200"
                         >
-                          ⚠ {e.napake.length}
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-        {ekipe.some((e) => e.napake.length > 0) && (
-          <div className="rounded-xl border border-rose-400/30 bg-rose-500/5 p-3 text-xs text-rose-100">
-            <strong>Neveljavni rosterji</strong> po glasovanju pozicij:
-            <ul className="mt-1 space-y-1">
-              {ekipe
-                .filter((e) => e.napake.length > 0)
-                .map((e) => (
-                  <li key={e.fantasy_team_id}>
-                    <strong>{e.name}</strong> ({e.owner}) — {e.napake.join(' · ')}
-                  </li>
-                ))}
-            </ul>
-          </div>
-        )}
-      </section>
-      </Razdelek>
+                          <td className="py-1.5 pr-2 font-semibold">{e.name}</td>
+                          <td className="py-1.5 pr-2 text-slate-400">{e.owner}</td>
+                          <td className="py-1.5 pr-2 text-right tabular-nums">
+                            {formatirajCeno(e.cash)}
+                          </td>
+                          <td className="py-1.5 pr-2 text-right tabular-nums">
+                            {formatirajCeno(e.roster_value)}
+                          </td>
+                          <td className="py-1.5 pr-2 text-right font-bold tabular-nums">
+                            <span
+                              className={
+                                Number(e.total_wealth) > Number(e.starting_budget)
+                                  ? 'text-gnl-300'
+                                  : Number(e.total_wealth) < Number(e.starting_budget)
+                                    ? 'text-rose-300'
+                                    : ''
+                              }
+                            >
+                              {formatirajCeno(e.total_wealth)}
+                            </span>
+                          </td>
+                          <td className="py-1.5 pr-2 tabular-nums">
+                            {e.stStarterjev}/{STEVILO_PRVIH}
+                          </td>
+                          <td className="py-1.5 pr-2 tabular-nums">
+                            {VRSTNI_RED.map((k) => e.kaderPoPoz[k]).join('/')}
+                          </td>
+                          <td className="py-1.5 pr-2 tabular-nums text-slate-400">
+                            {e.stKapetanov}/{e.stNamestnikov}
+                          </td>
+                          <td className="py-1.5 pr-2">
+                            {e.napake.length === 0 ? (
+                              <span className="znacka bg-gnl-400/20 text-gnl-200">
+                                ✓ ok
+                              </span>
+                            ) : (
+                              <span
+                                title={e.napake.join('\n')}
+                                className="znacka bg-rose-400/20 text-rose-200"
+                              >
+                                ⚠ {e.napake.length}
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              {ekipe.some((e) => e.napake.length > 0) && (
+                <div className="rounded-xl border border-rose-400/30 bg-rose-500/5 p-3 text-xs text-rose-100">
+                  <strong>Neveljavni rosterji</strong> po glasovanju pozicij:
+                  <ul className="mt-1 space-y-1">
+                    {ekipe
+                      .filter((e) => e.napake.length > 0)
+                      .map((e) => (
+                        <li key={e.fantasy_team_id}>
+                          <strong>{e.name}</strong> ({e.owner}) — {e.napake.join(' · ')}
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+              )}
+            </section>
+            </Razdelek>
 
-      <Razdelek id="tocke" naslov="Točke">
-      <section className="kartica space-y-3 p-4">
-        <h2 className="font-bold">Točke</h2>
-        <p className="text-sm text-slate-400">
-          Točke se preračunajo iz nastopov. Poženi po uvozu zapisnikov ali ko se
-          potrdi večje število asistenc in pozicij.
-        </p>
-        <button
-          onClick={() => setPotrjujemPreracun(true)}
-          disabled={preracunavam || potrjujemPreracun || krogi.length === 0}
-          className="gumb-glavni disabled:opacity-50"
-        >
-          {preracunavam ? 'Preračunavam …' : 'Preračunaj vse kroge'}
-        </button>
-        {potrjujemPreracun && (
-          <Potrditev
-            potrdi={preracunajVse}
-            preklici={() => setPotrjujemPreracun(false)}
-            zaseden={preracunavam}
-            gumb="Da, preračunaj"
-          >
-            Preračunam točke {zaVseKroge(krogi.length)} te lige? Lestvica se
-            med preračunom lahko za hip pokaže napol osveženo.
-          </Potrditev>
-        )}
-      </section>
-      </Razdelek>
+            <Razdelek id="tocke">
+            <section className="kartica space-y-3 p-4">
+              <h2 className="font-bold">Točke</h2>
+              <p className="text-sm text-slate-400">
+                Točke se preračunajo iz nastopov. Poženi po uvozu zapisnikov ali ko se
+                potrdi večje število asistenc in pozicij.
+              </p>
+              <button
+                onClick={() => setPotrjujemPreracun(true)}
+                disabled={preracunavam || potrjujemPreracun || krogi.length === 0}
+                className="gumb-glavni disabled:opacity-50"
+              >
+                {preracunavam ? 'Preračunavam …' : 'Preračunaj vse kroge'}
+              </button>
+              {potrjujemPreracun && (
+                <Potrditev
+                  potrdi={preracunajVse}
+                  preklici={() => setPotrjujemPreracun(false)}
+                  zaseden={preracunavam}
+                  gumb="Da, preračunaj"
+                >
+                  Preračunam točke {zaVseKroge(krogi.length)} te lige? Lestvica se
+                  med preračunom lahko za hip pokaže napol osveženo.
+                </Potrditev>
+              )}
+            </section>
+            </Razdelek>
 
-      <Razdelek id="lige" naslov="Upravljanje lig">
-        <UpravljanjeLig />
-      </Razdelek>
+            <Razdelek id="lige">
+              <UpravljanjeLig />
+            </Razdelek>
 
-      {/* uvoz */}
-      <Razdelek id="uvoz" naslov="Uvoz zapisnikov">
-      <section className="kartica space-y-2 p-4">
-        <h2 className="font-bold">Uvoz zapisnikov</h2>
-        <p className="text-sm text-slate-400">
-          Uvoz teče iz ukazne vrstice, ker zahteva dostop do spletne strani MNZ:
-        </p>
-        <pre className="overflow-x-auto rounded-xl bg-slate-950 p-3 text-xs text-slate-300">
-{`SUPABASE_SERVICE_ROLE_KEY=... node scripts/uvoz-zapisnikov.mjs --tekmovanje ${
+            {/* uvoz */}
+            <Razdelek id="uvoz">
+            <section className="kartica space-y-2 p-4">
+              <h2 className="font-bold">Uvoz zapisnikov</h2>
+              <p className="text-sm text-slate-400">
+                Uvoz teče iz ukazne vrstice, ker zahteva dostop do spletne strani MNZ:
+              </p>
+              <pre className="overflow-x-auto rounded-xl bg-slate-950 p-3 text-xs text-slate-300">
+      {`SUPABASE_SERVICE_ROLE_KEY=... node scripts/uvoz-zapisnikov.mjs --tekmovanje ${
   tekmovanje?.slug ?? 'clani'
 }
 # cene: brez --pisi le predogled; vklopljena liga zahteva še --tedensko ali --dovoli-aktivno
 SUPABASE_SERVICE_ROLE_KEY=... node scripts/ovrednoti-igralce.mjs --tekmovanje ${
   tekmovanje?.slug ?? 'clani'
 } --pisi`}
-        </pre>
-      </section>
-      </Razdelek>
+              </pre>
+            </section>
+            </Razdelek>
 
-      {/* opozorila iz zapisnikov */}
-      {opozorila.length > 0 && (
-        <Razdelek id="nepopolni" naslov={`Nepopolni zapisniki (${opozorila.length})`}>
-        <section className="space-y-2">
-          <h2 className="font-bold">Nepopolni zapisniki</h2>
-          <p className="text-sm text-slate-400">
-            Te tekme so bile uvožene, a zapisnik ni bil popoln. Preveri jih na
-            izvoru.
-          </p>
-          <ul className="space-y-2">
-            {opozorila.map((t) => (
-              <li key={t.id} className="kartica p-3 text-sm">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-semibold">Zapisnik {t.zapisnik_id}</span>
-                  <a
-                    href={t.source_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-gnl-300 hover:underline"
-                  >
-                    odpri ↗
-                  </a>
-                </div>
-                <ul className="mt-1 text-amber-300">
-                  {t.import_warnings.map((o: string, i: number) => (
-                    <li key={i}>• {o}</li>
+            {/* opozorila iz zapisnikov */}
+            <Razdelek id="nepopolni">
+              <section className="space-y-2">
+                <h2 className="font-bold">Nepopolni zapisniki</h2>
+                <p className="text-sm text-slate-400">
+                  Te tekme so bile uvožene, a zapisnik ni bil popoln. Preveri jih na
+                  izvoru.
+                </p>
+                {opozorila.length === 0 && (
+                  <p className="text-sm text-slate-500">Ni nepopolnih zapisnikov.</p>
+                )}
+                <ul className="space-y-2">
+                  {opozorila.map((t) => (
+                    <li key={t.id} className="kartica p-3 text-sm">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-semibold">Zapisnik {t.zapisnik_id}</span>
+                        <a
+                          href={t.source_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-gnl-300 hover:underline"
+                        >
+                          odpri ↗
+                        </a>
+                      </div>
+                      <ul className="mt-1 text-amber-300">
+                        {t.import_warnings.map((o: string, i: number) => (
+                          <li key={i}>• {o}</li>
+                        ))}
+                      </ul>
+                    </li>
                   ))}
                 </ul>
-              </li>
-            ))}
-          </ul>
-        </section>
-        </Razdelek>
-      )}
+              </section>
+            </Razdelek>
 
-      {/* igralci: pozicija in NZS */}
-      <Razdelek id="igralec" naslov="Igralec — pozicija in NZS">
-      <section className="kartica space-y-3 p-4">
-        <h2 className="font-bold">Igralec — pozicija in NZS</h2>
-        <p className="text-sm text-slate-400">
-          Administratorjeva pozicija povozi glasovanje. Podatke z NZS vnesi
-          ročno — iskalnik NZS robotom ni dostopen. Ugovor igralca ali zveze
-          (GDPR): poišči ga po imenu ali id-ju in ga anonimiziraj.
-        </p>
-        <form onSubmit={isciIgralca} className="flex gap-2">
-          <input
-            value={iskanje}
-            onChange={(e) => setIskanje(e.target.value)}
-            placeholder="Priimek ali ime …"
-            className="flex-1 rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm"
-          />
-          <button className="gumb-glavni">Išči</button>
-        </form>
+            {/* igralci: pozicija in NZS */}
+            <Razdelek id="igralec">
+            <section className="kartica space-y-3 p-4">
+              <h2 className="font-bold">Igralec — pozicija in NZS</h2>
+              <p className="text-sm text-slate-400">
+                Administratorjeva pozicija povozi glasovanje. Podatke z NZS vnesi
+                ročno — iskalnik NZS robotom ni dostopen. Ugovor igralca ali zveze
+                (GDPR): poišči ga po imenu ali id-ju in ga anonimiziraj.
+              </p>
+              <form onSubmit={isciIgralca} className="flex gap-2">
+                <input
+                  value={iskanje}
+                  onChange={(e) => setIskanje(e.target.value)}
+                  placeholder="Priimek ali ime …"
+                  className="flex-1 rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm"
+                />
+                <button className="gumb-glavni">Išči</button>
+              </form>
 
-        <ul className="space-y-2">
-          {zadetki.map((z) => (
-            <li key={z.id} className="rounded-xl bg-white/5 p-3">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="flex-1 font-semibold">
-                  {prikazniIme(z.full_name)}
-                </span>
-                <span className="text-xs text-slate-500">
-                  {z.team_name} · {vsaTekmovanja.find((tm) => tm.id === z.competition_id)?.short_name ?? '?'}
-                </span>
-                <span className="text-xs text-slate-400">
-                  {z.position
-                    ? IME_POZICIJE[z.position as Pozicija]
-                    : 'brez pozicije'}{' '}
-                  ·{' '}
-                  {formatirajTocke(z.value)}
-                </span>
-              </div>
-              {z.competition_id === tekmovanjeId && (
-              <div className="mt-2 flex flex-wrap gap-1">
-                {(['GK', 'DEF', 'MID', 'FWD'] as Pozicija[]).map((p) => (
-                  <button
-                    key={p}
-                    onClick={() =>
-                      z.position !== p && setCakaIgralec({ id: z.id, vrsta: 'pozicija', pozicija: p })
-                    }
-                    disabled={shranjujemIgralca}
-                    className={`znacka poz-${p} disabled:opacity-50 ${
+              <ul className="space-y-2">
+                {zadetki.map((z) => (
+                  <li key={z.id} className="rounded-xl bg-white/5 p-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="flex-1 font-semibold">
+                        {prikazniIme(z.full_name)}
+                      </span>
+                      <span className="text-xs text-slate-500">
+                        {z.team_name} · {vsaTekmovanja.find((tm) => tm.id === z.competition_id)?.short_name ?? '?'}
+                      </span>
+                      <span className="text-xs text-slate-400">
+                        {z.position
+                          ? IME_POZICIJE[z.position as Pozicija]
+                          : 'brez pozicije'}{' '}
+                        ·{' '}
+                        {formatirajTocke(z.value)}
+                      </span>
+                    </div>
+                    {z.competition_id === tekmovanjeId && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {(['GK', 'DEF', 'MID', 'FWD'] as Pozicija[]).map((p) => (
+                        <button
+                          key={p}
+                          onClick={() =>
+                            z.position !== p && setCakaIgralec({ id: z.id, vrsta: 'pozicija', pozicija: p })
+                          }
+                          disabled={shranjujemIgralca}
+                          className={`znacka poz-${p} disabled:opacity-50 ${
                       z.position === p ? 'ring-2 ring-white/40' : ''
                     }`}
-                  >
-                    {IME_POZICIJE[p]}
-                  </button>
-                ))}
-              </div>
-              )}
-              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                {z.competition_id === tekmovanjeId && (<>
-                <span className="text-slate-500">Prestavi v klub:</span>
-                <select
-                  value={z.team_id ?? ''}
-                  onChange={(e) =>
-                    e.target.value &&
-                    Number(e.target.value) !== z.team_id &&
-                    setCakaIgralec({ id: z.id, vrsta: 'klub', klubId: Number(e.target.value) })
-                  }
-                  disabled={shranjujemIgralca}
-                  className="rounded-lg border border-white/10 bg-slate-900 px-2 py-1 text-xs disabled:opacity-50"
-                >
-                  {klubi.map((k) => (
-                    <option key={k.id} value={k.id}>
-                      {k.name}
-                    </option>
-                  ))}
-                </select>
-                </>)}
-                {!z.full_name?.startsWith('#') && (
-                  <button
-                    onClick={() => pripraviAnonimizacijo(z.id)}
-                    disabled={shranjujemIgralca}
-                    className="ml-auto text-red-300 underline disabled:opacity-50"
-                  >
-                    Anonimiziraj (ugovor)
-                  </button>
-                )}
-              </div>
-              {cakaIgralec?.id === z.id &&
-                (() => {
-                  const c = cakaIgralec
-                  if (!c) return null
-                  return (
-                    <div className="mt-2">
-                      <Potrditev
-                        potrdi={() =>
-                          c.vrsta === 'pozicija'
-                            ? nastaviPozicijo(z.id, c.pozicija)
-                            : c.vrsta === 'klub'
-                              ? premakniKlub(z.id, c.klubId)
-                              : anonimiziraj([z.id, ...c.izbrani])
-                        }
-                        preklici={() => setCakaIgralec(null)}
-                        zaseden={shranjujemIgralca}
-                        gumb="Da, shrani"
-                      >
-                        {c.vrsta === 'pozicija' ? (
-                          <>
-                            Igralcu {prikazniIme(z.full_name)} nastavim pozicijo{' '}
-                            <strong>{IME_POZICIJE[c.pozicija]}</strong>? Povozi
-                            glasovanje in spremeni točke za gole ter kvote v kadrih.
-                          </>
-                        ) : c.vrsta === 'anonimizacija' ? (
-                          <>
-                            Ime igralca {prikazniIme(z.full_name)} (id {z.id}) zamenjam z{' '}
-                            <strong>#{z.id}</strong>? Za vedno — tudi uvoz ga ne vrne, nov
-                            igralec z istim imenom ali šifro v tej državi nastane že
-                            anonimiziran. Statistika in točke ostanejo.
-                            {c.ista.length > 0 && (
-                              <ul className="mt-2 space-y-1">
-                                {c.ista.map((o) => (
-                                  <li key={o.id}>
-                                    <label className="flex items-center gap-2">
-                                      <input
-                                        type="checkbox"
-                                        checked={o.po_sifri || c.izbrani.includes(o.id)}
-                                        disabled={o.po_sifri}
-                                        onChange={(e) =>
-                                          setCakaIgralec({
-                                            ...c,
-                                            izbrani: e.target.checked
-                                              ? [...c.izbrani, o.id]
-                                              : c.izbrani.filter((x) => x !== o.id),
-                                          })
-                                        }
-                                      />
-                                      {prikazniIme(o.full_name)} · {o.klub} · {o.liga}
-                                      {o.po_sifri ? ' (ista šifra, gre zraven)' : ' (le isto ime)'}
-                                    </label>
-                                  </li>
-                                ))}
-                              </ul>
-                            )}
-                          </>
-                        ) : (
-                          <>
-                            Prestavim {prikazniIme(z.full_name)} v klub{' '}
-                            <strong>{klubi.find((k) => k.id === c.klubId)?.name ?? '?'}</strong>?
-                            Kadri z več kot {MAX_IZ_KLUBA} igralci kluba postanejo neveljavni.
-                          </>
-                        )}
-                      </Potrditev>
+                        >
+                          {IME_POZICIJE[p]}
+                        </button>
+                      ))}
                     </div>
-                  )
-                })()}
-              {z.competition_id === tekmovanjeId && (
-              <div className="mt-2 flex flex-wrap gap-2">
-                <select
-                  onChange={(e) =>
-                    e.target.value && shraniNzs(z.id, 'nzs_top_league', e.target.value)
-                  }
-                  defaultValue=""
-                  className="rounded-lg border border-white/10 bg-slate-900 px-2 py-1 text-xs"
-                >
-                  <option value="">Najvišja liga (NZS) …</option>
-                  <option value="1SNL">1. SNL</option>
-                  <option value="2SNL">2. SNL</option>
-                  <option value="3SNL">3. SNL</option>
-                </select>
-                <input
-                  type="number"
-                  placeholder="minute v tej ligi"
-                  onBlur={(e) =>
-                    e.target.value &&
-                    shraniNzs(z.id, 'nzs_top_league_minutes', Number(e.target.value))
-                  }
-                  className="w-40 rounded-lg border border-white/10 bg-slate-900 px-2 py-1 text-xs"
-                />
-              </div>
-              )}
-            </li>
-          ))}
-        </ul>
-      </section>
-      </Razdelek>
+                    )}
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                      {z.competition_id === tekmovanjeId && (<>
+                      <span className="text-slate-500">Prestavi v klub:</span>
+                      <select
+                        value={z.team_id ?? ''}
+                        onChange={(e) =>
+                          e.target.value &&
+                          Number(e.target.value) !== z.team_id &&
+                          setCakaIgralec({ id: z.id, vrsta: 'klub', klubId: Number(e.target.value) })
+                        }
+                        disabled={shranjujemIgralca}
+                        className="rounded-lg border border-white/10 bg-slate-900 px-2 py-1 text-xs disabled:opacity-50"
+                      >
+                        {klubi.map((k) => (
+                          <option key={k.id} value={k.id}>
+                            {k.name}
+                          </option>
+                        ))}
+                      </select>
+                      </>)}
+                      {!z.full_name?.startsWith('#') && (
+                        <button
+                          onClick={() => pripraviAnonimizacijo(z.id)}
+                          disabled={shranjujemIgralca}
+                          className="ml-auto text-red-300 underline disabled:opacity-50"
+                        >
+                          Anonimiziraj (ugovor)
+                        </button>
+                      )}
+                    </div>
+                    {cakaIgralec?.id === z.id &&
+                      (() => {
+                        const c = cakaIgralec
+                        if (!c) return null
+                        return (
+                          <div className="mt-2">
+                            <Potrditev
+                              potrdi={() =>
+                                c.vrsta === 'pozicija'
+                                  ? nastaviPozicijo(z.id, c.pozicija)
+                                  : c.vrsta === 'klub'
+                                    ? premakniKlub(z.id, c.klubId)
+                                    : anonimiziraj([z.id, ...c.izbrani])
+                              }
+                              preklici={() => setCakaIgralec(null)}
+                              zaseden={shranjujemIgralca}
+                              gumb="Da, shrani"
+                            >
+                              {c.vrsta === 'pozicija' ? (
+                                <>
+                                  Igralcu {prikazniIme(z.full_name)} nastavim pozicijo{' '}
+                                  <strong>{IME_POZICIJE[c.pozicija]}</strong>? Povozi
+                                  glasovanje in spremeni točke za gole ter kvote v kadrih.
+                                </>
+                              ) : c.vrsta === 'anonimizacija' ? (
+                                <>
+                                  Ime igralca {prikazniIme(z.full_name)} (id {z.id}) zamenjam z{' '}
+                                  <strong>#{z.id}</strong>? Za vedno — tudi uvoz ga ne vrne, nov
+                                  igralec z istim imenom ali šifro v tej državi nastane že
+                                  anonimiziran. Statistika in točke ostanejo.
+                                  {c.ista.length > 0 && (
+                                    <ul className="mt-2 space-y-1">
+                                      {c.ista.map((o) => (
+                                        <li key={o.id}>
+                                          <label className="flex items-center gap-2">
+                                            <input
+                                              type="checkbox"
+                                              checked={o.po_sifri || c.izbrani.includes(o.id)}
+                                              disabled={o.po_sifri}
+                                              onChange={(e) =>
+                                                setCakaIgralec({
+                                                  ...c,
+                                                  izbrani: e.target.checked
+                                                    ? [...c.izbrani, o.id]
+                                                    : c.izbrani.filter((x) => x !== o.id),
+                                                })
+                                              }
+                                            />
+                                            {prikazniIme(o.full_name)} · {o.klub} · {o.liga}
+                                            {o.po_sifri ? ' (ista šifra, gre zraven)' : ' (le isto ime)'}
+                                          </label>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  )}
+                                </>
+                              ) : (
+                                <>
+                                  Prestavim {prikazniIme(z.full_name)} v klub{' '}
+                                  <strong>{klubi.find((k) => k.id === c.klubId)?.name ?? '?'}</strong>?
+                                  Kadri z več kot {MAX_IZ_KLUBA} igralci kluba postanejo neveljavni.
+                                </>
+                              )}
+                            </Potrditev>
+                          </div>
+                        )
+                      })()}
+                    {z.competition_id === tekmovanjeId && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <select
+                        onChange={(e) =>
+                          e.target.value && shraniNzs(z.id, 'nzs_top_league', e.target.value)
+                        }
+                        defaultValue=""
+                        className="rounded-lg border border-white/10 bg-slate-900 px-2 py-1 text-xs"
+                      >
+                        <option value="">Najvišja liga (NZS) …</option>
+                        <option value="1SNL">1. SNL</option>
+                        <option value="2SNL">2. SNL</option>
+                        <option value="3SNL">3. SNL</option>
+                      </select>
+                      <input
+                        type="number"
+                        placeholder="minute v tej ligi"
+                        onBlur={(e) =>
+                          e.target.value &&
+                          shraniNzs(z.id, 'nzs_top_league_minutes', Number(e.target.value))
+                        }
+                        className="w-40 rounded-lg border border-white/10 bg-slate-900 px-2 py-1 text-xs"
+                      />
+                    </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </section>
+            </Razdelek>
+          </AktivenRazdelek.Provider>
+        </div>
       </div>
 
       {sporocilo && <p className="text-sm text-gnl-300">{sporocilo}</p>}

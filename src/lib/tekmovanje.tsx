@@ -14,7 +14,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { useLocation, useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from './supabase'
 import {
   ugibajObiskovalca,
@@ -222,7 +222,7 @@ export function brezZveze(v: Record<string, unknown>): Tekmovanje {
 }
 
 export function TekmovanjeProvider({ children }: { children: ReactNode }) {
-  const [iskanje, setIskanje] = useSearchParams()
+  const [iskanje] = useSearchParams()
   // `tekmovanja` je le svež seznam (iz njega se odloča), `prikaz` do takrat shramba.
   const [tekmovanja, setTekmovanja] = useState<Tekmovanje[]>([])
   const [izShrambe] = useState(shranjeneLige)
@@ -286,7 +286,8 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const { pathname } = useLocation()
+  const { pathname, hash } = useLocation()
+  const pojdi = useNavigate()
   const zadnjiVNaslovu = useRef<string | null>(iskanje.get('t'))
   const zadnjaPot = useRef(pathname)
 
@@ -313,9 +314,10 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
       if (ukaz.param) novo.set('t', ukaz.param)
       else novo.delete('t')
       zadnjiVNaslovu.current = ukaz.param
-      setIskanje(novo, { replace: true })
+      // Ne setSearchParams: ta zavrže # (razdelek administracije).
+      pojdi({ search: novo.toString() ? `?${novo}` : '', hash }, { replace: true })
     }
-  }, [iskanje, pathname, slug, setIskanje])
+  }, [iskanje, pathname, hash, slug, pojdi])
 
   // Ugib države (IP, jezik, pas) potrebuje le, kdor lige nima — vprašamo ga
   // enkrat ob nalaganju, vzporedno s seznamom lig. `undefined` = še čakamo;
