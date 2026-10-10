@@ -4070,6 +4070,92 @@ preveri(
   preveri('fss: prazna predloga je null', F.vZapisnik('<html><div class="fss-rez__title"></div></html>') === null && F.tekmeStrani('<html></html>').length === 0)
 }
 
+// --- vir fssid (Srbija, regijske lige po bloku šifer COMET na fss.rs) ---------
+{
+  const F = await import('./viri/fssid.mjs')
+  const S = await import('./viri/fss.mjs')
+  const { default: viri } = await import('./viri/index.mjs')
+  const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  preveri('fssid: vir je vpisan', viri.fssid === F.default && F.default.drzava === 'RS' && F.default.imaRegistracije === false &&
+    F.default.premorMs >= 2000 && F.default.glave['User-Agent'] === 'SLFF fantasy (https://slff.eu)' && F.default.ocenjeniDatumi === true)
+  const b = F.razberiKodo('75912381-75912620')
+  let napacna = 0
+  for (const k of ['75912381-75912600', '75912381', 'x-y']) try { F.razberiKodo(k) } catch { napacna++ }
+  preveri('fssid: blok šifer — 16 klubov, 30 krogov po 8, krog po mestu', b.klubov === 16 && b.naKrog === 8 && b.krogov === 30 &&
+    F.krogPoMestu(75912381, b) === 1 && F.krogPoMestu(75912388, b) === 1 && F.krogPoMestu(75912389, b) === 2 && F.krogPoMestu(75912620, b) === 30 && napacna === 3)
+  preveri('fssid: naslovi (latinica)', F.default.naslovRazporeda('75912381-75912620') === 'https://fss.rs/izvestaj-sa-utakmice/75912381/?script=lat' &&
+    F.default.naslovZapisnika('x', '75912400') === 'https://fss.rs/izvestaj-sa-utakmice/75912400/?script=lat')
+
+  const odigrana = beri('rs-fssid-tekma-75912381.html')
+  const neodigrana = beri('rs-fssid-tekma-75912620-neodigrana.html')
+  preveri('fssid: tri stanja strani tekme', F.stanjeStrani(odigrana) === 'odigrana' && F.stanjeStrani(neodigrana) === 'neodigrana' &&
+    F.stanjeStrani(beri('rs-fssid-tekma-ne-postoji.html')) === 'ne-postoji' && F.stanjeStrani('<html>Just a moment...</html>') === 'neznano')
+  const g = F.glavaStrani(odigrana)
+  const gn = F.glavaStrani(neodigrana)
+  preveri('fssid: glava odigrane (klubi, izid, krog, datum) in neodigrane (le klubi)', g.domaci === 'PČINJA (Trgovište)' && g.gostje === 'TIMOČANIN' &&
+    g.izid?.domaci === 0 && g.izid?.gostje === 2 && g.krog === 1 && g.datum === '2026-08-15' && g.ura === '17:00' &&
+    gn.domaci === 'PČINJA (Trgovište)' && gn.gostje === 'RADNIČKI (Pirot)' && gn.izid === null && gn.krog === null && gn.datum === null)
+  preveri('fssid: ime kluba — podvojen kraj enkrat, kraj z velikimi črkami, kratice ostanejo', F.imeKluba('KABEL (Novi Sad) (Novi Sad)') === 'KABEL (Novi Sad)' &&
+    F.imeKluba('RADNIČKI (SVILAJNAC)') === 'RADNIČKI (Svilajnac)' && F.imeKluba('RADNIČKI (VA) (Valjevo)') === 'RADNIČKI (VA) (Valjevo)' &&
+    F.imeKluba('OFK BRZI BROD (Niš (Medijana))') === 'OFK BRZI BROD (Niš (Medijana))' && F.imeKluba('JEDINSTVO') === 'JEDINSTVO (Ub)' &&
+    F.imeKluba('TRAJAL (KRUŠEVAC)') === 'TRAJAL')
+
+  const vr = S.dresiVratarjev(beri('rs-fssid-vratarji-75912381.html'))
+  const prvi = F.prviZacetniki(odigrana)
+  preveri('fssid: vratar s prvaliga.rs je prvi začetnik COMET', !!vr && !!prvi && [0, 1].every((i) => [...prvi[i]].length === 1 && vr[i].has([...prvi[i]][0])))
+  const z = S.vZapisnik(odigrana, { id: '75912381', vratarji: vr })
+  const n = S.nastopi(z)
+  preveri('fssid: zapisnik — 11 + 11, goli = izid, brez opozoril', z.domaci.postava.length === 11 && z.gostje.postava.length === 11 &&
+    z.goli.length === 2 && z.opozorila.length === 0 && n.filter((x) => x.vratar && x.zacetnik).length === 2)
+
+  // Vira datumov: fsris.org.rs (Istok) in fsv.rs (Vojvodina, cirilica).
+  const ris = F.tekmeFsris(beri('rs-fssid-fsris-istok.html'))
+  const ris15 = F.tekmeFsris(beri('rs-fssid-fsris-istok-kolo15.html'))
+  const krogiRis = F.krogiFsris(beri('rs-fssid-fsris-istok.html'))
+  preveri('fssid: fsris — izbirnik 30 krogov, tekoči in naslednji krog po 8, krog 15 z datumi', krogiRis.size === 30 && krogiRis.get(1) === '5634' &&
+    ris.filter((t) => t.krog === 9).length === 8 && ris.filter((t) => t.krog === 10).length === 8 &&
+    ris15.filter((t) => t.krog === 15).length === 8 && ris15.every((t) => t.datum?.startsWith('2026-11-2') && t.ura))
+  const fsv = F.tekmeFsv(beri('rs-fssid-fsv-vojvodina.html'))
+  const fsv1 = fsv.find((t) => t.krog === 1)
+  preveri('fssid: fsv — 30 krogov po 8, jesen z datumi, pomlad brez', fsv.length === 240 && new Set(fsv.map((t) => t.krog)).size === 30 &&
+    fsv.filter((t) => t.krog <= 15).every((t) => t.datum) && fsv.filter((t) => t.krog > 15).every((t) => !t.datum) &&
+    F.vLatinico(fsv1.domaci) === 'kabel (novi sad)' && fsv1.datum === '2026-08-23' && fsv1.ura === '10:00')
+  preveri('fssid: besede imena (cirilica, šumniki, splošne oznake)', F.besedeImena('OFK Sinđelić').join() === 'sindjelic' &&
+    F.besedeImena('ЖЕЛЕЗНИЧАР (Инђија)').join() === 'zeleznicar,indjija' && F.besedeImena('ИНДЕX (Нови Сад)').join() === 'index,novi,sad')
+  // Ujemanje vira s tekmami COMET po krogu in imenih; Radnički (P) ni Radnički (S).
+  const comet15 = [
+    ['1', 'SLOGA (Leskovac)', 'TIMOČANIN'], ['2', 'TRAJAL (Kruševac)', 'VLASINA'], ['3', 'Morava 1918 (Ćuprija)', 'REMBAS'],
+    ['4', 'ĐERDAP (Kladovo)', 'TIMOK 1919'], ['5', 'RADNIČKI (Svilajnac)', 'JEDINSTVO 1936 (Kruševac)'], ['6', 'MALOŠIŠTE (Malošište)', 'GFK JAGODINA'],
+    ['7', 'OFK BRZI BROD (Niš (Medijana))', 'OFK SINĐELIĆ (Niš)'], ['8', 'RADNIČKI (Pirot)', 'PČINJA (Trgovište)'],
+  ].map(([id, domaci, gostje]) => ({ id, domaci, gostje, krog: 15 }))
+  const u = F.ujemiZVirom(comet15, ris15)
+  preveri('fssid: ujemanje vira datumov po krogu in imenih', u.ujete.size === 8 && u.neujetih === 0 &&
+    u.ujete.get('8')?.domaci.startsWith('Radnički (P)') && u.ujete.get('5')?.domaci.startsWith('Radnički (S)') && u.ujete.get('5')?.ura === '11:00')
+
+  // Sestava bloka: 4 klubi (12 šifer, 6 krogov po 2). Kroga 1–2 odigrana (1001
+  // je po zapisniku v 2. krogu), 3 dobi oceno (+7 dni, isti dan in ura), 4–6
+  // (druga polovica) brez datuma.
+  const tekma = (d, gst, izid, krog, datum) => `<h1 class="fss-rez__title"><span>${d}</span><span>${gst}</span></h1>` +
+    (izid ? `<div class="row fss-rez__rez"><div class="col-6"><span>${izid[0]}</span></div><div class="col-6"><span>${izid[1]}</span></div></div>` +
+      `<div class="col-12 fss-rez__info"><div>${krog}. kolo</div><div>${datum} 17:00</div></div>` : '<div>Utakmica nije odigrana ili podaci nisu uneti.</div>')
+  const mali = F.razberiKodo('1000-1011')
+  const strani = new Map([
+    [1000, tekma('A', 'B', [1, 0], 1, '15.08.2026.')], [1001, tekma('C', 'D', [3, 0], 2, '22.08.2026.')],
+    [1002, tekma('A', 'C', [2, 2], 2, '22.08.2026.')], [1003, tekma('B', 'D', [0, 1], 2, '23.08.2026.')],
+    [1004, tekma('A', 'D')], [1005, tekma('B', 'C')], [1006, tekma('B', 'A')], [1007, '<p>Utakmica ne postoji</p>'],
+  ])
+  const sb = F.sestaviBlok(mali, strani, [], { danes: Date.parse('2026-08-24T12:00:00Z') })
+  const raz = F.razporedBloka(sb, { danes: Date.parse('2026-09-10T12:00:00Z') })
+  const k3 = raz.find((k) => k.stevilka === 3)
+  preveri('fssid: blok — krog iz zapisnika, ocena kroga, druga polovica brez datuma, manjkajoča šifra', sb.neObstaja.join() === '1007' &&
+    sb.neujemanjaKrogov.length === 1 && sb.neujemanjaKrogov[0].id === 1001 && sb.neujemanjaKrogov[0].mesto === 1 &&
+    raz.map((k) => k.stevilka).join() === '1,2,3' && k3.ocenjen === true && k3.tekme.length === 2 && k3.tekme.every((t) => t.ura === '17:00') &&
+    k3.tekme.find((t) => t.domaci === 'A')?.datum === '2026-08-29' && raz.find((k) => k.stevilka === 2).tekme.filter((t) => t.odigrana).length === 3 &&
+    !raz.find((k) => k.stevilka === 1).ocenjen)
+  // Izid brez postav, starejši od tedna, je kontumacija z izidom.
+  preveri('fssid: izid brez postav je kontumacija', raz.find((k) => k.stevilka === 1).tekme.every((t) => t.kontumacija && t.izid))
+}
+
 // --- vir frf (Romunija, portal županijskih zvez frf-ajf.ro) --------------------
 {
   const F = await import('./viri/frf.mjs')
