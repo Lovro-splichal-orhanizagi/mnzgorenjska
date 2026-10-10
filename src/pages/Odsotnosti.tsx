@@ -25,6 +25,7 @@ import {
   type VrstaPorocila,
 } from '../components/Odsotnost'
 import { prevediNapako } from '../lib/napake'
+import { EKIPA_SHRANJENA } from '../components/OpozoriloEkipe'
 
 /** Brez šumnikov in velikih črk — "zeleznik" najde "Železnik" (kot izbirnik lige). */
 const poenostavi = (s: string) =>
@@ -164,6 +165,8 @@ export default function Odsotnosti() {
       .single()
     setPosiljam(false)
     if (error) return setNapaka(prevediNapako(error.message))
+    // Poročilo spremeni rumena opozorila pasu nad stranjo.
+    window.dispatchEvent(new Event(EKIPA_SHRANJENA))
 
     // Vstavimo na vrh brez ponovnega branja — pogled bi zahteval dodatno
     // poizvedbo samo za ime igralca, ki ga že imamo.
@@ -191,6 +194,7 @@ export default function Odsotnosti() {
   async function izbrisi(id: number) {
     const { error } = await supabase.from('player_reports').delete().eq('id', id)
     if (error) return setNapaka(prevediNapako(error.message))
+    window.dispatchEvent(new Event(EKIPA_SHRANJENA))
     setPorocila((prej) => prej.filter((p) => p.id !== id))
   }
 

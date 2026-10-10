@@ -74,7 +74,8 @@ function ligaVPovezavi(): boolean {
 }
 
 export default function PrviObisk() {
-  const { tekmovanja, vsaTekmovanja, drzava: drzavaLige, vprasajDrzavo: tujec, nastavi } = useTekmovanje()
+  const { tekmovanja, vsaTekmovanja, ligeSveze, drzava: drzavaLige, vprasajDrzavo: tujec, nastavi } =
+    useTekmovanje()
   // Po državi vpraša le gola naslovnica; stran lige ali entitete je v jeziku
   // svoje lige in brez koraka države (iskalnik z ameriškega IP-ja).
   const vprasajDrzavo = tujec && zaznajTujca()
@@ -122,7 +123,7 @@ export default function PrviObisk() {
   // petindvajset hkratnih štetij je bazo zasulo. Lig je manj kot tisoč, zato
   // brez strani.
   useEffect(() => {
-    if (skrit || !vsaTekmovanja.length) return
+    if (skrit || !ligeSveze) return
     let veljavno = true
     supabase
       .from('stevilo_ekip_lig')
@@ -138,10 +139,11 @@ export default function PrviObisk() {
     return () => {
       veljavno = false
     }
-  }, [skrit, vsaTekmovanja])
+  }, [skrit, ligeSveze, vsaTekmovanja])
 
+  // Izbira lige iz shrambe bi lahko ponudila že ugasnjeno ligo — počakamo na svež seznam.
   const prikazan =
-    !skrit && cas && !vabljen && (vprasajDrzavo ? vsaTekmovanja : tekmovanja).length >= 2
+    !skrit && cas && !vabljen && ligeSveze && (vprasajDrzavo ? vsaTekmovanja : tekmovanja).length >= 2
   useEffect(() => {
     if (!prikazan) return
     okno.current?.focus()

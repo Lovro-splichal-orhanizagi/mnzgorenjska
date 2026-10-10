@@ -18,8 +18,12 @@ import { naslovNapak, obvestilaEkip, type Obvestilo, type StanjeEkipe } from '..
  *
  * Ekipe se zaklenejo same ob roku, zato je pas edino mesto, kjer človek izve,
  * da z eno od njih nekaj ni prav. Stanje pride iz enega klica baze
- * (`stanje_mojih_ekip`), osveži se ob vsaki menjavi strani.
+ * (`stanje_mojih_ekip`), osveži se ob shranjeni ekipi ali poročilu o
+ * odsotnosti (dogodek `EKIPA_SHRANJENA`) in ob vrnitvi v zavihek ali
+ * aplikacijo, a takrat največ na pet minut.
  */
+export const EKIPA_SHRANJENA = 'slff:ekipa-shranjena'
+const OSVEZI_OB_FOKUSU_MS = 5 * 60 * 1000
 const KLJUC_SKRITIH = 'slff-skrita-opozorila'
 const NAJVEC_VRSTIC = 4
 
@@ -57,15 +61,31 @@ export default function OpozoriloEkipe() {
       return
     }
     let veljavno = true
-    supabase.rpc('stanje_mojih_ekip').then(({ data, error }) => {
-      if (!veljavno) return
-      // Napaka pasu ne sme pokvariti strani — brez podatkov ga preprosto ni.
-      setEkipe(error ? null : ((data ?? []) as unknown as StanjeEkipe[]))
-    })
+    let zadnjic = 0
+    const osvezi = () => {
+      zadnjic = Date.now()
+      supabase.rpc('stanje_mojih_ekip').then(({ data, error }) => {
+        if (!veljavno) return
+        // Napaka pasu ne sme pokvariti strani — brez podatkov ga preprosto ni.
+        setEkipe(error ? null : ((data ?? []) as unknown as StanjeEkipe[]))
+      })
+    }
+    // Fokus okna na spletu, vidnost tudi ob vrnitvi v aplikacijo (Capacitor).
+    const obFokusu = () => {
+      if (document.visibilityState === 'visible' && Date.now() - zadnjic > OSVEZI_OB_FOKUSU_MS)
+        osvezi()
+    }
+    osvezi()
+    window.addEventListener(EKIPA_SHRANJENA, osvezi)
+    window.addEventListener('focus', obFokusu)
+    document.addEventListener('visibilitychange', obFokusu)
     return () => {
       veljavno = false
+      window.removeEventListener(EKIPA_SHRANJENA, osvezi)
+      window.removeEventListener('focus', obFokusu)
+      document.removeEventListener('visibilitychange', obFokusu)
     }
-  }, [uporabnikId, loading, pathname])
+  }, [uporabnikId, loading])
 
   const naMojiEkipi = pathname.startsWith('/my-team')
   const { napake, opozorila } = useMemo(

@@ -16,11 +16,12 @@ import { oznaciVstopDrzave } from './PrviObisk'
 import { privzetaLiga, zapomniDrzavo } from '../lib/drzava'
 
 export default function VstopDrzave({ drzava }: { drzava: string }) {
-  const { vsaTekmovanja: tekmovanja } = useTekmovanje()
+  const { vsaTekmovanja: tekmovanja, ligeSveze } = useTekmovanje()
 
   useEffect(() => {
-    // Dokler se lige ne naložijo, ne vemo, ali ima država kakšno ligo.
-    if (!tekmovanja.length) return
+    // Dokler se lige ne naložijo, ne vemo, ali ima država kakšno ligo
+    // (seznam iz shrambe je lahko star).
+    if (!ligeSveze) return
     const imaLige = tekmovanja.some((t) => t.country_code === drzava)
     // Državo si zapomnimo le, če v njej kaj igramo — sicer bi obiskovalec
     // dobil jezik države, v kateri nima kaj videti.
@@ -29,7 +30,7 @@ export default function VstopDrzave({ drzava }: { drzava: string }) {
     // naj vseeno dobi vprašanje, kje želi igrati (PrviObisk).
     oznaciVstopDrzave()
     window.location.replace(imaLige ? `/?t=${privzetaLiga(tekmovanja, drzava)}` : '/')
-  }, [tekmovanja, drzava])
+  }, [tekmovanja, ligeSveze, drzava])
 
   return null
 }

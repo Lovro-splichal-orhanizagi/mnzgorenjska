@@ -38,6 +38,21 @@ import { jeBrezLige, useLigaStrani } from './naslov'
 
 export const PRIVZETO = 'clani'
 const KLJUC = 'slff-tekmovanje'
+// Seznam lig iz prejšnjega obiska: stran se izriše takoj, svež seznam pride v
+// ozadju. Le za prikaz — izbire lige, države in tujca čakajo na svež seznam,
+// ker je liga v shrambi lahko že ugasnjena.
+const KLJUC_LIG = 'slff-lige-v1'
+const ROK_SHRAMBE_LIG_MS = 7 * 24 * 3600 * 1000
+
+function shranjeneLige(): Tekmovanje[] {
+  try {
+    const v = JSON.parse(localStorage.getItem(KLJUC_LIG) ?? 'null')
+    if (!v || !Array.isArray(v.lige) || !(Date.now() - v.cas < ROK_SHRAMBE_LIG_MS)) return []
+    return v.lige
+  } catch {
+    return []
+  }
+}
 
 /** Tekmovanje, kot ga bere vmesnik (podmnožica stolpcev `competitions`). */
 export interface Tekmovanje {
@@ -145,6 +160,8 @@ interface KontekstVrednost {
    * najprej vpraša po njej.
    */
   vprasajDrzavo: boolean
+  /** Seznam lig je svež z baze (ne iz shrambe) — šele po njem se odloča. */
+  ligeSveze: boolean
   /** Seznam lig je naložen in prazen (ali ni prišel): lige ne bo, ne držimo ji prostora. */
   brezLig: boolean
   nastavi: (slug: string) => void
@@ -156,6 +173,7 @@ const Kontekst = createContext<KontekstVrednost>({
   tekmovanje: null,
   tekmovanja: [],
   vsaTekmovanja: [],
+  ligeSveze: false,
   drzava: 'SI',
   vprasajDrzavo: false,
   brezLig: false,
@@ -204,7 +222,10 @@ export function brezZveze(v: Record<string, unknown>): Tekmovanje {
 
 export function TekmovanjeProvider({ children }: { children: ReactNode }) {
   const [iskanje, setIskanje] = useSearchParams()
+  // `tekmovanja` je le svež seznam (iz njega se odloča), `prikaz` do takrat shramba.
   const [tekmovanja, setTekmovanja] = useState<Tekmovanje[]>([])
+  const [izShrambe] = useState(shranjeneLige)
+  const prikaz = tekmovanja.length ? tekmovanja : izShrambe
   const [ligeNalozene, setLigeNalozene] = useState(false)
   const [slug, setSlug] = useState<string>(
     () => iskanje.get('t') || shranjeno() || PRIVZETO,
@@ -232,7 +253,15 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
         .order('sort_order')
         // Enak sort_order (hrvaške lige) ne sme dati vsakič druge privzete lige.
         .order('id')
-      if (!polno.error) return (polno.data as Tekmovanje[] | null) ?? []
+      if (!polno.error) {
+        const sveze = (polno.data as Tekmovanje[] | null) ?? []
+        try {
+          localStorage.setItem(KLJUC_LIG, JSON.stringify({ cas: Date.now(), lige: sveze }))
+        } catch {
+          /* brez shrambe naslednji obisk spet čaka na seznam */
+        }
+        return sveze
+      }
 
       // Migracija za zveze še ni stekla — beri po stari shemi, da vmesnik
       // vseeno dobi lige.
@@ -247,6 +276,7 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
       .catch(() => [] as Tekmovanje[])
       .then((t) => {
         if (!veljavno) return
+        // Neuspel prenos pusti prikaz iz shrambe, odločitev pa ne sprejme.
         setTekmovanja(t)
         setLigeNalozene(true)
       })
@@ -384,10 +414,10 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
     }
   }, [slug])
 
-  const tekmovanje = tekmovanja.find((t) => t.slug === slug) ?? null
+  const tekmovanje = prikaz.find((t) => t.slug === slug) ?? null
   const { drzava, lige } = useMemo(
-    () => ligeDrzave(tekmovanja, slug, ugib?.drzava ?? null),
-    [tekmovanja, slug, ugib],
+    () => ligeDrzave(prikaz, slug, ugib?.drzava ?? null),
+    [prikaz, slug, ugib],
   )
 
   // Jezik sledi državi lige. Ob nalaganju ga jedro prevodov ugane iz šifre
@@ -415,7 +445,8 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
         id: tekmovanje?.id ?? null,
         tekmovanje,
         tekmovanja: lige,
-        vsaTekmovanja: tekmovanja,
+        vsaTekmovanja: prikaz,
+        ligeSveze: tekmovanja.length > 0,
         drzava,
         vprasajDrzavo: Boolean(tujecKoda) && !imaDrzavo,
         brezLig: ligeNalozene && !tekmovanja.length,
