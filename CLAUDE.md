@@ -1350,13 +1350,14 @@ Ligo označi `competitions.sezona_koledarska = true` (migracija
 Tekočo sezono lige da SQL `sezona_lige(liga[, datum])`; nanjo gledata
 `stanje_lige` (pripravljenost) in `vklopi_ligo_sredi_sezone`. Uvoz razporeda
 oznako izračuna s `sezonaIz(datum, tekmovanje.sezona_koledarska)`
-(`scripts/razpored.mjs`), **vir mora v zapisniku (`z.sezona`) dati isto
-obliko** (`'2026'`). Hišne ekipe berejo `sezona_lige` po ligi, zemljevid
-strani vzame še letnici. Vse ostalo sezono le primerja ali razvršča in z
-obliko "2026" deluje brez sprememb. Globalna `tekoca_sezona()` ostane
-"2026/27"; kar jo kliče brez lige (`uskladi-pozicije`, `preveri-podatke`
-— pregled golov vratarjev, `koledarskaSezona` v `Igralci.tsx` kot ugib pred
-seznamom sezon), za estonske lige še ne velja — ob vklopu prve lige preveri.
+(`scripts/razpored.mjs`; zastavico prebere `scripts/tekmovanje.mjs` s
+posebno poizvedbo, da manjkajoč stolpec ne odnese vira), **vir mora v
+zapisniku (`z.sezona`) dati isto obliko** (`'2026'`). Hišne ekipe in
+*Uskladi pozicije* berejo `sezona_lige` po ligi, preverba podatkov in
+zemljevid strani vzameta obe obliki, `competitions_view` nosi
+`sezona_koledarska` (Igralci po njej ugane tekočo sezono). Vse ostalo sezono
+le primerja ali razvršča in z obliko "2026" deluje brez sprememb. Globalna
+`tekoca_sezona()` ostane "2026/27" — nov klic naj bo `sezona_lige(liga)`.
 `ovrednoti-igralce --sezona 2025` za arhiv.
 
 ### Država obiskovalca

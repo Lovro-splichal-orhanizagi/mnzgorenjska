@@ -613,7 +613,8 @@ for (const l of seznam) {
   // Koledarska liga (Estonija) ima sezono "2026", ne "2026/27".
   const { data: sezonaLige, error: eSz } = await db.rpc('sezona_lige', { p_competition_id: l.id })
   if (eSz) throw new Error(eSz.message)
-  const { nabor, samoLetosnji } = await naborLige(l.id, sezonaLige ?? sezona)
+  const sezonaL = sezonaLige ?? sezona
+  const { nabor, samoLetosnji } = await naborLige(l.id, sezonaL)
 
   // Zasedena imena (vse ekipe lige) in izbranost med hišnimi ekipami.
   const { data: vseEkipe, error: eE } = await db
@@ -632,7 +633,7 @@ for (const l of seznam) {
 
   console.log(
     `  ${l.slug.padEnd(22)} ${pravih} pravih + ${obstojece.length} hišnih / cilj ${cilj} (${klubov} klubov) → +${dodati}` +
-    `  (nabor ${nabor.length} igralcev${samoLetosnji ? ', z letošnjimi minutami' : ', tudi brez letošnjih minut'})`,
+    `  (sezona ${sezonaL}, nabor ${nabor.length} igralcev${samoLetosnji ? ', z letošnjimi minutami' : ', tudi brez letošnjih minut'})`,
   )
   for (let i = 0; i < dodati; i++) {
     const ime = imena[i]

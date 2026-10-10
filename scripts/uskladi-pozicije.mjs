@@ -71,12 +71,6 @@ if (!KLJUC) {
 }
 const db = createClient(BASE, KLJUC, { auth: { persistSession: false } })
 
-const { data: sezona, error: eSezona } = await db.rpc('tekoca_sezona')
-if (eSezona || !sezona) {
-  console.error(`tekoča sezona: ${eSezona?.message ?? 'ni podatka'}`)
-  process.exit(1)
-}
-
 let q = db.from('competitions').select('id, slug').eq('source', VIR).order('sort_order')
 if (samo) q = q.eq('slug', samo)
 const { data: lige, error } = await q
@@ -84,7 +78,7 @@ if (error) { console.error(error.message); process.exit(1) }
 if (!lige?.length) { console.error(`ni ${VIR} lige ${samo ?? ''}`); process.exit(1) }
 
 console.log(
-  `Sezona ${sezona}, lig: ${lige.length}, ${vsePozicije ? 'vse pozicije' : 'le vratarji'}` +
+  `Lig: ${lige.length}, ${vsePozicije ? 'vse pozicije' : 'le vratarji'}` +
     (pisi ? '' : ' — samo izpis (brez --pisi)'),
 )
 let skupaj = 0
@@ -145,6 +139,12 @@ for (const liga of lige) {
   // MLSZ vratarja ne označi; `is_goalkeeper` je namig (prvi začetnik), ki ga
   // večina tekem potrdi ali ovrže enako kot oznako HNS.
   if (VIR === 'hns' || VIR === 'mlsz' || VIR === 'oefb' || VIR === 'fsb' || VIR === 'fss') { await uskladiHns(liga); continue }
+  // Tekoča sezona lige ("2026/27" ali pri koledarski ligi "2026").
+  const { data: sezona, error: eSezona } = await db.rpc('sezona_lige', { p_competition_id: liga.id })
+  if (eSezona || !sezona) {
+    console.error(`${liga.slug}: tekoča sezona: ${eSezona?.message ?? 'ni podatka'}`)
+    process.exit(1)
+  }
   const tekme = await vseVrstice((od, do_) =>
     db.from('matches')
       .select('id, source_url, rounds!inner(season, competition_id)')

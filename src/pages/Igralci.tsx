@@ -122,8 +122,9 @@ const STOLPCI: Array<{ kljuc: Stolpec; naslov: string; opis: string; mobilno?: f
 const selectRazred =
   'min-w-0 rounded-lg border border-white/10 bg-slate-900 px-2 py-1.5 text-sm text-slate-200'
 
-/** Sezona, ki je po koledarju tekoča (isto pravilo kot SQL `tekoca_sezona`). */
-function koledarskaSezona(d = new Date()): string {
+/** Sezona, ki je po koledarju tekoča (isto pravilo kot SQL `sezona_lige`). */
+function koledarskaSezona(koledarska = false, d = new Date()): string {
+  if (koledarska) return String(d.getFullYear())
   // ponytail: krajevni datum namesto ljubljanskega; zgreši le ob polnoči 1. julija.
   const leto = d.getFullYear() - (d.getMonth() < 6 ? 1 : 0)
   return `${leto}/${String((leto + 1) % 100).padStart(2, '0')}`
@@ -273,7 +274,7 @@ export default function Igralci() {
     const ligaId = tekmovanjeId
     // Lestvica verjetne sezone (tekoča po koledarju) ne čaka na seznam sezon;
     // če seznam izbere drugo, jo spodnji učinek naloži znova.
-    const verjetna = koledarskaSezona()
+    const verjetna = koledarskaSezona(Boolean(tekmovanje?.sezona_koledarska))
     const obljuba = naloziSezono(ligaId, verjetna, true)
     obljuba.catch(() => {})
     predhodno.current = { kljuc: `${ligaId}|${verjetna}|true`, obljuba }

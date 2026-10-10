@@ -15,6 +15,7 @@
 --    `vklopi_ligo_sredi_sezone` bereta `sezona_lige`. Obe sta prepisani iz
 --    zadnje definicije (20260910170000, 20261010020000), spremenjena je le
 --    sezona.
+-- 4. `competitions_view` dobi stolpec `sezona_koledarska` (na koncu).
 
 alter table public.competitions
   add column if not exists sezona_koledarska boolean not null default false;
@@ -160,3 +161,24 @@ end;
 $$;
 revoke all on function public.vklopi_ligo_sredi_sezone(text) from public, anon, authenticated;
 grant execute on function public.vklopi_ligo_sredi_sezone(text) to service_role;
+
+-- Vmesnik bere lige iz `competitions_view` (Igralci: ugib tekoče sezone).
+-- `c.*` je bil razširjen ob stvaritvi pogleda (20260912090000), zato je tu
+-- izrecen seznam istih stolpcev; nov stolpec gre NA KONEC, da `create or
+-- replace` ne prerazporedi stolpcev in odvisnih pogledov (lestvica_drzavna,
+-- mini_liga_lestvica) ni treba podirati.
+create or replace view competitions_view as
+  select c.id, c.slug, c.name, c.short_name, c.mnzg_liga, c.prvi_fantasy_krog,
+         c.sort_order, c.active, c.rok_pomak_ur, c.country_id, c.source,
+         c.source_league_code, c.federation_id, c.vir_ime, c.vir_url,
+         d.code       as country_code,
+         d.name       as country_name,
+         f.code       as federation_code,
+         f.name       as federation_name,
+         f.short_name as federation_short,
+         f.site_url   as federation_url,
+         f.sort_order as federation_sort,
+         c.sezona_koledarska
+    from competitions c
+    join countries d on d.id = c.country_id
+    left join federations f on f.id = c.federation_id;

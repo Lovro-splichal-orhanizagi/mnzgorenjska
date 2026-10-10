@@ -196,7 +196,8 @@ const { data: strelci, error: napakaStrelcev } = await db
   .from('player_season_standings')
   .select('id, full_name, goals, competition_id')
   .in('competition_id', (lige ?? []).map((l) => l.id))
-  .eq('season', sezonaIz(new Date().toISOString().slice(0, 10)))
+  // Tekoča sezona v obeh oblikah: "2026/27" in pri koledarskih ligah (Estonija) "2026".
+  .in('season', [sezonaIz(new Date().toISOString().slice(0, 10)), sezonaIz(new Date().toISOString().slice(0, 10), true)])
   .eq('position', 'GK')
   .neq('position_source', 'admin')
   .gte('goals', PRAG_GOLOV_VRATARJA)
