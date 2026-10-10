@@ -35,6 +35,7 @@ import {
 import { useAuth } from './useAuth'
 import { jezik, jePripravljen, nastaviJezik } from '../i18n/jedro.ts'
 import { jeBrezLige, useLigaStrani } from './naslov'
+import { drzavaVstopa } from './drzavaUgib'
 
 export const PRIVZETO = 'clani'
 const KLJUC = 'slff-tekmovanje'
@@ -428,7 +429,7 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!tekmovanja.length || !ustaljena) return
     // Vstop s povezave /sk stran naloži znova sam — dvojni nalog bi le utripal.
-    if (pathname === '/sk' || pathname === '/si') return
+    if (drzavaVstopa(pathname)) return
     const zeljen = jezikObiskovalca(drzava)
     if (jePripravljen(zeljen) && zeljen !== jezik()) {
       // Ligo v naslovu je dodala aplikacija (ugib), ne obiskovalec — po

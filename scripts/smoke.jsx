@@ -59,6 +59,10 @@ import { velikostImena, velikostEkipe, imeZaPlakat, najboljsiTrije, navijacev, s
 import { readFileSync } from 'node:fs'
 import { xmlEscape, urlset, sitemapIndex, nasloviLige, datotekeLige } from './sitemap.mjs'
 import { imeStrani } from '../src/lib/obiski'
+import { zDrzavo } from '../src/lib/naslov'
+import { zDrzavo as zDrzavoStreznika } from './hetzner/html/streznik.mjs'
+import { drzavaVstopa } from '../src/lib/drzavaUgib'
+import VstopDrzave from '../src/components/VstopDrzave'
 import { prezgodnjiKljuci, naloziSlovar } from '../src/i18n/jedro.ts'
 // Vsa aplikacija (tudi strani, ki jih smoke ne izriše), da se izvede vrh vseh modulov.
 import '../src/App'
@@ -177,6 +181,35 @@ try {
   preveri('sitemap: liga nad mejo se razdeli', d.map((k) => `${k.ime}:${k.naslovi.length}`).join(' ')
     === 'sitemap-x.xml:2 sitemap-x-2.xml:2 sitemap-x-3.xml:1')
   preveri('obisk: /table se šteje kot tabela', imeStrani('/table') === 'tabela')
+}
+
+// --- vstopna stran države in ime lige z državo -----------------------------
+{
+  const primeri = [
+    { name: 'Bundesliga', country_name: 'Österreich' },
+    { name: 'Slovenija open', country_name: 'Slovenija' },
+    { name: '1. GNL', country_name: 'Slovenija' },
+    { name: 'Liga', country_name: null },
+  ]
+  preveri('naslov: zDrzavo v vmesniku in strežniku HTML enako',
+    primeri.every((l) => zDrzavo(l) === zDrzavoStreznika(l)) && zDrzavo(primeri[0]) === 'Bundesliga (Österreich)'
+      && zDrzavo(primeri[1]) === 'Slovenija open', primeri.map((l) => zDrzavo(l)).join(' | '))
+  preveri('vstop: /at in /si/ sta vstopni strani, /xx in /at/1 ne',
+    drzavaVstopa('/at') === 'AT' && drzavaVstopa('/si/') === 'SI' && drzavaVstopa('/xx') === null && drzavaVstopa('/at/1') === null)
+  try {
+    renderToString(
+      <StaticRouter location="/at">
+        <AuthProvider>
+          <TekmovanjeProvider>
+            <VstopDrzave drzava="AT" />
+          </TekmovanjeProvider>
+        </AuthProvider>
+      </StaticRouter>,
+    )
+    preveri('izris: vstopna stran države', true)
+  } catch (e) {
+    preveri('izris: vstopna stran države', false, e.message)
+  }
 }
 
 // --- preklop med ligama ----------------------------------------------------

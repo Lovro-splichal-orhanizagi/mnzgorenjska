@@ -80,9 +80,10 @@ const vLigi = (pot, liga) => (liga.slug === PRIVZETO ? pot : zLigo(pot, liga))
 /**
  * Ime lige v naslovih strani lige: "Bundesliga (Österreich)". Imena, kot so
  * "Bundesliga", "2. Liga" ali "1. SNL", imajo lige več držav, zato država
- * pride zraven vedno, razen če jo ime že vsebuje.
+ * pride zraven vedno, razen če jo ime že vsebuje. Kopija `zDrzavo` iz
+ * src/lib/naslov.ts (kontejner ima le svoje datoteke); smoke ju primerja.
  */
-const zDrzavo = (liga) =>
+export const zDrzavo = (liga) =>
   liga.country_name && !liga.name.toLowerCase().includes(liga.country_name.toLowerCase()) ? `${liga.name} (${liga.country_name})` : liga.name
 /** Države z aktivno ligo po vrsti lig: [[koda, ime], …]. */
 const drzaveZLigo = (lige) => [...new Map(lige.filter((l) => l.active && l.country_code).map((l) => [l.country_code, l.country_name ?? l.country_code]))]
@@ -191,7 +192,7 @@ async function klub(id, { rest, lige, b, t }) {
         sport: 'Soccer',
         url,
         ...(k.logo_url && { logo: absolutno(k.logo_url) }),
-        memberOf: { '@type': 'SportsOrganization', name: liga.name, url: kanonicni('/table', liga.slug) },
+        memberOf: { '@type': 'SportsOrganization', name: liga.name, url: kanonicni('/table', brezPrivzete(liga)) },
         athlete: igralci.slice(0, 40).map((p) => ({ '@type': 'Person', name: prikazniIme(p.full_name), url: kanonicni(`/player/${p.id}`, brezPrivzete(liga)) })),
       },
       drobtine(liga, [{ ime: k.name, url }]),
@@ -240,13 +241,12 @@ async function tekma(id, { rest, lige, b }) {
         url,
         ...(m.played_on && { startDate: m.played_on }),
         eventStatus: 'https://schema.org/EventScheduled',
-        location: { '@type': 'Place', name: m.home_name },
         homeTeam: ekipa(m.home_name, m.home_team_id),
         awayTeam: ekipa(m.away_name, m.away_team_id),
         competitor: [ekipa(m.home_name, m.home_team_id), ekipa(m.away_name, m.away_team_id)],
-        superEvent: { '@type': 'SportsEvent', name: `${liga.name} ${m.season ?? ''}`.trim(), url: kanonicni('/results', liga.slug) },
+        superEvent: { '@type': 'SportsEvent', name: `${liga.name} ${m.season ?? ''}`.trim(), url: kanonicni('/results', brezPrivzete(liga)) },
       },
-      drobtine(liga, [{ ime: j.t('tekme.rezultati.naslov'), url: kanonicni('/results', liga.slug) }, { ime: `${m.home_name} : ${m.away_name}`, url }]),
+      drobtine(liga, [{ ime: j.t('tekme.rezultati.naslov'), url: kanonicni('/results', brezPrivzete(liga)) }, { ime: `${m.home_name} : ${m.away_name}`, url }]),
     ],
     vsebina: ovij(
       `<h1>${povezava(zLigo(`/club/${m.home_team_id}`, liga), m.home_name)} ${esc(m.home_goals)} : ${esc(m.away_goals)} ${povezava(zLigo(`/club/${m.away_team_id}`, liga), m.away_name)}</h1>` +
@@ -471,7 +471,7 @@ export function obdelovalec({ koren, rest, rok = 800 }) {
   async function seznamLig(signal) {
     if (lige.seznam && lige.do > Date.now()) return lige.seznam
     try {
-      const seznam = await rest('competitions_view?select=id,slug,name,active,country_code,country_name,vir_ime,federation_name&order=id', undefined, signal)
+      const seznam = await rest('competitions_view?select=id,slug,name,active,country_code,country_name,vir_ime,federation_name&order=federation_sort,sort_order,id', undefined, signal)
       lige = { do: Date.now() + 600_000, seznam }
     } catch (e) {
       if (!lige.seznam) throw e // star seznam je boljši kot nič

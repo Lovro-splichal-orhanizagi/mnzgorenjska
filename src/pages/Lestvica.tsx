@@ -8,7 +8,7 @@ import { supabase } from '../lib/supabase'
 import { vseVrstice } from '../lib/strani'
 import Sponzor from '../components/Sponzor'
 import { formatirajTocke, tockZ } from '../lib/pomozno'
-import { useNaslov } from '../lib/naslov'
+import { useNaslov, zDrzavo } from '../lib/naslov'
 import { useTekmovanje } from '../lib/tekmovanje'
 import { sestejOdKroga } from '../lib/lestvica'
 import MojeMiniLige from '../components/MojeMiniLige'
@@ -60,7 +60,7 @@ type ZmagovalecKroga = TockeKroga & { round_number: number; season: string }
 
 export default function Lestvica() {
   const { id: tekmovanjeId, tekmovanje } = useTekmovanje()
-  useNaslov(tekmovanje?.name, t('lestvice.lestvica.naslov'))
+  useNaslov(zDrzavo(tekmovanje), t('lestvice.lestvica.naslov'))
   const { session } = useAuth()
   const [ekipe, setEkipe] = useState<VrsticaLestvice[]>([])
   const [krog, setKrog] = useState<Krog | null>(null)

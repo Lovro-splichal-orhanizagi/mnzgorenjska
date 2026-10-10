@@ -30,6 +30,7 @@ import { mnozina, EKIPE } from '../lib/pomozno'
 import { poZvezah } from './IzbirnikLige'
 import { t } from '../i18n'
 import { KLJUC_VSTOPA, drzaveZLigami, preklopiDrzavo, zaznajTujca } from '../lib/drzava'
+import { drzavaVstopa } from '../lib/drzavaUgib'
 import Zastava from './Zastava'
 import { imeDrzave } from './IzbiraDrzave'
 
@@ -103,7 +104,9 @@ export default function PrviObisk() {
     // starši), naj najprej vidi, kar mu je kdo poslal.
     pathname.startsWith('/player/') ||
     pathname.startsWith('/team/') ||
-    pathname.startsWith('/match/')
+    pathname.startsWith('/match/') ||
+    // Vstopna stran države sama našteje lige.
+    Boolean(drzavaVstopa(pathname))
   const okno = useRef<HTMLDivElement | null>(null)
 
   const zapri = () => {

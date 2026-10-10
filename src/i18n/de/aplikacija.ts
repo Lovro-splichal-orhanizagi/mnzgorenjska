@@ -11,6 +11,9 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     deljenjeKratko: 'Fantasy-Liga für den regionalen Amateurfußball. Punkte aus den offiziellen Spielberichten.',
     ligeDrzave: 'Fantasy-Ligen ({drzava}): {lige}.',
   },
+  vstopDrzave: {
+    uvod: 'Wähl eine Liga und stell dein Team zusammen.',
+  },
   niStrani: {
     naslov: 'Seite nicht gefunden',
     opis: 'Vielleicht ist der Link veraltet oder in der Adresse steckt ein Tippfehler.',

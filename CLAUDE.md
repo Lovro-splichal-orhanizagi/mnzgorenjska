@@ -1369,8 +1369,16 @@ Slovensko") je v nogi in na vrhu izbirnika lige; pokaže le države z aktivnimi
 ligami. `preklopiDrzavo` zapiše državo, privzeto ligo in jezik v brskalnik in
 naloži naslovnico nove države — ekip in strežnika se ne dotakne. Okno prvega
 obiska ima isto povezavo ("Slovenija?"), ki pa ligo pusti neizbrano, da okno
-vpraša znova z ligami nove države. Vstopni povezavi `slff.eu/sk` in `/si` sta
-za kampanje in ostajata.
+vpraša znova z ligami nove države.
+
+**Vstopne povezave** `slff.eu/si`, `/sk`, `/at` … (`VstopDrzave.tsx`) so
+prave strani: ime države in vse aktivne lige po zvezah (domača stran in
+lestvica), v jeziku države (`drzavaVstopa` v `izberi()`), kanonični `/at`,
+brez okna prvega obiska. Državo si zapomnijo (`zapomniDrzavo`), ligo izbere
+klik (`/?t=…`, shrani se kot vsaka izbira). **Kampanja** (`?src=…` ali
+`utm_*`) gre po starem naravnost v privzeto ligo države (`location.replace`).
+Država brez aktivne lige preusmeri na `/`. Isto vsebino za iskalnike izriše
+strežnik HTML (`drzava` v `streznik.mjs`).
 
 **Slovaška je odprta** za vse (ugib po IP in jeziku). **Državo zapreš** tako,
 da jo dodaš v `SAMO_S_POVEZAVO` v `src/lib/drzavaUgib.ts` (npr. `['SK']`):
@@ -1521,7 +1529,7 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   → dani goli → ime. Medsebojnih tekem in odvzetih točk ne pozna — stran to
   pove kot približek. Privzeta sezona je zadnja z odigrano tekmo. Pod njo
   strelci iz `player_season_standings`
-- **Zemljevid strani**: `public/sitemap.xml` ima le stalne poti; po ligah ga
+- **Zemljevid strani**: `public/sitemap.xml` ima le stalne poti brez lige (`/`, `/table` … privzete lige so v `sitemap-clani.xml`); po ligah ga
   ponoči sestavi `scripts/sitemap.mjs` (delovni tok `sitemap.yml`, anon ključ:
   strani lige s `?t=` — privzeta liga `clani` brez njega, kot kanonični —,
   klubi, igralci z minutami letos ali lani, odigrane tekme, v
@@ -1648,12 +1656,14 @@ dodaj v `KLJUCI` tam).
   `#root` vse aktivne lige po zvezah (domača stran in lestvica, privzeta liga
   brez `?t=`). Predloga je kartica države (`at.html`), og:/twitter: opis
   ostane s kartice. Država brez aktivne lige dobi nespremenjeno predlogo.
-  Vmesnik `/at` še vedno preusmeri v ligo. `/` (domov) povezuje vse vstopne
+  Vmesnik izriše isto stran (glej *Država obiskovalca*). `/` (domov) povezuje vse vstopne
   strani, prva drobtina (BreadcrumbList) kaže nanje.
 - **Naslovi strani lige** (domov, lestvica lige, fantasy lestvica, rezultati,
   igralci) imajo za imenom lige državo: "Bundesliga (Österreich)", ker ima
   ime, kot je "Bundesliga" ali "2. Liga", več držav. Pravilo je preprosto:
-  vedno, razen če ime lige državo že vsebuje (`zDrzavo`). Opis teh strani je
+  vedno, razen če ime lige državo že vsebuje (`zDrzavo` v `src/lib/naslov.ts`,
+  kopija v `streznik.mjs`, ker kontejner nima `src/`; smoke ju primerja).
+  Isto velja za `useNaslov` teh strani v vmesniku. Opis teh strani je
   po ligi (zveza, sezona, vrh lestvice ali zadnji izidi).
 - Poševnica na koncu (`/table/`) je ista stran: strežnik jo za kanonični
   odreže, Caddy pa strani s seznama `@posevnica` preusmeri s 301 brez nje.

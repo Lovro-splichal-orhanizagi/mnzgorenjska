@@ -126,7 +126,8 @@ for (const pot of ['/player/9', '/player/abc']) {
   assert.equal(dogodek.homeTeam.name, 'Šenčur')
   assert.equal(dogodek.awayTeam.url, 'https://slff.eu/club/6')
   assert.equal(dogodek.description, 'Šenčur 2 : 1 Bled')
-  assert.deepEqual(dogodek.location, { '@type': 'Place', name: 'Šenčur' })
+  assert.equal(dogodek.location, undefined, 'brez naslova kraja Search Console javi opozorilo')
+  assert.equal(dogodek.superEvent.url, 'https://slff.eu/results', 'privzeta liga brez ?t=')
   assert.equal(dogodek.eventStatus, 'https://schema.org/EventScheduled')
   assert.match(html, /Strelci: Janez Novak 12&#39;/)
 }

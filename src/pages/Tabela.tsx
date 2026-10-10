@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase'
 import { useTekmovanje } from '../lib/tekmovanje'
 import { imeZveze } from '../components/VirPodatkov'
 import Grb from '../components/Grb'
-import { useNaslov } from '../lib/naslov'
+import { useNaslov, zDrzavo } from '../lib/naslov'
 import { t } from '../i18n'
 import type { Database } from '../lib/baza.types'
 
@@ -38,7 +38,7 @@ export default function Tabela() {
   const [strelci, setStrelci] = useState<Strelec[]>([])
   const [nalaganje, setNalaganje] = useState(true)
   const [napaka, setNapaka] = useState<string | null>(null)
-  useNaslov(tekmovanje?.name ? t('tekme.tabela.zavihek', { liga: tekmovanje.name }) : t('tekme.tabela.naslov'))
+  useNaslov(tekmovanje?.name ? t('tekme.tabela.zavihek', { liga: zDrzavo(tekmovanje) }) : t('tekme.tabela.naslov'))
 
   useEffect(() => {
     if (!tekmovanjeId) return

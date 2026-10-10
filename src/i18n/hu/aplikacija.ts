@@ -11,6 +11,9 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     deljenjeKratko: 'Fantasy foci a megyei amatőr bajnokságokhoz. Pontok a hivatalos jegyzőkönyvekből.',
     ligeDrzave: 'Fantasy ligák ({drzava}): {lige}.',
   },
+  vstopDrzave: {
+    uvod: 'Válassz bajnokságot, és állítsd össze a csapatod.',
+  },
   niStrani: {
     naslov: 'Az oldal nem létezik',
     opis: 'Lehet, hogy a link elavult, vagy elírás van a címben.',

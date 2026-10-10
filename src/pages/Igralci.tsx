@@ -13,7 +13,7 @@ import {
   TEKME,
 } from '../lib/pomozno'
 import { vseVrstice } from '../lib/strani'
-import { useNaslov } from '../lib/naslov'
+import { useNaslov, zDrzavo } from '../lib/naslov'
 import { Link } from '../components/Povezava'
 import { POZICIJE } from '../lib/pravila'
 import { useTekmovanje } from '../lib/tekmovanje'
@@ -201,7 +201,7 @@ async function naloziSezono(
 
 export default function Igralci() {
   const { id: tekmovanjeId, tekmovanje } = useTekmovanje()
-  useNaslov(tekmovanje?.name, t('igralci.seznam.naslov'))
+  useNaslov(zDrzavo(tekmovanje), t('igralci.seznam.naslov'))
   const odsotni = useOdsotni(tekmovanjeId)
   const zveza = imeZveze(tekmovanje)
   const [igralci, setIgralci] = useState<IgralecSezone[]>([])

@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { t } from '../i18n/jedro.ts'
 import { DOMENA } from './platforma.ts'
+import { drzavaVstopa } from './drzavaUgib.ts'
 
 
 /**
@@ -25,7 +26,21 @@ export function useNaslov(...deli: Array<string | null | undefined>): void {
 const BREZ_LIGE = ['/legal', '/login', '/account', '/reminders', '/new-password', '/novo-geslo', '/admin', '/auth/', '/l/']
 
 export function jeBrezLige(pot: string): boolean {
-  return BREZ_LIGE.some((p) => (p.endsWith('/') ? pot.startsWith(p) : pot === p))
+  // Vstopna stran države (/at) je ena za vse lige; kanonični je `/at`.
+  return Boolean(drzavaVstopa(pot)) || BREZ_LIGE.some((p) => (p.endsWith('/') ? pot.startsWith(p) : pot === p))
+}
+
+/**
+ * Ime lige v naslovu strani lige: "Bundesliga (Österreich)". Imena, kot so
+ * "Bundesliga", "2. Liga" ali "1. SNL", imajo lige več držav, zato država
+ * pride zraven vedno, razen če jo ime že vsebuje. Isto pravilo ima strežnik
+ * HTML (`zDrzavo` v scripts/hetzner/html/streznik.mjs, smoke ju primerja).
+ */
+export function zDrzavo(liga: { name: string; country_name?: string | null } | null | undefined): string | undefined {
+  if (!liga?.name) return undefined
+  return liga.country_name && !liga.name.toLowerCase().includes(liga.country_name.toLowerCase())
+    ? `${liga.name} (${liga.country_name})`
+    : liga.name
 }
 
 /**

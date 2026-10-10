@@ -11,6 +11,9 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     deljenjeKratko: 'Liga fantasy pentru ligile de fotbal amator. Puncte din foile de joc oficiale.',
     ligeDrzave: 'Ligi fantasy ({drzava}): {lige}.',
   },
+  vstopDrzave: {
+    uvod: 'Alege o ligă și formează-ți echipa.',
+  },
   niStrani: {
     naslov: 'Pagina nu există',
     opis: 'Linkul poate fi expirat sau adresa are o greșeală de scriere.',

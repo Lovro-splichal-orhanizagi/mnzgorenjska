@@ -16,6 +16,10 @@ export const aplikacija = {
     // Opis vstopne strani države (/at …) v strežniku HTML: ime države in lige.
     ligeDrzave: 'Fantasy lige ({drzava}): {lige}.',
   },
+  // Vstopna stran države (/at): seznam lig te države.
+  vstopDrzave: {
+    uvod: 'Izberi ligo in sestavi ekipo.',
+  },
   niStrani: {
     naslov: 'Stran ne obstaja',
     opis: 'Povezava je morda zastarela ali pa je v naslovu tipkarska napaka.',
