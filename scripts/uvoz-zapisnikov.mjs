@@ -25,6 +25,13 @@ import { dodajStrelceSKlopi } from './zapisnik.mjs'
 import { imeHash, regHash } from './anonimizacija.mjs'
 import { NEPOPOLN } from './viri/frf.mjs'
 
+// Vir je zavrnil (jalgpall: 403, 429, izziv): izhod 4, da nočna zanka države
+// ne bere naprej (uvoz-zapisnikov.yml). Ostale napake ostanejo izhod 1.
+process.on('uncaughtException', (e) => {
+  console.error(e)
+  process.exit(e?.zavrnitev ? 4 : 1)
+})
+
 /** Nepopolna tekma: prvo opozorilo se začne z `NEPOPOLN` (glej viri/frf.mjs). */
 const jeNepopolna = (opozorila) => Array.isArray(opozorila) && String(opozorila[0] ?? '').startsWith(NEPOPOLN)
 
@@ -118,6 +125,8 @@ async function prenesi(url, datoteka, sveze = false) {
     throw e
   }
   const besedilo = await odgovor.text()
+  // Izziv (CAPTCHA) ne sme v predpomnilnik namesto zapisnika.
+  if (vir.jeIzziv?.(besedilo)) throw vir.zavrnitev(`${url} vrne izziv (CAPTCHA)`)
   writeFileSync(pot, besedilo)
   return besedilo
 }

@@ -141,16 +141,20 @@ jobs:
           urni=0
           if [ "$GITHUB_EVENT_NAME" = "schedule" ] && [ "$(date -u +%H)" != "05" ]; then urni=1; fi
           [ "$urni" = 1 ] && echo "Urni zagon: preračun le dotaknjenih krogov"
+          # Izhod 4 = vir je zavrnil (403, 429, izziv — jalgpall): ne beremo
+          # naprej, tudi ostalih lig iste države ne (spletišče je skupno).
+          zavrnjen=0
+          teci() { "$@" </dev/null; local k=$?; [ "$k" = 4 ] && zavrnjen=1; return "$k"; }
           while IFS= read -r liga; do
             [ -n "$liga" ] || continue
             echo "::group::$liga"
             ok=1
-            node scripts/uvoz-razporeda.mjs   --tekmovanje "$liga" --pisi </dev/null || ok=0
+            teci node scripts/uvoz-razporeda.mjs --tekmovanje "$liga" --pisi || ok=0
             node scripts/uvoz-delegiranja.mjs --tekmovanje "$liga" --pisi </dev/null || ok=0
             rm -f /tmp/uvozenih
             dodatno=""
             [ "$urni" = 1 ] && dodatno="--samo-dotaknjene"
-            node scripts/uvoz-zapisnikov.mjs  --tekmovanje "$liga" --sveze 21 --porocilo /tmp/uvozenih $dodatno </dev/null || ok=0
+            [ "$zavrnjen" = 1 ] || teci node scripts/uvoz-zapisnikov.mjs --tekmovanje "$liga" --sveze 21 --porocilo /tmp/uvozenih $dodatno || ok=0
             # Prestopi so porocilo; vir, ki jih ne objavlja, se konca z 0.
             node scripts/uvoz-registracij.mjs --tekmovanje "$liga" </dev/null || ok=0
             # Novi igralci pridejo le z novimi zapisniki. Brez porocila (uvoz
@@ -167,6 +171,11 @@ jobs:
               padle="$padle $liga"
             fi
             echo "::endgroup::"
+            if [ "$zavrnjen" = 1 ]; then
+              echo "::error title=Vir je zavrnil::$liga — vir je vrnil 403/429 ali izziv; ostale lige države preskočene, ne obhajamo"
+              padle="$padle $liga"
+              break
+            fi
           done < /tmp/lige.txt
           if [ -n "$padle" ]; then
             echo "::error title=Neuspele lige::$padle"

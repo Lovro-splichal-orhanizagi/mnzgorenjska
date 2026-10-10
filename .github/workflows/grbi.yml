@@ -1,4 +1,7 @@
 name: Grbi klubov (rocni seznam)
+# Vir v imenu zagona: uvozi Estonije po njem vedo, da bere jalgpall.ee
+# (scripts/cakaj-na-uvoze.mjs, SKUPEN_VIR).
+run-name: Grbi klubov ${{ inputs.vir }}
 
 # `scripts/prenesi-grbe.mjs` ima rocno sestavljen seznam naslovov grbov za
 # klube, ki jih NZS ne objavlja (regionalne lige). Doslej je tekel le lokalno,
@@ -15,23 +18,26 @@ name: Grbi klubov (rocni seznam)
 # `vir = oefb`: avstrijski klubi z oefb.at (scripts/grbi-oefb.mjs), id grba iz
 # razporeda lige. /oefb2/images/ robots.txt prepoveduje — beremo ga le z
 # izrecnim dovoljenjem OFB (9. 10. 2026). Brez `tekmovanje` vse aktivne at- lige.
+#
+# `vir = jalgpall`: estonski klubi z glave zapisnika na jalgpall.ee
+# (scripts/grbi-jalgpall.mjs). Brez `tekmovanje` vse ee- lige.
 
 on:
   workflow_dispatch:
     inputs:
       vir:
-        description: 'rocni = seznam v prenesi-grbe.mjs, sportnet = slovaski klubi s futbalnet.sk, hns = hrvaski klubi s semafor.hns.family, oefb = avstrijski klubi z oefb.at'
+        description: 'rocni = seznam v prenesi-grbe.mjs, sportnet = slovaski klubi s futbalnet.sk, hns = hrvaski klubi s semafor.hns.family, oefb = avstrijski klubi z oefb.at, jalgpall = estonski klubi z jalgpall.ee'
         required: false
         default: rocni
         type: choice
-        options: [rocni, sportnet, hns, oefb]
+        options: [rocni, sportnet, hns, oefb, jalgpall]
       tekmovanje:
-        description: 'Samo za hns/oefb: ena liga (slug, npr. hr-mz-1mnl, at-k-kaerntner-liga); prazno = vse hrvaske / vse aktivne avstrijske lige'
+        description: 'Samo za hns/oefb/jalgpall: ena liga (slug, npr. hr-mz-1mnl, at-k-kaerntner-liga); prazno = vse hrvaske / vse aktivne avstrijske lige'
         required: false
         default: ''
         type: string
       prepisi:
-        description: 'Samo za hns/oefb: prepisi tudi obstojece grbe'
+        description: 'Samo za hns/oefb/jalgpall: prepisi tudi obstojece grbe'
         required: false
         default: false
         type: boolean
@@ -65,6 +71,15 @@ jobs:
       - run: npm ci --ignore-scripts
       # Za pomanjšanje grbov (sips je le na macOS); ubuntu-latest ga nima več.
       - run: command -v convert || command -v magick || (sudo apt-get update -qq && sudo apt-get install -y -qq imagemagick)
+      # jalgpall.ee ima en proračun branja (Crawl-Delay 5 s): grbi ne berejo
+      # hkrati z uvozom Estonije, ki je začel prej (in obratno, glej skripto).
+      - name: Pocakaj na uvoze Estonije
+        if: inputs.vir == 'jalgpall'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/cakaj-na-uvoze.mjs --drzava EE --najvec 45
       - name: Prenesi grbe in zapisi logo_url
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -80,11 +95,12 @@ jobs:
             sportnet) skripta=grbi-sportnet ;;
             hns) skripta=grbi-hns ;;
             oefb) skripta=grbi-oefb ;;
+            jalgpall) skripta=grbi-jalgpall ;;
             *) skripta=prenesi-grbe ;;
           esac
           args=()
           if [ "$PISI" = "true" ]; then args+=(--pisi); fi
-          if [ "$VIR" = "hns" ] || [ "$VIR" = "oefb" ]; then
+          if [ "$VIR" = "hns" ] || [ "$VIR" = "oefb" ] || [ "$VIR" = "jalgpall" ]; then
             if [ -n "$TEKMOVANJE" ]; then args+=(--tekmovanje "$TEKMOVANJE"); fi
             if [ "$PREPISI" = "true" ]; then args+=(--prepisi); fi
           fi

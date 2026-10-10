@@ -42,6 +42,12 @@ const NAJVEC_MIN = Number(arg('--najvec') ?? 120)
 // Romunija: vsaka županijska zveza (AJF) je svoja piramida; državne zveze v
 // SLFF ni, 'frf' je le vir (nobena liga nima zveze s to šifro).
 const LOCENE_ZVEZE = { AT: 'oefb', RO: 'frf' }
+// Države, katerih lige bere eno samo spletišče s skupnim proračunom branja
+// (jalgpall.ee: robots.txt Crawl-Delay 5 s za vse nas skupaj). Dva zagona iste
+// države bi brala hkrati in skupaj prehitro, zato se tu križa VSAK zagon iste
+// države: nočni in ročni, vklopljena in nevklopljena liga, tudi *Grbi klubov*
+// tega vira (run-name "Grbi klubov <vir>").
+const SKUPEN_VIR = { EE: 'jalgpall' }
 
 const { GITHUB_RUN_ID, GITHUB_REPOSITORY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = process.env
 if (!GITHUB_RUN_ID || !GITHUB_REPOSITORY) {
@@ -83,8 +89,9 @@ function seKrize(tok, naslov) {
     // Nočni uvoz bere le vklopljene lige, zato ga ročni uvoz nevklopljene ne
     // zadeva (madžarske lige pred vklopom: sicer bi vsak urni zagon čakal
     // na tekoči ročni uvoz).
-    if (!mojaLiga && !liga.aktivna) return false
     if (liga.drzava !== mojaDrzava) return false
+    if (SKUPEN_VIR[mojaDrzava]) return true
+    if (!mojaLiga && !liga.aktivna) return false
     // Ročna uvoza nevklopljenih lig pišeta vsak v svoje igralce in tečeta
     // hkrati, tudi iz iste dežele (od 10. 10. 2026; prej le iz različnih).
     // Hkratni vpis istega novega kluba ujame klubId, isto tekmo skupnega arhiva
@@ -97,7 +104,9 @@ function seKrize(tok, naslov) {
   }
   // Nočni uvoz piše le v vklopljene lige. Ročni uvoz nevklopljene ga ne moti;
   // med seboj pa nočne zagone vrsti že skupina `uvoz-zapisnikov`.
-  if (tok === 'uvoz-zapisnikov.yml') return mojaLiga ? mojaJeAktivna : false
+  // Nočni zagon nosi vse države; pri skupnem viru se nanj čaka vedno.
+  if (tok === 'uvoz-zapisnikov.yml') return SKUPEN_VIR[mojaDrzava] ? true : mojaLiga ? mojaJeAktivna : false
+  if (tok === 'grbi.yml') return !!SKUPEN_VIR[mojaDrzava] && naslov === `Grbi klubov ${SKUPEN_VIR[mojaDrzava]}`
   return true
 }
 
@@ -120,7 +129,9 @@ if (samoTece) {
 
 for (let min = 1; min <= NAJVEC_MIN; min++) {
   const pred = []
-  for (const tok of ['uvoz-zapisnikov.yml', 'uvoz-lige.yml', 'zdruzi-klube.yml', 'tedensko-cene.yml']) {
+  const tokovi = ['uvoz-zapisnikov.yml', 'uvoz-lige.yml', 'zdruzi-klube.yml', 'tedensko-cene.yml']
+  if (SKUPEN_VIR[mojaDrzava]) tokovi.push('grbi.yml')
+  for (const tok of tokovi) {
     // Brez --status: tudi čakajoči (queued) starejši zagon mora priti prvi.
     const zagoni = JSON.parse(
       gh('run', 'list', '--workflow', tok, '--limit', '50', '--json', 'databaseId,startedAt,status,displayTitle'),
