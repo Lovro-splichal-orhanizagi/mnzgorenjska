@@ -28,6 +28,7 @@ import hlf from './hlf.mjs'
 import pzpn from './pzpn.mjs'
 import jalgpall from './jalgpall.mjs'
 import lff from './lff.mjs'
+import ffm from './ffm.mjs'
 
 const VIRI = {
   mnzg,
@@ -70,6 +71,9 @@ const VIRI = {
   // Latvija (LFF) prek lff.lv: brez šifer igralcev (ime + klub), vratar (G),
   // koledarska sezona.
   lff,
+  // Severna Makedonija (FFM) prek ffm.mk: predloga kot fss.rs, brez šifer igralcev,
+  // vratar je prvi začetnik (namig).
+  ffm,
 }
 
 /**
