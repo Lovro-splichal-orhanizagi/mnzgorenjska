@@ -574,6 +574,74 @@ ekipa z 10 oz. 9 začetniki; goli = izid, vsi nastopi s šifro); 14 vzorcev je b
 | hu-za-3-nyugat | `67/20/33920` | `65/20/31676` |
 | hu-za-3-kozep | `67/20/34240` | `63/20/29515` (Nyugat 2024/25; nova skupina) |
 
+**Mladinci U19** (migracija 20261012061100): 48 lig, **neaktivnih**, le
+najstarejša kategorija na velikem igrišču — MLSZ Országos U19 Kiemelt in Alap,
+Regionális U19 Kiemelt (Nyugat, Kelet) in sedem skupin Regionális U19 Alap
+(zveza `mlsz`; Adatbank regionalne vodi pod županijo, ki jih izvaja, zato je
+`<sz>` v šifri županija) ter županijske U19 lige s skupinami. Nobena županija
+nima U18 namesto U19. Kot druge mladinske lige: `prvi_fantasy_krog = 2`,
+`rok_pomak_ur = 2`. Ekipe U19 nosijo ime kluba (`kljucKlubaHu` pripono U19
+odreže), klub je skupen s člani. Zapisniki so enaki kot pri odraslih
+(postavi 11 + 11, klop, menjave v parih, šifre igralcev).
+
+Izpuščeno: U17 in mlajši (tudi Nógrád, ki ima najvišjo U17), U21 (Győr,
+Hajdú-Bihar, Heves, Nógrád, Vas, Zala, Veszprém II. — spremljevalne lige
+odraslih, ne mladinske; Győr, Hajdú-Bihar, Heves, Nógrád in Vas zato županijske
+U19 nimajo, njihovi klubi igrajo v regionalnih), leány/női, futsal (tudi
+županijski U19 futsal), kispályás, Fejér *Téli Műfüves* (zimski turnir),
+Pest *PVMF7vége* (turnir), pokali in rájátszás. Pest U19 A–E (8 klubov, 9
+krogov) in Komárom-Esztergom U19 *Alapszakasz* sta le jesenski del —
+nadaljevanje bo svoje tekmovanje (kot Veszprém III.).
+
+Arhiv je osnovno tekmovanje 2025/26; kjer je županija skupine preuredila, je
+izbran po skupnih klubih 1. kroga (BLSZ 2025/26 je bila ena skupina →
+1. csoport, 2. csoport dobi 2024/25; Pest 2025/26 A–D → A, C, D, E).
+**Pest U19 B in Komárom-Esztergom U19 II. sta brez arhiva** (lanske skupine
+so porabile druge lige, KEM je imel lani eno samo U19).
+
+Preverba arhivov (11.–12. 10. 2026, zadnji krog vsakega od 49 arhivov): število
+krogov se ujema s seznamom zveze, zadnji krog je odigran (Békés Észak ena
+neodigrana tekma); prvi zapisnik z izidom se razčleni pri 47 (goli = izid,
+vsi nastopi s šifro, klop in menjave kot pri odraslih), dva vzorca sta
+kontumaciji (zapisnik null). Mladinske ekipe pogosteje igrajo okrnjene: pet
+vzorcev ima ekipo z 8–10 začetniki (opozorilo, ne napaka). Adatbank je ves čas
+vračal `SQLSTATE[08004] [1040] Too many connections` — preverba je tekla s
+3,5 s med zahtevki in umikom do 5 minut.
+
+| liga | tekoča 2026/27 | arhiv |
+|---|---|---|
+| hu-u19-orszagos-kiemelt / -alap | `67/0/34125` / `33758` | `65/0/31618` / `31992` |
+| hu-u19-kiemelt-nyugat / -kelet | `67/0/33775` / `34140` | `65/0/31636` / `32034` |
+| hu-u19-eszaknyugat | `67/8/34463` | `65/8/32091` |
+| hu-u19-kozepnyugat | `67/7/34362` | `65/7/32098` |
+| hu-u19-delnyugat | `67/2/34374` | `65/15/32152` (lani pod Somogy) |
+| hu-u19-kozepkelet | `67/5/34365` | `65/5/32155` |
+| hu-u19-eszakkelet | `67/10/34363` | `65/13/32100` (lani pod Nógrád) |
+| hu-u19-kelet | `67/16/34403` | `65/16/32090` |
+| hu-u19-delkelet | `67/6/34350` | `65/6/32097` |
+| hu-bk-u19-del / -eszak / -kozep | `67/1/33679` / `33680` / `33681` | `65/1/31510` / `31511` / `31512` |
+| hu-ba-u19-1 | `67/2/33845` | `65/2/31438` |
+| hu-ba-u19-2 | `67/2/33847` | `65/2/32199,32200` (A + B, brez rájátszás) |
+| hu-be-u19-eszak / -del | `67/3/34290` / `33833` | `65/3/31726` / `32046` |
+| hu-baz-u19-1 | `67/4/33599` | `65/4/31350` |
+| hu-baz-u19-2-eszak / -kelet / -kozep | `67/4/34092` / `34093` / `34094` | `65/4/31794` / `31795` / `31796` |
+| hu-bp-u19-1 | `67/5/33817` | `65/5/31545` (alapszakasz) |
+| hu-bp-u19-2 | `67/5/34361` | `63/5/29828` (2. csoport 2024/25) |
+| hu-cs-u19-szalai / -toth | `67/6/33880` / `34102` | `65/6/31554` (Homokhát) / `31904` (Tisza-Maros) |
+| hu-fe-u19-1 | `67/7/34116` | `65/7/31938` |
+| hu-fe-u19-2-eszak / -nyugat / -del | `67/7/34186` / `34187` / `34188` | `65/7/31964` (Kelet) / `31962` (Észak) / `31966` (Dél) |
+| hu-jn-u19-1 | `67/11/33742` | `65/11/31496` |
+| hu-jn-u19-teruleti | `67/11/33744` | `65/11/31497,31990` (I. + II. csoport) |
+| hu-ke-u19-1 / -2 | `67/12/33795` / `33797` | `65/12/31692` / — |
+| hu-pe-u19-a / -b / -c / -d / -e | `67/14/34248` / `34249` / `34250` / `34387` / `34252` | `65/14/32326` / — / `32327` / `32328` / `32325` |
+| hu-so-u19-1 | `67/15/33707` | `65/15/31583` |
+| hu-so-u19-2-eszak / -del | `67/15/33711` / `34108` | `65/15/31587` / `31857` |
+| hu-sz-u19-1 | `67/16/33810` | `65/16/31416` |
+| hu-sz-u19-2-1 / -2-2 | `67/16/33812` / `34158` | `65/16/31418` / `31844,31841` (3. + 2. csoport) |
+| hu-to-u19 | `67/17/33960` | `65/17/31536` |
+| hu-ve-u19 | `67/19/34165` | `65/19/32094` |
+| hu-za-u19 | `67/20/33922` | `65/20/31681` |
+
 ### Avstrija
 
 Država `AT` ("Österreich", migracija 20261009160000) ima vmesnik v nemščini
