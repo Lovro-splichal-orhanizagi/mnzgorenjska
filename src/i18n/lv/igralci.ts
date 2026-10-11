@@ -207,7 +207,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     vsiKlubi: 'Visi klubi',
     vsePozicije: 'Visas pozīcijas',
     igralec: 'Spēlētājs',
-    znanoPoRoku: 'Būs zināms pēc pirmā termiņa',
+    znanoPoRoku: 'Būs zināms pēc termiņa, kad līgā būs vismaz 5 komandas',
     pokaziVec: 'Rādīt vairāk ({n})',
     prikazaniVsi: 'Parādīti visi ({igralci}).',
     razvrsti: 'Kārtot',

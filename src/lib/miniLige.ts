@@ -209,6 +209,8 @@ export interface VrsticaPregleda {
   ekipa_id: number
   ekipa: string
   lastnik: string | null
+  /** Lastnik ekipe; vmesnik z njim poveže le svojo ekipo (sestava je zasebna). */
+  lastnik_id?: string | null
   tocke: number
   mesto: number
   /** Za koliko mest se je ekipa premaknila na lestvici mini lige; `null` v prvem krogu. */

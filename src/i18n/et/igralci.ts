@@ -201,7 +201,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     vsiKlubi: 'Kõik klubid',
     vsePozicije: 'Kõik positsioonid',
     igralec: 'Mängija',
-    znanoPoRoku: 'Selgub pärast esimest tähtaega',
+    znanoPoRoku: 'Selgub pärast tähtaega, kui liigas on vähemalt 5 meeskonda',
     pokaziVec: 'Näita rohkem ({n})',
     prikazaniVsi: 'Näidatakse kõiki ({igralci}).',
     razvrsti: 'Sorteeri',

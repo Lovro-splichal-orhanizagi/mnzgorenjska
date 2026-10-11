@@ -259,13 +259,16 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     nazaj: 'Wróć do tabeli',
     skupaj: 'łącznie {tocke} {beseda}',
     brezKrogov:
-      'W tej lidze nie zakończyła się jeszcze żadna kolejka. Cudze drużyny pokażą się po upływie terminu — do tego czasu nikt ich nie widzi.',
+      'W tej lidze nie zakończyła się jeszcze żadna kolejka. Składy z kolejek pokażą się po pierwszym terminie.',
     nalaganjePostave: 'Ładowanie składu …',
     brezPostave: 'Ta drużyna nie miała składu w wybranej kolejce.',
     vTemKrogu: '{beseda} w tej kolejce',
     kazen: '(−{kazen} za transfery)',
     namestnik: 'Kapitan nie zagrał, więc mnożnik przejął wicekapitan.',
     klop: 'Ławka',
+    zasebna: 'Drużyny innych graczy nie są publiczne.',
+    zasebnaOpis:
+      'Skład, kapitana, ławkę i transfery widzi tylko właściciel drużyny. Punkty i miejsce są w rankingu.',
   },
 
   klub: {

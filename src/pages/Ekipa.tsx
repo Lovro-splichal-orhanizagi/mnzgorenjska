@@ -20,6 +20,8 @@ import {
 } from '../lib/tujaEkipa'
 import { t } from '../i18n'
 import { izvor } from '../lib/platforma'
+import { useAuth } from '../lib/useAuth'
+import { jeMojaEkipa } from '../components/ImeEkipe'
 
 interface Krog {
   id: number
@@ -28,13 +30,13 @@ interface Krog {
 }
 
 /**
- * Ekipa drugega managerja — a le v krogih, ki so se ze zaklenili.
+ * Ekipa po krogih — postave zaklenjenih krogov s točkami.
  *
- * V klepetu sta padli dve nasprotujoci si prosnji: en manager je hotel videti
- * tuje ekipe, drug je odgovoril, da igra tako izgubi smisel. Obe drzita, le
- * vsaka na svoji strani roka. Pred rokom bi bil vpogled prepisovanje; po
- * roku je postava zamrznjena in je edino, kar se da z njo poceti, primerjati
- * se z njo. Zato ta stran ne pozna nastavitve zasebnosti — pozna samo rok.
+ * Sestava ekipe je zasebna (odločitev lastnika, 10/2026; migracija
+ * 20261012121100): postavo, kapetana in klop vidi le lastnik (in admin).
+ * Drugim stran pokaže ime, lastnika, točke in mesto ter pove, da ekipe drugih
+ * niso javne. Pravilo varuje baza (`tuja_postava`, RLS na posnetkih); stran
+ * tujcu postave niti ne zahteva.
  */
 export default function Ekipa() {
   const { id } = useParams<{ id: string }>()
@@ -55,6 +57,10 @@ export default function Ekipa() {
   const [kazen, setKazen] = useState(0)
   const [neto, setNeto] = useState<number | null>(null)
   const [napaka, setNapaka] = useState<string | null>(null)
+  const [mesto, setMesto] = useState<number | null>(null)
+  const [jeAdmin, setJeAdmin] = useState(false)
+  const { session, loading: nalaganjeSeje } = useAuth()
+  const uporabnikId = session?.user.id ?? null
   // Vrstica krogov drsi vodoravno; izbrani krog naj bo viden.
   const vrsticaKrogov = useRef<HTMLDivElement>(null)
   // Liga ekipe, ne tista, ki je izbrana v meniju — povezava lahko pripelje
@@ -84,6 +90,17 @@ export default function Ekipa() {
         return
       }
       setEkipa(e)
+
+      // Mesto na lestvici lige: koliko ekip ima več točk.
+      if (e.competition_id != null && e.total_points != null) {
+        const { count } = await supabase
+          .from('fantasy_team_standings')
+          .select('fantasy_team_id', { count: 'exact', head: true })
+          .eq('competition_id', e.competition_id)
+          .gt('total_points', e.total_points)
+        if (!veljavno) return
+        setMesto(count != null ? count + 1 : null)
+      }
 
       // Samo krogi, v katerih ima TA ekipa posnetek. Migracija 20260913100000
       // je zaklenila vse ze zapadle kroge, tudi cele lanske sezone, za katere
@@ -122,9 +139,39 @@ export default function Ekipa() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
+  // --- kdo sme videti sestavo ----------------------------------------------
+  // Lastnik vedno; admin tudi (baza mu postavo vrne). Dokler ni znano, ali je
+  // gledalec admin, stran še nalaga, da se adminu ne pokaže zasebno sporočilo.
+  const jeLastnik = jeMojaEkipa(ekipa?.owner_id, uporabnikId)
+  const [adminZnan, setAdminZnan] = useState(false)
+  useEffect(() => {
+    if (!ekipa || !uporabnikId || jeLastnik) {
+      setJeAdmin(false)
+      setAdminZnan(true)
+      return
+    }
+    let veljavno = true
+    setAdminZnan(false)
+    supabase
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', uporabnikId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!veljavno) return
+        setJeAdmin(Boolean(data?.is_admin))
+        setAdminZnan(true)
+      })
+    return () => {
+      veljavno = false
+    }
+  }, [ekipa, uporabnikId, jeLastnik])
+  const smeVideti = jeLastnik || jeAdmin
+  const odloceno = !nalaganjeSeje && adminZnan
+
   // --- postava izbranega kroga ---------------------------------------------
   useEffect(() => {
-    if (!id || !izbranKrog) return
+    if (!id || !izbranKrog || !smeVideti) return
     let veljavno = true
     ;(async () => {
       setNalaganjePostave(true)
@@ -155,7 +202,7 @@ export default function Ekipa() {
     return () => {
       veljavno = false
     }
-  }, [id, izbranKrog])
+  }, [id, izbranKrog, smeVideti])
 
   const { postava, klop } = useMemo(() => razdeli(vrstice), [vrstice])
   const skupaj = useMemo(() => skupajTock(vrstice), [vrstice])
@@ -187,7 +234,7 @@ export default function Ekipa() {
     if (vrsta && gumb) vrsta.scrollLeft = gumb.offsetLeft - (vrsta.clientWidth - gumb.offsetWidth) / 2
   }, [izbranKrog, krogi, nalaganje])
 
-  if (nalaganje) return <p className="text-slate-400">{t('skupno.nalaganje')}</p>
+  if (nalaganje || (ekipa && !odloceno)) return <p className="text-slate-400">{t('skupno.nalaganje')}</p>
   if (napaka)
     return (
       <div>
@@ -214,10 +261,22 @@ export default function Ekipa() {
             tocke: formatirajTocke(ekipa?.total_points),
             beseda: tockZ(ekipa?.total_points),
           })}
+          {mesto != null && <> · {t('lestvice.mesto', { mesto })}</>}
         </p>
       </header>
 
-      {krogi.length === 0 ? (
+      {!smeVideti ? (
+        <div className="kartica space-y-2 p-4">
+          <p className="font-semibold">{t('lestvice.ekipa.zasebna')}</p>
+          <p className="text-sm text-slate-400">{t('lestvice.ekipa.zasebnaOpis')}</p>
+          <Link
+            to={zLigo('/standings', tekmovanjeEkipe?.slug)}
+            className="inline-block text-sm text-gnl-400 underline"
+          >
+            {t('lestvice.ekipa.nazaj')}
+          </Link>
+        </div>
+      ) : krogi.length === 0 ? (
         <p className="text-sm text-slate-400">
           {t('lestvice.ekipa.brezKrogov')}
         </p>

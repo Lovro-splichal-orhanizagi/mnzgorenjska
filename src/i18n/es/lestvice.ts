@@ -249,13 +249,16 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     nazaj: 'Volver a la clasificación',
     skupaj: '{tocke} {beseda} en total',
     brezKrogov:
-      'En esta liga aún no ha terminado ninguna jornada. Los equipos de los demás se muestran cuando pasa el cierre; hasta entonces no los ve nadie.',
+      'En esta liga aún no ha terminado ninguna jornada. Las alineaciones por jornada aparecen tras el primer cierre.',
     nalaganjePostave: 'Cargando la alineación …',
     brezPostave: 'Este equipo no tenía alineación en la jornada seleccionada.',
     vTemKrogu: '{beseda} en esta jornada',
     kazen: '(−{kazen} por fichajes)',
     namestnik: 'El capitán no jugó, así que el multiplicador pasó al vicecapitán.',
     klop: 'Banquillo',
+    zasebna: 'Los equipos de otros jugadores no son públicos.',
+    zasebnaOpis:
+      'La alineación, el capitán, el banquillo y los fichajes solo los ve el dueño del equipo. Los puntos y la posición están en la clasificación.',
   },
 
   klub: {

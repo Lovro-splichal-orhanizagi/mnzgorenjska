@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Link } from '../components/Povezava'
 import ImeLastnika from '../components/ImeLastnika'
+import ImeEkipe from '../components/ImeEkipe'
 import { supabase } from '../lib/supabase'
 import { formatirajTocke, mnozina, EKIPE, KROGI } from '../lib/pomozno'
 import { vseVrstice } from '../lib/strani'
@@ -206,12 +207,15 @@ export default function Slovenija() {
                     {v.mesto <= 3 ? MEDALJE[v.mesto - 1] : v.mesto}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <Link
-                      to={zLigo(`/team/${v.fantasy_team_id}`, v.competition_slug)}
-                      className="block truncate text-sm font-semibold after:absolute after:inset-0 after:content-[''] hover:text-gnl-400"
+                    <ImeEkipe
+                      id={v.fantasy_team_id}
+                      lastnikId={v.owner_id}
+                      pot={zLigo(`/team/${v.fantasy_team_id}`, v.competition_slug)}
+                      className="block truncate text-sm font-semibold"
+                      povezavaRazred="after:absolute after:inset-0 after:content-[''] hover:text-gnl-400"
                     >
                       {v.team_name}
-                    </Link>
+                    </ImeEkipe>
                     <div className="truncate text-xs text-slate-500">
                       <ImeLastnika ime={v.owner_name} id={v.owner_id} />
                       {v.competition_short ? ` · ${v.competition_short}` : ''}

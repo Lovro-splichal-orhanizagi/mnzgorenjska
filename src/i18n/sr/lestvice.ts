@@ -254,13 +254,16 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     nazaj: 'Nazad na tabelu',
     skupaj: 'ukupno {tocke} {beseda}',
     brezKrogov:
-      'U ovoj ligi još nije završeno nijedno kolo. Tuđi timovi se prikazuju posle isteka roka, do tada ih niko ne vidi.',
+      'U ovoj ligi još nije završeno nijedno kolo. Postave po kolima se prikazuju posle prvog roka.',
     nalaganjePostave: 'Učitavanje postave …',
     brezPostave: 'Ovaj tim u izabranom kolu nije imao postavu.',
     vTemKrogu: '{beseda} u ovom kolu',
     kazen: '(−{kazen} za transfere)',
     namestnik: 'Kapiten nije igrao, pa je množilac preuzeo zamenik.',
     klop: 'Klupa',
+    zasebna: 'Timovi drugih igrača nisu javni.',
+    zasebnaOpis:
+      'Postavu, kapitena, klupu i transfere vidi samo vlasnik tima. Bodovi i mesto su na tabeli.',
   },
 
   klub: {

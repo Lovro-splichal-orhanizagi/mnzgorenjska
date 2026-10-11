@@ -201,7 +201,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     vsiKlubi: 'Alle Vereine',
     vsePozicije: 'Alle Positionen',
     igralec: 'Spieler',
-    znanoPoRoku: 'Bekannt nach der ersten Deadline',
+    znanoPoRoku: 'Bekannt nach der Deadline, sobald die Liga mindestens 5 Teams hat',
     pokaziVec: 'Mehr anzeigen ({n})',
     prikazaniVsi: 'Alle werden angezeigt ({igralci}).',
     razvrsti: 'Sortieren',

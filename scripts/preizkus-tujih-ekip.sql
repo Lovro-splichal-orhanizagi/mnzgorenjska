@@ -2,8 +2,8 @@
 --
 -- Dve trditvi, ki ju vmesnik ne more dokazati, ker sta v bazi:
 --   a) tekoci kader tuje ekipe ni berljiv nikomur razen lastniku,
---   b) zaklenjena postava tuje ekipe je berljiva vsem.
--- Med njima je edina razlika rok kroga.
+--   b) tudi zaklenjena postava tuje ekipe ni berljiva nikomur razen lastniku
+--      in adminu (zasebne ekipe, 20261012121100; prej je bila po roku javna).
 --
 -- Poganja se proti LOKALNI bazi:
 --   docker exec -i supabase_db_mnzgorenjska psql -U postgres -d postgres \
@@ -189,8 +189,8 @@ begin
   -- --- 6b. tudi obvoz prek `postava_kroga` ne izda tekocega kadra ----------
   -- `postava_kroga` je starejsa pomozna funkcija: dokler posnetka se ni in
   -- rok se ni potekel, vrne ZIVI kader iz `fantasy_roster`. Zato mora ta
-  -- trditev stati PRED zaklepom — potem prva veja vrne posnetek, ki je javen
-  -- tako ali tako, in preizkus ne bi meril tistega, kar misli, da meri. Tece s pravicami klicatelja
+  -- trditev stati PRED zaklepom — potem prva veja bere posnetek (tega varuje
+  -- politika na `fantasy_lineups`), in preizkus ne bi meril tistega, kar misli, da meri. Tece s pravicami klicatelja
   -- in je javna, zato je bila pred zaostritvijo RLS druga pot do tuje ekipe —
   -- mimo politike in mimo `tuja_postava`.
   update rounds set deadline_at = now() + interval '2 days' where id = krog;
@@ -215,7 +215,7 @@ begin
   update rounds set deadline_at = now() - interval '1 day' where id = krog;
 
 
-  -- --- 7. po zaklepu je tuja postava vidna ---------------------------------
+  -- --- 7. tudi po zaklepu tuja postava ostane skrita, lastnik jo vidi ------
   -- Kapetan tudi odigra tekmo: mnozitelj pripada tistemu, ki je igral, in
   -- brez nastopa bi kapetanstvo preslo na namestnika.
   insert into matches (round_id, home_team_id, away_team_id, home_goals, away_goals, played_on)
@@ -237,17 +237,25 @@ begin
   execute 'set local role authenticated';
   select count(*) into n from tuja_postava(ekipa_a, krog);
   execute 'set local role postgres';
-  if n <> 15 then
-    raise exception '7. po zaklepu naj tujec vidi 15 igralcev, videl je %', n;
+  if n <> 0 then
+    raise exception '7. po zaklepu naj tujec ne vidi postave, videl je % igralcev', n;
   end if;
 
-  -- --- 8. vidi jo tudi neprijavljen ----------------------------------------
+  perform set_config('request.jwt.claims', json_build_object('sub', a, 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+  select count(*) into n from tuja_postava(ekipa_a, krog);
+  execute 'set local role postgres';
+  if n <> 15 then
+    raise exception '7. po zaklepu naj lastnik vidi 15 igralcev, videl je %', n;
+  end if;
+
+  -- --- 8. neprijavljen je ne vidi ------------------------------------------
   perform set_config('request.jwt.claims', json_build_object('role', 'anon')::text, true);
   execute 'set local role anon';
   select count(*) into n from tuja_postava(ekipa_a, krog);
   execute 'set local role postgres';
-  if n <> 15 then
-    raise exception '8. po zaklepu naj tudi anonimni vidi postavo, videl je %', n;
+  if n <> 0 then
+    raise exception '8. po zaklepu naj anonimni ne vidi postave, videl je %', n;
   end if;
 
   -- --- 9. v postavi je enajst igralcev, kapetan steje dvojno ---------------
@@ -283,11 +291,16 @@ begin
    order by r.season desc, r.number desc
    limit 1;
 
+  -- Izbranost je znana sele od 5 cloveskih ekip v krogu (20261012121100);
+  -- pod pragom je NULL, ker bi seštevek izdal posamezno ekipo.
   select count(*) into n
     from fantasy_lineups fl
     join player_standings ps on ps.id = fl.player_id
    where fl.round_id = zadnji_zaklenjen
-     and coalesce(ps.owners, 0) = 0;
+     and coalesce(ps.owners, 0) = 0
+     and (select count(distinct x.fantasy_team_id) from fantasy_lineups x
+           join fantasy_teams h on h.id = x.fantasy_team_id and not h.hisna
+          where x.round_id = zadnji_zaklenjen) >= 5;
   if n > 0 then
     raise exception '10b. igralci iz zadnjega zaklenjenega kroga naj steti v izbranost, brez nje jih je %', n;
   end if;
@@ -305,7 +318,11 @@ begin
   end if;
 
   -- --- 11. postava nosi tocke, ne le imen ---------------------------------
+  -- Bere lastnik: seja ima se zahtevek tujca B iz trditve 10.
+  perform set_config('request.jwt.claims', json_build_object('sub', a, 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
   select tocke into t from tuja_postava(ekipa_a, krog) where player_id = kapetan;
+  execute 'set local role postgres';
   if t is null or t <= 0 then
     raise exception '11. kapetan z golom in 90 minutami naj ima tocke, ima %', t;
   end if;

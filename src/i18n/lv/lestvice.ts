@@ -250,13 +250,16 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     nazaj: 'Atpakaļ uz kopvērtējumu',
     skupaj: 'kopā {tocke} {beseda}',
     brezKrogov:
-      'Šajā līgā vēl nav noslēgusies neviena kārta. Citu komandas būs redzamas, kad pagājis termiņš; līdz tam tās neredz neviens.',
+      'Šajā līgā vēl nav noslēgusies neviena kārta. Sastāvi pa kārtām būs redzami pēc pirmā termiņa.',
     nalaganjePostave: 'Ielādēju sastāvu …',
     brezPostave: 'Šai komandai izvēlētajā kārtā nebija sastāva.',
     vTemKrogu: '{beseda} šajā kārtā',
     kazen: '(−{kazen} par transfēriem)',
     namestnik: 'Kapteinis nespēlēja, tāpēc reizinātāju pārņēma vicekapteinis.',
     klop: 'Soliņš',
+    zasebna: 'Citu spēlētāju komandas nav publiskas.',
+    zasebnaOpis:
+      'Sastāvu, kapteini, soliņu un transfērus redz tikai komandas īpašnieks. Punkti un vieta ir kopvērtējumā.',
   },
 
   klub: {

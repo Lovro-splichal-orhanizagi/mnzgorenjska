@@ -321,7 +321,8 @@ async function lestvica(liga, { rest, j, url }) {
     drobtina: { ime: naslov, url },
     vsebina:
       `<h1>${esc(naslov)} — ${esc(liga.name)}</h1><ol>` +
-      ekipe.map((e) => `<li>${povezava(zLigo(`/team/${e.fantasy_team_id}`, liga), e.team_name)} — ${esc(j.mn('tocke', Number(e.total_points)))}</li>`).join('') +
+      // Ime ekipe brez povezave: sestavo ekipe vidi le lastnik (/team/ je zaseben).
+      ekipe.map((e) => `<li>${esc(e.team_name)} — ${esc(j.mn('tocke', Number(e.total_points)))}</li>`).join('') +
       '</ol>',
   }
 }

@@ -251,13 +251,16 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     nazaj: 'Back to standings',
     skupaj: '{tocke} {beseda} in total',
     brezKrogov:
-      'No round has finished in this league yet. Other teams become visible once the deadline passes — until then nobody can see them.',
+      'No round has finished in this league yet. Lineups by round appear after the first deadline.',
     nalaganjePostave: 'Loading lineup …',
     brezPostave: 'This team had no lineup in the selected round.',
     vTemKrogu: '{beseda} this round',
     kazen: '(−{kazen} for transfers)',
     namestnik: 'The captain didn’t play, so the vice-captain took over the multiplier.',
     klop: 'Bench',
+    zasebna: 'Other managers\' teams are not public.',
+    zasebnaOpis:
+      'Only the team owner can see the lineup, captain, bench and transfers. Points and rank are in the standings.',
   },
 
   klub: {

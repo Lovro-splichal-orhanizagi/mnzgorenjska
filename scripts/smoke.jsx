@@ -46,6 +46,7 @@ import { tockeZaNastop } from '../src/lib/tockovanje'
 import { sestejOdKroga } from '../src/lib/lestvica'
 import { zdruziNavijace } from '../src/lib/navijaci'
 import { TabelaNavijacev, KlubMedNavijaci, IzbiraKluba } from '../src/components/NavijaciKlubov'
+import { jeMojaEkipa } from '../src/components/ImeEkipe'
 import { krogKoncan, mestoVLigi, igralciPregleda, postaviPregled, oznakaPremika, imeDatotekePregleda, KVADRAT, SIRINA_P, VISINA_P, ROB_P } from '../src/lib/tedenskiPregled'
 import { parsirajZapisnik, nastopi, dodajStrelceSKlopi } from './zapisnik.mjs'
 import { poZvezah, ustreza, pokaziZvezo } from '../src/components/IzbirnikLige'
@@ -5301,7 +5302,12 @@ preveri(
     preveri(
       'izris: navijaci klubov',
       html.includes('ND Renče') && html.includes('Soška fronta') && html.includes('Premalo navijačev') &&
-        html.includes('Tržič') && html.includes('tvoj klub') && html.includes('/team/12'),
+        html.includes('Tržič') && html.includes('tvoj klub') && !html.includes('/team/12'),
+    )
+    // Zasebne ekipe: tuja ekipa ni povezava, svoja je.
+    preveri(
+      'zasebne ekipe: povezava le na svojo ekipo',
+      jeMojaEkipa('a', 'a') && !jeMojaEkipa('a', 'b') && !jeMojaEkipa(null, null) && !jeMojaEkipa(null, 'a'),
     )
     const nic = izris(<TabelaNavijacev podatki={prazno} />)
     preveri('izris: navijaci klubov brez izbire', nic.includes('Bodi prvi'))

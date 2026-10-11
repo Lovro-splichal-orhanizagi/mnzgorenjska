@@ -201,7 +201,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     vsiKlubi: 'Minden klub',
     vsePozicije: 'Minden poszt',
     igralec: 'Játékos',
-    znanoPoRoku: 'Az első határidő után derül ki',
+    znanoPoRoku: 'A határidő után derül ki, ha a bajnokságban legalább 5 csapat van',
     pokaziVec: 'Több mutatása ({n})',
     prikazaniVsi: 'Mind látható ({igralci}).',
     razvrsti: 'Rendezés',
