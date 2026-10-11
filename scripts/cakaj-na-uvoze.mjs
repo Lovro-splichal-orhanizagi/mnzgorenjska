@@ -58,7 +58,8 @@ const LOCENE_ZVEZE = { AT: 'oefb', RO: 'frf', RS: 'fss', HU: 'mlsz' }
 // države bi brala hkrati in skupaj prehitro, zato se tu križa VSAK zagon iste
 // države: nočni in ročni, vklopljena in nevklopljena liga, tudi *Grbi klubov*
 // tega vira (run-name "Grbi klubov <vir>").
-const SKUPEN_VIR = { EE: 'jalgpall' }
+// Španija: vse lige bere fcf.cat (en zapisnik na tekmo, 3 s med zahtevki).
+const SKUPEN_VIR = { EE: 'jalgpall', ES: 'fcf' }
 
 const { GITHUB_RUN_ID, GITHUB_REPOSITORY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = process.env
 if (!GITHUB_RUN_ID || !GITHUB_REPOSITORY) {
