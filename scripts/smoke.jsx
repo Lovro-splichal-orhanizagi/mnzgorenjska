@@ -4168,6 +4168,67 @@ preveri(
   preveri('fss: prazna predloga je null', F.vZapisnik('<html><div class="fss-rez__title"></div></html>') === null && F.tekmeStrani('<html></html>').length === 0)
 }
 
+// --- soimenjak pri drugem klubu ni prestop (Petrović Lazar, fssid 10/2026) -------
+{
+  const { prestopSkladen, trk, imataTrk } = await import('./prestop.mjs')
+  const vzorec = JSON.parse(readFileSync(new URL('./vzorci/rs-fssid-zliti-soimenjak.json', import.meta.url), 'utf8'))
+  // Tok iz igralecId (vir brez šifre): igralec po klubu in imenu; sicer edini
+  // soimenjak drugje — prestop, če ga `odloci` dovoli; sicer nov zapis.
+  const simuliraj = (nastopi, odloci) => {
+    const igralci = []
+    for (const n of nastopi) {
+      let p = igralci.find((x) => x.klub === n.klub)
+      if (!p && igralci.length === 1 && odloci(igralci[0].nastopi, n)) {
+        p = igralci[0]
+        p.klub = n.klub
+      }
+      if (!p) igralci.push((p = { klub: n.klub, nastopi: [] }))
+      p.nastopi.push(n)
+    }
+    return igralci
+  }
+  const novo = (vrste, n) => prestopSkladen(vrste, n).skladen
+  const enKlub = (igralci) => igralci.every((p) => new Set(p.nastopi.map((n) => n.klub)).size === 1)
+  const staro = simuliraj(vzorec.nastopi, () => true)
+  preveri('zliti: stari uvoz zlije Petrovića (en zapis, dva kluba)', staro.length === 1 && !enKlub(staro))
+  for (const [opis, vrsta] of [
+    ['po vrsti', vzorec.nastopi],
+    ['obratno', [...vzorec.nastopi].reverse()],
+    ['najprej Malošište', [...vzorec.nastopi].sort((a, b) => (a.klub === b.klub ? 0 : a.klub === 3566 ? -1 : 1))],
+  ]) {
+    const igralci = simuliraj(vrsta, novo)
+    preveri(`zliti: dva igralca, vsak s svojim klubom (${opis})`, igralci.length === 2 && enKlub(igralci) &&
+      igralci.find((p) => p.klub === 3560)?.nastopi.every((n) => n.vratar),
+      igralci.map((p) => `${p.klub}:${p.nastopi.length}`).join(' '))
+  }
+  // Že zlit zapis v bazi (pred razdelitvijo): ponoven uvoz tekme Morave ga ne posvoji.
+  const zlit = vzorec.nastopi.filter((n) => n.tekma !== 149329)
+  const moravaR4 = vzorec.nastopi.find((n) => n.tekma === 149329)
+  preveri('zliti: tekma Morave ne gre k zlitemu zapisu', !novo(zlit, moravaR4), prestopSkladen(zlit, moravaR4).razlog)
+
+  const n = (klub, krog, datum, sezona = '2026/27') => ({ klub, krog, datum, sezona })
+  const A = 1, B = 2
+  const pravi = [n(A, 1, '2026-08-15'), n(A, 2, '2026-08-22'), n(A, 3, '2026-08-29'), n(B, 4, '2026-09-05'), n(B, 5, '2026-09-12')]
+  preveri('prestop: pravi prestop med sezono ostane en igralec', simuliraj(pravi, novo).length === 1)
+  preveri('prestop: prestavljena tekma po prestopu (isti krog tedne pozneje) je prestop',
+    novo([n(A, 1, '2026-08-15'), n(A, 2, '2026-08-22'), n(A, 3, '2026-08-29')], n(B, 2, '2026-09-24')))
+  preveri('prestop: vrnitev s posoje (A → B → A) je prestop',
+    novo([n(A, 1, '2025-08-15', '2025/26'), n(B, 1, '2026-03-01', '2025/26')], n(A, 2, '2026-08-22')))
+  preveri('prestop: ponoven uvoz stare tekme starega kluba je skladen',
+    novo([{ ...n(A, 1, '2026-08-15'), tekma: 7 }, n(A, 2, '2026-08-22'), n(B, 4, '2026-09-05')], { ...n(A, 1, '2026-08-15'), tekma: 7 }))
+  preveri('prestop: nov klub, star klub pa ima poznejši nastop — ni prestop',
+    !novo([n(A, 1, '2026-08-15'), n(A, 5, '2026-09-12')], n(B, 3, '2026-08-29')))
+  preveri('prestop: arhiv (lani A) in letos B je prestop', novo([n(A, 30, '2026-05-20', '2025/26')], n(B, 1, '2026-08-15')))
+  preveri('trk: isti dan za dva kluba', trk(n(A, 1, '2026-08-15'), n(B, 2, '2026-08-15')))
+  preveri('trk: isti krog dan narazen', trk(n(A, 1, '2026-08-15'), n(B, 1, '2026-08-16')))
+  preveri('trk: isti krog brez datuma', trk(n(A, 1, null), n(B, 1, null)))
+  preveri('trk: isti krog tedne narazen ni trk', !trk(n(A, 1, '2026-08-15'), n(B, 1, '2026-09-24')))
+  preveri('trk: isti klub ni trk', !trk(n(A, 1, '2026-08-15'), n(A, 1, '2026-08-15')))
+  preveri('trk: zdruzi-duplikate ne zlije razdeljenih',
+    imataTrk(vzorec.nastopi.filter((x) => x.klub === 3560), vzorec.nastopi.filter((x) => x.klub === 3566)) &&
+      !imataTrk(pravi.filter((x) => x.klub === A), pravi.filter((x) => x.klub === B)))
+}
+
 // --- vir fssid (Srbija, regijske lige po bloku šifer COMET na fss.rs) ---------
 {
   const F = await import('./viri/fssid.mjs')

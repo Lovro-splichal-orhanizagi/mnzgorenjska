@@ -1,0 +1,114 @@
+name: Razdeli zlite igralce
+
+# Uvoz je soimenjaka drugega kluba imel za prestop, tudi kadar sta igrala
+# hkrati (Petrović Lazar, rs-srpska-istok: vratar Morave in igralec Malošišta
+# v istih krogih, en zapis z vsoto točk obeh). `razdeli-zlite-igralce.mjs`
+# takega igralca razdeli po klubih (SQL `razdeli_zlitega_igralca`, migracija
+# 20261011233100) in preračuna točke krogov. Skripta potrebuje zivi kljuc, ki
+# zivi samo tu — zato tece tu.
+#
+# Najprej brez `pisi` (nacrt), najprej neaktivne lige (vir fsb, fss, fssid),
+# nato aktivne (nzs, mnzmb, …). Brez `vir` in `tekmovanje` vse lige.
+# Ponoven zagon razdeljenih ne spremeni.
+on:
+  workflow_dispatch:
+    inputs:
+      vir:
+        description: 'Vir (npr. fsb, fss, fssid, nzs, mnzmb); prazno = vsi'
+        required: false
+        type: string
+        default: ''
+      tekmovanje:
+        description: 'Slug ene lige (npr. rs-srpska-istok); prazno = vse lige vira'
+        required: false
+        type: string
+        default: ''
+      igralec:
+        description: 'Id enega igralca (neobvezno)'
+        required: false
+        type: string
+        default: ''
+      pisi:
+        description: 'Zapisi (brez tega je samo nacrt)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+run-name: Razdeli zlite igralce ${{ inputs.tekmovanje || inputs.vir || 'vse' }}${{ inputs.pisi && ' (pisi)' || '' }}
+
+# Uvoz in razdelitev pisejo iste nastope: uvoz tekmo zamenja v celoti, zato
+# ne smeta teci hkrati. Kot zdruzi-klube: svoja skupina, prvi korak pocaka na
+# starejse zagone iz druzine uvozov.
+concurrency:
+  group: razdeli-zlite-igralce
+  cancel-in-progress: false
+
+jobs:
+  razdeli:
+    runs-on: ubuntu-latest
+    # 15 minut dela + do 120 minut cakanja na starejsi uvoz.
+    timeout-minutes: 140
+    permissions:
+      contents: read
+      actions: read
+    env:
+      VIR: ${{ inputs.vir }}
+      TEKMOVANJE: ${{ inputs.tekmovanje }}
+      IGRALEC: ${{ inputs.igralec }}
+      PISI: ${{ inputs.pisi }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      # Nobena odvisnost ne potrebuje namestitvenih skript; brez njih tuja
+      # koda ob namestitvi ne tece.
+      - run: npm ci --ignore-scripts
+
+      - name: Pocakaj na starejse uvoze
+        if: ${{ inputs.pisi }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          MOJ=$(gh run view "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" --json startedAt --jq .startedAt)
+          for i in $(seq 1 120); do
+            n=0
+            for wf in uvoz-zapisnikov.yml uvoz-lige.yml zdruzi-klube.yml tedensko-cene.yml razdeli-zlite-igralce.yml; do
+              k=$(gh run list -R "$GITHUB_REPOSITORY" --workflow "$wf" --limit 50 \
+                --json databaseId,startedAt,status \
+                --jq "[.[] | select(.status != \"completed\" and .databaseId != $GITHUB_RUN_ID and .startedAt > \"2000\" and (.startedAt < \"$MOJ\" or (.startedAt == \"$MOJ\" and .databaseId < $GITHUB_RUN_ID)))] | length")
+              n=$((n + k))
+            done
+            [ "$n" -eq 0 ] && exit 0
+            echo "Pred mano tece se $n uvozov — cakam ($i/120 min)"
+            sleep 60
+          done
+          echo "::error::Starejsi uvoz tece ze dve uri."
+          exit 1
+
+      - name: Razdeli
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          args=()
+          if [ -n "$VIR" ]; then
+            [[ "$VIR" =~ ^[a-z0-9-]+$ ]] || { echo "vir: le male crke, stevke in -"; exit 1; }
+            args+=(--vir "$VIR")
+          fi
+          if [ -n "$TEKMOVANJE" ]; then
+            [[ "$TEKMOVANJE" =~ ^[a-z0-9-]+$ ]] || { echo "tekmovanje: le male crke, stevke in -"; exit 1; }
+            args+=(--tekmovanje "$TEKMOVANJE")
+          fi
+          if [ -n "$IGRALEC" ]; then
+            [[ "$IGRALEC" =~ ^[0-9]+$ ]] || { echo "igralec: id je stevilo"; exit 1; }
+            args+=(--igralec "$IGRALEC")
+          fi
+          [ "$PISI" = "true" ] && args+=(--pisi)
+          node scripts/razdeli-zlite-igralce.mjs "${args[@]}"

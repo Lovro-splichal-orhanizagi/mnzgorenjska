@@ -19,6 +19,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { vseVrstice } from './strani.mjs'
 import { readFileSync } from 'node:fs'
+import { imataTrk } from './prestop.mjs'
 
 const PREVEC_DUPLIKATOV = 3 // pri več kot 3 zapisih ne mergamo — v amaterski
 // ligi ni verjetno, da bi bila ena oseba imela 4 zapise, in mnoštvo pomeni,
@@ -84,20 +85,29 @@ async function najdiPare() {
 async function casovnica(playerId) {
   const { data } = await db
     .from('appearances')
-    .select('matches(played_on)')
+    .select('team_id, matches(played_on, rounds(season, number))')
     .eq('player_id', playerId)
     .order('matches(played_on)', { ascending: true })
   const datumi = (data ?? [])
     .map((a) => a.matches?.played_on)
     .filter(Boolean)
     .sort()
-  return { prvi: datumi[0] ?? null, zadnji: datumi[datumi.length - 1] ?? null, n: datumi.length }
+  // Za trk (isti dan ali krog za dva kluba, scripts/prestop.mjs).
+  const nastopi = (data ?? []).map((a) => ({
+    klub: a.team_id,
+    datum: a.matches?.played_on ?? null,
+    sezona: a.matches?.rounds?.season ?? null,
+    krog: a.matches?.rounds?.number ?? null,
+  }))
+  return { prvi: datumi[0] ?? null, zadnji: datumi[datumi.length - 1] ?? null, n: datumi.length, nastopi }
 }
 
 // --- ali se dva razpona prekrivata -------------------------------------------
+// Trk: za dva kluba na isti dan ali v istem krogu. Ena oseba tega ne more;
+// tako ločene zapise naredi `razdeli-zlite-igralce` in ne smemo jih zliti nazaj.
 function prekrivataSe(a, b) {
   if (!a.prvi || !b.prvi) return false // vsaj eden nima nastopov → varno mergat
-  return a.zadnji >= b.prvi && b.zadnji >= a.prvi
+  return (a.zadnji >= b.prvi && b.zadnji >= a.prvi) || imataTrk(a.nastopi, b.nastopi)
 }
 
 // --- merger enega OLD → NEW --------------------------------------------------

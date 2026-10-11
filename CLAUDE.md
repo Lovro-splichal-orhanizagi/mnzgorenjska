@@ -1758,6 +1758,24 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
 ## Glavni koncepti podatkovnega modela
 
 - `players` → realni igralci, vezani na realni klub (`teams`) in tekmovanje
+- **Soimenjak pri drugem klubu ni samodejno prestop.** Vir brez šifre igralca
+  (stari CMS MNZ, NZS, fsb, fss, fssid) pozna le ime in klub; uvoz je
+  istoimenskega igralca drugega kluba imel za prestop tudi, ko sta igrala
+  hkrati (Petrović Lazar, rs-srpska-istok, 10/2026: vratar Morave in igralec
+  Malošišta v istih krogih, en zapis, vsota točk). Zdaj ga `prestopSkladen`
+  (`scripts/prestop.mjs`) sprejme le, če je skladen s časom: brez **trka**
+  (isti dan ali isti krog ≤ 6 dni narazen), nov klub za vsemi nastopi starega,
+  vrnitev ne v obdobju drugega kluba; sicer nov zapis (dvojnika `zdruzi-duplikate`
+  združi, zapisov s trkom pa ne). Igralca s šifro (`reg_st`) po imenu ne
+  posvoji. Šifra je identiteta: pri sportnet/oefb/hns/mlsz dva kluba v istem
+  krogu niso zlitje (dvojna registracija, prestavljena tekma, krogi faz).
+  Že zlite razdeli delovni tok *Razdeli zlite igralce*
+  (`scripts/razdeli-zlite-igralce.mjs` → SQL `zliti_igralci`,
+  `razdeli_zlitega_igralca`, migracija 20261011233100): gruča je klub, id
+  ostane klubu, ki ga imajo lastniki (pozicija ob nakupu, sicer klub zadnjega
+  kroga pred prvim posnetkom postave), sicer trenutnemu klubu; drugi klubi
+  dobijo svojega igralca z nastopi, goli in asistencami, točke krogov se
+  preračunajo. Najprej brez `pisi`, najprej neaktivne lige; ponoven zagon nič ne spremeni
 - `fantasy_teams` → ekipe uporabnikov, `fantasy_roster` → izbrani igralci
   (`is_starter`, `is_captain`, `is_vice`, `bench_order`)
 - `fantasy_teams.hisna` → **hišna ekipa**: sistemska ekipa SLFF, da slovaške
@@ -2244,8 +2262,9 @@ teče tam: `uvoz-lige.yml` (uvoz ene lige), `grbi-nzs.yml` (grbi z NZS, ki
 jih sam zapiše v git), `grbi.yml` (ročni seznam grbov iz
 `prenesi-grbe.mjs` za regionalne lige; prepiše le klube brez grba, najprej
 brez `pisi` za načrt) in `zdruzi-klube.yml` (dva podvojena kluba; najprej
-brez `pisi` za predogled) in `hisne-ekipe.yml` (hišne ekipe SLFF; najprej
-brez `pisi`). Grb, dodan le v seznam in pognan lokalno, v
+brez `pisi` za predogled), `hisne-ekipe.yml` (hišne ekipe SLFF; najprej
+brez `pisi`) in `razdeli-zlite-igralce.yml` (zliti soimenjaki; najprej brez
+`pisi`). Grb, dodan le v seznam in pognan lokalno, v
 produkcijo ne pride. **Migracije uveljavi CI samodejno** ob vsakem pushu na main (posel
 *Migracije baze* v `ci.yml`, pred objavo strani) v bazo iz skrivnosti
 `SUPABASE_DB_URL`; ob selitvi baze se zamenja le ta skrivnost, med samo
