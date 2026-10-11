@@ -89,6 +89,7 @@ export default function Profil() {
         <p className="text-slate-400">{t('racun.profil.zaseben')}</p>
       ) : (
         <>
+          {profil.jaz && (
           <section className="space-y-2">
             <h2 className="text-lg font-bold">{t('racun.profil.ekipe')}</h2>
             {ekipe.length === 0 ? (
@@ -121,6 +122,7 @@ export default function Profil() {
               </ul>
             )}
           </section>
+          )}
 
           {d && (d.krogov > 0 || d.sezon > 0) && (
             <section className="space-y-2">
@@ -149,7 +151,7 @@ export default function Profil() {
             </section>
           )}
 
-          {miniLige.length > 0 && (
+          {profil.jaz && miniLige.length > 0 && (
             <section className="space-y-2">
               <h2 className="text-lg font-bold">{t('racun.profil.miniLige')}</h2>
               <ul className="kartica divide-y divide-white/10 overflow-hidden">
