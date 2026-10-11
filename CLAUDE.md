@@ -574,7 +574,7 @@ ekipa z 10 oz. 9 začetniki; goli = izid, vsi nastopi s šifro); 14 vzorcev je b
 | hu-za-3-nyugat | `67/20/33920` | `65/20/31676` |
 | hu-za-3-kozep | `67/20/34240` | `63/20/29515` (Nyugat 2024/25; nova skupina) |
 
-**Mladinci U19** (migracija 20261012055100): 48 lig, **neaktivnih**, le
+**Mladinci U19** (migracija 20261012061100): 48 lig, **neaktivnih**, le
 najstarejša kategorija na velikem igrišču — MLSZ Országos U19 Kiemelt in Alap,
 Regionális U19 Kiemelt (Nyugat, Kelet) in sedem skupin Regionális U19 Alap
 (zveza `mlsz`; Adatbank regionalne vodi pod županijo, ki jih izvaja, zato je
