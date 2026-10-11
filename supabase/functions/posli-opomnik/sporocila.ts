@@ -11,10 +11,10 @@
 // vmesnik, ko odpre povezavo `?t=sk-…`. Kdor ima ekipi v obeh državah, dobi
 // dva ločena maila, vsakega v jeziku svoje lige.
 
-export type Jezik = 'sl' | 'sk' | 'hr' | 'cs' | 'hu' | 'de' | 'sr' | 'ro' | 'et'
+export type Jezik = 'sl' | 'sk' | 'hr' | 'cs' | 'hu' | 'de' | 'sr' | 'ro' | 'et' | 'pl'
 
 /** Jezik države lige (enako kot `JEZIK_DRZAVE` v vmesniku). */
-export const JEZIK_DRZAVE: Record<string, Jezik> = { SI: 'sl', SK: 'sk', HR: 'hr', CZ: 'cs', HU: 'hu', AT: 'de', RS: 'sr', RO: 'ro', EE: 'et' }
+export const JEZIK_DRZAVE: Record<string, Jezik> = { SI: 'sl', SK: 'sk', HR: 'hr', CZ: 'cs', HU: 'hu', AT: 'de', RS: 'sr', RO: 'ro', EE: 'et', PL: 'pl' }
 /** Časovni pas, v katerem so roki lige. */
 export const PAS_DRZAVE: Record<string, string> = {
   SI: 'Europe/Ljubljana',
@@ -26,8 +26,9 @@ export const PAS_DRZAVE: Record<string, string> = {
   RS: 'Europe/Belgrade',
   RO: 'Europe/Bucharest',
   EE: 'Europe/Tallinn',
+  PL: 'Europe/Warsaw',
 }
-const LOKALE: Record<Jezik, string> = { sl: 'sl-SI', sk: 'sk-SK', hr: 'hr-HR', cs: 'cs-CZ', hu: 'hu-HU', de: 'de-AT', sr: 'sr-Latn-RS', ro: 'ro-RO', et: 'et-EE' }
+const LOKALE: Record<Jezik, string> = { sl: 'sl-SI', sk: 'sk-SK', hr: 'hr-HR', cs: 'cs-CZ', hu: 'hu-HU', de: 'de-AT', sr: 'sr-Latn-RS', ro: 'ro-RO', et: 'et-EE', pl: 'pl-PL' }
 
 export const SITE = 'https://slff.eu'
 
@@ -97,6 +98,7 @@ const pozdrav = (j: Jezik, ime: string | null | undefined) => {
   if (j === 'sr') return prvo ? `Zdravo, ${esc(prvo)}!` : 'Zdravo!'
   if (j === 'ro') return prvo ? `Salut, ${esc(prvo)}!` : 'Salut!'
   if (j === 'et') return prvo ? `Tere, ${esc(prvo)}!` : 'Tere!'
+  if (j === 'pl') return prvo ? `Cześć, ${esc(prvo)}!` : 'Cześć!'
   return prvo ? `Živjo, ${esc(prvo)}!` : 'Živjo!'
 }
 
@@ -124,6 +126,7 @@ const ODJAVA: Record<Jezik, string> = {
   sr: 'Ne želim više da primam podsetnike',
   ro: 'Nu mai vreau mementouri',
   et: 'Ma ei soovi enam meeldetuletusi',
+  pl: 'Nie chcę więcej przypomnień',
 }
 
 const nogaOdjave = (j: Jezik, odjava: string) =>
@@ -235,6 +238,18 @@ export function sestaviOpomnik(
       opomba:
         'Kui sul meeldetuletust vaja pole (sel hooajal sa meeskonda kokku ei pane), võid selle kirja tähelepanuta jätta. Järgmine kord kirjutame sulle alles enne järgmist vooru.',
     },
+    // Poljščina: ime lige stoji samostojno za dvopičjem, da ga ni treba sklanjati.
+    pl: {
+      naslov: meta.brez_ekipe
+        ? `SLFF ${ozn}: nie masz jeszcze drużyny na następną kolejkę`
+        : `SLFF ${ozn}: uzupełnij drużynę przed następną kolejką`,
+      glavno: meta.brez_ekipe
+        ? `Nie masz jeszcze drużyny fantasy (liga: ${OZN}). Bez niej w następnej kolejce nie zdobędziesz punktów.`
+        : `Twoja drużyna fantasy (liga: ${OZN}) nie jest jeszcze kompletna (brakuje składu, kapitana, wicekapitana itp.). Bez prawidłowej drużyny w następnej kolejce nie zdobędziesz punktów.`,
+      gumb: 'Ułóż / popraw drużynę →',
+      opomba:
+        'Jeśli nie potrzebujesz przypomnienia (w tym sezonie nie układasz drużyny), możesz zignorować tę wiadomość. Następnym razem napiszemy dopiero przed kolejną kolejką.',
+    },
     sl: {
       naslov: meta.brez_ekipe
         ? `SLFF ${ozn} — še nimaš ekipe za naslednji krog`
@@ -278,6 +293,7 @@ export function sestaviPushOpomnik(
     sr: { naslov: `SLFF ${ozn}: još nemaš tim`, besedilo: `Rok za kolo je ${kdaj}. Sastavi tim da bi osvajao bodove.` },
     ro: { naslov: `SLFF ${ozn}: încă nu ai echipă`, besedilo: `Termenul etapei: ${kdaj}. Fă-ți echipa ca să strângi puncte.` },
     et: { naslov: `SLFF ${ozn}: sul pole veel meeskonda`, besedilo: `Vooru tähtaeg: ${kdaj}. Pane meeskond kokku, et punkte koguda.` },
+    pl: { naslov: `SLFF ${ozn}: nie masz jeszcze drużyny`, besedilo: `Termin kolejki: ${kdaj}. Ułóż drużynę, aby zdobywać punkty.` },
     sl: { naslov: `SLFF ${ozn}: še nimaš ekipe`, besedilo: `Rok za krog je ${kdaj}. Sestavi ekipo, da dobiš točke.` },
   }[jezikLige(liga)]
 }
@@ -291,7 +307,7 @@ export function sestaviOpomnikBrezLige(
   jezik: string | null | undefined,
   meta: { display_name: string | null },
 ): Sporocilo {
-  const j: Jezik = jezik === 'sk' || jezik === 'hr' || jezik === 'cs' || jezik === 'hu' || jezik === 'de' || jezik === 'sr' || jezik === 'ro' || jezik === 'et' ? jezik : 'sl'
+  const j: Jezik = jezik === 'sk' || jezik === 'hr' || jezik === 'cs' || jezik === 'hu' || jezik === 'de' || jezik === 'sr' || jezik === 'ro' || jezik === 'et' || jezik === 'pl' ? jezik : 'sl'
   // Naravnost na Mojo ekipo s predlogom (`?sestavi=1`): ekipa je ob odprtju
   // že sestavljena, ostane le Shrani. Državo in ligo ugane stran (IP, jezik).
   const vstop = `${SITE}/my-team?sestavi=1`
@@ -344,6 +360,12 @@ export function sestaviOpomnikBrezLige(
       glavno: 'Registreerusid, kuid sul pole veel fantaasiameeskonda. Paneme sulle meeskonna kokku ühe klõpsuga, vaheta kedagi, kui tahad, ja salvesta. Punkte kogud juba järgmises voorus.',
       gumb: 'Pane mulle meeskond kokku →',
       opomba: 'Kui sa ei taha meeskonda kokku panna, võid selle kirja tähelepanuta jätta.',
+    },
+    pl: {
+      naslov: 'SLFF: wybierz swoją ligę i ułóż drużynę',
+      glavno: 'Masz już konto, ale nie masz jeszcze drużyny fantasy. Ułożymy ci drużynę jednym kliknięciem, wymień, kogo chcesz, i zapisz. Punkty zbierasz już w następnej kolejce.',
+      gumb: 'Ułóż mi drużynę →',
+      opomba: 'Jeśli nie chcesz układać drużyny, możesz zignorować tę wiadomość.',
     },
     sl: {
       naslov: 'SLFF — izberi svojo ligo in sestavi ekipo',
@@ -470,6 +492,17 @@ export function sestaviOpozorilo(
         gumb: 'Paranda meeskond →',
         opomba:
           'Muidu kandub meeskond voorust vooru ise edasi ja sa ei pea midagi tegema. Kirjutame sulle ainult siis, kui see pole võimalik.',
+      }
+    },
+    pl: () => {
+      const kolejka = u.round_number ? `w ${u.round_number}. kolejce` : 'w następnej kolejce'
+      return {
+        naslov: `SLFF ${ozn}: twoja drużyna nie zdobędzie punktów ${kolejka}`,
+        glavno: `Drużyna ${ekipa} nie spełnia zasad, więc nie zostanie zatwierdzona i nie zdobędzie punktów ${kolejka}.`,
+        rok: rok && `Możesz to poprawić do terminu: ${rok}.`,
+        gumb: 'Popraw drużynę →',
+        opomba:
+          'Normalnie drużyna sama przechodzi z kolejki do kolejki i nie musisz nic robić. Piszemy tylko wtedy, gdy to nie jest możliwe.',
       }
     },
     sl: () => {
@@ -648,6 +681,23 @@ export function sestaviPoznavalca(
       gumbUrl: p.pozicije,
       vprasanja: 'Kui midagi on ebaselge, vasta sellele kirjale.',
     },
+    pl: {
+      naslov: 'SLFF: zatwierdziliśmy twoją prośbę o status znawcy',
+      kaj:
+        meta.obseg === 'liga'
+          ? `Od teraz jesteś znawcą ligi <strong>${imeLige}</strong>: twój głos sam zatwierdza pozycję zawodnika lub asystę, nie trzeba czekać na inne głosy.`
+          : `Od teraz jesteś znawcą klubu <strong>${klub}</strong> (liga: ${imeLige}): twój głos przy zawodnikach tego klubu liczy się potrójnie.`,
+      hvala: 'Dziękujemy za chęć pomocy.',
+      prosnja:
+        'Jedna prośba: to wyraz zaufania. Wpisuj tylko to, co naprawdę wiesz, i nie dopasowuj danych do swojej drużyny fantasy. Od tego zależą punkty wszystkich graczy w lidze. Jeśli okaże się, że dane są celowo błędne, stracisz status znawcy.',
+      kje: `Pozycje zmieniasz na stronie <a href="${p.pozicije}" style="color:#15803d;">Pozycje</a>
+        (obowiązują od każdego poniedziałkowego poranka), asysty na stronie
+        <a href="${p.asistence}" style="color:#15803d;">Asysty</a> (od razu).
+        Zawodnika, który już nie gra w klubie, możesz oznaczyć jako "już nie gra".`,
+      gumb: 'Otwórz Pozycje →',
+      gumbUrl: p.pozicije,
+      vprasanja: 'Jeśli coś jest niejasne, odpowiedz na tę wiadomość.',
+    },
     sl: {
       naslov: 'SLFF — odobrili smo tvojo prošnjo za poznavalca',
       kaj:
@@ -698,7 +748,8 @@ const POZICIJA_DE: Record<string, string> = { DEF: 'Verteidiger', MID: 'Mittelfe
 const POZICIJA_SR: Record<string, string> = { DEF: 'odbrambeni', MID: 'vezni', FWD: 'napadač' }
 const POZICIJA_RO: Record<string, string> = { DEF: 'fundaș', MID: 'mijlocaș', FWD: 'atacant' }
 const POZICIJA_ET: Record<string, string> = { DEF: 'kaitsja', MID: 'poolkaitsja', FWD: 'ründaja' }
-const POZICIJA: Record<Jezik, Record<string, string>> = { sl: POZICIJA_SL, sk: POZICIJA_SK, hr: POZICIJA_HR, cs: POZICIJA_CS, hu: POZICIJA_HU, de: POZICIJA_DE, sr: POZICIJA_SR, ro: POZICIJA_RO, et: POZICIJA_ET }
+const POZICIJA_PL: Record<string, string> = { DEF: 'obrońca', MID: 'pomocnik', FWD: 'napastnik' }
+const POZICIJA: Record<Jezik, Record<string, string>> = { sl: POZICIJA_SL, sk: POZICIJA_SK, hr: POZICIJA_HR, cs: POZICIJA_CS, hu: POZICIJA_HU, de: POZICIJA_DE, sr: POZICIJA_SR, ro: POZICIJA_RO, et: POZICIJA_ET, pl: POZICIJA_PL }
 
 export function sestaviPopravekPozicije(
   liga: Liga,
@@ -723,6 +774,7 @@ export function sestaviPopravekPozicije(
       if (j === 'de') return poz ? `${ime} (jetzt ${poz})` : ime
       if (j === 'ro') return poz ? `${ime} (acum ${poz})` : ime
       if (j === 'et') return poz ? `${ime} (nüüd ${poz})` : ime
+      if (j === 'pl') return poz ? `${ime} (teraz ${poz})` : ime
       return poz ? `${ime} (zdaj ${poz})` : ime
     })
     .join(', ')
@@ -831,6 +883,19 @@ export function sestaviPopravekPozicije(
         'on juba ümber arvutatud. Kui ta müüd, pead tema asemele ostma väravavahi.',
       gumb: 'Ava minu meeskond →',
       opomba: 'Vabandame vea pärast.',
+    },
+    pl: {
+      naslov: `SLFF ${ozn}: poprawiliśmy pozycję zawodnika w twojej drużynie`,
+      glavno:
+        `W twojej drużynie ${ekipa ? `<strong>${ekipa}</strong> ` : ''}jest zawodnik ${kdo}, ` +
+        'który był u nas błędnie zapisany jako bramkarz. Protokół jednego meczu raz oznaczył go jako bramkarza, ' +
+        'ale w rzeczywistości gra w polu. Poprawiliśmy jego pozycję.',
+      body:
+        'Co to dla ciebie oznacza: w twoim składzie zostaje na miejscu bramkarza, więc drużyna nadal spełnia zasady ' +
+        'i nie musisz nic robić. Od teraz jednak zdobywa punkty jako zawodnik z pola, a punkty z ostatniej kolejki ' +
+        'zostały już przeliczone. Jeśli go sprzedasz, w jego miejsce musisz kupić bramkarza.',
+      gumb: 'Otwórz moją drużynę →',
+      opomba: 'Przepraszamy za pomyłkę.',
     },
     sl: {
       naslov: `SLFF ${ozn} — popravek pozicije igralca v tvoji ekipi`,
@@ -972,6 +1037,17 @@ export function sestaviIzstopKluba(
         'Punktid, mis nad mängitud mängudes juba kogusid, jäävad sulle. Keegi ei saa neid enam osta.',
       gumb: 'Vaheta mängijad →',
     },
+    pl: {
+      naslov: `SLFF ${ozn}: klub twojego zawodnika wycofał się z ligi`,
+      glavno:
+        `Klub ${klubi} wycofał się z ligi. ` +
+        `${ekipa ? `W drużynie <strong>${ekipa}</strong> masz` : 'W drużynie masz'} zawodników tego klubu: ${kdo}.`,
+      body:
+        'Ci zawodnicy już nie grają, więc nie zdobędziesz za nich punktów. Drużyna pozostaje prawidłowa, a pozostali ' +
+        'zawodnicy zdobywają punkty normalnie. Mimo to radzimy wymienić ich przed następnym terminem. ' +
+        'Punkty, które już zdobyli w rozegranych meczach, zostają ci. Nikt nie może ich już kupić.',
+      gumb: 'Wymień zawodników →',
+    },
     sl: {
       naslov: `SLFF ${ozn} — klub tvojega igralca je izstopil iz lige`,
       glavno:
@@ -1047,7 +1123,9 @@ export function sestaviTedenskiPregled(liga: Liga, m: PregledKroga): Sporocilo {
                   ? roMn(cela(n), 'punct', 'puncte', 'de puncte')
                   : j === 'et'
                     ? (n === 1 ? 'punkt' : 'punkti')
-                    : slMn(cela(n), 'točka', 'točki', 'točke', 'točk')
+                    : j === 'pl'
+                      ? plMn(n, 'punkt', 'punkty', 'punktów', 'punktu')
+                      : slMn(cela(n), 'točka', 'točki', 'točke', 'točk')
     }`
   const ekipa = `<strong>${esc(m.ekipa)}</strong>`
   const premik = m.mesto_prej == null ? 0 : m.mesto_prej - m.mesto
@@ -1162,6 +1240,19 @@ export function sestaviTedenskiPregled(liga: Liga, m: PregledKroga): Sporocilo {
       gumb: 'Valmista meeskond järgmiseks vooruks ette →',
       odjava: 'Ma ei soovi enam kirju',
     },
+    pl: {
+      naslov: `SLFF ${ozn}: ${m.krog}. kolejka, ${tock(m.tocke)}, ${m.mesto}. miejsce${premikZnak}`,
+      glavno: `Twoja drużyna ${ekipa} zdobyła w ${m.krog}. kolejce <strong>${tock(m.tocke)}</strong> (liga: ${OZN}).`,
+      liga: m.povprecje != null && m.najvec != null
+        ? `Średnia ligi: ${st(m.povprecje)}, najwięcej: ${st(m.najvec)}.` : '',
+      top: 'Najwięcej punktów w całej lidze w tej kolejce.',
+      mesto: `W tabeli jesteś na <strong>${m.mesto}. miejscu</strong> spośród ${m.ekip} drużyn` +
+        (m.mesto_prej == null || premik === 0 ? '.' : ` (wcześniej ${m.mesto_prej}. miejsce).`),
+      kapetan: m.kapetan ? `Kapitan ${esc(m.kapetan)}: ${tock(m.kapetan_tocke ?? 0)}.` : '',
+      najboljsi: najboljsiNiKapetan ? `Najlepszy w drużynie: ${esc(m.najboljsi!)} (${tock(m.najboljsi_tocke ?? 0)}).` : '',
+      gumb: 'Przygotuj drużynę na następną kolejkę →',
+      odjava: 'Nie chcę więcej e-maili',
+    },
     sl: {
       naslov: `SLFF ${ozn} — ${m.krog}. krog: ${tock(m.tocke)}, ${m.mesto}. mesto${premikZnak}`,
       glavno: `Tvoja ekipa ${ekipa} je v ${m.krog}. krogu ${OZN} zbrala <strong>${tock(m.tocke)}</strong>.`,
@@ -1207,7 +1298,7 @@ const skMn = (n: number, one: string, few: string, other: string) =>
  * ga prepoznamo po obliki in prevedemo; neznano obliko (SQL se je spremenil)
  * nadomesti splošen stavek, da v slovaškem mailu ni slovenščine.
  *
- * `'en'` rabi le vmesnik (angleški obiskovalec) — pošta je vedno sl/sk/hr/cs/hu/de/sr/ro/et.
+ * `'en'` rabi le vmesnik (angleški obiskovalec) — pošta je vedno sl/sk/hr/cs/hu/de/sr/ro/et/pl.
  */
 export function prevediRazlog(razlog: string | null | undefined, j: Jezik | 'en'): string {
   if (j === 'sl') return razlog ?? 'Kader ni veljaven.'
@@ -1219,6 +1310,7 @@ export function prevediRazlog(razlog: string | null | undefined, j: Jezik | 'en'
   if (j === 'sr') return razlogVSrbscini(razlog)
   if (j === 'ro') return razlogVRomunscini(razlog)
   if (j === 'et') return razlogVEstonscini(razlog)
+  if (j === 'pl') return razlogVPoljscini(razlog)
   if (!razlog) return 'Káder nie je platný.'
   const r = razlog.trim()
   let m: RegExpMatchArray | null
@@ -1496,4 +1588,41 @@ function razlogVEstonscini(razlog: string | null | undefined): string {
   if (r === 'Ekipa nima natanko enega namestnika kapetana.')
     return 'Meeskonnal pole täpselt ühte asekaptenit.'
   return 'Meeskond ei vasta reeglitele. Vaata üksikasju jaotises Minu meeskond.'
+}
+
+/** Polska množina: one (1), few (2-4, 22-24 …), many (0, 5-21 …), other (necela števila, "2,5 punktu"). */
+const plMn = (n: number, one: string, few: string, many: string, other: string) => {
+  if (!Number.isInteger(n)) return other
+  if (n === 1) return one
+  const e = n % 10
+  const d = n % 100
+  return e >= 2 && e <= 4 && (d < 12 || d > 14) ? few : many
+}
+
+/** Isti razlogi v poljščini (za poljski mail in vmesnik). Glagol se ujema s številom ("są 3 zawodnicy", "jest 5 zawodników"). */
+function razlogVPoljscini(razlog: string | null | undefined): string {
+  if (!razlog) return 'Kadra nie spełnia zasad.'
+  const r = razlog.trim()
+  let m: RegExpMatchArray | null
+  const jest = (n: number) => `${plMn(n, 'jest', 'są', 'jest', 'jest')} ${n} ${plMn(n, 'zawodnik', 'zawodnicy', 'zawodników', 'zawodnika')}`
+  const zawodnika = (n: number) => `${n} ${plMn(n, 'zawodnika', 'zawodników', 'zawodników', 'zawodnika')}`
+
+  if (r === 'Ekipa je prazna — kadra ni.') return 'Drużyna jest pusta, w kadrze nie ma żadnego zawodnika.'
+  if ((m = r.match(/^V kadru je (\d+) igralcev namesto (\d+)\.$/)))
+    return `W kadrze ${jest(Number(m[1]))} zamiast ${m[2]}.`
+  if ((m = r.match(/^V kadru ni vec aktivnih igralcev: (.*)\. Klub letos ne igra ali je igralec odsel\.$/s)))
+    return `W kadrze są zawodnicy, którzy nie są już aktywni: ${m[1]}. Ich klub nie gra w tym sezonie albo zawodnik odszedł.`
+  if ((m = r.match(/^Iz kluba (.+) imas (\d+) igralce, dovoljeni so (\d+)\./s)))
+    return `Z klubu ${m[1]} masz ${zawodnika(Number(m[2]))}, dozwolonych jest najwyżej ${m[3]}. ` +
+      'Może się to zdarzyć także bez twojej zmiany: gdy zawodnik w trakcie sezonu przejdzie do klubu, z którego masz już zawodników.'
+  if ((m = r.match(/^Pri (\d+) igralcih ni znana pozicija\.$/)))
+    return `Pozycja nie jest znana u ${zawodnika(Number(m[1]))}.`
+  if ((m = r.match(/^Kader mora imeti 2 vratarja, 5 branilcev, 5 vezistov in 3 napadalce; ima ([\d-]+)\.$/)))
+    return `Kadra musi mieć 2 bramkarzy, 5 obrońców, 5 pomocników i 3 napastników; teraz ma ${m[1]}.`
+  if ((m = r.match(/^V postavi je (\d+) igralcev namesto (\d+)\.$/)))
+    return `W pierwszym składzie ${jest(Number(m[1]))} zamiast ${m[2]}.`
+  if (r === 'Ekipa nima natanko enega kapetana.') return 'Drużyna nie ma dokładnie jednego kapitana.'
+  if (r === 'Ekipa nima natanko enega namestnika kapetana.')
+    return 'Drużyna nie ma dokładnie jednego wicekapitana.'
+  return 'Drużyna nie spełnia zasad. Szczegóły znajdziesz w sekcji Moja drużyna.'
 }

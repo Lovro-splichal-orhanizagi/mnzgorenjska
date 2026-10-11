@@ -241,6 +241,21 @@ const IMENA_EE = [
   'Kaheteistkümnes Mängija', 'Resultatiivne Sööt FC', 'Kuldne Puutsakas', 'Esimene Puude FC', 'Rabarebased',
 ]
 
+// Polskie ligi: zabawne, wymyślone, bez nazw prawdziwych klubów.
+const IMENA_PL = [
+  'Mazurskie Orły', 'Tatrzańskie Kozice', 'Wiślane Szczupaki', 'Bieszczadzkie Wilki', 'Kaszubskie Mewy',
+  'Puszczańskie Żubry', 'Odrzańskie Sumy', 'Podlaskie Bociany', 'Bałtyckie Foki', 'Karkonoskie Rysie',
+  'Niedzielni Bohaterowie', 'Sobotnie Legendy', 'Doliczony Czas FC', 'Bracia z Ławki', 'Spalony FC',
+  'Poprzeczka FC', 'Słupek United', 'Chorągiewka FC', 'Jedenastka FC', 'Rzut Rożny United',
+  'Żółta Kartka FC', 'Czerwona Kartka United', 'Opaska Kapitana FC', 'Chłopaki ze Sztucznej', 'Błotne Boisko FC',
+  'Kontratak FC', 'Pressing FC', 'Libero FC', 'Dziesiątka FC', 'Dziewiątka United',
+  'Pierogi FC', 'Bigos United', 'Żurek FC', 'Oscypek FC', 'Kiełbasa United',
+  'Pączek FC', 'Schabowy FC', 'Zapiekanka FC', 'Obwarzanek United', 'Gołąbki FC',
+  'Mistrzowie Powiatu', 'Piwo po Meczu FC', 'Klub Grillowy FC', 'Sobótka United', 'Remiza FC',
+  'Reprezentacja Wsi', 'Stara Gwardia', 'Strażacy FC', 'Dom Kultury FC', 'Wieczni Rezerwowi',
+  'Dwunasty Zawodnik', 'Asysta FC', 'Złota Główka', 'Pierwszy Kontakt FC', 'Leśne Dziki',
+]
+
 // Postave v mejah POZICIJE (vratar 1, branilci 3–5, vezisti 2–5, napadalci 1–3).
 const POSTAVE = [
   [4, 4, 2], [4, 3, 3], [3, 5, 2], [3, 4, 3], [5, 3, 2], [4, 5, 1], [5, 4, 1],
@@ -628,7 +643,7 @@ for (const l of seznam) {
     if (eK) throw new Error(eK.message)
     for (const r of kadri ?? []) izbranost.set(r.player_id, (izbranost.get(r.player_id) ?? 0) + 1)
   }
-  const imena = premesaj({ SI: IMENA_SI, HR: IMENA_HR, CZ: IMENA_CZ, HU: IMENA_HU, AT: IMENA_AT, RS: IMENA_RS, RO: IMENA_RO, EE: IMENA_EE }[DRZAVA] ?? IMENA, generator('imena:' + l.slug))
+  const imena = premesaj({ SI: IMENA_SI, HR: IMENA_HR, CZ: IMENA_CZ, HU: IMENA_HU, AT: IMENA_AT, RS: IMENA_RS, RO: IMENA_RO, EE: IMENA_EE, PL: IMENA_PL }[DRZAVA] ?? IMENA, generator('imena:' + l.slug))
     .filter((i) => !zasedena.has(i.toLowerCase()))
 
   console.log(

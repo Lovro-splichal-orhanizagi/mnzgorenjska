@@ -112,6 +112,18 @@ const BESEDE: Record<string, { pridevniki: string[]; samostalniki: string[] }> =
       'Kotkas', 'Draakon', 'Härg', 'Hobune', 'Pistrik', 'Ilves',
     ],
   },
+  pl: {
+    pridevniki: [
+      'Niebieski', 'Czerwony', 'Zielony', 'Żółty', 'Czarny', 'Biały', 'Srebrny', 'Złoty',
+      'Szybki', 'Dziki', 'Cichy', 'Ognisty', 'Lodowy', 'Nocny', 'Poranny',
+      'Żelazny', 'Miedziany', 'Słoneczny', 'Niebiański', 'Bezlitosny',
+    ],
+    samostalniki: [
+      'Bramkarz', 'Obrońca', 'Pomocnik', 'Napastnik', 'Kapitan', 'Sędzia', 'Trener',
+      'Kibic', 'Snajper', 'Rozgrywający', 'Rezerwowy', 'Weteran', 'Bohater', 'Wilk',
+      'Orzeł', 'Smok', 'Byk', 'Koń', 'Sokół', 'Ryś',
+    ],
+  },
   de: {
     pridevniki: [
       'Blauer', 'Roter', 'Grüner', 'Gelber', 'Schwarzer', 'Weißer', 'Silberner', 'Goldener',

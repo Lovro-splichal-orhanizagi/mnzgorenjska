@@ -1,4 +1,4 @@
-// Izbira jezika: "SL · HR · SK · CS · HU · DE · SR · RO · ET · EN".
+// Izbira jezika: "SL · HR · SK · CS · HU · DE · SR · RO · ET · PL · EN".
 //
 // Jezik sicer sledi državi lige (tujec dobi angleščino); tu ga obiskovalec
 // izbere sam in izbira obvelja pred vsem drugim (`izberiJezik`, le v
@@ -17,6 +17,7 @@ const IMENA: Partial<Record<Jezik, string>> = {
   sr: 'Srpski',
   ro: 'Română',
   et: 'Eesti',
+  pl: 'Polski',
   en: 'English',
 }
 
