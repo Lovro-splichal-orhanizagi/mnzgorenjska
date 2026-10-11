@@ -4258,6 +4258,34 @@ preveri(
     P.naslovFotografije('5/abc.webp', true).endsWith('/fotografije-igralcev/5/abc-64.webp'))
 }
 
+// --- uradne odsotnosti potrjenih igralcev ----------------------------------------
+// Forum: pri istem igralcu je uradna odsotnost (igralec sam) nad skupnostnimi
+// poročili; igralci po najnovejšem vnosu. Pravila opominov preveri varnost.sql.
+{
+  const U = await import('../src/lib/uradneOdsotnosti.ts')
+  const ur = (id, player_id, created_at, o = {}) => ({
+    id, player_id, created_at, glavni_player_id: player_id, competition_id: 1, player_name: 'X',
+    team_id: null, team_name: null, team_short: null, team_logo: null, vrsta: 'poskodba',
+    od: '2026-10-01', vrnitev: null, opomba: null, status: 'odprto', zaprto_at: null,
+    ni_drzalo_datum: null, moje: false, ...o,
+  })
+  const po = (id, player_id, created_at) => ({ id, player_id, created_at, user_id: 'u', kind: 'poskodba', content: 'x' })
+  const vnosi = U.zdruziZaForum(
+    [ur(1, 10, '2026-10-01T10:00:00Z'), ur(2, 20, '2026-10-05T10:00:00Z')],
+    [po(5, 10, '2026-10-09T10:00:00Z'), po(6, 20, '2026-10-02T10:00:00Z'), po(7, 30, '2026-10-03T10:00:00Z')],
+  )
+  const zaporedje = vnosi.map((v) => (v.vrsta === 'uradna' ? `u${v.uradna.id}` : `p${v.porocilo.id}`)).join()
+  preveri('uradne odsotnosti: uradna nad skupnostnimi istega igralca', zaporedje === 'u1,p5,u2,p6,p7', zaporedje)
+  preveri('uradne odsotnosti: aktivna le odprta pred vrnitvijo',
+    U.jeAktivna({ status: 'odprto', vrnitev: null }, '2026-10-11') &&
+    U.jeAktivna({ status: 'odprto', vrnitev: '2026-10-12' }, '2026-10-11') &&
+    !U.jeAktivna({ status: 'odprto', vrnitev: '2026-10-11' }, '2026-10-11') &&
+    !U.jeAktivna({ status: 'ni_drzalo', vrnitev: null }, '2026-10-11'))
+  preveri('uradne odsotnosti: vrste ustrezajo filtrom foruma',
+    U.skupnaVrsta('poskodba') === 'poskodba' && U.skupnaVrsta('kazen') === 'odsotnost' &&
+    U.skupnaVrsta('dopust') === 'odsotnost' && U.skupnaVrsta('drugo') === 'drugo')
+}
+
 // --- vir fss (Srbija, državni ligi FSS; vratar s prvaliga.rs) ------------------
 {
   const F = await import('./viri/fss.mjs')
