@@ -2701,7 +2701,8 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   `<igralec>/<ime>.webp` 256 px in `-64.webp`; izrez in pomanjšava v
   brskalniku). Fotografije na seznamih bere pogled `fotografije_igralcev` v
   enem zahtevku na stran (`useFotografije`, `FotoIgralca`, `Dres igralecId`).
-  `skrij_moje_ime()` je samopostrežni ugovor (`anonimiziraj_igralca`, dokončen);
+  `skrij_moje_ime()` je le servisna (od 20261012145100 igralec imena ne skrije sam:
+  v fantasy igri ga poznajo drugi; ugovor gre prek info@ in admina);
   anonimizacija vedno pobriše predstavitev. **Storage na strežniku** je
   `storage-api` z datotekami na disku (`/opt/supabase/volumes/storage`, brez
   MinIO), vklop, varnostna kopija in povrnitev v `docs/hetzner-shramba.md`.

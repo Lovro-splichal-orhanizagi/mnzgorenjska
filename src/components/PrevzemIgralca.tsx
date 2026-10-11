@@ -202,10 +202,6 @@ export default function PrevzemIgralca({
             if (!mojPotrjen || !window.confirm(t('igralci.prevzem.odpovejPotrdi'))) return
             if (await rpc(() => supabase.rpc('preklici_moj_zahtevek', { p_id: mojPotrjen.id }))) setUrejam(false)
           }}
-          naSkrijIme={async () => {
-            if (!window.confirm(t('igralci.prevzem.skrijImePotrdi'))) return
-            if (await rpc(() => supabase.rpc('skrij_moje_ime'))) window.location.reload()
-          }}
         />
       )}
 
@@ -454,13 +450,11 @@ function Urejevalnik({
   profil,
   naShranjeno,
   naOdpoved,
-  naSkrijIme,
 }: {
   glavni: number
   profil: Predstavitev | null
   naShranjeno: () => Promise<void>
   naOdpoved: () => void
-  naSkrijIme: () => void
 }) {
   const [vzdevek, setVzdevek] = useState(profil?.vzdevek ?? '')
   const [opis, setOpis] = useState(profil?.opis ?? '')
@@ -630,11 +624,7 @@ function Urejevalnik({
         {t('igralci.prevzem.shrani')}
       </button>
       <div className="space-y-2 border-t border-white/10 pt-3">
-        <p className="text-xs text-slate-400">{t('igralci.prevzem.skrijImeOpis')}</p>
         <div className="flex flex-wrap gap-3">
-          <button type="button" onClick={naSkrijIme} className="text-xs text-rose-300 hover:underline">
-            {t('igralci.prevzem.skrijIme')}
-          </button>
           <button type="button" onClick={naOdpoved} className="text-xs text-slate-500 hover:text-rose-300">
             {t('igralci.prevzem.odpovej')}
           </button>

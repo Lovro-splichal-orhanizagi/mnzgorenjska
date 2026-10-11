@@ -1506,12 +1506,14 @@ select pg_temp.preveri('prevzem: stran /claim pokaže e-naslov prosilca le z vel
 select pg_temp.preveri('prevzem: žeton potrdi kot klub',
   (select potrdil from zahtevki_igralca where user_id = 'c1a10000-0000-4000-8000-000000000005' and status = 'potrjen') = 'klub');
 
--- Skrij ime: obstoječa anonimizacija, predstavitev gre proč.
+-- Skrij ime: igralec ga ne skrije sam (ugovor gre prek admina); servisna
+-- funkcija ostane obstoječa anonimizacija, predstavitev gre proč.
 select set_config('request.jwt.claim.sub','c1a10000-0000-4000-8000-000000000004',true);
 set local role authenticated;
 insert into profil_igralca(player_id, vzdevek) values (-919016, 'Šestica');
-select pg_temp.preveri('prevzem: skrij moje ime anonimizira', skrij_moje_ime() >= 1);
+select pg_temp.zavrnjeno('prevzem: igralec si imena ne skrije sam', $$select skrij_moje_ime()$$);
 reset role;
+select pg_temp.preveri('prevzem: skrij moje ime (servis) anonimizira', skrij_moje_ime() >= 1);
 select pg_temp.preveri('prevzem: po skritju ni imena ne predstavitve',
   (select anonimiziran_razlog = 'ugovor' and full_name = '#' || id from players where id = -919016)
   and (select skrij_ime and vzdevek is null from profil_igralca where player_id = -919016));
