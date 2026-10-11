@@ -1588,7 +1588,7 @@ Lastnik je vir odobril (10. 10. 2026). robots.txt stran nima.
 - **Slug: vsak znak, ki ni črka ali števka, je svoj vezaj** ("Liga 5 Cluj -
   Grupa 1" → `liga-5-cluj---grupa-1`). Neznano pot stran pusti v naslovu, a
   pokaže privzeto ligo zveze — prvi uvoz Cluj L5 G1/G2 (11. 10. 2026) je tako
-  dobil razpored Lige 4 (popravek 20261012055000). Zdaj `odpri` preveri ime
+  dobil razpored Lige 4 (popravek 20261012070000). Zdaj `odpri` preveri ime
   naloženega tekmovanja proti šifri in brez kartic, ki se ujemajo z odgovorom,
   ligo ne ugiba — uvoz se ustavi.
 
