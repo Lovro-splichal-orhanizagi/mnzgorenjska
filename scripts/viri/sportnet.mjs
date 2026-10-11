@@ -70,6 +70,15 @@ export function vPriimekIme(ime) {
 
 const POZICIJA = { goalkeeper: 'GK', defender: 'DEF', midfielder: 'MID', forward: 'FWD' }
 
+/**
+ * Številka kroga iz imena. Zveze pišejo "7", državni ligi (Niké liga) pa
+ * "7. kolo". Baraž ("1. barážový zápas") ni krog lige — null.
+ */
+export function krogIz(ime) {
+  const m = String(ime ?? '').trim().match(/^(\d+)(?:\.\s*kolo)?$/i)
+  return m ? Number(m[1]) : null
+}
+
 /** "27:00" → 27; sodniški podaljšek prvega polčasa ostane v prvem polčasu. */
 function minuta(dogodek) {
   const m = Number(String(dogodek?.eventTime ?? '').split(':')[0])
@@ -162,7 +171,7 @@ export function vZapisnik(t, { url = null } = {}) {
     zapisnikId: t.__issfId ?? t._id,
     url,
     sezona: sezonaIz(t.season?.name),
-    krog: Number(t.round?.name) || null,
+    krog: krogIz(t.round?.name),
     datum,
     domaci: ekipe[0],
     gostje: ekipe[1],
@@ -279,7 +288,7 @@ const vir = {
   async razporedVseStrani(koda, prenesi) {
     const krogi = new Map()
     for (const t of await vseTekme(koda, prenesi)) {
-      const stevilka = Number(t.round?.name)
+      const stevilka = krogIz(t.round?.name)
       const domaci = t.teams?.find((e) => e.additionalProperties?.homeaway === 'home')?.name
       const gostje = t.teams?.find((e) => e.additionalProperties?.homeaway === 'away')?.name
       if (!Number.isInteger(stevilka) || !domaci || !gostje) continue
