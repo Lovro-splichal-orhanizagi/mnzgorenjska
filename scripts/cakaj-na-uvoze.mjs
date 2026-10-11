@@ -41,7 +41,10 @@ const NAJVEC_MIN = Number(arg('--najvec') ?? 120)
 // Države, kjer zveze pod državno nimajo skupnih klubov: država → državna zveza.
 // Romunija: vsaka županijska zveza (AJF) je svoja piramida; državne zveze v
 // SLFF ni, 'frf' je le vir (nobena liga nima zveze s to šifro).
-const LOCENE_ZVEZE = { AT: 'oefb', RO: 'frf' }
+// Srbija: regionalne zveze (FSV, FSRZS, FSRIS, FS Beograd) so ločene piramide,
+// državna je FSS (Superliga, Prva liga); vse fssid lige bere fss.rs, zato koliko
+// jih teče hkrati omeji veriga, ki jih zažene (dve naenkrat, 2 s premora vsaka).
+const LOCENE_ZVEZE = { AT: 'oefb', RO: 'frf', RS: 'fss' }
 // Države, katerih lige bere eno samo spletišče s skupnim proračunom branja
 // (jalgpall.ee: robots.txt Crawl-Delay 5 s za vse nas skupaj). Dva zagona iste
 // države bi brala hkrati in skupaj prehitro, zato se tu križa VSAK zagon iste
