@@ -3070,6 +3070,9 @@ preveri(
   // Poljščina (7 sklonov) ne sklanja: ime lige stoji za dvopičjem.
   for (const iz of ['Klasa A', 'IV liga mazowiecka', 'Klasa okręgowa Kraków'])
     preveri(`plakat: poljsko "${iz}" ostane nespremenjeno`, ligaVTozilniku(iz, 'pl') === iz, ligaVTozilniku(iz, 'pl'))
+  // Španščina ne sklanja, člen je odvisen od imena: ime lige stoji za dvopičjem.
+  for (const iz of ['Primera Regional', 'Tercera Federación Grupo 7', 'Preferente Aficionados'])
+    preveri(`plakat: špansko "${iz}" ostane nespremenjeno`, ligaVTozilniku(iz, 'es') === iz, ligaVTozilniku(iz, 'es'))
 
   // "Je live": kratko ime lige ne sme zrasti cez rob, ce gre v dve vrstici.
   preveri('plakat live: kratko ime v eni vrstici je najvecje', velikostLige('3. SNL ZAHOD', 1) === 124)
@@ -3571,6 +3574,17 @@ preveri(
   preveri('drzava: poljski brskalnik', D.ugibajDrzavo({ jeziki: ['pl-PL'], casovniPas: 'Europe/Warsaw' }) === 'PL')
   preveri('drzava: anglesko v Varšavi (pas)', D.ugibajDrzavo({ jeziki: ['en-US'], casovniPas: 'Europe/Warsaw' }) === 'PL')
   preveri('drzava: liga pl-… je poljska', D.drzavaLige('pl-klasa-a') === 'PL' && D.JEZIK_DRZAVE.PL === 'pl' && drzavaVstopa('/pl') === 'PL')
+  // Španija: jezik es, ugib po brskalniku (es, es-ES, ca-ES) in pasu (Madrid, Kanarski otoki);
+  // španščina Latinske Amerike (es-MX, es-419, es-AR) ni Španija, tujec z njo pa dobi španščino.
+  preveri('jezik: Španec špansko', zj({ drzava: 'ES' }) === 'es' && zj({ tujec: 'ES', jeziki: ['es-ES'] }) === 'es')
+  preveri('tujec: prvi jezik es ostane (tudi es-MX)', D.jezikTujca(['es-ES', 'en']) === 'es' && D.jezikTujca(['es-MX']) === 'es' && D.jezikTujca(['en', 'es']) === 'en')
+  preveri('drzava: spanski brskalnik', D.ugibajDrzavo({ jeziki: ['es-ES'] }) === 'ES' && D.ugibajDrzavo({ jeziki: ['es'] }) === 'ES' && D.ugibajDrzavo({ jeziki: ['ca-ES'] }) === 'ES')
+  preveri('drzava: latinskoameriska spanscina ni Spanija',
+    D.ugibajDrzavo({ jeziki: ['es-MX'], casovniPas: 'America/Mexico_City' }) === null &&
+      D.ugibajDrzavo({ jeziki: ['es-419'] }) === null && D.ugibajDrzavo({ jeziki: ['es-AR'], casovniPas: 'America/Argentina/Buenos_Aires' }) === null)
+  preveri('drzava: anglesko v Madridu in na Kanarskih otokih (pas)',
+    D.ugibajDrzavo({ jeziki: ['en-US'], casovniPas: 'Europe/Madrid' }) === 'ES' && D.ugibajDrzavo({ jeziki: ['en-GB'], casovniPas: 'Atlantic/Canary' }) === 'ES')
+  preveri('drzava: liga es-… je spanska', D.drzavaLige('es-primera-regional') === 'ES' && D.JEZIK_DRZAVE.ES === 'es' && drzavaVstopa('/es') === 'ES')
   shramba.set('slff-tujec', 'CZ')
   // Jezik tujca je odvisen od jezika okolja (Node ima navigator.languages).
   const jezikTujcaTu = D.jezikTujca(globalThis.navigator?.languages)
@@ -3613,6 +3627,7 @@ preveri(
   const { ro } = await import('../src/i18n/ro/index.ts')
   const { et } = await import('../src/i18n/et/index.ts')
   const { pl } = await import('../src/i18n/pl/index.ts')
+  const { es } = await import('../src/i18n/es/index.ts')
   const listi = (d, pot = '') =>
     Object.entries(d).flatMap(([k, v]) =>
       typeof v === 'string' || (v && typeof v === 'object' && 'other' in v) ? [[pot + k, v]] : listi(v, `${pot}${k}.`),
@@ -3622,7 +3637,7 @@ preveri(
     const besedila = typeof v === 'string' ? [v] : Object.values(v)
     return besedila.map((b) => [...b.matchAll(/\{(\w+)\}|<(\w+)>/g)].map((m) => m[0]).sort().join(' '))
   }
-  for (const [ime, slovar] of [['sk', sk], ['en', en], ['hr', hr], ['cs', cs], ['hu', hu], ['de', de], ['sr', sr], ['ro', ro], ['et', et], ['pl', pl]]) {
+  for (const [ime, slovar] of [['sk', sk], ['en', en], ['hr', hr], ['cs', cs], ['hu', hu], ['de', de], ['sr', sr], ['ro', ro], ['et', et], ['pl', pl], ['es', es]]) {
     const napake = []
     let manjka = 0
     for (const [kljuc, izvirnik] of listi(sl)) {
@@ -3721,7 +3736,7 @@ preveri(
   const crticeEt = listi(et).filter(([, v]) => (typeof v === 'string' ? [v] : Object.values(v)).some((b) => /[—–]/.test(b)))
   preveri('prevodi et: brez pomisljajev', crticeEt.length === 0, crticeEt.slice(0, 5).map(([k]) => k).join(', '))
   preveri('prevodi et: drzava Eesti v vseh jezikih',
-    [sl, sk, en, hr, cs, hu, de, sr, ro, et, pl].every((d) => d.aplikacija.izbiraDrzave.imena.EE === 'Eesti'))
+    [sl, sk, en, hr, cs, hu, de, sr, ro, et, pl, es].every((d) => d.aplikacija.izbiraDrzave.imena.EE === 'Eesti'))
   preveri('prevodi et: tocke', et.skupno.besede.tocke.one === 'punkt' && et.skupno.besede.tocke.other === 'punkti')
   preveri('prevodi et: liga na plakatu za dvopičjem', /: \{liga\}/.test(et.lestvice.plakat.jeOdprta), et.lestvice.plakat.jeOdprta)
   // Poljske množine: Intl.PluralRules('pl') da one/few/many/other; many so cela
@@ -3732,12 +3747,25 @@ preveri(
   )
   preveri('prevodi pl: mnozine one/few/many/other', slabePl.length === 0, slabePl.slice(0, 5).map(([k]) => k).join(', '))
   preveri('prevodi pl: drzava Polska v vseh jezikih',
-    [sl, sk, en, hr, cs, hu, de, sr, ro, et, pl].every((d) => d.aplikacija.izbiraDrzave.imena.PL === 'Polska'))
+    [sl, sk, en, hr, cs, hu, de, sr, ro, et, pl, es].every((d) => d.aplikacija.izbiraDrzave.imena.PL === 'Polska'))
   const tPl = pl.skupno.besede.tocke
   preveri('prevodi pl: tocke (1 punkt, 2 punkty, 5 punktów, 1,5 punktu)',
     tPl.one === 'punkt' && tPl.few === 'punkty' && tPl.many === 'punktów' && tPl.other === 'punktu')
   preveri('prevodi pl: krog je kolejka', pl.domov.krog === '{krog}. kolejka', pl.domov.krog)
   preveri('prevodi pl: liga na plakatu za dvopičjem', /: \{liga\}/.test(pl.lestvice.plakat.jeOdprta), pl.lestvice.plakat.jeOdprta)
+  // Španske množine: Intl.PluralRules('es') da one/many/other; many so celi milijoni
+  // (1.000.000), other vse ostalo, tudi 0 in decimalke ("1,5 puntos").
+  const kategorijeEs = new Intl.PluralRules('es-ES').resolvedOptions().pluralCategories
+  const slabeEs = listi(es).filter(
+    ([, v]) => typeof v === 'object' && (Object.keys(v).some((k) => !kategorijeEs.includes(k)) || kategorijeEs.some((k) => !(k in v))),
+  )
+  preveri('prevodi es: mnozine one/many/other', slabeEs.length === 0, slabeEs.slice(0, 5).map(([k]) => k).join(', '))
+  preveri('prevodi es: drzava España v vseh jezikih',
+    [sl, sk, en, hr, cs, hu, de, sr, ro, et, pl, es].every((d) => d.aplikacija.izbiraDrzave.imena.ES === 'España'))
+  const tEs = es.skupno.besede.tocke
+  preveri('prevodi es: tocke (1 punto, 2 puntos, 1,5 puntos)', tEs.one === 'punto' && tEs.many === 'puntos' && tEs.other === 'puntos')
+  preveri('prevodi es: krog je jornada', es.domov.krog === 'Jornada {krog}' && es.tekme.krog === 'Jornada {n}', es.domov.krog)
+  preveri('prevodi es: liga na plakatu za dvopičjem', /: \{liga\}/.test(es.lestvice.plakat.jeOdprta), es.lestvice.plakat.jeOdprta)
 }
 
 // --- vir sportnet (Slovaška) -----------------------------------------------
@@ -5501,6 +5529,66 @@ preveri(
   preveri('e-pošta: avtentikacijske predloge in zadeve pl',
     vejePl.every((v) => v && !slovenskoPl.test(v) && !pomisljaj.test(v)) && zadevePl.length === 3 &&
       zadevePl.every((z) => !slovenskoPl.test(z) && !pomisljaj.test(z)), zadevePl.join(' | '))
+
+  // Španija: isti maili v španščini, rok po madridsko (kot Ljubljana), razlog preveden, množine one/other.
+  const esL = { slug: 'es-primera-regional', oznaka: 'Primera Regional', ime: 'Primera Regional', drzava: 'ES' }
+  // Slovenščina ali pozdravi drugih jezikov v španskem mailu.
+  const slovenskoEs = /Živjo|ekip[aeo]|krog|točk|opomnik|igralc|kader|namesto|sestavi |Ahoj|Bok|Szia|Servus|Zdravo|Salut|Tere|Cześć/
+  const oEs = E.sestaviOpomnik(esL, { display_name: 'Javier García', brez_ekipe: true })
+  const oEs2 = E.sestaviOpomnik(esL, { display_name: null, brez_ekipe: false })
+  preveri('e-pošta: opomnik es',
+    oEs.naslov.includes('aún no tienes equipo para la próxima jornada') && oEs.html.includes('¡Hola, Javier!') && oEs2.html.includes('¡Hola!') &&
+      oEs2.naslov.includes('completa tu equipo') && oEs.odjava === 'https://slff.eu/reminders?t=es-primera-regional' &&
+      oEs.html.includes('https://slff.eu/my-team?t=es-primera-regional') && oEs.html.includes('No quiero más recordatorios') &&
+      !slovenskoEs.test(oEs.naslov + oEs.html + oEs2.naslov + oEs2.html), oEs.naslov)
+  const zEs = E.sestaviOpozorilo(esL, { display_name: 'Javier', team_name: 'Linces del Guadalquivir', round_number: 5, deadline_at: rok, razlog })
+  preveri('e-pošta: opozorilo es (rok po madridsko, razlog preveden)',
+    zEs.naslov.includes('en la jornada 5') && zEs.html.includes('10:00') &&
+      zEs.html.includes('Del club Šenčur tienes 4 jugadores') && !slovenskoEs.test(zEs.naslov + zEs.html), zEs.naslov)
+  preveri('e-pošta: rok es v časovnem pasu lige', E.izpisRoka(rok, esL).includes('10:00'), E.izpisRoka(rok, esL))
+  const prevodiEs = razlogi.map((r) => E.prevediRazlog(r, 'es'))
+  const splosenEs = E.prevediRazlog('Neznan razlog.', 'es')
+  preveri(
+    'e-pošta: vsi razlogi prevedeni v španščino',
+    prevodiEs.every((p) => p !== splosenEs && !slovenskoEs.test(p) && !pomisljaj.test(p)),
+    prevodiEs.find((p) => p === splosenEs || slovenskoEs.test(p) || pomisljaj.test(p)),
+  )
+  preveri('e-pošta: razlog es (množina one/other)',
+    prevodiEs[1] === 'En la plantilla hay 3 jugadores en lugar de 15.' && prevodiEs[7] === 'En el once inicial hay 10 jugadores en lugar de 11.' &&
+      E.prevediRazlog('V kadru je 1 igralcev namesto 15.', 'es') === 'En la plantilla hay 1 jugador en lugar de 15.',
+    `${prevodiEs[1]} | ${prevodiEs[7]}`)
+  const bEs = E.sestaviOpomnikBrezLige('es', { display_name: 'Javier' })
+  preveri('e-pošta: brez lige es v španščini',
+    bEs.naslov.includes('elige tu liga') && bEs.html.includes('href="https://slff.eu/my-team?sestavi=1"') &&
+      bEs.html.includes('¡Hola, Javier!') && !slovenskoEs.test(bEs.html.replace(/href="[^"]*"/g, '')))
+  const pEs = E.sestaviPoznavalca(esL, { display_name: 'Javier', obseg: 'klub', klub: 'CD Ejemplo' })
+  preveri('e-pošta: poznavalec es', pEs.html.includes('experto del club <strong>CD Ejemplo</strong>') && pEs.html.includes('/positions?t=es-primera-regional') && !slovenskoEs.test(pEs.html))
+  const popEs = E.sestaviPopravekPozicije(esL, { display_name: 'Javier', team_name: 'Linces', igralci: [{ ime: 'Javier García', pozicija: 'MID' }] })
+  const izEs = E.sestaviIzstopKluba(esL, { display_name: 'Javier', team_name: 'Linces', igralci: [{ ime: 'Javier García', klub: 'CD Ejemplo' }] })
+  const pushEs = E.sestaviPushOpomnik(esL, rok)
+  const tEsP = E.sestaviTedenskiPregled(esL, {
+    display_name: 'Javier', ekipa: 'Linces', krog: 5, tocke: 2.5, mesto: 3, mesto_prej: 5, ekip: 12,
+    povprecje: 30, najvec: 60, kapetan: 'Javier García', kapetan_tocke: 1, najboljsi: 'Pablo López', najboljsi_tocke: 24,
+  })
+  preveri('e-pošta: popravek pozicije, izstop, push in tedenski pregled es',
+    popEs.html.includes('(ahora centrocampista)') && izEs.naslov.includes('se ha retirado de la liga') &&
+      pushEs.naslov.includes('aún no tienes equipo') && tEsP.naslov.includes('2,5 puntos') && tEsP.html.includes('1 punto.') &&
+      tEsP.html.includes('24 puntos') &&
+      !slovenskoEs.test(popEs.naslov + popEs.html + izEs.naslov + izEs.html + pushEs.besedilo + tEsP.naslov + tEsP.html), tEsP.naslov)
+  preveri('e-pošta: es brez pomišljajev',
+    [oEs, oEs2, zEs, bEs, pEs, popEs, izEs, tEsP].every((m) => !pomisljaj.test(m.naslov + brezNoge(m.html))) &&
+      !pomisljaj.test(pushEs.naslov + pushEs.besedilo))
+  // Avtentikacijska pošta: španska veja predlog in zadev brez slovenščine in pomišljajev.
+  const vejeEs = ['confirmation', 'magic_link', 'recovery'].map((ime) => {
+    const h = readFileSync(new URL(`../supabase/templates/${ime}.html`, import.meta.url), 'utf8')
+    const m = h.match(/"es" }}([\s\S]*?){{ else/)
+    return m ? m[1].replace(/href="[^"]*"/g, '') : null
+  })
+  const zadeveEs = [...readFileSync(new URL('../scripts/hetzner/docker-compose.slff.yml', import.meta.url), 'utf8')
+    .matchAll(/"es" }}([^{]*){{/g)].map((m) => m[1])
+  preveri('e-pošta: avtentikacijske predloge in zadeve es',
+    vejeEs.every((v) => v && !slovenskoEs.test(v) && !pomisljaj.test(v)) && zadeveEs.length === 3 &&
+      zadeveEs.every((z) => !slovenskoEs.test(z) && !pomisljaj.test(z)), zadeveEs.join(' | '))
 
   // Tedenski pregled "Tvoj krog".
   const krog = {

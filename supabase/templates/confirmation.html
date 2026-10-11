@@ -68,6 +68,13 @@
     <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Potwierdź e-mail →</a>
   </p>
   <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Jeśli to nie ty się rejestrowałeś, zignoruj tę wiadomość.</p>
+{{ else if eq (printf "%v" .Data.jezik) "es" }}
+  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">¡Hola!</p>
+  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Gracias por registrarte en SLFF. Pulsa el botón para confirmar tu correo electrónico y ya puedes empezar a hacer tu equipo.</p>
+  <p style="text-align: center; margin: 24px 0;">
+    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Confirmar correo →</a>
+  </p>
+  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Si no te has registrado tú, ignora este mensaje.</p>
 {{ else }}
   <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Živjo!</p>
   <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Hvala za registracijo v SLFF. S klikom na gumb potrdiš svoj e-naslov in lahko začneš sestavljati ekipo.</p>

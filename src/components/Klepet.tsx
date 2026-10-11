@@ -124,6 +124,20 @@ const BESEDE: Record<string, { pridevniki: string[]; samostalniki: string[] }> =
       'Orzeł', 'Smok', 'Byk', 'Koń', 'Sokół', 'Ryś',
     ],
   },
+  // Španščina: pridevnik za samostalnikom ("Portero Azul 42"); vsi samostalniki
+  // so moškega spola, pridevniki zato v moški obliki.
+  es: {
+    pridevniki: [
+      'Azul', 'Rojo', 'Verde', 'Amarillo', 'Negro', 'Blanco', 'Plateado', 'Dorado',
+      'Rápido', 'Salvaje', 'Silencioso', 'Ardiente', 'Helado', 'Nocturno', 'Madrugador',
+      'de Hierro', 'de Cobre', 'Soleado', 'Celestial', 'Implacable',
+    ],
+    samostalniki: [
+      'Portero', 'Defensa', 'Centrocampista', 'Delantero', 'Capitán', 'Árbitro', 'Míster',
+      'Hincha', 'Goleador', 'Mediapunta', 'Suplente', 'Veterano', 'Héroe', 'Lobo',
+      'Halcón', 'Dragón', 'Toro', 'Caballo', 'Oso', 'Lince',
+    ],
+  },
   de: {
     pridevniki: [
       'Blauer', 'Roter', 'Grüner', 'Gelber', 'Schwarzer', 'Weißer', 'Silberner', 'Goldener',
@@ -163,8 +177,8 @@ export function psevdonim(userId?: string | null): string {
   const p = pridevniki[h % pridevniki.length]
   const s = samostalniki[Math.floor(h / pridevniki.length) % samostalniki.length]
   const st = h % 100
-  // Romunski pridevnik stoji za samostalnikom ("Portar Albastru 42").
-  return jezikSlovarja() === 'ro' ? `${s} ${p} ${st}` : `${p} ${s} ${st}`
+  // Romunski in španski pridevnik stojita za samostalnikom ("Portar Albastru 42", "Portero Azul 42").
+  return jezikSlovarja() === 'ro' || jezikSlovarja() === 'es' ? `${s} ${p} ${st}` : `${p} ${s} ${st}`
 }
 
 function relativniCas(iso: string): string {

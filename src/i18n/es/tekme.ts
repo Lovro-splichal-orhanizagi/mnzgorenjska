@@ -1,0 +1,211 @@
+// `tekme` en español (fuente: src/i18n/sl/tekme.ts).
+import type { Prevod } from '../jedro.ts'
+
+export const tekme: NonNullable<Prevod['tekme']> = {
+  krog: 'Jornada {n}',
+  moraPrijava: 'Para votar tienes que <prijava>iniciar sesión</prijava>.',
+
+  tockovanje: {
+    postavke: {
+      nastopOd60: '60 minutos jugados o más',
+      nastopDo60: 'Hasta 60 minutos jugados',
+      gol: 'Gol',
+      goli: 'Goles ({n})',
+      asistenca: 'Asistencia',
+      asistence: 'Asistencias ({n})',
+      brezPrejetega: 'Portería a cero',
+      zmaga: 'Victoria del equipo',
+      prejetiGoli: 'Goles encajados ({n})',
+      obranjena: 'Penalti parado ({n})',
+      zgresena: 'Penalti fallado ({n})',
+      avtogol: 'Gol en propia puerta ({n})',
+      rumeni: 'Tarjeta amarilla ({n})',
+      rdeci: 'Tarjeta roja',
+    },
+    pravila: {
+      igralniCas: 'Tiempo de juego',
+      nastopDo60: 'Hasta 60 minutos jugados',
+      nastopOd60: '60 minutos jugados o más',
+      goliInAsistence: 'Goles y asistencias',
+      golVratarja: 'Gol de un portero',
+      golBranilca: 'Gol de un defensa',
+      golVezista: 'Gol de un centrocampista',
+      golNapadalca: 'Gol de un delantero',
+      asistenca: 'Asistencia',
+      obramba: 'Defensa',
+      csVratar: 'Portería a cero: portero',
+      csBranilec: 'Portería a cero: defensa',
+      csVezist: 'Portería a cero: centrocampista',
+      zmaga: 'Victoria del equipo: portero, defensa',
+      prejeta2: 'Cada 2 goles encajados: portero, defensa',
+      opomba:
+        'La portería a cero cuenta con al menos 60 minutos, y los goles encajados solo los que llegan con el jugador en el campo.',
+      obranjena:
+        'Penalti parado: portero (el acta lo recoge como penalti fallado del rival)',
+      kazni: 'Penalizaciones',
+      zgresena: 'Penalti fallado',
+      avtogol: 'Gol en propia puerta',
+      rumeni: 'Tarjeta amarilla',
+      rdeci: 'Tarjeta roja',
+    },
+  },
+
+  rezultati: {
+    naslov: 'Resultados',
+    uvod:
+      'Partidos jugados según las actas de {zveza}. Haz clic en un partido y verás las dos alineaciones en el campo, con los puntos que ha ganado cada jugador en su camiseta.',
+    niZacetka: 'La temporada aún no ha empezado.',
+    prazenKrog: 'En esta jornada no se ha jugado ningún partido.',
+    prejsnji: 'Jornada anterior',
+    naslednji: 'Jornada siguiente',
+  },
+
+  tabela: {
+    naslov: 'Clasificación',
+    zavihek: '{liga} · clasificación',
+    uvod: 'Clasificación de la temporada {sezona}, calculada a partir de los resultados de las actas de {zveza}.',
+    opomba: 'Aproximación: victoria 3 puntos, empate 1; a igualdad de puntos decide la diferencia de goles y luego los goles a favor. Las federaciones pueden tener otras reglas (enfrentamientos directos, puntos descontados); la clasificación oficial es la de {zveza}.',
+    niTekem: 'Esta liga aún no tiene partidos jugados.',
+    stolpci: {
+      klub: 'Club',
+      tekme: 'PJ',
+      zmage: 'G',
+      remiji: 'E',
+      porazi: 'P',
+      goli: 'Goles',
+      razlika: 'DG',
+      tocke: 'Pts',
+      forma: 'Forma',
+    },
+    stolpciOpis: {
+      tekme: 'Partidos jugados',
+      zmage: 'Ganados',
+      remiji: 'Empatados',
+      porazi: 'Perdidos',
+      goli: 'Goles a favor : en contra',
+      razlika: 'Diferencia de goles',
+      tocke: 'Puntos',
+    },
+    forma: { W: 'G', D: 'E', L: 'P' },
+    formaOpis: { W: 'victoria', D: 'empate', L: 'derrota' },
+    strelci: 'Goleadores',
+    niStrelcev: 'Esta temporada aún no hay goleadores.',
+    stolpciStrelcev: {
+      igralec: 'Jugador',
+      klub: 'Club',
+      goli: 'Goles',
+      tekme: 'Partidos',
+      minute: 'Min',
+    },
+  },
+
+  tekma: {
+    naslov: 'Partido',
+    niTekme: 'Este partido no está en las actas.',
+    nazaj: '← Resultados',
+    brezPostav:
+      'El acta de este partido no indica las alineaciones, así que no se pueden mostrar los puntos por jugador.',
+    naDresu:
+      'En la camiseta pone cuántos puntos ha ganado el jugador en este partido. Haz clic en un jugador para abrir su página.',
+    cakajo: {
+      one: '{n} gol de este partido espera asistencia; hasta que la tenga, el asistente se queda sin sus +3 puntos. Dinos abajo quién dio el pase.',
+      many: '{n} goles de este partido esperan asistencia; hasta que la tengan, el asistente se queda sin sus +3 puntos. Dinos abajo quién dio el pase.',
+      other: '{n} goles de este partido esperan asistencia; hasta que la tengan, el asistente se queda sin sus +3 puntos. Dinos abajo quién dio el pase.',
+    },
+    goliInAsistence: 'Goles y asistencias',
+    prijaviSe: 'Inicia sesión para votar',
+  },
+
+  glasovanje: {
+    naslov: 'Asistencias',
+    kdoJePodal: '¿Quién dio el pase?',
+    uvod:
+      'Las actas de {zveza} recogen a los goleadores, pero no las asistencias. Las decide la comunidad: cuando un mismo jugador reúne <b>{glasov}</b> en un gol, se le concede la asistencia y suma <b>+3 puntos</b>.',
+    pragGlasov: { one: '{n} voto', many: '{n} votos', other: '{n} votos' },
+    niTekem: 'En la temporada actual aún no se ha jugado ningún partido',
+    niTekemOpis:
+      'La votación de asistencias se abre en cuanto se juegue la primera jornada. Vuelve cuando lleguen las actas.',
+    arhiv: 'archivo',
+    preteklaSezona:
+      'Estás votando sobre una temporada pasada. No afecta a los puntos de la liga actual; solo corrige el historial.',
+    izberiKrog: '1. Elige jornada',
+    izberiTekmo: '2. Elige partido',
+    vsePotrjeno: 'Todo confirmado',
+    zaprto: 'cerrado',
+    poglejTekmo: 'Ver las alineaciones y los puntos de este partido →',
+    niGolov: 'En este partido no hubo goles.',
+    vsePotrjene: 'Todas las asistencias de este partido están confirmadas. 🎉',
+    zaprtoOpis: 'La votación de este partido está cerrada; está abierta hasta el cierre de la jornada siguiente.',
+    brezPotrjene: 'Sin asistencia confirmada: {goli}.',
+  },
+
+  gol: {
+    neznanStrelec: 'goleador desconocido',
+    avtogol: 'Gol en propia puerta: {ime}',
+    enajstmetrovka: '{ime}: penalti',
+    brezAsistenceOpomba: 'sin asistencia',
+    potrjena: 'asistencia confirmada: cerrado',
+    brezAsistence: 'Sin asistencia',
+    odlocilaSkupnost: 'así lo ha decidido la comunidad',
+    morasSePrijaviti: 'Para votar tienes que iniciar sesión',
+    spremeniGlas: 'Cambiar voto',
+    kdoJePodal: '¿Quién dio el pase?',
+    vodiBrez: 'Va ganando «sin asistencia»',
+    vodi: 'Va ganando <b>{ime}</b>',
+    igralecBrezZapisa: 'jugador sin registro',
+    doOdlocitve: '(faltan {n} para decidir)',
+    ostali: 'Resto:',
+    brezGlasovi: 'sin ({n})',
+    izberiPodajalca: 'Elige al asistente: {ekipa}',
+    nihce: 'Nadie: gol sin asistencia',
+  },
+
+  pozicije: {
+    naslov: 'Posiciones',
+    kjeKdoIgra: '¿Quién juega dónde?',
+    uvod:
+      'Las actas solo marcan al portero y las alineaciones van por dorsal, así que las posiciones no se pueden deducir. Las decide la comunidad. Votos necesarios: <b>{prag}</b>; la cifra baja (hasta {minPrag}) si la estimación estadística (dorsal, goles, tarjetas) apunta con fuerza en esa dirección. Los votos de los <b>expertos del club</b> y de los usuarios con <b>alta precisión</b> cuentan más.',
+    enkratNaTeden:
+      'Las posiciones votadas se aplican <b>una vez por semana, el lunes por la mañana</b>, todas a la vez. Así la liga no cambia entre semana sin avisar: lo que ves el martes vale también el sábado, cuando se cierra la jornada. El jugador que ya ha reunido suficientes votos lleva hasta entonces un reloj de arena <ikona>⏳</ikona>.',
+    klub: 'Club',
+    poznavalecOznaka: '  ★ experto',
+    samoIzStatistike: 'Solo por estadística ({n})',
+    vsiPotrjeni: 'Todos los jugadores de este club tienen la posición confirmada. 🎉',
+    niIgralcev: 'No hay jugadores.',
+    status: {
+      naslov: 'Mi estado como votante',
+      utezOpis:
+        'Peso de cada voto; se suma al bono de experto si votas a un jugador de tu club.',
+      utez: 'peso {utez}×',
+      tocnih: '({pravilni}/{vsi} acertados)',
+      klubPoznam: 'Club que conozco bien (experto): mi voto para los jugadores de este club cuenta más:',
+      nisemPoznavalec: '— no soy experto de ningún club —',
+      opomba:
+        'Un experto marca un solo club. Los pesos se estabilizan con el tiempo: si tus votos resultan incorrectos, la confianza baja. La confianza se recalcula a partir de los votos anteriores cuando se conoce la posición.',
+    },
+    igralec: {
+      statistika: '{tekme} · {minute} min · {goli} · {cs} porterías a cero',
+      izZapisnika: 'Del acta: el portero está marcado con (V)',
+      izStatistike: 'Por estadística (dorsal, goles, tarjetas): los votos pueden corregirla',
+      potrdilaSkupnost: 'Confirmada por la comunidad',
+      zapisnik: ' · acta',
+      uveljavitevOpis:
+        'Las posiciones se aplican una vez por semana, el lunes por la mañana: así la liga no cambia entre semana sin avisar.',
+      izglasovano: 'votado: {pozicija} · el lunes',
+      neIgraOpis: 'Ya no juega: no está en el mercado. Si aparece en un acta, vuelve solo.',
+      neIgra: 'ya no juega',
+      vrniOpis: 'Devolver al jugador a los activos',
+      vrni: 'devolver',
+      odhodOpis:
+        'El jugador ya no juega en este club: lo quita del mercado. Si aparece en un acta, vuelve solo.',
+      statistikaKaze:
+        'La estadística apunta a <b>{pozicija} ({odstotek}%)</b>: un voto en esa dirección cuenta con un umbral más bajo ({nizji} en lugar de {prag}).',
+      dolocenaIzStatistike: 'La posición sale de la estadística: si no es la correcta, haz clic en la buena.',
+      dolocilaSkupnost: 'La posición la ha decidido la comunidad: se puede corregir con votos.',
+      gumbUtez: 'Peso {utez} / umbral {prag}',
+      gumbPrior: ' · estimación {odstotek}%',
+      gumbPoznavalec: ' · tu voto como experto cuenta más',
+      vodi: 'Va ganando {pozicija}: peso {utez} / {prag}',
+    },
+  },
+}

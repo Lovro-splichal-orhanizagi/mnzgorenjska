@@ -67,6 +67,13 @@
     <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Ustaw nowe hasło →</a>
   </p>
   <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Jeśli to nie ty prosiłeś o nowe hasło, zignoruj tę wiadomość. Stare hasło nadal działa.</p>
+{{ else if eq (printf "%v" .Data.jezik) "es" }}
+  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Nueva contraseña</p>
+  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Alguien (esperamos que tú) ha pedido una nueva contraseña para SLFF. Pulsa el botón y escribe la nueva contraseña.</p>
+  <p style="text-align: center; margin: 24px 0;">
+    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Elegir nueva contraseña →</a>
+  </p>
+  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Si no has pedido una nueva contraseña, ignora este mensaje. La contraseña anterior sigue valiendo.</p>
 {{ else }}
   <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Ponastavitev gesla</p>
   <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Nekdo (upamo, da ti) je zahteval novo geslo za SLFF. Klikni gumb in vpiši novo geslo.</p>

@@ -8,6 +8,7 @@
 //   npm run prevodi -- ro      # romunščina (mora biti popolna, kot sk)
 //   npm run prevodi -- et      # estonščina (mora biti popolna, kot sk)
 //   npm run prevodi -- pl      # poljščina (mora biti popolna, kot sk)
+//   npm run prevodi -- es      # španščina (mora biti popolna, kot sk)
 //   npm run prevodi -- en     # angleščina (mora biti popolna, kot sk)
 import { sl } from '../src/i18n/sl'
 import { hr } from '../src/i18n/hr'
@@ -20,6 +21,7 @@ import { sr } from '../src/i18n/sr'
 import { ro } from '../src/i18n/ro'
 import { et } from '../src/i18n/et'
 import { pl } from '../src/i18n/pl'
+import { es } from '../src/i18n/es'
 
 type Drevo = { [k: string]: unknown }
 const jeList = (v: unknown) => typeof v === 'string' || (typeof v === 'object' && v !== null && 'other' in v)
@@ -37,7 +39,7 @@ function ima(d: Drevo, kljuc: string): boolean {
 }
 
 const vsi = listi(sl as Drevo)
-const jeziki: Record<string, Drevo> = { hr: hr as Drevo, sk: sk as Drevo, cs: cs as Drevo, hu: hu as Drevo, de: de as Drevo, sr: sr as Drevo, ro: ro as Drevo, et: et as Drevo, pl: pl as Drevo, en: en as Drevo }
+const jeziki: Record<string, Drevo> = { hr: hr as Drevo, sk: sk as Drevo, cs: cs as Drevo, hu: hu as Drevo, de: de as Drevo, sr: sr as Drevo, ro: ro as Drevo, et: et as Drevo, pl: pl as Drevo, es: es as Drevo, en: en as Drevo }
 const izbran = process.argv[2]
 for (const [j, slovar] of Object.entries(jeziki)) {
   if (izbran && izbran !== j) continue
