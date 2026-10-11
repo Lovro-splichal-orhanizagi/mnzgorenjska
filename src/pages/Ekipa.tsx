@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase'
 import { formatirajTocke, prikazniIme, tockZ } from '../lib/pomozno'
 import { useNaslov, useNoindex } from '../lib/naslov'
 import EnajstericaNaIgriscu from '../components/EnajstericaNaIgriscu'
+import FotoIgralca from '../components/FotoIgralca'
 import ZgodbaKroga from '../components/ZgodbaKroga'
 import { useKanonicnaLiga, useTekmovanje, zLigo } from '../lib/tekmovanje'
 import {
@@ -283,6 +284,7 @@ export default function Ekipa() {
                         key={v.player_id}
                         className="flex min-h-11 items-center gap-2 px-3 py-2 text-sm"
                       >
+                        <FotoIgralca id={Number(v.player_id)} velikost={24} />
                         <Link
                           to={zLigo(`/player/${v.player_id}`, tekmovanjeEkipe?.slug)}
                           className="min-w-0 flex-1 truncate hover:text-gnl-400"

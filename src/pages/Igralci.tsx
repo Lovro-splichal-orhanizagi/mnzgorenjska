@@ -18,6 +18,7 @@ import { Link } from '../components/Povezava'
 import { POZICIJE } from '../lib/pravila'
 import { useTekmovanje } from '../lib/tekmovanje'
 import Grb from '../components/Grb'
+import FotoIgralca from '../components/FotoIgralca'
 import { t, tx, lokale } from '../i18n'
 import type { Pozicija } from '../lib/tipi'
 import Sponzor from '../components/Sponzor'
@@ -579,11 +580,10 @@ export default function Igralci() {
                 </td>
                 <td className="sticky left-0 z-10 bg-slate-950 px-3 py-2 sm:static sm:max-w-none sm:bg-transparent">
                   <div className="flex items-center gap-2">
-                    <Grb
-                      ime={i.team_name}
-                      kratko={i.team_short}
-                      logo={i.team_logo}
+                    <FotoIgralca
+                      id={i.id}
                       velikost={24}
+                      nadomestek={<Grb ime={i.team_name} kratko={i.team_short} logo={i.team_logo} velikost={24} />}
                     />
                     <div className="min-w-0 max-w-[8.5rem] sm:max-w-none">
                       <Link
@@ -663,8 +663,9 @@ export default function Igralci() {
               <li key={z.id}>
                 <Link
                   to={potIgralca(z)}
-                  className="flex items-baseline gap-2 rounded-lg px-2 py-2 text-sm transition hover:bg-white/5"
+                  className="flex items-center gap-2 rounded-lg px-2 py-2 text-sm transition hover:bg-white/5"
                 >
+                  <FotoIgralca id={z.id} velikost={24} />
                   <span className="max-w-[60%] shrink-0 truncate font-semibold hover:text-gnl-300">
                     {prikazniIme(z.full_name)}
                   </span>
@@ -778,7 +779,11 @@ function VrhLige({ lestvice }: { lestvice: Array<{ naslov: string; vrstice: VrhV
                     <span className={`w-4 text-center text-sm font-bold ${i === 0 ? 'text-amber-300' : 'text-slate-500'}`}>
                       {i + 1}
                     </span>
-                    <Grb ime={igralec.team_name} kratko={igralec.team_short} logo={igralec.team_logo} velikost={20} />
+                    <FotoIgralca
+                      id={id}
+                      velikost={24}
+                      nadomestek={<Grb ime={igralec.team_name} kratko={igralec.team_short} logo={igralec.team_logo} velikost={20} />}
+                    />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-semibold">{prikazniIme(igralec.full_name)}</span>
                       <span className="block truncate text-xs text-slate-400">
@@ -816,7 +821,11 @@ function PrviIgralec({ igralec, sezona }: { igralec: IgralecSezone; sezona: stri
         <span>{t('igralci.vrh.prvi', { sezona: sezona ?? '' })}</span>
       </div>
       <div className="mt-2 flex items-center gap-4">
-        <Grb ime={igralec.team_name} kratko={igralec.team_short} logo={igralec.team_logo} velikost={56} />
+        <FotoIgralca
+          id={igralec.id}
+          velikost={72}
+          nadomestek={<Grb ime={igralec.team_name} kratko={igralec.team_short} logo={igralec.team_logo} velikost={56} />}
+        />
         <div className="min-w-0 flex-1">
           <div className="break-words text-2xl font-black leading-tight text-white sm:text-4xl">
             {prikazniIme(igralec.full_name)}

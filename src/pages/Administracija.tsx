@@ -12,6 +12,7 @@ import { useTekmovanje } from '../lib/tekmovanje'
 import UpravljanjeLig from '../components/admin/UpravljanjeLig'
 import ZivostSkupnosti from '../components/admin/Zivost'
 import ProsnjePoznavalcev from '../components/admin/ProsnjePoznavalcev'
+import Prevzemi from '../components/admin/Prevzemi'
 import RastLig from '../components/admin/RastLig'
 import Rast from '../components/admin/Rast'
 import Lijak from '../components/admin/Lijak'
@@ -622,7 +623,13 @@ export default function Administracija() {
         ...(tekmovanje ? [{ id: 'promo', naslov: 'Promo: liga je live' }] : []),
       ],
     },
-    { skupina: 'Igralci', razdelki: [{ id: 'igralec', naslov: 'Igralec — pozicija in NZS' }] },
+    {
+      skupina: 'Igralci',
+      razdelki: [
+        { id: 'igralec', naslov: 'Igralec — pozicija in NZS' },
+        { id: 'prevzemi', naslov: 'Prevzemi profilov' },
+      ],
+    },
     {
       skupina: 'Uporabniki',
       razdelki: [
@@ -731,6 +738,9 @@ export default function Administracija() {
 
             <Razdelek id="poznavalci">
               <ProsnjePoznavalcev />
+            </Razdelek>
+            <Razdelek id="prevzemi">
+              <Prevzemi />
             </Razdelek>
             <Razdelek id="rast-lig">
               <RastLig />

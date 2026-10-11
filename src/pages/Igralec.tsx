@@ -24,6 +24,8 @@ import {
 // funkcijo uvozimo pod drugim imenom.
 import { serijaCen, premik as premikSerije, crta } from '../lib/gibanjeCene'
 import Grb from '../components/Grb'
+import FotoIgralca from '../components/FotoIgralca'
+import PrevzemIgralca from '../components/PrevzemIgralca'
 import KarticaIgralca from '../components/KarticaIgralca'
 import { dosezkiNastopa, vrsticaTekme, type NastopZaKartico } from '../lib/karticaIgralca'
 import {
@@ -502,11 +504,20 @@ export default function Igralec() {
 
       {/* glava */}
       <div className="-mt-3 flex items-center gap-3 sm:gap-4">
+        {/* Potrjen igralec s fotografijo: fotografija namesto grba kluba. */}
         <span className="sm:hidden">
-          <Grb ime={igralec.team_name} kratko={igralec.team_short} logo={igralec.team_logo} velikost={40} />
+          <FotoIgralca
+            id={igralec.id}
+            velikost={48}
+            nadomestek={<Grb ime={igralec.team_name} kratko={igralec.team_short} logo={igralec.team_logo} velikost={40} />}
+          />
         </span>
         <span className="hidden sm:block">
-          <Grb ime={igralec.team_name} kratko={igralec.team_short} logo={igralec.team_logo} velikost={56} />
+          <FotoIgralca
+            id={igralec.id}
+            velikost={72}
+            nadomestek={<Grb ime={igralec.team_name} kratko={igralec.team_short} logo={igralec.team_logo} velikost={56} />}
+          />
         </span>
         <div className="min-w-0 flex-1">
           <h1 className="line-clamp-2 break-words text-2xl font-black naslov sm:text-3xl">
@@ -538,6 +549,13 @@ export default function Igralec() {
           </div>
         </div>
       </div>
+
+      {/* prevzem profila: značka in predstavitev potrjenega igralca, "To sem jaz" */}
+      <PrevzemIgralca
+        igralecId={igralec.id}
+        slugLige={slugLige}
+        anonimiziran={String(igralec.full_name ?? '').startsWith('#')}
+      />
 
       {/* številke — tekoča sezona; seštevek vseh sezon je drugotna vrstica */}
       <div className="space-y-2">

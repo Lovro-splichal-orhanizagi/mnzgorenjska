@@ -27,6 +27,9 @@ import Klub from '../src/pages/Klub'
 import InfoIgralca from '../src/components/InfoIgralca'
 import ZivostSkupnosti from '../src/components/admin/Zivost'
 import Administracija from '../src/pages/Administracija'
+import PotrditevPrevzema from '../src/pages/PotrditevPrevzema'
+import PrevzemIgralca from '../src/components/PrevzemIgralca'
+import Prevzemi from '../src/components/admin/Prevzemi'
 import {
   preveriEkipo,
   lahkoUrejasPripomocek,
@@ -116,6 +119,10 @@ const strani = [
   ['Tekma', Tekma, '/match/1'],
   ['Prijava', Prijava, '/login'],
   ['Administracija', Administracija, '/admin'],
+  // Te se do odgovora baze izrišejo prazne; ovoj preveri, da izris ne pade.
+  ['Potrditev prevzema', () => <div><PotrditevPrevzema /></div>, '/claim'],
+  ['Prevzem igralca', () => <div><PrevzemIgralca igralecId={1} slugLige="mladinci" anonimiziran={false} /></div>, '/player/1'],
+  ['Admin: prevzemi', () => <div><Prevzemi /></div>, '/admin'],
 ]
 
 for (const [ime, Komponenta, pot] of strani) {
@@ -4229,6 +4236,26 @@ preveri(
   preveri('anonimizacija: uvoz zgosti ime in sifro enako kot baza',
     imeHash(7, 'Test Šime') === '558e773d490d37ef3d185b90d5f8e2017391b71b5e5c14d74888dc3e874f514c' &&
     regHash(7, 913040) === '0977c5f2629986f97d714990a002b776017db2c12c201af132af556ae48780d7')
+}
+
+// --- prevzem profila igralca ("To sem jaz") --------------------------------------
+// Mladinsko ligo vmesnik in baza prepoznata po isti šifri (SQL
+// `je_mladinski_slug`, varnost.sql); potrdilo o 16 letih zahteva baza.
+{
+  const P = await import('../src/lib/prevzem.ts')
+  preveri('prevzem: mladinske lige po šifri (kot SQL)',
+    ['mladinci', 'lj-mladinci-2', 'mb-u19', 'sml2-vzhod', 'hu-bk-u19-del', 'rs-u19-srbija', 'sk-ssfz-u19-3liga-juh', 'mk-u19-super']
+      .every(P.jeMladinskiSlug) &&
+    !['clani', 'lj-1-liga', 'snl3-vzhod', 'hu-u190', null].some(P.jeMladinskiSlug))
+  preveri('prevzem: uporabniško ime iz povezave ali z @',
+    P.ocistiRocico(' @ime.priimek ') === 'ime.priimek' &&
+    P.ocistiRocico('https://www.instagram.com/ime_1/?hl=sl') === 'ime_1' &&
+    P.ocistiRocico('https://www.tiktok.com/@ime.x') === 'ime.x' &&
+    P.VZOREC_ROCICE.instagram.test('ime_1') && !P.VZOREC_ROCICE.instagram.test('ime/evil'))
+  preveri('prevzem: naslov fotografije in 64-pikselske različice',
+    P.naslovFotografije(null) === null &&
+    P.naslovFotografije('5/abc.webp').endsWith('/storage/v1/object/public/fotografije-igralcev/5/abc.webp') &&
+    P.naslovFotografije('5/abc.webp', true).endsWith('/fotografije-igralcev/5/abc-64.webp'))
 }
 
 // --- vir fss (Srbija, državni ligi FSS; vratar s prvaliga.rs) ------------------

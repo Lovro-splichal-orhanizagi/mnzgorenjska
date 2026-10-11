@@ -48,6 +48,7 @@ const Opomniki = lazy(() => import('./pages/Opomniki'))
 const Racun = lazy(() => import('./pages/Racun'))
 const Profil = lazy(() => import('./pages/Profil'))
 const PotrditevPovezave = lazy(() => import('./pages/PotrditevPovezave'))
+const PotrditevPrevzema = lazy(() => import('./pages/PotrditevPrevzema'))
 
 // Poti so angleške, ker jih vidi vsaka država (slovaški obiskovalec ne
 // odpira "moja-ekipa"). Stari slovenski naslovi ostanejo kot preusmeritve.
@@ -161,6 +162,7 @@ export default function App() {
               <Route path="/account" element={<Racun />} />
               <Route path="/u/:id" element={<Profil />} />
               <Route path="/auth/confirm" element={<PotrditevPovezave />} />
+              <Route path="/claim" element={<PotrditevPrevzema />} />
               {/* Stari slovenski naslovi (deljene povezave, e-pošta, iskalniki)
                   vodijo na nove — s parametri, poizvedbo in #. */}
               {STARE_POTI.map(([staro, novo]) => (

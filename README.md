@@ -126,6 +126,10 @@ rezervnih igralcev.
 | `teams` | Klubi — **skupni** obema ligama (grb, ime) |
 | `players` | Igralci ene lige (cena, pozicija, vir pozicije); ista oseba je v obeh ligah dve vrstici; `anonimiziran_at` = ime skrito (GDPR) |
 | `anonimizirani_igralci` | Zgoščeno izvirno ime in šifra anonimiziranega igralca, da ga uvoz še prepozna in nov zapis iste osebe z ugovorom anonimizira (zaprta tabela) |
+| `zahtevki_igralca` | Zahtevki "To sem jaz": uporabnik prevzame profil igralca (`cakajoc`, `potrjen`, `zavrnjen`, `preklican`; potrdil `klub`, `soigralci` ali `admin`). Največ en potrjen na igralca in na uporabnika; piše le prek RPC |
+| `povezani_igralci` | Druge vrstice iste osebe (druga liga, mladinci, prestop), ki jih admin poveže k potrjenemu profilu |
+| `profil_igralca` | Predstavitev potrjenega igralca (vzdevek, opis, omrežja, fotografija); ureja jo le potrjen lastnik, uradnih podatkov ne |
+| `potrditve_soigralcev` / `prijave_profila_igralca` / `zetoni_prevzema` | Potrditve soigralcev, prijave lažnih profilov, enkratne povezave za klub (le zgoščene); zaprte tabele |
 | `rounds` / `matches` | Krogi in tekme (z izvorom: `zapisnik_id`, `source_url`); `borza_po_starem` zapre krog pred ponovnim obračunom cen po novih pravilih, `borza_z_odmikom` ga obračuna po starih mejah (odmik 3.0); `kontumacija` = dodeljen izid brez zapisnika, `vir_brez_izida` = vir minule tekme ne kaže kot odigrane (prestavljena brez datuma) |
 | `appearances` | Nastop igralca na tekmi: minute, goli, kartoni, prejeti goli |
 | `goals` | Posamezni gol (strelec, minuta, 11m, avtogol, potrjena asistenca) |
@@ -175,6 +179,7 @@ napako (izbirnik lige, stran Igralci).
   cron zamuja; `fantasy_teams.roster_updated_at` prepreči zajem poznejših sprememb.
 - Klop+ in Wildcard lahko uporabnik doda, premakne ali prekliče samo pred
   določenim rokom kroga iste lige. Preverbo izvaja baza.
+- Prevzem profila igralca ("To sem jaz"): zahtevek potrdi odobren poznavalec kluba (sam nastavljen `insider_team_id` ne šteje), dva potrjena soigralca istega kluba in lige, enkratna povezava iz maila klubu ali admin; svojega zahtevka nihče ne potrdi. Čakajoči zahtevki niso javni (javen je le pogled `potrjeni_igralci`). Fotografije zapiše le potrjen lastnik v mapo svojega igralca.
 - Kroge, klube in igralce urejajo **le administratorji** (`profiles.is_admin`).
 - Javni profil `/u/:id` bere `javni_profil(id)` (le javna polja; zasebni profil le ime). Prikazno ime si uporabnik spremeni sam (3–24 znakov, enolično, enkrat na 7 dni, sprožilec `varuj_prikazno_ime`).
 - Račun izbriše uporabnik sam z `izbrisi_moj_racun()` (stran `/account`); z njim gredo profil, ekipe z zgodovino, glasovi in njegove mini lige. Sistemskega lastnika hišnih ekip ni mogoče izbrisati.
