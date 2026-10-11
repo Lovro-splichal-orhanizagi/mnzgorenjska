@@ -129,6 +129,15 @@ const IME_V_LIGI = {
   'medjuopstinska-liga-grupa-c': MOL_C,
   'medjuopstinska-liga-grupa-c-2025-26': MOL_C,
   'medjuopstinska-liga-grupa-c-2024-25': MOL_C,
+  // Omladinske lige (U19), pregled 11. 10. 2026 ("Mesto:" domačih tekem obeh
+  // sezon): RADNIČKI (Obrenovac), BUDUĆNOST (Dobanovci), DUNAV (Veliko Selo),
+  // BSK v Drugi (Palilula = Borča) in KOLUBARA (Lazarevac) so članski klubi
+  // brez kraja. JEDINSTVO igra doma v Dobanovcih, članski JEDINSTVO v Jakovu —
+  // dokler ni potrjeno, da je isti klub, ostane ločen.
+  'druga-omladinska-liga-beograda-2026-27': { OMLADINAC: 'OMLADINAC (Veliko Polje)', JEDINSTVO: 'JEDINSTVO (Dobanovci)' },
+  'druga-omladinska-liga-beograda': { OMLADINAC: 'OMLADINAC (Veliko Polje)', JEDINSTVO: 'JEDINSTVO (Dobanovci)' },
+  'treca-omladinska-liga-beograda-2026-27': MOL_A, // BSK iz Batajnice
+  'treca-omladinska-liga-beograda': { BORAC: 'BORAC (Ostružnica)' },
 }
 
 /** Ime kluba, kot ga uvoz vidi (s preimenovanjem v tej ligi). */

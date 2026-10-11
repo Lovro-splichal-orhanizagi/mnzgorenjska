@@ -1289,6 +1289,62 @@ Srpsko ligo Zapad) ali HTML (fsgkg.org.rs, fsgks.rs), a vir jih še ne bere:
 Uvoz: `gh workflow run uvoz-lige.yml -f liga=rs-zona-drina -f cene=true`;
 seznam v vrstnem redu je v PR.
 
+### Srbija — omladinske lige (U19)
+
+Le **najstarejša mladinska kategorija** (omladinci, U19); kadeti (U17),
+pioniri (U15), petlići in "Liga mlađih omladinaca Beograda" (U18) niso
+vpisani. Migracija 20261012011100, devet lig, **neaktivnih**,
+`prvi_fantasy_krog = 2`, `rok_pomak_ur = 2` (tekme dopoldne, kot slovenske
+in slovaške U19). Mladinske ekipe so isti klubi kot člani (klub skupen,
+igralec svoja vrstica po ligi).
+
+| liga | vir | šifra 2026/27 | klubov | arhiv 2025/26 | ime (zveza) | dokaz U19 | datumi |
+|---|---|---|---|---|---|---|---|
+| rs-u19-srbija | fss | `omladinska-liga-srbije-26-27` | 14 | `omladinska-liga-srbije-25-26` (16) | Omladinska liga Srbije (FSS) | ime tekmovanja na fss.rs; blok COMET 75829387 (Kadetska liga Srbije je 75828245) | stran lige |
+| rs-u19-bg-1 | fsb | `prva-omladinska-liga-beograda-2026-27` | 14 | `prva-omladinska-liga-beograda` | Prva omladinska liga Beograda (FSB) | ime tekmovanja na fsb.org.rs | stran lige (jesen) |
+| rs-u19-bg-2 | fsb | `druga-omladinska-liga-beograda-2026-27` | 14 | `druga-omladinska-liga-beograda` | Druga omladinska liga Beograda (FSB) | isto | stran lige (jesen) |
+| rs-u19-bg-3 | fsb | `treca-omladinska-liga-beograda-2026-27` | 12 | `treca-omladinska-liga-beograda` | Treća omladinska liga Beograda (FSB) | isto | stran lige (jesen) |
+| rs-u19-vojvodina | fssid | `76001621-76001802` | 14 | — | Omladinska liga Vojvodine (FSV) | fsv.rs stran lige + PDF "Sastav Omladinske lige Vojvodine 2026/27", 14/14 klubov | ocena |
+| rs-u19-vojvodina-sever | fssid | `76057523-76057654` | 12 | — | Druga omladinska liga Vojvodine "Sever" (FSV) | fsv.rs stran lige, 12/12 | ocena |
+| rs-u19-vojvodina-jug | fssid | `76058296-76058427` | 12 | — | Druga omladinska liga Vojvodine "Jug" (FSV) | fsv.rs stran lige, 12/12 | ocena |
+| rs-u19-zapad | fssid | `75908331-75908570` | 16 | — | Prva omladinska liga FSRZS | COMET tabela (tekmovanje 75907894) na fsrzs.com, 16/16 | ocena (COMET PDF ves razpored) |
+| rs-u19-zapad-zm | fssid | `75924544-75924699` | 13 | — | Druga omladinska liga "Zapadno-moravska" (FSRZS) | COMET tabela (75918191), 13/13 | ocena |
+
+**Pasti pri prepoznavanju.** fsv.rs ima podstran
+`omladinska-liga-vojvodine-2026-2027-tabela-i-rezultati`, ki kaže **kadetsko**
+ligo (isti razpored kot Kadetska liga Vojvodine) — velja glavna stran lige in
+PDF sastava. Pari blokov z istimi klubi (odločeno s strani zveze): Vojvodina
+76001621 omladinska / 76002700 kadetska / 76003873 pionirska; Druga Sever
+76057523 omladinska / 76059057 kadetska; Druga Jug 76058296 omladinska /
+76060043 kadetska; FSRZS 75908331 Prva omladinska / 75910179 Prva kadetska;
+Druga kadetska "Zapadno-moravska" 75932006, "Kolubarsko-mačvanska" 75918864,
+"Podunavsko-šumadijska" 75915926. Ostali bloki FSRZS z akademijami
+(75913817, 75917144, 75922145, 75932959) so pionirski — vse tri omladinske
+lige FSRZS so najdene drugje. Druga pionirska Sever (FSV) je 76061069.
+
+**Ni vpisano / negotovo**: Druga omladinska liga "Podunavsko-šumadijska"
+(FSRZS, šest klubov, bloka nismo našli); pet blokov okolice Subotice
+(76104745, 76105755, 76106517, 76107559, 76108498 — kategorija ni potrjena,
+76105755, 76107559 in 76108498 imajo TSC ali Spartak, ki U19 igrata v OLS — verjetno mlajši); FSRIS
+(I. in II. omladinska liga) — fsris.org.rs nima šifer tekem COMET, blokov
+pometanje ni našlo; veteranski 76135586, 76227518 in neznani 75982840,
+76134808, 76199287.
+
+**Imena.** fssid piše klube s krajem, fss (Superliga, Prva liga, OLS) brez:
+`IME_DRZAVNE` v `fssid.mjs` mladinske ekipe državnih klubov preslika v ime iz
+baze (LOZNICA, METALAC, RADNIČKI 1923, BORAC 1926, JAVOR MATIS, OFK VRŠAC,
+PROLETER 023, ŽELEZNIČAR = Pančevo). V fsb (`IME_V_LIGI`, "Mesto:" domačih
+tekem obeh sezon): OMLADINAC v Drugi = Veliko Polje, BSK v Tretji = Batajnica,
+BORAC v Tretji 2025/26 = Ostružnica, JEDINSTVO v Drugi igra doma v Dobanovcih
+(članski JEDINSTVO v Jakovu) — ločen klub "JEDINSTVO (Dobanovci)", dokler ni
+potrjeno, da je isti. RADNIČKI (Obrenovac), BUDUĆNOST (Dobanovci), DUNAV
+(Veliko Selo), BSK v Drugi (Palilula/Borča) in KOLUBARA (Lazarevac) so
+članski klubi brez kraja.
+
+Uvoz (ena za drugo): `gh workflow run uvoz-lige.yml -f liga=rs-u19-srbija -f
+arhiv=omladinska-liga-srbije-25-26 -f cene=true`; fssid brez arhiva. Seznam
+je v PR.
+
 ### Romunija
 
 Država `RO` ("România", migracija 20261010190000) ima vmesnik v romunščini
