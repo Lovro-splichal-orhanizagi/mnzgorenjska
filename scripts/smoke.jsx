@@ -4829,6 +4829,80 @@ preveri(
     izziv instanceof L.LffZavrnitev && L.default.zavrnitev('x', 429).zavrnitev === true)
 }
 
+// --- vir fcf (Španija, Katalonija, fcf.cat) ----------------------------------------
+{
+  const C = await import('./viri/fcf.mjs')
+  const { default: viri } = await import('./viri/index.mjs')
+  const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  preveri('fcf: vir je vpisan, 3 s, User-Agent s stikom', viri.fcf === C.default && C.default.drzava === 'ES' &&
+    C.default.imaRegistracije === false && C.default.premorMs >= 3000 &&
+    C.default.glave['User-Agent'] === 'SLFF fantasy (slff.eu; splih.94@gmail.com)')
+  preveri('fcf: šifra lige (blok) in naslovi, nikoli /api/', C.razberiKodo('4139542-4139779').od === 4139542 &&
+    C.default.naslovRazporeda('4139542-4139779') === 'https://www.fcf.cat/ca/competicio/acta/4139542' &&
+    C.default.naslovZapisnika('x', 'es4139543') === 'https://www.fcf.cat/ca/competicio/acta/4139543' &&
+    C.sifraZapisnika(4139543) === 'es4139543' && !/\/api\//.test(C.naslovZapisnika(1)))
+  let slabaSifra = null
+  try { C.razberiKodo('58161889') } catch (e) { slabaSifra = e.message }
+  preveri('fcf: šifra brez bloka ustavi uvoz', /<od>-<do>/.test(slabaSifra ?? ''))
+  preveri('fcf: datum, ura (Madrid = Ljubljana), sezona, minuta', C.datumIz('19.09.2026') === '2026-09-19' && C.uraIz('17.00') === '17:00' &&
+    C.uraIz('00.00') === null && C.sezonaIz('2026 / 27') === '2026/27' && C.minuta('35’') === 35 && C.minuta('90+3’') === 90)
+  preveri('fcf: ime igralca in kratko ime kluba', C.imeIgralca('CASTAÑO MARIN, IKER') === 'Castaño Marin Iker' && C.imeIgralca('AITOR') === 'Aitor' &&
+    C.imeIgralca('GARCIA DE LA TORRE, JOAN') === 'Garcia de la Torre Joan' && C.kratkoImeEs('ROSES, A.E.') === 'Roses' &&
+    C.kratkoImeEs('GARRIGUELLA,C.E.') === 'Garriguella' && C.kratkoImeEs('SANT LLORENÇ DE LA MUGA, F.C. ') === 'Sant Llorenç de la Muga' &&
+    C.kljucKlubaEs('BASE ROSES, C.F.') !== C.kljucKlubaEs('ROSES, A.E.'))
+
+  const q = beri('es-fcf-acta-quarta-4139543.html')
+  preveri('fcf: navadna stran ni izziv, izziv je', !C.jeIzziv(q) && C.jeIzziv('<title>Just a moment...</title>') && C.vrstaStrani(q) === 'zapisnik' &&
+    C.vrstaStrani('<title>Acta no trobada | FCF</title>') === 'ni' && C.vrstaStrani('<html></html>') === 'neznano')
+  const z = C.vZapisnik(q, { id: 'es4139543' })
+  const n = C.nastopi(z)
+  const minute = (i) => n.filter((x) => x.ekipaIdx === i).reduce((a, x) => a + x.minute, 0)
+  preveri('fcf: Quarta — glava, krog, sezona, izid, zaprt, skupina', z.domaci.ime === 'ROSES, A.E.' && z.gostje.ime === 'EMPURIABRAVA CASTELLO, C.F.' &&
+    z.rezultat.domaci === 1 && z.rezultat.gostje === 3 && z.krog === 1 && z.sezona === '2026/27' && z.datum === '2026-09-19' &&
+    z.ura === '17:00' && z.zaprt && z.tekmovanje === 'QUARTA CATALANA' && z.skupina === 'GRUP 1')
+  preveri('fcf: Quarta — 11 + 11, klop, vratar, kapetan, šifre, goli = izid', z.domaci.postava.length === 11 && z.gostje.postava.length === 11 &&
+    z.domaci.rezerve.length === 9 && z.gostje.rezerve.length === 4 && n.filter((x) => x.vratar && x.zacetnik).length === 2 &&
+    z.domaci.postava.some((i) => i.kapetan) && n.every((x) => x.regSt != null) && z.goli.length === 4 &&
+    !z.opozorila.some((o) => o.startsWith('goli iz')) && z.rumeni.length === 4 && z.rdeci.length === 0)
+  preveri('fcf: Quarta brez vpisanih menjav — začetniki 90, klop brez nastopa, strelec s klopi od gola', z.brezMenjav[0] && z.brezMenjav[1] &&
+    n.filter((x) => !x.zacetnik).length === 1 && n.find((x) => !x.zacetnik).minutaOd === 76 && minute(0) === 1004 && minute(1) === 990 &&
+    z.opozorila.some((o) => /na klopi, vstopa zapisnik nima/.test(o)))
+
+  const p = C.vZapisnik(beri('es-fcf-acta-primera-3791085.html'), { id: 'es3791085' })
+  const np = C.nastopi(p)
+  const minuteP = (i) => np.filter((x) => x.ekipaIdx === i).reduce((a, x) => a + x.minute, 0)
+  preveri('fcf: Primera — menjave z minuto, 990 minut na ekipo, brez opozoril', !p.brezMenjav[0] && !p.brezMenjav[1] && minuteP(0) === 990 &&
+    minuteP(1) === 990 && p.krog === 30 && p.sezona === '2025/26' && p.opozorila.length === 0 &&
+    np.find((x) => x.ime === 'Tubert Clos Joan')?.minutaOd === 46 && np.find((x) => x.ime === 'Cufi Zykov Denis')?.minutaDo === 46)
+  preveri('fcf: Primera — rezerva strelec po vstopu, goli = izid 1:2', p.goli.length === 3 && p.goli.filter((g) => g.ekipaIdx === 1).length === 2 &&
+    np.find((x) => x.ime === 'Sánchez Díaz Àlex')?.goli === 1)
+
+  const ag = C.vZapisnik(beri('es-fcf-acta-avtogol-4139572.html'))
+  preveri('fcf: avtogol (žoga z rdečimi pikami) ni rdeči karton, šteje nasprotniku', ag.goli.filter((g) => g.avtogol).length === 1 &&
+    ag.goli.find((g) => g.avtogol).ekipaIdx === 1 && ag.rdeci.length === 0 && ag.opozorila.length === 0 &&
+    ag.rezultat.domaci === 2 && C.kratkoImeEs(ag.domaci.ime) === 'Cistella')
+  const rd = C.vZapisnik(beri('es-fcf-acta-rdeci-4139542.html'))
+  const nrd = C.nastopi(rd)
+  preveri('fcf: rdeči karton (77.) konča nastop, 11 m', rd.rdeci.length === 1 && rd.rdeci[0].minuta === 77 &&
+    nrd.find((x) => x.rdeci)?.minute === 77 && rd.goli.filter((g) => g.enajstmetrovka).length === 1 && rd.goli.length === 6)
+
+  const pendent = beri('es-fcf-acta-pendent-4139743.html')
+  const g = C.glavaStrani(pendent)
+  preveri('fcf: neodigrana — glava z datumom, uro in krogom, brez zapisnika', C.vZapisnik(pendent) === null && g.oznaka === 'Pendent' &&
+    !g.izid && g.krog === 26 && g.datum === '2027-04-18' && g.ura === '16:00' && g.domaci === 'AGULLANA, C.E.')
+  const krogi = C.razporedBloka({ tekme: [{ id: 4139543, html: q, g: C.glavaStrani(q) }, { id: 4139743, html: pendent, g }] })
+  preveri('fcf: razpored iz bloka — krogi, odigrana, ura', krogi.length === 2 && krogi[0].stevilka === 1 && krogi[0].tekme[0].odigrana &&
+    !krogi[0].tekme[0].kontumacija && krogi[1].tekme[0].ura === '16:00' && !krogi[1].tekme[0].odigrana)
+  preveri('fcf: vzorci brez sodnikov in osebja', !/POT PAVON|BRITOS|Àrbitres","children":\[\["\$","div"[^\]]*"[A-Z]+, [A-Z]+"/.test(q))
+
+  let izziv = null
+  try { await C.default.zapisniki('1-2', async () => '<title>Just a moment...</title>') } catch (e) { izziv = e }
+  let zavrnjen = null
+  try { await C.default.zapisniki('1-2', async () => { const e = new Error('403'); e.status = 403; throw e }) } catch (e) { zavrnjen = e }
+  preveri('fcf: 403 in izziv vržeta FcfZavrnitev (uvoz izhod 4)', izziv instanceof C.FcfZavrnitev && zavrnjen instanceof C.FcfZavrnitev &&
+    zavrnjen.status === 403 && C.default.zavrnitev('x', 429).zavrnitev === true)
+}
+
 // --- vir fsb (Srbija, Fudbalski savez Beograda) ---------------------------------
 {
   const F = await import('./viri/fsb.mjs')

@@ -2034,6 +2034,131 @@ Zveze, tekmovanja in vir vpiše svoja migracija. Manjka še: španski kanal v
 HelpStacku (`Podpora.tsx` za `es` uporabi slovenskega) in **pregled
 prevoda pri naravnem govorcu**.
 
+### Španija — vir `fcf` (Katalonija)
+
+Vir `fcf` (`scripts/viri/fcf.mjs`) bere **fcf.cat** (Federació Catalana de
+Futbol), ki objavi vsa katalonska tekmovanja od Lliga Elit do Quarta
+Catalana. Stran je Next.js: **strani tekmovanj, skupin, klubov in ekip si
+podatke naloži brskalnik iz `/api/`, ki ga robots.txt prepoveduje — `/api/`
+(in `/_next/`) ne kličemo nikoli.** Strežnik pa izriše **zapisnik**
+`/ca/competicio/acta/<id>` (robots.txt ga dovoli): v strani je drevo React
+Server Components (`self.__next_f.push`), ki ga `drevoRsc` sestavi
+(sklici `$<id>`/`$L<id>`, besedilne vrstice `T`), ostalo bere po elementih.
+Šifra lige se začne z `es-`.
+
+- **Šifra lige je blok šifer zapisnikov `<od>-<do>`** (kot `fssid`). Skupina
+  ene sezone je strnjen blok, urejen po krogih (8 mest na krog pri 15 ali 16
+  klubih; pri lihem številu je prosto mesto "Acta no trobada" ali tekma "vs
+  undefined"). **Zapisnik obstaja tudi za neodigrano tekmo** ("Pendent") — z
+  datumom, uro in krogom, zato je razpored kar blok zapisnikov in datumov ni
+  treba ocenjevati. Vsaka stran nosi tekmovanje, skupino, krog in sezono;
+  stran druge skupine v bloku vir izpusti z opozorilom. Blok in sosednje
+  bloke najde `scripts/catalanske-lige.mjs` iz ene šifre (bisekcija mej).
+  Nova sezona = nov blok; seme poišči v bližini lanskega bloka ali na strani
+  kluba v brskalniku (povezave na akte so v strani, ki jo izriše brskalnik).
+- **Glava**: domači, oznaka ("Acta Tancada" = zaprt, "Pendent", "SUSPÈS",
+  "AJORNAT"), izid ("1 - 3"; neodigrana "- - -"), drobtine "QUARTA CATALANA /
+  GRUP 1 / Jornada 1", "Temporada : 2026 / 27", "Data: 19.09.2026", "Hora:
+  17.00 H" — **madridski čas = ljubljanski**, brez pretvorbe. Polčasa ni.
+- **Ekipi** (`localNode`, `visitorNode`): "Alineacions" (začetniki) in
+  "Suplents" (klop); igralec je predmet `{ id, nombre, dorsal, titular,
+  capitan, portero }` — `id` je stalna šifra osebe FCF (→ `reg_st`),
+  `portero` vratar (tudi rezervni, → GK), `capitan` kapetan. Ime "PRIIMKA,
+  IME" → "Priimka Ime" (`imeIgralca`, male črke z veliko začetnico; "de",
+  "la", "i" ostanejo mali); nekateri igralci imajo le vzdevek ("AITOR").
+- **Dogodki** so ob igralcu: minuta ("35’", "90+3’" → 90) in ikona na stalnem
+  mestu — žoga (gol), rumeni (`#FFEB3B`), rdeči/drugi rumeni, vstop (modra
+  puščica `#0068A9`) in izstop (rdeča puščica). Vrsto gola (GOL, GOL PENAL,
+  GOL EN PRÒPIA) in strelca da razdelek "Gols" s stanjem po golu; avtogol je
+  pri strelcu v njegovi ekipi in šteje nasprotniku (stanje to preveri).
+  Rdečega kartona v vzorcih še ni bilo — razbiranje po barvi je
+  nepreverjeno (`neznan dogodek` v opozorilih, če ikona ni znana).
+- **Menjave**: v nižjih ligah jih klubi **ne vpišejo** (Quarta Catalana grup
+  1 2026/27: nobena ekipa nobene). Takrat ima začetnik 90 minut, rezerva brez
+  vpisanega vstopa pa nastopa nima (kot `fsb`) — minute začetnikov so
+  precenjene, ekipa ima lahko čez 990 minut. Strelec s klopi dobi vstop ob
+  golu (opozorilo). `z.brezMenjav` pove, katera ekipa menjav ni vpisala.
+  Primera Catalana menjave vpisuje (990 minut na ekipo).
+- **Šifra zapisnika v bazi je `es<id>`** (`sifraZapisnika`): številke fcf.cat
+  (3,7–4,2 milijona) se prekrivajo s šiframi oefb, `matches.zapisnik_id` pa je
+  enoličen čez vse vire. `--zapisnik` uvoza vzame `es…`.
+- **Nepopoln zapisnik** (ekipa z manj kot 7 začetniki) kot pri `frf`: izid se
+  zapiše, `imported_at` ostane prazen, 45 dni se bere znova. Kontumacija: izid
+  brez obeh postav, starejši od tedna. Tekma z izidom, ki še ni "Tancada", se
+  bere vsako uro do 45 dni.
+- **Predpomnilnik** (`scripts/.predpomnilnik/fcf`): odigrana zaprta tekma se
+  ne bere znova (razen prve 3 dni ob uvozu zapisnikov), neodigrana, ko je na
+  vrsti (od dneva pred datumom do 14 dni po njem vsako uro, nato dnevno),
+  sicer enkrat na teden; "no trobada" enkrat na teden. Prvi uvoz bloka
+  prebere vseh ~240 strani — **strežnik je počasen** (stran 0,4 MB, v
+  preizkusu 5–20 s na zahtevek s 3 s premora), zato je prvi uvoz skupine
+  ~1 ura. Vse lige bere en gostitelj: `cakaj-na-uvoze.mjs` ima ES v
+  `SKUPEN_VIR`, zagoni Španije se ne prekrivajo.
+- Klubi: ključ brez diakritike in ločil, **z obliko** ("ROSES, A.E." in "BASE
+  ROSES, C.F." sta dva kluba); kratko ime je del pred vejico brez oblike
+  ("Roses", "Sant Llorenç de la Muga"). Druge ekipe ("…, B") so svoj klub.
+- *Uskladi pozicije* z `vir = fcf` (vratar po večini tekem); ostale pozicije
+  na glasovanje.
+
+**Pravice (pregled 11. 10. 2026, ni pravni nasvet).** robots.txt dovoli vse
+razen `/api/`, `/_next/` in iskanja; zapisniki so dovoljeni. Pravno obvestilo
+(Avís legal) prepoveduje reprodukcijo vsebin **"amb finalitats comercials"**
+brez dovoljenja FCF. SLFF je brezplačen in nekomercialen; **FCF smo obvestili
+oziroma prosili za soglasje** — do odgovora so lige **neaktivne**. Navedba
+vira (`vir_ime` FCF, `vir_url` → fcf.cat) je v nogi. Beremo odkrito
+(User-Agent `SLFF fantasy (slff.eu; splih.94@gmail.com)`, **3 s** med
+zahtevki). Sodnikov, osebja (Equip Tècnic) in igrišča ne beremo; vzorci
+`scripts/vzorci/es-fcf-*` so brez njih (repo je javen). **Ob izzivu, CAPTCHI,
+403 ali 429 se uvoz ustavi — ne obhajaj** (`FcfZavrnitev`, izhod 4). Če nas
+FCF prosi, naj nehamo, `es-` lige izklopimo.
+
+Seznam blokov in preizkus:
+
+```bash
+node scripts/catalanske-lige.mjs 4139543                    # blok skupine iz enega zapisnika
+node scripts/catalanske-lige.mjs 4139543 --naprej 3 --preveri   # + sosednji bloki, zadnji odigrani krog
+node scripts/catalanske-lige.mjs --polno 4139542-4139779    # ves blok, kot ga bere uvoz (brez baze)
+```
+
+Preizkus v živo (11. 10. 2026, brez pisanja v bazo) na Quarta Catalana grup 1
+2026/27 (`4139542-4139779`): 30 krogov, 210 tekem (vse z uro), 15 klubov,
+28 "no trobada" (prosto mesto vsakega kroga), 0 tujih strani; 16 odigranih,
+16 zapisnikov, vsi polni (11 + 11, vratar pri vseh 32 postavah), goli = izid
+16/16 (82), 0 kontumacij, 1 avtogol, 2 gola z 11 m, 1 rdeči karton, 81
+rumenih. **Nobena ekipa ni vpisala menjav** (32/32): 990 minut ima 19 ekip,
+12 več (strelec s klopi dobi vstop ob golu — 15 takih opozoril), 1 manj
+(rdeči karton). 367 nastopov (15 s klopi), vsi s šifro. Preverjeni so še
+zapisniki 1. in 30. kroga Primera Catalana 2025/26 (menjave vpisane, 990
+minut) in Quarta grup 2 2025/26. Med preizkusom je strežnik večkrat
+odgovarjal po 20–60 s; telo strani zato bere `fcfFetch` (90 s, ponovitev).
+Rdeči karton je `div` z `bg-[#F30000]` na 3. mestu; avtogol je žoga z
+rdečimi pikami (ne rdeči karton). **Drugi rumeni in gol z 11 m v vrstici
+igralca še nista videna kot ikona** — vrsta gola pride iz razdelka "Gols".
+
+Vpisane so 4 skupine (migracija 20261012080000), **neaktivne**, zveza `fcf`.
+Pregled bloka za blokom od Quarta grup 1 (11. 10. 2026, 34 zahtevkov) je
+našel Quarta grup 1–6 (Girona, sosednji bloki); grup 4 in 5 (14 klubov,
+7 na krog) v 3. krogu še nimata zaprtih zapisnikov — nista vpisani.
+
+| liga | klubov | tekoča 2026/27 | arhiv 2025/26 |
+|---|---|---|---|
+| es-ct-quarta-g1 | 15 | `4139542-4139779` | — (TODO) |
+| es-ct-quarta-g2 | 15–16 | `4139781-4140020` | — (TODO; zapisnik `3788226` je v bloku grup 2 2025/26) |
+| es-ct-quarta-g3 | 15–16 | `4140021-4140260` | — (TODO) |
+| es-ct-quarta-g6 | 15–16 | `4140625-4140864` | — (TODO) |
+
+**TODO**: ostale skupine niso pregledane — Lliga Elit, Primera Catalana
+(2025/26 grup 1: zapisnik `3791085`), Segona (2026/27 grup 3 ima zapisnik
+`4110000`), Tercera in Quarta grup 4, 5, 7–32+ (grup 32: `4137000`).
+Bloki istega tekmovanja niso urejeni po številki skupine; za blokom Quarta
+grup 6 je Copa Catalunya Femenina. Pregled: `node scripts/catalanske-lige.mjs
+<šifra> --naprej N --preveri` (en blok ~3–20 zahtevkov). Arhivi 2025/26: blok
+s semenom iz lanskih zapisnikov, isti postopek.
+
+Uvoz (ena za drugo, **šele s soglasjem FCF**): `gh workflow run uvoz-lige.yml
+-f liga=es-ct-quarta-g1 -f cene=true` (z arhivom: `-f arhiv=<blok 2025/26>`).
+Prvi uvoz bloka je ~240 strani — ob počasnem strežniku do ene ure.
+
 ### Severna Makedonija — vir `ffm`
 
 Država `MK` ("Северна Македонија", migracija 20261012053100). **Vmesnika v

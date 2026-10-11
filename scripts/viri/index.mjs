@@ -29,6 +29,7 @@ import pzpn from './pzpn.mjs'
 import jalgpall from './jalgpall.mjs'
 import lff from './lff.mjs'
 import ffm from './ffm.mjs'
+import fcf from './fcf.mjs'
 
 const VIRI = {
   mnzg,
@@ -74,6 +75,9 @@ const VIRI = {
   // Severna Makedonija (FFM) prek ffm.mk: predloga kot fss.rs, brez šifer igralcev,
   // vratar je prvi začetnik (namig).
   ffm,
+  // Španija (Katalonija): Federació Catalana de Futbol prek zapisnikov fcf.cat
+  // (drevo RSC v strani); liga je blok šifer zapisnikov, šifra osebe, vratar.
+  fcf,
 }
 
 /**
