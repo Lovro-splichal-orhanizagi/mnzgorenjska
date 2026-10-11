@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { Link } from '../components/Povezava'
+import ImeLastnika from '../components/ImeLastnika'
 import { supabase } from '../lib/supabase'
 import { formatirajTocke, prikazniIme, tockZ } from '../lib/pomozno'
 import { useNaslov, useNoindex } from '../lib/naslov'
@@ -40,6 +41,7 @@ export default function Ekipa() {
   const [ekipa, setEkipa] = useState<{
     team_name: string | null
     owner_name: string | null
+    owner_id: string | null
     total_points: number | null
     competition_id: number | null
   } | null>(null)
@@ -71,7 +73,7 @@ export default function Ekipa() {
       setNalaganje(true)
       const { data: e, error } = await supabase
         .from('fantasy_team_standings')
-        .select('team_name, owner_name, total_points, competition_id')
+        .select('team_name, owner_name, owner_id, total_points, competition_id')
         .eq('fantasy_team_id', Number(id))
         .maybeSingle()
       if (!veljavno) return
@@ -202,7 +204,11 @@ export default function Ekipa() {
           {ekipa?.team_name ?? t('lestvice.ekipa.naslov')}
         </h1>
         <p className="text-sm text-slate-400">
-          {ekipa?.owner_name ? <>{prikazniIme(ekipa.owner_name)} ·{' '}</> : null}
+          {ekipa?.owner_name ? (
+            <>
+              <ImeLastnika ime={prikazniIme(ekipa.owner_name)} id={ekipa.owner_id} /> ·{' '}
+            </>
+          ) : null}
           {t('lestvice.ekipa.skupaj', {
             tocke: formatirajTocke(ekipa?.total_points),
             beseda: tockZ(ekipa?.total_points),

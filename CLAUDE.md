@@ -2457,6 +2457,16 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   napravo in v ligi nima ekipe (ali ima prazno; brez ekipe šteje domača liga
   kot pri opomniku), 24 ur pred rokom, enkrat na krog (`email_log` vrsta
   `opomnik-push`). Teče vsako uro v `opozorila.yml` (`VRSTA=opomnik-push`)
+- `javni_profil(id)` → javna stran profila `/u/:id` (SECURITY DEFINER, le
+  javna polja): ime, avatar, član od, navijam, ekipe v aktivnih ligah z mestom
+  na lestvici lige, dosežki (sezone, krogi, najboljši krog) in mini lige, v
+  katerih je tudi gledalec (`sem_v_mini_ligi`; mini lige so zasebne).
+  `profiles.javni_profil = false` pokaže drugim le ime; izbrisan profil in
+  sistemski lastnik hišnih ekip vrneta NULL. Lestvični pogledi
+  (`fantasy_team_standings`, `fantasy_round_standings`, `lestvica_drzavna`,
+  `mini_liga_lestvica`) imajo na koncu `owner_id` (pri hišnih NULL), da ime
+  lastnika vodi na profil (`ImeLastnika.tsx`). `isci_klube(iskanje)` je
+  izbirnik kluba (navijam) čez klube aktivnih lig
 - `izbrisi_moj_racun()` → uporabnik izbriše svoj račun (stran `/account`,
   zahteva obeh trgovin); kaskada odnese profil, ekipe, glasove in mini lige
 - `players.anonimiziran_at` → igralcu je ime skrito (GDPR, migracija
@@ -2869,8 +2879,17 @@ update competitions set active = true where slug in ('lj-1-liga','lj-2-liga');
   potrebujejo le lokalni Docker Postgres in migracije, ne uvoženih tekem.
   `SUPABASE_TEST_DB` lahko izbere izolirano testno bazo v istem kontejnerju.
 - Lastnik profila sme posodobiti le `display_name`, `insider_team_id`,
-  `navijam_team_id`, `brez_opomnikov` in `brez_push` (odjava od e-pošte in
-  pusha, stran `/reminders`); `is_admin` je servisno polje. Lastnik ekipe sme pisati le vnosna polja ob
+  `navijam_team_id`, `brez_opomnikov`, `brez_push` (odjava od e-pošte in
+  pusha, stran `/reminders`), `avatar_barva`, `avatar_ikona` in
+  `javni_profil` (stran `/account`); `is_admin`, `insider_competition_id` in
+  `display_name_changed_at` so servisna polja. Ime, ki ga spremeni lastnik
+  sam, preveri sprožilec `varuj_prikazno_ime` (3–24 znakov, brez "admin",
+  "slff", "moderator" in žaljivk, enolično brez razlike v velikosti črk,
+  enkrat na 7 dni; koda napake gre v `hint`, vmesnik jo prevede v
+  `src/lib/profil.ts`). Enolični indeks velja le za izbrana imena
+  (`display_name_changed_at is not null`), ker ima registracija podvojena
+  imena (Googlovo `given_name`) in ne sme pasti; admin in servis pravil ne
+  poznata. Lastnik ekipe sme pisati le vnosna polja ob
   nastanku in ime ob spremembi. Za kader in denar vedno kliči `shrani_ekipo`.
   Brisanje ekipe je servisno opravilo, ker bi sicer obšlo zaklenjeno zgodovino.
 - Nove tabele in pogledi v `public` vlogama `anon`/`authenticated` **ne dajo

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import Avatar from './Avatar'
 import { useLocation } from 'react-router-dom'
 import { NavLink } from './Povezava'
 import { useAuth } from '../lib/useAuth'
@@ -65,6 +66,7 @@ export default function Navbar() {
   const [klubiLige, setKlubiLige] = useState<string[]>([])
   const [jeAdmin, setJeAdmin] = useState(false)
   const [ime, setIme] = useState<string | null>(null)
+  const [avatar, setAvatar] = useState<{ barva: number | null; ikona: string | null }>({ barva: null, ikona: null })
   const [odprt, setOdprt] = useState(false)
   const [vecOdprt, setVecOdprt] = useState(false)
   const [racunOdprt, setRacunOdprt] = useState(false)
@@ -139,13 +141,14 @@ export default function Navbar() {
     let veljavno = true
     supabase
       .from('profiles')
-      .select('is_admin, display_name')
+      .select('is_admin, display_name, avatar_barva, avatar_ikona')
       .eq('id', uporabnikId)
       .maybeSingle()
       .then(({ data }) => {
         if (!veljavno) return
         setJeAdmin(Boolean(data?.is_admin))
         setIme((data?.display_name as string | null) ?? null)
+        setAvatar({ barva: data?.avatar_barva ?? null, ikona: data?.avatar_ikona ?? null })
       })
     return () => {
       veljavno = false
@@ -248,11 +251,12 @@ export default function Navbar() {
                   onClick={() => setRacunOdprt(!racunOdprt)}
                   aria-haspopup="menu"
                   aria-expanded={racunOdprt}
-                  aria-label={t('aplikacija.meni.izbrisRacuna')}
-                  title={ime ?? session.user.email ?? t('aplikacija.meni.izbrisRacuna')}
-                  className="flex h-11 w-11 items-center justify-center rounded-full bg-gnl-500/20 font-black text-gnl-200 ring-1 ring-gnl-400/40 hover:bg-gnl-500/30"
+                  aria-label={t('aplikacija.meni.nastavitve')}
+                  title={ime ?? session.user.email ?? t('aplikacija.meni.nastavitve')}
+                  className="flex h-11 w-11 items-center justify-center rounded-full hover:opacity-90"
                 >
-                  {zacetnica}
+                  {/* Avatar profila; dokler se ime nalaga, začetnica e-naslova. */}
+                  <Avatar id={session.user.id} ime={ime ?? zacetnica} barva={avatar.barva} ikona={avatar.ikona} velikost={36} />
                 </button>
                 {racunOdprt && (
                   <div
@@ -262,6 +266,14 @@ export default function Navbar() {
                     <div className="truncate px-3 py-2 text-xs text-slate-500">
                       {ime ?? session.user.email}
                     </div>
+                    <NavLink
+                      to={`/u/${session.user.id}`}
+                      role="menuitem"
+                      className={vrsticaMenija}
+                      onClick={() => setRacunOdprt(false)}
+                    >
+                      {t('aplikacija.meni.mojProfil')}
+                    </NavLink>
                     <NavLink
                       to="/reminders"
                       role="menuitem"
@@ -276,7 +288,7 @@ export default function Navbar() {
                       className={vrsticaMenija}
                       onClick={() => setRacunOdprt(false)}
                     >
-                      {t('aplikacija.meni.izbrisRacuna')}
+                      {t('aplikacija.meni.nastavitve')}
                     </NavLink>
                     <a
                       href={vabilo}

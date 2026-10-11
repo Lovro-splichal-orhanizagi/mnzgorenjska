@@ -10,6 +10,7 @@ export interface DrzavnaVrstica {
   fantasy_team_id: number | null
   team_name: string | null
   owner_name: string | null
+  owner_id?: string | null
   total_points: number | null
   rounds_played: number | null
   points_per_round: number | null

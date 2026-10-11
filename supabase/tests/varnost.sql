@@ -1117,6 +1117,129 @@ select pg_temp.preveri('zliti: igralec s šifro ostane cel',
   razdeli_zlitega_igralca(-916003, true)->>'stanje' = 'sifra'
   and (select count(*) from appearances where player_id = -916003) = 8);
 
+-- --- Profili: nastavitve in javna stran (20261012081100) ---------------------
+reset role;
+select set_config('request.jwt.claim.sub','',true);
+-- Napaka sprožilca nosi kodo v `hint` (vmesnik jo prevede); enoličnost ob
+-- dirki pa je 23505 iz indeksa.
+create function pg_temp.napaka(p_opis text, p_sql text, p_hint text) returns void
+language plpgsql as $$
+declare v_hint text; v_ok boolean := false;
+begin
+  begin
+    execute p_sql;
+    raise exception using errcode = 'P9998', message = 'Napad je uspel';
+  exception
+    when sqlstate 'P9998' then null;
+    when others then
+      get stacked diagnostics v_hint = pg_exception_hint;
+      v_ok := p_hint is null or v_hint = p_hint or (p_hint = 'ime-zasedeno' and sqlstate = '23505');
+  end;
+  perform pg_temp.preveri(p_opis, v_ok);
+end;
+$$;
+grant execute on function pg_temp.napaka(text, text, text) to anon, authenticated;
+-- Ekipe so na profilu le v aktivnih ligah.
+update competitions set active = true where id = -913001;
+
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
+-- Ime je ta uporabnik spremenil že na začetku datoteke (admin ga je nato popravil).
+select pg_temp.napaka('profil: ime najvec enkrat na 7 dni',
+  $$update profiles set display_name='Drugo ime' where id=auth.uid()$$, 'ime-prepogosto');
+select pg_temp.zavrnjeno('profil: datuma spremembe imena ni mogoce ponastaviti',
+  $$update profiles set display_name_changed_at=null where id=auth.uid()$$);
+select pg_temp.zavrnjeno('profil: liga poznavalca ostane servisna',
+  $$update profiles set insider_competition_id=-913001 where id=auth.uid()$$);
+update profiles set avatar_barva=3, avatar_ikona='pokal', javni_profil=false where id=auth.uid();
+select pg_temp.preveri('profil: lastnik nastavi avatar in zasebnost',
+  (select avatar_barva=3 and avatar_ikona='pokal' and not javni_profil from profiles where id=auth.uid()));
+select pg_temp.napaka('profil: ikona le iz nabora',
+  $$update profiles set avatar_ikona='<script>' where id=auth.uid()$$, null);
+select pg_temp.napaka('profil: barva le iz palete',
+  $$update profiles set avatar_barva=99 where id=auth.uid()$$, null);
+update profiles set javni_profil=false, avatar_barva=1, display_name='Prevzeto' where id='b8a06635-2322-4444-8c42-44e419f912ac';
+select pg_temp.preveri('profil: tujega profila ni mogoce urejati',
+  (select javni_profil and avatar_barva is null and display_name='Tujec' from profiles where id='b8a06635-2322-4444-8c42-44e419f912ac'));
+select pg_temp.preveri('profil: lastnik vidi svoj zasebni profil z ekipami',
+  (select (v->>'jaz')::boolean and (v->'ekipe') @> '[{"id": -913001, "mesto": 1}]'::jsonb
+     from javni_profil(auth.uid()) v));
+select pg_temp.preveri('profil: lestvica pozna lastnika ekipe',
+  (select owner_id=auth.uid() from fantasy_team_standings where fantasy_team_id=-913001));
+
+reset role;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ac',true);
+set local role authenticated;
+select pg_temp.napaka('profil: ime prekratko',
+  $$update profiles set display_name='ab' where id=auth.uid()$$, 'ime-dolzina');
+select pg_temp.napaka('profil: ime predolgo',
+  $$update profiles set display_name=repeat('x',25) where id=auth.uid()$$, 'ime-dolzina');
+select pg_temp.napaka('profil: ime se ne izdaja za admina',
+  $$update profiles set display_name='Glavni Adm1n' where id=auth.uid()$$, 'ime-rezervirano');
+select pg_temp.napaka('profil: ime se ne izdaja za SLFF',
+  $$update profiles set display_name='S.L.F.F. ekipa' where id=auth.uid()$$, 'ime-rezervirano');
+select pg_temp.napaka('profil: ime se ne izdaja za moderatorja',
+  $$update profiles set display_name='Moderator Jan' where id=auth.uid()$$, 'ime-rezervirano');
+select pg_temp.napaka('profil: zaljivo ime',
+  $$update profiles set display_name='Fuck You' where id=auth.uid()$$, 'ime-neprimerno');
+select pg_temp.napaka('profil: oznake HTML niso ime',
+  $$update profiles set display_name='<b>Jan</b>' where id=auth.uid()$$, 'ime-znaki');
+update profiles set display_name='  Novi   Tujec ' where id=auth.uid();
+select pg_temp.preveri('profil: veljavno ime se shrani obrezano',
+  (select display_name='Novi Tujec' and display_name_changed_at is not null from profiles where id=auth.uid()));
+reset role;
+-- Teden je mimo: prvi uporabnik sme znova, a ne imena, ki ga že nosi drug.
+update profiles set display_name_changed_at = now() - interval '8 days'
+ where id='b8a06635-2322-4444-8c42-44e419f912ab';
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
+select pg_temp.napaka('profil: zasedeno ime ne glede na velike crke',
+  $$update profiles set display_name='novi TUJEC' where id=auth.uid()$$, 'ime-zasedeno');
+update profiles set display_name='Testni Manager' where id=auth.uid();
+select pg_temp.preveri('profil: po tednu dni se ime spet da spremeniti',
+  (select display_name='Testni Manager' from profiles where id=auth.uid()));
+reset role;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ac',true);
+set local role authenticated;
+select pg_temp.preveri('profil: zasebni profil tujcu skrije ekipe in klub',
+  (select v->>'ime'='Testni Manager' and not (v->>'javen')::boolean
+          and not (v ? 'ekipe') and not (v ? 'navijam') and not (v ? 'dosezki') and not (v ? 'clan_od')
+     from javni_profil('b8a06635-2322-4444-8c42-44e419f912ab') v));
+reset role;
+
+select set_config('request.jwt.claim.sub','',true);
+set local role anon;
+select pg_temp.preveri('profil: zasebni profil anonimnemu le ime',
+  (select v - 'id' - 'ime' - 'javen' - 'jaz' = '{}'::jsonb from javni_profil('b8a06635-2322-4444-8c42-44e419f912ab') v));
+select pg_temp.preveri('profil: javni profil brez servisnih polj',
+  (select (v ? 'ekipe') and not (v ? 'is_admin') and not (v ? 'brez_opomnikov') and not (v ? 'insider_team_id')
+          and not (v ? 'email') and not (v->>'jaz')::boolean
+     from javni_profil('b8a06635-2322-4444-8c42-44e419f912ac') v));
+reset role;
+insert into auth.users(id,email,raw_user_meta_data,created_at) values
+ ('b8a06635-2322-4444-8c42-44e419f912af','test-hisa-profil@example.invalid','{"display_name":"SLFF hisa"}',now());
+insert into fantasy_teams(owner_id,name,competition_id,hisna)
+values ('b8a06635-2322-4444-8c42-44e419f912af','Hisna za profil',-913002,true);
+set local role anon;
+select pg_temp.preveri('profil: sistemski lastnik hisnih ekip nima profila',
+  javni_profil('b8a06635-2322-4444-8c42-44e419f912af') is null);
+select pg_temp.preveri('profil: neznan profil je NULL',
+  javni_profil('00000000-0000-0000-0000-000000000000') is null);
+select pg_temp.zavrnjeno('profil: anonimni ne ureja profilov',
+  $$update profiles set javni_profil=false where id='b8a06635-2322-4444-8c42-44e419f912ac'$$);
+select pg_temp.preveri('profil: iskanje kluba aktivne lige',
+  (select count(*) >= 1 from isci_klube('test VARNOSTI')));
+reset role;
+
+-- Admin popravi ime drugemu brez omejitev (Administracija → Uporabniki).
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+update profiles set display_name='Ab' where id='b8a06635-2322-4444-8c42-44e419f912ac';
+select pg_temp.preveri('profil: admin popravi tuje ime brez pravil',
+  (select display_name='Ab' from profiles where id='b8a06635-2322-4444-8c42-44e419f912ac'));
+reset role;
+select set_config('request.jwt.claim.sub','',true);
+
 do $$
 declare v_napak int;
 begin

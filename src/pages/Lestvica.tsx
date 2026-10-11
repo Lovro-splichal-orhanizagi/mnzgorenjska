@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { Link } from '../components/Povezava'
+import ImeLastnika from '../components/ImeLastnika'
 import { useAuth } from '../lib/useAuth'
 import Plakat from '../components/Plakat'
 import { najboljsiTrije, type VrsticaIgralca } from '../lib/plakat'
@@ -31,6 +32,7 @@ interface TockeKroga {
   fantasy_team_id: number
   team_name: string | null
   owner_name: string | null
+  owner_id?: string | null
   points: number | null
   penalty: number | null
   transfers: number | null
@@ -46,6 +48,7 @@ interface VrsticaLestvice {
   fantasy_team_id: number
   team_name: string | null
   owner_name: string | null
+  owner_id?: string | null
   total_points?: number | null
   points?: number | null
   penalty?: number | null
@@ -127,7 +130,7 @@ export default function Lestvica() {
       supabase
         .from('fantasy_team_standings')
         .select(
-          'fantasy_team_id, team_name, owner_name, owner_registered_at, team_created_at, total_points',
+          'fantasy_team_id, team_name, owner_name, owner_id, owner_registered_at, team_created_at, total_points',
         )
         .eq('competition_id', ligaId)
         .order('total_points', { ascending: false })
@@ -169,7 +172,7 @@ export default function Lestvica() {
           supabase
             .from('fantasy_round_standings')
             .select(
-              'round_id, fantasy_team_id, team_name, owner_name, points, penalty, transfers, rank',
+              'round_id, fantasy_team_id, team_name, owner_name, owner_id, points, penalty, transfers, rank',
             )
             .eq('competition_id', ligaId)
             .order('round_id')
@@ -481,7 +484,7 @@ export default function Lestvica() {
                         {e.team_name}
                       </Link>
                       <div className="truncate text-xs text-slate-500">
-                        {e.owner_name}
+                        <ImeLastnika ime={e.owner_name} id={e.owner_id} />
                         {(e.team_created_at ?? e.owner_registered_at) && (
                           <span className={`${e.owner_name ? 'ml-1 ' : ''}hidden sm:inline`}>
                             {/* Hišna ekipa nima imena lastnika — brez vodilne pike. */}
@@ -539,7 +542,9 @@ export default function Lestvica() {
                 >
                   {z.team_name}
                 </Link>
-                <span className="hidden text-xs text-slate-500 sm:inline">{z.owner_name}</span>
+                <span className="hidden text-xs text-slate-500 sm:inline">
+                  <ImeLastnika ime={z.owner_name} id={z.owner_id} />
+                </span>
                 <span className="font-bold tabular-nums text-gnl-300">
                   {formatirajTocke(z.points)}
                 </span>

@@ -50,6 +50,7 @@ const PO_PREDPONI: [string, string][] = [
   ['/club/', 'klub'],
   ['/match/', 'tekma'],
   ['/l/', 'vstop_v_mini_ligo'],
+  ['/u/', 'profil'],
 ]
 
 export function imeStrani(pot: string): string | null {

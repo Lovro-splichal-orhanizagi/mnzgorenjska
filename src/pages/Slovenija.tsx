@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Link } from '../components/Povezava'
+import ImeLastnika from '../components/ImeLastnika'
 import { supabase } from '../lib/supabase'
 import { formatirajTocke, mnozina, EKIPE, KROGI } from '../lib/pomozno'
 import { vseVrstice } from '../lib/strani'
@@ -61,7 +62,7 @@ export default function Slovenija() {
             // predlogo, sestavljen niz pa je zanj navaden `string` in vrne
             // `GenericStringError`.
             .select(
-              'fantasy_team_id, team_name, owner_name, total_points, rounds_played, points_per_round, competition_slug, competition_short, federation_short',
+              'fantasy_team_id, team_name, owner_name, owner_id, total_points, rounds_played, points_per_round, competition_slug, competition_short, federation_short',
             )
             .order('total_points', { ascending: false })
             .order('fantasy_team_id')
@@ -212,7 +213,7 @@ export default function Slovenija() {
                       {v.team_name}
                     </Link>
                     <div className="truncate text-xs text-slate-500">
-                      {v.owner_name}
+                      <ImeLastnika ime={v.owner_name} id={v.owner_id} />
                       {v.competition_short ? ` · ${v.competition_short}` : ''}
                       {v.federation_short ? ` · ${v.federation_short}` : ''}
                     </div>

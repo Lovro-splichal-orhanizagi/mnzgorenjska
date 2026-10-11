@@ -46,6 +46,7 @@ const Administracija = lazy(() => import('./pages/Administracija'))
 const VstopVMiniLigo = lazy(() => import('./pages/VstopVMiniLigo'))
 const Opomniki = lazy(() => import('./pages/Opomniki'))
 const Racun = lazy(() => import('./pages/Racun'))
+const Profil = lazy(() => import('./pages/Profil'))
 const PotrditevPovezave = lazy(() => import('./pages/PotrditevPovezave'))
 
 // Poti so angleške, ker jih vidi vsaka država (slovaški obiskovalec ne
@@ -158,6 +159,7 @@ export default function App() {
               <Route path="/legal" element={<Pravno />} />
               <Route path="/reminders" element={<Opomniki />} />
               <Route path="/account" element={<Racun />} />
+              <Route path="/u/:id" element={<Profil />} />
               <Route path="/auth/confirm" element={<PotrditevPovezave />} />
               {/* Stari slovenski naslovi (deljene povezave, e-pošta, iskalniki)
                   vodijo na nove — s parametri, poizvedbo in #. */}
