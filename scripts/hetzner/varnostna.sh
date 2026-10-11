@@ -3,7 +3,8 @@
 # pg_dump -Fc -> /opt/slff/backup (48 hours kept) -> Hetzner Storage Box slff-backup
 # (FSN1, other datacenter): dumps/urne mirrors the 48 hourly ones, dumps/dnevne keeps the
 # 03:07 UTC one for 30 days. The box's shell has no `find`, so old daily copies are
-# picked by the date in their name. A failure goes to Discord.
+# picked by the date in their name. Storage files (player photos) go to shramba/ each
+# hour as well. A failure goes to Discord.
 set -euo pipefail
 LOKALNO=/opt/slff/backup
 BOX=u685650@u685650.your-storagebox.de
@@ -24,13 +25,22 @@ docker exec supabase-db pg_dump -U supabase_admin -d postgres -Fc > "$LOKALNO/$I
 mv "$LOKALNO/$IME.tmp" "$LOKALNO/$IME"
 find "$LOKALNO" -name 'slff-*.dump' -mmin +2880 -delete
 
-$SSH $BOX "mkdir -p dumps/urne dumps/dnevne"
+$SSH $BOX "mkdir -p dumps/urne dumps/dnevne shramba/zdaj shramba/izbrisane"
 rsync -a --delete --include='slff-*.dump' --exclude='*' -e "$SSH" "$LOKALNO/" "$BOX:dumps/urne/"
+# Storage files (player photos, docs/hetzner-shramba.md): rows are in the dump, files only
+# here. A file deleted on the server moves to shramba/izbrisane/<day>/ and goes after 30
+# days like the daily dumps, so every kept dump still finds its photos and a removed photo
+# (GDPR) does not live on in the backup.
+rsync -a --delete --backup --backup-dir="../izbrisane/$(date -u +%Y%m%d)" -e "$SSH" \
+  /opt/supabase/volumes/storage/ "$BOX:shramba/zdaj/"
 if [ "$(date -u +%H)" = 03 ]; then
   rsync -a -e "$SSH" "$LOKALNO/$IME" "$BOX:dumps/dnevne/"
   MEJA=$(date -u -d '30 days ago' +%Y%m%d)
   for f in $($SSH $BOX "ls dumps/dnevne"); do
     [[ $f =~ ^slff-([0-9]{8})T ]] && [ "${BASH_REMATCH[1]}" -lt "$MEJA" ] && $SSH $BOX "rm dumps/dnevne/$f"
+  done
+  for d in $($SSH $BOX "ls shramba/izbrisane"); do
+    [[ $d =~ ^[0-9]{8}$ ]] && [ "$d" -lt "$MEJA" ] && $SSH $BOX "rm -r shramba/izbrisane/$d"
   done
 fi
 echo "$(date -u +%FT%TZ) ok $IME $(stat -c %s "$LOKALNO/$IME")"

@@ -2702,9 +2702,13 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   brskalniku). Fotografije na seznamih bere pogled `fotografije_igralcev` v
   enem zahtevku na stran (`useFotografije`, `FotoIgralca`, `Dres igralecId`).
   `skrij_moje_ime()` je samopostrežni ugovor (`anonimiziraj_igralca`, dokončen);
-  anonimizacija vedno pobriše predstavitev. **Strežnik nima storitve Storage**:
-  vedro in pravila ustvari `prevzem_pripravi_shrambo()` šele, ko shema
-  `storage` obstaja (lokalno da, na strežniku ne) — po vklopu Storage jo pokliči.
+  anonimizacija vedno pobriše predstavitev. **Storage na strežniku** je
+  `storage-api` z datotekami na disku (`/opt/supabase/volumes/storage`, brez
+  MinIO), vklop, varnostna kopija in povrnitev v `docs/hetzner-shramba.md`.
+  Vedro in pravila ustvari `prevzem_pripravi_shrambo()` šele, ko tabele
+  `storage` obstajajo (storage-api jih ustvari sam ob zagonu) — po vklopu jo
+  pokliči. SQL brisanje (`prevzem_odstrani_fotografije`) odstrani le vrstico,
+  datoteka ostane na disku (osirotelo, ni javna; čiščenje v istem dokumentu).
 - **Uradne odsotnosti** (migracija 20261012135100): potrjeni igralec (lastnik
   potrjenega `zahtevki_igralca`, tudi za povezane vrstice) sam javi odsotnost
   (`objavi_uradno_odsotnost`: vrsta `poskodba`/`bolezen`/`dopust`/`kazen`/`drugo`,

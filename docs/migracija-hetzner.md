@@ -18,7 +18,7 @@ they stay logged in, keep their passwords and teams, and existing links keep wor
 | Mail (auth + reminders) | Resend | Mailcow (HelpStack's server, 167.233.99.232) as **`mail.slff.eu`**, `noreply@slff.eu`, port 465 |
 | pg_cron: `zakleni-zapadle-kroge` */5, `uveljavi-cene`, `uveljavi-pozicije`, `obnovi-tocke-krogov`, `obnovi-statistiko-igralcev` | Supabase | same, in our Postgres |
 | pg_net + Vault (1 secret: `discord_webhook`) | Supabase | same; **re-insert the secret by hand** (the Vault key differs, so a dump can't decrypt it) |
-| Storage (0 objects), Realtime (unused, Klepet polls) | — | **not deployed** |
+| Storage (0 objects), Realtime (unused, Klepet polls) | — | Realtime **not deployed**; Storage added later for player photos (`docs/hetzner-shramba.md`) |
 | GitHub Actions crons (imports, alerts, weekly prices/report) | GitHub | stay on GitHub, only `SUPABASE_URL`/key secrets change |
 | Daily backups | Supabase | ours (section 6) |
 
@@ -221,7 +221,8 @@ takes about 1 minute and works at any time.
     It keeps 48 h in `/opt/slff/backup`, plus the Hetzner **Storage Box** `slff-backup`
     (`u685650@u685650.your-storagebox.de`, **SSH port 23**, FSN1, BX11 €3.20/month, key
     `/root/.ssh/backup_ed25519`). On the box, `dumps/urne` mirrors the 48 hourly dumps and
-    `dumps/dnevne` keeps the 03:07 UTC one for 30 days. The box's shell has no `find`;
+    `dumps/dnevne` keeps the 03:07 UTC one for 30 days; Storage files go to `shramba/`
+    (`docs/hetzner-shramba.md`). The box's shell has no `find`;
     pruning uses the date in the file name. Failures go to Discord. Plus Hetzner's daily VM
     snapshots.
   - **Restore test 2026-10-06:** a box copy restored into a scratch DB with identical counts
