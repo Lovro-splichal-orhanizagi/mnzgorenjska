@@ -4625,6 +4625,96 @@ preveri(
   preveri('jalgpall: stran z drugo sezono ustavi uvoz', /kaže sezono 2026, ne 2025/.test(napacnaSezona ?? ''))
 }
 
+// --- vir lff (Latvija, lff.lv) -----------------------------------------------------
+{
+  const L = await import('./viri/lff.mjs')
+  const { default: viri } = await import('./viri/index.mjs')
+  const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  preveri('lff: vir je vpisan, 3 s, User-Agent s stikom', viri.lff === L.default && L.default.drzava === 'LV' &&
+    L.default.imaRegistracije === false && L.default.premorMs >= 3000 &&
+    L.default.glave['User-Agent'] === 'SLFF fantasy (slff.eu; splih.94@gmail.com)')
+  preveri('lff: šifra in naslovi', L.razbijKodo('tresa-liga/23836414').p === '23836414' && L.razbijKodo('virsliga/2026').tekmovanje === null &&
+    L.razbijKodo('otra-liga/2026/23536781').tekmovanje === '23536781' &&
+    L.default.naslovRazporeda('virsliga/2025') === 'https://lff.lv/sacensibas/viriesi/virsliga/?p=2025' &&
+    L.naslovZapisnika('24131474', '/speles/a-b-24131474/') === 'https://lff.lv/speles/a-b-24131474/' &&
+    L.default.naslovZapisnika(null, 'lv24131474') === 'https://lff.lv/speles/spele-24131474/' &&
+    L.sifraZapisnika('24131474') === 'lv24131474' && L.sifraZapisnika('lv24131474') === 'lv24131474')
+  let slabaSifra = null
+  try { L.razbijKodo('virsliga') } catch (e) { slabaSifra = e.message }
+  preveri('lff: šifra brez <p> ustavi uvoz', /<sekcija>\/<p>/.test(slabaSifra ?? ''))
+  preveri('lff: minuta (podaljšek, PP = polčas), datum (Riga → Ljubljana)', L.minuta("64'") === 64 && L.minuta("90'+1'") === 90 &&
+    L.minuta('PP') === 45 && L.datumUra('4', 'okt', '2026', '14:00').ura === '13:00' &&
+    L.datumUra('1', 'jūn', '2026', '00:30').datum === '2026-05-31' && L.datumUra('23', 'mai', '2026').datum === '2026-05-23' &&
+    L.datumUra('x', 'okt', '2026').datum === null)
+  preveri('lff: ključ in kratko ime kluba', L.kljucKlubaLv('Mārupes SC-2 / MNSS') === 'mārupes sc 2 mnss' &&
+    L.kratkoImeLv('FK Staiceles Bebri') === 'Staiceles Bebri' && L.kratkoImeLv('FS Jelgava') === 'Jelgava' &&
+    L.kratkoImeLv('RFS Academy') === 'RFS Academy')
+  preveri('lff: navadna stran ni izziv, izziv je', !L.jeIzziv(beri('lv-lff-spele-25780838.html')) && L.jeIzziv('<title>Just a moment...</title>'))
+
+  const rietumi = beri('lv-lff-liga-tresa-liga-23836414.html')
+  const t = L.tekmeLige('tresa-liga/23836414', rietumi)
+  preveri('lff: razpored — 3. liga Rietumu zona 2026: 10 krogov, 30 tekem, 6 klubov, vse odigrane', t.length === 30 &&
+    new Set(t.map((x) => x.krog)).size === 10 && new Set(t.flatMap((x) => [x.domaci, x.gostje])).size === 6 &&
+    t.every((x) => x.izid && x.pot?.endsWith(`-${x.id}/`)) && L.letoTekem(t) === '2026')
+  const krogi = L.razcleniRazpored('tresa-liga/23836414', rietumi)
+  preveri('lff: razpored — ura v ljubljanskem času (14:00 v Rigi → 13:00)', krogi.length === 10 &&
+    krogi[0].tekme[0].datum === '2026-05-23' && krogi[0].tekme[0].ura === '13:00' && krogi.every((k) => k.tekme.every((x) => x.odigrana)))
+  const druga = beri('lv-lff-liga-otra-liga-2026.html')
+  const b = L.blokiStrani(druga)
+  let brezSkupine = null
+  try { L.tekmeLige('otra-liga/2026', druga) } catch (e) { brezSkupine = e.message }
+  let napacnoLeto = null
+  try { L.tekmeLige('otra-liga/2025/23536781', druga) } catch (e) { napacnoLeto = e.message }
+  preveri('lff: 2. liga — skupini A in B ter finale, skupina iz šifre, napačno leto ustavi', b.length === 3 &&
+    b.map((x) => x.zavihek).join('|') === 'Finālturnīrs|Visas spēles A grupa|Visas spēles B grupa' &&
+    L.tekmeLige('otra-liga/2026/23536781', druga).length === 90 && /šifra mora navesti tekmovanje/.test(brezSkupine ?? '') &&
+    /kaže sezono 2026, ne 2025/.test(napacnoLeto ?? ''))
+
+  const z = L.vZapisnik(beri('lv-lff-spele-25780838.html'), { id: '25780838' })
+  const n = L.nastopi(z)
+  const minute = (nn, i) => nn.filter((x) => x.ekipaIdx === i).reduce((a, x) => a + x.minute, 0)
+  preveri('lff: zapisnik — 11 + 11, klop, goli = izid, vratar (G) pri obeh, 990 minut, brez opozoril', z.domaci.ime === 'FK Staiceles Bebri' &&
+    z.gostje.ime === 'RFS Academy' && z.datum === '2026-10-04' && z.sezona === '2026' && z.rezultat.gostje === 2 &&
+    z.domaci.postava.length === 11 && z.gostje.postava.length === 11 && z.domaci.rezerve.length === 3 && z.gostje.rezerve.length === 5 &&
+    z.goli.length === 3 && [z.domaci, z.gostje].every((e) => e.postava.filter((i) => i.vratar).length === 1) &&
+    minute(n, 0) === 990 && minute(n, 1) === 990 && z.opozorila.length === 0)
+  preveri('lff: ime Priimek Ime, kapetan (C), zgrešena 11 m, menjave v parih', z.domaci.postava[0].ime === 'Arnavs Elvis' &&
+    z.domaci.postava[1].kapetan && z.zgresene.length === 1 && n.find((x) => x.ime === 'Arnavs Elvis')?.zgreseneEnajstmetrovke === 1 &&
+    z.menjave.length === 6 && z.menjave.every((m) => m.noter.ime && m.ven.ime) && z.rumeni.length === 5)
+  const rk = L.vZapisnik(beri('lv-lff-spele-24131474.html'))
+  const izkljuceni = L.nastopi(rk).filter((x) => x.rdeci)
+  preveri('lff: drugi rumeni in rdeči (88.) — 1 rumeni + 1 rdeči, 986 minut', rk.rdeci.length === 2 &&
+    izkljuceni.length === 2 && izkljuceni.every((x) => x.rumeni === 1 && x.minute === 88) && minute(L.nastopi(rk), 1) === 986 && rk.opozorila.length === 0)
+  const av = L.vZapisnik(beri('lv-lff-spele-24131469.html'))
+  preveri('lff: avtogol je pri strelčevi ekipi in šteje nasprotniku', av.goli.filter((g) => g.avtogol).length === 1 &&
+    av.goli.find((g) => g.avtogol)?.ekipaIdx === 1 && av.rezultat.domaci === 7 && av.opozorila.length === 0)
+  const pp = L.vZapisnik(beri('lv-lff-spele-24131455.html'))
+  preveri('lff: karton "PP" (polčas) je 45. minuta', pp.rumeni.some((r) => r.minuta === 45) && pp.opozorila.length === 0)
+  const vl = L.vZapisnik(beri('lv-lff-spele-23300148.html'))
+  preveri('lff: Virslīga — igralec s povezavo /speletaji/ in kapetan-vratar "(C) (G)"', vl.domaci.postava.length === 11 &&
+    vl.domaci.postava[0].vratar && vl.domaci.postava[0].kapetan && vl.domaci.postava.find((i) => i.st === 3)?.ime === 'Semeško Maksims' &&
+    vl.krog === 16 && vl.opozorila.length === 0)
+  const deset = L.vZapisnik(beri('lv-lff-spele-24131468.html'))
+  preveri('lff: ekipa z 10 začetniki je opozorilo, ne izpad', deset.gostje.postava.length === 10 &&
+    deset.opozorila.some((o) => /10 igralcev/.test(o)))
+  preveri('lff: prazen zapisnik (kontumacija) je null', L.vZapisnik(beri('lv-lff-spele-24131450-prazen.html')) === null)
+
+  const kont = await L.default.kontumacije('tresa-liga/23836414', async (url) =>
+    /24131450|24131472|24131473/.test(url) ? beri('lv-lff-spele-24131450-prazen.html') : beri('lv-lff-spele-24131474.html'), krogi, '2026-10-11')
+  preveri('lff: kontumacije — 3:0 / 0:3 s praznim zapisnikom (FK Namejs trikrat)', kont.length === 3 &&
+    kont.every((x) => /Namejs/.test(x.domaci + x.gostje)) && kont[0].krog === 2)
+  const zs = await L.default.zapisniki('tresa-liga/23836414', async (url) => (url.includes('/sacensibas/') ? rietumi : beri('lv-lff-spele-24131474.html')))
+  preveri('lff: zapisniki() — šifra lv<id>, ime, krog in sezona z razporeda, neujemanje izida je opozorilo', zs.length === 30 &&
+    zs.every((x) => /^lv\d+$/.test(x.id) && x.z.zapisnikId === x.id) && zs[0].z.domaci.ime === 'Futbola Parks Academy' &&
+    zs[0].z.krog === 1 && zs[0].z.sezona === '2026' && zs[0].url.endsWith('-24131448/') && zs[0].z.opozorila.some((o) => /ni izid razporeda/.test(o)))
+  let zavrnjen = null
+  try { await L.default.zapisniki('tresa-liga/23836414', async () => { const e = new Error('HTTP 403'); e.status = 403; throw e }) } catch (e) { zavrnjen = e }
+  let izziv = null
+  try { await L.default.zapisniki('tresa-liga/23836414', async () => '<title>Just a moment...</title>') } catch (e) { izziv = e }
+  preveri('lff: 403 in izziv vržeta LffZavrnitev (uvoz izhod 4)', zavrnjen instanceof L.LffZavrnitev && zavrnjen.status === 403 &&
+    izziv instanceof L.LffZavrnitev && L.default.zavrnitev('x', 429).zavrnitev === true)
+}
+
 // --- vir fsb (Srbija, Fudbalski savez Beograda) ---------------------------------
 {
   const F = await import('./viri/fsb.mjs')

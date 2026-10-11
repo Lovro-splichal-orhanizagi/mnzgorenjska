@@ -1649,6 +1649,115 @@ Uvoz (ena za drugo): `gh workflow
 run uvoz-lige.yml -f liga=ee-premium-liiga -f arhiv=52/2025,52/2024 -f
 cene=true`. Arhiv 180 zapisnikov po 5 s in več je okoli 20 minut na sezono.
 
+### Latvija — vir `lff`
+
+Vir `lff` (`scripts/viri/lff.mjs`) bere **lff.lv** (Latvijas Futbola
+federācija), kjer LFF iz COMET objavi Virslīgo, 1., 2. in 3. līgo. HTML iz
+strežnika, brez izziva. Država `LV` ("Latvija", vpiše jo migracija lig);
+vmesnika v latvijščini, kartice in pošte **še ni** in `LV` **ni** v matriki
+nočnega uvoza — oboje pred vklopom. Šifra lige se začne z `lv-`.
+
+- **Sezona je koledarsko leto** (marec–november, `sezona_koledarska`, glej
+  *Koledarska sezona* pri Estoniji): oznaka `"2026"`. Vir jo vzame iz
+  datumov razporeda (najpogostejše leto).
+- **Šifra lige je `<sekcija>/<p>[/<tekmovanje>]`**: `<sekcija>` je pot pod
+  `/sacensibas/viriesi/` (virsliga, lvbet-liga, otra-liga, tresa-liga), `<p>`
+  parameter `?p=` izbirnika "Izvēlies līgu" — pri Virslīgi in 1. ligi **leto**
+  (`virsliga/2026`), pri 3. ligi **id tekmovanja COMET** cone
+  (`tresa-liga/23836414` = Rietumu zona 2026), pri 2. ligi leto ali id strani.
+  `<tekmovanje>` izbere skupino, kadar ima stran več blokov "Visas spēles"
+  (2. liga: A, B in Finālturnīrs → `otra-liga/2026/23536781`). Stran z več
+  bloki brez izbire ali z letom, ki se ne ujema z datumi (neznan `p` stran
+  tiho zamenja s tekočo), uvoz ustavi. Vsaka sezona ima svoje id-je.
+- **Razpored**: zavihek "Visas spēles" (`stats_competition_<id>_…_style2`),
+  krogi "N. kārta", tekma z `data-id` (id tekme COMET), datumom (h5 dan, h6
+  mesec "okt"/"jūn", h7 ura, h8 leto; **riški čas → ljubljanski −1 h**),
+  izidom (`res1`/`res2`, "-" neodigrana) in potjo `/speles/<slug>-<id>/`
+  (stran najde id na koncu, slug je okras). "Nākamās spēles" (`style1`) ne
+  beremo. Izpadnih delov (Finālturnīrs, "1/4 fināls") ne uvažamo.
+- **Zapisnik** (zavihek "Spēles protokols", `table.teams`): vrstice
+  `firstteam` (začetniki) in `bench` (klop), v vsaki oba kluba (dres, igralec,
+  prazno, dres, igralec). "(G)" vratar (tudi rezervni), "(C)" kapetan,
+  kapetan-vratar "(C) (G)". Dogodki pri igralcu z minuto ("64'", "90'+1'" →
+  90, **"PP" = polčas → 45**): `goal`, `penalty` (gol z 11 m), `own_goal` (pri
+  strelčevi ekipi, šteje nasprotniku — goli = izid to potrdi), `penalty_failed`,
+  `yellow`, `second_yellow` (prvi rumeni je svoj dogodek → 1 rumeni + 1 rdeči),
+  `red`, `substitutionIn`/`substitutionOut` — **minute so točne**, menjave
+  združimo v pare po minuti. Kartoni trenerjev (časovnica) niso v protokolu in
+  ne štejejo. Polčasa stran ne pove. Narodnosti (zastavica) ne beremo.
+- **Identiteta: ime + klub** (kot fss, fsb). Le nekateri igralci imajo
+  povezavo `/speletaji/<slug>-<id>/` (profil reprezentanta) — za identiteto je
+  ne uporabljamo, ker bi isti igralec dobil dve vrstici. Ime "Ime Priimek" →
+  "Priimek Ime" (priimek je zadnja beseda). Šifra zapisnika v bazi je
+  `lv<id>` (COMET drugih zvez ima iste številke).
+- **Kontumacija**: razpored jo pokaže le kot 3:0 / 0:3; zapisnik je brez
+  postav. `vir.kontumacije` prebere zapisnike takih tekem, starejših od tedna
+  dni (v isti predpomnilnik kot uvoz zapisnikov), in jih označi.
+- Klubi: ključ ohrani latvijske znake; skupne ekipe ("Mārupes SC-2 / MNSS")
+  in druge ekipe ("Riga FC-2") so svoj klub. Kratko ime brez FK/FC/SK/FS/AFA.
+  Klubi nižjih lig se med sezonama močno premešajo (3. liga 2026 ↔ 2025: le
+  2–6 skupnih klubov na cono).
+- *Uskladi pozicije* z `vir = lff` (vratar po večini tekem); ostale pozicije
+  na glasovanje.
+
+**Pravice (pregled 11. 10. 2026, ni pravni nasvet).** robots.txt zapre le
+MJ12bot. Pogojev uporabe strani ni (le *Privātuma politika*); noga pravi
+"Autortiesības 2026 © Atsauce uz LFF.lv obligāta" — **navedba vira je
+obvezna** (`vir_ime` LFF, `vir_url` → lff.lv v nogi). Dovoljenja LFF še
+nimamo. Beremo odkrito (User-Agent `SLFF fantasy (slff.eu;
+splih.94@gmail.com)`, **3 s** med zahtevki, zapisnikov, starejših od tedna, ne
+beremo znova). **Ob izzivu, CAPTCHI, 403 ali 429 se uvoz ustavi — ne
+obhajaj** (`LffZavrnitev`, izhod 4). Če nas LFF prosi, naj nehamo, `lv-` lige
+izklopimo.
+
+Seznam lig in preizkus:
+
+```bash
+node scripts/latvijske-lige.mjs                       # lige 2026: šifra, klubi, krogi, tekme
+node scripts/latvijske-lige.mjs --leto 2025 --preveri --najvec 1
+node scripts/latvijske-lige.mjs --polno tresa-liga/23836414 --mapa /tmp/lv
+```
+
+Preizkus v živo (11. 10. 2026) na 3. ligi Rietumu zona 2026: 10 krogov,
+30 tekem z uro, 6 klubov, 3 kontumacije (FK Namejs, prazen zapisnik),
+27 zapisnikov, goli = izid 27/27 (172; razpored s kontumacijami 181),
+53/54 postav po 11 (FK Namejs z 10), vratar (G) 54/54, 990 minut 47/54,
+ostalih 7 pojasni rdeči karton (6) ali 10 začetnikov (1); 784 nastopov
+(191 s klopi), 2 avtogola, 7 golov z 11 m, 5 zgrešenih, 8 izključitev. Po en
+zapisnik zadnjega kroga vsake lige 2026 in 2025: vsi 11 + 11 (dvakrat ekipa
+z 10), goli = izid, vratar pri vseh.
+
+Vpisanih je 8 lig (migracija 20261012030100), **neaktivnih**, zveza `lff`.
+Sezona 2026 je ob vpisu skoraj končana (Virslīga 32. od 36 krogov, 1. liga
+22. od 26, ostale končane, 3. liga igra finale) — vklop bo realno za 2027.
+
+| liga | klubov | tekoča 2026 | arhiv 2025 |
+|---|---|---|---|
+| lv-virsliga | 10 | `virsliga/2026` | `virsliga/2025` |
+| lv-1-liga | 14 | `lvbet-liga/2026` | `lvbet-liga/2025` |
+| lv-2-liga-a | 10 | `otra-liga/2026/23536781` | `otra-liga/20846382/22188994` (2. faza A) |
+| lv-2-liga-b | 10 | `otra-liga/2026/23536800` | `otra-liga/20846382/20849250` (1. faza A) |
+| lv-3-liga-centrs | 12 | `tresa-liga/23836115` | `tresa-liga/21070084` |
+| lv-3-liga-ziemeli | 10 | `tresa-liga/23836298` | `tresa-liga/21311921/21311921` (1. faza, Austrumu grupa) |
+| lv-3-liga-austrumi | 8 | `tresa-liga/23836359` | `tresa-liga/21063555/21063555` (1. faza) |
+| lv-3-liga-rietumi | 6 | `tresa-liga/23836414` | `tresa-liga/21172228` |
+
+2. liga 2025 je imela dve fazi (1. faza A/B po 14 krogov, 2. faza A/B po 8
+krogov, isti klubi premešani); arhiv je izbran po največ skupnih klubih, vsak
+arhiv ima ena sama liga (`matches.zapisnik_id` je enoličen). Neuporabljeni
+bloki 2025: `20849255` (1. faza B), `22188997` (2. faza B), Ziemeļu
+`21338843` (1. faza Rietumu) in `22146056` (2. faza A). Arhivi so izbrani po
+skupnih klubih in so pri nižjih ligah šibki — pred uvozom preveri. Rietumu
+zona (6 klubov) je na spodnji meji (3 iz kluba × 5).
+
+Izpuščeno: regijske strani (kurzeme., vidzeme., zemgale., latgale., za.,
+riga.lff.lv — niso pregledane), ženske, mladinske, futsal, pokal, veterani,
+pārspēles, izpadni deli.
+
+Uvoz (ena za drugo): `gh workflow run uvoz-lige.yml -f liga=lv-virsliga -f
+arhiv=virsliga/2025 -f cene=true`. Arhiv 180 zapisnikov po 3 s je okoli
+10 minut na sezono.
+
 ### Poljska
 
 Država `PL` ("Polska", migracija 20261012004500) ima vmesnik v poljščini
