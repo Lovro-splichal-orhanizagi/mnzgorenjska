@@ -44,15 +44,27 @@ const NAJVEC_MIN = Number(arg('--najvec') ?? 120)
 const popravek = process.argv.includes('--popravek')
 const popravekVir = arg('--vir')
 const popravekLiga = arg('--tekmovanje')
-// Države, kjer zveze pod državno nimajo skupnih klubov: država → državna zveza.
-// Romunija: vsaka županijska zveza (AJF) je svoja piramida; državne zveze v
-// SLFF ni, 'frf' je le vir (nobena liga nima zveze s to šifro).
+// Države, kjer zveze pod državno nimajo skupnih klubov. Ročni uvoz
+// nevklopljene lige ločene zveze teče hkrati z uvozom nevklopljene lige iste
+// države; državne zveze (`drzavne`, mešajo vse) čakajo na vse in vsi nanje.
+// `istaZveza: false`: lige ISTE ločene zveze se vseeno vrstijo (le različne
+// zveze tečejo hkrati).
+// Avstrija: deželne zveze, državna ÖFB (Bundesliga, 2. Liga, Regionalliga).
+// Romunija: vsaka županijska zveza (`ajf-<judet>`, vira hlf in frf) je svoja
+// piramida; državni sta LPF (SuperLiga) in FRF (Liga 2, Liga 3). Lige iste
+// županije si lahko delijo klube (rezerve, II. ekipe) in strežnik frf-ajf.ro (arhiv
+// ~10 s na tekmo), zato županija uvaža eno ligo naenkrat.
 // Srbija: regionalne zveze (FSV, FSRZS, FSRIS, FS Beograd) so ločene piramide,
 // državna je FSS (Superliga, Prva liga); vse fssid lige bere fss.rs, zato koliko
 // jih teče hkrati omeji veriga, ki jih zažene (dve naenkrat, 2 s premora vsaka).
 // Madžarska: vármegye zveze (BLSZ in 19 županij) so ločene piramide, državna
 // je MLSZ (NB I–III). Vse bere isti Adatbank, zato hkratnost omeji veriga.
-const LOCENE_ZVEZE = { AT: 'oefb', RO: 'frf', RS: 'fss', HU: 'mlsz' }
+const LOCENE_ZVEZE = {
+  AT: { drzavne: ['oefb'], istaZveza: true },
+  RO: { drzavne: ['lpf', 'frf'], istaZveza: false },
+  RS: { drzavne: ['fss'], istaZveza: true },
+  HU: { drzavne: ['mlsz'], istaZveza: true },
+}
 // Države, katerih lige bere eno samo spletišče s skupnim proračunom branja
 // (jalgpall.ee: robots.txt Crawl-Delay 5 s za vse nas skupaj). Dva zagona iste
 // države bi brala hkrati in skupaj prehitro, zato se tu križa VSAK zagon iste
@@ -123,13 +135,16 @@ function seKrize(tok, naslov) {
     if (SKUPEN_VIR[mojaDrzava]) return true
     if (!mojaLiga && !liga.aktivna) return false
     // Ročna uvoza nevklopljenih lig pišeta vsak v svoje igralce in tečeta
-    // hkrati, tudi iz iste dežele (od 10. 10. 2026; prej le iz različnih).
+    // hkrati, v AT/RS/HU tudi iz iste dežele (od 10. 10. 2026; prej le iz
+    // različnih), v Romuniji le iz različnih županij (od 11. 10. 2026).
     // Hkratni vpis istega novega kluba ujame klubId, isto tekmo skupnega arhiva
-    // preskok tekme druge lige. Državna zveza (Bundesliga, Regionalliga) meša
-    // dežele, zato čaka na vse. Koliko jih teče, omeji vrsta Avstrije.
-    const drzavna = LOCENE_ZVEZE[mojaDrzava]
-    if (drzavna && mojaLiga && !mojaJeAktivna && !liga.aktivna && mojaZveza && liga.zveza &&
-        mojaZveza !== drzavna && liga.zveza !== drzavna) return false
+    // preskok tekme druge lige. Državna zveza (Bundesliga, Regionalliga;
+    // romunska SuperLiga, Liga 2, Liga 3) meša dežele/županije, zato čaka na
+    // vse. Koliko jih teče, omeji vrsta Avstrije oz. veriga, ki jih zažene.
+    const locene = LOCENE_ZVEZE[mojaDrzava]
+    if (locene && mojaLiga && !mojaJeAktivna && !liga.aktivna && mojaZveza && liga.zveza &&
+        !locene.drzavne.includes(mojaZveza) && !locene.drzavne.includes(liga.zveza) &&
+        (locene.istaZveza || mojaZveza !== liga.zveza)) return false
     return true
   }
   // Nočni uvoz piše le v vklopljene lige. Ročni uvoz nevklopljene ga ne moti;
