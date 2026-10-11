@@ -24,6 +24,7 @@ import { prenesiSPonovitvami } from './prenos.mjs'
 import { dodajStrelceSKlopi } from './zapisnik.mjs'
 import { imeHash, regHash } from './anonimizacija.mjs'
 import { NEPOPOLN } from './viri/frf.mjs'
+import { prestopSkladen } from './prestop.mjs'
 
 // Vir je zavrnil (jalgpall: 403, 429, izziv): izhod 4, da nočna zanka države
 // ne bere naprej (uvoz-zapisnikov.yml). Ostale napake ostanejo izhod 1.
@@ -254,13 +255,32 @@ async function preveriUgovor(id, polnoIme, regSt) {
  * zato ju v takem primeru ločimo še po številki dresa. Številke ne uporabimo
  * vedno, ker isti igralec med sezono lahko zamenja dres.
  */
+/** Nastopi igralca s klubom, krogom in datumom — za presojo prestopa (scripts/prestop.mjs). */
+async function nastopiIgralca(playerId) {
+  const vrstice = await vseVrstice((od, do_) =>
+    db
+      .from('appearances')
+      .select('id, team_id, match_id, matches!inner(played_on, rounds!inner(season, number))')
+      .eq('player_id', playerId)
+      .order('id')
+      .range(od, do_),
+  )
+  return vrstice.map((a) => ({
+    klub: a.team_id,
+    tekma: a.match_id,
+    datum: a.matches?.played_on ?? null,
+    sezona: a.matches?.rounds?.season ?? null,
+    krog: a.matches?.rounds?.number ?? null,
+  }))
+}
+
 /** Začetek opozorila, ki ga preveri-podatke išče v `matches.import_warnings`. */
 const VRATAR_IZ_POLJA = 'v vratih, a vodimo ga v polju'
 
 async function igralecId(
   teamId,
   polnoIme,
-  { vratar, st, dvoumno = false, zasedeni = null, regSt = null, pozicija = null, opozorila = null, datum = null },
+  { vratar, st, dvoumno = false, zasedeni = null, regSt = null, pozicija = null, opozorila = null, datum = null, tekma = null },
 ) {
   // Oznaka vratarja iz enega zapisnika naredi vratarja le igralca, čigar
   // pozicije še ne poznamo (ali je ugibana). Znanega igralca iz polja ne
@@ -427,20 +447,37 @@ async function igralecId(
   // brez enega samega nastopa — tako je pri Niko Zelezniki, kjer so trije
   // "Potocnik Matic", tiho izpadlo enajst arhivskih tekem.
   if (!obstoj && !dvoumno) {
+    // Igralec s šifro vira je druga oseba ali ista brez šifre v tem zapisniku —
+    // po imenu ga ne posvojimo (šifra je identiteta, ime ni).
     const { data: drugje } = await db
       .from('players')
       .select('id, position, position_source, team_id, teams(name)')
       .eq('competition_id', tekmovanje.id)
       .eq('full_name', polnoIme)
+      .is('reg_st', null)
       .limit(2)
 
     if (drugje?.length === 1) {
       const p = drugje[0]
-      await db.from('players').update({ team_id: teamId, shirt_number: st }).eq('id', p.id)
-      console.log(
-        `  prestop: ${polnoIme} ${p.teams?.name ?? '?'} -> klub ${teamId}`,
-      )
-      obstoj = p
+      // Prestop le, če je skladen s časom (scripts/prestop.mjs): soimenjak, ki
+      // je za drugi klub igral v istem krogu ali pozneje, je druga oseba.
+      // Dvom = nov zapis; dvojnika zdruzi-duplikate združi, zlitja nihče.
+      const { skladen, razlog } = prestopSkladen(await nastopiIgralca(p.id), {
+        klub: teamId,
+        tekma: tekma?.id ?? null,
+        sezona: tekma?.sezona ?? null,
+        krog: tekma?.krog ?? null,
+        datum: tekma?.datum ?? datum,
+      })
+      if (skladen) {
+        await db.from('players').update({ team_id: teamId, shirt_number: st }).eq('id', p.id)
+        console.log(
+          `  prestop: ${polnoIme} ${p.teams?.name ?? '?'} -> klub ${teamId}`,
+        )
+        obstoj = p
+      } else {
+        console.log(`  soimenjak pri drugem klubu: ${polnoIme} (${p.teams?.name ?? '?'}: ${razlog}) — nov igralec`)
+      }
     } else if (drugje?.length > 1) {
       // Vec soimenjakov — ne ugibamo, raje nov zapis in opozorilo.
       console.log(`  soimenjaki: ${polnoIme} — ustvarjam novega igralca`)
@@ -589,6 +626,7 @@ const odtisKode = (() => {
   const h = createHash('sha256')
   const datoteke = [
     'scripts/uvoz-zapisnikov.mjs',
+    'scripts/prestop.mjs',
     'scripts/klubi.mjs',
     'scripts/razporedi.mjs',
     ...readdirSync('scripts').filter((f) => /^zapisnik.*\.mjs$/.test(f)).map((f) => `scripts/${f}`),
@@ -767,6 +805,7 @@ for (const { id, z, url } of zapisniki) {
       if (x.regSt) idPoStevilki.set(`${x.ekipaIdx}|r${x.regSt}`, pId)
     }
     const zasedeni = new Set() // igralci, ze porabljeni na TEJ tekmi
+    const kontekstTekme = { id: tekma.id, sezona: z.sezona, krog: z.krog, datum: z.datum ?? null }
     const vrstice = []
     for (const x of n) {
       const tId = x.ekipaIdx === 0 ? domaciId : gostjeId
@@ -779,6 +818,7 @@ for (const { id, z, url } of zapisniki) {
         pozicija: x.pozicija ?? null,
         opozorila: z.opozorila,
         datum: z.datum ?? null,
+        tekma: kontekstTekme,
       })
       zasedeni.add(pId)
       zapomni(x, pId)
@@ -903,7 +943,7 @@ for (const { id, z, url } of zapisniki) {
         (g.regSt && idPoStevilki.get(`${g.ekipaIdx}|r${g.regSt}`)) ||
         (g.st != null && idPoStevilki.get(`${g.ekipaIdx}|${g.st}`)) ||
         null
-      if (!pId && g.ime) pId = await igralecId(tId, g.ime, { vratar: false, st: g.st })
+      if (!pId && g.ime) pId = await igralecId(tId, g.ime, { vratar: false, st: g.st, datum: z.datum ?? null, tekma: kontekstTekme })
       goliVrstice.push({
         match_id: tekma.id,
         scorer_id: pId,

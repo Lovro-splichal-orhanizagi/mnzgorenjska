@@ -81,7 +81,7 @@ const mojId = Number(GITHUB_RUN_ID)
 
 // Ali zagon drugega toka piše v iste vrstice kot ta?
 function seKrize(tok, naslov) {
-  if (tok === 'zdruzi-klube.yml' || tok === 'tedensko-cene.yml') return true
+  if (tok === 'zdruzi-klube.yml' || tok === 'tedensko-cene.yml' || tok === 'razdeli-zlite-igralce.yml') return true
   if (tok === 'uvoz-lige.yml') {
     const slug = /^Uvoz lige (\S+)$/.exec(naslov ?? '')?.[1]
     const liga = slug ? ligaPoSlugu.get(slug) : null
@@ -112,7 +112,7 @@ function seKrize(tok, naslov) {
 
 if (samoTece) {
   const tecejo = []
-  for (const tok of ['uvoz-zapisnikov.yml', 'uvoz-lige.yml', 'zdruzi-klube.yml', 'tedensko-cene.yml']) {
+  for (const tok of ['uvoz-zapisnikov.yml', 'uvoz-lige.yml', 'zdruzi-klube.yml', 'tedensko-cene.yml', 'razdeli-zlite-igralce.yml']) {
     const zagoni = JSON.parse(gh('run', 'list', '--workflow', tok, '--limit', '50', '--json', 'databaseId,status,displayTitle'))
     for (const z of zagoni) {
       if (z.status === 'completed') continue
@@ -129,7 +129,7 @@ if (samoTece) {
 
 for (let min = 1; min <= NAJVEC_MIN; min++) {
   const pred = []
-  const tokovi = ['uvoz-zapisnikov.yml', 'uvoz-lige.yml', 'zdruzi-klube.yml', 'tedensko-cene.yml']
+  const tokovi = ['uvoz-zapisnikov.yml', 'uvoz-lige.yml', 'zdruzi-klube.yml', 'tedensko-cene.yml', 'razdeli-zlite-igralce.yml']
   if (SKUPEN_VIR[mojaDrzava]) tokovi.push('grbi.yml')
   for (const tok of tokovi) {
     // Brez --status: tudi čakajoči (queued) starejši zagon mora priti prvi.

@@ -988,6 +988,135 @@ select pg_temp.preveri('admin_rast: admin dobi dneve',
   jsonb_array_length(admin_rast(current_date - 6)->'dnevi') >= 7);
 reset role;
 
+-- Zliti soimenjaki (Petrović Lazar, rs-srpska-istok, 10/2026): en igralec z
+-- nastopi za dva kluba v istih krogih. razdeli_zlitega_igralca ga razdeli po
+-- klubih; id ostane klubu lastnikov (pozicija ob nakupu) ali trenutnemu.
+insert into competitions(id, slug, name, short_name, active, country_id, source) overriding system value
+values (-916001, 'test-zliti', 'Test zlitih', 'ZLITI', false, (select id from countries where code='SI'), 'fssid');
+insert into teams(id, name, short_name, country_id) overriding system value
+select -916000-n, 'Test zliti '||n, 'Z'||n, (select id from countries where code='SI')
+from generate_series(1,4) n;
+-- -916001 "Morava" (vratar), -916002 "Malošište" (polje), -916003/4 nasprotnika
+insert into rounds(id, season, number, deadline_at, competition_id, played_on) overriding system value
+select -916000-n, '2099/00', n, now()-interval '1 day'*(60-7*n), -916001, (current_date-(60-7*n))
+from generate_series(1,5) n;
+insert into matches(id, round_id, home_team_id, away_team_id, played_on, home_goals, away_goals, imported_at) overriding system value
+values (-916011, -916001, -916001, -916003, current_date-53, 0, 0, now()),
+       (-916012, -916001, -916002, -916004, current_date-52, 1, 0, now()),
+       (-916021, -916002, -916001, -916003, current_date-46, 0, 0, now()),
+       (-916022, -916002, -916002, -916004, current_date-45, 2, 0, now()),
+       (-916031, -916003, -916001, -916003, current_date-39, 0, 0, now()),
+       (-916032, -916003, -916002, -916004, current_date-39, 0, 0, now()),
+       (-916041, -916004, -916001, -916003, current_date-32, 0, 0, now()),
+       (-916052, -916005, -916002, -916004, current_date-25, 0, 0, now());
+insert into players(id, team_id, competition_id, first_name, last_name, full_name, position,
+                    position_source, value, active) overriding system value
+values (-916001, -916002, -916001, 'Lazar', 'Zliti', 'Zliti Lazar', 'GK', 'zapisnik', 6, true),
+       (-916002, -916002, -916001, 'Ana', 'Zliti', 'Zliti Ana', 'GK', 'zapisnik', 6, true),
+       (-916003, -916002, -916001, 'Reg', 'Zliti', 'Zliti Reg', 'MID', 'zapisnik', 6, true);
+update players set reg_st = 916003 where id = -916003;
+-- Prestop s prestavljeno tekmo: 2. krog za Moravo, tri tedne pozneje
+-- prestavljeni 2. krog za Malošište — isti krog, a ne zlitje.
+insert into matches(id, round_id, home_team_id, away_team_id, played_on, imported_at) overriding system value
+values (-916062, -916002, -916004, -916002, current_date-20, now());
+insert into players(id, team_id, competition_id, first_name, last_name, full_name,
+                    position_source, active) overriding system value
+values (-916006, -916002, -916001, 'Pre', 'Zliti', 'Zliti Pre', 'neznano', true);
+insert into appearances(match_id, player_id, team_id, started, minutes_played)
+values (-916011, -916006, -916001, true, 90), (-916021, -916006, -916001, true, 90),
+       (-916052, -916006, -916002, true, 90), (-916062, -916006, -916002, true, 90);
+-- Uvoz po popravku je za tekmo 4. kroga Morave že ustvaril soimenjaka -916005.
+insert into players(id, team_id, competition_id, first_name, last_name, full_name,
+                    position_source, active) overriding system value
+values (-916004, -916002, -916001, 'Bor', 'Zliti', 'Zliti Bor', 'neznano', true),
+       (-916005, -916001, -916001, 'Bor', 'Zliti', 'Zliti Bor', 'neznano', true);
+insert into appearances(match_id, player_id, team_id, started, minutes_played)
+select m, case when m = -916041 then -916005 else -916004 end,
+       case when abs(m) % 10 = 1 then -916001 else -916002 end, true, 90
+from unnest(array[-916011,-916012,-916021,-916022,-916031,-916032,-916041,-916052]) m;
+-- -916001 brez lastnika, -916002 z lastnikom, ki ga je kupil kot vratarja.
+insert into appearances(match_id, player_id, team_id, started, minutes_played, is_goalkeeper, shirt_number, goals, clean_sheet)
+select m, pl, case when abs(m) % 10 = 1 then -916001 else -916002 end, true, 90, abs(m) % 10 = 1,
+       case when abs(m) % 10 = 1 then 1 else 14 end, case when m = -916022 then 1 else 0 end, abs(m) % 10 = 1
+from unnest(array[-916011,-916012,-916021,-916022,-916031,-916032,-916041,-916052]) m
+cross join (values (-916001), (-916002), (-916003)) v(pl);
+insert into goals(id, match_id, scorer_id, team_id, minute) overriding system value
+values (-916001, -916022, -916001, -916002, 10), (-916002, -916022, -916002, -916002, 20),
+       (-916003, -916022, -916003, -916002, 30);
+select recompute_round_scores(id) from rounds where competition_id = -916001;
+insert into fantasy_teams(id,owner_id,name,competition_id) overriding system value
+values (-916001,'b8a06635-2322-4444-8c42-44e419f912ab','Zliti ekipa',-916001);
+insert into fantasy_roster(fantasy_team_id, player_id, is_starter, buy_position, buy_value)
+values (-916001, -916002, true, 'GK', 6);
+
+select pg_temp.preveri('zliti: anon ne kliče razdeli_zlitega_igralca',
+  not has_function_privilege('anon', 'razdeli_zlitega_igralca(bigint,boolean)', 'execute')
+  and not has_function_privilege('authenticated', 'zliti_igralci(text,text)', 'execute'));
+select pg_temp.preveri('zliti: kandidati najdeni, igralec s šifro preskočen',
+  (select count(*) from zliti_igralci('test-zliti') where preskok is null) = 3
+  and (select preskok from zliti_igralci('test-zliti') where player_id = -916003) = 'sifra'
+  and (select preskok from zliti_igralci('test-zliti') where player_id = -916006) = 'prestavljena-tekma'
+  and razdeli_zlitega_igralca(-916006, true)->>'stanje' = 'brez-spora');
+
+-- Načrt ne piše.
+select pg_temp.preveri('zliti: načrt ne spremeni ničesar',
+  razdeli_zlitega_igralca(-916001)->>'stanje' = 'nacrt'
+  and (select count(*) from appearances where player_id = -916001) = 8);
+
+do $$
+declare v jsonb; v_nov bigint;
+begin
+  v := razdeli_zlitega_igralca(-916001, true);
+  v_nov := (v->'novi'->0->>'igralec')::bigint;
+  perform pg_temp.preveri('zliti: brez lastnika id ostane trenutnemu klubu',
+    v->'ohrani'->>'klub' = '-916002' and v->'ohrani'->>'pravilo' = 'trenutni-klub'
+    and (select count(*) from appearances where player_id = -916001 and team_id = -916002) = 4
+    and not exists (select 1 from appearances where player_id = -916001 and team_id <> -916002));
+  perform pg_temp.preveri('zliti: drugi klub dobi novega igralca (vratar, svoji nastopi)',
+    (select team_id = -916001 and position = 'GK' and full_name = 'Zliti Lazar' and competition_id = -916001
+       from players where id = v_nov)
+    and (select count(*) from appearances where player_id = v_nov) = 4);
+  perform pg_temp.preveri('zliti: ostanek ni več vratar',
+    (select position is null and position_source = 'neznano' from players where id = -916001));
+  perform pg_temp.preveri('zliti: gol ostane strelcu svojega kluba',
+    (select scorer_id = -916001 from goals where id = -916001));
+  perform pg_temp.preveri('zliti: točke kroga le iz svoje tekme',
+    (select count(*) from player_scores where player_id = -916001) = 4
+    and (select count(*) from player_scores where player_id = v_nov) = 4
+    and (select points from player_scores where player_id = -916001 and round_id = -916001)
+        = (select sum(points) from appearance_points where player_id = -916001 and round_id = -916001));
+  perform pg_temp.preveri('zliti: statistika sledi razdelitvi',
+    (select matches from statistika_igralcev where player_id = -916001) = 4
+    and (select matches from statistika_igralcev where player_id = v_nov) = 4);
+  perform pg_temp.preveri('zliti: ponoven zagon ne naredi ničesar',
+    razdeli_zlitega_igralca(-916001, true)->>'stanje' = 'brez-spora'
+    and (select count(*) from players where competition_id = -916001 and full_name = 'Zliti Lazar') = 2);
+
+  v := razdeli_zlitega_igralca(-916002, true);
+  v_nov := (v->'novi'->0->>'igralec')::bigint;
+  perform pg_temp.preveri('zliti: lastnik je kupil vratarja — id ostane vratarju',
+    v->'ohrani'->>'pravilo' = 'pozicija-ob-nakupu'
+    and (select team_id = -916001 and position = 'GK' from players where id = -916002)
+    and (select team_id = -916002 and position is null from players where id = v_nov)
+    and exists (select 1 from fantasy_roster where player_id = -916002));
+  perform pg_temp.preveri('zliti: gol gre z nastopom k novemu igralcu',
+    (select scorer_id = v_nov from goals where id = -916002));
+end;
+$$;
+do $$
+declare v jsonb;
+begin
+  v := razdeli_zlitega_igralca(-916004, true);
+  perform pg_temp.preveri('zliti: obstoječi soimenjak kluba dobi nastope',
+    v->'novi'->0->>'zapis' = 'obstojec'
+    and (select count(*) from appearances where player_id = -916005) = 4
+    and (select count(*) from players where full_name = 'Zliti Bor') = 2);
+end;
+$$;
+select pg_temp.preveri('zliti: igralec s šifro ostane cel',
+  razdeli_zlitega_igralca(-916003, true)->>'stanje' = 'sifra'
+  and (select count(*) from appearances where player_id = -916003) = 8);
+
 do $$
 declare v_napak int;
 begin

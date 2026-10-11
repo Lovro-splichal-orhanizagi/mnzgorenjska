@@ -1,0 +1,17 @@
+{
+  "opis": "Petrović Lazar, rs-srpska-istok 2026/27 (igralec 127766 v produkciji, 11. 10. 2026): dva človeka z istim imenom, en zapis. Nastopi po vrstnem redu tekem; klub 3560 = Morava 1918 (Ćuprija, vratar), 3566 = Malošište (polje).",
+  "ime": "Petrović Lazar",
+  "nastopi": [
+    { "tekma": 149300, "sezona": "2026/27", "krog": 1, "datum": "2026-08-15", "klub": 3560, "vratar": true },
+    { "tekma": 149304, "sezona": "2026/27", "krog": 1, "datum": "2026-08-16", "klub": 3566, "vratar": false },
+    { "tekma": 149311, "sezona": "2026/27", "krog": 2, "datum": "2026-08-22", "klub": 3560, "vratar": true },
+    { "tekma": 149308, "sezona": "2026/27", "krog": 2, "datum": "2026-08-23", "klub": 3566, "vratar": false },
+    { "tekma": 149321, "sezona": "2026/27", "krog": 3, "datum": "2026-08-29", "klub": 3560, "vratar": true },
+    { "tekma": 149324, "sezona": "2026/27", "krog": 3, "datum": "2026-08-29", "klub": 3566, "vratar": false },
+    { "tekma": 149329, "sezona": "2026/27", "krog": 4, "datum": "2026-09-05", "klub": 3560, "vratar": true },
+    { "tekma": 149342, "sezona": "2026/27", "krog": 5, "datum": "2026-09-13", "klub": 3566, "vratar": false },
+    { "tekma": 149345, "sezona": "2026/27", "krog": 6, "datum": "2026-09-20", "klub": 3566, "vratar": false },
+    { "tekma": 149360, "sezona": "2026/27", "krog": 7, "datum": "2026-09-27", "klub": 3566, "vratar": false },
+    { "tekma": 149365, "sezona": "2026/27", "krog": 8, "datum": "2026-10-03", "klub": 3566, "vratar": false }
+  ]
+}
