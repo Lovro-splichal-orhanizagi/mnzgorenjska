@@ -209,7 +209,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     oznaka: 'Játékosprofil',
     gumb: 'Ez vagyok én',
     naslovOkna: 'Te vagy az?',
-    opis: 'Vedd át a játékosprofilodat. Ha a klub, két csapattárs vagy az SLFF megerősít, hozzáadhatsz becenevet, fényképet, bemutatkozást és közösségi fiókokat. A hivatalos adatokat (név, klub, poszt, percek, gólok, ár) nem módosíthatod.',
+    opis: 'Vedd át a játékosprofilodat. Ha a klub, két csapattárs vagy az SLFF megerősít, hozzáadhatsz becenevet, fényképet, bemutatkozást és közösségi fiókokat. A hivatalos adatokat (név, klub, poszt, percek, gólok, ár) nem módosíthatod. A kérést elküldjük a klubodnak, amely egy kattintással megerősíti e-mailben.',
     dokaz: 'Link, amely igazolja, hogy te vagy az (nem kötelező)',
     dokazPrimer: 'https://… (pl. a profilod a klub oldalán)',
     star16: 'Megerősítem, hogy legalább 16 éves vagyok.',

@@ -212,7 +212,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     oznaka: 'Profil de jucător',
     gumb: 'Acesta sunt eu',
     naslovOkna: 'Tu ești?',
-    opis: 'Preia-ți profilul de jucător. După ce te confirmă clubul, doi coechipieri sau SLFF, poți adăuga o poreclă, o fotografie, o descriere și rețelele sociale. Datele oficiale (nume, club, poziție, minute, goluri, preț) nu le poți modifica.',
+    opis: 'Preia-ți profilul de jucător. După ce te confirmă clubul, doi coechipieri sau SLFF, poți adăuga o poreclă, o fotografie, o descriere și rețelele sociale. Datele oficiale (nume, club, poziție, minute, goluri, preț) nu le poți modifica. Trimitem cererea clubului tău, care o confirmă cu un clic într-un e-mail.',
     dokaz: 'Link care arată că ești tu (opțional)',
     dokazPrimer: 'https://… (de ex. profilul tău pe site-ul clubului)',
     star16: 'Confirm că am cel puțin 16 ani.',

@@ -209,7 +209,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     oznaka: 'Mängija profiil',
     gumb: 'See olen mina',
     naslovOkna: 'Kas see oled sina?',
-    opis: 'Võta oma mängijaprofiil üle. Kui klubi, kaks meeskonnakaaslast või SLFF on sind kinnitanud, saad lisada hüüdnime, foto, tutvustuse ja sotsiaalmeedia kontod. Ametlikke andmeid (nimi, klubi, positsioon, minutid, väravad, hind) muuta ei saa.',
+    opis: 'Võta oma mängijaprofiil üle. Kui klubi, kaks meeskonnakaaslast või SLFF on sind kinnitanud, saad lisada hüüdnime, foto, tutvustuse ja sotsiaalmeedia kontod. Ametlikke andmeid (nimi, klubi, positsioon, minutid, väravad, hind) muuta ei saa. Saadame taotluse sinu klubile, kes kinnitab selle e-kirjas ühe klõpsuga.',
     dokaz: 'Link, mis näitab, et see oled sina (valikuline)',
     dokazPrimer: 'https://… (nt sinu profiil klubi lehel)',
     star16: 'Kinnitan, et olen vähemalt 16-aastane.',

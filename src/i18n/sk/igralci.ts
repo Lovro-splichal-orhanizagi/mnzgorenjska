@@ -215,7 +215,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     oznaka: 'Profil hráča',
     gumb: 'To som ja',
     naslovOkna: 'Si to ty?',
-    opis: 'Prevezmi svoj profil hráča. Keď ťa potvrdí klub, dvaja spoluhráči alebo SLFF, môžeš pridať prezývku, fotku, popis a sociálne siete. Oficiálne údaje (meno, klub, pozícia, minúty, góly, cena) meniť nemôžeš.',
+    opis: 'Prevezmi svoj profil hráča. Keď ťa potvrdí klub, dvaja spoluhráči alebo SLFF, môžeš pridať prezývku, fotku, popis a sociálne siete. Oficiálne údaje (meno, klub, pozícia, minúty, góly, cena) meniť nemôžeš. Žiadosť pošleme tvojmu klubu, ktorý ju potvrdí jedným kliknutím v e-maile.',
     dokaz: 'Odkaz, ktorý ukáže, že si to ty (nepovinné)',
     dokazPrimer: 'https://… (napr. tvoj profil na stránke klubu)',
     star16: 'Potvrdzujem, že mám aspoň 16 rokov.',

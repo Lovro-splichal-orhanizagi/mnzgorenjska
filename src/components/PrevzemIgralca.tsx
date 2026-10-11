@@ -359,7 +359,6 @@ function OknoZahtevka({
   naZapri: () => void
   naPoslji: (dokaz: string, star16: boolean) => void
 }) {
-  const [dokaz, setDokaz] = useState('')
   const [star16, setStar16] = useState(false)
   useEffect(() => {
     const ob = (e: KeyboardEvent) => e.key === 'Escape' && naZapri()
@@ -375,23 +374,12 @@ function OknoZahtevka({
         aria-label={t('igralci.prevzem.naslovOkna')}
         onSubmit={(e) => {
           e.preventDefault()
-          naPoslji(dokaz.trim(), star16)
+          naPoslji('', star16)
         }}
         className="relative max-h-[88dvh] w-full space-y-3 overflow-y-auto rounded-t-2xl border-t border-white/15 bg-slate-950 p-4 pb-[calc(1rem+var(--dno))] shadow-2xl sm:max-w-md sm:rounded-2xl sm:border sm:pb-4"
       >
         <h2 className="text-lg font-black">{t('igralci.prevzem.naslovOkna')}</h2>
         <p className="text-sm text-slate-300">{t('igralci.prevzem.opis')}</p>
-        <label className="block space-y-1 text-sm">
-          <span className="text-slate-300">{t('igralci.prevzem.dokaz')}</span>
-          <input
-            type="url"
-            value={dokaz}
-            onChange={(e) => setDokaz(e.target.value)}
-            maxLength={300}
-            placeholder={t('igralci.prevzem.dokazPrimer')}
-            className="w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2"
-          />
-        </label>
         {mladinska && (
           <div className="space-y-1">
             <label className="flex items-start gap-2 text-sm">
