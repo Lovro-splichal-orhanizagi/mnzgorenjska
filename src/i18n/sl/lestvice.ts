@@ -263,13 +263,16 @@ export const lestvice = {
     nazaj: 'Nazaj na lestvico',
     skupaj: 'skupaj {tocke} {beseda}',
     brezKrogov:
-      'V tej ligi se še ni zaključil noben krog. Tuje ekipe se pokažejo, ko mine rok — do takrat jih ne vidi nihče.',
+      'V tej ligi se še ni zaključil noben krog. Postave po krogih se pokažejo, ko mine prvi rok.',
     nalaganjePostave: 'Nalaganje postave …',
     brezPostave: 'Ta ekipa v izbranem krogu ni imela postave.',
     vTemKrogu: '{beseda} v tem krogu',
     kazen: '(−{kazen} za prestope)',
     namestnik: 'Kapetan ni igral, zato je množitelj prevzel namestnik.',
     klop: 'Klop',
+    zasebna: 'Ekipe drugih igralcev niso javne.',
+    zasebnaOpis:
+      'Postavo, kapetana, klop in prestope vidi le lastnik ekipe. Točke in mesto so na lestvici.',
   },
 
   klub: {

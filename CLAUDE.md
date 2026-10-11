@@ -2429,6 +2429,20 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   iz kroga. Vmesnik naj bere in briše pripomočke **s filtrom na sezono**.
 - `fantasy_lineups` → posnetek postave po krogih; nastane s `zakleni_krog(krog)`
   oz. `zakleni_zapadle_kroge()` (za cron). Točkovanje bere posnetek, če obstaja.
+- **Ekipe so zasebne** (migracija 20261012121100): sestavo ekipe (kader,
+  posnetki, kapetan, klop, pripomočki) vidi le lastnik in admin, tudi po roku
+  in tudi pri hišnih ekipah. RLS na `fantasy_roster`, `fantasy_lineups`,
+  `fantasy_chips`; `tuja_postava` vrne vrstice le, če `sme_videti_ekipo(ekipa)`
+  (lastnik, admin, servis). Javno ostane, kar sestave ne izda: lestvice (ime,
+  lastnik, točke, mesto, točke kroga, število prestopov in kazen iz
+  `fantasy_transfers`), mini lige in izbranost. Izbranost (`owners` v
+  `player_standings`, `player_season_standings`) je NULL, dokler ima zadnji
+  zaklenjeni krog lige manj kot **5 človeških ekip** — sicer seštevek izda
+  ekipo. Stran `/team/:id` tujcu pokaže le ime, lastnika, točke in mesto;
+  ime ekipe na lestvicah je povezava le pri svoji ekipi (`ImeEkipe.tsx`).
+  Funkcija ali pogled, ki bere tuje posnetke, mora teči kot lastnik sheme
+  (SECURITY DEFINER / pogled brez `security_invoker`) in sama paziti, kaj
+  vrne.
 - `rounds.lineups_locked_at` → dokončan zajem, tudi za neveljavne/prazne ekipe;
   odsotnost posnetka ni dovoljenje za poznejši zajem. `fantasy_teams.roster_updated_at`
   beleži čas shranjevanja. `shrani_ekipo` pred spremembo zajame zapadle kroge;
@@ -2490,11 +2504,13 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   vhod v izračun **potrebuje svoj sprožilec**, sicer lestvica zaostaja do noči
   (`npm run preizkus-tock-krogov` primerja tabelo z izračunom).
 - `tedenski_pregled_mini_lige(liga, krog)` → zgodbe končanega kroga mini lige
-  (točke kroga, premiki na lestvici mini lige, kapetan, klop, adut) kot jsonb;
+  (točke kroga, premiki na lestvici mini lige, kapetan, klop) kot jsonb;
   besedila sestavi `src/lib/miniLige.ts` (`zgodbeKroga`). Krog je **številka**
   tekoče sezone, ker mini liga gre čez lige; končane kroge ekip da
-  `koncani_krogi_mini_lige`. Obe tečeta s pravicami klicatelja, zato tujec
-  mini lige (RLS na `mini_liga_clani`) dobi `null`
+  `koncani_krogi_mini_lige`. Tujec mini lige (`sem_v_mini_ligi`) dobi `null`.
+  Pregled teče kot lastnik sheme (bere tuje posnetke za točke klopi), a
+  kapetana izbere le med ekipami, ki jih klicatelj sme videti (svojo), aduta
+  ne vrne več (izdal bi, česa tekmeci nimajo); vrstice nosijo `lastnik_id`
 - `player_standings` → lestvica igralcev (točke, forma, na tekmo, izbranost)
 - `statistika_igralcev` → statistika igralca po ligi in sezoni (nastopi,
   minute, goli, kartoni, čiste mreže, točke, asistence, zadnji krog, forma).
@@ -2607,7 +2623,8 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   sistemski lastnik hišnih ekip vrneta NULL. Lestvični pogledi
   (`fantasy_team_standings`, `fantasy_round_standings`, `lestvica_drzavna`,
   `mini_liga_lestvica`) imajo na koncu `owner_id` (pri hišnih NULL), da ime
-  lastnika vodi na profil (`ImeLastnika.tsx`). `isci_klube(iskanje)` je
+  lastnika vodi na profil (`ImeLastnika.tsx`), ime ekipe pa na ekipo le pri
+  svoji (`ImeEkipe.tsx`, ekipe so zasebne). `isci_klube(iskanje)` je
   izbirnik kluba (navijam) čez klube aktivnih lig
 - `izbrisi_moj_racun()` → uporabnik izbriše svoj račun (stran `/account`,
   zahteva obeh trgovin); kaskada odnese profil, ekipe, glasove in mini lige
@@ -3095,6 +3112,12 @@ update competitions set active = true where slug in ('lj-1-liga','lj-2-liga');
 - Mutacijski RPC-ji so servisni. Admin stran kliče `admin_preracunaj_krog`,
   ki izrecno preveri `is_admin()`. Novi javni RPC potrebuje izrecen `grant execute`;
   privzeto funkcije niso več odprte vlogama `anon` in `authenticated`.
+  **Obnova baze na Hetznerju (6. 10. 2026) je to tiho razveljavila**: vse
+  funkcije v public so dobile EXECUTE za anon in authenticated, tudi
+  servisne (`uveljavi_cene`, `izstop_kluba` …), in privzete pravice so spet
+  odpirale vsako novo funkcijo. Migracija 20261012123100 vrne pravice, kot jih
+  ima baza iz migracij. Po vsaki obnovi ali selitvi baze primerjaj
+  `has_function_privilege('anon', …)` produkcije s svežo bazo iz migracij.
 - Migracija `20260913100000` zapre vse že zapadle kroge brez rekonstruiranja
   manjkajočih postav. V produkciji jo namesti po končanem zajemu zapadlih
   krogov in pred naslednjim rokom; nato objavi frontend z novim admin RPC-jem.

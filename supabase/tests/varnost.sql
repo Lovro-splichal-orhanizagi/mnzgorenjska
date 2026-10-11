@@ -167,7 +167,9 @@ reset role;
 
 -- Veljaven kader se mora posneti PRED prvim shranjevanjem po roku, tudi
 -- kadar cron se ni tekel. Naslednji kader je osnutek za prihodnji krog.
-update rounds set deadline_at=clock_timestamp()-interval '1 millisecond' where id=-913002;
+-- Rok tik PO zadnji shrambi: z "- 1 ms" je na hitri bazi padel pred njo in
+-- zakleni_krog je ekipo izpustil kot shranjeno po roku (nestanoviten test).
+update rounds set deadline_at=clock_timestamp() where id=-913002;
 set local role authenticated;
 select shrani_ekipo(-913001,'[]'::jsonb);
 reset role;
@@ -603,10 +605,24 @@ select pg_temp.preveri('pregled: tocke kroga po samodejnih menjavah',
 select pg_temp.preveri('pregled: A je skocil na prvo mesto, B padel',
   (select (j->'vrstice'->0->>'premik')::int = 1 and (j->'vrstice'->1->>'premik')::int = -1
       and (j->'vrstice'->0->>'mesto')::int = 1 from pregled));
-select pg_temp.preveri('pregled: kapetan, klop in adut',
+select pg_temp.preveri('pregled: svoj kapetan in klop, aduta ni (zasebne ekipe)',
   (select (j->'kapetan'->>'igralec_id')::bigint = -914001 and (j->'kapetan'->>'skupaj')::numeric = 30
       and (j->'klop'->>'ekipa_id')::bigint = -914001 and (j->'klop'->>'tocke')::numeric = 7
-      and (j->'adut'->>'igralec_id')::bigint = -914005 from pregled));
+      and j->'adut' = 'null'::jsonb from pregled));
+select pg_temp.preveri('pregled: vrstice nosijo lastnika za povezavo na svojo ekipo',
+  (select (j->'vrstice'->0->>'lastnik_id') = 'b8a06635-2322-4444-8c42-44e419f912ab' from pregled));
+reset role;
+-- B je v isti mini ligi: tujega kapetana z imenom igralca ne vidi, svojega da.
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ac',true);
+set local role authenticated;
+select pg_temp.preveri('pregled: clan mini lige ne vidi tujega kapetana ne igralcev',
+  (select (j->'kapetan'->>'ekipa_id')::bigint = -914002 and (j->'kapetan'->>'igralec_id')::bigint = -914002
+      and j->'adut' = 'null'::jsonb
+      and position('-914001' in coalesce(j->>'kapetan','')) = 0
+     from (select tedenski_pregled_mini_lige(-914001) as j) x));
+reset role;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
 select pg_temp.preveri('pregled: prvi krog nima premikov',
   (select j->'vrstice'->0->'premik' = 'null'::jsonb and (j->'vrstice'->0->>'tocke')::numeric = 18
      from (select tedenski_pregled_mini_lige(-914001, 1) as j) x));
@@ -758,10 +774,10 @@ select pg_temp.preveri('lestvica kroga izpusti odstranjeno ime',
 select pg_temp.preveri('hisne ekipe nimajo posnetka za nazaj',
   not exists (select 1 from fantasy_lineups fl join rounds r on r.id=fl.round_id
                where r.number < 5 and fl.fantasy_team_id in (select id from hisne)));
-select pg_temp.preveri('izbranost steje samo cloveske ekipe',
-  (select owners = (select count(*) from fantasy_lineups where round_id=-913004 and player_id=-913002
-                      and fantasy_team_id not in (select id from hisne))
-     from player_standings where id=-913002 and competition_id=-913001));
+-- Ena sama cloveska ekipa: izbranost bi izdala njen kader, zato je skrita
+-- (prag 5 cloveskih ekip v krogu, 20261012121100). Stetje nad pragom je spodaj.
+select pg_temp.preveri('izbranost je skrita, dokler je v krogu manj kot 5 cloveskih ekip',
+  (select owners is null from player_standings where id=-913002 and competition_id=-913001));
 create temporary table cloveski_posnetki as
   select count(*) as n from fantasy_lineups where round_id=-913004 and fantasy_team_id not in (select id from hisne);
 select pg_temp.preveri('v lestvici lige so hisne ekipe z oznako',
@@ -1664,6 +1680,157 @@ select pg_temp.preveri('uradno: "Spet sem nared" brez posledic',
   and (select opomini = 0 from stanje_uradne_odsotnosti(-913006)));
 reset role;
 select pg_temp.preveri('uradno: zaprta brez tekme ostane brez opomina', preveri_uradne_odsotnosti() = 0);
+-- --- Zasebne ekipe (20261012121100) -----------------------------------------
+-- Sestavo ekipe (posnetki, pripomocki, tuja_postava, ucinkovita postava) vidi
+-- le lastnik in admin. Lestvice, tocke kroga in izbranost (nad pragom) ostanejo
+-- javne. -913001 je ekipa uporabnika ...ab s posnetkom zaklenjenega kroga
+-- -913002 in pripomockom; ...ac je tujec, ...ad admin.
+reset role;
+select set_config('request.jwt.claim.sub','',true);
+select pg_temp.preveri('zasebne: priprava ima posnetek in pripomocek',
+  (select count(*)=15 from fantasy_lineups where round_id=-913002 and fantasy_team_id=-913001)
+  and exists (select 1 from fantasy_chips where fantasy_team_id=-913001)
+  and (select lineups_locked_at is not null from rounds where id=-913002));
+
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
+select pg_temp.preveri('zasebne: lastnik bere svoje posnetke',
+  (select count(*)=15 from fantasy_lineups where round_id=-913002 and fantasy_team_id=-913001));
+select pg_temp.preveri('zasebne: lastnik bere svoje pripomocke',
+  exists (select 1 from fantasy_chips where fantasy_team_id=-913001));
+select pg_temp.preveri('zasebne: lastnik vidi svojo zaklenjeno postavo (tuja_postava)',
+  (select count(*)=15 from tuja_postava(-913001, -913002)));
+select pg_temp.preveri('zasebne: lastnik dobi svojo ucinkovito postavo',
+  exists (select 1 from ucinkovita_postava(-913001, -913002)));
+reset role;
+
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ac',true);
+set local role authenticated;
+select pg_temp.preveri('zasebne: tujec ne bere tujih posnetkov',
+  not exists (select 1 from fantasy_lineups where fantasy_team_id=-913001));
+select pg_temp.preveri('zasebne: tujec ne bere tujih pripomockov',
+  not exists (select 1 from fantasy_chips where fantasy_team_id=-913001));
+select pg_temp.preveri('zasebne: tujec ne bere tujega kadra',
+  not exists (select 1 from fantasy_roster where fantasy_team_id=-913001));
+select pg_temp.preveri('zasebne: tuja_postava tujcu ne vrne nicesar po roku',
+  not exists (select 1 from tuja_postava(-913001, -913002)));
+select pg_temp.preveri('zasebne: ucinkovita_postava in postava_kroga tujcu ne izdata postave',
+  not exists (select 1 from ucinkovita_postava(-913001, -913002))
+  and not exists (select 1 from postava_kroga(-913001, -913002)));
+select pg_temp.zavrnjeno('zasebne: tujec ne klice pomocnika sme_videti_ekipo',
+  $$select sme_videti_ekipo(-913001)$$);
+select pg_temp.preveri('zasebne: tujec vidi tocke in mesto tuje ekipe',
+  exists (select 1 from fantasy_team_standings where fantasy_team_id=-913001)
+  and exists (select 1 from fantasy_round_points where fantasy_team_id=-913001 and round_id=-913002));
+reset role;
+
+select set_config('request.jwt.claim.sub','',true);
+set local role anon;
+select pg_temp.preveri('zasebne: anonimni ne bere posnetkov, pripomockov ne kadra',
+  not exists (select 1 from fantasy_lineups)
+  and not exists (select 1 from fantasy_chips)
+  and not exists (select 1 from fantasy_roster));
+select pg_temp.preveri('zasebne: tuja_postava anonimnemu ne vrne nicesar',
+  not exists (select 1 from tuja_postava(-913001, -913002)));
+select pg_temp.preveri('zasebne: anonimni vidi lestvico in tocke kroga',
+  exists (select 1 from fantasy_team_standings where fantasy_team_id=-913001)
+  and exists (select 1 from fantasy_round_points where fantasy_team_id=-913001 and round_id=-913002));
+select pg_temp.zavrnjeno('zasebne: anonimni ne more brisati hisnih ekip',
+  $$select odstrani_hisne_ekipe(array[]::bigint[])$$);
+select pg_temp.zavrnjeno('zasebne: anonimni ne sprozi preracuna vseh tock',
+  $$select osvezi_vse_tocke_krogov()$$);
+select pg_temp.zavrnjeno('zasebne: anonimni ne klice shrani_ekipo',
+  $$select shrani_ekipo(-913001, '[]'::jsonb)$$);
+reset role;
+
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+select pg_temp.preveri('zasebne: admin vidi tujo postavo in posnetke',
+  (select count(*)=15 from tuja_postava(-913001, -913002))
+  and (select count(*)=15 from fantasy_lineups where round_id=-913002 and fantasy_team_id=-913001)
+  and exists (select 1 from fantasy_chips where fantasy_team_id=-913001));
+reset role;
+select set_config('request.jwt.claim.sub','',true);
+select pg_temp.preveri('zasebne: servis (postgres) vidi postavo',
+  (select count(*)=15 from tuja_postava(-913001, -913002)));
+
+-- Pravice: servisne funkcije ekip niso odprte vlogama anon in authenticated
+-- (na strezniku jih je odprla obnova baze 6. 10. 2026).
+select pg_temp.preveri('zasebne: servisne funkcije ekip niso javne',
+  not exists (
+    select 1 from unnest(array[
+      'public.odstrani_hisne_ekipe(bigint[])', 'public.ustvari_hisno_ekipo(uuid, bigint, text, jsonb)',
+      'public.osvezi_tocke_krogov(bigint[])', 'public.osvezi_vse_tocke_krogov()',
+      'public.zakleni_krog(bigint)', 'public.zakleni_zapadle_kroge(interval)',
+      'public.sme_videti_ekipo(bigint)', 'public.ime_hisnega_lastnika(bigint, bigint)'
+    ]) f
+     where has_function_privilege('anon', f::regprocedure, 'execute')
+        or has_function_privilege('authenticated', f::regprocedure, 'execute')));
+select pg_temp.preveri('zasebne: funkcije prijavljenih niso odprte anonimnim',
+  not exists (
+    select 1 from unnest(array[
+      'public.shrani_ekipo(bigint, jsonb)', 'public.tedenski_pregled_mini_lige(bigint, integer)',
+      'public.koncani_krogi_mini_lige(bigint)', 'public.stanje_mojih_ekip()',
+      'public.razlog_neveljavne_ekipe(bigint)'
+    ]) f
+     where has_function_privilege('anon', f::regprocedure, 'execute'))
+  and has_function_privilege('authenticated', 'public.shrani_ekipo(bigint, jsonb)', 'execute'));
+
+-- Hisna ekipa: ista zasebnost (vidi le admin).
+update profiles set brez_opomnikov=true where id='b8a06635-2322-4444-8c42-44e419f912ae';
+create temporary table hisna_zasebna as
+select ustvari_hisno_ekipo('b8a06635-2322-4444-8c42-44e419f912ae', -913001, 'Hisna zasebna', pg_temp.kader()) as id;
+grant select on hisna_zasebna to anon, authenticated;
+insert into fantasy_lineups(round_id, fantasy_team_id, player_id, is_starter, is_captain, is_vice, bench_order, position)
+select -913002, fr.fantasy_team_id, fr.player_id, fr.is_starter, fr.is_captain, fr.is_vice, fr.bench_order, fr.buy_position
+  from fantasy_roster fr where fr.fantasy_team_id = (select id from hisna_zasebna);
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ac',true);
+set local role authenticated;
+select pg_temp.preveri('zasebne: postava hisne ekipe ni javna',
+  not exists (select 1 from fantasy_lineups where fantasy_team_id=(select id from hisna_zasebna))
+  and not exists (select 1 from tuja_postava((select id from hisna_zasebna), -913002)));
+reset role;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+select pg_temp.preveri('zasebne: admin vidi postavo hisne ekipe',
+  (select count(*)=15 from tuja_postava((select id from hisna_zasebna), -913002)));
+reset role;
+select set_config('request.jwt.claim.sub','',true);
+
+-- Izbranost: seštevek je javen sele od 5 cloveskih ekip v zadnjem
+-- zaklenjenem krogu; hisne se ne stejejo ne v izbranost ne v prag.
+insert into competitions(id, slug, name, short_name, active, country_id, source) overriding system value
+values (-917001, 'test-zasebne', 'Test zasebnih ekip', 'TZE', false, (select id from countries where code='SI'), 'mnzg');
+insert into players(id, team_id, competition_id, first_name, last_name, position,
+                    position_source, value, value_start, active) overriding system value
+values (-917001, -913001, -917001, 'Zasebni', 'Igralec', 'MID', 'admin', 5, 5, true);
+insert into rounds(id,season,number,deadline_at,lineups_locked_at,competition_id) overriding system value
+values (-917001,'2099/00',1,now()-interval '2 days',now()-interval '2 days',-917001);
+insert into auth.users(id,email,raw_user_meta_data,created_at)
+select ('d1a10000-0000-4000-8000-00000000000'||n)::uuid, 'zasebne-'||n||'@example.invalid',
+       jsonb_build_object('display_name','Zasebni '||n), now()-interval '5 days'
+  from generate_series(1,5) n;
+insert into fantasy_teams(id,owner_id,name,competition_id,created_at) overriding system value
+select -917000-n, ('d1a10000-0000-4000-8000-00000000000'||n)::uuid, 'Zasebna '||n, -917001, now()-interval '5 days'
+  from generate_series(1,5) n;
+insert into fantasy_teams(id,owner_id,name,competition_id,created_at,hisna) overriding system value
+values (-917009,'b8a06635-2322-4444-8c42-44e419f912ae','Zasebna hisna',-917001,now()-interval '5 days',true);
+insert into fantasy_lineups(round_id, fantasy_team_id, player_id, is_starter, is_captain, is_vice, bench_order, position)
+select -917001, t, -917001, true, true, false, null, 'MID'
+  from (values (-917001),(-917002),(-917003),(-917004),(-917009)) v(t);
+set local role anon;
+select pg_temp.preveri('zasebne: pri 4 cloveskih ekipah izbranost ni znana',
+  (select owners is null from player_standings where id=-917001));
+reset role;
+insert into fantasy_lineups(round_id, fantasy_team_id, player_id, is_starter, is_captain, is_vice, bench_order, position)
+values (-917001, -917005, -917001, true, true, false, null, 'MID');
+set local role anon;
+select pg_temp.preveri('zasebne: od 5 cloveskih ekip anonimni vidi izbranost (brez hisnih)',
+  (select owners = 5 from player_standings where id=-917001));
+select pg_temp.preveri('zasebne: sezonska izbranost bere isti prag brez napake',
+  (select count(*) >= 0 from player_season_standings where competition_id=-917001));
+reset role;
+
 
 do $$
 declare v_napak int;

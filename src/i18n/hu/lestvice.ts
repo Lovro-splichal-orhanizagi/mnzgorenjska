@@ -252,13 +252,16 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     nazaj: 'Vissza a tabellához',
     skupaj: 'Összesen {tocke} {beseda}',
     brezKrogov:
-      'Ebben a bajnokságban még egy forduló sem zárult le. A többi csapat a határidő lejárta után válik láthatóvá, addig senki sem látja őket.',
+      'Ebben a bajnokságban még egy forduló sem zárult le. A fordulónkénti felállások az első határidő után jelennek meg.',
     nalaganjePostave: 'Felállás betöltése …',
     brezPostave: 'Ennek a csapatnak nem volt felállása a kiválasztott fordulóban.',
     vTemKrogu: '{beseda} ebben a fordulóban',
     kazen: '(−{kazen} az átigazolásokért)',
     namestnik: 'A csapatkapitány nem játszott, ezért a szorzót az alkapitány kapta.',
     klop: 'Kispad',
+    zasebna: 'A többi játékos csapata nem nyilvános.',
+    zasebnaOpis:
+      'A felállást, a kapitányt, a kispadot és az átigazolásokat csak a csapat tulajdonosa látja. A pontok és a helyezés a tabellán vannak.',
   },
 
   klub: {

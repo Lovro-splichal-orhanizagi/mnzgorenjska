@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocation, useSearchParams } from 'react-router-dom'
 import { Link } from '../components/Povezava'
 import ImeLastnika from '../components/ImeLastnika'
+import ImeEkipe from '../components/ImeEkipe'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import { formatirajTocke, mnozina, KROGI } from '../lib/pomozno'
@@ -399,12 +400,14 @@ export default function MiniLige() {
                     )}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <Link
-                      to={`/team/${v.fantasy_team_id}`}
-                      className="block truncate text-sm font-semibold after:absolute after:inset-0 after:content-[''] hover:text-gnl-400"
+                    <ImeEkipe
+                      id={v.fantasy_team_id}
+                      lastnikId={v.owner_id}
+                      className="block truncate text-sm font-semibold"
+                      povezavaRazred="after:absolute after:inset-0 after:content-[''] hover:text-gnl-400"
                     >
                       {v.team_name}
-                    </Link>
+                    </ImeEkipe>
                     <div className="truncate text-xs text-slate-500">
                       <ImeLastnika ime={v.owner_name} id={v.owner_id} />
                       {kaziLigo && v.competition_short ? ` · ${v.competition_short}` : ''}

@@ -254,13 +254,16 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     nazaj: 'Zpět na žebříček',
     skupaj: 'celkem {tocke} {beseda}',
     brezKrogov:
-      'V této lize ještě neskončilo žádné kolo. Cizí týmy se zobrazí po uzávěrce, do té doby je nevidí nikdo.',
+      'V této lize ještě neskončilo žádné kolo. Sestavy podle kol se zobrazí po první uzávěrce.',
     nalaganjePostave: 'Načítá se sestava …',
     brezPostave: 'Tento tým neměl ve vybraném kole sestavu.',
     vTemKrogu: '{beseda} v tomto kole',
     kazen: '(−{kazen} za přestupy)',
     namestnik: 'Kapitán nehrál, proto násobitel převzal zástupce kapitána.',
     klop: 'Lavička',
+    zasebna: 'Týmy ostatních hráčů nejsou veřejné.',
+    zasebnaOpis:
+      'Sestavu, kapitána, lavičku a přestupy vidí jen majitel týmu. Body a umístění jsou v žebříčku.',
   },
 
   klub: {

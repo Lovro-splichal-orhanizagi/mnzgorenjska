@@ -204,7 +204,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     vsiKlubi: 'Toate cluburile',
     vsePozicije: 'Toate pozițiile',
     igralec: 'Jucător',
-    znanoPoRoku: 'Se va ști după primul termen',
+    znanoPoRoku: 'Se va ști după termen, când liga are cel puțin 5 echipe',
     pokaziVec: 'Arată mai mult ({n})',
     prikazaniVsi: 'Sunt afișați toți ({igralci}).',
     razvrsti: 'Sortează',

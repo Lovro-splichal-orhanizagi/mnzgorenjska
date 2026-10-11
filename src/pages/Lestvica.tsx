@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { Link } from '../components/Povezava'
 import ImeLastnika from '../components/ImeLastnika'
+import ImeEkipe from '../components/ImeEkipe'
 import { useAuth } from '../lib/useAuth'
 import Plakat from '../components/Plakat'
 import { najboljsiTrije, type VrsticaIgralca } from '../lib/plakat'
@@ -433,12 +433,14 @@ export default function Lestvica() {
                 {zmagovalecKroga ? (
                   <p className="min-w-0 truncate text-slate-400">
                     {t('lestvice.lestvica.zmagovalecKroga', { krog: krog?.number })}:{' '}
-                    <Link
-                      to={`/team/${zmagovalecKroga.fantasy_team_id}`}
-                      className="font-semibold text-slate-100 hover:text-gnl-300"
+                    <ImeEkipe
+                      id={zmagovalecKroga.fantasy_team_id}
+                      lastnikId={zmagovalecKroga.owner_id}
+                      className="font-semibold text-slate-100"
+                      povezavaRazred="hover:text-gnl-300"
                     >
                       {zmagovalecKroga.team_name}
-                    </Link>{' '}
+                    </ImeEkipe>{' '}
                     · <span className="font-bold tabular-nums text-gnl-300">{formatirajTocke(zmagovalecKroga.points)}</span>
                   </p>
                 ) : (
@@ -476,13 +478,16 @@ export default function Lestvica() {
                       {tocke > 0 ? (MEDALJE[i] ?? i + 1) : '–'}
                     </span>
                     <div className="min-w-0 flex-1">
-                      {/* Povezava z ::after pokrije celo vrstico, da se tapne vsa. */}
-                      <Link
-                        to={`/team/${e.fantasy_team_id}`}
-                        className="block truncate text-sm font-semibold after:absolute after:inset-0 after:content-[''] hover:text-gnl-300"
+                      {/* Sestavo vidi le lastnik: povezavo (z ::after čez
+                          vrstico) ima samo svoja ekipa, tuja je golo ime. */}
+                      <ImeEkipe
+                        id={e.fantasy_team_id}
+                        lastnikId={e.owner_id}
+                        className="block truncate text-sm font-semibold"
+                        povezavaRazred="after:absolute after:inset-0 after:content-[''] hover:text-gnl-300"
                       >
                         {e.team_name}
-                      </Link>
+                      </ImeEkipe>
                       <div className="truncate text-xs text-slate-500">
                         <ImeLastnika ime={e.owner_name} id={e.owner_id} />
                         {(e.team_created_at ?? e.owner_registered_at) && (
@@ -536,12 +541,14 @@ export default function Lestvica() {
                 <span className="w-14 shrink-0 text-xs text-slate-500">
                   {t('lestvice.krog', { n: z.round_number })}
                 </span>
-                <Link
-                  to={`/team/${z.fantasy_team_id}`}
-                  className="min-w-0 flex-1 truncate font-semibold hover:text-gnl-300"
+                <ImeEkipe
+                  id={z.fantasy_team_id}
+                  lastnikId={z.owner_id}
+                  className="min-w-0 flex-1 truncate font-semibold"
+                  povezavaRazred="hover:text-gnl-300"
                 >
                   {z.team_name}
-                </Link>
+                </ImeEkipe>
                 <span className="hidden text-xs text-slate-500 sm:inline">
                   <ImeLastnika ime={z.owner_name} id={z.owner_id} />
                 </span>

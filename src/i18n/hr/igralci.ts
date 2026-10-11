@@ -204,7 +204,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     vsiKlubi: 'Svi klubovi',
     vsePozicije: 'Sve pozicije',
     igralec: 'Igrač',
-    znanoPoRoku: 'Bit će poznato nakon prvog roka',
+    znanoPoRoku: 'Bit će poznato nakon roka, kad liga ima barem 5 momčadi',
     pokaziVec: 'Prikaži više ({n})',
     prikazaniVsi: 'Prikazani su svi ({igralci}).',
     razvrsti: 'Poredaj',

@@ -251,13 +251,16 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     nazaj: 'Tagasi edetabelisse',
     skupaj: 'Kokku {tocke} {beseda}',
     brezKrogov:
-      'Selles liigas pole veel ükski voor lõppenud. Teised meeskonnad on näha pärast tähtaega, enne seda ei näe neid keegi.',
+      'Selles liigas pole veel ükski voor lõppenud. Vooru koosseisud on näha pärast esimest tähtaega.',
     nalaganjePostave: 'Laadin koosseisu …',
     brezPostave: 'Sellel meeskonnal polnud valitud voorus koosseisu.',
     vTemKrogu: '{beseda} selles voorus',
     kazen: '(−{kazen} üleminekute eest)',
     namestnik: 'Kapten ei mänginud, seega võttis kordaja üle asekapten.',
     klop: 'Pink',
+    zasebna: 'Teiste mängijate meeskonnad ei ole avalikud.',
+    zasebnaOpis:
+      'Koosseisu, kaptenit, pinki ja üleminekuid näeb ainult meeskonna omanik. Punktid ja koht on edetabelis.',
   },
 
   klub: {

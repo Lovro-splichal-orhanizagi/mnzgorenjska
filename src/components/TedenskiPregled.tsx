@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from './Povezava'
+import ImeEkipe from './ImeEkipe'
 import { supabase } from '../lib/supabase'
 import { formatirajTocke } from '../lib/pomozno'
 import {
@@ -127,9 +127,14 @@ export default function TedenskiPregled({ ligaId, ime, koda }: { ligaId: number;
                 {pregled.vrstice!.map((v, i) => (
                   <li key={v.ekipa_id} className="flex items-center gap-2">
                     <span className="w-5 text-right text-xs text-slate-500">{i + 1}.</span>
-                    <Link to={`/team/${v.ekipa_id}`} className="min-w-0 flex-1 truncate hover:text-gnl-300">
+                    <ImeEkipe
+                      id={v.ekipa_id}
+                      lastnikId={v.lastnik_id}
+                      className="min-w-0 flex-1 truncate"
+                      povezavaRazred="hover:text-gnl-300"
+                    >
                       {v.ekipa}
-                    </Link>
+                    </ImeEkipe>
                     <span className="font-bold tabular-nums text-gnl-300">{formatirajTocke(v.tocke)}</span>
                   </li>
                 ))}

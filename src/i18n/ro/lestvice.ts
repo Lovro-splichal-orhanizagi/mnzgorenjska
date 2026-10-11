@@ -258,13 +258,16 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     nazaj: 'Înapoi la clasament',
     skupaj: 'total {tocke} {beseda}',
     brezKrogov:
-      'În această ligă nu s-a încheiat încă nicio etapă. Echipele altora apar după termenul limită; până atunci nu le vede nimeni.',
+      'În această ligă nu s-a încheiat încă nicio etapă. Formațiile pe etape apar după primul termen limită.',
     nalaganjePostave: 'Se încarcă echipa de start …',
     brezPostave: 'Această echipă nu a avut echipă de start în etapa aleasă.',
     vTemKrogu: '{beseda} în această etapă',
     kazen: '(−{kazen} pentru transferuri)',
     namestnik: 'Căpitanul nu a jucat, așa că multiplicatorul l-a preluat vicecăpitanul.',
     klop: 'Bancă',
+    zasebna: 'Echipele altor jucători nu sunt publice.',
+    zasebnaOpis:
+      'Formația, căpitanul, banca și transferurile le vede doar proprietarul echipei. Punctele și locul sunt în clasament.',
   },
 
   klub: {

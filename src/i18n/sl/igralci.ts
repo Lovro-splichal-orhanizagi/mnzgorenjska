@@ -205,7 +205,7 @@ export const igralci = {
     vsiKlubi: 'Vsi klubi',
     vsePozicije: 'Vse pozicije',
     igralec: 'Igralec',
-    znanoPoRoku: 'Znano bo po prvem roku',
+    znanoPoRoku: 'Znano po roku, ko ima liga vsaj 5 ekip',
     pokaziVec: 'Pokaži več ({n})',
     prikazaniVsi: 'Prikazani so vsi ({igralci}).',
     razvrsti: 'Razvrsti',

@@ -140,9 +140,8 @@ function SeznamNavijacev({ klub, krog }: { klub: KlubNavijacev; krog: number | n
       {klub.navijaci.map((n) => (
         <li key={n.fantasy_team_id} className="flex items-center gap-2 py-1.5 text-sm">
           <div className="min-w-0 flex-1">
-            <Link to={`/team/${n.fantasy_team_id}`} className="block truncate font-semibold hover:text-gnl-400">
-              {n.ekipa}
-            </Link>
+            {/* Sestava ekipe je zasebna (le lastnik), zato ime ni povezava. */}
+            <span className="block truncate font-semibold">{n.ekipa}</span>
             <div className="truncate text-xs text-slate-500">{n.lastnik}</div>
           </div>
           {krog != null && (
