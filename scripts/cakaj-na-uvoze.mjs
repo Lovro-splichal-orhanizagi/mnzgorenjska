@@ -44,7 +44,9 @@ const NAJVEC_MIN = Number(arg('--najvec') ?? 120)
 // Srbija: regionalne zveze (FSV, FSRZS, FSRIS, FS Beograd) so ločene piramide,
 // državna je FSS (Superliga, Prva liga); vse fssid lige bere fss.rs, zato koliko
 // jih teče hkrati omeji veriga, ki jih zažene (dve naenkrat, 2 s premora vsaka).
-const LOCENE_ZVEZE = { AT: 'oefb', RO: 'frf', RS: 'fss' }
+// Madžarska: vármegye zveze (BLSZ in 19 županij) so ločene piramide, državna
+// je MLSZ (NB I–III). Vse bere isti Adatbank, zato hkratnost omeji veriga.
+const LOCENE_ZVEZE = { AT: 'oefb', RO: 'frf', RS: 'fss', HU: 'mlsz' }
 // Države, katerih lige bere eno samo spletišče s skupnim proračunom branja
 // (jalgpall.ee: robots.txt Crawl-Delay 5 s za vse nas skupaj). Dva zagona iste
 // države bi brala hkrati in skupaj prehitro, zato se tu križa VSAK zagon iste
