@@ -105,6 +105,16 @@ export function stanjeStrani(html) {
 const IME_DRZAVNE = {
   'TRAJAL (Kruševac)': 'TRAJAL',
   'TEKSTILAC (Odžaci)': 'TEKSTILAC',
+  // Omladinske lige (U19, 11. 10. 2026): mladinske ekipe klubov Superlige in
+  // Prve lige (v bazi z imenom vira `fss`, brez kraja).
+  'BORAC 1926 (Čačak)': 'BORAC 1926',
+  'JAVOR MATIS (Ivanjica)': 'JAVOR MATIS',
+  'LOZNICA (Loznica)': 'LOZNICA',
+  'METALAC (Gornji Milanovac)': 'METALAC',
+  'OFK VRŠAC (Vršac)': 'OFK VRŠAC',
+  'PROLETER 023 (Zrenjanin)': 'PROLETER 023',
+  'RADNIČKI 1923 (Kragujevac)': 'RADNIČKI 1923',
+  'ŽELEZNIČAR (Pančevo)': 'ŽELEZNIČAR',
 }
 
 // Isto ime, drug klub: COMET v nižjih ligah piše ime brez kraja ("MLADOST",
