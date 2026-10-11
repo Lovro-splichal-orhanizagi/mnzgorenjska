@@ -2686,7 +2686,9 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   prejšnja povezava zahtevka poteče), naslov je vpisani ali prvi uporaben iz
   `klub_stik` (nov naslov gre v stike, mail v `klub_stik_posta`). Mail in stran
   `/claim` pokažeta ime **in e-naslov prosilca** (to piše v oknu "To sem jaz");
-  samodejnega pošiljanja klubom ni. Preizkus brez kluba: servis
+  samodejnega pošiljanja klubom ni. Nov zahtevek in prijava lažnega profila
+  gresta takoj na Discord (sprožilec `trg_prevzem_na_discord`, webhook iz Vaulta,
+  brez e-naslova). Preizkus brez kluba: servis
   `{"test_zahtevek", "test_na"}`. Zahtevek za že potrjenega ali čakajočega igralca je `spor`
   (odloči le admin). Mladinska liga (`je_mladinski_slug`: `mladinci`, `-u19`,
   `sml1/2`; isto v `src/lib/prevzem.ts`) zahteva potrdilo "vsaj 16 let"
