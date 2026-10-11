@@ -1293,7 +1293,7 @@ seznam v vrstnem redu je v PR.
 
 Le **najstarejša mladinska kategorija** (omladinci, U19); kadeti (U17),
 pioniri (U15), petlići in "Liga mlađih omladinaca Beograda" (U18) niso
-vpisani. Migracija 20261012011100, devet lig, **neaktivnih**,
+vpisani. Migracija 20261012055100, devet lig, **neaktivnih**,
 `prvi_fantasy_krog = 2`, `rok_pomak_ur = 2` (tekme dopoldne, kot slovenske
 in slovaške U19). Mladinske ekipe so isti klubi kot člani (klub skupen,
 igralec svoja vrstica po ligi).
