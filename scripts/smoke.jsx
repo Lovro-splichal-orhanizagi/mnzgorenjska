@@ -4249,6 +4249,63 @@ preveri(
   preveri('fss: prazna predloga je null', F.vZapisnik('<html><div class="fss-rez__title"></div></html>') === null && F.tekmeStrani('<html></html>').length === 0)
 }
 
+// --- vir ffm (Severna Makedonija, ffm.mk; predloga kot fss.rs s predpono ffm-) ---
+{
+  const F = await import('./viri/ffm.mjs')
+  const { default: viri } = await import('./viri/index.mjs')
+  const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  preveri('ffm: vir je vpisan', viri.ffm === F.default && F.default.drzava === 'MK' && F.default.imaRegistracije === false &&
+    F.default.premorMs >= 2000 && F.default.glave['User-Agent'] === 'SLFF fantasy (https://slff.eu)')
+  preveri('ffm: naslovi in šifra zapisnika mk<id>', F.default.naslovRazporeda('region-1-sezona-26-27') === 'https://www.ffm.mk/natprevaruvanje/region-1-sezona-26-27/' &&
+    F.sifraZapisnika('12066450') === 'mk12066450' && F.sifraZapisnika('mk12066450') === 'mk12066450' &&
+    F.default.naslovZapisnika('x', 'mk12066450') === 'https://www.ffm.mk/izvestaj/12066450/')
+  preveri('ffm: 00:00 je neznana ura', F.datumUra('18.10.2026 00:00').ura === null && F.datumUra('18.10.2026 00:00').datum === '2026-10-18' &&
+    F.datumUra('13.09.2026. 16:00').ura === '16:00')
+  preveri('ffm: ključ in kratko ime kluba (cirilica, velike/male črke)', F.kljucKlubaMk('ФК КУЛ-ЗДРАВЈЕ') === F.kljucKlubaMk('ФК Кул-Здравје') &&
+    F.kljucKlubaMk('ФК РЕЧИЦА') !== F.kljucKlubaMk('ФК РЕЧИЦА с.Речица') && F.kratkoImeMk('ФК Студеничан') === 'Студеничан' &&
+    F.kratkoImeMk('ЗГ ФК КУМАНОВО') === 'ЗГ ФК КУМАНОВО')
+
+  const stran = beri('mk-ffm-liga-region-1-2026-27.html')
+  const t = F.tekmeStrani(stran)
+  const poKrogu = new Map()
+  for (const x of t) poKrogu.set(x.krog, (poKrogu.get(x.krog) ?? 0) + 1)
+  // Prva harmonika ponovi tekoči krog: brati se sme le enkrat (11 krogov po 6).
+  preveri('ffm: stran lige — 11 krogov po 6, 12 klubov, tekoči krog ni podvojen', poKrogu.size === 11 && [...poKrogu.values()].every((n) => n === 6) &&
+    new Set(t.flatMap((x) => [x.domaci, x.gostje])).size === 12)
+  const n1 = t.find((x) => x.id === '12066450')
+  preveri('ffm: tekma s strani lige (cirilica, izid, polčas)', n1?.krog === 1 && n1.datum === '2026-09-13' && n1.ura === '16:00' &&
+    n1.domaci === 'ФК Студеничан' && n1.gostje === 'ФК КУЛ-ЗДРАВЈЕ' && n1.izid?.domaci === 5 && n1.izid?.gostje === 3 && n1.polcas?.gostje === 2)
+  preveri('ffm: nerazpisane tekme (00:00) imajo datum brez ure, napoved ni zapisnik', t.filter((x) => !x.ura).length === 36 &&
+    t.filter((x) => !x.ura).every((x) => x.datum && !x.id) && t.filter((x) => x.najava).length === 40)
+  const razpored = F.razcleniRazpored([], stran)
+  preveri('ffm: razpored — 11 krogov, 26 odigranih, brez kontumacij', razpored.length === 11 &&
+    razpored.flatMap((k) => k.tekme).filter((x) => x.odigrana).length === 26 && !razpored.flatMap((k) => k.tekme).some((x) => x.kontumacija))
+
+  const z = F.vZapisnik(beri('mk-ffm-izvestaj-12066450-avtogol-rdeci.html'), { id: 'mk12066450' })
+  const n = F.nastopi(z)
+  const minute = (nn, i) => nn.filter((x) => x.ekipaIdx === i).reduce((a, x) => a + x.minute, 0)
+  preveri('ffm: zapisnik — 11 + 11, izid, polčas, krog, latinica, brez opozoril', z.domaci.postava.length === 11 && z.gostje.postava.length === 11 &&
+    z.rezultat.domaci === 5 && z.rezultat.gostje === 3 && z.polcas?.domaci === 1 && z.krog === 1 && z.datum === '2026-09-13' &&
+    z.domaci.postava[0].ime === 'Limaj Fadil' && z.opozorila.length === 0)
+  preveri('ffm: avtogol šteje nasprotniku (5:3)', z.goli.filter((g) => g.avtogol).length === 1 && z.goli.length === 8)
+  preveri('ffm: rdeči v 52. — 990 in 952 minut, 8 s klopi', minute(n, 0) === 990 && minute(n, 1) === 952 && n.filter((x) => !x.zacetnik).length === 8)
+  preveri('ffm: vratar je prvi začetnik (namig)', n.filter((x) => x.vratar).map((x) => x.st).join() === '1,12' &&
+    n.filter((x) => x.vratar).every((x) => x.zacetnik && x.pozicija === 'GK'))
+  const z2 = F.vZapisnik(beri('mk-ffm-izvestaj-11909690-drugi-rumeni.html'))
+  const rama = F.nastopi(z2).find((x) => x.ime === 'Rama Landrit')
+  preveri('ffm: drugi rumeni je izključitev, prvi rumeni ostane', z2.rdeci.length === 1 && rama?.rdeci === 1 && rama.rumeni === 1 && z2.opozorila.length === 0)
+  const z3 = F.vZapisnik(beri('mk-ffm-izvestaj-11909684-enajstmetrovka.html'))
+  preveri('ffm: enajstmetrovka', z3.goli.filter((g) => g.enajstmetrovka).length === 1 && z3.rezultat.domaci === 3 && z3.opozorila.length === 0)
+  // Napaka vira: gol vpisan dvema igralcema v isti minuti (izid 7:0, dogodkov 11).
+  const z4 = F.vZapisnik(beri('mk-ffm-izvestaj-11937009-podvojeni-goli.html'))
+  preveri('ffm: podvojeni goli vira dajo opozorilo, izid ostane', z4.rezultat.domaci === 7 && z4.opozorila.some((o) => o.startsWith('goli iz dogodkov (11:0)')))
+  preveri('ffm: kontumacija — zapisnik s postavama brez dogodkov in polčasa je null, izid brez polčasa na strani je kontumacija',
+    F.vZapisnik(beri('mk-ffm-izvestaj-12065013-kontumacija.html')) === null &&
+    F.jeKontumacija({ id: '12065013', izid: { domaci: 0, gostje: 3 }, polcas: null }) && !F.jeKontumacija(n1) && F.jeKontumacija({ id: null, izid: { domaci: 3, gostje: 0 }, polcas: null }))
+  preveri('ffm: prazna predloga je null',F.vZapisnik('<html><div class="ffm-match-header"></div></html>') === null && F.tekmeStrani('<html></html>').length === 0 &&
+    !F.jeStranLige('<html>404</html>'))
+}
+
 // --- soimenjak pri drugem klubu ni prestop (Petrović Lazar, fssid 10/2026) -------
 {
   const { prestopSkladen, trk, imataTrk } = await import('./prestop.mjs')
