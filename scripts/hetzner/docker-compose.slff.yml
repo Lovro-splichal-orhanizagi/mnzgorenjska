@@ -1,11 +1,27 @@
-# SLFF: only what the app uses (no storage, realtime, studio, pooler, imgproxy).
+# SLFF: only what the app uses (no realtime, studio, pooler, imgproxy).
 # Studio on demand: docker compose --profile off up -d studio meta (+ ssh tunnel to 8000).
 services:
   studio:    { profiles: ["off"] }
   realtime:  { profiles: ["off"] }
-  storage:   { profiles: ["off"] }
   imgproxy:  { profiles: ["off"] }
   supavisor: { profiles: ["off"] }
+  # Player photos (bucket fotografije-igralcev, docs/hetzner-shramba.md). Files on disk in
+  # ./volumes/storage (backed up by varnostna.sh), rows in storage.*; the env comes from
+  # the base file (JWT secret/JWKS, keys, DATABASE_URL as supabase_storage_admin).
+  # No imgproxy: the browser already makes the 256 and 64 px WebP, no transforms needed.
+  storage:
+    image: supabase/storage-api:v1.74.0  # same as the base file of this stack (versions.md 2026-09-09)
+    mem_limit: 384m  # ~110 MB idle; the 4 GB VM has ~1.2 GB free
+    depends_on: !override
+      db:
+        condition: service_healthy
+      rest:
+        condition: service_started
+    environment:
+      ENABLE_IMAGE_TRANSFORMATION: "false"
+      IMGPROXY_URL: ""
+      # Global ceiling; the bucket itself allows 2 MB (prevzem_pripravi_shrambo).
+      FILE_SIZE_LIMIT: 5242880
   auth:
     image: supabase/gotrue:v2.197.0  # >= Supabase Cloud, or the auth dump does not fit
     extra_hosts:

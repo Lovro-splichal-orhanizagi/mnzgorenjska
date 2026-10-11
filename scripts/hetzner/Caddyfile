@@ -146,7 +146,11 @@ slff.eu {
 	@supabase_api path /rest/v1/* /auth/v1/* /storage/v1/* /functions/v1/* /realtime/v1/*
 	handle @supabase_api {
 		# Answers are per user: never the site default "public" from the header block above.
-		header Cache-Control "private, no-store"
+		# Except public player photos (/storage/v1/object/public/…): Storage sends the
+		# upload's Cache-Control (a year; names are random and never reused), so browsers
+		# and Cloudflare keep them (docs/hetzner-shramba.md).
+		@ni_javna_datoteka not path /storage/v1/object/public/*
+		header @ni_javna_datoteka Cache-Control "private, no-store"
 		reverse_proxy localhost:8000 {
 			header_up X-Forwarded-For {http.request.header.CF-Connecting-IP}
 			# Kong echoes the origin; the site block already sends Access-Control-Allow-Origin *,
