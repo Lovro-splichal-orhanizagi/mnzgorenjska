@@ -2016,8 +2016,8 @@ goli dogodkov / izidi, postav po 11):
 | treta-liga-ug-24-25 | 138/139 | 536/536 | 269/276 | |
 | opshtinska-…-skop-e-24-25 | 44/44 | 192/192 | 86/88 | |
 | opshtinska-…-kumanovo-24-25 | 75/75 | 355/355 | 147/150 | |
-| treta-liga-ugozapad-24-25 | UGOZAPAD |
-| treta-liga-zapad-24-25 | ZAPAD |
+| treta-liga-ugozapad-24-25 | 119/119 | 452/446 | 237/238 | 2 s podvojenimi goli |
+| treta-liga-zapad-24-25 | 148/148 | 664/656 | 290/296 | 5 s podvojenimi goli |
 | mladinska-super-liga-25-26 | **ni preštet** — preštej pred uvozom |
 
 Prvi začetnik ima dres 1 ali 12 v 70–90 % postav, sicer vratarske številke
