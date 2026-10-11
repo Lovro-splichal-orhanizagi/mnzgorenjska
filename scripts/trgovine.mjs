@@ -167,7 +167,8 @@ async function namestitveAndroid() {
   if (seznam.status === 404) throw new Error(`vedro ${env.PLAY_BUCKET} ne obstaja (preveri PLAY_BUCKET: Play Console → Download reports → Statistics → Copy Cloud Storage URI)`)
   // Dovoljenje se pri Googlu razširi do 24 ur, zato 403 le opozori in zagona ne podre.
   if (seznam.status === 403 || seznam.status === 401) {
-    console.log(`::warning::Google Play: ni dostopa do vedra ${env.PLAY_BUCKET} (${seznam.status}). Servisni račun potrebuje "View app information and download bulk reports" (Play Console → Users and permissions); po dodelitvi lahko traja do 24 ur.`)
+    const zakaj = (await seznam.text()).replace(/\s+/g, ' ').slice(0, 300)
+    console.log(`::warning::Google Play: ni dostopa do vedra ${env.PLAY_BUCKET} (${seznam.status}: ${zakaj}). Servisni račun potrebuje "View app information and download bulk reports" (Play Console → Users and permissions); po dodelitvi lahko traja do 24 ur.`)
     return
   }
   if (!seznam.ok) throw new Error(`seznam vedra: ${seznam.status} ${(await seznam.text()).slice(0, 300)}`)
