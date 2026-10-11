@@ -2635,6 +2635,32 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   šele po uspešni posodobitvi. `imeHash`/`regHash` v
   `scripts/anonimizacija.mjs` morata ostati enaka SQL
   `anonimizacijski_kljuc` (smoke in `test:varnost`)
+- **Prevzem profila igralca** ("To sem jaz", migracija 20261012063100):
+  `zahtevki_igralca` (en potrjen na igralca IN na uporabnika, en odprt na
+  uporabnika; delna unikatna kazala), piše le prek RPC `prevzemi_igralca`,
+  `preklici_moj_zahtevek`, `odloci_zahtevek_klub`, `potrdi_soigralca`,
+  `prevzem_odloci_z_zetonom`, `admin_odloci_zahtevek`. Potrdi: **poznavalec
+  kluba** (`insider_team_id` + odobrena `poznavalec_prosnje` `klub` za ta klub
+  in ligo, ali `insider_competition_id` lige; sam nastavljen klub ne šteje),
+  **dva različna potrjena soigralca** istega kluba in lige, **klub po mailu**
+  (enkraten žeton, 14 dni, v bazi le sha256; funkcija `posli-prevzem`, urnika
+  še ni) ali **admin** (Administracija → Prevzemi profilov: čakajoči > 7 dni,
+  spori, prijave). Zahtevek za že potrjenega ali čakajočega igralca je `spor`
+  (odloči le admin). Mladinska liga (`je_mladinski_slug`: `mladinci`, `-u19`,
+  `sml1/2`; isto v `src/lib/prevzem.ts`) zahteva potrdilo "vsaj 16 let"
+  (`star_vsaj_16`), datuma rojstva ne zbiramo. **Ista oseba v več vrsticah**
+  (člani in mladinci, druga liga, prestop) je ena: admin poveže vrstice v
+  `povezani_igralci` (predlogi `admin_predlogi_povezav`: isto ime brez šumnikov
+  ali šifra v državi), povezane kažejo isto značko in predstavitev.
+  `profil_igralca` (ključ je glavna vrstica): vzdevek, opis, uporabniška imena
+  omrežij, `fotografija` (pot v vedru `fotografije-igralcev`,
+  `<igralec>/<ime>.webp` 256 px in `-64.webp`; izrez in pomanjšava v
+  brskalniku). Fotografije na seznamih bere pogled `fotografije_igralcev` v
+  enem zahtevku na stran (`useFotografije`, `FotoIgralca`, `Dres igralecId`).
+  `skrij_moje_ime()` je samopostrežni ugovor (`anonimiziraj_igralca`, dokončen);
+  anonimizacija vedno pobriše predstavitev. **Strežnik nima storitve Storage**:
+  vedro in pravila ustvari `prevzem_pripravi_shrambo()` šele, ko shema
+  `storage` obstaja (lokalno da, na strežniku ne) — po vklopu Storage jo pokliči.
 - `povzetek_rasti()` → ena vrstica številk (uporabniki, novi v 7 dneh, ekipe,
   aktivne lige, namestitve) pod vsakim poročilom na Discord (mejnik uporabnikov,
   `scripts/trgovine.mjs`). Le servis

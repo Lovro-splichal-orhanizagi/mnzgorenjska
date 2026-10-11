@@ -2,6 +2,7 @@
 // s točkami ob rezultatu tekme, zato živi v svoji datoteki.
 
 import type { Pozicija } from '../lib/tipi'
+import { naslovFotografije, useFotografija } from '../lib/prevzem'
 
 const BARVA_DRESA: Record<Pozicija, { dres: string; rokav: string }> = {
   GK: { dres: '#fbbf24', rokav: '#d97706' },
@@ -10,18 +11,40 @@ const BARVA_DRESA: Record<Pozicija, { dres: string; rokav: string }> = {
   FWD: { dres: '#fb7185', rokav: '#e11d48' },
 }
 
+/**
+ * Z `igralecId` potrjen igralec s fotografijo dobi okroglo fotografijo z
+ * robom v barvi pozicije (ista velikost kot dres); ostali dres. Fotografije
+ * vseh dresov na strani pridejo v enem zahtevku (`useFotografije`).
+ */
 export default function Dres({
   pozicija,
   razred = 'h-7 w-8 sm:h-9 sm:w-10',
+  igralecId,
 }: {
   pozicija?: Pozicija | null
   razred?: string
+  igralecId?: number | string | null
 }) {
   const barva =
     (pozicija ? BARVA_DRESA[pozicija] : undefined) ?? {
       dres: '#94a3b8',
       rokav: '#475569',
     }
+  const n = igralecId == null || igralecId === '' ? null : Number(igralecId)
+  const src = naslovFotografije(useFotografija(Number.isFinite(n) ? n : null), true)
+  if (src)
+    return (
+      <span className={`grid place-items-center ${razred}`} aria-hidden="true">
+        <img
+          src={src}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          className="aspect-square h-full rounded-full border-2 object-cover drop-shadow"
+          style={{ borderColor: barva.dres }}
+        />
+      </span>
+    )
   return (
     <svg
       viewBox="0 0 48 44"

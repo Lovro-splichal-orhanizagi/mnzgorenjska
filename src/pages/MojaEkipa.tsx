@@ -45,6 +45,7 @@ import Plakat from '../components/Plakat'
 import ZgodbaKroga from '../components/ZgodbaKroga'
 import { najboljsiTrije, type VrsticaIgralca } from '../lib/plakat'
 import Grb from '../components/Grb'
+import FotoIgralca from '../components/FotoIgralca'
 import Odstevanje from '../components/Odstevanje'
 import EnajstericaNaIgriscu from '../components/EnajstericaNaIgriscu'
 import InfoIgralca from '../components/InfoIgralca'
@@ -2580,11 +2581,10 @@ function TrgIgralcev({
               } ${razlog ? 'opacity-70' : ''}`}
             >
               <div className="flex items-center gap-2">
-                <Grb
-                  ime={i.team_name}
-                  kratko={i.team_short}
-                  logo={i.team_logo}
-                  velikost={22}
+                <FotoIgralca
+                  id={Number(i.id)}
+                  velikost={24}
+                  nadomestek={<Grb ime={i.team_name} kratko={i.team_short} logo={i.team_logo} velikost={22} />}
                 />
                 <span className={`znacka shrink-0 ${razredPozicije(i.position)}`}>
                   {(i.position && KRATKA_POZICIJA[i.position]) ?? '?'}

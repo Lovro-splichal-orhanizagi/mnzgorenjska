@@ -30,7 +30,7 @@ function KarticaIgralca({ igralec }: { igralec: IgralecEnajsterice }) {
       className="group relative w-[3.6rem] text-center transition sm:w-[5rem]"
     >
       <div className="relative flex justify-center">
-        <Dres pozicija={igralec.position} razred="h-8 w-9 sm:h-10 sm:w-11" />
+        <Dres pozicija={igralec.position} razred="h-8 w-9 sm:h-10 sm:w-11" igralecId={igralec.player_id ?? igralec.id} />
         {igralec.oznaka && (
           <span
             title={

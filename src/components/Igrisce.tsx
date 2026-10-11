@@ -73,7 +73,7 @@ function KarticaIgralca({
         }`}
         className="flex w-full justify-center pb-0.5 transition duration-150 active:scale-95 sm:hover:-translate-y-0.5"
       >
-        <Dres pozicija={igralec.position} razred="h-7 w-8 sm:h-9 sm:w-10" />
+        <Dres pozicija={igralec.position} razred="h-7 w-8 sm:h-9 sm:w-10" igralecId={igralec.id} />
       </button>
       <button
         onClick={naInfo ?? naKlik}

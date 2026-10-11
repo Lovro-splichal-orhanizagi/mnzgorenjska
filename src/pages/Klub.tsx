@@ -26,6 +26,9 @@ import { najboljsiTrije, navijacev, ligaVTozilniku } from '../lib/plakat'
 import { NavijaciKluba } from '../components/NavijaciKlubov'
 import { izvor } from '../lib/platforma'
 import { NalaganjeZaBralnik, Skelet } from '../components/Skelet'
+import FotoIgralca from '../components/FotoIgralca'
+import ZahtevkiKluba from '../components/ZahtevkiKluba'
+import { useFotografije } from '../lib/prevzem'
 
 interface Igralec {
   id: number
@@ -148,6 +151,7 @@ export default function Klub() {
     () => igralci.reduce((v, i) => v + Number(i.owners ?? 0), 0),
     [igralci],
   )
+  const fotografije = useFotografije(igralci.map((i) => i.id))
   const poPoziciji = useMemo(() => {
     const m = new Map<string, Igralec[]>()
     for (const i of igralci) {
@@ -239,6 +243,7 @@ export default function Klub() {
             <ul className="kartica divide-y divide-white/10 overflow-hidden">
               {seznam.map((i) => (
                 <li key={i.id} className="flex min-h-12 items-center gap-2 px-3 py-2 text-sm">
+                  <FotoIgralca pot={fotografije.get(i.id) ?? null} velikost={28} />
                   {/* Na telefonu gre statistika pod ime — v isti vrstici je
                       ime ostalo pri treh črkah ("Joz…"). */}
                   <div className="flex min-w-0 flex-1 flex-col sm:flex-row sm:items-center sm:gap-2">
@@ -263,6 +268,8 @@ export default function Klub() {
         ))
       )}
 
+
+      {id && <ZahtevkiKluba klubId={Number(id)} />}
 
       {ligaId != null && id && (
         <NavijaciKluba

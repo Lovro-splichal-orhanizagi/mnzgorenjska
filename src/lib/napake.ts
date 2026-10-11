@@ -14,6 +14,13 @@ const ZNANE: [RegExp, Parameters<typeof t>[0]][] = [
   [/^Tvoja prosnja za to ligo ze caka/, 'skupno.napakeRpc.prosnjaCaka'],
   [/^Prošnja za to ligo je bila nedavno zavrnjena/, 'skupno.napakeRpc.prosnjaZavrnjena'],
   [/^Izbrani klub ne igra v tej ligi/, 'skupno.napakeRpc.klubNeIgra'],
+  [/^Že imaš potrjen profil igralca/, 'igralci.prevzem.napake.zePotrjen'],
+  [/^Tvoj zahtevek že čaka/, 'igralci.prevzem.napake.zeCaka'],
+  [/^Ime tega igralca je skrito/, 'igralci.prevzem.napake.skrito'],
+  [/^Preveč zahtevkov/, 'igralci.prevzem.napake.prevec'],
+  [/^V mladinski ligi moraš potrditi/, 'igralci.prevzem.napake.star16'],
+  [/^Dokaz mora biti povezava/, 'igralci.prevzem.napake.dokaz'],
+  [/^Ta profil si že prijavil/, 'igralci.prevzem.napake.zePrijavil'],
 ]
 
 export function prevediNapako(sporocilo: string): string {

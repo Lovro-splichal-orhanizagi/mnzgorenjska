@@ -82,7 +82,7 @@ function Kartica({
                   }`}
     >
       <div className="flex justify-center">
-        <Dres pozicija={nastop.position} razred="h-7 w-8 lg:h-9 lg:w-10" />
+        <Dres pozicija={nastop.position} razred="h-7 w-8 lg:h-9 lg:w-10" igralecId={nastop.player_id} />
       </div>
       <div className="mt-0.5 truncate rounded-t-md bg-slate-900/90 px-1 py-0.5 text-[10px] font-semibold leading-tight lg:text-[11px]">
         {prikazniIme(nastop.full_name).split(' ').slice(-1)[0]}

@@ -1239,6 +1239,282 @@ select pg_temp.preveri('profil: admin popravi tuje ime brez pravil',
   (select display_name='Ab' from profiles where id='b8a06635-2322-4444-8c42-44e419f912ac'));
 reset role;
 select set_config('request.jwt.claim.sub','',true);
+-- ---------------------------------------------------------------------------
+-- Prevzem profila igralca ("To sem jaz"), migracija 20261012063100.
+-- ---------------------------------------------------------------------------
+reset role;
+create function pg_temp.napaka(p_opis text, p_sql text) returns void
+language plpgsql as $$
+declare v_napaka boolean := false;
+begin
+  begin
+    execute p_sql;
+    raise exception using errcode = 'P9998', message = 'Ni napake';
+  exception
+    when sqlstate 'P9998' then null;
+    when others then v_napaka := true;
+  end;
+  perform pg_temp.preveri(p_opis, v_napaka);
+end;
+$$;
+grant execute on function pg_temp.napaka(text, text) to anon, authenticated;
+
+-- Uporabniki: A = ...ab (prosilec), T = ...ac (tujec), admin = ...ad,
+-- S1, S2 potrjena soigralca, P poznavalec (odobren), M drugi prosilec.
+insert into auth.users(id,email,raw_user_meta_data,created_at) values
+ ('c1a10000-0000-4000-8000-000000000001','prevzem-s1@example.invalid','{"display_name":"S1"}',now()),
+ ('c1a10000-0000-4000-8000-000000000002','prevzem-s2@example.invalid','{"display_name":"S2"}',now()),
+ ('c1a10000-0000-4000-8000-000000000003','prevzem-p@example.invalid','{"display_name":"P"}',now()),
+ ('c1a10000-0000-4000-8000-000000000004','prevzem-m@example.invalid','{"display_name":"M"}',now()),
+ ('c1a10000-0000-4000-8000-000000000005','prevzem-k@example.invalid','{"display_name":"K"}',now());
+insert into competitions(id, slug, name, short_name, active, country_id, source) overriding system value
+values (-919009, 'test-varnost-u19', 'Test U19', 'TU19', false, (select id from countries where code='SI'), 'mnzg');
+insert into players(id, team_id, competition_id, first_name, last_name, full_name, position, position_source, value, value_start, active) overriding system value
+values (-919016, -913001, -913001, 'Test', '16', 'Prevzem Šestnajst', 'MID', 'admin', 6, 6, true),
+       (-919017, -913001, -919009, 'Test', '17', 'Prevzem Mladinec', 'MID', 'admin', 6, 6, true),
+       (-919018, -913002, -913002, 'Test', '18', 'prevzem sestnajst', 'MID', 'admin', 6, 6, true);
+-- S1 in S2 sta že potrjena igralca istega kluba in lige kot -913001.
+insert into zahtevki_igralca(player_id, user_id, status, potrdil, decided_at) values
+ (-913006, 'c1a10000-0000-4000-8000-000000000001', 'potrjen', 'admin', now()),
+ (-913011, 'c1a10000-0000-4000-8000-000000000002', 'potrjen', 'admin', now());
+-- Zgornji testi so A in T naredili za poznavalca lige; tu ne smeta biti.
+update profiles set insider_competition_id = null
+ where id in ('b8a06635-2322-4444-8c42-44e419f912ab', 'b8a06635-2322-4444-8c42-44e419f912ac');
+-- P je odobren poznavalec kluba -913001 v ligi -913001.
+update profiles set insider_team_id = -913001 where id = 'c1a10000-0000-4000-8000-000000000003';
+insert into poznavalec_prosnje(user_id, competition_id, team_id, vloga, status)
+values ('c1a10000-0000-4000-8000-000000000003', -913001, -913001, 'trener', 'klub');
+
+select pg_temp.preveri('prevzem: mladinske lige po šifri',
+  je_mladinski_slug('mladinci') and je_mladinski_slug('lj-mladinci-2') and je_mladinski_slug('mb-u19')
+  and je_mladinski_slug('sml2-vzhod') and je_mladinski_slug('hu-bk-u19-del') and je_mladinski_slug('rs-u19-srbija')
+  and not je_mladinski_slug('clani') and not je_mladinski_slug('lj-1-liga') and not je_mladinski_slug('snl3-vzhod')
+  and not je_mladinski_slug('hu-u190'));
+
+-- A odda zahtevek za -913001.
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
+select pg_temp.preveri('prevzem: prijavljen odda zahtevek', prevzemi_igralca(-913001, 'https://example.org/klub') is not null);
+select pg_temp.napaka('prevzem: le en odprt zahtevek na uporabnika', $$select prevzemi_igralca(-913002)$$);
+select pg_temp.preveri('prevzem: prosilec vidi svoj čakajoči zahtevek',
+  (select count(*) from zahtevki_igralca where player_id = -913001 and status = 'cakajoc') = 1);
+-- A ima (iz testa zgoraj) sam nastavljen insider_team_id = -913001.
+select pg_temp.zavrnjeno('prevzem: svojega zahtevka ne potrdiš (niti kot poznavalec)',
+  $$select odloci_zahtevek_klub((select id from zahtevki_igralca where player_id=-913001 and status='cakajoc'), true)$$);
+select pg_temp.zavrnjeno('prevzem: svojega zahtevka ne potrdiš kot soigralec',
+  $$select potrdi_soigralca((select id from zahtevki_igralca where player_id=-913001 and status='cakajoc'))$$);
+select pg_temp.zavrnjeno('prevzem: prosilec ne piše zahtevka neposredno',
+  $$update zahtevki_igralca set status='potrjen', potrdil='admin' where user_id=auth.uid()$$);
+select pg_temp.zavrnjeno('prevzem: prosilec ne doda potrditve soigralca neposredno',
+  $$insert into potrditve_soigralcev(zahtevek_id,user_id,player_id) select id, auth.uid(), -913006 from zahtevki_igralca where user_id=auth.uid()$$);
+
+-- Tujec: ni poznavalec ne soigralec; sam nastavljen klub ne šteje.
+reset role;
+select set_config('test.zahtevek', (select id::text from zahtevki_igralca where player_id=-913001 and status='cakajoc'), true);
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ac',true);
+set local role authenticated;
+update profiles set insider_team_id = -913001 where id = auth.uid();
+select pg_temp.preveri('prevzem: tujec ne vidi tujih čakajočih zahtevkov',
+  (select count(*) from zahtevki_igralca) = 0);
+select pg_temp.zavrnjeno('prevzem: sam nastavljen poznavalec kluba ne potrdi',
+  $$select odloci_zahtevek_klub(current_setting('test.zahtevek')::bigint, true)$$);
+select pg_temp.zavrnjeno('prevzem: tujec ne potrdi kot soigralec',
+  $$select potrdi_soigralca(current_setting('test.zahtevek')::bigint)$$);
+select pg_temp.preveri('prevzem: tujcu ni česa potrjevati',
+  (select count(*) from zahtevki_za_odlocitev(-913001, null)) = 0);
+reset role;
+set local role anon;
+select pg_temp.zavrnjeno('prevzem: anon ne bere zahtevkov', $$select count(*) from zahtevki_igralca$$);
+select pg_temp.preveri('prevzem: čakajoči zahtevek ni javen',
+  not exists (select 1 from potrjeni_igralci where player_id = -913001));
+select pg_temp.zavrnjeno('prevzem: anon ne odda zahtevka', $$select prevzemi_igralca(-913002)$$);
+select pg_temp.zavrnjeno('prevzem: anon ne bere žetonov', $$select count(*) from zetoni_prevzema$$);
+reset role;
+
+-- Soigralca S1 in S2 potrdita: po drugem je potrjen.
+select set_config('request.jwt.claim.sub','c1a10000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.preveri('prevzem: soigralec vidi zahtevek za odločitev',
+  (select count(*) from zahtevki_za_odlocitev(-913001, null)) = 1);
+select pg_temp.preveri('prevzem: prvi soigralec zabeleži',
+  potrdi_soigralca((select id from zahtevki_za_odlocitev(null, -913001))) = 'zabelezeno');
+select pg_temp.napaka('prevzem: isti soigralec ne potrdi dvakrat',
+  $$select potrdi_soigralca((select id from zahtevki_za_odlocitev(null, -913001)))$$);
+select set_config('request.jwt.claim.sub','c1a10000-0000-4000-8000-000000000002',true);
+select pg_temp.preveri('prevzem: drugi različni soigralec potrdi',
+  potrdi_soigralca((select id from zahtevki_za_odlocitev(null, -913001))) = 'potrjen');
+reset role;
+select pg_temp.preveri('prevzem: potrdili soigralci',
+  (select potrdil from zahtevki_igralca where player_id = -913001 and status = 'potrjen') = 'soigralci');
+
+-- En potrjen na igralca in na uporabnika.
+select pg_temp.napaka('prevzem: drug potrjen zahtevek za istega igralca ne gre (kazalo)',
+  $$insert into zahtevki_igralca(player_id,user_id,status,potrdil) values (-913001,'b8a06635-2322-4444-8c42-44e419f912ac','potrjen','admin')$$);
+select pg_temp.napaka('prevzem: drug potrjen profil istega uporabnika ne gre (kazalo)',
+  $$insert into zahtevki_igralca(player_id,user_id,status,potrdil) values (-913002,'b8a06635-2322-4444-8c42-44e419f912ab','potrjen','admin')$$);
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
+select pg_temp.napaka('prevzem: potrjen uporabnik ne prevzame še enega igralca',
+  $$select prevzemi_igralca(-913002)$$);
+-- Predstavitev: lastnik piše, drugi ne.
+insert into profil_igralca(player_id, vzdevek, opis, instagram) values (-913001, 'Bomber', 'Napadalec.', 'test.igralec');
+select pg_temp.preveri('prevzem: lastnik ureja predstavitev',
+  (select vzdevek from profil_igralca where player_id = -913001) = 'Bomber');
+-- Shramba (le kjer obstaja): lastnik naloži v mapo svojega igralca, tuj ne.
+do $$
+begin
+  if to_regclass('storage.objects') is null then return; end if;
+  execute $s$insert into storage.objects(bucket_id, name) values ('fotografije-igralcev', '-913001/test.webp')$s$;
+  perform pg_temp.preveri('prevzem: lastnik naloži fotografijo svojega igralca', true);
+  perform pg_temp.zavrnjeno('prevzem: lastnik ne naloži v mapo drugega igralca',
+    $s$insert into storage.objects(bucket_id, name) values ('fotografije-igralcev', '-913006/test.webp')$s$);
+end $$;
+select pg_temp.napaka('prevzem: omrežje le kot uporabniško ime',
+  $$update profil_igralca set instagram='https://evil.example/x' where player_id=-913001$$);
+select pg_temp.napaka('prevzem: fotografija le v mapi svojega igralca',
+  $$update profil_igralca set fotografija='-913002/a.webp' where player_id=-913001$$);
+select pg_temp.zavrnjeno('prevzem: lastnik ne nastavi skrij_ime neposredno',
+  $$update profil_igralca set skrij_ime=true where player_id=-913001$$);
+do $$ begin update players set full_name = 'Drugo ime', value = 14 where id = -913001;
+exception when others then null; end $$;
+select pg_temp.preveri('prevzem: lastnik ne ureja uradnih podatkov',
+  (select full_name is distinct from 'Drugo ime' and value <> 14 from players where id = -913001));
+select pg_temp.napaka('prevzem: svojega profila ne prijaviš', $$select prijavi_profil_igralca(-913001)$$);
+
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ac',true);
+do $$
+begin
+  if to_regclass('storage.objects') is null then return; end if;
+  perform pg_temp.zavrnjeno('prevzem: tuj uporabnik ne naloži fotografije',
+    $s$insert into storage.objects(bucket_id, name) values ('fotografije-igralcev', '-913001/vsiljivec.webp')$s$);
+end $$;
+update profil_igralca set vzdevek = 'Vsiljivec' where player_id = -913001;
+select pg_temp.preveri('prevzem: tuj uporabnik ne ureja predstavitve',
+  (select vzdevek from profil_igralca where player_id = -913001) = 'Bomber');
+select pg_temp.zavrnjeno('prevzem: tuj uporabnik ne doda predstavitve',
+  $$insert into profil_igralca(player_id, vzdevek) values (-913006, 'Vsiljivec')$$);
+select prijavi_profil_igralca(-913001, 'To ni on.');
+select pg_temp.napaka('prevzem: isti uporabnik prijavi profil le enkrat', $$select prijavi_profil_igralca(-913001)$$);
+-- Spor: drugi uporabnik zahteva že potrjenega igralca.
+select prevzemi_igralca(-913001);
+select pg_temp.preveri('prevzem: zahtevek za potrjenega igralca je spor',
+  (select spor from zahtevki_igralca where user_id = auth.uid() and status = 'cakajoc'));
+select pg_temp.zavrnjeno('prevzem: povezuje le admin',
+  $$select admin_povezi_igralca(1, -919018)$$);
+select pg_temp.zavrnjeno('prevzem: predloge povezav vidi le admin',
+  $$select * from admin_predlogi_povezav(1)$$);
+select pg_temp.zavrnjeno('prevzem: vrsto zahtevkov vidi le admin',
+  $$select * from admin_zahtevki_igralcev()$$);
+select pg_temp.zavrnjeno('prevzem: fotografijo drugih odstrani le admin',
+  $$select admin_odstrani_fotografijo(-913001)$$);
+select pg_temp.zavrnjeno('prevzem: žetone za mail ustvari le servis',
+  $$select * from prevzem_za_posto_klubu(1)$$);
+reset role;
+set local role anon;
+select pg_temp.preveri('prevzem: potrjena predstavitev je javna',
+  (select vzdevek from profil_igralca where player_id = -913001) = 'Bomber'
+  and (select potrdil from potrjeni_igralci where player_id = -913001) = 'soigralci');
+reset role;
+
+-- Admin: spornega ne more potrditi (igralec je že potrjen); poveže drugo vrstico.
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+select pg_temp.napaka('prevzem: admin ne potrdi drugega profila za potrjenega igralca',
+  $$select admin_odloci_zahtevek((select id from zahtevki_igralca where user_id='b8a06635-2322-4444-8c42-44e419f912ac' and status='cakajoc'), 'potrdi')$$);
+select admin_odloci_zahtevek((select id from zahtevki_igralca where user_id='b8a06635-2322-4444-8c42-44e419f912ac' and status='cakajoc'), 'zavrni');
+select admin_povezi_igralca((select id from zahtevki_igralca where player_id=-913001 and status='potrjen'), -919018);
+select pg_temp.preveri('prevzem: povezana vrstica dobi značko in predstavitev',
+  (select glavni_player_id from potrjeni_igralci where player_id = -919018) = -913001);
+select pg_temp.napaka('prevzem: vrstica ne pripada dvema profiloma',
+  $$select admin_povezi_igralca((select id from zahtevki_igralca where player_id=-913006 and status='potrjen'), -919018)$$);
+reset role;
+select set_config('request.jwt.claim.sub','c1a10000-0000-4000-8000-000000000004',true);
+set local role authenticated;
+select prevzemi_igralca(-919018);
+select pg_temp.preveri('prevzem: zahtevek za povezano vrstico je spor',
+  (select spor from zahtevki_igralca where user_id = auth.uid() and status = 'cakajoc'));
+select preklici_moj_zahtevek((select id from zahtevki_igralca where user_id = auth.uid() and status = 'cakajoc'));
+reset role;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+select admin_povezi_igralca((select id from zahtevki_igralca where player_id=-913001 and status='potrjen'), -919018, false);
+select pg_temp.preveri('prevzem: admin odveže vrstico',
+  not exists (select 1 from potrjeni_igralci where player_id = -919018));
+reset role;
+
+-- Poznavalec kluba (odobren): potrdi zahtevek M za -919016.
+select set_config('request.jwt.claim.sub','c1a10000-0000-4000-8000-000000000004',true);
+set local role authenticated;
+select prevzemi_igralca(-919016);
+select set_config('request.jwt.claim.sub','c1a10000-0000-4000-8000-000000000003',true);
+select pg_temp.preveri('prevzem: poznavalec vidi zahtevek kluba',
+  (select vloga from zahtevki_za_odlocitev(-913001, -919016)) = 'klub');
+select odloci_zahtevek_klub((select id from zahtevki_za_odlocitev(null, -919016)), true);
+reset role;
+select pg_temp.preveri('prevzem: potrdil klub',
+  (select potrdil from zahtevki_igralca where player_id = -919016 and status = 'potrjen') = 'klub');
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+select pg_temp.preveri('prevzem: predlog povezave po imenu brez šumnikov',
+  exists (select 1 from admin_predlogi_povezav((select id from zahtevki_igralca where player_id=-919016 and status='potrjen'))
+           where player_id = -919018));
+reset role;
+
+-- Mladinska liga: brez potrdila o 16 letih ne gre.
+select set_config('request.jwt.claim.sub','c1a10000-0000-4000-8000-000000000005',true);
+set local role authenticated;
+select pg_temp.napaka('prevzem: mladinec mora potrditi 16 let', $$select prevzemi_igralca(-919017)$$);
+select prevzemi_igralca(-919017, null, true);
+select pg_temp.preveri('prevzem: potrdilo o 16 letih je shranjeno',
+  (select star_vsaj_16 from zahtevki_igralca where user_id = auth.uid() and status = 'cakajoc'));
+reset role;
+
+-- Žeton kluba: enkraten, poteče.
+insert into zetoni_prevzema(zahtevek_id, hash, expires_at)
+select id, prevzem_zeton_hash('zeton-veljaven'), now() + interval '1 day'
+  from zahtevki_igralca where user_id = 'c1a10000-0000-4000-8000-000000000005' and status = 'cakajoc';
+insert into zetoni_prevzema(zahtevek_id, hash, expires_at)
+select id, prevzem_zeton_hash('zeton-potekel'), now() - interval '1 minute'
+  from zahtevki_igralca where user_id = 'c1a10000-0000-4000-8000-000000000005' and status = 'cakajoc';
+select pg_temp.preveri('prevzem: žeton je shranjen le zgoščen',
+  not exists (select 1 from zetoni_prevzema where hash in ('zeton-veljaven', 'zeton-potekel')));
+set local role anon;
+select pg_temp.zavrnjeno('prevzem: potekel žeton ne velja', $$select prevzem_odloci_z_zetonom('zeton-potekel', true)$$);
+select pg_temp.zavrnjeno('prevzem: neznan žeton ne velja', $$select prevzem_odloci_z_zetonom('ugibam', true)$$);
+select pg_temp.preveri('prevzem: klub potrdi z žetonom', prevzem_odloci_z_zetonom('zeton-veljaven', true) = 'potrjen');
+select pg_temp.zavrnjeno('prevzem: žeton je enkraten', $$select prevzem_odloci_z_zetonom('zeton-veljaven', false)$$);
+reset role;
+select pg_temp.preveri('prevzem: žeton potrdi kot klub',
+  (select potrdil from zahtevki_igralca where user_id = 'c1a10000-0000-4000-8000-000000000005' and status = 'potrjen') = 'klub');
+
+-- Skrij ime: obstoječa anonimizacija, predstavitev gre proč.
+select set_config('request.jwt.claim.sub','c1a10000-0000-4000-8000-000000000004',true);
+set local role authenticated;
+insert into profil_igralca(player_id, vzdevek) values (-919016, 'Šestica');
+select pg_temp.preveri('prevzem: skrij moje ime anonimizira', skrij_moje_ime() >= 1);
+reset role;
+select pg_temp.preveri('prevzem: po skritju ni imena ne predstavitve',
+  (select anonimiziran_razlog = 'ugovor' and full_name = '#' || id from players where id = -919016)
+  and (select skrij_ime and vzdevek is null from profil_igralca where player_id = -919016));
+select set_config('request.jwt.claim.sub','c1a10000-0000-4000-8000-000000000004',true);
+set local role authenticated;
+update profil_igralca set vzdevek = 'Spet' where player_id = -919016;
+select pg_temp.preveri('prevzem: po skritju imena predstavitve ni več mogoče urediti',
+  (select vzdevek from profil_igralca where player_id = -919016) is null);
+reset role;
+
+-- Admin prekliče lažni profil: predstavitev in prijave gredo proč.
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+select pg_temp.preveri('prevzem: prijava je v vrsti admina',
+  exists (select 1 from admin_zahtevki_igralcev() where player_id = -913001 and vrsta = 'prijava'));
+select admin_odloci_zahtevek((select id from zahtevki_igralca where player_id=-913001 and status='potrjen'), 'preklici', 'Lažni profil');
+reset role;
+select pg_temp.preveri('prevzem: preklic odstrani predstavitev in prijave',
+  not exists (select 1 from profil_igralca where player_id = -913001)
+  and not exists (select 1 from potrjeni_igralci where player_id = -913001)
+  and not exists (select 1 from prijave_profila_igralca p join zahtevki_igralca z on z.id = p.zahtevek_id
+                   where z.player_id = -913001 and p.resena_at is null));
 
 do $$
 declare v_napak int;

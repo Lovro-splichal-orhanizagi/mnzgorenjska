@@ -14,6 +14,7 @@ import { drzaveZLigami, preklopiDrzavo } from '../lib/drzava'
 import { t as prevod, lokale } from '../i18n'
 import { imeDrzave } from './IzbiraDrzave'
 import Zastava from './Zastava'
+import FotoIgralca from './FotoIgralca'
 import {
   dovoljZaIskanje,
   opisIgralca,
@@ -429,10 +430,11 @@ export default function IzbirnikLige() {
                             aria-label={opisIgralca(z)}
                             onClick={() => izberiIgralca(z)}
                             onMouseEnter={() => setAktivna(zaporedje.length + i)}
-                            className={`flex cursor-pointer items-baseline gap-2 rounded-lg px-2.5 py-2.5 text-sm sm:py-2 ${
+                            className={`flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2.5 text-sm sm:py-2 ${
                               jeAktiven ? 'bg-white/10 text-slate-100' : 'text-slate-300'
                             }`}
                           >
+                            <FotoIgralca id={z.id} velikost={20} />
                             <span className="max-w-[60%] shrink-0 truncate font-semibold">{prikazniIme(z.full_name)}</span>
                             <span className="min-w-0 flex-1 truncate text-xs text-slate-500">{podrobno}</span>
                             {vecDrzav && z.drzava && z.drzava !== drzava && (
