@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocation, useSearchParams } from 'react-router-dom'
 import { Link } from '../components/Povezava'
+import ImeLastnika from '../components/ImeLastnika'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import { formatirajTocke, mnozina, KROGI } from '../lib/pomozno'
@@ -150,7 +151,7 @@ export default function MiniLige() {
       const { data } = await supabase
         .from('mini_liga_lestvica')
         .select(
-          'fantasy_team_id, team_name, owner_name, total_points, rounds_played, points_per_round, competition_short, federation_short',
+          'fantasy_team_id, team_name, owner_name, owner_id, total_points, rounds_played, points_per_round, competition_short, federation_short',
         )
         .eq('mini_liga_id', izbrana)
       if (!veljavno) return
@@ -405,7 +406,7 @@ export default function MiniLige() {
                       {v.team_name}
                     </Link>
                     <div className="truncate text-xs text-slate-500">
-                      {v.owner_name}
+                      <ImeLastnika ime={v.owner_name} id={v.owner_id} />
                       {kaziLigo && v.competition_short ? ` · ${v.competition_short}` : ''}
                     </div>
                   </div>

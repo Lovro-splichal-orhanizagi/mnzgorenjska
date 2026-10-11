@@ -121,7 +121,7 @@ rezervnih igralcev.
 
 | Tabela | Opis |
 |---|---|
-| `profiles` | Profili uporabnikov, zastavica `is_admin`, odjava od e-poštnih opomnikov `brez_opomnikov` in od potisnih obvestil `brez_push` |
+| `profiles` | Profili uporabnikov, zastavica `is_admin`, odjava od e-poštnih opomnikov `brez_opomnikov` in od potisnih obvestil `brez_push`, avatar (`avatar_barva`, `avatar_ikona`), `javni_profil`, `display_name_changed_at` |
 | `competitions` | Ligi: `clani` in `mladinci` (šifra vira, prvi fantasy krog) |
 | `teams` | Klubi — **skupni** obema ligama (grb, ime) |
 | `players` | Igralci ene lige (cena, pozicija, vir pozicije); ista oseba je v obeh ligah dve vrstici; `anonimiziran_at` = ime skrito (GDPR) |
@@ -176,6 +176,7 @@ napako (izbirnik lige, stran Igralci).
 - Klop+ in Wildcard lahko uporabnik doda, premakne ali prekliče samo pred
   določenim rokom kroga iste lige. Preverbo izvaja baza.
 - Kroge, klube in igralce urejajo **le administratorji** (`profiles.is_admin`).
+- Javni profil `/u/:id` bere `javni_profil(id)` (le javna polja; zasebni profil le ime). Prikazno ime si uporabnik spremeni sam (3–24 znakov, enolično, enkrat na 7 dni, sprožilec `varuj_prikazno_ime`).
 - Račun izbriše uporabnik sam z `izbrisi_moj_racun()` (stran `/account`); z njim gredo profil, ekipe z zgodovino, glasovi in njegove mini lige. Sistemskega lastnika hišnih ekip ni mogoče izbrisati.
 
 Migracijo `20260913100000_varnost_in_roki.sql` namesti pred novim frontendom,

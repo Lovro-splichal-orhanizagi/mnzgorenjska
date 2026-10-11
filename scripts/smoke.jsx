@@ -21,6 +21,8 @@ import Slovenija from '../src/pages/Slovenija'
 import MiniLige from '../src/pages/MiniLige'
 import VstopVMiniLigo from '../src/pages/VstopVMiniLigo'
 import Ekipa from '../src/pages/Ekipa'
+import Profil from '../src/pages/Profil'
+import { preveriImeProfila, napakaIzBaze, zacetniceImena, barvaAvatarja, naslednjaSpremembaImena, BARVE_AVATARJA } from '../src/lib/profil'
 import Klub from '../src/pages/Klub'
 import InfoIgralca from '../src/components/InfoIgralca'
 import ZivostSkupnosti from '../src/components/admin/Zivost'
@@ -93,6 +95,7 @@ const strani = [
   ['Mini lige', MiniLige, '/mini-leagues'],
   ['Vstop v mini ligo', VstopVMiniLigo, '/l/ABCDEF'],
   ['Tuja ekipa', Ekipa, '/team/1'],
+  ['Profil', Profil, '/u/b8a06635-2322-4444-8c42-44e419f912ab'],
   ['Klub', Klub, '/club/24'],
   [
     'Info o igralcu',
@@ -182,6 +185,32 @@ try {
   preveri('sitemap: liga nad mejo se razdeli', d.map((k) => `${k.ime}:${k.naslovi.length}`).join(' ')
     === 'sitemap-x.xml:2 sitemap-x-2.xml:2 sitemap-x-3.xml:1')
   preveri('obisk: /table se šteje kot tabela', imeStrani('/table') === 'tabela')
+  preveri('obisk: /u/<id> se šteje kot profil', imeStrani('/u/b8a06635-2322') === 'profil')
+}
+
+// --- profil: pravila prikaznega imena in avatar (src/lib/profil.ts) --------
+// Isto pravilo kot `napaka_prikaznega_imena` v bazi (test:varnost).
+{
+  const primeri = [
+    ['Jan', null], ['  Luka   Novak ', null], ['Žan Kovačič', null], ['FC Šenčur 1975', null], ['Admir', null],
+    ['ab', 'dolzina'], ['x'.repeat(25), 'dolzina'], ['<b>Jan</b>', 'znaki'], ['jan@slff.eu', 'znaki'],
+    ['Glavni Adm1n', 'rezervirano'], ['S.L.F.F. ekipa', 'rezervirano'], ['Moderator Jan', 'rezervirano'],
+    ['Fuck You', 'neprimerno'],
+  ]
+  const narobe = primeri.filter(([ime, koda]) => preveriImeProfila(ime) !== koda)
+  preveri('profil: pravila imena kot v bazi', narobe.length === 0, narobe.map(([i]) => i).join(', '))
+  preveri('profil: koda napake iz baze', napakaIzBaze({ hint: 'ime-prepogosto' }) === 'prepogosto'
+    && napakaIzBaze({ code: '23505' }) === 'zasedeno' && napakaIzBaze({ hint: 'kaj drugega' }) === null)
+  preveri('profil: začetnice', zacetniceImena('Janez Novak') === 'JN' && zacetniceImena('luka') === 'L'
+    && zacetniceImena('  ') === '?' && zacetniceImena('Žan  Šef ml.') === 'ŽŠ')
+  preveri('profil: barva iz id-ja je stalna in iz palete',
+    barvaAvatarja('abc', null) === barvaAvatarja('abc', undefined) && BARVE_AVATARJA.includes(barvaAvatarja('abc', null))
+      && barvaAvatarja('abc', 2) === BARVE_AVATARJA[2] && barvaAvatarja('abc', 99) === barvaAvatarja('abc', null))
+  const zdaj = Date.parse('2026-10-11T12:00:00Z')
+  preveri('profil: ime znova po 7 dneh',
+    naslednjaSpremembaImena(null, zdaj) === null
+      && naslednjaSpremembaImena('2026-10-01T12:00:00Z', zdaj) === null
+      && naslednjaSpremembaImena('2026-10-10T12:00:00Z', zdaj)?.toISOString() === '2026-10-17T12:00:00.000Z')
 }
 
 // --- vstopna stran države in ime lige z državo -----------------------------
@@ -3155,7 +3184,7 @@ preveri(
   preveri('naslov: kanonicni obdrzi le ligo', kanonicni('/players', '?t=mladinci&klub=3') === 'https://slff.eu/players?t=mladinci')
   preveri('naslov: kanonicni brez lige', kanonicni('/', '') === 'https://slff.eu/')
   preveri('naslov: kanonicni brez koncne posevnice', kanonicni('/players/', '?t=x') === 'https://slff.eu/players?t=x' && kanonicni('/', '') === 'https://slff.eu/')
-  preveri('naslov: zasebne strani noindex', ['/my-team', '/my-team/', '/mini-leagues', '/login', '/account', '/reminders', '/new-password', '/team/5', '/l/AB12', '/admin', '/mini-leagues/3'].every(jeZasebna) && !jeZasebna('/players') && !jeZasebna('/'))
+  preveri('naslov: zasebne strani noindex', ['/my-team', '/my-team/', '/mini-leagues', '/login', '/account', '/reminders', '/new-password', '/team/5', '/l/AB12', '/admin', '/mini-leagues/3', '/u/abc'].every(jeZasebna) && !jeZasebna('/players') && !jeZasebna('/'))
   preveri('naslov: kanonicni strani brez lige nima ?t=', kanonicni('/legal', '?t=mladinci') === 'https://slff.eu/legal')
   const { zLigo } = await import('../src/lib/tekmovanje')
   preveri('povezava: liga v naslovu', zLigo('/player/5', 'sk-za-1trieda') === '/player/5?t=sk-za-1trieda')

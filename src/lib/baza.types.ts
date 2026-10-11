@@ -2552,37 +2552,49 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_barva: number | null
+          avatar_ikona: string | null
           brez_opomnikov: boolean
           brez_push: boolean
           created_at: string
           display_name: string
+          display_name_changed_at: string | null
           id: string
           insider_competition_id: number | null
           insider_team_id: number | null
           is_admin: boolean
+          javni_profil: boolean
           navijam_team_id: number | null
         }
         ComputedFields: never
         Insert: {
+          avatar_barva?: number | null
+          avatar_ikona?: string | null
           brez_opomnikov?: boolean
           brez_push?: boolean
           created_at?: string
           display_name: string
+          display_name_changed_at?: string | null
           id: string
           insider_competition_id?: number | null
           insider_team_id?: number | null
           is_admin?: boolean
+          javni_profil?: boolean
           navijam_team_id?: number | null
         }
         Update: {
+          avatar_barva?: number | null
+          avatar_ikona?: string | null
           brez_opomnikov?: boolean
           brez_push?: boolean
           created_at?: string
           display_name?: string
+          display_name_changed_at?: string | null
           id?: string
           insider_competition_id?: number | null
           insider_team_id?: number | null
           is_admin?: boolean
+          javni_profil?: boolean
           navijam_team_id?: number | null
         }
         Relationships: [
@@ -3624,6 +3636,7 @@ export type Database = {
         Row: {
           competition_id: number | null
           fantasy_team_id: number | null
+          owner_id: string | null
           owner_name: string | null
           penalty: number | null
           points: number | null
@@ -3776,6 +3789,7 @@ export type Database = {
           competition_id: number | null
           fantasy_team_id: number | null
           hisna: boolean | null
+          owner_id: string | null
           owner_name: string | null
           owner_registered_at: string | null
           rounds_played: number | null
@@ -3968,6 +3982,7 @@ export type Database = {
           fantasy_team_id: number | null
           federation_name: string | null
           federation_short: string | null
+          owner_id: string | null
           owner_name: string | null
           points_per_round: number | null
           rounds_played: number | null
@@ -4117,6 +4132,7 @@ export type Database = {
           federation_short: string | null
           joined_at: string | null
           mini_liga_id: number | null
+          owner_id: string | null
           owner_name: string | null
           points_per_round: number | null
           rounds_played: number | null
@@ -5348,6 +5364,17 @@ export type Database = {
         Returns: string
       }
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
+      isci_klube: {
+        Args: { iskanje: string; omejitev?: number }
+        Returns: {
+          drzava: string
+          grb: string
+          id: number
+          ime: string
+          kratko: string
+          liga: string
+        }[]
+      }
       isci_igralce: {
         Args: { iskanje: string; omejitev?: number }
         Returns: {
@@ -5372,6 +5399,7 @@ export type Database = {
         Args: { p_competition_id: number; p_team_id: number }
         Returns: Json
       }
+      javni_profil: { Args: { p_id: string }; Returns: Json }
       je_poznavalec_lige: {
         Args: { p_competition_id: number }
         Returns: boolean

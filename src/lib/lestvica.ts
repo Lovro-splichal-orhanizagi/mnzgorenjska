@@ -18,6 +18,7 @@ export interface VrsticaKroga {
   fantasy_team_id: number
   team_name?: string | null
   owner_name?: string | null
+  owner_id?: string | null
   points?: number | null
 }
 
@@ -25,6 +26,7 @@ export interface SkupekEkipe {
   fantasy_team_id: number
   team_name: string | null
   owner_name: string | null
+  owner_id?: string | null
   points: number
   krogov: number
 }
@@ -46,6 +48,7 @@ export function sestejOdKroga(
         fantasy_team_id: v.fantasy_team_id,
         team_name: v.team_name ?? null,
         owner_name: v.owner_name ?? null,
+        owner_id: v.owner_id ?? null,
         points: 0,
         krogov: 0,
       }

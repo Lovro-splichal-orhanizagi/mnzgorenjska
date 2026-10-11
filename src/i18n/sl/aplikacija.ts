@@ -52,6 +52,8 @@ export const aplikacija = {
     racun: 'Račun',
     opomniki: 'Obvestila',
     izbrisRacuna: 'Izbris računa',
+    nastavitve: 'Nastavitve računa',
+    mojProfil: 'Moj profil',
     povabi: 'Povabi prijatelja',
     pomoc: 'Pomoč',
     odjava: 'Odjava',

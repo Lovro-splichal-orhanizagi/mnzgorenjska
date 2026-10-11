@@ -45,6 +45,8 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     racun: 'Fiók',
     opomniki: 'Értesítések',
     izbrisRacuna: 'Fiók törlése',
+    nastavitve: 'Fiókbeállítások',
+    mojProfil: 'Saját profil',
     povabi: 'Hívd meg egy barátod',
     pomoc: 'Súgó',
     odjava: 'Kijelentkezés',
