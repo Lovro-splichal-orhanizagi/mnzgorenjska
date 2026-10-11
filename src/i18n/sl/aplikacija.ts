@@ -86,6 +86,7 @@ export const aplikacija = {
       RO: 'România',
       EE: 'Eesti',
       PL: 'Polska',
+      ES: 'España',
     },
     preklopi: 'Preklopi na {drzava}',
   },

@@ -1839,6 +1839,38 @@ Vpisanih je 8 lig (migracija 20261012003000), **neaktivnih**, zveza
 Uvoz (ena za drugo): `gh workflow run uvoz-lige.yml -f liga=pl-sk-4-liga -f
 arhiv=swietokrzyski/3917069b-155b-41df-ae80-0e9ad0308f7f -f cene=true`.
 
+### Španija
+
+Država `ES` ("España", migracija 20261012040000) ima vmesnik v španščini
+(`src/i18n/es/`, jezik `es`, `es-ES`: "3 oct", decimalna vejica, cena
+"13,2 M€"; `JEZIK_DRZAVE.ES`), vstop `slff.eu/es`, kartico ob deljenju
+`es.html` (Caddy jo vrne za `/es` in `?t=es-…`, tudi na `:3201`), špansko
+vejo pošte (`sporocila.ts`, avtentikacijske predloge in zadeve v
+`docker-compose.slff.yml`, pozdrav "¡Hola!") in španska imena lastnikov
+hišnih ekip ("Javier García"). **Šifra španske lige se začne z `es-`.**
+Ugib: brskalnik `es` (gola oznaka), `es-ES`, `ca-ES`, `gl-ES`, `eu-ES` ali
+pas `Europe/Madrid`, `Atlantic/Canary`, `Africa/Ceuta`. **`es-MX`, `es-419`,
+`es-AR` … niso Španija** (kot `de` ni Avstrija): v `DRZAVE` je zato `=es`,
+oznaka z `=`, ki velja le natanko. Tujec s katerokoli španščino dobi španski
+vmesnik (`jezikTujca`). Sezona kot v Sloveniji (avgust–junij), ne koledarska.
+Izrazi kot v LaLiga Fantasy in Biwenger, oblika "tú": equipo, plantilla (15),
+once inicial / titulares, banquillo, suplentes, capitán, vicecapitán,
+fichajes, mercado, presupuesto, portero, defensa, centrocampista, delantero,
+clasificación, asistencia, tarjeta, portería a cero, puntos, miniliga;
+`krog` je vedno **jornada** ("Jornada 5"), pripomoček `klop_plus` je
+"Banquillo+", poznavalec je "experto". Množine one/many/other
+(`Intl.PluralRules('es')`): `one` 1, `many` celi milijoni (1.000.000),
+`other` vse ostalo, tudi 0 in decimalke ("1,5 puntos"); `many` je zato
+enak `other`. Španščina ne sklanja, a člen pred imenom lige je odvisen od
+imena ("la Primera Regional", "el Grupo 3"), zato ime lige stoji samostojno
+za dvopičjem ali v oklepaju ("Liga fantasy abierta: {liga}", "liga:
+{liga}"); `ligaVTozilniku` ga pusti. Psevdonim v klepetu ima pridevnik za
+samostalnikom ("Portero Azul 42", vsi samostalniki moškega spola). Stran
+Pozicije je v meniju kot v Sloveniji. `ES` je v matriki nočnega uvoza.
+Zveze, tekmovanja in vir vpiše svoja migracija. Manjka še: španski kanal v
+HelpStacku (`Podpora.tsx` za `es` uporabi slovenskega) in **pregled
+prevoda pri naravnem govorcu**.
+
 ### Država obiskovalca
 
 Domena je ena, **lige druge države so skrite**: `useTekmovanje().tekmovanja`
@@ -2274,7 +2306,7 @@ besedilom). **Obvezno, vsakič:**
    istega pošiljatelja po 3+ dneh je v redu).
 2. **Po** poslanem mailu: `node scripts/stiki-klubov.mjs zabelezi --za <naslov>
    --vrsta prvi|opomnik --poslal <ime> --zadeva "…" --telo-datoteka <datoteka>`
-   (nov naslov še `--klub "…" --drzava SI|SK|HR|CZ|HU|AT|RS|RO|EE|PL [--liga …]`). Pri paketih
+   (nov naslov še `--klub "…" --drzava SI|SK|HR|CZ|HU|AT|RS|RO|EE|PL|ES [--liga …]`). Pri paketih
    beleži sproti, po vsakem mailu, ne na koncu.
 3. Odgovor kluba: `zabelezi --vrsta odgovor --opomba "<povzetek>"`; dogovor ali
    zavrnitev: `nastavi --za … --stanje sodeluje|ne_zeli`.
@@ -2332,7 +2364,7 @@ kanonični `?t=` po svoji ligi.
   `src/i18n` — nikoli `toLocaleString('sl-SI')`.
 - Drugi jezik (`src/i18n/hr/`) je lahko delen; manjkajoče pride iz
   slovenščine. `npm run prevodi -- hr` izpiše, kaj manjka. Brskalnik izbere
-  jezik sam šele, ko je v `PRIPRAVLJENI` (`sl`, `hr`, `sk`, `cs`, `hu`, `de`, `sr`, `ro`, `et`, `en`). Hrvaščina,
+  jezik sam šele, ko je v `PRIPRAVLJENI` (`sl`, `hr`, `sk`, `cs`, `hu`, `de`, `sr`, `ro`, `et`, `pl`, `es`, `en`). Hrvaščina,
   slovaščina, češčina, madžarščina, nemščina, srbščina, romunščina, estonščina in angleščina so popolne — smoke preveri, da imajo vse ključe ter iste
   `{parametre}` in `<oznake>`; nov slovenski niz zato dodaj v vseh devet.
 - **Kateri jezik** (`zeljenJezik` v `src/lib/drzavaUgib.ts`, isto pravilo v

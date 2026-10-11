@@ -65,6 +65,13 @@
     <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Zaloguj się →</a>
   </p>
   <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Jeśli to nie ty prosiłeś o logowanie, zignoruj tę wiadomość.</p>
+{{ else if eq (printf "%v" .Data.jezik) "es" }}
+  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Inicio de sesión en SLFF</p>
+  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Pulsa el botón y habrás iniciado sesión. El enlace vale una hora y solo se puede usar una vez.</p>
+  <p style="text-align: center; margin: 24px 0;">
+    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Iniciar sesión →</a>
+  </p>
+  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Si no has pedido iniciar sesión, ignora este mensaje.</p>
 {{ else }}
   <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Prijava v SLFF</p>
   <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Klikni gumb in prijavljen/a si. Povezava velja eno uro in jo lahko uporabiš le enkrat.</p>

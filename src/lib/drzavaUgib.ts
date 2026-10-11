@@ -10,6 +10,9 @@ const KLJUC = 'slff-drzava'
  * Znane države: jezik in časovni pas, ki nanje kažeta. Jezik je osnova
  * (`sk`) ali cela oznaka z regijo (`de-at`): nemščina sama je tudi Nemčija
  * in Švica, zato na Avstrijo kaže le `de-AT` ali pas `Europe/Vienna`.
+ * Oznaka z `=` velja le natanko: `=es` je gola španščina (brez regije), ki
+ * je večinoma Španija; `es-MX`, `es-419`, `es-AR` … so Latinska Amerika in
+ * na Španijo ne kažejo (tujec, kot `de` brez `-AT`).
  */
 const DRZAVE: Record<string, { jeziki: string[]; pasovi: string[] }> = {
   SI: { jeziki: ['sl'], pasovi: ['Europe/Ljubljana'] },
@@ -22,6 +25,7 @@ const DRZAVE: Record<string, { jeziki: string[]; pasovi: string[] }> = {
   RO: { jeziki: ['ro'], pasovi: ['Europe/Bucharest'] },
   EE: { jeziki: ['et'], pasovi: ['Europe/Tallinn'] },
   PL: { jeziki: ['pl'], pasovi: ['Europe/Warsaw'] },
+  ES: { jeziki: ['=es', 'es-es', 'ca-es', 'gl-es', 'eu-es'], pasovi: ['Europe/Madrid', 'Atlantic/Canary', 'Africa/Ceuta'] },
 }
 export const znaneDrzave = () => Object.keys(DRZAVE)
 
@@ -62,7 +66,9 @@ export function ugibajDrzavo({
   const odprte = Object.entries(DRZAVE).filter(([k]) => jeOdprta(k))
   for (const j of jeziki ?? []) {
     const oznaka = j.toLowerCase()
-    const d = odprte.find(([, v]) => v.jeziki.includes(oznaka.slice(0, 2)) || v.jeziki.includes(oznaka))
+    const d = odprte.find(
+      ([, v]) => v.jeziki.includes(oznaka.slice(0, 2)) || v.jeziki.includes(oznaka) || v.jeziki.includes('=' + oznaka),
+    )
     if (d) return d[0]
   }
   const poPasu = odprte.find(([, v]) => casovniPas && v.pasovi.includes(casovniPas))
@@ -223,10 +229,13 @@ export const izbranJezik = (): string | null => beri(KLJUC_IZBRANEGA_JEZIKA)
 export const jeTujIp = (ip: string | null | undefined, drzaveZLigami: readonly string[]): boolean =>
   Boolean(ip && drzaveZLigami.length && !drzaveZLigami.includes(ip))
 
-/** Jezik tujca: angleščina, razen če je prvi jezik brskalnika sl, sk, hr, cs, hu, de, sr, ro, et ali pl. */
+/**
+ * Jezik tujca: angleščina, razen če je prvi jezik brskalnika sl, sk, hr, cs, hu, de, sr, ro, et, pl ali es.
+ * Kot nemščina (de-DE) dobi tudi vsaka španščina (es-MX, es-AR …) španski vmesnik.
+ */
 export function jezikTujca(jeziki: readonly string[] | null | undefined): string {
   const prvi = (jeziki?.[0] ?? '').toLowerCase().slice(0, 2)
-  return prvi === 'sl' || prvi === 'sk' || prvi === 'hr' || prvi === 'cs' || prvi === 'hu' || prvi === 'de' || prvi === 'sr' || prvi === 'ro' || prvi === 'et' || prvi === 'pl' ? prvi : 'en'
+  return prvi === 'sl' || prvi === 'sk' || prvi === 'hr' || prvi === 'cs' || prvi === 'hu' || prvi === 'de' || prvi === 'sr' || prvi === 'ro' || prvi === 'et' || prvi === 'pl' || prvi === 'es' ? prvi : 'en'
 }
 
 /**
@@ -279,7 +288,7 @@ export function drzavaLige(slug: string | null | undefined): string | null {
 }
 
 /** Jezik vmesnika za državo. */
-export const JEZIK_DRZAVE: Record<string, string> = { SI: 'sl', SK: 'sk', HR: 'hr', CZ: 'cs', HU: 'hu', AT: 'de', RS: 'sr', RO: 'ro', EE: 'et', PL: 'pl' }
+export const JEZIK_DRZAVE: Record<string, string> = { SI: 'sl', SK: 'sk', HR: 'hr', CZ: 'cs', HU: 'hu', AT: 'de', RS: 'sr', RO: 'ro', EE: 'et', PL: 'pl', ES: 'es' }
 
 /** Država vstopne strani (`/at` → 'AT'), sicer null. */
 export function drzavaVstopa(pot: string): string | null {

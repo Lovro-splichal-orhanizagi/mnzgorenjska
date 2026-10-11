@@ -256,6 +256,21 @@ const IMENA_PL = [
   'Dwunasty Zawodnik', 'Asysta FC', 'Złota Główka', 'Pierwszy Kontakt FC', 'Leśne Dziki',
 ]
 
+// Ligas españolas: divertidos, inventados, sin nombres de clubes reales.
+const IMENA_ES = [
+  'Linces del Guadalquivir', 'Toros de la Meseta', 'Halcones de Gredos', 'Lobos de la Sierra', 'Gaviotas del Cantábrico',
+  'Cigüeñas de la Vega', 'Atunes del Estrecho', 'Osos de los Picos', 'Mosquitos del Delta', 'Cabras del Pirineo',
+  'Héroes del Domingo', 'Leyendas del Sábado', 'Tiempo Añadido CF', 'Los del Banquillo', 'Fuera de Juego CF',
+  'Larguero CF', 'Poste United', 'Banderín de Córner CF', 'Punto de Penalti CF', 'Saque de Esquina United',
+  'Tarjeta Amarilla CF', 'Tarjeta Roja United', 'Brazalete CF', 'Los Chicos del Césped', 'Campo de Tierra CF',
+  'Contragolpe CF', 'Presión Alta CF', 'Líbero CF', 'El Diez CF', 'El Nueve United',
+  'Tortilla CF', 'Croqueta United', 'Paella FC', 'Gazpacho CF', 'Churros United',
+  'Bocadillo CF', 'Chorizo FC', 'Pulpo a Feira CF', 'Salmorejo United', 'Calamares CF',
+  'Campeones de la Comarca', 'Caña de Después CF', 'Peña del Bar CF', 'Barbacoa United', 'Verbena CF',
+  'Selección del Pueblo', 'La Vieja Guardia', 'Bomberos CF', 'Casa de Cultura CF', 'Eternos Suplentes',
+  'El Jugador Número Doce', 'Asistencia CF', 'Cabezazo de Oro', 'Primer Toque CF', 'Jabalíes del Monte',
+]
+
 // Postave v mejah POZICIJE (vratar 1, branilci 3–5, vezisti 2–5, napadalci 1–3).
 const POSTAVE = [
   [4, 4, 2], [4, 3, 3], [3, 5, 2], [3, 4, 3], [5, 3, 2], [4, 5, 1], [5, 4, 1],
@@ -643,7 +658,7 @@ for (const l of seznam) {
     if (eK) throw new Error(eK.message)
     for (const r of kadri ?? []) izbranost.set(r.player_id, (izbranost.get(r.player_id) ?? 0) + 1)
   }
-  const imena = premesaj({ SI: IMENA_SI, HR: IMENA_HR, CZ: IMENA_CZ, HU: IMENA_HU, AT: IMENA_AT, RS: IMENA_RS, RO: IMENA_RO, EE: IMENA_EE, PL: IMENA_PL }[DRZAVA] ?? IMENA, generator('imena:' + l.slug))
+  const imena = premesaj({ SI: IMENA_SI, HR: IMENA_HR, CZ: IMENA_CZ, HU: IMENA_HU, AT: IMENA_AT, RS: IMENA_RS, RO: IMENA_RO, EE: IMENA_EE, PL: IMENA_PL, ES: IMENA_ES }[DRZAVA] ?? IMENA, generator('imena:' + l.slug))
     .filter((i) => !zasedena.has(i.toLowerCase()))
 
   console.log(

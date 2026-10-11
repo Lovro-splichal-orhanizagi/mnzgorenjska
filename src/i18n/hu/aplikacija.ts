@@ -77,6 +77,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
       RO: 'România',
       EE: 'Eesti',
       PL: 'Polska',
+      ES: 'España',
     },
     preklopi: 'Váltás: {drzava}',
   },
