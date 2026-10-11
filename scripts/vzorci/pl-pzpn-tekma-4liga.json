@@ -1,0 +1,25 @@
+{
+ "id": "4f26cf1c-aba2-4e26-808a-eb401a031e2e",
+ "kickoff_at": "2026-08-09T17:00:00+02:00",
+ "league_name": "ŚZPN: IV Liga (Świętokrzyskie)",
+ "round_label": "Kolejka 1",
+ "state": "Rozegrany",
+ "is_live": false,
+ "has_broadcast": false,
+ "broadcast_audio": false,
+ "is_favorite": false,
+ "host": {
+  "id": "3cfbfb5c-ed96-49b2-8cd8-903f2f8ec353",
+  "name": "KS VICTORIA 2015 Skalbmierz"
+ },
+ "guest": {
+  "id": "9ee0ee22-54e5-4fef-b7a5-68425884b122",
+  "name": "MKS GRANAT Skarżysko-Kamienna "
+ },
+ "score": {
+  "final": "3:1",
+  "half": "0:1",
+  "full_time": "3:1"
+ },
+ "stadium": null
+}

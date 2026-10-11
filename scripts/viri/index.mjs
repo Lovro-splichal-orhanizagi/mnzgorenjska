@@ -25,6 +25,7 @@ import fss from './fss.mjs'
 import fssid from './fssid.mjs'
 import frf from './frf.mjs'
 import hlf from './hlf.mjs'
+import pzpn from './pzpn.mjs'
 import jalgpall from './jalgpall.mjs'
 
 const VIRI = {
@@ -60,6 +61,8 @@ const VIRI = {
   // Romunija: uradna platforma FRF (hailafotbal.ro), digitalni zapisniki od 2026/27,
   // z dresi, vratarjem in šifro igralca; bere jo brskalnik brez glave.
   hlf,
+  // Poljska: uradni zapisniki PZPN (Extranet) prek javnega gradnika vojvodske zveze.
+  pzpn,
   // Estonija (EJL) prek jalgpall.ee: šifre igralcev, pozicije iz postavitve,
   // koledarska sezona.
   jalgpall,
