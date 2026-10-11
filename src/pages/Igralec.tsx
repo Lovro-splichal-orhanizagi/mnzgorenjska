@@ -26,6 +26,7 @@ import { serijaCen, premik as premikSerije, crta } from '../lib/gibanjeCene'
 import Grb from '../components/Grb'
 import FotoIgralca from '../components/FotoIgralca'
 import PrevzemIgralca from '../components/PrevzemIgralca'
+import UradneOdsotnostiIgralca from '../components/UradnaOdsotnost'
 import KarticaIgralca from '../components/KarticaIgralca'
 import { dosezkiNastopa, vrsticaTekme, type NastopZaKartico } from '../lib/karticaIgralca'
 import {
@@ -698,6 +699,9 @@ export default function Igralec() {
           </ul>
         </section>
       )}
+
+      {/* uradne odsotnosti potrjenega igralca: le informacija, kot poročila spodaj */}
+      <UradneOdsotnostiIgralca igralecId={igralec.id} />
 
       {/* odsotnosti in poškodbe — informativno, ne vpliva na sestavo ekipe */}
       <section>

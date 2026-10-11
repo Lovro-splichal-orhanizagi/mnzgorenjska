@@ -1517,6 +1517,154 @@ select pg_temp.preveri('prevzem: preklic odstrani predstavitev in prijave',
   and not exists (select 1 from prijave_profila_igralca p join zahtevki_igralca z on z.id = p.zahtevek_id
                    where z.player_id = -913001 and p.resena_at is null));
 
+-- ---------------------------------------------------------------------------
+-- Uradne odsotnosti potrjenih igralcev, migracija 20261012113100.
+-- S1 (...001) je potrjen za -913006, S2 (...002) za -913011. Admin S1
+-- poveže še vrstico -919020 v drugi ligi.
+-- ---------------------------------------------------------------------------
+reset role;
+select set_config('request.jwt.claim.sub','',true);
+insert into players(id, team_id, competition_id, first_name, last_name, full_name, position, position_source, value, value_start, active) overriding system value
+values (-919020, -913002, -913002, 'Test', '20', 'Uradni Povezan', 'MID', 'admin', 6, 6, true);
+insert into povezani_igralci(player_id, zahtevek_id)
+select -919020, id from zahtevki_igralca where player_id = -913006 and status = 'potrjen';
+
+select set_config('request.jwt.claim.sub','c1a10000-0000-4000-8000-000000000002',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('uradno: drug potrjen igralec ne javi za tujega igralca',
+  $$select objavi_uradno_odsotnost(-913006, 'poskodba')$$);
+select pg_temp.zavrnjeno('uradno: ne javi niti za tujo povezano vrstico',
+  $$select objavi_uradno_odsotnost(-919020, 'poskodba')$$);
+select pg_temp.zavrnjeno('uradno: neposreden vpis v tabelo ne gre',
+  $$insert into uradne_odsotnosti(player_id, zahtevek_id, user_id, vrsta, od, sezona)
+    select -913011, id, auth.uid(), 'poskodba', current_date, '2026/27'
+      from zahtevki_igralca where user_id = auth.uid() and status = 'potrjen'$$);
+select pg_temp.zavrnjeno('uradno: tabele (z uporabnikom) ne bere vmesnik',
+  $$select count(*) from uradne_odsotnosti$$);
+select pg_temp.zavrnjeno('uradno: preverbo kliče le servis',
+  $$select preveri_uradne_odsotnosti()$$);
+reset role;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ac',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('uradno: nepotrjen uporabnik ne javi',
+  $$select objavi_uradno_odsotnost(-913001, 'poskodba')$$);
+reset role;
+select set_config('request.jwt.claim.sub','',true);
+set local role anon;
+select pg_temp.zavrnjeno('uradno: anon ne javi', $$select objavi_uradno_odsotnost(-913006, 'poskodba')$$);
+reset role;
+
+-- S1 javi zase (glavna vrstica).
+select set_config('request.jwt.claim.sub','c1a10000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.napaka('uradno: opomba največ 140 znakov',
+  $$select objavi_uradno_odsotnost(-913006, 'poskodba', null, null, repeat('x', 141))$$);
+select pg_temp.napaka('uradno: vrnitev po začetku',
+  $$select objavi_uradno_odsotnost(-913006, 'poskodba', current_date, current_date)$$);
+select pg_temp.napaka('uradno: neznana vrsta',
+  $$select objavi_uradno_odsotnost(-913006, 'izlet')$$);
+select pg_temp.preveri('uradno: potrjeni igralec javi zase',
+  objavi_uradno_odsotnost(-913006, 'poskodba', null, null, 'Koleno') is not null);
+select pg_temp.napaka('uradno: naenkrat le ena odprta (tudi za povezano vrstico)',
+  $$select objavi_uradno_odsotnost(-919020, 'bolezen')$$);
+select pg_temp.preveri('uradno: lastnik povezane vrstice vidi svoje stanje',
+  (select lastnik and opomini = 0 and najvec = 2 and not blokiran from stanje_uradne_odsotnosti(-919020)));
+select pg_temp.preveri('uradno: lastnik vidi, da je odsotnost njegova',
+  (select moje from uradne_odsotnosti_view where player_id = -913006 and status = 'odprto'));
+reset role;
+
+select set_config('request.jwt.claim.sub','c1a10000-0000-4000-8000-000000000002',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('uradno: tujec ne zapre tuje odsotnosti',
+  $$select zapri_uradno_odsotnost((select id from uradne_odsotnosti_view where player_id = -913006 and status = 'odprto'))$$);
+select pg_temp.preveri('uradno: tujec ni lastnik in ne vidi opominov',
+  (select not lastnik and opomini = 0 from stanje_uradne_odsotnosti(-913006)));
+reset role;
+select set_config('request.jwt.claim.sub','',true);
+set local role anon;
+select pg_temp.preveri('uradno: javna, a brez uporabnika',
+  (select opomba = 'Koleno' and not moje and glavni_player_id = -913006
+     from uradne_odsotnosti_view where player_id = -913006 and status = 'odprto')
+  and not exists (select 1 from information_schema.columns
+                   where table_name = 'uradne_odsotnosti_view' and column_name = 'user_id'));
+reset role;
+
+-- Preverba: odsotnost je bila objavljena pred 10 dnevi.
+update uradne_odsotnosti set created_at = now() - interval '10 days', od = current_date - 10
+ where user_id = 'c1a10000-0000-4000-8000-000000000001' and status = 'odprto';
+insert into matches(id, round_id, home_team_id, away_team_id, played_on) overriding system value
+values (-919101, -913005, -913005, -913002, current_date - 5),
+       (-919102, -913006, -913005, -913001, current_date - 3),
+       (-919103, -913006, -913004, -913001, current_date);
+insert into appearances(match_id, player_id, team_id, minutes_played) values (-919101, -919020, -913002, 0);
+select pg_temp.preveri('uradno: nastop brez minut ni opomin', preveri_uradne_odsotnosti() = 0);
+update appearances set minutes_played = 45 where match_id = -919101 and player_id = -919020;
+select pg_temp.preveri('uradno: igral na povezani vrstici = ni držalo', preveri_uradne_odsotnosti() = 1);
+select pg_temp.preveri('uradno: ni držalo z datumom tekme',
+  (select status = 'ni_drzalo' and ni_drzalo_datum = current_date - 5
+     from uradne_odsotnosti_view where player_id = -913006 order by id desc limit 1));
+select pg_temp.preveri('uradno: preverba je idempotentna', preveri_uradne_odsotnosti() = 0);
+
+-- Zaprta pred tekmo: brez opomina.
+select set_config('request.jwt.claim.sub','c1a10000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.preveri('uradno: z enim opominom še javlja',
+  objavi_uradno_odsotnost(-913006, 'kazen', current_date - 10, current_date + 10) is not null);
+select pg_temp.napaka('uradno: ni držalo ne zapreš',
+  $$select zapri_uradno_odsotnost((select id from uradne_odsotnosti_view where status = 'ni_drzalo' and moje limit 1))$$);
+reset role;
+update uradne_odsotnosti set created_at = now() - interval '10 days', status = 'zaprto', zaprto_at = now() - interval '8 days'
+ where user_id = 'c1a10000-0000-4000-8000-000000000001' and status = 'odprto';
+insert into appearances(match_id, player_id, team_id, minutes_played) values (-919102, -913006, -913001, 90);
+select pg_temp.preveri('uradno: zaprta pred tekmo ni opomin', preveri_uradne_odsotnosti() = 0);
+
+-- Tekma na dan objave ne šteje (poškodba, javljena po tekmi).
+select set_config('request.jwt.claim.sub','c1a10000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select objavi_uradno_odsotnost(-913006, 'poskodba');
+reset role;
+insert into appearances(match_id, player_id, team_id, minutes_played) values (-919103, -913006, -913001, 90);
+select pg_temp.preveri('uradno: tekma na dan objave ni opomin', preveri_uradne_odsotnosti() = 0);
+
+-- "Spet sem nared" PO tekmi: opomin vseeno (tekma je bila med odprto odsotnostjo).
+update uradne_odsotnosti set created_at = now() - interval '10 days', od = current_date - 10
+ where user_id = 'c1a10000-0000-4000-8000-000000000001' and status = 'odprto';
+select set_config('request.jwt.claim.sub','c1a10000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select zapri_uradno_odsotnost((select id from uradne_odsotnosti_view where moje and status = 'odprto'));
+reset role;
+select pg_temp.preveri('uradno: zaprta po tekmi je opomin', preveri_uradne_odsotnosti() = 1);
+select pg_temp.preveri('uradno: dva opomina',
+  uradne_odsotnosti_opomini('c1a10000-0000-4000-8000-000000000001') = 2);
+
+-- Dva opomina: brez uradnih odsotnosti do konca sezone, navadna poročila gredo.
+select set_config('request.jwt.claim.sub','c1a10000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.napaka('uradno: dva opomina blokirata uradne odsotnosti',
+  $$select objavi_uradno_odsotnost(-913006, 'drugo')$$);
+select pg_temp.preveri('uradno: stanje pove blokado',
+  (select blokiran and opomini = 2 from stanje_uradne_odsotnosti(-913006)));
+insert into player_reports(player_id, user_id, kind, content)
+values (-913006, auth.uid(), 'poskodba', 'Navadno poročilo');
+select pg_temp.preveri('uradno: blokiran še piše navadna poročila',
+  exists (select 1 from player_reports where player_id = -913006 and content = 'Navadno poročilo'));
+reset role;
+
+-- Nova sezona: opomini lanske sezone ne štejejo več.
+update uradne_odsotnosti set sezona = '2000/01'
+ where user_id = 'c1a10000-0000-4000-8000-000000000001' and status = 'ni_drzalo';
+select set_config('request.jwt.claim.sub','c1a10000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.preveri('uradno: nova sezona, novi opomini',
+  (select opomini = 0 and not blokiran from stanje_uradne_odsotnosti(-913006))
+  and objavi_uradno_odsotnost(-913006, 'dopust') is not null);
+select zapri_uradno_odsotnost((select id from uradne_odsotnosti_view where moje and status = 'odprto'));
+select pg_temp.preveri('uradno: "Spet sem nared" brez posledic',
+  not exists (select 1 from uradne_odsotnosti_view where moje and status = 'odprto')
+  and (select opomini = 0 from stanje_uradne_odsotnosti(-913006)));
+reset role;
+select pg_temp.preveri('uradno: zaprta brez tekme ostane brez opomina', preveri_uradne_odsotnosti() = 0);
+
 do $$
 declare v_napak int;
 begin

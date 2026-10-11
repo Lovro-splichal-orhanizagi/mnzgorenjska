@@ -130,6 +130,7 @@ rezervnih igralcev.
 | `povezani_igralci` | Druge vrstice iste osebe (druga liga, mladinci, prestop), ki jih admin poveže k potrjenemu profilu |
 | `profil_igralca` | Predstavitev potrjenega igralca (vzdevek, opis, omrežja, fotografija); ureja jo le potrjen lastnik, uradnih podatkov ne |
 | `potrditve_soigralcev` / `prijave_profila_igralca` / `zetoni_prevzema` | Potrditve soigralcev, prijave lažnih profilov, enkratne povezave za klub (le zgoščene); zaprte tabele |
+| `uradne_odsotnosti` | Uradne odsotnosti, ki jih javi potrjeni igralec sam (vrsta, od, vrnitev ali neznano, opomba do 140 znakov; `odprto`, `zaprto`, `ni_drzalo`). Samo informacija; zaprta tabela, javno prek pogleda `uradne_odsotnosti_view` brez uporabnika, piše le prek RPC |
 | `rounds` / `matches` | Krogi in tekme (z izvorom: `zapisnik_id`, `source_url`); `borza_po_starem` zapre krog pred ponovnim obračunom cen po novih pravilih, `borza_z_odmikom` ga obračuna po starih mejah (odmik 3.0); `kontumacija` = dodeljen izid brez zapisnika, `vir_brez_izida` = vir minule tekme ne kaže kot odigrane (prestavljena brez datuma) |
 | `appearances` | Nastop igralca na tekmi: minute, goli, kartoni, prejeti goli |
 | `goals` | Posamezni gol (strelec, minuta, 11m, avtogol, potrjena asistenca) |
@@ -180,6 +181,7 @@ napako (izbirnik lige, stran Igralci).
 - Klop+ in Wildcard lahko uporabnik doda, premakne ali prekliče samo pred
   določenim rokom kroga iste lige. Preverbo izvaja baza.
 - Prevzem profila igralca ("To sem jaz"): zahtevek potrdi odobren poznavalec kluba (sam nastavljen `insider_team_id` ne šteje), dva potrjena soigralca istega kluba in lige, enkratna povezava iz maila klubu ali admin; svojega zahtevka nihče ne potrdi. Čakajoči zahtevki niso javni (javen je le pogled `potrjeni_igralci`). Fotografije zapiše le potrjen lastnik v mapo svojega igralca.
+- Uradno odsotnost (`objavi_uradno_odsotnost`) javi in zapre (`zapri_uradno_odsotnost`) le potrjeni igralec za svoje vrstice (glavna in povezane). Preverba po uvozu (`preveri_uradne_odsotnosti`, servis) odsotnost, med katero je po zapisniku igral, označi "ni držalo"; dva taka opomina v sezoni vzameta pravico do uradnih odsotnosti do konca sezone. Na točke in cene nima vpliva.
 - Kroge, klube in igralce urejajo **le administratorji** (`profiles.is_admin`).
 - Javni profil `/u/:id` bere `javni_profil(id)` (le javna polja; zasebni profil le ime). Prikazno ime si uporabnik spremeni sam (3–24 znakov, enolično, enkrat na 7 dni, sprožilec `varuj_prikazno_ime`).
 - Račun izbriše uporabnik sam z `izbrisi_moj_racun()` (stran `/account`); z njim gredo profil, ekipe z zgodovino, glasovi in njegove mini lige. Sistemskega lastnika hišnih ekip ni mogoče izbrisati.

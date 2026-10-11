@@ -26,6 +26,13 @@ import {
 } from '../components/Odsotnost'
 import { prevediNapako } from '../lib/napake'
 import { EKIPA_SHRANJENA } from '../components/OpozoriloEkipe'
+import { VrsticaUradne } from '../components/UradnaOdsotnost'
+import {
+  skupnaVrsta,
+  zdruziZaForum,
+  type UradnaOdsotnost,
+  type VnosForuma,
+} from '../lib/uradneOdsotnosti'
 
 /** Brez šumnikov in velikih črk — "zeleznik" najde "Železnik" (kot izbirnik lige). */
 const poenostavi = (s: string) =>
@@ -50,6 +57,13 @@ export default function Odsotnosti() {
   // Kaj se dogaja v DRUGIH ligah. Pri petindvajsetih ligah in peščici poročil
   // je stran skoraj vedno prazna — in prazna stran ne pove, čemu služi.
   const [drugod, setDrugod] = useState<Porocilo[]>([])
+  // Uradne odsotnosti potrjenih igralcev (igralec sam); na forumu nad
+  // skupnostnimi poročili istega igralca.
+  const [uradne, setUradne] = useState<UradnaOdsotnost[]>([])
+  const [uradneDrugod, setUradneDrugod] = useState<UradnaOdsotnost[]>([])
+  // Potrjeni igralec dobi povezavo na svoj profil, kjer javi uradno odsotnost.
+  const [mojIgralec, setMojIgralec] = useState<number | null>(null)
+  const [zapiram, setZapiram] = useState(false)
   const [filter, setFilter] = useState<VrstaPorocila | 'vse'>('vse')
   const [nalaganje, setNalaganje] = useState(true)
   const [napaka, setNapaka] = useState<string | null>(null)
@@ -74,7 +88,8 @@ export default function Odsotnosti() {
     setNapaka(null)
     let veljavno = true
     ;(async () => {
-      const [{ data, error }, { data: ostalo }] = await Promise.all([
+      const drugeId = drugeLige.length ? drugeLige : [-1]
+      const [{ data, error }, { data: ostalo }, { data: ur }, { data: urOstalo }] = await Promise.all([
         supabase
           .from('player_reports_view')
           .select('*')
@@ -86,7 +101,19 @@ export default function Odsotnosti() {
         supabase
           .from('player_reports_view')
           .select('*')
-          .in('competition_id', drugeLige.length ? drugeLige : [-1])
+          .in('competition_id', drugeId)
+          .order('created_at', { ascending: false })
+          .limit(5),
+        supabase
+          .from('uradne_odsotnosti_view')
+          .select('*')
+          .eq('competition_id', ligaId)
+          .order('created_at', { ascending: false })
+          .limit(100),
+        supabase
+          .from('uradne_odsotnosti_view')
+          .select('*')
+          .in('competition_id', drugeId)
           .order('created_at', { ascending: false })
           .limit(5),
       ])
@@ -94,12 +121,32 @@ export default function Odsotnosti() {
       if (error) setNapaka(prevediNapako(error.message))
       else setPorocila((data ?? []) as Porocilo[])
       setDrugod((ostalo ?? []) as Porocilo[])
+      setUradne((ur ?? []) as UradnaOdsotnost[])
+      setUradneDrugod((urOstalo ?? []) as UradnaOdsotnost[])
       setNalaganje(false)
     })()
     return () => {
       veljavno = false
     }
   }, [tekmovanjeId, tekmovanja])
+
+  useEffect(() => {
+    const uid = session?.user.id
+    if (!uid) return setMojIgralec(null)
+    let veljavno = true
+    supabase
+      .from('zahtevki_igralca')
+      .select('player_id')
+      .eq('user_id', uid)
+      .eq('status', 'potrjen')
+      .maybeSingle()
+      .then(({ data }) => {
+        if (veljavno) setMojIgralec(data?.player_id ?? null)
+      })
+    return () => {
+      veljavno = false
+    }
+  }, [session?.user.id])
 
   // Iskanje igralca ob objavi. Brez izbranega igralca poročilo nima smisla —
   // forum je urejen po igralcih, ne po prostem besedilu.
@@ -143,6 +190,67 @@ export default function Odsotnosti() {
     () => (filter === 'vse' ? porocila : porocila.filter((p) => p.kind === filter)),
     [porocila, filter],
   )
+  const vnosi = useMemo(
+    () =>
+      zdruziZaForum(
+        filter === 'vse' ? uradne : uradne.filter((u) => skupnaVrsta(u.vrsta) === filter),
+        vidna,
+      ),
+    [uradne, vidna, filter],
+  )
+  const vnosiDrugod = useMemo(
+    () => zdruziZaForum(uradneDrugod, drugod).slice(0, 8),
+    [uradneDrugod, drugod],
+  )
+
+  async function zapriUradno(id: number) {
+    setZapiram(true)
+    setNapaka(null)
+    const { error } = await supabase.rpc('zapri_uradno_odsotnost', { p_id: id })
+    setZapiram(false)
+    if (error) return setNapaka(prevediNapako(error.message))
+    window.dispatchEvent(new Event(EKIPA_SHRANJENA))
+    const zdaj = new Date().toISOString()
+    setUradne((prej) => prej.map((u) => (u.id === id ? { ...u, status: 'zaprto', zaprto_at: zdaj } : u)))
+  }
+
+  /** Igralec s klubom in povezavo, za glavo vrstice. */
+  const glava = (v: {
+    player_id: number
+    player_name?: string | null
+    team_name?: string | null
+    team_short?: string | null
+    team_logo?: string | null
+  }) => (
+    <span className="flex min-w-0 items-center gap-1.5">
+      <Grb ime={v.team_name} kratko={v.team_short} logo={v.team_logo} velikost={18} />
+      <Link to={`/player/${v.player_id}`} className="truncate font-semibold hover:text-gnl-300">
+        {prikazniIme(v.player_name)}
+      </Link>
+    </span>
+  )
+
+  const vrstica = (v: VnosForuma, drugje = false) =>
+    v.vrsta === 'uradna' ? (
+      <VrsticaUradne
+        key={`${drugje ? 'd' : ''}u-${v.uradna.id}`}
+        odsotnost={v.uradna}
+        naslov={glava(v.uradna)}
+        naZapri={!drugje && v.uradna.moje ? () => void zapriUradno(v.uradna.id) : undefined}
+        dela={zapiram}
+      />
+    ) : (
+      <VrsticaPorocila
+        key={`${drugje ? 'd' : ''}p-${v.porocilo.id}`}
+        porocilo={v.porocilo}
+        naslov={glava(v.porocilo)}
+        naIzbris={
+          !drugje && session?.user?.id === v.porocilo.user_id
+            ? () => izbrisi(v.porocilo.id)
+            : undefined
+        }
+      />
+    )
 
   async function objavi(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -330,78 +438,41 @@ export default function Odsotnosti() {
         </form>
       )}
 
-      {vidna.length === 0 ? (
+      {mojIgralec != null && (
+        <p className="text-sm text-slate-400">
+          {tx('igralci.uradno.naForumu', {}, {
+            povezava: (b) => (
+              <Link to={`/player/${mojIgralec}`} className="text-gnl-300 underline">
+                {b}
+              </Link>
+            ),
+          })}
+        </p>
+      )}
+
+      {vnosi.length === 0 ? (
         <div className="kartica space-y-2 p-6 text-center text-slate-400">
           <p>
-            {porocila.length === 0
+            {porocila.length === 0 && uradne.length === 0
               ? t('igralci.odsotnosti.prazno')
               : t('igralci.odsotnosti.praznaKategorija')}
           </p>
-          {porocila.length === 0 && (
+          {porocila.length === 0 && uradne.length === 0 && (
             <p className="text-sm text-slate-500">
               {t('igralci.odsotnosti.praznoNamig')}
             </p>
           )}
         </div>
       ) : (
-        <ul className="space-y-2">
-          {vidna.map((p) => (
-            <VrsticaPorocila
-              key={p.id}
-              porocilo={p}
-              naslov={
-                <span className="flex min-w-0 items-center gap-1.5">
-                  <Grb
-                    ime={p.team_name}
-                    kratko={p.team_short}
-                    logo={p.team_logo}
-                    velikost={18}
-                  />
-                  <Link
-                    to={`/player/${p.player_id}`}
-                    className="truncate font-semibold hover:text-gnl-300"
-                  >
-                    {prikazniIme(p.player_name)}
-                  </Link>
-                </span>
-              }
-              naIzbris={
-                session?.user?.id === p.user_id ? () => izbrisi(p.id) : undefined
-              }
-            />
-          ))}
-        </ul>
+        <ul className="space-y-2">{vnosi.map((v) => vrstica(v))}</ul>
       )}
 
-      {drugod.length > 0 && (
+      {vnosiDrugod.length > 0 && (
         <section className="space-y-2 pt-2">
           <h2 className="text-xs font-bold uppercase tracking-wide text-slate-500">
             {t('igralci.odsotnosti.drugod')}
           </h2>
-          <ul className="space-y-2 opacity-75">
-            {drugod.map((p) => (
-              <VrsticaPorocila
-                key={`d-${p.id}`}
-                porocilo={p}
-                naslov={
-                  <span className="flex min-w-0 items-center gap-1.5">
-                    <Grb
-                      ime={p.team_name}
-                      kratko={p.team_short}
-                      logo={p.team_logo}
-                      velikost={18}
-                    />
-                    <Link
-                      to={`/player/${p.player_id}`}
-                      className="truncate font-semibold hover:text-gnl-300"
-                    >
-                      {prikazniIme(p.player_name)}
-                    </Link>
-                  </span>
-                }
-              />
-            ))}
-          </ul>
+          <ul className="space-y-2 opacity-75">{vnosiDrugod.map((v) => vrstica(v, true))}</ul>
         </section>
       )}
 

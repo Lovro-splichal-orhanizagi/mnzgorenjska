@@ -2661,6 +2661,32 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   anonimizacija vedno pobriše predstavitev. **Strežnik nima storitve Storage**:
   vedro in pravila ustvari `prevzem_pripravi_shrambo()` šele, ko shema
   `storage` obstaja (lokalno da, na strežniku ne) — po vklopu Storage jo pokliči.
+- **Uradne odsotnosti** (migracija 20261012113100): potrjeni igralec (lastnik
+  potrjenega `zahtevki_igralca`, tudi za povezane vrstice) sam javi odsotnost
+  (`objavi_uradno_odsotnost`: vrsta `poskodba`/`bolezen`/`dopust`/`kazen`/`drugo`,
+  od, vrnitev ali neznano, opomba do 140 znakov) in jo zapre
+  ("Spet sem nared", `zapri_uradno_odsotnost`, brez posledic). Naenkrat ena
+  odprta na osebo. Tabela `uradne_odsotnosti` je zaprta (v njej je uporabnik);
+  javno jo kaže pogled `uradne_odsotnosti_view` (brez uporabnika, `moje` za
+  prijavljenega; profil, ki ni več potrjen, ne kaže ničesar). Na forumu
+  Odsotnosti stoji z značko "Uradno: igralec sam" nad skupnostnimi poročili
+  istega igralca (`zdruziZaForum` v `src/lib/uradneOdsotnosti.ts`), na strani
+  igralca razdelek `UradnaOdsotnost.tsx` (lastnik vidi opomine in obrazec).
+  **Preverba** `preveri_uradne_odsotnosti()` (servis) teče v poslu *skupno*
+  delovnega toka *Uvoz zapisnikov* (`scripts/preveri-uradne-odsotnosti.mjs`,
+  po združitvi duplikatov) in vsako uro prek pg_cron: če je igralec
+  (katerakoli vrstica osebe) igral z minutami > 0 na tekmi z datumom v
+  [od, vrnitev), po dnevu objave in pred dnem zaprtja, je odsotnost
+  `ni_drzalo` (javno "Ni držalo: igral DD. MM.") in to je opomin osebi.
+  Zapisnik pozna le datum, zato dan objave in dan zaprtja štejeta v korist
+  igralca. Zaprte odsotnosti pregleduje še 60 dni (zapisnik lahko zamuja).
+  Dva opomina v sezoni (`sezona_lige` lige vrstice, `uradne_odsotnosti_najvec()`)
+  = do konca sezone brez uradnih odsotnosti; navadna poročila lahko piše še
+  naprej. Nova sezona začne z nič. **Ni odbitka točk ne cene**: točke
+  prihajajo le iz uradnih zapisnikov (minute, goli, kartoni), zato uradna
+  odsotnost ali "ni držalo" na točke, ceno in izbiro ekip ne vpliva; kazen je
+  le izguba pravice do uradnih odsotnosti. Anonimizacija vrstice jih izbriše
+  (kot skupnostna poročila).
 - `povzetek_rasti()` → ena vrstica številk (uporabniki, novi v 7 dneh, ekipe,
   aktivne lige, namestitve) pod vsakim poročilom na Discord (mejnik uporabnikov,
   `scripts/trgovine.mjs`). Le servis

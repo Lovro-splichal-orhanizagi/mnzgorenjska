@@ -215,3 +215,12 @@ jobs:
           FACR_PROXY: ${{ secrets.FACR_PROXY }}
         run: node scripts/zdruzi-duplikate.mjs --pisi
         continue-on-error: true
+      # Uradne odsotnosti potrjenih igralcev: kdor je po zapisniku igral med
+      # odprto odsotnostjo, dobi "ni držalo" in opomin (brez vpliva na točke).
+      # Po združitvi duplikatov, da nastopi visijo na pravih vrsticah.
+      - name: Preveri uradne odsotnosti
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/preveri-uradne-odsotnosti.mjs
+        continue-on-error: true

@@ -21,6 +21,15 @@ const ZNANE: [RegExp, Parameters<typeof t>[0]][] = [
   [/^V mladinski ligi moraš potrditi/, 'igralci.prevzem.napake.star16'],
   [/^Dokaz mora biti povezava/, 'igralci.prevzem.napake.dokaz'],
   [/^Ta profil si že prijavil/, 'igralci.prevzem.napake.zePrijavil'],
+  [/^Uradno odsotnost lahko javi le potrjeni/, 'igralci.uradno.napake.niLastnik'],
+  [/^To ni tvoja uradna odsotnost/, 'igralci.uradno.napake.niLastnik'],
+  [/^Uradno odsotnost že imaš odprto/, 'igralci.uradno.napake.odprta'],
+  [/^Dva opomina v tej sezoni/, 'igralci.uradno.napake.blokiran'],
+  [/^Začetek odsotnosti je lahko/, 'igralci.uradno.napake.zacetek'],
+  [/^Vrnitev mora biti po začetku/, 'igralci.uradno.napake.vrnitev'],
+  [/^Opomba ima lahko največ/, 'igralci.uradno.napake.opomba'],
+  [/^Preveč uradnih odsotnosti/, 'igralci.uradno.napake.prevec'],
+  [/^Uradna odsotnost ni več odprta/, 'igralci.uradno.napake.niOdprta'],
 ]
 
 export function prevediNapako(sporocilo: string): string {

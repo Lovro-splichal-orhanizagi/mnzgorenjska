@@ -3533,6 +3533,58 @@ export type Database = {
         }
         Relationships: []
       }
+      uradne_odsotnosti: {
+        Row: {
+          created_at: string
+          id: number
+          ni_drzalo_datum: string | null
+          ni_drzalo_match_id: number | null
+          od: string
+          opomba: string | null
+          player_id: number
+          sezona: string
+          status: string
+          user_id: string
+          vrnitev: string | null
+          vrsta: string
+          zahtevek_id: number
+          zaprto_at: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          id?: never
+          ni_drzalo_datum?: string | null
+          ni_drzalo_match_id?: number | null
+          od: string
+          opomba?: string | null
+          player_id: number
+          sezona: string
+          status?: string
+          user_id: string
+          vrnitev?: string | null
+          vrsta: string
+          zahtevek_id: number
+          zaprto_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          ni_drzalo_datum?: string | null
+          ni_drzalo_match_id?: number | null
+          od?: string
+          opomba?: string | null
+          player_id?: number
+          sezona?: string
+          status?: string
+          user_id?: string
+          vrnitev?: string | null
+          vrsta?: string
+          zahtevek_id?: number
+          zaprto_at?: string | null
+        }
+        Relationships: []
+      }
       zahtevki_igralca: {
         Row: {
           created_at: string
@@ -5622,6 +5674,30 @@ export type Database = {
           },
         ]
       }
+      uradne_odsotnosti_view: {
+        Row: {
+          competition_id: number | null
+          created_at: string | null
+          glavni_player_id: number | null
+          id: number | null
+          moje: boolean | null
+          ni_drzalo_datum: string | null
+          od: string | null
+          opomba: string | null
+          player_id: number | null
+          player_name: string | null
+          status: string | null
+          team_id: number | null
+          team_logo: string | null
+          team_name: string | null
+          team_short: string | null
+          vrnitev: string | null
+          vrsta: string | null
+          zaprto_at: string | null
+        }
+        ComputedFields: never
+        Relationships: []
+      }
       voter_position_accuracy: {
         Row: {
           correct: number | null
@@ -6058,6 +6134,16 @@ export type Database = {
         Returns: boolean
       }
       nova_koda_mini_lige: { Args: Record<PropertyKey, never>; Returns: string }
+      objavi_uradno_odsotnost: {
+        Args: {
+          p_od?: string
+          p_opomba?: string
+          p_player_id: number
+          p_vrnitev?: string
+          p_vrsta: string
+        }
+        Returns: number
+      }
       odjavi_z_zetonom: {
         Args: { p_user: string; p_zeton: string }
         Returns: boolean
@@ -6125,6 +6211,7 @@ export type Database = {
       potrdi_soigralca: { Args: { p_id: number }; Returns: string }
       povzetek_rasti: { Args: Record<PropertyKey, never>; Returns: string }
       preklici_moj_zahtevek: { Args: { p_id: number }; Returns: undefined }
+      preveri_uradne_odsotnosti: { Args: Record<PropertyKey, never>; Returns: number }
       preracunaj_cene: {
         Args: { p_round_id: number }
         Returns: {
@@ -6290,6 +6377,16 @@ export type Database = {
           veljavna: boolean
         }[]
       }
+      stanje_uradne_odsotnosti: {
+        Args: { p_player_id: number }
+        Returns: {
+          blokiran: boolean
+          lastnik: boolean
+          najvec: number
+          opomini: number
+          sezona: string
+        }[]
+      }
       stiki_klubov: {
         Args: {
           p_drzava?: string
@@ -6416,6 +6513,8 @@ export type Database = {
           player_id: number
         }[]
       }
+      uradne_odsotnosti_najvec: { Args: Record<PropertyKey, never>; Returns: number }
+      uradne_odsotnosti_opomini: { Args: { p_user: string }; Returns: number }
       ustvari_hisno_ekipo: {
         Args: {
           p_competition_id: number
@@ -6508,6 +6607,7 @@ export type Database = {
       }
       zakleni_krog: { Args: { p_round_id: number }; Returns: number }
       zakleni_zapadle_kroge: { Args: { p_okno?: string }; Returns: number }
+      zapri_uradno_odsotnost: { Args: { p_id: number }; Returns: undefined }
       zaprosi_za_poznavalca: {
         Args: {
           p_competition_id: number
