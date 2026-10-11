@@ -44,6 +44,7 @@ const Pozicije = lazy(() => import('./pages/Pozicije'))
 const Odsotnosti = lazy(() => import('./pages/Odsotnosti'))
 const Administracija = lazy(() => import('./pages/Administracija'))
 const VstopVMiniLigo = lazy(() => import('./pages/VstopVMiniLigo'))
+const JavnaMiniLiga = lazy(() => import('./pages/JavnaMiniLiga'))
 const Opomniki = lazy(() => import('./pages/Opomniki'))
 const Racun = lazy(() => import('./pages/Racun'))
 const Profil = lazy(() => import('./pages/Profil'))
@@ -145,6 +146,7 @@ export default function App() {
               <Route path="/standings" element={<Lestvica />} />
               <Route path="/national" element={<Slovenija />} />
               <Route path="/mini-leagues" element={<MiniLige />} />
+              <Route path="/mini-leagues/:id" element={<JavnaMiniLiga />} />
               <Route path="/l/:koda" element={<VstopVMiniLigo />} />
               <Route path="/team/:id" element={<Ekipa />} />
               <Route path="/club/:id" element={<Klub />} />

@@ -20,8 +20,10 @@ import Odsotnosti from '../src/pages/Odsotnosti'
 import Slovenija from '../src/pages/Slovenija'
 import MiniLige from '../src/pages/MiniLige'
 import VstopVMiniLigo from '../src/pages/VstopVMiniLigo'
+import JavnaMiniLiga from '../src/pages/JavnaMiniLiga'
 import Ekipa from '../src/pages/Ekipa'
 import Profil from '../src/pages/Profil'
+import { preveriJavnoLigo, napakaJavnosti } from '../src/lib/javneMiniLige'
 import { preveriImeProfila, napakaIzBaze, zacetniceImena, barvaAvatarja, naslednjaSpremembaImena, BARVE_AVATARJA } from '../src/lib/profil'
 import Klub from '../src/pages/Klub'
 import InfoIgralca from '../src/components/InfoIgralca'
@@ -98,6 +100,7 @@ const strani = [
   ['Slovenija', Slovenija, '/national'],
   ['Mini lige', MiniLige, '/mini-leagues'],
   ['Vstop v mini ligo', VstopVMiniLigo, '/l/ABCDEF'],
+  ['Javna mini liga', JavnaMiniLiga, '/mini-leagues/1'],
   ['Tuja ekipa', Ekipa, '/team/1'],
   ['Profil', Profil, '/u/b8a06635-2322-4444-8c42-44e419f912ab'],
   ['Klub', Klub, '/club/24'],
@@ -207,6 +210,16 @@ try {
   ]
   const narobe = primeri.filter(([ime, koda]) => preveriImeProfila(ime) !== koda)
   preveri('profil: pravila imena kot v bazi', narobe.length === 0, narobe.map(([i]) => i).join(', '))
+  // Javna mini liga: isto pravilo za ime in opis (sprožilec varuj_mini_ligo).
+  preveri('javne lige: ime in opis kot v bazi',
+    preveriJavnoLigo('Liga prijateljev', 'Za vse iz Kranja') === null
+    && preveriJavnoLigo('SLFF uradna', '') === 'ime-rezervirano'
+    && preveriJavnoLigo('Ok liga', 'f.u.c.k') === 'opis-neprimerno'
+    && preveriJavnoLigo('Ok liga', 'a'.repeat(121)) === 'opis-dolzina'
+    && preveriJavnoLigo('<b>', '') === 'ime-znaki')
+  preveri('javne lige: koda napake iz baze se prevede',
+    napakaJavnosti({ hint: 'javne-najvec', message: 'x' }).includes('3')
+    && napakaJavnosti({ message: 'Ta mini liga ni javna.' }) !== '')
   preveri('profil: koda napake iz baze', napakaIzBaze({ hint: 'ime-prepogosto' }) === 'prepogosto'
     && napakaIzBaze({ code: '23505' }) === 'zasedeno' && napakaIzBaze({ hint: 'kaj drugega' }) === null)
   preveri('profil: začetnice', zacetniceImena('Janez Novak') === 'JN' && zacetniceImena('luka') === 'L'

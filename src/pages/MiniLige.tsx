@@ -19,6 +19,8 @@ import {
 } from '../lib/miniLige'
 import DeliMiniLigo from '../components/DeliMiniLigo'
 import TedenskiPregled from '../components/TedenskiPregled'
+import JavneMiniLige from '../components/JavneMiniLige'
+import JavnostMiniLige from '../components/JavnostMiniLige'
 import { t, tx } from '../i18n'
 import { dogodek } from '../lib/analitika'
 import { prevediNapako } from '../lib/napake'
@@ -30,11 +32,16 @@ interface MojaLiga {
   name: string
   code: string
   owner_id: string
+  javna: boolean
+  opis: string | null
+  competition_id: number | null
+  javna_zaklenjena_at: string | null
 }
 
 interface MojaEkipa {
   id: number
   name: string
+  competition_id: number | null
   competition_short: string | null
 }
 
@@ -43,7 +50,8 @@ interface MojaEkipa {
  *
  * Javna liga postane igriva šele, ko se napolni; mini liga deluje pri vsaki
  * gostoti. Namenoma gre čez lige: pridružiš se z eno svojo ekipo, ne glede na
- * to, katero tekmovanje igra.
+ * to, katero tekmovanje igra. Lastnik jo lahko objavi v eni ligi (javna mini
+ * liga): takrat jo drugi najdejo spodaj in se pridružijo brez kode.
  */
 export default function MiniLige() {
   const { session, loading: nalaganjePrijave } = useAuth()
@@ -97,11 +105,12 @@ export default function MiniLige() {
     }
     const { data: mojeEkipe } = await supabase
       .from('fantasy_teams')
-      .select('id, name, competitions(short_name)')
+      .select('id, name, competition_id, competitions(short_name)')
       .eq('owner_id', uporabnikId)
     const seznam: MojaEkipa[] = (mojeEkipe ?? []).map((e) => ({
       id: e.id as number,
       name: (e.name as string) ?? '',
+      competition_id: (e.competition_id as number | null) ?? null,
       competition_short:
         (e as { competitions?: { short_name?: string | null } }).competitions?.short_name ?? null,
     }))
@@ -122,7 +131,7 @@ export default function MiniLige() {
     const ligaIdji = [...new Set((clanstva ?? []).map((c) => c.mini_liga_id))]
     const { data: moje } = await supabase
       .from('mini_lige')
-      .select('id, name, code, owner_id')
+      .select('id, name, code, owner_id, javna, opis, competition_id, javna_zaklenjena_at')
       .or(
         [
           `owner_id.eq.${uporabnikId}`,
@@ -226,9 +235,14 @@ export default function MiniLige() {
     if (izid?.mini_liga_id) setIzbrana(izid.mini_liga_id as number)
   }
 
+  async function poPridruzitvi(ligaId: number) {
+    await naloziSvoje()
+    setIzbrana(ligaId)
+  }
+
   if (!session && !nalaganjePrijave)
     return (
-      <div className="space-y-4">
+      <div className="space-y-6">
         <h1 className="text-2xl font-black naslov sm:text-3xl">{t('lestvice.miniLige.naslov')}</h1>
         <p className="text-sm text-slate-400">
           {tx('lestvice.miniLige.prijava', {}, {
@@ -242,6 +256,7 @@ export default function MiniLige() {
             ),
           })}
         </p>
+        <JavneMiniLige ekipe={null} />
       </div>
     )
   if (nalaganje || nalaganjePrijave) return <p className="animiraj-utrip text-slate-400">{t('skupno.nalaganje')}</p>
@@ -432,6 +447,10 @@ export default function MiniLige() {
             <DeliMiniLigo ime={trenutna.name} koda={trenutna.code} stanje="polna" />
           )}
 
+          {trenutna && trenutna.owner_id === uporabnikId && (
+            <JavnostMiniLige liga={trenutna} ekipe={ekipe} onSpremenjeno={naloziSvoje} />
+          )}
+
           <details className="group">
             <summary className="cursor-pointer list-none py-1 text-sm font-semibold text-slate-300 hover:text-white [&::-webkit-details-marker]:hidden">
               <span aria-hidden className="mr-1 inline-block text-slate-500 transition group-open:rotate-90">
@@ -443,6 +462,8 @@ export default function MiniLige() {
           </details>
         </>
       )}
+
+      <JavneMiniLige ekipe={ekipe} onPridruzen={poPridruzitvi} />
     </div>
   )
 }

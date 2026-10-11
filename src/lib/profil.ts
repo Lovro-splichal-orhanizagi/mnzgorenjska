@@ -50,25 +50,33 @@ const NEPRIMERNO = /(fuck|shit|cunt|nigg|hitler|kurac|pizd|picka|jebem|jebi|kurv
 export const pocistiIme = (ime: string): string => ime.replace(/\s+/g, ' ').trim()
 
 /**
- * Isto pravilo kot `napaka_prikaznega_imena` v bazi (brez enoličnosti in
- * omejitve 7 dni, ki ju pozna le baza). Vrne kodo napake ali null.
+ * Znaki, rezervirane besede in žaljivke: isto kot `prepovedano_besedilo` v
+ * bazi (prikazno ime in ime ter opis javne mini lige). Vrne kodo ali null.
  */
-export function preveriImeProfila(ime: string): NapakaImena | null {
-  const v = pocistiIme(ime)
-  const dolzina = [...v].length
-  if (dolzina < 3 || dolzina > 24) return 'dolzina'
+export function prepovedanoBesedilo(besedilo: string): 'znaki' | 'rezervirano' | 'neprimerno' | null {
+  const v = pocistiIme(besedilo)
   // eslint-disable-next-line no-control-regex
   if (/[\u0000-\u001f\u007f<>{}[\]|\\/@#$%^*=+~`"]/.test(v) || /[\u200B-\u200F\u2028-\u202F\u2060-\u206F\uFEFF]/.test(v))
     return 'znaki'
   const cisto = v
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .replace(/[0134578@$!|]/g, (c) => ({ '0': 'o', '1': 'i', '3': 'e', '4': 'a', '5': 's', '7': 't', '8': 'b', '@': 'a', $: 's', '!': 'i', '|': 'i' })[c] ?? c)
     .replace(/[^a-z]/g, '')
   if (REZERVIRANO.test(cisto)) return 'rezervirano'
   if (NEPRIMERNO.test(cisto)) return 'neprimerno'
   return null
+}
+
+/**
+ * Isto pravilo kot `napaka_prikaznega_imena` v bazi (brez enoličnosti in
+ * omejitve 7 dni, ki ju pozna le baza). Vrne kodo napake ali null.
+ */
+export function preveriImeProfila(ime: string): NapakaImena | null {
+  const dolzina = [...pocistiIme(ime)].length
+  if (dolzina < 3 || dolzina > 24) return 'dolzina'
+  return prepovedanoBesedilo(ime)
 }
 
 /** Koda napake iz odgovora baze (`hint` sprožilca ali 23505 enoličnega indeksa). */

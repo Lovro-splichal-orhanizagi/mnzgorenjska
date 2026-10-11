@@ -13,6 +13,7 @@ import UpravljanjeLig from '../components/admin/UpravljanjeLig'
 import ZivostSkupnosti from '../components/admin/Zivost'
 import ProsnjePoznavalcev from '../components/admin/ProsnjePoznavalcev'
 import Prevzemi from '../components/admin/Prevzemi'
+import PrijaveMiniLig from '../components/admin/PrijaveMiniLig'
 import RastLig from '../components/admin/RastLig'
 import Rast from '../components/admin/Rast'
 import Lijak from '../components/admin/Lijak'
@@ -636,6 +637,7 @@ export default function Administracija() {
         { id: 'uporabniki', naslov: `Uporabniki (${uporabniki.length})` },
         { id: 'ekipe', naslov: `Fantasy ekipe (${ekipe.length})` },
         { id: 'poznavalci', naslov: 'Prošnje poznavalcev' },
+        { id: 'mini-lige', naslov: 'Prijave mini lig' },
       ],
     },
     {
@@ -741,6 +743,9 @@ export default function Administracija() {
             </Razdelek>
             <Razdelek id="prevzemi">
               <Prevzemi />
+            </Razdelek>
+            <Razdelek id="mini-lige">
+              <PrijaveMiniLig />
             </Razdelek>
             <Razdelek id="rast-lig">
               <RastLig />
