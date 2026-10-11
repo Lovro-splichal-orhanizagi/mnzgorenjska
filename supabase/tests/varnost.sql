@@ -1211,8 +1211,8 @@ select set_config('request.jwt.claim.sub','',true);
 set local role anon;
 select pg_temp.preveri('profil: zasebni profil anonimnemu le ime',
   (select v - 'id' - 'ime' - 'javen' - 'jaz' = '{}'::jsonb from javni_profil('b8a06635-2322-4444-8c42-44e419f912ab') v));
-select pg_temp.preveri('profil: javni profil brez servisnih polj',
-  (select (v ? 'ekipe') and not (v ? 'is_admin') and not (v ? 'brez_opomnikov') and not (v ? 'insider_team_id')
+select pg_temp.preveri('profil: javni profil brez servisnih polj in brez tujih ekip',
+  (select not (v ? 'ekipe') and not (v ? 'mini_lige') and (v ? 'dosezki') and not (v ? 'is_admin') and not (v ? 'brez_opomnikov') and not (v ? 'insider_team_id')
           and not (v ? 'email') and not (v->>'jaz')::boolean
      from javni_profil('b8a06635-2322-4444-8c42-44e419f912ac') v));
 reset role;
