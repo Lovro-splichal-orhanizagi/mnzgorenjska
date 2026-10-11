@@ -2429,7 +2429,7 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   iz kroga. Vmesnik naj bere in briše pripomočke **s filtrom na sezono**.
 - `fantasy_lineups` → posnetek postave po krogih; nastane s `zakleni_krog(krog)`
   oz. `zakleni_zapadle_kroge()` (za cron). Točkovanje bere posnetek, če obstaja.
-- **Ekipe so zasebne** (migracija 20261012121100): sestavo ekipe (kader,
+- **Ekipe so zasebne** (migracija 20261012137100): sestavo ekipe (kader,
   posnetki, kapetan, klop, pripomočki) vidi le lastnik in admin, tudi po roku
   in tudi pri hišnih ekipah. RLS na `fantasy_roster`, `fantasy_lineups`,
   `fantasy_chips`; `tuja_postava` vrne vrstice le, če `sme_videti_ekipo(ekipa)`
@@ -2511,7 +2511,7 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   Pregled teče kot lastnik sheme (bere tuje posnetke za točke klopi), a
   kapetana izbere le med ekipami, ki jih klicatelj sme videti (svojo), aduta
   ne vrne več (izdal bi, česa tekmeci nimajo); vrstice nosijo `lastnik_id`
-- **Javne mini lige** (migracija 20261012133100): `mini_lige.javna`, `opis`
+- **Javne mini lige** (migracija 20261012139100): `mini_lige.javna`, `opis`
   (≤ 120), `competition_id` (liga, v kateri je javna; mini liga sama še vedno
   gre čez lige) in `javna_zaklenjena_at` (admin jo je skril, lastnik je ne more
   spet objaviti). Javnost nastavi le ustvarjalec prek
@@ -2696,7 +2696,7 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   anonimizacija vedno pobriše predstavitev. **Strežnik nima storitve Storage**:
   vedro in pravila ustvari `prevzem_pripravi_shrambo()` šele, ko shema
   `storage` obstaja (lokalno da, na strežniku ne) — po vklopu Storage jo pokliči.
-- **Uradne odsotnosti** (migracija 20261012113100): potrjeni igralec (lastnik
+- **Uradne odsotnosti** (migracija 20261012135100): potrjeni igralec (lastnik
   potrjenega `zahtevki_igralca`, tudi za povezane vrstice) sam javi odsotnost
   (`objavi_uradno_odsotnost`: vrsta `poskodba`/`bolezen`/`dopust`/`kazen`/`drugo`,
   od, vrnitev ali neznano, opomba do 140 znakov) in jo zapre

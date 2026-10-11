@@ -33,7 +33,7 @@ interface Krog {
  * Ekipa po krogih — postave zaklenjenih krogov s točkami.
  *
  * Sestava ekipe je zasebna (odločitev lastnika, 10/2026; migracija
- * 20261012121100): postavo, kapetana in klop vidi le lastnik (in admin).
+ * 20261012137100): postavo, kapetana in klop vidi le lastnik (in admin).
  * Drugim stran pokaže ime, lastnika, točke in mesto ter pove, da ekipe drugih
  * niso javne. Pravilo varuje baza (`tuja_postava`, RLS na posnetkih); stran
  * tujcu postave niti ne zahteva.

@@ -3,7 +3,7 @@
 -- Dve trditvi, ki ju vmesnik ne more dokazati, ker sta v bazi:
 --   a) tekoci kader tuje ekipe ni berljiv nikomur razen lastniku,
 --   b) tudi zaklenjena postava tuje ekipe ni berljiva nikomur razen lastniku
---      in adminu (zasebne ekipe, 20261012121100; prej je bila po roku javna).
+--      in adminu (zasebne ekipe, 20261012137100; prej je bila po roku javna).
 --
 -- Poganja se proti LOKALNI bazi:
 --   docker exec -i supabase_db_mnzgorenjska psql -U postgres -d postgres \
@@ -291,7 +291,7 @@ begin
    order by r.season desc, r.number desc
    limit 1;
 
-  -- Izbranost je znana sele od 5 cloveskih ekip v krogu (20261012121100);
+  -- Izbranost je znana sele od 5 cloveskih ekip v krogu (20261012137100);
   -- pod pragom je NULL, ker bi seštevek izdal posamezno ekipo.
   select count(*) into n
     from fantasy_lineups fl
