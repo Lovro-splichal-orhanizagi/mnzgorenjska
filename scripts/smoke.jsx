@@ -4473,6 +4473,40 @@ preveri(
   preveri('hlf: v predpomnilnik gredo brez fotografij in osebja', !JSON.stringify(H.brezSlik({ a: { photo: 'x', staff: [1], b: 1 } })).includes('photo'))
 }
 
+// --- vir pzpn (Poljska, zapisniki PZPN Extranet prek gradnika zveze) ------------
+{
+  const P = await import('./viri/pzpn.mjs')
+  const { default: viri } = await import('./viri/index.mjs')
+  const json = (ime) => JSON.parse(readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8'))
+  const koda = 'swietokrzyski/0e86c2b3-75d3-483b-80a0-4f086352afc5'
+  preveri('pzpn: vir je vpisan', viri.pzpn === P.default && P.default.drzava === 'PL' && P.default.imaRegistracije === false &&
+    P.default.premorMs >= 3000 && P.default.glave['User-Agent'].endsWith('SLFF fantasy (slff.eu; splih.94@gmail.com)'))
+  preveri('pzpn: šifra in naslovi', P.razbijKodo(koda).play === '0e86c2b3-75d3-483b-80a0-4f086352afc5' &&
+    P.naslovZapisnika(koda, 'x') === 'https://szpnkielce.pl/wp-json/szpn/v1/proxy/pzpn/shared/matches/x/events.json')
+  let slabaSifra = null
+  try { P.razbijKodo('mazowiecki/0e86c2b3-75d3-483b-80a0-4f086352afc5') } catch (e) { slabaSifra = e.message }
+  preveri('pzpn: zveza brez znanega posrednika ustavi uvoz', /swietokrzyski/.test(slabaSifra ?? ''))
+  preveri('pzpn: minuta, krog, čas, sezona, pavza', P.minuta("90' +2'") === 90 && P.minuta("45' +1'") === 45 && P.stevilkaKroga('Kolejka 7') === 7 &&
+    P.casTekme('2026-08-09T17:00:00+02:00').ura === '17:00' && P.sezonaIzDatuma('2027-03-14') === '2026/27' &&
+    P.jePauza({ host: { name: 'pauzuje w tej kolejce' }, guest: { name: 'X' } }))
+  preveri('pzpn: kratko ime in ključ kluba (ł)', P.kratkoImePl('KS VICTORIA 2015 Skalbmierz') === 'Victoria Skalbmierz' &&
+    P.kratkoImePl('SOKÓŁ-NORDKALK GÓRNIK Kraków') === 'Sokół-Nordkalk Górnik Kraków' && P.kljucKlubaPl('Płomień Wólka') === P.kljucKlubaPl('Plomien Wolka'))
+
+  const t = json('pl-pzpn-tekma-4liga.json')
+  const z = P.vZapisnik(t, json('pl-pzpn-zapisnik-4liga.json'))
+  const n = P.nastopi(z)
+  const minute = (i) => n.filter((x) => x.ekipaIdx === i).reduce((a, x) => a + x.minute, 0)
+  preveri('pzpn: zapisnik — 11 + 11, izid, polčas, krog, ura, brez opozoril', z.domaci.postava.length === 11 && z.gostje.postava.length === 11 &&
+    z.rezultat.domaci === 3 && z.rezultat.gostje === 1 && z.polcas?.gostje === 1 && z.krog === 1 && z.ura === '17:00' &&
+    z.sezona === '2026/27' && !z.nepopoln && z.opozorila.length === 0)
+  preveri('pzpn: enajstmetrovka, vratar pri obeh, vsi s šifro', z.goli.some((g) => g.enajstmetrovka) &&
+    n.filter((x) => x.vratar && x.zacetnik).length === 2 && n.every((x) => x.regSt != null))
+  preveri('pzpn: minute — 990 in 978 (rdeči v 78.)', minute(0) === 990 && minute(1) === 978 && z.rdeci.some((r) => r.minuta === 78))
+  const brez = P.vZapisnik(t, { success: true, events: { host: { squad: [] }, guest: { squad: [] } } })
+  preveri('pzpn: brez postav — izid ostane, nepopoln, brez nastopov', brez.nepopoln && brez.prazen && P.nastopi(brez).length === 0 &&
+    brez.opozorila[0].startsWith(P.NEPOPOLN))
+}
+
 // --- vir jalgpall (Estonija, jalgpall.ee) -----------------------------------------
 {
   const J = await import('./viri/jalgpall.mjs')
