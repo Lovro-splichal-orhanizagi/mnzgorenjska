@@ -27,6 +27,7 @@ import frf from './frf.mjs'
 import hlf from './hlf.mjs'
 import pzpn from './pzpn.mjs'
 import jalgpall from './jalgpall.mjs'
+import lff from './lff.mjs'
 
 const VIRI = {
   mnzg,
@@ -66,6 +67,9 @@ const VIRI = {
   // Estonija (EJL) prek jalgpall.ee: šifre igralcev, pozicije iz postavitve,
   // koledarska sezona.
   jalgpall,
+  // Latvija (LFF) prek lff.lv: brez šifer igralcev (ime + klub), vratar (G),
+  // koledarska sezona.
+  lff,
 }
 
 /**
