@@ -104,6 +104,9 @@ export function ligaVTozilniku(liga: string, j: Jezik = jezikSlovarja()): string
   // Primera Regional", "el Grupo 3"); ime zato stoji samostojno za dvopičjem
   // ("Liga fantasy abierta: Primera Regional").
   if (j === 'es') return liga
+  // Latvijščina ima 7 sklonov; ime lige ostane v imenovalniku in stoji
+  // samostojno za dvopičjem ("Fantāzijas līga ir atvērta: Virslīga").
+  if (j === 'lv') return liga
   if (j === 'sk') return liga.replace(/(^|\s)liga(?=\s|$)/, '$1ligu').replace(/(^|\s)trieda(?=\s|$)/, '$1triedu')
   // Hrvaščina: ženske besede imena pred " — " na -a dobijo -u: "Treća NL Sjever"
   // -> "Treću NL Sjever", "Prva zagrebačka liga" -> "Prvu zagrebačku ligu".

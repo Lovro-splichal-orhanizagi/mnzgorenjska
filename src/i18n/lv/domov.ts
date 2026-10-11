@@ -1,0 +1,89 @@
+// Latviešu `domov` (avots: src/i18n/sl/domov.ts).
+import type { Prevod } from '../jedro.ts'
+
+export const domov: NonNullable<Prevod['domov']> = {
+  napakaNalaganja: 'Datus neizdevās ielādēt.',
+  delNiNalozen: 'Daļa datu netika ielādēta: {napaka}',
+  uvod: {
+    gorenjskaMladinci: 'Gorenjskas futbola līga, juniori',
+    gorenjskaClani: '1. Gorenjskas futbola līga',
+    geslo: 'Sastādi komandu. Krāj punktus. Uzvari.',
+    opis: 'Punkti nāk no oficiālajiem spēļu protokoliem ({zveza}): vārti, minūtes, sausās spēles, kartītes. Viss, izņemot rezultatīvās piespēles, ko nosaka kopiena.',
+    vecLig: 'Vari spēlēt vairākās līgās: <krepko>līgu izvēlies augšā pa kreisi</krepko>, katrai ir sava komanda un kopvērtējums.',
+    zacetekSezone: '<krepko>Sezona sākas {datum}</krepko>. Sastādi komandu pirms termiņa.',
+    zamudniki: '<krepko>Nokavēji startu?</krepko> <lestvica>Kopvērtējumā</lestvica> tu sacenties no tās kārtas, kurā pievienojies.',
+    sestaviEkipo: 'Sastādīt komandu',
+    rezultati: 'Rezultāti un sastāvi',
+  },
+  asistence: {
+    cakajo: {
+      zero: '{n} vārtu guvumu gaida rezultatīvo piespēli',
+      one: '{n} vārtu guvums gaida rezultatīvo piespēli',
+      other: '{n} vārtu guvumi gaida rezultatīvo piespēli',
+    },
+  },
+  rok: {
+    seZaklene: '{krog}. kārta tiek slēgta',
+  },
+  krog: '{krog}. kārta',
+  brezKroga: 'Bez kārtas',
+  minut: '{n} min',
+  zadnjiRezultati: {
+    naslov: 'Pēdējie rezultāti',
+    vsi: 'Visi rezultāti →',
+    poglejTekmo: 'Skatīt šīs spēles sastāvus un punktus',
+  },
+  najboljsi: {
+    igralecSezone: 'Sezonas spēlētājs',
+    celaLestvica: 'Viss spēlētāju reitings →',
+    vodilni: {
+      strelec: 'Labākais vārtu guvējs',
+      podajalec: 'Labākais piespēlētājs',
+      mreze: 'Visvairāk sauso spēļu',
+    },
+  },
+  idealna: {
+    naslov: 'Kārtas simboliskā izlase',
+    krogSezona: '{krog}. kārta · sezona {sezona}',
+    opis: 'Pēdējās kārtas labākie 11; zem krekla ir punkti.',
+  },
+  povabi: {
+    naslov: 'Uzaicini draugu uz līgu',
+  },
+  skupnost: {
+    brezAsistence: '{goli} bez rezultatīvās piespēles',
+    povejKdo: {
+      zero: 'Pastāsti, kurš piespēlēja: apstiprina {n} balsu',
+      one: 'Pastāsti, kurš piespēlēja: apstiprina {n} balss',
+      other: 'Pastāsti, kurš piespēlēja: apstiprina {n} balsis',
+    },
+    ugibanaPozicija: '{igralci} ar minētu pozīciju',
+    pozicijaOdloca: 'Pozīcija nosaka, cik vērti ir vārti',
+    odsotnosti: 'Traumas un prombūtnes',
+    javi: 'Paziņo, kurš nespēlēs: citiem tas izglābs kārtu',
+  },
+  naslednje: {
+    naslov: 'Nākamās spēles',
+    proti: 'vs',
+  },
+  kakoIgras: {
+    naslov: 'Kā spēlēt',
+    registracija: '1. Reģistrācija',
+    registracijaOpis: 'Izveido kontu ar Google vai ar e-pastu un paroli un izdomā komandas nosaukumu.',
+    kader: '2. Sastādi sastāvu',
+    kaderOpis: 'Laukumā izvēlies 15 spēlētājus: 2 vārtsargus, 5 aizsargus, 5 pussargus un 3 uzbrucējus, ne vairāk kā 3 no viena kluba, budžeta 100 robežās.',
+    enajsterica: '3. Izvēlies pamatsastāvu',
+    enajstericaOpis: 'Vienpadsmit iet laukumā, četri uz soliņa. Kapteinis nes trīskāršus punktus; ja viņš nespēlē, apsēju pārņem vicekapteinis.',
+    poKrogu: '4. Pēc katras kārtas',
+    poKroguOpis: 'Punkti tiek aprēķināti no protokoliem. Spēlētāju bez minūtēm automātiski nomaina tās pašas pozīcijas rezervists, un reizi sezonā ar Soliņš+ vari ieskaitīt punktos visu soliņu.',
+  },
+  kakoSeTockuje: 'Kā tiek piešķirti punkti',
+  moja: {
+    tocke: 'Punkti',
+    mesto: 'Vieta',
+    mestoOd: '{mesto}. no {n}',
+    uredi: 'Mana komanda →',
+  },
+  taTeden: 'Šonedēļ',
+  klepet: 'Tērzēšana un ieteikumi',
+}

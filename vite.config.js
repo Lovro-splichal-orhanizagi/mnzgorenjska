@@ -15,6 +15,7 @@ import { aplikacija as aplikacijaRo } from './src/i18n/ro/aplikacija.ts'
 import { aplikacija as aplikacijaEt } from './src/i18n/et/aplikacija.ts'
 import { aplikacija as aplikacijaPl } from './src/i18n/pl/aplikacija.ts'
 import { aplikacija as aplikacijaEs } from './src/i18n/es/aplikacija.ts'
+import { aplikacija as aplikacijaLv } from './src/i18n/lv/aplikacija.ts'
 import { sl } from './src/i18n/sl/index.ts'
 import { sk } from './src/i18n/sk/index.ts'
 import { hr } from './src/i18n/hr/index.ts'
@@ -26,6 +27,7 @@ import { ro } from './src/i18n/ro/index.ts'
 import { et } from './src/i18n/et/index.ts'
 import { pl } from './src/i18n/pl/index.ts'
 import { es } from './src/i18n/es/index.ts'
+import { lv } from './src/i18n/lv/index.ts'
 
 /**
  * V zgrajeno stran zapiše commit, iz katerega je nastala.
@@ -67,7 +69,7 @@ function znamkaCommita() {
 }
 
 /**
- * Različice `index.html` za kartico ob deljenju (sk.html, hr.html, cz.html, hu.html, at.html, rs.html, ro.html, ee.html, pl.html, es.html).
+ * Različice `index.html` za kartico ob deljenju (sk.html, hr.html, cz.html, hu.html, at.html, rs.html, ro.html, ee.html, pl.html, es.html, lv.html).
  *
  * Facebook, WhatsApp in iskalniki JS ne poženejo in vidijo le statični HTML —
  * slovenski. Klub, ki deli povezavo `slff.eu/club/…?t=sk-…`, bi objavil
@@ -99,6 +101,8 @@ function karticeDrzav() {
     { koda: 'pl', jezik: 'pl', locale: 'pl_PL', n: aplikacijaPl.naslovStrani },
     // Španija: datoteka po kodi države (/es, ?t=es-…), jezik je es.
     { koda: 'es', jezik: 'es', locale: 'es_ES', n: aplikacijaEs.naslovStrani },
+    // Latvija: datoteka po kodi države (/lv, ?t=lv-…), jezik je lv.
+    { koda: 'lv', jezik: 'lv', locale: 'lv_LV', n: aplikacijaLv.naslovStrani },
   ]
   const zamenjaj = (html, datoteka, atribut, ime, vsebina) => {
     const re = new RegExp(`(<meta ${atribut}="${ime}" content=")[^"]*(")`)
@@ -141,7 +145,7 @@ function besedeZaHtml() {
     'tekme.rezultati.naslov', 'tekme.rezultati.uvod', 'tekme.tekma.naslov',
     'igralci.seznam.naslov', 'igralci.profil.naslov', 'lestvice.lestvica.naslov', 'lestvice.klub.naslov',
   ]
-  const SLOVARJI = { sl, sk, hr, cs, hu, de, sr, ro, et, pl, es }
+  const SLOVARJI = { sl, sk, hr, cs, hu, de, sr, ro, et, pl, es, lv }
   const vzemi = (drevo, kljuc) => kljuc.split('.').reduce((d, k) => d?.[k], drevo)
   let izhod = 'dist'
   return {

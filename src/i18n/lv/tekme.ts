@@ -1,0 +1,211 @@
+// Latviešu `tekme` (avots: src/i18n/sl/tekme.ts).
+import type { Prevod } from '../jedro.ts'
+
+export const tekme: NonNullable<Prevod['tekme']> = {
+  krog: '{n}. kārta',
+  moraPrijava: 'Lai balsotu, tev <prijava>jāpiesakās</prijava>.',
+
+  tockovanje: {
+    postavke: {
+      nastopOd60: 'Nospēlētas 60 minūtes vai vairāk',
+      nastopDo60: 'Spēle līdz 60 minūtēm',
+      gol: 'Vārti',
+      goli: 'Vārti ({n})',
+      asistenca: 'Rezultatīvā piespēle',
+      asistence: 'Rezultatīvās piespēles ({n})',
+      brezPrejetega: 'Sausā spēle',
+      zmaga: 'Komandas uzvara',
+      prejetiGoli: 'Ielaistie vārti ({n})',
+      obranjena: 'Atvairīts soda sitiens ({n})',
+      zgresena: 'Neizmantots soda sitiens ({n})',
+      avtogol: 'Vārti savos vārtos ({n})',
+      rumeni: 'Dzeltenā kartīte ({n})',
+      rdeci: 'Sarkanā kartīte',
+    },
+    pravila: {
+      igralniCas: 'Spēles laiks',
+      nastopDo60: 'Spēle līdz 60 minūtēm',
+      nastopOd60: 'Nospēlētas 60 minūtes vai vairāk',
+      goliInAsistence: 'Vārti un rezultatīvās piespēles',
+      golVratarja: 'Vārtsarga vārti',
+      golBranilca: 'Aizsarga vārti',
+      golVezista: 'Pussarga vārti',
+      golNapadalca: 'Uzbrucēja vārti',
+      asistenca: 'Rezultatīvā piespēle',
+      obramba: 'Aizsardzība',
+      csVratar: 'Sausā spēle: vārtsargs',
+      csBranilec: 'Sausā spēle: aizsargs',
+      csVezist: 'Sausā spēle: pussargs',
+      zmaga: 'Komandas uzvara: vārtsargs, aizsargs',
+      prejeta2: 'Katri 2 ielaistie vārti: vārtsargs, aizsargs',
+      opomba:
+        'Aizsardzība skaitās, ja nospēlētas vismaz 60 minūtes, un ielaistie vārti tikai tie, kas gūti, kamēr spēlētājs ir laukumā.',
+      obranjena:
+        'Atvairīts soda sitiens: vārtsargs (protokolā tas ir norādīts kā pretinieka neizmantots soda sitiens)',
+      kazni: 'Sodi',
+      zgresena: 'Neizmantots soda sitiens',
+      avtogol: 'Vārti savos vārtos',
+      rumeni: 'Dzeltenā kartīte',
+      rdeci: 'Sarkanā kartīte',
+    },
+  },
+
+  rezultati: {
+    naslov: 'Rezultāti',
+    uvod:
+      'Aizvadītās spēles no protokoliem ({zveza}). Noklikšķini uz spēles un redzēsi abus sastāvus laukumā: uz katra krekla punkti, ko spēlētājs nopelnījis.',
+    niZacetka: 'Sezona vēl nav sākusies.',
+    prazenKrog: 'Šajā kārtā nav aizvadītu spēļu.',
+    prejsnji: 'Iepriekšējā kārta',
+    naslednji: 'Nākamā kārta',
+  },
+
+  tabela: {
+    naslov: 'Turnīra tabula',
+    zavihek: '{liga} · turnīra tabula',
+    uvod: 'Sezonas {sezona} turnīra tabula, aprēķināta no spēļu rezultātiem protokolos ({zveza}).',
+    opomba: 'Tuvinājums: uzvara 3 punkti, neizšķirts 1; ja punktu skaits vienāds, izšķir vārtu starpība, tad gūtie vārti. Federācijām var būt citi noteikumi (savstarpējās spēles, atņemti punkti); oficiālā tabula ir pie {zveza}.',
+    niTekem: 'Šai līgai vēl nav aizvadītu spēļu.',
+    stolpci: {
+      klub: 'Klubs',
+      tekme: 'S',
+      zmage: 'U',
+      remiji: 'N',
+      porazi: 'Z',
+      goli: 'Vārti',
+      razlika: 'VS',
+      tocke: 'Punkti',
+      forma: 'Forma',
+    },
+    stolpciOpis: {
+      tekme: 'Aizvadītās spēles',
+      zmage: 'Uzvaras',
+      remiji: 'Neizšķirti',
+      porazi: 'Zaudējumi',
+      goli: 'Gūtie : ielaistie vārti',
+      razlika: 'Vārtu starpība',
+      tocke: 'Punkti',
+    },
+    forma: { W: 'U', D: 'N', L: 'Z' },
+    formaOpis: { W: 'uzvara', D: 'neizšķirts', L: 'zaudējums' },
+    strelci: 'Vārtu guvēji',
+    niStrelcev: 'Šajā sezonā vēl nav vārtu guvēju.',
+    stolpciStrelcev: {
+      igralec: 'Spēlētājs',
+      klub: 'Klubs',
+      goli: 'Vārti',
+      tekme: 'Spēles',
+      minute: 'Min',
+    },
+  },
+
+  tekma: {
+    naslov: 'Spēle',
+    niTekme: 'Šīs spēles protokolos nav.',
+    nazaj: '← Rezultāti',
+    brezPostav:
+      'Šīs spēles protokolā sastāvi nav norādīti, tāpēc punktus pa spēlētājiem nevar parādīt.',
+    naDresu:
+      'Uz krekla rakstīts, cik punktu spēlētājs nopelnīja šajā spēlē. Klikšķis uz spēlētāja atver viņa lapu.',
+    cakajo: {
+      zero: '{n} vārtu guvumu šajā spēlē gaida rezultatīvo piespēli; kamēr tās nav, piespēlētājs paliek bez +3 punktiem. Pastāsti zemāk, kurš piespēlēja.',
+      one: '{n} vārtu guvums šajā spēlē gaida rezultatīvo piespēli; kamēr tās nav, piespēlētājs paliek bez +3 punktiem. Pastāsti zemāk, kurš piespēlēja.',
+      other: '{n} vārtu guvumi šajā spēlē gaida rezultatīvo piespēli; kamēr tās nav, piespēlētājs paliek bez +3 punktiem. Pastāsti zemāk, kurš piespēlēja.',
+    },
+    goliInAsistence: 'Vārti un rezultatīvās piespēles',
+    prijaviSe: 'Piesakies, lai balsotu',
+  },
+
+  glasovanje: {
+    naslov: 'Rezultatīvās piespēles',
+    kdoJePodal: 'Kurš piespēlēja?',
+    uvod:
+      'Protokoli ({zveza}) reģistrē vārtu guvējus, bet ne rezultatīvās piespēles. Tās nosaka kopiena: kad viens spēlētājs pie vārtu guvuma savāc <b>{glasov}</b>, viņam tiek ieskaitīta rezultatīvā piespēle, kas nes <b>+3 punktus</b>.',
+    pragGlasov: { zero: '{n} balsu', one: '{n} balsi', other: '{n} balsis' },
+    niTekem: 'Pašreizējā sezonā vēl nav aizvadītu spēļu',
+    niTekemOpis:
+      'Balsošana par rezultatīvajām piespēlēm atvērsies, tiklīdz būs aizvadīta pirmā kārta. Atgriezies, kad būs pienākuši protokoli.',
+    arhiv: 'arhīvs',
+    preteklaSezona:
+      'Tu balso par iepriekšējo sezonu. Tas neietekmē pašreizējās līgas punktus, tikai izlabo vēsturi.',
+    izberiKrog: '1. Izvēlies kārtu',
+    izberiTekmo: '2. Izvēlies spēli',
+    vsePotrjeno: 'Viss apstiprināts',
+    zaprto: 'slēgts',
+    poglejTekmo: 'Skatīt šīs spēles sastāvus un punktus →',
+    niGolov: 'Šajā spēlē vārti netika gūti.',
+    vsePotrjene: 'Visas rezultatīvās piespēles šajā spēlē ir apstiprinātas. 🎉',
+    zaprtoOpis: 'Balsošana par šo spēli ir slēgta; tā ir atvērta līdz nākamās kārtas termiņam.',
+    brezPotrjene: 'Bez apstiprinātas rezultatīvās piespēles: {goli}.',
+  },
+
+  gol: {
+    neznanStrelec: 'nezināms vārtu guvējs',
+    avtogol: 'Vārti savos vārtos: {ime}',
+    enajstmetrovka: '{ime}: soda sitiens',
+    brezAsistenceOpomba: 'bez rezultatīvās piespēles',
+    potrjena: 'rezultatīvā piespēle apstiprināta, slēgts',
+    brezAsistence: 'Bez rezultatīvās piespēles',
+    odlocilaSkupnost: 'tā nolēma kopiena',
+    morasSePrijaviti: 'Lai balsotu, tev jāpiesakās',
+    spremeniGlas: 'Mainīt balsi',
+    kdoJePodal: 'Kurš piespēlēja?',
+    vodiBrez: 'Vadībā «bez rezultatīvās piespēles»',
+    vodi: 'Vadībā <b>{ime}</b>',
+    igralecBrezZapisa: 'spēlētājs bez ieraksta',
+    doOdlocitve: '· vēl {n} līdz lēmumam',
+    ostali: 'Pārējie:',
+    brezGlasovi: 'bez ({n})',
+    izberiPodajalca: 'Izvēlies piespēlētāju: {ekipa}',
+    nihce: 'Neviens: vārti bez rezultatīvās piespēles',
+  },
+
+  pozicije: {
+    naslov: 'Pozīcijas',
+    kjeKdoIgra: 'Kurš kur spēlē?',
+    uvod:
+      'Protokoli atzīmē tikai vārtsargu, bet sastāvus uzskaita pēc krekla numuriem, tāpēc pozīcijas no tiem nevar nolasīt. Tās nosaka kopiena. Vajadzīgās balsis: <b>{prag}</b>; skaits samazinās (līdz {minPrag}), ja statistiskais priors (krekla numurs, vārti, kartītes) stipri norāda tajā virzienā. <b>Kluba ekspertu</b> un lietotāju ar <b>augstu precizitāti</b> balsis skaitās vairāk.',
+    enkratNaTeden:
+      'Nobalsotās pozīcijas stājas spēkā <b>reizi nedēļā, pirmdienas rītā</b>, visas uzreiz. Tā līga nedēļas laikā nemainās zem rokām: ko redzi otrdien, ir spēkā arī sestdien, kad kārta tiek slēgta. Spēlētājs, kurš jau savācis pietiekami daudz balsu, līdz tam ir atzīmēts ar smilšu pulksteni <ikona>⏳</ikona>.',
+    klub: 'Klubs',
+    poznavalecOznaka: '  ★ eksperts',
+    samoIzStatistike: 'Tikai no statistikas ({n})',
+    vsiPotrjeni: 'Visiem šī kluba spēlētājiem ir apstiprināta pozīcija. 🎉',
+    niIgralcev: 'Nav spēlētāju.',
+    status: {
+      naslov: 'Mans balsotāja statuss',
+      utezOpis:
+        'Vienas balss svars; tam pieskaita eksperta bonusu, ja balso par sava kluba spēlētāju.',
+      utez: 'svars {utez}×',
+      tocnih: '({pravilni}/{vsi} precīzi)',
+      klubPoznam: 'Klubs, ko labi pazīstu (eksperts); mana balss par šī kluba spēlētājiem skaitās vairāk:',
+      nisemPoznavalec: 'neesmu neviena kluba eksperts',
+      opomba:
+        'Eksperts atzīmē tikai vienu klubu. Svari laika gaitā nostabilizējas: ja tavas balsis izrādās nepareizas, uzticēšanās samazinās. Uzticēšanās tiek pārrēķināta no iepriekšējām balsīm, kad pozīcija ir zināma.',
+    },
+    igralec: {
+      statistika: '{tekme} · {minute} min · {goli} · {cs} sausās spēles',
+      izZapisnika: 'No protokola: vārtsargs ir atzīmēts ar (V)',
+      izStatistike: 'No statistikas (krekla nr., vārti, kartītes): balsis to var izlabot',
+      potrdilaSkupnost: 'Apstiprināja kopiena',
+      zapisnik: ' · protokols',
+      uveljavitevOpis:
+        'Pozīcijas stājas spēkā reizi nedēļā, pirmdienas rītā; tā līga nedēļas laikā nemainās zem rokām.',
+      izglasovano: 'nobalsots: {pozicija} · pirmdien',
+      neIgraOpis: 'Vairs nespēlē: nav tirgū. Ja viņš parādīsies protokolā, atgriezīsies pats.',
+      neIgra: 'vairs nespēlē',
+      vrniOpis: 'Atgriezt spēlētāju aktīvo vidū',
+      vrni: 'atgriezt',
+      odhodOpis:
+        'Spēlētājs šajā klubā vairs nespēlē: tas viņu noņem no tirgus. Spēle protokolā viņu atgriež pati.',
+      statistikaKaze:
+        'Statistika norāda uz <b>{pozicija} ({odstotek}%)</b>; balss šajā virzienā skaitās ar zemāku slieksni ({nizji}, nevis {prag}).',
+      dolocenaIzStatistike: 'Pozīcija ir noteikta no statistikas; ja tā nav pareiza, noklikšķini uz pareizās.',
+      dolocilaSkupnost: 'Pozīciju noteica kopiena; ar balsīm to var izlabot.',
+      gumbUtez: 'Svars {utez} / slieksnis {prag}',
+      gumbPrior: ' · priors {odstotek}%',
+      gumbPoznavalec: ' · tava eksperta balss skaitās vairāk',
+      vodi: 'Vadībā {pozicija}: svars {utez} / {prag}',
+    },
+  },
+}
