@@ -30,6 +30,9 @@ Pri **5 glasovih** za istega kandidata se podatek potrdi in začne šteti.
 - **Mini lige** — zasebna lestvica med znanci (tudi čez lige). Povabilo je povezava `/l/KODA`
   (deljenje prek sistemskega lista, WhatsAppa, Viberja ali kopiranja); po vsakem končanem
   krogu **tedenski pregled**: manager kroga, kapetan, skriti adut, dvigalo, klop in lesena žlica.
+  Ustvarjalec lahko mini ligo objavi v eni ligi (**javna mini liga**, do 3 na ligo, kratek opis):
+  drugi jo najdejo na strani Mini lige in se pridružijo brez kode; tujci vidijo le lestvico
+  (`/mini-leagues/:id`), prijava lige gre v Administracijo.
 - **Dve ligi** — v glavi se preklaplja med člani in mladinci; vsaka liga ima svoje igralce, svojo ekipo in svojo lestvico.
 - **Uporabniški računi** — registracija in prijava z e-pošto in geslom.
 - **Pregled kluba/igralcev** — seznam ekip in igralcev 1. GNL.

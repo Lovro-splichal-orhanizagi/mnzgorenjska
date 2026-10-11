@@ -1786,27 +1786,60 @@ export type Database = {
       mini_lige: {
         Row: {
           code: string
+          competition_id: number | null
           created_at: string
           id: number
+          javna: boolean
+          javna_zaklenjena_at: string | null
           name: string
+          opis: string | null
           owner_id: string
         }
         ComputedFields: never
         Insert: {
           code: string
+          competition_id?: number | null
           created_at?: string
           id?: never
+          javna?: boolean
+          javna_zaklenjena_at?: string | null
           name: string
+          opis?: string | null
           owner_id: string
         }
         Update: {
           code?: string
+          competition_id?: number | null
           created_at?: string
           id?: never
+          javna?: boolean
+          javna_zaklenjena_at?: string | null
           name?: string
+          opis?: string | null
           owner_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "mini_lige_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mini_lige_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mini_lige_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["competition_id"]
+          },
           {
             foreignKeyName: "mini_lige_owner_id_fkey"
             columns: ["owner_id"]
@@ -2704,6 +2737,59 @@ export type Database = {
             columns: ["round_id"]
             isOneToOne: false
             referencedRelation: "zadnji_odigrani_krog"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prijave_mini_lig: {
+        Row: {
+          created_at: string
+          id: number
+          mini_liga_id: number
+          razlog: string | null
+          resena_at: string | null
+          resil: string | null
+          user_id: string
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          id?: never
+          mini_liga_id: number
+          razlog?: string | null
+          resena_at?: string | null
+          resil?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          mini_liga_id?: number
+          razlog?: string | null
+          resena_at?: string | null
+          resil?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prijave_mini_lig_mini_liga_id_fkey"
+            columns: ["mini_liga_id"]
+            isOneToOne: false
+            referencedRelation: "mini_lige"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prijave_mini_lig_resil_fkey"
+            columns: ["resil"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prijave_mini_lig_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -5772,6 +5858,10 @@ export type Database = {
         Args: { p_competition_id?: number; p_user_id: string }
         Returns: undefined
       }
+      admin_odloci_mini_ligo: {
+        Args: { p_liga: number; p_skrij: boolean }
+        Returns: undefined
+      }
       admin_odloci_prosnjo: {
         Args: { p_id: number; p_odlocitev: string }
         Returns: undefined
@@ -5806,6 +5896,22 @@ export type Database = {
       admin_preracunaj_krog: {
         Args: { p_round_id: number }
         Returns: undefined
+      }
+      admin_prijave_mini_lig: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          ekip: number
+          ime: string
+          javna: boolean
+          lastnik: string
+          lastnik_id: string
+          liga: string
+          mini_liga_id: number
+          opis: string
+          prijav: number
+          razlogi: string[]
+          zadnja: string
+        }[]
       }
       admin_prosnje_poznavalcev: {
         Args: Record<PropertyKey, never>
@@ -5992,6 +6098,19 @@ export type Database = {
         Args: { p_competition_id: number; p_team_id: number }
         Returns: Json
       }
+      javne_mini_lige: {
+        Args: { p_iskanje?: string; p_omejitev?: number; p_tekmovanje: number }
+        Returns: {
+          created_at: string
+          ekip: number
+          id: number
+          name: string
+          opis: string
+          owner_id: string
+          owner_name: string
+          sem_clan: boolean
+        }[]
+      }
       javni_profil: { Args: { p_id: string }; Returns: Json }
       je_lastnik_profila: { Args: { p_player_id: number }; Returns: boolean }
       je_mladinska_liga: {
@@ -6056,6 +6175,20 @@ export type Database = {
         }[]
       }
       krog_je_odigran: { Args: { p_round_id: number }; Returns: boolean }
+      lestvica_javne_mini_lige: {
+        Args: { p_liga: number }
+        Returns: {
+          competition_short: string
+          fantasy_team_id: number
+          federation_short: string
+          owner_id: string
+          owner_name: string
+          points_per_round: number
+          rounds_played: number
+          team_name: string
+          total_points: number
+        }[]
+      }
       lestvica_lige: {
         Args: { p_competition_id: number; p_sezona?: string }
         Returns: {
@@ -6084,6 +6217,25 @@ export type Database = {
           najvisja: number
         }[]
       }
+      mini_liga_glava: {
+        Args: { p_liga: number }
+        Returns: {
+          competition_id: number
+          competition_name: string
+          competition_short: string
+          competition_slug: string
+          ekip: number
+          id: number
+          javna: boolean
+          name: string
+          opis: string
+          owner_id: string
+          owner_name: string
+          sem_clan: boolean
+          sem_lastnik: boolean
+          zaklenjena: boolean
+        }[]
+      }
       mini_liga_po_kodi: {
         Args: { p_koda: string }
         Returns: {
@@ -6095,6 +6247,15 @@ export type Database = {
       }
       najcenejsi_kader: { Args: { p_igralci: Json }; Returns: number }
       najdi_igralca: { Args: { ime: string; liga?: string }; Returns: Json }
+      nastavi_javnost_mini_lige: {
+        Args: {
+          p_javna: boolean
+          p_liga: number
+          p_opis?: string
+          p_tekmovanje?: number
+        }
+        Returns: undefined
+      }
       nastavitev_int: {
         Args: { p_key: string; p_privzeto: number }
         Returns: number
@@ -6212,6 +6373,7 @@ export type Database = {
       povzetek_rasti: { Args: Record<PropertyKey, never>; Returns: string }
       preklici_moj_zahtevek: { Args: { p_id: number }; Returns: undefined }
       preveri_uradne_odsotnosti: { Args: Record<PropertyKey, never>; Returns: number }
+      prepovedano_besedilo: { Args: { p_besedilo: string }; Returns: string }
       preracunaj_cene: {
         Args: { p_round_id: number }
         Returns: {
@@ -6308,12 +6470,23 @@ export type Database = {
         }
         Returns: number
       }
+      pridruzi_javni_mini_ligi: {
+        Args: { p_ekipa: number; p_liga: number }
+        Returns: {
+          dodano: boolean
+          mini_liga_id: number
+        }[]
+      }
       pridruzi_mini_ligi: {
         Args: { p_ekipa: number; p_koda: string }
         Returns: {
           dodano: boolean
           mini_liga_id: number
         }[]
+      }
+      prijavi_mini_ligo: {
+        Args: { p_liga: number; p_razlog?: string }
+        Returns: undefined
       }
       prijavi_profil_igralca: {
         Args: { p_player_id: number; p_razlog?: string }

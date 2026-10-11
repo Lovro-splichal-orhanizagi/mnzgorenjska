@@ -1831,6 +1831,168 @@ select pg_temp.preveri('zasebne: sezonska izbranost bere isti prag brez napake',
   (select count(*) >= 0 from player_season_standings where competition_id=-917001));
 reset role;
 
+-- Javne mini lige (migracija 20261012133100): objava, seznam, pridružitev
+-- brez kode, varovalo imena, omejitev na lastnika, prijave in admin.
+-- ---------------------------------------------------------------------------
+reset role;
+select set_config('request.jwt.claim.sub','',true);
+insert into auth.users(id,email,raw_user_meta_data,created_at) values
+ ('c2b20000-0000-4000-8000-000000000001','javne-a@example.invalid','{"display_name":"JavnaA"}',now()),
+ ('c2b20000-0000-4000-8000-000000000002','javne-b@example.invalid','{"display_name":"JavnaB"}',now()),
+ ('c2b20000-0000-4000-8000-000000000003','javne-c@example.invalid','{"display_name":"JavnaC"}',now());
+-- Aktivni ligi brez krogov: varovalo vklopa lige tu ni predmet testa.
+set local session_replication_role = replica;
+insert into competitions(id, slug, name, short_name, active, country_id, source) overriding system value
+values (-921001, 'test-javne-1', 'Test javnih 1', 'TJ1', true, (select id from countries where code='SI'), 'mnzg'),
+       (-921002, 'test-javne-2', 'Test javnih 2', 'TJ2', true, (select id from countries where code='SI'), 'mnzg');
+set local session_replication_role = origin;
+-- A in B imata ekipo v -921001, B še v -921002, C le v -921002.
+insert into fantasy_teams(id,owner_id,name,competition_id,created_at) overriding system value values
+ (-921001,'c2b20000-0000-4000-8000-000000000001','Javna A',-921001,now()),
+ (-921002,'c2b20000-0000-4000-8000-000000000002','Javna B',-921001,now()),
+ (-921003,'c2b20000-0000-4000-8000-000000000002','Javna B2',-921002,now()),
+ (-921004,'c2b20000-0000-4000-8000-000000000003','Javna C',-921002,now());
+insert into mini_lige(id, name, code, owner_id) overriding system value values
+ (-921001, 'Javna testna', 'JAVNA921A', 'c2b20000-0000-4000-8000-000000000001'),
+ (-921002, 'Zasebna testna', 'JAVNA921B', 'c2b20000-0000-4000-8000-000000000001'),
+ (-921003, 'SLFF uradna', 'JAVNA921C', 'c2b20000-0000-4000-8000-000000000001'),
+ (-921004, 'Tretja javna', 'JAVNA921D', 'c2b20000-0000-4000-8000-000000000001'),
+ (-921005, 'Cetrta javna', 'JAVNA921E', 'c2b20000-0000-4000-8000-000000000001'),
+ (-921006, 'Peta javna', 'JAVNA921F', 'c2b20000-0000-4000-8000-000000000001');
+insert into mini_liga_clani(mini_liga_id, fantasy_team_id) values (-921001,-921001),(-921002,-921001);
+
+-- Javnost nastavi le ustvarjalec, in le prek RPC.
+select set_config('request.jwt.claim.sub','c2b20000-0000-4000-8000-000000000002',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('javne: tuj uporabnik ne more objaviti mini lige',
+  $$select nastavi_javnost_mini_lige(-921001, true, null, -921001)$$);
+reset role;
+select set_config('request.jwt.claim.sub','c2b20000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('javne: lastnik ne objavi mimo RPC (update javna)',
+  $$update mini_lige set javna = true, competition_id = -921001 where id = -921001$$);
+select pg_temp.zavrnjeno('javne: lastnik ne vpiše javne lige mimo RPC (insert)',
+  $$insert into mini_lige(name, code, owner_id, javna, competition_id)
+    values ('Mimo', 'JAVNA921X', 'c2b20000-0000-4000-8000-000000000001', true, -921001)$$);
+reset role;
+select set_config('request.jwt.claim.sub','',true);
+set local role anon;
+select pg_temp.preveri('javne: zasebna liga ni na seznamu',
+  not exists (select 1 from javne_mini_lige(-921001)));
+select pg_temp.zavrnjeno('javne: anonimni ne more objaviti',
+  $$select nastavi_javnost_mini_lige(-921001, true, null, -921001)$$);
+reset role;
+
+select set_config('request.jwt.claim.sub','c2b20000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select nastavi_javnost_mini_lige(-921001, true, '  Liga  za vse  ', -921001);
+select pg_temp.napaka('javne: brez ekipe v ligi ni objave',
+  $$select nastavi_javnost_mini_lige(-921004, true, null, -921002)$$, 'javna-brez-ekipe');
+select pg_temp.napaka('javne: rezervirano ime ne gre v javno',
+  $$select nastavi_javnost_mini_lige(-921003, true, null, -921001)$$, 'ime-rezervirano');
+select pg_temp.napaka('javne: žaljiv opis ne gre v javno',
+  $$select nastavi_javnost_mini_lige(-921004, true, 'f.u.c.k vsi', -921001)$$, 'opis-neprimerno');
+select pg_temp.napaka('javne: predolg opis ne gre',
+  $$select nastavi_javnost_mini_lige(-921004, true, repeat('a', 121), -921001)$$, null);
+select pg_temp.napaka('javne: javne lige ni mogoče preimenovati v žaljivko',
+  $$update mini_lige set name = 'Kurac FC' where id = -921001$$, 'ime-neprimerno');
+update mini_lige set name = 'Javna testna 2' where id = -921002;
+reset role;
+select pg_temp.preveri('javne: opis je počiščen, zasebno ime se preimenuje',
+  (select opis = 'Liga za vse' and javna and competition_id = -921001 from mini_lige where id = -921001)
+  and (select name = 'Javna testna 2' from mini_lige where id = -921002));
+
+select set_config('request.jwt.claim.sub','',true);
+set local role anon;
+select pg_temp.preveri('javne: anonimni vidi javno ligo s številom ekip',
+  (select count(*) = 1 and bool_and(id = -921001 and ekip = 1 and owner_name = 'JavnaA' and not sem_clan)
+     from javne_mini_lige(-921001)));
+select pg_temp.preveri('javne: iskanje po imenu, % je navaden znak',
+  exists (select 1 from javne_mini_lige(-921001, 'testna'))
+  and not exists (select 1 from javne_mini_lige(-921001, '%')));
+select pg_temp.preveri('javne: javna liga ni na seznamu druge lige',
+  not exists (select 1 from javne_mini_lige(-921002)));
+select pg_temp.preveri('javne: anonimni vidi lestvico javne lige',
+  (select count(*) = 1 from lestvica_javne_mini_lige(-921001))
+  and exists (select 1 from mini_liga_glava(-921001) where javna));
+select pg_temp.preveri('javne: zasebne lige anonimni ne vidi',
+  not exists (select 1 from mini_liga_glava(-921002))
+  and not exists (select 1 from lestvica_javne_mini_lige(-921002)));
+select pg_temp.zavrnjeno('javne: anonimni se ne pridruži',
+  $$select pridruzi_javni_mini_ligi(-921001, -921002)$$);
+reset role;
+
+-- Pridružitev brez kode: le javna liga, le ekipa iz njene lige.
+select set_config('request.jwt.claim.sub','c2b20000-0000-4000-8000-000000000002',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('javne: v zasebno ligo ni vstopa brez kode',
+  $$select pridruzi_javni_mini_ligi(-921002, -921002)$$);
+select pg_temp.zavrnjeno('javne: ekipa druge lige se ne pridruži',
+  $$select pridruzi_javni_mini_ligi(-921001, -921003)$$);
+select pg_temp.zavrnjeno('javne: s tujo ekipo ni pridružitve',
+  $$select pridruzi_javni_mini_ligi(-921001, -921001)$$);
+select pg_temp.preveri('javne: ekipa iz lige se pridruži brez kode',
+  (select dodano from pridruzi_javni_mini_ligi(-921001, -921002)));
+select pg_temp.preveri('javne: druga pridružitev ne podvoji',
+  not (select dodano from pridruzi_javni_mini_ligi(-921001, -921002)));
+select pg_temp.preveri('javne: član vidi ligo kot svojo',
+  (select sem_clan from javne_mini_lige(-921001) where id = -921001));
+select pg_temp.zavrnjeno('javne: prijav ni mogoče brati',
+  $$select * from prijave_mini_lig$$);
+reset role;
+
+-- Največ tri javne lige istega lastnika v eni ligi.
+select set_config('request.jwt.claim.sub','c2b20000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select nastavi_javnost_mini_lige(-921004, true, null, -921001);
+select nastavi_javnost_mini_lige(-921005, true, null, -921001);
+select pg_temp.napaka('javne: četrta javna liga istega lastnika v ligi pade',
+  $$select nastavi_javnost_mini_lige(-921006, true, null, -921001)$$, 'javne-najvec');
+select nastavi_javnost_mini_lige(-921005, false);
+select nastavi_javnost_mini_lige(-921006, true, null, -921001);
+reset role;
+select pg_temp.preveri('javne: po skritju ene se objavi druga',
+  (select count(*) = 3 from mini_lige where owner_id = 'c2b20000-0000-4000-8000-000000000001' and javna));
+
+-- Prijava in admin.
+select set_config('request.jwt.claim.sub','c2b20000-0000-4000-8000-000000000003',true);
+set local role authenticated;
+select prijavi_mini_ligo(-921001, 'Neprimerno ime');
+select pg_temp.napaka('javne: iste lige ni mogoče prijaviti dvakrat',
+  $$select prijavi_mini_ligo(-921001, 'Spet')$$, null);
+select pg_temp.zavrnjeno('javne: zasebne lige ni mogoče prijaviti',
+  $$select prijavi_mini_ligo(-921002, null)$$);
+select pg_temp.zavrnjeno('javne: ne-admin ne vidi vrste prijav',
+  $$select * from admin_prijave_mini_lig()$$);
+select pg_temp.zavrnjeno('javne: ne-admin ne skrije lige',
+  $$select admin_odloci_mini_ligo(-921001, true)$$);
+reset role;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+select pg_temp.preveri('javne: prijava je v vrsti admina',
+  exists (select 1 from admin_prijave_mini_lig() where mini_liga_id = -921001 and prijav = 1));
+select admin_odloci_mini_ligo(-921001, true);
+reset role;
+select pg_temp.preveri('javne: admin ligo skrije in reši prijave, člani ostanejo',
+  (select not javna and javna_zaklenjena_at is not null from mini_lige where id = -921001)
+  and not exists (select 1 from prijave_mini_lig where mini_liga_id = -921001 and resena_at is null)
+  and (select count(*) = 2 from mini_liga_clani where mini_liga_id = -921001));
+select set_config('request.jwt.claim.sub','c2b20000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('javne: skrite lige lastnik ne objavi znova',
+  $$select nastavi_javnost_mini_lige(-921001, true, null, -921001)$$);
+reset role;
+select set_config('request.jwt.claim.sub','',true);
+set local role anon;
+select pg_temp.preveri('javne: skrita liga ni več na seznamu',
+  not exists (select 1 from javne_mini_lige(-921001) where id = -921001)
+  and not exists (select 1 from mini_liga_glava(-921001)));
+reset role;
+select pg_temp.preveri('javne: pravilo prikaznega imena ostane enako',
+  napaka_prikaznega_imena('Ad') = 'ime-dolzina'
+  and napaka_prikaznega_imena('4dm1n') = 'ime-rezervirano'
+  and napaka_prikaznega_imena('Luka<') = 'ime-znaki'
+  and napaka_prikaznega_imena('Luka Novak') is null);
 
 do $$
 declare v_napak int;

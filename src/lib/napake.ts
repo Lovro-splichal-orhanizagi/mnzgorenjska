@@ -30,6 +30,12 @@ const ZNANE: [RegExp, Parameters<typeof t>[0]][] = [
   [/^Opomba ima lahko največ/, 'igralci.uradno.napake.opomba'],
   [/^Preveč uradnih odsotnosti/, 'igralci.uradno.napake.prevec'],
   [/^Uradna odsotnost ni več odprta/, 'igralci.uradno.napake.niOdprta'],
+  [/^Ta mini liga ni javna/, 'lestvice.javneLige.napake.niJavna'],
+  [/^Za to mini ligo potrebuješ ekipo v njeni ligi/, 'lestvice.javneLige.napake.ekipaVLigi'],
+  [/^To mini ligo si že prijavil/, 'lestvice.javneLige.napake.zePrijavil'],
+  [/^Preveč odprtih prijav/, 'lestvice.javneLige.napake.prevecPrijav'],
+  [/^Javnost mini lige nastavi le/, 'lestvice.javneLige.napake.leUstvarjalec'],
+  [/^To mini ligo je skril administrator/, 'lestvice.javneLige.napake.zaklenjena'],
 ]
 
 export function prevediNapako(sporocilo: string): string {

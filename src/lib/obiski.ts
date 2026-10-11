@@ -50,6 +50,7 @@ const PO_PREDPONI: [string, string][] = [
   ['/club/', 'klub'],
   ['/match/', 'tekma'],
   ['/l/', 'vstop_v_mini_ligo'],
+  ['/mini-leagues/', 'mini_lige'],
   ['/u/', 'profil'],
 ]
 

@@ -2511,6 +2511,24 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   Pregled teče kot lastnik sheme (bere tuje posnetke za točke klopi), a
   kapetana izbere le med ekipami, ki jih klicatelj sme videti (svojo), aduta
   ne vrne več (izdal bi, česa tekmeci nimajo); vrstice nosijo `lastnik_id`
+- **Javne mini lige** (migracija 20261012133100): `mini_lige.javna`, `opis`
+  (≤ 120), `competition_id` (liga, v kateri je javna; mini liga sama še vedno
+  gre čez lige) in `javna_zaklenjena_at` (admin jo je skril, lastnik je ne more
+  spet objaviti). Javnost nastavi le ustvarjalec prek
+  `nastavi_javnost_mini_lige` (potrebuje ekipo v tej ligi); neposredno sme
+  lastnik spremeniti le `name` (stolpčna pravica). Sprožilec `varuj_mini_ligo`
+  ime in opis javne lige preveri s `prepovedano_besedilo` (isto pravilo kot
+  prikazno ime: znaki, rezervirane besede, žaljivke; JS `prepovedanoBesedilo`)
+  in omeji na 3 javne lige istega lastnika v ligi. Branje gre le prek
+  SECURITY DEFINER RPC (tabela nosi kodo, RLS ostane za člane):
+  `javne_mini_lige(liga, iskanje)` (anon, največ 100, po številu ekip),
+  `mini_liga_glava(id)` in `lestvica_javne_mini_lige(id)` (javna vsem,
+  zasebna članom; le lestvica, nikoli postave ali koda). Pridružitev brez kode
+  `pridruzi_javni_mini_ligi(liga, ekipa)`: liga javna, ekipa svoja in iz lige
+  mini lige. Prijave v `prijave_mini_lig` (`prijavi_mini_ligo`, ena odprta na
+  uporabnika in ligo, največ 10 odprtih); Administracija → Prijave mini lig
+  (`admin_prijave_mini_lig`, `admin_odloci_mini_ligo`: skrij in zakleni ali
+  zavrni). Stran `/mini-leagues/:id` (`JavnaMiniLiga.tsx`, noindex)
 - `player_standings` → lestvica igralcev (točke, forma, na tekmo, izbranost)
 - `statistika_igralcev` → statistika igralca po ligi in sezoni (nastopi,
   minute, goli, kartoni, čiste mreže, točke, asistence, zadnji krog, forma).
@@ -3107,7 +3125,8 @@ update competitions set active = true where slug in ('lj-1-liga','lj-2-liga');
   več pisanja** samodejno (migracija 20260923090000). Tabela, v katero piše
   vmesnik, potrebuje izrecen `grant insert/update/delete` in RLS. Pogled, ki ni
   `security_invoker`, teče mimo RLS — nikoli mu ne daj pisanja.
-- V mini ligo se vstopi samo prek `pridruzi_mini_ligi` (s kodo) ali
+- V mini ligo se vstopi samo prek `pridruzi_mini_ligi` (s kodo),
+  `pridruzi_javni_mini_ligi` (javna liga, ekipa iz njene lige) ali
   `ustvari_mini_ligo`; neposrednega vpisa v `mini_liga_clani` ni.
 - Mutacijski RPC-ji so servisni. Admin stran kliče `admin_preracunaj_krog`,
   ki izrecno preveri `is_admin()`. Novi javni RPC potrebuje izrecen `grant execute`;
