@@ -1651,7 +1651,7 @@ cene=true`. Arhiv 180 zapisnikov po 5 s in več je okoli 20 minut na sezono.
 
 ### Poljska — vir `pzpn`
 
-Država `PL` ("Polska", migracija 20261011230000). **Vmesnika v poljščini še
+Država `PL` ("Polska", migracija 20261012003000). **Vmesnika v poljščini še
 ni** — pride s svojo spremembo (jezik, pošta, kartica, imena hišnih ekip);
 do takrat so lige neaktivne. **Šifra poljske lige se začne s `pl-`.**
 
@@ -1690,7 +1690,7 @@ Preizkus (11. 10. 2026): 15 zapisnikov IV lige, okręgowe in klase A — vsi
 11 + 11, vratar pri vseh 30 ekipah, goli = izidi, 0 opozoril; Klasa B Kielce I
 v živo — 78 tekem z uro, 36 zapisnikov, goli = izidi (197), 1120 nastopov.
 
-Vpisanih je 8 lig (migracija 20261011230000), **neaktivnih**, zveza
+Vpisanih je 8 lig (migracija 20261012003000), **neaktivnih**, zveza
 `szpn-swietokrzyski`. Skupine A in B so z lanskimi povezane po skupnih klubih:
 
 | liga | tekoča 2026/27 (`swietokrzyski/…`) | arhiv 2025/26 |
