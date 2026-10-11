@@ -1,23 +1,22 @@
 // Edge Function: posli-prevzem
 //
-// Klubu sporoči, da je kdo prevzel profil njegovega igralca ("To sem jaz"),
-// z enkratno povezavo za potrditev ali zavrnitev (`/claim#<žeton>`, velja 14
-// dni). Komu in kateri zahtevki, odloči SQL `prevzem_za_posto_klubu`: naslov
-// iz `klub_stik` (brez `ne_zeli` in `napacen_mail`), en mail na klub na dan,
-// žeton v bazi le zgoščen. Vsak mail gre v `email_log` in `klub_stik_posta`
-// (vrsta `drugo`), da ga vidijo vsi, ki pišejo klubom.
+// Klubu pošlje zahtevek "To sem jaz" v potrditev: enkratna povezava
+// (`/claim#<žeton>`, velja 14 dni) z imenom in e-naslovom prosilca. Pošlje
+// le na ukaz admina (Administracija → Prevzemi profilov → "pošlji klubu"):
+// `{"zahtevek": <id>, "na"?: "<naslov kluba>"}`. Žeton in naslov da SQL
+// `admin_prevzem_zeton_za_klub` (admin, sicer prvi uporaben naslov iz
+// `klub_stik`; žeton v bazi le zgoščen). Mail gre v `email_log` in
+// `klub_stik_posta` (vrsta `drugo`), da ga vidijo vsi, ki pišejo klubom.
+// Samodejnega pošiljanja ni (migracija 20261012141100).
 //
-// Kliče ga le stroj (servisni ključ). URNIKA ŠE NI: preden ga vklopiš, se
-// odloči, ali samodejni mail klubu velja kot stik po pravilih iz CLAUDE.md
-// (Pošta klubom). Ročni zagon:
-//   curl -X POST https://api.slff.eu/functions/v1/posli-prevzem \
-//     -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" -d '{"suho":true}'
+// Kliče admin (Bearer <access_token>, preveri `is_admin`) ali servis.
+// Preizkus brez kluba (servis): {"test_zahtevek": <id>, "test_na": "<naslov>"};
+// nič ne gre v stike kluba.
 //
 // Skrivnosti so iste kot pri posli-opomnik (SMTP_HOST, SMTP_USER, SMTP_PASS,
 // EMAIL_FROM); novih ni. Objava: scripts/hetzner/objavi-funkcije.sh posli-prevzem
 //
 // Jezik: država lige (BESEDILA), neznana država angleško. Odgovori na info@.
-// Preizkus brez kluba: {"test_zahtevek": <id>, "test_na": "<naslov>"}.
 
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4'
 import nodemailer from 'npm:nodemailer@6.9.16'
@@ -32,8 +31,15 @@ interface Vrstica {
   liga: string
   drzava: string | null
   prosilec: string | null
+  prosilec_email: string | null
   expires_at: string
-  klub_stik_id: number
+  klub_stik_id: number | null
+}
+
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
 const smtp = nodemailer.createTransport({
@@ -111,9 +117,13 @@ function sestavi(v: Vrstica): { naslov: string; html: string; besedilo: string }
   const b = BESEDILA[v.drzava ?? ''] ?? BESEDILA.EN
   const povezava = `https://slff.eu/claim#${v.zeton}`
   const d = new Date(v.expires_at).toLocaleDateString(b.jezik)
+  // Klub prosilca prepozna po e-naslovu, ne po prikaznem imenu. Pomišljaj iz
+  // imena lige ("1. GNL — člani") v mailu zamenja vejica.
+  const prosilec = v.prosilec_email ? `${v.prosilec ?? '?'} (${v.prosilec_email})` : (v.prosilec ?? '?')
+  const liga = v.liga.replaceAll(' — ', ', ')
   const vstavi = (t: string, h: (x: string) => string = (x) => x) =>
-    t.replaceAll('{p}', h(v.prosilec ?? '?')).replaceAll('{i}', h(v.igralec)).replaceAll('{k}', h(v.klub))
-      .replaceAll('{l}', h(v.liga)).replaceAll('{d}', d)
+    t.replaceAll('{p}', h(prosilec)).replaceAll('{i}', h(v.igralec)).replaceAll('{k}', h(v.klub))
+      .replaceAll('{l}', h(liga)).replaceAll('{d}', d)
   const krepko = (x: string) => `<b>${esc(x)}</b>`
   return {
     naslov: vstavi(b.naslov),
@@ -125,79 +135,81 @@ function sestavi(v: Vrstica): { naslov: string; html: string; besedilo: string }
 }
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response(null)
+  if (req.method === 'OPTIONS') return new Response(null, { headers: CORS })
   if (req.method !== 'POST') return json({ error: 'Samo POST.' }, 405)
+  const URL_ = Deno.env.get('SUPABASE_URL')!
   const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   const SECRET_KEY = Deno.env.get('SUPABASE_SECRET_KEY')
   const auth = req.headers.get('Authorization') ?? ''
-  if (![SERVICE_KEY, SECRET_KEY].filter(Boolean).some((k) => auth === `Bearer ${k}`))
-    return json({ error: 'Samo servisni ključ.' }, 403)
+  const jeStroj = [SERVICE_KEY, SECRET_KEY].filter(Boolean).some((k) => auth === `Bearer ${k}`)
+  const service = createClient(URL_, SERVICE_KEY)
+  // Admin kliče s svojim žetonom; RPC `admin_prevzem_zeton_za_klub` sam preveri is_admin().
+  const uporabnik = createClient(URL_, Deno.env.get('SUPABASE_ANON_KEY')!, { global: { headers: { Authorization: auth } } })
+  if (!jeStroj) {
+    const { data: admin, error } = await uporabnik.rpc('is_admin')
+    if (error) return json({ error: error.message }, 500)
+    if (!admin) return json({ error: 'Samo administrator.' }, 403)
+  }
 
   const vhod = (await req.json().catch(() => ({}))) as {
-    suho?: boolean
-    najvec?: number
-    // Preizkus: mail za EN zahtevek gre na test_na, ne klubu; nič ne gre v stike kluba.
+    zahtevek?: number
+    na?: string
+    // Preizkus (servis): mail za EN zahtevek gre na test_na, ne klubu; nič ne gre v stike kluba.
     test_zahtevek?: number
     test_na?: string
   }
-  const service = createClient(Deno.env.get('SUPABASE_URL')!, SERVICE_KEY)
-  if (vhod.suho) {
-    const { count, error } = await service
-      .from('zahtevki_igralca')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'cakajoc')
-      .eq('spor', false)
-    if (error) return json({ error: error.message }, 500)
-    return json({ suho: true, cakajocih: count })
-  }
   if (!Deno.env.get('SMTP_PASS')) return json({ error: 'Pomanjkljiva nastavitev: SMTP_PASS.' }, 500)
 
-  // Žetoni nastanejo ob klicu; mail, ki ne uspe, pusti žeton neuporabljen
-  // (zahtevek čaka naprej na poznavalca, soigralce ali admina).
   const test = vhod.test_zahtevek != null
+  if (test && !jeStroj) return json({ error: 'Preizkus le s servisnim ključem.' }, 403)
   if (test && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(vhod.test_na ?? '')) return json({ error: 'test_na: veljaven naslov.' }, 400)
+  if (!test && !Number.isInteger(vhod.zahtevek)) return json({ error: 'zahtevek: številka zahtevka.' }, 400)
+  // Servis nima auth.uid(), zato admin pot teče z admin žetonom.
+  if (!test && jeStroj) return json({ error: 'Pošiljanje klubu sproži admin iz Administracije.' }, 400)
+
+  // Žeton nastane ob klicu; mail, ki ne uspe, pusti žeton neuporabljen
+  // (admin lahko pošlje znova, prejšnja povezava takrat poteče).
   const { data, error } = test
     ? await service.rpc('prevzem_zeton_test', { p_zahtevek_id: vhod.test_zahtevek })
-    : await service.rpc('prevzem_za_posto_klubu', { p_najvec: vhod.najvec ?? 20 })
-  if (error) return json({ error: error.message }, 500)
-  const vrstice = ((data ?? []) as Vrstica[]).map((v) => (test ? { ...v, email: vhod.test_na! } : v))
+    : await uporabnik.rpc('admin_prevzem_zeton_za_klub', { p_zahtevek_id: vhod.zahtevek, p_na: vhod.na ?? null })
+  if (error) return json({ error: error.message }, 400)
+  const v0 = ((data ?? []) as Vrstica[])[0]
+  if (!v0) return json({ error: 'Zahtevek ni odprt.' }, 400)
+  const v = test ? { ...v0, email: vhod.test_na! } : v0
+  const s = sestavi(v)
   const FROM = Deno.env.get('EMAIL_FROM') || 'SLFF <noreply@slff.eu>'
-  let poslano = 0
-  for (const v of vrstice) {
-    const s = sestavi(v)
-    let napaka: string | null = null
-    let id: string | null = null
-    try {
-      const r = await smtp.sendMail({
-        from: FROM,
-        to: v.email,
-        subject: s.naslov,
-        html: s.html,
-        text: s.besedilo,
-        // Odgovori klubov pridejo k nam (info@ gre tudi v Discord).
-        replyTo: Deno.env.get('EMAIL_REPLY_TO') || 'SLFF <info@slff.eu>',
-      })
-      id = r.messageId
-      poslano++
-    } catch (e) {
-      napaka = String(e)
-    }
-    await service.from('email_log').insert({ email: v.email, vrsta: test ? 'prevzem-test' : 'prevzem-klub', resend_id: id, napaka })
-    if (!napaka && !test)
-      await service.from('klub_stik_posta').insert({
-        stik_id: v.klub_stik_id,
-        vrsta: 'drugo',
-        zadeva: s.naslov,
-        poslal: 'SLFF (samodejno, prevzem profila)',
-        opomba: `zahtevek ${v.zahtevek_id}`,
-        za: v.email,
-        // Brez žetona: v bazi je le njegova zgoščena vrednost.
-        telo: s.besedilo.replaceAll(v.zeton, '…'),
-      })
+  let napaka: string | null = null
+  let id: string | null = null
+  try {
+    const r = await smtp.sendMail({
+      from: FROM,
+      to: v.email,
+      subject: s.naslov,
+      html: s.html,
+      text: s.besedilo,
+      // Odgovori klubov pridejo k nam (info@ gre tudi v Discord).
+      replyTo: Deno.env.get('EMAIL_REPLY_TO') || 'SLFF <info@slff.eu>',
+    })
+    id = r.messageId
+  } catch (e) {
+    napaka = String(e)
   }
-  return json({ kandidati: vrstice.length, poslano })
+  await service.from('email_log').insert({ email: v.email, vrsta: test ? 'prevzem-test' : 'prevzem-klub', resend_id: id, napaka })
+  if (!napaka && !test && v.klub_stik_id != null)
+    await service.from('klub_stik_posta').insert({
+      stik_id: v.klub_stik_id,
+      vrsta: 'drugo',
+      zadeva: s.naslov,
+      poslal: 'SLFF (admin, prevzem profila)',
+      opomba: `zahtevek ${v.zahtevek_id}`,
+      za: v.email,
+      // Brez žetona: v bazi je le njegova zgoščena vrednost.
+      telo: s.besedilo.replaceAll(v.zeton, '…'),
+    })
+  if (napaka) return json({ error: `Mail ni odšel: ${napaka}` }, 502)
+  return json({ poslano: 1, na: v.email })
 })
 
 function json(obj: unknown, status = 200) {
-  return new Response(JSON.stringify(obj), { status, headers: { 'Content-Type': 'application/json' } })
+  return new Response(JSON.stringify(obj), { status, headers: { ...CORS, 'Content-Type': 'application/json' } })
 }

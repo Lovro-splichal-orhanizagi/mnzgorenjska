@@ -11,6 +11,7 @@ interface Podatki {
   klub: string | null
   liga: string | null
   prosilec: string | null
+  prosilec_email: string | null
   dokaz_url: string | null
 }
 
@@ -59,7 +60,10 @@ export default function PotrditevPrevzema() {
         <div className="kartica space-y-3 p-4">
           <p className="text-slate-200">
             {t('igralci.prevzem.zeton.vprasanje', {
-              prosilec: podatki.prosilec ?? '?',
+              // Klub prosilca prepozna po e-naslovu, prikazno ime mu ne pove nič.
+              prosilec: podatki.prosilec_email
+                ? `${podatki.prosilec ?? '?'} (${podatki.prosilec_email})`
+                : (podatki.prosilec ?? '?'),
               igralec: prikazniIme(podatki.igralec),
               klub: podatki.klub ?? '',
               liga: podatki.liga ?? '',

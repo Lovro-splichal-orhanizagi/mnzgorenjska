@@ -1424,8 +1424,8 @@ select pg_temp.zavrnjeno('prevzem: vrsto zahtevkov vidi le admin',
   $$select * from admin_zahtevki_igralcev()$$);
 select pg_temp.zavrnjeno('prevzem: fotografijo drugih odstrani le admin',
   $$select admin_odstrani_fotografijo(-913001)$$);
-select pg_temp.zavrnjeno('prevzem: žetone za mail ustvari le servis',
-  $$select * from prevzem_za_posto_klubu(1)$$);
+select pg_temp.zavrnjeno('prevzem: žeton za mail klubu ustvari le admin',
+  $$select * from admin_prevzem_zeton_za_klub(1, 'klub@example.invalid')$$);
 reset role;
 set local role anon;
 select pg_temp.preveri('prevzem: potrjena predstavitev je javna',
@@ -1501,6 +1501,8 @@ select pg_temp.zavrnjeno('prevzem: neznan žeton ne velja', $$select prevzem_odl
 select pg_temp.preveri('prevzem: klub potrdi z žetonom', prevzem_odloci_z_zetonom('zeton-veljaven', true) = 'potrjen');
 select pg_temp.zavrnjeno('prevzem: žeton je enkraten', $$select prevzem_odloci_z_zetonom('zeton-veljaven', false)$$);
 reset role;
+select pg_temp.preveri('prevzem: stran /claim pokaže e-naslov prosilca le z veljavnim žetonom',
+  (select prosilec_email is null from prevzem_zeton_podatki('zeton-veljaven')));
 select pg_temp.preveri('prevzem: žeton potrdi kot klub',
   (select potrdil from zahtevki_igralca where user_id = 'c1a10000-0000-4000-8000-000000000005' and status = 'potrjen') = 'klub');
 
@@ -1518,6 +1520,35 @@ set local role authenticated;
 update profil_igralca set vzdevek = 'Spet' where player_id = -919016;
 select pg_temp.preveri('prevzem: po skritju imena predstavitve ni več mogoče urediti',
   (select vzdevek from profil_igralca where player_id = -919016) is null);
+reset role;
+
+-- Admin pošlje zahtevek klubu: nov žeton, naslov kluba, e-naslov prosilca na /claim.
+with z as (
+  insert into zahtevki_igralca (player_id, user_id)
+  values (-913002, 'c1a10000-0000-4000-8000-000000000003') returning id
+)
+select set_config('test.prevzem_zahtevek', (select id::text from z), true);
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+select pg_temp.napaka('prevzem: neveljaven naslov kluba pade',
+  $$select * from admin_prevzem_zeton_za_klub(current_setting('test.prevzem_zahtevek')::bigint, 'ni-naslov')$$);
+select set_config('test.prevzem_zeton', zeton, true)
+  from admin_prevzem_zeton_za_klub(current_setting('test.prevzem_zahtevek')::bigint, ' Klub@Example.invalid ');
+reset role;
+select pg_temp.preveri('prevzem: admin pošlje klubu (čas in naslov zapisana)',
+  (select klubu_poslano_at is not null and klubu_na = 'klub@example.invalid'
+     from zahtevki_igralca where id = current_setting('test.prevzem_zahtevek')::bigint));
+set local role anon;
+select pg_temp.preveri('prevzem: klub na /claim vidi e-naslov prosilca',
+  (select prosilec_email like '%@example.invalid' from prevzem_zeton_podatki(current_setting('test.prevzem_zeton'))));
+reset role;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+select admin_prevzem_zeton_za_klub(current_setting('test.prevzem_zahtevek')::bigint, 'klub@example.invalid');
+reset role;
+set local role anon;
+select pg_temp.preveri('prevzem: ponovno pošiljanje razveljavi prejšnjo povezavo',
+  (select stanje = 'potekel' from prevzem_zeton_podatki(current_setting('test.prevzem_zeton'))));
 reset role;
 
 -- Admin prekliče lažni profil: predstavitev in prijave gredo proč.

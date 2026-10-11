@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { FunctionsHttpError } from '@supabase/supabase-js'
 import { supabase } from '../../lib/supabase'
 import { Link } from '../Povezava'
 import FotoIgralca from '../FotoIgralca'
@@ -23,7 +24,10 @@ interface Zahtevek {
   razlogi: string[] | null
   potrditev: number
   povezanih: number
-  vrsta: 'spor' | 'star' | 'prijava' | 'potrjen'
+  vrsta: 'spor' | 'caka' | 'prijava' | 'potrjen'
+  klub_email: string | null
+  klubu_poslano_at: string | null
+  klubu_na: string | null
 }
 
 interface Predlog {
@@ -41,18 +45,32 @@ interface Predlog {
 
 const VRSTA: Record<Zahtevek['vrsta'], string> = {
   spor: 'spor',
-  star: 'čaka > 7 dni',
+  caka: 'čaka',
   prijava: 'prijavljen',
   potrjen: 'potrjen',
 }
 
 const dan = (d: string) => new Date(d).toLocaleDateString('sl-SI')
 
+/** Sporočilo napake funkcije: razlog je v telesu odgovora, ne v `message`. */
+async function napakaFunkcije(error: unknown): Promise<string> {
+  if (error instanceof FunctionsHttpError) {
+    try {
+      const telo = await (error.context as Response).json()
+      if (telo?.error) return String(telo.error)
+    } catch {
+      /* telo ni JSON */
+    }
+  }
+  return (error as Error)?.message ?? String(error)
+}
+
 /**
- * Prevzemi profilov ("To sem jaz"): čakajoči zahtevki, starejši od 7 dni,
- * spori (drug uporabnik za istega igralca), prijavljeni lažni profili in
- * nedavno potrjeni. Admin potrdi, zavrne ali prekliče, odstrani fotografijo
- * in poveže druge vrstice iste osebe (druga liga, mladinci, prestop).
+ * Prevzemi profilov ("To sem jaz"): vsi čakajoči zahtevki, spori (drug
+ * uporabnik za istega igralca), prijavljeni lažni profili in nedavno
+ * potrjeni. Čakajoči zahtevek admin potrdi, pošlje klubu (mail z enkratno
+ * povezavo in e-naslovom prosilca, `posli-prevzem`) ali zavrne; potrjenega
+ * prekliče, odstrani fotografijo in poveže druge vrstice iste osebe.
  */
 export default function Prevzemi() {
   const [vrstice, setVrstice] = useState<Zahtevek[] | null>(null)
@@ -60,6 +78,8 @@ export default function Prevzemi() {
   const [dela, setDela] = useState(false)
   const [odprt, setOdprt] = useState<number | null>(null)
   const [predlogi, setPredlogi] = useState<Predlog[]>([])
+  const [naslovi, setNaslovi] = useState<Record<number, string>>({})
+  const [sporocilo, setSporocilo] = useState<string | null>(null)
 
   const nalozi = useCallback(async () => {
     const { data, error } = await supabase.rpc('admin_zahtevki_igralcev')
@@ -94,6 +114,21 @@ export default function Prevzemi() {
     void izvedi(() => supabase.rpc('admin_odloci_zahtevek', { p_id: z.id, p_odlocitev: odlocitev }))
   }
 
+  async function posljiKlubu(z: Zahtevek) {
+    const na = (naslovi[z.id] ?? z.klub_email ?? '').trim()
+    if (!na) return setNapaka('Klub nima naslova v stikih. Vpiši ga.')
+    if (!window.confirm(`Pošljem zahtevek "${z.player_name}" (${z.prosilec}, ${z.email}) klubu na ${na}?`)) return
+    setDela(true)
+    setNapaka(null)
+    setSporocilo(null)
+    const { data, error } = await supabase.functions.invoke('posli-prevzem', { body: { zahtevek: z.id, na } })
+    setDela(false)
+    if (error) return setNapaka(`Pošiljanje ni uspelo: ${await napakaFunkcije(error)}`)
+    if (data?.error) return setNapaka(`Pošiljanje ni uspelo: ${data.error}`)
+    setSporocilo(`Poslano klubu na ${data?.na ?? na}.`)
+    await nalozi()
+  }
+
   if (vrstice === null) return napaka ? <p className="text-sm text-rose-400">{napaka}</p> : null
 
   return (
@@ -107,10 +142,12 @@ export default function Prevzemi() {
         )}
       </h2>
       <p className="text-xs text-slate-500">
-        Čakajoči zahtevki, starejši od 7 dni, spori, prijavljeni profili in potrjeni v zadnjih 60 dneh. Mlajše
-        zahtevke potrdi klub ali dva soigralca.
+        Vsi čakajoči zahtevki, spori, prijavljeni profili in potrjeni v zadnjih 60 dneh. Čakajoči: potrdi sam,
+        pošlji klubu (mail z enkratno povezavo in e-naslovom prosilca) ali zavrni. Potrdita ga lahko tudi
+        poznavalec kluba ali dva potrjena soigralca.
       </p>
       {napaka && <p className="text-sm text-rose-400">{napaka}</p>}
+      {sporocilo && <p className="text-sm text-gnl-300">{sporocilo}</p>}
       {vrstice.length === 0 ? (
         <p className="text-sm text-slate-500">Ni ničesar za pregled.</p>
       ) : (
@@ -141,6 +178,11 @@ export default function Prevzemi() {
                       {z.potrditev > 0 && ` · soigralcev: ${z.potrditev}`}
                       {z.povezanih > 0 && ` · povezanih vrstic: ${z.povezanih}`}
                     </div>
+                    {z.status === 'cakajoc' && z.klubu_poslano_at && (
+                      <div className="text-xs text-gnl-300">
+                        poslano klubu {dan(z.klubu_poslano_at)} na {z.klubu_na}
+                      </div>
+                    )}
                     {z.dokaz_url && (
                       <a href={z.dokaz_url} target="_blank" rel="noopener noreferrer" className="break-all text-xs text-gnl-300 hover:underline">
                         {z.dokaz_url}
@@ -161,6 +203,17 @@ export default function Prevzemi() {
                     <>
                       <button disabled={dela} onClick={() => odloci(z, 'potrdi')} className="gumb-glavni text-xs disabled:opacity-50">
                         potrdi
+                      </button>
+                      <input
+                        type="email"
+                        value={naslovi[z.id] ?? z.klub_email ?? ''}
+                        onChange={(e) => setNaslovi((n) => ({ ...n, [z.id]: e.target.value }))}
+                        placeholder="naslov kluba"
+                        aria-label="Naslov kluba"
+                        className="w-44 rounded-lg border border-white/10 bg-slate-900 px-2 py-1 text-xs"
+                      />
+                      <button disabled={dela} onClick={() => posljiKlubu(z)} className="gumb-tih text-xs disabled:opacity-50">
+                        {z.klubu_poslano_at ? 'pošlji klubu znova' : 'pošlji klubu'}
                       </button>
                       <button disabled={dela} onClick={() => odloci(z, 'zavrni')} className="text-xs text-slate-500 hover:text-rose-300">
                         zavrni
