@@ -94,6 +94,10 @@
       "destination": "/ee.html"
     },
     {
+      "source": "/pl",
+      "destination": "/pl.html"
+    },
+    {
       "source": "/((?!api/)(?!.*\\.).*)",
       "has": [
         {
@@ -180,6 +184,17 @@
         }
       ],
       "destination": "/ee.html"
+    },
+    {
+      "source": "/((?!api/)(?!.*\\.).*)",
+      "has": [
+        {
+          "type": "query",
+          "key": "t",
+          "value": "pl-.*"
+        }
+      ],
+      "destination": "/pl.html"
     },
     {
       "source": "/((?!api/)(?!.*\\.).*)",

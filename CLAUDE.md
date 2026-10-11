@@ -1649,11 +1649,34 @@ Uvoz (ena za drugo): `gh workflow
 run uvoz-lige.yml -f liga=ee-premium-liiga -f arhiv=52/2025,52/2024 -f
 cene=true`. Arhiv 180 zapisnikov po 5 s in več je okoli 20 minut na sezono.
 
+### Poljska
+
+Država `PL` ("Polska", migracija 20261012004500) ima vmesnik v poljščini
+(`src/i18n/pl/`, jezik `pl`, `pl-PL`, `JEZIK_DRZAVE.PL`), vstop `slff.eu/pl`,
+kartico ob deljenju `pl.html` (Caddy jo vrne za `/pl` in `?t=pl-…`), poljsko
+vejo pošte (`sporocila.ts`, avtentikacijske predloge in zadeve v
+`docker-compose.slff.yml`, pozdrav "Cześć") in poljska imena lastnikov hišnih
+ekip ("Jakub Nowak"). **Šifra poljske lige se začne z `pl-`.** Ugib: brskalnik
+`pl` ali pas `Europe/Warsaw`. Izrazi kot v poljskih fantasy igrah: drużyna,
+kadra (15), wyjściowy skład / jedenastka, ławka, kapitan, wicekapitan,
+transfery, bramkarz, obrońca, pomocnik, napastnik, tabela, ranking, asysta,
+kartka, czyste konto, punkty, miniliga; `krog` je vedno **kolejka** ("5.
+kolejka"), pripomoček `klop_plus` je "Ławka+". Množine one/few/many/other
+(`Intl.PluralRules('pl')`): `one` 1, `few` 2–4 (22–24 …), `many` 0 in 5–21
+(25 …), `other` le decimalke, ki dobijo rodilnik ednine ("1 punkt, 2 punkty,
+5 punktów, 1,5 punktu"); `two` poljščina nima. Poljščina ima 7 sklonov, zato
+ime lige **ostane v imenovalniku** in stoji samostojno za dvopičjem ali v
+oklepaju ("Liga fantasy jest otwarta: {liga}"); `ligaVTozilniku` ga pusti.
+Psevdonim v klepetu ima pridevnik pred samostalnikom ("Niebieski Bramkarz
+42", vsi samostalniki so moškega spola). Stran Pozicije je v meniju kot v
+Sloveniji. `PL` je v matriki nočnega uvoza. Zveze, tekmovanja in vir vpiše
+svoja migracija. Manjka še: poljski kanal v HelpStacku (`Podpora.tsx` za `pl`
+uporabi slovenskega) in **pregled prevoda pri naravnem govorcu**.
+
 ### Poljska — vir `pzpn`
 
-Država `PL` ("Polska", migracija 20261012003000). **Vmesnika v poljščini še
-ni** — pride s svojo spremembo (jezik, pošta, kartica, imena hišnih ekip);
-do takrat so lige neaktivne. **Šifra poljske lige se začne s `pl-`.**
+Država, jezik in vmesnik so opisani zgoraj (*Poljska*); lige vpiše migracija
+20261012003000.
 
 Vir `pzpn` (`scripts/viri/pzpn.mjs`) bere **uradne zapisnike PZPN** (Extranet,
 "protokół"). PZPN jih hrani v skupnem API-ju (`shared-api-ng.laczynaspilka.pl`,
@@ -2142,7 +2165,7 @@ besedilom). **Obvezno, vsakič:**
    istega pošiljatelja po 3+ dneh je v redu).
 2. **Po** poslanem mailu: `node scripts/stiki-klubov.mjs zabelezi --za <naslov>
    --vrsta prvi|opomnik --poslal <ime> --zadeva "…" --telo-datoteka <datoteka>`
-   (nov naslov še `--klub "…" --drzava SI|SK|HR|CZ|HU|AT|RS|RO|EE [--liga …]`). Pri paketih
+   (nov naslov še `--klub "…" --drzava SI|SK|HR|CZ|HU|AT|RS|RO|EE|PL [--liga …]`). Pri paketih
    beleži sproti, po vsakem mailu, ne na koncu.
 3. Odgovor kluba: `zabelezi --vrsta odgovor --opomba "<povzetek>"`; dogovor ali
    zavrnitev: `nastavi --za … --stanje sodeluje|ne_zeli`.
