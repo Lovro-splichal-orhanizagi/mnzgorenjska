@@ -213,7 +213,7 @@ export const igralci = {
     oznaka: 'Profil igralca',
     gumb: 'To sem jaz',
     naslovOkna: 'Si to ti?',
-    opis: 'Prevzemi svoj profil igralca. Ko te potrdi klub, dva soigralca ali SLFF, lahko dodaš vzdevek, fotografijo, opis in omrežja. Uradnih podatkov (ime, klub, pozicija, minute, goli, cena) ne moreš spreminjati.',
+    opis: 'Prevzemi svoj profil igralca. Ko te potrdi klub, dva soigralca ali SLFF, lahko dodaš vzdevek, fotografijo, opis in omrežja. Uradnih podatkov (ime, klub, pozicija, minute, goli, cena) ne moreš spreminjati. Zahtevek pošljemo tvojemu klubu, ki ga potrdi z enim klikom v e-pošti.',
     dokaz: 'Povezava, ki pokaže, da si to ti (neobvezno)',
     dokazPrimer: 'https://… (npr. tvoj profil na strani kluba)',
     star16: 'Potrjujem, da sem star vsaj 16 let.',

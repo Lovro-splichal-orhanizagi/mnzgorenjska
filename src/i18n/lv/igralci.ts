@@ -215,7 +215,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     oznaka: 'Spēlētāja profils',
     gumb: 'Tas esmu es',
     naslovOkna: 'Vai tas esi tu?',
-    opis: 'Pārņem savu spēlētāja profilu. Kad tevi apstiprinās klubs, divi komandas biedri vai SLFF, varēsi pievienot iesauku, foto, aprakstu un sociālos tīklus. Oficiālos datus (vārds, klubs, pozīcija, minūtes, vārti, cena) mainīt nevar.',
+    opis: 'Pārņem savu spēlētāja profilu. Kad tevi apstiprinās klubs, divi komandas biedri vai SLFF, varēsi pievienot iesauku, foto, aprakstu un sociālos tīklus. Oficiālos datus (vārds, klubs, pozīcija, minūtes, vārti, cena) mainīt nevar. Pieprasījumu nosūtām tavam klubam, kas to apstiprina ar vienu klikšķi e-pastā.',
     dokaz: 'Saite, kas parāda, ka tas esi tu (nav obligāti)',
     dokazPrimer: 'https://… (piem., tavs profils kluba lapā)',
     star16: 'Apstiprinu, ka man ir vismaz 16 gadi.',

@@ -215,7 +215,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     oznaka: 'Profil zawodnika',
     gumb: 'To ja',
     naslovOkna: 'To ty?',
-    opis: 'Przejmij swój profil zawodnika. Gdy potwierdzi cię klub, dwóch kolegów z drużyny albo SLFF, możesz dodać pseudonim, zdjęcie, opis i media społecznościowe. Oficjalnych danych (imię i nazwisko, klub, pozycja, minuty, gole, cena) nie można zmieniać.',
+    opis: 'Przejmij swój profil zawodnika. Gdy potwierdzi cię klub, dwóch kolegów z drużyny albo SLFF, możesz dodać pseudonim, zdjęcie, opis i media społecznościowe. Oficjalnych danych (imię i nazwisko, klub, pozycja, minuty, gole, cena) nie można zmieniać. Wysyłamy prośbę do twojego klubu, który potwierdza ją jednym kliknięciem w e-mailu.',
     dokaz: 'Link, który pokazuje, że to ty (opcjonalnie)',
     dokazPrimer: 'https://… (np. twój profil na stronie klubu)',
     star16: 'Potwierdzam, że mam co najmniej 16 lat.',
