@@ -1,5 +1,5 @@
 // Uradne odsotnosti: potrjeni igralec sam javi, da ne bo igral (migracija
-// 20261012113100, tabela `uradne_odsotnosti`, pogled `uradne_odsotnosti_view`).
+// 20261012135100, tabela `uradne_odsotnosti`, pogled `uradne_odsotnosti_view`).
 //
 // Samo informacija, kot skupnostna poročila: ne vpliva na izbiro, cene ne
 // točke. Če igralec po zapisniku zaigra, preden odsotnost zapre, jo preverba

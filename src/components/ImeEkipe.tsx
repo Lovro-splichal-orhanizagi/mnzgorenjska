@@ -1,5 +1,5 @@
 // Ime fantasy ekipe na lestvici. Sestavo ekipe vidi le lastnik (zasebne
-// ekipe, migracija 20261012121100), zato je ime povezava na /team/:id le pri
+// ekipe, migracija 20261012137100), zato je ime povezava na /team/:id le pri
 // svoji ekipi; tuja ekipa je golo ime, njen lastnik pa vodi na profil
 // (`ImeLastnika`). Hišna ekipa nima lastnika-človeka (owner_id NULL).
 import type { ReactNode } from 'react'

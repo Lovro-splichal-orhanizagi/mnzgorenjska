@@ -2,7 +2,7 @@
 //
 // Če je igralec (katerakoli njegova vrstica) po zapisniku igral med odprto
 // uradno odsotnostjo, jo `preveri_uradne_odsotnosti()` (migracija
-// 20261012113100) označi "ni_drzalo" in to je opomin osebi. Brez vpliva na
+// 20261012135100) označi "ni_drzalo" in to je opomin osebi. Brez vpliva na
 // točke in cene. Isto preverbo vsako uro kliče tudi pg_cron (rezerva).
 //
 //   SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… node scripts/preveri-uradne-odsotnosti.mjs

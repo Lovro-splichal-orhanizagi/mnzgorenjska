@@ -1,5 +1,5 @@
 // Javne mini lige: lastnik ligo objavi v eni ligi, drugi jo najdejo in se
-// pridružijo brez kode. Odloča baza (migracija 20261012133100,
+// pridružijo brez kode. Odloča baza (migracija 20261012139100,
 // `nastavi_javnost_mini_lige`, `pridruzi_javni_mini_ligi`, sprožilec
 // `varuj_mini_ligo`); tu je isto pravilo za obrazec in prevod kod napak.
 import { t } from '../i18n'

@@ -775,7 +775,7 @@ select pg_temp.preveri('hisne ekipe nimajo posnetka za nazaj',
   not exists (select 1 from fantasy_lineups fl join rounds r on r.id=fl.round_id
                where r.number < 5 and fl.fantasy_team_id in (select id from hisne)));
 -- Ena sama cloveska ekipa: izbranost bi izdala njen kader, zato je skrita
--- (prag 5 cloveskih ekip v krogu, 20261012121100). Stetje nad pragom je spodaj.
+-- (prag 5 cloveskih ekip v krogu, 20261012137100). Stetje nad pragom je spodaj.
 select pg_temp.preveri('izbranost je skrita, dokler je v krogu manj kot 5 cloveskih ekip',
   (select owners is null from player_standings where id=-913002 and competition_id=-913001));
 create temporary table cloveski_posnetki as
@@ -1534,7 +1534,7 @@ select pg_temp.preveri('prevzem: preklic odstrani predstavitev in prijave',
                    where z.player_id = -913001 and p.resena_at is null));
 
 -- ---------------------------------------------------------------------------
--- Uradne odsotnosti potrjenih igralcev, migracija 20261012113100.
+-- Uradne odsotnosti potrjenih igralcev, migracija 20261012135100.
 -- S1 (...001) je potrjen za -913006, S2 (...002) za -913011. Admin S1
 -- poveže še vrstico -919020 v drugi ligi.
 -- ---------------------------------------------------------------------------
@@ -1680,7 +1680,7 @@ select pg_temp.preveri('uradno: "Spet sem nared" brez posledic',
   and (select opomini = 0 from stanje_uradne_odsotnosti(-913006)));
 reset role;
 select pg_temp.preveri('uradno: zaprta brez tekme ostane brez opomina', preveri_uradne_odsotnosti() = 0);
--- --- Zasebne ekipe (20261012121100) -----------------------------------------
+-- --- Zasebne ekipe (20261012137100) -----------------------------------------
 -- Sestavo ekipe (posnetki, pripomocki, tuja_postava, ucinkovita postava) vidi
 -- le lastnik in admin. Lestvice, tocke kroga in izbranost (nad pragom) ostanejo
 -- javne. -913001 je ekipa uporabnika ...ab s posnetkom zaklenjenega kroga
@@ -1831,7 +1831,7 @@ select pg_temp.preveri('zasebne: sezonska izbranost bere isti prag brez napake',
   (select count(*) >= 0 from player_season_standings where competition_id=-917001));
 reset role;
 
--- Javne mini lige (migracija 20261012133100): objava, seznam, pridružitev
+-- Javne mini lige (migracija 20261012139100): objava, seznam, pridružitev
 -- brez kode, varovalo imena, omejitev na lastnika, prijave in admin.
 -- ---------------------------------------------------------------------------
 reset role;

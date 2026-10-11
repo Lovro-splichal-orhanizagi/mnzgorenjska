@@ -2,7 +2,7 @@
 // razdelek na strani igralca z obrazcem za lastnika.
 //
 // Samo informacija: ne vpliva na izbiro ekip, cene ne točke. Kdo sme javiti,
-// zapreti in kdaj je opomin, odloči baza (migracija 20261012113100).
+// zapreti in kdaj je opomin, odloči baza (migracija 20261012135100).
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
