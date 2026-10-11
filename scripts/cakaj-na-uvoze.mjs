@@ -38,6 +38,12 @@ const mojaLiga = arg('--liga')
 const samoTece = process.argv.includes('--tece')
 let mojaDrzava = arg('--drzava')?.toUpperCase() ?? null
 const NAJVEC_MIN = Number(arg('--najvec') ?? 120)
+// Popravek (razdeli-zlite-igralce): piše v lige enega vira/lige, zato čaka le na
+// uvoze TE države — vklopljene in nevklopljene. Prej je čakal na vse starejše
+// uvoze vseh držav, vsi novejši uvozi pa nanj: 11. 10. 2026 je dve uri stalo vse.
+const popravek = process.argv.includes('--popravek')
+const popravekVir = arg('--vir')
+const popravekLiga = arg('--tekmovanje')
 // Države, kjer zveze pod državno nimajo skupnih klubov: država → državna zveza.
 // Romunija: vsaka županijska zveza (AJF) je svoja piramida; državne zveze v
 // SLFF ni, 'frf' je le vir (nobena liga nima zveze s to šifro).
@@ -61,7 +67,7 @@ if (!GITHUB_RUN_ID || !GITHUB_REPOSITORY) {
 }
 const db = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } })
 
-const { data: lige, error } = await db.from('competitions').select('slug, active, countries!inner(code), federations(code)')
+const { data: lige, error } = await db.from('competitions').select('slug, active, source, countries!inner(code), federations(code)')
 if (error) {
   console.error(`Lig ni mogoče prebrati: ${error.message}`)
   process.exit(1)
@@ -69,6 +75,18 @@ if (error) {
 const ligaPoSlugu = new Map(
   lige.map((l) => [l.slug, { aktivna: l.active, drzava: l.countries.code, zveza: l.federations?.code ?? null }]),
 )
+
+// Država vira: iz katerekoli lige tega vira (vir ima eno državo).
+const drzavaVira = new Map(lige.map((l) => [l.source, l.countries.code]))
+if (popravek) mojaDrzava = ligaPoSlugu.get(popravekLiga)?.drzava ?? drzavaVira.get(popravekVir) ?? null
+
+// Zagon popravka: "Razdeli zlite igralce <liga|vir|vse>[ (pisi)]". Brez (pisi)
+// le izpiše načrt in ne piše nikamor.
+function drzavaPopravka(naslov) {
+  const m = /^Razdeli zlite igralce (\S+)( \(pisi\))?$/.exec(naslov ?? '')
+  if (!m) return { pise: true, drzava: null }
+  return { pise: !!m[2], drzava: ligaPoSlugu.get(m[1])?.drzava ?? drzavaVira.get(m[1]) ?? null }
+}
 
 let mojaJeAktivna = true
 let mojaZveza = null
@@ -86,7 +104,12 @@ const mojId = Number(GITHUB_RUN_ID)
 
 // Ali zagon drugega toka piše v iste vrstice kot ta?
 function seKrize(tok, naslov) {
-  if (tok === 'zdruzi-klube.yml' || tok === 'tedensko-cene.yml' || tok === 'razdeli-zlite-igralce.yml') return true
+  if (tok === 'zdruzi-klube.yml' || tok === 'tedensko-cene.yml') return true
+  if (tok === 'razdeli-zlite-igralce.yml') {
+    const p = drzavaPopravka(naslov)
+    if (!p.pise) return false
+    return !p.drzava || !mojaDrzava || p.drzava === mojaDrzava
+  }
   if (tok === 'uvoz-lige.yml') {
     const slug = /^Uvoz lige (\S+)$/.exec(naslov ?? '')?.[1]
     const liga = slug ? ligaPoSlugu.get(slug) : null
@@ -95,6 +118,7 @@ function seKrize(tok, naslov) {
     // zadeva (madžarske lige pred vklopom: sicer bi vsak urni zagon čakal
     // na tekoči ročni uvoz).
     if (liga.drzava !== mojaDrzava) return false
+    if (popravek) return true
     if (SKUPEN_VIR[mojaDrzava]) return true
     if (!mojaLiga && !liga.aktivna) return false
     // Ročna uvoza nevklopljenih lig pišeta vsak v svoje igralce in tečeta
@@ -110,7 +134,8 @@ function seKrize(tok, naslov) {
   // Nočni uvoz piše le v vklopljene lige. Ročni uvoz nevklopljene ga ne moti;
   // med seboj pa nočne zagone vrsti že skupina `uvoz-zapisnikov`.
   // Nočni zagon nosi vse države; pri skupnem viru se nanj čaka vedno.
-  if (tok === 'uvoz-zapisnikov.yml') return SKUPEN_VIR[mojaDrzava] ? true : mojaLiga ? mojaJeAktivna : false
+  // Popravek lahko piše v vklopljene lige, zato čaka tudi na nočni uvoz.
+  if (tok === 'uvoz-zapisnikov.yml') return popravek || SKUPEN_VIR[mojaDrzava] ? true : mojaLiga ? mojaJeAktivna : false
   if (tok === 'grbi.yml') return !!SKUPEN_VIR[mojaDrzava] && naslov === `Grbi klubov ${SKUPEN_VIR[mojaDrzava]}`
   return true
 }
