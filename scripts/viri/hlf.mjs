@@ -81,13 +81,17 @@ export function razbijKodo(koda) {
 export const naslovLige = (koda) => `${OSNOVNI}/rezultate/${razbijKodo(koda).pot}`
 export const naslovKroga = (koda, krog) => `${naslovLige(koda)}/etapa-${krog}`
 
-/** Slug kot ga gradi stran: "Victoria Viişoara" → "victoria-viisoara". */
+/**
+ * Slug kot ga gradi stran: "Victoria Viişoara" → "victoria-viisoara". Vsak
+ * znak, ki ni črka ali števka, postane svoj vezaj — "Liga 5 Cluj - Grupa 1" je
+ * "liga-5-cluj---grupa-1" (s strnjenimi vezaji stran tiho pokaže privzeto ligo).
+ */
 export const slug = (s) =>
-  razpakiraj(String(s ?? ''))
+  razpakiraj(String(s ?? '').trim())
     .normalize('NFD')
     .replace(/\p{M}/gu, '')
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/[^a-z0-9]/g, '-')
     .replace(/^-+|-+$/g, '')
 
 /** "2026-2027" → "2026/27". */
@@ -496,18 +500,36 @@ export class Seja {
     await this.preveriStran()
     // Stran lahko naloži kroge več lig zveze; prava je tista, katere tekme so
     // na karticah strani.
-    await this.stran.locator('.match-container').first().waitFor({ timeout: 15000 }).catch(() => {})
-    const besedila = (await this.stran.locator('.match-container .match-details.isnotmobile').allInnerTexts().catch(() => [])).map(poenoti)
-    const naStrani = (o) =>
-      tekmeKroga(o.telo).every((t) => besedila.some((b) => b.includes(poenoti(t.homeClub?.name)) && b.includes(poenoti(t.awayClub?.name))))
-    const kandidati = this.odgovori.filter((o) => o.ime === 'GetMatches' && o.zahteva?.TourRoundId && o.telo?.responseData)
-    const k = (besedila.length ? kandidati.filter(naStrani).at(-1) : null) ?? kandidati.at(-1)
-    if (!k) throw new Error(`hlf: ${url} ni naložila tekem kroga`)
-    if (besedila.length && !naStrani(k)) throw new Error(`hlf: tekme v odgovoru se ne ujemajo s karticami na ${url}`)
+    // Brez kartic ligo ugibati ni dovoljeno: zadnji odgovor je lahko privzeta
+    // liga zveze (Cluj L5 Grupa 1 in 2 sta na GitHubovem tekaču dobili razpored
+    // Lige 4, 11. 10. 2026). Zato čakamo, da so kartice na strani in da se
+    // nanje ujema odgovor z enakim številom tekem; sicer uvoz ustavimo.
+    const naStrani = (o, besedila) => {
+      const tekme = tekmeKroga(o.telo)
+      return tekme.length > 0 && tekme.length === besedila.length &&
+        tekme.every((t) => besedila.some((b) => b.includes(poenoti(t.homeClub?.name)) && b.includes(poenoti(t.awayClub?.name))))
+    }
+    let k = null
+    for (const konec = Date.now() + 90000; !k && Date.now() < konec; ) {
+      const besedila = (await this.stran.locator('.match-container .match-details.isnotmobile').allInnerTexts().catch(() => [])).map(poenoti)
+      const kandidati = this.odgovori.filter((o) => o.ime === 'GetMatches' && o.zahteva?.TourRoundId && o.telo?.responseData)
+      if (besedila.length) k = kandidati.filter((o) => naStrani(o, besedila)).at(-1) ?? null
+      if (!k) await cakaj(1000)
+    }
+    await this.preveriStran()
+    if (!k) throw new Error(`hlf: na ${url} ni kartic, ki bi se ujemale z odgovorom kroga — uvoz ustavljen (ne ugibamo lige)`)
     this.ids = { SeasonId: k.zahteva.SeasonId, CompetitionId: k.zahteva.CompetitionId, StageId: k.zahteva.StageId, SeriesId: k.zahteva.SeriesId }
     // Stran ob neznani poti pokaže privzeto ligo — preveri, da smo na pravi.
     const pot = decodeURI(new URL(this.stran.url()).pathname)
     if (!pot.startsWith(`/rezultate/${this.deli.pot}/`)) throw new Error(`hlf: stran je odprla ${pot}, ne lige ${this.deli.pot} — je šifra prava?`)
+    // Neznano pot stran pusti v naslovu, pokaže pa privzeto ligo zveze. Zato
+    // preverimo ime tekmovanja, ki ga je res naložila.
+    const tekmovanje = this.odgovori
+      .filter((o) => o.ime === 'GetCompetitions')
+      .flatMap((o) => (Array.isArray(o.telo?.responseData) ? o.telo.responseData : []))
+      .find((t) => t.competitionId === this.ids.CompetitionId)
+    if (tekmovanje && slug(tekmovanje.name) !== this.deli.tekmovanje)
+      throw new Error(`hlf: ${url} kaže tekmovanje "${tekmovanje.name}" (${slug(tekmovanje.name)}), ne ${this.deli.tekmovanje} — šifra je napačna, uvoz ustavljen`)
     // Krogi pridejo za vso zvezo; stran jih lahko naloži za več zvez (SuperLiga je LPF,
     // ne FRF) — vzamemo odgovor, ki ima krog te serije.
     const imaSerijo = (o) =>

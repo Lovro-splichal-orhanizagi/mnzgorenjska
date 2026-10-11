@@ -1461,6 +1461,12 @@ Lastnik je vir odobril (10. 10. 2026). robots.txt stran nima.
   menjavi kroga odgovor pride pred karticami — `karticeKazejo` počaka, da
   kartice kažejo tekme odgovora, tekmo pa poišče po imenih klubov, ne po
   mestu (Cluj L5 Gherla je klikal napačne tekme).
+- **Slug: vsak znak, ki ni črka ali števka, je svoj vezaj** ("Liga 5 Cluj -
+  Grupa 1" → `liga-5-cluj---grupa-1`). Neznano pot stran pusti v naslovu, a
+  pokaže privzeto ligo zveze — prvi uvoz Cluj L5 G1/G2 (11. 10. 2026) je tako
+  dobil razpored Lige 4 (popravek 20261012055000). Zdaj `odpri` preveri ime
+  naloženega tekmovanja proti šifri in brez kartic, ki se ujemajo z odgovorom,
+  ligo ne ugiba — uvoz se ustavi.
 
 Preizkus (10. 10. 2026): Liga 3 Serie 1 — 22 krogov, 132 tekem z uro, 48
 zapisnikov, vsi polni, goli = izidi (158), 1460 nastopov, vsi s šifro;
@@ -1481,7 +1487,7 @@ Vpisanih je 26 lig (migracija 20261010220000), **neaktivnih**, sezona
 | ro-liga3-s1 … s8 | `national superscore-liga-3/sezon-regular/serie-1` … `serie-8` |
 | ro-ab-superliga, -l4-s1/-s2, -l5-s1/-s2 | `judetean/alba superliga-ajf-alba/sezon-regular/1`, `liga-4/…/serie-1/2`, `liga-5/…/serie-1/2` |
 | ro-bh-l4 | `judetean/bihor liga-4/sezon-regular/tur-preliminar` (13 krogov, nato nova faza) |
-| ro-cj-l4, -l5-g1, -l5-g2, -l5-gherla, -l5-dej, -l5-campia-turzii | `judetean/cluj liga-4-cluj/…`, `liga-5-cluj-grupa-1/2`, `liga-5-gherla`, `liga-5-dej`, `liga-5-campia-turzii` |
+| ro-cj-l4, -l5-g1, -l5-g2, -l5-gherla, -l5-dej, -l5-campia-turzii | `judetean/cluj liga-4-cluj/…`, `liga-5-cluj---grupa-1/2` (tri vezaje!), `liga-5-gherla`, `liga-5-dej`, `liga-5-campia-turzii` |
 | ro-hd-l4, -l5 | `judetean/hunedoara liga-4/sezon-regular/serie-1`, `liga-5/campionat/serie-1` |
 | ro-ph-l4 | `judetean/prahova liga-a-4-a-prahova/sezon-regular/serie-1` |
 | ro-sb-superliga | `judetean/sibiu superliga/sezon-regular/serie-1` |
