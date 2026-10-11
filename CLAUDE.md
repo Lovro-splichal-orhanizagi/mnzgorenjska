@@ -1649,6 +1649,39 @@ Uvoz (ena za drugo): `gh workflow
 run uvoz-lige.yml -f liga=ee-premium-liiga -f arhiv=52/2025,52/2024 -f
 cene=true`. Arhiv 180 zapisnikov po 5 s in več je okoli 20 minut na sezono.
 
+### Latvija
+
+Država `LV` ("Latvija", migracija 20261012050000) ima vmesnik v latvijščini
+(`src/i18n/lv/`, jezik `lv`, `lv-LV`, `JEZIK_DRZAVE.LV`), izbirnik jezika
+"Latviešu", vstop `slff.eu/lv`, kartico ob deljenju `lv.html` (Caddy jo vrne
+za `/lv` in `?t=lv-…`, tudi rezerva `:3201`), latvijsko vejo pošte
+(`sporocila.ts`, avtentikacijske predloge in zadeve v
+`docker-compose.slff.yml`, pozdrav "Sveiki") in latvijska imena lastnikov
+hišnih ekip ("Jānis Bērziņš"; le moška imena, ker imajo priimki moško in
+žensko obliko). **Šifra latvijske lige se začne z `lv-`.** Ugib: brskalnik
+`lv` ali pas `Europe/Riga`. Izrazi kot v latvijskih fantasy in nogometnih
+medijih: komanda, sastāvs (15), pamatsastāvs, soliņš / rezervisti, kapteinis,
+vicekapteinis, transfēri (prestopi), maiņa (samodejna menjava), vārtsargs,
+aizsargs, pussargs, uzbrucējs, turnīra tabula (prava lestvica lige),
+kopvērtējums (fantasy lestvica), rezultatīvā piespēle, kartīte, sausā spēle,
+punkti, eksperts (poznavalec), bonuss (pripomoček); `krog` je vedno **kārta**
+("5. kārta", "5. kārtā"), pripomoček `klop_plus` je "Soliņš+". Množine
+zero/one/other (`Intl.PluralRules('lv')`, `Mnozina.zero` v `jedro.ts`):
+`zero` 0, 10–20, 30 … z rodilnikom množine ("0 punktu, 10 punktu, 11
+punktu"), `one` 1, 21, 31 … razen 11 ("1 punkts, 21 punkts"), `other`
+ostalo ("2 punkti", tudi "2,5 punkti"). Latvijščina ima 7 sklonov, zato ime
+lige **ostane v imenovalniku** in stoji samostojno za dvopičjem ali v
+oklepaju ("Fantāzijas līga ir atvērta: {liga}", "līga: {liga}");
+`ligaVTozilniku` ga pusti. Brez pomišljajev (smoke). Psevdonim v klepetu ima
+pridevnik v določni obliki pred samostalnikom ("Zilais Vārtsargs 42", vsi
+samostalniki so moškega spola). Sezona je **koledarska** kot v Estoniji
+(`competitions.sezona_koledarska` vklopi migracija lig). Stran Pozicije je
+v meniju kot v Sloveniji. `LV` je v matriki nočnega uvoza in v *Hisne
+ekipe*. Zveze, tekmovanja in vir vpiše svoja migracija. Manjka še: latvijski
+kanal v HelpStacku (`Podpora.tsx` za `lv` uporabi slovenskega) in
+**pregled prevoda pri naravnem govorcu**.
+
+
 ### Latvija — vir `lff`
 
 Vir `lff` (`scripts/viri/lff.mjs`) bere **lff.lv** (Latvijas Futbola
@@ -2306,7 +2339,7 @@ besedilom). **Obvezno, vsakič:**
    istega pošiljatelja po 3+ dneh je v redu).
 2. **Po** poslanem mailu: `node scripts/stiki-klubov.mjs zabelezi --za <naslov>
    --vrsta prvi|opomnik --poslal <ime> --zadeva "…" --telo-datoteka <datoteka>`
-   (nov naslov še `--klub "…" --drzava SI|SK|HR|CZ|HU|AT|RS|RO|EE|PL|ES [--liga …]`). Pri paketih
+   (nov naslov še `--klub "…" --drzava SI|SK|HR|CZ|HU|AT|RS|RO|EE|PL|ES|LV [--liga …]`). Pri paketih
    beleži sproti, po vsakem mailu, ne na koncu.
 3. Odgovor kluba: `zabelezi --vrsta odgovor --opomba "<povzetek>"`; dogovor ali
    zavrnitev: `nastavi --za … --stanje sodeluje|ne_zeli`.
@@ -2364,7 +2397,7 @@ kanonični `?t=` po svoji ligi.
   `src/i18n` — nikoli `toLocaleString('sl-SI')`.
 - Drugi jezik (`src/i18n/hr/`) je lahko delen; manjkajoče pride iz
   slovenščine. `npm run prevodi -- hr` izpiše, kaj manjka. Brskalnik izbere
-  jezik sam šele, ko je v `PRIPRAVLJENI` (`sl`, `hr`, `sk`, `cs`, `hu`, `de`, `sr`, `ro`, `et`, `pl`, `es`, `en`). Hrvaščina,
+  jezik sam šele, ko je v `PRIPRAVLJENI` (`sl`, `hr`, `sk`, `cs`, `hu`, `de`, `sr`, `ro`, `et`, `pl`, `es`, `lv`, `en`). Hrvaščina,
   slovaščina, češčina, madžarščina, nemščina, srbščina, romunščina, estonščina in angleščina so popolne — smoke preveri, da imajo vse ključe ter iste
   `{parametre}` in `<oznake>`; nov slovenski niz zato dodaj v vseh devet.
 - **Kateri jezik** (`zeljenJezik` v `src/lib/drzavaUgib.ts`, isto pravilo v

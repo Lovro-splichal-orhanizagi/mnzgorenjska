@@ -138,6 +138,20 @@ const BESEDE: Record<string, { pridevniki: string[]; samostalniki: string[] }> =
       'Halcón', 'Dragón', 'Toro', 'Caballo', 'Oso', 'Lince',
     ],
   },
+  // Latvijščina: pridevnik v določni obliki moškega spola ("Zilais Vārtsargs 42"),
+  // vsi samostalniki so moškega spola; rodilniki (Zelta, Nakts …) so nesklonljivi.
+  lv: {
+    pridevniki: [
+      'Zilais', 'Sarkanais', 'Zaļais', 'Dzeltenais', 'Melnais', 'Baltais', 'Sudraba', 'Zelta',
+      'Ātrais', 'Mežonīgais', 'Klusais', 'Ugunīgais', 'Ledainais', 'Nakts', 'Rīta',
+      'Dzelzs', 'Vara', 'Saulainais', 'Debesu', 'Nežēlīgais',
+    ],
+    samostalniki: [
+      'Vārtsargs', 'Aizsargs', 'Pussargs', 'Uzbrucējs', 'Kapteinis', 'Tiesnesis', 'Treneris',
+      'Fans', 'Snaiperis', 'Diriģents', 'Rezervists', 'Veterāns', 'Varonis', 'Vilks',
+      'Ērglis', 'Pūķis', 'Vērsis', 'Zirgs', 'Piekūns', 'Lūsis',
+    ],
+  },
   de: {
     pridevniki: [
       'Blauer', 'Roter', 'Grüner', 'Gelber', 'Schwarzer', 'Weißer', 'Silberner', 'Goldener',

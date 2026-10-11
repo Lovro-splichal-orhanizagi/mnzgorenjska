@@ -74,6 +74,13 @@
     <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Elegir nueva contraseña →</a>
   </p>
   <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Si no has pedido una nueva contraseña, ignora este mensaje. La contraseña anterior sigue valiendo.</p>
+{{ else if eq (printf "%v" .Data.jezik) "lv" }}
+  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Jauna parole</p>
+  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Kāds (cerams, ka tu) pieprasīja jaunu SLFF paroli. Nospied pogu un ievadi jauno paroli.</p>
+  <p style="text-align: center; margin: 24px 0;">
+    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Iestatīt jaunu paroli →</a>
+  </p>
+  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Ja tu pats nepieprasīji jaunu paroli, vienkārši ignorē šo vēstuli. Vecā parole joprojām ir derīga.</p>
 {{ else }}
   <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Ponastavitev gesla</p>
   <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Nekdo (upamo, da ti) je zahteval novo geslo za SLFF. Klikni gumb in vpiši novo geslo.</p>

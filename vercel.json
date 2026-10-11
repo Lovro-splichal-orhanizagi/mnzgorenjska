@@ -102,6 +102,10 @@
       "destination": "/es.html"
     },
     {
+      "source": "/lv",
+      "destination": "/lv.html"
+    },
+    {
       "source": "/((?!api/)(?!.*\\.).*)",
       "has": [
         {
@@ -210,6 +214,17 @@
         }
       ],
       "destination": "/es.html"
+    },
+    {
+      "source": "/((?!api/)(?!.*\\.).*)",
+      "has": [
+        {
+          "type": "query",
+          "key": "t",
+          "value": "lv-.*"
+        }
+      ],
+      "destination": "/lv.html"
     },
     {
       "source": "/((?!api/)(?!.*\\.).*)",
