@@ -116,7 +116,7 @@ const moj = samoTece ? null : JSON.parse(gh('run', 'view', GITHUB_RUN_ID, '--jso
 const mojId = Number(GITHUB_RUN_ID)
 
 // Ali zagon drugega toka piše v iste vrstice kot ta?
-function seKrize(tok, naslov) {
+function seKrize(tok, naslov, id) {
   if (tok === 'zdruzi-klube.yml' || tok === 'tedensko-cene.yml') return true
   if (tok === 'razdeli-zlite-igralce.yml') {
     const p = drzavaPopravka(naslov)
@@ -151,7 +151,16 @@ function seKrize(tok, naslov) {
   // med seboj pa nočne zagone vrsti že skupina `uvoz-zapisnikov`.
   // Nočni zagon nosi vse države; pri skupnem viru se nanj čaka vedno.
   // Popravek lahko piše v vklopljene lige, zato čaka tudi na nočni uvoz.
-  if (tok === 'uvoz-zapisnikov.yml') return popravek || SKUPEN_VIR[mojaDrzava] ? true : mojaLiga ? mojaJeAktivna : false
+  // Pri skupnem viru se čaka le na posel te države ("uvoz EE"): zagon kot
+  // celota teče, dokler ne konča najdaljši posel (AT ure), EE je gotov v
+  // minutah (ee-premium-liiga je 11. 10. 2026 čakal 120 minut in padel).
+  if (tok === 'uvoz-zapisnikov.yml') {
+    if (popravek) return true
+    if (!SKUPEN_VIR[mojaDrzava]) return mojaLiga ? mojaJeAktivna : false
+    const posel = JSON.parse(gh('run', 'view', String(id), '--json', 'jobs')).jobs
+      .find((j) => j.name === `uvoz ${mojaDrzava}`)
+    return posel?.status !== 'completed'
+  }
   if (tok === 'grbi.yml') return !!SKUPEN_VIR[mojaDrzava] && naslov === `Grbi klubov ${SKUPEN_VIR[mojaDrzava]}`
   return true
 }
@@ -185,7 +194,7 @@ for (let min = 1; min <= NAJVEC_MIN; min++) {
     for (const z of zagoni) {
       if (z.status === 'completed' || z.databaseId === mojId || !(z.startedAt > '2000')) continue
       const starejsi = z.startedAt < moj || (z.startedAt === moj && z.databaseId < mojId)
-      if (starejsi && seKrize(tok, z.displayTitle)) pred.push(`${z.displayTitle} (${z.databaseId})`)
+      if (starejsi && seKrize(tok, z.displayTitle, z.databaseId)) pred.push(`${z.displayTitle} (${z.databaseId})`)
     }
   }
   if (!pred.length) process.exit(0)
