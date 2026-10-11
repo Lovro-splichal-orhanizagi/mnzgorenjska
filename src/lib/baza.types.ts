@@ -3678,6 +3678,8 @@ export type Database = {
           decided_by: string | null
           dokaz_url: string | null
           id: number
+          klubu_na: string | null
+          klubu_poslano_at: string | null
           note: string | null
           player_id: number
           potrdil: string | null
@@ -3693,6 +3695,8 @@ export type Database = {
           decided_by?: string | null
           dokaz_url?: string | null
           id?: never
+          klubu_na?: string | null
+          klubu_poslano_at?: string | null
           note?: string | null
           player_id: number
           potrdil?: string | null
@@ -3707,6 +3711,8 @@ export type Database = {
           decided_by?: string | null
           dokaz_url?: string | null
           id?: never
+          klubu_na?: string | null
+          klubu_poslano_at?: string | null
           note?: string | null
           player_id?: number
           potrdil?: string | null
@@ -5874,6 +5880,23 @@ export type Database = {
         Args: { p_player_id: number }
         Returns: undefined
       }
+      admin_prevzem_zeton_za_klub: {
+        Args: { p_na?: string; p_zahtevek_id: number }
+        Returns: {
+          drzava: string
+          email: string
+          expires_at: string
+          igralec: string
+          klub: string
+          klub_stik_id: number
+          liga: string
+          liga_slug: string
+          prosilec: string
+          prosilec_email: string
+          zahtevek_id: number
+          zeton: string
+        }[]
+      }
       admin_povezi_igralca: {
         Args: { p_player_id: number; p_povezi?: boolean; p_zahtevek_id: number }
         Returns: undefined
@@ -6017,6 +6040,9 @@ export type Database = {
           dokaz_url: string
           email: string
           id: number
+          klub_email: string
+          klubu_na: string
+          klubu_poslano_at: string
           liga: string
           player_id: number
           player_name: string
@@ -6396,6 +6422,10 @@ export type Database = {
           primer: string
         }[]
       }
+      prevzem_ime_igralca: {
+        Args: { p_ime: string; p_polno: string; p_priimek: string }
+        Returns: string
+      }
       prevzem_je_poznavalec_kluba: {
         Args: { p_player_id: number; p_user: string }
         Returns: boolean
@@ -6429,22 +6459,6 @@ export type Database = {
         Args: { p_player_id: number; p_user: string }
         Returns: number
       }
-      prevzem_za_posto_klubu: {
-        Args: { p_najvec?: number }
-        Returns: {
-          drzava: string
-          email: string
-          expires_at: string
-          igralec: string
-          klub: string
-          klub_stik_id: number
-          liga: string
-          liga_slug: string
-          prosilec: string
-          zahtevek_id: number
-          zeton: string
-        }[]
-      }
       prevzem_zahtevek_igralca: {
         Args: { p_player_id: number }
         Returns: number
@@ -6459,7 +6473,25 @@ export type Database = {
           klub: string
           liga: string
           prosilec: string
+          prosilec_email: string
           stanje: string
+        }[]
+      }
+      prevzem_zeton_test: {
+        Args: { p_zahtevek_id: number }
+        Returns: {
+          drzava: string
+          email: string
+          expires_at: string
+          igralec: string
+          klub: string
+          klub_stik_id: number
+          liga: string
+          liga_slug: string
+          prosilec: string
+          prosilec_email: string
+          zahtevek_id: number
+          zeton: string
         }[]
       }
       prevzemi_igralca: {

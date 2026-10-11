@@ -2678,9 +2678,16 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   kluba** (`insider_team_id` + odobrena `poznavalec_prosnje` `klub` za ta klub
   in ligo, ali `insider_competition_id` lige; sam nastavljen klub ne šteje),
   **dva različna potrjena soigralca** istega kluba in lige, **klub po mailu**
-  (enkraten žeton, 14 dni, v bazi le sha256; funkcija `posli-prevzem`, urnika
-  še ni) ali **admin** (Administracija → Prevzemi profilov: čakajoči > 7 dni,
-  spori, prijave). Zahtevek za že potrjenega ali čakajočega igralca je `spor`
+  ali **admin**. **Vsak zahtevek najprej vidi admin** (Administracija →
+  Prevzemi profilov: vsi čakajoči, spori, prijave; migracija 20261012141100)
+  in ima tri gumbe: *potrdi*, *pošlji klubu* in *zavrni*. *Pošlji klubu*
+  pokliče funkcijo `posli-prevzem` z admin žetonom (`{zahtevek, na}`); žeton
+  da `admin_prevzem_zeton_za_klub` (enkraten, 14 dni, v bazi le sha256,
+  prejšnja povezava zahtevka poteče), naslov je vpisani ali prvi uporaben iz
+  `klub_stik` (nov naslov gre v stike, mail v `klub_stik_posta`). Mail in stran
+  `/claim` pokažeta ime **in e-naslov prosilca** (to piše v oknu "To sem jaz");
+  samodejnega pošiljanja klubom ni. Preizkus brez kluba: servis
+  `{"test_zahtevek", "test_na"}`. Zahtevek za že potrjenega ali čakajočega igralca je `spor`
   (odloči le admin). Mladinska liga (`je_mladinski_slug`: `mladinci`, `-u19`,
   `sml1/2`; isto v `src/lib/prevzem.ts`) zahteva potrdilo "vsaj 16 let"
   (`star_vsaj_16`), datuma rojstva ne zbiramo. **Ista oseba v več vrsticah**
