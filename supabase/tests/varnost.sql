@@ -1240,7 +1240,7 @@ select pg_temp.preveri('profil: admin popravi tuje ime brez pravil',
 reset role;
 select set_config('request.jwt.claim.sub','',true);
 -- ---------------------------------------------------------------------------
--- Prevzem profila igralca ("To sem jaz"), migracija 20261012063100.
+-- Prevzem profila igralca ("To sem jaz"), migracija 20261012091100.
 -- ---------------------------------------------------------------------------
 reset role;
 create function pg_temp.napaka(p_opis text, p_sql text) returns void

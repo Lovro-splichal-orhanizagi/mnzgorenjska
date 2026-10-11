@@ -1,6 +1,6 @@
 // Prevzem profila igralca ("To sem jaz") in fotografije potrjenih igralcev.
 //
-// Baza: migracija 20261012063100 (zahtevki_igralca, profil_igralca,
+// Baza: migracija 20261012091100 (zahtevki_igralca, profil_igralca,
 // potrjeni_igralci, fotografije_igralcev). Fotografije so v vedru
 // `fotografije-igralcev` (javno branje): "<igralec>/<ime>.webp" je 256 px,
 // "<igralec>/<ime>-64.webp" 64 px. Ime je naključno, zato se slika nikoli ne

@@ -2635,7 +2635,7 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   šele po uspešni posodobitvi. `imeHash`/`regHash` v
   `scripts/anonimizacija.mjs` morata ostati enaka SQL
   `anonimizacijski_kljuc` (smoke in `test:varnost`)
-- **Prevzem profila igralca** ("To sem jaz", migracija 20261012063100):
+- **Prevzem profila igralca** ("To sem jaz", migracija 20261012091100):
   `zahtevki_igralca` (en potrjen na igralca IN na uporabnika, en odprt na
   uporabnika; delna unikatna kazala), piše le prek RPC `prevzemi_igralca`,
   `preklici_moj_zahtevek`, `odloci_zahtevek_klub`, `potrdi_soigralca`,
