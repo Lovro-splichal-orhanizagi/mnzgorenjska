@@ -794,8 +794,8 @@ tečejo največ trije uvozi, **iz vsake deželne zveze en**; državna (`oefb`:
 Bundesliga, 2. Liga, Regionalliga) meša dežele in teče sama, in če je na vrsti,
 se za njo ne zažene nič. Deželne zveze skoraj nimajo skupnih klubov (izjema:
 obe Regionalligi Süd uvozita isti arhiv mešane Regionallige `226374`, `221198`), zato
-`cakaj-na-uvoze.mjs` v Avstriji (`LOCENE_ZVEZE`) ročna uvoza nevklopljenih lig
-dveh dežel pusti teči hkrati; hkraten vpis istega novega kluba ujame `klubId`
+`cakaj-na-uvoze.mjs` v Avstriji (`LOCENE_ZVEZE`, enako za RO, RS, HU z njihovimi
+državnimi zvezami) ročna uvoza nevklopljenih lig dveh dežel pusti teči hkrati; hkraten vpis istega novega kluba ujame `klubId`
 (23505 → obstoječi klub). Zažene nevklopljene lige brez zagona ali z enim
 padcem (z `cene`); po dveh padcih ligo preskoči in javi na Discord. Ligo z
 uspelim uvozom poskusi vklopiti vsak tik. Ligo z novim
@@ -1435,6 +1435,16 @@ kot v Sloveniji. Zveze, tekmovanja in vir vpiše svoja migracija. Manjka še:
 romunski kanal v HelpStacku (`Podpora.tsx` za `ro` uporabi slovenskega) in
 pregled prevoda pri naravnem govorcu. `RO` je v matriki nočnega uvoza.
 
+**Hkratni uvozi po županijah.** `cakaj-na-uvoze.mjs` (`LOCENE_ZVEZE.RO`) pusti
+ročna uvoza **nevklopljenih** lig dveh **različnih** županijskih zvez
+(`ajf-<judet>`, vira `hlf` in `frf`) teči hkrati — županije nimajo skupnih
+klubov; hkraten vpis istega novega kluba ujame `klubId` (23505 → obstoječi).
+Lige **iste** županije se vrstijo (`istaZveza: false`; v AT/RS/HU tečejo
+hkrati tudi te). Državni zvezi `lpf` (SuperLiga) in `frf` (Liga 2, Liga 3)
+čakata na vse romunske uvoze in vsi nanju (kot `oefb` v Avstriji). Vklopljene
+lige in nočni uvoz se vrstijo kot prej. Arhiv `frf` je počasen (~10 s na
+tekmo), zato hkrati zaženi le nekaj županij.
+
 ### Romunija — vir `frf`
 
 Vir `frf` (`scripts/viri/frf.mjs`) bere **www.frf-ajf.ro**, en portal vseh 41
@@ -1533,7 +1543,8 @@ zveze `ajf-<judet>`:
 | ro-vl-l6-nord | `valcea/liga-a-vi-a-seria-nord-16615` | `valcea/liga-a-vi-a-seria-nord-15213` |
 | ro-vl-l6-sud | `valcea/liga-a-vi-a-seria-sud-16618` | `valcea/liga-a-vi-a-seria-sud-15214` |
 
-Uvoz (**šele z dovoljenjem**, ena za drugo): `gh workflow run uvoz-lige.yml -f
+Uvoz (**šele z dovoljenjem**; lige različnih županij lahko tečejo hkrati, iste
+županije ena za drugo — glej *Hkratni uvozi po županijah*): `gh workflow run uvoz-lige.yml -f
 liga=ro-tm-l4 -f arhiv=timis/liga-a-iv-a-14975 -f cene=true`. Strani tekem
 arhiva strežnik sestavlja **~10 s** (tekoče < 1 s), zato je arhiv 240
 zapisnikov ~45 minut na ligo — en arhiv naenkrat. Nato pozicije (glasovanje, vratarji!),
