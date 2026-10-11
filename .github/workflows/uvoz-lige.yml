@@ -107,12 +107,18 @@ jobs:
         # zdruzi-klube/tedensko-cene vedno (glej skripto).
         run: node scripts/cakaj-na-uvoze.mjs --liga "$LIGA"
 
+      # Predpomnilnik se shrani TUDI ob padcu (spodaj, if: always()): ponovni
+      # poskus lige nadaljuje, kjer je prejšnji obstal, namesto da vse bere
+      # znova. Najprej se obnovi zadnji predpomnilnik te lige, šele nato
+      # splošni (sicer je ponovni poskus dobil predpomnilnik druge države).
       - name: Predpomnilnik zapisnikov
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: scripts/.predpomnilnik
-          key: zapisniki-${{ github.run_id }}
-          restore-keys: zapisniki-
+          key: zapisniki-${{ inputs.liga }}-${{ github.run_id }}
+          restore-keys: |
+            zapisniki-${{ inputs.liga }}-
+            zapisniki-
 
       # Liga mora obstajati, sicer se skripte ustavijo sele na pol poti.
       - name: Preveri, da liga obstaja
@@ -212,3 +218,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh workflow run uvoz-avstrije.yml -f po_uvozu=true || true
+
+      - name: Shrani predpomnilnik zapisnikov
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: scripts/.predpomnilnik
+          key: zapisniki-${{ inputs.liga }}-${{ github.run_id }}
