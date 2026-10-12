@@ -2337,6 +2337,17 @@ Uvoz (ena za drugo, **šele s soglasjem FCF**): `gh workflow run uvoz-lige.yml
 -f liga=es-ct-quarta-g1 -f cene=true` (z arhivom: `-f arhiv=<blok 2025/26>`).
 Prvi uvoz bloka je ~240 strani — ob počasnem strežniku do ene ure.
 
+### Španija — vir `lapreferente` (zavrnjen)
+
+**lapreferente.com ni vir.** Preizkus 12. 10. 2026 (2 zahtevka, User-Agent
+`SLFF fantasy (slff.eu; splih.94@gmail.com)`, 3 s premora): robots.txt je le
+`User-agent: *` (brez Disallow), že domača stran pa vrne **403 z izzivom
+Cloudflare** ("Just a moment…", `cType: 'managed'`). Po pravilu "ob izzivu,
+403 ali 429 se ustavi — ne obhajaj" smo nehali; pravnega obvestila, strani
+tekem in krogov nismo prebrali. Vir, migracija in pregled pokritosti zato
+niso narejeni. Brez dovoljenja lastnika (ali odprtja dostopa za naš
+User-Agent) se ga ne lotevaj — ne z brskalnikom ne s piškotki izziva.
+
 ### Severna Makedonija — vir `ffm`
 
 Država `MK` ("Северна Македонија", migracija 20261012053100). **Vmesnika v
