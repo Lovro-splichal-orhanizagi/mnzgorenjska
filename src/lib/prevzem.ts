@@ -9,7 +9,8 @@ import { useEffect, useState } from 'react'
 import { supabase, API_URL } from './supabase'
 
 export const VEDRO_FOTOGRAFIJ = 'fotografije-igralcev'
-export const NAJVEC_VHOD = 2 * 1024 * 1024
+// Izvirnik s telefona ima 3–8 MB; v shrambo gre le 256 px izrez (nekaj deset kB).
+export const NAJVEC_VHOD = 20 * 1024 * 1024
 
 /** Mladinska liga po šifri (isto pravilo kot SQL `je_mladinski_slug`). */
 export function jeMladinskiSlug(slug: string | null | undefined): boolean {
@@ -47,32 +48,44 @@ export const NASLOV_OMREZJA = {
   facebook: (r: string) => `https://www.facebook.com/${r}`,
 } as const
 
-/** Kvadratni izrez na sredini, pomanjšan na `stranica` px, kot WebP. */
-async function kvadrat(bmp: ImageBitmap, stranica: number): Promise<Blob> {
+/** Kvadratni izrez na sredini, pomanjšan na `stranica` px. */
+async function kvadrat(bmp: ImageBitmap, stranica: number, vrsta: 'image/webp' | 'image/jpeg'): Promise<Blob> {
   const s = Math.min(bmp.width, bmp.height)
   const cv = document.createElement('canvas')
   cv.width = stranica
   cv.height = stranica
   const c = cv.getContext('2d')!
   c.imageSmoothingQuality = 'high'
+  // JPEG nima prosojnosti: prosojni PNG bi dobil črno ozadje.
+  if (vrsta === 'image/jpeg') {
+    c.fillStyle = '#fff'
+    c.fillRect(0, 0, stranica, stranica)
+  }
   c.drawImage(bmp, (bmp.width - s) / 2, (bmp.height - s) / 2, s, s, 0, 0, stranica, stranica)
-  const blob = await new Promise<Blob | null>((r) => cv.toBlob((b) => r(b), 'image/webp', 0.85))
-  // Brskalnik brez WebP (stari Safari) vrne PNG; to ni WebP in ga zavrnemo.
-  if (!blob || blob.type !== 'image/webp') throw new Error('webp')
+  const blob = await new Promise<Blob | null>((r) => cv.toBlob((b) => r(b), vrsta, 0.85))
+  // Safari (tudi vsi brskalniki na iPhonu) WebP ne zna kodirati in vrne PNG.
+  if (!blob || blob.type !== vrsta) throw new Error('vrsta-izhoda')
   return blob
 }
 
 /**
- * Pripravi fotografijo za nalaganje: izrez na sredino, 256 in 64 px WebP.
+ * Pripravi fotografijo za nalaganje: izrez na sredino, 256 in 64 px — WebP,
+ * kjer ga brskalnik zna kodirati, sicer JPEG (Safari, iPhone).
  * Ponovno kodiranje odstrani tudi metapodatke (EXIF, lokacija).
  */
-export async function pripraviFotografijo(datoteka: File): Promise<{ velika: Blob; majhna: Blob }> {
+export async function pripraviFotografijo(
+  datoteka: File,
+): Promise<{ velika: Blob; majhna: Blob; koncnica: 'webp' | 'jpg'; vrsta: 'image/webp' | 'image/jpeg' }> {
   if (datoteka.size > NAJVEC_VHOD) throw new Error('prevelika')
   if (!/^image\/(jpeg|png|webp)$/.test(datoteka.type)) throw new Error('vrsta')
   // createImageBitmap upošteva zasuk iz EXIF (kot na kartici igralca).
   const bmp = await createImageBitmap(datoteka)
   try {
-    return { velika: await kvadrat(bmp, 256), majhna: await kvadrat(bmp, 64) }
+    try {
+      return { velika: await kvadrat(bmp, 256, 'image/webp'), majhna: await kvadrat(bmp, 64, 'image/webp'), koncnica: 'webp', vrsta: 'image/webp' }
+    } catch {
+      return { velika: await kvadrat(bmp, 256, 'image/jpeg'), majhna: await kvadrat(bmp, 64, 'image/jpeg'), koncnica: 'jpg', vrsta: 'image/jpeg' }
+    }
   } finally {
     bmp.close()
   }

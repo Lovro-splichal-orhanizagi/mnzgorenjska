@@ -11,6 +11,8 @@ import { formatirajCeno, formatirajTocke, prikazniIme } from '../lib/pomozno'
 import { serijaCen, premik, crta, zadnjiPremiki } from '../lib/gibanjeCene'
 import type { SpremembaCene } from '../lib/gibanjeCene'
 import Grb from './Grb'
+import FotoIgralca from './FotoIgralca'
+import PredstavitevIgralca, { usePredstavitev } from './PredstavitevIgralca'
 import { t } from '../i18n'
 import { useZaklepPomika } from '../lib/zaklepPomika'
 
@@ -63,6 +65,8 @@ export default function InfoIgralca({
   const [tekme, setTekme] = useState<Tekma[]>([])
   const [nalaganje, setNalaganje] = useState(true)
   const okno = useRef<HTMLDivElement | null>(null)
+  // Potrjen igralec se predstavi sam: fotografija, vzdevek, opis, omrežja.
+  const predstavitev = usePredstavitev(igralecId)
 
   // Pogovorno okno: fokus vanj ob odprtju, Escape ga zapre.
   useEffect(() => {
@@ -186,10 +190,17 @@ export default function InfoIgralca({
         className="relative max-h-[88dvh] w-full overflow-y-auto overscroll-contain rounded-t-2xl border-t border-white/15 bg-slate-950 p-4 pb-[calc(1rem+var(--dno))] shadow-2xl outline-none sm:max-w-md sm:pb-4 sm:rounded-2xl sm:border"
       >
         <div className="mb-3 flex items-start gap-2">
-          <Grb ime={klub} kratko={klubKratko} logo={klubLogo} velikost={26} />
+          <FotoIgralca
+            pot={predstavitev?.profil?.fotografija ?? null}
+            velikost={56}
+            nadomestek={<Grb ime={klub} kratko={klubKratko} logo={klubLogo} velikost={26} />}
+          />
           <div className="min-w-0 flex-1">
             <div className="truncate font-black">{prikazniIme(ime)}</div>
-            <div className="truncate text-xs text-slate-500">{klub}</div>
+            <div className="flex min-w-0 items-center gap-1.5 text-xs text-slate-500">
+              {predstavitev?.profil?.fotografija && <Grb ime={klub} kratko={klubKratko} logo={klubLogo} velikost={14} />}
+              <span className="truncate">{klub}</span>
+            </div>
           </div>
           <button
             onClick={naZapri}
@@ -199,6 +210,12 @@ export default function InfoIgralca({
             ✕
           </button>
         </div>
+
+        {predstavitev && (
+          <div className="mb-3">
+            <PredstavitevIgralca potrdil={predstavitev.potrdil} profil={predstavitev.profil} />
+          </div>
+        )}
 
         {dejanja && <div className="mb-3">{dejanja}</div>}
 

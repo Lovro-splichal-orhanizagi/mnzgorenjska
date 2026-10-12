@@ -4,7 +4,6 @@ import { useAuth } from '../lib/useAuth'
 import { t, datum } from '../i18n'
 import { prevediNapako } from '../lib/napake'
 import {
-  NASLOV_OMREZJA,
   VEDRO_FOTOGRAFIJ,
   VZOREC_ROCICE,
   jeMladinskiSlug,
@@ -13,21 +12,7 @@ import {
   pozabiFotografijo,
   pripraviFotografijo,
 } from '../lib/prevzem'
-
-type Potrdil = 'klub' | 'soigralci' | 'admin'
-type Omrezje = 'instagram' | 'tiktok' | 'facebook'
-const OMREZJA: Omrezje[] = ['instagram', 'tiktok', 'facebook']
-
-interface Predstavitev {
-  player_id: number
-  vzdevek: string | null
-  opis: string | null
-  instagram: string | null
-  tiktok: string | null
-  facebook: string | null
-  fotografija: string | null
-  skrij_ime: boolean
-}
+import PredstavitevIgralca, { OMREZJA, type Omrezje, type Potrdil, type Predstavitev } from './PredstavitevIgralca'
 
 interface MojZahtevek {
   id: number
@@ -130,36 +115,11 @@ export default function PrevzemIgralca({
     return true
   }
 
-  const omrezja = profil ? OMREZJA.filter((o) => profil[o]) : []
-
   return (
     <section className="space-y-3" aria-label={t('igralci.prevzem.oznaka')}>
       {/* predstavitev potrjenega igralca */}
       {potrjen && (
-        <div className="kartica space-y-2 p-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="znacka bg-sky-400/20 text-sky-200" title={t('igralci.prevzem.znackaOpis')}>
-              <span aria-hidden="true">✓</span> {t(`igralci.prevzem.znacka.${potrjen.potrdil}`)}
-            </span>
-            {profil?.vzdevek && <span className="font-bold text-slate-100">"{profil.vzdevek}"</span>}
-          </div>
-          {profil?.opis && <p className="whitespace-pre-line break-words text-sm text-slate-300">{profil.opis}</p>}
-          {omrezja.length > 0 && (
-            <ul className="flex flex-wrap gap-3 text-sm">
-              {omrezja.map((o) => (
-                <li key={o}>
-                  <a
-                    href={NASLOV_OMREZJA[o](profil![o]!)}
-                    target="_blank"
-                    rel="nofollow noopener noreferrer ugc"
-                    className="text-gnl-300 hover:underline"
-                  >
-                    {t(`igralci.prevzem.${o}`)}: @{profil![o]}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          )}
+        <PredstavitevIgralca potrdil={potrjen.potrdil} profil={profil}>
           {jeLastnik && (
             <button onClick={() => setUrejam((u) => !u)} className="gumb-tih text-sm">
               {t('igralci.prevzem.uredi')}
@@ -186,7 +146,7 @@ export default function PrevzemIgralca({
               dela={dela}
             />
           )}
-        </div>
+        </PredstavitevIgralca>
       )}
 
       {jeLastnik && urejam && potrjen && (
@@ -500,13 +460,13 @@ function Urejevalnik({
 
   async function odstraniDatoteke(pot: string | null) {
     if (!pot) return
-    await supabase.storage.from(VEDRO_FOTOGRAFIJ).remove([pot, pot.replace(/\.webp$/, '-64.webp')])
+    await supabase.storage.from(VEDRO_FOTOGRAFIJ).remove([pot, pot.replace(/\.(webp|jpg|png)$/, '-64.$1')])
   }
 
   async function naloziFoto(datoteka: File) {
     setNapaka(null)
     setSporocilo(null)
-    let slike: { velika: Blob; majhna: Blob }
+    let slike: Awaited<ReturnType<typeof pripraviFotografijo>>
     try {
       slike = await pripraviFotografijo(datoteka)
     } catch (e) {
@@ -517,12 +477,12 @@ function Urejevalnik({
     }
     setDela(true)
     const ime = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`
-    const pot = `${glavni}/${ime}.webp`
+    const pot = `${glavni}/${ime}.${slike.koncnica}`
     const shramba = supabase.storage.from(VEDRO_FOTOGRAFIJ)
-    const moznosti = { contentType: 'image/webp', cacheControl: '31536000', upsert: false }
+    const moznosti = { contentType: slike.vrsta, cacheControl: '31536000', upsert: false }
     const [a, b] = await Promise.all([
       shramba.upload(pot, slike.velika, moznosti),
-      shramba.upload(pot.replace(/\.webp$/, '-64.webp'), slike.majhna, moznosti),
+      shramba.upload(pot.replace(/\.(webp|jpg)$/, '-64.$1'), slike.majhna, moznosti),
     ])
     if (a.error || b.error) {
       setDela(false)
