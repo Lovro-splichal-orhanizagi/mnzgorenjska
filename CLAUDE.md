@@ -345,6 +345,17 @@ Vpisanih je 15 lig severozahoda (migracija 20261004163300), **neaktivnih**:
 | hr-zg-1liga / -2liga | `114608298` / `114608605` | `100629221` / `100632300` |
 | hr-kc-elitna | `114703534` | `100712145` |
 
+**Državne lige HNS** (migracija 20261012155100, **neaktivne**): pregled
+pokritosti 12. 10. 2026 je pokazal, da `hrvaske-lige.mjs` izpusti vse s
+"SuperSport" v imenu (filter `IZPUSTI`, ker sponzor nosi tudi HNK in HMNL), zato
+vrh ni bil vpisan. Zapisnik je isti kot pri Treći NL.
+
+| liga | tekoča 2026/27 | arhiv 2025/26 |
+|---|---|---|
+| hr-hnl | `114137140` (10 klubov) | `100391485` |
+| hr-1nl | `114348034` (16) | `100413651` |
+| hr-2nl | `114348039` (16) | `100418001` |
+
 Klubi se ujemajo le znotraj države vira (`mapaKlubov` po `vir.drzava`):
 "NK Polet" ali "NK Mladost" je v Sloveniji in na Hrvaškem drug klub. Ključ
 kluba ohrani ć in đ, ki ju slovenski `poenostavi` zavrže — tudi natančno ime
@@ -383,7 +394,8 @@ Posebnosti, ki jih je našel pregled pred vklopom (7. 10. 2026):
   zadnje tekme; arhiv kluba ne prestavlja.
 - Kratko ime je v državi enolično (oznaka županije in raven: "MZ I.",
   "VŽ Elitna"), ker stoji brez zveze v roku, rezultatih in zadevi maila.
-- 1. ŽNL Karlovac zapisnikov na Semafor ne vnaša — ostane izklopljena.
+- 1. ŽNL Karlovac je zapisnike na Semafor začela vnašati (pregled 12. 10. 2026:
+  143 tekem s postavami); `hr-ka-1-znl-nskz` je vklopljena.
 - **Vklop sredi sezone**: borza neaktivnih lig ne premika; ob vklopu postavi
   `prvi_fantasy_krog` na naslednji krog, da borza starejših krogov ne
   obračuna (začetna cena jih že vsebuje). **Naslednji krog = prvi krog za
