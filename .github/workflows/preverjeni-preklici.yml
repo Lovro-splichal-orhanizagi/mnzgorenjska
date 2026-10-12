@@ -1,0 +1,37 @@
+name: 'Preverjeni: preklici naročnin'
+
+# Preklicana letna pravica preverjenega igralca (preklic profila,
+# anonimizacija, izbris računa, odvzem, dodelitev drugemu, sumljivo plačilo)
+# mora ustaviti tudi naročnino v Stripe. Baza vrstico označi
+# (`preverjeni_racuni.stripe_preklic = 'caka'`), funkcija stripe-webhook jo
+# prekliče ob vsakem dogodku Stripe in ob odvzemu v Administraciji; ta tek je
+# rezerva za vse ostalo (preklic profila ali izbris računa brez dogodka).
+on:
+  schedule:
+    - cron: '41 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: preverjeni-preklici
+  cancel-in-progress: false
+
+jobs:
+  preklici:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Prekliči čakajoče naročnine
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        # Funkcija še ni objavljena (404): opozorilo, ne napaka.
+        run: |
+          KODA=$(curl -sS -o /dev/null -w '%{http_code}' -X POST "$SUPABASE_URL/functions/v1/stripe-webhook" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H 'Content-Type: application/json' \
+            -d '{"akcija":"preklici"}')
+          echo "HTTP $KODA"
+          if [ "$KODA" = 404 ]; then echo "::warning::stripe-webhook ni objavljen"; exit 0; fi
+          [ "$KODA" = 200 ]

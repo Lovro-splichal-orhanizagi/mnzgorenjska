@@ -45,6 +45,8 @@ import {
   STEVILO_PRVIH,
 } from '../src/lib/pravila'
 import { tockeZaNastop } from '../src/lib/tockovanje'
+import { veljavenPodpis } from '../supabase/functions/stripe-webhook/podpis.ts'
+import { createHmac } from 'node:crypto'
 import { sestejOdKroga } from '../src/lib/lestvica'
 import { zdruziNavijace } from '../src/lib/navijaci'
 import { TabelaNavijacev, KlubMedNavijaci, IzbiraKluba } from '../src/components/NavijaciKlubov'
@@ -6358,6 +6360,20 @@ preveri(
     preveri('pošta klubom: v vrsto za opomnik le stare vrstice (ne parkirane)', ids === '1', ids)
   }
   preveri('pošta klubom: naslov v dnevniku zakrit', zakrij('za <ana.novak@klub.at>: 550') === 'za <a***@klub.at>: 550')
+}
+
+{
+  // Podpis Stripe (stripe-webhook): HMAC-SHA256 nad "t.telo", 5 minut, več v1.
+  const skr = 'whsec_test_smoke'
+  const telo = '{"id":"evt_1","type":"checkout.session.completed"}'
+  const t = 1760000000
+  const v1 = createHmac('sha256', skr).update(`${t}.${telo}`).digest('hex')
+  preveri('stripe: veljaven podpis gre', await veljavenPodpis(`t=${t},v1=${v1}`, telo, skr, t + 10))
+  preveri('stripe: eden od več podpisov gre', await veljavenPodpis(`t=${t},v1=${'0'.repeat(64)},v1=${v1}`, telo, skr, t))
+  preveri('stripe: spremenjeno telo pade', !(await veljavenPodpis(`t=${t},v1=${v1}`, telo + ' ', skr, t)))
+  preveri('stripe: star podpis pade', !(await veljavenPodpis(`t=${t},v1=${v1}`, telo, skr, t + 301)))
+  preveri('stripe: druga skrivnost pade', !(await veljavenPodpis(`t=${t},v1=${v1}`, telo, 'whsec_drug', t)))
+  preveri('stripe: brez glave pade', !(await veljavenPodpis(null, telo, skr, t)))
 }
 
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)

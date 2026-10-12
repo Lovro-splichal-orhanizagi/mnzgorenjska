@@ -1849,6 +1849,109 @@ export type Database = {
           },
         ]
       }
+      narocila_znack: {
+        Row: {
+          created_at: string
+          id: number
+          ime_na_znacki: string
+          naslov: NonNullable<Json>
+          opomba: string | null
+          player_id: number | null
+          poslano_at: string | null
+          postnina: string | null
+          preverjeni_racun_id: number | null
+          status: string
+          stripe_checkout_id: string
+          user_id: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          id?: never
+          ime_na_znacki: string
+          naslov: NonNullable<Json>
+          opomba?: string | null
+          player_id?: number | null
+          poslano_at?: string | null
+          postnina?: string | null
+          preverjeni_racun_id?: number | null
+          status?: string
+          stripe_checkout_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          ime_na_znacki?: string
+          naslov?: NonNullable<Json>
+          opomba?: string | null
+          player_id?: number | null
+          poslano_at?: string | null
+          postnina?: string | null
+          preverjeni_racun_id?: number | null
+          status?: string
+          stripe_checkout_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "narocila_znack_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "krog_najboljsi"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "narocila_znack_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "player_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "narocila_znack_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "player_season_standings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "narocila_znack_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "player_standings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "narocila_znack_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "narocila_znack_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "pozicije_v_cakanju"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "narocila_znack_preverjeni_racun_id_fkey"
+            columns: ["preverjeni_racun_id"]
+            isOneToOne: false
+            referencedRelation: "preverjeni_racuni"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "narocila_znack_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       obiski_dnevno: {
         Row: {
           dan: string
@@ -2643,45 +2746,60 @@ export type Database = {
         Row: {
           created_at: string
           id: number
+          odpoved_pravici: boolean | null
           player_id: number
           star_vsaj_18: boolean | null
           status: string
+          stripe_checkout_id: string | null
           stripe_customer_id: string | null
+          stripe_payment_intent: string | null
+          stripe_preklic: string | null
           stripe_subscription_id: string | null
           updated_at: string
           user_id: string | null
           ustvaril: string | null
           velja_do: string | null
           vir: string
+          znesek_pravice: number | null
         }
         ComputedFields: never
         Insert: {
           created_at?: string
           id?: never
+          odpoved_pravici?: boolean | null
           player_id: number
           star_vsaj_18?: boolean | null
           status?: string
+          stripe_checkout_id?: string | null
           stripe_customer_id?: string | null
+          stripe_payment_intent?: string | null
+          stripe_preklic?: string | null
           stripe_subscription_id?: string | null
           updated_at?: string
           user_id?: string | null
           ustvaril?: string | null
           velja_do?: string | null
           vir: string
+          znesek_pravice?: number | null
         }
         Update: {
           created_at?: string
           id?: never
+          odpoved_pravici?: boolean | null
           player_id?: number
           star_vsaj_18?: boolean | null
           status?: string
+          stripe_checkout_id?: string | null
           stripe_customer_id?: string | null
+          stripe_payment_intent?: string | null
+          stripe_preklic?: string | null
           stripe_subscription_id?: string | null
           updated_at?: string
           user_id?: string | null
           ustvaril?: string | null
           velja_do?: string | null
           vir?: string
+          znesek_pravice?: number | null
         }
         Relationships: [
           {
@@ -3639,6 +3757,28 @@ export type Database = {
         Update: {
           id?: number
           kljuc?: string
+        }
+        Relationships: []
+      }
+      stripe_dogodki: {
+        Row: {
+          id: string
+          obdelano_at: string | null
+          prejeto_at: string
+          tip: string
+        }
+        ComputedFields: never
+        Insert: {
+          id: string
+          obdelano_at?: string | null
+          prejeto_at?: string
+          tip: string
+        }
+        Update: {
+          id?: string
+          obdelano_at?: string | null
+          prejeto_at?: string
+          tip?: string
         }
         Relationships: []
       }
@@ -6104,6 +6244,27 @@ export type Database = {
           po_sifri: boolean
         }[]
       }
+      admin_narocila_znack: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          created_at: string
+          id: number
+          ime_na_znacki: string
+          kupec: string
+          naslov: Json
+          opomba: string
+          player_id: number
+          player_name: string
+          poslano_at: string
+          postnina: string
+          pravica_status: string
+          status: string
+        }[]
+      }
+      admin_nastavi_narocilo_znacke: {
+        Args: { p_id: number; p_opomba?: string; p_status: string }
+        Returns: undefined
+      }
       admin_nastavi_poznavalca: {
         Args: { p_competition_id?: number; p_user_id: string }
         Returns: undefined
@@ -6703,12 +6864,126 @@ export type Database = {
           primer: string
         }[]
       }
+      preverjen_cakajoci_preklici: {
+        Args: Record<PropertyKey, never>
+        Returns: string[]
+      }
+      preverjen_ime_znacke: { Args: { p_ime: string }; Returns: string }
+      preverjen_iz_placila: {
+        Args: {
+          p_checkout: string
+          p_customer: string
+          p_ime_na_znacki?: string
+          p_naslov?: Json
+          p_odpoved: boolean
+          p_payment_intent: string
+          p_player_id: number
+          p_postnina?: string
+          p_star_vsaj_18: boolean
+          p_subscription: string
+          p_user_id: string
+          p_velja_do: string
+          p_vir: string
+          p_znesek?: number
+        }
+        Returns: string
+      }
+      preverjen_lahko_velja: {
+        Args: { p_glavni: number; p_razen?: number; p_user_id: string }
+        Returns: boolean
+      }
+      preverjen_moja_pravica: {
+        Args: { p_player_id: number }
+        Returns: {
+          velja_do: string
+          vir: string
+        }[]
+      }
+      preverjen_moje_narocnine: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          stripe_customer_id: string
+          velja_do: string
+        }[]
+      }
+      preverjen_narocnina_konec: {
+        Args: { p_konec: string; p_subscription: string }
+        Returns: number
+      }
+      preverjen_pocisti_naslove: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      preverjen_podaljsaj: {
+        Args: { p_subscription: string; p_velja_do: string }
+        Returns: string
+      }
+      preverjen_preklic_opravljen: {
+        Args: { p_subscription: string }
+        Returns: undefined
+      }
+      preverjen_pripravi_nakup: {
+        Args: { p_ime_na_znacki?: string; p_player_id: number }
+        Returns: {
+          email: string
+          glavni: number
+          ime_na_znacki: string
+          liga: string
+          stripe_customer_id: string
+        }[]
+      }
+      preverjen_spor_dobljen: {
+        Args: { p_payment_intent: string; p_subscription: string }
+        Returns: string
+      }
+      preverjen_vracilo: {
+        Args: {
+          p_payment_intent: string
+          p_spor: boolean
+          p_subscription: string
+          p_vrnjeno: number
+          p_znesek: number
+        }
+        Returns: string
+      }
+      preverjen_vrstica_placila: {
+        Args: { p_payment_intent: string; p_subscription: string }
+        Returns: {
+          created_at: string
+          id: number
+          odpoved_pravici: boolean | null
+          player_id: number
+          star_vsaj_18: boolean | null
+          status: string
+          stripe_checkout_id: string | null
+          stripe_customer_id: string | null
+          stripe_payment_intent: string | null
+          stripe_preklic: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string | null
+          ustvaril: string | null
+          velja_do: string | null
+          vir: string
+          znesek_pravice: number | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "preverjeni_racuni"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       preverjeni_igralci_za: {
         Args: { p_ids: number[] }
         Returns: {
           player_id: number
           vzdevek: string
         }[]
+      }
+      preverjeni_na_discord: {
+        Args: { p_besedilo: string }
+        Returns: undefined
       }
       prevzem_ime_igralca: {
         Args: { p_ime: string; p_polno: string; p_priimek: string }
