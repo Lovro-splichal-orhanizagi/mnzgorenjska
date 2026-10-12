@@ -2951,7 +2951,7 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
     `charge.invoice`, basil `invoice_payments`); neznano → 200 in nič.
     Servisne funkcije (`service_role`):
     - `preverjen_iz_placila`: postavke seje najprej preveri webhook
-      (lookup_key, en kos, znesek = cena; sicer brez pravice in Discord),
+      (lookup_key, en kos, `amount_subtotal` = cena × količina; sicer brez pravice in Discord),
       `znesek_pravice` se shrani. Seja enkrat (`stripe_checkout_id`, po
       zaklepu). Letna `velja_do` = konec obdobja + 3 dni milosti (obnova se
       plača nekaj ur po izteku), doživljenjska brez roka. Ročna ali tuja
@@ -2967,11 +2967,13 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
       `potekel`). `past_due` in `unpaid` pustita pravico do roka;
       `cancel_at_period_end` do konca obdobja.
     - `preverjen_vracilo` (`charge.refunded`: znesek vrnjeno/plačano): polno
-      vračilo, spor (`charge.dispute.created`) ali vračilo, ki seže v znesek
-      doživljenjske pravice → `preklican` (in značka); delno pri odprtem
-      naročilu → le značka; sicer le Discord.
+      vračilo, spor (`charge.dispute.created`) ali vračilo vsaj celotne cene
+      doživljenjske → `preklican` (in značka); manjše pri odprtem naročilu →
+      le značka; sicer le Discord. Postavke seje: `amount_subtotal` =
+      cena × količina, `znesek_pravice` = `amount_total`.
     - `preverjen_spor_dobljen` (`charge.dispute.closed`, won): pravica se
-      vrne, če profil še velja, sicer Discord.
+      vrne, če profil še velja (zastarele aktivne vrstice najprej `potekel`,
+      tudi pri oživitvi v `preverjen_podaljsaj`), sicer Discord.
   - **Ustavitev zaračunavanja.** Vsak prehod letne pravice z naročnino v
     `preklican` (preklic profila, anonimizacija, izbris računa, admin odvzem,
     dodelitev drugemu, sumljivo plačilo, vračilo, spor) sprožilec
@@ -2981,7 +2983,9 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
     `{"akcija":"preklici"}` z admin JWT (Administracija → Preverjeni po vsakem
     dejanju) ali servisnim ključem — delovni tok *Preverjeni: preklici
     naročnin* (`preverjeni-preklici.yml`, vsako uro; 404 pred objavo je le
-    opozorilo). Dobljen spor oznako, ki še čaka, umakne.
+    opozorilo; izpis le kode HTTP). Po dobljenem sporu naročnina ostane
+    preklicana, letna velja do `velja_do` (`subscription.deleted` sami
+    preklicane naročnine roka ne skrajša).
   - `narocila_znack`: ime, naslov (jsonb), poštnina, `za_tisk` →
     `natisnjeno` → `poslano` (`poslano_at`) ali `preklicano`; zaprta,
     `admin_narocila_znack`, `admin_nastavi_narocilo_znacke` (Administracija →

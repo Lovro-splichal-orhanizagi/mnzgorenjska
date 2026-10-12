@@ -127,7 +127,7 @@ async function nasePlacilo(placilo: Obj): Promise<{ pi: string | null; sub: stri
   return data?.length ? { pi: null, sub } : null
 }
 
-/** Postavke seje ustrezajo nakupu (lookup_key, ena kos, cena). Vrne znesek pravice. */
+/** Postavke seje ustrezajo nakupu (lookup_key, en kos, cena pred davkom in popustom). Vrne plačan znesek pravice. */
 async function preveriPostavke(seja: string, vir: string, znacka: boolean): Promise<number | null> {
   const p = await beri(`checkout/sessions/${seja}/line_items?limit=10`)
   const postavke = (p.data ?? []) as Obj[]
@@ -135,7 +135,7 @@ async function preveriPostavke(seja: string, vir: string, znacka: boolean): Prom
   const pravica = najdi(CENE[vir as 'letna' | 'dozivljenjska'])
   const ok =
     !!pravica &&
-    pravica.amount_total === pravica.price.unit_amount &&
+    pravica.amount_subtotal === pravica.price.unit_amount * pravica.quantity &&
     postavke.length === (znacka ? 2 : 1) &&
     (!znacka || !!najdi(CENE.znacka))
   return ok ? pravica.amount_total : null
@@ -165,9 +165,13 @@ Deno.serve(async (req) => {
       sme = (await u.rpc('is_admin')).data === true
     }
     if (!sme) return new Response('bad signature', { status: 400, headers: CORS })
-    return new Response(JSON.stringify({ preklicano: await prekliciCakajoce() }), {
-      headers: { ...CORS, 'Content-Type': 'application/json' },
-    })
+    const glavaJson = { ...CORS, 'Content-Type': 'application/json' }
+    try {
+      return new Response(JSON.stringify({ preklicano: await prekliciCakajoce() }), { headers: glavaJson })
+    } catch (e) {
+      console.error('stripe-webhook: vrsta', e)
+      return new Response(JSON.stringify({ error: 'vrsta' }), { status: 500, headers: glavaJson })
+    }
   }
 
   const skrivnost = Deno.env.get('STRIPE_WEBHOOK_SECRET')

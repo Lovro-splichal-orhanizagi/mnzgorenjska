@@ -2389,11 +2389,15 @@ select preverjen_narocnina_konec('sub_t', now() - interval '1 minute');
 reset role;
 select pg_temp.preveri('plačila: konec naročnine pravico izteče',
   (select status = 'potekel' from preverjeni_racuni where stripe_checkout_id = 'cs_1') and not je_preverjen(-925010));
+-- Zastarela aktivna (potekla ročna) vrstica oživitve ne zablokira.
+insert into preverjeni_racuni(user_id, player_id, vir, velja_do)
+values ('b8a06635-2322-4444-8c42-44e419f912e1', -925010, 'rocno', now() - interval '1 hour');
 set local role service_role;
 create temporary table izid_ozivitve on commit drop as select preverjen_podaljsaj('sub_t', now() + interval '1 year') as a;
 reset role;
-select pg_temp.preveri('plačila: plačilo potekle naročnine pravico oživi',
-  (select a = 'obnovljeno' from izid_ozivitve) and je_preverjen(-925010));
+select pg_temp.preveri('plačila: plačilo potekle naročnine pravico oživi, zastarela vrstica poteče',
+  (select a = 'obnovljeno' from izid_ozivitve) and je_preverjen(-925010)
+  and not exists (select 1 from preverjeni_racuni where player_id = -925010 and vir = 'rocno' and status = 'aktiven'));
 
 -- Odvzem letne pravice označi naročnino za preklic v Stripe; plačilo nato ni več pravica.
 select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
@@ -2430,7 +2434,7 @@ select pg_temp.pade('plačila: neznan status naročila pade',
   $$select admin_nastavi_narocilo_znacke((select id from admin_narocila_znack() where ime_na_znacki = 'Kupljen 7'), 'izgubljeno')$$);
 reset role;
 
--- Delno vračilo: najprej značka, nato le Discord, vračilo v znesek pravice jo prekliče.
+-- Delno vračilo: najprej značka, nato le Discord (tudi 1 €), polno vračilo pravico prekliče.
 set local role service_role;
 create temporary table izid_vracil on commit drop as
 select preverjen_vracilo('pi_2', null, 700, 3600, false) as a,
@@ -2440,11 +2444,16 @@ select pg_temp.preveri('plačila: delno vračilo prekliče značko, pravica osta
   (select a = 'znacka' and b = 'delno' from izid_vracil)
   and je_preverjen(-925010) and (select status = 'preklicano' from narocila_znack where stripe_checkout_id = 'cs_2'));
 set local role service_role;
-create temporary table izid_vracila on commit drop as select preverjen_vracilo('pi_2', null, 1000, 3600, false) as a,
+create temporary table izid_vracila on commit drop as select preverjen_vracilo('pi_2', null, 800, 3600, false) as a;
+reset role;
+select pg_temp.preveri('plačila: vračilo 1 € pravico obdrži',
+  (select a = 'delno' from izid_vracila) and je_preverjen(-925010));
+set local role service_role;
+create temporary table izid_vracila2 on commit drop as select preverjen_vracilo('pi_2', null, 3600, 3600, false) as a,
   preverjen_vracilo('pi_neznan', 'sub_neznan', 100, 100, false) as b;
 reset role;
-select pg_temp.preveri('plačila: vračilo v znesek pravice jo prekliče, tuje plačilo prezre',
-  (select a = 'preklican' and b = 'neznano' from izid_vracila) and not je_preverjen(-925010));
+select pg_temp.preveri('plačila: polno vračilo pravico prekliče, tuje plačilo prezre',
+  (select a = 'preklican' and b = 'neznano' from izid_vracila2) and not je_preverjen(-925010));
 
 -- Spor dobljen: pravica se vrne, ker profil še velja.
 set local role service_role;

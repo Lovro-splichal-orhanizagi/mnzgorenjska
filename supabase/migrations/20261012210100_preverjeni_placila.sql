@@ -330,6 +330,9 @@ begin
   if found then
     return 'podaljsano';
   end if;
+  -- Zastarele aktivne vrstice igralca ne držijo mesta (en aktiven na igralca).
+  update preverjeni_racuni set status = 'potekel', updated_at = now()
+   where player_id = r.player_id and status = 'aktiven' and velja_do <= now();
   if r.status = 'potekel' and p_velja_do > now() and preverjen_lahko_velja(r.user_id, r.player_id, r.id) then
     update preverjeni_racuni set status = 'aktiven', velja_do = p_velja_do, updated_at = now() where id = r.id;
     return 'obnovljeno';
@@ -339,6 +342,8 @@ end;
 $$;
 
 -- Konec naročnine (customer.subscription.deleted): pravica poteče ob koncu.
+-- Naročnine, ki smo jih preklicali sami (`stripe_preklic`), roka ne krajšajo:
+-- pravica po dobljenem sporu velja do `velja_do`.
 create or replace function public.preverjen_narocnina_konec(p_subscription text, p_konec timestamptz)
 returns int language plpgsql security definer set search_path = public
 as $$
@@ -349,7 +354,7 @@ begin
      set velja_do = least(coalesce(velja_do, p_konec), p_konec),
          status = case when least(coalesce(velja_do, p_konec), p_konec) <= now() then 'potekel' else status end,
          updated_at = now()
-   where stripe_subscription_id = p_subscription and status = 'aktiven';
+   where stripe_subscription_id = p_subscription and status = 'aktiven' and stripe_preklic is null;
   get diagnostics n = row_count;
   return n;
 end;
@@ -366,9 +371,9 @@ as $$
 $$;
 
 -- Vračilo ali spor (charge.refunded, charge.dispute.created). Polno vračilo,
--- spor ali vračilo, ki seže v znesek pravice → pravica preklicana (letna:
--- naročnina se prekliče). Delno pri doživljenjski z odprtim naročilom →
--- le značka. Sicer le Discord. Vrne 'preklican', 'znacka', 'delno' ali
+-- spor ali vračilo vsaj celotnega zneska doživljenjske pravice → pravica
+-- preklicana (letna: naročnina se prekliče). Manjše vračilo pri odprtem
+-- naročilu → le značka; sicer le Discord. Vrne 'preklican', 'znacka', 'delno' ali
 -- 'neznano' (ni naše plačilo).
 create or replace function public.preverjen_vracilo(
   p_payment_intent text, p_subscription text, p_vrnjeno int, p_znesek int, p_spor boolean)
@@ -385,7 +390,7 @@ begin
   perform pg_advisory_xact_lock(hashtext('preverjen:' || r.player_id));
   v_odprto := exists (select 1 from narocila_znack where preverjeni_racun_id = r.id and status in ('za_tisk', 'natisnjeno'));
   if p_spor or p_vrnjeno >= p_znesek
-     or (r.vir = 'dozivljenjska' and r.znesek_pravice is not null and p_znesek - p_vrnjeno < r.znesek_pravice) then
+     or (r.vir = 'dozivljenjska' and r.znesek_pravice is not null and p_vrnjeno >= r.znesek_pravice) then
     update preverjeni_racuni set status = 'preklican', updated_at = now() where id = r.id and status = 'aktiven';
     update narocila_znack set status = 'preklicano', opomba = coalesce(opomba || ' · ', '') || case when p_spor then 'spor' else 'vračilo' end
      where preverjeni_racun_id = r.id and status in ('za_tisk', 'natisnjeno');
@@ -420,12 +425,15 @@ begin
   if r.status <> 'preklican' then
     return 'nespremenjeno';
   end if;
+  update preverjeni_racuni set status = 'potekel', updated_at = now()
+   where player_id = r.player_id and status = 'aktiven' and velja_do <= now();
   if (r.velja_do is null or r.velja_do > now()) and preverjen_lahko_velja(r.user_id, r.player_id, r.id) then
-    update preverjeni_racuni
-       set status = 'aktiven', updated_at = now(),
-           stripe_preklic = case when stripe_preklic = 'caka' then null else stripe_preklic end
-     where id = r.id;
-    perform preverjeni_na_discord('✅ Spor dobljen, pravica vrnjena: https://slff.eu/player/' || r.player_id);
+    -- Naročnina ostane preklicana (tudi če preklic še čaka): letna velja do roka.
+    update preverjeni_racuni set status = 'aktiven', updated_at = now() where id = r.id;
+    perform preverjeni_na_discord('✅ Spor dobljen, pravica vrnjena'
+      || case when r.vir = 'letna' then ' do ' || to_char(r.velja_do, 'DD. MM. YYYY')
+              || ' (naročnina je bila ob sporu preklicana in se ne obnovi)' else '' end
+      || ': https://slff.eu/player/' || r.player_id);
     return 'obnovljen';
   end if;
   perform preverjeni_na_discord('ℹ️ Spor dobljen, pravice ni mogoče vrniti (profil, ime ali rok), preveri ročno: https://slff.eu/player/' || r.player_id);
@@ -486,13 +494,22 @@ grant execute on function
   public.preverjen_pocisti_naslove()
   to service_role;
 
+-- Čiščenje naslovov vsak dan. Lovimo le manjkajoč pg_cron (lokalne in
+-- preizkusne baze); napaka pri načrtovanju naj pade.
 do $$
 begin
-  create extension if not exists pg_cron;
+  if to_regnamespace('cron') is null then
+    begin
+      create extension if not exists pg_cron;
+    exception
+      -- undefined_file: ni nameščen; feature_not_supported: ni v preload;
+      -- raise_exception: pg_cron zunaj baze iz cron.database_name.
+      when undefined_file or feature_not_supported or raise_exception then
+        raise notice 'pg_cron ni na voljo: čiščenje naslovov naročil ni načrtovano (%).', sqlerrm;
+        return;
+    end;
+  end if;
   perform cron.schedule('preverjeni-naslovi', '23 4 * * *', $urnik$select public.preverjen_pocisti_naslove()$urnik$);
-exception
-  when others then
-    raise notice 'pg_cron ni na voljo: čiščenje naslovov naročil ni načrtovano.';
 end;
 $$;
 
