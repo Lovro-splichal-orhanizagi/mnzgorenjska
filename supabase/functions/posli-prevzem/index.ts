@@ -17,6 +17,11 @@
 // EMAIL_FROM); novih ni. Objava: scripts/hetzner/objavi-funkcije.sh posli-prevzem
 //
 // Jezik: država lige (BESEDILA), neznana država angleško. Odgovori na info@.
+//
+// `{"obvesti": true}` (kdorkoli, tudi brez prijave): vsem potrjenim, še
+// neobveščenim igralcem pošlje "profil je potrjen" s povezavo na profil
+// (`prevzem_neobvesceni`, nato `prevzem_obvescen`) — vsak zahtevek enkrat,
+// zato je klic brez prijave neškodljiv. Vmesnik ga sproži po potrditvi.
 
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4'
 import nodemailer from 'npm:nodemailer@6.9.16'
@@ -134,6 +139,92 @@ function sestavi(v: Vrstica): { naslov: string; html: string; besedilo: string }
   }
 }
 
+// Mail potrjenemu igralcu. {i} igralec, {k} klub, {l} liga, {u} povezava. Brez pomišljajev.
+const POTRJEN: Record<string, { naslov: string; telo: string; gumb: string }> = {
+  SI: { naslov: 'Tvoj profil na SLFF je potrjen', gumb: 'Odpri svoj profil',
+    telo: 'Živjo,\n\npotrdili smo, da si {i} ({k}, {l}). Profil je zdaj tvoj.\n\nNanj lahko dodaš fotografijo, vzdevek, kratek opis ter Instagram, TikTok ali Facebook. Prijavi se z istim računom in odpri svoj profil:\n{u}\n\nUradnih podatkov iz zapisnikov (ime, klub, statistika) ni mogoče spreminjati. Če kaj ni prav, odgovori na ta mail.' },
+  HR: { naslov: 'Tvoj profil na SLFF je potvrđen', gumb: 'Otvori svoj profil',
+    telo: 'Bok,\n\npotvrdili smo da si {i} ({k}, {l}). Profil je sada tvoj.\n\nNa njega možeš dodati fotografiju, nadimak, kratak opis te Instagram, TikTok ili Facebook. Prijavi se istim računom i otvori svoj profil:\n{u}\n\nSlužbeni podaci iz zapisnika (ime, klub, statistika) ne mogu se mijenjati. Ako nešto nije u redu, odgovori na ovaj e-mail.' },
+  SK: { naslov: 'Tvoj profil na SLFF je potvrdený', gumb: 'Otvoriť môj profil',
+    telo: 'Ahoj,\n\npotvrdili sme, že si {i} ({k}, {l}). Profil je teraz tvoj.\n\nMôžeš si naň pridať fotku, prezývku, krátky popis a Instagram, TikTok alebo Facebook. Prihlás sa tým istým účtom a otvor svoj profil:\n{u}\n\nOficiálne údaje zo zápisov (meno, klub, štatistiky) sa meniť nedajú. Ak niečo nesedí, odpovedz na tento e-mail.' },
+  CZ: { naslov: 'Tvůj profil na SLFF je potvrzený', gumb: 'Otevřít můj profil',
+    telo: 'Ahoj,\n\npotvrdili jsme, že jsi {i} ({k}, {l}). Profil je teď tvůj.\n\nMůžeš si na něj přidat fotku, přezdívku, krátký popis a Instagram, TikTok nebo Facebook. Přihlas se stejným účtem a otevři svůj profil:\n{u}\n\nOficiální údaje ze zápisů (jméno, klub, statistiky) měnit nelze. Pokud něco nesedí, odpověz na tento e-mail.' },
+  HU: { naslov: 'Az SLFF-profilod megerősítve', gumb: 'Profilom megnyitása',
+    telo: 'Szia!\n\nMegerősítettük, hogy te vagy {i} ({k}, {l}). A profil mostantól a tiéd.\n\nHozzáadhatsz fényképet, becenevet, rövid bemutatkozást, valamint Instagramot, TikTokot vagy Facebookot. Jelentkezz be ugyanazzal a fiókkal, és nyisd meg a profilodat:\n{u}\n\nA jegyzőkönyvek hivatalos adatai (név, klub, statisztika) nem módosíthatók. Ha valami nem stimmel, válaszolj erre az e-mailre.' },
+  AT: { naslov: 'Dein SLFF-Profil ist bestätigt', gumb: 'Mein Profil öffnen',
+    telo: 'Hallo,\n\nwir haben bestätigt, dass du {i} bist ({k}, {l}). Das Profil gehört jetzt dir.\n\nDu kannst ein Foto, einen Spitznamen, eine kurze Beschreibung sowie Instagram, TikTok oder Facebook hinzufügen. Melde dich mit demselben Konto an und öffne dein Profil:\n{u}\n\nDie offiziellen Daten aus den Spielberichten (Name, Verein, Statistik) können nicht geändert werden. Wenn etwas nicht stimmt, antworte einfach auf diese E-Mail.' },
+  RS: { naslov: 'Tvoj profil na SLFF je potvrđen', gumb: 'Otvori svoj profil',
+    telo: 'Zdravo,\n\npotvrdili smo da si {i} ({k}, {l}). Profil je sada tvoj.\n\nNa njega možeš da dodaš fotografiju, nadimak, kratak opis i Instagram, TikTok ili Facebook. Prijavi se istim nalogom i otvori svoj profil:\n{u}\n\nZvanični podaci iz zapisnika (ime, klub, statistika) ne mogu da se menjaju. Ako nešto nije u redu, odgovori na ovaj mejl.' },
+  RO: { naslov: 'Profilul tău SLFF este confirmat', gumb: 'Deschide profilul meu',
+    telo: 'Salut,\n\nam confirmat că ești {i} ({k}, {l}). Profilul este acum al tău.\n\nPoți adăuga o fotografie, o poreclă, o scurtă descriere și Instagram, TikTok sau Facebook. Conectează-te cu același cont și deschide-ți profilul:\n{u}\n\nDatele oficiale din rapoarte (nume, club, statistici) nu pot fi modificate. Dacă ceva nu e în regulă, răspunde la acest e-mail.' },
+  EE: { naslov: 'Sinu SLFF-i profiil on kinnitatud', gumb: 'Ava minu profiil',
+    telo: 'Tere,\n\nkinnitasime, et oled {i} ({k}, {l}). Profiil on nüüd sinu.\n\nSaad lisada foto, hüüdnime, lühikese tutvustuse ning Instagrami, TikToki või Facebooki. Logi sisse sama kontoga ja ava oma profiil:\n{u}\n\nProtokollide ametlikke andmeid (nimi, klubi, statistika) muuta ei saa. Kui midagi on valesti, vasta sellele e-kirjale.' },
+  PL: { naslov: 'Twój profil w SLFF jest potwierdzony', gumb: 'Otwórz mój profil',
+    telo: 'Cześć,\n\npotwierdziliśmy, że jesteś {i} ({k}, {l}). Profil jest teraz Twój.\n\nMożesz dodać zdjęcie, pseudonim, krótki opis oraz Instagram, TikTok lub Facebook. Zaloguj się tym samym kontem i otwórz swój profil:\n{u}\n\nOficjalnych danych z protokołów (imię, klub, statystyki) nie można zmieniać. Jeśli coś się nie zgadza, odpowiedz na tego e-maila.' },
+  ES: { naslov: 'Tu perfil en SLFF está confirmado', gumb: 'Abrir mi perfil',
+    telo: 'Hola,\n\nhemos confirmado que eres {i} ({k}, {l}). El perfil ya es tuyo.\n\nPuedes añadir una foto, un apodo, una breve descripción e Instagram, TikTok o Facebook. Inicia sesión con la misma cuenta y abre tu perfil:\n{u}\n\nLos datos oficiales de las actas (nombre, club, estadísticas) no se pueden cambiar. Si algo no está bien, responde a este correo.' },
+  LV: { naslov: 'Tavs SLFF profils ir apstiprināts', gumb: 'Atvērt manu profilu',
+    telo: 'Sveiks,\n\nmēs apstiprinājām, ka tu esi {i} ({k}, {l}). Profils tagad ir tavs.\n\nTu vari pievienot foto, iesauku, īsu aprakstu un Instagram, TikTok vai Facebook. Pieslēdzies ar to pašu kontu un atver savu profilu:\n{u}\n\nOficiālos protokolu datus (vārds, klubs, statistika) mainīt nevar. Ja kaut kas nav pareizi, atbildi uz šo e-pastu.' },
+  MK: { naslov: 'Твојот профил на SLFF е потврден', gumb: 'Отвори го мојот профил',
+    telo: 'Здраво,\n\nпотврдивме дека си {i} ({k}, {l}). Профилот сега е твој.\n\nМожеш да додадеш фотографија, прекар, краток опис и Instagram, TikTok или Facebook. Најави се со истата сметка и отвори го својот профил:\n{u}\n\nОфицијалните податоци од записниците (име, клуб, статистика) не може да се менуваат. Ако нешто не е во ред, одговори на оваа порака.' },
+  EN: { naslov: 'Your SLFF profile is confirmed', gumb: 'Open my profile',
+    telo: 'Hi,\n\nwe have confirmed that you are {i} ({k}, {l}). The profile is now yours.\n\nYou can add a photo, a nickname, a short bio and your Instagram, TikTok or Facebook. Sign in with the same account and open your profile:\n{u}\n\nOfficial data from the match reports (name, club, stats) cannot be changed. If something is not right, just reply to this email.' },
+}
+
+interface Neobvescen {
+  zahtevek_id: number
+  email: string
+  igralec: string
+  player_id: number
+  liga_slug: string
+  liga: string
+  klub: string
+  drzava: string | null
+}
+
+function sestaviPotrjen(v: Neobvescen): { naslov: string; html: string; besedilo: string } {
+  const b = POTRJEN[v.drzava ?? ''] ?? POTRJEN.EN
+  const u = `https://slff.eu/player/${v.player_id}?t=${encodeURIComponent(v.liga_slug)}`
+  const liga = v.liga.replaceAll(' — ', ', ')
+  const vstavi = (t: string) => t.replaceAll('{i}', v.igralec).replaceAll('{k}', v.klub).replaceAll('{l}', liga)
+  const besedilo = `${vstavi(b.telo).replaceAll('{u}', u)}\n\nJernej, SLFF`
+  const odstavki = esc(vstavi(b.telo)).split('\n\n').map((o) =>
+    o.includes('{u}') ? `<p>${o.replace('\n{u}', '')}</p><p><a href="${u}">${esc(b.gumb)}</a></p>` : `<p>${o}</p>`)
+  return { naslov: b.naslov, besedilo, html: odstavki.join('') + '<p>Jernej, SLFF</p>' }
+}
+
+async function obvestiPotrjene(service: ReturnType<typeof createClient>): Promise<Response> {
+  const { data, error } = await service.rpc('prevzem_neobvesceni')
+  if (error) return json({ error: error.message }, 500)
+  let poslano = 0
+  const napake: string[] = []
+  for (const v of (data ?? []) as Neobvescen[]) {
+    const s = sestaviPotrjen(v)
+    let napaka: string | null = null
+    let id: string | null = null
+    try {
+      const r = await smtp.sendMail({
+        from: Deno.env.get('EMAIL_FROM') || 'SLFF <noreply@slff.eu>',
+        to: v.email,
+        subject: s.naslov,
+        html: s.html,
+        text: s.besedilo,
+        replyTo: Deno.env.get('EMAIL_REPLY_TO') || 'SLFF <info@slff.eu>',
+      })
+      id = r.messageId
+    } catch (e) {
+      napaka = String(e)
+    }
+    await service.from('email_log').insert({ email: v.email, vrsta: 'prevzem-potrjen', resend_id: id, napaka })
+    if (napaka) napake.push(`zahtevek ${v.zahtevek_id}: ${napaka}`)
+    else {
+      await service.rpc('prevzem_obvescen', { p_zahtevek_id: v.zahtevek_id })
+      poslano++
+    }
+  }
+  return json({ poslano, napake })
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: CORS })
   if (req.method !== 'POST') return json({ error: 'Samo POST.' }, 405)
@@ -143,6 +234,16 @@ Deno.serve(async (req) => {
   const auth = req.headers.get('Authorization') ?? ''
   const jeStroj = [SERVICE_KEY, SECRET_KEY].filter(Boolean).some((k) => auth === `Bearer ${k}`)
   const service = createClient(URL_, SERVICE_KEY)
+  const vhod = (await req.json().catch(() => ({}))) as {
+    zahtevek?: number
+    na?: string
+    // Preizkus (servis): mail za EN zahtevek gre na test_na, ne klubu; nič ne gre v stike kluba.
+    test_zahtevek?: number
+    test_na?: string
+    obvesti?: boolean
+  }
+  if (!Deno.env.get('SMTP_PASS')) return json({ error: 'Pomanjkljiva nastavitev: SMTP_PASS.' }, 500)
+  if (vhod.obvesti === true) return await obvestiPotrjene(service)
   // Admin kliče s svojim žetonom; RPC `admin_prevzem_zeton_za_klub` sam preveri is_admin().
   const uporabnik = createClient(URL_, Deno.env.get('SUPABASE_ANON_KEY')!, { global: { headers: { Authorization: auth } } })
   if (!jeStroj) {
@@ -150,15 +251,6 @@ Deno.serve(async (req) => {
     if (error) return json({ error: error.message }, 500)
     if (!admin) return json({ error: 'Samo administrator.' }, 403)
   }
-
-  const vhod = (await req.json().catch(() => ({}))) as {
-    zahtevek?: number
-    na?: string
-    // Preizkus (servis): mail za EN zahtevek gre na test_na, ne klubu; nič ne gre v stike kluba.
-    test_zahtevek?: number
-    test_na?: string
-  }
-  if (!Deno.env.get('SMTP_PASS')) return json({ error: 'Pomanjkljiva nastavitev: SMTP_PASS.' }, 500)
 
   const test = vhod.test_zahtevek != null
   if (test && !jeStroj) return json({ error: 'Preizkus le s servisnim ključem.' }, 403)

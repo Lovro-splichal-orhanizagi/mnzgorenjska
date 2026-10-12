@@ -3681,6 +3681,7 @@ export type Database = {
           klubu_na: string | null
           klubu_poslano_at: string | null
           note: string | null
+          obvescen_at: string | null
           player_id: number
           potrdil: string | null
           spor: boolean
@@ -3698,6 +3699,7 @@ export type Database = {
           klubu_na?: string | null
           klubu_poslano_at?: string | null
           note?: string | null
+          obvescen_at?: string | null
           player_id: number
           potrdil?: string | null
           spor?: boolean
@@ -3714,6 +3716,7 @@ export type Database = {
           klubu_na?: string | null
           klubu_poslano_at?: string | null
           note?: string | null
+          obvescen_at?: string | null
           player_id?: number
           potrdil?: string | null
           spor?: boolean
@@ -6429,6 +6432,23 @@ export type Database = {
       prevzem_je_poznavalec_kluba: {
         Args: { p_player_id: number; p_user: string }
         Returns: boolean
+      }
+      prevzem_neobvesceni: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          drzava: string
+          email: string
+          igralec: string
+          klub: string
+          liga: string
+          liga_slug: string
+          player_id: number
+          zahtevek_id: number
+        }[]
+      }
+      prevzem_obvescen: {
+        Args: { p_zahtevek_id: number }
+        Returns: undefined
       }
       prevzem_odloci_z_zetonom: {
         Args: { p_potrdi: boolean; p_zeton: string }

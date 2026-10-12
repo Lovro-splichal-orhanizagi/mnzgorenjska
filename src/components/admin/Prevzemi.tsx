@@ -111,7 +111,12 @@ export default function Prevzemi() {
 
   const odloci = (z: Zahtevek, odlocitev: string) => {
     if (odlocitev === 'preklici' && !window.confirm(`Prekličem profil "${z.player_name}" (${z.prosilec})?`)) return
-    void izvedi(() => supabase.rpc('admin_odloci_zahtevek', { p_id: z.id, p_odlocitev: odlocitev }))
+    void izvedi(async () => {
+      const r = await supabase.rpc('admin_odloci_zahtevek', { p_id: z.id, p_odlocitev: odlocitev })
+      // Potrjeni dobi mail s povezavo na profil (posli-prevzem pošlje vsakemu enkrat).
+      if (!r.error && odlocitev === 'potrdi') void supabase.functions.invoke('posli-prevzem', { body: { obvesti: true } })
+      return r
+    })
   }
 
   async function posljiKlubu(z: Zahtevek) {
