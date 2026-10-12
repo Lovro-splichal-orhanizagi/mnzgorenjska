@@ -7,6 +7,7 @@ import { formatirajTocke, prikazniIme, tockZ } from '../lib/pomozno'
 import { useNaslov, useNoindex } from '../lib/naslov'
 import EnajstericaNaIgriscu from '../components/EnajstericaNaIgriscu'
 import FotoIgralca from '../components/FotoIgralca'
+import ZnakPreverjen from '../components/ZnakPreverjen'
 import ZgodbaKroga from '../components/ZgodbaKroga'
 import { useKanonicnaLiga, useTekmovanje, zLigo } from '../lib/tekmovanje'
 import {
@@ -349,6 +350,7 @@ export default function Ekipa() {
                           className="min-w-0 flex-1 truncate hover:text-gnl-400"
                         >
                           {prikazniIme(v.ime)}
+                          <ZnakPreverjen id={Number(v.player_id)} className="ml-1" />
                           {oznaka(v) && (
                             <span className="ml-1 rounded bg-slate-700 px-1 text-[10px] font-black">
                               {oznaka(v)}

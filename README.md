@@ -132,6 +132,9 @@ rezervnih igralcev.
 | `zahtevki_igralca` | Zahtevki "To sem jaz": uporabnik prevzame profil igralca (`cakajoc`, `potrjen`, `zavrnjen`, `preklican`; potrdil `klub`, `soigralci` ali `admin`). Največ en potrjen na igralca in na uporabnika; piše le prek RPC |
 | `povezani_igralci` | Druge vrstice iste osebe (druga liga, mladinci, prestop), ki jih admin poveže k potrjenemu profilu |
 | `profil_igralca` | Predstavitev potrjenega igralca (vzdevek, opis, omrežja, fotografija); ureja jo le potrjen lastnik, uradnih podatkov ne |
+| `preverjeni_racuni` | Pravica preverjenega igralca (kljukica in dodatki): uporabnik, glavna vrstica, vir `rocno`/`letna`/`dozivljenjska`, `aktiven`/`preklican`/`potekel`, `velja_do`, `star_vsaj_18`, rezervirana stolpca Stripe. Piše le admin prek RPC (faza 2: plačilo) |
+| `profil_igralca_plus` | Dodatki preverjenega igralca (opis do 500, YouTube, X, spletna stran, pasica, barva, izpostavljena tekma ali statistika, sporočilo navijačem); vidno le prek `je_preverjen` |
+| `testerji` | Preizkuševalci, ki vidijo preverjene pri stikalu `preverjeni_racuni` = 1; piše le admin |
 | `potrditve_soigralcev` / `prijave_profila_igralca` / `zetoni_prevzema` | Potrditve soigralcev, prijave lažnih profilov, enkratne povezave za klub (le zgoščene); zaprte tabele |
 | `uradne_odsotnosti` | Uradne odsotnosti, ki jih javi potrjeni igralec sam (vrsta, od, vrnitev ali neznano, opomba do 140 znakov; `odprto`, `zaprto`, `ni_drzalo`). Samo informacija; zaprta tabela, javno prek pogleda `uradne_odsotnosti_view` brez uporabnika, piše le prek RPC |
 | `rounds` / `matches` | Krogi in tekme (z izvorom: `zapisnik_id`, `source_url`); `borza_po_starem` zapre krog pred ponovnim obračunom cen po novih pravilih, `borza_z_odmikom` ga obračuna po starih mejah (odmik 3.0); `kontumacija` = dodeljen izid brez zapisnika, `vir_brez_izida` = vir minule tekme ne kaže kot odigrane (prestavljena brez datuma) |
@@ -184,6 +187,7 @@ napako (izbirnik lige, stran Igralci).
 - Klop+ in Wildcard lahko uporabnik doda, premakne ali prekliče samo pred
   določenim rokom kroga iste lige. Preverbo izvaja baza.
 - Prevzem profila igralca ("To sem jaz"): zahtevek potrdi odobren poznavalec kluba (sam nastavljen `insider_team_id` ne šteje), dva potrjena soigralca istega kluba in lige, enkratna povezava iz maila klubu ali admin; svojega zahtevka nihče ne potrdi. Čakajoči zahtevki niso javni (javen je le pogled `potrjeni_igralci`). Fotografije zapiše le potrjen lastnik v mapo svojega igralca.
+- Preverjeni igralci: vsako branje statusa in dodatkov gre skozi `vidi_preverjene()` (stikalo `preverjeni_racuni`: 0 nihče, 1 admin in `testerji`, 2 vsi). Dodatke piše le potrjen lastnik z veljavno pravico, ročici gresta skozi `prepovedano_besedilo`, daljša besedila skozi `prepovedane_besede` (po besedah); pravico dodeli in odvzame le admin, preklic, anonimizacija ali izbris računa jo prekliče.
 - Uradno odsotnost (`objavi_uradno_odsotnost`) javi in zapre (`zapri_uradno_odsotnost`) le potrjeni igralec za svoje vrstice (glavna in povezane). Preverba po uvozu (`preveri_uradne_odsotnosti`, servis) odsotnost, med katero je po zapisniku igral, označi "ni držalo"; dva taka opomina v sezoni vzameta pravico do uradnih odsotnosti do konca sezone. Na točke in cene nima vpliva.
 - Kroge, klube in igralce urejajo **le administratorji** (`profiles.is_admin`).
 - Javni profil `/u/:id` bere `javni_profil(id)` (le javna polja; zasebni profil le ime). Prikazno ime si uporabnik spremeni sam (3–24 znakov, enolično, enkrat na 7 dni, sprožilec `varuj_prikazno_ime`).

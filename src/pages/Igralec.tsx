@@ -25,6 +25,7 @@ import {
 import { serijaCen, premik as premikSerije, crta } from '../lib/gibanjeCene'
 import Grb from '../components/Grb'
 import FotoIgralca from '../components/FotoIgralca'
+import ZnakPreverjen from '../components/ZnakPreverjen'
 import PrevzemIgralca from '../components/PrevzemIgralca'
 import UradneOdsotnostiIgralca from '../components/UradnaOdsotnost'
 import KarticaIgralca from '../components/KarticaIgralca'
@@ -526,6 +527,7 @@ export default function Igralec() {
         <div className="min-w-0 flex-1">
           <h1 className="line-clamp-2 break-words text-2xl font-black naslov sm:text-3xl">
             {prikazniIme(igralec.full_name)}
+            <ZnakPreverjen id={igralec.id} velikost={22} className="ml-2" />
           </h1>
           <p className="text-sm text-slate-400">
             {igralec.team_id ? (

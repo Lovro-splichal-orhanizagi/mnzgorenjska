@@ -15,6 +15,7 @@ import { t as prevod, lokale } from '../i18n'
 import { imeDrzave } from './IzbiraDrzave'
 import Zastava from './Zastava'
 import FotoIgralca from './FotoIgralca'
+import ZnakPreverjen from './ZnakPreverjen'
 import {
   dovoljZaIskanje,
   opisIgralca,
@@ -435,7 +436,10 @@ export default function IzbirnikLige() {
                             }`}
                           >
                             <FotoIgralca id={z.id} velikost={20} />
-                            <span className="max-w-[60%] shrink-0 truncate font-semibold">{prikazniIme(z.full_name)}</span>
+                            <span className="max-w-[60%] shrink-0 truncate font-semibold">
+                              {prikazniIme(z.full_name)}
+                              <ZnakPreverjen id={z.id} className="ml-1" />
+                            </span>
                             <span className="min-w-0 flex-1 truncate text-xs text-slate-500">{podrobno}</span>
                             {vecDrzav && z.drzava && z.drzava !== drzava && (
                               <Zastava koda={z.drzava} className="h-3 shrink-0 self-center" />
