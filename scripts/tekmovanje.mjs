@@ -14,39 +14,24 @@ export function slugTekmovanja(privzeto = 'clani') {
   return v && !v.startsWith('--') ? v : privzeto
 }
 
-// Stolpci, ki obstajajo šele po migraciji 20260905090000 (države in viri).
-const NOVI = 'source, source_league_code, country_id'
-const STARI = 'id, slug, name, short_name, mnzg_liga, prvi_fantasy_krog, rok_pomak_ur, active'
+const STOLPCI = 'id, slug, name, short_name, mnzg_liga, prvi_fantasy_krog, rok_pomak_ur, active, source, source_league_code, country_id'
 
 /**
  * Vrne vrstico iz `competitions` za dani slug; brez nje se ne da uvažati.
  *
- * Kodo in migracije uveljavlja vsak svoja pot: koda gre v git in na Vercel,
- * migracija pa jo mora nekdo pognati proti Supabase. Uvoz zato ne sme
- * predpostavljati, da je oboje prišlo hkrati — če novih stolpcev še ni,
- * PostgREST vrne 400 in nočni uvoz bi se ustavil. Zato poskusimo s polnim
- * naborom in ob napaki pademo nazaj na starega.
+ * Ob napaki branja se uvoz USTAVI. Doslej je padel nazaj na stolpce brez
+ * vira (prehod na migracijo 20260905090000, davno končan) — in ker je potem
+ * manjkal `source`, je uvoz bral MNZ Gorenjska (liga 1502) v tujo ligo.
+ * Tako je 12. 10. kratek izpad povezave z bazo poslal srbsko ligo brati
+ * zapisnike Gorenjske; ustavila jih je le enoličnost `zapisnik_id`.
  */
 export async function tekmovanje(db, slug = slugTekmovanja()) {
-  let { data, error } = await db
+  const { data, error } = await db
     .from('competitions')
-    .select(`${STARI}, ${NOVI}`)
+    .select(STOLPCI)
     .eq('slug', slug)
     .maybeSingle()
-
-  if (error) {
-    const staraShema = await db
-      .from('competitions')
-      .select(STARI)
-      .eq('slug', slug)
-      .maybeSingle()
-    if (staraShema.error)
-      throw new Error(`tekmovanja ni mogoče prebrati: ${error.message}`)
-    console.log(
-      '  opomba: baza še nima stolpcev za države in vire — uvoz teče po starem',
-    )
-    data = staraShema.data
-  }
+  if (error) throw new Error(`tekmovanja ni mogoče prebrati: ${error.message}`)
 
   if (!data) {
     // Nasteti "clani in mladinci" je bilo res, dokler sta bili ligi dve.
