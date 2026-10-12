@@ -170,7 +170,7 @@ export const racun = {
   // Zasebnost in pogoji. <b> je krepko, ostale oznake so povezave.
   pravno: {
     naslov: 'Zasebnost in pogoji',
-    zadnjaSprememba: 'Zadnja sprememba: 9. oktober 2026',
+    zadnjaSprememba: 'Zadnja sprememba: 12. oktober 2026',
     kajJeNaslov: 'Kaj je SLFF',
     kajJe:
       'SLFF (Sunday League Fantasy Football) je navijaška fantasy liga za slovenske medobčinske nogometne lige. Vodimo jo ljubiteljsko in ni povezana z medobčinskimi nogometnimi zvezami, NZS ali s klubi. Igra je brezplačna in brez denarnih vložkov ali nagrad.',
@@ -184,7 +184,7 @@ export const racun = {
     podatkiNaprava:
       '<b>Žeton naprave za obvestila.</b> Če v mobilni aplikaciji dovoliš obvestila, shranimo žeton, prek katerega ti pošljemo opomnik pred rokom kroga. Ob odjavi ga izbrišemo.',
     neHranimo:
-      'Ne hranimo naslova, telefonske številke ali podatkov o plačilih. Piškotkov za sledenje in oglaševalskih orodij ne uporabljamo. V brskalniku so shranjeni tvoja prijavna seja, oznaka pogovora v klepetu za pomoč, če ga odpreš, in oznake seje, s katerimi preštejemo obisk strani le enkrat. Koliko ljudi je odprlo katero stran, štejemo le kot dnevni seštevek — brez tvojega imena, računa, naprave ali naslova IP. Splošno statistiko obiska (katere strani, od kod obiskovalci pridejo, vrsta naprave in država, nekaj dejanj, kot je sestava ekipe) beleži <b>Umami</b> na našem strežniku: brez piškotkov, naslova IP ne shrani in obiska ne poveže s tvojim računom. Če ima brskalnik vklopljeno možnost »Ne sledi«, se ne beleži nič.',
+      'Telefonske številke in podatkov plačilne kartice ne hranimo, naslova pa le, če naročiš natisnjeno značko (glej spodaj). Piškotkov za sledenje in oglaševalskih orodij ne uporabljamo. V brskalniku so shranjeni tvoja prijavna seja, oznaka pogovora v klepetu za pomoč, če ga odpreš, in oznake seje, s katerimi preštejemo obisk strani le enkrat. Koliko ljudi je odprlo katero stran, štejemo le kot dnevni seštevek — brez tvojega imena, računa, naprave ali naslova IP. Splošno statistiko obiska (katere strani, od kod obiskovalci pridejo, vrsta naprave in država, nekaj dejanj, kot je sestava ekipe) beleži <b>Umami</b> na našem strežniku: brez piškotkov, naslova IP ne shrani in obiska ne poveže s tvojim računom. Če ima brskalnik vklopljeno možnost »Ne sledi«, se ne beleži nič.',
     dostopNaslov: 'Komu so podatki dostopni',
     dostop:
       'Podatki so na našem strežniku pri ponudniku <b>Hetzner</b> (Nemčija, EU), promet do njega gre prek <b>Cloudflare</b> (zaščita in dostava strani). Potrditvena in ponastavitvena pošta gre prek našega poštnega strežnika (prav tako Hetzner), obvestila v mobilni aplikaciji prek <b>Google Firebase Cloud Messaging</b> (le žeton naprave in besedilo obvestila). Klepet za pomoč v spodnjem desnem kotu teče prek <b>HelpStack</b>: tja gre to, kar vanj napišeš, in — če si prijavljen — tvoje prikazno ime, da vemo, komu odgovarjamo. Ko ti pomočnik v klepetu pomaga, lahko pogleda tudi, na kateri strani in v kateri ligi si ter ali je tvoja ekipa veljavna. E-pošte mu ne posredujemo. Nikomur drugemu podatkov ne posredujemo in jih ne prodajamo.',
@@ -209,5 +209,31 @@ export const racun = {
     jamstvoNaslov: 'Brez jamstva',
     jamstvo:
       'Stran teče, kakor teče. Trudimo se, da so podatki pravilni in da je dosegljiva, jamčiti pa tega ne moremo — zapisniki znajo zamujati, statistika pa vsebovati napake.',
+    kajJePlacljivo:
+      'Edina plačljiva stvar je neobvezna značka preverjenega igralca (glej Plačljive storitve spodaj).',
+    podatkiPlacilo:
+      '<b>Nakup značke preverjenega igralca (le če kupiš).</b> Zapis nakupa (kaj, kdaj, znesek in oznaka kupca pri Stripe) hranimo 10 let, kot zahteva računovodska zakonodaja. Naslov za dostavo natisnjene značke hranimo 90 dni po pošiljanju, nato ostane le država.',
+    dostopStripe:
+      'Plačila značke preverjenega igralca obdeluje <b>Stripe</b> (Stripe Payments Europe, Irska): dobi tvoje ime, e-pošto, naslov za račun in pri natisnjeni znački naslov za dostavo. Podatke kartice vneseš neposredno pri Stripe, mi jih ne vidimo.',
+    placljivoNaslov:
+      'Plačljive storitve: preverjeni igralci',
+    placljivoUvod:
+      'Igra je in ostane brezplačna. Plačljiva je le neobvezna značka preverjenega igralca, ki jo lahko kupi igralec, ki je potrdil, da je profil njegov. Značka nikoli ne vpliva na točke, cene, fantasy ekipe ali pravila igre. Ti pogoji veljajo za ta nakup.',
+    prodajalec:
+      '<b>Prodajalec:</b> SPACE GUARDIAN, računalniško programiranje, d.o.o., Ulica Hermana Potočnika 5, 1000 Ljubljana, Slovenija. Matična številka 9850538000, ID za DDV SI42765153. Kontakt: <eposta>info@slff.eu</eposta>.',
+    kupis:
+      '<b>Kaj kupiš.</b> Modro kljukico ob imenu igralca in dodatke profila (daljši opis, povezave, pasica, barva, izpostavljena tekma ali statistika, sporočilo navijačem). Letna naročnina stane 9,99 € in se vsako leto samodejno podaljša. Nakup za vedno stane 29 € enkratno in velja, dokler SLFF to storitev ponuja. K nakupu za vedno lahko dodaš natisnjeno značko z imenom za 5 € in poštnino 2 € (Slovenija) ali 4 € (druga država EU). Pošiljamo le v države EU, dostava običajno traja 2 do 3 tedne. Vse cene vključujejo DDV.',
+    placilo:
+      '<b>Plačilo.</b> Plačilo obdela Stripe. Podatkov kartice ne vidimo in jih ne hranimo. Kupiš lahko le, če si star vsaj 18 let. Pogodba je sklenjena, ko Stripe plačilo potrdi.',
+    odpoved:
+      '<b>Odpoved naročnine.</b> Naročnino lahko kadarkoli odpoveš z gumbom Upravljaj naročnino na strani računa (slff.eu/account) ali na profilu igralca. Odpoved velja ob koncu plačanega leta; do takrat značka ostane. Za že začeto leto denarja ne vračamo, razen v primerih spodaj.',
+    odstop:
+      '<b>Pravica do odstopa.</b> Digitalna vsebina (kljukica in dodatki) se zagotovi takoj po plačilu. Pred plačilom izrecno soglašaš s takojšnjo zagotovitvijo in potrdiš, da s tem izgubiš pravico do odstopa v 14 dneh (člen 16(m) Direktive 2011/83/EU, ZVPot-1). Natisnjena značka je izdelana po tvojih navodilih (ime na znački), zato pravice do odstopa zanjo ni (člen 16(c)). Zakonsko jamstvo ostane: če značka pride poškodovana, napačna ali sploh ne pride, nam piši in jo brezplačno zamenjamo ali ti vrnemo denar.',
+    konec:
+      '<b>Kdaj značka preneha.</b> Značka preneha, če se izkaže, da profil ni tvoj in potrditev prekličemo, če ime igralca na njegovo zahtevo ali zahtevo zveze skrijemo, ali če izbrišeš račun. Naročnina se takrat samodejno ustavi in ni več zaračunana. Če plačilo izpodbijaš pri banki (chargeback), se značka odvzame.',
+    vracila:
+      '<b>Vračila.</b> Pri zlorabi ali lažni potrditvi profila denarja ne vračamo. Če značka preneha po naši napaki, na zahtevo zveze ali ker storitev ukinemo, ti pri letni naročnini vrnemo sorazmerni del za neporabljene mesece, pri nakupu za vedno pa celoten znesek, če se to zgodi v 12 mesecih po nakupu.',
+    pritozbe:
+      '<b>Vprašanja in pritožbe.</b> Piši na <eposta>info@slff.eu</eposta>, odgovorimo v nekaj delovnih dneh. Velja slovensko pravo; to ti ne odvzame varstva, ki ti ga daje pravo države, v kateri živiš.',
   },
 }

@@ -312,6 +312,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       obdeluje: 'Platba se ještě zpracovává. Odznak se zobrazí, jakmile ji přijmeme.',
       narocninaNaslov: 'Předplatné (ověřený hráč)',
       narocninaApp: 'Předplatné spravuješ na slff.eu.',
+      pogoji: '<pogoji>Podmínky nákupu</pogoji> · Prodávající: Space Guardian d.o.o.',
     },
     napake: {
       znaki: 'Text obsahuje nepovolené znaky (např. / @ # " < >).',

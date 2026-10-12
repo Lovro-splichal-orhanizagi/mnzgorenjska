@@ -309,6 +309,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       obdeluje: 'El pago aún se está procesando. El check aparecerá cuando lo recibamos.',
       narocninaNaslov: 'Suscripción (jugador verificado)',
       narocninaApp: 'Gestiona tu suscripción en slff.eu.',
+      pogoji: '<pogoji>Condiciones de compra</pogoji> · Vendedor: Space Guardian d.o.o.',
     },
     napake: {
       znaki: 'El texto contiene caracteres no permitidos (p. ej. / @ # " < >).',

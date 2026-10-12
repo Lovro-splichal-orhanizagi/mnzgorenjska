@@ -2,7 +2,7 @@
 // pove, kaj hranimo, zakaj in kako se tega znebiš.
 import { useNaslov } from '../lib/naslov'
 import { t, tx } from '../i18n'
-import type { ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 
 const krepko = { b: (v: ReactNode) => <strong>{v}</strong> }
 const eposta = (v: ReactNode) => (
@@ -13,6 +13,11 @@ const eposta = (v: ReactNode) => (
 
 export default function Pravno() {
   useNaslov(t('racun.pravno.naslov'))
+  // Povezava "pogoji nakupa" (/legal#placljivo) pride v nov zavihek: stran je
+  // lazy kos, zato brskalnik do sidra sam ne skoči.
+  useEffect(() => {
+    if (window.location.hash) document.getElementById(window.location.hash.slice(1))?.scrollIntoView()
+  }, [])
   return (
     <div className="max-w-2xl space-y-8">
       <header>
@@ -27,6 +32,7 @@ export default function Pravno() {
       <section className="space-y-3">
         <h2 className="text-lg font-bold">{t('racun.pravno.kajJeNaslov')}</h2>
         <p className="text-slate-300">{t('racun.pravno.kajJe')}</p>
+        <p className="text-slate-300">{t('racun.pravno.kajJePlacljivo')}</p>
       </section>
 
       <section className="space-y-3">
@@ -36,6 +42,7 @@ export default function Pravno() {
           <li>{tx('racun.pravno.podatkiIme', {}, krepko)}</li>
           <li>{tx('racun.pravno.podatkiEkipa', {}, krepko)}</li>
           <li>{tx('racun.pravno.podatkiNaprava', {}, krepko)}</li>
+          <li>{tx('racun.pravno.podatkiPlacilo', {}, krepko)}</li>
         </ul>
         <p className="text-slate-300">{t('racun.pravno.neHranimo')}</p>
       </section>
@@ -43,6 +50,7 @@ export default function Pravno() {
       <section className="space-y-3">
         <h2 className="text-lg font-bold">{t('racun.pravno.dostopNaslov')}</h2>
         <p className="text-slate-300">{tx('racun.pravno.dostop', {}, krepko)}</p>
+        <p className="text-slate-300">{tx('racun.pravno.dostopStripe', {}, krepko)}</p>
       </section>
 
       <section className="space-y-3">
@@ -84,6 +92,16 @@ export default function Pravno() {
       <section className="space-y-3">
         <h2 className="text-lg font-bold">{t('racun.pravno.pravilaNaslov')}</h2>
         <p className="text-slate-300">{t('racun.pravno.pravila')}</p>
+      </section>
+
+      <section id="placljivo" className="scroll-mt-20 space-y-3">
+        <h2 className="text-lg font-bold">{t('racun.pravno.placljivoNaslov')}</h2>
+        <p className="text-slate-300">{t('racun.pravno.placljivoUvod')}</p>
+        <p className="text-slate-300">{tx('racun.pravno.prodajalec', {}, { ...krepko, eposta })}</p>
+        {(['kupis', 'placilo', 'odpoved', 'odstop', 'konec', 'vracila'] as const).map((k) => (
+          <p key={k} className="text-slate-300">{tx(`racun.pravno.${k}`, {}, krepko)}</p>
+        ))}
+        <p className="text-slate-300">{tx('racun.pravno.pritozbe', {}, { ...krepko, eposta })}</p>
       </section>
 
       <section className="space-y-3">

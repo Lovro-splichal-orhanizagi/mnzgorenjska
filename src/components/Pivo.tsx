@@ -1,5 +1,5 @@
-// Gumb "Časti pivo" (naslovnica in noga vsake strani). SLFF je brezplačen in brez oglasov; pivo le
-// pomaga pokriti strežnik in domeno in na igro ne vpliva.
+// Gumb "Časti pivo" (naslovnica in noga vsake strani). Igra je brezplačna (plačljiva je le neobvezna
+// značka preverjenega igralca); pivo le pomaga pokriti strežnik in domeno in na igro ne vpliva.
 //
 // Samo povezava: brez skripte in gradnika Buy Me a Coffee, torej brez tujih
 // piškotkov. `/pivo` preusmeri Caddy (scripts/hetzner/Caddyfile) na

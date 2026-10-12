@@ -168,7 +168,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   // Zasebnost in pogoji. <b> je krepko, ostale oznake so povezave.
   pravno: {
     naslov: 'Adatvédelem és feltételek',
-    zadnjaSprememba: 'Utolsó módosítás: 2026. október 9.',
+    zadnjaSprememba: 'Utolsó módosítás: 2026. október 12.',
     kajJeNaslov: 'Mi az SLFF',
     kajJe:
       'Az SLFF (Sunday League Fantasy Football) szurkolói fantasy bajnokság a helyi amatőr labdarúgó-bajnokságokhoz. Önkéntesen működtetjük, és nem kapcsolódik a megyei vagy az országos labdarúgó-szövetségekhez, sem a klubokhoz. A játék ingyenes, nincs benne pénzes tét vagy nyeremény.',
@@ -182,7 +182,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     podatkiNaprava:
       '<b>Eszköztoken az értesítésekhez.</b> Ha a mobilalkalmazásban engedélyezed az értesítéseket, eltárolunk egy tokent, amellyel a forduló határideje előtt emlékeztetőt küldünk. Kijelentkezéskor töröljük.',
     neHranimo:
-      'Nem tároljuk a lakcímed, a telefonszámod vagy fizetési adatokat. Nem használunk követő sütiket és hirdetési eszközöket. A böngésződ tárolja a bejelentkezési munkamenetet, a súgó chat beszélgetésének azonosítóját (ha megnyitod), és munkamenet-jelölőket, amelyekkel egy oldal megtekintését csak egyszer számoljuk. Azt, hogy hányan nyitottak meg egy oldalt, csak napi összesítésként tartjuk nyilván, a neved, fiókod, eszközöd vagy IP-címed nélkül. Az általános látogatottsági statisztikát (mely oldalak, honnan jönnek a látogatók, eszköztípus és ország, néhány művelet, például a csapat összeállítása) a saját szerverünkön futó <b>Umami</b> rögzíti: sütik nélkül, az IP-címet nem tárolja, és a látogatást nem köti a fiókodhoz. Ha a böngésződben be van kapcsolva a „Ne kövessenek” beállítás, semmit sem rögzítünk.',
+      'Nem tároljuk a telefonszámod és a bankkártyaadataidat, a címedet pedig csak akkor, ha nyomtatott jelvényt rendelsz (lásd lent). Nem használunk követő sütiket és hirdetési eszközöket. A böngésződ tárolja a bejelentkezési munkamenetet, a súgó chat beszélgetésének azonosítóját (ha megnyitod), és munkamenet-jelölőket, amelyekkel egy oldal megtekintését csak egyszer számoljuk. Azt, hogy hányan nyitottak meg egy oldalt, csak napi összesítésként tartjuk nyilván, a neved, fiókod, eszközöd vagy IP-címed nélkül. Az általános látogatottsági statisztikát (mely oldalak, honnan jönnek a látogatók, eszköztípus és ország, néhány művelet, például a csapat összeállítása) a saját szerverünkön futó <b>Umami</b> rögzíti: sütik nélkül, az IP-címet nem tárolja, és a látogatást nem köti a fiókodhoz. Ha a böngésződben be van kapcsolva a „Ne kövessenek” beállítás, semmit sem rögzítünk.',
     dostopNaslov: 'Ki fér hozzá az adatokhoz',
     dostop:
       'Az adatok a saját szerverünkön vannak a <b>Hetzner</b> szolgáltatónál (Németország, EU), a forgalom a <b>Cloudflare</b> hálózatán keresztül érkezik (védelem és az oldal kiszolgálása). A megerősítő és jelszó-visszaállító e-maileket a saját levelezőszerverünk küldi (szintén a Hetznernél), a mobilalkalmazás értesítéseit pedig a <b>Google Firebase Cloud Messaging</b> (csak az eszköztoken és az értesítés szövege). A jobb alsó sarokban lévő súgó chat a <b>HelpStack</b> szolgáltatáson fut: oda az kerül, amit beírsz, és ha be vagy jelentkezve, a megjelenített neved, hogy tudjuk, kinek válaszolunk. Amikor a chatben az asszisztens segít, azt is láthatja, melyik oldalon és melyik bajnokságban vagy, és érvényes-e a csapatod. Az e-mail-címedet nem adjuk át neki. Senki másnak nem adjuk tovább és nem adjuk el az adataidat.',
@@ -207,5 +207,31 @@ export const racun: NonNullable<Prevod['racun']> = {
     jamstvoNaslov: 'Garancia nélkül',
     jamstvo:
       'Az oldal úgy működik, ahogy működik. Igyekszünk, hogy az adatok pontosak legyenek és az oldal elérhető legyen, de ezt garantálni nem tudjuk: a jegyzőkönyvek késhetnek, a statisztikában pedig lehetnek hibák.',
+    kajJePlacljivo:
+      'Az egyetlen fizetős dolog az ellenőrzött játékos jelvény, ami nem kötelező (lásd lent: Fizetős szolgáltatások).',
+    podatkiPlacilo:
+      '<b>Ellenőrzött játékos jelvény vásárlása (csak ha veszel).</b> A vásárlás adatait (mit, mikor, mennyiért, és a Stripe vevőazonosítód) 10 évig őrizzük, ahogy a számviteli jogszabályok előírják. A nyomtatott jelvény szállítási címét a feladás után 90 napig őrizzük, utána csak az ország marad meg.',
+    dostopStripe:
+      'Az ellenőrzött játékos jelvény fizetését a <b>Stripe</b> (Stripe Payments Europe, Írország) kezeli: megkapja a neved, e-mail-címed, számlázási címed és nyomtatott jelvénynél a szállítási címet. A kártyaadatokat közvetlenül a Stripe-nál adod meg, mi nem látjuk őket.',
+    placljivoNaslov:
+      'Fizetős szolgáltatások: ellenőrzött játékosok',
+    placljivoUvod:
+      'A játék ingyenes, és az is marad. Csak az ellenőrzött játékos jelvény fizetős, ami nem kötelező, és azt az a játékos veheti meg, aki igazolta, hogy a profil az övé. A jelvény soha nem befolyásolja a pontokat, az árakat, a fantasy csapatokat vagy a játékszabályokat. Ezek a feltételek erre a vásárlásra vonatkoznak.',
+    prodajalec:
+      '<b>Eladó:</b> SPACE GUARDIAN, računalniško programiranje, d.o.o., Ulica Hermana Potočnika 5, 1000 Ljubljana, Szlovénia. Cégjegyzékszám 9850538000, közösségi adószám SI42765153. Kapcsolat: <eposta>info@slff.eu</eposta>.',
+    kupis:
+      '<b>Mit veszel.</b> Kék pipát a játékos neve mellé és profilextrákat (hosszabb leírás, linkek, borítókép, szín, kiemelt meccs vagy statisztika, üzenet a szurkolóknak). Az éves előfizetés 9,99 €, és minden évben automatikusan megújul. Az örökre szóló vásárlás egyszeri 29 €, és addig érvényes, amíg az SLFF ezt a szolgáltatást kínálja. Az örökre szóló vásárláshoz névre szóló nyomtatott jelvényt is kérhetsz 5 €-ért, 2 € (Szlovénia) vagy 4 € (más EU-ország) postaköltséggel. Csak EU-országokba szállítunk, a kézbesítés általában 2-3 hét. Az árak tartalmazzák az áfát.',
+    placilo:
+      '<b>Fizetés.</b> A fizetést a Stripe kezeli. A kártyaadatokat nem látjuk és nem tároljuk. Csak akkor vásárolhatsz, ha legalább 18 éves vagy. A szerződés akkor jön létre, amikor a Stripe visszaigazolja a fizetést.',
+    odpoved:
+      '<b>Az előfizetés lemondása.</b> Az előfizetést bármikor lemondhatod az Előfizetés kezelése gombbal a fiókod oldalán (slff.eu/account) vagy a játékos profilján. A lemondás a kifizetett év végén lép életbe, addig a jelvény megmarad. A már megkezdett évért nem adunk vissza pénzt, kivéve az alábbi eseteket.',
+    odstop:
+      '<b>Elállási jog.</b> A digitális tartalmat (pipa és extrák) a fizetés után azonnal megkapod. Fizetés előtt kifejezetten hozzájárulsz az azonnali teljesítéshez, és tudomásul veszed, hogy ezzel elveszíted a 14 napos elállási jogodat (a 2011/83/EU irányelv 16. cikk m) pontja, szlovén ZVPot-1). A nyomtatott jelvény a te kérésed szerint készül (név a jelvényen), ezért arra nincs elállási jog (16. cikk c) pont). A törvényes szavatossági jogaid megmaradnak: ha a jelvény sérülten, hibásan vagy egyáltalán nem érkezik meg, írj nekünk, és ingyen kicseréljük vagy visszaadjuk a pénzt.',
+    konec:
+      '<b>Mikor szűnik meg a jelvény.</b> A jelvény megszűnik, ha kiderül, hogy a profil nem a tiéd, és visszavonjuk az igazolást, ha a játékos nevét az ő vagy a szövetség kérésére elrejtjük, vagy ha törlöd a fiókodat. Az előfizetés ilyenkor automatikusan leáll, és többé nem terhelünk. Ha a fizetést a bankodnál vitatod (chargeback), a jelvényt visszavonjuk.',
+    vracila:
+      '<b>Visszatérítés.</b> Visszaélés vagy hamis profiligazolás esetén nem adunk vissza pénzt. Ha a jelvény a mi hibánkból, a szövetség kérésére vagy a szolgáltatás megszüntetése miatt szűnik meg, éves előfizetésnél a fel nem használt hónapok arányos részét, örökre szóló vásárlásnál pedig a teljes összeget visszaadjuk, ha ez a vásárlástól számított 12 hónapon belül történik.',
+    pritozbe:
+      '<b>Kérdések és panaszok.</b> Írj az <eposta>info@slff.eu</eposta> címre, néhány munkanapon belül válaszolunk. A szlovén jog az irányadó; ez nem veszi el azt a védelmet, amelyet a lakóhelyed szerinti ország joga biztosít.',
   },
 }

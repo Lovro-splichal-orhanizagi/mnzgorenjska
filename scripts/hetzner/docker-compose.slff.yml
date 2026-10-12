@@ -79,6 +79,8 @@ services:
       # preverjen-placilo, stripe-webhook: Stripe (test mode first: sk_test_..., whsec_...)
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      # 1 = Checkout requires accepting the terms; set only after the ToS URL is in Stripe Public details
+      STRIPE_TOS: ${STRIPE_TOS:-}
       SITE_URL: ${SITE_URL:-https://slff.eu}
       EMAIL_REPLY_TO: ${EMAIL_REPLY_TO:-}
   db:

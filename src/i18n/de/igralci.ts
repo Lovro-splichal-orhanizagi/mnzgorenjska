@@ -306,6 +306,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       obdeluje: 'Die Zahlung wird noch verarbeitet. Das Häkchen erscheint, sobald sie eingegangen ist.',
       narocninaNaslov: 'Abo (verifizierter Spieler)',
       narocninaApp: 'Dein Abo verwaltest du auf slff.eu.',
+      pogoji: '<pogoji>Kaufbedingungen</pogoji> · Verkäufer: Space Guardian d.o.o.',
     },
     napake: {
       znaki: 'Der Text enthält nicht erlaubte Zeichen (z. B. / @ # " < >).',

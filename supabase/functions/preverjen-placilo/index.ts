@@ -5,7 +5,7 @@
 //
 //   {"akcija": "checkout", "player_id": 123, "vir": "letna"|"dozivljenjska",
 //    "znacka": false, "dostava"?: "si"|"eu", "ime_na_znacki"?: "…",
-//    "star_vsaj_18": true, "odpoved_pravici": true} → {"url": "<Checkout>"}
+//    "star_vsaj_18": true, "odpoved_pravici": true, "jezik"?: "sl"|…} → {"url": "<Checkout>"}
 //   {"akcija": "portal", "player_id"?: 123} → {"url": "<Billing portal>"}
 //     (vsak kupec z aktivno naročnino, ne glede na stikalo; vrnitev na
 //     profil igralca ali /account)
@@ -21,7 +21,13 @@
 //
 // Napake baze, ki jih vmesnik pozna, gredo naprej; ostale postanejo splošna.
 //
-// Env: STRIPE_SECRET_KEY (najprej sk_test_…), SITE_URL (https://slff.eu),
+// Nad gumbom za plačilo je opomba o takojšnji zagotovitvi in izgubi pravice do
+// odstopa (slovensko za `jezik: sl`, sicer angleško). STRIPE_TOS=1 doda še
+// obvezno potrditev pogojev (`consent_collection[terms_of_service]`); Stripe jo
+// zavrne, dokler v Settings → Public details ni vpisan Terms of service URL
+// (https://slff.eu/legal#placljivo), zato je privzeto izklopljena.
+//
+// Env: STRIPE_SECRET_KEY (najprej sk_test_…), SITE_URL (https://slff.eu), STRIPE_TOS (neobvezno, 1),
 // SUPABASE_URL, SUPABASE_ANON_KEY. Objava: scripts/hetzner/objavi-funkcije.sh preverjen-placilo
 
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4'
@@ -42,6 +48,11 @@ const ZNANE = [/^Plačilo trenutno ni na voljo/, /^Preveriš lahko le svoj potrj
   /^To besedilo ni dovoljeno/, /^Za nakup se je treba prijaviti/]
 const NAPAKA = 'Plačila ni bilo mogoče začeti.'
 const napakaBaze = (m: string) => (ZNANE.some((v) => v.test(m)) ? m : NAPAKA)
+
+const OPOMBA = {
+  sl: 'Vsebina se zagotovi takoj po plačilu, zato s plačilom izgubiš pravico do odstopa v 14 dneh. Pogoji: slff.eu/legal#placljivo',
+  en: 'The content is provided immediately after payment, so by paying you lose the 14-day right of withdrawal. Terms: slff.eu/legal#placljivo',
+}
 
 const CENE = { letna: 'slff_preverjen_letna', dozivljenjska: 'slff_preverjen_dozivljenjska', znacka: 'slff_znacka' }
 
@@ -88,6 +99,7 @@ Deno.serve(async (req) => {
     ime_na_znacki?: string
     star_vsaj_18?: boolean
     odpoved_pravici?: boolean
+    jezik?: string
   }
   try {
     if (vhod.akcija === 'portal') {
@@ -153,7 +165,9 @@ Deno.serve(async (req) => {
       success_url: `${nazaj}uspeh`,
       cancel_url: `${nazaj}preklic`,
       locale: 'auto',
+      'custom_text[submit][message]': OPOMBA[vhod.jezik === 'sl' ? 'sl' : 'en'],
     }
+    if (Deno.env.get('STRIPE_TOS') === '1') polja['consent_collection[terms_of_service]'] = 'required'
     for (const [k, v] of Object.entries(meta)) {
       polja[`metadata[${k}]`] = v
       // Naročnina in plačilo nosita iste oznake, da webhook loči naše dogodke od drugih znamk računa.

@@ -122,7 +122,12 @@ async function igralec(id, { rest, lige, b }) {
   const liga = p && lige.find((l) => l.id === p.competition_id)
   if (!liga) return ni(b().t('igralci.profil.naslov'))
   const j = b(liga)
-  const sezona = await tekocaSezona(rest, liga.id)
+  // Kljukica preverjenega igralca: funkcija sama pogleda stikalo (anon jo vidi
+  // le pri preverjeni_racuni = 2); napaka kljukico le izpusti.
+  const [sezona, preverjen] = await Promise.all([
+    tekocaSezona(rest, liga.id),
+    rest('rpc/preverjeni_igralci_za', { p_ids: [Number(id)] }).then((v) => v.some((r) => r.player_id === Number(id)), () => false),
+  ])
   const [s] = sezona
     ? await rest(`player_season_standings?id=eq.${id}&competition_id=eq.${liga.id}&season=eq.${encodeURIComponent(sezona)}&select=points,matches,goals,minutes`)
     : []
@@ -149,7 +154,7 @@ async function igralec(id, { rest, lige, b }) {
       drobtine(liga, [{ ime: p.team_name, url: DOMENA + klub }, { ime, url }]),
     ],
     vsebina: ovij(
-      `<h1>${esc(ime)}</h1><p>${[pozicija && esc(pozicija), povezava(klub, p.team_name), povezava(zLigo('/table', liga), liga.name)].filter(Boolean).join(' · ')}</p>` +
+      `<h1>${esc(ime)}${preverjen ? ` <small>✓ ${esc(j.t('igralci.preverjen.znacka'))}</small>` : ''}</h1><p>${[pozicija && esc(pozicija), povezava(klub, p.team_name), povezava(zLigo('/table', liga), liga.name)].filter(Boolean).join(' · ')}</p>` +
         (s ? `<p>${esc(sezona)}: ${esc(stat)} · ${esc(j.stevilo(s.minutes))} ${esc(j.t('tekme.tabela.stolpciStrelcev.minute'))}</p>` : ''),
     ),
   }

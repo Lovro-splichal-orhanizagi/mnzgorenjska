@@ -3019,12 +3019,37 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
     zavrne). Testna kartica `4242 4242 4242 4242`, 3DS
     `4000 0027 6000 3184`, zavrnjena `4000 0000 0000 0002`. Stikalo 1 +
     preizkuševalec za preizkus.
-  - **Faza 3 (še ni):** podatki prodajalca (Space Guardian) in nova znamka v
-    računu Stripe, `/legal` (zdaj pravi, da je igra brezplačna in ne hrani
-    podatkov o plačilih) s pogoji nakupa in pravico do odstopa, Stripe Tax
-    registracija in OSS, živi ključi (`sk_live_…`, nov endpoint v živem
-    načinu), šele nato stikalo 2. Strežnik HTML kljukice še ne izriše —
-    dodaj jo, ko je stikalo 2.
+  - **Faza 3: pogoji nakupa.** So razdelek `/legal#placljivo` ("Plačljive
+    storitve: preverjeni igralci", ne svoja pot, zato brez sprememb Caddyja in
+    zemljevida): prodajalec SPACE GUARDIAN d.o.o. (naslov, matična 9850538000,
+    DDV SI42765153, info@slff.eu), ponudba in cene z DDV, Stripe, 18+, odpoved
+    naročnine (ob koncu plačanega leta), izguba pravice do odstopa za digitalno
+    vsebino (čl. 16(m)) in izjema za značko po meri (čl. 16(c)) ob ohranjenem
+    jamstvu, prenehanje (preklic potrditve, skrito ime, izbris računa,
+    chargeback), vračila (zloraba nič; naša napaka, zahteva zveze ali ukinitev:
+    letna sorazmerno, za vedno vse v 12 mesecih) in pritožbe. Zasebnost pove,
+    kaj hranimo o nakupu (10 let zapis, naslov 90 dni) in da plačila obdeluje
+    Stripe. Ključi `racun.pravno.*` v vseh 13 jezikih; sprememba pogojev =
+    nov datum v `zadnjaSprememba`. Kartica nakupa ima pod potrditvama
+    povezavo "Pogoji nakupa" (nov zavihek) in "Prodajalec: Space Guardian
+    d.o.o."; Checkout ima nad gumbom opombo o takojšnji zagotovitvi
+    (`custom_text.submit`, sl ali en po `jezik` iz vmesnika). **`STRIPE_TOS=1`**
+    (env funkcij, compose) doda `consent_collection[terms_of_service]=required`;
+    vklopi ga šele, ko je v Stripe Settings → Public details vpisan Terms of
+    service URL `https://slff.eu/legal#placljivo`, sicer Stripe sejo zavrne.
+    Strežnik HTML na strani igralca ob imenu izriše "✓ Preverjen igralec"
+    (`preverjeni_igralci_za` z anon ključem, ki vrne kaj šele pri stikalu 2;
+    napaka kljukico izpusti).
+  - **Pred vklopom v živo (lastnik):** aktivacija računa Stripe v živem načinu
+    s podatki Space Guardian (znamka SLFF, Public details: ime, podpora
+    info@slff.eu, Terms of service URL zgoraj); katalog v živem načinu (CLI:
+    cene z lookup_key `slff_preverjen_letna`, `slff_preverjen_dozivljenjska`,
+    `slff_znacka`, poštnini z metapodatkom `kljuc` `postnina_si`/`postnina_eu`,
+    davčna koda in `tax_behavior=inclusive`); Stripe Tax: registracija SI (in
+    OSS za EU); e-poštna potrdila kupcem (Settings → Customer emails); živi
+    webhook endpoint z istimi dogodki in portal; na strežniku `sk_live_…`,
+    nov `whsec_…`, `STRIPE_TOS=1`, objava obeh funkcij; preizkus z eno pravo
+    kartico in vračilom; šele nato stikalo `preverjeni_racuni = 2`.
 - **Uradne odsotnosti** (migracija 20261012135100): potrjeni igralec (lastnik
   potrjenega `zahtevki_igralca`, tudi za povezane vrstice) sam javi odsotnost
   (`objavi_uradno_odsotnost`: vrsta `poskodba`/`bolezen`/`dopust`/`kazen`/`drugo`,

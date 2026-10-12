@@ -306,6 +306,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       obdeluje: 'A fizetés még feldolgozás alatt áll. A jelvény megjelenik, amint megérkezik.',
       narocninaNaslov: 'Előfizetés (ellenőrzött játékos)',
       narocninaApp: 'Az előfizetést az slff.eu oldalon kezelheted.',
+      pogoji: '<pogoji>Vásárlási feltételek</pogoji> · Eladó: Space Guardian d.o.o.',
     },
     napake: {
       znaki: 'A szöveg nem engedélyezett karaktereket tartalmaz (pl. / @ # " < >).',

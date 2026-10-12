@@ -163,7 +163,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   },
   pravno: {
     naslov: 'Prywatność i regulamin',
-    zadnjaSprememba: 'Ostatnia zmiana: 9 października 2026',
+    zadnjaSprememba: 'Ostatnia zmiana: 12 października 2026',
     kajJeNaslov: 'Czym jest SLFF',
     kajJe:
       'SLFF (Sunday League Fantasy Football) to kibicowska liga fantasy dla lokalnych lig amatorskich. Prowadzimy ją hobbystycznie i nie jest powiązana z Polskim Związkiem Piłki Nożnej (PZPN), wojewódzkimi związkami piłki nożnej ani z klubami. Gra jest darmowa, bez wpłat pieniężnych i bez nagród.',
@@ -177,7 +177,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     podatkiNaprava:
       '<b>Token urządzenia do powiadomień.</b> Jeśli w aplikacji mobilnej zezwolisz na powiadomienia, zapisujemy token, przez który wysyłamy ci przypomnienie przed terminem kolejki. Przy wylogowaniu go usuwamy.',
     neHranimo:
-      'Nie przechowujemy adresu zamieszkania, numeru telefonu ani danych płatniczych. Nie używamy plików cookie do śledzenia ani narzędzi reklamowych. W przeglądarce zapisane są twoja sesja logowania, identyfikator rozmowy na czacie pomocy, jeśli go otworzysz, oraz znaczniki sesji, dzięki którym wizytę na stronie liczymy tylko raz. Ile osób otworzyło którą stronę, liczymy wyłącznie jako dzienną sumę — bez twojego imienia, konta, urządzenia czy adresu IP. Ogólne statystyki odwiedzin (które strony, skąd przychodzą odwiedzający, rodzaj urządzenia i kraj, kilka działań, takich jak zbudowanie drużyny) zapisuje <b>Umami</b> na naszym serwerze: bez plików cookie, nie zapisuje adresu IP i nie łączy wizyty z twoim kontem. Jeśli przeglądarka ma włączoną opcję „Do Not Track”, nic nie jest zapisywane.',
+      'Nie przechowujemy numeru telefonu ani danych karty płatniczej, a adres tylko wtedy, gdy zamówisz drukowaną odznakę (zob. niżej). Nie używamy plików cookie do śledzenia ani narzędzi reklamowych. W przeglądarce zapisane są twoja sesja logowania, identyfikator rozmowy na czacie pomocy, jeśli go otworzysz, oraz znaczniki sesji, dzięki którym wizytę na stronie liczymy tylko raz. Ile osób otworzyło którą stronę, liczymy wyłącznie jako dzienną sumę — bez twojego imienia, konta, urządzenia czy adresu IP. Ogólne statystyki odwiedzin (które strony, skąd przychodzą odwiedzający, rodzaj urządzenia i kraj, kilka działań, takich jak zbudowanie drużyny) zapisuje <b>Umami</b> na naszym serwerze: bez plików cookie, nie zapisuje adresu IP i nie łączy wizyty z twoim kontem. Jeśli przeglądarka ma włączoną opcję „Do Not Track”, nic nie jest zapisywane.',
     dostopNaslov: 'Kto ma dostęp do danych',
     dostop:
       'Dane są na naszym serwerze u dostawcy <b>Hetzner</b> (Niemcy, UE), ruch do niego idzie przez <b>Cloudflare</b> (ochrona i dostarczanie strony). E-maile z potwierdzeniem i resetem hasła wysyła nasz serwer pocztowy (również Hetzner), powiadomienia w aplikacji mobilnej idą przez <b>Google Firebase Cloud Messaging</b> (tylko token urządzenia i treść powiadomienia). Czat pomocy w prawym dolnym rogu działa przez <b>HelpStack</b>: trafia tam to, co w nim napiszesz, oraz — jeśli jesteś zalogowany — twoja nazwa wyświetlana, żebyśmy wiedzieli, komu odpowiadamy. Gdy asystent na czacie ci pomaga, może też sprawdzić, na której stronie i w której lidze jesteś oraz czy twoja drużyna jest prawidłowa. Adresu e-mail mu nie przekazujemy. Nikomu innemu danych nie przekazujemy i ich nie sprzedajemy.',
@@ -202,5 +202,31 @@ export const racun: NonNullable<Prevod['racun']> = {
     jamstvoNaslov: 'Bez gwarancji',
     jamstvo:
       'Strona działa tak, jak działa. Staramy się, by dane były poprawne, a strona dostępna, ale nie możemy tego zagwarantować — protokoły bywają opóźnione, a statystyki mogą zawierać błędy.',
+    kajJePlacljivo:
+      'Jedyną płatną rzeczą jest nieobowiązkowa odznaka zweryfikowanego zawodnika (zob. niżej Usługi płatne).',
+    podatkiPlacilo:
+      '<b>Zakup odznaki zweryfikowanego zawodnika (tylko jeśli kupisz).</b> Zapis zakupu (co, kiedy, kwota i twój identyfikator klienta w Stripe) przechowujemy przez 10 lat, jak wymagają przepisy o rachunkowości. Adres dostawy drukowanej odznaki przechowujemy przez 90 dni od wysyłki, potem zostaje tylko kraj.',
+    dostopStripe:
+      'Płatności za odznakę zweryfikowanego zawodnika obsługuje <b>Stripe</b> (Stripe Payments Europe, Irlandia): otrzymuje twoje imię i nazwisko, e-mail, adres rozliczeniowy, a przy drukowanej odznace adres dostawy. Dane karty wpisujesz bezpośrednio w Stripe, my ich nie widzimy.',
+    placljivoNaslov:
+      'Usługi płatne: zweryfikowani zawodnicy',
+    placljivoUvod:
+      'Gra jest i pozostanie darmowa. Płatna jest tylko nieobowiązkowa odznaka zweryfikowanego zawodnika, którą może kupić zawodnik, który potwierdził, że profil jest jego. Odznaka nigdy nie wpływa na punkty, ceny, drużyny fantasy ani zasady gry. Te warunki dotyczą tego zakupu.',
+    prodajalec:
+      '<b>Sprzedawca:</b> SPACE GUARDIAN, računalniško programiranje, d.o.o., Ulica Hermana Potočnika 5, 1000 Ljubljana, Słowenia. Numer rejestrowy 9850538000, NIP UE SI42765153. Kontakt: <eposta>info@slff.eu</eposta>.',
+    kupis:
+      '<b>Co kupujesz.</b> Niebieski znaczek przy nazwisku zawodnika i dodatki profilu (dłuższy opis, linki, baner, kolor, wyróżniony mecz lub statystyka, wiadomość do kibiców). Subskrypcja roczna kosztuje 9,99 € i odnawia się automatycznie co roku. Zakup na zawsze kosztuje jednorazowo 29 € i obowiązuje, dopóki SLFF oferuje tę usługę. Do zakupu na zawsze możesz dodać drukowaną odznakę z imieniem za 5 € plus wysyłka 2 € (Słowenia) lub 4 € (inny kraj UE). Wysyłamy tylko do krajów UE, dostawa trwa zwykle 2-3 tygodnie. Wszystkie ceny zawierają VAT.',
+    placilo:
+      '<b>Płatność.</b> Płatność obsługuje Stripe. Nie widzimy i nie przechowujemy danych karty. Kupić możesz tylko, jeśli masz co najmniej 18 lat. Umowa zostaje zawarta, gdy Stripe potwierdzi płatność.',
+    odpoved:
+      '<b>Rezygnacja z subskrypcji.</b> Subskrypcję możesz anulować w każdej chwili przyciskiem Zarządzaj subskrypcją na stronie konta (slff.eu/account) lub na profilu zawodnika. Rezygnacja działa z końcem opłaconego roku; do tego czasu odznaka zostaje. Za rozpoczęty już rok nie zwracamy pieniędzy, z wyjątkiem przypadków poniżej.',
+    odstop:
+      '<b>Prawo odstąpienia.</b> Treść cyfrowa (znaczek i dodatki) jest dostarczana od razu po płatności. Przed płatnością wyraźnie zgadzasz się na natychmiastowe dostarczenie i potwierdzasz, że tracisz przez to 14-dniowe prawo odstąpienia od umowy (art. 16 lit. m dyrektywy 2011/83/UE, słoweńska ustawa ZVPot-1). Drukowana odznaka jest wykonywana według twoich wskazówek (imię na odznace), więc prawo odstąpienia jej nie dotyczy (art. 16 lit. c). Ustawowe uprawnienia z tytułu niezgodności towaru z umową pozostają: jeśli odznaka dotrze uszkodzona, błędna lub wcale, napisz do nas, a bezpłatnie ją wymienimy lub zwrócimy pieniądze.',
+    konec:
+      '<b>Kiedy odznaka wygasa.</b> Odznaka wygasa, jeśli okaże się, że profil nie jest twój i cofniemy potwierdzenie, jeśli nazwisko zawodnika ukryjemy na jego prośbę lub prośbę związku albo jeśli usuniesz konto. Subskrypcja zatrzymuje się wtedy automatycznie i nie jest już pobierana. Jeśli zakwestionujesz płatność w banku (chargeback), odznaka zostaje odebrana.',
+    vracila:
+      '<b>Zwroty.</b> W razie nadużycia lub fałszywego potwierdzenia profilu nie zwracamy pieniędzy. Jeśli odznaka wygaśnie z naszej winy, na prośbę związku lub dlatego, że wycofamy usługę, przy subskrypcji rocznej zwracamy proporcjonalną część za niewykorzystane miesiące, a przy zakupie na zawsze całą kwotę, jeśli stanie się to w ciągu 12 miesięcy od zakupu.',
+    pritozbe:
+      '<b>Pytania i reklamacje.</b> Napisz na <eposta>info@slff.eu</eposta>, odpowiemy w ciągu kilku dni roboczych. Obowiązuje prawo słoweńskie; nie pozbawia cię to ochrony, którą daje ci prawo kraju, w którym mieszkasz.',
   },
 }

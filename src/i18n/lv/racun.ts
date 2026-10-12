@@ -163,7 +163,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   },
   pravno: {
     naslov: 'Privātums un noteikumi',
-    zadnjaSprememba: 'Pēdējās izmaiņas: 2026. gada 9. oktobris',
+    zadnjaSprememba: 'Pēdējās izmaiņas: 2026. gada 12. oktobris',
     kajJeNaslov: 'Kas ir SLFF',
     kajJe:
       'SLFF (Sunday League Fantasy Football) ir līdzjutēju veidota fantāzijas līga vietējām amatieru futbola līgām. To vada brīvprātīgie, un tā nav saistīta ar reģionālajām futbola federācijām, nacionālo futbola federāciju vai klubiem. Spēle ir bez maksas, bez naudas likmēm un balvām.',
@@ -177,7 +177,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     podatkiNaprava:
       '<b>Ierīces žetons paziņojumiem.</b> Ja mobilajā lietotnē atļauj paziņojumus, mēs saglabājam žetonu, ar kuru tev nosūtām atgādinājumu pirms kārtas termiņa. Izrakstoties mēs to izdzēšam.',
     neHranimo:
-      'Mēs neglabājam adresi, tālruņa numuru vai maksājumu datus. Mēs neizmantojam izsekošanas sīkdatnes un reklāmas rīkus. Pārlūkā tiek saglabāta tava pieteikšanās sesija, palīdzības tērzēšanas sarunas atzīme, ja to atver, un sesijas atzīmes, ar kurām lapas apmeklējumu saskaitām tikai vienreiz. Cik cilvēku atvēruši kuru lapu, mēs skaitām tikai kā dienas kopsummu, bez tava vārda, konta, ierīces vai IP adreses. Vispārējo apmeklējumu statistiku (kuras lapas, no kurienes apmeklētāji nāk, ierīces veids un valsts, dažas darbības, piemēram, komandas sastādīšana) reģistrē <b>Umami</b> mūsu serverī: bez sīkdatnēm, IP adresi tas nesaglabā un apmeklējumu nesasaista ar tavu kontu. Ja pārlūkā ir ieslēgta opcija «Neizsekot», netiek reģistrēts nekas.',
+      'Mēs neglabājam tālruņa numuru vai kartes datus, un adresi tikai tad, ja pasūti drukātu nozīmīti (skatīt zemāk). Mēs neizmantojam izsekošanas sīkdatnes un reklāmas rīkus. Pārlūkā tiek saglabāta tava pieteikšanās sesija, palīdzības tērzēšanas sarunas atzīme, ja to atver, un sesijas atzīmes, ar kurām lapas apmeklējumu saskaitām tikai vienreiz. Cik cilvēku atvēruši kuru lapu, mēs skaitām tikai kā dienas kopsummu, bez tava vārda, konta, ierīces vai IP adreses. Vispārējo apmeklējumu statistiku (kuras lapas, no kurienes apmeklētāji nāk, ierīces veids un valsts, dažas darbības, piemēram, komandas sastādīšana) reģistrē <b>Umami</b> mūsu serverī: bez sīkdatnēm, IP adresi tas nesaglabā un apmeklējumu nesasaista ar tavu kontu. Ja pārlūkā ir ieslēgta opcija «Neizsekot», netiek reģistrēts nekas.',
     dostopNaslov: 'Kam dati ir pieejami',
     dostop:
       'Dati atrodas mūsu serverī pie pakalpojumu sniedzēja <b>Hetzner</b> (Vācija, ES), datu plūsma uz to iet caur <b>Cloudflare</b> (aizsardzība un lapu piegāde). Apstiprinājuma un paroles atjaunošanas vēstules iet caur mūsu pasta serveri (arī Hetzner), paziņojumi mobilajā lietotnē caur <b>Google Firebase Cloud Messaging</b> (tikai ierīces žetons un paziņojuma teksts). Palīdzības tērzēšana apakšējā labajā stūrī darbojas caur <b>HelpStack</b>: tur nonāk tas, ko tajā uzraksti, un, ja esi pieteicies, tavs redzamais vārds, lai zinātu, kam atbildam. Kad palīgs tērzēšanā tev palīdz, tas var redzēt arī, kurā lapā un kurā līgā tu esi un vai tava komanda ir derīga. E-pastu mēs tam nenododam. Nevienam citam datus nenododam un nepārdodam.',
@@ -202,5 +202,31 @@ export const racun: NonNullable<Prevod['racun']> = {
     jamstvoNaslov: 'Bez garantijas',
     jamstvo:
       'Lapa darbojas, kā darbojas. Mēs cenšamies, lai dati būtu pareizi un lapa pieejama, bet garantēt to nevaram: protokoli mēdz kavēties, un statistikā var būt kļūdas.',
+    kajJePlacljivo:
+      'Vienīgais maksas elements ir neobligātā pārbaudīta spēlētāja nozīmīte (skatīt zemāk Maksas pakalpojumi).',
+    podatkiPlacilo:
+      '<b>Pārbaudīta spēlētāja nozīmītes pirkums (tikai ja pērc).</b> Pirkuma ierakstu (ko, kad, summa un tavs Stripe klienta identifikators) glabājam 10 gadus, kā to prasa grāmatvedības likumi. Drukātās nozīmītes piegādes adresi glabājam 90 dienas pēc nosūtīšanas, pēc tam paliek tikai valsts.',
+    dostopStripe:
+      'Pārbaudīta spēlētāja nozīmītes maksājumus apstrādā <b>Stripe</b> (Stripe Payments Europe, Īrija): tas saņem tavu vārdu, e-pastu, norēķinu adresi un drukātai nozīmītei piegādes adresi. Kartes datus tu ievadi tieši Stripe, mēs tos neredzam.',
+    placljivoNaslov:
+      'Maksas pakalpojumi: pārbaudīti spēlētāji',
+    placljivoUvod:
+      'Spēle ir un paliks bez maksas. Maksas ir tikai neobligātā pārbaudīta spēlētāja nozīmīte, ko var nopirkt spēlētājs, kurš apstiprinājis, ka profils ir viņa. Nozīmīte nekad neietekmē punktus, cenas, fantāzijas komandas vai spēles noteikumus. Šie noteikumi attiecas uz šo pirkumu.',
+    prodajalec:
+      '<b>Pārdevējs:</b> SPACE GUARDIAN, računalniško programiranje, d.o.o., Ulica Hermana Potočnika 5, 1000 Ljubljana, Slovēnija. Reģistrācijas numurs 9850538000, PVN numurs SI42765153. Kontakti: <eposta>info@slff.eu</eposta>.',
+    kupis:
+      '<b>Ko tu pērc.</b> Zilu ķeksīti pie spēlētāja vārda un profila papildinājumus (garāks apraksts, saites, reklāmkarogs, krāsa, izcelta spēle vai statistika, ziņa līdzjutējiem). Gada abonements maksā 9,99 € un katru gadu automātiski atjaunojas. Pirkums uz visiem laikiem maksā 29 € vienreiz un ir spēkā, kamēr SLFF šo pakalpojumu piedāvā. Pirkumam uz visiem laikiem vari pievienot drukātu nozīmīti ar vārdu par 5 € un pasta izdevumiem 2 € (Slovēnija) vai 4 € (cita ES valsts). Sūtām tikai uz ES valstīm, piegāde parasti aizņem 2-3 nedēļas. Visas cenas ietver PVN.',
+    placilo:
+      '<b>Maksājums.</b> Maksājumu apstrādā Stripe. Kartes datus mēs neredzam un neglabājam. Pirkt vari tikai tad, ja tev ir vismaz 18 gadi. Līgums ir noslēgts, kad Stripe apstiprina maksājumu.',
+    odpoved:
+      '<b>Abonementa atcelšana.</b> Abonementu vari atcelt jebkurā laikā ar pogu Pārvaldīt abonementu sava konta lapā (slff.eu/account) vai spēlētāja profilā. Atcelšana stājas spēkā apmaksātā gada beigās; līdz tam nozīmīte paliek. Par jau iesāktu gadu naudu neatmaksājam, izņemot zemāk minētos gadījumus.',
+    odstop:
+      '<b>Atteikuma tiesības.</b> Digitālais saturs (ķeksītis un papildinājumi) tiek nodrošināts uzreiz pēc maksājuma. Pirms maksājuma tu skaidri piekrīti tūlītējai nodrošināšanai un apstiprini, ka ar to zaudē 14 dienu atteikuma tiesības (Direktīvas 2011/83/ES 16. panta m) punkts, Slovēnijas ZVPot-1). Drukātā nozīmīte tiek izgatavota pēc taviem norādījumiem (vārds uz nozīmītes), tāpēc tai atteikuma tiesību nav (16. panta c) punkts). Likumā noteiktās tiesības paliek: ja nozīmīte pienāk bojāta, nepareiza vai nepienāk vispār, raksti mums, un mēs to bez maksas nomainīsim vai atmaksāsim naudu.',
+    konec:
+      '<b>Kad nozīmīte beidzas.</b> Nozīmīte beidzas, ja izrādās, ka profils nav tavs un mēs atsaucam apstiprinājumu, ja spēlētāja vārdu paslēpjam pēc viņa vai federācijas lūguma vai ja tu izdzēs savu kontu. Abonements tad automātiski apstājas un vairs netiek iekasēts. Ja apstrīdi maksājumu savā bankā (chargeback), nozīmīte tiek noņemta.',
+    vracila:
+      '<b>Atmaksas.</b> Ļaunprātīgas izmantošanas vai nepatiesa profila apstiprinājuma gadījumā naudu neatmaksājam. Ja nozīmīte beidzas mūsu kļūdas dēļ, pēc federācijas lūguma vai tāpēc, ka pārtraucam pakalpojumu, gada abonementam atmaksājam proporcionālu daļu par neizmantotajiem mēnešiem, bet pirkumam uz visiem laikiem visu summu, ja tas notiek 12 mēnešu laikā pēc pirkuma.',
+    pritozbe:
+      '<b>Jautājumi un sūdzības.</b> Raksti uz <eposta>info@slff.eu</eposta>, atbildam dažu darba dienu laikā. Piemēro Slovēnijas tiesības; tas tev neatņem aizsardzību, ko sniedz tavas dzīvesvietas valsts tiesības.',
   },
 }
