@@ -356,6 +356,66 @@ vrh ni bil vpisan. Zapisnik je isti kot pri Treći NL.
 | hr-1nl | `114348034` (16) | `100413651` |
 | hr-2nl | `114348039` (16) | `100418001` |
 
+**Mladinske lige (juniori, U19)** (migracija 20261013110100, 28 lig,
+**neaktivnih**): pregled 12. 10. 2026 je prečesal seznam tekmovanj vseh 40
+zvez (`/handlers/getCompetitions/`, sezoni 2026/2027 in 2025/2026; skripta
+`hrvaske-lige.mjs` mladinske izpusti) in odprl en zapisnik vsake lige in
+vsakega arhiva: povsod postavi 11 + 11 s šifro osebe, vratar in klop, kot pri
+odraslih. Kot druge U19: `prvi_fantasy_krog = 2`, `rok_pomak_ur = 2`.
+Državne in regijske (nogometna središta HNS: Istok, Centar, Rijeka, Sjever,
+Split) imajo zvezo `hns`, županijske in NS zvezo kot lige odraslih.
+Primorsko-goranska in Varaždinska imata namesto U19 **U18** — šifra ima vseeno
+`u19`, da ju `je_mladinski_slug` prepozna kot mladinski (smoke).
+
+Izpuščeno: Međimurje U-19 (`115953166`, arhiv `101026354`) — stran
+tekmovanja 12. 10. vrača HTTP 500 (U-17 iste zveze dela); vpiši, ko se
+popravi. Koprivnica "U-17 Kadeti i juniori" (U17), Split NSŽSD (5 klubov),
+Dubrovnik (5, nič odigranega), Požega (3), Đakovo (5, 8 na 8), Virovitica
+(2026/27 le pokal), HNS pilot "liga ulaznih juniora U-18", pokali (HNK, ŽNS),
+futsal, kvalifikacije.
+
+Arhiv je izbran po skupnih klubih; vejica pomeni več lanskih lig (vsaka ima en
+sam arhiv). **Brez arhiva**: Centar III. (nova liga, največ 2 skupna kluba),
+Rijeka U18 (lani je PGŽ ni imela) in ZŽ I. (lanske 1. lige ni; edini arhiv
+`101304947` — 3 od 8 klubov pri obeh — dobi ZŽ II. po imenu). Šibki arhivi:
+Karlovac (lani 4 klubi), Sjever, Split II., Istok, ZG II. (4–6 skupnih).
+
+| liga | klubov | tekoča 2026/27 | arhiv 2025/26 (skupnih klubov) |
+|---|---|---|---|
+| hr-u19-1hnl | 16 | `114526424` | `100454960` (12) |
+| hr-u19-2nl | 14 | `114771687` | `100540163` (12) |
+| hr-u19-2nl-b | 14 | `114771691` | `100540177` (9) |
+| hr-u19-1nl-istok | 9 | `114864867` | `100911679` (6, lani Središte Osijek) |
+| hr-u19-1nl-centar | 16 | `114975565` | `101044860` (9) |
+| hr-u19-2nl-centar | 14 | `114985034` | `101047726` (7) |
+| hr-u19-3nl-centar | 9 | `114992787` | — |
+| hr-u19-1nl-rijeka | 12 | `115053595` | `101025334` (11) |
+| hr-u19-1nl-sjever | 10 | `115344352` | `100732196,100734814` (4 + 5, Prva + Druga) |
+| hr-u19-1nl-split | 13 | `116563036` | `101245463` (10) |
+| hr-u19-2nl-split | 13 | `116566614` | `101805614` (5) |
+| hr-zg-u19-1znl | 14 | `114507628` | `100785503` (10) |
+| hr-zg-u19-2znl | 6 | `114507634` | `100785794` (4) |
+| hr-bj-u19-sjever | 10 | `114681204` | `100633968` (6) |
+| hr-bj-u19-jug | 10 | `115169842` | `100634009` (8) |
+| hr-bp-u19 | 8 | `115910901` | `101574772,101579365` (4 + 3, Centar + Istok) |
+| hr-is-u19-a | 11 | `115006487` | `100949387` (9) |
+| hr-is-u19-b | 8 | `115003917` | `100954626` (6) |
+| hr-ka-u19 | 11 | `115466348` | `101150516` (3 od 4) |
+| hr-kz-u19 | 11 | `115942754` | `100905225` (6) |
+| hr-ri-u19 (U18) | 14 | `115228638` | — |
+| hr-sm-u19 | 9 | `115008823` | `101064213` (8) |
+| hr-vz-u19 (U18) | 12 | `114799310` | `101887799` (12) |
+| hr-vs-u19 | 13 | `114880435` | `100803263,101338736,100671629` (8 + 2 + 2: Liga juniora A, Županja, Vukovar) |
+| hr-zz-u19-1liga | 8 | `114786421` | — |
+| hr-zz-u19-2liga | 9 | `114786736` | `101304947` (3) |
+| hr-ku-u19 | 10 | `114768241` | `100559950` (6) |
+| hr-na-u19 | 7 | `114377093` | `100460540` (5) |
+
+Uvoz (ena za drugo): `gh workflow run uvoz-lige.yml -f liga=hr-u19-1hnl -f
+arhiv=100454960 -f cene=true`; liga brez arhiva brez `arhiv`. Pred uvozom
+poženi `node scripts/hrvaske-lige.mjs` za trke imen (mladinske ekipe nosijo
+ime kluba) in po uvozu *Grbi klubov* z `vir = hns`.
+
 Klubi se ujemajo le znotraj države vira (`mapaKlubov` po `vir.drzava`):
 "NK Polet" ali "NK Mladost" je v Sloveniji in na Hrvaškem drug klub. Ključ
 kluba ohrani ć in đ, ki ju slovenski `poenostavi` zavrže — tudi natančno ime

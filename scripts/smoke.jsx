@@ -4262,7 +4262,9 @@ preveri(
 {
   const P = await import('../src/lib/prevzem.ts')
   preveri('prevzem: mladinske lige po šifri (kot SQL)',
-    ['mladinci', 'lj-mladinci-2', 'mb-u19', 'sml2-vzhod', 'hu-bk-u19-del', 'rs-u19-srbija', 'sk-ssfz-u19-3liga-juh', 'mk-u19-super']
+    ['mladinci', 'lj-mladinci-2', 'mb-u19', 'sml2-vzhod', 'hu-bk-u19-del', 'rs-u19-srbija', 'sk-ssfz-u19-3liga-juh', 'mk-u19-super',
+      // Hrvaška: tudi U18 (Rijeka, Varaždin) nosi `u19` v šifri.
+      'hr-u19-1hnl', 'hr-u19-2nl-b', 'hr-zg-u19-1znl', 'hr-ri-u19', 'hr-vz-u19']
       .every(P.jeMladinskiSlug) &&
     !['clani', 'lj-1-liga', 'snl3-vzhod', 'hu-u190', null].some(P.jeMladinskiSlug))
   preveri('prevzem: uporabniško ime iz povezave ali z @',
