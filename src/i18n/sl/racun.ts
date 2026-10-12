@@ -160,7 +160,7 @@ export const racun = {
   izbris: {
     naslov: 'Izbris računa',
     moraPrijava: 'Za izbris računa se moraš <prijava>prijaviti</prijava>.',
-    opis: 'Izbrisali bomo račun {email}: profil, vse tvoje ekipe z zgodovino točk, glasove in mini lige, ki si jih ustvaril. Izbrisa ni mogoče preklicati.',
+    opis: 'Izbrisali bomo račun {email}: profil, vse tvoje ekipe z zgodovino točk, glasove in mini lige, ki si jih ustvaril. Izbrisa ni mogoče preklicati. Z izbrisom preneha tudi značka preverjenega igralca, naročnina pa se ustavi brez vračila.',
     gumb: 'Izbriši račun',
     potrdi: 'Da, izbriši za vedno',
     preklici: 'Prekliči',
@@ -202,17 +202,17 @@ export const racun = {
       'Fotografija na naslovnici je delo Abigail Keenan in je objavljena na <unsplash>Unsplashu</unsplash> pod njihovo licenco, ki dovoljuje prosto uporabo. Ne prikazuje igralcev naših lig.',
     praviceNaslov: 'Tvoje pravice',
     pravice:
-      'Račun in vse svoje podatke lahko kadarkoli izbrišeš sam: v meniju računa izberi <b>Izbris računa</b> (slff.eu/account). Za popravek prikaznega imena ali če izbris ne uspe, nam piši na <eposta>info@slff.eu</eposta>. Ob izbrisu izgine tudi tvoja ekipa z lestvice.',
+      'Račun in vse svoje podatke lahko kadarkoli izbrišeš sam: v meniju računa izberi <b>Izbris računa</b> (slff.eu/account). Za popravek prikaznega imena ali če izbris ne uspe, nam piši na <eposta>info@slff.eu</eposta>. Ob izbrisu izgine tudi tvoja ekipa z lestvice. Zapis nakupa značke preverjenega igralca ostane 10 let, kot zahteva računovodska zakonodaja, naslov za dostavo pa po pravilu zgoraj.',
     pravilaNaslov: 'Pravila igranja',
     pravila:
       'En človek, en račun. Glasovanje o asistencah in pozicijah je namenjeno resničnim popravkom — namerno napačno glasovanje kvari igro vsem in lahko vodi do odstranitve računa. Točkovanje in cene se lahko med sezono spremenijo, če se izkaže, da je kaj krivično; take spremembe bomo objavili.',
     jamstvoNaslov: 'Brez jamstva',
     jamstvo:
-      'Stran teče, kakor teče. Trudimo se, da so podatki pravilni in da je dosegljiva, jamčiti pa tega ne moremo — zapisniki znajo zamujati, statistika pa vsebovati napake.',
+      'Stran teče, kakor teče. Trudimo se, da so podatki pravilni in da je dosegljiva, jamčiti pa tega ne moremo — zapisniki znajo zamujati, statistika pa vsebovati napake. To velja za brezplačno igro. Za plačljive storitve veljajo pogoji v razdelku Plačljive storitve in tvoje zakonske pravice potrošnika.',
     kajJePlacljivo:
       'Edina plačljiva stvar je neobvezna značka preverjenega igralca (glej Plačljive storitve spodaj).',
     podatkiPlacilo:
-      '<b>Nakup značke preverjenega igralca (le če kupiš).</b> Zapis nakupa (kaj, kdaj, znesek in oznaka kupca pri Stripe) hranimo 10 let, kot zahteva računovodska zakonodaja. Naslov za dostavo natisnjene značke hranimo 90 dni po pošiljanju, nato ostane le država.',
+      '<b>Nakup značke preverjenega igralca (le če kupiš).</b> Zapis nakupa (kaj, kdaj, znesek in oznaka kupca pri Stripe) hranimo 10 let, kot zahteva računovodska zakonodaja. Naslov za dostavo natisnjene značke hranimo 90 dni po pošiljanju ali preklicu naročila in najdlje 12 mesecev po naročilu, nato ostane le država.',
     dostopStripe:
       'Plačila značke preverjenega igralca obdeluje <b>Stripe</b> (Stripe Payments Europe, Irska): dobi tvoje ime, e-pošto, naslov za račun in pri natisnjeni znački naslov za dostavo. Podatke kartice vneseš neposredno pri Stripe, mi jih ne vidimo.',
     placljivoNaslov:
@@ -220,7 +220,7 @@ export const racun = {
     placljivoUvod:
       'Igra je in ostane brezplačna. Plačljiva je le neobvezna značka preverjenega igralca, ki jo lahko kupi igralec, ki je potrdil, da je profil njegov. Značka nikoli ne vpliva na točke, cene, fantasy ekipe ali pravila igre. Ti pogoji veljajo za ta nakup.',
     prodajalec:
-      '<b>Prodajalec:</b> SPACE GUARDIAN, računalniško programiranje, d.o.o., Ulica Hermana Potočnika 5, 1000 Ljubljana, Slovenija. Matična številka 9850538000, ID za DDV SI42765153. Kontakt: <eposta>info@slff.eu</eposta>.',
+      '<b>Prodajalec:</b> SPACE GUARDIAN, računalniško programiranje, d.o.o., Ulica Hermana Potočnika 5, 1000 Ljubljana, Slovenija, vpisana v sodni register pri Okrožnem sodišču v Ljubljani. Matična številka 9850538000, ID za DDV SI42765153. Kontakt: <eposta>info@slff.eu</eposta>.',
     kupis:
       '<b>Kaj kupiš.</b> Modro kljukico ob imenu igralca in dodatke profila (daljši opis, povezave, pasica, barva, izpostavljena tekma ali statistika, sporočilo navijačem). Letna naročnina stane 9,99 € in se vsako leto samodejno podaljša. Nakup za vedno stane 29 € enkratno in velja, dokler SLFF to storitev ponuja. K nakupu za vedno lahko dodaš natisnjeno značko z imenom za 5 € in poštnino 2 € (Slovenija) ali 4 € (druga država EU). Pošiljamo le v države EU, dostava običajno traja 2 do 3 tedne. Vse cene vključujejo DDV.',
     placilo:
@@ -232,8 +232,8 @@ export const racun = {
     konec:
       '<b>Kdaj značka preneha.</b> Značka preneha, če se izkaže, da profil ni tvoj in potrditev prekličemo, če ime igralca na njegovo zahtevo ali zahtevo zveze skrijemo, ali če izbrišeš račun. Naročnina se takrat samodejno ustavi in ni več zaračunana. Če plačilo izpodbijaš pri banki (chargeback), se značka odvzame.',
     vracila:
-      '<b>Vračila.</b> Pri zlorabi ali lažni potrditvi profila denarja ne vračamo. Če značka preneha po naši napaki, na zahtevo zveze ali ker storitev ukinemo, ti pri letni naročnini vrnemo sorazmerni del za neporabljene mesece, pri nakupu za vedno pa celoten znesek, če se to zgodi v 12 mesecih po nakupu.',
+      '<b>Vračila.</b> Pri zlorabi ali lažni potrditvi profila denarja ne vračamo. Če značka preneha po naši napaki, na zahtevo zveze ali ker storitev ukinemo, ti pri letni naročnini vrnemo sorazmerni del za neporabljene mesece. Pri nakupu za vedno vrnemo celoten znesek v prvih 12 mesecih po nakupu, pozneje pa sorazmerni del preostanka do 5 let od nakupa. Natisnjene značke in poštnine ob ukinitvi ne vračamo (značka ostane tvoja), le pri napaki ali okvari.',
     pritozbe:
-      '<b>Vprašanja in pritožbe.</b> Piši na <eposta>info@slff.eu</eposta>, odgovorimo v nekaj delovnih dneh. Velja slovensko pravo; to ti ne odvzame varstva, ki ti ga daje pravo države, v kateri živiš.',
+      '<b>Vprašanja in pritožbe.</b> Piši na <eposta>info@slff.eu</eposta>, odgovorimo v 8 delovnih dneh. Ne priznavamo nobenega izvajalca izvensodnega reševanja potrošniških sporov (IRPS). Velja slovensko pravo; to ti ne odvzame varstva, ki ti ga daje pravo države, v kateri živiš.',
   },
 }

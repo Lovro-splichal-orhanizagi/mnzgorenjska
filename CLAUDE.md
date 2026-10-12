@@ -2999,7 +2999,9 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
     `admin_narocila_znack`, `admin_nastavi_narocilo_znacke` (Administracija →
     Preverjeni → Naročila značk). Izbris računa ali anonimizacija naročila ne
     pobrišeta, `user_id` gre na null; 90 dni po pošiljanju ali preklicu ostane
-    v naslovu le država (`preverjen_pocisti_naslove`, pg_cron 04:23).
+    v naslovu le država (`preverjen_pocisti_naslove`, pg_cron 04:23), naročilu,
+    ki obvisi v `za_tisk`/`natisnjeno`, pa 12 mesecev po naročilu (migracija
+    20261012233100).
   - **Vklop testnega načina (lastnik):** na strežniku v `/opt/supabase/.env`
     `STRIPE_SECRET_KEY=sk_test_…`, `STRIPE_WEBHOOK_SECRET=whsec_…`,
     `SITE_URL=https://slff.eu` (compose jih poda funkcijam; compose ročno),
@@ -3027,13 +3029,24 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
     vsebino (čl. 16(m)) in izjema za značko po meri (čl. 16(c)) ob ohranjenem
     jamstvu, prenehanje (preklic potrditve, skrito ime, izbris računa,
     chargeback), vračila (zloraba nič; naša napaka, zahteva zveze ali ukinitev:
-    letna sorazmerno, za vedno vse v 12 mesecih) in pritožbe. Zasebnost pove,
-    kaj hranimo o nakupu (10 let zapis, naslov 90 dni) in da plačila obdeluje
-    Stripe. Ključi `racun.pravno.*` v vseh 13 jezikih; sprememba pogojev =
+    letna sorazmerno, za vedno vse v prvih 12 mesecih, nato sorazmerno do 5
+    let; natisnjene značke in poštnine ob ukinitvi ne vračamo) in pritožbe
+    (odgovor v 8 delovnih dneh, ne priznavamo izvajalca IRPS). Prodajalec je
+    "vpisan v sodni register pri Okrožnem sodišču v Ljubljani". "Brez jamstva"
+    velja le za brezplačno igro. Zasebnost pove, kaj hranimo o nakupu (10 let
+    zapis, naslov 90 dni po pošiljanju ali preklicu, največ 12 mesecev), da
+    plačila obdeluje Stripe in da izbris računa konča značko in naročnino brez
+    vračila. Ključi `racun.pravno.*` v vseh 13 jezikih; sprememba pogojev =
     nov datum v `zadnjaSprememba`. Kartica nakupa ima pod potrditvama
     povezavo "Pogoji nakupa" (nov zavihek) in "Prodajalec: Space Guardian
     d.o.o."; Checkout ima nad gumbom opombo o takojšnji zagotovitvi
-    (`custom_text.submit`, sl ali en po `jezik` iz vmesnika). **`STRIPE_TOS=1`**
+    (`custom_text.submit`, sl ali en po `jezik` iz vmesnika). Ista opomba z
+    naslovom pogojev je **na računu** (trajni nosilec potrditve): pri enkratnem
+    plačilu `invoice_creation` z `invoice_data.footer` (Stripe zaračuna
+    Invoicing za račune po plačilu; račun sproži `invoice.paid` brez
+    naročnine, ki ga webhook prezre), pri naročnini `subscription_data.description`
+    (`invoice_creation` v načinu subscription ni dovoljen) — nogo računov
+    naročnine da privzeta noga v Stripe (spodaj). **`STRIPE_TOS=1`**
     (env funkcij, compose) doda `consent_collection[terms_of_service]=required`;
     vklopi ga šele, ko je v Stripe Settings → Public details vpisan Terms of
     service URL `https://slff.eu/legal#placljivo`, sicer Stripe sejo zavrne.
@@ -3049,7 +3062,21 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
     OSS za EU); e-poštna potrdila kupcem (Settings → Customer emails); živi
     webhook endpoint z istimi dogodki in portal; na strežniku `sk_live_…`,
     nov `whsec_…`, `STRIPE_TOS=1`, objava obeh funkcij; preizkus z eno pravo
-    kartico in vračilom; šele nato stikalo `preverjeni_racuni = 2`.
+    kartico in vračilom; šele nato stikalo `preverjeni_racuni = 2`. Še:
+    - **Trajni nosilec**: Settings → Invoices → privzeta noga (Default footer)
+      in potrdila kupcem (Customer emails: successful payments) s stavkom o
+      odpovedi pravici in `https://slff.eu/legal#placljivo`; preveri na
+      testnem računu enkratnega plačila in naročnine, da je stavek na obeh.
+    - **Osnovni kapital** Space Guardian d.o.o. dopiši v `racun.pravno.prodajalec`
+      (vseh 13 jezikov) — zdaj ga ni (TODO lastnik).
+    - **Davčno potrjevanje računov (ZDavPR)**: spletna plačila s kartico so
+      lahko zavezana davčno potrjenim računom (EOR/ZOI) — pred živim načinom
+      potrdi z računovodjo, ali račun Stripe zadošča.
+    - **Pravnik**: ali je značka digitalna vsebina (odpoved po čl. 16(m)) ali
+      digitalna storitev (sorazmerno plačilo ob odstopu) — od tega je odvisno
+      besedilo odpovedi.
+    - **Portal v živem načinu**: preklic naročnine ob koncu obdobja (v
+      testnem je tako nastavljen; ponovi v živem).
 - **Uradne odsotnosti** (migracija 20261012135100): potrjeni igralec (lastnik
   potrjenega `zahtevki_igralca`, tudi za povezane vrstice) sam javi odsotnost
   (`objavi_uradno_odsotnost`: vrsta `poskodba`/`bolezen`/`dopust`/`kazen`/`drugo`,

@@ -68,10 +68,12 @@ const PODATKI = {
   'goals?match_id=eq.5': [{ minute: 12, team_id: 3, scorer: { full_name: 'Novak Janez' } }],
   'match_assist_status?competition_id=eq.1': [{ match_id: 5, season: '2026/27', played_on: '2026-09-13', home_name: 'Šenčur', away_name: 'Bled', home_goals: 2, away_goals: 1 }],
   'fantasy_team_standings?competition_id=eq.1': [{ fantasy_team_id: 11, team_name: 'FC Luka', total_points: 40 }],
-  'rpc/preverjeni_igralci_za': [{ player_id: 7, vzdevek: null }],
   'rpc/lestvica_lige': [{ mesto: 1, team_id: 3, ime: 'Šenčur', tekme: 5, zmage: 4, remiji: 1, porazi: 0, dani: 12, prejeti: 3, tocke: 13, sezona: '2026/27' }],
 }
-const rest = async (pot) => {
+const PREVERJENI = [7]
+const rest = async (pot, telo) => {
+  // Kot baza: vrne le preverjene med vprašanimi (nepreverjen id → []).
+  if (pot === 'rpc/preverjeni_igralci_za') return telo.p_ids.filter((i) => PREVERJENI.includes(i)).map((i) => ({ player_id: i, vzdevek: null }))
   const kljuc = Object.keys(PODATKI).find((k) => pot === k || pot.startsWith(k + '&'))
   if (!kljuc) throw new Error(`neznana poizvedba ${pot}`)
   return PODATKI[kljuc]
@@ -109,6 +111,7 @@ const izris = async (pot, t) => {
   assert.equal(s.liga.country_code, 'SK')
   assert.equal(s.kanonicni, 'https://slff.eu/player/8?t=sk-za-1')
   assert.match(s.opis, /1 bod\./)
+  assert.deepEqual(await rest('rpc/preverjeni_igralci_za', { p_ids: [8] }), [])
   assert.ok(!s.vsebina.includes('✓'), 'nepreverjen brez kljukice')
 }
 

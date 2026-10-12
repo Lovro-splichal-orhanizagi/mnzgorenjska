@@ -160,7 +160,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   izbris: {
     naslov: 'Delete account',
     moraPrijava: 'You need to <prijava>log in</prijava> to delete your account.',
-    opis: 'We will delete the account {email}: your profile, all your squads with their points history, your votes and the mini-leagues you created. This cannot be undone.',
+    opis: 'We will delete the account {email}: your profile, all your squads with their points history, your votes and the mini-leagues you created. This cannot be undone. Deleting the account also ends a verified player badge, and a subscription stops without a refund.',
     gumb: 'Delete account',
     potrdi: 'Yes, delete forever',
     preklici: 'Cancel',
@@ -201,17 +201,17 @@ export const racun: NonNullable<Prevod['racun']> = {
       'The photo on the home page is by Abigail Keenan and is published on <unsplash>Unsplash</unsplash> under their licence, which allows free use. It does not show players from our leagues.',
     praviceNaslov: 'Your rights',
     pravice:
-      'You can delete your account and all your data yourself at any time: choose <b>Delete account</b> in the account menu (slff.eu/account). To correct your display name, or if the deletion fails, write to us at <eposta>info@slff.eu</eposta>. When your account is deleted, your team also disappears from the standings.',
+      'You can delete your account and all your data yourself at any time: choose <b>Delete account</b> in the account menu (slff.eu/account). To correct your display name, or if the deletion fails, write to us at <eposta>info@slff.eu</eposta>. When your account is deleted, your team also disappears from the standings. The record of a verified player badge purchase stays for 10 years, as accounting law requires, and the delivery address as described above.',
     pravilaNaslov: 'Rules of play',
     pravila:
       'One person, one account. Voting on assists and positions is meant for genuine corrections — deliberately wrong votes spoil the game for everyone and may lead to the removal of your account. Scoring and prices may change during the season if something turns out to be unfair; we will announce any such changes.',
     jamstvoNaslov: 'No warranty',
     jamstvo:
-      'The site runs as it runs. We do our best to keep the data correct and the site available, but we cannot guarantee it — match reports can be late and statistics can contain errors.',
+      'The site runs as it runs. We do our best to keep the data correct and the site available, but we cannot guarantee it — match reports can be late and statistics can contain errors. This applies to the free game. Paid services are governed by the Paid services section and your statutory consumer rights.',
     kajJePlacljivo:
       'The only paid thing is the optional verified player badge (see Paid services below).',
     podatkiPlacilo:
-      '<b>Verified player badge purchase (only if you buy one).</b> We keep the purchase record (what, when, amount and your Stripe customer ID) for 10 years, as accounting law requires. We keep the delivery address for a printed badge for 90 days after shipping; after that only the country remains.',
+      '<b>Verified player badge purchase (only if you buy one).</b> We keep the purchase record (what, when, amount and your Stripe customer ID) for 10 years, as accounting law requires. We keep the delivery address for a printed badge for 90 days after shipping or cancellation of the order, and at most 12 months after ordering; after that only the country remains.',
     dostopStripe:
       'Payments for the verified player badge are processed by <b>Stripe</b> (Stripe Payments Europe, Ireland): it receives your name, email, billing address and, for a printed badge, the delivery address. You enter your card details directly with Stripe; we never see them.',
     placljivoNaslov:
@@ -219,7 +219,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     placljivoUvod:
       'The game is and stays free. The only paid item is the optional verified player badge, which a player who has confirmed that the profile is theirs can buy. The badge never affects points, prices, fantasy teams or the rules of the game. These terms apply to that purchase.',
     prodajalec:
-      '<b>Seller:</b> SPACE GUARDIAN, računalniško programiranje, d.o.o., Ulica Hermana Potočnika 5, 1000 Ljubljana, Slovenia. Company registration number 9850538000, VAT ID SI42765153. Contact: <eposta>info@slff.eu</eposta>.',
+      '<b>Seller:</b> SPACE GUARDIAN, računalniško programiranje, d.o.o., Ulica Hermana Potočnika 5, 1000 Ljubljana, Slovenia, entered in the court register at the District Court in Ljubljana. Company registration number 9850538000, VAT ID SI42765153. Contact: <eposta>info@slff.eu</eposta>.',
     kupis:
       '<b>What you buy.</b> A blue check next to the player\'s name and profile extras (longer description, links, banner, colour, a featured match or statistic, a message to fans). The yearly subscription costs €9.99 and renews automatically every year. The forever option costs €29 once and lasts as long as SLFF offers this service. With the forever option you can add a printed badge with your name for €5 plus postage of €2 (Slovenia) or €4 (another EU country). We ship only to EU countries; delivery usually takes 2 to 3 weeks. All prices include VAT.',
     placilo:
@@ -231,8 +231,8 @@ export const racun: NonNullable<Prevod['racun']> = {
     konec:
       '<b>When the badge ends.</b> The badge ends if it turns out that the profile is not yours and we cancel the confirmation, if the player\'s name is hidden at the player\'s or the football association\'s request, or if you delete your account. A subscription then stops automatically and is no longer charged. If you dispute the payment with your bank (chargeback), the badge is removed.',
     vracila:
-      '<b>Refunds.</b> We do not refund in case of misuse or a false profile claim. If the badge ends because of our mistake, at the football association\'s request or because we discontinue the service, we refund the unused months of a yearly subscription pro rata, and the full amount of a forever purchase if this happens within 12 months of buying.',
+      '<b>Refunds.</b> We do not refund in case of misuse or a false profile claim. If the badge ends because of our mistake, at the football association\'s request or because we discontinue the service, we refund the unused months of a yearly subscription pro rata. For a forever purchase we refund the full amount within the first 12 months after buying, and after that a pro rata share of what remains of 5 years from the purchase. The printed badge and postage are not refunded on discontinuation (the badge stays yours), only for defects.',
     pritozbe:
-      '<b>Questions and complaints.</b> Write to <eposta>info@slff.eu</eposta>; we reply within a few working days. Slovenian law applies; this does not take away the protection given to you by the law of the country where you live.',
+      '<b>Questions and complaints.</b> Write to <eposta>info@slff.eu</eposta>; we reply within 8 working days. We do not recognise any provider of out-of-court consumer dispute resolution. Slovenian law applies; this does not take away the protection given to you by the law of the country where you live.',
   },
 }

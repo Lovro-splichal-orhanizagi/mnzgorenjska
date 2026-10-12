@@ -158,7 +158,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   izbris: {
     naslov: 'Zrušenie účtu',
     moraPrijava: 'Na zrušenie účtu sa musíš <prijava>prihlásiť</prijava>.',
-    opis: 'Zrušíme účet {email}: profil, všetky tvoje tímy s históriou bodov, hlasy a minilgy, ktoré si vytvoril. Zrušenie sa nedá vrátiť.',
+    opis: 'Zrušíme účet {email}: profil, všetky tvoje tímy s históriou bodov, hlasy a minilgy, ktoré si vytvoril. Zrušenie sa nedá vrátiť. Zmazaním účtu skončí aj odznak overeného hráča a predplatné sa zastaví bez vrátenia peňazí.',
     gumb: 'Zrušiť účet',
     potrdi: 'Áno, zrušiť navždy',
     preklici: 'Zrušiť',
@@ -200,17 +200,17 @@ export const racun: NonNullable<Prevod['racun']> = {
       'Fotografia na titulnej stránke je dielom Abigail Keenan a je zverejnená na <unsplash>Unsplash</unsplash> pod ich licenciou, ktorá umožňuje voľné použitie. Nezobrazuje hráčov našich líg.',
     praviceNaslov: 'Tvoje práva',
     pravice:
-      'Účet a všetky svoje údaje môžeš kedykoľvek zrušiť sám: v menu účtu zvoľ <b>Zrušenie účtu</b> (slff.eu/account). Ak chceš opraviť zobrazované meno alebo zrušenie nevyjde, napíš nám na <eposta>info@slff.eu</eposta>. Pri vymazaní zmizne z rebríčka aj tvoj tím.',
+      'Účet a všetky svoje údaje môžeš kedykoľvek zrušiť sám: v menu účtu zvoľ <b>Zrušenie účtu</b> (slff.eu/account). Ak chceš opraviť zobrazované meno alebo zrušenie nevyjde, napíš nám na <eposta>info@slff.eu</eposta>. Pri vymazaní zmizne z rebríčka aj tvoj tím. Záznam o kúpe odznaku overeného hráča zostáva 10 rokov, ako to vyžadujú účtovné predpisy, a adresa na doručenie podľa pravidla vyššie.',
     pravilaNaslov: 'Pravidlá hry',
     pravila:
       'Jeden človek, jeden účet. Hlasovanie o asistenciách a pozíciách slúži na skutočné opravy — úmyselne nesprávne hlasovanie kazí hru všetkým a môže viesť k odstráneniu účtu. Bodovanie a ceny sa môžu počas sezóny zmeniť, ak sa ukáže, že niečo je nespravodlivé; takéto zmeny zverejníme.',
     jamstvoNaslov: 'Bez záruky',
     jamstvo:
-      'Stránka funguje tak, ako funguje. Snažíme sa, aby boli údaje správne a aby bola stránka dostupná, zaručiť to však nemôžeme — zápisy o stretnutí môžu meškať a štatistiky môžu obsahovať chyby.',
+      'Stránka funguje tak, ako funguje. Snažíme sa, aby boli údaje správne a aby bola stránka dostupná, zaručiť to však nemôžeme — zápisy o stretnutí môžu meškať a štatistiky môžu obsahovať chyby. To platí pre bezplatnú hru. Pre platené služby platia podmienky v časti Platené služby a tvoje zákonné práva spotrebiteľa.',
     kajJePlacljivo:
       'Jediná platená vec je nepovinný odznak overeného hráča (pozri Platené služby nižšie).',
     podatkiPlacilo:
-      '<b>Kúpa odznaku overeného hráča (len ak ho kúpiš).</b> Záznam o kúpe (čo, kedy, suma a označenie zákazníka v Stripe) uchovávame 10 rokov, ako to vyžadujú účtovné predpisy. Adresu na doručenie vytlačeného odznaku uchovávame 90 dní po odoslaní, potom zostane len krajina.',
+      '<b>Kúpa odznaku overeného hráča (len ak ho kúpiš).</b> Záznam o kúpe (čo, kedy, suma a označenie zákazníka v Stripe) uchovávame 10 rokov, ako to vyžadujú účtovné predpisy. Adresu na doručenie vytlačeného odznaku uchovávame 90 dní po odoslaní alebo zrušení objednávky a najdlhšie 12 mesiacov od objednávky, potom zostane len krajina.',
     dostopStripe:
       'Platby za odznak overeného hráča spracúva <b>Stripe</b> (Stripe Payments Europe, Írsko): dostane tvoje meno, e-mail, fakturačnú adresu a pri vytlačenom odznaku adresu na doručenie. Údaje karty zadávaš priamo v Stripe, my ich nevidíme.',
     placljivoNaslov:
@@ -218,7 +218,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     placljivoUvod:
       'Hra je a zostane zadarmo. Platený je len nepovinný odznak overeného hráča, ktorý si môže kúpiť hráč, ktorý potvrdil, že profil je jeho. Odznak nikdy neovplyvňuje body, ceny, fantasy tímy ani pravidlá hry. Tieto podmienky platia pre túto kúpu.',
     prodajalec:
-      '<b>Predávajúci:</b> SPACE GUARDIAN, računalniško programiranje, d.o.o., Ulica Hermana Potočnika 5, 1000 Ljubljana, Slovinsko. Identifikačné číslo 9850538000, IČ DPH SI42765153. Kontakt: <eposta>info@slff.eu</eposta>.',
+      '<b>Predávajúci:</b> SPACE GUARDIAN, računalniško programiranje, d.o.o., Ulica Hermana Potočnika 5, 1000 Ljubljana, Slovinsko, zapísaná v obchodnom registri Okresného súdu v Ľubľane. Identifikačné číslo 9850538000, IČ DPH SI42765153. Kontakt: <eposta>info@slff.eu</eposta>.',
     kupis:
       '<b>Čo kupuješ.</b> Modrú fajku pri mene hráča a doplnky profilu (dlhší popis, odkazy, banner, farba, zvýraznený zápas alebo štatistika, odkaz fanúšikom). Ročné predplatné stojí 9,99 € a každý rok sa automaticky obnoví. Kúpa navždy stojí 29 € jednorazovo a platí, kým SLFF túto službu ponúka. Ku kúpe navždy môžeš pridať vytlačený odznak s menom za 5 € a poštovné 2 € (Slovinsko) alebo 4 € (iná krajina EÚ). Posielame len do krajín EÚ, doručenie zvyčajne trvá 2 až 3 týždne. Všetky ceny sú vrátane DPH.',
     placilo:
@@ -230,8 +230,8 @@ export const racun: NonNullable<Prevod['racun']> = {
     konec:
       '<b>Kedy odznak končí.</b> Odznak končí, ak sa ukáže, že profil nie je tvoj a potvrdenie zrušíme, ak meno hráča na jeho žiadosť alebo žiadosť zväzu skryjeme, alebo ak zmažeš účet. Predplatné sa vtedy automaticky zastaví a už sa neúčtuje. Ak platbu napadneš v banke (chargeback), odznak sa odoberie.',
     vracila:
-      '<b>Vrátenie peňazí.</b> Pri zneužití alebo nepravdivom potvrdení profilu peniaze nevraciame. Ak odznak skončí našou chybou, na žiadosť zväzu alebo preto, že službu zrušíme, pri ročnom predplatnom vrátime pomernú časť za nevyužité mesiace a pri kúpe navždy celú sumu, ak sa to stane do 12 mesiacov od kúpy.',
+      '<b>Vrátenie peňazí.</b> Pri zneužití alebo nepravdivom potvrdení profilu peniaze nevraciame. Ak odznak skončí našou chybou, na žiadosť zväzu alebo preto, že službu zrušíme, pri ročnom predplatnom vrátime pomernú časť za nevyužité mesiace. Pri kúpe navždy vrátime celú sumu v prvých 12 mesiacoch od kúpy, neskôr pomernú časť zostatku do 5 rokov od kúpy. Vytlačený odznak a poštovné pri zrušení služby nevraciame (odznak zostane tvoj), len pri vade.',
     pritozbe:
-      '<b>Otázky a reklamácie.</b> Napíš na <eposta>info@slff.eu</eposta>, odpovieme do niekoľkých pracovných dní. Platí slovinské právo; tým neprichádzaš o ochranu, ktorú ti dáva právo krajiny, v ktorej žiješ.',
+      '<b>Otázky a reklamácie.</b> Napíš na <eposta>info@slff.eu</eposta>, odpovieme do 8 pracovných dní. Neuznávame žiadny subjekt alternatívneho riešenia spotrebiteľských sporov. Platí slovinské právo; tým neprichádzaš o ochranu, ktorú ti dáva právo krajiny, v ktorej žiješ.',
   },
 }

@@ -2553,6 +2553,18 @@ reset role;
 select pg_temp.preveri('plačila: po 90 dneh od pošiljanja ostane le država',
   (select naslov = '{"country":"SI"}'::jsonb from narocila_znack where stripe_checkout_id = 'cs_2'));
 
+-- Obviselo naročilo (za_tisk): naslov ostane do 12 mesecev od naročila.
+insert into narocila_znack (preverjeni_racun_id, player_id, ime_na_znacki, naslov, stripe_checkout_id, status, created_at)
+values
+ (-925022, -925010, 'Obviselo', '{"name":"X","line1":"Glavna 1","city":"Kranj","country":"SI"}', 'cs_z4', 'za_tisk', now() - interval '13 months'),
+ (-925022, -925010, 'Sveže', '{"name":"X","line1":"Glavna 1","city":"Kranj","country":"SI"}', 'cs_z5', 'za_tisk', now() - interval '11 months');
+set local role service_role;
+select preverjen_pocisti_naslove();
+reset role;
+select pg_temp.preveri('plačila: naročilo v za_tisk po 12 mesecih obdrži le državo, mlajše ves naslov',
+  (select naslov = '{"country":"SI"}'::jsonb from narocila_znack where stripe_checkout_id = 'cs_z4')
+  and (select naslov->>'city' = 'Kranj' from narocila_znack where stripe_checkout_id = 'cs_z5'));
+
 do $$
 declare v_napak int;
 begin

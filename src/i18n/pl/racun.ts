@@ -154,7 +154,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   izbris: {
     naslov: 'Usuwanie konta',
     moraPrijava: 'Aby usunąć konto, musisz się <prijava>zalogować</prijava>.',
-    opis: 'Usuniemy konto {email}: profil, wszystkie twoje drużyny z historią punktów, głosy i miniligi, które utworzyłeś. Usunięcia nie można cofnąć.',
+    opis: 'Usuniemy konto {email}: profil, wszystkie twoje drużyny z historią punktów, głosy i miniligi, które utworzyłeś. Usunięcia nie można cofnąć. Usunięcie konta kończy też odznakę zweryfikowanego zawodnika, a subskrypcja zatrzymuje się bez zwrotu pieniędzy.',
     gumb: 'Usuń konto',
     potrdi: 'Tak, usuń na zawsze',
     preklici: 'Anuluj',
@@ -195,17 +195,17 @@ export const racun: NonNullable<Prevod['racun']> = {
       'Zdjęcie na stronie głównej jest autorstwa Abigail Keenan i zostało opublikowane na <unsplash>Unsplash</unsplash> na ich licencji, która pozwala na swobodne użycie. Nie przedstawia zawodników naszych lig.',
     praviceNaslov: 'Twoje prawa',
     pravice:
-      'Konto i wszystkie swoje dane możesz w każdej chwili usunąć sam: w menu konta wybierz <b>Usuń konto</b> (slff.eu/account). W sprawie poprawienia nazwy wyświetlanej lub jeśli usunięcie się nie powiedzie, napisz na <eposta>info@slff.eu</eposta>. Po usunięciu znika też twoja drużyna z rankingu.',
+      'Konto i wszystkie swoje dane możesz w każdej chwili usunąć sam: w menu konta wybierz <b>Usuń konto</b> (slff.eu/account). W sprawie poprawienia nazwy wyświetlanej lub jeśli usunięcie się nie powiedzie, napisz na <eposta>info@slff.eu</eposta>. Po usunięciu znika też twoja drużyna z rankingu. Zapis zakupu odznaki zweryfikowanego zawodnika zostaje przez 10 lat, jak wymagają przepisy o rachunkowości, a adres dostawy zgodnie z zasadą powyżej.',
     pravilaNaslov: 'Zasady gry',
     pravila:
       'Jeden człowiek, jedno konto. Głosowanie o asystach i pozycjach służy prawdziwym poprawkom — celowo błędne głosowanie psuje grę wszystkim i może skończyć się usunięciem konta. Punktacja i ceny mogą się w trakcie sezonu zmienić, jeśli okaże się, że coś jest niesprawiedliwe; takie zmiany ogłosimy.',
     jamstvoNaslov: 'Bez gwarancji',
     jamstvo:
-      'Strona działa tak, jak działa. Staramy się, by dane były poprawne, a strona dostępna, ale nie możemy tego zagwarantować — protokoły bywają opóźnione, a statystyki mogą zawierać błędy.',
+      'Strona działa tak, jak działa. Staramy się, by dane były poprawne, a strona dostępna, ale nie możemy tego zagwarantować — protokoły bywają opóźnione, a statystyki mogą zawierać błędy. Dotyczy to darmowej gry. Usługi płatne podlegają warunkom z sekcji Usługi płatne i twoim ustawowym prawom konsumenta.',
     kajJePlacljivo:
       'Jedyną płatną rzeczą jest nieobowiązkowa odznaka zweryfikowanego zawodnika (zob. niżej Usługi płatne).',
     podatkiPlacilo:
-      '<b>Zakup odznaki zweryfikowanego zawodnika (tylko jeśli kupisz).</b> Zapis zakupu (co, kiedy, kwota i twój identyfikator klienta w Stripe) przechowujemy przez 10 lat, jak wymagają przepisy o rachunkowości. Adres dostawy drukowanej odznaki przechowujemy przez 90 dni od wysyłki, potem zostaje tylko kraj.',
+      '<b>Zakup odznaki zweryfikowanego zawodnika (tylko jeśli kupisz).</b> Zapis zakupu (co, kiedy, kwota i twój identyfikator klienta w Stripe) przechowujemy przez 10 lat, jak wymagają przepisy o rachunkowości. Adres dostawy drukowanej odznaki przechowujemy przez 90 dni od wysyłki lub anulowania zamówienia i najdłużej 12 miesięcy od zamówienia, potem zostaje tylko kraj.',
     dostopStripe:
       'Płatności za odznakę zweryfikowanego zawodnika obsługuje <b>Stripe</b> (Stripe Payments Europe, Irlandia): otrzymuje twoje imię i nazwisko, e-mail, adres rozliczeniowy, a przy drukowanej odznace adres dostawy. Dane karty wpisujesz bezpośrednio w Stripe, my ich nie widzimy.',
     placljivoNaslov:
@@ -213,7 +213,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     placljivoUvod:
       'Gra jest i pozostanie darmowa. Płatna jest tylko nieobowiązkowa odznaka zweryfikowanego zawodnika, którą może kupić zawodnik, który potwierdził, że profil jest jego. Odznaka nigdy nie wpływa na punkty, ceny, drużyny fantasy ani zasady gry. Te warunki dotyczą tego zakupu.',
     prodajalec:
-      '<b>Sprzedawca:</b> SPACE GUARDIAN, računalniško programiranje, d.o.o., Ulica Hermana Potočnika 5, 1000 Ljubljana, Słowenia. Numer rejestrowy 9850538000, NIP UE SI42765153. Kontakt: <eposta>info@slff.eu</eposta>.',
+      '<b>Sprzedawca:</b> SPACE GUARDIAN, računalniško programiranje, d.o.o., Ulica Hermana Potočnika 5, 1000 Ljubljana, Słowenia, wpisana do rejestru sądowego prowadzonego przez Sąd Okręgowy w Lublanie. Numer rejestrowy 9850538000, NIP UE SI42765153. Kontakt: <eposta>info@slff.eu</eposta>.',
     kupis:
       '<b>Co kupujesz.</b> Niebieski znaczek przy nazwisku zawodnika i dodatki profilu (dłuższy opis, linki, baner, kolor, wyróżniony mecz lub statystyka, wiadomość do kibiców). Subskrypcja roczna kosztuje 9,99 € i odnawia się automatycznie co roku. Zakup na zawsze kosztuje jednorazowo 29 € i obowiązuje, dopóki SLFF oferuje tę usługę. Do zakupu na zawsze możesz dodać drukowaną odznakę z imieniem za 5 € plus wysyłka 2 € (Słowenia) lub 4 € (inny kraj UE). Wysyłamy tylko do krajów UE, dostawa trwa zwykle 2-3 tygodnie. Wszystkie ceny zawierają VAT.',
     placilo:
@@ -225,8 +225,8 @@ export const racun: NonNullable<Prevod['racun']> = {
     konec:
       '<b>Kiedy odznaka wygasa.</b> Odznaka wygasa, jeśli okaże się, że profil nie jest twój i cofniemy potwierdzenie, jeśli nazwisko zawodnika ukryjemy na jego prośbę lub prośbę związku albo jeśli usuniesz konto. Subskrypcja zatrzymuje się wtedy automatycznie i nie jest już pobierana. Jeśli zakwestionujesz płatność w banku (chargeback), odznaka zostaje odebrana.',
     vracila:
-      '<b>Zwroty.</b> W razie nadużycia lub fałszywego potwierdzenia profilu nie zwracamy pieniędzy. Jeśli odznaka wygaśnie z naszej winy, na prośbę związku lub dlatego, że wycofamy usługę, przy subskrypcji rocznej zwracamy proporcjonalną część za niewykorzystane miesiące, a przy zakupie na zawsze całą kwotę, jeśli stanie się to w ciągu 12 miesięcy od zakupu.',
+      '<b>Zwroty.</b> W razie nadużycia lub fałszywego potwierdzenia profilu nie zwracamy pieniędzy. Jeśli odznaka wygaśnie z naszej winy, na prośbę związku lub dlatego, że wycofamy usługę, przy subskrypcji rocznej zwracamy proporcjonalną część za niewykorzystane miesiące. Przy zakupie na zawsze zwracamy całą kwotę w ciągu pierwszych 12 miesięcy od zakupu, a później proporcjonalną część pozostałej części 5 lat od zakupu. Drukowanej odznaki i kosztów wysyłki przy wycofaniu usługi nie zwracamy (odznaka zostaje twoja), tylko w razie wady.',
     pritozbe:
-      '<b>Pytania i reklamacje.</b> Napisz na <eposta>info@slff.eu</eposta>, odpowiemy w ciągu kilku dni roboczych. Obowiązuje prawo słoweńskie; nie pozbawia cię to ochrony, którą daje ci prawo kraju, w którym mieszkasz.',
+      '<b>Pytania i reklamacje.</b> Napisz na <eposta>info@slff.eu</eposta>, odpowiemy w ciągu 8 dni roboczych. Nie uznajemy żadnego podmiotu pozasądowego rozwiązywania sporów konsumenckich. Obowiązuje prawo słoweńskie; nie pozbawia cię to ochrony, którą daje ci prawo kraju, w którym mieszkasz.',
   },
 }

@@ -158,7 +158,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   izbris: {
     naslov: 'Kustuta konto',
     moraPrijava: 'Konto kustutamiseks pead <prijava>sisse logima</prijava>.',
-    opis: 'Kustutame konto {email}: sinu profiili, kõik sinu koosseisud koos punktide ajalooga, sinu hääled ja sinu loodud miniliigad. Seda ei saa tagasi võtta.',
+    opis: 'Kustutame konto {email}: sinu profiili, kõik sinu koosseisud koos punktide ajalooga, sinu hääled ja sinu loodud miniliigad. Seda ei saa tagasi võtta. Kustutamisega lõpeb ka kinnitatud mängija märk ja tellimus peatub ilma tagastuseta.',
     gumb: 'Kustuta konto',
     potrdi: 'Jah, kustuta jäädavalt',
     preklici: 'Tühista',
@@ -199,17 +199,17 @@ export const racun: NonNullable<Prevod['racun']> = {
       'Avalehe foto on teinud Abigail Keenan ja see on avaldatud teenuses <unsplash>Unsplash</unsplash> selle litsentsi alusel, mis lubab vaba kasutust. Fotol pole meie liigade mängijaid.',
     praviceNaslov: 'Sinu õigused',
     pravice:
-      'Saad oma konto ja kõik oma andmed igal ajal ise kustutada: vali kontomenüüs <b>Kustuta konto</b> (slff.eu/account). Kuvatava nime parandamiseks või kui kustutamine ebaõnnestub, kirjuta meile aadressile <eposta>info@slff.eu</eposta>. Konto kustutamisel kaob ka sinu meeskond edetabelist.',
+      'Saad oma konto ja kõik oma andmed igal ajal ise kustutada: vali kontomenüüs <b>Kustuta konto</b> (slff.eu/account). Kuvatava nime parandamiseks või kui kustutamine ebaõnnestub, kirjuta meile aadressile <eposta>info@slff.eu</eposta>. Konto kustutamisel kaob ka sinu meeskond edetabelist. Kinnitatud mängija märgi ostu kirje jääb alles 10 aastaks, nagu nõuab raamatupidamisseadus, ja tarneaadress ülaltoodud reegli järgi.',
     pravilaNaslov: 'Mängureeglid',
     pravila:
       'Üks inimene, üks konto. Hääletus resultatiivsete söötude ja positsioonide üle on mõeldud päris parandusteks: meelega valed hääled rikuvad mängu kõigile ja võivad viia konto eemaldamiseni. Punktiarvestus ja hinnad võivad hooaja jooksul muutuda, kui midagi osutub ebaõiglaseks; sellistest muudatustest anname teada.',
     jamstvoNaslov: 'Garantiid pole',
     jamstvo:
-      'Leht töötab nii, nagu töötab. Anname endast parima, et andmed oleksid õiged ja leht kättesaadav, kuid garanteerida me seda ei saa: mänguprotokollid võivad hilineda ja statistikas võib olla vigu.',
+      'Leht töötab nii, nagu töötab. Anname endast parima, et andmed oleksid õiged ja leht kättesaadav, kuid garanteerida me seda ei saa: mänguprotokollid võivad hilineda ja statistikas võib olla vigu. See kehtib tasuta mängu kohta. Tasulistele teenustele kehtivad jaotise Tasulised teenused tingimused ja sinu seadusest tulenevad tarbijaõigused.',
     kajJePlacljivo:
       'Ainus tasuline asi on vabatahtlik kinnitatud mängija märk (vt allpool Tasulised teenused).',
     podatkiPlacilo:
-      '<b>Kinnitatud mängija märgi ost (ainult kui ostad).</b> Ostu kirjet (mida, millal, summa ja sinu kliendi tunnus Stripe’is) hoiame 10 aastat, nagu nõuab raamatupidamisseadus. Trükitud märgi tarneaadressi hoiame 90 päeva pärast saatmist, seejärel jääb alles ainult riik.',
+      '<b>Kinnitatud mängija märgi ost (ainult kui ostad).</b> Ostu kirjet (mida, millal, summa ja sinu kliendi tunnus Stripe’is) hoiame 10 aastat, nagu nõuab raamatupidamisseadus. Trükitud märgi tarneaadressi hoiame 90 päeva pärast saatmist või tellimuse tühistamist ja kõige rohkem 12 kuud pärast tellimist, seejärel jääb alles ainult riik.',
     dostopStripe:
       'Kinnitatud mängija märgi makseid töötleb <b>Stripe</b> (Stripe Payments Europe, Iirimaa): see saab sinu nime, e-posti, arveldusaadressi ja trükitud märgi puhul tarneaadressi. Kaardiandmed sisestad otse Stripe’is, meie neid ei näe.',
     placljivoNaslov:
@@ -217,7 +217,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     placljivoUvod:
       'Mäng on ja jääb tasuta. Tasuline on ainult vabatahtlik kinnitatud mängija märk, mida saab osta mängija, kes on kinnitanud, et profiil on tema oma. Märk ei mõjuta kunagi punkte, hindu, fantaasiameeskondi ega mängureegleid. Need tingimused kehtivad selle ostu kohta.',
     prodajalec:
-      '<b>Müüja:</b> SPACE GUARDIAN, računalniško programiranje, d.o.o., Ulica Hermana Potočnika 5, 1000 Ljubljana, Sloveenia. Registrikood 9850538000, KMKR number SI42765153. Kontakt: <eposta>info@slff.eu</eposta>.',
+      '<b>Müüja:</b> SPACE GUARDIAN, računalniško programiranje, d.o.o., Ulica Hermana Potočnika 5, 1000 Ljubljana, Sloveenia, kantud Ljubljana ringkonnakohtu registrisse. Registrikood 9850538000, KMKR number SI42765153. Kontakt: <eposta>info@slff.eu</eposta>.',
     kupis:
       '<b>Mida ostad.</b> Sinise linnukese mängija nime juurde ja profiili lisad (pikem kirjeldus, lingid, bänner, värv, esiletõstetud mäng või statistika, sõnum fännidele). Aastatellimus maksab 9,99 € ja uueneb igal aastal automaatselt. Igavene ost maksab ühekordselt 29 € ja kehtib seni, kuni SLFF seda teenust pakub. Igavese ostu juurde saad lisada trükitud nimega märgi hinnaga 5 €, millele lisandub postikulu 2 € (Sloveenia) või 4 € (muu ELi riik). Saadame ainult ELi riikidesse, kohaletoimetamine võtab tavaliselt 2-3 nädalat. Kõik hinnad sisaldavad käibemaksu.',
     placilo:
@@ -229,8 +229,8 @@ export const racun: NonNullable<Prevod['racun']> = {
     konec:
       '<b>Millal märk lõpeb.</b> Märk lõpeb, kui selgub, et profiil ei ole sinu oma ja tühistame kinnituse, kui mängija nimi peidetakse tema või liidu soovil või kui kustutad oma konto. Tellimus peatub siis automaatselt ja tasu enam ei võeta. Kui vaidlustad makse oma pangas (chargeback), märk eemaldatakse.',
     vracila:
-      '<b>Tagastused.</b> Kuritarvituse või vale profiilikinnituse korral raha ei tagastata. Kui märk lõpeb meie vea tõttu, liidu soovil või seetõttu, et lõpetame teenuse, tagastame aastatellimuse kasutamata kuude eest proportsionaalse osa ja igavese ostu puhul kogu summa, kui see juhtub 12 kuu jooksul pärast ostu.',
+      '<b>Tagastused.</b> Kuritarvituse või vale profiilikinnituse korral raha ei tagastata. Kui märk lõpeb meie vea tõttu, liidu soovil või seetõttu, et lõpetame teenuse, tagastame aastatellimuse kasutamata kuude eest proportsionaalse osa. Igavese ostu puhul tagastame esimese 12 kuu jooksul pärast ostu kogu summa, hiljem proportsionaalse osa ostust arvates 5 aastast järelejäänud ajast. Trükitud märki ja postikulu teenuse lõpetamisel ei tagastata (märk jääb sulle), ainult puuduse korral.',
     pritozbe:
-      '<b>Küsimused ja kaebused.</b> Kirjuta aadressil <eposta>info@slff.eu</eposta>, vastame mõne tööpäeva jooksul. Kehtib Sloveenia õigus; see ei võta sinult kaitset, mida annab sinu elukohariigi õigus.',
+      '<b>Küsimused ja kaebused.</b> Kirjuta aadressil <eposta>info@slff.eu</eposta>, vastame 8 tööpäeva jooksul. Me ei tunnusta ühtegi tarbijavaidluste kohtuvälise lahendamise üksust. Kehtib Sloveenia õigus; see ei võta sinult kaitset, mida annab sinu elukohariigi õigus.',
   },
 }

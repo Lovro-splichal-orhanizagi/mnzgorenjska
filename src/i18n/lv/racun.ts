@@ -154,7 +154,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   izbris: {
     naslov: 'Konta dzēšana',
     moraPrijava: 'Lai dzēstu kontu, tev <prijava>jāpiesakās</prijava>.',
-    opis: 'Mēs izdzēsīsim kontu {email}: profilu, visas tavas komandas ar punktu vēsturi, balsis un minilīgas, ko esi izveidojis. Dzēšanu nevar atsaukt.',
+    opis: 'Mēs izdzēsīsim kontu {email}: profilu, visas tavas komandas ar punktu vēsturi, balsis un minilīgas, ko esi izveidojis. Dzēšanu nevar atsaukt. Dzēšot kontu, beidzas arī pārbaudīta spēlētāja nozīmīte, un abonements apstājas bez atmaksas.',
     gumb: 'Dzēst kontu',
     potrdi: 'Jā, dzēst uz visiem laikiem',
     preklici: 'Atcelt',
@@ -195,17 +195,17 @@ export const racun: NonNullable<Prevod['racun']> = {
       'Sākumlapas fotoattēla autore ir Abigail Keenan, un tas ir publicēts <unsplash>Unsplash</unsplash> ar viņu licenci, kas atļauj brīvu izmantošanu. Tajā nav redzami mūsu līgu spēlētāji.',
     praviceNaslov: 'Tavas tiesības',
     pravice:
-      'Kontu un visus savus datus vari jebkurā brīdī izdzēst pats: konta izvēlnē izvēlies <b>Konta dzēšana</b> (slff.eu/account). Lai labotu redzamo vārdu vai ja dzēšana neizdodas, raksti mums uz <eposta>info@slff.eu</eposta>. Pēc dzēšanas no kopvērtējuma pazūd arī tava komanda.',
+      'Kontu un visus savus datus vari jebkurā brīdī izdzēst pats: konta izvēlnē izvēlies <b>Konta dzēšana</b> (slff.eu/account). Lai labotu redzamo vārdu vai ja dzēšana neizdodas, raksti mums uz <eposta>info@slff.eu</eposta>. Pēc dzēšanas no kopvērtējuma pazūd arī tava komanda. Pārbaudīta spēlētāja nozīmītes pirkuma ieraksts paliek 10 gadus, kā to prasa grāmatvedības likumi, bet piegādes adrese saskaņā ar iepriekš minēto noteikumu.',
     pravilaNaslov: 'Spēles noteikumi',
     pravila:
       'Viens cilvēks, viens konts. Balsošana par rezultatīvajām piespēlēm un pozīcijām ir paredzēta īstiem labojumiem; apzināti nepareiza balsošana sabojā spēli visiem un var novest pie konta dzēšanas. Punktu skaitīšana un cenas sezonas laikā var mainīties, ja izrādās, ka kaut kas ir netaisnīgi; par šādām izmaiņām paziņosim.',
     jamstvoNaslov: 'Bez garantijas',
     jamstvo:
-      'Lapa darbojas, kā darbojas. Mēs cenšamies, lai dati būtu pareizi un lapa pieejama, bet garantēt to nevaram: protokoli mēdz kavēties, un statistikā var būt kļūdas.',
+      'Lapa darbojas, kā darbojas. Mēs cenšamies, lai dati būtu pareizi un lapa pieejama, bet garantēt to nevaram: protokoli mēdz kavēties, un statistikā var būt kļūdas. Tas attiecas uz bezmaksas spēli. Maksas pakalpojumiem piemēro noteikumus sadaļā Maksas pakalpojumi un tavas likumā noteiktās patērētāja tiesības.',
     kajJePlacljivo:
       'Vienīgais maksas elements ir neobligātā pārbaudīta spēlētāja nozīmīte (skatīt zemāk Maksas pakalpojumi).',
     podatkiPlacilo:
-      '<b>Pārbaudīta spēlētāja nozīmītes pirkums (tikai ja pērc).</b> Pirkuma ierakstu (ko, kad, summa un tavs Stripe klienta identifikators) glabājam 10 gadus, kā to prasa grāmatvedības likumi. Drukātās nozīmītes piegādes adresi glabājam 90 dienas pēc nosūtīšanas, pēc tam paliek tikai valsts.',
+      '<b>Pārbaudīta spēlētāja nozīmītes pirkums (tikai ja pērc).</b> Pirkuma ierakstu (ko, kad, summa un tavs Stripe klienta identifikators) glabājam 10 gadus, kā to prasa grāmatvedības likumi. Drukātās nozīmītes piegādes adresi glabājam 90 dienas pēc nosūtīšanas vai pasūtījuma atcelšanas un ne ilgāk kā 12 mēnešus pēc pasūtījuma, pēc tam paliek tikai valsts.',
     dostopStripe:
       'Pārbaudīta spēlētāja nozīmītes maksājumus apstrādā <b>Stripe</b> (Stripe Payments Europe, Īrija): tas saņem tavu vārdu, e-pastu, norēķinu adresi un drukātai nozīmītei piegādes adresi. Kartes datus tu ievadi tieši Stripe, mēs tos neredzam.',
     placljivoNaslov:
@@ -213,7 +213,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     placljivoUvod:
       'Spēle ir un paliks bez maksas. Maksas ir tikai neobligātā pārbaudīta spēlētāja nozīmīte, ko var nopirkt spēlētājs, kurš apstiprinājis, ka profils ir viņa. Nozīmīte nekad neietekmē punktus, cenas, fantāzijas komandas vai spēles noteikumus. Šie noteikumi attiecas uz šo pirkumu.',
     prodajalec:
-      '<b>Pārdevējs:</b> SPACE GUARDIAN, računalniško programiranje, d.o.o., Ulica Hermana Potočnika 5, 1000 Ljubljana, Slovēnija. Reģistrācijas numurs 9850538000, PVN numurs SI42765153. Kontakti: <eposta>info@slff.eu</eposta>.',
+      '<b>Pārdevējs:</b> SPACE GUARDIAN, računalniško programiranje, d.o.o., Ulica Hermana Potočnika 5, 1000 Ljubljana, Slovēnija, reģistrēta Ļubļanas apgabaltiesas tiesu reģistrā. Reģistrācijas numurs 9850538000, PVN numurs SI42765153. Kontakti: <eposta>info@slff.eu</eposta>.',
     kupis:
       '<b>Ko tu pērc.</b> Zilu ķeksīti pie spēlētāja vārda un profila papildinājumus (garāks apraksts, saites, reklāmkarogs, krāsa, izcelta spēle vai statistika, ziņa līdzjutējiem). Gada abonements maksā 9,99 € un katru gadu automātiski atjaunojas. Pirkums uz visiem laikiem maksā 29 € vienreiz un ir spēkā, kamēr SLFF šo pakalpojumu piedāvā. Pirkumam uz visiem laikiem vari pievienot drukātu nozīmīti ar vārdu par 5 € un pasta izdevumiem 2 € (Slovēnija) vai 4 € (cita ES valsts). Sūtām tikai uz ES valstīm, piegāde parasti aizņem 2-3 nedēļas. Visas cenas ietver PVN.',
     placilo:
@@ -225,8 +225,8 @@ export const racun: NonNullable<Prevod['racun']> = {
     konec:
       '<b>Kad nozīmīte beidzas.</b> Nozīmīte beidzas, ja izrādās, ka profils nav tavs un mēs atsaucam apstiprinājumu, ja spēlētāja vārdu paslēpjam pēc viņa vai federācijas lūguma vai ja tu izdzēs savu kontu. Abonements tad automātiski apstājas un vairs netiek iekasēts. Ja apstrīdi maksājumu savā bankā (chargeback), nozīmīte tiek noņemta.',
     vracila:
-      '<b>Atmaksas.</b> Ļaunprātīgas izmantošanas vai nepatiesa profila apstiprinājuma gadījumā naudu neatmaksājam. Ja nozīmīte beidzas mūsu kļūdas dēļ, pēc federācijas lūguma vai tāpēc, ka pārtraucam pakalpojumu, gada abonementam atmaksājam proporcionālu daļu par neizmantotajiem mēnešiem, bet pirkumam uz visiem laikiem visu summu, ja tas notiek 12 mēnešu laikā pēc pirkuma.',
+      '<b>Atmaksas.</b> Ļaunprātīgas izmantošanas vai nepatiesa profila apstiprinājuma gadījumā naudu neatmaksājam. Ja nozīmīte beidzas mūsu kļūdas dēļ, pēc federācijas lūguma vai tāpēc, ka pārtraucam pakalpojumu, gada abonementam atmaksājam proporcionālu daļu par neizmantotajiem mēnešiem. Pirkumam uz visiem laikiem pirmajos 12 mēnešos pēc pirkuma atmaksājam visu summu, vēlāk proporcionālu daļu no atlikušā laika līdz 5 gadiem no pirkuma. Drukāto nozīmīti un pasta izdevumus pakalpojuma pārtraukšanas gadījumā neatmaksājam (nozīmīte paliek tev), tikai defekta gadījumā.',
     pritozbe:
-      '<b>Jautājumi un sūdzības.</b> Raksti uz <eposta>info@slff.eu</eposta>, atbildam dažu darba dienu laikā. Piemēro Slovēnijas tiesības; tas tev neatņem aizsardzību, ko sniedz tavas dzīvesvietas valsts tiesības.',
+      '<b>Jautājumi un sūdzības.</b> Raksti uz <eposta>info@slff.eu</eposta>, atbildam 8 darba dienu laikā. Mēs neatzīstam nevienu patērētāju strīdu ārpustiesas risināšanas struktūru. Piemēro Slovēnijas tiesības; tas tev neatņem aizsardzību, ko sniedz tavas dzīvesvietas valsts tiesības.',
   },
 }

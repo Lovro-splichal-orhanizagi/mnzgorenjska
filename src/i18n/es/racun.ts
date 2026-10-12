@@ -154,7 +154,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   izbris: {
     naslov: 'Eliminar cuenta',
     moraPrijava: 'Para eliminar la cuenta tienes que <prijava>iniciar sesión</prijava>.',
-    opis: 'Eliminaremos la cuenta {email}: el perfil, todos tus equipos con su historial de puntos, tus votos y las miniligas que hayas creado. No se puede deshacer.',
+    opis: 'Eliminaremos la cuenta {email}: el perfil, todos tus equipos con su historial de puntos, tus votos y las miniligas que hayas creado. No se puede deshacer. Al borrar la cuenta también termina la insignia de jugador verificado, y la suscripción se detiene sin reembolso.',
     gumb: 'Eliminar cuenta',
     potrdi: 'Sí, eliminar para siempre',
     preklici: 'Cancelar',
@@ -195,17 +195,17 @@ export const racun: NonNullable<Prevod['racun']> = {
       'La fotografía de la página de inicio es obra de Abigail Keenan y está publicada en <unsplash>Unsplash</unsplash> con su licencia, que permite el uso libre. No muestra a jugadores de nuestras ligas.',
     praviceNaslov: 'Tus derechos',
     pravice:
-      'Puedes eliminar tu cuenta y todos tus datos tú mismo cuando quieras: en el menú de la cuenta elige <b>Eliminar cuenta</b> (slff.eu/account). Para corregir tu nombre visible o si la eliminación falla, escríbenos a <eposta>info@slff.eu</eposta>. Al eliminarla, tu equipo también desaparece de la clasificación.',
+      'Puedes eliminar tu cuenta y todos tus datos tú mismo cuando quieras: en el menú de la cuenta elige <b>Eliminar cuenta</b> (slff.eu/account). Para corregir tu nombre visible o si la eliminación falla, escríbenos a <eposta>info@slff.eu</eposta>. Al eliminarla, tu equipo también desaparece de la clasificación. El registro de la compra de la insignia de jugador verificado se conserva 10 años, como exige la normativa contable, y la dirección de envío según la regla de arriba.',
     pravilaNaslov: 'Reglas del juego',
     pravila:
       'Una persona, una cuenta. La votación de asistencias y posiciones sirve para corregir de verdad; votar mal a propósito estropea el juego a todos y puede llevar a eliminar la cuenta. La puntuación y los precios pueden cambiar durante la temporada si algo resulta injusto; anunciaremos esos cambios.',
     jamstvoNaslov: 'Sin garantía',
     jamstvo:
-      'La web funciona tal cual. Nos esforzamos por que los datos sean correctos y por que esté disponible, pero no podemos garantizarlo: las actas pueden llegar tarde y las estadísticas pueden contener errores.',
+      'La web funciona tal cual. Nos esforzamos por que los datos sean correctos y por que esté disponible, pero no podemos garantizarlo: las actas pueden llegar tarde y las estadísticas pueden contener errores. Esto se aplica al juego gratuito. Los servicios de pago se rigen por las condiciones de la sección Servicios de pago y por tus derechos legales como consumidor.',
     kajJePlacljivo:
       'Lo único de pago es la insignia opcional de jugador verificado (ver Servicios de pago abajo).',
     podatkiPlacilo:
-      '<b>Compra de la insignia de jugador verificado (solo si la compras).</b> Guardamos el registro de la compra (qué, cuándo, importe y tu identificador de cliente en Stripe) durante 10 años, como exige la normativa contable. Guardamos la dirección de envío de la insignia impresa durante 90 días tras el envío; después solo queda el país.',
+      '<b>Compra de la insignia de jugador verificado (solo si la compras).</b> Guardamos el registro de la compra (qué, cuándo, importe y tu identificador de cliente en Stripe) durante 10 años, como exige la normativa contable. Guardamos la dirección de envío de la insignia impresa durante 90 días tras el envío o la cancelación del pedido, y como máximo 12 meses desde el pedido; después solo queda el país.',
     dostopStripe:
       'Los pagos de la insignia de jugador verificado los procesa <b>Stripe</b> (Stripe Payments Europe, Irlanda): recibe tu nombre, tu correo, la dirección de facturación y, para la insignia impresa, la dirección de envío. Los datos de la tarjeta los introduces directamente en Stripe; nosotros no los vemos.',
     placljivoNaslov:
@@ -213,7 +213,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     placljivoUvod:
       'El juego es y seguirá siendo gratis. Solo es de pago la insignia opcional de jugador verificado, que puede comprar el jugador que ha confirmado que el perfil es suyo. La insignia nunca influye en los puntos, los precios, los equipos fantasy ni las reglas del juego. Estas condiciones se aplican a esa compra.',
     prodajalec:
-      '<b>Vendedor:</b> SPACE GUARDIAN, računalniško programiranje, d.o.o., Ulica Hermana Potočnika 5, 1000 Ljubljana, Eslovenia. Número de registro 9850538000, NIF-IVA SI42765153. Contacto: <eposta>info@slff.eu</eposta>.',
+      '<b>Vendedor:</b> SPACE GUARDIAN, računalniško programiranje, d.o.o., Ulica Hermana Potočnika 5, 1000 Ljubljana, Eslovenia, inscrita en el registro judicial del Tribunal de Distrito de Liubliana. Número de registro 9850538000, NIF-IVA SI42765153. Contacto: <eposta>info@slff.eu</eposta>.',
     kupis:
       '<b>Qué compras.</b> Un check azul junto al nombre del jugador y extras de perfil (descripción más larga, enlaces, banner, color, un partido o una estadística destacados, un mensaje a la afición). La suscripción anual cuesta 9,99 € y se renueva automáticamente cada año. La opción para siempre cuesta 29 € una sola vez y vale mientras SLFF ofrezca este servicio. Con la opción para siempre puedes añadir una insignia impresa con tu nombre por 5 € más 2 € de envío (Eslovenia) o 4 € (otro país de la UE). Solo enviamos a países de la UE; la entrega suele tardar de 2 a 3 semanas. Todos los precios incluyen IVA.',
     placilo:
@@ -225,8 +225,8 @@ export const racun: NonNullable<Prevod['racun']> = {
     konec:
       '<b>Cuándo termina la insignia.</b> La insignia termina si resulta que el perfil no es tuyo y anulamos la confirmación, si ocultamos el nombre del jugador a petición suya o de la federación, o si borras tu cuenta. En ese caso la suscripción se detiene automáticamente y no se vuelve a cobrar. Si reclamas el pago ante tu banco (chargeback), se retira la insignia.',
     vracila:
-      '<b>Reembolsos.</b> No reembolsamos en caso de abuso o de una confirmación falsa del perfil. Si la insignia termina por un error nuestro, a petición de la federación o porque cerramos el servicio, devolvemos la parte proporcional de los meses no usados de la suscripción anual y el importe íntegro de la opción para siempre si ocurre en los 12 meses siguientes a la compra.',
+      '<b>Reembolsos.</b> No reembolsamos en caso de abuso o de una confirmación falsa del perfil. Si la insignia termina por un error nuestro, a petición de la federación o porque cerramos el servicio, devolvemos la parte proporcional de los meses no usados de la suscripción anual. En la opción para siempre devolvemos el importe íntegro durante los primeros 12 meses tras la compra y, después, la parte proporcional de lo que quede de 5 años desde la compra. La insignia impresa y el envío no se reembolsan si cerramos el servicio (la insignia sigue siendo tuya), solo en caso de defecto.',
     pritozbe:
-      '<b>Preguntas y reclamaciones.</b> Escribe a <eposta>info@slff.eu</eposta>; respondemos en pocos días laborables. Se aplica la ley eslovena; esto no te quita la protección que te da la ley del país donde vives.',
+      '<b>Preguntas y reclamaciones.</b> Escribe a <eposta>info@slff.eu</eposta>; respondemos en un plazo de 8 días hábiles. No reconocemos ninguna entidad de resolución extrajudicial de litigios de consumo. Se aplica la ley eslovena; esto no te quita la protección que te da la ley del país donde vives.',
   },
 }

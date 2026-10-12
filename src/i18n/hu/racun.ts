@@ -158,7 +158,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   izbris: {
     naslov: 'Fiók törlése',
     moraPrijava: 'A fiók törléséhez <prijava>jelentkezz be</prijava>.',
-    opis: 'Töröljük ezt a fiókot: {email}. Törlődik a profilod, minden csapatod a pontelőzményekkel, a szavazataid és az általad létrehozott miniligák. A törlés nem vonható vissza.',
+    opis: 'Töröljük ezt a fiókot: {email}. Törlődik a profilod, minden csapatod a pontelőzményekkel, a szavazataid és az általad létrehozott miniligák. A törlés nem vonható vissza. A törléssel az ellenőrzött játékos jelvény is megszűnik, az előfizetés pedig visszatérítés nélkül leáll.',
     gumb: 'Fiók törlése',
     potrdi: 'Igen, végleg törlöm',
     preklici: 'Mégse',
@@ -200,17 +200,17 @@ export const racun: NonNullable<Prevod['racun']> = {
       'A kezdőlap fotója Abigail Keenan munkája, és az <unsplash>Unsplash</unsplash> oldalon jelent meg az ő licencük alapján, amely szabad felhasználást enged. Nem a mi bajnokságaink játékosait ábrázolja.',
     praviceNaslov: 'A jogaid',
     pravice:
-      'A fiókodat és minden adatodat bármikor magad is törölheted: a fiók menüjében válaszd a <b>Fiók törlése</b> pontot (slff.eu/account). A megjelenített név javításához, vagy ha a törlés nem sikerül, írj nekünk: <eposta>info@slff.eu</eposta>. A fiók törlésével a csapatod is eltűnik a tabelláról.',
+      'A fiókodat és minden adatodat bármikor magad is törölheted: a fiók menüjében válaszd a <b>Fiók törlése</b> pontot (slff.eu/account). A megjelenített név javításához, vagy ha a törlés nem sikerül, írj nekünk: <eposta>info@slff.eu</eposta>. A fiók törlésével a csapatod is eltűnik a tabelláról. Az ellenőrzött játékos jelvény vásárlásának adatai a számviteli jogszabályok szerint 10 évig megmaradnak, a szállítási cím pedig a fenti szabály szerint.',
     pravilaNaslov: 'Játékszabályok',
     pravila:
       'Egy ember, egy fiók. A gólpasszokról és posztokról szóló szavazás valódi javításokra szolgál: a szándékosan hibás szavazat mindenkinek elrontja a játékot, és a fiók törléséhez vezethet. A pontozás és az árak a szezon közben változhatnak, ha valami igazságtalannak bizonyul; az ilyen változásokat bejelentjük.',
     jamstvoNaslov: 'Garancia nélkül',
     jamstvo:
-      'Az oldal úgy működik, ahogy működik. Igyekszünk, hogy az adatok pontosak legyenek és az oldal elérhető legyen, de ezt garantálni nem tudjuk: a jegyzőkönyvek késhetnek, a statisztikában pedig lehetnek hibák.',
+      'Az oldal úgy működik, ahogy működik. Igyekszünk, hogy az adatok pontosak legyenek és az oldal elérhető legyen, de ezt garantálni nem tudjuk: a jegyzőkönyvek késhetnek, a statisztikában pedig lehetnek hibák. Ez az ingyenes játékra vonatkozik. A fizetős szolgáltatásokra a Fizetős szolgáltatások részben leírt feltételek és a fogyasztói jogaid érvényesek.',
     kajJePlacljivo:
       'Az egyetlen fizetős dolog az ellenőrzött játékos jelvény, ami nem kötelező (lásd lent: Fizetős szolgáltatások).',
     podatkiPlacilo:
-      '<b>Ellenőrzött játékos jelvény vásárlása (csak ha veszel).</b> A vásárlás adatait (mit, mikor, mennyiért, és a Stripe vevőazonosítód) 10 évig őrizzük, ahogy a számviteli jogszabályok előírják. A nyomtatott jelvény szállítási címét a feladás után 90 napig őrizzük, utána csak az ország marad meg.',
+      '<b>Ellenőrzött játékos jelvény vásárlása (csak ha veszel).</b> A vásárlás adatait (mit, mikor, mennyiért, és a Stripe vevőazonosítód) 10 évig őrizzük, ahogy a számviteli jogszabályok előírják. A nyomtatott jelvény szállítási címét a feladás vagy a rendelés törlése után 90 napig, de legfeljebb a rendeléstől számított 12 hónapig őrizzük, utána csak az ország marad meg.',
     dostopStripe:
       'Az ellenőrzött játékos jelvény fizetését a <b>Stripe</b> (Stripe Payments Europe, Írország) kezeli: megkapja a neved, e-mail-címed, számlázási címed és nyomtatott jelvénynél a szállítási címet. A kártyaadatokat közvetlenül a Stripe-nál adod meg, mi nem látjuk őket.',
     placljivoNaslov:
@@ -218,7 +218,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     placljivoUvod:
       'A játék ingyenes, és az is marad. Csak az ellenőrzött játékos jelvény fizetős, ami nem kötelező, és azt az a játékos veheti meg, aki igazolta, hogy a profil az övé. A jelvény soha nem befolyásolja a pontokat, az árakat, a fantasy csapatokat vagy a játékszabályokat. Ezek a feltételek erre a vásárlásra vonatkoznak.',
     prodajalec:
-      '<b>Eladó:</b> SPACE GUARDIAN, računalniško programiranje, d.o.o., Ulica Hermana Potočnika 5, 1000 Ljubljana, Szlovénia. Cégjegyzékszám 9850538000, közösségi adószám SI42765153. Kapcsolat: <eposta>info@slff.eu</eposta>.',
+      '<b>Eladó:</b> SPACE GUARDIAN, računalniško programiranje, d.o.o., Ulica Hermana Potočnika 5, 1000 Ljubljana, Szlovénia, a Ljubljanai Kerületi Bíróság cégjegyzékében nyilvántartva. Cégjegyzékszám 9850538000, közösségi adószám SI42765153. Kapcsolat: <eposta>info@slff.eu</eposta>.',
     kupis:
       '<b>Mit veszel.</b> Kék pipát a játékos neve mellé és profilextrákat (hosszabb leírás, linkek, borítókép, szín, kiemelt meccs vagy statisztika, üzenet a szurkolóknak). Az éves előfizetés 9,99 €, és minden évben automatikusan megújul. Az örökre szóló vásárlás egyszeri 29 €, és addig érvényes, amíg az SLFF ezt a szolgáltatást kínálja. Az örökre szóló vásárláshoz névre szóló nyomtatott jelvényt is kérhetsz 5 €-ért, 2 € (Szlovénia) vagy 4 € (más EU-ország) postaköltséggel. Csak EU-országokba szállítunk, a kézbesítés általában 2-3 hét. Az árak tartalmazzák az áfát.',
     placilo:
@@ -230,8 +230,8 @@ export const racun: NonNullable<Prevod['racun']> = {
     konec:
       '<b>Mikor szűnik meg a jelvény.</b> A jelvény megszűnik, ha kiderül, hogy a profil nem a tiéd, és visszavonjuk az igazolást, ha a játékos nevét az ő vagy a szövetség kérésére elrejtjük, vagy ha törlöd a fiókodat. Az előfizetés ilyenkor automatikusan leáll, és többé nem terhelünk. Ha a fizetést a bankodnál vitatod (chargeback), a jelvényt visszavonjuk.',
     vracila:
-      '<b>Visszatérítés.</b> Visszaélés vagy hamis profiligazolás esetén nem adunk vissza pénzt. Ha a jelvény a mi hibánkból, a szövetség kérésére vagy a szolgáltatás megszüntetése miatt szűnik meg, éves előfizetésnél a fel nem használt hónapok arányos részét, örökre szóló vásárlásnál pedig a teljes összeget visszaadjuk, ha ez a vásárlástól számított 12 hónapon belül történik.',
+      '<b>Visszatérítés.</b> Visszaélés vagy hamis profiligazolás esetén nem adunk vissza pénzt. Ha a jelvény a mi hibánkból, a szövetség kérésére vagy a szolgáltatás megszüntetése miatt szűnik meg, éves előfizetésnél a fel nem használt hónapok arányos részét visszaadjuk. Örökre szóló vásárlásnál a vásárlást követő első 12 hónapban a teljes összeget, azután a vásárlástól számított 5 évből hátralévő idő arányos részét adjuk vissza. A nyomtatott jelvényt és a postaköltséget megszüntetéskor nem térítjük vissza (a jelvény a tiéd marad), csak hiba esetén.',
     pritozbe:
-      '<b>Kérdések és panaszok.</b> Írj az <eposta>info@slff.eu</eposta> címre, néhány munkanapon belül válaszolunk. A szlovén jog az irányadó; ez nem veszi el azt a védelmet, amelyet a lakóhelyed szerinti ország joga biztosít.',
+      '<b>Kérdések és panaszok.</b> Írj az <eposta>info@slff.eu</eposta> címre, 8 munkanapon belül válaszolunk. Nem ismerünk el egyetlen fogyasztói jogviták bíróságon kívüli rendezésére jogosult szervet sem. A szlovén jog az irányadó; ez nem veszi el azt a védelmet, amelyet a lakóhelyed szerinti ország joga biztosít.',
   },
 }
