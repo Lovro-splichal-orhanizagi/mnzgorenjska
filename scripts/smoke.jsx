@@ -4347,6 +4347,12 @@ preveri(
   const n2 = F.nastopi(z2)
   const gajic = n2.find((x) => x.ime === 'Gajić Uroš')
   preveri('fss: drugi rumeni je izključitev (minute do nje)', z2.rdeci.length === 1 && gajic?.rdeci === 1 && gajic.minute === 50 && z2.opozorila.length === 0)
+  // Klub je "gol" vpisal tudi podajalcu: izid 0:6, dogodkov 12, pari ob isti minuti.
+  const zDvojni = F.vZapisnik(beri('rs-fssid-izvestaj-75954332-dvojni-goli.html'))
+  const nDvojni = F.nastopi(zDvojni)
+  preveri('fss: gol z dvema strelcema ob isti minuti je gol brez strelca', zDvojni.goli.length === 6 && zDvojni.goli.every((g) => g.st === null && g.ekipaIdx === 1) &&
+    nDvojni.filter((x) => x.ekipaIdx === 1).every((x) => x.goli === 0) && nDvojni.filter((x) => x.ekipaIdx === 0).every((x) => x.prejetiGoli === 6) &&
+    !zDvojni.opozorila.some((o) => o.startsWith('goli iz dogodkov')))
   preveri('fss: prazna predloga je null', F.vZapisnik('<html><div class="fss-rez__title"></div></html>') === null && F.tekmeStrani('<html></html>').length === 0)
 }
 
