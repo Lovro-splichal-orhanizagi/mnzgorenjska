@@ -143,7 +143,7 @@ function besedeZaHtml() {
     'skupno.besede', 'skupno.pozicija',
     'tekme.tabela.naslov', 'tekme.tabela.zavihek', 'tekme.tabela.uvod', 'tekme.tabela.stolpci', 'tekme.tabela.stolpciStrelcev', 'tekme.tabela.strelci',
     'tekme.rezultati.naslov', 'tekme.rezultati.uvod', 'tekme.tekma.naslov',
-    'igralci.seznam.naslov', 'igralci.profil.naslov', 'lestvice.lestvica.naslov', 'lestvice.klub.naslov',
+    'igralci.seznam.naslov', 'igralci.profil.naslov', 'igralci.preverjen.znacka', 'lestvice.lestvica.naslov', 'lestvice.klub.naslov',
   ]
   const SLOVARJI = { sl, sk, hr, cs, hu, de, sr, ro, et, pl, es, lv }
   const vzemi = (drevo, kljuc) => kljuc.split('.').reduce((d, k) => d?.[k], drevo)

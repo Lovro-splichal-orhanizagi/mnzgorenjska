@@ -310,6 +310,7 @@ export const igralci = {
       obdeluje: 'Plačilo se še obdeluje. Značka se prikaže, ko ga prejmemo.',
       narocninaNaslov: 'Naročnina (preverjen igralec)',
       narocninaApp: 'Naročnino upravljaš na slff.eu.',
+      pogoji: '<pogoji>Pogoji nakupa</pogoji> · Prodajalec: Space Guardian d.o.o.',
     },
     napake: {
       znaki: 'Besedilo vsebuje nedovoljene znake (npr. / @ # " < >).',

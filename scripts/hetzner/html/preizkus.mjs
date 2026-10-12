@@ -43,6 +43,7 @@ const BESEDE = {
     'tekme.tabela.strelci': 'Strelci',
     'tekme.rezultati.naslov': 'Rezultati',
     'igralci.profil.naslov': 'Igralec',
+    'igralci.preverjen.znacka': 'Preverjen igralec',
   },
   sk: { 'aplikacija.naslovStrani.zStranjo': '{naslov} · SLFF', 'aplikacija.naslovStrani.ligeDrzave': 'Fantasy ligy — {drzava}: {lige}.', 'skupno.besede': { tocke: { one: 'bod', few: 'body', many: 'bodu', other: 'bodov' } } },
 }
@@ -69,7 +70,10 @@ const PODATKI = {
   'fantasy_team_standings?competition_id=eq.1': [{ fantasy_team_id: 11, team_name: 'FC Luka', total_points: 40 }],
   'rpc/lestvica_lige': [{ mesto: 1, team_id: 3, ime: 'Šenčur', tekme: 5, zmage: 4, remiji: 1, porazi: 0, dani: 12, prejeti: 3, tocke: 13, sezona: '2026/27' }],
 }
-const rest = async (pot) => {
+const PREVERJENI = [7]
+const rest = async (pot, telo) => {
+  // Kot baza: vrne le preverjene med vprašanimi (nepreverjen id → []).
+  if (pot === 'rpc/preverjeni_igralci_za') return telo.p_ids.filter((i) => PREVERJENI.includes(i)).map((i) => ({ player_id: i, vzdevek: null }))
   const kljuc = Object.keys(PODATKI).find((k) => pot === k || pot.startsWith(k + '&'))
   if (!kljuc) throw new Error(`neznana poizvedba ${pot}`)
   return PODATKI[kljuc]
@@ -98,6 +102,7 @@ const izris = async (pot, t) => {
   assert.ok(!/<\/script>.*<\/script>/s.test(html.match(/ld\+json">(.*?)<\/script>/)[1]), '< v JSON-LD ni ubežan')
   assert.match(html, /<div id="root"><main[^>]*><h1>/)
   assert.match(html, /href="\/club\/3\?t=clani"/)
+  assert.match(html, /<h1>[^<]*<small>✓ Preverjen igralec<\/small><\/h1>/)
 }
 
 // Slovaški igralec: kanonični z ?t=, slovaška množina.
@@ -106,6 +111,8 @@ const izris = async (pot, t) => {
   assert.equal(s.liga.country_code, 'SK')
   assert.equal(s.kanonicni, 'https://slff.eu/player/8?t=sk-za-1')
   assert.match(s.opis, /1 bod\./)
+  assert.deepEqual(await rest('rpc/preverjeni_igralci_za', { p_ids: [8] }), [])
+  assert.ok(!s.vsebina.includes('✓'), 'nepreverjen brez kljukice')
 }
 
 // Neznan igralec in neštevilski id: 404 z noindex, brez kanoničnega.

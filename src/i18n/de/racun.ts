@@ -158,7 +158,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   izbris: {
     naslov: 'Konto löschen',
     moraPrijava: 'Um dein Konto zu löschen, musst du dich <prijava>anmelden</prijava>.',
-    opis: 'Wir löschen das Konto {email}: dein Profil, alle deine Kader mit ihrem Punkteverlauf, deine Stimmen und die Mini-Ligen, die du angelegt hast. Das lässt sich nicht rückgängig machen.',
+    opis: 'Wir löschen das Konto {email}: dein Profil, alle deine Kader mit ihrem Punkteverlauf, deine Stimmen und die Mini-Ligen, die du angelegt hast. Das lässt sich nicht rückgängig machen. Mit dem Löschen endet auch das Abzeichen für verifizierte Spieler, und ein Abo wird ohne Erstattung beendet.',
     gumb: 'Konto löschen',
     potrdi: 'Ja, endgültig löschen',
     preklici: 'Abbrechen',
@@ -167,7 +167,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   },
   pravno: {
     naslov: 'Datenschutz und Nutzungsbedingungen',
-    zadnjaSprememba: 'Zuletzt geändert: 9. Oktober 2026',
+    zadnjaSprememba: 'Zuletzt geändert: 12. Oktober 2026',
     kajJeNaslov: 'Was SLFF ist',
     kajJe:
       'SLFF (Sunday League Fantasy Football) ist eine Fantasy-Liga von Fans für den regionalen Amateurfußball. Sie wird von Freiwilligen betrieben und steht in keiner Verbindung zu den Landes- oder Regionalverbänden, zum nationalen Fußballverband oder zu den Klubs. Das Spiel ist gratis, ohne Einsätze und ohne Preise.',
@@ -181,7 +181,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     podatkiNaprava:
       '<b>Gerätetoken für Benachrichtigungen.</b> Wenn du in der mobilen App Benachrichtigungen erlaubst, speichern wir einen Token, mit dem wir dir vor der Deadline eine Erinnerung schicken. Beim Abmelden wird er gelöscht.',
     neHranimo:
-      'Wir speichern weder deine Adresse noch deine Telefonnummer oder Zahlungsdaten. Wir verwenden keine Tracking-Cookies und keine Werbetools. Dein Browser speichert deine Anmeldesitzung, eine Kennung für das Gespräch im Hilfe-Chat, falls du ihn öffnest, und Markierungen der Sitzung, damit eine Seite nicht doppelt gezählt wird. Wie viele Leute welche Seite geöffnet haben, wird nur als Tagessumme gespeichert: ohne deinen Namen, dein Konto, dein Gerät oder deine IP-Adresse. Allgemeine Besuchsstatistiken (welche Seiten, woher die Besucher kommen, Gerätetyp und Land, einige Aktionen wie das Zusammenstellen eines Teams) erfasst <b>Umami</b> auf unserem eigenen Server: ohne Cookies, ohne gespeicherte IP-Adresse, und Besuche werden nicht mit deinem Konto verknüpft. Wenn in deinem Browser "Do Not Track" eingeschaltet ist, wird nichts erfasst.',
+      'Wir speichern weder deine Telefonnummer noch deine Kartendaten, deine Adresse nur, wenn du ein gedrucktes Abzeichen bestellst (siehe unten). Wir verwenden keine Tracking-Cookies und keine Werbetools. Dein Browser speichert deine Anmeldesitzung, eine Kennung für das Gespräch im Hilfe-Chat, falls du ihn öffnest, und Markierungen der Sitzung, damit eine Seite nicht doppelt gezählt wird. Wie viele Leute welche Seite geöffnet haben, wird nur als Tagessumme gespeichert: ohne deinen Namen, dein Konto, dein Gerät oder deine IP-Adresse. Allgemeine Besuchsstatistiken (welche Seiten, woher die Besucher kommen, Gerätetyp und Land, einige Aktionen wie das Zusammenstellen eines Teams) erfasst <b>Umami</b> auf unserem eigenen Server: ohne Cookies, ohne gespeicherte IP-Adresse, und Besuche werden nicht mit deinem Konto verknüpft. Wenn in deinem Browser "Do Not Track" eingeschaltet ist, wird nichts erfasst.',
     dostopNaslov: 'Wer Zugriff auf die Daten hat',
     dostop:
       'Die Daten liegen auf unserem eigenen Server bei <b>Hetzner</b> (Deutschland, EU); der Verkehr dorthin läuft über <b>Cloudflare</b> (Schutz und Auslieferung der Seite). E-Mails zur Bestätigung und zum Zurücksetzen des Passworts verschicken wir über unseren eigenen Mailserver (ebenfalls bei Hetzner), Benachrichtigungen in der mobilen App über <b>Google Firebase Cloud Messaging</b> (nur Gerätetoken und Text der Benachrichtigung). Der Hilfe-Chat rechts unten läuft über <b>HelpStack</b>: er bekommt, was du hineinschreibst, und, wenn du angemeldet bist, deinen Anzeigenamen, damit wir wissen, wem wir antworten. Wenn dir der Assistent im Chat hilft, sieht er auch, auf welcher Seite und in welcher Liga du bist und ob dein Team gültig ist. Deine E-Mail-Adresse geben wir nicht weiter. Wir teilen deine Daten mit niemandem sonst und verkaufen sie nicht.',
@@ -199,12 +199,38 @@ export const racun: NonNullable<Prevod['racun']> = {
       'Das Foto auf der Startseite stammt von Abigail Keenan und ist auf <unsplash>Unsplash</unsplash> unter deren Lizenz veröffentlicht, die eine freie Nutzung erlaubt. Es zeigt keine Spieler aus unseren Ligen.',
     praviceNaslov: 'Deine Rechte',
     pravice:
-      'Du kannst dein Konto und alle deine Daten jederzeit selbst löschen: wähl im Kontomenü <b>Konto löschen</b> (slff.eu/account). Um deinen Anzeigenamen zu ändern oder falls das Löschen nicht klappt, schreib uns an <eposta>info@slff.eu</eposta>. Mit dem Löschen des Kontos verschwindet auch dein Team aus der Tabelle.',
+      'Du kannst dein Konto und alle deine Daten jederzeit selbst löschen: wähl im Kontomenü <b>Konto löschen</b> (slff.eu/account). Um deinen Anzeigenamen zu ändern oder falls das Löschen nicht klappt, schreib uns an <eposta>info@slff.eu</eposta>. Mit dem Löschen des Kontos verschwindet auch dein Team aus der Tabelle. Der Kaufdatensatz für ein Abzeichen für verifizierte Spieler bleibt 10 Jahre, wie es das Buchhaltungsrecht verlangt, die Lieferadresse nach der Regel oben.',
     pravilaNaslov: 'Spielregeln',
     pravila:
       'Eine Person, ein Konto. Die Abstimmung über Torvorlagen und Positionen ist für echte Korrekturen gedacht: absichtlich falsche Stimmen verderben allen das Spiel und können zur Löschung des Kontos führen. Punktevergabe und Preise können sich während der Saison ändern, wenn sich etwas als unfair herausstellt; solche Änderungen kündigen wir an.',
     jamstvoNaslov: 'Keine Gewähr',
     jamstvo:
-      'Die Seite läuft, wie sie läuft. Wir bemühen uns, dass die Daten stimmen und die Seite erreichbar ist, garantieren können wir es aber nicht: Spielberichte können verspätet sein und Statistiken Fehler enthalten.',
+      'Die Seite läuft, wie sie läuft. Wir bemühen uns, dass die Daten stimmen und die Seite erreichbar ist, garantieren können wir es aber nicht: Spielberichte können verspätet sein und Statistiken Fehler enthalten. Das gilt für das kostenlose Spiel. Für kostenpflichtige Leistungen gelten die Bedingungen im Abschnitt Kostenpflichtige Leistungen und deine gesetzlichen Verbraucherrechte.',
+    kajJePlacljivo:
+      'Kostenpflichtig ist nur das freiwillige Abzeichen für verifizierte Spieler (siehe Kostenpflichtige Leistungen unten).',
+    podatkiPlacilo:
+      '<b>Kauf des Abzeichens für verifizierte Spieler (nur wenn du kaufst).</b> Den Kaufdatensatz (was, wann, Betrag und deine Kundenkennung bei Stripe) bewahren wir 10 Jahre auf, wie es das Buchhaltungsrecht verlangt. Die Lieferadresse für ein gedrucktes Abzeichen bewahren wir 90 Tage nach dem Versand oder der Stornierung der Bestellung auf, höchstens aber 12 Monate ab der Bestellung, danach bleibt nur das Land.',
+    dostopStripe:
+      'Zahlungen für das Abzeichen für verifizierte Spieler wickelt <b>Stripe</b> ab (Stripe Payments Europe, Irland): Stripe erhält deinen Namen, deine E-Mail-Adresse, die Rechnungsadresse und beim gedruckten Abzeichen die Lieferadresse. Deine Kartendaten gibst du direkt bei Stripe ein, wir sehen sie nicht.',
+    placljivoNaslov:
+      'Kostenpflichtige Leistungen: verifizierte Spieler',
+    placljivoUvod:
+      'Das Spiel ist und bleibt gratis. Kostenpflichtig ist nur das freiwillige Abzeichen für verifizierte Spieler, das ein Spieler kaufen kann, der bestätigt hat, dass das Profil seines ist. Das Abzeichen hat nie Einfluss auf Punkte, Preise, Fantasy-Teams oder Spielregeln. Diese Bedingungen gelten für diesen Kauf.',
+    prodajalec:
+      '<b>Verkäufer:</b> SPACE GUARDIAN, računalniško programiranje, d.o.o., Ulica Hermana Potočnika 5, 1000 Ljubljana, Slowenien, eingetragen im Gerichtsregister beim Bezirksgericht Ljubljana. Registernummer 9850538000, UID SI42765153. Kontakt: <eposta>info@slff.eu</eposta>.',
+    kupis:
+      '<b>Was du kaufst.</b> Ein blaues Häkchen neben dem Namen des Spielers und Profil-Extras (längere Beschreibung, Links, Banner, Farbe, hervorgehobenes Spiel oder Statistik, Nachricht an die Fans). Das Jahresabo kostet 9,99 € und verlängert sich jedes Jahr automatisch. Der Kauf für immer kostet einmalig 29 € und gilt, solange SLFF diese Leistung anbietet. Zum Kauf für immer kannst du ein gedrucktes Abzeichen mit Namen für 5 € dazunehmen, plus Porto von 2 € (Slowenien) oder 4 € (anderes EU-Land). Wir versenden nur in EU-Länder, die Lieferung dauert meist 2 bis 3 Wochen. Alle Preise inklusive Umsatzsteuer.',
+    placilo:
+      '<b>Zahlung.</b> Die Zahlung wickelt Stripe ab. Deine Kartendaten sehen und speichern wir nicht. Kaufen kannst du nur, wenn du mindestens 18 Jahre alt bist. Der Vertrag kommt zustande, sobald Stripe die Zahlung bestätigt.',
+    odpoved:
+      '<b>Kündigung des Abos.</b> Du kannst das Abo jederzeit über den Button Abo verwalten auf deiner Kontoseite (slff.eu/account) oder im Spielerprofil kündigen. Die Kündigung wirkt zum Ende des bezahlten Jahres; bis dahin bleibt das Abzeichen. Für ein bereits begonnenes Jahr erstatten wir nichts, außer in den Fällen unten.',
+    odstop:
+      '<b>Widerrufsrecht.</b> Der digitale Inhalt (Häkchen und Extras) wird sofort nach der Zahlung bereitgestellt. Vor der Zahlung stimmst du der sofortigen Bereitstellung ausdrücklich zu und bestätigst, dass du damit dein 14-tägiges Widerrufsrecht verlierst (Art. 16 lit. m der Richtlinie 2011/83/EU, slowenisches ZVPot-1). Das gedruckte Abzeichen wird nach deinen Vorgaben (Name auf dem Abzeichen) angefertigt, daher gibt es dafür kein Widerrufsrecht (Art. 16 lit. c). Deine gesetzlichen Gewährleistungsrechte bleiben: Kommt das Abzeichen beschädigt, falsch oder gar nicht an, schreib uns, und wir ersetzen es kostenlos oder erstatten dir das Geld.',
+    konec:
+      '<b>Wann das Abzeichen endet.</b> Das Abzeichen endet, wenn sich herausstellt, dass das Profil nicht deines ist und wir die Bestätigung widerrufen, wenn der Name des Spielers auf seinen Wunsch oder auf Wunsch des Verbands ausgeblendet wird oder wenn du dein Konto löschst. Ein Abo endet dann automatisch und wird nicht mehr abgebucht. Wenn du die Zahlung bei deiner Bank zurückbuchen lässt (Chargeback), wird das Abzeichen entfernt.',
+    vracila:
+      '<b>Erstattungen.</b> Bei Missbrauch oder einer falschen Profilbestätigung erstatten wir nichts. Endet das Abzeichen durch unseren Fehler, auf Wunsch des Verbands oder weil wir die Leistung einstellen, erstatten wir beim Jahresabo anteilig die ungenutzten Monate. Beim Kauf für immer erstatten wir in den ersten 12 Monaten nach dem Kauf den vollen Betrag, danach anteilig den Rest von 5 Jahren ab dem Kauf. Das gedruckte Abzeichen und das Porto erstatten wir bei Einstellung nicht (das Abzeichen bleibt deines), nur bei Mängeln.',
+    pritozbe:
+      '<b>Fragen und Beschwerden.</b> Schreib an <eposta>info@slff.eu</eposta>, wir antworten innerhalb von 8 Werktagen. Wir erkennen keine Stelle zur außergerichtlichen Beilegung von Verbraucherstreitigkeiten an. Es gilt slowenisches Recht; der Schutz, den dir das Recht deines Wohnsitzlandes gibt, bleibt dir erhalten.',
   },
 }

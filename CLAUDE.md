@@ -2999,7 +2999,9 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
     `admin_narocila_znack`, `admin_nastavi_narocilo_znacke` (Administracija →
     Preverjeni → Naročila značk). Izbris računa ali anonimizacija naročila ne
     pobrišeta, `user_id` gre na null; 90 dni po pošiljanju ali preklicu ostane
-    v naslovu le država (`preverjen_pocisti_naslove`, pg_cron 04:23).
+    v naslovu le država (`preverjen_pocisti_naslove`, pg_cron 04:23), naročilu,
+    ki obvisi v `za_tisk`/`natisnjeno`, pa 12 mesecev po naročilu (migracija
+    20261012233100).
   - **Vklop testnega načina (lastnik):** na strežniku v `/opt/supabase/.env`
     `STRIPE_SECRET_KEY=sk_test_…`, `STRIPE_WEBHOOK_SECRET=whsec_…`,
     `SITE_URL=https://slff.eu` (compose jih poda funkcijam; compose ročno),
@@ -3019,12 +3021,62 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
     zavrne). Testna kartica `4242 4242 4242 4242`, 3DS
     `4000 0027 6000 3184`, zavrnjena `4000 0000 0000 0002`. Stikalo 1 +
     preizkuševalec za preizkus.
-  - **Faza 3 (še ni):** podatki prodajalca (Space Guardian) in nova znamka v
-    računu Stripe, `/legal` (zdaj pravi, da je igra brezplačna in ne hrani
-    podatkov o plačilih) s pogoji nakupa in pravico do odstopa, Stripe Tax
-    registracija in OSS, živi ključi (`sk_live_…`, nov endpoint v živem
-    načinu), šele nato stikalo 2. Strežnik HTML kljukice še ne izriše —
-    dodaj jo, ko je stikalo 2.
+  - **Faza 3: pogoji nakupa.** So razdelek `/legal#placljivo` ("Plačljive
+    storitve: preverjeni igralci", ne svoja pot, zato brez sprememb Caddyja in
+    zemljevida): prodajalec SPACE GUARDIAN d.o.o. (naslov, matična 9850538000,
+    DDV SI42765153, info@slff.eu), ponudba in cene z DDV, Stripe, 18+, odpoved
+    naročnine (ob koncu plačanega leta), izguba pravice do odstopa za digitalno
+    vsebino (čl. 16(m)) in izjema za značko po meri (čl. 16(c)) ob ohranjenem
+    jamstvu, prenehanje (preklic potrditve, skrito ime, izbris računa,
+    chargeback), vračila (zloraba nič; naša napaka, zahteva zveze ali ukinitev:
+    letna sorazmerno, za vedno vse v prvih 12 mesecih, nato sorazmerno do 5
+    let; natisnjene značke in poštnine ob ukinitvi ne vračamo) in pritožbe
+    (odgovor v 8 delovnih dneh, ne priznavamo izvajalca IRPS). Prodajalec je
+    "vpisan v sodni register pri Okrožnem sodišču v Ljubljani". "Brez jamstva"
+    velja le za brezplačno igro. Zasebnost pove, kaj hranimo o nakupu (10 let
+    zapis, naslov 90 dni po pošiljanju ali preklicu, največ 12 mesecev), da
+    plačila obdeluje Stripe in da izbris računa konča značko in naročnino brez
+    vračila. Ključi `racun.pravno.*` v vseh 13 jezikih; sprememba pogojev =
+    nov datum v `zadnjaSprememba`. Kartica nakupa ima pod potrditvama
+    povezavo "Pogoji nakupa" (nov zavihek) in "Prodajalec: Space Guardian
+    d.o.o."; Checkout ima nad gumbom opombo o takojšnji zagotovitvi
+    (`custom_text.submit`, sl ali en po `jezik` iz vmesnika). Ista opomba z
+    naslovom pogojev je **na računu** (trajni nosilec potrditve): pri enkratnem
+    plačilu `invoice_creation` z `invoice_data.footer` (Stripe zaračuna
+    Invoicing za račune po plačilu; račun sproži `invoice.paid` brez
+    naročnine, ki ga webhook prezre), pri naročnini `subscription_data.description`
+    (`invoice_creation` v načinu subscription ni dovoljen) — nogo računov
+    naročnine da privzeta noga v Stripe (spodaj). **`STRIPE_TOS=1`**
+    (env funkcij, compose) doda `consent_collection[terms_of_service]=required`;
+    vklopi ga šele, ko je v Stripe Settings → Public details vpisan Terms of
+    service URL `https://slff.eu/legal#placljivo`, sicer Stripe sejo zavrne.
+    Strežnik HTML na strani igralca ob imenu izriše "✓ Preverjen igralec"
+    (`preverjeni_igralci_za` z anon ključem, ki vrne kaj šele pri stikalu 2;
+    napaka kljukico izpusti).
+  - **Pred vklopom v živo (lastnik):** aktivacija računa Stripe v živem načinu
+    s podatki Space Guardian (znamka SLFF, Public details: ime, podpora
+    info@slff.eu, Terms of service URL zgoraj); katalog v živem načinu (CLI:
+    cene z lookup_key `slff_preverjen_letna`, `slff_preverjen_dozivljenjska`,
+    `slff_znacka`, poštnini z metapodatkom `kljuc` `postnina_si`/`postnina_eu`,
+    davčna koda in `tax_behavior=inclusive`); Stripe Tax: registracija SI (in
+    OSS za EU); e-poštna potrdila kupcem (Settings → Customer emails); živi
+    webhook endpoint z istimi dogodki in portal; na strežniku `sk_live_…`,
+    nov `whsec_…`, `STRIPE_TOS=1`, objava obeh funkcij; preizkus z eno pravo
+    kartico in vračilom; šele nato stikalo `preverjeni_racuni = 2`. Še:
+    - **Trajni nosilec**: Settings → Invoices → privzeta noga (Default footer)
+      in potrdila kupcem (Customer emails: successful payments) s stavkom o
+      odpovedi pravici in `https://slff.eu/legal#placljivo`; preveri na
+      testnem računu enkratnega plačila in naročnine, da je stavek na obeh.
+    - **Osnovni kapital** Space Guardian d.o.o. dopiši v `racun.pravno.prodajalec`
+      (vseh 13 jezikov) — zdaj ga ni (TODO lastnik).
+    - **Davčno potrjevanje računov (ZDavPR)**: spletna plačila s kartico so
+      lahko zavezana davčno potrjenim računom (EOR/ZOI) — pred živim načinom
+      potrdi z računovodjo, ali račun Stripe zadošča.
+    - **Pravnik**: ali je značka digitalna vsebina (odpoved po čl. 16(m)) ali
+      digitalna storitev (sorazmerno plačilo ob odstopu) — od tega je odvisno
+      besedilo odpovedi.
+    - **Portal v živem načinu**: preklic naročnine ob koncu obdobja (v
+      testnem je tako nastavljen; ponovi v živem).
 - **Uradne odsotnosti** (migracija 20261012135100): potrjeni igralec (lastnik
   potrjenega `zahtevki_igralca`, tudi za povezane vrstice) sam javi odsotnost
   (`objavi_uradno_odsotnost`: vrsta `poskodba`/`bolezen`/`dopust`/`kazen`/`drugo`,

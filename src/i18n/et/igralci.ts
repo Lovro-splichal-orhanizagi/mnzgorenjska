@@ -306,6 +306,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       obdeluje: 'Makset alles töödeldakse. Linnuke ilmub, kui makse on kätte saadud.',
       narocninaNaslov: 'Tellimus (kinnitatud mängija)',
       narocninaApp: 'Tellimust halda lehel slff.eu.',
+      pogoji: '<pogoji>Ostutingimused</pogoji> · Müüja: Space Guardian d.o.o.',
     },
     napake: {
       znaki: 'Tekstis on lubamatuid märke (nt / @ # " < >).',

@@ -309,6 +309,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       obdeluje: 'Plaćanje se još obrađuje. Značka će se pojaviti kad ga primimo.',
       narocninaNaslov: 'Pretplata (provereni igrač)',
       narocninaApp: 'Pretplatom upravljaš na slff.eu.',
+      pogoji: '<pogoji>Uslovi kupovine</pogoji> · Prodavac: Space Guardian d.o.o.',
     },
     napake: {
       znaki: 'Tekst sadrži nedozvoljene znakove (npr. / @ # " < >).',

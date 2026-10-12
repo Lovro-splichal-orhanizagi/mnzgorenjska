@@ -158,7 +158,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   izbris: {
     naslov: 'Zrušenie účtu',
     moraPrijava: 'Na zrušenie účtu sa musíš <prijava>prihlásiť</prijava>.',
-    opis: 'Zrušíme účet {email}: profil, všetky tvoje tímy s históriou bodov, hlasy a minilgy, ktoré si vytvoril. Zrušenie sa nedá vrátiť.',
+    opis: 'Zrušíme účet {email}: profil, všetky tvoje tímy s históriou bodov, hlasy a minilgy, ktoré si vytvoril. Zrušenie sa nedá vrátiť. Zmazaním účtu skončí aj odznak overeného hráča a predplatné sa zastaví bez vrátenia peňazí.',
     gumb: 'Zrušiť účet',
     potrdi: 'Áno, zrušiť navždy',
     preklici: 'Zrušiť',
@@ -168,7 +168,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   // Súkromie a podmienky. <b> je tučné písmo, ostatné značky sú odkazy.
   pravno: {
     naslov: 'Súkromie a podmienky',
-    zadnjaSprememba: 'Posledná zmena: 9. októbra 2026',
+    zadnjaSprememba: 'Posledná zmena: 12. októbra 2026',
     kajJeNaslov: 'Čo je SLFF',
     kajJe:
       'SLFF (Sunday League Fantasy Football) je fanúšikovská fantasy liga pre amatérske futbalové súťaže. Prevádzkujeme ju amatérsky a nie je prepojená so Slovenským futbalovým zväzom (SFZ), regionálnymi ani oblastnými futbalovými zväzmi, ani s klubmi. Hra je bezplatná, bez peňažných vkladov a bez výhier.',
@@ -182,7 +182,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     podatkiNaprava:
       '<b>Token zariadenia pre upozornenia.</b> Ak v mobilnej aplikácii povolíš upozornenia, uložíme token, cez ktorý ti pošleme pripomienku pred uzávierkou kola. Pri odhlásení ho vymažeme.',
     neHranimo:
-      'Neuchovávame adresu, telefónne číslo ani platobné údaje. Nepoužívame sledovacie cookies ani reklamné nástroje. V prehliadači je uložená tvoja prihlasovacia relácia, identifikátor konverzácie v chate podpory, ak ho otvoríš, a značky relácie, vďaka ktorým návštevu stránky počítame len raz. Koľko ľudí otvorilo ktorú stránku uchovávame len ako denný súčet — bez tvojho mena, účtu, zariadenia či IP adresy. Všeobecnú štatistiku návštev (ktoré stránky, odkiaľ návštevníci prichádzajú, typ zariadenia a krajina, niekoľko akcií ako zostavenie tímu) zaznamenáva <b>Umami</b> na našom serveri: bez cookies, IP adresu neukladá a návštevu nespája s tvojím účtom. Ak má prehliadač zapnutú možnosť „Nesledovať“, nezaznamenáva sa nič.',
+      'Neuchovávame telefónne číslo ani údaje platobnej karty a adresu len vtedy, ak si objednáš vytlačený odznak (pozri nižšie). Nepoužívame sledovacie cookies ani reklamné nástroje. V prehliadači je uložená tvoja prihlasovacia relácia, identifikátor konverzácie v chate podpory, ak ho otvoríš, a značky relácie, vďaka ktorým návštevu stránky počítame len raz. Koľko ľudí otvorilo ktorú stránku uchovávame len ako denný súčet — bez tvojho mena, účtu, zariadenia či IP adresy. Všeobecnú štatistiku návštev (ktoré stránky, odkiaľ návštevníci prichádzajú, typ zariadenia a krajina, niekoľko akcií ako zostavenie tímu) zaznamenáva <b>Umami</b> na našom serveri: bez cookies, IP adresu neukladá a návštevu nespája s tvojím účtom. Ak má prehliadač zapnutú možnosť „Nesledovať“, nezaznamenáva sa nič.',
     dostopNaslov: 'Kto má k údajom prístup',
     dostop:
       'Údaje sú uložené na našom serveri u poskytovateľa <b>Hetzner</b> (Nemecko, EÚ), prevádzka k nemu ide cez <b>Cloudflare</b> (ochrana a doručovanie stránky). Potvrdzovacie e-maily a e-maily na obnovenie hesla sa odosielajú z nášho poštového servera (tiež Hetzner), upozornenia v mobilnej aplikácii cez <b>Google Firebase Cloud Messaging</b> (iba token zariadenia a text upozornenia). Chat podpory v pravom dolnom rohu beží cez <b>HelpStack</b>: odovzdáva sa tam to, čo doň napíšeš, a — ak si prihlásený — tvoje zobrazované meno, aby sme vedeli, komu odpovedáme. Keď ti asistent v chate pomáha, môže si pozrieť aj to, na ktorej stránke a v ktorej lige si a či je tvoj tím platný. Tvoj e-mail mu neposkytujeme. Nikomu inému údaje neposkytujeme a nepredávame ich.',
@@ -200,12 +200,38 @@ export const racun: NonNullable<Prevod['racun']> = {
       'Fotografia na titulnej stránke je dielom Abigail Keenan a je zverejnená na <unsplash>Unsplash</unsplash> pod ich licenciou, ktorá umožňuje voľné použitie. Nezobrazuje hráčov našich líg.',
     praviceNaslov: 'Tvoje práva',
     pravice:
-      'Účet a všetky svoje údaje môžeš kedykoľvek zrušiť sám: v menu účtu zvoľ <b>Zrušenie účtu</b> (slff.eu/account). Ak chceš opraviť zobrazované meno alebo zrušenie nevyjde, napíš nám na <eposta>info@slff.eu</eposta>. Pri vymazaní zmizne z rebríčka aj tvoj tím.',
+      'Účet a všetky svoje údaje môžeš kedykoľvek zrušiť sám: v menu účtu zvoľ <b>Zrušenie účtu</b> (slff.eu/account). Ak chceš opraviť zobrazované meno alebo zrušenie nevyjde, napíš nám na <eposta>info@slff.eu</eposta>. Pri vymazaní zmizne z rebríčka aj tvoj tím. Záznam o kúpe odznaku overeného hráča zostáva 10 rokov, ako to vyžadujú účtovné predpisy, a adresa na doručenie podľa pravidla vyššie.',
     pravilaNaslov: 'Pravidlá hry',
     pravila:
       'Jeden človek, jeden účet. Hlasovanie o asistenciách a pozíciách slúži na skutočné opravy — úmyselne nesprávne hlasovanie kazí hru všetkým a môže viesť k odstráneniu účtu. Bodovanie a ceny sa môžu počas sezóny zmeniť, ak sa ukáže, že niečo je nespravodlivé; takéto zmeny zverejníme.',
     jamstvoNaslov: 'Bez záruky',
     jamstvo:
-      'Stránka funguje tak, ako funguje. Snažíme sa, aby boli údaje správne a aby bola stránka dostupná, zaručiť to však nemôžeme — zápisy o stretnutí môžu meškať a štatistiky môžu obsahovať chyby.',
+      'Stránka funguje tak, ako funguje. Snažíme sa, aby boli údaje správne a aby bola stránka dostupná, zaručiť to však nemôžeme — zápisy o stretnutí môžu meškať a štatistiky môžu obsahovať chyby. To platí pre bezplatnú hru. Pre platené služby platia podmienky v časti Platené služby a tvoje zákonné práva spotrebiteľa.',
+    kajJePlacljivo:
+      'Jediná platená vec je nepovinný odznak overeného hráča (pozri Platené služby nižšie).',
+    podatkiPlacilo:
+      '<b>Kúpa odznaku overeného hráča (len ak ho kúpiš).</b> Záznam o kúpe (čo, kedy, suma a označenie zákazníka v Stripe) uchovávame 10 rokov, ako to vyžadujú účtovné predpisy. Adresu na doručenie vytlačeného odznaku uchovávame 90 dní po odoslaní alebo zrušení objednávky a najdlhšie 12 mesiacov od objednávky, potom zostane len krajina.',
+    dostopStripe:
+      'Platby za odznak overeného hráča spracúva <b>Stripe</b> (Stripe Payments Europe, Írsko): dostane tvoje meno, e-mail, fakturačnú adresu a pri vytlačenom odznaku adresu na doručenie. Údaje karty zadávaš priamo v Stripe, my ich nevidíme.',
+    placljivoNaslov:
+      'Platené služby: overení hráči',
+    placljivoUvod:
+      'Hra je a zostane zadarmo. Platený je len nepovinný odznak overeného hráča, ktorý si môže kúpiť hráč, ktorý potvrdil, že profil je jeho. Odznak nikdy neovplyvňuje body, ceny, fantasy tímy ani pravidlá hry. Tieto podmienky platia pre túto kúpu.',
+    prodajalec:
+      '<b>Predávajúci:</b> SPACE GUARDIAN, računalniško programiranje, d.o.o., Ulica Hermana Potočnika 5, 1000 Ljubljana, Slovinsko, zapísaná v obchodnom registri Okresného súdu v Ľubľane. Identifikačné číslo 9850538000, IČ DPH SI42765153. Kontakt: <eposta>info@slff.eu</eposta>.',
+    kupis:
+      '<b>Čo kupuješ.</b> Modrú fajku pri mene hráča a doplnky profilu (dlhší popis, odkazy, banner, farba, zvýraznený zápas alebo štatistika, odkaz fanúšikom). Ročné predplatné stojí 9,99 € a každý rok sa automaticky obnoví. Kúpa navždy stojí 29 € jednorazovo a platí, kým SLFF túto službu ponúka. Ku kúpe navždy môžeš pridať vytlačený odznak s menom za 5 € a poštovné 2 € (Slovinsko) alebo 4 € (iná krajina EÚ). Posielame len do krajín EÚ, doručenie zvyčajne trvá 2 až 3 týždne. Všetky ceny sú vrátane DPH.',
+    placilo:
+      '<b>Platba.</b> Platbu spracúva Stripe. Údaje karty nevidíme a neuchovávame. Kúpiť môžeš, len ak máš aspoň 18 rokov. Zmluva je uzavretá, keď Stripe platbu potvrdí.',
+    odpoved:
+      '<b>Zrušenie predplatného.</b> Predplatné môžeš kedykoľvek zrušiť tlačidlom Spravovať predplatné na stránke účtu (slff.eu/account) alebo na profile hráča. Zrušenie platí na konci zaplateného roka; dovtedy odznak zostane. Za už začatý rok peniaze nevraciame, okrem prípadov nižšie.',
+    odstop:
+      '<b>Právo na odstúpenie.</b> Digitálny obsah (fajka a doplnky) sa poskytne hneď po zaplatení. Pred platbou výslovne súhlasíš s okamžitým poskytnutím a potvrdzuješ, že tým strácaš právo odstúpiť od zmluvy do 14 dní (čl. 16 písm. m) smernice 2011/83/EÚ, slovinský ZVPot-1). Vytlačený odznak sa vyrába podľa tvojich pokynov (meno na odznaku), preto pri ňom právo na odstúpenie nie je (čl. 16 písm. c)). Zákonná zodpovednosť za vady zostáva: ak odznak príde poškodený, nesprávny alebo nepríde vôbec, napíš nám a bezplatne ho vymeníme alebo ti vrátime peniaze.',
+    konec:
+      '<b>Kedy odznak končí.</b> Odznak končí, ak sa ukáže, že profil nie je tvoj a potvrdenie zrušíme, ak meno hráča na jeho žiadosť alebo žiadosť zväzu skryjeme, alebo ak zmažeš účet. Predplatné sa vtedy automaticky zastaví a už sa neúčtuje. Ak platbu napadneš v banke (chargeback), odznak sa odoberie.',
+    vracila:
+      '<b>Vrátenie peňazí.</b> Pri zneužití alebo nepravdivom potvrdení profilu peniaze nevraciame. Ak odznak skončí našou chybou, na žiadosť zväzu alebo preto, že službu zrušíme, pri ročnom predplatnom vrátime pomernú časť za nevyužité mesiace. Pri kúpe navždy vrátime celú sumu v prvých 12 mesiacoch od kúpy, neskôr pomernú časť zostatku do 5 rokov od kúpy. Vytlačený odznak a poštovné pri zrušení služby nevraciame (odznak zostane tvoj), len pri vade.',
+    pritozbe:
+      '<b>Otázky a reklamácie.</b> Napíš na <eposta>info@slff.eu</eposta>, odpovieme do 8 pracovných dní. Neuznávame žiadny subjekt alternatívneho riešenia spotrebiteľských sporov. Platí slovinské právo; tým neprichádzaš o ochranu, ktorú ti dáva právo krajiny, v ktorej žiješ.',
   },
 }

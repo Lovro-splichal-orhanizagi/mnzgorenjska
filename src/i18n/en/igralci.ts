@@ -306,6 +306,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       obdeluje: 'The payment is still being processed. The badge will appear once we receive it.',
       narocninaNaslov: 'Subscription (verified player)',
       narocninaApp: 'Manage your subscription on slff.eu.',
+      pogoji: '<pogoji>Terms of purchase</pogoji> · Seller: Space Guardian d.o.o.',
     },
     napake: {
       znaki: 'The text contains characters that are not allowed (e.g. / @ # " < >).',

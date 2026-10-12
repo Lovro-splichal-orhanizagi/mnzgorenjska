@@ -160,7 +160,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   izbris: {
     naslov: 'Delete account',
     moraPrijava: 'You need to <prijava>log in</prijava> to delete your account.',
-    opis: 'We will delete the account {email}: your profile, all your squads with their points history, your votes and the mini-leagues you created. This cannot be undone.',
+    opis: 'We will delete the account {email}: your profile, all your squads with their points history, your votes and the mini-leagues you created. This cannot be undone. Deleting the account also ends a verified player badge, and a subscription stops without a refund.',
     gumb: 'Delete account',
     potrdi: 'Yes, delete forever',
     preklici: 'Cancel',
@@ -169,7 +169,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   },
   pravno: {
     naslov: 'Privacy and terms',
-    zadnjaSprememba: 'Last updated: 9 October 2026',
+    zadnjaSprememba: 'Last updated: 12 October 2026',
     kajJeNaslov: 'What SLFF is',
     kajJe:
       'SLFF (Sunday League Fantasy Football) is a fan-made fantasy league for local amateur football leagues. It is run by volunteers and is not affiliated with the regional football associations, the national football association or the clubs. The game is free, with no stakes or prizes.',
@@ -183,7 +183,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     podatkiNaprava:
       '<b>Device token for notifications.</b> If you allow notifications in the mobile app, we store a token we use to send you a reminder before the round deadline. It is deleted when you log out.',
     neHranimo:
-      'We do not store your address, phone number or payment details. We do not use tracking cookies or advertising tools. Your browser stores your login session, an identifier for the help chat conversation if you open it, and session marks that keep a page from being counted twice. How many people opened which page is kept only as a daily total — without your name, account, device or IP address. General visit statistics (which pages, where visitors come from, device type and country, a few actions such as building a team) are recorded by <b>Umami</b> on our own server: no cookies, no stored IP address, and visits are not linked to your account. If your browser has "Do Not Track" switched on, nothing is recorded.',
+      'We do not store your phone number or card details, and we store your address only if you order a printed badge (see below). We do not use tracking cookies or advertising tools. Your browser stores your login session, an identifier for the help chat conversation if you open it, and session marks that keep a page from being counted twice. How many people opened which page is kept only as a daily total — without your name, account, device or IP address. General visit statistics (which pages, where visitors come from, device type and country, a few actions such as building a team) are recorded by <b>Umami</b> on our own server: no cookies, no stored IP address, and visits are not linked to your account. If your browser has "Do Not Track" switched on, nothing is recorded.',
     dostopNaslov: 'Who can access the data',
     dostop:
       'The data is stored on our own server at <b>Hetzner</b> (Germany, EU); traffic to it passes through <b>Cloudflare</b> (protection and delivery of the site). Confirmation and password-reset emails are sent from our own mail server (also at Hetzner), and notifications in the mobile app via <b>Google Firebase Cloud Messaging</b> (only the device token and the notification text). The help chat in the bottom right corner runs on <b>HelpStack</b>: it receives what you write in it and — if you are logged in — your display name, so we know who we are replying to. When the assistant in the chat helps you, it can also see which page and league you are on and whether your team is valid. We do not pass on your email address. We do not share your data with anyone else and we do not sell it.',
@@ -201,12 +201,38 @@ export const racun: NonNullable<Prevod['racun']> = {
       'The photo on the home page is by Abigail Keenan and is published on <unsplash>Unsplash</unsplash> under their licence, which allows free use. It does not show players from our leagues.',
     praviceNaslov: 'Your rights',
     pravice:
-      'You can delete your account and all your data yourself at any time: choose <b>Delete account</b> in the account menu (slff.eu/account). To correct your display name, or if the deletion fails, write to us at <eposta>info@slff.eu</eposta>. When your account is deleted, your team also disappears from the standings.',
+      'You can delete your account and all your data yourself at any time: choose <b>Delete account</b> in the account menu (slff.eu/account). To correct your display name, or if the deletion fails, write to us at <eposta>info@slff.eu</eposta>. When your account is deleted, your team also disappears from the standings. The record of a verified player badge purchase stays for 10 years, as accounting law requires, and the delivery address as described above.',
     pravilaNaslov: 'Rules of play',
     pravila:
       'One person, one account. Voting on assists and positions is meant for genuine corrections — deliberately wrong votes spoil the game for everyone and may lead to the removal of your account. Scoring and prices may change during the season if something turns out to be unfair; we will announce any such changes.',
     jamstvoNaslov: 'No warranty',
     jamstvo:
-      'The site runs as it runs. We do our best to keep the data correct and the site available, but we cannot guarantee it — match reports can be late and statistics can contain errors.',
+      'The site runs as it runs. We do our best to keep the data correct and the site available, but we cannot guarantee it — match reports can be late and statistics can contain errors. This applies to the free game. Paid services are governed by the Paid services section and your statutory consumer rights.',
+    kajJePlacljivo:
+      'The only paid thing is the optional verified player badge (see Paid services below).',
+    podatkiPlacilo:
+      '<b>Verified player badge purchase (only if you buy one).</b> We keep the purchase record (what, when, amount and your Stripe customer ID) for 10 years, as accounting law requires. We keep the delivery address for a printed badge for 90 days after shipping or cancellation of the order, and at most 12 months after ordering; after that only the country remains.',
+    dostopStripe:
+      'Payments for the verified player badge are processed by <b>Stripe</b> (Stripe Payments Europe, Ireland): it receives your name, email, billing address and, for a printed badge, the delivery address. You enter your card details directly with Stripe; we never see them.',
+    placljivoNaslov:
+      'Paid services: verified players',
+    placljivoUvod:
+      'The game is and stays free. The only paid item is the optional verified player badge, which a player who has confirmed that the profile is theirs can buy. The badge never affects points, prices, fantasy teams or the rules of the game. These terms apply to that purchase.',
+    prodajalec:
+      '<b>Seller:</b> SPACE GUARDIAN, računalniško programiranje, d.o.o., Ulica Hermana Potočnika 5, 1000 Ljubljana, Slovenia, entered in the court register at the District Court in Ljubljana. Company registration number 9850538000, VAT ID SI42765153. Contact: <eposta>info@slff.eu</eposta>.',
+    kupis:
+      '<b>What you buy.</b> A blue check next to the player\'s name and profile extras (longer description, links, banner, colour, a featured match or statistic, a message to fans). The yearly subscription costs €9.99 and renews automatically every year. The forever option costs €29 once and lasts as long as SLFF offers this service. With the forever option you can add a printed badge with your name for €5 plus postage of €2 (Slovenia) or €4 (another EU country). We ship only to EU countries; delivery usually takes 2 to 3 weeks. All prices include VAT.',
+    placilo:
+      '<b>Payment.</b> Payment is processed by Stripe. We do not see or store your card details. You can buy only if you are at least 18 years old. The contract is concluded when Stripe confirms the payment.',
+    odpoved:
+      '<b>Cancelling the subscription.</b> You can cancel at any time with the Manage subscription button on your account page (slff.eu/account) or on the player profile. The cancellation takes effect at the end of the paid year; until then the badge stays. We do not refund a year that has already started, except in the cases below.',
+    odstop:
+      '<b>Right of withdrawal.</b> The digital content (the check and the extras) is provided immediately after payment. Before paying, you expressly agree to immediate provision and acknowledge that you thereby lose the 14-day right of withdrawal (Art. 16(m) of Directive 2011/83/EU, Slovenian ZVPot-1). The printed badge is made to your specification (the name on it), so there is no right of withdrawal for it (Art. 16(c)). Your statutory warranty rights remain: if the badge arrives damaged, wrong or not at all, write to us and we will replace it free of charge or refund you.',
+    konec:
+      '<b>When the badge ends.</b> The badge ends if it turns out that the profile is not yours and we cancel the confirmation, if the player\'s name is hidden at the player\'s or the football association\'s request, or if you delete your account. A subscription then stops automatically and is no longer charged. If you dispute the payment with your bank (chargeback), the badge is removed.',
+    vracila:
+      '<b>Refunds.</b> We do not refund in case of misuse or a false profile claim. If the badge ends because of our mistake, at the football association\'s request or because we discontinue the service, we refund the unused months of a yearly subscription pro rata. For a forever purchase we refund the full amount within the first 12 months after buying, and after that a pro rata share of what remains of 5 years from the purchase. The printed badge and postage are not refunded on discontinuation (the badge stays yours), only for defects.',
+    pritozbe:
+      '<b>Questions and complaints.</b> Write to <eposta>info@slff.eu</eposta>; we reply within 8 working days. We do not recognise any provider of out-of-court consumer dispute resolution. Slovenian law applies; this does not take away the protection given to you by the law of the country where you live.',
   },
 }

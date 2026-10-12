@@ -8,7 +8,7 @@ import { useCallback, useEffect, useId, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { FunctionsHttpError } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
-import { t, datum, stevilo } from '../i18n'
+import { t, tx, datum, stevilo, jezikSlovarja } from '../i18n'
 import { prevediNapako } from '../lib/napake'
 import { jeNativno } from '../lib/platforma'
 import { VEDRO_FOTOGRAFIJ, naslovFotografije } from '../lib/prevzem'
@@ -256,6 +256,7 @@ function Ponudba({ igralecId }: { igralecId: number }) {
       ime_na_znacki: zZnacko ? ime : undefined,
       star_vsaj_18: star18,
       odpoved_pravici: odpoved,
+      jezik: jezikSlovarja(),
     })
     if (r.url) return window.location.assign(r.url)
     setDela(false)
@@ -310,6 +311,15 @@ function Ponudba({ igralecId }: { igralecId: number }) {
         <input id={`${idp}-odpoved`} type="checkbox" className="mt-1" checked={odpoved} onChange={(e) => setOdpoved(e.target.checked)} />
         <span>{t('igralci.preverjen.ponudba.odpoved')}</span>
       </label>
+      <p className="text-xs text-slate-400">
+        {tx('igralci.preverjen.ponudba.pogoji', {}, {
+          pogoji: (v) => (
+            <a href="/legal#placljivo" target="_blank" rel="noopener noreferrer" className="text-sky-300 underline">
+              {v}
+            </a>
+          ),
+        })}
+      </p>
       <button
         type="button"
         disabled={dela || !star18 || !odpoved || (zZnacko && !ime.trim())}

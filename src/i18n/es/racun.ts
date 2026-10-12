@@ -154,7 +154,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   izbris: {
     naslov: 'Eliminar cuenta',
     moraPrijava: 'Para eliminar la cuenta tienes que <prijava>iniciar sesión</prijava>.',
-    opis: 'Eliminaremos la cuenta {email}: el perfil, todos tus equipos con su historial de puntos, tus votos y las miniligas que hayas creado. No se puede deshacer.',
+    opis: 'Eliminaremos la cuenta {email}: el perfil, todos tus equipos con su historial de puntos, tus votos y las miniligas que hayas creado. No se puede deshacer. Al borrar la cuenta también termina la insignia de jugador verificado, y la suscripción se detiene sin reembolso.',
     gumb: 'Eliminar cuenta',
     potrdi: 'Sí, eliminar para siempre',
     preklici: 'Cancelar',
@@ -163,7 +163,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   },
   pravno: {
     naslov: 'Privacidad y condiciones',
-    zadnjaSprememba: 'Última modificación: 9 de octubre de 2026',
+    zadnjaSprememba: 'Última modificación: 12 de octubre de 2026',
     kajJeNaslov: 'Qué es SLFF',
     kajJe:
       'SLFF (Sunday League Fantasy Football) es una liga fantasy hecha por aficionados para ligas de fútbol regionales y aficionadas. La llevamos de forma voluntaria y no tiene relación con las federaciones territoriales, la federación nacional ni los clubes. El juego es gratuito, sin apuestas ni premios.',
@@ -177,7 +177,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     podatkiNaprava:
       '<b>Token del dispositivo para notificaciones.</b> Si en la aplicación móvil permites las notificaciones, guardamos un token con el que te enviamos un recordatorio antes del cierre de la jornada. Al cerrar sesión lo borramos.',
     neHranimo:
-      'No guardamos dirección postal, número de teléfono ni datos de pago. No usamos cookies de seguimiento ni herramientas publicitarias. En el navegador se guardan tu sesión, la marca de conversación del chat de ayuda si lo abres y marcas de sesión con las que contamos una sola vez cada visita a una página. Cuánta gente ha abierto cada página lo contamos solo como total diario, sin tu nombre, cuenta, dispositivo ni dirección IP. Las estadísticas generales de visitas (qué páginas, de dónde llegan los visitantes, tipo de dispositivo y país, algunas acciones como hacer un equipo) las registra <b>Umami</b> en nuestro servidor: sin cookies, sin guardar la dirección IP y sin relacionar la visita con tu cuenta. Si el navegador tiene activada la opción «No rastrear», no se registra nada.',
+      'No guardamos tu número de teléfono ni los datos de tu tarjeta, y tu dirección solo si pides una insignia impresa (ver abajo). No usamos cookies de seguimiento ni herramientas publicitarias. En el navegador se guardan tu sesión, la marca de conversación del chat de ayuda si lo abres y marcas de sesión con las que contamos una sola vez cada visita a una página. Cuánta gente ha abierto cada página lo contamos solo como total diario, sin tu nombre, cuenta, dispositivo ni dirección IP. Las estadísticas generales de visitas (qué páginas, de dónde llegan los visitantes, tipo de dispositivo y país, algunas acciones como hacer un equipo) las registra <b>Umami</b> en nuestro servidor: sin cookies, sin guardar la dirección IP y sin relacionar la visita con tu cuenta. Si el navegador tiene activada la opción «No rastrear», no se registra nada.',
     dostopNaslov: 'Quién tiene acceso a los datos',
     dostop:
       'Los datos están en nuestro servidor del proveedor <b>Hetzner</b> (Alemania, UE) y el tráfico hasta él pasa por <b>Cloudflare</b> (protección y entrega de la web). Los correos de confirmación y de restablecimiento salen de nuestro servidor de correo (también en Hetzner) y las notificaciones de la aplicación móvil, por <b>Google Firebase Cloud Messaging</b> (solo el token del dispositivo y el texto del aviso). El chat de ayuda de la esquina inferior derecha funciona con <b>HelpStack</b>: allí llega lo que escribes y, si has iniciado sesión, tu nombre visible, para saber a quién respondemos. Cuando el asistente del chat te ayuda, también puede ver en qué página y en qué liga estás y si tu equipo es válido. No le pasamos tu correo. No cedemos los datos a nadie más ni los vendemos.',
@@ -195,12 +195,38 @@ export const racun: NonNullable<Prevod['racun']> = {
       'La fotografía de la página de inicio es obra de Abigail Keenan y está publicada en <unsplash>Unsplash</unsplash> con su licencia, que permite el uso libre. No muestra a jugadores de nuestras ligas.',
     praviceNaslov: 'Tus derechos',
     pravice:
-      'Puedes eliminar tu cuenta y todos tus datos tú mismo cuando quieras: en el menú de la cuenta elige <b>Eliminar cuenta</b> (slff.eu/account). Para corregir tu nombre visible o si la eliminación falla, escríbenos a <eposta>info@slff.eu</eposta>. Al eliminarla, tu equipo también desaparece de la clasificación.',
+      'Puedes eliminar tu cuenta y todos tus datos tú mismo cuando quieras: en el menú de la cuenta elige <b>Eliminar cuenta</b> (slff.eu/account). Para corregir tu nombre visible o si la eliminación falla, escríbenos a <eposta>info@slff.eu</eposta>. Al eliminarla, tu equipo también desaparece de la clasificación. El registro de la compra de la insignia de jugador verificado se conserva 10 años, como exige la normativa contable, y la dirección de envío según la regla de arriba.',
     pravilaNaslov: 'Reglas del juego',
     pravila:
       'Una persona, una cuenta. La votación de asistencias y posiciones sirve para corregir de verdad; votar mal a propósito estropea el juego a todos y puede llevar a eliminar la cuenta. La puntuación y los precios pueden cambiar durante la temporada si algo resulta injusto; anunciaremos esos cambios.',
     jamstvoNaslov: 'Sin garantía',
     jamstvo:
-      'La web funciona tal cual. Nos esforzamos por que los datos sean correctos y por que esté disponible, pero no podemos garantizarlo: las actas pueden llegar tarde y las estadísticas pueden contener errores.',
+      'La web funciona tal cual. Nos esforzamos por que los datos sean correctos y por que esté disponible, pero no podemos garantizarlo: las actas pueden llegar tarde y las estadísticas pueden contener errores. Esto se aplica al juego gratuito. Los servicios de pago se rigen por las condiciones de la sección Servicios de pago y por tus derechos legales como consumidor.',
+    kajJePlacljivo:
+      'Lo único de pago es la insignia opcional de jugador verificado (ver Servicios de pago abajo).',
+    podatkiPlacilo:
+      '<b>Compra de la insignia de jugador verificado (solo si la compras).</b> Guardamos el registro de la compra (qué, cuándo, importe y tu identificador de cliente en Stripe) durante 10 años, como exige la normativa contable. Guardamos la dirección de envío de la insignia impresa durante 90 días tras el envío o la cancelación del pedido, y como máximo 12 meses desde el pedido; después solo queda el país.',
+    dostopStripe:
+      'Los pagos de la insignia de jugador verificado los procesa <b>Stripe</b> (Stripe Payments Europe, Irlanda): recibe tu nombre, tu correo, la dirección de facturación y, para la insignia impresa, la dirección de envío. Los datos de la tarjeta los introduces directamente en Stripe; nosotros no los vemos.',
+    placljivoNaslov:
+      'Servicios de pago: jugadores verificados',
+    placljivoUvod:
+      'El juego es y seguirá siendo gratis. Solo es de pago la insignia opcional de jugador verificado, que puede comprar el jugador que ha confirmado que el perfil es suyo. La insignia nunca influye en los puntos, los precios, los equipos fantasy ni las reglas del juego. Estas condiciones se aplican a esa compra.',
+    prodajalec:
+      '<b>Vendedor:</b> SPACE GUARDIAN, računalniško programiranje, d.o.o., Ulica Hermana Potočnika 5, 1000 Ljubljana, Eslovenia, inscrita en el registro judicial del Tribunal de Distrito de Liubliana. Número de registro 9850538000, NIF-IVA SI42765153. Contacto: <eposta>info@slff.eu</eposta>.',
+    kupis:
+      '<b>Qué compras.</b> Un check azul junto al nombre del jugador y extras de perfil (descripción más larga, enlaces, banner, color, un partido o una estadística destacados, un mensaje a la afición). La suscripción anual cuesta 9,99 € y se renueva automáticamente cada año. La opción para siempre cuesta 29 € una sola vez y vale mientras SLFF ofrezca este servicio. Con la opción para siempre puedes añadir una insignia impresa con tu nombre por 5 € más 2 € de envío (Eslovenia) o 4 € (otro país de la UE). Solo enviamos a países de la UE; la entrega suele tardar de 2 a 3 semanas. Todos los precios incluyen IVA.',
+    placilo:
+      '<b>Pago.</b> El pago lo procesa Stripe. No vemos ni guardamos los datos de tu tarjeta. Solo puedes comprar si tienes al menos 18 años. El contrato se celebra cuando Stripe confirma el pago.',
+    odpoved:
+      '<b>Cancelar la suscripción.</b> Puedes cancelar la suscripción en cualquier momento con el botón Gestionar suscripción en la página de tu cuenta (slff.eu/account) o en el perfil del jugador. La cancelación surte efecto al final del año pagado; hasta entonces la insignia se mantiene. No devolvemos el dinero de un año ya empezado, salvo en los casos de abajo.',
+    odstop:
+      '<b>Derecho de desistimiento.</b> El contenido digital (el check y los extras) se facilita inmediatamente después del pago. Antes de pagar aceptas expresamente el suministro inmediato y reconoces que así pierdes el derecho de desistimiento de 14 días (art. 16, letra m, de la Directiva 2011/83/UE; ZVPot-1 esloveno). La insignia impresa se fabrica según tus indicaciones (el nombre en la insignia), por lo que no tiene derecho de desistimiento (art. 16, letra c). Tus derechos legales de garantía se mantienen: si la insignia llega dañada, equivocada o no llega, escríbenos y la cambiamos gratis o te devolvemos el dinero.',
+    konec:
+      '<b>Cuándo termina la insignia.</b> La insignia termina si resulta que el perfil no es tuyo y anulamos la confirmación, si ocultamos el nombre del jugador a petición suya o de la federación, o si borras tu cuenta. En ese caso la suscripción se detiene automáticamente y no se vuelve a cobrar. Si reclamas el pago ante tu banco (chargeback), se retira la insignia.',
+    vracila:
+      '<b>Reembolsos.</b> No reembolsamos en caso de abuso o de una confirmación falsa del perfil. Si la insignia termina por un error nuestro, a petición de la federación o porque cerramos el servicio, devolvemos la parte proporcional de los meses no usados de la suscripción anual. En la opción para siempre devolvemos el importe íntegro durante los primeros 12 meses tras la compra y, después, la parte proporcional de lo que quede de 5 años desde la compra. La insignia impresa y el envío no se reembolsan si cerramos el servicio (la insignia sigue siendo tuya), solo en caso de defecto.',
+    pritozbe:
+      '<b>Preguntas y reclamaciones.</b> Escribe a <eposta>info@slff.eu</eposta>; respondemos en un plazo de 8 días hábiles. No reconocemos ninguna entidad de resolución extrajudicial de litigios de consumo. Se aplica la ley eslovena; esto no te quita la protección que te da la ley del país donde vives.',
   },
 }

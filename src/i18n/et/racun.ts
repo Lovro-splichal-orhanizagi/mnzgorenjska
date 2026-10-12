@@ -158,7 +158,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   izbris: {
     naslov: 'Kustuta konto',
     moraPrijava: 'Konto kustutamiseks pead <prijava>sisse logima</prijava>.',
-    opis: 'Kustutame konto {email}: sinu profiili, kõik sinu koosseisud koos punktide ajalooga, sinu hääled ja sinu loodud miniliigad. Seda ei saa tagasi võtta.',
+    opis: 'Kustutame konto {email}: sinu profiili, kõik sinu koosseisud koos punktide ajalooga, sinu hääled ja sinu loodud miniliigad. Seda ei saa tagasi võtta. Kustutamisega lõpeb ka kinnitatud mängija märk ja tellimus peatub ilma tagastuseta.',
     gumb: 'Kustuta konto',
     potrdi: 'Jah, kustuta jäädavalt',
     preklici: 'Tühista',
@@ -167,7 +167,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   },
   pravno: {
     naslov: 'Privaatsus ja tingimused',
-    zadnjaSprememba: 'Viimati muudetud: 9. oktoober 2026',
+    zadnjaSprememba: 'Viimati muudetud: 12. oktoober 2026',
     kajJeNaslov: 'Mis on SLFF',
     kajJe:
       'SLFF (Sunday League Fantasy Football) on fännide tehtud fantaasialiiga kohalikele amatöörliigadele. Seda veavad vabatahtlikud ja see pole seotud piirkondlike jalgpalliliitude, riikliku jalgpalliliidu ega klubidega. Mäng on tasuta, ilma panuste ja auhindadeta.',
@@ -181,7 +181,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     podatkiNaprava:
       '<b>Seadme tunnus teavituste jaoks.</b> Kui lubad mobiilirakenduses teavitused, hoiame tunnust, millega saadame sulle enne vooru tähtaega meeldetuletuse. See kustutatakse väljalogimisel.',
     neHranimo:
-      'Me ei hoia sinu aadressi, telefoninumbrit ega makseandmeid. Me ei kasuta jälgimisküpsiseid ega reklaamitööriistu. Sinu brauser hoiab sinu sisselogimise seanssi, abivestluse vestluse tunnust, kui selle avad, ja seansimärke, mis hoiavad ära lehe kahekordse loendamise. Kui palju inimesi millist lehte avas, hoitakse ainult päeva kogusummana, ilma sinu nime, konto, seadme või IP-aadressita. Üldist külastusstatistikat (millised lehed, kust külastajad tulevad, seadme tüüp ja riik, mõned tegevused, näiteks meeskonna kokkupanek) kogub <b>Umami</b> meie oma serveris: küpsisteta, IP-aadressi hoidmata ja külastusi sinu kontoga sidumata. Kui sinu brauseris on sisse lülitatud "Do Not Track", ei salvestata midagi.',
+      'Me ei hoia sinu telefoninumbrit ega kaardiandmeid ja aadressi ainult siis, kui tellid trükitud märgi (vt allpool). Me ei kasuta jälgimisküpsiseid ega reklaamitööriistu. Sinu brauser hoiab sinu sisselogimise seanssi, abivestluse vestluse tunnust, kui selle avad, ja seansimärke, mis hoiavad ära lehe kahekordse loendamise. Kui palju inimesi millist lehte avas, hoitakse ainult päeva kogusummana, ilma sinu nime, konto, seadme või IP-aadressita. Üldist külastusstatistikat (millised lehed, kust külastajad tulevad, seadme tüüp ja riik, mõned tegevused, näiteks meeskonna kokkupanek) kogub <b>Umami</b> meie oma serveris: küpsisteta, IP-aadressi hoidmata ja külastusi sinu kontoga sidumata. Kui sinu brauseris on sisse lülitatud "Do Not Track", ei salvestata midagi.',
     dostopNaslov: 'Kellel on andmetele juurdepääs',
     dostop:
       'Andmeid hoitakse meie oma serveris ettevõttes <b>Hetzner</b> (Saksamaa, EL); liiklus käib läbi <b>Cloudflare</b>’i (kaitse ja lehe edastamine). Kinnitus- ja parooli lähtestamise kirjad saadetakse meie oma meiliserverist (samuti Hetzneris) ja mobiilirakenduse teavitused läbi <b>Google Firebase Cloud Messaging</b>’u (ainult seadme tunnus ja teavituse tekst). Abivestlus all paremas nurgas töötab teenusel <b>HelpStack</b>: see saab, mida sinna kirjutad, ja kui oled sisse logitud, sinu kuvatava nime, et teaksime, kellele vastame. Kui vestluse assistent sind aitab, näeb ta ka, millisel lehel ja millises liigas oled ning kas sinu meeskond vastab reeglitele. Sinu e-posti aadressi me edasi ei anna. Me ei jaga sinu andmeid kellegi teisega ega müü neid.',
@@ -199,12 +199,38 @@ export const racun: NonNullable<Prevod['racun']> = {
       'Avalehe foto on teinud Abigail Keenan ja see on avaldatud teenuses <unsplash>Unsplash</unsplash> selle litsentsi alusel, mis lubab vaba kasutust. Fotol pole meie liigade mängijaid.',
     praviceNaslov: 'Sinu õigused',
     pravice:
-      'Saad oma konto ja kõik oma andmed igal ajal ise kustutada: vali kontomenüüs <b>Kustuta konto</b> (slff.eu/account). Kuvatava nime parandamiseks või kui kustutamine ebaõnnestub, kirjuta meile aadressile <eposta>info@slff.eu</eposta>. Konto kustutamisel kaob ka sinu meeskond edetabelist.',
+      'Saad oma konto ja kõik oma andmed igal ajal ise kustutada: vali kontomenüüs <b>Kustuta konto</b> (slff.eu/account). Kuvatava nime parandamiseks või kui kustutamine ebaõnnestub, kirjuta meile aadressile <eposta>info@slff.eu</eposta>. Konto kustutamisel kaob ka sinu meeskond edetabelist. Kinnitatud mängija märgi ostu kirje jääb alles 10 aastaks, nagu nõuab raamatupidamisseadus, ja tarneaadress ülaltoodud reegli järgi.',
     pravilaNaslov: 'Mängureeglid',
     pravila:
       'Üks inimene, üks konto. Hääletus resultatiivsete söötude ja positsioonide üle on mõeldud päris parandusteks: meelega valed hääled rikuvad mängu kõigile ja võivad viia konto eemaldamiseni. Punktiarvestus ja hinnad võivad hooaja jooksul muutuda, kui midagi osutub ebaõiglaseks; sellistest muudatustest anname teada.',
     jamstvoNaslov: 'Garantiid pole',
     jamstvo:
-      'Leht töötab nii, nagu töötab. Anname endast parima, et andmed oleksid õiged ja leht kättesaadav, kuid garanteerida me seda ei saa: mänguprotokollid võivad hilineda ja statistikas võib olla vigu.',
+      'Leht töötab nii, nagu töötab. Anname endast parima, et andmed oleksid õiged ja leht kättesaadav, kuid garanteerida me seda ei saa: mänguprotokollid võivad hilineda ja statistikas võib olla vigu. See kehtib tasuta mängu kohta. Tasulistele teenustele kehtivad jaotise Tasulised teenused tingimused ja sinu seadusest tulenevad tarbijaõigused.',
+    kajJePlacljivo:
+      'Ainus tasuline asi on vabatahtlik kinnitatud mängija märk (vt allpool Tasulised teenused).',
+    podatkiPlacilo:
+      '<b>Kinnitatud mängija märgi ost (ainult kui ostad).</b> Ostu kirjet (mida, millal, summa ja sinu kliendi tunnus Stripe’is) hoiame 10 aastat, nagu nõuab raamatupidamisseadus. Trükitud märgi tarneaadressi hoiame 90 päeva pärast saatmist või tellimuse tühistamist ja kõige rohkem 12 kuud pärast tellimist, seejärel jääb alles ainult riik.',
+    dostopStripe:
+      'Kinnitatud mängija märgi makseid töötleb <b>Stripe</b> (Stripe Payments Europe, Iirimaa): see saab sinu nime, e-posti, arveldusaadressi ja trükitud märgi puhul tarneaadressi. Kaardiandmed sisestad otse Stripe’is, meie neid ei näe.',
+    placljivoNaslov:
+      'Tasulised teenused: kinnitatud mängijad',
+    placljivoUvod:
+      'Mäng on ja jääb tasuta. Tasuline on ainult vabatahtlik kinnitatud mängija märk, mida saab osta mängija, kes on kinnitanud, et profiil on tema oma. Märk ei mõjuta kunagi punkte, hindu, fantaasiameeskondi ega mängureegleid. Need tingimused kehtivad selle ostu kohta.',
+    prodajalec:
+      '<b>Müüja:</b> SPACE GUARDIAN, računalniško programiranje, d.o.o., Ulica Hermana Potočnika 5, 1000 Ljubljana, Sloveenia, kantud Ljubljana ringkonnakohtu registrisse. Registrikood 9850538000, KMKR number SI42765153. Kontakt: <eposta>info@slff.eu</eposta>.',
+    kupis:
+      '<b>Mida ostad.</b> Sinise linnukese mängija nime juurde ja profiili lisad (pikem kirjeldus, lingid, bänner, värv, esiletõstetud mäng või statistika, sõnum fännidele). Aastatellimus maksab 9,99 € ja uueneb igal aastal automaatselt. Igavene ost maksab ühekordselt 29 € ja kehtib seni, kuni SLFF seda teenust pakub. Igavese ostu juurde saad lisada trükitud nimega märgi hinnaga 5 €, millele lisandub postikulu 2 € (Sloveenia) või 4 € (muu ELi riik). Saadame ainult ELi riikidesse, kohaletoimetamine võtab tavaliselt 2-3 nädalat. Kõik hinnad sisaldavad käibemaksu.',
+    placilo:
+      '<b>Makse.</b> Makset töötleb Stripe. Me ei näe ega hoia sinu kaardiandmeid. Osta saad ainult siis, kui oled vähemalt 18-aastane. Leping on sõlmitud, kui Stripe makse kinnitab.',
+    odpoved:
+      '<b>Tellimuse lõpetamine.</b> Tellimuse saad igal ajal lõpetada nupuga Halda tellimust oma konto lehel (slff.eu/account) või mängija profiilil. Lõpetamine jõustub makstud aasta lõpus, seni jääb märk alles. Juba alanud aasta eest raha ei tagastata, välja arvatud allpool toodud juhtudel.',
+    odstop:
+      '<b>Taganemisõigus.</b> Digitaalne sisu (linnuke ja lisad) antakse kohe pärast makset. Enne makset nõustud sõnaselgelt kohese üleandmisega ja kinnitad, et kaotad sellega 14 päeva taganemisõiguse (direktiivi 2011/83/EL artikli 16 punkt m, Sloveenia ZVPot-1). Trükitud märk valmistatakse sinu juhiste järgi (nimi märgil), seega selle puhul taganemisõigust ei ole (artikli 16 punkt c). Seadusest tulenevad õigused jäävad: kui märk saabub kahjustatult, valesti või ei saabu üldse, kirjuta meile ja vahetame selle tasuta või tagastame raha.',
+    konec:
+      '<b>Millal märk lõpeb.</b> Märk lõpeb, kui selgub, et profiil ei ole sinu oma ja tühistame kinnituse, kui mängija nimi peidetakse tema või liidu soovil või kui kustutad oma konto. Tellimus peatub siis automaatselt ja tasu enam ei võeta. Kui vaidlustad makse oma pangas (chargeback), märk eemaldatakse.',
+    vracila:
+      '<b>Tagastused.</b> Kuritarvituse või vale profiilikinnituse korral raha ei tagastata. Kui märk lõpeb meie vea tõttu, liidu soovil või seetõttu, et lõpetame teenuse, tagastame aastatellimuse kasutamata kuude eest proportsionaalse osa. Igavese ostu puhul tagastame esimese 12 kuu jooksul pärast ostu kogu summa, hiljem proportsionaalse osa ostust arvates 5 aastast järelejäänud ajast. Trükitud märki ja postikulu teenuse lõpetamisel ei tagastata (märk jääb sulle), ainult puuduse korral.',
+    pritozbe:
+      '<b>Küsimused ja kaebused.</b> Kirjuta aadressil <eposta>info@slff.eu</eposta>, vastame 8 tööpäeva jooksul. Me ei tunnusta ühtegi tarbijavaidluste kohtuvälise lahendamise üksust. Kehtib Sloveenia õigus; see ei võta sinult kaitset, mida annab sinu elukohariigi õigus.',
   },
 }

@@ -154,7 +154,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   izbris: {
     naslov: 'Ștergerea contului',
     moraPrijava: 'Ca să îți ștergi contul, trebuie să te <prijava>autentifici</prijava>.',
-    opis: 'Vom șterge contul {email}: profilul, toate echipele tale cu istoricul punctelor, voturile și miniligile pe care le-ai creat. Ștergerea nu poate fi anulată.',
+    opis: 'Vom șterge contul {email}: profilul, toate echipele tale cu istoricul punctelor, voturile și miniligile pe care le-ai creat. Ștergerea nu poate fi anulată. Odată cu ștergerea încetează și insigna de jucător verificat, iar abonamentul se oprește fără rambursare.',
     gumb: 'Șterge contul',
     potrdi: 'Da, șterge definitiv',
     preklici: 'Anulează',
@@ -163,7 +163,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   },
   pravno: {
     naslov: 'Confidențialitate și termeni',
-    zadnjaSprememba: 'Ultima modificare: 9 octombrie 2026',
+    zadnjaSprememba: 'Ultima modificare: 12 octombrie 2026',
     kajJeNaslov: 'Ce este SLFF',
     kajJe:
       'SLFF (Sunday League Fantasy Football) este o ligă fantasy a suporterilor pentru ligile de fotbal amator. O facem din pasiune și nu are legătură cu Federația Română de Fotbal (FRF), asociațiile județene de fotbal sau cu cluburile. Jocul este gratuit, fără mize în bani și fără premii.',
@@ -177,7 +177,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     podatkiNaprava:
       '<b>Tokenul dispozitivului pentru notificări.</b> Dacă permiți notificările în aplicația mobilă, păstrăm un token prin care îți trimitem un memento înainte de termenul etapei. La deconectare îl ștergem.',
     neHranimo:
-      'Nu păstrăm adresa poștală, numărul de telefon sau date despre plăți. Nu folosim cookie-uri de urmărire sau instrumente de publicitate. În browser sunt salvate sesiunea ta de autentificare, identificatorul conversației din chatul de ajutor, dacă îl deschizi, și identificatori de sesiune cu care numărăm o singură dată vizita unei pagini. Câți oameni au deschis o anumită pagină numărăm doar ca total zilnic, fără numele, contul, dispozitivul sau adresa ta IP. Statisticile generale de vizitare (ce pagini, de unde vin vizitatorii, tipul dispozitivului și țara, câteva acțiuni precum alcătuirea echipei) le înregistrează <b>Umami</b> pe serverul nostru: fără cookie-uri, nu salvează adresa IP și nu leagă vizita de contul tău. Dacă browserul are activată opțiunea „Nu urmări”, nu se înregistrează nimic.',
+      'Nu păstrăm numărul de telefon sau datele cardului, iar adresa doar dacă comanzi o insignă tipărită (vezi mai jos). Nu folosim cookie-uri de urmărire sau instrumente de publicitate. În browser sunt salvate sesiunea ta de autentificare, identificatorul conversației din chatul de ajutor, dacă îl deschizi, și identificatori de sesiune cu care numărăm o singură dată vizita unei pagini. Câți oameni au deschis o anumită pagină numărăm doar ca total zilnic, fără numele, contul, dispozitivul sau adresa ta IP. Statisticile generale de vizitare (ce pagini, de unde vin vizitatorii, tipul dispozitivului și țara, câteva acțiuni precum alcătuirea echipei) le înregistrează <b>Umami</b> pe serverul nostru: fără cookie-uri, nu salvează adresa IP și nu leagă vizita de contul tău. Dacă browserul are activată opțiunea „Nu urmări”, nu se înregistrează nimic.',
     dostopNaslov: 'Cine are acces la date',
     dostop:
       'Datele sunt pe serverul nostru la furnizorul <b>Hetzner</b> (Germania, UE), iar traficul către el trece prin <b>Cloudflare</b> (protecție și livrarea paginilor). E-mailurile de confirmare și de resetare trec prin serverul nostru de e-mail (tot la Hetzner), notificările din aplicația mobilă prin <b>Google Firebase Cloud Messaging</b> (doar tokenul dispozitivului și textul notificării). Chatul de ajutor din colțul din dreapta jos funcționează prin <b>HelpStack</b>: acolo ajunge ce scrii în el și, dacă ești autentificat, numele tău afișat, ca să știm cui răspundem. Când asistentul din chat te ajută, poate vedea și pe ce pagină și în ce ligă ești și dacă echipa ta e validă. Adresa de e-mail nu i-o transmitem. Nu transmitem datele nimănui altcuiva și nu le vindem.',
@@ -195,12 +195,38 @@ export const racun: NonNullable<Prevod['racun']> = {
       'Fotografia de pe pagina principală este realizată de Abigail Keenan și publicată pe <unsplash>Unsplash</unsplash> sub licența lor, care permite utilizarea liberă. Nu înfățișează jucători din ligile noastre.',
     praviceNaslov: 'Drepturile tale',
     pravice:
-      'Îți poți șterge oricând singur contul și toate datele: în meniul contului alege <b>Ștergerea contului</b> (slff.eu/account). Pentru corectarea numelui afișat sau dacă ștergerea nu reușește, scrie-ne la <eposta>info@slff.eu</eposta>. La ștergere dispare și echipa ta din clasament.',
+      'Îți poți șterge oricând singur contul și toate datele: în meniul contului alege <b>Ștergerea contului</b> (slff.eu/account). Pentru corectarea numelui afișat sau dacă ștergerea nu reușește, scrie-ne la <eposta>info@slff.eu</eposta>. La ștergere dispare și echipa ta din clasament. Înregistrarea cumpărării insignei de jucător verificat rămâne 10 ani, cum cere legislația contabilă, iar adresa de livrare după regula de mai sus.',
     pravilaNaslov: 'Regulile jocului',
     pravila:
       'Un om, un cont. Votul pentru pase decisive și poziții este pentru corecturi reale: votul greșit intenționat strică jocul pentru toți și poate duce la eliminarea contului. Punctajul și prețurile se pot schimba în timpul sezonului dacă se dovedește că ceva e nedrept; astfel de schimbări le vom anunța.',
     jamstvoNaslov: 'Fără garanție',
     jamstvo:
-      'Site-ul merge așa cum merge. Ne străduim ca datele să fie corecte și site-ul să fie disponibil, dar nu putem garanta asta: foile de joc pot întârzia, iar statisticile pot conține greșeli.',
+      'Site-ul merge așa cum merge. Ne străduim ca datele să fie corecte și site-ul să fie disponibil, dar nu putem garanta asta: foile de joc pot întârzia, iar statisticile pot conține greșeli. Asta se aplică jocului gratuit. Pentru serviciile cu plată se aplică condițiile din secțiunea Servicii cu plată și drepturile tale legale de consumator.',
+    kajJePlacljivo:
+      'Singurul lucru cu plată este insigna opțională de jucător verificat (vezi Servicii cu plată mai jos).',
+    podatkiPlacilo:
+      '<b>Cumpărarea insignei de jucător verificat (doar dacă o cumperi).</b> Înregistrarea cumpărării (ce, când, suma și identificatorul tău de client la Stripe) o păstrăm 10 ani, cum cere legislația contabilă. Adresa de livrare a insignei tipărite o păstrăm 90 de zile după expediere sau anularea comenzii și cel mult 12 luni de la comandă, apoi rămâne doar țara.',
+    dostopStripe:
+      'Plățile pentru insigna de jucător verificat sunt procesate de <b>Stripe</b> (Stripe Payments Europe, Irlanda): primește numele, e-mailul, adresa de facturare și, pentru insigna tipărită, adresa de livrare. Datele cardului le introduci direct la Stripe, noi nu le vedem.',
+    placljivoNaslov:
+      'Servicii cu plată: jucători verificați',
+    placljivoUvod:
+      'Jocul este și rămâne gratuit. Cu plată este doar insigna opțională de jucător verificat, pe care o poate cumpăra un jucător care a confirmat că profilul este al lui. Insigna nu influențează niciodată punctele, prețurile, echipele fantasy sau regulile jocului. Acești termeni se aplică acestei cumpărări.',
+    prodajalec:
+      '<b>Vânzător:</b> SPACE GUARDIAN, računalniško programiranje, d.o.o., Ulica Hermana Potočnika 5, 1000 Ljubljana, Slovenia, înscrisă în registrul judiciar la Tribunalul Districtual din Ljubljana. Număr de înregistrare 9850538000, cod de TVA SI42765153. Contact: <eposta>info@slff.eu</eposta>.',
+    kupis:
+      '<b>Ce cumperi.</b> O bifă albastră lângă numele jucătorului și extra pe profil (descriere mai lungă, linkuri, banner, culoare, un meci sau o statistică evidențiată, un mesaj pentru fani). Abonamentul anual costă 9,99 € și se reînnoiește automat în fiecare an. Varianta pentru totdeauna costă 29 € o singură dată și este valabilă cât timp SLFF oferă acest serviciu. La varianta pentru totdeauna poți adăuga o insignă tipărită cu numele pentru 5 € plus poștă de 2 € (Slovenia) sau 4 € (altă țară din UE). Expediem doar în țări din UE, livrarea durează de obicei 2-3 săptămâni. Toate prețurile includ TVA.',
+    placilo:
+      '<b>Plata.</b> Plata este procesată de Stripe. Nu vedem și nu păstrăm datele cardului. Poți cumpăra doar dacă ai cel puțin 18 ani. Contractul se încheie când Stripe confirmă plata.',
+    odpoved:
+      '<b>Anularea abonamentului.</b> Poți anula oricând abonamentul cu butonul Gestionează abonamentul de pe pagina contului (slff.eu/account) sau de pe profilul jucătorului. Anularea are efect la sfârșitul anului plătit; până atunci insigna rămâne. Pentru un an deja început nu returnăm bani, cu excepția cazurilor de mai jos.',
+    odstop:
+      '<b>Dreptul de retragere.</b> Conținutul digital (bifa și extra) este furnizat imediat după plată. Înainte de plată îți dai acordul expres pentru furnizarea imediată și confirmi că astfel îți pierzi dreptul de retragere de 14 zile (art. 16 lit. (m) din Directiva 2011/83/UE, ZVPot-1 din Slovenia). Insigna tipărită este realizată după indicațiile tale (numele de pe insignă), deci pentru ea nu există drept de retragere (art. 16 lit. (c)). Garanția legală rămâne: dacă insigna sosește deteriorată, greșită sau nu sosește deloc, scrie-ne și o înlocuim gratuit sau îți returnăm banii.',
+    konec:
+      '<b>Când încetează insigna.</b> Insigna încetează dacă se dovedește că profilul nu este al tău și anulăm confirmarea, dacă numele jucătorului este ascuns la cererea lui sau a federației ori dacă îți ștergi contul. Abonamentul se oprește atunci automat și nu se mai facturează. Dacă contești plata la bancă (chargeback), insigna este retrasă.',
+    vracila:
+      '<b>Rambursări.</b> În caz de abuz sau confirmare falsă a profilului nu returnăm bani. Dacă insigna încetează din greșeala noastră, la cererea federației sau pentru că închidem serviciul, la abonamentul anual returnăm proporțional lunile nefolosite. La varianta pentru totdeauna returnăm întreaga sumă în primele 12 luni de la cumpărare, iar după aceea partea proporțională din ce a rămas din cei 5 ani de la cumpărare. Insigna tipărită și poșta nu le returnăm la închiderea serviciului (insigna rămâne a ta), doar în caz de defect.',
+    pritozbe:
+      '<b>Întrebări și reclamații.</b> Scrie la <eposta>info@slff.eu</eposta>, răspundem în 8 zile lucrătoare. Nu recunoaștem nicio entitate de soluționare extrajudiciară a litigiilor cu consumatorii. Se aplică legea slovenă; asta nu îți ia protecția pe care ți-o oferă legea țării în care locuiești.',
   },
 }

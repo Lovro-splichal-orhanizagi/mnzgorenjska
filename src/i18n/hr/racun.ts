@@ -160,7 +160,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   izbris: {
     naslov: 'Brisanje računa',
     moraPrijava: 'Za brisanje računa moraš se <prijava>prijaviti</prijava>.',
-    opis: 'Obrisat ćemo račun {email}: profil, sve tvoje momčadi s poviješću bodova, glasove i mini lige koje si napravio. Brisanje nije moguće poništiti.',
+    opis: 'Obrisat ćemo račun {email}: profil, sve tvoje momčadi s poviješću bodova, glasove i mini lige koje si napravio. Brisanje nije moguće poništiti. Brisanjem prestaje i značka provjerenog igrača, a pretplata se zaustavlja bez povrata novca.',
     gumb: 'Obriši račun',
     potrdi: 'Da, obriši zauvijek',
     preklici: 'Odustani',
@@ -170,7 +170,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   // Privatnost i uvjeti. <b> je podebljano, ostale oznake su poveznice.
   pravno: {
     naslov: 'Privatnost i uvjeti',
-    zadnjaSprememba: 'Zadnja izmjena: 9. listopada 2026.',
+    zadnjaSprememba: 'Zadnja izmjena: 12. listopada 2026.',
     kajJeNaslov: 'Što je SLFF',
     kajJe:
       'SLFF (Sunday League Fantasy Football) je navijačka fantasy liga za amaterske nogometne lige. Vodimo je amaterski i nije povezana s Hrvatskim nogometnim savezom (HNS), županijskim nogometnim savezima ni s klubovima. Igra je besplatna, bez novčanih uloga i nagrada.',
@@ -184,7 +184,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     podatkiNaprava:
       '<b>Token uređaja za obavijesti.</b> Ako u mobilnoj aplikaciji dopustiš obavijesti, spremamo token preko kojeg ti šaljemo podsjetnik prije roka kola. Pri odjavi ga brišemo.',
     neHranimo:
-      'Ne čuvamo adresu, broj telefona ni podatke o plaćanjima. Ne koristimo kolačiće za praćenje ni oglašivačke alate. U pregledniku su spremljeni tvoja sesija prijave, oznaka razgovora u chatu za pomoć ako ga otvoriš, i oznake sesije kojima posjet stranici brojimo samo jednom. Koliko je ljudi otvorilo koju stranicu čuvamo samo kao dnevni zbroj — bez tvojeg imena, računa, uređaja ili IP adrese. Opću statistiku posjeta (koje stranice, odakle posjetitelji dolaze, vrsta uređaja i država, nekoliko radnji poput slaganja momčadi) bilježi <b>Umami</b> na našem poslužitelju: bez kolačića, IP adresu ne sprema i posjet ne povezuje s tvojim računom. Ako preglednik ima uključenu opciju „Ne prati“, ne bilježi se ništa.',
+      'Ne čuvamo broj telefona ni podatke platne kartice, a adresu samo ako naručiš tiskanu značku (vidi niže). Ne koristimo kolačiće za praćenje ni oglašivačke alate. U pregledniku su spremljeni tvoja sesija prijave, oznaka razgovora u chatu za pomoć ako ga otvoriš, i oznake sesije kojima posjet stranici brojimo samo jednom. Koliko je ljudi otvorilo koju stranicu čuvamo samo kao dnevni zbroj — bez tvojeg imena, računa, uređaja ili IP adrese. Opću statistiku posjeta (koje stranice, odakle posjetitelji dolaze, vrsta uređaja i država, nekoliko radnji poput slaganja momčadi) bilježi <b>Umami</b> na našem poslužitelju: bez kolačića, IP adresu ne sprema i posjet ne povezuje s tvojim računom. Ako preglednik ima uključenu opciju „Ne prati“, ne bilježi se ništa.',
     dostopNaslov: 'Kome su podaci dostupni',
     dostop:
       'Podaci su pohranjeni na našem poslužitelju kod pružatelja <b>Hetzner</b> (Njemačka, EU), a promet do njega ide preko <b>Cloudflarea</b> (zaštita i isporuka stranice). Pošta za potvrdu i ponovno postavljanje lozinke ide s našeg poslužitelja pošte (također Hetzner), obavijesti u mobilnoj aplikaciji preko <b>Google Firebase Cloud Messaginga</b> (samo token uređaja i tekst obavijesti). Chat za pomoć u donjem desnom kutu radi preko <b>HelpStacka</b>: tamo ide ono što u njega napišeš i — ako si prijavljen — tvoje prikazno ime, da znamo kome odgovaramo. Kad ti pomoćnik u chatu pomaže, može vidjeti i na kojoj si stranici i u kojoj ligi te je li tvoja momčad valjana. E-adresu mu ne prosljeđujemo. Nikome drugome podatke ne prosljeđujemo i ne prodajemo ih.',
@@ -202,12 +202,38 @@ export const racun: NonNullable<Prevod['racun']> = {
       'Fotografija na naslovnici djelo je Abigail Keenan i objavljena je na <unsplash>Unsplashu</unsplash> pod njihovom licencom, koja dopušta slobodnu upotrebu. Ne prikazuje igrače naših liga.',
     praviceNaslov: 'Tvoja prava',
     pravice:
-      'Račun i sve svoje podatke možeš u svakom trenutku sam obrisati: u izborniku računa odaberi <b>Brisanje računa</b> (slff.eu/account). Za ispravak prikaznog imena ili ako brisanje ne uspije, piši nam na <eposta>info@slff.eu</eposta>. Brisanjem nestaje i tvoja momčad s ljestvice.',
+      'Račun i sve svoje podatke možeš u svakom trenutku sam obrisati: u izborniku računa odaberi <b>Brisanje računa</b> (slff.eu/account). Za ispravak prikaznog imena ili ako brisanje ne uspije, piši nam na <eposta>info@slff.eu</eposta>. Brisanjem nestaje i tvoja momčad s ljestvice. Zapis o kupnji značke provjerenog igrača ostaje 10 godina, kako to traže računovodstveni propisi, a adresa za dostavu prema pravilu gore.',
     pravilaNaslov: 'Pravila igre',
     pravila:
       'Jedan čovjek, jedan račun. Glasovanje o asistencijama i pozicijama služi za stvarne ispravke — namjerno pogrešno glasovanje kvari igru svima i može dovesti do uklanjanja računa. Bodovanje i cijene mogu se tijekom sezone promijeniti ako se pokaže da je nešto nepravedno; takve promjene ćemo objaviti.',
     jamstvoNaslov: 'Bez jamstva',
     jamstvo:
-      'Stranica radi kako radi. Trudimo se da podaci budu točni i da bude dostupna, ali to ne možemo jamčiti — zapisnici znaju kasniti, a statistika sadržavati greške.',
+      'Stranica radi kako radi. Trudimo se da podaci budu točni i da bude dostupna, ali to ne možemo jamčiti — zapisnici znaju kasniti, a statistika sadržavati greške. To vrijedi za besplatnu igru. Za usluge koje se plaćaju vrijede uvjeti u odjeljku Usluge koje se plaćaju i tvoja zakonska prava potrošača.',
+    kajJePlacljivo:
+      'Jedino što se plaća je neobavezna značka provjerenog igrača (vidi Usluge koje se plaćaju niže).',
+    podatkiPlacilo:
+      '<b>Kupnja značke provjerenog igrača (samo ako kupiš).</b> Zapis o kupnji (što, kada, iznos i oznaka kupca kod Stripea) čuvamo 10 godina, kako to traže računovodstveni propisi. Adresu za dostavu tiskane značke čuvamo 90 dana nakon slanja ili otkazivanja narudžbe, a najdulje 12 mjeseci od narudžbe, a zatim ostaje samo država.',
+    dostopStripe:
+      'Plaćanja značke provjerenog igrača obrađuje <b>Stripe</b> (Stripe Payments Europe, Irska): dobiva tvoje ime, e-poštu, adresu za račun i, za tiskanu značku, adresu za dostavu. Podatke kartice upisuješ izravno kod Stripea, mi ih ne vidimo.',
+    placljivoNaslov:
+      'Usluge koje se plaćaju: provjereni igrači',
+    placljivoUvod:
+      'Igra je i ostaje besplatna. Plaća se samo neobavezna značka provjerenog igrača, koju može kupiti igrač koji je potvrdio da je profil njegov. Značka nikad ne utječe na bodove, cijene, fantasy momčadi ni pravila igre. Ovi uvjeti vrijede za tu kupnju.',
+    prodajalec:
+      '<b>Prodavatelj:</b> SPACE GUARDIAN, računalniško programiranje, d.o.o., Ulica Hermana Potočnika 5, 1000 Ljubljana, Slovenija, upisano u sudski registar pri Okružnom sudu u Ljubljani. Matični broj 9850538000, PDV ID SI42765153. Kontakt: <eposta>info@slff.eu</eposta>.',
+    kupis:
+      '<b>Što kupuješ.</b> Plavu kvačicu uz ime igrača i dodatke profila (duži opis, poveznice, naslovna slika, boja, istaknuta utakmica ili statistika, poruka navijačima). Godišnja pretplata stoji 9,99 € i svake se godine automatski obnavlja. Kupnja zauvijek stoji 29 € jednokratno i vrijedi dok SLFF nudi ovu uslugu. Uz kupnju zauvijek možeš dodati tiskanu značku s imenom za 5 € i poštarinu 2 € (Slovenija) ili 4 € (druga država EU). Šaljemo samo u države EU, dostava obično traje 2 do 3 tjedna. Sve cijene uključuju PDV.',
+    placilo:
+      '<b>Plaćanje.</b> Plaćanje obrađuje Stripe. Podatke kartice ne vidimo i ne čuvamo. Kupiti možeš samo ako imaš najmanje 18 godina. Ugovor je sklopljen kad Stripe potvrdi plaćanje.',
+    odpoved:
+      '<b>Otkaz pretplate.</b> Pretplatu možeš otkazati bilo kada gumbom Upravljaj pretplatom na stranici računa (slff.eu/account) ili na profilu igrača. Otkaz vrijedi na kraju plaćene godine; do tada značka ostaje. Za već započetu godinu ne vraćamo novac, osim u slučajevima niže.',
+    odstop:
+      '<b>Pravo na odustanak.</b> Digitalni sadržaj (kvačica i dodaci) isporučuje se odmah nakon plaćanja. Prije plaćanja izričito pristaješ na trenutačnu isporuku i potvrđuješ da time gubiš pravo na odustanak u roku od 14 dana (članak 16. točka (m) Direktive 2011/83/EU, slovenski ZVPot-1). Tiskana značka izrađuje se prema tvojim uputama (ime na znački), pa za nju nema prava na odustanak (članak 16. točka (c)). Zakonsko jamstvo ostaje: ako značka stigne oštećena, pogrešna ili uopće ne stigne, piši nam i besplatno ćemo je zamijeniti ili ti vratiti novac.',
+    konec:
+      '<b>Kad značka prestaje.</b> Značka prestaje ako se pokaže da profil nije tvoj i opozovemo potvrdu, ako ime igrača sakrijemo na njegov zahtjev ili zahtjev saveza ili ako izbrišeš račun. Pretplata se tada automatski zaustavlja i više se ne naplaćuje. Ako plaćanje osporiš kod banke (chargeback), značka se oduzima.',
+    vracila:
+      '<b>Povrat novca.</b> Kod zlouporabe ili lažne potvrde profila ne vraćamo novac. Ako značka prestane zbog naše pogreške, na zahtjev saveza ili zato što ukinemo uslugu, kod godišnje pretplate vraćamo razmjerni dio za neiskorištene mjesece. Kod kupnje zauvijek vraćamo cijeli iznos u prvih 12 mjeseci od kupnje, a nakon toga razmjerni dio preostatka do 5 godina od kupnje. Tiskanu značku i poštarinu kod ukidanja ne vraćamo (značka ostaje tvoja), samo kod nedostatka ili kvara.',
+    pritozbe:
+      '<b>Pitanja i prigovori.</b> Piši na <eposta>info@slff.eu</eposta>, odgovaramo u roku od 8 radnih dana. Ne priznajemo nijedno tijelo za izvansudsko rješavanje potrošačkih sporova. Primjenjuje se slovensko pravo; time ne gubiš zaštitu koju ti daje pravo države u kojoj živiš.',
   },
 }

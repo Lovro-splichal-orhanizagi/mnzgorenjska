@@ -312,6 +312,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       obdeluje: 'Płatność jest jeszcze przetwarzana. Znaczek pojawi się, gdy ją otrzymamy.',
       narocninaNaslov: 'Subskrypcja (zweryfikowany zawodnik)',
       narocninaApp: 'Subskrypcją zarządzasz na slff.eu.',
+      pogoji: '<pogoji>Warunki zakupu</pogoji> · Sprzedawca: Space Guardian d.o.o.',
     },
     napake: {
       znaki: 'Tekst zawiera niedozwolone znaki (np. / @ # " < >).',
