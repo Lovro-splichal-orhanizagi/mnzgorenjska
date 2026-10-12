@@ -4405,7 +4405,9 @@ preveri(
   preveri('ffm: enajstmetrovka', z3.goli.filter((g) => g.enajstmetrovka).length === 1 && z3.rezultat.domaci === 3 && z3.opozorila.length === 0)
   // Napaka vira: gol vpisan dvema igralcema v isti minuti (izid 7:0, dogodkov 11).
   const z4 = F.vZapisnik(beri('mk-ffm-izvestaj-11937009-podvojeni-goli.html'))
-  preveri('ffm: podvojeni goli vira dajo opozorilo, izid ostane', z4.rezultat.domaci === 7 && z4.opozorila.some((o) => o.startsWith('goli iz dogodkov (11:0)')))
+  // Par ob isti minuti postane en gol brez strelca: 11 dogodkov, 7 golov kot v izidu.
+  preveri('ffm: podvojeni goli vira so goli brez strelca, izid ostane', z4.rezultat.domaci === 7 && z4.goli.length === 7 &&
+    z4.goli.filter((g) => g.st === null).length === 4 && !z4.opozorila.some((o) => o.startsWith('goli iz dogodkov')))
   preveri('ffm: kontumacija — zapisnik s postavama brez dogodkov in polčasa je null, izid brez polčasa na strani je kontumacija',
     F.vZapisnik(beri('mk-ffm-izvestaj-12065013-kontumacija.html')) === null &&
     F.jeKontumacija({ id: '12065013', izid: { domaci: 0, gostje: 3 }, polcas: null }) && !F.jeKontumacija(n1) && F.jeKontumacija({ id: null, izid: { domaci: 3, gostje: 0 }, polcas: null }))

@@ -205,6 +205,28 @@ export function dresiVratarjev(html) {
 }
 
 /**
+ * Nekateri klubi vpišejo "gol" tudi podajalcu: ob isti minuti dva gola iste
+ * ekipe, dogodkov dvakrat toliko kot golov v izidu. Kdo je zadel, se ne da
+ * vedeti — kadar ima ekipa več golov iz dogodkov kot v izidu, postane vsaka
+ * taka minuta en gol brez strelca (izid in prejeti goli držijo, točk za gol ne
+ * dobi nihče). Enajstmetrovka strelca pove. Spremeni `goli` na mestu.
+ */
+export function zdruziDvojneGole(goli, rezultat, ekipe, opozorila) {
+  const zaEkipo = (idx) => goli.filter((g) => (g.avtogol ? 1 - g.ekipaIdx : g.ekipaIdx) === idx).length
+  for (const [idx, izid] of [[0, rezultat.domaci], [1, rezultat.gostje]]) {
+    if (zaEkipo(idx) <= izid) continue
+    const poMinuti = Map.groupBy(goli.filter((g) => !g.avtogol && g.ekipaIdx === idx), (g) => g.minuta)
+    for (const [minuta, skupaj] of poMinuti) {
+      if (skupaj.length < 2) continue
+      const enajstmetrovka = skupaj.find((g) => g.enajstmetrovka)
+      for (const g of skupaj) goli.splice(goli.indexOf(g), 1)
+      goli.push(enajstmetrovka ?? { ekipaIdx: idx, st: null, ime: null, minuta, avtogol: false, enajstmetrovka: false })
+    }
+    opozorila.push(`${ekipe[idx].ime}: več golov iz dogodkov kot v izidu — gol z več strelci ob isti minuti ostane brez strelca`)
+  }
+}
+
+/**
  * Zapisnik v obliko, ki jo dajo drugi viri. Null pri prazni predlogi ali
  * če ena od ekip nima postave. `vratarji` = dresiVratarjev(...) ali null.
  */
@@ -255,22 +277,8 @@ export function vZapisnik(html, { id = null, url = null, vratarji = null } = {})
   })
   if (!vratarji) opozorila.push('vratarjev ni (prvaliga.rs)')
 
-  // Nekateri klubi vpišejo "gol" tudi podajalcu: ob isti minuti dva gola iste
-  // ekipe, dogodkov dvakrat toliko kot golov v izidu. Kdo je zadel, se ne da
-  // vedeti — taka minuta ostane en gol brez strelca (izid in prejeti goli
-  // držijo, točk za gol ne dobi nihče). Enajstmetrovka pove strelca.
+  zdruziDvojneGole(goli, rezultat, ekipe, opozorila)
   const zaEkipo = (idx) => goli.filter((g) => (g.avtogol ? 1 - g.ekipaIdx : g.ekipaIdx) === idx).length
-  for (const [idx, izid] of [[0, rezultat.domaci], [1, rezultat.gostje]]) {
-    if (zaEkipo(idx) <= izid) continue
-    const poMinuti = Map.groupBy(goli.filter((g) => !g.avtogol && g.ekipaIdx === idx), (g) => g.minuta)
-    for (const [minuta, skupaj] of poMinuti) {
-      if (skupaj.length < 2) continue
-      const enajstmetrovka = skupaj.find((g) => g.enajstmetrovka)
-      for (const g of skupaj) goli.splice(goli.indexOf(g), 1)
-      goli.push(enajstmetrovka ?? { ekipaIdx: idx, st: null, ime: null, minuta, avtogol: false, enajstmetrovka: false })
-    }
-    opozorila.push(`${ekipe[idx].ime}: več golov iz dogodkov kot v izidu — gol z več strelci ob isti minuti ostane brez strelca`)
-  }
   if (zaEkipo(0) !== rezultat.domaci || zaEkipo(1) !== rezultat.gostje)
     opozorila.push(`goli iz dogodkov (${zaEkipo(0)}:${zaEkipo(1)}) se ne ujemajo z izidom ${rezultat.domaci}:${rezultat.gostje}`)
 
