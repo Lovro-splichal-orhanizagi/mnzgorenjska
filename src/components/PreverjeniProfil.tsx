@@ -1,9 +1,12 @@
 // Dodatki preverjenega igralca na profilu (`profil_igralca_plus`): pasica,
 // barva, daljši opis, povezave, izpostavljena tekma ali statistika in
 // sporočilo navijačem. Lastniku potrjenega profila, ki še ni preverjen,
-// pokaže ponudbo (plačilo pride pozneje), preverjenemu urejevalnik.
+// pokaže nakup (Stripe Checkout prek funkcije `preverjen-placilo`, le na
+// spletu), preverjenemu urejevalnik in pri letni naročnini portal Stripe.
 // Kaj kdo vidi, odloči baza (`je_preverjen`, `vidi_preverjene`).
 import { useCallback, useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
+import { FunctionsHttpError } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import { t, datum, stevilo } from '../i18n'
 import { prevediNapako } from '../lib/napake'
@@ -62,27 +65,50 @@ export default function PreverjeniProfil({
   urejam: boolean
 }) {
   const [plus, setPlus] = useState<Plus | null | undefined>(undefined)
-  const [lastnik, setLastnik] = useState<{ vidi: boolean; preverjen: boolean } | null>(null)
+  const [lastnik, setLastnik] = useState<{ vidi: boolean; preverjen: boolean; vir: string | null } | null>(null)
+  // Vrnitev s Checkout (`?placilo=uspeh`): webhook pravico zapiše v nekaj sekundah.
+  const placano = new URLSearchParams(useLocation().search).get('placilo') === 'uspeh'
 
   const nalozi = useCallback(async () => {
-    const [{ data }, vidi, prev] = await Promise.all([
+    const [{ data }, vidi, prev, pravica] = await Promise.all([
       supabase.from('profil_igralca_plus').select('*').eq('player_id', glavni).maybeSingle(),
       jeLastnik ? supabase.rpc('vidi_preverjene') : Promise.resolve({ data: false }),
       jeLastnik ? supabase.rpc('je_preverjen', { p_player_id: glavni }) : Promise.resolve({ data: false }),
+      jeLastnik ? supabase.rpc('preverjen_moja_pravica', { p_player_id: glavni }) : Promise.resolve({ data: [] }),
     ])
     setPlus((data as Plus | null) ?? null)
-    setLastnik(jeLastnik ? { vidi: !!vidi.data, preverjen: !!prev.data } : null)
+    setLastnik(
+      jeLastnik ? { vidi: !!vidi.data, preverjen: !!prev.data, vir: (pravica.data ?? [])[0]?.vir ?? null } : null,
+    )
+    return !!prev.data
   }, [glavni, jeLastnik])
 
   useEffect(() => {
     void nalozi()
   }, [nalozi])
 
+  // Po plačilu ~20 s sprašuje, ali je pravica že zapisana.
+  useEffect(() => {
+    if (!placano || !jeLastnik) return
+    let ostalo = 10
+    const id = window.setInterval(() => {
+      ostalo -= 1
+      void nalozi().then((ok) => {
+        if (ok) pozabiPreverjene()
+        if (ok || ostalo <= 0) window.clearInterval(id)
+      })
+    }, 2000)
+    return () => window.clearInterval(id)
+  }, [placano, jeLastnik, nalozi])
+
   if (plus === undefined) return null
+  const kupuje = lastnik?.vidi && !lastnik.preverjen && !jeNativno()
   return (
     <>
       {plus && <Prikaz plus={plus} igralecId={igralecId} />}
-      {lastnik?.vidi && !lastnik.preverjen && !jeNativno() && <Ponudba />}
+      {kupuje && placano && <p className="kartica p-3 text-sm text-sky-200">{t('igralci.preverjen.ponudba.uspeh')}</p>}
+      {kupuje && !placano && <Ponudba igralecId={igralecId} />}
+      {lastnik?.preverjen && lastnik.vir === 'letna' && !jeNativno() && <Narocnina igralecId={igralecId} />}
       {lastnik?.preverjen && urejam && (
         <Urejevalnik
           glavni={glavni}
@@ -187,15 +213,119 @@ function Izpostavljeno({ plus, igralecId, barva }: { plus: Plus; igralecId: numb
   )
 }
 
-function Ponudba() {
+/** Klic funkcije plačila; vrne naslov Stripe ali prevedeno napako. */
+async function placilo(telo: Record<string, unknown>): Promise<{ url?: string; napaka?: string }> {
+  const { data, error } = await supabase.functions.invoke('preverjen-placilo', { body: telo })
+  let sporocilo: string | undefined = data?.error
+  if (error instanceof FunctionsHttpError) {
+    sporocilo = await (error.context as Response)
+      .json()
+      .then((j: { error?: string }) => j?.error)
+      .catch(() => undefined)
+  }
+  if (data?.url && !error) return { url: data.url as string }
+  return { napaka: sporocilo ? prevediNapako(sporocilo) : t('igralci.preverjen.ponudba.napaka') }
+}
+
+function Ponudba({ igralecId }: { igralecId: number }) {
+  const [vir, setVir] = useState<'letna' | 'dozivljenjska'>('letna')
+  const [znacka, setZnacka] = useState(false)
+  const [ime, setIme] = useState('')
+  const [star18, setStar18] = useState(false)
+  const [odpoved, setOdpoved] = useState(false)
+  const [dela, setDela] = useState(false)
+  const [napaka, setNapaka] = useState<string | null>(null)
+  const zZnacko = vir === 'dozivljenjska' && znacka
+
+  async function kupi() {
+    setDela(true)
+    setNapaka(null)
+    const r = await placilo({
+      akcija: 'checkout',
+      player_id: igralecId,
+      vir,
+      znacka: zZnacko,
+      ime_na_znacki: zZnacko ? ime : undefined,
+      star_vsaj_18: star18,
+      odpoved_pravici: odpoved,
+    })
+    if (r.url) return window.location.assign(r.url)
+    setDela(false)
+    setNapaka(r.napaka ?? null)
+  }
+
   return (
     <div className="kartica space-y-2 border-sky-400/30 p-3 text-sm">
       <h3 className="font-bold text-sky-200">{t('igralci.preverjen.ponudba.naslov')}</h3>
       <p className="text-slate-300">{t('igralci.preverjen.ponudba.opis')}</p>
-      <p className="font-semibold text-slate-100">{t('igralci.preverjen.ponudba.cena')}</p>
-      <button type="button" disabled className="gumb-glavni text-sm opacity-50">
-        {t('igralci.preverjen.ponudba.kmalu')}
+      <fieldset className="space-y-1">
+        {(['letna', 'dozivljenjska'] as const).map((v) => (
+          <label key={v} className="flex items-center gap-2">
+            <input type="radio" name="vir-preverjen" checked={vir === v} onChange={() => setVir(v)} />
+            <span className="font-semibold text-slate-100">{t(`igralci.preverjen.ponudba.${v}`)}</span>
+          </label>
+        ))}
+      </fieldset>
+      {vir === 'dozivljenjska' && (
+        <div className="space-y-1 pl-5">
+          <label className="flex items-center gap-2">
+            <input type="checkbox" checked={znacka} onChange={(e) => setZnacka(e.target.checked)} />
+            <span>{t('igralci.preverjen.ponudba.znacka')}</span>
+          </label>
+          {znacka && (
+            <input
+              value={ime}
+              onChange={(e) => setIme(e.target.value)}
+              maxLength={30}
+              aria-label={t('igralci.preverjen.ponudba.imeNaZnacki')}
+              placeholder={t('igralci.preverjen.ponudba.imeNaZnacki')}
+              className="w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-1.5 sm:max-w-xs"
+            />
+          )}
+        </div>
+      )}
+      <label className="flex items-start gap-2">
+        <input type="checkbox" className="mt-1" checked={star18} onChange={(e) => setStar18(e.target.checked)} />
+        <span>{t('igralci.preverjen.ponudba.star18')}</span>
+      </label>
+      <label className="flex items-start gap-2">
+        <input type="checkbox" className="mt-1" checked={odpoved} onChange={(e) => setOdpoved(e.target.checked)} />
+        <span>{t('igralci.preverjen.ponudba.odpoved')}</span>
+      </label>
+      <button
+        type="button"
+        disabled={dela || !star18 || !odpoved || (zZnacko && !ime.trim())}
+        onClick={() => void kupi()}
+        className="gumb-glavni text-sm disabled:opacity-50"
+      >
+        {t('igralci.preverjen.ponudba.kupi')}
       </button>
+      {napaka && <p className="text-rose-400">{napaka}</p>}
+    </div>
+  )
+}
+
+function Narocnina({ igralecId }: { igralecId: number }) {
+  const [dela, setDela] = useState(false)
+  const [napaka, setNapaka] = useState<string | null>(null)
+  return (
+    <div className="text-sm">
+      <button
+        type="button"
+        disabled={dela}
+        onClick={async () => {
+          setDela(true)
+          setNapaka(null)
+          const r = await placilo({ akcija: 'portal', player_id: igralecId })
+          if (r.url) return window.location.assign(r.url)
+          setDela(false)
+          setNapaka(r.napaka ?? null)
+        }}
+        className="text-gnl-300 hover:underline disabled:opacity-50"
+      >
+        {t('igralci.preverjen.ponudba.upravljaj')}
+      </button>
+      {napaka && <p className="text-rose-400">{napaka}</p>}
     </div>
   )
 }

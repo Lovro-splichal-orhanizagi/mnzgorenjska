@@ -1,8 +1,9 @@
-// Preverjeni igralci (faza 1, brez plačil).
+// Preverjeni igralci.
 //
 // Stikalo `preverjeni_racuni`: 0 nihče ne vidi ničesar, 1 le admin in
-// preizkuševalci, 2 vsi. Pravico (kljukica in dodatki profila) zdaj dodeli le
-// admin potrjenemu profilu; plačilo pride pozneje.
+// preizkuševalci, 2 vsi. Pravico (kljukica in dodatki profila) dodeli admin
+// (vir "ročno") ali plačilo prek Stripe (letna, doživljenjska; webhook).
+// Spodaj naročila natisnjenih značk z naslovi (le admin).
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { pozabiPreverjene } from '../../lib/preverjeni'
@@ -118,7 +119,7 @@ export default function Preverjeni() {
       <div>
         <h2 className="font-bold">Preverjeni igralci</h2>
         <p className="text-sm text-slate-400">
-          Modra kljukica in dodatki profila za potrjene igralce. Plačila še ni: pravico dodeli admin (vir "ročno").
+          Modra kljukica in dodatki profila za potrjene igralce. Pravico dodeli admin (vir "ročno") ali plačilo (Stripe, letna ali doživljenjska).
         </p>
       </div>
 
@@ -274,6 +275,104 @@ export default function Preverjeni() {
         </ul>
       </div>
       {napaka && <p className="text-sm text-rose-400">{napaka}</p>}
+      <NarocilaZnack />
     </section>
+  )
+}
+
+interface Narocilo {
+  id: number
+  created_at: string
+  status: string
+  ime_na_znacki: string
+  naslov: { name?: string; line1?: string; line2?: string; postal_code?: string; city?: string; country?: string }
+  postnina: string | null
+  poslano_at: string | null
+  opomba: string | null
+  player_id: number | null
+  player_name: string | null
+  kupec: string | null
+  pravica_status: string | null
+}
+
+const STATUSI = ['za_tisk', 'natisnjeno', 'poslano', 'preklicano'] as const
+
+/** Naročila natisnjenih značk: naslov za pošiljanje in stanje (le admin). */
+function NarocilaZnack() {
+  const [vrstice, setVrstice] = useState<Narocilo[] | null>(null)
+  const [vsa, setVsa] = useState(false)
+  const [napaka, setNapaka] = useState<string | null>(null)
+
+  const nalozi = useCallback(async () => {
+    const { data, error } = await supabase.rpc('admin_narocila_znack')
+    if (error) return setNapaka(error.message)
+    setVrstice((data ?? []) as Narocilo[])
+  }, [])
+  useEffect(() => {
+    void nalozi()
+  }, [nalozi])
+
+  async function nastavi(n: Narocilo, status: string) {
+    const opomba = status === 'preklicano' ? window.prompt('Razlog preklica (neobvezno):') ?? undefined : undefined
+    const { error } = await supabase.rpc('admin_nastavi_narocilo_znacke', { p_id: n.id, p_status: status, p_opomba: opomba })
+    if (error) return setNapaka(error.message)
+    await nalozi()
+  }
+
+  if (!vrstice) return napaka ? <p className="text-sm text-rose-400">{napaka}</p> : null
+  const prikazane = vsa ? vrstice : vrstice.filter((n) => n.status === 'za_tisk' || n.status === 'natisnjeno')
+  return (
+    <div className="space-y-2">
+      <h3 className="text-sm font-semibold">
+        Naročila značk ({vrstice.filter((n) => n.status === 'za_tisk').length} za tisk)
+        <button type="button" onClick={() => setVsa((v) => !v)} className="ml-2 text-xs font-normal text-slate-500 hover:text-slate-300">
+          {vsa ? 'le odprta' : `vsa (${vrstice.length})`}
+        </button>
+      </h3>
+      <ul className="divide-y divide-white/5 text-sm">
+        {prikazane.map((n) => {
+          const a = n.naslov
+          const siVTujino = n.postnina === 'postnina_si' && a.country !== 'SI'
+          return (
+            <li key={n.id} className="flex flex-wrap items-start justify-between gap-2 py-2">
+              <div className="min-w-0">
+                <span className="font-semibold">"{n.ime_na_znacki}"</span>
+                {n.player_id != null && (
+                  <Link to={`/player/${n.player_id}`} className="ml-2 text-xs text-slate-400 hover:text-gnl-300">
+                    {n.player_name}
+                  </Link>
+                )}
+                <span className="ml-2 text-xs text-slate-500">
+                  {n.status} · {dan(n.created_at)}
+                  {n.poslano_at ? ` · poslano ${dan(n.poslano_at)}` : ''}
+                  {n.pravica_status && n.pravica_status !== 'aktiven' ? ` · pravica ${n.pravica_status}` : ''}
+                </span>
+                <address className="whitespace-pre-line text-xs not-italic text-slate-300">
+                  {[a.name, a.line1, a.line2, [a.postal_code, a.city].filter(Boolean).join(' '), a.country].filter(Boolean).join('\n')}
+                </address>
+                <div className="text-xs text-slate-500">
+                  {n.kupec ?? 'izbrisan račun'} · {n.postnina ?? '?'}
+                  {siVTujino && <span className="ml-1 text-amber-300">SI poštnina v tujino</span>}
+                  {n.opomba ? ` · ${n.opomba}` : ''}
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {STATUSI.filter((st) => st !== n.status).map((st) => (
+                  <button
+                    key={st}
+                    type="button"
+                    onClick={() => void nastavi(n, st)}
+                    className="rounded px-2 py-0.5 text-xs ring-1 ring-white/10 hover:bg-white/5"
+                  >
+                    {st}
+                  </button>
+                ))}
+              </div>
+            </li>
+          )
+        })}
+      </ul>
+      {napaka && <p className="text-sm text-rose-400">{napaka}</p>}
+    </div>
   )
 }

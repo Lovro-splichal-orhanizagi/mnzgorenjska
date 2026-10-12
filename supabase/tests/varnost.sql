@@ -2273,6 +2273,148 @@ select pg_temp.preveri('preverjeni: izbris računa izbriše dodatke, pravica ost
   and not exists (select 1 from preverjeni_racuni where player_id = -913005 and status = 'aktiven')
   and exists (select 1 from preverjeni_racuni where player_id = -913005 and user_id is null and status = 'preklican'));
 
+-- --------------------------------------------------------------------------
+-- Preverjeni igralci, faza 2 (Stripe): servisne funkcije pišejo pravico in
+-- naročilo značke; kupec (e1) ima potrjen profil igralca -925010, tujec (c9)
+-- nič, admin (ad). Stikalo je 2.
+-- --------------------------------------------------------------------------
+reset role;
+insert into auth.users(id,email,raw_user_meta_data,created_at) values
+ ('b8a06635-2322-4444-8c42-44e419f912e1','test-kupec@example.invalid','{"display_name":"Kupec"}',now()-interval '2 days');
+insert into players(id, team_id, competition_id, first_name, last_name, full_name, position, position_source, value, value_start, active)
+overriding system value values (-925010, -913001, -913001, 'Kupljen', 'Igralec', 'Igralec Kupljen', 'MID', 'admin', 5, 5, true);
+insert into zahtevki_igralca(id, player_id, user_id, status, potrdil, decided_at) overriding system value
+values (-925010, -925010, 'b8a06635-2322-4444-8c42-44e419f912e1', 'potrjen', 'admin', now());
+update settings set value = '2' where key = 'preverjeni_racuni';
+
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912e1',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('plačila: uporabnik ne kliče servisne funkcije plačila',
+  $$select preverjen_iz_placila(auth.uid(), -925010, 'dozivljenjska', null, 'cus_x', null, 'cs_vdor', 'pi_vdor', true, true)$$);
+select pg_temp.zavrnjeno('plačila: uporabnik ne podaljša naročnine',
+  $$select preverjen_podaljsaj('sub_x', now() + interval '5 years')$$);
+select pg_temp.zavrnjeno('plačila: uporabnik ne konča naročnine',
+  $$select preverjen_narocnina_konec('sub_x', now())$$);
+select pg_temp.zavrnjeno('plačila: uporabnik ne sproži vračila',
+  $$select preverjen_vracilo('pi_x', 'cus_x', false, false)$$);
+select pg_temp.zavrnjeno('plačila: uporabnik ne bere dogodkov Stripe',
+  $$select * from stripe_dogodki$$);
+select pg_temp.zavrnjeno('plačila: uporabnik ne bere naročil značk',
+  $$select * from narocila_znack$$);
+select pg_temp.zavrnjeno('plačila: uporabnik ne vidi seznama naročil',
+  $$select * from admin_narocila_znack()$$);
+select pg_temp.zavrnjeno('plačila: uporabnik ne nastavi naročila',
+  $$select admin_nastavi_narocilo_znacke(1, 'poslano')$$);
+select pg_temp.preveri('plačila: kupec pripravi nakup svojega profila',
+  (select glavni = -925010 and liga = 'test-varnost' and email = 'test-kupec@example.invalid' and ime_na_znacki = 'Kupljen 7'
+     from preverjen_pripravi_nakup(-925010, '  Kupljen   7 ')));
+select pg_temp.pade('plačila: žaljivka na znački pade', $$select * from preverjen_pripravi_nakup(-925010, 'kurac')$$);
+select pg_temp.pade('plačila: ime na znački nad 30 znakov pade', $$select * from preverjen_pripravi_nakup(-925010, repeat('a', 31))$$);
+reset role;
+select set_config('request.jwt.claim.sub','',true);
+set local role anon;
+select pg_temp.zavrnjeno('plačila: anonimni ne kliče servisne funkcije',
+  $$select preverjen_vracilo('pi_x', 'cus_x', false, false)$$);
+select pg_temp.zavrnjeno('plačila: anonimni ne pripravi nakupa',
+  $$select * from preverjen_pripravi_nakup(-925010, null)$$);
+reset role;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912c9',true);
+set local role authenticated;
+select pg_temp.pade('plačila: tujec ne kupi tujega profila', $$select * from preverjen_pripravi_nakup(-925010, null)$$);
+reset role;
+
+-- Letna naročnina: pravica do konca obdobja, ponovljena seja je 'ze'.
+set local role service_role;
+create temporary table izid_placila on commit drop as
+select preverjen_iz_placila('b8a06635-2322-4444-8c42-44e419f912e1', -925010, 'letna', now() + interval '1 year',
+  'cus_t', 'sub_t', 'cs_1', null, true, true) as a,
+  preverjen_iz_placila('b8a06635-2322-4444-8c42-44e419f912e1', -925010, 'letna', now() + interval '1 year',
+  'cus_t', 'sub_t', 'cs_1', null, true, true) as b;
+insert into stripe_dogodki(id, tip) values ('evt_test_1', 'checkout.session.completed');
+reset role;
+select pg_temp.preveri('plačila: letna naročnina ustvari pravico, ponovljena seja ne podvoji',
+  (select a = 'aktiven' and b = 'ze' from izid_placila)
+  and (select count(*) = 1 from preverjeni_racuni where stripe_checkout_id = 'cs_1' and status = 'aktiven' and velja_do > now() + interval '360 days')
+  and je_preverjen(-925010));
+select pg_temp.pade('plačila: isti dogodek Stripe se ne zapiše dvakrat',
+  $$insert into stripe_dogodki(id, tip) values ('evt_test_1', 'checkout.session.completed')$$);
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912e1',true);
+set local role authenticated;
+select pg_temp.pade('plačila: preverjen profil ne kupi znova', $$select * from preverjen_pripravi_nakup(-925010, null)$$);
+select pg_temp.preveri('plačila: lastnik vidi svojo naročnino',
+  (select vir = 'letna' and stripe_customer_id = 'cus_t' from preverjen_moja_pravica(-925010)));
+reset role;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912c9',true);
+set local role authenticated;
+select pg_temp.preveri('plačila: tujec ne vidi tuje naročnine', not exists (select 1 from preverjen_moja_pravica(-925010)));
+reset role;
+
+-- Obnova podaljša, starejši rok ne skrajša; konec naročnine pravico izteče.
+set local role service_role;
+select preverjen_podaljsaj('sub_t', now() + interval '2 years');
+select preverjen_podaljsaj('sub_t', now() + interval '1 day');
+reset role;
+select pg_temp.preveri('plačila: obnova podaljša rok, starejši dogodek ga ne skrajša',
+  (select velja_do > now() + interval '700 days' from preverjeni_racuni where stripe_checkout_id = 'cs_1'));
+set local role service_role;
+select preverjen_narocnina_konec('sub_t', now() - interval '1 minute');
+reset role;
+select pg_temp.preveri('plačila: konec naročnine pravico izteče',
+  (select status = 'potekel' from preverjeni_racuni where stripe_checkout_id = 'cs_1') and not je_preverjen(-925010));
+
+-- Doživljenjska z značko; delno vračilo prekliče le značko, polno še pravico.
+set local role service_role;
+select preverjen_iz_placila('b8a06635-2322-4444-8c42-44e419f912e1', -925010, 'dozivljenjska', null,
+  'cus_t', null, 'cs_2', 'pi_2', true, true, 'Kupljen 7',
+  '{"name":"Igralec Kupljen","line1":"Glavna 1","postal_code":"4000","city":"Kranj","country":"SI"}', 'postnina_si');
+reset role;
+select pg_temp.preveri('plačila: doživljenjska brez roka in naročilo značke za tisk',
+  je_preverjen(-925010)
+  and (select velja_do is null and odpoved_pravici and star_vsaj_18 from preverjeni_racuni where stripe_checkout_id = 'cs_2')
+  and (select status = 'za_tisk' and ime_na_znacki = 'Kupljen 7' and naslov->>'city' = 'Kranj' from narocila_znack where stripe_checkout_id = 'cs_2'));
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+select pg_temp.preveri('plačila: admin vidi naročilo z naslovom',
+  exists (select 1 from admin_narocila_znack() where ime_na_znacki = 'Kupljen 7' and naslov->>'postal_code' = '4000' and kupec = 'Kupec'));
+select admin_nastavi_narocilo_znacke((select id from admin_narocila_znack() where ime_na_znacki = 'Kupljen 7'), 'natisnjeno', 'test');
+select pg_temp.pade('plačila: neznan status naročila pade',
+  $$select admin_nastavi_narocilo_znacke((select id from admin_narocila_znack() where ime_na_znacki = 'Kupljen 7'), 'izgubljeno')$$);
+reset role;
+set local role service_role;
+select preverjen_vracilo('pi_2', 'cus_t', true, false);
+reset role;
+select pg_temp.preveri('plačila: delno vračilo prekliče značko, pravica ostane',
+  je_preverjen(-925010) and (select status = 'preklicano' from narocila_znack where stripe_checkout_id = 'cs_2'));
+set local role service_role;
+select preverjen_vracilo('pi_2', 'cus_t', false, false);
+reset role;
+select pg_temp.preveri('plačila: polno vračilo prekliče pravico',
+  not je_preverjen(-925010) and (select status = 'preklican' from preverjeni_racuni where stripe_checkout_id = 'cs_2'));
+
+-- Plačilo za profil, ki ni kupčev: zapiše se kot preklicano.
+set local role service_role;
+select preverjen_iz_placila('b8a06635-2322-4444-8c42-44e419f912c9', -925010, 'dozivljenjska', null,
+  'cus_c9', null, 'cs_3', 'pi_3', true, true);
+reset role;
+select pg_temp.preveri('plačila: plačilo tujega profila je preklicano, kljukice ni',
+  (select status = 'preklican' from preverjeni_racuni where stripe_checkout_id = 'cs_3') and not je_preverjen(-925010));
+select pg_temp.pade('plačila: plačilo brez potrditve 18 let pade',
+  $$select preverjen_iz_placila('b8a06635-2322-4444-8c42-44e419f912e1', -925010, 'dozivljenjska', null, 'cus_t', null, 'cs_4', 'pi_4', false, true)$$);
+
+-- Spor pri naročnini (payment_intent neznan) prekliče plačane pravice kupca.
+set local role service_role;
+select preverjen_iz_placila('b8a06635-2322-4444-8c42-44e419f912e1', -925010, 'letna', now() + interval '1 year',
+  'cus_t', 'sub_5', 'cs_5', null, true, true);
+select preverjen_vracilo('pi_neznan', 'cus_t', false, true);
+reset role;
+select pg_temp.preveri('plačila: spor prekliče naročnino kupca',
+  not je_preverjen(-925010) and (select status = 'preklican' from preverjeni_racuni where stripe_checkout_id = 'cs_5'));
+
+-- Izbris računa: naročilo z naslovom ostane (le admin), brez uporabnika.
+delete from auth.users where id = 'b8a06635-2322-4444-8c42-44e419f912e1';
+select pg_temp.preveri('plačila: izbris računa pusti naročilo brez uporabnika',
+  (select user_id is null and naslov->>'city' = 'Kranj' from narocila_znack where stripe_checkout_id = 'cs_2'));
+
 do $$
 declare v_napak int;
 begin

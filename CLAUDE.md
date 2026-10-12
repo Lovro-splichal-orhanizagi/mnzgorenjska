@@ -2916,17 +2916,74 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
     `admin_preverjeni` pokaže aktivno pravico igralca ne glede na uporabnika
     (`aktivna`, `drug_uporabnik`). `user_id` je `on delete set null`: izbris
     računa pusti zgodovino (pomembno za plačila).
-  - Lastnik potrjenega profila, ki ni preverjen, vidi ob vklopljenem stikalu
-    kartico "Preveri profil" (9,99 €/leto ali 29 € za vedno, gumb "Kmalu");
-    v aplikaciji je skrita (`jeNativno`).
-  - **Faza 2/3 (še ni):** Stripe Checkout (najprej testni način) za letno in
-    doživljenjsko, webhook piše `preverjeni_racuni` (vir, `velja_do`,
-    Stripe id-ji, `star_vsaj_18` s potrditvijo ob nakupu), nakup le na spletu
-    (ne v aplikaciji, pravila trgovin). Prodajalec: Space Guardian. Pred tem
-    pravni popravki: `/legal` zdaj pravi, da je igra brezplačna in ne hrani
-    podatkov o plačilih; dodati pogoje nakupa, pravico do odstopa v EU (14 dni,
-    izjema za takoj zagotovljeno digitalno vsebino s soglasjem) in 18+.
-    Strežnik HTML kljukice še ne izriše — dodaj jo, ko je stikalo 2.
+  - Lastnik potrjenega profila, ki ni preverjen, pri vklopljenem stikalu
+    vidi nakup (spodaj); v aplikaciji je skrit (`jeNativno`, pravila trgovin).
+  - **Faza 2: Stripe Checkout** (testni način, migracija 20261012210100).
+    Kartica "Preveri profil": letno (9,99 €) ali za vedno (29 €), pri
+    doživljenjski še "+ natisnjena značka" (5 €, poštnina 2 € SI / 4 € EU, le
+    EU-27) z imenom na znački (≤ 30, `prepovedane_besede`), obvezni potrditvi
+    18+ in soglasja o takojšnji zagotovitvi (izguba 14-dnevne pravice do
+    odstopa); obe se shranita (`star_vsaj_18`, `odpoved_pravici`, CHECK za
+    plačljiv vir). Gumb kliče funkcijo **`preverjen-placilo`** (JWT kupca):
+    `checkout` → `preverjen_pripravi_nakup` z JWT kupca (stikalo, svoj
+    potrjen profil prek `povezani_igralci`, ime ni skrito, ni že preverjen,
+    ime na znački), cene po lookup_key (`slff_preverjen_letna`,
+    `slff_preverjen_dozivljenjska`, `slff_znacka`), poštnina po metapodatku
+    `kljuc` (`postnina_si`, `postnina_eu`) — id-jev Stripe v kodi ni.
+    Checkout: `automatic_tax`, `billing_address_collection=required`, kupec
+    iz prejšnje pravice ali `customer_email`, metapodatki `app=slff`,
+    `user_id`, `player_id` (glavna), `vir`, `znacka`, `ime_na_znacki` tudi na
+    naročnini/plačilu. Checkout tarife ne zna omejiti na državo: kupec vidi
+    obe poštnini, admin pri naročilu vidi "SI poštnina v tujino". Povratek
+    `SITE_URL/player/<id>?t=<liga>&placilo=uspeh|preklic`; ob `uspeh` kartica
+    ~20 s sprašuje `je_preverjen`. `portal` (lastnik letne,
+    `preverjen_moja_pravica`) odpre portal Stripe ("Upravljaj naročnino").
+  - **`stripe-webhook`** (brez JWT): podpis `Stripe-Signature` (HMAC-SHA256
+    `t.telo`, 5 minut, stalni čas; `podpis.ts`, preverja ga smoke), dogodek
+    enkrat v `stripe_dogodki` (ponovljen → 200; napaka obdelave zapis zbriše
+    in vrne 500, da Stripe ponovi), le `metadata.app = slff` (račun je skupen
+    več znamkam). Servisne funkcije (`service_role`): `preverjen_iz_placila`
+    (seja enkrat po `stripe_checkout_id`; letna `velja_do` = konec obdobja
+    + 3 dni milosti, ker se obnova plača nekaj ur po izteku; doživljenjska brez
+    roka; ročna ali tuja aktivna pravica pade; profil, ki ni več kupčev, ime
+    skrito ali dvojno plačilo → vrstica `preklican` in Discord "vrni denar";
+    z značko vrstica v `narocila_znack`), `preverjen_podaljsaj`
+    (`invoice.paid`, `customer.subscription.updated`: rok le naprej),
+    `preverjen_narocnina_konec` (`…deleted` ali status canceled/unpaid →
+    `potekel`; `cancel_at_period_end` pusti do konca obdobja),
+    `preverjen_vracilo` (`charge.refunded`: polno → `preklican`, delno pri
+    naročeni znački → le naročilo `preklicano`; `charge.dispute.created` →
+    po payment_intent ali vse plačane pravice kupca). Plačila naročnine nimajo
+    naših metapodatkov: vračilo letne uredi **preklic naročnine v Stripe**
+    (deleted → potekel) ali Administracija → Odvzemi. Discord (Vault
+    `discord_webhook`, `preverjeni_na_discord`) brez e-naslovov. Oblike
+    objektov beremo za stare in nove različice API (basil: obdobje na
+    postavkah, naročnina računa pod `parent`).
+  - `narocila_znack`: ime, naslov (jsonb), poštnina, `za_tisk` →
+    `natisnjeno` → `poslano` (`poslano_at`) ali `preklicano`; zaprta,
+    `admin_narocila_znack`, `admin_nastavi_narocilo_znacke` (Administracija →
+    Preverjeni → Naročila značk). Izbris računa ali anonimizacija naročila ne
+    pobrišeta (knjigovodstvo), `user_id` gre na null.
+  - **Vklop testnega načina (lastnik):** na strežniku v `/opt/supabase/.env`
+    `STRIPE_SECRET_KEY=sk_test_…`, `STRIPE_WEBHOOK_SECRET=whsec_…`,
+    `SITE_URL=https://slff.eu` (compose jih poda funkcijam), nato
+    `scripts/hetzner/objavi-funkcije.sh preverjen-placilo` in `… stripe-webhook`
+    (CI funkcij ne objavi). V Stripe (testni način) Webhooks → nov endpoint
+    `https://api.slff.eu/functions/v1/stripe-webhook` z dogodki
+    `checkout.session.completed`, `checkout.session.async_payment_succeeded`,
+    `invoice.paid`, `customer.subscription.updated`,
+    `customer.subscription.deleted`, `charge.refunded`,
+    `charge.dispute.created`; skrivnost podpisa na strežnik. Portal (Settings →
+    Billing → Customer portal) vklopi preklic naročnine. Stripe Tax mora biti
+    vklopljen (sicer `automatic_tax` seje zavrne). Testna kartica
+    `4242 4242 4242 4242`, 3DS `4000 0027 6000 3184`, zavrnjena
+    `4000 0000 0000 0002`. Stikalo 1 + preizkuševalec za preizkus.
+  - **Faza 3 (še ni):** podatki prodajalca (Space Guardian) in nova znamka v
+    računu Stripe, `/legal` (zdaj pravi, da je igra brezplačna in ne hrani
+    podatkov o plačilih) s pogoji nakupa in pravico do odstopa, Stripe Tax
+    registracija in OSS, živi ključi (`sk_live_…`, nov endpoint v živem
+    načinu), šele nato stikalo 2. Strežnik HTML kljukice še ne izriše —
+    dodaj jo, ko je stikalo 2.
 - **Uradne odsotnosti** (migracija 20261012135100): potrjeni igralec (lastnik
   potrjenega `zahtevki_igralca`, tudi za povezane vrstice) sam javi odsotnost
   (`objavi_uradno_odsotnost`: vrsta `poskodba`/`bolezen`/`dopust`/`kazen`/`drugo`,

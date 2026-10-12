@@ -76,6 +76,10 @@ services:
       # bmc-pivo: Buy Me a Coffee webhook -> Discord
       DISCORD_WEBHOOK: ${DISCORD_WEBHOOK:-}
       BMC_WEBHOOK_SECRET: ${BMC_WEBHOOK_SECRET:-}
+      # preverjen-placilo, stripe-webhook: Stripe (test mode first: sk_test_..., whsec_...)
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      SITE_URL: ${SITE_URL:-https://slff.eu}
       EMAIL_REPLY_TO: ${EMAIL_REPLY_TO:-}
   db:
     image: supabase/postgres:17.6.1.166
