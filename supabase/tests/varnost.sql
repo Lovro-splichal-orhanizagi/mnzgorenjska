@@ -2044,6 +2044,179 @@ select pg_temp.preveri('javne: pravilo prikaznega imena ostane enako',
   and napaka_prikaznega_imena('Luka<') = 'ime-znaki'
   and napaka_prikaznega_imena('Luka Novak') is null);
 
+-- --------------------------------------------------------------------------
+-- Preverjeni igralci: stikalo, preizkuševalci, pravica, dodatki, brisanje.
+-- Lastnik (ab) ima potrjen profil igralca -913005, tujec (ac) nič, admin (ad),
+-- preizkuševalec (c9). Tekma -925001 je igralčeva, -925002 ne.
+-- --------------------------------------------------------------------------
+reset role;
+insert into auth.users(id,email,raw_user_meta_data,created_at) values
+ ('b8a06635-2322-4444-8c42-44e419f912c9','test-tester@example.invalid','{"display_name":"Tester"}',now()-interval '2 days');
+insert into settings(key, value) values ('preverjeni_racuni', '0')
+  on conflict (key) do update set value = '0';
+insert into zahtevki_igralca(id, player_id, user_id, status, potrdil, decided_at) overriding system value
+values (-925001, -913005, 'b8a06635-2322-4444-8c42-44e419f912ab', 'potrjen', 'admin', now());
+insert into profil_igralca(player_id, vzdevek) values (-913005, 'Kljukica');
+insert into matches(id, round_id, home_team_id, away_team_id) overriding system value
+values (-925001, -913001, -913005, -913001), (-925002, -913001, -913002, -913003);
+insert into appearances(match_id, player_id, team_id) values (-925001, -913005, -913005);
+
+-- pg_temp.pade (zgoraj, hišne ekipe) tudi za vlogo authenticated.
+grant execute on function pg_temp.pade(text, text) to authenticated;
+
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('preverjeni: lastnik si pravice ne dodeli sam',
+  $$select admin_dodeli_preverjen(-913005, 'rocno', null)$$);
+select pg_temp.zavrnjeno('preverjeni: lastnik ne vpiše pravice neposredno',
+  $$insert into preverjeni_racuni(user_id, player_id, vir) values ('b8a06635-2322-4444-8c42-44e419f912ab', -913005, 'rocno')$$);
+select pg_temp.zavrnjeno('preverjeni: ne-admin ne doda preizkuševalca',
+  $$select admin_nastavi_testerja('b8a06635-2322-4444-8c42-44e419f912ab', true)$$);
+reset role;
+
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+select admin_dodeli_preverjen(-913005, 'rocno', null);
+select admin_nastavi_testerja('b8a06635-2322-4444-8c42-44e419f912c9', true);
+select pg_temp.preveri('preverjeni: admin dodeli ročno pravico',
+  (select count(*) = 1 from admin_preverjeni() where player_id = -913005 and velja));
+select pg_temp.pade('preverjeni: plačljivega vira admin ne vpiše',
+  $$select admin_dodeli_preverjen(-913005, 'letna', now() + interval '1 year')$$);
+reset role;
+select pg_temp.pade('preverjeni: plačljiva pravica brez 18 let pade',
+  $$insert into preverjeni_racuni(user_id, player_id, vir) values ('b8a06635-2322-4444-8c42-44e419f912ab', -913006, 'dozivljenjska')$$);
+
+-- Stikalo 0: nihče nič, tudi lastnik in admin ne.
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
+select pg_temp.preveri('preverjeni: stikalo 0 skrije lastniku',
+  not je_preverjen(-913005) and not exists (select 1 from preverjeni_igralci_za(array[-913005::bigint])));
+select pg_temp.zavrnjeno('preverjeni: stikalo 0 lastnik dodatkov ne vpiše',
+  $$insert into profil_igralca_plus(player_id, opis) values (-913005, 'Pri 0 ne gre.')$$);
+reset role;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+select pg_temp.preveri('preverjeni: stikalo 0 skrije adminu', not je_preverjen(-913005));
+reset role;
+
+-- Stikalo 1: le admin in preizkuševalec.
+update settings set value = '1' where key = 'preverjeni_racuni';
+insert into profil_igralca_plus(player_id, opis, barva, tekma_id) values (-913005, 'Dolg   opis igralca.', 'modra', -925001);
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+select pg_temp.preveri('preverjeni: stikalo 1 admin vidi',
+  je_preverjen(-913005)
+  and (select vzdevek = 'Kljukica' from preverjeni_igralci_za(array[-913005::bigint, -913006]))
+  and exists (select 1 from profil_igralca_plus where player_id = -913005));
+reset role;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912c9',true);
+set local role authenticated;
+select pg_temp.preveri('preverjeni: stikalo 1 preizkuševalec vidi',
+  je_preverjen(-913005) and exists (select 1 from profil_igralca_plus where player_id = -913005));
+reset role;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ac',true);
+set local role authenticated;
+select pg_temp.preveri('preverjeni: stikalo 1 tujec ne vidi',
+  not je_preverjen(-913005) and not exists (select 1 from profil_igralca_plus where player_id = -913005)
+  and not exists (select 1 from preverjeni_igralci_za(array[-913005::bigint])));
+reset role;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
+select pg_temp.preveri('preverjeni: stikalo 1 lastnik (ni preizkuševalec) ne vidi', not je_preverjen(-913005));
+reset role;
+select set_config('request.jwt.claim.sub','',true);
+set local role anon;
+select pg_temp.preveri('preverjeni: stikalo 1 anonimni ne vidi',
+  not exists (select 1 from profil_igralca_plus) and not exists (select 1 from preverjeni_igralci_za(array[-913005::bigint])));
+reset role;
+
+-- Stikalo 2: vsi vidijo; piše le lastnik, preverjeno.
+update settings set value = '2' where key = 'preverjeni_racuni';
+select set_config('request.jwt.claim.sub','',true);
+set local role anon;
+select pg_temp.preveri('preverjeni: stikalo 2 anonimni vidi značko in dodatke',
+  exists (select 1 from preverjeni_igralci_za(array[-913005::bigint, -913006]) where player_id = -913005)
+  and not exists (select 1 from preverjeni_igralci_za(array[-913006::bigint]))
+  and (select opis = 'Dolg opis igralca.' from profil_igralca_plus where player_id = -913005));
+reset role;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ac',true);
+set local role authenticated;
+update profil_igralca_plus set opis = 'Vdor' where player_id = -913005;
+select pg_temp.zavrnjeno('preverjeni: tujec ne doda dodatkov tujemu igralcu',
+  $$insert into profil_igralca_plus(player_id, opis) values (-913006, 'Vdor')$$);
+select pg_temp.preveri('preverjeni: tujec pasice ne naloži', not prevzem_sme_pisati_foto('-913005/banner-abc.webp'));
+reset role;
+select pg_temp.preveri('preverjeni: tujec ne spremeni dodatkov',
+  (select opis = 'Dolg opis igralca.' from profil_igralca_plus where player_id = -913005));
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
+update profil_igralca_plus set sporocilo = 'Hvala navijači!', statistika = null, splet = 'https://example.com/igralec'
+ where player_id = -913005;
+select pg_temp.preveri('preverjeni: lastnik ureja dodatke in sme pasico',
+  (select sporocilo = 'Hvala navijači!' from profil_igralca_plus where player_id = -913005)
+  and prevzem_sme_pisati_foto('-913005/banner-abc.webp') and prevzem_sme_pisati_foto('-913005/foto.webp'));
+reset role;
+
+-- Preverba vnosov (kot lastnik).
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
+select pg_temp.pade('preverjeni: opis nad 500 znakov pade',
+  $$update profil_igralca_plus set opis = repeat('a', 501) where player_id = -913005$$);
+select pg_temp.pade('preverjeni: sporočilo nad 140 znakov pade',
+  $$update profil_igralca_plus set sporocilo = repeat('a', 141) where player_id = -913005$$);
+select pg_temp.pade('preverjeni: spletna stran le https',
+  $$update profil_igralca_plus set splet = 'http://example.com' where player_id = -913005$$);
+select pg_temp.pade('preverjeni: spletna stran do 200 znakov',
+  $$update profil_igralca_plus set splet = 'https://example.com/' || repeat('a', 190) where player_id = -913005$$);
+select pg_temp.pade('preverjeni: barva le iz palete',
+  $$update profil_igralca_plus set barva = '#ff0000' where player_id = -913005$$);
+select pg_temp.pade('preverjeni: žaljivka v opisu pade',
+  $$update profil_igralca_plus set opis = 'ti si kurac' where player_id = -913005$$);
+select pg_temp.pade('preverjeni: rezervirana beseda v sporočilu pade',
+  $$update profil_igralca_plus set sporocilo = 'Uradni SLFF admin' where player_id = -913005$$);
+select pg_temp.pade('preverjeni: tuja tekma pade',
+  $$update profil_igralca_plus set tekma_id = -925002 where player_id = -913005$$);
+select pg_temp.pade('preverjeni: tekma in statistika hkrati padeta',
+  $$update profil_igralca_plus set statistika = 'goli' where player_id = -913005$$);
+select pg_temp.pade('preverjeni: pasica le v svoji mapi',
+  $$update profil_igralca_plus set pasica = '-913006/banner-abc.webp' where player_id = -913005$$);
+reset role;
+
+-- Potek: pravica z rokom v preteklosti ne velja več.
+update preverjeni_racuni set velja_do = now() - interval '1 minute' where player_id = -913005;
+select set_config('request.jwt.claim.sub','',true);
+set local role anon;
+select pg_temp.preveri('preverjeni: potekla pravica skrije značko in dodatke',
+  not je_preverjen(-913005) and not exists (select 1 from profil_igralca_plus));
+reset role;
+update preverjeni_racuni set velja_do = null where player_id = -913005;
+
+-- Preklic profila izbriše dodatke in značka ugasne.
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
+select preklici_moj_zahtevek(-925001);
+select pg_temp.preveri('preverjeni: po preklicu profila ni značke', not je_preverjen(-913005));
+reset role;
+select pg_temp.preveri('preverjeni: preklic izbriše dodatke',
+  not exists (select 1 from profil_igralca_plus where player_id = -913005));
+
+-- Anonimizacija izbriše dodatke (nov potrjen zahtevek, nova pravica).
+update zahtevki_igralca set status = 'potrjen', decided_at = now() where id = -925001;
+update preverjeni_racuni set status = 'aktiven' where player_id = -913005;
+insert into profil_igralca_plus(player_id, opis) values (-913005, 'Pred anonimizacijo.');
+select pg_temp.preveri('preverjeni: pred anonimizacijo je preverjen', je_preverjen(-913005));
+update players set anonimiziran_at = now() where id = -913005;
+select pg_temp.preveri('preverjeni: anonimizacija izbriše dodatke in značko',
+  not exists (select 1 from profil_igralca_plus where player_id = -913005) and not je_preverjen(-913005));
+
+-- Izbris računa (kaskada zahtevka) izbriše dodatke.
+update players set anonimiziran_at = null where id = -913005;
+insert into profil_igralca_plus(player_id, opis) values (-913005, 'Pred izbrisom.');
+delete from zahtevki_igralca where id = -925001;
+select pg_temp.preveri('preverjeni: izbris zahtevka (računa) izbriše dodatke',
+  not exists (select 1 from profil_igralca_plus where player_id = -913005)
+  and not exists (select 1 from profil_igralca where player_id = -913005));
+
 do $$
 declare v_napak int;
 begin

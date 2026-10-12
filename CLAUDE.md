@@ -2869,6 +2869,52 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   `storage` obstajajo (storage-api jih ustvari sam ob zagonu) — po vklopu jo
   pokliči. SQL brisanje (`prevzem_odstrani_fotografije`) odstrani le vrstico,
   datoteka ostane na disku (osirotelo, ni javna; čiščenje v istem dokumentu).
+- **Preverjeni igralci** (faza 1 brez plačil, migracija 20261012190100):
+  potrjen igralec z veljavno pravico dobi modro kljukico ob imenu (stran
+  igralca, Igralci, Klub, Ekipa, igrišča, tekma, iskanje lige; vzdevek na
+  seznamih) in dodatke profila. **Stikalo** `preverjeni_racuni` v `settings`:
+  0 izklopljeno (privzeto), 1 preizkus (admin in `testerji`), 2 v živo.
+  Vsako branje gre skozi `vidi_preverjene()`; pri 0 ne vidi nihče ničesar,
+  tudi lastnik ne (kot `sponzorji_vidni`). Admin → Igralci → *Preverjeni*:
+  stikalo, preizkuševalci (`admin_nastavi_testerja`), dodelitev in odvzem.
+  - `preverjeni_racuni` (pravica): `user_id`, `player_id` = glavna vrstica,
+    `vir` `rocno`/`letna`/`dozivljenjska`, `status` `aktiven`/`preklican`/`potekel`,
+    `velja_do` (null = brez roka), `star_vsaj_18` (CHECK: plačljiv vir zahteva
+    true, ročni sme null), `stripe_customer_id`/`stripe_subscription_id` (prazna,
+    za fazo 2). En aktiven na igralca. Zaprta tabela, piše le admin:
+    `admin_dodeli_preverjen(igralec, 'rocno', velja_do)` (zahteva potrjen
+    zahtevek, vzame njegovega uporabnika; plačljivih virov ne vpiše),
+    `admin_odvzemi_preverjen(id)`, seznam `admin_preverjeni()`. Potek ne
+    potrebuje crona: `je_preverjen` primerja `velja_do` s časom.
+  - `je_preverjen(igralec)`: stikalo + potrjen zahtevek (tudi povezane
+    vrstice) + aktivna, nepotekla pravica **istega uporabnika** + ime ni
+    skrito. Seznami kličejo `preverjeni_igralci_za(ids[])` (id in vzdevek, do
+    300 na klic) v enem zahtevku na stran (`usePreverjeni`, `ZnakPreverjen`,
+    `src/lib/preverjeni.ts`), kot fotografije.
+  - `profil_igralca_plus` (ključ glavna vrstica): opis do 500 (navadni opis
+    160 ostane), `youtube`, `x`, `splet` (https, ≤ 200), `pasica`
+    (`<glavni>/banner-<ime>.webp` v vedru `fotografije-igralcev`, 1200 × 400,
+    ≤ 2 MB, izrez v brskalniku; nalaganje dovoli `prevzem_sme_pisati_foto` le
+    preverjenemu), `barva` (ena od osmih), `tekma_id` (svoja tekma) ali
+    `statistika` (ključ sezone), `sporocilo` do 140. Bere vsak le, če
+    `je_preverjen`; piše lastnik, ki je preverjen. Sprožilec
+    `varuj_profil_igralca_plus` vsa besedila spusti skozi
+    `prepovedano_besedilo` (zato v opisu ni `/ @ # " < >`).
+  - Brisanje: `prevzem_odstrani_predstavitev` (preklic, anonimizacija) zdaj
+    pobriše tudi dodatke, pasica gre z mapo igralca. Izbris računa (kaskada
+    zahtevka) pobriše predstavitev, dodatke in datoteke (sprožilec
+    `prevzem_izbris_zahtevka`); pravica gre s kaskado profila.
+  - Lastnik potrjenega profila, ki ni preverjen, vidi ob vklopljenem stikalu
+    kartico "Preveri profil" (9,99 €/leto ali 29 € za vedno, gumb "Kmalu");
+    v aplikaciji je skrita (`jeNativno`).
+  - **Faza 2/3 (še ni):** Stripe Checkout (najprej testni način) za letno in
+    doživljenjsko, webhook piše `preverjeni_racuni` (vir, `velja_do`,
+    Stripe id-ji, `star_vsaj_18` s potrditvijo ob nakupu), nakup le na spletu
+    (ne v aplikaciji, pravila trgovin). Prodajalec: Space Guardian. Pred tem
+    pravni popravki: `/legal` zdaj pravi, da je igra brezplačna in ne hrani
+    podatkov o plačilih; dodati pogoje nakupa, pravico do odstopa v EU (14 dni,
+    izjema za takoj zagotovljeno digitalno vsebino s soglasjem) in 18+.
+    Strežnik HTML kljukice še ne izriše — dodaj jo, ko je stikalo 2.
 - **Uradne odsotnosti** (migracija 20261012135100): potrjeni igralec (lastnik
   potrjenega `zahtevki_igralca`, tudi za povezane vrstice) sam javi odsotnost
   (`objavi_uradno_odsotnost`: vrsta `poskodba`/`bolezen`/`dopust`/`kazen`/`drugo`,

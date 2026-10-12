@@ -19,6 +19,7 @@ import { POZICIJE } from '../lib/pravila'
 import { useTekmovanje } from '../lib/tekmovanje'
 import Grb from '../components/Grb'
 import FotoIgralca from '../components/FotoIgralca'
+import ZnakPreverjen from '../components/ZnakPreverjen'
 import { t, tx, lokale } from '../i18n'
 import type { Pozicija } from '../lib/tipi'
 import Sponzor from '../components/Sponzor'
@@ -591,6 +592,7 @@ export default function Igralci() {
                         className="block truncate font-semibold hover:text-gnl-300"
                       >
                         {prikazniIme(i.full_name)}
+                        <ZnakPreverjen id={i.id} vzdevek className="ml-1" />
                         {odsotni[i.id] && (
                           <span
                             title={opisOdsotnosti(odsotni[i.id])}
@@ -668,6 +670,7 @@ export default function Igralci() {
                   <FotoIgralca id={z.id} velikost={24} />
                   <span className="max-w-[60%] shrink-0 truncate font-semibold hover:text-gnl-300">
                     {prikazniIme(z.full_name)}
+                    <ZnakPreverjen id={z.id} className="ml-1" />
                   </span>
                   <span className="min-w-0 flex-1 truncate text-xs text-slate-500">
                     {[z.klub, z.liga_ime].filter(Boolean).join(' · ')}
@@ -785,7 +788,10 @@ function VrhLige({ lestvice }: { lestvice: Array<{ naslov: string; vrstice: VrhV
                       nadomestek={<Grb ime={igralec.team_name} kratko={igralec.team_short} logo={igralec.team_logo} velikost={20} />}
                     />
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-semibold">{prikazniIme(igralec.full_name)}</span>
+                      <span className="block truncate text-sm font-semibold">
+                        {prikazniIme(igralec.full_name)}
+                        <ZnakPreverjen id={id} vzdevek className="ml-1" />
+                      </span>
                       <span className="block truncate text-xs text-slate-400">
                         {igralec.team_name ?? ''}
                         {igralec.position ? ` · ${KRATKA_POZICIJA[igralec.position]}` : ''}
@@ -829,6 +835,7 @@ function PrviIgralec({ igralec, sezona }: { igralec: IgralecSezone; sezona: stri
         <div className="min-w-0 flex-1">
           <div className="break-words text-2xl font-black leading-tight text-white sm:text-4xl">
             {prikazniIme(igralec.full_name)}
+            <ZnakPreverjen id={igralec.id} vzdevek velikost={22} className="ml-2" />
           </div>
           <div className="mt-1 truncate text-sm text-slate-300">
             {igralec.team_name ?? ''}

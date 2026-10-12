@@ -10,6 +10,7 @@ import { prikazniIme, formatirajTocke } from '../lib/pomozno'
 import type { ReactNode } from 'react'
 import type { Pozicija } from '../lib/tipi'
 import Dres from './Dres'
+import ZnakPreverjen from './ZnakPreverjen'
 import Grb from './Grb'
 import { t } from '../i18n'
 
@@ -86,6 +87,7 @@ function Kartica({
       </div>
       <div className="mt-0.5 truncate rounded-t-md bg-slate-900/90 px-1 py-0.5 text-[10px] font-semibold leading-tight lg:text-[11px]">
         {prikazniIme(nastop.full_name).split(' ').slice(-1)[0]}
+        <ZnakPreverjen id={nastop.player_id} velikost={10} className="ml-0.5" />
       </div>
       <div
         className={`rounded-b-md px-1 py-0.5 text-[10px] font-black leading-tight tabular-nums ${

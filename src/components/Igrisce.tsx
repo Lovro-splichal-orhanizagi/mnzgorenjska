@@ -16,6 +16,7 @@ import type { ReactNode } from 'react'
 import type { IgralecVKadru, Pozicija } from '../lib/tipi'
 import Grb from './Grb'
 import Dres from './Dres'
+import ZnakPreverjen from './ZnakPreverjen'
 import { t, stevilo } from '../i18n'
 
 /** Igralec na igriscu — kader plus polja, ki jih potrebuje prikaz. */
@@ -83,6 +84,7 @@ function KarticaIgralca({
       >
         <div className="truncate rounded-t-md bg-slate-900/90 px-1 py-0.5 text-[11px] font-semibold leading-tight">
           {ime.split(' ').slice(-1)[0]}
+          <ZnakPreverjen id={igralec.id} velikost={10} className="ml-0.5" />
         </div>
         {igralec.active === false && (
           <div

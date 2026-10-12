@@ -13,6 +13,7 @@ import {
   pripraviFotografijo,
   razlicicaFotografije,
 } from '../lib/prevzem'
+import PreverjeniProfil from './PreverjeniProfil'
 import PredstavitevIgralca, { OMREZJA, type Omrezje, type Potrdil, type Predstavitev } from './PredstavitevIgralca'
 
 interface MojZahtevek {
@@ -148,6 +149,11 @@ export default function PrevzemIgralca({
             />
           )}
         </PredstavitevIgralca>
+      )}
+
+      {/* preverjen igralec: dodatki, ponudba ali urejanje (vidno le pri stikalu) */}
+      {potrjen && (
+        <PreverjeniProfil igralecId={igralecId} glavni={potrjen.glavni} jeLastnik={jeLastnik} urejam={urejam} />
       )}
 
       {jeLastnik && urejam && potrjen && (

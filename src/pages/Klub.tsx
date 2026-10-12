@@ -27,6 +27,7 @@ import { NavijaciKluba } from '../components/NavijaciKlubov'
 import { izvor } from '../lib/platforma'
 import { NalaganjeZaBralnik, Skelet } from '../components/Skelet'
 import FotoIgralca from '../components/FotoIgralca'
+import ZnakPreverjen from '../components/ZnakPreverjen'
 import ZahtevkiKluba from '../components/ZahtevkiKluba'
 import { useFotografije } from '../lib/prevzem'
 
@@ -249,6 +250,7 @@ export default function Klub() {
                   <div className="flex min-w-0 flex-1 flex-col sm:flex-row sm:items-center sm:gap-2">
                     <Link to={`/player/${i.id}`} className="min-w-0 truncate font-semibold hover:text-gnl-400 sm:flex-1">
                       {prikazniIme(i.full_name)}
+                      <ZnakPreverjen id={i.id} vzdevek className="ml-1" />
                     </Link>
                     <span className="shrink-0 text-xs text-slate-500">
                       {i.goals ? t('lestvice.klub.goli', { n: i.goals }) : ''}
