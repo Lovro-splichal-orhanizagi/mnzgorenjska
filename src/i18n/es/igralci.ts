@@ -304,6 +304,11 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       napaka: 'No se ha podido iniciar el pago.',
       uspeh: 'Pago recibido, el check aparecerá en unos segundos.',
       upravljaj: 'Gestionar suscripción',
+      dostavaSi: 'Eslovenia',
+      dostavaEu: 'Otro país de la UE',
+      obdeluje: 'El pago aún se está procesando. El check aparecerá cuando lo recibamos.',
+      narocninaNaslov: 'Suscripción (jugador verificado)',
+      narocninaApp: 'Gestiona tu suscripción en slff.eu.',
     },
     napake: {
       znaki: 'El texto contiene caracteres no permitidos (p. ej. / @ # " < >).',

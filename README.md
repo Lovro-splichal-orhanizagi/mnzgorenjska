@@ -132,9 +132,9 @@ rezervnih igralcev.
 | `zahtevki_igralca` | Zahtevki "To sem jaz": uporabnik prevzame profil igralca (`cakajoc`, `potrjen`, `zavrnjen`, `preklican`; potrdil `klub`, `soigralci` ali `admin`). Največ en potrjen na igralca in na uporabnika; piše le prek RPC |
 | `povezani_igralci` | Druge vrstice iste osebe (druga liga, mladinci, prestop), ki jih admin poveže k potrjenemu profilu |
 | `profil_igralca` | Predstavitev potrjenega igralca (vzdevek, opis, omrežja, fotografija); ureja jo le potrjen lastnik, uradnih podatkov ne |
-| `preverjeni_racuni` | Pravica preverjenega igralca (kljukica in dodatki): uporabnik, glavna vrstica, vir `rocno`/`letna`/`dozivljenjska`, `aktiven`/`preklican`/`potekel`, `velja_do`, `star_vsaj_18`, `odpoved_pravici`, id-ji Stripe (kupec, naročnina, seja, plačilo). Ročno piše admin prek RPC, plačljivo le webhook Stripe (servisne funkcije) |
-| `narocila_znack` | Naročila natisnjene značke ob doživljenjski pravici: ime na znački, naslov (jsonb), poštnina, stanje `za_tisk`/`natisnjeno`/`poslano`/`preklicano`. Zaprta, bere in ureja le admin prek RPC; ostane po izbrisu računa |
-| `stripe_dogodki` | Prejeti dogodki Stripe (idempotenca webhooka); le servis |
+| `preverjeni_racuni` | Pravica preverjenega igralca (kljukica in dodatki): uporabnik, glavna vrstica, vir `rocno`/`letna`/`dozivljenjska`, `aktiven`/`preklican`/`potekel`, `velja_do`, `star_vsaj_18`, `odpoved_pravici`, `znesek_pravice`, id-ji Stripe (kupec, naročnina, seja, plačilo), `stripe_preklic` (naročnino preklicati v Stripe). Ročno piše admin prek RPC, plačljivo le webhook Stripe (servisne funkcije) |
+| `narocila_znack` | Naročila natisnjene značke ob doživljenjski pravici: ime na znački, naslov (jsonb), poštnina, stanje `za_tisk`/`natisnjeno`/`poslano`/`preklicano`. Zaprta, bere in ureja le admin prek RPC; ostane po izbrisu računa, naslov po 90 dneh od pošiljanja le država |
+| `stripe_dogodki` | Prejeti dogodki Stripe z `obdelano_at` (idempotenca webhooka); le servis |
 | `profil_igralca_plus` | Dodatki preverjenega igralca (opis do 500, YouTube, X, spletna stran, pasica, barva, izpostavljena tekma ali statistika, sporočilo navijačem); vidno le prek `je_preverjen` |
 | `testerji` | Preizkuševalci, ki vidijo preverjene pri stikalu `preverjeni_racuni` = 1; piše le admin |
 | `potrditve_soigralcev` / `prijave_profila_igralca` / `zetoni_prevzema` | Potrditve soigralcev, prijave lažnih profilov, enkratne povezave za klub (le zgoščene); zaprte tabele |

@@ -13,6 +13,7 @@ import Grb from '../components/Grb'
 import IzbiraJezika from '../components/IzbiraJezika'
 import IzbiraDrzave from '../components/IzbiraDrzave'
 import NastavitveObvestil from '../components/NastavitveObvestil'
+import { UpravljanjeNarocnine } from '../components/PreverjeniProfil'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import { useNaslov } from '../lib/naslov'
@@ -186,6 +187,7 @@ function Nastavitve({ uporabnikId, email, zGeslom }: { uporabnikId: string; emai
         </Razdelek>
       )}
 
+      <UpravljanjeNarocnine />
       <RazdelekPrijava email={email} zGeslom={zGeslom} />
       <RazdelekIzbris email={email} />
     </div>

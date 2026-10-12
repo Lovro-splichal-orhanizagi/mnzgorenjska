@@ -89,6 +89,9 @@ export default function Preverjeni() {
     setDela(false)
     if (error) return setNapaka(error.message)
     pozabiPreverjene()
+    // Odvzem ali dodelitev drugemu lahko prekliče letno pravico: naročnino v
+    // Stripe prekliče webhook iz vrste (sicer v uri delovni tok).
+    void supabase.functions.invoke('stripe-webhook', { body: { akcija: 'preklici' } })
     await nalozi()
   }
 
@@ -332,7 +335,6 @@ function NarocilaZnack() {
       <ul className="divide-y divide-white/5 text-sm">
         {prikazane.map((n) => {
           const a = n.naslov
-          const siVTujino = n.postnina === 'postnina_si' && a.country !== 'SI'
           return (
             <li key={n.id} className="flex flex-wrap items-start justify-between gap-2 py-2">
               <div className="min-w-0">
@@ -352,7 +354,6 @@ function NarocilaZnack() {
                 </address>
                 <div className="text-xs text-slate-500">
                   {n.kupec ?? 'izbrisan račun'} · {n.postnina ?? '?'}
-                  {siVTujino && <span className="ml-1 text-amber-300">SI poštnina v tujino</span>}
                   {n.opomba ? ` · ${n.opomba}` : ''}
                 </div>
               </div>

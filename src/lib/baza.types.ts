@@ -2753,12 +2753,14 @@ export type Database = {
           stripe_checkout_id: string | null
           stripe_customer_id: string | null
           stripe_payment_intent: string | null
+          stripe_preklic: string | null
           stripe_subscription_id: string | null
           updated_at: string
           user_id: string | null
           ustvaril: string | null
           velja_do: string | null
           vir: string
+          znesek_pravice: number | null
         }
         ComputedFields: never
         Insert: {
@@ -2771,12 +2773,14 @@ export type Database = {
           stripe_checkout_id?: string | null
           stripe_customer_id?: string | null
           stripe_payment_intent?: string | null
+          stripe_preklic?: string | null
           stripe_subscription_id?: string | null
           updated_at?: string
           user_id?: string | null
           ustvaril?: string | null
           velja_do?: string | null
           vir: string
+          znesek_pravice?: number | null
         }
         Update: {
           created_at?: string
@@ -2788,12 +2792,14 @@ export type Database = {
           stripe_checkout_id?: string | null
           stripe_customer_id?: string | null
           stripe_payment_intent?: string | null
+          stripe_preklic?: string | null
           stripe_subscription_id?: string | null
           updated_at?: string
           user_id?: string | null
           ustvaril?: string | null
           velja_do?: string | null
           vir?: string
+          znesek_pravice?: number | null
         }
         Relationships: [
           {
@@ -3757,17 +3763,20 @@ export type Database = {
       stripe_dogodki: {
         Row: {
           id: string
+          obdelano_at: string | null
           prejeto_at: string
           tip: string
         }
         ComputedFields: never
         Insert: {
           id: string
+          obdelano_at?: string | null
           prejeto_at?: string
           tip: string
         }
         Update: {
           id?: string
+          obdelano_at?: string | null
           prejeto_at?: string
           tip?: string
         }
@@ -6855,6 +6864,10 @@ export type Database = {
           primer: string
         }[]
       }
+      preverjen_cakajoci_preklici: {
+        Args: Record<PropertyKey, never>
+        Returns: string[]
+      }
       preverjen_ime_znacke: { Args: { p_ime: string }; Returns: string }
       preverjen_iz_placila: {
         Args: {
@@ -6871,25 +6884,43 @@ export type Database = {
           p_user_id: string
           p_velja_do: string
           p_vir: string
+          p_znesek?: number
         }
         Returns: string
+      }
+      preverjen_lahko_velja: {
+        Args: { p_glavni: number; p_razen?: number; p_user_id: string }
+        Returns: boolean
       }
       preverjen_moja_pravica: {
         Args: { p_player_id: number }
         Returns: {
-          liga: string
-          stripe_customer_id: string
           velja_do: string
           vir: string
+        }[]
+      }
+      preverjen_moje_narocnine: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          stripe_customer_id: string
+          velja_do: string
         }[]
       }
       preverjen_narocnina_konec: {
         Args: { p_konec: string; p_subscription: string }
         Returns: number
       }
+      preverjen_pocisti_naslove: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       preverjen_podaljsaj: {
         Args: { p_subscription: string; p_velja_do: string }
-        Returns: number
+        Returns: string
+      }
+      preverjen_preklic_opravljen: {
+        Args: { p_subscription: string }
+        Returns: undefined
       }
       preverjen_pripravi_nakup: {
         Args: { p_ime_na_znacki?: string; p_player_id: number }
@@ -6901,14 +6932,47 @@ export type Database = {
           stripe_customer_id: string
         }[]
       }
+      preverjen_spor_dobljen: {
+        Args: { p_payment_intent: string; p_subscription: string }
+        Returns: string
+      }
       preverjen_vracilo: {
         Args: {
-          p_customer: string
-          p_delno: boolean
           p_payment_intent: string
           p_spor: boolean
+          p_subscription: string
+          p_vrnjeno: number
+          p_znesek: number
         }
         Returns: string
+      }
+      preverjen_vrstica_placila: {
+        Args: { p_payment_intent: string; p_subscription: string }
+        Returns: {
+          created_at: string
+          id: number
+          odpoved_pravici: boolean | null
+          player_id: number
+          star_vsaj_18: boolean | null
+          status: string
+          stripe_checkout_id: string | null
+          stripe_customer_id: string | null
+          stripe_payment_intent: string | null
+          stripe_preklic: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string | null
+          ustvaril: string | null
+          velja_do: string | null
+          vir: string
+          znesek_pravice: number | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "preverjeni_racuni"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       preverjeni_igralci_za: {
         Args: { p_ids: number[] }

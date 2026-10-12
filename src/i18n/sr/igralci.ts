@@ -304,6 +304,11 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       napaka: 'Plaćanje nije moglo da počne.',
       uspeh: 'Plaćanje primljeno, značka će se pojaviti za nekoliko sekundi.',
       upravljaj: 'Upravljaj pretplatom',
+      dostavaSi: 'Slovenija',
+      dostavaEu: 'Druga zemlja EU',
+      obdeluje: 'Plaćanje se još obrađuje. Značka će se pojaviti kad ga primimo.',
+      narocninaNaslov: 'Pretplata (provereni igrač)',
+      narocninaApp: 'Pretplatom upravljaš na slff.eu.',
     },
     napake: {
       znaki: 'Tekst sadrži nedozvoljene znakove (npr. / @ # " < >).',

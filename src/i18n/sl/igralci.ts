@@ -305,6 +305,11 @@ export const igralci = {
       napaka: 'Plačila ni bilo mogoče začeti.',
       uspeh: 'Plačilo prejeto, značka se prikaže v nekaj sekundah.',
       upravljaj: 'Upravljaj naročnino',
+      dostavaSi: 'Slovenija',
+      dostavaEu: 'Druga država EU',
+      obdeluje: 'Plačilo se še obdeluje. Značka se prikaže, ko ga prejmemo.',
+      narocninaNaslov: 'Naročnina (preverjen igralec)',
+      narocninaApp: 'Naročnino upravljaš na slff.eu.',
     },
     napake: {
       znaki: 'Besedilo vsebuje nedovoljene znake (npr. / @ # " < >).',

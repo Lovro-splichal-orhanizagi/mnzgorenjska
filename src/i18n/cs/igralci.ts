@@ -307,6 +307,11 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       napaka: 'Platbu se nepodařilo zahájit.',
       uspeh: 'Platba přijata, odznak se zobrazí za několik sekund.',
       upravljaj: 'Spravovat předplatné',
+      dostavaSi: 'Slovinsko',
+      dostavaEu: 'Jiná země EU',
+      obdeluje: 'Platba se ještě zpracovává. Odznak se zobrazí, jakmile ji přijmeme.',
+      narocninaNaslov: 'Předplatné (ověřený hráč)',
+      narocninaApp: 'Předplatné spravuješ na slff.eu.',
     },
     napake: {
       znaki: 'Text obsahuje nepovolené znaky (např. / @ # " < >).',

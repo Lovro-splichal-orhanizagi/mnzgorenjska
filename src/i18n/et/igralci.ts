@@ -301,6 +301,11 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       napaka: 'Makset ei õnnestunud alustada.',
       uspeh: 'Makse on kätte saadud, linnuke ilmub mõne sekundi pärast.',
       upravljaj: 'Halda tellimust',
+      dostavaSi: 'Sloveenia',
+      dostavaEu: 'Muu ELi riik',
+      obdeluje: 'Makset alles töödeldakse. Linnuke ilmub, kui makse on kätte saadud.',
+      narocninaNaslov: 'Tellimus (kinnitatud mängija)',
+      narocninaApp: 'Tellimust halda lehel slff.eu.',
     },
     napake: {
       znaki: 'Tekstis on lubamatuid märke (nt / @ # " < >).',

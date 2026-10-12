@@ -301,6 +301,11 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       napaka: 'Die Zahlung konnte nicht gestartet werden.',
       uspeh: 'Zahlung erhalten, das Häkchen erscheint in wenigen Sekunden.',
       upravljaj: 'Abo verwalten',
+      dostavaSi: 'Slowenien',
+      dostavaEu: 'Anderes EU-Land',
+      obdeluje: 'Die Zahlung wird noch verarbeitet. Das Häkchen erscheint, sobald sie eingegangen ist.',
+      narocninaNaslov: 'Abo (verifizierter Spieler)',
+      narocninaApp: 'Dein Abo verwaltest du auf slff.eu.',
     },
     napake: {
       znaki: 'Der Text enthält nicht erlaubte Zeichen (z. B. / @ # " < >).',

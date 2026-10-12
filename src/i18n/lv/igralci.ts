@@ -307,6 +307,11 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       napaka: 'Maksājumu neizdevās sākt.',
       uspeh: 'Maksājums saņemts, ķeksītis parādīsies pēc dažām sekundēm.',
       upravljaj: 'Pārvaldīt abonementu',
+      dostavaSi: 'Slovēnija',
+      dostavaEu: 'Cita ES valsts',
+      obdeluje: 'Maksājums vēl tiek apstrādāts. Ķeksītis parādīsies, kad to saņemsim.',
+      narocninaNaslov: 'Abonements (pārbaudīts spēlētājs)',
+      narocninaApp: 'Abonementu pārvaldi slff.eu.',
     },
     napake: {
       znaki: 'Tekstā ir neatļautas rakstzīmes (piem., / @ # " < >).',

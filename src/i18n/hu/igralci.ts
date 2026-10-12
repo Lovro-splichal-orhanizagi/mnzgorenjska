@@ -301,6 +301,11 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       napaka: 'A fizetést nem sikerült elindítani.',
       uspeh: 'A fizetés megérkezett, a jelvény néhány másodpercen belül megjelenik.',
       upravljaj: 'Előfizetés kezelése',
+      dostavaSi: 'Szlovénia',
+      dostavaEu: 'Másik EU-ország',
+      obdeluje: 'A fizetés még feldolgozás alatt áll. A jelvény megjelenik, amint megérkezik.',
+      narocninaNaslov: 'Előfizetés (ellenőrzött játékos)',
+      narocninaApp: 'Az előfizetést az slff.eu oldalon kezelheted.',
     },
     napake: {
       znaki: 'A szöveg nem engedélyezett karaktereket tartalmaz (pl. / @ # " < >).',

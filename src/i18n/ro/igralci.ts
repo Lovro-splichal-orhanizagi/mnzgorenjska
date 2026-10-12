@@ -304,6 +304,11 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       napaka: 'Plata nu a putut fi pornită.',
       uspeh: 'Plata a fost primită, bifa apare în câteva secunde.',
       upravljaj: 'Gestionează abonamentul',
+      dostavaSi: 'Slovenia',
+      dostavaEu: 'Altă țară din UE',
+      obdeluje: 'Plata este încă în procesare. Bifa apare după ce o primim.',
+      narocninaNaslov: 'Abonament (jucător verificat)',
+      narocninaApp: 'Abonamentul îl gestionezi pe slff.eu.',
     },
     napake: {
       znaki: 'Textul conține caractere nepermise (de ex. / @ # " < >).',

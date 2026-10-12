@@ -307,6 +307,11 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       napaka: 'Nie udało się rozpocząć płatności.',
       uspeh: 'Płatność otrzymana, znaczek pojawi się za kilka sekund.',
       upravljaj: 'Zarządzaj subskrypcją',
+      dostavaSi: 'Słowenia',
+      dostavaEu: 'Inny kraj UE',
+      obdeluje: 'Płatność jest jeszcze przetwarzana. Znaczek pojawi się, gdy ją otrzymamy.',
+      narocninaNaslov: 'Subskrypcja (zweryfikowany zawodnik)',
+      narocninaApp: 'Subskrypcją zarządzasz na slff.eu.',
     },
     napake: {
       znaki: 'Tekst zawiera niedozwolone znaki (np. / @ # " < >).',

@@ -106,7 +106,11 @@ export default function PreverjeniProfil({
   return (
     <>
       {plus && <Prikaz plus={plus} igralecId={igralecId} />}
-      {kupuje && placano && <p className="kartica p-3 text-sm text-sky-200">{t('igralci.preverjen.ponudba.uspeh')}</p>}
+      {placano && lastnik?.vidi && (lastnik.preverjen || !jeNativno()) && (
+        <p className="kartica p-3 text-sm text-sky-200">
+          {t(lastnik.preverjen ? 'igralci.preverjen.ponudba.uspeh' : 'igralci.preverjen.ponudba.obdeluje')}
+        </p>
+      )}
       {kupuje && !placano && <Ponudba igralecId={igralecId} />}
       {lastnik?.preverjen && lastnik.vir === 'letna' && !jeNativno() && <Narocnina igralecId={igralecId} />}
       {lastnik?.preverjen && urejam && (
@@ -230,6 +234,7 @@ async function placilo(telo: Record<string, unknown>): Promise<{ url?: string; n
 function Ponudba({ igralecId }: { igralecId: number }) {
   const [vir, setVir] = useState<'letna' | 'dozivljenjska'>('letna')
   const [znacka, setZnacka] = useState(false)
+  const [dostava, setDostava] = useState<'si' | 'eu'>('si')
   const [ime, setIme] = useState('')
   const [star18, setStar18] = useState(false)
   const [odpoved, setOdpoved] = useState(false)
@@ -245,6 +250,7 @@ function Ponudba({ igralecId }: { igralecId: number }) {
       player_id: igralecId,
       vir,
       znacka: zZnacko,
+      dostava: zZnacko ? dostava : undefined,
       ime_na_znacki: zZnacko ? ime : undefined,
       star_vsaj_18: star18,
       odpoved_pravici: odpoved,
@@ -272,6 +278,16 @@ function Ponudba({ igralecId }: { igralecId: number }) {
             <input type="checkbox" checked={znacka} onChange={(e) => setZnacka(e.target.checked)} />
             <span>{t('igralci.preverjen.ponudba.znacka')}</span>
           </label>
+          {znacka && (
+            <div className="flex flex-wrap gap-3">
+              {(['si', 'eu'] as const).map((d) => (
+                <label key={d} className="flex items-center gap-1">
+                  <input type="radio" name="dostava-znacke" checked={dostava === d} onChange={() => setDostava(d)} />
+                  {t(d === 'si' ? 'igralci.preverjen.ponudba.dostavaSi' : 'igralci.preverjen.ponudba.dostavaEu')}
+                </label>
+              ))}
+            </div>
+          )}
           {znacka && (
             <input
               value={ime}
@@ -305,7 +321,7 @@ function Ponudba({ igralecId }: { igralecId: number }) {
   )
 }
 
-function Narocnina({ igralecId }: { igralecId: number }) {
+function Narocnina({ igralecId }: { igralecId?: number }) {
   const [dela, setDela] = useState(false)
   const [napaka, setNapaka] = useState<string | null>(null)
   return (
@@ -327,6 +343,25 @@ function Narocnina({ igralecId }: { igralecId: number }) {
       </button>
       {napaka && <p className="text-rose-400">{napaka}</p>}
     </div>
+  )
+}
+
+/**
+ * Naročnina na strani Račun: vsak z aktivno naročnino jo lahko prekliče,
+ * ne glede na stikalo in profil. V aplikaciji le opomba (nakup in portal sta
+ * na spletu).
+ */
+export function UpravljanjeNarocnine() {
+  const [ima, setIma] = useState(false)
+  useEffect(() => {
+    void supabase.rpc('preverjen_moje_narocnine').then(({ data }) => setIma(!!data?.length))
+  }, [])
+  if (!ima) return null
+  return (
+    <section className="kartica space-y-2 p-4">
+      <h2 className="text-lg font-bold">{t('igralci.preverjen.ponudba.narocninaNaslov')}</h2>
+      {jeNativno() ? <p className="text-sm text-slate-300">{t('igralci.preverjen.ponudba.narocninaApp')}</p> : <Narocnina />}
+    </section>
   )
 }
 

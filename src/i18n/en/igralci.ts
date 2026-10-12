@@ -301,6 +301,11 @@ export const igralci: NonNullable<Prevod['igralci']> = {
       napaka: 'The payment could not be started.',
       uspeh: 'Payment received, the badge will appear in a few seconds.',
       upravljaj: 'Manage subscription',
+      dostavaSi: 'Slovenia',
+      dostavaEu: 'Another EU country',
+      obdeluje: 'The payment is still being processed. The badge will appear once we receive it.',
+      narocninaNaslov: 'Subscription (verified player)',
+      narocninaApp: 'Manage your subscription on slff.eu.',
     },
     napake: {
       znaki: 'The text contains characters that are not allowed (e.g. / @ # " < >).',
