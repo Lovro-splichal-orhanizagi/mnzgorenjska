@@ -4336,6 +4336,14 @@ preveri(
     U.skupnaVrsta('dopust') === 'odsotnost' && U.skupnaVrsta('drugo') === 'drugo')
 }
 
+// --- tekmovanje: napaka branja ustavi uvoz (ne pade na MNZ Gorenjska) --------
+{
+  const { tekmovanje } = await import('./tekmovanje.mjs')
+  const napacnaBaza = { from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null, error: { message: 'upstream connect error' } }) }) }) }) }
+  const napaka = await tekmovanje(napacnaBaza, 'rs-x').then(() => null, (e) => e.message)
+  preveri('tekmovanje: napaka branja ustavi uvoz', napaka === 'tekmovanja ni mogoče prebrati: upstream connect error')
+}
+
 // --- vir fss (Srbija, državni ligi FSS; vratar s prvaliga.rs) ------------------
 {
   const F = await import('./viri/fss.mjs')
