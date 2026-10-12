@@ -69,7 +69,7 @@ async function zapisi(trgovina, vrstice) {
 
 // ---------- mejniki ----------
 // Primerja z najvišjim že javljenim mejnikom (`trgovine_stanje.mejnik`, null = še nič), zato
-// seštevek, ki pade in znova zraste (Play odšteje odstranitve), ne javi dvakrat.
+// seštevek, ki pade in znova zraste (npr. Apple popravi poročilo), ne javi dvakrat.
 // Prvi zagon javi le zadnji dosežen mejnik, ne vseh zgodovinskih.
 async function mejniki(ime, trgovina, zdaj) {
   const { data, error } = await db.from('trgovine_stanje').select('mejnik').eq('trgovina', trgovina).maybeSingle()
