@@ -30,6 +30,7 @@ export const aplikacija = {
     gumb: 'Časti pivo',
     /** Povezava na pivski zid (/beers) ob gumbu in v meniju Več. */
     zid: 'Pivski zid',
+    lestvicaDomov: 'Pivska lestvica',
     // Stran /beers (pages/Piva.tsx): brez zneskov.
     stran: {
       uvod: 'SLFF je brezplačen. Strežnik in domeno plačujemo sami, zato vsako pivo res pomaga. Hvala vsem, ki ste nas že počastili!',

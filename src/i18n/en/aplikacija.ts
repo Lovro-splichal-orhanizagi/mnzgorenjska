@@ -24,6 +24,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     gumb: 'Buy us a beer',
     /** Povezava na pivski zid (/beers) ob gumbu in v meniju Več. */
     zid: 'Beer wall',
+    lestvicaDomov: 'Beer leaderboard',
     // Stran /beers (pages/Piva.tsx): brez zneskov.
     stran: {
       uvod: 'SLFF is free. We pay for the server and the domain ourselves, so every beer really helps. Thanks to everyone who has bought us one!',

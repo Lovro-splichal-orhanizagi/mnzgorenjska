@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import Pivo from '../components/Pivo'
 import { imeZveze } from '../components/VirPodatkov'
 import { sestaviVabilo, vabiloMailto } from '../lib/vabilo'
@@ -6,6 +6,7 @@ import { Link } from '../components/Povezava'
 import { jeNativno } from '../lib/platforma'
 import { supabase } from '../lib/supabase'
 import { vseVrstice } from '../lib/strani'
+import { lestvicaPodpornikov, type JavnoPivo } from '../lib/piva'
 import { pravilaOpis } from '../lib/tockovanje'
 import {
   prikazniIme,
@@ -640,6 +641,10 @@ export default function Domov() {
           </Razdelek>
         )}
 
+        {/* Pivska lestvica: vrh podpornikov s sporočili. Kot gumb za pivo le
+            na spletu (Pivo.tsx); v aplikaciji izostane. */}
+        {!jeNativno() && <PivskaLestvica />}
+
         {/* naslednje tekme — prvi krog razporeda */}
         {prihodnjiKrog && (
           <Razdelek naslov={t('domov.naslednje.naslov')}>
@@ -751,6 +756,50 @@ function poKrogih(tekme: any[], smer: 1 | -1): { krog: any; tekme: any[] } | nul
 }
 
 /** Razdelek naslovnice: majhen naslov (in povezava desno), pod njim vsebina. */
+/** Vrh pivskega zidu (/beers): prvi trije podporniki z imenom in njihovo zadnje sporočilo. */
+function PivskaLestvica() {
+  const [piva, setPiva] = useState<JavnoPivo[] | null>(null)
+  useEffect(() => {
+    let veljavno = true
+    supabase.rpc('javna_piva').then(({ data }) => {
+      if (veljavno) setPiva((data ?? []) as JavnoPivo[])
+    })
+    return () => {
+      veljavno = false
+    }
+  }, [])
+  const vrh = useMemo(() => lestvicaPodpornikov(piva ?? []).filter((p) => p.ime !== null).slice(0, 3), [piva])
+  if (!vrh.length) return null
+  return (
+    <Razdelek
+      naslov={`🍺 ${t('aplikacija.pivo.lestvicaDomov')}`}
+      povezava={{ to: '/beers', besedilo: `${t('aplikacija.pivo.zid')} →` }}
+    >
+      <ol className="kartica divide-y divide-white/10">
+        {vrh.map((p, i) => (
+          <li key={p.ime} className="flex gap-3 px-3 py-2.5">
+            <span className="w-6 shrink-0 text-center" aria-hidden>
+              {['🥇', '🥈', '🥉'][i]}
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-baseline gap-3">
+                <span className="min-w-0 flex-1 truncate font-semibold">{p.ime}</span>
+                <span className="shrink-0 text-sm font-bold tabular-nums text-gnl-300">
+                  {t('aplikacija.pivo.stran.piv', { n: p.piv })}
+                </span>
+              </div>
+              {p.sporocila[0] && (
+                <p className="line-clamp-2 whitespace-pre-line break-words text-sm text-slate-300">{p.sporocila[0]}</p>
+              )}
+            </div>
+          </li>
+        ))}
+      </ol>
+      <Pivo src="domov-lestvica" />
+    </Razdelek>
+  )
+}
+
 function Razdelek({
   naslov,
   povezava,

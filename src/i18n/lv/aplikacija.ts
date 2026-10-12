@@ -23,6 +23,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     gumb: 'Uzsauc mums alu',
     /** Povezava na pivski zid (/beers) ob gumbu in v meniju Več. */
     zid: 'Alus siena',
+    lestvicaDomov: 'Alus tabula',
     // Stran /beers (pages/Piva.tsx): brez zneskov.
     stran: {
       uvod: 'SLFF ir bez maksas. Serveri un domēnu apmaksājam paši, tāpēc katrs alus tiešām palīdz. Paldies visiem, kas mums jau uzsaukuši!',
