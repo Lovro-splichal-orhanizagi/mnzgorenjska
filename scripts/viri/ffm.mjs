@@ -42,7 +42,7 @@
 // izziv ali CAPTCHA, ustavi — ne obhajaj.
 import { razpakiraj } from '../klubi.mjs'
 import { sifra } from './zapisniki.mjs'
-import { datumUra as datumUraFss, minuta, nastopi, sezonaIzDatuma } from './fss.mjs'
+import { datumUra as datumUraFss, minuta, nastopi, sezonaIzDatuma, zdruziDvojneGole } from './fss.mjs'
 
 const OSNOVNI = 'https://www.ffm.mk'
 
@@ -250,6 +250,7 @@ export function vZapisnik(html, { id = null, url = null } = {}) {
     if (e.postava.length !== 11) opozorila.push(`${e.ime}: v postavi je ${e.postava.length} igralcev namesto 11`)
   })
 
+  zdruziDvojneGole(goli, rezultat, ekipe, opozorila)
   const zaEkipo = (idx) => goli.filter((g) => (g.avtogol ? 1 - g.ekipaIdx : g.ekipaIdx) === idx).length
   if (zaEkipo(0) !== rezultat.domaci || zaEkipo(1) !== rezultat.gostje)
     opozorila.push(`goli iz dogodkov (${zaEkipo(0)}:${zaEkipo(1)}) se ne ujemajo z izidom ${rezultat.domaci}:${rezultat.gostje}`)
