@@ -29,11 +29,8 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
       skupaj: { one: '{n} caña hasta ahora', many: '{n} cañas hasta ahora', other: '{n} cañas hasta ahora' },
       piv: { one: '{n} caña', many: '{n} cañas', other: '{n} cañas' },
       lestvica: 'Ranking de apoyos',
-      sporocila: 'Últimos mensajes',
       anonimni: 'Apoyos anónimos',
-      anonimno: 'Anónimo',
       prazno: 'Todavía no hay ninguna caña en el muro. ¡Sé el primero!',
-      brezSporocil: 'Aún no hay mensajes.',
     },
   },
   noga: {

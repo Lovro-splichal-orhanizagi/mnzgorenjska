@@ -36,11 +36,8 @@ export const aplikacija = {
       skupaj: { one: 'Doslej {n} pivo', two: 'Doslej {n} piva', few: 'Doslej {n} piva', other: 'Doslej {n} piv' },
       piv: { one: '{n} pivo', two: '{n} piva', few: '{n} piva', other: '{n} piv' },
       lestvica: 'Lestvica podpornikov',
-      sporocila: 'Zadnja sporočila',
       anonimni: 'Anonimni podporniki',
-      anonimno: 'Anonimno',
       prazno: 'Na zidu še ni nobenega piva. Bodi prvi!',
-      brezSporocil: 'Sporočil še ni.',
     },
   },
   noga: {

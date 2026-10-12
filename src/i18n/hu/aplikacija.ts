@@ -30,11 +30,8 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
       skupaj: { one: 'Eddig {n} sör', other: 'Eddig {n} sör' },
       piv: { one: '{n} sör', other: '{n} sör' },
       lestvica: 'Támogatók toplistája',
-      sporocila: 'Legújabb üzenetek',
       anonimni: 'Névtelen támogatók',
-      anonimno: 'Névtelen',
       prazno: 'A falon még nincs sör. Légy te az első!',
-      brezSporocil: 'Még nincs üzenet.',
     },
   },
   noga: {

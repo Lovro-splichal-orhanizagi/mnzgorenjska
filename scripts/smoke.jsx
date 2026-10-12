@@ -34,7 +34,7 @@ import PrevzemIgralca from '../src/components/PrevzemIgralca'
 import Prevzemi from '../src/components/admin/Prevzemi'
 import Piva from '../src/pages/Piva'
 import PivskiZidAdmin from '../src/components/admin/Piva'
-import { lestvicaPodpornikov, zadnjaSporocila, vsehPiv } from '../src/lib/piva'
+import { lestvicaPodpornikov, vsehPiv } from '../src/lib/piva'
 import { ocistiSporocilo } from '../supabase/functions/bmc-pivo/sporocilo.ts'
 import {
   preveriEkipo,
@@ -173,8 +173,13 @@ for (const [ime, Komponenta, pot] of strani) {
   preveri('pivo: lestvica združi ime brez velikosti črk, anonimni na koncu',
     l.length === 3 && l[0].ime.toLowerCase() === 'janez' && l[0].piv === 3 && l[0].nakupov === 2
       && l[1].ime === 'Ana' && l[2].ime === null && l[2].piv === 6, JSON.stringify(l))
-  preveri('pivo: zadnja sporočila le z besedilom, najnovejše prvo',
-    zadnjaSporocila(piva).map((p) => p.sporocilo).join(',') === 'b,anonimno,a')
+  preveri('pivo: sporočila so ob imenu na lestvici, le z besedilom',
+    l[0].sporocila.join(',') === 'a' && l[1].sporocila.join(',') === 'b' && l[2].sporocila.join(',') === 'anonimno')
+  const dvakrat = lestvicaPodpornikov([
+    { ime: 'Ana', piv: 1, sporocilo: 'staro', created_at: '2026-10-01T10:00:00Z' },
+    { ime: 'Ana', piv: 1, sporocilo: 'novo', created_at: '2026-10-09T10:00:00Z' },
+  ])
+  preveri('pivo: več sporočil istega podpornika, najnovejše prvo', dvakrat[0].sporocila.join(',') === 'novo,staro')
   preveri('pivo: vsota piv', vsehPiv(piva) === 11)
 }
 

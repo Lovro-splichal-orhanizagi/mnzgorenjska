@@ -30,11 +30,8 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
       skupaj: { one: '{n} Bier bisher', other: '{n} Biere bisher' },
       piv: { one: '{n} Bier', other: '{n} Biere' },
       lestvica: 'Top-Unterstützer',
-      sporocila: 'Neueste Nachrichten',
       anonimni: 'Anonyme Unterstützer',
-      anonimno: 'Anonym',
       prazno: 'Noch kein Bier an der Wand. Sei der Erste!',
-      brezSporocil: 'Noch keine Nachrichten.',
     },
   },
   noga: {

@@ -1,4 +1,5 @@
-// Pivski zid (/beers): podporniki z Buy Me a Coffee in njihova sporočila.
+// Pivski zid (/beers): lestvica podpornikov z Buy Me a Coffee, vsak s svojimi
+// sporočili ob imenu.
 //
 // Podatke da `javna_piva()` (supabase/migrations/…_pivski_zid.sql): ime,
 // število piv, sporočilo, datum. Zneskov baza ne pozna, zato jih tu ni.
@@ -8,8 +9,8 @@ import { useEffect, useMemo, useState } from 'react'
 import Pivo from '../components/Pivo'
 import { supabase } from '../lib/supabase'
 import { useNaslov } from '../lib/naslov'
-import { lestvicaPodpornikov, vsehPiv, zadnjaSporocila, type JavnoPivo } from '../lib/piva'
-import { t, datum } from '../i18n'
+import { lestvicaPodpornikov, vsehPiv, type JavnoPivo } from '../lib/piva'
+import { t } from '../i18n'
 
 const MEDALJE = ['🥇', '🥈', '🥉']
 
@@ -31,7 +32,6 @@ export default function Piva() {
   }, [])
 
   const lestvica = useMemo(() => lestvicaPodpornikov(piva ?? []), [piva])
-  const sporocila = useMemo(() => zadnjaSporocila(piva ?? []), [piva])
   const skupaj = useMemo(() => vsehPiv(piva ?? []), [piva])
 
   return (
@@ -62,45 +62,34 @@ export default function Piva() {
             <h2 className="text-lg font-bold">{t('aplikacija.pivo.stran.lestvica')}</h2>
             <ol className="kartica divide-y divide-white/10 overflow-hidden">
               {lestvica.map((p, i) => (
-                <li key={p.ime ?? '—anonimni'} className="flex items-center gap-3 px-3 py-2.5 sm:px-4">
-                  <span className="w-7 shrink-0 text-center text-sm font-bold tabular-nums text-slate-500">
+                <li key={p.ime ?? '—anonimni'} className="flex gap-3 px-3 py-3 sm:px-4">
+                  <span className="w-7 shrink-0 pt-0.5 text-center text-sm font-bold tabular-nums text-slate-500">
                     {p.ime === null ? '🙈' : (MEDALJE[i] ?? `${i + 1}.`)}
                   </span>
-                  <span
-                    className={`min-w-0 flex-1 truncate font-semibold ${p.ime === null ? 'italic text-slate-400' : ''}`}
-                  >
-                    {p.ime ?? t('aplikacija.pivo.stran.anonimni')}
-                  </span>
-                  <span className="shrink-0 text-sm font-bold tabular-nums text-gnl-300">
-                    {t('aplikacija.pivo.stran.piv', { n: p.piv })}
-                  </span>
+                  <div className="min-w-0 flex-1 space-y-1.5">
+                    <div className="flex items-baseline gap-3">
+                      <span
+                        className={`min-w-0 flex-1 truncate font-semibold ${p.ime === null ? 'italic text-slate-400' : ''}`}
+                      >
+                        {p.ime ?? t('aplikacija.pivo.stran.anonimni')}
+                      </span>
+                      <span className="shrink-0 text-sm font-bold tabular-nums text-gnl-300">
+                        {t('aplikacija.pivo.stran.piv', { n: p.piv })}
+                      </span>
+                    </div>
+                    {/* Sporočila podpornika: navadno besedilo, nikoli HTML. */}
+                    {p.sporocila.map((s, j) => (
+                      <p
+                        key={j}
+                        className="whitespace-pre-line break-words border-l-2 border-gnl-400/40 pl-2.5 text-sm text-slate-200"
+                      >
+                        {s}
+                      </p>
+                    ))}
+                  </div>
                 </li>
               ))}
             </ol>
-          </section>
-
-          <section className="space-y-2">
-            <h2 className="text-lg font-bold">{t('aplikacija.pivo.stran.sporocila')}</h2>
-            {sporocila.length === 0 ? (
-              <p className="text-sm text-slate-400">{t('aplikacija.pivo.stran.brezSporocil')}</p>
-            ) : (
-              <ul className="space-y-2">
-                {sporocila.map((p, i) => (
-                  <li key={`${p.created_at}-${i}`} className="kartica space-y-1.5 p-3 sm:p-4">
-                    <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 text-sm">
-                      <span className={`font-semibold ${p.ime ? '' : 'italic text-slate-400'}`}>
-                        {p.ime ?? t('aplikacija.pivo.stran.anonimno')}
-                      </span>
-                      <span className="text-xs text-slate-500">
-                        <span aria-hidden>🍺 </span>
-                        {t('aplikacija.pivo.stran.piv', { n: p.piv })} · {datum(p.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}
-                      </span>
-                    </div>
-                    <p className="whitespace-pre-line break-words text-sm text-slate-200">{p.sporocilo}</p>
-                  </li>
-                ))}
-              </ul>
-            )}
           </section>
         </>
       )}
