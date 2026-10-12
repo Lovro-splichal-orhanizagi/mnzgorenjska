@@ -13,7 +13,8 @@
 //   (naslov kluba), ne "Esindaja" (zastopnik, osebni naslov). Povezave ekip
 //   so v razporedu lige. robots.txt: Crawl-Delay 5 (vir.premorMs); ajax.php
 //   in /otsing ne beremo. Estonske lige so neaktivne — maili čakajo na vklop.
-// 403, 429 ali izziv ustavi branje (izhod 2) — ne obhajamo.
+// 403, 429 ali izziv ustavi branje takoj (izhod 2) — ne obhajamo.
+// Teče na strežniku (docker compose run --rm slff-posta …, scripts/hetzner/posta/).
 //
 // En naslov = en klub (prednost ima prva ekipa pred rezervno), klub brez
 // igralcev z nastopi letos izpustimo. Nov naslov dobi vrstico (`nov`,
@@ -60,14 +61,72 @@ const REZERVA = /(\b1[b-d]\b|\(1b\)|\bII+\b|Juniors|Amateure|\bU2[0-3]\b)/
 const VELJAVEN = /^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i
 const vir = drzava === 'AT' ? oefb : jalgpall
 
+// 403/429 ustavi takoj, brez ponovitve (prenesiSPonovitvami bi 429 ponovil).
+class Zavrnitev extends Error {}
+const izziv = (t) => /<title>\s*(Just a moment|Attention Required)|cf_chl_opt|cf-turnstile/i.test(t) || (drzava === 'EE' && jeIzziv(t))
 async function stran(url) {
-  const o = await prenesiSPonovitvami(url, { glave: vir.glave, premorMs: vir.premorMs })
+  let o
+  try {
+    o = await prenesiSPonovitvami(url, {
+      glave: vir.glave,
+      premorMs: vir.premorMs,
+      fetchFn: async (u, m) => {
+        const r = await fetch(u, m)
+        if (r.status === 403 || r.status === 429) throw new Zavrnitev(`${r.status}`)
+        return r
+      },
+    })
+  } catch (e) {
+    if (!(e instanceof Zavrnitev)) throw e
+    console.error(`Ustavljeno: ${url} -> ${e.message} (zavrnitev — ne obhajamo)`)
+    process.exit(2)
+  }
   const t = await o.text()
-  if (o.status === 403 || o.status === 429 || (drzava === 'EE' && jeIzziv(t))) {
-    console.error(`Ustavljeno: ${url} -> ${o.status} (zavrnitev ali izziv — ne obhajamo)`)
+  if (izziv(t)) {
+    console.error(`Ustavljeno: ${url} vrne izziv (CAPTCHA) — ne obhajamo`)
     process.exit(2)
   }
   return o.ok ? t : null
+}
+
+// jalgpall.ee ima en proračun branja (Crawl-Delay 5) za vse nas skupaj. Uvozi
+// Estonije tečejo v GitHub Actions (cakaj-na-uvoze, SKUPEN_VIR), ta skripta pa
+// na strežniku, kjer ni žetona: pogledamo javni API (brez žetona) in ne beremo,
+// dokler kak tak zagon teče ali čaka. Polnjenje traja ~15 minut; uvoz, ki se
+// začne med njim, za nekaj minut bere hkrati (ponytail: ni zaklepa čez oba sistema).
+async function teceUvozEstonije() {
+  const repo = env.GITHUB_REPOSITORY || 'Lovro-splichal-orhanizagi/mnzgorenjska'
+  const api = async (pot) => {
+    const o = await fetch(`https://api.github.com/repos/${repo}/${pot}`, { headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'SLFF posta' } })
+    if (!o.ok) throw new Error(`GitHub API ${o.status}`)
+    return o.json()
+  }
+  const tece = []
+  for (const status of ['in_progress', 'queued']) {
+    for (const z of (await api(`actions/runs?status=${status}&per_page=100`)).workflow_runs ?? []) {
+      const tok = String(z.path ?? '').split('/').pop()
+      const naslov = z.display_title ?? ''
+      // Nočni uvoz nosi vse države; šteje le njegov posel "uvoz EE".
+      const nocni = tok === 'uvoz-zapisnikov.yml' &&
+        (await api(`actions/runs/${z.id}/jobs?per_page=100`)).jobs?.some((j) => j.name === 'uvoz EE' && j.status !== 'completed')
+      if (nocni || (tok === 'uvoz-lige.yml' && /^Uvoz lige ee-/.test(naslov)) || (tok === 'grbi.yml' && naslov === 'Grbi klubov jalgpall'))
+        tece.push(`${naslov || tok} (${z.id})`)
+    }
+  }
+  return tece
+}
+if (drzava === 'EE') {
+  let tece
+  try {
+    tece = await teceUvozEstonije()
+  } catch (e) {
+    console.error(`Ne vem, ali teče uvoz Estonije (${e.message}) — ne berem jalgpall.ee.`)
+    process.exit(3)
+  }
+  if (tece.length) {
+    console.error(`Teče uvoz, ki bere jalgpall.ee: ${tece.join(', ')} — poskusi pozneje.`)
+    process.exit(3)
+  }
 }
 
 // --- lige, klubi, igralci z nastopi ---------------------------------------------

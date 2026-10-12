@@ -1,5 +1,5 @@
--- Vrsta pošte klubom: maile napolnimo zdaj, pošlje jih delovni tok
--- *Pošta klubom* (scripts/posta-klubom.mjs) pozneje, v oknu prejemnikove
+-- Vrsta pošte klubom: maile napolnimo zdaj, pošlje jih delavec slff-posta
+-- na strežniku (scripts/posta-klubom.mjs --zanka) pozneje, v oknu prejemnikove
 -- države in z dnevno mejo.
 --
 -- `v_vrsti`: naslov je v vrsti (vpiše ga scripts/vrsta-poste-klubom.mjs).

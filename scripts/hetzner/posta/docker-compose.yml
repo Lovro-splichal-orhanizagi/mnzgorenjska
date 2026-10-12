@@ -1,0 +1,28 @@
+# Pošta klubom (scripts/posta-klubom.mjs --zanka) na VM: /opt/slff-posta/
+#   docker-compose.yml   ta datoteka
+#   .env                 SUPABASE_SERVICE_ROLE_KEY, LUKA_SMTP_GESLO (chmod 600, ustvari lastnik, NI v gitu)
+#   app/scripts/…        skripte, ki jih rabi pošta (objavi-posto.sh)
+#   app/node_modules/    le @supabase/supabase-js
+# Objava: scripts/hetzner/objavi-posto.sh. CI tega ne objavi.
+# Dnevnik: docker logs slff-posta (brez naslovov klubov).
+# Polnjenje vrste: docker compose run --rm posta node scripts/vrsta-poste-klubom.mjs --drzava AT [--pisi]
+services:
+  posta:
+    image: node:22-alpine
+    container_name: slff-posta
+    restart: unless-stopped
+    init: true
+    # Gostiteljevo omrežje kot slff-html: PostgREST prek envoy na 127.0.0.1:8000,
+    # SMTP/IMAP na mail.slff.eu.
+    network_mode: host
+    user: node
+    working_dir: /app
+    command: ["node", "scripts/posta-klubom.mjs", "--zanka"]
+    environment:
+      SUPABASE_URL: http://127.0.0.1:8000
+      TZ: Europe/Ljubljana
+    env_file: .env
+    volumes:
+      - ./app:/app:ro
+    mem_limit: 128m
+    cpus: 0.5
