@@ -2092,8 +2092,37 @@ skupnih klubih in so pri nižjih ligah šibki — pred uvozom preveri. Rietumu
 zona (6 klubov) je na spodnji meji (3 iz kluba × 5).
 
 Izpuščeno: regijske strani (kurzeme., vidzeme., zemgale., latgale., za.,
-riga.lff.lv — niso pregledane), ženske, mladinske, futsal, pokal, veterani,
-pārspēles, izpadni deli.
+riga.lff.lv — niso pregledane), ženske, mladinske pod U19, futsal, pokal,
+veterani, pārspēles, izpadni deli.
+
+**Mladinska U19** (migracija 20261013100100, **neaktivna**, kot ostale U19
+`prvi_fantasy_krog = 2`, `rok_pomak_ur = 2`). Jaunatnes čempionāts je pod
+`/sacensibas/jauniesi/` (Elites, Meistarības, Attīstības grupa); šifra ima
+spredaj `jauniesi/` (`jauniesi/<sekcija>/<p>`, `<p>` je id COMET), pretekla
+leta so na svoji strani `<sekcija>-<leto>` (`elites-grupa-2025`; povezave na
+*LJFČ vēsture*). Najstarejša skupina je U-19; leta 2026 jo igra **le Elites
+grupa** (Meistarības in Attīstības sta od U-17 navzdol). Seznam:
+`node scripts/latvijske-lige.mjs --u19 [--leto 2025]`.
+
+| liga | klubov | tekoča 2026 | arhiv 2025 |
+|---|---|---|---|
+| lv-u19 | 7 | `jauniesi/elites-grupa/23450990` | `jauniesi/elites-grupa-2025/20725038` (6) |
+
+Preizkus v živo (12. 10. 2026), vsi zapisniki: 2026 — 14 krogov, 42 tekem,
+goli = izid 42/42, postav po 11 83/84 (Dienvidkurzemes SS/LFS enkrat z 8),
+vratar (G) 84/84, 990 minut 79/84 (4 z rdečim), 1235 nastopov (314 s klopi),
+314 menjav z minuto; 2025 — 20 krogov (6 klubov, štirikrožno), 60 tekem,
+goli = izid 60/60, postav po 11 120/120, vratar 120/120, 990 minut 108/120
+(vseh 12 z rdečim), 1845 nastopov (525 s klopi); en zapisnik (20864859) ima
+tri rdeče brez minute (opozorilo). Arhiv je šibek: skupna sta le FS Ventspils in
+FS Jelgava ("Skanstes SK/FS Metta" 2025 in "Skanstes SK/FK Metta" 2026 sta
+po ključu različna kluba). U19 Meistarības grupa 2025
+(`jauniesi/meistaribas-grupa-2025/20725145`, 7 klubov, skupna JDFS Alberts in
+Dienvidkurzemes SS/LFS) ostane neuporabljena — arhiv ima ena sama liga.
+Klubi so skupne ekipe akademij in šol ("JFK Daugava / Salaspils FA",
+"FK Tukums 2000/TSS"); kratko ime poševnico ohrani ("JFK Daugava/Salaspils
+FA"). V tabeli 2026 je še "FK Jelgava" brez tekem (izstop) — razpored ga ne
+pozna.
 
 Uvoz (ena za drugo): `gh workflow run uvoz-lige.yml -f liga=lv-virsliga -f
 arhiv=virsliga/2025 -f cene=true`. Arhiv 180 zapisnikov po 3 s je okoli

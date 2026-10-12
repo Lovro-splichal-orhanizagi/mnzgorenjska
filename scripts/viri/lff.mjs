@@ -6,7 +6,7 @@
 // SEZONA je koledarsko leto (marec–november): 2026 = "2026", ne "2026/27"
 // (`competitions.sezona_koledarska`). Vir jo vzame iz datumov razporeda.
 //
-// ŠIFRA LIGE je `<sekcija>/<p>[/<tekmovanje>]`:
+// ŠIFRA LIGE je `[jauniesi/]<sekcija>/<p>[/<tekmovanje>]`:
 // - `<sekcija>` je pot pod /sacensibas/viriesi/ (virsliga, lvbet-liga,
 //   otra-liga, tresa-liga),
 // - `<p>` je parameter `?p=` izbirnika "Izvēlies līgu" — pri Virslīgi in
@@ -15,9 +15,12 @@
 //   ki ima več skupin,
 // - `<tekmovanje>` (id COMET) izbere skupino, kadar ima stran več blokov
 //   "Visas spēles" (2. liga: A in B grupa in finale, `otra-liga/2026/23536781`).
+// - mladinske lige (Jaunatnes čempionāts) so pod /sacensibas/jauniesi/, šifra
+//   ima spredaj `jauniesi/`; `<p>` je id tekmovanja COMET
+//   (`jauniesi/elites-grupa/23450990` = U19 Elites grupa 2026).
 // Vsaka sezona ima svoje id-je; ob novi sezoni se popravi šifra.
 //
-// STRAN LIGE `/sacensibas/viriesi/<sekcija>/?p=<p>`: zavihek "Visas spēles"
+// STRAN LIGE `/sacensibas/viriesi/<sekcija>/?p=<p>` (mladinske `/sacensibas/jauniesi/…`): zavihek "Visas spēles"
 // (`data-genid="stats_competition_<id>_…_style2"`) ima vse kroge ("N. kārta")
 // in vse tekme: `data-id` (id tekme COMET), datum (h5 dan, h6 mesec "okt",
 // h7 ura v riškem času, h8 leto), domači in gostje, izid (`res1`, `res2`;
@@ -46,16 +49,20 @@ import { nastopi as nastopiPoImenu } from './fss.mjs'
 const OSNOVNI = 'https://lff.lv'
 const DOLZINA_TEKME = 90
 
-/** "tresa-liga/23836115" → { sekcija, p, tekmovanje }. */
+/**
+ * "tresa-liga/23836115" → { skupina: 'viriesi', sekcija, p, tekmovanje }.
+ * Mladinske lige imajo spredaj `jauniesi/` (stran /sacensibas/jauniesi/…):
+ * "jauniesi/elites-grupa/23450990" = U19 Elites grupa 2026.
+ */
 export function razbijKodo(koda) {
-  const m = String(koda ?? '').trim().match(/^([a-z0-9-]+)\/(\d+)(?:\/(\d+))?$/)
-  if (!m) throw new Error(`lff: šifra lige je "<sekcija>/<p>[/<tekmovanje>]" (npr. virsliga/2026, tresa-liga/23836115), ne "${koda}"`)
-  return { sekcija: m[1], p: m[2], tekmovanje: m[3] ?? null }
+  const m = String(koda ?? '').trim().match(/^(?:(jauniesi)\/)?([a-z0-9-]+)\/(\d+)(?:\/(\d+))?$/)
+  if (!m) throw new Error(`lff: šifra lige je "[jauniesi/]<sekcija>/<p>[/<tekmovanje>]" (npr. virsliga/2026, tresa-liga/23836115), ne "${koda}"`)
+  return { skupina: m[1] ?? 'viriesi', sekcija: m[2], p: m[3], tekmovanje: m[4] ?? null }
 }
 
 export const naslovLige = (koda) => {
-  const { sekcija, p } = razbijKodo(koda)
-  return `${OSNOVNI}/sacensibas/viriesi/${sekcija}/?p=${p}`
+  const { skupina, sekcija, p } = razbijKodo(koda)
+  return `${OSNOVNI}/sacensibas/${skupina}/${sekcija}/?p=${p}`
 }
 // Šifra zapisnika v bazi je `lv<id>`: id tekme COMET je enoličen le znotraj
 // ene zveze (fss in fsb imata svoj COMET), `matches.zapisnik_id` pa čez vse vire.
@@ -126,7 +133,7 @@ export const imeStrani = (html) => besedilo(String(html ?? '').match(/<h1 class=
 
 /** Izbirnik "Izvēlies līgu": [{ p, ime }] (privzeta stran nima `p`). */
 export const izbirnikStrani = (html) =>
-  [...String(html ?? '').matchAll(/<option value="\/sacensibas\/viriesi\/[^/"]+\/(?:\?p=(\d+))?">([^<]*)</g)].map((m) => ({ p: m[1] ?? null, ime: razpakiraj(m[2]) }))
+  [...String(html ?? '').matchAll(/<option value="\/sacensibas\/(?:viriesi|jauniesi)\/[^/"]+\/(?:\?p=(\d+))?">([^<]*)</g)].map((m) => ({ p: m[1] ?? null, ime: razpakiraj(m[2]) }))
 
 /** Tekme enega bloka: [{ krog, id, pot, datum, ura, domaci, gostje, izid }]. */
 export function tekmeBloka(blok) {
@@ -362,11 +369,14 @@ const OBLIKE_LV = new Set(['fk', 'fc', 'sk', 'fs', 'afa'])
 
 /**
  * Kratko ime: brez oblike kluba ("FK Staiceles Bebri" → "Staiceles Bebri",
- * "FS Jelgava" → "Jelgava"); "RFS Academy" in "BFC Daugavpils" ostaneta.
+ * "FS Jelgava" → "Jelgava"); "RFS Academy" in "BFC Daugavpils" ostaneta,
+ * "JFK Daugava / Salaspils FA" → "JFK Daugava/Salaspils FA".
  * Največ tri besede.
  */
 export function kratkoImeLv(polno) {
-  const besede = razpakiraj(polno).trim().split(/\s+/).filter(Boolean)
+  // Skupna ekipa "JFK Daugava / Salaspils FA": poševnica z obdajajočimi
+  // presledki je ena beseda z obema deloma, da kratko ime ne konča z "/".
+  const besede = razpakiraj(polno).trim().replace(/\s*\/\s*/g, '/').split(/\s+/).filter(Boolean)
   const ostale = besede.filter((b) => !OBLIKE_LV.has(b.toLowerCase()))
   return ostale.length ? ostale.slice(0, 3).join(' ') : razpakiraj(polno).trim()
 }
