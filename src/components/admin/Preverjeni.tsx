@@ -14,7 +14,7 @@ interface Profil {
   player_name: string | null
   team_name: string | null
   liga: string | null
-  user_id: string
+  user_id: string | null
   prosilec: string | null
   email: string | null
   pravica_id: number | null
@@ -23,6 +23,8 @@ interface Profil {
   velja_do: string | null
   dodeljena_at: string | null
   velja: boolean
+  aktivna: boolean
+  drug_uporabnik: boolean
 }
 
 interface Tester {
@@ -98,7 +100,7 @@ export default function Preverjeni() {
       ? profili.filter((p) =>
           [p.player_name, p.prosilec, p.email, p.team_name, p.liga].some((v) => v?.toLowerCase().includes(niz)),
         )
-      : profili.filter((p) => p.velja)
+      : profili.filter((p) => p.aktivna)
     return vsi.slice(0, 50)
   }, [profili, iskanje])
 
@@ -214,14 +216,21 @@ export default function Preverjeni() {
                   {p.prosilec} · {p.email}
                   {p.pravica_id != null && (
                     <span className={p.velja ? 'ml-2 text-sky-300' : 'ml-2 text-slate-500'}>
-                      {p.velja ? 'preverjen' : p.status === 'aktiven' ? 'potekel' : p.status} ({p.vir}
+                      {p.velja
+                        ? 'preverjen'
+                        : p.aktivna && p.drug_uporabnik
+                          ? 'aktivna pri prejšnjem lastniku'
+                          : p.aktivna
+                            ? 'potekel'
+                            : p.status}{' '}
+                      ({p.vir}
                       {p.velja_do ? `, do ${dan(p.velja_do)}` : ', brez roka'}
                       {p.dodeljena_at ? `, od ${dan(p.dodeljena_at)}` : ''})
                     </span>
                   )}
                 </div>
               </div>
-              {p.velja ? (
+              {p.aktivna ? (
                 <button
                   type="button"
                   disabled={dela}

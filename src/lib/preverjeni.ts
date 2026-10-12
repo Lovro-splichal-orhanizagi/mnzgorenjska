@@ -60,25 +60,47 @@ const poslusalci = new Set<() => void>()
 let vrsta = new Set<number>()
 let casovnik: ReturnType<typeof setTimeout> | null = null
 
-async function preberi() {
-  casovnik = null
-  const ids = [...vrsta].filter((id) => !predpomnilnik.has(id))
-  vrsta = new Set()
-  // Baza vzame največ 300 id-jev na klic.
-  for (let i = 0; i < ids.length; i += 300) {
-    const kos = ids.slice(i, i + 300)
+async function preberiKos(kos: number[]) {
+  // Ena ponovitev; neuspel kos ostane neznan in ga naslednji izris vpraša znova.
+  for (let poskus = 0; poskus < 2; poskus++) {
     const { data, error } = await supabase.rpc('preverjeni_igralci_za', { p_ids: kos })
     if (error) continue
     for (const id of kos) predpomnilnik.set(id, null)
     for (const v of data ?? []) predpomnilnik.set(v.player_id, { vzdevek: v.vzdevek })
+    return
   }
+}
+
+async function preberi() {
+  casovnik = null
+  const ids = [...vrsta].filter((id) => !predpomnilnik.has(id))
+  vrsta = new Set()
+  // Baza vzame največ 300 id-jev na klic; kosi gredo hkrati.
+  const kosi: number[][] = []
+  for (let i = 0; i < ids.length; i += 300) kosi.push(ids.slice(i, i + 300))
+  await Promise.all(kosi.map(preberiKos))
   poslusalci.forEach((f) => f())
 }
 
-/** Pozabi vse (po spremembi pravice ali vzdevka). */
+/**
+ * Pozabi vse (sprememba pravice, vzdevka ali prijave) in znane id-je vpraša
+ * znova, da se kljukice na strani osvežijo.
+ */
 export function pozabiPreverjene() {
+  for (const id of predpomnilnik.keys()) vrsta.add(id)
   predpomnilnik.clear()
+  poslusalci.forEach((f) => f())
+  if (vrsta.size && !casovnik) casovnik = setTimeout(preberi, 0)
 }
+
+// Kaj kdo vidi, je odvisno od prijave (stikalo 1: admin, preizkuševalci).
+// Le ob menjavi uporabnika (SIGNED_IN pride tudi ob vrnitvi na zavihek).
+let uporabnik: string | null | undefined
+supabase.auth.onAuthStateChange((_dogodek, seja) => {
+  const nov = seja?.user.id ?? null
+  if (uporabnik !== undefined && nov !== uporabnik) pozabiPreverjene()
+  uporabnik = nov
+})
 
 /**
  * Preverjeni med igralci na strani. Vse komponente na strani se zberejo v en

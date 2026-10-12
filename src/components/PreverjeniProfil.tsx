@@ -260,7 +260,14 @@ function Urejevalnik({
     if (sp && (sp.length > 200 || !VZOREC.splet.test(sp))) return setNapaka(t('igralci.preverjen.napakaSplet'))
     setDela(true)
     const { error } = await zapisi({
-      opis: opis.replace(/\s+/g, ' ').trim() || null,
+      // Nove vrstice ostanejo, največ dve zapored (isto počne baza).
+      opis:
+        opis
+          .replace(/\r\n?/g, '\n')
+          .replace(/[ \t]+/g, ' ')
+          .replace(/ ?\n ?/g, '\n')
+          .replace(/\n{3,}/g, '\n\n')
+          .trim() || null,
       youtube: yt || null,
       x: xx || null,
       splet: sp || null,

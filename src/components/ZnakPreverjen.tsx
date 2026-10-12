@@ -24,7 +24,7 @@ export default function ZnakPreverjen({
   if (!p) return null
   const oznaka = t('igralci.preverjen.znacka')
   return (
-    <span className={`inline-flex items-center gap-1 align-middle ${className}`}>
+    <span className={`inline-flex min-w-0 items-center gap-1 align-middle ${className}`}>
       <svg
         role="img"
         aria-label={oznaka}
@@ -40,7 +40,7 @@ export default function ZnakPreverjen({
         />
         <path fill="none" stroke="#0f172a" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" d="M7.5 12.3l3 3 6-6.3" />
       </svg>
-      {vzdevek && p.vzdevek && <span className="truncate text-xs font-normal text-sky-200">"{p.vzdevek}"</span>}
+      {vzdevek && p.vzdevek && <span className="min-w-0 truncate text-xs font-normal text-sky-200">"{p.vzdevek}"</span>}
     </span>
   )
 }

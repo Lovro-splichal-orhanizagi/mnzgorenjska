@@ -48,7 +48,8 @@ grant execute on function public.vidi_preverjene() to anon, authenticated;
 -- --------------------------------------------------------------------------
 create table public.preverjeni_racuni (
   id           bigint generated always as identity primary key,
-  user_id      uuid not null references public.profiles on delete cascade,
+  -- Izbris računa pusti zgodovino (faza 2: plačila); pravica pade na 'preklican'.
+  user_id      uuid references public.profiles on delete set null,
   -- Glavna vrstica potrjenega zahtevka; povezane vrstice gredo prek nje.
   player_id    bigint not null references public.players on delete cascade,
   vir          text not null check (vir in ('rocno', 'letna', 'dozivljenjska')),
@@ -153,8 +154,42 @@ create policy "preverjen lastnik ureja" on public.profil_igralca_plus
   using (je_lastnik_profila(player_id) and je_preverjen(player_id))
   with check (je_lastnik_profila(player_id) and je_preverjen(player_id));
 
--- Besedila vidijo vsi: isto pravilo kot prikazno ime in javna mini liga.
--- Tekma mora biti igralčeva (nastop glavne ali povezane vrstice).
+-- Daljša besedila (opis, sporočilo, spletna stran): pravilo po besedah.
+-- `prepovedano_besedilo` je za imena (prepove / @ # " in dele besed, zato bi
+-- padla "2015/16" in "badminton"). Tu: le kontrolni (razen novih vrstic) in
+-- nevidni znaki ter < >; žaljivka je beseda ali začetek besede, rezervirana
+-- beseda le cela. Vrne 'znaki', 'rezervirano', 'neprimerno' ali null.
+create or replace function public.prepovedane_besede(p_besedilo text)
+returns text language plpgsql immutable set search_path = public, extensions
+as $$
+declare
+  v_beseda text;
+begin
+  if replace(coalesce(p_besedilo, ''), E'\n', '') ~ '[[:cntrl:]<>]'
+     or p_besedilo ~ '[​-‏ - ⁠-⁯﻿]' then
+    return 'znaki';
+  end if;
+  for v_beseda in
+    select translate(w, '0134578', 'oieastb')
+      from regexp_split_to_table(podpora_brez_sumnikov(p_besedilo), '[^[:alnum:]]+') w
+     where w <> ''
+  loop
+    if v_beseda in ('admin', 'administrator', 'slff', 'moderator', 'sysop', 'helpstack') then
+      return 'rezervirano';
+    end if;
+    if v_beseda ~ '^(fuck|shit|cunt|nigg|hitler|kurac|pizd|picka|jebem|jebi|kurva|faggot|retard|fotze|kokot)' then
+      return 'neprimerno';
+    end if;
+  end loop;
+  return null;
+end;
+$$;
+revoke all on function public.prepovedane_besede(text) from public, anon, authenticated;
+
+-- Besedila vidijo vsi. Ročici (YouTube, X) gresta skozi strogo pravilo imen
+-- (`prepovedano_besedilo`), daljša besedila skozi `prepovedane_besede`.
+-- Opis obdrži nove vrstice (največ dve zapored). Tekma mora biti igralčeva
+-- (nastop glavne ali povezane vrstice).
 create or replace function public.varuj_profil_igralca_plus()
 returns trigger language plpgsql security definer set search_path = public
 as $$
@@ -162,13 +197,20 @@ declare
   v_napaka text;
   v_besedilo text;
 begin
-  new.opis := nullif(btrim(regexp_replace(coalesce(new.opis, ''), '\s+', ' ', 'g')), '');
+  new.opis := regexp_replace(regexp_replace(coalesce(new.opis, ''), '\r\n?', E'\n', 'g'), '[ \t]+', ' ', 'g');
+  new.opis := regexp_replace(regexp_replace(new.opis, ' ?\n ?', E'\n', 'g'), '\n{3,}', E'\n\n', 'g');
+  new.opis := nullif(btrim(new.opis, E' \n'), '');
   new.sporocilo := nullif(btrim(regexp_replace(coalesce(new.sporocilo, ''), '\s+', ' ', 'g')), '');
-  foreach v_besedilo in array array[new.opis, new.sporocilo, new.youtube, new.x,
-                                    -- naslov: le besede (znaki URL-ja so pri spletu dovoljeni)
-                                    regexp_replace(coalesce(new.splet, ''), '[^[:alnum:]]+', ' ', 'g')] loop
-    continue when v_besedilo is null or v_besedilo = '';
+  foreach v_besedilo in array array[new.youtube, new.x] loop
+    continue when v_besedilo is null;
     v_napaka := prepovedano_besedilo(v_besedilo);
+    if v_napaka is not null then
+      raise exception 'To besedilo ni dovoljeno.' using hint = 'plus-' || v_napaka;
+    end if;
+  end loop;
+  foreach v_besedilo in array array[new.opis, new.sporocilo, new.splet] loop
+    continue when v_besedilo is null;
+    v_napaka := prepovedane_besede(v_besedilo);
     if v_napaka = 'znaki' then
       raise exception 'Besedilo vsebuje nedovoljene znake.' using hint = 'plus-znaki';
     elsif v_napaka is not null then
@@ -196,15 +238,20 @@ create trigger profil_igralca_plus_varuj before insert or update on public.profi
 -- Brisanje: preklic, anonimizacija, izbris računa
 -- --------------------------------------------------------------------------
 
--- Ista funkcija kot prej, še z dodatki. Pasica je v isti mapi vedra
--- ("<glavni>/banner-…"), zato jo odnese `prevzem_odstrani_fotografije`.
--- Kliče jo preklic (`prevzem_preklici`) in sprožilec anonimizacije.
+-- Ista funkcija kot prej, še z dodatki in pravico. Pasica je v isti mapi
+-- vedra ("<glavni>/banner-…"), zato jo odnese `prevzem_odstrani_fotografije`.
+-- Kliče jo preklic (`prevzem_preklici`), sprožilec anonimizacije in izbris
+-- računa. Aktivna pravica pade na 'preklican': mesto (en aktiven na igralca)
+-- se sprosti za naslednjega lastnika, isti lastnik ob ponovnem prevzemu
+-- kljukice ne dobi sam (nova dodelitev; faza 2 plačano obnovi izrecno).
 create or replace function public.prevzem_odstrani_predstavitev(p_player_id bigint)
 returns void language plpgsql security definer set search_path = public
 as $$
 begin
   delete from profil_igralca where player_id = p_player_id;
   delete from profil_igralca_plus where player_id = p_player_id;
+  update preverjeni_racuni set status = 'preklican', updated_at = now()
+   where player_id = p_player_id and status = 'aktiven';
   perform prevzem_odstrani_fotografije(p_player_id);
 end;
 $$;
@@ -235,17 +282,64 @@ as $$
           or je_preverjen(split_part(p_name, '/', 1)::bigint))
 $$;
 
+-- Brisati sme lastnik vse svoje datoteke, tudi pasico po poteku pravice.
+create or replace function public.prevzem_sme_brisati_foto(p_name text)
+returns boolean language sql stable security definer set search_path = public
+as $$
+  select p_name ~ '^-?[0-9]{1,18}/[A-Za-z0-9_-]{1,64}\.(jpg|png|webp)$'
+     and je_lastnik_profila(split_part(p_name, '/', 1)::bigint)
+$$;
+revoke all on function public.prevzem_sme_brisati_foto(text) from public, anon;
+grant execute on function public.prevzem_sme_brisati_foto(text) to authenticated;
+
+-- Pravila shrambe kot v 20261012091100, brisanje po `prevzem_sme_brisati_foto`.
+create or replace function public.prevzem_pripravi_shrambo()
+returns void language plpgsql security definer set search_path = public
+as $$
+begin
+  if to_regclass('storage.buckets') is null then
+    raise notice 'Sheme storage ni: vedro fotografij ni ustvarjeno.';
+    return;
+  end if;
+  execute $s$
+    insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+    values ('fotografije-igralcev', 'fotografije-igralcev', true, 2097152,
+            array['image/jpeg', 'image/png', 'image/webp'])
+    on conflict (id) do update set public = true, file_size_limit = excluded.file_size_limit,
+                                   allowed_mime_types = excluded.allowed_mime_types
+  $s$;
+  execute 'drop policy if exists "fotografije igralcev: lastnik bere" on storage.objects';
+  execute 'drop policy if exists "fotografije igralcev: lastnik naloži" on storage.objects';
+  execute 'drop policy if exists "fotografije igralcev: lastnik zamenja" on storage.objects';
+  execute 'drop policy if exists "fotografije igralcev: lastnik izbriše" on storage.objects';
+  execute $s$create policy "fotografije igralcev: lastnik bere" on storage.objects for select to authenticated
+    using (bucket_id = 'fotografije-igralcev' and public.prevzem_sme_brisati_foto(name))$s$;
+  execute $s$create policy "fotografije igralcev: lastnik naloži" on storage.objects for insert to authenticated
+    with check (bucket_id = 'fotografije-igralcev' and public.prevzem_sme_pisati_foto(name))$s$;
+  execute $s$create policy "fotografije igralcev: lastnik zamenja" on storage.objects for update to authenticated
+    using (bucket_id = 'fotografije-igralcev' and public.prevzem_sme_pisati_foto(name))
+    with check (bucket_id = 'fotografije-igralcev' and public.prevzem_sme_pisati_foto(name))$s$;
+  execute $s$create policy "fotografije igralcev: lastnik izbriše" on storage.objects for delete to authenticated
+    using (bucket_id = 'fotografije-igralcev' and public.prevzem_sme_brisati_foto(name))$s$;
+end;
+$$;
+revoke all on function public.prevzem_pripravi_shrambo() from public, anon, authenticated;
+
+select public.prevzem_pripravi_shrambo();
+
 -- --------------------------------------------------------------------------
 -- Admin
 -- --------------------------------------------------------------------------
 
--- Vsi potrjeni profili z zadnjo pravico (za dodelitev in seznam aktivnih).
+-- Vsi potrjeni profili z zadnjo pravico igralca (aktivna ima prednost, ne
+-- glede na uporabnika, da jo admin vidi in odvzame). `velja` = kljukica sveti
+-- (aktivna, nepotekla, istega uporabnika kot zahtevek); `aktivna` = status.
 create or replace function public.admin_preverjeni()
 returns table (
   zahtevek_id bigint, player_id bigint, player_name text, team_name text, liga text,
   user_id uuid, prosilec text, email text,
   pravica_id bigint, vir text, status text, velja_do timestamptz, dodeljena_at timestamptz,
-  velja boolean
+  velja boolean, aktivna boolean, drug_uporabnik boolean
 )
 language plpgsql stable security definer set search_path = public
 as $$
@@ -257,7 +351,10 @@ begin
   select z.id, z.player_id, p.full_name, t.name, c.name,
          z.user_id, pf.display_name, u.email::text,
          r.id, r.vir, r.status, r.velja_do, r.created_at,
-         coalesce(r.status = 'aktiven' and (r.velja_do is null or r.velja_do > now()), false)
+         coalesce(r.status = 'aktiven' and (r.velja_do is null or r.velja_do > now())
+                  and r.user_id is not distinct from z.user_id, false),
+         coalesce(r.status = 'aktiven', false),
+         r.id is not null and r.user_id is distinct from z.user_id
     from zahtevki_igralca z
     join players p on p.id = z.player_id
     left join teams t on t.id = p.team_id
@@ -266,8 +363,8 @@ begin
     left join auth.users u on u.id = z.user_id
     left join lateral (
       select * from preverjeni_racuni r
-       where r.player_id = z.player_id and r.user_id = z.user_id
-       order by (r.status = 'aktiven') desc, r.created_at desc limit 1
+       where r.player_id = z.player_id
+       order by (r.status = 'aktiven') desc, (r.user_id is not distinct from z.user_id) desc, r.created_at desc limit 1
     ) r on true
    where z.status = 'potrjen'
    order by (r.status = 'aktiven') desc nulls last, p.full_name;
@@ -294,9 +391,12 @@ begin
   if not found then
     raise exception 'Igralec nima potrjenega profila.';
   end if;
-  -- Potekla pravica ne drži več mesta (en aktiven na igralca).
+  -- Potekla pravica in pravica drugega (prejšnjega) lastnika ne držita več
+  -- mesta (en aktiven na igralca).
   update preverjeni_racuni set status = 'potekel', updated_at = now()
    where player_id = z.player_id and status = 'aktiven' and velja_do <= now();
+  update preverjeni_racuni set status = 'preklican', updated_at = now()
+   where player_id = z.player_id and status = 'aktiven' and user_id is distinct from z.user_id;
   if exists (select 1 from preverjeni_racuni where player_id = z.player_id and status = 'aktiven') then
     raise exception 'Igralec že ima aktivno pravico.';
   end if;

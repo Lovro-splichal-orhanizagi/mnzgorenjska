@@ -2898,12 +2898,24 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
     preverjenemu), `barva` (ena od osmih), `tekma_id` (svoja tekma) ali
     `statistika` (ključ sezone), `sporocilo` do 140. Bere vsak le, če
     `je_preverjen`; piše lastnik, ki je preverjen. Sprožilec
-    `varuj_profil_igralca_plus` vsa besedila spusti skozi
-    `prepovedano_besedilo` (zato v opisu ni `/ @ # " < >`).
-  - Brisanje: `prevzem_odstrani_predstavitev` (preklic, anonimizacija) zdaj
-    pobriše tudi dodatke, pasica gre z mapo igralca. Izbris računa (kaskada
-    zahtevka) pobriše predstavitev, dodatke in datoteke (sprožilec
-    `prevzem_izbris_zahtevka`); pravica gre s kaskado profila.
+    `varuj_profil_igralca_plus`: ročici (YouTube, X) gresta skozi strogo
+    `prepovedano_besedilo`, opis, sporočilo in spletna stran skozi
+    `prepovedane_besede` (po besedah: žaljivka je beseda ali začetek besede,
+    rezervirana beseda — admin, slff, moderator … — le cela; ločila,
+    številke, `/ @ # " %` so dovoljeni, prepovedani le kontrolni in nevidni
+    znaki ter `< >`). Opis obdrži nove vrstice, največ dve zapored. Brisati
+    svoje datoteke (tudi pasico po poteku) sme lastnik brez pravice
+    (`prevzem_sme_brisati_foto`), nalagati pasico le preverjen.
+  - Brisanje: `prevzem_odstrani_predstavitev` (preklic, anonimizacija, izbris
+    računa prek sprožilca `prevzem_izbris_zahtevka`) pobriše predstavitev,
+    dodatke in datoteke (pasica gre z mapo igralca) in aktivno pravico igralca
+    postavi na `preklican`. Mesto (en aktiven na igralca) se tako sprosti za
+    naslednjega lastnika; **isti uporabnik ob ponovnem prevzemu kljukice ne
+    dobi sam** — potrebna je nova dodelitev (faza 2 plačano obnovi izrecno).
+    `admin_dodeli_preverjen` prekliče aktivno pravico drugega uporabnika,
+    `admin_preverjeni` pokaže aktivno pravico igralca ne glede na uporabnika
+    (`aktivna`, `drug_uporabnik`). `user_id` je `on delete set null`: izbris
+    računa pusti zgodovino (pomembno za plačila).
   - Lastnik potrjenega profila, ki ni preverjen, vidi ob vklopljenem stikalu
     kartico "Preveri profil" (9,99 €/leto ali 29 € za vedno, gumb "Kmalu");
     v aplikaciji je skrita (`jeNativno`).

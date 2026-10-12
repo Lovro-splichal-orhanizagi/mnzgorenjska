@@ -2180,42 +2180,98 @@ select pg_temp.pade('preverjeni: tekma in statistika hkrati padeta',
   $$update profil_igralca_plus set statistika = 'goli' where player_id = -913005$$);
 select pg_temp.pade('preverjeni: pasica le v svoji mapi',
   $$update profil_igralca_plus set pasica = '-913006/banner-abc.webp' where player_id = -913005$$);
+-- Daljša besedila: pravilo po besedah (ločila, številke in deli besed so v redu).
+update profil_igralca_plus set tekma_id = null, sporocilo = 'Trening 1 ura dnevno #gol_fan? ne: "100 %" = +'
+ where player_id = -913005;
+select pg_temp.preveri('preverjeni: sporočilo z ločili in številkami gre',
+  (select sporocilo = 'Trening 1 ura dnevno #gol_fan? ne: "100 %" = +' from profil_igralca_plus where player_id = -913005));
+update profil_igralca_plus set opis = E'Rad igram tudi badminton.\r\nIgram od sezone 2015/16  @klub\n\n\n\nKonec', splet = 'https://badminton.si/o-meni'
+ where player_id = -913005;
+select pg_temp.preveri('preverjeni: badminton, 2015/16, @ in https://badminton.si gredo; nove vrstice ostanejo (največ dve)',
+  (select opis = E'Rad igram tudi badminton.\nIgram od sezone 2015/16 @klub\n\nKonec' and splet = 'https://badminton.si/o-meni'
+     from profil_igralca_plus where player_id = -913005));
+select pg_temp.pade('preverjeni: žaljivka kot začetek besede pade',
+  $$update profil_igralca_plus set sporocilo = 'To je bilo fucking dobro' where player_id = -913005$$);
+select pg_temp.pade('preverjeni: žaljivka v poti spletne strani pade',
+  $$update profil_igralca_plus set splet = 'https://example.com/fuck-you' where player_id = -913005$$);
+select pg_temp.pade('preverjeni: < > v opisu pade',
+  $$update profil_igralca_plus set opis = '<script>' where player_id = -913005$$);
+select pg_temp.pade('preverjeni: nevidni znak v opisu pade',
+  $$update profil_igralca_plus set opis = E'Skrito​besedilo' where player_id = -913005$$);
+select pg_temp.pade('preverjeni: X ročica ostane pod strogim pravilom',
+  $$update profil_igralca_plus set x = 'slff_admin' where player_id = -913005$$);
 reset role;
 
--- Potek: pravica z rokom v preteklosti ne velja več.
+-- Potek: pravica z rokom v preteklosti ne velja več; pasico lastnik še sme zbrisati.
 update preverjeni_racuni set velja_do = now() - interval '1 minute' where player_id = -913005;
 select set_config('request.jwt.claim.sub','',true);
 set local role anon;
 select pg_temp.preveri('preverjeni: potekla pravica skrije značko in dodatke',
   not je_preverjen(-913005) and not exists (select 1 from profil_igralca_plus));
 reset role;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
+select pg_temp.preveri('preverjeni: po poteku pasice ne naloži, zbriše pa jo',
+  not prevzem_sme_pisati_foto('-913005/banner-abc.webp') and prevzem_sme_brisati_foto('-913005/banner-abc.webp')
+  and not prevzem_sme_brisati_foto('-913006/banner-abc.webp'));
+reset role;
 update preverjeni_racuni set velja_do = null where player_id = -913005;
 
--- Preklic profila izbriše dodatke in značka ugasne.
+-- Preklic profila: dodatki gredo, pravica pade na 'preklican'.
 select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
 set local role authenticated;
 select preklici_moj_zahtevek(-925001);
 select pg_temp.preveri('preverjeni: po preklicu profila ni značke', not je_preverjen(-913005));
 reset role;
-select pg_temp.preveri('preverjeni: preklic izbriše dodatke',
-  not exists (select 1 from profil_igralca_plus where player_id = -913005));
-
--- Anonimizacija izbriše dodatke (nov potrjen zahtevek, nova pravica).
-update zahtevki_igralca set status = 'potrjen', decided_at = now() where id = -925001;
-update preverjeni_racuni set status = 'aktiven' where player_id = -913005;
-insert into profil_igralca_plus(player_id, opis) values (-913005, 'Pred anonimizacijo.');
-select pg_temp.preveri('preverjeni: pred anonimizacijo je preverjen', je_preverjen(-913005));
-update players set anonimiziran_at = now() where id = -913005;
-select pg_temp.preveri('preverjeni: anonimizacija izbriše dodatke in značko',
-  not exists (select 1 from profil_igralca_plus where player_id = -913005) and not je_preverjen(-913005));
-
--- Izbris računa (kaskada zahtevka) izbriše dodatke.
-update players set anonimiziran_at = null where id = -913005;
-insert into profil_igralca_plus(player_id, opis) values (-913005, 'Pred izbrisom.');
-delete from zahtevki_igralca where id = -925001;
-select pg_temp.preveri('preverjeni: izbris zahtevka (računa) izbriše dodatke',
+select pg_temp.preveri('preverjeni: preklic izbriše dodatke in prekliče pravico',
   not exists (select 1 from profil_igralca_plus where player_id = -913005)
-  and not exists (select 1 from profil_igralca where player_id = -913005));
+  and not exists (select 1 from preverjeni_racuni where player_id = -913005 and status = 'aktiven')
+  and exists (select 1 from preverjeni_racuni where player_id = -913005 and status = 'preklican'));
+
+-- Isti uporabnik znova prevzame: kljukice ni, dokler je admin ne dodeli.
+update zahtevki_igralca set status = 'potrjen', decided_at = now() where id = -925001;
+select pg_temp.preveri('preverjeni: ponoven prevzem istega uporabnika kljukice ne vrne', not je_preverjen(-913005));
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+select admin_dodeli_preverjen(-913005, 'rocno', null);
+reset role;
+select pg_temp.preveri('preverjeni: nova dodelitev istemu uporabniku vrne kljukico', je_preverjen(-913005));
+
+-- Drug uporabnik prevzame: dodelitev gre, stara (tudi zastala aktivna) pravica pade.
+update zahtevki_igralca set status = 'preklican' where id = -925001;
+insert into zahtevki_igralca(id, player_id, user_id, status, potrdil, decided_at) overriding system value
+values (-925002, -913005, 'b8a06635-2322-4444-8c42-44e419f912ac', 'potrjen', 'admin', now());
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+select pg_temp.preveri('preverjeni: admin vidi aktivno pravico drugega uporabnika',
+  (select aktivna and drug_uporabnik and not velja from admin_preverjeni() where player_id = -913005));
+select admin_dodeli_preverjen(-913005, 'rocno', null);
+reset role;
+select pg_temp.preveri('preverjeni: dodelitev novemu lastniku prekliče staro pravico',
+  je_preverjen(-913005)
+  and (select count(*) = 1 from preverjeni_racuni where player_id = -913005 and status = 'aktiven'
+          and user_id = 'b8a06635-2322-4444-8c42-44e419f912ac'));
+
+-- Anonimizacija izbriše dodatke in prekliče pravico.
+insert into profil_igralca_plus(player_id, opis) values (-913005, 'Pred anonimizacijo.');
+update players set anonimiziran_at = now() where id = -913005;
+select pg_temp.preveri('preverjeni: anonimizacija izbriše dodatke, značko in pravico',
+  not exists (select 1 from profil_igralca_plus where player_id = -913005) and not je_preverjen(-913005)
+  and not exists (select 1 from preverjeni_racuni where player_id = -913005 and status = 'aktiven'));
+
+-- Izbris računa: dodatki gredo, pravica ostane v zgodovini kot 'preklican' brez uporabnika.
+update players set anonimiziran_at = null where id = -913005;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+select admin_dodeli_preverjen(-913005, 'rocno', null);
+reset role;
+insert into profil_igralca_plus(player_id, opis) values (-913005, 'Pred izbrisom.');
+delete from auth.users where id = 'b8a06635-2322-4444-8c42-44e419f912ac';
+select pg_temp.preveri('preverjeni: izbris računa izbriše dodatke, pravica ostane preklicana brez uporabnika',
+  not exists (select 1 from profil_igralca_plus where player_id = -913005)
+  and not exists (select 1 from profil_igralca where player_id = -913005)
+  and not exists (select 1 from preverjeni_racuni where player_id = -913005 and status = 'aktiven')
+  and exists (select 1 from preverjeni_racuni where player_id = -913005 and user_id is null and status = 'preklican'));
 
 do $$
 declare v_napak int;

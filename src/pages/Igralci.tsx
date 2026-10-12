@@ -589,9 +589,9 @@ export default function Igralci() {
                     <div className="min-w-0 max-w-[8.5rem] sm:max-w-none">
                       <Link
                         to={`/player/${i.id}`}
-                        className="block truncate font-semibold hover:text-gnl-300"
+                        className="flex min-w-0 items-center font-semibold hover:text-gnl-300"
                       >
-                        {prikazniIme(i.full_name)}
+                        <span className="min-w-0 truncate">{prikazniIme(i.full_name)}</span>
                         <ZnakPreverjen id={i.id} vzdevek className="ml-1" />
                         {odsotni[i.id] && (
                           <span
@@ -788,8 +788,8 @@ function VrhLige({ lestvice }: { lestvice: Array<{ naslov: string; vrstice: VrhV
                       nadomestek={<Grb ime={igralec.team_name} kratko={igralec.team_short} logo={igralec.team_logo} velikost={20} />}
                     />
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-semibold">
-                        {prikazniIme(igralec.full_name)}
+                      <span className="flex min-w-0 items-center text-sm font-semibold">
+                        <span className="min-w-0 truncate">{prikazniIme(igralec.full_name)}</span>
                         <ZnakPreverjen id={id} vzdevek className="ml-1" />
                       </span>
                       <span className="block truncate text-xs text-slate-400">

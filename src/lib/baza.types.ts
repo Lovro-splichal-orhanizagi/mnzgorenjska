@@ -2649,7 +2649,7 @@ export type Database = {
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
           updated_at: string
-          user_id: string
+          user_id: string | null
           ustvaril: string | null
           velja_do: string | null
           vir: string
@@ -2664,7 +2664,7 @@ export type Database = {
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           updated_at?: string
-          user_id: string
+          user_id?: string | null
           ustvaril?: string | null
           velja_do?: string | null
           vir: string
@@ -2678,7 +2678,7 @@ export type Database = {
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
           ustvaril?: string | null
           velja_do?: string | null
           vir?: string
@@ -6132,7 +6132,9 @@ export type Database = {
       admin_preverjeni: {
         Args: Record<PropertyKey, never>
         Returns: {
+          aktivna: boolean
           dodeljena_at: string
+          drug_uporabnik: boolean
           email: string
           liga: string
           player_id: number
@@ -6677,6 +6679,7 @@ export type Database = {
       povzetek_rasti: { Args: Record<PropertyKey, never>; Returns: string }
       preklici_moj_zahtevek: { Args: { p_id: number }; Returns: undefined }
       preveri_uradne_odsotnosti: { Args: Record<PropertyKey, never>; Returns: number }
+      prepovedane_besede: { Args: { p_besedilo: string }; Returns: string }
       prepovedano_besedilo: { Args: { p_besedilo: string }; Returns: string }
       preracunaj_cene: {
         Args: { p_round_id: number }
@@ -6756,6 +6759,7 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      prevzem_sme_brisati_foto: { Args: { p_name: string }; Returns: boolean }
       prevzem_sme_pisati_foto: { Args: { p_name: string }; Returns: boolean }
       prevzem_soigralec: {
         Args: { p_player_id: number; p_user: string }

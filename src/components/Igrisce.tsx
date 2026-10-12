@@ -82,9 +82,9 @@ function KarticaIgralca({
         title={naInfo ? t('mojaEkipa.trg.podatkiNamig') : undefined}
         className="block w-full transition duration-150 active:scale-95"
       >
-        <div className="truncate rounded-t-md bg-slate-900/90 px-1 py-0.5 text-[11px] font-semibold leading-tight">
-          {ime.split(' ').slice(-1)[0]}
-          <ZnakPreverjen id={igralec.id} velikost={10} className="ml-0.5" />
+        <div className="flex items-center justify-center rounded-t-md bg-slate-900/90 px-1 py-0.5 text-[11px] font-semibold leading-tight">
+          <span className="min-w-0 truncate">{ime.split(' ').slice(-1)[0]}</span>
+          <ZnakPreverjen id={igralec.id} velikost={10} className="ml-0.5 shrink-0" />
         </div>
         {igralec.active === false && (
           <div

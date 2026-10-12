@@ -49,9 +49,9 @@ function KarticaIgralca({ igralec }: { igralec: IgralecEnajsterice }) {
           </span>
         )}
       </div>
-      <div className="mt-0.5 truncate rounded-t-md bg-slate-900/90 px-1 py-0.5 text-[10px] font-semibold leading-tight text-slate-100 sm:text-[11px]">
-        {prikazniIme(igralec.full_name).split(' ').slice(-1)[0]}
-        <ZnakPreverjen id={igralec.player_id ?? igralec.id} velikost={10} className="ml-0.5" />
+      <div className="mt-0.5 flex items-center justify-center rounded-t-md bg-slate-900/90 px-1 py-0.5 text-[10px] font-semibold leading-tight text-slate-100 sm:text-[11px]">
+        <span className="min-w-0 truncate">{prikazniIme(igralec.full_name).split(' ').slice(-1)[0]}</span>
+        <ZnakPreverjen id={igralec.player_id ?? igralec.id} velikost={10} className="ml-0.5 shrink-0" />
       </div>
       <div className="flex items-center justify-center gap-1 rounded-b-md bg-gnl-500/90 px-1 py-0.5 text-[10px] font-black leading-tight tabular-nums text-slate-950 sm:text-[11px]">
         <Grb
