@@ -2256,7 +2256,8 @@ Server Components (`self.__next_f.push`), ki ga `drevoRsc` sestavi
   vpisanega vstopa pa nastopa nima (kot `fsb`) — minute začetnikov so
   precenjene, ekipa ima lahko čez 990 minut. Strelec s klopi dobi vstop ob
   golu (opozorilo). `z.brezMenjav` pove, katera ekipa menjav ni vpisala.
-  Primera Catalana menjave vpisuje (990 minut na ekipo).
+  Od Lliga Elit do Tercera Catalana jih vpisujejo vse ekipe (pregled 12. 10.
+  2026, 990 minut na ekipo), Quarta nobena.
 - **Šifra zapisnika v bazi je `es<id>`** (`sifraZapisnika`): številke fcf.cat
   (3,7–4,2 milijona) se prekrivajo s šiframi oefb, `matches.zapisnik_id` pa je
   enoličen čez vse vire. `--zapisnik` uvoza vzame `es…`.
@@ -2313,25 +2314,66 @@ Rdeči karton je `div` z `bg-[#F30000]` na 3. mestu; avtogol je žoga z
 rdečimi pikami (ne rdeči karton). **Drugi rumeni in gol z 11 m v vrstici
 igralca še nista videna kot ikona** — vrsta gola pride iz razdelka "Gols".
 
-Vpisane so 4 skupine (migracija 20261012080000), **neaktivne**, zveza `fcf`.
-Pregled bloka za blokom od Quarta grup 1 (11. 10. 2026, 34 zahtevkov) je
-našel Quarta grup 1–6 (Girona, sosednji bloki); grup 4 in 5 (14 klubov,
-7 na krog) v 3. krogu še nimata zaprtih zapisnikov — nista vpisani.
+Vpisane so 4 skupine Quarta (migracija 20261012080000) in 29 skupin višjih
+lig (migracija 20261013090000), vse **neaktivne**, zveza `fcf`.
 
-| liga | klubov | tekoča 2026/27 | arhiv 2025/26 |
-|---|---|---|---|
-| es-ct-quarta-g1 | 15 | `4139542-4139779` | — (TODO) |
-| es-ct-quarta-g2 | 15–16 | `4139781-4140020` | — (TODO; zapisnik `3788226` je v bloku grup 2 2025/26) |
-| es-ct-quarta-g3 | 15–16 | `4140021-4140260` | — (TODO) |
-| es-ct-quarta-g6 | 15–16 | `4140625-4140864` | — (TODO) |
+**Pregled blokov 2026/27** (12. 10. 2026, ~450 zahtevkov po 3 s): bloki
+tekmovanj ležijo v dveh skupinah šifer. `4106968-4110837`: Lliga Elit (en
+blok), za njim prijateljske tekme državnih lig, nato Primera grup 1–3 in
+Segona grup 1–6 zaporedoma. `4114505-4119737`: Tercera grup 1–17, pomešane s
+futsalom in ženskimi Preferent ter posameznimi prijateljskimi tekmami
+(Tercera grup 18 ni; vrzel `4114985-4115227` je prazna). Quarta je pri
+`4137000-4140864` (grup 4 in 5 med grup 3 in 6, po 182 šifer). Vsi bloki
+višjih lig imajo 30 krogov po 8 mest (240 šifer), 15–16 klubov.
 
-**TODO**: ostale skupine niso pregledane — Lliga Elit, Primera Catalana
-(2025/26 grup 1: zapisnik `3791085`), Segona (2026/27 grup 3 ima zapisnik
-`4110000`), Tercera in Quarta grup 4, 5, 7–32+ (grup 32: `4137000`).
-Bloki istega tekmovanja niso urejeni po številki skupine; za blokom Quarta
-grup 6 je Copa Catalunya Femenina. Pregled: `node scripts/catalanske-lige.mjs
-<šifra> --naprej N --preveri` (en blok ~3–20 zahtevkov). Arhivi 2025/26: blok
-s semenom iz lanskih zapisnikov, isti postopek.
+**Postave in menjave**: 1. krog vseh 29 skupin in dve tekmi 4. kroga vsake
+(Quarta 4 in 5 še nimata 4. kroga): **vse postave 11 + 11**. Od Lliga Elit do
+Tercera **vse ekipe vpisujejo menjave** (minuta vstopa in izstopa); Quarta
+grup 4 in 5 (kot 1–6) **nobena**.
+
+| liga | klubov | tekoča 2026/27 | menjave | arhiv 2025/26 |
+|---|---|---|---|---|
+| es-ct-elit | 16 | `4106968-4107207` | da | — (TODO) |
+| es-ct-primera-g1 | 16 | `4108646-4108885` | da | — (TODO) |
+| es-ct-primera-g2 | 16 | `4108886-4109125` | da | — (TODO) |
+| es-ct-primera-g3 | 15–16 | `4109126-4109365` | da | — (TODO) |
+| es-ct-segona-g1 | 16 | `4109388-4109627` | da | — (TODO) |
+| es-ct-segona-g2 | 16 | `4109630-4109869` | da | — (TODO) |
+| es-ct-segona-g3 | 16 | `4109870-4110109` | da | — (TODO) |
+| es-ct-segona-g4 | 16 | `4110110-4110349` | da | — (TODO) |
+| es-ct-segona-g5 | 16 | `4110354-4110593` | da | — (TODO) |
+| es-ct-segona-g6 | 16 | `4110598-4110837` | da | — (TODO) |
+| es-ct-tercera-g1 | 16 | `4115948-4116187` | da | — (TODO) |
+| es-ct-tercera-g2 | 15–16 | `4116188-4116427` | da | — (TODO) |
+| es-ct-tercera-g3 | 15–16 | `4116428-4116667` | da | — (TODO) |
+| es-ct-tercera-g4 | 15–16 | `4115228-4115467` | da | — (TODO) |
+| es-ct-tercera-g5 | 16 | `4115468-4115707` | da | — (TODO) |
+| es-ct-tercera-g6 | 16 | `4116668-4116907` | da | — (TODO) |
+| es-ct-tercera-g7 | 16 | `4116908-4117147` | da | — (TODO) |
+| es-ct-tercera-g8 | 16 | `4117389-4117628` | da | — (TODO) |
+| es-ct-tercera-g9 | 16 | `4118349-4118588` | da | — (TODO) |
+| es-ct-tercera-g10 | 16 | `4119498-4119737` | da | — (TODO) |
+| es-ct-tercera-g11 | 16 | `4118591-4118830` | da | — (TODO) |
+| es-ct-tercera-g12 | 16 | `4118835-4119074` | da | — (TODO) |
+| es-ct-tercera-g13 | 16 | `4119076-4119315` | da | — (TODO) |
+| es-ct-tercera-g14 | 16 | `4117629-4117868` | da | — (TODO) |
+| es-ct-tercera-g15 | 16 | `4117869-4118108` | da | — (TODO) |
+| es-ct-tercera-g16 | 16 | `4114505-4114744` | da | — (TODO) |
+| es-ct-tercera-g17 | 16 | `4114745-4114984` | da | — (TODO) |
+| es-ct-quarta-g1 | 15 | `4139542-4139779` | ne | — (TODO) |
+| es-ct-quarta-g2 | 15–16 | `4139781-4140020` | ne | — (TODO; zapisnik `3788226` je v bloku grup 2 2025/26) |
+| es-ct-quarta-g3 | 15–16 | `4140021-4140260` | ne | — (TODO) |
+| es-ct-quarta-g4 | 14 | `4140261-4140442` | ne | — (TODO) |
+| es-ct-quarta-g5 | 14 | `4140443-4140624` | ne | — (TODO) |
+| es-ct-quarta-g6 | 15–16 | `4140625-4140864` | ne | — (TODO) |
+
+**TODO**: Quarta grup 7–32+ (grup 32: `4137000`, grup 26 ima posamezno
+tekmo `4117388`) niso pregledane. Bloki istega tekmovanja niso urejeni po
+številki skupine; za blokom Quarta grup 6 je Copa Catalunya Femenina.
+Pregled: `node scripts/catalanske-lige.mjs <šifra> --naprej N --preveri` (en
+blok ~3–20 zahtevkov). Arhiv 2025/26: blok s semenom iz lanskih zapisnikov,
+isti postopek; isto skupino določijo skupni klubi (vsaj ~polovica, ob
+napredovanju in izpadu manj).
 
 Uvoz (ena za drugo, **šele s soglasjem FCF**): `gh workflow run uvoz-lige.yml
 -f liga=es-ct-quarta-g1 -f cene=true` (z arhivom: `-f arhiv=<blok 2025/26>`).
