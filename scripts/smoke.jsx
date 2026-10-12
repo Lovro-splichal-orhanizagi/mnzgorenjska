@@ -3856,6 +3856,8 @@ preveri(
   preveri('sportnet: "Futbalový klub X" je "FK X"', S.kljucKlubaSk('Futbalový klub Nižná') === S.kljucKlubaSk('FK Nižná'))
   preveri('sportnet: "Telovýchovná jednota X" je "TJ X"', S.kljucKlubaSk('Telovýchovná jednota Lovča') === S.kljucKlubaSk('TJ Lovča'))
   preveri('sportnet: B-ekipa ni isti klub', S.kljucKlubaSk('TJ Sokol Medzibrod B') !== S.kljucKlubaSk('TJ Sokol Medzibrod'))
+  preveri('sportnet: krog "7" in "7. kolo" (Niké liga), baraž ni krog',
+    S.krogIz('7') === 7 && S.krogIz('22. kolo') === 22 && S.krogIz('1. barážový zápas') === null && S.krogIz(undefined) === null)
   preveri('sportnet: slovaski cas', S.lokalniCas('2026-09-19T13:00:00.000Z').datum === '2026-09-19' && S.lokalniCas('2026-09-19T13:00:00.000Z').ura === '15:00')
   const tekma = JSON.parse(readFileSync(new URL('./vzorci/sportnet-tekma.json', import.meta.url), 'utf8'))
   const z = S.vZapisnik(tekma)
