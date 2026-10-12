@@ -3,7 +3,7 @@
 // iOS: App Store Connect API — stanje zadnje različice (v pregledu, zavrnjena,
 // v trgovini) in prvi prenosi iz dnevnih prodajnih poročil (SALES/SUMMARY).
 // Android: Play bulk poročila v Cloud Storage (installs_<paket>_<mesec>_overview.csv,
-// "Total User Installs" in "Daily User Installs").
+// "Daily Device Installs"; seštevek je vsota po dnevih).
 // Dneve zapiše v `trgovine_dnevno`, stanje iOS v `trgovine_stanje` (admin: Rast).
 // Na Discord javi spremembo stanja iOS in vsak nov mejnik po MEJNIK namestitev
 // (nad najvišjim že javljenim, `trgovine_stanje.mejnik`).
@@ -69,7 +69,7 @@ async function zapisi(trgovina, vrstice) {
 
 // ---------- mejniki ----------
 // Primerja z najvišjim že javljenim mejnikom (`trgovine_stanje.mejnik`, null = še nič), zato
-// seštevek, ki pade in znova zraste (Play odšteje odstranitve), ne javi dvakrat.
+// seštevek, ki pade in znova zraste (npr. Apple popravi poročilo), ne javi dvakrat.
 // Prvi zagon javi le zadnji dosežen mejnik, ne vseh zgodovinskih.
 async function mejniki(ime, trgovina, zdaj) {
   const { data, error } = await db.from('trgovine_stanje').select('mejnik').eq('trgovina', trgovina).maybeSingle()
@@ -159,7 +159,9 @@ async function googleZeton() {
   return (await r.json()).access_token
 }
 
-// Vse mesečne datoteke v vedru: vsak dan z "Total User Installs" in "Daily User Installs".
+// Vse mesečne datoteke v vedru: vsak dan z "Daily Device Installs" (prenosi, kot
+// enote pri Applu). "Total User Installs" Google ne polni več (vedno 0, 10/2026),
+// zato je seštevek vsota dnevnih od prvega poročila.
 async function namestitveAndroid() {
   const zeton = await googleZeton()
   const glava = { authorization: `Bearer ${zeton}` }
@@ -190,12 +192,12 @@ async function namestitveAndroid() {
     const [prva = '', ...ostalo] = besedilo.trim().split(/\r?\n/)
     if (!prva) continue // prazna datoteka
     const st = prva.split(',')
-    const [iDan, iSkupaj, iNovi] = ['Date', 'Total User Installs', 'Daily User Installs'].map((s) => st.indexOf(s))
-    if (iDan < 0 || iSkupaj < 0) throw new Error(`Play ${ime}: ni stolpcev Date / Total User Installs (${prva})`)
+    const [iDan, iNovi] = ['Date', 'Daily Device Installs'].map((s) => st.indexOf(s))
+    if (iDan < 0 || iNovi < 0) throw new Error(`Play ${ime}: ni stolpcev Date / Daily Device Installs (${prva})`)
     for (const v of ostalo) {
       const c = v.split(',')
       if (!c[iDan]) continue
-      vrstice.push({ dan: c[iDan], skupaj: Number(c[iSkupaj] || 0), novi: iNovi < 0 ? null : Number(c[iNovi] || 0) })
+      vrstice.push({ dan: c[iDan], novi: Number(c[iNovi] || 0) })
     }
   }
   if (!vrstice.length) {
@@ -203,6 +205,8 @@ async function namestitveAndroid() {
     return
   }
   vrstice.sort((a, b) => a.dan.localeCompare(b.dan))
+  let skupaj = 0
+  for (const v of vrstice) v.skupaj = skupaj += v.novi
   await zapisi('android', vrstice)
   await mejniki('Google Play', 'android', vrstice.at(-1).skupaj)
 }
