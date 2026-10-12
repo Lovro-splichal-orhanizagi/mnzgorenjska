@@ -24,6 +24,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     gumb: 'Osta meile õlu',
     /** Povezava na pivski zid (/beers) ob gumbu in v meniju Več. */
     zid: 'Õllesein',
+    lestvicaDomov: 'Õlle edetabel',
     // Stran /beers (pages/Piva.tsx): brez zneskov.
     stran: {
       uvod: 'SLFF on tasuta. Serveri ja domeeni eest maksame ise, seega aitab iga õlu päriselt. Aitäh kõigile, kes on meile juba välja teinud!',

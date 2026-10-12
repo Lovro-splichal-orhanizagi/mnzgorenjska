@@ -24,6 +24,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     gumb: 'Fizess nekünk egy sört',
     /** Povezava na pivski zid (/beers) ob gumbu in v meniju Več. */
     zid: 'Sörfal',
+    lestvicaDomov: 'Sörtoplista',
     // Stran /beers (pages/Piva.tsx): brez zneskov.
     stran: {
       uvod: 'Az SLFF ingyenes. A szervert és a domaint mi fizetjük, ezért minden sör sokat segít. Köszönjük mindenkinek, aki már meghívott minket!',

@@ -23,6 +23,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     gumb: 'Invítanos a una caña',
     /** Povezava na pivski zid (/beers) ob gumbu in v meniju Več. */
     zid: 'Muro de cañas',
+    lestvicaDomov: 'Ranking de cañas',
     // Stran /beers (pages/Piva.tsx): brez zneskov.
     stran: {
       uvod: 'SLFF es gratis. El servidor y el dominio los pagamos nosotros, así que cada caña ayuda de verdad. ¡Gracias a todos los que ya nos habéis invitado!',
