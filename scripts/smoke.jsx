@@ -4580,6 +4580,47 @@ preveri(
     F.imeKluba('MLADOST') === 'MLADOST (Lučani)' && F.imeKluba('HAJDUK', '75912381-75912620') === 'HAJDUK')
 }
 
+// --- lažni vratar: ena oznaka (G) igralca iz polja (Mirković, fssid 10/2026) --------
+{
+  const S = await import('./viri/fss.mjs')
+  const { default: viri } = await import('./viri/index.mjs')
+  const L = await import('./lazni-vratarji.mjs')
+  const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  // Vir sam ga označi: fss.rs ga našteje prvega z dresom 1, prvaliga.rs mu da (G).
+  const z = S.vZapisnik(beri('rs-fssid-tekma-76083196-vratar-iz-polja.html'), { vratarji: S.dresiVratarjev(beri('rs-fssid-vratarji-76083196.html')) })
+  preveri('lažni vratar: zapisnik 76083196 označi Mirkovića (1) za vratarja — napaka vira, ne razčlenjevalnika',
+    z.domaci.postava.find((i) => i.vratar)?.ime === 'Mirković Dalibor' && z.domaci.postava.filter((i) => i.vratar).length === 1)
+
+  const vz = JSON.parse(beri('rs-fssid-lazni-vratar.json'))
+  const g = L.glasoviVratarjev(vz.nastopi)
+  const id = (ime) => vz.igralci.find((p) => p.ime === ime).id
+  const mirkovic = id('Mirković Dalibor')
+  preveri('lažni vratar: Mirković — 1 začetek v vratih, 5 v polju ob vratarju Paunoviću', g.get(mirkovic)?.gk === 1 && g.get(mirkovic)?.polje === 5,
+    JSON.stringify(g.get(mirkovic)))
+  preveri('lažni vratar: Mirković je lažen, Paunović (pravi) ni, Adamović (ena tekma) ostane',
+    L.jeLazenVratar(g.get(mirkovic)) && !L.jeLazenVratar(g.get(id('Paunović Stefan'))) && !L.jeLazenVratar(g.get(id('Adamović Ivan'))))
+  const lazni = vz.igralci.filter((p) => p.position === 'GK' && p.position_source === 'zapisnik' && L.jeLazenVratar(g.get(p.id)))
+  const nove = L.pozicijeLaznih(lazni, vz.igralci)
+  preveri('lažni vratar: z 6 goli ga ugibanje v klubu razvrsti med napadalce', lazni.length === 1 && nove.get(mirkovic) === 'FWD',
+    [...nove].join(' '))
+  // Rezervni vratar, ki vstopi, oznake nima (namig "prvi začetnik"): šteje le začetek.
+  const n = (igralec, tekma, vratar, zacel = true, sezona = '2026/27') => ({ igralec, tekma, klub: 1, sezona, zacel, vratar })
+  const rez = L.glasoviVratarjev([n(1, 1, true), n(2, 1, false), n(2, 2, false, false), n(1, 2, true), n(2, 3, false, false), n(1, 3, true)])
+  preveri('lažni vratar: vstopi s klopi niso glas za polje', !L.jeLazenVratar(rez.get(2)) && rez.get(2).polje === 1)
+  // Lani vratar, letos v polju: šteje zadnja sezona.
+  const lani = L.glasoviVratarjev([
+    n(1, 1, true, true, '2025/26'), n(1, 2, true, true, '2025/26'), n(1, 3, true, true, '2025/26'),
+    n(1, 4, false), n(9, 4, true), n(1, 5, false), n(9, 5, true),
+  ])
+  preveri('lažni vratar: šteje zadnja sezona (lani 3× vratar, letos 2× v polju)', lani.get(1).sezona === '2026/27' && L.jeLazenVratar(lani.get(1)))
+  preveri('lažni vratar: viri z oznako vratarja na tekmo', viri.fsb.vratarPoVecini && viri.fss.vratarPoVecini && viri.fssid.vratarPoVecini && !viri.hns.vratarPoVecini)
+  // Razvrstitev kluba je ista kot v ugani-pozicije (8 igralcev: 2 FWD, 3 DEF).
+  const kader = Array.from({ length: 8 }, (_, i) => ({ id: i + 1, goliNa90: [0.9, 0.5, 0, 0, 0.1, 0, 0, 0][i], kartoniNa90: [0, 0, 0.5, 0.4, 0, 0.3, 0, 0][i] }))
+  const r = L.razvrstiKlub(kader)
+  preveri('ugibanje: razvrstitev kluba (strelci FWD, kartoni DEF, ostali MID)', [...r.values()].join() === 'FWD,FWD,DEF,DEF,MID,DEF,MID,MID' &&
+    L.razvrstiKlub(kader.slice(0, 3)).size === 0, [...r.values()].join())
+}
+
 // --- vir frf (Romunija, portal županijskih zvez frf-ajf.ro) --------------------
 {
   const F = await import('./viri/frf.mjs')

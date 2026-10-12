@@ -162,6 +162,9 @@ jobs:
             if [ "$urni" = 1 ] && [ "$(cat /tmp/uvozenih 2>/dev/null || echo x)" = "0" ]; then
               echo "Ni novih tekem — ugibanje pozicij preskočeno"
             else
+              # Vir, ki vratarja označi na tekmo (Srbija): igralca iz polja, ki ga
+              # je ena oznaka prekrstila v GK, vrne v polje (drugi viri: preskoči).
+              node scripts/lazni-vratarji.mjs   --tekmovanje "$liga" --pisi </dev/null || ok=0
               node scripts/ugani-pozicije.mjs   --tekmovanje "$liga" --pisi --samo-nove </dev/null || ok=0
             fi
             if [ "$ok" = 1 ]; then
