@@ -64,7 +64,8 @@ export function minuta(s) {
 /** "14.08.2026. 20:00" / "01.08.2026 20:00" → { datum: "2026-08-14", ura: "20:00" }. */
 export function datumUra(s) {
   const m = String(s ?? '').match(/(\d{1,2})\.(\d{1,2})\.(\d{4})\.?\s*(?:(\d{1,2}):(\d{2}))?/)
-  if (!m) return { datum: null, ura: null }
+  // fsris.org.rs piše tekmi brez termina "01.01.1970" (ničti čas) — to ni datum.
+  if (!m || Number(m[3]) < 2000) return { datum: null, ura: null }
   return {
     datum: `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`,
     ura: m[4] ? `${m[4].padStart(2, '0')}:${m[5]}` : null,
