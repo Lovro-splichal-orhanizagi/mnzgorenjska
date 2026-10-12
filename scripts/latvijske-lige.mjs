@@ -1,8 +1,9 @@
-// Seznam latvijskih lig odraslih (moški) na lff.lv — za migracijo, ki jih vpiše,
+// Seznam latvijskih lig odraslih (moški) in mladinskih U19 na lff.lv — za migracijo, ki jih vpiše,
 // in preizkus vira `lff`.
 //
 //   node scripts/latvijske-lige.mjs                      # lige 2026: šifra, klubi, krogi, tekme, zapisniki
 //   node scripts/latvijske-lige.mjs --leto 2025          # ista slika za arhivsko leto (šifre arhiva)
+//   node scripts/latvijske-lige.mjs --u19 [--leto 2025]  # mladinske lige U-19 (jauniesi/…)
 //   node scripts/latvijske-lige.mjs --preveri            # še zapisniki zadnjega odigranega kroga (do 3 na ligo)
 //   node scripts/latvijske-lige.mjs --preveri --najvec 1 # le en zapisnik na ligo
 //   node scripts/latvijske-lige.mjs --polno tresa-liga/23836414   # vsi zapisniki ene lige: goli = izidi, 11 + 11, vratar, minute
@@ -116,6 +117,29 @@ if (polno) {
 }
 
 const leto = vrednost('leto') ?? String(new Date().getFullYear())
+
+// Mladinske (U19): Jaunatnes čempionāts, stran /sacensibas/jauniesi/<grupa>/ za
+// tekoče leto, `<grupa>-<leto>` za pretekla. Najstarejša starost je U-19.
+if (zastavica('u19')) {
+  const tekoce = leto === String(new Date().getFullYear())
+  console.log('šifra | ime | klubov | krogov | tekem | odigranih | z uro')
+  for (const grupa of ['elites-grupa', 'meistaribas-grupa', 'attistibas-grupa']) {
+    const sekcija = tekoce ? grupa : `${grupa}-${leto}`
+    const prva = await besedilo(`${lff.osnovniNaslov}/sacensibas/jauniesi/${sekcija}/`)
+    for (const o of izbirnikStrani(prva).filter((x) => /U-?19/i.test(x.ime))) {
+      const html = o.p == null ? prva : await besedilo(`${lff.osnovniNaslov}/sacensibas/jauniesi/${sekcija}/?p=${o.p}`)
+      for (const b of blokiStrani(html).filter((x) => !FINALE.test(x.zavihek))) {
+        const tekme = tekmeBloka(b.html)
+        const klubi = new Set(tekme.flatMap((t) => [t.domaci, t.gostje]))
+        console.log(`jauniesi/${sekcija}/${b.tekmovanje} | ${imeStrani(html)} (${o.ime}) | ${klubi.size} | ${new Set(tekme.map((t) => t.krog)).size} | ` +
+          `${tekme.length} | ${tekme.filter((t) => t.izid).length} | ${tekme.filter((t) => t.ura).length}`)
+      }
+    }
+  }
+  console.log(`(${zahtevkov} zahtevkov)`)
+  process.exit(0)
+}
+
 console.log('šifra | ime | klubov | krogov | tekem | odigranih | z uro')
 for (const sekcija of SEKCIJE) {
   const prva = await besedilo(`${lff.osnovniNaslov}/sacensibas/viriesi/${sekcija}/`)

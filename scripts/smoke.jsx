@@ -4979,6 +4979,19 @@ preveri(
   try { await L.default.zapisniki('tresa-liga/23836414', async () => '<title>Just a moment...</title>') } catch (e) { izziv = e }
   preveri('lff: 403 in izziv vržeta LffZavrnitev (uvoz izhod 4)', zavrnjen instanceof L.LffZavrnitev && zavrnjen.status === 403 &&
     izziv instanceof L.LffZavrnitev && L.default.zavrnitev('x', 429).zavrnitev === true)
+
+  // Mladinske lige (U19): stran /sacensibas/jauniesi/<sekcija>/, šifra "jauniesi/…".
+  preveri('lff: U19 — šifra jauniesi/<sekcija>/<p>, naslov pod /jauniesi/, članske ostanejo pod /viriesi/',
+    L.razbijKodo('jauniesi/elites-grupa/23450990').skupina === 'jauniesi' && L.razbijKodo('jauniesi/elites-grupa/23450990').p === '23450990' &&
+    L.razbijKodo('virsliga/2026').skupina === 'viriesi' &&
+    L.default.naslovRazporeda('jauniesi/elites-grupa-2025/20725038') === 'https://lff.lv/sacensibas/jauniesi/elites-grupa-2025/?p=20725038' &&
+    L.naslovLige('tresa-liga/23836414') === 'https://lff.lv/sacensibas/viriesi/tresa-liga/?p=23836414')
+  const u19 = L.tekmeLige('jauniesi/elites-grupa/23450990', beri('lv-lff-liga-jauniesi-elites-grupa-23450990.html'))
+  preveri('lff: U19 Elites grupa 2026 — 14 krogov, 42 tekem, 7 klubov, vse odigrane', u19.length === 42 &&
+    new Set(u19.map((x) => x.krog)).size === 14 && new Set(u19.flatMap((x) => [x.domaci, x.gostje])).size === 7 &&
+    u19.every((x) => x.izid) && L.letoTekem(u19) === '2026')
+  preveri('lff: kratko ime skupne ekipe ne konča s poševnico', L.kratkoImeLv('JFK Daugava / Salaspils FA') === 'JFK Daugava/Salaspils FA' &&
+    L.kratkoImeLv('FK Tukums 2000/TSS') === 'Tukums 2000/TSS')
 }
 
 // --- vir fcf (Španija, Katalonija, fcf.cat) ----------------------------------------
