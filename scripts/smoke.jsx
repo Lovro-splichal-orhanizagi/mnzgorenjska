@@ -4314,6 +4314,7 @@ preveri(
     F.naslovVratarjev('75808250') === 'https://www.prvaliga.rs/arhiva/izvestaj-utakmice/75808250/')
   preveri('fss: datum z in brez pike, minuta', F.datumUra('14.08.2026. 20:00').datum === '2026-08-14' && F.datumUra('01.08.2026 20:00').ura === '20:00' &&
     F.minuta("90+3'") === 90 && F.minuta("77'") === 77)
+  preveri('fss: 01.01.1970 (tekma brez termina) ni datum', F.datumUra('01.01.1970 01:00').datum === null && F.datumUra('01.01.1970').ura === null)
   preveri('fss: državni klub z imenom beograjskega dobi kraj', F.imeKluba('MLADOST') === 'MLADOST (Lučani)' && F.imeKluba('NAPREDAK') === 'NAPREDAK (Kruševac)' &&
     F.imeKluba('RADNIČKI 1923') === 'RADNIČKI 1923' && F.imeKluba('TELEOPTIK') === 'TELEOPTIK')
 
