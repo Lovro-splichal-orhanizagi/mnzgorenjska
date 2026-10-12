@@ -2,7 +2,7 @@
 //
 // Baza vrne le ime (null = anonimno), število piv, sporočilo (null, če ga je
 // podpornik ali admin skril) in datum (`javna_piva()`); zneskov ne pozna.
-// Tu so le čiste funkcije, da jih smoke preveri brez baze.
+// Sporočila so na lestvici ob imenu podpornika. Tu so le čiste funkcije, da jih smoke preveri brez baze.
 
 export interface JavnoPivo {
   ime: string | null
@@ -18,6 +18,8 @@ export interface Podpornik {
   /** Kolikokrat je častil. */
   nakupov: number
   zadnjic: string
+  /** Njegova sporočila (brez skritih in praznih), najnovejše prvo. */
+  sporocila: string[]
 }
 
 /**
@@ -30,7 +32,7 @@ export function lestvicaPodpornikov(piva: JavnoPivo[]): Podpornik[] {
   for (const p of piva) {
     const ime = p.ime?.trim().replace(/\s+/g, ' ') || null
     if (!ime) {
-      anonimni ??= { ime: null, piv: 0, nakupov: 0, zadnjic: p.created_at }
+      anonimni ??= { ime: null, piv: 0, nakupov: 0, zadnjic: p.created_at, sporocila: [] }
       anonimni.piv += p.piv
       anonimni.nakupov += 1
       if (p.created_at > anonimni.zadnjic) anonimni.zadnjic = p.created_at
@@ -38,25 +40,25 @@ export function lestvicaPodpornikov(piva: JavnoPivo[]): Podpornik[] {
     }
     const kljuc = ime.toLocaleLowerCase()
     const v = po.get(kljuc)
-    if (!v) po.set(kljuc, { ime, piv: p.piv, nakupov: 1, zadnjic: p.created_at })
+    if (!v) po.set(kljuc, { ime, piv: p.piv, nakupov: 1, zadnjic: p.created_at, sporocila: [] })
     else {
       v.piv += p.piv
       v.nakupov += 1
       if (p.created_at > v.zadnjic) v.zadnjic = p.created_at
     }
   }
+  // Sporočila k vrstici podpornika, najnovejše prvo.
+  for (const p of [...piva].sort((a, b) => b.created_at.localeCompare(a.created_at))) {
+    const besedilo = p.sporocilo?.trim()
+    if (!besedilo) continue
+    const ime = p.ime?.trim().replace(/\s+/g, ' ') || null
+    const v = ime ? po.get(ime.toLocaleLowerCase()) : anonimni
+    v?.sporocila.push(besedilo)
+  }
   const lestvica = [...po.values()].sort(
     (a, b) => b.piv - a.piv || b.zadnjic.localeCompare(a.zadnjic) || a.ime!.localeCompare(b.ime!),
   )
   return anonimni ? [...lestvica, anonimni] : lestvica
-}
-
-/** Zadnja sporočila (le tista, ki jih kdo napisal in niso skrita). */
-export function zadnjaSporocila(piva: JavnoPivo[], koliko = 30): JavnoPivo[] {
-  return piva
-    .filter((p) => p.sporocilo && p.sporocilo.trim())
-    .sort((a, b) => b.created_at.localeCompare(a.created_at))
-    .slice(0, koliko)
 }
 
 /** Vsota piv (za naslov zidu). */
