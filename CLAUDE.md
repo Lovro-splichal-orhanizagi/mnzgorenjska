@@ -3104,7 +3104,7 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   le izguba pravice do uradnih odsotnosti. Anonimizacija vrstice jih izbriše
   (kot skupnostna poročila).
 - `povzetek_rasti()` → ena vrstica številk (uporabniki, novi v 7 dneh, ekipe,
-  aktivne lige, namestitve) pod vsakim poročilom na Discord (mejnik uporabnikov,
+  aktivne lige, namestitve, kliki na "Časti pivo" skupaj in v 7 dneh) pod vsakim poročilom na Discord (mejnik uporabnikov,
   `scripts/trgovine.mjs`). Le servis
 - `teams.logo_url` → grb kluba; če je prazen, `src/components/Grb.jsx` nariše
   ščit z začetnicami
