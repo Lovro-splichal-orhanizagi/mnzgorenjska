@@ -6258,5 +6258,107 @@ preveri(
     preveri('vrsta: državna na vrsti zadrži ostale', imena(v) === '', imena(v))
   }}
 
+// --- pošta klubom (scripts/posta-klubom.mjs) ----------------------------------
+{
+  const { besedilo, sporocilo, kandidati, vOknu, zakrij, stareZaOpomnik, POSLAL } = await import('./posta-klubom.mjs')
+  const k = (drzava) => ({ drzava, team_id: 2002, liga_slug: 'x-liga', ime_lige: 'Kärntner Liga', klub: 'St. Veit SC' })
+  const p = { igralcev: 19, naj: 'Sebastian Weiss', tocke: 55, ekip: 7 }
+  for (const drzava of ['AT', 'EE']) {
+    for (const vrsta of ['prvi', 'opomnik']) {
+      for (const pp of [p, { ...p, naj: null, ekip: 0 }]) {
+        const b = besedilo(k(drzava), pp, vrsta)
+        const vse = `${b.zadeva}\n${b.telo}`
+        preveri(`pošta klubom: ${drzava} ${vrsta} brez ostankov`, !/[{}]|undefined|null|NaN/.test(vse) && vse.includes('https://slff.eu/club/2002?t=x-liga'), vse.slice(0, 80))
+        if (drzava === 'EE') preveri(`pošta klubom: EE ${vrsta} brez pomišljajev`, !/[–—]/.test(vse))
+        const m = sporocilo({ na: 'klub@example.com', zadeva: b.zadeva, telo: b.telo, odjava: b.odjava, id: 'x' })
+        const glava = m.match(/^Subject: (.*(?:\r\n .*)*)/m)[1]
+        const nazaj = glava.split('\r\n ').map((w) => w.match(/^=\?UTF-8\?B\?(.*)\?=$/)).map((x, i) => (x ? Buffer.from(x[1], 'base64').toString() : glava.split('\r\n ')[i])).join('')
+        preveri(`pošta klubom: ${drzava} ${vrsta} vrstica zadeve ≤ 78`, `Subject: ${glava}`.split('\r\n').every((v) => v.length <= 78))
+        preveri(`pošta klubom: ${drzava} ${vrsta} zadeva in telo nazaj`, nazaj === b.zadeva && /^[\x00-\x7f]*$/.test(m)
+          && Buffer.from(m.split('\r\n\r\n')[1].replace(/\r\n/g, ''), 'base64').toString() === b.telo.replace(/\n/g, '\r\n'))
+      }
+    }
+  }
+  preveri('pošta klubom: država brez besedil ne dobi nič', besedilo(k('SI'), p, 'prvi') === null)
+
+  // Okno: 08–18 krajevno, ne v nedeljo; poletni/zimski čas (Dunaj 25. 10. 2026).
+  const okno = [
+    ['AT', '2026-10-12T06:30:00Z', true], ['AT', '2026-10-12T05:30:00Z', false], ['AT', '2026-10-12T15:59:00Z', true],
+    ['AT', '2026-10-12T16:00:00Z', false], ['AT', '2026-10-11T10:00:00Z', false], ['AT', '2026-10-17T10:00:00Z', true],
+    ['AT', '2026-10-26T06:30:00Z', false], ['AT', '2026-10-26T07:00:00Z', true], ['EE', '2026-10-12T05:30:00Z', true],
+    ['EE', '2026-10-12T15:30:00Z', false], ['SI', '2026-10-12T10:00:00Z', false],
+  ]
+  for (const [d, t, ok] of okno) preveri(`pošta klubom: okno ${d} ${t}`, vOknu(d, new Date(t)) === ok)
+
+  const zdaj = new Date('2026-10-12T10:00:00Z')
+  const dni = (n) => new Date(zdaj.getTime() - n * 86400e3).toISOString()
+  const st = (id, o = {}) => ({ id, v_vrsti: true, email: `k${id}@x.at`, drzava: 'AT', liga_slug: 'at-a', stanje: 'nov', team_id: 100 + id, klub: `Klub ${id}`, ...o })
+  const vrsta = [
+    st(1), // prvi
+    st(2, { stanje: 'poslano' }), // opomnik (prvi pred 4 dnevi)
+    st(3, { stanje: 'poslano' }), // prvi pred 2 dnevoma: še ne
+    st(4, { liga_slug: 'at-neaktivna' }), // neaktivna liga čaka
+    st(5, { poslji_od: '2026-10-13T00:00:00Z' }), // še ne
+    st(6, { stanje: 'poslano' }), // prvi je poslal drug
+    st(7, { stanje: 'poslano' }), // klic drugega: ni opomnika
+    st(8, { stanje: 'odgovoril' }),
+    st(9, { team_id: 900 }), // isti klub (team_id) je pred 5 dnevi dobil mail od drugega
+    st(10, { klub: 'SV Šentjur', team_id: null }), // isto ime v državi, pošta pred 2 dnevoma
+    st(11, { stanje: 'poslano' }), // opomnik, a klub je pred 1 dnevom dobil pošto na drug naslov
+    st(12, { v_vrsti: false }),
+    st(13, { drzava: 'SI' }),
+    st(14, { team_id: 901 }), // klic drugega pred 8 dnevi: sme
+  ]
+  const drugi = [
+    { id: 50, team_id: 900, klub: 'Drug zapis', drzava: 'AT' },
+    { id: 51, team_id: 777, klub: 'SV Sentjur', drzava: 'AT' },
+    { id: 52, team_id: 111, klub: 'Klub 11 B', drzava: 'AT' },
+    { id: 53, team_id: 901, klub: 'X', drzava: 'AT' },
+  ]
+  const posta = [
+    { stik_id: 2, vrsta: 'prvi', poslal: POSLAL, poslano_at: dni(4) },
+    { stik_id: 3, vrsta: 'prvi', poslal: POSLAL, poslano_at: dni(2) },
+    { stik_id: 6, vrsta: 'prvi', poslal: 'Jernej', poslano_at: dni(10) },
+    { stik_id: 7, vrsta: 'prvi', poslal: POSLAL, poslano_at: dni(10) },
+    { stik_id: 7, vrsta: 'klic', poslal: 'Jernej', poslano_at: dni(9) },
+    { stik_id: 50, vrsta: 'prvi', poslal: 'Jernej', poslano_at: dni(5) },
+    { stik_id: 51, vrsta: 'odgovor', poslal: 'klub', poslano_at: dni(2) },
+    { stik_id: 11, vrsta: 'prvi', poslal: POSLAL, poslano_at: dni(5) },
+    { stik_id: 52, vrsta: 'prvi', poslal: POSLAL, poslano_at: dni(1) },
+    { stik_id: 53, vrsta: 'klic', poslal: 'Jernej', poslano_at: dni(8) },
+  ]
+  vrsta[10].team_id = 111 // 11 in 52 sta isti klub
+  const izbor = kandidati(vrsta, posta, new Set(['at-a']), zdaj, [...vrsta, ...drugi]).map((x) => `${x.vrsta}:${x.s.id}`).join(',')
+  preveri('pošta klubom: kandidati (stanja, drug pošiljatelj, 3 dni, poslji_od, neaktivna liga, klub)', izbor === 'opomnik:2,prvi:1,prvi:14', izbor)
+  {
+    // En stik na klub: drug naslov istega kluba ne dobi prvega maila, če ga je klub že dobil (tudi pred mesecem).
+    const a = { id: 1, v_vrsti: true, email: 'a@x.at', drzava: 'AT', liga_slug: 'at-a', stanje: 'nov', team_id: 5, klub: 'SV A' }
+    const b = { id: 2, v_vrsti: false, email: 'b@x.at', drzava: 'AT', liga_slug: 'at-a', stanje: 'poslano', team_id: 5, klub: 'SV A' }
+    const izb = kandidati([a], [{ stik_id: 2, vrsta: 'prvi', poslal: POSLAL, poslano_at: dni(30) }], new Set(['at-a']), zdaj, [a, b])
+    preveri('pošta klubom: en stik na klub (drug naslov istega kluba)', izb.length === 0)
+    const sam = kandidati([a], [], new Set(['at-a']), zdaj, [a, b])
+    preveri('pošta klubom: klub brez pošte dobi prvi mail', sam.length === 1)
+  }
+  {
+    // Stare vrstice za opomnik: le brez pošiljatelja, poslano, brez opombe "poslano…", vsa pošta Lukova.
+    const v = (id, o = {}) => ({ id, drzava: 'AT', v_vrsti: false, posiljatelj: null, stanje: 'poslano', opomba: null, ...o })
+    const stiki = [
+      v(1), // stara, gre v vrsto
+      v(2, { opomba: 'poslano? preveri ročno (opomnik, 2026-10-12): SMTP konec DATA' }),
+      v(3, { opomba: 'poslano (prvi, 2026-10-12), a vpis v klub_stik_posta ni uspel — vpiši ročno' }),
+      v(4, { posiljatelj: 'luka@slff.eu' }), // vrsta jo je že imela (tudi prevzeta in ubita med pošiljanjem)
+      v(5, { stanje: 'opomnik' }),
+      v(6, { v_vrsti: true }),
+      v(7), // prvi je poslal drug
+      v(8, { drzava: 'EE' }),
+      v(9, { stanje: 'odgovoril' }),
+    ]
+    const p8 = [1, 2, 3, 4, 5, 6, 8, 9].map((id) => ({ stik_id: id, vrsta: 'prvi', poslal: POSLAL }))
+    const ids = stareZaOpomnik(stiki, [...p8, { stik_id: 7, vrsta: 'prvi', poslal: 'Jernej' }]).map((s) => s.id).join()
+    preveri('pošta klubom: v vrsto za opomnik le stare vrstice (ne parkirane)', ids === '1', ids)
+  }
+  preveri('pošta klubom: naslov v dnevniku zakrit', zakrij('za <ana.novak@klub.at>: 550') === 'za <a***@klub.at>: 550')
+}
+
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)
 process.exit(napak === 0 ? 0 : 1)
