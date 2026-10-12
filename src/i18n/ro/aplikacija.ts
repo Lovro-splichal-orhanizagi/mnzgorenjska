@@ -22,6 +22,20 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
   /** Buton de susținere (components/Pivo.tsx). */
   pivo: {
     gumb: 'Fă-ne cinste cu o bere',
+    /** Povezava na pivski zid (/beers) ob gumbu in v meniju Več. */
+    zid: 'Zidul berilor',
+    // Stran /beers (pages/Piva.tsx): brez zneskov.
+    stran: {
+      uvod: 'SLFF este gratuit. Serverul și domeniul le plătim noi, așa că fiecare bere ajută cu adevărat. Mulțumim tuturor celor care ne-au făcut deja cinste!',
+      skupaj: { one: 'Până acum {n} bere', few: 'Până acum {n} beri', other: 'Până acum {n} de beri' },
+      piv: { one: '{n} bere', few: '{n} beri', other: '{n} de beri' },
+      lestvica: 'Clasamentul susținătorilor',
+      sporocila: 'Cele mai noi mesaje',
+      anonimni: 'Susținători anonimi',
+      anonimno: 'Anonim',
+      prazno: 'Încă nu e nicio bere pe zid. Fii primul!',
+      brezSporocil: 'Încă nu sunt mesaje.',
+    },
   },
   noga: {
     zasebnost: 'Confidențialitate și termeni',

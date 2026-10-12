@@ -50,6 +50,7 @@ const Racun = lazy(() => import('./pages/Racun'))
 const Profil = lazy(() => import('./pages/Profil'))
 const PotrditevPovezave = lazy(() => import('./pages/PotrditevPovezave'))
 const PotrditevPrevzema = lazy(() => import('./pages/PotrditevPrevzema'))
+const Piva = lazy(() => import('./pages/Piva'))
 
 // Poti so angleške, ker jih vidi vsaka država (slovaški obiskovalec ne
 // odpira "moja-ekipa"). Stari slovenski naslovi ostanejo kot preusmeritve.
@@ -165,6 +166,7 @@ export default function App() {
               <Route path="/u/:id" element={<Profil />} />
               <Route path="/auth/confirm" element={<PotrditevPovezave />} />
               <Route path="/claim" element={<PotrditevPrevzema />} />
+              <Route path="/beers" element={<Piva />} />
               {/* Stari slovenski naslovi (deljene povezave, e-pošta, iskalniki)
                   vodijo na nove — s parametri, poizvedbo in #. */}
               {STARE_POTI.map(([staro, novo]) => (
@@ -183,6 +185,14 @@ export default function App() {
               {!jeNativno() && <Pivo src="noga" />}
               <Facebook />
             </div>
+            {!jeNativno() && (
+              <div className="mb-3">
+                <Link to="/beers" className="underline hover:text-slate-200">
+                  <span aria-hidden>🍺 </span>
+                  {t('aplikacija.pivo.zid')}
+                </Link>
+              </div>
+            )}
             <Link to="/legal" className="underline hover:text-slate-200">
               {t('aplikacija.noga.zasebnost')}
             </Link>

@@ -21,6 +21,20 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
   },
   pivo: {
     gumb: 'Uzsauc mums alu',
+    /** Povezava na pivski zid (/beers) ob gumbu in v meniju Več. */
+    zid: 'Alus siena',
+    // Stran /beers (pages/Piva.tsx): brez zneskov.
+    stran: {
+      uvod: 'SLFF ir bez maksas. Serveri un domēnu apmaksājam paši, tāpēc katrs alus tiešām palīdz. Paldies visiem, kas mums jau uzsaukuši!',
+      skupaj: { zero: 'Līdz šim {n} alus', one: 'Līdz šim {n} alus', other: 'Līdz šim {n} alus' },
+      piv: { zero: '{n} alus', one: '{n} alus', other: '{n} alus' },
+      lestvica: 'Atbalstītāju tabula',
+      sporocila: 'Jaunākās ziņas',
+      anonimni: 'Anonīmi atbalstītāji',
+      anonimno: 'Anonīmi',
+      prazno: 'Uz sienas vēl nav neviena alus. Esi pirmais!',
+      brezSporocil: 'Ziņu vēl nav.',
+    },
   },
   noga: {
     zasebnost: 'Privātums un noteikumi',

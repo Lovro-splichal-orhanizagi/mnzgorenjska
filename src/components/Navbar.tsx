@@ -159,7 +159,9 @@ export default function Navbar() {
   // (Slovenija, Hrvaška, Češka, Madžarska, Avstrija, Srbija, Romunija, Estonija, Poljska, Španija, Latvija). Slovaški zapisnik jih ima, zato stran tam nima kaj početi.
   const zaDrzavo = drzava === 'SI' || drzava === 'HR' || drzava === 'CZ' || drzava === 'HU' || drzava === 'AT' || drzava === 'RS' || drzava === 'RO' || drzava === 'EE' || drzava === 'PL' || drzava === 'ES' || drzava === 'LV' ? ostale : ostale.filter((p) => p.pot !== '/positions')
   // Administracija je samo na spletu, mobilna aplikacija je za igralce.
-  const vec = jeAdmin && !jeNativno() ? [...zaDrzavo, { pot: '/admin', get naslov() { return t('aplikacija.meni.admin') } }] : zaDrzavo
+  // Pivski zid je le na spletu (kot gumb "Časti pivo", glej Pivo.tsx).
+  const zSpletom = jeNativno() ? zaDrzavo : [...zaDrzavo, { pot: '/beers', get naslov() { return t('aplikacija.pivo.zid') } }]
+  const vec = jeAdmin && !jeNativno() ? [...zSpletom, { pot: '/admin', get naslov() { return t('aplikacija.meni.admin') } }] : zSpletom
   // Začetnica za avatar: iz vzdevka, sicer iz e-naslova.
   const zacetnica = (ime || session?.user.email || '?').trim().charAt(0).toUpperCase()
 

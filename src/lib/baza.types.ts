@@ -2161,6 +2161,46 @@ export type Database = {
           },
         ]
       }
+      piva: {
+        Row: {
+          created_at: string
+          id: number
+          ime: string | null
+          piv: number
+          skrito: boolean
+          sporocilo: string | null
+          test: boolean
+          vir: string
+          vracilo: boolean
+          zunanji_id: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          id?: never
+          ime?: string | null
+          piv?: number
+          skrito?: boolean
+          sporocilo?: string | null
+          test?: boolean
+          vir?: string
+          vracilo?: boolean
+          zunanji_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          ime?: string | null
+          piv?: number
+          skrito?: boolean
+          sporocilo?: string | null
+          test?: boolean
+          vir?: string
+          vracilo?: boolean
+          zunanji_id?: string | null
+        }
+        Relationships: []
+      }
       players: {
         Row: {
           active: boolean
@@ -6230,10 +6270,20 @@ export type Database = {
         Args: { p_player_ids: number[] }
         Returns: number
       }
+      admin_dodaj_pivo: {
+        Args: {
+          p_datum?: string
+          p_ime: string
+          p_piv: number
+          p_sporocilo?: string
+        }
+        Returns: number
+      }
       admin_dodeli_preverjen: {
         Args: { p_player_id: number; p_velja_do?: string; p_vir?: string }
         Returns: number
       }
+      admin_izbrisi_pivo: { Args: { p_id: number }; Returns: undefined }
       admin_ista_oseba: {
         Args: { p_player_id: number }
         Returns: {
@@ -6290,6 +6340,21 @@ export type Database = {
         Returns: undefined
       }
       admin_odvzemi_preverjen: { Args: { p_id: number }; Returns: undefined }
+      admin_piva: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          created_at: string
+          id: number
+          ime: string
+          piv: number
+          skrito: boolean
+          sporocilo: string
+          test: boolean
+          vir: string
+          vracilo: boolean
+          zunanji_id: string
+        }[]
+      }
       admin_preverjeni: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -6397,6 +6462,10 @@ export type Database = {
           slug: string
           teden: string
         }[]
+      }
+      admin_skrij_pivo: {
+        Args: { p_id: number; p_skrito: boolean }
+        Returns: undefined
       }
       admin_sponzorji: {
         Args: Record<PropertyKey, never>
@@ -6563,6 +6632,15 @@ export type Database = {
       izstop_kluba: {
         Args: { p_competition_id: number; p_team_id: number }
         Returns: Json
+      }
+      javna_piva: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          created_at: string
+          ime: string
+          piv: number
+          sporocilo: string
+        }[]
       }
       javne_mini_lige: {
         Args: { p_iskanje?: string; p_omejitev?: number; p_tekmovanje: number }

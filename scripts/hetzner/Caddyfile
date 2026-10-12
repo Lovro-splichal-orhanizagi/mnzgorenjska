@@ -273,7 +273,7 @@ slff.eu {
 			not path / /sk /hr /cz /hu /at /rs /ro /ee /pl /es /lv /si
 			not path /my-team /assists /positions /absences /players /standings /national /mini-leagues /results /table
 			not path /player/* /team/* /club/* /match/* /l/* /u/* /mini-leagues/*
-			not path /login /new-password /novo-geslo /legal /reminders /account /auth/confirm /admin /claim
+			not path /login /new-password /novo-geslo /legal /reminders /account /auth/confirm /admin /claim /beers
 		}
 		route {
 			file_server @datoteka

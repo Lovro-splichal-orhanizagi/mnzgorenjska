@@ -2565,6 +2565,81 @@ select pg_temp.preveri('plačila: naročilo v za_tisk po 12 mesecih obdrži le d
   (select naslov = '{"country":"SI"}'::jsonb from narocila_znack where stripe_checkout_id = 'cs_z4')
   and (select naslov->>'city' = 'Kranj' from narocila_znack where stripe_checkout_id = 'cs_z5'));
 
+-- --------------------------------------------------------------------------
+-- Pivski zid (piva): zaprta tabela, javna pot brez zneskov, admin RPC.
+-- --------------------------------------------------------------------------
+reset role;
+delete from piva;
+insert into piva (zunanji_id, ime, piv, sporocilo, vir) values
+  ('t-1', 'Janez', 2, 'Gremo Preddvor,Gremo Repiči<br>Prestor se vrača<BR />Čole &amp; co &lt;3', 'bmc'),
+  ('t-2', 'Someone', 1, 'anonimno', 'bmc'),
+  ('t-3', 'Skriti', 1, 'skrivnost', 'bmc'),
+  ('t-4', 'Vrnjen', 5, 'vračilo', 'bmc'),
+  ('t-5', 'Tester', 3, 'test', 'bmc'),
+  ('t-6', '   ', 1, '<b>krepko</b>', 'bmc');
+update piva set skrito = true where zunanji_id = 't-3';
+update piva set vracilo = true where zunanji_id = 't-4';
+update piva set test = true where zunanji_id = 't-5';
+
+select pg_temp.preveri('piva: sporočilo je očiščeno (<br> v novo vrstico, entitete, oznake)',
+  (select sporocilo = E'Gremo Preddvor,Gremo Repiči\nPrestor se vrača\nČole & co <3' from piva where zunanji_id = 't-1')
+  and (select sporocilo = 'krepko' and ime is null from piva where zunanji_id = 't-6'));
+select pg_temp.preveri('piva: javna pot nima zneska, valute ali e-naslova',
+  (select array_agg(a.attname::text order by a.n) = array['ime','piv','sporocilo','created_at']
+     from pg_proc p, unnest(p.proargnames, p.proargmodes) with ordinality a(attname, mode, n)
+    where p.proname = 'javna_piva' and a.mode = 't')
+  and not exists (select 1 from information_schema.columns
+                   where table_schema = 'public' and table_name = 'piva'
+                     and column_name ~ '(amount|znesek|currency|valuta|email|mail)'));
+
+select set_config('request.jwt.claim.sub','',true);
+set local role anon;
+select pg_temp.zavrnjeno('piva: anonimni ne bere tabele', $$select * from piva$$);
+select pg_temp.zavrnjeno('piva: anonimni ne piše v tabelo', $$insert into piva (ime, piv, vir) values ('x', 1, 'rocno')$$);
+select pg_temp.zavrnjeno('piva: anonimni ne dodaja piv', $$select admin_dodaj_pivo('x', 1, null, null)$$);
+select pg_temp.zavrnjeno('piva: anonimni ne skriva sporočil', $$select admin_skrij_pivo(1, true)$$);
+select pg_temp.preveri('piva: javna pot izpusti vračila, teste in skrita sporočila',
+  (select count(*) = 4 from javna_piva())
+  and not exists (select 1 from javna_piva() where piv in (3, 5))
+  and exists (select 1 from javna_piva() where ime is null and sporocilo = 'anonimno')
+  and exists (select 1 from javna_piva() where ime = 'Skriti' and sporocilo is null)
+  and not exists (select 1 from javna_piva() where sporocilo in ('skrivnost', 'vračilo', 'test')));
+reset role;
+
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('piva: prijavljen ne bere tabele', $$select * from piva$$);
+select pg_temp.zavrnjeno('piva: prijavljen ne spreminja tabele', $$update piva set skrito = false$$);
+select pg_temp.zavrnjeno('piva: prijavljen ne-admin ne vidi seznama', $$select admin_piva()$$);
+select pg_temp.zavrnjeno('piva: prijavljen ne-admin ne dodaja', $$select admin_dodaj_pivo('x', 1, null, null)$$);
+select pg_temp.zavrnjeno('piva: prijavljen ne-admin ne skriva', $$select admin_skrij_pivo(1, true)$$);
+select pg_temp.zavrnjeno('piva: prijavljen ne-admin ne briše', $$select admin_izbrisi_pivo(1)$$);
+select pg_temp.preveri('piva: prijavljen bere javno pot', (select count(*) = 4 from javna_piva()));
+reset role;
+
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+select admin_dodaj_pivo('Ročni', 4, 'Hvala<br/>vsem', '2026-10-01');
+select admin_skrij_pivo((select id from admin_piva() where zunanji_id = 't-1'), true);
+select pg_temp.preveri('piva: admin doda ročni vnos z datumom in skrije sporočilo',
+  (select count(*) = 7 from admin_piva())
+  and exists (select 1 from javna_piva() where ime = 'Ročni' and piv = 4 and sporocilo = E'Hvala\nvsem'
+                and created_at::date = date '2026-10-01')
+  and exists (select 1 from javna_piva() where ime = 'Janez' and sporocilo is null));
+reset role;
+-- Nakupa BMC admin ne izbriše (le skrije); kot postgres z admin JWT.
+do $$ begin
+  perform admin_izbrisi_pivo((select id from piva where zunanji_id = 't-2'));
+  perform pg_temp.preveri('piva: admin ne izbriše nakupa BMC', false);
+exception when others then
+  perform pg_temp.preveri('piva: admin ne izbriše nakupa BMC', exists (select 1 from piva where zunanji_id = 't-2'));
+end $$;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+select admin_izbrisi_pivo((select id from admin_piva() where vir = 'rocno'));
+reset role;
+select pg_temp.preveri('piva: admin izbriše ročni vnos', not exists (select 1 from piva where vir = 'rocno'));
+
 do $$
 declare v_napak int;
 begin
