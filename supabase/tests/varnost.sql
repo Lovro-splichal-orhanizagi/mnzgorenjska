@@ -2486,6 +2486,53 @@ select pg_temp.preveri('plačila: plačilo tujega profila je preklicano, kljukic
 select pg_temp.pade('plačila: plačilo brez potrditve 18 let pade',
   $$select preverjen_iz_placila('b8a06635-2322-4444-8c42-44e419f912e1', -925010, 'dozivljenjska', null, 'cus_t', null, 'cs_4', 'pi_4', false, true)$$);
 
+-- Preklic pravice in naročila značk; Discord je nadomeščen s štetjem klicev
+-- (transakcija se razveljavi).
+create temporary table discord_klici (besedilo text);
+grant insert on discord_klici to public;
+create or replace function public.preverjeni_na_discord(p_besedilo text)
+returns void language sql security definer set search_path = public
+as $$ insert into pg_temp.discord_klici values (p_besedilo) $$;
+
+-- Preklic profila: naročilo za tisk preklicano, eno sporočilo.
+insert into preverjeni_racuni(id, user_id, player_id, vir) overriding system value
+values (-925020, 'b8a06635-2322-4444-8c42-44e419f912e1', -925010, 'rocno');
+insert into narocila_znack(preverjeni_racun_id, player_id, ime_na_znacki, naslov, stripe_checkout_id, status) values
+ (-925020, -925010, 'Kupljen 7', '{"country":"SI"}', 'cs_z1', 'za_tisk');
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912e1',true);
+set local role authenticated;
+select preklici_moj_zahtevek(-925010);
+reset role;
+select pg_temp.preveri('plačila: preklic profila prekliče značko za tisk in jo javi enkrat',
+  (select status = 'preklican' from preverjeni_racuni where id = -925020)
+  and (select status = 'preklicano' and opomba = 'pravica preklicana' from narocila_znack where stripe_checkout_id = 'cs_z1')
+  and (select count(*) = 1 and bool_and(besedilo like '%Značka preklicana s pravico (1)%/player/-925010') from discord_klici));
+
+-- Polno vračilo: opomba 'vračilo' ostane, eno sporočilo.
+delete from discord_klici;
+insert into preverjeni_racuni(id, user_id, player_id, vir, star_vsaj_18, odpoved_pravici, stripe_payment_intent, znesek_pravice)
+overriding system value values (-925021, 'b8a06635-2322-4444-8c42-44e419f912e1', -925010, 'dozivljenjska', true, true, 'pi_z', 2900);
+insert into narocila_znack(preverjeni_racun_id, player_id, ime_na_znacki, naslov, stripe_checkout_id, status) values
+ (-925021, -925010, 'Kupljen 7', '{"country":"SI"}', 'cs_z2', 'za_tisk');
+set local role service_role;
+select preverjen_vracilo('pi_z', null, 3600, 3600, false);
+reset role;
+select pg_temp.preveri('plačila: polno vračilo obdrži opombo vračila in javi enkrat',
+  (select status = 'preklican' from preverjeni_racuni where id = -925021)
+  and (select status = 'preklicano' and opomba = 'vračilo' from narocila_znack where stripe_checkout_id = 'cs_z2')
+  and (select count(*) = 1 and bool_and(besedilo like '%Pravica preklicana (vračilo, tudi značka)%') from discord_klici));
+
+-- Preklic (admin) pri natisnjeni znački: ostane natisnjena, le opozorilo.
+delete from discord_klici;
+insert into preverjeni_racuni(id, user_id, player_id, vir) overriding system value
+values (-925022, 'b8a06635-2322-4444-8c42-44e419f912e1', -925010, 'rocno');
+insert into narocila_znack(preverjeni_racun_id, player_id, ime_na_znacki, naslov, stripe_checkout_id, status) values
+ (-925022, -925010, 'Kupljen 7', '{"country":"SI"}', 'cs_z3', 'natisnjeno');
+update preverjeni_racuni set status = 'preklican' where id = -925022;
+select pg_temp.preveri('plačila: natisnjena značka ostane, preklic jo le javi',
+  (select status = 'natisnjeno' and opomba is null from narocila_znack where stripe_checkout_id = 'cs_z3')
+  and (select count(*) = 1 and bool_and(besedilo like '%Natisnjena ali poslana%') from discord_klici));
+
 -- Izbris računa: naročilo z naslovom ostane (le admin); poznejše plačilo
 -- izbrisanega kupca je preklicano brez uporabnika in čaka na preklic naročnine.
 delete from auth.users where id = 'b8a06635-2322-4444-8c42-44e419f912e1';
