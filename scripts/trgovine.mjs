@@ -190,6 +190,8 @@ async function namestitveAndroid() {
     const [prva = '', ...ostalo] = besedilo.trim().split(/\r?\n/)
     if (!prva) continue // prazna datoteka
     const st = prva.split(',')
+    console.log(`${ime}: ${ostalo.length} vrstic; ${prva}`)
+    for (const v of ostalo) console.log(`  ${v}`)
     const [iDan, iSkupaj, iNovi] = ['Date', 'Total User Installs', 'Daily User Installs'].map((s) => st.indexOf(s))
     if (iDan < 0 || iSkupaj < 0) throw new Error(`Play ${ime}: ni stolpcev Date / Total User Installs (${prva})`)
     for (const v of ostalo) {
