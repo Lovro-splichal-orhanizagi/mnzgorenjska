@@ -346,22 +346,43 @@ export const zakrij = (t) => String(t ?? '').replace(/([^\s<>"'(),;:@]+)@([^\s<>
 const DAN = 86400e3
 const normKlub = (ime) => String(ime ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '')
 
-/**
- * Pošta istega kluba (vrstice z istim team_id ali istim imenom v isti državi)
- * blokira: v zadnjih 3 dneh kdorkoli, v zadnjih 7 dneh drug pošiljatelj.
- */
-function klubBlokiran(s, vsi, poStiku, zdaj) {
+/** Vrstice istega kluba: isti team_id ali isto ime (brez šumnikov in ločil) v isti državi. */
+export function istiKlub(s, vsi) {
   const ime = normKlub(s.klub)
-  for (const o of vsi) {
-    const isti = o.id === s.id || (s.team_id != null && o.team_id === s.team_id) || (ime && o.drzava === s.drzava && normKlub(o.klub) === ime)
-    if (!isti) continue
+  return vsi.filter((o) => o.id === s.id || (s.team_id != null && o.team_id === s.team_id) || (ime && o.drzava === s.drzava && normKlub(o.klub) === ime))
+}
+
+/**
+ * Pošta istega kluba blokira: v zadnjih 3 dneh kdorkoli, v zadnjih 7 dneh drug
+ * pošiljatelj. Prvi mail pa le, če klub (na katerikoli naslov) še ni dobil
+ * nobenega prvega maila ali opomnika — en stik na klub.
+ */
+function klubBlokiran(s, vsi, poStiku, zdaj, prviMail) {
+  for (const o of istiKlub(s, vsi)) {
     for (const r of poStiku.get(o.id) ?? []) {
       const starost = zdaj.getTime() - Date.parse(r.poslano_at)
       if (starost < 3 * DAN) return true
       if (starost < 7 * DAN && r.vrsta !== 'odgovor' && r.poslal !== POSLAL) return true
+      if (prviMail && o.id !== s.id && ['prvi', 'opomnik'].includes(r.vrsta)) return true
     }
   }
   return false
+}
+
+/**
+ * Stare avstrijske vrstice (prvi mail poslan pred vrsto, lokalno) za opomnik iz
+ * vrste. Le brez pošiljatelja (vrsta ga vpiše ob prevzemu v vrsto, zato
+ * pozneje parkirana vrstica nikoli več ne ustreza), stanje `poslano`, brez
+ * opombe "poslano…" in le, če je vso pošto poslal Luka.
+ */
+export function stareZaOpomnik(stiki, posta) {
+  const poStiku = new Map()
+  for (const r of posta) (poStiku.get(r.stik_id) ?? poStiku.set(r.stik_id, []).get(r.stik_id)).push(r)
+  return stiki.filter((s) => {
+    const r = (poStiku.get(s.id) ?? []).filter((x) => x.vrsta !== 'odgovor')
+    return s.drzava === 'AT' && !s.v_vrsti && s.posiljatelj == null && s.stanje === 'poslano' && !/^poslano/i.test(s.opomba ?? '') &&
+      r.some((x) => x.vrsta === 'prvi') && r.every((x) => x.poslal === POSLAL)
+  })
 }
 
 /**
@@ -375,7 +396,7 @@ export function kandidati(vrsta, posta, aktivne, zdaj = new Date(), vsi = vrsta)
   const prvi = []
   for (const s of vrsta) {
     if (!s.v_vrsti || !s.email || !BESEDILA[s.drzava] || !aktivne.has(s.liga_slug)) continue
-    if (klubBlokiran(s, vsi, poStiku, zdaj)) continue
+    if (klubBlokiran(s, vsi, poStiku, zdaj, s.stanje === 'nov')) continue
     const r = poStiku.get(s.id) ?? []
     if (s.stanje === 'nov') {
       if (!r.length && (!s.poslji_od || Date.parse(s.poslji_od) <= zdaj.getTime())) prvi.push(s)
@@ -407,7 +428,10 @@ async function krog(db, { geslo, suho, najvec }) {
   const zdaj = new Date()
   const vceraj = new Date(zdaj.getTime() - 30 * 3600e3).toISOString()
   const danes = preveri(await db.from('klub_stik_posta').select('poslano_at').eq('poslal', POSLAL).in('vrsta', ['prvi', 'opomnik']).gte('poslano_at', vceraj))
-    .filter((r) => danDunaj(new Date(r.poslano_at)) === danDunaj(zdaj)).length
+    .filter((r) => danDunaj(new Date(r.poslano_at)) === danDunaj(zdaj)).length +
+    // Parkirani "morda poslani" maili današnjega dne štejejo v mejo.
+    preveri(await db.from('klub_stik').select('updated_at').ilike('opomba', 'poslano%').gte('updated_at', vceraj))
+      .filter((r) => danDunaj(new Date(r.updated_at)) === danDunaj(zdaj)).length
   if (danes >= NA_DAN && !suho) {
     log(`Danes poslano: ${danes}/${NA_DAN} — dnevna meja`)
     return false
@@ -506,7 +530,19 @@ async function krog(db, { geslo, suho, najvec }) {
     }
     if (poslanih) await cakaj((60 + Math.random() * 90) * 1000)
     // Tik pred pošiljanjem znova: okno, pošta kluba (tudi tega kroga), prevzem vrstice.
-    if (!vOknu(s.drzava, new Date()) || !kandidati([s], posta, aktivne, new Date(), vsi).length) {
+    // Pošta kluba sveže iz baze (drug pošiljatelj je morda pisal med krogom).
+    let sveze
+    try {
+      const vrsticeDrzave = await vseVrstice((od, do_) =>
+        db.from('klub_stik').select('id, team_id, klub, drzava').eq('drzava', s.drzava).order('id').range(od, do_))
+      const idji = istiKlub(s, vrsticeDrzave).map((o) => o.id)
+      const postaKluba = preveri(await db.from('klub_stik_posta').select('id, stik_id, vrsta, poslal, poslano_at').in('stik_id', idji).order('id'))
+      sveze = kandidati([s], postaKluba, aktivne, new Date(), vrsticeDrzave).length > 0
+    } catch (e) {
+      log(`preskok ${oznaka(s)}: sveža pošta kluba ni prebrana (${e.message})`)
+      continue
+    }
+    if (!vOknu(s.drzava, new Date()) || !sveze) {
       log(`preskok ${oznaka(s)}: zunaj okna ali klub je medtem dobil pošto`)
       continue
     }
@@ -587,14 +623,14 @@ async function main() {
   const najvec = Number(arg('--najvec') ?? 2)
   const env = process.env
   const geslo = env.LUKA_SMTP_GESLO
-  if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
-    console.error('Manjka SUPABASE_URL ali SUPABASE_SERVICE_ROLE_KEY.')
+  // V zanki (Docker restart) pred izhodom počakamo, da manjkajoča nastavitev ne vrti ponovnih zagonov.
+  const konec = async (sporocilo) => {
+    console.error(sporocilo)
+    if (zanka) await cakaj(10 * 60e3)
     process.exit(1)
   }
-  if (!suho && !geslo) {
-    console.error('Manjka LUKA_SMTP_GESLO (geslo nabiralnika luka@slff.eu).')
-    process.exit(1)
-  }
+  if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) await konec('Manjka SUPABASE_URL ali SUPABASE_SERVICE_ROLE_KEY.')
+  if (!suho && !geslo) await konec('Manjka LUKA_SMTP_GESLO (geslo nabiralnika luka@slff.eu).')
   const db = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } })
   if (!zanka) {
     try {

@@ -3021,13 +3021,17 @@ EE tallinski čas) in največ 100 na dunajski dan. Najprej opomniki (en sam, ≥
 dni po našem prvem, brez pošte drugih — tudi klic ali drugo za vedno zapre
 opomnik), nato prvi maili (`nov`, brez pošte, liga **aktivna** — neaktivna
 liga čaka, tako Estonija do vklopa). Klub (isti `team_id` ali isto ime v
-državi) čaka, če je v 3 dneh dobil pošto od kogarkoli ali v 7 dneh od drugega.
+državi) čaka, če je v 3 dneh dobil pošto od kogarkoli ali v 7 dneh od drugega,
+pravilo pa tik pred pošiljanjem preveri še enkrat na sveži pošti. **En stik na
+klub:** drug naslov kluba, ki je prvi mail ali opomnik že dobil, prvega ne dobi.
 Pred opomnikom pogleda v nabiralnik (IMAP, INBOX in Junk): mail z naslova ali
 citirana povezava na stran kluba → `odgovor`, odboj ali SMTP zavrnitev →
 `napacen_mail`. Pred SMTP vrstico prevzame (`v_vrsti = false`) in jo vrne šele
 po vpisu v `klub_stik_posta` (poslal `Luka (luka@slff.eu)`); napaka po začetku
 DATA ali neuspel vpis jo pusti zunaj vrste z opombo "poslano? preveri ročno" —
-**nikoli samodejno znova**. Kopija gre v Sent. Številke v mailu so sveže;
+**nikoli samodejno znova** (in šteje v dnevno mejo). Polnjenje vrne v vrsto le
+stare avstrijske vrstice pred vrsto (brez `posiljatelj`, `poslano`, brez opombe
+"poslano…") in jim ob tem vpiše pošiljatelja. Kopija gre v Sent. Številke v mailu so sveže;
 besedila (nemška, estonska) so v skripti in ne trdijo, da imamo dovoljenje
 zveze. Prehodne napake delavec le zabeleži; zavrnjena prijava: ura premora,
 nato izhod (Docker ga znova zažene).

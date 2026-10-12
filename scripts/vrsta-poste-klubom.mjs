@@ -14,7 +14,7 @@
 //   so v razporedu lige. robots.txt: Crawl-Delay 5 (vir.premorMs); ajax.php
 //   in /otsing ne beremo. Estonske lige so neaktivne — maili čakajo na vklop.
 // 403, 429 ali izziv ustavi branje takoj (izhod 2) — ne obhajamo.
-// Teče na strežniku (docker compose run --rm slff-posta …, scripts/hetzner/posta/).
+// Teče na strežniku (docker compose run --rm posta …, scripts/hetzner/posta/).
 //
 // En naslov = en klub (prednost ima prva ekipa pred rezervno), klub brez
 // igralcev z nastopi letos izpustimo. Nov naslov dobi vrstico (`nov`,
@@ -28,7 +28,7 @@ import { vseVrstice } from './strani.mjs'
 import { mapaKlubov, razpakiraj } from './klubi.mjs'
 import oefb, { naslovRazporeda as razporedAt, predhodniPodatki, imeEkipe, kljucKlubaAt } from './viri/oefb.mjs'
 import jalgpall, { naslovRazporeda as razporedEe, jeIzziv } from './viri/jalgpall.mjs'
-import { OD, POSLAL } from './posta-klubom.mjs'
+import { OD, stareZaOpomnik } from './posta-klubom.mjs'
 
 const arg = (ime) => {
   const i = process.argv.indexOf(ime)
@@ -134,7 +134,7 @@ let q = db.from('competitions').select('id, slug, active, source_league_code').l
 if (drzava === 'AT') q = q.eq('active', true)
 const lige = preveri(await q)
 const obstojeci = await vseVrstice((od, do_) =>
-  db.from('klub_stik').select('id, team_id, email, drzava, v_vrsti').order('id').range(od, do_),
+  db.from('klub_stik').select('id, team_id, email, drzava, v_vrsti, posiljatelj, stanje, opomba').order('id').range(od, do_),
 )
 const posta = await vseVrstice((od, do_) => db.from('klub_stik_posta').select('id, stik_id, vrsta, poslal').order('id').range(od, do_))
 const imaVrstico = new Set(obstojeci.map((s) => s.team_id).filter(Boolean))
@@ -207,13 +207,9 @@ for (const k of klubi.filter((k) => !k.profi).sort((a, b) => Number(REZERVA.test
 }
 const brezNaslova = [...new Map(brez.filter((k) => !imaVrstico.has(k.team_id)).map((k) => [k.team_id, k])).values()]
 
-// Avstrijski naslovi, ki jim je prvi mail poslal le Luka (lokalno pošiljanje pred vrsto): opomnik gre iz vrste.
-const poStiku = new Map()
-for (const r of posta) (poStiku.get(r.stik_id) ?? poStiku.set(r.stik_id, []).get(r.stik_id)).push(r)
-const nasi = drzava !== 'AT' ? [] : obstojeci.filter((s) => {
-  const r = (poStiku.get(s.id) ?? []).filter((x) => ['prvi', 'opomnik'].includes(x.vrsta))
-  return s.drzava === 'AT' && !s.v_vrsti && r.some((x) => x.vrsta === 'prvi') && r.every((x) => x.poslal === POSLAL)
-})
+// Stari avstrijski naslovi (prvi mail iz lokalnega pošiljanja pred vrsto): opomnik gre iz vrste.
+// Parkirane vrstice ("poslano? preveri ročno") ne ustrezajo — glej stareZaOpomnik.
+const nasi = drzava !== 'AT' ? [] : stareZaOpomnik(obstojeci, posta)
 
 console.log(`\n${drzava}: lig ${lige.length}, prebranih klubov ${klubi.length}`)
 console.log(`  novih naslovov v vrsto: ${novi.size}${posljiOd ? ` (ne pred ${posljiOd})` : ''}`)
@@ -231,5 +227,5 @@ const vrstice = [
 ]
 for (let i = 0; i < vrstice.length; i += 100) preveri(await db.from('klub_stik').insert(vrstice.slice(i, i + 100)))
 for (let i = 0; i < nasi.length; i += 100)
-  preveri(await db.from('klub_stik').update({ v_vrsti: true }).in('id', nasi.slice(i, i + 100).map((s) => s.id)))
+  preveri(await db.from('klub_stik').update({ v_vrsti: true, posiljatelj: OD }).in('id', nasi.slice(i, i + 100).map((s) => s.id)).is('posiljatelj', null).eq('v_vrsti', false))
 console.log(`\nZapisano: ${vrstice.length} vrstic, ${nasi.length} v vrsto za opomnik.`)
