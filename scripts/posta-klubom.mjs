@@ -546,7 +546,7 @@ async function krog(db, { geslo, suho, najvec }) {
       log(`preskok ${oznaka(s)}: zunaj okna ali klub je medtem dobil pošto`)
       continue
     }
-    const prevzem = await db.from('klub_stik').update({ v_vrsti: false }).eq('id', s.id).eq('v_vrsti', true).select('id')
+    const prevzem = await db.from('klub_stik').update({ v_vrsti: false }).eq('id', s.id).eq('v_vrsti', true).in('stanje', ['nov', 'poslano']).select('id')
     if (prevzem.error || !prevzem.data?.length) {
       log(`preskok ${oznaka(s)}: ${prevzem.error ? `prevzem ni uspel (${prevzem.error.message})` : 'vrstico je vzel drug zagon'}`)
       continue
