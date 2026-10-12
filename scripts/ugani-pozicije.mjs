@@ -28,12 +28,10 @@ import {
   tekmovanje as najdiTekmovanje,
 } from './tekmovanje.mjs'
 
-// Pričakovana sestava enajsterice brez vratarja: 4 branilci, 4 vezisti,
-// 2–3 napadalci. V deležih igralskega kadra kluba:
-const DELEZ_NAPADALCEV = 0.25
-const DELEZ_BRANILCEV = 0.42
-
-const MIN_MINUT = 180 // pod tem je premalo za oceno
+// Razvrstitev znotraj kluba (deleži napadalcev in branilcev, MIN_MINUT) je v
+// lazni-vratarji.mjs: z njo dobi pozicijo tudi igralec, ki ga je ena oznaka
+// vratarja napačno prekrstila v GK.
+import { MIN_MINUT, razvrstiKlub } from './lazni-vratarji.mjs'
 
 function izEnv() {
   try {
@@ -164,28 +162,8 @@ if (ligaBrezVratarjev) {
 
 const predlogi = ugibaniVratarji.map((p) => ({ ...p, ugibanje: 'GK' }))
 for (const [, kader] of poKlubih) {
-  const n = kader.length
-  if (n < 4) continue
-
-  // 1. najboljši strelci -> napadalci
-  const poGolih = [...kader].sort((a, b) => b.goliNa90 - a.goliNa90)
-  const stNapadalcev = Math.max(1, Math.round(n * DELEZ_NAPADALCEV))
-  const napadalci = new Set(poGolih.slice(0, stNapadalcev).map((p) => p.id))
-
-  // 2. med preostalimi tisti z največ kartoni -> branilci
-  const ostali = kader.filter((p) => !napadalci.has(p.id))
-  const poKartonih = [...ostali].sort((a, b) => {
-    if (b.kartoniNa90 !== a.kartoniNa90) return b.kartoniNa90 - a.kartoniNa90
-    // ob enakem številu kartonov je manj golov bolj obrambno
-    return a.goliNa90 - b.goliNa90
-  })
-  const stBranilcev = Math.max(1, Math.round(n * DELEZ_BRANILCEV))
-  const branilci = new Set(poKartonih.slice(0, stBranilcev).map((p) => p.id))
-
-  for (const p of kader) {
-    const poz = napadalci.has(p.id) ? 'FWD' : branilci.has(p.id) ? 'DEF' : 'MID'
-    predlogi.push({ ...p, ugibanje: poz })
-  }
+  const razvrstitev = razvrstiKlub(kader)
+  for (const p of kader) if (razvrstitev.has(p.id)) predlogi.push({ ...p, ugibanje: razvrstitev.get(p.id) })
 }
 
 // --- nihče ne sme ostati brez pozicije ---------------------------------------

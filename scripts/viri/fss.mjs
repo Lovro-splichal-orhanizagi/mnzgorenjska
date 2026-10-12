@@ -373,6 +373,8 @@ const vir = {
   glave: { 'User-Agent': 'SLFF fantasy (https://slff.eu)' },
   premorMs: 2000,
   imaRegistracije: false,
+  // Oznaka vratarja je na tekmo; pozicijo določi večina začetkov (lazni-vratarji.mjs).
+  vratarPoVecini: true,
 
   naslovRazporeda: naslovLige,
   naslovZapisnika: (_koda, id) => naslovIzvestaja(id),

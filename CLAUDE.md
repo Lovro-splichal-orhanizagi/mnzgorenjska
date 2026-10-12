@@ -1408,6 +1408,14 @@ SLFF); **izziv ali CAPTCHA ustavi uvoz — ne obhajaj.**
 - **Vratar**: prvaliga.rs (`(G)`, ista šifra COMET) kot pri `fss`; če ga tam ni,
   je vratar prvi začetnik (COMET vratarja našteje prvega; 30/30 preverjenih
   tekem enako kot prvaliga.rs). *Uskladi pozicije* z `vir = fssid`.
+- **Lažni vratarji** (fsb, fss, fssid — `vratarPoVecini`): COMET igralca iz
+  polja na posamezni tekmi kdaj vodi kot vratarja (Mirković Dalibor, zapisnik
+  76083196: dres 1 in (G) tudi na prvaliga.rs; sicer 11 ob vratarju). Uvoz ga
+  ob prvi oznaki za vselej prekrsti v GK (`smeVVrata`), zato po vsakem uvozu
+  `scripts/lazni-vratarji.mjs` vrne v polje GK, ki je v zadnji sezoni vsaj 2×
+  in večkrat kot v vratih začel v polju ob drugem označenem vratarju; pozicijo
+  da razvrstitev iz ugani-pozicije (`ugibanje`). Ob vklopu 12. 10. 2026 jih je
+  bilo 112 (migracija 20261012195100).
 - **Napake vira**: v 7 od 209 zapisnikov je gol vpisan dvema igralcema v isti
   minuti (goli iz dogodkov > izid, opozorilo `goli iz dogodkov …`); izid ostane
   izid zapisnika. Izid za zeleno mizo (fsv: Dinamo 1945 : Mladost Apa 3:0*,

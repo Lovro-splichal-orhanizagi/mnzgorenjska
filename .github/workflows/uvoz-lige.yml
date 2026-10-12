@@ -197,6 +197,7 @@ jobs:
           FACR_PROXY: ${{ secrets.FACR_PROXY }}
         run: |
           set -euo pipefail
+          node scripts/lazni-vratarji.mjs    --tekmovanje "$LIGA" --pisi
           node scripts/ugani-pozicije.mjs    --tekmovanje "$LIGA" --pisi $DOVOLI_AKTIVNO
           node scripts/ovrednoti-igralce.mjs --tekmovanje "$LIGA" --pisi $DOVOLI_AKTIVNO
 
