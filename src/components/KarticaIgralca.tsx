@@ -20,6 +20,7 @@ import {
 import { formatirajTocke, KRATKA_POZICIJA } from '../lib/pomozno'
 import { t } from '../i18n'
 import { naslovSlike } from '../lib/platforma'
+import { naslovaVelikeFotografije } from '../lib/prevzem'
 
 const M = 2
 const OZKA = '"Barlow Condensed", "Arial Narrow", sans-serif'
@@ -330,9 +331,12 @@ export async function narisiKartico(p: PodatkiKartice, foto: FotoKartice | null 
 export default function KarticaIgralca({
   podatki,
   povezava,
+  fotografija = null,
 }: {
   podatki: PodatkiKartice
   povezava: string
+  /** Pot fotografije s profila potrjenega igralca: privzeta slika kartice. */
+  fotografija?: string | null
 }) {
   const [foto, setFoto] = useState<FotoKartice | null>(null)
   const [napakaFoto, setNapakaFoto] = useState<string | null>(null)
@@ -358,6 +362,25 @@ export default function KarticaIgralca({
     io.observe(el)
     return () => io.disconnect()
   }, [vidna])
+  // Potrjen igralec s fotografijo: ta je privzeta (768 px, sicer 256 px).
+  // Lastna izbrana slika ima prednost in je ta ne povozi.
+  useEffect(() => {
+    if (!vidna || !fotografija) return
+    let veljavno = true
+    ;(async () => {
+      for (const u of naslovaVelikeFotografije(fotografija)) {
+        const s = await slika(u)
+        if (!veljavno) return
+        if (s) {
+          setFoto((f) => f ?? { slika: s, sirina: s.naturalWidth, visina: s.naturalHeight, x: 0, y: 0, povecava: 1, id: 0 })
+          return
+        }
+      }
+    })()
+    return () => {
+      veljavno = false
+    }
+  }, [vidna, fotografija])
   // Predogled in gumb za deljenje si delita eno risbo na vsebino.
   const risba = useRef<{ kljuc: string; blob: Promise<Blob | null> } | null>(null)
   function narisi() {

@@ -28,6 +28,7 @@ import FotoIgralca from '../components/FotoIgralca'
 import PrevzemIgralca from '../components/PrevzemIgralca'
 import UradneOdsotnostiIgralca from '../components/UradnaOdsotnost'
 import KarticaIgralca from '../components/KarticaIgralca'
+import { useFotografija } from '../lib/prevzem'
 import { dosezkiNastopa, vrsticaTekme, type NastopZaKartico } from '../lib/karticaIgralca'
 import {
   VRSTE,
@@ -91,6 +92,8 @@ export default function Igralec() {
   const prijava = povezavaNaPrijavo(lokacija.pathname + lokacija.search)
   const { vsaTekmovanja } = useTekmovanje()
   const [igralec, setIgralec] = useState<Profil | null>(null)
+  // Fotografija s profila potrjenega igralca je privzeta slika na kartici za deljenje.
+  const fotoProfila = useFotografija(igralec?.id ?? null)
   // Številke tekoče sezone; `igralec` (player_overview) je seštevek vseh sezon.
   const [sezonsko, setSezonsko] = useState<Sezonsko | null>(null)
   const [razlage, setRazlage] = useState<Razlaga[]>([])
@@ -898,6 +901,7 @@ export default function Igralec() {
                 : null,
               ekip: ekipZIgralcem,
             }}
+            fotografija={fotoProfila}
             povezava={
               typeof window !== 'undefined'
                 ? `${izvor()}/player/${igralec.id}${slugLige ? `?t=${slugLige}` : ''}`

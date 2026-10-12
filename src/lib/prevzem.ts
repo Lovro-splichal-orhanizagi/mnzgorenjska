@@ -3,7 +3,9 @@
 // Baza: migracija 20261012091100 (zahtevki_igralca, profil_igralca,
 // potrjeni_igralci, fotografije_igralcev). Fotografije so v vedru
 // `fotografije-igralcev` (javno branje): "<igralec>/<ime>.webp" je 256 px,
-// "<igralec>/<ime>-64.webp" 64 px. Ime je naključno, zato se slika nikoli ne
+// "<igralec>/<ime>-64.webp" 64 px, "<igralec>/<ime>-768.webp" 768 px za
+// slike za deljenje (kartica, zgodba kroga); namesto .webp je lahko .jpg
+// (Safari WebP ne zna kodirati). Ime je naključno, zato se slika nikoli ne
 // spremeni in jo brskalnik lahko hrani leto dni.
 import { useEffect, useState } from 'react'
 import { supabase, API_URL } from './supabase'
@@ -18,11 +20,26 @@ export function jeMladinskiSlug(slug: string | null | undefined): boolean {
   return /(^|-)(u19|mladinci)($|-)/.test(slug) || /^sml[0-9]/.test(slug)
 }
 
+/** Pot različice fotografije: '' (256 px), '-64' ali '-768'. */
+export function razlicicaFotografije(pot: string, pripona: '' | '-64' | '-768'): string {
+  return pot.replace(/\.(webp|jpg|png)$/, `${pripona}.$1`)
+}
+
 /** Javni naslov fotografije; `majhna` vrne 64-pikselsko različico. */
 export function naslovFotografije(pot: string | null | undefined, majhna = false): string | null {
   if (!pot) return null
-  const p = majhna ? pot.replace(/\.(webp|jpg|png)$/, '-64.$1') : pot
+  const p = majhna ? razlicicaFotografije(pot, '-64') : pot
   return `${API_URL}/storage/v1/object/public/${VEDRO_FOTOGRAFIJ}/${p}`
+}
+
+/**
+ * Naslova za sliko za deljenje: 768 px, nato 256 px (fotografije, naložene
+ * pred 768-pikselsko različico, je nimajo).
+ */
+export function naslovaVelikeFotografije(pot: string | null | undefined): string[] {
+  if (!pot) return []
+  const n = (p: string) => `${API_URL}/storage/v1/object/public/${VEDRO_FOTOGRAFIJ}/${p}`
+  return [n(razlicicaFotografije(pot, '-768')), n(pot)]
 }
 
 /**
@@ -69,22 +86,29 @@ async function kvadrat(bmp: ImageBitmap, stranica: number, vrsta: 'image/webp' |
 }
 
 /**
- * Pripravi fotografijo za nalaganje: izrez na sredino, 256 in 64 px — WebP,
+ * Pripravi fotografijo za nalaganje: izrez na sredino, 256, 64 in 768 px — WebP,
  * kjer ga brskalnik zna kodirati, sicer JPEG (Safari, iPhone).
  * Ponovno kodiranje odstrani tudi metapodatke (EXIF, lokacija).
  */
 export async function pripraviFotografijo(
   datoteka: File,
-): Promise<{ velika: Blob; majhna: Blob; koncnica: 'webp' | 'jpg'; vrsta: 'image/webp' | 'image/jpeg' }> {
+): Promise<{ velika: Blob; majhna: Blob; polna: Blob; koncnica: 'webp' | 'jpg'; vrsta: 'image/webp' | 'image/jpeg' }> {
   if (datoteka.size > NAJVEC_VHOD) throw new Error('prevelika')
   if (!/^image\/(jpeg|png|webp)$/.test(datoteka.type)) throw new Error('vrsta')
   // createImageBitmap upošteva zasuk iz EXIF (kot na kartici igralca).
   const bmp = await createImageBitmap(datoteka)
   try {
+    // Majhne fotografije ne povečujemo: 768 px je največ, kolikor jo je.
+    const polna = Math.min(768, Math.max(256, Math.min(bmp.width, bmp.height)))
+    const vse = async (vrsta: 'image/webp' | 'image/jpeg') => ({
+      velika: await kvadrat(bmp, 256, vrsta),
+      majhna: await kvadrat(bmp, 64, vrsta),
+      polna: await kvadrat(bmp, polna, vrsta),
+    })
     try {
-      return { velika: await kvadrat(bmp, 256, 'image/webp'), majhna: await kvadrat(bmp, 64, 'image/webp'), koncnica: 'webp', vrsta: 'image/webp' }
+      return { ...(await vse('image/webp')), koncnica: 'webp', vrsta: 'image/webp' }
     } catch {
-      return { velika: await kvadrat(bmp, 256, 'image/jpeg'), majhna: await kvadrat(bmp, 64, 'image/jpeg'), koncnica: 'jpg', vrsta: 'image/jpeg' }
+      return { ...(await vse('image/jpeg')), koncnica: 'jpg', vrsta: 'image/jpeg' }
     }
   } finally {
     bmp.close()
