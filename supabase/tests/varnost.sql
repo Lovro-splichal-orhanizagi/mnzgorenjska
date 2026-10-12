@@ -2486,6 +2486,21 @@ select pg_temp.preveri('plačila: plačilo tujega profila je preklicano, kljukic
 select pg_temp.pade('plačila: plačilo brez potrditve 18 let pade',
   $$select preverjen_iz_placila('b8a06635-2322-4444-8c42-44e419f912e1', -925010, 'dozivljenjska', null, 'cus_t', null, 'cs_4', 'pi_4', false, true)$$);
 
+-- Preklic profila prekliče naročilo za tisk; natisnjeno ostane (le Discord).
+insert into preverjeni_racuni(id, user_id, player_id, vir) overriding system value
+values (-925020, 'b8a06635-2322-4444-8c42-44e419f912e1', -925010, 'rocno');
+insert into narocila_znack(preverjeni_racun_id, player_id, ime_na_znacki, naslov, stripe_checkout_id, status) values
+ (-925020, -925010, 'Kupljen 7', '{"country":"SI"}', 'cs_z1', 'za_tisk'),
+ (-925020, -925010, 'Kupljen 7', '{"country":"SI"}', 'cs_z2', 'natisnjeno');
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912e1',true);
+set local role authenticated;
+select preklici_moj_zahtevek(-925010);
+reset role;
+select pg_temp.preveri('plačila: preklic profila prekliče značko za tisk, natisnjena ostane',
+  (select status = 'preklican' from preverjeni_racuni where id = -925020)
+  and (select status = 'preklicano' and opomba = 'pravica preklicana' from narocila_znack where stripe_checkout_id = 'cs_z1')
+  and (select status = 'natisnjeno' and opomba is null from narocila_znack where stripe_checkout_id = 'cs_z2'));
+
 -- Izbris računa: naročilo z naslovom ostane (le admin); poznejše plačilo
 -- izbrisanega kupca je preklicano brez uporabnika in čaka na preklic naročnine.
 delete from auth.users where id = 'b8a06635-2322-4444-8c42-44e419f912e1';

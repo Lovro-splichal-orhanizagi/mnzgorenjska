@@ -357,8 +357,12 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
   const { session, loading: nalagaSeja } = useAuth()
   const uporabnik = session?.user.id ?? null
   const [ekipeLige, setEkipeLige] = useState<{ uporabnik: string; liga: string | null } | null>(null)
+  // Tudi izrecna, a neznana liga (neaktivna v naslovu, `?t=ee-…`) pride do
+  // odločitve spodaj, ki čaka na ekipe — brez poizvedbe bi stran (admin)
+  // za vedno ostala pri "Nalaganje …".
+  const znanaLiga = tekmovanja.some((t) => t.slug === slug)
   useEffect(() => {
-    if (!uporabnik || izrecno.current || !tekmovanja.length) return
+    if (!uporabnik || (izrecno.current && znanaLiga) || !tekmovanja.length) return
     let veljavno = true
     supabase
       .from('fantasy_teams')
@@ -372,7 +376,7 @@ export function TekmovanjeProvider({ children }: { children: ReactNode }) {
     return () => {
       veljavno = false
     }
-  }, [uporabnik, tekmovanja])
+  }, [uporabnik, tekmovanja, znanaLiga])
 
   // Nov obiskovalec brez izbire dobi ligo svojih ekip ali privzeto ligo
   // SVOJE države (Slovak ne pristane na Gorenjski). Kdor ligo že ima, tega ne

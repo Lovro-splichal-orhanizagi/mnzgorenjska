@@ -4,7 +4,7 @@
 // pokaže nakup (Stripe Checkout prek funkcije `preverjen-placilo`, le na
 // spletu), preverjenemu urejevalnik in pri letni naročnini portal Stripe.
 // Kaj kdo vidi, odloči baza (`je_preverjen`, `vidi_preverjene`).
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useId, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { FunctionsHttpError } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
@@ -241,6 +241,8 @@ function Ponudba({ igralecId }: { igralecId: number }) {
   const [dela, setDela] = useState(false)
   const [napaka, setNapaka] = useState<string | null>(null)
   const zZnacko = vir === 'dozivljenjska' && znacka
+  // Izrecna povezava oznake z izbiro: klik na besedilo (ceno, državo) izbere.
+  const idp = useId()
 
   async function kupi() {
     setDela(true)
@@ -266,23 +268,23 @@ function Ponudba({ igralecId }: { igralecId: number }) {
       <p className="text-slate-300">{t('igralci.preverjen.ponudba.opis')}</p>
       <fieldset className="space-y-1">
         {(['letna', 'dozivljenjska'] as const).map((v) => (
-          <label key={v} className="flex items-center gap-2">
-            <input type="radio" name="vir-preverjen" checked={vir === v} onChange={() => setVir(v)} />
+          <label key={v} htmlFor={`${idp}-${v}`} className="flex cursor-pointer items-center gap-2">
+            <input id={`${idp}-${v}`} type="radio" name="vir-preverjen" checked={vir === v} onChange={() => setVir(v)} />
             <span className="font-semibold text-slate-100">{t(`igralci.preverjen.ponudba.${v}`)}</span>
           </label>
         ))}
       </fieldset>
       {vir === 'dozivljenjska' && (
         <div className="space-y-1 pl-5">
-          <label className="flex items-center gap-2">
-            <input type="checkbox" checked={znacka} onChange={(e) => setZnacka(e.target.checked)} />
+          <label htmlFor={`${idp}-znacka`} className="flex cursor-pointer items-center gap-2">
+            <input id={`${idp}-znacka`} type="checkbox" checked={znacka} onChange={(e) => setZnacka(e.target.checked)} />
             <span>{t('igralci.preverjen.ponudba.znacka')}</span>
           </label>
           {znacka && (
             <div className="flex flex-wrap gap-3">
               {(['si', 'eu'] as const).map((d) => (
-                <label key={d} className="flex items-center gap-1">
-                  <input type="radio" name="dostava-znacke" checked={dostava === d} onChange={() => setDostava(d)} />
+                <label key={d} htmlFor={`${idp}-${d}`} className="flex cursor-pointer items-center gap-1">
+                  <input id={`${idp}-${d}`} type="radio" name="dostava-znacke" checked={dostava === d} onChange={() => setDostava(d)} />
                   {t(d === 'si' ? 'igralci.preverjen.ponudba.dostavaSi' : 'igralci.preverjen.ponudba.dostavaEu')}
                 </label>
               ))}
@@ -300,12 +302,12 @@ function Ponudba({ igralecId }: { igralecId: number }) {
           )}
         </div>
       )}
-      <label className="flex items-start gap-2">
-        <input type="checkbox" className="mt-1" checked={star18} onChange={(e) => setStar18(e.target.checked)} />
+      <label htmlFor={`${idp}-star18`} className="flex cursor-pointer items-start gap-2">
+        <input id={`${idp}-star18`} type="checkbox" className="mt-1" checked={star18} onChange={(e) => setStar18(e.target.checked)} />
         <span>{t('igralci.preverjen.ponudba.star18')}</span>
       </label>
-      <label className="flex items-start gap-2">
-        <input type="checkbox" className="mt-1" checked={odpoved} onChange={(e) => setOdpoved(e.target.checked)} />
+      <label htmlFor={`${idp}-odpoved`} className="flex cursor-pointer items-start gap-2">
+        <input id={`${idp}-odpoved`} type="checkbox" className="mt-1" checked={odpoved} onChange={(e) => setOdpoved(e.target.checked)} />
         <span>{t('igralci.preverjen.ponudba.odpoved')}</span>
       </label>
       <button
