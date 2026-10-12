@@ -27,6 +27,7 @@ import {
 } from '../lib/tedenskiPregled'
 import { t } from '../i18n'
 import { naslovSlike } from '../lib/platforma'
+import { naslovaVelikeFotografije } from '../lib/prevzem'
 
 const CRNILO = '#10251B'
 const pisava = (teza: number, px: number) => `${teza} ${px}px Inter, system-ui, sans-serif`
@@ -80,6 +81,24 @@ async function narisiElement(c: CanvasRenderingContext2D, e: ElementPregleda) {
     const znak = await naloziSliko('/logo/slff-grb.png')
     if (znak) c.drawImage(znak, e.x, e.y, e.d, e.d)
   } else {
+    // Potrjen igralec s fotografijo: fotografija v krogu namesto grba.
+    for (const u of naslovaVelikeFotografije(e.foto)) {
+      const foto = await naloziSliko(u)
+      if (!foto) continue
+      const r = e.d / Math.min(foto.width, foto.height)
+      c.save()
+      c.beginPath()
+      c.arc(e.x, e.y, e.d / 2, 0, Math.PI * 2)
+      c.clip()
+      c.drawImage(foto, e.x - (foto.width * r) / 2, e.y - (foto.height * r) / 2, foto.width * r, foto.height * r)
+      c.restore()
+      c.beginPath()
+      c.arc(e.x, e.y, e.d / 2, 0, Math.PI * 2)
+      c.lineWidth = 3
+      c.strokeStyle = KREM
+      c.stroke()
+      return
+    }
     // Grb v kremni okrogli znacki: JPG grbi z belim ozadjem sicer izgledajo
     // kot bel kvadrat na temnem.
     c.beginPath()
@@ -167,6 +186,10 @@ async function naloziPregled(
     const grbi = new Map((data ?? []).map((v) => [v.id, v.teams?.logo_url ?? null]))
     if (kapetan) kapetan.grb = grbi.get(kapetan.player_id) ?? null
     if (najboljsi) najboljsi.grb = grbi.get(najboljsi.player_id) ?? null
+    const { data: fotke } = await supabase.from('fotografije_igralcev').select('player_id, fotografija').in('player_id', ids)
+    const poIgralcu = new Map((fotke ?? []).map((v) => [v.player_id, v.fotografija]))
+    if (kapetan) kapetan.foto = poIgralcu.get(kapetan.player_id) ?? null
+    if (najboljsi) najboljsi.foto = poIgralcu.get(najboljsi.player_id) ?? null
   }
 
   return {

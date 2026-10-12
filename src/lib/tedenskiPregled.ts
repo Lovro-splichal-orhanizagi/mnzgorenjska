@@ -36,6 +36,8 @@ export interface IgralecPregleda {
   ime: string
   klub: string | null
   grb: string | null
+  /** Fotografija s profila potrjenega igralca (pot v vedru); ima prednost pred grbom. */
+  foto: string | null
   /** Tocke, ki jih pokazemo: kapetanu z mnoziteljem, najboljsemu njegove. */
   tocke: number
   mnozitelj: number
@@ -144,6 +146,7 @@ export function igralciPregleda(vrstice: VrsticaTuje[]): {
     ime: imeZaPlakat(v.ime),
     klub: v.klub,
     grb: null,
+    foto: null,
     tocke,
     mnozitelj: v.mnozitelj,
     namestnik: v.mnozitelj > 1 && !v.je_kapetan,
@@ -190,7 +193,7 @@ export type ElementPregleda =
     }
   | { vrsta: 'pravokotnik'; id: string; x: number; y: number; w: number; h: number; barva: string; samoPokoncno?: boolean }
   /** Grb kluba v okrogli znacki; `x`, `y` sta sredisce. */
-  | { vrsta: 'grb'; id: string; x: number; y: number; d: number; url: string | null; zacetnice: string }
+  | { vrsta: 'grb'; id: string; x: number; y: number; d: number; url: string | null; zacetnice: string; foto?: string | null }
   /** Znak SLFF; `x`, `y` sta zgornji levi kot. */
   | { vrsta: 'znak'; id: string; x: number; y: number; d: number; samoPokoncno?: boolean }
 
@@ -277,7 +280,7 @@ function vrsticaIgralca(
   const imeV = vSirino(ime, 48, 34, 800, prostor, meri)
   const oznakaV = vSirino(oznaka, 26, 20, 700, prostor, meri)
   const out: ElementPregleda[] = [
-    { vrsta: 'grb', id: `${id}.grb`, x: ROB_P + G / 2, y: vrh + VISINA_VRSTICE / 2 - 8, d: G, url: ig.grb, zacetnice: zacetniceKluba(ig.klub) },
+    { vrsta: 'grb', id: `${id}.grb`, x: ROB_P + G / 2, y: vrh + VISINA_VRSTICE / 2 - 8, d: G, url: ig.grb, zacetnice: zacetniceKluba(ig.klub), foto: ig.foto },
     { vrsta: 'besedilo', id: `${id}.oznaka`, besedilo: oznakaV.besedilo, x: levo, y: vrh + 34, px: oznakaV.px, teza: 700, barva: ZLATA, poravnava: 'left', razmik: 2 },
     { vrsta: 'besedilo', id: `${id}.ime`, besedilo: imeV.besedilo, x: levo, y: vrh + 88, px: imeV.px, teza: 800, barva: KREM, poravnava: 'left' },
     { vrsta: 'besedilo', id: `${id}.tocke`, besedilo: tocke, x: SIRINA_P - ROB_P, y: vrh + 96, px: 76, teza: 900, barva: ZLATA, poravnava: 'right' },

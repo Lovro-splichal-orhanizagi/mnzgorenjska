@@ -11,6 +11,7 @@ import {
   ocistiRocico,
   pozabiFotografijo,
   pripraviFotografijo,
+  razlicicaFotografije,
 } from '../lib/prevzem'
 import PredstavitevIgralca, { OMREZJA, type Omrezje, type Potrdil, type Predstavitev } from './PredstavitevIgralca'
 
@@ -460,7 +461,7 @@ function Urejevalnik({
 
   async function odstraniDatoteke(pot: string | null) {
     if (!pot) return
-    await supabase.storage.from(VEDRO_FOTOGRAFIJ).remove([pot, pot.replace(/\.(webp|jpg|png)$/, '-64.$1')])
+    await supabase.storage.from(VEDRO_FOTOGRAFIJ).remove([pot, razlicicaFotografije(pot, '-64'), razlicicaFotografije(pot, '-768')])
   }
 
   async function naloziFoto(datoteka: File) {
@@ -480,11 +481,12 @@ function Urejevalnik({
     const pot = `${glavni}/${ime}.${slike.koncnica}`
     const shramba = supabase.storage.from(VEDRO_FOTOGRAFIJ)
     const moznosti = { contentType: slike.vrsta, cacheControl: '31536000', upsert: false }
-    const [a, b] = await Promise.all([
+    const [a, b, c] = await Promise.all([
       shramba.upload(pot, slike.velika, moznosti),
-      shramba.upload(pot.replace(/\.(webp|jpg)$/, '-64.$1'), slike.majhna, moznosti),
+      shramba.upload(razlicicaFotografije(pot, '-64'), slike.majhna, moznosti),
+      shramba.upload(razlicicaFotografije(pot, '-768'), slike.polna, moznosti),
     ])
-    if (a.error || b.error) {
+    if (a.error || b.error || c.error) {
       setDela(false)
       await odstraniDatoteke(pot)
       return setNapaka(t('igralci.prevzem.fotoNapaka'))
