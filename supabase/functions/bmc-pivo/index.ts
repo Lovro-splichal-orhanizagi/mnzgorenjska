@@ -9,13 +9,26 @@
 // x-signature-sha256 (help.buymeacoffee.com, OpenAPI bmc-webhooks-openapi.json).
 // Brez veljavnega podpisa ne pošljemo ničesar.
 //
-// Skrivnosti iz env: BMC_WEBHOOK_SECRET, DISCORD_WEBHOOK. E-naslova podpornika
-// na Discord ne pošiljamo; sporočilo podpornika le, če ga ni skril.
+// Skrivnosti iz env: BMC_WEBHOOK_SECRET, DISCORD_WEBHOOK, SUPABASE_URL,
+// SUPABASE_SERVICE_ROLE_KEY. E-naslova podpornika na Discord ne pošiljamo;
+// sporočilo podpornika le, če ga ni skril.
+//
+// Pivski zid (/beers): vsak nakup se zapiše v `piva` (servisni ključ) —
+// ime, število piv, sporočilo (če ni skrito), test (live_mode = false).
+// Zneska, valute in e-naslova NE zapišemo. Zapis je po `zunanji_id` (BMC
+// data.id) idempoten: ponovljen donation.created ne naredi nič, vračilo
+// postavi `vracilo`. Če zapis v bazo ne uspe, Discord vseeno dobi sporočilo,
+// odgovor pa je 500, da BMC dogodek ponovi (ponovitev je varna, Discord pa
+// lahko ob tem sporočilo dobi dvakrat).
+
+import { createClient } from 'npm:@supabase/supabase-js@2.45.4'
+import { ocistiSporocilo } from './sporocilo.ts'
 
 interface Dogodek {
   type?: string
   live_mode?: boolean
   data?: {
+    id?: number | string
     supporter_name?: string
     coffee_count?: number
     amount?: number
@@ -48,11 +61,37 @@ function besedilo(d: Dogodek): string | null {
   const znesek = p.amount != null ? ` (${p.amount} ${p.currency ?? ''})`.trimEnd() : ''
   const test = d.live_mode === false ? '[TEST] ' : ''
   if (d.type === 'donation.created') {
-    const opomba = p.support_note && p.note_hidden !== 'true' ? `\n> ${p.support_note.slice(0, 500)}` : ''
+    const cisto = p.note_hidden !== 'true' ? ocistiSporocilo(p.support_note) : null
+    const opomba = cisto ? `\n> ${cisto.replace(/\n/g, '\n> ')}` : ''
     return `${test}🍺 **${kdo}** nam je častil ${piv}× pivo${znesek}${opomba}`
   }
   if (d.type === 'donation.refunded') return `${test}↩️ Vračilo: ${kdo}, ${piv}× pivo${znesek}`
   return null
+}
+
+/** Zapis v pivski zid. Vrne napako ali null. Brez zneska in e-naslova. */
+async function zapisi(d: Dogodek): Promise<string | null> {
+  const url = Deno.env.get('SUPABASE_URL')
+  const kljuc = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+  if (!url || !kljuc) return 'baza ni nastavljena'
+  const p = d.data ?? {}
+  if (p.id == null || String(p.id).trim() === '') return 'dogodek brez data.id'
+  const baza = createClient(url, kljuc, { auth: { persistSession: false } })
+  const vrstica = {
+    zunanji_id: String(p.id),
+    ime: p.supporter_name?.trim() || null,
+    piv: Math.max(1, Math.floor(Number(p.coffee_count) || 1)),
+    // Skrito sporočilo ne gre v bazo; čisti ga še sprožilec v bazi.
+    sporocilo: p.note_hidden === 'true' ? null : (p.support_note ?? null),
+    test: d.live_mode === false,
+    vir: 'bmc',
+  }
+  const { error } = d.type === 'donation.refunded'
+    // Vračilo nakupa, ki ga še nimamo (pred pivskim zidom), se vpiše že vrnjeno.
+    ? await baza.from('piva').upsert({ ...vrstica, vracilo: true }, { onConflict: 'zunanji_id' })
+    // Ponovljen webhook ne spremeni ničesar (tudi skritega sporočila ne).
+    : await baza.from('piva').upsert(vrstica, { onConflict: 'zunanji_id', ignoreDuplicates: true })
+  return error ? error.message : null
 }
 
 Deno.serve(async (req) => {
@@ -78,11 +117,15 @@ Deno.serve(async (req) => {
     return new Response('ignored', { status: 200 })
   }
 
+  const napakaBaze = await zapisi(dogodek).catch((e) => String(e))
+  if (napakaBaze) console.error(`bmc-pivo: zapis v bazo ni uspel: ${napakaBaze}`)
+
   const r = await fetch(discord, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ content: vsebina.slice(0, 1990), allowed_mentions: { parse: [] } }),
   })
-  // Če Discord ne sprejme, vrnemo napako — BMC bo poskusil znova.
+  // Če baza ali Discord ne sprejme, vrnemo napako — BMC bo poskusil znova.
+  if (napakaBaze) return new Response('db failed', { status: 500 })
   return new Response(r.ok ? 'ok' : 'discord failed', { status: r.ok ? 200 : 502 })
 })

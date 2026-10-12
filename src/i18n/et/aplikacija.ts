@@ -22,6 +22,20 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
   /** Gumb za podporo na naslovnici (components/Pivo.tsx). */
   pivo: {
     gumb: 'Osta meile õlu',
+    /** Povezava na pivski zid (/beers) ob gumbu in v meniju Več. */
+    zid: 'Õllesein',
+    // Stran /beers (pages/Piva.tsx): brez zneskov.
+    stran: {
+      uvod: 'SLFF on tasuta. Serveri ja domeeni eest maksame ise, seega aitab iga õlu päriselt. Aitäh kõigile, kes on meile juba välja teinud!',
+      skupaj: { one: 'Seni {n} õlu', other: 'Seni {n} õlut' },
+      piv: { one: '{n} õlu', other: '{n} õlut' },
+      lestvica: 'Toetajate edetabel',
+      sporocila: 'Viimased sõnumid',
+      anonimni: 'Anonüümsed toetajad',
+      anonimno: 'Anonüümne',
+      prazno: 'Seinal pole veel ühtegi õlut. Ole esimene!',
+      brezSporocil: 'Sõnumeid veel pole.',
+    },
   },
   noga: {
     zasebnost: 'Privaatsus ja tingimused',

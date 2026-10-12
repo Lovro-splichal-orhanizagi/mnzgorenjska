@@ -3,6 +3,7 @@ import Pivo from '../components/Pivo'
 import { imeZveze } from '../components/VirPodatkov'
 import { sestaviVabilo, vabiloMailto } from '../lib/vabilo'
 import { Link } from '../components/Povezava'
+import { jeNativno } from '../lib/platforma'
 import { supabase } from '../lib/supabase'
 import { vseVrstice } from '../lib/strani'
 import { pravilaOpis } from '../lib/tockovanje'
@@ -429,7 +430,15 @@ export default function Domov() {
                 alt={t('aplikacija.naslovStrani.osnova')}
                 className="h-12 w-12 sm:h-24 sm:w-24"
               />
-              <Pivo src="domov" />
+              {/* Gumb in pod njim pivski zid; v aplikaciji oboje izostane (Pivo.tsx). */}
+              {!jeNativno() && (
+                <div className="flex flex-col items-end gap-1">
+                  <Pivo src="domov" />
+                  <Link to="/beers" className="text-xs text-slate-300 underline hover:text-white">
+                    {t('aplikacija.pivo.zid')}
+                  </Link>
+                </div>
+              )}
             </div>
             {/* Dokler se lige nalagajo, ne vemo, katera je izbrana — nevtralen
                 obris namesto gorenjskega imena, ki bi obiskovalcu druge lige

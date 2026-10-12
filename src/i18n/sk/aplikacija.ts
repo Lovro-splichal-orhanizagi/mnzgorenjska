@@ -22,6 +22,20 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
   /** Gumb za podporo na naslovnici (components/Pivo.tsx). */
   pivo: {
     gumb: 'Kúp nám pivo',
+    /** Povezava na pivski zid (/beers) ob gumbu in v meniju Več. */
+    zid: 'Pivná stena',
+    // Stran /beers (pages/Piva.tsx): brez zneskov.
+    stran: {
+      uvod: 'SLFF je zadarmo. Server a doménu platíme sami, takže každé pivo naozaj pomôže. Ďakujeme všetkým, ktorí nás už pozvali!',
+      skupaj: { one: 'Zatiaľ {n} pivo', few: 'Zatiaľ {n} pivá', many: 'Zatiaľ {n} piva', other: 'Zatiaľ {n} pív' },
+      piv: { one: '{n} pivo', few: '{n} pivá', many: '{n} piva', other: '{n} pív' },
+      lestvica: 'Rebríček podporovateľov',
+      sporocila: 'Najnovšie odkazy',
+      anonimni: 'Anonymní podporovatelia',
+      anonimno: 'Anonymne',
+      prazno: 'Na stene zatiaľ nie je žiadne pivo. Buď prvý!',
+      brezSporocil: 'Zatiaľ žiadne odkazy.',
+    },
   },
   noga: {
     zasebnost: 'Súkromie a podmienky',

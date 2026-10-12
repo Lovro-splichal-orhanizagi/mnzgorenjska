@@ -3237,6 +3237,20 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
 - `povzetek_rasti()` → ena vrstica številk (uporabniki, novi v 7 dneh, ekipe,
   aktivne lige, namestitve, kliki na "Časti pivo" skupaj in v 7 dneh) pod vsakim poročilom na Discord (mejnik uporabnikov,
   `scripts/trgovine.mjs`). Le servis
+- **Pivski zid** (`/beers`, migracija 20261013150100): `piva` hrani nakupe
+  Buy Me a Coffee (funkcija `bmc-pivo`, servisni ključ, `zunanji_id` = BMC
+  `data.id`, idempotentno; vračilo postavi `vracilo`, `live_mode = false` je
+  `test`) in ročne vnose admina (`vir = 'rocno'`). **Zneska, valute in
+  e-naslova ne hranimo.** Sporočilo počisti sprožilec (`ocisti_sporocilo_piva`:
+  `<br>` → nova vrstica, oznake proč, entitete, 500 znakov; isto pravilo
+  `ocistiSporocilo` v `bmc-pivo/sporocilo.ts` za Discord), skrito na BMC se ne
+  shrani. Tabela je zaprta; javno le `javna_piva()` (ime ali null za
+  anonimne/"Someone", piva, sporočilo ali null, ko ga je admin skril, datum;
+  brez vračil in testov). Admin: `admin_piva`, `admin_skrij_pivo`,
+  `admin_dodaj_pivo`, `admin_izbrisi_pivo` (le ročni). Stran združi
+  podpornike po imenu (`src/lib/piva.ts`). Če zapis v bazo ne uspe, gre
+  Discord vseeno ven, BMC pa dobi 500 in ponovi. Stran in povezave so le na
+  spletu (kot gumb `Pivo.tsx`)
 - `teams.logo_url` → grb kluba; če je prazen, `src/components/Grb.jsx` nariše
   ščit z začetnicami
 

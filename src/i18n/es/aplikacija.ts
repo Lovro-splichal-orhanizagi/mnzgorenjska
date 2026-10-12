@@ -21,6 +21,20 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
   },
   pivo: {
     gumb: 'Invítanos a una caña',
+    /** Povezava na pivski zid (/beers) ob gumbu in v meniju Več. */
+    zid: 'Muro de cañas',
+    // Stran /beers (pages/Piva.tsx): brez zneskov.
+    stran: {
+      uvod: 'SLFF es gratis. El servidor y el dominio los pagamos nosotros, así que cada caña ayuda de verdad. ¡Gracias a todos los que ya nos habéis invitado!',
+      skupaj: { one: '{n} caña hasta ahora', many: '{n} cañas hasta ahora', other: '{n} cañas hasta ahora' },
+      piv: { one: '{n} caña', many: '{n} cañas', other: '{n} cañas' },
+      lestvica: 'Ranking de apoyos',
+      sporocila: 'Últimos mensajes',
+      anonimni: 'Apoyos anónimos',
+      anonimno: 'Anónimo',
+      prazno: 'Todavía no hay ninguna caña en el muro. ¡Sé el primero!',
+      brezSporocil: 'Aún no hay mensajes.',
+    },
   },
   noga: {
     zasebnost: 'Privacidad y condiciones',

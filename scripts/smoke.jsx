@@ -32,6 +32,10 @@ import Administracija from '../src/pages/Administracija'
 import PotrditevPrevzema from '../src/pages/PotrditevPrevzema'
 import PrevzemIgralca from '../src/components/PrevzemIgralca'
 import Prevzemi from '../src/components/admin/Prevzemi'
+import Piva from '../src/pages/Piva'
+import PivskiZidAdmin from '../src/components/admin/Piva'
+import { lestvicaPodpornikov, zadnjaSporocila, vsehPiv } from '../src/lib/piva'
+import { ocistiSporocilo } from '../supabase/functions/bmc-pivo/sporocilo.ts'
 import {
   preveriEkipo,
   lahkoUrejasPripomocek,
@@ -129,6 +133,8 @@ const strani = [
   ['Potrditev prevzema', () => <div><PotrditevPrevzema /></div>, '/claim'],
   ['Prevzem igralca', () => <div><PrevzemIgralca igralecId={1} slugLige="mladinci" anonimiziran={false} /></div>, '/player/1'],
   ['Admin: prevzemi', () => <div><Prevzemi /></div>, '/admin'],
+  ['Pivski zid', Piva, '/beers'],
+  ['Admin: pivski zid', () => <div><PivskiZidAdmin /></div>, '/admin'],
 ]
 
 for (const [ime, Komponenta, pot] of strani) {
@@ -146,6 +152,30 @@ for (const [ime, Komponenta, pot] of strani) {
   } catch (e) {
     preveri(`izris: ${ime}`, false, e.message)
   }
+}
+
+// --- pivski zid (src/lib/piva.ts, bmc-pivo/sporocilo.ts) -------------------
+{
+  preveri('pivo: <br> postane nova vrstica, oznake gredo, entitete nazaj',
+    ocistiSporocilo('Gremo Preddvor,Gremo Repiči…<br>Prestor se vrača,Čole treba da jača<BR/>a<br />b &amp; <i>c</i> &lt;3 &quot;x&quot; &#39;y&#39;')
+      === 'Gremo Preddvor,Gremo Repiči…\nPrestor se vrača,Čole treba da jača\na\nb & c <3 "x" \'y\'')
+  preveri('pivo: &amp;lt; ostane &lt;', ocistiSporocilo('&amp;lt;') === '&lt;')
+  preveri('pivo: prazno sporočilo je null', ocistiSporocilo('  <br> ') === null && ocistiSporocilo(null) === null)
+  preveri('pivo: sporočilo največ 500 znakov', ocistiSporocilo('x'.repeat(900)).length === 500)
+  const piva = [
+    { ime: 'Janez', piv: 2, sporocilo: 'a', created_at: '2026-10-03T10:00:00Z' },
+    { ime: 'janez ', piv: 1, sporocilo: null, created_at: '2026-10-05T10:00:00Z' },
+    { ime: null, piv: 5, sporocilo: 'anonimno', created_at: '2026-10-04T10:00:00Z' },
+    { ime: null, piv: 1, sporocilo: null, created_at: '2026-10-01T10:00:00Z' },
+    { ime: 'Ana', piv: 2, sporocilo: 'b', created_at: '2026-10-06T10:00:00Z' },
+  ]
+  const l = lestvicaPodpornikov(piva)
+  preveri('pivo: lestvica združi ime brez velikosti črk, anonimni na koncu',
+    l.length === 3 && l[0].ime.toLowerCase() === 'janez' && l[0].piv === 3 && l[0].nakupov === 2
+      && l[1].ime === 'Ana' && l[2].ime === null && l[2].piv === 6, JSON.stringify(l))
+  preveri('pivo: zadnja sporočila le z besedilom, najnovejše prvo',
+    zadnjaSporocila(piva).map((p) => p.sporocilo).join(',') === 'b,anonimno,a')
+  preveri('pivo: vsota piv', vsehPiv(piva) === 11)
 }
 
 // Pas z rokom brez podatkov namenoma ne izrise nicesar (rok se ni znan), zato

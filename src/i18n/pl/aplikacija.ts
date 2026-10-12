@@ -21,6 +21,20 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
   },
   pivo: {
     gumb: 'Postaw nam piwo',
+    /** Povezava na pivski zid (/beers) ob gumbu in v meniju Več. */
+    zid: 'Ściana piw',
+    // Stran /beers (pages/Piva.tsx): brez zneskov.
+    stran: {
+      uvod: 'SLFF jest darmowy. Za serwer i domenę płacimy sami, więc każde piwo naprawdę pomaga. Dziękujemy wszystkim, którzy już nam postawili!',
+      skupaj: { one: 'Do tej pory {n} piwo', few: 'Do tej pory {n} piwa', many: 'Do tej pory {n} piw', other: 'Do tej pory {n} piwa' },
+      piv: { one: '{n} piwo', few: '{n} piwa', many: '{n} piw', other: '{n} piwa' },
+      lestvica: 'Ranking wspierających',
+      sporocila: 'Najnowsze wiadomości',
+      anonimni: 'Anonimowi wspierający',
+      anonimno: 'Anonimowo',
+      prazno: 'Na ścianie nie ma jeszcze żadnego piwa. Bądź pierwszy!',
+      brezSporocil: 'Jeszcze brak wiadomości.',
+    },
   },
   noga: {
     zasebnost: 'Prywatność i regulamin',

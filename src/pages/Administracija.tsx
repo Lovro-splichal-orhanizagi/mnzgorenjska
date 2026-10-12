@@ -19,6 +19,7 @@ import RastLig from '../components/admin/RastLig'
 import Rast from '../components/admin/Rast'
 import Lijak from '../components/admin/Lijak'
 import Sponzorji from '../components/admin/Sponzorji'
+import PivskiZid from '../components/admin/Piva'
 import KlubiStiki from '../components/admin/KlubiStiki'
 import Potrditev from '../components/admin/Potrditev'
 import Razdelek, { AktivenRazdelek } from '../components/admin/Razdelek'
@@ -647,6 +648,7 @@ export default function Administracija() {
       razdelki: [
         { id: 'stiki', naslov: 'Stiki s klubi' },
         { id: 'sponzorji', naslov: 'Sponzorji' },
+        { id: 'piva', naslov: 'Pivski zid' },
       ],
     },
   ]
@@ -757,6 +759,9 @@ export default function Administracija() {
             </Razdelek>
             <Razdelek id="sponzorji">
               <Sponzorji />
+            </Razdelek>
+            <Razdelek id="piva">
+              <PivskiZid />
             </Razdelek>
             <Razdelek id="stiki">
               <KlubiStiki />

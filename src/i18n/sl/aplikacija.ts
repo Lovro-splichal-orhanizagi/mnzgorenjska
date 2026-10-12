@@ -28,6 +28,20 @@ export const aplikacija = {
   /** Gumb za podporo: naslovnica in noga vsake strani (components/Pivo.tsx). */
   pivo: {
     gumb: 'Časti pivo',
+    /** Povezava na pivski zid (/beers) ob gumbu in v meniju Več. */
+    zid: 'Pivski zid',
+    // Stran /beers (pages/Piva.tsx): brez zneskov.
+    stran: {
+      uvod: 'SLFF je brezplačen. Strežnik in domeno plačujemo sami, zato vsako pivo res pomaga. Hvala vsem, ki ste nas že počastili!',
+      skupaj: { one: 'Doslej {n} pivo', two: 'Doslej {n} piva', few: 'Doslej {n} piva', other: 'Doslej {n} piv' },
+      piv: { one: '{n} pivo', two: '{n} piva', few: '{n} piva', other: '{n} piv' },
+      lestvica: 'Lestvica podpornikov',
+      sporocila: 'Zadnja sporočila',
+      anonimni: 'Anonimni podporniki',
+      anonimno: 'Anonimno',
+      prazno: 'Na zidu še ni nobenega piva. Bodi prvi!',
+      brezSporocil: 'Sporočil še ni.',
+    },
   },
   noga: {
     zasebnost: 'Zasebnost in pogoji',
