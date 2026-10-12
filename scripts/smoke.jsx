@@ -6258,5 +6258,28 @@ preveri(
     preveri('vrsta: državna na vrsti zadrži ostale', imena(v) === '', imena(v))
   }}
 
+// --- pošta klubom (scripts/posta-klubom.mjs) ----------------------------------
+{
+  const { besedilo, sporocilo } = await import('./posta-klubom.mjs')
+  const k = (drzava) => ({ drzava, team_id: 2002, liga_slug: 'x-liga', ime_lige: 'Kärntner Liga', klub: 'St. Veit SC' })
+  const p = { igralcev: 19, naj: 'Sebastian Weiss', tocke: 55, ekip: 7 }
+  for (const drzava of ['AT', 'EE']) {
+    for (const vrsta of ['prvi', 'opomnik']) {
+      for (const pp of [p, { ...p, naj: null, ekip: 0 }]) {
+        const b = besedilo(k(drzava), pp, vrsta)
+        const vse = `${b.zadeva}\n${b.telo}`
+        preveri(`pošta klubom: ${drzava} ${vrsta} brez ostankov`, !/[{}]|undefined|null|NaN/.test(vse) && vse.includes('https://slff.eu/club/2002?t=x-liga'), vse.slice(0, 80))
+        if (drzava === 'EE') preveri(`pošta klubom: EE ${vrsta} brez pomišljajev`, !/[–—]/.test(vse))
+        const m = sporocilo({ na: 'klub@example.com', zadeva: b.zadeva, telo: b.telo, odjava: b.odjava, id: 'x' })
+        const glava = m.match(/^Subject: (.*(?:\r\n .*)*)/m)[1]
+        const nazaj = glava.split('\r\n ').map((w) => w.match(/^=\?UTF-8\?B\?(.*)\?=$/)).map((x, i) => (x ? Buffer.from(x[1], 'base64').toString() : glava.split('\r\n ')[i])).join('')
+        preveri(`pošta klubom: ${drzava} ${vrsta} zadeva in telo nazaj`, nazaj === b.zadeva && /^[\x00-\x7f]*$/.test(m)
+          && Buffer.from(m.split('\r\n\r\n')[1].replace(/\r\n/g, ''), 'base64').toString() === b.telo.replace(/\n/g, '\r\n'))
+      }
+    }
+  }
+  preveri('pošta klubom: država brez besedil ne dobi nič', besedilo(k('SI'), p, 'prvi') === null)
+}
+
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)
 process.exit(napak === 0 ? 0 : 1)

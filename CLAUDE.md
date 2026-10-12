@@ -3007,6 +3007,30 @@ Ključ stikov je v `~/.config/slff/stiki-kljuc` ali `SLFF_STIKI_KLJUC` (da ga
 admin; **repo je javen, ključ in naslovi nikoli v git**). Brez ključa ne
 pošiljaj — vprašaj človeka. Funkcije: migracija `20261008143100_stiki_kljuc`.
 
+### Vrsta pošte (luka@slff.eu)
+
+Maile iz luka@slff.eu ne pošilja več človek, ampak vrsta (migracija
+`20261012183100`): `klub_stik.v_vrsti` (naslov je v vrsti), `poslji_od` (prvi
+mail ne prej) in `posiljatelj`. Delovni tok *Pošta klubom* (`posta-klubom.yml`
+→ `scripts/posta-klubom.mjs`) teče vsakih 10 minut in pošlje največ dva maila
+(60–150 s narazen), le v oknu države prejemnika (08–18, pon–sob; AT dunajski,
+EE tallinski čas) in največ 100 na dunajski dan. Najprej opomniki (en sam, ≥ 3
+dni po našem prvem, brez pošte drugih), nato prvi maili (`nov`, brez pošte,
+liga **aktivna** — neaktivna liga čaka, tako Estonija do vklopa). Pred
+opomnikom pogleda v nabiralnik (IMAP): odgovor → `odgovor`, odboj ali SMTP
+zavrnitev → `napacen_mail`. Vsak mail vpiše v `klub_stik_posta` (poslal `Luka
+(luka@slff.eu)`) in kopijo v Sent. Številke v mailu so sveže; besedila (nemška,
+estonska) so v skripti in ne trdijo, da imamo dovoljenje zveze. Geslo je
+skrivnost `LUKA_SMTP_GESLO`; brez nje časovni zagon tiho čaka.
+
+Polni jo isti tok z `nacin = napolni` (`scripts/vrsta-poste-klubom.mjs`,
+`drzava` AT ali EE, najprej brez `pisi`, po želji `poslji_od`): le uradni
+naslov kluba (AT: blok "Kontakt" na vereine.oefb.at, brez Bundeslige in 2.
+Lige; EE: "E-post" na strani ekipe jalgpall.ee, ne "Esindaja"), en naslov na
+klub, prva ekipa pred rezervno, klub brez igralcev z nastopi izpusti. Vrstic
+drugih pošiljateljev in obstoječih naslovov ne spreminja. `nacin = suho`
+izpiše naslednje maile brez pošiljanja.
+
 ## Poti
 
 Poti so **angleške** (`/my-team`, `/players`, `/match/:id` …), ker jih vidi
