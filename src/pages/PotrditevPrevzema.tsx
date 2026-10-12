@@ -42,6 +42,8 @@ export default function PotrditevPrevzema() {
     const { data, error } = await supabase.rpc('prevzem_odloci_z_zetonom', { p_zeton: zeton, p_potrdi: potrdi })
     setDela(false)
     if (error) return setNapaka(prevediNapako(error.message))
+    // Potrjeni igralec dobi mail s povezavo na profil (vsak enkrat).
+    if (data === 'potrjen') void supabase.functions.invoke('posli-prevzem', { body: { obvesti: true } })
     setIzid(data === 'potrjen' ? t('igralci.prevzem.zeton.hvalaPotrjen') : t('igralci.prevzem.zeton.hvalaZavrnjen'))
   }
 

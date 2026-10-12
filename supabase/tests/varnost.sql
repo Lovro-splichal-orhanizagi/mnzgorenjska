@@ -1506,6 +1506,23 @@ select pg_temp.preveri('prevzem: stran /claim pokaže e-naslov prosilca le z vel
 select pg_temp.preveri('prevzem: žeton potrdi kot klub',
   (select potrdil from zahtevki_igralca where user_id = 'c1a10000-0000-4000-8000-000000000005' and status = 'potrjen') = 'klub');
 
+-- Mail "profil je potrjen": seznam neobveščenih ima e-naslove, zato le servis.
+select set_config('request.jwt.claim.sub','c1a10000-0000-4000-8000-000000000005',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('prevzem: neobveščenih (e-naslovov) ne bere prijavljen', $$select * from prevzem_neobvesceni()$$);
+select pg_temp.zavrnjeno('prevzem: obveščenosti ne označi prijavljen', $$select prevzem_obvescen(1)$$);
+reset role;
+set local role anon;
+select pg_temp.zavrnjeno('prevzem: neobveščenih ne bere anonimen', $$select * from prevzem_neobvesceni()$$);
+reset role;
+select pg_temp.preveri('prevzem: potrjen s klubom čaka na mail',
+  exists (select 1 from prevzem_neobvesceni() n join zahtevki_igralca z on z.id = n.zahtevek_id
+           where z.user_id = 'c1a10000-0000-4000-8000-000000000005' and n.email = 'prevzem-k@example.invalid'));
+select prevzem_obvescen(z.id) from zahtevki_igralca z where z.user_id = 'c1a10000-0000-4000-8000-000000000005' and z.status = 'potrjen';
+select pg_temp.preveri('prevzem: mail gre vsakemu enkrat',
+  not exists (select 1 from prevzem_neobvesceni() n join zahtevki_igralca z on z.id = n.zahtevek_id
+               where z.user_id = 'c1a10000-0000-4000-8000-000000000005'));
+
 -- Skrij ime: igralec ga ne skrije sam (ugovor gre prek admina); servisna
 -- funkcija ostane obstoječa anonimizacija, predstavitev gre proč.
 select set_config('request.jwt.claim.sub','c1a10000-0000-4000-8000-000000000004',true);
