@@ -3342,6 +3342,20 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   podpornike po imenu (`src/lib/piva.ts`). Če zapis v bazo ne uspe, gre
   Discord vseeno ven, BMC pa dobi 500 in ponovi. Stran in povezave so le na
   spletu (kot gumb `Pivo.tsx`)
+- **Klubski računi** (migracija 20261013201100, spec
+  `docs/superpowers/specs/2026-10-13-klubski-racuni-design.md`): klub dobi
+  račun, ko se prijavi s **potrjenim** uradnim naslovom iz `klub_stik`
+  (`uveljavi_klubski_racun`, kliče ga `useAuth` ob vsaki prijavi). Do 5
+  računov na klub, en klub na uporabnika. Brez admina, razen: naslov brez
+  `team_id` (`brez_kluba`), poln klub (`polno`) in prošnja za nov naslov
+  (`klub_zaprosi_za_naslov`; predlagani naslov je vedno mail računa). Vse v
+  Administraciji → Klubski računi (`admin_odloci_klubski_zahtevek`; potrditev
+  vpiše ali popravi `klub_stik` s stanjem `sodeluje`). Preklican račun se ob
+  prijavi ne obnovi. Pravice (pozicije, dodajanje igralcev, stran kluba,
+  prijave napak) prihajajo v fazah 2–4; povsod velja
+  `je_klubski_racun(uid, team_id)`. Klub nikoli ne piše minut, golov, cen ali
+  `reg_st`. Hrvaški in srbski stiki so s klubi povezani po imenu in ligi
+  (migracija 20261013203100)
 - `teams.logo_url` → grb kluba; če je prazen, `src/components/Grb.jsx` nariše
   ščit z začetnicami
 
