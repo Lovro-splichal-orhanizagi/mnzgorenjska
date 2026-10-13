@@ -385,12 +385,14 @@ values (-921001, -913001, -913001, 'Klub', 'Profil', 'Profil Klub', 'MID', 'admi
 insert into auth.users(id, email, email_confirmed_at, raw_user_meta_data, created_at) values
  ('f1a10000-0000-4000-8000-000000000003', 'igralec.kluba@example.invalid', now(), '{"display_name":"IK"}', now());
 insert into zahtevki_igralca(player_id, user_id) values (-921001, 'f1a10000-0000-4000-8000-000000000003');
+-- Id preberemo kot postgres: RLS klubu ne pokaže tujih zahtevkov v tabeli.
+select set_config('test.zahtevek_kluba', (select id::text from zahtevki_igralca where player_id = -921001), true);
 select set_config('request.jwt.claim.sub','f1a10000-0000-4000-8000-000000000002',true);
 set local role authenticated;
 select pg_temp.zavrnjeno('klub-profil: drug klub ne potrdi',
-  $$select odloci_zahtevek_klub((select id from zahtevki_igralca where player_id = -921001 and status = 'cakajoc'), true)$$);
+  $$select odloci_zahtevek_klub(current_setting('test.zahtevek_kluba')::bigint, true)$$);
 select set_config('request.jwt.claim.sub','f1a10000-0000-4000-8000-000000000001',true);
-select odloci_zahtevek_klub((select id from zahtevki_igralca where player_id = -921001 and status = 'cakajoc'), true);
+select odloci_zahtevek_klub(current_setting('test.zahtevek_kluba')::bigint, true);
 reset role;
 select pg_temp.preveri('klub-profil: klubski račun potrdi profil svojega igralca',
   exists (select 1 from zahtevki_igralca where player_id = -921001 and status = 'potrjen' and potrdil = 'klub'));
