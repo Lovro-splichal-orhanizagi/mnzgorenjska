@@ -61,6 +61,27 @@ Kadar ima klub že račun, gre v isto vrsto kot spor.
 `liga_slug` (suho, nato `--pisi` prek delovnega toka). Dvoumne izpiše za
 ročno odločitev.
 
+**Naslova, ki ga nimamo.** Klub, katerega naslova v `klub_stik` ni (ali je
+tam star ali napačen), odda **prošnjo**: »Ta naslov je uradni naslov kluba X.«
+
+- Prošnjo odda prijavljen račun s potrjenim mailom; predlagani naslov je
+  **mail tega računa** (tako je lastništvo nabiralnika že dokazano). Drug
+  naslov bi bil le trditev brez dokaza.
+- Obrazec: klub (iskalnik po klubih), vloga osebe (predsednik, tajnik,
+  trener …), povezava, kjer je naslov objavljen (spletna stran kluba,
+  Facebook, stran zveze), opomba.
+- RPC `klub_zaprosi_za_naslov(p_team_id, p_vloga, p_dokaz_url, p_opomba)`;
+  ena odprta prošnja na račun, Discord ob vsaki.
+- Admin preveri (ali je naslov res objavljen, ali je klub že zastopan) in
+  potrdi ali zavrne. Potrditev vpiše oziroma popravi `klub_stik` (`email`,
+  `team_id`, `vir_url` = dokaz, `stanje = 'sodeluje'`) in takoj ustvari
+  klubski račun. Če ima klub že račun z drugim naslovom, admin izbere, kateri
+  ostane (stari se prekliče).
+- Zavrnitev z razlogom, ki ga uporabnik vidi.
+
+Vse tri vrste čakajočih (`brez_kluba`, `spor`, `nov_naslov`) so v isti tabeli
+`klubski_zahtevki` s stolpcem `vrsta` in istim zavihkom v Administraciji.
+
 Pomožna funkcija `je_klubski_racun(p_user uuid, p_team_id bigint)` je osnova
 vseh pravic spodaj.
 
@@ -147,7 +168,8 @@ je igral.
 
 ## 6. Administracija
 
-Nov zavihek **Klubi**: aktivni računi (preklic), vrsta `klubski_zahtevki`,
+Nov zavihek **Klubi**: aktivni računi (preklic), vrsta `klubski_zahtevki`
+(tudi prošnje za nov naslov),
 alarmi dodanih igralcev, igralci brez nastopa po 6 tednih, prijave napak.
 
 ## Varnost
@@ -173,7 +195,8 @@ Vsi novi napisi v vseh 13 jezikih (`src/i18n/*`).
 
 ## Vrstni red
 
-1. Računi, preverba, Administracija → Klubi, povezava HR/RS stikov.
+1. Računi, preverba, prošnje za nov naslov, Administracija → Klubi,
+   povezava HR/RS stikov.
 2. Pozicije, potrjevanje profilov, stran kluba.
 3. Dodajanje igralcev, posvojitev v uvozu, alarmi.
 4. Prijave napak v zapisniku.
