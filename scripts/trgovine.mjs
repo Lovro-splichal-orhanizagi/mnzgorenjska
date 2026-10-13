@@ -70,15 +70,15 @@ async function zapisi(trgovina, vrstice) {
 // ---------- mejniki ----------
 // Primerja z najvišjim že javljenim mejnikom (`trgovine_stanje.mejnik`, null = še nič), zato
 // seštevek, ki pade in znova zraste (npr. Apple popravi poročilo), ne javi dvakrat.
-// Prvi zagon javi le zadnji dosežen mejnik, ne vseh zgodovinskih.
+// Javi le najvišji nov mejnik, ne vseh vmesnih.
 async function mejniki(ime, trgovina, zdaj) {
   const { data, error } = await db.from('trgovine_stanje').select('mejnik').eq('trgovina', trgovina).maybeSingle()
   if (error) throw new Error(error.message)
   const dosezen = Math.floor(zdaj / MEJNIK) * MEJNIK
   const javljen = data?.mejnik ?? null
   console.log(`${ime}: skupaj ${zdaj}, javljen mejnik ${javljen ?? '—'}`)
-  const prvi = javljen === null ? Math.max(MEJNIK, dosezen) : javljen + MEJNIK
-  for (let m = prvi; m <= dosezen; m += MEJNIK) await javi(`📱 ${ime}: ${m} namestitev (skupaj ${zdaj}).`)
+  // Ena vrstica za najvišji nov mejnik; "10 namestitev (skupaj 14)" se je bralo kot napaka.
+  if (dosezen >= MEJNIK && dosezen > (javljen ?? 0)) await javi(`📱 ${ime}: čez ${dosezen} namestitev (zdaj ${zdaj}).`)
   if (!suho && (javljen === null || dosezen > javljen)) {
     await preveri(await db.from('trgovine_stanje').upsert({ trgovina, mejnik: Math.max(dosezen, javljen ?? 0) }))
   }
