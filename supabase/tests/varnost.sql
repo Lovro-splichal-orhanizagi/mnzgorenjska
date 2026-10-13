@@ -496,6 +496,15 @@ select pg_temp.preveri('odobritev za ligo nastavi poznavalca lige',
   (select insider_competition_id=-913001 from profiles where id='b8a06635-2322-4444-8c42-44e419f912ab'));
 select pg_temp.preveri('odlocena prosnja ni vec med cakajocimi',
   not exists(select 1 from admin_prosnje_poznavalcev() where competition_id=-913001));
+select pg_temp.preveri('admin vidi potrjenega poznavalca lige, ki velja',
+  exists(select 1 from admin_potrjeni_poznavalci()
+          where user_id='b8a06635-2322-4444-8c42-44e419f912ab' and obseg='liga'
+            and competition_id=-913001 and velja and potrjeno_at is not null));
+reset role;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('uporabnik ne vidi seznama potrjenih poznavalcev',
+  $$select * from admin_potrjeni_poznavalci()$$);
 reset role;
 
 -- Stanje mojih ekip: vsak vidi le svoje, anonimni nic. Funkcija kaze le

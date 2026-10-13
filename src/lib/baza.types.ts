@@ -6432,6 +6432,23 @@ export type Database = {
           zadnja: string
         }[]
       }
+      admin_potrjeni_poznavalci: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          competition_id: number
+          competition_name: string
+          display_name: string
+          email: string
+          glasov: number
+          obseg: string
+          potrjeno_at: string
+          team_id: number
+          team_name: string
+          user_id: string
+          velja: boolean
+          vloga: string
+        }[]
+      }
       admin_prosnje_poznavalcev: {
         Args: Record<PropertyKey, never>
         Returns: {
