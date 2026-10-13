@@ -24,7 +24,7 @@ declare
   nasprotnik bigint;
   igralci bigint[];
   igralec_tekme bigint;
-  q bigint; p1 bigint; p2 bigint; p3 bigint; p4 bigint;
+  q bigint; p1 bigint; p2 bigint; p3 bigint; p4 bigint; p5 bigint;
   krogi bigint[] := '{}';
   tekme bigint[] := '{}';
   st int;
@@ -38,29 +38,24 @@ declare
   premik numeric;
 begin
   -- --- priprava ------------------------------------------------------------
-  select c.id, max(r.season) into tekmovanje, sezona
-    from competitions c join rounds r on r.competition_id = c.id
-    join players p on p.competition_id = c.id
-   group by c.id order by count(distinct p.id) desc limit 1;
-
-  -- Klub s vsaj šestimi igralci z znano pozicijo in prostorom navzdol.
-  select p.team_id into klub from players p
-   where p.competition_id = tekmovanje and not p.value_locked and p.position is not null
-   group by p.team_id having count(*) >= 6 order by p.team_id limit 1;
-  select t2.id into nasprotnik from teams t2
-    join players p on p.team_id = t2.id and p.competition_id = tekmovanje
-   where t2.id <> klub group by t2.id order by t2.id limit 1;
-  if klub is null or nasprotnik is null then
-    raise exception 'preizkus potrebuje klub s šestimi igralci in nasprotnika';
-  end if;
-  select array_agg(id order by id) into igralci from (
-    select p.id from players p
-     where p.team_id = klub and p.competition_id = tekmovanje and not p.value_locked
-       and p.position is not null
-     order by p.id limit 6) x;
-  -- Cena s prostorom navzdol (lokalni podatki imajo pogosto spodnjo mejo).
-  update players set value = 7.0, value_start = 7.0 where id = any(igralci);
-  igralec_tekme := igralci[1]; q := igralci[2]; p1 := igralci[3]; p2 := igralci[4]; p3 := igralci[5]; p4 := igralci[6];
+  -- Lastna liga z negativnimi id-ji: preizkus ne sme sloneti na začetnih
+  -- podatkih (seed), ki jih sveža baza v CI morda nima.
+  sezona := tekoca_sezona();
+  insert into competitions(id, slug, name, short_name, active, country_id, source) overriding system value
+  values (-923001, 'test-zamrznitev', 'Test zamrznitve', 'TZ', false, (select id from countries where code = 'SI'), 'mnzg')
+  returning id into tekmovanje;
+  update competitions set prvi_fantasy_krog = 1 where id = tekmovanje;
+  insert into teams(id, name, short_name, country_id) overriding system value
+  values (-923001, 'Zamrznitev klub', 'ZK', (select id from countries where code = 'SI')),
+         (-923002, 'Zamrznitev nasprotnik', 'ZN', (select id from countries where code = 'SI'));
+  klub := -923001; nasprotnik := -923002;
+  insert into players(id, team_id, competition_id, first_name, last_name, full_name, position, position_source, value, value_start, active) overriding system value
+  select -923000 - n, klub, tekmovanje, 'Z', n::text, 'Zamrznitev ' || n, 'MID', 'admin', 7.0, 7.0, true
+    from generate_series(1, 7) n;
+  insert into players(id, team_id, competition_id, first_name, last_name, full_name, position, position_source, value, value_start, active) overriding system value
+  values (-923100, nasprotnik, tekmovanje, 'Z', 'N', 'Zamrznitev Nasprotnik', 'MID', 'admin', 7.0, 7.0, true);
+  select array_agg(id order by id desc) into igralci from players where team_id = klub;
+  igralec_tekme := igralci[1]; q := igralci[2]; p1 := igralci[3]; p2 := igralci[4]; p3 := igralci[5]; p4 := igralci[6]; p5 := igralci[7];
 
   -- Starejše tekme kluba v sezoni štejejo za uvožene (okno forme ne čaka).
   update matches m set imported_at = coalesce(m.imported_at, now())
@@ -79,6 +74,8 @@ begin
     tekme := tekme || t;
     insert into appearances (match_id, player_id, team_id, started, minutes_played)
     select t, x, klub, true, 90 from unnest(case when i = 1 then igralci else array[igralec_tekme] end) x;
+    insert into appearances (match_id, player_id, team_id, started, minutes_played)
+    values (t, -923100, nasprotnik, true, 90);
   end loop;
 
   -- Potrjeni profili in uradne odsotnosti (objavljene pred prvim krogom).
@@ -98,6 +95,22 @@ begin
            case when i in (2, 3) then now() - interval '44 days' end
       from zahtevki_igralca z where z.player_id = vrstni[i] and z.user_id = u;
   end loop;
+
+  -- P5 zapira in odpira samoprijavljene poškodbe (brez kluba): A1 zajame 2.
+  -- krog (+3. po zaprtju), A2 4. krog (+5.). V sezoni sme brez potrditve
+  -- prihraniti le 2 padca: 3. in 4. krog, 5. pade.
+  u := 'a2a10000-0000-4000-8000-000000000005';
+  insert into auth.users(id, email, email_confirmed_at, raw_user_meta_data, created_at)
+  values (u, 'zamrznitev5@example.invalid', now(), '{}', now() - interval '60 days');
+  insert into zahtevki_igralca(player_id, user_id, status, potrdil, decided_at)
+  values (p5, u, 'potrjen', 'admin', now() - interval '50 days');
+  insert into uradne_odsotnosti(player_id, zahtevek_id, user_id, vrsta, od, sezona, created_at, status, zaprto_at)
+  select p5, z.id, u, 'poskodba', x.od, sezona, now() - interval '45 days', 'zaprto',
+         (x.zaprto::timestamp at time zone 'Europe/Ljubljana')
+    from zahtevki_igralca z,
+         (values (current_date - (44 - 7 * 2) - 1, current_date - (44 - 7 * 2) + 1),
+                 (current_date - (44 - 7 * 4) - 1, current_date - (44 - 7 * 4) + 1)) x(od, zaprto)
+   where z.player_id = p5;
 
   -- --- 1. zamrznitev po krogih ---------------------------------------------
   -- P1 (brez potrditve): 2. in 3. krog zamrznjena, 4. ne.
@@ -144,6 +157,13 @@ begin
   if (select count(*) from price_changes where player_id = p4 and round_id = any(krogi[3:5]) and new_value < old_value) <> 3 then
     raise exception '2g. P4 (dopust) naj pade kot Q';
   end if;
+  -- P5: brez potrditve največ 2 prihranjena padca v sezoni (kroženje).
+  if (select count(*) from zadrzani_padci where player_id = p5) <> 2 then
+    raise exception '2i. P5 brez potrditve naj v sezoni prihrani 2 padca, prihranil je %', (select count(*) from zadrzani_padci where player_id = p5);
+  end if;
+  if not exists (select 1 from price_changes where player_id = p5 and round_id = krogi[5] and new_value < old_value) then
+    raise exception '2j. P5 naj v 5. krogu pade (omejitev v sezoni)';
+  end if;
   -- Ponoven obračun ne podvoji zadržanih padcev.
   perform preracunaj_cene(krogi[4]);
   if (select count(*) from zadrzani_padci where player_id = p2) <> 3 then
@@ -168,6 +188,23 @@ begin
   perform preveri_uradne_odsotnosti();
   if (select cena_p2 - value from players where id = p2) <> 0.3 then
     raise exception '3d. ponovna preverba ne sme znova odšteti';
+  end if;
+  -- Nočna borza znova obračuna kroge zadnjih 14 dni: kazen ostane, ni podvojena.
+  -- Isto kot uveljavi_zapadle_cene (ta bere le vklopljene lige; testne lige
+  -- ni mogoče vklopiti brez veljavnega kadra): krogi v oknu po vrsti.
+  for i in 1..6 loop
+    if dan_kroga(krogi[i]) >= current_date - 14 then
+      perform uveljavi_cene(krogi[i]);
+    end if;
+  end loop;
+  if (select cena_p2 - value from players where id = p2) <> 0.3 then
+    raise exception '3e. po nočni borzi naj P2 ostane pri -0.3, je pri %', (select value - cena_p2 from players where id = p2);
+  end if;
+  if exists (select 1 from price_changes where player_id = p2 and new_value < old_value and round_id = any(krogi[2:5])) then
+    raise exception '3g. zadržani krogi so obračunani: nočna borza jim ne sme dodati padca';
+  end if;
+  if not exists (select 1 from price_changes where player_id = p2 and new_value < old_value and round_id = krogi[6]) then
+    raise exception '3f. kazen naj bo v zgodovini cene (zadnji krog)';
   end if;
 
   raise notice 'preizkus zamrznitve: vse trditve držijo (2/6 krogov, vrnitev + 1, dopust ne, zadržani padci, ni_drzalo enkrat)';

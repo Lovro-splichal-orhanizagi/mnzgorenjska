@@ -57,8 +57,16 @@ as $$
      and (z.player_id = p_player_id
           or exists (select 1 from povezani_igralci pi where pi.zahtevek_id = z.id and pi.player_id = p_player_id))
      and k.dan >= o.od
-     and (select count(*) from krogi x where x.dan >= o.od and x.number <= k.number)
+     and (select count(distinct x.number) from krogi x where x.dan >= o.od and x.number <= k.number)
          <= case when o.klub_potrdil_at is not null then 6 else 2 end
+     -- Brez potrditve kluba oseba v sezoni prihrani največ 2 padca, ne glede
+     -- na to, kolikokrat odsotnost zapre in odpre (kroženje).
+     and (o.klub_potrdil_at is not null or (
+          select count(*) from zadrzani_padci zp
+            join uradne_odsotnosti o2 on o2.id = zp.odsotnost_id
+            join rounds rr on rr.id = zp.round_id
+           where o2.zahtevek_id = o.zahtevek_id and o2.klub_potrdil_at is null
+             and rr.season = k.season and zp.round_id <> k.id) < 2)
      -- Pred tem krogom ni bilo nobenega na dan konca ali po njem.
      and not exists (
        select 1 from krogi x
@@ -69,6 +77,9 @@ as $$
    limit 1
 $$;
 revoke all on function public.dan_kroga(bigint), public.zamrznjena_odsotnost(bigint, bigint) from public, anon, authenticated;
+-- Pogled `uradne_odsotnosti_view` (javen) ju kliče za `cena_zamrznjena`;
+-- povesta le, kar pogled že kaže (dan kroga, ali je cena zamrznjena).
+grant execute on function public.dan_kroga(bigint), public.zamrznjena_odsotnost(bigint, bigint) to anon, authenticated;
 
 -- --------------------------------------------------------------------------
 -- Klub potrdi odsotnost svojega igralca (poškodba, bolezen).
@@ -229,6 +240,12 @@ begin
         select 1 from price_changes pc
         where pc.player_id = p.id and pc.round_id = p_round_id
       )
+      -- Zadržan padec je za ta krog obračun (20261013221100): če odsotnost
+      -- pozneje "ni držala", ga uveljavi preverba, ne ponoven obračun.
+      and not exists (
+        select 1 from zadrzani_padci zp
+        where zp.player_id = p.id and zp.round_id = p_round_id
+      )
       -- Zapisniki enega kroga ne pridejo hkrati. Igralec, katerega klub v
       -- oknu forme se nima uvozene tekme, pocaka — brez vrstice v
       -- `price_changes` ga naslednji nocni tek obracuna znova, ko podatki
@@ -365,7 +382,11 @@ begin
   get diagnostics v_n = row_count;
 
   -- Zamrznitev ni držala: zadržani padci te odsotnosti se uveljavijo naenkrat
-  -- (ne pod spodnjo mejo borze) in le enkrat (20261013221100).
+  -- (ne pod spodnjo mejo borze) in le enkrat (20261013221100). Kazen gre v
+  -- `price_changes` zadnjega odigranega kroga igralčeve lige: nočna borza
+  -- (uveljavi_zapadle_cene) cene nastavlja iz teh vrstic, zato bi neposreden
+  -- popravek `players.value` povozila; tako je kazen tudi v zgodovini cene.
+  -- Igralcu z ročno zaklenjeno ceno (`value_locked`) se kazen ne uveljavi.
   with vsote as (
     select zp.player_id, sum(zp.znesek) as vsota
       from zadrzani_padci zp
@@ -373,11 +394,30 @@ begin
      where o.status = 'ni_drzalo' and zp.uveljavljeno_at is null
      group by zp.player_id
   ),
+  cilji as (
+    select v.player_id, v.vsota, p.value,
+           (select r.id from rounds r
+             where r.competition_id = p.competition_id
+               and r.season = (select max(r2.season) from rounds r2 where r2.competition_id = p.competition_id)
+               and krog_je_odigran(r.id)
+             order by r.number desc, r.id desc limit 1) as round_id
+      from vsote v join players p on p.id = v.player_id
+     where not p.value_locked
+  ),
+  zgodovina as (
+    insert into price_changes (player_id, round_id, old_value, new_value, form)
+    select c.player_id, c.round_id, c.value,
+           greatest((select najnizja from meje_borze()), c.value + c.vsota), 0
+      from cilji c where c.round_id is not null
+    on conflict (player_id, round_id) do update
+      set new_value = greatest((select najnizja from meje_borze()), price_changes.new_value + excluded.new_value - excluded.old_value),
+          changed_at = now()
+  ),
   cene as (
     update players p
-       set value = greatest((select najnizja from meje_borze()), p.value + v.vsota)
-      from vsote v
-     where p.id = v.player_id and not p.value_locked
+       set value = greatest((select najnizja from meje_borze()), p.value + c.vsota)
+      from cilji c
+     where p.id = c.player_id
     returning p.id
   )
   update zadrzani_padci zp
@@ -416,7 +456,15 @@ create or replace view public.uradne_odsotnosti_view as
          coalesce(r.user_id = auth.uid(), false) as moje,
          -- Zamrznitev cene (20261013221100): odprta poškodba ali bolezen;
          -- koliko krogov, pove `klub_potrdil` (2 brez, 6 s potrditvijo).
-         (r.status = 'odprto' and r.vrsta in ('poskodba', 'bolezen')) as cena_zamrznjena,
+         -- Velja, dokler zadnji odigrani krog lige od začetka odsotnosti še
+         -- spada v zamrznitev (ali odigranega kroga še ni bilo).
+         (r.status = 'odprto' and r.vrsta in ('poskodba', 'bolezen') and (
+            not exists (select 1 from rounds x where x.competition_id = p.competition_id
+                          and dan_kroga(x.id) between r.od and (now() at time zone 'Europe/Ljubljana')::date)
+            or zamrznjena_odsotnost(r.player_id,
+                 (select x.id from rounds x where x.competition_id = p.competition_id
+                    and dan_kroga(x.id) between r.od and (now() at time zone 'Europe/Ljubljana')::date
+                  order by x.number desc, x.id desc limit 1)) is not null)) as cena_zamrznjena,
          r.klub_potrdil_at is not null as klub_potrdil
     from uradne_odsotnosti r
     join zahtevki_igralca z on z.id = r.zahtevek_id and z.status = 'potrjen'
