@@ -62,7 +62,7 @@ export const racun = {
     odjavaVprasanje: 'Ne želiš več dobivati e-pošte SLFF (opomnikov pred rokom in obvestil o ekipi)?',
     odjavaGumb: 'Odjavi me',
     odjavaNapaka: 'Povezava ni veljavna. Prijavi se in opomnike izklopi v nastavitvah.',
-    push: 'Potisna obvestila (mobilna aplikacija)',
+    push: 'Potisna obvestila',
     pushOpis: 'Dan pred rokom ti telefon pove, če ekipa še ni pripravljena.',
     pushVklopljena: 'Potisna obvestila so vklopljena.',
     pushIzklopljena: 'Potisnih obvestil ti ne bomo več pošiljali.',

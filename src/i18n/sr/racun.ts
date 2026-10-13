@@ -64,7 +64,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     odjavaVprasanje: 'Ne želiš više da primaš imejlove od SLFF-a (podsetnike pre roka i obaveštenja o timu)?',
     odjavaGumb: 'Odjavi me',
     odjavaNapaka: 'Link nije ispravan. Prijavi se i isključi podsetnike u podešavanjima.',
-    push: 'Push obaveštenja (mobilna aplikacija)',
+    push: 'Push obaveštenja',
     pushOpis: 'Dan pre roka telefon će ti javiti ako tim još nije spreman.',
     pushVklopljena: 'Push obaveštenja su uključena.',
     pushIzklopljena: 'Više ti nećemo slati push obaveštenja.',

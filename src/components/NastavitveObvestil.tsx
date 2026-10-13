@@ -8,7 +8,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import { povezavaNaPrijavo } from '../lib/prijava'
 import { jeNativno } from '../lib/platforma'
-import { registrirajPush, type DovoljenjePush } from './PotisnaObvestila'
+import { pushPodprt, registrirajPush, type DovoljenjePush } from './PotisnaObvestila'
 import { t, tx } from '../i18n'
 
 const profili = () => supabase.from('profiles')
@@ -38,7 +38,7 @@ export default function NastavitveObvestil({ vgrajeno = false }: { vgrajeno?: bo
         if (error) return setNapaka(t('racun.opomniki.napakaNalaganja'))
         setVklop({ brez_opomnikov: !data?.brez_opomnikov, brez_push: !data?.brez_push })
       })
-    if (jeNativno()) void registrirajPush(false).then((d) => veljavno && setDovoljenje(d))
+    if (pushPodprt()) void registrirajPush(false).then((d) => veljavno && setDovoljenje(d))
     return () => {
       veljavno = false
     }
@@ -58,7 +58,7 @@ export default function NastavitveObvestil({ vgrajeno = false }: { vgrajeno?: bo
     setVklop({ ...vklop, [stolpec]: novo })
     setShranjeno(stolpec)
     // Za dovoljenje telefona vprašamo šele tu, ko človek ve, zakaj.
-    if (stolpec === 'brez_push' && novo && jeNativno()) setDovoljenje(await registrirajPush(true))
+    if (stolpec === 'brez_push' && novo && pushPodprt()) setDovoljenje(await registrirajPush(true))
   }
 
   async function dovoli() {
@@ -113,10 +113,10 @@ export default function NastavitveObvestil({ vgrajeno = false }: { vgrajeno?: bo
       )}
       {stikalo('brez_push', t('racun.opomniki.push'), t('racun.opomniki.pushOpis'))}
 
-      {jeNativno() && vklop?.brez_push && dovoljenje && dovoljenje !== 'granted' && (
+      {pushPodprt() && vklop?.brez_push && dovoljenje && dovoljenje !== 'granted' && (
         <div className="space-y-2 text-sm text-amber-300">
           {dovoljenje === 'denied' ? (
-            <p>{t('racun.opomniki.pushZavrnjeno')}</p>
+            jeNativno() && <p>{t('racun.opomniki.pushZavrnjeno')}</p>
           ) : (
             <button type="button" onClick={() => void dovoli()} className="gumb-tih min-h-[44px] px-3 py-2">
               {t('racun.opomniki.pushDovoli')}

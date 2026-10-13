@@ -3012,15 +3012,18 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   `docs/migracija-hetzner.md` 6c): brez piškotkov, ogledi strani in nekaj dogodkov
   (`dogodek('ime', {…})`). Vsak korak `zabeleziKorak` gre tudi tja. Nov dogodek naj nima
   podatkov o uporabniku; parametri iz naslova se počistijo (ostanejo `t`, `utm_*`, `src`)
-- `push_tokens` → žeton FCM naprave mobilne aplikacije (ključ je žeton, ob
+- `push_tokens` → žeton FCM naprave mobilne aplikacije ali brskalnika
+  (`platforma` `web`: Firebase JS, spletna aplikacija "SLFF web" v projektu
+  slff-cb58e, privzeti ključ VAPID, obvestilo prikaže `public/obvestila-sw.js`;
+  Safari na iPhonu le v aplikaciji na zaslonu) (ključ je žeton, ob
   prijavi drugega uporabnika na isti napravi se preseli). Vpiše ga le
   `shrani_push_zeton`, bere servis: `posli-opomnik` pošlje isto sporočilo še
   kot obvestilo (`push.ts`, skrivnost `FIREBASE_SERVICE_ACCOUNT`). Kanala sta
   neodvisna: pošta gre, če ni `profiles.brez_opomnikov`, push, če ni
   `profiles.brez_push` (oboje stran `/reminders`, naslov "Obvestila");
   kandidati vrnejo `email_vklop`/`push_vklop`, `email_log.kanal` pove, kaj je
-  prišlo. Za dovoljenje telefona vpraša prva shramba ekipe v aplikaciji, stikalo
-  na tej strani in pas po prijavi v aplikaciji (`PotisnaObvestila.tsx`), dokler
+  prišlo. Za dovoljenje vpraša prva shramba ekipe, stikalo na tej strani in pas
+  po prijavi v aplikaciji ali brskalniku (`PotisnaObvestila.tsx`), dokler
   dovoljenje ni odločeno in `brez_push` ni vklopljen; "Zapri" ga skrije za teden
 - `kandidati_za_push_opomnik(liga)` → samo push "še nimaš ekipe": kdor ima
   napravo in v ligi nima ekipe (ali ima prazno; brez ekipe šteje domača liga

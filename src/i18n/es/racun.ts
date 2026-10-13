@@ -62,7 +62,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     odjavaVprasanje: '¿No quieres recibir más correos de SLFF (recordatorios antes del cierre y avisos sobre tu equipo)?',
     odjavaGumb: 'Darme de baja',
     odjavaNapaka: 'El enlace no es válido. Inicia sesión y desactiva los recordatorios en la configuración.',
-    push: 'Notificaciones push (aplicación móvil)',
+    push: 'Notificaciones push',
     pushOpis: 'El día antes del cierre, el móvil te avisa si tu equipo aún no está listo.',
     pushVklopljena: 'Notificaciones push activadas.',
     pushIzklopljena: 'Ya no te enviaremos notificaciones push.',

@@ -62,7 +62,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     odjavaVprasanje: 'Nechceš už dostávať e-maily SLFF (pripomienky pred termínom a upozornenia o tíme)?',
     odjavaGumb: 'Odhlásiť ma',
     odjavaNapaka: 'Odkaz nie je platný. Prihlás sa a vypni pripomienky v nastaveniach.',
-    push: 'Push upozornenia (mobilná aplikácia)',
+    push: 'Push upozornenia',
     pushOpis: 'Deň pred uzávierkou ti telefón pripomenie, ak tím ešte nie je pripravený.',
     pushVklopljena: 'Push upozornenia sú zapnuté.',
     pushIzklopljena: 'Push upozornenia ti už nebudeme posielať.',

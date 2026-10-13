@@ -62,7 +62,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     odjavaVprasanje: 'Ei soovi enam SLFF-i kirju (tähtaja meeldetuletused ja teated meeskonna kohta)?',
     odjavaGumb: 'Loobun kirjadest',
     odjavaNapaka: 'See link pole kehtiv. Logi sisse ja lülita meeldetuletused seadetes välja.',
-    push: 'Tõuketeavitused (mobiilirakendus)',
+    push: 'Tõuketeavitused',
     pushOpis: 'Päev enne tähtaega annab telefon teada, kui sinu koosseis pole valmis.',
     pushVklopljena: 'Tõuketeavitused on sisse lülitatud.',
     pushIzklopljena: 'Me ei saada sulle enam tõuketeavitusi.',
