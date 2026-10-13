@@ -2649,6 +2649,84 @@ select admin_izbrisi_pivo((select id from admin_piva() where vir = 'rocno'));
 reset role;
 select pg_temp.preveri('piva: admin izbriše ročni vnos', not exists (select 1 from piva where vir = 'rocno'));
 
+-- --------------------------------------------------------------------------
+-- Klubski računi (faza 1)
+-- --------------------------------------------------------------------------
+reset role;
+-- Klub -913003 ima uradni naslov z velikimi črkami in presledkom; klub
+-- -913004 ima naslov brez kluba (team_id null); -913005 ne želi stika.
+insert into klub_stik(id, team_id, klub, drzava, email, stanje) overriding system value values
+ (-920001, -913003, 'Test varnosti 2', 'SI', ' Klub.Tri@Example.invalid', 'poslano'),
+ (-920002, null,    'Brez kluba',      'SI', 'brez.kluba@example.invalid', 'poslano'),
+ (-920003, -913005, 'Test varnosti 4', 'SI', 'ne.zeli@example.invalid', 'ne_zeli');
+insert into auth.users(id, email, email_confirmed_at, raw_user_meta_data, created_at) values
+ ('e1a10000-0000-4000-8000-000000000001', 'klub.tri@example.invalid', now(), '{"display_name":"K1"}', now()),
+ ('e1a10000-0000-4000-8000-000000000002', 'nepotrjen@example.invalid', null, '{"display_name":"K2"}', now()),
+ ('e1a10000-0000-4000-8000-000000000003', 'brez.kluba@example.invalid', now(), '{"display_name":"K3"}', now()),
+ ('e1a10000-0000-4000-8000-000000000004', 'ne.zeli@example.invalid', now(), '{"display_name":"K4"}', now());
+-- Nepotrjen uporabnik ima isti naslov kot klub -913003 (drug zapis v klub_stik).
+insert into klub_stik(id, team_id, klub, drzava, email, stanje) overriding system value values
+ (-920004, -913003, 'Test varnosti 2', 'SI', 'nepotrjen@example.invalid', 'poslano');
+
+select set_config('request.jwt.claim.sub','e1a10000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.preveri('klub: potrjen naslov (velike črke, presledek) dobi račun',
+  uveljavi_klubski_racun() = -913003);
+select pg_temp.preveri('klub: ponovna prijava vrne isti klub, brez druge vrstice',
+  uveljavi_klubski_racun() = -913003);
+select pg_temp.preveri('klub: moj_klubski_racun pokaže klub',
+  (moj_klubski_racun()->'racun'->>'team_id')::bigint = -913003);
+select pg_temp.zavrnjeno('klub: tabele računov ni mogoče brati neposredno',
+  $$select * from klubski_racuni$$);
+select pg_temp.zavrnjeno('klub: interne funkcije niso dostopne',
+  $$select klub_ustvari_racun(auth.uid(), -913001, null)$$);
+
+select set_config('request.jwt.claim.sub','e1a10000-0000-4000-8000-000000000002',true);
+select pg_temp.preveri('klub: nepotrjen mail ne dobi računa', uveljavi_klubski_racun() is null);
+
+select set_config('request.jwt.claim.sub','e1a10000-0000-4000-8000-000000000003',true);
+select pg_temp.preveri('klub: naslov brez kluba ne dobi računa', uveljavi_klubski_racun() is null);
+select uveljavi_klubski_racun();
+reset role;
+select pg_temp.preveri('klub: naslov brez kluba gre enkrat v vrsto (brez_kluba)',
+  (select count(*) from klubski_zahtevki where user_id = 'e1a10000-0000-4000-8000-000000000003'
+     and vrsta = 'brez_kluba' and status = 'odprt') = 1);
+
+select set_config('request.jwt.claim.sub','e1a10000-0000-4000-8000-000000000004',true);
+set local role authenticated;
+select pg_temp.preveri('klub: stik ne_zeli ne dobi računa', uveljavi_klubski_racun() is null);
+reset role;
+
+-- Peti račun kluba -913003: dodamo 4 aktivne (skupaj s K1 jih je 5).
+insert into auth.users(id, email, email_confirmed_at, raw_user_meta_data, created_at)
+select ('e1a10000-0000-4000-8000-00000000001' || n)::uuid, 'peti' || n || '@example.invalid', now(), '{}', now()
+from generate_series(1, 5) n;
+insert into klubski_racuni(user_id, team_id)
+select ('e1a10000-0000-4000-8000-00000000001' || n)::uuid, -913003 from generate_series(1, 4) n;
+insert into klub_stik(id, team_id, klub, drzava, email, stanje) overriding system value values
+ (-920005, -913003, 'Test varnosti 2', 'SI', 'peti5@example.invalid', 'poslano');
+select set_config('request.jwt.claim.sub','e1a10000-0000-4000-8000-000000000015',true);
+set local role authenticated;
+select pg_temp.preveri('klub: šesti račun ne nastane', uveljavi_klubski_racun() is null);
+select uveljavi_klubski_racun();
+reset role;
+select pg_temp.preveri('klub: šesti gre enkrat v vrsto (polno)',
+  (select count(*) from klubski_zahtevki where user_id = 'e1a10000-0000-4000-8000-000000000015'
+     and vrsta = 'polno' and status = 'odprt') = 1);
+
+-- Preklican račun se ob naslednji prijavi ne obnovi.
+update klubski_racuni set preklican_at = now() where user_id = 'e1a10000-0000-4000-8000-000000000001';
+select set_config('request.jwt.claim.sub','e1a10000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.preveri('klub: preklican račun se ob prijavi ne obnovi', uveljavi_klubski_racun() is null);
+reset role;
+select pg_temp.preveri('klub: preklican ostane edina vrstica',
+  (select count(*) from klubski_racuni where user_id = 'e1a10000-0000-4000-8000-000000000001') = 1);
+
+set local role anon;
+select pg_temp.zavrnjeno('klub: anonimni ne kliče uveljavi', $$select uveljavi_klubski_racun()$$);
+reset role;
+
 do $$
 declare v_napak int;
 begin
