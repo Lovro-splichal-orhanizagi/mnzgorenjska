@@ -1064,8 +1064,10 @@ tečejo največ trije uvozi, **iz vsake deželne zveze en**; državna (`oefb`:
 Bundesliga, 2. Liga, Regionalliga) meša dežele in teče sama, in če je na vrsti,
 se za njo ne zažene nič. Deželne zveze skoraj nimajo skupnih klubov (izjema:
 obe Regionalligi Süd uvozita isti arhiv mešane Regionallige `226374`, `221198`), zato
-`cakaj-na-uvoze.mjs` v Avstriji (`LOCENE_ZVEZE`, enako za RO, RS, HU z njihovimi
-državnimi zvezami) ročna uvoza nevklopljenih lig dveh dežel pusti teči hkrati; hkraten vpis istega novega kluba ujame `klubId`
+`cakaj-na-uvoze.mjs` v Avstriji (`LOCENE_ZVEZE` v `scripts/hkratnost.mjs`, enako za RO, RS, HU in od
+13. 10. 2026 SK z njihovimi državnimi zvezami) ročna uvoza lig dveh dežel pusti teči hkrati, od 13. 10. 2026
+tudi vklopljenih (nočni uvoz jih v koših že piše hkrati; vklopljena liga še vedno čaka na nočni posel svoje
+države), ista dežela pa le pri dveh nevklopljenih; hkraten vpis istega novega kluba ujame `klubId`
 (23505 → obstoječi klub). Zažene nevklopljene lige brez zagona ali z enim
 padcem (z `cene`); po dveh padcih ligo preskoči in javi na Discord. Ligo z
 uspelim uvozom poskusi vklopiti vsak tik. Ligo z novim
