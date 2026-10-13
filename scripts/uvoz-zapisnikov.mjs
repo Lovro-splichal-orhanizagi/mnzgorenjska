@@ -297,7 +297,8 @@ async function igralecId(
   // pozicije še ne poznamo (ali je ugibana). Znanega igralca iz polja ne
   // prekrsti: Labaška (Smrečany) je bil po eni oznaki vratar s 49 goli na 52
   // tekmah, 32 takih je bilo oktobra 2026. Pravi prestop v vrata popravi
-  // admin ali glasovanje.
+  // admin ali glasovanje. Pozicija kluba (`klub`) je kot `admin`: pogoj spodaj
+  // jo že izključi, ker ni `neznano` ne `ugibanje`.
   const smeVVrata = (p) =>
     p.position_source !== 'admin' &&
     (p.position == null || ['neznano', 'ugibanje'].includes(p.position_source))
