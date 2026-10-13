@@ -85,6 +85,9 @@ services:
       EMAIL_REPLY_TO: ${EMAIL_REPLY_TO:-}
   db:
     image: supabase/postgres:17.6.1.166
+    # Docker da /dev/shm 64 MB; vzporedne poizvedbe ga presežejo ("could not
+    # resize shared memory segment"). Pomnilnik se porabi le, ko ga poizvedba rabi.
+    shm_size: 256m
     # ponytail: sized for the 4 GB VM; revisit after a rescale.
     command:
       - postgres
