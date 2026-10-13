@@ -3019,7 +3019,9 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   neodvisna: pošta gre, če ni `profiles.brez_opomnikov`, push, če ni
   `profiles.brez_push` (oboje stran `/reminders`, naslov "Obvestila");
   kandidati vrnejo `email_vklop`/`push_vklop`, `email_log.kanal` pove, kaj je
-  prišlo. Za dovoljenje telefona vpraša šele stikalo na tej strani, ne prijava
+  prišlo. Za dovoljenje telefona vpraša prva shramba ekipe v aplikaciji, stikalo
+  na tej strani in pas po prijavi v aplikaciji (`PotisnaObvestila.tsx`), dokler
+  dovoljenje ni odločeno in `brez_push` ni vklopljen; "Zapri" ga skrije za teden
 - `kandidati_za_push_opomnik(liga)` → samo push "še nimaš ekipe": kdor ima
   napravo in v ligi nima ekipe (ali ima prazno; brez ekipe šteje domača liga
   kot pri opomniku), 24 ur pred rokom, enkrat na krog (`email_log` vrsta
