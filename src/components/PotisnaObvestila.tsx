@@ -3,11 +3,14 @@
 // Žeton naprave prijavljenega shrani v `push_tokens`, če je dovoljenje že
 // dano; pošilja jih `posli-opomnik`. Za dovoljenje NE vpraša ob prijavi (brez
 // konteksta, zavrnitve pa ni mogoče popraviti v aplikaciji): vpraša prva
-// shramba ekipe in stikalo na strani Obvestila (`registrirajPush(true)`).
+// shramba ekipe, stikalo na strani Obvestila (`registrirajPush(true)`) in pas
+// po prijavi v aplikaciji, dokler dovoljenje ni odločeno (ekipo je večina
+// sestavila na spletu, zato prve shrambe v aplikaciji nikoli ni bilo).
+// "Zapri" pas skrije za teden dni.
 // Ob odjavi žeton izbrišemo,
 // sicer bi naslednji na isti napravi dobival obvestila prejšnjega. Dotik
 // obvestila odpre pot iz `data.url`. Na spletu ne naredi nič.
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Capacitor } from '@capacitor/core'
 import { FirebaseMessaging } from '@capacitor-firebase/messaging'
@@ -15,6 +18,10 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import { jeNativno } from '../lib/platforma'
 import { varnaPot } from '../lib/prijava'
+import { t } from '../i18n'
+
+const ZAPRTO = 'slff-push-pas-zaprt'
+const TEDEN = 7 * 86400e3
 
 async function shrani(token: string) {
   const platforma = Capacitor.getPlatform() === 'ios' ? 'ios' : 'android'
@@ -48,6 +55,7 @@ export default function PotisnaObvestila() {
   const navigate = useNavigate()
   const uporabnik = session?.user.id ?? null
   const prej = useRef<string | null>(null)
+  const [pas, setPas] = useState(false)
 
   useEffect(() => {
     if (!jeNativno()) return
@@ -80,8 +88,41 @@ export default function PotisnaObvestila() {
       if (bil) void FirebaseMessaging.deleteToken().catch(() => {})
       return
     }
-    void registrirajPush(false)
+    setPas(false)
+    void registrirajPush(false).then(async (d) => {
+      if (d !== 'prompt' || Date.now() - Number(localStorage.getItem(ZAPRTO) ?? 0) < TEDEN) return
+      const { data } = await supabase.from('profiles').select('brez_push').eq('id', uporabnik).maybeSingle()
+      if (!data?.brez_push) setPas(true)
+    })
   }, [uporabnik])
 
-  return null
+  if (!pas) return null
+  return (
+    <div className="kartica fixed inset-x-3 bottom-24 z-50 mx-auto max-w-md space-y-3 p-4 shadow-lg">
+      <p className="font-semibold">{t('racun.opomniki.push')}</p>
+      <p className="text-sm text-slate-300">{t('racun.opomniki.pushOpis')}</p>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          className="gumb-glavni min-h-[44px] flex-1 px-3 py-2"
+          onClick={() => {
+            setPas(false)
+            void registrirajPush(true)
+          }}
+        >
+          {t('racun.opomniki.pushDovoli')}
+        </button>
+        <button
+          type="button"
+          className="gumb-tih min-h-[44px] px-3 py-2"
+          onClick={() => {
+            localStorage.setItem(ZAPRTO, String(Date.now()))
+            setPas(false)
+          }}
+        >
+          {t('skupno.zapri')}
+        </button>
+      </div>
+    </div>
+  )
 }
