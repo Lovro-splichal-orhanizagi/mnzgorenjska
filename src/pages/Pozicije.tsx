@@ -544,7 +544,8 @@ function IgralecKartica({
   // Zapisnika in ročnega vnosa administratorja glasovanje ne premakne; vse
   // ostalo (neznano, ugibanje, prejšnje glasovanje) je mogoče popraviti.
   const izZapisnika = igralec.position_source === 'zapisnik'
-  const zaklenjeno = izZapisnika || igralec.position_source === 'admin'
+  const odKluba = igralec.position_source === 'klub'
+  const zaklenjeno = izZapisnika || igralec.position_source === 'admin' || odKluba
   const ugibano = igralec.position_source === 'ugibanje'
   const potrjeno = Boolean(igralec.position)
   // Vodilna pozicija po SEŠTETIH UTEŽEH (ne surovih glasovih).
@@ -606,7 +607,9 @@ function IgralecKartica({
             title={
               izZapisnika
                 ? t('tekme.pozicije.igralec.izZapisnika')
-                : ugibano
+                : odKluba
+                  ? t('tekme.pozicije.igralec.odKluba')
+                  : ugibano
                   ? t('tekme.pozicije.igralec.izStatistike')
                   : t('tekme.pozicije.igralec.potrdilaSkupnost')
             }
@@ -620,6 +623,7 @@ function IgralecKartica({
               </abbr>
             )}
             {izZapisnika && t('tekme.pozicije.igralec.zapisnik')}
+            {odKluba && t('tekme.pozicije.igralec.klub')}
           </span>
         )}
 

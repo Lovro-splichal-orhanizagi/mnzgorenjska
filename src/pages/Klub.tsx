@@ -30,6 +30,9 @@ import FotoIgralca from '../components/FotoIgralca'
 import ZnakPreverjen from '../components/ZnakPreverjen'
 import ZahtevkiKluba from '../components/ZahtevkiKluba'
 import { useFotografije } from '../lib/prevzem'
+import KlubPredstavitev from '../components/KlubPredstavitev'
+import KlubUrejanje from '../components/KlubUrejanje'
+import { useMojKlub } from '../lib/useMojKlub'
 
 interface Igralec {
   id: number
@@ -57,6 +60,21 @@ export default function Klub() {
   // Plakata se rišeta (platno, PNG) šele, ko kdo odpre razdelek "Za objavo".
   const [objavaOdprta, setObjavaOdprta] = useState(false)
   const { slug: izbranSlug } = useTekmovanje()
+  const mojKlub = useMojKlub()
+  // Po urejanju (opis, grb) se predstavitev in glava kluba naložita znova.
+  const [osvezi, setOsvezi] = useState(0)
+  const osveziKlub = () => {
+    setOsvezi((n) => n + 1)
+    if (!id) return
+    void supabase
+      .from('teams')
+      .select('name, logo_url, short_name')
+      .eq('id', Number(id))
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setKlub(data)
+      })
+  }
   useNaslov(klub?.name ?? t('lestvice.klub.naslov'), liga?.name)
   useNoindex(!nalaganje && Boolean(napaka) && !klub)
   useKanonicnaLiga(liga?.slug)
@@ -202,6 +220,8 @@ export default function Klub() {
         </div>
       </header>
 
+      {id && <KlubPredstavitev klubId={Number(id)} osvezi={osvezi} />}
+
       <section className="space-y-3">
         <p className="text-sm leading-relaxed text-slate-400">
           {tx(
@@ -270,6 +290,10 @@ export default function Klub() {
         ))
       )}
 
+
+      {id && mojKlub === Number(id) && (
+        <KlubUrejanje klubId={Number(id)} igralci={igralci} onSpremeni={osveziKlub} />
+      )}
 
       {id && <ZahtevkiKluba klubId={Number(id)} />}
 

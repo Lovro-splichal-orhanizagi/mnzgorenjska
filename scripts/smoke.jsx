@@ -3375,6 +3375,17 @@ preveri(
   const { default: PotrditevPovezave } = await import('../src/pages/PotrditevPovezave')
   const { izvor, DOMENA } = await import('../src/lib/platforma')
   preveri('aplikacija: povezave brez okna gredo na slff.eu', izvor() === DOMENA && DOMENA === 'https://slff.eu')
+  // Grb kluba iz shrambe: baza hrani relativno pot, naslov API doda vmesnik.
+  const { naslovSlike, nastaviApiUrl } = await import('../src/lib/platforma')
+  nastaviApiUrl('https://api.primer.test')
+  preveri('grb kluba: relativna pot shrambe dobi naslov API',
+    naslovSlike('/storage/v1/object/public/grbi-klubov/12/grb-a.webp') === 'https://api.primer.test/storage/v1/object/public/grbi-klubov/12/grb-a.webp'
+    && naslovSlike('/grbi/klub.png') === '/grbi/klub.png')
+  nastaviApiUrl('http://127.0.0.1:54321')
+  // Spletna stran kluba, ki je brskalnik ne razčleni, ne sme podreti strani kluba.
+  const { imeGostitelja } = await import('../src/lib/klubskiRacun')
+  preveri('stran kluba: neveljaven naslov ne vrže napake',
+    imeGostitelja('https://[x]') === 'https://[x]' && imeGostitelja('https://www.nk-klub.si/o-nas') === 'www.nk-klub.si')
   for (const [ime, pot, Stran] of [['Racun', '/account', Racun], ['PotrditevPovezave', '/auth/confirm?type=signup', PotrditevPovezave]]) {
     try {
       const html = renderToString(

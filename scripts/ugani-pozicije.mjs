@@ -118,8 +118,8 @@ for (const a of kartoni ?? []) {
 // --- razvrstitev po klubih --------------------------------------------------
 const poKlubih = new Map()
 for (const p of igralci) {
-  // vratarji so znani iz zapisnika, administratorjevih in izglasovanih se ne dotikamo
-  if (['zapisnik', 'admin', 'glasovanje'].includes(p.position_source)) continue
+  // vratarji so znani iz zapisnika, administratorjevih, izglasovanih in klubovih se ne dotikamo
+  if (['zapisnik', 'admin', 'glasovanje', 'klub'].includes(p.position_source)) continue
   if (samoNove && p.position) continue
   if ((p.minutes ?? 0) < MIN_MINUT) continue
   const k = poKlubih.get(p.team_id) ?? []
@@ -140,7 +140,7 @@ for (const p of igralci) {
 // konca, brez gola, ob izenačenju manj kartonov in več minut. Velja le, dokler
 // skupnost (glasovanje) ali admin ne povesta drugače — position_source ostane
 // 'ugibanje'. Lige z oznako vratarja (vse ostale) se to ne dotakne.
-const zanesljivi = ['zapisnik', 'admin', 'glasovanje']
+const zanesljivi = ['zapisnik', 'admin', 'glasovanje', 'klub']
 const ligaBrezVratarjev = !igralci.some((p) => p.position === 'GK' && zanesljivi.includes(p.position_source))
 const klubiZVratarjem = new Set(
   igralci.filter((p) => p.position === 'GK' && (zanesljivi.includes(p.position_source) || samoNove)).map((p) => p.team_id),
@@ -174,7 +174,7 @@ for (const [, kader] of poKlubih) {
 const zeUgotovljeni = new Set(predlogi.map((p) => p.id))
 for (const p of igralci) {
   if (zeUgotovljeni.has(p.id)) continue
-  if (['zapisnik', 'admin', 'glasovanje'].includes(p.position_source)) continue
+  if (['zapisnik', 'admin', 'glasovanje', 'klub'].includes(p.position_source)) continue
   if (p.position) continue
   predlogi.push({ ...p, ugibanje: 'MID', goliNa90: 0, kartoniNa90: 0, brezDokazov: true })
 }

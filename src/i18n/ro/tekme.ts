@@ -193,6 +193,8 @@ export const tekme: NonNullable<Prevod['tekme']> = {
     igralec: {
       statistika: '{tekme} · {minute} min · {goli} · {cs} fără gol primit',
       izZapisnika: 'Din raportul de meci: portarul e marcat cu (P)',
+      odKluba: 'Post setat de club',
+      klub: ' · club',
       izStatistike: 'Din statistici (nr. tricou, goluri, cartonașe): voturile o pot corecta',
       potrdilaSkupnost: 'Confirmată de comunitate',
       zapisnik: ' · raport de meci',

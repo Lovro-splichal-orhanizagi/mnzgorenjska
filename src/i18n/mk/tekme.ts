@@ -191,6 +191,8 @@ export const tekme: NonNullable<Prevod['tekme']> = {
     igralec: {
       statistika: '{tekme} · {minute} мин · {goli} · {cs} без примен',
       izZapisnika: 'Од записникот: голманот е означен',
+      odKluba: 'Позицијата ја постави клубот',
+      klub: ' · клуб',
       izStatistike: 'Од статистиката (бр. на дрес, голови, картони), гласовите можат да ја поправат',
       potrdilaSkupnost: 'Потврдила заедницата',
       zapisnik: ' · записник',

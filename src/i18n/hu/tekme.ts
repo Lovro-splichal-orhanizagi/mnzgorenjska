@@ -191,6 +191,8 @@ export const tekme: NonNullable<Prevod['tekme']> = {
     igralec: {
       statistika: '{tekme} · {minute} perc · {goli} · {cs} kapott gól nélkül',
       izZapisnika: 'A jegyzőkönyvből: a kapus meg van jelölve',
+      odKluba: 'A posztot a klub állította be',
+      klub: ' · klub',
       izStatistike: 'Statisztikából (mezszám, gólok, lapok): a szavazatok javíthatják',
       potrdilaSkupnost: 'A közösség megerősítette',
       zapisnik: ' · jegyzőkönyv',

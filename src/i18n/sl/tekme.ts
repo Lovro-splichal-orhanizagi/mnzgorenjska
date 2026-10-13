@@ -192,6 +192,8 @@ export const tekme = {
     igralec: {
       statistika: '{tekme} · {minute} min · {goli} · {cs} brez prejetega',
       izZapisnika: 'Iz zapisnika — vratar je označen z (V)',
+      odKluba: 'Pozicijo je nastavil klub',
+      klub: ' · klub',
       izStatistike: 'Iz statistike (št. dresa, goli, kartoni) — glasovi jo lahko popravijo',
       potrdilaSkupnost: 'Potrdila skupnost',
       zapisnik: ' · zapisnik',
