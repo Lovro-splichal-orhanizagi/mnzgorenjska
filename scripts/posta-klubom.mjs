@@ -410,7 +410,20 @@ export function kandidati(vrsta, posta, aktivne, zdaj = new Date(), vsi = vrsta)
     opomniki.push({ ...s, prvi_at: p[0].poslano_at })
   }
   opomniki.sort((a, b) => Date.parse(a.prvi_at) - Date.parse(b.prvi_at))
-  return [...opomniki.map((s) => ({ s, vrsta: 'opomnik' })), ...prvi.map((s) => ({ s, vrsta: 'prvi' }))]
+  return [...opomniki.map((s) => ({ s, vrsta: 'opomnik' })), ...izmenicno(prvi).map((s) => ({ s, vrsta: 'prvi' }))]
+}
+
+/**
+ * Prvi maili izmenično po državah (AT, EE, AT, EE …), vsaka v svojem vrstnem
+ * redu: nova država ne čaka za zaostankom druge (1300 avstrijskih ob 100 na dan).
+ */
+export function izmenicno(vrstice) {
+  const poDrzavi = new Map()
+  for (const s of vrstice) (poDrzavi.get(s.drzava) ?? poDrzavi.set(s.drzava, []).get(s.drzava)).push(s)
+  const vrste = [...poDrzavi.values()]
+  const izid = []
+  for (let i = 0; izid.length < vrstice.length; i++) for (const v of vrste) if (i < v.length) izid.push(v[i])
+  return izid
 }
 
 // V dnevnik nikoli naslov kluba: stik #id (klub, liga).

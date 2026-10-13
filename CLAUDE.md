@@ -3508,7 +3508,7 @@ node:22-alpine, omrežje gostitelja kot `slff-html`) poganja
 EE tallinski čas) in največ 100 na dunajski dan. Najprej opomniki (en sam, ≥ 3
 dni po našem prvem, brez pošte drugih — tudi klic ali drugo za vedno zapre
 opomnik), nato prvi maili (`nov`, brez pošte, liga **aktivna** — neaktivna
-liga čaka, tako Estonija do vklopa). Klub (isti `team_id` ali isto ime v
+liga čaka, tako Estonija do vklopa; izmenično po državah, `izmenicno`). Klub (isti `team_id` ali isto ime v
 državi) čaka, če je v 3 dneh dobil pošto od kogarkoli ali v 7 dneh od drugega,
 pravilo pa tik pred pošiljanjem preveri še enkrat na sveži pošti. **En stik na
 klub:** drug naslov kluba, ki je prvi mail ali opomnik že dobil, prvega ne dobi.

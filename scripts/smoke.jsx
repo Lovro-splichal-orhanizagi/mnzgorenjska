@@ -6592,7 +6592,7 @@ preveri(
 
 // --- pošta klubom (scripts/posta-klubom.mjs) ----------------------------------
 {
-  const { besedilo, sporocilo, kandidati, vOknu, zakrij, stareZaOpomnik, POSLAL } = await import('./posta-klubom.mjs')
+  const { besedilo, sporocilo, kandidati, izmenicno, vOknu, zakrij, stareZaOpomnik, POSLAL } = await import('./posta-klubom.mjs')
   const k = (drzava) => ({ drzava, team_id: 2002, liga_slug: 'x-liga', ime_lige: 'Kärntner Liga', klub: 'St. Veit SC' })
   const p = { igralcev: 19, naj: 'Sebastian Weiss', tocke: 55, ekip: 7 }
   for (const drzava of ['AT', 'EE']) {
@@ -6662,6 +6662,10 @@ preveri(
   vrsta[10].team_id = 111 // 11 in 52 sta isti klub
   const izbor = kandidati(vrsta, posta, new Set(['at-a']), zdaj, [...vrsta, ...drugi]).map((x) => `${x.vrsta}:${x.s.id}`).join(',')
   preveri('pošta klubom: kandidati (stanja, drug pošiljatelj, 3 dni, poslji_od, neaktivna liga, klub)', izbor === 'opomnik:2,prvi:1,prvi:14', izbor)
+  {
+    const r = izmenicno([1, 2, 3].map((id) => ({ id, drzava: 'AT' })).concat([4, 5].map((id) => ({ id, drzava: 'EE' })))).map((x) => x.id).join(',')
+    preveri('pošta klubom: prvi maili izmenično po državah', r === '1,4,2,5,3', r)
+  }
   {
     // En stik na klub: drug naslov istega kluba ne dobi prvega maila, če ga je klub že dobil (tudi pred mesecem).
     const a = { id: 1, v_vrsti: true, email: 'a@x.at', drzava: 'AT', liga_slug: 'at-a', stanje: 'nov', team_id: 5, klub: 'SV A' }
