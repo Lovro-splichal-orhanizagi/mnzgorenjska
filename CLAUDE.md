@@ -3328,7 +3328,10 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   le izguba pravice do uradnih odsotnosti. Anonimizacija vrstice jih izbriše
   (kot skupnostna poročila).
 - `povzetek_rasti()` → ena vrstica številk (uporabniki, novi v 7 dneh, ekipe,
-  aktivne lige, namestitve, kliki na "Časti pivo" skupaj in v 7 dneh) pod vsakim poročilom na Discord (mejnik uporabnikov,
+  aktivne lige, namestitve, kliki na "Časti pivo" skupaj in v 7 dneh), pod njo
+  vrstica na državo (uporabniki z ekipo v ligi države in novi v 7 dneh, ekipe
+  in nove, aktivne lige; država je država lige) in število uporabnikov brez
+  ekipe — pod vsakim poročilom na Discord (mejnik uporabnikov,
   `scripts/trgovine.mjs`). Le servis
 - **Pivski zid** (`/beers`, migracija 20261013150100): `piva` hrani nakupe
   Buy Me a Coffee (funkcija `bmc-pivo`, servisni ključ, `zunanji_id` = BMC
