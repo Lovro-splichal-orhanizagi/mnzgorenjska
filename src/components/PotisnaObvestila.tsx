@@ -18,6 +18,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Capacitor } from '@capacitor/core'
+import { App } from '@capacitor/app'
 import { FirebaseMessaging } from '@capacitor-firebase/messaging'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
@@ -27,6 +28,8 @@ import { t } from '../i18n'
 
 const ZAPRTO = 'slff-push-pas-zaprt'
 const TEDEN = 7 * 86400e3
+// Prva gradnja trgovine z nastavitvijo Firebase (1.0.1, gradnja 3).
+const PUSH_OD_GRADNJE = 3
 
 // Javna nastavitev spletne aplikacije Firebase (ni skrivnost).
 const FIREBASE_SPLET = {
@@ -134,6 +137,8 @@ export default function PotisnaObvestila() {
     }
     void registrirajPush(false).then(async (d) => {
       if (d !== 'prompt' || Date.now() - Number(localStorage.getItem(ZAPRTO) ?? 0) < TEDEN) return
+      // Gradnja 1 (iOS in Android 1.0) je brez Firebase: žetona ne dobi, pas bi lagal.
+      if (jeNativno() && Number((await App.getInfo()).build) < PUSH_OD_GRADNJE) return
       const { data } = await supabase.from('profiles').select('brez_push').eq('id', uporabnik).maybeSingle()
       if (!data?.brez_push) setPas(true)
     })

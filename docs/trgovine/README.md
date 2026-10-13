@@ -34,7 +34,10 @@ and screenshot `/?t=clani`, `/team/<id>`, `/standings`, `/players`,
 | Play app signing SHA-256 `08:A0:67:…:10:83` + upload key `27:EF:03:…:2A:C7` | `assetlinks.json` |
 | Firebase project `slff-cb58e` (iOS + Android apps) | `GoogleService-Info.plist`, `google-services.json`, Supabase secret `FIREBASE_SERVICE_ACCOUNT` |
 
-Build numbers: iOS 1.0 (1), Android 1.0 (1) and 1.0.1 (2). Keep the next
+Build numbers: iOS 1.0 (1) and 1.0.1 (3), Android 1.0 (1) and 1.0.1 (3) —
+build 3 is the first with Firebase push (13. 10. 2026: Play production and App
+Store review were on build 1; both now on 1.0.1 (3)). The repo still says 1 / 2,
+so the **next upload is build 4** on both. Keep the next
 iOS build and Android versionCode on the **same number** (`min_app_verzija`
 compares that number on both platforms).
 
