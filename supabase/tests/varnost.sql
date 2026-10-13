@@ -2902,6 +2902,46 @@ reset role;
 select pg_temp.preveri('klub-profil: klubski račun potrdi profil svojega igralca',
   exists (select 1 from zahtevki_igralca where player_id = -921001 and status = 'potrjen' and potrdil = 'klub'));
 
+-- Stran kluba.
+select set_config('request.jwt.claim.sub','f1a10000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select klub_uredi_predstavitev(-913001, 'Klub z dolgo tradicijo.', 'https://klub.example.org', 'nk_test', null);
+select pg_temp.napaka('klub-stran: spletna stran mora biti https',
+  $$select klub_uredi_predstavitev(-913001, null, 'javascript:alert(1)', null, null)$$);
+select pg_temp.zavrnjeno('klub-stran: drug klub ne ureja',
+  $$select klub_uredi_predstavitev(-913002, 'x', null, null, null)$$);
+select klub_nastavi_grb(-913001, '-913001/grb-abc.webp');
+select pg_temp.zavrnjeno('klub-stran: grb le v svojo mapo',
+  $$select klub_nastavi_grb(-913001, '-913002/grb-abc.webp')$$);
+reset role;
+set local role anon;
+select pg_temp.preveri('klub-stran: predstavitev je javna',
+  (select opis from klub_predstavitev where team_id = -913001) = 'Klub z dolgo tradicijo.');
+select pg_temp.preveri('klub-stran: oznaka uradnega računa je javna',
+  ima_klubski_racun(-913001) and not ima_klubski_racun(-913005));
+reset role;
+select pg_temp.preveri('klub-stran: grb kluba je zapisan',
+  (select logo_vir from teams where id = -913001) = 'klub'
+  and (select logo_url from teams where id = -913001) like '%/grbi-klubov/-913001/grb-abc.webp');
+-- Skripta za grbe (service_role) ne povozi grba kluba.
+update teams set logo_url = '/grbi/drug.png' where id = -913001;
+select pg_temp.preveri('klub-stran: skripta ne povozi grba kluba',
+  (select logo_url from teams where id = -913001) like '%/grbi-klubov/-913001/grb-abc.webp');
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+select admin_ponastavi_grb(-913001);
+reset role;
+update teams set logo_url = '/grbi/drug.png' where id = -913001;
+select pg_temp.preveri('klub-stran: po adminovi ponastavitvi skripta spet piše',
+  (select logo_url from teams where id = -913001) = '/grbi/drug.png' and (select logo_vir from teams where id = -913001) is null);
+-- Preklican račun ne ureja strani.
+update klubski_racuni set preklican_at = now() where user_id = 'f1a10000-0000-4000-8000-000000000001';
+select set_config('request.jwt.claim.sub','f1a10000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('klub-stran: preklican račun ne ureja',
+  $$select klub_uredi_predstavitev(-913001, 'y', null, null, null)$$);
+reset role;
+
 do $$
 declare v_napak int;
 begin
