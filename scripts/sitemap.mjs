@@ -143,11 +143,20 @@ async function glavna() {
         .eq('competition_id', liga.id).in('season', [tekoca, lani, danes.slice(0, 4), String(Number(danes.slice(0, 4)) - 1)]).gt('minutes', 0)
         .order('id').order('season').range(od, do_),
     )
-    const tekme = await vseVrstice((od, do_) =>
-      db.from('matches').select('id, played_on, home_team_id, away_team_id, rounds!inner(competition_id)')
-        .eq('rounds.competition_id', liga.id).not('imported_at', 'is', null)
-        .order('id').range(od, do_),
-    )
+    // Najprej krogi, nato tekme po round_id (kazalo): filter prek rounds!inner je
+    // Postgres reševal s prehodom vseh tekem po id (75 ms na stran, 26 000 klicev na noč).
+    const krogi = (await vseVrstice((od, do_) =>
+      db.from('rounds').select('id').eq('competition_id', liga.id).order('id').range(od, do_),
+    )).map((r) => r.id)
+    const tekme = []
+    for (let i = 0; i < krogi.length; i += 100) {
+      const kos = krogi.slice(i, i + 100)
+      tekme.push(...await vseVrstice((od, do_) =>
+        db.from('matches').select('id, played_on, home_team_id, away_team_id')
+          .in('round_id', kos).not('imported_at', 'is', null)
+          .order('id').range(od, do_),
+      ))
+    }
     const naslovi = nasloviLige(liga.slug, {
       klubi: [...new Set(klubi.map((k) => k.team_id))],
       igralci: [...new Set(igralci.map((p) => p.id))],

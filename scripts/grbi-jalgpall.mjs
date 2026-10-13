@@ -89,6 +89,17 @@ const imeDatoteke = (ime) =>
   'ee-' + ime.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60)
 const KONCNICE = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/webp': 'webp' }
 
+/** Vrsta slike po prvih bajtih (za odgovore brez Content-Type). */
+export function vrstaSlike(b) {
+  const z = b.subarray(0, 12).toString('latin1')
+  if (z.startsWith('\x89PNG')) return 'image/png'
+  if (z.startsWith('\xff\xd8\xff')) return 'image/jpeg'
+  if (z.startsWith('GIF8')) return 'image/gif'
+  if (z.startsWith('RIFF') && z.slice(8, 12) === 'WEBP') return 'image/webp'
+  if (/^\s*</.test(b.subarray(0, 200).toString('utf8')) && b.subarray(0, 1000).toString('utf8').includes('<svg')) return 'image/svg+xml'
+  return ''
+}
+
 // --- lige in klubi -------------------------------------------------------------
 let q = db.from('competitions').select('id, slug, source_league_code').eq('source', 'jalgpall').order('slug')
 if (samoLiga) q = q.eq('slug', samoLiga)
@@ -170,11 +181,13 @@ for (const n of nacrt) {
       console.error(`Ustavljeno: ${n.src} -> ${o.status} (zavrnitev — ne obhajamo)`)
       process.exit(2)
     }
-    const vrsta = (o.headers.get('content-type') ?? '').split(';')[0].trim()
-    if (!o.ok || !vrsta.startsWith('image/')) throw new Error(`HTTP ${o.status} ${vrsta}`)
+    if (!o.ok) throw new Error(`HTTP ${o.status}`)
+    const buf = Buffer.from(await o.arrayBuffer())
+    // /images/teams/<id> je brez končnice in brez Content-Type: vrsto pove vsebina.
+    const vrsta = (o.headers.get('content-type') ?? '').split(';')[0].trim() || vrstaSlike(buf)
     // SVG ne shranjujemo (kot pri drugih virih grbov): ne pomanjšamo ga in lahko nosi skript.
     if (vrsta === 'image/svg+xml') throw new Error('SVG — preskočeno')
-    const buf = Buffer.from(await o.arrayBuffer())
+    if (!vrsta.startsWith('image/')) throw new Error(`ni slika (${vrsta || 'neznana vrsta'})`)
     if (buf.length < 200) throw new Error('prazna slika')
     preneseni.push({ ...n, buf, konc: KONCNICE[vrsta] ?? 'png', hash: createHash('sha1').update(buf).digest('hex') })
   } catch (e) {
