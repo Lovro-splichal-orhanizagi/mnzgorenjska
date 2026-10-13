@@ -4927,6 +4927,23 @@ preveri(
     zs.some((x) => x.id === '1227060' && x.z.krog === 7 && !x.z.nepopoln) && zs.some((x) => x.id === '1227058' && x.z.nepopoln && x.z.krog === 6))
 }
 
+// --- hkratnost ročnih uvozov iste države (scripts/hkratnost.mjs) ------------
+{
+  const { locenaHkrati } = await import('./hkratnost.mjs')
+  const L = (zveza, aktivna = false) => ({ zveza, aktivna })
+  preveri('hkratnost: HU nevklopljeni, različni županiji', locenaHkrati('HU', L('mlsz-pe'), L('mlsz-bk')))
+  preveri('hkratnost: HU nevklopljeni, ista županija (istaZveza)', locenaHkrati('HU', L('mlsz-pe'), L('mlsz-pe')))
+  preveri('hkratnost: HU vklopljeni, različni županiji', locenaHkrati('HU', L('mlsz-pe', true), L('mlsz-bk', true)))
+  preveri('hkratnost: HU vklopljeni, ista županija čaka', !locenaHkrati('HU', L('mlsz-pe', true), L('mlsz-pe')))
+  preveri('hkratnost: HU državna MLSZ čaka', !locenaHkrati('HU', L('mlsz'), L('mlsz-bk')))
+  preveri('hkratnost: SK različni zvezi', locenaHkrati('SK', L('obfz-presov'), L('vsfz')))
+  preveri('hkratnost: SK ista zveza čaka', !locenaHkrati('SK', L('obfz-presov'), L('obfz-presov')))
+  preveri('hkratnost: SK državna SFZ čaka', !locenaHkrati('SK', L('sfz'), L('vsfz')))
+  preveri('hkratnost: brez zveze čaka', !locenaHkrati('SK', L(null), L('vsfz')))
+  preveri('hkratnost: država brez pravila čaka', !locenaHkrati('SI', L('mnzg'), L('mnzlj')))
+  preveri('hkratnost: RO ista županija čaka', !locenaHkrati('RO', L('ajf-cj'), L('ajf-cj')))
+}
+
 // --- vir hlf (Romunija, uradna platforma FRF hailafotbal.ro) ----------------------
 {
   const H = await import('./viri/hlf.mjs')
