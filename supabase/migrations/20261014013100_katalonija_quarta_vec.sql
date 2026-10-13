@@ -29,6 +29,9 @@ select v.slug, v.ime, v.kratko, d.id, f.id, 'fcf', v.koda, 1, v.vrstni, 6, false
     ('es-ct-quarta-g18', 'Quarta Catalana, grup 18', 'Quarta Cat. 18', '4148555-4148794', 118),
     ('es-ct-quarta-g19', 'Quarta Catalana, grup 19', 'Quarta Cat. 19', '4148795-4149034', 119),
     ('es-ct-quarta-g20', 'Quarta Catalana, grup 20', 'Quarta Cat. 20', '4149035-4149274', 120),
+    ('es-ct-quarta-g21', 'Quarta Catalana, grup 21', 'Quarta Cat. 21', '4149275-4149513', 121),
+    ('es-ct-quarta-g22', 'Quarta Catalana, grup 22', 'Quarta Cat. 22', '4149516-4149755', 122),
+    ('es-ct-quarta-g23', 'Quarta Catalana, grup 23', 'Quarta Cat. 23', '4149756-4149995', 123),
     ('es-ct-quarta-g32', 'Quarta Catalana, grup 32', 'Quarta Cat. 32', '4136953-4137084', 132)
   ) as v(slug, ime, kratko, koda, vrstni)
  where d.code = 'ES'

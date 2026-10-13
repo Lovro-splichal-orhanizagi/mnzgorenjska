@@ -2552,6 +2552,9 @@ grup 4 in 5 (kot 1–6) **nobena**.
 | es-ct-quarta-g18 | 16 | `4148555-4148794` | ne | — (TODO) |
 | es-ct-quarta-g19 | 16 | `4148795-4149034` | ne | — (TODO) |
 | es-ct-quarta-g20 | 16 | `4149035-4149274` | ne | — (TODO) |
+| es-ct-quarta-g21 | 16 | `4149275-4149513` | ne | — (TODO) |
+| es-ct-quarta-g22 | 16 | `4149516-4149755` | ne | — (TODO) |
+| es-ct-quarta-g23 | 16 | `4149756-4149995` | ne | — (TODO) |
 | es-ct-quarta-g32 | 12 | `4136953-4137084` | ne | — (TODO) |
 
 **Quarta grup 7+** (pregled 13. 10. 2026, migracija 20261014013100): grup
