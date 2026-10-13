@@ -26,6 +26,9 @@ on:
     - cron: '17 * * * 5,6,0'
     # Ponedeljek do četrtek — enkrat, ob 5:17 UTC (7:17 po naše)
     - cron: '17 5 * * 1-4'
+    # Rezerva: GitHub zagon ob obremenitvi tiho izpusti (13. 10. 2026 ga ni
+    # bilo). Posel `zacni` jo preskoči, če je današnji jutranji zagon že tekel.
+    - cron: '47 6 * * 1-4'
   workflow_dispatch:
 
 permissions:
@@ -50,22 +53,81 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Vsaka država v svojem poslu, vsi hkrati. Viri so različna spletišča (vsako
-  # s svojim tempom), klubi so enolični po državi, igralci po ligi — posla se
-  # ne dotakneta istih vrstic. Zaporedno je 103 lig 9. 10. porabilo 212 minut
-  # in zagon je padel na 240-minutni meji; ob vikendih teče vsako uro.
+  # Rezervni cron (06:47) teče le, če jutranjega (05:17) danes ni bilo.
+  zacni:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+    outputs:
+      teci: ${{ steps.odlocitev.outputs.teci }}
+    steps:
+      - id: odlocitev
+        env:
+          GH_TOKEN: ${{ github.token }}
+          URNIK: ${{ github.event.schedule }}
+        run: |
+          teci=true
+          if [ "$URNIK" = '47 6 * * 1-4' ]; then
+            danes=$(date -u +%Y-%m-%dT04:00:00Z)
+            prej=$(gh run list -R "$GITHUB_REPOSITORY" --workflow uvoz-zapisnikov.yml --limit 20 \
+              --json databaseId,createdAt --jq "[.[]|select(.databaseId != ${GITHUB_RUN_ID} and .createdAt >= \"$danes\")]|length")
+            [ "$prej" -gt 0 ] && teci=false
+          fi
+          echo "Rezervni zagon potreben: $teci"
+          echo "teci=$teci" >> "$GITHUB_OUTPUT"
+
+  # Vsaka država v svojem poslu, velike razdeljene na koše (scripts/nocni-kosi.mjs).
+  # Viri so različna spletišča (vsako s svojim tempom), klubi so enolični po
+  # državi, igralci po ligi — posla različnih držav se ne dotakneta istih
+  # vrstic. Koši iste države si delijo klube: hkraten vpis istega novega kluba
+  # ujame `klubId` (23505 → obstoječi), zaklep vrstice ("lock timeout") pa
+  # drugi poskus lige na koncu koša.
+  #
+  # Zakaj koši: Avstrija (162 vklopljenih lig) je 11.–12. 10. 2026 v enem
+  # poslu v 240 minutah obdelala 42 lig in GitHub jo je preklical, vsak zagon
+  # iste. Preklican ali padel posel predpomnilnika ni shranil, zato je
+  # naslednji spet bral in uvažal vse zapisnike zadnjih 21 dni.
   uvoz:
+    needs: zacni
+    if: needs.zacni.outputs.teci == 'true'
     strategy:
       fail-fast: false
       matrix:
         # Nova država mora na ta seznam, sicer se njene lige ponoči ne uvažajo.
-        drzava: [SI, HR, SK, HU, CZ, AT, RS, RO, EE, PL, ES, LV, MK]
-    name: uvoz ${{ matrix.drzava }}
+        # Število košev je isto kot KOSOV v scripts/nocni-kosi.mjs (smoke primerja).
+        # Koliko košev sme brati isti vir, določa VZPOREDNI tam.
+        include:
+          - { drzava: SI, kos: 1, kosov: 2 }
+          - { drzava: SI, kos: 2, kosov: 2 }
+          - { drzava: HR, kos: 1, kosov: 3 }
+          - { drzava: HR, kos: 2, kosov: 3 }
+          - { drzava: HR, kos: 3, kosov: 3 }
+          - { drzava: SK, kos: 1, kosov: 2 }
+          - { drzava: SK, kos: 2, kosov: 2 }
+          - { drzava: HU, kos: 1, kosov: 3 }
+          - { drzava: HU, kos: 2, kosov: 3 }
+          - { drzava: HU, kos: 3, kosov: 3 }
+          - { drzava: CZ, kos: 1, kosov: 1 }
+          - { drzava: AT, kos: 1, kosov: 4 }
+          - { drzava: AT, kos: 2, kosov: 4 }
+          - { drzava: AT, kos: 3, kosov: 4 }
+          - { drzava: AT, kos: 4, kosov: 4 }
+          - { drzava: RS, kos: 1, kosov: 2 }
+          - { drzava: RS, kos: 2, kosov: 2 }
+          - { drzava: RO, kos: 1, kosov: 1 }
+          - { drzava: EE, kos: 1, kosov: 1 }
+          - { drzava: PL, kos: 1, kosov: 1 }
+          - { drzava: ES, kos: 1, kosov: 1 }
+          - { drzava: LV, kos: 1, kosov: 1 }
+          - { drzava: MK, kos: 1, kosov: 1 }
+    # Ime "uvoz HU" pri enem košu, "uvoz HU 2/3" pri več (cakaj-na-uvoze.mjs
+    # pri skupnem viru gleda vse posle, ki se začnejo z "uvoz <država>").
+    name: uvoz ${{ matrix.drzava }}${{ matrix.kosov > 1 && format(' {0}/{1}', matrix.kos, matrix.kosov) || '' }}
     runs-on: ubuntu-latest
-    # 17 lig je 13. septembra porabilo 43 minut ze pred zadnjo ligo.
-    # Ura pusti prostor se za njen uvoz, predpomnilnik in obcasno pocasne vire.
-    # 24 lig; z `--sveze` vsaka vzame minuto, brez njega tri.
-    # Do 120 minut cakanja na starejsi (rocni) uvoz pride zraven.
+    # Koš sam ne začne nove lige po 190 minutah (ROK_MIN v nocni-uvoz.sh), da
+    # ostane čas za shranjevanje predpomnilnika. Do 120 minut čakanja na
+    # starejši ročni uvoz pride zraven, zato 240 ostane.
     timeout-minutes: 240
     permissions:
       contents: read
@@ -89,7 +151,8 @@ jobs:
       # Druzina uvozov (uvoz-zapisnikov, uvoz-lige, zdruzi-klube,
       # tedensko-cene) pise v iste tabele: klube, igralce, tekme, cene. Kar se
       # krizi (ista drzava, skupni posli), tece po vrsti — po casu zacetka,
-      # brez izpodrivanja; razlicne drzave tecejo hkrati.
+      # brez izpodrivanja; razlicne drzave tecejo hkrati. Koši istega zagona
+      # drug na drugega ne čakajo (isti zagon).
       - name: Pocakaj na starejse uvoze
         env:
           GH_TOKEN: ${{ github.token }}
@@ -98,92 +161,46 @@ jobs:
         # Le na uvoze iste države ter zdruzi-klube/tedensko-cene (glej skripto).
         run: node scripts/cakaj-na-uvoze.mjs --drzava ${{ matrix.drzava }}
 
-      # Predpomnilnik prihrani ponovno pobiranje že prebranih zapisnikov —
-      # tako ob vsakem zagonu s strani MNZ potegnemo le nove tekme.
+      # Predpomnilnik prihrani ponovno pobiranje že prebranih zapisnikov in
+      # nosi odtise uvoženih (nespremenjen zapisnik se ne uvaža znova) ter
+      # stanje koša (katera liga je bila kdaj osvežena). Vsak koš ima svojega.
+      # Shrani se VEDNO (tudi ob padcu ali preklicu): actions/cache ga je
+      # shranil le ob uspehu, zato je posel, ki je padel na eni ligi, vsak
+      # zagon znova uvažal vse.
       - name: Predpomnilnik zapisnikov
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: scripts/.predpomnilnik
-          key: zapisniki-${{ matrix.drzava }}-${{ github.run_id }}
+          key: zapisniki-${{ matrix.drzava }}-k${{ matrix.kos }}od${{ matrix.kosov }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
+            zapisniki-${{ matrix.drzava }}-k${{ matrix.kos }}od${{ matrix.kosov }}-
             zapisniki-${{ matrix.drzava }}-
-            zapisniki-
 
-      # === Vse vklopljene lige ===========================================
+      # === Vklopljene lige koša ===========================================
       # Napake posamezne lige zberemo, obdelamo tudi ostale in na koncu
-      # vrnemo neuspeh, ce katera liga ni uspela.
+      # vrnemo neuspeh, ce katera liga ni uspela (glej scripts/nocni-uvoz.sh).
       - name: Uvoz po ligah
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           # Ceske lige: is.fotbal.cz doseze le posrednik v EU (scripts/hetzner/facr-posrednik.sh).
           FACR_PROXY: ${{ secrets.FACR_PROXY }}
-        run: |
-          set -euo pipefail
-          node scripts/aktivna-tekmovanja.mjs --drzava ${{ matrix.drzava }} > /tmp/lige.txt
-          echo "Lige za uvoz: $(tr '\n' ' ' < /tmp/lige.txt)"
-          [ -s /tmp/lige.txt ] || { echo "Država ${{ matrix.drzava }} nima vklopljenih lig."; exit 0; }
-          # Ena liga ne sme podreti ostalih. Spletisca zvez so razlicno
-          # zanesljiva: Nova Gorica je zvecer strezla okrnjeno stran, Ljubljana
-          # in NZS sta obcasno pocasni. Pod `set -e` je prva taka napaka
-          # ustavila zanko in vse NASLEDNJE lige tisti dan sploh niso bile
-          # uvozene — pri sestnajstih ligah je to tiha izguba dneva.
-          #
-          # Vsak ukaz preverimo posebej (`|| ok=0`). Prej so bili povezani z
-          # &&, kar je pomenilo, da je napaka razporeda (npr. varovalo pred
-          # okrnjenim razporedom) ustavila tudi uvoz zapisnikov te lige.
-          # Zagon se na koncu vseeno konca z napako, da se opozorilo vidi.
-          padle=""
+          DRZAVA: ${{ matrix.drzava }}
+          KOS: ${{ matrix.kos }}
+          KOSOV: ${{ matrix.kosov }}
           # Urni zagon ob vikendih dela le, kar je novo: preračuna samo kroge
           # z novimi zapisniki in ugiba pozicije samo, če je liga dobila nove
-          # tekme. Jutranji zagon (05 UTC) in ročni zagon naredita vse,
-          # vključno z varnostnim preračunom zadnjih 21 dni.
-          urni=0
-          if [ "$GITHUB_EVENT_NAME" = "schedule" ] && [ "$(date -u +%H)" != "05" ]; then urni=1; fi
-          [ "$urni" = 1 ] && echo "Urni zagon: preračun le dotaknjenih krogov"
-          # Izhod 4 = vir je zavrnil (403, 429, izziv — jalgpall): ne beremo
-          # naprej, tudi ostalih lig iste države ne (spletišče je skupno).
-          zavrnjen=0
-          teci() { "$@" </dev/null; local k=$?; [ "$k" = 4 ] && zavrnjen=1; return "$k"; }
-          while IFS= read -r liga; do
-            [ -n "$liga" ] || continue
-            echo "::group::$liga"
-            ok=1
-            teci node scripts/uvoz-razporeda.mjs --tekmovanje "$liga" --pisi || ok=0
-            node scripts/uvoz-delegiranja.mjs --tekmovanje "$liga" --pisi </dev/null || ok=0
-            rm -f /tmp/uvozenih
-            dodatno=""
-            [ "$urni" = 1 ] && dodatno="--samo-dotaknjene"
-            [ "$zavrnjen" = 1 ] || teci node scripts/uvoz-zapisnikov.mjs --tekmovanje "$liga" --sveze 21 --porocilo /tmp/uvozenih $dodatno || ok=0
-            # Prestopi so porocilo; vir, ki jih ne objavlja, se konca z 0.
-            node scripts/uvoz-registracij.mjs --tekmovanje "$liga" </dev/null || ok=0
-            # Novi igralci pridejo le z novimi zapisniki. Brez porocila (uvoz
-            # je padel pred koncem) ugibamo za vsak primer.
-            if [ "$urni" = 1 ] && [ "$(cat /tmp/uvozenih 2>/dev/null || echo x)" = "0" ]; then
-              echo "Ni novih tekem — ugibanje pozicij preskočeno"
-            else
-              # Vir, ki vratarja označi na tekmo (Srbija): igralca iz polja, ki ga
-              # je ena oznaka prekrstila v GK, vrne v polje (drugi viri: preskoči).
-              node scripts/lazni-vratarji.mjs   --tekmovanje "$liga" --pisi </dev/null || ok=0
-              node scripts/ugani-pozicije.mjs   --tekmovanje "$liga" --pisi --samo-nove </dev/null || ok=0
-            fi
-            if [ "$ok" = 1 ]; then
-              echo "$liga: v redu"
-            else
-              echo "::warning title=Uvoz lige::$liga ni uspela; ostale se nadaljujejo"
-              padle="$padle $liga"
-            fi
-            echo "::endgroup::"
-            if [ "$zavrnjen" = 1 ]; then
-              echo "::error title=Vir je zavrnil::$liga — vir je vrnil 403/429 ali izziv; ostale lige države preskočene, ne obhajamo"
-              padle="$padle $liga"
-              break
-            fi
-          done < /tmp/lige.txt
-          if [ -n "$padle" ]; then
-            echo "::error title=Neuspele lige::$padle"
-            exit 1
-          fi
+          # tekme. Jutranji, rezervni in ročni zagon naredijo vse, vključno z
+          # varnostnim preračunom zadnjih 21 dni.
+          URNIK: ${{ github.event.schedule }}
+        run: bash scripts/nocni-uvoz.sh
+
+      - name: Shrani predpomnilnik
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: scripts/.predpomnilnik
+          key: zapisniki-${{ matrix.drzava }}-k${{ matrix.kos }}od${{ matrix.kosov }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       # Rdec zagon v GitHubu ni alarm, dokler ga kdo ne vidi. Uvoz je dvakrat
       # padel in dva dni ni opazil nihce.
@@ -191,13 +208,13 @@ jobs:
         if: failure()
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_TEDENSKO }}
-        run: node scripts/javi-napako.mjs "Uvoz zapisnikov ${{ matrix.drzava }}"
+        run: node scripts/javi-napako.mjs "Uvoz zapisnikov ${{ matrix.drzava }} ${{ matrix.kos }}/${{ matrix.kosov }}"
 
   # === Skupno za vse lige ============================================
   # Ko so vse države končale (tudi neuspešno).
   skupno:
-    needs: uvoz
-    if: always()
+    needs: [zacni, uvoz]
+    if: always() && needs.zacni.outputs.teci == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:

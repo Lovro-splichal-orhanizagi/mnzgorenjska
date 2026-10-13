@@ -18,6 +18,7 @@ import { readFileSync, existsSync, mkdirSync, writeFileSync, readdirSync } from 
 import { createHash } from 'node:crypto'
 import { tekmovanje as najdiTekmovanje, sifraLige } from './tekmovanje.mjs'
 import { viraZa } from './viri/index.mjs'
+import { zaprtje } from './odtis-kode.mjs'
 import { mapaKlubov } from './klubi.mjs'
 import { vseVrstice } from './strani.mjs'
 import { prenesiSPonovitvami } from './prenos.mjs'
@@ -640,7 +641,9 @@ const odtisKode = (() => {
     'scripts/klubi.mjs',
     'scripts/razporedi.mjs',
     ...readdirSync('scripts').filter((f) => /^zapisnik.*\.mjs$/.test(f)).map((f) => `scripts/${f}`),
-    ...readdirSync('scripts/viri').map((f) => `scripts/viri/${f}`),
+    // Le vir te lige (in kar uvaža), ne vseh virov: popravek madžarskega vira
+    // ne sme razveljaviti odtisov avstrijskih lig (odtis-kode.mjs).
+    ...zaprtje(`scripts/viri/${virIme ?? tekmovanje.source}.mjs`),
   ].sort()
   for (const f of datoteke) h.update(f).update(readFileSync(f))
   return h.digest('hex').slice(0, 16)

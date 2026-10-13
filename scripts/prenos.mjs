@@ -54,6 +54,10 @@ export function retryAfterMs(vrednost, zdaj = Date.now()) {
   return Number.isFinite(t) ? Math.max(0, t - zdaj) : null
 }
 
+// Nočni uvoz bere vir iz več poslov hkrati (scripts/nocni-kosi.mjs); vsak posel
+// takrat čaka toliko-krat dlje, da skupni tempo k viru ostane kot pri enem.
+const FAKTOR_PREMORA = Math.max(1, Number(process.env.SLFF_PREMOR_FAKTOR) || 1)
+
 /**
  * `fetch` s ponovitvami. Vrne `Response` kot `fetch` — tudi 4xx in zadnji 5xx,
  * da klicatelj sam odloči, kaj z njim (in napako napiše kot doslej).
@@ -83,7 +87,7 @@ export async function prenesiSPonovitvami(url, moznosti = {}) {
   const poskusov = padli.has(host) ? 1 : zamiki.length + 1
 
   for (let poskus = 1; ; poskus++) {
-    if (premorMs) await cakaj(premorMs)
+    if (premorMs) await cakaj(premorMs * FAKTOR_PREMORA)
     let odgovor
     let napaka
     try {

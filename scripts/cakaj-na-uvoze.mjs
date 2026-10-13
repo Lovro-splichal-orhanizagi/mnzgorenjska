@@ -157,9 +157,10 @@ function seKrize(tok, naslov, id) {
   if (tok === 'uvoz-zapisnikov.yml') {
     if (popravek) return true
     if (!SKUPEN_VIR[mojaDrzava]) return mojaLiga ? mojaJeAktivna : false
-    const posel = JSON.parse(gh('run', 'view', String(id), '--json', 'jobs')).jobs
-      .find((j) => j.name === `uvoz ${mojaDrzava}`)
-    return posel?.status !== 'completed'
+    // Država ima lahko več košev ("uvoz HU 1/3" …, scripts/nocni-kosi.mjs).
+    const posli = JSON.parse(gh('run', 'view', String(id), '--json', 'jobs')).jobs
+      .filter((j) => j.name === `uvoz ${mojaDrzava}` || j.name.startsWith(`uvoz ${mojaDrzava} `))
+    return !posli.length || posli.some((j) => j.status !== 'completed')
   }
   if (tok === 'grbi.yml') return !!SKUPEN_VIR[mojaDrzava] && naslov === `Grbi klubov ${SKUPEN_VIR[mojaDrzava]}`
   return true

@@ -68,6 +68,8 @@ import { razcleniRazpored, datum, sezonaIz, oznakaBrezIzida } from './razpored.m
 import { vseVrstice } from './strani.mjs'
 import { premakniProti, NAJVECJI_TEDENSKI_PREMIK } from './premik-cene.mjs'
 import { ravenLige, koliko, cenaIzVisjeLige, zadnjiDveSezoni } from './visja-liga.mjs'
+import { zgoscenka, kosLige, razdeli, uredi, VZPOREDNI, KOSOV } from './nocni-kosi.mjs'
+import { lokalniUvozi, zaprtje } from './odtis-kode.mjs'
 import { oceniPripravljenost, najcenejsiKader } from '../src/lib/pripravljenost'
 import { serijaCen, premik, crta, zadnjiPremiki } from '../src/lib/gibanjeCene'
 import { dopolniKader, predlagajKader } from '../src/lib/predlogKadra'
@@ -975,6 +977,54 @@ preveri(
     await vseVrstice(async () => ({ data: null, error: { message: 'baza je padla' } }))
   } catch (e) { padlo = e.message === 'baza je padla' }
   preveri('strani: napaka se ne poje tiho', padlo)
+}
+
+// --- koši nočnega uvoza -----------------------------------------------------
+// Avstrija (162 lig) v enem poslu ni prišla čez 42 lig v 240 minutah; država je
+// razdeljena na koše. Liga mora ostati v istem košu (predpomnilnik koša), vir
+// brez dovoljenja za vzporedno branje mora biti v enem samem košu.
+{
+  preveri('koši: zgoščenka je stabilna', zgoscenka('at-bundesliga') === zgoscenka('at-bundesliga') && zgoscenka('a') !== zgoscenka('b'))
+  const lige = Array.from({ length: 160 }, (_, i) => ({ slug: `at-liga-${i}`, vir: 'oefb' }))
+    .concat(Array.from({ length: 30 }, (_, i) => ({ slug: `si-liga-${i}`, vir: ['mnzg', 'mnzlj', 'nzs'][i % 3] })))
+  const kosi = razdeli(lige, 4)
+  preveri('koši: vsaka liga v natanko enem košu', kosi.flat().length === lige.length && new Set(kosi.flat().map((l) => l.slug)).size === lige.length)
+  preveri('koši: liga ostane v istem košu', lige.every((l) => kosLige(l.slug, l.vir, 4) === kosLige(l.slug, l.vir, 4)))
+  const kosiVira = (vir) => new Set(kosi.flatMap((k, i) => (k.some((l) => l.vir === vir) ? [i] : [])))
+  preveri('koši: oefb se razdeli na 4 koše', kosiVira('oefb').size === 4, [...kosi].map((k) => k.length).join('/'))
+  preveri('koši: MNZ (vir brez VZPOREDNI) le v enem košu', ['mnzg', 'mnzlj', 'nzs'].every((v) => kosiVira(v).size === 1))
+  preveri('koši: faktor premora = koši vira', kosi.flat().every((l) => l.faktor === kosiVira(l.vir).size))
+  preveri('koši: brez razdelitve vse v košu 0', razdeli(lige, 1)[0].length === lige.length && razdeli(lige, 1)[0].every((l) => l.faktor === 1))
+  const vrstni = uredi([{ slug: 'a' }, { slug: 'b' }, { slug: 'c' }], { a: '2026-10-13T05:00:00Z', c: '2026-10-12T05:00:00Z' })
+  preveri('koši: najprej nikoli, nato najdlje neosvežena', vrstni.map((l) => l.slug).join('') === 'bca', vrstni.map((l) => l.slug).join(''))
+  preveri('koši: VZPOREDNI ne presega košev nobene države', Object.values(VZPOREDNI).every((n) => n >= 1 && n <= Math.max(...Object.values(KOSOV))))
+  // Matrika v delovnem toku in KOSOV morata biti ista, sicer kak koš nikoli ne teče.
+  const yml = readFileSync(new URL('../.github/workflows/uvoz-zapisnikov.yml', import.meta.url), 'utf8')
+  const vrstice = [...yml.matchAll(/\{ drzava: ([A-Z]{2}), kos: (\d+), kosov: (\d+) \}/g)].map((m) => [m[1], +m[2], +m[3]])
+  const poDrzavi = {}
+  for (const [d, k, n] of vrstice) (poDrzavi[d] ??= { n, kosi: new Set() }).kosi.add(k)
+  const skladno = Object.entries(poDrzavi).every(([d, { n, kosi }]) =>
+    n === (KOSOV[d] ?? 1) && kosi.size === n && [...kosi].every((k) => k >= 1 && k <= n))
+  preveri('koši: matrika uvoz-zapisnikov.yml = KOSOV', skladno && Object.keys(KOSOV).every((d) => poDrzavi[d]), JSON.stringify(Object.fromEntries(Object.entries(poDrzavi).map(([d, v]) => [d, v.n]))))
+}
+
+// --- odtis kode za preskok nespremenjenih zapisnikov --------------------------
+// Popravek enega vira ne sme razveljaviti odtisov lig drugih virov.
+{
+  const kode = {
+    'scripts/viri/fssid.mjs': "import { x } from './fss.mjs'\nimport y from '../prenos.mjs'\nconst z = await import('./ffm.mjs')",
+    'scripts/viri/fss.mjs': "export { a } from './zapisniki.mjs'",
+    'scripts/viri/zapisniki.mjs': "import fs from 'node:fs'",
+    'scripts/prenos.mjs': '',
+    'scripts/viri/ffm.mjs': '',
+    'scripts/viri/oefb.mjs': '',
+  }
+  preveri('odtis: lokalni uvozi', lokalniUvozi(kode['scripts/viri/fssid.mjs']).join(',') === './fss.mjs,../prenos.mjs,./ffm.mjs')
+  const z = zaprtje('scripts/viri/fssid.mjs', (p) => kode[p], (p) => p in kode)
+  preveri('odtis: zaprtje vira zajame, kar uvaža', z.join(',') === 'scripts/prenos.mjs,scripts/viri/ffm.mjs,scripts/viri/fss.mjs,scripts/viri/fssid.mjs,scripts/viri/zapisniki.mjs', z.join(','))
+  preveri('odtis: tuj vir ni v zaprtju', !z.includes('scripts/viri/oefb.mjs'))
+  const prava = zaprtje('scripts/viri/oefb.mjs')
+  preveri('odtis: pravi vir oefb ne zajame drugih virov', prava.includes('scripts/viri/oefb.mjs') && !prava.some((p) => /viri\/(mlsz|hns|index)\.mjs$/.test(p)), prava.join(','))
 }
 
 // --- cena novinca iz višje lige ---------------------------------------------
