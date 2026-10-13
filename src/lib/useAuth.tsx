@@ -1,6 +1,7 @@
 import type { Session } from '@supabase/supabase-js'
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { supabase } from './supabase'
+import { uveljaviKlubskiRacun } from './klubskiRacun'
 
 interface AuthVrednost {
   session: Session | null
@@ -25,6 +26,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => sub.subscription.unsubscribe()
   }, [])
+
+  // Klubski račun: ob vsaki prijavi (in ob odprtju strani s sejo) preveri,
+  // ali je potrjen mail uradni naslov kluba. Enkrat na uporabnika na nalaganje.
+  const uid = session?.user.id
+  useEffect(() => {
+    if (uid) void uveljaviKlubskiRacun()
+  }, [uid])
 
   return (
     <AuthContext.Provider value={{ session, loading }}>
