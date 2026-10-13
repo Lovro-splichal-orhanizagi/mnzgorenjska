@@ -3351,9 +3351,20 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   (`klub_zaprosi_za_naslov`; predlagani naslov je vedno mail računa). Vse v
   Administraciji → Klubski računi (`admin_odloci_klubski_zahtevek`; potrditev
   vpiše ali popravi `klub_stik` s stanjem `sodeluje`). Preklican račun se ob
-  prijavi ne obnovi. Pravice (pozicije, dodajanje igralcev, stran kluba,
-  prijave napak) prihajajo v fazah 2–4; povsod velja
-  `je_klubski_racun(uid, team_id)`. Klub nikoli ne piše minut, golov, cen ali
+  prijavi ne obnovi. Povsod velja `je_klubski_racun(uid, team_id)`.
+  **Faza 2** (migracije 20261013211100–215100): pozicija kluba
+  (`klub_nastavi_pozicijo`) čaka v `pozicije_klub_cakajo` in jo uveljavi
+  `uveljavi_pozicije()` v ponedeljek pred glasovanjem; vir `klub` je zaklenjen
+  kot `admin` (`potrdi_pozicijo`, `pozicije_v_cakanju`, `ugani-pozicije.mjs`,
+  `smeVVrata`), `admin` pa ga prepiše in klub `admin` ne; dnevnik
+  `pozicije_klub_dnevnik`. Klub potrjuje profile svojih igralcev
+  (`prevzem_je_poznavalec_kluba`). Stran kluba: `klub_predstavitev` (javno
+  branje), `ima_klubski_racun` (oznaka), grb v vedru `grbi-klubov`
+  (`klub_nastavi_grb`; `teams.logo_url` je relativna pot `/storage/…`, ki ji
+  `naslovSlike` doda `API_URL`); `teams.logo_vir = 'klub'` in sprožilec
+  `teams_grb_kluba` skriptam za grbe in `zdruzi-klube` preprečita povoziti
+  grb, dokler ga admin ne ponastavi (`admin_ponastavi_grb`). Dodajanje
+  igralcev in prijave napak sta fazi 3–4. Klub nikoli ne piše minut, golov, cen ali
   `reg_st`. Hrvaški in srbski stiki so s klubi povezani po imenu in ligi
   (migracija 20261013203100)
 - `teams.logo_url` → grb kluba; če je prazen, `src/components/Grb.jsx` nariše
