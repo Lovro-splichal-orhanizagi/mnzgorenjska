@@ -3324,7 +3324,7 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   = do konca sezone brez uradnih odsotnosti; navadna poročila lahko piše še
   naprej. Nova sezona začne z nič. **Ni odbitka točk**: točke prihajajo le iz
   uradnih zapisnikov, zato odsotnost na točke in izbiro ekip ne vpliva.
-  **Zamrznitev cene** (migracija 20261013221100, spec
+  **Zamrznitev cene** (migracija 20261013233100, spec
   `docs/superpowers/specs/2026-10-13-zamrznitev-cene-design.md`): poškodba ali
   bolezen (ne dopust, kazen, drugo) zadrži padec borze "ni igral" (−0.1):
   `zamrznjena_odsotnost(player, round)` šteje kroge lige od dneva `od`, največ

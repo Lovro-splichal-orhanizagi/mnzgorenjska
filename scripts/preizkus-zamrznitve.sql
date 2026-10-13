@@ -1,4 +1,4 @@
--- Preizkus zamrznitve cene ob poškodbi (migracija 20261013221100).
+-- Preizkus zamrznitve cene ob poškodbi (migracija 20261013233100).
 --
 -- En klub igra šest novih krogov. V 1. krogu igrajo vsi (izhodišče), nato
 -- pet igralcev ne igra več; odsotnosti veljajo od dneva po 1. krogu:

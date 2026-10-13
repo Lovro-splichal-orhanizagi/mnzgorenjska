@@ -7,7 +7,7 @@
 **Spec:** `docs/superpowers/specs/2026-10-13-zamrznitev-cene-design.md`
 
 ## Global Constraints
-- Migracija `20261013221100_zamrznitev_cene.sql` (večja od prod in main, liha minuta).
+- Migracija `20261013233100_zamrznitev_cene.sql` (večja od prod in main, liha minuta).
 - `preracunaj_cene` je zadnjič definirana v `20260927220000_kontumacije.sql`; nova različica je ista razen veje "ni igral" in CTE `zadrzano`.
 - Testni id-ji v `varnost.sql`: `a2a10000-…`, igralci/klubi `-922…`.
 - 13 jezikov, brez pomišljajev; nikoli `git add -A`.

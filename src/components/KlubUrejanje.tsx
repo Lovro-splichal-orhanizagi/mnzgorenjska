@@ -30,7 +30,7 @@ export default function KlubUrejanje({
   const [sporocilo, setSporocilo] = useState<string | null>(null)
   const [napaka, setNapaka] = useState<string | null>(null)
   const [dela, setDela] = useState(false)
-  // Odprte poškodbe in bolezni igralcev kluba (zamrznitev cene, 20261013221100).
+  // Odprte poškodbe in bolezni igralcev kluba (zamrznitev cene, 20261013233100).
   const [odsotnosti, setOdsotnosti] = useState<
     { id: number; player_name: string | null; vrsta: string; od: string; vrnitev: string | null; potrjena: boolean }[]
   >([])

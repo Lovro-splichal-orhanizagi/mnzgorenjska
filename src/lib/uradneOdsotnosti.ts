@@ -2,7 +2,7 @@
 // 20261012135100, tabela `uradne_odsotnosti`, pogled `uradne_odsotnosti_view`).
 //
 // Ne vpliva na izbiro ne točke. Poškodba ali bolezen zamrzne padec cene
-// (20261013221100): do 2 krogov, s potrditvijo kluba do 6, in še krog po
+// (20261013233100): do 2 krogov, s potrditvijo kluba do 6, in še krog po
 // vrnitvi. Če igralec po zapisniku zaigra, preden odsotnost zapre, jo preverba
 // po uvozu označi "ni držalo": to je opomin in zadržani padci cene se
 // uveljavijo; dva opomina v sezoni vzameta pravico do uradnih odsotnosti do
