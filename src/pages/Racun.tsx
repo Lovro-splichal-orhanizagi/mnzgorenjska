@@ -14,6 +14,7 @@ import IzbiraJezika from '../components/IzbiraJezika'
 import IzbiraDrzave from '../components/IzbiraDrzave'
 import NastavitveObvestil from '../components/NastavitveObvestil'
 import { UpravljanjeNarocnine } from '../components/PreverjeniProfil'
+import KlubskiRacun from '../components/KlubskiRacun'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import { useNaslov } from '../lib/naslov'
@@ -189,6 +190,7 @@ function Nastavitve({ uporabnikId, email, zGeslom }: { uporabnikId: string; emai
         </Razdelek>
       )}
 
+      <KlubskiRacun />
       <UpravljanjeNarocnine />
       <RazdelekPrijava email={email} zGeslom={zGeslom} />
       <RazdelekIzbris email={email} />

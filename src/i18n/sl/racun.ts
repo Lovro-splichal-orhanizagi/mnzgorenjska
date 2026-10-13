@@ -236,4 +236,30 @@ export const racun = {
     pritozbe:
       '<b>Vprašanja in pritožbe.</b> Piši na <eposta>info@slff.eu</eposta>, odgovorimo v 8 delovnih dneh. Ne priznavamo nobenega izvajalca izvensodnega reševanja potrošniških sporov (IRPS). Velja slovensko pravo; to ti ne odvzame varstva, ki ti ga daje pravo države, v kateri živiš.',
   },
+  // Komponenta KlubskiRacun na strani Račun.
+  klubskiRacun: {
+    naslov: 'Uradni račun kluba',
+    aktiven: 'Ta račun zastopa klub {klub}.',
+    pravice: 'Kot klub boš lahko urejal pozicije, dodajal igralce in potrjeval profile svojih igralcev.',
+    vprasanje: 'Zastopaš klub?',
+    pojasnilo:
+      'Če se prijaviš z uradnim naslovom kluba, ki ga imamo, dobiš klubski račun samodejno. Če naslova nimamo, zaprosi spodaj in ga preverimo.',
+    klub: 'Klub',
+    isciKlub: 'Išči klub …',
+    vloga: 'Tvoja vloga v klubu',
+    vloge: { predsednik: 'predsednik', tajnik: 'tajnik', trener: 'trener', vodstvo: 'vodstvo kluba', drugo: 'drugo' },
+    dokaz: 'Povezava, kjer je naslov objavljen (spletna stran, Facebook, zveza)',
+    opomba: 'Opomba (neobvezno)',
+    naslovRacuna: 'Naslov, ki ga potrjujemo: {email}',
+    poslji: 'Pošlji prošnjo',
+    caka: 'Prošnja za {klub} čaka na pregled.',
+    cakaBrezKluba: 'Tvoj naslov je med uradnimi, a ga moramo še povezati s klubom. Uredimo v kratkem.',
+    cakaPolno: 'Klub ima že 5 računov. Pregledali bomo in ti sporočili.',
+    zavrnjeno: 'Prošnja je bila zavrnjena: {razlog}',
+    nepotrjen: 'Najprej potrdi e-pošto svojega računa.',
+    napake: {
+      zeKlub: 'Že zastopaš klub.',
+      caka: 'Tvoja prošnja že čaka na odločitev.',
+    },
+  },
 }
