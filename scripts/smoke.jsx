@@ -57,7 +57,7 @@ import { TabelaNavijacev, KlubMedNavijaci, IzbiraKluba } from '../src/components
 import { jeMojaEkipa } from '../src/components/ImeEkipe'
 import { krogKoncan, mestoVLigi, igralciPregleda, postaviPregled, oznakaPremika, imeDatotekePregleda, KVADRAT, SIRINA_P, VISINA_P, ROB_P } from '../src/lib/tedenskiPregled'
 import { parsirajZapisnik, nastopi, dodajStrelceSKlopi } from './zapisnik.mjs'
-import { poZvezah, ustreza, pokaziZvezo } from '../src/components/IzbirnikLige'
+import { poZvezah, ustreza, pokaziZvezo, ustrezaRavni, privzetoRazprte } from '../src/components/IzbirnikLige'
 import { dovoljZaIskanje, ujemaIme, opisIgralca, potIgralca, izDrugihLig } from '../src/lib/iskanjeIgralcev'
 import { virPodatkov, imeZveze } from '../src/components/VirPodatkov'
 import { sestaviVabilo, vabiloMailto } from '../src/lib/vabilo'
@@ -803,6 +803,19 @@ preveri(
   preveri('izbirnik: iskanje brez sumnikov', ustreza(lige[0], 'clani') || ustreza(lige[0], 'GNL'), 'GNL')
   preveri('izbirnik: prazno iskanje najde vse', lige.every((l) => ustreza(l, '')))
   preveri('izbirnik: nesmisel ne najde nic', !lige.some((l) => ustreza(l, 'xyzzy')))
+
+  // Raven: mladinske lige po šifri (je_mladinski_slug), "vse" pusti vse.
+  preveri('izbirnik: raven U19', lige.filter((l) => ustrezaRavni(l, 'mladinci')).map((l) => l.slug).join() === 'mladinci')
+  preveri('izbirnik: raven člani', !lige.some((l) => l.slug === 'mladinci' && ustrezaRavni(l, 'clani')))
+  preveri('izbirnik: raven vse', lige.every((l) => ustrezaRavni(l, 'vse')))
+
+  // Majhna država: vse zveze razprte. Velika: le zveza izbrane lige.
+  const mala = privzetoRazprte(lige, 'lj-1')
+  preveri('izbirnik: malo lig, vse zveze razprte', ['mnzg', 'mnzlj', '—'].every((k) => mala.has(k)))
+  const mnogo = [...lige, ...Array.from({ length: 20 }, (_, i) => liga(`x${i}`, `Liga ${i}`, 'mnzx', 'X', 3))]
+  const velika = privzetoRazprte(mnogo, 'lj-1')
+  preveri('izbirnik: mnogo lig, razprta le zveza izbrane', velika.has('mnzlj') && !velika.has('mnzx') && !velika.has('mnzg'))
+  preveri('izbirnik: brez izbrane razprta prva zveza', privzetoRazprte(mnogo, null).has('mnzg'))
 
   // Iskanje igralcev čez vse lige (isci_igralce): baza zavrne krajše od treh
   // znakov, vmesnik zato tudi ne pošlje poizvedbe.

@@ -76,9 +76,17 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     lige: 'Liigad',
     igralci: 'Mängijad',
     iscemIgralce: 'Otsin mängijaid …',
+    nedavno: 'Viimati',
+    raven: 'Tase',
+    ravni: {
+      vse: 'Kõik',
+      clani: 'Täiskasvanud',
+      mladinci: 'U19',
+    },
   },
   izbiraDrzave: {
     oznaka: 'Riik',
+    gumb: 'Riik: {drzava}',
     /** Riikide nimed nende omas keeles, kõigis tõlgetes samad. */
     imena: {
       SI: 'Slovenija',
@@ -98,6 +106,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
   },
   izbiraJezika: {
     oznaka: 'Keel',
+    gumb: 'Keel: {jezik}',
     preklopi: 'Vaheta keelt: {jezik}',
   },
   prviObisk: {

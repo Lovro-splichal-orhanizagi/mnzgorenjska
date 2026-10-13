@@ -76,9 +76,17 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     lige: 'Bajnokságok',
     igralci: 'Játékosok',
     iscemIgralce: 'Játékosok keresése …',
+    nedavno: 'Legutóbbi',
+    raven: 'Szint',
+    ravni: {
+      vse: 'Mind',
+      clani: 'Felnőtt',
+      mladinci: 'U19',
+    },
   },
   izbiraDrzave: {
     oznaka: 'Ország',
+    gumb: 'Ország: {drzava}',
     /** Imena držav v lastnem jeziku, v vseh prevodih enaka. */
     imena: {
       SI: 'Slovenija',
@@ -98,6 +106,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
   },
   izbiraJezika: {
     oznaka: 'Nyelv',
+    gumb: 'Nyelv: {jezik}',
     preklopi: 'Váltás: {jezik}',
   },
   prviObisk: {

@@ -84,10 +84,21 @@ export const aplikacija = {
     /** Razdelek z igralci vseh lig pod ligami (iskanje od treh znakov). */
     igralci: 'Igralci',
     iscemIgralce: 'Iščem igralce …',
+    /** Nazadnje izbrane lige na vrhu izbirnika (brez iskanja). */
+    nedavno: 'Nedavno',
+    /** Izbira ravni, ko ima država člane in mladince (U19). */
+    raven: 'Raven',
+    ravni: {
+      vse: 'Vse',
+      clani: 'Člani',
+      mladinci: 'U19',
+    },
   },
   izbiraDrzave: {
     /** Oznaka pred izbirnikom (za bralnike zaslona in v nogi). */
     oznaka: 'Država',
+    /** Gumb izbirnika države (za bralnike zaslona). */
+    gumb: 'Država: {drzava}',
     /** Imena držav v lastnem jeziku — v vseh prevodih enaka. */
     imena: {
       SI: 'Slovenija',
@@ -108,6 +119,8 @@ export const aplikacija = {
   izbiraJezika: {
     /** Oznaka izbirnika "SL · SK · EN" (za bralnike zaslona). */
     oznaka: 'Jezik',
+    /** Gumb izbirnika jezika (za bralnike zaslona). */
+    gumb: 'Jezik: {jezik}',
     /** Namig ob jeziku; ime jezika je vedno v njem samem (English). */
     preklopi: 'Preklopi na {jezik}',
   },

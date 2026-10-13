@@ -198,8 +198,8 @@ export default function App() {
             </Link>
             <VirPodatkov />
             <div className="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
-              <IzbiraDrzave />
-              <IzbiraJezika />
+              <IzbiraDrzave navzgor />
+              <IzbiraJezika navzgor />
             </div>
           </footer>
         </div>

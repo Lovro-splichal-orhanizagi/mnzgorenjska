@@ -75,9 +75,17 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     lige: 'Līgas',
     igralci: 'Spēlētāji',
     iscemIgralce: 'Meklēju spēlētājus …',
+    nedavno: 'Nesen',
+    raven: 'Līmenis',
+    ravni: {
+      vse: 'Visas',
+      clani: 'Pieaugušie',
+      mladinci: 'U19',
+    },
   },
   izbiraDrzave: {
     oznaka: 'Valsts',
+    gumb: 'Valsts: {drzava}',
     imena: {
       SI: 'Slovenija',
       SK: 'Slovensko',
@@ -96,6 +104,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
   },
   izbiraJezika: {
     oznaka: 'Valoda',
+    gumb: 'Valoda: {jezik}',
     preklopi: 'Pārslēgties: {jezik}',
   },
   prviObisk: {

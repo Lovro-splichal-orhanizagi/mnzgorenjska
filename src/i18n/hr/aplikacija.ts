@@ -77,9 +77,17 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     lige: 'Lige',
     igralci: 'Igrači',
     iscemIgralce: 'Tražim igrače …',
+    nedavno: 'Nedavno',
+    raven: 'Razina',
+    ravni: {
+      vse: 'Sve',
+      clani: 'Seniori',
+      mladinci: 'U19',
+    },
   },
   izbiraDrzave: {
     oznaka: 'Država',
+    gumb: 'Država: {drzava}',
     imena: {
       SI: 'Slovenija',
       SK: 'Slovensko',
@@ -98,6 +106,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
   },
   izbiraJezika: {
     oznaka: 'Jezik',
+    gumb: 'Jezik: {jezik}',
     preklopi: 'Prebaci: {jezik}',
   },
   prviObisk: {
