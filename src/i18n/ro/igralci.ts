@@ -124,10 +124,13 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     drugod: 'Recent, în alte părți ale României',
   },
   uradno: {
+    zamrznjena2: '🧊 Preț înghețat (până la 2 etape)',
+    zamrznjena6: '🧊 Preț înghețat (până la 6 etape, confirmat de club)',
+    zamrznitevPravilo: 'La accidentare sau boală prețul nu îți scade: până la 2 etape, cu confirmarea clubului până la 6, plus o etapă după revenire. Dacă joci în timpul absenței, înghețarea se anulează.',
     znacka: 'Oficial: jucătorul însuși',
     opisZnacke: 'Absența a fost anunțată chiar de jucătorul confirmat.',
     naslov: 'Absență oficială',
-    opis: 'Ca jucător confirmat poți anunța singur că nu vei juca. Este doar o informație: nu influențează alegerea echipelor, prețurile sau punctele.',
+    opis: 'Ca jucător confirmat poți anunța singur că nu vei juca. Este doar o informație: nu influențează alegerea echipelor sau punctele. La accidentare sau boală oprește scăderea prețului.',
     vrsta: 'Motiv',
     vrste: {
       poskodba: 'Accidentare',

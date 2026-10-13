@@ -122,10 +122,13 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     drugod: 'Legutóbb más bajnokságokban',
   },
   uradno: {
+    zamrznjena2: '🧊 Ár befagyasztva (legfeljebb 2 forduló)',
+    zamrznjena6: '🧊 Ár befagyasztva (legfeljebb 6 forduló, a klub megerősítette)',
+    zamrznitevPravilo: 'Sérülés vagy betegség esetén az árad nem csökken: legfeljebb 2 fordulóig, a klub megerősítésével 6-ig, plusz egy fordulóig a visszatérés után. Ha a távollét alatt játszol, a befagyasztás érvényét veszti.',
     znacka: 'Hivatalos: maga a játékos',
     opisZnacke: 'A hiányzást maga a megerősített játékos jelentette.',
     naslov: 'Hivatalos hiányzás',
-    opis: 'Megerősített játékosként magad jelentheted, hogy nem fogsz játszani. Ez csak tájékoztatás: nem befolyásolja a csapatválasztást, az árakat és a pontokat.',
+    opis: 'Megerősített játékosként magad jelentheted, hogy nem fogsz játszani. Ez csak tájékoztatás: nem befolyásolja a csapatválasztást és a pontokat. Sérülés vagy betegség esetén megállítja az árad csökkenését.',
     vrsta: 'Ok',
     vrste: {
       poskodba: 'Sérülés',

@@ -124,10 +124,13 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     drugod: 'Lo último en el resto de Eslovenia',
   },
   uradno: {
+    zamrznjena2: '🧊 Precio congelado (hasta 2 jornadas)',
+    zamrznjena6: '🧊 Precio congelado (hasta 6 jornadas, confirmado por el club)',
+    zamrznitevPravilo: 'Con una lesión o enfermedad tu precio no baja: hasta 2 jornadas, hasta 6 si tu club lo confirma, más una jornada tras tu vuelta. Si juegas durante la ausencia, la congelación se anula.',
     znacka: 'Oficial: el propio jugador',
     opisZnacke: 'La ausencia la ha comunicado el propio jugador verificado.',
     naslov: 'Ausencia oficial',
-    opis: 'Como jugador verificado puedes comunicar tú mismo que no vas a jugar. Es solo información: no afecta a la elección de equipos, a los precios ni a los puntos.',
+    opis: 'Como jugador verificado puedes comunicar tú mismo que no vas a jugar. Es solo información: no afecta a la elección de equipos ni a los puntos. Con una lesión o enfermedad detiene la bajada de tu precio.',
     vrsta: 'Motivo',
     vrste: {
       poskodba: 'Lesión',

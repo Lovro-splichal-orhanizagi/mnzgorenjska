@@ -336,6 +336,11 @@ export const lestvice = {
   klub: {
     uradniRacun: 'Uradni račun kluba',
     urejanje: {
+      odsotnosti: 'Poškodbe igralcev',
+      odsotnostiOpis: 'Potrdi poškodbo ali bolezen svojega igralca: cena mu ostane zamrznjena do 6 krogov namesto 2.',
+      potrdi: 'Potrdi',
+      potrjeno: 'potrdil klub',
+      niOdsotnosti: 'Ni odprtih poškodb ali bolezni.',
       naslov: 'Urejanje kluba',
       opisRazdelka: 'Vidiš le ti, ker zastopaš ta klub.',
       pozicije: 'Pozicije igralcev',

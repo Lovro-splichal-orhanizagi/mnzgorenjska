@@ -122,10 +122,13 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     drugod: 'Zuletzt anderswo im Land',
   },
   uradno: {
+    zamrznjena2: '🧊 Preis eingefroren (bis zu 2 Runden)',
+    zamrznjena6: '🧊 Preis eingefroren (bis zu 6 Runden, vom Verein bestätigt)',
+    zamrznitevPravilo: 'Bei Verletzung oder Krankheit sinkt dein Preis nicht: bis zu 2 Runden, mit Bestätigung des Vereins bis zu 6, plus eine Runde nach der Rückkehr. Spielst du während der Abwesenheit, wird das Einfrieren aufgehoben.',
     znacka: 'Offiziell: vom Spieler selbst',
     opisZnacke: 'Die Abwesenheit hat der bestätigte Spieler selbst gemeldet.',
     naslov: 'Offizielle Abwesenheit',
-    opis: 'Als bestätigter Spieler kannst du selbst melden, dass du nicht spielst. Das ist nur eine Information: Sie wirkt sich nicht auf Kaderwahl, Preise oder Punkte aus.',
+    opis: 'Als bestätigter Spieler kannst du selbst melden, dass du nicht spielst. Das ist nur eine Information: Sie wirkt sich nicht auf Kaderwahl oder Punkte aus. Bei Verletzung oder Krankheit stoppt sie den Preisverfall.',
     vrsta: 'Grund',
     vrste: {
       poskodba: 'Verletzung',

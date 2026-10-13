@@ -127,10 +127,13 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     drugod: 'Pēdējie citur valstī',
   },
   uradno: {
+    zamrznjena2: '🧊 Cena iesaldēta (līdz 2 kārtām)',
+    zamrznjena6: '🧊 Cena iesaldēta (līdz 6 kārtām, klubs apstiprināja)',
+    zamrznitevPravilo: 'Traumas vai slimības laikā tava cena nekrīt: līdz 2 kārtām, ar kluba apstiprinājumu līdz 6, un vēl vienu kārtu pēc atgriešanās. Ja prombūtnes laikā spēlē, iesaldēšana tiek atcelta.',
     znacka: 'Oficiāli: pats spēlētājs',
     opisZnacke: 'Prombūtni paziņoja pats apstiprinātais spēlētājs.',
     naslov: 'Oficiāla prombūtne',
-    opis: 'Kā apstiprināts spēlētājs vari pats paziņot, ka nespēlēsi. Tā ir tikai informācija: tā neietekmē komandu izvēli, cenas vai punktus.',
+    opis: 'Kā apstiprināts spēlētājs vari pats paziņot, ka nespēlēsi. Tā ir tikai informācija: tā neietekmē komandu izvēli vai punktus. Traumas vai slimības gadījumā tā aptur cenas kritumu.',
     vrsta: 'Iemesls',
     vrste: {
       poskodba: 'Trauma',

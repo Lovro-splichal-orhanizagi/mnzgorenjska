@@ -1,10 +1,12 @@
 // Uradne odsotnosti: potrjeni igralec sam javi, da ne bo igral (migracija
 // 20261012135100, tabela `uradne_odsotnosti`, pogled `uradne_odsotnosti_view`).
 //
-// Samo informacija, kot skupnostna poročila: ne vpliva na izbiro, cene ne
-// točke. Če igralec po zapisniku zaigra, preden odsotnost zapre, jo preverba
-// po uvozu označi "ni držalo" in to je opomin; dva v sezoni vzameta pravico do
-// uradnih odsotnosti do konca sezone. Pravila so v bazi; tu je le prikaz.
+// Ne vpliva na izbiro ne točke. Poškodba ali bolezen zamrzne padec cene
+// (20261013221100): do 2 krogov, s potrditvijo kluba do 6, in še krog po
+// vrnitvi. Če igralec po zapisniku zaigra, preden odsotnost zapre, jo preverba
+// po uvozu označi "ni držalo": to je opomin in zadržani padci cene se
+// uveljavijo; dva opomina v sezoni vzameta pravico do uradnih odsotnosti do
+// konca sezone. Pravila so v bazi; tu je le prikaz.
 import { datum } from '../i18n/jedro.ts'
 import type { Porocilo, VrstaPorocila } from '../components/Odsotnost'
 
@@ -41,6 +43,10 @@ export interface UradnaOdsotnost {
   zaprto_at: string | null
   ni_drzalo_datum: string | null
   moje: boolean
+  /** Odprta poškodba ali bolezen: padec cene je zadržan. */
+  cena_zamrznjena: boolean
+  /** Klub je potrdil: zamrznitev do 6 krogov namesto 2. */
+  klub_potrdil: boolean
 }
 
 /** Današnji datum v Ljubljani (YYYY-MM-DD), kot ga šteje baza. */

@@ -124,10 +124,13 @@ export const igralci = {
     drugod: 'Nazadnje drugod po Sloveniji',
   },
   uradno: {
+    zamrznjena2: '🧊 Cena zamrznjena (do 2 krogov)',
+    zamrznjena6: '🧊 Cena zamrznjena (do 6 krogov, potrdil klub)',
+    zamrznitevPravilo: 'Pri poškodbi ali bolezni se ti cena ne zniža: do 2 krogov, s potrditvijo kluba do 6, in še krog po vrnitvi. Če med odsotnostjo zaigraš, se zamrznitev razveljavi.',
     znacka: 'Uradno: igralec sam',
     opisZnacke: 'Odsotnost je javil potrjeni igralec sam.',
     naslov: 'Uradna odsotnost',
-    opis: 'Kot potrjeni igralec lahko sam javiš, da ne boš igral. To je le informacija: ne vpliva na izbiro ekip, cene ali točke.',
+    opis: 'Kot potrjeni igralec lahko sam javiš, da ne boš igral. To je le informacija: ne vpliva na izbiro ekip ne na točke. Pri poškodbi ali bolezni ti zadrži padec cene.',
     vrsta: 'Razlog',
     vrste: {
       poskodba: 'Poškodba',

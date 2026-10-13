@@ -122,10 +122,13 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     drugod: 'Viimased teistest liigadest',
   },
   uradno: {
+    zamrznjena2: '🧊 Hind külmutatud (kuni 2 vooru)',
+    zamrznjena6: '🧊 Hind külmutatud (kuni 6 vooru, klubi kinnitas)',
+    zamrznitevPravilo: 'Vigastuse või haiguse korral su hind ei lange: kuni 2 vooru, klubi kinnitusega kuni 6, ja veel üks voor pärast naasmist. Kui mängid eemaloleku ajal, külmutamine tühistatakse.',
     znacka: 'Ametlik: mängija ise',
     opisZnacke: 'Puudumisest teatas kinnitatud mängija ise.',
     naslov: 'Ametlik puudumine',
-    opis: 'Kinnitatud mängijana saad ise teatada, et sa ei mängi. See on ainult teave: see ei mõjuta koosseisu valikut, hindu ega punkte.',
+    opis: 'Kinnitatud mängijana saad ise teatada, et sa ei mängi. See on ainult teave: see ei mõjuta koosseisu valikut ega punkte. Vigastuse või haiguse korral peatab see hinna languse.',
     vrsta: 'Põhjus',
     vrste: {
       poskodba: 'Vigastus',

@@ -330,6 +330,11 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
   klub: {
     uradniRacun: 'Cont oficial de club',
     urejanje: {
+      odsotnosti: 'Accidentările jucătorilor',
+      odsotnostiOpis: 'Confirmă accidentarea sau boala jucătorului tău: prețul îi rămâne înghețat până la 6 etape în loc de 2.',
+      potrdi: 'Confirmă',
+      potrjeno: 'confirmat de club',
+      niOdsotnosti: 'Nicio accidentare sau boală deschisă.',
       naslov: 'Editare club',
       opisRazdelka: 'Doar tu vezi asta, pentru că reprezinți acest club.',
       pozicije: 'Posturile jucătorilor',

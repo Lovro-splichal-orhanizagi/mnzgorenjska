@@ -126,10 +126,13 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     drugod: 'Ostatnio w innych miejscach',
   },
   uradno: {
+    zamrznjena2: '🧊 Cena zamrożona (do 2 kolejek)',
+    zamrznjena6: '🧊 Cena zamrożona (do 6 kolejek, potwierdził klub)',
+    zamrznitevPravilo: 'Przy kontuzji lub chorobie twoja cena nie spada: do 2 kolejek, z potwierdzeniem klubu do 6, plus jedna kolejka po powrocie. Jeśli zagrasz w czasie nieobecności, zamrożenie zostaje cofnięte.',
     znacka: 'Oficjalnie: sam zawodnik',
     opisZnacke: 'Nieobecność zgłosił sam potwierdzony zawodnik.',
     naslov: 'Oficjalna nieobecność',
-    opis: 'Jako potwierdzony zawodnik możesz sam zgłosić, że nie zagrasz. To tylko informacja: nie wpływa na wybór drużyn, ceny ani punkty.',
+    opis: 'Jako potwierdzony zawodnik możesz sam zgłosić, że nie zagrasz. To tylko informacja: nie wpływa na wybór drużyn ani punkty. Przy kontuzji lub chorobie zatrzymuje spadek ceny.',
     vrsta: 'Powód',
     vrste: {
       poskodba: 'Kontuzja',

@@ -326,6 +326,11 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
   klub: {
     uradniRacun: 'Službeni račun kluba',
     urejanje: {
+      odsotnosti: 'Ozljede igrača',
+      odsotnostiOpis: 'Potvrdi ozljedu ili bolest svog igrača: cijena mu ostaje zamrznuta do 6 kola umjesto 2.',
+      potrdi: 'Potvrdi',
+      potrjeno: 'potvrdio klub',
+      niOdsotnosti: 'Nema otvorenih ozljeda ni bolesti.',
       naslov: 'Uređivanje kluba',
       opisRazdelka: 'Vidiš samo ti, jer predstavljaš ovaj klub.',
       pozicije: 'Pozicije igrača',
