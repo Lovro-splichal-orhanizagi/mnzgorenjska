@@ -5,7 +5,10 @@
 create table public.klub_predstavitev (
   team_id       bigint primary key references public.teams on delete cascade,
   opis          text check (opis is null or (char_length(opis) between 1 and 300 and opis !~ '[[:cntrl:]]')),
-  spletna_stran text check (spletna_stran is null or (length(spletna_stran) <= 200 and spletna_stran ~ '^https://[^[:space:]<>"''\\]+$')),
+  -- Gostitelj iz črk, številk, pik in vezajev: naslov, ki ga brskalnik ne
+  -- razčleni (https://[x]), bi podrl stran kluba.
+  spletna_stran text check (spletna_stran is null or (length(spletna_stran) <= 200
+                and spletna_stran ~ '^https://[A-Za-z0-9.-]+(:[0-9]{1,5})?(/[^[:space:]<>"''\\]*)?$')),
   instagram     text check (instagram is null or instagram ~ '^[A-Za-z0-9._]{1,30}$'),
   facebook      text check (facebook is null or facebook ~ '^[A-Za-z0-9.]{5,50}$'),
   updated_at    timestamptz not null default now(),
@@ -100,8 +103,9 @@ grant execute on function public.klub_uredi_predstavitev(bigint, text, text, tex
 create or replace function public.klub_sme_pisati_grb(p_name text)
 returns boolean language sql stable security definer set search_path = public
 as $$
-  select p_name ~ '^-?[0-9]{1,18}/[A-Za-z0-9_-]{1,64}\.(webp|png)$'
-     and je_klubski_racun(auth.uid(), split_part(p_name, '/', 1)::bigint)
+  select case when p_name ~ '^-?[0-9]{1,18}/[A-Za-z0-9_-]{1,64}\.(webp|png)$'
+              then je_klubski_racun(auth.uid(), split_part(p_name, '/', 1)::bigint)
+              else false end
 $$;
 grant execute on function public.klub_sme_pisati_grb(text) to authenticated;
 
@@ -127,3 +131,19 @@ begin
     with check (bucket_id = 'grbi-klubov' and public.klub_sme_pisati_grb(name));
 end;
 $$;
+
+-- Združevanje klubov (zdruzi-klube.mjs) izbriše odvečno vrstico teams; s tem
+-- bi šli klubski računi in predstavitev (on delete cascade). Raje pade.
+create or replace function public.trg_teams_ne_brisi_kluba_z_racunom()
+returns trigger language plpgsql set search_path = public
+as $$
+begin
+  if exists (select 1 from klubski_racuni where team_id = old.id and preklican_at is null) then
+    raise exception 'Klub % ima klubski račun: pred brisanjem ga prenesi na drug klub.', old.id;
+  end if;
+  return old;
+end;
+$$;
+drop trigger if exists teams_ne_brisi_kluba_z_racunom on public.teams;
+create trigger teams_ne_brisi_kluba_z_racunom before delete on public.teams
+  for each row execute function public.trg_teams_ne_brisi_kluba_z_racunom();

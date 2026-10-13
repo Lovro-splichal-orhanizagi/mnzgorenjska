@@ -3382,6 +3382,10 @@ preveri(
     naslovSlike('/storage/v1/object/public/grbi-klubov/12/grb-a.webp') === 'https://api.primer.test/storage/v1/object/public/grbi-klubov/12/grb-a.webp'
     && naslovSlike('/grbi/klub.png') === '/grbi/klub.png')
   nastaviApiUrl('http://127.0.0.1:54321')
+  // Spletna stran kluba, ki je brskalnik ne razčleni, ne sme podreti strani kluba.
+  const { imeGostitelja } = await import('../src/lib/klubskiRacun')
+  preveri('stran kluba: neveljaven naslov ne vrže napake',
+    imeGostitelja('https://[x]') === 'https://[x]' && imeGostitelja('https://www.nk-klub.si/o-nas') === 'www.nk-klub.si')
   for (const [ime, pot, Stran] of [['Racun', '/account', Racun], ['PotrditevPovezave', '/auth/confirm?type=signup', PotrditevPovezave]]) {
     try {
       const html = renderToString(

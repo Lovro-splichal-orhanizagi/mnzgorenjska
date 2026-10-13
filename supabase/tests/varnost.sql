@@ -2942,6 +2942,38 @@ select pg_temp.zavrnjeno('klub-stran: preklican račun ne ureja',
   $$select klub_uredi_predstavitev(-913001, 'y', null, null, null)$$);
 reset role;
 
+-- Popravki po pregledu faze 2.
+-- (1) Čakajoča pozicija preklicanega računa se ob ponedeljku ne uveljavi.
+update klubski_racuni set preklican_at = null where user_id = 'f1a10000-0000-4000-8000-000000000001';
+update players set position = 'MID', position_source = 'glasovanje' where id = -921001;
+select set_config('request.jwt.claim.sub','f1a10000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select klub_nastavi_pozicijo(-921001, 'FWD');
+reset role;
+update klubski_racuni set preklican_at = now() where user_id = 'f1a10000-0000-4000-8000-000000000001';
+select uveljavi_pozicije();
+select pg_temp.preveri('klub-poz: preklican račun, čakajoča pozicija se ne uveljavi',
+  (select position_source from players where id = -921001) = 'glasovanje'
+  and not exists (select 1 from pozicije_klub_cakajo where player_id = -921001));
+update klubski_racuni set preklican_at = null where user_id = 'f1a10000-0000-4000-8000-000000000001';
+-- (2) Spletna stran z neveljavnim gostiteljem je zavrnjena.
+select set_config('request.jwt.claim.sub','f1a10000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.napaka('klub-stran: neveljaven gostitelj spletne strani',
+  $$select klub_uredi_predstavitev(-913001, null, 'https://[x]', null, null)$$);
+select pg_temp.napaka('klub-stran: neveljavna vrata spletne strani',
+  $$select klub_uredi_predstavitev(-913001, null, 'https://klub.si:80a', null, null)$$);
+-- (4) Pot grba: tuja mapa in nesmiselna pot vrneta false (ne napake).
+select pg_temp.preveri('klub-stran: grb v tujo mapo ni dovoljen', not klub_sme_pisati_grb('-913002/grb-a.png'));
+select pg_temp.preveri('klub-stran: nesmiselna pot grba vrne false', not klub_sme_pisati_grb('abc/x.png'));
+select pg_temp.preveri('klub-stran: grb v svojo mapo je dovoljen', klub_sme_pisati_grb('-913001/grb-a.png'));
+reset role;
+-- (3) Kluba s klubskim računom ni mogoče izbrisati (združevanje klubov).
+insert into teams(id, name, short_name, country_id) overriding system value
+values (-921100, 'Klub brez igralcev', 'KBI', (select id from countries where code = 'SI'));
+insert into klubski_racuni(user_id, team_id) values ('f1a10000-0000-4000-8000-000000000003', -921100);
+select pg_temp.napaka('klub-stran: klub z računom se ne izbriše', $$delete from teams where id = -921100$$);
+
 do $$
 declare v_napak int;
 begin

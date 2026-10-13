@@ -7,8 +7,11 @@
 -- glasovanje in skripte ga ne spremenijo. Klub ne prepiše `admin`.
 
 alter table public.players drop constraint if exists players_position_source_check;
+-- NOT VALID + VALIDATE: preverba ne drži izključnega zaklepa nad players, ki
+-- ga uvozi pišejo ves dan (lock timeout, glej uvozne verige).
 alter table public.players add constraint players_position_source_check
-  check (position_source in ('neznano', 'ugibanje', 'zapisnik', 'glasovanje', 'admin', 'klub'));
+  check (position_source in ('neznano', 'ugibanje', 'zapisnik', 'glasovanje', 'admin', 'klub')) not valid;
+alter table public.players validate constraint players_position_source_check;
 
 create table public.pozicije_klub_cakajo (
   player_id  bigint primary key references public.players on delete cascade,
@@ -163,10 +166,13 @@ declare
   v_spremenjenih int := 0;
 begin
   for v_igralec in
-    select c.player_id, c.position, c.user_id, p.position as staro, p.position_source
+    select c.player_id, c.position, c.user_id, p.team_id, p.position as staro, p.position_source
       from pozicije_klub_cakajo c join players p on p.id = c.player_id
   loop
-    if v_igralec.position_source is distinct from 'admin' then
+    -- Velja le, če račun še zastopa igralčev klub (preklic, prestop med tednom).
+    if v_igralec.position_source is distinct from 'admin'
+       and v_igralec.user_id is not null
+       and je_klubski_racun(v_igralec.user_id, v_igralec.team_id) then
       update players set position = v_igralec.position, position_source = 'klub'
        where id = v_igralec.player_id;
       insert into pozicije_klub_dnevnik(player_id, staro, novo, user_id)

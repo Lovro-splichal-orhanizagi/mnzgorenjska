@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { t } from '../i18n'
+import { imeGostitelja } from '../lib/klubskiRacun'
 
 export interface Predstavitev {
   opis: string | null
@@ -40,7 +41,7 @@ export default function KlubPredstavitev({ klubId, osvezi }: { klubId: number; o
       <div className="flex flex-wrap gap-3 text-sky-300">
         {p?.spletna_stran && (
           <a href={p.spletna_stran} target="_blank" rel="noreferrer noopener nofollow" className="underline">
-            {new URL(p.spletna_stran).hostname}
+            {imeGostitelja(p.spletna_stran)}
           </a>
         )}
         {p?.instagram && (

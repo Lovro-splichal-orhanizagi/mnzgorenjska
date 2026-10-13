@@ -53,3 +53,12 @@ export async function pripraviGrb(datoteka: File): Promise<{ blob: Blob; koncnic
     bmp.close()
   }
 }
+
+/** Gostitelj za prikaz spletne strani kluba; naslov, ki ga brskalnik ne razčleni, vrne nespremenjen. */
+export function imeGostitelja(naslov: string): string {
+  try {
+    return new URL(naslov).hostname
+  } catch {
+    return naslov
+  }
+}
