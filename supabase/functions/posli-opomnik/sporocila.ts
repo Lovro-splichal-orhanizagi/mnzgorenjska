@@ -92,7 +92,7 @@ export function esc(s: string): string {
     .replaceAll("'", '&#39;')
 }
 
-const pozdrav = (j: Jezik, ime: string | null | undefined) => {
+const pozdrav = (j: Jezik | 'en', ime: string | null | undefined) => {
   const prvo = ime?.trim().split(' ')[0]
   if (j === 'sk' || j === 'cs') return prvo ? `Ahoj, ${esc(prvo)}!` : 'Ahoj!'
   if (j === 'hr') return prvo ? `Bok, ${esc(prvo)}!` : 'Bok!'
@@ -105,6 +105,7 @@ const pozdrav = (j: Jezik, ime: string | null | undefined) => {
   if (j === 'mk') return prvo ? `Здраво, ${esc(prvo)}!` : 'Здраво!'
   if (j === 'pl') return prvo ? `Cześć, ${esc(prvo)}!` : 'Cześć!'
   if (j === 'es') return prvo ? `¡Hola, ${esc(prvo)}!` : '¡Hola!'
+  if (j === 'en') return prvo ? `Hi ${esc(prvo)},` : 'Hi,'
   return prvo ? `Živjo, ${esc(prvo)}!` : 'Živjo!'
 }
 
@@ -122,8 +123,9 @@ function ovoj(vsebina: string, noga: string): string {
   `
 }
 
-const ODJAVA: Record<Jezik, string> = {
+const ODJAVA: Record<Jezik | 'en', string> = {
   sl: 'Ne želim več opomnikov',
+  en: 'Stop these reminders',
   sk: 'Nechcem už dostávať pripomienky',
   hr: 'Ne želim više primati podsjetnike',
   cs: 'Nechci už dostávat připomínky',
@@ -138,7 +140,7 @@ const ODJAVA: Record<Jezik, string> = {
   mk: 'Не сакам повеќе потсетници',
 }
 
-const nogaOdjave = (j: Jezik, odjava: string) =>
+const nogaOdjave = (j: Jezik | 'en', odjava: string) =>
   ` ·
         <a href="${odjava}" style="color:#94a3b8;">${ODJAVA[j]}</a>`
 
@@ -355,7 +357,8 @@ export function sestaviOpomnikBrezLige(
   jezik: string | null | undefined,
   meta: { display_name: string | null },
 ): Sporocilo {
-  const j: Jezik = jezik === 'sk' || jezik === 'hr' || jezik === 'cs' || jezik === 'hu' || jezik === 'de' || jezik === 'sr' || jezik === 'ro' || jezik === 'et' || jezik === 'pl' || jezik === 'es' || jezik === 'lv' || jezik === 'mk' ? jezik : 'sl'
+  // `en` le dobrodošlica uporabniku brez znanega jezika (Google prijava).
+  const j: Jezik | 'en' = jezik === 'sk' || jezik === 'hr' || jezik === 'cs' || jezik === 'hu' || jezik === 'de' || jezik === 'sr' || jezik === 'ro' || jezik === 'et' || jezik === 'pl' || jezik === 'es' || jezik === 'lv' || jezik === 'mk' || jezik === 'en' ? jezik : 'sl'
   // Naravnost na Mojo ekipo s predlogom (`?sestavi=1`): ekipa je ob odprtju
   // že sestavljena, ostane le Shrani. Državo in ligo ugane stran (IP, jezik).
   const vstop = `${SITE}/my-team?sestavi=1`
@@ -432,6 +435,12 @@ export function sestaviOpomnikBrezLige(
       glavno: 'Tu esi reģistrējies, bet tev vēl nav fantāzijas komandas. Sastādīsim tev komandu ar vienu klikšķi, nomaini, ko vēlies, un saglabā. Punktus krāsi jau nākamajā kārtā.',
       gumb: 'Sastādīt man komandu →',
       opomba: 'Ja nevēlies sastādīt komandu, vari šo vēstuli ignorēt.',
+    },
+    en: {
+      naslov: 'SLFF: pick your league and build your team',
+      glavno: 'You signed up, but you don’t have a fantasy team yet. We’ll build one for you in one click: swap anyone you like and save. You start scoring points in the next round.',
+      gumb: 'Build my team →',
+      opomba: 'If you don’t want to build a team, you can ignore this email.',
     },
     sl: {
       naslov: 'SLFF — izberi svojo ligo in sestavi ekipo',

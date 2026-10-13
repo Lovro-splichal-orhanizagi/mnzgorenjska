@@ -5708,6 +5708,10 @@ preveri(
     bSk.naslov.includes('vyber si ligu') && bSk.html.includes('href="https://slff.eu/my-team?sestavi=1"') &&
       !slovensko.test(bSk.html) && bSk.html.includes('Ahoj, Ján!'))
   preveri('e-pošta: brez lige ima odjavo', bSl.odjava === 'https://slff.eu/reminders' && bSk.html.includes('/reminders'))
+  const bEn = E.sestaviOpomnikBrezLige('en', { display_name: 'Ana Horvat' })
+  preveri('e-pošta: dobrodošlica en v angleščini na sestavo ekipe',
+    bEn.naslov.includes('build your team') && bEn.html.includes('href="https://slff.eu/my-team?sestavi=1"') &&
+      !slovensko.test(bEn.html) && bEn.html.includes('Hi Ana,') && bEn.html.includes('Stop these reminders'))
   preveri('e-pošta: sl razlog nespremenjen', E.prevediRazlog(razlogi[0], 'sl') === razlogi[0])
   const pushSl = E.sestaviPushOpomnik(si, rok)
   const pushSk = E.sestaviPushOpomnik(sk, rok)
