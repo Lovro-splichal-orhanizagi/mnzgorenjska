@@ -286,6 +286,21 @@ const IMENA_LV = [
   'Divpadsmitais Spēlētājs', 'Rezultatīvā Piespēle FC', 'Zelta Galva', 'Pirmais Pieskāriens FC', 'Meža Kuiļi',
 ]
 
+// Македонски лиги: забавни, измислени, без имиња на вистински клубови.
+const IMENA_MK = [
+  'Вардарски Соколи', 'Охридски Пастрмки', 'Пелистерски Волци', 'Шарпланински Овчари', 'Дојрански Рибари',
+  'Струмички Пиперки', 'Тиквешки Лозари', 'Кочански Оризари', 'Мавровски Мечки', 'Преспански Пеликани',
+  'Неделни Херои', 'Саботни Легенди', 'Продолжение ФК', 'Браќа од Клупата', 'Офсајд ФК',
+  'Лоб ФК', 'Стативата Јунајтед', 'Корнер Знаменце ФК', 'Единаесетка ФК', 'Корнер Удар Јунајтед',
+  'Жолт Картон ФК', 'Црвен Картон Јунајтед', 'Капитенска Лента ФК', 'Момците од Вештачка Трева', 'Калливо Игралиште ФК',
+  'Контранапад ФК', 'Висок Притисок ФК', 'Либеро ФК', 'Деветката ФК', 'Десетката Јунајтед',
+  'Ајвар ФК', 'Тавче Гравче Јунајтед', 'Пастрмајлија ФК', 'Бурек Јунајтед', 'Ѓомлезе ФК',
+  'Шопска Салата ФК', 'Сарма Јунајтед', 'Пинџур ФК', 'Ракија по Мечот', 'Турлитава ФК',
+  'Шампиони на Општината', 'Пиво по Натпреварот', 'Скара Јунајтед', 'Кафеана ФК', 'Свадбата ФК',
+  'Селска Селекција', 'Старата Гарда', 'Пожарникари ФК', 'Дом на Култура ФК', 'Вечни Резерви',
+  'Дванаесеттиот Играч', 'Асистенција ФК', 'Златна Глава', 'Прв Допир ФК', 'Шумски Диви Свињи',
+]
+
 // Postave v mejah POZICIJE (vratar 1, branilci 3–5, vezisti 2–5, napadalci 1–3).
 const POSTAVE = [
   [4, 4, 2], [4, 3, 3], [3, 5, 2], [3, 4, 3], [5, 3, 2], [4, 5, 1], [5, 4, 1],
@@ -673,7 +688,7 @@ for (const l of seznam) {
     if (eK) throw new Error(eK.message)
     for (const r of kadri ?? []) izbranost.set(r.player_id, (izbranost.get(r.player_id) ?? 0) + 1)
   }
-  const imena = premesaj({ SI: IMENA_SI, HR: IMENA_HR, CZ: IMENA_CZ, HU: IMENA_HU, AT: IMENA_AT, RS: IMENA_RS, RO: IMENA_RO, EE: IMENA_EE, PL: IMENA_PL, ES: IMENA_ES, LV: IMENA_LV }[DRZAVA] ?? IMENA, generator('imena:' + l.slug))
+  const imena = premesaj({ SI: IMENA_SI, HR: IMENA_HR, CZ: IMENA_CZ, HU: IMENA_HU, AT: IMENA_AT, RS: IMENA_RS, RO: IMENA_RO, EE: IMENA_EE, PL: IMENA_PL, ES: IMENA_ES, LV: IMENA_LV, MK: IMENA_MK }[DRZAVA] ?? IMENA, generator('imena:' + l.slug))
     .filter((i) => !zasedena.has(i.toLowerCase()))
 
   console.log(

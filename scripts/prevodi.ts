@@ -23,6 +23,7 @@ import { et } from '../src/i18n/et'
 import { pl } from '../src/i18n/pl'
 import { es } from '../src/i18n/es'
 import { lv } from '../src/i18n/lv'
+import { mk } from '../src/i18n/mk'
 
 type Drevo = { [k: string]: unknown }
 const jeList = (v: unknown) => typeof v === 'string' || (typeof v === 'object' && v !== null && 'other' in v)
@@ -40,7 +41,7 @@ function ima(d: Drevo, kljuc: string): boolean {
 }
 
 const vsi = listi(sl as Drevo)
-const jeziki: Record<string, Drevo> = { hr: hr as Drevo, sk: sk as Drevo, cs: cs as Drevo, hu: hu as Drevo, de: de as Drevo, sr: sr as Drevo, ro: ro as Drevo, et: et as Drevo, pl: pl as Drevo, es: es as Drevo, lv: lv as Drevo, en: en as Drevo }
+const jeziki: Record<string, Drevo> = { hr: hr as Drevo, sk: sk as Drevo, cs: cs as Drevo, hu: hu as Drevo, de: de as Drevo, sr: sr as Drevo, ro: ro as Drevo, et: et as Drevo, pl: pl as Drevo, es: es as Drevo, lv: lv as Drevo, mk: mk as Drevo, en: en as Drevo }
 const izbran = process.argv[2]
 for (const [j, slovar] of Object.entries(jeziki)) {
   if (izbran && izbran !== j) continue

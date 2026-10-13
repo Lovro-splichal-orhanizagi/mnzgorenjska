@@ -282,6 +282,7 @@ export default function KlubiStiki() {
         <option value="PL">PL</option>
         <option value="ES">ES</option>
         <option value="LV">LV</option>
+        <option value="MK">MK</option>
       </select>
       <input value={nov.liga_slug} onChange={(e) => setNov({ ...nov, liga_slug: e.target.value })} placeholder="Liga (npr. hr-mz-1mnl)" className={VNOS} />
       <input value={nov.email} onChange={(e) => setNov({ ...nov, email: e.target.value })} placeholder="E-naslov" className={VNOS} />
@@ -346,6 +347,7 @@ export default function KlubiStiki() {
           <option value="PL">Poljska</option>
           <option value="ES">Španija</option>
           <option value="LV">Latvija</option>
+          <option value="MK">Severna Makedonija</option>
         </select>
         <input
           value={iskanje}

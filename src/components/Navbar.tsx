@@ -157,7 +157,7 @@ export default function Navbar() {
 
   // Glasovanje o pozicijah je nadomestek za zapisnik, ki pozicij ne pozna
   // (Slovenija, Hrvaška, Češka, Madžarska, Avstrija, Srbija, Romunija, Estonija, Poljska, Španija, Latvija). Slovaški zapisnik jih ima, zato stran tam nima kaj početi.
-  const zaDrzavo = drzava === 'SI' || drzava === 'HR' || drzava === 'CZ' || drzava === 'HU' || drzava === 'AT' || drzava === 'RS' || drzava === 'RO' || drzava === 'EE' || drzava === 'PL' || drzava === 'ES' || drzava === 'LV' ? ostale : ostale.filter((p) => p.pot !== '/positions')
+  const zaDrzavo = drzava === 'SI' || drzava === 'HR' || drzava === 'CZ' || drzava === 'HU' || drzava === 'AT' || drzava === 'RS' || drzava === 'RO' || drzava === 'EE' || drzava === 'PL' || drzava === 'ES' || drzava === 'LV' || drzava === 'MK' ? ostale : ostale.filter((p) => p.pot !== '/positions')
   // Administracija je samo na spletu, mobilna aplikacija je za igralce.
   // Pivski zid je le na spletu (kot gumb "Časti pivo", glej Pivo.tsx).
   const zSpletom = jeNativno() ? zaDrzavo : [...zaDrzavo, { pot: '/beers', get naslov() { return t('aplikacija.pivo.zid') } }]

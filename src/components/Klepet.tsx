@@ -152,6 +152,20 @@ const BESEDE: Record<string, { pridevniki: string[]; samostalniki: string[] }> =
       'Ērglis', 'Pūķis', 'Vērsis', 'Zirgs', 'Piekūns', 'Lūsis',
     ],
   },
+  // Makedonščina: pridevnik moškega spola pred samostalnikom ("Син Голман 42"),
+  // vsi samostalniki so moškega spola.
+  mk: {
+    pridevniki: [
+      'Син', 'Црвен', 'Зелен', 'Жолт', 'Црн', 'Бел', 'Сребрен', 'Златен',
+      'Брз', 'Див', 'Тивок', 'Огнен', 'Леден', 'Ноќен', 'Утрински',
+      'Железен', 'Бакарен', 'Сончев', 'Небесен', 'Безмилосен',
+    ],
+    samostalniki: [
+      'Голман', 'Бек', 'Халф', 'Напаѓач', 'Капитен', 'Судија', 'Тренер',
+      'Навивач', 'Стрелец', 'Плејмејкер', 'Резервист', 'Ветеран', 'Херој', 'Волк',
+      'Орел', 'Змеј', 'Бик', 'Коњ', 'Сокол', 'Рис',
+    ],
+  },
   de: {
     pridevniki: [
       'Blauer', 'Roter', 'Grüner', 'Gelber', 'Schwarzer', 'Weißer', 'Silberner', 'Goldener',
