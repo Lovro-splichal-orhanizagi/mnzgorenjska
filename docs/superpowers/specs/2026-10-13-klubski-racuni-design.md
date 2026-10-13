@@ -27,8 +27,12 @@ ali Google). Produkcija zahteva potrditev maila (`GOTRUE_MAILER_AUTOCONFIRM=fals
 Google vrne preverjen naslov, zato potrjen naslov dokazuje, da ima klub
 nabiralnik.
 
-En račun na klub (deljena prijava). Ker je `teams` ena vrstica na klub čez
-vse lige, račun pokriva člane in mladince hkrati.
+**Klub ima lahko več računov**, vsakega s svojim uradnim naslovom (tajnik,
+predsednik, trener mladincev …). Vsi imajo enake pravice in vsak naslov mora
+biti preverjen posebej. Največ **5 aktivnih računov na klub**; šesti gre v
+vrsto admina. Ker je `teams` ena vrstica na klub čez vse lige, račun pokriva
+člane in mladince hkrati. Dnevniki beležijo uporabnika, zato se ve, kateri
+račun je kaj spremenil.
 
 **Tabela** `klubski_racuni`:
 
@@ -40,7 +44,7 @@ vse lige, račun pokriva člane in mladince hkrati.
 | `created_at` | |
 | `preklican_at`, `preklical` | admin preklic (zgodovina ostane) |
 
-Delni unikatni kazali: en aktiven račun na uporabnika in en na klub.
+Delni unikatni kazalo: en aktiven račun na uporabnika (uporabnik zastopa en klub). `klub_stik` že dovoli več vrstic (naslovov) za isti `team_id`.
 
 **RPC** `uveljavi_klubski_racun()` (SECURITY DEFINER) kliče vmesnik ob vsaki
 prijavi. Če velja vse od tega, vpiše vrstico in javi na Discord
@@ -50,11 +54,11 @@ prijavi. Če velja vse od tega, vpiše vrstico in javi na Discord
 - `lower(email)` je enak `lower(klub_stik.email)`;
 - `klub_stik.team_id is not null`;
 - `klub_stik.stanje not in ('ne_zeli', 'napacen_mail')`;
-- klub še nima aktivnega računa.
+- klub ima manj kot 5 aktivnih računov.
 
 **Brez klika admina**, kadar se vse ujame. Kadar se naslov ujame, `team_id`
 pa manjka, gre vrstica v `klubski_zahtevki` (admin izbere klub in potrdi).
-Kadar ima klub že račun, gre v isto vrsto kot spor.
+Kadar ima klub že 5 računov, gre v isto vrsto (`polno`). Drugi in vsak nadaljnji račun kluba javi na Discord posebej, da admin vidi, kdo vse zastopa klub.
 
 **Hrvaški in srbski stiki** (578 + 3) danes nimajo `team_id`. Skripta
 `scripts/povezi-stike.mjs` jih poveže s klubi po normaliziranem imenu in
@@ -75,11 +79,12 @@ tam star ali napačen), odda **prošnjo**: »Ta naslov je uradni naslov kluba X.
 - Admin preveri (ali je naslov res objavljen, ali je klub že zastopan) in
   potrdi ali zavrne. Potrditev vpiše oziroma popravi `klub_stik` (`email`,
   `team_id`, `vir_url` = dokaz, `stanje = 'sodeluje'`) in takoj ustvari
-  klubski račun. Če ima klub že račun z drugim naslovom, admin izbere, kateri
-  ostane (stari se prekliče).
+  klubski račun. Če ima klub že račune z drugimi naslovi, se nov naslov
+  **doda** kot še ena vrstica `klub_stik`; obstoječi računi ostanejo. Admin
+  lahko ob tem prekliče katerikoli starega (npr. bivši tajnik).
 - Zavrnitev z razlogom, ki ga uporabnik vidi.
 
-Vse tri vrste čakajočih (`brez_kluba`, `spor`, `nov_naslov`) so v isti tabeli
+Vse tri vrste čakajočih (`brez_kluba`, `polno`, `nov_naslov`) so v isti tabeli
 `klubski_zahtevki` s stolpcem `vrsta` in istim zavihkom v Administraciji.
 
 Pomožna funkcija `je_klubski_racun(p_user uuid, p_team_id bigint)` je osnova
