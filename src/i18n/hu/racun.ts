@@ -62,7 +62,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     odjavaVprasanje: 'Nem szeretnél több SLFF e-mailt (határidő-emlékeztetőt és értesítést a csapatodról)?',
     odjavaGumb: 'Leiratkozom',
     odjavaNapaka: 'A link érvénytelen. Jelentkezz be, és kapcsold ki az emlékeztetőket a beállításokban.',
-    push: 'Push-értesítések (mobilalkalmazás)',
+    push: 'Push-értesítések',
     pushOpis: 'A határidő előtti napon a telefonod szól, ha a csapatod még nincs kész.',
     pushVklopljena: 'A push-értesítések be vannak kapcsolva.',
     pushIzklopljena: 'Nem küldünk több push-értesítést.',

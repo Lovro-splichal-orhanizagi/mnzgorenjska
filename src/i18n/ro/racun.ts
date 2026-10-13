@@ -62,7 +62,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     odjavaVprasanje: 'Nu mai vrei să primești e-mailuri SLFF (mementouri înainte de termen și notificări despre echipă)?',
     odjavaGumb: 'Dezabonează-mă',
     odjavaNapaka: 'Linkul nu este valid. Autentifică-te și dezactivează mementourile din setări.',
-    push: 'Notificări push (aplicația mobilă)',
+    push: 'Notificări push',
     pushOpis: 'Cu o zi înainte de termen, telefonul îți spune dacă echipa nu e încă pregătită.',
     pushVklopljena: 'Notificările push sunt activate.',
     pushIzklopljena: 'Nu-ți mai trimitem notificări push.',

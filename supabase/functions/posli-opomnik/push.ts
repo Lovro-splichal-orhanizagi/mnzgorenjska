@@ -1,4 +1,4 @@
-// Potisna obvestila prek FCM HTTP v1 (iOS in Android, glej PotisnaObvestila.tsx).
+// Potisna obvestila prek FCM HTTP v1 (iOS, Android in brskalnik, glej PotisnaObvestila.tsx).
 //
 // Skrivnost FIREBASE_SERVICE_ACCOUNT je celoten JSON servisnega računa iz
 // Firebase (Project settings → Service accounts → Generate new private key).
@@ -97,6 +97,8 @@ export async function posljiPush(
             token,
             notification: { title: o.naslov, body: o.besedilo },
             data: { url: o.url },
+            // Brskalnik (public/obvestila-sw.js) odpre le celoten naslov.
+            webpush: { fcm_options: { link: new URL(o.url, 'https://slff.eu').href } },
           },
         }),
       })

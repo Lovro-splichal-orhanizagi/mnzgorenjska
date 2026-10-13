@@ -62,7 +62,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     odjavaVprasanje: 'Vairs nevēlies saņemt SLFF e-pastus (atgādinājumus pirms termiņa un paziņojumus par komandu)?',
     odjavaGumb: 'Atrakstīties',
     odjavaNapaka: 'Saite nav derīga. Piesakies un izslēdz atgādinājumus iestatījumos.',
-    push: 'Push paziņojumi (mobilā lietotne)',
+    push: 'Push paziņojumi',
     pushOpis: 'Dienu pirms termiņa telefons tev paziņos, ja komanda vēl nav gatava.',
     pushVklopljena: 'Push paziņojumi ir ieslēgti.',
     pushIzklopljena: 'Mēs tev vairs nesūtīsim push paziņojumus.',

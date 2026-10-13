@@ -1,15 +1,20 @@
-// Potisna obvestila v mobilni aplikaciji (FCM za iOS in Android).
+// Potisna obvestila: FCM v mobilni aplikaciji (iOS, Android) in v brskalniku.
 //
 // Žeton naprave prijavljenega shrani v `push_tokens`, če je dovoljenje že
 // dano; pošilja jih `posli-opomnik`. Za dovoljenje NE vpraša ob prijavi (brez
 // konteksta, zavrnitve pa ni mogoče popraviti v aplikaciji): vpraša prva
 // shramba ekipe, stikalo na strani Obvestila (`registrirajPush(true)`) in pas
-// po prijavi v aplikaciji, dokler dovoljenje ni odločeno (ekipo je večina
-// sestavila na spletu, zato prve shrambe v aplikaciji nikoli ni bilo).
-// "Zapri" pas skrije za teden dni.
+// po prijavi, dokler dovoljenje ni odločeno (ekipo je večina sestavila na
+// spletu, zato prve shrambe v aplikaciji nikoli ni bilo). "Zapri" pas skrije
+// za teden dni.
+//
+// V brskalniku gre isti vtičnik prek Firebase JS (spletna aplikacija "SLFF web"
+// v projektu slff-cb58e, privzeti ključ VAPID); obvestilo prikaže
+// `public/obvestila-sw.js`. Safari na iPhonu push pozna le v aplikaciji na
+// zaslonu, zato tam pasu ni (`pushPodprt`).
 // Ob odjavi žeton izbrišemo,
 // sicer bi naslednji na isti napravi dobival obvestila prejšnjega. Dotik
-// obvestila odpre pot iz `data.url`. Na spletu ne naredi nič.
+// obvestila odpre pot iz `data.url`.
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Capacitor } from '@capacitor/core'
@@ -23,8 +28,34 @@ import { t } from '../i18n'
 const ZAPRTO = 'slff-push-pas-zaprt'
 const TEDEN = 7 * 86400e3
 
+// Javna nastavitev spletne aplikacije Firebase (ni skrivnost).
+const FIREBASE_SPLET = {
+  apiKey: 'AIzaSyAfwaMY71Te0RxJcoopZpTmoktahJ1q1Ns',
+  authDomain: 'slff-cb58e.firebaseapp.com',
+  projectId: 'slff-cb58e',
+  messagingSenderId: '397012484212',
+  appId: '1:397012484212:web:157ee3df49d897ada65121',
+}
+
+/** Ali ta naprava sploh zna push (aplikacija ali brskalnik s Push API). */
+export function pushPodprt(): boolean {
+  if (jeNativno()) return true
+  return typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window
+}
+
+let splet: Promise<ServiceWorkerRegistration> | null = null
+/** Firebase in delavec obvestil v brskalniku, enkrat na stran. */
+function pripraviSplet(): Promise<ServiceWorkerRegistration> {
+  splet ??= (async () => {
+    const { initializeApp, getApps } = await import('firebase/app')
+    if (!getApps().length) initializeApp(FIREBASE_SPLET)
+    return navigator.serviceWorker.register('/obvestila-sw.js')
+  })()
+  return splet
+}
+
 async function shrani(token: string) {
-  const platforma = Capacitor.getPlatform() === 'ios' ? 'ios' : 'android'
+  const platforma = jeNativno() ? (Capacitor.getPlatform() === 'ios' ? 'ios' : 'android') : 'web'
   await supabase.rpc('shrani_push_zeton', { p_zeton: token, p_platforma: platforma })
 }
 
@@ -32,11 +63,22 @@ export type DovoljenjePush = 'granted' | 'denied' | 'prompt'
 
 /**
  * Stanje dovoljenja; z `vprasaj` ob neodločenem vpraša sistem. Ob dovoljenju
- * shrani žeton. Zunaj aplikacije ali brez Firebase vrne `denied`.
+ * shrani žeton. Brez podpore ali brez Firebase vrne `denied`.
  */
 export async function registrirajPush(vprasaj: boolean): Promise<DovoljenjePush> {
-  if (!jeNativno()) return 'denied'
+  if (!pushPodprt()) return 'denied'
   try {
+    // V brskalniku se vprašanje ne sme izgubiti za uvozom Firebase (Safari
+    // dovoli requestPermission le neposredno ob kliku), zato najprej to.
+    if (!jeNativno()) {
+      let d = Notification.permission
+      if (d === 'default' && vprasaj) d = await Notification.requestPermission()
+      if (d !== 'granted') return d === 'denied' ? 'denied' : 'prompt'
+      const registracija = await pripraviSplet()
+      const { token } = await FirebaseMessaging.getToken({ serviceWorkerRegistration: registracija })
+      await shrani(token)
+      return 'granted'
+    }
     let { receive } = await FirebaseMessaging.checkPermissions()
     if (receive !== 'granted' && receive !== 'denied' && vprasaj)
       ({ receive } = await FirebaseMessaging.requestPermissions())
@@ -45,7 +87,7 @@ export async function registrirajPush(vprasaj: boolean): Promise<DovoljenjePush>
     await shrani(token)
     return 'granted'
   } catch {
-    // Firebase ni nastavljen (razvojna gradnja brez GoogleService datotek).
+    // Firebase ni nastavljen (razvojna gradnja brez GoogleService datotek) ali brskalnik zavrne.
     return 'denied'
   }
 }
@@ -81,14 +123,15 @@ export default function PotisnaObvestila() {
   }, [navigate])
 
   useEffect(() => {
-    if (!jeNativno()) return
+    if (!pushPodprt()) return
     const bil = prej.current
     prej.current = uporabnik
     if (!uporabnik) {
-      if (bil) void FirebaseMessaging.deleteToken().catch(() => {})
+      setPas(false)
+      // Na spletu je Firebase pripravljen le, če je ta stran žeton že dobila.
+      if (bil && (jeNativno() || splet)) void FirebaseMessaging.deleteToken().catch(() => {})
       return
     }
-    setPas(false)
     void registrirajPush(false).then(async (d) => {
       if (d !== 'prompt' || Date.now() - Number(localStorage.getItem(ZAPRTO) ?? 0) < TEDEN) return
       const { data } = await supabase.from('profiles').select('brez_push').eq('id', uporabnik).maybeSingle()
