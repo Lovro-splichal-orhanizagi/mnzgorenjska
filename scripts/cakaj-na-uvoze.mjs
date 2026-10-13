@@ -111,8 +111,24 @@ if (mojaLiga) {
   mojaZveza = l?.zveza ?? null
 }
 
-const gh = (...a) => execFileSync('gh', [...a, '-R', GITHUB_REPOSITORY], { encoding: 'utf8' })
-const moj = samoTece ? null : JSON.parse(gh('run', 'view', GITHUB_RUN_ID, '--json', 'startedAt')).startedAt
+const gh = (...a) => execFileSync('gh', [...a, '-R', GITHUB_REPOSITORY], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })
+// Žeton delovnega toka ima ~1000 klicev API na uro za ves repozitorij. Štirje
+// uvozi, ki čakajo vsak s 5–6 klici na minuto, so ga 13. 10. porabili in vsi
+// so padli. Zato poizvedujemo na KORAK_MIN minut in omejitev počakamo.
+const KORAK_MIN = 3
+const jeOmejitev = (e) => /rate limit/i.test(String(e?.stderr ?? e?.message ?? ''))
+async function ghPocakaj(...a) {
+  for (let poskus = 1; ; poskus++) {
+    try {
+      return gh(...a)
+    } catch (e) {
+      if (!jeOmejitev(e) || poskus >= 20) throw e
+      console.log(`Omejitev GitHub API — počakam 5 min (${poskus}/20)`)
+      await new Promise((r) => setTimeout(r, 300_000))
+    }
+  }
+}
+const moj = samoTece ? null : JSON.parse(await ghPocakaj('run', 'view', GITHUB_RUN_ID, '--json', 'startedAt')).startedAt
 const mojId = Number(GITHUB_RUN_ID)
 
 // Ali zagon drugega toka piše v iste vrstice kot ta?
@@ -183,24 +199,32 @@ if (samoTece) {
   process.exit(3)
 }
 
-for (let min = 1; min <= NAJVEC_MIN; min++) {
+for (let min = KORAK_MIN; min <= NAJVEC_MIN; min += KORAK_MIN) {
   const pred = []
   const tokovi = ['uvoz-zapisnikov.yml', 'uvoz-lige.yml', 'zdruzi-klube.yml', 'tedensko-cene.yml', 'razdeli-zlite-igralce.yml']
   if (SKUPEN_VIR[mojaDrzava]) tokovi.push('grbi.yml')
   for (const tok of tokovi) {
     // Brez --status: tudi čakajoči (queued) starejši zagon mora priti prvi.
     const zagoni = JSON.parse(
-      gh('run', 'list', '--workflow', tok, '--limit', '50', '--json', 'databaseId,startedAt,status,displayTitle'),
+      await ghPocakaj('run', 'list', '--workflow', tok, '--limit', '50', '--json', 'databaseId,startedAt,status,displayTitle'),
     )
     for (const z of zagoni) {
       if (z.status === 'completed' || z.databaseId === mojId || !(z.startedAt > '2000')) continue
       const starejsi = z.startedAt < moj || (z.startedAt === moj && z.databaseId < mojId)
-      if (starejsi && seKrize(tok, z.displayTitle, z.databaseId)) pred.push(`${z.displayTitle} (${z.databaseId})`)
+      if (!starejsi) continue
+      let krize = true
+      try {
+        krize = seKrize(tok, z.displayTitle, z.databaseId)
+      } catch (e) {
+        // Ob omejitvi API ne vemo: varno je čakati (krize ostane true).
+        if (!jeOmejitev(e)) throw e
+      }
+      if (krize) pred.push(`${z.displayTitle} (${z.databaseId})`)
     }
   }
   if (!pred.length) process.exit(0)
   console.log(`Pred mano teče še ${pred.length} uvozov (${pred.join(', ')}) — čakam (${min}/${NAJVEC_MIN} min)`)
-  await new Promise((r) => setTimeout(r, 60_000))
+  await new Promise((r) => setTimeout(r, KORAK_MIN * 60_000))
 }
 console.log(`::error::Starejši uvoz iste države teče že ${NAJVEC_MIN} minut.`)
 process.exit(1)
