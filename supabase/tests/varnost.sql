@@ -2727,6 +2727,67 @@ set local role anon;
 select pg_temp.zavrnjeno('klub: anonimni ne kliče uveljavi', $$select uveljavi_klubski_racun()$$);
 reset role;
 
+-- Prošnja za nov naslov. K5 ima potrjen mail, ki ga ni v klub_stik.
+insert into auth.users(id, email, email_confirmed_at, raw_user_meta_data, created_at) values
+ ('e1a10000-0000-4000-8000-000000000005', 'tajnik.novi@example.invalid', now(), '{"display_name":"K5"}', now());
+select set_config('request.jwt.claim.sub','e1a10000-0000-4000-8000-000000000005',true);
+set local role authenticated;
+select pg_temp.preveri('klub: prošnja za nov naslov se odda',
+  klub_zaprosi_za_naslov(-913004, 'tajnik', 'https://example.org/kontakt') is not null);
+select pg_temp.napaka('klub: le ena odprta prošnja na račun',
+  $$select klub_zaprosi_za_naslov(-913004, 'tajnik', 'https://example.org/kontakt')$$);
+select pg_temp.zavrnjeno('klub: ne-admin ne odloča', $$select admin_odloci_klubski_zahtevek(
+  (select (moj_klubski_racun()->'zahtevek'->>'id')::bigint), true)$$);
+select pg_temp.zavrnjeno('klub: ne-admin ne vidi vrste', $$select * from admin_klubski_zahtevki()$$);
+
+-- Uporabnik, ki že zastopa klub (eden od petih), ne zaprosi za drugega.
+select set_config('request.jwt.claim.sub','e1a10000-0000-4000-8000-000000000011',true);
+select pg_temp.napaka('klub: zastopnik kluba ne zaprosi za drug klub',
+  $$select klub_zaprosi_za_naslov(-913004, 'trener', null)$$);
+
+-- Admin potrdi K5 za -913004: nastane stik in račun.
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+select admin_odloci_klubski_zahtevek(
+  (select id from admin_klubski_zahtevki() where email = 'tajnik.novi@example.invalid'), true);
+reset role;
+select pg_temp.preveri('klub: potrjena prošnja vpiše klub_stik (sodeluje)',
+  exists (select 1 from klub_stik where lower(email) = 'tajnik.novi@example.invalid'
+            and team_id = -913004 and stanje = 'sodeluje' and vir_url = 'https://example.org/kontakt'));
+select pg_temp.preveri('klub: potrjena prošnja ustvari račun',
+  je_klubski_racun('e1a10000-0000-4000-8000-000000000005', -913004));
+
+-- Polno: šesti (iz Task 1) za -913003 brez preklica pade, s preklicem uspe.
+-- Task 1 je preklical K1, zato klub spet napolnimo na 5 aktivnih.
+reset role;
+insert into auth.users(id, email, email_confirmed_at, raw_user_meta_data, created_at) values
+ ('e1a10000-0000-4000-8000-000000000016', 'sesti@example.invalid', now(), '{}', now());
+insert into klubski_racuni(user_id, team_id) values ('e1a10000-0000-4000-8000-000000000016', -913003);
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+select pg_temp.napaka('klub: polnega kluba admin ne potrdi brez preklica',
+  $$select admin_odloci_klubski_zahtevek(
+      (select id from admin_klubski_zahtevki() where vrsta = 'polno' and status = 'odprt'), true)$$);
+select admin_odloci_klubski_zahtevek(
+  (select id from admin_klubski_zahtevki() where vrsta = 'polno' and status = 'odprt'), true, null, null,
+  (select id from admin_klubski_racuni() where user_id = 'e1a10000-0000-4000-8000-000000000011'));
+reset role;
+select pg_temp.preveri('klub: s preklicem šesti dobi račun, preklicani ga izgubi',
+  je_klubski_racun('e1a10000-0000-4000-8000-000000000015', -913003)
+  and not je_klubski_racun('e1a10000-0000-4000-8000-000000000011', -913003));
+
+-- Brez kluba: admin izbere klub; zavrnitev nosi razlog.
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+select pg_temp.napaka('klub: brez_kluba brez izbranega kluba ne gre',
+  $$select admin_odloci_klubski_zahtevek(
+      (select id from admin_klubski_zahtevki() where vrsta = 'brez_kluba' and status = 'odprt'), true)$$);
+select admin_odloci_klubski_zahtevek(
+  (select id from admin_klubski_zahtevki() where vrsta = 'brez_kluba' and status = 'odprt'), false, null, 'Ni naslov kluba.');
+reset role;
+select pg_temp.preveri('klub: zavrnjen zahtevek ima razlog',
+  exists (select 1 from klubski_zahtevki where user_id = 'e1a10000-0000-4000-8000-000000000003'
+            and status = 'zavrnjen' and razlog = 'Ni naslov kluba.'));
+
 do $$
 declare v_napak int;
 begin

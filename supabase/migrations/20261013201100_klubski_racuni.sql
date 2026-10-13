@@ -150,3 +150,174 @@ revoke all on function public.je_klubski_racun(uuid, bigint), public.klub_ustvar
   public.klub_v_vrsto(uuid, text, text, bigint, bigint) from public, anon, authenticated;
 revoke all on function public.uveljavi_klubski_racun(), public.moj_klubski_racun() from public, anon;
 grant execute on function public.uveljavi_klubski_racun(), public.moj_klubski_racun() to authenticated;
+
+-- --------------------------------------------------------------------------
+-- Prošnja za nov naslov: »mail mojega računa je uradni naslov kluba X«.
+-- --------------------------------------------------------------------------
+create or replace function public.klub_zaprosi_za_naslov(p_team_id bigint, p_vloga text,
+                                                         p_dokaz_url text, p_opomba text default null)
+returns bigint language plpgsql security definer set search_path = public
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_email text;
+  v_potrjen timestamptz;
+  v_id bigint;
+begin
+  if v_uid is null then
+    raise insufficient_privilege using message = 'Prijava je obvezna.';
+  end if;
+  select lower(btrim(email)), email_confirmed_at into v_email, v_potrjen from auth.users where id = v_uid;
+  if v_potrjen is null then
+    raise exception 'Najprej potrdi e-pošto računa.';
+  end if;
+  if exists (select 1 from klubski_racuni where user_id = v_uid and preklican_at is null) then
+    raise exception 'Že zastopaš klub.';
+  end if;
+  if not exists (select 1 from teams where id = p_team_id) then
+    raise exception 'Klub ne obstaja.';
+  end if;
+  if exists (select 1 from klubski_zahtevki where user_id = v_uid and status = 'odprt') then
+    raise exception 'Prošnja že čaka na odločitev.';
+  end if;
+  insert into klubski_zahtevki(user_id, email, vrsta, team_id, vloga, dokaz_url, opomba)
+  values (v_uid, v_email, 'nov_naslov', p_team_id, p_vloga,
+          nullif(btrim(coalesce(p_dokaz_url, '')), ''), nullif(btrim(coalesce(p_opomba, '')), ''))
+  returning id into v_id;
+  perform preverjeni_na_discord(format('🏟️ Prošnja za uradni naslov: %s, %s (%s) %s',
+    (select name from teams where id = p_team_id), v_email, coalesce(p_vloga, '?'), coalesce(p_dokaz_url, '')));
+  return v_id;
+end;
+$$;
+
+-- --------------------------------------------------------------------------
+-- Administracija → Klubi
+-- --------------------------------------------------------------------------
+create or replace function public.admin_klubski_zahtevki()
+returns table (id bigint, user_id uuid, display_name text, email text, vrsta text, team_id bigint,
+               team_name text, vloga text, dokaz_url text, opomba text, status text, razlog text,
+               created_at timestamptz, racunov_kluba int)
+language plpgsql stable security definer set search_path = public
+as $$
+begin
+  if not is_admin() then
+    raise insufficient_privilege using message = 'Samo administrator.';
+  end if;
+  return query
+    select z.id, z.user_id, p.display_name, z.email, z.vrsta, z.team_id, t.name, z.vloga, z.dokaz_url,
+           z.opomba, z.status, z.razlog, z.created_at,
+           (select count(*)::int from klubski_racuni r where r.team_id = z.team_id and r.preklican_at is null)
+      from klubski_zahtevki z
+      left join profiles p on p.id = z.user_id
+      left join teams t on t.id = z.team_id
+     order by (z.status = 'odprt') desc, z.created_at desc
+     limit 300;
+end;
+$$;
+
+create or replace function public.admin_klubski_racuni()
+returns table (id bigint, user_id uuid, display_name text, email text, team_id bigint, team_name text,
+               created_at timestamptz, preklican_at timestamptz)
+language plpgsql stable security definer set search_path = public
+as $$
+begin
+  if not is_admin() then
+    raise insufficient_privilege using message = 'Samo administrator.';
+  end if;
+  return query
+    select r.id, r.user_id, p.display_name, u.email::text, r.team_id, t.name, r.created_at, r.preklican_at
+      from klubski_racuni r
+      join teams t on t.id = r.team_id
+      left join profiles p on p.id = r.user_id
+      left join auth.users u on u.id = r.user_id
+     order by (r.preklican_at is null) desc, t.name, r.created_at;
+end;
+$$;
+
+create or replace function public.admin_preklici_klubski_racun(p_id bigint)
+returns void language plpgsql security definer set search_path = public
+as $$
+begin
+  if not is_admin() then
+    raise insufficient_privilege using message = 'Samo administrator.';
+  end if;
+  update klubski_racuni set preklican_at = now(), preklical = auth.uid()
+   where id = p_id and preklican_at is null;
+  if not found then
+    raise exception 'Račun ni aktiven.';
+  end if;
+end;
+$$;
+
+create or replace function public.admin_odloci_klubski_zahtevek(p_id bigint, p_potrdi boolean,
+  p_team_id bigint default null, p_razlog text default null, p_preklici_racun bigint default null)
+returns void language plpgsql security definer set search_path = public
+as $$
+declare
+  z klubski_zahtevki;
+  v_team bigint;
+  v_stik bigint;
+  v_drzava text;
+begin
+  if not is_admin() then
+    raise insufficient_privilege using message = 'Samo administrator.';
+  end if;
+  select * into z from klubski_zahtevki where id = p_id for update;
+  if not found or z.status <> 'odprt' then
+    raise exception 'Zahtevek ni odprt.';
+  end if;
+
+  if not p_potrdi then
+    update klubski_zahtevki
+       set status = 'zavrnjen', razlog = nullif(left(btrim(coalesce(p_razlog, '')), 500), ''),
+           decided_at = now(), decided_by = auth.uid()
+     where id = p_id;
+    return;
+  end if;
+
+  v_team := coalesce(p_team_id, z.team_id);
+  if v_team is null then
+    raise exception 'Izberi klub.';
+  end if;
+  if exists (select 1 from klubski_racuni where user_id = z.user_id and preklican_at is null) then
+    raise exception 'Uporabnik že zastopa klub.';
+  end if;
+  if p_preklici_racun is not null then
+    update klubski_racuni set preklican_at = now(), preklical = auth.uid()
+     where id = p_preklici_racun and team_id = v_team and preklican_at is null;
+    if not found then
+      raise exception 'Račun za preklic ni aktiven račun tega kluba.';
+    end if;
+  end if;
+  perform 1 from teams where id = v_team for update;
+  if (select count(*) from klubski_racuni where team_id = v_team and preklican_at is null) >= 5 then
+    raise exception 'Klub ima že 5 računov; najprej prekliči enega.';
+  end if;
+
+  -- Uradni naslov: popravi obstoječi stik ali dodaj novega (klub ima lahko več naslovov).
+  select id into v_stik from klub_stik where lower(btrim(email)) = z.email limit 1;
+  if v_stik is not null then
+    update klub_stik
+       set team_id = v_team, stanje = 'sodeluje', vir_url = coalesce(z.dokaz_url, vir_url), updated_at = now()
+     where id = v_stik;
+  else
+    select c.code into v_drzava from teams t join countries c on c.id = t.country_id where t.id = v_team;
+    insert into klub_stik(team_id, klub, drzava, email, vir_url, stanje, opomba)
+    values (v_team, (select name from teams where id = v_team), v_drzava, z.email, z.dokaz_url, 'sodeluje',
+            'Prošnja za uradni naslov #' || p_id)
+    returning id into v_stik;
+  end if;
+
+  perform klub_ustvari_racun(z.user_id, v_team, v_stik);
+  update klubski_zahtevki
+     set status = 'potrjen', team_id = v_team, klub_stik_id = v_stik, decided_at = now(), decided_by = auth.uid()
+   where id = p_id;
+end;
+$$;
+
+revoke all on function public.klub_zaprosi_za_naslov(bigint, text, text, text), public.admin_klubski_zahtevki(),
+  public.admin_klubski_racuni(), public.admin_preklici_klubski_racun(bigint),
+  public.admin_odloci_klubski_zahtevek(bigint, boolean, bigint, text, bigint) from public, anon;
+grant execute on function public.klub_zaprosi_za_naslov(bigint, text, text, text), public.admin_klubski_zahtevki(),
+  public.admin_klubski_racuni(), public.admin_preklici_klubski_racun(bigint),
+  public.admin_odloci_klubski_zahtevek(bigint, boolean, bigint, text, bigint) to authenticated;
