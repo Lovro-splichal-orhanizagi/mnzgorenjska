@@ -475,6 +475,28 @@ export async function stranKroga(koda, krog, prenesi, sveze, umik = UMIK_MS) {
   throw new Error(`mlsz: ${koda} krog ${krog} ni stran kroga (${String(html ?? '').length} B: ${String(html ?? '').slice(0, 60)}) — uvoz ustavljen`)
 }
 
+// Isto velja za stran tekme: prava ima blok domačih (`left_team`), tudi
+// kontumacija brez postav. Ostanek "Too many connections" je bil v
+// predpomnilniku tri tedne in uvoz je tekmo vsakič tiho preskočil, ker je
+// zapisnik starejši od 45 dni (286 tekem, 10.–12. 10. 2026).
+export const jeStranTekme = (html) => String(html ?? '').includes('id="left_team"')
+
+/**
+ * Stran tekme ali null. Ostanek ponovimo z umikom kot stran kroga; če ostane,
+ * tekmo preskočimo z opozorilom (drugi zapisniki lige se uvozijo).
+ */
+export async function stranTekme(url, ime, prenesi, sveze = false, umik = UMIK_MS) {
+  let html = await prenesi(url, ime, sveze)
+  for (const ms of umik) {
+    if (jeStranTekme(html)) return html
+    await new Promise((r) => setTimeout(r, ms))
+    html = await prenesi(url, ime, true)
+  }
+  if (jeStranTekme(html)) return html
+  console.warn(`\n  mlsz: ${url} ni stran tekme (${String(html ?? '').length} B: ${String(html ?? '').slice(0, 60)}) — tekma preskočena, uvoz jo prebere naslednjič`)
+  return null
+}
+
 async function straniKrogov(koda, prenesi, sveze) {
   const prva = await stranKroga(koda, 1, prenesi, true)
   const krogi = krogiStrani(prva)
@@ -501,6 +523,9 @@ const vir = {
   imaRegistracije: false,
 
   naslovRazporeda: (koda) => naslovKroga(koda, 1),
+  // V predpomnilnik le prava stran kroga ali tekme, nikoli ostanek
+  // preobremenjenega ada1bank (glej `jeStranKroga`, `jeStranTekme`).
+  zaPredpomnilnik: (html) => jeStranKroga(html) || jeStranTekme(html),
   // Zapisnik potrebuje krog; brez njega adatbank vrne tekmo po kratkem naslovu.
   naslovZapisnika: (koda, sifra, krog) => (krog ? naslovTekme(koda, krog, sifra) : `${OSNOVNI}/match/${sifra}`),
 
@@ -513,8 +538,8 @@ const vir = {
         // zapisnikov, zato to ne pomeni veliko novih zahtevkov.
         let kontumacija = false
         if (mozna3do0(t.izid) && t.id) {
-          const stran = await prenesi(naslovTekme(koda, krog, t.id), imeTekme(koda, t.id), true)
-          kontumacija = jeKontumacija(stran, t.izid) && (!brezPostav(stran, t.izid) || starostDni(t.datum) > 7)
+          const stran = await stranTekme(naslovTekme(koda, krog, t.id), imeTekme(koda, t.id), prenesi, true)
+          kontumacija = !!stran && jeKontumacija(stran, t.izid) && (!brezPostav(stran, t.izid) || starostDni(t.datum) > 7)
         }
         tekme.push({
           domaci: t.domaci, gostje: t.gostje, datum: t.datum, ura: t.ura, kontumacija, odigrana: !!t.izid,
@@ -532,9 +557,15 @@ const vir = {
       for (const t of vrsticeKroga(html, krog).filter((x) => x.izid && x.id)) {
         const url = naslovTekme(koda, krog, t.id)
         const ime = imeTekme(koda, t.id)
-        let z = vZapisnik(await prenesi(url, ime), { id: t.id, url })
-        // Znova le tekmo zadnjih 45 dni: starejša brez postav je kontumacija.
-        if (!z && starostDni(t.datum) <= 45) z = vZapisnik(await prenesi(url, ime, true), { id: t.id, url })
+        const stran = await stranTekme(url, ime, prenesi)
+        if (!stran) continue
+        let z = vZapisnik(stran, { id: t.id, url })
+        // Prava stran brez zapisnika (kontumacija, postave še niso vnesene):
+        // znova le tekmo zadnjih 45 dni, starejša brez postav je kontumacija.
+        if (!z && starostDni(t.datum) <= 45) {
+          const sveza = await stranTekme(url, ime, prenesi, true)
+          if (sveza) z = vZapisnik(sveza, { id: t.id, url })
+        }
         if (!z) continue
         // Ime kluba in krog iz razporeda, da se tekma ujame z vrstico razporeda.
         z.domaci.ime = t.domaci
