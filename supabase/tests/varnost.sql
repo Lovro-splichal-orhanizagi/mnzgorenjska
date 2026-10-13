@@ -2812,6 +2812,78 @@ end;
 $$;
 reset role;
 
+-- --------------------------------------------------------------------------
+-- Klubski računi, faza 2: pozicije
+-- --------------------------------------------------------------------------
+reset role;
+insert into auth.users(id, email, email_confirmed_at, raw_user_meta_data, created_at) values
+ ('f1a10000-0000-4000-8000-000000000001', 'klub.ena@example.invalid', now(), '{"display_name":"KE"}', now()),
+ ('f1a10000-0000-4000-8000-000000000002', 'klub.dva@example.invalid', now(), '{"display_name":"KD"}', now());
+-- KE zastopa klub -913001, KD klub -913002 (vstavimo neposredno, kot admin).
+insert into klubski_racuni(user_id, team_id) values
+ ('f1a10000-0000-4000-8000-000000000001', -913001),
+ ('f1a10000-0000-4000-8000-000000000002', -913002);
+-- -913006 je igralec kluba -913001 (MID, admin iz začetka datoteke); za test ga
+-- postavimo na glasovanje, -913011 (kluba -913001) ostane admin.
+update players set position = 'MID', position_source = 'glasovanje' where id = -913006;
+
+select set_config('request.jwt.claim.sub','f1a10000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select klub_nastavi_pozicijo(-913006, 'FWD');
+select pg_temp.preveri('klub-poz: zahteva čaka, pozicija se ne spremeni takoj',
+  (select position from players where id = -913006) = 'MID'
+  and exists (select 1 from klub_cakajoce_pozicije(-913001) where igralec = -913006 and pozicija = 'FWD'));
+select klub_nastavi_pozicijo(-913006, 'DEF');
+select pg_temp.preveri('klub-poz: nova zahteva zamenja staro',
+  (select count(*) from klub_cakajoce_pozicije(-913001) where igralec = -913006) = 1
+  and (select pozicija from klub_cakajoce_pozicije(-913001) where igralec = -913006) = 'DEF');
+select pg_temp.napaka('klub-poz: neveljavna pozicija', $$select klub_nastavi_pozicijo(-913006, 'XYZ')$$);
+select pg_temp.zavrnjeno('klub-poz: igralec drugega kluba',
+  $$select klub_nastavi_pozicijo((select id from players where team_id = -913002 limit 1), 'GK')$$);
+select pg_temp.zavrnjeno('klub-poz: čakajoče drugega kluba niso vidne',
+  $$select * from klub_cakajoce_pozicije(-913002)$$);
+select pg_temp.zavrnjeno('klub-poz: tabele ni mogoče brati', $$select * from pozicije_klub_cakajo$$);
+-- Admin igralec: zahteva se sprejme, a se ob uveljavitvi ne uveljavi.
+select klub_nastavi_pozicijo(-913011, 'GK');
+reset role;
+
+set local role anon;
+select pg_temp.zavrnjeno('klub-poz: anonimni ne nastavlja', $$select klub_nastavi_pozicijo(-913006, 'GK')$$);
+reset role;
+
+-- Tedenska uveljavitev (kot cron).
+select uveljavi_pozicije();
+select pg_temp.preveri('klub-poz: ponedeljek uveljavi pozicijo kluba',
+  (select position || '/' || position_source from players where id = -913006) = 'DEF/klub');
+select pg_temp.preveri('klub-poz: admin pozicije klub ne prepiše',
+  (select position_source from players where id = -913011) = 'admin');
+select pg_temp.preveri('klub-poz: po uveljavitvi ni več čakajočih',
+  not exists (select 1 from pozicije_klub_cakajo where player_id in (-913006, -913011)));
+select pg_temp.preveri('klub-poz: dnevnik zabeleži spremembo',
+  exists (select 1 from pozicije_klub_dnevnik where player_id = -913006 and staro = 'MID' and novo = 'DEF'));
+
+-- Glasovanje ne povozi pozicije kluba.
+-- Poznavalec lige: en glas doseže prag, zato bi brez zaklepa pozicija padla.
+insert into auth.users(id, email, email_confirmed_at, raw_user_meta_data, created_at) values
+ ('f1a10000-0000-4000-8000-000000000004', 'poznavalec.lige@example.invalid', now(), '{"display_name":"PL"}', now());
+update profiles set insider_competition_id = -913001 where id = 'f1a10000-0000-4000-8000-000000000004';
+insert into position_votes(player_id, voter_id, position)
+values (-913006, 'f1a10000-0000-4000-8000-000000000004', 'GK');
+select potrdi_pozicijo(-913006);
+select pg_temp.preveri('klub-poz: glasovanje ne povozi kluba',
+  (select position_source from players where id = -913006) = 'klub');
+select pg_temp.preveri('klub-poz: pozicije_v_cakanju ne kaže igralcev kluba',
+  not exists (select 1 from pozicije_v_cakanju where player_id = -913006));
+
+-- Preklican račun ne piše več.
+update klubski_racuni set preklican_at = now() where user_id = 'f1a10000-0000-4000-8000-000000000002';
+select set_config('request.jwt.claim.sub','f1a10000-0000-4000-8000-000000000002',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('klub-poz: preklican račun ne nastavlja',
+  $$select klub_nastavi_pozicijo((select id from players where team_id = -913002 limit 1), 'GK')$$);
+reset role;
+update klubski_racuni set preklican_at = null where user_id = 'f1a10000-0000-4000-8000-000000000002';
+
 do $$
 declare v_napak int;
 begin

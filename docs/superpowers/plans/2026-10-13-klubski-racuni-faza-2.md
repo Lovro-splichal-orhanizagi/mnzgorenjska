@@ -58,7 +58,7 @@
 
 **Interfaces:**
 - Consumes: `je_klubski_racun(uuid, bigint)`, `klubski_racuni` (faza 1).
-- Produces: `klub_nastavi_pozicijo(p_player_id bigint, p_position text) returns void`, `klub_preklici_pozicijo(p_player_id bigint) returns void`, `klub_cakajoce_pozicije(p_team_id bigint) returns table(player_id bigint, position text, created_at timestamptz)`; `position_source = 'klub'`.
+- Produces: `klub_nastavi_pozicijo(p_player_id bigint, p_position text) returns void`, `klub_preklici_pozicijo(p_player_id bigint) returns void`, `klub_cakajoce_pozicije(p_team_id bigint) returns table(igralec bigint, pozicija text, od timestamptz)`; `position_source = 'klub'`.
 
 - [ ] **Step 1: Testi (padejo)** — dodaj pred `do $$\ndeclare v_napak int;`:
 
@@ -83,11 +83,11 @@ set local role authenticated;
 select klub_nastavi_pozicijo(-913006, 'FWD');
 select pg_temp.preveri('klub-poz: zahteva čaka, pozicija se ne spremeni takoj',
   (select position from players where id = -913006) = 'MID'
-  and exists (select 1 from klub_cakajoce_pozicije(-913001) where player_id = -913006 and position = 'FWD'));
+  and exists (select 1 from klub_cakajoce_pozicije(-913001) where igralec = -913006 and pozicija = 'FWD'));
 select klub_nastavi_pozicijo(-913006, 'DEF');
 select pg_temp.preveri('klub-poz: nova zahteva zamenja staro',
-  (select count(*) from klub_cakajoce_pozicije(-913001) where player_id = -913006) = 1
-  and (select position from klub_cakajoce_pozicije(-913001) where player_id = -913006) = 'DEF');
+  (select count(*) from klub_cakajoce_pozicije(-913001) where igralec = -913006) = 1
+  and (select pozicija from klub_cakajoce_pozicije(-913001) where igralec = -913006) = 'DEF');
 select pg_temp.napaka('klub-poz: neveljavna pozicija', $$select klub_nastavi_pozicijo(-913006, 'XYZ')$$);
 select pg_temp.zavrnjeno('klub-poz: igralec drugega kluba',
   $$select klub_nastavi_pozicijo((select id from players where team_id = -913002 limit 1), 'GK')$$);
@@ -114,11 +114,12 @@ select pg_temp.preveri('klub-poz: dnevnik zabeleži spremembo',
   exists (select 1 from pozicije_klub_dnevnik where player_id = -913006 and staro = 'MID' and novo = 'DEF'));
 
 -- Glasovanje ne povozi pozicije kluba.
+-- Poznavalec lige: en glas doseže prag, zato bi brez zaklepa pozicija padla.
+insert into auth.users(id, email, email_confirmed_at, raw_user_meta_data, created_at) values
+ ('f1a10000-0000-4000-8000-000000000004', 'poznavalec.lige@example.invalid', now(), '{"display_name":"PL"}', now());
+update profiles set insider_competition_id = -913001 where id = 'f1a10000-0000-4000-8000-000000000004';
 insert into position_votes(player_id, voter_id, position)
-select -913006, u, 'GK' from (values
- ('b8a06635-2322-4444-8c42-44e419f912ab'::uuid), ('b8a06635-2322-4444-8c42-44e419f912ac'::uuid),
- ('b8a06635-2322-4444-8c42-44e419f912ad'::uuid)) v(u)
-on conflict do nothing;
+values (-913006, 'f1a10000-0000-4000-8000-000000000004', 'GK');
 select potrdi_pozicijo(-913006);
 select pg_temp.preveri('klub-poz: glasovanje ne povozi kluba',
   (select position_source from players where id = -913006) = 'klub');
@@ -206,7 +207,7 @@ end;
 $$;
 
 create or replace function public.klub_cakajoce_pozicije(p_team_id bigint)
-returns table (player_id bigint, position text, created_at timestamptz)
+returns table (igralec bigint, pozicija text, od timestamptz)
 language plpgsql stable security definer set search_path = public
 as $$
 begin
