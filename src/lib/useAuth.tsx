@@ -2,6 +2,7 @@ import type { Session } from '@supabase/supabase-js'
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { supabase } from './supabase'
 import { uveljaviKlubskiRacun } from './klubskiRacun'
+import { jezik } from '../i18n'
 
 interface AuthVrednost {
   session: Session | null
@@ -46,6 +47,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [uid])
   const klubPreverjen = Boolean(uid) && preverjenZa === uid
+
+  // Prijava z Googlom jezika ne zapiše (registracija z mailom ga), zato bi pošta
+  // šla po privzetem. Ob prvi seji brez njega zapišemo jezik vmesnika; angleški
+  // vmesnik ne pove države, zato ga pustimo (dobrodošlica je tedaj angleška).
+  const brezJezika = Boolean(session && !session.user.user_metadata?.jezik)
+  useEffect(() => {
+    if (!uid || !brezJezika || jezik() === 'en') return
+    void supabase.auth.updateUser({ data: { jezik: jezik() } })
+  }, [uid, brezJezika])
 
   return (
     <AuthContext.Provider value={{ session, loading, klubPreverjen }}>

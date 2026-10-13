@@ -3025,6 +3025,13 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   prišlo. Za dovoljenje vpraša prva shramba ekipe, stikalo na tej strani in pas
   po prijavi v aplikaciji ali brskalniku (`PotisnaObvestila.tsx`), dokler
   dovoljenje ni odločeno in `brez_push` ni vklopljen; "Zapri" ga skrije za teden
+- `kandidati_za_dobrodoslico(najvec)` → dan po registraciji mail in push
+  "sestavi ekipo" (`/my-team?sestavi=1`) vsem brez (neprazne) ekipe:
+  registracija pred 20 urami do 7 dni, potrjen naslov, enkrat na človeka
+  (`email_log` vrsta `dobrodoslica`, neuspela največ trikrat). Jezik iz
+  registracije, sicer država prve ekipe ali kluba navijanja, sicer angleščina
+  (Google jezika ne pove; `useAuth` ga ob prvi seji zapiše iz vmesnika). Teče
+  vsako uro v `opozorila.yml` (`VRSTA=dobrodoslica`, največ 60 na zagon)
 - `kandidati_za_push_opomnik(liga)` → samo push "še nimaš ekipe": kdor ima
   napravo in v ligi nima ekipe (ali ima prazno; brez ekipe šteje domača liga
   kot pri opomniku), 24 ur pred rokom, enkrat na krog (`email_log` vrsta
