@@ -106,8 +106,10 @@ async function prenesi(url, ime) {
     if (vir.jeIzziv?.(html)) throw vir.zavrnitev(`${url} vrne izziv (CAPTCHA)`)
     // Ločeno po viru: šifre lig in dokumentov so last spletišča, ne sistema,
     // in dve zvezi bi si lahko delili isto ime datoteke.
+    // Stran, ki je vir ne prizna za pravo (mlsz: "Too many connections"), ne
+    // gre v predpomnilnik — sicer bi jo uvoz zapisnikov bral naprej.
     mkdirSync(`${PREDPOMNILNIK}/${vir.ime}`, { recursive: true })
-    writeFileSync(pot, html)
+    if (vir.zaPredpomnilnik?.(html, ime) ?? true) writeFileSync(pot, html)
     return html
   } catch (e) {
     // Zavrnitve vira (jalgpall: 403, 429, izziv) ne obidemo s shranjeno stranjo.

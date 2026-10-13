@@ -4278,6 +4278,25 @@ preveri(
     napaka = e
   }
   preveri('mlsz: vztrajen ostanek ustavi uvoz (ne 0 zapisnikov)', /ni stran kroga.*Too many connections/.test(napaka?.message ?? ''))
+
+  // Isti ostanek namesto strani tekme je bil v predpomnilniku tri tedne: tekma,
+  // starejša od 45 dni, se ni prebrala znova (286 tekem brez zapisnika). Ostanek
+  // ne sme v predpomnilnik, prava stran (tudi kontumacija) da.
+  const pravaTekma = beri('hu-adatbank-tekma-65-20-31672-2090962.html')
+  preveri('mlsz: ostanek ni stran tekme', M.jeStranTekme(pravaTekma) && M.jeStranTekme(kz) && !M.jeStranTekme(ostanek) &&
+    !M.jeStranTekme(pravaStran))
+  preveri('mlsz: v predpomnilnik le prava stran', M.default.zaPredpomnilnik(pravaTekma) && M.default.zaPredpomnilnik(pravaStran) &&
+    M.default.zaPredpomnilnik(kz) && !M.default.zaPredpomnilnik(ostanek) && !M.default.zaPredpomnilnik(''))
+  let klicevT = 0
+  const sveziKlici = []
+  const tekmaPoOstanku = async (_u, _i, sveze) => (sveziKlici.push(!!sveze), ++klicevT <= 1 ? ostanek : pravaTekma)
+  const st = await M.stranTekme('u', 'i', tekmaPoOstanku, false, [0, 0])
+  preveri('mlsz: ostanek tekme se prebere znova (sveže)', klicevT === 2 && M.jeStranTekme(st) && sveziKlici[1] === true)
+  const opozori = console.warn
+  console.warn = () => {}
+  const brez = await M.stranTekme('u', 'i', async () => ostanek, false, [0, 0])
+  console.warn = opozori
+  preveri('mlsz: vztrajen ostanek tekme preskoči tekmo', brez === null)
 }
 
 // --- anonimizacija (GDPR) ---------------------------------------------------------

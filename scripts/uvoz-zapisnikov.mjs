@@ -111,9 +111,19 @@ console.log(`Tekmovanje: ${tekmovanje.name} (liga ${liga})`)
 const MAPA = `${PREDPOMNILNIK}/${vir.ime}`
 if (!existsSync(MAPA)) mkdirSync(MAPA, { recursive: true })
 
+// Vir lahko pove, katera stran sploh sme v predpomnilnik (`vir.zaPredpomnilnik`):
+// preobremenjen strežnik vrne 200 z obvestilom o napaki namesto strani in tak
+// ostanek bi sicer obveljal za vselej (mlsz, 10.–12. 10. 2026: 286 tekem brez
+// zapisnika, ker je bila v predpomnilniku stran "Too many connections").
+// Neveljavne strani ne shranimo in shranjene ne beremo — vir jo prebere znova.
+const smeVPredpomnilnik = (besedilo, datoteka) => vir.zaPredpomnilnik?.(besedilo, datoteka) ?? true
+
 async function prenesi(url, datoteka, sveze = false) {
   const pot = `${MAPA}/${datoteka}`
-  if (!sveze && existsSync(pot)) return readFileSync(pot, 'utf8')
+  if (!sveze && existsSync(pot)) {
+    const shranjeno = readFileSync(pot, 'utf8')
+    if (smeVPredpomnilnik(shranjeno, datoteka)) return shranjeno
+  }
   // Vir lahko zahteva vljudnost: premor med zahtevki in glavo, ki pove, kdo
   // bere (Sportnet). Slovenski viri tega nimajo in ostanejo, kot so bili.
   // Prehodne motnje (DNS, 5xx) prenos sam ponovi — glej `prenos.mjs`.
@@ -128,7 +138,7 @@ async function prenesi(url, datoteka, sveze = false) {
   const besedilo = await odgovor.text()
   // Izziv (CAPTCHA) ne sme v predpomnilnik namesto zapisnika.
   if (vir.jeIzziv?.(besedilo)) throw vir.zavrnitev(`${url} vrne izziv (CAPTCHA)`)
-  writeFileSync(pot, besedilo)
+  if (smeVPredpomnilnik(besedilo, datoteka)) writeFileSync(pot, besedilo)
   return besedilo
 }
 
@@ -906,35 +916,6 @@ for (const { id, z, url } of zapisniki) {
       )
     }
 
-    // Napaka pri pripravi ne sme izbrisati prejsnjih nastopov. Zamenjava ni
-    // v transakciji (RPC-ja zanjo ni), zato stare nastope najprej preberemo:
-    // ce vstavljanje novih pade, jih vrnemo, sicer bi tekma ostala brez
-    // enega samega nastopa in z njo tocke vseh, ki so igrali.
-    const { data: stariNastopi, error: eStari } = await db
-      .from('appearances')
-      .select(
-        'match_id, player_id, team_id, shirt_number, started, minute_on, minute_off, minutes_played, ' +
-          'goals, own_goals, penalties_scored, penalties_missed, penalties_saved, yellow_cards, red_cards, ' +
-          'goals_conceded, clean_sheet, is_goalkeeper',
-      )
-      .eq('match_id', tekma.id)
-      .order('id')
-    if (eStari) throw new Error(`branje starih nastopov: ${eStari.message}`)
-    const { error: eIzbris } = await db.from('appearances').delete().eq('match_id', tekma.id)
-    if (eIzbris) throw new Error(eIzbris.message)
-    const { error: eNastopi } = await db.from('appearances').insert(vrstice)
-    if (eNastopi) {
-      if (stariNastopi?.length) {
-        const { error: eVrni } = await db.from('appearances').insert(stariNastopi)
-        if (eVrni)
-          throw new Error(
-            `${eNastopi.message}; VRAČANJE ${stariNastopi.length} starih nastopov NI USPELO: ${eVrni.message}`,
-          )
-        throw new Error(`${eNastopi.message} (stari nastopi vrnjeni)`)
-      }
-      throw new Error(eNastopi.message)
-    }
-
     // goli
     const goliVrstice = []
     for (const g of z.goli) {
@@ -955,23 +936,26 @@ for (const { id, z, url } of zapisniki) {
         score_away: g.rezultat?.[1] ?? null,
       })
     }
+    // Gole zamenjamo le, kadar jih razčlenitev najde in se nabor razlikuje od
+    // obstoječega — sicer asistence in glasovi ostanejo. Ob spremembi
+    // zapisnika se glasovi za spremenjene gole izgubijo, kar je prav.
+    let goliZaZamenjavo = null
     if (goliVrstice.length) {
-      // Preveri, ali se prihajajoči nabor golov razlikuje od obstoječega.
-      // Če je enak, preskočimo delete/insert (asistence in glasovi ostanejo).
       const noviKljuci = new Set(goliVrstice.map(kljucGola))
-      const enak =
-        obstKljuci.size === noviKljuci.size &&
-        [...obstKljuci].every((k) => noviKljuci.has(k))
-      if (!enak) {
-        // Vsebina se je spremenila (dodan/odstranjen gol, popravek). Le tedaj
-        // izbrišemo in ponovno vstavimo — vsi glasovi za spremenjene gole se
-        // sicer izgubijo, a to je pravilno vedenje ob spremembi zapisnika.
-        const { error: eBrisGoli } = await db.from('goals').delete().eq('match_id', tekma.id)
-        if (eBrisGoli) throw new Error(eBrisGoli.message)
-        const { error: eGoli } = await db.from('goals').insert(goliVrstice)
-        if (eGoli) throw new Error(eGoli.message)
-      }
+      const enak = obstKljuci.size === noviKljuci.size && [...obstKljuci].every((k) => noviKljuci.has(k))
+      if (!enak) goliZaZamenjavo = goliVrstice
     }
+
+    // Nastope (in spremenjene gole) zamenja baza v eni transakciji
+    // (`zamenjaj_nastope_tekme`): prej sta bila izbris in vstavljanje dva
+    // zahtevka in padec omrežja vmes je živo tekmo pustil brez nastopov
+    // (tekma 148981, 12. 10. 2026). Napaka zdaj pusti stare podatke cele.
+    const { error: eZamenjava } = await db.rpc('zamenjaj_nastope_tekme', {
+      p_match_id: tekma.id,
+      p_nastopi: vrstice,
+      p_goli: goliZaZamenjavo,
+    })
+    if (eZamenjava) throw new Error(`zamenjava nastopov: ${eZamenjava.message} (stari nastopi ostanejo)`)
 
     // Gol, katerega strelec na tej tekmi nima nastopa, je NEUPORABEN: tock ne
     // prinese nikomur in invarianta ga upraviceno javi kot napako. Tak gol

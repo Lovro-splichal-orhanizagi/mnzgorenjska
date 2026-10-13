@@ -662,6 +662,13 @@ Kjer je županija skupine preuredila, dobi vsaka skupina svojo lansko skupino,
 manjkajočo pa iz 2024/25 (évad 63), ki je ne uporablja nihče drug. Sezone pred
 2025/26 adatbank preusmeri na živi ada1bank, ki občasno vrne 43-bajtni
 ostanek; vir ga prebere znova, vztrajen ostanek ustavi uvoz (`stranKroga`).
+Isti ostanek (`SQLSTATE[08004] [1040] Too many connections`, 200) pride tudi
+namesto strani tekme. **Ostanek ne gre v predpomnilnik** (`vir.zaPredpomnilnik`:
+le stran s `match_panel` ali `left_team`) in shranjenega uvoz ne bere; stran
+tekme se po umiku prebere znova (`stranTekme`), vztrajen ostanek tekmo
+preskoči z opozorilom. Prej se je shranil kot vsak odgovor 200 in tekma,
+starejša od 45 dni, se ni prebrala nikoli več: 10.–12. 10. 2026 je tako 286
+tekem 65 lig ostalo brez zapisnika.
 
 | liga | tekoča 2026/27 | arhiv |
 |---|---|---|
@@ -2765,7 +2772,15 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   (ali ima vir izid), kadar ga razpored pozna.
 - Omrežje: uvozi berejo prek `prenesiSPonovitvami` (`scripts/prenos.mjs`) —
   ponovi omrežne napake, 5xx in 429 (2 s, 6 s, 15 s), 4xx nikoli. Nov prenos
-  v uvozni skripti naj gre skozenj, ne mimo z golim `fetch`
+  v uvozni skripti naj gre skozenj, ne mimo z golim `fetch`. Vir, katerega
+  strežnik ob preobremenitvi vrne 200 z obvestilom namesto strani, naj ima
+  `zaPredpomnilnik(besedilo, datoteka)` (uvoz zapisnikov in razporeda tako
+  stran ne shranita in shranjene ne bereta; zdaj le mlsz)
+- Nastope tekme (in spremenjene gole) uvoz zamenja s
+  `zamenjaj_nastope_tekme(tekma, nastopi, goli)` v eni transakciji (servisna,
+  migracija 20261013181100). Prej sta bila izbris in vstavljanje dva zahtevka
+  in padec omrežja vmes je živo tekmo pustil brez nastopov (tekma 148981,
+  12. 10. 2026)
 - borza (`preracunaj_cene`, nočno `uveljavi_zapadle_cene`) premakne ceno po
   točkah kroga (+0.1 na dve točki nad osnovnima dvema, največ +1.0; forma
   treh krogov je spodnja meja), odsotnost pa kaznuje šele drugi zaporedni krog.
