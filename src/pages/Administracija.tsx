@@ -388,25 +388,41 @@ export default function Administracija() {
   // preprosto odreže. Ekipe, ki so padle čez rob, so se na strani prikazale
   // brez enega samega igralca. Kadrov je čez obe ligi že 1324, zato jih
   // beremo po straneh in nikoli ne verjamemo, da je ena zahteva dovolj.
+  // Najprej ekipe lige, nato kadri po fantasy_team_id (kazalo): filter prek
+  // fantasy_teams!inner je Postgres reševal s prehodom vseh kadrov (650 ms na stran).
   async function vsiKadri(tekmovanje: any) {
     const STRAN = 1000
     const vse = []
+    const ekipe: number[] = []
     for (let od = 0; ; od += STRAN) {
       const { data, error } = await supabase
-        .from('fantasy_roster')
-        .select(
-          'fantasy_team_id, player_id, is_starter, is_captain, is_vice, buy_value, buy_position, fantasy_teams!inner(competition_id), players(id, full_name, position, team_id, value, active)',
-        )
-        .eq('fantasy_teams.competition_id', tekmovanje)
-        .order('fantasy_team_id')
-        .order('player_id')
-        .range(od, od + STRAN - 1)
+        .from('fantasy_teams').select('id').eq('competition_id', tekmovanje).order('id').range(od, od + STRAN - 1)
       if (error) {
         setNapaka(error.message)
-        break
+        return []
       }
-      vse.push(...(data ?? []))
+      ekipe.push(...(data ?? []).map((e) => e.id))
       if (!data || data.length < STRAN) break
+    }
+    for (let i = 0; i < ekipe.length; i += 150) {
+      const kos = ekipe.slice(i, i + 150)
+      for (let od = 0; ; od += STRAN) {
+        const { data, error } = await supabase
+          .from('fantasy_roster')
+          .select(
+            'fantasy_team_id, player_id, is_starter, is_captain, is_vice, buy_value, buy_position, players(id, full_name, position, team_id, value, active)',
+          )
+          .in('fantasy_team_id', kos)
+          .order('fantasy_team_id')
+          .order('player_id')
+          .range(od, od + STRAN - 1)
+        if (error) {
+          setNapaka(error.message)
+          return vse
+        }
+        vse.push(...(data ?? []))
+        if (!data || data.length < STRAN) break
+      }
     }
     return vse
   }
