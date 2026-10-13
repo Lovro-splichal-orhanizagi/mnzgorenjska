@@ -12,6 +12,7 @@ import { useTekmovanje } from '../lib/tekmovanje'
 import UpravljanjeLig from '../components/admin/UpravljanjeLig'
 import ZivostSkupnosti from '../components/admin/Zivost'
 import ProsnjePoznavalcev from '../components/admin/ProsnjePoznavalcev'
+import PotrjeniPoznavalci from '../components/admin/PotrjeniPoznavalci'
 import Prevzemi from '../components/admin/Prevzemi'
 import Preverjeni from '../components/admin/Preverjeni'
 import PrijaveMiniLig from '../components/admin/PrijaveMiniLig'
@@ -641,6 +642,7 @@ export default function Administracija() {
         { id: 'uporabniki', naslov: `Uporabniki (${uporabniki.length})` },
         { id: 'ekipe', naslov: `Fantasy ekipe (${ekipe.length})` },
         { id: 'poznavalci', naslov: 'Prošnje poznavalcev' },
+        { id: 'potrjeni-poznavalci', naslov: 'Potrjeni poznavalci' },
         { id: 'mini-lige', naslov: 'Prijave mini lig' },
       ],
     },
@@ -745,6 +747,9 @@ export default function Administracija() {
 
             <Razdelek id="poznavalci">
               <ProsnjePoznavalcev />
+            </Razdelek>
+            <Razdelek id="potrjeni-poznavalci">
+              <PotrjeniPoznavalci />
             </Razdelek>
             <Razdelek id="prevzemi">
               <Prevzemi />
