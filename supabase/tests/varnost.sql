@@ -2974,6 +2974,36 @@ values (-921100, 'Klub brez igralcev', 'KBI', (select id from countries where co
 insert into klubski_racuni(user_id, team_id) values ('f1a10000-0000-4000-8000-000000000003', -921100);
 select pg_temp.napaka('klub-stran: klub z računom se ne izbriše', $$delete from teams where id = -921100$$);
 
+-- Zamrznitev cene: klub potrdi poškodbo svojega igralca (20261013221100).
+insert into players(id, team_id, competition_id, first_name, last_name, full_name, position, position_source, value, value_start, active) overriding system value
+values (-922001, -913001, -913001, 'Pos', 'Kodba', 'Kodba Pos', 'MID', 'admin', 6, 6, true);
+insert into auth.users(id, email, email_confirmed_at, raw_user_meta_data, created_at) values
+ ('a3a10000-0000-4000-8000-000000000001', 'poskodovan@example.invalid', now(), '{"display_name":"PO"}', now());
+insert into zahtevki_igralca(player_id, user_id, status, potrdil, decided_at)
+values (-922001, 'a3a10000-0000-4000-8000-000000000001', 'potrjen', 'admin', now());
+insert into uradne_odsotnosti(player_id, zahtevek_id, user_id, vrsta, od, sezona)
+select -922001, id, user_id, 'poskodba', current_date, '2099/00' from zahtevki_igralca where player_id = -922001;
+select set_config('test.odsotnost', (select id::text from uradne_odsotnosti where player_id = -922001), true);
+select set_config('request.jwt.claim.sub','f1a10000-0000-4000-8000-000000000002',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('zamrznitev: tuj klub ne potrdi odsotnosti',
+  $$select klub_potrdi_odsotnost(current_setting('test.odsotnost')::bigint)$$);
+select pg_temp.zavrnjeno('zamrznitev: tuj klub ne vidi odsotnosti', $$select * from klub_odsotnosti(-913001)$$);
+select set_config('request.jwt.claim.sub','a3a10000-0000-4000-8000-000000000001',true);
+select pg_temp.zavrnjeno('zamrznitev: igralec sam ne potrdi', $$select klub_potrdi_odsotnost(current_setting('test.odsotnost')::bigint)$$);
+select set_config('request.jwt.claim.sub','f1a10000-0000-4000-8000-000000000001',true);
+select pg_temp.preveri('zamrznitev: klub vidi odsotnost svojega igralca',
+  exists (select 1 from klub_odsotnosti(-913001) where player_id = -922001 and not potrjena));
+select klub_potrdi_odsotnost(current_setting('test.odsotnost')::bigint);
+reset role;
+select pg_temp.preveri('zamrznitev: klub potrdi odsotnost',
+  (select klub_potrdil_at is not null from uradne_odsotnosti where player_id = -922001));
+set local role anon;
+select pg_temp.preveri('zamrznitev: pogled pokaže zamrznjeno ceno in potrditev',
+  (select cena_zamrznjena and klub_potrdil from uradne_odsotnosti_view where player_id = -922001));
+select pg_temp.zavrnjeno('zamrznitev: zadržanih padcev ni mogoče brati', $$select * from zadrzani_padci$$);
+reset role;
+
 do $$
 declare v_napak int;
 begin

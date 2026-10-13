@@ -87,6 +87,8 @@ jobs:
       - run: npx --yes supabase@2.117.0 db start
       - run: npm run test:varnost
       - run: npm run test:socasnost
+      # Zamrznitev cene ob poškodbi: borza in kazen na sestavljenih krogih.
+      - run: npm run preizkus-zamrznitve
       - if: always()
         run: npx --yes supabase@2.117.0 stop --no-backup
 
