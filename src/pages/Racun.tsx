@@ -168,8 +168,10 @@ function Nastavitve({ uporabnikId, email, zGeslom }: { uporabnikId: string; emai
 
       <Razdelek naslov={t('racun.nastavitve.jezikNaslov')}>
         <p className="text-sm text-slate-400">{t('racun.nastavitve.jezikOpis')}</p>
-        <IzbiraJezika className="flex flex-wrap items-center" />
-        <IzbiraDrzave className="flex flex-wrap items-center" />
+        <div className="flex flex-wrap items-center gap-2">
+          <IzbiraJezika />
+          <IzbiraDrzave />
+        </div>
       </Razdelek>
 
       <Razdelek naslov={t('racun.nastavitve.obvestilaNaslov')}>

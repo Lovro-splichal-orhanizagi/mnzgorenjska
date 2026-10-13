@@ -4,15 +4,23 @@
 // šestih (Gorenjska + Ljubljana) ne bi več — na telefonu bi se prelivala čez
 // zaslon in ob vsaki novi ligi bolj.
 //
-// Nad ligami so države kot zavihki. Zavihek le brska; šele izbira lige druge
-// države preklopi državo (in jezik, zato stran naloži znova).
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
+// Nad ligami je izbira države (spustni meni, ne več vrsta zavihkov: držav je
+// dvanajst). Država le brska; šele izbira lige druge države preklopi državo
+// (in jezik, zato stran naloži znova).
+//
+// Brez iskanja je seznam drevo: zveze so skupine, ki se razprejo, odprta je
+// le zveza izbrane lige (Madžarska ima 146 lig v dvajsetih zvezah). Na vrhu so
+// nazadnje izbrane lige, nad seznamom izbira ravni (člani, U19), kadar ima
+// država oboje. Iskanje gre čez vse države in vse lige pokaže razprte.
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTekmovanje, type Tekmovanje } from '../lib/tekmovanje'
 import { potrdiZapustitev } from '../lib/neshranjeno'
 import { drzaveZLigami, preklopiDrzavo } from '../lib/drzava'
-import { t as prevod, lokale } from '../i18n'
-import { imeDrzave } from './IzbiraDrzave'
+import { jeMladinskiSlug } from '../lib/prevzem'
+import { t as prevod, lokale, stevilo } from '../i18n'
+import { imeDrzave, moznostiDrzav } from './IzbiraDrzave'
+import SpustniMeni from './SpustniMeni'
 import Zastava from './Zastava'
 import FotoIgralca from './FotoIgralca'
 import ZnakPreverjen from './ZnakPreverjen'
@@ -27,6 +35,17 @@ import { prikazniIme } from '../lib/pomozno'
 
 /** Toliko igralcev pokaže razdelek "Igralci" pod ligami. */
 const IGRALCEV_V_IZBIRNIKU = 6
+
+/** Do toliko lig v pogledu so vse zveze razprte (Slovenija, Avstrija po deželah). */
+const VSE_RAZPRTE_DO = 15
+
+/** Toliko nazadnje izbranih lig pokaže razdelek "Nedavno". */
+const NEDAVNIH = 4
+const KLJUC_NEDAVNIH = 'slff-nedavne-lige'
+const NEDAVNO = 'nedavno'
+
+type Raven = 'vse' | 'clani' | 'mladinci'
+const RAVNI: Raven[] = ['vse', 'clani', 'mladinci']
 
 /** Brez šumnikov in velikih črk — da "zelezniki" najde "Železniki". */
 const poenostavi = (s: string) =>
@@ -83,15 +102,84 @@ export function ustreza(t: Tekmovanje, iskanje: string): boolean {
   return kosi.some((k) => k.includes(q))
 }
 
+/** Liga po ravni: mladinska (U19) ali članska. */
+export function ustrezaRavni(t: Tekmovanje, raven: Raven): boolean {
+  if (raven === 'vse') return true
+  return jeMladinskiSlug(t.slug) === (raven === 'mladinci')
+}
+
+/** Zveze, razprte ob odprtju: vse v majhni državi, sicer le zveza izbrane lige. */
+export function privzetoRazprte(lige: Tekmovanje[], izbrana: string | null): Set<string> {
+  const skupine = poZvezah(lige)
+  const odprte = new Set<string>([NEDAVNO])
+  if (lige.length <= VSE_RAZPRTE_DO) skupine.forEach((s) => odprte.add(s.kljuc))
+  else {
+    const s = skupine.find((s) => s.lige.some((t) => t.slug === izbrana)) ?? skupine[0]
+    if (s) odprte.add(s.kljuc)
+  }
+  return odprte
+}
+
+/** Nazadnje izbrane lige (le ta brskalnik); shramba je lahko zaprta. */
+function preberiNedavne(): string[] {
+  try {
+    const v: unknown = JSON.parse(localStorage.getItem(KLJUC_NEDAVNIH) ?? '[]')
+    return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []
+  } catch {
+    return []
+  }
+}
+
+/** Zapiše novo ligo in tisto, ki jo človek zapušča (da je naslednjič na vrhu). */
+function zapisiNedavno(nova: string, prejsnja: string | null) {
+  const seznam = [nova, prejsnja, ...preberiNedavne()].filter((x): x is string => Boolean(x))
+  try {
+    localStorage.setItem(KLJUC_NEDAVNIH, JSON.stringify([...new Set(seznam)].slice(0, NEDAVNIH + 2)))
+  } catch {
+    // Zasebno okno ali polna shramba: brez razdelka Nedavno.
+  }
+}
+
+/** Vrstica seznama, po kateri se premikata puščici. */
+type Vrstica =
+  | { tip: 'skupina'; id: string; s: Skupina }
+  | { tip: 'liga'; id: string; t: Tekmovanje; skupina: string }
+  | { tip: 'igralec'; id: string; z: NajdenIgralec }
+
+const idLige = (skupina: string, t: Tekmovanje) => `liga-${skupina}-${t.slug}`
+
+function Kljukica() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 12 12" className="h-3.5 w-3.5 shrink-0 text-gnl-300">
+      <path d="M2.5 6.5 5 9l4.5-6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function Puscica({ obrnjena, className = '' }: { obrnjena: boolean; className?: string }) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 12 12" className={`h-3 w-3 shrink-0 transition ${obrnjena ? 'rotate-180' : ''} ${className}`}>
+      <path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
 export default function IzbirnikLige() {
   const { slug, tekmovanja, vsaTekmovanja, drzava, tekmovanje, nastavi } = useTekmovanje()
   const [odprt, setOdprt] = useState(false)
   const [iskanje, setIskanje] = useState('')
-  // Država, katere lige plošča kaže. Zavihek le brska — stran se ne naloži
+  // Država, katere lige plošča kaže. Izbira le brska — stran se ne naloži
   // znova, dokler človek ne izbere lige.
   const [zavihek, setZavihek] = useState(drzava)
-  // Liga, na kateri stoji tipkovnica (puščici gor/dol); Enter jo izbere.
-  const [aktivna, setAktivna] = useState(0)
+  const [raven, setRaven] = useState<Raven>('vse')
+  // Razprte zveze (in "Nedavno") v drevesu brez iskanja.
+  const [razprte, setRazprte] = useState<Set<string>>(() => new Set())
+  const [nedavne, setNedavne] = useState<string[]>([])
+  // Seznam držav je odprt: lige in iskanje se umaknejo, da ima prostor.
+  const [drzaveOdprte, setDrzaveOdprte] = useState(false)
+  // Vrstica, na kateri stoji tipkovnica (puščice); Enter jo izbere ali razpre.
+  // Po id-ju, ne po mestu: razprtje zveze premakne vse pod njo.
+  const [aktivnaId, setAktivnaId] = useState<string | null>(null)
   // Plošča je pod gumbom, na ozkem zaslonu pa zamaknjena, da ne zleze čez rob.
   // (Glava ima backdrop-blur, zato `fixed` v njej ne bi bil glede na okno.)
   const [mesto, setMesto] = useState({ levo: 0, sirina: 352 })
@@ -100,8 +188,24 @@ export default function IzbirnikLige() {
   const gumb = useRef<HTMLButtonElement | null>(null)
   const pojdi = useNavigate()
 
-  const drzave = useMemo(() => drzaveZLigami(vsaTekmovanja), [vsaTekmovanja])
-  const vecDrzav = drzave.length > 1
+  const vecDrzav = useMemo(() => drzaveZLigami(vsaTekmovanja).length > 1, [vsaTekmovanja])
+
+  const ligeDrzave = (koda: string) => vsaTekmovanja.filter((t) => (t.country_code ?? drzava) === koda)
+
+  /** Pogled ene države: zavihek, raven in razprte zveze se zamenjajo skupaj. */
+  const pokaziDrzavo = (koda: string) => {
+    setZavihek(koda)
+    setRaven('vse')
+    setIskanje('')
+    setRazprte(privzetoRazprte(ligeDrzave(koda), slug))
+  }
+
+  const odpri = () => {
+    pokaziDrzavo(drzava)
+    setNedavne(preberiNedavne())
+    setDrzaveOdprte(false)
+    setOdprt(true)
+  }
 
   // Klik izven zapre; brez tega spustni seznam ostane odprt čez celo stran.
   useEffect(() => {
@@ -117,8 +221,7 @@ export default function IzbirnikLige() {
     // Na dotik bi fokus odprl tipkovnico čez seznam lig, ki ga človek hoče videti.
     if (odprt && window.matchMedia('(hover: hover)').matches) poljeIskanja.current?.focus()
     else setIskanje('')
-    if (odprt) setZavihek(drzava)
-  }, [odprt, drzava])
+  }, [odprt])
 
   // Širina in zamik plošče ob odprtju in ob spremembi okna.
   useEffect(() => {
@@ -135,17 +238,32 @@ export default function IzbirnikLige() {
     return () => window.removeEventListener('resize', postavi)
   }, [odprt])
 
-  // Iskanje gre čez vse države; brez iskanja le izbrani zavihek.
+  // Iskanje gre čez vse države in vse ravni; brez iskanja le izbrana država.
   const isce = iskanje.trim().length > 0
+  const vDrzavi = useMemo(
+    () => vsaTekmovanja.filter((t) => (t.country_code ?? drzava) === zavihek),
+    [vsaTekmovanja, zavihek, drzava],
+  )
+  // Izbira ravni ima smisel le, kadar ima država oboje.
+  const imaRavni = useMemo(
+    () => vDrzavi.some((t) => jeMladinskiSlug(t.slug)) && vDrzavi.some((t) => !jeMladinskiSlug(t.slug)),
+    [vDrzavi],
+  )
   const skupine = useMemo(() => {
-    const vir = isce
-      ? vsaTekmovanja
-      : vsaTekmovanja.filter((t) => (t.country_code ?? drzava) === zavihek)
-    return poZvezah(vir.filter((t) => ustreza(t, iskanje)))
-  }, [vsaTekmovanja, iskanje, isce, zavihek, drzava])
+    if (isce) return poZvezah(vsaTekmovanja.filter((t) => ustreza(t, iskanje)))
+    return poZvezah(vDrzavi.filter((t) => ustrezaRavni(t, imaRavni ? raven : 'vse')))
+  }, [vsaTekmovanja, vDrzavi, iskanje, isce, raven, imaRavni])
 
-  // Ravno zaporedje, kot ga vidi oko — po njem se premikata puščici.
-  const zaporedje = useMemo(() => skupine.flatMap((s) => s.lige), [skupine])
+  // Nedavno: lige iz shrambe, ki so še aktivne, brez izbrane.
+  const skupinaNedavnih = useMemo<Skupina | null>(() => {
+    if (isce) return null
+    const lige = nedavne
+      .filter((s) => s !== slug)
+      .map((s) => vsaTekmovanja.find((t) => t.slug === s))
+      .filter((t): t is Tekmovanje => t != null)
+      .slice(0, NEDAVNIH)
+    return lige.length ? { kljuc: NEDAVNO, naslov: prevod('aplikacija.izbirnikLige.nedavno'), lige } : null
+  }, [isce, nedavne, slug, vsaTekmovanja])
 
   // Od treh znakov naprej iskanje najde še igralce vseh aktivnih lig; pod
   // ligami jih pokaže razdelek "Igralci". Puščici gresta čez lige in igralce
@@ -155,16 +273,41 @@ export default function IzbirnikLige() {
     omejitev: IGRALCEV_V_IZBIRNIKU,
     vklopljeno: iskanjeIgralcev,
   })
-  const vsehMoznosti = zaporedje.length + igralci.length
 
-  // Ob odprtju in ob vsakem novem iskanju začni pri izbrani ligi, sicer pri prvi.
+  // Vrstice, kot jih vidi oko — po njih se premikata puščici. Brez iskanja
+  // so v zaporedju tudi glave zvez (drevo), z iskanjem le lige in igralci.
+  const drevo = [...(skupinaNedavnih ? [skupinaNedavnih] : []), ...skupine]
+  const vrstice = useMemo<Vrstica[]>(() => {
+    if (isce)
+      return [
+        ...skupine.flatMap((s) => s.lige.map((t): Vrstica => ({ tip: 'liga', id: idLige(s.kljuc, t), t, skupina: s.kljuc }))),
+        ...igralci.map((z): Vrstica => ({ tip: 'igralec', id: `igralec-${z.id}`, z })),
+      ]
+    return drevo.flatMap((s): Vrstica[] => [
+      { tip: 'skupina', id: `skupina-${s.kljuc}`, s },
+      ...(razprte.has(s.kljuc)
+        ? s.lige.map((t): Vrstica => ({ tip: 'liga', id: idLige(s.kljuc, t), t, skupina: s.kljuc }))
+        : []),
+    ])
+    // drevo je izpeljano iz skupine in skupinaNedavnih.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isce, skupine, skupinaNedavnih, igralci, razprte])
+
+  // Ob odprtju, iskanju ali menjavi pogleda začni pri izbrani ligi (v njeni
+  // zvezi, ne v Nedavno), sicer pri prvi vrstici.
   useEffect(() => {
-    const i = zaporedje.findIndex((t) => t.slug === slug)
-    setAktivna(i >= 0 ? i : 0)
-  }, [zaporedje, slug, odprt])
+    if (!odprt) return
+    const izbrana = vrstice.find((v) => v.tip === 'liga' && v.t.slug === slug && v.skupina !== NEDAVNO)
+    setAktivnaId((izbrana ?? vrstice[0])?.id ?? null)
+    // Ne ob vsaki spremembi vrstic: razprtje zveze ne sme premakniti tipkovnice.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [odprt, iskanje, zavihek, raven])
+
+  const aktivna = Math.max(0, vrstice.findIndex((v) => v.id === aktivnaId))
+  const aktivnaVrstica = vrstice.length ? vrstice[aktivna] : undefined
 
   // Escape zapre seznam, tudi ko fokus ni v iskalnem polju (npr. po kliku
-  // na drsnik seznama).
+  // na drsnik seznama). Odprt seznam držav Escape ujame sam.
   useEffect(() => {
     if (!odprt) return
     const tipkaDok = (e: globalThis.KeyboardEvent) => {
@@ -177,14 +320,13 @@ export default function IzbirnikLige() {
     return () => document.removeEventListener('keydown', tipkaDok)
   }, [odprt])
 
-  // Možnost pod tipkovnico mora ostati vidna, ko jo puščica premakne pod rob seznama.
+  // Vrstica pod tipkovnico mora ostati vidna, ko jo puščica premakne pod rob seznama.
   useEffect(() => {
-    if (!odprt) return
-    const t = zaporedje[aktivna]
-    const z = igralci[aktivna - zaporedje.length]
-    const idEl = t ? `liga-${t.slug}` : z ? `igralec-${z.id}` : null
-    if (idEl) document.getElementById(idEl)?.scrollIntoView?.({ block: 'nearest' })
-  }, [odprt, aktivna, zaporedje, igralci])
+    if (!odprt || !aktivnaVrstica) return
+    document
+      .querySelector(`[data-vrstica="${CSS.escape(aktivnaVrstica.id)}"]`)
+      ?.scrollIntoView?.({ block: 'nearest' })
+  }, [odprt, aktivnaVrstica])
 
   // Ena sama liga povsod: izbirati ni česa.
   if (vsaTekmovanja.length < 2 && tekmovanja.length < 2) return null
@@ -207,6 +349,7 @@ export default function IzbirnikLige() {
   const izberi = (t: Tekmovanje) => {
     // Moja ekipa ob menjavi lige naloži drug kader — neshranjene spremembe bi izginile.
     if (t.slug !== slug && !potrdiZapustitev()) return
+    if (t.slug !== slug) zapisiNedavno(t.slug, slug)
     // Liga druge države: jezik se med obiskom ne menja, zato stran naloži znova.
     if (t.country_code && t.country_code !== drzava) {
       preklopiDrzavo(t.country_code, vsaTekmovanja, { liga: t.slug })
@@ -231,30 +374,89 @@ export default function IzbirnikLige() {
     pojdi(pot)
   }
 
+  const preklopiSkupino = (kljuc: string, odpri?: boolean) =>
+    setRazprte((r) => {
+      const n = new Set(r)
+      if (odpri ?? !n.has(kljuc)) n.add(kljuc)
+      else n.delete(kljuc)
+      return n
+    })
+
   const tipka = (e: KeyboardEvent<HTMLInputElement>) => {
+    const v = aktivnaVrstica
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault()
-      if (!vsehMoznosti) return
+      if (!vrstice.length) return
       const korak = e.key === 'ArrowDown' ? 1 : -1
-      setAktivna((a) => (Math.min(a, vsehMoznosti - 1) + korak + vsehMoznosti) % vsehMoznosti)
+      setAktivnaId(vrstice[(aktivna + korak + vrstice.length) % vrstice.length].id)
     } else if (e.key === 'Enter') {
       e.preventDefault()
-      const t = zaporedje[aktivna]
-      const z = igralci[aktivna - zaporedje.length]
-      if (t) izberi(t)
-      else if (z) izberiIgralca(z)
+      if (v?.tip === 'skupina') preklopiSkupino(v.s.kljuc)
+      else if (v?.tip === 'liga') izberi(v.t)
+      else if (v?.tip === 'igralec') izberiIgralca(v.z)
+    } else if (!isce && e.key === 'ArrowRight' && v?.tip === 'skupina') {
+      // Drevo: desno razpre zvezo, na razprti skoči na prvo ligo.
+      e.preventDefault()
+      if (!razprte.has(v.s.kljuc)) preklopiSkupino(v.s.kljuc, true)
+      else if (v.s.lige[0]) setAktivnaId(idLige(v.s.kljuc, v.s.lige[0]))
+    } else if (!isce && e.key === 'ArrowLeft' && v) {
+      // Levo strne zvezo, z lige skoči na njeno zvezo.
+      e.preventDefault()
+      if (v.tip === 'skupina') preklopiSkupino(v.s.kljuc, false)
+      else if (v.tip === 'liga') setAktivnaId(`skupina-${v.skupina}`)
     }
     // Escape ujame poslušalec na dokumentu (zgoraj).
   }
 
-  const idMoznosti = (t: Tekmovanje) => `liga-${t.slug}`
-  const aktivnaLiga = zaporedje[aktivna]
-  const aktivniIgralec = igralci[aktivna - zaporedje.length]
-  const aktivnaMoznost = aktivnaLiga
-    ? idMoznosti(aktivnaLiga)
-    : aktivniIgralec
-      ? `igralec-${aktivniIgralec.id}`
-      : undefined
+  /** Ena liga: v drevesu `treeitem`, pri iskanju `option`. */
+  const vrsticaLige = (t: Tekmovanje, skupina: string) => {
+    const id = idLige(skupina, t)
+    const izbrana = t.slug === slug
+    const jeAktivna = aktivnaVrstica?.id === id
+    const tujaDrzava = vecDrzav && t.country_code && (isce || skupina === NEDAVNO) && t.country_code !== zavihek
+    return (
+      <div
+        key={id}
+        id={id}
+        data-vrstica={id}
+        role={isce ? 'option' : 'treeitem'}
+        aria-level={isce ? undefined : 2}
+        aria-selected={izbrana}
+        onClick={() => izberi(t)}
+        onMouseEnter={() => setAktivnaId(id)}
+        className={`flex min-h-[44px] cursor-pointer items-center gap-2 rounded-lg px-2.5 text-sm sm:min-h-[36px] ${
+          isce ? '' : 'pl-6'
+        } ${
+          izbrana ? 'bg-gnl-500/15 font-bold text-gnl-200' : jeAktivna ? 'bg-white/10 text-slate-100' : 'text-slate-300'
+        }`}
+      >
+        {tujaDrzava && t.country_code && <Zastava koda={t.country_code} className="h-3 shrink-0" />}
+        <span className="min-w-0 flex-1 truncate">{t.name}</span>
+        {izbrana && <Kljukica />}
+      </div>
+    )
+  }
+
+  /** Glava zveze pri iskanju (ni možnost, le naslov). */
+  const glavaIskanja = (s: Skupina): ReactNode => {
+    const koda = s.lige[0]?.country_code ?? null
+    return (
+      <div
+        aria-hidden="true"
+        className="sticky top-0 z-10 flex items-center gap-1.5 bg-slate-900 px-3 pb-1 pt-2.5 text-[10px] font-bold uppercase tracking-wide text-slate-400"
+      >
+        {vecDrzav && koda && <Zastava koda={koda} className="h-3" />}
+        <span className="truncate">{s.naslov}</span>
+        <span className="ml-auto font-semibold text-slate-600">{s.lige.length}</span>
+      </div>
+    )
+  }
+
+  const praznoSporocilo = (
+    <p className="px-3 py-6 text-center text-sm text-slate-500" aria-live="polite">
+      {iscemIgralce ? prevod('aplikacija.izbirnikLige.iscemIgralce') : prevod('aplikacija.izbirnikLige.niZadetkov')}
+    </p>
+  )
 
   return (
     // min-w-0 + max-w: gumb se na ozkem zaslonu skrajša, namesto da bi
@@ -263,8 +465,8 @@ export default function IzbirnikLige() {
       <button
         data-pomoc="izbirnik-lige"
         ref={gumb}
-        onClick={() => setOdprt(!odprt)}
-        aria-haspopup="listbox"
+        onClick={() => (odprt ? setOdprt(false) : odpri())}
+        aria-haspopup="dialog"
         aria-expanded={odprt}
         title={surovoIme}
         // Preklopnik je bil premajhen — nov obiskovalec ga ni videl. Ambrasti
@@ -276,20 +478,7 @@ export default function IzbirnikLige() {
         {vecDrzav && <Zastava koda={drzava} className="h-4" />}
         <span className="min-w-0 truncate text-amber-50 sm:hidden">{zaMobile}</span>
         <span className="hidden min-w-0 truncate text-amber-50 sm:inline">{zaDesktop}</span>
-        <svg
-          aria-hidden="true"
-          viewBox="0 0 12 12"
-          className={`h-3 w-3 shrink-0 text-amber-300/80 transition ${odprt ? 'rotate-180' : ''}`}
-        >
-          <path
-            d="M2.5 4.5 6 8l3.5-3.5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+        <Puscica obrnjena={odprt} className="text-amber-300/80" />
       </button>
 
       {odprt && (
@@ -299,116 +488,85 @@ export default function IzbirnikLige() {
                      bg-slate-900 shadow-xl shadow-black/50"
         >
           <div className="space-y-2 border-b border-white/10 p-2">
-            {/* Države kot zavihki; pri mnogih se vrstica le vodoravno pomakne. */}
+            {/* Država le brska; seznam se pokaže v plošči (lebdeči bi ga plošča odrezala). */}
             {vecDrzav && (
-              <div
-                role="tablist"
-                aria-label={prevod('aplikacija.izbiraDrzave.oznaka')}
-                className="flex gap-1 overflow-x-auto rounded-xl bg-slate-950 p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-              >
-                {drzave.map((koda) => {
-                  const izbran = !isce && koda === zavihek
-                  return (
-                    <button
-                      key={koda}
-                      type="button"
-                      role="tab"
-                      aria-selected={izbran}
-                      onClick={() => {
-                        setZavihek(koda)
-                        setIskanje('')
-                      }}
-                      className={`flex min-w-fit flex-1 items-center justify-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition ${
-                        izbran ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
-                      }`}
-                    >
-                      <Zastava koda={koda} />
-                      {imeDrzave(koda)}
-                    </button>
-                  )
-                })}
-              </div>
+              <SpustniMeni
+                vVrsti
+                className="text-sm"
+                obOdprtju={setDrzaveOdprte}
+                oznakaGumba={prevod('aplikacija.izbiraDrzave.gumb', { drzava: imeDrzave(zavihek) })}
+                oznakaMenija={prevod('aplikacija.izbiraDrzave.oznaka')}
+                gumb={
+                  <>
+                    <Zastava koda={zavihek} className="h-3.5 shrink-0" />
+                    <span className="truncate font-semibold text-slate-100">{imeDrzave(zavihek)}</span>
+                    <span className="text-xs text-slate-500">{stevilo(vDrzavi.length)}</span>
+                  </>
+                }
+                moznosti={moznostiDrzav(vsaTekmovanja, zavihek)}
+                izberi={pokaziDrzavo}
+              />
             )}
-            {/* Iskalno polje je zunaj seznama: v role=listbox smejo biti le možnosti. */}
-            <input
-              ref={poljeIskanja}
-              value={iskanje}
-              onChange={(e) => setIskanje(e.target.value)}
-              onKeyDown={tipka}
-              placeholder={prevod('aplikacija.izbirnikLige.isciPolje')}
-              role="combobox"
-              aria-label={prevod('aplikacija.izbirnikLige.isci')}
-              aria-expanded="true"
-              aria-controls="seznam-lig"
-              aria-autocomplete="list"
-              aria-activedescendant={aktivnaMoznost}
-              className="w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm placeholder:text-slate-500"
-            />
+            {!drzaveOdprte && (
+              <>
+                {/* Iskalno polje je zunaj seznama: v seznamu smejo biti le možnosti. */}
+                <input
+                  ref={poljeIskanja}
+                  value={iskanje}
+                  onChange={(e) => setIskanje(e.target.value)}
+                  onKeyDown={tipka}
+                  placeholder={prevod('aplikacija.izbirnikLige.isciPolje')}
+                  role="combobox"
+                  aria-label={prevod('aplikacija.izbirnikLige.isci')}
+                  aria-expanded="true"
+                  aria-haspopup={isce ? 'listbox' : 'tree'}
+                  aria-controls="seznam-lig"
+                  aria-autocomplete="list"
+                  aria-activedescendant={aktivnaVrstica?.id}
+                  className="w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm placeholder:text-slate-500"
+                />
+                {!isce && imaRavni && (
+                  <div
+                    role="radiogroup"
+                    aria-label={prevod('aplikacija.izbirnikLige.raven')}
+                    className="flex gap-1 rounded-xl bg-slate-950 p-1"
+                  >
+                    {RAVNI.map((r) => (
+                      <button
+                        key={r}
+                        type="button"
+                        role="radio"
+                        aria-checked={raven === r}
+                        onClick={() => {
+                          setRaven(r)
+                          setRazprte(privzetoRazprte(vDrzavi.filter((t) => ustrezaRavni(t, r)), slug))
+                        }}
+                        className={`min-h-[36px] flex-1 truncate rounded-lg px-2 text-xs font-semibold transition ${
+                          raven === r ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+                        }`}
+                      >
+                        {prevod(`aplikacija.izbirnikLige.ravni.${r}`)}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
           </div>
 
-          {vsehMoznosti === 0 ? (
-            <p className="px-3 py-6 text-center text-sm text-slate-500" aria-live="polite">
-              {iscemIgralce
-                ? prevod('aplikacija.izbirnikLige.iscemIgralce')
-                : prevod('aplikacija.izbirnikLige.niZadetkov')}
-            </p>
-          ) : (
+          {drzaveOdprte ? null : vrstice.length === 0 ? (
+            praznoSporocilo
+          ) : isce ? (
             // Stanje iskanja igralcev ni možnost, zato stoji zunaj listboxa.
             <div className="max-h-[min(60vh,26rem)] overflow-y-auto overscroll-contain pb-1.5">
               <div id="seznam-lig" role="listbox" aria-label={prevod('aplikacija.izbirnikLige.lige')}>
-                {skupine.map((s) => {
-                  const koda = s.lige[0]?.country_code ?? null
-                  return (
-                    <div key={s.kljuc} role="group" aria-label={s.naslov}>
-                      {/* Glava skupine ostane vidna, ko se seznam pomika. */}
-                      <div
-                        aria-hidden="true"
-                        className="sticky top-0 z-10 flex items-center gap-1.5 bg-slate-900 px-3 pb-1 pt-2.5 text-[10px] font-bold uppercase tracking-wide text-slate-400"
-                      >
-                        {isce && vecDrzav && koda && <Zastava koda={koda} className="h-3" />}
-                        <span className="truncate">{s.naslov}</span>
-                        <span className="ml-auto font-semibold text-slate-600">{s.lige.length}</span>
-                      </div>
-                      <div className="px-1.5">
-                        {s.lige.map((t) => {
-                          const jeAktivna = aktivnaLiga?.slug === t.slug
-                          const izbrana = t.slug === slug
-                          return (
-                            <div
-                              key={t.slug}
-                              id={idMoznosti(t)}
-                              role="option"
-                              aria-selected={izbrana}
-                              onClick={() => izberi(t)}
-                              onMouseEnter={() => setAktivna(zaporedje.indexOf(t))}
-                              className={`flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2.5 text-sm sm:py-2 ${
-                                izbrana
-                                  ? 'bg-gnl-500/15 font-bold text-gnl-200'
-                                  : jeAktivna
-                                    ? 'bg-white/10 text-slate-100'
-                                    : 'text-slate-300'
-                              }`}
-                            >
-                              <span className="min-w-0 flex-1 truncate">{t.name}</span>
-                              {izbrana && (
-                                <svg aria-hidden="true" viewBox="0 0 12 12" className="h-3.5 w-3.5 shrink-0 text-gnl-300">
-                                  <path
-                                    d="M2.5 6.5 5 9l4.5-6"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="1.8"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                </svg>
-                              )}
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  )
-                })}
+                {skupine.map((s) => (
+                  <div key={s.kljuc} role="group" aria-label={s.naslov}>
+                    {/* Glava skupine ostane vidna, ko se seznam pomika. */}
+                    {glavaIskanja(s)}
+                    <div className="px-1.5">{s.lige.map((t) => vrsticaLige(t, s.kljuc))}</div>
+                  </div>
+                ))}
                 {igralci.length > 0 && (
                   <div role="group" aria-label={prevod('aplikacija.izbirnikLige.igralci')}>
                     <div
@@ -419,19 +577,21 @@ export default function IzbirnikLige() {
                       <span className="ml-auto font-semibold text-slate-600">{igralci.length}</span>
                     </div>
                     <div className="px-1.5">
-                      {igralci.map((z, i) => {
-                        const jeAktiven = aktivniIgralec?.id === z.id
+                      {igralci.map((z) => {
+                        const id = `igralec-${z.id}`
+                        const jeAktiven = aktivnaVrstica?.id === id
                         const podrobno = [z.klub, z.liga_ime].filter(Boolean).join(' · ')
                         return (
                           <div
                             key={z.id}
-                            id={`igralec-${z.id}`}
+                            id={id}
+                            data-vrstica={id}
                             role="option"
                             aria-selected={false}
                             aria-label={opisIgralca(z)}
                             onClick={() => izberiIgralca(z)}
-                            onMouseEnter={() => setAktivna(zaporedje.length + i)}
-                            className={`flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2.5 text-sm sm:py-2 ${
+                            onMouseEnter={() => setAktivnaId(id)}
+                            className={`flex min-h-[44px] cursor-pointer items-center gap-2 rounded-lg px-2.5 text-sm sm:min-h-[36px] ${
                               jeAktiven ? 'bg-white/10 text-slate-100' : 'text-slate-300'
                             }`}
                           >
@@ -456,6 +616,44 @@ export default function IzbirnikLige() {
                   {prevod('aplikacija.izbirnikLige.iscemIgralce')}
                 </p>
               )}
+            </div>
+          ) : (
+            <div className="max-h-[min(60vh,26rem)] overflow-y-auto overscroll-contain px-1.5 pb-1.5">
+              <div id="seznam-lig" role="tree" aria-label={prevod('aplikacija.izbirnikLige.lige')}>
+                {drevo.map((s) => {
+                  const id = `skupina-${s.kljuc}`
+                  const razprta = razprte.has(s.kljuc)
+                  const jeAktivna = aktivnaVrstica?.id === id
+                  const imaIzbrano = s.kljuc !== NEDAVNO && s.lige.some((t) => t.slug === slug)
+                  return (
+                    <div
+                      key={s.kljuc}
+                      id={id}
+                      role="treeitem"
+                      aria-level={1}
+                      aria-expanded={razprta}
+                      aria-selected={false}
+                      aria-label={s.naslov}
+                    >
+                      {/* Glava zveze: klik razpre ali strne; ostane vidna, ko se seznam pomika. */}
+                      <div
+                        data-vrstica={id}
+                        onClick={() => preklopiSkupino(s.kljuc)}
+                        onMouseEnter={() => setAktivnaId(id)}
+                        className={`sticky top-0 z-10 mt-1 flex min-h-[44px] cursor-pointer items-center gap-2 rounded-lg bg-slate-900 px-2.5 text-xs font-bold uppercase tracking-wide sm:min-h-[36px] ${
+                          jeAktivna ? 'text-slate-100 ring-1 ring-inset ring-white/15' : 'text-slate-400'
+                        }`}
+                      >
+                        <Puscica obrnjena={false} className={`text-slate-500 ${razprta ? '' : '-rotate-90'}`} />
+                        <span className="min-w-0 flex-1 truncate">{s.naslov}</span>
+                        {!razprta && imaIzbrano && <Kljukica />}
+                        <span className="font-semibold text-slate-600">{stevilo(s.lige.length)}</span>
+                      </div>
+                      {razprta && <div role="group">{s.lige.map((t) => vrsticaLige(t, s.kljuc))}</div>}
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           )}
         </div>
