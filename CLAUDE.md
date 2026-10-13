@@ -2521,11 +2521,28 @@ Prvi uvoz bloka je ~240 strani — ob počasnem strežniku do ene ure.
 
 ### Severna Makedonija — vir `ffm`
 
-Država `MK` ("Северна Македонија", migracija 20261012053100). **Vmesnika v
-makedonščini še ni** — pride s svojo spremembo (jezik `mk`, `mk-MK`,
-`JEZIK_DRZAVE.MK`, vstop `slff.eu/mk`, kartica `mk.html`, pošta, imena hišnih
-ekip, `klub_stik.drzava`, zastava v izbirniku, `MK` v matriki nočnega uvoza);
-do takrat so lige neaktivne. **Šifra makedonske lige se začne z `mk-`.**
+Država `MK` ("Северна Македонија", migracija 20261012053100) ima vmesnik v
+makedonščini (`src/i18n/mk/`, jezik `mk`, `mk-MK`, **cirilica**,
+`JEZIK_DRZAVE.MK`), izbirnik jezika "Македонски", vstop `slff.eu/mk`, kartico
+ob deljenju `mk.html` (Caddy jo vrne za `/mk` in `?t=mk-…`, tudi rezerva
+`:3201`), makedonsko vejo pošte (`sporocila.ts`, avtentikacijske predloge in
+zadeve v `docker-compose.slff.yml`, pozdrav "Здраво") in makedonska imena
+lastnikov hišnih ekip (migracija 20261013183100, tudi `klub_stik.drzava`
+sprejme MK). **Šifra makedonske lige se začne z `mk-`.** Ugib: brskalnik `mk`
+ali pas `Europe/Skopje`. Izrazi kot v makedonskih športnih medijih: тим,
+состав, прв состав, клупа, капитен, вице-капитен, трансфери, голман,
+одбранбен, среден ред, напаѓач, табела, асистенција, картон, поени, мини лига;
+`krog` je vedno **коло** ("5. коло"), pripomoček `klop_plus` je "Клупа+",
+poznavalec je "познавач". Množine one/other (`Intl.PluralRules('mk')`): `one`
+1, 21, 31 … razen 11, sicer `other` s števno obliko ("1 поен, 2 поени, 11
+поени, 21 поен"; "2 тима", "3 гласа"). Makedonščina nima sklonov, a člen je
+pripona (лигата), zato ime lige stoji samostojno za dvopičjem ali predlogom
+("лига: {liga}", "за {liga}"); `ligaVTozilniku` ga pusti. Psevdonim v
+klepetu ima pridevnik pred samostalnikom ("Син Голман 42"). Stran Pozicije je
+v meniju kot v Sloveniji. `MK` je v matriki nočnega uvoza in v *Hisne ekipe*.
+Manjka še: makedonski kanal v HelpStacku (`Podpora.tsx` za `mk` uporabi
+slovenskega) in **pregled prevoda pri naravnem govorcu**. Lige ostanejo
+neaktivne, dokler jih lastnik ne vklopi.
 
 Vir `ffm` (`scripts/viri/ffm.mjs`) bere **www.ffm.mk** (Фудбалска федерација
 на Македонија). Ista WordPressova predloga kot fss.rs (vtičnik
@@ -3535,8 +3552,8 @@ kanonični `?t=` po svoji ligi.
   `src/i18n` — nikoli `toLocaleString('sl-SI')`.
 - Drugi jezik (`src/i18n/hr/`) je lahko delen; manjkajoče pride iz
   slovenščine. `npm run prevodi -- hr` izpiše, kaj manjka. Brskalnik izbere
-  jezik sam šele, ko je v `PRIPRAVLJENI` (`sl`, `hr`, `sk`, `cs`, `hu`, `de`, `sr`, `ro`, `et`, `pl`, `es`, `lv`, `en`). Hrvaščina,
-  slovaščina, češčina, madžarščina, nemščina, srbščina, romunščina, estonščina in angleščina so popolne — smoke preveri, da imajo vse ključe ter iste
+  jezik sam šele, ko je v `PRIPRAVLJENI` (`sl`, `hr`, `sk`, `cs`, `hu`, `de`, `sr`, `ro`, `et`, `pl`, `es`, `lv`, `mk`, `en`). Hrvaščina,
+  slovaščina, češčina, madžarščina, nemščina, srbščina, romunščina, estonščina, latvijščina, makedonščina in angleščina so popolne — smoke preveri, da imajo vse ključe ter iste
   `{parametre}` in `<oznake>`; nov slovenski niz zato dodaj v vseh devet.
 - **Kateri jezik** (`zeljenJezik` v `src/lib/drzavaUgib.ts`, isto pravilo v
   `izberi()` ob nalaganju in v varovalu konteksta lige):

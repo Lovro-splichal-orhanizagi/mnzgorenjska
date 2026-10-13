@@ -34,7 +34,7 @@ import {
   KLJUC_IZBRANEGA_JEZIKA,
 } from '../lib/drzavaUgib.ts'
 
-export type Jezik = 'sl' | 'hr' | 'sk' | 'cs' | 'hu' | 'de' | 'sr' | 'ro' | 'et' | 'pl' | 'es' | 'lv' | 'en'
+export type Jezik = 'sl' | 'hr' | 'sk' | 'cs' | 'hu' | 'de' | 'sr' | 'ro' | 'et' | 'pl' | 'es' | 'lv' | 'mk' | 'en'
 
 /** Množinske oblike; `other` je obvezna, ostale po pravilih jezika. */
 // `many` rabi slovaščina za necela števila ("2,5 bodu"), `zero` latvijščina
@@ -69,6 +69,7 @@ const NALAGALNIKI: Record<Exclude<Jezik, 'sl'>, () => Promise<Drevo>> = {
   pl: () => import('./pl/index.ts').then((m) => m.pl as Drevo),
   es: () => import('./es/index.ts').then((m) => m.es as Drevo),
   lv: () => import('./lv/index.ts').then((m) => m.lv as Drevo),
+  mk: () => import('./mk/index.ts').then((m) => m.mk as Drevo),
   en: () => import('./en/index.ts').then((m) => m.en as Drevo),
 }
 const SL = sl as Drevo
@@ -108,10 +109,10 @@ export async function naloziSlovar(rokMs = 3000): Promise<void> {
   jezikVRabi = d ? j : 'sl'
 }
 /** Jeziki, ki so dovolj prevedeni, da jih vmesnik izbere sam. */
-export const PRIPRAVLJENI: Jezik[] = ['sl', 'hr', 'sk', 'cs', 'hu', 'de', 'sr', 'ro', 'et', 'pl', 'es', 'lv', 'en']
+export const PRIPRAVLJENI: Jezik[] = ['sl', 'hr', 'sk', 'cs', 'hu', 'de', 'sr', 'ro', 'et', 'pl', 'es', 'lv', 'mk', 'en']
 // Angleščina v britanski obliki: "3 Oct", 24-urni čas, decimalna pika.
 // Srbščina v latinici (`sr-Latn-RS`): sama `sr-RS` bi datume pisala v cirilici.
-const LOKALE: Record<Jezik, string> = { sl: 'sl-SI', hr: 'hr-HR', sk: 'sk-SK', cs: 'cs-CZ', hu: 'hu-HU', de: 'de-AT', sr: 'sr-Latn-RS', ro: 'ro-RO', et: 'et-EE', pl: 'pl-PL', es: 'es-ES', lv: 'lv-LV', en: 'en-GB' }
+const LOKALE: Record<Jezik, string> = { sl: 'sl-SI', hr: 'hr-HR', sk: 'sk-SK', cs: 'cs-CZ', hu: 'hu-HU', de: 'de-AT', sr: 'sr-Latn-RS', ro: 'ro-RO', et: 'et-EE', pl: 'pl-PL', es: 'es-ES', lv: 'lv-LV', mk: 'mk-MK', en: 'en-GB' }
 const SHRAMBA = 'slff-jezik'
 
 export const jePripravljen = (j: string): j is Jezik => PRIPRAVLJENI.includes(j as Jezik)

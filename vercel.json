@@ -106,6 +106,10 @@
       "destination": "/lv.html"
     },
     {
+      "source": "/mk",
+      "destination": "/mk.html"
+    },
+    {
       "source": "/((?!api/)(?!.*\\.).*)",
       "has": [
         {
@@ -225,6 +229,17 @@
         }
       ],
       "destination": "/lv.html"
+    },
+    {
+      "source": "/((?!api/)(?!.*\\.).*)",
+      "has": [
+        {
+          "type": "query",
+          "key": "t",
+          "value": "mk-.*"
+        }
+      ],
+      "destination": "/mk.html"
     },
     {
       "source": "/((?!api/)(?!.*\\.).*)",

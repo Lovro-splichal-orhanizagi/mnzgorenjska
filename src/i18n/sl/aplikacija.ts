@@ -113,6 +113,7 @@ export const aplikacija = {
       PL: 'Polska',
       ES: 'España',
       LV: 'Latvija',
+      MK: 'Северна Македонија',
     },
     preklopi: 'Preklopi na {drzava}',
   },
