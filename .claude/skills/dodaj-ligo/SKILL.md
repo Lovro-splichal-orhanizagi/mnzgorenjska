@@ -424,6 +424,21 @@ noč poskočil s 4.5 na 9.0, uporabnik pa ga ima v ekipi po stari ceni in
 proračun je vezan na ceno ob nakupu. Sidro borze potuje z isto razliko, sicer
 bi cena takoj obstala ob meji.
 
+**Novinec iz višje lige** ni pri 4.5 (pritožba s Hrvaške, 13. 10. 2026).
+Igralec pod 270 minutami, ki ima isto šifro osebe (`reg_st`) v višji ligi
+iste države in **istega vira** in tam vsaj 270 minut v zadnjih dveh sezonah,
+dobi ceno iz tamkajšnje: percentil, prebran iz cene, vsaka raven višje zapre
+20 % razdalje do vrha (največ tri), nato meje pozicije te lige; le navzgor
+(`scripts/visja-liga.mjs`, `ovrednoti-igralce` izpiše seznam "Cena iz višje
+lige"). Raven lige je pravilo po šifri in imenu v `ravenLige`, ne stolpec:
+HR (državne lige, županijske po imenu le znotraj iste zveze), SK, HU, ES, EE,
+LV po uradni piramidi, AT le državne nad deželnimi; mladinske se primerjajo le
+z mladinskimi. Brez pravila (SI, RS, RO, PL, CZ, MK) in brez šifer osebe ostane
+4.5. Ob novi ligi z novim poimenovanjem ravni preveri `ravenLige` (smoke).
+Na vklopljeni ligi pride do nove cene le **tedensko prevrednotenje** (največ
+1.0 na teden, sidro potuje z njo) — tudi pri igralcu, ki je že na borzi,
+a le navzgor do cene iz višje lige.
+
 ## Preverba podatkov
 
 `node scripts/preveri-podatke.mjs` trdi stvari, ki morajo držati v vsaki ligi,
