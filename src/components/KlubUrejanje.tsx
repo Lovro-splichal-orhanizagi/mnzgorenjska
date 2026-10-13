@@ -30,10 +30,14 @@ export default function KlubUrejanje({
   const [sporocilo, setSporocilo] = useState<string | null>(null)
   const [napaka, setNapaka] = useState<string | null>(null)
   const [dela, setDela] = useState(false)
+  // Odprte poškodbe in bolezni igralcev kluba (zamrznitev cene, 20261013221100).
+  const [odsotnosti, setOdsotnosti] = useState<
+    { id: number; player_name: string | null; vrsta: string; od: string; vrnitev: string | null; potrjena: boolean }[]
+  >([])
 
   const nalozi = useCallback(async () => {
     const ids = igralci.map((i) => i.id)
-    const [pl, ck, pr] = await Promise.all([
+    const [pl, ck, pr, od] = await Promise.all([
       ids.length
         ? supabase.from('players').select('id, position, position_source').in('id', ids)
         : Promise.resolve({ data: [] as { id: number; position: string | null; position_source: string | null }[] }),
@@ -43,10 +47,12 @@ export default function KlubUrejanje({
         .select('opis, spletna_stran, instagram, facebook')
         .eq('team_id', klubId)
         .maybeSingle(),
+      supabase.rpc('klub_odsotnosti', { p_team_id: klubId }),
     ])
     setViri(new Map((pl.data ?? []).map((v) => [v.id, { position: v.position, position_source: v.position_source }])))
     setCakajo(new Map((ck.data ?? []).map((c) => [c.igralec, c.pozicija])))
     if (pr.data) setP(pr.data as Predstavitev)
+    setOdsotnosti(od.data ?? [])
   }, [igralci, klubId])
 
   useEffect(() => {
@@ -97,6 +103,36 @@ export default function KlubUrejanje({
       <p className="mt-1 text-xs text-slate-400">{t('lestvice.klub.urejanje.opisRazdelka')}</p>
       {napaka && <p className="mt-2 text-sm text-rose-400">{napaka}</p>}
       {sporocilo && <p className="mt-2 text-sm text-gnl-300">{sporocilo}</p>}
+
+      <section className="mt-4 space-y-2">
+        <h3 className="font-semibold">{t('lestvice.klub.urejanje.odsotnosti')}</h3>
+        <p className="text-xs text-slate-400">{t('lestvice.klub.urejanje.odsotnostiOpis')}</p>
+        {odsotnosti.length === 0 ? (
+          <p className="text-sm text-slate-500">{t('lestvice.klub.urejanje.niOdsotnosti')}</p>
+        ) : (
+          <ul className="divide-y divide-white/5 text-sm">
+            {odsotnosti.map((o) => (
+              <li key={o.id} className="flex flex-wrap items-center justify-between gap-2 py-1">
+                <span className="min-w-0 truncate">
+                  {o.player_name} · {t(`igralci.uradno.vrste.${o.vrsta as 'poskodba' | 'bolezen'}`)}
+                </span>
+                {o.potrjena ? (
+                  <span className="znacka bg-sky-400/20 text-sky-200">✓ {t('lestvice.klub.urejanje.potrjeno')}</span>
+                ) : (
+                  <button
+                    type="button"
+                    className="gumb-glavni text-xs disabled:opacity-50"
+                    disabled={dela}
+                    onClick={() => void izvedi(() => supabase.rpc('klub_potrdi_odsotnost', { p_id: o.id }))}
+                  >
+                    {t('lestvice.klub.urejanje.potrdi')}
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <section className="mt-4 space-y-2">
         <h3 className="font-semibold">{t('lestvice.klub.urejanje.pozicije')}</h3>

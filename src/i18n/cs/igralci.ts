@@ -126,10 +126,13 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     drugod: 'Naposledy v jiných ligách',
   },
   uradno: {
+    zamrznjena2: '🧊 Cena zmrazená (do 2 kol)',
+    zamrznjena6: '🧊 Cena zmrazená (do 6 kol, potvrdil klub)',
+    zamrznitevPravilo: 'Při zranění nebo nemoci ti cena neklesá: do 2 kol, s potvrzením klubu do 6, a ještě jedno kolo po návratu. Pokud během absence nastoupíš, zmrazení se zruší.',
     znacka: 'Oficiálně: sám hráč',
     opisZnacke: 'Absenci nahlásil ověřený hráč sám.',
     naslov: 'Oficiální absence',
-    opis: 'Jako ověřený hráč můžeš sám nahlásit, že nebudeš hrát. Je to jen informace: neovlivňuje výběr týmů, ceny ani body.',
+    opis: 'Jako ověřený hráč můžeš sám nahlásit, že nebudeš hrát. Je to jen informace: neovlivňuje výběr týmů ani body. Při zranění nebo nemoci zastaví pokles ceny.',
     vrsta: 'Důvod',
     vrste: {
       poskodba: 'Zranění',

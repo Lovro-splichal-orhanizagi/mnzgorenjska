@@ -324,6 +324,11 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
   klub: {
     uradniRacun: 'Hivatalos klubfiók',
     urejanje: {
+      odsotnosti: 'Játékosok sérülései',
+      odsotnostiOpis: 'Erősítsd meg játékosod sérülését vagy betegségét: az ára 2 helyett legfeljebb 6 fordulóig befagyasztva marad.',
+      potrdi: 'Megerősítés',
+      potrjeno: 'a klub megerősítette',
+      niOdsotnosti: 'Nincs nyitott sérülés vagy betegség.',
       naslov: 'Klub szerkesztése',
       opisRazdelka: 'Csak te látod, mert ezt a klubot képviseled.',
       pozicije: 'Játékosok posztjai',

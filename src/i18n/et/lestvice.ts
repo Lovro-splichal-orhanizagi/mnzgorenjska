@@ -323,6 +323,11 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
   klub: {
     uradniRacun: 'Klubi ametlik konto',
     urejanje: {
+      odsotnosti: 'Mängijate vigastused',
+      odsotnostiOpis: 'Kinnita oma mängija vigastus või haigus: tema hind jääb külmutatuks kuni 6 vooru 2 asemel.',
+      potrdi: 'Kinnita',
+      potrjeno: 'klubi kinnitas',
+      niOdsotnosti: 'Avatud vigastusi ega haigusi pole.',
       naslov: 'Klubi muutmine',
       opisRazdelka: 'Näed seda ainult sina, sest esindad seda klubi.',
       pozicije: 'Mängijate positsioonid',

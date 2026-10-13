@@ -53,6 +53,11 @@ export function VrsticaUradne({
           ? t('igralci.uradno.vrnitevDne', { datum: kratekDatum(o.vrnitev) })
           : t('igralci.uradno.vrnitevNeznana')}
       </p>
+      {o.cena_zamrznjena && (
+        <p className="mt-1 text-xs text-sky-200">
+          {o.klub_potrdil ? t('igralci.uradno.zamrznjena6') : t('igralci.uradno.zamrznjena2')}
+        </p>
+      )}
       {o.opomba && (
         <p className="mt-1 whitespace-pre-wrap break-words text-sm text-slate-200">{o.opomba}</p>
       )}
@@ -253,6 +258,9 @@ export default function UradneOdsotnostiIgralca({ igralecId }: { igralecId: numb
                   className="mt-1 w-full rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm"
                 />
               </label>
+              {(vrsta === 'poskodba' || vrsta === 'bolezen') && (
+                <p className="text-[11px] text-sky-200">{t('igralci.uradno.zamrznitevPravilo')}</p>
+              )}
               <p className="text-[11px] text-slate-400">{t('igralci.uradno.pravilo')}</p>
               <button type="submit" disabled={dela} className="gumb-glavni w-full sm:w-auto">
                 {dela ? t('igralci.uradno.objavljam') : t('igralci.uradno.objavi')}

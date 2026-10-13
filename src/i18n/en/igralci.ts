@@ -122,10 +122,13 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     drugod: 'Latest from other leagues',
   },
   uradno: {
+    zamrznjena2: '🧊 Price frozen (up to 2 rounds)',
+    zamrznjena6: '🧊 Price frozen (up to 6 rounds, confirmed by the club)',
+    zamrznitevPravilo: 'With an injury or illness your price does not drop: up to 2 rounds, up to 6 if your club confirms, plus one round after your return. If you play while absent, the freeze is undone.',
     znacka: 'Official: from the player',
     opisZnacke: 'Posted by the verified player.',
     naslov: 'Official absence',
-    opis: 'As a verified player you can report yourself that you will not play. It is information only: it does not affect team selection, prices or points.',
+    opis: 'As a verified player you can report yourself that you will not play. It is information only: it does not affect team selection or points. With an injury or illness it stops your price from dropping.',
     vrsta: 'Reason',
     vrste: {
       poskodba: 'Injury',

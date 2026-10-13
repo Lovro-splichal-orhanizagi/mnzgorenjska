@@ -323,6 +323,11 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
   klub: {
     uradniRacun: 'Official club account',
     urejanje: {
+      odsotnosti: 'Player injuries',
+      odsotnostiOpis: 'Confirm your player’s injury or illness: their price stays frozen for up to 6 rounds instead of 2.',
+      potrdi: 'Confirm',
+      potrjeno: 'confirmed by the club',
+      niOdsotnosti: 'No open injuries or illnesses.',
       naslov: 'Club settings',
       opisRazdelka: 'Only you can see this, because you represent this club.',
       pozicije: 'Player positions',

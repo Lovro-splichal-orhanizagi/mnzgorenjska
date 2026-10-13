@@ -124,10 +124,13 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     drugod: 'Nedavno drugde u Srbiji',
   },
   uradno: {
+    zamrznjena2: '🧊 Cena zamrznuta (do 2 kola)',
+    zamrznjena6: '🧊 Cena zamrznuta (do 6 kola, potvrdio klub)',
+    zamrznitevPravilo: 'Kod povrede ili bolesti cena ti ne pada: do 2 kola, uz potvrdu kluba do 6, i još jedno kolo posle povratka. Ako zaigraš tokom odsustva, zamrzavanje se poništava.',
     znacka: 'Zvanično: sam igrač',
     opisZnacke: 'Odsustvo je prijavio sam potvrđeni igrač.',
     naslov: 'Zvanično odsustvo',
-    opis: 'Kao potvrđeni igrač možeš sam da prijaviš da nećeš igrati. To je samo informacija: ne utiče na izbor tima, cene ni poene.',
+    opis: 'Kao potvrđeni igrač možeš sam da prijaviš da nećeš igrati. To je samo informacija: ne utiče na izbor tima ni poene. Kod povrede ili bolesti zaustavlja pad cene.',
     vrsta: 'Razlog',
     vrste: {
       poskodba: 'Povreda',
