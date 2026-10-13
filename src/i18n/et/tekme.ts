@@ -191,6 +191,8 @@ export const tekme: NonNullable<Prevod['tekme']> = {
     igralec: {
       statistika: '{tekme} · {minute} min · {goli} · {cs} nullimängu',
       izZapisnika: 'Mänguprotokollist: väravavaht on märgitud (V)',
+      odKluba: 'Positsiooni määras klubi',
+      klub: ' · klubi',
       izStatistike: 'Statistikast (särginumber, väravad, kaardid): hääled võivad seda parandada',
       potrdilaSkupnost: 'Kogukonna kinnitatud',
       zapisnik: ' · mänguprotokoll',

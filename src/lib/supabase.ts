@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { Capacitor } from '@capacitor/core'
 import type { Database } from './baza.types'
+import { nastaviApiUrl } from './platforma'
 
 // Na slff.eu brskalnik API kliče na istem izvoru (Caddy na slff.eu posreduje
 // /rest/v1, /auth/v1 … istemu Kongu kot api.slff.eu): brez CORS predpoizvedbe
@@ -41,6 +42,7 @@ if (import.meta.env.DEV && url && !/127\.0\.0\.1|localhost/.test(url)) {
 // iz naslova, in prehod na api.slff.eu bi vse odjavil (docs/migracija-hetzner.md).
 /** Naslov API-ja, ki ga uporablja odjemalec — za klice mimo supabase-js. */
 export const API_URL = url ?? ''
+nastaviApiUrl(API_URL)
 
 export const supabase = createClient<Database>(url ?? '', anonKey ?? '', {
   auth: {

@@ -1430,6 +1430,80 @@ export type Database = {
           },
         ]
       }
+      klub_predstavitev: {
+        Row: {
+          facebook: string | null
+          instagram: string | null
+          opis: string | null
+          spletna_stran: string | null
+          team_id: number
+          updated_at: string
+          updated_by: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          facebook?: string | null
+          instagram?: string | null
+          opis?: string | null
+          spletna_stran?: string | null
+          team_id: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          facebook?: string | null
+          instagram?: string | null
+          opis?: string | null
+          spletna_stran?: string | null
+          team_id?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "klub_predstavitev_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: true
+            referencedRelation: "competition_teams"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "klub_predstavitev_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: true
+            referencedRelation: "krog_najboljsi"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "klub_predstavitev_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: true
+            referencedRelation: "player_reports_view"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "klub_predstavitev_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: true
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "klub_predstavitev_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: true
+            referencedRelation: "uradne_odsotnosti_view"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "klub_predstavitev_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       klub_stik: {
         Row: {
           created_at: string
@@ -2926,6 +3000,156 @@ export type Database = {
           },
         ]
       }
+      pozicije_klub_cakajo: {
+        Row: {
+          created_at: string
+          player_id: number
+          position: string
+          user_id: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          player_id: number
+          position: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          player_id?: number
+          position?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pozicije_klub_cakajo_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: true
+            referencedRelation: "krog_najboljsi"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "pozicije_klub_cakajo_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: true
+            referencedRelation: "player_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pozicije_klub_cakajo_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: true
+            referencedRelation: "player_season_standings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pozicije_klub_cakajo_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: true
+            referencedRelation: "player_standings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pozicije_klub_cakajo_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: true
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pozicije_klub_cakajo_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: true
+            referencedRelation: "pozicije_v_cakanju"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "pozicije_klub_cakajo_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pozicije_klub_dnevnik: {
+        Row: {
+          created_at: string
+          id: number
+          novo: string
+          player_id: number
+          staro: string | null
+          user_id: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          id?: never
+          novo: string
+          player_id: number
+          staro?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          novo?: string
+          player_id?: number
+          staro?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pozicije_klub_dnevnik_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "krog_najboljsi"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "pozicije_klub_dnevnik_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "player_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pozicije_klub_dnevnik_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "player_season_standings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pozicije_klub_dnevnik_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "player_standings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pozicije_klub_dnevnik_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pozicije_klub_dnevnik_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "pozicije_v_cakanju"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "pozicije_klub_dnevnik_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       poznavalec_prosnje: {
         Row: {
           competition_id: number
@@ -4096,6 +4320,7 @@ export type Database = {
           country_id: number
           id: number
           logo_url: string | null
+          logo_vir: string | null
           name: string
           short_name: string | null
         }
@@ -4104,6 +4329,7 @@ export type Database = {
           country_id: number
           id?: never
           logo_url?: string | null
+          logo_vir?: string | null
           name: string
           short_name?: string | null
         }
@@ -4111,6 +4337,7 @@ export type Database = {
           country_id?: number
           id?: never
           logo_url?: string | null
+          logo_vir?: string | null
           name?: string
           short_name?: string | null
         }
@@ -6885,6 +7112,7 @@ export type Database = {
           zunanji_id: string
         }[]
       }
+      admin_ponastavi_grb: { Args: { p_team_id: number }; Returns: undefined }
       admin_potrjeni_poznavalci: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -6903,11 +7131,7 @@ export type Database = {
         }[]
       }
       admin_povezi_igralca: {
-        Args: {
-          p_player_id: number
-          p_povezi?: boolean
-          p_zahtevek_id: number
-        }
+        Args: { p_player_id: number; p_povezi?: boolean; p_zahtevek_id: number }
         Returns: undefined
       }
       admin_predlogi_povezav: {
@@ -7148,6 +7372,7 @@ export type Database = {
       }
       asistenca_odprta: { Args: { p_goal_id: number }; Returns: boolean }
       asistence_odprte_do: { Args: { p_match_id: number }; Returns: string }
+      ima_klubski_racun: { Args: { p_team_id: number }; Returns: boolean }
       ime_hisnega_lastnika: {
         Args: { p_competition_id: number; p_id: number }
         Returns: string
@@ -7268,6 +7493,37 @@ export type Database = {
           team_id: number
           user_id: string
         }[]
+      }
+      klub_cakajoce_pozicije: {
+        Args: { p_team_id: number }
+        Returns: {
+          igralec: number
+          od: string
+          pozicija: string
+        }[]
+      }
+      klub_nastavi_grb: {
+        Args: { p_pot: string; p_team_id: number }
+        Returns: string
+      }
+      klub_nastavi_pozicijo: {
+        Args: { p_player_id: number; p_position: string }
+        Returns: undefined
+      }
+      klub_preklici_pozicijo: {
+        Args: { p_player_id: number }
+        Returns: undefined
+      }
+      klub_sme_pisati_grb: { Args: { p_name: string }; Returns: boolean }
+      klub_uredi_predstavitev: {
+        Args: {
+          p_facebook: string
+          p_instagram: string
+          p_opis: string
+          p_spletna_stran: string
+          p_team_id: number
+        }
+        Returns: undefined
       }
       klub_ustvari_racun: {
         Args: { p_stik_id: number; p_team_id: number; p_user: string }
@@ -7423,10 +7679,7 @@ export type Database = {
         Args: { p_competition_id: number; p_user_id: string }
         Returns: boolean
       }
-      nova_koda_mini_lige: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      nova_koda_mini_lige: { Args: Record<PropertyKey, never>; Returns: string }
       objavi_uradno_odsotnost: {
         Args: {
           p_od?: string
@@ -7447,10 +7700,7 @@ export type Database = {
         Returns: undefined
       }
       odstrani_hisne_ekipe: { Args: { p_ids: number[] }; Returns: number }
-      okno_preracuna_tock: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      okno_preracuna_tock: { Args: Record<PropertyKey, never>; Returns: string }
       osvezi_statistiko_igralcev: {
         Args: { p_igralci: number[] }
         Returns: undefined

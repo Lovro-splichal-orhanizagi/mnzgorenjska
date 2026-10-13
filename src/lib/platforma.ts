@@ -82,7 +82,17 @@ export function izvor(): string {
  * trgovine (ota.ts), zato jih aplikacija bere s slff.eu; tako novi grbi
  * pridejo tudi brez nove različice.
  */
+// Naslov API nastavi supabase.ts (platforma ga ne uvaža, ker jo berejo tudi
+// skripte v Node, kjer odjemalca ni).
+let apiUrl = ''
+export function nastaviApiUrl(url: string) {
+  apiUrl = url
+}
+
 export function naslovSlike(src: string): string {
+  // Grb, ki ga je naložil klub, je v shrambi (migracija 20261013215100): baza
+  // hrani relativno pot, naslov API pozna le vmesnik.
+  if (src.startsWith('/storage/')) return apiUrl + src
   return src.startsWith('/grbi/') && jeNativno() ? DOMENA + src : src
 }
 

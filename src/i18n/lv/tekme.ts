@@ -186,6 +186,8 @@ export const tekme: NonNullable<Prevod['tekme']> = {
     igralec: {
       statistika: '{tekme} · {minute} min · {goli} · {cs} sausās spēles',
       izZapisnika: 'No protokola: vārtsargs ir atzīmēts ar (V)',
+      odKluba: 'Pozīciju iestatīja klubs',
+      klub: ' · klubs',
       izStatistike: 'No statistikas (krekla nr., vārti, kartītes): balsis to var izlabot',
       potrdilaSkupnost: 'Apstiprināja kopiena',
       zapisnik: ' · protokols',

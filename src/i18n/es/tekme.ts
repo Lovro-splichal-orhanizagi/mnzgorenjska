@@ -186,6 +186,8 @@ export const tekme: NonNullable<Prevod['tekme']> = {
     igralec: {
       statistika: '{tekme} · {minute} min · {goli} · {cs} porterías a cero',
       izZapisnika: 'Del acta: el portero está marcado con (V)',
+      odKluba: 'Posición fijada por el club',
+      klub: ' · club',
       izStatistike: 'Por estadística (dorsal, goles, tarjetas): los votos pueden corregirla',
       potrdilaSkupnost: 'Confirmada por la comunidad',
       zapisnik: ' · acta',
