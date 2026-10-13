@@ -2788,6 +2788,30 @@ select pg_temp.preveri('klub: zavrnjen zahtevek ima razlog',
   exists (select 1 from klubski_zahtevki where user_id = 'e1a10000-0000-4000-8000-000000000003'
             and status = 'zavrnjen' and razlog = 'Ni naslov kluba.'));
 
+-- Popravki po pregledu: zavrnitev ostane zavrnjena; slab dokaz da berljivo napako.
+select set_config('request.jwt.claim.sub','e1a10000-0000-4000-8000-000000000003',true);
+set local role authenticated;
+select uveljavi_klubski_racun();
+reset role;
+select pg_temp.preveri('klub: zavrnjen brez_kluba se ob novi prijavi ne vrne v vrsto',
+  not exists (select 1 from klubski_zahtevki where user_id = 'e1a10000-0000-4000-8000-000000000003' and status = 'odprt'));
+insert into auth.users(id, email, email_confirmed_at, raw_user_meta_data, created_at) values
+ ('e1a10000-0000-4000-8000-000000000006', 'dokaz@example.invalid', now(), '{"display_name":"K6"}', now());
+select set_config('request.jwt.claim.sub','e1a10000-0000-4000-8000-000000000006',true);
+set local role authenticated;
+do $$
+declare v_msg text := '';
+begin
+  begin
+    perform klub_zaprosi_za_naslov(-913004, 'tajnik', 'www.klub.si');
+  exception when others then
+    v_msg := sqlerrm;
+  end;
+  perform pg_temp.preveri('klub: dokaz brez https da berljivo napako', v_msg like 'Dokaz mora biti povezava%');
+end;
+$$;
+reset role;
+
 do $$
 declare v_napak int;
 begin

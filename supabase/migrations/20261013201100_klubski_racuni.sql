@@ -118,6 +118,11 @@ begin
   if exists (select 1 from klubski_racuni where user_id = v_uid and preklican_at is not null) then
     return null;
   end if;
+  -- Admin je zahtevek za ta naslov zavrnil: ne vračaj ga v vrsto ob vsaki prijavi.
+  if exists (select 1 from klubski_zahtevki
+              where user_id = v_uid and klub_stik_id = s.id and status = 'zavrnjen') then
+    return null;
+  end if;
   if s.team_id is null then
     perform klub_v_vrsto(v_uid, v_email, 'brez_kluba', null, s.id);
     return null;
@@ -179,6 +184,11 @@ begin
   end if;
   if exists (select 1 from klubski_zahtevki where user_id = v_uid and status = 'odprt') then
     raise exception 'Prošnja že čaka na odločitev.';
+  end if;
+  -- Isto besedilo kot pri prevzemu profila, da ga vmesnik prevede (napake.ts).
+  if nullif(btrim(coalesce(p_dokaz_url, '')), '') is not null
+     and (length(btrim(p_dokaz_url)) > 300 or btrim(p_dokaz_url) !~ '^https?://[^[:space:]<>"]+$') then
+    raise exception 'Dokaz mora biti povezava (https://…).';
   end if;
   insert into klubski_zahtevki(user_id, email, vrsta, team_id, vloga, dokaz_url, opomba)
   values (v_uid, v_email, 'nov_naslov', p_team_id, p_vloga,

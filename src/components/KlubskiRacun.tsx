@@ -13,7 +13,7 @@ interface Klub {
 }
 
 export default function KlubskiRacun() {
-  const { session } = useAuth()
+  const { session, klubPreverjen } = useAuth()
   const [stanje, setStanje] = useState<StanjeKluba | null>(null)
   const [iskanje, setIskanje] = useState('')
   const [zadetki, setZadetki] = useState<Klub[]>([])
@@ -24,9 +24,10 @@ export default function KlubskiRacun() {
   const [napaka, setNapaka] = useState<string | null>(null)
   const [dela, setDela] = useState(false)
 
+  // Šele po preverbi ob prijavi (useAuth), da nov klub ne vidi obrazca.
   useEffect(() => {
-    if (session) void mojKlubskiRacun().then(setStanje)
-  }, [session])
+    if (session && klubPreverjen) void mojKlubskiRacun().then(setStanje)
+  }, [session, klubPreverjen])
 
   useEffect(() => {
     const q = iskanje.trim()
