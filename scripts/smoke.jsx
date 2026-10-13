@@ -67,6 +67,7 @@ import { adaptivniPrag } from '../src/pages/Pozicije'
 import { razcleniRazpored, datum, sezonaIz, oznakaBrezIzida } from './razpored.mjs'
 import { vseVrstice } from './strani.mjs'
 import { premakniProti, NAJVECJI_TEDENSKI_PREMIK } from './premik-cene.mjs'
+import { ravenLige, koliko, cenaIzVisjeLige, zadnjiDveSezoni } from './visja-liga.mjs'
 import { oceniPripravljenost, najcenejsiKader } from '../src/lib/pripravljenost'
 import { serijaCen, premik, crta, zadnjiPremiki } from '../src/lib/gibanjeCene'
 import { dopolniKader, predlagajKader } from '../src/lib/predlogKadra'
@@ -961,6 +962,45 @@ preveri(
     await vseVrstice(async () => ({ data: null, error: { message: 'baza je padla' } }))
   } catch (e) { padlo = e.message === 'baza je padla' }
   preveri('strani: napaka se ne poje tiho', padlo)
+}
+
+// --- cena novinca iz višje lige ---------------------------------------------
+// Igralec, ki je prišel iz višje lige, ne sme ostati pri 4.5 med najcenejšimi
+// (pritožba s Hrvaške, 13. 10. 2026). Raven lige je pravilo po šifri in imenu.
+{
+  const r = (slug, name = '', zveza = null) => ravenLige({ slug, name, zveza })
+  const hnl3 = r('hr-3nl-sjever', 'Treća NL Sjever', 'hns')
+  const brod1 = r('hr-bp-1znl', '1. ŽNL — Brod', 'zns-brod')
+  const brod2 = r('hr-bp-2znl-istok', 'II. ŽNL Istok — Brod', 'zns-brod')
+  const istra2 = r('hr-is-2znl-jug', '2. ŽNL Jug — Istra', 'zns-istra')
+  preveri('višja liga: 3. NL je nad županijsko', koliko(hnl3, brod1) === 1, JSON.stringify([hnl3, brod1]))
+  preveri('višja liga: 2. NL eno, HNL tri ravni nad 3. NL',
+    koliko(r('hr-2nl', 'SuperSport Druga NL', 'hns'), hnl3) === 1 && koliko(r('hr-hnl', '', 'hns'), hnl3) === 3)
+  preveri('višja liga: 1. ŽNL nad 2. ŽNL iste zveze', koliko(brod1, brod2) === 1, JSON.stringify(brod2))
+  preveri('višja liga: lige različnih županij se ne primerjajo', koliko(brod1, istra2) === 0)
+  preveri('višja liga: nižja liga ni višja', koliko(brod2, brod1) === 0 && koliko(brod1, hnl3) === 0)
+  preveri('višja liga: 4. NL nad 1. ŽNL iste zveze',
+    koliko(r('hr-ri-4nl', '4. NL — NS Rijeka', 'zns-rijeka'), r('hr-ri-1-znl', '1. ŽNL — Rijeka', 'zns-rijeka')) === 1)
+  preveri('višja liga: II pred I (rimske številke)', r('hr-bm-ii-znl-beli-manastir', 'II ŽNL Beli Manastir', 'ns-beli-manastir').raven === 3)
+  preveri('višja liga: mladinska in članska se ne primerjata', koliko(hnl3, r('hr-zg-u19-1znl', '1. ZNL juniori', 'zns-zagreb')) === 0)
+  preveri('višja liga: slovaška piramida je državna',
+    koliko(r('sk-zsfz-5liga-juhovychod'), r('sk-nr-7liga')) === 2 && koliko(r('sk-nike-liga'), r('sk-sfz-2liga')) === 1)
+  preveri('višja liga: madžarska NB III nad županijsko I.', koliko(r('hu-nb3-del-kelet'), r('hu-za-1')) === 1 &&
+    koliko(r('hu-za-1'), r('hu-bp-3-2')) === 2)
+  preveri('višja liga: avstrijske deželne med sabo ne', koliko(r('at-k-kaerntner-liga', '', 'kfv'), r('at-k-1-klasse-ost', '', 'kfv')) === 0 &&
+    koliko(r('at-regionalliga-ost', '', 'oefb'), r('at-w-stadtliga', '', 'wfv')) === 1)
+  preveri('višja liga: država brez pravila nič', r('rs-srpska-istok') === null && r('clani') === null)
+
+  const MID = [4.0, 12.0]
+  const naVrhu = cenaIzVisjeLige(12.0, MID, MID, 1, 3)
+  const sredina = cenaIzVisjeLige(5.0, MID, MID, 1, 3)
+  preveri('višja liga: najboljši ostane najboljši', naVrhu === 12.0, String(naVrhu))
+  preveri('višja liga: povprečen eno raven višje je dražji', sredina > 5.0 && sredina < 6.5, String(sredina))
+  preveri('višja liga: več ravni, višja cena', cenaIzVisjeLige(5.0, MID, MID, 2, 3) > sredina)
+  preveri('višja liga: najslabši ni nad privzeto', cenaIzVisjeLige(4.0, MID, MID, 1, 3) < 4.5)
+  preveri('višja liga: meje ciljne pozicije', cenaIzVisjeLige(12.0, MID, [4.0, 7.0], 1, 3) === 7.0)
+  preveri('višja liga: zadnji dve sezoni',
+    JSON.stringify(zadnjiDveSezoni(['2024/25', '2026/27', '2025/26', '2026/27'])) === '["2026/27","2025/26"]')
 }
 
 // --- prevrednotenje ne sme skakati ------------------------------------------

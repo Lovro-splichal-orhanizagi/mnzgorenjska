@@ -2673,6 +2673,21 @@ klubov) toliko minut v eni sezoni nabere premalo igralcev in cenik se sesede
 v eno samo številko. Takrat uvozi še eno sezono nazaj in `ovrednoti-igralce`
 poženi **brez** `--sezona`, da sešteje vse.
 
+**Novinec iz višje lige** ni pri 4.5 (pritožba s Hrvaške, 13. 10. 2026).
+Igralec pod 270 minutami, ki ima isto šifro osebe (`reg_st`) v višji ligi
+iste države in **istega vira** in tam vsaj 270 minut v zadnjih dveh sezonah,
+dobi ceno iz tamkajšnje: percentil, prebran iz cene, vsaka raven višje zapre
+20 % razdalje do vrha (največ tri), nato meje pozicije te lige; le navzgor
+(`scripts/visja-liga.mjs`, `ovrednoti-igralce` izpiše seznam "Cena iz višje
+lige"). Raven lige je pravilo po šifri in imenu v `ravenLige`, ne stolpec:
+HR (državne lige, županijske po imenu le znotraj iste zveze), SK, HU, ES, EE,
+LV po uradni piramidi, AT le državne nad deželnimi; mladinske se primerjajo le
+z mladinskimi. Brez pravila (SI, RS, RO, PL, CZ, MK) in brez šifer osebe ostane
+4.5. Ob novi ligi z novim poimenovanjem ravni preveri `ravenLige` (smoke).
+Na vklopljeni ligi pride do nove cene le **tedensko prevrednotenje** (največ
+1.0 na teden, sidro potuje z njo) — tudi pri igralcu, ki je že na borzi,
+a le navzgor do cene iz višje lige.
+
 **Pragovi glasovanja so po tekmovanju** (`competition_settings`, brano prek
 `nastavitev_int_za`). Trije glasovi so v ligi z dvesto igralci lahek dosežek
 in v ligi z dvajsetimi nedosegljiv; kar tekmovanje nima svojega, pride iz

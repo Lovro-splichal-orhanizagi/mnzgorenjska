@@ -21,13 +21,17 @@
 //   - bonusa za izkušnje iz višjih lig (podatek z NZS, če ga administrator vnese).
 //
 // Igralci brez zadostnih minut dobijo privzeto vrednost, da niso precenjeni
-// zaradi enega samega dobrega nastopa.
+// zaradi enega samega dobrega nastopa — razen novinca iz VIŠJE lige iste
+// države, ki ga vir prepozna po šifri osebe (`reg_st`): ta dobi ceno, izpeljano
+// iz cene v višji ligi (`scripts/visja-liga.mjs`). Na vklopljeni ligi pride do
+// nje le tedenski zagon, največ za `--najvec` na teden.
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'node:fs'
 import { tekmovanje as najdiTekmovanje } from './tekmovanje.mjs'
 import { vseVrstice, vrsticeIgralcevLige } from './strani.mjs'
 import { premakniProti, NAJVECJI_TEDENSKI_PREMIK } from './premik-cene.mjs'
 import { isoTeden } from './cas.mjs'
+import { ravenLige, koliko, cenaIzVisjeLige, zadnjiDveSezoni } from './visja-liga.mjs'
 
 const NAJNIZJA = 4.0
 const NAJVISJA = 12.0
@@ -138,7 +142,7 @@ const igralci = await vseVrstice((od, do_) =>
   db
     .from('players')
     .select(
-      'id, full_name, position, value, value_start, value_locked, nzs_top_league, nzs_top_league_minutes, repriced_week',
+      'id, full_name, position, value, value_start, value_locked, nzs_top_league, nzs_top_league_minutes, repriced_week, reg_st',
     )
     .eq('competition_id', tekmovanje.id)
     .order('id')
@@ -235,6 +239,113 @@ if (ocene.size === 0) {
   process.exit(0)
 }
 
+// --- novinci iz višjih lig ----------------------------------------------------
+// Igralec brez dovolj minut v tej ligi, ki ima isto šifro osebe v višji ligi
+// iste države in vira in tam vsaj MIN_MINUT v zadnjih dveh sezonah, dobi ceno
+// iz tamkajšnje cene (glej visja-liga.mjs). Le navzgor: kdor bi bil tako
+// cenejši od privzete, ostane pri 4.5.
+const zaokrozi = (v) => Math.round(v * 2) / 2 // na 0.5 natančno
+
+let prenosi
+try {
+  prenosi = await ceneIzVisjihLig()
+} catch (e) {
+  console.error(`Cen iz višjih lig ni mogoče prebrati: ${e.message}`)
+  process.exit(1)
+}
+console.log(`Novincev s ceno iz višje lige: ${prenosi.size}`)
+
+async function ceneIzVisjihLig() {
+  const izhod = new Map()
+  const kandidati = (igralci ?? []).filter((p) => p.reg_st && !ocene.has(p.id) && !p.value_locked)
+  if (!kandidati.length || !tekmovanje.country_id) return izhod
+
+  const { data: lige, error: eLige } = await db
+    .from('competitions')
+    .select('id, slug, name, source, federation_id')
+    .eq('country_id', tekmovanje.country_id)
+  if (eLige) throw new Error(eLige.message)
+  const { data: zveze, error: eZveze } = await db
+    .from('federations')
+    .select('id, code')
+    .eq('country_id', tekmovanje.country_id)
+  if (eZveze) throw new Error(eZveze.message)
+  const kodaZveze = new Map((zveze ?? []).map((z) => [z.id, z.code]))
+  const ravni = new Map(
+    (lige ?? []).map((l) => [l.id, ravenLige({ slug: l.slug, name: l.name, zveza: kodaZveze.get(l.federation_id) })]),
+  )
+  const moja = ravni.get(tekmovanje.id)
+  if (!moja) return izhod
+  // Šifra osebe velja le znotraj vira (NZS in MNZ imata vsak svoje številke).
+  const visje = (lige ?? []).filter(
+    (l) => l.id !== tekmovanje.id && l.source === tekmovanje.source && koliko(ravni.get(l.id), moja) > 0,
+  )
+  if (!visje.length) return izhod
+  const imeLige = new Map(visje.map((l) => [l.id, l.slug]))
+
+  const poSifri = new Map()
+  for (const p of kandidati) {
+    if (!poSifri.has(p.reg_st)) poSifri.set(p.reg_st, [])
+    poSifri.get(p.reg_st).push(p)
+  }
+  const sifre = [...poSifri.keys()]
+  const drugi = []
+  for (let i = 0; i < sifre.length; i += 100) {
+    const kos = sifre.slice(i, i + 100)
+    drugi.push(
+      ...(await vseVrstice((od, do_) =>
+        db
+          .from('players')
+          .select('id, reg_st, competition_id, position, value')
+          .in('reg_st', kos)
+          .in('competition_id', [...imeLige.keys()])
+          .is('anonimiziran_at', null)
+          .order('id')
+          .range(od, do_),
+      )),
+    )
+  }
+  if (!drugi.length) return izhod
+
+  const statistika = []
+  for (let i = 0; i < drugi.length; i += 150) {
+    const kos = drugi.slice(i, i + 150).map((d) => d.id)
+    statistika.push(
+      ...(await vseVrstice((od, do_) =>
+        db
+          .from('player_season_stats')
+          .select('player_id, season, minutes')
+          .in('player_id', kos)
+          .order('player_id')
+          .order('season')
+          .range(od, do_),
+      )),
+    )
+  }
+  const sezone = new Set(zadnjiDveSezoni(statistika.map((s) => s.season)))
+  const minute = new Map()
+  for (const s of statistika)
+    if (sezone.has(s.season)) minute.set(s.player_id, (minute.get(s.player_id) ?? 0) + (s.minutes ?? 0))
+
+  for (const d of drugi) {
+    if ((minute.get(d.id) ?? 0) < MIN_MINUT || d.value == null) continue
+    const za = ravni.get(d.competition_id)
+    const stopnje = koliko(za, moja)
+    for (const p of poSifri.get(d.reg_st) ?? []) {
+      // Brez znane pozicije v tej ligi velja tista iz višje lige: branilec z
+      // 8.4 (blizu vrha branilcev) ni napadalec z 8.4.
+      const mejeCilj = MEJE[p.position ?? d.position ?? 'MID'] ?? [NAJNIZJA, NAJVISJA]
+      const surova = cenaIzVisjeLige(d.value, MEJE[d.position ?? 'MID'] ?? [NAJNIZJA, NAJVISJA], mejeCilj, stopnje, EKSPONENT)
+      const cena = zaokrozi(Math.min(mejeCilj[1], Math.max(mejeCilj[0], surova)))
+      if (cena <= PRIVZETA) continue
+      const prej = izhod.get(p.id)
+      if (!prej || cena > prej.cena)
+        izhod.set(p.id, { cena, liga: imeLige.get(d.competition_id), tamCena: Number(d.value), minute: minute.get(d.id), stopnje })
+    }
+  }
+  return izhod
+}
+
 // --- razvrstitev v cenovni razpon -----------------------------------------
 // Percentil je odpornejši od linearne lestvice, ker en izjemen igralec
 // ne stisne vseh ostalih na dno.
@@ -263,13 +374,12 @@ const percentilV = (urejene, v) => {
   return lo / Math.max(1, urejene.length - 1)
 }
 
-const zaokrozi = (v) => Math.round(v * 2) / 2 // na 0.5 natančno
-
 let posodobljenih = 0
 let neuspesnih = 0
 let zaklenjenih = 0
 let borznih = 0
 const premaknjenih = []
+const novinci = []
 const razpored = new Map()
 
 for (const p of igralci ?? []) {
@@ -280,7 +390,12 @@ for (const p of igralci ?? []) {
   // V nacinu "samo novi" pustimo obstojece cene pri miru — zanima nas samo
   // sidro (value_start) za igralce, ki so ravno prisli v bazo.
   if (samoNove && p.value_start != null) continue
-  if (tedensko && naBorzi.has(p.id)) {
+  const ocena = ocene.get(p.id)
+  const prenos = ocena == null ? prenosi.get(p.id) : null
+  // Borza upravlja ceno igralca, ki je že igral v živi ligi. Novinca iz višje
+  // lige, ki je pod ceno iz višje lige, tedenski zagon vseeno dvigne (z njim
+  // potuje sidro, zato borzni odmik ostane) — sicer bi ostal pri 4.5.
+  if (tedensko && naBorzi.has(p.id) && !(prenos && prenos.cena > Number(p.value))) {
     borznih++
     continue
   }
@@ -296,9 +411,8 @@ for (const p of igralci ?? []) {
   const [spodnja, zgornja] = MEJE[koda] ?? [NAJNIZJA, NAJVISJA]
 
   let vrednost
-  const ocena = ocene.get(p.id)
   if (ocena == null) {
-    vrednost = PRIVZETA
+    vrednost = prenos ? prenos.cena : PRIVZETA
   } else {
     const q = percentilV(poPoziciji.get(koda) ?? [], ocena)
     vrednost = spodnja + Math.pow(q, EKSPONENT) * (zgornja - spodnja)
@@ -346,7 +460,9 @@ for (const p of igralci ?? []) {
     premaknjenih.push({ ime: p.full_name, iz: stara, v: vrednost })
   }
 
-  if ((p.value_start == null || brezBorze) && ocena != null) popravek.value_start = vrednost
+  if ((p.value_start == null || brezBorze) && (ocena != null || prenos)) popravek.value_start = vrednost
+  if (prenos && vrednost !== Number(p.value))
+    novinci.push({ ime: p.full_name, iz: Number(p.value), v: vrednost, ...prenos })
   razpored.set(vrednost, (razpored.get(vrednost) ?? 0) + 1)
   if (!pisi) continue
 
@@ -379,6 +495,14 @@ if (tedensko) {
   for (const x of premaknjenih.slice(0, 10))
     console.log(`  ${x.iz.toFixed(1)} → ${x.v.toFixed(1)}  ${x.ime}`)
 }
+
+// Načrt za pregled: kdo dobi ceno iz višje lige in od kod.
+novinci.sort((a, b) => b.v - a.v)
+console.log(`\nCena iz višje lige: ${novinci.length} igralcev${tedensko ? ` (premik največ ${najvecPremik} na zagon)` : ''}`)
+for (const x of novinci.slice(0, 40))
+  console.log(
+    `  ${x.iz.toFixed(1)} → ${x.v.toFixed(1)}  ${x.ime} — ${x.liga}: ${x.tamCena.toFixed(1)}, ${x.minute} min, ${x.stopnje} ${x.stopnje === 1 ? 'raven' : 'ravni'} višje`,
+  )
 
 console.log('\nPorazdelitev vrednosti:')
 for (const v of [...razpored.keys()].sort((a, b) => a - b))
