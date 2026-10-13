@@ -2974,7 +2974,7 @@ values (-921100, 'Klub brez igralcev', 'KBI', (select id from countries where co
 insert into klubski_racuni(user_id, team_id) values ('f1a10000-0000-4000-8000-000000000003', -921100);
 select pg_temp.napaka('klub-stran: klub z računom se ne izbriše', $$delete from teams where id = -921100$$);
 
--- Zamrznitev cene: klub potrdi poškodbo svojega igralca (20261013221100).
+-- Zamrznitev cene: klub potrdi poškodbo svojega igralca (20261013233100).
 insert into players(id, team_id, competition_id, first_name, last_name, full_name, position, position_source, value, value_start, active) overriding system value
 values (-922001, -913001, -913001, 'Pos', 'Kodba', 'Kodba Pos', 'MID', 'admin', 6, 6, true);
 insert into auth.users(id, email, email_confirmed_at, raw_user_meta_data, created_at) values

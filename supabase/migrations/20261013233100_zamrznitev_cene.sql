@@ -240,7 +240,7 @@ begin
         select 1 from price_changes pc
         where pc.player_id = p.id and pc.round_id = p_round_id
       )
-      -- Zadržan padec je za ta krog obračun (20261013221100): če odsotnost
+      -- Zadržan padec je za ta krog obračun (20261013233100): če odsotnost
       -- pozneje "ni držala", ga uveljavi preverba, ne ponoven obračun.
       and not exists (
         select 1 from zadrzani_padci zp
@@ -289,7 +289,7 @@ begin
         when d.je_igral and (d.tocke_kroga < 0 or d.tocke <= 2) then -0.1
         when d.je_igral then 0
         -- Ni igral: pade šele drugi zaporedni krog, ko je klub igral brez njega.
-        -- Uradna poškodba ali bolezen (20261013221100): padec se zadrži.
+        -- Uradna poškodba ali bolezen (20261013233100): padec se zadrži.
         when d.klub_igral and d.prej_klub_igral and not d.prej_igral
              and zamrznjena_odsotnost(d.id, p_round_id) is not null then 0
         when d.klub_igral and d.prej_klub_igral and not d.prej_igral then -0.1
@@ -382,7 +382,7 @@ begin
   get diagnostics v_n = row_count;
 
   -- Zamrznitev ni držala: zadržani padci te odsotnosti se uveljavijo naenkrat
-  -- (ne pod spodnjo mejo borze) in le enkrat (20261013221100). Kazen gre v
+  -- (ne pod spodnjo mejo borze) in le enkrat (20261013233100). Kazen gre v
   -- `price_changes` zadnjega odigranega kroga igralčeve lige: nočna borza
   -- (uveljavi_zapadle_cene) cene nastavlja iz teh vrstic, zato bi neposreden
   -- popravek `players.value` povozila; tako je kazen tudi v zgodovini cene.
@@ -454,7 +454,7 @@ create or replace view public.uradne_odsotnosti_view as
          r.zaprto_at,
          r.ni_drzalo_datum,
          coalesce(r.user_id = auth.uid(), false) as moje,
-         -- Zamrznitev cene (20261013221100): odprta poškodba ali bolezen;
+         -- Zamrznitev cene (20261013233100): odprta poškodba ali bolezen;
          -- koliko krogov, pove `klub_potrdil` (2 brez, 6 s potrditvijo).
          -- Velja, dokler zadnji odigrani krog lige od začetka odsotnosti še
          -- spada v zamrznitev (ali odigranega kroga še ni bilo).
