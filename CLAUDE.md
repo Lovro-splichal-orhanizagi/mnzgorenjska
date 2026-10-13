@@ -3322,11 +3322,20 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   igralca. Zaprte odsotnosti pregleduje še 60 dni (zapisnik lahko zamuja).
   Dva opomina v sezoni (`sezona_lige` lige vrstice, `uradne_odsotnosti_najvec()`)
   = do konca sezone brez uradnih odsotnosti; navadna poročila lahko piše še
-  naprej. Nova sezona začne z nič. **Ni odbitka točk ne cene**: točke
-  prihajajo le iz uradnih zapisnikov (minute, goli, kartoni), zato uradna
-  odsotnost ali "ni držalo" na točke, ceno in izbiro ekip ne vpliva; kazen je
-  le izguba pravice do uradnih odsotnosti. Anonimizacija vrstice jih izbriše
-  (kot skupnostna poročila).
+  naprej. Nova sezona začne z nič. **Ni odbitka točk**: točke prihajajo le iz
+  uradnih zapisnikov, zato odsotnost na točke in izbiro ekip ne vpliva.
+  **Zamrznitev cene** (migracija 20261013221100, spec
+  `docs/superpowers/specs/2026-10-13-zamrznitev-cene-design.md`): poškodba ali
+  bolezen (ne dopust, kazen, drugo) zadrži padec borze "ni igral" (−0.1):
+  `zamrznjena_odsotnost(player, round)` šteje kroge lige od dneva `od`, največ
+  2, s potrditvijo klubskega računa (`klub_potrdi_odsotnost`,
+  `klub_odsotnosti` v Urejanju kluba) 6, do vrnitve/zaprtja in še en krog.
+  Dviga ne zadrži. `preracunaj_cene` zadržani padec zapiše v `zadrzani_padci`;
+  ob "ni držalo" ga `preveri_uradne_odsotnosti` uveljavi (vsoto naenkrat, ne
+  pod mejo borze, enkrat) — cena pade le na tisto, kar bi bila brez
+  zamrznitve. Pogled ima `cena_zamrznjena` in `klub_potrdil`. Preizkus
+  `npm run preizkus-zamrznitve` (tudi v CI). Anonimizacija vrstice jih
+  izbriše (kot skupnostna poročila).
 - `povzetek_rasti()` → ena vrstica številk (uporabniki, novi v 7 dneh, ekipe,
   aktivne lige, namestitve, kliki na "Časti pivo" skupaj in v 7 dneh) pod vsakim poročilom na Discord (mejnik uporabnikov,
   `scripts/trgovine.mjs`). Le servis
