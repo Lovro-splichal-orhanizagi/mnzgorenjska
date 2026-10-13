@@ -408,8 +408,11 @@ globalno vrednost). Isto se da iz baze:
 update competitions set active = true where slug = '<slug>';
 ```
 
-Nočni uvoz seznam lig prebere iz baze (`scripts/aktivna-tekmovanja.mjs`), zato
-delovnega toka ni treba spreminjati — nova liga se začne uvažati sama.
+Nočni uvoz seznam lig prebere iz baze (`scripts/nocni-kosi.mjs`), zato
+delovnega toka ni treba spreminjati — nova liga se začne uvažati sama in
+pristane v košu svoje države (CLAUDE.md, *Nočni uvoz: države in koši*). Le
+**nova država** mora v matriko `uvoz-zapisnikov.yml`, **nov vir**, ki sme brati
+iz več košev, pa v `VZPOREDNI` (sicer bere en sam koš, kar je varno).
 
 ## Cene med sezono
 
