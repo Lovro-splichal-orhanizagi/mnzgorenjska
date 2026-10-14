@@ -334,6 +334,10 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     preklici: 'Tühista',
     caka: 'Ootab kinnitust.',
     cakaOpis: 'Kinnitada saab klubi asjatundja, kaks kinnitatud meeskonnakaaslast või SLFF. Taotlust näed ainult sina.',
+    cakaPrijatelj: 'Kiiremini läheb, kui tood meeskonnakaaslase: kui kaks kaaslast on kinnitatud, saavad nad kinnitada ka sind.',
+    cakaDeli: 'Kutsu meeskonnakaaslane',
+    cakaVabilo: 'SLFF-is on fantaasialiiga meie mängude ja mängijatega. Leia oma profiil, vajuta „See olen mina“ ja kinnitame teineteist: {povezava}',
+    cakaKopirano: 'Link on kopeeritud.',
     umakni: 'Võta taotlus tagasi',
     zavrnjen: 'Sinu taotlus selle profiili kohta lükati tagasi.',
     znacka: {

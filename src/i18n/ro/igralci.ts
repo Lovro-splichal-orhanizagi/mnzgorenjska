@@ -337,6 +337,10 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     preklici: 'Anulează',
     caka: 'Așteaptă confirmarea.',
     cakaOpis: 'Poate fi confirmată de un cunoscător al clubului, de doi coechipieri confirmați sau de SLFF. Doar tu vezi cererea.',
+    cakaPrijatelj: 'Merge mai repede dacă aduci un coechipier: când doi coechipieri sunt confirmați, te pot confirma și pe tine.',
+    cakaDeli: 'Invită un coechipier',
+    cakaVabilo: 'Pe SLFF e o ligă fantasy cu meciurile și jucătorii noștri. Caută-ți profilul, apasă „Acesta sunt eu” și ne confirmăm unul pe altul: {povezava}',
+    cakaKopirano: 'Linkul a fost copiat.',
     umakni: 'Retrage cererea',
     zavrnjen: 'Cererea ta pentru acest profil a fost respinsă.',
     znacka: {

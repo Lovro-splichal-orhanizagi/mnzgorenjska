@@ -337,6 +337,10 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     preklici: 'Cancelar',
     caka: 'Pendiente de confirmación.',
     cakaOpis: 'Puede confirmarla un experto del club, dos compañeros ya confirmados o SLFF. Solo tú ves esta solicitud.',
+    cakaPrijatelj: 'Va más rápido si traes a un compañero: cuando dos compañeros estén confirmados, también pueden confirmarte a ti.',
+    cakaDeli: 'Invita a un compañero',
+    cakaVabilo: 'En SLFF hay una liga fantasy con nuestros partidos y jugadores. Busca tu perfil, pulsa «Soy yo» y nos confirmamos el uno al otro: {povezava}',
+    cakaKopirano: 'Enlace copiado.',
     umakni: 'Retirar solicitud',
     zavrnjen: 'Tu solicitud para este perfil ha sido rechazada.',
     znacka: {

@@ -340,6 +340,10 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     preklici: 'Anuluj',
     caka: 'Czeka na potwierdzenie.',
     cakaOpis: 'Potwierdzić może znawca klubu, dwóch potwierdzonych kolegów z drużyny albo SLFF. Zgłoszenie widzisz tylko ty.',
+    cakaPrijatelj: 'Szybciej pójdzie, jeśli przyprowadzisz kolegę z drużyny: gdy dwóch kolegów zostanie potwierdzonych, mogą potwierdzić także ciebie.',
+    cakaDeli: 'Zaproś kolegę z drużyny',
+    cakaVabilo: 'Na SLFF jest liga fantasy z naszymi meczami i zawodnikami. Znajdź swój profil, kliknij „To ja” i potwierdzimy się nawzajem: {povezava}',
+    cakaKopirano: 'Link skopiowany.',
     umakni: 'Wycofaj zgłoszenie',
     zavrnjen: 'Twoje zgłoszenie dotyczące tego profilu zostało odrzucone.',
     znacka: {

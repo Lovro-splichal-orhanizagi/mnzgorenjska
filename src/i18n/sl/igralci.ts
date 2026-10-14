@@ -338,6 +338,10 @@ export const igralci = {
     preklici: 'Prekliči',
     caka: 'Čaka na potrditev.',
     cakaOpis: 'Potrdi ga lahko poznavalec kluba, dva potrjena soigralca ali SLFF. Zahtevek vidiš le ti.',
+    cakaPrijatelj: 'Hitreje gre, če pripelješ soigralca: ko se potrdita dva soigralca, lahko potrdita tudi tebe.',
+    cakaDeli: 'Povabi soigralca',
+    cakaVabilo: 'Na SLFF je fantasy liga z našimi tekmami in igralci. Poišči svoj profil, klikni »To sem jaz« in potrdiva drug drugega: {povezava}',
+    cakaKopirano: 'Povezava je kopirana.',
     umakni: 'Umakni zahtevek',
     zavrnjen: 'Tvoj zahtevek za ta profil je bil zavrnjen.',
     znacka: {

@@ -334,6 +334,10 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     preklici: 'Abbrechen',
     caka: 'Wartet auf Bestätigung.',
     cakaOpis: 'Bestätigen kann ihn ein Kenner des Vereins, zwei bestätigte Mitspieler oder SLFF. Den Antrag siehst nur du.',
+    cakaPrijatelj: 'Schneller geht es, wenn du einen Mitspieler mitbringst: Sobald zwei Mitspieler bestätigt sind, können sie auch dich bestätigen.',
+    cakaDeli: 'Mitspieler einladen',
+    cakaVabilo: 'Auf SLFF gibt es eine Fantasy-Liga mit unseren Spielen und Spielern. Such dein Profil, tippe auf „Das bin ich“ und wir bestätigen uns gegenseitig: {povezava}',
+    cakaKopirano: 'Link kopiert.',
     umakni: 'Antrag zurückziehen',
     zavrnjen: 'Dein Antrag für dieses Profil wurde abgelehnt.',
     znacka: {

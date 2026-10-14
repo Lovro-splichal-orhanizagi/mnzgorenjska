@@ -340,6 +340,10 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     preklici: 'Zrušit',
     caka: 'Čeká na potvrzení.',
     cakaOpis: 'Potvrdit ji může znalec klubu, dva potvrzení spoluhráči nebo SLFF. Žádost vidíš jen ty.',
+    cakaPrijatelj: 'Rychleji to půjde, když přivedeš spoluhráče: jakmile se potvrdí dva spoluhráči, mohou potvrdit i tebe.',
+    cakaDeli: 'Pozvi spoluhráče',
+    cakaVabilo: 'Na SLFF je fantasy liga s našimi zápasy a hráči. Najdi svůj profil, klikni „To jsem já“ a potvrdíme se navzájem: {povezava}',
+    cakaKopirano: 'Odkaz je zkopírován.',
     umakni: 'Stáhnout žádost',
     zavrnjen: 'Tvoje žádost o tento profil byla zamítnuta.',
     znacka: {
