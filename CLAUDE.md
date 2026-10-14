@@ -2204,9 +2204,43 @@ bloki 2025: `20849255` (1. faza B), `22188997` (2. faza B), Ziemeļu
 skupnih klubih in so pri nižjih ligah šibki — pred uvozom preveri. Rietumu
 zona (6 klubov) je na spodnji meji (3 iz kluba × 5).
 
-Izpuščeno: regijske strani (kurzeme., vidzeme., zemgale., latgale., za.,
-riga.lff.lv — niso pregledane), ženske, mladinske pod U19, futsal, pokal,
-veterani, pārspēles, izpadni deli.
+Izpuščeno: ženske, mladinske pod U19, futsal, pokal, superpokal, Livonia Cup,
+veterani, pārspēles, izpadni deli, *Turnīru reģistrs* (seznam zasebnih
+turnirjev, brez zapisnikov).
+
+**Druge lige odraslih (pregled 12. 10. 2026): uporabne ni nobene več.**
+Na lff.lv so med moškimi le zgornje štiri sekcije (ostale so pokal,
+superpokal, veterani, pārspēles, Livonia Cup, Baltic futsal). Regijske strani:
+
+- **riga.lff.lv** (Joomla, robots zapre le sistemske mape): "Rīgas futbola
+  čempionāts" (11 : 11) teče na **fta.lv/rigasfutbols** (robots
+  `Crawl-delay: 5`). 2025 (strežniški HTML, id-ji COMET) je to le 3. liga
+  Centra zona (isti 12 klubov). 2026 je SPA, ki bere JSON
+  `www.footour.lv/api` (robots dovoli vse; `masterTournamentSettings?
+  masterTournamentId=58`): tid 353 = 3. liga Centra zona (že imamo), **tid
+  355 = "4. līga"** — nova, 8 klubov (ASK Kadaga-2, FC Baku Riga, FK Fujaki,
+  FK Lielupe-2, FK Ropaži, JFC Dobele, Just Vibe FC, SK Tedīši), 14 krogov /
+  56 tekem + končnica, arhiva 2025 ni. Zapisnik
+  (`matchProtocol?masterTournamentId=58&tid=355&mid=<id>`) ima ime, dres,
+  pozicijo (G/D/M/S), gole (`MATCH_TIME_GOAL`, `11M_PENALTY_GOAL`) in kartone
+  z minuto — goli = izid 22/22 v vzorcu 11 tekem — **a začetne enajsterice
+  ne loči**: `startingLineup` je true pri vseh igralcih seznama (do 57),
+  `played` označi vse, ki so igrali (14–20), menjave (`PLAYER_ON/OFF`) so
+  vpisane le pri 3 od 11 tekem. Brez XI in minut menjav ni nastopov ne
+  minut, zato **ni vpisana**. Če bi footour začel vpisovati menjave, bi bil
+  potreben nov vir (JSON, drug format kot lff.lv).
+- **kurzeme.lff.lv** (https ima lastno potrdilo, http dela): odrasli le
+  7 : 7 (Kurzemes kauss), telpni futbol in veterani; "Rietumu līga" je 3. liga
+  Rietumu zona.
+- **vidzeme.lff.lv** (Squarespace): "Sacensības" vodi na 3. ligo lff.lv,
+  ostalo mladinsko in novice.
+- **zemgale.lff.lv** (Squarespace, zelo počasen): amaterski futbol je telpni
+  in 7 : 7, brez zapisnikov.
+- **latgale.lff.lv** (https lastno potrdilo, http dela): "Latgales reģiona 3.
+  līga" je 3. liga Austrumu zona; Daugavpils atklātais in Augšdaugavas novada
+  čempionāts sta 7 : 7 z le izidi v novicah.
+- **za.lff.lv** (Ziemeļaustrumi): "1. līga 2026" je 6 regijskih ekip
+  (Preiļi, Jēkabpils Lūši, Balvi …), le lestvica; 2025 je bila telpna.
 
 **Mladinska U19** (migracija 20261013100100, **neaktivna**, kot ostale U19
 `prvi_fantasy_krog = 2`, `rok_pomak_ur = 2`). Jaunatnes čempionāts je pod
