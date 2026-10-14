@@ -169,6 +169,11 @@ export function tekmeSeznama(html) {
 
 // --- stran tekme ---------------------------------------------------------------------------
 
+// Tipkarske napake v imenu ekipe (ime objave ekipe SportsPress, enako na vseh
+// tekmah ekipe). Ključ je ime s strani, vrednost pravilno ime kluba.
+const IME_EKIPE = new Map([['EI San Martín', 'El San Martín']])
+const popraviIme = (ime) => (ime ? IME_EKIPE.get(ime) ?? ime : ime)
+
 /** Glava strani tekme: { id, domaci, gostje, izid, datum, ura, liga, sezona, krog }. Null, če ni tekma. */
 export function glavaStrani(html) {
   const s = cisto(html)
@@ -188,8 +193,8 @@ export function glavaStrani(html) {
   const izid = izidi.length === 2 && izidi.every((x) => /^\d+$/.test(x)) ? { domaci: Number(izidi[0]), gostje: Number(izidi[1]) } : null
   return {
     id,
-    domaci: imeni[0] ?? null,
-    gostje: imeni[1] ?? null,
+    domaci: popraviIme(imeni[0] ?? null),
+    gostje: popraviIme(imeni[1] ?? null),
     izid,
     datum: datumIz(polje('Fecha')),
     ura: uraIz(polje('Hora')),
@@ -250,7 +255,10 @@ export function dogodkiStrani(html) {
     if (!['GOLES', 'TARJETAS', 'SUSTITUCIONES'].includes(naslov)) continue
     for (const [, stran, ul] of del.matchAll(/<ul class="sp-res__col sp-res__col--(home|away)">([\s\S]*?)<\/ul>/g)) {
       const ekipaIdx = stran === 'home' ? 0 : 1
-      for (const [, li] of ul.matchAll(/<li class="sp-res__item[^"]*">([\s\S]*?)<\/li>/g)) {
+      for (const [, celLi] of ul.matchAll(/<li class="sp-res__item[^"]*">([\s\S]*?)<\/li>/g)) {
+        // Oznaka gola ("Penalti", "En propia") je svoj element; ime je brez nje.
+        const znacka = celLi.match(/sp-res__gol-badge--([a-z-]+)/)?.[1] ?? null
+        const li = celLi.replace(/<span class="sp-res__gol-badge[^"]*">[\s\S]*?<\/span>/g, '')
         const m = minuta(besedilo(li.match(/<span class="sp-res__min">([\s\S]*?)<\/span>/)?.[1]))
         const ikona = li.match(/sp-res__icon--([a-z-]+)/)?.[1] ?? null
         if (naslov === 'SUSTITUCIONES') {
@@ -261,8 +269,8 @@ export function dogodkiStrani(html) {
         }
         const ime = besedilo(li.match(/<span class="sp-res__name">([\s\S]*?)<\/span>/)?.[1])
         if (naslov === 'GOLES') {
-          const vrsta = ikona === 'goal' ? 'gol' : /own|propia/.test(ikona ?? '') ? 'avtogol' : /pen/.test(ikona ?? '') ? 'enajstmetrovka' : null
-          if (!vrsta) neznani.push(`gol z ikono "${ikona}" (${ime})`)
+          const vrsta = znacka === 'propia' ? 'avtogol' : znacka === 'penalti' ? 'enajstmetrovka' : ikona === 'goal' && !znacka ? 'gol' : null
+          if (!vrsta) neznani.push(`gol z ikono "${ikona}"${znacka ? ` in oznako "${znacka}"` : ''} (${ime})`)
           goli.push({ ekipaIdx, ime, minuta: m, vrsta: vrsta ?? 'gol', besedilo: besedilo(li) })
         } else {
           const vrsta = ikona === 'yellow' ? 'rumeni' : ikona === 'red' ? 'rdeci' : /yellow-?red|second|doble/.test(ikona ?? '') ? 'drugiRumeni' : null
@@ -345,11 +353,7 @@ export function vZapisnik(html, { id = null, url = null } = {}) {
 
   // Goli: stran in stanje po golu.
   const goli = []
-  const stanja = [...d.stanja]
   for (const x of d.goli) {
-    // Stanje, ki pripada temu golu (isto ime in minuta), pove, komu je štel.
-    const si = stanja.findIndex((s) => s.ime === x.ime && s.minuta === x.minuta)
-    const st = si >= 0 ? stanja.splice(si, 1)[0] : null
     let idx = x.ekipaIdx
     let i = poImenu(idx, x.ime)
     let avtogol = x.vrsta === 'avtogol'
@@ -366,8 +370,7 @@ export function vZapisnik(html, { id = null, url = null } = {}) {
       opozorila.push(`gol v ${x.minuta}. minuti (${x.ime}): strelca ni v postavi`)
       continue
     }
-    goli.push({ ...kdo(idx, i, x.minuta), avtogol, enajstmetrovka: !avtogol && (x.vrsta === 'enajstmetrovka' || /\(p\)|penalti/i.test(x.besedilo)) })
-    void st
+    goli.push({ ...kdo(idx, i, x.minuta), avtogol, enajstmetrovka: !avtogol && x.vrsta === 'enajstmetrovka' })
   }
 
   const rumeni = []
