@@ -31,6 +31,8 @@ import lff from './lff.mjs'
 import ffm from './ffm.mjs'
 import fcf from './fcf.mjs'
 import fas from './fas.mjs'
+import ltfutbolas from './ltfutbolas.mjs'
+import fscg from './fscg.mjs'
 
 const VIRI = {
   mnzg,
@@ -82,6 +84,10 @@ const VIRI = {
   // Španija (Asturija): FutbolAsturiano.es (WordPress SportsPress), ne zveza;
   // liga je blok šifer objav tekem ene sezone, igralec s potjo profila.
   fas,
+  // Litva (LFF) prek lietuvosfutbolas.lt in Črna gora (regije FSCG) prek
+  // centar/sjever/jug.fscg.me: ista predloga COMET (Auris), `comet-auris.mjs`.
+  ltfutbolas,
+  fscg,
 }
 
 /**

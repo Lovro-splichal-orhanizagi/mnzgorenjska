@@ -581,7 +581,7 @@ Kako zdaj:
 - **Koš lige** je zgoščenka šifre (stabilna; koš ima svoj predpomnilnik
   `zapisniki-<drzava>-k<kos>od<kosov>-…`). Vir sme brati iz več košev hkrati le,
   če je v `VZPOREDNI` (oefb 4, hns 3, mlsz 3, sportnet 2, fss 2, fssid 2);
-  vsi drugi viri (MNZ, nzs, fsb, jalgpall, fcf, fas, facr, hlf, frf, lff, pzpn, ffm)
+  vsi drugi viri (MNZ, nzs, fsb, jalgpall, fcf, fas, facr, hlf, frf, lff, pzpn, ffm, ltfutbolas, fscg)
   so v enem košu. Vir, ki ga bere k košev, v vsakem bere s **k-krat daljšim
   premorom** (`SLFF_PREMOR_FAKTOR` → `prenos.mjs`), zato skupni tempo k viru
   ni večji kot pri enem poslu (mlsz: Crawl-delay 1 s). Hitrost pride iz pisanja
@@ -2827,6 +2827,109 @@ Prvi začetnik ima dres 1 ali 12 v 70–90 % postav, sicer vratarske številke
 Uvoz (ena za drugo, ~2 s na zapisnik — arhiv 240 zapisnikov je ~10 minut):
 `gh workflow run uvoz-lige.yml -f liga=mk-prva-mfl -f arhiv=prva-mfl-25-26 -f
 cene=true`.
+
+### Litva in Črna gora — vira `ltfutbolas` in `fscg` (predloga COMET Auris)
+
+Obe spletišči izrišeta podatke COMET s strežnika v isti predlogi podjetja
+Auris kot lff.lv, zato imata skupen razčlenjevalnik
+(`scripts/viri/comet-auris.mjs`) in vsak svoj tanek vir. Državi `LT`
+("Lietuva") in `ME` ("Crna Gora") vpiše migracija lig (20261015030700);
+vmesnika v litovščini ali črnogorščini, kartic in pošte **še ni**, `LT` in
+`ME` **nista** v matriki nočnega uvoza — oboje pred vklopom. Šifre lig se
+začnejo z `lt-` oziroma `me-`. Uvoz za ligo ne potrebuje ničesar več.
+
+- **Stran tekmovanja**: zavihek vseh tekem `table.fixtures style2`, krogi
+  `tr.th1` ("14. turas", "5. kolo"), tekma je vrstica z `data-id` (id tekme
+  COMET). Litva: datum `YYYY-MM-DD` in ura v celicah, klub kot povezava
+  `/klubai/<slug>-<id>/?cid=<tekmovanje>` s `title`, izid v povezavi
+  `/rungtynes/<slug>-<id>/` ("-" = neodigrana). Črna gora: `div.date`
+  "05.09.2026.", `div.time`, klub v `<span>` ob izidu, povezava
+  `/utakmice/<slug>-<id>/` (sicer "-"). Izid brez povezave je kontumacija.
+- **Zapisnik** (`table.teams`): vrstice `firstteam` in `bench`, v vsaki
+  igralec domačih, dres, prazno, dres, igralec gostov; prazno mesto je "-".
+  "(G)" vratar (tudi rezervni), "(C)" kapetan. Dogodki `ul.events li.<vrsta>`
+  z minuto — Litva besedilo "46'", Črna gora `div.minute`: `goal`,
+  **`penalty` (gol z 11 m — razred ni `goal`)**, `own_goal` (pri strelčevi
+  ekipi, šteje nasprotniku), `penalty_failed`, `yellow`, `second_yellow` (prvi
+  rumeni je svoj dogodek → 1 rumeni + 1 rdeči), `red`, `substitutionIn`/
+  `substitutionOut` — **minute so točne**, menjave v parih po minuti. Rumeni
+  brez minute se zgodi (opozorilo). Polčasa stran ne pove. Kartoni trenerjev
+  niso v protokolu.
+- Ime "Ime Priimek" → "Priimek Ime". Šifra zapisnika v bazi je `lt<id>` in
+  `me<id>` (COMET drugih zvez ima iste številke). Kontumacija: 3:0 / 0:3,
+  starejša od tedna, z zapisnikom brez postave ene ekipe (Igalo : Cetinje,
+  Jug 2026/27) — `vir.kontumacije`.
+- Ključ kluba ohrani krajevne znake; kratko ime brez FK/FC/FKS/FSK, **OFK
+  ostane** (Sjever: "Gusinje" in "OFK Gusinje" sta dva kluba).
+- *Uskladi pozicije* z `vir = ltfutbolas` ali `fscg` (vratar po večini tekem).
+
+**Litva — `ltfutbolas`** (lietuvosfutbolas.lt, portal rezultatov LFF):
+
+- **Sezona je koledarsko leto** (april–oktober, `sezona_koledarska`, "2026"),
+  iz datumov razporeda. Ura je vilenska (EET) → ljubljanska −1 h.
+- **Šifra lige je id tekmovanja COMET** (`/varzybos/<id>/<slug>/`, slug je
+  okras); vsaka sezona svoj. `/varzybos/megeju/<slug>/` kaže le tekočo
+  sezono, zato beremo po id-ju in preverimo, da povezave klubov nosijo isti
+  `?cid=` (drugače se uvoz ustavi).
+- Vsak igralec ima povezavo `/zaidejai/<slug>-<id>/` → `reg_st`.
+- **Arhiv**: izbirnika sezon ni in id-jev 2025 nismo našli; 2022: II lyga I
+  etapas `11644164`, 1–10 v. `13334048`, 11–18 v. `13339888`. Cene so zato
+  iz tekoče sezone.
+- KLFF in ŠAFF-PAFF III lyga nimata ločitve začetniki/klop; vilniausfutbolas.lt
+  nima menjav; lff.lt ima prazne tabele postav (raziskava 15. 10. 2026).
+
+**Črna gora — `fscg`** (Treća liga, regijske poddomene centar, sjever, jug):
+
+- Sezona jesen–pomlad ("2026/27"), čas je ljubljanski.
+- **Šifra lige je `<regija>/<slug>/<id tekmovanja>`**
+  (`centar/seniorska-liga/9331975`). Stran `/takmicenja/<slug>/` kaže le
+  tekočo sezono; ko pokaže drug id (`data-genid`), se uvoz ustavi in šifro je
+  treba popraviti. **Arhiva regijske strani nimajo** (arhiv na fscg.me ima le
+  državne lige).
+- Igralci nimajo povezav na profil: identiteta je ime + klub (kot fss).
+
+**Pravice (pregled 15. 10. 2026, ni pravni nasvet).** Nobeno spletišče nima
+robots.txt (`/robots.txt` preusmeri na naslovnico), izziva ni bilo. Pogojev
+uporabe nismo našli; LT noga "Visos teisės saugomos". Dovoljenja LFF ali
+FSCG nimamo (za LFF raziskava priporoča vljudnostni mail). Beremo odkrito
+(`User-Agent: SLFF fantasy (https://slff.eu)`, **3 s** med zahtevki,
+zapisnikov, starejših od tedna, ne beremo znova). **Ob izzivu, CAPTCHI, 403
+ali 429 se uvoz ustavi — ne obhajaj** (`CometZavrnitev`, izhod 4). Sodnikov,
+delegatov in gledalcev ne beremo; vzorci `scripts/vzorci/lt-ltfutbolas-*`,
+`me-fscg-*` so brez njih.
+
+Preizkus v živo (15. 10. 2026, brez pisanja v bazo; po 8 tekem na ligo —
+zadnje in najbolj zadetkovne; KAFF-MAFF 20):
+
+| liga | tekem | goli = izid | postav po 11 | menjav | ekip brez menjav | 990 minut |
+|---|---|---|---|---|---|---|
+| II lyga A (`23383524`) | 8 | 54/54 (8/8) | 16/16 | 49 | 0 | 13/16 (6 rdečih) |
+| II lyga B (`23384849`) | 8 | 70/70 (8/8) | 16/16 | 52 | 0 | 13/16 (3 rdeči) |
+| KAFF-MAFF III (`23832343`) | 20 | 126/126 (20/20) | 39/40 | 23 | **24/40** | 36/40 |
+| Centar (`9331975`) | 8 | 78/78 (8/8) | 16/16 | 62 | 1 | 16/16 |
+| Sjever (`9344268`) | 8 | 63/63 (8/8) | 15/16 | 55 | 1 | 12/16 |
+| Jug (`9391667`) | 8 (1 kontumacija) | 45/45 (7/7) | 13/14 | 43 | 2 | 13/14 |
+
+Vratar (G) je bil pri vseh postavah, litovski nastopi vsi s šifro.
+
+Vpisanih je 5 lig (migracija 20261015030700), **neaktivnih**:
+
+| liga | klubov | tekoča | zveza |
+|---|---|---|---|
+| lt-2-lyga-a | 15 | `23383524` (2026) | `lff-lt` |
+| lt-2-lyga-b | 15 | `23384849` (2026) | `lff-lt` |
+| me-3-liga-centar | 13 | `centar/seniorska-liga/9331975` (2026/27) | `fscg-centar` |
+| me-3-liga-sjever | 9 | `sjever/seniorska-liga/9344268` | `fscg-sjever` |
+| me-3-liga-jug | 7 | `jug/seniorska-liga/9391667` | `fscg-jug` |
+
+**Ni vpisano**: KAFF-MAFF III lyga 2026 (`23832343`, 8 klubov) — zapisnike
+razčleni, a 24 od 40 ekip v preizkusu ni vpisalo nobene menjave (začetniki
+bi imeli po 90 minut, rezerve nič). Jug ima le 7 klubov (spodnja meja).
+Litovska sezona 2026 je ob vpisu skoraj končana — vklop realno za 2027
+(nova šifra).
+
+Uvoz (ena za drugo, brez arhiva): `gh workflow run uvoz-lige.yml -f
+liga=lt-2-lyga-a -f cene=true`.
 
 ### Država obiskovalca
 
