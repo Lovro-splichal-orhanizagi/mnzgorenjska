@@ -119,6 +119,13 @@ export function ravenLige({ slug, name, zveza }) {
     return null
   }
 
+  // Ukrajina (vir pfl-ua): Perša liga (raven 2) nad Drugo ligo A in B (3).
+  if (slug.startsWith('ua-')) {
+    if (mladinska) return null
+    if ((m = slug.match(/^ua-(\d)-liga/))) return abs(Number(m[1]) + 1)
+    return null
+  }
+
   if (slug.startsWith('lv-')) {
     if (mladinska) return null
     if (slug === 'lv-virsliga') return abs(1)
