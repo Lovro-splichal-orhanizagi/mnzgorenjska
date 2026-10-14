@@ -31,6 +31,7 @@ import lff from './lff.mjs'
 import ffm from './ffm.mjs'
 import fcf from './fcf.mjs'
 import fas from './fas.mjs'
+import nsfbih from './nsfbih.mjs'
 
 const VIRI = {
   mnzg,
@@ -82,6 +83,9 @@ const VIRI = {
   // Španija (Asturija): FutbolAsturiano.es (WordPress SportsPress), ne zveza;
   // liga je blok šifer objav tekem ene sezone, igralec s potjo profila.
   fas,
+  // Bosna in Hercegovina: NS FBiH prek nsfbih.ba (COMET, Prva in Druga liga
+  // FBiH), brez šifer igralcev (ime + klub), vratar je prvi začetnik (namig).
+  nsfbih,
 }
 
 /**

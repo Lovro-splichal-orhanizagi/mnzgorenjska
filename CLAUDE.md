@@ -2828,6 +2828,79 @@ Uvoz (ena za drugo, ~2 s na zapisnik — arhiv 240 zapisnikov je ~10 minut):
 `gh workflow run uvoz-lige.yml -f liga=mk-prva-mfl -f arhiv=prva-mfl-25-26 -f
 cene=true`.
 
+### Bosna in Hercegovina — vir `nsfbih`
+
+Država `BA` ("Bosna i Hercegovina", migracija 20261015031500). **Vmesnika v
+bosanščini/hrvaščini še ni** (ne `JEZIK_DRZAVE`, ne kartice, ne pošte) in `BA`
+**ni** v matriki nočnega uvoza (`uvoz-zapisnikov.yml`) — oboje pred vklopom.
+Šifra lige se začne z `ba-`.
+
+Vir `nsfbih` (`scripts/viri/nsfbih.mjs`) bere **www.nsfbih.ba** (Nogometni
+savez Federacije BiH): WWIN Prva liga FBiH (2. raven BiH) in Druga liga FBiH
+v štirih skupinah (3. raven). Podatki so iz COMET (šifre tekem 54xxxxxx),
+stran je HTML iz strežnika, brez prijave in izziva. Kantonalnih lig (4. raven
+in nižje) ni nikjer javno s postavami. **fsrs.org (Republika Srpska) ne
+beremo.**
+
+- **Šifra lige je `<slug>/<sezona>`** (`druga-liga-fbih-jug/2026-27`). Slug
+  strani `/takmicenja/<slug>` je **isti vsako sezono**; stran kaže le tekočo
+  sezono, izbirnika sezon ni. Sezona v šifri ustavi uvoz, ko stran preide na
+  novo sezono (`kaže sezono …`) — ob novi sezoni popravi le sezono v
+  `source_league_code`. **Arhiva ni**: cene so le iz tekoče sezone (uvoz brez
+  `arhiv`, s `cene`).
+- **Razpored**: zavihek "Raspored i rezultati" (`id="t3"`), krogi "N. kolo",
+  tekma z datumom in uro ("02.09.2026. 16:30h", sarajevski = ljubljanski čas),
+  imenoma klubov (`<b>`, kraj v `<small>`), izidom ("7:0", "-" neodigrana) in
+  povezavo `/takmicenja/<slug>/<id>`. Druga liga objavi le jesenski del
+  (13–16 krogov), Prva liga vseh 30.
+- **Zelena miza**: izid z zvezdico ("3:0 *", na zapisniku "0:3*" in
+  "*(p.f.)") je **kontumacija** z registriranim izidom, tudi ko je bila tekma
+  odigrana (Bratstvo : Posušje 14. 8. 2026, na igrišču 3:1) — zapisnik je
+  null, igralci te tekme nastopov nimajo.
+- **Zapisnik** `/takmicenja/<slug>/<id>`: "Startna postava" in "Rezervni
+  igrači", vsak z dvema tabelama (domači: dogodki | ime | dres; gostje
+  zrcalno). Dogodki so ikone z minuto, **ne po vrsti**: `event-icon-goal`
+  (pred minuto "(P)" = 11 m, "(AG)" = avtogol pri strelcu v njegovi ekipi),
+  `event-icon-card bg-warning` / `bg-danger` (rumeni / rdeči; drugi rumeni je
+  rumeni + rdeči), `icon-right text-danger` / `text-success` (izstop / vstop,
+  minute točne, par po minuti). Zgrešenih 11 m stran ne kaže.
+- **Napake vira**: rezerva včasih "vstopi" dvakrat (Kobilica 56' in 79',
+  ob 79' vstopi drug brez para) — poznejši vstop je izstop (opozorilo
+  `dvakrat vstopi`); karton brez minute ostane karton z opozorilom.
+- **Vratar in kapetan nista označena.** COMET vratarja našteje prvega
+  (ostali po dresu; dres 1 ali 12 v 125 od 145 postav), zato je prvi začetnik
+  `vratar` kot namig (kot ffm, fssid). *Uskladi pozicije* z `vir = nsfbih`.
+- **Identiteta**: ime + klub (šifer igralcev ni), ime "Priimek Ime" kot v
+  COMET. Šifra zapisnika v bazi je `ba<id>`. Ključ kluba ohrani obliko in
+  šumnike: "FK VITEZ" / "NK VITEZ", "FK RUDAR" / "NK RUDAR", "NK SLOGA" /
+  "HNK SLOGA", "NK BRATSTVO" / "GNK BRATSTVO" so različni klubi, zato je
+  kratko ime polno ime. Istih imen v petih ligah ni (pregled 15. 10. 2026).
+
+**Pravice (pregled 15. 10. 2026, ni pravni nasvet).** robots.txt je
+"User-agent: *" in `Sitemap: /sitemap`, brez Disallow in Crawl-delay; pogojev
+uporabe proti branju nismo našli. Dovoljenja NS FBiH nimamo. Beremo odkrito
+(`User-Agent: SLFF fantasy (https://slff.eu)`, **3 s** med zahtevki, popolnih
+zapisnikov ne beremo znova). **Ob 403, 429, izzivu ali CAPTCHI se uvoz ustavi
+— ne obhajaj** (`NsfbihZavrnitev`, izhod 4). Sodnikov, delegata in gledalcev
+ne beremo; vzorci `scripts/vzorci/ba-nsfbih-*` so brez njih.
+
+Preizkus v živo (15. 10. 2026, ~80 strani po 3 s, brez pisanja v bazo; 14–15
+zapisnikov na ligo, razpršenih čez sezono): vsi 11 + 11, goli = izid povsod,
+990 minut na ekipo razen ob rdečem kartonu.
+
+| liga | klubov | tekoča 2026/27 | krogov / tekem / odigranih | preizkus: zapisnikov, goli, postav po 11, menjav |
+|---|---|---|---|---|
+| ba-prva-liga-fbih | 16 | `wwin-prva-liga-fbih/2026-27` | 30 / 240 / 72 (1 zelena miza) | 14, 30, 28/28, 117 |
+| ba-druga-liga-fbih-jug | 13 | `druga-liga-fbih-jug/2026-27` | 16 / 96 / 48 (1 kontumacija) | 15, 60, 30/30, 119 |
+| ba-druga-liga-fbih-sjever | 16 | `druga-liga-fbih-sjever/2026-27` | 15 / 120 / 72 | 14, 54, 28/28, 118 |
+| ba-druga-liga-fbih-centar | 16 | `druga-liga-fbih-centar/2026-27` | 15 / 120 / 71 | 14, 57, 28/28, 112 |
+| ba-druga-liga-fbih-zapad | 14 | `druga-liga-fbih-zapad/2026-27` | 13 / 91 / 56 | 14, 43, 28/28, 93 |
+
+Arhiv: — (vir ga nima). Vse **neaktivne**, zveza `nsfbih`. Uvoz (ena za
+drugo, brez arhiva): `gh workflow run uvoz-lige.yml -f
+liga=ba-druga-liga-fbih-jug -f cene=true`; ~70 zapisnikov po 3 s je ~4
+minute na ligo.
+
 ### Država obiskovalca
 
 Domena je ena, **lige druge države so skrite**: `useTekmovanje().tekmovanja`
