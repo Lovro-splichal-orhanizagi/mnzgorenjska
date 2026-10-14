@@ -384,6 +384,12 @@ export function vZapisnik(html, { id = null, url = null } = {}) {
     if (x.vrsta === 'rumeni') rumeni.push(kdo(x.ekipaIdx, i, x.minuta))
     else if (!rdeci.some((r) => r.ekipaIdx === x.ekipaIdx && r.regSt === i.regSt && r.ime === i.ime)) rdeci.push(kdo(x.ekipaIdx, i, x.minuta))
   }
+  // Drugi rumeni: stran vpiše oba rumena in rdečega; kot pri drugih virih
+  // ostane 1 rumeni + 1 rdeči.
+  for (const r of rdeci) {
+    const njegovi = rumeni.filter((y) => y.ekipaIdx === r.ekipaIdx && y.regSt === r.regSt && y.ime === r.ime)
+    for (const y of njegovi.slice(1)) rumeni.splice(rumeni.indexOf(y), 1)
+  }
 
   const sestava = ekipe.map((x, idx) => {
     if (!znana[idx]) return { ime: imeni[idx], postava: [], rezerve: [] }
