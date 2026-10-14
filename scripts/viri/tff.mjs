@@ -45,7 +45,8 @@ import { sifra } from './zapisniki.mjs'
 export { nastopi }
 
 const OSNOVNI = 'https://www.tff.org'
-const MAPA = 'scripts/.predpomnilnik/tff'
+// Mapo tednov sme smoke preusmeriti v začasno (`SLFF_TFF_MAPA`), da ne piše v predpomnilnik.
+const mapa = () => process.env.SLFF_TFF_MAPA || 'scripts/.predpomnilnik/tff'
 const DOLZINA_TEKME = 90
 const URA = 3600000
 const DAN = 24 * URA
@@ -446,17 +447,21 @@ export function kratkoImeTr(polno) {
 
 // --- branje ------------------------------------------------------------------------------
 
-const pot = (ime) => `${MAPA}/${ime}`
+const pot = (ime) => `${mapa()}/${ime}`
 function izPredpomnilnika(ime) {
   const p = pot(ime)
   if (!existsSync(p)) return null
   return { html: readFileSync(p, 'utf8'), starost: Date.now() - statSync(p).mtimeMs }
 }
 
-async function prenesiStran(prenesi, url, ime) {
+/**
+ * Prenos strani tedna ali tekme: 403/429 in izziv vržeta `TffZavrnitev`
+ * (uvoz izhod 4), da nočna zanka ostalih TR lig ne bere naprej.
+ */
+async function prenesiStran(prenesi, url, ime, sveze = true) {
   let html
   try {
-    html = await prenesi(url, ime, true)
+    html = await prenesi(url, ime, sveze)
   } catch (e) {
     if (e.zavrnitev || e.status === 403 || e.status === 429) throw new TffZavrnitev(`tff: ${url} → ${e.status ?? e.message} — uvoz ustavljen, ne obhajamo`, e.status)
     throw e
@@ -469,16 +474,19 @@ const starostDni = (datum, danes = Date.now()) => (datum ? (danes - Date.parse(`
 
 /**
  * Kako star sme biti shranjen teden (ms): odigran teden (vsi izidi, zadnja
- * tekma pred več kot tremi dnevi) se ne bere znova; teden blizu danes
- * (od −7 do +10 dni) vsako uro; poznejši na tri dni; pretekli z neodigrano
- * (prestavljeno) tekmo dnevno.
+ * tekma pred več kot tremi dnevi) enkrat na teden do 45 dni — disciplinska
+ * komisija izid lahko pozneje spremeni v hükmen 3:0 in `kontumacije` gleda
+ * izide iz tedna —, nato se ne bere več; teden blizu danes (od −7 do +10 dni)
+ * vsako uro; poznejši na tri dni; pretekli z neodigrano (prestavljeno) tekmo
+ * dnevno.
  */
 export function najvecStarostTedna(tekme, danes = Date.now()) {
   if (!tekme.length) return DAN
   const datumi = tekme.map((t) => t.datum).filter(Boolean).sort()
   if (!datumi.length) return DAN
   const vsiIzidi = tekme.every((t) => t.izid)
-  if (vsiIzidi && starostDni(datumi.at(-1), danes) > 3) return Infinity
+  if (vsiIzidi && starostDni(datumi.at(-1), danes) > 45) return Infinity
+  if (vsiIzidi && starostDni(datumi.at(-1), danes) > 3) return 7 * DAN
   if (tekme.some((t) => t.datum && starostDni(t.datum, danes) >= -10 && starostDni(t.datum, danes) <= 7)) return URA
   if (starostDni(datumi[0], danes) < -10) return 3 * DAN
   return DAN
@@ -494,7 +502,7 @@ async function beriTeden(koda, hafta, prenesi, danes) {
     if (r && r.starost <= 15 * 60000) {
       try {
         const t = tekmeTedna(koda, r.html, 1)
-        mkdirSync(MAPA, { recursive: true })
+        mkdirSync(mapa(), { recursive: true })
         writeFileSync(pot(ime), obreziTeden(r.html))
         return t
       } catch {
@@ -513,7 +521,7 @@ async function beriTeden(koda, hafta, prenesi, danes) {
   }
   const html = await prenesiStran(prenesi, naslovTedna(koda, hafta), ime)
   const t = tekmeTedna(koda, html, hafta)
-  mkdirSync(MAPA, { recursive: true })
+  mkdirSync(mapa(), { recursive: true })
   writeFileSync(pot(ime), obreziTeden(html))
   return t
 }
@@ -597,16 +605,14 @@ const vir = {
       const url = naslovTekme(t.id)
       // Zapisnik zadnjih treh dni se lahko še popravlja; starejšega ne beremo znova.
       const starost = starostDni(t.datum)
-      let html = await prenesi(url, imeTekme(t.id), starost <= 3)
-      if (jeIzziv(html)) throw new TffZavrnitev(`tff: ${url} vrne izziv (CAPTCHA) — uvoz ustavljen, ne obhajamo`)
+      let html = await prenesiStran(prenesi, url, imeTekme(t.id), starost <= 3)
       let z = vZapisnik(html, { id: sifraZapisnika(t.id), url })
       // Stran brez postav ("Esame Bilgileri Kulüpler Tarafından Girilmektedir"):
       // klub postave vnese pozneje, zato je shranjena ne sme zamrzniti — do 45
       // dni jo beremo sveže. Kontumacije (3:0 / 0:3, starejše od tedna) ne.
       const kontumacija = starost > 7 && ((t.izid.domaci === 3 && t.izid.gostje === 0) || (t.izid.domaci === 0 && t.izid.gostje === 3))
       if (!z && starost > 3 && starost <= 45 && !kontumacija) {
-        html = await prenesi(url, imeTekme(t.id), true)
-        if (jeIzziv(html)) throw new TffZavrnitev(`tff: ${url} vrne izziv (CAPTCHA) — uvoz ustavljen, ne obhajamo`)
+        html = await prenesiStran(prenesi, url, imeTekme(t.id), true)
         z = vZapisnik(html, { id: sifraZapisnika(t.id), url })
       }
       if (!z) continue

@@ -2854,7 +2854,9 @@ eden za drugim). Šifra lige se začne s `tr-`.
   pozimi −2 h). Celotna stran 3. Lig ima 640 kB (fiksturji vseh skupin, brez
   datumov); v predpomnilnik (`scripts/.predpomnilnik/tff/hafta-…`) gre le
   tedenski del (`obreziTeden`). Odigran teden (vsi izidi, zadnja tekma > 3 dni)
-  se ne bere znova, teden od −10 do +7 dni vsako uro, poznejši na 3 dni.
+  se bere enkrat na teden do 45 dni (disciplinska komisija izid pozneje
+  spremeni v hükmen 3:0, `kontumacije` pa gleda izide tedna), starejši ne
+  več; teden od −10 do +7 dni vsako uro, poznejši na 3 dni.
 - **Ime kluba** je zadnje, ki ga strani tednov povedo za `kulupID` (klub 4485
   je v starih fiksturjih "BEYKOZ İSHAKLI …", zdaj "BÜYÜKÇEKMECE GÜCÜ …");
   zapisnik vzame ime, krog in datum s strani tedna. Ključ kluba je po turško
@@ -2890,7 +2892,8 @@ zato zdaj ustreza. **Pogoj za ponovni pregled: ko SLFF zasluži karkoli
 dovoljenje TFF ali turške lige izklopimo.** Beremo odkrito (User-Agent
 `SLFF fantasy (https://slff.eu)`, **3 s** med zahtevki, zaključenih tednov in
 zapisnikov ne beremo znova). **Ob izzivu, CAPTCHI, 403 ali 429 se uvoz ustavi —
-ne obhajaj** (`TffZavrnitev`, izhod 4). Če nas TFF prosi, naj nehamo, `tr-`
+ne obhajaj** (`TffZavrnitev`, izhod 4 — na strani tedna in tekme, oboje gre
+skozi `prenesiStran`). Če nas TFF prosi, naj nehamo, `tr-`
 lige izklopimo.
 
 Preizkus v živo (15. 10. 2026, brez pisanja v bazo, ~150 zahtevkov): tabela

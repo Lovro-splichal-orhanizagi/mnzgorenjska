@@ -5416,7 +5416,9 @@ preveri(
     p1.tekme.every((t) => !t.izid) && kr.length === 1 && kr[0].stevilka === 1 && kr[0].tekme.every((t) => !t.odigrana && !t.kontumacija) &&
     kr[0].tekme[0].datum === '2026-10-17' && kr[0].tekme[0].ura === '12:00')
   preveri('tff: obrezan teden da isto kot cela stran', JSON.stringify(T.tekmeTedna('1596/3938', T.obreziTeden(beri('tr-tff-hafta-1596-3938-1.html')), 1)) === JSON.stringify(p1))
-  preveri('tff: zaključen teden se ne bere znova, bližnji vsako uro', T.najvecStarostTedna(t6.tekme, Date.parse('2026-11-01T00:00:00Z')) === Infinity &&
+  // Odigran teden se do 45 dni bere tedensko (hükmen pride lahko pozneje), nato ne več.
+  preveri('tff: odigran teden tedensko do 45 dni, nato ne več; bližnji vsako uro', T.najvecStarostTedna(t6.tekme, Date.parse('2026-11-01T00:00:00Z')) === 7 * 86400000 &&
+    T.najvecStarostTedna(t6.tekme, Date.parse('2027-01-01T00:00:00Z')) === Infinity &&
     T.najvecStarostTedna(t6.tekme, Date.parse('2026-10-12T00:00:00Z')) === 3600000 && T.najvecStarostTedna(p1.tekme, Date.parse('2026-09-01T00:00:00Z')) === 3 * 86400000)
 
   const h = beri('tr-tff-mac-319209.html')
@@ -5470,6 +5472,33 @@ preveri(
   try { await T.default.zapisniki('971/3543', async () => { const e = new Error('403'); e.status = 403; throw e }) } catch (e) { zavrnjen = e }
   preveri('tff: 403 in izziv vržeta TffZavrnitev (uvoz izhod 4)', izziv instanceof T.TffZavrnitev && zavrnjen instanceof T.TffZavrnitev &&
     zavrnjen.status === 403 && T.default.zavrnitev('x', 429).zavrnitev === true)
+  // 403 ali izziv na strani TEKME (strani tednov gredo skozi): večina zahtevkov je
+  // tekem, zato se zapora najprej pokaže tu. Tedni v začasni mapi, ne v predpomnilniku.
+  {
+    const { mkdtempSync, rmSync } = await import('node:fs')
+    const { tmpdir } = await import('node:os')
+    const mapa = mkdtempSync(`${tmpdir()}/tff-smoke-`)
+    const prej = process.env.SLFF_TFF_MAPA
+    process.env.SLFF_TFF_MAPA = mapa
+    const teden = T.obreziTeden(beri('tr-tff-hafta-971-3543-6.html'))
+    const tedenZa = (url) => teden.replace(/\(6\.\s*hafta\)/, `(${new URL(url).searchParams.get('hafta')}.hafta)`)
+    let tekme403 = null
+    try {
+      await T.default.zapisniki('971/3543', async (url) => {
+        if (/hafta=/.test(url)) return tedenZa(url)
+        const e = new Error('403'); e.status = 403; throw e
+      })
+    } catch (e) { tekme403 = e }
+    let tekmeIzziv = null
+    try {
+      await T.default.zapisniki('971/3543', async (url) => (/hafta=/.test(url) ? tedenZa(url) : '<title>Just a moment...</title>'))
+    } catch (e) { tekmeIzziv = e }
+    if (prej === undefined) delete process.env.SLFF_TFF_MAPA
+    else process.env.SLFF_TFF_MAPA = prej
+    rmSync(mapa, { recursive: true, force: true })
+    preveri('tff: 403 in izziv na strani tekme vržeta TffZavrnitev (izhod 4, ne 1)', tekme403 instanceof T.TffZavrnitev && tekme403.status === 403 &&
+      tekmeIzziv instanceof T.TffZavrnitev, `${tekme403?.name} ${tekme403?.status} / ${tekmeIzziv?.name}`)
+  }
   const kodiran = await T.tffFetch('data:text/html;charset=windows-1254;base64,' + Buffer.from([0xdd, 0x53, 0x54, 0x41, 0x4e, 0x42, 0x55, 0x4c, 0xfd]).toString('base64'))
   preveri('tff: stran windows-1254 se prebere kot UTF-8', (await kodiran.text()) === 'İSTANBULı')
 }
