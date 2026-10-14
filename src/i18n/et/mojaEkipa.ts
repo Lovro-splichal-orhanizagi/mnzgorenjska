@@ -153,6 +153,17 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   },
 
   // Algusnõuanne tühjale meeskonnale.
+  vodic: {
+    napredek: '{trenutni} / {skupaj}',
+    naprej: 'Edasi',
+    razumem: 'Selge',
+    sestaviNaslov: 'Meeskond ühe klõpsuga',
+    sestaviOpis: 'Klõpsa siin ja paneme sulle eelarve piires kokku sobiva meeskonna. Seejärel vaheta, keda soovid.',
+    igrisceNaslov: 'See on sinu meeskond',
+    igrisceOpis: 'Klõpsa mängijal, et näha andmeid või teda vahetada. Punkte toob algkoosseis, pingimängija tuleb sisse, kui keegi ei mängi.',
+    shraniNaslov: 'Viimane samm: Salvesta',
+    shraniOpis: 'Kui salvestad, kogud punkte juba järgmises voorus. Meeskonda saad muuta tähtajani.',
+  },
   zacetek: {
     naslov: 'Kust alustada?',
     sestaviMi: 'Pane mulle meeskond kokku',

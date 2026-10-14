@@ -14,6 +14,14 @@ import PovabiSoigralce from '../components/PovabiSoigralce'
 import { zabeleziKorak } from '../lib/lijak'
 import { osvetliCilj } from '../lib/podporaOrodja'
 import {
+  ustaviVodic,
+  vodicKonec,
+  vodicNaVrsti,
+  vodicObShranjevanju,
+  vodicPoPredlogu,
+  zacniVodic,
+} from '../lib/vodic'
+import {
   VELIKOST_EKIPE,
   STEVILO_PRVIH,
   MAX_IZ_KLUBA,
@@ -1022,8 +1030,9 @@ export default function MojaEkipa() {
     setSporocilo(t('mojaEkipa.sporocila.predlogSestavljen'))
     setIzPredloga(true)
     zabeleziKorak('predlog')
-    // Naslednji korak je en sam: Shrani. Pokažemo ga, ko se igrišče izriše.
-    window.setTimeout(() => osvetliCilj('shrani'), 400)
+    // Naslednji korak je en sam: Shrani. Pokažemo ga, ko se igrišče izriše
+    // (vodič za novince pokaže najprej igrišče, nato Shrani sam).
+    if (!vodicPoPredlogu()) window.setTimeout(() => osvetliCilj('shrani'), 400)
   }
 
   // Prazna ekipa: štejemo prihod (lijak začetka) in povezavi iz e-pošte
@@ -1039,6 +1048,24 @@ export default function MojaEkipa() {
     predlagaj()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nalaganje, napakaNalaganja, session, ekipa, izbrani.length, igralci.length, lokacija.search])
+
+  // Vodič za novince (src/lib/vodic.ts): prijavljen, v tej ligi brez ekipe,
+  // prazno igrišče in predlog je mogoč. Enkrat na ligo; kdor pride z
+  // `?sestavi=1`, ima predlog že sestavljen in vodiča ne dobi.
+  const praznaZaVodic =
+    !nalaganje &&
+    !napakaNalaganja &&
+    Boolean(session) &&
+    !ekipa &&
+    izbrani.length === 0 &&
+    igralci.length > 0 &&
+    zakajNiPredloga == null &&
+    !new URLSearchParams(lokacija.search).has('sestavi')
+  useEffect(() => {
+    if (!praznaZaVodic || tekmovanjeId == null || !vodicNaVrsti(tekmovanjeId)) return
+    return zacniVodic(tekmovanjeId)
+  }, [praznaZaVodic, tekmovanjeId])
+  useEffect(() => ustaviVodic, [tekmovanjeId])
 
   /**
    * Dopolni začet kader: kar je uporabnik že izbral, ostane, manjkajoča mesta
@@ -1223,6 +1250,7 @@ export default function MojaEkipa() {
 
   function poskusiShraniti() {
     if (shranjujem) return
+    vodicObShranjevanju()
     if (!imeEkipe.trim()) {
       setSporocilo(null)
       setNapaka(t('mojaEkipa.napake.vpisiIme'))
@@ -1263,6 +1291,7 @@ export default function MojaEkipa() {
       ekipaId = data.id
       setEkipa(data)
       zabeleziKorak('prva_shramba')
+      vodicKonec()
       // Prva shramba je trenutek, ko opomnik pred rokom očitno pomaga: v
       // aplikaciji takrat (le prvič) vprašamo za potisna obvestila.
       void registrirajPush(true)
@@ -1776,6 +1805,7 @@ export default function MojaEkipa() {
             </p>
           )}
           <button
+            data-pomoc="sestavi-mi"
             onClick={predlagaj}
             disabled={zakajNiPredloga != null}
             title={zakajNiPredloga ?? undefined}
@@ -2729,7 +2759,7 @@ function PredalTrga({
     <div className="lg:hidden">
       <div
         onClick={naZapri}
-        className="fixed inset-0 z-30 bg-slate-950/70 backdrop-blur-sm"
+        className="fixed inset-0 z-40 bg-slate-950/70 backdrop-blur-sm"
       />
       <div
         ref={ref}

@@ -184,7 +184,7 @@ export default function Navbar() {
     'block whitespace-nowrap rounded-lg px-3 py-2 text-left text-slate-300 hover:bg-white/5 hover:text-slate-100'
 
   return (
-    <header className="sticky top-[var(--vrh)] z-20 border-b border-white/10 bg-slate-950/80 backdrop-blur">
+    <header className="sticky top-[var(--vrh)] z-40 border-b border-white/10 bg-slate-950/80 backdrop-blur">
       <nav className="mx-auto max-w-6xl px-4 py-3">
         <div className="flex items-center gap-3 lg:gap-4">
           <NavLink to="/" aria-label="SLFF" className="flex shrink-0 items-center gap-2 font-black">

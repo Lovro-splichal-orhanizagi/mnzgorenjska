@@ -4,7 +4,15 @@
 import { supabase } from './supabase'
 import { dogodek } from './analitika'
 
-export type KorakLijaka = 'prazna_ekipa' | 'predlog' | 'prva_shramba' | 'sestavi_iz_maila' | 'pivo'
+export type KorakLijaka =
+  | 'prazna_ekipa'
+  | 'predlog'
+  | 'prva_shramba'
+  | 'sestavi_iz_maila'
+  | 'pivo'
+  | 'vodic_zacetek'
+  | 'vodic_preskok'
+  | 'vodic_konec'
 
 export function zabeleziKorak(korak: KorakLijaka) {
   const kljuc = `slff-lijak-${korak}-${new Date().toISOString().slice(0, 10)}`

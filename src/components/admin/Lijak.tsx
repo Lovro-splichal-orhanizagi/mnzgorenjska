@@ -180,7 +180,9 @@ export default function Lijak() {
         })}
         <p className="text-xs text-slate-500">
           Iz e-pošte (»Sestavi mi ekipo«): {poKoraku.get('sestavi_iz_maila') ?? 0}. Klik na
-          »Časti pivo«: {poKoraku.get('pivo') ?? 0} (nakupi pridejo na Discord). Isti korak se v
+          »Časti pivo«: {poKoraku.get('pivo') ?? 0} (nakupi pridejo na Discord). Vodič za novince:
+          začet {poKoraku.get('vodic_zacetek') ?? 0}, preskočen {poKoraku.get('vodic_preskok') ?? 0},
+          do konca {poKoraku.get('vodic_konec') ?? 0}. Isti korak se v
           isti seji šteje enkrat na dan.
         </p>
       </div>

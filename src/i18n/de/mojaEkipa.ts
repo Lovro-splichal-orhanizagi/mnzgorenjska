@@ -154,6 +154,17 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   },
 
   // Starthilfe für ein leeres Team.
+  vodic: {
+    napredek: '{trenutni} / {skupaj}',
+    naprej: 'Weiter',
+    razumem: 'Verstanden',
+    sestaviNaslov: 'Team mit einem Klick',
+    sestaviOpis: 'Tippe hier und wir stellen dir ein gültiges Team im Budget zusammen. Danach tauschst du, wen du willst.',
+    igrisceNaslov: 'Das ist dein Team',
+    igrisceOpis: 'Tippe auf einen Spieler für Details oder einen Tausch. Punkte holt die Startelf, ein Spieler von der Bank springt ein, wenn jemand nicht spielt.',
+    shraniNaslov: 'Letzter Schritt: Speichern',
+    shraniOpis: 'Nach dem Speichern sammelst du schon in der nächsten Runde Punkte. Das Team kannst du bis zur Deadline ändern.',
+  },
   zacetek: {
     naslov: 'Wo anfangen?',
     sestaviMi: 'Stell mir ein Team zusammen',

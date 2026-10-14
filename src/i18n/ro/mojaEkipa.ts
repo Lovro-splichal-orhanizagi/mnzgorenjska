@@ -155,6 +155,17 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   },
 
   // Sfat de început pentru echipa goală.
+  vodic: {
+    napredek: '{trenutni} / {skupaj}',
+    naprej: 'Mai departe',
+    razumem: 'Am înțeles',
+    sestaviNaslov: 'Echipă dintr-un clic',
+    sestaviOpis: 'Apasă aici și îți facem o echipă validă în limita bugetului. Apoi schimbi pe cine vrei.',
+    igrisceNaslov: 'Aceasta este echipa ta',
+    igrisceOpis: 'Apasă pe un jucător ca să vezi detalii sau să-l schimbi. Punctele le aduce formația de start, un jucător de pe bancă intră dacă cineva nu joacă.',
+    shraniNaslov: 'Ultimul pas: Salvează',
+    shraniOpis: 'După ce salvezi, aduni puncte chiar din etapa următoare. Echipa o poți schimba până la termenul limită.',
+  },
   zacetek: {
     naslov: 'De unde începi?',
     sestaviMi: 'Fă-mi o echipă',

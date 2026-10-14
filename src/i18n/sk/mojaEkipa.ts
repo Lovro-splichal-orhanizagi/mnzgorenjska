@@ -150,6 +150,17 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     primerImena: 'napr. Nedeľní hrdinovia',
   },
 
+  vodic: {
+    napredek: '{trenutni} / {skupaj}',
+    naprej: 'Ďalej',
+    razumem: 'Rozumiem',
+    sestaviNaslov: 'Tím jedným klikom',
+    sestaviOpis: 'Klikni sem a zostavíme ti platný tím v rámci rozpočtu. Potom vymeň, koho chceš.',
+    igrisceNaslov: 'Toto je tvoj tím',
+    igrisceOpis: 'Klikni na hráča a uvidíš údaje alebo ho vymeníš. Body prináša prvých 11, hráč z lavičky nastúpi, ak niekto nehrá.',
+    shraniNaslov: 'Posledný krok: Uložiť',
+    shraniOpis: 'Keď uložíš, zbieraš body už v ďalšom kole. Tím môžeš meniť až do uzávierky.',
+  },
   zacetek: {
     naslov: 'Kde začať?',
     sestaviMi: 'Zostav mi tím',

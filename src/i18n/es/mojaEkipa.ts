@@ -149,6 +149,17 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     primerImena: 'p. ej. Los Héroes del Domingo',
   },
 
+  vodic: {
+    napredek: '{trenutni} / {skupaj}',
+    naprej: 'Siguiente',
+    razumem: 'Entendido',
+    sestaviNaslov: 'Equipo en un clic',
+    sestaviOpis: 'Pulsa aquí y te hacemos un equipo válido dentro del presupuesto. Luego cambia a quien quieras.',
+    igrisceNaslov: 'Este es tu equipo',
+    igrisceOpis: 'Pulsa en un jugador para ver sus datos o cambiarlo. Puntúa el once inicial, un suplente entra si alguien no juega.',
+    shraniNaslov: 'Último paso: Guardar',
+    shraniOpis: 'Al guardar, sumas puntos ya en la próxima jornada. Puedes cambiar el equipo hasta el cierre.',
+  },
   zacetek: {
     naslov: '¿Por dónde empiezo?',
     sestaviMi: 'Hazme el equipo',
