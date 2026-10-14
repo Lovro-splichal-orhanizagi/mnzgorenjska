@@ -105,6 +105,10 @@ export default function PrviObisk() {
     pathname.startsWith('/player/') ||
     pathname.startsWith('/team/') ||
     pathname.startsWith('/match/') ||
+    // Pogoje, zasebnost in izbris računa berejo tudi pregledovalci trgovin
+    // (Google Play je posodobitev zavrnil, ker je okno prekrilo pravilnik).
+    pathname === '/legal' ||
+    pathname === '/account' ||
     // Vstopna stran države sama našteje lige.
     Boolean(drzavaVstopa(pathname))
   const okno = useRef<HTMLDivElement | null>(null)
