@@ -1,8 +1,9 @@
 -- Španija (Katalonija): preostale skupine Quarta Catalana 2026/27 z vira
 -- `fcf` (fcf.cat). Šifra lige je blok šifer zapisnikov `<od>-<do>` (glej
 -- CLAUDE.md, Španija — vir fcf). Bloki so najdeni iz zapisnikov (13. 10.
--- 2026): grup 7–31 ležijo v `4145911-…` (po 240 šifer, 30 krogov, 16 klubov),
--- grup 32–34 v `4136689-4137084` (22 krogov po 6 mest, 12 klubov).
+-- 2026): grup 7–23 ležijo strnjeno v `4145911-4149995` (po 240 šifer,
+-- 30 krogov, 16 klubov), grup 24 se začne pri `4149996`; grup 32 je
+-- `4136953-4137084` (22 krogov po 6 mest, 12 klubov).
 -- Postave so preverjene na odigranih tekmah (11 + 11).
 --
 -- Quarta menjav ne vpisuje (začetniki 90 minut, klop brez nastopa). FCF je

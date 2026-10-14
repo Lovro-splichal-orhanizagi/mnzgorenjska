@@ -2557,15 +2557,23 @@ grup 4 in 5 (kot 1–6) **nobena**.
 | es-ct-quarta-g23 | 16 | `4149756-4149995` | ne | — (TODO) |
 | es-ct-quarta-g32 | 12 | `4136953-4137084` | ne | — (TODO) |
 
-**Quarta grup 7+** (pregled 13. 10. 2026, migracija 20261014013100): grup
-7–31 ležijo strnjeno od `4145911` naprej (po 240 šifer, 30 krogov, 16
-klubov, urejeni po številki skupine; pred grup 7 je vrzel). Grup 32–34 so
-pri `4136689-4137084` (22 krogov po 6 mest, 12 klubov; grup 33 in 34 v
-obratnem vrstnem redu pred grup 32, za grup 32 je Primera Femení Juvenil).
+**Quarta grup 7+** (pregled 13.–14. 10. 2026, migracija 20261014093100): grup
+7–23 ležijo strnjeno v `4145911-4149995` (po 240 šifer, 30 krogov, 16 klubov,
+urejeni po številki skupine; pred grup 7 je vrzel), grup 24 se začne pri
+`4149996` (grup 24 je tudi `4150000`). Grup 32–34 so pri `4136689-4137084`
+(22 krogov po 6 mest, 12 klubov; grup 33 `4136821-4136952` in 34
+`4136689-4136820` ležita pred grup 32, za njo je Primera Femení Juvenil).
 Tekma grup 26 pri `4117388` je posamezna (okoli nje Preferent Femení
-Infantil). Postave so preverjene na odigranih tekmah vsake vpisane skupine
-(11 + 11, vratar pri vseh); Quarta menjav ne vpisuje. **TODO**: skupine, ki
-v tabeli manjkajo, niso preverjene (glej migracijo).
+Infantil). Postave vpisanih skupin so preverjene na 3 odigranih tekmah
+(11 + 11, vratar pri vseh); Quarta menjav ne vpisuje (grup 7: ena ekipa jih je).
+
+**TODO**: grup 9 (`4146391-4146630`), 11 (`4146871-4147110`), 12
+(`4147111-4147350`) in 15 (`4147835-4148074`) — bloki najdeni, a prva tekma
+bloka ni odigrana, zato postave niso preverjene (`node
+scripts/catalanske-lige.mjs <od> --preveri`); grup 33 in 34 — še brez
+odigrane tekme; grup 24–31 — nepregledano (strežnik je ponoči obstal), seme
+`4149996`, nadaljuj z `node scripts/catalanske-lige.mjs 4150000 --naprej 8
+--preveri`.
 
 Uvoz (ena za drugo, **šele s soglasjem FCF**): `gh workflow run uvoz-lige.yml
 -f liga=es-ct-quarta-g1 -f cene=true` (z arhivom: `-f arhiv=<blok 2025/26>`).
