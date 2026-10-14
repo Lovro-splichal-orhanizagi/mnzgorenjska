@@ -608,7 +608,7 @@ function Urejevalnik({
 /**
  * Mesto v vrsti in povabilo prijatelja: kdor pripelje prijatelja, ki se
  * prijavi prek njegove povezave in sestavi ekipo, je pregledan prej
- * (`moje_mesto_v_vrsti`, migracija 20261014172100).
+ * (`moje_mesto_v_vrsti`, migracija 20261014233100).
  */
 function VrstaZahtevka({ zahtevekId, naKopirano }: { zahtevekId: number; naKopirano: () => void }) {
   const [vrsta, setVrsta] = useState<{ mesto: number; v_vrsti: number; pripeljanih: number } | null>(null)

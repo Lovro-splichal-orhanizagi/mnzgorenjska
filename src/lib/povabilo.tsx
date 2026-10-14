@@ -2,7 +2,7 @@
 //
 // Kdor ima čakajoč zahtevek za prevzem profila, je pregledan prej, če
 // pripelje prijatelja, ki se prijavi prek njegove povezave in sestavi ekipo
-// (migracija 20261014172100). Koda ob obisku počaka v shrambi brskalnika, ker
+// (migracija 20261014233100). Koda ob obisku počaka v shrambi brskalnika, ker
 // se prijatelj večinoma najprej prijavi (potrditev e-pošte, Google) in šele
 // nato pride nazaj. Zabeleži se le novemu računu, enkrat — to preveri baza.
 import { useEffect } from 'react'
