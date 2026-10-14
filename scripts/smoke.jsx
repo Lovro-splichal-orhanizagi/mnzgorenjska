@@ -5017,6 +5017,80 @@ preveri(
     brez.opozorila[0].startsWith(P.NEPOPOLN))
 }
 
+// --- vir wmzpn (Poljska, Warmińsko-Mazurski ZPN, zapisniki PZPN prek admin-ajax) ------
+{
+  const W = await import('./viri/wmzpn.mjs')
+  const { default: viri } = await import('./viri/index.mjs')
+  const html = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  const koda = 'c164ca31-22e4-43fc-9e30-4f3bcc2b7d72/2820e642-1475-40f8-9489-13c742fbc63a/3c77d143-8010-4073-9842-d6b63365ffce'
+  preveri('wmzpn: vir je vpisan, 3 s, User-Agent SLFF', viri.wmzpn === W.default && W.default.drzava === 'PL' && W.default.imaRegistracije === false &&
+    W.default.premorMs >= 3000 && W.default.glave['User-Agent'] === 'SLFF fantasy (https://slff.eu)')
+  preveri('wmzpn: šifra in naslovi', W.razbijKodo(koda).play === '2820e642-1475-40f8-9489-13c742fbc63a' &&
+    W.default.naslovRazporeda(koda) === 'https://wmzpn.pl/?page_id=1625&leagueN=c164ca31-22e4-43fc-9e30-4f3bcc2b7d72&play=2820e642-1475-40f8-9489-13c742fbc63a&season=3c77d143-8010-4073-9842-d6b63365ffce' &&
+    W.default.naslovZapisnika(koda, '9b148db5-912e-4d64-93ca-1ad83800be15') === 'https://wmzpn.pl/wp-admin/admin-ajax.php?action=match_history&matchid=9b148db5-912e-4d64-93ca-1ad83800be15')
+  let slabaSifra = null
+  try { W.razbijKodo('swietokrzyski/0e86c2b3-75d3-483b-80a0-4f086352afc5') } catch (e) { slabaSifra = e.message }
+  preveri('wmzpn: napačna šifra ustavi uvoz', /leagueN/.test(slabaSifra ?? ''))
+  // Zapisnik stran naloži s POST (kot okno na strani); ostalo je GET.
+  const klici = []
+  const lazen = async (url, init) => { klici.push({ url, init }); return new Response('ok') }
+  await W.wmzpnFetch(W.default.naslovZapisnika(koda, 'abc'), { headers: { 'User-Agent': 'x' } }, lazen)
+  await W.wmzpnFetch(W.default.naslovRazporeda(koda), {}, lazen)
+  preveri('wmzpn: zapisnik je POST action=match_history, razpored GET', klici[0].url === 'https://wmzpn.pl/wp-admin/admin-ajax.php' &&
+    klici[0].init.method === 'POST' && klici[0].init.body === 'action=match_history&matchid=abc' && klici[0].init.headers['User-Agent'] === 'x' &&
+    !klici[1].init.method)
+  preveri('wmzpn: minuta, izid, čas, sezona, ime', W.minuta("45' +2'") === 45 && W.minuta("90' +3'") === 90 && W.minuta("22'") === 22 &&
+    W.izid('-:-') === null && W.izid('(2:0)')?.gostje === 0 && W.casTekme('2026-08-01 00:00:00').ura === null &&
+    W.sezonaZapisnika('2026/2027 - Jesienna') === '2026/27' && W.imeIgralca('Kacper Babkowski (Junior)') === 'Babkowski Kacper')
+  preveri('wmzpn: izziv in zavrnitev ustavita uvoz', W.jeIzziv('<div class="g-recaptcha">') && W.jeZavrnitev(403) && W.jeZavrnitev(429) &&
+    !W.jeIzziv(html('pl-wmzpn-zapisnik-4liga.html')))
+
+  // Razpored: le tabele "Kolejka N" (blok "POPRZEDNIA: KOLEJKA 11" pred njimi ne).
+  const stran = html('pl-wmzpn-liga-4liga.html')
+  const tekme = W.tekmeStrani(stran)
+  const krogi = W.razcleniRazpored(stran)
+  const k11 = tekme.find((t) => t.id === '9b148db5-912e-4d64-93ca-1ad83800be15')
+  preveri('wmzpn: razpored IV lige — 15 krogov po 8 tekem, 88 odigranih, brez podvojenih', W.imeStrani(stran) === 'Superscore IV Liga' &&
+    krogi.length === 15 && krogi.every((k) => k.tekme.length === 8) && tekme.length === 120 && new Set(tekme.map((t) => t.id)).size === 120 &&
+    tekme.filter((t) => t.odigrana).length === 88)
+  preveri('wmzpn: vrstica razporeda — datum, ura, imeni, izid, polčas', k11?.krog === 11 && k11.datum === '2026-10-10' && k11.ura === '16:00' &&
+    k11.domaci === 'MKS Rominta Gołdap' && k11.gostje === 'Stomil Olsztyn SA' && k11.izid?.gostje === 3 && k11.polcas?.gostje === 0 &&
+    tekme.at(-1).izid === null && tekme.at(-1).odigrana === false && tekme.at(-1).datum === '2026-11-14')
+
+  const zapisnik = (ime) => W.vZapisnik(html(`pl-wmzpn-zapisnik-${ime}.html`), {})
+  const minute = (z, i) => W.nastopi(z).filter((x) => x.ekipaIdx === i).reduce((a, x) => a + x.minute, 0)
+  const z = zapisnik('4liga')
+  const n = W.nastopi(z)
+  const babkowski = n.find((x) => x.ime === 'Babkowski Kacper')
+  preveri('wmzpn: zapisnik IV lige — 11 + 11, klop, izid, polčas, krog, sezona, brez opozoril', z.domaci.postava.length === 11 &&
+    z.gostje.postava.length === 11 && z.domaci.rezerve.length === 7 && z.gostje.rezerve.length === 8 && z.rezultat.gostje === 3 &&
+    z.polcas?.domaci === 0 && z.krog === 11 && z.sezona === '2026/27' && z.status === 'Rozegrany' && !z.nepopoln && z.opozorila.length === 0)
+  preveri('wmzpn: goli, rumeni, menjave z minuto, vsi s šifro osebe', z.goli.length === 3 && z.goli.every((g) => g.ekipaIdx === 1 && !g.avtogol) &&
+    z.rumeni.length === 3 && babkowski?.minute === 63 && babkowski.zacetnik &&
+    n.filter((x) => !x.zacetnik).length === 10 && minute(z, 0) === 990 && minute(z, 1) === 990 && n.every((x) => x.regSt != null))
+  const a = zapisnik('avtogol-11m')
+  preveri('wmzpn: avtogol pri ekipi strelca šteje nasprotniku, gol z 11 m', a.rezultat.domaci === 1 && a.rezultat.gostje === 2 &&
+    a.goli.some((g) => g.avtogol && g.ekipaIdx === 0 && g.minuta === 80) && a.goli.some((g) => g.enajstmetrovka && g.ekipaIdx === 0) &&
+    a.opozorila.length === 0)
+  const r = zapisnik('rdeci')
+  preveri('wmzpn: rdeči karton v 86. — 986 minut, 11 m, goli = izid', r.rdeci.length === 1 && r.rdeci[0].minuta === 86 && r.rdeci[0].ekipaIdx === 0 &&
+    minute(r, 0) === 986 && minute(r, 1) === 990 && r.goli.filter((g) => g.enajstmetrovka).length === 1 && r.opozorila.length === 0)
+  const b = zapisnik('klasa-b-brez-menjav')
+  preveri('wmzpn: klasa B brez menjav — začetniki 90, strelec s klopi vstopi ob golu', b.brezMenjav[0] && b.brezMenjav[1] &&
+    b.domaci.postava.length === 11 && W.nastopi(b).filter((x) => !x.zacetnik).length === 1 && b.goli.some((g) => g.avtogol) &&
+    b.opozorila.some((o) => /na klopi/.test(o)))
+  const d = zapisnik('brez-dogodkov')
+  preveri('wmzpn: zapisnik brez dogodkov — postavi da, goli ≠ izid je opozorilo', d.domaci.postava.length === 11 && d.goli.length === 0 &&
+    d.opozorila.some((o) => /ne ujemajo/.test(o)))
+  const wo = zapisnik('walkower')
+  preveri('wmzpn: walkower — Status "Walkover", 3:0 brez postav', W.jeWalkower(wo) && wo.prazen && wo.rezultat.domaci === 3 && W.nastopi(wo).length === 0)
+  preveri('wmzpn: neodigrana tekma ("Brak danych") — brez zapisnika', zapisnik('neodigrana') === null &&
+    W.brezPodatkov(html('pl-wmzpn-zapisnik-neodigrana.html')) && !W.popolnZapisnik(html('pl-wmzpn-zapisnik-neodigrana.html')) &&
+    W.popolnZapisnik(html('pl-wmzpn-zapisnik-4liga.html')))
+  preveri('wmzpn: ključ in kratko ime kluba kot pzpn', W.default.kljucKluba('KS Płomień Turznica') === W.default.kljucKluba('KS Plomien Turznica') &&
+    W.default.kratkoIme('MKS Rominta Gołdap') === 'Rominta Gołdap')
+}
+
 // --- vir jalgpall (Estonija, jalgpall.ee) -----------------------------------------
 {
   const J = await import('./viri/jalgpall.mjs')

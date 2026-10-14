@@ -31,6 +31,7 @@ import lff from './lff.mjs'
 import ffm from './ffm.mjs'
 import fcf from './fcf.mjs'
 import fas from './fas.mjs'
+import wmzpn from './wmzpn.mjs'
 
 const VIRI = {
   mnzg,
@@ -82,6 +83,9 @@ const VIRI = {
   // Španija (Asturija): FutbolAsturiano.es (WordPress SportsPress), ne zveza;
   // liga je blok šifer objav tekem ene sezone, igralec s potjo profila.
   fas,
+  // Poljska: Warmińsko-Mazurski ZPN (wmzpn.pl) — zapisniki PZPN Extranet prek
+  // okna strani (admin-ajax match_history), šifre oseb PZPN kot pri pzpn.
+  wmzpn,
 }
 
 /**

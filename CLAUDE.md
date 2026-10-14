@@ -2356,6 +2356,114 @@ Vpisanih je 8 lig (migracija 20261012003000), **neaktivnih**, zveza
 Uvoz (ena za drugo): `gh workflow run uvoz-lige.yml -f liga=pl-sk-4-liga -f
 arhiv=swietokrzyski/3917069b-155b-41df-ae80-0e9ad0308f7f -f cene=true`.
 
+### Poljska — vir `wmzpn` (Warmińsko-Mazurski ZPN)
+
+Vir `wmzpn` (`scripts/viri/wmzpn.mjs`) bere **wmzpn.pl** (WordPress, vtičnik
+`wmzpn-tables`), kjer W-M ZPN pokaže svoja tekmovanja iz Extraneta PZPN. Isti
+uradni zapisniki kot pri `pzpn`, druga pot do njih: brez gradnika in ključa,
+stran jih naloži sama.
+
+- **Šifra lige** je `<leagueN>/<play>/<season>` — trije UUID iz naslova
+  strani skupine `/?page_id=1625&leagueN=…&play=…&season=…` (meni
+  "Rozgrywki", skupine so naštete na strani). Vsaka sezona ima svoj `play` in
+  `season` (2026/27 `3c77d143-…`, 2025/26 `e9d66181-…`, 2024/25
+  `4be7b40c-…`; starejše sezone so na stari obliki `?league=<št.>` — ne
+  beremo). Napačna šifra ali stran brez razporeda ustavi uvoz.
+- **Razpored** je na strani skupine v `div.print-timetable`: tabele
+  "Kolejka N", vrstica `tr[data-match-id]` (UUID tekme PZPN) z datumom
+  ("2026-07-31 19:45:00", varšavski = ljubljanski čas, 00:00 = ura neznana),
+  domačimi, izidom ("2:2", neodigrana "-:-") z namigom "Wynik końcowy … Do
+  przerwy: (2:0)" in gosti. Pred njim stojita tabela križanja in blok
+  "POPRZEDNIA / AKTUALNA KOLEJKA" z istimi vrsticami — ju ne beremo. Jeseni
+  stran kaže le jesenske kroge (IV liga 15 od 30); pomlad pride z
+  naslednjimi uvozi razporeda.
+- **Zapisnik** je okno, ki ga stran ob kliku na izid naloži s
+  `POST /wp-admin/admin-ajax.php` (`action=match_history&matchid=<uuid>`).
+  Isti klic delamo mi: `naslovZapisnika` vrne naslov s parametri, `vir.fetch`
+  (`wmzpnFetch`) iz njega sestavi isti POST. Odgovor je delček HTML: glava
+  (klubi, izid, polčas), "Kolejka", "Sezon: 2026/2027 - Jesienna", "Status
+  meczu" (Rozegrany, **Walkover**), postavi — "Drużyna" začetniki, "Rezerwa"
+  klop — z dresom in **stalno šifro osebe PZPN** (`/rozgrywki/zawodnik/<uuid>`
+  → `reg_st` kot pri `pzpn`; isti igralec ima pri obeh virih isto šifro),
+  "(Junior)" se odreže. "Przebieg spotkania" ima dogodke z `data-minute`
+  ("22'", "45' +2'" → 45): `span.goal`, `span.penalty-kick` (gol z 11 m),
+  `span.own-goal` (avtogol, pri ekipi **strelca**, šteje nasprotniku), rumeni
+  `#FFD700`, rdeči `#DF0021`, vstop zelena puščica `#28A745`, izstop rdeča
+  `#DC3545` — minute so točne. Dogodek se pripiše igralcu po šifri, sicer
+  strani (left = domači). Neodigrana tekma vrne "Brak danych na temat tego
+  spotkania.". Imen osebja in sodnikov ne beremo; vzorci
+  `scripts/vzorci/pl-wmzpn-*` so brez njih.
+- **Vratarja, kapetana in pozicij zapisnik NE pove** (vse majice so iste
+  barve). Vse pozicije, tudi GK, določi ugibanje in glasovanje kot v
+  Sloveniji; *Uskladi pozicije* za `wmzpn` nima po čem šteti.
+- **Walkower**: razpored pokaže le izid brez polčasa ("3:0"), zapisnik
+  "Status meczu: Walkover" brez postav. `kontumacije` prebere zapisnike tekem
+  3:0 / 0:3, starejših od tedna, in označi tiste z walkoverjem ali brez
+  postav; uvoz zapisnikov jih izpusti.
+- Zapisnik z manj kot 7 začetniki ekipe je `nepopoln` (kot `pzpn`), 45 dni se
+  bere znova. Zapisnik z začetniki, a brez dogodkov (klub ni vnesel golov), je
+  opozorilo `goli iz zapisnika … se ne ujemajo` — izid ostane izid.
+- **Klasa B menjav ne vpisuje**: v preizkusu 60 zapisnikov vseh petih skupin
+  ni nobena ekipa vpisala menjave (začetniki 90 minut, rezerva nastopi le kot
+  strelec), v 7 od 59 odigranih goli ≠ izid. Zato klasa B **ni vpisana**; vir jo zna
+  brati (šifre spodaj).
+- Klubi: ključ in kratko ime kot `pzpn` (`kljucKlubaPl`, `kratkoImePl`);
+  rezervne ekipe ("Stomil II Olsztyn SA") so svoj klub.
+
+**Pravice (pregled 15. 10. 2026, ni pravni nasvet).** robots.txt ni (404),
+pogojev uporabe nismo našli; klic je javni klic strani brez prijave in
+ključa. Dovoljenja W-M ZPN še nimamo. Beremo odkrito (User-Agent
+`SLFF fantasy (https://slff.eu)`, **3 s** med zahtevki, popolnih zapisnikov
+ne beremo znova). **Ob 401/403/429 ali izzivu (CAPTCHA) se uvoz ustavi —
+ne obhajaj** (`WmzpnZavrnitev`, izhod 4). Če nas zveza prosi, naj nehamo,
+`pl-wm-` lige izklopimo.
+
+Preizkus v živo (15. 10. 2026, brez pisanja v bazo; razpored vseh 12 skupin,
+6 zapisnikov na skupino IV lige, okręgowe in klase A ter 12 na skupino klase
+B; tekme = v razporedu / odigrane, menjave = vstopi rezerv):
+
+| skupina | tekme | zapisnikov | goli / izidi | postav po 11 | menjave |
+|---|---|---|---|---|---|
+| IV liga | 120 / 88 | 6 | 22 / 22 | 12/12 | 60 |
+| okręgowa 1 | 120 / 87 | 6 | 30 / 30 | 12/12 | 54 |
+| okręgowa 2 | 120 / 88 | 6 | 24 / 24 | 12/12 | 49 |
+| klasa A 1 | 91 / 63 | 6 | 24 / 24 | 12/12 | 52 |
+| klasa A 2 | 91 / 54 | 6 | 35 / 35 | 12/12 | 63 |
+| klasa A 3 | 91 / 54 | 6 | 21 / 21 | 12/12 | 48 |
+| klasa A 4 | 91 / 63 | 6 | 36 / 36 | 12/12 | 64 |
+| klasa B 1–5 | 55, 66, 66, 55, 55 | 60 (1 walkower) | 336 / 355 | 118/118 | **0** |
+
+Pri IV ligi, okręgowi in klasi A ima vsaka ekipa 990 minut (razen ob rdečem
+kartonu), vsi nastopi s šifro, 0 opozoril razen rumenih kartonov osebju
+(ni v postavi). Arhivski zapisnik 2025/26 (IV liga, 30. krog) se razčleni
+enako.
+
+Vpisanih je 7 lig (migracija 20261015030500), **neaktivnih**, zveza `wmzpn`.
+Šifra je `<leagueN>/<play>/<season>`; arhiv je ista skupina 2025/26 (po
+skupnih klubih):
+
+| liga | leagueN | play 2026/27 | play arhiv 2025/26 (skupnih klubov) |
+|---|---|---|---|
+| pl-wm-4-liga | `c164ca31-22e4-43fc-9e30-4f3bcc2b7d72` | `2820e642-1475-40f8-9489-13c742fbc63a` | `17285e70-dba8-4fa2-a27a-30646ce64d6d` (11 od 16) |
+| pl-wm-okregowa-1 | `c5afdf4b-b449-4ef3-acf5-dded47fc5f58` | `33dde60f-37d8-4592-a080-6795cc040465` | `bbb69021-0b53-44c6-863b-96715174e7e7` (12) |
+| pl-wm-okregowa-2 | `c5afdf4b-…` | `add51c43-5c34-4d4a-82a6-7ee821ec1638` | `a0f01f01-7dff-4e92-ba57-1b339bb84e68` (9) |
+| pl-wm-a-1 | `63d04023-727a-4c0c-a8c6-4154fe1104b7` | `0aace3bb-4a47-4117-a614-a0a54e2085e8` | `e75c0e65-cfc0-44f5-8692-3673dd094715` (10 od 14) |
+| pl-wm-a-2 | `63d04023-…` | `a18e856f-d73b-4ff8-b44f-77ae417c83c9` | `9097e2ba-2e68-4552-953a-24766eafcba6` (9) |
+| pl-wm-a-3 | `63d04023-…` | `d0d84a85-7816-4ca0-8f6a-de8e3d3f5965` | `8cf5857a-d4cc-45d8-b4ae-884d1bf38b10` (10) |
+| pl-wm-a-4 | `63d04023-…` | `711ae517-02ca-4e5a-90a3-f0cbc75e7986` | `92e717fe-4cc1-445a-bf7e-85fc6ee377ea` (10) |
+
+Tekoča sezona je `3c77d143-8010-4073-9842-d6b63365ffce`, arhiv
+`e9d66181-d03e-4bb3-b889-4da848f4831d`. Klasa B (ni vpisana, leagueN
+`b7d2c55b-e2af-44e2-9df2-3f6e05dc1768`): 2026/27 skupine 1–5 `2b6f4e61-…`,
+`4885750d-…`, `b7ee2253-…`, `34438712-…`, `c7a545a8-…`; 2025/26 so bile štiri
+(`d8336132-…`, `e3f3d4b6-…`, `6f5236af-…`, `3adbaf0b-…`). Baraż (doigravanje)
+je svoje tekmovanje — za arhiv ga ne uvažaj.
+
+Uvoz (ena za drugo, šele po odločitvi lastnika): `gh workflow run
+uvoz-lige.yml -f liga=pl-wm-4-liga -f
+arhiv=c164ca31-22e4-43fc-9e30-4f3bcc2b7d72/17285e70-dba8-4fa2-a27a-30646ce64d6d/e9d66181-d03e-4bb3-b889-4da848f4831d
+-f cene=true`. Arhiv 240 zapisnikov po 3 s je ~12 minut na ligo.
+
 ### Španija
 
 Država `ES` ("España", migracija 20261012040000) ima vmesnik v španščini
