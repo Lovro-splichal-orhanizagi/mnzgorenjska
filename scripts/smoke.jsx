@@ -5419,6 +5419,12 @@ preveri(
   preveri('eps: razpored v uvoz — le krogi z datumom, kontumacija z izidom, ura 00:00 = brez ure', ua.length === 3 && ua[0].stevilka === 1 &&
     kont?.domaci === 'ΑΧΑΡΝΑΙΚΟΣ Β' && kont.izid.gostje === 3 && kont.odigrana && ua[1].tekme.find((t) => t.kontumacija)?.ura === null &&
     ua[2].tekme.every((t) => !t.odigrana))
+  // "ΔΕΝ ΘΑ ΔΙΕΞΑΧΘΕΙ" (klub izstopil): kontumacija z odstopom, še brez izida, da krog ne čaka nanjo.
+  const nebo = ua.flatMap((k) => k.tekme).filter((t) => t.odstop)
+  const nebo17 = nebo.find((t) => t.datum === '2026-10-17')
+  preveri('eps: razpored v uvoz — "ΔΕΝ ΘΑ ΔΙΕΞΑΧΘΕΙ" je kontumacija z odstopom', nebo.length >= 1 && nebo.every((t) => t.kontumacija) &&
+    nebo17?.domaci === 'ΑΧΑΡΝΑΙΚΟΣ Β' && nebo17.gostje === 'ΑΡΗΣ ΒΟΥΛΑΣ Β' && nebo17.kontumacija && !nebo17.odigrana && !('izid' in nebo17) &&
+    ua.flatMap((k) => k.tekme).filter((t) => t.kontumacija && !t.odstop).every((t) => t.izid))
   const rp = G.razporedStrani(beri('gr-eps-razpored-epspeir-726.html'))
   const tp = rp.krogi.flatMap((x) => x.tekme)
   preveri('eps: razpored Pireja — 22 krogov, 132 tekem, 24 odigranih, prihodnji krogi brez datuma', rp.ime === 'Α Κατηγορία - 1ος Όμιλος' && rp.krogi.length === 22 &&

@@ -240,8 +240,12 @@ export function razporedVUvoz(r, domena = null) {
         datum: t.datum,
         ura: t.ura,
         odigrana: !!t.izid,
-        kontumacija: t.kontumacija,
-        ...(t.kontumacija ? { izid: t.izid } : {}),
+        // "ΔΕΝ ΘΑ ΔΙΕΞΑΧΘΕΙ": klub je izstopil, tekme ne bo. Je kontumacija
+        // (krog ne čaka nanjo), izid pa EPS doda šele kasneje ("3-0 α.α.").
+        // `odstop` uvozu pove, da je klub z le takimi tekmami izstopil.
+        kontumacija: t.kontumacija || t.neBo,
+        odstop: t.neBo,
+        ...((t.kontumacija || t.neBo) && t.izid ? { izid: t.izid } : {}),
       })),
     }))
 }
