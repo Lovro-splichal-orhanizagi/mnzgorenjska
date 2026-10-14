@@ -31,6 +31,7 @@ import lff from './lff.mjs'
 import ffm from './ffm.mjs'
 import fcf from './fcf.mjs'
 import fas from './fas.mjs'
+import mfa from './mfa.mjs'
 
 const VIRI = {
   mnzg,
@@ -82,6 +83,9 @@ const VIRI = {
   // Španija (Asturija): FutbolAsturiano.es (WordPress SportsPress), ne zveza;
   // liga je blok šifer objav tekem ene sezone, igralec s potjo profila.
   fas,
+  // Malta (MFA) prek javnega JSON API-ja Match Centra (api.mfa.com.mt, COMET):
+  // šifra osebe, vratar, menjave z minuto; krog iz zaporedja šifer tekem.
+  mfa,
 }
 
 /**
