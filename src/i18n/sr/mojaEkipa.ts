@@ -155,6 +155,17 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   },
 
   // Uvodni savet za prazan tim.
+  vodic: {
+    napredek: '{trenutni} / {skupaj}',
+    naprej: 'Dalje',
+    razumem: 'Razumem',
+    sestaviNaslov: 'Tim u jednom kliku',
+    sestaviOpis: 'Klikni ovde i sastavićemo ti važeći tim u okviru budžeta. Zatim zameni koga god želiš.',
+    igrisceNaslov: 'Ovo je tvoj tim',
+    igrisceOpis: 'Klikni igrača da vidiš podatke ili ga zameniš. Poene donosi prvih 11, igrač sa klupe ulazi ako neko ne igra.',
+    shraniNaslov: 'Još samo jedan korak: Sačuvaj',
+    shraniOpis: 'Kad sačuvaš, skupljaš poene već u sledećem kolu. Tim možeš da menjaš do roka.',
+  },
   zacetek: {
     naslov: 'Odakle početi?',
     sestaviMi: 'Sastavi mi tim',

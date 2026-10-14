@@ -179,3 +179,45 @@ body:has(#chat-widget-bubble) [data-podpora] {
 @media (prefers-reduced-motion: reduce) {
   .pomoc-poudarek { animation: none; }
 }
+
+/* Vodič za novince (src/lib/vodic.ts, driver.js). Privzeti slog je svetel;
+   tu temen kot stran. Izbirnik z dvema razredoma, ker se driver.css naloži
+   šele ob vodiču (za tem). Na telefonu širina zaslona minus 16 px na stran. */
+.driver-popover.slff-vodic {
+  @apply rounded-2xl border border-white/10 bg-slate-900 text-slate-100 shadow-2xl;
+  font-family: inherit;
+  min-width: 0;
+  max-width: min(22rem, calc(100vw - 2rem));
+  padding: 1rem 1.1rem 0.9rem;
+}
+.driver-popover.slff-vodic .driver-popover-title {
+  @apply pr-8 text-base font-bold text-white;
+}
+.driver-popover.slff-vodic .driver-popover-description {
+  @apply text-sm leading-relaxed text-slate-300;
+}
+.driver-popover.slff-vodic .driver-popover-progress-text {
+  @apply text-xs text-slate-500;
+}
+.driver-popover.slff-vodic .driver-popover-close-btn {
+  @apply grid h-11 w-11 place-items-center text-xl text-slate-400;
+}
+.driver-popover.slff-vodic .driver-popover-close-btn:hover,
+.driver-popover.slff-vodic .driver-popover-close-btn:focus {
+  @apply text-white;
+}
+.driver-popover.slff-vodic .driver-popover-footer-btn {
+  @apply min-h-[40px] rounded-xl border-0 bg-gnl-400 px-4 text-sm font-bold text-slate-950;
+  text-shadow: none;
+}
+.driver-popover.slff-vodic .driver-popover-footer-btn:hover,
+.driver-popover.slff-vodic .driver-popover-footer-btn:focus {
+  @apply bg-gnl-300;
+}
+.driver-popover.slff-vodic .driver-popover-arrow {
+  border-color: rgb(15 23 42);
+}
+.driver-popover.slff-vodic .driver-popover-arrow-side-left { border-top-color: transparent; border-bottom-color: transparent; border-right-color: transparent; }
+.driver-popover.slff-vodic .driver-popover-arrow-side-right { border-top-color: transparent; border-bottom-color: transparent; border-left-color: transparent; }
+.driver-popover.slff-vodic .driver-popover-arrow-side-top { border-bottom-color: transparent; border-left-color: transparent; border-right-color: transparent; }
+.driver-popover.slff-vodic .driver-popover-arrow-side-bottom { border-top-color: transparent; border-left-color: transparent; border-right-color: transparent; }

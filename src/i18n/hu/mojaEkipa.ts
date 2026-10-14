@@ -153,6 +153,17 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   },
 
   // Kezdő tipp üres csapathoz.
+  vodic: {
+    napredek: '{trenutni} / {skupaj}',
+    naprej: 'Tovább',
+    razumem: 'Értem',
+    sestaviNaslov: 'Csapat egy kattintással',
+    sestaviOpis: 'Kattints ide, és összeállítunk neked egy érvényes csapatot a kereten belül. Utána cserélj, akit szeretnél.',
+    igrisceNaslov: 'Ez a te csapatod',
+    igrisceOpis: 'Kattints egy játékosra az adataiért vagy a cseréjéhez. Pontot a kezdő 11 hoz, a cserepadról beáll valaki, ha egy játékos nem lép pályára.',
+    shraniNaslov: 'Még egy lépés: Mentés',
+    shraniOpis: 'Mentés után már a következő fordulóban gyűjtöd a pontokat. A csapatot a határidőig módosíthatod.',
+  },
   zacetek: {
     naslov: 'Hol kezdjem?',
     sestaviMi: 'Állíts össze nekem egy csapatot',

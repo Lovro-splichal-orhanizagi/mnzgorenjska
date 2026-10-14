@@ -147,6 +147,17 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     primerImena: 'piem., Svētdienas Varoņi',
   },
 
+  vodic: {
+    napredek: '{trenutni} / {skupaj}',
+    naprej: 'Tālāk',
+    razumem: 'Skaidrs',
+    sestaviNaslov: 'Komanda ar vienu klikšķi',
+    sestaviOpis: 'Noklikšķini šeit, un mēs tev sastādīsim derīgu komandu budžeta robežās. Pēc tam nomaini, ko vēlies.',
+    igrisceNaslov: 'Šī ir tava komanda',
+    igrisceOpis: 'Noklikšķini uz spēlētāja, lai redzētu datus vai viņu nomainītu. Punktus nes pamatsastāvs, rezervists nāk laukumā, ja kāds nespēlē.',
+    shraniNaslov: 'Pēdējais solis: Saglabāt',
+    shraniOpis: 'Kad saglabāsi, punktus krāsi jau nākamajā kārtā. Komandu vari mainīt līdz termiņam.',
+  },
   zacetek: {
     naslov: 'Ar ko sākt?',
     sestaviMi: 'Sastādi man komandu',

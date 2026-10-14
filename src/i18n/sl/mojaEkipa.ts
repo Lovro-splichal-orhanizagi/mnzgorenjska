@@ -155,6 +155,17 @@ export const mojaEkipa = {
   },
 
   // Uvodni nasvet za prazno ekipo.
+  vodic: {
+    napredek: '{trenutni} / {skupaj}',
+    naprej: 'Naprej',
+    razumem: 'Razumem',
+    sestaviNaslov: 'Ekipa v enem kliku',
+    sestaviOpis: 'Klikni tukaj in sestavimo ti veljavno ekipo v okviru proračuna. Nato zamenjaš, kogar hočeš.',
+    igrisceNaslov: 'To je tvoja ekipa',
+    igrisceOpis: 'Klikni igralca, da vidiš podatke ali ga zamenjaš. Točke prinese prvih 11, igralec s klopi vskoči, če kdo ne igra.',
+    shraniNaslov: 'Še zadnji korak: Shrani',
+    shraniOpis: 'Ko shraniš, zbiraš točke že v naslednjem krogu. Ekipo lahko spreminjaš do roka.',
+  },
   zacetek: {
     naslov: 'Kje začeti?',
     sestaviMi: 'Sestavi mi ekipo',

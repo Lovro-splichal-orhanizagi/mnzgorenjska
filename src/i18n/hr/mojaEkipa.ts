@@ -155,6 +155,17 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   },
 
   // Uvodni savjet za praznu momčad.
+  vodic: {
+    napredek: '{trenutni} / {skupaj}',
+    naprej: 'Dalje',
+    razumem: 'Razumijem',
+    sestaviNaslov: 'Momčad u jednom kliku',
+    sestaviOpis: 'Klikni ovdje i složit ćemo ti valjanu momčad unutar budžeta. Zatim zamijeni koga god želiš.',
+    igrisceNaslov: 'Ovo je tvoja momčad',
+    igrisceOpis: 'Klikni igrača da vidiš podatke ili ga zamijeniš. Bodove donosi prvih 11, igrač s klupe ulazi ako netko ne igra.',
+    shraniNaslov: 'Još samo jedan korak: Spremi',
+    shraniOpis: 'Kad spremiš, skupljaš bodove već u sljedećem kolu. Momčad možeš mijenjati do roka.',
+  },
   zacetek: {
     naslov: 'Gdje početi?',
     sestaviMi: 'Složi mi momčad',
