@@ -7262,6 +7262,13 @@ export type Database = {
         Args: { p_player_id: number; p_povezi?: boolean; p_zahtevek_id: number }
         Returns: undefined
       }
+      admin_povabila_skupaj: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          registracij: number
+          z_ekipo: number
+        }[]
+      }
       admin_predlogi_povezav: {
         Args: { p_zahtevek_id: number }
         Returns: {
@@ -7466,6 +7473,7 @@ export type Database = {
           potrditev: number
           povezanih: number
           prijav: number
+          pripeljanih: number
           prosilec: string
           razlogi: string[]
           spor: boolean
@@ -7772,6 +7780,16 @@ export type Database = {
         }[]
       }
       moj_klubski_racun: { Args: Record<PropertyKey, never>; Returns: Json }
+      moja_koda_vabila: { Args: Record<PropertyKey, never>; Returns: string }
+      moje_mesto_v_vrsti: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          mesto: number
+          pripeljanih: number
+          v_vrsti: number
+          zahtevek_id: number
+        }[]
+      }
       najcenejsi_kader: { Args: { p_igralci: Json }; Returns: number }
       najdi_igralca: { Args: { ime: string; liga?: string }; Returns: Json }
       napaka_prikaznega_imena: { Args: { p_ime: string }; Returns: string }
@@ -8436,6 +8454,7 @@ export type Database = {
         }[]
       }
       zabelezi_korak: { Args: { p_korak: string }; Returns: undefined }
+      zabelezi_povabilo: { Args: { p_koda: string }; Returns: boolean }
       zabelezi_obisk: { Args: { p_stran: string }; Returns: undefined }
       zabelezi_sponzorja: {
         Args: {

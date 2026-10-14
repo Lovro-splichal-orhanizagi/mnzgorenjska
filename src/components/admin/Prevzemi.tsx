@@ -28,6 +28,7 @@ interface Zahtevek {
   klub_email: string | null
   klubu_poslano_at: string | null
   klubu_na: string | null
+  pripeljanih: number
 }
 
 interface Predlog {
@@ -80,11 +81,14 @@ export default function Prevzemi() {
   const [predlogi, setPredlogi] = useState<Predlog[]>([])
   const [naslovi, setNaslovi] = useState<Record<number, string>>({})
   const [sporocilo, setSporocilo] = useState<string | null>(null)
+  const [povabila, setPovabila] = useState<{ registracij: number; z_ekipo: number } | null>(null)
 
   const nalozi = useCallback(async () => {
     const { data, error } = await supabase.rpc('admin_zahtevki_igralcev')
     if (error) return setNapaka(error.message)
     setVrstice((data ?? []) as Zahtevek[])
+    const { data: pv } = await supabase.rpc('admin_povabila_skupaj')
+    setPovabila(pv?.[0] ?? null)
   }, [])
 
   useEffect(() => {
@@ -149,8 +153,14 @@ export default function Prevzemi() {
       <p className="text-xs text-slate-500">
         Vsi čakajoči zahtevki, spori, prijavljeni profili in potrjeni v zadnjih 60 dneh. Čakajoči: potrdi sam,
         pošlji klubu (mail z enkratno povezavo in e-naslovom prosilca) ali zavrni. Potrdita ga lahko tudi
-        poznavalec kluba ali dva potrjena soigralca.
+        poznavalec kluba ali dva potrjena soigralca. Vrstni red: najprej tisti, ki so pripeljali prijatelje
+        (prijava prek njihove povezave in sestavljena ekipa), nato po starosti — tako je obljubljeno prosilcem.
       </p>
+      {povabila && povabila.registracij > 0 && (
+        <p className="text-xs text-slate-400">
+          Prek povabil: {povabila.registracij} registracij, {povabila.z_ekipo} z ekipo.
+        </p>
+      )}
       {napaka && <p className="text-sm text-rose-400">{napaka}</p>}
       {sporocilo && <p className="text-sm text-gnl-300">{sporocilo}</p>}
       {vrstice.length === 0 ? (
@@ -181,6 +191,9 @@ export default function Prevzemi() {
                       {z.potrdil && ` · potrdil: ${z.potrdil}`}
                       {z.star_vsaj_16 && ' · ≥16 potrjeno'}
                       {z.potrditev > 0 && ` · soigralcev: ${z.potrditev}`}
+                      {z.pripeljanih > 0 && (
+                        <span className="znacka ml-1 bg-gnl-400/20 text-gnl-200">pripeljal {z.pripeljanih}</span>
+                      )}
                       {z.povezanih > 0 && ` · povezanih vrstic: ${z.povezanih}`}
                     </div>
                     {z.status === 'cakajoc' && z.klubu_poslano_at && (

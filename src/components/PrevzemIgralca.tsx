@@ -4,7 +4,7 @@ import { useAuth } from '../lib/useAuth'
 import { t, datum } from '../i18n'
 import { prevediNapako } from '../lib/napake'
 import { deliBesedilo } from '../lib/miniLige'
-import { izvor } from '../lib/platforma'
+import { povezavaZVabilom } from '../lib/povabilo'
 import {
   VEDRO_FOTOGRAFIJ,
   VZOREC_ROCICE,
@@ -179,21 +179,7 @@ export default function PrevzemIgralca({
         <div className="kartica space-y-1 border-amber-400/30 p-3 text-sm">
           <p className="font-semibold text-amber-200">{t('igralci.prevzem.caka')}</p>
           <p className="text-xs text-slate-400">{t('igralci.prevzem.cakaOpis')}</p>
-          {/* Potrjen soigralec lahko potrdi tudi tega: povabilo res pospeši. */}
-          <p className="pt-1 text-xs text-slate-300">{t('igralci.prevzem.cakaPrijatelj')}</p>
-          <button
-            onClick={async () => {
-              const povezava = izvor() + window.location.pathname
-              const izid = await deliBesedilo(
-                t('igralci.prevzem.cakaDeli'),
-                t('igralci.prevzem.cakaVabilo', { povezava }),
-              )
-              if (izid === 'kopirano') setSporocilo(t('igralci.prevzem.cakaKopirano'))
-            }}
-            className="gumb-tih mr-3 mt-1 min-h-[44px] px-3 py-2 text-sm"
-          >
-            {t('igralci.prevzem.cakaDeli')}
-          </button>
+          <VrstaZahtevka zahtevekId={mojOdprt.id} naKopirano={() => setSporocilo(t('igralci.prevzem.cakaKopirano'))} />
           <button
             onClick={() => rpc(() => supabase.rpc('preklici_moj_zahtevek', { p_id: mojOdprt.id }))}
             disabled={dela}
@@ -616,5 +602,59 @@ function Urejevalnik({
         </div>
       </div>
     </form>
+  )
+}
+
+/**
+ * Mesto v vrsti in povabilo prijatelja: kdor pripelje prijatelja, ki se
+ * prijavi prek njegove povezave in sestavi ekipo, je pregledan prej
+ * (`moje_mesto_v_vrsti`, migracija 20261014172100).
+ */
+function VrstaZahtevka({ zahtevekId, naKopirano }: { zahtevekId: number; naKopirano: () => void }) {
+  const [vrsta, setVrsta] = useState<{ mesto: number; v_vrsti: number; pripeljanih: number } | null>(null)
+  const [dela, setDela] = useState(false)
+
+  useEffect(() => {
+    let zivo = true
+    void supabase.rpc('moje_mesto_v_vrsti').then(({ data }) => {
+      const v = data?.find((x) => x.zahtevek_id === zahtevekId)
+      if (zivo && v) setVrsta(v)
+    })
+    return () => {
+      zivo = false
+    }
+  }, [zahtevekId])
+
+  return (
+    <div className="space-y-1 pt-1">
+      {vrsta && (
+        <p className="text-sm text-slate-200">
+          {t('igralci.prevzem.cakaMesto', { mesto: vrsta.mesto, skupaj: vrsta.v_vrsti })}
+          {vrsta.pripeljanih > 0 && (
+            <span className="text-gnl-300"> · {t('igralci.prevzem.cakaPripeljal', { n: vrsta.pripeljanih })}</span>
+          )}
+        </p>
+      )}
+      <p className="text-xs text-slate-300">{t('igralci.prevzem.cakaPrijatelj')}</p>
+      <button
+        onClick={async () => {
+          setDela(true)
+          try {
+            const povezava = await povezavaZVabilom(window.location.pathname)
+            const izid = await deliBesedilo(
+              t('igralci.prevzem.cakaDeli'),
+              t('igralci.prevzem.cakaVabilo', { povezava }),
+            )
+            if (izid === 'kopirano') naKopirano()
+          } finally {
+            setDela(false)
+          }
+        }}
+        disabled={dela}
+        className="gumb-tih mr-3 mt-1 min-h-[44px] px-3 py-2 text-sm disabled:opacity-50"
+      >
+        {t('igralci.prevzem.cakaDeli')}
+      </button>
+    </div>
   )
 }
