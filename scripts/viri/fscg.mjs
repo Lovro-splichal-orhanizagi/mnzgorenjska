@@ -12,15 +12,23 @@
 // — poddomena, pot strani `/takmicenja/<slug>/` in id tekmovanja COMET. Stran
 // kaže le tekočo sezono; id v šifri je varovalo: ko stran preklopi na novo
 // sezono (drug id v `data-genid`), se uvoz ustavi in šifro je treba popraviti.
-// Arhiva regijske strani nimajo.
+//
+// ARHIV: `<regija>/arhiva/<tekmovanje>` → `/takmicenja/arhiva/?cid=<id>`.
+// Stran arhiva izriše katerokoli tekmovanje COMET po id-ju (v meniju "Arhiva
+// takmičenja" so le stare državne lige, regijskih ni), zato id-je prejšnjih
+// sezon najdeš drugje — npr. v posnetkih strani lige na web.archive.org
+// (`data-genid`). 2025/26: Centar `8303239`, Sjever `8327709`, Jug `8373775`;
+// 2024/25: Sjever `7390107`, Jug `7487412`. Tudi tu velja varovalo `data-genid`.
 //
 // ZAPISNIK `/utakmice/<slug>-<id>/`: igralci brez povezav na profil (le ime
 // in dres; identiteta ime + klub kot pri fss), minuta v `div.minute`, gol z
 // 11 m ima razred `penalty`. Čas je ljubljanski (CET).
 //
 // robots.txt ni (/robots.txt preusmeri na naslovnico). Beremo odkrito
-// (User-Agent SLFF, 3 s med zahtevki), zapisnikov, starejših od tedna, ne
-// beremo znova. Ob izzivu, CAPTCHI, 403 ali 429 se uvoz ustavi — ne obhajaj.
+// (User-Agent SLFF, 3 s med zahtevki). Zapisnik zadnjega tedna beremo sveže,
+// do 45 dni še enkrat sveže, če stran iz predpomnilnika nima postav ali se
+// goli ne ujemajo z izidom (`zapisnikSvez`), starejših ne beremo znova. Ob
+// izzivu, CAPTCHI, 403 ali 429 se uvoz ustavi — ne obhajaj.
 import {
   CometZavrnitev, beri, delVira, jeIzziv, kljucKluba, kratkoIme, nastopi, sezonaTekem, tabelaVsehTekem,
   tekmeTabele, tekmovanjeStrani, vKroge,
@@ -37,8 +45,8 @@ export function razbijKodo(koda) {
 
 const osnovni = (regija) => `https://${regija}.fscg.me`
 export const naslovLige = (koda) => {
-  const { regija, slug } = razbijKodo(koda)
-  return `${osnovni(regija)}/takmicenja/${slug}/`
+  const { regija, slug, tekmovanje } = razbijKodo(koda)
+  return slug === 'arhiva' ? `${osnovni(regija)}/takmicenja/arhiva/?cid=${tekmovanje}` : `${osnovni(regija)}/takmicenja/${slug}/`
 }
 
 /** Tekme strani tekmovanja; stran z drugim tekmovanjem (nova sezona) ustavi uvoz. */

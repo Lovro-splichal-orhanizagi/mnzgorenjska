@@ -2884,8 +2884,14 @@ začnejo z `lt-` oziroma `me-`. Uvoz za ligo ne potrebuje ničesar več.
 - **Šifra lige je `<regija>/<slug>/<id tekmovanja>`**
   (`centar/seniorska-liga/9331975`). Stran `/takmicenja/<slug>/` kaže le
   tekočo sezono; ko pokaže drug id (`data-genid`), se uvoz ustavi in šifro je
-  treba popraviti. **Arhiva regijske strani nimajo** (arhiv na fscg.me ima le
-  državne lige).
+  treba popraviti.
+- **Arhiv: `<regija>/arhiva/<id>`** → `/takmicenja/arhiva/?cid=<id>` na
+  regijski poddomeni. Ta stran izriše **katerokoli** tekmovanje COMET po id-ju
+  (v isti predlogi, varovalo `data-genid` velja), čeprav meni "Arhiva
+  takmičenja" našteje le stare državne lige (do 2018/19) in fscg.me nobene
+  regijske. Id-ji prejšnjih sezon so iz posnetkov strani lige na
+  web.archive.org (`data-genid`); neznan id stran vrne s 200, zato id presodi
+  vsebina (genid, ime, datumi), ne status.
 - Igralci nimajo povezav na profil: identiteta je ime + klub (kot fss).
 
 **Pravice (pregled 15. 10. 2026, ni pravni nasvet).** Nobeno spletišče nima
@@ -2893,7 +2899,9 @@ robots.txt (`/robots.txt` preusmeri na naslovnico), izziva ni bilo. Pogojev
 uporabe nismo našli; LT noga "Visos teisės saugomos". Dovoljenja LFF ali
 FSCG nimamo (za LFF raziskava priporoča vljudnostni mail). Beremo odkrito
 (`User-Agent: SLFF fantasy (https://slff.eu)`, **3 s** med zahtevki,
-zapisnikov, starejših od tedna, ne beremo znova). **Ob izzivu, CAPTCHI, 403
+zapisnikov, starejših od tedna, ne beremo znova — do 45 dni le, če shranjena
+stran nima postav ali se goli ne ujemajo z izidom: `zapisnikSvez` v
+`comet-auris.mjs`, isto pri `lff`). **Ob izzivu, CAPTCHI, 403
 ali 429 se uvoz ustavi — ne obhajaj** (`CometZavrnitev`, izhod 4). Sodnikov,
 delegatov in gledalcev ne beremo; vzorci `scripts/vzorci/lt-ltfutbolas-*`,
 `me-fscg-*` so brez njih.
@@ -2912,15 +2920,30 @@ zadnje in najbolj zadetkovne; KAFF-MAFF 20):
 
 Vratar (G) je bil pri vseh postavah, litovski nastopi vsi s šifro.
 
+Preizkus arhivov FSCG v živo (15. 10. 2026, **vsi** zapisniki, 3 s med
+zahtevki; tekme brez zapisnika so vse 3:0 / 0:3 brez postav — kontumacije,
+Sjever 2025/26 jih ima 25, ker so klubi spomladi odstopili):
+
+| arhiv | tekem / zapisnikov | goli = izid | postav po 11 | vratar | 990 minut | menjav (nastopov s klopi) | ekip brez menjav |
+|---|---|---|---|---|---|---|---|
+| Centar 2025/26 `centar/arhiva/8303239` | 132 / 129 | 762 (129/129) | 258/258 | 258/258 | 240/258 | 1022 | 4/258 |
+| Sjever 2025/26 `sjever/arhiva/8327709` | 108 / 83 | 389 (83/83) | 158/166 | 166/166 | 150/166 | 509 | 19/166 |
+| Jug 2025/26 `jug/arhiva/8373775` | 63 / 56 | 336 (56/56) | 111/112 | 112/112 | 99/112 | 358 | 4/112 |
+| Sjever 2024/25 `sjever/arhiva/7390107` | 108 / 102 | 483 (102/102) | 199/204 | 204/204 | 190/204 | 510 | 36/204 |
+| Jug 2024/25 `jug/arhiva/7487412` | 63 / 60 | 322 (60/60) | 112/120 | 119/120 | 104/120 | 322 | 21/120 |
+
+Centar 2024/25 id-ja nismo našli (posnetek septembra 2024 še kaže 2023/24
+`6381521`).
+
 Vpisanih je 5 lig (migracija 20261015030700), **neaktivnih**:
 
-| liga | klubov | tekoča | zveza |
-|---|---|---|---|
-| lt-2-lyga-a | 15 | `23383524` (2026) | `lff-lt` |
-| lt-2-lyga-b | 15 | `23384849` (2026) | `lff-lt` |
-| me-3-liga-centar | 13 | `centar/seniorska-liga/9331975` (2026/27) | `fscg-centar` |
-| me-3-liga-sjever | 9 | `sjever/seniorska-liga/9344268` | `fscg-sjever` |
-| me-3-liga-jug | 7 | `jug/seniorska-liga/9391667` | `fscg-jug` |
+| liga | klubov | tekoča | arhiv | zveza |
+|---|---|---|---|---|
+| lt-2-lyga-a | 15 | `23383524` (2026) | — | `lff-lt` |
+| lt-2-lyga-b | 15 | `23384849` (2026) | — | `lff-lt` |
+| me-3-liga-centar | 13 | `centar/seniorska-liga/9331975` (2026/27) | `centar/arhiva/8303239` | `fscg-centar` |
+| me-3-liga-sjever | 9 | `sjever/seniorska-liga/9344268` | `sjever/arhiva/8327709`, `sjever/arhiva/7390107` | `fscg-sjever` |
+| me-3-liga-jug | 7 | `jug/seniorska-liga/9391667` | `jug/arhiva/8373775`, `jug/arhiva/7487412` | `fscg-jug` |
 
 **Ni vpisano**: KAFF-MAFF III lyga 2026 (`23832343`, 8 klubov) — zapisnike
 razčleni, a 24 od 40 ekip v preizkusu ni vpisalo nobene menjave (začetniki
@@ -2928,8 +2951,10 @@ bi imeli po 90 minut, rezerve nič). Jug ima le 7 klubov (spodnja meja).
 Litovska sezona 2026 je ob vpisu skoraj končana — vklop realno za 2027
 (nova šifra).
 
-Uvoz (ena za drugo, brez arhiva): `gh workflow run uvoz-lige.yml -f
-liga=lt-2-lyga-a -f cene=true`.
+Uvoz (ena za drugo): Litva brez arhiva (`gh workflow run uvoz-lige.yml -f
+liga=lt-2-lyga-a -f cene=true`), Črna gora z arhivom (`-f
+liga=me-3-liga-sjever -f arhiv=sjever/arhiva/8327709,sjever/arhiva/7390107 -f
+cene=true`). Arhiv ~130 zapisnikov po 3 s je ~7 minut.
 
 ### Država obiskovalca
 

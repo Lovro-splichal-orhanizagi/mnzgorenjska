@@ -378,6 +378,28 @@ export function kratkoIme(polno) {
 /** Dni od datuma tekme ('YYYY-MM-DD'); brez datuma 0, da se tekma prebere. */
 export const starostDni = (datum) => (datum ? (Date.now() - Date.parse(`${datum}T00:00:00Z`)) / 86400000 : 0)
 
+/** Zapisnik zadnjega tedna se še popravlja: vedno sveže. */
+export const SVEZE_DNI = 7
+/** Do te starosti se nerazčlenjena ali nepopolna stran iz predpomnilnika prebere še enkrat. */
+export const PONOVNO_DNI = 45
+const golovSeNeUjema = (z) => z.opozorila.some((o) => /^goli iz dogodkov .* se ne ujemajo/.test(o))
+
+/**
+ * Zapisnik z dano funkcijo razčlenjevanja (`razcleni(html)`), kot `zapisnikSvez`
+ * v `zapisniki.mjs`: stran, zajeta pred vnosom postav ali popravkom gola, ne
+ * sme obtičati v predpomnilniku. Tekma zadnjega tedna se bere sveže; starejša
+ * do `PONOVNO_DNI` iz predpomnilnika, a če se stran ne razčleni ali goli
+ * dogodkov niso izid, še enkrat sveže. Starejših ne beremo znova (stare
+ * sezone bi sicer vsako noč brale kontumacije).
+ */
+export async function zapisnikSvez(beriStran, razcleni, datum) {
+  const starost = starostDni(datum)
+  const sveze = starost <= SVEZE_DNI
+  const z = razcleni(await beriStran(sveze))
+  if (sveze || starost > PONOVNO_DNI || (z && !golovSeNeUjema(z))) return z
+  return razcleni(await beriStran(true)) ?? z
+}
+
 /** Prenos, ki se ob izzivu ali zavrnitvi ustavi (`ime` je ime vira za sporočilo). */
 export async function beri(ime, prenesi, url, datoteka, sveze) {
   let html
@@ -411,8 +433,13 @@ export function delVira({ ime, predpona, naslovLige, naslovZapisnika, tekmeLige,
       const out = []
       for (const t of tekme.filter((x) => x.izid && x.pot)) {
         const url = naslovZapisnika(t.id, t.pot, koda)
-        // Zapisnik zadnjega tedna se lahko še popravlja; starejšega ne beremo znova.
-        const z = vZapisnik(await beri(ime, prenesi, url, imeZapisnika(t.id), starostDni(t.datum) <= 7), { id: t.id, url })
+        // Zadnji teden sveže; do 45 dni še enkrat sveže, če stran iz
+        // predpomnilnika nima postav ali se goli ne ujemajo z izidom.
+        const z = await zapisnikSvez(
+          (sveze) => beri(ime, prenesi, url, imeZapisnika(t.id), sveze),
+          (html) => vZapisnik(html, { id: t.id, url }),
+          t.datum,
+        )
         if (!z) continue
         // Ime kluba, krog in sezona z razporeda, da se tekma ujame z vrstico razporeda.
         z.domaci.ime = t.domaci

@@ -18,7 +18,8 @@
 //
 // robots.txt ni (/robots.txt preusmeri na naslovnico). Beremo odkrito
 // (User-Agent SLFF, 3 s med zahtevki), zapisnikov, starejših od tedna, ne
-// beremo znova. Ob izzivu, CAPTCHI, 403 ali 429 se uvoz ustavi — ne obhajaj.
+// beremo znova (do 45 dni le, če shranjena stran nima postav ali se goli ne
+// ujemajo — `zapisnikSvez`). Ob izzivu, CAPTCHI, 403 ali 429 se uvoz ustavi — ne obhajaj.
 import { vLjubljanskiCas } from './frf.mjs'
 import {
   CometZavrnitev, beri, delVira, jeIzziv, kljucKluba, kratkoIme, letoTekem, nastopi, tabelaVsehTekem,

@@ -15,8 +15,12 @@
 -- ČRNA GORA (vir `fscg`, centar/sjever/jug.fscg.me): Treća liga v treh
 -- regijah (raven 3, najnižja), sezona 2026/27. Šifra lige je
 -- `<regija>/<slug>/<id tekmovanja COMET>`; ob novi sezoni stran pokaže drug
--- id in uvoz se ustavi, dokler šifre ne popraviš. Arhiva regijske strani
--- nimajo. Jug ima le 7 klubov (spodnja meja: 3 iz kluba × 5).
+-- id in uvoz se ustavi, dokler šifre ne popraviš. Arhiv je šifra
+-- `<regija>/arhiva/<id>` (stran `/takmicenja/arhiva/?cid=<id>` izriše
+-- katerokoli tekmovanje COMET; id-ji iz posnetkov na web.archive.org):
+-- 2025/26 Centar `centar/arhiva/8303239`, Sjever `sjever/arhiva/8327709`,
+-- Jug `jug/arhiva/8373775`; 2024/25 Sjever `sjever/arhiva/7390107`, Jug
+-- `jug/arhiva/7487412`. Jug ima le 7 klubov (spodnja meja: 3 iz kluba × 5).
 --
 -- Vse NEAKTIVNE; uvozi niso bili pognani.
 

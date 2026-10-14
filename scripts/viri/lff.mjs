@@ -39,12 +39,15 @@
 //
 // robots.txt zapre le MJ12bot. Noga: "Autortiesības 2026 © Atsauce uz LFF.lv
 // obligāta" (navedba vira je obvezna). Beremo odkrito (User-Agent SLFF, 3 s med
-// zahtevki), zapisnikov, starejših od tedna, ne beremo znova. Ob izzivu,
+// zahtevki), zapisnikov, starejših od tedna, ne beremo znova (do 45 dni le, če
+// shranjena stran nima postav ali se goli ne ujemajo — `zapisnikSvez` v
+// comet-auris.mjs). Ob izzivu,
 // CAPTCHI, 403 ali 429 se uvoz ustavi — ne obhajaj.
 import { razpakiraj } from '../klubi.mjs'
 import { vPriimekIme } from './sportnet.mjs'
 import { vLjubljanskiCas } from './frf.mjs'
 import { nastopi as nastopiPoImenu } from './fss.mjs'
+import { zapisnikSvez } from './comet-auris.mjs'
 
 const OSNOVNI = 'https://lff.lv'
 const DOLZINA_TEKME = 90
@@ -383,9 +386,6 @@ export function kratkoImeLv(polno) {
 
 // --- prenos --------------------------------------------------------------------
 
-/** Dni od datuma tekme ('YYYY-MM-DD'); brez datuma 0, da se tekma prebere. */
-const starostDni = (datum) => (datum ? (Date.now() - Date.parse(`${datum}T00:00:00Z`)) / 86400000 : 0)
-
 /** Prenos, ki se ob izzivu ali zavrnitvi ustavi. */
 async function beri(prenesi, url, ime, sveze) {
   let html
@@ -424,8 +424,13 @@ const vir = {
     const out = []
     for (const t of tekme.filter((x) => x.izid)) {
       const url = naslovZapisnika(t.id, t.pot)
-      // Zapisnik zadnjega tedna se lahko še popravlja; starejšega ne beremo znova.
-      const z = vZapisnik(await beri(prenesi, url, imeZapisnika(t.id), starostDni(t.datum) <= 7), { id: t.id, url })
+      // Zadnji teden sveže; do 45 dni še enkrat sveže, če stran iz
+      // predpomnilnika nima postav ali se goli ne ujemajo z izidom.
+      const z = await zapisnikSvez(
+        (sveze) => beri(prenesi, url, imeZapisnika(t.id), sveze),
+        (html) => vZapisnik(html, { id: t.id, url }),
+        t.datum,
+      )
       if (!z) continue
       // Ime kluba, krog in sezona z razporeda, da se tekma ujame z vrstico razporeda.
       z.domaci.ime = t.domaci
