@@ -581,7 +581,7 @@ Kako zdaj:
 - **Koš lige** je zgoščenka šifre (stabilna; koš ima svoj predpomnilnik
   `zapisniki-<drzava>-k<kos>od<kosov>-…`). Vir sme brati iz več košev hkrati le,
   če je v `VZPOREDNI` (oefb 4, hns 3, mlsz 3, sportnet 2, fss 2, fssid 2);
-  vsi drugi viri (MNZ, nzs, fsb, jalgpall, fcf, facr, hlf, frf, lff, pzpn, ffm)
+  vsi drugi viri (MNZ, nzs, fsb, jalgpall, fcf, fas, facr, hlf, frf, lff, pzpn, ffm)
   so v enem košu. Vir, ki ga bere k košev, v vsakem bere s **k-krat daljšim
   premorom** (`SLFF_PREMOR_FAKTOR` → `prenos.mjs`), zato skupni tempo k viru
   ni večji kot pri enem poslu (mlsz: Crawl-delay 1 s). Hitrost pride iz pisanja
@@ -2578,6 +2578,115 @@ odigrane tekme; grup 24–31 — nepregledano (strežnik je ponoči obstal), sem
 Uvoz (ena za drugo, **šele s soglasjem FCF**): `gh workflow run uvoz-lige.yml
 -f liga=es-ct-quarta-g1 -f cene=true` (z arhivom: `-f arhiv=<blok 2025/26>`).
 Prvi uvoz bloka je ~240 strani — ob počasnem strežniku do ene ure.
+
+### Španija — vir `fas` (Asturija)
+
+Vir `fas` (`scripts/viri/fas.mjs`) bere **futbolasturiano.es**, neodvisen
+digitalni dnevnik asturijskega nogometa (WordPress + SportsPress, Grupo
+Tyclamata), **ne zveze**. Postave objavlja za **Tercera Federación, skupina 2**
+(asturijski klubi) in **Primera AsturFútbol**; nižje asturijske lige (2ª, 3ª
+AsturFútbol) imajo le izide — ne beremo jih. REST `sportspress/v2` je
+izklopljen; beremo HTML.
+
+- **Šifra lige je `<liga>:<od>-<do>`**: `<liga>` je izraz SportsPress
+  `sp_league` (stran `/competicion/<liga>/`: `3-rfef`, `1-asturfutbol`),
+  `<od>-<do>` blok šifer objav (post id) tekem **ene sezone**. Razpored sezone
+  je ustvarjen naenkrat, zato je blok strnjen in natanko N×(N−1) šifer (18
+  klubov: 306, 20 klubov: 380), po dve in dve (krog n in povratni krog).
+  Stran lige našteje tekme vseh sezon z `sp_league-…` `sp_season-2026-2027`,
+  datumom in uro (`<time datetime>`); **tekme s stanjem "future" (bližnji
+  krog, ki mu je uredništvo popravilo uro) na strani lige in v zemljevidu
+  strani manjkajo** — zato blok, ne seznam: manjkajoče šifre vir prebere s
+  `/?p=<id>` (preusmeri na stran tekme). Pomočnik: `node
+  scripts/asturijske-lige.mjs` (lige, sezone, blok, koliko manjka na strani
+  lige), `--polno <šifra>` (ves blok kot uvoz, brez baze), `--vzorec <id>
+  <datoteka>` (obrezana stran za `scripts/vzorci/`). Nova sezona = nov blok
+  (poženi pomočnika, ko je razpored objavljen).
+- **Stran tekme** `/evento/<domači>-<gostje>/`: imeni (`sp-team-name` = ime
+  objave ekipe; isto na vseh tekmah ekipe, zato brez vzdevkov — razen
+  tipkarske "EI San Martín" → "El San Martín", `IME_EKIPE`), izid
+  (`sp-team-result`, neodigrana brez števk), "Detalles": Fecha, Hora
+  (**madridski = ljubljanski čas**), Liga ("3ª RFEF", "1ª AsturFútbol"),
+  Temporada ("2026/2027" → `2026/27`), **Jornada** (krog). Krog in klubi
+  tekme se ne menjajo, zato se stran neodigrane tekme bere enkrat na 14 dni
+  (datum da sveža stran lige), od dneva pred tekmo vsako uro.
+- **Postavi** (`fa-convocatoria`): vrstica `fa-conv__row` = začetnik,
+  `--entra` = vstopil, `--convocado` = neuporabljena rezerva; dres, ime s
+  povezavo `/jugador/<slug>/`, pozicija ("Portero" → GK, branilci DEF,
+  vezisti in **krila (Extremo) MID**, "Delantero" FWD; "—" brez) in ocena
+  (ne beremo). **Identiteta igralca je pot profila**: `regSt` =
+  `sifraIgralca(slug)` (FNV-1a, 50 bitov + 2^52 — nad šiframi oseb FCF v isti
+  državi). Dva igralca z istim dresom na isti tekmi (Sporting Atlético: 14
+  in 14) loči šifra.
+- **Dogodki** po prikaznem imenu (brez povezave) v razdelkih GOLES (oznaka
+  `sp-res__gol-badge--penalti` = 11 m, `--propia` = avtogol, stolpec ekipe
+  strelca, šteje nasprotniku), TARJETAS (`--yellow`, `--red`; drugi rumeni =
+  dva rumena + rdeči → 1 rumeni + 1 rdeči) in SUSTITUCIONES (vstop, izstop,
+  minuta; "94'" → 90). **Minute so točne.** Menjava brez minute (redko,
+  uredništvo je vpisalo le ime) je opozorilo, rezerva brez nastopa.
+- **Šifra zapisnika v bazi je `fas<id>`**; `--zapisnik` vzame `fas…`.
+- **Nepopoln zapisnik** (ekipa z manj kot 7 začetniki, tudi le strelci ali
+  prazna stran z izidom) kot pri `frf`/`fcf`: izid se zapiše, `imported_at`
+  ostane prazen, 45 dni se bere vsako uro. **Kontumacija** je le 3:0 ali 0:3
+  brez obeh postav in brez golov, starejša od tedna — prazna stran z drugim
+  izidom ali z goli je tekma, ki ji uredništvo postav ni vpisalo.
+- **Arhiva ni.** SportsPress na futbolasturiano.es vodi le sezono 2026/27
+  (izraz `sp_season` je en sam, `/temporada/2025-2026/` vrne 404, zgodovina
+  na straneh igralcev se začne z 2026/2027; objave ekip so iz junija 2025,
+  tekme od avgusta 2026). Cene so le iz tekoče sezone (uvoz brez `arhiv`,
+  s `cene`) — kot `hlf` in `fssid`; pred vklopom preveri
+  `pripravljenost-lige` (delež privzetih ≤ 70 %).
+- *Uskladi pozicije* z `vir = fas` (vratar po večini tekem).
+- Predpomnilnik `scripts/.predpomnilnik/fas` (stran lige `razpored-<šifra>.html`,
+  ki jo uvoz razporeda prenese tik pred `razporedVseStrani`, in
+  `evento-<id>.html`). Prvi uvoz bloka prebere vse strani (~300–380 po 3 s,
+  20–25 minut). ES je v `SKUPEN_VIR` (`cakaj-na-uvoze.mjs`, zaradi fcf.cat) —
+  zagoni Španije se zato ne prekrivajo, tudi fas s fcf; drugega ni treba.
+
+**Pravice (pregled 13. 10. 2026, ni pravni nasvet).** robots.txt
+`User-agent: * / Disallow:` (nič prepovedano), pravno obvestilo (Aviso legal)
+je prazno, brez WAF in izziva. Navedba vira (`vir_ime` FutbolAsturiano.es,
+`vir_url` → stran lige) je v nogi; zveza v izbirniku je RFFPA (`rfpaf`).
+Vljudnostno obvestilo uredništvu (correo@futbolasturiano.es) še ni poslano.
+Beremo odkrito (User-Agent `SLFF fantasy (slff.eu; splih.94@gmail.com)`,
+**3 s** med zahtevki, strežnik je občasno počasen — `fasFetch` 90 s). Sodnikov,
+ocen, poročil, fotografij in igrišča ne beremo; vzorci `scripts/vzorci/es-fas-*`
+so obrezani. **Ob izzivu, CAPTCHI, 403 ali 429 se uvoz ustavi — ne obhajaj**
+(`FasZavrnitev`, izhod 4).
+
+Vpisani ligi (migracija 20261014203100), **neaktivni**, zveza `rfpaf`:
+
+| liga | klubov | tekoča 2026/27 | arhiv |
+|---|---|---|---|
+| es-as-tercera-g2 | 18 | `3-rfef:14499-14804` | — (vir ga nima) |
+| es-as-primera | 20 | `1-asturfutbol:15137-15516` | — (vir ga nima) |
+
+Preizkus v živo (14. 10. 2026, `node scripts/asturijske-lige.mjs --polno`,
+brez baze; ves blok, ~690 strani po 3 s, 0 zavrnitev):
+
+- **Tercera G2** — 34 krogov, 306 tekem (vse z uro), 18 klubov, 0 tujih
+  objav, 54 odigranih (krogi 1–6), 0 kontumacij; 50 polnih zapisnikov in 4
+  nepopolni (1. krog: uredništvo je vpisalo le strelce); **postav po 11
+  100/100, vratar 100/100**, goli = izid 52/54 (148/151), 446 menjav z
+  minuto, 990 minut 89/100 ekip (ostale: rdeči karton ali menjava brez
+  minute), 1544 nastopov (444 s klopi), vsi s šifro; 15 rdečih, 5 avtogolov,
+  6 golov z 11 m. Od 2. kroga so polni vsi zapisniki (9/9 na krog).
+- **Primera AF** — 38 krogov, 380 tekem, 20 klubov, 48 odigranih (krogi
+  1–5), 3 kontumacije (3:0 brez postav); od 45 zapisnikov **le 20 polnih**
+  (11 + 11, vratar 40/40, goli = izid 20/20, 163 menjav z minuto), 25 brez
+  postav. Po krogih polnih: 4, 1, 5, 2, 8 od 9–10 — uredništvo postave
+  Primere vpisuje vse bolj redno, a ne zanesljivo. Pred vklopom preveri
+  pokritost zadnjih krogov; tekma brez postav da le izid (klubi brez točk).
+- **Napake vira**: UP Langreo – Praviano (4. krog) ima v glavi 0:3, med goli
+  3:2; El San Martín – Astur CF (4. krog, 2:2) ima vpisana le gola gostov;
+  Sporting Atlético – Llanes (2. krog) in štiri druge tekme imajo nekaj
+  menjav brez minute (vstop v postavi, minute ni) — opozorilo, rezerva brez
+  nastopa. Izid ostane izid glave.
+- **Arhiv 2025/26 ne obstaja** (glej zgoraj); preizkus lanskih tekem zato ni
+  mogoč.
+
+Uvoz (ena za drugo, brez arhiva): `gh workflow run uvoz-lige.yml -f
+liga=es-as-tercera-g2 -f cene=true`.
 
 ### Severna Makedonija — vir `ffm`
 

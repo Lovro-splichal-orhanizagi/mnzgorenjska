@@ -357,8 +357,10 @@ export function vZapisnik(html, { id = null, url = null } = {}) {
     let idx = x.ekipaIdx
     let i = poImenu(idx, x.ime)
     let avtogol = x.vrsta === 'avtogol'
-    // Avtogol: stran ga vpiše v stolpec ekipe, ki ji je štel; strelec je pri nasprotniku.
-    if (!i) {
+    // Avtogol brez oznake v stolpcu ekipe, ki ji je štel: strelec je pri
+    // nasprotniku. Le ko je postava stolpca znana — pri nepopolni strani
+    // (J1: le nekaj imen) bi sicer gol tujega strelca postal avtogol.
+    if (!i && znana[idx]) {
       const nasprotnik = poImenu(1 - idx, x.ime)
       if (nasprotnik) {
         i = nasprotnik
@@ -427,6 +429,11 @@ export function vZapisnik(html, { id = null, url = null } = {}) {
     menjave,
     nepopoln: !znana[0] || !znana[1],
     prazen: !ekipe[0].postava.length && !ekipe[1].postava.length,
+    // Kontumacija: izid 3:0 ali 0:3 brez obeh postav in brez golov. Prazna
+    // stran z drugim izidom ali z goli je tekma, ki ji uredništvo postave ni
+    // vpisalo (Primera AF pogosto) — ta je nepopolna, ne kontumacija.
+    kontumacija: !ekipe[0].postava.length && !ekipe[1].postava.length && !d.goli.length &&
+      ((g.izid.domaci === 3 && g.izid.gostje === 0) || (g.izid.domaci === 0 && g.izid.gostje === 3)),
     opozorila,
   }
 }
@@ -571,9 +578,9 @@ export function razporedBloka(b, { danes = Date.now() } = {}) {
   for (const t of b.tekme) {
     const { g } = t
     if (!krogi.has(g.krog)) krogi.set(g.krog, { stevilka: g.krog, tekme: [] })
-    // Izid brez postav obeh ekip, starejši od tedna, je kontumacija.
+    // Kontumacija (3:0 brez postav in golov), starejša od tedna.
     let kontumacija = false
-    if (g.izid && starostDni(g.datum, danes) > 7) kontumacija = !!vZapisnik(t.html)?.prazen
+    if (g.izid && starostDni(g.datum, danes) > 7) kontumacija = !!vZapisnik(t.html)?.kontumacija
     krogi.get(g.krog).tekme.push({
       domaci: g.domaci,
       gostje: g.gostje,
@@ -624,8 +631,8 @@ const vir = {
       if (!t.g.izid) continue
       const url = naslovTekme(t.id)
       const z = vZapisnik(t.html, { id: sifraZapisnika(t.id), url })
-      // Kontumacija (izid brez obeh postav) nima zapisnika; nepopoln gre skozi.
-      if (!z || (z.prazen && starostDni(z.datum) > 7)) continue
+      // Kontumacija (3:0 brez postav in golov) nima zapisnika; nepopoln gre skozi.
+      if (!z || (z.kontumacija && starostDni(z.datum) > 7)) continue
       z.datum = t.g.datum ?? z.datum
       out.push({ id: z.zapisnikId, z, url })
     }
