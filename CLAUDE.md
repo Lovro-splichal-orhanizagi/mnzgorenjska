@@ -2860,9 +2860,13 @@ v prostem besedilu) ni vpisana.
   po straneh, s `teamId` ali `date`), zato vir starejše prebere po šifri
   `/matches/<id>` navzdol od najnižje znane do treh zgrešenih zapored, in še
   luknje bloka do 120 šifer (`dopolniZacetek`; NL II 2025/26: 100 + 30 + 3,
-  NL I 2025/26: luknja 23 tekem za prestavljeno zgodnjo tekmo). Take
-  tekme gredo v predpomnilnik (`tekma-<id>.json`, tudi `{"ni":404}`) in se ne
-  berejo znova. Zadeva le tekmovanja z več kot 100 tekmami (NL I, NL II,
+  NL I 2025/26: luknja 23 tekem za prestavljeno zgodnjo tekmo). Odigrane,
+  tuje in neobstoječe (`{"ni":404}`) gredo v svoj predpomnilnik
+  (`po-sifri-<id>.json`) in se ne berejo znova; neodigrana tekma našega
+  tekmovanja se bere vsakič (prestavljena dobi datum in pozneje PLAYED). Ime
+  mora biti drugačno od `tekma-<id>.json`, ki ga dobi `prenesi`: gostiteljev
+  `prenesi` shrani vsak odgovor pod tem imenom in tekma, prvič prebrana kot
+  SCHEDULED, bi taka ostala za vselej. Zadeva le tekmovanja z več kot 100 tekmami (NL I, NL II,
   Challenge Phase 1); upcoming ima isto mejo, a pozni krogi pridejo sami.
 - **Krog API ne pozna.** COMET izda šifre tekem tekmovanja po krogih, zato je
   krog zaporedje šifer (`krogiPoSifrah`): nov krog, ko bi klub igral drugič ali
@@ -2907,8 +2911,11 @@ je glava strani same); vljudnostni mail MFA je predlagan (raziskava
 2026-10-15), dovoljenja še nimamo. Beremo odkrito (`User-Agent: SLFF fantasy
 (https://slff.eu)`, **3 s** med zahtevki, zapisnikov, starejših od tedna, ne
 beremo znova). Sodnikov, trenerjev in fotografij ne beremo; vzorci
-`scripts/vzorci/mt-mfa-*` so brez njih. **Ob 403, 429, izzivu ali HTML
-namesto JSON se uvoz ustavi — ne obhajaj** (`MfaZavrnitev`, izhod 4).
+`scripts/vzorci/mt-mfa-*` so brez njih. **Ob 403, 429 ali izzivu se uvoz
+ustavi — ne obhajaj** (`MfaZavrnitev`, izhod 4). Odgovor, ki ni JSON (stran
+vzdrževanja, prazen, odrezan), ustavi uvoz lige z navadno napako (izhod 1) in
+ne gre v predpomnilnik (`vir.zaPredpomnilnik`), zato ga naslednji uvoz
+prebere znova.
 
 Preizkus v živo (15. 10. 2026, brez baze; seznami + zadnji krog, 3 s med
 zahtevki, ~60 zahtevkov, 0 zavrnitev):
@@ -3133,7 +3140,7 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   v uvozni skripti naj gre skozenj, ne mimo z golim `fetch`. Vir, katerega
   strežnik ob preobremenitvi vrne 200 z obvestilom namesto strani, naj ima
   `zaPredpomnilnik(besedilo, datoteka)` (uvoz zapisnikov in razporeda tako
-  stran ne shranita in shranjene ne bereta; zdaj le mlsz)
+  stran ne shranita in shranjene ne bereta; zdaj mlsz in mfa)
 - Nastope tekme (in spremenjene gole) uvoz zamenja s
   `zamenjaj_nastope_tekme(tekma, nastopi, goli)` v eni transakciji (servisna,
   migracija 20261013181100). Prej sta bila izbris in vstavljanje dva zahtevka

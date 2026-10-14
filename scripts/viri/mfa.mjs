@@ -441,15 +441,24 @@ export async function vseTekme(koda, prenesi, opcije = {}) {
 // `teamId` ali po straneh; NL II 2025/26: 100 od 132). Starejše najdemo po
 // šifri: blok tekmovanja je strnjen, zato beremo `/matches/<id>` navzdol od
 // najnižje znane šifre, dokler trikrat zapored ne zadenemo tuje ali neobstoječe
-// tekme. Odigrana tekma se ne spremeni — preberemo jo enkrat (predpomnilnik
-// vira); neobstoječo (404, 400) si zapomnimo kot `{"ni":…}`.
+// tekme. Odigrana tekma se ne spremeni — preberemo jo enkrat; neobstoječo
+// (404, 400) si zapomnimo kot `{"ni":…}`, tujo (drugo tekmovanje) prav tako.
+// Neodigrana tekma našega tekmovanja se bere vsakič znova (prestavljena
+// tekma dobi nov datum in pozneje status PLAYED).
+//
+// Ta predpomnilnik ima SVOJE ime datoteke (`po-sifri-<id>.json`), ne imena,
+// ki ga dobi `prenesi`: gostiteljev `prenesi` (uvoz zapisnikov in razporeda)
+// shrani vsak odgovor 200 pod podanim imenom v isto mapo in bi z istim imenom
+// tukajšnje pravilo obšel — tekma, prvič prebrana kot SCHEDULED, bi taka
+// ostala za vselej.
 export const OMEJITEV_SEZNAMA = 100
 const MAPA = 'scripts/.predpomnilnik/mfa'
 const naslovTekme = (id) => `${API}/matches/${id}`
 const imeTekme = (id) => `tekma-${id}.json`
+const imePoSifri = (id) => `po-sifri-${id}.json`
 
-async function tekmaPoSifri(prenesi, id, mapa) {
-  const pot = mapa ? `${mapa}/${imeTekme(id)}` : null
+async function tekmaPoSifri(prenesi, id, mapa, c) {
+  const pot = mapa ? `${mapa}/${imePoSifri(id)}` : null
   if (pot && existsSync(pot)) {
     try { return JSON.parse(readFileSync(pot, 'utf8')) } catch { /* pokvarjen: preberi znova */ }
   }
@@ -460,7 +469,7 @@ async function tekmaPoSifri(prenesi, id, mapa) {
     if (e.zavrnitev || ![400, 404].includes(e.status)) throw e
     d = { ni: e.status }
   }
-  if (pot && (d.ni || d.status === 'PLAYED')) {
+  if (pot && (d.ni || d.status === 'PLAYED' || (d.competitionId != null && String(d.competitionId) !== c))) {
     mkdirSync(mapa, { recursive: true })
     writeFileSync(pot, JSON.stringify(d))
   }
@@ -479,7 +488,7 @@ export async function dopolniZacetek(tekme, preteklih, prenesi, { mapa = MAPA } 
     let zgresenih = 0
     for (let i = 0; zgresenih < 3 && i < 600; i++) {
       id--
-      const d = await tekmaPoSifri(prenesi, id, mapa)
+      const d = await tekmaPoSifri(prenesi, id, mapa, c)
       if (nasa(d)) { out.push(d); zgresenih = 0 } else zgresenih++
     }
     // Meja seznama je po datumu, ne po šifri: v krogu na meji manjka še kakšna
@@ -492,7 +501,7 @@ export async function dopolniZacetek(tekme, preteklih, prenesi, { mapa = MAPA } 
     for (let i = 1; i < ids.length; i++) {
       if (ids[i] - ids[i - 1] < 2 || ids[i] - ids[i - 1] > 120) continue
       for (let j = ids[i - 1] + 1; j < ids[i]; j++) {
-        const d = await tekmaPoSifri(prenesi, j, mapa)
+        const d = await tekmaPoSifri(prenesi, j, mapa, c)
         if (nasa(d)) out.push(d)
       }
     }
@@ -514,6 +523,12 @@ const vir = {
   naslovZapisnika: (_koda, id) => naslovPostave(id),
   jeIzziv,
   zavrnitev: (sporocilo, status = null) => new MfaZavrnitev(`mfa: ${sporocilo} — uvoz ustavljen, ne obhajamo`, status),
+  // V predpomnilnik gostitelja le JSON: stran vzdrževanja, prazen ali odrezan
+  // odgovor (200) bi sicer obveljal za vselej (zapisnik, starejši od tedna, se
+  // bere iz predpomnilnika) in vsak nočni uvoz bi padel na `beriJson`.
+  zaPredpomnilnik: (besedilo) => {
+    try { JSON.parse(besedilo); return true } catch { return false }
+  },
 
   async razporedVseStrani(koda, prenesi) {
     return razcleniRazpored(await vseTekme(koda, prenesi))

@@ -5374,7 +5374,8 @@ preveri(
 {
   const M = await import('./viri/mfa.mjs')
   const { default: viri } = await import('./viri/index.mjs')
-  const { readdirSync } = await import('node:fs')
+  const { readdirSync, mkdtempSync, rmSync, existsSync, writeFileSync } = await import('node:fs')
+  const { tmpdir } = await import('node:os')
   const beri = (ime) => JSON.parse(readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8'))
   preveri('mfa: vir je vpisan, 3 s, User-Agent SLFF in x-version 2', viri.mfa === M.default && M.default.drzava === 'MT' &&
     M.default.imaRegistracije === false && M.default.premorMs >= 2000 &&
@@ -5447,6 +5448,36 @@ preveri(
     throw Object.assign(new Error('HTTP 404'), { status: 404 })
   }, { mapa: null })
   preveri('mfa: majhna luknja v bloku se prebere, velika (nova šifra) ne', luknja.length === 4 && sonde2.join() === '199,198,197,201,202')
+
+  // Gostiteljev `prenesi` (uvoz-zapisnikov/-razporeda) shrani vsak 200 odgovor
+  // pod podanim imenom v isto mapo. Neodigrana tekma po šifri se mora naslednjič
+  // prebrati znova, odigrana in neobstoječa ne.
+  const mapaPS = mkdtempSync(`${tmpdir()}/mfa-po-sifri-`)
+  const sonde3 = []
+  let odigrana = false
+  const gostitelj = async (url, ime, sveze = false) => {
+    const pot = `${mapaPS}/${ime}`
+    if (!sveze && existsSync(pot) && (M.default.zaPredpomnilnik?.(readFileSync(pot, 'utf8'), ime) ?? true)) return readFileSync(pot, 'utf8')
+    const id = Number(url.match(/matches\/(\d+)$/)?.[1])
+    sonde3.push(id)
+    let b
+    if (id === 109) b = JSON.stringify({ ...t(id, 'c', 5, 6, '08-01'), status: odigrana ? 'PLAYED' : 'POSTPONED' })
+    else if (id >= 105) b = JSON.stringify(t(id, 'c', 1, 2, '08-01'))
+    else throw Object.assign(new Error('HTTP 404'), { status: 404 })
+    if (M.default.zaPredpomnilnik?.(b, ime) ?? true) writeFileSync(pot, b)
+    return b
+  }
+  const zacetek = [t(110, 'c', 1, 2, '09-01')]
+  await M.dopolniZacetek(zacetek, new Map([['c', 100]]), gostitelj, { mapa: mapaPS })
+  odigrana = true
+  sonde3.length = 0
+  const drugic = await M.dopolniZacetek(zacetek, new Map([['c', 100]]), gostitelj, { mapa: mapaPS })
+  rmSync(mapaPS, { recursive: true, force: true })
+  preveri('mfa: neodigrana tekma po šifri se ob naslednjem uvozu prebere znova (odigrane in 404 ne)',
+    drugic.find((x) => x.id === 109)?.status === 'PLAYED' && sonde3.join() === '109')
+  preveri('mfa: v predpomnilnik le JSON (ne HTML vzdrževanja, prazen ali odrezan odgovor)', typeof M.default.zaPredpomnilnik === 'function' &&
+    M.default.zaPredpomnilnik('{"status":"PLAYED"}') && M.default.zaPredpomnilnik('[]') && !M.default.zaPredpomnilnik('<html>vzdrževanje</html>') &&
+    !M.default.zaPredpomnilnik('') && !M.default.zaPredpomnilnik('{"homeTeam":{"players":['))
 
   const tekma = (id) => [...past, ...up].find((x) => String(x.id) === String(id))
   const zap = (id, kontekst = tekma(id)) => M.vZapisnik(beri(`mt-mfa-tekma-${id}-izid.json`), beri(`mt-mfa-tekma-${id}-postava.json`), { id: M.sifraZapisnika(id), tekma: kontekst })
