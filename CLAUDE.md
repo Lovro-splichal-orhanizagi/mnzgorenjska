@@ -2388,8 +2388,14 @@ stran jih naloži sama.
   "(Junior)" se odreže. "Przebieg spotkania" ima dogodke z `data-minute`
   ("22'", "45' +2'" → 45): `span.goal`, `span.penalty-kick` (gol z 11 m),
   `span.own-goal` (avtogol, pri ekipi **strelca**, šteje nasprotniku), rumeni
-  `#FFD700`, rdeči `#DF0021`, vstop zelena puščica `#28A745`, izstop rdeča
-  `#DC3545` — minute so točne. Dogodek se pripiše igralcu po šifri, sicer
+  `#FFD700`, rdeči `#DF0021` (rdeča barva pred rumeno: rumeno-rdeča ikona bi
+  bila rdeči), vstop zelena puščica `#28A745`, izstop rdeča `#DC3545` —
+  minute so točne. **Drugi rumeni je le še en navaden rumeni brez rdečega**
+  (6 v 97 zapisnikih raziskave; pzpn ima zanj `SecondYellow`): vir ga
+  spremeni v rdeči v njegovi minuti (1 rumeni + 1 rdeči, opozorilo), minute
+  igralca se končajo tam. Isti rumeni dvakrat v isti minuti (po zapisu vira,
+  "90' +2'" ≠ "90' +3'") je dvojnik vnosa — šteje enkrat, opozorilo.
+  Dogodek se pripiše igralcu po šifri, sicer
   strani (left = domači). Neodigrana tekma vrne "Brak danych na temat tego
   spotkania.". Imen osebja in sodnikov ne beremo; vzorci
   `scripts/vzorci/pl-wmzpn-*` so brez njih.
@@ -2401,8 +2407,15 @@ stran jih naloži sama.
   3:0 / 0:3, starejših od tedna, in označi tiste z walkoverjem ali brez
   postav; uvoz zapisnikov jih izpusti.
 - Zapisnik z manj kot 7 začetniki ekipe je `nepopoln` (kot `pzpn`), 45 dni se
-  bere znova. Zapisnik z začetniki, a brez dogodkov (klub ni vnesel golov), je
-  opozorilo `goli iz zapisnika … se ne ujemajo` — izid ostane izid.
+  bere znova. **Postave in dogodke Extranet vnaša ločeno** (vzorec
+  `…-brez-dogodkov`: 0:2, postavi 11 + 11, nobenega dogodka): zapisnik z
+  začetniki, a goli iz dogodkov ≠ izid, je opozorilo `goli iz zapisnika … se
+  ne ujemajo` (izid ostane izid) in **ni popoln** (`popolnZapisnik`), zato ga
+  uvoz bere svežega do 45 dni po tekmi in dogodke, vnesene pozneje, ujame —
+  nočni uvoz (`--sveze 21`) pa uvoženo tekmo, starejšo od 21 dni, preskoči,
+  zato kar pride pozneje, prinese le ročni uvoz lige ali `--zapisnik`.
+  Ekipa z rezervami, a brez vpisane menjave, je opozorilo `menjav ni vpisal`
+  (začetniki 90 minut, `z.brezMenjav`).
 - **Klasa B menjav ne vpisuje**: v preizkusu 60 zapisnikov vseh petih skupin
   ni nobena ekipa vpisala menjave (začetniki 90 minut, rezerva nastopi le kot
   strelec), v 7 od 59 odigranih goli ≠ izid. Zato klasa B **ni vpisana**; vir jo zna

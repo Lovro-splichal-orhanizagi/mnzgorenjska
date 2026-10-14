@@ -5082,6 +5082,32 @@ preveri(
   const d = zapisnik('brez-dogodkov')
   preveri('wmzpn: zapisnik brez dogodkov — postavi da, goli ≠ izid je opozorilo', d.domaci.postava.length === 11 && d.goli.length === 0 &&
     d.opozorila.some((o) => /ne ujemajo/.test(o)))
+  // Extranet dogodke kdaj vnese šele dneve po tekmi: zapisnik s postavama, a
+  // brez (vseh) golov ni popoln, da ga uvoz bere znova (do 45 dni).
+  preveri('wmzpn: postave brez golov iz izida niso popoln zapisnik (bere se znova)',
+    !W.popolnZapisnik(html('pl-wmzpn-zapisnik-brez-dogodkov.html')) && W.popolnZapisnik(html('pl-wmzpn-zapisnik-rdeci.html')) &&
+    W.popolnZapisnik(html('pl-wmzpn-zapisnik-avtogol-11m.html')) && W.popolnZapisnik(html('pl-wmzpn-zapisnik-klasa-b-brez-menjav.html')))
+  preveri('wmzpn: ekipa brez vpisanih menjav je opozorilo', d.opozorila.some((o) => /menjav ni vpisal/.test(o)) &&
+    b.opozorila.filter((o) => /menjav ni vpisal/.test(o)).length === 2 && !z.opozorila.some((o) => /menjav/.test(o)))
+  // Drugi rumeni: Extranet ga pokaže kot navaden rumeni karton, rdečega ni
+  // (Wolski, Drwęca : Radomniak, okręgowa gr. 2, 6. krog: 38' in 84').
+  const dr = zapisnik('drugi-rumeni')
+  const wolski = W.nastopi(dr).find((x) => x.ime === 'Wolski Radosław')
+  preveri('wmzpn: drugi rumeni — rdeči v 84., 1 rumeni + 1 rdeči, minute do 84', dr.rdeci.length === 1 && dr.rdeci[0].ime === 'Wolski Radosław' &&
+    dr.rdeci[0].minuta === 84 && dr.rumeni.filter((r) => r.ime === 'Wolski Radosław').length === 1 && dr.rumeni.length === 7 &&
+    wolski?.minute === 84 && wolski.zacetnik && minute(dr, 0) === 984 && minute(dr, 1) === 990 && dr.krog === 6 && dr.sezona === '2026/27' &&
+    dr.opozorila.some((o) => /drugi rumeni/.test(o)))
+  const dvojnik = W.vZapisnik(html('pl-wmzpn-zapisnik-drugi-rumeni.html').replace(`data-minute="84'" style="margin-top: 3px;"`, `data-minute="38'" style="margin-top: 3px;"`), {})
+  preveri('wmzpn: isti rumeni dvakrat v isti minuti je dvojnik, ne izključitev', dvojnik.rdeci.length === 0 &&
+    dvojnik.rumeni.filter((r) => r.ime === 'Wolski Radosław').length === 1 && dvojnik.opozorila.some((o) => /dvakrat/.test(o)))
+  // 90'+2' in 90'+3' sta dva kartona, čeprav je minuta obeh 90.
+  const podaljsek = W.vZapisnik(html('pl-wmzpn-zapisnik-drugi-rumeni.html').replace(`data-minute="38'"`, `data-minute="90' +2'"`)
+    .replace(`data-minute="84'" style="margin-top: 3px;"`, `data-minute="90' +3'" style="margin-top: 3px;"`), {})
+  preveri('wmzpn: drugi rumeni v sodnikovem dodatku ni dvojnik', podaljsek.rdeci.length === 1 && podaljsek.rdeci[0].minuta === 90 &&
+    !podaljsek.opozorila.some((o) => /dvakrat/.test(o)))
+  preveri('wmzpn: rdeča ikona (tudi rumeno-rdeča) je rdeči karton', W.vrstaDogodka('<svg class="red-card"></svg>') === 'rdeci' &&
+    W.vrstaDogodka('<svg class="second-yellow-card"><g fill="#FFD700"></g><g fill="#DF0021"></g></svg>') === 'rdeci' &&
+    W.vrstaDogodka('<svg class="yellow-card"><g fill="#FFD700"></g></svg>') === 'rumeni')
   const wo = zapisnik('walkower')
   preveri('wmzpn: walkower — Status "Walkover", 3:0 brez postav', W.jeWalkower(wo) && wo.prazen && wo.rezultat.domaci === 3 && W.nastopi(wo).length === 0)
   preveri('wmzpn: neodigrana tekma ("Brak danych") — brez zapisnika', zapisnik('neodigrana') === null &&

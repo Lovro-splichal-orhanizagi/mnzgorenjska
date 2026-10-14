@@ -12,9 +12,11 @@
 // in stalno šifro osebe PZPN (`/rozgrywki/zawodnik/<uuid>` → `reg_st` kot pri
 // pzpn in hlf), nato "Przebieg spotkania" z dogodki (`data-minute`): gol
 // (`span.goal`), gol z 11 m (`span.penalty-kick`, "Gol z karnego"), avtogol
-// (`span.own-goal`, "Gol samobójczy", pri ekipi strelca), rumeni (`#FFD700`),
+// (`span.own-goal`, "Gol samobójczy", pri ekipi strelca), rumeni (`#FFD700`;
+// drugi rumeni je le še en rumeni brez rdečega — vir ga spremeni v rdeči),
 // rdeči (`#DF0021`), vstop (zelena puščica `#28A745`) in izstop (rdeča
-// `#DC3545`). Vratarja, kapetana in pozicij zapisnik NE pove (le "(Junior)").
+// `#DC3545`). Postave in dogodke Extranet vnaša ločeno, dogodki lahko pridejo
+// dneve pozneje. Vratarja, kapetana in pozicij zapisnik NE pove (le "(Junior)").
 // Neodigrana tekma vrne "Brak danych na temat tego spotkania.".
 //
 // ŠIFRA LIGE je `<leagueN>/<play>/<season>` (trije UUID iz naslova strani
@@ -253,14 +255,17 @@ function postavi(s) {
   return ekipe
 }
 
-/** Vrsta dogodka iz okvirja dogodka. */
+/**
+ * Vrsta dogodka iz okvirja dogodka. Rdeče pred rumenim: rumeno-rdeča ikona
+ * (drugi rumeni, če bi jo Extranet kdaj pokazal) ima obe barvi in je rdeči.
+ */
 export function vrstaDogodka(okvir) {
   const s = String(okvir)
   if (/class="own-goal/.test(s)) return 'avtogol'
   if (/class="penalty-kick/.test(s)) return 'enajstmetrovka'
   if (/class="goal"/.test(s)) return 'gol'
-  if (/yellow-card|#FFD700/i.test(s)) return 'rumeni'
   if (/red-card|#DF0021/i.test(s)) return 'rdeci'
+  if (/yellow-card|#FFD700/i.test(s)) return 'rumeni'
   if (/#28A745/i.test(s)) return 'noter'
   if (/#DC3545/i.test(s)) return 'ven'
   return null
@@ -278,10 +283,16 @@ function dogodki(s) {
     const okvir = zacetek < 0 ? '' : kos.slice(zacetek, Math.max(zacetek, kos.indexOf('</a>', zacetek)) + 4)
     const uuid = okvir.match(new RegExp(`/rozgrywki/zawodnik/(${UUID})`))?.[1] ?? null
     const ime = imeIgralca(okvir.replace(/<span class="tooltiptext">[\s\S]*?<\/span>/g, '').replace(/<svg[\s\S]*?<\/svg>/g, '').replace(/⚽/g, ''))
-    out.push({ stran, minuta: minuta(kos.match(/data-minute="([^"]*)"/)?.[1]), uuid, ime, vrsta: vrstaDogodka(okvir), surovo: besedilo(okvir).slice(0, 60) })
+    const casVir = kos.match(/data-minute="([^"]*)"/)?.[1] ?? ''
+    out.push({ stran, minuta: minuta(casVir), casVir: casVir.replace(/\s+/g, ''), uuid, ime, vrsta: vrstaDogodka(okvir), surovo: besedilo(okvir).slice(0, 60) })
   }
   return out
 }
+
+const kljucIgralca = (x) => `${x.ekipaIdx}|${x.regSt ?? x.ime}`
+
+/** Goli iz dogodkov zapisnika po ekipah [domači, gostje]; avtogol šteje nasprotniku. */
+export const goliZapisnika = (z) => [0, 1].map((idx) => z.goli.filter((g) => (g.avtogol ? 1 - g.ekipaIdx : g.ekipaIdx) === idx).length)
 
 /**
  * Zapisnik v obliko drugih virov. `tekma` je vrstica razporeda (datum, ura,
@@ -312,6 +323,9 @@ export function vZapisnik(html, tekma = {}) {
   ekipe.forEach((x, idx) => { for (const i of [...x.postava, ...x.rezerve]) if (i.uuid) poUuid.set(i.uuid, { idx, i, preklopi: [] }) })
   const goli = []
   const rumeni = []
+  // Minuta rumenega, kot jo piše vir ("90'+2'"): 90+2 in 90+3 sta dva kartona,
+  // čeprav sta oba v 90. minuti.
+  const casRumenega = new Map()
   const rdeci = []
   for (const d of dogodki(s)) {
     const najden = d.uuid ? poUuid.get(d.uuid) : null
@@ -322,12 +336,33 @@ export function vZapisnik(html, tekma = {}) {
     if (d.minuta == null) opozorila.push(`${imeni[ekipaIdx]}: dogodek ${d.vrsta ?? '?'} pri ${kdo.ime} brez minute`)
     if (d.vrsta === 'gol' || d.vrsta === 'enajstmetrovka' || d.vrsta === 'avtogol')
       goli.push({ ...kdo, minuta: d.minuta, avtogol: d.vrsta === 'avtogol', enajstmetrovka: d.vrsta === 'enajstmetrovka' })
-    else if (d.vrsta === 'rumeni') rumeni.push({ ...kdo, minuta: d.minuta })
+    else if (d.vrsta === 'rumeni') {
+      // Isti rumeni dvakrat v isti minuti je dvojnik vnosa, ne izključitev.
+      if (rumeni.some((r) => kljucIgralca(r) === kljucIgralca(kdo) && casRumenega.get(r) === d.casVir))
+        opozorila.push(`${imeni[ekipaIdx]}: rumeni pri ${kdo.ime} v ${d.casVir} je vpisan dvakrat — štejemo enega`)
+      else {
+        const r = { ...kdo, minuta: d.minuta }
+        casRumenega.set(r, d.casVir)
+        rumeni.push(r)
+      }
+    }
     else if (d.vrsta === 'rdeci') {
       if (!rdeci.some((r) => r.ekipaIdx === ekipaIdx && r.regSt === kdo.regSt && r.ime === kdo.ime)) rdeci.push({ ...kdo, minuta: d.minuta })
     } else if (d.vrsta === 'noter' || d.vrsta === 'ven') {
       if (najden && d.minuta != null) najden.preklopi.push(d.minuta)
     } else opozorila.push(`${imeni[ekipaIdx]}: neznan dogodek pri ${kdo.ime} ("${d.surovo}")`)
+  }
+
+  // Drugi rumeni: Extranet ga pokaže kot navaden rumeni karton brez rdečega
+  // (pzpn ima zanj `SecondYellow`). Kot pri drugih virih: 1 rumeni + 1 rdeči
+  // v minuti drugega rumenega, da igralec dobi minute le do izključitve.
+  for (const k of new Set(rumeni.map(kljucIgralca))) {
+    const njegovi = rumeni.filter((r) => kljucIgralca(r) === k).sort((a, b) => (a.minuta ?? 0) - (b.minuta ?? 0))
+    if (njegovi.length < 2) continue
+    const drugi = njegovi[1]
+    rumeni.splice(rumeni.indexOf(drugi), 1)
+    if (!rdeci.some((r) => kljucIgralca(r) === k)) rdeci.push({ ...drugi })
+    opozorila.push(`${imeni[drugi.ekipaIdx]}: drugi rumeni pri ${drugi.ime} v ${drugi.minuta}. minuti — šteje kot rdeči`)
   }
 
   const brezMenjav = [false, false]
@@ -340,13 +375,15 @@ export function vZapisnik(html, tekma = {}) {
     const rezerve = x.rezerve.map(vObliko)
     // Nižje lige menjav kdaj ne vpišejo: začetniki imajo takrat po 90 minut.
     brezMenjav[idx] = ![...postava, ...rezerve].some((i) => i.preklopi.length)
+    if (brezMenjav[idx] && rezerve.length)
+      opozorila.push(`${imeni[idx]}: menjav ni vpisal — začetniki imajo po 90 minut, rezerve brez nastopa`)
     return { ime: imeni[idx], postava, rezerve }
   })
 
   // Goli iz zapisnika proti izidu (avtogol šteje nasprotniku).
-  const zaEkipo = (idx) => goli.filter((g) => (g.avtogol ? 1 - g.ekipaIdx : g.ekipaIdx) === idx).length
-  if (znana[0] && znana[1] && (zaEkipo(0) !== rezultat.domaci || zaEkipo(1) !== rezultat.gostje))
-    opozorila.push(`goli iz zapisnika (${zaEkipo(0)}:${zaEkipo(1)}) se ne ujemajo z izidom ${rezultat.domaci}:${rezultat.gostje}`)
+  const [g0, g1] = goliZapisnika({ goli })
+  if (znana[0] && znana[1] && (g0 !== rezultat.domaci || g1 !== rezultat.gostje))
+    opozorila.push(`goli iz zapisnika (${g0}:${g1}) se ne ujemajo z izidom ${rezultat.domaci}:${rezultat.gostje}`)
   opozorila.sort((a, b) => Number(b.startsWith(NEPOPOLN)) - Number(a.startsWith(NEPOPOLN)))
 
   return {
@@ -376,11 +413,17 @@ export function vZapisnik(html, tekma = {}) {
 /** Walkower: zapisnik ima "Status meczu: Walkover" (razpored le izid brez polčasa). */
 export const jeWalkower = (z) => /walk/i.test(String(z?.status ?? ''))
 
-/** Popoln zapisnik (obe ekipi ≥ 7 začetnikov) — takega ne beremo znova. */
+/**
+ * Popoln zapisnik — takega ne beremo znova: obe ekipi ≥ 7 začetnikov **in**
+ * goli iz dogodkov = izid. Extranet postave in dogodke vnaša ločeno; zapisnik
+ * s postavama brez (vseh) golov se zato bere znova (do 45 dni), sicer bi
+ * ostal v predpomnilniku z začetniki po 90 minut in brez strelcev.
+ */
 export const popolnZapisnik = (html) => {
-  if (brezPodatkov(html)) return false
-  const p = postavi(brezSlogov(html))
-  return p.length >= 2 && p.every((e) => e.postava.length >= NAJMANJ_ZACETNIKOV)
+  const z = vZapisnik(html)
+  if (!z || z.nepopoln) return false
+  const [g0, g1] = goliZapisnika(z)
+  return g0 === z.rezultat.domaci && g1 === z.rezultat.gostje
 }
 
 // --- prenos -------------------------------------------------------------------------------
@@ -430,7 +473,10 @@ const vir = {
     return razcleniRazpored(await beri(prenesi, naslovLige(koda), imeLige(koda), true))
   },
 
-  /** Zapisniki odigranih tekem. Popoln se ne bere znova, nepopoln 45 dni. */
+  /**
+   * Zapisniki odigranih tekem. Popoln (postavi, goli = izid) se ne bere
+   * znova, nepopoln se bere svež do 45 dni.
+   */
   async zapisniki(koda, prenesi) {
     const out = []
     for (const t of await straneSkupine(koda, prenesi)) {
