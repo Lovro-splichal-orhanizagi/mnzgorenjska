@@ -146,7 +146,7 @@ export default function PotisnaObvestila() {
 
   if (!pas) return null
   return (
-    <div className="kartica fixed inset-x-3 bottom-24 z-50 mx-auto max-w-md space-y-3 p-4 shadow-lg">
+    <div className="fixed inset-x-3 bottom-24 z-50 mx-auto max-w-md space-y-3 rounded-2xl border border-white/10 bg-slate-900 p-4 shadow-2xl">
       <p className="font-semibold">{t('racun.opomniki.push')}</p>
       <p className="text-sm text-slate-300">{t('racun.opomniki.pushOpis')}</p>
       <div className="flex gap-2">

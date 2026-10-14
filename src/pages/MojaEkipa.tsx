@@ -2759,7 +2759,7 @@ function PredalTrga({
     <div className="lg:hidden">
       <div
         onClick={naZapri}
-        className="fixed inset-0 z-30 bg-slate-950/70 backdrop-blur-sm"
+        className="fixed inset-0 z-40 bg-slate-950/70 backdrop-blur-sm"
       />
       <div
         ref={ref}
