@@ -19,6 +19,7 @@ import Domov from './pages/Domov'
 import NativnePovezave from './components/NativnePovezave'
 import PosodobiAplikacijo from './components/PosodobiAplikacijo'
 import PotisnaObvestila from './components/PotisnaObvestila'
+import { BeleziPovabilo } from './lib/povabilo'
 import { jeZasebna, useKanonicni, useNaslov, useNoindex } from './lib/naslov'
 import { useObisk } from './lib/obiski'
 import { jeNativno } from './lib/platforma'
@@ -110,6 +111,7 @@ export default function App() {
           <NativnePovezave />
           <PosodobiAplikacijo />
           <PotisnaObvestila />
+          <BeleziPovabilo />
           <PrviObisk />
           <RokKroga />
           <Navbar />

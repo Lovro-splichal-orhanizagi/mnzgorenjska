@@ -334,6 +334,12 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     preklici: 'Tühista',
     caka: 'Ootab kinnitust.',
     cakaOpis: 'Kinnitada saab klubi asjatundja, kaks kinnitatud meeskonnakaaslast või SLFF. Taotlust näed ainult sina.',
+    cakaPrijatelj: 'Too sõber ja jõuad järjekorras kiiremini: iga, kes liitub sinu lingi kaudu ja paneb kokku meeskonna, viib sind ettepoole.',
+    cakaDeli: 'Kutsu sõber',
+    cakaVabilo: 'Mängid minuga? SLFF on tasuta fantaasialiiga meie mängude ja mängijatega. Liitu selle lingi kaudu ja pane kokku meeskond: {povezava}',
+    cakaMesto: 'Koht järjekorras: {mesto} / {skupaj}',
+    cakaPripeljal: 'toodud sõpru: {n}',
+    cakaKopirano: 'Link on kopeeritud.',
     umakni: 'Võta taotlus tagasi',
     zavrnjen: 'Sinu taotlus selle profiili kohta lükati tagasi.',
     znacka: {

@@ -334,6 +334,12 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     preklici: 'Cancel',
     caka: 'Awaiting confirmation.',
     cakaOpis: 'It can be confirmed by a club insider, two confirmed teammates or SLFF. Only you can see this request.',
+    cakaPrijatelj: 'Bring a friend and you\'ll be checked sooner: everyone who signs up through your link and builds a team moves you up the queue.',
+    cakaDeli: 'Invite a friend',
+    cakaVabilo: 'Playing with me? SLFF is a free fantasy league with our matches and players. Sign up through this link and build a team: {povezava}',
+    cakaMesto: 'Place in queue: {mesto} of {skupaj}',
+    cakaPripeljal: 'friends brought: {n}',
+    cakaKopirano: 'Link copied.',
     umakni: 'Withdraw request',
     zavrnjen: 'Your request for this profile was rejected.',
     znacka: {
