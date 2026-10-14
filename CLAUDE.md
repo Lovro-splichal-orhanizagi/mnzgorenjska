@@ -2828,6 +2828,104 @@ Uvoz (ena za drugo, ~2 s na zapisnik — arhiv 240 zapisnikov je ~10 minut):
 `gh workflow run uvoz-lige.yml -f liga=mk-prva-mfl -f arhiv=prva-mfl-25-26 -f
 cene=true`.
 
+### Turčija — vir `tff`
+
+Vir `tff` (`scripts/viri/tff.mjs`) bere **tff.org** (Türkiye Futbol
+Federasyonu): Nesine 2. Lig (raven 3, skupini Beyaz in Kırmızı), Nesine 3. Lig
+(raven 4, v 2026/27 tri skupine po 18 klubov) in Profesyonelliğe Geçiş Ligi
+(PGL, raven 5, nekdanji BAL, 12 skupin po 10–14 klubov, prvi krog 17.–18. 10.
+2026). Pokrajinske amaterske lige (Süper Amatör in nižje, ASKF) na tff.org
+niso. Država `TR` ("Türkiye") in zveza `tff` vpiše migracija lig; vmesnika v
+turščini, kartice, pošte in `TR` v matriki nočnega uvoza **še ni** — oboje
+pred vklopom (`TR` je le v `SKUPEN_VIR`, da ročni uvozi turških lig tečejo
+eden za drugim). Šifra lige se začne s `tr-`.
+
+- **Kodiranje**: ASP.NET iz strežnika v **windows-1254**. `vir.fetch`
+  (`tffFetch`) bajte pretvori v UTF-8; brez tega so ğ, ı, İ, ş pokvarjeni.
+- **Šifra lige je `<pageID>/<grupID>`**: stran tekmovanja ene sezone in
+  skupina. 2026/27: 2. Lig `976`, 3. Lig `971`, PGL `1596`; 2025/26: 2. Lig
+  `1769`, 3. Lig `1770`, BAL `1793` (seznam sezon: arhiv 2. Lig `pageID=371`,
+  3. Lig `376`, PGL `1290`). Vsaka sezona ima nove številke obeh.
+- **Razpored** je po tednih: `default.aspx?pageID=<p>&grupID=<g>&hafta=<n>`
+  (zavihek "<skupina> (<n>.hafta)", vse tekme kroga z datumom, uro, kluboma s
+  šifro `kulupID`, izidom in `macId`). Število tednov povedo povezave
+  `hafta=`. Neznan teden ali skupino stran tiho zamenja — vir preveri zavihek in
+  se ustavi. Ura je istanbulska (UTC+3 vse leto) → ljubljanska (poleti −1 h,
+  pozimi −2 h). Celotna stran 3. Lig ima 640 kB (fiksturji vseh skupin, brez
+  datumov); v predpomnilnik (`scripts/.predpomnilnik/tff/hafta-…`) gre le
+  tedenski del (`obreziTeden`). Odigran teden (vsi izidi, zadnja tekma > 3 dni)
+  se ne bere znova, teden od −10 do +7 dni vsako uro, poznejši na 3 dni.
+- **Ime kluba** je zadnje, ki ga strani tednov povedo za `kulupID` (klub 4485
+  je v starih fiksturjih "BEYKOZ İSHAKLI …", zdaj "BÜYÜKÇEKMECE GÜCÜ …");
+  zapisnik vzame ime, krog in datum s strani tedna. Ključ kluba je po turško
+  (`toLocaleLowerCase('tr')`: I → ı, İ → i), kratko ime brez "Spor Kulübü",
+  "A.Ş." ("Kdz.Ereğli 1980", "Orduspor 1967").
+- **Zapisnik** `Default.aspx?pageId=29&macId=<id>` (šifra v bazi `tr<id>`): za
+  vsako ekipo "İlk 11" (dres "47." in igralec s **stalno šifro osebe**
+  `kisiId` → `reg_st`), "Yedekler" (klop), "Goller" ("IME,47.dk (H)": F noga,
+  H glava, P 11 m, K avtogol — vpisan pri **strelčevi** ekipi, šteje
+  nasprotniku; S = izvajanje 11 m po tekmi, ne šteje), "Kartlar" (Sarı Kart,
+  Kırmızı Kart, Çift Sarı Kart = drugi rumeni, prvi rumeni ni vpisan posebej →
+  1 rumeni + 1 rdeči ob isti minuti), "Oyundan Çıkanlar" in "Oyuna Girenler"
+  (izstop in vstop z minuto, par po minuti; "90+3.dk" → 90). Ime "MÜCAHİT
+  ÇAKIR" → "Çakır Mücahit". **Vratarja in pozicij ni** (prvi začetnik ni
+  vratar: dresi 47, 34, 25 …) — vse pozicije, tudi GK, določi glasovanje;
+  *Uskladi pozicije* za `tff` nima česa šteti. Sodnikov, opazovalcev,
+  stadiona in trenerjev ne beremo; vzorci `scripts/vzorci/tr-tff-*` so brez
+  njih.
+- **Neodigrana tekma** ima glavo z datumom brez izida; **kontumacija** (hükmen)
+  ima izid 3:0 / 0:3, opombo "Esame Bilgileri Kulüpler Tarafından
+  Girilmektedir", brez ure in brez ene ali obeh postav (Yeni Malatyaspor,
+  3. Lig 03, 3. in 11. 10. 2026; BAL 2025/26 pogosto z le domačo postavo).
+  `vZapisnik` vrne null, `vir.kontumacije` jo označi po tednu dni.
+- Imena: TFF ime kluba včasih odreže ("… SPORTİF FAALİYET SPOR KULÜ").
+
+**Pravice (pregled 15. 10. 2026, ni pravni nasvet).** robots.txt ni (404),
+izziva ni. Pogoji uporabe (`default.aspx?pageID=179`): "Sitede yer alan
+bilgiler, kaynak gösterilmek suretiyle yayımlanabilir; ancak bu bilgiler
+ticari amaçlarla kullanılamaz" — objava **z navedbo vira** (`vir_ime` TFF,
+`vir_url` → tff.org v nogi), **ne v komercialne namene**. SLFF je brezplačen,
+zato zdaj ustreza. **Pogoj za ponovni pregled: ko SLFF zasluži karkoli
+(oglasi, sponzorji, plačljivi preverjeni igralci, pivo), potrebujemo pisno
+dovoljenje TFF ali turške lige izklopimo.** Beremo odkrito (User-Agent
+`SLFF fantasy (https://slff.eu)`, **3 s** med zahtevki, zaključenih tednov in
+zapisnikov ne beremo znova). **Ob izzivu, CAPTCHI, 403 ali 429 se uvoz ustavi —
+ne obhajaj** (`TffZavrnitev`, izhod 4). Če nas TFF prosi, naj nehamo, `tr-`
+lige izklopimo.
+
+Preizkus v živo (15. 10. 2026, brez pisanja v bazo, ~150 zahtevkov): tabela
+spodaj; vse prebrane postave 11 + 11, goli = izid, menjave z minuto, 0
+opozoril. 3. Lig 01 v celoti: 34 tednov, 306 tekem, 18 klubov. Ekipa ima 990
+minut razen pri rdečem kartonu.
+
+| liga | tekoča 2026/27 | zapisnikov (goli = izid, postav po 11, s klopi) | arhiv 2025/26 (skupnih klubov) |
+|---|---|---|---|
+| tr-2-lig-beyaz | `976/3541` | 12 (36, 24/24, 103) | `1769/2781` Kırmızı (8 od 18) |
+| tr-2-lig-kirmizi | `976/3542` (17 klubov) | 12 (39, 24/24, 112; 2 avtogola) | `1769/2782` Beyaz (7 od 19) |
+| tr-3-lig-1 | `971/3543` | 12 (34, 24/24, 110) | `1770/2785` 03 (9), `1770/2783` 01 (7) |
+| tr-3-lig-2 | `971/3544` | 12 (24, 24/24, 111) | `1770/2786` 04 (11) |
+| tr-3-lig-3 | `971/3545` | 10 + 2 kontumaciji (42, 20/20, 94) | `1770/2784` 02 (11) |
+| tr-pgl-1 … tr-pgl-12 | `1596/3938` … `1596/3949` (12 skupin, 10–14 klubov, 22 ali 26 tednov) | 2026/27 še ni odigrana (1. krog 17.–18. 10.); BAL 2025/26: 47 (97, 94/94, 414) | spodaj |
+
+Arhiv je izbran po skupnih klubih (šifre `kulupID` iz fiksturjev obeh sezon);
+vsak arhiv ima ena sama liga. 2. Lig je med sezonama skupini premešala, zato
+je arhiv šibek. PGL 2026/27 ima 12 skupin, BAL 2025/26 jih je imel deset;
+PGL je nova raven: najboljši klubi BAL in izpadli iz 3. Lig (ta ima zdaj tri
+skupine namesto štirih). Skupnih klubov z BAL je največ 6 od 10–14, zato je
+arhiv šibek; izpadli iz 3. Lig dobijo ceno iz višje lige sami (`reg_st` =
+`kisiId`, isti vir), če je 3. Lig uvožena. Predlog (vsak BAL arhiv enkrat,
+`1793/<grup>`): PGL 1 `3306` (4), 2 `3304` (3), 3 `3302` (4), 4 `3309` (3),
+5 `3310` (6), 8 `3301` (3), 10 `3308` (5), 11 `3305` (3), 12 `3307` (5);
+PGL 6, 7 in 9 brez arhiva (`3303` ima z njimi le 1 klub). BAL 2025/26 preizkus
+(teden 10 vsake od 10 skupin): 47 zapisnikov in 3 kontumacije z le domačo
+postavo, goli = izid 97/97, 94/94 postav po 11, 414 nastopov s klopi, 2
+avtogola, 12 golov z 11 m, 0 opozoril. **PGL pred uvozom preveri na prvem
+odigranem krogu 2026/27.**
+
+Uvoz (ena za drugo): `gh workflow run uvoz-lige.yml -f liga=tr-3-lig-1 -f
+arhiv=1770/2785,1770/2783 -f cene=true`. Liga je 34 strani tednov in ~300
+zapisnikov po 3 s — prvi uvoz okoli 20–30 minut.
+
 ### Država obiskovalca
 
 Domena je ena, **lige druge države so skrite**: `useTekmovanje().tekmovanja`
@@ -2918,7 +3016,7 @@ dobi ceno iz tamkajšnje: percentil, prebran iz cene, vsaka raven višje zapre
 (`scripts/visja-liga.mjs`, `ovrednoti-igralce` izpiše seznam "Cena iz višje
 lige"). Raven lige je pravilo po šifri in imenu v `ravenLige`, ne stolpec:
 HR (državne lige, županijske po imenu le znotraj iste zveze), SK, HU, ES, EE,
-LV po uradni piramidi, AT le državne nad deželnimi; mladinske se primerjajo le
+LV, TR po uradni piramidi, AT le državne nad deželnimi; mladinske se primerjajo le
 z mladinskimi. Brez pravila (SI, RS, RO, PL, CZ, MK) in brez šifer osebe ostane
 4.5. Ob novi ligi z novim poimenovanjem ravni preveri `ravenLige` (smoke).
 Na vklopljeni ligi pride do nove cene le **tedensko prevrednotenje** (največ

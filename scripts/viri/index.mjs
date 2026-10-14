@@ -31,6 +31,7 @@ import lff from './lff.mjs'
 import ffm from './ffm.mjs'
 import fcf from './fcf.mjs'
 import fas from './fas.mjs'
+import tff from './tff.mjs'
 
 const VIRI = {
   mnzg,
@@ -82,6 +83,9 @@ const VIRI = {
   // Španija (Asturija): FutbolAsturiano.es (WordPress SportsPress), ne zveza;
   // liga je blok šifer objav tekem ene sezone, igralec s potjo profila.
   fas,
+  // Turčija (TFF) prek tff.org: 2. Lig, 3. Lig in PGL; šifra osebe (kisiId),
+  // brez vratarja in pozicij, stran v windows-1254.
+  tff,
 }
 
 /**
