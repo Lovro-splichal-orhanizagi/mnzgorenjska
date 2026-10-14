@@ -30,6 +30,7 @@ import jalgpall from './jalgpall.mjs'
 import lff from './lff.mjs'
 import ffm from './ffm.mjs'
 import fcf from './fcf.mjs'
+import fas from './fas.mjs'
 
 const VIRI = {
   mnzg,
@@ -78,6 +79,9 @@ const VIRI = {
   // Španija (Katalonija): Federació Catalana de Futbol prek zapisnikov fcf.cat
   // (drevo RSC v strani); liga je blok šifer zapisnikov, šifra osebe, vratar.
   fcf,
+  // Španija (Asturija): FutbolAsturiano.es (WordPress SportsPress), ne zveza;
+  // liga je blok šifer objav tekem ene sezone, igralec s potjo profila.
+  fas,
 }
 
 /**

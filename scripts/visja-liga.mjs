@@ -104,6 +104,12 @@ export function ravenLige({ slug, name, zveza }) {
     const r = { elit: 1, primera: 2, segona: 3, tercera: 4, quarta: 5 }[slug.split('-')[2]]
     return r ? abs(r) : null
   }
+  // Asturija (vir fas): Tercera Federación nad Primero AsturFútbol; raven le
+  // znotraj Asturije (katalonske lige so druga piramida in drug vir).
+  if (slug.startsWith('es-as-')) {
+    const r = { tercera: 1, primera: 2 }[slug.split('-')[2]]
+    return r ? { raven: r, obmocje: 'es-as', drzavna: false, mladinska } : null
+  }
 
   if (slug.startsWith('ee-')) {
     if (slug === 'ee-premium-liiga') return abs(1)
