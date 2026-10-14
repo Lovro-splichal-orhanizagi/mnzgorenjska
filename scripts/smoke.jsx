@@ -5421,6 +5421,8 @@ preveri(
     n.find((x) => x.ime === 'Жиленко Арсеній')?.minute === 25 && n.find((x) => x.ime === 'Вагін Ігор')?.minutaOd === 46 &&
     z.menjave.find((m) => m.noter.ime === 'Вагін Ігор')?.ven.ime === 'Жиленко Арсеній' && z.menjave.find((m) => m.noter.ime === 'Станкович Іван')?.ven.ime === 'Богомаз Назарій' &&
     n.find((x) => x.ime === 'Абрамов Михайло') === undefined && z.zgresene.length === 1 && z.zgresene[0].ime === 'Кобак Едвард' && z.zgresene[0].minuta === 80)
+  preveri('pfl-ua: zgrešena 11 m pride v nastop (penalties_missed)', n.find((x) => x.ime === 'Кобак Едвард')?.zgreseneEnajstmetrovke === 1 &&
+    n.filter((x) => x.zgreseneEnajstmetrovke > 0).length === 1)
   const ag = U.vZapisnik(beri('ua-pfl-tekma-16144.html'))
   preveri('pfl-ua: avtogol (icon-autogoal) pri strelcu, šteje nasprotniku', ag.goli.filter((g) => g.avtogol).length === 1 &&
     ag.goli.find((g) => g.avtogol)?.ime === 'Малиш Станіслав-Нурі' && ag.goli.find((g) => g.avtogol)?.ekipaIdx === 1 && ag.rezultat.domaci === 3 && ag.opozorila.length === 0)
@@ -5440,19 +5442,49 @@ preveri(
   const th = U.vZapisnik(beri('ua-pfl-tekma-16604.html'))
   preveri('pfl-ua: tehnični poraz (KDK) — izid 3:0 za zeleno mizo, goli z igrišča, opozorilo', th.rezultat.domaci === 3 && th.goli.length === 3 &&
     th.opozorila.length === 1 && /tehnični poraz/.test(th.opozorila[0]) && th.domaci.ime === 'Нива (Вінниця)')
+  const nth = U.nastopi(th)
+  const vrataTh = (i) => nth.find((x) => x.ekipaIdx === i && x.vratar)
+  preveri('pfl-ua: tehnični poraz — prejeti goli in čista mreža z igrišča (2:1), izid ostane 3:0', th.tehnicnaPoraza === true &&
+    th.izidIgrisca?.domaci === 2 && th.izidIgrisca?.gostje === 1 && vrataTh(0)?.prejetiGoli === 1 && vrataTh(0)?.cleanSheet === false &&
+    vrataTh(1)?.prejetiGoli === 2 && vrataTh(1)?.cleanSheet === false && th.rezultat.domaci === 3 && th.rezultat.gostje === 0 &&
+    U.vZapisnik(beri('ua-pfl-tekma-16602.html')).izidIgrisca === undefined)
   const nd = beri('ua-pfl-tekma-16687.html')
   preveri('pfl-ua: neodigrana tekma — glava brez izida in ure, brez zapisnika', U.vZapisnik(nd) === null && U.glavaStrani(nd)?.izid === null &&
     U.glavaStrani(nd)?.krog === 18 && U.glavaStrani(nd)?.datum === '2027-03-20' && U.glavaStrani(nd)?.ura === null)
   preveri('pfl-ua: vzorci brez sodnikov in osebja', !/Арбітр|Липко|Спостерігач|Головний тренер|Представники/.test(
     ['ua-pfl-tekma-16602.html', 'ua-pfl-tekma-16604.html', 'ua-pfl-tekma-16687.html', 'ua-pfl-koledar-1348.html'].map(beri).join('')))
 
+  // Uvoz zapisnikov z dnem 15. 10. 2026 (starost tekem odloča o ponovnem branju),
+  // opozorila vira se zberejo, ne izpišejo.
+  const opozorilaKonzole = []
+  const tiho = async (fn) => {
+    const [warn, zdaj] = [console.warn, Date.now]
+    console.warn = (s) => opozorilaKonzole.push(String(s))
+    Date.now = () => Date.parse('2026-10-15T12:00:00Z')
+    try { return await fn() } finally { console.warn = warn; Date.now = zdaj }
+  }
   // Uvoz zapisnikov prek vira: koledar JSON, le odigrane, ime kluba, krog in sezona s koledarja.
-  const zs = await U.default.zapisniki('2b/1355', async (url) => {
+  const zs = await tiho(() => U.default.zapisniki('2b/1355', async (url) => {
     if (url.includes('/calendar-json/')) return beri('ua-pfl-koledar-2b.json')
     return url.endsWith('/16733') ? beri('ua-pfl-tekma-16733.html') : beri('ua-pfl-tekma-16687.html')
-  })
+  }))
   preveri('pfl-ua: zapisniki — šifra ua<id>, sezona 2026/27 s koledarja', zs.length === 1 && zs[0].id === 'ua16733' && zs[0].z.sezona === '2026/27' &&
     zs[0].z.krog === 9 && zs[0].z.domaci.ime === 'Металург')
+  // Stran v predpomnilniku brez postav (izid je bil, postav še ne): starejšo od tedna preberemo še enkrat svežo.
+  // 16733 (4. 10.) je v predpomnilniku prazna, sveža ima postave; 16692 (31. 7.) je
+  // starejša od 45 dni in se ne bere znova; 16707 (3:0) je kontumacija brez opozorila.
+  const klici = []
+  opozorilaKonzole.length = 0
+  const zsp = await tiho(() => U.default.zapisniki('2b/1355', async (url, _ime, sveze) => {
+    if (url.includes('/calendar-json/')) return beri('ua-pfl-koledar-2b.json')
+    klici.push([url.split('/').pop(), sveze])
+    return url.endsWith('/16733') && sveze ? beri('ua-pfl-tekma-16733.html') : beri('ua-pfl-tekma-16687.html')
+  }))
+  const brano = (id) => klici.filter(([x]) => x === id).map(([, sv]) => sv).join(',')
+  preveri('pfl-ua: prazna stran v predpomnilniku se do 45 dni prebere znova (sveže) in ne obtiči', zsp.length === 1 && zsp[0].id === 'ua16733' &&
+    brano('16733') === 'false,true' && brano('16692') === 'false' && brano('16740') === 'true' &&
+    opozorilaKonzole.some((s) => s.startsWith('pfl-ua: 16692 ima izid, zapisnik brez postav')) &&
+    !opozorilaKonzole.some((s) => s.startsWith('pfl-ua: 16707 ')) && !opozorilaKonzole.some((s) => s.startsWith('pfl-ua: 16733 ')))
   // JSON kaže drug turnir (arhiv) → HTML koledar.
   const brani = []
   const ar = await U.default.razporedVseStrani('2a/1348', async (url) => {

@@ -38,12 +38,13 @@
 // izzivu, CAPTCHI, 403 ali 429 se uvoz ustavi — ne obhajaj.
 import { razpakiraj } from '../klubi.mjs'
 import { vLjubljanskiCas } from './frf.mjs'
-import { nastopi } from './hlf.mjs'
-
-export { nastopi }
+import { nastopi as nastopiHlf } from './hlf.mjs'
 
 const OSNOVNI = 'https://pfl.ua'
 const DOLZINA_TEKME = 90
+// Stran tekme z izidom brez postav (klub postav še ni vnesel, delna stran) do
+// toliko dni po tekmi preberemo znova svežo, starejšo pustimo (kontumacija).
+const PONOVNO_DNI = 45
 export const PREMOR_MS = 3000
 const UA = 'SLFF fantasy (https://slff.eu)'
 
@@ -390,6 +391,9 @@ export function vZapisnik(html, { id = null, url = null } = {}) {
   })
 
   const zaEkipo = (idx) => goli.filter((x) => (x.avtogol ? 1 - x.ekipaIdx : x.ekipaIdx) === idx).length
+  // Pri tehničnem porazu ostane `rezultat` uradni izid (tekma, lestvica, zmaga),
+  // prejeti goli in čista mreža igralcev pa so z igrišča (`nastopi`).
+  const izidIgrisca = g.tehnicnaPoraza ? { domaci: zaEkipo(0), gostje: zaEkipo(1) } : undefined
   // Tehnični poraz: izid je za zeleno mizo (3:0), goli in nastopi z igrišča.
   if (g.tehnicnaPoraza) opozorila.push(`tehnični poraz (KDK): izid ${g.izid.domaci}:${g.izid.gostje} je za zeleno mizo, goli z igrišča ${zaEkipo(0)}:${zaEkipo(1)}`)
   else if (zaEkipo(0) !== g.izid.domaci || zaEkipo(1) !== g.izid.gostje)
@@ -422,6 +426,7 @@ export function vZapisnik(html, { id = null, url = null } = {}) {
     domaci: sestava[0],
     gostje: sestava[1],
     rezultat: g.izid,
+    ...(izidIgrisca ? { tehnicnaPoraza: true, izidIgrisca } : {}),
     // Polčasa stran ne pove.
     polcas: null,
     goli,
@@ -457,6 +462,26 @@ export const kratkoImeUa = (polno) => razpakiraj(polno).replace(/\s+/g, ' ').tri
 
 /** Dni od datuma tekme ('YYYY-MM-DD'); brez datuma 0, da se tekma prebere. */
 const starostDni = (datum) => (datum ? (Date.now() - Date.parse(`${datum}T00:00:00Z`)) / 86400000 : 0)
+
+const jeTriNic = (i) => (i?.domaci === 3 && i?.gostje === 0) || (i?.domaci === 0 && i?.gostje === 3)
+
+/**
+ * Nastopi kot pri hlf (po šifri osebe) in še: zgrešene 11-metrovke (hlf jih
+ * nima) ter pri tehničnem porazu prejeti goli in čista mreža z igrišča, ne iz
+ * uradnega izida za zeleno mizo.
+ */
+export const nastopi = (z) =>
+  nastopiHlf(z).map((n) => {
+    const out = {
+      ...n,
+      zgreseneEnajstmetrovke: (z.zgresene ?? []).filter((k) => k.ekipaIdx === n.ekipaIdx && (n.regSt != null ? k.regSt === n.regSt : k.ime === n.ime)).length,
+    }
+    if (z.izidIgrisca) {
+      out.prejetiGoli = n.ekipaIdx === 0 ? z.izidIgrisca.gostje : z.izidIgrisca.domaci
+      out.cleanSheet = out.prejetiGoli === 0
+    }
+    return out
+  })
 
 /** Prenos, ki se ob izzivu ali zavrnitvi ustavi. */
 async function beri(prenesi, url, ime, sveze) {
@@ -514,8 +539,16 @@ const vir = {
     for (const t of k.tekme.filter((x) => x.izid)) {
       const url = naslovTekme(t.id)
       // Zapisnik zadnjega tedna se lahko še popravlja; starejšega ne beremo znova.
-      const z = vZapisnik(await beri(prenesi, url, imeTekme(t.id), starostDni(t.datum) <= 7), { id: t.id, url })
-      if (!z) continue
+      const starost = starostDni(t.datum)
+      let z = vZapisnik(await beri(prenesi, url, imeTekme(t.id), starost <= 7), { id: t.id, url })
+      // Stran iz predpomnilnika brez postav (shranjena, ko je bil izid že
+      // objavljen, postave pa še ne) bi obtičala: do 45 dni jo preberemo svežo.
+      if (!z && starost > 7 && starost <= PONOVNO_DNI) z = vZapisnik(await beri(prenesi, url, imeTekme(t.id), true), { id: t.id, url })
+      if (!z) {
+        // 3:0 brez postav je kontumacija (`kontumacije`), ostalo javimo.
+        if (!jeTriNic(t.izid)) console.warn(`pfl-ua: ${t.id} ima izid, zapisnik brez postav — preskočen`)
+        continue
+      }
       // Klubi, krog in sezona s koledarja, da se tekma ujame z vrstico razporeda.
       z.domaci.ime = t.domaci
       z.gostje.ime = t.gostje
@@ -541,7 +574,7 @@ const vir = {
       for (const t of k.tekme) {
         const i = t.izid
         if (!i || !t.pflId || !t.datum || t.datum > teden) continue
-        if (!((i.domaci === 3 && i.gostje === 0) || (i.domaci === 0 && i.gostje === 3))) continue
+        if (!jeTriNic(i)) continue
         const html = await prenesiKrog(naslovTekme(t.pflId), imeTekme(t.pflId), t.datum)
         if (jeIzziv(html)) throw new PflZavrnitev(`pfl-ua: ${naslovTekme(t.pflId)} vrne izziv (CAPTCHA)`)
         if (!vZapisnik(html) && glavaStrani(html)?.izid) out.push({ krog: k.stevilka, domaci: t.domaci, gostje: t.gostje })

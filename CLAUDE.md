@@ -2859,7 +2859,13 @@ lige se začne z `ua-`.
   zgrešena 11 m, `icon-yellow`, `icon-cards` drugi rumeni (→ 1 rumeni + rdeči),
   `icon-red`. Menjava je povezava z `icon-up`/`icon-down` in minuto; opis
   "46': <ven>, <noter>" da par. Leteče menjave šteje `minuteIzPreklopov`.
-  **Polčasa ni.** Šifra zapisnika v bazi je `ua<id>`.
+  **Polčasa ni.** Šifra zapisnika v bazi je `ua<id>`. `nastopi` je hlf-ov
+  (po šifri osebe) z zgrešenimi 11-metrovkami (`penalties_missed`).
+- **Predpomnilnik**: zapisnik, starejši od tedna, se bere iz predpomnilnika;
+  stran z izidom, a brez postav (shranjena, preden je klub vnesel postave)
+  vir do 45 dni po tekmi prebere še enkrat svežo, sicer bi obtičala. Tekma z
+  izidom brez postav, ki ni 3:0, je opozorilo `pfl-ua: <id> ima izid,
+  zapisnik brez postav` v dnevniku uvoza.
 - **Vratar** ni označen; zavihek "Схема" ima postavitev začetnikov, vsaka
   ekipa na svojem igrišču — vratar je edini začetnik ob golovi črti (domači
   najmanjši `top`, gostje največji). Namig kot pri mlsz; *Uskladi pozicije*
@@ -2867,7 +2873,11 @@ lige se začne z `ua-`.
 - **Tehnični poraz** (KDK UAF) je opomba `bg-warning-subtle` nad zapisnikom
   ("зараховано технічну поразку 0:3"): izid je za zeleno mizo, postave in goli
   z igrišča (Нива : Рух, 1. krog 2a 2026/27: 3:0, na igrišču 2:1) — opozorilo
-  `tehnični poraz`. Kontumacija brez postav (3:0 brez zapisnika, starejša od
+  `tehnični poraz`. **Pravilo:** uradni izid (`rezultat`) velja za tekmo,
+  lestvico in zmago; prejeti goli in čista mreža igralcev so z igrišča
+  (`z.izidIgrisca`, `nastopi`) — vratar Ниве ima 1 prejeti gol, ne čiste
+  mreže. Tako `goals_conceded` ustreza golom v `goals` in točke prejetih golov
+  med igranjem (`prejeti_na_igriscu`) se računajo. Kontumacija brez postav (3:0 brez zapisnika, starejša od
   tedna) gre prek `vir.kontumacije`; videli je še nismo.
 - **Isto ime, drug klub**: "Нива" je Ternopil (Perša, teamId 1170) in Vinnica
   (2a, 1175; 2025/26 kot 1177). `IME_KLUBA` v viru ju preimenuje po teamId v
