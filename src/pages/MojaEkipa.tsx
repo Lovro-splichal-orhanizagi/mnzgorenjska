@@ -1221,6 +1221,26 @@ export default function MojaEkipa() {
     )
   }
 
+  // Menjava s tapom (Igrisce preveri veljavnost z lahkoZamenjata): igralca
+  // si zamenjata mesto v postavi in na klopi (tudi vrstni red klopi), trak
+  // pa preide na igralca, ki stopi v postavo.
+  function zamenjajVPostavi(a: IgralecNaIgriscu, b: IgralecNaIgriscu) {
+    setSporocilo(null)
+    const [ven, noter] = a.is_starter ? [a, b] : [b, a]
+    const iVen = izbrani.findIndex((s) => s.player_id === Number(ven.id))
+    const iNoter = izbrani.findIndex((s) => s.player_id === Number(noter.id))
+    if (iVen < 0 || iNoter < 0) return
+    const s = izbrani[iVen]
+    if (s.is_captain)
+      setSporocilo(t('mojaEkipa.sporocila.kapetanPrevzel', { ime: ime(Number(noter.id)) }))
+    else if (s.is_vice)
+      setSporocilo(t('mojaEkipa.sporocila.namestnikPrevzel', { ime: ime(Number(noter.id)) }))
+    const kopija = [...izbrani]
+    kopija[iVen] = { ...izbrani[iNoter], is_starter: true, is_captain: s.is_captain, is_vice: s.is_vice }
+    kopija[iNoter] = { ...s, is_starter: false, is_captain: false, is_vice: false }
+    setIzbrani(kopija)
+  }
+
   // Vrstni red klopi: kdo prvi vskoči ob samodejni menjavi.
   function premakniNaKlopi(igralec: IgralecNaIgriscu, smer: -1 | 1) {
     // Isti seznam kot klop na igrišču: igralci brez pozicije tam ne stojijo.
@@ -1942,6 +1962,7 @@ export default function MojaEkipa() {
             naOdstrani={(i) => odstrani(i as IgralecTrga)}
             naPraznoMesto={naPraznoMesto}
             naPremakniKlop={premakniNaKlopi}
+            naZamenjaj={zamenjajVPostavi}
             naInfo={(i) => setInfo(i as IgralecTrga)}
           />
           </div>

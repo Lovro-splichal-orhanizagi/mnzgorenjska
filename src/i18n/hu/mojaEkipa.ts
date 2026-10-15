@@ -75,6 +75,8 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
       'A kezdőcsapatban nincs több hely ezen a poszton. Előbb ültess le valakit a kispadra.',
     niVecNamestnik: '{ime} már nem alkapitány, válassz újat.',
     niVecKapetan: '{ime} már nem csapatkapitány, válassz újat.',
+    kapetanPrevzel: 'A csapatkapitányi karszalagot átvette: {ime}.',
+    namestnikPrevzel: 'Az új kapitányhelyettes: {ime}.',
     rokPotekel: 'A(z) {krog}. forduló határideje lejárt, a változtatások a következő fordulótól érvényesek.',
     shranjenaZaKrog: 'A csapatod elmentve, készen áll a(z) {krog}. fordulóra.',
     shranjenaVeljavna: 'A csapatod elmentve, és megfelel a szabályoknak.',
@@ -294,8 +296,13 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
 
   // Pálya a csapatépítőben (components/Igrisce.tsx).
   igrisce: {
-    naKlop: 'Kispadra',
-    vPostavo: 'Be a kezdőbe',
+    namigZamenjave: 'Koppints egy játékos mezére, majd arra, akivel cserélnéd.',
+    zapriNamig: 'Tipp bezárása',
+    izberiZaMenjavo: '{ime}: kiválasztás cseréhez',
+    prekliciIzbiro: '{ime}: kiválasztás törlése',
+    zamenjajZ: '{ime}: csere vele: {drugi}',
+    izbran: 'Kiválasztva: {ime}. Koppints egy kiemelt játékosra a cseréhez, vagy újra rá a törléshez.',
+    brezMenjave: 'Nincs érvényes csere ehhez a játékoshoz: {ime}. Koppints rá újra a törléshez.',
     niVecVLigiNamig: 'Ez a játékos már nincs a bajnokságban, vele a keret nem szerez pontot.',
     niVecVLigi: 'már nincs a bajnokságban',
     poskodba: 'sérülés',

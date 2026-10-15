@@ -76,6 +76,8 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
       'U postavi nema mjesta za još jednog igrača na toj poziciji — najprije pošalji nekoga na klupu.',
     niVecNamestnik: '{ime} više nije zamjenik — odaberi novog.',
     niVecKapetan: '{ime} više nije kapetan — odaberi novog.',
+    kapetanPrevzel: '{ime} je preuzeo kapetansku traku.',
+    namestnikPrevzel: '{ime} je sada zamjenik kapetana.',
     rokPotekel: 'Rok {krog}. kola je već istekao pa promjene vrijede od sljedećeg kola.',
     shranjenaZaKrog: 'Momčad je spremljena i spremna za {krog}. kolo.',
     shranjenaVeljavna: 'Momčad je spremljena i ispunjava pravila.',
@@ -298,8 +300,13 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
 
   // Teren pri slaganju momčadi (components/Igrisce.tsx).
   igrisce: {
-    naKlop: 'Premjesti na klupu',
-    vPostavo: 'Stavi u prvu postavu',
+    namigZamenjave: 'Dodirni dres igrača, zatim onoga s kojim ga mijenjaš.',
+    zapriNamig: 'Zatvori savjet',
+    izberiZaMenjavo: '{ime}: odaberi za zamjenu',
+    prekliciIzbiro: '{ime}: poništi odabir',
+    zamenjajZ: '{ime}: zamijeni s igračem {drugi}',
+    izbran: 'Odabran je {ime}. Dodirni označenog igrača za zamjenu ili ponovno istog za poništenje.',
+    brezMenjave: 'Za igrača {ime} nema valjane zamjene. Dodirni ga ponovno za poništenje.',
     niVecVLigiNamig: 'Igrač više nije u ligi — momčad s njim ne dobiva bodove.',
     niVecVLigi: 'više nije u ligi',
     poskodba: 'ozljeda',

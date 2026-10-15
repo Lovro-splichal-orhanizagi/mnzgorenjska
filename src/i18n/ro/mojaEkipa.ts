@@ -76,6 +76,8 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
       'În formație nu mai e loc pentru încă un jucător pe această poziție. Trimite mai întâi pe cineva pe bancă.',
     niVecNamestnik: '{ime} nu mai e vicecăpitan: alege altul.',
     niVecKapetan: '{ime} nu mai e căpitan: alege altul.',
+    kapetanPrevzel: '{ime} a preluat banderola de căpitan.',
+    namestnikPrevzel: '{ime} este acum vicecăpitan.',
     rokPotekel: 'Termenul etapei {krog} a expirat deja, așa că modificările se aplică din etapa următoare.',
     shranjenaZaKrog: 'Echipa e salvată și pregătită pentru etapa {krog}.',
     shranjenaVeljavna: 'Echipa e salvată și respectă regulile.',
@@ -298,8 +300,13 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
 
   // Terenul la alcătuirea echipei (components/Igrisce.tsx).
   igrisce: {
-    naKlop: 'Mută pe bancă',
-    vPostavo: 'Trece în formația de start',
+    namigZamenjave: 'Atinge tricoul unui jucător, apoi pe cel cu care îl schimbi.',
+    zapriNamig: 'Închide sfatul',
+    izberiZaMenjavo: '{ime}: alege pentru schimbare',
+    prekliciIzbiro: '{ime}: anulează alegerea',
+    zamenjajZ: '{ime}: schimbă cu {drugi}',
+    izbran: 'Ai ales pe {ime}. Atinge un jucător marcat pentru schimbare sau din nou pe același pentru anulare.',
+    brezMenjave: 'Pentru {ime} nu există o schimbare validă. Atinge-l din nou pentru anulare.',
     niVecVLigiNamig: 'Jucătorul nu mai e în ligă: lotul cu el nu primește puncte.',
     niVecVLigi: 'nu mai e în ligă',
     poskodba: 'accidentare',
