@@ -6896,7 +6896,8 @@ preveri(
   preveri('objave: ponedeljek vzame glavno ligo', pon.slug === 'clani' && pon.liga.krog === 8 && pon.igralec.ime === 'Kovač Tine')
   preveri('objave: enajsterica 1-4-4-2', pon.idealna.length === 11 &&
     ['GK', 'DEF', 'MID', 'FWD'].map((p) => pon.idealna.filter((x) => x.position === p).length).join() === '1,4,4,2')
-  preveri('objave: največ pet poudarkov', pon.poudarki.length === 5 && pon.poudarki[0].vrsta === 'hattrick')
+  preveri('objave: le pohvale, brez kapetana in padca', pon.poudarki.length > 0 && pon.poudarki[0].vrsta === 'hattrick'
+    && !pon.poudarki.some((p) => ['kapetan', 'padec'].includes(p.vrsta)))
   const cet = o.izberiVsebino(dejstva, 'cet')
   preveri('objave: četrtek čez lige, brez lige v povezavi', cet.slug === null && cet.liga === null && cet.igralec.liga === '1. GNL — člani'
     && o.povezava(cet) === 'https://slff.eu/?src=ig' && o.povezava(pon) === 'https://slff.eu/?src=ig&t=clani')
@@ -6914,7 +6915,7 @@ preveri(
 
   // Preverba napisa: števila in imena le iz dejstev; povezava in ključniki ne štejejo.
   const d = o.dejstvaZaNapis(pon)
-  const dober = 'Tine Kovač je zabil 3 gole in pobral 19 točk! 🔥\nKapetan Aljaž Rozman? 1 točka. Ups.\nhttps://slff.eu/?src=ig&t=clani\n#SLFF #GNL2026'
+  const dober = 'Tine Kovač je zabil 3 gole in pobral 19 točk! 🔥\nhttps://slff.eu/?src=ig&t=clani\n#SLFF #GNL2026'
   preveri('objave: dober napis gre', o.preveriNapis(dober, d, 'sl').length === 0, o.preveriNapis(dober, d, 'sl').join())
   preveri('objave: izmišljeno število pade', o.preveriNapis('Tine Kovač je zabil 4 gole.', d, 'sl').join() === '4')
   preveri('objave: decimalna vejica je isto število', o.preveriNapis('Cena: 8,2 M€, prej 7,2.', d, 'sl').length === 0)

@@ -3782,7 +3782,9 @@ HU občasno; država brez kroga v oknu gre na naslednjo); **četrtek** 12:00 /
   idealna enajsterica, skok in padec cene (`price_changes`), hat-trick, vratar
   z golom, "kapetan, ki je razočaral" (najbolj izbrani kapetan z ≤ 2 točkama,
   le seštevek in le pri vsaj 5 človeških ekipah), liga tedna (največ novih
-  ekip). **Nikoli** mladinske lige (`je_mladinski_slug`), anonimizirani
+  ekip). **Objava le slavi** (lastnik, 15. 10. 2026): padca cene in kapetana
+  `izberiVsebino` ne vzame, šala gre na nedeljsko ligo nasploh, nikoli na
+  igralca. **Nikoli** mladinske lige (`je_mladinski_slug`), anonimizirani
   igralci, hišne ekipe, imena uporabnikov ali ekip. `npm run preizkus-objav`
   (tudi v CI).
 - **Napis** napiše Claude (`claude-sonnet-5-5`, Messages API, `ANTHROPIC_API_KEY`)

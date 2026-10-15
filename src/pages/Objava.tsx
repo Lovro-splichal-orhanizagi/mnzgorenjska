@@ -12,7 +12,7 @@ import { formatirajTocke, mnozina, prikazniIme, tockZ, GOLI } from '../lib/pomoz
 import type { Pozicija } from '../lib/tipi'
 
 export interface Poudarek {
-  vrsta: 'skok' | 'padec' | 'kapetan' | 'vratar' | 'hattrick' | 'liga_tedna'
+  vrsta: 'skok' | 'vratar' | 'hattrick' | 'liga_tedna'
   ime: string
   klub?: string | null
   /** Liga (četrtek, vse države). */
@@ -78,13 +78,6 @@ function opisPoudarka(p: Poudarek): { naslov: string; vrednost: string } {
   switch (p.vrsta) {
     case 'skok':
       return { naslov: t('domov.objava.skok'), vrednost: `${cena(p.staro)} → ${cena(p.novo)}` }
-    case 'padec':
-      return { naslov: t('domov.objava.padec'), vrednost: `${cena(p.staro)} → ${cena(p.novo)}` }
-    case 'kapetan':
-      return {
-        naslov: t('domov.objava.kapetan'),
-        vrednost: `${formatirajTocke(p.tocke)} ${tockZ(p.tocke)} · ${t('domov.objava.kapetanOpis', { delez: p.delez ?? 0 })}`,
-      }
     case 'vratar':
       return { naslov: t('domov.objava.vratar'), vrednost: mnozina(p.goli ?? 0, GOLI) }
     case 'hattrick':
