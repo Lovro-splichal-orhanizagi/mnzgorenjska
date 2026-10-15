@@ -215,6 +215,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     hvalaGlas: 'Paldies, ziņa ir saglabāta. Kad sakrāsies pietiekami daudz vienādu balsu, pozīcija tiks izlabota.',
     niIgralca: 'Spēlētājs nav atrasts.',
     vsiIgralci: '← Visi spēlētāji',
+    vEkipo: 'Izvēlies viņu savā komandā',
+    vEkipoBrezplacno: 'Bez maksas, arī bez konta',
     stevilkaDresa: ' · nr. {st}',
     cena: 'cena',
     sezona: 'Sezona {sezona}',

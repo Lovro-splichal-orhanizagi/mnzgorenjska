@@ -91,6 +91,9 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     zapriObvestilo: 'Închide notificarea',
     odstranjen: '{ime} a fost scos.',
     razveljavi: 'Anulează',
+    dodan: '{ime} e în echipa ta. Apasă Salvează.',
+    zeVEkipi: '{ime} e deja în echipa ta.',
+    niNaTrgu: 'Acest jucător nu poate fi cumpărat acum.',
   },
 
   brezPrijave: {

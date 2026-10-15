@@ -210,6 +210,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     hvalaGlas: 'Danke, deine Meldung ist gespeichert. Sobald genug gleiche Stimmen zusammenkommen, wird die Position korrigiert.',
     niIgralca: 'Diesen Spieler gibt es nicht.',
     vsiIgralci: '← Alle Spieler',
+    vEkipo: 'Hol ihn in dein Team',
+    vEkipoBrezplacno: 'Kostenlos, auch ohne Konto',
     stevilkaDresa: ' · Nr. {st}',
     cena: 'Preis',
     sezona: 'Saison {sezona}',

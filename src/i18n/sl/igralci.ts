@@ -212,6 +212,8 @@ export const igralci = {
     hvalaGlas: 'Hvala — sporočilo je zabeleženo. Ko se zbere dovolj enakih, se pozicija popravi.',
     niIgralca: 'Igralca ni.',
     vsiIgralci: '← Vsi igralci',
+    vEkipo: 'Izberi ga v svojo ekipo',
+    vEkipoBrezplacno: 'Brezplačno, tudi brez računa',
     stevilkaDresa: ' · št. {st}',
     cena: 'cena',
     sezona: 'Sezona {sezona}',

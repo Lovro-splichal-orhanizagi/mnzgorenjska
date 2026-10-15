@@ -212,6 +212,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     hvalaGlas: 'Mulțumim, votul a fost înregistrat. Când se adună destule voturi la fel, poziția se corectează.',
     niIgralca: 'Jucătorul nu există.',
     vsiIgralci: '← Toți jucătorii',
+    vEkipo: 'Alege-l în echipa ta',
+    vEkipoBrezplacno: 'Gratuit, și fără cont',
     stevilkaDresa: ' · nr. {st}',
     cena: 'preț',
     sezona: 'Sezonul {sezona}',
