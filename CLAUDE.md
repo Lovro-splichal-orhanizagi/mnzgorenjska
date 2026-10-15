@@ -2950,9 +2950,13 @@ druga stran (Joomla z lastno komponento) in druga oblika, zato svoj vir.
 - **Zapisnik** `?view=match&id=<id>`: glava "DOMAČI - GOSTJE (polčas) izid",
   "Status: Odigrana" (neodigrana je "Zakazana" in ima v glavi **0 : 0** — ni
   izid), datum; tabeli ekip, začetniki pred vrstico "Izmjene", klop za njo.
-  Igralec ima **šifro** v povezavi (`view=player&id=<šifra>:…` ali
-  `/stats/player/<šifra>-…`, ista šifra → `reg_st`), "(GK)" je vratar (tudi
-  rezervni), "(C)" kapetan. Dogodki `<div class="…">min'</div>`: `gol`,
+  Igralec ima v povezavi šifro (`view=player&id=<šifra>:…` ali
+  `/stats/player/<šifra>-…`), ki pa **ni stalna**: je vrstica strani in stran
+  jo ob osvežitvi preštevilči (15. 10. 2026 v nekaj urah vsi igralci +293,
+  Marčetić Stefan 22294400 → 22294693). Zato **ni `reg_st`**: identiteta je
+  ime + klub kot pri nsfbih, šifra le poveže dogodke z igralcem na isti
+  strani. Šifre klubov (`/stats/team/…/<šifra>-…`) so stalne. "(GK)" je
+  vratar (tudi rezervni), "(C)" kapetan. Dogodki `<div class="…">min'</div>`: `gol`,
   `penal` (11 m, v 45 tekmah ga še ni bilo), `autogol` (pri strelcu v njegovi
   ekipi), `zuta`, `crvena` (dva rumena = 1 rumeni + 1 rdeči), `izmjena` (pri
   začetniku izstop, pri rezervi vstop; minute točne, par po minuti).
@@ -2991,7 +2995,7 @@ Preizkus v živo (15. 10. 2026, vsi zapisniki, brez pisanja v bazo):
 |---|---|---|---|---|---|---|---|---|---|
 | ba-wwin-liga-bih | 10 | `wwin-liga-bih/54152223` | 10 / 50 / 45 | 45 | 118 (45/45) | 90/90 | 90/90 | 83/90 (5 rdeči, 2 napaki vira) | 403 |
 
-1393 nastopov (403 s klopi), vsi s šifro; 162 rumenih, 6 rdečih, 3 avtogoli.
+1393 nastopov (403 s klopi), identiteta ime + klub; 162 rumenih, 6 rdečih, 3 avtogoli.
 Neaktivna, zveza `nfsbih`. Uvoz (brez arhiva): `gh workflow run
 uvoz-lige.yml -f liga=ba-wwin-liga-bih -f cene=true`; 45 zapisnikov po 3 s
 je ~3 minute.

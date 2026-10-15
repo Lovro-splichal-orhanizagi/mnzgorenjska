@@ -88,7 +88,7 @@ const VIRI = {
   // FBiH), brez šifer igralcev (ime + klub), vratar je prvi začetnik (namig).
   nsfbih,
   // Bosna in Hercegovina, državna raven: NFSBiH prek nfsbih.ba (WWIN liga BiH;
-  // isti COMET, druga stran), šifra igralca iz povezave, vratar "(GK)".
+  // isti COMET, druga stran), ime + klub (šifra v povezavi ni stalna), vratar "(GK)".
   nfsbih,
 }
 

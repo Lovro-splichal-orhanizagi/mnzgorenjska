@@ -20,12 +20,18 @@
 //
 // ZAPISNIK: glava "DOMAČI - GOSTJE (1 : 0) 2 : 0", "Status: Odigrana",
 // "Datum: 10.10.2026 18:30"; nato dve tabeli (domači, gostje): vrstica je
-// dres | igralec (`view=player&id=<šifra>` → `reg_st`) z oznakama "(GK)"
-// (vratar, tudi rezervni) in "(C)" (kapetan); pred vrstico "Izmjene" so
+// dres | igralec (`view=player&id=<šifra>:…`) z oznakama "(GK)" (vratar, tudi
+// rezervni) in "(C)" (kapetan); pred vrstico "Izmjene" so
 // začetniki, za njo klop. Dogodki so `<div class="…">minuta'</div>` pri
 // igralcu: `gol`, `penal` (gol z 11 m), `autogol` (pri strelcu v NJEGOVI
 // ekipi), `zuta`, `crvena`, `izmjena` (pri začetniku izstop, pri rezervi
 // vstop; minute so točne). Sodnikov, delegata in gledalcev ne beremo.
+//
+// IDENTITETA je ime + klub (kot nsfbih), NE šifra iz povezave: ta je vrstica
+// strani, ki jo stran ob osvežitvi preštevilči (15. 10. 2026 v nekaj urah vsi
+// igralci +293, Marčetić Stefan 22294400 → 22294693). Kot `reg_st` bi vsak nov
+// nabor šifer ustvaril nove igralce in razklal minute. Šifra služi le znotraj
+// ene strani (dogodki k pravemu igralcu, soimenjaka v isti ekipi).
 //
 // ARHIV 2025/26 (46565761) ima razpored in izide (36 krogov, 180 tekem), a
 // zapisniki so BREZ postav — za cene ni uporaben.
@@ -194,7 +200,7 @@ export function razcleniRazpored(koda, html) {
 
 const DOGODEK = /<div class="(gol|penal|autogol|zuta|crvena|izmjena)">\s*([^<]*)<\/div>/g
 
-/** Igralci ene tabele: [{ st, ime, regSt, vratar, kapetan, zacetnik, dogodki }]. */
+/** Igralci ene tabele: [{ st, ime, sifraStrani, vratar, kapetan, zacetnik, dogodki }]. */
 function igralciTabele(tabela) {
   const out = []
   let zacetnik = true
@@ -205,6 +211,7 @@ function igralciTabele(tabela) {
     }
     // Povezava na igralca je v dveh oblikah: `?view=player&id=<šifra>:<slug>`
     // ali `/stats/player/<šifra>-<slug>/` (ista šifra; strani /stats/ ne beremo).
+    // Šifra ni stalna (glej IDENTITETA zgoraj) — le ključ znotraj te strani.
     const igralec = vrstica.match(/(?:view=player&amp;id=(\d+)|\/stats\/player\/(\d+)-)[^"]*">([^<]*)<\/a>([\s\S]*)$/)
     if (!igralec) continue
     const dres = besedilo(vrstica.match(/<td class="text-center">([\s\S]*?)<\/td>/)?.[1])
@@ -212,7 +219,7 @@ function igralciTabele(tabela) {
     out.push({
       st: /^\d+$/.test(dres) ? Number(dres) : null,
       ime: besedilo(igralec[3]),
-      regSt: igralec[1] ?? igralec[2],
+      sifraStrani: igralec[1] ?? igralec[2],
       vratar: /\(GK\)/.test(oznake),
       kapetan: /\(C\)/.test(oznake),
       zacetnik,
@@ -235,8 +242,9 @@ export function glavaTekme(html) {
   const sez = v.match(/<h4>[^<]*?(\d{2})\/(\d{2})\s*<\/h4>/)
   const { datum, ura } = datumUra(besedilo(v.match(/<strong>Datum<\/strong>:\s*([^<]*)/)?.[1]))
   const status = besedilo(v.match(/Status:\s*<strong>([^<]*)<\/strong>/)?.[1]) || null
-  // Neodigrana ("Zakazana") ima v glavi "(0 : 0) 0 : 0" — to ni izid.
-  const odigrana = !status || /odigran/i.test(status)
+  // Neodigrana ("Zakazana") ima v glavi "(0 : 0) 0 : 0" — to ni izid. Velja le
+  // "Odigrana" na začetku (ne "Neodigrana").
+  const odigrana = !status || /^odigran/i.test(status)
   const izid = odigrana && izidi && stevilo(izidi[3]) != null && stevilo(izidi[4]) != null ? { domaci: stevilo(izidi[3]), gostje: stevilo(izidi[4]) } : null
   const polcas = odigrana && izidi && stevilo(izidi[1]) != null && stevilo(izidi[2]) != null ? { domaci: stevilo(izidi[1]), gostje: stevilo(izidi[2]) } : null
   return {
@@ -282,7 +290,7 @@ export function vZapisnik(html, { id = null, url = null } = {}) {
   ekipe.forEach((e, ekipaIdx) => {
     const izstopi = []
     for (const i of e.igralci) {
-      const kdo = { ekipaIdx, st: i.st, ime: i.ime, regSt: i.regSt }
+      const kdo = { ekipaIdx, st: i.st, ime: i.ime, regSt: null, sifraStrani: i.sifraStrani }
       const zute = i.dogodki.filter((d) => d.vrsta === 'zuta')
       const crvena = i.dogodki.find((d) => d.vrsta === 'crvena')
       // Drugi rumeni: dva rumena (s rdečim ali brez) → 1 rumeni + 1 rdeči ob drugem.
@@ -320,7 +328,7 @@ export function vZapisnik(html, { id = null, url = null } = {}) {
     const vratarjev = e.postava.filter((i) => i.vratar).length
     if (vratarjev !== 1) opozorila.push(`${e.ime}: vratarjev v postavi ${vratarjev}`)
     const sifre = new Map()
-    for (const i of e.igralci) sifre.set(i.regSt, (sifre.get(i.regSt) ?? 0) + 1)
+    for (const i of e.igralci) sifre.set(i.sifraStrani, (sifre.get(i.sifraStrani) ?? 0) + 1)
     for (const [k, n] of sifre) if (n > 1) opozorila.push(`${e.ime}: igralec s šifro ${k} je v zapisniku ${n}-krat`)
   })
 
@@ -330,7 +338,7 @@ export function vZapisnik(html, { id = null, url = null } = {}) {
   const sezonaDatuma = sezonaIzDatuma(g.datum)
   if (g.sezona && sezonaDatuma && g.sezona !== sezonaDatuma) opozorila.push(`sezona v naslovu ${g.sezona} ni sezona datuma ${sezonaDatuma}`)
 
-  const vObliko = ({ dogodki: _d, kapetan: _k, ...i }) => ({ ...i, pozicija: i.vratar ? 'GK' : null })
+  const vObliko = ({ dogodki: _d, kapetan: _k, ...i }) => ({ ...i, regSt: null, pozicija: i.vratar ? 'GK' : null })
   return {
     zapisnikId: id,
     url,
@@ -352,7 +360,7 @@ export function vZapisnik(html, { id = null, url = null } = {}) {
   }
 }
 
-/** Nastopi po šifri igralca (dres ni enoličen ključ). */
+/** Nastopi; dogodki k igralcu po šifri strani (dres ni enoličen ključ), brez reg_st. */
 export function nastopi(z) {
   const out = []
   for (const [idx, ekipa] of [z.domaci, z.gostje].entries()) {
@@ -364,14 +372,14 @@ export function nastopi(z) {
       let do_ = i.ven ?? DOLZINA_TEKME
       if (i.rdec != null) do_ = Math.min(do_, i.rdec)
       do_ = Math.max(od, Math.min(do_, DOLZINA_TEKME))
-      const moji = (seznam) => seznam.filter((x) => x.ekipaIdx === idx && x.regSt === i.regSt)
+      const moji = (seznam) => seznam.filter((x) => x.ekipaIdx === idx && x.sifraStrani === i.sifraStrani)
       const goliIgralca = moji(z.goli)
       out.push({
         ekipaIdx: idx,
         ekipa: ekipa.ime,
         st: i.st,
         ime: i.ime,
-        regSt: i.regSt ?? null,
+        regSt: null,
         pozicija: i.vratar ? 'GK' : null,
         vratar: !!i.vratar,
         zacetnik,

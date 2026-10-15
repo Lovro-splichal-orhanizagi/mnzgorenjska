@@ -5570,9 +5570,20 @@ preveri(
   const n = F.nastopi(z)
   preveri('nfsbih: zapisnik — glava (klubi, izid, polčas, sezona, datum, ura)', z.domaci.ime === 'FK BORAC (Banja Luka)' && z.gostje.ime === 'BSK' &&
     z.rezultat.domaci === 2 && z.rezultat.gostje === 0 && z.polcas.domaci === 0 && z.sezona === '2026/27' && z.datum === '2026-10-10' && z.ura === '18:30')
-  preveri('nfsbih: 11 + 11, klop, šifra igralca iz povezave, "(GK)" je vratar, "(C)" ni pozicija', z.domaci.postava.length === 11 && z.gostje.postava.length === 11 &&
-    z.domaci.rezerve.length === 11 && z.domaci.postava[0].ime === 'Jurkas Mladen' && z.domaci.postava[0].regSt === '22294630' && z.domaci.postava[0].vratar &&
-    !z.domaci.postava[1].vratar && n.filter((x) => x.vratar).length === 2 && n.every((x) => x.regSt) && z.opozorila.length === 0)
+  preveri('nfsbih: 11 + 11, klop, "(GK)" je vratar, "(C)" ni pozicija', z.domaci.postava.length === 11 && z.gostje.postava.length === 11 &&
+    z.domaci.rezerve.length === 11 && z.domaci.postava[0].ime === 'Jurkas Mladen' && z.domaci.postava[0].vratar &&
+    !z.domaci.postava[1].vratar && n.filter((x) => x.vratar).length === 2 && z.opozorila.length === 0)
+  // Šifra v povezavi (`view=player&id=…`, `/stats/player/…`) je vrstica strani, ne
+  // oseba: 15. 10. 2026 jo je stran v nekaj urah preštevilčila (Marčetić Stefan
+  // 22294400 → 22294693, vsi igralci +293). Kot reg_st bi vsak nov nabor šifer
+  // ustvaril nove igralce in razklal minute — identiteta je ime + klub.
+  const preStevilceno = beri('ba-nfsbih-tekma-54152314.html').replace(/(view=player&amp;id=|\/stats\/player\/)(\d+)/g, (_, p, d) => p + (Number(d) + 293))
+  const zp = F.vZapisnik(preStevilceno, { id: 'ba54152314' })
+  const brezSifre = ({ sifraStrani: _s, ...x }) => x
+  preveri('nfsbih: šifra iz povezave ni reg_st — preštevilčena stran da iste nastope in gole', n.every((x) => x.regSt == null) &&
+    [...z.goli, ...z.rumeni, ...z.rdeci].every((x) => x.regSt == null) &&
+    [...z.domaci.postava, ...z.domaci.rezerve, ...z.gostje.postava, ...z.gostje.rezerve].every((x) => x.regSt == null) &&
+    JSON.stringify(F.nastopi(zp)) === JSON.stringify(n) && JSON.stringify(zp.goli.map(brezSifre)) === JSON.stringify(z.goli.map(brezSifre)))
   preveri('nfsbih: menjave v parih po minuti, 990 + 990, strelec s klopi, goli = izid', z.menjave.length === 10 && min(n, 0) === 990 && min(n, 1) === 990 &&
     z.menjave.some((m) => m.minuta === 79 && m.ven.ime === 'Juričić Luka' && m.noter.ime === 'Perić Karlo') &&
     n.find((x) => x.ime === 'Deket Matej')?.minutaOd === 61 && n.find((x) => x.ime === 'Deket Matej')?.goli === 1 && z.goli.length === 2 &&
@@ -5586,14 +5597,15 @@ preveri(
     a.goli.find((g) => g.avtogol)?.ime === 'Karačić Goran' && a.goli.find((g) => g.avtogol)?.ekipaIdx === 0 && a.rezultat.gostje === 1 &&
     F.nastopi(a).find((x) => x.ime === 'Karačić Goran')?.avtogoli === 1 && a.opozorila.length === 0)
   const s = F.vZapisnik(beri('ba-nfsbih-tekma-54152310-stats-povezave.html'))
-  preveri('nfsbih: povezava /stats/player/<šifra>-… da isto šifro', s.domaci.postava[0].regSt === '22294369' && s.domaci.postava[0].vratar &&
-    F.nastopi(s).every((x) => x.regSt) && s.goli.length === 2 && min(F.nastopi(s), 0) === 990)
+  preveri('nfsbih: povezava /stats/player/<šifra>-… se prebere kot igralec (brez reg_st)', s.domaci.postava[0].ime === 'Abdulahović Tarik' && s.domaci.postava[0].vratar &&
+    F.nastopi(s).every((x) => x.regSt == null) && F.nastopi(s).length === 31 && s.goli.length === 2 && min(F.nastopi(s), 0) === 990)
   const v = F.vZapisnik(beri('ba-nfsbih-tekma-54152295-vstop-brez-izstopa.html'))
   preveri('nfsbih: vstop brez izstopa (napaka vira) — opozorilo, ekipa čez 990 minut', min(F.nastopi(v), 1) === 1034 && v.opozorila.length === 1 &&
     /Kosi Filip vstopi v 46\. minuti/.test(v.opozorila[0]))
   const nd = beri('ba-nfsbih-tekma-54152319-neodigrana.html')
   preveri('nfsbih: neodigrana ("Zakazana", v glavi 0 : 0) nima izida ne zapisnika', F.vZapisnik(nd) === null && F.glavaTekme(nd).izid === null &&
-    F.glavaTekme(nd).status === 'Zakazana' && F.glavaTekme(nd).datum === '2026-10-17' && F.jeStranTekme(nd))
+    F.glavaTekme(nd).status === 'Zakazana' && F.glavaTekme(nd).datum === '2026-10-17' && F.jeStranTekme(nd) &&
+    F.glavaTekme(nd.replace('Status: <strong>Zakazana', 'Status: <strong>Neodigrana')).izid === null)
   preveri('nfsbih: v predpomnilnik gre le prava stran (razpored ali tekma), ne napaka', F.default.zaPredpomnilnik(stran, 'nfsbih-liga-x.html') &&
     F.default.zaPredpomnilnik(nd, 'nfsbih-tekma-54152319.html') &&
     !F.default.zaPredpomnilnik('<div id="error-page"><h1 class="error-code">403</h1>Pristup zabranjen.</div>', 'nfsbih-tekma-1.html') &&
