@@ -154,7 +154,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     izbrisiVprasanje: 'Obrisati poruku?',
     naslov: 'Pomozi nam da bude bolje!',
     anonimno: 'anonimno',
-    uvod: 'Što te smeta? Što bi htio vidjeti? Što ti nedostaje? Tvoj dojam nam puno znači — <krepko>reci nam</krepko>. Chat je anoniman; nitko ne vidi tko je što napisao.',
+    uvod: 'Što ti smeta? Što bi htio vidjeti? Što ti nedostaje? Tvoj dojam nam puno znači — <krepko>reci nam</krepko>. Chat je anoniman; nitko ne vidi tko je što napisao.',
     prikazesKot: 'U chatu se prikazuješ kao <ime>{ime}</ime>. Tvoje registrirano ime ostaje skriveno.',
     zaPisanje: 'Za pisanje se prijavi (čitanje je javno). Tvoje registrirano ime ostaje skriveno, pojavljuješ se pod nasumičnim nadimkom.',
     bodiPrvi: 'Budi prvi koji će napisati poruku.',

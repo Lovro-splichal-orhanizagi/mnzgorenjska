@@ -140,7 +140,7 @@ export const tekme: NonNullable<Prevod['tekme']> = {
     poglejTekmo: 'Vezi echipele de start și punctele acestui meci →',
     niGolov: 'În acest meci nu s-au marcat goluri.',
     vsePotrjene: 'Toate pasele decisive din acest meci sunt confirmate. 🎉',
-    zaprtoOpis: 'Votul pentru acest meci este închis: rămâne deschis până la termenul etapei următoare.',
+    zaprtoOpis: 'Votul pentru acest meci este închis: a fost deschis până la termenul etapei următoare.',
     brezPotrjene: 'Fără pasă decisivă confirmată: {goli}.',
   },
 
@@ -192,8 +192,8 @@ export const tekme: NonNullable<Prevod['tekme']> = {
     },
     igralec: {
       statistika: '{tekme} · {minute} min · {goli} · {cs} fără gol primit',
-      izZapisnika: 'Din raportul de meci: portarul e marcat cu (P)',
-      odKluba: 'Post setat de club',
+      izZapisnika: 'Din raportul de meci: portarul e marcat',
+      odKluba: 'Poziție setată de club',
       klub: ' · club',
       izStatistike: 'Din statistici (nr. tricou, goluri, cartonașe): voturile o pot corecta',
       potrdilaSkupnost: 'Confirmată de comunitate',

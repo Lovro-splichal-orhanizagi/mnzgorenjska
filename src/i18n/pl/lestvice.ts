@@ -83,7 +83,7 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
 
   slovenija: {
     naslovStrani: 'Tabela krajowa',
-    naslov: 'Słowenia',
+    naslov: 'Polska',
     pripravlja: 'Tabela krajowa jest w przygotowaniu. Spróbuj za kilka minut.',
     povzetek: 'Wszystkie drużyny ze wszystkich lig razem — {ekip} z {lig} i {zvez}.',
     lig: { one: '{n} ligi', few: '{n} lig', many: '{n} lig', other: '{n} ligi' },
@@ -108,15 +108,15 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     zavihekIgralci: 'Zawodnicy',
     zavihekKlubi: 'Kluby',
     klubiUvod: 'Prawdziwe drużyny klubowe, nie fantasy: punkty zdobyte przez zawodników dla drużyny · sezon {sezona}',
-    klubiIgralcev: { one: '{n} zawodnik', few: '{n} zawodników', many: '{n} zawodników', other: '{n} zawodnika' },
+    klubiIgralcev: { one: '{n} zawodnik', few: '{n} zawodnicy', many: '{n} zawodników', other: '{n} zawodnika' },
     klubiPovprecje:
       'Ligi nie startują jednocześnie, więc średnia na kolejkę wyrównuje różnicę; liczą się drużyny z co najmniej {krogov}.',
     klubiVec: 'Pokaż więcej',
     klubiOpomba:
       'Seniorzy i juniorzy tego samego klubu liczą się osobno. Punkty są bez asyst. Zawodnik, który zmienia klub, zaczyna w nowym od zera; punkty zdobyte wcześniej zostają w starym klubie.',
-    vrhNaslov: 'Kto rządzi Słowenią?',
-    vrhPoglejVse: 'Zobacz najlepszą 10 →',
-    vrhUvod: 'Najlepsza 10 ze wszystkich lig · sezon {sezona}',
+    vrhNaslov: 'Kto rządzi Polską?',
+    vrhPoglejVse: 'Zobacz najlepszą dziesiątkę →',
+    vrhUvod: 'Najlepsza dziesiątka ze wszystkich lig · sezon {sezona}',
     vrhTocke: 'Najwięcej punktów',
     vrhGoli: 'Strzelcy',
     vrhCisteMreze: 'Czyste konta — bramkarze',
@@ -393,7 +393,7 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
   },
 
   plakat: {
-    navijaci: { one: '{n} kibic', few: '{n} kibiców', many: '{n} kibiców', other: '{n} kibica' },
+    navijaci: { one: '{n} kibic', few: '{n} kibice', many: '{n} kibiców', other: '{n} kibica' },
     stavekNavijacev: {
       one: '{navijacev} ma już naszych zawodników w drużynie.',
       few: '{navijacev} mają już naszych zawodników w drużynie.',
@@ -402,7 +402,7 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     },
     izNasihIgralcev: 'Zbuduj swoją drużynę z naszych zawodników.',
     najvecTock: 'Najwięcej punktów w tym sezonie',
-    pridi: 'PRZYJDŹ',
+    pridi: 'CHODŹ',
     sestavit: 'ZBUDOWAĆ',
     ekipo: 'DRUŻYNĘ.',
     jeOdprta: 'Liga fantasy jest otwarta: {liga}. Za darmo.',

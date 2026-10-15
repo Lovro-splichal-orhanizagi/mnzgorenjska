@@ -21,7 +21,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
   },
   /** Gumb za podporo na naslovnici (components/Pivo.tsx). */
   pivo: {
-    gumb: 'Fizess nekünk egy sört',
+    gumb: 'Hívj meg minket egy sörre',
     /** Povezava na pivski zid (/beers) ob gumbu in v meniju Več. */
     zid: 'Sörfal',
     lestvicaDomov: 'Sörtoplista',

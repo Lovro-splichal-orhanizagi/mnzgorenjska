@@ -184,7 +184,7 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     kopiran: 'Kokkuvõte kopeeritud, kleebi see oma grupivestlusesse.',
     sporociloNaslov: '📊 {ime} · {krog}. voor',
     manager: 'Vooru mänedžer',
-    managerOpis: '{ekipa} · {tocke}. Kiitlemisõigus järgmise voorupeale.',
+    managerOpis: '{ekipa} · {tocke}. Kiitlemisõigus kuni järgmise vooruni.',
     kapetan: 'Vooru kapten',
     kapetanOpis: '{igralec} tõi kaptenipaelaga {tocke} ({ekipa}).',
     adut: 'Peidetud pärl',

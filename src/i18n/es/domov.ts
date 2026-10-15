@@ -75,7 +75,7 @@ export const domov: NonNullable<Prevod['domov']> = {
     registracija: '1. Registro',
     registracijaOpis: 'Crea una cuenta con Google o con correo y contraseña e inventa un nombre para tu equipo.',
     kader: '2. Haz tu plantilla',
-    kaderOpis: 'En el campo eliges 15 jugadores: 2 porteros, 5 defensas, 5 centrocampistas y 3 delanteros, como mucho 3 del mismo club y dentro de un presupuesto de 100.',
+    kaderOpis: 'Elige 15 jugadores: 2 porteros, 5 defensas, 5 centrocampistas y 3 delanteros, como mucho 3 del mismo club y dentro de un presupuesto de 100.',
     enajsterica: '3. Elige tu once',
     enajstericaOpis: 'Once salen al campo y cuatro al banquillo. El capitán puntúa el triple; si no juega, el brazalete pasa al vicecapitán.',
     poKrogu: '4. Después de cada jornada',

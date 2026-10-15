@@ -76,7 +76,7 @@ export const domov: NonNullable<Prevod['domov']> = {
     registracijaOpis: 'Creează-ți un cont cu Google sau cu e-mail și parolă și alege un nume pentru echipă.',
     kader: '2. Alcătuiește lotul',
     kaderOpis: 'Pe teren alegi 15 jucători: 2 portari, 5 fundași, 5 mijlocași și 3 atacanți, cel mult 3 de la același club, într-un buget de 100.',
-    enajsterica: '3. Alege primul unsprezece',
+    enajsterica: '3. Alege formația de start',
     enajstericaOpis: 'Unsprezece intră pe teren, patru stau pe bancă. Căpitanul aduce puncte triple; dacă nu joacă, banderola o preia vicecăpitanul.',
     poKrogu: '4. După fiecare etapă',
     poKroguOpis: 'Punctele se calculează din rapoartele de meci. Un jucător fără minute e înlocuit automat de o rezervă de pe aceeași poziție, iar o dată pe sezon poți folosi Bancă+ ca să-ți numere puncte toată banca.',

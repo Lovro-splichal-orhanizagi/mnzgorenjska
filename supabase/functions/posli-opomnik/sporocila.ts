@@ -256,7 +256,7 @@ export function sestaviOpomnik(
         : `SLFF ${ozn}: uzupełnij drużynę przed następną kolejką`,
       glavno: meta.brez_ekipe
         ? `Nie masz jeszcze drużyny fantasy (liga: ${OZN}). Bez niej w następnej kolejce nie zdobędziesz punktów.`
-        : `Twoja drużyna fantasy (liga: ${OZN}) nie jest jeszcze kompletna (brakuje składu, kapitana, wicekapitana itp.). Bez prawidłowej drużyny w następnej kolejce nie zdobędziesz punktów.`,
+        : `Twoja drużyna fantasy (liga: ${OZN}) nie jest jeszcze kompletna (brakuje kadry, kapitana, wicekapitana itp.). Bez prawidłowej drużyny w następnej kolejce nie zdobędziesz punktów.`,
       gumb: 'Ułóż / popraw drużynę →',
       opomba:
         'Jeśli nie potrzebujesz przypomnienia (w tym sezonie nie układasz drużyny), możesz zignorować tę wiadomość. Następnym razem napiszemy dopiero przed kolejną kolejką.',
@@ -481,14 +481,14 @@ export function sestaviOpomnikBrezEkipe(
     sk: { naslov: 'tím na teba stále čaká', glavno: 'Stále nemáš fantasy tím. „Zostav mi tím“ ho vytvorí jedným klikom: vymeň, koho chceš, a ulož.', rok: 'Uzávierka', gumb: 'Zostav mi tím →' },
     hr: { naslov: 'momčad te još čeka', glavno: 'Još uvijek nemaš fantasy momčad. „Složi mi momčad“ je slaže jednim klikom: zamijeni koga želiš i spremi.', rok: 'Rok', gumb: 'Složi mi momčad →' },
     cs: { naslov: 'tým na tebe pořád čeká', glavno: 'Pořád nemáš fantasy tým. „Sestav mi tým“ ho vytvoří jedním kliknutím: vyměň, koho chceš, a ulož.', rok: 'Uzávěrka', gumb: 'Sestav mi tým →' },
-    hu: { naslov: 'a csapatod még vár', glavno: 'Még mindig nincs fantasy csapatod. A „Csapatot kérek“ egy kattintással összerakja: cseréld le, akit szeretnél, és mentsd el.', rok: 'Határidő', gumb: 'Csapatot kérek →' },
+    hu: { naslov: 'a csapatod még vár', glavno: 'Még mindig nincs fantasy csapatod. A „Csapatot kérek” gomb egy kattintással összerakja: cseréld le, akit szeretnél, és mentsd el.', rok: 'Határidő', gumb: 'Csapatot kérek →' },
     de: { naslov: 'dein Team wartet noch', glavno: 'Du hast noch kein Fantasy-Team. „Team für mich zusammenstellen“ erledigt das mit einem Klick: tausch aus, wen du willst, und speichere.', rok: 'Deadline', gumb: 'Team für mich zusammenstellen →' },
     sr: { naslov: 'tim te još čeka', glavno: 'Još uvek nemaš fantasy tim. „Sastavi mi tim“ ga sastavlja jednim klikom: zameni koga želiš i sačuvaj.', rok: 'Rok', gumb: 'Sastavi mi tim →' },
-    ro: { naslov: 'echipa te așteaptă încă', glavno: 'Încă nu ai o echipă fantasy. „Fă-mi echipa“ o face dintr-un clic: schimbă pe cine vrei și salvează.', rok: 'Termen', gumb: 'Fă-mi echipa →' },
+    ro: { naslov: 'echipa te așteaptă încă', glavno: 'Încă nu ai o echipă fantasy. „Fă-mi echipa” o face dintr-un clic: schimbă pe cine vrei și salvează.', rok: 'Termen', gumb: 'Fă-mi echipa →' },
     et: { naslov: 'meeskond ootab sind ikka veel', glavno: 'Sul pole ikka veel fantaasiameeskonda. „Pane mulle meeskond kokku“ teeb selle ühe klõpsuga: vaheta kedagi, kui tahad, ja salvesta.', rok: 'Tähtaeg', gumb: 'Pane mulle meeskond kokku →' },
-    pl: { naslov: 'drużyna wciąż na ciebie czeka', glavno: 'Nadal nie masz drużyny fantasy. „Ułóż mi drużynę” zrobi to jednym kliknięciem: wymień, kogo chcesz, i zapisz.', rok: 'Termin', gumb: 'Ułóż mi drużynę →' },
+    pl: { naslov: 'drużyna wciąż na ciebie czeka', glavno: 'Nadal nie masz drużyny fantasy. „Złóż mi drużynę” zrobi to jednym kliknięciem: wymień, kogo chcesz, i zapisz.', rok: 'Termin', gumb: 'Złóż mi drużynę →' },
     es: { naslov: 'tu equipo aún te espera', glavno: 'Todavía no tienes equipo fantasy. «Hazme el equipo» lo hace con un clic: cambia a quien quieras y guarda.', rok: 'Cierre', gumb: 'Hazme el equipo →' },
-    lv: { naslov: 'komanda tevi joprojām gaida', glavno: 'Tev joprojām nav fantāzijas komandas. “Sastādīt man komandu” to izdara ar vienu klikšķi: nomaini, ko vēlies, un saglabā.', rok: 'Termiņš', gumb: 'Sastādīt man komandu →' },
+    lv: { naslov: 'komanda tevi joprojām gaida', glavno: 'Tev joprojām nav fantāzijas komandas. “Sastādi man komandu” to izdara ar vienu klikšķi: nomaini, ko vēlies, un saglabā.', rok: 'Termiņš', gumb: 'Sastādīt man komandu →' },
     mk: { naslov: 'тимот сè уште те чека', glavno: 'Сè уште немаш фантази тим. „Состави ми тим“ го прави со еден клик: замени кого сакаш и зачувај.', rok: 'Рок', gumb: 'Состави ми тим →' },
     en: { naslov: 'your team is still waiting', glavno: 'You still don’t have a fantasy team. “Build my team” makes one in a single click: swap anyone you like and save.', rok: 'Deadline', gumb: 'Build my team →' },
   }[j]
@@ -622,7 +622,7 @@ export function sestaviOpozorilo(
       const runde = u.round_number ? `Runde ${u.round_number}` : 'die nächste Runde'
       return {
         naslov: `SLFF ${ozn}: dein Team holt keine Punkte für ${runde}`,
-        glavno: `Dein Team ${ekipa} hält sich nicht an die Regeln, deshalb wird es für ${runde} nicht gesperrt und holt darin keine Punkte.`,
+        glavno: `Dein Team ${ekipa} entspricht nicht den Regeln, deshalb wird es für ${runde} nicht gesperrt und holt darin keine Punkte.`,
         rok: rok && `Korrigieren kannst du es bis zur Deadline: ${rok}.`,
         gumb: 'Team korrigieren →',
         opomba:
@@ -860,7 +860,7 @@ export function sestaviPoznavalca(
       kje: `Pozițiile le editezi pe pagina <a href="${p.pozicije}" style="color:#15803d;">Poziții</a>
         (se aplică în fiecare luni dimineața), pasele decisive pe pagina
         <a href="${p.asistence}" style="color:#15803d;">Pase decisive</a> (imediat).
-        Un jucător care nu mai joacă la club îl poți marca cu "nu mai joacă".`,
+        Pe un jucător care nu mai joacă la club îl poți marca cu "nu mai joacă".`,
       gumb: 'Deschide Poziții →',
       gumbUrl: p.pozicije,
       vprasanja: 'Dacă ceva nu e clar, răspunde la acest e-mail.',
@@ -892,7 +892,7 @@ export function sestaviPoznavalca(
       prosnja:
         'Jedna prośba: to wyraz zaufania. Wpisuj tylko to, co naprawdę wiesz, i nie dopasowuj danych do swojej drużyny fantasy. Od tego zależą punkty wszystkich graczy w lidze. Jeśli okaże się, że dane są celowo błędne, stracisz status znawcy.',
       kje: `Pozycje zmieniasz na stronie <a href="${p.pozicije}" style="color:#15803d;">Pozycje</a>
-        (obowiązują od każdego poniedziałkowego poranka), asysty na stronie
+        (zaczynają obowiązywać w każdy poniedziałek rano), asysty na stronie
         <a href="${p.asistence}" style="color:#15803d;">Asysty</a> (od razu).
         Zawodnika, który już nie gra w klubie, możesz oznaczyć jako "już nie gra".`,
       gumb: 'Otwórz Pozycje →',
@@ -1149,7 +1149,7 @@ export function sestaviPopravekPozicije(
         'który był u nas błędnie zapisany jako bramkarz. Protokół jednego meczu raz oznaczył go jako bramkarza, ' +
         'ale w rzeczywistości gra w polu. Poprawiliśmy jego pozycję.',
       body:
-        'Co to dla ciebie oznacza: w twoim składzie zostaje na miejscu bramkarza, więc drużyna nadal spełnia zasady ' +
+        'Co to dla ciebie oznacza: w twojej kadrze zostaje na miejscu bramkarza, więc drużyna nadal spełnia zasady ' +
         'i nie musisz nic robić. Od teraz jednak zdobywa punkty jako zawodnik z pola, a punkty z ostatniej kolejki ' +
         'zostały już przeliczone. Jeśli go sprzedasz, w jego miejsce musisz kupić bramkarza.',
       gumb: 'Otwórz moją drużynę →',
@@ -1340,7 +1340,7 @@ export function sestaviIzstopKluba(
         `Klub ${klubi} wycofał się z ligi. ` +
         `${ekipa ? `W drużynie <strong>${ekipa}</strong> masz` : 'W drużynie masz'} zawodników tego klubu: ${kdo}.`,
       body:
-        'Ci zawodnicy już nie grają, więc nie zdobędziesz za nich punktów. Drużyna pozostaje prawidłowa, a pozostali ' +
+        'Ci zawodnicy już nie zagrają, więc nie zdobędziesz za nich punktów. Drużyna pozostaje prawidłowa, a pozostali ' +
         'zawodnicy zdobywają punkty normalnie. Mimo to radzimy wymienić ich przed następnym terminem. ' +
         'Punkty, które już zdobyli w rozegranych meczach, zostają ci. Nikt nie może ich już kupić.',
       gumb: 'Wymień zawodników →',
@@ -1353,7 +1353,7 @@ export function sestaviIzstopKluba(
       body:
         'Estos jugadores ya no van a jugar, así que no sumarás puntos con ellos. El equipo sigue siendo válido y los demás ' +
         'jugadores puntúan con normalidad. Aun así, te recomendamos cambiarlos antes del próximo cierre. ' +
-        'Los puntos que ya sumaron en los partidos jugados se quedan contigo. Nadie más puede ficharlos.',
+        'Los puntos que ya sumaron en los partidos jugados se quedan contigo. Ya nadie puede ficharlos.',
       gumb: 'Cambiar jugadores →',
     },
     lv: {
@@ -1440,7 +1440,7 @@ export function sestaviTedenskiPregled(liga: Liga, m: PregledKroga): Sporocilo {
   const tock = (n: number) =>
     `${st(n)} ${
       j === 'sk'
-        ? skMn(cela(n), 'bod', 'body', 'bodov')
+        ? (Number.isInteger(n) ? skMn(n, 'bod', 'body', 'bodov') : 'bodu')
         : j === 'hr' || j === 'sr'
           ? hrMn(cela(n), 'bod', 'boda', 'bodova')
           : j === 'cs'
@@ -1582,7 +1582,7 @@ export function sestaviTedenskiPregled(liga: Liga, m: PregledKroga): Sporocilo {
       liga: m.povprecje != null && m.najvec != null
         ? `Średnia ligi: ${st(m.povprecje)}, najwięcej: ${st(m.najvec)}.` : '',
       top: 'Najwięcej punktów w całej lidze w tej kolejce.',
-      mesto: `W tabeli jesteś na <strong>${m.mesto}. miejscu</strong> spośród ${m.ekip} drużyn` +
+      mesto: `W rankingu jesteś na <strong>${m.mesto}. miejscu</strong> spośród ${m.ekip} drużyn` +
         (m.mesto_prej == null || premik === 0 ? '.' : ` (wcześniej ${m.mesto_prej}. miejsce).`),
       kapetan: m.kapetan ? `Kapitan ${esc(m.kapetan)}: ${tock(m.kapetan_tocke ?? 0)}.` : '',
       najboljsi: najboljsiNiKapetan ? `Najlepszy w drużynie: ${esc(m.najboljsi!)} (${tock(m.najboljsi_tocke ?? 0)}).` : '',
@@ -1608,7 +1608,7 @@ export function sestaviTedenskiPregled(liga: Liga, m: PregledKroga): Sporocilo {
       liga: m.povprecje != null && m.najvec != null
         ? `Līgas vidējais: ${st(m.povprecje)}, labākais: ${st(m.najvec)}.` : '',
       top: 'Visvairāk punktu visā līgā šajā kārtā.',
-      mesto: `Tabulā tu esi <strong>${m.mesto}. vietā</strong> no ${m.ekip}` +
+      mesto: `Kopvērtējumā tu esi <strong>${m.mesto}. vietā</strong> no ${m.ekip}` +
         (m.mesto_prej == null || premik === 0 ? '.' : ` (iepriekš ${m.mesto_prej}. vietā).`),
       kapetan: m.kapetan ? `Kapteinis ${esc(m.kapetan)}: ${tock(m.kapetan_tocke ?? 0)}.` : '',
       najboljsi: najboljsiNiKapetan ? `Labākais komandā: ${esc(m.najboljsi!)} (${tock(m.najboljsi_tocke ?? 0)}).` : '',
@@ -1998,7 +1998,7 @@ function razlogVPoljscini(razlog: string | null | undefined): string {
   if ((m = r.match(/^Kader mora imeti 2 vratarja, 5 branilcev, 5 vezistov in 3 napadalce; ima ([\d-]+)\.$/)))
     return `Kadra musi mieć 2 bramkarzy, 5 obrońców, 5 pomocników i 3 napastników; teraz ma ${m[1]}.`
   if ((m = r.match(/^V postavi je (\d+) igralcev namesto (\d+)\.$/)))
-    return `W pierwszym składzie ${jest(Number(m[1]))} zamiast ${m[2]}.`
+    return `W wyjściowym składzie ${jest(Number(m[1]))} zamiast ${m[2]}.`
   if (r === 'Ekipa nima natanko enega kapetana.') return 'Drużyna nie ma dokładnie jednego kapitana.'
   if (r === 'Ekipa nima natanko enega namestnika kapetana.')
     return 'Drużyna nie ma dokładnie jednego wicekapitana.'

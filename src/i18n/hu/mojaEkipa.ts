@@ -76,7 +76,7 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     niVecNamestnik: '{ime} már nem alkapitány, válassz újat.',
     niVecKapetan: '{ime} már nem csapatkapitány, válassz újat.',
     kapetanPrevzel: 'A csapatkapitányi karszalagot átvette: {ime}.',
-    namestnikPrevzel: 'Az új kapitányhelyettes: {ime}.',
+    namestnikPrevzel: 'Az új alkapitány: {ime}.',
     rokPotekel: 'A(z) {krog}. forduló határideje lejárt, a változtatások a következő fordulótól érvényesek.',
     shranjenaZaKrog: 'A csapatod elmentve, készen áll a(z) {krog}. fordulóra.',
     shranjenaVeljavna: 'A csapatod elmentve, és megfelel a szabályoknak.',
