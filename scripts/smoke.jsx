@@ -5370,6 +5370,179 @@ preveri(
     zavrnjen.status === 403 && A.default.zavrnitev('x', 429).zavrnitev === true)
 }
 
+// --- vir aft (Ukrajina, Ternopilska oblast, aft.com.ua) ---------------------------
+{
+  const A = await import('./viri/aft.mjs')
+  const { default: viri } = await import('./viri/index.mjs')
+  const { mkdtempSync, rmSync } = await import('node:fs')
+  const { tmpdir } = await import('node:os')
+  const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  preveri('aft: vir je vpisan, 3 s, User-Agent, država UA', viri.aft === A.default && A.default.drzava === 'UA' &&
+    A.default.imaRegistracije === false && A.default.premorMs >= 3000 && A.default.glave['User-Agent'] === 'SLFF fantasy (https://slff.eu)' &&
+    typeof A.default.zaPredpomnilnik === 'function')
+  let slabaSifra = null
+  try { A.razberiKodo('champinship/36') } catch (e) { slabaSifra = e.message }
+  preveri('aft: šifra lige je id turnirja, naslovi, šifra zapisnika', A.razberiKodo(' 36 ') === 36 && /id turnirja/.test(slabaSifra ?? '') &&
+    A.default.naslovRazporeda('36') === 'https://aft.com.ua/tournament/champinship/36' &&
+    A.default.naslovZapisnika('36', 'aft2100') === 'https://aft.com.ua/match/2100' && A.sifraZapisnika(2100) === 'aft2100')
+  preveri('aft: minuta, datum, datum iz besedila (čez novo leto)', A.minuta('90+1') === 90 && A.minuta('64') === 64 &&
+    A.datumIz('11.10.2026, Збараж') === '2026-10-11' && A.datumIzBesedila('11 жовтня. Жилинці.', '2026-10-12') === '2026-10-11' &&
+    A.datumIzBesedila('28 грудня. Тернопіль.', '2027-01-03') === '2026-12-28' && A.datumIzBesedila('Арбітр – x', '2026-10-12') === null)
+  preveri('aft: ime igralca — kapetan, začetnica za priimkom, pika konca seznama', A.imeIgralca('Хруставка-к') === 'Хруставка' &&
+    A.imeIgralca('Березовський-к ') === 'Березовський' && A.imeIgralca('Д. Марчук') === 'Марчук Д.' && A.imeIgralca('Волод. Пшивий') === 'Пшивий Волод.' &&
+    A.imeIgralca('Чубей Я') === 'Чубей Я.' && A.imeIgralca('Беслюбняк.') === 'Беслюбняк' && A.imeIgralca('Лук’янов') === "Лук'янов" && A.imeIgralca(': Корчевний') === 'Корчевний')
+  preveri('aft: klub iz članka in z razporeda (ime, kraj, številka)', A.podobnostKluba('ФАТ-Вікнини Вікно', 'Вікнини Вікно') > 0 &&
+    A.podobnostKluba('Борщів-2', 'Борщів Борщів') === 0 && A.podobnostKluba('Поділля Васильківці', 'Поділля В Васильківці') >
+      A.podobnostKluba('Поділля Васильківці', 'Поділля ВБ В. Березовиця') && A.kljucKlubaUa('Поділля ВБ') !== A.kljucKlubaUa('Поділля В'))
+
+  // Stran turnirja: Вища ліга 2026 (9 klubov, 18 krogov), Нараїв od avgusta ne igra.
+  const l36 = A.tekmeLige(beri('ua-aft-turnir-36.html'))
+  const raz = A.razporedIzTekem(l36.tekme)
+  const kont = raz.flatMap((k) => k.tekme).filter((t) => t.kontumacija)
+  preveri('aft: stran turnirja — sezona, krogi, klubi, kraj iz grba', l36.sezona === '2026' && /Вища ліга/.test(l36.naslov) && l36.tekme.length === 72 &&
+    raz.length === 18 && new Set(l36.tekme.flatMap((t) => [t.domaci, t.gostje])).size === 9 &&
+    l36.tekme.some((t) => t.id === 2100 && t.datum === '2026-10-11' && t.domaci === 'Збараж' && t.gostje === 'Борщів' && t.izid.domaci === 1 && t.izid.gostje === 2 && t.gostjeKraj === 'Борщів'))
+  preveri('aft: 3:0 brez kraja je kontumacija (8× Нараїв), z igrišča ni', kont.length === 8 && kont.every((t) => (t.domaci === 'Нараїв' || t.gostje === 'Нараїв') && t.odigrana) &&
+    !raz.flatMap((k) => k.tekme).some((t) => t.kontumacija && t.domaci === 'Агрон' && t.gostje === 'Нараїв'))
+  const k14 = raz.find((k) => k.stevilka === 14).tekme
+  preveri('aft: prestavljena tekma — le odigrana vrstica (Збруч-Агробізнес : Борщів 25. 9.)', k14.filter((t) => t.domaci === 'Збруч-Агробізнес' && t.gostje === 'Борщів').length === 1 &&
+    k14.find((t) => t.domaci === 'Збруч-Агробізнес').datum === '2026-09-25' && k14.find((t) => t.domaci === 'Збруч-Агробізнес').odigrana)
+  const l37 = A.tekmeLige(beri('ua-aft-turnir-37.html'))
+  const neodigrane = l37.tekme.filter((t) => !t.izid)
+  preveri('aft: neodigrana tekma — kijevska ura 12:00 je ljubljanska 11:00', l37.sezona === '2026' && neodigrane.length === 3 &&
+    neodigrane.every((t) => t.krog === 21 && t.datum === '2026-10-18' && t.ura === '11:00'))
+
+  const novice = A.noviceStrani(beri('ua-aft-novice-1.html'))
+  preveri('aft: seznam novic — id, pot s slugom, datum objave', novice.length === 12 && novice[0].id === 2482 && novice[0].datum === '2026-10-14' &&
+    novice.some((n) => n.id === 2474 && n.url.endsWith('/news/2474-persha-liha-20-tur-match-lideriv-na-borshchivshchyni-buchatske-derbi-ta-sensatsiia-u-terebovli')))
+
+  const minute = (z, i) => A.default.nastopi(z).filter((x) => x.ekipaIdx === i).reduce((s, x) => s + x.minute, 0)
+  const zapisnikiClanka = (ime, liga) => {
+    const h = beri(ime)
+    return A.blokiClanka(h).map((b) => ({ b, t: A.tekmaZaBlok(b, liga.tekme, A.datumClanka(h)) })).filter((x) => x.t).map(({ b, t }) => A.vZapisnik(b, t, { url: ime, sezona: liga.sezona }))
+  }
+  // Перша ліга, 20. krog: en članek, tri tekme.
+  const p20 = zapisnikiClanka('ua-aft-clanek-2474-persha-krog.html', l37)
+  const ni = p20.find((z) => z.domaci.ime === 'Нічлава')
+  preveri('aft: članek kroga — tri tekme, klubi z razporeda, datum, krog, sezona', p20.length === 3 && p20.every((z) => z.krog === 20 && z.datum === '2026-10-11' && z.sezona === '2026') &&
+    ni.zapisnikId === 'aft2105' && ni.gostje.ime === 'Медобори' && ni.rezultat.domaci === 1 && ni.polcas.domaci === 0)
+  preveri('aft: 11 + 11, kapetan, vratar (prvi začetnik), klop z neuporabljenimi', p20.every((z) => z.domaci.postava.length === 11 && z.gostje.postava.length === 11 &&
+    [z.domaci, z.gostje].every((e) => e.postava[0].vratar && e.postava.filter((x) => x.vratar).length === 1)) &&
+    ni.domaci.postava.find((x) => x.ime === 'Хруставка')?.kapetan && ni.domaci.rezerve.length === 11 && ni.gostje.rezerve.map((x) => x.ime).includes('Кохан'))
+  preveri('aft: manjkajoča vejica ("Чемерейко Слободян") — dva igralca z opozorilom', ni.domaci.postava.some((x) => x.ime === 'Чемерейко') &&
+    ni.domaci.postava.some((x) => x.ime === 'Слободян') && ni.opozorila.length === 1 && /manjka vejica/.test(ni.opozorila[0]))
+  preveri('aft: menjave z minuto, 990 minut, strelec po priimku (90+1 → 90)', p20.every((z) => minute(z, 0) === 990 && minute(z, 1) === 990) &&
+    ni.menjave.length === 7 && ni.menjave.find((m) => m.noter.ime === 'Бартошко')?.minuta === 84 &&
+    ni.goli.length === 1 && ni.goli[0].ime === 'Чемерейко' && ni.goli[0].ekipaIdx === 0 && ni.goli[0].minuta === 90 && ni.rumeni.length === 4)
+  const bo = p20.find((z) => z.gostje.ime === 'Борщів-2')
+  preveri('aft: soimenjaki z začetnico ("Д. Марчук", "Чубей Я.")', bo.gostje.postava.some((x) => x.ime === 'Марчук Д.') &&
+    bo.gostje.postava.some((x) => x.ime === 'Марчук Н.') && bo.gostje.rezerve.map((x) => x.ime).join() === 'Чубей Я.,Чубей С.' && bo.opozorila.length === 0)
+  const napacenDatum = { ...A.blokiClanka(beri('ua-aft-clanek-2474-persha-krog.html'))[0], datum: '2026-09-11' }
+  preveri('aft: napačen mesec v članku — ujame le ohlapno (klubi + izid), ne z drugim izidom', A.tekmaZaBlok(napacenDatum, l37.tekme, '2026-10-12') === null &&
+    A.tekmaZaBlokOhlapno(napacenDatum, l37.tekme, '2026-10-12')?.id === 2105 &&
+    A.tekmaZaBlokOhlapno({ ...napacenDatum, glava: { ...napacenDatum.glava, izid: { domaci: 7, gostje: 7 } } }, l37.tekme, '2026-10-12') === null)
+  preveri('aft: blok Перше лige se ne ujame s tekmo Вище ліге', A.blokiClanka(beri('ua-aft-clanek-2474-persha-krog.html')).every((b) => A.tekmaZaBlok(b, l36.tekme, '2026-10-12') === null))
+
+  // Вища ліга: članek na tekmo, taktična razporeditev, 11 m.
+  const [v] = zapisnikiClanka('ua-aft-clanek-2472-vyshcha.html', l36)
+  preveri('aft: Вища ліга — "ФАТ-Вікнини" je Вікнини, gol z 11 m, goli = izid', v.zapisnikId === 'aft2102' && v.domaci.ime === 'Вікнини' && v.rezultat.gostje === 4 &&
+    v.goli.length === 5 && v.goli.filter((g) => g.enajstmetrovka).length === 1 && v.goli.filter((g) => g.ekipaIdx === 1).length === 4 && v.opozorila.length === 0)
+  preveri('aft: vratar iz "ТАКТИЧНА РОЗСТАНОВКА" (kapetan-vratar Оснік-к)', v.domaci.postava.find((x) => x.vratar)?.ime === 'Оснік' &&
+    v.domaci.postava.find((x) => x.ime === 'Оснік')?.kapetan && v.gostje.postava.find((x) => x.vratar)?.ime === 'Рогаль' && v.gostje.rezerve.some((x) => x.ime === 'Семенець Т.' && x.noter === 66))
+  const [vej] = zapisnikiClanka('ua-aft-clanek-2409-vejice.html', l36)
+  preveri('aft: odvečna in manjkajoča vejica, oznaka «Поділля» В.Б.', vej.zapisnikId === 'aft1879' && vej.domaci.postava.length === 11 && vej.gostje.postava.length === 11 &&
+    vej.gostje.rezerve.find((x) => x.ime === 'Кандибал')?.noter === 56 && vej.gostje.postava.find((x) => x.ime === 'Заверуха') &&
+    minute(vej, 0) === 990 && minute(vej, 1) === 990 && vej.opozorila.length === 2)
+  const [ag] = zapisnikiClanka('ua-aft-clanek-2379-avtogol.html', l36)
+  preveri('aft: neoznačen avtogol (vratar gostov pri 1:0) šteje domačim', ag.goli.length === 1 && ag.goli[0].avtogol && ag.goli[0].ekipaIdx === 1 &&
+    ag.goli[0].ime === 'Довгий' && !ag.opozorila.some((o) => /^goli iz dogodkov/.test(o)) && /avtogol/.test(ag.opozorila[0]))
+  const [so] = zapisnikiClanka('ua-aft-clanek-2349-soimenjak.html', l36)
+  const kr = so.goli.find((g) => g.ime === 'Кривий')
+  preveri('aft: soimenjak v obeh klubih ("Сергій Кривий", а/г) — klub iz taktične razporeditve', so.zapisnikId === 'aft1712' && kr?.avtogol && kr.ekipaIdx === 0 &&
+    so.goli.length === 6 && !so.opozorila.some((o) => /Кривий|goli iz dogodkov/.test(o)) && so.gostje.postava.length === 11 && minute(so, 1) === 990)
+  const [ver] = zapisnikiClanka('ua-aft-clanek-2449-veriga.html', l36)
+  const nver = A.default.nastopi(ver)
+  preveri('aft: veriga menjav "(Гринь, 60, Дума, 90+4)", polčas s tipkarsko napako (0:10) → brez', ver.polcas === null &&
+    nver.find((x) => x.ime === 'Лисий')?.minute === 60 && nver.find((x) => x.ime === 'Гринь')?.minutaOd === 60 && nver.find((x) => x.ime === 'Гринь')?.minutaDo === 90 &&
+    ver.menjave.some((m) => m.ven.ime === 'Гринь' && m.noter.ime === 'Дума') && minute(ver, 0) === 990 && ver.opozorila.length === 0)
+  const [rd] = zapisnikiClanka('ua-aft-clanek-2470-rdeci.html', l36)
+  const nrd = A.default.nastopi(rd)
+  preveri('aft: drugi rumeni — 1 rumeni + rdeči, nastop do izključitve', rd.rdeci.length === 1 && rd.rdeci[0].ime === 'Ясніцький' && rd.rdeci[0].minuta === 85 &&
+    nrd.find((x) => x.ime === 'Ясніцький')?.rumeni === 1 && nrd.find((x) => x.ime === 'Ясніцький')?.minute === 85 && minute(rd, 0) === 985 && minute(rd, 1) === 990)
+  const [zg] = zapisnikiClanka('ua-aft-clanek-2448-zgresena.html', l36)
+  preveri('aft: zgrešena 11 m iz stavka ("На 34-й хвилині … не реалізував пенальті")', zg.zgresene.length === 1 && zg.zgresene[0].ime === 'Кобеля' &&
+    zg.zgresene[0].ekipaIdx === 1 && A.default.nastopi(zg).find((x) => x.ime === 'Кобеля')?.zgreseneEnajstmetrovke === 1)
+  // Karton trenerja ali predstavnika ne šteje; igralec, ki ga ni v postavi, je opozorilo.
+  const umetni = A.blokiClanka(`<div itemprop="articleBody"><p>«Сокіл» (В. Березовиця) – «ФАТ-Вікнини» (Вікно) – 0:0</p><p>4 жовтня. Березовиця.</p>
+    <p>«Сокіл»: Антонюк, Бойко, Вовк, Гнатюк, Дячук, Ємець, Жук, Зінчук, Ілюк, Кий, Лось. Заміна: Мак.</p><p>«ФАТ-Вікнини»: Нос, Оса, Пан, Рак, Сом, Тур, Уж, Фещук, Хорт, Цап, Чиж.</p>
+    <p>Попереджені: Іван Бойко (10), Петро Тренерко (30, тренер).</p><p>Вилучений: Олег Особа (85, офіційна особа).</p></div>`, '2026-10-05')
+  const um = A.vZapisnik(umetni[0], l36.tekme.find((t) => t.id === 2011))
+  preveri('aft: karton trenerja ali uradne osebe ne šteje', um.rumeni.length === 1 && um.rdeci.length === 0 && !um.opozorila.some((o) => /Тренерко|Особа/.test(o)))
+  preveri('aft: vzorci brez sodnikov, opazovalcev, osebja', !/Арбітр|Спостерігач|тренер|представник|особа|Делегат/i.test(
+    ['ua-aft-clanek-2474-persha-krog.html', 'ua-aft-clanek-2472-vyshcha.html', 'ua-aft-clanek-2409-vejice.html', 'ua-aft-clanek-2379-avtogol.html',
+      'ua-aft-clanek-2449-veriga.html', 'ua-aft-clanek-2470-rdeci.html', 'ua-aft-clanek-2448-zgresena.html', 'ua-aft-clanek-2349-soimenjak.html',
+      'ua-aft-turnir-36.html', 'ua-aft-turnir-37.html', 'ua-aft-novice-1.html'].map(beri).join('')))
+
+  // Predpomnilnik: le prave strani; vzdrževalna stran s 200 ne.
+  preveri('aft: v predpomnilnik le prava stran', A.zaPredpomnilnik(beri('ua-aft-turnir-36.html'), 'liga-36.html') &&
+    A.zaPredpomnilnik(beri('ua-aft-novice-1.html'), 'novice-1.html') && A.zaPredpomnilnik(beri('ua-aft-clanek-2472-vyshcha.html'), 'clanek-2472.html') &&
+    !A.zaPredpomnilnik('<html><h1>Сайт на технічному обслуговуванні</h1></html>', 'liga-36.html') &&
+    !A.zaPredpomnilnik('<html>503</html>', 'clanek-1.html') && !A.zaPredpomnilnik('<title>Just a moment...</title>', 'novice-1.html'))
+
+  // Seznam novic: prvi zagon do začetka sezone, naslednji le do znanih.
+  const stranNovic = (n) => `<div class="news-index-grid">${n.map(([id, d]) => `<article class="news-card-m"><a href="https://aft.com.ua/news/${id}-x" class="news-card-m__link">` +
+    `<time class="news-card-m__date" datetime="${d}"></time><h3 class="news-card-m__title">n${id}</h3></a></article>`).join('')}</div>`
+  const mapa = mkdtempSync(`${tmpdir()}/aft-smoke-`)
+  try {
+    let strani = { 1: [[10, '2026-10-14'], [9, '2026-10-12']], 2: [[8, '2026-10-05'], [7, '2026-09-28']], 3: [[6, '2026-09-20']] }
+    const prebrane = []
+    const prenesi = async (url) => { const s = Number(url.match(/page=(\d+)/)[1]); prebrane.push(s); return stranNovic(strani[s] ?? []) }
+    const prvi = await A.seznamNovic('2026-10-01', '2026-10-20', prenesi, { danes: '2026-10-15', mapa })
+    const prviStrani = prebrane.splice(0).join()
+    strani = { 1: [[12, '2026-10-29'], [11, '2026-10-28']], 2: [[10, '2026-10-14'], [9, '2026-10-12']], 3: [[8, '2026-10-05'], [7, '2026-09-28']] }
+    const drugi = await A.seznamNovic('2026-10-01', '2026-10-31', prenesi, { danes: '2026-10-30', mapa })
+    preveri('aft: seznam novic — prvi zagon do začetka, drugi le do znanih', prviStrani === '1,2' && prvi.map((c) => c.id).join() === '8,9,10' &&
+      prebrane.join() === '1,2' && drugi.map((c) => c.id).join() === '8,9,10,11,12')
+
+    // Cel tok zapisnikov: stran turnirja, seznam novic, članek kroga.
+    const clanki = { 2474: beri('ua-aft-clanek-2474-persha-krog.html') }
+    const imena = []
+    const prenesiVse = async (url, ime) => {
+      imena.push(ime)
+      if (/champinship\/37/.test(url)) return beri('ua-aft-turnir-37.html')
+      if (/news\?page=1$/.test(url)) return stranNovic([[2474, '2026-10-12'], [2400, '2026-04-20']])
+      const id = url.match(/news\/(\d+)-/)?.[1]
+      if (id && clanki[id]) return clanki[id]
+      if (id) return '<div class="news-article__body" itemprop="articleBody"><p>Новина.</p></div>'
+      throw new Error(`neznan naslov ${url}`)
+    }
+    const mapa2 = mkdtempSync(`${tmpdir()}/aft-smoke-`)
+    const r = await A.zapisnikiLige('37', prenesiVse, { danes: '2026-10-15', mapa: mapa2 })
+    rmSync(mapa2, { recursive: true, force: true })
+    preveri('aft: zapisniki lige — tri tekme 20. kroga, ostale brez poročila, ime v predpomnilniku', r.zapisniki.length === 3 &&
+      r.zapisniki.every((x) => x.z.krog === 20 && /^aft21\d\d$/.test(x.id) && x.url.includes('/news/2474-')) && r.brez.length === 57 &&
+      imena.includes('liga-37.html') && imena.includes('novice-1.html') && imena.includes('clanek-2474.html'))
+
+    // Zavrnitev in izziv na vsaki poti: stran turnirja, seznam novic, članek.
+    const zavrni = (status) => async () => { const e = new Error(String(status)); e.status = status; throw e }
+    const napaka = async (f) => { try { await f() } catch (e) { return e } return null }
+    const z401 = await napaka(() => A.default.razporedVseStrani('36', zavrni(401)))
+    const z403 = await napaka(() => A.default.zapisniki('37', zavrni(403)))
+    const izzivNovic = await napaka(() => A.zapisnikiLige('37', async (url) => /champinship/.test(url) ? beri('ua-aft-turnir-37.html') : '<title>Just a moment...</title>', { danes: '2026-10-15', mapa }))
+    const z429 = await napaka(() => A.zapisnikiLige('37', async (url) => {
+      if (/champinship/.test(url)) return beri('ua-aft-turnir-37.html')
+      if (/news\?page/.test(url)) return stranNovic([[2474, '2026-10-12'], [2400, '2026-04-20']])
+      const e = new Error('429'); e.status = 429; throw e
+    }, { danes: '2026-10-15', mapa }))
+    const vzdrzevanje = await napaka(() => A.default.razporedVseStrani('36', async () => '<html><h1>Технічні роботи</h1></html>'))
+    preveri('aft: 401, 403, 429 in izziv vržejo AftZavrnitev na vsaki poti (izhod 4)', [z401, z403, izzivNovic, z429].every((e) => e instanceof A.AftZavrnitev && e.zavrnitev) &&
+      z401.status === 401 && z403.status === 403 && z429.status === 429 && A.default.zavrnitev('x', 429).zavrnitev === true &&
+      vzdrzevanje && !(vzdrzevanje instanceof A.AftZavrnitev) && /nima tekem/.test(vzdrzevanje.message))
+  } finally {
+    rmSync(mapa, { recursive: true, force: true })
+  }
+}
+
 // --- vir fsb (Srbija, Fudbalski savez Beograda) ---------------------------------
 {
   const F = await import('./viri/fsb.mjs')
