@@ -5523,6 +5523,36 @@ preveri(
       r.zapisniki.every((x) => x.z.krog === 20 && /^aft21\d\d$/.test(x.id) && x.url.includes('/news/2474-')) && r.brez.length === 57 &&
       imena.includes('liga-37.html') && imena.includes('novice-1.html') && imena.includes('clanek-2474.html'))
 
+    // Izbrisan članek (404, 410) ne ustavi lige: opozorilo, izpade iz novice.json;
+    // 5xx (začasna napaka) še vedno ustavi uvoz, a ne kot zavrnitev.
+    const mapa3 = mkdtempSync(`${tmpdir()}/aft-smoke-`)
+    const izbrisani = { 2471: 404, 2473: 410 }
+    const prenesiIzbris = (napake) => async (url, ime) => {
+      if (/champinship\/37/.test(url)) return beri('ua-aft-turnir-37.html')
+      if (/news\?page=1$/.test(url)) return stranNovic([[2474, '2026-10-12'], [2473, '2026-10-12'], [2471, '2026-10-11'], [2400, '2026-04-20']])
+      const id = url.match(/news\/(\d+)-/)?.[1]
+      if (napake[id]) { const e = new Error(`${url} -> HTTP ${napake[id]}`); e.status = napake[id]; throw e }
+      return prenesiVse(url, ime)
+    }
+    const opozorilaPrej = console.warn
+    const opozorila = []
+    console.warn = (...a) => opozorila.push(a.join(' '))
+    let rIzbris, napakaIzbris, seznamPo
+    try {
+      rIzbris = await A.zapisnikiLige('37', prenesiIzbris(izbrisani), { danes: '2026-10-15', mapa: mapa3 })
+      seznamPo = JSON.parse(readFileSync(`${mapa3}/novice.json`, 'utf8')).clanki.map((c) => c.id)
+    } catch (e) {
+      napakaIzbris = e
+    } finally {
+      console.warn = opozorilaPrej
+    }
+    const e500 = await A.zapisnikiLige('37', prenesiIzbris({ 2471: 500 }), { danes: '2026-10-15', mapa: mapa3 }).then(() => null, (e) => e)
+    rmSync(mapa3, { recursive: true, force: true })
+    preveri('aft: izbrisan članek (404/410) — opozorilo, iz novice.json, liga se uvozi; 500 ustavi', !napakaIzbris && rIzbris?.zapisniki.length === 3 &&
+      opozorila.some((o) => /2471/.test(o) && /404/.test(o)) && opozorila.some((o) => /2473/.test(o) && /410/.test(o)) &&
+      !seznamPo?.includes(2471) && !seznamPo?.includes(2473) && seznamPo?.includes(2474) &&
+      e500 && e500.status === 500 && !(e500 instanceof A.AftZavrnitev))
+
     // Zavrnitev in izziv na vsaki poti: stran turnirja, seznam novic, članek.
     const zavrni = (status) => async () => { const e = new Error(String(status)); e.status = status; throw e }
     const napaka = async (f) => { try { await f() } catch (e) { return e } return null }

@@ -2858,6 +2858,9 @@ nočnega uvoza — oboje pred vklopom. Šifra lige se začne z `ua-`.
   strani do že znanih novic, starejših od dveh tednov (pozneje objavljen
   članek z zgodnejšim datumom stoji globlje). Prvi zagon sezone bere ~40
   strani in ~470 člankov (strežnik je počasen, 3–10 s na stran: ~45 minut).
+  **Izbrisan članek** (404, 410 — umaknjena novica, spremenjen slug) lige ne
+  ustavi: opozorilo, članek izpade iz `novice.json`, uvoz gre naprej.
+  401, 403, 429, izziv in 5xx še vedno ustavijo uvoz.
 - **Blok tekme** v članku: glava `«Дом» (kraj) – «Gost» (kraj) – 1:0 (0:0)`,
   datum ("11 жовтня"), postavi `«Klub»: …`, "Гол(и):", "Попереджені:",
   "Вилучений:", stavek "На 34-й хвилині … не реалізував пенальті" in pri Вищі

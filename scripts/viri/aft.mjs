@@ -822,6 +822,16 @@ function preberiSeznam(mapa) {
     return { clanki: new Map(), najstarejsi: null }
   }
 }
+/** Članek, ki ga ni več (404, 410 …), izpade iz seznama novic. */
+function odstraniIzSeznama(id, mapa) {
+  const s = preberiSeznam(mapa)
+  if (s.clanki.delete(id)) zapisiSeznam(s, mapa)
+}
+/**
+ * Izbrisan članek: 4xx, ki ni zavrnitev (401, 403, 429) in ne 408 (časovna
+ * omejitev je začasna). Zavrnitev in 5xx še vedno ustavita uvoz.
+ */
+const jeIzbrisan = (e) => !e?.zavrnitev && e?.status >= 400 && e.status < 500 && e.status !== 408 && !jeZavrnitev(e.status)
 function zapisiSeznam(s, mapa) {
   mkdirSync(mapa, { recursive: true })
   writeFileSync(potSeznama(mapa), JSON.stringify({ najstarejsi: s.najstarejsi, clanki: [...s.clanki.values()].sort((a, b) => b.id - a.id) }))
@@ -898,7 +908,17 @@ export async function zapisnikiLige(koda, prenesi, { danes = new Date().toISOStr
     })
   const neujeti = [] // bloki brez tekme po datumu: { b, c, objava }
   for (const c of novice) {
-    const html = await clanek(c, prenesi, popolnost, zdaj)
+    let html
+    try {
+      html = await clanek(c, prenesi, popolnost, zdaj)
+    } catch (e) {
+      // En izbrisan članek (umaknjena novica, spremenjen slug) ne ustavi
+      // lige: opozorilo, članek izpade iz novice.json in uvoz gre naprej.
+      if (!jeIzbrisan(e)) throw e
+      console.warn(`aft: ${c.url} → HTTP ${e.status} — članka ni več, preskočen in odstranjen s seznama novic`)
+      odstraniIzSeznama(c.id, mapa)
+      continue
+    }
     const objava = c.datum ?? datumClanka(html)
     for (const b of blokiClanka(html, objava)) {
       const t = tekmaZaBlok(b, odigrane, objava)
