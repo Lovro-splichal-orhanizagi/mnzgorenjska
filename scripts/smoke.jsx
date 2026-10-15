@@ -5467,6 +5467,49 @@ preveri(
   preveri('isthmian: 403 in izziv vržeta IsthmianZavrnitev (uvoz izhod 4), HTML namesto JSON ustavi', izziv instanceof I.IsthmianZavrnitev &&
     zavrnjen instanceof I.IsthmianZavrnitev && zavrnjen.status === 403 && I.default.zavrnitev('x', 429).zavrnitev === true &&
     /ni vrnil JSON/.test(html?.message ?? ''))
+
+  // Gostitelj razporeda (uvoz-razporeda.mjs) zavrnitev prepozna le pri 403 in
+  // 429 (po ponovitvah), pri 401 pa vzame shranjeni razpored. Vir zato zavrne
+  // že v svojem `fetch`: 401/403/429 brez ponovitve, izhod 4 pri obeh uvozih.
+  {
+    const { prenesiSPonovitvami, pozabiPadle } = await import('./prenos.mjs')
+    const pravi = globalThis.fetch
+    const izid = {}
+    for (const status of [401, 403, 429]) {
+      let klicev = 0
+      let glava = null
+      globalThis.fetch = async (_u, m) => { klicev++; glava = m?.headers?.['x-tenant-id']; return new Response('', { status }) }
+      let napaka = null
+      try {
+        await prenesiSPonovitvami(I.naslovStrani('npl/67d7c7bb74247876e6dae40c/2026-27'), { glave: I.default.glave, fetchFn: I.default.fetch, zamiki: [0, 0, 0], log: () => {} })
+      } catch (e) { napaka = e }
+      izid[status] = { zavrnitev: napaka?.zavrnitev === true && napaka.status === status, klicev, glava }
+      pozabiPadle?.()
+    }
+    globalThis.fetch = pravi
+    preveri('isthmian: 401, 403 in 429 so zavrnitev že v vir.fetch (brez ponovitve, brez shranjenega razporeda)',
+      Object.values(izid).every((x) => x.zavrnitev && x.klicev === 1 && x.glava === 'npl'), JSON.stringify(izid))
+  }
+  preveri('isthmian: v predpomnilnik le seznam tekem (JSON), ne stran vzdrževanja', typeof I.default.zaPredpomnilnik === 'function' &&
+    I.default.zaPredpomnilnik(JSON.stringify(s)) === true && I.default.zaPredpomnilnik('<html>vzdrževanje</html>') === false &&
+    I.default.zaPredpomnilnik('') === false && I.default.zaPredpomnilnik('{"items":[1') === false && I.default.zaPredpomnilnik('{"error":"x"}') === false)
+
+  // Zapisnik se dopolnjuje: postave so, goli pa še ne. Taka tekma ne sme dobiti
+  // `imported_at` — nočni `--sveze 21` jo sicer preskoči, ko je krog (datum
+  // najzgodnejše tekme v reži "Match N") starejši od 21 dni, in goli ne
+  // pridejo nikoli. Nepopolna je 7 dni, potem gre skozi z opozorilom.
+  {
+    const brez = { ...t, homeGoals: t.homeGoals.slice(1) }
+    const sveza = I.vZapisnik(brez, { danes: Date.parse('2026-08-16T12:00:00Z') })
+    const stara = I.vZapisnik(brez, { danes: Date.parse('2026-08-30T12:00:00Z') })
+    const cela = I.vZapisnik(t, { danes: Date.parse('2026-08-16T12:00:00Z') })
+    const vsi = await I.default.zapisniki('isthmian/67d7d0c1749090308acc1021/2026-27',
+      async () => JSON.stringify({ ...s, items: [{ ...t, homeGoals: t.homeGoals.slice(1) }] }), Date.parse('2026-08-16T12:00:00Z'))
+    preveri('isthmian: goli se ne ujemajo z izidom — tekma do 7 dni nepopolna (bere se znova), nato z opozorilom',
+      sveza.nepopoln && !sveza.prazen && sveza.opozorila[0].startsWith(I.NEPOPOLN) && I.nastopi(sveza).length === I.nastopi(cela).length &&
+      !stara.nepopoln && /se ne ujemajo/.test(stara.opozorila.join()) && !cela.nepopoln && cela.opozorila.length === 0 &&
+      vsi.length === 1 && vsi[0].z.nepopoln)
+  }
 }
 
 // --- vir fsb (Srbija, Fudbalski savez Beograda) ---------------------------------

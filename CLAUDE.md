@@ -2891,7 +2891,9 @@ prepovedjo branja nismo našli (stran pogojev bere API s prijavo); noga
 "© … All rights reserved". **Vljudnostni mail vsem trem ligam je
 priporočljiv.** Beremo odkrito (`User-Agent: SLFF fantasy (https://slff.eu)`,
 **3 s** med zahtevki, ena liga ~5 zahtevkov na uvoz). **Ob 401, 403, 429 ali
-izzivu se uvoz ustavi (`IsthmianZavrnitev`, izhod 4) — ne obhajaj.** API ni
+izzivu se uvoz ustavi (`IsthmianZavrnitev`, izhod 4) — ne obhajaj.** Zavrne
+že `isthmianFetch` (brez ponovitve 429 in brez shranjenega razporeda pri 401);
+v predpomnilnik gre le seznam tekem (`zaPredpomnilnik`). API ni
 dokumentiran in se lahko spremeni brez opozorila.
 
 Preizkus v živo (15. 10. 2026, vse strani vseh 12 lig, brez baze):
@@ -2912,7 +2914,10 @@ Preizkus v živo (15. 10. 2026, vse strani vseh 12 lig, brez baze):
 | gb-sfl-d1-central | `sfl/69d0be24b616bafb97331d42/2026-27` | 462 | 106 | 368/368 | 212/212 | 798 | **ni uporaben** |
 
 Vratar (GK) je v vsaki postavi natanko eden. Neujemanja golov so tekme
-prejšnjega večera (zapisnik se še dopolnjuje). **Arhiv SFL 2025/26 ni
+prejšnjega večera (zapisnik se še dopolnjuje): taka tekma je do 7 dni
+`nepopoln` (brez `imported_at`, nočni uvoz jo bere znova), nato gre skozi z
+opozorilom. Sicer bi jo `--sveze 21` po prvem uvozu preskočil, ker ima krog
+"Match N" datum najzgodnejše tekme reže. **Arhiv SFL 2025/26 ni
 uporaben**: tekmovanja so bila za 2026/27 prenesena na platformo, lanski
 podatki imajo ekipe "P"/"p", 16 "začetnikov" in večino tekem brez postav
 (Premier South 135 zapisnikov, goli = izid 26) — SFL dobi cene le iz tekoče

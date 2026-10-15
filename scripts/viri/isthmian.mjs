@@ -51,6 +51,9 @@ export const LIGE = {
 }
 const DOLZINA_TEKME = 90
 const NAJMANJ_ZACETNIKOV = 7
+// Zapisnik se dopolnjuje: klub vnese postave, gole pa pozneje. Tako dolgo je
+// tekma, katere goli se ne ujemajo z izidom, nepopolna (brez `imported_at`).
+const DNI_DOPOLNJEVANJA = 7
 const NA_STRAN = 100
 const NAJVEC_STRANI = 20
 export const PREMOR_MS = 3000
@@ -83,10 +86,20 @@ export const tenantIzNaslova = (url) => {
   return Object.entries(LIGE).find(([, l]) => l.api === host)?.[0] ?? null
 }
 
-/** `fetch` z glavo lige; `prenos.mjs` ga dobi kot `vir.fetch`. */
-export function isthmianFetch(url, moznosti = {}) {
+/**
+ * `fetch` z glavo lige; `prenos.mjs` ga dobi kot `vir.fetch`. Zavrnitev
+ * (401, 403, 429) vrže `IsthmianZavrnitev` že tu: brez ponovitve (prenos 429
+ * sicer ponovi trikrat) in mimo shranjenega razporeda (uvoz-razporeda.mjs pri
+ * 401 vzame shranjeno stran). Oba uvoza tako končata z izhodom 4.
+ */
+export async function isthmianFetch(url, moznosti = {}) {
   const tenant = tenantIzNaslova(url)
-  return fetch(url, { ...moznosti, headers: { ...(moznosti.headers ?? {}), ...(tenant ? { 'x-tenant-id': tenant } : {}) } })
+  const odgovor = await fetch(url, { ...moznosti, headers: { ...(moznosti.headers ?? {}), ...(tenant ? { 'x-tenant-id': tenant } : {}) } })
+  if (jeZavrnitev(odgovor.status)) {
+    await odgovor.body?.cancel().catch(() => {})
+    throw new IsthmianZavrnitev(`isthmian: ${url} → HTTP ${odgovor.status} — uvoz ustavljen, ne obhajamo`, odgovor.status)
+  }
+  return odgovor
 }
 
 /** Zavrnitev (401, 403, 429) ali izziv: uvoz se ustavi in ne vzame shranjene strani. */
@@ -101,6 +114,20 @@ export class IsthmianZavrnitev extends Error {
 export const jeZavrnitev = (status) => status === 401 || status === 403 || status === 429
 export const jeIzziv = (besedilo) =>
   /<title>\s*(Just a moment|Attention Required)|cf_chl_opt|cf-turnstile|g-recaptcha|hcaptcha|captcha/i.test(String(besedilo ?? ''))
+
+/**
+ * V predpomnilnik gre le seznam tekem. Stran vzdrževanja (200 s HTML) ali
+ * odrezan JSON bi sicer prepisal zadnji dober razpored, ki ga uvoz razporeda
+ * vzame, ko vir pade.
+ */
+export function zaPredpomnilnik(besedilo) {
+  try {
+    const d = JSON.parse(besedilo)
+    return !!d && Array.isArray(d.items) && !!d.pagination
+  } catch {
+    return false
+  }
+}
 
 /** Odgovor kot JSON; HTML (izziv, aplikacija) ali napaka ustavi uvoz. */
 export function json(besedilo, url) {
@@ -250,8 +277,14 @@ function ekipa(t, s) {
  * Avtogol platforma vpiše na dva načina: `own-goal` ali kot `normal` z
  * igralcem NASPROTNE ekipe (obakrat v golih ekipe, ki ji gol šteje). Oboje je
  * avtogol pri ekipi strelca. Strelec "N/A" (neznan) je gol ekipe brez strelca.
+ *
+ * Postavi obeh ekip, goli pa se ne ujemajo z izidom, in tekma ni starejša od
+ * `DNI_DOPOLNJEVANJA`: klub zapisnik še dopolnjuje. Taka tekma je `nepopoln`
+ * (uvoz ji ne da `imported_at`), da jo nočni uvoz bere znova. Uvožene tekme
+ * `--sveze 21` ne bere več, ko je njen krog starejši od 21 dni — krog
+ * "Match N" pa ima datum najzgodnejše tekme reže, ki je lahko mesece prej.
  */
-export function vZapisnik(t) {
+export function vZapisnik(t, { danes = Date.now() } = {}) {
   const rezultat = izid(t)
   if (!jeOdigrana(t) || !rezultat) return null
   zapomniKratko(t)
@@ -319,8 +352,13 @@ export function vZapisnik(t) {
   })
 
   const zaEkipo = (idx) => goli.filter((g) => (g.avtogol ? 1 - g.ekipaIdx : g.ekipaIdx) === idx).length
-  if (znana[0] && znana[1] && (zaEkipo(0) !== rezultat.domaci || zaEkipo(1) !== rezultat.gostje))
-    opozorila.push(`goli iz zapisnika (${zaEkipo(0)}:${zaEkipo(1)}) se ne ujemajo z izidom ${rezultat.domaci}:${rezultat.gostje}`)
+  let dopolnjuje = false
+  if (znana[0] && znana[1] && (zaEkipo(0) !== rezultat.domaci || zaEkipo(1) !== rezultat.gostje)) {
+    const neujemanje = `goli iz zapisnika (${zaEkipo(0)}:${zaEkipo(1)}) se ne ujemajo z izidom ${rezultat.domaci}:${rezultat.gostje}`
+    const starost = (danes - Date.parse(`${t.date}T00:00:00Z`)) / 86400000
+    dopolnjuje = !(starost > DNI_DOPOLNJEVANJA)
+    opozorila.push(dopolnjuje ? `${NEPOPOLN}: ${neujemanje} — klub zapisnik še dopolnjuje` : neujemanje)
+  }
   opozorila.sort((a, b) => Number(b.startsWith(NEPOPOLN)) - Number(a.startsWith(NEPOPOLN)))
 
   const cas = vLjubljanskiCas(t.date, t.time)
@@ -340,7 +378,7 @@ export function vZapisnik(t) {
     rumeni,
     rdeci,
     menjave,
-    nepopoln: !znana[0] || !znana[1],
+    nepopoln: !znana[0] || !znana[1] || dopolnjuje,
     prazen: !ekipe[0].postava.length && !ekipe[1].postava.length,
     opozorila,
   }
@@ -420,6 +458,7 @@ const vir = {
   naslovRazporeda: (koda) => naslovStrani(koda, 1),
   naslovZapisnika: (koda, id) => naslovTekme(razbijKodo(koda).tenant, id),
   jeIzziv,
+  zaPredpomnilnik,
   zavrnitev: (sporocilo, status = null) => new IsthmianZavrnitev(`isthmian: ${sporocilo} — uvoz ustavljen, ne obhajamo`, status),
 
   /** Razpored: vsi krogi ("Match N") s tekmami, odigrane in kontumacije. */
@@ -427,13 +466,13 @@ const vir = {
     return razcleniRazpored(await vseTekme(koda, prenesi))
   },
 
-  /** Zapisniki vseh odigranih tekem sezone — v seznamu so že celi. */
-  async zapisniki(koda, prenesi) {
+  /** Zapisniki vseh odigranih tekem sezone — v seznamu so že celi (seznam vedno svež). */
+  async zapisniki(koda, prenesi, danes = Date.now()) {
     const { tenant, sezona } = razbijKodo(koda)
     const out = []
     for (const t of await vseTekme(koda, prenesi)) {
-      if (!jeOdigrana(t) || jeKontumacija(t)) continue
-      const z = vZapisnik(t)
+      if (!jeOdigrana(t) || jeKontumacija(t, danes)) continue
+      const z = vZapisnik(t, { danes })
       if (!z) continue
       if (z.sezona !== sezona) z.opozorila.push(`tekma ${z.datum} ni v sezoni ${sezona}`)
       z.sezona = sezona
