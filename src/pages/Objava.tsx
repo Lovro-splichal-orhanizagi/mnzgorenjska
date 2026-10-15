@@ -156,7 +156,10 @@ export function Prosojnica({ v, n }: { v: VsebinaObjave; n: number }) {
     <div
       id="prosojnica"
       className="relative flex h-[1350px] w-[1080px] flex-col overflow-hidden bg-gradient-to-b from-[#14603f] via-[#0b3d2e] to-[#04140f] p-16 text-slate-100"
+      style={{ fontFamily: "'InterObjava', sans-serif" }}
     >
+      {/* Strežnik (Playwright na Linuxu) nima pisave Inter; brez nje bi rišel s kitajsko nadomestno. */}
+      <style>{`@font-face{font-family:'InterObjava';src:url('/fonts/InterVariable.woff2') format('woff2');font-weight:100 900;font-display:block}`}</style>
       <div className="igrisce pointer-events-none absolute inset-0 opacity-60" />
       <div className="relative flex flex-1 flex-col">
         <Glava v={v} />
