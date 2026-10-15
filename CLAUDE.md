@@ -2830,7 +2830,7 @@ cene=true`.
 
 ### Anglija — vir `isthmian`
 
-Država `GB` ("England", migracija 20261015131100): koda ISO 3166-1, ker
+Država `GB` ("England", migracija 20261015163500): koda ISO 3166-1, ker
 `GB-ENG` (ISO 3166-2) z vezajem podre pravilo "šifra lige se začne s kodo
 države" in ker IP iz Anglije pove `GB`. **Šifra angleške lige se začne z
 `gb-`.** Vmesnika v angleščini za državo, kartice in pošte **še ni**
