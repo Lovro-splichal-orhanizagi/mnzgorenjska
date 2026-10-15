@@ -2828,6 +2828,100 @@ Uvoz (ena za drugo, ~2 s na zapisnik — arhiv 240 zapisnikov je ~10 minut):
 `gh workflow run uvoz-lige.yml -f liga=mk-prva-mfl -f arhiv=prva-mfl-25-26 -f
 cene=true`.
 
+### Armenija — vir `ffa`
+
+Vir `ffa` (`scripts/viri/ffa.mjs`) bere **ffa.am** (Football Federation of
+Armenia, Laravel + Livewire, spredaj Cloudflare brez izziva), kjer FFA objavi
+tekmovanja, ki jih vodi sama: **Prvo ligo** (Առաջին խումբ, raven 2) in
+amaterski ligi A in B. Premier Liga je na svojem spletišču
+(premierleague.ffa.am) — vir je ne bere. Država `AM` ("Հայաստան", vpiše jo
+migracija lige); vmesnika v armenščini, kartice in pošte **še ni** in `AM`
+**ni** v `JEZIK_DRZAVE` ne v matriki nočnega uvoza — oboje pred vklopom.
+Šifra lige se začne z `am-`.
+
+- **Šifra lige je `<pot>/<skupina>`**: pot strani pod `/en/` (`first-league`)
+  in id skupine iz gradnika Livewire `cascade-tour-matches`
+  (`wire:initial-data`, `dataMeta.groups`; 902 = Prva liga 2026/27). Stran
+  vedno pokaže **tekočo** skupino; pretekle sezone (802 = 2025/26, …) in
+  druge skupine (amaterske A1/A2) bi zahtevale zahtevek Livewire (POST), ki
+  ga ne pošiljamo — **arhiva zato ni**, cene so iz tekoče sezone. Če stran
+  pokaže drugo skupino (nova sezona), se uvoz ustavi: popravi
+  `source_league_code`. Sezona je leto skupine v gradniku ("2026-2027" →
+  "2026/27"; skupine in leta so našteti vzporedno, najnovejše prvo).
+- **Razpored** je ena stran: `<tbody tour="N">` (krogi pomešani), vrstica
+  domači, izid ("2:1", tehnični izid "3:0(3:0)", neodigrana " : "), gostje,
+  termin "04/08 17:00" **brez leta** (julij–december prvo leto sezone,
+  januar–junij drugo) ali "Postponed", kraj, stadion in povezava
+  `/en/match-info/f<id>`. **Erevanski čas (UTC+4, brez poletnega) →
+  ljubljanski** (−2 h poleti, −3 h pozimi). Tehnični izid je kontumacija.
+- **Izstop kluba**: klub, ki je izstopil (Hayq 2026/27), ostane na strani z
+  vrsticami brez termina, izida in povezave tudi v odigranih krogih.
+  `izstopljeniKlubi` ga prepozna (vsaj dve taki vrstici, od prve nobene prave
+  tekme) in `razporedIzTekem` njegove neodigrane tekme izpusti (25); tehnični
+  izidi pred izstopom ostanejo kot kontumacije.
+- **Zapisnik** `/en/match-info/f<id>` (šifra v bazi `am<id>`): glava ("…
+  (2026-2027): 1" = sezona in krog, "04.08.2026 17:00", imeni, izid,
+  "Technical defeat" pri kontumaciji → zapisnik null), "Players" (začetniki)
+  in "Substitutes" (klop), levo domači, desno gostje. Dogodki so ikone z
+  minuto: `down.png` izstop, `up.png` vstop, `ball.png` gol, `yc.png`
+  rumeni, `rc.png` rdeči — **levo ikona pred minuto, desno minuta pred
+  ikono**, zato razčlenjujemo HTML. Rumeni in rdeči ob isti minuti (ali dva
+  rumena) je drugi rumeni → 1 rumeni + 1 rdeči. Polčasa stran ne pove.
+  Trenerjev ("Coaches"), sodnikov in delegata ne beremo; vzorci `am-ffa-*`
+  so brez njih.
+- **Goli iz glave**: pod imenom kluba, ki mu gol šteje, so strelci z
+  minutami, "(11m)" = 11 m, "(OG)" = **avtogol igralca nasprotne ekipe** (pri
+  nas je pri strelcu v njegovi ekipi). Igralca najde ikona žoge iste minute
+  (glava ime včasih obrne: "Abayomi David"), sicer ime. Ikone v postavi same
+  avtogola ne ločijo — s samimi ikonami bi se 4 od 59 tekem ne ujemale z
+  izidom.
+- **Napake vira**: menjava, vpisana obrnjeno (rezerva "vstopi" po izstopu:
+  "67 noter, 20 ven", f98471, f98509, f98518), se zamenja z opozorilom. Kadar
+  vstop rezerve manjka (Olympia, f98492: dva izstopa v 82., brez vstopa), ima
+  ekipa manj kot 990 minut.
+- **Identiteta: ime + klub** (kot fss, gff), šifer igralcev ni. Ime je
+  latinica ("Hayk Hovakimyan" → "Hovakimyan Hayk"), nekaj imen tujcev je
+  delno v armenski pisavi, kot jih piše zveza.
+- **Vratar ni označen**: prvi začetnik je vratar le kot namig (kot ffm,
+  gff); v 118 postavah ima dres 1, 12, 13 ali 25 v 59, sicer 31, 33, 71, 88 …
+  *Uskladi pozicije* z `vir = ffa`.
+- Druge ekipe ("Ararat-2", "BKMA-2", "Urartu-2") so svoj klub; ključ ohrani
+  števke.
+
+**Amaterske lige niso vpisane**: Amateur League A 2026/27 ima skupini A1 in
+A2 po **4 klube** (6 krogov), League B je le 2025/26 (skupini in play-off po
+4–5 klubov). Pri 15 igralcih in največ treh iz kluba je pet klubov spodnja
+meja — kadra ni mogoče sestaviti. Zapisnik je ista predloga (vzorec
+`am-ffa-tekma-95922-amaterska.html` se razčleni, 11 + 11, goli = izid).
+
+**Pravice (pregled 15. 10. 2026, ni pravni nasvet).** robots.txt:
+`User-agent: *` z `Disallow:` (prazno — nič prepovedano), brez Crawl-delay.
+Noga zahteva aktivno povezavo na ffa.am ob uporabi gradiva (`vir_ime` FFA,
+`vir_url` → stran lige v nogi). Po besedah lastnika imamo dovoljenje za
+branje (15. 10. 2026). Beremo odkrito (`User-Agent: SLFF fantasy (https://slff.eu)`, **4 s**
+med zahtevki, zapisnikov, starejših od tedna, ne beremo znova — razen
+nepopolnih do 45 dni, `zapisnikSvez`). **Ob 401, 403, 429 ali izzivu se uvoz
+ustavi — ne obhajaj** (`FfaZavrnitev` že v `vir.fetch`, izhod 4). Navadne
+strani nosijo Cloudflarov skript `/cdn-cgi/challenge-platform/…/jsd/` — to
+ni izziv. V predpomnilnik gre le prava stran (`vir.zaPredpomnilnik`: stran
+lige z gradnikom, stran tekme z glavo). Če nas FFA prosi, naj nehamo, `am-`
+lige izklopimo.
+
+Preizkus v živo (15. 10. 2026, brez pisanja v bazo; stran lige in 79 strani
+tekem po 4 s): 30 krogov, 222 vrstic, 15 klubov (14 + Hayq, izstopil), v
+razporedu 197 tekem (25 neodigranih Hayqa izpuščenih), 63 odigranih, od tega 4
+tehnični izidi (kontumacije) in 59 zapisnikov: goli = izid 59/59 (211),
+postav po 11 118/118, 547 menjav z minuto (547 nastopov s klopi), 990 minut
+102/118 (15 rdečih kartonov, 1 manjkajoč vstop), 4 opozorila (obrnjene
+menjave). Igralcev z vsaj 270 minutami 199 od 368 (54 %).
+
+| liga | klubov | tekoča 2026/27 | arhiv |
+|---|---|---|---|
+| am-1-liga | 14 (+ Hayq, izstopil) | `first-league/902` | — (le prek Livewire) |
+
+Uvoz (brez arhiva): `gh workflow run uvoz-lige.yml -f liga=am-1-liga -f
+cene=true`. 59 zapisnikov po 4 s je ~5 minut.
+
 ### Država obiskovalca
 
 Domena je ena, **lige druge države so skrite**: `useTekmovanje().tekmovanja`

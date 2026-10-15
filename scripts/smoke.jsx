@@ -5506,6 +5506,142 @@ preveri(
   preveri('fsb: stran, ki ni stran lige, ustavi uvoz', /ni stran lige/.test(niLiga))
 }
 
+// --- vir ffa (Armenija, ffa.am) ----------------------------------------------------
+{
+  const F = await import('./viri/ffa.mjs')
+  const { default: viri } = await import('./viri/index.mjs')
+  const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  preveri('ffa: vir je vpisan, 4 s, User-Agent SLFF', viri.ffa === F.default && F.default.drzava === 'AM' &&
+    F.default.imaRegistracije === false && F.default.premorMs >= 3000 &&
+    F.default.glave['User-Agent'] === 'SLFF fantasy (https://slff.eu)')
+  preveri('ffa: šifra in naslovi', F.razberiKodo('first-league/902').pot === 'first-league' && F.razberiKodo('first-league/902').skupina === '902' &&
+    F.default.naslovRazporeda('first-league/902') === 'https://www.ffa.am/en/first-league' &&
+    F.default.naslovZapisnika(null, 'am98467') === 'https://www.ffa.am/en/match-info/f98467' &&
+    F.sifraZapisnika('98467') === 'am98467' && F.sifraZapisnika('am98467') === 'am98467')
+  let slabaSifra = null
+  try { F.razberiKodo('first-league') } catch (e) { slabaSifra = e.message }
+  preveri('ffa: šifra brez <pot>/<skupina> ustavi uvoz', /<pot>\/<skupina>/.test(slabaSifra ?? ''))
+  preveri('ffa: čas (Erevan UTC+4 → Ljubljana), datum v sezoni, minuta, sezona', F.vLjubljanskiCas('2026-08-04', '17:00').ura === '15:00' &&
+    F.vLjubljanskiCas('2026-11-02', '15:00').ura === '12:00' && F.vLjubljanskiCas('2026-08-04', '01:00').datum === '2026-08-03' &&
+    F.datumVSezoni('04/08', '2026/27') === '2026-08-04' && F.datumVSezoni('08/03', '2026/27') === '2027-03-08' &&
+    F.datumVSezoni('x', '2026/27') === null && F.minuta('90+1') === 90 && F.minuta('45+2') === 45 && F.minuta('74 ') === 74 &&
+    F.sezonaIz('2026-2027') === '2026/27' && F.sezonaIz('ՍՖԱ Ա լիգա 2026/27-A1') === '2026/27')
+  preveri('ffa: izid in tehnični izid', F.izidIz('2:1').domaci === 2 && !F.izidIz('2:1').tehnicni && F.izidIz('3:0(3:0)').tehnicni &&
+    F.izidIz(' : ') === null)
+  preveri('ffa: ključ kluba — druga ekipa je svoj klub', F.kljucKlubaAm('Ararat-2') !== F.kljucKlubaAm('Ararat') &&
+    F.kljucKlubaAm('Ararat-Armenia-2') === 'ararat armenia 2' && F.kratkoImeAm('Sardarapat FC-2') === 'Sardarapat FC-2')
+
+  const liga = beri('am-ffa-first-league-902.html')
+  const { sezona, tekme } = F.tekmeStrani('first-league/902', liga)
+  preveri('ffa: stran lige — sezona iz gradnika, 30 krogov, ura → ljubljanska, tehnični izidi, prestavljena', sezona === '2026/27' &&
+    tekme.length === 222 && tekme.filter((t) => t.izid).length === 63 && tekme.filter((t) => t.tehnicni).length === 4 &&
+    new Set(tekme.map((t) => t.krog)).size === 30 && tekme[0].krog === 1 && tekme[0].id === '98468' && tekme[0].datum === '2026-08-03' &&
+    tekme[0].ura === '14:30' && tekme.filter((t) => t.prestavljena).length === 1 && tekme.find((t) => t.prestavljena)?.datum === null)
+  const r = F.razporedIzTekem(tekme)
+  const vse = r.krogi.flatMap((k) => k.tekme)
+  preveri('ffa: izstop kluba (Hayq) — neodigrane tekme proč, tehnični izidi so kontumacije', r.izstopili.join() === 'Hayq' &&
+    r.izpuscenih === 25 && vse.length === 197 && vse.filter((t) => t.kontumacija).length === 4 &&
+    !vse.some((t) => !t.odigrana && (t.domaci === 'Hayq' || t.gostje === 'Hayq')) &&
+    vse.filter((t) => t.odigrana).length === 63 && r.krogi.length === 30 && new Set(vse.flatMap((t) => [t.domaci, t.gostje])).size === 15)
+  let tujaSkupina = null
+  try { F.tekmeStrani('first-league/802', liga) } catch (e) { tujaSkupina = e.message }
+  preveri('ffa: stran z drugo skupino (nova sezona) ustavi uvoz', /kaže skupino 902, ne 802/.test(tujaSkupina ?? ''))
+
+  const h = beri('am-ffa-tekma-98467-rdeci.html')
+  preveri('ffa: navadna stran ni izziv (skript /cdn-cgi/challenge-platform/ ni izziv), izziv je', !F.jeIzziv(h) &&
+    !F.jeIzziv('<script src="/cdn-cgi/challenge-platform/scripts/jsd/main.js"></script>') && F.jeIzziv('<title>Just a moment...</title>'))
+  const z = F.vZapisnik(h, { id: '98467' })
+  const n = F.nastopi(z)
+  const minute = (nn, i) => nn.filter((x) => x.ekipaIdx === i).reduce((a, x) => a + x.minute, 0)
+  preveri('ffa: glava — klubi, izid, datum in ura (17:00 Erevan → 15:00), sezona, krog', z.domaci.ime === 'Ararat-2' &&
+    z.gostje.ime === 'Andranik' && z.rezultat.domaci === 0 && z.rezultat.gostje === 4 && z.datum === '2026-08-04' && z.ura === '15:00' &&
+    z.sezona === '2026/27' && z.krog === 1 && z.polcas === null)
+  preveri('ffa: 11 + 11, klop, dres, Priimek Ime, vratar = prvi začetnik (namig)', z.domaci.postava.length === 11 &&
+    z.gostje.postava.length === 11 && z.domaci.rezerve.length === 7 && z.gostje.rezerve.length === 12 &&
+    z.domaci.postava[0].st === 98 && z.domaci.postava[0].ime === 'Hovakimyan Hayk' && z.domaci.postava[0].pozicija === 'GK' &&
+    z.domaci.postava.filter((i) => i.vratar).length === 1 && z.gostje.rezerve.every((i) => !i.vratar))
+  preveri('ffa: goli iz glave (gostje: zrcalni stolpec), rumeni + rdeči ob isti minuti = 1 + 1, nastop do izključitve', z.goli.length === 4 &&
+    z.goli.every((g) => g.ekipaIdx === 1 && g.st) && z.goli.filter((g) => g.ime === 'Ghiasyan Davit').length === 2 &&
+    z.rdeci.length === 2 && n.find((x) => x.ime === 'Mkhitaryan Boris')?.minutaDo === 40 && n.find((x) => x.ime === 'Mkhitaryan Boris')?.rumeni === 1 &&
+    minute(n, 0) === 940 && minute(n, 1) === 965 && z.menjave.length === 10 && z.opozorila.length === 0)
+  preveri('ffa: rezerva z golom — vstop 61, gol 74', n.find((x) => x.ime === 'Chilingaryan Ararat')?.minutaOd === 61 &&
+    n.find((x) => x.ime === 'Chilingaryan Ararat')?.goli === 1 && n.filter((x) => !x.zacetnik).length === 10)
+
+  const ag = F.vZapisnik(beri('am-ffa-tekma-98471-avtogol.html'))
+  const nag = F.nastopi(ag)
+  preveri('ffa: avtogol "(OG)" pod ekipo, ki ji šteje, je pri strelcu v nasprotni; "(11m)"; obrnjen ime v glavi', ag.goli.length === 5 &&
+    ag.goli.find((g) => g.avtogol)?.ime === 'Davtyan Tigran' && ag.goli.find((g) => g.avtogol)?.ekipaIdx === 0 &&
+    ag.goli.filter((g) => g.enajstmetrovka).length === 1 && ag.goli.filter((g) => g.ime === 'David Abayomi' && g.ekipaIdx === 1).length === 2 &&
+    nag.find((x) => x.ime === 'Davtyan Tigran')?.avtogoli === 1 && !ag.opozorila.some((o) => /goli iz dogodkov/.test(o)))
+  preveri('ffa: obrnjena menjava (67 noter, 20 ven) se zamenja z opozorilom, 990 minut', ag.opozorila.length === 1 &&
+    /zamenjana/.test(ag.opozorila[0]) && nag.find((x) => x.ime === 'Harutyunyan Nairi')?.minutaOd === 20 &&
+    nag.find((x) => x.ime === 'Harutyunyan Nairi')?.minutaDo === 67 && minute(nag, 0) === 990 && minute(nag, 1) === 990)
+  const ob = F.vZapisnik(beri('am-ffa-tekma-98518-obrnjena.html'))
+  preveri('ffa: dve obrnjeni menjavi v verigi, avtogol, 990 minut', ob.opozorila.length === 2 && minute(F.nastopi(ob), 1) === 990 &&
+    ob.goli.length === 3 && ob.goli.filter((g) => g.avtogol).length === 1)
+  const am = F.vZapisnik(beri('am-ffa-tekma-95922-amaterska.html'))
+  preveri('ffa: amaterska tekma (ista predloga) — 11 + 11, goli = izid, 990 minut', am.domaci.postava.length === 11 &&
+    am.gostje.postava.length === 11 && am.goli.length === 5 && minute(F.nastopi(am), 0) === 990 && am.opozorila.length === 0)
+  const th = beri('am-ffa-tekma-98478-tehnicni.html')
+  const nd = beri('am-ffa-tekma-98545-neodigrana.html')
+  preveri('ffa: tehnični poraz in neodigrana tekma — brez zapisnika', F.vZapisnik(th) === null && F.glavaTekme(th).tehnicni &&
+    F.vZapisnik(nd) === null && F.glavaTekme(nd).izid === null && F.glavaTekme(nd).krog === 12 && F.glavaTekme(nd).ura === '12:00')
+  preveri('ffa: vzorci brez trenerjev in sodnikov', !/Coaches|Referee|Delegate|Observer|Fourth official/.test(
+    ['am-ffa-tekma-98467-rdeci.html', 'am-ffa-tekma-98471-avtogol.html', 'am-ffa-tekma-98518-obrnjena.html', 'am-ffa-tekma-98478-tehnicni.html',
+      'am-ffa-tekma-98545-neodigrana.html', 'am-ffa-tekma-95922-amaterska.html'].map(beri).join('')))
+  preveri('ffa: v predpomnilnik le prava stran (ne vzdrževalna, ne izziv)', F.zaPredpomnilnik(h, 'tekma-98467.html') &&
+    F.zaPredpomnilnik(liga, 'liga-first-league-902.html') && !F.zaPredpomnilnik('<h1>Be right back.</h1>', 'tekma-98467.html') &&
+    !F.zaPredpomnilnik('<h1>Be right back.</h1>', 'liga-first-league-902.html') && !F.zaPredpomnilnik('<title>Just a moment...</title>', 'tekma-1.html'))
+
+  // zapisniki(): liga sveže, tehnični izidi se ne berejo, šifra am<id>.
+  const prebrane = []
+  const zs = await F.default.zapisniki('first-league/902', async (url, ime, sveze) => {
+    prebrane.push({ url, ime, sveze })
+    return url.endsWith('/first-league') ? liga : h
+  })
+  preveri('ffa: zapisniki() — šifra am<id>, ime, krog in sezona z razporeda, tehnični izidi izpuščeni', zs.length === 59 &&
+    zs.every((x) => /^am\d+$/.test(x.id) && x.z.zapisnikId === x.id) && zs.find((x) => x.id === 'am98467')?.z.opozorila.length === 0 &&
+    zs.find((x) => x.id === 'am98468')?.z.domaci.ime === 'Shirak-2' && zs.find((x) => x.id === 'am98468')?.z.krog === 1 &&
+    zs.every((x) => x.z.sezona === '2026/27') && !prebrane.some((p) => /f98478|f98493|f98517/.test(p.url)) &&
+    prebrane[0].sveze === true && zs.find((x) => x.id === 'am98468')?.z.opozorila.some((o) => /ni izid razporeda/.test(o)))
+  const razp = await F.default.razporedVseStrani('first-league/902', async () => liga)
+  preveri('ffa: razporedVseStrani()', razp.length === 30 && razp.flatMap((k) => k.tekme).length === 197)
+
+  // Nepopolna stran v predpomnilniku: do 45 dni še enkrat sveže, po 45 dneh ne.
+  const zdaj = Date.parse('2026-10-15T12:00:00Z')
+  const klici = []
+  const beriStran = async (sveze) => { klici.push(sveze); return klici.length === 1 ? nd : h }
+  const z20 = await F.zapisnikSvez(beriStran, (x) => F.vZapisnik(x), '2026-09-25', zdaj)
+  const k20 = [...klici]
+  klici.length = 0
+  const z60 = await F.zapisnikSvez(beriStran, (x) => F.vZapisnik(x), '2026-08-01', zdaj)
+  const k60 = [...klici]
+  klici.length = 0
+  await F.zapisnikSvez(beriStran, (x) => F.vZapisnik(x), '2026-10-12', zdaj)
+  preveri('ffa: stran brez postav iz predpomnilnika se do 45 dni prebere še enkrat sveže', z20?.rezultat.gostje === 4 &&
+    k20.join() === 'false,true' && z60 === null && k60.join() === 'false' && klici.join() === 'true')
+
+  // Zavrnitev na vsaki poti: 401, 403, 429 in izziv (tudi kot status 503) → FfaZavrnitev (uvoz izhod 4).
+  const zavrnjen = async (status, telo = '') => {
+    try { await F.ffaFetch('https://www.ffa.am/en/first-league', {}, async () => new Response(telo, { status })); return null } catch (e) { return e }
+  }
+  const z401 = await zavrnjen(401)
+  const z403 = await zavrnjen(403)
+  const z429 = await zavrnjen(429)
+  const z503 = await zavrnjen(503, '<title>Just a moment...</title>')
+  const ok503 = await zavrnjen(503, 'Service Unavailable')
+  preveri('ffa: fetch vira — 401, 403, 429 in izziv vržejo FfaZavrnitev, navaden 503 ne', [z401, z403, z429, z503].every((e) => e instanceof F.FfaZavrnitev && e.zavrnitev) &&
+    z401.status === 401 && z429.status === 429 && ok503 === null && F.default.fetch && F.default.zavrnitev('x', 429).zavrnitev === true)
+  let zp = null
+  try { await F.default.zapisniki('first-league/902', async (url) => { if (url.endsWith('/first-league')) return liga; const e = new Error('HTTP 401'); e.status = 401; throw e }) } catch (e) { zp = e }
+  let zi = null
+  try { await F.default.zapisniki('first-league/902', async (url) => (url.endsWith('/first-league') ? liga : '<title>Just a moment...</title>')) } catch (e) { zi = e }
+  let zr = null
+  try { await F.default.razporedVseStrani('first-league/902', async () => { const e = new Error('HTTP 403'); e.status = 403; throw e }) } catch (e) { zr = e }
+  preveri('ffa: 401 na strani tekme, izziv na strani tekme in 403 na razporedu ustavijo uvoz', zp instanceof F.FfaZavrnitev && zp.status === 401 &&
+    zi instanceof F.FfaZavrnitev && zr instanceof F.FfaZavrnitev && zr.status === 403)
+}
+
 // --- vir oefb (Avstrija, oefb.at) ------------------------------------------------
 {
   const O = await import('./viri/oefb.mjs')

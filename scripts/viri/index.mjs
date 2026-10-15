@@ -31,6 +31,7 @@ import lff from './lff.mjs'
 import ffm from './ffm.mjs'
 import fcf from './fcf.mjs'
 import fas from './fas.mjs'
+import ffa from './ffa.mjs'
 
 const VIRI = {
   mnzg,
@@ -82,6 +83,9 @@ const VIRI = {
   // Španija (Asturija): FutbolAsturiano.es (WordPress SportsPress), ne zveza;
   // liga je blok šifer objav tekem ene sezone, igralec s potjo profila.
   fas,
+  // Armenija: Football Federation of Armenia (ffa.am), Prva liga; brez šifer
+  // igralcev (ime + klub), vratar je prvi začetnik (namig).
+  ffa,
 }
 
 /**
