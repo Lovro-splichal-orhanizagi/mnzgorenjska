@@ -92,8 +92,11 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     razveljavi: 'Võta tagasi',
   },
 
-  prijavaPotrebna: 'Meeskonna kokkupanemiseks pead sisse logima.',
-  prijava: 'Logi sisse',
+  brezPrijave: {
+    opis: 'Meeskonna saad kokku panna ka ilma kontota. See jääb sellesse brauserisse, kuni selle salvestad.',
+    shrani: 'Salvesta ja loo konto',
+    pripravljena: 'Sinu meeskond on valmis. Salvesta see.',
+  },
   locenaLiga:
     'Sinu meeskond liigas <liga>{liga}</liga> on eraldi sinu teistest meeskondadest, oma eelarve ja oma edetabeliga. Punktid lähevad arvesse alates {krog}. voorust, sest seni käivad veel üleminekud ja vanuseklasside vahetused.',
 

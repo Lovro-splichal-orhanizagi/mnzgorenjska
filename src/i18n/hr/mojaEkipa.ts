@@ -93,8 +93,11 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     razveljavi: 'Poništi',
   },
 
-  prijavaPotrebna: 'Za slaganje momčadi moraš se prijaviti.',
-  prijava: 'Prijava',
+  brezPrijave: {
+    opis: 'Momčad složiš bez računa. Ostaje u ovom pregledniku dok je ne spremiš.',
+    shrani: 'Spremi i otvori račun',
+    pripravljena: 'Tvoja momčad je spremna — spremi je.',
+  },
   locenaLiga:
     'Momčad u ligi <liga>{liga}</liga> odvojena je od momčadi u drugim ligama — sa svojim proračunom i svojom ljestvicom. Liga je uključena usred sezone, pa se bodovi računaju od {krog}. kola nadalje. Ranije odigrana kola ne broje se nikome.',
 

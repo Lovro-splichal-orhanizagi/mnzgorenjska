@@ -3150,6 +3150,12 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   `/my-team?sestavi=1` sestavi ekipo ob odprtju). Le števci, brez uporabnika;
   piše `zabelezi_korak`, bere admin. Ime ekipe se predlaga ("FC Ime") in se ga
   da spremeniti kadarkoli (od 6. 10. 2026; prej je bilo po prvi shrambi fiksno)
+- **Sestava brez prijave** (od 15. 10. 2026): neprijavljen na `/my-team`
+  sestavlja **osnutek** v `localStorage` (`slff-osnutek-<liga>`,
+  `src/lib/osnutek.ts`; ob branju preverjen proti trgu). Shrani ga pelje na
+  `/login?…&nacin=registracija`; po prijavi osnutek napolni le prazno ekipo
+  (shranjen kader ima prednost, osnutek se pobriše), po shrambi izgine.
+  Koraka lijaka `osnutek_brez_prijave` in `osnutek_shranjen`
 - `obiski_dnevno` → obiski strani: dnevni seštevki po strani in starosti
   računa (`nov` = registriran v zadnjih 7 dneh, `star`, `neprijavljen`).
   Odgovarja na "kam gre tisti, ki ekipe ne sestavi" — lijak sam tega ne pove.

@@ -92,8 +92,11 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     razveljavi: 'Visszavonás',
   },
 
-  prijavaPotrebna: 'A csapat összeállításához be kell jelentkezned.',
-  prijava: 'Bejelentkezés',
+  brezPrijave: {
+    opis: 'A csapatot fiók nélkül is összeállíthatod. Ebben a böngészőben marad, amíg el nem mented.',
+    shrani: 'Mentés és fiók létrehozása',
+    pripravljena: 'A csapatod kész, mentsd el.',
+  },
   locenaLiga:
     'A csapatod itt: <liga>{liga}</liga>, külön van a többi bajnokságban lévő csapataidtól, saját költségvetéssel és saját tabellával. A pontok a(z) {krog}. fordulótól számítanak, mert addig még zajlanak az átigazolások és a korosztályok közti váltások.',
 

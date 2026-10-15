@@ -93,8 +93,11 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     razveljavi: 'Anulează',
   },
 
-  prijavaPotrebna: 'Ca să-ți faci echipa, trebuie să te autentifici.',
-  prijava: 'Autentificare',
+  brezPrijave: {
+    opis: 'Îți poți face echipa fără cont. Rămâne în acest browser până o salvezi.',
+    shrani: 'Salvează și creează cont',
+    pripravljena: 'Echipa ta e gata, salveaz-o.',
+  },
   locenaLiga:
     'Echipa din liga <liga>{liga}</liga> e separată de echipele din alte ligi, cu propriul buget și propriul clasament. Punctele contează din etapa {krog}, pentru că până atunci încă au loc transferuri și treceri între selecții.',
 

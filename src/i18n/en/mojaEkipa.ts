@@ -92,8 +92,11 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     razveljavi: 'Undo',
   },
 
-  prijavaPotrebna: 'You need to log in to build a team.',
-  prijava: 'Log in',
+  brezPrijave: {
+    opis: 'You can build your team without an account. It stays in this browser until you save it.',
+    shrani: 'Save and create account',
+    pripravljena: 'Your team is ready — save it.',
+  },
   locenaLiga:
     'Your team in <liga>{liga}</liga> is separate from your teams in other leagues — with its own budget and its own standings. Points count from round {krog} onwards, because transfers and moves between age groups are still happening until then.',
 

@@ -90,8 +90,11 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     razveljavi: 'Atsaukt',
   },
 
-  prijavaPotrebna: 'Lai sastādītu komandu, tev jāpiesakās.',
-  prijava: 'Pieteikties',
+  brezPrijave: {
+    opis: 'Komandu vari sastādīt arī bez konta. Tā paliek šajā pārlūkā, līdz to saglabāsi.',
+    shrani: 'Saglabāt un izveidot kontu',
+    pripravljena: 'Tava komanda ir gatava. Saglabā to.',
+  },
   locenaLiga:
     'Komanda līgā <liga>{liga}</liga> ir atsevišķa no komandām citās līgās, ar savu budžetu un savu kopvērtējumu. Punkti tiek skaitīti no {krog}. kārtas, jo līdz tam vēl notiek pārejas starp klubiem un vecuma grupām.',
 

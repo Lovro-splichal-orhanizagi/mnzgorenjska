@@ -13,6 +13,8 @@ export type KorakLijaka =
   | 'vodic_zacetek'
   | 'vodic_preskok'
   | 'vodic_konec'
+  | 'osnutek_brez_prijave'
+  | 'osnutek_shranjen'
 
 export function zabeleziKorak(korak: KorakLijaka) {
   const kljuc = `slff-lijak-${korak}-${new Date().toISOString().slice(0, 10)}`

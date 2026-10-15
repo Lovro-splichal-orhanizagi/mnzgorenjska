@@ -24,7 +24,10 @@ export default function Prijava() {
   const [params] = useSearchParams()
   const nazajParam = varnaPot(params.get('nazaj'))
   const nazaj = nazajParam ?? '/my-team'
-  const [nacin, setNacin] = useState<Nacin>('prijava')
+  // `?nacin=registracija`: Shrani na Moji ekipi brez računa odpre registracijo.
+  const [nacin, setNacin] = useState<Nacin>(() =>
+    params.get('nacin') === 'registracija' ? 'registracija' : 'prijava',
+  )
   const [email, setEmail] = useState('')
   const [geslo, setGeslo] = useState('')
   const [ime, setIme] = useState('')

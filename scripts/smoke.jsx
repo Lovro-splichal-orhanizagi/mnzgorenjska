@@ -55,6 +55,7 @@ import { sestejOdKroga } from '../src/lib/lestvica'
 import { zdruziNavijace } from '../src/lib/navijaci'
 import { TabelaNavijacev, KlubMedNavijaci, IzbiraKluba } from '../src/components/NavijaciKlubov'
 import { jeMojaEkipa } from '../src/components/ImeEkipe'
+import { veljavenOsnutek } from '../src/lib/osnutek'
 import { krogKoncan, mestoVLigi, igralciPregleda, postaviPregled, oznakaPremika, imeDatotekePregleda, KVADRAT, SIRINA_P, VISINA_P, ROB_P } from '../src/lib/tedenskiPregled'
 import { parsirajZapisnik, nastopi, dodajStrelceSKlopi } from './zapisnik.mjs'
 import { poZvezah, ustreza, pokaziZvezo, ustrezaRavni, privzetoRazprte } from '../src/components/IzbirnikLige'
@@ -5690,6 +5691,29 @@ preveri(
     preveri(
       'zasebne ekipe: povezava le na svojo ekipo',
       jeMojaEkipa('a', 'a') && !jeMojaEkipa('a', 'b') && !jeMojaEkipa(null, null) && !jeMojaEkipa(null, 'a'),
+    )
+    // Osnutek brez prijave: odide, kdor ni na trgu, cena je današnja, trak le en.
+    const osn = veljavenOsnutek(
+      [
+        { player_id: 1, is_starter: true, is_captain: true },
+        { player_id: 1, is_starter: true },
+        { player_id: 2, is_starter: true, is_captain: true, is_vice: true },
+        { player_id: 3, is_starter: true },
+        { player_id: 4, is_starter: false, is_vice: true },
+        'smeti',
+      ],
+      [
+        { id: 1, position: 'GK', value: 5.5 },
+        { id: 2, position: 'DEF', value: 4.5 },
+        { id: 3, position: 'MID', value: 6, active: false },
+        { id: 4, position: 'FWD', value: 7 },
+      ],
+    )
+    preveri(
+      'osnutek: preverjen proti trgu',
+      osn.length === 3 && osn[0].is_captain && osn[0].buy_value === 5.5 &&
+        !osn[1].is_captain && osn[1].is_vice && !osn[2].is_vice && osn[2].buy_position === 'FWD' &&
+        veljavenOsnutek(null, []).length === 0,
     )
     const nic = izris(<TabelaNavijacev podatki={prazno} />)
     preveri('izris: navijaci klubov brez izbire', nic.includes('Bodi prvi'))
