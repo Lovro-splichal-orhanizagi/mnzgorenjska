@@ -30,6 +30,7 @@ import {
   sestaviOpomnik,
   sestaviOpomnikBrezEkipe,
   sestaviOpomnikBrezLige,
+  sestaviLigaZivi,
   sestaviOpozorilo,
   sestaviIzstopKluba,
   sestaviPopravekPozicije,
@@ -43,7 +44,7 @@ import {
 import { posljiPush, pushNastavljen, type Obvestilo } from './push.ts'
 import nodemailer from 'npm:nodemailer@6.9.16'
 
-const VRSTE = ['opomnik', 'opozorilo', 'poznavalec', 'popravek-pozicije', 'izstop-kluba', 'opomnik-push', 'tedenski-pregled', 'dobrodoslica', 'brez-ekipe'] as const
+const VRSTE = ['opomnik', 'opozorilo', 'poznavalec', 'popravek-pozicije', 'izstop-kluba', 'opomnik-push', 'tedenski-pregled', 'dobrodoslica', 'brez-ekipe', 'liga-zivi'] as const
 type Vrsta = (typeof VRSTE)[number]
 
 // Besedila so v `sporocila.ts`, v jeziku DRŽAVE LIGE (slovaška liga →
@@ -213,6 +214,33 @@ Deno.serve(async (req) => {
       })
     }
     return json({ kandidati_stevilo: kand.length, poslano, poslanih_mailov: poslanih, preskoceno: kand.length - poslano })
+  }
+
+  // `liga-zivi`: enkratno obvestilo na željo "Moje lige ni", ko je liga
+  // aktivna (`kandidati_za_zivo_ligo`). Ob uspehu `zelja_lige_poslana`
+  // pobriše e-naslov; neuspeh se poskusi še dvakrat.
+  if (vrsta === 'liga-zivi') {
+    if (!jeStroj) return json({ error: 'Obvestilo o ligi pošlje samo urnik (servisni ključ).' }, 403)
+    if (!SMTP_PASS && !suho) return json({ error: 'Pomanjkljiva nastavitev: SMTP_PASS.' }, 500)
+    const service3 = createClient(SUPABASE_URL, SERVICE_KEY)
+    const { data, error } = await service3.rpc('kandidati_za_zivo_ligo', {
+      p_najvec: suho ? 1000 : Math.min(vhod.najvec_poslati ?? 10, 20),
+    })
+    if (error) return json({ error: error.message }, 500)
+    const kand = (data ?? []) as Array<{
+      id: number; email: string; display_name: string | null; jezik: string | null
+      liga_slug: string; liga_oznaka: string; liga_drzava: string | null
+    }>
+    if (suho) return json({ suho: true, kandidati_stevilo: kand.length })
+    let poslano = 0
+    for (const z of kand) {
+      if (poslano > 0) await new Promise((r) => setTimeout(r, 600))
+      const liga: Liga = { slug: z.liga_slug, oznaka: z.liga_oznaka, drzava: z.liga_drzava }
+      const rez = await poslji(EMAIL_FROM, z.email, sestaviLigaZivi(z.jezik, { display_name: z.display_name, liga }))
+      if (!rez.napaka) poslano++
+      await service3.rpc('zelja_lige_poslana', { p_id: z.id, p_uspeh: !rez.napaka })
+    }
+    return json({ kandidati_stevilo: kand.length, poslano, preskoceno: kand.length - poslano })
   }
 
   if (!competition_id)

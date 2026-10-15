@@ -5776,6 +5776,14 @@ preveri(
     zSk.naslov,
   )
   preveri('e-pošta: rok v časovnem pasu lige', E.izpisRoka(rok, sk).includes('10:00') && E.izpisRoka(rok, si).includes('10:00'))
+  const zivaSk = E.sestaviLigaZivi(null, { display_name: null, liga: sk })
+  const zivaEn = E.sestaviLigaZivi('en', { display_name: 'Ana', liga: { ...si, ime: 'A <b>' } })
+  preveri(
+    'e-pošta: liga je zaživela (jezik lige ali želje, ubeži ime)',
+    zivaSk.html.includes('Ahoj!') && !slovensko.test(zivaSk.naslov + zivaSk.html) &&
+      zivaSk.html.includes('my-team?sestavi=1&amp;t=sk-ssfz-4liga') &&
+      zivaEn.html.includes('Hi Ana,') && zivaEn.html.includes('A &lt;b&gt;') && !zivaEn.odjava,
+  )
 
   const razlogi = [
     'Ekipa je prazna — kadra ni.',

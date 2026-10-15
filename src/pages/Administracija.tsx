@@ -18,6 +18,7 @@ import Prevzemi from '../components/admin/Prevzemi'
 import Preverjeni from '../components/admin/Preverjeni'
 import PrijaveMiniLig from '../components/admin/PrijaveMiniLig'
 import RastLig from '../components/admin/RastLig'
+import ZeljeLig from '../components/admin/ZeljeLig'
 import Rast from '../components/admin/Rast'
 import Lijak from '../components/admin/Lijak'
 import Sponzorji from '../components/admin/Sponzorji'
@@ -639,6 +640,7 @@ export default function Administracija() {
       skupina: 'Lige',
       razdelki: [
         { id: 'lige', naslov: 'Upravljanje lig' },
+        { id: 'zelje-lig', naslov: 'Želje lig' },
         { id: 'tocke', naslov: 'Točke' },
         { id: 'uvoz', naslov: 'Uvoz zapisnikov' },
         { id: 'nepopolni', naslov: `Nepopolni zapisniki (${opozorila.length})` },
@@ -783,6 +785,9 @@ export default function Administracija() {
             </Razdelek>
             <Razdelek id="rast-lig">
               <RastLig />
+            </Razdelek>
+            <Razdelek id="zelje-lig">
+              <ZeljeLig />
             </Razdelek>
             <Razdelek id="sponzorji">
               <Sponzorji />

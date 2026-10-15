@@ -513,6 +513,47 @@ export function sestaviOpomnikBrezEkipe(
   return { naslov: `SLFF${liga ? ` ${liga.oznaka}` : ''} — ${B.naslov}`, html, odjava }
 }
 
+// --- liga, ki si jo je kdo želel, je zaživela -------------------------------
+// Enkratno obvestilo na željo ("Moje lige ni"), zato brez odjave. Jezik je
+// jezik vmesnika ob želji, sicer jezik lige. Ime lige stoji samo zase.
+
+export function sestaviLigaZivi(
+  jezik: string | null | undefined,
+  meta: { display_name: string | null; liga: Liga },
+): Sporocilo {
+  const { liga } = meta
+  const j: Jezik | 'en' =
+    jezik === 'en' || Object.values(JEZIK_DRZAVE).includes(jezik as Jezik) ? (jezik as Jezik | 'en') : jezikLige(liga)
+  const vstop = `${SITE}/my-team?sestavi=1&t=${encodeURIComponent(liga.slug)}`
+  const B = {
+    sl: { naslov: 'tvoja liga je tu', glavno: 'Želel/a si si to ligo in zdaj je v SLFF. Sestavi ekipo, preden se začne naslednji krog.', gumb: 'Sestavi ekipo →', opomba: 'To je edini mail o tej želji.' },
+    sk: { naslov: 'tvoja liga je tu', glavno: 'Želal/a si si túto ligu a teraz je v SLFF. Zostav si tím ešte pred ďalším kolom.', gumb: 'Zostav tím →', opomba: 'Toto je jediný e-mail o tvojom želaní.' },
+    hr: { naslov: 'tvoja liga je tu', glavno: 'Želio/la si ovu ligu i sada je u SLFF-u. Složi momčad prije sljedećeg kola.', gumb: 'Složi momčad →', opomba: 'Ovo je jedini e-mail o tvojoj želji.' },
+    cs: { naslov: 'tvoje liga je tu', glavno: 'Přál/a sis tuto ligu a teď je v SLFF. Sestav si tým ještě před dalším kolem.', gumb: 'Sestav tým →', opomba: 'Toto je jediný e-mail o tvém přání.' },
+    hu: { naslov: 'itt a bajnokságod', glavno: 'Ezt a bajnokságot kérted, és most már az SLFF-ben van. Rakd össze a csapatodat a következő forduló előtt.', gumb: 'Csapatot rakok össze →', opomba: 'Ez az egyetlen e-mail a kérésedről.' },
+    de: { naslov: 'deine Liga ist da', glavno: 'Du hast dir diese Liga gewünscht, jetzt ist sie bei SLFF. Stell dein Team vor der nächsten Runde zusammen.', gumb: 'Team zusammenstellen →', opomba: 'Das ist die einzige E-Mail zu deinem Wunsch.' },
+    sr: { naslov: 'tvoja liga je tu', glavno: 'Želeo/la si ovu ligu i sada je u SLFF-u. Sastavi tim pre sledećeg kola.', gumb: 'Sastavi tim →', opomba: 'Ovo je jedini imejl o tvojoj želji.' },
+    ro: { naslov: 'liga ta e aici', glavno: 'Ți-ai dorit această ligă și acum e în SLFF. Fă-ți echipa înainte de etapa următoare.', gumb: 'Fă-ți echipa →', opomba: 'Acesta este singurul e-mail despre dorința ta.' },
+    et: { naslov: 'sinu liiga on siin', glavno: 'Soovisid seda liigat ja nüüd on see SLFF-is. Pane meeskond kokku enne järgmist vooru.', gumb: 'Pane meeskond kokku →', opomba: 'See on ainus kiri sinu soovi kohta.' },
+    pl: { naslov: 'twoja liga już jest', glavno: 'Chciałeś/aś tej ligi i teraz jest w SLFF. Ułóż drużynę przed następną kolejką.', gumb: 'Ułóż drużynę →', opomba: 'To jedyna wiadomość w sprawie twojej prośby.' },
+    es: { naslov: 'tu liga ya está aquí', glavno: 'Pediste esta liga y ya está en SLFF. Haz tu equipo antes de la próxima jornada.', gumb: 'Haz tu equipo →', opomba: 'Este es el único correo sobre tu petición.' },
+    lv: { naslov: 'tava līga ir klāt', glavno: 'Tu vēlējies šo līgu, un tagad tā ir SLFF. Sastādi komandu pirms nākamās kārtas.', gumb: 'Sastādīt komandu →', opomba: 'Šī ir vienīgā vēstule par tavu vēlmi.' },
+    mk: { naslov: 'твојата лига е тука', glavno: 'Ја посака оваа лига и сега е во SLFF. Состави тим пред следното коло.', gumb: 'Состави тим →', opomba: 'Ова е единствената порака за твојата желба.' },
+    en: { naslov: 'your league is here', glavno: 'You asked for this league and now it’s on SLFF. Build your team before the next round.', gumb: 'Build my team →', opomba: 'This is the only email about your request.' },
+  }[j]
+  const html = ovoj(
+    `<p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">${pozdrav(j, meta.display_name)}</p>
+      <p style="font-size: 15px; line-height: 1.5; margin: 0 0 12px;">${B.glavno}</p>
+      <p style="font-size: 14px; color: #334155; margin: 0 0 20px;"><strong>${esc(liga.ime || liga.oznaka)}</strong></p>
+      <p style="text-align: center; margin: 24px 0;">
+        <a href="${vstop.replaceAll('&', '&amp;')}" style="${GUMB}">${B.gumb}</a>
+      </p>
+      <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">${B.opomba}</p>`,
+    '',
+  )
+  return { naslov: `SLFF ${liga.oznaka} — ${B.naslov}`, html }
+}
+
 // --- opozorilo: ekipa se ob roku ne bo zaklenila ----------------------------
 
 export function sestaviOpozorilo(

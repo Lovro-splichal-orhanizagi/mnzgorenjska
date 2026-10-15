@@ -3536,6 +3536,21 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   in nove, aktivne lige; država je država lige) in število uporabnikov brez
   ekipe — pod vsakim poročilom na Discord (mejnik uporabnikov,
   `scripts/trgovine.mjs`). Le servis
+- **Želje lig** ("Moje lige ni? Povej nam", migracija 20261015120100):
+  `zelje_lig` (država kot koda ali prosto ime, ime lige ≤ 120, po želji
+  `competition_id` vpisane **neaktivne** lige, jezik vmesnika, `obvescen_at`).
+  Zaprta tabela; piše le `zelim_ligo` (anon in prijavljeni): prijavljen brez
+  e-naslova (pošta gre na račun), neprijavljen z e-naslovom; ista oseba in
+  liga/besedilo = ena vrstica, 5 na dan na osebo, 300 na dan vseh
+  neprijavljenih; besedilo skozi `prepovedane_besede`. Okno `ZelimLigo.tsx`
+  (izbirnik lige, okno prvega obiska, vstop države) predlaga neaktivne lige
+  države iz `competitions_view`. Admin: Administracija → Želje lig
+  (`admin_zelje_lig` po ligi ali besedilu, `admin_povezi_zelje(ids, šifra)`
+  poveže besedilo z ligo). Ko je liga aktivna, gre vsaki želji en mail
+  (`opozorila.yml`, `VRSTA=liga-zivi` → `posli-opomnik`,
+  `kandidati_za_zivo_ligo`, `zelja_lige_poslana`: uspeh pobriše e-naslov,
+  neuspeh največ trikrat). Neobveščene z e-naslovom pg_cron po 12 mesecih
+  izbriše
 - **Pivski zid** (`/beers`, migracija 20261013150100): `piva` hrani nakupe
   Buy Me a Coffee (funkcija `bmc-pivo`, servisni ključ, `zunanji_id` = BMC
   `data.id`, idempotentno; vračilo postavi `vracilo`, `live_mode = false` je
