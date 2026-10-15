@@ -4671,6 +4671,119 @@ preveri(
     !F.jeStranLige('<html>404</html>'))
 }
 
+// --- vir pfl-az (Azerbajdžan, PFL: razpored iz API-ja, zapisniki PDF) -----------
+{
+  const A = await import('./viri/pfl-az.mjs')
+  const { default: viri } = await import('./viri/index.mjs')
+  const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  preveri('pfl-az: vir je vpisan', viri['pfl-az'] === A.default && A.default.drzava === 'AZ' && A.default.imaRegistracije === false &&
+    A.default.premorMs >= 3000 && A.default.glave['User-Agent'] === 'SLFF fantasy (https://slff.eu)' && A.default.fetch === A.pflFetch)
+  preveri('pfl-az: naslovi in šifra zapisnika az<id>', A.default.naslovRazporeda('55') === 'https://pfl.az/api/v1/tours/get-games?league_id=55&withGames=true' &&
+    A.naslovKrogov('55', 2).endsWith('&page=2') && A.sifraZapisnika(7249) === 'az7249' && A.sifraZapisnika('az7249') === 'az7249')
+  let slabaKoda = false
+  try { A.razbijKodo('liqa2') } catch { slabaKoda = true }
+  preveri('pfl-az: šifra lige je league_id', A.razbijKodo(' 55 ') === 55 && slabaKoda)
+  // Baku je UTC+4 brez poletnega časa: poleti −2 h, pozimi −3 h do Ljubljane; 00:00 = ura ni znana.
+  preveri('pfl-az: bakujski čas v ljubljanskega', A.casTekme('01/09/2026 17:00').datum === '2026-09-01' && A.casTekme('01/09/2026 17:00').ura === '15:00' &&
+    A.casTekme('10/12/2026 14:00').ura === '11:00' && A.casTekme('02/09/2026 01:30').datum === '2026-09-01' && A.casTekme('02/09/2026 01:30').ura === '23:30' &&
+    A.casTekme('01/11/2026 00:00').ura === null && A.casTekme('01/11/2026 00:00').datum === '2026-11-01' && A.casTekme('x').datum === null)
+
+  const krogi = JSON.parse(beri('az-pfl-krogi-55.json'))
+  const tekme = A.tekmeKrogov('55', krogi)
+  const razpored = A.razcleniRazpored(tekme)
+  // II Liqa 2026/27: 22 krogov po 6 (krogi 23–27 drugega dela so še prazni), 12 klubov.
+  preveri('pfl-az: razpored — 22 krogov po 6, 12 klubov, 42 odigranih, nerazpisane brez ure', razpored.length === 22 &&
+    razpored.every((k) => k.tekme.length === 6) && new Set(tekme.flatMap((t) => [t.domaci, t.gostje])).size === 12 &&
+    razpored.flatMap((k) => k.tekme).filter((t) => t.odigrana).length === 42 && tekme.filter((t) => !t.ura).length === 84)
+  const t1 = tekme.find((t) => t.id === 7249)
+  preveri('pfl-az: tekma iz razporeda (ljubljanski čas, izid, PDF)', t1?.krog === 1 && t1.datum === '2026-09-01' && t1.ura === '15:00' &&
+    t1.domaci === 'Qaradağ L.' && t1.gostje === 'Hypers' && t1.izid?.domaci === 2 && /\.pdf$/.test(t1.protokol) && A.jeOdigrana(t1) &&
+    !A.jeOdigrana(tekme.find((t) => t.id === 7297)))
+  let tujaLiga = false
+  try { A.tekmeKrogov('50', krogi) } catch { tujaLiga = true }
+  preveri('pfl-az: krog druge lige (filter ni upoštevan) ustavi uvoz', tujaLiga)
+  preveri('pfl-az: "p/o" ni krog lige', A.razcleniRazpored(A.tekmeKrogov('55', { data: [{ title: 'p/o', league: { id: 55 }, games: [krogi.data[0].games[0]] }] })).length === 0)
+
+  const T = new Map(tekme.map((t) => [t.id, t]))
+  // I Liqa 2026/27: tekme vzorcev 6987, 6995, 6998 (iz razporeda lige 53).
+  const tI = (id, krog, datum, domaci, gostje, izid) => ({ id, krog, datum, ura: '15:00', domaci, gostje, izid, status: 3, protokol: `https://pfl.az/storage/games/files/${id}.pdf` })
+  const minute = (nn, i) => nn.filter((x) => x.ekipaIdx === i).reduce((a, x) => a + x.minute, 0)
+
+  const z = A.vZapisnik(beri('az-pfl-protokol-7249-drugi-rumeni.txt'), T.get(7249))
+  const n = A.nastopi(z)
+  const asrafli = n.find((x) => x.ime === 'Əşrəfli Vüqar')
+  preveri('pfl-az: zapisnik — 11 + 11, izid, krog, sezona, Priimek Ime, brez opozoril', z.domaci.postava.length === 11 && z.gostje.postava.length === 11 &&
+    z.rezultat.domaci === 2 && z.krog === 1 && z.sezona === '2026/27' && z.zapisnikId === 'az7249' && z.domaci.postava[0].ime === 'Bayramov Fərman' &&
+    z.opozorila.length === 0 && !z.nepopoln)
+  preveri('pfl-az: menjave pod igralcem (minute), 990 in 954 minut (rdeči v 54.)', minute(n, 0) === 990 && minute(n, 1) === 954 &&
+    n.find((x) => x.ime === 'İbrahimov Samir')?.minute === 65 && n.find((x) => x.ime === 'Əmircanov Təmraz')?.minutaOd === 65 &&
+    n.filter((x) => !x.zacetnik).length === 7)
+  preveri('pfl-az: drugi rumeni je 1 rumeni + 1 rdeči, 11 m, kapetan', asrafli?.rumeni === 1 && asrafli.rdeci === 1 && asrafli.minute === 54 &&
+    z.goli.filter((g) => g.enajstmetrovka).length === 1 && n.find((x) => x.ime === 'Zeynallı İsa')?.goliIzEnajstmetrovke === 1 &&
+    z.domaci.postava.find((x) => x.kapetan)?.ime === 'Zeynallı İsa')
+  preveri('pfl-az: vratar je prvi začetnik (namig)', n.filter((x) => x.vratar).map((x) => x.st).join() === '90,13' && n.filter((x) => x.vratar).every((x) => x.zacetnik && x.pozicija === 'GK'))
+
+  const z2 = A.vZapisnik(beri('az-pfl-protokol-7289-gol-brez-minute.txt'), T.get(7289))
+  preveri('pfl-az: gol brez minute "(p.)" šteje, zgrešeni 11 m, 9:1', z2.goli.length === 10 && z2.goli.some((g) => g.ekipaIdx === 1 && g.minuta === null && g.enajstmetrovka) &&
+    z2.zgresene.length === 2 && !z2.opozorila.length && A.nastopi(z2).find((x) => x.ime === 'Bayramov Zöhrab')?.goli === 2)
+  const z3 = A.vZapisnik(beri('az-pfl-protokol-6995-brez-zaklepaja.txt'), tI(6995, 2, '2026-09-10', 'Gəncəbasar', 'Xankəndi', { domaci: 2, gostje: 1 }))
+  const n3 = A.nastopi(z3)
+  preveri('pfl-az: vstop brez zaklepaja, minute ločene s podpičjem ("52; 82 (p.)")', z3.gostje.postava.length === 11 && n3.find((x) => x.ime === 'Kamta Kristian')?.minutaOd === 72 &&
+    minute(n3, 1) === 990 && n3.find((x) => x.ime === 'Açimi Dileyn')?.goli === 2 && !z3.opozorila.length)
+  const z4 = A.vZapisnik(beri('az-pfl-protokol-6998-tipkarska.txt'), tI(6998, 3, '2026-09-18', 'Xankəndi', 'MOİK', { domaci: 0, gostje: 2 }))
+  preveri('pfl-az: tipkarska napaka imena v glavi (razdalja ≤ 2) z opozorilom', A.nastopi(z4).find((x) => x.ime === 'İsmayılov Bilal')?.goli === 2 &&
+    z4.opozorila.length === 1 && /İsamyılov/.test(z4.opozorila[0]) && A.razdalja('isamyılov', 'ismayılov') === 2)
+  const z5 = A.vZapisnik(beri('az-pfl-protokol-7251-avtogol.txt'), T.get(7251))
+  const n5 = A.nastopi(z5)
+  preveri('pfl-az: avtogol (ö.q.) pri strelcu iz druge ekipe, šteje nasprotniku (4:2)', z5.goli.filter((g) => g.avtogol).length === 1 &&
+    n5.find((x) => x.ime === 'Nəsirov Vasif')?.avtogoli === 1 && n5.find((x) => x.ime === 'Nəsirov Vasif')?.ekipaIdx === 1 && !z5.opozorila.length)
+  const z6 = A.vZapisnik(beri('az-pfl-protokol-6987-ime-brez-narekovajev.txt'), tI(6987, 1, '2026-09-03', 'MOİK', 'Şahdağ Qusar', { domaci: 0, gostje: 1 }))
+  preveri('pfl-az: ime ekipe brez narekovajev, karton "oyundan sonra"', z6.domaci.postava.length === 11 && z6.gostje.postava.length === 11 &&
+    z6.rumeni.some((r) => r.ime === 'Yadullayev Cavid' && r.minuta === 90) && !z6.opozorila.length)
+
+  // Besede z mesti (pdftotext -bbox): stolpca po legi, ne po presledkih (`-layout` ju je zmešal).
+  const besedilo = A.ocistiProtokol(A.bboxVBesedilo(beri('az-pfl-bbox-7272.html')))
+  const z7 = A.vZapisnik(besedilo, T.get(7272))
+  preveri('pfl-az: stolpca iz besed z mesti — 11 + 11, 6:0, 990 minut, brez opozoril', z7.domaci.postava.length === 11 && z7.gostje.postava.length === 11 &&
+    z7.goli.length === 6 && minute(A.nastopi(z7), 1) === 990 && !z7.opozorila.length && A.popolnZapisnik(besedilo))
+  preveri('pfl-az: brez imen sodnikov, delegata in trenerjev', /Baş hakim: —/.test(A.ocistiProtokol('Baş hakim: Ime Priimek')) &&
+    A.ocistiProtokol('Baş məşqçi: Ime Priimek') === 'Baş məşqçi: —' && /Sarı vərəqə: X, 3 \(hakimin/.test(A.ocistiProtokol('Sarı vərəqə: X, 3 (hakimin qərarına etiraz)')))
+  preveri('pfl-az: prelom očiščene vrstice gre proč', A.ocistiProtokol('Rəsmi şəxslərə göstərilən sarı vərəqələr: Ime Priimek, 53 (texniki zona\npozulması); Drugi Uradnik, 85\nQollar: X, 3') ===
+    'Rəsmi şəxslərə göstərilən sarı vərəqələr: —\nQollar: X, 3')
+  // Kontumacija: status 0, izid 0:0, opomba v protokolu (Şəmkir : Xankəndi 2025/26).
+  const kont = '9 mart 2026. Saat 15:00. Şəmkir OİK stadionu.\nQeyd: AFFA İntizam Komitəsinin qərarına əsasən “Şəmkir” komandasına 0:3 hesablı\ntexniki məğlubiyyət verilib.\n@@ “Şəmkir”\n25. Afiq Musayev\n@@ “Xankəndi”\n95. Qurban Məhərrəmov\n'
+  const tk = { id: 6672, krog: 17, datum: '2026-03-09', domaci: 'Şəmkir', gostje: 'Xankəndi', izid: { domaci: 0, gostje: 0 }, status: 0 }
+  preveri('pfl-az: tehnični poraz — izid z vidika domačih, zapisnika ni', A.tehnicniPoraz(kont, tk)?.izid?.gostje === 3 && A.tehnicniPoraz(kont, tk).izid.domaci === 0 &&
+    A.tehnicniPoraz(kont, { ...tk, domaci: 'Xankəndi', gostje: 'Şəmkir' })?.izid?.domaci === 3 && A.vZapisnik(kont, tk) === null &&
+    A.tehnicniPoraz(beri('az-pfl-protokol-7249-drugi-rumeni.txt'), T.get(7249)) === null)
+  const krogK = [{ stevilka: 17, tekme: [{ ...tk, odigrana: false, izid: undefined, pflId: 6672, protokol: 'https://pfl.az/storage/games/files/x.pdf' }] }]
+  const najdeneK = await A.default.kontumacije('50', async () => kont, krogK, '2026-10-15')
+  preveri('pfl-az: kontumacije() označi tekmo in vpiše izid', najdeneK.length === 1 && krogK[0].tekme[0].izid?.gostje === 3)
+  preveri('pfl-az: protokol druge tekme (drug datum) se ne bere', A.datumProtokola('9 mart 2026. Saat') === '2026-03-09' && A.datumProtokola('7 sentybar 2026.') === '2026-09-07' &&
+    A.vZapisnik(kont.replace(/Qeyd[\s\S]*?verilib\.\n/, ''), { ...tk, id: 6648, datum: '2025-12-15', izid: { domaci: 1, gostje: 0 } }).nepopoln)
+  const zp = A.vZapisnik('', T.get(7249))
+  preveri('pfl-az: brez protokola je zapisnik nepopoln (izid ostane)', zp.nepopoln && zp.rezultat.domaci === 2 && !zp.domaci.postava.length &&
+    zp.opozorila[0].startsWith(A.NEPOPOLN) && !A.popolnZapisnik(''))
+  preveri('pfl-az: ključ in kratko ime kluba', A.kljucKlubaAz('Qaradağ L.') === 'qaradağ l' && A.kljucKlubaAz('KÜR-ARAZ') === A.kljucKlubaAz('Kür-Araz') &&
+    A.kratkoImeAz('FK Şamaxı') === 'Şamaxı' && A.kratkoImeAz('Ağstafa Gəncləri') === 'Ağstafa Gəncləri')
+
+  // Zavrnitev (401/403/429) ali izziv ustavi uvoz (izhod 4); stran, ki ni PDF, ni zavrnitev in ne gre v predpomnilnik.
+  const pravi = globalThis.fetch
+  const poskusi = async (odgovor, url) => {
+    globalThis.fetch = async () => odgovor
+    try { return { r: await A.pflFetch(url) } } catch (e) { return { e } } finally { globalThis.fetch = pravi }
+  }
+  const z429 = await poskusi(new Response('', { status: 429 }), 'https://pfl.az/api/v1/tours/get-games?league_id=55&withGames=true')
+  const z403 = await poskusi(new Response('', { status: 403 }), 'https://pfl.az/storage/games/files/x.pdf')
+  const izziv = await poskusi(new Response('<title>Just a moment...</title>', { status: 200 }), 'https://pfl.az/api/v1/tours/get-games?league_id=55&withGames=true')
+  const niPdf = await poskusi(new Response('<html>napaka</html>', { status: 200 }), 'https://pfl.az/storage/games/files/x.pdf')
+  const json = await poskusi(new Response('{"data":[]}', { status: 200 }), 'https://pfl.az/api/v1/tours/get-games?league_id=55&withGames=true')
+  preveri('pfl-az: 429, 403 in izziv so zavrnitev, stran namesto PDF je napaka, JSON gre skozi', z429.e?.zavrnitev && z403.e?.zavrnitev && izziv.e?.zavrnitev &&
+    niPdf.e && !niPdf.e.zavrnitev && (await json.r?.text()) === '{"data":[]}')
+  preveri('pfl-az: v predpomnilnik le pravi odgovori', A.default.zaPredpomnilnik('{"data":[]}', 'pfl-az-krogi-55-1.json') &&
+    !A.default.zaPredpomnilnik('<html></html>', 'pfl-az-krogi-55-1.json') && !A.default.zaPredpomnilnik('', 'pfl-az-7249-x.txt'))
+}
+
 // --- soimenjak pri drugem klubu ni prestop (Petrović Lazar, fssid 10/2026) -------
 {
   const { prestopSkladen, trk, imataTrk } = await import('./prestop.mjs')

@@ -93,6 +93,10 @@ jobs:
       - name: Chromium za vir hlf
         if: startsWith(inputs.liga, 'ro-')
         run: npx playwright install chromium --only-shell --with-deps
+      # Vir pfl-az (Azerbajdžan) bere zapisnike PDF s pdftotext.
+      - name: poppler-utils za vir pfl-az
+        if: startsWith(inputs.liga, 'az-')
+        run: sudo apt-get update -q && sudo apt-get install -y -q --no-install-recommends poppler-utils
 
       # Druzina uvozov (uvoz-zapisnikov, uvoz-lige, zdruzi-klube,
       # tedensko-cene) pise v iste tabele: klube, igralce, tekme, cene. Kar se
