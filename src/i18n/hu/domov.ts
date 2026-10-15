@@ -106,5 +106,11 @@ export const domov: NonNullable<Prevod['domov']> = {
     novihEkip: 'Új csapatok: {n}',
     tedenVEvropi: 'Ezen a héten Európában',
     poziv: 'Állítsd össze a csapatod',
+    hvala: 'Köszönjük!',
+    mejnikPodnaslov: 'fantasy menedzser az SLFF-en',
+    mejnikStevilke: 'Az SLFF ma',
+    drzav: 'ország',
+    lig: 'liga',
+    ekip: 'csapat',
   },
 }

@@ -6945,7 +6945,8 @@ preveri(
   const { readFileSync } = await import('node:fs')
   const dejstva = JSON.parse(readFileSync(new URL('./vzorci/objava-dejstva.json', import.meta.url), 'utf8'))
   const pon = o.izberiVsebino(dejstva, 'pon')
-  preveri('objave: ponedeljek vzame glavno ligo', pon.slug === 'clani' && pon.liga.krog === 8 && pon.igralec.ime === 'Kovač Tine')
+  preveri('objave: ponedeljek vzame glavno ligo (z angleškim imenom države)', pon.slug === 'clani' && pon.liga.krog === 8
+    && pon.igralec.ime === 'Kovač Tine' && pon.liga.drzava === 'Slovenia')
   preveri('objave: enajsterica 1-4-4-2', pon.idealna.length === 11 &&
     ['GK', 'DEF', 'MID', 'FWD'].map((p) => pon.idealna.filter((x) => x.position === p).length).join() === '1,4,4,2')
   preveri('objave: le pohvale, brez kapetana in padca', pon.poudarki.length > 0 && pon.poudarki[0].vrsta === 'hattrick'
@@ -6965,29 +6966,51 @@ preveri(
     }
   }
 
-  // Preverba napisa: števila in imena le iz dejstev; povezava in ključniki ne štejejo.
+  // Preverba napisa (angleško): števila in imena le iz dejstev; povezava in ključniki ne štejejo.
   const d = o.dejstvaZaNapis(pon)
-  const dober = 'Tine Kovač je zabil 3 gole in pobral 19 točk! 🔥\nhttps://slff.eu/?src=ig&t=clani\n#SLFF #GNL2026'
-  preveri('objave: dober napis gre', o.preveriNapis(dober, d, 'sl').length === 0, o.preveriNapis(dober, d, 'sl').join())
-  preveri('objave: izmišljeno število pade', o.preveriNapis('Tine Kovač je zabil 4 gole.', d, 'sl').join() === '4')
-  preveri('objave: decimalna vejica je isto število', o.preveriNapis('Cena: 8,2 M€, prej 7,2.', d, 'sl').length === 0)
-  preveri('objave: izmišljeno ime pade', o.preveriNapis('Tine Kovač in Janez Novak sta igrala.', d, 'sl').join() === 'Janez,Novak')
-  preveri('objave: začetek stavka ni ime', o.preveriNapis('Bravo! Neverjetno.', d, 'sl').length === 0)
-  preveri('objave: nemški samostalniki gredo, tuje ime ne', o.preveriNapis('Der Spieler Tine Kovač trifft dreimal im Spiel.', d, 'de').length === 0
-    && o.preveriNapis('Ein Tor von Hans Huber.', d, 'de').join() === 'Hans Huber')
+  const dober = "Tine Kovač bagged 3 goals and 19 points in Slovenia's 1. GNL! 🔥 Sunday-league legend.\nhttps://slff.eu/?src=ig&t=clani\n#SLFF #GNL2026"
+  preveri('objave: dober napis gre', o.preveriNapis(dober, d).length === 0, o.preveriNapis(dober, d).join())
+  preveri('objave: izmišljeno število pade', o.preveriNapis('Tine Kovač scored 4 goals.', d).join() === '4')
+  preveri('objave: tisočice z vejico so eno število', o.preveriNapis('Now 4,000 of you!', { milestone_users: 4000 }).length === 0
+    && o.preveriNapis('Now 4,100 of you!', { milestone_users: 4000 }).join() === '4,100')
+  preveri('objave: izmišljeno ime pade', o.preveriNapis('Tine Kovač and John Smith played.', d).join() === 'John,Smith')
+  preveri('objave: začetek stavka ni ime', o.preveriNapis('Bravo! Unbelievable.', d).length === 0)
 
   // Napis: slab poskus → drugi poskus; dvakrat slab → predloga; brez ključa → predloga.
   const odgovori = (seznam) => async () => seznam.shift()
-  let n = await o.napis(pon, 'sl', 'k', odgovori(['Zabil je Janez Novak, 99 golov.', dober]))
+  let n = await o.napis(pon, 'k', odgovori(['John Smith scored 99 goals.', dober]))
   preveri('objave: drugi poskus Clauda', n.vir === 'claude' && n.zavrnjeno.length === 1 && n.napis === dober)
-  n = await o.napis(pon, 'sl', 'k', odgovori(['Golov: 99.', 'Golov: 98.']))
+  n = await o.napis(pon, 'k', odgovori(['Goals: 99.', 'Goals: 98.']))
   preveri('objave: dvakrat slabo → predloga', n.vir === 'predloga' && n.napis.includes('https://slff.eu/?src=ig&t=clani')
-    && o.preveriNapis(n.napis, d, 'sl').length === 0)
-  n = await o.napis(pon, 'sl', 'k', odgovori(['Tine Kovač: 19 točk!']))
+    && n.napis.includes('Slovenia') && o.preveriNapis(n.napis, d).length === 0, n.napis)
+  n = await o.napis(pon, 'k', odgovori(['Tine Kovač: 19 points!']))
   preveri('objave: manjkajoča povezava se doda', n.vir === 'claude' && n.napis.endsWith('https://slff.eu/?src=ig&t=clani'))
-  n = await o.napis(cet, 'en', undefined)
-  preveri('objave: brez ključa predloga (vsi jeziki brez ostankov)', n.vir === 'predloga'
-    && ['sl', 'hr', 'sk', 'de', 'hu', 'en', 'pl'].every((j) => !/undefined|null|NaN/.test(o.predlogaNapisa(cet, j))))
+  n = await o.napis(cet, undefined)
+  preveri('objave: brez ključa predloga', n.vir === 'predloga' && !/undefined|null|NaN/.test(n.napis)
+    && o.preveriNapis(n.napis, o.dejstvaZaNapis(cet)).length === 0, n.napis)
+
+  // Mejnik uporabnikov: le svež mejnik (< 300 čez), objava 6 h kasneje v oknu 09–20 (Ljubljana).
+  preveri('objave: mejnik dosežen le svež', o.dosezenMejnik(4000) === 4000 && o.dosezenMejnik(4299) === 4000
+    && o.dosezenMejnik(4300) === null && o.dosezenMejnik(3999) === null && o.dosezenMejnik(3612) === null && o.dosezenMejnik(250) === null)
+  const ura = (iso) => o.objavaMejnika(new Date(iso)).toISOString()
+  preveri('objave: objava mejnika v oknu 09–20', ura('2026-10-15T08:00:00Z') === '2026-10-15T14:00:00.000Z'
+    && ura('2026-10-15T00:30:00Z') === '2026-10-15T07:00:00.000Z' // 02:30 + 6 h = 08:30 → 09:00 (poletni)
+    && ura('2026-10-15T13:00:00Z') === '2026-10-16T07:00:00.000Z' // 15:00 + 6 h = 21:00 → jutri 09:00
+    && ura('2026-11-15T20:00:00Z') === '2026-11-16T08:00:00.000Z' // 21:00 + 6 h = 03:00 → 09:00 (zimski)
+    && ura('2026-10-15T07:59:00Z') === '2026-10-15T13:59:00.000Z', ura('2026-10-15T00:30:00Z'))
+  const mej = o.vsebinaMejnika({ uporabnikov: 4012, drzav: 13, lig: 612, ekip: 5321 }, 4000)
+  preveri('objave: mejnik — tri prosojnice, povezava brez lige', prosojnice(mej).join() === 'mejnik,mejnikStevilke,poziv'
+    && o.povezava(mej) === 'https://slff.eu/?src=ig')
+  for (let i = 0; i < 2; i++) {
+    const html = renderToString(<StaticRouter location="/objava"><Prosojnica v={mej} n={i} /></StaticRouter>).replace(/<!-- -->/g, '')
+    preveri(`objave: izris prosojnice mejnika ${i + 1}`, html.includes(`${i + 1}/3`) && !/undefined|NaN/.test(html)
+      && (i === 0 ? /4.?000/.test(html) : /5.?321/.test(html)))
+  }
+  const dm = o.dejstvaZaNapis(mej)
+  n = await o.napis(mej, 'k', odgovori(['🎉 4,000 managers! 612 leagues in 13 countries and 5,321 teams. Thank you!\nhttps://slff.eu/?src=ig\n#SLFF']))
+  preveri('objave: napis mejnika s tisočicami gre', n.vir === 'claude', JSON.stringify(n.zavrnjeno))
+  preveri('objave: predloga mejnika prestane preverbo', o.predlogaNapisa(mej).includes('4,000')
+    && o.preveriNapis(o.predlogaNapisa(mej), dm).length === 0, o.preveriNapis(o.predlogaNapisa(mej), dm).join())
 
   // Termini in rotacija (ljubljanski čas, tudi po koncu poletnega časa 25. 10. 2026).
   preveri('objave: ponedeljek 10:00 poleti, četrtek 18:00 pozimi',

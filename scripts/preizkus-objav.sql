@@ -117,6 +117,34 @@ begin
   if (select stanje from objave where teden = '1999-01-04' and slot = 'pon') <> 'ustavljeno' then
     raise exception '6. osnutek naj bo ustavljen';
   end if;
+  -- 7. Mejnik: dejstva servisna, uporabniki brez hišnega profila, ekipe brez hišnih;
+  --    vsak mejnik enkrat, dva mejnika v istem tednu gresta, pon/cet še vedno enkrat na teden.
+  d := objava_mejnik_dejstva();
+  if (d ->> 'uporabnikov')::int <> skupaj_uporabnikov()
+     or (d ->> 'ekip')::int <> (select count(*) from fantasy_teams where not hisna)
+     or (d ->> 'drzav')::int < 1 or (d ->> 'lig')::int < 1
+     or has_function_privilege('anon', 'objava_mejnik_dejstva()', 'execute')
+     or has_function_privilege('authenticated', 'objava_mejnik_dejstva()', 'execute') then
+    raise exception '7. objava_mejnik_dejstva: %', d;
+  end if;
+  insert into objave (slot, teden, mejnik, jezik, dejstva, napis, objava_ob) values
+    ('mejnik', '1999-01-04', 1000, 'en', '{}', 'x', now()),
+    ('mejnik', '1999-01-04', 2000, 'en', '{}', 'x', now());
+  begin
+    insert into objave (slot, teden, mejnik, jezik, dejstva, napis, objava_ob) values ('mejnik', '1999-02-01', 1000, 'en', '{}', 'x', now());
+    raise exception '7. isti mejnik dvakrat';
+  exception when unique_violation then null;
+  end;
+  begin
+    insert into objave (slot, teden, jezik, dejstva, napis, objava_ob) values ('mejnik', '1999-02-01', 'en', '{}', 'x', now());
+    raise exception '7. mejnik brez številke';
+  exception when check_violation then null;
+  end;
+  begin
+    insert into objave (slot, teden, jezik, dejstva, napis, objava_ob) values ('pon', '1999-01-04', 'en', '{}', 'x', now());
+    raise exception '7. pon dvakrat v tednu';
+  exception when unique_violation then null;
+  end;
   raise notice 'preizkus objav: vse v redu';
 end $$;
 

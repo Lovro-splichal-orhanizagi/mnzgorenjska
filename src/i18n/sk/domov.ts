@@ -110,5 +110,11 @@ export const domov: NonNullable<Prevod['domov']> = {
     novihEkip: 'Nových tímov: {n}',
     tedenVEvropi: 'Tento týždeň v Európe',
     poziv: 'Zostav si tím',
+    hvala: 'Ďakujeme!',
+    mejnikPodnaslov: 'fantasy manažérov na SLFF',
+    mejnikStevilke: 'SLFF dnes',
+    drzav: 'krajín',
+    lig: 'líg',
+    ekip: 'tímov',
   },
 }
