@@ -31,6 +31,10 @@ on:
     # ali se pokvari zvecer pred rokom, sicer ne bi dobila nicesar.
     # Minuta 17, ker je ob polni uri GitHub najbolj zaseden.
     - cron: '17 * * * *'
+    # Rezerva: GitHub tek kdaj tiho izpusti (15. 10. 2026 od 7:24 do 10:20
+    # nobenega). Dvojni tek je varen: concurrency ju vrsti, pošta gre enkrat
+    # (email_log), opomniki brez ekipe največ en na dan.
+    - cron: '47 * * * *'
   workflow_dispatch:
     inputs:
       suho:
