@@ -18,12 +18,12 @@ factual, generated from our data, with a human veto window.
 Fact candidates (SQL, one function, returns jsonb):
 - top scorer of the round (points, goals), Ideal XI of the round (existing
   selection logic: 1 GK, 4 DEF, 4 MID, 2 FWD),
-- biggest price riser / faller of the week,
-- "captain fail": most-picked captain with ≤ 2 points (aggregate only, never
-  a user's team — teams are private),
+- biggest price riser of the week,
 - goalkeeper with a goal or assist, hat-tricks,
 - league of the week (most new teams in 7 days), milestones (users, teams,
   new country / league live).
+
+**Posts only celebrate** (owner, 15. 10.): no price fallers, no "captain fail", no bad performances; humour is about Sunday-league life in general, never a named person.
 
 **Never in a post:** players from U19 leagues (`je_mladinski_slug`),
 anonymised players (`anonimiziran_at`), users' names or teams, anything not
