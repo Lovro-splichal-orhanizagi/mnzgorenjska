@@ -76,6 +76,8 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
       'În formație nu mai e loc pentru încă un jucător pe această poziție. Trimite mai întâi pe cineva pe bancă.',
     niVecNamestnik: '{ime} nu mai e vicecăpitan: alege altul.',
     niVecKapetan: '{ime} nu mai e căpitan: alege altul.',
+    kapetanPrevzel: '{ime} a preluat banderola de căpitan.',
+    namestnikPrevzel: '{ime} este acum vicecăpitan.',
     rokPotekel: 'Termenul etapei {krog} a expirat deja, așa că modificările se aplică din etapa următoare.',
     shranjenaZaKrog: 'Echipa e salvată și pregătită pentru etapa {krog}.',
     shranjenaVeljavna: 'Echipa e salvată și respectă regulile.',
@@ -91,10 +93,16 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     zapriObvestilo: 'Închide notificarea',
     odstranjen: '{ime} a fost scos.',
     razveljavi: 'Anulează',
+    dodan: '{ime} e în echipa ta. Apasă Salvează.',
+    zeVEkipi: '{ime} e deja în echipa ta.',
+    niNaTrgu: 'Acest jucător nu poate fi cumpărat acum.',
   },
 
-  prijavaPotrebna: 'Ca să-ți faci echipa, trebuie să te autentifici.',
-  prijava: 'Autentificare',
+  brezPrijave: {
+    opis: 'Îți poți face echipa fără cont. Rămâne în acest browser până o salvezi.',
+    shrani: 'Salvează și creează cont',
+    pripravljena: 'Echipa ta e gata, salveaz-o.',
+  },
   locenaLiga:
     'Echipa din liga <liga>{liga}</liga> e separată de echipele din alte ligi, cu propriul buget și propriul clasament. Punctele contează din etapa {krog}, pentru că până atunci încă au loc transferuri și treceri între selecții.',
 
@@ -102,6 +110,11 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   vec: 'Mai mult: bonusuri, istoric, reguli',
 
   prestopi: {
+    medSezono: {
+      one: 'Te alături în timpul sezonului: până la termenul etapei {krog} îți faci echipa fără penalizare. Apoi ai în fiecare etapă {n} transfer gratuit, fiecare în plus costă −{kazen}.',
+      few: 'Te alături în timpul sezonului: până la termenul etapei {krog} îți faci echipa fără penalizare. Apoi ai în fiecare etapă {n} transferuri gratuite, fiecare în plus costă −{kazen}.',
+      other: 'Te alături în timpul sezonului: până la termenul etapei {krog} îți faci echipa fără penalizare. Apoi ai în fiecare etapă {n} de transferuri gratuite, fiecare în plus costă −{kazen}.',
+    },
     stevec: 'Transferuri: {n}/{prosti}',
     wildcard: 'wildcard, fără penalizare',
     odbitek: 'penalizare {tock} în această etapă',
@@ -290,8 +303,13 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
 
   // Terenul la alcătuirea echipei (components/Igrisce.tsx).
   igrisce: {
-    naKlop: 'Mută pe bancă',
-    vPostavo: 'Trece în formația de start',
+    namigZamenjave: 'Atinge tricoul unui jucător, apoi pe cel cu care îl schimbi.',
+    zapriNamig: 'Închide sfatul',
+    izberiZaMenjavo: '{ime}: alege pentru schimbare',
+    prekliciIzbiro: '{ime}: anulează alegerea',
+    zamenjajZ: '{ime}: schimbă cu {drugi}',
+    izbran: 'Ai ales pe {ime}. Atinge un jucător marcat pentru schimbare sau din nou pe același pentru anulare.',
+    brezMenjave: 'Pentru {ime} nu există o schimbare validă. Atinge-l din nou pentru anulare.',
     niVecVLigiNamig: 'Jucătorul nu mai e în ligă: lotul cu el nu primește puncte.',
     niVecVLigi: 'nu mai e în ligă',
     poskodba: 'accidentare',
@@ -310,7 +328,7 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     klop: 'Bancă',
     klopOpis:
       'Cine nu joacă din formație e înlocuit de primul jucător de pe aceeași poziție de pe bancă, în ordine de la stânga la dreapta.',
-    brezPozicije: 'Fără poziție confirmată: nu pot fi trimiși pe teren',
+    brezPozicije: 'Fără poziție confirmată: nu poate fi trimis pe teren',
   },
 
   // Terenul cu punctele unei echipe la un meci (components/IgrisceTocke.tsx).
@@ -337,7 +355,7 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
 
   // Bara cu notificări despre echipele mele (components/OpozoriloEkipe.tsx, lib/stanjeEkip.ts).
   opozorila: {
-    naslov: 'Avertismente în echipele tale',
+    naslov: 'Avertismente pentru echipele tale',
     naslovNapakEna: 'Una dintre echipele tale nu va primi puncte',
     naslovNapak: {
       one: '{n} echipă de-a ta nu va primi puncte',

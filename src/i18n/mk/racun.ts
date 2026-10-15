@@ -104,7 +104,7 @@ export const racun: NonNullable<Prevod['racun']> = {
       gol: 'Гол',
       pokal: 'Пехар',
       copat: 'Копачка',
-      rokavice: 'Голманки ракавици',
+      rokavice: 'Голмански ракавици',
       dres: 'Дрес',
       zastavica: 'Корнер знаменце',
       navijac: 'Навивач',

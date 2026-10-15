@@ -946,6 +946,11 @@ Strani izriše JavaScript, podatki pa so v strani kot JSON
   zamenjanim domačinom) — izpustimo jo. **Kontumacija** ima izid in namesto
   zapisnika povezavo `strafverifiziert` (`#`); v arhivih 14 lig pet takih.
   Kot rezerva šteje še 3:0 s prazno postavo po tednu dni.
+  oefb.at kdaj za minuto vrne stran razporeda s statusom 200, a brez JSON-a
+  razporeda (`appPreloads['NO_DATA']`): nočni uvoz je javljal "Razporeda ni
+  bilo mogoče razbrati", uvoz zapisnikov pa tiho 0 tekem (13.–15. 10. 2026).
+  `stranRazporeda` jo prebere znova po 30 s in 2 min, nato uvoz pade z
+  jasno napako; taka stran ne gre v predpomnilnik (`zaPredpomnilnik`).
 - **Zapisnik** `/bewerbe/Spiel/Spielbericht/<id>/`: začetniki v skupinah
   `tor`/`abwehr`/`mittelfeld`/`sturm` ali vsi v `weitere`, klop v `ersatz`,
   šifra igralca iz `/Profile/Spieler/<id>` → `reg_st`. Dogodki: `goal`
@@ -3106,7 +3111,15 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   v uvozni skripti naj gre skozenj, ne mimo z golim `fetch`. Vir, katerega
   strežnik ob preobremenitvi vrne 200 z obvestilom namesto strani, naj ima
   `zaPredpomnilnik(besedilo, datoteka)` (uvoz zapisnikov in razporeda tako
-  stran ne shranita in shranjene ne bereta; zdaj le mlsz)
+  stran ne shranita in shranjene ne bereta; mlsz in razpored oefb)
+- Baza: odjemalec Supabase v nočni verigi (uvoz razporeda, delegiranja,
+  zapisnikov, registracij, lažni vratarji, ugibanje pozicij) ima
+  `global.fetch: fetchZaBazo()` (`scripts/prenos.mjs`): "fetch failed",
+  Cloudflare 520 in PostgREST 503 so ligo podrli zaradi ene tekme (AT,
+  11.–14. 10. 2026). Ponovi (2, 5, 15, 30 s) branje, PATCH/PUT/DELETE, upsert
+  in `zamenjaj_nastope_tekme`; navaden INSERT in druge RPC le, ko zahtevek
+  baze zagotovo ni dosegel (ECONNREFUSED, DNS, Cloudflare 521–523). Nov
+  idempotenten RPC, ki ga uvoz kliče, dodaj v `PONOVLJIVI_RPC`
 - Nastope tekme (in spremenjene gole) uvoz zamenja s
   `zamenjaj_nastope_tekme(tekma, nastopi, goli)` v eni transakciji (servisna,
   migracija 20261013181100). Prej sta bila izbris in vstavljanje dva zahtevka
@@ -3235,7 +3248,17 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   `predlog` ("Sestavi mi ekipo"), `prva_shramba`, `sestavi_iz_maila` (povezava
   `/my-team?sestavi=1` sestavi ekipo ob odprtju). Le števci, brez uporabnika;
   piše `zabelezi_korak`, bere admin. Ime ekipe se predlaga ("FC Ime") in se ga
-  da spremeniti kadarkoli (od 6. 10. 2026; prej je bilo po prvi shrambi fiksno)
+  da spremeniti kadarkoli (od 6. 10. 2026; prej je bilo po prvi shrambi fiksno).
+  `kartica_deljena`: kartico igralca (`KarticaIgralca.tsx`) je kdo delil,
+  prenesel ali delil njeno povezavo (`?src=kartica`). Kartice ni v mladinskih
+  ligah (`jeMladinskiSlug`) in pri anonimiziranih igralcih; potrjeni lastnik
+  profila vidi "Deli svojo kartico"
+- **Sestava brez prijave** (od 15. 10. 2026): neprijavljen na `/my-team`
+  sestavlja **osnutek** v `localStorage` (`slff-osnutek-<liga>`,
+  `src/lib/osnutek.ts`; ob branju preverjen proti trgu). Shrani ga pelje na
+  `/login?…&nacin=registracija`; po prijavi osnutek napolni le prazno ekipo
+  (shranjen kader ima prednost, osnutek se pobriše), po shrambi izgine.
+  Koraka lijaka `osnutek_brez_prijave` in `osnutek_shranjen`
 - `obiski_dnevno` → obiski strani: dnevni seštevki po strani in starosti
   računa (`nov` = registriran v zadnjih 7 dneh, `star`, `neprijavljen`).
   Odgovarja na "kam gre tisti, ki ekipe ne sestavi" — lijak sam tega ne pove.
@@ -3285,6 +3308,15 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   registracije, sicer država prve ekipe ali kluba navijanja, sicer angleščina
   (Google jezika ne pove; `useAuth` ga ob prvi seji zapiše iz vmesnika). Teče
   vsako uro v `opozorila.yml` (`VRSTA=dobrodoslica`, največ 60 na zagon)
+- `kandidati_za_opomnik_brez_ekipe(najvec)` → po dobrodošlici še do trije
+  mail in push "ekipa te še čaka" (`/my-team?sestavi=1&t=<liga>`, vrsta
+  `brez-ekipe`), tudi računom, starejšim od tedna: prvi ≥ 3 dni po
+  registraciji, nato ≥ 7 dni narazen, največ trije uspešni (šest poskusov),
+  ne v 2 dneh po dobrodošlici (v njenem oknu gre ta prva), konec ob neprazni
+  ekipi. Liga: prazne ekipe, kluba navijanja ali države jezika (SI: člani),
+  z rokom naslednjega kroga; brez nje mail lige ne imenuje. Najprej najnovejše
+  registracije. Teče vsako uro v `opozorila.yml` (`VRSTA=brez-ekipe`, 60 na
+  zagon); preizkus `npm run preizkus-brez-ekipe`
 - `kandidati_za_push_opomnik(liga)` → samo push "še nimaš ekipe": kdor ima
   napravo in v ligi nima ekipe (ali ima prazno; brez ekipe šteje domača liga
   kot pri opomniku), 24 ur pred rokom, enkrat na krog (`email_log` vrsta
@@ -3607,6 +3639,21 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   in nove, aktivne lige; država je država lige) in število uporabnikov brez
   ekipe — pod vsakim poročilom na Discord (mejnik uporabnikov,
   `scripts/trgovine.mjs`). Le servis
+- **Želje lig** ("Moje lige ni? Povej nam", migracija 20261015120100):
+  `zelje_lig` (država kot koda ali prosto ime, ime lige ≤ 120, po želji
+  `competition_id` vpisane **neaktivne** lige, jezik vmesnika, `obvescen_at`).
+  Zaprta tabela; piše le `zelim_ligo` (anon in prijavljeni): prijavljen brez
+  e-naslova (pošta gre na račun), neprijavljen z e-naslovom; ista oseba in
+  liga/besedilo = ena vrstica, 5 na dan na osebo, 300 na dan vseh
+  neprijavljenih; besedilo skozi `prepovedane_besede`. Okno `ZelimLigo.tsx`
+  (izbirnik lige, okno prvega obiska, vstop države) predlaga neaktivne lige
+  države iz `competitions_view`. Admin: Administracija → Želje lig
+  (`admin_zelje_lig` po ligi ali besedilu, `admin_povezi_zelje(ids, šifra)`
+  poveže besedilo z ligo). Ko je liga aktivna, gre vsaki želji en mail
+  (`opozorila.yml`, `VRSTA=liga-zivi` → `posli-opomnik`,
+  `kandidati_za_zivo_ligo`, `zelja_lige_poslana`: uspeh pobriše e-naslov,
+  neuspeh največ trikrat). Neobveščene z e-naslovom pg_cron po 12 mesecih
+  izbriše
 - **Pivski zid** (`/beers`, migracija 20261013150100): `piva` hrani nakupe
   Buy Me a Coffee (funkcija `bmc-pivo`, servisni ključ, `zunanji_id` = BMC
   `data.id`, idempotentno; vračilo postavi `vracilo`, `live_mode = false` je
@@ -3764,8 +3811,8 @@ Actions (dnevniki javnega repozitorija bi pokazali naslove): kontejner
 `slff-posta` (`/opt/slff-posta`, `scripts/hetzner/posta/docker-compose.yml`,
 node:22-alpine, omrežje gostitelja kot `slff-html`) poganja
 `scripts/posta-klubom.mjs --zanka`. Vsakih 10 minut pošlje največ dva maila
-(60–150 s narazen), le v oknu države prejemnika (08–18, pon–sob; AT dunajski,
-EE tallinski čas) in največ 100 na dunajski dan. Najprej opomniki (en sam, ≥ 3
+(60–150 s narazen), le v oknu države prejemnika (08–18, pon–sob; krajevni
+čas: AT, EE, HR, HU, RS — `OKNA`) in največ 100 na dunajski dan. Najprej opomniki (en sam, ≥ 3
 dni po našem prvem, brez pošte drugih — tudi klic ali drugo za vedno zapre
 opomnik), nato prvi maili (`nov`, brez pošte, liga **aktivna** — neaktivna
 liga čaka, tako Estonija do vklopa; izmenično po državah, `izmenicno`). Klub (isti `team_id` ali isto ime v
@@ -3780,8 +3827,8 @@ DATA ali neuspel vpis jo pusti zunaj vrste z opombo "poslano? preveri ročno" �
 **nikoli samodejno znova** (in šteje v dnevno mejo). Polnjenje vrne v vrsto le
 stare avstrijske vrstice pred vrsto (brez `posiljatelj`, `poslano`, brez opombe
 "poslano…") in jim ob tem vpiše pošiljatelja. Kopija gre v Sent. Številke v mailu so sveže;
-besedila (nemška, estonska) so v skripti in ne trdijo, da imamo dovoljenje
-zveze. Prehodne napake delavec le zabeleži; zavrnjena prijava: ura premora,
+besedila (nemška, estonska, hrvaška, madžarska, srbska v latinici) so v
+skripti in ne trdijo, da imamo dovoljenje zveze. Prehodne napake delavec le zabeleži; zavrnjena prijava: ura premora,
 nato izhod (Docker ga znova zažene).
 
 **Dnevnik:** `ssh slff docker logs slff-posta` — brez naslovov (stik #id,
@@ -3797,7 +3844,11 @@ ključ iz `/opt/supabase/.env`) in `LUKA_SMTP_GESLO=` (geslo nabiralnika),
 posta node scripts/vrsta-poste-klubom.mjs --drzava AT` (načrt), nato z
 `--pisi` (po želji `--poslji-od <ISO>`). Le uradni naslov kluba (AT: blok
 "Kontakt" na vereine.oefb.at, brez Bundeslige in 2. Lige; EE: "E-post" na
-strani ekipe jalgpall.ee, ne "Esindaja"), en naslov na klub, prva ekipa pred
+strani ekipe jalgpall.ee, ne "Esindaja"; HU: "Klub adatok" → E-mail na strani
+kluba adatbank.mlsz.hu, le aktivne lige, brez NB I in NB II, ostanek "Too many
+connections" klub preskoči do naslednjega zagona; preizkus brez baze
+`--drzava HU --suho --koda 67/20/33915 --najvec 5` izpiše zakrite naslove),
+en naslov na klub, prva ekipa pred
 rezervno, klub brez igralcev z nastopi izpusti; 403, 429 ali izziv ustavi
 takoj. Vrstic drugih pošiljateljev in obstoječih naslovov ne spreminja.
 jalgpall.ee ima skupen proračun branja (`SKUPEN_VIR`), strežnik pa nima
@@ -3806,6 +3857,127 @@ pogleda, ali teče ali čaka uvoz, ki bere jalgpall.ee (*Uvoz lige ee-…*, pose
 *uvoz EE* nočnega uvoza, *Grbi klubov jalgpall*), in tedaj ne bere (izhod 3).
 Ne zaganjaj ga tik pred uvozom Estonije. `--suho` na posta-klubom izpiše
 naslednje maile brez pošiljanja.
+
+**HR in RS polnjenje nima** (pregled 15. 10. 2026): Semafor pri klubu
+(`/klubovi/<id>/`) kaže le naslov in stadion, fsb.org.rs in fss.rs naslovov
+klubov ne objavljata. ŽNS jih objavijo v PDF "Adresar klubova" (zns.hr: 1. in
+2. ŽNL, Treća NL Centar), vsaka zveza drugače — ni podprto. Besedila in okni
+HR, RS sta pripravljena: vrstica, ki jo v vrsto postavi človek (`v_vrsti`,
+`posiljatelj`), gre po istih pravilih.
+
+## Samodejne objave (Instagram, Facebook)
+
+Načrt: `docs/superpowers/specs/2026-10-15-samodejne-objave-design.md`. Faza 1:
+osnutki na Discord; **faza 2: ob roku objava na Instagram in Facebook, če je
+nihče ne ustavi** — le, ko so na strežniku ključi `META_*` (brez njih ostane
+faza 1). Delavec `slff-objave` na
+strežniku (`scripts/objave.mjs --zanka`, `/opt/slff-objave`, slika Playwright)
+vsakih 10 minut pogleda termin. **Vse objave so angleške** (napis in
+prosojnice, `JEZIK`; lastnik, 15. 10. 2026). **Ponedeljek** osnutek 04:00,
+objava 09:20–11:40 — **vrtiljak vseh držav** (lastnik, 15. 10. 2026; prej
+rotacija ene države): naslovnica "Weekend in Europe's Sunday leagues" z
+obdobjem in zastavami, ena prosojnica na državo (zastava in angleško ime,
+igralec kroga velik, do dva za njim), poziv "Pick your Sunday XI · slff.eu".
+**Četrtek** osnutek 12:00, objava 17:10–19:40 — **dosežki tedna**: naslovnica,
+en dosežek na prosojnico (največ 6), poziv. En osnutek na termin in teden
+(`objave`, delni unique `slot, teden` za pon/cet); zamujen termin se ne
+nadoknadi.
+- **Ura objave je naključna** (lastnik: naj bo videti kot človek):
+  `casObjave(osnova, razpon, zdaj, rng)` — osnova (pon 10:00, čet 18:00,
+  mejnik `objavaMejnika`) + enakomeren odmik iz `TERMINI[slot].razpon`
+  (pon −40…+100 min, čet −50…+100, mejnik ±40), cele minute, nikoli
+  večkratnik 5, vsaj `VETO` (5 h) po osnutku, v oknu 08:30–21:30 Ljubljana.
+  Izračuna se šele po napisu in slikah (veto teče od Discorda); čas je v
+  `objava_ob` in v sporočilu na Discordu. `terminiZdaj` osnutek naredi le,
+  dokler do najkasnejše objave termina ostane 5 h.
+- **Instagram Graph API vrtiljak sprejme največ 10 slik** (v aplikaciji jih je
+  20, v API ne). Ponedeljek: do 8 držav naslovnica + države + poziv; pri 9
+  naslovnica odpade (9 + poziv), obdobje nosi glava prve države; več kot 9
+  (`NAJVEC_DRZAV`) odpadejo tiste z najmanj uporabniki. Četrtek največ 6 dosežkov.
+- **Mejnik** (slot `mejnik`, migracija 20261015190100): vsak obhod zanke
+  pokliče `objava_mejnik_dejstva()` (servisna: `uporabnikov` =
+  `skupaj_uporabnikov()`, `drzav` in `lig` aktivnih lig, `ekip` brez hišnih).
+  Ko število preseže večkratnik 1000 (`dosezenMejnik`) **za manj kot 300**
+  (`MEJNIK_ROK`; mejniki, preseženi pred uvedbo, se ne objavijo) in vrstice s
+  tem `mejnik` (unique) še ni, nastane osnutek: napis (Claude, zahvala
+  skupnosti, ista preverba), prosojnici "4,000" z maskoto in "SLFF today"
+  (države, lige, ekipe) ter poziv. Osnova objave je 6 ur po osnutku,
+  premaknjena naprej v okno 09:00–20:00 (`objavaMejnika`), nato ±40 min
+  (`casObjave`); dalje kot vsak osnutek (Discord z "Ustavi", `objaviZapadle`).
+
+- **Dejstva** (migracija 20261015230100, obe servisni) štejejo le tekme, ki
+  so se zgodile: **uvožen zapisnik** (`imported_at`), ne kontumacija, datum v
+  oknu. Razpisan, prestavljen ali na zapisnik čakajoč krog ne šteje.
+  - `objava_drzave(od, do)` (ponedeljek, okno prejšnji teden): po državi
+    trije najboljši igralci kroga čez vse njene lige (zadnji krog lige z
+    uvoženo tekmo v oknu; ime, klub, kratko ime lige, krog, točke, goli).
+    **Država brez igralca s 6 točkami ne pride v objavo.** Vrstni red:
+    uporabniki z ekipo v ligah države (brez hišnih), nato število lig s
+    krogom, nato koda. Brez države ni osnutka.
+  - `objava_dosezki(od, do)` (četrtek, zadnjih 7 dni): seznami `hattrick`
+    (3+ goli na tekmi), `vratar_gol`, `najvec_tock` (največ točk kroga v
+    Evropi, ≥ 6), `rekord_lige` (več točk kot kdorkoli v prejšnjih, vsaj
+    štirih krogih sezone lige), `skok` (le dvig cene), `cista_mreza` (vratar
+    s 3+ čistimi mrežami zapored, zadnja v oknu), skupnost **anonimno**:
+    `manager_tedna` (le točke in država, brez hišnih), `novih_upraviteljev`
+    (računi iz okna brez hišnega), `uporabnikov`. `vsebinaDosezkov` vzame vsak
+    igralec enkrat (vrstni red hat-trick, največ točk, rekord, vratar, niz,
+    skok), skupnost na konec; **brez dosežka igralca ni osnutka**. Novih lig
+    ni (vklop lige nima časa), mini lig tudi ne.
+  - `objava_dejstva` (stari ponedeljek in četrtek) ostane v bazi, a je
+    `objave.mjs` ne kliče več.
+  **Objava le slavi** (lastnik, 15. 10. 2026): padca cene in slabih predstav
+  ni, šala gre na nedeljsko ligo nasploh, nikoli na igralca. **Nikoli**
+  mladinske lige (`je_mladinski_slug`), neaktivne lige, anonimizirani igralci,
+  hišne ekipe, imena uporabnikov ali ekip. `npm run preizkus-objav` (tudi v
+  CI) preveri izločitve, preskočene države in anonimnost.
+- **Napis** napiše Claude (`claude-sonnet-5-5`, Messages API, `ANTHROPIC_API_KEY`)
+  iz izbranih dejstev (ponedeljek: uvodna vrstica in ena vrstica na državo;
+  četrtek: ena na dosežek), s povezavo `https://slff.eu/?src=ig`.
+  `preveriNapis`: vsako število in vsaka beseda z veliko začetnico sredi stavka
+  mora biti v dejstvih ("4,000" je tisoč, svojilni 's odpade, dnevi v tednu
+  so dovoljeni); sicer še en poskus, nato suha predloga (`napis_vir`).
+- **Prosojnice** (1080 × 1350): stran `/objava?slide=n`
+  (`src/pages/Objava.tsx`), ki jo main.tsx izriše brez glave in noge; vsebino
+  ji Playwright vpiše v `window.__OBJAVA__`, jezik (`en`) v izbiro jezika. Ni v
+  zemljevidu, `noindex` (tudi Caddy `@zasebne`), v `@ni_strani` je izjema.
+  Nizi so v `domov.objava.*` vseh jezikov (smoke), izriše se le angleščina. **Strežnik jo bere s slff.eu**
+  (`OBJAVE_URL`), zato mora biti sprememba strani objavljena pred delavcem.
+- **Osnutek**: vrstica v `objave` (slike JPEG na disku
+  `/opt/slff-objave/mediji/<teden>-<slot>-<naključno>/n.jpg`), nato Discord
+  (`DISCORD_OBJAVE_WEBHOOK`) s slikami, napisom, povzetkom dejstev in
+  enkratno povezavo **"⛔ Ustavi objavo"** (`slff.eu/objava#ustavi=<žeton>`;
+  žeton 256 bitov, v bazi le `ustavi_zeton_hash` = sha256). Šele uspel
+  Discord vpiše `discord_at`; neuspel → `stanje = 'napaka'` (osnutek, ki ga
+  človek ni videl, se nikoli ne objavi).
+- **Ustavitev**: stran `/objava` z `#ustavi=` (`UstaviObjavo` v
+  `src/pages/Objava.tsx`, slovensko kot Administracija) pokaže gumb; šele klik
+  pokliče `ustavi_objavo(zeton)` (anon, migracija 20261015170100) — Discord
+  povezave odpira sam, zato ne ustavi že odprtje. Ustavi le `osnutek` pred
+  rokom; sicer "povezava ne velja več".
+- **Objava (faza 2)**: `objaviZapadle` v zanki vzame osnutke z rokom v
+  zadnjih **2 urah** (`OBJAVA_ZAMUDA`; starejši ostanejo neobjavljeni — delavec
+  ni tekel ali preizkusni osnutek preteklega tedna), z `discord_at` in
+  `stanje = 'osnutek'`. Najprej jih pogojno prevzame (`objavljanje`), nato
+  Instagram (vsebniki → vrtiljak → `status_code` FINISHED → `media_publish`)
+  in Facebook stran (neobjavljene `/photos`, nato `/feed` z `attached_media`),
+  Graph API `v26.0` (`META_GRAPH_VERSION`). Slike Meta prebere z
+  `https://slff.eu/objave-mediji/…` (Caddy, `OBJAVE_MEDIJI_URL`). Uspeh →
+  `objavljeno`, `ig_povezava`, `fb_povezava`, Discord s povezavama; napaka →
+  `napaka` in Discord, **nikoli ponovno samodejno** (Meta je morda objavila
+  del) — ponovi človek ročno.
+- Preizkus brez baze in brez ključev: `npm run dev`, nato `node scripts/objave.mjs
+  --slot pon --suho --dejstva scripts/vzorci/objava-drzave.json --url
+  http://localhost:5173 --mapa /tmp/objave-vzorec` (napis je predloga, slike v mapi);
+  četrtek: `--slot cet --dejstva scripts/vzorci/objava-dosezki.json`;
+  mejnik: `--slot mejnik --dejstva scripts/vzorci/objava-mejnik.json`.
+- **Objava**: `scripts/hetzner/objavi-objave.sh` iz main (CI je ne objavi).
+  Enkratna nastavitev (lastnik): `/opt/slff-objave/.env` s
+  `SUPABASE_SERVICE_ROLE_KEY=`, `ANTHROPIC_API_KEY=`, `DISCORD_OBJAVE_WEBHOOK=`,
+  za fazo 2 še `META_PAGE_TOKEN=`, `META_PAGE_ID=`, `META_IG_USER_ID=` (kako jih
+  dobiti: načrt, *Faza 2*), `chmod 600`. Blok `/objave-mediji/*` v
+  `scripts/hetzner/Caddyfile` se prenese ročno (Caddy CI ne objavi). Dnevnik
+  `ssh slff docker logs slff-objave`.
 
 ## Poti
 

@@ -22,7 +22,7 @@ import { sifra } from './viri/zapisniki.mjs'
 import { razcleniRazpored, sezonaIz, oznakaBrezIzida, tekmaDrugegaKroga, odvecneVrsticePara } from './razpored.mjs'
 import { rokKroga } from './razporedi.mjs'
 import { vseVrstice } from './strani.mjs'
-import { prenesiSPonovitvami } from './prenos.mjs'
+import { prenesiSPonovitvami, fetchZaBazo } from './prenos.mjs'
 
 // Vir je zavrnil (jalgpall: 403, 429, izziv): izhod 4, da nočna zanka države
 // ne bere naprej (uvoz-zapisnikov.yml). Ostale napake ostanejo izhod 1.
@@ -68,7 +68,7 @@ const arg = (ime, privzeto = null) => {
 }
 const pisi = process.argv.includes('--pisi')
 const dovoliManjKlubov = process.argv.includes('--dovoli-manj-klubov')
-const db = createClient(BASE, SERVICE, { auth: { persistSession: false } })
+const db = createClient(BASE, SERVICE, { auth: { persistSession: false }, global: { fetch: fetchZaBazo() } })
 
 const tekmovanje = await najdiTekmovanje(db, arg('tekmovanje', 'clani'))
 const vir = viraZa(tekmovanje)

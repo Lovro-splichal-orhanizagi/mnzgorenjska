@@ -45,8 +45,11 @@ const PRAVILA_1 = {
   zmaga: { GK: 0, DEF: 0, MID: 0, FWD: 0 } as Record<Pozicija, number>,
 }
 
-/** Izračuna točke enega igralca na eni tekmi. */
-export function tockeZaNastop(n: Nastop, pozicija: Pozicija): IzracunTock {
+/**
+ * Izračuna točke enega igralca na eni tekmi. Brez pozicije (še ni določena)
+ * gol in obramba ne prineseta nič — tako kot v bazi (`tocke_za_nastop`).
+ */
+export function tockeZaNastop(n: Nastop, pozicija: Pozicija | null): IzracunTock {
   const postavke: Postavka[] = []
   const dodaj = (opis: string, tocke: number) => {
     if (tocke !== 0) postavke.push({ opis, tocke })
@@ -61,7 +64,7 @@ export function tockeZaNastop(n: Nastop, pozicija: Pozicija): IzracunTock {
   else dodaj(t('tekme.tockovanje.postavke.nastopDo60'), T.nastopDo60)
 
   // goli
-  const zaGol = T.gol[pozicija] ?? 0
+  const zaGol = (pozicija && T.gol[pozicija]) || 0
   const goli = n.goli ?? 0
   if (goli > 0) dodaj(goli === 1 ? t('tekme.tockovanje.postavke.gol') : t('tekme.tockovanje.postavke.goli', { n: goli }), goli * zaGol)
 
@@ -76,18 +79,18 @@ export function tockeZaNastop(n: Nastop, pozicija: Pozicija): IzracunTock {
     )
 
   // clean sheet
-  const zaCS = T.cleanSheet[pozicija] ?? 0
+  const zaCS = (pozicija && T.cleanSheet[pozicija]) || 0
   if (n.cleanSheet && minute >= T.pragMinut && zaCS > 0)
     dodaj(t('tekme.tockovanje.postavke.brezPrejetega'), zaCS)
 
   // zmaga ekipe
-  const zaZmago = T.zmaga[pozicija] ?? 0
+  const zaZmago = (pozicija && T.zmaga[pozicija]) || 0
   if (n.zmaga && minute >= T.pragMinut && zaZmago > 0)
     dodaj(t('tekme.tockovanje.postavke.zmaga'), zaZmago)
 
   // prejeti goli
   const prejetiGoli = n.prejetiGoli ?? 0
-  if (T.prejetiPozicije.includes(pozicija) && prejetiGoli > 0) {
+  if (pozicija && T.prejetiPozicije.includes(pozicija) && prejetiGoli > 0) {
     const odbitek = -Math.floor(prejetiGoli / T.prejetiNaTocko)
     if (odbitek !== 0) dodaj(t('tekme.tockovanje.postavke.prejetiGoli', { n: prejetiGoli }), odbitek)
   }
@@ -115,6 +118,29 @@ export function tockeZaNastop(n: Nastop, pozicija: Pozicija): IzracunTock {
   return {
     skupaj: postavke.reduce((v, p) => v + p.tocke, 0),
     postavke,
+  }
+}
+
+/**
+ * Razlaga točk za prikaz: postavke iz `tockeZaNastop`, ki se morajo sešteti v
+ * točke iz baze (`appearance_points.points`). Če se ne, razliko pokaže kot
+ * "ostalo" — vsota na zaslonu je vedno prava.
+ */
+export function razloziTocke(
+  n: Nastop,
+  pozicija: Pozicija | null,
+  dejanske?: number | string | null,
+): IzracunTock & { brezPozicije: boolean } {
+  const r = tockeZaNastop(n, pozicija)
+  const brezPozicije = !pozicija && (n.goli ?? 0) > 0
+  if (dejanske == null) return { ...r, brezPozicije }
+  const prave = Number(dejanske)
+  const razlika = Math.round((prave - r.skupaj) * 10) / 10
+  if (razlika === 0) return { ...r, brezPozicije }
+  return {
+    skupaj: prave,
+    postavke: [...r.postavke, { opis: t('tekme.razlaga.ostalo'), tocke: razlika }],
+    brezPozicije,
   }
 }
 

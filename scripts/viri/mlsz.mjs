@@ -61,6 +61,29 @@ const imeTekme = (koda, id) => `tekma-${pot(koda).replace(/\//g, '-')}-${id}.htm
 
 const besedilo = (html) => razpakiraj(String(html ?? '').replace(/<[^>]+>/g, ' '))
 
+// --- stran kluba (pošta klubom, scripts/vrsta-poste-klubom.mjs) -----------------
+
+export const naslovKluba = (koda, id) => `${OSNOVNI}/club/${pot(koda)}/1/${id}.html`
+
+/** Ekipe lige iz stranskega seznama strani kroga ali kluba: [{ id, ime }]. */
+export function ekipeLige(html) {
+  const out = new Map()
+  for (const m of String(html ?? '').matchAll(/class="league-team[^"]*" onclick="changeTeamDetailsNewGC\('[^']*',\s*\d+,\s*(\d+)[^"]*"[^>]*>[\s\S]*?<span>([^<]*)<\/span>/g))
+    if (!out.has(m[1])) out.set(m[1], { id: m[1], ime: besedilo(m[2]) })
+  return [...out.values()]
+}
+
+/**
+ * Uradni naslov kluba (blok "Klub adatok" → E-mail, kot ga klub vodi pri MLSZ)
+ * ali null. `undefined`, če to ni stran kluba (ostanek preobremenjenega ada1bank).
+ */
+export function emailKluba(html) {
+  const h = String(html ?? '')
+  if (!h.includes('id="team_data"')) return undefined
+  const blok = h.match(/<div class="detail email">[\s\S]*?<div class="datas">([\s\S]*?)<\/div>/)?.[1] ?? ''
+  return blok.match(/[^\s<>"':]+@[^\s<>"']+\.[a-z]{2,}/i)?.[0].toLowerCase() ?? null
+}
+
 /**
  * "2026. 10. 03. 15:00" (stran kroga) ali "2025.10.04 - 15:00" (zapisnik)
  * → { datum: '2026-10-03', ura: '15:00' }.

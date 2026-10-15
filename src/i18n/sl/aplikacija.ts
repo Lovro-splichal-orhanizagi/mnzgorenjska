@@ -44,6 +44,10 @@ export const aplikacija = {
   noga: {
     zasebnost: 'Zasebnost in pogoji',
     facebook: 'Sledi nam na Facebooku',
+    instagram: 'Sledi nam na Instagramu',
+    /** Povezavi na aplikacijo v trgovinah (Trgovine.tsx). */
+    android: 'Aplikacija za Android',
+    iphone: 'Aplikacija za iPhone',
     vir: 'Podatki: uradni zapisniki <vir>{ime}</vir>',
     /** Ime zveze sredi stavka, kadar je ne poznamo. */
     zvezeSplosno: 'zveze',
@@ -70,6 +74,7 @@ export const aplikacija = {
     pomoc: 'Pomoč',
     odjava: 'Odjava',
     prijava: 'Prijava',
+    zacni: 'Začni brezplačno',
     meni: 'Meni',
     meniZGlasovi: 'Meni ({n} za glasovanje)',
   },
@@ -131,6 +136,9 @@ export const aplikacija = {
     brezEkip: 'še brez ekip',
     nazaj: '← Nazaj',
     preskoci: 'Preskoči',
+    isci: 'Išči ligo …',
+    /** Naslov skupine treh lig z največ ekipami na vrhu okna. */
+    najvecEkip: 'Največ ekip',
     /** Povezava na drugo državo, ko je ugib pokazal napačno. */
     drugaDrzava: '{drzava}?',
     /** Korak države za tujca (IP iz države brez lig). */
@@ -203,5 +211,27 @@ export const aplikacija = {
     naslov: 'Posodobi aplikacijo',
     opis: 'Ta različica SLFF ni več podprta. Posodobi aplikacijo, da boš lahko še naprej urejal ekipo.',
     gumb: 'Posodobi',
+  },
+  /** "Moje lige ni": povezava v izbirniku lige, oknu prvega obiska in na vstopu države (ZelimLigo.tsx). */
+  zelimLigo: {
+    povezava: 'Moje lige ni? Povej nam',
+    naslov: 'Katero ligo bi rad igral?',
+    opis: 'Povej nam, katera liga ti manjka. Lige dodajamo po tem, koliko ljudi si jih želi.',
+    drzava: 'Država',
+    drugaDrzava: 'Druga država',
+    imeDrzave: 'Ime države',
+    liga: 'Liga',
+    ligaPrimer: 'npr. 1. liga MNZ Celje',
+    predlogi: 'Že vpisane lige, ki še niso odprte:',
+    email: 'Tvoj e-naslov',
+    emailOpomba: 'Uporabimo ga le, da ti javimo, ko liga zaživi, nato ga izbrišemo.',
+    poslji: 'Pošlji',
+    preklici: 'Prekliči',
+    hvala: 'Hvala — javimo, ko liga zaživi.',
+    zapri: 'Zapri',
+    napaka: 'Pošiljanje ni uspelo. Poskusi znova.',
+    napakaEmail: 'Vpiši veljaven e-naslov.',
+    napakaOmejitev: 'Danes si poslal že dovolj želja. Poskusi jutri.',
+    napakaBesedilo: 'Preveri ime države in lige.',
   },
 }
