@@ -2934,7 +2934,7 @@ tekmi zadnjega kroga): Premier 32 krogov / 192 tekem (6 faz), Challenge 22 /
 100 s seznama + 82 po šifri), NL II 22 / 132 + ponovljena tekma kot 23. krog;
 vzorčeni zapisniki vsi 11 + 11, vratar, goli = izid.
 
-Vpisane so 4 lige (migracija 20261015030900), **neaktivne**, zveza `mfa`:
+Vpisane so 4 lige (migracija 20261015130900), **neaktivne**, zveza `mfa`:
 
 | liga | tekoča 2026/27 | arhiv 2025/26 |
 |---|---|---|
