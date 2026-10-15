@@ -32,6 +32,7 @@ import ffm from './ffm.mjs'
 import fcf from './fcf.mjs'
 import fas from './fas.mjs'
 import aft from './aft.mjs'
+import ffl from './ffl.mjs'
 
 const VIRI = {
   mnzg,
@@ -86,6 +87,9 @@ const VIRI = {
   // Ukrajina (Ternopilska oblast): Асоціація футболу Тернопільщини prek
   // aft.com.ua; postave iz novic (ponatis Газета 1), koledarska sezona.
   aft,
+  // Ukrajina (Lvivska oblast): Львівська асоціація футболу prek ffl.org.ua;
+  // postave iz novic (članek lige na dan), 10 s med zahtevki (Crawl-delay).
+  ffl,
 }
 
 /**
