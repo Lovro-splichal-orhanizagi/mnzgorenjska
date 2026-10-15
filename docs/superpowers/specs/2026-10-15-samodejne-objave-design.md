@@ -1,7 +1,8 @@
 # Automated social posts (IG + FB) — design
 
-Approved by the owner 15. 10. 2026. Phase 1 is being built; nothing publishes
-until phase 2.
+Approved by the owner 15. 10. 2026. Phase 1 (drafts on Discord) is live;
+phase 2 (publishing) is built and switches on when the `META_*` keys are on the
+server.
 
 ## Goal
 
@@ -51,6 +52,57 @@ reports are fine).
 6. **Publish (phase 2)** — at scheduled time, if not stopped: Instagram Graph
    API (single / carousel container → publish), Facebook Page API (photo /
    multi-photo post). Success → Discord message with permalinks.
+
+## Phase 2: publishing (built 15. 10. 2026)
+
+- **Images**: slides are JPEG (Instagram accepts only JPEG), in
+  `/opt/slff-objave/mediji/<week>-<slot>-<random>/n.jpg`, served read-only by
+  Caddy at `https://slff.eu/objave-mediji/…` (no listing, `noindex`). Meta
+  fetches them by URL.
+- **Stop link**: the worker makes a 256-bit token per draft and stores only its
+  sha256 (`ustavi_zeton_hash`). Discord gets
+  `https://slff.eu/objava#ustavi=<token>` (in `#`, so never in server logs;
+  in `<…>`, so Discord shows no preview). The page shows a button; only the
+  click calls `ustavi_objavo(token)` (anon RPC; stops only a draft before its
+  time). Chosen over an edge function: no function deploy, CI ships the page.
+- **Publisher** (`objaviZapadle`, every loop): drafts with `stanje = 'osnutek'`,
+  `discord_at` set and the scheduled time passed by at most 2 h. Claim first
+  (`osnutek` → `objavljanje`, conditional update), then Instagram (item
+  containers, carousel container, poll `status_code` until `FINISHED`,
+  `media_publish`, read `permalink`) and Facebook (each photo to
+  `/{page}/photos` with `published=false`, then `/{page}/feed` with
+  `attached_media`, read `permalink_url`). Graph API v26.0
+  (`META_GRAPH_VERSION`). Success → `objavljeno` + permalinks + Discord;
+  failure → `napaka` + Discord, never retried automatically.
+- **Env** (`/opt/slff-objave/.env`): `META_PAGE_TOKEN`, `META_PAGE_ID`,
+  `META_IG_USER_ID`. Missing → drafts as in phase 1, nothing publishes.
+
+### Owner setup (once)
+
+1. Instagram account → Professional (Business or Creator) and linked to the
+   SLFF Facebook page (Instagram settings → Linked accounts, or Page settings →
+   Linked accounts).
+2. developers.facebook.com → Create app → type Business, use case "Manage
+   everything on your Page" + Instagram API with Facebook Login. Add yourself
+   as admin; the app can stay in development mode as long as only people with
+   a role on the app publish (we only post to our own page).
+3. Graph API Explorer → the app → User token with permissions
+   `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`,
+   `instagram_basic`, `instagram_content_publish`, `business_management` →
+   Generate, pick the SLFF page and Instagram account.
+4. Long-lived user token (60 days):
+   `GET https://graph.facebook.com/v26.0/oauth/access_token?grant_type=fb_exchange_token&client_id=<app id>&client_secret=<app secret>&fb_exchange_token=<short token>`.
+5. Page token from it (does not expire while the user token stays valid and
+   the user keeps the page role):
+   `GET https://graph.facebook.com/v26.0/me/accounts?access_token=<long user token>`
+   → `access_token` and `id` of the SLFF page = `META_PAGE_TOKEN`, `META_PAGE_ID`.
+   Check in the Access Token Debugger that "Expires" is "Never".
+6. IG user id:
+   `GET https://graph.facebook.com/v26.0/<page id>?fields=instagram_business_account&access_token=<page token>`
+   → `instagram_business_account.id` = `META_IG_USER_ID`.
+7. Put the three into `/opt/slff-objave/.env` (`chmod 600`), copy the Caddyfile
+   (`/objave-mediji/*`), redeploy the worker. The next draft's Discord message
+   says "objava … če je ne ustaviš" instead of "Meta ni nastavljena".
 
 ## Where it runs
 
