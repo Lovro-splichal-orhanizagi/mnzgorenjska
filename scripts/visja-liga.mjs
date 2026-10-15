@@ -126,6 +126,15 @@ export function ravenLige({ slug, name, zveza }) {
     return null
   }
 
+  // Kazahstan (vir kff): Premier liga 1, Prva liga 2, Druga liga (obe
+  // konferenci) 3. Šifra osebe KFF je ista v vseh ligah.
+  if (slug.startsWith('kz-')) {
+    if (mladinska) return null
+    if (slug === 'kz-premier-liga') return abs(1)
+    if ((m = slug.match(/^kz-(\d)-liga/))) return abs(1 + Number(m[1]))
+    return null
+  }
+
   return null
 }
 

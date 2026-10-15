@@ -435,7 +435,7 @@ dobi ceno iz tamkajšnje: percentil, prebran iz cene, vsaka raven višje zapre
 (`scripts/visja-liga.mjs`, `ovrednoti-igralce` izpiše seznam "Cena iz višje
 lige"). Raven lige je pravilo po šifri in imenu v `ravenLige`, ne stolpec:
 HR (državne lige, županijske po imenu le znotraj iste zveze), SK, HU, ES, EE,
-LV po uradni piramidi, AT le državne nad deželnimi; mladinske se primerjajo le
+LV, KZ po uradni piramidi, AT le državne nad deželnimi; mladinske se primerjajo le
 z mladinskimi. Brez pravila (SI, RS, RO, PL, CZ, MK) in brez šifer osebe ostane
 4.5. Ob novi ligi z novim poimenovanjem ravni preveri `ravenLige` (smoke).
 Na vklopljeni ligi pride do nove cene le **tedensko prevrednotenje** (največ
