@@ -5546,6 +5546,17 @@ preveri(
   preveri('eps: Evbeja — zapisnik 11 + 11, gol gostov 0:1, 7 menjav, 990 minut, šifra osebe zveze 16', zev.zapisnikId === 'gr16-7619' && zev.sezona === '2026/27' &&
     zev.domaci.ime === 'Α.Ε ΙΣΤΙΑΙΑΣ' && zev.gostje.ime === 'Α.Ε ΠΡΟΠΟΝΤΙΣ' && zev.krog === 3 && zev.goli.length === 1 && zev.goli[0].ekipaIdx === 1 &&
     zev.menjave.length === 7 && minute(nev, 0) === 990 && minute(nev, 1) === 990 && nev.every((x) => x.regSt > 160000000 && x.regSt < 170000000) && zev.opozorila.length === 0)
+  // Evbeja 8371 (1:4) je imela postavi, časovnica pa je bila prazna: tekma z goli
+  // brez golov v časovnici je nepopolna, da se po tednu ne zamrzne z 0 goli.
+  const htmlEv = beri('gr-eps-tekma-epsevias-7619.html')
+  const iCas = htmlEv.indexOf('Διακύμανση Αποτελέσματος')
+  const jCas = htmlEv.indexOf('</table>', iCas)
+  const brezCas = htmlEv.slice(0, iCas) + htmlEv.slice(iCas, jCas).replace(/<tr class='(?:odd|even)'>[\s\S]*?<\/tr>/g, '') + htmlEv.slice(jCas)
+  const zpc = G.vZapisnik(brezCas, { domena: 'epsevias.gr', gameId: 7619 })
+  preveri('eps: postavi + izid z goli + prazna časovnica = nepopoln (NEPOPOLN prvo opozorilo), polna Evbeja ni nepopolna',
+    G.casovnica(brezCas).length === 0 && zpc.domaci.postava.length === 11 && zpc.gostje.postava.length === 11 && zpc.goli.length === 0 &&
+    zpc.rezultat.gostje === 1 && zpc.nepopoln === true && zpc.opozorila[0]?.startsWith(G.NEPOPOLN) && /časovnic/.test(zpc.opozorila[0]) &&
+    zev.nepopoln === false)
   preveri('eps: vzorci Aten in Evbeje brez letnic rojstva, sodnikov, skript in e-naslovov', !/ageAttention|\((19|20)\d\d\)|<script|email-protection|waust/i.test(
     ['gr-eps-razpored-epsath-1538.html', 'gr-eps-tekma-epsath-82739.html', 'gr-eps-tekma-epsath-83494.html', 'gr-eps-tekma-nepopoln-epsath-82789.html', 'gr-eps-tekma-epsevias-7619.html'].map(beri).join('')))
 }

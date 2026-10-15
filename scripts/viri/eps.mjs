@@ -503,7 +503,11 @@ export function vZapisnik(html, { domena = null, gameId = null, url = null } = {
   })
 
   const zaEkipo = (idx) => goli.filter((x) => (x.avtogol ? 1 - x.ekipaIdx : x.ekipaIdx) === idx).length
-  if (!g.kontumacija && znana[0] && znana[1] && (zaEkipo(0) !== g.izid.domaci || zaEkipo(1) !== g.izid.gostje))
+  // Postavi so, izid ima gole, časovnica pa nobenega (Evbeja 8371, 1:4): zveza
+  // časovnico vpiše pozneje. Nepopoln — brez imported_at, bere se znova tudi po tednu.
+  const brezCasovnice = !g.kontumacija && znana[0] && znana[1] && g.izid.domaci + g.izid.gostje > 0 && goli.length === 0
+  if (brezCasovnice) opozorila.push(`${NEPOPOLN}: časovnica brez golov pri izidu ${g.izid.domaci}:${g.izid.gostje}`)
+  else if (!g.kontumacija && znana[0] && znana[1] && (zaEkipo(0) !== g.izid.domaci || zaEkipo(1) !== g.izid.gostje))
     opozorila.push(`goli iz časovnice (${zaEkipo(0)}:${zaEkipo(1)}) se ne ujemajo z izidom ${g.izid.domaci}:${g.izid.gostje}`)
   opozorila.sort((a, b) => Number(b.startsWith(NEPOPOLN)) - Number(a.startsWith(NEPOPOLN)))
 
@@ -525,7 +529,7 @@ export function vZapisnik(html, { domena = null, gameId = null, url = null } = {
     rdeci,
     menjave,
     kontumacija: g.kontumacija,
-    nepopoln: !g.kontumacija && (!znana[0] || !znana[1]),
+    nepopoln: !g.kontumacija && (!znana[0] || !znana[1] || brezCasovnice),
     prazen: !postavi[0].length && !postavi[1].length,
     opozorila,
   }

@@ -2908,7 +2908,10 @@ Cloudflare brez izziva.
 - **Nepopolni zapisniki**: nekatere tekme imajo le izid brez postav (kot pri
   `frf`, `fcf`): izid se zapiše, `imported_at` ostane prazen, tekma se bere
   znova (shranjen nepopoln zapisnik ne velja). Zapisnik, starejši od tedna in
-  poln, se ne bere znova.
+  poln, se ne bere znova. Nepopoln je tudi zapisnik z obema postavama in
+  izidom z goli, a brez gola v časovnici (Evbeja Γ3 8371, 1:4): zveza
+  časovnico vpiše pozneje, sicer bi tekma po tednu obstala z 0 goli in brez
+  menjav.
 - **Strelec s klopi brez vstopa** (Atene Γ3 84218, Evbeja Β1 7829, Γ3 8373):
   dobi nastop od gola, ekipa ima zato čez 990 minut (kot pri `fcf`).
 - Navedba vira: zveza (`site_url`) v nogi; `vir_ime`/`vir_url` sta prazna.
