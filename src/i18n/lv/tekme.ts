@@ -210,4 +210,23 @@ export const tekme: NonNullable<Prevod['tekme']> = {
       vodi: 'Vadībā {pozicija}: svars {utez} / {prag}',
     },
   },
+  // Razlaga točk in cene na mestu (components/Razlaga.tsx).
+  razlaga: {
+    zakaj: 'Kāpēc {tocke}? Punktu sadalījums',
+    zapri: 'Aizvērt',
+    ostalo: 'Citi',
+    brezPozicije: 'Pozīcija vēl nav noteikta, tāpēc vārti vēl nedod punktus. Kad kopiena pozīciju apstiprinās, punkti tiks pārrēķināti.',
+    pravila1: 'Šī kārta tiek vērtēta pēc vecākajiem noteikumiem: vārtsarga sausā spēle +4, par uzvaru punktu nav.',
+    asistence: 'Rezultatīvās piespēles apstiprina kopiena balsojumā; neapstiprināta piespēle vēl nedod punktus.',
+    zadnjiKrog: 'Pēdējā spēle: {krog}. kārta',
+    cena: {
+      zakaj: 'Kāpēc šāda cena?',
+      zdaj: 'Pašreizējā cena',
+      izhodisce: 'Sākuma cena',
+      izhodisceOpis: 'Sākuma cena tiek aprēķināta no iepriekšējās sezonas minūtēm un punktiem, salīdzinot ar citiem līgas spēlētājiem.',
+      privzeta: 'Kas iepriekšējā sezonā nospēlēja mazāk par {minut} minūtēm, sāk ar {cena}, ja vien nav spēlējis augstākā līgā; tad cena nāk no turienes.',
+      borza: 'Pēc katras kārtas cena mainās: +{korak} par katriem diviem punktiem virs 2 (ne vairāk kā +{najvec} kārtā), −{korak} pēc vājas kārtas vai vājas formas un −{korak}, ja spēlētājs nespēlē otro kārtu pēc kārtas, lai gan viņa klubs spēlē.',
+      razpon: 'Cena vienmēr ir no {od} līdz {do}.',
+    },
+  },
 }
