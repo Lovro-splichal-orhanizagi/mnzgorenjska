@@ -5325,6 +5325,18 @@ preveri(
   }
   const krogi = await vir.razporedVseStrani('6651271', prenesi)
   const klubi = [...new Set(krogi.flatMap((k) => k.tekme.flatMap((t) => [t.domaci, t.gostje])))].sort()
+  // Prazen ali tuj seznam višje lige bi tiho odnesel pripone: "B36 II" bi
+  // postal "B36" in druga ekipa bi se zlila s prvo v isti klub.
+  const visjaNapaka = async (seznam) => {
+    try {
+      await vir.razporedVseStrani('6651271', async (url) => (/competitionId=6654857/.test(url) ? seznam : prenesi(url)))
+      return null
+    } catch (e) { return e }
+  }
+  const prazna = await visjaNapaka('[]')
+  const tuja = await visjaNapaka(beri('fo-fsf-tekme-6651271.json'))
+  preveri('fsf: prazen ali tuj seznam višje lige ustavi uvoz (pripone drugih ekip)', /6654857/.test(prazna?.message ?? '') &&
+    /6654857/.test(tuja?.message ?? ''), `${prazna?.message} | ${tuja?.message}`)
   preveri('fsf: razpored 2. deild 2026 — 22 krogov, 110 tekem, 100 odigranih, 11 ekip', krogi.length === 22 &&
     krogi.reduce((a, k) => a + k.tekme.length, 0) === 110 && krogi.reduce((a, k) => a + k.tekme.filter((t) => t.odigrana).length, 0) === 100 &&
     klubi.length === 11, klubi.join(' | '))

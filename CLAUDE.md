@@ -2302,7 +2302,8 @@ vklopom. Šifra lige se začne s `fo-`.
   "B71 II", "FC Suðuroy II", "ÍF II" (prve ekipe v 1. deild) in "MB" (prva
   ekipa). TB in FC Suðuroy sta 2025 igrala v Betri in 2026 v 1. deild: v
   1. deild 2026 sta prvi ekipi, v arhivu 2. deild 2025 "TB II" in "FC Suðuroy
-  II". Razpored višjih lig iste sezone vir prebere sam (en zahtevek na ligo).
+  II". Razpored višjih lig iste sezone vir prebere sam (en zahtevek na ligo);
+  prazen ali tuj seznam višje lige (napačen id v `SEZONE`) ustavi uvoz.
   Druga ekipa je svoj klub (kot "Riga FC-2" pri `lff`); igralci so tako ali
   tako ločeni po ligi.
 - **Naslovi**: `/matches?competitionId=<id>` (vse tekme sezone: `roundOrder`,

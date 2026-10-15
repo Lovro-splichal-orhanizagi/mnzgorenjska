@@ -444,12 +444,21 @@ export const nastopi = (z) =>
 /** Dni od datuma tekme ('YYYY-MM-DD'); brez datuma 0, da se tekma prebere. */
 const starostDni = (datum) => (datum ? (Date.now() - Date.parse(`${datum}T00:00:00Z`)) / 86400000 : 0)
 
-/** Množice id-jev klubov višjih lig iste sezone. */
+/**
+ * Množice id-jev klubov višjih lig iste sezone. Prazen seznam (sezona še ni
+ * razpisana) ali seznam drugega tekmovanja (napačen id v `SEZONE`) ustavi
+ * uvoz: brez njega bi druge ekipe tiho izgubile pripono ("B36 II" → "B36") in
+ * se zlile s prvo ekipo v isti klub.
+ */
 async function visjeLige(koda, prenesi, sveze) {
   const out = []
   for (const id of razbijKodo(koda).visje) {
     const seznam = await beri(prenesi, naslovTekem(id), imeTekem(id), sveze)
-    out.push(new Set(seznam.flatMap((t) => [Number(t.homeTeam?.id), Number(t.awayTeam?.id)])))
+    const ids = new Set(seznam.flatMap((t) => [Number(t.homeTeam?.id), Number(t.awayTeam?.id)]).filter((x) => Number.isFinite(x) && x > 0))
+    if (!ids.size) throw new Error(`fsf: višja liga ${id} (SEZONE) nima tekem — pripon drugih ekip ("B36 II") ni mogoče določiti, uvoz ustavljen`)
+    if (!seznam.every((t) => t.competition?.id == null || t.competition.id === id))
+      throw new Error(`fsf: seznam višje lige ${id} vsebuje tekme drugega tekmovanja — preveri SEZONE, uvoz ustavljen`)
+    out.push(ids)
   }
   return out
 }
