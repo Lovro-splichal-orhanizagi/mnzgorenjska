@@ -53,7 +53,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     asistence: 'Asistencias',
     pozicije: 'Posiciones',
     odsotnosti: 'Ausencias',
-    slovenija: 'Eslovenia',
+    slovenija: 'España',
     admin: 'Admin',
     vec: 'Más',
     racun: 'Cuenta',

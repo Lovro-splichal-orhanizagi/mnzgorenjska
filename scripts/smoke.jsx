@@ -6325,7 +6325,7 @@ preveri(
   preveri('e-pošta: razlog pl (množine one/few/many)',
     prevodiPl[1] === 'W kadrze są 3 zawodnicy zamiast 15.' && prevodiPl[2] === 'W kadrze jest 14 zawodników zamiast 15.' &&
       prevodiPl[4] === 'Pozycja nie jest znana u 1 zawodnika.' && prevodiPl[5] === 'Pozycja nie jest znana u 2 zawodników.' &&
-      prevodiPl[7] === 'W pierwszym składzie jest 10 zawodników zamiast 11.' &&
+      prevodiPl[7] === 'W wyjściowym składzie jest 10 zawodników zamiast 11.' &&
       E.prevediRazlog('V kadru je 1 igralcev namesto 15.', 'pl') === 'W kadrze jest 1 zawodnik zamiast 15.' &&
       E.prevediRazlog('V kadru je 22 igralcev namesto 15.', 'pl') === 'W kadrze są 22 zawodnicy zamiast 15.',
     `${prevodiPl[1]} | ${prevodiPl[2]} | ${prevodiPl[7]}`)

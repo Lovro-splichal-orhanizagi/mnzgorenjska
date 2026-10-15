@@ -45,7 +45,7 @@ export const domov: NonNullable<Prevod['domov']> = {
   idealna: {
     naslov: 'Idealna momčad',
     krogSezona: '{krog}. kolo · sezona {sezona}',
-    opis: 'Najboljih 11 kola; ispod dresa su bodovi. Strelicama listaš kola sezone.',
+    opis: 'Najboljih 11 u kolu; ispod dresa su bodovi. Strelicama listaš kola sezone.',
     prejsnji: 'Prethodno kolo',
     naslednji: 'Sljedeće kolo',
     ni: 'Za ovo kolo nema bodova.',

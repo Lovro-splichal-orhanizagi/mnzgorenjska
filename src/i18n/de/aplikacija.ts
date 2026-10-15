@@ -195,7 +195,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
   },
   zelimLigo: {
     povezava: 'Deine Liga fehlt? Sag es uns',
-    naslov: 'Welche Liga möchtest du spielen?',
+    naslov: 'In welcher Liga möchtest du spielen?',
     opis: 'Sag uns, welche Liga dir fehlt. Wir nehmen Ligen danach auf, wie viele sie sich wünschen.',
     drzava: 'Land',
     drugaDrzava: 'Anderes Land',

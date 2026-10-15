@@ -328,7 +328,7 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     klop: 'Bancă',
     klopOpis:
       'Cine nu joacă din formație e înlocuit de primul jucător de pe aceeași poziție de pe bancă, în ordine de la stânga la dreapta.',
-    brezPozicije: 'Fără poziție confirmată: nu pot fi trimiși pe teren',
+    brezPozicije: 'Fără poziție confirmată: nu poate fi trimis pe teren',
   },
 
   // Terenul cu punctele unei echipe la un meci (components/IgrisceTocke.tsx).
@@ -355,7 +355,7 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
 
   // Bara cu notificări despre echipele mele (components/OpozoriloEkipe.tsx, lib/stanjeEkip.ts).
   opozorila: {
-    naslov: 'Avertismente în echipele tale',
+    naslov: 'Avertismente pentru echipele tale',
     naslovNapakEna: 'Una dintre echipele tale nu va primi puncte',
     naslovNapak: {
       one: '{n} echipă de-a ta nu va primi puncte',

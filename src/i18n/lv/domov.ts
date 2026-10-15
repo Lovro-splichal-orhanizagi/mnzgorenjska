@@ -74,7 +74,7 @@ export const domov: NonNullable<Prevod['domov']> = {
     registracija: '1. Reģistrācija',
     registracijaOpis: 'Izveido kontu ar Google vai ar e-pastu un paroli un izdomā komandas nosaukumu.',
     kader: '2. Sastādi sastāvu',
-    kaderOpis: 'Laukumā izvēlies 15 spēlētājus: 2 vārtsargus, 5 aizsargus, 5 pussargus un 3 uzbrucējus, ne vairāk kā 3 no viena kluba, budžeta 100 robežās.',
+    kaderOpis: 'Izvēlies 15 spēlētājus: 2 vārtsargus, 5 aizsargus, 5 pussargus un 3 uzbrucējus, ne vairāk kā 3 no viena kluba, budžeta 100 robežās.',
     enajsterica: '3. Izvēlies pamatsastāvu',
     enajstericaOpis: 'Vienpadsmit iet laukumā, četri uz soliņa. Kapteinis nes trīskāršus punktus; ja viņš nespēlē, apsēju pārņem vicekapteinis.',
     poKrogu: '4. Pēc katras kārtas',
