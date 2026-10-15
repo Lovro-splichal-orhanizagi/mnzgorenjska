@@ -48,13 +48,18 @@ jobs:
           LIGE: ${{ inputs.lige }}
           PREDPONA: ${{ inputs.predpona }}
         run: |
-          set -uo pipefail
+          # GitHub poganja bash z -e; prazen grep (npr. nobena liga ni preskocena)
+          # bi sicer koncal korak, se preden se zacne.
+          set +e -uo pipefail
           # Le NEVKLOPLJENE lige: lazni-vratarji nima varovala za vklopljeno ligo.
-          curl -sf "$SUPABASE_URL/rest/v1/competitions?select=slug&active=eq.false&order=slug" \
+          FILTER=""
+          [ -n "$PREDPONA" ] && [ -z "$LIGE" ] && FILTER="&slug=like.$PREDPONA*"
+          curl -sf "$SUPABASE_URL/rest/v1/competitions?select=slug&active=eq.false&order=slug&limit=5000$FILTER" \
             -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
-            | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>JSON.parse(s).forEach(l=>console.log(l.slug)))' > /tmp/izklopljene.txt
+            | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>JSON.parse(s).forEach(l=>console.log(l.slug)))' > /tmp/izklopljene.txt \
+            || { echo "::error::Seznama lig ni mogoce prebrati."; exit 1; }
           { echo "$LIGE" | tr ', ' '\n\n'; [ -n "$PREDPONA" ] && grep "^$PREDPONA" /tmp/izklopljene.txt; } | grep -v '^$' | sort -u > /tmp/zelene.txt
-          grep -vxFf /tmp/izklopljene.txt /tmp/zelene.txt | sed 's/^/Preskocena (vklopljena ali je ni): /'
+          grep -vxFf /tmp/izklopljene.txt /tmp/zelene.txt | sed 's/^/Preskocena (vklopljena ali je ni): /' || true
           grep -xFf /tmp/izklopljene.txt /tmp/zelene.txt > /tmp/lige.txt
           echo "Lige: $(tr '\n' ' ' < /tmp/lige.txt)"
           [ -s /tmp/lige.txt ] || { echo "::error::Ni lig."; exit 1; }
