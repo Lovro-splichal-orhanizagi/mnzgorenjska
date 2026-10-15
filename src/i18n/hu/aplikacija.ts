@@ -63,6 +63,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     pomoc: 'Súgó',
     odjava: 'Kijelentkezés',
     prijava: 'Bejelentkezés',
+    zacni: 'Kezdd el ingyen',
     meni: 'Menü',
     meniZGlasovi: 'Menü ({n} szavazásra vár)',
   },

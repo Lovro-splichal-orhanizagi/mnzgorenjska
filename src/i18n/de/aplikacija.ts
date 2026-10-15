@@ -63,6 +63,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     pomoc: 'Hilfe',
     odjava: 'Abmelden',
     prijava: 'Anmelden',
+    zacni: 'Kostenlos starten',
     meni: 'Menü',
     meniZGlasovi: 'Menü ({n} zum Abstimmen)',
   },

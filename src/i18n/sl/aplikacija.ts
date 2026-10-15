@@ -70,6 +70,7 @@ export const aplikacija = {
     pomoc: 'Pomoč',
     odjava: 'Odjava',
     prijava: 'Prijava',
+    zacni: 'Začni brezplačno',
     meni: 'Meni',
     meniZGlasovi: 'Meni ({n} za glasovanje)',
   },

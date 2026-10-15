@@ -63,6 +63,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     pomoc: 'Abi',
     odjava: 'Logi välja',
     prijava: 'Logi sisse',
+    zacni: 'Alusta tasuta',
     meni: 'Menüü',
     meniZGlasovi: 'Menüü ({n} hääletamiseks)',
   },
