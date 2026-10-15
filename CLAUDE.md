@@ -3149,7 +3149,11 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   `predlog` ("Sestavi mi ekipo"), `prva_shramba`, `sestavi_iz_maila` (povezava
   `/my-team?sestavi=1` sestavi ekipo ob odprtju). Le števci, brez uporabnika;
   piše `zabelezi_korak`, bere admin. Ime ekipe se predlaga ("FC Ime") in se ga
-  da spremeniti kadarkoli (od 6. 10. 2026; prej je bilo po prvi shrambi fiksno)
+  da spremeniti kadarkoli (od 6. 10. 2026; prej je bilo po prvi shrambi fiksno).
+  `kartica_deljena`: kartico igralca (`KarticaIgralca.tsx`) je kdo delil,
+  prenesel ali delil njeno povezavo (`?src=kartica`). Kartice ni v mladinskih
+  ligah (`jeMladinskiSlug`) in pri anonimiziranih igralcih; potrjeni lastnik
+  profila vidi "Deli svojo kartico"
 - **Sestava brez prijave** (od 15. 10. 2026): neprijavljen na `/my-team`
   sestavlja **osnutek** v `localStorage` (`slff-osnutek-<liga>`,
   `src/lib/osnutek.ts`; ob branju preverjen proti trgu). Shrani ga pelje na

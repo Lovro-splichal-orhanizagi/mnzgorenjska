@@ -1074,6 +1074,32 @@ export default function MojaEkipa() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nalaganje, napakaNalaganja, session, ekipa, izbrani.length, igralci.length, lokacija.search])
 
+  // `?dodaj=<id>` s strani igralca ("Izberi ga v svojo ekipo"): ko je trg
+  // te lige naložen, ga dodamo kot gumb na trgu in parameter pobrišemo, da ga
+  // osvežitev ne doda znova.
+  const zeDodan = useRef(false)
+  useEffect(() => {
+    const iskanje = new URLSearchParams(lokacija.search)
+    const id = Number(iskanje.get('dodaj'))
+    if (!id || zeDodan.current || nalaganje || napakaNalaganja) return
+    // Trg mora biti iz lige v naslovu, ne iz prej izbrane.
+    const liga = iskanje.get('t')
+    if (tekmovanjeId == null || osnutekLiga.current !== tekmovanjeId || (liga && tekmovanje?.slug !== liga))
+      return
+    zeDodan.current = true
+    iskanje.delete('dodaj')
+    navigate({ search: iskanje.toString() ? `?${iskanje}` : '', hash: lokacija.hash }, { replace: true })
+    const igralec = poId[id]
+    if (izbrani.some((s) => s.player_id === id))
+      return setSporocilo(t('mojaEkipa.sporocila.zeVEkipi', { ime: ime(id) }))
+    if (!igralec || !naTrgu(igralec)) return setSporocilo(t('mojaEkipa.sporocila.niNaTrgu'))
+    // Ne gre (pozicija, klub, denar): dodaj pokaže razlog kot gumb na trgu.
+    if (zakajNeGre(igralec, izbraniPodrobno, preostalo)) return dodaj(igralec)
+    dodaj(igralec)
+    setSporocilo(t('mojaEkipa.sporocila.dodan', { ime: ime(id) }))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nalaganje, napakaNalaganja, tekmovanjeId, tekmovanje?.slug, lokacija.search])
+
   // Vodič za novince (src/lib/vodic.ts): v tej ligi brez ekipe (tudi
   // neprijavljen — Shrani ga pelje v registracijo), prazno igrišče in predlog
   // je mogoč. Enkrat na ligo; kdor pride z `?sestavi=1`, ima predlog že
@@ -1085,7 +1111,8 @@ export default function MojaEkipa() {
     izbrani.length === 0 &&
     igralci.length > 0 &&
     zakajNiPredloga == null &&
-    !new URLSearchParams(lokacija.search).has('sestavi')
+    !new URLSearchParams(lokacija.search).has('sestavi') &&
+    !new URLSearchParams(lokacija.search).has('dodaj')
   useEffect(() => {
     if (!praznaZaVodic || tekmovanjeId == null || !vodicNaVrsti(tekmovanjeId)) return
     return zacniVodic(tekmovanjeId)
@@ -1219,6 +1246,26 @@ export default function MojaEkipa() {
         s.player_id === igralec.id ? { ...s, is_starter: true } : s,
       ),
     )
+  }
+
+  // Menjava s tapom (Igrisce preveri veljavnost z lahkoZamenjata): igralca
+  // si zamenjata mesto v postavi in na klopi (tudi vrstni red klopi), trak
+  // pa preide na igralca, ki stopi v postavo.
+  function zamenjajVPostavi(a: IgralecNaIgriscu, b: IgralecNaIgriscu) {
+    setSporocilo(null)
+    const [ven, noter] = a.is_starter ? [a, b] : [b, a]
+    const iVen = izbrani.findIndex((s) => s.player_id === Number(ven.id))
+    const iNoter = izbrani.findIndex((s) => s.player_id === Number(noter.id))
+    if (iVen < 0 || iNoter < 0) return
+    const s = izbrani[iVen]
+    if (s.is_captain)
+      setSporocilo(t('mojaEkipa.sporocila.kapetanPrevzel', { ime: ime(Number(noter.id)) }))
+    else if (s.is_vice)
+      setSporocilo(t('mojaEkipa.sporocila.namestnikPrevzel', { ime: ime(Number(noter.id)) }))
+    const kopija = [...izbrani]
+    kopija[iVen] = { ...izbrani[iNoter], is_starter: true, is_captain: s.is_captain, is_vice: s.is_vice }
+    kopija[iNoter] = { ...s, is_starter: false, is_captain: false, is_vice: false }
+    setIzbrani(kopija)
   }
 
   // Vrstni red klopi: kdo prvi vskoči ob samodejni menjavi.
@@ -1942,6 +1989,7 @@ export default function MojaEkipa() {
             naOdstrani={(i) => odstrani(i as IgralecTrga)}
             naPraznoMesto={naPraznoMesto}
             naPremakniKlop={premakniNaKlopi}
+            naZamenjaj={zamenjajVPostavi}
             naInfo={(i) => setInfo(i as IgralecTrga)}
           />
           </div>

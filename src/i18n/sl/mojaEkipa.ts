@@ -75,6 +75,8 @@ export const mojaEkipa = {
       'V postavi ni prostora za še enega igralca na tej poziciji — najprej daj koga na klop.',
     niVecNamestnik: '{ime} ni več namestnik — izberi novega.',
     niVecKapetan: '{ime} ni več kapetan — izberi novega.',
+    kapetanPrevzel: '{ime} je prevzel kapetanski trak.',
+    namestnikPrevzel: '{ime} je zdaj namestnik kapetana.',
     rokPotekel: 'Rok {krog}. kroga je že potekel, zato spremembe veljajo od naslednjega kroga.',
     shranjenaZaKrog: 'Ekipa je shranjena in pripravljena za {krog}. krog.',
     shranjenaVeljavna: 'Ekipa je shranjena in izpolnjuje pravila.',
@@ -90,6 +92,9 @@ export const mojaEkipa = {
     zapriObvestilo: 'Zapri obvestilo',
     odstranjen: '{ime} je odstranjen.',
     razveljavi: 'Razveljavi',
+    dodan: '{ime} je v tvoji ekipi — pritisni Shrani.',
+    zeVEkipi: '{ime} je že v tvoji ekipi.',
+    niNaTrgu: 'Tega igralca trenutno ni mogoče kupiti.',
   },
 
   brezPrijave: {
@@ -305,8 +310,13 @@ export const mojaEkipa = {
 
   // Igrišče pri sestavi ekipe (components/Igrisce.tsx).
   igrisce: {
-    naKlop: 'Premakni na klop',
-    vPostavo: 'Uvrsti v prvo postavo',
+    namigZamenjave: 'Tapni dres igralca, nato tistega, s katerim ga zamenjaš.',
+    zapriNamig: 'Zapri namig',
+    izberiZaMenjavo: '{ime}: izberi za menjavo',
+    prekliciIzbiro: '{ime}: prekliči izbiro',
+    zamenjajZ: '{ime}: zamenjaj z igralcem {drugi}',
+    izbran: 'Izbran je {ime}. Tapni označenega igralca za menjavo ali istega znova za preklic.',
+    brezMenjave: 'Za igralca {ime} ni veljavne menjave. Tapni ga znova za preklic.',
     niVecVLigiNamig: 'Igralec ni več v ligi — kader z njim ne dobi točk.',
     niVecVLigi: 'ni več v ligi',
     poskodba: 'poškodba',

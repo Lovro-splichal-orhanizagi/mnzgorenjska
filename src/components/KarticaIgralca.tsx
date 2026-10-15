@@ -13,12 +13,13 @@ import DeliSliko from './DeliSliko'
 import {
   SIRINA_K as W,
   VISINA_K as H,
-  stavekEkip,
   imeDatotekeKartice,
+  kratkiNaslov,
   type PodatkiKartice,
 } from '../lib/karticaIgralca'
-import { formatirajTocke, KRATKA_POZICIJA } from '../lib/pomozno'
-import { t } from '../i18n'
+import { formatirajTocke, formatirajPremik, KRATKA_POZICIJA } from '../lib/pomozno'
+import { t, stevilo } from '../i18n'
+import { zabeleziKorak } from '../lib/lijak'
 import { naslovSlike } from '../lib/platforma'
 import { naslovaVelikeFotografije } from '../lib/prevzem'
 
@@ -102,17 +103,19 @@ function zacetnice(ime: string, kratko: string | null): string {
 
 const vBlob = (p: HTMLCanvasElement) => new Promise<Blob | null>((r) => p.toBlob((b) => r(b), 'image/png'))
 
-function statistika(p: PodatkiKartice): Array<[string, string]> {
+/** Levo zadnja tekma, desno sezona, cena in izbranost. Tretji člen je premik cene. */
+function statistika(p: PodatkiKartice): Array<[string, string, number?]> {
   const n = p.nastop
-  const out: Array<[string, string]> = [
+  const out: Array<[string, string, number?]> = [
     [String(n?.goli ?? 0), t('igralci.kartica.stat.gol')],
     [String(n?.asistence ?? 0), t('igralci.kartica.stat.ast')],
     [String(n?.minute ?? 0), t('igralci.kartica.stat.min')],
   ]
-  if (p.krog) out.push([String(p.krog), t('igralci.kartica.stat.krog')])
   if (p.sezona) out.push([formatirajTocke(p.sezona.tocke), t('igralci.kartica.stat.sez')])
-  if (p.ekip) out.push([String(p.ekip), t('igralci.kartica.stat.ekip')])
-  return out.slice(0, 6)
+  if (p.cena != null)
+    out.push([stevilo(p.cena, { minimumFractionDigits: 1, maximumFractionDigits: 1 }), t('igralci.kartica.stat.cena'), p.premikCene])
+  if (p.izbran != null) out.push([`${p.izbran}%`, t('igralci.kartica.stat.izb')])
+  return out
 }
 
 /**
@@ -287,17 +290,22 @@ export async function narisiKartico(p: PodatkiKartice, foto: FotoKartice | null 
   // statistika 2 x 3
   const st = statistika(p)
   const kol = [x + cw * 0.3, x + cw * 0.7]
-  st.forEach(([v, o], i) => {
+  st.forEach(([v, o, premik], i) => {
     const cx = kol[i < 3 ? 0 : 1]
     const cy = y + 768 + (i % 3) * 66
+    const desno = x + cw - 60 - (cx + 8)
     c.textAlign = 'right'
     c.fillStyle = CRNILO
-    c.font = oz(800, 60)
-    c.fillText(v, cx - 8, cy)
+    napisi(c, v, cx - 8, cy, cx - 8 - (i < 3 ? x + 70 : W / 2 + 12), (px) => oz(800, px), 60, 40)
     c.textAlign = 'left'
-    c.font = oz(600, 44)
     c.fillStyle = 'rgba(36,28,12,.75)'
-    c.fillText(o, cx + 8, cy)
+    const px = napisi(c, o, cx + 8, cy, desno, (px) => oz(600, px), 44, 26)
+    // premik cene ob oznaki, zelen ali rdeč
+    if (premik) {
+      const sir = c.measureText(o).width
+      c.fillStyle = premik > 0 ? '#1E6B3A' : '#9B1C1C'
+      napisi(c, `${premik > 0 ? '▲' : '▼'}${formatirajPremik(premik)}`, cx + 8 + sir + 8, cy, desno - sir - 8, (v) => oz(700, v), px, 22)
+    }
   })
   c.fillStyle = 'rgba(36,28,12,.35)'
   c.fillRect(W / 2 - 1.5, y + 722, 3, 184)
@@ -317,14 +325,7 @@ export async function narisiKartico(p: PodatkiKartice, foto: FotoKartice | null 
   c.textAlign = 'left'
   c.fillStyle = KREM
   c.font = sans(800, 30)
-  c.fillText('slff.eu', 72, H - 70)
-  const e = stavekEkip(p.ekip)
-  if (e) {
-    c.textAlign = 'right'
-    c.fillStyle = 'rgba(242,232,207,.65)'
-    napisi(c, e, W - 72, H - 70, 330, (v) => sans(600, v), 26, 20)
-  }
-  c.textAlign = 'left'
+  napisi(c, kratkiNaslov(p.naslov) || 'slff.eu', 72, H - 70, W - 144, (v) => sans(800, v), 30, 22)
   return vBlob(pl)
 }
 
@@ -496,6 +497,7 @@ export default function KarticaIgralca({
             besedilo={besedilo}
             povezava={povezava}
             imeSlike={imeDatotekeKartice(podatki.ime, podatki.priimek, podatki.krog)}
+            naDeljeno={() => zabeleziKorak('kartica_deljena')}
           />
         ) : (
           <div className="h-8" aria-hidden />
