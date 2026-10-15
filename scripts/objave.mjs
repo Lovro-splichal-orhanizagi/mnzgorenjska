@@ -127,12 +127,8 @@ export function izberiVsebino(dejstva, slot) {
   for (const h of izbrane.flatMap((l) => l.hattrick.map((x) => zLigo(x, l))).slice(0, 2)) poudarki.push({ vrsta: 'hattrick', ...h })
   const vratar = naj(izbrane.flatMap((l) => l.vratar_gol.map((x) => zLigo(x, l))), (x) => x.goli)
   if (vratar) poudarki.push({ vrsta: 'vratar', ...vratar })
-  const kapetan = naj(izbrane.map((l) => zLigo(l.kapetan_spodrsljaj, l)), (x) => x.delez)
-  if (kapetan) poudarki.push({ vrsta: 'kapetan', ...kapetan })
   const skok = naj(izbrane.map((l) => zLigo(l.skok, l)), (x) => x.novo - x.staro)
   if (skok) poudarki.push({ vrsta: 'skok', ...skok })
-  const padec = naj(izbrane.map((l) => zLigo(l.padec, l)), (x) => x.staro - x.novo)
-  if (padec) poudarki.push({ vrsta: 'padec', ...padec })
   if (dejstva.liga_tedna) poudarki.push({ vrsta: 'liga_tedna', ime: dejstva.liga_tedna.ime, novih: dejstva.liga_tedna.novih_ekip })
   return {
     slot,
@@ -230,7 +226,8 @@ export function sistemskiPoziv(jezik, link) {
     `Write in ${JEZIK_IME[jezik] ?? 'English'}. Tone: goofy, warm, a bit cheeky, never mean to a player. Short: at most 6 short lines plus hashtags.`,
     'Use ONLY the facts in the user message. Every number and every player, club or league name you write must appear in the facts exactly as given.',
     'Do not invent results, opponents, dates, minutes, nicknames or anything else. Do not mention any user, fantasy team or manager.',
-    'Players are amateurs: joke about the situation, not the person.',
+    'Only celebrate: every player, club and league in the post is praised. Never point out a bad performance, a price drop or a mistake.',
+    'Humour comes from Sunday-league life in general (muddy pitches, Monday-morning legs, the post-match beer, the bus to the away game), never at a named person.',
     `End with a call to action and this exact link on its own line: ${link}`,
     'Then 3 to 6 hashtags (include #SLFF). Plain text, emojis allowed, no markdown.',
   ].join('\n')
