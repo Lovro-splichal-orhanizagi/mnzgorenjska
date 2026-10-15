@@ -16,7 +16,7 @@
 -- julijske sobote, zato ima klub v kakem krogu dve tekmi, v kakem nobene.
 -- Sezona avgust–maj (ne koledarska). Lige so NEAKTIVNE; uvoz ni bil pognan.
 
-insert into countries (code, name, sort_order) values ('GB', 'England', 14) on conflict (code) do nothing;
+insert into countries (code, name, sort_order) values ('GB', 'United Kingdom', 14) on conflict (code) do nothing;
 
 insert into federations (country_id, code, name, short_name, site_url, sort_order)
 select d.id, 'ncefl', 'Northern Counties East Football League', 'NCEL', 'https://www.ncefl.org.uk/', 1410
