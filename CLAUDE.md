@@ -2900,7 +2900,7 @@ postav po 11 32/32, 136 menjav, 990 minut 28/32 (trije rdeči kartoni, en
 dvojni izstop). Arhiv 2025: Liga 3 in Liga 4 po 3 zapisnike, goli = izid,
 postave 6/6 po 11, 23 in 21 menjav.
 
-Vpisani ligi (migracija 20261015131700), **neaktivni**, zveza `gff`. Sezona
+Vpisani ligi (migracija 20261015164100), **neaktivni**, zveza `gff`. Sezona
 2026 je ob vpisu pri 23. od 30 krogov — vklop bo realno za 2027. Arhiv ima
 vsak ena sama liga; Liga 3 2026 ima 9 klubov lanske Lige 3 in 3 lanske Lige 4.
 
