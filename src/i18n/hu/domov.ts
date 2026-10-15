@@ -44,7 +44,10 @@ export const domov: NonNullable<Prevod['domov']> = {
   idealna: {
     naslov: 'A forduló csapata',
     krogSezona: '{krog}. forduló · {sezona} szezon',
-    opis: 'Az utolsó forduló legjobb 11 játékosa; a mez alatt a pontok.',
+    opis: 'A forduló legjobb 11 játékosa; a mez alatt a pontok. A nyilakkal lapozhatsz a szezon fordulói között.',
+    prejsnji: 'Előző forduló',
+    naslednji: 'Következő forduló',
+    ni: 'Ebben a fordulóban nincsenek pontok.',
   },
   povabi: {
     naslov: 'Hívd meg egy barátod a bajnokságba',
@@ -74,6 +77,14 @@ export const domov: NonNullable<Prevod['domov']> = {
     enajstericaOpis: 'Tizenegyen a pályára mennek, négyen a kispadra. A csapatkapitány háromszoros pontot hoz; ha nem játszik, a karszalagot az alkapitány veszi át.',
     poKrogu: '4. Minden forduló után',
     poKroguOpis: 'A pontok a jegyzőkönyvekből számolódnak. A játékpercek nélküli játékost automatikusan cseréli egy azonos posztú cserejátékos, és szezononként egyszer a Kispad+ segítségével a teljes kispad pontjai is beszámítanak.',
+  },
+  novinec: {
+    kader: 'Rakd össze a csapatod',
+    kaderOpis: '15 játékos, 100-as büdzsé. Vagy kattints az „Állíts össze nekem egy csapatot” gombra, és egy kattintással kész.',
+    kapetan: 'Válassz csapatkapitányt',
+    kapetanOpis: 'Az ő pontjai háromszorosan számítanak.',
+    tocke: 'Gyűjtsd a pontokat',
+    tockeOpis: 'Minden fordulóban a hivatalos jegyzőkönyvekből.',
   },
   kakoSeTockuje: 'Hogyan jönnek a pontok',
   moja: {

@@ -45,7 +45,10 @@ export const domov: NonNullable<Prevod['domov']> = {
   idealna: {
     naslov: 'Elf der Runde',
     krogSezona: 'Runde {krog} · Saison {sezona}',
-    opis: 'Die besten 11 der letzten Runde, die Punkte stehen unter jedem Trikot.',
+    opis: 'Die besten 11 der Runde, die Punkte stehen unter jedem Trikot. Mit den Pfeilen blätterst du durch die Runden der Saison.',
+    prejsnji: 'Vorige Runde',
+    naslednji: 'Nächste Runde',
+    ni: 'Für diese Runde gibt es keine Punkte.',
   },
   povabi: {
     naslov: 'Lade Freunde in die Liga ein',
@@ -75,6 +78,14 @@ export const domov: NonNullable<Prevod['domov']> = {
     enajstericaOpis: 'Elf stehen am Platz, vier auf der Bank. Der Kapitän holt dreifache Punkte; spielt er nicht, übernimmt der Vizekapitän die Schleife.',
     poKrogu: '4. Nach jeder Runde',
     poKroguOpis: 'Die Punkte werden aus den Spielberichten berechnet. Ein Spieler ohne Einsatzminuten wird automatisch durch einen Ersatzspieler auf derselben Position ersetzt, und einmal pro Saison kannst du mit Bank+ die ganze Bank mitzählen lassen.',
+  },
+  novinec: {
+    kader: 'Stell dein Team zusammen',
+    kaderOpis: '15 Spieler, Budget 100, oder „Stell mir ein Team zusammen“ und es steht mit einem Klick.',
+    kapetan: 'Wähl einen Kapitän',
+    kapetanOpis: 'Seine Punkte zählen dreifach.',
+    tocke: 'Sammle Punkte',
+    tockeOpis: 'Jede Runde aus den offiziellen Spielberichten.',
   },
   kakoSeTockuje: 'So werden Punkte vergeben',
   moja: {

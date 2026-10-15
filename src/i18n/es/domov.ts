@@ -46,7 +46,10 @@ export const domov: NonNullable<Prevod['domov']> = {
   idealna: {
     naslov: 'Once ideal',
     krogSezona: 'Jornada {krog} · temporada {sezona}',
-    opis: 'Los 11 mejores de la última jornada; bajo la camiseta, los puntos.',
+    opis: 'Los 11 mejores de la jornada; bajo la camiseta, los puntos. Con las flechas recorres las jornadas de la temporada.',
+    prejsnji: 'Jornada anterior',
+    naslednji: 'Jornada siguiente',
+    ni: 'No hay puntos para esta jornada.',
   },
   povabi: {
     naslov: 'Invita a un amigo a la liga',
@@ -77,6 +80,14 @@ export const domov: NonNullable<Prevod['domov']> = {
     enajstericaOpis: 'Once salen al campo y cuatro al banquillo. El capitán puntúa el triple; si no juega, el brazalete pasa al vicecapitán.',
     poKrogu: '4. Después de cada jornada',
     poKroguOpis: 'Los puntos se calculan a partir de las actas. Un jugador sin minutos lo sustituye automáticamente un suplente de la misma posición, y una vez por temporada puedes usar Banquillo+ para que puntúe todo el banquillo.',
+  },
+  novinec: {
+    kader: 'Haz tu equipo',
+    kaderOpis: '15 jugadores, presupuesto de 100, o pulsa «Hazme el equipo» y lo tienes en un clic.',
+    kapetan: 'Elige capitán',
+    kapetanOpis: 'Sus puntos cuentan el triple.',
+    tocke: 'Suma puntos',
+    tockeOpis: 'Cada jornada, de las actas oficiales de los partidos.',
   },
   kakoSeTockuje: 'Cómo se puntúa',
   moja: {

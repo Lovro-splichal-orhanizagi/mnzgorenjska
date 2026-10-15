@@ -45,7 +45,10 @@ export const domov: NonNullable<Prevod['domov']> = {
   idealna: {
     naslov: 'Vooru meeskond',
     krogSezona: '{krog}. voor · hooaeg {sezona}',
-    opis: 'Viimase vooru parim 11; punktid iga särgi all.',
+    opis: 'Vooru parim 11; punktid iga särgi all. Nooltega saad hooaja voore sirvida.',
+    prejsnji: 'Eelmine voor',
+    naslednji: 'Järgmine voor',
+    ni: 'Selles voorus punkte pole.',
   },
   povabi: {
     naslov: 'Kutsu sõber liigasse',
@@ -75,6 +78,14 @@ export const domov: NonNullable<Prevod['domov']> = {
     enajstericaOpis: 'Üksteist lähevad väljakule, neli jäävad pingile. Kapten saab kolmekordsed punktid; kui ta ei mängi, võtab kaptenipaela asekapten.',
     poKrogu: '4. Pärast igat vooru',
     poKroguOpis: 'Punktid arvutatakse mänguprotokollidest. Mängija, kellel minuteid pole, asendatakse automaatselt sama positsiooni varumängijaga, ja kord hooajas saad kasutada Pink+, et lugeda kogu pinki.',
+  },
+  novinec: {
+    kader: 'Pane meeskond kokku',
+    kaderOpis: '15 mängijat, eelarve 100. Või vajuta „Pane mulle meeskond kokku“ ja see on ühe klõpsuga valmis.',
+    kapetan: 'Vali kapten',
+    kapetanOpis: 'Tema punktid lähevad kolmekordselt arvesse.',
+    tocke: 'Kogu punkte',
+    tockeOpis: 'Igas voorus ametlikest mänguprotokollidest.',
   },
   kakoSeTockuje: 'Kuidas punkte antakse',
   moja: {

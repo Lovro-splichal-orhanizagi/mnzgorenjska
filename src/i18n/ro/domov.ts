@@ -46,7 +46,10 @@ export const domov: NonNullable<Prevod['domov']> = {
   idealna: {
     naslov: 'Echipa ideală',
     krogSezona: 'Etapa {krog} · sezonul {sezona}',
-    opis: 'Cei mai buni 11 din ultima etapă; sub tricou sunt punctele.',
+    opis: 'Cei mai buni 11 ai etapei; sub tricou sunt punctele. Cu săgețile răsfoiești etapele sezonului.',
+    prejsnji: 'Etapa anterioară',
+    naslednji: 'Etapa următoare',
+    ni: 'Pentru această etapă nu există puncte.',
   },
   povabi: {
     naslov: 'Invită un prieten în ligă',
@@ -77,6 +80,14 @@ export const domov: NonNullable<Prevod['domov']> = {
     enajstericaOpis: 'Unsprezece intră pe teren, patru stau pe bancă. Căpitanul aduce puncte triple; dacă nu joacă, banderola o preia vicecăpitanul.',
     poKrogu: '4. După fiecare etapă',
     poKroguOpis: 'Punctele se calculează din rapoartele de meci. Un jucător fără minute e înlocuit automat de o rezervă de pe aceeași poziție, iar o dată pe sezon poți folosi Bancă+ ca să-ți numere puncte toată banca.',
+  },
+  novinec: {
+    kader: 'Alcătuiește echipa',
+    kaderOpis: '15 jucători, buget 100, sau apasă „Fă-mi o echipă” și e gata dintr-un clic.',
+    kapetan: 'Alege căpitanul',
+    kapetanOpis: 'Punctele lui contează triplu.',
+    tocke: 'Strânge puncte',
+    tockeOpis: 'În fiecare etapă, din foile de joc oficiale.',
   },
   kakoSeTockuje: 'Cum se punctează',
   moja: {

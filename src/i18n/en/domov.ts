@@ -45,7 +45,10 @@ export const domov: NonNullable<Prevod['domov']> = {
   idealna: {
     naslov: 'Team of the round',
     krogSezona: 'Round {krog} · season {sezona}',
-    opis: 'Best 11 of the last round; points under each shirt.',
+    opis: 'Best 11 of the round; points under each shirt. Use the arrows to browse the season’s rounds.',
+    prejsnji: 'Previous round',
+    naslednji: 'Next round',
+    ni: 'No points for this round.',
   },
   povabi: {
     naslov: 'Invite a friend to the league',
@@ -75,6 +78,14 @@ export const domov: NonNullable<Prevod['domov']> = {
     enajstericaOpis: 'Eleven go on the pitch, four on the bench. The captain scores triple points; if he does not play, the vice-captain takes the armband.',
     poKrogu: '4. After every round',
     poKroguOpis: 'Points are calculated from the match reports. A player without minutes is automatically replaced by a substitute in the same position, and once a season you can use Bench+ to count your whole bench.',
+  },
+  novinec: {
+    kader: 'Build your team',
+    kaderOpis: '15 players, a budget of 100 — or tap “Build me a team” and it’s done in one click.',
+    kapetan: 'Pick a captain',
+    kapetanOpis: 'His points count triple.',
+    tocke: 'Score points',
+    tockeOpis: 'Every round, from the official match reports.',
   },
   kakoSeTockuje: 'How scoring works',
   moja: {
