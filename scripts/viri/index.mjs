@@ -31,6 +31,7 @@ import lff from './lff.mjs'
 import ffm from './ffm.mjs'
 import fcf from './fcf.mjs'
 import fas from './fas.mjs'
+import modular11 from './modular11.mjs'
 
 const VIRI = {
   mnzg,
@@ -82,6 +83,9 @@ const VIRI = {
   // Španija (Asturija): FutbolAsturiano.es (WordPress SportsPress), ne zveza;
   // liga je blok šifer objav tekem ene sezone, igralec s potjo profila.
   fas,
+  // ZDA: USL League Two prek Modular11 (prvi vir zunaj Evrope); razpored je
+  // GET seznam tekem divizije, zapisnik JSON v strani tekme, krog je teden.
+  modular11,
 }
 
 /**
