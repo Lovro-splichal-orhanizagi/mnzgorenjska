@@ -3621,7 +3621,8 @@ preveri(
   preveri('kartica: napadalcu mreza ne steje', !K.dosezkiNastopa({ minute: 90, goli: 0, asistence: 0, cistaMreza: true, obranjene: 0 }, 'FWD').includes('mreža brez gola'))
   preveri('kartica: tekma', K.vrsticaTekme('Triglav', 'Bled', 3, 1) === 'Triglav 3 : 1 Bled' && K.vrsticaTekme('A', 'B', null, null) === 'A – B')
   preveri('kartica: 1 tocka / 2 tocki / 5 tock', K.podnapisTock(1, 8) === 'točka v 8. krogu' && K.podnapisTock(2, 8) === 'točki v 8. krogu' && K.podnapisTock(5, null) === 'točk v sezoni')
-  preveri('kartica: ekipe', K.stavekEkip(1) === 'V 1 fantasy ekipi' && K.stavekEkip(34) === 'V 34 fantasy ekipah' && K.stavekEkip(0) === null)
+  preveri('kartica: izbranost', K.odstotekIzbranosti(3, 12) === 25 && K.odstotekIzbranosti(null, 12) === null && K.odstotekIzbranosti(3, 0) === null)
+  preveri('kartica: kratek naslov', K.kratkiNaslov('https://slff.eu/player/7?t=clani&src=kartica') === 'slff.eu/player/7')
   preveri('kartica: dolg priimek se zmanjsa', K.velikostPriimka(600, (px) => px * 20) === 72 && K.velikostPriimka(600, (px) => px * 2) === 210)
   preveri('kartica: ime datoteke', K.imeDatotekeKartice('Žan', 'Bunić', 8) === 'slff-zan-bunic-8-krog.png')
 }

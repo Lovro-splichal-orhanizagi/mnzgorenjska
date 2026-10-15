@@ -93,6 +93,9 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     zapriObvestilo: 'Hinweis schließen',
     odstranjen: '{ime} entfernt.',
     razveljavi: 'Rückgängig',
+    dodan: '{ime} ist in deinem Team. Tippe auf Speichern.',
+    zeVEkipi: '{ime} ist schon in deinem Team.',
+    niNaTrgu: 'Dieser Spieler kann gerade nicht gekauft werden.',
   },
 
   brezPrijave: {

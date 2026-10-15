@@ -91,6 +91,9 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     zapriObvestilo: 'Zavřít oznámení',
     odstranjen: '{ime} je odebrán.',
     razveljavi: 'Vrátit zpět',
+    dodan: '{ime} je ve tvém týmu. Stiskni Uložit.',
+    zeVEkipi: '{ime} už je ve tvém týmu.',
+    niNaTrgu: 'Tohoto hráče teď nelze koupit.',
   },
 
   brezPrijave: {

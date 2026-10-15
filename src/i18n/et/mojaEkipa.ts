@@ -92,6 +92,9 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     zapriObvestilo: 'Sulge teade',
     odstranjen: '{ime} eemaldatud.',
     razveljavi: 'Võta tagasi',
+    dodan: '{ime} on sinu meeskonnas. Vajuta Salvesta.',
+    zeVEkipi: '{ime} on juba sinu meeskonnas.',
+    niNaTrgu: 'Seda mängijat praegu osta ei saa.',
   },
 
   brezPrijave: {

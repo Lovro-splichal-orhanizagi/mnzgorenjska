@@ -92,6 +92,9 @@ export const mojaEkipa = {
     zapriObvestilo: 'Zapri obvestilo',
     odstranjen: '{ime} je odstranjen.',
     razveljavi: 'Razveljavi',
+    dodan: '{ime} je v tvoji ekipi — pritisni Shrani.',
+    zeVEkipi: '{ime} je že v tvoji ekipi.',
+    niNaTrgu: 'Tega igralca trenutno ni mogoče kupiti.',
   },
 
   brezPrijave: {

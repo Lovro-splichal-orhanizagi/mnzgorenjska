@@ -92,6 +92,9 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     zapriObvestilo: 'Értesítés bezárása',
     odstranjen: 'Eltávolítva: {ime}.',
     razveljavi: 'Visszavonás',
+    dodan: '{ime} bekerült a csapatodba. Nyomd meg a Mentés gombot.',
+    zeVEkipi: '{ime} már a csapatodban van.',
+    niNaTrgu: 'Ezt a játékost most nem lehet megvenni.',
   },
 
   brezPrijave: {
