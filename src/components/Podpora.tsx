@@ -24,51 +24,26 @@ import { prijaviOrodja, type StanjeStrani } from '../lib/podporaOrodja'
  * Agent ima orodja v brskalniku (`lib/podporaOrodja.ts`): pogleda, kje je
  * obiskovalec, ga pelje na stran in mu na njej pokaže, kam klikniti.
  */
-// Vsak jezik ima svoj kanal v HelpStacku: slovaški ima slovaško bazo znanja
-// (pravila brez glasovanja o pozicijah — te pridejo iz zapisnika), hrvaški
-// hrvaško (vratar iz zapisnika, ostale pozicije glasovanje kot v Sloveniji).
-// Kdor gleda ligo države, dobi njen kanal; ostali (sl, en) slovenskega, ki
-// odgovarja v jeziku vprašanja.
+// Vsak jezik ima svoj kanal v HelpStacku s svojo bazo znanja (pravila te
+// države: vir, zveze, pozicije iz zapisnika ali glasovanje). Kanali so enakega
+// videza (barva, ikona, avatar), pozdrav in baza znanja sta v jeziku kanala.
+// Angleščina nima svojega: dobi slovenskega, ki odgovarja v jeziku vprašanja.
+// Kanale in baze znanja ureja MCP HelpStacka (od 13. 10. 2026 tudi
+// `create_channel`); zapis id-jev je zunaj gita v outreach/helpstack-jeziki.
 const KANALI: Record<string, string> = {
   sl: 'cmucx868b000cv2atsowgly81',
   sk: 'cmupjxbms00s0sz2cty78ex1j',
   hr: 'cmuymww46001dtk2c4j207tbd',
-  // Češkega kanala v HelpStacku še ni: češki obiskovalci dobijo slovenskega,
-  // ki odgovarja v jeziku vprašanja. Ko kanal (s češko bazo znanja) nastane,
-  // se tu njegov id zamenja.
-  cs: 'cmucx868b000cv2atsowgly81',
-  // Madžarskega kanala tudi še ni: madžarski obiskovalci dobijo slovenskega.
-  // Ko kanal (z madžarsko bazo znanja) nastane, gre tu njegov id.
-  hu: 'cmucx868b000cv2atsowgly81',
-  // Nemškega (avstrijskega) kanala tudi še ni: dobijo slovenskega.
-  de: 'cmucx868b000cv2atsowgly81',
-  // Srbskega kanala še ni: srbski obiskovalci dobijo hrvaškega (jezik je
-  // blizu, baza znanja in odgovori v hrvaščini jim ustrezajo bolje od
-  // slovenskih). Ko kanal (s srbsko bazo znanja) nastane, gre tu njegov id.
-  sr: 'cmuymww46001dtk2c4j207tbd',
-  // Romunskega kanala še ni: romunski obiskovalci dobijo slovenskega, ki
-  // odgovarja v jeziku vprašanja. Ko kanal (z romunsko bazo znanja) nastane,
-  // gre tu njegov id.
-  ro: 'cmucx868b000cv2atsowgly81',
-  // Estonskega kanala še ni: estonski obiskovalci dobijo slovenskega, ki
-  // odgovarja v jeziku vprašanja. Ko kanal (z estonsko bazo znanja) nastane,
-  // gre tu njegov id.
-  et: 'cmucx868b000cv2atsowgly81',
-  // Poljskega kanala še ni: poljski obiskovalci dobijo slovenskega, ki
-  // odgovarja v jeziku vprašanja. Ko kanal (s poljsko bazo znanja) nastane,
-  // gre tu njegov id.
-  pl: 'cmucx868b000cv2atsowgly81',
-  // Španskega kanala še ni: španski obiskovalci dobijo slovenskega, ki
-  // odgovarja v jeziku vprašanja. Ko kanal (s špansko bazo znanja) nastane,
-  // gre tu njegov id.
-  es: 'cmucx868b000cv2atsowgly81',
-  // Latvijskega kanala še ni: latvijski obiskovalci dobijo slovenskega, ki
-  // odgovarja v jeziku vprašanja. Ko kanal (z latvijsko bazo znanja) nastane,
-  // gre tu njegov id.
-  lv: 'cmucx868b000cv2atsowgly81',
-  // Makedonskega kanala še ni: makedonski obiskovalci dobijo slovenskega, ki
-  // odgovarja v jeziku vprašanja.
-  mk: 'cmucx868b000cv2atsowgly81',
+  cs: 'cmv6jvz6d000ftk2cuuj1vpds',
+  hu: 'cmv6jw1xq000wtk2cth1k86h6',
+  de: 'cmv6jw4ot001dtk2c9r3mkl2z',
+  sr: 'cmv6jw7dx001utk2c2tn4oke3',
+  ro: 'cmv6jwa6i002btk2c8opj9c6y',
+  et: 'cmv6jwcwo002stk2cpf03ie4z',
+  pl: 'cmv6jwfot0039tk2c0qbovydr',
+  es: 'cmv6jwic8003qtk2c3vffzwz9',
+  lv: 'cmv6jwl0l0047tk2c4uu40ayk',
+  mk: 'cmv6jyq2o004otk2caifawqla',
 }
 const skripta = (id: string) => `https://helpstack.eu/widget.js?id=${id}`
 

@@ -554,8 +554,8 @@ ob deljenju `cz.html` (Caddy jo vrne za `/cz` in `?t=cz-…`), češko vejo poš
 češke lige se začne s `cz-`** (koda države, ne jezika), sicer jezik ob
 nalaganju ne ve, da gleda Češko. Ugib: brskalnik `cs`, pas `Europe/Prague`.
 Stran Pozicije je v meniju kot v Sloveniji in na Hrvaškem (če češki vir
-pozicije prinese, jo skrij v `Navbar.tsx` kot za SK). Češkega kanala v
-HelpStacku še ni: `Podpora.tsx` za `cs` uporabi slovenskega.
+pozicije prinese, jo skrij v `Navbar.tsx` kot za SK). Češki kanal v
+HelpStacku ima češko bazo znanja (`Podpora.tsx`, `KANALI.cs`).
 
 ### Nočni uvoz: države in koši
 
@@ -619,8 +619,8 @@ samostojno ("Megnyílt a fantasy liga: {liga}."); enako ime kluba in številke
 (člen a/az je odvisen od izgovora). Za številom je samostalnik v ednini
 ("3 pont"), zato imata množinski obliki `one` in `other` isto besedo. Stran
 Pozicije je v meniju kot v Sloveniji (če madžarski vir pozicije prinese, jo
-skrij v `Navbar.tsx` kot za SK). Madžarskega kanala v HelpStacku še ni:
-`Podpora.tsx` za `hu` uporabi slovenskega.
+skrij v `Navbar.tsx` kot za SK). Madžarski kanal v HelpStacku
+ima madžarsko bazo znanja (`Podpora.tsx`, `KANALI.hu`).
 
 Vir `mlsz` (`scripts/viri/mlsz.mjs`) bere **MLSZ adatbank**
 (adatbank.mlsz.hu), kjer MLSZ in vseh dvajset županijskih zvez objavljata
@@ -928,8 +928,8 @@ Kapitän, Vizekapitän, Transfers, `krog` je vedno **Runde**, vratar je
 ("Die Fantasy-Liga ist eröffnet: {liga}"), `ligaVTozilniku` ga pusti. Zveze,
 tekmovanja in vir vpiše svoja migracija. Stran Pozicije je v meniju kot v
 Sloveniji (če avstrijski vir pozicije prinese, jo skrij v `Navbar.tsx` kot za
-SK). Nemškega kanala v HelpStacku še ni: `Podpora.tsx` za `de` uporabi
-slovenskega.
+SK). Nemški kanal v HelpStacku ima avstrijsko bazo znanja
+(`Podpora.tsx`, `KANALI.de`).
 
 ### Avstrija — vir `oefb`
 
@@ -1303,8 +1303,8 @@ ekavico in srbskimi izrazi: tim (ne momčad), golman, odbrambeni, tabela,
 fudbal, nalog, imejl. Množine one/few/other in sklanjanje imena lige
 (`ligaVTozilniku`, glava `liga` ali `zona`) kot v hrvaščini. Stran Pozicije
 je v meniju kot v Sloveniji. Zveze, tekmovanja in vir vpiše svoja migracija
-(spodaj). Manjka še: srbski kanal v HelpStacku (`Podpora.tsx` za `sr`
-uporabi slovenskega) in pregled prevoda pri naravnem govorcu. `RS` je v
+(spodaj). Srbski kanal v HelpStacku ima srbsko bazo znanja (`KANALI.sr`).
+Manjka še pregled prevoda pri naravnem govorcu. `RS` je v
 matriki nočnega uvoza.
 
 ### Srbija — vir `fsb`
@@ -1711,8 +1711,8 @@ in več) dobi "de" ("20 de puncte"), zato se števne besede v `skupno.besede`
 za `other` začnejo z "de". Ime lige stoji za dvopičjem ("Liga fantasy s-a
 deschis: {liga}"), `ligaVTozilniku` ga pusti. Psevdonim v klepetu ima
 pridevnik za samostalnikom ("Portar Albastru 42"). Stran Pozicije je v meniju
-kot v Sloveniji. Zveze, tekmovanja in vir vpiše svoja migracija. Manjka še:
-romunski kanal v HelpStacku (`Podpora.tsx` za `ro` uporabi slovenskega) in
+kot v Sloveniji. Zveze, tekmovanja in vir vpiše svoja migracija. Romunski
+kanal v HelpStacku ima romunsko bazo znanja (`KANALI.ro`). Manjka še
 pregled prevoda pri naravnem govorcu. `RO` je v matriki nočnega uvoza.
 
 **Hkratni uvozi po županijah.** `cakaj-na-uvoze.mjs` (`LOCENE_ZVEZE.RO`) pusti
@@ -1936,8 +1936,8 @@ za dvopičjem ali v oklepaju ("Fantaasialiiga on avatud: {liga}", "liiga:
 oklepaju) in klub ("klubi {klub}"). Brez pomišljajev (smoke). Psevdonim v
 klepetu ima pridevnik pred samostalnikom ("Sinine Väravavaht 42"). Stran
 Pozicije je v meniju kot v Sloveniji. `EE` je v matriki nočnega uvoza.
-Manjka še: estonski kanal v HelpStacku (`Podpora.tsx` za `et` uporabi
-slovenskega) in **pregled prevoda pri naravnem govorcu**.
+Estonski kanal v HelpStacku ima estonsko bazo znanja (`KANALI.et`).
+Manjka še **pregled prevoda pri naravnem govorcu**.
 
 **Koledarska sezona.** Estonske lige igrajo od marca do novembra, zato je
 sezona leto: `rounds.season = '2026'`, ne `'2026/27'` (arhiv `'2025'`).
@@ -2098,8 +2098,8 @@ pridevnik v določni obliki pred samostalnikom ("Zilais Vārtsargs 42", vsi
 samostalniki so moškega spola). Sezona je **koledarska** kot v Estoniji
 (`competitions.sezona_koledarska` vklopi migracija lig). Stran Pozicije je
 v meniju kot v Sloveniji. `LV` je v matriki nočnega uvoza in v *Hisne
-ekipe*. Zveze, tekmovanja in vir vpiše svoja migracija. Manjka še: latvijski
-kanal v HelpStacku (`Podpora.tsx` za `lv` uporabi slovenskega) in
+ekipe*. Zveze, tekmovanja in vir vpiše svoja migracija. Latvijski kanal
+v HelpStacku ima latvijsko bazo znanja (`KANALI.lv`). Manjka še
 **pregled prevoda pri naravnem govorcu**.
 
 
@@ -2296,8 +2296,8 @@ oklepaju ("Liga fantasy jest otwarta: {liga}"); `ligaVTozilniku` ga pusti.
 Psevdonim v klepetu ima pridevnik pred samostalnikom ("Niebieski Bramkarz
 42", vsi samostalniki so moškega spola). Stran Pozicije je v meniju kot v
 Sloveniji. `PL` je v matriki nočnega uvoza. Zveze, tekmovanja in vir vpiše
-svoja migracija. Manjka še: poljski kanal v HelpStacku (`Podpora.tsx` za `pl`
-uporabi slovenskega) in **pregled prevoda pri naravnem govorcu**.
+svoja migracija. Poljski kanal v HelpStacku ima poljsko bazo znanja (`KANALI.pl`).
+Manjka še **pregled prevoda pri naravnem govorcu**.
 
 ### Poljska — vir `pzpn`
 
@@ -2384,8 +2384,8 @@ za dvopičjem ali v oklepaju ("Liga fantasy abierta: {liga}", "liga:
 {liga}"); `ligaVTozilniku` ga pusti. Psevdonim v klepetu ima pridevnik za
 samostalnikom ("Portero Azul 42", vsi samostalniki moškega spola). Stran
 Pozicije je v meniju kot v Sloveniji. `ES` je v matriki nočnega uvoza.
-Zveze, tekmovanja in vir vpiše svoja migracija. Manjka še: španski kanal v
-HelpStacku (`Podpora.tsx` za `es` uporabi slovenskega) in **pregled
+Zveze, tekmovanja in vir vpiše svoja migracija. Španski kanal v
+HelpStacku ima špansko bazo znanja (`KANALI.es`). Manjka še **pregled
 prevoda pri naravnem govorcu**.
 
 ### Španija — vir `fcf` (Katalonija)
@@ -2709,8 +2709,8 @@ pripona (лигата), zato ime lige stoji samostojno za dvopičjem ali predlog
 ("лига: {liga}", "за {liga}"); `ligaVTozilniku` ga pusti. Psevdonim v
 klepetu ima pridevnik pred samostalnikom ("Син Голман 42"). Stran Pozicije je
 v meniju kot v Sloveniji. `MK` je v matriki nočnega uvoza in v *Hisne ekipe*.
-Manjka še: makedonski kanal v HelpStacku (`Podpora.tsx` za `mk` uporabi
-slovenskega) in **pregled prevoda pri naravnem govorcu**. Lige ostanejo
+Makedonski kanal v HelpStacku ima makedonsko bazo znanja (`KANALI.mk`).
+Manjka še **pregled prevoda pri naravnem govorcu**. Lige ostanejo
 neaktivne, dokler jih lastnik ne vklopi.
 
 Vir `ffm` (`scripts/viri/ffm.mjs`) bere **www.ffm.mk** (Фудбалска федерација
