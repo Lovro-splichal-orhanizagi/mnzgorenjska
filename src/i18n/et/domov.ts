@@ -96,4 +96,19 @@ export const domov: NonNullable<Prevod['domov']> = {
   },
   taTeden: 'Sel nädalal',
   klepet: 'Vestlus ja ideed',
+  // Prosojnice samodejnih objav (Instagram, Facebook; stran /objava).
+  objava: {
+    igralecKroga: 'Vooru mängija',
+    krogVStevilkah: 'Voor numbrites',
+    skok: 'Hinnatõus',
+    padec: 'Hinnalangus',
+    kapetan: 'Pettumust valmistanud kapten',
+    kapetanOpis: 'Teda valis {delez} % meeskondadest',
+    vratar: 'Väravat löönud väravavaht',
+    hattrick: 'Kübaratrikk',
+    ligaTedna: 'Nädala liiga',
+    novihEkip: 'Uusi meeskondi: {n}',
+    tedenVEvropi: 'Sel nädalal Euroopas',
+    poziv: 'Pane oma meeskond kokku',
+  },
 }

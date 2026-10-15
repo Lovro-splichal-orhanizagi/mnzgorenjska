@@ -100,4 +100,19 @@ export const domov: NonNullable<Prevod['domov']> = {
   },
   taTeden: 'W tym tygodniu',
   klepet: 'Czat i sugestie',
+  // Prosojnice samodejnih objav (Instagram, Facebook; stran /objava).
+  objava: {
+    igralecKroga: 'Zawodnik kolejki',
+    krogVStevilkah: 'Kolejka w liczbach',
+    skok: 'Wzrost ceny',
+    padec: 'Spadek ceny',
+    kapetan: 'Kapitan, który zawiódł',
+    kapetanOpis: 'Wybrało go {delez}% drużyn',
+    vratar: 'Bramkarz strzelec',
+    hattrick: 'Hat-trick',
+    ligaTedna: 'Liga tygodnia',
+    novihEkip: 'Nowe drużyny: {n}',
+    tedenVEvropi: 'W tym tygodniu w Europie',
+    poziv: 'Złóż swoją drużynę',
+  },
 }

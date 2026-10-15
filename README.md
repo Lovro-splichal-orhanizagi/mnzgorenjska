@@ -151,6 +151,7 @@ rezervnih igralcev.
 | `player_scores` | Točke igralca po krogih |
 | `settings` | Pragova glasov (privzeto 5) |
 | `push_tokens` | Žetoni FCM naprav mobilne aplikacije; vpiše jih le `shrani_push_zeton`, bere le servis (`posli-opomnik`) |
+| `objave` | Osnutki samodejnih objav za Instagram in Facebook (dejstva, napis, slike, stanje); le servis (`scripts/objave.mjs`, dejstva iz `objava_dejstva`) |
 
 Vsi pogledi imajo stolpec `competition_id` — vmesnik po njem filtrira izbrano
 ligo. Pogled `competition_teams` pove, kateri klubi igrajo v kateri ligi.

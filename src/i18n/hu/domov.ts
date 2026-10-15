@@ -95,4 +95,19 @@ export const domov: NonNullable<Prevod['domov']> = {
   },
   taTeden: 'Ezen a héten',
   klepet: 'Chat és ötletek',
+  // Prosojnice samodejnih objav (Instagram, Facebook; stran /objava).
+  objava: {
+    igralecKroga: 'A forduló játékosa',
+    krogVStevilkah: 'A forduló számokban',
+    skok: 'Áremelkedés',
+    padec: 'Árcsökkenés',
+    kapetan: 'A csalódást okozó kapitány',
+    kapetanOpis: 'A csapatok {delez}%-a választotta',
+    vratar: 'Gólszerző kapus',
+    hattrick: 'Mesterhármas',
+    ligaTedna: 'A hét ligája',
+    novihEkip: 'Új csapatok: {n}',
+    tedenVEvropi: 'Ezen a héten Európában',
+    poziv: 'Állítsd össze a csapatod',
+  },
 }

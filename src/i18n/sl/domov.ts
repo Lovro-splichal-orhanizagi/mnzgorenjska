@@ -98,4 +98,19 @@ export const domov = {
   },
   taTeden: 'Ta teden',
   klepet: 'Klepet in predlogi',
+  // Prosojnice samodejnih objav (Instagram, Facebook; stran /objava).
+  objava: {
+    igralecKroga: 'Igralec kroga',
+    krogVStevilkah: 'Krog v številkah',
+    skok: 'Skok cene',
+    padec: 'Padec cene',
+    kapetan: 'Kapetan, ki je razočaral',
+    kapetanOpis: 'Izbralo ga je {delez} % ekip',
+    vratar: 'Vratar strelec',
+    hattrick: 'Hat-trick',
+    ligaTedna: 'Liga tedna',
+    novihEkip: 'Novih ekip: {n}',
+    tedenVEvropi: 'Ta teden v Evropi',
+    poziv: 'Sestavi svojo ekipo',
+  },
 }

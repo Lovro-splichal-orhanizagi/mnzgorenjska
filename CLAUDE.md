@@ -3762,6 +3762,49 @@ klubov ne objavljata. ŽNS jih objavijo v PDF "Adresar klubova" (zns.hr: 1. in
 HR, RS sta pripravljena: vrstica, ki jo v vrsto postavi človek (`v_vrsti`,
 `posiljatelj`), gre po istih pravilih.
 
+## Samodejne objave (Instagram, Facebook)
+
+Načrt: `docs/superpowers/specs/2026-10-15-samodejne-objave-design.md`. **Faza 1
+(zdaj): le osnutki na Discord, nič se ne objavi.** Delavec `slff-objave` na
+strežniku (`scripts/objave.mjs --zanka`, `/opt/slff-objave`, slika Playwright)
+vsakih 10 minut pogleda termin: **ponedeljek** osnutek 04:00, objava 10:00 —
+krog ene države v njenem jeziku (`ROTACIJA` po ISO tednu: SI, HR, SK …, AT in
+HU občasno; država brez kroga v oknu gre na naslednjo); **četrtek** 12:00 /
+18:00 — vse države, angleško. En osnutek na termin in teden (`objave`, unique
+`slot, teden`); zamujen termin (delavec ni tekel) se ne nadoknadi.
+
+- **Dejstva** da `objava_dejstva(drzava, od, do)` (servisna; `null` = vse
+  države): zadnji krog vsake aktivne lige z tekmo v oknu — igralec kroga,
+  idealna enajsterica, skok in padec cene (`price_changes`), hat-trick, vratar
+  z golom, "kapetan, ki je razočaral" (najbolj izbrani kapetan z ≤ 2 točkama,
+  le seštevek in le pri vsaj 5 človeških ekipah), liga tedna (največ novih
+  ekip). **Nikoli** mladinske lige (`je_mladinski_slug`), anonimizirani
+  igralci, hišne ekipe, imena uporabnikov ali ekip. `npm run preizkus-objav`
+  (tudi v CI).
+- **Napis** napiše Claude (`claude-sonnet-5-5`, Messages API, `ANTHROPIC_API_KEY`)
+  iz izbranih dejstev, s povezavo `https://slff.eu/?src=ig[&t=<liga>]`.
+  `preveriNapis`: vsako število in vsaka beseda z veliko začetnico sredi stavka
+  mora biti v dejstvih (v nemščini le ime s priimkom — samostalniki so z
+  veliko); sicer še en poskus, nato suha predloga (`napis_vir`).
+- **Prosojnice** (1080 × 1350): stran `/objava?slide=n`
+  (`src/pages/Objava.tsx`), ki jo main.tsx izriše brez glave in noge; vsebino
+  ji Playwright vpiše v `window.__OBJAVA__`, jezik v izbiro jezika. Ni v
+  zemljevidu, `noindex` (tudi Caddy `@zasebne`), v `@ni_strani` je izjema.
+  Nizi so v `domov.objava.*` vseh jezikov. **Strežnik jo bere s slff.eu**
+  (`OBJAVE_URL`), zato mora biti sprememba strani objavljena pred delavcem.
+- **Osnutek**: vrstica v `objave` (slike na disku `/opt/slff-objave/mediji`),
+  nato Discord (`DISCORD_OBJAVE_WEBHOOK`) s slikami, napisom in povzetkom
+  dejstev. Neuspel Discord → `stanje = 'napaka'` (osnutek, ki ga človek ni
+  videl, se nikoli ne objavi). `ustavi_objavo(zeton)` in
+  `ustavi_zeton_hash` sta pripravljena za fazo 2 (povezava "Ustavi").
+- Preizkus brez baze in brez ključev: `npm run dev`, nato `node scripts/objave.mjs
+  --slot pon --suho --dejstva scripts/vzorci/objava-dejstva.json --url
+  http://localhost:5173 --mapa /tmp/objave-vzorec` (napis je predloga, slike v mapi).
+- **Objava**: `scripts/hetzner/objavi-objave.sh` iz main (CI je ne objavi).
+  Enkratna nastavitev (lastnik): `/opt/slff-objave/.env` s
+  `SUPABASE_SERVICE_ROLE_KEY=`, `ANTHROPIC_API_KEY=`, `DISCORD_OBJAVE_WEBHOOK=`,
+  `chmod 600`. Dnevnik `ssh slff docker logs slff-objave`.
+
 ## Poti
 
 Poti so **angleške** (`/my-team`, `/players`, `/match/:id` …), ker jih vidi

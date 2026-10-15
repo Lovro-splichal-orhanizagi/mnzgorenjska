@@ -6866,6 +6866,70 @@ preveri(
   preveri('pošta klubom: naslov v dnevniku zakrit', zakrij('za <ana.novak@klub.at>: 550') === 'za <a***@klub.at>: 550')
 }
 
+// --- samodejne objave (scripts/objave.mjs, src/pages/Objava.tsx) --------------
+{
+  const o = await import('./objave.mjs')
+  const { Prosojnica, prosojnice } = await import('../src/pages/Objava')
+  const { readFileSync } = await import('node:fs')
+  const dejstva = JSON.parse(readFileSync(new URL('./vzorci/objava-dejstva.json', import.meta.url), 'utf8'))
+  const pon = o.izberiVsebino(dejstva, 'pon')
+  preveri('objave: ponedeljek vzame glavno ligo', pon.slug === 'clani' && pon.liga.krog === 8 && pon.igralec.ime === 'Kovač Tine')
+  preveri('objave: enajsterica 1-4-4-2', pon.idealna.length === 11 &&
+    ['GK', 'DEF', 'MID', 'FWD'].map((p) => pon.idealna.filter((x) => x.position === p).length).join() === '1,4,4,2')
+  preveri('objave: največ pet poudarkov', pon.poudarki.length === 5 && pon.poudarki[0].vrsta === 'hattrick')
+  const cet = o.izberiVsebino(dejstva, 'cet')
+  preveri('objave: četrtek čez lige, brez lige v povezavi', cet.slug === null && cet.liga === null && cet.igralec.liga === '1. GNL — člani'
+    && o.povezava(cet) === 'https://slff.eu/?src=ig' && o.povezava(pon) === 'https://slff.eu/?src=ig&t=clani')
+  preveri('objave: brez kroga ni vsebine', o.izberiVsebino({ lige: [] }, 'pon') === null)
+  preveri('objave: štiri prosojnice', prosojnice(pon).join() === 'uvod,poudarki,enajsterica,poziv'
+    && prosojnice({ ...pon, poudarki: [], idealna: [] }).join() === 'uvod,poziv')
+  for (let n = 0; n < 4; n++) {
+    try {
+      const html = renderToString(<StaticRouter location="/objava"><Prosojnica v={pon} n={n} /></StaticRouter>).replace(/<!-- -->/g, '')
+      preveri(`objave: izris prosojnice ${n + 1}`, html.includes(`${n + 1}/4`) && !/undefined|NaN/.test(html))
+    } catch (e) {
+      preveri(`objave: izris prosojnice ${n + 1}`, false, e.message)
+    }
+  }
+
+  // Preverba napisa: števila in imena le iz dejstev; povezava in ključniki ne štejejo.
+  const d = o.dejstvaZaNapis(pon)
+  const dober = 'Tine Kovač je zabil 3 gole in pobral 19 točk! 🔥\nKapetan Aljaž Rozman? 1 točka. Ups.\nhttps://slff.eu/?src=ig&t=clani\n#SLFF #GNL2026'
+  preveri('objave: dober napis gre', o.preveriNapis(dober, d, 'sl').length === 0, o.preveriNapis(dober, d, 'sl').join())
+  preveri('objave: izmišljeno število pade', o.preveriNapis('Tine Kovač je zabil 4 gole.', d, 'sl').join() === '4')
+  preveri('objave: decimalna vejica je isto število', o.preveriNapis('Cena: 8,2 M€, prej 7,2.', d, 'sl').length === 0)
+  preveri('objave: izmišljeno ime pade', o.preveriNapis('Tine Kovač in Janez Novak sta igrala.', d, 'sl').join() === 'Janez,Novak')
+  preveri('objave: začetek stavka ni ime', o.preveriNapis('Bravo! Neverjetno.', d, 'sl').length === 0)
+  preveri('objave: nemški samostalniki gredo, tuje ime ne', o.preveriNapis('Der Spieler Tine Kovač trifft dreimal im Spiel.', d, 'de').length === 0
+    && o.preveriNapis('Ein Tor von Hans Huber.', d, 'de').join() === 'Hans Huber')
+
+  // Napis: slab poskus → drugi poskus; dvakrat slab → predloga; brez ključa → predloga.
+  const odgovori = (seznam) => async () => seznam.shift()
+  let n = await o.napis(pon, 'sl', 'k', odgovori(['Zabil je Janez Novak, 99 golov.', dober]))
+  preveri('objave: drugi poskus Clauda', n.vir === 'claude' && n.zavrnjeno.length === 1 && n.napis === dober)
+  n = await o.napis(pon, 'sl', 'k', odgovori(['Golov: 99.', 'Golov: 98.']))
+  preveri('objave: dvakrat slabo → predloga', n.vir === 'predloga' && n.napis.includes('https://slff.eu/?src=ig&t=clani')
+    && o.preveriNapis(n.napis, d, 'sl').length === 0)
+  n = await o.napis(pon, 'sl', 'k', odgovori(['Tine Kovač: 19 točk!']))
+  preveri('objave: manjkajoča povezava se doda', n.vir === 'claude' && n.napis.endsWith('https://slff.eu/?src=ig&t=clani'))
+  n = await o.napis(cet, 'en', undefined)
+  preveri('objave: brez ključa predloga (vsi jeziki brez ostankov)', n.vir === 'predloga'
+    && ['sl', 'hr', 'sk', 'de', 'hu', 'en', 'pl'].every((j) => !/undefined|null|NaN/.test(o.predlogaNapisa(cet, j))))
+
+  // Termini in rotacija (ljubljanski čas, tudi po koncu poletnega časa 25. 10. 2026).
+  preveri('objave: ponedeljek 10:00 poleti, četrtek 18:00 pozimi',
+    o.termin('pon', '2026-10-12').objavaOb.toISOString() === '2026-10-12T08:00:00.000Z'
+    && o.termin('cet', '2026-10-26').objavaOb.toISOString() === '2026-10-29T17:00:00.000Z')
+  preveri('objave: osnutek le v oknu termina', o.terminiZdaj(new Date('2026-10-12T03:00:00Z')).map((x) => x.slot).join() === 'pon'
+    && o.terminiZdaj(new Date('2026-10-12T01:59:00Z')).length === 0 && o.terminiZdaj(new Date('2026-10-12T08:00:00Z')).length === 0
+    && o.terminiZdaj(new Date('2026-10-15T12:00:00Z')).map((x) => x.slot).join() === 'cet')
+  preveri('objave: okno tekem', JSON.stringify(o.okno('pon', '2026-10-12')) === '{"od":"2026-10-05","do":"2026-10-12"}'
+    && JSON.stringify(o.okno('cet', '2026-10-12')) === '{"od":"2026-10-08","do":"2026-10-15"}')
+  const r = (teden) => o.vrstniRedDrzav(teden).join()
+  preveri('objave: rotacija SI → HR → SK, vsak teden druga', r('2026-10-12') === 'SI,HR,SK,AT,HU' && r('2026-10-19').startsWith('HR,')
+    && r('2026-10-26').startsWith('SK,') && o.isoTeden('2027-01-04') === 1 && o.isoTeden('2026-12-28') === 53)
+}
+
 {
   // Podpis Stripe (stripe-webhook): HMAC-SHA256 nad "t.telo", 5 minut, več v1.
   const skr = 'whsec_test_smoke'
