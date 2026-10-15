@@ -18,8 +18,9 @@
 // koordinatami, divizija (`js-match-group`), del (`js-match-bracket`: "League"
 // ali "Playoffs" — končnice ne beremo), klub z id-jem ekipe
 // (`/league-schedule/teams/<id>`), izid ("2 : 1"). Krogov ni (`js-match-round`
-// je vedno 1): krog je TEDEN (pon–ned po lokalnem datumu), štet od tedna prve
-// tekme divizije v letu.
+// je vedno 1): krog je TEDEN (pon–ned po lokalnem datumu), štet od STALNEGA
+// začetka (teden 1. maja v letu šifre, `krogIzDatuma`) — ne od prve tekme, sicer
+// bi prestavljena prva tekma premaknila številke vseh krogov.
 //
 // ZAPISNIK `/match_details/<id>/2` izriše strežnik; v skripti strani so JSON
 // predmeti `'match'` (glava: čas, prizorišče s časovnim pasom `timezone_name`,
@@ -139,8 +140,21 @@ function ponedeljek(datum) {
   return t - dan * 86400000
 }
 
-/** Krog = teden (pon–ned) od tedna prve tekme: 1, 2, … (prazen teden preskoči številko). */
+/** Krog = teden (pon–ned) od tedna datuma `prvi`: 1, 2, … (prazen teden preskoči številko). */
 export const krogTedna = (datum, prvi) => Math.floor((ponedeljek(datum) - ponedeljek(prvi)) / (7 * 86400000)) + 1
+
+/** Ponedeljek tedna 1. maja v letu sezone (začetek 1. kroga): 2026 → 2026-04-27. */
+export const zacetekSezone = (leto) => new Date(ponedeljek(`${leto}-05-01`)).toISOString().slice(0, 10)
+
+/**
+ * Krog tekme: teden (pon–ned, lokalni datum) od tedna 1. maja v letu sezone.
+ * Številka je STALNA — ne zavisi od drugih tekem. Prej je bil krog štet od
+ * prve tekme divizije: prestavljena (ali naknadno dodana) prva tekma bi
+ * premaknila vse številke in uvoz razporeda bi tekme že zaklenjenih krogov
+ * (posnetki postav, roki) vpisal v druge kroge. Divizija, ki začne pozneje
+ * (Southwest 2026: 16. 5.), ima prvi krog 3. Tekma pred 1. majem je krog 1.
+ */
+export const krogIzDatuma = (datum, leto) => Math.max(1, krogTedna(datum, zacetekSezone(leto)))
 
 // --- časovni pasovi -----------------------------------------------------------
 
@@ -231,17 +245,28 @@ export function vrsticeStrani(html) {
  * časom. `strani` so vse strani razporeda divizije.
  */
 export function tekmeLige(koda, strani) {
-  const { divizija } = razbijKodo(koda)
+  const { divizija, leto } = razbijKodo(koda)
   const vse = new Map()
   for (const html of strani) for (const v of vrsticeStrani(html)) vse.set(v.id, v)
   const liga = [...vse.values()].filter((v) => /^league$/i.test(v.del) && v.datumLokalno)
-  const prvi = liga.map((v) => v.datumLokalno).sort()[0]
-  return liga
+  const tekme = liga
     .map((v) => {
       const pas = pasTekme(divizija, v.domaciId)
-      return { ...v, krog: krogTedna(v.datumLokalno, prvi), pas, ...vLjubljano(v.datumLokalno, v.uraLokalno, pas) }
+      return { ...v, krog: krogIzDatuma(v.datumLokalno, leto), pas, ...vLjubljano(v.datumLokalno, v.uraLokalno, pas) }
     })
-    .sort((a, b) => a.krog - b.krog || String(a.datum).localeCompare(String(b.datum)) || Number(a.id) - Number(b.id))
+    .sort((a, b) => String(a.datumLokalno).localeCompare(String(b.datumLokalno)) ||
+      String(a.uraLokalno ?? '').localeCompare(String(b.uraLokalno ?? '')) || Number(a.id) - Number(b.id))
+  // Isti par (domači : gostje) igra lahko dvakrat v ISTEM tednu (Mountain 2025:
+  // Utah United : Colorado Storm v četrtek 12. 6. in soboto 14. 6.). Tekma je v
+  // bazi enolična po (krog, domači, gostje) — druga bi povozila prvo (zapisnik,
+  // nastopi). Poznejša zato gre v naslednji krog; rok tega kroga je tako pred
+  // njo. Odvisno le od tekem tega para, zato številke ostalih ostanejo stalne.
+  const zasedeno = new Set()
+  for (const t of tekme) {
+    while (zasedeno.has(`${t.krog}:${t.domaciId}:${t.gostjeId}`)) t.krog++
+    zasedeno.add(`${t.krog}:${t.domaciId}:${t.gostjeId}`)
+  }
+  return tekme.sort((a, b) => a.krog - b.krog || String(a.datum).localeCompare(String(b.datum)) || Number(a.id) - Number(b.id))
 }
 
 /** Razpored v obliko uvoza razporeda. */
@@ -543,6 +568,12 @@ const vir = {
   zavrnitev: (sporocilo, status = null) => new Modular11Zavrnitev(`modular11: ${sporocilo} — uvoz ustavljen, ne obhajamo`, status),
   // Stran napake (prazen odgovor, obvestilo strežnika) ne gre v predpomnilnik.
   zaPredpomnilnik: (html) => jeStranRazporeda(html) || jeStranTekme(html),
+  // Krog je teden: prestavljena tekma je v razporedu v drugem krogu. Razpored
+  // je ves (vse strani), zato uvoz razporeda neuvoženo vrstico, ki je razpored
+  // v njenem krogu nima več, odstrani v vsakem krogu (ne le v polnih). NE
+  // `krogiPoTednih` (ncefl): ta par domači : gostje šteje za eno tekmo sezone,
+  // v USL2 pa isti par igra tudi dvakrat (Great Plains 2026: šest parov).
+  razporedCel: true,
 
   async razporedVseStrani(koda, prenesi) {
     return razcleniRazpored(koda, await straniRazporeda(koda, prenesi))

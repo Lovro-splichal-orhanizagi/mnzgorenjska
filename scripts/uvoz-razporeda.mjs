@@ -112,8 +112,8 @@ async function prenesi(url, ime) {
     if (vir.zaPredpomnilnik?.(html, ime) ?? true) writeFileSync(pot, html)
     return html
   } catch (e) {
-    // Zavrnitve vira (jalgpall: 403, 429, izziv) ne obidemo s shranjeno stranjo.
-    if (e.zavrnitev || (vir.zavrnitev && [403, 429].includes(e.status))) throw vir.zavrnitev(e.message, e.status)
+    // Zavrnitve vira (jalgpall: 401, 403, 429, izziv) ne obidemo s shranjeno stranjo.
+    if (e.zavrnitev || (vir.zavrnitev && [401, 403, 429].includes(e.status))) throw vir.zavrnitev(e.message, e.status)
     if (!existsSync(pot)) throw e
     console.log(`  vir ni dosegljiv (${e.message}) — uporabim zadnji shranjeni razpored`)
     return readFileSync(pot, 'utf8')
@@ -200,6 +200,8 @@ if (vir.kontumacije) {
     }
     if (najdene.length) console.log(`Kontumacij v razporedu: ${oznacenih}`)
   } catch (e) {
+    // Zavrnitev vira (403, 429, izziv) ni motnja: uvoz se ustavi z izhodom 4.
+    if (e.zavrnitev) throw e
     console.log(`  kontumacij ni bilo mogoče prebrati (${e.message}) — nadaljujem brez njih`)
   }
 }
@@ -599,7 +601,13 @@ if (smemoDeaktivirati) {
   for (const pari of pariKrogov.values()) velikosti.set(pari.size, (velikosti.get(pari.size) ?? 0) + 1)
   const obicajen = [...velikosti].sort((a, b) => b[1] - a[1] || b[0] - a[0])[0]?.[0] ?? 0
   const polnKrog = Math.max(1, Math.min(Math.floor(letosnjiKlubi.size / 2), obicajen))
-  const preverjeniKrogi = [...pariKrogov].filter(([, pari]) => pari.size >= polnKrog).map(([id]) => id)
+  // Vir, pri katerem je krog teden (`vir.razporedCel`, modular11), razpored
+  // prebere ves (vse strani; neveljavna stran ustavi uvoz) in tekmo, prestavljeno
+  // v drug teden, pokaže v drugem krogu. Tedni so različno polni, zato velja za
+  // vse kroge sezone, tudi tiste, ki jih razpored nima več.
+  const preverjeniKrogi = vir.razporedCel
+    ? [...new Set([...idKrogov, ...pariKrogov.keys()])]
+    : [...pariKrogov].filter(([, pari]) => pari.size >= polnKrog).map(([id]) => id)
   if (preverjeniKrogi.length) {
     const { data: neuvozene, error: eBeri } = await db
       .from('matches')
@@ -613,7 +621,7 @@ if (smemoDeaktivirati) {
       process.exitCode = 1
     }
     const umaknjene = (neuvozene ?? []).filter(
-      (m) => !pariKrogov.get(m.round_id).has(`${m.home_team_id}:${m.away_team_id}`),
+      (m) => !pariKrogov.get(m.round_id)?.has(`${m.home_team_id}:${m.away_team_id}`),
     )
     if (umaknjene.length) {
       const { error } = await db

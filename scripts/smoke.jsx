@@ -5298,6 +5298,11 @@ preveri(
     U.lokalniCas('05/16/26 06:30pm').datum === '2026-05-16' &&
     U.krogTedna('2026-05-16', '2026-05-16') === 1 && U.krogTedna('2026-05-17', '2026-05-16') === 1 &&
     U.krogTedna('2026-05-18', '2026-05-16') === 2 && U.krogTedna('2026-07-11', '2026-05-16') === 9)
+  // Krog šteje od stalnega začetka (teden 1. maja), ne od prve tekme divizije.
+  preveri('modular11: krog je stalen — teden 1. maja je krog 1 (2026: od pon 27. 4.), tekma pred njim krog 1',
+    U.zacetekSezone('2026') === '2026-04-27' && U.zacetekSezone('2025') === '2025-04-28' && U.zacetekSezone('2027') === '2027-04-26' &&
+    U.krogIzDatuma('2026-05-03', '2026') === 1 && U.krogIzDatuma('2026-05-04', '2026') === 2 && U.krogIzDatuma('2026-05-16', '2026') === 3 &&
+    U.krogIzDatuma('2026-04-20', '2026') === 1 && U.krogIzDatuma('2026-07-12', '2026') === 11)
   preveri('modular11: pozicija iz formacije (mesto 1 vratar, prva vrsta branilci, zadnja napadalci)',
     U.pozicijaIzFormacije('4 3 3', 1) === 'GK' && U.pozicijaIzFormacije('4 3 3', 5) === 'DEF' && U.pozicijaIzFormacije('4 3 3', 6) === 'MID' &&
     U.pozicijaIzFormacije('4 3 3', 11) === 'FWD' && U.pozicijaIzFormacije('4 2 3 1', 9) === 'MID' && U.pozicijaIzFormacije('4 2 3 1', 11) === 'FWD' &&
@@ -5315,9 +5320,36 @@ preveri(
     t.length === 48 && new Set(t.flatMap((x) => [x.domaci, x.gostje])).size === 8 && new Set(t.map((x) => x.krog)).size === 9 &&
     t.every((x) => x.izid && x.del === 'League' && x.divizija === 'Southwest'))
   const krogi = U.razcleniRazpored('24/52/2026', strani)
-  preveri('modular11: razpored — krog 1 je teden 16. 5., Eagles : City SC (tor 19. 5.) je krog 2', krogi[0].stevilka === 1 &&
-    krogi[0].tekme.length === 2 && krogi[1].tekme.some((x) => x.domaci === 'Southern California Eagles' && x.gostje === 'City SC') &&
+  preveri('modular11: razpored — prvi krog je 3 (teden 16. 5.), Eagles : City SC (tor 19. 5.) je krog 4', krogi[0].stevilka === 3 &&
+    krogi[0].tekme.length === 2 && krogi[1].stevilka === 4 && krogi[1].tekme.some((x) => x.domaci === 'Southern California Eagles' && x.gostje === 'City SC') &&
     krogi.every((k) => k.tekme.every((x) => x.odigrana && x.m11Id && x.izid)))
+  // Prestavljena prva tekma (16. 5. → 1. 7.) ne sme premakniti številk drugih krogov:
+  // sicer bi uvoz razporeda tekme že zaklenjenih krogov vpisal v druge kroge.
+  const prestavljena = U.tekmeLige('24/52/2026', strani.map((h) => h.replaceAll('05/16/26', '07/01/26')))
+  const krogPrej = new Map(t.map((x) => [x.id, x.krog]))
+  const premaknjene = prestavljena.filter((x) => krogPrej.get(x.id) !== x.krog)
+  preveri('modular11: prestavljena prva tekma ne premakne številk drugih krogov', prestavljena.length === 48 &&
+    premaknjene.length > 0 && premaknjene.every((x) => x.datumLokalno === '2026-07-01' && x.krog === 10))
+  // Isti par drugič v istem tednu (Mountain 2025: Utah United : Colorado Storm,
+  // čet + sob): tekma druge vrstice kroga 4 dobi klube prve. V bazi je tekma
+  // enolična po (krog, domači, gostje), zato gre poznejša v naslednji krog.
+  const prva = t.find((x) => x.krog === 4)
+  const druga = t.find((x) => x.krog === 4 && x.id !== prva.id && x.datumLokalno >= prva.datumLokalno)
+  const ponaredi = (h) => h.split('<!-- desktop version -->').map((r) => (new RegExp(`uid-mobile-style">\\s*${druga.id}\\b`).test(r)
+    ? r.replaceAll(`teams/${druga.domaciId}"`, 'teams/DOMACI"').replaceAll(`teams/${druga.gostjeId}"`, `teams/${prva.gostjeId}"`).replaceAll('teams/DOMACI"', `teams/${prva.domaciId}"`)
+    : r)).join('<!-- desktop version -->')
+  const dvakrat = U.tekmeLige('24/52/2026', strani.map(ponaredi))
+  const paraKrog = dvakrat.filter((x) => x.domaciId === prva.domaciId && x.gostjeId === prva.gostjeId && [prva.id, druga.id].includes(x.id))
+  preveri('modular11: isti par dvakrat v istem tednu — poznejša tekma gre v naslednji krog, ostali ostanejo',
+    paraKrog.length === 2 && paraKrog.find((x) => x.id === prva.id)?.krog === 4 && paraKrog.find((x) => x.id === druga.id)?.krog === 5 &&
+    dvakrat.filter((x) => x.id !== druga.id).every((x) => krogPrej.get(x.id) === x.krog))
+  // Prestavljena tekma je v drugem krogu (tednu): uvoz razporeda staro neuvoženo
+  // vrstico odstrani v vsakem krogu, ne le v polnem. Ne krogiPoTednih (ncefl):
+  // isti par igra v USL2 tudi dvakrat (Great Plains 2026), tam bi se tekma izgubila.
+  const uvozRazporeda = readFileSync(new URL('./uvoz-razporeda.mjs', import.meta.url), 'utf8')
+  preveri('modular11: prestavljena tekma ne ostane v starem krogu (razporedCel), 401 in kontumacije → izhod 4',
+    U.default.razporedCel === true && !U.default.krogiPoTednih && /vir\.razporedCel\s*\?/.test(uvozRazporeda) &&
+    /\[401, 403, 429\]\.includes\(e\.status\)/.test(uvozRazporeda) && /if \(e\.zavrnitev\) throw e/.test(uvozRazporeda))
 
   const z = U.vZapisnik(beri('us-m11-tekma-116529.html'), { id: '116529' })
   const n = U.nastopi(z)
@@ -5378,7 +5410,7 @@ preveri(
   })
   preveri('modular11: zapisniki() — šifra us<id>, ime, krog in sezona z razporeda, neujemanje izida je opozorilo', zs.length === 48 &&
     zs.every((x) => /^us\d+$/.test(x.id) && x.z.zapisnikId === x.id && x.z.sezona === '2026') &&
-    zs.find((x) => x.id === 'us116529')?.z.krog === 4 && zs.find((x) => x.id === 'us116529')?.z.opozorila.length === 0 &&
+    zs.find((x) => x.id === 'us116529')?.z.krog === 6 && zs.find((x) => x.id === 'us116529')?.z.opozorila.length === 0 &&
     zs[0].z.domaci.ime === 'City SC' && zs[0].z.opozorila.some((o) => /ni izid razporeda/.test(o)))
   let zavrnjen = null
   try { await U.default.zapisniki('24/52/2026', async () => { const e = new Error('HTTP 403'); e.status = 403; throw e }) } catch (e) { zavrnjen = e }

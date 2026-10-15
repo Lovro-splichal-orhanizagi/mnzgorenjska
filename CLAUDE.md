@@ -2861,10 +2861,22 @@ Google Maps — **ne uporabljamo ga** (in nobenega drugega ključa iz njihove ko
   (`js-match-bracket` "League" ali "Playoffs" — **končnice ne beremo**), klub z
   id-jem ekipe, izid. Stran napake ne gre v predpomnilnik (`zaPredpomnilnik`).
 - **Krogov ni** (`js-match-round` je vedno 1): **krog je teden** (pon–ned po
-  lokalnem datumu), štet od tedna prve tekme divizije v letu (`krogTedna`).
-  Prazen teden preskoči številko. Ekipa ima lahko v tednu dve tekmi (sobota +
-  torek) — to je dvojni krog kot v FPL. Prestavljena prva tekma bi premaknila
-  številke vseh krogov (tveganje; pred vklopom preveri).
+  lokalnem datumu), štet od **stalnega začetka**: teden 1. maja v letu šifre
+  (`krogIzDatuma`, `zacetekSezone`; 2026 od pon 27. 4.). Številka ne zavisi od
+  drugih tekem — prej je štela od prve tekme divizije in prestavljena prva
+  tekma bi premaknila vse kroge (tekme, roki in posnetki postav zaklenjenih
+  krogov bi pristali v drugih krogih). Divizija, ki začne pozneje, ima prvi
+  krog 2–4 (Southwest 2026: 3); tekma pred 1. majem je krog 1 (najzgodnejša
+  tekma 2025 in 2026 je bila 3. 5.). Prazen teden preskoči številko. Ekipa ima
+  lahko v tednu dve tekmi (sobota + torek) — dvojni krog kot v FPL (točke krogov
+  se seštejejo). **Isti par domači : gostje igra v sezoni lahko dvakrat** (vse
+  divizije s 6 klubi, 2026 po šest parov), zato vir NI `krogiPoTednih` (ncefl).
+  Celo v **istem tednu** (Mountain 2025: Utah United : Colorado Storm, četrtek
+  in sobota): tekma je v bazi enolična po (krog, domači, gostje), zato gre
+  poznejša v naslednji krog (`tekmeLige`).
+  **Prestavljena tekma** (v drug teden) dobi nov krog; `razporedCel` pove uvozu
+  razporeda, da staro neuvoženo vrstico odstrani v vsakem krogu sezone, ne le
+  v polnih (sicer bi ostala "ni uvožena" in borza bi čakala nanjo).
 - **Zapisnik** `/match_details/<id>/2`: strežnik v skripto vpiše JSON
   `'match'` (glava, prizorišče s pasom, formaciji, polčasa), `'details'`
   (goli z minuto in `ownGoal`, opomini, izključitve, menjave z minuto) in
@@ -2941,7 +2953,7 @@ ker 990 pokvari že rdeči karton ali napačno vnesena menjava (igralec gre ven,
 čeprav ni na igrišču — opozorilo; nekaj takih je verjetno ponovni vstop).
 Seznam `penalties` je bil v vseh zapisnikih prazen: **gola z 11 m ne ločimo**
 (`enajstmetrovka` je vedno false), zgrešenih 11 m ni. Polčasa sta 45 + 45
-razen petih napačnih vnosov (opozorilo). Krogov (tednov) je 9–11 na divizijo.
+razen petih napačnih vnosov (opozorilo). Krogov (tednov) je 9–11 na divizijo (številke 1–11).
 Klubi lige: 6–11 (Ranger, South Florida, Valley, Southeast, Great Plains s 6
 so na spodnji meji 3 iz kluba × 5).
 
