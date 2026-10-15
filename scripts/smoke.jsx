@@ -5818,7 +5818,20 @@ preveri(
   preveri('e-pošta: dobrodošlica en v angleščini na sestavo ekipe',
     bEn.naslov.includes('build your team') && bEn.html.includes('href="https://slff.eu/my-team?sestavi=1"') &&
       !slovensko.test(bEn.html) && bEn.html.includes('Hi Ana,') && bEn.html.includes('Stop these reminders'))
-  preveri('e-pošta: sl razlog nespremenjen', E.prevediRazlog(razlogi[0], 'sl') === razlogi[0])
+  const zSlE = E.sestaviOpomnikBrezEkipe('sl', { display_name: 'Janez', liga: si, rok })
+  preveri('e-pošta: brez ekipe sl z ligo, rokom in sestavo v ligi',
+    zSlE.naslov === 'SLFF Člani — ekipa te še čaka' && zSlE.html.includes('href="https://slff.eu/my-team?sestavi=1&amp;t=clani"') &&
+      zSlE.html.includes('Člani') && zSlE.html.includes('10:00') && zSlE.odjava === 'https://slff.eu/reminders?t=clani', zSlE.naslov)
+  const zEnE = E.sestaviOpomnikBrezEkipe('en', { display_name: 'Ana', liga: null, rok: null })
+  preveri('e-pošta: brez ekipe brez lige ne imenuje lige',
+    zEnE.naslov === 'SLFF — your team is still waiting' && zEnE.html.includes('href="https://slff.eu/my-team?sestavi=1"') &&
+      !zEnE.html.includes('t=') && !slovensko.test(zEnE.html), zEnE.naslov)
+  const tujiE = ['sk', 'hr', 'cs', 'hu', 'de', 'sr', 'ro', 'et', 'pl', 'es', 'lv', 'mk']
+    .map((j) => [j, E.sestaviOpomnikBrezEkipe(j, { display_name: null, liga: sk, rok })])
+  preveri('e-pošta: brez ekipe v vseh jezikih brez slovenščine',
+    tujiE.every(([, m]) => m.naslov.startsWith('SLFF IV. liga — ') && !slovensko.test(m.naslov + m.html) && m.html.includes('t=sk-ssfz-4liga')),
+    tujiE.find(([, m]) => slovensko.test(m.naslov + m.html))?.[0])
+  preveri('e-pošta: sl razlog nespremenjen',E.prevediRazlog(razlogi[0], 'sl') === razlogi[0])
   const pushSl = E.sestaviPushOpomnik(si, rok)
   const pushSk = E.sestaviPushOpomnik(sk, rok)
   preveri('push: opomnik brez ekipe v jeziku lige',

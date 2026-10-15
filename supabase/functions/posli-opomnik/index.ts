@@ -28,6 +28,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2.45.4'
 import {
   JEZIK_DRZAVE,
   sestaviOpomnik,
+  sestaviOpomnikBrezEkipe,
   sestaviOpomnikBrezLige,
   sestaviOpozorilo,
   sestaviIzstopKluba,
@@ -42,7 +43,7 @@ import {
 import { posljiPush, pushNastavljen, type Obvestilo } from './push.ts'
 import nodemailer from 'npm:nodemailer@6.9.16'
 
-const VRSTE = ['opomnik', 'opozorilo', 'poznavalec', 'popravek-pozicije', 'izstop-kluba', 'opomnik-push', 'tedenski-pregled', 'dobrodoslica'] as const
+const VRSTE = ['opomnik', 'opozorilo', 'poznavalec', 'popravek-pozicije', 'izstop-kluba', 'opomnik-push', 'tedenski-pregled', 'dobrodoslica', 'brez-ekipe'] as const
 type Vrsta = (typeof VRSTE)[number]
 
 // Besedila so v `sporocila.ts`, v jeziku DRŽAVE LIGE (slovaška liga →
@@ -164,24 +165,33 @@ Deno.serve(async (req) => {
   // Dobrodošlica dan po registraciji (mail in push "sestavi ekipo"): ni vezana na
   // ligo; kdo jo dobi, določi `kandidati_za_dobrodoslico` (enkrat na človeka).
   // `najvec_poslati` omeji kos: funkcija ima 60 s, mail traja ~4 s.
-  if (vrsta === 'dobrodoslica') {
+  // `brez-ekipe`: do trije opomniki po dobrodošlici (`kandidati_za_opomnik_brez_ekipe`
+  // določi urnik), z ligo in rokom, če ju poznamo.
+  if (vrsta === 'dobrodoslica' || vrsta === 'brez-ekipe') {
     if (!jeStroj) return json({ error: 'Dobrodošlico pošlje samo urnik (servisni ključ).' }, 403)
     if (!SMTP_PASS && !suho) return json({ error: 'Pomanjkljiva nastavitev: SMTP_PASS.' }, 500)
     const service2 = createClient(SUPABASE_URL, SERVICE_KEY)
-    const { data, error } = await service2.rpc('kandidati_za_dobrodoslico', {
-      p_najvec: suho ? 1000 : Math.min(vhod.najvec_poslati ?? 10, 20),
-    })
+    const { data, error } = await service2.rpc(
+      vrsta === 'dobrodoslica' ? 'kandidati_za_dobrodoslico' : 'kandidati_za_opomnik_brez_ekipe',
+      { p_najvec: suho ? 1000 : Math.min(vhod.najvec_poslati ?? 10, 20) },
+    )
     if (error) return json({ error: error.message }, 500)
     const kand = (data ?? []) as Array<{
-      user_id: string; email: string; display_name: string | null; jezik: string | null; drzava: string | null
+      user_id: string; email: string; display_name: string | null; jezik: string | null; drzava?: string | null
       email_vklop: boolean; push_vklop: boolean
+      competition_id?: number | null; liga_slug?: string | null; liga_oznaka?: string | null; liga_drzava?: string | null
+      rok?: string | null
     }>
     if (suho) return json({ suho: true, kandidati_stevilo: kand.length })
     let poslanih = 0
     let poslano = 0
     for (const u of kand) {
-      const jezik = u.jezik ?? (u.drzava ? JEZIK_DRZAVE[u.drzava] : null) ?? 'en'
-      const sporocilo = await sOdjavo(service2, u.user_id, sestaviOpomnikBrezLige(jezik, { display_name: u.display_name }))
+      const drzava = u.drzava ?? u.liga_drzava
+      const jezik = u.jezik ?? (drzava ? JEZIK_DRZAVE[drzava] : null) ?? 'en'
+      const liga: Liga | null = u.liga_slug ? { slug: u.liga_slug, oznaka: u.liga_oznaka ?? '', drzava: u.liga_drzava ?? null } : null
+      const sporocilo = await sOdjavo(service2, u.user_id, vrsta === 'dobrodoslica'
+        ? sestaviOpomnikBrezLige(jezik, { display_name: u.display_name })
+        : sestaviOpomnikBrezEkipe(jezik, { display_name: u.display_name, liga, rok: u.rok ?? null }))
       let rez: { id?: string; napaka?: string } = {}
       const zaPosto = u.email_vklop && !!u.email
       if (zaPosto) {
@@ -189,13 +199,15 @@ Deno.serve(async (req) => {
         rez = await poslji(EMAIL_FROM, u.email, sporocilo)
         if (!rez.napaka) poslanih++
       }
-      const push = u.push_vklop ? await posljiPush(service2, u.user_id, vObvestilo(sporocilo, '/my-team?sestavi=1')) : 0
+      const pot = `/my-team?sestavi=1${liga ? `&t=${encodeURIComponent(liga.slug)}` : ''}`
+      const push = u.push_vklop ? await posljiPush(service2, u.user_id, vObvestilo(sporocilo, pot)) : 0
       const izid = izidKanalov(zaPosto, rez, push)
       if (!izid.napaka) poslano++
       await service2.from('email_log').insert({
         user_id: u.user_id,
         email: u.email ?? '',
-        vrsta: 'dobrodoslica',
+        vrsta,
+        competition_id: u.competition_id ?? null,
         resend_id: rez.id ?? null,
         ...izid,
       })

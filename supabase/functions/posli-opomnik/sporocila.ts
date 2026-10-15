@@ -461,6 +461,58 @@ export function sestaviOpomnikBrezLige(
   return { naslov: B.naslov, html, odjava }
 }
 
+// --- opomnik brez ekipe: do trije po dobrodošlici ---------------------------
+// Krajši od dobrodošlice: liga (ekipe, kluba ali države jezika), rok in gumb.
+// Ime lige stoji samo zase (v vrstici z rokom), da ga ni treba sklanjati.
+// Brez lige (`liga` null) brez `?t=` in brez roka.
+
+export function sestaviOpomnikBrezEkipe(
+  jezik: string | null | undefined,
+  meta: { display_name: string | null; liga: Liga | null; rok: string | null },
+): Sporocilo {
+  const j: Jezik | 'en' =
+    jezik === 'en' || Object.values(JEZIK_DRZAVE).includes(jezik as Jezik) ? (jezik as Jezik | 'en') : 'sl'
+  const { liga, rok } = meta
+  const t = liga ? `&t=${encodeURIComponent(liga.slug)}` : ''
+  const vstop = `${SITE}/my-team?sestavi=1${t}`
+  const odjava = liga ? povezave(liga.slug).odjava : `${SITE}/reminders`
+  const B = {
+    sl: { naslov: 'ekipa te še čaka', glavno: 'Še vedno nimaš fantasy ekipe. »Sestavi mi ekipo« jo naredi v enem kliku: zamenjaj, kogar hočeš, in shrani.', rok: 'Rok', gumb: 'Sestavi mi ekipo →' },
+    sk: { naslov: 'tím na teba stále čaká', glavno: 'Stále nemáš fantasy tím. „Zostav mi tím“ ho vytvorí jedným klikom: vymeň, koho chceš, a ulož.', rok: 'Uzávierka', gumb: 'Zostav mi tím →' },
+    hr: { naslov: 'momčad te još čeka', glavno: 'Još uvijek nemaš fantasy momčad. „Složi mi momčad“ je složi jednim klikom: zamijeni koga želiš i spremi.', rok: 'Rok', gumb: 'Složi mi momčad →' },
+    cs: { naslov: 'tým na tebe pořád čeká', glavno: 'Pořád nemáš fantasy tým. „Sestav mi tým“ ho vytvoří jedním kliknutím: vyměň, koho chceš, a ulož.', rok: 'Uzávěrka', gumb: 'Sestav mi tým →' },
+    hu: { naslov: 'a csapatod még vár', glavno: 'Még mindig nincs fantasy csapatod. A „Csapatot kérek“ egy kattintással összerakja: cseréld le, akit szeretnél, és mentsd el.', rok: 'Határidő', gumb: 'Csapatot kérek →' },
+    de: { naslov: 'dein Team wartet noch', glavno: 'Du hast noch kein Fantasy-Team. „Team für mich zusammenstellen“ erledigt das mit einem Klick: tausch aus, wen du willst, und speichere.', rok: 'Deadline', gumb: 'Team für mich zusammenstellen →' },
+    sr: { naslov: 'tim te još čeka', glavno: 'Još uvek nemaš fantasy tim. „Sastavi mi tim“ ga sastavlja jednim klikom: zameni koga želiš i sačuvaj.', rok: 'Rok', gumb: 'Sastavi mi tim →' },
+    ro: { naslov: 'echipa te așteaptă încă', glavno: 'Încă nu ai o echipă fantasy. „Fă-mi echipa“ o face dintr-un clic: schimbă pe cine vrei și salvează.', rok: 'Termen', gumb: 'Fă-mi echipa →' },
+    et: { naslov: 'meeskond ootab sind ikka veel', glavno: 'Sul pole ikka veel fantaasiameeskonda. „Pane mulle meeskond kokku“ teeb selle ühe klõpsuga: vaheta kedagi, kui tahad, ja salvesta.', rok: 'Tähtaeg', gumb: 'Pane mulle meeskond kokku →' },
+    pl: { naslov: 'drużyna wciąż na ciebie czeka', glavno: 'Nadal nie masz drużyny fantasy. „Ułóż mi drużynę” zrobi to jednym kliknięciem: wymień, kogo chcesz, i zapisz.', rok: 'Termin', gumb: 'Ułóż mi drużynę →' },
+    es: { naslov: 'tu equipo aún te espera', glavno: 'Todavía no tienes equipo fantasy. «Hazme el equipo» lo hace con un clic: cambia a quien quieras y guarda.', rok: 'Cierre', gumb: 'Hazme el equipo →' },
+    lv: { naslov: 'komanda tevi joprojām gaida', glavno: 'Tev joprojām nav fantāzijas komandas. “Sastādīt man komandu” to izdara ar vienu klikšķi: nomaini, ko vēlies, un saglabā.', rok: 'Termiņš', gumb: 'Sastādīt man komandu →' },
+    mk: { naslov: 'тимот сè уште те чека', glavno: 'Сè уште немаш фантази тим. „Состави ми тим“ го прави со еден клик: замени кого сакаш и зачувај.', rok: 'Рок', gumb: 'Состави ми тим →' },
+    en: { naslov: 'your team is still waiting', glavno: 'You still don’t have a fantasy team. “Build my team” makes one in a single click: swap anyone you like and save.', rok: 'Deadline', gumb: 'Build my team →' },
+  }[j]
+  const kdaj = liga && rok
+    ? new Date(rok).toLocaleString(j === 'en' ? 'en-GB' : LOKALE[j], {
+        weekday: 'long', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit',
+        timeZone: PAS_DRZAVE[liga.drzava ?? 'SI'] ?? PAS_DRZAVE.SI,
+      })
+    : null
+  const vrstica = liga
+    ? `<p style="font-size: 14px; color: #334155; margin: 0 0 20px;"><strong>${esc(liga.oznaka)}</strong>${kdaj ? ` · ${B.rok}: ${kdaj}` : ''}</p>`
+    : ''
+  const html = ovoj(
+    `<p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">${pozdrav(j, meta.display_name)}</p>
+      <p style="font-size: 15px; line-height: 1.5; margin: 0 0 12px;">${B.glavno}</p>
+      ${vrstica}
+      <p style="text-align: center; margin: 24px 0;">
+        <a href="${vstop.replaceAll('&', '&amp;')}" style="${GUMB}">${B.gumb}</a>
+      </p>`,
+    nogaOdjave(j, odjava),
+  )
+  return { naslov: `SLFF${liga ? ` ${liga.oznaka}` : ''} — ${B.naslov}`, html, odjava }
+}
+
 // --- opozorilo: ekipa se ob roku ne bo zaklenila ----------------------------
 
 export function sestaviOpozorilo(

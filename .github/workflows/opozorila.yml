@@ -90,6 +90,18 @@ jobs:
           SUHO: ${{ github.event_name == 'workflow_dispatch' && inputs.suho || 'false' }}
         run: node scripts/posli-opomnike.mjs
 
+      # Po dobrodoslici se do trije opomniki brez ekipe (>= 3 dni po
+      # registraciji, 7 dni narazen; urnik doloci baza). Za dobrodoslico, da
+      # ta v svojem oknu odide prva. Zaostanek ~1800 po 60 na uro.
+      - name: Poslji opomnik brez ekipe
+        if: success() || failure()
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          VRSTA: brez-ekipe
+          SUHO: ${{ github.event_name == 'workflow_dispatch' && inputs.suho || 'false' }}
+        run: node scripts/posli-opomnike.mjs
+
       # Rdec zagon v GitHubu ni alarm, dokler ga kdo ne vidi. Uvoz je dvakrat
       # padel in dva dni ni opazil nihce.
       - name: Javi padec na Discord

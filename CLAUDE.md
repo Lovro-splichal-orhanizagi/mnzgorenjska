@@ -3205,6 +3205,15 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   registracije, sicer država prve ekipe ali kluba navijanja, sicer angleščina
   (Google jezika ne pove; `useAuth` ga ob prvi seji zapiše iz vmesnika). Teče
   vsako uro v `opozorila.yml` (`VRSTA=dobrodoslica`, največ 60 na zagon)
+- `kandidati_za_opomnik_brez_ekipe(najvec)` → po dobrodošlici še do trije
+  mail in push "ekipa te še čaka" (`/my-team?sestavi=1&t=<liga>`, vrsta
+  `brez-ekipe`), tudi računom, starejšim od tedna: prvi ≥ 3 dni po
+  registraciji, nato ≥ 7 dni narazen, največ trije uspešni (šest poskusov),
+  ne v 2 dneh po dobrodošlici (v njenem oknu gre ta prva), konec ob neprazni
+  ekipi. Liga: prazne ekipe, kluba navijanja ali države jezika (SI: člani),
+  z rokom naslednjega kroga; brez nje mail lige ne imenuje. Najprej najnovejše
+  registracije. Teče vsako uro v `opozorila.yml` (`VRSTA=brez-ekipe`, 60 na
+  zagon); preizkus `npm run preizkus-brez-ekipe`
 - `kandidati_za_push_opomnik(liga)` → samo push "še nimaš ekipe": kdor ima
   napravo in v ligi nima ekipe (ali ima prazno; brez ekipe šteje domača liga
   kot pri opomniku), 24 ur pred rokom, enkrat na krog (`email_log` vrsta
