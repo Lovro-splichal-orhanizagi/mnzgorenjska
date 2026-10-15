@@ -5467,13 +5467,62 @@ preveri(
     z('hk33306').domaci.postava.filter((x) => x.vratar).map((x) => x.ime).join() === 'Слободян' && z('hk33306').menjave.length === 4 &&
     z('hk33306').menjave.find((m) => m.noter.ime === 'Пудло')?.ven.ime === 'Антонюк' && z('hk33306').menjave.find((m) => m.noter.ime === 'Пудло')?.minuta === 45 &&
     minute('hk33306', 0) === 990 && minute('hk33306', 1) === 990 && zaEkipo(z('hk33306'), 0) === 4 && zaEkipo(z('hk33306'), 1) === 1 && z('hk33306').polcas?.domaci === 3)
-  preveri('hoff-km: imena poenotena v sezoni — golo "Олійник" je strelec "Олійник Владислав" (gol ima nastop)', n('hk33306').some((x) => x.ime === 'Олійник Владислав' && x.goli === 2 && x.minute === 69) &&
+  preveri('hoff-km: ime igralca je ime iz postave ob prvem nastopu — strelec "Олійник Владислав" je "Олійник" kot v postavi (gol ima nastop)', n('hk33306').some((x) => x.ime === 'Олійник' && x.goli === 2 && x.minute === 69) &&
+    !n('hk33306').some((x) => x.ime === 'Олійник Владислав') &&
     zs.every(({ z: x }) => x.goli.every((g) => !g.ime || H.default.nastopi(x).some((y) => y.ekipaIdx === g.ekipaIdx && y.ime === g.ime))))
+  // Nočni uvoz bere vse objave leta, uvozi pa le zadnjih 21 dni: ime igralca na
+  // tekmi se ne sme spremeniti, ko pridejo nove objave (sicer en igralec razpade
+  // na dva: "Матанчук" in "Матанчук Денис"). Objave po datumu, vsak rez znova.
+  const imenaDo = async (rez) => {
+    const doRez = (s) => JSON.stringify(JSON.parse(s).filter((x) => String(x.date).slice(0, 10) <= rez))
+    const prenesiDo = async (url, ime, sveze) => {
+      if (ime === 'seznam-2026-1.json' || ime === 'vsebina-2026-0.json') return doRez(await prenesi()(url, ime, sveze))
+      return prenesi()(url, ime, sveze)
+    }
+    const m = new Map()
+    for (const liga of ['chho-2026-vyshha-liga', 'chho-2026-persha-liga']) {
+      for (const { id, z: x } of await tiho(() => H.default.zapisniki(liga, prenesiDo))) {
+        for (const [i, e] of [x.domaci, x.gostje].entries()) [...e.postava, ...e.rezerve].forEach((y, j) => m.set(`${id}|${i}|${j}`, y.ime))
+      }
+    }
+    return m
+  }
+  const imenaKonec = await imenaDo('2026-12-31')
+  const rezi = [...new Set(JSON.parse(beri('ua-hoff-objave-2026.json')).map((x) => String(x.date).slice(0, 10)))].sort()
+  const premiki = []
+  for (const rez of rezi) for (const [k, ime] of await imenaDo(rez)) if (imenaKonec.get(k) !== ime) premiki.push(`${rez} ${k}: ${ime} → ${imenaKonec.get(k)}`)
+  preveri(`hoff-km: ime igralca se z novimi objavami ne spremeni (vzorec, ${rezi.length} rezov)${premiki.length ? ` — ${premiki.slice(0, 3).join('; ')}` : ''}`,
+    imenaKonec.size > 300 && premiki.length === 0)
+  // Ista oseba ohrani eno ime po vrsti objav: golo ime, nato strelec z imenom,
+  // nato soimenjak v klubu; vrstni red v klicu ni pomemben (datum, id objave).
+  const igr = (ime, ekipaIdx = 0) => ({ ime, ekipaIdx, zacetnik: true, preklopi: [] })
+  const objavaZ = (id, datum, imena, goli = []) => {
+    const ig = imena.map((ime) => igr(ime))
+    return { id, datum, klubi: ['а', 'б'], r: { ekipe: [{ igralci: ig }, { igralci: [igr('Тест', 1)] }], goli: goli.map(([i, ime]) => ({ igralec: ig[i], imeDogodka: ime })), zgresene: [] } }
+  }
+  const zaporedje = () => [
+    objavaZ(5, '2026-05-01', ['Матанчук', 'Сушинський', 'Бойко']),
+    objavaZ(6, '2026-05-08', ['Матанчук', 'Сушинський', 'Бойко Назар'], [[0, 'Матанчук Денис']]),
+    objavaZ(7, '2026-05-15', ['Матанчук Денис', 'Сушинський', 'Бойко Н.']),
+    objavaZ(8, '2026-05-22', ['Матанчук Д.', 'Матанчук Андрій', 'Сушинський Назарій', 'Бойко З.', 'Бойко Назар']),
+    objavaZ(9, '2026-05-29', ['Матанчук', 'Матанчук Андрій', 'Сушинський']),
+  ]
+  const poRezih = [1, 2, 3, 4, 5].map((n) => {
+    const v = zaporedje().slice(0, n)
+    H.poenotiImena([...v].reverse())
+    return v.map((x) => x.r.ekipe[0].igralci.map((y) => y.ime))
+  })
+  const koncno = poRezih.at(-1)
+  preveri('hoff-km: poenotena imena so stalna — vsak rez da iste nastope, Матанчук/Матанчук Денис/Матанчук Д. je en "Матанчук", soimenjak Андрій svoj',
+    poRezih.every((p) => p.every((imena, i) => imena.join('|') === koncno[i].join('|'))) &&
+    koncno.map((x) => x[0]).join('|') === 'Матанчук|Матанчук|Матанчук|Матанчук|Матанчук' && koncno[3][1] === 'Матанчук Андрій' && koncno[4][1] === 'Матанчук Андрій' &&
+    new Set(koncno.map((x) => x.find((y) => y.startsWith('Сушинський')))).size === 1 &&
+    koncno.slice(0, 3).every((x) => x[2] === 'Бойко') && koncno[3][4] === 'Бойко' && koncno[3][3] === 'Бойко З.')
   preveri('hoff-km: strelec za pomišljajem druge ekipe gre k svoji (Самсонюк), opozorilo', zaEkipo(z('hk33305'), 0) === 2 && zaEkipo(z('hk33305'), 1) === 0 &&
     z('hk33305').opozorila.some((o) => /Самсонюк.*druge ekipe/.test(o)))
   preveri('hoff-km: 11 m (pen.), zgrešena 11 m, kartoni po stranéh in po postavi', z('hk33163').goli.filter((g) => g.enajstmetrovka).length === 1 &&
-    z('hk33163').zgresene.length === 1 && n('hk33163').find((x) => x.ime === 'Тринадцятко Олег')?.zgreseneEnajstmetrovke === 1 &&
-    z('hk33163').rumeni.length === 4 && z('hk33163').rumeni.filter((x) => x.ekipaIdx === 1).length === 2 && z('hk33306').rumeni.find((x) => x.ime === 'Форманюк Тарас')?.ekipaIdx === 1)
+    z('hk33163').zgresene.length === 1 && n('hk33163').find((x) => x.ime === 'Тринадцятко')?.zgreseneEnajstmetrovke === 1 &&
+    z('hk33163').rumeni.length === 4 && z('hk33163').rumeni.filter((x) => x.ekipaIdx === 1).length === 2 && z('hk33306').rumeni.find((x) => x.ime === 'Форманюк')?.ekipaIdx === 1)
   preveri('hoff-km: rdeči po tekmi ("по завершенню гри") ne skrajša nastopa', z('hk33015').rdeci.length === 1 && z('hk33015').rdeci[0].minuta === 90 &&
     n('hk33015').find((x) => x.ime === 'Гарбарук')?.minute === 28 && n('hk33015').find((x) => x.ime === 'Гарбарук')?.rdeci === 1)
   preveri('hoff-km: izid "1</strong><strong>0:1" je 10:1, glava z napako (isti klub dvakrat) — objavo najde naslov', zaEkipo(z('hk32168'), 0) === 10 &&
@@ -5496,11 +5545,11 @@ preveri(
   const zp = await tiho(() => H.default.zapisniki('chho-2026-persha-liga', prenesi()))
   const p = (id) => zp.find((x) => x.id === id)?.z
   preveri('hoff-km: Perša — avtogol "6 – а/г" šteje nasprotniku, 1:2', p('hk32510')?.goli.filter((g) => g.avtogol).length === 1 &&
-    zaEkipo(p('hk32510'), 0) === 1 && zaEkipo(p('hk32510'), 1) === 2 && H.default.nastopi(p('hk32510')).find((x) => x.ime === 'Куліковський Богдан')?.avtogoli === 1)
+    zaEkipo(p('hk32510'), 0) === 1 && zaEkipo(p('hk32510'), 1) === 2 && H.default.nastopi(p('hk32510')).find((x) => x.ime === 'Куліковський')?.avtogoli === 1)
   preveri('hoff-km: Perša — ostanek za piko izpuščen (11 + 11), dvakrat isto ime le enkrat, veriga Чабак', p('hk32577')?.gostje.postava.length === 11 &&
     p('hk32577').opozorila.some((o) => /za koncem stavka/.test(o)) && p('hk32866')?.opozorila.some((o) => /Шуляк je v postavi dvakrat/.test(o)) &&
     H.default.nastopi(p('hk32866')).filter((x) => x.ime === 'Шуляк').length === 1 &&
-    H.default.nastopi(p('hk32866')).find((x) => x.ime === 'Чабак Артур')?.minute === 44 && p('hk31428')?.menjave.find((m) => m.noter.ime === 'Бондаренко Максим')?.ven.ime === 'Закорчменний Андрій')
+    H.default.nastopi(p('hk32866')).find((x) => x.ime === 'Чабак')?.minute === 44 && p('hk31428')?.menjave.find((m) => m.noter.ime === 'Бондаренко Максим')?.ven.ime === 'Закорчменний')
   preveri('hoff-km: objava brez golov (3:0) — opozorilo neujemanja, uvozi se', /goli iz objave \(0:0\) se ne ujemajo z izidom 3:0/.test(p('hk32187')?.opozorila.join('|')) &&
     !p('hk32187').nepopoln)
   preveri('hoff-km: izid brez objave je opozorilo v dnevniku', opozorilaKonzole.some((s) => /ima izid, objave s postavama ni/.test(s)))

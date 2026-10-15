@@ -2886,10 +2886,20 @@ lige se začne z `ua-`.
   gol ekipe brez strelca (ne nov igralec — sicer gol brez nastopa). Karton
   trenerja ne šteje.
 - **Identiteta: ime + klub**, šifer ni. Objave pišejo večinoma le priimek, ime
-  le ob soimenjaku ali pri strelcu ("Олійник" / "Олійник Владислав"):
-  `poenotiImena` golemu priimku (in začetnici "Бойко Н.") da ime, če ima klub
-  v sezoni s tem priimkom natanko enega igralca z imenom. Dva soimenjaka v
-  klubu ostaneta gola (Сідорчук Владислав in Станіслав sta vedno z imenom).
+  le ob soimenjaku ali pri strelcu ("Олійник" / "Олійник Владислав"), ista
+  oseba pa je kdaj "Матанчук", "Матанчук Денис" in "Матанчук Д.". **Ime se z
+  novimi objavami ne sme spremeniti**: uvoz išče igralca po polnem imenu, nočni
+  uvoz znova uvozi le zadnjih 21 dni, zato bi preimenovanje enega igralca
+  razdelilo na dva (pregled sezone 2026: 86 od 1186 nastopov Vyshcha in 65 od
+  737 Persha, preden je bilo popravljeno). `poenotiImena` gre skozi objave po vrsti
+  (datum, id) in osebi kluba da ime, kot ga je postava napisala ob njenem
+  **prvem** nastopu; poznejšo obliko (golo ime, ime, začetnica) pripiše
+  obstoječi osebi le iz prejšnjih objav in iste objave, ime strelca se le
+  nauči. Nova objava tako starih imen ne spremeni (smoke: vsak rez po datumu).
+  Dvoumno (dva Бойка, golo "Бойко") ostane, kot je napisano; soimenjaka v
+  klubu, ki ju postava piše z imenom, sta dva igralca (Сідорчук Владислав in
+  Станіслав). Ime v naslednji sezoni je spet ime iz postave (večinoma golo),
+  zato se med sezonama ujema bolje kot polno ime strelca.
   Šifra zapisnika v bazi je `hk<id objave>`.
 - **Predpomnilnik**: stran lige vedno sveža; seznam in vsebina objav tekočega
   leta vedno sveža, arhiv iz predpomnilnika — a če kateri tekmi do 45 dni

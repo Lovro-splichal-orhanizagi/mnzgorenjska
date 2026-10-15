@@ -658,42 +658,83 @@ export function vZapisnik(objava, { imeni = null, datum = null, danes = Date.now
 }
 
 /**
- * Enotna imena v sezoni: objave pišejo večinoma le priimek, ime le ob
- * soimenjaku ali pri strelcu ("Олійник" in "Олійник Владислав"). Golo ime
- * dobi ime, če ima klub v sezoni s tem priimkom natanko enega igralca z
- * imenom; sicer ostane, kot je (dva Сідорчука). Tako je ista oseba v vseh
- * tekmah isti igralec.
+ * Stalna imena v sezoni. Objave pišejo večinoma le priimek, ime le ob
+ * soimenjaku ali pri strelcu ("Олійник" v postavi, "Олійник Владислав" pri
+ * golu), kdaj pa ista oseba nastopi kot "Матанчук", "Матанчук Денис" in
+ * "Матанчук Д.". Uvoz igralca najde po polnem imenu, nočni uvoz pa znova uvozi
+ * le zadnjih 21 dni — ime, ki bi se spremenilo z novejšo objavo, bi enega
+ * igralca razdelilo na dva (zdruzi-duplikate različnih imen ne združi).
+ *
+ * Zato gremo skozi objave po vrsti (datum, id) in vsaki osebi kluba damo ime,
+ * kot ga je postava napisala ob njenem PRVEM nastopu; poznejša oblika
+ * (golo ime, ime, začetnica) se pripiše obstoječi osebi le na podlagi
+ * prejšnjih objav in iste objave. Nova objava tako ne spremeni nobenega
+ * imena, ki je že bilo — vsak zagon da za staro tekmo isto ime. Imena iz
+ * golov in postav ("Денис") se le naučimo, da poznejše oblike najdejo osebo.
+ * Dvoumno (dva Бойка, golo "Бойко") ostane, kot je napisano.
+ *
+ * `razclenjene`: [{ r, klubi: [ključ domačih, ključ gostov], datum, id }].
  */
 export function poenotiImena(razclenjene) {
-  // ključ kluba → priimek → ime (male črke) → polno ime za prikaz
-  const polna = new Map()
   const jeZacetnica = (i) => i.length <= 2
-  const dodaj = (klub, ime) => {
-    const b = besedeImena(ime)
-    if (b.length < 2 || jeZacetnica(b[1])) return
-    if (!polna.has(klub)) polna.set(klub, new Map())
-    const m = polna.get(klub)
-    if (!m.has(b[0])) m.set(b[0], new Map())
-    m.get(b[0]).set(b[1], besedilo(ime).replace(/\s*[–—-]\s*к$/i, ''))
+  const kljucBesed = (b) => b.map(ohlapno)
+  // ključ kluba → priimek (ohlapno) → [{ ime, kljuc, imena: Set, zacetnice: Set }]
+  const osebe = new Map()
+  const zaPriimek = (klub, priimek) => {
+    if (!osebe.has(klub)) osebe.set(klub, new Map())
+    const m = osebe.get(klub)
+    if (!m.has(priimek)) m.set(priimek, [])
+    return m.get(priimek)
   }
-  for (const { r, klubi } of razclenjene) {
-    r.ekipe.forEach((e, idx) => e.igralci.forEach((x) => dodaj(klubi[idx], x.ime)))
-    // Polno ime strelca ali zgrešene 11 m velja za igralca, ki mu je pripisan.
-    for (const x of [...r.goli, ...r.zgresene]) if (x.igralec && x.imeDogodka && besedeImena(x.imeDogodka)[0] === besedeImena(x.igralec.ime)[0]) dodaj(klubi[x.igralec.ekipaIdx], x.imeDogodka)
+  const nauci = (o, b) => {
+    if (b.length !== 2) return
+    if (jeZacetnica(b[1])) o.zacetnice.add(b[1][0])
+    else o.imena.add(b[1])
   }
-  for (const { r, klubi } of razclenjene) {
+  // Polna imena najprej, nato začetnice, nato gola imena: "Матанчук Андрій"
+  // zasede svojo osebo, preden golo "Матанчук" izbira med ostalimi.
+  const vrsta = (b) => (b.length === 1 ? 2 : b.length === 2 && jeZacetnica(b[1]) ? 1 : 0)
+  const red = [...razclenjene].sort((a, b) => String(a.datum ?? '').localeCompare(String(b.datum ?? '')) || (Number(a.id) || 0) - (Number(b.id) || 0))
+  for (const { r, klubi } of red) {
+    const osebaIgralca = new Map()
     r.ekipe.forEach((e, idx) => {
-      for (const x of e.igralci) {
-        const b = besedeImena(x.ime)
-        if (b.length > 2 || (b.length === 2 && !jeZacetnica(b[1]))) continue
-        const imena = [...(polna.get(klubi[idx])?.get(b[0]) ?? new Map()).entries()]
-        // Začetnica ("Бойко Н.") → edino ime s to začetnico; golo ime → edino ime.
-        const zadetki = b.length === 2 ? imena.filter(([i]) => i.startsWith(b[1])) : imena
-        // Soimenjaka na isti tekmi ne poenotimo v isto ime.
-        const soimenjak = e.igralci.some((y) => y !== x && besedeImena(y.ime)[0] === b[0] && (b.length === 1 || besedeImena(y.ime).length === 1))
-        if (zadetki.length === 1 && !soimenjak) x.ime = zadetki[0][1]
+      const zasedene = new Set()
+      const igralci = e.igralci.map((x) => ({ x, b: kljucBesed(besedeImena(x.ime)) })).filter((y) => y.b.length)
+      for (const { x, b } of igralci.sort((p, q) => vrsta(p.b) - vrsta(q.b))) {
+        const vse = zaPriimek(klubi[idx], b[0])
+        const prosti = vse.filter((o) => !zasedene.has(o))
+        const brezImena = prosti.filter((o) => !o.imena.size && !o.zacetnice.size)
+        let o = prosti.filter((y) => y.kljuc === b.join(' '))
+        o = o.length === 1 ? o[0] : null
+        if (!o && b.length === 2 && !jeZacetnica(b[1])) {
+          const zImenom = prosti.filter((y) => y.imena.has(b[1]))
+          const brezDrugega = prosti.filter((y) => !y.imena.size && [...y.zacetnice].every((z) => b[1].startsWith(z)))
+          o = zImenom.length === 1 ? zImenom[0] : !zImenom.length && brezDrugega.length === 1 ? brezDrugega[0] : null
+        } else if (!o && b.length === 2) {
+          const sZacetnico = prosti.filter((y) => y.zacetnice.has(b[1][0]) || [...y.imena].some((i) => i.startsWith(b[1][0])))
+          o = sZacetnico.length === 1 ? sZacetnico[0] : !sZacetnico.length && brezImena.length === 1 ? brezImena[0] : null
+        } else if (!o && b.length === 1) {
+          // Golo ime: edina prosta oseba s tem priimkom, sicer edina, ki jo
+          // postava piše golo.
+          const gole = prosti.filter((y) => y.kljuc === b[0])
+          o = prosti.length === 1 ? prosti[0] : gole.length === 1 ? gole[0] : null
+        }
+        if (!o) {
+          o = { ime: x.ime, kljuc: b.join(' '), imena: new Set(), zacetnice: new Set() }
+          vse.push(o)
+        }
+        nauci(o, b)
+        zasedene.add(o)
+        osebaIgralca.set(x, o)
+        x.ime = o.ime
       }
     })
+    // Ime strelca ali zgrešene 11 m ("Матанчук Денис") pove ime osebe za naprej.
+    for (const g of [...r.goli, ...r.zgresene]) {
+      const o = g.igralec && g.imeDogodka ? osebaIgralca.get(g.igralec) : null
+      const b = kljucBesed(besedeImena(String(g.imeDogodka ?? '').replace(/\s*[–—-]\s*к$/i, '')))
+      if (o && b[0] === kljucBesed(besedeImena(o.ime))[0]) nauci(o, b)
+    }
   }
 }
 
@@ -815,7 +856,12 @@ export async function tekmeZObjavami(koda, prenesi, { danes = Date.now() } = {})
   }
   let vse = await sestavi(sveze)
   if (!sveze && zadnja && vse.some((x) => ziva(x.tekma) && !x.tekma.tehnicni && (!x.r || x.r.nepopoln))) vse = await sestavi((sveze = true))
-  poenotiImena(vse.filter((x) => x.r).map((x) => ({ r: x.r, klubi: [kljucKlubaUa(x.tekma.domaci), kljucKlubaUa(x.tekma.gostje)] })))
+  poenotiImena(vse.filter((x) => x.r).map((x) => ({
+    r: x.r,
+    klubi: [kljucKlubaUa(x.tekma.domaci), kljucKlubaUa(x.tekma.gostje)],
+    datum: String(x.objava.date ?? ''),
+    id: x.objava.id,
+  })))
   return { liga, vse }
 }
 
