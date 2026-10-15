@@ -2830,7 +2830,7 @@ cene=true`.
 
 ### Grčija — vir `mascot` (Mascotnet)
 
-Država `GR` ("Ελλάδα") — vpiše jo ta migracija (20261015121300) ali migracija
+Država `GR` ("Ελλάδα") — vpiše jo ta migracija (20261015162100) ali migracija
 vira `eps`, kar pride prej (obe `on conflict do nothing`). Vmesnika v grščini,
 kartice in pošte **še ni**, `GR` **ni** v matriki nočnega uvoza — oboje pred
 vklopom. Šifra lige se začne z `gr-`.
@@ -2944,7 +2944,7 @@ ali le vstop, opozorilo), ali menjavo, pri kateri vir ne ve, kdo gre ven. Ahaja:
 nastopov s klopi brez dresa (klopi ne objavi). Nobena tekma ni bila brez
 borbe.
 
-Vpisanih je 31 lig (migracija 20261015121300), **neaktivnih**, brez arhiva:
+Vpisanih je 31 lig (migracija 20261015162100), **neaktivnih**, brez arhiva:
 
 | liga | šifra (`<domena>:<diorganosi>`) | klubov | odigranih / zapisnikov | goli = izid | postav po 11 | 990 minut |
 |---|---|---|---|---|---|---|
