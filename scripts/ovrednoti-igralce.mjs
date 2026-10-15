@@ -212,9 +212,10 @@ console.log(`Igralcev s statistiko: ${poIgralcu.size} od ${naSi.size}`)
 // igralcev 270 minut in liga ostane pri 4.5 — cenik ne loči nikogar. Prag
 // zato sledi temu, koliko je liga sploh odigrala: tretjina minut najbolj
 // zaposlenega igralca, a vsaj ena cela tekma. Lige z arhivom ali vsaj devetimi
-// odigranimi krogi imajo prag nespremenjen (270).
+// odigranimi krogi imajo prag nespremenjen (270). Vklopljena liga ga ima vedno
+// nespremenjenega: tam cene vodi borza, nižji prag bi tedenski zagon premaknil.
 const najvecMinut = Math.max(0, ...[...poIgralcu.values()].map((s) => s.minutes))
-const prag = Math.min(MIN_MINUT, Math.max(90, Math.floor(najvecMinut / 3)))
+const prag = tekmovanje.active ? MIN_MINUT : Math.min(MIN_MINUT, Math.max(90, Math.floor(najvecMinut / 3)))
 if (prag < MIN_MINUT) console.log(`Malo odigranega (največ ${najvecMinut} min): prag znižan na ${prag} min`)
 
 const ocene = new Map()

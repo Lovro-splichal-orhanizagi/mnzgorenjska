@@ -4,10 +4,10 @@ name: Cene lig
 # ze v bazi, a so ostale pri privzeti 4.5 (npr. Katalonija po 2–4 krogih brez
 # arhiva): uvoz traja 20–25 minut na ligo, cene nekaj sekund.
 #
-# Vklopljene lige preskoci (in ovrednoti-igralce.mjs jih brez --dovoli-aktivno
-# zavrne tudi sam), zato zagon cen ljudem v ekipah ne premakne. Na starejse uvoze ne caka: dolga
-# vrsta uvozov drugih lig bi ga zadrzala za ure, pise pa le cene igralcev
-# nevklopljenih lig, ki jih uvoz iste lige v tistem trenutku ne bi smel imeti.
+# Preskoci vklopljene lige (cene tam vodi borza; ovrednoti-igralce.mjs jih
+# brez --dovoli-aktivno zavrne tudi sam) in lige, ki cenik ze imajo
+# (prestanejo pripravljenost). Na starejse uvoze ne caka: dolga vrsta uvozov
+# drugih lig bi ga zadrzala za ure, pise pa le cene nevklopljenih lig.
 on:
   workflow_dispatch:
     inputs:
@@ -60,6 +60,11 @@ jobs:
           [ -s /tmp/lige.txt ] || { echo "::error::Ni lig."; exit 1; }
           padle=""
           while IFS= read -r liga; do
+            # Liga, ki cenik ze ima (prestane pripravljenost), ostane pri miru.
+            if node scripts/pripravljenost-lige.mjs --tekmovanje "$liga" </dev/null >/dev/null 2>&1; then
+              echo "ze ima cene, preskocena $liga" | tee -a /tmp/povzetek.txt
+              continue
+            fi
             echo "::group::$liga"
             if node scripts/lazni-vratarji.mjs    --tekmovanje "$liga" --pisi </dev/null \
               && node scripts/ugani-pozicije.mjs  --tekmovanje "$liga" --pisi </dev/null \
