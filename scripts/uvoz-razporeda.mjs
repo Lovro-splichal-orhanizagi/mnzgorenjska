@@ -309,7 +309,7 @@ if (idKrogov.length) {
   const vrstice = await vseVrstice((od, do_) =>
     db
       .from('matches')
-      .select('id, round_id, home_team_id, away_team_id, played_on, imported_at, kontumacija, vir_brez_izida')
+      .select('id, round_id, home_team_id, away_team_id, played_on, imported_at, kontumacija, vir_brez_izida, home_goals, away_goals')
       .in('round_id', idKrogov)
       .order('id')
       .range(od, do_),
@@ -412,12 +412,16 @@ for (const k of veljavni) {
       // borza pa je zaradi nje zadrzala cel krog. Datum popravimo SAMO, dokler
       // tekma ni uvozena: odigrana tekma ima pravi datum iz zapisnika.
       const obstojeca = obstojTekme[0]
-      if (t.kontumacija && !obstojeca.kontumacija && !obstojeca.imported_at) {
+      // Kontumacija, označena pred izidom (askf: napovedan izostanek, izstop
+      // kluba; v bazi 0:0), dobi izid, ko ga vir objavi.
+      const izidKontumacije = t.kontumacija && obstojeca.kontumacija && !!t.izid &&
+        (obstojeca.home_goals !== t.izid.domaci || obstojeca.away_goals !== t.izid.gostje)
+      if (t.kontumacija && (!obstojeca.kontumacija || izidKontumacije) && !obstojeca.imported_at) {
         // Izid dodeljene zmage, kjer ga vir pove (HNS); sicer ostane, kot je.
         const izid = t.izid ? { home_goals: t.izid.domaci, away_goals: t.izid.gostje } : {}
         const { error } = await db.from('matches').update({ kontumacija: true, ...izid }).eq('id', obstojeca.id)
         if (error) console.log(`  tekma ${t.domaci} : ${t.gostje}: ${error.message}`)
-        else console.log(`  kontumacija: ${t.domaci} : ${t.gostje}`)
+        else console.log(`  kontumacija${izidKontumacije ? ' (izid)' : ''}: ${t.domaci} : ${t.gostje}`)
       }
       // Oznaka "vir brez izida" velja le za neuvoženo tekmo; pišemo jo samo ob
       // spremembi, ker vsak zapis v `matches` preračuna točke kroga.
@@ -456,7 +460,7 @@ for (const k of veljavni) {
         vir_brez_izida: brezIzidaPriViru(t) === true,
         ...(t.kontumacija && t.izid ? { home_goals: t.izid.domaci, away_goals: t.izid.gostje } : {}),
       })
-      .select('id, round_id, home_team_id, away_team_id, played_on, imported_at, kontumacija, vir_brez_izida')
+      .select('id, round_id, home_team_id, away_team_id, played_on, imported_at, kontumacija, vir_brez_izida, home_goals, away_goals')
       .single()
     if (error) console.log(`  tekma ${t.domaci} : ${t.gostje}: ${error.message}`)
     else {

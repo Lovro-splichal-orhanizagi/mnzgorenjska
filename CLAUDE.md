@@ -2860,11 +2860,17 @@ uvoz) še ni pripravljena — lige so **neaktivne**.
 - **Čas** je istanbulski (UTC+3 vse leto) → ljubljanski (−1 h poleti, −2 h
   pozimi); "00:00" pomeni brez ure (kontumacije).
 - **Kontumacija**: pod klubom v razporedu stoji opomba — "Hükmen" (zmagovalec),
-  "Bu Maça Gitmeyecek/Çıkmadı", "Ligden Çekildi" (izstopil). Taka tekma je v
-  razporedu `kontumacija` z izidom, zapisnika uvoz ne bere. Stran tekme ima tedaj
-  le postavo ekipe, ki je prišla (ali nobene) — `vZapisnik` z opombo
-  kontumacije in eno postavo vrne null, da igralci ne dobijo nastopa. Kontumacij
-  je veliko: Aydın SAL 2025/26 41 od 108, Çanakkale SAL 25 od 132.
+  "Bu Maça Gitmeyecek/Çıkmadı", "Ligden Çekildi" (izstopil), "Ligden
+  Çıkarıldı" (izključen). Taka tekma je v razporedu `kontumacija`, **tudi brez
+  izida**: "Gitmeyecek" (ne bo prišel) zveza vpiše pred tekmo, "Çekildi" na vse
+  tekme izstopljenega kluba. Izstop in izključitev sta še `odstop`. Izid se
+  vpiše, ko ga zveza objavi (do takrat je v bazi 0:0, lestvica lige jo šteje kot
+  remi). Zapisnika uvoz ne bere. Stran tekme ima tedaj le postavo ekipe, ki je
+  prišla (ali nobene) — `vZapisnik` z opombo kontumacije in eno postavo vrne
+  null, da igralci ne dobijo nastopa. **Neznana opomba** se ne razume kot
+  kontumacija: uvoz razporeda jo javi (`::warning::`), zapisnik dobi opozorilo
+  — ob novi obliki dopolni `OPOMBA_KONTUMACIJE`. Kontumacij je veliko: Aydın
+  SAL 2025/26 41 od 108, Çanakkale SAL 25 od 132.
 - **Zapisnik** `/macdetay?macID=<id>`: "İLK 11" in "YEDEKLER" obeh ekip z
   dresom in **šifro licence TFF** (`/oyuncular?lisansno=` → `reg_st`, ista v
   obeh pokrajinah); časovnica "OLAYLAR": `estakimli` domači, `mstakimli` gostje,
@@ -2921,7 +2927,8 @@ spletišča nismo več brali — ne vemo, ali je zapora trajna, časovna ali le 
 stran. Aydın 1. Amatör 3 zato ni preštet. **Pred uvozom aydınskih lig** naj
 lastnik preveri dostop (ali vpraša Aydın ASKF); če 403 ostane, `aydin` lige
 ostanejo neaktivne in jih ne beremo — ne obhajaj (drug IP, brskalnik, manjši
-tempo brez dogovora). Çanakkale zavrnitve ni vrnil (~260 zahtevkov).
+tempo brez dogovora). Çanakkale zavrnitve ni vrnil (~260 zahtevkov). Ob
+11:15 istega dne je en sam GET `/fikstur` spet dobil 403 — zapora traja.
 
 Vpisanih je 5 lig (migracija 20261015120700), **neaktivnih**, zvezi
 `askf-canakkale` in `askf-aydin`. Sezona 2026/27 se začne konec oktobra

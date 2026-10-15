@@ -21,8 +21,10 @@
 // redni del); beremo le del z letnim razporedom ("YILLIK FİKSTÜR") — izpadnih
 // delov ne uvažamo. Teden je "N. HAFTA", datum in ura sta istanbulska (UTC+3 vse
 // leto → ljubljanski). Pod klubom stoji opomba: "Hükmen" (zmaga za zeleno
-// mizo), "Ligden Çekildi" (izstopil), "Bu Maça Gitmeyecek/Çıkmayacak" (ne pride)
-// — taka tekma je kontumacija.
+// mizo), "Ligden Çekildi" (izstopil), "Ligden Çıkarıldı" (izključen), "Bu Maça
+// Gitmeyecek/Çıkmayacak" (ne pride) — taka tekma je kontumacija, tudi preden ima
+// izid: zveza izostanek napove vnaprej in izstopljenemu klubu označi vse tekme.
+// Izstop in izključitev sta še `odstop`. Druga opomba se javi (`neznaneOpombe`).
 //
 // ZAPISNIK `/macdetay?macID=<id>`: glava (klubi s šifro `kulup`, izid, teden,
 // "15 Kasım 2025 Cumartesi - 15:00"), "İLK 11" in "YEDEKLER" obeh ekip (dres in
@@ -283,7 +285,9 @@ export function deliStrani(html) {
   return [...deli.values()].map((d) => ({ ime: d.ime, letni: d.letni, krogi: [...d.krogi.values()].filter((k) => !d.letni || k.letni) }))
 }
 
-const OPOMBA_KONTUMACIJE = /h[üu]kmen|çekil|cekil|gitmeyecek|gitmedi|çıkmayacak|cikmayacak|çıkmadı|cikmadi/i
+const OPOMBA_KONTUMACIJE = /h[üu]kmen|çekil|cekil|çıkarıl|cikaril|ihraç|ihrac|gitmeyecek|gitmedi|çıkmayacak|cikmayacak|çıkmadı|cikmadi/i
+/** Klub je iz lige izstopil ali bil izključen: vse njegove tekme so kontumacije. */
+const OPOMBA_ODSTOPA = /çekil|cekil|çıkarıl|cikaril|ihraç|ihrac/i
 
 /** Ena vrstica razporeda: { id, datum, ura, domaci, gostje, domaciId, gostjeId, izid, opombe }. */
 function vrsticaTekme(r) {
@@ -337,8 +341,9 @@ export function fiksturIzStrani(html) {
 
 /**
  * Tekme rednega dela lige: [{ krog, id, datum, ura, domaci, gostje, domaciId,
- * gostjeId, izid, kontumacija }] (datum in ura ljubljanska). Stran druge
- * sezone, lige ali skupine (postback brez učinka) ustavi uvoz.
+ * gostjeId, izid, kontumacija, odstop, neznaneOpombe }] (datum in ura
+ * ljubljanska). Kontumacija je vrstica z opombo izostanka ali izstopa, z izidom
+ * ali brez. Stran druge sezone, lige ali skupine (postback brez učinka) ustavi uvoz.
  */
 export function tekmeLige(koda, html) {
   const k = razberiKodo(koda)
@@ -357,8 +362,10 @@ export function tekmeLige(koda, html) {
     const n = Number(String(kr.oznaka ?? '').match(/^(\d+)\.\s*HAFTA$/i)?.[1])
     if (!n) throw new Error(`askf: ${zahtevano} — teden "${kr.oznaka}" ni "N. HAFTA" — uvoz ustavljen`)
     for (const t of kr.tekme) {
-      const kontumacija = !!t.izid && t.opombe.some((o) => OPOMBA_KONTUMACIJE.test(o))
-      out.push({ krog: n, ...t, kontumacija, ...vLjubljanskiCas(t.datum, t.ura) })
+      const kontumacija = t.opombe.some((o) => OPOMBA_KONTUMACIJE.test(o))
+      const odstop = t.opombe.some((o) => OPOMBA_ODSTOPA.test(o))
+      const neznaneOpombe = t.opombe.filter((o) => !OPOMBA_KONTUMACIJE.test(o))
+      out.push({ krog: n, ...t, kontumacija, odstop, neznaneOpombe, ...vLjubljanskiCas(t.datum, t.ura) })
     }
   }
   if (!out.length) throw new Error(`askf: ${zahtevano} — razpored brez tekem — se je stran spremenila? Uvoz ustavljen`)
@@ -376,8 +383,10 @@ export function razporedIzTekem(tekme) {
       datum: t.datum,
       ura: t.ura,
       kontumacija: t.kontumacija,
-      odigrana: !!t.izid,
-      ...(t.kontumacija ? { izid: t.izid } : {}),
+      odstop: t.odstop,
+      // Kontumacija brez izida (napovedan izostanek, izstop) ni "brez izida pri viru".
+      odigrana: !!t.izid || t.kontumacija,
+      ...(t.kontumacija && t.izid ? { izid: t.izid } : {}),
     })
   }
   return [...krogi.values()].filter((k) => k.tekme.some((t) => t.datum)).sort((a, b) => a.stevilka - b.stevilka)
@@ -838,7 +847,10 @@ const vir = {
   zavrnitev: (sporocilo, status = null) => new AskfZavrnitev(`askf: ${sporocilo} — uvoz ustavljen, ne obhajamo`, status),
 
   async razporedVseStrani(koda, prenesi) {
-    return razporedIzTekem(await razporedLige(koda, prenesi))
+    const tekme = await razporedLige(koda, prenesi)
+    for (const t of tekme.filter((x) => x.neznaneOpombe.length))
+      console.log(`::warning::askf: ${t.krog}. teden ${t.domaci} : ${t.gostje} — neznana opomba razporeda: ${t.neznaneOpombe.join('; ')}${t.izid ? ' (ima izid, uvozi se kot odigrana — preveri)' : ''}`)
+    return razporedIzTekem(tekme)
   },
 
   async zapisniki(koda, prenesi) {
@@ -864,6 +876,8 @@ const vir = {
       z.datum = t.datum ?? z.datum
       z.ura = t.ura ?? z.ura
       z.sezona = sezonaBaze(k.sezona)
+      // Opomba, ki je ne poznamo (morda nova oblika izostanka): tekma se uvozi, a javi.
+      if (t.neznaneOpombe.length) z.opozorila.push(`neznana opomba razporeda: ${t.neznaneOpombe.join('; ')} — je bila tekma res odigrana?`)
       if (z.rezultat.domaci !== t.izid.domaci || z.rezultat.gostje !== t.izid.gostje)
         z.opozorila.push(`izid zapisnika ${z.rezultat.domaci}:${z.rezultat.gostje} ni izid razporeda ${t.izid.domaci}:${t.izid.gostje}`)
       out.push({ id, z, url })

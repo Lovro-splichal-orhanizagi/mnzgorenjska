@@ -5427,6 +5427,29 @@ preveri(
   preveri('askf: skupina — izbrana po postbacku (naslov strani prazen), brez nje ali druga ustavi', T.stanjeStrani(fa).skupine.map((g) => `${g.kljuc}${g.izbrana ? '*' : ''}`).join() === '1,2*' &&
     ta.length === 10 && ta.every((t) => !t.izid) && ta[0].datum === '2026-10-24' && ta[0].ura === '13:00' &&
     /šifra mora povedati skupino/.test(brezSkupine ?? '') && /skupina 2, ne/.test(drugaSkupina ?? ''))
+  // Opomba pod klubom vrstic tekme `macId` (letni razpored in tekoči teden): `stran` home/away, po želji izid namesto "-".
+  const zOpombo = (html, macId, stran, opomba, izid = null) =>
+    html.replace(new RegExp(`(<li id="[^"]*_musabaka_\\d+" class="table-row">(?:(?!</li>)[\\s\\S])*?macID=${macId}"(?:(?!</li>)[\\s\\S])*?</li>)`, 'g'), (vrstica) => {
+      let v = vrstica.replace(new RegExp(`(<div class="fixture-match-${stran} table-cell">\\s*<a [^>]*>[^<]*</a>)`), `$1 \n<br><span>${opomba}</span>`)
+      if (izid) v = v.replace(/(macID=\d+">)\s*-\s*(<\/a>)/, `$1\n${izid}\n$2`)
+      return v
+    })
+  let fo = zOpombo(fa, 7678, 'away', 'Bu Maça Gitmeyecek')
+  fo = zOpombo(fo, 7679, 'home', 'Ligden Çekildi')
+  fo = zOpombo(fo, 7676, 'home', 'Ligden Çıkarıldı', '0-3')
+  fo = zOpombo(fo, 7677, 'away', 'Ertelendi', '1-1')
+  const to = T.tekmeLige('aydin/2026-2027/1amator/2', fo)
+  const vo = (id) => to.find((t) => t.id === id)
+  preveri('askf: "Ligden Çıkarıldı" (izključen iz lige) z izidom je kontumacija in odstop', vo(7676)?.kontumacija === true && vo(7676)?.odstop === true &&
+    vo(7676)?.izid?.gostje === 3, JSON.stringify(vo(7676)))
+  const ro = T.razporedIzTekem(to).flatMap((k) => k.tekme)
+  const rv = (d) => ro.find((t) => t.domaci === d)
+  preveri('askf: napovedan izostanek ("Bu Maça Gitmeyecek") ali izstop ("Ligden Çekildi") brez izida je že kontumacija, izstop še odstop',
+    vo(7678)?.kontumacija === true && vo(7678)?.odstop === false && !vo(7678)?.izid && vo(7679)?.kontumacija === true && vo(7679)?.odstop === true &&
+    rv('GÜZELÇAMLI BLD.SPOR')?.kontumacija === true && !('izid' in rv('GÜZELÇAMLI BLD.SPOR')) && rv('SALİH UÇAR KOÇARLI A.MENDERES')?.odstop === true &&
+    rv('YAZIDERESPOR')?.izid?.gostje === 3 && to.filter((t) => t.kontumacija).length === 3, JSON.stringify([vo(7678), vo(7679)]))
+  preveri('askf: neznana opomba ob izidu se javi (ni kontumacija, ni tiho)', vo(7677)?.kontumacija === false &&
+    JSON.stringify(vo(7677)?.neznaneOpombe) === '["Ertelendi"]' && to.filter((t) => t.neznaneOpombe?.length).length === 1, JSON.stringify(vo(7677)))
 
   // Zapisnik.
   const z = T.vZapisnik(beri('tr-askf-mac-10300.html'), { id: 'askf-canakkale-10300' })
@@ -5457,6 +5480,8 @@ preveri(
     T.glavaZapisnika(hk).opombe.includes('Hükmen') && T.jeStranTekme(hk))
   preveri('askf: kontumacija s postavo ekipe, ki je prišla ("Bu Maça Çıkmadı") — zapisnika ni', T.vZapisnik(beri('tr-askf-mac-kontumacija-postava-aydin-6080.html')) === null &&
     /Bu Maça Çıkmadı/.test(beri('tr-askf-mac-kontumacija-postava-aydin-6080.html')))
+  preveri('askf: tekma ekipe, izključene iz lige ("Ligden Çıkarıldı"), s postavo nasprotnika — zapisnika ni',
+    T.vZapisnik(beri('tr-askf-mac-kontumacija-postava-aydin-6080.html').replace(/Bu Maça Çıkmadı/g, 'Ligden Çıkarıldı')) === null)
   preveri('askf: odigrana tekma brez vnesenih postav — zapisnika (še) ni', T.vZapisnik(beri('tr-askf-mac-brez-postav-10374.html')) === null &&
     T.glavaZapisnika(beri('tr-askf-mac-brez-postav-10374.html')).izid.gostje === 3)
   // Ena ekipa brez postave in goli, ki se pri sveži tekmi ne ujemajo: nepopoln (uvoz ga bere znova).
@@ -5531,6 +5556,8 @@ preveri(
     const tIzziv = await zz(async (url) => (/fikstur/.test(url) ? razpored : '<div class="g-recaptcha"></div>'))
     const fIzziv = await zz(async () => '<title>Just a moment...</title>')
     const ok = await T.default.zapisniki('canakkale/2025-2026/samator', async (url) => (/fikstur/.test(url) ? razpored : beri('tr-askf-mac-10300.html')))
+    const razporedN = T.fiksturVStran(T.razcleniFikstur(zOpombo(fs, 10273, 'home', 'Ertelendi')))
+    const okN = await T.default.zapisniki('canakkale/2025-2026/samator', async (url) => (/fikstur/.test(url) ? razporedN : beri('tr-askf-mac-10300.html')))
     if (prej === undefined) delete process.env.SLFF_ASKF_MAPA
     else process.env.SLFF_ASKF_MAPA = prej
     rmSync(mapa, { recursive: true, force: true })
@@ -5539,6 +5566,9 @@ preveri(
     preveri('askf: uvoz zapisnikov — kontumacij ne bere, klub, krog in sezona iz razporeda', ok.length === 12 - T.tekmeLige('canakkale/2025-2026/samator', fs).filter((t) => t.kontumacija).length &&
       ok.every((x) => x.z.sezona === '2025/26' && x.id.startsWith('askf-canakkale-')) && ok[0].z.krog === 1 &&
       ok.some((x) => x.z.opozorila.some((o) => /niso klubi razporeda/.test(o))))
+    preveri('askf: neznana opomba razporeda ob izidu gre v opozorila zapisnika', okN.length === ok.length &&
+      okN.filter((x) => x.z.opozorila.some((o) => /neznana opomba razporeda: Ertelendi/.test(o))).length === 1 &&
+      !ok.some((x) => x.z.opozorila.some((o) => /neznana opomba/.test(o))))
   }
 }
 
