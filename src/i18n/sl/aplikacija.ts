@@ -44,6 +44,9 @@ export const aplikacija = {
   noga: {
     zasebnost: 'Zasebnost in pogoji',
     facebook: 'Sledi nam na Facebooku',
+    /** Povezavi na aplikacijo v trgovinah (Trgovine.tsx). */
+    android: 'Aplikacija za Android',
+    iphone: 'Aplikacija za iPhone',
     vir: 'Podatki: uradni zapisniki <vir>{ime}</vir>',
     /** Ime zveze sredi stavka, kadar je ne poznamo. */
     zvezeSplosno: 'zveze',

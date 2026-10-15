@@ -38,6 +38,8 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
   noga: {
     zasebnost: 'Приватност и услови',
     facebook: 'Следете нè на Facebook',
+    android: 'Апликација за Android',
+    iphone: 'Апликација за iPhone',
     vir: 'Податоци: официјални записници (<vir>{ime}</vir>)',
     /** Naziv saveza usred rečenice, kad ga ne znamo. */
     zvezeSplosno: 'федерацијата',
