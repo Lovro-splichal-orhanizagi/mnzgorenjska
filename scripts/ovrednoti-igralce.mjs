@@ -208,10 +208,19 @@ console.log(`Igralcev s statistiko: ${poIgralcu.size} od ${naSi.size}`)
 // NULL in bi za gole in "brez prejetega gola" dobila 0 točk — vrednotenje bi
 // tako precenilo vratarje (edine z znano pozicijo iz zapisnika).
 // Zato ocenjujemo iz surove statistike, ki je od pozicije neodvisna.
+// Zgodaj v sezoni brez arhiva (fcf, fas) ima po 2–4 krogih le peščica
+// igralcev 270 minut in liga ostane pri 4.5 — cenik ne loči nikogar. Prag
+// zato sledi temu, koliko je liga sploh odigrala: tretjina minut najbolj
+// zaposlenega igralca, a vsaj ena cela tekma. Lige z arhivom ali vsaj devetimi
+// odigranimi krogi imajo prag nespremenjen (270).
+const najvecMinut = Math.max(0, ...[...poIgralcu.values()].map((s) => s.minutes))
+const prag = Math.min(MIN_MINUT, Math.max(90, Math.floor(najvecMinut / 3)))
+if (prag < MIN_MINUT) console.log(`Malo odigranega (največ ${najvecMinut} min): prag znižan na ${prag} min`)
+
 const ocene = new Map()
 for (const p of igralci ?? []) {
   const s = poIgralcu.get(p.id)
-  if (!s || s.minutes < MIN_MINUT) continue
+  if (!s || s.minutes < prag) continue
 
   const na90 = (v) => v / (s.minutes / 90)
   const goliNa90 = na90(s.goals)
@@ -232,7 +241,7 @@ for (const p of igralci ?? []) {
   // koren zaupanja: malo minut ceno zniža, a je ne izniči
   ocene.set(p.id, ocena * Math.sqrt(zaupanje))
 }
-console.log(`Igralcev z dovolj minutami (>=${MIN_MINUT}): ${ocene.size}`)
+console.log(`Igralcev z dovolj minutami (>=${prag}): ${ocene.size}`)
 
 if (ocene.size === 0) {
   console.log('Ni dovolj podatkov za vrednotenje.')
