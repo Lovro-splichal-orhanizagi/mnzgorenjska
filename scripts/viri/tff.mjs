@@ -41,7 +41,7 @@
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { razpakiraj } from '../klubi.mjs'
 import { nastopi } from './hlf.mjs'
-import { sezonaIzDatuma } from './frf.mjs'
+import { sezonaIzDatuma, NEPOPOLN } from './frf.mjs'
 import { sifra } from './zapisniki.mjs'
 
 export { nastopi }
@@ -474,7 +474,7 @@ export function vZapisnik(html, { id = null, url = null } = {}) {
     }
   })
 
-  const zaEkipo = (idx) => goli.filter((x) => (x.avtogol ? 1 - x.ekipaIdx : x.ekipaIdx) === idx).length
+  const zaEkipo = (idx) => goliZaEkipo(goli, idx)
   if (zaEkipo(0) !== g.izid.domaci || zaEkipo(1) !== g.izid.gostje)
     opozorila.push(`goli iz zapisnika (${zaEkipo(0)}:${zaEkipo(1)}) se ne ujemajo z izidom ${g.izid.domaci}:${g.izid.gostje}`)
 
@@ -499,6 +499,14 @@ export function vZapisnik(html, { id = null, url = null } = {}) {
     opozorila,
   }
 }
+
+const goliZaEkipo = (goli, idx) => goli.filter((x) => (x.avtogol ? 1 - x.ekipaIdx : x.ekipaIdx) === idx).length
+
+/**
+ * Manjkajo strelci? Izid je vpisan, golov (še) ne — TFF strelce vpiše pozneje
+ * (318188 Mardin : Karagümrük 1:0 brez strelca, 15. 10. 2026).
+ */
+export const manjkajoGoli = (z) => !!z && (goliZaEkipo(z.goli, 0) < z.rezultat.domaci || goliZaEkipo(z.goli, 1) < z.rezultat.gostje)
 
 // --- klubi ---------------------------------------------------------------------------------
 
@@ -665,6 +673,12 @@ export function razporedIzTekem(tekme) {
 export async function tffFetch(url, moznosti = {}) {
   const { signal: _s, ...ostalo } = moznosti
   const o = await fetch(url, { ...ostalo, signal: AbortSignal.timeout(60000) })
+  // Zavrnitev (401, 403, 429) ustavi uvoz že tu, brez ponovitev — tudi na
+  // poteh, ki bi ob napaki vzele shranjeno stran (uvoz razporeda, kontumacije).
+  if (ZAVRNITVE.includes(o.status)) {
+    await o.body?.cancel().catch(() => {})
+    throw new TffZavrnitev(`tff: ${url} → ${o.status} — uvoz ustavljen, ne obhajamo`, o.status)
+  }
   const bajti = new Uint8Array(await o.arrayBuffer())
   const tip = o.headers.get('content-type') ?? ''
   const kodiranje = /charset=([\w-]+)/i.exec(tip)?.[1] ?? 'windows-1254'
@@ -713,12 +727,20 @@ const vir = {
       // Stran brez postav ("Esame Bilgileri Kulüpler Tarafından Girilmektedir"):
       // klub postave vnese pozneje, zato je shranjena ne sme zamrzniti — do 45
       // dni jo beremo sveže. Kontumacije (3:0 / 0:3, starejše od tedna) ne.
+      // Enako zapisnik z izidom, a brez (vseh) strelcev: shranjen ne sme obveljati za popolnega.
       const kontumacija = starost > 7 && ((t.izid.domaci === 3 && t.izid.gostje === 0) || (t.izid.domaci === 0 && t.izid.gostje === 3))
-      if (!z && starost > 3 && starost <= 45 && !kontumacija) {
+      if (((!z && !kontumacija) || manjkajoGoli(z)) && starost > 3 && starost <= 45) {
         html = await prenesiStran(prenesi, url, imeTekme(t.id), true)
         z = vZapisnik(html, { id: sifraZapisnika(t.id), url })
       }
       if (!z) continue
+      // Do 45 dni je tekma brez strelcev nepopolna: uvoz zapiše izid in nastope,
+      // `imported_at` ostane prazen (borza čaka), nočni uvoz jo bere znova,
+      // preveri-podatke jo po 3 dneh javi. Starejša gre skozi z opozorilom.
+      if (manjkajoGoli(z) && starost <= 45) {
+        z.nepopoln = true
+        z.opozorila.unshift(`${NEPOPOLN}: izid ${z.rezultat.domaci}:${z.rezultat.gostje}, strelci (še) niso vpisani`)
+      }
       // Ime kluba, krog in datum s strani tedna, da se tekma ujame z razporedom.
       const g = glavaZapisnika(html)
       const obrnjeno = g.domaciId === t.gostjeId && g.gostjeId === t.domaciId

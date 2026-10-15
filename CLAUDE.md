@@ -2897,6 +2897,10 @@ eden za drugim). Šifra lige se začne s `tr-`.
   Girilmektedir", brez ure in brez ene ali obeh postav (Yeni Malatyaspor,
   3. Lig 03, 3. in 11. 10. 2026; BAL 2025/26 pogosto z le domačo postavo).
   `vZapisnik` vrne null, `vir.kontumacije` jo označi po tednu dni.
+- **Izid brez strelcev** (manj golov kot izid, `manjkajoGoli`): TFF strelce
+  vpiše pozneje. Do 45 dni je tekma `nepopoln` (opozorilo `zapisnik
+  nepopoln`, `imported_at` prazen, borza čaka) in jo vsak uvoz bere sveže;
+  starejša gre skozi z opozorilom `goli … se ne ujemajo z izidom`.
 - Imena: TFF ime kluba včasih odreže ("… SPORTİF FAALİYET SPOR KULÜ").
 
 **Pravice (pregled 15. 10. 2026, ni pravni nasvet).** robots.txt ni (404),
@@ -2910,8 +2914,8 @@ dovoljenje TFF ali turške lige izklopimo.** Beremo odkrito (User-Agent
 `SLFF fantasy (https://slff.eu)`, **3 s** med zahtevki, zaključenih tednov in
 zapisnikov ne beremo znova). **Ob izzivu, CAPTCHI, 403 ali 429 se uvoz ustavi —
 ne obhajaj** (`TffZavrnitev`, izhod 4 — na strani tedna in tekme, oboje gre
-skozi `prenesiStran`; tudi 401 in zavrnitev med branjem kontumacij v uvozu
-razporeda). V predpomnilnik gre le prava stran (`vir.zaPredpomnilnik`:
+skozi `prenesiStran`; 401, 403 in 429 vrže že `vir.fetch` (`tffFetch`), brez
+ponovitev, zato tudi uvoz razporeda in kontumacije ne vzamejo shranjene strani). V predpomnilnik gre le prava stran (`vir.zaPredpomnilnik`:
 zapisnik z glavo, teden z zavihkom) — napaka strežnika s statusom 200 ne. Če nas TFF prosi, naj nehamo, `tr-`
 lige izklopimo.
 
@@ -2948,7 +2952,7 @@ odigranem krogu 2026/27.**
 1. Lig (15. 10. 2026, 135 + 88 zahtevkov): tekoča sezona 38 tednov, 380
 tekem, 20 klubov, 97 z izidom — vsi zapisniki 11 + 11, menjave z minuto (893),
 goli = izid 96/97 (tekma 318188, Mardin : Karagümrük, se je ta dan šele
-končala: izid 1:0 brez vpisanega strelca — sveže branje prve 3 dni), 990
+končala: izid 1:0 brez vpisanega strelca, tudi zvečer še brez), 990
 minut 177/194, ostalih 17 pojasni rdeči karton. Arhiv `1772` (tedni 1, 10,
 19, 28, 38): 50 zapisnikov, goli = izid 50/50, 990 minut 90/100 (10 z rdečim),
 0 opozoril. Imena tujcev so po turško ("Gıannı", "Cebıo"): TFF jih piše z I

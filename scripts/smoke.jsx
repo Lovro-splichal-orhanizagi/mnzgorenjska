@@ -5553,6 +5553,63 @@ preveri(
     preveri('tff: 403 in izziv na strani tekme vržeta TffZavrnitev (izhod 4, ne 1)', tekme403 instanceof T.TffZavrnitev && tekme403.status === 403 &&
       tekmeIzziv instanceof T.TffZavrnitev, `${tekme403?.name} ${tekme403?.status} / ${tekmeIzziv?.name}`)
   }
+  // Izid brez vpisanega strelca (318188 Mardin : Karagümrük 1:0, 15. 10. 2026):
+  // TFF strelca vpiše pozneje. Tak zapisnik ni popoln — do 45 dni ga beremo
+  // sveže in tekma ostane brez `imported_at` (nepopoln), starejši gre skozi z opozorilom.
+  {
+    const { mkdtempSync, rmSync } = await import('node:fs')
+    const { tmpdir } = await import('node:os')
+    const { NEPOPOLN } = await import('./viri/frf.mjs')
+    const brezStrelcev = beri('tr-tff-mac-1lig-avtogol-318115.html').replace(/rptGoller_ctl/g, 'rptBrez_ctl')
+    const teden = T.obreziTeden(beri('tr-tff-hafta-142-10.html'))
+    const poskusi = async (dniNazaj) => {
+      const d = new Date(Date.now() - dniNazaj * 86400000)
+      const datum = `${String(d.getUTCDate()).padStart(2, '0')}.${String(d.getUTCMonth() + 1).padStart(2, '0')}.${d.getUTCFullYear()}`
+      const mapa = mkdtempSync(`${tmpdir()}/tff-smoke-`)
+      const prej = process.env.SLFF_TFF_MAPA
+      process.env.SLFF_TFF_MAPA = mapa
+      let svezih = 0
+      let tekem = 0
+      try {
+        const zs = await T.default.zapisniki('142', async (url, _ime, sveze) => {
+          const h = new URL(url).searchParams.get('hafta')
+          if (h) return teden.replace(/>10\.Hafta</, `>${h}.Hafta<`).replace(/\d{2}\.\d{2}\.2026/g, datum)
+          tekem++
+          if (sveze) svezih++
+          return brezStrelcev
+        })
+        return { zs, svezih, tekem }
+      } finally {
+        if (prej === undefined) delete process.env.SLFF_TFF_MAPA
+        else process.env.SLFF_TFF_MAPA = prej
+        rmSync(mapa, { recursive: true, force: true })
+      }
+    }
+    const r10 = await poskusi(10)
+    const r60 = await poskusi(60)
+    preveri('tff: izid brez strelca — do 45 dni sveže in nepopoln (brez imported_at), starejši z opozorilom',
+      r10.zs.length > 0 && r10.zs.every((x) => x.z.nepopoln && String(x.z.opozorila[0]).startsWith(NEPOPOLN)) && r10.svezih === r10.zs.length &&
+      r60.zs.length === r10.zs.length && r60.zs.every((x) => !x.z.nepopoln && x.z.opozorila.some((o) => /se ne ujemajo z izidom/.test(o))) && r60.svezih === 0,
+      `10 dni: ${r10.zs.length} tekem, nepopolnih ${r10.zs.filter((x) => x.z.nepopoln).length}, svežih ${r10.svezih}; 60 dni: nepopolnih ${r60.zs.filter((x) => x.z.nepopoln).length}, svežih ${r60.svezih}`)
+  }
+  // 401/403/429 vrže že `tffFetch`: tudi pot mimo `prenesiStran` (uvoz razporeda
+  // vzame ob napaki shranjeno stran, kontumacije) se ustavi z izhodom 4.
+  {
+    const { prenesiSPonovitvami } = await import('./prenos.mjs')
+    const pravi = globalThis.fetch
+    const statusi = []
+    for (const status of [401, 403, 429]) {
+      let klicev = 0
+      globalThis.fetch = async () => { klicev++; return new Response('', { status }) }
+      let e = null
+      try { await prenesiSPonovitvami('https://www.tff.org/x', { fetchFn: T.tffFetch, zamiki: [0, 0, 0], log: () => {} }) } catch (x) { e = x }
+      statusi.push(e instanceof T.TffZavrnitev && e.zavrnitev === true && e.status === status && klicev === 1)
+    }
+    globalThis.fetch = async () => new Response('<html>ok</html>', { status: 200 })
+    const ok = await T.tffFetch('https://www.tff.org/y')
+    globalThis.fetch = pravi
+    preveri('tff: 401, 403 in 429 vrže tffFetch (zavrnitev, brez ponovitev)', statusi.every(Boolean) && ok.status === 200, JSON.stringify(statusi))
+  }
   const kodiran = await T.tffFetch('data:text/html;charset=windows-1254;base64,' + Buffer.from([0xdd, 0x53, 0x54, 0x41, 0x4e, 0x42, 0x55, 0x4c, 0xfd]).toString('base64'))
   preveri('tff: stran windows-1254 se prebere kot UTF-8', (await kodiran.text()) === 'İSTANBULı')
 }
