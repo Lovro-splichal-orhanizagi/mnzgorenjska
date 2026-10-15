@@ -2410,11 +2410,18 @@ stran jih naloži sama.
 - **Izstopljena ekipa**: zveza njene tekme pusti v razporedu kot "-:-
   Nierozegrany", zapisnik je "Brak danych" (B Klasa gr. 3 2025/26: Zryw
   Jedwabno jeseni, Omulew II spomladi; gr. 1: Znicz II). `izstopljeneEkipe`
-  ekipo prepozna, ko ima od neke tekme naprej vsaj tri neodigrane tekme,
-  starejše od tedna, in nobene odigrane (tekme proti že izstopljeni ne
-  štejejo), ostali pa so medtem igrali; te tekme razpored označi kot
-  kontumacije **brez izida** (kot jalgpall "- : -"). Prestavljene tekme ene
-  ekipe (tri zapored) bi bile napačno označene — preveri, če se pojavi.
+  ekipo prepozna, ko ima za svojo zadnjo odigrano tekmo (kadarkoli, tudi ta
+  teden) vsaj tri neodigrane, starejše od tedna, v vsakem od teh krogov so
+  vse ostale tekme odigrane (tekme proti že izstopljeni ne štejejo) **in** to
+  potrdi tabela zveze na isti strani (`tabelaStrani`): ekipe v njej ni
+  (Zryw — izidi razveljavljeni) ali ji tabela šteje vsaj tri tekme več, kot
+  jih ima z izidom (Omulew II: M 22, z izidom 14). Preložene tekme tabela ne
+  šteje, stran brez tabele ne potrdi nobenega izstopa. Te tekme razpored
+  označi kot kontumacije **brez izida** (kot jalgpall "- : -"). **Oznaka je
+  enosmerna**: `uvoz-razporeda` kontumacije ne pobriše, ko tekma kasneje dobi
+  izid (zapisnik se kljub temu uvozi in točke pridejo, oznaka ostane) — zato
+  je pravilo strogo; napačno oznako popravi admin
+  (`update matches set kontumacija = false where id = …`).
 - **Zavrnitev in napake strani**: `wmzpnFetch` ob 401/403/429 vrže
   `WmzpnZavrnitev` na vsaki poti (razpored, zapisniki, kontumacije — tudi
   `uvoz-razporeda` jo iz kontumacij zdaj spusti naprej), prenos je ne

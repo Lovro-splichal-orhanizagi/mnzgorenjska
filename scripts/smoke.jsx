@@ -5149,6 +5149,30 @@ preveri(
   preveri('wmzpn: izstop šele po treh neodigranih, starejših od tedna; IV liga brez izstopov',
     W.izstopljeneEkipe(kbT, '2025-08-30').size === 0 && W.izstopljeneEkipe(W.tekmeStrani(stran), '2026-10-15').size === 0 &&
     W.razcleniRazpored(stran, '2026-10-15').flatMap((k) => k.tekme).filter((t) => t.kontumacija).length === 0)
+  // Oznaka kontumacije v bazi je enosmerna: preložene tekme ne smejo postati
+  // kontumacije. (a) Ekipa, ki je ta teden spet igrala, ni izstopila.
+  const zrywSpet = [...kbT, { krog: 99, id: 'x', datum: '2025-11-28', ura: null, domaci: 'KS Zryw Jedwabno', gostje: 'KS Brama Olsztyn', izid: { domaci: 1, gostje: 0 }, odigrana: true, walkower: false }]
+  // (b) Preložen krog (vreme): neodigranih je več tekem kroga, ne le ene ekipe.
+  const ivT = W.tekmeStrani(stran)
+  const ivEkipa = ivT.filter((t) => t.odigrana).at(-1).domaci
+  const ivZadnji = ivT.filter((t) => t.odigrana && (t.domaci === ivEkipa || t.gostje === ivEkipa)).slice(-3).map((t) => t.krog)
+  const ivPrelozeni = ivT.map((t) => ivZadnji.includes(t.krog) && (t.domaci === ivEkipa || t.gostje === ivEkipa || t.id === ivT.find((x) => x.krog === t.krog && x.domaci !== ivEkipa && x.gostje !== ivEkipa).id)
+    ? { ...t, izid: null, odigrana: false } : t)
+  const ivDanes = new Date(Date.parse(`${ivT.filter((t) => t.odigrana).map((t) => t.datum).sort().at(-1)}T00:00:00Z`) + 8 * 86400000).toISOString().slice(0, 10)
+  preveri('wmzpn: preložene tekme niso izstop — ekipa je spet igrala, preložen krog z več tekmami',
+    !W.izstopljeneEkipe(zrywSpet, '2025-11-30').has('KS Zryw Jedwabno') && W.izstopljeneEkipe(kbT, '2025-11-30').has('KS Zryw Jedwabno') &&
+    ivZadnji.length === 3 && W.izstopljeneEkipe(ivPrelozeni, ivDanes).size === 0)
+  // (c) Ena sama ekipa s tremi preloženimi (ostali krog odigran): razpored je
+  // ne loči od izstopa, tabela pa: preložene tekme ne šteje (M = z izidom).
+  const ivSamo = ivT.map((t) => ivZadnji.includes(t.krog) && (t.domaci === ivEkipa || t.gostje === ivEkipa) ? { ...t, izid: null, odigrana: false } : t)
+  const ivTabela = new Map([...new Set(ivT.flatMap((t) => [t.domaci, t.gostje]))].map((e) =>
+    [W.default.kljucKluba(e), ivSamo.filter((t) => (t.domaci === e || t.gostje === e) && t.odigrana).length]))
+  const kbTabela = W.tabelaStrani(kb)
+  preveri('wmzpn: izstop potrdi tabela zveze — Zryw ni v njej, Omulew II ima M 22; preložene ekipe tabela ne potrdi; brez tabele ni izstopa',
+    W.izstopljeneEkipe(ivSamo, ivDanes).size === 1 && W.izstopljeneEkipe(ivSamo, ivDanes, ivTabela).size === 0 &&
+    kbTabela.size === 11 && !kbTabela.has(W.default.kljucKluba('KS Zryw Jedwabno')) && kbTabela.get(W.default.kljucKluba('GZPN Omulew II Wielbark')) === 22 &&
+    W.izstopljeneEkipe(kbT, '2026-10-15', kbTabela).size === 2 && W.izstopljeneEkipe(kbT, '2026-10-15', new Map()).size === 0 &&
+    W.razcleniRazpored(kb.replace(/<section class="print-table">[\s\S]*?<\/section>/, ''), '2026-10-15').flatMap((k) => k.tekme).filter((t) => t.kontumacija).length === 1)
 
   // Napaka strani ne gre v predpomnilnik; 401/403/429 ustavi uvoz na vsaki poti.
   preveri('wmzpn: v predpomnilnik le zapisnik, "Brak danych" ali stran z razporedom',

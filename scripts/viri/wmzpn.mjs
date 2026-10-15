@@ -201,40 +201,78 @@ export function tekmeStrani(html) {
 const dniPred = (danes, dni) => new Date(Date.parse(`${danes}T00:00:00Z`) - dni * 86400000).toISOString().slice(0, 10)
 
 /**
- * Ekipe, ki so izstopile: od neke tekme naprej nobena njihova tekma, starejša
- * od tedna, nima izida, takih je vsaj tri, in v tem času so drugi odigrali
- * tekme po njihovem prvem neodigranem datumu. Zveza tekme izstopljene ekipe
- * pusti v razporedu kot "-:- Nierozegrany", zapisnik je "Brak danych"
- * (B Klasa gr. 3 2025/26: KS Zryw Jedwabno jeseni, Omulew II spomladi).
+ * Ekipe, ki so izstopile: za njeno zadnjo odigrano tekmo (kadarkoli, tudi v
+ * zadnjem tednu ali pozneje) ima vsaj tri neodigrane, starejše od tedna, in v
+ * vsakem od teh krogov so vse ostale tekme (razen proti izstopljenim)
+ * odigrane. Zveza tekme izstopljene ekipe pusti v razporedu kot "-:-
+ * Nierozegrany", zapisnik je "Brak danych" (B Klasa gr. 3 2025/26: KS Zryw
+ * Jedwabno jeseni, Omulew II spomladi).
+ *
+ * Oznaka kontumacije v bazi je enosmerna (uvoz razporeda je ne pobriše), zato
+ * je pravilo strogo: preložen krog (vreme, igrišče) ima neodigranih več tekem
+ * in ne šteje; ekipa, ki je spet igrala, ni izstopila; prestavljena tekma z
+ * novim datumom pade iz niza. Izstop mora potrditi še tabela zveze
+ * (`tabelaStrani`, kadar je podana): ekipe ni v njej (Zryw — izidi
+ * razveljavljeni) ali ji šteje vsaj tri tekme več, kot jih ima z izidom
+ * (Omulew II: M 22, z izidom 14 — neodigrane so verificirane). Preložena
+ * tekma v tabeli ne šteje, zato ekipa s tremi preloženimi ni izstop. Prazna
+ * tabela (stran brez nje) ne potrdi nobenega izstopa.
  * Vrne Map ekipa → datum prve neodigrane tekme.
  */
-export function izstopljeneEkipe(tekme, danes = new Date().toISOString().slice(0, 10)) {
+export function izstopljeneEkipe(tekme, danes = new Date().toISOString().slice(0, 10), tabela = null) {
   const meja = dniPred(danes, 7)
   const out = new Map()
   const ekipe = new Set(tekme.flatMap((t) => [t.domaci, t.gostje]))
+  const potrdiTabela = (e) => {
+    if (!tabela) return true
+    const k = kljucKlubaPl(e)
+    if (!tabela.size) return false
+    if (!tabela.has(k)) return true
+    return tabela.get(k) - tekme.filter((t) => (t.domaci === e || t.gostje === e) && t.odigrana).length >= 3
+  }
   // Tekma proti že izstopljeni ekipi (po njenem izstopu) ne šteje — sicer
   // ekipa, ki je izstopila pozneje, ne bi imela "samih neodigranih".
-  const protiIzstopljeni = (t, e) => {
-    const nasprotnik = t.domaci === e ? t.gostje : t.domaci
-    return out.has(nasprotnik) && t.datum >= out.get(nasprotnik)
+  const izstopljena = (x, datum) => out.has(x) && datum >= out.get(x)
+  const protiIzstopljeni = (t, e) => izstopljena(t.domaci === e ? t.gostje : t.domaci, t.datum)
+  // Krog je (razen tekme `t`) odigran: vse druge tekme kroga do meje imajo
+  // izid, vsaj ena je (ni prekinitve cele lige ali preloženega kroga).
+  const ostaliOdigrali = (t) => {
+    const druge = tekme.filter((x) => x !== t && x.krog === t.krog && x.datum && x.datum <= meja &&
+      !izstopljena(x.domaci, x.datum) && !izstopljena(x.gostje, x.datum))
+    return druge.length > 0 && druge.every((x) => x.odigrana)
   }
   for (let novih = 1; novih; ) {
     novih = 0
     for (const e of ekipe) {
       if (out.has(e)) continue
       const njene = tekme
-        .filter((t) => (t.domaci === e || t.gostje === e) && t.datum && t.datum <= meja && !protiIzstopljeni(t, e))
+        .filter((t) => (t.domaci === e || t.gostje === e) && t.datum && !protiIzstopljeni(t, e))
         .sort((a, b) => a.datum.localeCompare(b.datum))
-      const i = njene.findIndex((t) => !t.odigrana)
-      if (i < 0) continue
-      const rep = njene.slice(i)
-      if (rep.length < 3 || rep.some((t) => t.odigrana)) continue
-      const od = rep[0].datum
-      // Drugi so po tem datumu igrali naprej (ni prekinitve cele lige).
-      const drugiIgrali = tekme.filter((t) => t.odigrana && t.datum > od && t.domaci !== e && t.gostje !== e).length
-      if (drugiIgrali >= rep.length) { out.set(e, od); novih++ }
+      // Niz za zadnjo odigrano tekmo; odigrana tekma po njem (tudi ta teden)
+      // pomeni, da ekipa igra naprej.
+      const zadnja = njene.findLastIndex((t) => t.odigrana)
+      const rep = njene.slice(zadnja + 1).filter((t) => t.datum <= meja)
+      if (rep.length < 3 || !rep.every(ostaliOdigrali) || !potrdiTabela(e)) continue
+      out.set(e, rep[0].datum)
+      novih++
     }
   }
+  return out
+}
+
+/**
+ * Tabela skupine (`section.print-table`): Map ključ kluba → M (tekem, ki jih
+ * zveza šteje). Prazna, če je stran nima.
+ */
+export function tabelaStrani(html) {
+  const s = String(html ?? '')
+  const out = new Map()
+  const i = s.indexOf('class="print-table"')
+  if (i < 0) return out
+  const konec = s.indexOf('</table>', i)
+  const del = s.slice(i, konec < 0 ? undefined : konec)
+  for (const m of del.matchAll(/<td class="title-column"[^>]*>\s*<a [^>]*>([^<]*)<\/a>\s*<\/td>\s*<td class="align-center">\s*(\d+)\s*<\/td>/g))
+    out.set(kljucKlubaPl(besedilo(m[1])), Number(m[2]))
   return out
 }
 
@@ -246,7 +284,7 @@ export function izstopljeneEkipe(tekme, danes = new Date().toISOString().slice(0
 export function razcleniRazpored(html, danes = new Date().toISOString().slice(0, 10)) {
   const krogi = new Map()
   const tekme = tekmeStrani(html)
-  const izstop = izstopljeneEkipe(tekme, danes)
+  const izstop = izstopljeneEkipe(tekme, danes, tabelaStrani(html))
   const meja = dniPred(danes, 7)
   for (const t of tekme) {
     if (!krogi.has(t.krog)) krogi.set(t.krog, { stevilka: t.krog, tekme: [] })
