@@ -20,7 +20,7 @@
 --
 -- Sezona avgust–maj (ne koledarska). Vse lige so NEAKTIVNE; uvoz ni bil pognan.
 
-insert into countries (code, name, sort_order) values ('GB', 'England', 14) on conflict (code) do nothing;
+insert into countries (code, name, sort_order) values ('GB', 'United Kingdom', 14) on conflict (code) do nothing;
 
 insert into federations (country_id, code, name, short_name, site_url, sort_order)
 select d.id, v.code, v.name, v.short_name, v.site_url, v.sort_order
