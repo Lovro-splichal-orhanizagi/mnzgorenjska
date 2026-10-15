@@ -5115,6 +5115,58 @@ preveri(
     W.popolnZapisnik(html('pl-wmzpn-zapisnik-4liga.html')))
   preveri('wmzpn: ključ in kratko ime kluba kot pzpn', W.default.kljucKluba('KS Płomień Turznica') === W.default.kljucKluba('KS Plomien Turznica') &&
     W.default.kratkoIme('MKS Rominta Gołdap') === 'Rominta Gołdap')
+
+  // Klasa B (kot Quarta pri fcf): menjav ne vpisuje; goli ≠ izid obdrži izid zapisnika.
+  // Piast Wilczęta : Sparta Kwietniewo (B gr. 1, 4. krog): izid 6:5, dogodki 7:5, trije strelci s klopi.
+  const GI_IZID = [6, 5]
+  const gi = zapisnik('klasa-b-goli-izid')
+  const [gi0, gi1] = W.goliZapisnika(gi)
+  const giN = W.nastopi(gi)
+  preveri('wmzpn: klasa B, goli ≠ izid — izid ostane izid zapisnika, opozorilo, ni popoln (bere se znova)',
+    gi.rezultat.domaci === GI_IZID[0] && gi.rezultat.gostje === GI_IZID[1] && (gi0 !== GI_IZID[0] || gi1 !== GI_IZID[1]) &&
+    gi.opozorila.some((o) => /se ne ujemajo z izidom/.test(o)) && !W.popolnZapisnik(html('pl-wmzpn-zapisnik-klasa-b-goli-izid.html')) &&
+    giN.find((x) => x.ekipaIdx === 0)?.prejetiGoli === GI_IZID[1])
+  preveri('wmzpn: klasa B — obe ekipi brez menjav, začetniki po 90 (ali do rdečega), klop brez gola ne nastopi',
+    gi.brezMenjav[0] && gi.brezMenjav[1] && giN.filter((x) => x.zacetnik).every((x) => x.minute === 90 || gi.rdeci.some((r) => r.regSt === x.regSt)) &&
+    giN.filter((x) => !x.zacetnik).every((x) => gi.goli.some((g) => g.regSt === x.regSt)))
+  // Ekipa brez klopi ni "brez menjav" (kot fcf): nima koga menjati.
+  const brezKlopi = W.vZapisnik(html('pl-wmzpn-zapisnik-klasa-b-brez-menjav.html').replace(/<div class='team-section-sub'>\s*Rezerwa[\s\S]*?(?=<div class='team-section-header'>|class='events'|Przebieg spotkania)/, ''), {})
+  preveri('wmzpn: brez klopi ni oznake brezMenjav', !brezKlopi.brezMenjav[0] && brezKlopi.brezMenjav[1])
+
+  // Razpored klase B 2025/26 (gr. 3): walkower "3:0(w)" in dve izstopljeni ekipi.
+  const kb = html('pl-wmzpn-liga-klasa-b-2025.html')
+  const kbT = W.tekmeStrani(kb)
+  const wk = kbT.find((t) => t.id === 'ef991afb-5c6a-4ed9-b058-96520bcc455b')
+  preveri('wmzpn: walkower "3:0(w)" v razporedu — izid 3:0, kontumacija z izidom', wk?.walkower && wk.izid?.domaci === 3 && wk.izid.gostje === 0 &&
+    wk.odigrana && W.razcleniRazpored(kb, '2026-10-15').flatMap((k) => k.tekme).find((t) => t.wmzpnId === wk.id)?.izid?.domaci === 3)
+  const izstop = W.izstopljeneEkipe(kbT, '2026-10-15')
+  const kbR = W.razcleniRazpored(kb, '2026-10-15').flatMap((k) => k.tekme)
+  preveri('wmzpn: izstopljena ekipa — neodigrane tekme so kontumacije brez izida (Zryw jeseni, Omulew II spomladi)',
+    izstop.size === 2 && izstop.get('KS Zryw Jedwabno') === '2025-08-17' && izstop.get('GZPN Omulew II Wielbark') === '2026-05-09' &&
+    kbR.length === 121 && kbR.filter((t) => t.kontumacija).length === 18 && kbR.filter((t) => t.kontumacija && !t.rezultat).length === 17 &&
+    kbR.every((t) => t.odigrana))
+  // Le tekme, starejše od tedna; brez izstopa nobena.
+  preveri('wmzpn: izstop šele po treh neodigranih, starejših od tedna; IV liga brez izstopov',
+    W.izstopljeneEkipe(kbT, '2025-08-30').size === 0 && W.izstopljeneEkipe(W.tekmeStrani(stran), '2026-10-15').size === 0 &&
+    W.razcleniRazpored(stran, '2026-10-15').flatMap((k) => k.tekme).filter((t) => t.kontumacija).length === 0)
+
+  // Napaka strani ne gre v predpomnilnik; 401/403/429 ustavi uvoz na vsaki poti.
+  preveri('wmzpn: v predpomnilnik le zapisnik, "Brak danych" ali stran z razporedom',
+    W.zaPredpomnilnik(html('pl-wmzpn-zapisnik-4liga.html'), 'zapisnik-x.html') && W.zaPredpomnilnik(html('pl-wmzpn-zapisnik-neodigrana.html'), 'zapisnik-x.html') &&
+    !W.zaPredpomnilnik('0', 'zapisnik-x.html') && !W.zaPredpomnilnik('', 'zapisnik-x.html') && W.zaPredpomnilnik(stran, 'liga-x.html') &&
+    !W.zaPredpomnilnik('<html>Błąd</html>', 'razpored-x.html') && W.default.zaPredpomnilnik === W.zaPredpomnilnik)
+  const zavrnjen = []
+  for (const status of [401, 403, 429]) {
+    try { await W.wmzpnFetch(W.default.naslovZapisnika(koda, 'abc'), {}, async () => new Response('', { status })) } catch (e) { zavrnjen.push(e.zavrnitev && e.name === 'WmzpnZavrnitev' && e.status === status) }
+  }
+  const { prenesiSPonovitvami } = await import('./prenos.mjs')
+  let poskusov = 0
+  let izPrenosa = null
+  try {
+    await prenesiSPonovitvami(W.default.naslovRazporeda(koda), { fetchFn: (u, i) => W.wmzpnFetch(u, i, async () => { poskusov++; return new Response('', { status: 429 }) }), zamiki: [1, 1], log: () => {} })
+  } catch (e) { izPrenosa = e }
+  preveri('wmzpn: 401/403/429 vrže WmzpnZavrnitev (izhod 4), prenos je ne ponavlja', zavrnjen.length === 3 && zavrnjen.every(Boolean) &&
+    izPrenosa?.zavrnitev === true && poskusov === 1 && (await W.wmzpnFetch('https://wmzpn.pl/x', {}, async () => new Response('ok'))).status === 200)
 }
 
 // --- vir jalgpall (Estonija, jalgpall.ee) -----------------------------------------

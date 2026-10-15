@@ -27,7 +27,8 @@
 //
 // robots.txt ni (404), pogojev uporabe nismo našli. Beremo odkrito
 // (User-Agent SLFF, 3 s med zahtevki), popolnih zapisnikov ne beremo znova.
-// **Ob 403, 429 ali izzivu (CAPTCHA) se uvoz ustavi — ne obhajaj.**
+// **Ob 401, 403, 429 ali izzivu (CAPTCHA) se uvoz ustavi — ne obhajaj**
+// (`wmzpnFetch` vrže `WmzpnZavrnitev` na vsaki poti, izhod 4).
 import { razpakiraj } from '../klubi.mjs'
 import { nastopi, regIzUuid } from './hlf.mjs'
 import { NEPOPOLN } from './frf.mjs'
@@ -85,7 +86,19 @@ export const jeIzziv = (html) =>
  * `fetch` vira: naslov zapisnika (`admin-ajax.php?action=match_history&…`)
  * pošlje kot POST obrazca, vse ostalo kot navaden GET.
  */
-export function wmzpnFetch(url, init = {}, fetchFn = fetch) {
+export async function wmzpnFetch(url, init = {}, fetchFn = fetch) {
+  const odgovor = await surovFetch(url, init, fetchFn)
+  // 401/403/429 je zavrnitev na VSAKI poti (razpored, zapisnik, kontumacije):
+  // napaka ni prehodna, zato je prenos ne ponavlja, uvoz pa ne vzame
+  // shranjene strani in konča z izhodom 4.
+  if (jeZavrnitev(odgovor.status)) {
+    await odgovor.body?.cancel().catch(() => {})
+    throw new WmzpnZavrnitev(`wmzpn: ${url} → HTTP ${odgovor.status} — uvoz ustavljen, ne obhajamo`, odgovor.status)
+  }
+  return odgovor
+}
+
+function surovFetch(url, init, fetchFn) {
   const u = new URL(url)
   if (u.pathname.endsWith('/admin-ajax.php') && u.searchParams.get('action') === 'match_history') {
     const telo = new URLSearchParams({ action: 'match_history', matchid: u.searchParams.get('matchid') ?? '' })
@@ -163,7 +176,9 @@ export function tekmeStrani(html) {
       if (!id || !domaci || !gostje || jePauza(domaci, gostje)) continue
       const rez = v.match(/class="align-center schedule-result"[\s\S]*?<a class="tooltip"[^>]*>\s*([^<]*?)\s*<span class="tooltiptext">([\s\S]*?)<\/span>/)
       const namig = besedilo(rez?.[2])
-      const r = izid(rez?.[1])
+      // Walkower ima za izidom "(w)": "3:0(w)", namig "(Walkower) 3:0".
+      const celica = String(rez?.[1] ?? '')
+      const r = izid(celica.replace(/\(\s*w\s*\)\s*$/i, ''))
       const { datum, ura } = casTekme(v.match(/schedule-datetime">([^<]*)/)?.[1])
       out.push({
         krog,
@@ -175,25 +190,74 @@ export function tekmeStrani(html) {
         izid: r,
         polcas: izid(namig.match(/Do przerwy:\s*(\(\s*\d+\s*:\s*\d+\s*\))/)?.[1]),
         odigrana: !!r,
-        walkower: /walk/i.test(namig),
+        walkower: /walk/i.test(namig) || /\(\s*w\s*\)/i.test(celica),
       })
     }
   }
   return out
 }
 
-/** Razpored v obliko uvoza razporeda: krogi s tekmami, ki imajo datum. */
-export function razcleniRazpored(html) {
+/** Dan v obliki "YYYY-MM-DD", `dni` dni pred `danes`. */
+const dniPred = (danes, dni) => new Date(Date.parse(`${danes}T00:00:00Z`) - dni * 86400000).toISOString().slice(0, 10)
+
+/**
+ * Ekipe, ki so izstopile: od neke tekme naprej nobena njihova tekma, starejša
+ * od tedna, nima izida, takih je vsaj tri, in v tem času so drugi odigrali
+ * tekme po njihovem prvem neodigranem datumu. Zveza tekme izstopljene ekipe
+ * pusti v razporedu kot "-:- Nierozegrany", zapisnik je "Brak danych"
+ * (B Klasa gr. 3 2025/26: KS Zryw Jedwabno jeseni, Omulew II spomladi).
+ * Vrne Map ekipa → datum prve neodigrane tekme.
+ */
+export function izstopljeneEkipe(tekme, danes = new Date().toISOString().slice(0, 10)) {
+  const meja = dniPred(danes, 7)
+  const out = new Map()
+  const ekipe = new Set(tekme.flatMap((t) => [t.domaci, t.gostje]))
+  // Tekma proti že izstopljeni ekipi (po njenem izstopu) ne šteje — sicer
+  // ekipa, ki je izstopila pozneje, ne bi imela "samih neodigranih".
+  const protiIzstopljeni = (t, e) => {
+    const nasprotnik = t.domaci === e ? t.gostje : t.domaci
+    return out.has(nasprotnik) && t.datum >= out.get(nasprotnik)
+  }
+  for (let novih = 1; novih; ) {
+    novih = 0
+    for (const e of ekipe) {
+      if (out.has(e)) continue
+      const njene = tekme
+        .filter((t) => (t.domaci === e || t.gostje === e) && t.datum && t.datum <= meja && !protiIzstopljeni(t, e))
+        .sort((a, b) => a.datum.localeCompare(b.datum))
+      const i = njene.findIndex((t) => !t.odigrana)
+      if (i < 0) continue
+      const rep = njene.slice(i)
+      if (rep.length < 3 || rep.some((t) => t.odigrana)) continue
+      const od = rep[0].datum
+      // Drugi so po tem datumu igrali naprej (ni prekinitve cele lige).
+      const drugiIgrali = tekme.filter((t) => t.odigrana && t.datum > od && t.domaci !== e && t.gostje !== e).length
+      if (drugiIgrali >= rep.length) { out.set(e, od); novih++ }
+    }
+  }
+  return out
+}
+
+/**
+ * Razpored v obliko uvoza razporeda: krogi s tekmami, ki imajo datum.
+ * Neodigrana tekma izstopljene ekipe (`izstopljeneEkipe`), starejša od tedna,
+ * je kontumacija brez izida (kot jalgpall "- : -").
+ */
+export function razcleniRazpored(html, danes = new Date().toISOString().slice(0, 10)) {
   const krogi = new Map()
-  for (const t of tekmeStrani(html)) {
+  const tekme = tekmeStrani(html)
+  const izstop = izstopljeneEkipe(tekme, danes)
+  const meja = dniPred(danes, 7)
+  for (const t of tekme) {
     if (!krogi.has(t.krog)) krogi.set(t.krog, { stevilka: t.krog, tekme: [] })
+    const umaknjena = !t.odigrana && !!t.datum && t.datum <= meja && [t.domaci, t.gostje].some((e) => izstop.has(e) && t.datum >= izstop.get(e))
     krogi.get(t.krog).tekme.push({
       domaci: t.domaci,
       gostje: t.gostje,
       datum: t.datum,
       ura: t.ura,
-      kontumacija: t.walkower,
-      odigrana: t.odigrana,
+      kontumacija: t.walkower || umaknjena,
+      odigrana: t.odigrana || umaknjena,
       ...(t.walkower && t.izid ? { izid: t.izid } : {}),
       // Za `kontumacije`: 3:0 / 0:3 brez postav je treba pogledati v zapisniku.
       wmzpnId: t.id,
@@ -207,6 +271,17 @@ export function razcleniRazpored(html) {
 
 /** "Brak danych na temat tego spotkania." — tekme ni (še) v Extranetu. */
 export const brezPodatkov = (html) => /Brak danych na temat tego spotkania/i.test(String(html ?? ''))
+
+/** Pravi odgovor okna tekme (glava z izidom). Vse drugo je napaka strani. */
+export const jeZapisnik = (html) => /<div class='team-container-score'>/.test(String(html ?? ''))
+
+/**
+ * Sme stran v predpomnilnik? Le pravi zapisnik, "Brak danych" ali stran
+ * skupine z razporedom — napaka WordPressa ("0", prazen odgovor, stran brez
+ * razporeda) se ne shrani in shranjena se ne bere.
+ */
+export const zaPredpomnilnik = (html, datoteka = '') =>
+  /zapisnik-/.test(datoteka) ? jeZapisnik(html) || brezPodatkov(html) : /print-timetable/.test(String(html ?? ''))
 
 /**
  * Postavi iz delčka: [{ postava, rezerve }, { postava, rezerve }]. Ekipa se
@@ -373,9 +448,11 @@ export function vZapisnik(html, tekma = {}) {
     const vObliko = ({ uuid, ...i }) => ({ ...i, preklopi: (poUuid.get(uuid)?.preklopi ?? []).sort((a, b) => a - b) })
     const postava = x.postava.map(vObliko)
     const rezerve = x.rezerve.map(vObliko)
-    // Nižje lige menjav kdaj ne vpišejo: začetniki imajo takrat po 90 minut.
-    brezMenjav[idx] = ![...postava, ...rezerve].some((i) => i.preklopi.length)
-    if (brezMenjav[idx] && rezerve.length)
+    // Klasa B menjav ne vpisuje (kot Quarta pri fcf): ekipa z rezervami brez
+    // vpisane menjave ima začetnike po 90 minut (ali do rdečega), rezerva
+    // nastopi le kot strelec — od minute gola (`nastopi`).
+    brezMenjav[idx] = rezerve.length > 0 && ![...postava, ...rezerve].some((i) => i.preklopi.length)
+    if (brezMenjav[idx])
       opozorila.push(`${imeni[idx]}: menjav ni vpisal — začetniki imajo po 90 minut, rezerve brez nastopa`)
     return { ime: imeni[idx], postava, rezerve }
   })
@@ -466,6 +543,7 @@ const vir = {
   naslovRazporeda: naslovLige,
   naslovZapisnika,
   jeIzziv,
+  zaPredpomnilnik,
   zavrnitev: (sporocilo, status = null) => new WmzpnZavrnitev(`wmzpn: ${sporocilo} — uvoz ustavljen, ne obhajamo`, status),
 
   /** Razpored: krogi s tekmami (varšavski = ljubljanski čas), izidi. */
@@ -484,6 +562,12 @@ const vir = {
       const url = naslovZapisnika(koda, t.id)
       let html = await beri(prenesi, url, imeZapisnika(t.id), starostDni(t.datum) <= 3)
       if (!popolnZapisnik(html) && starostDni(t.datum) <= 45) html = await beri(prenesi, url, imeZapisnika(t.id), true)
+      // Napaka strani ("0", prazen odgovor) ni zapisnik: tekmo preskočimo,
+      // naslednji uvoz jo prebere znova (v predpomnilnik ni šla).
+      if (!jeZapisnik(html) && !brezPodatkov(html)) {
+        console.log(`  wmzpn: ${t.domaci} : ${t.gostje} (${t.krog}. krog) — odgovor ni zapisnik, preskočeno`)
+        continue
+      }
       const z = vZapisnik(html, t)
       if (!z) continue
       // Walkower ("Status meczu: Walkover", 3:0 brez postav) ni tekma z
@@ -512,6 +596,8 @@ const vir = {
         if (!((r.domaci === 3 && r.gostje === 0) || (r.domaci === 0 && r.gostje === 3))) continue
         const html = await prenesiKrog(naslovZapisnika(koda, t.wmzpnId), imeZapisnika(t.wmzpnId), t.datum)
         if (jeIzziv(html)) throw new WmzpnZavrnitev(`wmzpn: ${naslovZapisnika(koda, t.wmzpnId)} vrne izziv (CAPTCHA)`)
+        // Napaka strani ni dokaz, da tekme ni bilo.
+        if (!jeZapisnik(html) && !brezPodatkov(html)) continue
         const z = vZapisnik(html, { izid: r })
         if (brezPodatkov(html) || !z || z.prazen || jeWalkower(z)) out.push({ krog: k.stevilka, domaci: t.domaci, gostje: t.gostje })
       }

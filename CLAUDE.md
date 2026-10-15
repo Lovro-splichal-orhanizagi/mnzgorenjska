@@ -2402,10 +2402,25 @@ stran jih naloži sama.
 - **Vratarja, kapetana in pozicij zapisnik NE pove** (vse majice so iste
   barve). Vse pozicije, tudi GK, določi ugibanje in glasovanje kot v
   Sloveniji; *Uskladi pozicije* za `wmzpn` nima po čem šteti.
-- **Walkower**: razpored pokaže le izid brez polčasa ("3:0"), zapisnik
-  "Status meczu: Walkover" brez postav. `kontumacije` prebere zapisnike tekem
-  3:0 / 0:3, starejših od tedna, in označi tiste z walkoverjem ali brez
-  postav; uvoz zapisnikov jih izpusti.
+- **Walkower**: razpored pokaže izid z oznako "3:0(w)" (namig "(Walkower)
+  3:0") ali le izid brez polčasa, zapisnik "Status meczu: Walkover" brez
+  postav. "(w)" razpored sam označi kot kontumacijo z izidom; `kontumacije`
+  prebere zapisnike ostalih tekem 3:0 / 0:3, starejših od tedna, in označi
+  tiste z walkoverjem ali brez postav; uvoz zapisnikov jih izpusti.
+- **Izstopljena ekipa**: zveza njene tekme pusti v razporedu kot "-:-
+  Nierozegrany", zapisnik je "Brak danych" (B Klasa gr. 3 2025/26: Zryw
+  Jedwabno jeseni, Omulew II spomladi; gr. 1: Znicz II). `izstopljeneEkipe`
+  ekipo prepozna, ko ima od neke tekme naprej vsaj tri neodigrane tekme,
+  starejše od tedna, in nobene odigrane (tekme proti že izstopljeni ne
+  štejejo), ostali pa so medtem igrali; te tekme razpored označi kot
+  kontumacije **brez izida** (kot jalgpall "- : -"). Prestavljene tekme ene
+  ekipe (tri zapored) bi bile napačno označene — preveri, če se pojavi.
+- **Zavrnitev in napake strani**: `wmzpnFetch` ob 401/403/429 vrže
+  `WmzpnZavrnitev` na vsaki poti (razpored, zapisniki, kontumacije — tudi
+  `uvoz-razporeda` jo iz kontumacij zdaj spusti naprej), prenos je ne
+  ponavlja, izhod 4. V predpomnilnik gre le pravi zapisnik, "Brak danych" ali
+  stran z razporedom (`zaPredpomnilnik`); odgovor, ki ni zapisnik ("0",
+  prazen), uvoz preskoči in ga prebere znova.
 - Zapisnik z manj kot 7 začetniki ekipe je `nepopoln` (kot `pzpn`), 45 dni se
   bere znova. **Postave in dogodke Extranet vnaša ločeno** (vzorec
   `…-brez-dogodkov`: 0:2, postavi 11 + 11, nobenega dogodka): zapisnik z
@@ -2416,10 +2431,14 @@ stran jih naloži sama.
   zato kar pride pozneje, prinese le ročni uvoz lige ali `--zapisnik`.
   Ekipa z rezervami, a brez vpisane menjave, je opozorilo `menjav ni vpisal`
   (začetniki 90 minut, `z.brezMenjav`).
-- **Klasa B menjav ne vpisuje**: v preizkusu 60 zapisnikov vseh petih skupin
-  ni nobena ekipa vpisala menjave (začetniki 90 minut, rezerva nastopi le kot
-  strelec), v 7 od 59 odigranih goli ≠ izid. Zato klasa B **ni vpisana**; vir jo zna
-  brati (šifre spodaj).
+- **Klasa B menjav ne vpisuje** — obravnava je ista kot pri Quarti (`fcf`):
+  `z.brezMenjav` označi ekipo z rezervami brez vpisane menjave, začetnik ima
+  90 minut (ali do rdečega kartona), rezerva brez gola nastopa nima, strelec s
+  klopi nastopi od minute svojega (prvega) gola (opozorilo). Minute
+  začetnikov so zato precenjene (ekipa ima lahko čez 990), minute strelcev s
+  klopi podcenjene. Zapisnik, v katerem se goli iz dogodkov ne ujemajo z
+  izidom (manjkajoči ali odvečni gol), obdrži **izid zapisnika** z
+  opozorilom, kot pri drugih virih, in se bere znova do 45 dni.
 - Klubi: ključ in kratko ime kot `pzpn` (`kljucKlubaPl`, `kratkoImePl`);
   rezervne ekipe ("Stomil II Olsztyn SA") so svoj klub.
 
@@ -2444,14 +2463,41 @@ B; tekme = v razporedu / odigrane, menjave = vstopi rezerv):
 | klasa A 2 | 91 / 54 | 6 | 35 / 35 | 12/12 | 63 |
 | klasa A 3 | 91 / 54 | 6 | 21 / 21 | 12/12 | 48 |
 | klasa A 4 | 91 / 63 | 6 | 36 / 36 | 12/12 | 64 |
-| klasa B 1–5 | 55, 66, 66, 55, 55 | 60 (1 walkower) | 336 / 355 | 118/118 | **0** |
 
 Pri IV ligi, okręgowi in klasi A ima vsaka ekipa 990 minut (razen ob rdečem
 kartonu), vsi nastopi s šifro, 0 opozoril razen rumenih kartonov osebju
 (ni v postavi). Arhivski zapisnik 2025/26 (IV liga, 30. krog) se razčleni
 enako.
 
-Vpisanih je 7 lig (migracija 20261015162900), **neaktivnih**, zveza `wmzpn`.
+**Klasa B, vsi zapisniki tekoče sezone** (15. 10. 2026, pot uvoza brez baze:
+`prenesiSPonovitvami` + `vir.fetch` + `razporedVseStrani` + `zapisniki`;
+ekipe "brez menjav" = z rezervami in brez vpisane menjave; 990 = ekip z
+natanko 990 minutami / več / manj):
+
+| skupina | tekme / odigrane | zapisnikov | goli = izid | golov / izidi | postav po 11 | brez menjav | nastopov (s klopi) | 990 / več / manj |
+|---|---|---|---|---|---|---|---|---|
+| B 1 | 55 / 45 | 45 | 38 | 255 / 256 | 90/90 | 90/90 | 1027 (37) | 59 / 26 / 5 |
+| B 2 | 66 / 54 | 54 | 42 | 320 / 359 | 108/108 | 108/108 | 1224 (36) | 77 / 22 / 9 |
+| B 3 | 66 / 52 | 51 (1 walkower) | 41 | 239 / 265 | 102/102 | 102/102 | 1157 (35) | 74 / 26 / 2 |
+| B 4 | 55 / 44 | 43 (1 walkower) | 28 | 210 / 231 | 86/86 | 84/86 | 978 (32) | 62 / 21 / 3 |
+| B 5 | 55 / 44 | 43 (1 walkower) | 39 | 257 / 268 | 85/86 | 86/86 | 980 (35) | 55 / 21 / 10 |
+
+Skupaj 236 zapisnikov: goli = izid 188, od 48 neujemanj jih 34 nima nobenega
+dogodka (postavi da, goli ne — Extranet jih vnaša posebej), 14 ima gol preveč
+ali premalo. Nobena ekipa ni vpisala menjave; dve ekipi (B 4) sta brez klopi
+in zato nista "brez menjav". Vsi nastopi s šifro, nobena tekma nepopolna.
+"Več kot 990" so strelci s klopi (175, vstop ob golu), "manj" rdeči kartoni.
+Ostala opozorila: drugi rumeni (20), karton osebju (18), dogodek brez ikone
+(2, `neznan dogodek`, prezrt). Walkoverji: zapisnik "Walkover" 3:0, razpored
+jih tekoče sezone pokaže brez "(w)" — označi jih `kontumacije`.
+
+Arhiv klase B 2025/26, vzorec 15 zapisnikov na skupino enakomerno čez sezono
+(60, 2 walkoverja): 58 razčlenjenih, sezona 2025/26, goli = izid 45/58,
+postav po 11 115/116, brez menjav 114/116, vsi nastopi s šifro. Razpored
+2025/26: gr. 1 izstop Znicz II (jesen), gr. 3 Zryw Jedwabno (jesen) in
+Omulew II (pomlad) — vzorec razporeda `pl-wmzpn-liga-klasa-b-2025.html`.
+
+Vpisanih je 12 lig (migracija 20261015162900), **neaktivnih**, zveza `wmzpn`.
 Šifra je `<leagueN>/<play>/<season>`; arhiv je ista skupina 2025/26 (po
 skupnih klubih):
 
@@ -2464,18 +2510,36 @@ skupnih klubih):
 | pl-wm-a-2 | `63d04023-…` | `a18e856f-d73b-4ff8-b44f-77ae417c83c9` | `9097e2ba-2e68-4552-953a-24766eafcba6` (9) |
 | pl-wm-a-3 | `63d04023-…` | `d0d84a85-7816-4ca0-8f6a-de8e3d3f5965` | `8cf5857a-d4cc-45d8-b4ae-884d1bf38b10` (10) |
 | pl-wm-a-4 | `63d04023-…` | `711ae517-02ca-4e5a-90a3-f0cbc75e7986` | `92e717fe-4cc1-445a-bf7e-85fc6ee377ea` (10) |
+| pl-wm-b-1 | `b7d2c55b-e2af-44e2-9df2-3f6e05dc1768` | `2b6f4e61-f6fe-48fc-9637-0270ed5c3607` | `d8336132-3283-4853-9199-02e4bad4e292` (6 od 11) |
+| pl-wm-b-2 | `b7d2c55b-…` | `4885750d-c754-45b9-be62-622caac0ceb2` | `e3f3d4b6-23fa-4241-823a-557ef7eb2c76` (8 od 12) |
+| pl-wm-b-3 | `b7d2c55b-…` | `b7ee2253-ab8b-46ff-93af-c94500e196c1` | `6f5236af-3dd0-463e-b80c-43b6865c5190` (8 od 12) |
+| pl-wm-b-4 | `b7d2c55b-…` | `34438712-87a8-4300-a5ad-2df29ecb415d` | `3adbaf0b-5784-4682-a306-763477dd0a44` (6 od 11) |
+| pl-wm-b-5 | `b7d2c55b-…` | `c7a545a8-9770-4a42-b5f8-8fcbda7e3cf6` | — |
 
 Tekoča sezona je `3c77d143-8010-4073-9842-d6b63365ffce`, arhiv
-`e9d66181-d03e-4bb3-b889-4da848f4831d`. Klasa B (ni vpisana, leagueN
-`b7d2c55b-e2af-44e2-9df2-3f6e05dc1768`): 2026/27 skupine 1–5 `2b6f4e61-…`,
-`4885750d-…`, `b7ee2253-…`, `34438712-…`, `c7a545a8-…`; 2025/26 so bile štiri
-(`d8336132-…`, `e3f3d4b6-…`, `6f5236af-…`, `3adbaf0b-…`). Baraż (doigravanje)
-je svoje tekmovanje — za arhiv ga ne uvažaj.
+`e9d66181-d03e-4bb3-b889-4da848f4831d`. Klasa B je imela 2025/26 le štiri
+skupine; **B 5 je brez arhiva** (največ skupnih klubov, 3 od 11, ima lanska
+gr. 1, ki jo dobi B 1 s 6; večina B 5 so nove rezervne ekipe "II"). 2024/25
+gr. 1 (`f4b73457-98f1-4f2a-9f55-353bb465a8df`, season
+`4be7b40c-84ff-4e5a-96e5-875d7f13483a`) ima prav tako le 3 skupne — ni
+uporabljena. Cene klase B naj zato pridejo predvsem iz tekoče sezone (11
+krogov oktobra). Baraż (doigravanje) je svoje tekmovanje — za arhiv ga ne
+uvažaj.
 
 Uvoz (ena za drugo, šele po odločitvi lastnika): `gh workflow run
 uvoz-lige.yml -f liga=pl-wm-4-liga -f
 arhiv=c164ca31-22e4-43fc-9e30-4f3bcc2b7d72/17285e70-dba8-4fa2-a27a-30646ce64d6d/e9d66181-d03e-4bb3-b889-4da848f4831d
--f cene=true`. Arhiv 240 zapisnikov po 3 s je ~12 minut na ligo.
+-f cene=true`. Arhiv 240 zapisnikov po 3 s je ~12 minut na ligo (klasa B
+~130, strežnik je odgovarjal 3–5 s na zahtevek in dvakrat prekinil povezavo,
+ECONNRESET — prenos jo ponovi). Klasa B brez arhiva: `-f liga=pl-wm-b-5 -f
+cene=true`.
+
+**Podkarpacki ZPN** (pregled 15. 10. 2026) vtičnika nima: `/wyniki24/` in
+`/wyniki-terminarze/` kažeta neizrisano kratko kodo `[pzpn_table]`
+(vtičnik ni nameščen, med naloženimi ni nobenega za tabele), rezultati so le
+statični izvozi Extraneta v `/wp-content/uploads/…/*.html` (`/terminarze-2026-2027/`:
+razpored z izidi in igrišči, brez povezav na tekme in brez postav). Za
+fantasy neuporabno.
 
 ### Španija
 

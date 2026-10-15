@@ -14,10 +14,18 @@
 --   pl-wm-a-3           63d04023-727a-4c0c-a8c6-4154fe1104b7/8cf5857a-d4cc-45d8-b4ae-884d1bf38b10/e9d66181-d03e-4bb3-b889-4da848f4831d (10)
 --   pl-wm-a-4           63d04023-727a-4c0c-a8c6-4154fe1104b7/92e717fe-4cc1-445a-bf7e-85fc6ee377ea/e9d66181-d03e-4bb3-b889-4da848f4831d (10)
 --
--- Klasa B (5 skupin) NI vpisana: v preizkusu 60 zapisnikov (12 na skupino)
--- ni nobena ekipa vpisala menjav, v 7 od 59 odigranih se goli ne ujemajo z izidom.
--- Vir jo zna brati (šifre v CLAUDE.md), a brez menjav ni pravih minut.
--- Mladinske lige (Junior A1 …) niso vpisane.
+--   pl-wm-b-1           b7d2c55b-e2af-44e2-9df2-3f6e05dc1768/d8336132-3283-4853-9199-02e4bad4e292/e9d66181-d03e-4bb3-b889-4da848f4831d (6 od 11)
+--   pl-wm-b-2           b7d2c55b-e2af-44e2-9df2-3f6e05dc1768/e3f3d4b6-23fa-4241-823a-557ef7eb2c76/e9d66181-d03e-4bb3-b889-4da848f4831d (8 od 12)
+--   pl-wm-b-3           b7d2c55b-e2af-44e2-9df2-3f6e05dc1768/6f5236af-3dd0-463e-b80c-43b6865c5190/e9d66181-d03e-4bb3-b889-4da848f4831d (8 od 12)
+--   pl-wm-b-4           b7d2c55b-e2af-44e2-9df2-3f6e05dc1768/3adbaf0b-5784-4682-a306-763477dd0a44/e9d66181-d03e-4bb3-b889-4da848f4831d (6 od 11)
+--   pl-wm-b-5           brez arhiva: 2025/26 sta bili le štiri skupine; največ skupnih (3) ima
+--                       gr. 1, ki jo dobi pl-wm-b-1 (6). 2024/25 gr. 1 (f4b73457-98f1-4f2a-9f55-353bb465a8df,
+--                       season 4be7b40c-84ff-4e5a-96e5-875d7f13483a) ima prav tako le 3 skupne.
+--
+-- Klasa B menjav ne vpisuje (kot Quarta pri fcf): začetniki 90 minut (ali do
+-- rdečega), strelec s klopi nastopi od minute gola, `z.brezMenjav` označi
+-- ekipo; zapisnik, v katerem se goli ne ujemajo z izidom, obdrži izid z
+-- opozorilom. Mladinske lige (Junior A1 …) niso vpisane.
 --
 -- Lige so NEAKTIVNE (vklop šele po uvozu arhiva, tekoče sezone in cen).
 
@@ -45,7 +53,12 @@ select v.slug, v.ime, v.kratko, d.id, f.id, 'wmzpn', v.liga || '/' || v.play || 
     ('pl-wm-a-1', 'Klasa A, grupa 1 (Warmińsko-Mazurskie)', 'WM A 1', '63d04023-727a-4c0c-a8c6-4154fe1104b7', '0aace3bb-4a47-4117-a614-a0a54e2085e8', 14),
     ('pl-wm-a-2', 'Klasa A, grupa 2 (Warmińsko-Mazurskie)', 'WM A 2', '63d04023-727a-4c0c-a8c6-4154fe1104b7', 'a18e856f-d73b-4ff8-b44f-77ae417c83c9', 15),
     ('pl-wm-a-3', 'Klasa A, grupa 3 (Warmińsko-Mazurskie)', 'WM A 3', '63d04023-727a-4c0c-a8c6-4154fe1104b7', 'd0d84a85-7816-4ca0-8f6a-de8e3d3f5965', 16),
-    ('pl-wm-a-4', 'Klasa A, grupa 4 (Warmińsko-Mazurskie)', 'WM A 4', '63d04023-727a-4c0c-a8c6-4154fe1104b7', '711ae517-02ca-4e5a-90a3-f0cbc75e7986', 17)
+    ('pl-wm-a-4', 'Klasa A, grupa 4 (Warmińsko-Mazurskie)', 'WM A 4', '63d04023-727a-4c0c-a8c6-4154fe1104b7', '711ae517-02ca-4e5a-90a3-f0cbc75e7986', 17),
+    ('pl-wm-b-1', 'Klasa B, grupa 1 (Warmińsko-Mazurskie)', 'WM B 1', 'b7d2c55b-e2af-44e2-9df2-3f6e05dc1768', '2b6f4e61-f6fe-48fc-9637-0270ed5c3607', 18),
+    ('pl-wm-b-2', 'Klasa B, grupa 2 (Warmińsko-Mazurskie)', 'WM B 2', 'b7d2c55b-e2af-44e2-9df2-3f6e05dc1768', '4885750d-c754-45b9-be62-622caac0ceb2', 19),
+    ('pl-wm-b-3', 'Klasa B, grupa 3 (Warmińsko-Mazurskie)', 'WM B 3', 'b7d2c55b-e2af-44e2-9df2-3f6e05dc1768', 'b7ee2253-ab8b-46ff-93af-c94500e196c1', 20),
+    ('pl-wm-b-4', 'Klasa B, grupa 4 (Warmińsko-Mazurskie)', 'WM B 4', 'b7d2c55b-e2af-44e2-9df2-3f6e05dc1768', '34438712-87a8-4300-a5ad-2df29ecb415d', 21),
+    ('pl-wm-b-5', 'Klasa B, grupa 5 (Warmińsko-Mazurskie)', 'WM B 5', 'b7d2c55b-e2af-44e2-9df2-3f6e05dc1768', 'c7a545a8-9770-4a42-b5f8-8fcbda7e3cf6', 22)
   ) as v(slug, ime, kratko, liga, play, vrstni)
  where d.code = 'PL'
 on conflict (slug) do nothing;

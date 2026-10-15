@@ -200,6 +200,8 @@ if (vir.kontumacije) {
     }
     if (najdene.length) console.log(`Kontumacij v razporedu: ${oznacenih}`)
   } catch (e) {
+    // Zavrnitev vira (403, 429, izziv) ni motnja: uvoz se ustavi (izhod 4).
+    if (e?.zavrnitev) throw e
     console.log(`  kontumacij ni bilo mogoče prebrati (${e.message}) — nadaljujem brez njih`)
   }
 }
