@@ -6947,13 +6947,27 @@ preveri(
   const beri = (ime) => JSON.parse(readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8'))
   const pon = o.vsebinaDrzav(beri('objava-drzave.json'))
   const cet = o.vsebinaDosezkov(beri('objava-dosezki.json'))
-  preveri('objave: ponedeljek — največ 8 držav (Instagram: 10 slik), po vrsti iz SQL, angleško ime in zastava',
-    pon.drzave.length === 8 && pon.drzave[0].ime === 'Slovenia' && pon.drzave[0].zastava === '🇸🇮'
-    && !pon.drzave.some((d) => d.koda === 'ES') && pon.drzave[2].drugi.length === 1 && pon.drzave[6].drugi.length === 0)
+  preveri('objave: ponedeljek — vseh 9 držav, po vrsti iz SQL, angleško ime in zastava',
+    pon.drzave.length === 9 && pon.drzave[0].ime === 'Slovenia' && pon.drzave[0].zastava === '🇸🇮'
+    && pon.drzave[8].koda === 'ES' && pon.drzave[2].drugi.length === 1 && pon.drzave[6].drugi.length === 0)
   preveri('objave: obdobje okna', pon.obdobje.replace(/\s/g, '') === '5–11Oct2026', pon.obdobje)
   preveri('objave: brez države ni ponedeljka', o.vsebinaDrzav({ od: '2026-10-05', do: '2026-10-12', drzave: [] }) === null)
-  preveri('objave: ponedeljek — naslovnica + 8 držav + poziv = 10 prosojnic',
-    prosojnice(pon).length === 10 && prosojnice(pon)[0] === 'naslovnica' && prosojnice(pon)[9] === 'poziv')
+  // Instagram Graph API: največ 10 slik. Do 8 držav z naslovnico, 9 brez nje, več kot 9 odreže objave.mjs.
+  const sDrzavami = (k) => {
+    const v0 = beri('objava-drzave.json')
+    const drzave = Array.from({ length: k }, (_, i) => ({ ...v0.drzave[i % 9], drzava: ['SI', 'HR', 'SK', 'AT', 'HU', 'RS', 'RO', 'PL', 'ES', 'CZ', 'EE'][i] }))
+    return prosojnice(o.vsebinaDrzav({ ...v0, drzave }))
+  }
+  preveri('objave: ponedeljek — 8 držav: naslovnica + 8 + poziv', sDrzavami(8).length === 10 && sDrzavami(8)[0] === 'naslovnica')
+  preveri('objave: ponedeljek — 9 držav: brez naslovnice, 9 + poziv', sDrzavami(9).length === 10 && sDrzavami(9)[0] === 'drzava-0'
+    && sDrzavami(9)[9] === 'poziv')
+  preveri('objave: ponedeljek — 11 držav: 9 + poziv', sDrzavami(11).length === 10 && sDrzavami(11)[0] === 'drzava-0'
+    && !sDrzavami(11).includes('naslovnica'))
+  preveri('objave: ponedeljek — 3 države: naslovnica + 3 + poziv', sDrzavami(3).join() === 'naslovnica,drzava-0,drzava-1,drzava-2,poziv')
+  {
+    const html = renderToString(<StaticRouter location="/objava"><Prosojnica v={pon} n={0} /></StaticRouter>)
+    preveri('objave: brez naslovnice nosi obdobje glava prve države', html.includes(pon.obdobje) && html.includes('Slovenia'))
+  }
   preveri('objave: četrtek — igralec enkrat, skupnost na koncu, največ 6',
     cet.dosezki.map((x) => x.vrsta).join() === 'hattrick,hattrick,rekord,vratar,manager,novi'
     && prosojnice(cet).length === 8)
@@ -6981,7 +6995,7 @@ preveri(
   preveri('objave: tisočice z vejico so eno število', o.preveriNapis('Now 4,000 of you!', { milestone_users: 4000 }).length === 0
     && o.preveriNapis('Now 4,100 of you!', { milestone_users: 4000 }).join() === '4,100')
   preveri('objave: izmišljeno ime pade', o.preveriNapis('Tine Kovač and John Smith played.', d).join() === 'John,Smith')
-  preveri('objave: država, ki je ni v objavi, pade', o.preveriNapis('Big weekend in Spain too.', d).join() === 'Spain')
+  preveri('objave: država, ki je ni v objavi, pade', o.preveriNapis('Big weekend in Portugal too.', d).join() === 'Portugal')
   preveri('objave: začetek stavka ni ime', o.preveriNapis('Bravo! Unbelievable.', d).length === 0)
   const dc = o.dejstvaZaNapis(cet)
   preveri('objave: napis četrtka', o.preveriNapis('Hat-trick hero Lukas Gruber (4 goals) and a manager in Croatia with 112 points! 286 new managers.', dc).length === 0,

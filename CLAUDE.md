@@ -3805,8 +3805,9 @@ nadoknadi.
   `objava_ob` in v sporočilu na Discordu. `terminiZdaj` osnutek naredi le,
   dokler do najkasnejše objave termina ostane 5 h.
 - **Instagram Graph API vrtiljak sprejme največ 10 slik** (v aplikaciji jih je
-  20, v API ne), zato ponedeljek vzame največ 8 držav (`NAJVEC_DRZAV`:
-  naslovnica + 8 + poziv), četrtek največ 6 dosežkov.
+  20, v API ne). Ponedeljek: do 8 držav naslovnica + države + poziv; pri 9
+  naslovnica odpade (9 + poziv), obdobje nosi glava prve države; več kot 9
+  (`NAJVEC_DRZAV`) odpadejo tiste z najmanj uporabniki. Četrtek največ 6 dosežkov.
 - **Mejnik** (slot `mejnik`, migracija 20261015190100): vsak obhod zanke
   pokliče `objava_mejnik_dejstva()` (servisna: `uporabnikov` =
   `skupaj_uporabnikov()`, `drzav` in `lig` aktivnih lig, `ekip` brez hišnih).

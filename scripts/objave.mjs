@@ -50,8 +50,9 @@ export const MEJNIK_KORAK = 1000
 export const MEJNIK_ROK = 300
 // Človek ima za veto vsaj toliko časa med osnutkom na Discordu in objavo.
 export const VETO = 5 * 3600e3
-// Instagram Graph API sprejme največ 10 slik v vrtiljaku: naslovnica + 8 držav + poziv.
-export const NAJVEC_DRZAV = 8
+// Instagram Graph API sprejme največ 10 slik v vrtiljaku: do 8 držav z naslovnico
+// in pozivom, 9 držav brez naslovnice (prosojnice() v src/pages/Objava.tsx).
+export const NAJVEC_DRZAV = 9
 // Četrtek: naslovnica + največ 6 dosežkov + poziv.
 export const NAJVEC_DOSEZKOV = 6
 

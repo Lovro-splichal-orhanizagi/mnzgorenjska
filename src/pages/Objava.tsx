@@ -74,13 +74,19 @@ declare global {
 
 type Prosojnica = 'naslovnica' | 'poziv' | 'mejnik' | 'mejnikStevilke' | `drzava-${number}` | `dosezek-${number}`
 
+// Instagram Graph API: največ 10 slik. Pri devetih državah naslovnica odpade
+// (9 + poziv), obdobje nosi glava prve države; več kot 9 jih objave.mjs ne da.
+const NASLOVNICA_DO_DRZAV = 8
+
+const brezNaslovnice = (v: VsebinaObjave) => (v.drzave?.length ?? 0) > NASLOVNICA_DO_DRZAV
+
 /** Prosojnice, ki jih vsebina ima (isti seznam bere generator). */
 export function prosojnice(v: VsebinaObjave): Prosojnica[] {
   if (v.mejnik) return ['mejnik', 'mejnikStevilke', 'poziv']
   const srednje = v.drzave
     ? v.drzave.map((_, i): Prosojnica => `drzava-${i}`)
     : (v.dosezki ?? []).map((_, i): Prosojnica => `dosezek-${i}`)
-  return ['naslovnica', ...srednje, 'poziv']
+  return [...(brezNaslovnice(v) ? [] : ['naslovnica' as const]), ...srednje, 'poziv']
 }
 
 const cena = (v?: number) => t('skupno.cena', { v: stevilo(Number(v ?? 0), { minimumFractionDigits: 1, maximumFractionDigits: 1 }) })
@@ -164,10 +170,16 @@ function vsebina(v: VsebinaObjave, kaj: Prosojnica): { desno?: ReactNode; telo: 
     }
   }
   if (kaj.startsWith('drzava-') && v.drzave) {
-    const d = v.drzave[Number(kaj.slice('drzava-'.length))]
+    const st = Number(kaj.slice('drzava-'.length))
+    const d = v.drzave[st]
     const i = d.igralec
     return {
-      desno: <span>{d.zastava} {d.ime}</span>,
+      desno: (
+        <>
+          <div>{d.zastava} {d.ime}</div>
+          {st === 0 && brezNaslovnice(v) && <div className="text-2xl font-bold text-[color:var(--zlato)]">{v.obdobje}</div>}
+        </>
+      ),
       telo: (
         <Sredina className="gap-6">
           <Oznaka>{t('domov.objava.igralecKroga')}</Oznaka>

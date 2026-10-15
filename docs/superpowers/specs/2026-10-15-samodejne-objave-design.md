@@ -29,8 +29,10 @@ of each league's latest such round, across all its leagues (no U19, no
 inactive leagues, no anonymised players). Countries are ordered by **users
 with a team in the country's leagues** (house teams excluded), then by
 leagues with a round. **Instagram's Graph API takes at most 10 carousel
-items** (the app allows 20, the API does not), so at most **8 countries**
-(cover + 8 + CTA); the rest are left out. No country → no draft.
+items** (the app allows 20, the API does not): up to 8 countries get cover +
+countries + CTA; with 9 the cover is dropped (9 + CTA, the first country's
+header carries the date range); beyond 9 the countries with the fewest users
+are left out. No country → no draft.
 
 ### Thursday: achievements of the week (owner, 15. 10. 2026)
 
