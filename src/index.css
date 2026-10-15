@@ -157,10 +157,21 @@ body:has(#chat-widget-bubble) [data-podpora] {
   }
   .animiraj-pulz { animation: pulz-obroc 1.2s ease-out; }
 
+  /* Pivo nazdravi: dvig in nagib, nato premor (gumb Pivo.tsx). */
+  @keyframes nazdravi {
+    0%, 60%, 100% { transform: none; }
+    68% { transform: translateY(-3px) rotate(-18deg) scale(1.15); }
+    76% { transform: translateY(-3px) rotate(12deg) scale(1.15); }
+    84% { transform: translateY(-1px) rotate(-8deg) scale(1.05); }
+    92% { transform: rotate(4deg); }
+  }
+  .animiraj-pivo { animation: nazdravi 3.2s ease-in-out infinite; transform-origin: 50% 85%; }
+
   @media (prefers-reduced-motion: reduce) {
     .animiraj-utrip,
     .animiraj-vstop,
-    .animiraj-pulz {
+    .animiraj-pulz,
+    .animiraj-pivo {
       animation: none;
     }
   }
