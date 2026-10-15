@@ -2830,7 +2830,7 @@ cene=true`.
 
 ### Bosna in Hercegovina — vir `nsfbih`
 
-Država `BA` ("Bosna i Hercegovina", migracija 20261015031500). **Vmesnika v
+Država `BA` ("Bosna i Hercegovina", migracija 20261015131500). **Vmesnika v
 bosanščini/hrvaščini še ni** (ne `JEZIK_DRZAVE`, ne kartice, ne pošte) in `BA`
 **ni** v matriki nočnega uvoza (`uvoz-zapisnikov.yml`) — oboje pred vklopom.
 Šifra lige se začne z `ba-`.
