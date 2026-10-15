@@ -5552,6 +5552,11 @@ preveri(
   try { await ME.default.zapisniki('jug/seniorska-liga/9391667', async () => '<title>Just a moment...</title>') } catch (e) { izziv = e }
   preveri('ltfutbolas, fscg: 403 in izziv vržeta CometZavrnitev (uvoz izhod 4)', zavrnjen instanceof C.CometZavrnitev && zavrnjen.status === 403 &&
     izziv instanceof C.CometZavrnitev && ME.default.zavrnitev('x', 429).zavrnitev === true)
+  // 401 (prijava) je zavrnitev kot 403 — ne preberemo shranjene strani in ne nadaljujemo.
+  let neprijavljen = null
+  try { await ME.default.zapisniki('jug/seniorska-liga/9391667', async () => { const e = new Error('HTTP 401'); e.status = 401; throw e }) } catch (e) { neprijavljen = e }
+  preveri('ltfutbolas, fscg: 401 vrže CometZavrnitev (uvoz izhod 4)', neprijavljen instanceof C.CometZavrnitev && neprijavljen.status === 401 &&
+    C.jeZavrnitev(401) && C.jeZavrnitev(403) && C.jeZavrnitev(429) && !C.jeZavrnitev(404) && !C.jeZavrnitev(500))
 
   // Državne lige: A lyga in I lyga (Litva), 1. CFL, 2. CFL, Prva omladinska (fscg.me)
   preveri('fscg: regija fscg je fscg.me brez poddomene (državne lige in arhiv)',
@@ -5606,6 +5611,9 @@ preveri(
   preveri('uvoz-razporeda: zavrnitev vira pri kontumacijah ustavi uvoz (izhod 4), ne preskoči',
     /kontumacij ni bilo mogoče prebrati/.test(uvozRazporeda) &&
     /catch \(e\) \{\s*(?:\/\/[^\n]*\n\s*)*if \(e\.zavrnitev\) throw e\s*console\.log\(`  kontumacij ni bilo/.test(uvozRazporeda))
+  // 401 pri razporedu: brez tega prenesi vzame shranjeni razpored in uvoz teče naprej.
+  preveri('uvoz-razporeda: 401, 403 in 429 so zavrnitev vira (ne rezerva iz predpomnilnika)',
+    /vir\.zavrnitev && \[401, 403, 429\]\.includes\(e\.status\)\)+ throw vir\.zavrnitev/.test(uvozRazporeda))
 }
 
 // --- vir fsb (Srbija, Fudbalski savez Beograda) ---------------------------------

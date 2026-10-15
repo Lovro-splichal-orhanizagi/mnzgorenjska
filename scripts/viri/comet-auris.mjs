@@ -30,7 +30,7 @@ export const cisto = (s) => String(s ?? '').replace(/<script[\s\S]*?<\/script>/g
 export const besedilo = (html) =>
   razpakiraj(String(html ?? '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ')).replace(/\s+/g, ' ').trim()
 
-/** Zavrnitev (403, 429) ali izziv: uvoz se ustavi in ne vzame shranjene strani. */
+/** Zavrnitev (401, 403, 429) ali izziv: uvoz se ustavi in ne vzame shranjene strani. */
 export class CometZavrnitev extends Error {
   constructor(sporocilo, status = null) {
     super(sporocilo)
@@ -39,7 +39,7 @@ export class CometZavrnitev extends Error {
     this.zavrnitev = true
   }
 }
-export const jeZavrnitev = (status) => status === 403 || status === 429
+export const jeZavrnitev = (status) => status === 401 || status === 403 || status === 429
 export const jeIzziv = (html) =>
   /<title>\s*(Just a moment|Attention Required)|cf_chl_opt|cf-turnstile|g-recaptcha|hcaptcha|captcha/i.test(String(html ?? ''))
 

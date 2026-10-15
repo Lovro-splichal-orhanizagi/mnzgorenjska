@@ -32,7 +32,7 @@
 // (User-Agent SLFF, 3 s med zahtevki). Zapisnik zadnjega tedna beremo sveže,
 // do 45 dni še enkrat sveže, če stran iz predpomnilnika nima postav ali se
 // goli ne ujemajo z izidom (`zapisnikSvez`), starejših ne beremo znova. Ob
-// izzivu, CAPTCHI, 403 ali 429 se uvoz ustavi — ne obhajaj.
+// izzivu, CAPTCHI, 401, 403 ali 429 se uvoz ustavi — ne obhajaj.
 import {
   CometZavrnitev, beri, delVira, jeIzziv, zaPredpomnilnik, kljucKluba, kratkoIme, nastopi, sezonaTekem, tabelaVsehTekem,
   tekmeTabele, tekmovanjeStrani, vKroge,
