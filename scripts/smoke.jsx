@@ -5642,6 +5642,152 @@ preveri(
     zi instanceof F.FfaZavrnitev && zr instanceof F.FfaZavrnitev && zr.status === 403)
 }
 
+// --- vir ffa: Premier Liga (premierleague.ffa.am, blok strani tekem) ---------------
+{
+  const F = await import('./viri/ffa.mjs')
+  const { default: viri } = await import('./viri/index.mjs')
+  const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  const KODA = 'premierleague/96103-96300'
+  preveri('ffa PL: šifra bloka, naslovi (stran kroga, stran tekme), ffa.am ostane', F.razberiBlok(KODA)?.od === 96103 &&
+    F.razberiBlok(KODA)?.do === 96300 && F.razberiBlok('first-league/902') === null && F.razberiBlok('premierleague/f38786-f38920')?.od === 38786 &&
+    F.default.naslovRazporeda(KODA) === 'https://premierleague.ffa.am/en/games' &&
+    F.default.naslovZapisnika(KODA, 'am96151') === 'https://premierleague.ffa.am/en/games/f96151' &&
+    F.default.naslovZapisnika('first-league/902', 'am98467') === 'https://www.ffa.am/en/match-info/f98467' && viri.ffa === F.default &&
+    (() => { try { F.razberiBlok('premierleague/96300-96103'); return false } catch { return true } })())
+  preveri('ffa PL: sezona iz datuma (julij–junij), ključ kluba brez FC/SC, druga ekipa ostane svoj klub', F.sezonaIzDatuma('2026-10-11') === '2026/27' &&
+    F.sezonaIzDatuma('2027-05-20') === '2026/27' && F.kljucKlubaAm('FC Urartu') === F.kljucKlubaAm('Urartu') &&
+    F.kljucKlubaAm('Sardarapat FC') === 'sardarapat' && F.kljucKlubaAm('Sardarapat FC-2') === 'sardarapat 2' &&
+    F.kljucKlubaAm('Urartu-2') !== F.kljucKlubaAm('FC Urartu') && F.kljucKlubaAm('Avshar Ararat') !== F.kljucKlubaAm('FC Ararat') &&
+    F.kratkoImeAm('FC Ararat-Armenia') === 'Ararat-Armenia' && F.kratkoImeAm('SC Shirak') === 'Shirak')
+
+  // Stran kroga: le tekoči krog (9), termin Erevan → Ljubljana.
+  const krog = beri('am-ffa-pl-krog-9.html')
+  const sk = F.tekmeKrogaPl(krog)
+  const u = sk.tekme.find((t) => t.id === '96151')
+  preveri('ffa PL: stran kroga — krog 9, 6 tekem, izid, 20:00 Erevan → 18:00', sk.krog === 9 && sk.tekme.length === 6 &&
+    u?.domaci === 'FC Urartu' && u?.gostje === 'FC Ararat' && u?.izid?.domaci === 2 && u?.izid?.gostje === 2 &&
+    u?.datum === '2026-10-11' && u?.ura === '18:00' && F.zaPredpomnilnik(krog, 'razpored-premierleague_96103-96300.html') &&
+    !F.zaPredpomnilnik('<html>Be right back</html>', 'razpored-premierleague_96103-96300.html') &&
+    !F.zaPredpomnilnik('<html>Be right back</html>', 'razpored-first-league_902.html'))
+
+  // Strani tekem: ista predloga kot ffa.am, z drugačnimi razredi in ikonami.
+  const ag = beri('am-ffa-pl-tekma-96106-avtogol.html')
+  const z = F.vZapisnik(ag, { id: '96106' })
+  const n = F.nastopi(z)
+  const minute = (nn, i) => nn.filter((x) => x.ekipaIdx === i).reduce((a, x) => a + x.minute, 0)
+  const zaEkipo = (zz, i) => zz.goli.filter((g) => (g.avtogol ? 1 - g.ekipaIdx : g.ekipaIdx) === i).length
+  preveri('ffa PL: glava — klubi, izid 3:4, krog 1 ("Matchday 1"), 20:00 Erevan → 18:00', z.domaci.ime === 'FC Gandzasar' &&
+    z.gostje.ime === 'FC Ararat-Armenia' && z.rezultat.domaci === 3 && z.rezultat.gostje === 4 && z.krog === 1 &&
+    z.datum === '2026-08-01' && z.ura === '18:00')
+  preveri('ffa PL: 11 + 11, klop, vratar = prvi začetnik (namig), menjave z minuto, 990 minut', z.domaci.postava.length === 11 &&
+    z.gostje.postava.length === 11 && z.domaci.rezerve.length > 0 && z.domaci.postava[0].vratar && z.domaci.postava[0].pozicija === 'GK' &&
+    z.domaci.postava.filter((x) => x.vratar).length === 1 && z.menjave.length > 0 && z.menjave.every((m) => m.minuta != null) &&
+    minute(n, 0) === 990 && minute(n, 1) === 990 && n.some((x) => !x.zacetnik && x.minute > 0))
+  preveri('ffa PL: "(OG)" pod gosti je avtogol domačega igralca, "(11m)" je 11 m, goli = izid', zaEkipo(z, 0) === 3 && zaEkipo(z, 1) === 4 &&
+    z.goli.find((g) => g.avtogol)?.ekipaIdx === 0 && z.goli.find((g) => g.avtogol)?.minuta === 3 &&
+    z.goli.filter((g) => g.enajstmetrovka).length === 1 && z.opozorila.length === 0)
+  const rd = F.vZapisnik(beri('am-ffa-pl-tekma-96107-rdeci.html'))
+  const dr = F.vZapisnik(beri('am-ffa-pl-tekma-96131-dva-rdeca.html'))
+  preveri('ffa PL: rdeči karton — nastop do izključitve (v 90. ostane 990, v 38. in 45. manj); avtogol gostov; goli = izid',
+    rd.rdeci.length === 1 && rd.rdeci[0].minuta === 90 && rd.rdeci[0].ekipaIdx === 1 && zaEkipo(rd, 0) === 2 && rd.goli.some((g) => g.avtogol && g.ekipaIdx === 1) &&
+    zaEkipo(rd, 1) === 2 && minute(F.nastopi(rd), 1) === 990 && minute(F.nastopi(rd), 0) === 990 && dr.rdeci.length === 2 &&
+    zaEkipo(dr, 0) === 3 && zaEkipo(dr, 1) === 1 && minute(F.nastopi(dr), 0) < 990 && minute(F.nastopi(dr), 1) < 990)
+  const nd = beri('am-ffa-pl-tekma-96157-neodigrana.html')
+  const nr = beri('am-ffa-pl-tekma-96300-nerazpisana.html')
+  const ar = beri('am-ffa-pl-tekma-38786-arhiv.html')
+  preveri('ffa PL: neodigrana (krog in termin), nerazpisana ("To schedule", brez kroga), arhiv (sezona v naslovu)',
+    F.vZapisnik(nd) === null && F.tekmaPl(nd, '96157').krogStrani === 10 && F.tekmaPl(nd, '96157').datum === '2026-10-17' &&
+    F.tekmaPl(nd, '96157').izid === null && F.vZapisnik(nr) === null && F.tekmaPl(nr, '96300').krogStrani === null &&
+    F.tekmaPl(nr, '96300').datum === null && F.tekmaPl(nr, '96300').domaci === 'SC Shirak' && F.tekmaPl(ar, '38786').sezonaStrani === '2025/26' &&
+    F.tekmaPl(ar, '38786').krogStrani === 1 && F.vZapisnik(ar)?.domaci.postava.length === 11 && F.tekmaPl('<html>Be right back</html>', 1) === null)
+  preveri('ffa PL: vzorci brez trenerjev, sodnikov in kontaktov', !/Coaches|Referee|Delegate|Inspector|Phone number|email-protection|Press officer/.test(
+    ['am-ffa-pl-krog-9.html', 'am-ffa-pl-tekma-96106-avtogol.html', 'am-ffa-pl-tekma-96107-rdeci.html', 'am-ffa-pl-tekma-96131-dva-rdeca.html',
+      'am-ffa-pl-tekma-96157-neodigrana.html', 'am-ffa-pl-tekma-96300-nerazpisana.html', 'am-ffa-pl-tekma-38786-arhiv.html'].map(beri).join('')))
+
+  // Blok iz vzorcev: krog 9 (96151–96156) in 10 (96157–96162), 12 klubov.
+  // Neodigrano stran preimenujemo v druge pare, da je klubov 12 (6 tekem na krog).
+  const KLUBI = ['FC Urartu', 'FC Ararat', 'FC Van', 'FC Gandzasar', 'Sardarapat FC', 'FC Noah', 'FC Pyunik', 'FC BKMA',
+    'FC Ararat-Armenia', 'FC Alashkert', 'FC Syunik', 'SC Shirak']
+  const tekma = (domaci, gostje, krogSt, termin) => nd.replace('FC Ararat', domaci).replace('SC Shirak', gostje)
+    .replace('Matchday 10', krogSt ? `Matchday ${krogSt}` : 'Matchday').replace(/Matchday<\/div>/, 'To schedule</div>').replace('17.10.2026 20:00', termin ?? '')
+  const odigrana = (domaci, gostje, termin) => ag.replace('FC Gandzasar', domaci).replace('FC Ararat-Armenia', gostje)
+    .replace('Matchday 1', 'Matchday 9').replace('01.08.2026 20:00', termin)
+  const strani = new Map()
+  strani.set(96151, odigrana(KLUBI[0], KLUBI[1], '11.10.2026 20:00'))
+  for (let i = 1; i < 6; i++) strani.set(96151 + i, tekma(KLUBI[2 * i], KLUBI[2 * i + 1], 9, '04.10.2026 18:00'))
+  for (let i = 0; i < 5; i++) strani.set(96157 + i, tekma(KLUBI[(2 * i + 3) % 12], KLUBI[(2 * i + 6) % 12], 10, '17.10.2026 20:00'))
+  strani.set(96162, nr.replace('SC Shirak', 'FC Noah').replace('FC Alashkert', 'FC Pyunik'))
+  const danes = Date.parse('2026-10-15T12:00:00Z')
+  const b = F.sestaviBlokPl({ od: 96151, do: 96162 }, strani)
+  const r = F.razporedBlokaPl(b, danes)
+  preveri('ffa PL: blok — 12 klubov, 6 na krog, odmik 8 (blok od 9. kroga), "To schedule" dobi krog po mestu', b.klubov === 12 && b.naKrog === 6 &&
+    b.odmik === 8 && b.tekme.find((t) => t.id === '96162')?.krog === 10 && b.sezona === '2026/27' && !b.neujemanja.length && !b.manjkajo.length)
+  preveri('ffa PL: razpored bloka — krogi 9 in 10, odigrana tekma, kontumacij ni, nerazpisana brez termina ostane v krogu',
+    r.krogi.map((k) => k.stevilka).join() === '9,10' && r.krogi[0].tekme.length === 6 && r.krogi[1].tekme.length === 6 &&
+    r.krogi[0].tekme.filter((t) => t.odigrana).length === 1 && !r.krogi.flatMap((k) => k.tekme).some((t) => t.kontumacija) &&
+    r.krogi[1].tekme.filter((t) => !t.datum).length === 1 && !r.izstopili.length)
+  // Izid brez postav, starejši od tedna, je kontumacija; tehnični poraz tudi.
+  const brezPostav = { ...b, tekme: b.tekme.map((t) => (t.id === '96152' ? { ...t, izid: { domaci: 3, gostje: 0 }, postave: false } : t)) }
+  preveri('ffa PL: izid brez postav, starejši od tedna = kontumacija', F.razporedBlokaPl(brezPostav, danes).krogi[0].tekme.find((t) => t.ffaId === '96152')?.kontumacija === true &&
+    F.razporedBlokaPl(brezPostav, Date.parse('2026-10-08T12:00:00Z')).krogi[0].tekme.find((t) => t.ffaId === '96152')?.kontumacija === false)
+  // Izstop kluba: dve pretekli neodigrani tekmi in od prve nobene odigrane → neodigrane proč.
+  const izstop = F.izstopljeniVBloku([
+    { domaci: 'A', gostje: 'B', datum: '2026-09-01', izid: null }, { domaci: 'C', gostje: 'A', datum: '2026-09-08', izid: null },
+    { domaci: 'B', gostje: 'C', datum: '2026-09-08', izid: { domaci: 1, gostje: 0 } }, { domaci: 'A', gostje: 'C', datum: '2026-11-01', izid: null },
+  ], danes)
+  preveri('ffa PL: izstop kluba v bloku', [...izstop].join() === 'A')
+  preveri('ffa PL: čas do ponovnega branja — odigrana s postavama nikoli, na vrsti vsako uro, daleč teden, izid brez postav dnevno',
+    F.najvecStarostPl(F.tekmaPl(strani.get(96151), 96151), danes) === Infinity &&
+    F.najvecStarostPl(F.tekmaPl(strani.get(96157), 96157), Date.parse('2026-10-17T08:00:00Z')) === 3600e3 &&
+    F.najvecStarostPl(F.tekmaPl(strani.get(96157), 96157), danes) === 7 * 864e5 && F.najvecStarostPl(F.tekmaPl(nr, 96300), danes) === 7 * 864e5 &&
+    F.najvecStarostPl({ ...F.tekmaPl(strani.get(96151), 96151), postave: false }, danes) === 864e5 && F.najvecStarostPl(null, danes) === -1)
+
+  // preberiBlokPl: predpomnilnik v pomnilniku (strani stare 10 minut). Stran
+  // kroga kaže krog 9 odigran, shranjene strani 96151–96156 so neodigrane →
+  // preberejo se znova; krog 10 (17. 10., čez dva dni) ostane; 96160 manjka.
+  const KODA2 = 'premierleague/96151-96162'
+  const shramba = new Map([...strani].map(([id, h]) => [`tekma-pl-${id}.html`, { html: h, starost: 600e3 }]))
+  shramba.set('tekma-pl-96151.html', { html: tekma(KLUBI[0], KLUBI[1], 9, '11.10.2026 20:00'), starost: 600e3 })
+  shramba.set('razpored-premierleague_96151-96162.html', { html: krog, starost: 60e3 })
+  shramba.delete('tekma-pl-96160.html')
+  const shranjeno = []
+  const pp = { beri: (ime) => shramba.get(ime) ?? null, shrani: (ime) => shranjeno.push(ime) }
+  const prebrane = []
+  const prenesi = async (url) => {
+    prebrane.push(url)
+    const id = Number(url.match(/\/games\/f(\d+)/)?.[1])
+    if (id === 96160) { const e = new Error(`${url} -> HTTP 404`); e.status = 404; throw e }
+    return strani.get(id) ?? krog
+  }
+  const bb = await F.preberiBlokPl(KODA2, prenesi, { danes, predpomnilnik: pp })
+  const krog9 = (x) => /\/f9615[1-6]$/.test(x)
+  preveri('ffa PL: blok iz predpomnilnika — sveže le tekme, ki jih stran kroga kaže drugače, in manjkajoča (404 → manjka)',
+    prebrane.length === 7 && prebrane.filter(krog9).length === 6 && prebrane.some((x) => x.endsWith('/f96160')) &&
+    bb.svezi.has(96151) && !bb.svezi.has(96157) && bb.manjkajo.join() === '96160' && bb.krog === 9 && bb.prebranih === 7 &&
+    shranjeno.length === 6 && bb.tekme.find((t) => t.id === '96151')?.izid?.domaci === 3)
+  prebrane.length = 0
+  const zb = await F.zapisnikiBlokaPl(KODA2, prenesi, { danes, predpomnilnik: pp })
+  preveri('ffa PL: zapisniki bloka — šifra am<id>, klubi in krog s strani, sezona bloka; sveža stran se ne bere dvakrat',
+    zb.length === 1 && zb[0].id === 'am96151' && zb[0].z.zapisnikId === 'am96151' && zb[0].z.domaci.ime === 'FC Urartu' &&
+    zb[0].z.krog === 9 && zb[0].z.sezona === '2026/27' && zb[0].url === 'https://premierleague.ffa.am/en/games/f96151' &&
+    prebrane.filter((x) => x.endsWith('/f96151')).length === 1)
+
+  // Zavrnitev na vsaki poti bloka: 403 na strani kroga, 429 na strani tekme, izziv.
+  const prazno = { beri: () => null, shrani: () => {} }
+  const ujemi = async (fn) => { try { await fn(); return null } catch (e) { return e } }
+  const e403 = await ujemi(() => F.preberiBlokPl(KODA2, async () => { const e = new Error('HTTP 403'); e.status = 403; throw e }, { danes, predpomnilnik: prazno }))
+  const e429 = await ujemi(() => F.preberiBlokPl(KODA2, async (url) => {
+    if (url.endsWith('/en/games')) return krog
+    const e = new Error('HTTP 429'); e.status = 429; throw e
+  }, { danes, predpomnilnik: prazno }))
+  const eIzziv = await ujemi(() => F.preberiBlokPl(KODA2, async (url) => (url.endsWith('/en/games') ? krog : '<title>Just a moment...</title>'), { danes, predpomnilnik: prazno }))
+  const eSprem = await ujemi(() => F.preberiBlokPl(KODA2, async (url) => (url.endsWith('/en/games') ? krog : '<html>Be right back</html>'), { danes, predpomnilnik: prazno }))
+  preveri('ffa PL: 403 (stran kroga), 429 (stran tekme) in izziv vržejo FfaZavrnitev; vzdrževalna stran ustavi uvoz',
+    e403 instanceof F.FfaZavrnitev && e403.status === 403 && e429 instanceof F.FfaZavrnitev && e429.status === 429 &&
+    eIzziv instanceof F.FfaZavrnitev && eSprem instanceof Error && !(eSprem instanceof F.FfaZavrnitev) && /ni stran tekme/.test(eSprem.message) &&
+    !F.zaPredpomnilnik('<html>Be right back</html>', 'tekma-pl-96151.html') && F.zaPredpomnilnik(ag, 'tekma-pl-96106.html'))
+}
+
 // --- vir oefb (Avstrija, oefb.at) ------------------------------------------------
 {
   const O = await import('./viri/oefb.mjs')

@@ -1,9 +1,11 @@
-// Vir: Football Federation of Armenia — ffa.am (Prva liga, Առաջին խումբ).
+// Vir: Football Federation of Armenia — ffa.am (Prva liga, Առաջին խումբ) in
+// premierleague.ffa.am (Premier Liga, Հայաստանի Պրեմիեր լիգա).
 //
 // FFA na ffa.am (Laravel + Livewire) objavi tekmovanja, ki jih vodi sama:
 // Prvo ligo (raven 2) in amaterske lige (Amateur League A in B). Premier Liga
-// je na svojem spletišču (premierleague.ffa.am) in je ta vir ne bere. HTML iz
-// strežnika, spredaj Cloudflare brez izziva. Glej CLAUDE.md (Armenija — vir ffa).
+// je na svojem spletišču (premierleague.ffa.am, ista predloga strani tekme,
+// šifra lige je blok strani tekem — glej razdelek "Premier Liga" spodaj). HTML
+// iz strežnika, spredaj Cloudflare brez izziva. Glej CLAUDE.md (Armenija — vir ffa).
 //
 // SEZONA je jesen–pomlad (avgust–maj): "2026/27".
 //
@@ -44,27 +46,49 @@
 // (User-Agent SLFF, 4 s med zahtevki, zapisnikov, starejših od tedna, ne
 // beremo znova razen nepopolnih). Ob izzivu, CAPTCHI, 401, 403 ali 429 se uvoz
 // ustavi — ne obhajaj.
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { razpakiraj } from '../klubi.mjs'
 import { vPriimekIme } from './sportnet.mjs'
 import { nastopi as nastopiPoImenu } from './fss.mjs'
 
 const OSNOVNI = 'https://www.ffa.am'
+const PL = 'https://premierleague.ffa.am'
 const DOLZINA_TEKME = 90
+
+/**
+ * Blok Premier Lige: "premierleague/96103-96300" → { od: 96103, do: 96300 };
+ * druga oblika šifre → null.
+ */
+export function razberiBlok(koda) {
+  const m = String(koda ?? '').trim().match(/^premierleague\/f?(\d+)-f?(\d+)$/)
+  if (!m) return null
+  const od = Number(m[1])
+  const doo = Number(m[2])
+  if (doo < od || doo - od > 1000) throw new Error(`ffa: blok Premier Lige "${koda}" ni veljaven (od ≤ do, največ 1000 tekem)`)
+  return { od, do: doo }
+}
 
 /** "first-league/902" → { pot: 'first-league', skupina: '902' }. */
 export function razberiKodo(koda) {
   const m = String(koda ?? '').trim().match(/^([a-z0-9-]+(?:\/[a-z0-9-]+)*)\/(\d+)$/)
-  if (!m) throw new Error(`ffa: šifra lige je "<pot>/<skupina>" (npr. first-league/902 = Prva liga 2026/27), ne "${koda}"`)
+  if (!m) throw new Error(`ffa: šifra lige je "<pot>/<skupina>" (npr. first-league/902 = Prva liga 2026/27) ali "premierleague/<od>-<do>" (blok tekem Premier Lige), ne "${koda}"`)
   return { pot: m[1], skupina: m[2] }
 }
 
-export const naslovLige = (koda) => `${OSNOVNI}/en/${razberiKodo(koda).pot}`
+const goloId = (id) => String(id).replace(/^am/, '').replace(/^f/, '')
+/** Stran lige (ffa.am) ali stran kroga Premier Lige (`/en/games`, tekoči krog). */
+export const naslovLige = (koda) => (razberiBlok(koda) ? `${PL}/en/games` : `${OSNOVNI}/en/${razberiKodo(koda).pot}`)
 // Šifra zapisnika v bazi je `am<id>`: `matches.zapisnik_id` je enoličen čez
 // vse vire, številke ffa.am (95922, 98467 …) pa so v prostoru drugih virov.
-export const sifraZapisnika = (id) => `am${String(id).replace(/^am/, '').replace(/^f/, '')}`
-export const naslovZapisnika = (id) => `${OSNOVNI}/en/match-info/f${String(id).replace(/^am/, '').replace(/^f/, '')}`
+// premierleague.ffa.am in ffa.am imata isti prostor šifer (tekma f96151 je na
+// obeh ista), zato se šifri dveh spletišč ne moreta srečati.
+export const sifraZapisnika = (id) => `am${goloId(id)}`
+export const naslovZapisnika = (id) => `${OSNOVNI}/en/match-info/f${goloId(id)}`
+export const naslovTekmePl = (id) => `${PL}/en/games/f${goloId(id)}`
 const imeLige = (koda) => `liga-${String(koda).replace(/[/:]/g, '-')}.html`
-const imeZapisnika = (id) => `tekma-${String(id).replace(/^am/, '').replace(/^f/, '')}.html`
+const imeZapisnika = (id) => `tekma-${goloId(id)}.html`
+const imeTekmePl = (id) => `tekma-pl-${goloId(id)}.html`
+const imeKrogaPl = (koda) => `krog-${String(koda).replace(/[/:]/g, '-')}.html`
 
 const brezSkript = (s) => String(s ?? '').replace(/<script[\s\S]*?<\/script>/g, '').replace(/<!--[\s\S]*?-->/g, '')
 const besedilo = (html) => razpakiraj(String(html ?? '').replace(/<[^>]+>/g, ' '))
@@ -115,6 +139,9 @@ export function zaPredpomnilnik(html, datoteka = '') {
   if (jeIzziv(s)) return false
   if (/^tekma-/.test(datoteka)) return /single-game-teams__title/.test(s)
   if (/^liga-/.test(datoteka)) return /cascade-tour-matches/.test(s) && /<tbody[^>]*tour="/.test(s)
+  // Stran kroga Premier Lige (uvoz razporeda jo shrani kot `razpored-premierleague_…`).
+  if (/^(krog|razpored)-premierleague/.test(datoteka)) return /games-index/.test(s) && /match-item/.test(s)
+  if (/^razpored-/.test(datoteka)) return /cascade-tour-matches/.test(s) && /<tbody[^>]*tour="/.test(s)
   return s.length > 0
 }
 
@@ -300,10 +327,11 @@ const IKONE = { 'ball': 'gol', 'yc': 'rumeni', 'rc': 'rdeci', 'down': 'ven', 'up
 /**
  * Dogodki enega igralca iz `players__player-range-block`: [{ vrsta, minuta }].
  * Levo je ikona pred minuto, desno minuta pred ikono — pare tvorimo po
- * zaporedju, kakor stoji prvi žeton.
+ * zaporedju, kakor stoji prvi žeton. Ikone so na ffa.am v `/assets/`, na
+ * premierleague.ffa.am v `/img/icons/` (tam je ikona vedno pred minuto).
  */
 export function dogodkiIgralca(blok) {
-  const zetoni = [...String(blok ?? '').matchAll(/<img[^>]*src="[^"]*\/assets\/([a-z0-9_-]+)\.(?:png|gif|svg|jpg)"|<div[^>]*players__player-text[^>]*>([\s\S]*?)<\/div>/g)]
+  const zetoni = [...String(blok ?? '').matchAll(/<img[^>]*src="[^"]*\/(?:assets|img\/icons)\/([a-z0-9_-]+)\.(?:png|gif|svg|jpg)"|<div[^>]*players__player-text[^>]*>([\s\S]*?)<\/div>/g)]
     .map((m) => (m[1] != null ? { ikona: m[1] } : { besedilo: besedilo(m[2]) }))
     .filter((z) => z.ikona || z.besedilo)
   const out = []
@@ -331,8 +359,9 @@ export function igralciStolpca(html) {
     if (iIme < 0) continue
     const imeDel = kos.slice(iIme, iDog > iIme ? iDog : undefined)
     const dogDel = iDog < 0 ? '' : kos.slice(iDog, iIme > iDog ? iIme : undefined)
-    const ime = besedilo(imeDel.match(/<div class="players__player-text[^"]*">([\s\S]*?)<\/div>/)?.[1])
-    const st = imeDel.match(/<div class="players__player-number[^"]*">\s*(\d+)\s*<\/div>/)?.[1] ?? null
+    // premierleague.ffa.am ima med `<div` in `class=` novo vrstico.
+    const ime = besedilo(imeDel.match(/<div\s+class="players__player-text[^"]*">([\s\S]*?)<\/div>/)?.[1])
+    const st = imeDel.match(/<div\s+class="players__player-number[^"]*">\s*(\d+)\s*<\/div>/)?.[1] ?? null
     if (!ime) continue
     out.push({ st: st != null ? Number(st) : null, polnoIme: ime, dogodki: dogodkiIgralca(dogDel) })
   }
@@ -345,8 +374,14 @@ function stolpca(s, od, doNaslova) {
   if (i < 0) return [[], []]
   const j = doNaslova ? s.indexOf(doNaslova, i + od.length) : -1
   const del = s.slice(i, j < 0 ? undefined : j)
-  const levi = del.indexOf('players__box mr-2')
-  const desni = del.indexOf('players__box ml-2')
+  // ffa.am: `players__box mr-2` (domači) in `ml-2` (gostje); premierleague.ffa.am
+  // ima le dva `players__box`, domači prvi.
+  let levi = del.indexOf('players__box mr-2')
+  let desni = del.indexOf('players__box ml-2')
+  if (levi < 0 && desni < 0) {
+    const skatle = [...del.matchAll(/class="players__box[" ]/g)].map((m) => m.index)
+    if (skatle.length === 2) [levi, desni] = skatle
+  }
   if (levi < 0 || desni < 0) return [[], []]
   return [igralciStolpca(del.slice(levi, desni)), igralciStolpca(del.slice(desni))]
 }
@@ -420,25 +455,30 @@ function goliIzGlave(strelci, ekipe, ikone, opozorila) {
 /** Glava strani tekme: { sezona, krog, datum, ura, domaci, gostje, izid, tehnicni, strelci }. */
 export function glavaTekme(html) {
   const s = brezSkript(html)
-  const naslov = besedilo(s.match(/single-game-teams__title">([\s\S]*?)<\/div>/)?.[1])
-  const cas = besedilo(s.match(/single-game-teams__date">([\s\S]*?)<\/div>/)?.[1]).match(/(\d{2})\.(\d{2})\.(\d{4})\s+(\d{1,2}:\d{2})?/)
+  const naslov = besedilo(s.match(/single-game-teams__title"[^>]*>([\s\S]*?)<\/div>/)?.[1])
+  const cas = besedilo(s.match(/single-game-teams__date[^"]*"[^>]*>([\s\S]*?)<\/div>/)?.[1]).match(/(\d{2})\.(\d{2})\.(\d{4})\s+(\d{1,2}:\d{2})?/)
   const { datum, ura } = cas ? vLjubljanskiCas(`${cas[3]}-${cas[2]}-${cas[1]}`, cas[4] ?? null) : { datum: null, ura: null }
   const imena = [...s.matchAll(/single-game-teams__name[^"]*">([\s\S]*?)<\/div>/g)].map((m) => besedilo(m[1]))
   const iIzida = s.indexOf('single-game-teams__score"')
   // Izid sta dve številki `goals-num` takoj za oznako; neodigrana tekma ju nima.
   const blokIzida = iIzida < 0 ? '' : s.slice(iIzida, s.indexOf('single-game-teams__last', iIzida) >>> 0)
   const goli = [...blokIzida.matchAll(/goals-num">\s*(\d+)\s*<\/div>/g)].map((m) => Number(m[1]))
-  // Strelci: levi stolpec glave (`__first`) do izida, desni (`__last`) do vrstice s kontumacijo/stadionom.
+  // Strelci: levi stolpec glave (`__first`) do izida, desni (`__last`) do vrstice
+  // s kontumacijo/stadionom (ffa.am) oziroma do postav (premierleague.ffa.am,
+  // kjer je stadion pod izidom, pred `__last`).
   const iPrvi = s.indexOf('single-game-teams__first')
   const iZadnji = s.indexOf('single-game-teams__last')
-  const iKonec = s.indexOf('single-game-teams__stadium')
+  const iKonec = [s.indexOf('single-game-teams__stadium', iZadnji), s.indexOf('class="players"', iZadnji)].filter((x) => x > iZadnji)
   const strelci = iPrvi < 0 || iZadnji < 0
     ? [[], []]
-    : [strelciIzGlave(s.slice(iPrvi, iIzida < 0 ? iZadnji : iIzida)), strelciIzGlave(s.slice(iZadnji, iKonec < 0 ? undefined : iKonec))]
+    : [strelciIzGlave(s.slice(iPrvi, iIzida < 0 || iIzida > iZadnji ? iZadnji : iIzida)), strelciIzGlave(s.slice(iZadnji, iKonec.length ? Math.min(...iKonec) : undefined))]
   return {
     naslov,
-    sezona: sezonaIz(naslov.match(/\((\d{4}\s*-\s*\d{4})\)/)?.[1]),
-    krog: Number(naslov.match(/:\s*(\d+)\s*$/)?.[1]) || null,
+    // ffa.am: "Պրեմիեր Լիգա (2026-2027): 9"; premierleague.ffa.am: "2025-2026
+    // Fastex Premier League : Matchday 1" (tekoča sezona le ": Matchday 9",
+    // nerazpisana tekma "To schedule").
+    sezona: sezonaIz(naslov.match(/\d{4}\s*-\s*\d{4}/)?.[0]),
+    krog: Number(naslov.match(/:\s*(?:Matchday|Տուր|Тур)?\s*(\d+)\s*$/i)?.[1]) || null,
     datum,
     ura,
     domaci: imena[0] ?? null,
@@ -561,15 +601,20 @@ export const nastopi = (z) => nastopiPoImenu(z)
 // --- klubi ---------------------------------------------------------------------
 
 // Ključ kluba: male črke, ločila v presledek, števke ostanejo — "Ararat-2"
-// (druga ekipa) ni "Ararat"; armenske črke ostanejo.
+// (druga ekipa) ni "Ararat"; armenske črke ostanejo. Oblika "FC"/"SC" odpade:
+// premierleague.ffa.am piše "FC Urartu", "SC Shirak", "Sardarapat FC", ffa.am
+// isti klub "Urartu" (ob prestopu lige je to isti klub, ne nov).
 export const kljucKlubaAm = (ime) =>
   razpakiraj(ime)
     .toLowerCase()
     .replace(/[^\p{L}0-9]+/gu, ' ')
-    .trim()
+    .split(' ')
+    .filter((b) => b && b !== 'fc' && b !== 'sc')
+    .join(' ')
 
-/** Kratko ime: stran piše kratka imena ("BKMA-2", "Pyunik Academy"). */
-export const kratkoImeAm = (polno) => razpakiraj(polno).trim().split(/\s+/).slice(0, 3).join(' ')
+/** Kratko ime: brez "FC"/"SC" ("FC Ararat-Armenia" → "Ararat-Armenia", "BKMA-2", "Pyunik Academy"). */
+export const kratkoImeAm = (polno) =>
+  razpakiraj(polno).trim().split(/\s+/).filter((b) => !/^(FC|SC)$/i.test(b)).slice(0, 3).join(' ')
 
 // --- prenos --------------------------------------------------------------------
 
@@ -609,6 +654,279 @@ export async function beri(prenesi, url, ime, sveze) {
   return html
 }
 
+// --- Premier Liga (premierleague.ffa.am) -----------------------------------------
+//
+// Razporeda cele sezone spletišče ne pokaže: `/en/games` ima le tekoči krog,
+// ostali krogi pridejo z zahtevkom Livewire (POST), ki ga ne pošiljamo. Strani
+// tekem pa so strnjen blok šifer, urejen po krogih (2026/27: 12 klubov, 33
+// krogov po 6 tekem, f96103–f96300; 2025/26: 10 klubov, 27 krogov po 5,
+// f38786–f38920; zunaj bloka 404). Stran obstaja tudi za neodigrano tekmo:
+// "Matchday N" in termin, ali "To schedule" brez kroga in termina (krog se
+// takrat izpelje iz mesta v bloku). Zato je razpored kar blok strani tekem,
+// kot pri fssid in fcf, stran kroga pa le pospeši osvežitev tekočega kroga.
+
+const MAPA = 'scripts/.predpomnilnik/ffa'
+const URA = 3600e3
+const DAN = 24 * URA
+
+/** Sezona iz datuma tekme (julij–junij): "2026-10-11" → "2026/27". */
+export function sezonaIzDatuma(datum) {
+  const m = String(datum ?? '').match(/^(\d{4})-(\d{2})/)
+  if (!m) return null
+  const leto = Number(m[2]) >= 7 ? Number(m[1]) : Number(m[1]) - 1
+  return `${leto}/${String(leto + 1).slice(-2)}`
+}
+
+/**
+ * Stran kroga (`/en/games`): { krog, tekme: [{ id, domaci, gostje, datum, ura,
+ * izid }] } — le tekoči krog (podatek `tour` gradnika `games-index`).
+ */
+export function tekmeKrogaPl(html) {
+  const s = brezSkript(html)
+  let krog = null
+  for (const m of String(html ?? '').matchAll(/wire:initial-data="([^"]*)"/g)) {
+    const json = m[1].replace(/&quot;/g, '"').replace(/&amp;/g, '&')
+    if (!/"name":"games-index"/.test(json)) continue
+    krog = Number(json.match(/"tour":"(\d+)"/)?.[1]) || null
+  }
+  const tekme = []
+  let termin = null
+  for (const m of s.matchAll(/matches__title[^"]*">([^<]*)<|<a\s+href="[^"]*\/games\/f(\d+)"\s*>([\s\S]*?)<\/a>/g)) {
+    if (m[1] != null) {
+      termin = besedilo(m[1]).match(/(\d{2})\.(\d{2})\.(\d{4})\s+(\d{1,2}:\d{2})?/)
+      continue
+    }
+    const imena = [...m[3].matchAll(/match-item__team-block[\s\S]*?<span>([\s\S]*?)<\/span>/g)].map((x) => besedilo(x[1]))
+    const izid = izidIz(besedilo(m[3].match(/match-item__goals[^"]*">([\s\S]*?)<\/div>/)?.[1]))
+    const cas = termin ? vLjubljanskiCas(`${termin[3]}-${termin[2]}-${termin[1]}`, termin[4] ?? null) : { datum: null, ura: null }
+    tekme.push({ id: m[2], domaci: imena[0] ?? null, gostje: imena[1] ?? null, datum: cas.datum, ura: cas.ura, izid: izid ? { domaci: izid.domaci, gostje: izid.gostje } : null })
+  }
+  return { krog, tekme }
+}
+
+/** Tekma s strani tekme Premier Lige (tudi neodigrana); null, če ni strani tekme. */
+export function tekmaPl(html, id) {
+  if (!/single-game-teams__title/.test(String(html ?? ''))) return null
+  const g = glavaTekme(html)
+  return {
+    id: goloId(id),
+    krogStrani: g.krog,
+    sezonaStrani: g.sezona,
+    datum: g.datum,
+    ura: g.ura,
+    domaci: g.domaci,
+    gostje: g.gostje,
+    izid: g.izid,
+    tehnicni: g.tehnicni,
+    // Izid brez postav (ali z eno samo) — kontumacija, ko je starejša od tedna.
+    postave: !!(g.izid && !g.tehnicni && vZapisnik(html)),
+  }
+}
+
+/**
+ * Tekme bloka iz prebranih strani (Map id → html): krog je krog strani, sicer
+ * mesto v bloku (klubov / 2 tekem na krog). Sezona je sezona datumov bloka.
+ */
+export function sestaviBlokPl(blok, strani) {
+  const tekme = []
+  const manjkajo = []
+  for (let id = blok.od; id <= blok.do; id++) {
+    const t = strani.has(id) ? tekmaPl(strani.get(id), id) : null
+    if (!t) { manjkajo.push(id); continue }
+    t.html = strani.get(id)
+    tekme.push(t)
+  }
+  const klubi = new Set(tekme.flatMap((t) => [t.domaci, t.gostje]).filter(Boolean))
+  const naKrog = Math.max(1, Math.floor(klubi.size / 2))
+  // Blok se navadno začne s 1. krogom; če se ne (blok od sredine sezone), pove
+  // odmik najpogostejša razlika med krogom strani in mestom.
+  const razlike = new Map()
+  for (const t of tekme) {
+    if (!t.krogStrani) continue
+    const r = t.krogStrani - (Math.floor((Number(t.id) - blok.od) / naKrog) + 1)
+    razlike.set(r, (razlike.get(r) ?? 0) + 1)
+  }
+  const odmik = [...razlike].sort((a, b) => b[1] - a[1])[0]?.[0] ?? 0
+  const neujemanja = []
+  for (const t of tekme) {
+    t.mesto = Math.floor((Number(t.id) - blok.od) / naKrog) + 1 + odmik
+    if (t.krogStrani && t.krogStrani !== t.mesto) neujemanja.push(`f${t.id} (${t.krogStrani}. ≠ ${t.mesto}.)`)
+    t.krog = t.krogStrani ?? t.mesto
+  }
+  const sezone = new Map()
+  for (const t of tekme) {
+    const s = sezonaIzDatuma(t.datum)
+    if (s) sezone.set(s, (sezone.get(s) ?? 0) + 1)
+  }
+  const sezona = [...sezone].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null
+  return { tekme, klubov: klubi.size, naKrog, odmik, sezona, sezone: [...sezone.keys()], manjkajo, neujemanja }
+}
+
+const starostMs = (datum, danes) => (datum ? danes - Date.parse(`${datum}T00:00:00Z`) : 0)
+
+/** Koliko je lahko stara shranjena stran tekme, preden jo preberemo znova. */
+export function najvecStarostPl(t, danes = Date.now()) {
+  if (!t) return -1
+  if (t.izid) {
+    if (t.tehnicni || t.postave) return Infinity
+    // Izid brez postav: zapisnik se morda še vnaša — dnevno do 45 dni.
+    return starostMs(t.datum, danes) <= PONOVNO_DNI * DAN ? DAN : Infinity
+  }
+  if (!t.datum) return 7 * DAN // "To schedule"
+  const cez = -starostMs(t.datum, danes) / DAN
+  if (cez > 1) return 7 * DAN // še ni na vrsti
+  if (cez > -14) return URA // na vrsti ali pred kratkim
+  return DAN // prestavljena brez novega termina
+}
+
+/** Predpomnilnik na disku (`scripts/.predpomnilnik/ffa`); preizkus poda svojega. */
+export const PREDPOMNILNIK_DISK = {
+  beri(ime) {
+    const p = `${MAPA}/${ime}`
+    if (!existsSync(p)) return null
+    return { html: readFileSync(p, 'utf8'), starost: Date.now() - statSync(p).mtimeMs }
+  },
+  // Oba uvoza pišeta v `scripts/.predpomnilnik/ffa/<ime>`, kar je MAPA;
+  // zapišemo še sami, da predpomnilnik ne visi na tem dogovoru.
+  shrani(ime, html) {
+    mkdirSync(MAPA, { recursive: true })
+    writeFileSync(`${MAPA}/${ime}`, html)
+  },
+}
+
+/** Sveže (izziv in zavrnitev ustavita); 404 → null. Prava stran gre v predpomnilnik. */
+async function beriSvezePl(prenesi, url, ime, predpomnilnik) {
+  let html
+  try {
+    html = await beri(prenesi, url, ime, true)
+  } catch (e) {
+    if (!e.zavrnitev && e.status === 404) return null
+    throw e
+  }
+  if (zaPredpomnilnik(html, ime)) predpomnilnik.shrani(ime, html)
+  return html
+}
+
+/**
+ * Prebere blok: shranjene strani, nato sveže tiste, ki jih ni ali so na vrsti
+ * (`najvecStarostPl`), in tiste tekočega kroga, pri katerih stran kroga kaže
+ * drug izid ali termin. Vrne { blok, ...sestaviBlokPl, svezi: Set id-jev,
+ * prebranih, krog }.
+ */
+export async function preberiBlokPl(koda, prenesi, { danes = Date.now(), predpomnilnik = PREDPOMNILNIK_DISK } = {}) {
+  const blok = razberiBlok(koda)
+  const izPredpomnilnikaFn = (ime) => predpomnilnik.beri(ime)
+  // Stran kroga: uvoz razporeda jo je pravkar prenesel (naslovRazporeda), zato
+  // jo vzamemo iz predpomnilnika, če je mlajša od 10 minut.
+  let krog = { krog: null, tekme: [] }
+  const ck = izPredpomnilnikaFn(`razpored-${String(koda).replace(/[^\w-]/g, '_')}.html`) ?? izPredpomnilnikaFn(imeKrogaPl(koda))
+  const htmlKroga = ck && ck.starost <= 10 * 60e3 && zaPredpomnilnik(ck.html, imeKrogaPl(koda)) ? ck.html : await beriSvezePl(prenesi, `${PL}/en/games`, imeKrogaPl(koda), predpomnilnik)
+  if (htmlKroga) krog = tekmeKrogaPl(htmlKroga)
+  const naStraniKroga = new Map(krog.tekme.map((t) => [Number(t.id), t]))
+
+  const strani = new Map()
+  const svezi = new Set()
+  let prebranih = 0
+  for (let id = blok.od; id <= blok.do; id++) {
+    const c = izPredpomnilnikaFn(imeTekmePl(id))
+    const t = c && zaPredpomnilnik(c.html, imeTekmePl(id)) ? tekmaPl(c.html, id) : null
+    let najvec = najvecStarostPl(t, danes)
+    const k = naStraniKroga.get(id)
+    if (t && k && (!!k.izid !== !!t.izid || (k.izid && (k.izid.domaci !== t.izid.domaci || k.izid.gostje !== t.izid.gostje)) ||
+      (k.datum && (k.datum !== t.datum || k.ura !== t.ura)))) najvec = -1
+    if (t && c.starost <= najvec) { strani.set(id, c.html); continue }
+    const html = await beriSvezePl(prenesi, naslovTekmePl(id), imeTekmePl(id), predpomnilnik)
+    prebranih++
+    if (html == null) continue
+    if (!tekmaPl(html, id)) throw new Error(`ffa: ${naslovTekmePl(id)} ni stran tekme (${html.length} B) — se je stran spremenila? Uvoz ustavljen`)
+    strani.set(id, html)
+    svezi.add(id)
+  }
+  const b = sestaviBlokPl(blok, strani)
+  if (b.manjkajo.length) console.warn(`ffa: v bloku ${koda} ni tekem f${b.manjkajo.join(', f')}`)
+  if (b.neujemanja.length) console.warn(`ffa: krog strani ni krog po mestu v bloku pri ${b.neujemanja.join(', ')}`)
+  if (b.sezone.length > 1) console.warn(`ffa: blok ${koda} ima tekme več sezon (${b.sezone.join(', ')}) — je blok pravi?`)
+  return { blok, ...b, svezi, prebranih, krog: krog.krog }
+}
+
+/**
+ * Klubi, ki so izstopili (blok): vsaj dve neodigrani tekmi, starejši od tedna
+ * dni, in od prve take nobene prave odigrane tekme (le tehnični izidi).
+ */
+export function izstopljeniVBloku(tekme, danes = Date.now()) {
+  const pretekle = new Map()
+  for (const t of tekme) {
+    if (t.izid || !t.datum || starostMs(t.datum, danes) <= 7 * DAN) continue
+    for (const k of [t.domaci, t.gostje]) pretekle.set(k, [...(pretekle.get(k) ?? []), t.datum])
+  }
+  const out = new Set()
+  for (const [k, datumi] of pretekle) {
+    if (datumi.length < 2) continue
+    const od = datumi.sort()[0]
+    if (!tekme.some((t) => t.izid && !t.tehnicni && t.datum >= od && (t.domaci === k || t.gostje === k))) out.add(k)
+  }
+  return out
+}
+
+/**
+ * Razpored bloka v obliko uvoza razporeda. Tehnični izid ali izid brez postav,
+ * starejši od tedna, je kontumacija; neodigrane tekme kluba, ki je izstopil,
+ * izpustimo; krog brez termina (vse "To schedule") pride, ko ga razpišejo.
+ */
+export function razporedBlokaPl(b, danes = Date.now()) {
+  const izstopili = izstopljeniVBloku(b.tekme, danes)
+  const krogi = new Map()
+  let izpuscenih = 0
+  for (const t of b.tekme) {
+    if (!t.izid && (izstopili.has(t.domaci) || izstopili.has(t.gostje))) { izpuscenih++; continue }
+    if (!krogi.has(t.krog)) krogi.set(t.krog, { stevilka: t.krog, tekme: [] })
+    const kontumacija = !!t.izid && (t.tehnicni || (!t.postave && starostMs(t.datum, danes) > 7 * DAN))
+    krogi.get(t.krog).tekme.push({
+      domaci: t.domaci,
+      gostje: t.gostje,
+      datum: t.datum,
+      ura: t.ura,
+      kontumacija,
+      odigrana: !!t.izid,
+      ffaId: t.id,
+      izid: t.izid,
+    })
+  }
+  const vsi = [...krogi.values()].sort((a, b) => a.stevilka - b.stevilka)
+  return { krogi: vsi.filter((k) => k.tekme.some((t) => t.datum)), brezTermina: vsi.filter((k) => !k.tekme.some((t) => t.datum)).length, izstopili: [...izstopili], izpuscenih }
+}
+
+/** Zapisniki bloka: odigrane tekme s postavama (kontumacije izpuščene). */
+export async function zapisnikiBlokaPl(koda, prenesi, { danes = Date.now(), ...moznosti } = {}) {
+  const b = await preberiBlokPl(koda, prenesi, { danes, ...moznosti })
+  const out = []
+  for (const t of b.tekme.filter((x) => x.izid && !x.tehnicni)) {
+    const url = naslovTekmePl(t.id)
+    let html = t.html
+    // Brez postav ali z goli, ki niso izid: pri tekmi zadnjih 45 dni še enkrat
+    // sveže (če je ta zagon stran že prebral, je to ta stran) — `zapisnikSvez`.
+    const z = await zapisnikSvez(
+      async (sveze) => {
+        if (!sveze || b.svezi.has(Number(t.id))) return html
+        html = (await beriSvezePl(prenesi, url, imeTekmePl(t.id), moznosti.predpomnilnik ?? PREDPOMNILNIK_DISK)) ?? html
+        return html
+      },
+      (x) => vZapisnik(x, { id: t.id, url }),
+      t.datum,
+      danes,
+    )
+    if (!z) continue
+    z.domaci.ime = t.domaci
+    z.gostje.ime = t.gostje
+    z.krog = t.krog
+    z.sezona = b.sezona ?? z.sezona
+    z.datum ??= t.datum
+    z.zapisnikId = sifraZapisnika(t.id)
+    out.push({ id: z.zapisnikId, z, url })
+  }
+  return out
+}
+
 const vir = {
   ime: 'ffa',
   polnoIme: 'Football Federation of Armenia (ffa.am)',
@@ -621,13 +939,21 @@ const vir = {
   imaRegistracije: false,
 
   naslovRazporeda: naslovLige,
-  naslovZapisnika: (_koda, id) => naslovZapisnika(id),
+  naslovZapisnika: (koda, id) => (razberiBlok(koda) ? naslovTekmePl(id) : naslovZapisnika(id)),
   jeIzziv,
   zaPredpomnilnik,
   fetch: (url, moznosti) => ffaFetch(url, moznosti),
   zavrnitev: (sporocilo, status = null) => new FfaZavrnitev(`ffa: ${sporocilo} — uvoz ustavljen, ne obhajamo`, status),
 
   async razporedVseStrani(koda, prenesi) {
+    if (razberiBlok(koda)) {
+      const b = await preberiBlokPl(koda, prenesi)
+      const r = razporedBlokaPl(b)
+      console.log(`  Premier Liga ${koda}: ${b.tekme.length} tekem, ${b.klubov} klubov, sezona ${b.sezona}, prebranih strani ${b.prebranih}` +
+        (r.brezTermina ? `, krogov brez termina ${r.brezTermina} (pridejo, ko jih razpišejo)` : ''))
+      if (r.izpuscenih) console.log(`  izstopili: ${r.izstopili.join(', ')} — izpuščenih neodigranih tekem: ${r.izpuscenih}`)
+      return r.krogi
+    }
     const { tekme } = tekmeStrani(koda, await beri(prenesi, naslovLige(koda), imeLige(koda), true))
     const r = razporedIzTekem(tekme)
     if (r.izpuscenih) console.log(`  izstopili: ${r.izstopili.join(', ')} — izpuščenih neodigranih tekem: ${r.izpuscenih}`)
@@ -635,6 +961,7 @@ const vir = {
   },
 
   async zapisniki(koda, prenesi) {
+    if (razberiBlok(koda)) return zapisnikiBlokaPl(koda, prenesi)
     const { sezona, tekme } = tekmeStrani(koda, await beri(prenesi, naslovLige(koda), imeLige(koda), true))
     const out = []
     // Tehnični izid je kontumacija (razpored jo označi); stran tekme nima tekme.
