@@ -240,8 +240,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     naslednjeTekme: 'Najbliższe mecze',
     tekmaDoma: '{krog}. kolejka — u siebie z {nasprotnik}',
     tekmaVGosteh: '{krog}. kolejka — na wyjeździe z {nasprotnik}',
-    domaKratko: 'D',
-    vGostehKratko: 'W',
     vsaPorocila: 'wszystkie zgłoszenia →',
     niPorocil: 'Brak zgłoszeń. Jeśli wiesz, że zawodnika zabraknie, napisz poniżej.',
     porociloPrimer: 'Np. kontuzja kolana, trzy tygodnie.',

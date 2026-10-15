@@ -237,8 +237,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     naslednjeTekme: 'Sledeće utakmice',
     tekmaDoma: '{krog}. kolo: kod kuće protiv {nasprotnik}',
     tekmaVGosteh: '{krog}. kolo: u gostima protiv {nasprotnik}',
-    domaKratko: 'D',
-    vGostehKratko: 'G',
     vsaPorocila: 'sva obaveštenja →',
     niPorocil: 'Nema obaveštenja. Ako znaš da igrač nedostaje, reci ispod.',
     porociloPrimer: 'Npr. povreda kolena, tri nedelje.',

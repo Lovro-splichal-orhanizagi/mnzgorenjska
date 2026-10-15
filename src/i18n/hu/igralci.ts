@@ -234,8 +234,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     naslednjeTekme: 'Következő meccsek',
     tekmaDoma: '{krog}. forduló: otthon, ellenfél: {nasprotnik}',
     tekmaVGosteh: '{krog}. forduló: idegenben, ellenfél: {nasprotnik}',
-    domaKratko: 'O',
-    vGostehKratko: 'I',
     vsaPorocila: 'minden bejelentés →',
     niPorocil: 'Nincs bejelentés. Ha tudod, hogy a játékos hiányzik, írd meg lent.',
     porociloPrimer: 'Pl. térdsérülés, három hét.',

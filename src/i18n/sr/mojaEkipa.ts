@@ -105,6 +105,11 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   vec: 'Više: bonusi, istorija, pravila',
 
   prestopi: {
+    medSezono: {
+      one: 'Pridružuješ se usred sezone: do roka {krog}. kola tim sastavljaš bez kazne. Zatim svako kolo imaš {n} besplatan transfer, svaki sledeći košta −{kazen}.',
+      few: 'Pridružuješ se usred sezone: do roka {krog}. kola tim sastavljaš bez kazne. Zatim svako kolo imaš {n} besplatna transfera, svaki sledeći košta −{kazen}.',
+      other: 'Pridružuješ se usred sezone: do roka {krog}. kola tim sastavljaš bez kazne. Zatim svako kolo imaš {n} besplatnih transfera, svaki sledeći košta −{kazen}.',
+    },
     stevec: 'Transferi: {n}/{prosti}',
     wildcard: 'wildcard, bez kazne',
     odbitek: 'odbitak {tock} u ovom kolu',

@@ -38,6 +38,8 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
   noga: {
     zasebnost: 'Приватност и услови',
     facebook: 'Следете нè на Facebook',
+    android: 'Апликација за Android',
+    iphone: 'Апликација за iPhone',
     vir: 'Податоци: официјални записници (<vir>{ime}</vir>)',
     /** Naziv saveza usred rečenice, kad ga ne znamo. */
     zvezeSplosno: 'федерацијата',
@@ -64,6 +66,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     pomoc: 'Помош',
     odjava: 'Одјава',
     prijava: 'Најава',
+    zacni: 'Започни бесплатно',
     meni: 'Мени',
     meniZGlasovi: 'Мени ({n} за гласање)',
   },
@@ -116,6 +119,8 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     brezEkip: 'сè уште без тимови',
     nazaj: '← Назад',
     preskoci: 'Прескокни',
+    isci: 'Барај лига …',
+    najvecEkip: 'Најмногу тимови',
     drugaDrzava: '{drzava}?',
     drzavaOpis: 'Прво избери држава, потоа лига во неа.',
   },

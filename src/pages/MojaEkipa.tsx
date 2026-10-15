@@ -1540,6 +1540,17 @@ export default function MojaEkipa() {
   const naslednjiZaPripomocek = krogiZaPripomocek[0]
 
   // Prestop je igralec, ki ga v zadnji zaklenjeni postavi ni bilo.
+  // Ekipa še nima posnetka v tej sezoni, liga pa je že zaklenila kroge.
+  const medSezono =
+    !nalaganje &&
+    zaklenjenaPostava == null &&
+    naslednjiKrog?.season != null &&
+    krogi.some(
+      (k) =>
+        k.season === naslednjiKrog.season &&
+        k.lineups_locked_at != null &&
+        (k.number ?? 0) < (naslednjiKrog.number ?? 0),
+    )
   const prestopi = zaklenjenaPostava
     ? izbrani.filter((s) => !zaklenjenaPostava.includes(s.player_id)).length
     : 0
@@ -1787,6 +1798,18 @@ export default function MojaEkipa() {
             </>
           )}
         </p>
+
+        {/* Zamudnik: prvi posnetek ekipe nima s čim primerjati, zato zakleni_krog
+            prestopov ne šteje; od naslednjega kroga veljajo prosti in kazen. */}
+        {medSezono && naslednjiKrog && (
+          <p className="text-xs text-sky-200/90">
+            {t('mojaEkipa.prestopi.medSezono', {
+              n: pravila.prosti,
+              krog: naslednjiKrog.number,
+              kazen: mnozina(pravila.kazen, TOCKE),
+            })}
+          </p>
+        )}
 
         {/* Na večjem zaslonu je prostora še za vrednost ekipe in zasedenost mest. */}
         <div className="hidden flex-wrap items-center justify-between gap-2 text-xs text-slate-500 sm:flex">

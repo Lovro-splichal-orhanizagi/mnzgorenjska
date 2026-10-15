@@ -103,6 +103,11 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   vec: 'Más: comodines, historial, reglas',
 
   prestopi: {
+    medSezono: {
+      one: 'Te unes con la temporada en marcha: hasta el cierre de la jornada {krog} montas tu equipo sin penalización. Después tienes {n} fichaje gratis por jornada; cada uno extra cuesta −{kazen}.',
+      many: 'Te unes con la temporada en marcha: hasta el cierre de la jornada {krog} montas tu equipo sin penalización. Después tienes {n} fichajes gratis por jornada; cada uno extra cuesta −{kazen}.',
+      other: 'Te unes con la temporada en marcha: hasta el cierre de la jornada {krog} montas tu equipo sin penalización. Después tienes {n} fichajes gratis por jornada; cada uno extra cuesta −{kazen}.',
+    },
     stevec: 'Fichajes: {n}/{prosti}',
     wildcard: 'wildcard: sin penalización',
     odbitek: 'penalización de {tock} en esta jornada',

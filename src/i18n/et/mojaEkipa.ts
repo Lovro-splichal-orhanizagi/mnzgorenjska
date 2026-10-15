@@ -104,6 +104,10 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   vec: 'Veel: boonused, ajalugu, reeglid',
 
   prestopi: {
+    medSezono: {
+      one: 'Liitud hooaja keskel: {krog}. vooru tähtajani paned meeskonna kokku ilma karistuseta. Seejärel on sul igas voorus {n} tasuta üleminek, iga järgmine maksab −{kazen}.',
+      other: 'Liitud hooaja keskel: {krog}. vooru tähtajani paned meeskonna kokku ilma karistuseta. Seejärel on sul igas voorus {n} tasuta üleminekut, iga järgmine maksab −{kazen}.',
+    },
     stevec: 'Üleminekud: {n}/{prosti}',
     wildcard: 'wildcard, karistuseta',
     odbitek: 'selles voorus maha {tock}',

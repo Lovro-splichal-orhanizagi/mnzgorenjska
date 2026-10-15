@@ -234,8 +234,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     naslednjeTekme: 'Järgmised mängud',
     tekmaDoma: '{krog}. voor: kodus vs {nasprotnik}',
     tekmaVGosteh: '{krog}. voor: võõrsil vs {nasprotnik}',
-    domaKratko: 'K',
-    vGostehKratko: 'V',
     vsaPorocila: 'kõik teated →',
     niPorocil: 'Teateid pole. Kui tead, et mängija puudub, ütle seda allpool.',
     porociloPrimer: 'Nt põlvevigastus, kolm nädalat.',

@@ -237,8 +237,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     naslednjeTekme: 'Următoarele meciuri',
     tekmaDoma: 'Etapa {krog}: acasă cu {nasprotnik}',
     tekmaVGosteh: 'Etapa {krog}: în deplasare la {nasprotnik}',
-    domaKratko: 'A',
-    vGostehKratko: 'D',
     vsaPorocila: 'toate rapoartele →',
     niPorocil: 'Nu există rapoarte. Dacă știi că jucătorul lipsește, spune mai jos.',
     porociloPrimer: 'De ex. accidentare la genunchi, trei săptămâni.',

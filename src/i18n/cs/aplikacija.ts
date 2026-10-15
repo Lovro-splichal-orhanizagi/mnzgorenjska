@@ -38,6 +38,8 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
   noga: {
     zasebnost: 'Soukromí a podmínky',
     facebook: 'Sleduj nás na Facebooku',
+    android: 'Aplikace pro Android',
+    iphone: 'Aplikace pro iPhone',
     vir: 'Data: oficiální zápisy o utkání <vir>{ime}</vir>',
     /** Ime zveze sredi stavka, ko je ne poznamo. */
     zvezeSplosno: 'svazu',
@@ -64,6 +66,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     pomoc: 'Pomoc',
     odjava: 'Odhlásit se',
     prijava: 'Přihlásit se',
+    zacni: 'Začni zdarma',
     meni: 'Menu',
     meniZGlasovi: 'Menu ({n} k hlasování)',
   },
@@ -116,6 +119,8 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     brezEkip: 'zatím bez týmů',
     nazaj: '← Zpět',
     preskoci: 'Přeskočit',
+    isci: 'Hledej ligu …',
+    najvecEkip: 'Nejvíc týmů',
     drugaDrzava: '{drzava}?',
     drzavaOpis: 'Nejdřív si vyber zemi, potom ligu v ní.',
   },

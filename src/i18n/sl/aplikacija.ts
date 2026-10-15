@@ -44,6 +44,9 @@ export const aplikacija = {
   noga: {
     zasebnost: 'Zasebnost in pogoji',
     facebook: 'Sledi nam na Facebooku',
+    /** Povezavi na aplikacijo v trgovinah (Trgovine.tsx). */
+    android: 'Aplikacija za Android',
+    iphone: 'Aplikacija za iPhone',
     vir: 'Podatki: uradni zapisniki <vir>{ime}</vir>',
     /** Ime zveze sredi stavka, kadar je ne poznamo. */
     zvezeSplosno: 'zveze',
@@ -70,6 +73,7 @@ export const aplikacija = {
     pomoc: 'Pomoč',
     odjava: 'Odjava',
     prijava: 'Prijava',
+    zacni: 'Začni brezplačno',
     meni: 'Meni',
     meniZGlasovi: 'Meni ({n} za glasovanje)',
   },
@@ -131,6 +135,9 @@ export const aplikacija = {
     brezEkip: 'še brez ekip',
     nazaj: '← Nazaj',
     preskoci: 'Preskoči',
+    isci: 'Išči ligo …',
+    /** Naslov skupine treh lig z največ ekipami na vrhu okna. */
+    najvecEkip: 'Največ ekip',
     /** Povezava na drugo državo, ko je ugib pokazal napačno. */
     drugaDrzava: '{drzava}?',
     /** Korak države za tujca (IP iz države brez lig). */

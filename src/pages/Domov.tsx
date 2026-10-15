@@ -572,17 +572,13 @@ export default function Domov() {
               </li>
             ))}
           </ol>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-white/10 pt-3">
-            <Link to="/my-team" className="gumb-glavni">
-              {t('domov.uvod.sestaviEkipo')}
-            </Link>
-            {naslednjiKrog?.deadline_at && (
-              <span className="text-sm text-slate-300">
-                {t('domov.rok.seZaklene', { krog: naslednjiKrog.number })}:{' '}
-                <Odstevanje do={naslednjiKrog.deadline_at} />
-              </span>
-            )}
-          </div>
+          {/* Poziv "Sestavi ekipo" je že v uvodu (ali v glavi prijavljenega) — tu le rok. */}
+          {naslednjiKrog?.deadline_at && (
+            <p className="border-t border-white/10 pt-3 text-sm text-slate-300">
+              {t('domov.rok.seZaklene', { krog: naslednjiKrog.number })}:{' '}
+              <Odstevanje do={naslednjiKrog.deadline_at} />
+            </p>
+          )}
         </section>
       )}
 
@@ -789,23 +785,26 @@ export default function Domov() {
         </details>
       )}
 
-      {/* potek igre — na telefonu zaprto, da naslovnica ni neskončna */}
-      <details open={siroko} className="group">
-        <Povzetek>{t('domov.kakoIgras.naslov')}</Povzetek>
-        <ol className="mt-3 grid gap-x-8 gap-y-4 sm:grid-cols-2">
-          {[
-            [t('domov.kakoIgras.registracija'), t('domov.kakoIgras.registracijaOpis')],
-            [t('domov.kakoIgras.kader'), t('domov.kakoIgras.kaderOpis')],
-            [t('domov.kakoIgras.enajsterica'), t('domov.kakoIgras.enajstericaOpis')],
-            [t('domov.kakoIgras.poKrogu'), t('domov.kakoIgras.poKroguOpis')],
-          ].map(([naslov, opis]) => (
-            <li key={naslov}>
-              <h3 className="text-sm font-bold text-gnl-300">{naslov}</h3>
-              <p className="mt-0.5 text-sm text-slate-300">{opis}</p>
-            </li>
-          ))}
-        </ol>
-      </details>
+      {/* potek igre — na telefonu zaprto, da naslovnica ni neskončna; novinec
+          ga ima že v kartici na vrhu */}
+      {!novinec && (
+        <details open={siroko} className="group">
+          <Povzetek>{t('domov.kakoIgras.naslov')}</Povzetek>
+          <ol className="mt-3 grid gap-x-8 gap-y-4 sm:grid-cols-2">
+            {[
+              [t('domov.kakoIgras.registracija'), t('domov.kakoIgras.registracijaOpis')],
+              [t('domov.kakoIgras.kader'), t('domov.kakoIgras.kaderOpis')],
+              [t('domov.kakoIgras.enajsterica'), t('domov.kakoIgras.enajstericaOpis')],
+              [t('domov.kakoIgras.poKrogu'), t('domov.kakoIgras.poKroguOpis')],
+            ].map(([naslov, opis]) => (
+              <li key={naslov}>
+                <h3 className="text-sm font-bold text-gnl-300">{naslov}</h3>
+                <p className="mt-0.5 text-sm text-slate-300">{opis}</p>
+              </li>
+            ))}
+          </ol>
+        </details>
+      )}
 
       {/* pravila */}
       <details open={siroko} className="group">

@@ -240,8 +240,6 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     naslednjeTekme: 'Nākamās spēles',
     tekmaDoma: '{krog}. kārta: mājās pret {nasprotnik}',
     tekmaVGosteh: '{krog}. kārta: izbraukumā pret {nasprotnik}',
-    domaKratko: 'M',
-    vGostehKratko: 'I',
     vsaPorocila: 'visi ziņojumi →',
     niPorocil: 'Nav ziņojumu. Ja zini, ka spēlētājs trūks, pastāsti zemāk.',
     porociloPrimer: 'Piem., ceļa trauma, trīs nedēļas.',

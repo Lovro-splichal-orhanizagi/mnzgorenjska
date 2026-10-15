@@ -105,6 +105,11 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   vec: 'Mai mult: bonusuri, istoric, reguli',
 
   prestopi: {
+    medSezono: {
+      one: 'Te alături în timpul sezonului: până la termenul etapei {krog} îți faci echipa fără penalizare. Apoi ai în fiecare etapă {n} transfer gratuit, fiecare în plus costă −{kazen}.',
+      few: 'Te alături în timpul sezonului: până la termenul etapei {krog} îți faci echipa fără penalizare. Apoi ai în fiecare etapă {n} transferuri gratuite, fiecare în plus costă −{kazen}.',
+      other: 'Te alături în timpul sezonului: până la termenul etapei {krog} îți faci echipa fără penalizare. Apoi ai în fiecare etapă {n} de transferuri gratuite, fiecare în plus costă −{kazen}.',
+    },
     stevec: 'Transferuri: {n}/{prosti}',
     wildcard: 'wildcard, fără penalizare',
     odbitek: 'penalizare {tock} în această etapă',
