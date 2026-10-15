@@ -356,6 +356,16 @@ vrh ni bil vpisan. Zapisnik je isti kot pri Treći NL.
 | hr-1nl | `114348034` (16) | `100413651` |
 | hr-2nl | `114348039` (16) | `100418001` |
 
+**Veteranske lige imena ne povedo** (pregled 15. 10. 2026): ZNS Zagreb ima
+2026/27 "Premier liga" (`115622586`), "1. liga skupina A/B" (`115624020`,
+`115628588`) in "2. liga skupina A/B/C" (`115630270`, `115632903`,
+`115635697`) — veteranske, klubi "VNK …" in veteranske ekipe NK. Filter
+`IZPUSTI` jih po imenu ne ujame, zato `hrvaske-lige.mjs` ligo izpusti še po
+klubih (`jeVeteranska`: klub "VNK …" ali "… veterani"; trki imen jih ne
+štejejo). `IZPUSTI` izpusti še pokale "HNK …" (HNKŽ, HNK NSKŽ), futsal "ŽNML"
+(klubi MNK) in "djevojčice/zagičice". Pregled vseh 40 zvez po popravku: drugih
+takih lig ni, nobena ni vpisana v bazi.
+
 **Mladinske lige (juniori, U19)** (migracija 20261013110100, 28 lig,
 **neaktivnih**): pregled 12. 10. 2026 je prečesal seznam tekmovanj vseh 40
 zvez (`/handlers/getCompetitions/`, sezoni 2026/2027 in 2025/2026; skripta
@@ -1404,9 +1414,12 @@ majhne (7–12 klubov):
 | rs-bg-mladenovac | `opstinska-liga-mladenovac-2026-2027` | `opstinska-liga-mladenovac-2` | `opstinska-liga-mladenovac-2024-25` |
 | rs-bg-obrenovac | `opstinska-liga-obrenovac-2026-2027` | `opstinska-liga-obrenovac` | `opstinska-liga-obrenovac-2024-2025` |
 
-(`…` = `medjuopstinska-liga`.) **Ni vpisanih**: Prva opštinska liga FSOL
-(2026/27) in Opštinska liga Sopot (obe sezoni) imata po dva kluba MLADOST v
-isti ligi, stran lige ju ne loči. Trki imen med ligami (10. 10. 2026, kraj
+(`…` = `medjuopstinska-liga`.) Prva opštinska liga FSOL in Opštinska liga
+Sopot imata po dva kluba MLADOST v isti ligi, ki ju stran FSB ne loči — zato
+sta vpisani prek vira `fssid` (COMET ime s krajem; `rs-bg-lazarevac-1`,
+`rs-bg-sopot`, glej spodaj), arhiva (le na fsb) nimata. **Šifre tekem fsb
+(`pid`) so šifre COMET**; `/izvestaj/?pid=` od 15. 10. 2026 preusmeri (301) na
+`/utakmica/izvestaj/?pid=`. Trki imen med ligami (10. 10. 2026, kraj
 iz "Mesto:"): BUDUĆNOST/JEDINSTVO/SLOGA v Obrenovcu (Zvečka, Dren, Ratari),
 NAPREDAK/SLOGA v Mladenovcu (kraja ne piše), BSK/MLADOST/SLOGA/ŠUMADIJA v
 Lazarevcu (Brajkovac, Cvetovac, Lukavica, Mali Crljeni), BSK v MOL A
@@ -1573,6 +1586,12 @@ odločijo vikend popoldne, vaški klubi in klubi, ki niso v drugem bloku.
 - **Liho število klubov** (Gradski ligi Kruševac, 13): blok N×(N−1), vsak krog
   en klub prost, (N−1)/2 tekem na krog, 2N krogov (`razberiKodo`); prva
   polovica sezone so krogi do `krogov / 2`.
+- **Večkrožne lige** (opštinske z malo klubi): blok je k × N(N−1)/2 šifer,
+  `razberiKodo` poskusi k = 2, 3, 4, 1 (prvi, ki da celo N ≥ 3) in vrne
+  `krozni`. Malo Crniće 2026/27: 8 klubov trikrožno (84 šifer, 21 krogov po 4);
+  Krupanj: 6 klubov štirikrožno (60, 20 krogov po 3). Velikost je le ugib —
+  blok mora biti cel (meji iz `srbija-blok.mjs`), sicer se okrnjen blok prebere
+  kot drugo število klubov (220 šifer = 11 klubov štirikrožno).
 - **Isto ime, drug klub**: COMET v nižjih ligah piše ime brez kraja (MLADOST v
   štirih ligah, HAJDUK, RUDAR, BSK v treh …), bare JEDINSTVO/MLADOST/NAPREDAK pa
   `fss.mjs` preslika v državni klub (Ub, Lučani, Kruševac). `IME_V_BLOKU` v
@@ -1631,6 +1650,42 @@ odločijo vikend popoldne, vaški klubi in klubi, ki niso v drugem bloku.
 | rs-zajecar-okruzna | `76162366-76162605` | 16 | Zaječarska okružna liga (ime iz medijev) | ocena; malo vnesenih zapisnikov |
 | rs-bor-okruzna | `76083154-76083335` | 14 | Okružna liga Bor (ime iz medijev) | ocena |
 | rs-pirot-okruzna | `76156082-76156171` | 10 | Liga Pirotski okrug (**ime nepotrjeno**) | ocena |
+
+**Opštinske in međuopštinske lige** (migracija 20261015172300, 8 lig,
+**neaktivne**, brez arhiva, datumi ocena). Vsak blok je bil ves prebran
+(15. 10. 2026, brez pisanja v bazo): odigrane tekme, zapisniki (11 + 11),
+goli = izid, menjave z minuto. Kraji v `IME_V_BLOKU` so s stadiona domačih
+tekem v zapisniku COMET.
+
+| liga | blok | klubov | ime (zveza) | odigranih / zapisnikov | goli = izid | postav 11 |
+|---|---|---|---|---|---|---|
+| rs-kikinda-mol | `76235200-76235409` | 15 | Međuopštinska liga Kikinda-Žitište (MFS Kikinda-Žitište; občine Kikinda, Žitište, Novi Bečej, Nova Crnja) | 56 / 56 | 56/56 | 112/112 |
+| rs-vrsac-mol | `76475945-76476034` | 10 | MOL Vršac (Vršac, Bela Crkva, Alibunar; **ime nepotrjeno**) | 40 / 39 (1 brez postav) | 39/39 | 74/78 |
+| rs-subotica-gradska | `75788469-75788578` | 11 | Gradska liga Subotica (vasi mesta Subotica; **ime nepotrjeno**) | 35 / 35 | 35/35 | 70/70 |
+| rs-bg-lazarevac-1 | `76177421-76177510` | 10 | Prva opštinska liga FSOL (fsb.org.rs) | 24 / 24 | 24/24 | 48/48 |
+| rs-bg-sopot | `77527270-77527325` | 8 | Opštinska liga Sopot (fsb.org.rs) | 16 / 16 | 16/16 | 30/32 |
+| rs-malo-crnice | `76183530-76183613` | 8 (trikrožna) | Opštinska liga Malo Crniće (vse vasi občine; **ime nepotrjeno**) | 16 / 15 (1 brez postav) | 15/15 | 28/30 |
+| rs-krupanj | `77542317-77542376` | 6 (štirikrožna) | Opštinska liga Krupanj (**ime nepotrjeno**) | 14 / 14 | 14/14 | 28/28 |
+| rs-pirot-opstinska | `76461361-76461416` | 8 | Opštinska liga Pirot (vasi občine Pirot; **ime nepotrjeno**) | 24 / 24 | 24/24 | 48/48 |
+
+Imena: MOL Kikinda — BEGA (Novi Itebej), BORAC (A) = Aleksandrovo, BORAC (I) =
+Iđoš, BUDUĆNOST (Banatski Dvor), PROLETER (Međa); Sopot — drugi MLADOST
+(poleg MLADOST (Guberevac)) nima kraja ne v COMET ne na fsb ("Mesto: ---"),
+zato MLADOST (Sopot), kot občina pri Mladenovcu. FSOL: BSK (Brajkovac), SLOGA
+(Lukavica), MLADOST (Cvetovac), MLADI RADNIK in OFK BORAC 1978 so isti klubi
+kot v arhivih `rs-bg-lazarevac-2` (fsb) — COMET jih piše enako, zato en zapis.
+Pregled trkov (15. 10. 2026, vsa imena RS v bazi): drugih trkov ni.
+
+**Pometanje 15. 10. 2026** (step 50, 2 s, ~2220 zahtevkov, brez izziva; trikrat
+HTTP 522 in izpad omrežja — ponovljeno): `75781300-75828200` (navzdol od
+prvega znanega bloka), `76460000-76477700`, `77500000-77560000` (okoli bloka
+Sopot). **Nepregledano**: `75600000-75781300` in `76477700-77500000` (proračun
+2500 zahtevkov). Najdeno: zgornji bloki Vršac, Subotica, Pirot, Krupanj, Prva
+liga Srbije `75808231-75808470` (vir `fss`), pokalne ali posamezne tekme
+(`75812699`, `75803389`, 5 in 15 šifer), mladinski Srem `76472363-76472452`
+(tekme v petek dopoldne in sredi tedna, klubi višjih lig) in `77543710-77543754`
+(45 šifer, enokrožna, ob sredah, Inđija/Irig/Ruma — ni članska liga).
+Neznani `75982840` ima iste klube kot MOL Kikinda (tekme ob ponedeljkih) — ni vpisan.
 
 Zveza v izbirniku je regijska (`fsv`, `fsrzs`, `fsris`), organizator je v
 tabeli. Datume z vira bereta le `fsv` (VFL) in `fsris` (zone) — ista oblika
@@ -2065,6 +2120,20 @@ končane) — vklop bo realno za 2027, takrat leto v šifri popravi na 2027.
 | ee-iii-liiga-louna-ida | 11 | `550/2026` | `550/2025` |
 | ee-iv-liiga-pohja-ida | 8 | `267/2026` | `267/2025`, `267/2024` |
 | ee-iv-liiga-pohja-laane | 7 | `268/2026` | `268/2025`, `268/2024` |
+
+**U19 Eliitliiga** (migracija 20261015172300, `ee-u19-eliitliiga`,
+**neaktivna**, `prvi_fantasy_krog = 2`, `rok_pomak_ur = 2`): `89/2026`, arhiv
+`89/2025`. Stran se imenuje "U19 Eliitliiga Esiliiga": 19 klubov enokrožno,
+19 krogov (eden prost). Ekipe so "U-19 <klub>"; `imeEkipe` predpono odreže
+(klub skupen s člani), "U-19 FC Tallinn I" je "FC Tallinn", "… II" ostane
+svoj klub. Preizkus (15. 10. 2026, vsi zapisniki): 2026 — 171 tekem, 44
+kontumacij (FC Kuressaare in JK Tallinna Kalev sta izstopila, "- : -"),
+124 zapisnikov, goli = izid 124/124 (843), postav po 11 245/248, vratar (VV)
+248/248, pozicija pri 1508/2723 začetnikih, 3519 nastopov (796 s klopi), vsi s
+šifro; 2025 — 153 tekem, 9 kontumacij, 144 zapisnikov, goli = izid 144/144
+(897), postav po 11 287/288, 4156 nastopov, vsi s šifro. Ob vpisu ostaja en
+krog (20. 10.) — vklop realno 2027 (leto v šifri na 2027). Uvoz: `gh workflow
+run uvoz-lige.yml -f liga=ee-u19-eliitliiga -f arhiv=89/2025 -f cene=true`.
 
 Izpuščeno: kvalifikacije (üleminekumängud: Premium 283, II liiga 281, II
 liiga B 560), zaključni turnirji (III liiga võitja 180, II B võitja 559, IV

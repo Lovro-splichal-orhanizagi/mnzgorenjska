@@ -20,7 +20,7 @@ const GLAVE = { 'User-Agent': 'SLFF fantasy (https://slff.eu)' }
 const SEZONA = '2026/2027'
 const ARHIV = '2025/2026'
 const IZPUSTI =
-  /pionir|kadet|junior|žen|hnlž|nlž|futsal|mal[io]m? nogomet|hmnl|žmnl|veteran|\bw?u\s*-?\s*\d|karlić|limać|^m?žnl? |mžnl|žml|kup\b|cup\b|superkup|limač|početni|prednatjecat|ulaznih|pilot|prstić|zagić|tići|papalin|pilić|picek|pijetl|špiget|mladež|kvalifikac|popun|doigravanj|turnir|\bpio\b|^hnk$|supersport/i
+  /pionir|kadet|junior|žen|hnlž|nlž|futsal|mal[io]m? nogomet|hmnl|žmnl|veteran|\bw?u\s*-?\s*\d|karlić|limać|^m?žnl? |mžnl|žml|kup\b|cup\b|superkup|limač|zagič|djevoj|početni|prednatjecat|ulaznih|pilot|prstić|zagić|tići|papalin|pilić|picek|pijetl|špiget|mladež|kvalifikac|popun|doigravanj|turnir|\bpio\b|^hnk|žnml|supersport/i
 
 const arg = (ime) => {
   const i = process.argv.indexOf(`--${ime}`)
@@ -64,21 +64,29 @@ async function tekmovanja(sezona, oid) {
 // ključ kluba -> šifra kluba na Semaforju -> { ime, lige }
 const poKljucu = new Map()
 
+// Veteranske lige imena pogosto ne povedo ("Premier liga", "1. liga skupina A"
+// pri ZNS Zagreb, 2026/27), klubi pa so "VNK …" (veteranski NK) ali veteranske
+// ekipe ("… veterani"). Liga s takim klubom ni liga odraslih.
+export const VETERANSKI_KLUB = /^v\.?\s*n\.?\s*k\.?(\s|$)|veteran/i
+export const jeVeteranska = (imena) => imena.some((ime) => VETERANSKI_KLUB.test(String(ime).trim()))
+
 /** Klubi in odigrane tekme s strani tekmovanja. */
 async function obseg(id) {
   const html = await besedilo(`${OSNOVNI}/natjecanja/${id}/x/`)
   const blok = html.slice(Math.max(0, html.indexOf('current_results')))
   const vrstice = new Map()
   for (const m of blok.matchAll(/data-match="(\d+)">[\s\S]*?<div class="res1">([^<]*)</g)) vrstice.set(m[1], m[2].trim())
-  const klubi = new Set()
-  for (const [, klub, ime] of blok.matchAll(/<div class="club[12]" data-id="(\d+)"><a[^>]*>([^<]*)/g)) {
-    klubi.add(klub)
-    const kljuc = kljucKlubaHr(imeKluba(razpakiraj(ime), klub))
-    if (!poKljucu.has(kljuc)) poKljucu.set(kljuc, new Map())
-    if (!poKljucu.get(kljuc).has(klub)) poKljucu.get(kljuc).set(klub, { ime: razpakiraj(ime), lige: new Set() })
-    poKljucu.get(kljuc).get(klub).lige.add(id)
-  }
-  return { klubov: klubi.size, tekem: vrstice.size, odigranih: [...vrstice.values()].filter((r) => /^\d+$/.test(r)).length }
+  const klubi = new Map()
+  for (const [, klub, ime] of blok.matchAll(/<div class="club[12]" data-id="(\d+)"><a[^>]*>([^<]*)/g)) klubi.set(klub, razpakiraj(ime))
+  const veteranska = jeVeteranska([...klubi.values()])
+  if (!veteranska)
+    for (const [klub, ime] of klubi) {
+      const kljuc = kljucKlubaHr(imeKluba(ime, klub))
+      if (!poKljucu.has(kljuc)) poKljucu.set(kljuc, new Map())
+      if (!poKljucu.get(kljuc).has(klub)) poKljucu.get(kljuc).set(klub, { ime, lige: new Set() })
+      poKljucu.get(kljuc).get(klub).lige.add(id)
+    }
+  return { klubov: klubi.size, veteranska, tekem: vrstice.size, odigranih: [...vrstice.values()].filter((r) => /^\d+$/.test(r)).length }
 }
 
 const izbrana = arg('zveza')
@@ -92,6 +100,10 @@ for (const z of vse) {
   for (const l of lige) {
     const arhiv = lani.find((x) => brezSezone(x.ime) === brezSezone(l.ime))
     const o = await obseg(l.id)
+    if (o.veteranska) {
+      if (!sql) console.log(`  ${l.ime.padEnd(42)} ${l.id}  izpuščeno: veteranska (klub VNK / veterani)`)
+      continue
+    }
     if (sql) console.log(`    -- ${z.ime}\n    ('${brezSezone(l.ime)}', '${l.ime.replace(/'/g, "''")}', '${z.oid}', '${l.id}', '${arhiv?.id ?? ''}'),`)
     else
       console.log(

@@ -4742,9 +4742,16 @@ preveri(
     F.default.premorMs >= 2000 && F.default.glave['User-Agent'] === 'SLFF fantasy (https://slff.eu)' && F.default.ocenjeniDatumi === true)
   const b = F.razberiKodo('75912381-75912620')
   let napacna = 0
-  for (const k of ['75912381-75912600', '75912381', 'x-y']) try { F.razberiKodo(k) } catch { napacna++ }
+  for (const k of ['75912381-75912601', '75912381', 'x-y']) try { F.razberiKodo(k) } catch { napacna++ }
   preveri('fssid: blok šifer — 16 klubov, 30 krogov po 8, krog po mestu', b.klubov === 16 && b.naKrog === 8 && b.krogov === 30 &&
     F.krogPoMestu(75912381, b) === 1 && F.krogPoMestu(75912388, b) === 1 && F.krogPoMestu(75912389, b) === 2 && F.krogPoMestu(75912620, b) === 30 && napacna === 3)
+  // Trikrožna liga (Malo Crniće 2026/27: 8 klubov, 84 šifer = 3 × 28, 21 krogov po 4) in liha dvokrožna.
+  const b3 = F.razberiKodo('76183530-76183613')
+  const b15 = F.razberiKodo('76235200-76235409')
+  const b4 = F.razberiKodo('77542317-77542376')
+  preveri('fssid: blok šifer — trikrožna (8 klubov, 21 krogov), štirikrožna (6 klubov, 20 krogov) in liha (15 klubov, 30 krogov po 7)',
+    b4.klubov === 6 && b4.krozni === 4 && b4.krogov === 20 && b3.klubov === 8 && b3.krozni === 3 && b3.naKrog === 4 && b3.krogov === 21 && F.krogPoMestu(76183613, b3) === 21 &&
+    b15.klubov === 15 && b15.krozni === 2 && b15.naKrog === 7 && b15.krogov === 30 && b.krozni === 2)
   preveri('fssid: naslovi (latinica)', F.default.naslovRazporeda('75912381-75912620') === 'https://fss.rs/izvestaj-sa-utakmice/75912381/?script=lat' &&
     F.default.naslovZapisnika('x', '75912400') === 'https://fss.rs/izvestaj-sa-utakmice/75912400/?script=lat')
 
@@ -4761,6 +4768,10 @@ preveri(
     F.imeKluba('RADNIČKI (SVILAJNAC)') === 'RADNIČKI (Svilajnac)' && F.imeKluba('RADNIČKI (VA) (Valjevo)') === 'RADNIČKI (VA) (Valjevo)' &&
     F.imeKluba('OFK BRZI BROD (Niš (Medijana))') === 'OFK BRZI BROD (Niš (Medijana))' && F.imeKluba('JEDINSTVO') === 'JEDINSTVO (Ub)' &&
     F.imeKluba('TRAJAL (KRUŠEVAC)') === 'TRAJAL')
+  preveri('fssid: kraj po bloku — MOL Kikinda (stadion), Sopot (drugi MLADOST ni Lučani)',
+    F.imeKluba('BORAC (A)', '76235200-76235409') === 'BORAC (Aleksandrovo)' && F.imeKluba('BEGA', '76235200-76235409') === 'BEGA (Novi Itebej)' &&
+    F.imeKluba('MLADOST', '77527270-77527325') === 'MLADOST (Sopot)' && F.imeKluba('MLADOST (Guberevac)', '77527270-77527325') === 'MLADOST (Guberevac)' &&
+    F.imeKluba('MLADOST') === 'MLADOST (Lučani)')
 
   const vr = S.dresiVratarjev(beri('rs-fssid-vratarji-75912381.html'))
   const prvi = F.prviZacetniki(odigrana)
@@ -5091,6 +5102,9 @@ preveri(
   preveri('jalgpall: ključ in kratko ime kluba', J.kljucKlubaEe('Nõmme Kalju FC') === 'nõmme kalju fc' &&
     J.kratkoImeEe('Tallinna FC Flora U21') === 'Flora U21' && J.kratkoImeEe('Nõmme Kalju FC') === 'Nõmme Kalju' &&
     J.kratkoImeEe('Paide Linnameeskond') === 'Paide Linnameeskond' && J.kratkoImeEe('JK Tallinna Kalev III') === 'Tallinna Kalev III')
+  preveri('jalgpall: mladinska ekipa je klub brez predpone U-19', J.imeEkipe('U-19 Tallinna FC Flora') === 'Tallinna FC Flora' &&
+    J.imeEkipe('U-19 FC Tallinn II') === 'FC Tallinn II' && J.imeEkipe('U-19 FC Tallinn I') === 'FC Tallinn' &&
+    J.imeEkipe('JK Tallinna Kalev III') === 'JK Tallinna Kalev III' && J.imeEkipe('Tartu JK Tammeka U21') === 'Tartu JK Tammeka U21')
   preveri('jalgpall: navadna stran ni izziv, izziv je', !J.jeIzziv(beri('ee-jalgpall-protokoll-141546.html')) && J.jeIzziv('<title>Just a moment...</title>'))
 
   const koledar = beri('ee-jalgpall-koledar-53-2026.html')

@@ -69,6 +69,11 @@ export const naslovZapisnika = (id) => `${OSNOVNI}/voistlused/protocol/${String(
 const imeRazporeda = (koda) => `koledar-${String(koda).replace('/', '-')}.html`
 const imeZapisnika = (id) => `protokoll-${id}.html`
 
+// Mladinske ekipe imajo ime s predpono ("U-19 Tallinna FC Flora"); klub je isti
+// kot pri članih (skupna vrstica `teams`, kot pri drugih U19), zato jo odrežemo.
+// Prva od dveh ekip kluba ("U-19 FC Tallinn I") je klub, druga ("… II") ostane svoja.
+export const imeEkipe = (s) => razpakiraj(s).replace(/^U-?\s?19\s+(.+?)(?:\s+I)?$/i, '$1')
+
 const cisto = (s) => String(s ?? '').replace(/<script[\s\S]*?<\/script>/g, '').replace(/<!--[\s\S]*?-->/g, '').replace(/\s+/g, ' ').replace(/> </g, '><')
 const besedilo = (html) => razpakiraj(String(html ?? '').replace(/<[^>]+>/g, ' '))
 
@@ -131,7 +136,7 @@ export function vrsticeRazporeda(html) {
     if (!krog) continue
     for (const e of del.split('class="event-single"').slice(1)) {
       const { datum, ura } = datumUra(e.match(/<p class="title">([^<]*)<\/p>/)?.[1])
-      const ekipi = [...e.matchAll(/<div class="team"><p><a href="[^"]*\/team\/\d+">([^<]*)<\/a>/g)].map((m) => razpakiraj(m[1]))
+      const ekipi = [...e.matchAll(/<div class="team"><p><a href="[^"]*\/team\/\d+">([^<]*)<\/a>/g)].map((m) => imeEkipe(m[1]))
       if (ekipi.length !== 2) continue
       const rez = e.match(/<div class="result">(.*?)<\/div>/)?.[1] ?? ''
       const { izid, kontumacija } = izidRazporeda(rez)
@@ -262,7 +267,7 @@ export function vZapisnik(html, { id = null, url = null } = {}) {
   if (!koncni) return null
   const polcas = glava.match(/(\d+)\s*-\s*(\d+)\s*<small>Vaheajaseis/)
   const rezultat = { domaci: Number(koncni[1]), gostje: Number(koncni[2]) }
-  const imena = [...s.matchAll(/<div class="team">(?:<div class="flag">.*?<\/div>)?<p><a href="[^"]*\/team\/\d+">([^<]*)<\/a>/g)].map((m) => razpakiraj(m[1]))
+  const imena = [...s.matchAll(/<div class="team">(?:<div class="flag">.*?<\/div>)?<p><a href="[^"]*\/team\/\d+">([^<]*)<\/a>/g)].map((m) => imeEkipe(m[1]))
   const [zd, zg] = blok(s, 'Põhikoosseis')
   const [rd, rg] = blok(s, 'Vahetusmängijad')
   if (!zd.length || !zg.length) return null
@@ -379,7 +384,7 @@ export function grbiZapisnika(html) {
   const glava = s.match(/<div class="head"><div class="teams">(.*?)<div class="info">/)?.[1] ?? ''
   const [domaci = null, gostje = null] = glava.split(/<div class="team">/).slice(1).map((t) => {
     const img = t.match(/<div class="flag"><img[^>]*src="([^"]+)"[^>]*alt="([^"]*)"/)
-    return img ? { src: img[1].replace(/^http:/, 'https:'), ime: razpakiraj(img[2]) } : null
+    return img ? { src: img[1].replace(/^http:/, 'https:'), ime: imeEkipe(img[2]) } : null
   })
   return { domaci, gostje }
 }
