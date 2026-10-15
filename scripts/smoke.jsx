@@ -6943,51 +6943,62 @@ preveri(
   const o = await import('./objave.mjs')
   const { Prosojnica, prosojnice } = await import('../src/pages/Objava')
   const { readFileSync } = await import('node:fs')
-  const dejstva = JSON.parse(readFileSync(new URL('./vzorci/objava-dejstva.json', import.meta.url), 'utf8'))
-  const pon = o.izberiVsebino(dejstva, 'pon')
-  preveri('objave: ponedeljek vzame glavno ligo (z angleškim imenom države)', pon.slug === 'clani' && pon.liga.krog === 8
-    && pon.igralec.ime === 'Kovač Tine' && pon.liga.drzava === 'Slovenia')
-  preveri('objave: enajsterica 1-4-4-2', pon.idealna.length === 11 &&
-    ['GK', 'DEF', 'MID', 'FWD'].map((p) => pon.idealna.filter((x) => x.position === p).length).join() === '1,4,4,2')
-  preveri('objave: le pohvale, brez kapetana in padca', pon.poudarki.length > 0 && pon.poudarki[0].vrsta === 'hattrick'
-    && !pon.poudarki.some((p) => ['kapetan', 'padec'].includes(p.vrsta)))
-  const cet = o.izberiVsebino(dejstva, 'cet')
-  preveri('objave: četrtek čez lige, brez lige v povezavi', cet.slug === null && cet.liga === null && cet.igralec.liga === '1. GNL — člani'
-    && o.povezava(cet) === 'https://slff.eu/?src=ig' && o.povezava(pon) === 'https://slff.eu/?src=ig&t=clani')
-  preveri('objave: brez kroga ni vsebine', o.izberiVsebino({ lige: [] }, 'pon') === null)
-  preveri('objave: štiri prosojnice', prosojnice(pon).join() === 'uvod,poudarki,enajsterica,poziv'
-    && prosojnice({ ...pon, poudarki: [], idealna: [] }).join() === 'uvod,poziv')
-  for (let n = 0; n < 4; n++) {
-    try {
-      const html = renderToString(<StaticRouter location="/objava"><Prosojnica v={pon} n={n} /></StaticRouter>).replace(/<!-- -->/g, '')
-      preveri(`objave: izris prosojnice ${n + 1}`, html.includes(`${n + 1}/4`) && !/undefined|NaN/.test(html))
-    } catch (e) {
-      preveri(`objave: izris prosojnice ${n + 1}`, false, e.message)
+  // Ponedeljek: vrtiljak držav (objava_drzave), četrtek: dosežki tedna (objava_dosezki).
+  const beri = (ime) => JSON.parse(readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8'))
+  const pon = o.vsebinaDrzav(beri('objava-drzave.json'))
+  const cet = o.vsebinaDosezkov(beri('objava-dosezki.json'))
+  preveri('objave: ponedeljek — največ 8 držav (Instagram: 10 slik), po vrsti iz SQL, angleško ime in zastava',
+    pon.drzave.length === 8 && pon.drzave[0].ime === 'Slovenia' && pon.drzave[0].zastava === '🇸🇮'
+    && !pon.drzave.some((d) => d.koda === 'ES') && pon.drzave[2].drugi.length === 1 && pon.drzave[6].drugi.length === 0)
+  preveri('objave: obdobje okna', pon.obdobje.replace(/\s/g, '') === '5–11Oct2026', pon.obdobje)
+  preveri('objave: brez države ni ponedeljka', o.vsebinaDrzav({ od: '2026-10-05', do: '2026-10-12', drzave: [] }) === null)
+  preveri('objave: ponedeljek — naslovnica + 8 držav + poziv = 10 prosojnic',
+    prosojnice(pon).length === 10 && prosojnice(pon)[0] === 'naslovnica' && prosojnice(pon)[9] === 'poziv')
+  preveri('objave: četrtek — igralec enkrat, skupnost na koncu, največ 6',
+    cet.dosezki.map((x) => x.vrsta).join() === 'hattrick,hattrick,rekord,vratar,manager,novi'
+    && prosojnice(cet).length === 8)
+  preveri('objave: četrtek — manager brez imena', !('ime' in cet.dosezki[4]) && cet.dosezki[4].drzava === 'Croatia'
+    && !JSON.stringify(o.dejstvaZaNapis(cet)).includes('"name":null'))
+  preveri('objave: četrtek brez dosežka igralca ni objave',
+    o.vsebinaDosezkov({ od: '2026-10-08', do: '2026-10-15', manager_tedna: { tocke: 80, drzava: 'SI' }, novih_upraviteljev: 12, uporabnikov: 900 }) === null)
+  for (const [ime, v] of [['ponedeljka', pon], ['četrtka', cet]]) {
+    const seznam = prosojnice(v)
+    for (let n = 0; n < seznam.length; n++) {
+      try {
+        const html = renderToString(<StaticRouter location="/objava"><Prosojnica v={v} n={n} /></StaticRouter>).replace(/<!-- -->/g, '')
+        preveri(`objave: izris prosojnice ${ime} ${n + 1}`, html.includes(`${n + 1}/${seznam.length}`) && !/undefined|NaN|null/.test(html.replace(/<[^>]+>/g, '')))
+      } catch (e) {
+        preveri(`objave: izris prosojnice ${ime} ${n + 1}`, false, e.message)
+      }
     }
   }
 
   // Preverba napisa (angleško): števila in imena le iz dejstev; povezava in ključniki ne štejejo.
   const d = o.dejstvaZaNapis(pon)
-  const dober = "Tine Kovač bagged 3 goals and 19 points in Slovenia's 1. GNL! 🔥 Sunday-league legend.\nhttps://slff.eu/?src=ig&t=clani\n#SLFF #GNL2026"
+  const dober = "Mud, sweat and Monday legs! ⚽\n🇸🇮 Slovenia: Tine Kovač, 19 points\n🇦🇹 Austria: Lukas Gruber bagged 4 goals and 24 points in Round 11!\nhttps://slff.eu/?src=ig\n#SLFF #SundayLeague"
   preveri('objave: dober napis gre', o.preveriNapis(dober, d).length === 0, o.preveriNapis(dober, d).join())
-  preveri('objave: izmišljeno število pade', o.preveriNapis('Tine Kovač scored 4 goals.', d).join() === '4')
+  preveri('objave: izmišljeno število pade', o.preveriNapis('Tine Kovač scored 77 goals.', d).join() === '77')
   preveri('objave: tisočice z vejico so eno število', o.preveriNapis('Now 4,000 of you!', { milestone_users: 4000 }).length === 0
     && o.preveriNapis('Now 4,100 of you!', { milestone_users: 4000 }).join() === '4,100')
   preveri('objave: izmišljeno ime pade', o.preveriNapis('Tine Kovač and John Smith played.', d).join() === 'John,Smith')
+  preveri('objave: država, ki je ni v objavi, pade', o.preveriNapis('Big weekend in Spain too.', d).join() === 'Spain')
   preveri('objave: začetek stavka ni ime', o.preveriNapis('Bravo! Unbelievable.', d).length === 0)
+  const dc = o.dejstvaZaNapis(cet)
+  preveri('objave: napis četrtka', o.preveriNapis('Hat-trick hero Lukas Gruber (4 goals) and a manager in Croatia with 112 points! 286 new managers.', dc).length === 0,
+    o.preveriNapis('Hat-trick hero Lukas Gruber (4 goals) and a manager in Croatia with 112 points! 286 new managers.', dc).join())
 
-  // Napis: slab poskus → drugi poskus; dvakrat slab → predloga; brez ključa → predloga.
+  // Napis: slab poskus → drugi poskus; dvakrat slabo → predloga; brez ključa → predloga.
   const odgovori = (seznam) => async () => seznam.shift()
   let n = await o.napis(pon, 'k', odgovori(['John Smith scored 99 goals.', dober]))
   preveri('objave: drugi poskus Clauda', n.vir === 'claude' && n.zavrnjeno.length === 1 && n.napis === dober)
   n = await o.napis(pon, 'k', odgovori(['Goals: 99.', 'Goals: 98.']))
-  preveri('objave: dvakrat slabo → predloga', n.vir === 'predloga' && n.napis.includes('https://slff.eu/?src=ig&t=clani')
-    && n.napis.includes('Slovenia') && o.preveriNapis(n.napis, d).length === 0, n.napis)
+  preveri('objave: dvakrat slabo → predloga (vrstica na državo)', n.vir === 'predloga' && n.napis.includes('https://slff.eu/?src=ig')
+    && pon.drzave.every((x) => n.napis.includes(`${x.zastava} ${x.ime}: `)) && o.preveriNapis(n.napis, d).length === 0, n.napis)
   n = await o.napis(pon, 'k', odgovori(['Tine Kovač: 19 points!']))
-  preveri('objave: manjkajoča povezava se doda', n.vir === 'claude' && n.napis.endsWith('https://slff.eu/?src=ig&t=clani'))
+  preveri('objave: manjkajoča povezava se doda', n.vir === 'claude' && n.napis.endsWith('https://slff.eu/?src=ig'))
   n = await o.napis(cet, undefined)
-  preveri('objave: brez ključa predloga', n.vir === 'predloga' && !/undefined|null|NaN/.test(n.napis)
-    && o.preveriNapis(n.napis, o.dejstvaZaNapis(cet)).length === 0, n.napis)
+  preveri('objave: predloga četrtka prestane preverbo', n.vir === 'predloga' && !/undefined|null|NaN/.test(n.napis)
+    && n.napis.includes('a manager in Croatia scored 112 points') && o.preveriNapis(n.napis, dc).length === 0, n.napis)
 
   // Mejnik uporabnikov: le svež mejnik (< 300 čez), objava 6 h kasneje v oknu 09–20 (Ljubljana).
   preveri('objave: mejnik dosežen le svež', o.dosezenMejnik(4000) === 4000 && o.dosezenMejnik(4299) === 4000
@@ -7012,18 +7023,33 @@ preveri(
   preveri('objave: predloga mejnika prestane preverbo', o.predlogaNapisa(mej).includes('4,000')
     && o.preveriNapis(o.predlogaNapisa(mej), dm).length === 0, o.preveriNapis(o.predlogaNapisa(mej), dm).join())
 
-  // Termini in rotacija (ljubljanski čas, tudi po koncu poletnega časa 25. 10. 2026).
-  preveri('objave: ponedeljek 10:00 poleti, četrtek 18:00 pozimi',
-    o.termin('pon', '2026-10-12').objavaOb.toISOString() === '2026-10-12T08:00:00.000Z'
-    && o.termin('cet', '2026-10-26').objavaOb.toISOString() === '2026-10-29T17:00:00.000Z')
-  preveri('objave: osnutek le v oknu termina', o.terminiZdaj(new Date('2026-10-12T03:00:00Z')).map((x) => x.slot).join() === 'pon'
-    && o.terminiZdaj(new Date('2026-10-12T01:59:00Z')).length === 0 && o.terminiZdaj(new Date('2026-10-12T08:00:00Z')).length === 0
-    && o.terminiZdaj(new Date('2026-10-15T12:00:00Z')).map((x) => x.slot).join() === 'cet')
+  // Naključni čas objave: v razponu, ne večkratnik 5 minut, veto vsaj 5 h, okno 08:30–21:30.
+  const lj = (d) => new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Ljubljana', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(d)
+  const osPon = o.termin('pon', '2026-10-12')
+  const osnutekPon = new Date('2026-10-12T02:00:00Z') // 04:00 Ljubljana
+  let vsiCasi = true
+  for (const x of [0, 0.001, 0.25, 0.5, 0.999]) {
+    const c = o.casObjave(osPon.objavaOb, o.TERMINI.pon.razpon, osnutekPon, () => x)
+    const ura = lj(c)
+    if (ura < '09:20' || ura > '11:41' || c.getUTCMinutes() % 5 === 0 || c - osnutekPon < o.VETO || c.getUTCSeconds()) vsiCasi = false
+  }
+  preveri('objave: ponedeljek 09:20–11:40, minute ne na 5', vsiCasi && lj(o.casObjave(osPon.objavaOb, o.TERMINI.pon.razpon, osnutekPon, () => 0)) === '09:21')
+  const osCet = o.termin('cet', '2026-10-26')
+  const c1 = o.casObjave(osCet.objavaOb, o.TERMINI.cet.razpon, new Date('2026-10-29T11:00:00Z'), () => 0.999)
+  const c2 = o.casObjave(osCet.objavaOb, o.TERMINI.cet.razpon, new Date('2026-10-29T11:00:00Z'), () => 0)
+  preveri('objave: četrtek 17:10–19:40 (zimski čas)', lj(c2) === '17:11' && lj(c1) >= '19:30' && lj(c1) <= '19:41', `${lj(c2)} ${lj(c1)}`)
+  const pozno = new Date('2026-10-12T04:30:00Z') // osnutek ob 06:30: 09:20 bi bil premalo veta
+  const c3 = o.casObjave(osPon.objavaOb, o.TERMINI.pon.razpon, pozno, () => 0)
+  preveri('objave: veto vsaj 5 h tudi pri poznem osnutku', c3 - pozno >= o.VETO && lj(c3) === '11:31', lj(c3))
+  const c4 = o.casObjave(o.vLjubljani('2026-10-15', 20), [-40, 40], new Date('2026-10-15T08:00:00Z'), () => 0.999)
+  const c5 = o.casObjave(o.vLjubljani('2026-10-16', 9), [-40, 40], new Date('2026-10-15T13:00:00Z'), () => 0)
+  preveri('objave: mejnik ± 40 min, v oknu 08:30–21:30', lj(c4) <= '21:30' && lj(c4) >= '20:30' && lj(c5) === '08:31', `${lj(c4)} ${lj(c5)}`)
+  preveri('objave: osnutek le dokler je še 5 h veta', o.terminiZdaj(new Date('2026-10-12T02:00:00Z')).map((x) => x.slot).join() === 'pon'
+    && o.terminiZdaj(new Date('2026-10-12T04:40:00Z')).map((x) => x.slot).join() === 'pon'
+    && o.terminiZdaj(new Date('2026-10-12T04:41:00Z')).length === 0 && o.terminiZdaj(new Date('2026-10-12T01:59:00Z')).length === 0
+    && o.terminiZdaj(new Date('2026-10-15T10:00:00Z')).map((x) => x.slot).join() === 'cet')
   preveri('objave: okno tekem', JSON.stringify(o.okno('pon', '2026-10-12')) === '{"od":"2026-10-05","do":"2026-10-12"}'
     && JSON.stringify(o.okno('cet', '2026-10-12')) === '{"od":"2026-10-08","do":"2026-10-15"}')
-  const r = (teden) => o.vrstniRedDrzav(teden).join()
-  preveri('objave: rotacija SI → HR → SK, vsak teden druga', r('2026-10-12') === 'SI,HR,SK,AT,HU' && r('2026-10-19').startsWith('HR,')
-    && r('2026-10-26').startsWith('SK,') && o.isoTeden('2027-01-04') === 1 && o.isoTeden('2026-12-28') === 53)
 
   // Faza 2: okno objave, žeton, javni naslov slik, klici Graph API (lažen fetch, brez Mete).
   const rok = '2026-10-12T08:00:00.000Z'

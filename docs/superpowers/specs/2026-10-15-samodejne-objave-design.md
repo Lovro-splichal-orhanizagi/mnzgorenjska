@@ -13,9 +13,49 @@ factual, generated from our data, with a human veto window.
 
 | Slot | Content | Language |
 |---|---|---|
-| **Monday 10:00** (Ljubljana) | Round recap for **one country** (rotation SI → HR → SK → SI → HR → SK, AT/HU/others occasionally; country picked by users count, skipped if it had no round), e.g. "Round 8 in Slovenia's 1. GNL" | English |
-| **Thursday 18:00** | Cross-country goofy stat ("This week in Europe's Sunday leagues …") | English |
+| **Monday ~10:00** (Ljubljana, 09:20–11:40) | **Carousel of all countries**: cover "Weekend in Europe's Sunday leagues" + dates + flags, one slide per country (flag + English name, player of the round big, up to two runners-up small), CTA "Pick your Sunday XI · slff.eu" | English |
+| **Thursday ~18:00** (17:10–19:40) | **Achievements of the week**: cover, one achievement per slide (max 6), CTA | English |
 | **Milestone** (every 1,000 users) | "4,000 — thank you!" with mascot, plus countries / active leagues / teams | English |
+
+### Monday: all countries (owner, 15. 10. 2026)
+
+Replaces the weekly one-country rotation. Facts: `objava_drzave(od, do)`
+(service only, migration 20261015230100). A country is in the post **only if
+something actually happened**: at least one match in the window with an
+imported match report (`imported_at`), not a kontumacija; a scheduled,
+postponed or not-yet-imported round does not count, and a country whose best
+player has fewer than 6 points is skipped. Per country the top three players
+of each league's latest such round, across all its leagues (no U19, no
+inactive leagues, no anonymised players). Countries are ordered by **users
+with a team in the country's leagues** (house teams excluded), then by
+leagues with a round. **Instagram's Graph API takes at most 10 carousel
+items** (the app allows 20, the API does not), so at most **8 countries**
+(cover + 8 + CTA); the rest are left out. No country → no draft.
+
+### Thursday: achievements of the week (owner, 15. 10. 2026)
+
+Facts: `objava_dosezki(od, do)` (service only), last 7 days, same "really
+happened" rule and exclusions. Categories (each a list, empty if nothing
+happened): hat-tricks (3+ goals in a match), goalkeeper who scored, highest
+single-round points across Europe (≥ 6), league record for the season (more
+than anyone in at least four earlier rounds), biggest price riser (rises
+only), clean-sheet streak (3+ in a row, latest in the window); community,
+**anonymous only**: manager of the week (points and country, never a name,
+team or league; house teams excluded), new managers this week, total users.
+The script shows each player once (order: hat-trick, top score, record,
+keeper, streak, riser), community last, at most 6. **No player achievement →
+no draft.** Not included: newly live leagues (no activation timestamp),
+mini-league milestones.
+
+### Human-looking publish time (owner, 15. 10. 2026)
+
+`casObjave(base, range, now, rng)`: base (Mon 10:00, Thu 18:00, milestone
+draft + 6 h moved into 09–20) plus a uniform random offset (Mon −40…+100 min,
+Thu −50…+100, milestone ±40), whole minutes, never a multiple of 5, at least
+5 h after the draft (veto window), inside 08:30–21:30 Ljubljana. It is
+computed after the caption and slides, stored in `objava_ob` and shown in the
+Discord draft. A Monday/Thursday draft is only made while 5 h of veto remain
+before the latest possible time of its slot.
 
 **All posts are in English** (owner, 15. 10. 2026): one audience, one
 account, and the caption check only has to know one language.
@@ -34,7 +74,8 @@ account, and the caption check only has to know one language.
 - `unique (slot, teden)` is now a partial index for `pon`/`cet` only: two
   milestones can fall in the same week (~250 new users a day).
 
-Fact candidates (SQL, one function, returns jsonb):
+Original fact candidates (phase 1, `objava_dejstva`; superseded for Monday and
+Thursday by `objava_drzave` and `objava_dosezki` above):
 - top scorer of the round (points, goals), Ideal XI of the round (existing
   selection logic: 1 GK, 4 DEF, 4 MID, 2 FWD),
 - biggest price riser of the week,
@@ -51,7 +92,8 @@ reports are fine).
 
 ## Pipeline
 
-1. **Facts** — `objava_dejstva(drzava, od, do)` (SECURITY DEFINER, service only).
+1. **Facts** — `objava_drzave(od, do)` (Monday), `objava_dosezki(od, do)`
+   (Thursday), `objava_mejnik_dejstva()` (milestone); SECURITY DEFINER, service only.
 2. **Caption** — Claude (`claude-sonnet-5-5`, Messages API) with a system
    prompt: goofy, short, in English, hashtags, link slff.eu (with
    `?src=ig`), may use ONLY the given facts. Afterwards every number and name
