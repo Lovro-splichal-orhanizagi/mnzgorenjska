@@ -2837,7 +2837,7 @@ tehnične zaščite**: ob CAPTCHI, Cloudflarovem izzivu, prijavi ali 401/403/429
 se uvoz ustavi (`LowlandZavrnitev`, izhod 4) — ne obhajaj. Zavrne že
 `lowlandFetch` (brez ponovitve 429, brez shranjenega razporeda pri 401).
 
-Država `GB` (migracija 20261015121500, ime "United Kingdom" — isto kodo vpiše
+Država `GB` (migracija 20261015162300, ime "United Kingdom" — isto kodo vpiše
 tudi vir `isthmian` za Anglijo, kdor je prvi, da ime). **Šifra škotske lige se
 začne z `gb-`.** Vmesnika v angleščini za državo, kartice in pošte **še ni**,
 `GB` ni v matriki nočnega uvoza — oboje pred vklopom.
