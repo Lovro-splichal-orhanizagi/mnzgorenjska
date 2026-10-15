@@ -1,27 +1,33 @@
-// Samodejne objave za Instagram in Facebook, faza 1: osnutek na Discord.
+// Samodejne objave za Instagram in Facebook: osnutek na Discord, nato objava.
 // Načrt: docs/superpowers/specs/2026-10-15-samodejne-objave-design.md.
 //
 // Termina (ljubljanski čas): ponedeljek osnutek 04:00, objava 10:00 — krog
 // ene države v njenem jeziku (rotacija ROTACIJA); četrtek osnutek 12:00,
-// objava 18:00 — vse države, angleško. V fazi 1 se NIČ ne objavi: osnutek
-// (dejstva, napis, prosojnice) gre v tabelo `objave` in na Discord.
+// objava 18:00 — vse države, angleško. Osnutek (dejstva, napis, prosojnice)
+// gre v tabelo `objave` in na Discord s povezavo "Ustavi objavo"; ob roku ga
+// delavec objavi na Instagram in Facebook (faza 2), če ga nihče ni ustavil in
+// so nastavljeni ključi META_*. Brez njih se nič ne objavi (kot faza 1).
 //
 // 1. dejstva: SQL objava_dejstva (servisna) ali --dejstva datoteka.json,
 // 2. napis: Claude (Messages API), vsako število in ime mora biti v dejstvih;
 //    sicer še en poskus, nato predloga,
 // 3. prosojnice: stran /objava (src/pages/Objava.tsx), posname jih Playwright,
-// 4. osnutek: vrstica v `objave` (en na termin in teden) in Discord s slikami.
+// 4. osnutek: vrstica v `objave` (en na termin in teden) in Discord s slikami,
+// 5. objava: ob roku (največ OBJAVA_ZAMUDA kasneje) Instagram in Facebook.
 //
 //   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, ANTHROPIC_API_KEY, DISCORD_OBJAVE_WEBHOOK,
-//   OBJAVE_URL (stran s prosojnicami, privzeto https://slff.eu), OBJAVE_MAPA (slike)
+//   OBJAVE_URL (stran s prosojnicami, privzeto https://slff.eu), OBJAVE_MAPA (slike),
+//   OBJAVE_MEDIJI_URL (javni naslov mape slik, privzeto https://slff.eu/objave-mediji),
+//   META_PAGE_TOKEN, META_PAGE_ID, META_IG_USER_ID, META_GRAPH_VERSION (privzeto v26.0)
 //   node scripts/objave.mjs --zanka                    (delavec slff-objave: vsakih 10 minut)
 //   node scripts/objave.mjs --slot pon [--drzava SI]   (en osnutek zdaj)
 //   node scripts/objave.mjs --slot cet --suho --dejstva d.json --url http://localhost:5173 [--mapa /tmp/objave-vzorec]
 //     --suho: izpiše dejstva in napis, slike zapiše v --mapa; ne piše v bazo, ne pošlje na Discord
 import { fileURLToPath } from 'node:url'
-import { resolve, join } from 'node:path'
+import { resolve, join, relative } from 'node:path'
 import { mkdir, readFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
+import { createHash, randomBytes } from 'node:crypto'
 
 export const MODEL = 'claude-sonnet-5-5'
 // Ponedeljek: država po rotaciji ISO tedna; brez kroga gre na naslednjo.
@@ -31,6 +37,8 @@ export const ROTACIJA = ['SI', 'HR', 'SK', 'SI', 'HR', 'SK', 'AT', 'SI', 'HR', '
 export const JEZIK_DRZAVE = { SI: 'sl', SK: 'sk', HR: 'hr', CZ: 'cs', HU: 'hu', AT: 'de', RS: 'sr', RO: 'ro', EE: 'et', PL: 'pl', ES: 'es', LV: 'lv', MK: 'mk' }
 export const TERMINI = { pon: { dan: 0, osnutek: 4, objava: 10 }, cet: { dan: 3, osnutek: 12, objava: 18 } }
 const PAS = 'Europe/Ljubljana'
+// Objava, ki je delavec ni objavil v dveh urah po roku (ni tekel), ostane neobjavljena.
+export const OBJAVA_ZAMUDA = 2 * 3600e3
 
 // --- čas ----------------------------------------------------------------------
 
@@ -271,7 +279,7 @@ export async function napis(v, jezik, kljuc, klic = klicClaude) {
 
 // --- prosojnice -------------------------------------------------------------------
 
-/** Posname prosojnice strani /objava; vrne poti PNG. */
+/** Posname prosojnice strani /objava; vrne poti JPEG (Instagram sprejme le JPEG). */
 export async function posnemi(v, jezik, url, mapa) {
   const { chromium } = await import('playwright')
   await mkdir(mapa, { recursive: true })
@@ -294,8 +302,8 @@ export async function posnemi(v, jezik, url, mapa) {
       await stran.locator('#prosojnica').waitFor()
       await stran.evaluate(() => document.fonts.ready)
       if (i === 0) n = Number(await stran.evaluate(() => document.documentElement.dataset.prosojnic)) || 1
-      const pot = join(mapa, `${i + 1}.png`)
-      await stran.locator('#prosojnica').screenshot({ path: pot })
+      const pot = join(mapa, `${i + 1}.jpg`)
+      await stran.locator('#prosojnica').screenshot({ path: pot, type: 'jpeg', quality: 90 })
       poti.push(pot)
     }
     return poti
@@ -330,9 +338,103 @@ async function vDiscord(webhook, { naslov, napis: besedilo, povzetek: pov, poti 
     embeds: [{ title: 'Napis', description: besedilo.slice(0, 4000) }],
     allowed_mentions: { parse: [] },
   }))
-  for (const [i, pot] of poti.entries()) obrazec.append(`files[${i}]`, new Blob([await readFile(pot)], { type: 'image/png' }), `${i + 1}.png`)
+  for (const [i, pot] of poti.entries()) obrazec.append(`files[${i}]`, new Blob([await readFile(pot)], { type: 'image/jpeg' }), `${i + 1}.jpg`)
   const r = await fetch(webhook, { method: 'POST', body: obrazec })
   if (!r.ok) throw new Error(`Discord ${r.status}`)
+}
+
+async function sporociDiscord(webhook, content) {
+  if (!webhook) return
+  const r = await fetch(webhook, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ content: content.slice(0, 2000), allowed_mentions: { parse: [] } }),
+  })
+  if (!r.ok) throw new Error(`Discord ${r.status}`)
+}
+
+// --- ustavitev ------------------------------------------------------------------
+
+/** sha256 žetona, kot ga računa SQL ustavi_objavo (hex). */
+export const hashZetona = (zeton) => createHash('sha256').update(zeton, 'utf8').digest('hex')
+
+/** Enkraten žeton (256 bitov) in povezava; # ne gre v dnevnike strežnika. */
+export function novZeton(url) {
+  const zeton = randomBytes(32).toString('base64url')
+  return { zeton, hash: hashZetona(zeton), povezava: `${url}/objava#ustavi=${zeton}` }
+}
+
+// --- objava (Meta) ----------------------------------------------------------------
+
+export const metaNastavljena = (env) => Boolean(env.META_PAGE_TOKEN && env.META_PAGE_ID && env.META_IG_USER_ID)
+
+/** Ali je osnutek zdaj za objavo: viden na Discordu, ni ustavljen, rok je mimo, a ne več kot OBJAVA_ZAMUDA. */
+export function zaObjavo(o, zdaj) {
+  const rok = Date.parse(o.objava_ob)
+  return o.stanje === 'osnutek' && Boolean(o.discord_at) && zdaj >= rok && zdaj - rok <= OBJAVA_ZAMUDA
+}
+
+/** Javni naslov slike: <base>/<mapa osnutka>/<n>.jpg (Caddy, /objave-mediji/). */
+export const javniUrl = (pot, mapa, base) =>
+  `${base.replace(/\/$/, '')}/${relative(mapa, pot).split(/[\\/]/).map(encodeURIComponent).join('/')}`
+
+const grafOsnova = (env) => `https://graph.facebook.com/${env.META_GRAPH_VERSION || 'v26.0'}`
+
+/** Klic Graph API (POST obrazec ali GET); napaka Mete postane Error brez žetona. */
+async function graf(f, osnova, pot, parametri, metoda = 'POST') {
+  const telo = new URLSearchParams(parametri)
+  const r = metoda === 'GET' ? await f(`${osnova}/${pot}?${telo}`) : await f(`${osnova}/${pot}`, { method: 'POST', body: telo })
+  const o = await r.json().catch(() => ({}))
+  if (!r.ok || o.error) throw new Error(`Meta ${pot}: ${o.error?.message ?? r.status}`)
+  return o
+}
+
+/** Počaka, da je vsebnik Instagrama pripravljen (FINISHED), največ 5 minut. */
+async function pripravljen(f, osnova, id, token, cakajMs) {
+  for (let i = 0; i < 30; i++) {
+    const { status_code: s } = await graf(f, osnova, id, { fields: 'status_code', access_token: token }, 'GET')
+    if (s === 'FINISHED') return
+    if (s === 'ERROR' || s === 'EXPIRED') throw new Error(`Meta vsebnik ${id}: ${s}`)
+    await cakajMs(10e3)
+  }
+  throw new Error(`Meta vsebnik ${id}: ni pripravljen v 5 minutah`)
+}
+
+/** Instagram: ena slika ali vrtiljak (največ 10). Vrne povezavo do objave. */
+export async function objaviInstagram({ slike, napis: besedilo, env, f = fetch, cakajMs = cakaj }) {
+  const osnova = grafOsnova(env)
+  const token = env.META_PAGE_TOKEN
+  const ig = env.META_IG_USER_ID
+  let vsebnik
+  if (slike.length === 1) {
+    vsebnik = (await graf(f, osnova, `${ig}/media`, { image_url: slike[0], caption: besedilo, access_token: token })).id
+  } else {
+    const otroci = []
+    for (const url of slike.slice(0, 10)) {
+      otroci.push((await graf(f, osnova, `${ig}/media`, { image_url: url, is_carousel_item: 'true', access_token: token })).id)
+    }
+    for (const id of otroci) await pripravljen(f, osnova, id, token, cakajMs)
+    vsebnik = (await graf(f, osnova, `${ig}/media`, { media_type: 'CAROUSEL', children: otroci.join(','), caption: besedilo, access_token: token })).id
+  }
+  await pripravljen(f, osnova, vsebnik, token, cakajMs)
+  const { id } = await graf(f, osnova, `${ig}/media_publish`, { creation_id: vsebnik, access_token: token })
+  const { permalink } = await graf(f, osnova, id, { fields: 'permalink', access_token: token }, 'GET')
+  return permalink ?? `instagram:${id}`
+}
+
+/** Facebook stran: neobjavljene fotografije, nato ena objava z njimi. Vrne povezavo. */
+export async function objaviFacebook({ slike, napis: besedilo, env, f = fetch }) {
+  const osnova = grafOsnova(env)
+  const token = env.META_PAGE_TOKEN
+  const stran = env.META_PAGE_ID
+  const priloge = {}
+  for (const [i, url] of slike.entries()) {
+    const { id } = await graf(f, osnova, `${stran}/photos`, { url, published: 'false', access_token: token })
+    priloge[`attached_media[${i}]`] = JSON.stringify({ media_fbid: id })
+  }
+  const { id } = await graf(f, osnova, `${stran}/feed`, { message: besedilo, ...priloge, access_token: token })
+  const { permalink_url: url } = await graf(f, osnova, id, { fields: 'permalink_url', access_token: token }, 'GET')
+  return url ?? `https://www.facebook.com/${id}`
 }
 
 // --- osnutek ------------------------------------------------------------------------
@@ -348,6 +450,8 @@ async function dejstvaTermina(db, slot, teden, drzava) {
   }
   return null
 }
+
+const cakaj = (ms) => new Promise((r) => setTimeout(r, ms))
 
 const log = (s) => console.log(`${new Date().toISOString()} ${s}`)
 
@@ -366,7 +470,8 @@ export async function osnutek({ db, slot, teden, drzava, dejstva, suho, url, map
   }
   const jezik = slot === 'cet' ? 'en' : JEZIK_DRZAVE[d.drzava] ?? 'en'
   const n = await napis(v, jezik, env.ANTHROPIC_API_KEY)
-  const pot = join(mapa, `${teden}-${slot}`)
+  // Naključni del: slike so javne (/objave-mediji/), osnutek pa naj se ne da uganiti.
+  const pot = join(mapa, `${teden}-${slot}-${randomBytes(6).toString('hex')}`)
   const poti = await posnemi(v, jezik, url, pot)
   const { objavaOb } = termin(slot, teden)
   const pov = povzetek(v)
@@ -378,9 +483,10 @@ export async function osnutek({ db, slot, teden, drzava, dejstva, suho, url, map
     console.log(`--- prosojnice:\n${poti.join('\n')}`)
     return true
   }
+  const z = novZeton(url)
   const { data: vrstica, error } = await db.from('objave').insert({
     slot, teden, drzava: d.drzava, jezik, liga: v.slug, dejstva: d, napis: n.napis, napis_vir: n.vir,
-    mediji: poti, objava_ob: objavaOb.toISOString(),
+    mediji: poti, objava_ob: objavaOb.toISOString(), ustavi_zeton_hash: z.hash,
   }).select('id').single()
   if (error) {
     if (error.code === '23505') return false // drug zagon je bil hitrejši
@@ -389,8 +495,12 @@ export async function osnutek({ db, slot, teden, drzava, dejstva, suho, url, map
   try {
     if (!env.DISCORD_OBJAVE_WEBHOOK) throw new Error('manjka DISCORD_OBJAVE_WEBHOOK')
     const kdaj = new Intl.DateTimeFormat('sl-SI', { timeZone: PAS, dateStyle: 'short', timeStyle: 'short' }).format(objavaOb)
+    // <…> skrije predogled povezave; ustavi pa šele gumb na strani.
+    const kaj = metaNastavljena(env)
+      ? `objava na Instagram in Facebook ${kdaj}, če je ne ustaviš.\n⛔ Ustavi objavo: <${z.povezava}>`
+      : `objava ${kdaj}. Meta ni nastavljena: nič se ne objavi samo.`
     await vDiscord(env.DISCORD_OBJAVE_WEBHOOK, {
-      naslov: `📝 **Osnutek objave #${vrstica.id}** (${d.drzava ?? 'vse države'}, ${jezik}, napis: ${n.vir}) — objava ${kdaj}. Faza 1: nič se ne objavi samo.`,
+      naslov: `📝 **Osnutek objave #${vrstica.id}** (${d.drzava ?? 'vse države'}, ${jezik}, napis: ${n.vir}) — ${kaj}`,
       napis: n.napis, povzetek: pov, poti,
     })
   } catch (e) {
@@ -398,11 +508,54 @@ export async function osnutek({ db, slot, teden, drzava, dejstva, suho, url, map
     await db.from('objave').update({ stanje: 'napaka', napaka: e.message }).eq('id', vrstica.id)
     throw e
   }
+  // Brez tega se osnutek ne objavi (zaObjavo): človek ga mora videti.
+  const { error: e2 } = await db.from('objave').update({ discord_at: new Date().toISOString() }).eq('id', vrstica.id)
+  if (e2) throw new Error(`objave discord_at: ${e2.message}`)
   log(`Objava ${slot} ${teden}: osnutek #${vrstica.id} na Discordu.`)
   return true
 }
 
-const cakaj = (ms) => new Promise((r) => setTimeout(r, ms))
+/**
+ * Objavi osnutke, ki so na vrsti. Vrstico najprej prevzame (osnutek →
+ * objavljanje, pogojno), zato se nikoli ne objavi dvakrat; neuspeh je
+ * `napaka` in se ne ponovi sam (Meta je morda že objavila del).
+ */
+export async function objaviZapadle({ db, env, mapa, zdaj = Date.now(), f = fetch, cakajMs = cakaj }) {
+  const { data, error } = await db.from('objave').select('id, stanje, objava_ob, discord_at, napis, mediji')
+    .eq('stanje', 'osnutek').lte('objava_ob', new Date(zdaj).toISOString())
+    .gte('objava_ob', new Date(zdaj - OBJAVA_ZAMUDA).toISOString())
+  if (error) throw new Error(`objave: ${error.message}`)
+  for (const o of (data ?? []).filter((x) => zaObjavo(x, zdaj))) {
+    if (!metaNastavljena(env)) {
+      log(`Objava #${o.id}: META_* ni nastavljen, ne objavim.`)
+      continue
+    }
+    const { data: prevzeta, error: e1 } = await db.from('objave').update({ stanje: 'objavljanje' })
+      .eq('id', o.id).eq('stanje', 'osnutek').select('id')
+    if (e1 || !prevzeta?.length) continue
+    const base = env.OBJAVE_MEDIJI_URL || 'https://slff.eu/objave-mediji'
+    const slike = o.mediji.map((p) => javniUrl(p, mapa, base))
+    const izid = {}
+    let napaka = null
+    try {
+      izid.ig_povezava = await objaviInstagram({ slike, napis: o.napis, env, f, cakajMs })
+      izid.fb_povezava = await objaviFacebook({ slike, napis: o.napis, env, f })
+    } catch (e) {
+      napaka = e.message
+    }
+    const { error: e3 } = await db.from('objave').update(napaka
+      ? { ...izid, stanje: 'napaka', napaka }
+      : { ...izid, stanje: 'objavljeno', objavljeno_at: new Date().toISOString() }).eq('id', o.id)
+    if (e3) log(`Objava #${o.id}: zapis stanja ni uspel: ${e3.message}`)
+    const povezave = [izid.ig_povezava && `Instagram: <${izid.ig_povezava}>`, izid.fb_povezava && `Facebook: <${izid.fb_povezava}>`]
+      .filter(Boolean).join('\n')
+    const sporocilo = napaka
+      ? `❌ **Objava #${o.id} ni uspela:** ${napaka}${povezave ? `\nŽe objavljeno:\n${povezave}` : ''}\nNe ponovi se sama.`
+      : `✅ **Objava #${o.id} je objavljena.**\n${povezave}`
+    log(sporocilo.replace(/\n/g, ' '))
+    await sporociDiscord(env.DISCORD_OBJAVE_WEBHOOK, sporocilo).catch((e) => log(`Discord: ${e.message}`))
+  }
+}
 
 async function main() {
   const arg = (ime) => {
@@ -443,6 +596,11 @@ async function main() {
       } catch (e) {
         console.error(`Objava ${t.slot} ${t.teden} ni uspela: ${e.message}`)
       }
+    }
+    try {
+      await objaviZapadle({ db, env, mapa })
+    } catch (e) {
+      console.error(`Objavljanje: ${e.message}`)
     }
     await cakaj(10 * 60e3)
   }

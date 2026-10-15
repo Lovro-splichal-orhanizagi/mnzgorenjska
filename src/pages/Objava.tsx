@@ -6,7 +6,9 @@
 // `?slide=n` izbere prosojnico. Stran izriše main.tsx brez glave in noge.
 import EnajstericaNaIgriscu, { type IgralecEnajsterice } from '../components/EnajstericaNaIgriscu'
 import Grb from '../components/Grb'
+import { useState } from 'react'
 import { t, stevilo } from '../i18n'
+import { supabase } from '../lib/supabase'
 import { useNoindex } from '../lib/naslov'
 import { formatirajTocke, mnozina, prikazniIme, tockZ, GOLI } from '../lib/pomozno'
 import type { Pozicija } from '../lib/tipi'
@@ -175,8 +177,42 @@ export function Prosojnica({ v, n }: { v: VsebinaObjave; n: number }) {
   )
 }
 
+/**
+ * Povezava "Ustavi objavo" z Discorda: slff.eu/objava#ustavi=<žeton>. Žeton je v
+ * # (ne pride v dnevnike strežnika); ustavi šele gumb, ker Discord povezave
+ * odpira sam (predogled). Notranje orodje, zato slovensko kot Administracija.
+ */
+function UstaviObjavo({ zeton }: { zeton: string }) {
+  const [stanje, setStanje] = useState<'caka' | 'dela' | 'ustavljeno' | 'ne_velja' | 'napaka'>('caka')
+  const ustavi = async () => {
+    setStanje('dela')
+    const { data, error } = await supabase.rpc('ustavi_objavo', { p_zeton: zeton })
+    setStanje(error ? 'napaka' : data ? 'ustavljeno' : 'ne_velja')
+  }
+  const sporocilo = {
+    caka: 'Objava na Instagram in Facebook bo šla ob napovedanem času, če je ne ustaviš.',
+    dela: 'Ustavljam …',
+    ustavljeno: '⛔ Objava je ustavljena. Ne bo objavljena.',
+    ne_velja: 'Povezava ne velja več: objava je že ustavljena, objavljena ali je njen čas mimo.',
+    napaka: 'Ni uspelo. Poskusi znova ali piši na Discord.',
+  }[stanje]
+  return (
+    <div className="mx-auto max-w-md p-8 text-slate-100">
+      <h1 className="mb-4 text-2xl font-bold">Ustavi objavo</h1>
+      <p className="mb-6 text-slate-300">{sporocilo}</p>
+      {(stanje === 'caka' || stanje === 'napaka') && (
+        <button type="button" onClick={ustavi} className="rounded-lg bg-red-600 px-5 py-3 font-bold text-white hover:bg-red-500">
+          ⛔ Ustavi objavo
+        </button>
+      )}
+    </div>
+  )
+}
+
 export default function Objava() {
   useNoindex(true)
+  const zeton = location.hash.startsWith('#ustavi=') ? location.hash.slice('#ustavi='.length) : null
+  if (zeton) return <UstaviObjavo zeton={zeton} />
   const v = window.__OBJAVA__
   if (!v) return <p className="p-8 text-slate-400">Ni vsebine objave (window.__OBJAVA__).</p>
   // Generator prebere, koliko prosojnic naj posname.

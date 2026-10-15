@@ -3768,8 +3768,10 @@ HR, RS sta pripravljena: vrstica, ki jo v vrsto postavi človek (`v_vrsti`,
 
 ## Samodejne objave (Instagram, Facebook)
 
-Načrt: `docs/superpowers/specs/2026-10-15-samodejne-objave-design.md`. **Faza 1
-(zdaj): le osnutki na Discord, nič se ne objavi.** Delavec `slff-objave` na
+Načrt: `docs/superpowers/specs/2026-10-15-samodejne-objave-design.md`. Faza 1:
+osnutki na Discord; **faza 2: ob roku objava na Instagram in Facebook, če je
+nihče ne ustavi** — le, ko so na strežniku ključi `META_*` (brez njih ostane
+faza 1). Delavec `slff-objave` na
 strežniku (`scripts/objave.mjs --zanka`, `/opt/slff-objave`, slika Playwright)
 vsakih 10 minut pogleda termin: **ponedeljek** osnutek 04:00, objava 10:00 —
 krog ene države v njenem jeziku (`ROTACIJA` po ISO tednu: SI, HR, SK …, AT in
@@ -3798,18 +3800,39 @@ HU občasno; država brez kroga v oknu gre na naslednjo); **četrtek** 12:00 /
   zemljevidu, `noindex` (tudi Caddy `@zasebne`), v `@ni_strani` je izjema.
   Nizi so v `domov.objava.*` vseh jezikov. **Strežnik jo bere s slff.eu**
   (`OBJAVE_URL`), zato mora biti sprememba strani objavljena pred delavcem.
-- **Osnutek**: vrstica v `objave` (slike na disku `/opt/slff-objave/mediji`),
-  nato Discord (`DISCORD_OBJAVE_WEBHOOK`) s slikami, napisom in povzetkom
-  dejstev. Neuspel Discord → `stanje = 'napaka'` (osnutek, ki ga človek ni
-  videl, se nikoli ne objavi). `ustavi_objavo(zeton)` in
-  `ustavi_zeton_hash` sta pripravljena za fazo 2 (povezava "Ustavi").
+- **Osnutek**: vrstica v `objave` (slike JPEG na disku
+  `/opt/slff-objave/mediji/<teden>-<slot>-<naključno>/n.jpg`), nato Discord
+  (`DISCORD_OBJAVE_WEBHOOK`) s slikami, napisom, povzetkom dejstev in
+  enkratno povezavo **"⛔ Ustavi objavo"** (`slff.eu/objava#ustavi=<žeton>`;
+  žeton 256 bitov, v bazi le `ustavi_zeton_hash` = sha256). Šele uspel
+  Discord vpiše `discord_at`; neuspel → `stanje = 'napaka'` (osnutek, ki ga
+  človek ni videl, se nikoli ne objavi).
+- **Ustavitev**: stran `/objava` z `#ustavi=` (`UstaviObjavo` v
+  `src/pages/Objava.tsx`, slovensko kot Administracija) pokaže gumb; šele klik
+  pokliče `ustavi_objavo(zeton)` (anon, migracija 20261015170100) — Discord
+  povezave odpira sam, zato ne ustavi že odprtje. Ustavi le `osnutek` pred
+  rokom; sicer "povezava ne velja več".
+- **Objava (faza 2)**: `objaviZapadle` v zanki vzame osnutke z rokom v
+  zadnjih **2 urah** (`OBJAVA_ZAMUDA`; starejši ostanejo neobjavljeni — delavec
+  ni tekel ali preizkusni osnutek preteklega tedna), z `discord_at` in
+  `stanje = 'osnutek'`. Najprej jih pogojno prevzame (`objavljanje`), nato
+  Instagram (vsebniki → vrtiljak → `status_code` FINISHED → `media_publish`)
+  in Facebook stran (neobjavljene `/photos`, nato `/feed` z `attached_media`),
+  Graph API `v26.0` (`META_GRAPH_VERSION`). Slike Meta prebere z
+  `https://slff.eu/objave-mediji/…` (Caddy, `OBJAVE_MEDIJI_URL`). Uspeh →
+  `objavljeno`, `ig_povezava`, `fb_povezava`, Discord s povezavama; napaka →
+  `napaka` in Discord, **nikoli ponovno samodejno** (Meta je morda objavila
+  del) — ponovi človek ročno.
 - Preizkus brez baze in brez ključev: `npm run dev`, nato `node scripts/objave.mjs
   --slot pon --suho --dejstva scripts/vzorci/objava-dejstva.json --url
   http://localhost:5173 --mapa /tmp/objave-vzorec` (napis je predloga, slike v mapi).
 - **Objava**: `scripts/hetzner/objavi-objave.sh` iz main (CI je ne objavi).
   Enkratna nastavitev (lastnik): `/opt/slff-objave/.env` s
   `SUPABASE_SERVICE_ROLE_KEY=`, `ANTHROPIC_API_KEY=`, `DISCORD_OBJAVE_WEBHOOK=`,
-  `chmod 600`. Dnevnik `ssh slff docker logs slff-objave`.
+  za fazo 2 še `META_PAGE_TOKEN=`, `META_PAGE_ID=`, `META_IG_USER_ID=` (kako jih
+  dobiti: načrt, *Faza 2*), `chmod 600`. Blok `/objave-mediji/*` v
+  `scripts/hetzner/Caddyfile` se prenese ročno (Caddy CI ne objavi). Dnevnik
+  `ssh slff docker logs slff-objave`.
 
 ## Poti
 
