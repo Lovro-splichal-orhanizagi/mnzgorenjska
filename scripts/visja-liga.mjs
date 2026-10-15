@@ -126,6 +126,14 @@ export function ravenLige({ slug, name, zveza }) {
     return null
   }
 
+  // Ferski otoki (vir fsf): Betri deildin, 1. in 2. deild (druge ekipe klubov).
+  if (slug.startsWith('fo-')) {
+    if (mladinska) return null
+    if (slug === 'fo-betri-deildin') return abs(1)
+    if ((m = slug.match(/^fo-(\d)-deild/))) return abs(1 + Number(m[1]))
+    return null
+  }
+
   return null
 }
 

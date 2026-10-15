@@ -31,6 +31,7 @@ import lff from './lff.mjs'
 import ffm from './ffm.mjs'
 import fcf from './fcf.mjs'
 import fas from './fas.mjs'
+import fsf from './fsf.mjs'
 
 const VIRI = {
   mnzg,
@@ -82,6 +83,9 @@ const VIRI = {
   // Španija (Asturija): FutbolAsturiano.es (WordPress SportsPress), ne zveza;
   // liga je blok šifer objav tekem ene sezone, igralec s potjo profila.
   fas,
+  // Ferski otoki (FSF) prek javnega posrednika COMET na fsf.fo (JSON, ki ga
+  // stran kliče sama): šifre oseb, vratar, koledarska sezona, druge ekipe ("B36 II").
+  fsf,
 }
 
 /**
