@@ -1,0 +1,34 @@
+# Samodejne objave (scripts/objave.mjs --zanka) na VM: /opt/slff-objave/
+#   docker-compose.yml   ta datoteka
+#   .env                 SUPABASE_SERVICE_ROLE_KEY, ANTHROPIC_API_KEY, DISCORD_OBJAVE_WEBHOOK
+#                        (chmod 600, ustvari lastnik, NI v gitu)
+#   app/scripts/objave.mjs, app/node_modules/ (playwright, @supabase/supabase-js)
+#   mediji/              prosojnice osnutkov (PNG), <teden>-<slot>/n.png
+# Objava: scripts/hetzner/objavi-objave.sh. CI tega ne objavi.
+# Dnevnik: docker logs slff-objave. Preizkus brez pisanja:
+#   docker compose run --rm objave node scripts/objave.mjs --slot pon --suho --mapa /mediji/suho
+services:
+  objave:
+    # Chromium in Node; različica = playwright iz package.json.
+    image: mcr.microsoft.com/playwright:v1.64.0-noble
+    container_name: slff-objave
+    restart: unless-stopped
+    init: true
+    # Gostiteljevo omrežje kot slff-posta: PostgREST prek envoy na 127.0.0.1:8000.
+    network_mode: host
+    user: pwuser
+    working_dir: /app
+    command: ["node", "scripts/objave.mjs", "--zanka"]
+    environment:
+      SUPABASE_URL: http://127.0.0.1:8000
+      # Stran s prosojnicami (/objava); mora biti objavljena različica s to potjo.
+      OBJAVE_URL: https://slff.eu
+      OBJAVE_MAPA: /mediji
+      TZ: Europe/Ljubljana
+    env_file: .env
+    volumes:
+      - ./app:/app:ro
+      - ./mediji:/mediji
+    shm_size: 512m
+    mem_limit: 1g
+    cpus: 1.0

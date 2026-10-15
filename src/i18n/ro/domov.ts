@@ -98,4 +98,19 @@ export const domov: NonNullable<Prevod['domov']> = {
   },
   taTeden: 'Săptămâna aceasta',
   klepet: 'Chat și sugestii',
+  // Prosojnice samodejnih objav (Instagram, Facebook; stran /objava).
+  objava: {
+    igralecKroga: 'Jucătorul etapei',
+    krogVStevilkah: 'Etapa în cifre',
+    skok: 'Creștere de preț',
+    padec: 'Scădere de preț',
+    kapetan: 'Căpitanul care a dezamăgit',
+    kapetanOpis: 'L-au ales {delez} % dintre echipe',
+    vratar: 'Portar marcator',
+    hattrick: 'Hat-trick',
+    ligaTedna: 'Liga săptămânii',
+    novihEkip: 'Echipe noi: {n}',
+    tedenVEvropi: 'Săptămâna aceasta în Europa',
+    poziv: 'Fă-ți echipa',
+  },
 }
