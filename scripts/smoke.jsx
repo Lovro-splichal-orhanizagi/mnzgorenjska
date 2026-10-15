@@ -5376,33 +5376,38 @@ preveri(
   const { default: viri } = await import('./viri/index.mjs')
   const { ravenLige, koliko } = await import('./visja-liga.mjs')
   const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
-  preveri('eps: vir je vpisan, GR, 2,5 s, User-Agent SLFF', viri.eps === G.default && G.default.drzava === 'GR' &&
-    G.default.imaRegistracije === false && G.default.premorMs >= 2000 && G.default.glave['User-Agent'] === 'SLFF fantasy (https://slff.eu)')
+  preveri('eps: vir je vpisan, GR, 3 s, User-Agent SLFF', viri.eps === G.default && G.default.drzava === 'GR' &&
+    G.default.imaRegistracije === false && G.default.premorMs >= 3000 && G.default.glave['User-Agent'] === 'SLFF fantasy (https://slff.eu)')
   const k = G.razberiKodo('epspeir.gr:726')
   preveri('eps: šifra lige (domena + league_id) in naslovi', k.domena === 'epspeir.gr' && k.liga === 726 && k.zveza === 1 &&
     G.naslovRazporeda('epspeir.gr:726') === 'https://www.epspeir.gr/results/display_schedule.php?league_id=726' &&
     G.naslovMreze('epsana.gr:748') === 'https://www.epsana.gr/results/display_results.php?league_id=748' &&
     G.default.naslovZapisnika('x', 'gr2-31019') === 'https://www.epsana.gr/results/display_game.php?game_id=31019')
   const slaba = []
-  for (const koda of ['726', 'epsath.gr:1534', 'epsevias.gr:1', 'epspeir.gr']) {
+  for (const koda of ['726', 'epsxyz.gr:1534', 'epsevias.gr', 'epspeir.gr']) {
     try { G.razberiKodo(koda) } catch (e) { slaba.push(e.message) }
   }
-  preveri('eps: neznana domena ali šifra brez domene ustavi uvoz (Atene, Evbeja: robots.txt prepove)', slaba.length === 4 && slaba.every((s) => /<domena>:<league_id>/.test(s)))
+  preveri('eps: neznana domena ali šifra brez domene ustavi uvoz', slaba.length === 4 && slaba.every((s) => /<domena>:<league_id>/.test(s)))
+  // Atene in Evbeja: robots.txt prepove /results/, beremo ju s pisnim dovoljenjem upravljavca (Lovro, 10/2026).
+  preveri('eps: Atene (15) in Evbeja (16) — šifra lige, osebe in zapisnika', G.razberiKodo('epsath.gr:1534').zveza === 15 &&
+    G.razberiKodo('epsevias.gr:272').zveza === 16 && G.naslovRazporeda('epsevias.gr:272') === 'https://www.epsevias.gr/results/display_schedule.php?league_id=272' &&
+    G.sifraIgralca('epsath.gr', 56480) === 150056480 && G.sifraZapisnika('epsevias.gr', 7619) === 'gr16-7619' && G.razberiZapisnik('gr15-82739').domena === 'epsath.gr')
   preveri('eps: šifra osebe je zveza·10^7 + player_id — isti player_id dveh zvez sta dva igralca', G.sifraIgralca('epspeir.gr', 20726) === 10020726 &&
     G.sifraIgralca('epsana.gr', 20726) === 20020726 && G.sifraIgralca('epsf.gr', 1) === 140000001 && G.sifraIgralca('epspeir.gr', 'x') === null &&
     Object.values(G.ZVEZE).length === new Set(Object.values(G.ZVEZE)).size)
   preveri('eps: šifra zapisnika gr<zveza>-<game_id> in nazaj', G.sifraZapisnika('epsip.gr', 26623) === 'gr4-26623' &&
     G.razberiZapisnik('gr4-26623').domena === 'epsip.gr' && G.razberiZapisnik('gr4-26623').gameId === 26623)
   preveri('eps: datum, sezona, atenski čas → ljubljanski, minuta, izid', G.datumIz('20/09/26') === '2026-09-20' && G.datumIz('27-09-2026') === '2026-09-27' &&
-    G.sezonaIz('Περιόδου 2026-2027') === '2026/27' && G.sezonaIz('2026-27') === '2026/27' &&
+    G.sezonaIz('Περιόδου 2026-2027') === '2026/27' && G.sezonaIz('2026-27') === '2026/27' && G.sezonaIz('Περιόδου 2026 2027') === '2026/27' &&
     G.casTekme('2026-09-20', '16:30').ura === '15:30' && G.casTekme('2026-09-20', '00:00').ura === null &&
     G.casTekme('2026-09-20', '00:30').datum === '2026-09-19' && G.minuta("90+3'") === 90 && G.minuta("23'") === 23 &&
     G.izidIz('0-3 α.α.').kontumacija === true && G.izidIz('1-4').kontumacija === false && G.izidIz('') === null && G.krogIz('12η  Αγωνιστική') === 12)
   preveri('eps: klubi — naglasi, pike in latinične dvojnice v ključu, druga ekipa je svoj klub', G.kljucKlubaGr('ΑΕ ΠΕΡΑΜΑΤΟΣ ') === G.kljucKlubaGr('Α.Ε. Περάματος') &&
     G.kljucKlubaGr('ΚΥΑΝΟΥΣ Α ΒΑΡΗΣ B') === G.kljucKlubaGr('ΚΥΑΝΟΥΣ Α ΒΑΡΗΣ Β') && G.kljucKlubaGr('ΑΡΗΣ ΒΟΥΛΑΣ Β') !== G.kljucKlubaGr('ΑΡΗΣ ΒΟΥΛΑΣ') &&
     G.kratkoImeGr('ΑΕ ΠΕΡΑΜΑΤΟΣ ') === 'ΠΕΡΑΜΑΤΟΣ' && G.kratkoImeGr('Α.Ο. ΜΙΜΑΣ ΜΙΚΡΑΣΙΑΤΙΚΗ') === 'ΜΙΜΑΣ ΜΙΚΡΑΣΙΑΤΙΚΗ' && G.kratkoImeGr('ΑΡΓΟΝΑΥΤΗΣ') === 'ΑΡΓΟΝΑΥΤΗΣ')
-  preveri('eps: isto ime, drug klub — ΑΡΓΟΝΑΥΤΗΣ v Argolidi dobi oznako, v Pireju ne', G.imeKluba('epsarg.gr', 'ΑΡΓΟΝΑΥΤΗΣ') === 'ΑΡΓΟΝΑΥΤΗΣ (Αργολίδα)' &&
-    G.imeKluba('epspeir.gr', 'ΑΡΓΟΝΑΥΤΗΣ') === 'ΑΡΓΟΝΑΥΤΗΣ')
+  preveri('eps: isto ime, drug klub — ΑΡΓΟΝΑΥΤΗΣ v Argolidi in ΠΡΟΜΗΘΕΑΣ v Atenah dobita oznako, v Pireju ne', G.imeKluba('epsarg.gr', 'ΑΡΓΟΝΑΥΤΗΣ') === 'ΑΡΓΟΝΑΥΤΗΣ (Αργολίδα)' &&
+    G.imeKluba('epspeir.gr', 'ΑΡΓΟΝΑΥΤΗΣ') === 'ΑΡΓΟΝΑΥΤΗΣ' && G.imeKluba('epsath.gr', 'ΠΡΟΜΗΘΕΑΣ ') === 'ΠΡΟΜΗΘΕΑΣ (Αθήνα)' &&
+    G.imeKluba('epspeir.gr', 'ΠΡΟΜΗΘΕΑΣ') === 'ΠΡΟΜΗΘΕΑΣ')
   preveri('eps: raven — A1 > A2, A > B > Γ znotraj zveze, med zvezami se ne primerja', koliko(ravenLige({ slug: 'gr-peir-a-1' }), ravenLige({ slug: 'gr-peir-b-2' })) === 1 &&
     koliko(ravenLige({ slug: 'gr-peir-a-2' }), ravenLige({ slug: 'gr-peir-g-1' })) === 2 && koliko(ravenLige({ slug: 'gr-arg-a1' }), ravenLige({ slug: 'gr-arg-a2-1' })) === 1 &&
     koliko(ravenLige({ slug: 'gr-peir-a-1' }), ravenLige({ slug: 'gr-ana-b' })) === 0 && ravenLige({ slug: 'gr-peir-x' }) === null)
@@ -5484,25 +5489,65 @@ preveri(
   preveri('eps: vzorci brez letnic rojstva, sodnikov in oglasov', !/ageAttention|\((19|20)\d\d\)|ΖΕΣΤΑΣ|ΚΑΚΡΙΔΗΣ|sponsors|statcounter/i.test(
     ['gr-eps-razpored-epspeir-726.html', 'gr-eps-tekma-epspeir-27822.html', 'gr-eps-tekma-odrezana-epsip-26623.html', 'gr-eps-tekma-rdeci-epspeir-27966.html'].map(beri).join('')))
 
-  // epsFetch: cela stran ali odrezana tekma s statusom 500 velja kot 200, druga 500 ostane 500.
+  // epsFetch: cela stran ali odrezana tekma s statusom 500 velja kot 200, druga 500 ostane 500;
+  // 401, 403, 429 in izziv vržejo EpsZavrnitev že pri prenosu (brez ponovitev, brez shranjene strani).
   const pravi = globalThis.fetch
   const statusi = []
   try {
-    for (const telo of [h, od, '<html>Internal Server Error</html>', '<title>Just a moment...</title>']) {
-      globalThis.fetch = async () => new Response(telo, { status: 500 })
-      statusi.push((await G.epsFetch('https://www.epsdod.gr/x')).status)
+    for (const [telo, status] of [[h, 500], [od, 500], ['<html>Internal Server Error</html>', 500], ['<title>Just a moment...</title>', 500], ['', 401], ['x', 403], ['x', 429], ['<title>Just a moment...</title>', 200]]) {
+      globalThis.fetch = async () => new Response(telo, { status })
+      try { statusi.push((await G.epsFetch('https://www.epsdod.gr/x')).status) } catch (e) { statusi.push(e instanceof G.EpsZavrnitev ? `Z${e.status}` : e.message) }
     }
   } finally {
     globalThis.fetch = pravi
   }
-  preveri('eps: HTTP 500 s celo stranjo (Dodekanez) ali odrezano tekmo (Epir) je 200, ostalo ostane 500', statusi.join(',') === '200,200,500,500', statusi.join(','))
+  preveri('eps: HTTP 500 s celo stranjo (Dodekanez) ali odrezano tekmo (Epir) je 200, ostalo ostane 500; 401/403/429/izziv je zavrnitev', statusi.join(',') === '200,200,500,Z500,Z401,Z403,Z429,Z200', statusi.join(','))
+  preveri('eps: v predpomnilnik le cela stran platforme ali odrezana tekma (ne izziv, vzdrževanje, prazno)', G.default.zaPredpomnilnik === G.zaPredpomnilnik &&
+    G.zaPredpomnilnik(h) && G.zaPredpomnilnik(od) && !G.zaPredpomnilnik('<html><body>Site under maintenance</body></html>') && !G.zaPredpomnilnik('') &&
+    !G.zaPredpomnilnik(`<title>Just a moment...</title>${h}`))
 
   let izziv = null
   try { await G.default.zapisniki('epspeir.gr:726', async () => '<title>Just a moment...</title>') } catch (e) { izziv = e }
   let zavrnjen = null
   try { await G.default.zapisniki('epspeir.gr:726', async () => { const e = new Error('403'); e.status = 403; throw e }) } catch (e) { zavrnjen = e }
-  preveri('eps: 403 in izziv vržeta EpsZavrnitev (uvoz izhod 4)', izziv instanceof G.EpsZavrnitev && zavrnjen instanceof G.EpsZavrnitev &&
-    zavrnjen.status === 403 && G.default.zavrnitev('x', 429).zavrnitev === true)
+  let zavrnjen401 = null
+  try { await G.default.zapisniki('epspeir.gr:726', async () => { const e = new Error('401'); e.status = 401; throw e }) } catch (e) { zavrnjen401 = e }
+  preveri('eps: 401, 403 in izziv vržejo EpsZavrnitev (uvoz izhod 4)', izziv instanceof G.EpsZavrnitev && zavrnjen instanceof G.EpsZavrnitev &&
+    zavrnjen.status === 403 && zavrnjen401 instanceof G.EpsZavrnitev && zavrnjen401.status === 401 && G.default.zavrnitev('x', 429).zavrnitev === true)
+
+  // Atene (epsath.gr) in Evbeja (epsevias.gr): ista platforma, sezona "2026 2027", klub z " - " v imenu.
+  const rat = G.razporedStrani(beri('gr-eps-razpored-epsath-1538.html'))
+  const tat = rat.krogi.flatMap((x) => x.tekme)
+  const apolon = tat.filter((t) => t.domaci === 'ΑΠΟΛΛΩΝ ΑΘΗΝΩΝ - ΔΑΦΝΗ' || t.gostje === 'ΑΠΟΛΛΩΝ ΑΘΗΝΩΝ - ΔΑΦΝΗ')
+  preveri('eps: Atene — sezona "2026 2027", 15 klubov, 30 krogov po 7 tekem, klub z " - " v imenu ni izgubljen', rat.sezona === '2026/27' &&
+    rat.ime === 'Β Κατηγορία 2ος Όμιλος' && rat.krogi.length === 30 && rat.krogi.every((k) => k.tekme.length === 7) && tat.length === 210 &&
+    new Set(tat.flatMap((t) => [t.domaci, t.gostje])).size === 15 && rat.nerazreseni.length === 0 && apolon.length === 28 &&
+    apolon.find((t) => t.gameId === 83494)?.domaci === 'ΑΛΣΟΥΠΟΛΗ' && tat.filter((t) => t.izid).length === 21 && G.razporedVUvoz(rat, 'epsath.gr').length >= 4)
+  // Klub "Α - Β" igra le s "Γ" (brez krepkega zmagovalca, brez drugih vrstic): rez ni znan.
+  const dvoumen = G.razporedStrani(`<div id="maincolumn"><h1>Πρόγραμμα Αγώνων Περιόδου 2026-2027<br />Χ</h1><h2>1η Αγωνιστική</h2><table><tr class='odd'><td>Α - Β - Γ</td><td></td><td></td><td>20/09/26</td><td>16:30</td><td></td><td>1-1</td></table>`)
+  let nerazresen = null
+  try { G.razporedVUvoz(dvoumen, 'epsath.gr') } catch (e) { nerazresen = e }
+  preveri('eps: par, ki ga ni mogoče razdeliti na klube, ustavi uvoz razporeda (ne izpade tiho)', dvoumen.nerazreseni.length > 0 && /ne znam razdeliti/.test(nerazresen?.message ?? ''))
+  const zat = G.vZapisnik(beri('gr-eps-tekma-epsath-82739.html'), { domena: 'epsath.gr', gameId: 82739 })
+  const nat = G.nastopi(zat)
+  preveri('eps: Atene — zapisnik 11 + 11, goli = izid 4:1, menjave z minuto, 990 minut, šifra osebe zveze 15', zat.zapisnikId === 'gr15-82739' &&
+    zat.sezona === '2026/27' && zat.krog === 2 && zat.datum === '2026-09-16' && zat.ura === '16:00' && zat.domaci.postava.length === 11 && zat.gostje.postava.length === 11 &&
+    zat.goli.length === 5 && zat.rezultat.domaci === 4 && zat.rezultat.gostje === 1 && zat.menjave.length === 8 && zat.menjave.every((m) => m.minuta && m.noter.ime && m.ven.ime) &&
+    minute(nat, 0) === 990 && minute(nat, 1) === 990 && nat.every((x) => x.regSt > 150000000 && x.regSt < 160000000) && nat.filter((x) => x.vratar).length === 2 &&
+    ig(nat, 'ΨΥΧΟΓΥΙΟΣ ΝΕΙΛΟΣ ΑΓΓΕΛΟΣ')?.goli === 2 && zat.opozorila.length === 0)
+  const zap = G.vZapisnik(beri('gr-eps-tekma-epsath-83494.html'), { domena: 'epsath.gr', gameId: 83494 })
+  preveri('eps: Atene — klub z " - " v imenu na strani tekme (povezava kluba), goli = izid 1:2', zap.gostje.ime === 'ΑΠΟΛΛΩΝ ΑΘΗΝΩΝ - ΔΑΦΝΗ' &&
+    zap.domaci.ime === 'ΑΛΣΟΥΠΟΛΗ' && zap.goli.length === 3 && zap.gostje.postava.length === 11 && minute(G.nastopi(zap), 1) === 990 && zap.opozorila.length === 0)
+  const zne = G.vZapisnik(beri('gr-eps-tekma-nepopoln-epsath-82789.html'), { domena: 'epsath.gr', gameId: 82789 })
+  preveri('eps: Atene — izid brez postav je nepopoln (bere se znova)', zne.nepopoln && zne.rezultat.domaci === 1 && zne.rezultat.gostje === 3 && G.nastopi(zne).length === 0 &&
+    G.zaPredpomnilnik(beri('gr-eps-tekma-nepopoln-epsath-82789.html')))
+  const zev = G.vZapisnik(beri('gr-eps-tekma-epsevias-7619.html'), { domena: 'epsevias.gr', gameId: 7619 })
+  const nev = G.nastopi(zev)
+  preveri('eps: Evbeja — zapisnik 11 + 11, gol gostov 0:1, 7 menjav, 990 minut, šifra osebe zveze 16', zev.zapisnikId === 'gr16-7619' && zev.sezona === '2026/27' &&
+    zev.domaci.ime === 'Α.Ε ΙΣΤΙΑΙΑΣ' && zev.gostje.ime === 'Α.Ε ΠΡΟΠΟΝΤΙΣ' && zev.krog === 3 && zev.goli.length === 1 && zev.goli[0].ekipaIdx === 1 &&
+    zev.menjave.length === 7 && minute(nev, 0) === 990 && minute(nev, 1) === 990 && nev.every((x) => x.regSt > 160000000 && x.regSt < 170000000) && zev.opozorila.length === 0)
+  preveri('eps: vzorci Aten in Evbeje brez letnic rojstva, sodnikov, skript in e-naslovov', !/ageAttention|\((19|20)\d\d\)|<script|email-protection|waust/i.test(
+    ['gr-eps-razpored-epsath-1538.html', 'gr-eps-tekma-epsath-82739.html', 'gr-eps-tekma-epsath-83494.html', 'gr-eps-tekma-nepopoln-epsath-82789.html', 'gr-eps-tekma-epsevias-7619.html'].map(beri).join('')))
 }
 
 // --- vir fsb (Srbija, Fudbalski savez Beograda) ---------------------------------

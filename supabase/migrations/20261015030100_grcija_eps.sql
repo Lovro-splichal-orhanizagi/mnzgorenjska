@@ -1,4 +1,4 @@
--- Grčija: država GR, sedem regionalnih zvez EPS in njihove lige z vira `eps`
+-- Grčija: država GR, devet regionalnih zvez EPS in njihove lige z vira `eps`
 -- (skupna platforma results.php, ena domena na zvezo). Šifra lige je
 -- `<domena>:<league_id>` sezone 2026/27 (glej CLAUDE.md, Grčija — vir eps).
 --
@@ -19,6 +19,19 @@
 --   gr-ip-g-a    epsip.gr:303    (6)           gr-ip-g-b    epsip.gr:304    (6)
 --   gr-dod-a     epsdod.gr:443                 gr-arg-a1    epsarg.gr:1020
 --   gr-ark-a     epsarkadias.gr:205
+--   Atene (Αθηνών, epsath.gr) in Evbeja (Εύβοιας, epsevias.gr): robots.txt
+--   prepove /results/, beremo ju s PISNIM DOVOLJENJEM upravljavca (pridobil
+--   Lovro, oktober 2026). Atene so skupine 2026/27 preuredile — arhiv šibek:
+--   gr-ath-a-1   epsath.gr:1410  (5)           gr-ath-a-2   epsath.gr:1411  (6)
+--   gr-ath-b-1   epsath.gr:1413  (3)           gr-ath-b-2   epsath.gr:1412  (4)
+--   gr-ath-b-3   epsath.gr:1414  (4)           gr-ath-g-1   epsath.gr:1436  (4)
+--   gr-ath-g-2   epsath.gr:1435  (3)           gr-ath-g-3   epsath.gr:1437  (3)
+--   gr-ath-g-4   epsath.gr:1434  (3)
+--   gr-ev-a      epsevias.gr:224 (12)          gr-ev-b-1    epsevias.gr:218 (7)
+--   gr-ev-b-2    epsevias.gr:219 (9)           gr-ev-g-1    epsevias.gr:220 (7)
+--   gr-ev-g-2    epsevias.gr:221 (7)           gr-ev-g-3    epsevias.gr:222 (6)
+--   Evbeja Γ 4. skupina (epsevias.gr:278) NI vpisana: en sam poln zapisnik
+--   brez menjav — vpiši, ko se menjave pokažejo.
 -- Play-off, play-out in razvrstilne tekme so svoja tekmovanja — za arhiv jih
 -- ne uvažaj. Vsak arhiv preštej pred uvozom (tekem, golov, postav po 11).
 --
@@ -36,7 +49,9 @@ select d.id, v.code, v.ime, v.kratko, v.url, v.vrstni
     ('eps-ip', 'Ένωση Ποδοσφαιρικών Σωματείων Ηπείρου', 'ΕΠΣ Ηπείρου', 'https://www.epsip.gr/', 1304),
     ('eps-dod', 'Ένωση Ποδοσφαιρικών Σωματείων Δωδεκανήσου', 'ΕΠΣ Δωδεκανήσου', 'https://www.epsdod.gr/', 1305),
     ('eps-arg', 'Ένωση Ποδοσφαιρικών Σωματείων Αργολίδας', 'ΕΠΣ Αργολίδας', 'https://www.epsarg.gr/', 1306),
-    ('eps-ark', 'Ένωση Ποδοσφαιρικών Σωματείων Αρκαδίας', 'ΕΠΣ Αρκαδίας', 'https://www.epsarkadias.gr/', 1307)
+    ('eps-ark', 'Ένωση Ποδοσφαιρικών Σωματείων Αρκαδίας', 'ΕΠΣ Αρκαδίας', 'https://www.epsarkadias.gr/', 1307),
+    ('eps-ath', 'Ένωση Ποδοσφαιρικών Σωματείων Αθηνών', 'ΕΠΣ Αθηνών', 'https://www.epsath.gr/', 1308),
+    ('eps-ev', 'Ένωση Ποδοσφαιρικών Σωματείων Εύβοιας', 'ΕΠΣ Εύβοιας', 'https://www.epsevias.gr/', 1309)
   ) as v(code, ime, kratko, url, vrstni)
  where d.code = 'GR'
 on conflict (code) do nothing;
@@ -64,7 +79,22 @@ select v.slug, v.ime, v.kratko, d.id, f.id, 'eps', v.koda, 1, v.vrstni, 6, false
     ('gr-ip-g-b', 'Γ Κατηγορία, Β Όμιλος', 'Ήπειρος Γ-Β', 'epsip.gr:332', 'eps-ip', 14),
     ('gr-dod-a', 'Α Κατηγορία', 'Δωδεκάνησα Α', 'epsdod.gr:495', 'eps-dod', 15),
     ('gr-arg-a1', 'Α1 Κατηγορία', 'Αργολίδα Α1', 'epsarg.gr:1042', 'eps-arg', 16),
-    ('gr-ark-a', 'Α Κατηγορία', 'Αρκαδία Α', 'epsarkadias.gr:222', 'eps-ark', 17)
+    ('gr-ark-a', 'Α Κατηγορία', 'Αρκαδία Α', 'epsarkadias.gr:222', 'eps-ark', 17),
+    ('gr-ath-a-1', 'Α Κατηγορία, 1ος Όμιλος', 'Αθήνα Α1', 'epsath.gr:1534', 'eps-ath', 18),
+    ('gr-ath-a-2', 'Α Κατηγορία, 2ος Όμιλος', 'Αθήνα Α2', 'epsath.gr:1535', 'eps-ath', 19),
+    ('gr-ath-b-1', 'Β Κατηγορία, 1ος Όμιλος', 'Αθήνα Β1', 'epsath.gr:1537', 'eps-ath', 20),
+    ('gr-ath-b-2', 'Β Κατηγορία, 2ος Όμιλος', 'Αθήνα Β2', 'epsath.gr:1538', 'eps-ath', 21),
+    ('gr-ath-b-3', 'Β Κατηγορία, 3ος Όμιλος', 'Αθήνα Β3', 'epsath.gr:1539', 'eps-ath', 22),
+    ('gr-ath-g-1', 'Γ Κατηγορία, 1ος Όμιλος', 'Αθήνα Γ1', 'epsath.gr:1541', 'eps-ath', 23),
+    ('gr-ath-g-2', 'Γ Κατηγορία, 2ος Όμιλος', 'Αθήνα Γ2', 'epsath.gr:1542', 'eps-ath', 24),
+    ('gr-ath-g-3', 'Γ Κατηγορία, 3ος Όμιλος', 'Αθήνα Γ3', 'epsath.gr:1543', 'eps-ath', 25),
+    ('gr-ath-g-4', 'Γ Κατηγορία, 4ος Όμιλος', 'Αθήνα Γ4', 'epsath.gr:1544', 'eps-ath', 26),
+    ('gr-ev-a', 'Α Κατηγορία', 'Εύβοια Α', 'epsevias.gr:272', 'eps-ev', 27),
+    ('gr-ev-b-1', 'Β Κατηγορία, 1ος Όμιλος (Βόρειος)', 'Εύβοια Β1', 'epsevias.gr:273', 'eps-ev', 28),
+    ('gr-ev-b-2', 'Β Κατηγορία, 2ος Όμιλος (Νότιος)', 'Εύβοια Β2', 'epsevias.gr:279', 'eps-ev', 29),
+    ('gr-ev-g-1', 'Γ Κατηγορία, 1ος Όμιλος (Βόρειος)', 'Εύβοια Γ1', 'epsevias.gr:275', 'eps-ev', 30),
+    ('gr-ev-g-2', 'Γ Κατηγορία, 2ος Όμιλος (Κεντρικός 1)', 'Εύβοια Γ2', 'epsevias.gr:276', 'eps-ev', 31),
+    ('gr-ev-g-3', 'Γ Κατηγορία, 3ος Όμιλος (Κεντρικός 2)', 'Εύβοια Γ3', 'epsevias.gr:277', 'eps-ev', 32)
   ) as v(slug, ime, kratko, koda, zveza, vrstni)
   join federations f on f.code = v.zveza
  where d.code = 'GR'

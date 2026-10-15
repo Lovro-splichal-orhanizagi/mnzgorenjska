@@ -1,11 +1,12 @@
 // Vir: regionalne zveze EPS (Ένωση Ποδοσφαιρικών Σωματείων, Grčija) na skupni
 // platformi "results.php" — epspeir.gr, epsana.gr, epsda.gr, epsip.gr,
 // epsdod.gr, epsarg.gr, epsarkadias.gr, epshalkidikis.gr, epski.gr,
-// epskyklades.gr, epslak.gr, epsmes.gr, epsxiou.gr, epsf.gr.
+// epskyklades.gr, epslak.gr, epsmes.gr, epsxiou.gr, epsf.gr, epsath.gr,
+// epsevias.gr.
 //
 // Vsaka zveza ima svojo domeno in svojo bazo, koda (noga "Shipwrecked Frontier
-// Pioneer & UnScrupulous") pa je ista. Lige so A/B/Γ Κατηγορία zveze (raven
-// 4–6), po skupinah. Glej CLAUDE.md (Grčija — vir eps).
+// Pioneer & UnScrupulous", pri Atenah "Stargoose") pa je ista. Lige so A/B/Γ
+// Κατηγορία zveze (raven 4–6), po skupinah. Glej CLAUDE.md (Grčija — vir eps).
 //
 // ŠIFRA LIGE je `<domena>:<league_id>` (`epspeir.gr:726` = Pireja, Α Κατηγορία
 // 1. skupina 2026/27). Vsaka sezona ima svoj league_id (izbirnik sezone na
@@ -38,12 +39,13 @@
 // klasičnem vrstnem redu 1–11, zato je prvi začetnik vratar (namig). Letnice
 // rojstva ne beremo.
 //
-// robots.txt vrne 404 na vseh 14 domenah (15. 10. 2026), pogojev uporabe ni.
-// epsath.gr (Atene) in epsevias.gr (Evbeja) tečeta na isti platformi, a
-// robots.txt prepove /results/ (Atene še ClaudeBot) — ju NE beremo.
-// Beremo odkrito (User-Agent SLFF, 2,5 s med zahtevki), zapisnikov, starejših
-// od tedna, ne beremo znova. Ob izzivu, CAPTCHI, 403 ali 429 se uvoz ustavi —
-// ne obhajaj.
+// robots.txt vrne 404 na prvih 14 domenah (15. 10. 2026), pogojev uporabe ni.
+// epsath.gr (Atene) in epsevias.gr (Evbeja) robots.txt prepove /results/
+// (Atene še ClaudeBot): beremo ju LE zaradi pisnega dovoljenja upravljavca
+// (pridobil Lovro, oktober 2026). Dovoljenje ne velja za tehnično zaščito.
+// Beremo odkrito (User-Agent SLFF, 3 s med zahtevki), zapisnikov, starejših
+// od tedna, ne beremo znova. Ob izzivu, CAPTCHI, 401, 403 ali 429 se uvoz
+// ustavi — ne obhajaj.
 import { existsSync, readFileSync } from 'node:fs'
 import { razpakiraj } from '../klubi.mjs'
 import { nastopi } from './hlf.mjs'
@@ -54,7 +56,7 @@ export { nastopi, NEPOPOLN }
 
 const DOLZINA_TEKME = 90
 const NAJMANJ_ZACETNIKOV = 7
-export const PREMOR_MS = 2500
+export const PREMOR_MS = 3000
 const UA = 'SLFF fantasy (https://slff.eu)'
 const MAPA = 'scripts/.predpomnilnik/eps'
 const DAN = 86400000
@@ -76,6 +78,8 @@ export const ZVEZE = {
   'epsmes.gr': 12, // Mesenija
   'epsxiou.gr': 13, // Hios
   'epsf.gr': 14, // Ftiotida
+  'epsath.gr': 15, // Atene (pisno dovoljenje, glej zgoraj)
+  'epsevias.gr': 16, // Evbeja (pisno dovoljenje, glej zgoraj)
 }
 const DOMENA_ZVEZE = new Map(Object.entries(ZVEZE).map(([d, n]) => [n, d]))
 const IGRALCEV_NA_ZVEZO = 10_000_000
@@ -136,9 +140,9 @@ export function minuta(s) {
   return m ? Math.min(Number(m[1]), DOLZINA_TEKME) : null
 }
 
-/** "Περιόδου 2026-2027" ali "2026-27" → "2026/27". */
+/** "Περιόδου 2026-2027", "2026 2027" (Atene) ali "2026-27" → "2026/27". */
 export function sezonaIz(s) {
-  const m = String(s ?? '').match(/(\d{4})\s*[-/]\s*(\d{2,4})/)
+  const m = String(s ?? '').match(/(\d{4})\s*[-/\s]\s*(\d{2,4})/)
   return m ? `${m[1]}/${m[2].slice(-2)}` : null
 }
 
@@ -195,22 +199,30 @@ export function razporedStrani(html) {
   const glava = s.match(/<div id="maincolumn">[\s\S]*?<h1>([\s\S]*?)<\/h1>/)?.[1] ?? ''
   const [prvi, ...ostalo] = glava.split(/<br\s*\/?>/i)
   const krogi = []
+  const znani = new Set()
+  const dvoumne = []
   for (const del of s.split(/<h2>/).slice(1)) {
     const stevilka = krogIz(besedilo(del.slice(0, del.indexOf('</h2>'))))
     if (!stevilka) continue
     const tabela = del.slice(0, del.indexOf('</table>') >= 0 ? del.indexOf('</table>') : undefined)
+    // Prost krog: "<b>Ρεπό:</b> ΗΡΑΚΛΗΣ ΠΕΡΙΣΤΕΡΙΟΥ<br />" — tudi to je znano ime.
+    const repo = besedilo(del.match(/Ρεπό:\s*<\/b>([\s\S]*?)<br/)?.[1] ?? '')
+    if (repo) znani.add(repo)
     const tekme = []
     // Vrstice nimajo vedno zaključnega </tr>.
     for (const vrstica of tabela.split(/<tr class=['"](?:odd|even)['"]>/).slice(1)) {
       const td = [...vrstica.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map((m) => m[1])
       if (td.length < 7) continue
-      const para = besedilo(td[0]).split(' - ')
-      if (para.length !== 2) continue
+      // Ime kluba ima lahko " - " ("ΑΠΟΛΛΩΝ ΑΘΗΝΩΝ - ΔΑΦΝΗ", Atene): tak par
+      // razreši spodaj, ko so znana imena iz ostalih vrstic.
+      const deli = besedilo(td[0]).split(' - ').map((x) => x.trim())
+      if (deli.length < 2) continue
+      if (deli.length === 2) deli.forEach((x) => znani.add(x))
       const izid = izidIz(td[6])
       const { datum, ura } = casTekme(datumIz(besedilo(td[3])), besedilo(td[4]))
-      tekme.push({
-        domaci: para[0].trim(),
-        gostje: para[1].trim(),
+      const t = {
+        domaci: deli.length === 2 ? deli[0] : null,
+        gostje: deli.length === 2 ? deli[1] : null,
         datum,
         ura,
         izid: izid ? { domaci: izid.domaci, gostje: izid.gostje } : null,
@@ -218,11 +230,33 @@ export function razporedStrani(html) {
         gameId: Number(`${td[0]}${td[6]}`.match(/display_game\.php\?game_id=(\d+)/)?.[1]) || null,
         // "ΔΕΝ ΘΑ ΔΙΕΞΑΧΘΕΙ" (ne bo odigrana) namesto igrišča.
         neBo: /ΔΕΝ ΘΑ ΔΙΕΞΑΧΘΕΙ/.test(besedilo(td[1])),
-      })
+      }
+      if (deli.length > 2) dvoumne.push({ t, deli, krepko: besedilo(td[0].match(/<b>([\s\S]*?)<\/b>/)?.[1] ?? '') })
+      tekme.push(t)
     }
     krogi.push({ stevilka, tekme })
   }
-  return { sezona: sezonaIz(prvi), ime: besedilo(ostalo.join(' ')), krogi }
+  // Dvoumni pari: rez, pri katerem sta obe strani znani (ali ena znana, druga
+  // krepka — zmagovalec); dokler se kaj razreši, poskusi znova.
+  const nerazreseni = []
+  for (let spremembe = true; spremembe; ) {
+    spremembe = false
+    for (const d of dvoumne.filter((d) => !d.t.domaci)) {
+      const rezi = d.deli.slice(1).map((_, k) => [d.deli.slice(0, k + 1).join(' - '), d.deli.slice(k + 1).join(' - ')])
+      const ocena = ([a, b]) => (znani.has(a) || a === d.krepko ? 1 : 0) + (znani.has(b) || b === d.krepko ? 1 : 0)
+      const najboljsa = Math.max(...rezi.map(ocena))
+      const kandidati = rezi.filter((r) => ocena(r) === najboljsa)
+      if (najboljsa === 0 || kandidati.length !== 1) continue
+      ;[d.t.domaci, d.t.gostje] = kandidati[0]
+      kandidati[0].forEach((x) => znani.add(x))
+      spremembe = true
+    }
+  }
+  for (const k of krogi) {
+    for (const t of k.tekme.filter((t) => !t.domaci)) nerazreseni.push(`${k.stevilka}. krog: ${dvoumne.find((d) => d.t === t).deli.join(' - ')}`)
+    k.tekme = k.tekme.filter((t) => t.domaci)
+  }
+  return { sezona: sezonaIz(prvi), ime: besedilo(ostalo.join(' ')), krogi, nerazreseni }
 }
 
 /**
@@ -230,6 +264,8 @@ export function razporedStrani(html) {
  * z naslednjim uvozom. Imena klubov gredo skozi `imeKluba` zveze.
  */
 export function razporedVUvoz(r, domena = null) {
+  // Tekma, ki je ne znamo razdeliti na klube, bi iz razporeda tiho izpadla.
+  if (r.nerazreseni?.length) throw new Error(`eps: para ne znam razdeliti na klube (" - " v imenu): ${r.nerazreseni.join('; ')}`)
   return r.krogi
     .filter((k) => k.tekme.some((t) => t.datum))
     .map((k) => ({
@@ -519,9 +555,13 @@ export const kljucKlubaGr = (ime) =>
  * Isto ime, drug klub. Klub je enoličen v državi, zveze pa so ločene piramide:
  * ključ `<domena>|<ključ kluba>` → ime, pod katerim klub te zveze vodimo.
  * Pregled 15. 10. 2026 (219 klubov vpisanih lig): ΑΡΓΟΝΑΥΤΗΣ je v Pireju
- * (Α 1. skupina) in v Argolidi (Α1).
+ * (Α 1. skupina) in v Argolidi (Α1). Z Atenami in Evbejo (432 klubov 33 lig):
+ * ΠΡΟΜΗΘΕΑΣ je v Pireju (Γ 2. skupina) in v Atenah (Γ 2. skupina).
  */
-const IME_V_ZVEZI = new Map([['epsarg.gr|ΑΡΓΟΝΑΥΤΗΣ', 'ΑΡΓΟΝΑΥΤΗΣ (Αργολίδα)']])
+const IME_V_ZVEZI = new Map([
+  ['epsarg.gr|ΑΡΓΟΝΑΥΤΗΣ', 'ΑΡΓΟΝΑΥΤΗΣ (Αργολίδα)'],
+  ['epsath.gr|ΠΡΟΜΗΘΕΑΣ', 'ΠΡΟΜΗΘΕΑΣ (Αθήνα)'],
+])
 export const imeKluba = (domena, ime) => IME_V_ZVEZI.get(`${domena}|${kljucKlubaGr(ime)}`) ?? String(ime ?? '').trim()
 
 // Oblike društva (brez pik): Αθλητική Ένωση, Αθλητικός Όμιλος, Γυμναστικός Σύλλογος …
@@ -554,7 +594,7 @@ async function beri(prenesi, url, ime, sveze) {
     html = await prenesi(url, ime, sveze)
   } catch (e) {
     if (e.zavrnitev) throw e
-    if (e.status === 403 || e.status === 429) throw new EpsZavrnitev(`eps: ${url} → HTTP ${e.status} — uvoz ustavljen, ne obhajamo`, e.status)
+    if ([401, 403, 429].includes(e.status)) throw new EpsZavrnitev(`eps: ${url} → HTTP ${e.status} — uvoz ustavljen, ne obhajamo`, e.status)
     throw e
   }
   if (jeIzziv(html)) throw new EpsZavrnitev(`eps: ${url} vrne izziv (CAPTCHA) — uvoz ustavljen, ne obhajamo`)
@@ -562,9 +602,18 @@ async function beri(prenesi, url, ime, sveze) {
   return html
 }
 
+/**
+ * Stran, ki sme v predpomnilnik (in se iz njega bere): cela stran platforme ali
+ * tekma, odrezana za podatki. Izziv, stran vzdrževanja ali prazen odgovor 200
+ * ne — sicer bi obveljal za vselej (mlsz, 10. 2026).
+ */
+export const zaPredpomnilnik = (html) => !jeIzziv(html) && (jeStranPlatforme(html) || jeOdrezanaTekma(html))
+
 const shranjena = (ime) => {
   const p = `${MAPA}/${ime}`
-  return existsSync(p) ? readFileSync(p, 'utf8') : null
+  if (!existsSync(p)) return null
+  const html = readFileSync(p, 'utf8')
+  return zaPredpomnilnik(html) ? html : null
 }
 const starostDni = (datum, danes = Date.now()) => (datum ? (danes - Date.parse(`${datum}T00:00:00Z`)) / DAN : 0)
 
@@ -572,12 +621,19 @@ const starostDni = (datum, danes = Date.now()) => (datum ? (danes - Date.parse(`
  * Prenos z daljšim rokom. Dodekanez (epsdod.gr) vrne VSAKO stran s statusom
  * 500, a celo (noga, </html>); Epir (epsip.gr) vrne 500 pri tekmi s
  * pripombami, odrezano za podatki tekme — obe veljata kot 200. Napaka
- * strežnika brez cele strani ostane napaka.
+ * strežnika brez cele strani ostane napaka. 401, 403, 429 in izziv vržejo
+ * `EpsZavrnitev` že tu, da je ne ponovi `prenesiSPonovitvami` in je uvoz
+ * razporeda ne nadomesti s shranjeno stranjo (izhod 4 na vseh poteh).
  */
 export async function epsFetch(url, moznosti = {}) {
   const { signal: _s, ...ostalo } = moznosti
   const o = await fetch(url, { ...ostalo, signal: AbortSignal.timeout(60000) })
+  if ([401, 403, 429].includes(o.status)) {
+    await o.body?.cancel().catch(() => {})
+    throw new EpsZavrnitev(`eps: ${url} → HTTP ${o.status} — uvoz ustavljen, ne obhajamo`, o.status)
+  }
   const telo = await o.text()
+  if (jeIzziv(telo)) throw new EpsZavrnitev(`eps: ${url} vrne izziv (CAPTCHA) — uvoz ustavljen, ne obhajamo`, o.status)
   const status = o.status === 500 && !jeIzziv(telo) && (jeStranPlatforme(telo) || jeOdrezanaTekma(telo)) ? 200 : o.status
   return new Response(telo, { status, statusText: o.statusText, headers: o.headers })
 }
@@ -598,6 +654,7 @@ const vir = {
     return naslovTekme(domena, gameId)
   },
   jeIzziv,
+  zaPredpomnilnik,
   zavrnitev: (sporocilo, status = null) => new EpsZavrnitev(`eps: ${sporocilo} — uvoz ustavljen, ne obhajamo`, status),
 
   async razporedVseStrani(koda, prenesi) {
