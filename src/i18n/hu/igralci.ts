@@ -214,6 +214,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     hvalaGlas: 'Köszönjük, a jelzésedet rögzítettük. Ha elég egyező szavazat gyűlik össze, a poszt kijavításra kerül.',
     niIgralca: 'Nincs ilyen játékos.',
     vsiIgralci: '← Minden játékos',
+    vEkipo: 'Válaszd be a csapatodba',
+    vEkipoBrezplacno: 'Ingyenes, fiók nélkül is',
     stevilkaDresa: ' · mezszám: {st}',
     cena: 'ár',
     sezona: 'Szezon: {sezona}',

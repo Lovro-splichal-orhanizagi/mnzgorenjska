@@ -217,6 +217,8 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     hvalaGlas: 'Hvala, glas je zabeležen. Kada se skupi dovoljno istih, pozicija se ispravlja.',
     niIgralca: 'Igrač ne postoji.',
     vsiIgralci: '← Svi igrači',
+    vEkipo: 'Izaberi ga u svoj tim',
+    vEkipoBrezplacno: 'Besplatno, i bez naloga',
     stevilkaDresa: ' · br. {st}',
     cena: 'cena',
     sezona: 'Sezona {sezona}',

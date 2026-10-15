@@ -42,6 +42,8 @@ import { SeznamPostavk, RazlagaCene } from '../components/Razlaga'
 import type { Pozicija } from '../lib/tipi'
 import { t, tx } from '../i18n'
 import { izvor } from '../lib/platforma'
+import { naTrgu } from '../lib/osnutek'
+import { zabeleziKorak } from '../lib/lijak'
 import { prevediNapako } from '../lib/napake'
 import { NalaganjeZaBralnik, Skelet } from '../components/Skelet'
 
@@ -52,6 +54,8 @@ type Profil = Record<string, any> & {
   team_id?: number | null
   position?: Pozicija | null
   full_name?: string | null
+  active?: boolean | null
+  izstopil_at?: string | null
 }
 
 /** Številke tekoče sezone (`player_season_standings`). */
@@ -477,6 +481,18 @@ export default function Igralec() {
           <RazlagaCene cena={igralec.value} izhodisce={izhodisce} />
         </div>
       </div>
+
+      {/* Deljena povezava na igralca vodi v igro: dodaj ga v svojo ekipo (tudi brez računa). */}
+      {slugLige && naTrgu(igralec) && !String(igralec.full_name ?? '').startsWith('#') && (
+        <Link
+          to={zLigo(`/my-team?dodaj=${igralec.id}`, slugLige)}
+          onClick={() => zabeleziKorak('igralec_cta')}
+          className="gumb-glavni w-full flex-col"
+        >
+          <span>{t('igralci.profil.vEkipo')}</span>
+          <span className="text-xs font-normal opacity-80">{t('igralci.profil.vEkipoBrezplacno')}</span>
+        </Link>
+      )}
 
       {/* prevzem profila: značka in predstavitev potrjenega igralca, "To sem jaz" */}
       <PrevzemIgralca
