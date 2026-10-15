@@ -5508,7 +5508,14 @@ preveri(
     if (/game_number=1002&/.test(url)) return beri('gr-mascot-tekma-epsachaias-1002-brez-klopi.html')
     return '<html><body>vzdrževanje</body></html>'
   }
+  // Prazna mapa: vir pogleda čas shrambe strani in ne sme brati predpomnilnika razvijalca.
+  const mapaA = mkdtempSync(`${tmpdir()}/slff-mascot-a-`)
+  const prejA = process.env.SLFF_MASCOT_MAPA
+  process.env.SLFF_MASCOT_MAPA = mapaA
   const zs = await V.zapisniki(kodaA, prenesiA, { danes: Date.parse('2026-10-15T12:00:00Z') })
+  if (prejA === undefined) delete process.env.SLFF_MASCOT_MAPA
+  else process.env.SLFF_MASCOT_MAPA = prejA
+  rmSync(mapaA, { recursive: true, force: true })
   const prvi = zs[0]
   preveri('mascot: zapisniki lige — šifra, krog in klubi z razporeda', zs.length === 1 && prvi.id === 'gr-ach-2026-1002' && prvi.z.krog === 1 &&
     prvi.z.domaci.ime === 'ΑΝΑΓΕΝΝΗΣΗ ΠΑΤΡΩΝ' && prvi.url === 'https://www.epsachaias.gr/game.asp?game_number=1002&match_date=27.09.2026')
@@ -5536,6 +5543,64 @@ preveri(
   const o4 = k4?.tekme.find((x) => x.domaci === 'ΟΜΟΝΟΙΑ ΣΤΑΥΡΟΥΠΟΛΗΣ')
   preveri('mascot: razpored — datum in ura neodigrane tekme s strani tekme (ljubljanski čas), krog ni ocenjen', o4?.datum === '2026-10-17' && o4.ura === '15:30' &&
     k4.ocenjen === false && k4.tekme.length === 7 && razpored[0].tekme.every((x) => x.odigrana) && razpored.find((x) => x.stevilka === 5)?.ocenjen === true)
+
+  // Številka tekme se vsako sezono ponovi: datoteka strani tekme nosi sezono,
+  // sicer bi stara stran (s postavami) obveljala za letošnjo tekmo.
+  preveri('mascot: ime datoteke strani tekme ima sezono (kot šifra zapisnika)', M.imeTekme('epsm.gr', 2018, '2026-10-10') === 'mascot-tekma-mak-2026-2018.html' &&
+    M.imeTekme('epsm.gr', 2018, '2027-04-10') === M.imeTekme('epsm.gr', 2018, '2026-10-10') && M.imeTekme('epsm.gr', 2018, '2027-10-10') === 'mascot-tekma-mak-2027-2018.html')
+  // Podaljšek, kot ga strani pišejo: "45' +1 ΙΜΕ" (strelec) in "90' +2 A - B" (menjava).
+  const s1002 = beri('gr-mascot-tekma-epsachaias-1002-brez-klopi.html')
+  const zpod = M.vZapisnik(s1002.replace("39' ΣΠΥΡΟΥ ΑΝΤΩΝΙΟΣ", "45' +1 ΣΠΥΡΟΥ ΑΝΤΩΝΙΟΣ"), { domena: 'epsachaias.gr' })
+  const zpm = M.vZapisnik(beri('gr-mascot-tekma-epsm-2018.html').replace("61' ΚΑΤΣΩΡΑΣ Ε. - ΚΑΡΑΜΠΟΥΤΗΣ Μ.", "45' +2 ΚΑΤΣΩΡΑΣ Ε. - ΚΑΡΑΜΠΟΥΤΗΣ Μ."), { domena: 'epsm.gr' })
+  preveri('mascot: podaljšek "45\' +1 ΙΜΕ" — strelec v 45., menjava "45\' +2 A - B" v 45.', zpod.goli.find((g) => g.ime === 'ΣΠΥΡΟΥ ΑΝΤΩΝΙΟΣ')?.minuta === 45 &&
+    zpod.goli.length === 4 && zpod.opozorila.length === 0 && M.nastopi(zpm).find((x) => x.ime === 'ΚΑΡΑΜΠΟΥΤΗΣ Μ.')?.minutaOd === 45 && zpm.opozorila.length === 0 &&
+    M.glavaTekme(s1002.replace("39' ΣΠΥΡΟΥ ΑΝΤΩΝΙΟΣ", "45+1' ΣΠΥΡΟΥ ΑΝΤΩΝΙΟΣ")).strelci[1].find((x) => x.ime === 'ΣΠΥΡΟΥ ΑΝΤΩΝΙΟΣ')?.minuta === 45)
+
+  // Svežina shranjene strani tekme: po času shrambe, ne po starosti tekme.
+  {
+    const { writeFileSync, utimesSync } = await import('node:fs')
+    const mapaZ = mkdtempSync(`${tmpdir()}/slff-mascot-z-`)
+    const prejZ = process.env.SLFF_MASCOT_MAPA
+    process.env.SLFF_MASCOT_MAPA = mapaZ
+    const ime1002 = 'mascot-tekma-ach-2026-1002.html'
+    const zagon = async (stran, { danes = '2026-10-15', sveza = s1002 } = {}) => {
+      const k = []
+      const zz = await V.zapisniki(kodaA, async (url, ime, sveze) => {
+        k.push({ url, ime, sveze })
+        if (ime === M.imeRazporeda(kodaA)) return ra
+        if (/game_number=1002&/.test(url)) return sveze ? sveza : stran
+        return '<html><body>vzdrževanje</body></html>'
+      }, { danes: Date.parse(`${danes}T12:00:00Z`) })
+      return { zz, k: k.filter((x) => /1002&/.test(x.url)) }
+    }
+    try {
+      const a = await zagon(s1002)
+      // Stran, shranjena dan po tekmi (pred koncem treh dni), morda še ni bila dokončna.
+      writeFileSync(`${mapaZ}/${ime1002}`, s1002)
+      const dan = Date.parse('2026-09-28T10:00:00Z') / 1000
+      utimesSync(`${mapaZ}/${ime1002}`, dan, dan)
+      const b = await zagon(s1002)
+      // Stran, shranjena teden po tekmi, je dokončna.
+      const teden = Date.parse('2026-10-04T10:00:00Z') / 1000
+      utimesSync(`${mapaZ}/${ime1002}`, teden, teden)
+      const c = await zagon(s1002)
+      // Goli se ne ujemajo z izidom (strelec manjka): do 45 dni beri sveže, potem ne več.
+      const brezStrelca = s1002.replace(/<span class="epsm-scorer-item">39' ΣΠΥΡΟΥ ΑΝΤΩΝΙΟΣ<\/span>/, '')
+      const d = await zagon(brezStrelca)
+      const e = await zagon(brezStrelca, { danes: '2026-11-20' })
+      // Shranjena stran pove datum lanske sezone (ista številka tekme): beri sveže.
+      const lani = await zagon(s1002.replace('<strong>27.09.2026</strong>', '<strong>28.09.2025</strong>'))
+      preveri('mascot: svežina strani tekme — vsakič ime s sezono; zgodnja shramba, neujemanje golov (do 45 dni) in tuj datum se preberejo sveže',
+        a.k.every((x) => x.ime === ime1002) && a.k.map((x) => x.sveze).join() === 'false' &&
+        b.k.map((x) => x.sveze).join() === 'true' && c.k.map((x) => x.sveze).join() === 'false' &&
+        d.k.map((x) => x.sveze).join() === 'false,true' && e.k.map((x) => x.sveze).join() === 'false' &&
+        lani.k.map((x) => x.sveze).join() === 'false,true' && lani.zz[0]?.z.datum === '2026-09-27' && !lani.zz[0]?.z.opozorila.some((o) => /klubi zapisnika/.test(o)))
+    } finally {
+      if (prejZ === undefined) delete process.env.SLFF_MASCOT_MAPA
+      else process.env.SLFF_MASCOT_MAPA = prejZ
+      rmSync(mapaZ, { recursive: true, force: true })
+    }
+  }
 
   // Zavrnitev: izziv in 403/429 ustavita uvoz (izhod 4), tudi pri strani tekme.
   let izziv = null

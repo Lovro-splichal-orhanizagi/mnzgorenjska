@@ -2878,9 +2878,13 @@ tekme), zato se razčlenjevalnik drži besedila in razredov
   fssid), druga polovica izpade, dokler ne dobi datuma.
 - **Številka tekme se vsako sezono ponovi** (vsaka liga ima svoj tisočak:
   epsm Α1 1xxx, Α 1. skupina 2xxx …; `match_date` stran prezre). Šifra
-  zapisnika je zato `gr-<zveza>-<leto začetka sezone>-<N>` (`gr-mak-2026-2018`).
+  zapisnika je zato `gr-<zveza>-<leto začetka sezone>-<N>` (`gr-mak-2026-2018`),
+  datoteka strani tekme v predpomnilniku prav tako
+  (`mascot-tekma-mak-2026-2018.html`, `imeTekme`) — brez sezone bi lanska stran
+  s postavami obveljala za letošnjo tekmo. Shranjena stran z datumom več kot tri
+  tedne od datuma razporeda se prebere sveže.
 - **Zapisnik** `game.asp`: imeni klubov, izid, strelci po ekipah ("27'
-  ΧΑΤΖΗΛΙΑΣ Π.", 95' → 90), datum in ura ("ΗΜΕΡΟΜΗΝΙΑ", "ΩΡΑ"), za vsako ekipo
+  ΧΑΤΖΗΛΙΑΣ Π.", 95' → 90; podaljšek "45' +1 ΙΜΕ" ali "45+1'" → 45), datum in ura ("ΗΜΕΡΟΜΗΝΙΑ", "ΩΡΑ"), za vsako ekipo
   seznam "NN. ΠΡΙΙΜΕΚ Ι." — **pred `<hr>` začetniki, za njim klop** (dres je
   prava številka: začetnik ima lahko 17, klop 03), nato menjave "61' ΙΖSTOP -
   VSTOP" ("ΗΜ.'" = polčas → 45). **Kartonov in asistenc ni.** Igralec v
@@ -2906,9 +2910,12 @@ tekme), zato se razčlenjevalnik drži besedila in razredov
   postav (`vir.kontumacije`). Nepopoln zapisnik (ekipa z manj kot 7
   začetniki) kot pri `frf`: izid se zapiše, `imported_at` ostane prazen.
 - **Predpomnilnik**: v predpomnilnik gre le stran z glavo tekme oziroma
-  razpored s krogi (`zaPredpomnilnik`) — vzdrževalna stran ne. Stran tekme
-  brez zapisnika ali nepopolna se do 45 dni bere sveže; popolna, starejša od
-  treh dni, nikoli več.
+  razpored s krogi (`zaPredpomnilnik`) — vzdrževalna stran ne. Prve tri dni po
+  tekmi se stran bere sveže. Shranjena stran je dokončna šele, če je bila
+  **shranjena** več kot tri dni po tekmi (čas datoteke, ne starost tekme: stran
+  z dne tekme ima lahko postave brez menjav in strelcev; GR ni v nočnem uvozu).
+  Nedokončan zapisnik (`nedokoncan`: brez postav, nepopoln, goli ≠ izid, strelca
+  ni, menjava brez para) se do 45 dni bere sveže; dokončan nikoli več.
 - **Isto ime, drug klub**: zveze so ločene piramide, klub pa je enoličen v
   državi (tudi proti viru `eps`). `IME_V_ZVEZI` (`<domena>|<ključ>` → ime s
   krajem zveze). Pregled 15. 10. 2026 (vseh 41 lig desetih domen in

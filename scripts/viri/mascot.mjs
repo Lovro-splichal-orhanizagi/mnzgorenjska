@@ -112,7 +112,16 @@ export function sifraZapisnika(domena, st, datum) {
 const zgostitev = (s) => createHash('sha1').update(String(s)).digest('hex').slice(0, 12)
 export const imeRazporeda = (koda) => `mascot-razpored-${razberiKodo(koda).zveza}-${zgostitev(koda)}.html`
 const imeLestvice = (koda) => `mascot-lestvica-${razberiKodo(koda).zveza}-${zgostitev(koda)}.html`
-export const imeTekme = (domena, st) => `mascot-tekma-${DOMENE[domena].zveza}-${st}.html`
+/**
+ * Stran tekme: `mascot-tekma-mak-2026-2018.html`. Številka tekme se vsako sezono
+ * ponovi, zato ime nosi leto začetka sezone (kot `sifraZapisnika`) — brez njega bi
+ * lanska stran s postavami obveljala za letošnjo tekmo.
+ */
+export function imeTekme(domena, st, datum) {
+  const sezona = sezonaIzDatuma(datum)
+  if (!sezona) throw new Error(`mascot: tekma ${st} (${domena}) brez datuma sezone nima imena datoteke`)
+  return `mascot-tekma-${DOMENE[domena].zveza}-${sezona.slice(0, 4)}-${st}.html`
+}
 
 // --- pomožno -------------------------------------------------------------------------
 
@@ -158,7 +167,7 @@ export function vLjubljanskiCas(datum, ura) {
   return { datum: d.slice(0, 10), ura: d.slice(11, 16) }
 }
 
-/** "61'" → 61, "95'" → 90, "45+2'" → 45, "ΗΜ." (ημίχρονο, polčas) → 45. */
+/** "61'" → 61, "95'" → 90, "45+2'" in "45' +2" → 45, "ΗΜ." (ημίχρονο, polčas) → 45. */
 export function minuta(s) {
   const t = String(s ?? '').trim()
   if (/^ΗΜ/i.test(t)) return 45
@@ -429,11 +438,16 @@ function igralciSeznama(html) {
   return out
 }
 
-/** Menjave "61' ΙΜΕ - ΙΜΕ" (ali "ΗΜ.' …"): [{ minuta, a, b, besedilo }]. */
+// Podaljšek strani pišejo za apostrofom ("45' +1 ΙΜΕ", 1514 in 2011 Ahaje) ali
+// pred njim ("45+1'"); minuta je osnovna (45), podaljšek odpade.
+const PODALJSEK = String.raw`(?:\+\s*\d+\s*'?)?`
+
+/** Menjave "61' ΙΜΕ - ΙΜΕ" (ali "ΗΜ.' …", "90' +2 …"): [{ minuta, a, b, besedilo }]. */
 function menjaveSeznama(html) {
   const out = []
+  const vzorec = new RegExp(String.raw`^(\d{1,3}|ΗΜ\.?)\s*'?\s*${PODALJSEK}\s*(.*?)\s*[-–](?:\s+(.*))?$`)
   for (const v of vrstice(html)) {
-    const m = v.match(/^(\d{1,3}(?:\s*\+\s*\d+)?|ΗΜ\.?)\s*'?\s*(.*?)\s*[-–](?:\s+(.*))?$/)
+    const m = v.match(vzorec)
     if (m && (m[2] || m[3])) out.push({ minuta: minuta(m[1]), a: imeIgralca(m[2] ?? ''), b: imeIgralca(m[3] ?? ''), besedilo: v })
   }
   return out
@@ -462,7 +476,8 @@ export function glavaTekme(html) {
   if (!izid && r) izid = { domaci: Number(r[1]), gostje: Number(r[2]) }
   const strelci = [...s.matchAll(/class="(?:epsm-hero-scorer-list|epsm-scorers)"[^>]*>([\s\S]*?)<\/div>/g)].map((m) =>
     vrstice(m[1].replace(/<\/span>/g, '<br>'))
-      .map((v) => v.match(/^(\d{1,3}(?:\s*\+\s*\d+)?|ΗΜ\.?)\s*'\s*(.+)$/))
+      // Strelec ima apostrof vedno: "27'", "45+1'", "45' +1".
+      .map((v) => v.match(new RegExp(String.raw`^(\d{1,3}|ΗΜ\.?)\s*(?:'\s*${PODALJSEK}|\+\s*\d+\s*')\s*(.+)$`)))
       .filter(Boolean)
       .map((x) => ({ minuta: minuta(x[1]), ime: imeIgralca(x[2]) })),
   )
@@ -763,17 +778,21 @@ async function datumiNeodigranih(koda, tekme, prenesi, danes) {
       if (t && !t.igra) t.igra = n.igra
     }
   }
+  // Sezona razporeda (tekma brez datuma je iz iste sezone kot ostale).
+  const datumSezone = tekme.find((t) => t.datum)?.datum ?? new Date(danes).toISOString().slice(0, 10)
+  const sezona = sezonaIzDatuma(datumSezone)
   for (const t of brez.filter((x) => krogi.includes(x.krog) && x.igra)) {
-    const ime = imeTekme(domena, t.igra)
+    const ime = imeTekme(domena, t.igra, datumSezone)
     const c = izPredpomnilnika(ime)
     let html = c?.html
     let g = html ? glavaTekme(html) : null
-    if (!g || g.izid || c.starost > najvecStarostNeodigrane(g.datum, danes)) {
+    if (!g || g.izid || c.starost > najvecStarostNeodigrane(g.datum, danes) || (g.datum && sezonaIzDatuma(g.datum) !== sezona)) {
       html = await beri(prenesi, naslovTekme(domena, t.igra), ime, true)
       g = glavaTekme(html)
       if (g) vPredpomnilnik(ime, html)
     }
     if (!g || kljucKlubaGr(g.domaci) !== kljucKlubaGr(t.domaci) || kljucKlubaGr(g.gostje) !== kljucKlubaGr(t.gostje)) continue
+    if (g.datum && sezonaIzDatuma(g.datum) !== sezona) continue
     t.datum = g.datum
     t.ura = g.ura
   }
@@ -806,6 +825,13 @@ export function krogiZDatumi(tekme) {
   }
   return krogi.filter((k) => k.datum)
 }
+
+// Stran tekme, katere datum je od datuma razporeda dlje od treh tednov, ni ta tekma.
+const TUJ_DATUM_DNI = 21
+// Opozorila, po katerih zapisnik morda še ni dokončan (klub ga še vnaša).
+const NEDOKONCAN = /se ne ujemajo z izidom|strelca ni v zapisniku|vpisan le (?:izstop|vstop)|ne vem, kdo gre ven|brez minute/
+/** Zapisnik, ki ga je vredno prebrati znova: brez postav, nepopoln, goli ≠ izid, menjava brez para. */
+export const nedokoncan = (z) => !z || !!z.nepopoln || z.opozorila.some((o) => NEDOKONCAN.test(o))
 
 /** Tekma z izidom brez borbe (α.α., izstop) ali brez strani tekme je kontumacija. */
 const jeKontumacija = (t) => !!t.izid && (t.brezBorbe || !t.igra)
@@ -871,18 +897,29 @@ const vir = {
     const out = []
     for (const t of tekme.filter((x) => x.izid && x.igra && !x.brezBorbe)) {
       const url = naslovTekme(domena, t.igra, t.datum)
-      const ime = imeTekme(domena, t.igra)
+      const ime = imeTekme(domena, t.igra, t.datum)
       const id = sifraZapisnika(domena, t.igra, t.datum)
-      // Zapisnik zadnjih treh dni se lahko še popravlja; nepopolnega (ali brez
-      // postav) beremo sveže do 45 dni, starejšega popolnega ne beremo znova.
+      // Zapisnik zadnjih treh dni se lahko še popravlja. Shranjena stran velja
+      // za dokončno le, če je bila prebrana več kot tri dni po tekmi (čas
+      // shrambe, ne starost tekme: stran z dne tekme ima lahko postave brez
+      // menjav in strelcev). Nedokončanega (brez postav, nepopolnega, goli ne
+      // ustrezajo izidu, menjava brez para) beremo sveže do 45 dni.
       const star = starostDni(t.datum, danes)
-      let html = await beri(prenesi, url, ime, star <= 3)
+      const c = star > 3 ? izPredpomnilnika(ime) : null
+      const sveze = star <= 3 || (c != null && starostDni(t.datum, Date.now() - c.starost) <= 3)
+      let html = await beri(prenesi, url, ime, sveze)
       let z = vZapisnik(html, { id, url, domena })
-      if ((!z || z.nepopoln) && star > 3 && star <= 45) {
+      const tujDatum = () => {
+        const d = glavaTekme(html)?.datum
+        return !!d && Math.abs(starostDni(t.datum, Date.parse(`${d}T00:00:00Z`))) > TUJ_DATUM_DNI
+      }
+      // Shranjena stran z datumom daleč od razporeda je druga tekma (ista številka lani).
+      if (!sveze && (tujDatum() || (star <= 45 && nedokoncan(z)))) {
         html = await beri(prenesi, url, ime, true)
         z = vZapisnik(html, { id, url, domena })
       }
       if (!z) continue
+      if (tujDatum()) z.opozorila.push(`datum zapisnika ${glavaTekme(html).datum} je daleč od datuma razporeda ${t.datum}`)
       const g = glavaTekme(html)
       if (kljucKlubaGr(g.domaci) !== kljucKlubaGr(t.domaci) || kljucKlubaGr(g.gostje) !== kljucKlubaGr(t.gostje))
         z.opozorila.push(`klubi zapisnika (${g.domaci} : ${g.gostje}) niso klubi razporeda (${t.domaci} : ${t.gostje})`)
@@ -912,7 +949,7 @@ const vir = {
         const i = t.izidVira
         if (!i || !t.mascotIgra || !t.datum || t.datum > teden || t.kontumacija) continue
         if (!((i.domaci === 3 && i.gostje === 0) || (i.domaci === 0 && i.gostje === 3))) continue
-        const html = await prenesiKrog(naslovTekme(domena, t.mascotIgra, t.datum), imeTekme(domena, t.mascotIgra), t.datum)
+        const html = await prenesiKrog(naslovTekme(domena, t.mascotIgra, t.datum), imeTekme(domena, t.mascotIgra, t.datum), t.datum)
         if (jeIzziv(html)) throw new MascotZavrnitev(`mascot: ${naslovTekme(domena, t.mascotIgra)} vrne izziv (CAPTCHA)`)
         if (jeStranTekme(html) && !vZapisnik(html, { domena })) out.push({ krog: k.stevilka, domaci: t.domaci, gostje: t.gostje })
       }
