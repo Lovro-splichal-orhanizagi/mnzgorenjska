@@ -44,6 +44,7 @@ export const aplikacija = {
   noga: {
     zasebnost: 'Zasebnost in pogoji',
     facebook: 'Sledi nam na Facebooku',
+    instagram: 'Sledi nam na Instagramu',
     /** Povezavi na aplikacijo v trgovinah (Trgovine.tsx). */
     android: 'Aplikacija za Android',
     iphone: 'Aplikacija za iPhone',

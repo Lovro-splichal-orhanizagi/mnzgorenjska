@@ -37,6 +37,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
   noga: {
     zasebnost: 'Privacidad y condiciones',
     facebook: 'Síguenos en Facebook',
+    instagram: 'Síguenos en Instagram',
     android: 'App para Android',
     iphone: 'App para iPhone',
     vir: 'Datos: actas oficiales de <vir>{ime}</vir>',
