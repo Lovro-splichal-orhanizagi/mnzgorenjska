@@ -16,6 +16,7 @@ export type KorakLijaka =
   | 'osnutek_brez_prijave'
   | 'osnutek_shranjen'
   | 'igralec_cta'
+  | 'kartica_deljena'
 
 export function zabeleziKorak(korak: KorakLijaka) {
   const kljuc = `slff-lijak-${korak}-${new Date().toISOString().slice(0, 10)}`

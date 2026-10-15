@@ -29,8 +29,8 @@ import ZnakPreverjen from '../components/ZnakPreverjen'
 import PrevzemIgralca from '../components/PrevzemIgralca'
 import UradneOdsotnostiIgralca from '../components/UradnaOdsotnost'
 import KarticaIgralca from '../components/KarticaIgralca'
-import { useFotografija } from '../lib/prevzem'
-import { dosezkiNastopa } from '../lib/karticaIgralca'
+import { jeMladinskiSlug, useFotografija } from '../lib/prevzem'
+import { dosezkiNastopa, odstotekIzbranosti } from '../lib/karticaIgralca'
 import {
   VRSTE,
   VrsticaPorocila,
@@ -104,6 +104,10 @@ export default function Igralec() {
   const [nalaganje, setNalaganje] = useState(true)
   // Za kartico: v koliko ekipah je igralec.
   const [ekipZIgralcem, setEkipZIgralcem] = useState<number | null>(null)
+  // Imenovalec izbranosti na kartici: človeške ekipe lige (kot stran Igralci).
+  const [ekipVLigi, setEkipVLigi] = useState<number | null>(null)
+  // Potrjeni lastnik profila deli "svojo" kartico.
+  const [jeLastnik, setJeLastnik] = useState(false)
   // "Ime Priimek (Klub)": isto ime v drugem klubu je drug igralec.
   useNaslov(
     igralec
@@ -238,6 +242,14 @@ export default function Igralec() {
           : null,
       )
       setEkipZIgralcem(ss?.owners != null ? Number(ss.owners) : null)
+      supabase
+        .from('fantasy_teams')
+        .select('id', { count: 'exact', head: true })
+        .eq('competition_id', ligaId)
+        .eq('hisna', false)
+        .then(({ count }) => {
+          if (!preklican) setEkipVLigi(count ?? null)
+        })
       // Brez letošnjega nastopa igralec v player_season_standings nima vrstice,
       // v ekipah pa je lahko vseeno. Le takrat vprašamo player_standings (z
       // ligo v filtru) — mimo nalaganja, ker kartica na to ne čaka.
@@ -421,6 +433,13 @@ export default function Igralec() {
   const slugLige = vsaTekmovanja.find((tm) => tm.id === igralec.competition_id)?.slug
   const vLigo = slugLige ? `?t=${encodeURIComponent(slugLige)}` : ''
 
+  const anonimiziran = String(igralec.full_name ?? '').startsWith('#')
+  // Kartice ni za mladinske lige (mladoletni) in za igralce s skritim imenom.
+  const smeKartico = !anonimiziran && !!slugLige && !jeMladinskiSlug(slugLige)
+  const povezavaKartice = smeKartico
+    ? `${izvor()}/player/${igralec.id}?t=${encodeURIComponent(slugLige)}&src=kartica`
+    : ''
+
   const zadnjaSprememba = cene[0]
   const premik = zadnjaSprememba
     ? Number(zadnjaSprememba.new_value) - Number(zadnjaSprememba.old_value)
@@ -498,7 +517,8 @@ export default function Igralec() {
       <PrevzemIgralca
         igralecId={igralec.id}
         slugLige={slugLige}
-        anonimiziran={String(igralec.full_name ?? '').startsWith('#')}
+        anonimiziran={anonimiziran}
+        naLastnika={setJeLastnik}
       />
 
       {/* številke — tekoča sezona; seštevek vseh sezon je drugotna vrstica */}
@@ -784,9 +804,11 @@ export default function Igralec() {
 
       {/* kartica za objavo — za igralca, starše in navijače; pod statistiko,
           da na telefonu ne odrine podatkov za cel zaslon */}
-      {(zadnjiNastop || (sezonsko && (sezonsko.matches ?? 0) > 0)) && (
+      {smeKartico && (zadnjiNastop || (sezonsko && (sezonsko.matches ?? 0) > 0)) && (
         <section>
-          <h2 className={NASLOV}>{t('igralci.profil.deliKartico')}</h2>
+          <h2 className={NASLOV}>
+            {jeLastnik ? t('igralci.profil.deliSvojoKartico') : t('igralci.profil.deliKartico')}
+          </h2>
           <KarticaIgralca
             podatki={{
               ime: igralec.first_name ?? '',
@@ -809,14 +831,13 @@ export default function Igralec() {
                     golov: Number(sezonsko.goals ?? 0),
                   }
                 : null,
-              ekip: ekipZIgralcem,
+              cena: igralec.value != null ? Number(igralec.value) : null,
+              premikCene: premik,
+              izbran: odstotekIzbranosti(ekipZIgralcem, ekipVLigi),
+              naslov: povezavaKartice,
             }}
             fotografija={fotoProfila}
-            povezava={
-              typeof window !== 'undefined'
-                ? `${izvor()}/player/${igralec.id}${slugLige ? `?t=${slugLige}` : ''}`
-                : ''
-            }
+            povezava={povezavaKartice}
           />
         </section>
       )}
