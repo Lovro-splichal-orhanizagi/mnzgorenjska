@@ -119,6 +119,15 @@ export function ravenLige({ slug, name, zveza }) {
     return null
   }
 
+  // Norveška (vir nff): OBOS-ligaen je 2. raven (Eliteserien ni vpisana),
+  // "2div" 3., "3div" (Norsk Tipping-ligaen) 4., kretsove "4div" 5. in "5div" 6.
+  if (slug.startsWith('no-')) {
+    if (mladinska) return null
+    if (slug === 'no-obos') return abs(2)
+    if ((m = slug.match(/-(\d)div(-|$)/))) return abs(1 + Number(m[1]))
+    return null
+  }
+
   if (slug.startsWith('lv-')) {
     if (mladinska) return null
     if (slug === 'lv-virsliga') return abs(1)
