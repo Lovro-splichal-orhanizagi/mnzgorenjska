@@ -5370,6 +5370,105 @@ preveri(
     zavrnjen.status === 403 && A.default.zavrnitev('x', 429).zavrnitev === true)
 }
 
+// --- vir isthmian (Anglija, Isthmian / NPL / Southern League, skupni JSON) ---------
+{
+  const I = await import('./viri/isthmian.mjs')
+  const { readdirSync } = await import('node:fs')
+  const { default: viri } = await import('./viri/index.mjs')
+  const { ravenLige, koliko } = await import('./visja-liga.mjs')
+  const beri = (ime) => JSON.parse(readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8'))
+  preveri('isthmian: vir je vpisan, 3 s, User-Agent SLFF, država GB', viri.isthmian === I.default && I.default.drzava === 'GB' &&
+    I.default.imaRegistracije === false && I.default.premorMs >= 3000 && I.default.glave['User-Agent'] === 'SLFF fantasy (https://slff.eu)' &&
+    typeof I.default.fetch === 'function')
+  const k = I.razbijKodo('npl/67d7c7bb74247876e6dae40c/2026-27')
+  preveri('isthmian: šifra lige (tenant, tekmovanje, sezona) in naslovi', k.tenant === 'npl' && k.tekmovanje === '67d7c7bb74247876e6dae40c' &&
+    k.sezona === '2026/27' && k.od === '2026-07-01' && k.do === '2027-06-30' &&
+    I.naslovStrani('npl/67d7c7bb74247876e6dae40c/2026-27', 2) ===
+      'https://api.thenpl.co.uk/matches?competition=67d7c7bb74247876e6dae40c&limit=100&page=2&sort=asc&period=Custom&startDate=2026-07-01&endDate=2027-06-30' &&
+    I.default.naslovZapisnika('sfl/69d0bd99b616bafb97331d3f/2026-27', 'gb6a5a1b79ce9ef452b61f4383') === 'https://www.southern-football-league.co.uk/match/6a5a1b79ce9ef452b61f4383' &&
+    I.sifraZapisnika('6a590655ce9ef452b61f354b') === 'gb6a590655ce9ef452b61f354b' && I.imeStrani('isthmian/67d7d01f749090308acc101e/2025-26', 3) === 'seznam-isthmian_67d7d01f749090308acc101e_2025-26-3.json')
+  const slabe = ['67d7c7bb74247876e6dae40c/2026-27', 'fa/67d7c7bb74247876e6dae40c/2026-27', 'npl/67d7c7bb74247876e6dae40c/2026-28', 'npl/67d7c7bb74247876e6dae40c'].map((x) => {
+    try { I.razbijKodo(x); return null } catch (e) { return e.message }
+  })
+  preveri('isthmian: napačna šifra ustavi uvoz', slabe.every((m) => /<tenant>\/<tekmovanje>\/<LLLL-LL>/.test(m ?? '')))
+  preveri('isthmian: glava x-tenant-id po gostitelju API-ja', I.tenantIzNaslova('https://api.isthmian.co.uk/matches?x=1') === 'isthmian' &&
+    I.tenantIzNaslova('https://api.thenpl.co.uk/matches') === 'npl' && I.tenantIzNaslova('https://api.southern-football-league.co.uk/matches') === 'sfl' &&
+    I.tenantIzNaslova('https://example.com/') === null)
+  preveri('isthmian: čas London + 1 h, minuta, krog, sezona', I.vLjubljanskiCas('2026-08-15', '15:00').ura === '16:00' &&
+    JSON.stringify(I.vLjubljanskiCas('2026-08-15', '23:30')) === JSON.stringify({ datum: '2026-08-16', ura: '00:30' }) &&
+    I.vLjubljanskiCas('2026-08-15', null).ura === null && I.minuta(94) === 90 && I.minuta(45) === 45 && I.minuta(null) === null &&
+    I.stevilkaKroga({ name: 'Match 11' }) === 11 && I.stevilkaKroga({ name: 'Round One' }) === null &&
+    I.sezonaIzDatuma('2026-08-15') === '2026/27' && I.sezonaIzDatuma('2027-04-10') === '2026/27')
+  preveri('isthmian: klubi — "&" = "and", kratko ime brez AFC/FC', I.kljucKlubaGb('Wingate & Finchley') === I.kljucKlubaGb('Wingate and Finchley') &&
+    I.kljucKlubaGb("Boldmere St Michael's") === 'boldmere st michaels' && I.kratkoImeGb('Hartpury FC') === 'Hartpury' && I.kratkoImeGb('Brentwood Town') === 'Brentwood Town')
+  preveri('isthmian: raven — Premier (step 3) nad Division (step 4) v vseh treh ligah', koliko(ravenLige({ slug: 'gb-isthmian-premier' }), ravenLige({ slug: 'gb-npl-east' })) === 1 &&
+    koliko(ravenLige({ slug: 'gb-sfl-premier-south' }), ravenLige({ slug: 'gb-sfl-d1-central' })) === 1 && koliko(ravenLige({ slug: 'gb-npl-premier' }), ravenLige({ slug: 'gb-sfl-premier-central' })) === 0)
+
+  const t = beri('gb-isthmian-tekma-6a5906a7ce9ef452b61f3d92.json')
+  const z = I.vZapisnik(t)
+  const n = I.nastopi(z)
+  const minute = (nn, i) => nn.filter((x) => x.ekipaIdx === i).reduce((a, x) => a + x.minute, 0)
+  const ena = (ime) => n.find((x) => x.ime === ime)
+  preveri('isthmian: glava — klubi, izid, polčas, datum, ura (Ljubljana), krog, sezona', z.domaci.ime === 'Chatham Town' && z.gostje.ime === 'Three Bridges' &&
+    z.rezultat.domaci === 3 && z.rezultat.gostje === 1 && z.polcas.domaci === 1 && z.datum === '2026-08-15' && z.ura === '16:00' && z.krog === 3 &&
+    z.sezona === '2026/27' && z.zapisnikId === 'gb6a5906a7ce9ef452b61f3d92')
+  preveri('isthmian: 11 + 11, klop, vratar (GK), kapetan, šifra osebe, "Priimek Ime", brez opozoril', z.domaci.postava.length === 11 && z.gostje.postava.length === 11 &&
+    z.domaci.rezerve.length === 5 && z.gostje.rezerve.length === 5 && n.filter((x) => x.vratar && x.zacetnik).length === 2 &&
+    ena('Harvey Nathan')?.pozicija === 'GK' && ena('Butler Reece')?.kapetan && n.every((x) => Number.isSafeInteger(x.regSt)) && z.opozorila.length === 0)
+  preveri('isthmian: goli = izid, 11 m, menjave z minuto, vstop in izstop rezerve (94. → 90.)', z.goli.length === 4 && z.goli.filter((g) => g.enajstmetrovka).length === 1 &&
+    ena('Stevenson Brad')?.goliIzEnajstmetrovke === 1 && ena('Stevenson Brad')?.minute === 75 && z.menjave.length === 7 &&
+    ena('Oldfield Stanley')?.minutaOd === 76 && ena('Oldfield Stanley')?.minute === 14 && ena('Olugbodi Dapo')?.minute === 0 && ena('Allen Ben')?.goli === 1)
+  preveri('isthmian: rdeči rezervi — nastop do izključitve, ekipa 983 minut', z.rdeci.length === 1 && ena('Garlinge Kian')?.rdeci === 1 &&
+    ena('Garlinge Kian')?.minute === 18 && z.rumeni.length === 8 && minute(n, 0) === 983 && minute(n, 1) === 990)
+
+  const rd = I.vZapisnik(beri('gb-isthmian-tekma-rdeci-6a590693ce9ef452b61f3bdb.json'))
+  const nrd = I.nastopi(rd)
+  preveri('isthmian: drugi rumeni in rdeči — 1 rumeni + rdeči, ekipa z dvema izključenima', rd.rdeci.length === 2 && rd.rdeci.every((r) => r.ekipaIdx === 0 && r.minuta === 45) &&
+    nrd.find((x) => x.ime === 'Hart Sonny')?.minute === 45 && nrd.find((x) => x.ime === 'Tanimowo Ayo')?.minute === 45 && minute(nrd, 0) === 900 &&
+    rd.goli.length === 3 && rd.opozorila.length === 0)
+  const ag = I.vZapisnik(beri('gb-isthmian-tekma-avtogol-6a590696ce9ef452b61f3c1b.json'))
+  preveri('isthmian: avtogol ("own-goal", strelec N/A) šteje nasprotniku', ag.goli.length === 1 && ag.goli[0].avtogol && ag.goli[0].ekipaIdx === 0 &&
+    ag.goli[0].ime === null && ag.rezultat.gostje === 1 && ag.opozorila.length === 0 && I.nastopi(ag).every((x) => x.avtogoli === 0))
+  const na = I.vZapisnik(beri('gb-isthmian-tekma-neznan-strelec-6a590638ce9ef452b61f32f1.json'))
+  const nna = I.nastopi(na)
+  preveri('isthmian: strelec "N/A" — gol ekipe brez strelca, "N/A" na klopi ni igralec', na.goli.length === 5 && na.goli.filter((g) => g.ime === null).length === 1 &&
+    na.goli.find((g) => g.ime === null).ekipaIdx === 0 && !na.goli.find((g) => g.ime === null).avtogol && na.gostje.rezerve.length === 4 &&
+    !nna.some((x) => /N\/A/.test(x.ime)) && na.opozorila.length === 0)
+  const pr = I.vZapisnik(beri('gb-isthmian-tekma-prazen-6a574c49ce9ef452b61f20c7.json'))
+  preveri('isthmian: odigrana brez postav (SFL 2025/26) — nepopoln in prazen, brez nastopov', pr.nepopoln && pr.prazen && pr.opozorila[0].startsWith(I.NEPOPOLN) &&
+    I.nastopi(pr).length === 0 && pr.rezultat.domaci === 6 && !I.jeKontumacija(beri('gb-isthmian-tekma-prazen-6a574c49ce9ef452b61f20c7.json')))
+  preveri('isthmian: kontumacija le 3:0 / 0:3 brez postav, starejša od tedna', I.jeKontumacija({ status: 'FullTime', date: '2026-09-01', score: { current: { home: 3, away: 0 } }, homeLineup: [], awayLineup: [] }, Date.parse('2026-10-15')) &&
+    !I.jeKontumacija({ status: 'FullTime', date: '2026-10-12', score: { current: { home: 3, away: 0 } }, homeLineup: [], awayLineup: [] }, Date.parse('2026-10-15')) &&
+    !I.jeKontumacija(t, Date.parse('2026-10-15')))
+
+  const s = beri('gb-isthmian-stran-north-2026-27.json')
+  const krogi = I.razcleniRazpored(s.items, Date.parse('2026-10-15'))
+  const k1 = krogi.find((x) => x.stevilka === 1)
+  preveri('isthmian: razpored — krog "Match N", 11 tekem, odigrana, ura, prestavljena', krogi.map((x) => x.stevilka).join(',') === '1,5,9,20' &&
+    k1.tekme.length === 11 && k1.tekme.filter((x) => x.odigrana).length === 10 && k1.tekme[0].datum === '2026-08-08' && k1.tekme[0].ura === '16:00' &&
+    k1.tekme.at(-1).datum === '2026-11-10' && !k1.tekme.at(-1).odigrana && krogi.every((x) => x.tekme.every((y) => !y.kontumacija)))
+  const k9 = krogi.find((x) => x.stevilka === 9)
+  preveri('isthmian: prekinjena tekma s ponovitvijo v istem krogu — le ponovitev; preložena ostane neodigrana',
+    k9.tekme.length === 1 && k9.tekme[0].datum === '2026-11-03' && !k9.tekme[0].odigrana &&
+    krogi.find((x) => x.stevilka === 5).tekme[0].domaci === 'Grays Athletic' && !krogi.find((x) => x.stevilka === 5).tekme[0].odigrana &&
+    I.tekmeRazporeda([{ ...s.items[11], status: 'Abandoned' }]).length === 1)
+  const zs = await I.default.zapisniki('isthmian/67d7d0c1749090308acc1021/2026-27', async () => JSON.stringify(s))
+  preveri('isthmian: zapisniki iz strani seznama — le odigrane, sezona iz šifre, povezava na stran tekme', zs.length === 10 &&
+    zs.every((x) => x.z.sezona === '2026/27' && x.id.startsWith('gb') && x.url.startsWith('https://www.isthmian.co.uk/match/')))
+  preveri('isthmian: vzorci brez sodnikov in osebja', !/referee|manager|scoreHistory/i.test(
+    readdirSync(new URL('./vzorci/', import.meta.url)).filter((x) => x.startsWith('gb-isthmian')).map((x) => readFileSync(new URL(`./vzorci/${x}`, import.meta.url), 'utf8')).join('')))
+
+  let izziv = null
+  try { await I.default.zapisniki('isthmian/67d7d0c1749090308acc1021/2026-27', async () => '<title>Just a moment...</title>') } catch (e) { izziv = e }
+  let zavrnjen = null
+  try { await I.default.zapisniki('isthmian/67d7d0c1749090308acc1021/2026-27', async () => { const e = new Error('403'); e.status = 403; throw e }) } catch (e) { zavrnjen = e }
+  let html = null
+  try { await I.default.zapisniki('isthmian/67d7d0c1749090308acc1021/2026-27', async () => '<!doctype html><html></html>') } catch (e) { html = e }
+  preveri('isthmian: 403 in izziv vržeta IsthmianZavrnitev (uvoz izhod 4), HTML namesto JSON ustavi', izziv instanceof I.IsthmianZavrnitev &&
+    zavrnjen instanceof I.IsthmianZavrnitev && zavrnjen.status === 403 && I.default.zavrnitev('x', 429).zavrnitev === true &&
+    /ni vrnil JSON/.test(html?.message ?? ''))
+}
+
 // --- vir fsb (Srbija, Fudbalski savez Beograda) ---------------------------------
 {
   const F = await import('./viri/fsb.mjs')

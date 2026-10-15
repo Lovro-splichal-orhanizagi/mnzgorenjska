@@ -110,6 +110,12 @@ export function ravenLige({ slug, name, zveza }) {
     const r = { tercera: 1, primera: 2 }[slug.split('-')[2]]
     return r ? { raven: r, obmocje: 'es-as', drzavna: false, mladinska } : null
   }
+  // Anglija (vir isthmian): Premier Division vseh treh lig je step 3, ostale
+  // divizije step 4 — ista narodna piramida.
+  if (slug.startsWith('gb-')) {
+    if (mladinska) return null
+    return abs(/^gb-[a-z]+-premier(-|$)/.test(slug) ? 1 : 2)
+  }
 
   if (slug.startsWith('ee-')) {
     if (slug === 'ee-premium-liiga') return abs(1)

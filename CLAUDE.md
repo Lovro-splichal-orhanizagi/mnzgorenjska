@@ -2828,6 +2828,101 @@ Uvoz (ena za drugo, ~2 s na zapisnik — arhiv 240 zapisnikov je ~10 minut):
 `gh workflow run uvoz-lige.yml -f liga=mk-prva-mfl -f arhiv=prva-mfl-25-26 -f
 cene=true`.
 
+### Anglija — vir `isthmian`
+
+Država `GB` ("England", migracija 20261015031100): koda ISO 3166-1, ker
+`GB-ENG` (ISO 3166-2) z vezajem podre pravilo "šifra lige se začne s kodo
+države" in ker IP iz Anglije pove `GB`. **Šifra angleške lige se začne z
+`gb-`.** Vmesnika v angleščini za državo, kartice in pošte **še ni**
+(`JEZIK_DRZAVE.GB` ni vpisan), `GB` ni v matriki nočnega uvoza — oboje pred
+vklopom.
+
+Vir `isthmian` (`scripts/viri/isthmian.mjs`) bere step 3–4 angleške piramide:
+**Isthmian League, Northern Premier League (NPL) in Southern League (SFL)**,
+po štiri divizije. Vse tri tečejo na isti platformi (Streamline Content):
+stran lige (www.isthmian.co.uk, www.thenpl.co.uk,
+www.southern-football-league.co.uk) bere **javni JSON** z
+`api.<domena>/matches` in pošlje glavo `x-tenant-id: isthmian | npl | sfl` —
+brez ključa in prijave, isto kot brskalnik obiskovalca. Glava, ne gostitelj,
+izbere ligo (brez nje 400, z napačno prazen seznam); vir jo doda po
+gostitelju API-ja (`vir.fetch` → `isthmianFetch`).
+
+- **Šifra lige je `<tenant>/<tekmovanje>/<LLLL-LL>`**
+  (`npl/67d7c7bb74247876e6dae40c/2026-27`). Tekmovanje (24 hex) je **stalno
+  čez sezone**; sezono izbere `period=Custom&startDate=<L>-07-01&endDate=<L+1>-06-30`
+  (brez `period=Custom` API datum prezre in vrne obe sezoni). **Ob novi sezoni
+  se popravi le sezona v šifri.** Seznam tekmovanj (tudi pokalov) vrne
+  `GET /competitions`.
+- **Seznam je zapisnik**: `GET /matches?competition=<id>&limit=100&page=<n>&sort=asc&…`
+  vrne vse tekme sezone (~5 strani po 100, vsakič sveže) in v vsaki že vse:
+  `homeLineup`/`awayLineup` (`personId` UUID → `reg_st` kot pri hlf, dres,
+  `isCaptain`, `hasStartedMatch` = začetnik, `position` — skoraj vedno le
+  "GK" pri vratarju), `homeSubs` (minuta, `personOffId`, `personOnId` —
+  **minute so točne**, rezerva lahko gre noter in ven), `homeGoals`
+  (`goalType` normal | penalty | own-goal), `homeCards` (first_yellow_card,
+  second_yellow_card → 1 rumeni + rdeči, red_card). Minute nad 90 → 90.
+  Posebne strani zapisnika ni; povezava je `www.<domena>/match/<id>`.
+- **Avtogol** je v golih ekipe, ki ji šteje, s strelcem "N/A" in
+  `own-goal`. Strelec "N/A" pri `normal` je gol ekipe brez strelca (~1 na 30
+  tekem). "N/A" na klopi ni igralec. Gol, vpisan igralcu nasprotne ekipe, vir
+  šteje kot avtogol tega igralca (v podatkih še ni bil viden).
+- **Krog je "Match N"** (`round.name`): reža zvezinega razporeda, v kateri
+  igra vsak klub enkrat (11 tekem pri 22 klubih). Tekma, prestavljena naprej
+  ali nazaj, ostane v svoji reži — v ~11 % krogov 2026/27 je tekma odigrana
+  **več kot tri dni pred** glavnim datumom kroga (do več mesecev), zato bi
+  rok tak krog zaklenil zgodaj (rok = najzgodnejša tekma). **Pred vklopom
+  preveri roke krogov.** Prekinjena tekma (`Abandoned`) s ponovitvijo v
+  istem krogu se izpusti; brez ponovitve ostane neodigrana. `Postponed` je
+  neodigrana (datum lahko ostane star).
+- **Čas**: `date` in `time` sta londonska (`dateTime` z "Z" je isti čas,
+  napačno označen); Ljubljana = London + 1 h. Sezona avgust–maj.
+- Šifra zapisnika v bazi je `gb<id>`. Identiteta igralca je šifra osebe;
+  ime "Ime Priimek" → "Priimek Ime". Klub: `homeTeamName`, ključ z "&" =
+  "and", kratko ime iz `club.shortName` ("AFC Whyteleafe" → "Whyteleafe").
+- Kontumacije v podatkih še ni bilo; vir jo prepozna kot 3:0 / 0:3 brez
+  obeh postav, starejšo od tedna (ali stanje "Awarded"/"Walkover").
+- `ravenLige`: Premier Division vseh treh lig (step 3) nad ostalimi (step 4).
+  *Uskladi pozicije* z `vir = isthmian` (vratar po večini tekem).
+
+**Pravice (pregled 15. 10. 2026, ni pravni nasvet).** `robots.txt` na
+straneh ni (vrne aplikacijo s 200), na API-ju vrne 400 ("X-TENANT-ID not
+provided") — nič ni prepovedano, pravil za AI-robote ni. Pogojev uporabe s
+prepovedjo branja nismo našli (stran pogojev bere API s prijavo); noga
+"© … All rights reserved". **Vljudnostni mail vsem trem ligam je
+priporočljiv.** Beremo odkrito (`User-Agent: SLFF fantasy (https://slff.eu)`,
+**3 s** med zahtevki, ena liga ~5 zahtevkov na uvoz). **Ob 401, 403, 429 ali
+izzivu se uvoz ustavi (`IsthmianZavrnitev`, izhod 4) — ne obhajaj.** API ni
+dokumentiran in se lahko spremeni brez opozorila.
+
+Preizkus v živo (15. 10. 2026, vse strani vseh 12 lig, brez baze):
+
+| liga | tekoča 2026/27 | tekem | zapisnikov | goli / izidi | postav po 11 | menjav | arhiv 2025/26 |
+|---|---|---|---|---|---|---|---|
+| gb-isthmian-premier | `isthmian/67d7d01f749090308acc101e/2026-27` | 462 | 118 | 392/394 | 236/236 | 948 | `…/2025-26`: 462 zap., goli = izid, 924/924 |
+| gb-isthmian-north | `isthmian/67d7d0c1749090308acc1021/2026-27` | 462 | 115 | 393/393 | 230/230 | 873 | `…/2025-26`: 462, 924/924 |
+| gb-isthmian-south-central | `isthmian/67d7d11a749090308acc1022/2026-27` | 462 | 109 | 382/382 | 218/218 | 895 | `…/2025-26`: 462, 924/924 |
+| gb-isthmian-south-east | `isthmian/67d7d187749090308acc1023/2026-27` | 462 | 108 | 386/386 | 216/216 | 849 | `…/2025-26`: 462, 924/924 |
+| gb-npl-premier | `npl/67d7c7bb74247876e6dae40a/2026-27` | 462 | 142 | 465/465 | 284/284 | 1086 | `…/2025-26`: 420, 840/840 |
+| gb-npl-east | `npl/67d7c7bb74247876e6dae40b/2026-27` | 462 | 139 | 384/384 | 278/278 | 1056 | `…/2025-26`: 462, 924/924 |
+| gb-npl-west | `npl/67d7c7bb74247876e6dae40d/2026-27` | 462 | 138 | 458/460 | 276/276 | 1015 | `…/2025-26`: 462, 924/924 |
+| gb-npl-midlands | `npl/67d7c7bb74247876e6dae40c/2026-27` | 462 | 134 | 419/419 | 268/268 | 1012 | `…/2025-26`: 462, 924/924 |
+| gb-sfl-premier-south | `sfl/69d0bd99b616bafb97331d3f/2026-27` | 462 | 118 | 374/374 | 236/236 | 893 | **ni uporaben** |
+| gb-sfl-premier-central | `sfl/69d0bdbab616bafb97331d40/2026-27` | 462 | 119 | 348/348 | 238/238 | 898 | **ni uporaben** |
+| gb-sfl-d1-south | `sfl/69d0bdf9b616bafb97331d41/2026-27` | 462 | 114 | 340/340 | 228/228 | 834 | **ni uporaben** |
+| gb-sfl-d1-central | `sfl/69d0be24b616bafb97331d42/2026-27` | 462 | 106 | 368/368 | 212/212 | 798 | **ni uporaben** |
+
+Vratar (GK) je v vsaki postavi natanko eden. Neujemanja golov so tekme
+prejšnjega večera (zapisnik se še dopolnjuje). **Arhiv SFL 2025/26 ni
+uporaben**: tekmovanja so bila za 2026/27 prenesena na platformo, lanski
+podatki imajo ekipe "P"/"p", 16 "začetnikov" in večino tekem brez postav
+(Premier South 135 zapisnikov, goli = izid 26) — SFL dobi cene le iz tekoče
+sezone. Starejše sezone (od 2018) so po raziskavi brez menjav — ne uvažaj.
+
+Uvoz (ena za drugo, **šele po vljudnostnem mailu ligam**): `gh workflow run
+uvoz-lige.yml -f liga=gb-isthmian-premier -f
+arhiv=isthmian/67d7d01f749090308acc101e/2025-26 -f cene=true`; SFL brez
+`arhiv`. Liga je ~10 zahtevkov po 3 s.
+
 ### Država obiskovalca
 
 Domena je ena, **lige druge države so skrite**: `useTekmovanje().tekmovanja`
