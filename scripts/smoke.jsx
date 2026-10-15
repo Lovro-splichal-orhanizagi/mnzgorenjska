@@ -5660,6 +5660,10 @@ preveri(
     zTekma instanceof U.UplZavrnitev && !(z500 instanceof U.UplZavrnitev) && U.default.zavrnitev('x', 429).zavrnitev === true)
   const brezSezone = await ujemi(() => U.default.razporedVseStrani('428', async () => beri('ua-upl-koledar-432.html')))
   preveri('upl: koledar brez iskanega prvenstva ustavi uvoz', /brez tekem ali sezone/.test(brezSezone?.message ?? ''))
+  // Pravi `prenesi` uvoza razporeda: 401 pred `beri` vira ne sme pasti v shranjeni razpored.
+  const uvozRazporedaUpl = readFileSync(new URL('./uvoz-razporeda.mjs', import.meta.url), 'utf8')
+  preveri('upl: uvoz razporeda ob 401 ne vzame shranjenega koledarja (zavrnitev, izhod 4)',
+    /vir\.zavrnitev && \[401, 403, 429\]\.includes\(e\.status\)\)+ throw vir\.zavrnitev/.test(uvozRazporedaUpl))
 }
 
 // --- vir fsb (Srbija, Fudbalski savez Beograda) ---------------------------------

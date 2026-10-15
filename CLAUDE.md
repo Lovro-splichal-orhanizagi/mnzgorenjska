@@ -2975,7 +2975,11 @@ uvoz velja isto kot pri `pfl-ua` — pred vklopom.
   ("Полісся-2", "Колос-2", "Олександрія-2" …) imajo svoj ključ, "Металіст 1925"
   (UPL) in "Металіст" (PFL) sta dva kluba z dvema ključema. "Рух" v Drugi ligi A
   2026/27 (PFL teamId 1484) nosi isti grb kot UPL Рух (Lviv) in deli zapis
-  kluba. `IME_KLUBA` v viru je prazen; ob novi sezoni preveri trke znova.
+  kluba: stran ekipe na pfl.ua je "Рух (Львів)", ustanovljen 2003, Arena Lviv,
+  fcruhlviv.com — isti klub, ne drug. Kader so mladinci (letniki 2007–2010),
+  a prve ekipe Ruha 2026/27 ni ne v UPL ne v Perši ligi, zato to ni druga
+  ekipa ob prvi (pregled 15. 10. 2026; če se prva ekipa vrne, dobi PFL
+  ekipa ime "Рух-2" v `IME_KLUBA` pfl-ua). `IME_KLUBA` v viru je prazen; ob novi sezoni preveri trke znova.
 - **Cena iz višje lige** ne seže med `upl` in `pfl-ua` (šifre oseb so last
   vira); `ravenLige` ima `ua-upl` vseeno na ravni 1.
 
