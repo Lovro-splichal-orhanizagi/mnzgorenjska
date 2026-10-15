@@ -2302,7 +2302,10 @@ javne strani ne potrebujemo po robots.txt); če nas prosijo, naj nehamo,
   so prišli njeni klubi (`zdruziFaze`, kot `oefb`), zato sta obe skupini
   kroga 23–27. Izpadni deli (Lengjudeild *Umspil*, *5. deild - Úrslit*)
   nimajo krogov ("Umferð") in se ne pripnejo — 5. deild Úrslit meša klube
-  skupin A in B (kot nadstavba Plzeň-jih), zato ni vpisan.
+  skupin A in B (kot nadstavba Plzeň-jih), zato ni vpisan. Poznejša faza s
+  klubom, ki ga prejšnje faze nimajo, ali brez skupnega kluba uvoz ustavi;
+  faza še brez tekem ne doda ničesar. Zapisnik tekmovanja, ki ni faza iz
+  razporeda (povezava v glavi), uvoz ustavi.
 - **Razpored**: stran kroga `?id=<id>&banner-tab=matches-and-results&toggle=rounds&round=<n>`;
   prva stran (brez `round`) da izbirnik "Umferð N" (koliko krogov je, izbran je
   tekoči) in izbirnik sezone (`<option selected>` "2026 - 2. deild karla 2026"
@@ -2336,7 +2339,11 @@ javne strani ne potrebujemo po robots.txt); če nas prosijo, naj nehamo,
   vrne HTTP 500 (Haukar : Kári 2026 `7053260`, KA : Stjarnan `7041329`,
   Valur : Breiðablik `7041365`; privzeti zavihek dela). Vir tako tekmo
   izpusti z opozorilom (tekma ostane brez zapisnika, preverba jo javi), ob več
-  kot petini (najmanj 6) pa uvoz ustavi — to bi bila sprememba vira.
+  kot petini (najmanj 6) pa uvoz ustavi — to bi bila sprememba vira. Tudi
+  `kontumacije` tako tekmo preskoči (prej je ena 500 odnesla vse kontumacije
+  lige). Strani napake (500, 404) nosijo zavihek `banner-tab=report`, glave
+  tekme (`match-banner`) pa ne — `zaPredpomnilnik` zahteva glavo, da stran
+  napake s statusom 200 ne obvelja za zapisnik ali kontumacijo.
 - **Kontumacija**: tekma z izidom 3:0 ali 0:3, starejša od tedna, katere
   zapisnik nima postav (`vir.kontumacije`, kot `lff`). Stran tekme takrat
   pod izidom piše "<klub> mættu ekki til leiks." (Einherji : Fálkar 3:0,

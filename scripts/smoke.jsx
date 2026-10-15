@@ -5382,8 +5382,8 @@ preveri(
   preveri('ksi: rdeči "0´" (po tekmi) ne skrajša minut', po.rdeci.length === 3 && minute(poN, 0) === 990 && minute(poN, 1) === 990 &&
     poN.find((x) => x.ime === 'Gröndal Rikharður Smári')?.minute === 90 && po.opozorila.length === 0)
   preveri('ksi: zf faze — Efri in Neðri hluti za osnovnim delom (23.–27. krog)', (() => {
-    const f = (krogov, klubi, leto = '2026') => ({ leto, tekme: Array.from({ length: krogov }, (_, i) => ({ krog: i + 1, domaciId: klubi[0], gostjeId: klubi[1] })) })
-    const { tekme } = K.zdruziFaze([f(22, ['1', '2']), f(5, ['1', '3']), f(5, ['2', '4'])])
+    const f = (krogov, klubi, leto = '2026') => ({ leto, tekme: Array.from({ length: krogov }, (_, i) => ({ krog: i + 1, domaciId: klubi[(2 * i) % klubi.length], gostjeId: klubi[(2 * i + 1) % klubi.length] })) })
+    const { tekme } = K.zdruziFaze([f(22, ['1', '2', '3', '4']), f(5, ['1', '3']), f(5, ['2', '4'])])
     return tekme.filter((x) => x.faza === 1).map((x) => x.krog).join() === '23,24,25,26,27' &&
       tekme.filter((x) => x.faza === 2)[0].krog === 23 && tekme.filter((x) => x.faza === 0).at(-1).krog === 22
   })())
@@ -5403,6 +5403,61 @@ preveri(
   let mesane = null
   try { K.zdruziFaze([{ leto: '2026', tekme: [] }, { leto: '2025', tekme: [] }]) } catch (e) { mesane = e.message }
   preveri('ksi: faze iz različnih sezon ustavijo uvoz', /različnih sezon/.test(mesane ?? ''))
+
+  // Stran napake ksi.is (500 "Bilun í kerfinu okkar", 404 "Síða finnst ekki!")
+  // nosi zavihke tekme z `banner-tab=report"` — s statusom 200 ne sme v
+  // predpomnilnik in ne sme obveljati za kontumacijo (zapisnik brez postav).
+  const napaka = '<html><title>KSÍ</title><h1 class="headline-1">Bilun í kerfinu okkar</h1><a href="?id=7148573&amp;banner-tab=report" class="banner-tabs-link">Leikskýrsla</a></html>'
+  const zNapako = await K.default.kontumacije('7025600', async () => napaka, kontKrogi, '2026-10-15')
+  preveri('ksi: stran napake (200) ni zapisnik — ne gre v predpomnilnik in ni kontumacija', !K.zaPredpomnilnik(napaka) && zNapako.length === 0)
+  const dveKont = [{ stevilka: 13, tekme: [
+    { domaci: 'A', gostje: 'B', datum: '2026-07-20', izid: { domaci: 0, gostje: 3 }, ksiId: '7000001' },
+    { domaci: 'Einherji', gostje: 'Fálkar', datum: '2026-07-26', izid: { domaci: 3, gostje: 0 }, ksiId: '7148573' },
+  ] }]
+  let k500 = null
+  let k500napaka = null
+  try {
+    k500 = await K.default.kontumacije('7025600', async (url) => {
+      if (url.includes('7000001')) { const e = new Error('HTTP 500'); e.status = 500; throw e }
+      return kont
+    }, dveKont, '2026-10-15')
+  } catch (e) { k500napaka = e.message }
+  preveri('ksi: kontumacije — 500 ene tekme jo izpusti, ostale se najdejo', !k500napaka && k500?.length === 1 && k500[0].gostje === 'Fálkar')
+  let k403 = null
+  try { await K.default.kontumacije('7025600', async () => { const e = new Error('HTTP 403'); e.status = 403; throw e }, dveKont, '2026-10-15') } catch (e) { k403 = e }
+  preveri('ksi: kontumacije — 403 je zavrnitev (izhod 4), ne preskok', k403 instanceof K.KsiZavrnitev)
+
+  // Stran kroga mora kazati isto tekmovanje kot prva stran.
+  let tujKrog = null
+  try {
+    await K.default.razporedVseStrani('7025548', async (url) => {
+      const k = url.match(/[?&]round=(\d+)/)?.[1]
+      if (k === '7') return zKrogom(7).replace(/<option value="7025548" selected>/, '<option value="7025551" selected>')
+      return k ? zKrogom(Number(k)) : krog22
+    })
+  } catch (e) { tujKrog = e.message }
+  preveri('ksi: stran kroga z drugim tekmovanjem ustavi uvoz', /kaže tekmovanje 7025551, ne 7025548/.test(tujKrog ?? ''))
+
+  // Poznejša faza sme imeti le klube prejšnjih faz (Efri/Neðri hluti); mešana
+  // faza (5. deild Úrslit: A in B, Umspil z drugo ligo) ali tuja faza ustavi uvoz.
+  const fz = (krogov, pari) => ({ leto: '2026', tekme: Array.from({ length: krogov }, (_, i) => ({ krog: i + 1, domaciId: pari[i % pari.length][0], gostjeId: pari[i % pari.length][1] })) })
+  let mesana = null
+  try { K.zdruziFaze([fz(22, [['1', '2'], ['3', '4']]), fz(3, [['1', '9']])]) } catch (e) { mesana = e.message }
+  let tuja = null
+  try { K.zdruziFaze([fz(22, [['1', '2']]), fz(3, [['8', '9']])]) } catch (e) { tuja = e.message }
+  preveri('ksi: faza s klubom zunaj prejšnjih faz ali brez skupnega kluba ustavi uvoz',
+    /klub 9/.test(mesana ?? '') && /nima nobenega kluba/.test(tuja ?? '') &&
+    K.zdruziFaze([fz(22, [['1', '2']]), { leto: '2026', tekme: [] }]).tekme.length === 22)
+
+  // Zapisnik druge faze/tekmovanja (povezava na tekmovanje v glavi) ustavi uvoz.
+  let tujZapisnik = null
+  try {
+    await K.default.zapisniki('7025548', async (url) => {
+      if (url.includes('/oll-mot/')) return prenesi(url)
+      return beri('is-ksi-leikur-7053326.html').replace('href="/oll-mot/mot?id=7025548"', 'href="/oll-mot/mot?id=7025551"')
+    })
+  } catch (e) { tujZapisnik = e.message }
+  preveri('ksi: zapisnik iz drugega tekmovanja ustavi uvoz', /tekmovanja 7025551, ne 7025548/.test(tujZapisnik ?? ''))
 }
 
 // --- vir fcf (Španija, Katalonija, fcf.cat) ----------------------------------------

@@ -86,12 +86,16 @@ export const jeIzziv = (html) =>
 
 /**
  * Sme stran v predpomnilnik? Le prava stran tekmovanja (izbirnik sezone) ali
- * tekme (povezava na zavihek "Leikskýrsla"). Stran napake ali vzdrževanja s
- * statusom 200 ne sme obveljati — uvoz je ne shrani in shranjene ne bere.
+ * tekme (glava `match-banner` s klubom in zavihek "Leikskýrsla"). Stran napake
+ * ali vzdrževanja s statusom 200 ne sme obveljati — uvoz je ne shrani in
+ * shranjene ne bere. Strani napake ksi.is (500 "Bilun í kerfinu okkar", 404
+ * "Síða finnst ekki!") nosijo zavihke tekme z `banner-tab=report"`, glave
+ * tekme pa ne.
  */
 export const zaPredpomnilnik = (html) => {
   const s = String(html ?? '')
-  return /<option value="\d+" selected>/.test(s) || /banner-tab=report"/.test(s)
+  return /<option value="\d+" selected>/.test(s) ||
+    (/class="match-banner/.test(s) && /\/oll-mot\/mot\/lid\?id=\d+/.test(s) && /banner-tab=report"/.test(s))
 }
 
 /** "64´" → 64, "45+2´" → 45, "90+4´" → 90. */
@@ -205,7 +209,10 @@ export async function tekmeFaze(id, beriStran) {
     const html = krog === izbran ? prva : await beriStran(naslovKroga(id, krog), imeKroga(id, krog), krog)
     const k = krogiStrani(html)
     if (k.izbran !== krog) throw new Error(`ksi: ${naslovKroga(id, krog)} kaže krog ${k.izbran ?? '?'}, ne ${krog} — uvoz ustavljen`)
-    for (const t of tekmeStrani(html, izbrano.leto)) out.push({ ...t, krog })
+    const tu = izbranoTekmovanje(html)
+    if (tu?.id !== String(id))
+      throw new Error(`ksi: ${naslovKroga(id, krog)} kaže tekmovanje ${tu?.id ?? '?'}, ne ${id} — uvoz ustavljen`)
+    for (const t of tekmeStrani(html, izbrano.leto)) out.push({ ...t, krog, tekmovanje: String(id) })
   }
   return { leto: izbrano.leto, ime: izbrano.ime, tekme: out }
 }
@@ -213,13 +220,26 @@ export async function tekmeFaze(id, beriStran) {
 /**
  * Faze lige v eno zaporedje krogov. Krogi poznejše faze se zamaknejo za zadnji
  * krog faze, iz katere so prišli njeni klubi (Besta deild: osnovni del 1–22,
- * Efri in Neðri hluti oba 23–27).
+ * Efri in Neðri hluti oba 23–27). Poznejša faza sme imeti le klube prejšnjih
+ * faz: faza brez skupnega kluba (napačna šifra) bi dobila kroge 1..N in se
+ * pomešala z osnovnim delom, mešana (5. deild Úrslit: klubi skupin A in B,
+ * Umspil s klubom druge lige) pa bi v ligo pripeljala tuje igralce — ustavi.
+ * Faza še brez tekem (objavljena pozneje) ne doda ničesar.
  */
 export function zdruziFaze(faze) {
   const zamiki = []
   const out = []
+  const prejsnji = new Set()
   faze.forEach((f, i) => {
     const klubi = new Set(f.tekme.flatMap((t) => [t.domaciId, t.gostjeId]))
+    if (i > 0 && klubi.size) {
+      const tuji = [...klubi].filter((k) => !prejsnji.has(k))
+      if (tuji.length === klubi.size)
+        throw new Error(`ksi: faza ${i + 1} nima nobenega kluba iz prejšnjih faz — preveri šifro lige; uvoz ustavljen`)
+      if (tuji.length)
+        throw new Error(`ksi: faza ${i + 1} ima klub ${tuji.join(', ')}, ki ga prejšnje faze nimajo (mešana faza?) — uvoz ustavljen`)
+    }
+    for (const k of klubi) prejsnji.add(k)
     let zamik = 0
     for (let j = 0; j < i; j++) {
       const skupni = faze[j].tekme.some((t) => klubi.has(t.domaciId) || klubi.has(t.gostjeId))
@@ -425,11 +445,14 @@ export function vZapisnik(html, { id = null, url = null } = {}) {
   }
 
   const glava = s.match(/<span[^>]*>([^<]*)\/\s*(\d+)\.\s*umferð\s*<\/span>/)
+  // Tekmovanje tekme: edina povezava `/oll-mot/mot?id=<id>"` na strani je v glavi.
+  const tekmovanje = s.match(/href="\/oll-mot\/mot\?id=(\d+)"/)?.[1] ?? null
   const { datum, ura } = datumUra(besedilo(s.match(/<span class="body-5">([^<]*\d+\.\s*[^<\d]+\d{4}\s+\d{1,2}:\d{2}\s*)<\/span>/)?.[1]))
   const vObliko = ({ ikone: _i, polnoIme: _p, ...i }) => ({ ...i, pozicija: i.vratar ? 'GK' : null })
   return {
     zapisnikId: id,
     url,
+    tekmovanje,
     sezona: datum ? datum.slice(0, 4) : null,
     krog: glava ? Number(glava[2]) : null,
     datum,
@@ -565,6 +588,9 @@ const vir = {
         continue
       }
       if (!z) continue
+      // Zapisnik mora biti iz tekmovanja (faze), katerega razpored ga našteje.
+      if (z.tekmovanje && z.tekmovanje !== t.tekmovanje)
+        throw new Error(`ksi: zapisnik ${url} je iz tekmovanja ${z.tekmovanje}, ne ${t.tekmovanje} — uvoz ustavljen`)
       // Ime kluba, krog in sezona z razporeda, da se tekma ujame z vrstico razporeda.
       z.domaci.ime = t.domaci
       z.gostje.ime = t.gostje
@@ -593,8 +619,16 @@ const vir = {
         if (!i || !t.ksiId || !t.datum || t.datum > teden) continue
         if (!((i.domaci === 3 && i.gostje === 0) || (i.domaci === 0 && i.gostje === 3))) continue
         const url = naslovZapisnika(t.ksiId)
-        const html = await prenesiKrog(url, imeZapisnika(t.ksiId), t.datum)
-        if (jeIzziv(html)) throw new KsiZavrnitev(`ksi: ${url} vrne izziv (CAPTCHA)`)
+        let html
+        try {
+          html = await beri(prenesiKrog, url, imeZapisnika(t.ksiId), t.datum)
+        } catch (e) {
+          // Zavrnitev in izziv ustavita; vztrajna 500 ene tekme (kot pri uvozu
+          // zapisnikov) ne sme odnesti kontumacij vse lige.
+          if (e.zavrnitev || !(e.status >= 500 || e.status === 404)) throw e
+          console.log(`  ksi: zapisnik ${url} → HTTP ${e.status} — kontumacije te tekme ne preverim`)
+          continue
+        }
         if (!vZapisnik(html) && zaPredpomnilnik(html)) out.push({ krog: k.stevilka, domaci: t.domaci, gostje: t.gostje })
       }
     }
