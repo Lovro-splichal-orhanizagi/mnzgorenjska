@@ -275,7 +275,9 @@ export async function posnemi(v, jezik, url, mapa) {
   await mkdir(mapa, { recursive: true })
   const brskalnik = await chromium.launch({ headless: true })
   try {
-    const ctx = await brskalnik.newContext({ viewport: { width: 1080, height: 1350 } })
+    // Na strežniku slff.eu kaže nase (/etc/hosts), Caddy pa ima Cloudflarov izvorni certifikat,
+    // ki mu brskalnik ne zaupa. Stran beremo le z lastnega strežnika.
+    const ctx = await brskalnik.newContext({ viewport: { width: 1080, height: 1350 }, ignoreHTTPSErrors: true })
     // Statistika obiska (Umami) ne šteje robota.
     await ctx.route(/stats\.slff\.eu/, (r) => r.abort())
     await ctx.addInitScript(([vsebina, j]) => {
