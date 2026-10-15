@@ -288,6 +288,7 @@ export async function posnemi(v, jezik, url, mapa) {
     for (let i = 0; i < n; i++) {
       await stran.goto(`${url}/objava?slide=${i}`, { waitUntil: 'networkidle' })
       await stran.locator('#prosojnica').waitFor()
+      await stran.evaluate(() => document.fonts.ready)
       if (i === 0) n = Number(await stran.evaluate(() => document.documentElement.dataset.prosojnic)) || 1
       const pot = join(mapa, `${i + 1}.png`)
       await stran.locator('#prosojnica').screenshot({ path: pot })
