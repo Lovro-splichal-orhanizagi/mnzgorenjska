@@ -238,8 +238,6 @@ export const igralci = {
     naslednjeTekme: 'Naslednje tekme',
     tekmaDoma: '{krog}. krog — doma proti {nasprotnik}',
     tekmaVGosteh: '{krog}. krog — v gosteh proti {nasprotnik}',
-    domaKratko: 'D',
-    vGostehKratko: 'G',
     vsaPorocila: 'vsa poročila →',
     niPorocil: 'Ni poročil. Če veš, da igralec manjka, povej spodaj.',
     porociloPrimer: 'Npr. poškodba kolena, tri tedne.',

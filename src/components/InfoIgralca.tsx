@@ -317,7 +317,7 @@ export default function InfoIgralca({
                       title={tk.opponent_name ?? undefined}
                       className="rounded-md bg-white/5 px-2 py-1 text-[11px] text-slate-300"
                     >
-                      {tk.opponent_short || tk.opponent_name}
+                      {tk.opponent_name || tk.opponent_short}
                       <span className="ml-1 text-slate-600">
                         {tk.doma ? t('igralci.info.doma') : t('igralci.info.vGosteh')}
                       </span>

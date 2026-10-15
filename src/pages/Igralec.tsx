@@ -688,16 +688,17 @@ export default function Igralec() {
                   velikost={20}
                 />
                 {tk.opponent_id ? (
-                  <Link to={zLigo(`/club/${tk.opponent_id}`, slugLige)} className="font-semibold hover:text-gnl-300 hover:underline">
-                    {tk.opponent_short}
+                  <Link to={zLigo(`/club/${tk.opponent_id}`, slugLige)} className="max-w-[12rem] truncate font-semibold hover:text-gnl-300 hover:underline">
+                    {tk.opponent_name ?? tk.opponent_short}
                   </Link>
                 ) : (
-                  <span className="font-semibold">{tk.opponent_short}</span>
+                  <span className="max-w-[12rem] truncate font-semibold">{tk.opponent_name ?? tk.opponent_short}</span>
                 )}
+                {/* Polno ime in "doma"/"v gosteh": kratici "JM G" nihče ni razumel. */}
                 <span
                   className={`text-xs ${tk.doma ? 'text-gnl-300' : 'text-slate-500'}`}
                 >
-                  {tk.doma ? t('igralci.profil.domaKratko') : t('igralci.profil.vGostehKratko')}
+                  {tk.doma ? t('igralci.info.doma') : t('igralci.info.vGosteh')}
                 </span>
               </li>
             ))}
