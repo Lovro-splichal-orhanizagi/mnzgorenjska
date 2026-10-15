@@ -5543,6 +5543,23 @@ preveri(
     globalThis.fetch = pravi
     preveri('lowland: 401, 403 in 429 so zavrnitev že v vir.fetch (brez ponovitve)', Object.values(izid).every((x) => x.zavrnitev && x.klicev === 1), JSON.stringify(izid))
   }
+  {
+    // Kontumacije uvoza razporeda: stran tekme 3:0 se bere sveže (brez postav
+    // ne gre v predpomnilnik). Zavrnitev tam mora ustaviti uvoz (izhod 4),
+    // ne le izpustiti oznak; druga napaka razporeda ne ustavi.
+    const { preberiKontumacije } = await import('./razpored.mjs')
+    const krogi = [{ stevilka: 1, tekme: [{ sifra: 54383323, datum: '2026-08-01', domaci: 'A', gostje: 'B', izid: { domaci: 3, gostje: 0 } }] }]
+    const poskusi = async (prenesiKrog) => {
+      try { return { vrnil: await preberiKontumacije(S.default, 'slfl/2026-2027/54193157', prenesiKrog, krogi, '2026-10-15', () => {}) } } catch (e) { return { napaka: e } }
+    }
+    const izziv = typeof preberiKontumacije === 'function' ? await poskusi(async () => '<title>Just a moment...</title>') : {}
+    const z403 = typeof preberiKontumacije === 'function' ? await poskusi(async () => { throw S.default.zavrnitev('HTTP 403', 403) }) : {}
+    const omrezje = typeof preberiKontumacije === 'function' ? await poskusi(async () => { throw new Error('ECONNRESET') }) : {}
+    preveri('lowland: zavrnitev (izziv, 403) na strani tekme kontumacije ustavi uvoz razporeda; omrežna napaka ne',
+      izziv.napaka?.zavrnitev === true && z403.napaka?.zavrnitev === true && z403.napaka.status === 403 &&
+        Array.isArray(omrezje.vrnil) && omrezje.vrnil.length === 0,
+      JSON.stringify({ izziv: izziv.napaka?.message ?? izziv.vrnil, z403: z403.napaka?.message ?? z403.vrnil, omrezje: omrezje.napaka?.message ?? omrezje.vrnil }))
+  }
 }
 
 // --- vir fsb (Srbija, Fudbalski savez Beograda) ---------------------------------

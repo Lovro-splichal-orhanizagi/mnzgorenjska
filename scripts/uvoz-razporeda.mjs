@@ -19,7 +19,7 @@ import { tekmovanje as najdiTekmovanje, sifraLige } from './tekmovanje.mjs'
 import { viraZa } from './viri/index.mjs'
 import { mapaKlubov } from './klubi.mjs'
 import { sifra } from './viri/zapisniki.mjs'
-import { razcleniRazpored, sezonaIz, oznakaBrezIzida } from './razpored.mjs'
+import { razcleniRazpored, sezonaIz, oznakaBrezIzida, preberiKontumacije } from './razpored.mjs'
 import { rokKroga } from './razporedi.mjs'
 import { vseVrstice } from './strani.mjs'
 import { prenesiSPonovitvami } from './prenos.mjs'
@@ -186,22 +186,19 @@ if (vir.kontumacije) {
     if (zadnjiDatum && zadnjiDatum < meja && existsSync(pot)) return readFileSync(pot, 'utf8')
     return prenesi(naslov, ime)
   }
-  try {
-    const najdene = await vir.kontumacije(liga, prenesiKrog, veljavni, danes)
-    let oznacenih = 0
-    for (const n of najdene) {
-      const krog = veljavni.find((k) => k.stevilka === n.krog)
-      const tekma = krog?.tekme.find(
-        (t) => vir.kljucKluba(t.domaci) === vir.kljucKluba(n.domaci) &&
-          vir.kljucKluba(t.gostje) === vir.kljucKluba(n.gostje),
-      )
-      if (tekma) { tekma.kontumacija = true; oznacenih++ }
-      else console.log(`  kontumacija ${n.domaci} : ${n.gostje} (${n.krog}. krog) ni v razporedu`)
-    }
-    if (najdene.length) console.log(`Kontumacij v razporedu: ${oznacenih}`)
-  } catch (e) {
-    console.log(`  kontumacij ni bilo mogoče prebrati (${e.message}) — nadaljujem brez njih`)
+  // Zavrnitev (401/403/429, izziv) preberiKontumacije vrže naprej: izhod 4.
+  const najdene = await preberiKontumacije(vir, liga, prenesiKrog, veljavni, danes)
+  let oznacenih = 0
+  for (const n of najdene) {
+    const krog = veljavni.find((k) => k.stevilka === n.krog)
+    const tekma = krog?.tekme.find(
+      (t) => vir.kljucKluba(t.domaci) === vir.kljucKluba(n.domaci) &&
+        vir.kljucKluba(t.gostje) === vir.kljucKluba(n.gostje),
+    )
+    if (tekma) { tekma.kontumacija = true; oznacenih++ }
+    else console.log(`  kontumacija ${n.domaci} : ${n.gostje} (${n.krog}. krog) ni v razporedu`)
   }
+  if (najdene.length) console.log(`Kontumacij v razporedu: ${oznacenih}`)
 }
 
 const prviDatum = veljavni[0].tekme.find((t) => t.datum)?.datum

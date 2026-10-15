@@ -129,3 +129,20 @@ export function oznakaBrezIzida(krogi, danes) {
     !vePove || pokvarjen || typeof t.odigrana !== 'boolean' ? null : !t.odigrana && !!t.datum && t.datum < danes
   return { brezIzida, pokvarjen }
 }
+
+/**
+ * Kontumacije vira, ki jih razpored ne pokaže (`vir.kontumacije`). Napaka tu
+ * ne ustavi razporeda — brez oznake je stanje enako, kot ko jo vpiše admin —
+ * **razen zavrnitve** (401/403/429, izziv): ta gre naprej, da skripta konča z
+ * izhodom 4 in nočna zanka vira ne bere naprej. Strani tekem kontumacij ne gredo v
+ * predpomnilnik (brez postav), zato se berejo sveže ob vsakem zagonu.
+ */
+export async function preberiKontumacije(vir, liga, prenesiKrog, krogi, danes, log = console.log) {
+  try {
+    return await vir.kontumacije(liga, prenesiKrog, krogi, danes)
+  } catch (e) {
+    if (e?.zavrnitev) throw e
+    log(`  kontumacij ni bilo mogoče prebrati (${e?.message}) — nadaljujem brez njih`)
+    return []
+  }
+}
