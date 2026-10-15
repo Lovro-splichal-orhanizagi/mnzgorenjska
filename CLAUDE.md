@@ -2878,14 +2878,19 @@ znova). **Ob 401, 403, 429 ali izzivu se uvoz ustavi** (`FmfZavrnitev` že v
   SUBSTITUTIONS: "67'  7 Ursu Elyas › 8 Grosu Alexandru" — **minute so točne**.
   Ekipo dogodka določi dres + ime v postavi, ne stolpec. "45+3'" → 45, nad 90
   → 90. Polčasa ni. Zapisnik brez podpisa sodnika ("Meci jucat"/"СЫГРАНО")
-  ali z ekipo pod 7 začetniki je **nepopoln** (prvo opozorilo `zapisnik
-  nepopoln`, kot frf) in ne gre v predpomnilnik — bere se znova do 45 dni.
+  ali z ekipo pod 7 začetniki je **nepopoln** (`z.nepopoln`, prvo opozorilo
+  `zapisnik nepopoln`, kot frf: izid in nastopi se zapišejo, `imported_at`
+  ostane prazen) in ne gre v predpomnilnik — bere se ob vsakem uvozu znova.
 - **Identiteta: šifra osebe COMET → `reg_st`.** Igralcu iz zapisnika oblike B
   vir šifro poišče v zapisnikih oblike A iste lige (klub + ime, le ena šifra);
   zapisniki s šiframi vseh igralcev gredo v uvoz prvi. Kdor je igral le v
   krogih 1–6, ostane brez šifre (ime + klub; v preizkusu 18–41 nastopov na
-  ligo). Če tak igralec pozneje zaigra v zapisniku A, nastane dvojnik
-  (*zdruzi-duplikate*). Šifra zapisnika v bazi je `md<id>`.
+  ligo). Ko tak igralec pozneje zaigra v zapisniku A, ga uvoz posvoji
+  (`vir.sifraPozneje` → `posvojiBrezSifre` v `prestop.mjs`): šifre, ki je v ligi
+  še ni, ne vpiše kot nov zapis, ampak jo da edinemu zapisu brez šifre istega
+  kluba in imena (ne pri soimenjakih na isti tekmi). Prej je nastal dvojnik z
+  ločeno statistiko in ceno. Prestop med klubi ob tem ostane nov zapis. Šifra
+  zapisnika v bazi je `md<id>`.
 - Imena: "Priimek Ime" kot v COMET; besede z VELIKIMI črkami dobijo veliko
   začetnico, ş/ţ → ș/ț. Ključ kluba je brez diakritike; kratko ime brez oblike
   (FC, CF, CS, CSF, FCM, CMF, CSFCJT, EFA). `ravenLige`: Super Liga 1, Liga 1

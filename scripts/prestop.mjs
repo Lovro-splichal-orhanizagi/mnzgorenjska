@@ -88,3 +88,19 @@ export function prestopSkladen(nastopi, nov) {
 export function imataTrk(a, b) {
   return a.some((x) => b.some((y) => trk(x, y)))
 }
+
+/**
+ * Vir, pri katerem šifra osebe pride šele pozneje (fmf: zapisniki prvih krogov
+ * je nimajo), igralca najprej vpiše brez šifre (klub + ime). Ko ga zapisnik
+ * pokaže s šifro, ki je v ligi še ni, je to isti človek — če je pri tem klubu
+ * z istim imenom natanko en zapis brez šifre in na tej tekmi še ni zaseden.
+ * Dva ali več pomeni soimenjake: ne ugibamo.
+ *
+ * @param {{ id: number, reg_st?: string|null }[] | null} vrstice zapisi kluba z istim imenom
+ * @param {Set<number> | null} zasedeni igralci, ki so na tej tekmi že porabljeni
+ */
+export function posvojiBrezSifre(vrstice, zasedeni) {
+  const brez = (vrstice ?? []).filter((x) => x.reg_st == null)
+  if (brez.length !== 1) return null
+  return zasedeni?.has(brez[0].id) ? null : brez[0]
+}

@@ -595,6 +595,9 @@ export function vZapisnik(txt, { id = null, url = null } = {}) {
   // Brez podpisa sodnika ("Meci jucat") se zapisnik še lahko spremeni: nepopoln, bere se znova.
   const podpisan = /check_circle Meci jucat/.test(String(txt))
   if (!podpisan) opozorila.push('zapisnik nepopoln: sodnik zapisnika še ni potrdil (Meci jucat)')
+  // Uvoz (kot pri frf) zapiše izid in znane nastope, `imported_at` pa pusti prazen:
+  // lestvica in borza tekme ne štejeta za končno, nočni uvoz jo bere znova.
+  const nepopoln = !podpisan || ekipe.some((e) => e.postava.length < NAJMANJ_ZACETNIKOV)
   opozorila.sort((a, b) => Number(b.startsWith('zapisnik nepopoln')) - Number(a.startsWith('zapisnik nepopoln')))
 
   const vObliko = ({ stran: _s, ...i }) => ({ ...i, pozicija: i.vratar ? 'GK' : null })
@@ -608,6 +611,7 @@ export function vZapisnik(txt, { id = null, url = null } = {}) {
     ura: g.ura,
     // Podpis sodnika "Meci jucat" (ocisti ga poenoti v vseh jezikih predloge).
     odigrana: podpisan,
+    nepopoln,
     domaci: { ime: ekipe[0].ime, postava: ekipe[0].postava.map(vObliko), rezerve: ekipe[0].rezerve.map(vObliko) },
     gostje: { ime: ekipe[1].ime, postava: ekipe[1].postava.map(vObliko), rezerve: ekipe[1].rezerve.map(vObliko) },
     rezultat: g.izid,
@@ -626,7 +630,7 @@ export function vZapisnik(txt, { id = null, url = null } = {}) {
 export function jePopoln(txt) {
   try {
     const z = vZapisnik(txt)
-    return !!z && z.odigrana && z.domaci.postava.length >= NAJMANJ_ZACETNIKOV && z.gostje.postava.length >= NAJMANJ_ZACETNIKOV
+    return !!z && !z.nepopoln
   } catch {
     return false
   }
@@ -795,19 +799,20 @@ async function krogiZEdition(koda, prenesi, potrebni) {
   return krogi
 }
 
-/** Tekme kroga s šiframi; stran kroga z nedavno ali neodigrano tekmo se bere sveže. */
+/**
+ * Tekme kroga s šiframi; stran kroga z nedavno ali neodigrano tekmo se bere sveže.
+ * Neveljavne strani predpomnilnik ne vrne (`zaPredpomnilnik`), zato je taka že
+ * sveža — drugič je ne beremo.
+ */
 async function tekmeKrogaZ(koda, prenesi, edition, sveze) {
-  let html = await beri(prenesi, naslovKroga(koda, edition), imeKroga(edition), sveze)
-  if (!jeStranKroga(html) && !sveze) html = await beri(prenesi, naslovKroga(koda, edition), imeKroga(edition), true)
+  const html = await beri(prenesi, naslovKroga(koda, edition), imeKroga(edition), sveze)
   if (!jeStranKroga(html)) throw new Error(`fmf: ${naslovKroga(koda, edition)} ni stran kroga — uvoz ustavljen`)
   return tekmeKroga(html)
 }
 
-/** Pot PDF s strani tekme; stran brez povezave se ob naslednjem branju prebere znova. */
+/** Pot PDF s strani tekme; stran brez povezave ne gre v predpomnilnik, zato je vedno sveža. */
 async function pdfTekme(prenesi, id, sveze) {
-  let html = await beri(prenesi, naslovTekme(id), imeTekme(id), sveze)
-  if (!potZapisnika(html) && !sveze) html = await beri(prenesi, naslovTekme(id), imeTekme(id), true)
-  return potZapisnika(html)
+  return potZapisnika(await beri(prenesi, naslovTekme(id), imeTekme(id), sveze))
 }
 
 /**
@@ -843,6 +848,10 @@ const vir = {
   glave: { 'User-Agent': 'SLFF fantasy (https://slff.eu)' },
   premorMs: 3000,
   imaRegistracije: false,
+  // Šifra osebe pride šele z obliko A (od 7. kroga): igralec, vpisan brez nje, jo
+  // dobi ob prvem zapisniku s šifro (uvoz ga posvoji po klubu in imenu), sicer
+  // bi bil isti človek dva zapisa z ločeno statistiko in ceno.
+  sifraPozneje: true,
   fetch: (url, moznosti) => fmfFetch(url, moznosti),
 
   naslovRazporeda: naslovTiska,
@@ -871,9 +880,8 @@ const vir = {
       const pot = await pdfTekme(prenesi, t.id, sveze)
       if (!pot) continue // brez zapisnika (kontumacija ali še ni objavljen)
       const url = naslovPdf(pot)
-      let txt = await beri(prenesi, url, imeZapisnika(t.id), sveze)
-      // Nepopoln zapisnik ne gre v predpomnilnik; mlajšega od 45 dni beremo znova.
-      if (!jePopoln(txt) && !sveze && star <= 45) txt = await beri(prenesi, url, imeZapisnika(t.id), true)
+      // Nepopoln zapisnik ne gre v predpomnilnik, zato se ob vsakem uvozu prebere svež.
+      const txt = await beri(prenesi, url, imeZapisnika(t.id), sveze)
       const id = sifraZapisnika(t.id)
       const z = vZapisnik(txt, { id, url: naslovTekme(t.id) })
       if (!z) continue

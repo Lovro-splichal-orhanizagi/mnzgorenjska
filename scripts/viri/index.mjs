@@ -25,13 +25,13 @@ import fss from './fss.mjs'
 import fssid from './fssid.mjs'
 import frf from './frf.mjs'
 import hlf from './hlf.mjs'
+import fmf from './fmf.mjs'
 import pzpn from './pzpn.mjs'
 import jalgpall from './jalgpall.mjs'
 import lff from './lff.mjs'
 import ffm from './ffm.mjs'
 import fcf from './fcf.mjs'
 import fas from './fas.mjs'
-import fmf from './fmf.mjs'
 
 const VIRI = {
   mnzg,
@@ -68,6 +68,9 @@ const VIRI = {
   hlf,
   // Poljska: uradni zapisniki PZPN (Extranet) prek javnega gradnika vojvodske zveze.
   pzpn,
+  // Moldavija (FMF) prek fmf.md: zapisniki COMET kot PDF (pdftotext), šifra osebe
+  // COMET, vratar (G).
+  fmf,
   // Estonija (EJL) prek jalgpall.ee: šifre igralcev, pozicije iz postavitve,
   // koledarska sezona.
   jalgpall,
@@ -83,9 +86,6 @@ const VIRI = {
   // Španija (Asturija): FutbolAsturiano.es (WordPress SportsPress), ne zveza;
   // liga je blok šifer objav tekem ene sezone, igralec s potjo profila.
   fas,
-  // Moldavija (FMF) prek fmf.md: zapisniki COMET kot PDF (pdftotext), šifra osebe
-  // COMET, vratar (G).
-  fmf,
 }
 
 /**
