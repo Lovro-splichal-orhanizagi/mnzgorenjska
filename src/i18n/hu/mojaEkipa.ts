@@ -104,6 +104,10 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   vec: 'Még: bónuszok, előzmények, szabályok',
 
   prestopi: {
+    medSezono: {
+      one: 'Szezon közben csatlakozol: a következő határidőig ({krog}. forduló) büntetés nélkül állíthatod össze a csapatod. Utána fordulónként {n} ingyenes átigazolásod van, minden további −{kazen}.',
+      other: 'Szezon közben csatlakozol: a következő határidőig ({krog}. forduló) büntetés nélkül állíthatod össze a csapatod. Utána fordulónként {n} ingyenes átigazolásod van, minden további −{kazen}.',
+    },
     stevec: 'Átigazolások: {n}/{prosti}',
     wildcard: 'wildcard, levonás nélkül',
     odbitek: 'Levonás ebben a fordulóban: {tock}',

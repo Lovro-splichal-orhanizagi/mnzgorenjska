@@ -101,6 +101,11 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   vec: 'Vairāk: bonusi, vēsture, noteikumi',
 
   prestopi: {
+    medSezono: {
+      zero: 'Tu pievienojies sezonas laikā: līdz {krog}. kārtas termiņam komandu sastādi bez soda. Pēc tam katrā kārtā tev ir {n} bezmaksas transfēru, katrs nākamais maksā −{kazen}.',
+      one: 'Tu pievienojies sezonas laikā: līdz {krog}. kārtas termiņam komandu sastādi bez soda. Pēc tam katrā kārtā tev ir {n} bezmaksas transfērs, katrs nākamais maksā −{kazen}.',
+      other: 'Tu pievienojies sezonas laikā: līdz {krog}. kārtas termiņam komandu sastādi bez soda. Pēc tam katrā kārtā tev ir {n} bezmaksas transfēri, katrs nākamais maksā −{kazen}.',
+    },
     stevec: 'Transfēri: {n}/{prosti}',
     wildcard: 'wildcard, bez soda',
     odbitek: 'atskaitījums šajā kārtā: {tock}',

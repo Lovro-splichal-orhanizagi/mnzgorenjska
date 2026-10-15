@@ -104,6 +104,17 @@ export const mojaEkipa = {
   vec: 'Več: pripomočki, zgodovina, pravila',
 
   prestopi: {
+    /**
+     * Ekipa brez posnetka v tekoči sezoni, liga pa je že zaklenila kroge. Prvi
+     * posnetek nima s čim primerjati, zato prestopov ne šteje (zakleni_krog);
+     * nato `prosti_prestopi` na krog, vsak nadaljnji `kazen_prestopa`.
+     */
+    medSezono: {
+      one: 'Pridružuješ se med sezono: do roka {krog}. kroga ekipo sestaviš brez kazni. Nato imaš vsak krog {n} brezplačen prestop, vsak nadaljnji stane −{kazen}.',
+      two: 'Pridružuješ se med sezono: do roka {krog}. kroga ekipo sestaviš brez kazni. Nato imaš vsak krog {n} brezplačna prestopa, vsak nadaljnji stane −{kazen}.',
+      few: 'Pridružuješ se med sezono: do roka {krog}. kroga ekipo sestaviš brez kazni. Nato imaš vsak krog {n} brezplačne prestope, vsak nadaljnji stane −{kazen}.',
+      other: 'Pridružuješ se med sezono: do roka {krog}. kroga ekipo sestaviš brez kazni. Nato imaš vsak krog {n} brezplačnih prestopov, vsak nadaljnji stane −{kazen}.',
+    },
     stevec: 'Prestopi: {n}/{prosti}',
     wildcard: 'wildcard — brez kazni',
     odbitek: 'odbitek {tock} v tem krogu',

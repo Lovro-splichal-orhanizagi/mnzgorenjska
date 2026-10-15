@@ -105,6 +105,10 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   vec: 'Mehr: Chips, Verlauf, Regeln',
 
   prestopi: {
+    medSezono: {
+      one: 'Du steigst während der Saison ein: Bis zur Deadline von Runde {krog} stellst du dein Team ohne Abzug zusammen. Danach hast du pro Runde {n} Gratis-Transfer, jeder weitere kostet −{kazen}.',
+      other: 'Du steigst während der Saison ein: Bis zur Deadline von Runde {krog} stellst du dein Team ohne Abzug zusammen. Danach hast du pro Runde {n} Gratis-Transfers, jeder weitere kostet −{kazen}.',
+    },
     stevec: 'Transfers: {n}/{prosti}',
     wildcard: 'Wildcard, kein Abzug',
     odbitek: '{tock} Abzug in dieser Runde',

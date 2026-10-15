@@ -103,6 +103,12 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   vec: 'Więcej: chipy, historia, zasady',
 
   prestopi: {
+    medSezono: {
+      one: 'Dołączasz w trakcie sezonu: do terminu {krog}. kolejki składasz drużynę bez kary. Potem masz w każdej kolejce {n} darmowy transfer, każdy kolejny kosztuje −{kazen}.',
+      few: 'Dołączasz w trakcie sezonu: do terminu {krog}. kolejki składasz drużynę bez kary. Potem masz w każdej kolejce {n} darmowe transfery, każdy kolejny kosztuje −{kazen}.',
+      many: 'Dołączasz w trakcie sezonu: do terminu {krog}. kolejki składasz drużynę bez kary. Potem masz w każdej kolejce {n} darmowych transferów, każdy kolejny kosztuje −{kazen}.',
+      other: 'Dołączasz w trakcie sezonu: do terminu {krog}. kolejki składasz drużynę bez kary. Potem masz w każdej kolejce {n} darmowego transferu, każdy kolejny kosztuje −{kazen}.',
+    },
     stevec: 'Transfery: {n}/{prosti}',
     wildcard: 'wildcard — bez kary',
     odbitek: 'odjęcie {tock} w tej kolejce',
