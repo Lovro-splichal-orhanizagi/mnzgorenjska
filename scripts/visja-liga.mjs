@@ -126,6 +126,14 @@ export function ravenLige({ slug, name, zveza }) {
     return null
   }
 
+  // Moldavija (vir fmf, šifra osebe COMET): Super Liga (Liga 7777) 1, Liga 1 (skupini) 2, Liga 2 3.
+  if (slug.startsWith('md-')) {
+    if (mladinska) return null
+    if (slug === 'md-super-liga') return abs(1)
+    if ((m = slug.match(/^md-liga-(\d)/))) return abs(1 + Number(m[1]))
+    return null
+  }
+
   return null
 }
 

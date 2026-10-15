@@ -147,6 +147,10 @@ jobs:
       - name: Chromium za vir hlf
         if: matrix.drzava == 'RO'
         run: npx playwright install chromium --only-shell --with-deps
+      # Vir fmf (fmf.md) bere zapisnike PDF s pdftotext (poppler-utils).
+      - name: pdftotext za vir fmf
+        if: matrix.drzava == 'MD'
+        run: command -v pdftotext || (sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils)
 
       # Druzina uvozov (uvoz-zapisnikov, uvoz-lige, zdruzi-klube,
       # tedensko-cene) pise v iste tabele: klube, igralce, tekme, cene. Kar se
