@@ -45,7 +45,10 @@ export const domov: NonNullable<Prevod['domov']> = {
   idealna: {
     naslov: 'Kārtas simboliskā izlase',
     krogSezona: '{krog}. kārta · sezona {sezona}',
-    opis: 'Pēdējās kārtas labākie 11; zem krekla ir punkti.',
+    opis: 'Kārtas labākie 11; zem krekla ir punkti. Ar bultiņām vari pāršķirt sezonas kārtas.',
+    prejsnji: 'Iepriekšējā kārta',
+    naslednji: 'Nākamā kārta',
+    ni: 'Šajā kārtā punktu nav.',
   },
   povabi: {
     naslov: 'Uzaicini draugu uz līgu',
@@ -76,6 +79,14 @@ export const domov: NonNullable<Prevod['domov']> = {
     enajstericaOpis: 'Vienpadsmit iet laukumā, četri uz soliņa. Kapteinis nes trīskāršus punktus; ja viņš nespēlē, apsēju pārņem vicekapteinis.',
     poKrogu: '4. Pēc katras kārtas',
     poKroguOpis: 'Punkti tiek aprēķināti no protokoliem. Spēlētāju bez minūtēm automātiski nomaina tās pašas pozīcijas rezervists, un reizi sezonā ar Soliņš+ vari ieskaitīt punktos visu soliņu.',
+  },
+  novinec: {
+    kader: 'Sastādi komandu',
+    kaderOpis: '15 spēlētāji, budžets 100. Vai nospied „Sastādi man komandu“, un tā ir gatava ar vienu klikšķi.',
+    kapetan: 'Izvēlies kapteini',
+    kapetanOpis: 'Viņa punkti tiek skaitīti trīskārši.',
+    tocke: 'Krāj punktus',
+    tockeOpis: 'Katrā kārtā no oficiālajiem spēļu protokoliem.',
   },
   kakoSeTockuje: 'Kā tiek piešķirti punkti',
   moja: {

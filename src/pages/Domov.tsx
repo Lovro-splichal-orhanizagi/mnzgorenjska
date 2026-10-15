@@ -69,6 +69,41 @@ function kratkaPozicija(p: string | null | undefined): string {
   return (p && KRATKA_POZICIJA[p as Pozicija]) || (p ?? '')
 }
 
+/** Idealna enajsterica kroga: 1 GK + 4 DEF + 4 MID + 2 FWD po točkah (vrstice
+ *  `krog_najboljsi`, urejene po točkah). Če je pozicij premalo, dopolni z
+ *  ostalimi najboljšimi. */
+function idealnaEnajsterica(najboljsi: any[]): IgralecEnajsterice[] {
+  const poPozicijah: Record<Pozicija, any[]> = { GK: [], DEF: [], MID: [], FWD: [] }
+  for (const p of najboljsi) {
+    const poz = p.position as Pozicija | null
+    if (poz && poPozicijah[poz]) poPozicijah[poz].push(p)
+  }
+  const izbrani: any[] = [
+    ...poPozicijah.GK.slice(0, 1),
+    ...poPozicijah.DEF.slice(0, 4),
+    ...poPozicijah.MID.slice(0, 4),
+    ...poPozicijah.FWD.slice(0, 2),
+  ]
+  const uporabljeni = new Set(izbrani.map((p) => p.player_id))
+  for (const p of najboljsi) {
+    if (izbrani.length >= 11) break
+    if (!uporabljeni.has(p.player_id)) izbrani.push(p)
+  }
+  return izbrani as IgralecEnajsterice[]
+}
+
+/** Najboljši kroga za idealno enajsterico (javni pogled, tudi za anonimne). */
+function najboljsiKroga(krogId: number) {
+  return supabase
+    .from('krog_najboljsi')
+    .select(
+      'player_id, full_name, position, team_name, team_short, team_logo, points, minutes, price_delta, rank',
+    )
+    .eq('round_id', krogId)
+    .order('points', { ascending: false })
+    .limit(50)
+}
+
 export default function Domov() {
   const { id: tekmovanjeId, slug, tekmovanje, tekmovanja, brezLig } = useTekmovanje()
   // Naslovnica privzete lige ima osnovni naslov; druge lige svojega, sicer bi
@@ -104,6 +139,14 @@ export default function Domov() {
   const [idealnaPostava, setIdealnaPostava] = useState<IgralecEnajsterice[]>(
     [],
   )
+  // Odigrani krogi sezone zadnjega kroga (za puščice idealne enajsterice) in
+  // krog, ki ga je obiskovalec izbral; null = zadnji odigrani.
+  const [krogiSezone, setKrogiSezone] = useState<KrogPodatek[]>([])
+  const [izbraniKrog, setIzbraniKrog] = useState<KrogPodatek | null>(null)
+  const [nalagaIdealno, setNalagaIdealno] = useState(false)
+  // Ali ima prijavljeni v tej ligi ekipo z igralci; undefined = ne vemo (še
+  // nalagamo ali napaka) — takrat stran ostane, kot je za tiste z ekipo.
+  const [imaEkipo, setImaEkipo] = useState<boolean | undefined>(undefined)
   const [naslednjeTekme, setNaslednjeTekme] = useState<any[]>([])
   const [zadnjiRezultati, setZadnjiRezultati] = useState<any[]>([])
   const [naslednjiKrog, setNaslednjiKrog] = useState<KrogPodatek | null>(null)
@@ -120,6 +163,7 @@ export default function Domov() {
     let veljavno = true
     setNapaka(null)
     setSezonaTece(null)
+    setIzbraniKrog(null)
     async function nalozi() {
       // Ob zamenjavi lige se naloži vse od začetka, zato gre v en sam val
       // vse, kar ne potrebuje sezone ali kroga. Prej je bilo šest zaporednih
@@ -279,6 +323,19 @@ export default function Domov() {
             }
           : null
       setKrog(krogOk)
+      setKrogiSezone(
+        krogOk
+          ? ((vsiKrogi ?? []) as KrogPodatek[])
+              .filter(
+                (k) =>
+                  k.season === krogOk.season &&
+                  k.number != null &&
+                  krogOk.number != null &&
+                  k.number <= krogOk.number,
+              )
+              .sort((a, b) => (a.number ?? 0) - (b.number ?? 0))
+          : [],
+      )
       // `zadnji_odigrani_krog` pred prvim krogom vrne zadnjega lanskega.
       setSezonaTece(Boolean(krogOk && tekocaSezona && krogOk.season === tekocaSezona))
 
@@ -301,16 +358,7 @@ export default function Domov() {
             .order('id')
             .range(od, do_),
         ),
-        krogOk
-          ? supabase
-              .from('krog_najboljsi')
-              .select(
-                'player_id, full_name, position, team_name, team_short, team_logo, points, minutes, price_delta, rank',
-              )
-              .eq('round_id', krogOk.id)
-              .order('points', { ascending: false })
-              .limit(50)
-          : Promise.resolve({ data: null }),
+        krogOk ? najboljsiKroga(krogOk.id) : Promise.resolve({ data: null }),
       ])
       if (!veljavno) return
 
@@ -331,39 +379,9 @@ export default function Domov() {
       setObrambe(vrh('clean_sheets') as VrhIgralec[])
       setIgralecSezone(vrh('points'))
 
-      if (krogOk) {
-        const najboljsi = najboljsiOdgovor.data
-
-        // Idealna enajsterica: 1 GK + top 4 DEF + top 4 MID + top 2 FWD
-        // po točkah v zadnjem odigranem krogu. Če je pozicij premalo,
-        // dopolni z ostalimi najboljšimi. Pokaže, kaj se sistem šteje
-        // za "the team of the week".
-        const poPozicijah: Record<Pozicija, any[]> = {
-          GK: [],
-          DEF: [],
-          MID: [],
-          FWD: [],
-        }
-        for (const p of (najboljsi ?? []) as any[]) {
-          const poz = p.position as Pozicija | null
-          if (poz && poPozicijah[poz]) poPozicijah[poz].push(p)
-        }
-        const izbrani: any[] = [
-          ...poPozicijah.GK.slice(0, 1),
-          ...poPozicijah.DEF.slice(0, 4),
-          ...poPozicijah.MID.slice(0, 4),
-          ...poPozicijah.FWD.slice(0, 2),
-        ]
-        // Če je premalo (redke pozicije brez podatkov), dopolni s top preostalimi.
-        const uporabljeni = new Set(izbrani.map((p) => p.player_id))
-        for (const p of (najboljsi ?? []) as any[]) {
-          if (izbrani.length >= 11) break
-          if (!uporabljeni.has(p.player_id)) izbrani.push(p)
-        }
-        setIdealnaPostava(izbrani as IgralecEnajsterice[])
-      } else {
-        setIdealnaPostava([])
-      }
+      setIdealnaPostava(
+        krogOk ? idealnaEnajsterica((najboljsiOdgovor.data ?? []) as any[]) : [],
+      )
     }
     nalozi().catch((e: unknown) => {
       if (veljavno)
@@ -374,6 +392,26 @@ export default function Domov() {
     }
   }, [tekmovanjeId])
 
+  // Starejši krog idealne enajsterice se naloži šele ob kliku na puščico.
+  useEffect(() => {
+    if (!izbraniKrog) return
+    let veljavno = true
+    setNalagaIdealno(true)
+    najboljsiKroga(izbraniKrog.id).then(({ data }) => {
+      if (!veljavno) return
+      setIdealnaPostava(idealnaEnajsterica((data ?? []) as any[]))
+      setNalagaIdealno(false)
+    })
+    return () => {
+      veljavno = false
+    }
+  }, [izbraniKrog])
+
+  // Kdor v tej ligi nima ekipe (neprijavljen ali brez igralcev), dobi na vrhu
+  // kratka navodila in mu ne kažemo opravil skupnosti (asistence, pozicije).
+  const novinec = !avtNalaganje && (!session || imaEkipo === false)
+  const prikazaniKrog = izbraniKrog ?? krog
+  const mestoKroga = krogiSezone.findIndex((k) => k.id === prikazaniKrog?.id)
 
   // Pred prvim krogom: datum začetka iz naslednjega kroga (tekma ali rok).
   const zacetekSezone = naslednjiKrog?.played_on ?? naslednjiKrog?.deadline_at ?? null
@@ -405,6 +443,7 @@ export default function Domov() {
           liga={tekmovanje?.name ?? null}
           uporabnikId={session.user.id}
           krog={sezonaTece ? krog : null}
+          naEkipo={setImaEkipo}
         />
       ) : (
         <section className="relative overflow-hidden rounded-3xl p-4 ring-1 ring-white/10 sm:p-8">
@@ -510,6 +549,41 @@ export default function Domov() {
         </p>
       )}
 
+      {/* Novinec: trije koraki, rok naslednjega kroga in en poziv. */}
+      {novinec && (
+        <section className="kartica space-y-3 p-4">
+          <h2 className="text-lg font-bold">{t('domov.kakoIgras.naslov')}</h2>
+          <ol className="grid gap-3 sm:grid-cols-3">
+            {[
+              [t('domov.novinec.kader'), t('domov.novinec.kaderOpis')],
+              [t('domov.novinec.kapetan'), t('domov.novinec.kapetanOpis')],
+              [t('domov.novinec.tocke'), t('domov.novinec.tockeOpis')],
+            ].map(([naslov, opis], i) => (
+              <li key={naslov} className="flex gap-3">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gnl-500/20 text-sm font-black text-gnl-300">
+                  {i + 1}
+                </span>
+                <span className="min-w-0">
+                  <span className="block font-semibold">{naslov}</span>
+                  <span className="block text-sm text-slate-300">{opis}</span>
+                </span>
+              </li>
+            ))}
+          </ol>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-white/10 pt-3">
+            <Link to="/my-team" className="gumb-glavni">
+              {t('domov.uvod.sestaviEkipo')}
+            </Link>
+            {naslednjiKrog?.deadline_at && (
+              <span className="text-sm text-slate-300">
+                {t('domov.rok.seZaklene', { krog: naslednjiKrog.number })}:{' '}
+                <Odstevanje do={naslednjiKrog.deadline_at} />
+              </span>
+            )}
+          </div>
+        </section>
+      )}
+
       {/* Na širšem zaslonu razdelki v dveh stolpcih, na telefonu drug pod drugim. */}
       {/* Dokler prvi val ne pride (`sezonaTece` je null), razdelki držijo
           zaslon prostora: sicer bi sponzor, klepet in navodila pod njimi
@@ -522,7 +596,7 @@ export default function Domov() {
         {/* Ta teden: rok in kar liga čaka od ljudi — vrstice v eni skupini
             namesto štirih kartic. Asistence so edino, brez česar liga ne
             deluje, zato so poudarjene. */}
-        {(naslednjiKrog?.deadline_at || stat) && (
+        {!novinec && (naslednjiKrog?.deadline_at || stat) && (
           <Razdelek naslov={t('domov.taTeden')}>
             <ul className="kartica divide-y divide-white/10">
               {naslednjiKrog?.deadline_at && (
@@ -590,13 +664,41 @@ export default function Domov() {
         )}
 
         {/* idealna enajsterica zadnjega kroga — na igrišču */}
-        {idealnaPostava.length > 0 && (
+        {(idealnaPostava.length > 0 || izbraniKrog) && (
           <Razdelek
             naslov={t('domov.idealna.naslov')}
-            povezava={{ to: '/results', besedilo: t('domov.krog', { krog: krog?.number }) }}
+            desno={
+              <span className="flex shrink-0 items-center gap-1 text-sm font-semibold text-gnl-300">
+                <button
+                  type="button"
+                  aria-label={t('domov.idealna.prejsnji')}
+                  disabled={mestoKroga <= 0}
+                  onClick={() => setIzbraniKrog(krogiSezone[mestoKroga - 1])}
+                  className="rounded px-2 py-0.5 hover:bg-white/10 disabled:opacity-30"
+                >
+                  ‹
+                </button>
+                <span className="tabular-nums">{t('domov.krog', { krog: prikazaniKrog?.number })}</span>
+                <button
+                  type="button"
+                  aria-label={t('domov.idealna.naslednji')}
+                  disabled={mestoKroga < 0 || mestoKroga >= krogiSezone.length - 1}
+                  onClick={() => setIzbraniKrog(krogiSezone[mestoKroga + 1])}
+                  className="rounded px-2 py-0.5 hover:bg-white/10 disabled:opacity-30"
+                >
+                  ›
+                </button>
+              </span>
+            }
           >
             <p className="text-xs text-slate-400">{t('domov.idealna.opis')}</p>
-            <EnajstericaNaIgriscu igralci={idealnaPostava} />
+            <div className={nalagaIdealno ? 'opacity-50 transition' : 'transition'}>
+              {idealnaPostava.length > 0 ? (
+                <EnajstericaNaIgriscu igralci={idealnaPostava} />
+              ) : (
+                <p className="kartica p-4 text-sm text-slate-400">{t('domov.idealna.ni')}</p>
+              )}
+            </div>
           </Razdelek>
         )}
 
@@ -803,10 +905,13 @@ function PivskaLestvica() {
 function Razdelek({
   naslov,
   povezava,
+  desno,
   children,
 }: {
   naslov: string
   povezava?: { to: string; besedilo: string }
+  /** Namesto povezave poljuben gradnik desno od naslova. */
+  desno?: ReactNode
   children: ReactNode
 }) {
   return (
@@ -821,6 +926,7 @@ function Razdelek({
             {povezava.besedilo}
           </Link>
         )}
+        {desno}
       </div>
       {children}
     </section>
@@ -940,11 +1046,14 @@ function MojaGlava({
   liga,
   uporabnikId,
   krog,
+  naEkipo,
 }: {
   ligaId: number | null
   liga: string | null
   uporabnikId: string
   krog: KrogPodatek | null
+  /** Ali ima v ligi ekipo z igralci; undefined ob nalaganju ali napaki. */
+  naEkipo: (ima: boolean | undefined) => void
 }) {
   // undefined = nalaganje, null = brez ekipe v tej ligi, false = napaka branja
   const [ekipa, setEkipa] = useState<
@@ -956,16 +1065,19 @@ function MojaGlava({
     if (!ligaId) return
     let veljavno = true
     setEkipa(undefined)
+    naEkipo(undefined)
     async function nalozi(liga: number) {
       const { data: moja, error } = await supabase
         .from('fantasy_teams')
-        .select('id, name')
+        .select('id, name, fantasy_roster(count)')
         .eq('competition_id', liga)
         .eq('owner_id', uporabnikId)
         .eq('hisna', false)
         .maybeSingle()
       // Napaka ni "brez ekipe": ne vabi k sestavi tistega, ki ekipo ima.
       if (error) throw error
+      // Prazna ekipa (shranjeno le ime) je za naslovnico kot brez ekipe.
+      if (veljavno) naEkipo(Boolean(moja && (moja.fantasy_roster?.[0]?.count ?? 0) > 0))
       if (!moja) return null
       const { data: vrsta } = await supabase
         .from('fantasy_team_standings')
@@ -1012,7 +1124,7 @@ function MojaGlava({
     return () => {
       veljavno = false
     }
-  }, [ligaId, uporabnikId, krogId])
+  }, [ligaId, uporabnikId, krogId, naEkipo])
 
   if (ekipa === false) return null
   return (

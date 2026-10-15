@@ -45,7 +45,10 @@ export const domov: NonNullable<Prevod['domov']> = {
   idealna: {
     naslov: 'Idealni tim',
     krogSezona: '{krog}. kolo · sezona {sezona}',
-    opis: 'Najboljih 11 poslednjeg kola; ispod dresa su bodovi.',
+    opis: 'Najboljih 11 kola; ispod dresa su bodovi. Strelicama listaš kola sezone.',
+    prejsnji: 'Prethodno kolo',
+    naslednji: 'Sledeće kolo',
+    ni: 'Za ovo kolo nema bodova.',
   },
   povabi: {
     naslov: 'Pozovi prijatelja u ligu',
@@ -76,6 +79,14 @@ export const domov: NonNullable<Prevod['domov']> = {
     enajstericaOpis: 'Jedanaestorica idu na teren, četvorica na klupu. Kapiten donosi trostruke bodove; ako ne igra, traku preuzima zamenik.',
     poKrogu: '4. Posle svakog kola',
     poKroguOpis: 'Bodovi se računaju iz zapisnika. Igrača bez minuta automatski menja rezerva iste pozicije, a jednom u sezoni sa Klupa+ možeš u bodove da uračunaš celu klupu.',
+  },
+  novinec: {
+    kader: 'Sastavi tim',
+    kaderOpis: '15 igrača, budžet 100, ili klikni „Sastavi mi tim“ i gotovo je u jednom kliku.',
+    kapetan: 'Izaberi kapitena',
+    kapetanOpis: 'Njegovi bodovi se računaju trostruko.',
+    tocke: 'Skupljaj bodove',
+    tockeOpis: 'Svako kolo iz zvaničnih zapisnika utakmica.',
   },
   kakoSeTockuje: 'Kako se boduje',
   moja: {

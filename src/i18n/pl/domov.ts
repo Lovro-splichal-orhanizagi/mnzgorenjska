@@ -47,7 +47,10 @@ export const domov: NonNullable<Prevod['domov']> = {
   idealna: {
     naslov: 'Jedenastka kolejki',
     krogSezona: '{krog}. kolejka · sezon {sezona}',
-    opis: 'Najlepsza 11 ostatniej kolejki; pod koszulką są punkty.',
+    opis: 'Najlepsza 11 kolejki; pod koszulką są punkty. Strzałkami przeglądasz kolejki sezonu.',
+    prejsnji: 'Poprzednia kolejka',
+    naslednji: 'Następna kolejka',
+    ni: 'W tej kolejce nie ma punktów.',
   },
   povabi: {
     naslov: 'Zaproś znajomego do ligi',
@@ -79,6 +82,14 @@ export const domov: NonNullable<Prevod['domov']> = {
     enajstericaOpis: 'Jedenastu wychodzi na boisko, czterech siada na ławce. Kapitan przynosi potrójne punkty; jeśli nie gra, opaskę przejmuje wicekapitan.',
     poKrogu: '4. Po każdej kolejce',
     poKroguOpis: 'Punkty liczymy z protokołów meczowych. Zawodnika bez minut automatycznie zastępuje rezerwowy z tej samej pozycji, a raz w sezonie możesz chipem Ławka+ zaliczyć punkty całej ławki.',
+  },
+  novinec: {
+    kader: 'Zbuduj drużynę',
+    kaderOpis: '15 zawodników, budżet 100 — albo kliknij „Złóż mi drużynę” i gotowe jednym kliknięciem.',
+    kapetan: 'Wybierz kapitana',
+    kapetanOpis: 'Jego punkty liczą się potrójnie.',
+    tocke: 'Zbieraj punkty',
+    tockeOpis: 'W każdej kolejce z oficjalnych protokołów meczowych.',
   },
   kakoSeTockuje: 'Jak liczymy punkty',
   moja: {

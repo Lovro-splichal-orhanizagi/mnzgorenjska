@@ -45,7 +45,10 @@ export const domov = {
   idealna: {
     naslov: 'Idealna enajsterica',
     krogSezona: '{krog}. krog · sezona {sezona}',
-    opis: 'Najboljših 11 zadnjega kroga; pod dresom so točke.',
+    opis: 'Najboljših 11 kroga; pod dresom so točke. S puščicama listaš po krogih sezone.',
+    prejsnji: 'Prejšnji krog',
+    naslednji: 'Naslednji krog',
+    ni: 'Za ta krog ni točk.',
   },
   povabi: {
     naslov: 'Povabi prijatelja v ligo',
@@ -77,6 +80,14 @@ export const domov = {
     enajstericaOpis: 'Enajst gre na igrišče, štirje na klop. Kapetan prinese trojne točke; če ne igra, trak prevzame namestnik.',
     poKrogu: '4. Po vsakem krogu',
     poKroguOpis: 'Točke se izračunajo iz zapisnikov. Igralca brez minut samodejno zamenja rezervni iste pozicije, enkrat na sezono pa lahko s Klop+ v točke šteješ vso klop.',
+  },
+  novinec: {
+    kader: 'Sestavi ekipo',
+    kaderOpis: '15 igralcev, proračun 100 — ali pa »Sestavi mi ekipo« in je v enem kliku.',
+    kapetan: 'Izberi kapetana',
+    kapetanOpis: 'Njegove točke štejejo trojno.',
+    tocke: 'Zbiraj točke',
+    tockeOpis: 'Vsak krog iz uradnih zapisnikov tekem.',
   },
   kakoSeTockuje: 'Kako se točkuje',
   moja: {

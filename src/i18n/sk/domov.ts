@@ -46,7 +46,10 @@ export const domov: NonNullable<Prevod['domov']> = {
   idealna: {
     naslov: 'Ideálna jedenástka',
     krogSezona: '{krog}. kolo · sezóna {sezona}',
-    opis: 'Najlepších 11 posledného kola; pod dresom sú body.',
+    opis: 'Najlepších 11 kola; pod dresom sú body. Šípkami listuješ kolami sezóny.',
+    prejsnji: 'Predchádzajúce kolo',
+    naslednji: 'Nasledujúce kolo',
+    ni: 'Za toto kolo nie sú body.',
   },
   povabi: {
     naslov: 'Pozvi kamaráta do ligy',
@@ -78,6 +81,14 @@ export const domov: NonNullable<Prevod['domov']> = {
     enajstericaOpis: 'Jedenásť ide na ihrisko, štyria na lavičku. Kapitán prináša trojnásobné body; ak nehrá, pásku preberá zástupca.',
     poKrogu: '4. Po každom kole',
     poKroguOpis: 'Body sa vypočítajú zo zápisov. Hráča bez odohraných minút automaticky nahradí náhradník na rovnakej pozícii a raz za sezónu môžeš s Lavičkou+ započítať body celej lavičky.',
+  },
+  novinec: {
+    kader: 'Poskladaj tím',
+    kaderOpis: '15 hráčov, rozpočet 100 — alebo klikni na „Zostav mi tím“ a máš ho jedným klikom.',
+    kapetan: 'Vyber kapitána',
+    kapetanOpis: 'Jeho body sa počítajú trojnásobne.',
+    tocke: 'Zbieraj body',
+    tockeOpis: 'Každé kolo z oficiálnych zápisov o stretnutí.',
   },
   kakoSeTockuje: 'Ako sa získavajú body',
   moja: {
