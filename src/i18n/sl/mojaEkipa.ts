@@ -92,8 +92,11 @@ export const mojaEkipa = {
     razveljavi: 'Razveljavi',
   },
 
-  prijavaPotrebna: 'Za sestavo ekipe se moraš prijaviti.',
-  prijava: 'Prijava',
+  brezPrijave: {
+    opis: 'Ekipo sestaviš brez računa. Ostane v tem brskalniku, dokler je ne shraniš.',
+    shrani: 'Shrani in ustvari račun',
+    pripravljena: 'Tvoja ekipa je pripravljena — shrani jo.',
+  },
   locenaLiga:
     'Ekipa v ligi <liga>{liga}</liga> je ločena od ekip v drugih ligah — s svojim proračunom in svojo lestvico. Točke štejejo od {krog}. kroga naprej, ker se do takrat še vrstijo prestopi in prehodi med selekcijami.',
 

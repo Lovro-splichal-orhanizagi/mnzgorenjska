@@ -91,8 +91,11 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     razveljavi: 'Vrátit zpět',
   },
 
-  prijavaPotrebna: 'Pokud si chceš sestavit tým, musíš se přihlásit.',
-  prijava: 'Přihlášení',
+  brezPrijave: {
+    opis: 'Tým si sestavíš i bez účtu. Zůstane v tomto prohlížeči, dokud ho neuložíš.',
+    shrani: 'Uložit a vytvořit účet',
+    pripravljena: 'Tvůj tým je připravený. Ulož ho.',
+  },
   locenaLiga:
     'Tým v lize <liga>{liga}</liga> je oddělený od týmů v jiných ligách: má vlastní rozpočet a vlastní žebříček. Body se počítají od {krog}. kola, protože do té doby ještě probíhají přestupy a přesuny mezi kategoriemi.',
 

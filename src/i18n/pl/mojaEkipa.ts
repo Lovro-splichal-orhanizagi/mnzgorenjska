@@ -92,8 +92,11 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     razveljavi: 'Cofnij',
   },
 
-  prijavaPotrebna: 'Aby złożyć drużynę, musisz się zalogować.',
-  prijava: 'Zaloguj się',
+  brezPrijave: {
+    opis: 'Drużynę złożysz bez konta. Zostanie w tej przeglądarce, dopóki jej nie zapiszesz.',
+    shrani: 'Zapisz i załóż konto',
+    pripravljena: 'Twoja drużyna jest gotowa — zapisz ją.',
+  },
   locenaLiga:
     'Drużyna w lidze <liga>{liga}</liga> jest oddzielna od drużyn w innych ligach — z własnym budżetem i własną tabelą. Punkty liczą się od {krog}. kolejki, bo do tego czasu wciąż trwają transfery i przejścia między drużynami.',
 
