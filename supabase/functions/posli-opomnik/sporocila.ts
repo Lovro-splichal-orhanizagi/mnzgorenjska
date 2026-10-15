@@ -378,7 +378,7 @@ export function sestaviOpomnikBrezLige(
     },
     hr: {
       naslov: 'SLFF: odaberi svoju ligu i složi momčad',
-      glavno: 'Registrirao/la si se, ali još nemaš fantasy momčad. Momčad ti složimo jednim klikom, zamijeni koga želiš i spremi. Bodove skupljaš već u sljedećem kolu.',
+      glavno: 'Registrirao/la si se, ali još nemaš fantasy momčad. Momčad ćemo ti složiti jednim klikom, zamijeni koga želiš i spremi. Bodove skupljaš već u sljedećem kolu.',
       gumb: 'Složi mi momčad →',
       opomba: 'Ako nećeš slagati momčad, ovaj e-mail možeš zanemariti.',
     },
@@ -479,7 +479,7 @@ export function sestaviOpomnikBrezEkipe(
   const B = {
     sl: { naslov: 'ekipa te še čaka', glavno: 'Še vedno nimaš fantasy ekipe. »Sestavi mi ekipo« jo naredi v enem kliku: zamenjaj, kogar hočeš, in shrani.', rok: 'Rok', gumb: 'Sestavi mi ekipo →' },
     sk: { naslov: 'tím na teba stále čaká', glavno: 'Stále nemáš fantasy tím. „Zostav mi tím“ ho vytvorí jedným klikom: vymeň, koho chceš, a ulož.', rok: 'Uzávierka', gumb: 'Zostav mi tím →' },
-    hr: { naslov: 'momčad te još čeka', glavno: 'Još uvijek nemaš fantasy momčad. „Složi mi momčad“ je složi jednim klikom: zamijeni koga želiš i spremi.', rok: 'Rok', gumb: 'Složi mi momčad →' },
+    hr: { naslov: 'momčad te još čeka', glavno: 'Još uvijek nemaš fantasy momčad. „Složi mi momčad“ je slaže jednim klikom: zamijeni koga želiš i spremi.', rok: 'Rok', gumb: 'Složi mi momčad →' },
     cs: { naslov: 'tým na tebe pořád čeká', glavno: 'Pořád nemáš fantasy tým. „Sestav mi tým“ ho vytvoří jedním kliknutím: vyměň, koho chceš, a ulož.', rok: 'Uzávěrka', gumb: 'Sestav mi tým →' },
     hu: { naslov: 'a csapatod még vár', glavno: 'Még mindig nincs fantasy csapatod. A „Csapatot kérek“ egy kattintással összerakja: cseréld le, akit szeretnél, és mentsd el.', rok: 'Határidő', gumb: 'Csapatot kérek →' },
     de: { naslov: 'dein Team wartet noch', glavno: 'Du hast noch kein Fantasy-Team. „Team für mich zusammenstellen“ erledigt das mit einem Klick: tausch aus, wen du willst, und speichere.', rok: 'Deadline', gumb: 'Team für mich zusammenstellen →' },

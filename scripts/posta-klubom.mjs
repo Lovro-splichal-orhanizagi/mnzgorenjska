@@ -94,7 +94,7 @@ slff.eu
     zadeva: ekip >= 5 ? `${klub}: Ihre Spieler sind schon in ${ekip} Fantasy-Teams` : `${klub} im Fantasy-Spiel: so läuft es für Ihre Spieler`,
     telo: `Guten Tag,
 
-vor ein paar Tagen habe ich Ihnen über SLFF geschrieben, das kostenlose Fantasy-Spiel für die ${liga}. Kurz: Die Spieler von ${klub} sind im Spiel und sammeln Punkte${ekip >= 5 ? `, und sie stehen schon in ${ekip} Fantasy-Teams` : ''}.${naj ? ` Bester bisher: ${naj}.` : ''}
+vor ein paar Tagen habe ich Ihnen über SLFF geschrieben, das kostenlose Fantasy-Spiel für die ${liga}. Kurz: Die Spieler von ${klub} sind im Spiel und sammeln Punkte${ekip >= 5 ? `, und sie stehen schon in ${ekip} Fantasy-Teams` : ''}.${naj ? ` Bisher bester Spieler: ${naj}.` : ''}
 
 Die Vereinsseite mit Statistiken und einem fertigen Bild zum Teilen:
 ${url}
@@ -271,7 +271,7 @@ function madzarsko(k, p, vrsta, url) {
       zadeva: `${klub} játékosai a fantasy fociban (${liga})`,
       telo: `Jó napot kívánok!
 
-Luka vagyok az SLFF-től, ami egy ingyenes fantasy futballjáték amatőr bajnokságoknak. Nemrég bekerült a játékba ez a bajnokság is: ${liga}. A szurkolók a bajnokság valódi játékosaiból állítják össze a csapatukat, a pontok pedig a hivatalos mérkőzés-jegyzőkönyvekből jönnek (adatbank.mlsz.hu). ${klub} játékosai közül már ${p.igralcev} szerepel a játékban:
+Luka vagyok az SLFF-től, amely egy ingyenes fantasy futballjáték amatőr bajnokságoknak. Nemrég bekerült a játékba ez a bajnokság is: ${liga}. A szurkolók a bajnokság valódi játékosaiból állítják össze a csapatukat, a pontok pedig a hivatalos mérkőzés-jegyzőkönyvekből származnak (adatbank.mlsz.hu). ${klub} játékosai közül már ${p.igralcev} szerepel a játékban:
 ${url}
 ${naj ? `
 Eddigi legjobb játékos: ${naj}.
