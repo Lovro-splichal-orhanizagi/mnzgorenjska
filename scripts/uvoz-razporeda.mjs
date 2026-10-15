@@ -113,7 +113,7 @@ async function prenesi(url, ime) {
     return html
   } catch (e) {
     // Zavrnitve vira (jalgpall: 403, 429, izziv) ne obidemo s shranjeno stranjo.
-    if (e.zavrnitev || (vir.zavrnitev && [403, 429].includes(e.status))) throw vir.zavrnitev(e.message, e.status)
+    if (e.zavrnitev || (vir.zavrnitev && [401, 403, 429].includes(e.status))) throw vir.zavrnitev(e.message, e.status)
     if (!existsSync(pot)) throw e
     console.log(`  vir ni dosegljiv (${e.message}) — uporabim zadnji shranjeni razpored`)
     return readFileSync(pot, 'utf8')
@@ -200,6 +200,8 @@ if (vir.kontumacije) {
     }
     if (najdene.length) console.log(`Kontumacij v razporedu: ${oznacenih}`)
   } catch (e) {
+    // Zavrnitev vira (403, 429, izziv) ni motnja: uvoz se ustavi z izhodom 4.
+    if (e.zavrnitev) throw e
     console.log(`  kontumacij ni bilo mogoče prebrati (${e.message}) — nadaljujem brez njih`)
   }
 }

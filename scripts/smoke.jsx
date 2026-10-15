@@ -5385,8 +5385,10 @@ preveri(
     T.naslovTedna('1596/3938', 5) === 'https://www.tff.org/default.aspx?pageID=1596&grupID=3938&hafta=5' &&
     T.default.naslovZapisnika('x', 'tr319209') === 'https://www.tff.org/Default.aspx?pageId=29&macId=319209' && T.sifraZapisnika(319209) === 'tr319209')
   let slabaSifra = null
-  try { T.razberiKodo('3543') } catch (e) { slabaSifra = e.message }
-  preveri('tff: šifra brez strani ustavi uvoz', /<pageID>\/<grupID>/.test(slabaSifra ?? ''))
+  try { T.razberiKodo('971/') } catch (e) { slabaSifra = e.message }
+  const k1 = T.razberiKodo('142')
+  preveri('tff: napačna šifra ustavi uvoz; 1. Lig brez skupine', /<pageID>\/<grupID>/.test(slabaSifra ?? '') && k1.stran === 142 && k1.grup === null &&
+    T.default.naslovRazporeda('142') === 'https://www.tff.org/default.aspx?pageID=142&hafta=1' && T.naslovLige('1772') === 'https://www.tff.org/default.aspx?pageID=1772')
   preveri('tff: minuta, datum, istanbulski čas → ljubljanski (poleti −1 h, pozimi −2 h)', T.minuta('47.dk') === 47 && T.minuta('90+3.dk') === 90 &&
     T.minuta('45+1.dk') === 45 && T.datumIz('11.10.2026 - 14:30') === '2026-10-11' &&
     T.vLjubljanskiCas('2026-10-11', '14:30').ura === '13:30' && T.vLjubljanskiCas('2026-11-23', '14:00').ura === '12:00' &&
@@ -5421,6 +5423,54 @@ preveri(
     T.najvecStarostTedna(t6.tekme, Date.parse('2027-01-01T00:00:00Z')) === Infinity &&
     T.najvecStarostTedna(t6.tekme, Date.parse('2026-10-12T00:00:00Z')) === 3600000 && T.najvecStarostTedna(p1.tekme, Date.parse('2026-09-01T00:00:00Z')) === 3 * 86400000)
 
+  // Trendyol 1. Lig (šifra brez skupine, druga predloga tedna: `dtlHaftaninMaclari`).
+  const l10 = T.tekmeTedna('142', beri('tr-tff-hafta-142-10.html'), 10)
+  preveri('tff 1. Lig: teden — 38 tednov, 10 tekem, 7 z izidom, šifre klubov, ljubljanska ura', l10.skupina === null && l10.hafta === 10 && l10.tednov === 38 &&
+    l10.tekme.length === 10 && l10.tekme.filter((t) => t.izid).length === 7 && l10.tekme.every((t) => t.krog === 10 && t.domaciId && t.gostjeId && t.datum) &&
+    l10.tekme[0].id === 318183 && l10.tekme[0].domaci === 'BANDIRMA SPOR' && l10.tekme[0].gostjeId === 74 && l10.tekme[0].ura === '13:30' &&
+    l10.tekme[0].izid.gostje === 1)
+  let tuj1 = null
+  try { T.tekmeTedna('142', beri('tr-tff-hafta-142-10.html'), 11) } catch (e) { tuj1 = e.message }
+  let brezZavihka = null
+  try { T.tekmeTedna('142', beri('tr-tff-hafta-971-3543-6.html'), 6) } catch (e) { brezZavihka = e.message }
+  preveri('tff 1. Lig: drug teden ali stran s skupinami ustavi uvoz', /10\. teden/.test(tuj1 ?? '') && /1\. Lig/.test(brezZavihka ?? ''))
+  const po = beri('tr-tff-hafta-1772-1-playoff.html')
+  const a1 = T.tekmeTedna('1772', po, 1)
+  preveri('tff 1. Lig arhiv: play-off na strani se ne bere, obrezan teden je enak', /kupaMaclari_ctl\d+_lblTarih/.test(po) && a1.tekme.length === 10 &&
+    a1.tekme.every((t) => t.datum?.startsWith('2025-08')) && !a1.tekme.some((t) => t.id === 0) && T.obreziTeden(po).indexOf('kupaMaclari') < 0 &&
+    JSON.stringify(T.tekmeTedna('1772', T.obreziTeden(po), 1)) === JSON.stringify(a1) &&
+    JSON.stringify(T.tekmeTedna('142', T.obreziTeden(beri('tr-tff-hafta-142-10.html')), 10)) === JSON.stringify(l10))
+  {
+    // Ime kluba po kulupID (IME_KLUBA): sponzor iz arhiva ne naredi drugega kluba.
+    const { mkdtempSync, rmSync } = await import('node:fs')
+    const { tmpdir } = await import('node:os')
+    const mapa = mkdtempSync(`${tmpdir()}/tff-smoke-`)
+    const prej = process.env.SLFF_TFF_MAPA
+    process.env.SLFF_TFF_MAPA = mapa
+    const vse = await T.tekmeLige('1772', async (url) => po.replace(/>1\.Hafta</, `>${new URL(url).searchParams.get('hafta')}.Hafta<`))
+    if (prej === undefined) delete process.env.SLFF_TFF_MAPA
+    else process.env.SLFF_TFF_MAPA = prej
+    rmSync(mapa, { recursive: true, force: true })
+    const ime = (id) => vse.find((t) => t.domaciId === id)?.domaci ?? vse.find((t) => t.gostjeId === id)?.gostje
+    preveri('tff 1. Lig: arhivski sponzor → ime kluba iz 2026/27 (IME_KLUBA), 38 tednov', vse.length === 380 && ime(74) === 'EKENLER BETON SİVASSPOR' &&
+      ime(121) === 'HATAYSPOR' && ime(3623) === 'ORFA YAPI PENDİKSPOR FUTBOL A.Ş.' && ime(3661) === 'EMİNEVİM ÜMRANİYESPOR')
+  }
+  const l1 = T.vZapisnik(beri('tr-tff-mac-1lig-11m-rdeci-318093.html'))
+  const nl1 = T.nastopi(l1)
+  preveri('tff 1. Lig: zapisnik — 11 + 11, 11 m, rdeči v 88., 990 / 988 minut, brez opozoril', l1.domaci.ime === 'BANDIRMA SPOR' && /1\. Lig/.test(l1.liga) &&
+    l1.domaci.postava.length === 11 && l1.gostje.postava.length === 11 && l1.goli.length === 3 && l1.goli.filter((g) => g.enajstmetrovka).length === 1 &&
+    l1.rdeci.length === 1 && l1.rdeci[0].minuta === 88 && minute(nl1, 0) === 990 && minute(nl1, 1) === 988 && l1.menjave.length === 10 && l1.opozorila.length === 0 &&
+    l1.sezona === '2026/27' && l1.ura === '16:00')
+  const l2 = T.vZapisnik(beri('tr-tff-mac-1lig-avtogol-318115.html'))
+  preveri('tff 1. Lig: avtogol (K) šteje nasprotniku, 1:1, 990 minut', l2.goli.filter((g) => g.avtogol).length === 1 && l2.rezultat.domaci === 1 &&
+    l2.rezultat.gostje === 1 && l2.opozorila.length === 0 && minute(T.nastopi(l2), 0) === 990 && minute(T.nastopi(l2), 1) === 990)
+  preveri('tff: v predpomnilnik le prava stran (tekma z glavo, teden z zavihkom)', T.default.zaPredpomnilnik(beri('tr-tff-mac-1lig-avtogol-318115.html'), 'mac-318115.html') &&
+    !T.default.zaPredpomnilnik('<html><title>Hata</title></html>', 'mac-1.html') && !T.default.zaPredpomnilnik('<html></html>', 'hafta-142-3.html') &&
+    T.default.zaPredpomnilnik(beri('tr-tff-hafta-142-10.html'), 'razpored-142.html') && T.default.zaPredpomnilnik(beri('tr-tff-hafta-971-3543-6.html'), 'hafta-971-3543-6.html') &&
+    !T.default.zaPredpomnilnik(beri('tr-tff-hafta-142-10.html'), 'mac-1.html'))
+  preveri('tff: raven — 1. Lig nad 2. Lig', koliko(ravenLige({ slug: 'tr-1-lig' }), ravenLige({ slug: 'tr-2-lig-beyaz' })) === 1 &&
+    koliko(ravenLige({ slug: 'tr-1-lig' }), ravenLige({ slug: 'tr-pgl-3' })) === 3)
+
   const h = beri('tr-tff-mac-319209.html')
   const z = T.vZapisnik(h, { id: 'tr319209' })
   const n = T.nastopi(z)
@@ -5453,7 +5503,8 @@ preveri(
     T.glavaZapisnika(nd).datum === '2026-10-17')
   preveri('tff: vzorci brez sodnikov, opazovalcev in stadiona', !/Hakem\)|Gözlemci\)|Temsilci\)|STADI/.test(
     ['tr-tff-mac-319209.html', 'tr-tff-mac-11m-rdeci-319207.html', 'tr-tff-mac-drugi-rumeni-318721.html', 'tr-tff-mac-avtogol-318994.html',
-      'tr-tff-mac-bal-311650.html', 'tr-tff-mac-neodigrana-373217.html', 'tr-tff-mac-kontumacija-319819.html'].map(beri).join('')))
+      'tr-tff-mac-bal-311650.html', 'tr-tff-mac-neodigrana-373217.html', 'tr-tff-mac-kontumacija-319819.html',
+    'tr-tff-mac-1lig-11m-rdeci-318093.html', 'tr-tff-mac-1lig-avtogol-318115.html', 'tr-tff-hafta-1772-1-playoff.html'].map(beri).join('')))
 
   // Kontumacija (Yeni Malatyaspor ni prišel, 3. Lig 03, 3. 10. 2026): izid 0:3,
   // "Esame Bilgileri Kulüpler Tarafından Girilmektedir", brez postav in ure.
@@ -5472,6 +5523,9 @@ preveri(
   try { await T.default.zapisniki('971/3543', async () => { const e = new Error('403'); e.status = 403; throw e }) } catch (e) { zavrnjen = e }
   preveri('tff: 403 in izziv vržeta TffZavrnitev (uvoz izhod 4)', izziv instanceof T.TffZavrnitev && zavrnjen instanceof T.TffZavrnitev &&
     zavrnjen.status === 403 && T.default.zavrnitev('x', 429).zavrnitev === true)
+  let z401 = null
+  try { await T.default.zapisniki('142', async () => { const e = new Error('401'); e.status = 401; throw e }) } catch (e) { z401 = e }
+  preveri('tff: 401 (prijava) na 1. Lig vrže TffZavrnitev', z401 instanceof T.TffZavrnitev && z401.status === 401)
   // 403 ali izziv na strani TEKME (strani tednov gredo skozi): večina zahtevkov je
   // tekem, zato se zapora najprej pokaže tu. Tedni v začasni mapi, ne v predpomnilniku.
   {

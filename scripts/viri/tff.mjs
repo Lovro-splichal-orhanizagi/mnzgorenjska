@@ -1,9 +1,11 @@
 // Vir: Türkiye Futbol Federasyonu — tff.org (Turčija).
 //
 // TFF na tff.org objavi zapisnike profesionalnih lig in Profesyonelliğe Geçiş
-// Ligi (nekdanji BAL): Nesine 2. Lig (raven 3, dve skupini), Nesine 3. Lig
+// Ligi (nekdanji BAL): Trendyol 1. Lig (raven 2, brez skupin — šifra le
+// `<pageID>`, glej `vrsticeTedna1Lig`), Nesine 2. Lig (raven 3, dve skupini), Nesine 3. Lig
 // (raven 4, tri skupine v 2026/27) in PGL (raven 5, 12 skupin). Pokrajinske
-// amaterske lige (ASKF) niso na tff.org. Glej CLAUDE.md (Turčija — vir tff).
+// amaterske lige (ASKF) niso na tff.org. Süper Lig namenoma ne beremo (TFF
+// ima svojo fantasy igro). Glej CLAUDE.md (Turčija — vir tff).
 //
 // Stran je ASP.NET iz strežnika v kodiranju **windows-1254** (ğ, ı, İ, ş) —
 // `tffFetch` jo prebere kot bajte in pretvori v UTF-8, sicer bi bila turška
@@ -35,7 +37,7 @@
 // objaviti z navedbo vira, a ne v komercialne namene — SLFF je brezplačen;
 // ob prvem prihodku potrebujemo dovoljenje TFF. Beremo odkrito (User-Agent
 // SLFF, 3 s med zahtevki), zaključenih tednov in zapisnikov ne beremo znova.
-// Ob izzivu, CAPTCHI, 403 ali 429 se uvoz ustavi — ne obhajaj.
+// Ob izzivu, CAPTCHI, 401, 403 ali 429 se uvoz ustavi — ne obhajaj.
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { razpakiraj } from '../klubi.mjs'
 import { nastopi } from './hlf.mjs'
@@ -55,16 +57,21 @@ const UA = 'SLFF fantasy (https://slff.eu)'
 
 // --- šifre in naslovi ---------------------------------------------------------------
 
-/** "971/3543" → { stran: 971, grup: 3543 }. */
+/**
+ * "971/3543" → { stran: 971, grup: 3543 }; "142" → { stran: 142, grup: null }
+ * (liga brez skupin — Trendyol 1. Lig, glej `vrsticeTedna1Lig`).
+ */
 export function razberiKodo(koda) {
-  const m = String(koda ?? '').trim().match(/^(\d+)\/(\d+)$/)
-  if (!m) throw new Error(`tff: šifra lige je "<pageID>/<grupID>" (npr. 971/3543), ne "${koda}"`)
-  return { stran: Number(m[1]), grup: Number(m[2]) }
+  const s = String(koda ?? '').trim()
+  const m = s.match(/^(\d+)\/(\d+)$/)
+  if (m) return { stran: Number(m[1]), grup: Number(m[2]) }
+  if (/^\d+$/.test(s)) return { stran: Number(s), grup: null }
+  throw new Error(`tff: šifra lige je "<pageID>/<grupID>" (npr. 971/3543) ali "<pageID>" brez skupin (1. Lig: 142), ne "${koda}"`)
 }
 
 export const naslovLige = (koda) => {
   const { stran, grup } = razberiKodo(koda)
-  return `${OSNOVNI}/default.aspx?pageID=${stran}&grupID=${grup}`
+  return `${OSNOVNI}/default.aspx?pageID=${stran}${grup == null ? '' : `&grupID=${grup}`}`
 }
 export const naslovTedna = (koda, hafta) => `${naslovLige(koda)}&hafta=${hafta}`
 export const naslovTekme = (id) => `${OSNOVNI}/Default.aspx?pageId=29&macId=${String(id).replace(/^tr/, '')}`
@@ -110,6 +117,8 @@ export function vLjubljanskiCas(datum, ura) {
 
 /** "MÜCAHİT ÇAKIR" → "Mücahit Çakır" (turška pravila za i/İ in ı/I). */
 export function lepoIme(s) {
+  // Tuja imena TFF piše z I brez pike ("GIANNI" → "Gıannı"); ločiti jih od
+  // turških (YILMAZ, AYDIN, KAYALI) se zanesljivo ne da — ostanejo po turško.
   return String(s ?? '')
     .trim()
     .toLocaleLowerCase('tr')
@@ -127,7 +136,10 @@ export function vPriimekIme(ime) {
 export const jeIzziv = (html) =>
   /<title>\s*(Just a moment|Attention Required)|cf_chl_opt|cf-turnstile|g-recaptcha|hcaptcha/i.test(String(html ?? ''))
 
-/** Zavrnitev (403, 429) ali izziv: uvoz se ustavi in ne vzame shranjene strani. */
+/** Statusi, ki pomenijo "ne beri" (prijava, prepoved, preveč zahtevkov). */
+export const ZAVRNITVE = [401, 403, 429]
+
+/** Zavrnitev (401, 403, 429) ali izziv: uvoz se ustavi in ne vzame shranjene strani. */
 export class TffZavrnitev extends Error {
   constructor(sporocilo, status = null) {
     super(sporocilo)
@@ -187,6 +199,45 @@ export function vrsticeTedna(html) {
   return out
 }
 
+// Trendyol 1. Lig (pageID 142, arhiv 2025/26 1772) je ena skupina in ima
+// drugo predlogo: modul "Fikstürü" z zavihkom "10.Hafta" (`…_hs_Tab2`) in
+// vrsticami `dtlHaftaninMaclari` (domači Label4, gostje Label1, izid
+// Label5/Label6, `macId`). Na isti strani so še play-off (`kupaMaclari`, maja)
+// in fiksture vse sezone brez datumov — ne beremo ne enega ne drugega.
+
+/** Zavihek tedna 1. Lig: { skupina: null, hafta: 10 } ali null. */
+export function zavihekTedna1Lig(html) {
+  const m = String(html ?? '').match(/_hs_Tab2"[^>]*><span class="wrap"><span class="innerWrap">\s*(\d+)\s*\.\s*Hafta\s*<\/span>/i)
+  return m ? { skupina: null, hafta: Number(m[1]) } : null
+}
+
+/** Tekme tedna 1. Lig (oblika kot `vrsticeTedna`; datum in ura istanbulska). */
+export function vrsticeTedna1Lig(html) {
+  const out = []
+  const deli = cisto(html).split(/(?=<div id="[^"]*dtlHaftaninMaclari_ctl\d+_ayrt1")/)
+  for (const d of deli.slice(1)) {
+    const tarih = d.match(/_lblTarih">([^<]*)</)?.[1]
+    const saat = d.match(/_lblSaat">([^<]*)</)?.[1] ?? ''
+    const dom = d.match(/kulupID=(\d+)"[^>]*_A2">\s*<span[^>]*_Label4">([^<]*)</i)
+    const gos = d.match(/kulupID=(\d+)"[^>]*_A5">\s*<span[^>]*_Label1">([^<]*)</i)
+    const mac = d.match(/macId=(\d+)"[^>]*_A3"/i)
+    if (!dom || !gos || !mac) continue
+    const s1 = besedilo(d.match(/_Label5">([^<]*)</)?.[1])
+    const s2 = besedilo(d.match(/_Label6">([^<]*)</)?.[1])
+    out.push({
+      id: Number(mac[1]),
+      datum: datumIz(tarih),
+      ura: /\d{1,2}:\d{2}/.test(saat) ? saat.trim() : null,
+      domaci: besedilo(dom[2]),
+      gostje: besedilo(gos[2]),
+      domaciId: Number(dom[1]),
+      gostjeId: Number(gos[1]),
+      izid: /^\d+$/.test(s1) && /^\d+$/.test(s2) ? { domaci: Number(s1), gostje: Number(s2) } : null,
+    })
+  }
+  return out
+}
+
 /**
  * Teden iz strani: { hafta, skupina, tednov, tekme } (datum in ura
  * ljubljanska). Stran druge skupine ali drugega tedna (neznan `hafta` ali
@@ -194,6 +245,13 @@ export function vrsticeTedna(html) {
  */
 export function tekmeTedna(koda, html, hafta = null) {
   const { grup } = razberiKodo(koda)
+  if (grup == null) {
+    const z = zavihekTedna1Lig(html)
+    if (!z) throw new Error(`tff: ${naslovLige(koda)} nima zavihka tedna lige brez skupin (1. Lig) — stran se je spremenila? Uvoz ustavljen`)
+    if (hafta != null && z.hafta !== hafta) throw new Error(`tff: ${naslovTedna(koda, hafta)} kaže ${z.hafta}. teden — uvoz ustavljen`)
+    const tekme = vrsticeTedna1Lig(html).map((t) => ({ ...t, krog: z.hafta, ...vLjubljanskiCas(t.datum, t.ura) }))
+    return { hafta: z.hafta, skupina: null, tednov: steviloTednov(html), tekme }
+  }
   const z = zavihekTedna(html)
   if (!z) throw new Error(`tff: ${naslovLige(koda)} nima zavihka tedna — stran se je spremenila? Uvoz ustavljen`)
   const ime = skupineStrani(html).get(grup)
@@ -211,6 +269,15 @@ export function tekmeTedna(koda, html, hafta = null) {
  */
 export function obreziTeden(html) {
   const s = String(html ?? '')
+  if (zavihekTedna1Lig(s) && !zavihekTedna(s)) {
+    // 1. Lig: zavihek, povezave tednov in blok `dtlHaftaninMaclari` (brez play-offa).
+    const tedni = [...s.matchAll(/<td[^>]*class=haftaNo\w+><a href=[^>]*>/g)].map((m) => m[0])
+    const zavihek = s.match(/<a [^>]*_hs_Tab2"[^>]*><span class="wrap"><span class="innerWrap">[^<]*<\/span><\/span><\/a>/)?.[0] ?? ''
+    const od = s.search(/<div id="[^"]*dtlHaftaninMaclari_ctl\d+_ayrt1"/)
+    const zadnji = s.lastIndexOf('dtlHaftaninMaclari_ctl')
+    const tekme = od >= 0 && zadnji > od ? s.slice(od, s.indexOf('</div>', zadnji) + 6) : ''
+    return `<!-- tff teden 1. Lig (obrezano) -->\n${tedni.join('\n')}\n${zavihek}\n${tekme}\n`
+  }
   const skupine = [...s.matchAll(/<a href="[^"]*grupID=\d+[^"]*#hmac"[^>]*>\s*[^<]*<\/a>/g)].map((m) => m[0])
   const tedni = [...s.matchAll(/<td[^>]*class=haftaNo\w+><a href=[^>]*>/g)].map((m) => m[0])
   const zavihek = s.match(/<a [^>]*maclarBaslik_Tab2"[^>]*><span class="wrap"><span class="innerWrap">[^<]*<\/span><\/span><\/a>/)?.[0] ?? ''
@@ -276,6 +343,20 @@ export function glavaZapisnika(html) {
 
 /** Je stran sploh zapisnik tekme (ima glavo z obema kluboma)? */
 export const jeStranTekme = (html) => glavaZapisnika(html) != null
+
+/** Je stran teden lige (zavihek tedna s skupino ali 1. Lig)? */
+export const jeStranTedna = (html) => zavihekTedna(html) != null || zavihekTedna1Lig(html) != null
+
+/**
+ * V predpomnilnik gre le prava stran: zapisnik z glavo, teden z zavihkom.
+ * Napaka strežnika s statusom 200 (ASP.NET "Hata", prazna predloga) bi sicer
+ * obveljala, dokler se ne postara — tekma, starejša od treh dni, pa za vedno.
+ */
+export function zaPredpomnilnik(html, datoteka = '') {
+  if (/^mac-/.test(datoteka)) return jeStranTekme(html)
+  if (/^(hafta|razpored)-/.test(datoteka)) return jeStranTedna(html)
+  return jeStranTekme(html) || jeStranTedna(html)
+}
 
 /**
  * Zapisnik v obliko drugih virov. Null, če stran ni tekma, tekma nima izida
@@ -463,7 +544,7 @@ async function prenesiStran(prenesi, url, ime, sveze = true) {
   try {
     html = await prenesi(url, ime, sveze)
   } catch (e) {
-    if (e.zavrnitev || e.status === 403 || e.status === 429) throw new TffZavrnitev(`tff: ${url} → ${e.status ?? e.message} — uvoz ustavljen, ne obhajamo`, e.status)
+    if (e.zavrnitev || ZAVRNITVE.includes(e.status)) throw new TffZavrnitev(`tff: ${url} → ${e.status ?? e.message} — uvoz ustavljen, ne obhajamo`, e.status)
     throw e
   }
   if (jeIzziv(html)) throw new TffZavrnitev(`tff: ${url} vrne izziv (CAPTCHA) — uvoz ustavljen, ne obhajamo`)
@@ -527,6 +608,27 @@ async function beriTeden(koda, hafta, prenesi, danes) {
 }
 
 /**
+ * Ime kluba po šifri (`kulupID`) ne glede na sezono: 1. Lig nosi sponzorje v
+ * imenu in jih menja vsako sezono ("ÖZBELSAN SİVASSPOR" 2025/26 → "EKENLER
+ * BETON SİVASSPOR" 2026/27). Brez tega bi arhiv 2025/26 vpisal isti klub še
+ * enkrat pod starim imenom. Pregled 15. 10. 2026 (1. Lig obeh sezon proti
+ * 2./3. Lig, PGL in BAL): teh deset, trkov (isto ime, druga šifra) ni.
+ * Ob novi sezoni poženi pregled znova in dodaj preimenovane.
+ */
+export const IME_KLUBA = {
+  130: 'BANDIRMA SPOR', // 2025/26 ÖZBEYLİ BANDIRMA SPOR
+  74: 'EKENLER BETON SİVASSPOR', // ÖZBELSAN SİVASSPOR
+  3602: 'SMS GRUP SARIYER', // SMS GRUP SARIYERSPOR
+  4824: 'BODRUM FK', // SİPAY BODRUM FK
+  3623: 'ORFA YAPI PENDİKSPOR FUTBOL A.Ş.', // ATKO GRUP PENDİKSPOR FUTBOL A.Ş.
+  2020: 'ARTI DEĞER VAN SPOR FUTBOL KULÜBÜ', // İMAJ ALTYAPI VAN SPOR FUTBOL KULÜBÜ
+  6: 'KEÇTAŞ ANKARA KEÇİÖRENGÜCÜ', // EMRE GÖKDEMİR İNŞAAT ANKARA KEÇİÖRENGÜCÜ
+  9387: 'ALAGÖZ HOLDİNG IĞDIR FUTBOL KULÜBÜ', // ALAGÖZ HOLDİNG IĞDIR FK
+  964: 'TURKA ESENLER EROKSPOR', // ESENLER EROKSPOR
+  121: 'HATAYSPOR', // 1. Lig 2025/26 ATAKAŞ HATAYSPOR, 2026/27 v 2. Lig
+}
+
+/**
  * Vse tekme lige: [{ krog, id, datum, ura, domaci, gostje, domaciId, gostjeId, izid }].
  * Število tednov da prvi teden; ime kluba je zadnje, ki ga stran pove za šifro
  * kluba (preimenovan klub ima tako eno ime v razporedu in zapisnikih).
@@ -537,10 +639,10 @@ export async function tekmeLige(koda, prenesi, { danes = Date.now() } = {}) {
   if (!tednov) throw new Error(`tff: ${naslovLige(koda)} ne pove števila tednov — uvoz ustavljen`)
   const tekme = [...prvi.tekme]
   for (let h = 2; h <= tednov; h++) tekme.push(...(await beriTeden(koda, h, prenesi, danes)).tekme)
-  const imena = new Map()
+  const imena = new Map(Object.entries(IME_KLUBA).map(([k, v]) => [Number(k), v]))
   for (const t of tekme) {
-    imena.set(t.domaciId, t.domaci)
-    imena.set(t.gostjeId, t.gostje)
+    if (!(t.domaciId in IME_KLUBA)) imena.set(t.domaciId, t.domaci)
+    if (!(t.gostjeId in IME_KLUBA)) imena.set(t.gostjeId, t.gostje)
   }
   return tekme.map((t) => ({ ...t, domaci: imena.get(t.domaciId), gostje: imena.get(t.gostjeId) }))
 }
@@ -590,6 +692,7 @@ const vir = {
   naslovRazporeda: (koda) => naslovTedna(koda, 1),
   naslovZapisnika: (_koda, id) => naslovTekme(id),
   jeIzziv,
+  zaPredpomnilnik,
   zavrnitev: (sporocilo, status = null) => new TffZavrnitev(`tff: ${sporocilo} — uvoz ustavljen, ne obhajamo`, status),
   // Teden v predpomnilniku je obrezan; uvoz razporeda shrani celo stran 1. tedna
   // pod svojim imenom, `beriTeden` pa bere le svoje datoteke `hafta-…`.

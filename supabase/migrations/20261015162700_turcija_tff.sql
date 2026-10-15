@@ -1,10 +1,14 @@
--- Turčija: lige TFF z vira `tff` (tff.org) — Nesine 2. Lig (dve skupini),
--- Nesine 3. Lig (tri skupine) in Profesyonelliğe Geçiş Ligi (PGL, nekdanji
--- BAL, 12 skupin) za sezono 2026/27.
+-- Turčija: lige TFF z vira `tff` (tff.org) — Trendyol 1. Lig (raven 2, ena
+-- skupina, 20 klubov), Nesine 2. Lig (dve skupini), Nesine 3. Lig (tri
+-- skupine) in Profesyonelliğe Geçiş Ligi (PGL, nekdanji BAL, 12 skupin) za
+-- sezono 2026/27. Süper Lig namenoma NI vpisana (TFF ima svojo fantasy igro,
+-- pogoji so nekomercialni — odloči lastnik posebej).
 --
 -- Šifra lige je `<pageID>/<grupID>` (stran tekmovanja sezone in skupina, glej
--- scripts/viri/tff.mjs); vsaka sezona ima svoje številke, ob novi sezoni se
+-- scripts/viri/tff.mjs), pri 1. Lig brez skupin le `<pageID>` (142, arhiv
+-- 2025/26 `1772`); vsaka sezona ima svoje številke, ob novi sezoni se
 -- šifra popravi. Arhiv 2025/26 (po skupnih klubih, CLAUDE.md, Turčija — vir tff):
+--   tr-1-lig          1772
 --   tr-2-lig-beyaz    1769/2781            tr-3-lig-1  1770/2785,1770/2783
 --   tr-2-lig-kirmizi  1769/2782            tr-3-lig-2  1770/2786
 --                                          tr-3-lig-3  1770/2784
@@ -31,10 +35,12 @@ insert into competitions (
   vir_ime, vir_url
 )
 select v.slug, v.ime, v.kratko, d.id, f.id, 'tff', v.koda, 1, v.vrstni, 6, false,
-       'TFF', 'https://www.tff.org/default.aspx?pageID=' || split_part(v.koda, '/', 1) || '&grupID=' || split_part(v.koda, '/', 2)
+       'TFF', 'https://www.tff.org/default.aspx?pageID=' || split_part(v.koda, '/', 1)
+         || case when v.koda like '%/%' then '&grupID=' || split_part(v.koda, '/', 2) else '' end
   from countries d
   join federations f on f.code = 'tff'
   cross join (values
+    ('tr-1-lig', 'Trendyol 1. Lig', '1. Lig', '142', 0),
     ('tr-2-lig-beyaz', 'Nesine 2. Lig Beyaz Grup', '2. Lig Beyaz', '976/3541', 1),
     ('tr-2-lig-kirmizi', 'Nesine 2. Lig Kırmızı Grup', '2. Lig Kırmızı', '976/3542', 2),
     ('tr-3-lig-1', 'Nesine 3. Lig 1. Grup', '3. Lig 1', '971/3543', 11),
