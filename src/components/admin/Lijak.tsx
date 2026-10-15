@@ -184,7 +184,8 @@ export default function Lijak() {
           začet {poKoraku.get('vodic_zacetek') ?? 0}, preskočen {poKoraku.get('vodic_preskok') ?? 0},
           do konca {poKoraku.get('vodic_konec') ?? 0}. Brez prijave: sestavljal{' '}
           {poKoraku.get('osnutek_brez_prijave') ?? 0}, po prijavi shranil{' '}
-          {poKoraku.get('osnutek_shranjen') ?? 0}. Isti korak se v
+          {poKoraku.get('osnutek_shranjen') ?? 0}. Deljene kartice igralcev:{' '}
+          {poKoraku.get('kartica_deljena') ?? 0}. Isti korak se v
           isti seji šteje enkrat na dan.
         </p>
       </div>
