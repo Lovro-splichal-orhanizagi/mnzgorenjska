@@ -5630,6 +5630,21 @@ preveri(
   preveri('oefb: faze — en krog za obe skupini', krogiBl.length === 32 && krogiBl.at(-1).stevilka === 32 &&
     krogiBl.find((k) => k.stevilka === 23).tekme.length === 6)
 
+  // Stran razporeda brez podatkov (`NO_DATA`, 200): oefb.at jo kdaj vrne za
+  // minuto. Vir jo ponovi, je ne shrani in na koncu pade, ne vrne 0 tekem.
+  const brez = beri('at-oefb-spielplan-brez-podatkov.html')
+  preveri('oefb: stran brez podatkov razporeda', !O.imaRazpored(brez) && O.imaRazpored(beri('at-oefb-spielplan-231808.html')) &&
+    O.vrsticeRazporeda(brez).length === 0)
+  preveri('oefb: v predpomnilnik le razpored s podatki', !O.default.zaPredpomnilnik(brez, 'spielplan-232051.html') &&
+    !O.default.zaPredpomnilnik(brez, 'razpored-232051.html') && O.default.zaPredpomnilnik(beri('at-oefb-spielplan-231808.html'), 'spielplan-231808.html') &&
+    O.default.zaPredpomnilnik('', 'spiel-4078640.html'))
+  let prenosovRazporeda = 0
+  const nihajoca = async () => (++prenosovRazporeda === 1 ? brez : beri('at-oefb-spielplan-231808.html'))
+  const ponovljen = await O.stranRazporeda('231808', nihajoca, [0, 0])
+  preveri('oefb: razpored brez podatkov se prebere znova', O.imaRazpored(ponovljen) && prenosovRazporeda === 2, String(prenosovRazporeda))
+  preveri('oefb: vztrajno brez podatkov — uvoz pade', await O.stranRazporeda('232051', async () => brez, [0, 0])
+    .then(() => false, (e) => /brez podatkov razporeda/.test(e.message)))
+
   // Zapisnik s skupinami: KAC 1909 : ATSV Wolfsberg 0:3 (Kärntner Liga 2025/26, 1. krog) — 11 m, karton trenerja.
   const z = O.vZapisnik(beri('at-oefb-spiel-3844106.html'), { id: '3844106' })
   const n = O.nastopi(z)
@@ -6711,6 +6726,43 @@ preveri(
   preveri('prenos: Retry-After v sekundah in kot datum',
     retryAfterMs('3') === 3000 && retryAfterMs(new Date(10000).toUTCString(), 4000) === 6000 && retryAfterMs(null) === null)
 
+  // Baza (fetchZaBazo): ponovi le, kar ponovitev ne pokvari.
+  {
+    const { fetchZaBazo, jeIdempotenten } = await import('./prenos.mjs')
+    const API = 'https://api.slff.eu/rest/v1'
+    const reset = () => Object.assign(new TypeError('fetch failed'), { cause: { code: 'ECONNRESET' } })
+    const zavrnjeno = () => Object.assign(new TypeError('fetch failed'), { cause: { code: 'ECONNREFUSED' } })
+    const zaporedje = (...koraki) => {
+      let i = 0
+      const f = async () => { const k = koraki[Math.min(i++, koraki.length - 1)]; if (k instanceof Error) throw k; return new Response('x', { status: k }) }
+      f.klicev = () => i
+      return f
+    }
+    const baza = (fetchFn) => fetchZaBazo({ fetchFn, zamiki: [1, 1, 1, 1], log: () => {} })
+    preveri('baza: idempotentni zahtevki',
+      jeIdempotenten(`${API}/players?id=eq.1`, { method: 'PATCH' }) && jeIdempotenten(`${API}/players`) &&
+      jeIdempotenten(`${API}/position_priors`, { method: 'POST', headers: new Headers({ Prefer: 'resolution=merge-duplicates,return=minimal' }) }) &&
+      jeIdempotenten(`${API}/rpc/zamenjaj_nastope_tekme`, { method: 'POST' }) &&
+      !jeIdempotenten(`${API}/players`, { method: 'POST', headers: { Prefer: 'return=representation' } }) &&
+      !jeIdempotenten(`${API}/rpc/izstop_kluba`, { method: 'POST' }))
+    let f = zaporedje(reset(), 520, 200)
+    let o = await baza(f)(`${API}/players?id=eq.1`, { method: 'PATCH', body: '{}' })
+    preveri('baza: PATCH čez "fetch failed" in 520', o.status === 200 && f.klicev() === 3, String(f.klicev()))
+    f = zaporedje(reset(), 200)
+    let vrzena = null
+    try { await baza(f)(`${API}/players`, { method: 'POST', body: '{}' }) } catch (e) { vrzena = e }
+    preveri('baza: INSERT po prekinjeni povezavi ne ponovi', vrzena?.cause?.code === 'ECONNRESET' && f.klicev() === 1)
+    f = zaporedje(zavrnjeno(), 522, 201)
+    o = await baza(f)(`${API}/players`, { method: 'POST', body: '{}' })
+    preveri('baza: INSERT ponovi, ko baze ni dosegel', o.status === 201 && f.klicev() === 3)
+    f = zaporedje(520)
+    o = await baza(f)(`${API}/players`, { method: 'POST', body: '{}' })
+    preveri('baza: INSERT z 520 vrne odgovor brez ponovitve', o.status === 520 && f.klicev() === 1)
+    f = zaporedje(503)
+    o = await baza(f)(`${API}/competitions`)
+    preveri('baza: trajna 503 po 5 poskusih vrne odgovor', o.status === 503 && f.klicev() === 5)
+  }
+
   // Premor vira (Sportnet `premorMs`) velja pred vsakim poskusom.
   poskusi = 0
   const zacetek = Date.now()
@@ -6949,6 +7001,106 @@ preveri(
   const r = (teden) => o.vrstniRedDrzav(teden).join()
   preveri('objave: rotacija SI → HR → SK, vsak teden druga', r('2026-10-12') === 'SI,HR,SK,AT,HU' && r('2026-10-19').startsWith('HR,')
     && r('2026-10-26').startsWith('SK,') && o.isoTeden('2027-01-04') === 1 && o.isoTeden('2026-12-28') === 53)
+
+  // Faza 2: okno objave, žeton, javni naslov slik, klici Graph API (lažen fetch, brez Mete).
+  const rok = '2026-10-12T08:00:00.000Z'
+  const ob = (min) => Date.parse(rok) + min * 60e3
+  const os = { stanje: 'osnutek', objava_ob: rok, discord_at: '2026-10-12T02:00:00Z' }
+  preveri('objave: objava ob roku in do 2 h po njem', o.zaObjavo(os, ob(0)) && o.zaObjavo(os, ob(120)))
+  preveri('objave: ne pred rokom, ne zastarela, ne ustavljena, ne brez Discorda', !o.zaObjavo(os, ob(-1)) && !o.zaObjavo(os, ob(121))
+    && !o.zaObjavo({ ...os, stanje: 'ustavljeno' }, ob(5)) && !o.zaObjavo({ ...os, stanje: 'objavljanje' }, ob(5))
+    && !o.zaObjavo({ ...os, discord_at: null }, ob(5)))
+  const z = o.novZeton('https://slff.eu')
+  preveri('objave: žeton (sha256 hex kot SQL, 256 bitov, v #)',
+    o.hashZetona('abc') === 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad'
+    && z.hash === o.hashZetona(z.zeton) && z.zeton.length === 43 && z.povezava === `https://slff.eu/objava#ustavi=${z.zeton}`)
+  preveri('objave: javni naslov slike', o.javniUrl('/mediji/2026-10-12-pon-ab12/1.jpg', '/mediji', 'https://slff.eu/objave-mediji/')
+    === 'https://slff.eu/objave-mediji/2026-10-12-pon-ab12/1.jpg')
+  preveri('objave: Meta le z vsemi tremi ključi', !o.metaNastavljena({ META_PAGE_TOKEN: 't', META_PAGE_ID: 'p' })
+    && o.metaNastavljena({ META_PAGE_TOKEN: 't', META_PAGE_ID: 'p', META_IG_USER_ID: 'i' }))
+  const env = { META_PAGE_TOKEN: 'tok', META_PAGE_ID: 'P1', META_IG_USER_ID: 'IG1' }
+  const lazenFetch = (klici, odgovori = {}) => async (url, init) => {
+    const u = new URL(url)
+    const params = Object.fromEntries(init ? init.body : u.searchParams)
+    klici.push({ pot: u.pathname, metoda: init ? 'POST' : 'GET', params })
+    const kljuc = Object.keys(odgovori).find((k) => u.pathname.endsWith(k))
+    if (kljuc) return new Response(JSON.stringify(odgovori[kljuc]), { status: odgovori[kljuc].error ? 400 : 200 })
+    if (params.fields === 'status_code') return Response.json({ status_code: 'FINISHED' })
+    if (params.fields === 'permalink') return Response.json({ permalink: 'https://www.instagram.com/p/X/' })
+    if (params.fields === 'permalink_url') return Response.json({ permalink_url: 'https://www.facebook.com/slff/posts/9' })
+    return Response.json({ id: `id${klici.length}` })
+  }
+  const slike = ['https://slff.eu/objave-mediji/a/1.jpg', 'https://slff.eu/objave-mediji/a/2.jpg']
+  let klici = []
+  const ig = await o.objaviInstagram({ slike, napis: 'Napis', env, f: lazenFetch(klici), cakajMs: async () => {} })
+  const posti = klici.filter((k) => k.metoda === 'POST')
+  preveri('objave: Instagram vrtiljak (2 otroka, vrtiljak, objava)', ig === 'https://www.instagram.com/p/X/'
+    && posti.length === 4 && posti[0].pot === '/v26.0/IG1/media' && posti[0].params.is_carousel_item === 'true'
+    && posti[0].params.image_url === slike[0] && posti[2].params.media_type === 'CAROUSEL' && posti[2].params.children === 'id1,id2'
+    && posti[2].params.caption === 'Napis' && posti[3].pot === '/v26.0/IG1/media_publish' && posti[3].params.creation_id === `id${klici.findIndex((k) => k.params.media_type === 'CAROUSEL') + 1}`
+    && klici.every((k) => k.params.access_token === 'tok'), JSON.stringify(posti))
+  klici = []
+  await o.objaviInstagram({ slike: slike.slice(0, 1), napis: 'N', env: { ...env, META_GRAPH_VERSION: 'v25.0' }, f: lazenFetch(klici), cakajMs: async () => {} })
+  preveri('objave: Instagram ena slika (en vsebnik z napisom)', klici.filter((k) => k.metoda === 'POST').length === 2
+    && klici[0].params.caption === 'N' && klici[0].pot === '/v25.0/IG1/media' && !klici[0].params.is_carousel_item)
+  klici = []
+  const fb = await o.objaviFacebook({ slike, napis: 'Napis', env, f: lazenFetch(klici) })
+  const feed = klici.find((k) => k.pot.endsWith('/feed'))
+  preveri('objave: Facebook neobjavljene fotografije, nato objava z njimi', fb === 'https://www.facebook.com/slff/posts/9'
+    && klici.filter((k) => k.pot === '/v26.0/P1/photos' && k.params.published === 'false').length === 2
+    && feed.params.message === 'Napis' && JSON.parse(feed.params['attached_media[1]']).media_fbid === 'id2', JSON.stringify(klici))
+  klici = []
+  let napaka = ''
+  await o.objaviInstagram({ slike, napis: 'N', env, f: lazenFetch(klici, { media_publish: { error: { message: 'Limit' } } }), cakajMs: async () => {} })
+    .catch((e) => { napaka = e.message })
+  preveri('objave: napaka Mete brez žetona', napaka.includes('Limit') && !napaka.includes('tok'), napaka)
+
+  // objaviZapadle: prevzem (osnutek → objavljanje) pred Meto; brez ključev nič.
+  const lažnaBaza = (vrstice) => {
+    const zapisi = []
+    const db = {
+      zapisi,
+      from: () => {
+        const q = { filtri: {}, posodobi: null }
+        const b = {
+          select: () => b,
+          update: (v) => { q.posodobi = v; return b },
+          eq: (k, v) => { q.filtri[k] = v; return b },
+          lte: () => b,
+          gte: () => b,
+          then: (res) => {
+            if (!q.posodobi) return res({ data: vrstice, error: null })
+            zapisi.push({ ...q })
+            const v = vrstice.find((x) => x.id === q.filtri.id)
+            const ujema = !q.filtri.stanje || v.stanje === q.filtri.stanje
+            if (ujema) Object.assign(v, q.posodobi)
+            return res({ data: ujema ? [{ id: v.id }] : [], error: null })
+          },
+        }
+        return b
+      },
+    }
+    return db
+  }
+  const vrsta = () => [{ id: 7, ...os, napis: 'Napis', mediji: ['/mediji/a/1.jpg', '/mediji/a/2.jpg'] }]
+  let db = lažnaBaza(vrsta())
+  klici = []
+  await o.objaviZapadle({ db, env: {}, mapa: '/mediji', zdaj: ob(10), f: lazenFetch(klici) })
+  preveri('objave: brez META_* se nič ne objavi', klici.length === 0 && db.zapisi.length === 0)
+  db = lažnaBaza(vrsta())
+  await o.objaviZapadle({ db, env, mapa: '/mediji', zdaj: ob(10), f: lazenFetch(klici), cakajMs: async () => {} })
+  const [prevzem, konec] = db.zapisi
+  preveri('objave: prevzem pred Meto, nato objavljeno s povezavama', prevzem.posodobi.stanje === 'objavljanje' && prevzem.filtri.stanje === 'osnutek'
+    && konec.posodobi.stanje === 'objavljeno' && konec.posodobi.ig_povezava && konec.posodobi.fb_povezava
+    && klici[0].params.image_url === 'https://slff.eu/objave-mediji/a/1.jpg', JSON.stringify(db.zapisi))
+  db = lažnaBaza(vrsta())
+  klici = []
+  await o.objaviZapadle({ db, env, mapa: '/mediji', zdaj: ob(10), f: lazenFetch(klici, { '/P1/feed': { error: { message: 'FB ne' } } }), cakajMs: async () => {} })
+  preveri('objave: neuspeh je napaka (IG povezava ostane), brez ponovitve', db.zapisi[1].posodobi.stanje === 'napaka'
+    && db.zapisi[1].posodobi.ig_povezava && db.zapisi[1].posodobi.napaka.includes('FB ne'))
+  klici = []
+  await o.objaviZapadle({ db, env, mapa: '/mediji', zdaj: ob(10), f: lazenFetch(klici), cakajMs: async () => {} })
+  preveri('objave: napake ne objavi znova', klici.length === 0)
 }
 
 {

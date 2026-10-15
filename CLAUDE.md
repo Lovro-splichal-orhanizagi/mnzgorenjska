@@ -946,6 +946,11 @@ Strani izriše JavaScript, podatki pa so v strani kot JSON
   zamenjanim domačinom) — izpustimo jo. **Kontumacija** ima izid in namesto
   zapisnika povezavo `strafverifiziert` (`#`); v arhivih 14 lig pet takih.
   Kot rezerva šteje še 3:0 s prazno postavo po tednu dni.
+  oefb.at kdaj za minuto vrne stran razporeda s statusom 200, a brez JSON-a
+  razporeda (`appPreloads['NO_DATA']`): nočni uvoz je javljal "Razporeda ni
+  bilo mogoče razbrati", uvoz zapisnikov pa tiho 0 tekem (13.–15. 10. 2026).
+  `stranRazporeda` jo prebere znova po 30 s in 2 min, nato uvoz pade z
+  jasno napako; taka stran ne gre v predpomnilnik (`zaPredpomnilnik`).
 - **Zapisnik** `/bewerbe/Spiel/Spielbericht/<id>/`: začetniki v skupinah
   `tor`/`abwehr`/`mittelfeld`/`sturm` ali vsi v `weitere`, klop v `ersatz`,
   šifra igralca iz `/Profile/Spieler/<id>` → `reg_st`. Dogodki: `goal`
@@ -3020,7 +3025,15 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   v uvozni skripti naj gre skozenj, ne mimo z golim `fetch`. Vir, katerega
   strežnik ob preobremenitvi vrne 200 z obvestilom namesto strani, naj ima
   `zaPredpomnilnik(besedilo, datoteka)` (uvoz zapisnikov in razporeda tako
-  stran ne shranita in shranjene ne bereta; zdaj le mlsz)
+  stran ne shranita in shranjene ne bereta; mlsz in razpored oefb)
+- Baza: odjemalec Supabase v nočni verigi (uvoz razporeda, delegiranja,
+  zapisnikov, registracij, lažni vratarji, ugibanje pozicij) ima
+  `global.fetch: fetchZaBazo()` (`scripts/prenos.mjs`): "fetch failed",
+  Cloudflare 520 in PostgREST 503 so ligo podrli zaradi ene tekme (AT,
+  11.–14. 10. 2026). Ponovi (2, 5, 15, 30 s) branje, PATCH/PUT/DELETE, upsert
+  in `zamenjaj_nastope_tekme`; navaden INSERT in druge RPC le, ko zahtevek
+  baze zagotovo ni dosegel (ECONNREFUSED, DNS, Cloudflare 521–523). Nov
+  idempotenten RPC, ki ga uvoz kliče, dodaj v `PONOVLJIVI_RPC`
 - Nastope tekme (in spremenjene gole) uvoz zamenja s
   `zamenjaj_nastope_tekme(tekma, nastopi, goli)` v eni transakciji (servisna,
   migracija 20261013181100). Prej sta bila izbris in vstavljanje dva zahtevka
@@ -3768,8 +3781,10 @@ HR, RS sta pripravljena: vrstica, ki jo v vrsto postavi človek (`v_vrsti`,
 
 ## Samodejne objave (Instagram, Facebook)
 
-Načrt: `docs/superpowers/specs/2026-10-15-samodejne-objave-design.md`. **Faza 1
-(zdaj): le osnutki na Discord, nič se ne objavi.** Delavec `slff-objave` na
+Načrt: `docs/superpowers/specs/2026-10-15-samodejne-objave-design.md`. Faza 1:
+osnutki na Discord; **faza 2: ob roku objava na Instagram in Facebook, če je
+nihče ne ustavi** — le, ko so na strežniku ključi `META_*` (brez njih ostane
+faza 1). Delavec `slff-objave` na
 strežniku (`scripts/objave.mjs --zanka`, `/opt/slff-objave`, slika Playwright)
 vsakih 10 minut pogleda termin: **ponedeljek** osnutek 04:00, objava 10:00 —
 krog ene države v njenem jeziku (`ROTACIJA` po ISO tednu: SI, HR, SK …, AT in
@@ -3798,18 +3813,39 @@ HU občasno; država brez kroga v oknu gre na naslednjo); **četrtek** 12:00 /
   zemljevidu, `noindex` (tudi Caddy `@zasebne`), v `@ni_strani` je izjema.
   Nizi so v `domov.objava.*` vseh jezikov. **Strežnik jo bere s slff.eu**
   (`OBJAVE_URL`), zato mora biti sprememba strani objavljena pred delavcem.
-- **Osnutek**: vrstica v `objave` (slike na disku `/opt/slff-objave/mediji`),
-  nato Discord (`DISCORD_OBJAVE_WEBHOOK`) s slikami, napisom in povzetkom
-  dejstev. Neuspel Discord → `stanje = 'napaka'` (osnutek, ki ga človek ni
-  videl, se nikoli ne objavi). `ustavi_objavo(zeton)` in
-  `ustavi_zeton_hash` sta pripravljena za fazo 2 (povezava "Ustavi").
+- **Osnutek**: vrstica v `objave` (slike JPEG na disku
+  `/opt/slff-objave/mediji/<teden>-<slot>-<naključno>/n.jpg`), nato Discord
+  (`DISCORD_OBJAVE_WEBHOOK`) s slikami, napisom, povzetkom dejstev in
+  enkratno povezavo **"⛔ Ustavi objavo"** (`slff.eu/objava#ustavi=<žeton>`;
+  žeton 256 bitov, v bazi le `ustavi_zeton_hash` = sha256). Šele uspel
+  Discord vpiše `discord_at`; neuspel → `stanje = 'napaka'` (osnutek, ki ga
+  človek ni videl, se nikoli ne objavi).
+- **Ustavitev**: stran `/objava` z `#ustavi=` (`UstaviObjavo` v
+  `src/pages/Objava.tsx`, slovensko kot Administracija) pokaže gumb; šele klik
+  pokliče `ustavi_objavo(zeton)` (anon, migracija 20261015170100) — Discord
+  povezave odpira sam, zato ne ustavi že odprtje. Ustavi le `osnutek` pred
+  rokom; sicer "povezava ne velja več".
+- **Objava (faza 2)**: `objaviZapadle` v zanki vzame osnutke z rokom v
+  zadnjih **2 urah** (`OBJAVA_ZAMUDA`; starejši ostanejo neobjavljeni — delavec
+  ni tekel ali preizkusni osnutek preteklega tedna), z `discord_at` in
+  `stanje = 'osnutek'`. Najprej jih pogojno prevzame (`objavljanje`), nato
+  Instagram (vsebniki → vrtiljak → `status_code` FINISHED → `media_publish`)
+  in Facebook stran (neobjavljene `/photos`, nato `/feed` z `attached_media`),
+  Graph API `v26.0` (`META_GRAPH_VERSION`). Slike Meta prebere z
+  `https://slff.eu/objave-mediji/…` (Caddy, `OBJAVE_MEDIJI_URL`). Uspeh →
+  `objavljeno`, `ig_povezava`, `fb_povezava`, Discord s povezavama; napaka →
+  `napaka` in Discord, **nikoli ponovno samodejno** (Meta je morda objavila
+  del) — ponovi človek ročno.
 - Preizkus brez baze in brez ključev: `npm run dev`, nato `node scripts/objave.mjs
   --slot pon --suho --dejstva scripts/vzorci/objava-dejstva.json --url
   http://localhost:5173 --mapa /tmp/objave-vzorec` (napis je predloga, slike v mapi).
 - **Objava**: `scripts/hetzner/objavi-objave.sh` iz main (CI je ne objavi).
   Enkratna nastavitev (lastnik): `/opt/slff-objave/.env` s
   `SUPABASE_SERVICE_ROLE_KEY=`, `ANTHROPIC_API_KEY=`, `DISCORD_OBJAVE_WEBHOOK=`,
-  `chmod 600`. Dnevnik `ssh slff docker logs slff-objave`.
+  za fazo 2 še `META_PAGE_TOKEN=`, `META_PAGE_ID=`, `META_IG_USER_ID=` (kako jih
+  dobiti: načrt, *Faza 2*), `chmod 600`. Blok `/objave-mediji/*` v
+  `scripts/hetzner/Caddyfile` se prenese ročno (Caddy CI ne objavi). Dnevnik
+  `ssh slff docker logs slff-objave`.
 
 ## Poti
 

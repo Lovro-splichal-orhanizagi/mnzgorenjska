@@ -96,11 +96,26 @@ begin
   if (d -> 'lige' -> 0 ->> 'ekip')::int <> 5 then
     raise exception '4. ekip naj bo 5 (brez hišnih), je %', d -> 'lige' -> 0 ->> 'ekip';
   end if;
-  -- 5. Pravice: servisna.
+  -- 5. Pravice: dejstva in tabela servisna, ustavitev z žetonom tudi anon (faza 2).
   if has_function_privilege('anon', 'objava_dejstva(text, date, date)', 'execute')
-     or has_function_privilege('authenticated', 'ustavi_objavo(text)', 'execute')
+     or not has_function_privilege('anon', 'ustavi_objavo(text)', 'execute')
      or has_table_privilege('anon', 'objave', 'select') then
-    raise exception '5. objave in dejstva naj bodo le servisna';
+    raise exception '5. objave in dejstva naj bodo le servisna, ustavitev anon';
+  end if;
+  -- 6. Ustavi objavo: le pravi žeton, le enkrat, le pred rokom, le neobjavljen osnutek.
+  insert into objave (slot, teden, jezik, dejstva, napis, objava_ob, ustavi_zeton_hash) values
+    ('pon', '1999-01-04', 'sl', '{}', 'x', now() + interval '1 hour', encode(sha256(convert_to('zeton-a', 'UTF8')), 'hex')),
+    ('cet', '1999-01-04', 'en', '{}', 'x', now() - interval '1 minute', encode(sha256(convert_to('zeton-b', 'UTF8')), 'hex')),
+    ('pon', '1999-01-11', 'sl', '{}', 'x', now() + interval '1 hour', encode(sha256(convert_to('zeton-c', 'UTF8')), 'hex'));
+  update objave set stanje = 'objavljanje' where teden = '1999-01-11';
+  set local role anon;
+  if ustavi_objavo('napacen') or not ustavi_objavo('zeton-a') or ustavi_objavo('zeton-a')
+     or ustavi_objavo('zeton-b') or ustavi_objavo('zeton-c') then
+    raise exception '6. ustavi_objavo: napačen izid';
+  end if;
+  reset role;
+  if (select stanje from objave where teden = '1999-01-04' and slot = 'pon') <> 'ustavljeno' then
+    raise exception '6. osnutek naj bo ustavljen';
   end if;
   raise notice 'preizkus objav: vse v redu';
 end $$;

@@ -1,9 +1,11 @@
 # Samodejne objave (scripts/objave.mjs --zanka) na VM: /opt/slff-objave/
 #   docker-compose.yml   ta datoteka
-#   .env                 SUPABASE_SERVICE_ROLE_KEY, ANTHROPIC_API_KEY, DISCORD_OBJAVE_WEBHOOK
+#   .env                 SUPABASE_SERVICE_ROLE_KEY, ANTHROPIC_API_KEY, DISCORD_OBJAVE_WEBHOOK,
+#                        META_PAGE_TOKEN, META_PAGE_ID, META_IG_USER_ID (faza 2; brez njih ni objave)
 #                        (chmod 600, ustvari lastnik, NI v gitu)
 #   app/scripts/objave.mjs, app/node_modules/ (playwright, @supabase/supabase-js)
-#   mediji/              prosojnice osnutkov (PNG), <teden>-<slot>/n.png
+#   mediji/              prosojnice osnutkov (JPEG), <teden>-<slot>-<naključno>/n.jpg;
+#                        javno prek Caddyja: https://slff.eu/objave-mediji/… (Meta jih prebere)
 # Objava: scripts/hetzner/objavi-objave.sh. CI tega ne objavi.
 # Dnevnik: docker logs slff-objave. Preizkus brez pisanja:
 #   docker compose run --rm objave node scripts/objave.mjs --slot pon --suho --mapa /mediji/suho
