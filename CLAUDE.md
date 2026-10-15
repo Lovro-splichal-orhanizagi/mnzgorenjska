@@ -2451,7 +2451,7 @@ kartonu), vsi nastopi s šifro, 0 opozoril razen rumenih kartonov osebju
 (ni v postavi). Arhivski zapisnik 2025/26 (IV liga, 30. krog) se razčleni
 enako.
 
-Vpisanih je 7 lig (migracija 20261015130500), **neaktivnih**, zveza `wmzpn`.
+Vpisanih je 7 lig (migracija 20261015162900), **neaktivnih**, zveza `wmzpn`.
 Šifra je `<leagueN>/<play>/<season>`; arhiv je ista skupina 2025/26 (po
 skupnih klubih):
 
