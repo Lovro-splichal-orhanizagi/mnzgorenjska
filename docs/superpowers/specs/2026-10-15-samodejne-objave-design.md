@@ -13,8 +13,26 @@ factual, generated from our data, with a human veto window.
 
 | Slot | Content | Language |
 |---|---|---|
-| **Monday 10:00** (Ljubljana) | Round recap for **one country** (rotation SI → HR → SK → SI → HR → SK, AT/HU/others occasionally; country picked by users count, skipped if it had no round) | that country's language |
+| **Monday 10:00** (Ljubljana) | Round recap for **one country** (rotation SI → HR → SK → SI → HR → SK, AT/HU/others occasionally; country picked by users count, skipped if it had no round), e.g. "Round 8 in Slovenia's 1. GNL" | English |
 | **Thursday 18:00** | Cross-country goofy stat ("This week in Europe's Sunday leagues …") | English |
+| **Milestone** (every 1,000 users) | "4,000 — thank you!" with mascot, plus countries / active leagues / teams | English |
+
+**All posts are in English** (owner, 15. 10. 2026): one audience, one
+account, and the caption check only has to know one language.
+
+### Milestone posts (15. 10. 2026)
+
+- Users = `skupaj_uporabnikov()` (no house profile). The worker loop calls the
+  service-only `objava_mejnik_dejstva()` (users, countries and active leagues,
+  non-house teams) every pass.
+- A draft is made when the count is past a multiple of 1,000 by **less than
+  300** and no row has that `mejnik` (unique column; slot `mejnik`). Milestones
+  passed before deploy are therefore never posted.
+- Scheduled time = draft time + 6 h, moved forward into 09:00–20:00 Ljubljana
+  (before 09:00 → 09:00 that day, 20:00 or later → 09:00 next day). The rest
+  (Discord with stop link, `discord_at`, publisher's 2 h rule) is unchanged.
+- `unique (slot, teden)` is now a partial index for `pon`/`cet` only: two
+  milestones can fall in the same week (~250 new users a day).
 
 Fact candidates (SQL, one function, returns jsonb):
 - top scorer of the round (points, goals), Ideal XI of the round (existing
@@ -35,7 +53,7 @@ reports are fine).
 
 1. **Facts** — `objava_dejstva(drzava, od, do)` (SECURITY DEFINER, service only).
 2. **Caption** — Claude (`claude-sonnet-5-5`, Messages API) with a system
-   prompt: goofy, short, in the target language, hashtags, link slff.eu (with
+   prompt: goofy, short, in English, hashtags, link slff.eu (with
    `?src=ig`), may use ONLY the given facts. Afterwards every number and name
    in the caption is checked against the facts; mismatch → regenerate once,
    then fall back to a plain template caption.

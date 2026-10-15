@@ -1,9 +1,10 @@
 // Samodejne objave za Instagram in Facebook: osnutek na Discord, nato objava.
 // Načrt: docs/superpowers/specs/2026-10-15-samodejne-objave-design.md.
 //
-// Termina (ljubljanski čas): ponedeljek osnutek 04:00, objava 10:00 — krog
-// ene države v njenem jeziku (rotacija ROTACIJA); četrtek osnutek 12:00,
-// objava 18:00 — vse države, angleško. Osnutek (dejstva, napis, prosojnice)
+// Vse objave so angleške (lastnik, 15. 10. 2026). Termina (ljubljanski čas):
+// ponedeljek osnutek 04:00, objava 10:00 — krog ene države (rotacija
+// ROTACIJA); četrtek osnutek 12:00, objava 18:00 — vse države. Mejnik: vsakih
+// 1000 uporabnikov osnutek takoj, objava 6 ur kasneje v oknu 09–20. Osnutek (dejstva, napis, prosojnice)
 // gre v tabelo `objave` in na Discord s povezavo "Ustavi objavo"; ob roku ga
 // delavec objavi na Instagram in Facebook (faza 2), če ga nihče ni ustavil in
 // so nastavljeni ključi META_*. Brez njih se nič ne objavi (kot faza 1).
@@ -21,6 +22,7 @@
 //   META_PAGE_TOKEN, META_PAGE_ID, META_IG_USER_ID, META_GRAPH_VERSION (privzeto v26.0)
 //   node scripts/objave.mjs --zanka                    (delavec slff-objave: vsakih 10 minut)
 //   node scripts/objave.mjs --slot pon [--drzava SI]   (en osnutek zdaj)
+//   node scripts/objave.mjs --slot mejnik [--suho --dejstva m.json]  (mejnik zdaj, če je dosežen)
 //   node scripts/objave.mjs --slot cet --suho --dejstva d.json --url http://localhost:5173 [--mapa /tmp/objave-vzorec]
 //     --suho: izpiše dejstva in napis, slike zapiše v --mapa; ne piše v bazo, ne pošlje na Discord
 import { fileURLToPath } from 'node:url'
@@ -34,11 +36,15 @@ export const MODEL = 'claude-sonnet-5-5'
 // ponytail: stalna rotacija približa vrstni red po številu uporabnikov; ob
 // rasti druge države jo dopolni tu.
 export const ROTACIJA = ['SI', 'HR', 'SK', 'SI', 'HR', 'SK', 'AT', 'SI', 'HR', 'SK', 'SI', 'HR', 'SK', 'HU']
-export const JEZIK_DRZAVE = { SI: 'sl', SK: 'sk', HR: 'hr', CZ: 'cs', HU: 'hu', AT: 'de', RS: 'sr', RO: 'ro', EE: 'et', PL: 'pl', ES: 'es', LV: 'lv', MK: 'mk' }
+// Vse objave so angleške; jezik ostane stolpec tabele.
+export const JEZIK = 'en'
 export const TERMINI = { pon: { dan: 0, osnutek: 4, objava: 10 }, cet: { dan: 3, osnutek: 12, objava: 18 } }
 const PAS = 'Europe/Ljubljana'
 // Objava, ki je delavec ni objavil v dveh urah po roku (ni tekel), ostane neobjavljena.
 export const OBJAVA_ZAMUDA = 2 * 3600e3
+// Mejnik uporabnikov: vsakih KORAK; mejnik, ki je že več kot MEJNIK_ROK za nami, ni več novica.
+export const MEJNIK_KORAK = 1000
+export const MEJNIK_ROK = 300
 
 // --- čas ----------------------------------------------------------------------
 
@@ -97,6 +103,34 @@ export function vrstniRedDrzav(teden) {
   return [...new Set([...ROTACIJA.slice(i), ...ROTACIJA.slice(0, i)])]
 }
 
+// --- mejnik uporabnikov ---------------------------------------------------------
+
+/**
+ * Mejnik (večkratnik MEJNIK_KORAK), ki ga je število uporabnikov ravnokar
+ * doseglo; null, če ga ni ali je že MEJNIK_ROK za nami (mejniki, preseženi pred
+ * uvedbo, se ne objavijo).
+ */
+export function dosezenMejnik(uporabnikov) {
+  const m = Math.floor(Number(uporabnikov) / MEJNIK_KORAK) * MEJNIK_KORAK
+  return m > 0 && uporabnikov - m < MEJNIK_ROK ? m : null
+}
+
+/** Objava mejnika: 6 ur po osnutku, premaknjena naprej v okno 09:00–20:00 (Ljubljana). */
+export function objavaMejnika(zdaj) {
+  const ob = new Date(zdaj.getTime() + 6 * 3600e3)
+  const dan = datumLj(ob)
+  const ura = Number(new Intl.DateTimeFormat('en-GB', { timeZone: PAS, hour: '2-digit', hourCycle: 'h23' }).format(ob))
+  if (ura < 9) return vLjubljani(dan, 9)
+  if (ura >= 20) return vLjubljani(dodajDni(dan, 1), 9)
+  return ob
+}
+
+/** Vsebina mejnika (iste oblike kot izberiVsebino, prosojnice berejo `mejnik`). */
+export const vsebinaMejnika = (d, mejnik) => ({
+  slot: 'mejnik', slug: null, liga: null, igralec: null, poudarki: [], idealna: [],
+  mejnik: { mejnik, uporabnikov: d.uporabnikov, drzav: d.drzav, lig: d.lig, ekip: d.ekip },
+})
+
 // --- vsebina ------------------------------------------------------------------
 
 /** "Priimek Ime" → "Ime Priimek" (kot prikazniIme v src/lib/pomozno.ts). */
@@ -116,6 +150,9 @@ export function enajsterica(igralci) {
 
 /** Klub, pri četrtku še liga. */
 const klubLiga = (o) => [o.klub, o.liga].filter(Boolean).join(', ')
+
+/** Angleško ime države (SI → Slovenia). */
+export const imeDrzave = (koda) => (koda ? new Intl.DisplayNames(['en'], { type: 'region' }).of(koda) : undefined)
 
 const naj = (seznam, kljuc) => seznam.filter(Boolean).sort((a, b) => kljuc(b) - kljuc(a))[0] ?? null
 
@@ -141,7 +178,7 @@ export function izberiVsebino(dejstva, slot) {
   return {
     slot,
     slug: slot === 'pon' ? glavna.slug : null,
-    liga: slot === 'pon' ? { ime: glavna.name, krog: glavna.krog, sezona: glavna.sezona } : null,
+    liga: slot === 'pon' ? { ime: glavna.name, krog: glavna.krog, sezona: glavna.sezona, drzava: imeDrzave(glavna.drzava ?? dejstva.drzava) } : null,
     igralec,
     poudarki: poudarki.slice(0, 5),
     idealna: enajsterica(izbrane.flatMap((l) => l.idealna)),
@@ -152,6 +189,10 @@ export const povezava = (v) => `https://slff.eu/?src=ig${v.slug ? `&t=${v.slug}`
 
 /** Kar dobi Claude: imena v prikazni obliki, brez id-jev in grbov. */
 export function dejstvaZaNapis(v) {
+  if (v.mejnik) {
+    const m = v.mejnik
+    return { milestone_users: m.mejnik, users_now: m.uporabnikov, countries: m.drzav, active_leagues: m.lig, fantasy_teams: m.ekip }
+  }
   return {
     liga: v.liga,
     igralec_kroga: v.igralec && { ...v.igralec, ime: prikaz(v.igralec.ime), grb: undefined },
@@ -162,78 +203,65 @@ export function dejstvaZaNapis(v) {
 
 // --- preverba napisa ------------------------------------------------------------
 
-const STEVILO = /\d+(?:[.,]\d+)?/g
-const normaliziraj = (s) => String(Number(s.replace(',', '.')))
-// Besede z veliko začetnico, ki niso imena iz dejstev, a so v napisu dovoljene.
-const DOVOLJENE = ['SLFF', 'XI', 'Ideal', 'Fantasy', 'Instagram', 'Facebook', 'Europe', 'Evropa', 'Evropi', 'Európa', 'Európe', 'Europa', 'Europi',
-  'Slovenija', 'Sloveniji', 'Hrvatska', 'Hrvatskoj', 'Slovensko', 'Slovensku', 'Österreich', 'Magyarország', 'MVP', 'GOAT', 'OK']
+// Angleško: "4,000" je tisoč (vejica loči tisočice), "8.2" decimalka.
+const STEVILO = /\d{1,3}(?:,\d{3})+(?!\d)|\d+(?:\.\d+)?/g
+const normaliziraj = (s) => String(Number(s.replace(/,/g, '')))
+// Besede z veliko začetnico, ki niso imena iz dejstev, a so v (angleškem) napisu dovoljene.
+const DOVOLJENE = ['SLFF', 'XI', 'Ideal', 'Fantasy', 'Instagram', 'Facebook', 'Europe', 'MVP', 'GOAT', 'OK', 'Round', 'Player', 'League',
+  'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday', 'Thank', 'Thanks']
 
 /**
  * Napis sme omeniti le števila in imena iz dejstev. Vrne seznam tujih
  * (prazen = v redu). Povezave in ključniki (#…) se ne preverjajo. Ime je
- * beseda z veliko začetnico sredi stavka; v nemščini (samostalniki z veliko)
- * le dve taki zapored ("Torwart Mezga" bi padlo, kar je varno).
+ * beseda z veliko začetnico sredi stavka; svojilni 's odpade, zloženka
+ * ("Sunday-league") je znana, če je znan vsak del.
  */
-export function preveriNapis(napis, dejstva, jezik) {
+export function preveriNapis(napis, dejstva) {
   const besedilo = String(napis).replace(/https?:\/\/\S+/g, ' ').replace(/#[\p{L}\p{N}_]+/gu, ' ')
   const vir = JSON.stringify(dejstva)
   const stevila = new Set((vir.match(STEVILO) ?? []).map(normaliziraj))
   const besede = new Set([...(vir.match(/[\p{L}][\p{L}'’.-]*/gu) ?? []), ...DOVOLJENE].map((b) => b.toLowerCase()))
+  const znana = (z) => {
+    const brez = z.replace(/['’]s$/, '')
+    return besede.has(brez.toLowerCase()) || brez.split('-').every((d) => !/^\p{Lu}/u.test(d) || besede.has(d.toLowerCase()))
+  }
   const tuje = []
   for (const s of besedilo.match(STEVILO) ?? []) if (!stevila.has(normaliziraj(s))) tuje.push(s)
-  const jeVelika = /^\p{Lu}/u
-  // Besede z veliko začetnico sredi stavka (začetek stavka ali vrstice, tudi
-  // za čustvenčkom, je izvzet), zložene v nize, ki jih loči le presledek.
-  const nizi = []
-  let prejKonec = -1
   for (const m of besedilo.matchAll(/[\p{L}][\p{L}'’-]*/gu)) {
     const z = m[0]
+    // Začetek stavka ali vrstice (tudi za čustvenčkom) je izvzet.
     const sredi = /[\p{L}\p{N},;]$/u.test(besedilo.slice(0, m.index).trimEnd())
-    if (!jeVelika.test(z) || z.length < 2 || !sredi) {
-      prejKonec = -1
-      continue
-    }
-    if (prejKonec >= 0 && /^\s+$/.test(besedilo.slice(prejKonec, m.index))) nizi.at(-1).push(z)
-    else nizi.push([z])
-    prejKonec = m.index + z.length
-  }
-  for (const niz of nizi) {
-    const neznane = niz.filter((z) => !besede.has(z.toLowerCase()))
-    // Nemščina piše samostalnike z veliko: tuje je šele ime s priimkom (dve neznani zapored).
-    if (jezik !== 'de') tuje.push(...neznane)
-    else if (neznane.length >= 2) tuje.push(neznane.join(' '))
+    if (/^\p{Lu}/u.test(z) && z.length >= 2 && sredi && !znana(z)) tuje.push(z)
   }
   return [...new Set(tuje)]
 }
 
 // --- napis ----------------------------------------------------------------------
 
-const PREDLOGA = {
-  sl: { igralec: 'Igralec kroga', tocke: 'točke', krog: 'krog', teden: 'Ta teden v Evropi', poziv: 'Sestavi svojo ekipo' },
-  hr: { igralec: 'Igrač kola', tocke: 'bodovi', krog: 'kolo', teden: 'Ovaj tjedan u Europi', poziv: 'Složi svoju momčad' },
-  sk: { igralec: 'Hráč kola', tocke: 'body', krog: 'kolo', teden: 'Tento týždeň v Európe', poziv: 'Zostav si tím' },
-  de: { igralec: 'Spieler der Runde', tocke: 'Punkte', krog: 'Runde', teden: 'Diese Woche in Europa', poziv: 'Stell dein Team auf' },
-  hu: { igralec: 'A forduló játékosa', tocke: 'pont', krog: 'forduló', teden: 'Ezen a héten Európában', poziv: 'Állítsd össze a csapatod' },
-  en: { igralec: 'Player of the round', tocke: 'points', krog: 'round', teden: "This week in Europe's Sunday leagues", poziv: 'Build your team' },
-}
-
 /** Napis brez Clauda: suha dejstva, vedno pravilna. */
-export function predlogaNapisa(v, jezik) {
-  const b = PREDLOGA[jezik] ?? PREDLOGA.en
-  const vrstice = [v.liga ? `${v.liga.ime} · ${v.liga.krog}. ${b.krog}` : `${b.teden} ⚽`]
-  if (v.igralec) vrstice.push(`🏆 ${b.igralec}: ${prikaz(v.igralec.ime)} (${klubLiga(v.igralec)}), ${b.tocke}: ${v.igralec.tocke}`)
-  vrstice.push('', `👉 ${b.poziv}: ${povezava(v)}`, '', '#SLFF #fantasyfootball #football')
+export function predlogaNapisa(v) {
+  const vrstice = []
+  if (v.mejnik) {
+    const m = v.mejnik
+    vrstice.push(`🎉 ${m.mejnik.toLocaleString('en-GB')} managers on SLFF! Thank you all.`,
+      `⚽ ${m.lig} leagues in ${m.drzav} countries, ${m.ekip.toLocaleString('en-GB')} fantasy teams.`)
+  } else {
+    vrstice.push(v.liga ? `${v.liga.ime} (${v.liga.drzava}) · round ${v.liga.krog}` : "This week in Europe's Sunday leagues ⚽")
+    if (v.igralec) vrstice.push(`🏆 Player of the round: ${prikaz(v.igralec.ime)} (${klubLiga(v.igralec)}), points: ${v.igralec.tocke}`)
+  }
+  vrstice.push('', `👉 Build your team: ${povezava(v)}`, '', '#SLFF #fantasyfootball #football')
   return vrstice.join('\n')
 }
 
-const JEZIK_IME = { sl: 'Slovenian', hr: 'Croatian', sk: 'Slovak', cs: 'Czech', hu: 'Hungarian', de: 'German (Austrian)', sr: 'Serbian (Latin script, ekavian)', ro: 'Romanian', et: 'Estonian', pl: 'Polish', es: 'Spanish', lv: 'Latvian', mk: 'Macedonian (Cyrillic)', en: 'English' }
-
-export function sistemskiPoziv(jezik, link) {
+export function sistemskiPoziv(link, mejnik = false) {
   return [
     'You write Instagram/Facebook captions for SLFF, a free fantasy football game for amateur and regional leagues (slff.eu).',
-    `Write in ${JEZIK_IME[jezik] ?? 'English'}. Tone: goofy, warm, a bit cheeky, never mean to a player. Short: at most 6 short lines plus hashtags.`,
-    'Use ONLY the facts in the user message. Every number and every player, club or league name you write must appear in the facts exactly as given.',
-    'Do not invent results, opponents, dates, minutes, nicknames or anything else. Do not mention any user, fantasy team or manager.',
+    'Write in English. Tone: goofy, warm, a bit cheeky, never mean to a player. Short: at most 6 short lines plus hashtags.',
+    mejnik
+      ? 'This post celebrates SLFF reaching milestone_users users. Thank the community warmly; you may mention the countries, active leagues and fantasy teams counts. Write numbers from 1,000 up with a thousands comma (4,000).'
+      : 'The facts are a round recap (one league of one country, or several countries). Name the country when it is given.',
+    'Use ONLY the facts in the user message. Every number and every player, club, league or country name you write must appear in the facts exactly as given.',
+    'Do not invent results, opponents, dates, minutes, nicknames or anything else. Do not mention any user, fantasy team or manager by name.',
     'Only celebrate: every player, club and league in the post is praised. Never point out a bad performance, a price drop or a mistake.',
     'Humour comes from Sunday-league life in general (muddy pitches, Monday-morning legs, the post-match beer, the bus to the away game), never at a named person.',
     `End with a call to action and this exact link on its own line: ${link}`,
@@ -255,15 +283,15 @@ async function klicClaude(kljuc, sistem, sporocilo) {
 }
 
 /** Napis: Claude dvakrat, nato predloga. Vrne { napis, vir, zavrnjeno }. */
-export async function napis(v, jezik, kljuc, klic = klicClaude) {
+export async function napis(v, kljuc, klic = klicClaude) {
   const dejstva = dejstvaZaNapis(v)
   const link = povezava(v)
   const zavrnjeno = []
   if (kljuc) {
     for (let poskus = 0; poskus < 2; poskus++) {
       try {
-        let besedilo = await klic(kljuc, sistemskiPoziv(jezik, link), `Facts (JSON):\n${JSON.stringify(dejstva, null, 2)}`)
-        const tuje = preveriNapis(besedilo, dejstva, jezik)
+        let besedilo = await klic(kljuc, sistemskiPoziv(link, Boolean(v.mejnik)), `Facts (JSON):\n${JSON.stringify(dejstva, null, 2)}`)
+        const tuje = preveriNapis(besedilo, dejstva)
         if (!tuje.length) {
           if (!besedilo.includes(link)) besedilo += `\n\n${link}`
           return { napis: besedilo, vir: 'claude', zavrnjeno }
@@ -274,13 +302,13 @@ export async function napis(v, jezik, kljuc, klic = klicClaude) {
       }
     }
   }
-  return { napis: predlogaNapisa(v, jezik), vir: 'predloga', zavrnjeno }
+  return { napis: predlogaNapisa(v), vir: 'predloga', zavrnjeno }
 }
 
 // --- prosojnice -------------------------------------------------------------------
 
 /** Posname prosojnice strani /objava; vrne poti JPEG (Instagram sprejme le JPEG). */
-export async function posnemi(v, jezik, url, mapa) {
+export async function posnemi(v, url, mapa) {
   const { chromium } = await import('playwright')
   await mkdir(mapa, { recursive: true })
   const brskalnik = await chromium.launch({ headless: true })
@@ -293,7 +321,7 @@ export async function posnemi(v, jezik, url, mapa) {
     await ctx.addInitScript(([vsebina, j]) => {
       window.__OBJAVA__ = vsebina
       localStorage.setItem('slff-jezik-izbran', j)
-    }, [v, jezik])
+    }, [v, JEZIK])
     const stran = await ctx.newPage()
     const poti = []
     let n = 1
@@ -316,6 +344,10 @@ export async function posnemi(v, jezik, url, mapa) {
 
 /** Povzetek dejstev za človeka (Discord, --suho). */
 export function povzetek(v) {
+  if (v.mejnik) {
+    const m = v.mejnik
+    return `Mejnik: ${m.mejnik} uporabnikov (zdaj ${m.uporabnikov}), ${m.drzav} držav, ${m.lig} aktivnih lig, ${m.ekip} ekip`
+  }
   const vr = []
   if (v.liga) vr.push(`Liga: ${v.liga.ime}, ${v.liga.krog}. krog ${v.liga.sezona}`)
   if (v.igralec) vr.push(`Igralec kroga: ${prikaz(v.igralec.ime)} (${klubLiga(v.igralec)}) ${v.igralec.tocke} t, ${v.igralec.goli} gol.`)
@@ -455,28 +487,45 @@ const cakaj = (ms) => new Promise((r) => setTimeout(r, ms))
 
 const log = (s) => console.log(`${new Date().toISOString()} ${s}`)
 
-/** Izdela osnutek termina. Vrne true, če je nastal (ali bi v --suho). */
-export async function osnutek({ db, slot, teden, drzava, dejstva, suho, url, mapa, env }) {
-  if (!suho) {
-    const { data: obstaja, error } = await db.from('objave').select('id').eq('slot', slot).eq('teden', teden).maybeSingle()
+/** Izdela osnutek termina (pon, cet) ali mejnika. Vrne true, če je nastal (ali bi v --suho). */
+export async function osnutek({ db, slot, teden, drzava, dejstva, suho, url, mapa, env, zdaj = new Date() }) {
+  const obstaja = async (stolpec, vrednost) => {
+    if (suho) return false
+    const { data, error } = await db.from('objave').select('id').eq('slot', slot).eq(stolpec, vrednost).maybeSingle()
     if (error) throw new Error(`objave: ${error.message}`)
-    if (obstaja) return false
+    return Boolean(data)
   }
-  const d = dejstva ?? (await dejstvaTermina(db, slot, teden, drzava))
-  const v = d && izberiVsebino(d, slot)
-  if (!v) {
-    log(`Objava ${slot} ${teden}: ni kroga, osnutka ni.`)
-    return false
+  let d, v, objavaOb, mejnik = null
+  if (slot === 'mejnik') {
+    if (dejstva) d = dejstva
+    else {
+      const { data, error } = await db.rpc('objava_mejnik_dejstva')
+      if (error) throw new Error(`objava_mejnik_dejstva: ${error.message}`)
+      d = data
+    }
+    mejnik = dosezenMejnik(d.uporabnikov)
+    if (!mejnik || (await obstaja('mejnik', mejnik))) return false
+    v = vsebinaMejnika(d, mejnik)
+    objavaOb = objavaMejnika(zdaj)
+  } else {
+    if (await obstaja('teden', teden)) return false
+    d = dejstva ?? (await dejstvaTermina(db, slot, teden, drzava))
+    v = d && izberiVsebino(d, slot)
+    if (!v) {
+      log(`Objava ${slot} ${teden}: ni kroga, osnutka ni.`)
+      return false
+    }
+    objavaOb = termin(slot, teden).objavaOb
   }
-  const jezik = slot === 'cet' ? 'en' : JEZIK_DRZAVE[d.drzava] ?? 'en'
-  const n = await napis(v, jezik, env.ANTHROPIC_API_KEY)
+  const jezik = JEZIK
+  const oznaka = mejnik ? `mejnik ${mejnik}` : d.drzava ?? 'vse države'
+  const n = await napis(v, env.ANTHROPIC_API_KEY)
   // Naključni del: slike so javne (/objave-mediji/), osnutek pa naj se ne da uganiti.
   const pot = join(mapa, `${teden}-${slot}-${randomBytes(6).toString('hex')}`)
-  const poti = await posnemi(v, jezik, url, pot)
-  const { objavaOb } = termin(slot, teden)
+  const poti = await posnemi(v, url, pot)
   const pov = povzetek(v)
   if (suho) {
-    console.log(`--- ${slot} ${teden} (${d.drzava ?? 'vse države'}, ${jezik}), objava ${objavaOb.toISOString()}`)
+    console.log(`--- ${slot} ${teden} (${oznaka}, ${jezik}), objava ${objavaOb.toISOString()}`)
     console.log(pov)
     console.log(`--- napis (${n.vir}):\n${n.napis}`)
     for (const z of n.zavrnjeno) console.log('--- zavrnjen poskus:', JSON.stringify(z))
@@ -485,7 +534,7 @@ export async function osnutek({ db, slot, teden, drzava, dejstva, suho, url, map
   }
   const z = novZeton(url)
   const { data: vrstica, error } = await db.from('objave').insert({
-    slot, teden, drzava: d.drzava, jezik, liga: v.slug, dejstva: d, napis: n.napis, napis_vir: n.vir,
+    slot, teden, mejnik, drzava: d.drzava ?? null, jezik, liga: v.slug, dejstva: d, napis: n.napis, napis_vir: n.vir,
     mediji: poti, objava_ob: objavaOb.toISOString(), ustavi_zeton_hash: z.hash,
   }).select('id').single()
   if (error) {
@@ -500,7 +549,7 @@ export async function osnutek({ db, slot, teden, drzava, dejstva, suho, url, map
       ? `objava na Instagram in Facebook ${kdaj}, če je ne ustaviš.\n⛔ Ustavi objavo: <${z.povezava}>`
       : `objava ${kdaj}. Meta ni nastavljena: nič se ne objavi samo.`
     await vDiscord(env.DISCORD_OBJAVE_WEBHOOK, {
-      naslov: `📝 **Osnutek objave #${vrstica.id}** (${d.drzava ?? 'vse države'}, ${jezik}, napis: ${n.vir}) — ${kaj}`,
+      naslov: `📝 **Osnutek objave #${vrstica.id}** (${oznaka}, napis: ${n.vir}) — ${kaj}`,
       napis: n.napis, povzetek: pov, poti,
     })
   } catch (e) {
@@ -580,8 +629,8 @@ async function main() {
   }
   if (!zanka) {
     const slot = arg('--slot')
-    if (!(slot in TERMINI)) {
-      console.error('Uporaba: --slot pon|cet [--drzava SI] [--suho] [--dejstva d.json] [--url …] [--mapa …], ali --zanka')
+    if (!(slot in TERMINI) && slot !== 'mejnik') {
+      console.error('Uporaba: --slot pon|cet|mejnik [--drzava SI] [--suho] [--dejstva d.json] [--url …] [--mapa …], ali --zanka')
       process.exit(2)
     }
     const teden = ponedeljek(datumLj(new Date()))
@@ -590,7 +639,9 @@ async function main() {
   }
   log('Objave: zanka teče (vsakih 10 minut).')
   for (;;) {
-    for (const t of terminiZdaj(new Date())) {
+    const zdaj = new Date()
+    // Mejnik uporabnikov: vsak obhod pogleda, ali je dosežen (osnutek enkrat na mejnik).
+    for (const t of [...terminiZdaj(zdaj), { slot: 'mejnik', teden: ponedeljek(datumLj(zdaj)) }]) {
       try {
         await osnutek({ db, slot: t.slot, teden: t.teden, suho: false, url, mapa, env })
       } catch (e) {

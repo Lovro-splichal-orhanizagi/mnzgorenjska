@@ -109,5 +109,11 @@ export const domov = {
     novihEkip: 'Novih ekip: {n}',
     tedenVEvropi: 'Ta teden v Evropi',
     poziv: 'Sestavi svojo ekipo',
+    hvala: 'Hvala!',
+    mejnikPodnaslov: 'fantasy upraviteljev na SLFF',
+    mejnikStevilke: 'SLFF danes',
+    drzav: 'držav',
+    lig: 'lig',
+    ekip: 'ekip',
   },
 }

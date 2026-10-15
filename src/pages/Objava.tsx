@@ -28,11 +28,14 @@ export interface Poudarek {
 }
 
 export interface VsebinaObjave {
-  slot: 'pon' | 'cet'
-  liga: { ime: string; krog: number; sezona: string } | null
+  slot: 'pon' | 'cet' | 'mejnik'
+  /** Vse objave so angleške; `drzava` je angleško ime države (ponedeljek). */
+  liga: { ime: string; krog: number; sezona: string; drzava?: string } | null
   igralec: { ime: string; klub: string; liga?: string; pozicija: Pozicija | null; tocke: number; goli: number; grb?: string | null } | null
   poudarki: Poudarek[]
   idealna: IgralecEnajsterice[]
+  /** Mejnik uporabnikov (slot `mejnik`). */
+  mejnik?: { mejnik: number; uporabnikov: number; drzav: number; lig: number; ekip: number }
 }
 
 declare global {
@@ -41,10 +44,11 @@ declare global {
   }
 }
 
-type Prosojnica = 'uvod' | 'poudarki' | 'enajsterica' | 'poziv'
+type Prosojnica = 'uvod' | 'poudarki' | 'enajsterica' | 'poziv' | 'mejnik' | 'mejnikStevilke'
 
 /** Prosojnice, ki jih vsebina ima (isti seznam bere generator). */
 export function prosojnice(v: VsebinaObjave): Prosojnica[] {
+  if (v.mejnik) return ['mejnik', 'mejnikStevilke', 'poziv']
   return [
     v.igralec ? 'uvod' : null,
     v.poudarki.length ? 'poudarki' : null,
@@ -66,9 +70,9 @@ function Glava({ v }: { v: VsebinaObjave }) {
         {v.liga ? (
           <>
             <div className="font-black text-white">{v.liga.ime}</div>
-            <div>{t('domov.krog', { krog: v.liga.krog })} · {v.liga.sezona}</div>
+            <div>{[v.liga.drzava, t('domov.krog', { krog: v.liga.krog }), v.liga.sezona].filter(Boolean).join(' · ')}</div>
           </>
-        ) : (
+        ) : v.mejnik ? null : (
           <div className="max-w-[34rem] font-black text-white">{t('domov.objava.tedenVEvropi')}</div>
         )}
       </div>
@@ -107,6 +111,33 @@ function Vsebina({ v, kaj }: { v: VsebinaObjave; kaj: Prosojnica }) {
           {formatirajTocke(i.tocke)} {tockZ(i.tocke)}
         </div>
         {i.goli > 0 && <div className="text-4xl font-semibold">⚽ {mnozina(i.goli, GOLI)}</div>}
+      </div>
+    )
+  }
+  if (kaj === 'mejnik' && v.mejnik) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
+        <div className="text-5xl font-bold uppercase tracking-[0.2em] text-[color:var(--zlato)]">{t('domov.objava.hvala')}</div>
+        <div className="text-[15rem] font-black leading-none tracking-tight text-[color:var(--zlato)] drop-shadow-[0_8px_30px_rgba(255,209,102,0.35)]">
+          {stevilo(v.mejnik.mejnik)}
+        </div>
+        <div className="text-5xl font-black naslov">{t('domov.objava.mejnikPodnaslov')}</div>
+        <img src="/logo/slff-maskota.png" alt="" className="mt-6 h-[26rem]" />
+      </div>
+    )
+  }
+  if (kaj === 'mejnikStevilke' && v.mejnik) {
+    const m = v.mejnik
+    const vrstice: [number, string][] = [[m.drzav, t('domov.objava.drzav')], [m.lig, t('domov.objava.lig')], [m.ekip, t('domov.objava.ekip')]]
+    return (
+      <div className="my-10 flex flex-1 flex-col justify-center gap-8">
+        <div className="text-6xl font-black naslov">{t('domov.objava.mejnikStevilke')}</div>
+        {vrstice.map(([n, oznaka]) => (
+          <div key={oznaka} className="flex items-baseline gap-8 rounded-3xl border border-white/10 bg-white/[0.06] px-12 py-8">
+            <div className="text-[7rem] font-black leading-none text-[color:var(--zlato)]">{stevilo(n)}</div>
+            <div className="text-5xl font-bold text-slate-200">{oznaka}</div>
+          </div>
+        ))}
       </div>
     )
   }

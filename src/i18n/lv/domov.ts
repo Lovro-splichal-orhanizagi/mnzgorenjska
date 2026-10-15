@@ -108,5 +108,11 @@ export const domov: NonNullable<Prevod['domov']> = {
     novihEkip: 'Jaunas komandas: {n}',
     tedenVEvropi: 'Šonedēļ Eiropā',
     poziv: 'Izveido savu komandu',
+    hvala: 'Paldies!',
+    mejnikPodnaslov: 'fantāzijas menedžeru SLFF',
+    mejnikStevilke: 'SLFF šodien',
+    drzav: 'valstis',
+    lig: 'līgas',
+    ekip: 'komandas',
   },
 }
