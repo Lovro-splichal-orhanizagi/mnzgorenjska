@@ -40,6 +40,7 @@ import {
   preveriEkipo,
   lahkoUrejasPripomocek,
   lahkoZacne,
+  lahkoZamenjata,
   zakajNeGre,
   VELIKOST_EKIPE,
   PRORACUN,
@@ -638,6 +639,24 @@ preveri(
     prviIzVeljavne.filter((i) => i.position !== 'GK').slice(0, 10),
   ) === false,
 )
+
+// Menjava s tapom (Igrisce): cilji morajo dati veljavno postavo.
+const cilji = (id) => {
+  const a = veljavna.find((i) => i.id === id)
+  return veljavna.filter((b) => lahkoZamenjata(a, b, prviIzVeljavne)).map((b) => b.id)
+}
+preveri('menjava: vratar le z vratarjem', cilji(12).join() === '1' && cilji(1).join() === '12')
+preveri('menjava: branilec s klopi za kogarkoli iz polja', cilji(13).join() === '2,3,4,5,6,7,8,9,10,11')
+preveri('menjava: napadalec s klopi za kogarkoli iz polja', cilji(15).join() === '2,3,4,5,6,7,8,9,10,11')
+preveri('menjava: branilec iz postave le, če ostanejo trije', cilji(2).join() === '13,14,15')
+{
+  // 3-5-2: branilca lahko zamenja le branilec.
+  const prvi352 = [...prviIzVeljavne.filter((i) => i.id !== 5), { ...veljavna[13], is_starter: true }]
+  const def = prvi352.find((i) => i.id === 2)
+  preveri('menjava: ne pod tri branilce', !lahkoZamenjata(def, veljavna[14], prvi352))
+  preveri('menjava: branilec za branilca gre', lahkoZamenjata(def, veljavna[12], prvi352))
+}
+preveri('menjava: dva iz postave nista menjava', !lahkoZamenjata(veljavna[1], veljavna[2], prviIzVeljavne))
 
 preveri(
   'igralec šestega kluba se doda',

@@ -76,6 +76,8 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
       'In der Startelf ist kein Platz für einen weiteren Spieler auf dieser Position. Setz zuerst jemanden auf die Bank.',
     niVecNamestnik: '{ime} ist nicht mehr Vizekapitän. Wähle einen neuen.',
     niVecKapetan: '{ime} ist nicht mehr Kapitän. Wähle einen neuen.',
+    kapetanPrevzel: '{ime} trägt jetzt die Kapitänsbinde.',
+    namestnikPrevzel: '{ime} ist jetzt Vizekapitän.',
     rokPotekel: 'Die Deadline für Runde {krog} ist vorbei, Änderungen gelten ab der nächsten Runde.',
     shranjenaZaKrog: 'Dein Team ist gespeichert und bereit für Runde {krog}.',
     shranjenaVeljavna: 'Dein Team ist gespeichert und entspricht den Regeln.',
@@ -297,8 +299,13 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
 
   // Spielfeld im Team-Editor (components/Igrisce.tsx).
   igrisce: {
-    naKlop: 'Auf die Bank',
-    vPostavo: 'In die Startelf',
+    namigZamenjave: 'Tippe auf das Trikot eines Spielers und dann auf den, mit dem du ihn tauschst.',
+    zapriNamig: 'Tipp schließen',
+    izberiZaMenjavo: '{ime}: zum Tausch auswählen',
+    prekliciIzbiro: '{ime}: Auswahl aufheben',
+    zamenjajZ: '{ime}: mit {drugi} tauschen',
+    izbran: '{ime} ist ausgewählt. Tippe auf einen markierten Spieler zum Tauschen oder erneut auf ihn zum Abbrechen.',
+    brezMenjave: 'Für {ime} gibt es keinen gültigen Tausch. Tippe erneut, um abzubrechen.',
     niVecVLigiNamig: 'Dieser Spieler ist nicht mehr in der Liga. Ein Kader mit ihm holt keine Punkte.',
     niVecVLigi: 'nicht mehr in der Liga',
     poskodba: 'Verletzung',

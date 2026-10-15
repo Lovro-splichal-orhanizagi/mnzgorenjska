@@ -75,6 +75,8 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
       'There’s no room in the starting XI for another player in this position — bench someone first.',
     niVecNamestnik: '{ime} is no longer vice-captain — pick a new one.',
     niVecKapetan: '{ime} is no longer captain — pick a new one.',
+    kapetanPrevzel: '{ime} now wears the captain’s armband.',
+    namestnikPrevzel: '{ime} is now vice-captain.',
     rokPotekel: 'The round {krog} deadline has passed, so changes apply from the next round.',
     shranjenaZaKrog: 'Your team is saved and ready for round {krog}.',
     shranjenaVeljavna: 'Your team is saved and meets the rules.',
@@ -297,8 +299,13 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
 
   // Pitch in the team builder (components/Igrisce.tsx).
   igrisce: {
-    naKlop: 'Move to bench',
-    vPostavo: 'Move into starting XI',
+    namigZamenjave: 'Tap a player’s shirt, then the player you want to swap him with.',
+    zapriNamig: 'Close tip',
+    izberiZaMenjavo: '{ime}: select for substitution',
+    prekliciIzbiro: '{ime}: cancel selection',
+    zamenjajZ: '{ime}: swap with {drugi}',
+    izbran: '{ime} is selected. Tap a highlighted player to swap, or the same player again to cancel.',
+    brezMenjave: 'No valid swap for {ime}. Tap him again to cancel.',
     niVecVLigiNamig: 'This player is no longer in the league — a squad with him scores no points.',
     niVecVLigi: 'no longer in the league',
     poskodba: 'injury',
