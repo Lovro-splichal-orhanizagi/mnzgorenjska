@@ -225,6 +225,9 @@ function odsotnostZaIgrisce(o: PorociloOdsotnosti | undefined): IgralecNaIgriscu
   return { vrsta: o.kind, opis: opisOdsotnosti(o) }
 }
 
+/** Koliko zadnjih krogov svoje ekipe vidi lastnik v zgodovini. */
+const KROGOV_ZGODOVINE = 3
+
 export default function MojaEkipa() {
   const { session, loading } = useAuth()
   // Ob osvežitvi žetona (in ob vrnitvi v zavihek) useAuth nastavi NOV objekt
@@ -718,9 +721,10 @@ export default function MojaEkipa() {
           }
           poKrogih.set(key, prej)
         }
-        const zgod = [...poKrogih.values()].sort(
-          (a, b) => (b.krog?.number ?? 0) - (a.krog?.number ?? 0),
-        )
+        // Zgodovina kaže le zadnje tri kroge (odločitev lastnika, 15. 10. 2026).
+        const zgod = [...poKrogih.values()]
+          .sort((a, b) => (b.krog?.number ?? 0) - (a.krog?.number ?? 0))
+          .slice(0, KROGOV_ZGODOVINE)
         ekipaStanje = { nabor, chips: podatki(rChips) ?? [], posnetki, zgod }
       }
       if (!veljavno) return
