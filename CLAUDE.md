@@ -2944,7 +2944,9 @@ obeh ista tekma), zato `am<id>` ostane enolična.
   2025/26 `38786-38920` (10 klubov, 27 krogov po 5; meje preverjene z 404 na
   obeh straneh). **Nova sezona**: poišči prvo in zadnjo tekmo (stran `/en/games`
   ali stran kluba da šifre tekočega kroga; blok je klubov/2 × krogov) in popravi
-  `source_league_code`.
+  `source_league_code`. Stran kroga s tekmami zunaj bloka: vse zunaj
+  nedokončanega bloka ustavi uvoz (nova sezona ali nov blok), nekaj zunaj
+  (tekma, dodana za zgornjo mejo) je opozorilo — blok razširi.
 - **Stran tekme** `/en/games/f<id>` (beremo `/en/`; `/hy/` ima imena v
   armenski pisavi): naslov "2025-2026 Fastex Premier League : Matchday 1"
   (tekoča sezona le ": Matchday 9"), termin "11.10.2026 20:00" (erevanski čas
@@ -2960,7 +2962,8 @@ obeh ista tekma), zato `am<id>` ostane enolična.
   odigrana s postavama se ne bere znova (zapisnik zadnjega tedna sveže,
   nepopoln do 45 dni — `zapisnikSvez`), izid brez postav dnevno do 45 dni,
   neodigrana na vrsti (od dneva pred terminom do 14 dni po njem) vsako uro,
-  sicer tedensko, "To schedule" tedensko. Stran kroga (uvoz razporeda jo
+  sicer tedensko, "To schedule" tedensko (pred tekočim krogom — prestavljena
+  brez termina — dnevno). Stran kroga (uvoz razporeda jo
   prenese kot `naslovRazporeda`) pove izid in termin tekočega kroga — tekmo,
   ki jo kaže drugače kot predpomnilnik, preberemo takoj. Prvi uvoz bloka
   prebere vse strani. Krog brez termina (vse "To schedule") v razpored ne

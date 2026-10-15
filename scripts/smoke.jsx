@@ -5786,6 +5786,39 @@ preveri(
     e403 instanceof F.FfaZavrnitev && e403.status === 403 && e429 instanceof F.FfaZavrnitev && e429.status === 429 &&
     eIzziv instanceof F.FfaZavrnitev && eSprem instanceof Error && !(eSprem instanceof F.FfaZavrnitev) && /ni stran tekme/.test(eSprem.message) &&
     !F.zaPredpomnilnik('<html>Be right back</html>', 'tekma-pl-96151.html') && F.zaPredpomnilnik(ag, 'tekma-pl-96106.html'))
+
+  // Konec bloka: tekme, ki jih stran kroga kaže zunaj bloka, uvoz ne bi
+  // nikoli prebral. Vse zunaj nedokončanega bloka (nova sezona, nov blok)
+  // ustavi uvoz; nekaj zunaj (dodana tekma za zgornjo mejo) je opozorilo.
+  const prenesiBlok = async (url) => {
+    const id = Number(url.match(/\/games\/f(\d+)/)?.[1])
+    return strani.get(id) ?? krog
+  }
+  const eZunaj = await ujemi(() => F.preberiBlokPl('premierleague/96157-96162', prenesiBlok, { danes, predpomnilnik: prazno }))
+  const opozorila = []
+  const warn = console.warn
+  console.warn = (s) => opozorila.push(String(s))
+  const eDel = await ujemi(() => F.preberiBlokPl('premierleague/96151-96155', prenesiBlok, { danes, predpomnilnik: prazno }))
+  console.warn = warn
+  preveri('ffa PL: stran kroga s tekmami zunaj bloka — vse zunaj nedokončanega bloka ustavi uvoz, nekaj zunaj je opozorilo',
+    eZunaj instanceof Error && /zunaj bloka/.test(eZunaj.message) && eDel === null && opozorila.some((o) => /zunaj bloka .*f96156/.test(o)))
+
+  // "To schedule" pred tekočim krogom je prestavljena tekma brez termina:
+  // nov termin (in izid) mora priti v dnevu, ne šele čez teden.
+  const nerazpisana = F.tekmaPl(nr, 96150)
+  preveri('ffa PL: nerazpisana pred tekočim krogom se bere dnevno, za njim tedensko',
+    F.najvecStarostPl(nerazpisana, danes, { predKrogom: true }) === 864e5 && F.najvecStarostPl(nerazpisana, danes) === 7 * 864e5)
+  const strani3 = new Map([...strani].filter(([id]) => id <= 96156))
+  strani3.set(96150, nr.replace('SC Shirak', KLUBI[0]).replace('FC Alashkert', KLUBI[2]))
+  const shramba3 = new Map([...strani3].map(([id, h]) => [`tekma-pl-${id}.html`, { html: h, starost: 2 * 864e5 }]))
+  shramba3.set('razpored-premierleague_96150-96156.html', { html: krog, starost: 60e3 })
+  const prebrane3 = []
+  await F.preberiBlokPl('premierleague/96150-96156', async (url) => {
+    prebrane3.push(url)
+    return strani3.get(Number(url.match(/\/games\/f(\d+)/)?.[1])) ?? krog
+  }, { danes, predpomnilnik: { beri: (ime) => shramba3.get(ime) ?? null, shrani: () => {} } })
+  preveri('ffa PL: blok — nerazpisana tekma pred tekočim krogom (2 dni v predpomnilniku) se prebere znova',
+    prebrane3.some((x) => x.endsWith('/f96150')))
 }
 
 // --- vir oefb (Avstrija, oefb.at) ------------------------------------------------

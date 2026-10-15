@@ -764,15 +764,21 @@ export function sestaviBlokPl(blok, strani) {
 
 const starostMs = (datum, danes) => (datum ? danes - Date.parse(`${datum}T00:00:00Z`) : 0)
 
-/** Koliko je lahko stara shranjena stran tekme, preden jo preberemo znova. */
-export function najvecStarostPl(t, danes = Date.now()) {
+/**
+ * Koliko je lahko stara shranjena stran tekme, preden jo preberemo znova.
+ * `predKrogom`: tekma je v bloku pred tekočim krogom (stran kroga).
+ */
+export function najvecStarostPl(t, danes = Date.now(), { predKrogom = false } = {}) {
   if (!t) return -1
   if (t.izid) {
     if (t.tehnicni || t.postave) return Infinity
     // Izid brez postav: zapisnik se morda še vnaša — dnevno do 45 dni.
     return starostMs(t.datum, danes) <= PONOVNO_DNI * DAN ? DAN : Infinity
   }
-  if (!t.datum) return 7 * DAN // "To schedule"
+  // "To schedule" pred tekočim krogom je prestavljena tekma brez termina:
+  // nov termin (in tekma sama) lahko pride v nekaj dneh — dnevno. Za tekočim
+  // krogom so nerazpisani prihodnji krogi — tedensko.
+  if (!t.datum) return predKrogom ? DAN : 7 * DAN
   const cez = -starostMs(t.datum, danes) / DAN
   if (cez > 1) return 7 * DAN // še ni na vrsti
   if (cez > -14) return URA // na vrsti ali pred kratkim
@@ -823,6 +829,11 @@ export async function preberiBlokPl(koda, prenesi, { danes = Date.now(), predpom
   const htmlKroga = ck && ck.starost <= 10 * 60e3 && zaPredpomnilnik(ck.html, imeKrogaPl(koda)) ? ck.html : await beriSvezePl(prenesi, `${PL}/en/games`, imeKrogaPl(koda), predpomnilnik)
   if (htmlKroga) krog = tekmeKrogaPl(htmlKroga)
   const naStraniKroga = new Map(krog.tekme.map((t) => [Number(t.id), t]))
+  const vBloku = (id) => id >= blok.od && id <= blok.do
+  // Začetek tekočega kroga v bloku (najmanjša šifra strani kroga v bloku).
+  // Brez strani kroga (ali vse zunaj bloka) ni "pred krogom" nobena.
+  const vKrogu = [...naStraniKroga.keys()].filter(vBloku)
+  const zacetekKroga = vKrogu.length ? Math.min(...vKrogu) : -Infinity
 
   const strani = new Map()
   const svezi = new Set()
@@ -830,7 +841,7 @@ export async function preberiBlokPl(koda, prenesi, { danes = Date.now(), predpom
   for (let id = blok.od; id <= blok.do; id++) {
     const c = izPredpomnilnikaFn(imeTekmePl(id))
     const t = c && zaPredpomnilnik(c.html, imeTekmePl(id)) ? tekmaPl(c.html, id) : null
-    let najvec = najvecStarostPl(t, danes)
+    let najvec = najvecStarostPl(t, danes, { predKrogom: id < zacetekKroga })
     const k = naStraniKroga.get(id)
     if (t && k && (!!k.izid !== !!t.izid || (k.izid && (k.izid.domaci !== t.izid.domaci || k.izid.gostje !== t.izid.gostje)) ||
       (k.datum && (k.datum !== t.datum || k.ura !== t.ura)))) najvec = -1
@@ -843,6 +854,17 @@ export async function preberiBlokPl(koda, prenesi, { danes = Date.now(), predpom
     svezi.add(id)
   }
   const b = sestaviBlokPl(blok, strani)
+  // Tekme tekočega kroga zunaj bloka uvoz nikoli ne prebere (blok je meja).
+  // Vse zunaj nedokončanega bloka: nova sezona ali nov blok — ustavimo, kot
+  // ffa.am ob drugi skupini. Nekaj zunaj (tekma, dodana za zgornjo mejo): opozorilo.
+  const zunaj = [...naStraniKroga.keys()].filter((id) => !vBloku(id))
+  if (zunaj.length) {
+    const sporocilo = `stran kroga (${krog.krog ?? '?'}. krog) kaže tekme zunaj bloka ${koda}: f${zunaj.join(', f')}`
+    const nedokoncan = b.tekme.some((t) => !t.izid)
+    if (nedokoncan && zunaj.length === naStraniKroga.size)
+      throw new Error(`ffa: ${sporocilo} — nova sezona ali nov blok? Popravi source_league_code; uvoz ustavljen`)
+    console.warn(`ffa: ${sporocilo} — ${nedokoncan ? 'teh tekem uvoz ne bere; razširi blok v source_league_code' : 'blok je končan (arhiv ali nova sezona)'}`)
+  }
   if (b.manjkajo.length) console.warn(`ffa: v bloku ${koda} ni tekem f${b.manjkajo.join(', f')}`)
   if (b.neujemanja.length) console.warn(`ffa: krog strani ni krog po mestu v bloku pri ${b.neujemanja.join(', ')}`)
   if (b.sezone.length > 1) console.warn(`ffa: blok ${koda} ima tekme več sezon (${b.sezone.join(', ')}) — je blok pravi?`)
