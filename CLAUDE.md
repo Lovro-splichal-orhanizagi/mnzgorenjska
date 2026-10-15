@@ -2946,7 +2946,12 @@ z `ua-`.
   13. 9. 2026; članek: "Матч … не відбувся"). Prestavljena tekma ostane v svojem
   krogu z novim datumom ali kot "-" brez ure.
 - **Strani tekme ni**, tekma nima šifre: šifra zapisnika je
-  `ffl<liga>-<krog>-<šifra domačih>-<šifra gostov>`.
+  `ffl<liga>-<krog>-<manjša šifra kluba>-<večja šifra kluba>` — ne po
+  domačinu, da zveza, ki po uvozu obrne domačina in gosta, ne da druge uvožene
+  tekme z istimi nastopi (nova vrstica pade na `matches_zapisnik_id_key`;
+  popravi ročno). Prestavljena tekma ostane v svojem krogu, zato se šifra ne
+  spremeni; če bi jo zveza prestavila v drug krog, ostane stara neuvožena
+  vrstica (preverba jo javi).
 - **Postave so v novicah** (`/news/<id>`, naslov brez sluga). Članek lige na
   dan ali konec tedna ("Прем'єр-ліга Львівщини-2026/2027: матчі 11-го жовтня")
   ima povezavo na tekmovanje (`/cup/<id>` — pri Третій in Четвертій eno na
@@ -2988,7 +2993,8 @@ prepovedanega), pogojev uporabe nismo našli. **Med zahtevki je 10 s**
 seznama novic in 7–20 člankov (~5–6 minut); seznam in članki so v skupnem
 predpomnilniku vira, druga liga istega zagona bere le svoje članke. Beremo
 odkrito (User-Agent SLFF). **Ob 401, 403, 429 ali izzivu se uvoz ustavi
-takoj** (`FflZavrnitev`, izhod 4; `vir.fetch` 429 ne ponavlja) — ne obhajaj.
+takoj** (`FflZavrnitev`, izhod 4; `vir.fetch` 429 in izziv s 5xx ne ponavlja)
+— ne obhajaj.
 Izbrisan članek (404, 410) lige ne ustavi: opozorilo in izpade iz
 `novice.json`; 5xx ustavi. Sodnikov, opazovalcev, trenerjev in stadionov ne
 beremo; vzorci `scripts/vzorci/ua-ffl-*` so brez njih.
@@ -3027,9 +3033,19 @@ Izpuščeno: kupi (Кубок Третьої/Четвертої ліги, Куб
 plej-of tekme, Чемпіонат юніорів, ДЮФЛ, ženske, futsal, memoriali.
 
 Uvoz (ena za drugo; lige so **neaktivne**): `gh workflow run uvoz-lige.yml -f
-liga=ua-lv-premier -f cene=true` (brez arhiva). Rok prihodnjega kroga pozna
-šele, ko se krog začne — pred vklopom preveri, kako rok kroga nastane brez
-razporeda vnaprej.
+liga=ua-lv-premier -f cene=true` (brez arhiva).
+
+**Vklop zdaj ni mogoč — roka kroga ni vnaprej.** Stran tekmovanja pokaže
+krog šele, ko se začne (15. 10. 2026: 12. krog, 17.–18. 10., ga še ni;
+"Календар ігор" v meniju vodi na naslovnico, ki ima isti drsnik). Uvoz
+razporeda zato krog vpiše po prvi tekmi z rokom, ki je že mimo: krog se
+zaklene ob naslednjem zaklepu s kadrom, kakršen je takrat — kdor po začetku
+kroga (in pred uvozom razporeda) zamenja igralce, jih dobi v krog; pred
+krogom pa ni roka ne "naslednjega kroga". Pred vklopom je potreben vir
+datumov vnaprej (koledar ЛАФ, objava razporeda v novicah) ali ocena roka
+prihodnjega kroga, kot jo ima `fssid` (`ocenjeniDatumi`), le da tu pari
+prihodnjega kroga niso znani — uvoz razporeda bi moral sprejeti krog brez
+tekem z ocenjenim rokom.
 
 ### Država obiskovalca
 

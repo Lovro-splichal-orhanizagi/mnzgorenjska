@@ -14,8 +14,8 @@
 // "00:00" = ura ni znana), klub s šifro (`/team/<id>`), izid "3 - 1" ali "-"
 // (neodigrana). Stran kaže LE kroge, ki so se že začeli — prihodnjih krogov
 // (in njihovih rokov) vir ne objavi vnaprej. Stran tekme NE obstaja: tekma
-// nima šifre, zato je šifra zapisnika `ffl<liga>-<krog>-<domači>-<gostje>`
-// (šifre klubov).
+// nima šifre, zato je šifra zapisnika `ffl<liga>-<krog>-<klub>-<klub>`
+// (šifri klubov, manjša prva — glej `sifraZapisnika`).
 //
 // ZAPISNIKOV ni, postave so v NOVICAH (`/news/<id>`, naslavljanje brez sluga).
 // Članek lige na dan ali konec tedna ("Прем'єр-ліга Львівщини-2026/2027: матчі
@@ -73,8 +73,17 @@ export function razberiKodo(koda) {
 export const naslovLige = (koda) => `${OSNOVNI}/cup/${razberiKodo(koda)}`
 export const naslovNovic = (stran) => `${OSNOVNI}/news?page=${stran}`
 export const naslovClanka = (id) => `${OSNOVNI}/news/${id}`
-/** Šifra zapisnika: tekma nima svoje, zato liga, krog in šifri klubov. */
-export const sifraZapisnika = (liga, krog, domaciId, gostjeId) => `ffl${razberiKodo(liga)}-${krog}-${domaciId}-${gostjeId}`
+/**
+ * Šifra zapisnika: tekma nima svoje, zato liga, krog in šifri klubov — manjša
+ * prva, ne domači. Uvoz tekmo najde po (krog, domači, gostje); če zveza po uvozu
+ * obrne domačina in gosta, bi šifra po vrstnem redu dala drugo uvoženo tekmo z
+ * istimi nastopi (tiho podvojene točke). Tako ostane ista in nova vrstica pade
+ * na `matches_zapisnik_id_key` — glasna napaka uvoza, stara tekma ostane.
+ */
+export const sifraZapisnika = (liga, krog, domaciId, gostjeId) => {
+  const [a, b] = [Number(domaciId), Number(gostjeId)].sort((x, y) => x - y)
+  return `ffl${razberiKodo(liga)}-${krog}-${a}-${b}`
+}
 const imeLige = (koda) => `liga-${razberiKodo(koda)}.html`
 const imeNovic = (stran) => `novice-${stran}.html`
 const imeClanka = (id) => `clanek-${id}.html`
@@ -108,6 +117,12 @@ export async function fflFetch(url, moznosti = {}, fetchFn = fetch) {
   if (jeZavrnitev(odgovor.status)) {
     await odgovor.body?.cancel?.().catch(() => {})
     throw new FflZavrnitev(`ffl: ${url} → HTTP ${odgovor.status} — uvoz ustavljen, ne obhajamo`, odgovor.status)
+  }
+  // Izziv pride tudi s 5xx (Cloudflare "Just a moment…" s 503): brez tega bi ga
+  // prenos ponavljal, uvoz razporeda pa vzel shranjeno stran in šel naprej.
+  if (odgovor.status >= 500 && jeIzziv(await odgovor.clone().text().catch(() => ''))) {
+    await odgovor.body?.cancel?.().catch(() => {})
+    throw new FflZavrnitev(`ffl: ${url} vrne izziv (HTTP ${odgovor.status}) — uvoz ustavljen, ne obhajamo`, odgovor.status)
   }
   return odgovor
 }

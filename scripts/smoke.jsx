@@ -5588,6 +5588,11 @@ preveri(
   preveri('ffl: šifra lige je id tekmovanja, naslovi, šifra zapisnika (liga, krog, klubi)', L.razberiKodo(' 837 ') === 837 && /id tekmovanja/.test(slabaSifra ?? '') &&
     L.default.naslovRazporeda('837') === 'https://ffl.org.ua/cup/837' && L.naslovClanka(9760) === 'https://ffl.org.ua/news/9760' &&
     L.sifraZapisnika('837', 11, 775, 943) === 'ffl837-11-775-943')
+  // Tekma nima šifre vira: če zveza po uvozu obrne domačina in gosta, mora
+  // šifra ostati ista — nova vrstica z isto šifro pade na matches_zapisnik_id_key
+  // (glasna napaka), sicer bi nastala druga uvožena tekma z istimi nastopi.
+  preveri('ffl: šifra zapisnika ne sledi vrstnemu redu klubov (obrnjen par ni nova tekma)',
+    L.sifraZapisnika('837', 11, 943, 775) === 'ffl837-11-775-943' && L.sifraZapisnika('837', 11, 59, 1476) === 'ffl837-11-59-1476')
   preveri('ffl: datum dneva, sezona, ime kluba (oblika odpade, kraj in АФ ostaneta)', L.datumDneva('Неділя, 11-те жовтня.', '2026-10-11') === '2026-10-11' &&
     L.datumDneva('Субота, 26-те грудня.', '2027-01-02') === '2026-12-26' && L.datumDneva('Неділя, 23-тє серпня.', '2026-08-23') === '2026-08-23' &&
     L.datumDneva('Матч перенесено', '2026-10-11') === null && L.sezonaIz("Прем'єр-ліга Львівської області. Сезон-2026/2027") === '2026/27' &&
@@ -5757,6 +5762,14 @@ preveri(
     const p429 = await napaka(() => prenesiSPonovitvami('https://ffl.org.ua/cup/837', { fetchFn: (u, m) => L.fflFetch(u, m, lazen), zamiki: [1, 1] }))
     const ok = await prenesiSPonovitvami('https://ffl.org.ua/cup/837', { fetchFn: (u, m) => L.fflFetch(u, m, async () => new Response('ok')) })
     preveri('ffl: prenos — 429 takoj FflZavrnitev (en sam zahtevek), 200 gre skozi', p429 instanceof L.FflZavrnitev && p429.status === 429 && klicev === 1 && ok.status === 200)
+    // Izziv s statusom 503 (Cloudflare "Just a moment…") ni motnja strežnika:
+    // ustavi takoj (izhod 4), brez ponovitev in brez rezerve iz predpomnilnika.
+    let klicev503 = 0
+    const izziv503 = async () => { klicev503++; return new Response('<title>Just a moment...</title>', { status: 503 }) }
+    const p503 = await napaka(() => prenesiSPonovitvami('https://ffl.org.ua/cup/837', { fetchFn: (u, m) => L.fflFetch(u, m, izziv503), zamiki: [1, 1] }))
+    const navaden503 = await prenesiSPonovitvami('https://ffl.org.ua/cup/837', { fetchFn: (u, m) => L.fflFetch(u, m, async () => new Response('Service Unavailable', { status: 503 })), zamiki: [1, 1], log: () => {} })
+    preveri('ffl: izziv s 503 → FflZavrnitev takoj; navaden 503 ostane prehodna napaka', p503 instanceof L.FflZavrnitev && p503.zavrnitev && klicev503 === 1 &&
+      navaden503.status === 503)
     preveri('ffl: 401, 403, 429 in izziv vržejo FflZavrnitev na vsaki poti (izhod 4)', [z401, z403, izzivNovic, z429].every((e) => e instanceof L.FflZavrnitev && e.zavrnitev) &&
       z401.status === 401 && z403.status === 403 && z429.status === 429 && L.default.zavrnitev('x', 401).zavrnitev === true &&
       vzdrzevanje && !(vzdrzevanje instanceof L.FflZavrnitev) && /nima tekem/.test(vzdrzevanje.message))
