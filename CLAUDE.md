@@ -2828,6 +2828,162 @@ Uvoz (ena za drugo, ~2 s na zapisnik — arhiv 240 zapisnikov je ~10 minut):
 `gh workflow run uvoz-lige.yml -f liga=mk-prva-mfl -f arhiv=prva-mfl-25-26 -f
 cene=true`.
 
+### Grčija — vir `mascot` (Mascotnet)
+
+Država `GR` ("Ελλάδα") — vpiše jo ta migracija (20261015121300) ali migracija
+vira `eps`, kar pride prej (obe `on conflict do nothing`). Vmesnika v grščini,
+kartice in pošte **še ni**, `GR` **ni** v matriki nočnega uvoza — oboje pred
+vklopom. Šifra lige se začne z `gr-`.
+
+**Pisno dovoljenje za zajem: pridobil Lovro, oktober 2026.** Pogoji
+Mascotneta (`mascotnet.com/terms.asp`, "Όροι χρήσης" v nogi vsake strani)
+samodejno branje prepovedujejo; upravljavec ga je SLFF pisno dovolil.
+Dovoljenje **ne pokriva tehnične zaščite**: ob 401, 403, 429, izzivu ali
+CAPTCHI se uvoz ustavi (`MascotZavrnitev`, izhod 4) — ne obhajaj (ne novih
+sej, IP-jev ali brskalnika). Če upravljavec dovoljenje umakne: vse lige vira
+izklopi (`update competitions set active = false where source = 'mascot'`).
+Beremo vljudno: User-Agent `SLFF fantasy (https://slff.eu)`, **3 s** med
+zahtevki (robots.txt nima `Crawl-delay`; epsm in epsl zapreta le `/form*/`
+in `app*`, ostale domene robots.txt nimajo), popolnih zapisnikov ne beremo
+znova.
+
+Vir `mascot` (`scripts/viri/mascot.mjs`) bere spletišča EPS, ki jih gosti
+Mascot Network Hellas: epsm.gr (Makedonija/Solun), epsachaias.gr, epspellas.gr,
+epsdramas.gr, epskozanis.gr, epskerkyras.gr, epsthesprotias.gr, epsl.gr
+(Lezbos in Limnos), eps-imathias.gr, epsprevezas-lefkadas.gr (`DOMENE`; kratica
+zveze je v slugu in šifri zapisnika — **nikoli je ne spreminjaj**). Koda je
+ista (ASP), predloge pa se med domenami razlikujejo (štiri različice razporeda —
+epsm, Ahaja `table.asp`, Krf, Lezbos z izidom v isti vrstici — in dve strani
+tekme), zato se razčlenjevalnik drži besedila in razredov
+`epsm-…`, ne postavitve.
+
+- **Šifra lige je `<domena>:<diorganosi>`**, `diorganosi` natanko kot v meniju
+  domene (`table.asp?diorganosi=Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ`; zakomentirani
+  vnosi menija so lanski play-off/out). **Arhiva ni**: stran lige vedno kaže
+  tekočo sezono (Ahaja ima pretekle sezone le kot slike), cene so le iz
+  tekoče sezone. Ob novi sezoni šifra ostane, če zveza ligo imenuje enako.
+  Grške črke v šifri `sifra()` (zapisniki.mjs) spremeni v `_`, zato vir svoje
+  datoteke imenuje z zgostitvijo šifre (`imeRazporeda`) in preveri, da je
+  stran res ta liga (naslov strani, `jeStranLige`).
+- **Razpored** je `table_analytika.asp` (epsm, Krf, Lezbos) ali `table.asp`
+  (ostale): krogi "N<sup>η</sup> ΑΓΩΝΙΣΤΙΚΗ", vrstica "Domači / - / Gostje"
+  (ime kluba ima lahko " - ": "ΑΟ ΤΡΙΤΑΙΑΣ - Ο ΤΡΙΤΑΙΙΚΟΣ"), izid, povezava
+  `game.asp?game_number=N&match_date=dd.mm.yyyy`; Ahaja, Kozani, Imatija, Drama
+  in Pela imajo pri tekmi še datum in uro, epsm le pri odigranih (s povezave).
+  **Čas je atenski → ljubljanski −1 h.** Neodigrani tekmi brez datuma vir
+  datum vzame s **strani tekme** (obstaja pred tekmo), številko pa iz
+  razporeda ali okvirja "ΕΠΟΜΕΝΗ ΑΓΩΝΙΣΤΙΚΗ" na `table.asp` (epsm) — le za
+  naslednja dva kroga, v lastnem predpomnilniku (ura do 12 ur). Krog brez
+  znanega datuma prve polovice sezone se oceni (+7 dni, `datum_ocenjen`, kot
+  fssid), druga polovica izpade, dokler ne dobi datuma.
+- **Številka tekme se vsako sezono ponovi** (vsaka liga ima svoj tisočak:
+  epsm Α1 1xxx, Α 1. skupina 2xxx …; `match_date` stran prezre). Šifra
+  zapisnika je zato `gr-<zveza>-<leto začetka sezone>-<N>` (`gr-mak-2026-2018`).
+- **Zapisnik** `game.asp`: imeni klubov, izid, strelci po ekipah ("27'
+  ΧΑΤΖΗΛΙΑΣ Π.", 95' → 90), datum in ura ("ΗΜΕΡΟΜΗΝΙΑ", "ΩΡΑ"), za vsako ekipo
+  seznam "NN. ΠΡΙΙΜΕΚ Ι." — **pred `<hr>` začetniki, za njim klop** (dres je
+  prava številka: začetnik ima lahko 17, klop 03), nato menjave "61' ΙΖSTOP -
+  VSTOP" ("ΗΜ.'" = polčas → 45). **Kartonov in asistenc ni.** Igralec v
+  izključitvi zato dobi vse minute.
+- **Smer menjave** pove, kdo je na igrišču (gre ven) in kdo še ni igral (gre
+  noter) — klubi jo pišejo različno. Kjer veljata obe (soimenjaka "ΚΑΛΟΓΡΙΔΗΣ
+  Ν. - ΚΑΛΟΓΡΙΔΗΣ Ν."), odloči običajna smer domene (`menjava`). Napake vira
+  (prazno ime, oba igralca na klopi, oba na igrišču) dajo le izstop ali le
+  vstop ali nič, vedno z opozorilom.
+- **Ahaja (epsachaias.gr) klopi ne objavi**: le začetniki, menjave "VSTOP -
+  IZSTOP" in pogosto le s priimkom ("46' ΚΕΡΑΜΙΔΑΣ - ΠΑΣΒΑΝΤΙΔΗΣ"). Rezerva, ki
+  je vstopila, dobi nastop brez dresa; če ima klub v zapisnikih lige natanko
+  enega igralca s tem začetkom imena, dobi njegovo polno ime (`dopolniImena`),
+  sicer bi bila ista oseba v bazi dvakrat.
+- **Vratar ni označen**: prvi začetnik je vratar (namig → GK, kot `eps`,
+  `ffm`); *Uskladi pozicije* z `vir = mascot`, ostale pozicije na glasovanje.
+- **Identiteta je ime + klub** (kot fsb, ffm): "ΠΡΙΙΜΕΚ Ι." v velikih grških
+  črkah, kot ga piše zveza (male črke brez naglasov niso pravilna grščina);
+  soimenjaka loči dres. Isti dres pri dveh igralcih ekipe je opozorilo.
+- **Kontumacija**: izid brez strani tekme ali z oznako "α.α." / "ΑΝΕΥ ΑΓΩΝΑ"
+  / "ΑΠΟΣΥΡ…" / "ΔΕΝ ΘΑ ΔΙΕΞΑΧΘΕΙ" (`BREZ_BORBE`; velike "Α. Α." so začetnice
+  igrišča, ne oznaka), ali 3:0 / 0:3, starejša od tedna, katere stran nima
+  postav (`vir.kontumacije`). Nepopoln zapisnik (ekipa z manj kot 7
+  začetniki) kot pri `frf`: izid se zapiše, `imported_at` ostane prazen.
+- **Predpomnilnik**: v predpomnilnik gre le stran z glavo tekme oziroma
+  razpored s krogi (`zaPredpomnilnik`) — vzdrževalna stran ne. Stran tekme
+  brez zapisnika ali nepopolna se do 45 dni bere sveže; popolna, starejša od
+  treh dni, nikoli več.
+- **Isto ime, drug klub**: zveze so ločene piramide, klub pa je enoličen v
+  državi (tudi proti viru `eps`). `IME_V_ZVEZI` (`<domena>|<ključ>` → ime s
+  krajem zveze). Pregled 15. 10. 2026 (vseh 41 lig desetih domen in
+206 klubov vira `eps`): en trk, Α.Ε. Αμπελοκήπων (Solun, epsm Α 2. skupina,
+in Drama, Β) — dramski in njegova druga ekipa sta "Α.Ε. ΑΜΠΕΛΟΚΗΠΩΝ (Δράμα)"
+in "… Β (Δράμα)"; z `eps` trkov ni. Ob novi ligi ali sezoni:
+  `node scripts/mascot-lige.mjs --trki`.
+
+Seznam lig in preizkus (brez baze, po poti uvoza):
+
+```bash
+node scripts/mascot-lige.mjs                        # lige iz menijev vseh domen: krogi, tekme, odigrane
+node scripts/mascot-lige.mjs epsm.gr --preveri      # še vsi zapisniki (goli, postave, menjave, minute)
+node scripts/mascot-lige.mjs --trki                 # isto ime kluba v dveh zvezah
+```
+
+Preizkus v živo (15. 10. 2026, vse lige vseh desetih domen, vsi zapisniki,
+po poti uvoza brez baze; ~500 zahtevkov po 3 s, nobenega 403, 429 ali
+izziva): v 31 vpisanih ligah 384 odigranih tekem, 380 zapisnikov (stran 4 tekem
+še ni dala zapisnika — vir jo bere znova do 45 dni), 1 nepopoln (epsm Γ3, ekipa brez postave);
+goli = izid 362/379 — razlika je napaka vira (strelec, ki ga ni na seznamu
+igralcev, ali gol brez strelca), izid ostane izid zapisnika; postav po 11
+758/759 (Λήμνος: ekipa z 10); 2811 menjav z minuto, 990 minut ima 738/759
+ekip — ostale imajo menjavo, ki jo je klub vpisal le do polovice (le izstop
+ali le vstop, opozorilo), ali menjavo, pri kateri vir ne ve, kdo gre ven. Ahaja: 386
+nastopov s klopi brez dresa (klopi ne objavi). Nobena tekma ni bila brez
+borbe.
+
+Vpisanih je 31 lig (migracija 20261015121300), **neaktivnih**, brez arhiva:
+
+| liga | šifra (`<domena>:<diorganosi>`) | klubov | odigranih / zapisnikov | goli = izid | postav po 11 | 990 minut |
+|---|---|---|---|---|---|---|
+| gr-mak-a1 | `epsm.gr:Α1 ΕΡΑΣΙΤΕΧΝΙΚΗ` | 16 | 56 / 56 | 55/56 | 112/112 | 109/112 |
+| gr-mak-a-1 | `epsm.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ` | 14 | 21 / 21 | 21/21 | 42/42 | 40/42 |
+| gr-mak-a-2 | `epsm.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 2ος ΟΜΙΛΟΣ` | 14 | 21 / 21 | 19/21 | 42/42 | 39/42 |
+| gr-mak-a-3 | `epsm.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 3ος ΟΜΙΛΟΣ` | 15 | 27 / 27 | 25/27 | 54/54 | 54/54 |
+| gr-mak-b-1 | `epsm.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ` | 11 | 5 / 4 | 4/4 | 8/8 | 8/8 |
+| gr-mak-b-2 | `epsm.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ - 2ος ΟΜΙΛΟΣ` | 12 | 6 / 6 | 6/6 | 12/12 | 11/12 |
+| gr-mak-b-3 | `epsm.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ - 3ος ΟΜΙΛΟΣ` | 12 | 6 / 5 | 5/5 | 10/10 | 9/10 |
+| gr-mak-b-4 | `epsm.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ - 4ος ΟΜΙΛΟΣ` | 12 | 5 / 5 | 5/5 | 10/10 | 10/10 |
+| gr-mak-g-1 | `epsm.gr:Γ ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ` | 10 | 5 / 5 | 5/5 | 10/10 | 8/10 |
+| gr-mak-g-2 | `epsm.gr:Γ ΕΡΑΣΙΤΕΧΝΙΚΗ - 2ος ΟΜΙΛΟΣ` | 11 | 4 / 3 | 3/3 | 6/6 | 5/6 |
+| gr-mak-g-3 | `epsm.gr:Γ ΕΡΑΣΙΤΕΧΝΙΚΗ - 3ος ΟΜΙΛΟΣ` | 10 | 4 / 4 (1 nepopoln) | 3/3 | 7/7 | 7/7 |
+| gr-mak-g-4 | `epsm.gr:Γ ΕΡΑΣΙΤΕΧΝΙΚΗ - 4ος ΟΜΙΛΟΣ` | 10 | 3 / 3 | 3/3 | 6/6 | 5/6 |
+| gr-mak-g-5 | `epsm.gr:Γ ΕΡΑΣΙΤΕΧΝΙΚΗ - 5ος ΟΜΙΛΟΣ` | 11 | 4 / 4 | 4/4 | 8/8 | 8/8 |
+| gr-ach-a-1 | `epsachaias.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ` | 10 | 15 / 15 | 14/15 | 30/30 | 30/30 |
+| gr-ach-a-2 | `epsachaias.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 2ος ΟΜΙΛΟΣ` | 10 | 15 / 14 | 12/14 | 28/28 | 28/28 |
+| gr-ach-b-1 | `epsachaias.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ` | 13 | 12 / 12 | 12/12 | 24/24 | 24/24 |
+| gr-ach-b-2 | `epsachaias.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ - 2ος ΟΜΙΛΟΣ` | 13 | 12 / 12 | 11/12 | 24/24 | 24/24 |
+| gr-pel-a1 | `epspellas.gr:Α1 ΕΡΑΣΙΤΕΧΝΙΚΗ` | 11 | 5 / 5 | 4/5 | 10/10 | 10/10 |
+| gr-pel-a | `epspellas.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ` | 12 | 6 / 6 | 5/6 | 12/12 | 12/12 |
+| gr-dra-a | `epsdramas.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ (ΠΡΩΤΑΘΛΗΜΑ)` | 12 | 24 / 24 | 24/24 | 48/48 | 47/48 |
+| gr-dra-b-a | `epsdramas.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ - Α ΟΜΙΛΟΣ (ΠΡΩΤΑΘΛΗΜΑ)` | 12 | 18 / 18 | 18/18 | 36/36 | 34/36 |
+| gr-dra-b-b | `epsdramas.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ - Β ΟΜΙΛΟΣ (ΠΡΩΤΑΘΛΗΜΑ)` | 12 | 17 / 17 | 15/17 | 34/34 | 33/34 |
+| gr-koz-a | `epskozanis.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ (ΠΡΩΤΑΘΛΗΜΑ)` | 11 | 10 / 10 | 10/10 | 20/20 | 19/20 |
+| gr-koz-b | `epskozanis.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ (ΠΡΩΤΑΘΛΗΜΑ)` | 13 | 12 / 12 | 11/12 | 24/24 | 24/24 |
+| gr-ker-a | `epskerkyras.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ` | 12 | 5 / 5 | 5/5 | 10/10 | 10/10 |
+| gr-ker-b | `epskerkyras.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ` | 16 | 8 / 8 | 7/8 | 16/16 | 16/16 |
+| gr-les-a-lesvos | `epsl.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ (ΟΜΙΛΟΣ ΛΕΣΒΟΥ)` | 8 | 4 / 4 | 3/4 | 8/8 | 8/8 |
+| gr-les-a-limnos | `epsl.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ (ΟΜΙΛΟΣ ΛΗΜΝΟΥ)` | 8 | 4 / 4 | 4/4 | 7/8 | 7/8 |
+| gr-les-b | `epsl.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ ΛΕΣΒΟΥ` | 15 | 4 / 4 | 4/4 | 8/8 | 7/8 |
+| gr-ima-a | `eps-imathias.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ ΚΑΤΗΓΟΡΙΑ ΚΑΝΟΝΙΚΗ ΠΕΡΙΟΔΟΣ` | 14 | 28 / 28 | 27/28 | 56/56 | 56/56 |
+| gr-ima-b | `eps-imathias.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ ΚΑΤΗΓΟΡΙΑ ΚΑΝΟΝΙΚΗ ΠΕΡΙΟΔΟΣ` | 12 | 18 / 18 | 18/18 | 36/36 | 36/36 |
+
+**Ni vpisano** (15. 10. 2026): Thesprotia (epsthesprotias.gr, Α:
+6 klubov, nič odigranega) in Preveza-Lefkada (epsprevezas-lefkadas.gr, Α nič
+odigranega, Β 1. in 2. skupina brez razporeda) nimata nobene lige; Ahaja Γ
+1. in 2. skupina, Pela Β 1. in 2. skupina in Imatija Γ (brez razporeda) še
+nič odigranega. Vpiši jih, ko `node scripts/mascot-lige.mjs <domena>
+--preveri` pokaže zapisnike. Mlajše kategorije, ženske, pokali in play-off /
+play-out (zakomentirani vnosi menija) niso vpisani.
+
+Uvoz (ena za drugo, brez arhiva): `gh workflow run uvoz-lige.yml -f
+liga=gr-mak-a1 -f cene=true`. Liga ~60 zapisnikov po 3 s je ~3–4 minute.
+
 ### Država obiskovalca
 
 Domena je ena, **lige druge države so skrite**: `useTekmovanje().tekmovanja`

@@ -5371,6 +5371,199 @@ preveri(
     zavrnjen.status === 403 && A.default.zavrnitev('x', 429).zavrnitev === true)
 }
 
+// --- vir mascot (Grčija, spletišča EPS na platformi Mascotnet) -----------------
+{
+  const M = await import('./viri/mascot.mjs')
+  const { default: viri } = await import('./viri/index.mjs')
+  const { mkdtempSync, rmSync } = await import('node:fs')
+  const { tmpdir } = await import('node:os')
+  const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  const V = M.default
+  preveri('mascot: vir je vpisan, 3 s, User-Agent SLFF, GR, ocenjeni datumi', viri.mascot === V && V.drzava === 'GR' && V.imaRegistracije === false &&
+    V.premorMs >= 3000 && V.glave['User-Agent'] === 'SLFF fantasy (https://slff.eu)' && V.ocenjeniDatumi === true && V.fetch === M.mascotFetch)
+  const k = M.razberiKodo('epsm.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ')
+  let neznana = null
+  try { M.razberiKodo('epsath.gr:Α ΚΑΤΗΓΟΡΙΑ') } catch (e) { neznana = e.message }
+  preveri('mascot: šifra lige in naslovi (analitika pri epsm, table.asp drugje)', k.domena === 'epsm.gr' && k.diorganosi === 'Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ' && k.zveza === 'mak' &&
+    V.naslovRazporeda('epsm.gr:Α1 ΕΡΑΣΙΤΕΧΝΙΚΗ') === 'https://www.epsm.gr/table_analytika.asp?diorganosi=%CE%911%20%CE%95%CE%A1%CE%91%CE%A3%CE%99%CE%A4%CE%95%CE%A7%CE%9D%CE%99%CE%9A%CE%97' &&
+    V.naslovRazporeda('epsachaias.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ').startsWith('https://www.epsachaias.gr/table.asp?diorganosi=') &&
+    M.naslovTekme('epsm.gr', 2018, '2026-10-10') === 'https://www.epsm.gr/game.asp?game_number=2018&match_date=10.10.2026' && /ne poznam/.test(neznana ?? ''))
+  preveri('mascot: šifra zapisnika ima zvezo in sezono (številke tekem se vsako sezono ponovijo)', M.sifraZapisnika('epsm.gr', 2018, '2026-10-10') === 'gr-mak-2026-2018' &&
+    M.sifraZapisnika('epsm.gr', 2018, '2027-04-10') === 'gr-mak-2026-2018' && M.sifraZapisnika('epsachaias.gr', 1002, '2027-09-27') === 'gr-ach-2027-1002' &&
+    V.naslovZapisnika('epsm.gr:Α1 ΕΡΑΣΙΤΕΧΝΙΚΗ', 'gr-mak-2026-2018') === 'https://www.epsm.gr/game.asp?game_number=2018')
+  // Grške črke `sifra()` iz zapisniki.mjs vse spremeni v "_": imeni dveh lig bi se ujeli.
+  preveri('mascot: lastna imena datotek ločijo lige (sifra() jih ne)', M.imeRazporeda('epsm.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ') !== M.imeRazporeda('epsm.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ'))
+  preveri('mascot: atenski čas → ljubljanski (−1 h, tudi čez polnoč), 00:00 = ure ni', M.vLjubljanskiCas('2026-10-10', '16:30').ura === '15:30' &&
+    M.vLjubljanskiCas('2026-12-06', '00:30').datum === '2026-12-05' && M.vLjubljanskiCas('2026-12-06', '00:30').ura === '23:30' &&
+    M.vLjubljanskiCas('2026-10-10', '00:00').ura === null)
+  preveri('mascot: minuta (95\' → 90, ΗΜ. = polčas, 45+2 → 45)', M.minuta("95'") === 90 && M.minuta('ΗΜ.') === 45 && M.minuta("45+2'") === 45 && M.minuta("61'") === 61)
+  preveri('mascot: ključ kluba (pike, presledki, naglasi, latinične dvojnice); druga ekipa je svoj klub',
+    M.kljucKlubaGr('Α.Σ. ΝΕΑΠΟΛΗΣ') === M.kljucKlubaGr('ΑΣ ΝΕΑΠΟΛΗΣ') && M.kljucKlubaGr('ΚΕΡΚΥΡΑΪΚΟΣ') === M.kljucKlubaGr('Κερκυραϊκός') &&
+    M.kljucKlubaGr('APHΣ Π ΗΛΙΑ') === M.kljucKlubaGr('ΑΡΗΣ Π ΗΛΙΑ') && M.kljucKlubaGr('ΜΑΚΕΔΟΝΙΚΟΣ Β') !== M.kljucKlubaGr('ΜΑΚΕΔΟΝΙΚΟΣ'))
+  preveri('mascot: kratko ime brez oblike društva spredaj in zadaj', M.kratkoImeGr('ΑΟ ΑΧΙΛΛΕΑΣ ΝΥΜΦΩΝ') === 'ΑΧΙΛΛΕΑΣ ΝΥΜΦΩΝ' &&
+    M.kratkoImeGr('ΠΑΝΑΤΟΛΙΚΟΣ Α.Ο.') === 'ΠΑΝΑΤΟΛΙΚΟΣ' && M.kratkoImeGr('ΠΑΟ ΚΟΥΦΑΛΙΩΝ') === 'ΠΑΟ ΚΟΥΦΑΛΙΩΝ' && M.kratkoImeGr('ΑΧΑΙΚΗ') === 'ΑΧΑΙΚΗ')
+  preveri('mascot: ime igralca — priimek ustreza polnemu imenu, druga začetnica ne', M.istoIme('ΠΑΣΒΑΝΤΙΔΗΣ', 'ΠΑΣΒΑΝΤΙΔΗΣ ΔΗΜΗΤΡΙΟΣ') &&
+    M.istoIme('ΚΑΤΣΩΡΑΣ Ε.', 'ΚΑΤΣΩΡΑΣ Ε.') && !M.istoIme('ΑΛΜΑΛΗΣ Γ.', 'ΑΛΜΑΛΗΣ Χ.') && !M.istoIme('ΣΑΒΒΙΔΗΣ', 'ΣΑΒΒΟΠΟΥΛΟΣ'))
+
+  // Razpored: tri predloge (epsm in Krf analitika, Ahaja table.asp z datumi).
+  const rm = beri('gr-mascot-razpored-epsm-a-1.html')
+  const tm = M.tekmeRazporeda(rm)
+  preveri('mascot: razpored epsm — 26 krogov, 182 tekem, 14 klubov, 21 odigranih s stranjo, liga preverjena po naslovu', tm.length === 182 &&
+    new Set(tm.map((x) => x.krog)).size === 26 && new Set(tm.flatMap((x) => [x.domaci, x.gostje])).size === 14 &&
+    tm.filter((x) => x.izid && x.igra).length === 21 && M.jeStranLige(rm, 'Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ') && !M.jeStranLige(rm, 'Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 2ος ΟΜΙΛΟΣ'))
+  const t1 = tm.find((x) => x.igra === 2001)
+  preveri('mascot: tekma razporeda epsm (datum s povezave, ure ni)', t1?.krog === 1 && t1.domaci === 'ΑΣΤΡΑΠΗ ΜΕΣΑΙΟΥ' && t1.gostje === 'ΘΡΙΑΜΒΟΣ ΠΑΡΘΕΝΙΟΥ' &&
+    t1.izid?.domaci === 0 && t1.izid?.gostje === 2 && t1.datum === '2026-09-27' && t1.ura === null && !t1.brezBorbe)
+  const ra = beri('gr-mascot-razpored-epsachaias-a-1.html')
+  const ta = M.tekmeRazporeda(ra)
+  const tr = ta.find((x) => x.igra === 1005)
+  preveri('mascot: razpored Ahaje — 18 krogov, 90 tekem, 15 odigranih, klub s pomišljajem v imenu, datum in ura iz drobnega tiska',
+    ta.length === 90 && new Set(ta.map((x) => x.krog)).size === 18 && ta.filter((x) => x.izid).length === 15 &&
+    tr?.gostje === 'ΑΟ ΤΡΙΤΑΙΑΣ - Ο ΤΡΙΤΑΙΙΚΟΣ' && tr.domaci === 'ΑΧΑΙΚΗ' && tr.datum === '2026-09-27' && tr.ura === '17:00' &&
+    ta.filter((x) => x.krog === 4).every((x) => x.datum && !x.izid && !x.igra))
+  preveri('mascot: začetnice na igrišču ("Ε.Π.Σ.Α. Α. ΚΑΝΙΣΤΡΑΣ") niso "α.α."', !ta.some((x) => x.brezBorbe) &&
+    M.vrsticaTekme('<td>Α\n-\nΒ\n3\n-\n0 α.α.\n</td>')?.brezBorbe === true)
+  const rk = beri('gr-mascot-razpored-epskerkyras-a.html')
+  const tk = M.tekmeRazporeda(rk)
+  preveri('mascot: razpored Krfa — 22 krogov po 6, povezava pri vsaki tekmi, izid v svojem polju', tk.length === 132 &&
+    new Set(tk.map((x) => x.krog)).size === 22 && tk.every((x) => x.igra) && tk.filter((x) => x.izid).length === 5 &&
+    tk.find((x) => x.igra === 1005)?.izid?.gostje === 2 && tk.find((x) => x.igra === 1005)?.ura === '16:00' && M.jeStranLige(rk, 'Α ΕΡΑΣΙΤΕΧΝΙΚΗ'))
+  const rl = beri('gr-mascot-razpored-epsl-a-lesvos.html')
+  const tl = M.tekmeRazporeda(rl)
+  preveri('mascot: razpored Lezbosa — tekma v eni vrstici ("Domači - Gostje&nbsp;… 4 - 2"), 8 klubov trikrožno', tl.length === 84 &&
+    new Set(tl.map((x) => x.krog)).size === 21 && new Set(tl.flatMap((x) => [x.domaci, x.gostje])).size === 8 && tl.filter((x) => x.izid).length === 4 &&
+    tl[0].domaci === 'ΑΙΓΕΑΣ ΠΛΩΜΑΡΙΟΥ' && tl[0].gostje === 'Ε.Μ.Α.Σ ΦΙΛΙΑΣ' && tl[0].izid?.domaci === 4 && tl[0].igra === 1001 && tl[0].ura === '16:00' &&
+    tl.every((x) => x.datum) && M.jeStranLige(rl, 'Α ΕΡΑΣΙΤΕΧΝΙΚΗ (ΟΜΙΛΟΣ ΛΕΣΒΟΥ)'))
+  const vrsta = (d, g) => `<i onclick="location.href='game.asp?game_number=1'"></i>\n${d} - ${g}&nbsp;&nbsp;&nbsp;1 - 0\n<font>ΗΜ: 10.10.2026 16:00</font><br>`
+  const vezaj = M.tekmeRazporeda(`<div>ΑΝΑΛΥΤΙΚΟ ΠΡΟΓΡΑΜΜΑ <b>1<sup>η</sup> ΑΓΩΝΙΣΤΙΚΗ</b><br>${vrsta('ΑΟ ΤΡΙΤΑΙΑΣ - Ο ΤΡΙΤΑΙΙΚΟΣ', 'ΑΧΑΙΚΗ')}${vrsta('ΦΑΡΑΙΚΟΣ', 'ΘΥΕΛΛΑ')}<b>2<sup>η</sup> ΑΓΩΝΙΣΤΙΚΗ</b><br>${vrsta('ΑΧΑΙΚΗ', 'ΦΑΡΑΙΚΟΣ')}${vrsta('ΘΥΕΛΛΑ', 'ΑΟ ΤΡΙΤΑΙΑΣ - Ο ΤΡΙΤΑΙΙΚΟΣ')}</div>`)
+  preveri('mascot: vrstica brez ločila — ime z " - " se razdeli po klubih, ki jih razpored pozna', vezaj.length === 4 &&
+    vezaj[0].domaci === 'ΑΟ ΤΡΙΤΑΙΑΣ - Ο ΤΡΙΤΑΙΙΚΟΣ' && vezaj[0].gostje === 'ΑΧΑΙΚΗ' && vezaj[3].gostje === 'ΑΟ ΤΡΙΤΑΙΑΣ - Ο ΤΡΙΤΑΙΙΚΟΣ')
+  preveri('mascot: isto ime, drug klub — Αμπελόκηποι v Drami dobijo kraj, v Solunu ne', M.imeKluba('Α.Ε. ΑΜΠΕΛΟΚΗΠΩΝ', 'epsdramas.gr') === 'Α.Ε. ΑΜΠΕΛΟΚΗΠΩΝ (Δράμα)' &&
+    M.imeKluba('Α.Ε. ΑΜΠΕΛΟΚΗΠΩΝ Β', 'epsdramas.gr') === 'Α.Ε. ΑΜΠΕΛΟΚΗΠΩΝ Β (Δράμα)' && M.imeKluba('ΑΕ ΑΜΠΕΛΟΚΗΠΩΝ', 'epsm.gr') === 'ΑΕ ΑΜΠΕΛΟΚΗΠΩΝ')
+  const nk = M.naslednjiKrog(beri('gr-mascot-lestvica-epsm-a-1.html'))
+  preveri('mascot: naslednji krog s številkami tekem (table.asp epsm)', nk.length === 7 && nk.every((x) => x.krog === 4) &&
+    nk.find((x) => x.igra === 2022)?.domaci === 'ΟΜΟΝΟΙΑ ΣΤΑΥΡΟΥΠΟΛΗΣ' && nk.find((x) => x.igra === 2022)?.gostje === 'ΑΣΤΡΑΠΗ ΜΕΣΑΙΟΥ')
+  const kr = M.krogiZDatumi(tm)
+  preveri('mascot: krogi brez datuma prve polovice so ocenjeni (+7 dni), druga polovica izpade', kr.length === 13 &&
+    kr.filter((x) => !x.ocenjen).map((x) => x.stevilka).join() === '1,2,3' && kr.find((x) => x.stevilka === 4)?.datum === '2026-10-17' &&
+    kr.find((x) => x.stevilka === 5)?.datum === '2026-10-24')
+
+  // Zapisniki.
+  const minute = (n, i) => n.filter((x) => x.ekipaIdx === i).reduce((a, x) => a + x.minute, 0)
+  const z = M.vZapisnik(beri('gr-mascot-tekma-epsm-2018.html'), { id: 'gr-mak-2026-2018', domena: 'epsm.gr' })
+  const n = M.nastopi(z)
+  preveri('mascot: zapisnik epsm — 11 + 11, klop, 3:0, strelci, ljubljanski čas, brez opozoril', z.domaci.postava.length === 11 && z.gostje.postava.length === 11 &&
+    z.domaci.rezerve.length === 9 && z.gostje.rezerve.length === 6 && z.rezultat.domaci === 3 && z.rezultat.gostje === 0 && z.datum === '2026-10-10' &&
+    z.ura === '15:30' && z.sezona === '2026/27' && z.goli.map((g) => `${g.st}@${g.minuta}`).join() === '8@27,8@34,10@79' && z.opozorila.length === 0)
+  preveri('mascot: menjave "IZSTOP - VSTOP" z minuto — 990 + 990, 8 s klopi', z.menjave.length === 8 && minute(n, 0) === 990 && minute(n, 1) === 990 &&
+    n.filter((x) => !x.zacetnik).length === 8 && n.find((x) => x.ime === 'ΚΑΡΑΜΠΟΥΤΗΣ Μ.')?.minutaOd === 61 && n.find((x) => x.ime === 'ΚΑΤΣΩΡΑΣ Ε.')?.minutaDo === 61)
+  preveri('mascot: vratar je prvi začetnik (namig)', n.filter((x) => x.vratar).map((x) => `${x.ekipaIdx}:${x.st}`).join() === '0:1,1:1' &&
+    n.filter((x) => x.vratar).every((x) => x.zacetnik && x.pozicija === 'GK'))
+  const z5 = M.vZapisnik(beri('gr-mascot-tekma-epsm-1005-klop-03.html'), { domena: 'epsm.gr' })
+  const n5 = M.nastopi(z5)
+  preveri('mascot: začetnik in klop po črti, ne po dresu (17 začne, 03 vstopi); gol v 95. je 90.', z5.domaci.postava.some((x) => x.st === 17) &&
+    z5.domaci.rezerve.some((x) => x.st === 3) && n5.find((x) => x.st === 3 && x.ekipaIdx === 0)?.minutaOd === 82 &&
+    z5.goli.find((g) => g.ime === 'ΖΙΑΚΑΣ Δ.')?.minuta === 90 && minute(n5, 0) === 990 && minute(n5, 1) === 990 && z5.opozorila.length === 0)
+  const z10 = M.vZapisnik(beri('gr-mascot-tekma-epsm-1010-soimenjaka.html'), { domena: 'epsm.gr' })
+  const n10 = M.nastopi(z10)
+  const kal = n10.filter((x) => x.ime === 'ΚΑΛΟΓΡΙΔΗΣ Ν.')
+  preveri('mascot: soimenjaka v isti ekipi — menjava "ΚΑΛΟΓΡΙΔΗΣ Ν. - ΚΑΛΟΓΡΙΔΗΣ Ν." po tem, kdo je na igrišču', kal.length === 2 &&
+    kal.find((x) => x.st === 4)?.minutaDo === 82 && kal.find((x) => x.st === 13)?.minutaOd === 82 && minute(n10, 0) === 990 && z10.opozorila.length === 0)
+  const z14 = M.vZapisnik(beri('gr-mascot-tekma-epsm-2014-menjave-brez-para.html'), { domena: 'epsm.gr' })
+  const n14 = M.nastopi(z14)
+  preveri('mascot: napaka vira — menjava brez vstopa da le izstop, menjava dveh s klopi le vstop (z opozorilom)', n14.find((x) => x.ime === 'ΛΑΜΠΡΟΥ Ι.')?.minutaDo === 61 &&
+    n14.find((x) => x.ime === 'ΠΑΠΑΔΗΜΗΤΡΙΟΥ Ι.')?.minutaOd === 80 && !n14.some((x) => x.ime === 'ΖΒΙΓΓΟΣ Δ.') && minute(n14, 0) === 971 &&
+    z14.opozorila.some((o) => /vpisan le izstop/.test(o)) && z14.opozorila.some((o) => /vpisan le vstop/.test(o)) && z14.opozorila.some((o) => /dres 19/.test(o)))
+  const za = M.vZapisnik(beri('gr-mascot-tekma-epsachaias-1002-brez-klopi.html'), { id: 'gr-ach-2026-1002', domena: 'epsachaias.gr' })
+  const na = M.nastopi(za)
+  preveri('mascot: Ahaja — brez klopi, menjave "VSTOP - IZSTOP" s priimkom; rezerva brez dresa, 990 + 990',
+    za.domaci.rezerve.length === 5 && za.domaci.rezerve.every((x) => x.st === null) && za.domaci.rezerve.some((x) => x.ime === 'ΚΕΡΑΜΙΔΑΣ') &&
+    na.find((x) => x.ime === 'ΠΑΣΒΑΝΤΙΔΗΣ ΔΗΜΗΤΡΙΟΣ')?.minutaDo === 46 && na.find((x) => x.ime === 'ΚΕΡΑΜΙΔΑΣ')?.minutaOd === 46 &&
+    minute(na, 0) === 990 && minute(na, 1) === 990 && za.datum === '2026-09-27' && za.ura === '18:30' && za.opozorila.length === 0)
+  preveri('mascot: Ahaja — gol rezerve (vstopila v 59.) ji prinese gol', na.find((x) => x.ime === 'ΠΑΝΙΤΣΑΣ ΧΡΗΣΤΟΣ')?.goli === 1 &&
+    na.find((x) => x.ime === 'ΠΑΝΙΤΣΑΣ ΧΡΗΣΤΟΣ')?.minutaOd === 59 && za.goli.length === 4)
+  const zd = M.vZapisnik(beri('gr-mascot-tekma-epsdramas-1003-polcas.html'), { domena: 'epsdramas.gr' })
+  preveri('mascot: menjava "ΗΜ.\'" (polčas) je v 45. minuti', M.nastopi(zd).find((x) => x.ime === 'ΤΑΦΑ Σ.')?.minutaOd === 45 && zd.opozorila.length === 0)
+  const neodigrana = beri('gr-mascot-tekma-epsm-2022-neodigrana.html')
+  preveri('mascot: neodigrana tekma — zapisnika ni, glava pove datum in uro', M.vZapisnik(neodigrana) === null &&
+    M.glavaTekme(neodigrana)?.datum === '2026-10-17' && M.glavaTekme(neodigrana)?.ura === '16:30' && M.glavaTekme(neodigrana)?.izid === null)
+  // Rezerva brez dresa dobi polno ime, če ga klub v ligi pozna enkrat.
+  const zb = M.vZapisnik(beri('gr-mascot-tekma-epsachaias-1002-brez-klopi.html'), { domena: 'epsachaias.gr' })
+  const zc = structuredClone(za)
+  zc.domaci.postava[1] = { ...zc.domaci.postava[1], st: 14, ime: 'ΚΕΡΑΜΙΔΑΣ ΓΕΩΡΓΙΟΣ' }
+  M.dopolniImena([{ z: zb }, { z: zc }])
+  preveri('mascot: rezerva s samim priimkom dobi polno ime iz drugih zapisnikov kluba', zb.domaci.rezerve.some((x) => x.ime === 'ΚΕΡΑΜΙΔΑΣ ΓΕΩΡΓΙΟΣ') &&
+    zb.menjave.some((m) => m.noter.ime === 'ΚΕΡΑΜΙΔΑΣ ΓΕΩΡΓΙΟΣ') && zb.domaci.rezerve.some((x) => x.ime === 'ΓΑΛΑΝΗΣ'))
+  preveri('mascot: prazna ali vzdrževalna stran ni zapisnik in ne gre v predpomnilnik', M.vZapisnik('<html><body>Service Unavailable</body></html>') === null &&
+    !M.zaPredpomnilnik('<html><body>Service Unavailable</body></html>', 'mascot-tekma-mak-1.html') && M.zaPredpomnilnik(neodigrana, 'mascot-tekma-mak-2022.html') &&
+    !M.zaPredpomnilnik('<html>vzdrževanje</html>', M.imeRazporeda('epsm.gr:Α1 ΕΡΑΣΙΤΕΧΝΙΚΗ')) && M.zaPredpomnilnik(rm, M.imeRazporeda('epsm.gr:Α1 ΕΡΑΣΙΤΕΧΝΙΚΗ')) &&
+    !M.zaPredpomnilnik('<title>Just a moment...</title>', 'mascot-tekma-mak-1.html'))
+
+  // Od konca do konca: zapisniki Ahaje (razpored + strani tekem, druge strani "vzdrževanje").
+  const kodaA = 'epsachaias.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ'
+  const klici = []
+  const prenesiA = async (url, ime, sveze) => {
+    klici.push({ url, ime, sveze })
+    if (ime === M.imeRazporeda(kodaA)) return ra
+    if (/game_number=1002&/.test(url)) return beri('gr-mascot-tekma-epsachaias-1002-brez-klopi.html')
+    return '<html><body>vzdrževanje</body></html>'
+  }
+  const zs = await V.zapisniki(kodaA, prenesiA, { danes: Date.parse('2026-10-15T12:00:00Z') })
+  const prvi = zs[0]
+  preveri('mascot: zapisniki lige — šifra, krog in klubi z razporeda', zs.length === 1 && prvi.id === 'gr-ach-2026-1002' && prvi.z.krog === 1 &&
+    prvi.z.domaci.ime === 'ΑΝΑΓΕΝΝΗΣΗ ΠΑΤΡΩΝ' && prvi.url === 'https://www.epsachaias.gr/game.asp?game_number=1002&match_date=27.09.2026')
+  // Stran brez zapisnika (še ni vnesen ali vzdrževanje) se do 45 dni bere sveže, ne iz predpomnilnika.
+  const tekme = klici.filter((x) => /game_number/.test(x.url))
+  preveri('mascot: stran tekme brez zapisnika se prebere še enkrat sveže, popolna ne', tekme.filter((x) => /1002&/.test(x.url)).length === 1 &&
+    tekme.filter((x) => /1005&/.test(x.url)).map((x) => x.sveze).join() === 'false,true' && klici[0].sveze === true)
+
+  // Razpored epsm: datum neodigrane tekme s strani tekme (številka iz "ΕΠΟΜΕΝΗ ΑΓΩΝΙΣΤΙΚΗ").
+  const kodaM = 'epsm.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ'
+  const mapa = mkdtempSync(`${tmpdir()}/slff-mascot-`)
+  const prej = process.env.SLFF_MASCOT_MAPA
+  process.env.SLFF_MASCOT_MAPA = mapa
+  const prenesiM = async (url) => {
+    if (/table_analytika/.test(url)) return rm
+    if (/table\.asp/.test(url)) return beri('gr-mascot-lestvica-epsm-a-1.html')
+    if (/game_number=2022/.test(url)) return neodigrana
+    return '<html><body>vzdrževanje</body></html>'
+  }
+  const razpored = await V.razporedVseStrani(kodaM, prenesiM)
+  process.env.SLFF_MASCOT_MAPA = prej ?? ''
+  if (!prej) delete process.env.SLFF_MASCOT_MAPA
+  rmSync(mapa, { recursive: true, force: true })
+  const k4 = razpored.find((x) => x.stevilka === 4)
+  const o4 = k4?.tekme.find((x) => x.domaci === 'ΟΜΟΝΟΙΑ ΣΤΑΥΡΟΥΠΟΛΗΣ')
+  preveri('mascot: razpored — datum in ura neodigrane tekme s strani tekme (ljubljanski čas), krog ni ocenjen', o4?.datum === '2026-10-17' && o4.ura === '15:30' &&
+    k4.ocenjen === false && k4.tekme.length === 7 && razpored[0].tekme.every((x) => x.odigrana) && razpored.find((x) => x.stevilka === 5)?.ocenjen === true)
+
+  // Zavrnitev: izziv in 403/429 ustavita uvoz (izhod 4), tudi pri strani tekme.
+  let izziv = null
+  try { await V.zapisniki(kodaA, async () => '<html><title>Just a moment...</title></html>') } catch (e) { izziv = e }
+  let zavrnjen = null
+  try {
+    await V.zapisniki(kodaA, async (url, ime) => {
+      if (ime === M.imeRazporeda(kodaA)) return ra
+      throw Object.assign(new Error('429'), { status: 429 })
+    })
+  } catch (e) { zavrnjen = e }
+  const pravi = globalThis.fetch
+  let f403 = null
+  let fIzziv = null
+  try {
+    globalThis.fetch = async () => new Response('ne', { status: 403 })
+    try { await M.mascotFetch('https://www.epsm.gr/') } catch (e) { f403 = e }
+    globalThis.fetch = async () => new Response('<div class="cf-turnstile"></div>', { status: 200 })
+    try { await M.mascotFetch('https://www.epsm.gr/') } catch (e) { fIzziv = e }
+  } finally {
+    globalThis.fetch = pravi
+  }
+  preveri('mascot: 403, 429 in izziv vržejo MascotZavrnitev (uvoz izhod 4), ne obhajamo', izziv instanceof M.MascotZavrnitev && zavrnjen instanceof M.MascotZavrnitev &&
+    zavrnjen.status === 429 && f403?.zavrnitev === true && f403.status === 403 && fIzziv?.zavrnitev === true && V.zavrnitev('x', 401).zavrnitev === true)
+  preveri('mascot: vzorci brez sodnikov, opazovalcev, zdravnikov in trenerjev', !/ΔΙΑΤ:|ΔΙΑΙΤΗΤΗΣ:|ΠΡΟΠΟΝΗΤΗΣ:\s*[^\s<]|@/.test(
+    ['gr-mascot-tekma-epsm-2018.html', 'gr-mascot-tekma-epsachaias-1002-brez-klopi.html', 'gr-mascot-razpored-epsachaias-a-1.html', 'gr-mascot-tekma-epsdramas-1003-polcas.html'].map(beri).join('')))
+}
+
 // --- vir fsb (Srbija, Fudbalski savez Beograda) ---------------------------------
 {
   const F = await import('./viri/fsb.mjs')

@@ -31,6 +31,7 @@ import lff from './lff.mjs'
 import ffm from './ffm.mjs'
 import fcf from './fcf.mjs'
 import fas from './fas.mjs'
+import mascot from './mascot.mjs'
 
 const VIRI = {
   mnzg,
@@ -82,6 +83,10 @@ const VIRI = {
   // Španija (Asturija): FutbolAsturiano.es (WordPress SportsPress), ne zveza;
   // liga je blok šifer objav tekem ene sezone, igralec s potjo profila.
   fas,
+  // Grčija: regionalne zveze EPS na platformi Mascotnet (deset domen, šifra
+  // `<domena>:<diorganosi>`), brez šifer igralcev, vratar prvi začetnik (namig).
+  // Pisno dovoljenje upravljavca (Lovro, oktober 2026).
+  mascot,
 }
 
 /**
