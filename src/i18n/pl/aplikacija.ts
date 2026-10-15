@@ -115,6 +115,8 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     brezEkip: 'jeszcze bez drużyn',
     nazaj: '← Wstecz',
     preskoci: 'Pomiń',
+    isci: 'Szukaj ligi …',
+    najvecEkip: 'Najwięcej drużyn',
     drugaDrzava: '{drzava}?',
     drzavaOpis: 'Najpierw wybierz kraj, potem ligę.',
   },

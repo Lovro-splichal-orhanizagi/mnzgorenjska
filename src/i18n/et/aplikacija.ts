@@ -117,6 +117,8 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     brezEkip: 'meeskondi veel pole',
     nazaj: '← Tagasi',
     preskoci: 'Jäta vahele',
+    isci: 'Otsi liigat …',
+    najvecEkip: 'Kõige rohkem meeskondi',
     drugaDrzava: '{drzava}?',
     drzavaOpis: 'Vali kõigepealt riik, siis selle liiga.',
   },

@@ -132,6 +132,9 @@ export const aplikacija = {
     brezEkip: 'še brez ekip',
     nazaj: '← Nazaj',
     preskoci: 'Preskoči',
+    isci: 'Išči ligo …',
+    /** Naslov skupine treh lig z največ ekipami na vrhu okna. */
+    najvecEkip: 'Največ ekip',
     /** Povezava na drugo državo, ko je ugib pokazal napačno. */
     drugaDrzava: '{drzava}?',
     /** Korak države za tujca (IP iz države brez lig). */

@@ -117,6 +117,8 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     brezEkip: 'još bez timova',
     nazaj: '← Nazad',
     preskoci: 'Preskoči',
+    isci: 'Traži ligu …',
+    najvecEkip: 'Najviše timova',
     drugaDrzava: '{drzava}?',
     drzavaOpis: 'Prvo izaberi državu, zatim ligu u njoj.',
   },

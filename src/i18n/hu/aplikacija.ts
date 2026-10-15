@@ -117,6 +117,8 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     brezEkip: 'még nincs csapat',
     nazaj: '← Vissza',
     preskoci: 'Kihagyom',
+    isci: 'Liga keresése …',
+    najvecEkip: 'A legtöbb csapat',
     drugaDrzava: '{drzava}?',
     drzavaOpis: 'Először válassz országot, aztán abban egy bajnokságot.',
   },
