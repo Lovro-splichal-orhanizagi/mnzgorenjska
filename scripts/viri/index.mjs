@@ -31,6 +31,7 @@ import lff from './lff.mjs'
 import ffm from './ffm.mjs'
 import fcf from './fcf.mjs'
 import fas from './fas.mjs'
+import askf from './askf.mjs'
 
 const VIRI = {
   mnzg,
@@ -82,6 +83,9 @@ const VIRI = {
   // Španija (Asturija): FutbolAsturiano.es (WordPress SportsPress), ne zveza;
   // liga je blok šifer objav tekem ene sezone, igralec s potjo profila.
   fas,
+  // Turčija: pokrajinske amaterske zveze ASKF (platforma FYS: Çanakkale, Aydın);
+  // razpored s postbacki ASP.NET, šifra licence TFF igralca.
+  askf,
 }
 
 /**
