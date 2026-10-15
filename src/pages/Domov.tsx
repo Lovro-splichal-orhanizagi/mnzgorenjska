@@ -397,13 +397,15 @@ export default function Domov() {
     if (!izbraniKrog) return
     let veljavno = true
     setNalagaIdealno(true)
-    najboljsiKroga(izbraniKrog.id).then(({ data }) => {
+    najboljsiKroga(izbraniKrog.id).then(({ data, error }) => {
       if (!veljavno) return
-      setIdealnaPostava(idealnaEnajsterica((data ?? []) as any[]))
+      // Ob napaki ostane prejšnja enajsterica, ne prazen krog.
+      if (!error) setIdealnaPostava(idealnaEnajsterica((data ?? []) as any[]))
       setNalagaIdealno(false)
     })
     return () => {
       veljavno = false
+      setNalagaIdealno(false)
     }
   }, [izbraniKrog])
 
