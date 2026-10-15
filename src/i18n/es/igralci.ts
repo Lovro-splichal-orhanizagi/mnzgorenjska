@@ -116,7 +116,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     prazno: 'En esta liga aún no hay avisos. Si sabes de alguien que falta, sé el primero.',
     praznaKategorija: 'No hay avisos en esta categoría.',
     praznoNamig: 'Un aviso vale más cuando nadie más puede escribirlo: los jugadores también escriben sobre sí mismos.',
-    drugod: 'Lo último en el resto de Eslovenia',
+    drugod: 'Lo último en el resto del país',
   },
   uradno: {
     zamrznjena2: '🧊 Precio congelado (hasta 2 jornadas)',

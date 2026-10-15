@@ -53,7 +53,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     asistence: 'Asysty',
     pozicije: 'Pozycje',
     odsotnosti: 'Absencje',
-    slovenija: 'Słowenia',
+    slovenija: 'Polska',
     admin: 'Admin',
     vec: 'Więcej',
     racun: 'Konto',
@@ -208,7 +208,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     zapri: 'Zamknij',
     napaka: 'Nie udało się wysłać. Spróbuj ponownie.',
     napakaEmail: 'Wpisz poprawny adres e-mail.',
-    napakaOmejitev: 'Na dziś wysłałeś już wystarczająco próśb. Spróbuj jutro.',
+    napakaOmejitev: 'Na dziś wysłałeś już wystarczająco dużo próśb. Spróbuj jutro.',
     napakaBesedilo: 'Sprawdź nazwę kraju i ligi.',
   },
 }

@@ -62,7 +62,7 @@ export const domov: NonNullable<Prevod['domov']> = {
     ugibanaPozicija: '{igralci} oletatud positsiooniga',
     pozicijaOdloca: 'Positsioon otsustab, kui palju värav väärt on',
     odsotnosti: 'Vigastused ja puudumised',
-    javi: 'Anna teada, kes ei mängi: see säästab teistele vooru',
+    javi: 'Anna teada, kes ei mängi: nii päästad teiste vooru',
   },
   naslednje: {
     naslov: 'Järgmised mängud',

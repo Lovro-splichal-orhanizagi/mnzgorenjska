@@ -50,7 +50,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     lestvica: 'Clasament',
     rezultati: 'Rezultate',
     tabela: 'Clasamentul ligii',
-    miniLige: 'Miniligi',
+    miniLige: 'Mini-ligi',
     asistence: 'Pase decisive',
     pozicije: 'Poziții',
     odsotnosti: 'Absențe',
