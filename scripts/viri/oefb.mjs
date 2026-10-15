@@ -447,10 +447,32 @@ export function kratkoImeAt(polno) {
 /** Dni od datuma tekme ('YYYY-MM-DD'); brez datuma 0, da se tekma prebere. */
 const starostDni = (datum) => (datum ? (Date.now() - Date.parse(`${datum}T00:00:00Z`)) / 86400000 : 0)
 
+// Stran razporeda brez podatkov: oefb.at kdaj vrne 200 s stranjo, v kateri
+// manjka JSON razporeda (`appPreloads['NO_DATA']`), minuto pozneje pa je spet
+// v redu. Nočni uvoz je zato javljal "Razporeda ni bilo mogoče razbrati"
+// (at-v-landesliga, at-k-1-klasse-mitte, at-ooe-1-klasse-ost, 13.–15. 10.
+// 2026), uvoz zapisnikov pa je tiho našel 0 tekem. Ponovimo z umikom, nato
+// uvoz pade z jasno napako.
+export const UMIK_MS = [30_000, 120_000]
+export const imaRazpored = (html) => podatkiRazporeda(html) !== null
+
+/** Stran razporeda enega tekmovanja, sveža; brez podatkov po umikih vrže. */
+export async function stranRazporeda(id, prenesi, umik = UMIK_MS) {
+  let html = await prenesi(naslovRazporeda(id), imeRazporeda(id), true)
+  for (const ms of umik) {
+    if (imaRazpored(html)) return html
+    console.log(`  oefb: ${naslovRazporeda(id)} brez podatkov razporeda — znova čez ${ms / 1000} s`)
+    await new Promise((r) => setTimeout(r, ms))
+    html = await prenesi(naslovRazporeda(id), imeRazporeda(id), true)
+  }
+  if (imaRazpored(html)) return html
+  throw new Error(`oefb: ${naslovRazporeda(id)} je brez podatkov razporeda (${String(html ?? '').length} B) — uvoz ustavljen`)
+}
+
 /** Razpored vseh faz lige (glej `vrsticeFaz`), vsaka stran sveža. */
 async function razpored(koda, prenesi) {
   const strani = []
-  for (const id of razbijKodo(koda).idji) strani.push(await prenesi(naslovRazporeda(id), imeRazporeda(id), true))
+  for (const id of razbijKodo(koda).idji) strani.push(await stranRazporeda(id, prenesi))
   return vrsticeFaz(strani)
 }
 
@@ -462,6 +484,9 @@ const vir = {
   glave: { 'User-Agent': 'SLFF fantasy (https://slff.eu)' },
   premorMs: 1500,
   imaRegistracije: false,
+  // Razpored brez podatkov ne gre v predpomnilnik (uvoz razporeda ga bere kot
+  // rezervo, ko vir ne odgovori). `razpored-…` je ime uvoza razporeda.
+  zaPredpomnilnik: (html, ime) => !/^(spielplan|razpored)-/.test(ime ?? '') || imaRazpored(html),
 
   naslovRazporeda,
   naslovZapisnika: (_koda, sifra) => naslovTekme(sifra),

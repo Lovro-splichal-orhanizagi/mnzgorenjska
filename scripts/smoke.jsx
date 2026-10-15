@@ -5630,6 +5630,21 @@ preveri(
   preveri('oefb: faze — en krog za obe skupini', krogiBl.length === 32 && krogiBl.at(-1).stevilka === 32 &&
     krogiBl.find((k) => k.stevilka === 23).tekme.length === 6)
 
+  // Stran razporeda brez podatkov (`NO_DATA`, 200): oefb.at jo kdaj vrne za
+  // minuto. Vir jo ponovi, je ne shrani in na koncu pade, ne vrne 0 tekem.
+  const brez = beri('at-oefb-spielplan-brez-podatkov.html')
+  preveri('oefb: stran brez podatkov razporeda', !O.imaRazpored(brez) && O.imaRazpored(beri('at-oefb-spielplan-231808.html')) &&
+    O.vrsticeRazporeda(brez).length === 0)
+  preveri('oefb: v predpomnilnik le razpored s podatki', !O.default.zaPredpomnilnik(brez, 'spielplan-232051.html') &&
+    !O.default.zaPredpomnilnik(brez, 'razpored-232051.html') && O.default.zaPredpomnilnik(beri('at-oefb-spielplan-231808.html'), 'spielplan-231808.html') &&
+    O.default.zaPredpomnilnik('', 'spiel-4078640.html'))
+  let prenosovRazporeda = 0
+  const nihajoca = async () => (++prenosovRazporeda === 1 ? brez : beri('at-oefb-spielplan-231808.html'))
+  const ponovljen = await O.stranRazporeda('231808', nihajoca, [0, 0])
+  preveri('oefb: razpored brez podatkov se prebere znova', O.imaRazpored(ponovljen) && prenosovRazporeda === 2, String(prenosovRazporeda))
+  preveri('oefb: vztrajno brez podatkov — uvoz pade', await O.stranRazporeda('232051', async () => brez, [0, 0])
+    .then(() => false, (e) => /brez podatkov razporeda/.test(e.message)))
+
   // Zapisnik s skupinami: KAC 1909 : ATSV Wolfsberg 0:3 (Kärntner Liga 2025/26, 1. krog) — 11 m, karton trenerja.
   const z = O.vZapisnik(beri('at-oefb-spiel-3844106.html'), { id: '3844106' })
   const n = O.nastopi(z)
@@ -6710,6 +6725,43 @@ preveri(
     jePrehodnaNapaka({ cause: { code: 'UND_ERR_SOCKET' } }) && jePrehodnaNapaka({ code: 'ECONNRESET' }) && !jePrehodnaNapaka(new Error('x')))
   preveri('prenos: Retry-After v sekundah in kot datum',
     retryAfterMs('3') === 3000 && retryAfterMs(new Date(10000).toUTCString(), 4000) === 6000 && retryAfterMs(null) === null)
+
+  // Baza (fetchZaBazo): ponovi le, kar ponovitev ne pokvari.
+  {
+    const { fetchZaBazo, jeIdempotenten } = await import('./prenos.mjs')
+    const API = 'https://api.slff.eu/rest/v1'
+    const reset = () => Object.assign(new TypeError('fetch failed'), { cause: { code: 'ECONNRESET' } })
+    const zavrnjeno = () => Object.assign(new TypeError('fetch failed'), { cause: { code: 'ECONNREFUSED' } })
+    const zaporedje = (...koraki) => {
+      let i = 0
+      const f = async () => { const k = koraki[Math.min(i++, koraki.length - 1)]; if (k instanceof Error) throw k; return new Response('x', { status: k }) }
+      f.klicev = () => i
+      return f
+    }
+    const baza = (fetchFn) => fetchZaBazo({ fetchFn, zamiki: [1, 1, 1, 1], log: () => {} })
+    preveri('baza: idempotentni zahtevki',
+      jeIdempotenten(`${API}/players?id=eq.1`, { method: 'PATCH' }) && jeIdempotenten(`${API}/players`) &&
+      jeIdempotenten(`${API}/position_priors`, { method: 'POST', headers: new Headers({ Prefer: 'resolution=merge-duplicates,return=minimal' }) }) &&
+      jeIdempotenten(`${API}/rpc/zamenjaj_nastope_tekme`, { method: 'POST' }) &&
+      !jeIdempotenten(`${API}/players`, { method: 'POST', headers: { Prefer: 'return=representation' } }) &&
+      !jeIdempotenten(`${API}/rpc/izstop_kluba`, { method: 'POST' }))
+    let f = zaporedje(reset(), 520, 200)
+    let o = await baza(f)(`${API}/players?id=eq.1`, { method: 'PATCH', body: '{}' })
+    preveri('baza: PATCH čez "fetch failed" in 520', o.status === 200 && f.klicev() === 3, String(f.klicev()))
+    f = zaporedje(reset(), 200)
+    let vrzena = null
+    try { await baza(f)(`${API}/players`, { method: 'POST', body: '{}' }) } catch (e) { vrzena = e }
+    preveri('baza: INSERT po prekinjeni povezavi ne ponovi', vrzena?.cause?.code === 'ECONNRESET' && f.klicev() === 1)
+    f = zaporedje(zavrnjeno(), 522, 201)
+    o = await baza(f)(`${API}/players`, { method: 'POST', body: '{}' })
+    preveri('baza: INSERT ponovi, ko baze ni dosegel', o.status === 201 && f.klicev() === 3)
+    f = zaporedje(520)
+    o = await baza(f)(`${API}/players`, { method: 'POST', body: '{}' })
+    preveri('baza: INSERT z 520 vrne odgovor brez ponovitve', o.status === 520 && f.klicev() === 1)
+    f = zaporedje(503)
+    o = await baza(f)(`${API}/competitions`)
+    preveri('baza: trajna 503 po 5 poskusih vrne odgovor', o.status === 503 && f.klicev() === 5)
+  }
 
   // Premor vira (Sportnet `premorMs`) velja pred vsakim poskusom.
   poskusi = 0
