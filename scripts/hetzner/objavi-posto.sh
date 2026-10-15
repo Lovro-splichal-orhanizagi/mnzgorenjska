@@ -14,7 +14,7 @@ DATOTEKE=(
   scripts/posta-klubom.mjs scripts/vrsta-poste-klubom.mjs
   scripts/strani.mjs scripts/prenos.mjs scripts/klubi.mjs scripts/zapisnik.mjs
   scripts/viri/oefb.mjs scripts/viri/facr.mjs scripts/viri/jalgpall.mjs scripts/viri/sportnet.mjs
-  scripts/viri/frf.mjs scripts/viri/zapisniki.mjs
+  scripts/viri/frf.mjs scripts/viri/zapisniki.mjs scripts/viri/mlsz.mjs
 )
 if [[ -n $(git status --porcelain -- "${DATOTEKE[@]}" scripts/hetzner/posta) ]]; then
   echo "Uncommitted changes in the mail scripts; publish only what is on main."; exit 1
