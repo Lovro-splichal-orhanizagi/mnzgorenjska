@@ -237,10 +237,12 @@ async function klicClaude(kljuc, sistem, sporocilo) {
   const r = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'x-api-key': kljuc, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-    body: JSON.stringify({ model: MODEL, max_tokens: 800, system: sistem, messages: [{ role: 'user', content: sporocilo }] }),
+    body: JSON.stringify({ model: MODEL, max_tokens: 4000, system: sistem, messages: [{ role: 'user', content: sporocilo }] }),
   })
   if (!r.ok) throw new Error(`Anthropic ${r.status}: ${(await r.text()).slice(0, 300)}`)
   const o = await r.json()
+  // Model najprej razmišlja; odrezan napis ne sme naprej.
+  if (o.stop_reason === 'max_tokens') throw new Error('Anthropic: napis odrezan (max_tokens)')
   return o.content.filter((c) => c.type === 'text').map((c) => c.text).join('').trim()
 }
 
