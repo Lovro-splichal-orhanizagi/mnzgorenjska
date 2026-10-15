@@ -51,16 +51,24 @@
 //
 // Pogoji: noga strani "При использовании материалов обязательна ссылка на
 // официальный сайт" — navedba vira (povezava) je obvezna: `vir_ime` in
-// `vir_url` v nogi. Beremo odkrito (User-Agent SLFF, 3,5 s med zahtevki).
-// **Ob 401, 403, 429 ali izzivu se uvoz ustavi (`KffZavrnitev`, izhod 4) —
-// ne obhajamo.** Datuma rojstva, fotografij in sodnikov ne beremo.
+// `vir_url` v nogi. Beremo odkrito (User-Agent SLFF, 6 s med zahtevki —
+// pregled s 3,5 s je po ~1700 zahtevkih ostal brez povezave, glej CLAUDE.md).
+// **Ob 401, 403, 429, izzivu ali `NAJVEC_ZAPOREDNIH_NAPAK` zaporednih
+// omrežnih napakah (časovna omejitev, zavrnjena povezava) se uvoz ustavi
+// (`KffZavrnitev`, izhod 4) — ne obhajamo in ne ponavljamo v nedogled.**
+// Datuma rojstva, fotografij in sodnikov ne beremo.
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { razpakiraj } from '../klubi.mjs'
+import { jePrehodnaNapaka } from '../prenos.mjs'
 import { nastopi as nastopiPoSifri } from './oefb.mjs'
 
 const OSNOVNI = 'https://kffleague.kz'
 const UA = 'SLFF fantasy (https://slff.eu)'
-const PREMOR_MS = 3500
+const PREMOR_MS = 6000
+// Toliko omrežnih napak zapored (brez vmesnega odgovora) pomeni, da nas strežnik
+// ne sprejema več (15. 10. 2026 po ~1700 zahtevkih: TCP časovna omejitev). Uvoz se
+// ustavi z izhodom 4, namesto da bi vsako od stotih strani čakal po 30 s.
+export const NAJVEC_ZAPOREDNIH_NAPAK = 3
 let MAPA = 'scripts/.predpomnilnik/kff'
 const DOLZINA_TEKME = 90
 const URA = 3600000
@@ -105,17 +113,37 @@ export const jeZavrnitev = (status) => status === 401 || status === 403 || statu
 export const jeIzziv = (html) =>
   /<title>\s*(Just a moment|Attention Required|Access denied)|cf_chl_opt|cf-turnstile|g-recaptcha|hcaptcha|captcha|challenge-platform\/h\//i.test(String(html ?? ''))
 
+let zaporednihNapak = 0
+/** Za preizkus: pozabi štetje zaporednih omrežnih napak. */
+export const pozabiNapake = () => { zaporednihNapak = 0 }
+
 /**
  * `fetch` za `prenesiSPonovitvami`: 401, 403, 429 in izziv vržejo zavrnitev
  * TAKOJ (brez ponovitve — 429 bi prenos sicer ponovil), na vsaki poti branja.
+ * Prav tako `NAJVEC_ZAPOREDNIH_NAPAK` omrežnih napak zapored (štetje velja za
+ * ves proces, vsak odgovor ga ponastavi): prenos jih sicer ponovi in gre na
+ * naslednjo stran.
  */
 export async function kffFetch(url, moznosti = {}) {
-  const o = await fetch(url, moznosti)
-  if (jeZavrnitev(o.status)) {
-    await o.body?.cancel().catch(() => {})
-    throw new KffZavrnitev(`kff: ${url} → HTTP ${o.status} — uvoz ustavljen, ne obhajamo`, o.status)
+  let o
+  let telo
+  try {
+    o = await fetch(url, moznosti)
+    if (jeZavrnitev(o.status)) {
+      zaporednihNapak = 0
+      await o.body?.cancel().catch(() => {})
+      throw new KffZavrnitev(`kff: ${url} → HTTP ${o.status} — uvoz ustavljen, ne obhajamo`, o.status)
+    }
+    // Časovna omejitev velja tudi za telo (0,7 MB): napaka med branjem šteje kot omrežna.
+    telo = await o.text()
+  } catch (e) {
+    if (!e.zavrnitev && jePrehodnaNapaka(e) && ++zaporednihNapak >= NAJVEC_ZAPOREDNIH_NAPAK) {
+      const vzrok = e.cause?.code ?? e.code ?? e.name
+      throw new KffZavrnitev(`kff: ${zaporednihNapak} omrežnih napak zapored (zadnja ${url}: ${vzrok}) — strežnik nas ne sprejema (izpad ali zapora); uvoz ustavljen, ne ponavljamo in ne obhajamo`)
+    }
+    throw e
   }
-  const telo = await o.text()
+  zaporednihNapak = 0
   if (jeIzziv(telo)) throw new KffZavrnitev(`kff: ${url} vrne izziv (CAPTCHA) — uvoz ustavljen, ne obhajamo`)
   return new Response(telo, { status: o.status, statusText: o.statusText, headers: o.headers })
 }
@@ -328,6 +356,72 @@ export function tekmeSkupine(tekme, klub) {
   return redne.filter((t) => koren(t.domaci.id) === moj)
 }
 
+/**
+ * Varovalo konference: skupina je komponenta grafa, zato ENA tekma rednega dela
+ * med konferencama (faza, ki je `IZLOCENE_FAZE` ne pozna, napačno vnesena
+ * tekma) tiho zlije obe v eno ligo — razpored in igralci druge konference bi
+ * pristali v tej ligi. Zato je napaka:
+ * - most: par klubov, brez katerega skupina razpade na dva dela z vsaj tremi
+ *   klubi (v ligi "vsak z vsakim" mostu ni že po dveh krogih),
+ * - premalo nasprotnikov: klub z m tekmami je v ligi "vsak z vsakim" srečal
+ *   min(m, klubov − 1) različnih nasprotnikov; v zliti skupini le polovico
+ *   (več tekem med konferencama, trikrožna Druga liga),
+ * - manj kot 4 klubi (napačen klub v šifri, razpored še ni objavljen).
+ * Vrne sporočilo napake ali null.
+ */
+export function napakaSkupine(tekme, klub) {
+  const sosedi = new Map()
+  const tekem = new Map()
+  for (const t of tekme) {
+    const [a, b] = [t.domaci.id, t.gostje.id]
+    for (const [x, y] of [[a, b], [b, a]]) {
+      if (!sosedi.has(x)) sosedi.set(x, new Set())
+      sosedi.get(x).add(y)
+      tekem.set(x, (tekem.get(x) ?? 0) + 1)
+    }
+  }
+  const n = sosedi.size
+  const faze = () => [...new Set(tekme.map((t) => t.faza))].slice(0, 6).join(', ')
+  if (n < 4) return `kff: skupina kluba ${klub} ima ${n} klubov (${tekme.length} tekem) — je klub v šifri pravi, je razpored objavljen?`
+
+  // Mostovi (Tarjan): velikost poddrevesa pove, koliko klubov ostane na eni strani.
+  const vhod = new Map()
+  const nizek = new Map()
+  const velikost = new Map()
+  let cas = 0
+  const mostovi = []
+  const obisci = (v, oce) => {
+    vhod.set(v, cas)
+    nizek.set(v, cas++)
+    velikost.set(v, 1)
+    for (const w of sosedi.get(v)) {
+      if (w === oce) continue
+      if (vhod.has(w)) {
+        nizek.set(v, Math.min(nizek.get(v), vhod.get(w)))
+        continue
+      }
+      obisci(w, v)
+      velikost.set(v, velikost.get(v) + velikost.get(w))
+      nizek.set(v, Math.min(nizek.get(v), nizek.get(w)))
+      if (nizek.get(w) > vhod.get(v)) mostovi.push([v, w, velikost.get(w)])
+    }
+  }
+  obisci(sosedi.keys().next().value, null)
+  const most = mostovi.find(([, , k]) => Math.min(k, n - k) >= 3)
+  if (most)
+    return `kff: skupino kluba ${klub} (${n} klubov) drži skupaj ena sama povezava ${most[0]} – ${most[1]} (${most[2]} : ${n - most[2]} klubov) — konferenci sta se zlili (tekma med njima?); faze: ${faze()}`
+
+  let srecanih = 0
+  let pricakovanih = 0
+  for (const [k, s] of sosedi) {
+    srecanih += s.size
+    pricakovanih += Math.min(tekem.get(k), n - 1)
+  }
+  if (srecanih < 0.75 * pricakovanih)
+    return `kff: v skupini kluba ${klub} (${n} klubov) so klubi srečali ${srecanih} od pričakovanih ${pricakovanih} nasprotnikov — konferenci sta se zlili (tekme med njima?); faze: ${faze()}`
+  return null
+}
+
 /** Skupine (konference) sezone: [{ klubi: [{ id, ime }], tekem }]. */
 export function skupineSezone(tekme) {
   const redne = tekme.filter(jeRedniDel)
@@ -365,12 +459,16 @@ const starostDni = (datum, danes = Date.now()) => (datum ? (danes - Date.parse(`
 
 /**
  * Kako star sme biti izvleček tekme LIGE (ms). Odigrana tekma s postavama se
- * ne bere znova (razen prve 3 dni ob uvozu zapisnikov — popravki); odigrana
- * brez postave (zapisnik še ni vnesen) vsako uro do 45 dni; neodigrana na
- * vrsti (±14 dni) vsako uro, sicer dnevno.
+ * ne bere znova (prve 3 dni ob uvozu zapisnikov enkrat na 6 ur — popravki;
+ * tako je druga konferenca istega večera ne bere znova); odigrana brez
+ * postave (zapisnik še ni vnesen) vsako uro do 45 dni; neodigrana od 3 dni
+ * pred datumom do 14 dni po njem vsako uro, do 14 dni pred datumom in do 45
+ * po njem dnevno, sicer (začetek sezone: ves razpored naprej) tedensko;
+ * odpovedana tedensko. Nočni uvoz tako ne bere ves razpored vsak dan.
  */
 export function najvecStarost(t, danes = Date.now(), svezi = false) {
   if (!t || t.ni) return 7 * DAN
+  if (t.status === 'cancelled') return 7 * DAN
   const star = starostDni(t.datum, danes)
   if (t.izid || t.status === 'finished') {
     if (t.tehnicna) return star <= 14 ? DAN : Infinity
@@ -380,12 +478,13 @@ export function najvecStarost(t, danes = Date.now(), svezi = false) {
     const polna = t.postavi?.[0]?.zacetniki?.length && t.postavi?.[1]?.zacetniki?.length && Array.isArray(t.dogodki) &&
       (!t.izid || golov >= t.izid.domaci + t.izid.gostje)
     if (!polna) return star <= 45 ? URA : Infinity
-    if (svezi && star <= 3) return -1
+    if (svezi && star <= 3) return 6 * URA
     return Infinity
   }
   if (!t.datum) return DAN
-  if (star >= -14 && star <= 14) return URA
-  return DAN
+  if (star >= -3 && star <= 14) return URA
+  if (star >= -14 && star <= 45) return DAN
+  return 7 * DAN
 }
 
 /** Ali se stran sme shraniti (uvozne skripte): izvlečki tekem gredo ločeno, napake nikamor. */
@@ -419,6 +518,30 @@ export const jeMehki404 = (html) => /NEXT_HTTP_ERROR_FALLBACK;404/.test(String(h
 const prebrane = new Set()
 export const prebranaVTemZagonu = (id) => prebrane.has(Number(id))
 
+/**
+ * Neobstoječa tekma → { id, ni: true } v predpomnilnik. Tekma, ki je že bila
+ * prebrana, NE izgine zaradi enega "ne obstaja" (vzdrževanje, napaka strani
+ * vrne 404 ali mehki 404): ostane prejšnji izvleček, opozorilo v dnevnik.
+ */
+function neObstaja(id, log = console.log) {
+  const prej = izPredpomnilnika(imeIzvlecka(id))
+  if (prej) {
+    try {
+      const t = JSON.parse(prej.vsebina)
+      if (t && !t.ni) {
+        log(`  kff: tekma ${id} zdaj vrne "ne obstaja" — obdržim prejšnji izvleček (${t.datum} ${t.domaci?.ime} : ${t.gostje?.ime}); če je res izbrisana, preveri ročno`)
+        return t
+      }
+    } catch {
+      // pokvarjen izvleček — prepišemo
+    }
+  }
+  const ni = { id: Number(id), ni: true }
+  mkdirSync(MAPA, { recursive: true })
+  writeFileSync(pot(imeIzvlecka(id)), JSON.stringify(ni))
+  return ni
+}
+
 /** Prebere tekmo (sveže) in shrani izvleček; neobstoječa tekma (404) → { id, ni: true }. */
 export async function preberiTekmo(prenesi, id) {
   prebrane.add(Number(id))
@@ -426,22 +549,12 @@ export async function preberiTekmo(prenesi, id) {
   try {
     html = await prenesiStran(prenesi, naslovTekme(id), `tekma-${id}.html`)
   } catch (e) {
-    if (e.status === 404) {
-      const ni = { id, ni: true }
-      mkdirSync(MAPA, { recursive: true })
-      writeFileSync(pot(imeIzvlecka(id)), JSON.stringify(ni))
-      return ni
-    }
+    if (e.status === 404) return neObstaja(id)
     throw e
   }
   const t = izvlecek(html)
   // Neznan id: Next.js vrne stran "ne obstaja" s statusom 200 (mehki 404).
-  if (!t && jeMehki404(html)) {
-    const ni = { id: Number(id), ni: true }
-    mkdirSync(MAPA, { recursive: true })
-    writeFileSync(pot(imeIzvlecka(id)), JSON.stringify(ni))
-    return ni
-  }
+  if (!t && jeMehki404(html)) return neObstaja(id)
   if (!t) throw new Error(`kff: ${naslovTekme(id)} nima podatkov tekme (${String(html).length} B) — stran ni shranjena`)
   if (t.id !== Number(id)) throw new Error(`kff: ${naslovTekme(id)} vrne tekmo ${t.id} — stran ni shranjena`)
   mkdirSync(MAPA, { recursive: true })
@@ -506,7 +619,18 @@ export async function preberiLigo(koda, prenesi, { danes = Date.now(), svezi = f
   }
   const izpuscene = tekme.filter((t) => !jeRedniDel(t))
   if (izpuscene.length) log(`  kff: ${izpuscene.length} tekem zunaj rednega dela izpuščenih (${[...new Set(izpuscene.map((t) => t.faza))].join(', ')})`)
-  return tekmeSkupine(tekme, k.klub)
+  if (!tekme.length) return []
+  if (k.klub == null) {
+    // Sezona z več skupinami brez kluba v šifri bi tiho zlila vse skupine.
+    const skupine = skupineSezone(tekme).filter((s) => s.klubi.length >= 4)
+    if (skupine.length > 1)
+      throw new Error(`kff: sezona ${k.sezona} ima ${skupine.length} skupine — šifra lige potrebuje klub (${skupine.map((s) => s.klubi[0].id).join(', ')})`)
+    return tekmeSkupine(tekme, null)
+  }
+  const moje = tekmeSkupine(tekme, k.klub)
+  const napaka = napakaSkupine(moje, k.klub)
+  if (napaka) throw new Error(napaka)
+  return moje
 }
 
 // --- razpored -----------------------------------------------------------------------
@@ -542,6 +666,26 @@ export function razporedTekem(tekme) {
 const IME_KLUBA = {}
 const imeKluba = (s) => IME_KLUBA[s.id] ?? s.ime
 
+// Kazaške črke → ruske (časovnica piše ime kazaško, postava rusko).
+const KZ_RU = { ә: 'а', ғ: 'г', қ: 'к', ң: 'н', ө: 'о', ұ: 'у', ү: 'у', һ: 'х', і: 'и', ё: 'е', й: 'и' }
+const besedeImena = (s) =>
+  razpakiraj(String(s ?? ''))
+    .toLocaleLowerCase('ru')
+    .replace(/[әғқңөұүһіёй]/g, (c) => KZ_RU[c])
+    .split(/[^\p{L}]+/u)
+    .filter((b) => b.length >= 3)
+
+/**
+ * Sta imeni dogodka in postave ista oseba? Ujemanje prvih štirih črk katerekoli
+ * besede (vrstni red ime/priimek je različen). null: imena ni, ne vemo.
+ */
+export function podobnoIme(a, b) {
+  const x = besedeImena(a)
+  const y = besedeImena(b)
+  if (!x.length || !y.length) return null
+  return x.some((p) => y.some((q) => p.slice(0, 4) === q.slice(0, 4)))
+}
+
 const POZICIJE = new Set(['GK', 'DEF', 'MID', 'FWD'])
 const ZNANE = new Set(['goal', 'penalty', 'own_goal', 'yellow_card', 'red_card', 'second_yellow', 'missed_penalty', 'substitution'])
 
@@ -571,12 +715,26 @@ export function vZapisnik(t, { url = null } = {}) {
   })
   const strani = [t.domaci.id, t.gostje.id]
 
-  /** Igralec dogodka: ekipa po klubu, igralec po šifri, sicer po dresu. */
-  const kdo = (klub, x) => {
+  /**
+   * Igralec dogodka: ekipa po klubu, igralec po šifri, sicer po dresu. Po dresu
+   * je tveganje (napačen dres v časovnici → gol ali karton drugemu igralcu),
+   * zato opozorilo, kadar dogodek šifro ima (a je ni v postavi) ali ime
+   * dogodka ni podobno imenu v postavi (kazaški zapis "Қашқанқұл" je
+   * "Кашканкул" — to je podobno).
+   */
+  const kdo = (klub, x, vrsta, min) => {
     const idx = strani.indexOf(klub)
     if (idx < 0 || !x || (x.id == null && x.st == null)) return null
     const vsi = [...ekipe[idx].postava, ...ekipe[idx].rezerve]
-    const i = (x.id != null && vsi.find((p) => p.regSt === x.id)) || (x.st != null && vsi.find((p) => p.st === Number(x.st))) || null
+    let i = x.id != null ? vsi.find((p) => p.regSt === x.id) : null
+    if (!i && x.st != null) {
+      i = vsi.find((p) => p.st === Number(x.st)) ?? null
+      if (i) {
+        const podobno = podobnoIme(x.ime, i.ime)
+        if (x.id != null || podobno === false)
+          opozorila.push(`${vrsta} v ${min}. minuti: igralec "${x.ime}" (${x.id != null ? `šifra ${x.id} ni v postavi, ` : ''}dres ${x.st}) pripisan po dresu igralcu ${i.ime} — preveri`)
+      }
+    }
     return i ? { ekipaIdx: idx, st: i.st, ime: i.ime, regSt: i.regSt } : null
   }
 
@@ -593,8 +751,8 @@ export function vZapisnik(t, { url = null } = {}) {
     }
     if (m == null) opozorila.push(`dogodek "${d.vrsta}" brez minute`)
     if (d.vrsta === 'substitution') {
-      const ven = kdo(d.klub, d.igralec)
-      const noter = kdo(d.klub, d.igralec2)
+      const ven = kdo(d.klub, d.igralec, d.vrsta, d.minuta)
+      const noter = kdo(d.klub, d.igralec2, d.vrsta, d.minuta)
       if (!ven || !noter) opozorila.push(`menjava v ${d.minuta}. minuti: ${!ven ? `igralca ${d.igralec.ime} (${d.igralec.st}) ` : ''}${!noter ? `igralca ${d.igralec2.ime} (${d.igralec2.st}) ` : ''}ni v postavi`)
       if (!ven && !noter) continue
       const brez = { st: null, ime: null, regSt: null }
@@ -602,7 +760,7 @@ export function vZapisnik(t, { url = null } = {}) {
       menjave.push({ ekipaIdx: (ven ?? noter).ekipaIdx, minuta: m, noter: del(noter), ven: del(ven) })
       continue
     }
-    const p = kdo(d.klub, d.igralec)
+    const p = kdo(d.klub, d.igralec, d.vrsta, d.minuta)
     // Karton brez igralca in dresa: osebje (trener) — ne šteje.
     if (!p && /card|yellow/.test(d.vrsta) && d.igralec.id == null && d.igralec.st == null) continue
     if (!p) {

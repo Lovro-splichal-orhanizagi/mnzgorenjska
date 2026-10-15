@@ -5272,8 +5272,8 @@ preveri(
   const { mkdtempSync, rmSync, existsSync: obstaja } = await import('node:fs')
   const { tmpdir } = await import('node:os')
   const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
-  preveri('kff: vir je vpisan, 3,5 s, User-Agent SLFF, lasten fetch (zavrnitev brez ponovitve)', viri.kff === K.default &&
-    K.default.drzava === 'KZ' && K.default.imaRegistracije === false && K.default.premorMs >= 3000 &&
+  preveri('kff: vir je vpisan, 6 s, User-Agent SLFF, lasten fetch (zavrnitev brez ponovitve)', viri.kff === K.default &&
+    K.default.drzava === 'KZ' && K.default.imaRegistracije === false && K.default.premorMs >= 6000 &&
     K.default.glave['User-Agent'] === 'SLFF fantasy (https://slff.eu)' && K.default.fetch === K.kffFetch &&
     K.default.zaPredpomnilnik === K.zaPredpomnilnik)
   const k2 = K.razbijKodo('2l/2026/203/5065')
@@ -5362,6 +5362,17 @@ preveri(
   const gol = dog(2, 40, 'goal', 2, 205, 6)
   const brez = K.vZapisnik({ ...izm, dogodki: [gol] })
   preveri('kff: manjkajoč gol v časovnici je opozorilo', brez.opozorila.some((o) => /goli iz dogodkov \(0:1\)/.test(o)))
+  // Po dresu: kazaški zapis istega imena gre tiho, drugo ime ali tuja šifra opozori (gol vseeno šteje ekipi).
+  const poDresu = (ime, id = null) => K.vZapisnik({ ...izm, postavi: [ekipa(1, 100), { ...ekipa(2, 200), zacetniki: ekipa(2, 200).zacetniki.map((p) => (p.st === 6 ? { ...p, ime: 'Нурлыбек', priimek: 'Кашканкул' } : p)) }],
+    izid: { domaci: 0, gostje: 1 }, dogodki: [{ ...dog(2, 40, 'goal', 2, id, 6), igralec: { id, ime, st: 6 } }] })
+  const tiho = poDresu('Нұрлыбек Қашқанқұл')
+  const drug = poDresu('Ерлан Сейткали')
+  const tuja = poDresu('Нұрлыбек Қашқанқұл', 999)
+  preveri('kff: igralec dogodka po dresu — podobno ime brez opozorila, drugo ime ali tuja šifra opozori',
+    K.podobnoIme('Нұрлыбек Қашқанқұл', 'Кашканкул Нурлыбек') === true && K.podobnoIme('Ерлан Сейткали', 'Кашканкул Нурлыбек') === false &&
+    K.podobnoIme('', 'Кашканкул Нурлыбек') === null && tiho.opozorila.length === 0 && tiho.goli[0].regSt === 205 &&
+    drug.opozorila.some((o) => /po dresu igralcu Кашканкул Нурлыбек/.test(o)) && drug.goli.length === 1 &&
+    tuja.opozorila.some((o) => /šifra 999 ni v postavi/.test(o)))
 
   // Konference: povezani komponenti tekem rednega dela; finale ni del lige.
   const tk = (id, d, g, faza = 'Тур 1') => ({ id, faza, domaci: { id: d, ime: `K${d}` }, gostje: { id: g, ime: `K${g}` } })
@@ -5369,6 +5380,26 @@ preveri(
   preveri('kff: konferenca po klubu (komponenta), finale izpuščen', K.tekmeSkupine(sez, 2).map((x) => x.id).join() === '1,2,3' &&
     K.tekmeSkupine(sez, 6).map((x) => x.id).join() === '4,5,7' && K.tekmeSkupine(sez, null).length === 6 &&
     K.tekmeSkupine(sez, 99).length === 0 && K.skupineSezone(sez).length === 2)
+  // Varovalo: tekma rednega dela med konferencama zlije obe — uvoz se ustavi, ne pripiše tiho.
+  const krogVsakZVsakim = (klubi, odId) => {
+    const out = []
+    let id = odId
+    for (let i = 0; i < klubi.length; i++) for (let j = i + 1; j < klubi.length; j++)
+      out.push({ ...tk(id++, klubi[i], klubi[j], `Тур ${Math.min(i + j, klubi.length - 1)}`), krog: Math.min(i + j, klubi.length - 1) })
+    return out
+  }
+  const konfA = krogVsakZVsakim([1, 2, 3, 4, 5, 6], 100)
+  const konfB = krogVsakZVsakim([11, 12, 13, 14, 15, 16], 200)
+  const most = { ...tk(300, 6, 11, 'Тур 5'), krog: 5 }
+  const zlito = K.tekmeSkupine([...konfA, ...konfB, most], 1)
+  // Dvokrožno, dve tekmi med konferencama (ni mostu): premalo različnih nasprotnikov.
+  const dvakrat = (x, od) => [...x, ...x.map((t, i) => ({ ...t, id: od + i, krog: t.krog + 5 }))]
+  const zlito2 = K.tekmeSkupine([...dvakrat(konfA, 400), ...dvakrat(konfB, 500), most, { ...tk(301, 5, 12, 'Тур 6'), krog: 6 }], 1)
+  const prava2 = K.tekmeSkupine([...dvakrat(konfA, 400), ...dvakrat(konfB, 500)], 1)
+  preveri('kff: varovalo konference — zliti konferenci (most ali premalo nasprotnikov) in premajhna skupina sta napaka, prava skupina ne',
+    K.napakaSkupine(K.tekmeSkupine([...konfA, ...konfB], 1), 1) === null && K.napakaSkupine(prava2, 1) === null && zlito.length === 31 &&
+    /ena sama povezava/.test(K.napakaSkupine(zlito, 1) ?? '') && zlito2.length === 62 &&
+    /srečali \d+ od pričakovanih/.test(K.napakaSkupine(zlito2, 1) ?? '') && /ima 3 klubov/.test(K.napakaSkupine(sez.slice(0, 3), 2) ?? ''))
 
   const w = K.tekmeStraniLige(beri('kz-kff-liga-2l.html'))
   preveri('kff: stran lige — gradnik kroga (sezona 203, odigrane in prihajajoče)', w.sezona === 203 && w.tekme.length === 18 &&
@@ -5379,12 +5410,15 @@ preveri(
   preveri('kff: zemljevid strani — tekme z dnevom', zem.length === 2 && zem[0].id === 1563 && zem[0].datum === '2026-10-13' && zem[1].datum === '2025-10-24')
   const dan = Date.parse('2026-10-15T12:00:00Z')
   const polna = { ...t }
-  preveri('kff: predpomnilnik — odigrana s postavama ostane, prve 3 dni ob zapisnikih sveže, brez postave vsako uro, prihodnja dnevno',
-    K.najvecStarost(polna, dan) === Infinity && K.najvecStarost(polna, dan, true) === -1 &&
+  preveri('kff: predpomnilnik — odigrana s postavama ostane, prve 3 dni ob zapisnikih na 6 ur, brez postave vsako uro, prihodnja: 3 dni vsako uro, 14 dni dnevno, dlje tedensko, odpovedana tedensko',
+    K.najvecStarost(polna, dan) === Infinity && K.najvecStarost(polna, dan, true) === 6 * 3600000 &&
     K.najvecStarost({ ...t, postavi: null }, dan) === 3600000 && K.najvecStarost({ ...t, dogodki: [] }, dan) === 3600000 &&
     K.najvecStarost({ ...t, datum: '2026-01-01', postavi: null }, dan) === Infinity &&
-    K.najvecStarost({ ...odp, status: 'upcoming', datum: '2026-10-20' }, dan) === 3600000 &&
-    K.najvecStarost({ ...odp, status: 'upcoming', datum: '2026-11-20' }, dan) === 86400000 &&
+    K.najvecStarost({ ...odp, status: 'upcoming', datum: '2026-10-17' }, dan) === 3600000 &&
+    K.najvecStarost({ ...odp, status: 'upcoming', datum: '2026-10-25' }, dan) === 86400000 &&
+    K.najvecStarost({ ...odp, status: 'upcoming', datum: '2026-11-20' }, dan) === 7 * 86400000 &&
+    K.najvecStarost({ ...odp, status: 'upcoming', datum: '2026-09-15' }, dan) === 86400000 &&
+    K.najvecStarost(odp, dan) === 7 * 86400000 &&
     K.zaPredpomnilnik(h1563, 'tekma-1563.html') === false && K.zaPredpomnilnik('<html>napaka</html>', 'razpored-x.html') === false &&
     K.zaPredpomnilnik(beri('kz-kff-liga-2l.html'), 'razpored-x.html') === true)
 
@@ -5409,6 +5443,11 @@ preveri(
     await K.default.zapisniki('2l/2026/203@1569-1569', async () => '<html><script>self.__next_f.push([1,"NEXT_HTTP_ERROR_FALLBACK;404"])</script></html>')
     preveri('kff: mehki 404 (Next.js notFound s statusom 200) je neobstoječa tekma', K.jeMehki404('x NEXT_HTTP_ERROR_FALLBACK;404') &&
       JSON.parse(readFileSync(`${mapa}/tekma-1569.json`, 'utf8')).ni === true)
+    const izginila = await K.preberiTekmo(async () => '<html><script>self.__next_f.push([1,"NEXT_HTTP_ERROR_FALLBACK;404"])</script></html>', 1563)
+    const izginila404 = await K.preberiTekmo(async (url) => { const e = new Error(`${url} -> HTTP 404`); e.status = 404; throw e }, 1563)
+    preveri('kff: že prebrana tekma ne izgine zaradi enega "ne obstaja" (404 ali mehki) — ostane prejšnji izvleček',
+      izginila.id === 1563 && !izginila.ni && izginila404.id === 1563 && !izginila404.ni &&
+      JSON.parse(readFileSync(`${mapa}/tekma-1563.json`, 'utf8')).izid?.gostje === 4)
     let napaka = null
     try { await K.default.zapisniki('2l/2026/203@1570-1570',async () => '<html><body>Ошибка</body></html>') } catch (e) { napaka = e.message }
     preveri('kff: stran brez podatkov tekme ustavi in ne gre v predpomnilnik', /nima podatkov tekme/.test(napaka ?? '') && !obstaja(`${mapa}/tekma-1570.json`))
@@ -5438,6 +5477,32 @@ preveri(
     globalThis.fetch = pravi
   }
   preveri('kff: kffFetch — 401, 403, 429 in izziv so zavrnitev, navadna stran gre skozi', odzivi.join('|') === 'z401|z403|z429|z|<html>stran</html>', odzivi.join('|'))
+
+  // Strežnik nas ne sprejema več (TCP časovna omejitev): po NAJVEC_ZAPOREDNIH_NAPAK
+  // zaporednih omrežnih napakah zavrnitev (izhod 4), ne ponavljanje stran za stranjo.
+  // Odgovor vmes štetje ponastavi. Prek prenesiSPonovitvami (brez premorov).
+  const { prenesiSPonovitvami: pren, pozabiPadle } = await import('./prenos.mjs')
+  const casovna = () => Object.assign(new Error('The operation was aborted due to timeout'), { name: 'TimeoutError' })
+  let poskusov = 0
+  let ustavljen = null
+  try {
+    K.pozabiNapake()
+    pozabiPadle()
+    let n = 0
+    globalThis.fetch = async () => { n++; if (n === 2) return new Response('<html>ok</html>'); throw casovna() }
+    const prvi = await (await pren('https://kffleague.kz/ru/matches/1', { fetchFn: K.kffFetch, zamiki: [0, 0, 0], log: () => {} })).text()
+    globalThis.fetch = async () => { poskusov++; throw casovna() }
+    for (const id of [2, 3, 4]) {
+      try { await pren(`https://kffleague.kz/ru/matches/${id}`, { fetchFn: K.kffFetch, zamiki: [0, 0, 0], log: () => {} }) } catch (e) { if (e instanceof K.KffZavrnitev) { ustavljen = e; break } }
+    }
+    preveri('kff: zaporedne omrežne napake ustavijo uvoz (KffZavrnitev po 3, brez nadaljnjih strani), odgovor vmes ponastavi',
+      prvi === '<html>ok</html>' && ustavljen?.zavrnitev === true && /3 omrežnih napak zapored/.test(ustavljen.message) && poskusov === K.NAJVEC_ZAPOREDNIH_NAPAK,
+      `${poskusov} ${ustavljen?.message}`)
+  } finally {
+    globalThis.fetch = pravi
+    K.pozabiNapake()
+    pozabiPadle()
+  }
   preveri('kff: raven lige — Prva liga nad Drugo, Druga konferenci enaki', koliko(ravenLige({ slug: 'kz-1-liga' }), ravenLige({ slug: 'kz-2-liga-severo-vostok' })) === 1 &&
     koliko(ravenLige({ slug: 'kz-2-liga-yugo-zapad' }), ravenLige({ slug: 'kz-2-liga-severo-vostok' })) === 0)
 }

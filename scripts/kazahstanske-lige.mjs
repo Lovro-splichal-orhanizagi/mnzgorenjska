@@ -8,8 +8,8 @@
 //
 // Strani tekem bere in shranjuje vir sam (izvlečki v scripts/.predpomnilnik/kff),
 // zato drugi zagon ne bere ničesar znova, razen tekem tekočega kroga.
-// Vljudno kot vir: User-Agent SLFF, 3,5 s med zahtevki. Ob 401, 403, 429 ali
-// izzivu se ustavi (izhod 4) — ne obhajamo.
+// Vljudno kot vir: User-Agent SLFF, 6 s med zahtevki. Ob 401, 403, 429,
+// izzivu ali treh zaporednih omrežnih napakah se ustavi (izhod 4) — ne obhajamo.
 import { existsSync, readFileSync } from 'node:fs'
 import { prenesiSPonovitvami } from './prenos.mjs'
 import kff, {

@@ -2875,12 +2875,38 @@ z iskanim `season_id`.
 - **Predpomnilnik** (`scripts/.predpomnilnik/kff`): iz strani (0,7 MB) se
   shrani le izvleček JSON (nekaj kB). Tekma tuje sezone se ne bere nikoli več;
   odigrana s postavama in toliko goli kot izid ne (prve 3 dni ob uvozu
-  zapisnikov sveže); odigrana brez postave ali golov vsako uro do 45 dni
-  (in še enkrat sveže v istem zagonu, `zapisnikSvez`); neodigrana ±14 dni
-  vsako uro, sicer dnevno; neobstoječa (404) tedensko. Stran brez podatkov
-  tekme (napaka) **ne gre v predpomnilnik** (`zaPredpomnilnik`) in ustavi
-  uvoz. Sitemap 12 ur, stran lige 10 minut. Prvo branje sezone je ~860
-  strani (vse tekme leta, ~70 minut po 3,5 s) — potem le nove.
+  zapisnikov enkrat na 6 ur — druga konferenca istega večera je ne bere
+  znova); odigrana brez postave ali golov vsako uro do 45 dni (in še enkrat
+  sveže v istem zagonu, `zapisnikSvez`); neodigrana od 3 dni pred datumom do
+  14 dni po njem vsako uro, do 14 dni pred in 45 po dnevno, sicer tedensko
+  (na začetku sezone nočni uvoz tako ne bere vsak dan vsega razporeda);
+  odpovedana in neobstoječa (404) tedensko. Že prebrana tekma, ki naenkrat
+  vrne "ne obstaja", obdrži prejšnji izvleček (opozorilo v dnevniku). Stran
+  brez podatkov tekme (napaka) **ne gre v predpomnilnik** (`zaPredpomnilnik`)
+  in ustavi uvoz. Sitemap 12 ur, stran lige 10 minut. **Nočni zagon v
+  ustaljenem stanju** je ~50 zahtevkov za vse tri lige (sitemap, strani lig,
+  tekme zadnjih 3 dni, tekme naslednjih ~2 tednov, nepopolni zapisniki), tudi
+  ker druga in tretja liga bereta isto mapo. **Prvo branje** pa je ~860 strani
+  (vse tekme leta vseh tekmovanj — katera tekma je čigava, pove šele stran)
+  in arhiv še ~880 (id 1–883): skupaj ~1750 strani po 6 s je ~3 ure, več kot
+  `timeout-minutes: 180` uvoza lige. Predpomnilnik se shrani tudi ob padcu
+  ali preklicu, zato ponovni zagon nadaljuje; *Uvoz lige* obnovi
+  predpomnilnik lige, nato druge lige iste države (`zapisniki-kz-`), nato
+  kateregakoli — druga in tretja kazahstanska liga zato ne bereta vsega znova.
+- **Varovala skupine**: liga s klubom v šifri ustavi uvoz (napaka, ne tiho),
+  če ima skupina manj kot 4 klube, če jo drži skupaj ena sama povezava (most:
+  tekma rednega dela med konferencama, faza, ki je `IZLOCENE_FAZE` ne pozna)
+  ali če so klubi srečali manj kot tri četrtine pričakovanih nasprotnikov
+  (več tekem med konferencama); šifra brez kluba ustavi uvoz, če ima sezona
+  več skupin. Novo fazo (finale, dodatne tekme) dodaj v `IZLOCENE_FAZE`.
+  Izstop kluba (odpovedane tekme, `cancelled`) skupine ne razbije — tekme
+  ostanejo v grafu, v razporedu jih ni. Klub v šifri naj bo klub, ki igra vso
+  sezono.
+- **Igralec dogodka po dresu** (časovnica brez šifre): opozorilo, kadar ime
+  dogodka ni podobno imenu v postavi (`podobnoIme`: kazaške črke → ruske,
+  prve štiri črke katere koli besede) ali kadar ima dogodek šifro, ki je v
+  postavi ni — gol ali karton gre tedaj igralcu z istim dresom in to je treba
+  preveriti. Na vzorcih (2025 in 2026) se vsi zapisi po dresu ujemajo z imenom.
 - Klubi: ključ ohrani kazaške črke, ё = е; **rezervne ekipe "М" so svoj
   klub** ("Туран М" ≠ "Туран", "Кайсар М" ≠ "Кайсар", "Тараз М" ≠ "Тараз").
   Kratko ime: velike črke z veliko začetnico ("ХРОМТАУ" → "Хромтау"). Pregled
@@ -2893,11 +2919,23 @@ razen `/api/`, `/_next/` in naslovov s sledilnimi parametri. Noga: "При
 использовании материалов обязательна ссылка на официальный сайт" — **navedba
 vira je obvezna** (`vir_ime` kffleague.kz, `vir_url` na stran lige v nogi).
 Dovoljenja KFF nimamo. Beremo odkrito (`User-Agent: SLFF fantasy
-(https://slff.eu)`, **3,5 s** med zahtevki). Sodnikov, trenerjev, fotografij
+(https://slff.eu)`, **6 s** med zahtevki). Sodnikov, trenerjev, fotografij
 in videov ne beremo; vzorci `scripts/vzorci/kz-kff-*` so počiščeni. **Ob 401,
-403, 429 ali izzivu se uvoz ustavi** (`KffZavrnitev`, izhod 4; vir ima svoj
-`fetch`, da 429 ne ponavlja) — ne obhajaj. Če nas prosijo, naj nehamo, `kz-`
-lige izklopimo.
+403, 429, izzivu ali treh zaporednih omrežnih napakah** (časovna omejitev,
+zavrnjena povezava — `NAJVEC_ZAPOREDNIH_NAPAK`, štetje ponastavi vsak
+odgovor) **se uvoz ustavi** (`KffZavrnitev`, izhod 4, nočni koš ustavi vse
+lige vira; vir ima svoj `fetch`, da 429 in mrtvega strežnika ne ponavlja
+stran za stranjo) — ne obhajaj. Če nas prosijo, naj nehamo, `kz-` lige
+izklopimo.
+
+**Strežnik nas je nehal sprejemati (15. 10. 2026).** Pregled je s **3,5 s**
+med zahtevki prebral ~1700 strani (sitemap 2026 in arhiv id 1–763); po
+približno uri in pol so vse povezave h kffleague.kz končale s TCP časovno
+omejitvijo (druge strani dosegljive). Izpad ali zapora po IP, ne vemo. Zato:
+vir čaka **6 s** (ne manj), tri zaporedne omrežne napake ustavijo uvoz (ne
+ponavljanje), prvo branje (~1750 strani) naj teče **le enkrat** in ena liga
+naenkrat, ostalo iz predpomnilnika. Pred naslednjim branjem en sam zahtevek
+na roko; če povezave še ni, počakaj ali vprašaj KFF.
 
 ```bash
 node scripts/kazahstanske-lige.mjs                        # sezone leta iz sitemap.xml: id, tekem, skupine s klubi
@@ -2937,11 +2975,9 @@ Druga A 94 (goli = izid 88/94, 990 minut 168 + 18), Druga B 92 (77/92,
 163 + 21). Manjkajočih ~20 tekem na ligo je verjetno v id 764–883 —
 **pred uvozom arhiva prečeši ostanek** in preštej znova.
 
-Pri pregledu (15. 10. 2026, ~1700 strani po 3,5 s) je strežnik po približno
-uri in pol prenehal sprejemati povezave (TCP časovna omejitev, druge strani
-dosegljive). Ali je to izpad ali zapora po IP, ni znano — **ne obhajaj**
-(drug IP, drug User-Agent); počakaj in poskusi z enim zahtevkom. Če ostane
-zaprto, vprašaj KFF.
+Zapora pri pregledu (glej zgoraj, *Strežnik nas je nehal sprejemati*): **ne
+obhajaj** (drug IP, drug User-Agent); počakaj in poskusi z enim zahtevkom.
+Če ostane zaprto, vprašaj KFF.
 
 Uvoz (ena za drugo, **šele po vklopu države**): `gh workflow run
 uvoz-lige.yml -f liga=kz-1-liga -f arhiv=1l/2025/85@1-883 -f cene=true`.
