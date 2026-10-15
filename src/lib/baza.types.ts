@@ -1855,6 +1855,33 @@ export type Database = {
           },
         ]
       }
+      kode_vabil: {
+        Row: {
+          created_at: string
+          koda: string
+          user_id: string
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          koda: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          koda?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kode_vabil_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lijak_dnevno: {
         Row: {
           dan: string
@@ -2917,6 +2944,40 @@ export type Database = {
             columns: ["zahtevek_id"]
             isOneToOne: false
             referencedRelation: "zahtevki_igralca"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      povabila: {
+        Row: {
+          created_at: string
+          povabil: string
+          povabljeni: string
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          povabil: string
+          povabljeni: string
+        }
+        Update: {
+          created_at?: string
+          povabil?: string
+          povabljeni?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "povabila_povabil_fkey"
+            columns: ["povabil"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "povabila_povabljeni_fkey"
+            columns: ["povabljeni"]
+            isOneToOne: true
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -4886,6 +4947,75 @@ export type Database = {
           },
           {
             foreignKeyName: "zahtevki_igralca_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      zelje_lig: {
+        Row: {
+          competition_id: number | null
+          created_at: string
+          drzava: string
+          email: string | null
+          id: number
+          ime_lige: string
+          jezik: string | null
+          obvescen_at: string | null
+          poskusov: number
+          user_id: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          competition_id?: number | null
+          created_at?: string
+          drzava: string
+          email?: string | null
+          id?: never
+          ime_lige: string
+          jezik?: string | null
+          obvescen_at?: string | null
+          poskusov?: number
+          user_id?: string | null
+        }
+        Update: {
+          competition_id?: number | null
+          created_at?: string
+          drzava?: string
+          email?: string | null
+          id?: never
+          ime_lige?: string
+          jezik?: string | null
+          obvescen_at?: string | null
+          poskusov?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zelje_lig_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "zelje_lig_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "zelje_lig_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "lestvica_drzavna"
+            referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "zelje_lig_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -7258,16 +7388,20 @@ export type Database = {
           vloga: string
         }[]
       }
-      admin_povezi_igralca: {
-        Args: { p_player_id: number; p_povezi?: boolean; p_zahtevek_id: number }
-        Returns: undefined
-      }
       admin_povabila_skupaj: {
         Args: Record<PropertyKey, never>
         Returns: {
           registracij: number
           z_ekipo: number
         }[]
+      }
+      admin_povezi_igralca: {
+        Args: { p_player_id: number; p_povezi?: boolean; p_zahtevek_id: number }
+        Returns: undefined
+      }
+      admin_povezi_zelje: {
+        Args: { p_ids: number[]; p_slug: string }
+        Returns: undefined
       }
       admin_predlogi_povezav: {
         Args: { p_zahtevek_id: number }
@@ -7484,6 +7618,21 @@ export type Database = {
           vrsta: string
         }[]
       }
+      admin_zelje_lig: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          aktivna: boolean
+          competition_id: number
+          drzava: string
+          ids: number[]
+          imena: string[]
+          liga: string
+          odprtih: number
+          slug: string
+          zadnja: string
+          zelj: number
+        }[]
+      }
       admin_zivost: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -7589,6 +7738,18 @@ export type Database = {
         Returns: boolean
       }
       je_preverjen: { Args: { p_player_id: number }; Returns: boolean }
+      kandidati_za_dobrodoslico: {
+        Args: { p_najvec?: number }
+        Returns: {
+          display_name: string
+          drzava: string
+          email: string
+          email_vklop: boolean
+          jezik: string
+          push_vklop: boolean
+          user_id: string
+        }[]
+      }
       kandidati_za_opomnik: {
         Args: { p_competition_id: number }
         Returns: {
@@ -7598,6 +7759,22 @@ export type Database = {
           jezik: string
           push_vklop: boolean
           team_id: number
+          user_id: string
+        }[]
+      }
+      kandidati_za_opomnik_brez_ekipe: {
+        Args: { p_najvec?: number }
+        Returns: {
+          competition_id: number
+          display_name: string
+          email: string
+          email_vklop: boolean
+          jezik: string
+          liga_drzava: string
+          liga_oznaka: string
+          liga_slug: string
+          push_vklop: boolean
+          rok: string
           user_id: string
         }[]
       }
@@ -7629,6 +7806,18 @@ export type Database = {
           round_number: number
           team_id: number
           user_id: string
+        }[]
+      }
+      kandidati_za_zivo_ligo: {
+        Args: { p_najvec?: number }
+        Returns: {
+          display_name: string
+          email: string
+          id: number
+          jezik: string
+          liga_drzava: string
+          liga_oznaka: string
+          liga_slug: string
         }[]
       }
       klub_cakajoce_pozicije: {
@@ -8185,6 +8374,7 @@ export type Database = {
         Args: { p_player_id: number; p_razlog?: string }
         Returns: undefined
       }
+      pripeljanih: { Args: { p_uid: string }; Returns: number }
       pripisi_obranjene_enajstmetrovke: {
         Args: { p_round_id: number }
         Returns: number
@@ -8454,8 +8644,8 @@ export type Database = {
         }[]
       }
       zabelezi_korak: { Args: { p_korak: string }; Returns: undefined }
-      zabelezi_povabilo: { Args: { p_koda: string }; Returns: boolean }
       zabelezi_obisk: { Args: { p_stran: string }; Returns: undefined }
+      zabelezi_povabilo: { Args: { p_koda: string }; Returns: boolean }
       zabelezi_sponzorja: {
         Args: {
           p_competition_id?: number
@@ -8500,6 +8690,20 @@ export type Database = {
           p_vloga: string
         }
         Returns: number
+      }
+      zelim_ligo: {
+        Args: {
+          p_competition_id?: number
+          p_drzava: string
+          p_email?: string
+          p_ime: string
+          p_jezik?: string
+        }
+        Returns: undefined
+      }
+      zelja_lige_poslana: {
+        Args: { p_id: number; p_uspeh: boolean }
+        Returns: undefined
       }
       zeton_odjave: { Args: { p_user: string }; Returns: string }
       zliti_igralci: {

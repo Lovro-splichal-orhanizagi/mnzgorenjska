@@ -30,15 +30,16 @@ import PrevzemIgralca from '../components/PrevzemIgralca'
 import UradneOdsotnostiIgralca from '../components/UradnaOdsotnost'
 import KarticaIgralca from '../components/KarticaIgralca'
 import { useFotografija } from '../lib/prevzem'
-import { dosezkiNastopa, vrsticaTekme, type NastopZaKartico } from '../lib/karticaIgralca'
+import { dosezkiNastopa } from '../lib/karticaIgralca'
 import {
   VRSTE,
   VrsticaPorocila,
   type Porocilo,
   type VrstaPorocila,
 } from '../components/Odsotnost'
-import { tockeZaNastop } from '../lib/tockovanje'
-import type { Pozicija, Postavka } from '../lib/tipi'
+import { naloziRazlage, type Razlaga } from '../lib/razlagaTock'
+import { SeznamPostavk, RazlagaCene } from '../components/Razlaga'
+import type { Pozicija } from '../lib/tipi'
 import { t, tx } from '../i18n'
 import { izvor } from '../lib/platforma'
 import { prevediNapako } from '../lib/napake'
@@ -60,22 +61,6 @@ interface Sezonsko {
   matches: number | null
   goals: number | null
   minutes: number | null
-}
-
-/** Razlaga tock v enem krogu. */
-interface Razlaga {
-  round_id: number
-  number: number | null
-  season: string | null
-  played_on: string | null
-  match_id: number
-  minute: number | null
-  postavke: Postavka[]
-  skupaj: number
-  /** Surove številke nastopa — za kartico igralca. */
-  nastop: NastopZaKartico
-  /** "Domači 2 : 1 Gostje" — za kartico igralca. */
-  tekma: string | null
 }
 
 const POZICIJE: Pozicija[] = ['GK', 'DEF', 'MID', 'FWD']
@@ -141,24 +126,8 @@ export default function Igralec() {
           .select('value_start')
           .eq('id', igralecId)
           .maybeSingle(),
-        // Razlaga točk per krog — nastopi + goli + asistence; tekma nosi še
-        // izid in klube za kartico.
-        supabase
-          .from('appearances')
-          .select(
-            'match_id, minutes_played, goals, own_goals, penalties_missed, penalties_saved, yellow_cards, red_cards, goals_conceded, clean_sheet, matches(round_id, home_goals, away_goals, domaci:teams!matches_home_team_id_fkey(name), gostje:teams!matches_away_team_id_fkey(name), rounds(number, season, played_on))',
-          )
-          .eq('player_id', igralecId),
-        // Asistence: število golov, kjer je ta igralec confirmed asistent
-        supabase
-          .from('goals')
-          .select('match_id')
-          .eq('assist_player_id', igralecId),
-        // Zmago, prejete gole med igranjem in različico pravil kroga pove pogled.
-        supabase
-          .from('appearance_points')
-          .select('match_id, zmaga, prejeti_na_igriscu, cista_mreza, pravila')
-          .eq('player_id', igralecId),
+        // Razlaga točk po krogih; tekma nosi še izid in klube za kartico.
+        naloziRazlage(igralecId),
         uporabnikId
           ? supabase
               .from('position_votes')
@@ -189,7 +158,7 @@ export default function Igralec() {
       const ligaId = p.competition_id ?? 0
 
       const [
-        [{ data: g }, { data: zac }, { data: nastopi }, { data: asistGoli }, { data: izPogleda }, { data: moj }],
+        [{ data: g }, { data: zac }, raz, { data: moj }],
         { data: tek },
         [tekocaSez, ss, c, zk],
       ] = await Promise.all([
@@ -295,54 +264,6 @@ export default function Igralec() {
       )
       setMojGlas((moj?.position as Pozicija | null) ?? null)
 
-      const asistPoMatchu = new Map<number, number>()
-      for (const gg of (asistGoli ?? []) as any[])
-        asistPoMatchu.set(gg.match_id, (asistPoMatchu.get(gg.match_id) ?? 0) + 1)
-      const poMatchu = new Map((izPogleda ?? []).map((x) => [x.match_id, x]))
-
-      // Brez potrjene pozicije tock ni mogoce razcleniti; privzamemo vezista,
-      // kakor je racunala tudi prejsnja razlicica.
-      const pozicija = ((p as Profil | null)?.position ?? 'MID') as Pozicija
-      const raz: Razlaga[] = []
-      for (const n of (nastopi ?? []) as any[]) {
-        const r = n.matches?.rounds
-        if (!r) continue
-        const v = poMatchu.get(n.match_id)
-        const nastop = {
-          minute: n.minutes_played,
-          goli: n.goals,
-          asistence: asistPoMatchu.get(n.match_id) ?? 0,
-          cleanSheet: v?.cista_mreza ?? n.clean_sheet,
-          prejetiGoli: v?.prejeti_na_igriscu ?? n.goals_conceded,
-          zmaga: v?.zmaga,
-          pravila: v?.pravila,
-          obranjeneEnajstmetrovke: n.penalties_saved,
-          zgreseneEnajstmetrovke: n.penalties_missed,
-          avtogoli: n.own_goals,
-          rumeni: n.yellow_cards,
-          rdeci: n.red_cards,
-        }
-        const { skupaj, postavke } = tockeZaNastop(nastop, pozicija)
-        raz.push({
-          nastop: {
-            minute: n.minutes_played,
-            goli: n.goals,
-            asistence: asistPoMatchu.get(n.match_id) ?? 0,
-            cistaMreza: nastop.cleanSheet,
-            obranjene: n.penalties_saved,
-          },
-          tekma: vrsticaTekme(n.matches.domaci?.name ?? null, n.matches.gostje?.name ?? null, n.matches.home_goals, n.matches.away_goals),
-          round_id: n.matches.round_id,
-          number: r.number,
-          season: r.season,
-          played_on: r.played_on,
-          match_id: n.match_id,
-          minute: n.minutes_played,
-          postavke,
-          skupaj,
-        })
-      }
-      raz.sort((a, b) => (b.played_on ?? '').localeCompare(a.played_on ?? ''))
       setRazlage(raz)
       setNalaganje(false)
     }
@@ -553,6 +474,7 @@ export default function Igralec() {
               </span>
             )}
           </div>
+          <RazlagaCene cena={igralec.value} izhodisce={izhodisce} />
         </div>
       </div>
 
@@ -834,38 +756,7 @@ export default function Igralec() {
                   </button>
                   {odprto && (
                     <div className="px-3 pb-3">
-                      {r.postavke.length === 0 ? (
-                        <p className="text-xs text-slate-500">
-                          {t('igralci.profil.niIgralnegaCasa')}
-                        </p>
-                      ) : (
-                        <ul className="space-y-1 text-xs">
-                          {r.postavke.map((p, i) => (
-                            <li
-                              key={i}
-                              className="flex justify-between gap-3"
-                            >
-                              <span className="text-slate-400">{p.opis}</span>
-                              <span
-                                className={`font-bold tabular-nums ${
-                                  p.tocke > 0
-                                    ? 'text-gnl-300'
-                                    : 'text-rose-400'
-                                }`}
-                              >
-                                {p.tocke > 0 ? '+' : ''}
-                                {p.tocke}
-                              </span>
-                            </li>
-                          ))}
-                          <li className="mt-1 flex justify-between gap-3 border-t border-white/10 pt-1 text-slate-300">
-                            <span className="font-semibold">{t('igralci.profil.skupaj')}</span>
-                            <span className="font-black tabular-nums">
-                              {formatirajTocke(r.skupaj)}
-                            </span>
-                          </li>
-                        </ul>
-                      )}
+                      <SeznamPostavk razlaga={r} />
                     </div>
                   )}
                 </li>

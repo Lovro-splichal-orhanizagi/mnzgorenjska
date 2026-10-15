@@ -48,7 +48,7 @@ import {
   MAX_IZ_KLUBA,
   STEVILO_PRVIH,
 } from '../src/lib/pravila'
-import { tockeZaNastop } from '../src/lib/tockovanje'
+import { tockeZaNastop, razloziTocke } from '../src/lib/tockovanje'
 import { veljavenPodpis } from '../supabase/functions/stripe-webhook/podpis.ts'
 import { createHmac } from 'node:crypto'
 import { sestejOdKroga } from '../src/lib/lestvica'
@@ -453,6 +453,27 @@ preveri(
   'sestavljen primer: 2+6+4+2-1 = 13',
   t({ goli: 1, cleanSheet: true, zmaga: true, rumeni: 1 }, 'DEF') === 13,
 )
+
+// Razlaga točk (components/Razlaga.tsx): postavke se seštejejo v točke iz
+// baze (`appearance_points.points`, ročno izračunane po SQL tocke_za_nastop).
+{
+  const vsota = (r) => r.postavke.reduce((v, p) => v + p.tocke, 0)
+  const primeri = [
+    ['vratar 1:0, pravila 2', { cleanSheet: true, zmaga: true }, 'GK', 9],
+    ['branilec gol, 3 prejeti, rumeni, pravila 1', { goli: 1, prejetiGoli: 3, rumeni: 1, zmaga: true, pravila: 1 }, 'DEF', 6],
+    ['napadalec 30 min, rdeči', { minute: 30, rdeci: 1 }, 'FWD', -2],
+    ['brez pozicije, gol = le nastop', { goli: 1 }, null, 2],
+    ['vezist 2 asistenci, zgrešena 11 m', { asistence: 2, zgreseneEnajstmetrovke: 1 }, 'MID', 6],
+    ['ni igral', { minute: 0 }, 'DEF', 0],
+  ]
+  for (const [opis, o, poz, baza] of primeri) {
+    const r = razloziTocke(nastop(o), poz, baza)
+    preveri(`razlaga se ujema z bazo: ${opis}`, r.skupaj === baza && vsota(r) === baza && r.postavke.length === tockeZaNastop(nastop(o), poz).postavke.length)
+  }
+  preveri('razlaga brez pozicije opozori na gol', razloziTocke(nastop({ goli: 1 }), null, 2).brezPozicije)
+  const neujem = razloziTocke(nastop({}), 'MID', 3.5)
+  preveri('razlaga: razlika z bazo gre v "ostalo"', neujem.skupaj === 3.5 && vsota(neujem) === 3.5 && neujem.postavke.length === 2)
+}
 
 // --- pravila ekipe ---------------------------------------------------------
 console.log('')
@@ -5776,6 +5797,14 @@ preveri(
     zSk.naslov,
   )
   preveri('e-pošta: rok v časovnem pasu lige', E.izpisRoka(rok, sk).includes('10:00') && E.izpisRoka(rok, si).includes('10:00'))
+  const zivaSk = E.sestaviLigaZivi(null, { display_name: null, liga: sk })
+  const zivaEn = E.sestaviLigaZivi('en', { display_name: 'Ana', liga: { ...si, ime: 'A <b>' } })
+  preveri(
+    'e-pošta: liga je zaživela (jezik lige ali želje, ubeži ime)',
+    zivaSk.html.includes('Ahoj!') && !slovensko.test(zivaSk.naslov + zivaSk.html) &&
+      zivaSk.html.includes('my-team?sestavi=1&amp;t=sk-ssfz-4liga') &&
+      zivaEn.html.includes('Hi Ana,') && zivaEn.html.includes('A &lt;b&gt;') && !zivaEn.odjava,
+  )
 
   const razlogi = [
     'Ekipa je prazna — kadra ni.',

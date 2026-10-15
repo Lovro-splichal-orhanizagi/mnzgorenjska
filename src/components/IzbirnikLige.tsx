@@ -24,6 +24,7 @@ import SpustniMeni from './SpustniMeni'
 import Zastava from './Zastava'
 import FotoIgralca from './FotoIgralca'
 import ZnakPreverjen from './ZnakPreverjen'
+import { ZelimLigoOkno } from './ZelimLigo'
 import {
   dovoljZaIskanje,
   opisIgralca,
@@ -174,6 +175,7 @@ export default function IzbirnikLige() {
   const drzava = tujaLiga ? vstop : drzavaLige
   const tekmovanje = tujaLiga ? null : izbranaLiga
   const [odprt, setOdprt] = useState(false)
+  const [zelja, setZelja] = useState(false)
   const [iskanje, setIskanje] = useState('')
   // Država, katere lige plošča kaže. Izbira le brska — stran se ne naloži
   // znova, dokler človek ne izbere lige.
@@ -663,8 +665,23 @@ export default function IzbirnikLige() {
               </div>
             </div>
           )}
+          {!drzaveOdprte && (
+            <div className="border-t border-white/10 px-3 py-2 text-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setOdprt(false)
+                  setZelja(true)
+                }}
+                className="text-xs text-slate-400 underline decoration-dotted underline-offset-2 hover:text-slate-200"
+              >
+                {prevod('aplikacija.zelimLigo.povezava')}
+              </button>
+            </div>
+          )}
         </div>
       )}
+      {zelja && <ZelimLigoOkno drzava={zavihek} zapri={() => setZelja(false)} />}
     </div>
   )
 }

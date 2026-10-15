@@ -15,6 +15,8 @@ import FotoIgralca from './FotoIgralca'
 import PredstavitevIgralca, { usePredstavitev } from './PredstavitevIgralca'
 import { t } from '../i18n'
 import { useZaklepPomika } from '../lib/zaklepPomika'
+import { naloziRazlage, type Razlaga } from '../lib/razlagaTock'
+import { RazlagaTock, RazlagaCene } from './Razlaga'
 
 interface Sezona {
   matches: number | null
@@ -61,6 +63,9 @@ export default function InfoIgralca({
   const [sezona, setSezona] = useState<Sezona | null>(null)
   const [spremembe, setSpremembe] = useState<SpremembaCene[]>([])
   const [zacetna, setZacetna] = useState<number | null>(null)
+  const [cena, setCena] = useState<number | null>(null)
+  // Zadnja tekma tekoče sezone z razlago točk ("zakaj -1?").
+  const [zadnja, setZadnja] = useState<Razlaga | null>(null)
   const [krogov, setKrogov] = useState(0)
   const [tekme, setTekme] = useState<Tekma[]>([])
   const [nalaganje, setNalaganje] = useState(true)
@@ -88,7 +93,7 @@ export default function InfoIgralca({
       setNalaganje(true)
       // Klub igralca rabimo, preden vprasamo po njegovih tekmah, zato dva
       // kroga namesto enega.
-      const [{ data: sez }, { data: p }] = await Promise.all([
+      const [{ data: sez }, { data: p }, razlage] = await Promise.all([
         supabase
           .from('sezone')
           .select('season, tekoca')
@@ -97,9 +102,10 @@ export default function InfoIgralca({
           .maybeSingle(),
         supabase
           .from('players')
-          .select('value_start, team_id')
+          .select('value, value_start, team_id')
           .eq('id', igralecId)
           .maybeSingle(),
+        naloziRazlage(igralecId),
       ])
       if (!veljavno) return
       const letos = sez?.season ?? null
@@ -155,6 +161,8 @@ export default function InfoIgralca({
       if (!veljavno) return
       setSezona((s ?? null) as Sezona | null)
       setZacetna(p?.value_start != null ? Number(p.value_start) : null)
+      setCena(p?.value != null ? Number(p.value) : null)
+      setZadnja(razlage.find((r) => r.season === letos) ?? null)
       setSpremembe(
         ((c ?? []) as any[]).map((r) => ({
           krog: Number(r.rounds?.number ?? 0),
@@ -240,6 +248,19 @@ export default function InfoIgralca({
               />
             </div>
 
+            {zadnja && (
+              <div className="flex items-center justify-between gap-2 rounded-xl bg-white/5 px-3 py-2 text-xs text-slate-400">
+                <span>{t('tekme.razlaga.zadnjiKrog', { krog: zadnja.number ?? '' })}</span>
+                <RazlagaTock
+                  razlaga={zadnja}
+                  naslov={t('tekme.razlaga.zadnjiKrog', { krog: zadnja.number ?? '' })}
+                  className="rounded-md bg-white/10 px-2 py-0.5 font-black tabular-nums text-slate-100 underline decoration-dotted underline-offset-2 hover:bg-white/15"
+                >
+                  {formatirajTocke(zadnja.skupaj)}
+                </RazlagaTock>
+              </div>
+            )}
+
             {serija.length > 1 ? (
               <section className="rounded-xl bg-white/5 p-3">
                 <div className="mb-1 flex items-baseline justify-between gap-2">
@@ -283,6 +304,9 @@ export default function InfoIgralca({
                     vectorEffect="non-scaling-stroke"
                   />
                 </svg>
+                <div className="mt-1 text-right">
+                  <RazlagaCene cena={cena} izhodisce={zacetna} />
+                </div>
                 <ul className="mt-1 space-y-0.5">
                   {zadnjiPremiki(spremembe, serija[0].cena).map((z) => (
                     <li
@@ -298,9 +322,10 @@ export default function InfoIgralca({
                 </ul>
               </section>
             ) : (
-              <p className="rounded-xl bg-white/5 p-3 text-xs text-slate-500">
+              <div className="flex items-center justify-between gap-2 rounded-xl bg-white/5 p-3 text-xs text-slate-500">
                 {t('igralci.info.cenaMirna')}
-              </p>
+                <RazlagaCene cena={cena} izhodisce={zacetna} />
+              </div>
             )}
 
             {tekme.length > 0 && (

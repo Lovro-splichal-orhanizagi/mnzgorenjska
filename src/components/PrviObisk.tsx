@@ -33,6 +33,7 @@ import { KLJUC_VSTOPA, drzaveZLigami, preklopiDrzavo, zaznajTujca } from '../lib
 import { drzavaVstopa } from '../lib/drzavaUgib'
 import Zastava from './Zastava'
 import { imeDrzave } from './IzbiraDrzave'
+import ZelimLigo from './ZelimLigo'
 
 // Vstop `/sk` doda ligo v naslov sam; to ni izbira obiskovalca.
 export { oznaciVstopDrzave } from '../lib/drzava'
@@ -296,6 +297,10 @@ export default function PrviObisk() {
             </div>
           </>
         )}
+
+        <div className="mt-3 text-center">
+          <ZelimLigo drzava={drzava ?? drzavaLige} />
+        </div>
 
         <div className="mt-4 flex items-center justify-between gap-2">
           {vprasajDrzavo && drzava && drzave.length > 1 ? (
