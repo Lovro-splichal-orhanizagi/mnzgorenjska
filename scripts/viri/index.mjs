@@ -32,6 +32,7 @@ import ffm from './ffm.mjs'
 import fcf from './fcf.mjs'
 import fas from './fas.mjs'
 import pflUa from './pfl-ua.mjs'
+import upl from './upl.mjs'
 
 const VIRI = {
   mnzg,
@@ -86,6 +87,9 @@ const VIRI = {
   // Ukrajina: Професіональна футбольна ліга (pfl.ua) — Perša liga, Druga liga A in B;
   // koledar JSON, šifra igralca, vratar iz postavitve.
   'pfl-ua': pflUa,
+  // Ukrajina: Українська Прем'єр-Ліга (upl.ua) — koledar prvenstva in raport arbitra;
+  // šifra igralca, vratar iz postavitve.
+  upl,
 }
 
 /**

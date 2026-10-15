@@ -119,9 +119,11 @@ export function ravenLige({ slug, name, zveza }) {
     return null
   }
 
-  // Ukrajina (vir pfl-ua): Perša liga (raven 2) nad Drugo ligo A in B (3).
+  // Ukrajina: Premier liga (vir upl, raven 1) nad Peršo ligo (pfl-ua, 2) in
+  // Drugo ligo A in B (3). Cena iz višje lige velja le znotraj istega vira.
   if (slug.startsWith('ua-')) {
     if (mladinska) return null
+    if (slug === 'ua-upl') return abs(1)
     if ((m = slug.match(/^ua-(\d)-liga/))) return abs(Number(m[1]) + 1)
     return null
   }
