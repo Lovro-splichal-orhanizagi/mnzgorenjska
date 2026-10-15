@@ -4330,6 +4330,15 @@ preveri(
   preveri('mlsz: neodigrane tekme brez izida', k8.length === 6 && k8.every((t) => !t.izid && t.id) &&
     k8.some((t) => t.datum === '2026-10-11' && t.ura === '15:00' && t.domaci === 'Semjénháza Se'))
 
+  // Pošta klubom: ekipe lige iz stranskega seznama, uradni naslov s strani kluba (naslov v vzorcu zamenjan).
+  const ekipeHu = M.ekipeLige(beri('hu-adatbank-krog-67-20-33915-8.html'))
+  preveri('mlsz: ekipe lige s strani kroga', ekipeHu.length === 13 && ekipeHu.some((e) => e.id === '331759' && e.ime === 'OWI ZALA Bt. LETENYE SE'), ekipeHu.length)
+  const klubHu = beri('hu-adatbank-klub-67-20-33915-331759.html')
+  preveri('mlsz: naslov kluba (Klub adatok)', M.emailKluba(klubHu) === 'klub@example.com' && M.ekipeLige(klubHu).length === 13)
+  preveri('mlsz: ostanek ada1bank ni stran kluba, klub brez naslova null',
+    M.emailKluba('SQLSTATE[08004] [1040] Too many connections') === undefined &&
+    M.emailKluba(klubHu.replace(/<a href="mailto:[^<]*<\/a>/, '')) === null)
+
   // Zapisnik: Csesztreg : Zalakomár 3:4 (1:1) — 11 m, avtogol, rdeči rezervi, karton trenerja.
   const z = M.vZapisnik(beri('hu-adatbank-tekma-65-20-31672-2090962.html'), { id: '2090962' })
   const n = M.nastopi(z)
@@ -6718,7 +6727,7 @@ preveri(
   const { besedilo, sporocilo, kandidati, izmenicno, vOknu, zakrij, stareZaOpomnik, POSLAL } = await import('./posta-klubom.mjs')
   const k = (drzava) => ({ drzava, team_id: 2002, liga_slug: 'x-liga', ime_lige: 'Kärntner Liga', klub: 'St. Veit SC' })
   const p = { igralcev: 19, naj: 'Sebastian Weiss', tocke: 55, ekip: 7 }
-  for (const drzava of ['AT', 'EE']) {
+  for (const drzava of ['AT', 'EE', 'HR', 'HU', 'RS']) {
     for (const vrsta of ['prvi', 'opomnik']) {
       for (const pp of [p, { ...p, naj: null, ekip: 0 }]) {
         const b = besedilo(k(drzava), pp, vrsta)
@@ -6735,6 +6744,14 @@ preveri(
     }
   }
   preveri('pošta klubom: država brez besedil ne dobi nič', besedilo(k('SI'), p, 'prvi') === null)
+  {
+    // Hrvaščina in srbščina: število igralcev in točk v pravem sklonu, srbski vir po ligi.
+    const hr = (n, t) => besedilo(k('HR'), { ...p, igralcev: n, tocke: t }, 'prvi').telo
+    preveri('pošta klubom: HR sklanjanje', hr(1, 1).includes('već 1 igrač kluba') && hr(22, 2).includes('već 22 igrača kluba') &&
+      hr(11, 11).includes('11 bodova') && hr(21, 21).includes('21 bod.') && hr(19, 3).includes('3 boda'))
+    preveri('pošta klubom: RS vir po ligi', besedilo({ ...k('RS'), liga_slug: 'rs-bg-pbl-a' }, p, 'prvi').telo.includes('fsb.org.rs') &&
+      besedilo({ ...k('RS'), liga_slug: 'rs-srpska-istok' }, p, 'prvi').telo.includes('na fss.rs'))
+  }
 
   // Okno: 08–18 krajevno, ne v nedeljo; poletni/zimski čas (Dunaj 25. 10. 2026).
   const okno = [
@@ -6742,6 +6759,7 @@ preveri(
     ['AT', '2026-10-12T16:00:00Z', false], ['AT', '2026-10-11T10:00:00Z', false], ['AT', '2026-10-17T10:00:00Z', true],
     ['AT', '2026-10-26T06:30:00Z', false], ['AT', '2026-10-26T07:00:00Z', true], ['EE', '2026-10-12T05:30:00Z', true],
     ['EE', '2026-10-12T15:30:00Z', false], ['SI', '2026-10-12T10:00:00Z', false],
+    ['HR', '2026-10-12T06:30:00Z', true], ['HU', '2026-10-12T15:59:00Z', true], ['RS', '2026-10-12T16:00:00Z', false],
   ]
   for (const [d, t, ok] of okno) preveri(`pošta klubom: okno ${d} ${t}`, vOknu(d, new Date(t)) === ok)
 
