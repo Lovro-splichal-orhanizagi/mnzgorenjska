@@ -42,7 +42,9 @@
 //   Ekipa s klopjo in brez ene same menjave je `z.brezMenjav[idx]`: začetniki
 //   imajo 90 minut (ali do rdečega), rezerva brez vstopa nastopa nima, strelec s
 //   klopi dobi vstop ob golu (kot fsb, fcf Quarta). V nižjih 5. divisjon klubi
-//   včasih vpišejo vse igralce kot začetnike (do 20): vsi dobijo 90 minut.
+//   včasih vpišejo vse igralce kot začetnike (do 20): kdo je začel, ni znano,
+//   zato ekipa z več kot 11 začetniki nima znane postave (`nepopoln`, kot pod 7).
+//   Gol ekipe brez znane postave ostane ekipi brez strelca.
 //
 // Šifra zapisnika v bazi je `no<id>` (`sifraZapisnika`): FIKS šteje tekme v
 // milijonih (8,9 milijona), v istem prostoru kot rastoči viri drugih zvez.
@@ -64,6 +66,8 @@ const OSNOVNI = 'https://www.fotball.no'
 const DOLZINA_TEKME = 90
 /** Najmanj začetnikov, da ekipa šteje za ekipo z znano postavo. */
 const NAJMANJ_ZACETNIKOV = 7
+/** Več začetnikov pomeni, da je klub vpisal vse igralce kot začetnike. */
+const NAJVEC_ZACETNIKOV = 11
 
 /** "205686" → "205686"; šifra lige je id turnirja FIKS. */
 export function razbijKodo(koda) {
@@ -138,6 +142,20 @@ export function glavaTurnirja(html) {
   return m ? { ime: m[1].trim(), leto: m[2], krets: m[3]?.trim() ?? null } : { ime: h1 || null, leto: null, krets: null }
 }
 
+// Isto ime, drug klub. FIKS piše ekipo z imenom kluba brez kraja; ključ kluba
+// (`kljucKlubaNo`) je skupen vsem norveškim ligam, zato bi dva kluba z istim
+// imenom postala en zapis `teams` (grb, stran kluba, navijači). Ekipo
+// preimenujemo po id-ju ekipe FIKS (`lag/hjem/?fiksId=`); arhivske strani (2025)
+// povezav na ekipe nimajo, zato še po kretsu iz naslova turnirja. Pregled
+// 15. 10. 2026 (vseh 46 skupin 2026 in arhivi 2025, ključ → id ekip): edini trk
+// je "Borgen" — Østfold 4. div (ekipa 30463, klub 12) in Akershus 5. div
+// (ekipa 4161, klub 143). Ob novi skupini ali sezoni preveri znova
+// (`node scripts/norveske-lige.mjs` izpiše trke po id-jih ekip).
+const IME_EKIPE = { 4161: 'Borgen (Akershus)' }
+const IME_V_KRETSU = { 'Akershus|Borgen': 'Borgen (Akershus)' }
+export const imeEkipe = (ime, id = null, krets = null) =>
+  (id != null && IME_EKIPE[id]) || (krets && IME_V_KRETSU[`${krets}|${ime}`]) || ime
+
 /**
  * Vse tekme turnirja iz tabele "Alle kamper":
  * [{ krog, datum, ura, domaci, gostje, domaciId, gostjeId, id, izid, kampnr }].
@@ -146,13 +164,17 @@ export function vrsticeRazporeda(html) {
   const s = cisto(html)
   const i = s.indexOf('id="AllMatchesContainer"')
   if (i < 0) return []
+  const { krets } = glavaTurnirja(html)
   const tabela = s.slice(i).match(/<tbody>(.*?)<\/tbody>/)?.[1] ?? ''
   const out = []
   for (const tr of tabela.split(/<tr[^>]*>/).slice(1)) {
     const td = tr.split(/<td[^>]*>/).slice(1).map((x) => x.replace(/<\/td>.*$/, ''))
     if (td.length < 7) continue
     const krog = Number(besedilo(td[0]))
-    const ekipa = (x) => ({ ime: besedilo(x), id: x.match(/lag\/hjem\/\?fiksId=(\d+)/)?.[1] ?? null })
+    const ekipa = (x) => {
+      const id = x.match(/lag\/hjem\/\?fiksId=(\d+)/)?.[1] ?? null
+      return { ime: imeEkipe(besedilo(x), id, krets), id }
+    }
     const d = ekipa(td[4])
     const g = ekipa(td[6])
     if (!d.ime || !g.ime) continue
@@ -204,10 +226,13 @@ export function razcleniRazpored(_vrstice, html) {
 
 // --- zapisnik ---------------------------------------------------------------------
 
-/** Igralci enega seznama (`a_matchPlayerList`): [{ st, ime, regSt, kapetan }]. */
+/**
+ * Igralci enega seznama (`a_matchPlayerList`): [{ st, ime, regSt, kapetan, mesto }].
+ * `mesto` je mesto v seznamu PRED izpustom skritih in prečrtanih (0 = prvi, vratar).
+ */
 function igralciSeznama(del, opozorila, ekipa) {
   const out = []
-  for (const kos of String(del ?? '').split('class="matchPlayerListItem"').slice(1)) {
+  for (const [mesto, kos] of String(del ?? '').split('class="matchPlayerListItem"').slice(1).entries()) {
     const st = kos.match(/class="playerNumber">\s*(\d+)\s*</)?.[1]
     const p = kos.match(/person\/profil\/\?fiksId=(\d+)"\s*class="playerName">([^<]*)</)
     if (!p) {
@@ -223,6 +248,7 @@ function igralciSeznama(del, opozorila, ekipa) {
       polnoIme: polno,
       regSt: Number(p[1]),
       kapetan: /class="playerCaptain"/.test(kos),
+      mesto,
     })
   }
   return out
@@ -306,7 +332,10 @@ export function vZapisnik(html, { id = null, url = null } = {}) {
   const ekipe = [ekipaZapisnika(s, 'homeTeamWrapper', opozorila), ekipaZapisnika(s, 'awayTeamWrapper', opozorila)]
   ekipe.forEach((e, idx) => {
     e.ime = besedilo(imenaGlave[idx]?.[2] ?? '') || e.ime || ''
-    e.znana = e.postava.length >= NAJMANJ_ZACETNIKOV
+    // Več kot 11 začetnikov: klub je vpisal vse kot začetnike (5. divisjon, do
+    // 20) — kdo je začel, ni znano. Sicer bi vsi dobili 90 minut, nastop in
+    // čisto mrežo (cene). Enako merilo kot pregled pokritosti (7–11).
+    e.znana = e.postava.length >= NAJMANJ_ZACETNIKOV && e.postava.length <= NAJVEC_ZACETNIKOV
   })
 
   const kje = new Map()
@@ -352,6 +381,13 @@ export function vZapisnik(html, { id = null, url = null } = {}) {
         continue
       }
       if (d.ekipaIdx != null && d.ekipaIdx !== p.ekipaIdx) opozorila.push(`gol v ${d.minuta}. minuti (${p.ime}): vrstica je pri drugi ekipi`)
+      // Ekipa brez znane postave nima nastopov: strelec brez nastopa bi pri uvozu
+      // postal nov igralec, gol pa bi pobrisalo čiščenje golov brez nastopa.
+      // Gol zato ostane ekipi brez strelca (izid in prejeti goli ostanejo pravi).
+      if (!ekipe[p.ekipaIdx].znana) {
+        goli.push({ ekipaIdx: p.ekipaIdx, st: null, ime: null, regSt: null, minuta: p.minuta, avtogol: vrsta === 'avtogol', enajstmetrovka: vrsta === 'enajstmetrovka' })
+        continue
+      }
       goli.push({ ...p, avtogol: vrsta === 'avtogol', enajstmetrovka: vrsta === 'enajstmetrovka' })
     } else if (vrsta === 'rumeni') {
       if (p) rumeni.push(p) // karton trenerja ali osebe brez podatkov ne šteje
@@ -371,14 +407,15 @@ export function vZapisnik(html, { id = null, url = null } = {}) {
         .filter((m) => m.ekipaIdx === idx && m.minuta != null && (m.noter.regSt === i.regSt || m.ven.regSt === i.regSt))
         .map((m) => m.minuta)
         .sort((a, b) => a - b)
-    const vObliko = (zacetnik) => (i, j) => ({
+    const vObliko = (zacetnik) => (i) => ({
       st: i.st,
       ime: i.ime,
       regSt: i.regSt,
       kapetan: i.kapetan,
-      // Prvi začetnik je v FIKS vratar — le namig, ne oznaka zapisnika.
-      vratar: zacetnik && j === 0,
-      pozicija: zacetnik && j === 0 ? 'GK' : null,
+      // Prvo MESTO začetnikov je v FIKS vratar — le namig, ne oznaka zapisnika.
+      // Je na njem skrita ali prečrtana oseba, namiga ne dobi nihče.
+      vratar: zacetnik && i.mesto === 0,
+      pozicija: zacetnik && i.mesto === 0 ? 'GK' : null,
       zacetnik,
       preklopi: preklopi(i),
     })

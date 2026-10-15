@@ -105,8 +105,13 @@ async function skupine(leto) {
 function povzetek(html) {
   const v = vrsticeRazporeda(html)
   const klubi = new Set(v.flatMap((t) => [kljucKlubaNo(t.domaci), kljucKlubaNo(t.gostje)]))
+  // Ključ kluba → id-ji ekip FIKS (arhivske strani povezav na ekipe nimajo).
+  const ekipe = new Map()
+  for (const t of v)
+    for (const [ime, id] of [[t.domaci, t.domaciId], [t.gostje, t.gostjeId]])
+      if (id) ekipe.set(kljucKlubaNo(ime), new Set([...(ekipe.get(kljucKlubaNo(ime)) ?? []), id]))
   const { ime, leto } = glavaTurnirja(html)
-  return { ime, leto, vrstice: v, klubi, krogov: new Set(v.map((t) => t.krog)).size, odigranih: v.filter((t) => t.izid).length }
+  return { ime, leto, vrstice: v, klubi, ekipe, krogov: new Set(v.map((t) => t.krog)).size, odigranih: v.filter((t) => t.izid).length }
 }
 
 /** N tekem, enakomerno čez odigrane. */
@@ -122,8 +127,9 @@ async function prestej(tekme) {
     if (!z) { s.brezStrani++; s.primeri.push(`${t.id}: ni zapisnika`); continue }
     const goliOk = !z.opozorila.some((o) => o.startsWith('goli iz dogodkov'))
     // Več kot 11 "začetnikov": klub je vpisal vse igralce kot začetnike (leteče
-    // menjave brez minut) — kdo je začel, ne vemo, zato zapisnik ni poln.
-    const nad11 = [z.domaci, z.gostje].filter((e) => e.postava.length > 11).length
+    // menjave brez minut) — kdo je začel, ne vemo, zato zapisnik ni poln (vir
+    // tako ekipo vrne brez postave, `nepopoln`; število pove opozorilo).
+    const nad11 = z.opozorila.filter((o) => Number(o.match(/v postavi je (\d+) igralcev/)?.[1]) > 11).length
     s.postavNad11 += nad11
     if (z.nepopoln) { s.nepopolnih++; s.primeri.push(`${t.id}: ${z.opozorila[0]}`) }
     else if (goliOk) s.goliIzid++
@@ -207,5 +213,13 @@ if (trki.length) {
   console.log('Isto ime v več skupinah 2026:')
   for (const [k, v] of trki) console.log(`  ${k}: ${v.join(', ')}`)
 }
+// Pravi trk: isti ključ, različni ekipi FIKS (dva kluba bi postala en zapis
+// `teams`). Dodaj ga v IME_EKIPE / IME_V_KRETSU v viri/nff.mjs.
+const idji = new Map()
+for (const g of [...tekoce, ...arhivske])
+  for (const [k, ids] of g.p.ekipe) idji.set(k, new Set([...(idji.get(k) ?? []), ...ids]))
+const pravi = [...idji.entries()].filter(([, ids]) => ids.size > 1)
+console.log(pravi.length ? 'TRK — isti ključ kluba, različne ekipe FIKS:' : 'Trkov ključa kluba (različne ekipe FIKS) ni.')
+for (const [k, ids] of pravi) console.log(`  ${k}: ekipe ${[...ids].join(', ')}`)
 console.log(`Zahtevkov: ${zahtevkov}`)
 if (vrednost('json')) writeFileSync(vrednost('json'), JSON.stringify(izid, null, 1))

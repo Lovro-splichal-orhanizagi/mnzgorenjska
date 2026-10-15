@@ -2880,7 +2880,8 @@ NFF dovoljenje umakne ali prosi, naj nehamo, `no-` lige izklopimo.
 - **Vratar NI označen.** FIKS našteje začetnike po mestih z vratarjem prvim (ostali
   niso po dresu), zato ima prvi začetnik `vratar` in GK **le kot namig** (kot mlsz,
   ffm); *Uskladi pozicije* z `vir = nff` (večina tekem). Ostale pozicije na
-  glasovanje.
+  glasovanje. Namig gre po **mestu** v seznamu: je na prvem mestu skrita ali
+  prečrtana oseba, ga ne dobi nihče (sicer bi ga dobil igralec iz polja).
 - **Prečrtan igralec** ("Ime (strøket)") ni igral — izpuščen. **"Personinfo ikke
   tilgjengelig"** je oseba, katere podatkov NFF ne objavi (zasebnost): brez imena
   in šifre, izpuščena; njen gol ostane ekipi brez strelca (`scorer_id` null, goli =
@@ -2896,9 +2897,14 @@ NFF dovoljenje umakne ali prosi, naj nehamo, `no-` lige izklopimo.
   opozorilo); karton rezervi brez vstopa ne šteje (opozorilo). Minute začetnikov so
   precenjene, ekipa ima lahko čez 990 minut.
 - **Več kot 11 začetnikov**: v nižjih 5. divisjon klubi vpišejo vse igralce kot
-  začetnike (do 20; leteče menjave brez minut) — vsi dobijo 90 minut (opozorilo
-  `v postavi je N igralcev`). Pregled tak zapisnik šteje kot nepoln; skupine, kjer je
+  začetnike (do 20; leteče menjave brez minut) — kdo je začel, ni znano. Taka ekipa
+  **nima znane postave** (kot pod 7 začetniki): zapisnik je nepopoln, njeni igralci
+  nastopov ne dobijo (prej 20 × 90 minut, nastop in čista mreža — cene), opozorilo
+  `v postavi je N igralcev`. Pregled tak zapisnik šteje kot nepoln; skupine, kjer je
   to pogosto (Trøndelag 5. div, Nordmøre og Romsdal 5. div, Helgeland 2), niso vpisane.
+  **Gol ekipe brez znane postave** ostane ekipi brez strelca (brez imena in šifre):
+  strelec brez nastopa bi sicer pri uvozu nastal kot nov igralec, gol pa bi pobrisalo
+  čiščenje golov brez nastopa.
 - **Kontumacija**: glava "Bortelaget/Hjemmelaget møtte ikke" (`z.kontumacija`,
   tudi z izpolnjenim zapisnikom — Otta : Eina 0:3, 2026, ima 12 golov) ali 3:0 / 0:3
   brez obeh postav, starejša od tedna. Razpored izid pokaže kot navaden izid,
@@ -2917,7 +2923,13 @@ NFF dovoljenje umakne ali prosi, naj nehamo, `no-` lige izklopimo.
   IL", "Mjølner, FK", "Harstad IL 2"), 2025 kratka ("Svolvær", "Mjølner") — brez
   tega bi bil isti klub dvakrat. Druge ekipe ("Vålerenga 2", "Frigg 2") so svoj klub.
   Isto ime v dveh skupinah 2026 je pregled našel le v izpuščenih skupinah Finnmark
-  in Lofoten (jesenski del istih klubov).
+  in Lofoten (jesenski del istih klubov). **Isto ime, drug klub**: pregled vseh 46
+  skupin in arhivov po id-jih ekip FIKS (15. 10. 2026; odrezana oblika ni združila
+  nobenih dveh različnih ekip) je našel le "Borgen" — Østfold 4. div (ekipa 30463,
+  klub 12) in Akershus 5. div (ekipa 4161, klub 143). `IME_EKIPE` (po id-ju ekipe) in
+  `IME_V_KRETSU` (arhivske strani 2025 povezav na ekipe nimajo) v viru akershuškega
+  preimenujeta v "Borgen (Akershus)". `norveske-lige.mjs` izpiše nove trke po id-jih
+  ekip — dodaj jih tja pred uvozom.
 - Raven za ceno novinca (`ravenLige`): `no-obos` 2, `-2div-` 3, `-3div-` 4,
   `-4div` 5, `-5div` 6 (Eliteserien ni vpisana); šifra osebe je skupna vsem
   ravnem, zato novinec iz višje lige dobi ceno od tam.

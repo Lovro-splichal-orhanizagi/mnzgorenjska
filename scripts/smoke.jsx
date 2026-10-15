@@ -5516,6 +5516,39 @@ preveri(
     p.gostje.postava.length === 11 && p.opozorila[0].startsWith(N.NEPOPOLN) && N.nastopi(p).every((x) => x.ekipaIdx === 1))
   preveri('nff: stran brez izida ali napaka ni zapisnik', N.vZapisnik('<html><body>Siden finnes ikke</body></html>') === null)
 
+  // Skrit (Personinfo ikke tilgjengelig) prvi začetnik: namig vratarja je MESTO 1,
+  // ne prvi izpisani igralec — sicer bi igralec iz polja postal GK.
+  const skritGk = beri('no-nff-kamp-8974807.html').replace(
+    /<a href="\/fotballdata\/person\/profil\/\?fiksId=3944231" class="playerName">\s*Oskar Slotta Karlsen\s*<\/a>/,
+    '<div class="playerName unavailablePersonInfo">Personinfo ikke tilgjengelig</div>',
+  )
+  const sg = N.vZapisnik(skritGk)
+  preveri('nff: skrit prvi začetnik — nihče drug ne dobi namiga vratarja, o skriti osebi nič',
+    sg.domaci.postava.length === 10 && sg.domaci.postava.every((i) => !i.vratar && i.pozicija !== 'GK') &&
+    sg.gostje.postava[0].vratar && !/Slotta|3944231/.test(JSON.stringify(sg)) &&
+    N.nastopi(sg).filter((x) => x.ekipaIdx === 0).length === 10)
+
+  // "Vsi kot začetniki" (do 20, brez klopi): postava ni znana — sicer bi 20
+  // igralcev dobilo 90 minut, nastop in čisto mrežo (cene). Gol te ekipe ostane
+  // ekipi brez strelca (brez imena in šifre — uvoz ne sme ustvariti igralca
+  // brez nastopa, čigar gol bi nato pobrisal).
+  const vsi = (() => {
+    const s0 = beri('no-nff-kamp-8990682.html').replace(/\s+/g, ' ').replace(/> </g, '><')
+    const a = s0.indexOf('homeTeamWrapper')
+    const inb = s0.indexOf('<h4>Innbyttere:</h4>', a)
+    const konec = s0.indexOf('</li>', inb)
+    const klop = s0.slice(inb, konec)
+    const igralci = klop.slice(klop.indexOf('<div class="matchPlayerListItem">'), klop.lastIndexOf('</div>'))
+    const zac = s0.slice(0, inb)
+    return zac.slice(0, zac.lastIndexOf('</div>')) + igralci + '</div><h4>Innbyttere:</h4><div class="a_matchPlayerList"></div>' + s0.slice(konec)
+  })()
+  const vz = N.vZapisnik(vsi)
+  preveri('nff: več kot 11 začetnikov (vsi kot začetniki) — postava ni znana, nepopoln, goli ekipi brez strelca',
+    vz.nepopoln && vz.domaci.postava.length === 0 && vz.gostje.postava.length === 11 && vz.opozorila[0].startsWith(N.NEPOPOLN) &&
+    vz.opozorila.some((o) => /v postavi je 20 igralcev/.test(o)) &&
+    vz.goli.filter((g) => g.ekipaIdx === 0).length === 4 && vz.goli.filter((g) => g.ekipaIdx === 0).every((g) => g.ime == null && g.regSt == null && g.st == null) &&
+    N.nastopi(vz).every((x) => x.ekipaIdx === 1))
+
   // zapisniki(): šifre z no, krog, sezona in imena iz razporeda; prazen zapisnik se prebere sveže.
   const klici = []
   const zs = await N.default.zapisniki('205400', async (url, ime, sveze) => {
@@ -5556,6 +5589,14 @@ preveri(
   preveri('nff: kontumacija — 3:0 brez postav', N.jeKontumacija(kz) && kz.prazen && !N.jeKontumacija(N.vZapisnik(beri('no-nff-kamp-8974807.html'))))
   const najdene = await N.default.kontumacije('205400', async () => kont, krogi.slice(0, 1), '2026-10-15')
   preveri('nff: kontumacije() najde 0:3 brez postav (1. krog: Lommedalen : Gui)', najdene.length === 1 && najdene[0].domaci === 'Lommedalen' && najdene[0].krog === 1)
+
+  // Isto ime, drug klub: "Borgen" je Østfold (ekipa 30463) in Akershus (4161).
+  const borgen = turnir.replace(/(<h1[^>]*>[^<]*- 2026 - )Oslo/, '$1Akershus').replaceAll('Lommedalen', 'Borgen')
+  const vb = N.vrsticeRazporeda(borgen)
+  preveri('nff: Borgen (Akershus) ≠ Borgen (Østfold) — po id-ju ekipe in po kretsu', N.imeEkipe('Borgen', '4161') === 'Borgen (Akershus)' &&
+    N.imeEkipe('Borgen', '30463', 'Østfold') === 'Borgen' && N.imeEkipe('Borgen', null, 'Akershus') === 'Borgen (Akershus)' &&
+    N.kljucKlubaNo('Borgen (Akershus)') !== N.kljucKlubaNo('Borgen') && vb.some((t) => t.domaci === 'Borgen (Akershus)') &&
+    !vb.some((t) => t.domaci === 'Borgen' || t.gostje === 'Borgen') && N.vrsticeRazporeda(turnir).some((t) => t.domaci === 'Lommedalen'))
 
   const { ravenLige, koliko } = await import('./visja-liga.mjs')
   preveri('nff: raven — OBOS 2, 2div 3, 3div 4, 4div 5, 5div 6', ravenLige({ slug: 'no-obos' }).raven === 2 &&
