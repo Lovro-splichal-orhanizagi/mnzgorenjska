@@ -1052,6 +1052,9 @@ preveri(
     koliko(r('hu-za-1'), r('hu-bp-3-2')) === 2)
   preveri('višja liga: avstrijske deželne med sabo ne', koliko(r('at-k-kaerntner-liga', '', 'kfv'), r('at-k-1-klasse-ost', '', 'kfv')) === 0 &&
     koliko(r('at-regionalliga-ost', '', 'oefb'), r('at-w-stadtliga', '', 'wfv')) === 1)
+  preveri('višja liga: Litva — A lyga nad I lyga nad II lyga, Črna gora brez pravila',
+    koliko(r('lt-a-lyga'), r('lt-1-lyga')) === 1 && koliko(r('lt-1-lyga'), r('lt-2-lyga-a')) === 1 &&
+    koliko(r('lt-a-lyga'), r('lt-2-lyga-b')) === 2 && r('me-1-cfl') === null)
   preveri('višja liga: država brez pravila nič', r('rs-srpska-istok') === null && r('clani') === null)
 
   const MID = [4.0, 12.0]
@@ -5549,6 +5552,60 @@ preveri(
   try { await ME.default.zapisniki('jug/seniorska-liga/9391667', async () => '<title>Just a moment...</title>') } catch (e) { izziv = e }
   preveri('ltfutbolas, fscg: 403 in izziv vržeta CometZavrnitev (uvoz izhod 4)', zavrnjen instanceof C.CometZavrnitev && zavrnjen.status === 403 &&
     izziv instanceof C.CometZavrnitev && ME.default.zavrnitev('x', 429).zavrnitev === true)
+
+  // Državne lige: A lyga in I lyga (Litva), 1. CFL, 2. CFL, Prva omladinska (fscg.me)
+  preveri('fscg: regija fscg je fscg.me brez poddomene (državne lige in arhiv)',
+    ME.default.naslovRazporeda('fscg/meridianbet-1-cfl/9278739') === 'https://fscg.me/takmicenja/meridianbet-1-cfl/' &&
+    ME.default.naslovRazporeda('fscg/arhiva/8208775') === 'https://fscg.me/takmicenja/arhiva/?cid=8208775' &&
+    ME.naslovZapisnika('9278788', '/utakmice/a-b-9278788/', 'fscg/meridianbet-1-cfl/9278739') === 'https://fscg.me/utakmice/a-b-9278788/' &&
+    ME.razbijKodo('fscg/prva-omladinska-liga/9312757').tekmovanje === '9312757')
+  const cfl = beri('me-fscg-1-cfl.html')
+  const cflTekme = ME.tekmeLige('fscg/meridianbet-1-cfl/9278739', cfl)
+  const cflKrogi = ME.razcleniRazpored('fscg/meridianbet-1-cfl/9278739', cfl)
+  preveri('fscg: razpored 1. CFL 26/27 — klubi kot povezave /klubovi/, 19 krogov, 95 tekem, 10 klubov, 48 odigranih, ura brez pretvorbe',
+    cflTekme.length === 95 && cflKrogi.length === 19 && new Set(cflTekme.flatMap((x) => [x.domaci, x.gostje])).size === 10 &&
+    cflTekme.filter((x) => x.izid).length === 48 && C.sezonaTekem(cflTekme) === '2026/27' && cflKrogi[0].tekme[0].domaci === 'Petrovac' &&
+    cflKrogi[0].tekme[0].gostje === 'Bokelj sbbet' && cflKrogi[0].tekme[0].datum === '2026-08-01' && cflKrogi[0].tekme[0].ura === '20:00' &&
+    cflKrogi.flatMap((k) => k.tekme).every((x) => !x.kontumacija))
+  let cflDrug = null
+  try { ME.tekmeLige('fscg/meridianbet-1-cfl/8208775', cfl) } catch (e) { cflDrug = e.message }
+  preveri('fscg: 1. CFL — drug id (lanska sezona) ustavi uvoz', /kaže tekmovanje 9278739, ne 8208775/.test(cflDrug ?? ''))
+  const cz = C.vZapisnik(beri('me-fscg-tekma-9278788.html'))
+  const czn = C.nastopi(cz)
+  preveri('fscg: zapisnik 1. CFL — minuta kot besedilo, avtogol gostov šteje domačim (2:1), 990 minut, /igraci/ ni šifra',
+    cz.domaci.ime === 'OFK Mladost Lob.bet' && cz.gostje.ime === 'Otrant-Olympic' && cz.krog === 1 && cz.sezona === '2026/27' &&
+    cz.datum === '2026-08-02' && cz.goli.length === 3 && cz.goli.find((g) => g.avtogol)?.ime === 'Radenović Vasilije' &&
+    cz.goli.find((g) => g.avtogol).ekipaIdx === 1 && cz.goli.find((g) => g.ime === 'Čepić Arsenije')?.minuta === 55 &&
+    cz.domaci.postava.length === 11 && cz.gostje.postava.length === 11 && cz.menjave.length === 8 &&
+    minute(czn, 0) === 990 && minute(czn, 1) === 990 && czn.every((x) => x.regSt === null) && cz.opozorila.length === 0 &&
+    /href="\/igraci\//.test(beri('me-fscg-tekma-9278788.html')))
+  const al = beri('lt-ltfutbolas-varzybos-23198513.html')
+  const alTekme = LT.tekmeLige('23198513', al)
+  const alKrogi = LT.razcleniRazpored('23198513', al)
+  preveri('ltfutbolas: razpored A lyga (TOPLYGA) 2026 — 36 krogov, 144 tekem, 9 klubov, 128 z izidom, 14:15 vilensko → 13:15',
+    alTekme.length === 144 && alKrogi.length === 36 && new Set(alTekme.flatMap((x) => [x.domaci, x.gostje])).size === 9 &&
+    alTekme.filter((x) => x.izid).length === 128 && C.letoTekem(alTekme) === '2026' && alKrogi[0].tekme[0].domaci === 'FK Žalgiris' &&
+    alKrogi[0].tekme[0].datum === '2026-02-21' && alKrogi[0].tekme[0].ura === '13:15')
+  const az = C.vZapisnik(beri('lt-ltfutbolas-tekma-24325343.html'))
+  const azn = C.nastopi(az)
+  preveri('ltfutbolas: zapisnik A lyga — 4:0 z avtogolom, rdeči v 45. (945 minut), menjave, vse šifre igralcev',
+    az.domaci.ime === 'FK Žalgiris' && az.gostje.ime === 'FK Sūduva' && az.krog === 22 && az.rezultat.domaci === 4 &&
+    az.goli.length === 4 && az.goli.filter((g) => g.avtogol).length === 1 && az.rdeci.length === 1 && az.menjave.length === 10 &&
+    minute(azn, 0) === 990 && minute(azn, 1) === 945 && azn.find((x) => x.rdeci)?.minute === 45 &&
+    azn.every((x) => Number.isInteger(x.regSt)) && az.opozorila.length === 0)
+  const alZs = await LT.default.zapisniki('23198513', async (url) => (url.includes('/varzybos/') ? al : beri('lt-ltfutbolas-tekma-24325343.html')))
+  preveri('ltfutbolas: zapisniki() — datum in ura zapisnika v ljubljanskem času (14:15 → 13:15), sezona 2026 z razporeda',
+    alZs.length === 128 && alZs[0].z.ura === '13:15' && alZs[0].z.datum === '2026-10-10' && alZs[0].z.sezona === '2026' && alZs[0].id === 'lt23353006')
+  preveri('comet-auris: stran vzdrževanja ali napake (200) ne gre v predpomnilnik, prava stran gre',
+    LT.default.zaPredpomnilnik === C.zaPredpomnilnik && ME.default.zaPredpomnilnik === C.zaPredpomnilnik &&
+    C.zaPredpomnilnik(al) && C.zaPredpomnilnik(cfl) && C.zaPredpomnilnik(beri('me-fscg-tekma-9278788.html')) &&
+    C.zaPredpomnilnik(beri('me-fscg-tekma-9391712-ena-postava.html')) &&
+    !C.zaPredpomnilnik('<html><body><h1>Stranica je u održavanju</h1></body></html>') && !C.zaPredpomnilnik(''))
+  // Zavrnitev med branjem kontumacij (strani tekem 3:0) ne sme obveljati za motnjo.
+  const uvozRazporeda = readFileSync(new URL('./uvoz-razporeda.mjs', import.meta.url), 'utf8')
+  preveri('uvoz-razporeda: zavrnitev vira pri kontumacijah ustavi uvoz (izhod 4), ne preskoči',
+    /kontumacij ni bilo mogoče prebrati/.test(uvozRazporeda) &&
+    /catch \(e\) \{\s*(?:\/\/[^\n]*\n\s*)*if \(e\.zavrnitev\) throw e\s*console\.log\(`  kontumacij ni bilo/.test(uvozRazporeda))
 }
 
 // --- vir fsb (Srbija, Fudbalski savez Beograda) ---------------------------------

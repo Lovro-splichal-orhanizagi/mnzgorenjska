@@ -22,7 +22,7 @@
 // ujemajo — `zapisnikSvez`). Ob izzivu, CAPTCHI, 403 ali 429 se uvoz ustavi — ne obhajaj.
 import { vLjubljanskiCas } from './frf.mjs'
 import {
-  CometZavrnitev, beri, delVira, jeIzziv, kljucKluba, kratkoIme, letoTekem, nastopi, tabelaVsehTekem,
+  CometZavrnitev, beri, delVira, jeIzziv, zaPredpomnilnik, kljucKluba, kratkoIme, letoTekem, nastopi, tabelaVsehTekem,
   tekmeTabele, tekmovanjeStrani, vKroge,
 } from './comet-auris.mjs'
 
@@ -57,6 +57,7 @@ const skupno = delVira({
   naslovZapisnika,
   tekmeLige,
   sezonaLige: letoTekem,
+  vCas: vLjubljanskiCas,
 })
 export const sifraZapisnika = skupno.sifraZapisnika
 
@@ -72,6 +73,8 @@ const vir = {
   naslovRazporeda: naslovLige,
   naslovZapisnika: (_koda, id) => naslovZapisnika(id),
   jeIzziv,
+  // Stran vzdrževanja ali napake (200) ne gre v predpomnilnik — glej comet-auris.
+  zaPredpomnilnik,
   zavrnitev: (sporocilo, status = null) => new CometZavrnitev(`ltfutbolas: ${sporocilo} — uvoz ustavljen, ne obhajamo`, status),
 
   async razporedVseStrani(koda, prenesi) {

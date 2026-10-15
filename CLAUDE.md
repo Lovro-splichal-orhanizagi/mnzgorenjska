@@ -2830,8 +2830,8 @@ cene=true`.
 
 ### Litva in Črna gora — vira `ltfutbolas` in `fscg` (predloga COMET Auris)
 
-Obe spletišči izrišeta podatke COMET s strežnika v isti predlogi podjetja
-Auris kot lff.lv, zato imata skupen razčlenjevalnik
+Obe spletišči (in fscg.me z državnimi ligami) izrišeta podatke COMET s
+strežnika v isti predlogi podjetja Auris kot lff.lv, zato imata skupen razčlenjevalnik
 (`scripts/viri/comet-auris.mjs`) in vsak svoj tanek vir. Državi `LT`
 ("Lietuva") in `ME` ("Crna Gora") vpiše migracija lig (20261015163100);
 vmesnika v litovščini ali črnogorščini, kartic in pošte **še ni**, `LT` in
@@ -2843,12 +2843,13 @@ začnejo z `lt-` oziroma `me-`. Uvoz za ligo ne potrebuje ničesar več.
   COMET). Litva: datum `YYYY-MM-DD` in ura v celicah, klub kot povezava
   `/klubai/<slug>-<id>/?cid=<tekmovanje>` s `title`, izid v povezavi
   `/rungtynes/<slug>-<id>/` ("-" = neodigrana). Črna gora: `div.date`
-  "05.09.2026.", `div.time`, klub v `<span>` ob izidu, povezava
+  "05.09.2026.", `div.time`, klub v `<span>` ob izidu (regije) ali kot
+  povezava `/klubovi/<slug>-<id>/?cid=` (fscg.me), povezava
   `/utakmice/<slug>-<id>/` (sicer "-"). Izid brez povezave je kontumacija.
 - **Zapisnik** (`table.teams`): vrstice `firstteam` in `bench`, v vsaki
   igralec domačih, dres, prazno, dres, igralec gostov; prazno mesto je "-".
   "(G)" vratar (tudi rezervni), "(C)" kapetan. Dogodki `ul.events li.<vrsta>`
-  z minuto — Litva besedilo "46'", Črna gora `div.minute`: `goal`,
+  z minuto — Litva in fscg.me besedilo "46'", regije `div.minute`: `goal`,
   **`penalty` (gol z 11 m — razred ni `goal`)**, `own_goal` (pri strelčevi
   ekipi, šteje nasprotniku), `penalty_failed`, `yellow`, `second_yellow` (prvi
   rumeni je svoj dogodek → 1 rumeni + 1 rdeči), `red`, `substitutionIn`/
@@ -2862,27 +2863,41 @@ začnejo z `lt-` oziroma `me-`. Uvoz za ligo ne potrebuje ničesar več.
 - Ključ kluba ohrani krajevne znake; kratko ime brez FK/FC/FKS/FSK, **OFK
   ostane** (Sjever: "Gusinje" in "OFK Gusinje" sta dva kluba).
 - *Uskladi pozicije* z `vir = ltfutbolas` ali `fscg` (vratar po večini tekem).
+- **Predpomnilnik** (`zaPredpomnilnik`): shrani se le prava stran tekmovanja
+  (`table.fixtures`) ali tekme (`matchHeader`); stran vzdrževanja ali napake
+  s statusom 200 ne gre vanj in uvoz jo prebere znova.
+- **Zavrnitev** (403, 429, izziv) med branjem kontumacij v uvozu razporeda ni
+  več "nadaljujem brez njih", ampak `CometZavrnitev` in izhod 4.
 
 **Litva — `ltfutbolas`** (lietuvosfutbolas.lt, portal rezultatov LFF):
 
-- **Sezona je koledarsko leto** (april–oktober, `sezona_koledarska`, "2026"),
-  iz datumov razporeda. Ura je vilenska (EET) → ljubljanska −1 h.
+- **Sezona je koledarsko leto** (februar–november, `sezona_koledarska`, "2026"),
+  iz datumov razporeda. Ura je vilenska (EET) → ljubljanska −1 h, v razporedu
+  in v zapisniku (`vCas` v `delVira`).
 - **Šifra lige je id tekmovanja COMET** (`/varzybos/<id>/<slug>/`, slug je
   okras); vsaka sezona svoj. `/varzybos/megeju/<slug>/` kaže le tekočo
   sezono, zato beremo po id-ju in preverimo, da povezave klubov nosijo isti
   `?cid=` (drugače se uvoz ustavi).
 - Vsak igralec ima povezavo `/zaidejai/<slug>-<id>/` → `reg_st`.
-- **Arhiv**: izbirnika sezon ni in id-jev 2025 nismo našli; 2022: II lyga I
-  etapas `11644164`, 1–10 v. `13334048`, 11–18 v. `13339888`. Cene so zato
-  iz tekoče sezone.
+- **Arhiv**: izbirnika sezon ni. Id-je prejšnjih sezon da posnetek strani
+  `/varzybos/vyru/<liga>/` na web.archive.org (`?cid=`), stran
+  `/varzybos/<id>/lyga/` jih izriše: 2025 A lyga `20647154`, I lyga
+  `20673132`. Za II lyga 2025 posnetkov ni (2022: II lyga I etapas
+  `11644164`, 1–10 v. `13334048`, 11–18 v. `13339888`) — cene iz tekoče sezone.
+- A lyga se je 2026 preimenovala v **TOPLYGA** (9 klubov, 36 krogov); I lyga je
+  "I lyga remiama TOPsport". Naslov tekmovanja letnice nima, sezona pride z razporeda.
+- Vilniaus BFA ima v COMET dva kluba (#36093 v 2025, #1511 v 2026) z istim
+  imenom; ključ kluba je ime, zato je pri nas en klub (tako je prav).
 - KLFF in ŠAFF-PAFF III lyga nimata ločitve začetniki/klop; vilniausfutbolas.lt
   nima menjav; lff.lt ima prazne tabele postav (raziskava 15. 10. 2026).
 
-**Črna gora — `fscg`** (Treća liga, regijske poddomene centar, sjever, jug):
+**Črna gora — `fscg`** (državne lige na fscg.me, Treća liga na regijskih
+poddomenah centar, sjever, jug):
 
 - Sezona jesen–pomlad ("2026/27"), čas je ljubljanski.
 - **Šifra lige je `<regija>/<slug>/<id tekmovanja>`**
-  (`centar/seniorska-liga/9331975`). Stran `/takmicenja/<slug>/` kaže le
+  (`centar/seniorska-liga/9331975`); regija **`fscg`** je fscg.me sam
+  (`fscg/meridianbet-1-cfl/9278739`). Stran `/takmicenja/<slug>/` kaže le
   tekočo sezono; ko pokaže drug id (`data-genid`), se uvoz ustavi in šifro je
   treba popraviti.
 - **Arhiv: `<regija>/arhiva/<id>`** → `/takmicenja/arhiva/?cid=<id>` na
@@ -2893,6 +2908,14 @@ začnejo z `lt-` oziroma `me-`. Uvoz za ligo ne potrebuje ničesar več.
   web.archive.org (`data-genid`); neznan id stran vrne s 200, zato id presodi
   vsebina (genid, ime, datumi), ne status.
 - Igralci nimajo povezav na profil: identiteta je ime + klub (kot fss).
+  fscg.me da povezavo `/igraci/<slug>-<id>/` le nekaterim igralcem
+  (reprezentantom, kot lff.lv `/speletaji/`) — ni šifra, ker bi isti igralec
+  dobil dve vrstici; šifro beremo le z litovskega `/zaidejai/`.
+- **Prva omladinska liga** (U19, `prvi_fantasy_krog = 2`, `rok_pomak_ur = 2`):
+  po ligaškem delu se razdeli na plej-of in plej-aut, ki sta **svoji
+  tekmovanji** (2025/26: `8980717`, `8981167`; strani arhiva ju ne izrišeta v
+  obliki z razporedom). Uvažamo le ligaški del; ko stran pokaže drug id, se
+  uvoz ustavi. Druga omladinska liga (`9313718`, 12 klubov) ni vpisana.
 
 **Pravice (pregled 15. 10. 2026, ni pravni nasvet).** Nobeno spletišče nima
 robots.txt (`/robots.txt` preusmeri na naslovnico), izziva ni bilo. Pogojev
@@ -2920,6 +2943,36 @@ zadnje in najbolj zadetkovne; KAFF-MAFF 20):
 
 Vratar (G) je bil pri vseh postavah, litovski nastopi vsi s šifro.
 
+Preizkus državnih lig v živo (15. 10. 2026, brez pisanja v bazo, 3,5 s med
+zahtevki; LT po 30 tekem tekoče sezone — zadnje in najbolj zadetkovne — in po
+15 arhiva, ME **vsi** zapisniki tekoče sezone in po 15 arhiva):
+
+| liga | tekem / zapisnikov | goli = izid | postav po 11 | vratar | menjav (nastopov s klopi) | ekip brez menjav | 990 minut |
+|---|---|---|---|---|---|---|---|
+| A lyga 2026 (`23198513`) | 30 / 30 | 120 (30/30) | 60/60 | 60/60 | 268 (252) | 0 | 59/60 (1 rdeči) |
+| I lyga 2026 (`23198632`) | 30 / 30 | 138 (30/30) | 60/60 | 60/60 | 258 (253) | 0 | 56/60 (4 rdeči) |
+| A lyga 2025 (`20647154`) | 15 / 15 | 74 (15/15) | 30/30 | 30/30 | 138 (130) | 0 | 29/30 (1 rdeči) |
+| I lyga 2025 (`20673132`) | 15 / 15 | 82 (15/15) | 30/30 | 30/30 | 138 (134) | 0 | 26/30 (4 rdeči) |
+| 1. CFL 26/27 (`9278739`) | 48 / 48 | 103 (48/48) | 96/96 | 96/96 | 426 (408) | 0 | 90/96 (6 rdečih) |
+| 2. CFL 26/27 (`9279699`) | 54 / 54 | 145 (54/54) | 108/108 | 108/108 | 483 (471) | 0 | 100/108 (8 rdečih) |
+| Prva omladinska 26/27 (`9312757`) | 32 / 32 | 125 (32/32) | 64/64 | 64/64 | 353 (335) | 0 | 59/64 (5 rdečih) |
+| 1. CFL 2025/26 (`fscg/arhiva/8208775`) | 15 / 15 | 69 (15/15) | 30/30 | 30/30 | 141 (141) | 0 | 27/30 (3 rdeči) |
+| 2. CFL 2025/26 (`fscg/arhiva/8208777`) | 15 / 15 | 70 (15/15) | 30/30 | 30/30 | 126 (122) | 0 | 30/30 |
+| Prva omladinska 2025/26 (`fscg/arhiva/8231702`) | 15 / 15 | 94 (15/15) | 30/30 | 30/30 | 142 (140) | 0 | 29/30 (1 rdeči) |
+
+Litovski nastopi so vsi s šifro (928 + 918 + 468 + 468), črnogorski brez.
+Kontumacij v razporedih državnih lig ni. Edino opozorilo: rumeni brez minute
+(A lyga, 24325679). Arhivi: A lyga 2025 180 tekem (10 klubov), I lyga 2025
+240 (16), 1. in 2. CFL 2025/26 po 180 (10), Prva omladinska 2025/26 72 (9),
+vse z zapisnikom.
+
+**Trki imen** (15. 10. 2026, vse lige obeh držav, tekoče in arhivi, po
+ključu kluba in šifri kluba COMET): ni jih. Ponovljena imena so isti klub
+(napredovanje, izpad, mladinska ekipa kluba: Budva, Igalo, FK Internacional,
+OFK Titograd, TransINVEST …); izjema je le Vilniaus BFA z dvema šiframa COMET
+(glej zgoraj). "Akademija Berane" in "Berane", "Gusinje" in "OFK Gusinje" so
+različni ključi.
+
 Preizkus arhivov FSCG v živo (15. 10. 2026, **vsi** zapisniki, 3 s med
 zahtevki; tekme brez zapisnika so vse 3:0 / 0:3 brez postav — kontumacije,
 Sjever 2025/26 jih ima 25, ker so klubi spomladi odstopili):
@@ -2935,10 +2988,15 @@ Sjever 2025/26 jih ima 25, ker so klubi spomladi odstopili):
 Centar 2024/25 id-ja nismo našli (posnetek septembra 2024 še kaže 2023/24
 `6381521`).
 
-Vpisanih je 5 lig (migracija 20261015163100), **neaktivnih**:
+Vpisanih je 10 lig (migracija 20261015163100), **neaktivnih**:
 
 | liga | klubov | tekoča | arhiv | zveza |
 |---|---|---|---|---|
+| lt-a-lyga | 9 | `23198513` (2026) | `20647154` (2025) | `lff-lt` |
+| lt-1-lyga | 16 | `23198632` (2026) | `20673132` (2025) | `lff-lt` |
+| me-1-cfl | 10 | `fscg/meridianbet-1-cfl/9278739` (2026/27) | `fscg/arhiva/8208775` | `fscg` |
+| me-2-cfl | 10 | `fscg/druga-liga/9279699` | `fscg/arhiva/8208777` | `fscg` |
+| me-u19-1 | 10 | `fscg/prva-omladinska-liga/9312757` | `fscg/arhiva/8231702` (9, ligaški del) | `fscg` |
 | lt-2-lyga-a | 15 | `23383524` (2026) | — | `lff-lt` |
 | lt-2-lyga-b | 15 | `23384849` (2026) | — | `lff-lt` |
 | me-3-liga-centar | 13 | `centar/seniorska-liga/9331975` (2026/27) | `centar/arhiva/8303239` | `fscg-centar` |
@@ -2951,8 +3009,10 @@ bi imeli po 90 minut, rezerve nič). Jug ima le 7 klubov (spodnja meja).
 Litovska sezona 2026 je ob vpisu skoraj končana — vklop realno za 2027
 (nova šifra).
 
-Uvoz (ena za drugo): Litva brez arhiva (`gh workflow run uvoz-lige.yml -f
-liga=lt-2-lyga-a -f cene=true`), Črna gora z arhivom (`-f
+Uvoz (ena za drugo): A in I lyga z arhivom (`gh workflow run uvoz-lige.yml
+-f liga=lt-a-lyga -f arhiv=20647154 -f cene=true`), II lyga brez (`-f
+liga=lt-2-lyga-a -f cene=true`), Črna gora z arhivom (`-f liga=me-1-cfl -f
+arhiv=fscg/arhiva/8208775 -f cene=true`, `-f
 liga=me-3-liga-sjever -f arhiv=sjever/arhiva/8327709,sjever/arhiva/7390107 -f
 cene=true`). Arhiv ~130 zapisnikov po 3 s je ~7 minut.
 
@@ -3046,8 +3106,8 @@ dobi ceno iz tamkajšnje: percentil, prebran iz cene, vsaka raven višje zapre
 (`scripts/visja-liga.mjs`, `ovrednoti-igralce` izpiše seznam "Cena iz višje
 lige"). Raven lige je pravilo po šifri in imenu v `ravenLige`, ne stolpec:
 HR (državne lige, županijske po imenu le znotraj iste zveze), SK, HU, ES, EE,
-LV po uradni piramidi, AT le državne nad deželnimi; mladinske se primerjajo le
-z mladinskimi. Brez pravila (SI, RS, RO, PL, CZ, MK) in brez šifer osebe ostane
+LV, LT po uradni piramidi, AT le državne nad deželnimi; mladinske se primerjajo le
+z mladinskimi. Brez pravila (SI, RS, RO, PL, CZ, MK, ME) in brez šifer osebe ostane
 4.5. Ob novi ligi z novim poimenovanjem ravni preveri `ravenLige` (smoke).
 Na vklopljeni ligi pride do nove cene le **tedensko prevrednotenje** (največ
 1.0 na teden, sidro potuje z njo) — tudi pri igralcu, ki je že na borzi,

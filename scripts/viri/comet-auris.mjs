@@ -105,7 +105,7 @@ const izidCelice = (t, kateri) => {
 
 /** Ime kluba v vrstici: [domači, gostje]. */
 function imenaVrstice(t) {
-  const povezave = [...t.matchAll(/<a href="\/klubai\/[^"]*"(?: title="([^"]*)")?>([\s\S]*?)<\/a>/g)].map((m) =>
+  const povezave = [...t.matchAll(/<a href="\/(?:klubai|klubovi)\/[^"]*"(?: title="([^"]*)")?>([\s\S]*?)<\/a>/g)].map((m) =>
     razpakiraj(m[1] ?? besedilo(m[2])).trim(),
   )
   if (povezave.length === 2) return povezave
@@ -202,7 +202,10 @@ function igralecCelice(celica, st, zacetnik) {
     minuta: minuta(besedilo(m[2])),
   }))
   const prvi = (v) => dogodki.find((d) => d.vrsta === v)?.minuta ?? null
-  const profil = brezDogodkov.match(/href="\/(?:zaidejai|igraci)\/[^"]*-(\d+)\/"/)?.[1]
+  // Šifra osebe le z litovskega profila (`/zaidejai/`, ima ga vsak igralec).
+  // fscg.me povezavo `/igraci/` da le nekaterim (reprezentantom, kot lff.lv
+  // `/speletaji/`) — ta ni identiteta, ker bi isti igralec dobil dve vrstici.
+  const profil = brezDogodkov.match(/href="\/zaidejai\/[^"]*-(\d+)\/"/)?.[1]
   return {
     st: /^\d+$/.test(String(st).trim()) ? Number(String(st).trim()) : null,
     ime: vPriimekIme(ime),
@@ -400,6 +403,14 @@ export async function zapisnikSvez(beriStran, razcleni, datum) {
   return razcleni(await beriStran(true)) ?? z
 }
 
+/**
+ * Sme stran v predpomnilnik? Le prava stran tekmovanja (tabela tekem) ali
+ * tekme (glava `matchHeader`). Stran vzdrževanja ali napake s statusom 200
+ * ne sme obveljati za zapisnik (kot mlsz "Too many connections"): uvoz je ne
+ * shrani in shranjene ne bere, ampak stran prebere znova.
+ */
+export const zaPredpomnilnik = (html) => /<table class="fixtures |<div class="matchHeader">/.test(String(html ?? ''))
+
 /** Prenos, ki se ob izzivu ali zavrnitvi ustavi (`ime` je ime vira za sporočilo). */
 export async function beri(ime, prenesi, url, datoteka, sveze) {
   let html
@@ -418,9 +429,10 @@ export async function beri(ime, prenesi, url, datoteka, sveze) {
  * Skupni del vira: `zapisniki` in `kontumacije` za dano spletišče.
  * `tekmeLige(koda, html)` vrne tekme tabele (in preveri tekmovanje),
  * `sezonaLige(tekme)` sezono, `naslovLige(koda)` stran tekmovanja,
- * `naslovZapisnika(id, pot, koda)` stran tekme, `predpona` šifro zapisnika v bazi.
+ * `naslovZapisnika(id, pot, koda)` stran tekme, `predpona` šifro zapisnika v bazi,
+ * `vCas(datum, ura)` krajevni čas spletišča v ljubljanskega (kot v `vKroge`).
  */
-export function delVira({ ime, predpona, naslovLige, naslovZapisnika, tekmeLige, sezonaLige }) {
+export function delVira({ ime, predpona, naslovLige, naslovZapisnika, tekmeLige, sezonaLige, vCas = (datum, ura) => ({ datum, ura }) }) {
   const imeLige = (koda) => `liga-${String(koda).replace(/[/:]/g, '-')}.html`
   const imeZapisnika = (id) => `tekma-${id}.html`
   const sifraZapisnika = (id) => `${predpona}${String(id).replace(new RegExp(`^${predpona}`), '')}`
@@ -446,7 +458,10 @@ export function delVira({ ime, predpona, naslovLige, naslovZapisnika, tekmeLige,
         z.gostje.ime = t.gostje
         z.krog = t.krog
         z.sezona = sezona ?? z.sezona
-        z.datum ??= t.datum
+        // Datum in ura zapisnika sta krajevna (Vilna: uro več) — v ljubljanski čas.
+        const cas = vCas(z.datum ?? t.datum, z.ura ?? t.ura)
+        z.datum = cas.datum
+        z.ura = cas.ura
         if (z.rezultat.domaci !== t.izid.domaci || z.rezultat.gostje !== t.izid.gostje)
           z.opozorila.push(`izid zapisnika ${z.rezultat.domaci}:${z.rezultat.gostje} ni izid razporeda ${t.izid.domaci}:${t.izid.gostje}`)
         z.zapisnikId = sifraZapisnika(t.id)
