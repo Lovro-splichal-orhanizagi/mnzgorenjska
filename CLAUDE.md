@@ -2833,7 +2833,7 @@ cene=true`.
 Vir `aft` (`scripts/viri/aft.mjs`) bere **aft.com.ua** (Асоціація футболу
 Тернопільщини): oblastno prvenstvo, Вища ліга (raven 5, pod AAFU) in Перша
 ліга (raven 6). Država `UA` ("Україна") in zveza `aft` sta v migraciji
-20261015120300 (država z `on conflict do nothing`, ker jo vpiše tudi vir
+20261015161300 (država z `on conflict do nothing`, ker jo vpiše tudi vir
 `pfl-ua`). Ukrajinskega vmesnika, kartice in pošte še ni, `UA` ni v matriki
 nočnega uvoza — oboje pred vklopom. Šifra lige se začne z `ua-`.
 
