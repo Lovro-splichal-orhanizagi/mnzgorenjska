@@ -946,6 +946,11 @@ Strani izriše JavaScript, podatki pa so v strani kot JSON
   zamenjanim domačinom) — izpustimo jo. **Kontumacija** ima izid in namesto
   zapisnika povezavo `strafverifiziert` (`#`); v arhivih 14 lig pet takih.
   Kot rezerva šteje še 3:0 s prazno postavo po tednu dni.
+  oefb.at kdaj za minuto vrne stran razporeda s statusom 200, a brez JSON-a
+  razporeda (`appPreloads['NO_DATA']`): nočni uvoz je javljal "Razporeda ni
+  bilo mogoče razbrati", uvoz zapisnikov pa tiho 0 tekem (13.–15. 10. 2026).
+  `stranRazporeda` jo prebere znova po 30 s in 2 min, nato uvoz pade z
+  jasno napako; taka stran ne gre v predpomnilnik (`zaPredpomnilnik`).
 - **Zapisnik** `/bewerbe/Spiel/Spielbericht/<id>/`: začetniki v skupinah
   `tor`/`abwehr`/`mittelfeld`/`sturm` ali vsi v `weitere`, klop v `ersatz`,
   šifra igralca iz `/Profile/Spieler/<id>` → `reg_st`. Dogodki: `goal`
@@ -3020,7 +3025,15 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
   v uvozni skripti naj gre skozenj, ne mimo z golim `fetch`. Vir, katerega
   strežnik ob preobremenitvi vrne 200 z obvestilom namesto strani, naj ima
   `zaPredpomnilnik(besedilo, datoteka)` (uvoz zapisnikov in razporeda tako
-  stran ne shranita in shranjene ne bereta; zdaj le mlsz)
+  stran ne shranita in shranjene ne bereta; mlsz in razpored oefb)
+- Baza: odjemalec Supabase v nočni verigi (uvoz razporeda, delegiranja,
+  zapisnikov, registracij, lažni vratarji, ugibanje pozicij) ima
+  `global.fetch: fetchZaBazo()` (`scripts/prenos.mjs`): "fetch failed",
+  Cloudflare 520 in PostgREST 503 so ligo podrli zaradi ene tekme (AT,
+  11.–14. 10. 2026). Ponovi (2, 5, 15, 30 s) branje, PATCH/PUT/DELETE, upsert
+  in `zamenjaj_nastope_tekme`; navaden INSERT in druge RPC le, ko zahtevek
+  baze zagotovo ni dosegel (ECONNREFUSED, DNS, Cloudflare 521–523). Nov
+  idempotenten RPC, ki ga uvoz kliče, dodaj v `PONOVLJIVI_RPC`
 - Nastope tekme (in spremenjene gole) uvoz zamenja s
   `zamenjaj_nastope_tekme(tekma, nastopi, goli)` v eni transakciji (servisna,
   migracija 20261013181100). Prej sta bila izbris in vstavljanje dva zahtevka
