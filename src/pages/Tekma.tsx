@@ -120,7 +120,7 @@ export default function Tekma() {
           .order('shirt_number', { nullsFirst: false }),
         supabase
           .from('appearance_points')
-          .select('appearance_id, points, assists, prejeti_na_igriscu, cista_mreza')
+          .select('appearance_id, points, assists, prejeti_na_igriscu, cista_mreza, zmaga, pravila')
           .eq('match_id', tekmaId),
         supabase
           .from('goals')
@@ -136,7 +136,7 @@ export default function Tekma() {
 
       const tocke: Record<
         string,
-        { points?: number | null; assists?: number | null; prejeti_na_igriscu?: number | null; cista_mreza?: boolean | null }
+        { points?: number | null; assists?: number | null; prejeti_na_igriscu?: number | null; cista_mreza?: boolean | null; zmaga?: boolean | null; pravila?: number | null }
       > =
         Object.fromEntries(
           (tockeNastopov ?? []).map((x: any) => [String(x.appearance_id), x]),
@@ -152,6 +152,8 @@ export default function Tekma() {
           // tocke racuna pogled z goli, prejetimi med igranjem
           goals_conceded: tocke[String(n.id)]?.prejeti_na_igriscu ?? n.goals_conceded,
           clean_sheet: tocke[String(n.id)]?.cista_mreza ?? n.clean_sheet,
+          zmaga: tocke[String(n.id)]?.zmaga ?? null,
+          pravila: tocke[String(n.id)]?.pravila ?? null,
         })) as NastopTekme[],
       )
       setGoli(((g ?? []) as unknown) as Gol[])

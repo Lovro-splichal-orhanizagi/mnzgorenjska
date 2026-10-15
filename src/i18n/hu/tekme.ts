@@ -215,4 +215,23 @@ export const tekme: NonNullable<Prevod['tekme']> = {
       vodi: 'Vezet: {pozicija}, súly: {utez} / {prag}',
     },
   },
+  // Razlaga točk in cene na mestu (components/Razlaga.tsx).
+  razlaga: {
+    zakaj: 'Miért {tocke}? A pontok bontása',
+    zapri: 'Bezárás',
+    ostalo: 'Egyéb',
+    brezPozicije: 'A poszt még nincs meghatározva, ezért a gól egyelőre nem ér pontot. Amikor a közösség megerősíti a posztot, a pontok újraszámolódnak.',
+    pravila1: 'Ez a forduló a régebbi szabályok szerint pontoz: kapott gól nélküli kapus +4, győzelemért nincs pont.',
+    asistence: 'A gólpasszokat a közösség szavazással erősíti meg; a meg nem erősített gólpassz még nem ér pontot.',
+    zadnjiKrog: 'Utolsó meccs: {krog}. forduló',
+    cena: {
+      zakaj: 'Miért ennyi az ár?',
+      zdaj: 'Jelenlegi ár',
+      izhodisce: 'Kezdőár',
+      izhodisceOpis: 'A kezdőár az előző idény perceiből és pontjaiból számolódik, a liga többi játékosához mérve.',
+      privzeta: 'Aki az előző idényben {minut} percnél kevesebbet játszott, {cena} áron indul; kivéve, ha magasabb ligában játszott; akkor az ottani ár alapján kap árat.',
+      borza: 'Minden forduló után változik az ár: +{korak} minden 2 feletti két pontért (fordulónként legfeljebb +{najvec}), −{korak} gyenge forduló vagy gyenge forma után, és −{korak}, ha a játékos sorozatban a második fordulóban sem játszik, pedig a klubja igen.',
+      razpon: 'Az ár mindig {od} és {do} között van.',
+    },
+  },
 }
