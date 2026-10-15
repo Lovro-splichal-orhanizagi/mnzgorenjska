@@ -2758,7 +2758,7 @@ razporeda), izhod 4. Ne obhajaj.
   goli ne ujemajo z izidom (`zapisnikSvez`); goli mimo izida so prvih 7 dni
   `nepopoln` (brez `imported_at`, bere se znova).
 
-Vpisani ligi (migracija 20261015161100, **neaktivni**), zveza `ncefl`:
+Vpisani ligi (migracija 20261015230300, **neaktivni**), zveza `ncefl`:
 
 | liga | klubov | tekoča 2026/27 | arhiv 2025/26 |
 |---|---|---|---|
