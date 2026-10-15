@@ -85,7 +85,7 @@ export class NsfbihZavrnitev extends Error {
     this.zavrnitev = true
   }
 }
-export const jeZavrnitev = (status) => status === 403 || status === 429
+export const jeZavrnitev = (status) => status === 401 || status === 403 || status === 429
 export const jeIzziv = (html) =>
   /<title>\s*(Just a moment|Attention Required)|cf_chl_opt|cf-turnstile|g-recaptcha|hcaptcha|captcha/i.test(String(html ?? ''))
 
@@ -274,6 +274,12 @@ export function glavaTekme(html) {
   }
 }
 
+/** Je stran tekme (glava z obema kluboma in krogom)? Stran z napako ali vzdrževanjem ni. */
+export const jeStranTekme = (html) => {
+  const g = glavaTekme(html)
+  return !!(g.domaci && g.gostje && g.krog)
+}
+
 /**
  * Zapisnik v obliko, ki jo dajo drugi viri. Null, če tekma nima izida, je
  * izid za zeleno mizo (kontumacija) ali kateri od ekip manjka postava
@@ -382,6 +388,12 @@ async function beri(prenesi, url, ime, sveze) {
   return html
 }
 
+/** Stran tekme; napaka ali vzdrževanje (ni glave tekme) se prebere še enkrat sveže. */
+async function stranTekme(prenesi, url, ime, sveze) {
+  const html = await beri(prenesi, url, ime, sveze)
+  return !jeStranTekme(html) && !sveze ? beri(prenesi, url, ime, true) : html
+}
+
 const vir = {
   ime: 'nsfbih',
   polnoIme: 'Nogometni savez Federacije BiH (nsfbih.ba)',
@@ -395,6 +407,10 @@ const vir = {
   naslovZapisnika: (koda, id) => naslovTekme(razberiKodo(koda).slug, id),
   jeIzziv,
   zavrnitev: (sporocilo, status = null) => new NsfbihZavrnitev(`nsfbih: ${sporocilo} — uvoz ustavljen, ne obhajamo`, status),
+  // V predpomnilnik gre le prava stran (liga ali tekma), nikoli stran z
+  // napako ali vzdrževanjem, ki bi jo strežnik vrnil s 200.
+  zaPredpomnilnik: (html, datoteka = '') =>
+    /^nsfbih-tekma-/.test(datoteka) ? jeStranTekme(html) : /^nsfbih-liga-/.test(datoteka) ? jeStranLige(html) : jeStranLige(html) || jeStranTekme(html),
 
   async razporedVseStrani(koda, prenesi) {
     return razcleniRazpored(koda, await beri(prenesi, naslovLige(koda), imeLige(koda), true))
@@ -410,7 +426,7 @@ const vir = {
       const star = starostDni(t.datum)
       // Zapisnik zadnjih dni se lahko še popravlja; brez postav ga 45 dni beremo znova.
       const sveze = star <= 3
-      let z = vZapisnik(await beri(prenesi, url, imeTekme(t.id), sveze), { id, url })
+      let z = vZapisnik(await stranTekme(prenesi, url, imeTekme(t.id), sveze), { id, url })
       if (!z && !sveze && star <= 45) z = vZapisnik(await beri(prenesi, url, imeTekme(t.id), true), { id, url })
       if (!z) continue
       // Ime kluba in krog s strani lige, da se tekma ujame z vrstico razporeda.

@@ -32,6 +32,7 @@ import ffm from './ffm.mjs'
 import fcf from './fcf.mjs'
 import fas from './fas.mjs'
 import nsfbih from './nsfbih.mjs'
+import nfsbih from './nfsbih.mjs'
 
 const VIRI = {
   mnzg,
@@ -86,6 +87,9 @@ const VIRI = {
   // Bosna in Hercegovina: NS FBiH prek nsfbih.ba (COMET, Prva in Druga liga
   // FBiH), brez šifer igralcev (ime + klub), vratar je prvi začetnik (namig).
   nsfbih,
+  // Bosna in Hercegovina, državna raven: NFSBiH prek nfsbih.ba (WWIN liga BiH;
+  // isti COMET, druga stran), šifra igralca iz povezave, vratar "(GK)".
+  nfsbih,
 }
 
 /**

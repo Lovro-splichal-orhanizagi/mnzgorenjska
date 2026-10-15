@@ -112,8 +112,8 @@ async function prenesi(url, ime) {
     if (vir.zaPredpomnilnik?.(html, ime) ?? true) writeFileSync(pot, html)
     return html
   } catch (e) {
-    // Zavrnitve vira (jalgpall: 403, 429, izziv) ne obidemo s shranjeno stranjo.
-    if (e.zavrnitev || (vir.zavrnitev && [403, 429].includes(e.status))) throw vir.zavrnitev(e.message, e.status)
+    // Zavrnitve vira (jalgpall: 401, 403, 429, izziv) ne obidemo s shranjeno stranjo.
+    if (e.zavrnitev || (vir.zavrnitev && [401, 403, 429].includes(e.status))) throw vir.zavrnitev(e.message, e.status)
     if (!existsSync(pot)) throw e
     console.log(`  vir ni dosegljiv (${e.message}) — uporabim zadnji shranjeni razpored`)
     return readFileSync(pot, 'utf8')
