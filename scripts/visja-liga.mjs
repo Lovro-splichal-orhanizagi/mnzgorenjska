@@ -119,6 +119,16 @@ export function ravenLige({ slug, name, zveza }) {
     return null
   }
 
+  // Islandija (vir ksi): Besta deild, Lengjudeild, 2.–5. deild; Utandeild je
+  // zunaj piramide (brez ravni).
+  if (slug.startsWith('is-')) {
+    if (mladinska) return null
+    const r = { 'is-besta-deild': 1, 'is-lengjudeild': 2 }[slug]
+    if (r) return abs(r)
+    if ((m = slug.match(/^is-(\d)-deild/))) return abs(1 + Number(m[1]))
+    return null
+  }
+
   if (slug.startsWith('lv-')) {
     if (mladinska) return null
     if (slug === 'lv-virsliga') return abs(1)

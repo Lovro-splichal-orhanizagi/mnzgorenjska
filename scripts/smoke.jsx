@@ -5265,6 +5265,146 @@ preveri(
     L.kratkoImeLv('FK Tukums 2000/TSS') === 'Tukums 2000/TSS')
 }
 
+// --- vir ksi (Islandija, ksi.is) ---------------------------------------------------
+{
+  const K = await import('./viri/ksi.mjs')
+  const { default: viri } = await import('./viri/index.mjs')
+  const { ravenLige, koliko } = await import('./visja-liga.mjs')
+  const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  preveri('ksi: vir je vpisan, 3 s, User-Agent SLFF, država IS', viri.ksi === K.default && K.default.drzava === 'IS' &&
+    K.default.imaRegistracije === false && K.default.premorMs >= 3000 &&
+    K.default.glave['User-Agent'] === 'SLFF fantasy (https://slff.eu)')
+  preveri('ksi: šifra (faze s +) in naslovi', K.razbijKodo('7025548').join() === '7025548' &&
+    K.razbijKodo('7025510+7025527+7025532').length === 3 &&
+    K.default.naslovRazporeda('7025510+7025527') === 'https://www.ksi.is/oll-mot/mot?id=7025510&banner-tab=matches-and-results&toggle=rounds' &&
+    K.naslovKroga('7025548', 5) === 'https://www.ksi.is/oll-mot/mot?id=7025548&banner-tab=matches-and-results&toggle=rounds&round=5' &&
+    K.default.naslovZapisnika(null, 'is7053326') === 'https://www.ksi.is/leikir-og-urslit/felagslid/leikur?id=7053326&banner-tab=report' &&
+    K.sifraZapisnika('7053326') === 'is7053326' && K.sifraZapisnika('is7053326') === 'is7053326')
+  let slabaSifra = null
+  try { K.razbijKodo('2. deild') } catch (e) { slabaSifra = e.message }
+  preveri('ksi: šifra brez id-ja ustavi uvoz', /id tekmovanja/.test(slabaSifra ?? ''))
+  preveri('ksi: islandski čas (UTC) → ljubljanski: poleti +2, pozimi +1, čez polnoč', K.vLjubljanskiCas('2026-08-27', '18:00').ura === '20:00' &&
+    K.vLjubljanskiCas('2026-11-07', '14:00').ura === '15:00' && K.vLjubljanskiCas('2026-03-28', '23:30').datum === '2026-03-29' &&
+    K.vLjubljanskiCas('2026-03-29', '01:30').ura === '03:30' && K.vLjubljanskiCas('2026-03-28', '23:30').ura === '00:30' &&
+    K.datumUra('Lau 12. september  14:00', '2026').ura === '16:00' && K.datumUra('Lau 12. september 14:00', '2026').datum === '2026-09-12' &&
+    K.datumUra('Fim 27. ágúst 2026  18:00').datum === '2026-08-27' && K.datumUra('Sun 3. maí', '2026').ura === null &&
+    K.datumUra('x', '2026').datum === null)
+  preveri('ksi: minuta in ključ kluba', K.minuta('45´') === 45 && K.minuta('90+4´') === 90 && K.minuta('45+2´') === 45 &&
+    K.kljucKlubaIs('Dalvík/Reynir') === 'dalvík reynir' && K.kljucKlubaIs('Víkingur Ó.') === 'víkingur ó' &&
+    K.kljucKlubaIs('Þróttur V.') !== K.kljucKlubaIs('Þróttur R.') && K.kratkoImeIs('Kormákur/Hvöt') === 'Kormákur/Hvöt' &&
+    K.imeKluba('KFA Fullorðnir Karlar') === 'KFA' && K.imeKluba('Höttur/Huginn Fullorðnir Karlar') === 'Höttur/Huginn' && K.imeKluba('KFA') === 'KFA')
+  preveri('ksi: navadna stran ni izziv, izziv je; stran napake ne gre v predpomnilnik',
+    !K.jeIzziv(beri('is-ksi-leikur-7053326.html')) && K.jeIzziv('<title>Just a moment...</title>') &&
+    K.zaPredpomnilnik(beri('is-ksi-leikur-7053326.html')) && K.zaPredpomnilnik(beri('is-ksi-mot-7025548-k22.html')) &&
+    !K.zaPredpomnilnik('<!doctype html><title>KSÍ</title><h1>500</h1>'))
+  preveri('ksi: raven — Besta deild nad Lengjudeild nad 2.–5. deild, Utandeild brez ravni',
+    koliko(ravenLige({ slug: 'is-besta-deild' }), ravenLige({ slug: 'is-lengjudeild' })) === 1 &&
+    koliko(ravenLige({ slug: 'is-lengjudeild' }), ravenLige({ slug: 'is-2-deild' })) === 1 &&
+    koliko(ravenLige({ slug: 'is-2-deild' }), ravenLige({ slug: 'is-5-deild-a' })) === 3 &&
+    ravenLige({ slug: 'is-utandeild' }) === null && koliko(ravenLige({ slug: 'is-besta-deild' }), ravenLige({ slug: 'lv-virsliga' })) === 0)
+
+  const krog22 = beri('is-ksi-mot-7025548-k22.html')
+  const izbrano = K.izbranoTekmovanje(krog22)
+  const t = K.tekmeStrani(krog22, izbrano.leto)
+  preveri('ksi: stran kroga — 2. deild 2026, 22 krogov, izbran 22., 6 tekem z izidom, uro in šiframi klubov',
+    izbrano.id === '7025548' && izbrano.leto === '2026' && izbrano.ime === '2. deild karla 2026' &&
+    K.krogiStrani(krog22).vsi.length === 22 && K.krogiStrani(krog22).izbran === 22 && t.length === 6 &&
+    t[0].id === '7053326' && t[0].domaci === 'Þróttur V.' && t[0].gostje === 'Magni' && t[0].domaciId === '5172' &&
+    t[0].izid.domaci === 2 && t[0].izid.gostje === 1 && t[0].datum === '2026-09-12' && t[0].ura === '16:00' && t.every((x) => x.izid))
+
+  // Mock vira: vsak krog je kopija 22. kroga z drugim izbranim krogom.
+  const zKrogom = (n) => krog22.replace(/(link-dropdown-trigger[^>]*>\s*<span[^>]*>\s*Umferð )22/, `$1${n}`)
+  const zapisniki = { '7053326': 'is-ksi-leikur-7053326.html' }
+  let padel = false
+  const prenesi = async (url) => {
+    const k = url.match(/[?&]round=(\d+)/)?.[1]
+    if (url.includes('/oll-mot/')) return k ? zKrogom(Number(k)) : krog22
+    const id = url.match(/leikur\?id=(\d+)/)[1]
+    if (id === '7053327' && !padel) { padel = true; const e = new Error('HTTP 500'); e.status = 500; throw e }
+    return beri(zapisniki[id] ?? 'is-ksi-leikur-7053326.html')
+  }
+  const krogi = await K.default.razporedVseStrani('7025548', prenesi)
+  preveri('ksi: razpored — 22 krogov po 6 tekem, odigrane, ura v ljubljanskem času', krogi.length === 22 &&
+    krogi.every((k) => k.tekme.length === 6 && k.tekme.every((x) => x.odigrana && x.ura === '16:00')) && krogi[3].stevilka === 4)
+  const zs = await K.default.zapisniki('7025548', prenesi)
+  preveri('ksi: zapisniki() — šifra is<id>, ime, krog in sezona z razporeda, 500 ene tekme jo izpusti', zs.length === 131 &&
+    zs.every((x) => /^is\d+$/.test(x.id) && x.z.zapisnikId === x.id) && zs[0].z.krog === 1 && zs[0].z.sezona === '2026' &&
+    zs[0].z.domaci.ime === 'Þróttur V.' && zs.some((x) => x.z.opozorila.some((o) => /ni izid razporeda/.test(o))))
+  let preveč = null
+  try {
+    await K.default.zapisniki('7025548', async (url) => {
+      if (url.includes('/oll-mot/')) return prenesi(url)
+      const e = new Error('HTTP 500'); e.status = 500; throw e
+    })
+  } catch (e) { preveč = e.message }
+  preveri('ksi: veliko nedosegljivih zapisnikov ustavi uvoz', /zapisnikov ni dosegljivih/.test(preveč ?? ''))
+  let drugo = null
+  try { await K.default.razporedVseStrani('7025551', prenesi) } catch (e) { drugo = e.message }
+  preveri('ksi: stran z drugim tekmovanjem (neznan id) ustavi uvoz', /kaže tekmovanje 7025548, ne 7025551/.test(drugo ?? ''))
+  let zavrnjen = null
+  try { await K.default.razporedVseStrani('7025548', async () => { const e = new Error('HTTP 403'); e.status = 403; throw e }) } catch (e) { zavrnjen = e }
+  let neprijavljen = null
+  try { await K.default.zapisniki('7025548', async () => { const e = new Error('HTTP 401'); e.status = 401; throw e }) } catch (e) { neprijavljen = e }
+  let izziv = null
+  try { await K.default.zapisniki('7025548', async () => '<title>Just a moment...</title>') } catch (e) { izziv = e }
+  preveri('ksi: 401, 403 in izziv vržejo KsiZavrnitev (uvoz izhod 4)', zavrnjen instanceof K.KsiZavrnitev && zavrnjen.status === 403 &&
+    neprijavljen instanceof K.KsiZavrnitev && neprijavljen.status === 401 && izziv instanceof K.KsiZavrnitev &&
+    K.default.zavrnitev('x', 429).zavrnitev === true)
+
+  const z = K.vZapisnik(beri('is-ksi-leikur-7053326.html'), { id: '7053326' })
+  const n = K.nastopi(z)
+  const minute = (nn, i) => nn.filter((x) => x.ekipaIdx === i).reduce((a, x) => a + x.minute, 0)
+  preveri('ksi: zapisnik — 11 + 11, klop, goli = izid, vratar (M) in kapetan (F), šifre, 990 minut, brez opozoril',
+    z.domaci.ime === 'Þróttur V.' && z.gostje.ime === 'Magni' && z.rezultat.domaci === 2 && z.rezultat.gostje === 1 &&
+    z.datum === '2026-09-12' && z.ura === '16:00' && z.krog === 22 && z.sezona === '2026' &&
+    z.domaci.postava.length === 11 && z.gostje.postava.length === 11 && z.domaci.rezerve.length === 7 && z.gostje.rezerve.length === 7 &&
+    z.domaci.postava[0].ime === 'Blængsson Jökull' && z.domaci.postava[0].vratar && z.domaci.postava[0].kapetan &&
+    z.domaci.postava[0].regSt === 34623 && z.domaci.postava[0].pozicija === 'GK' &&
+    [z.domaci, z.gostje].every((e) => e.postava.filter((i) => i.vratar).length === 1) &&
+    z.goli.length === 3 && minute(n, 0) === 990 && minute(n, 1) === 990 && z.opozorila.length === 0)
+  const valur = n.find((x) => x.ime === 'Hákonarson Valur Þór')
+  preveri('ksi: menjave z minuto — rezerva od vstopa (62.), z golom; rumeni', valur && !valur.zacetnik && valur.minute === 28 &&
+    valur.goli === 1 && z.menjave.length === 20 && z.rumeni.length === 3 && n.every((x) => x.regSt))
+  const ag = K.vZapisnik(beri('is-ksi-leikur-7056056.html'))
+  preveri('ksi: avtogol "(sjálfsmark)" je pri strelčevi ekipi in šteje nasprotniku', ag.goli.filter((g) => g.avtogol).length === 1 &&
+    ag.goli.find((g) => g.avtogol).ekipaIdx === 1 && ag.goli.find((g) => g.avtogol).ime === 'Ólason Einar Sæþór' &&
+    ag.rezultat.domaci === 5 && ag.opozorila.length === 0 && ag.datum === '2026-08-27' && ag.ura === '20:00')
+  const rk = K.vZapisnik(beri('is-ksi-leikur-7053203.html'))
+  const vratarRdec = K.nastopi(rk).find((x) => x.rdeci)
+  preveri('ksi: več golov v eni vrstici, 11 m "(vítaspyrna)", rdeči vratarju (45.) — 945 minut', rk.goli.length === 6 &&
+    rk.goli.filter((g) => g.ime === 'Ómarsson Geir Sigurbjörn').length === 2 && rk.goli.filter((g) => g.enajstmetrovka).length === 1 &&
+    vratarRdec?.vratar && vratarRdec.minute === 45 && minute(K.nastopi(rk), 0) === 945 && rk.opozorila.length === 0)
+  const dva = K.vZapisnik(beri('is-ksi-leikur-7053201.html'))
+  preveri('ksi: dva gola istega igralca in avtogol v 90. minuti, 3:3', dva.goli.length === 6 &&
+    dva.goli.filter((g) => g.ime === 'Hmaidi Naim Aaras EL').length === 2 && dva.goli.filter((g) => g.avtogol).length === 1 && dva.opozorila.length === 0)
+  const po = K.vZapisnik(beri('is-ksi-leikur-7053294.html'))
+  const poN = K.nastopi(po)
+  preveri('ksi: rdeči "0´" (po tekmi) ne skrajša minut', po.rdeci.length === 3 && minute(poN, 0) === 990 && minute(poN, 1) === 990 &&
+    poN.find((x) => x.ime === 'Gröndal Rikharður Smári')?.minute === 90 && po.opozorila.length === 0)
+  preveri('ksi: zf faze — Efri in Neðri hluti za osnovnim delom (23.–27. krog)', (() => {
+    const f = (krogov, klubi, leto = '2026') => ({ leto, tekme: Array.from({ length: krogov }, (_, i) => ({ krog: i + 1, domaciId: klubi[0], gostjeId: klubi[1] })) })
+    const { tekme } = K.zdruziFaze([f(22, ['1', '2']), f(5, ['1', '3']), f(5, ['2', '4'])])
+    return tekme.filter((x) => x.faza === 1).map((x) => x.krog).join() === '23,24,25,26,27' &&
+      tekme.filter((x) => x.faza === 2)[0].krog === 23 && tekme.filter((x) => x.faza === 0).at(-1).krog === 22
+  })())
+  const efri = beri('is-ksi-mot-7025527-k1.html')
+  preveri('ksi: faza "Efri hluti" je svoje tekmovanje s krogi od 1', K.izbranoTekmovanje(efri).id === '7025527' &&
+    K.izbranoTekmovanje(efri).ime === 'Besta deild karla 2026 - Efri hluti' && K.krogiStrani(efri).izbran === 1 &&
+    K.krogiStrani(efri).vsi.length === 5 && K.tekmeStrani(efri, '2026').length === 3)
+  const kont = beri('is-ksi-leikur-7148573-kontumacija.html')
+  const kontKrogi = [{ stevilka: 13, tekme: [
+    { domaci: 'Einherji', gostje: 'Fálkar', datum: '2026-07-26', izid: { domaci: 3, gostje: 0 }, ksiId: '7148573' },
+    { domaci: 'Þróttur V.', gostje: 'Magni', datum: '2026-09-12', izid: { domaci: 2, gostje: 1 }, ksiId: '7053326' },
+  ] }]
+  const prebrani = []
+  const najdene = await K.default.kontumacije('7025600', async (url) => { prebrani.push(url); return url.includes('7148573') ? kont : beri('is-ksi-leikur-7053326.html') }, kontKrogi, '2026-10-15')
+  preveri('ksi: kontumacija "mættu ekki til leiks" — 3:0 brez postav; bere le tekme 3:0 / 0:3', K.vZapisnik(kont) === null &&
+    K.zaPredpomnilnik(kont) && najdene.length === 1 && najdene[0].krog === 13 && najdene[0].gostje === 'Fálkar' && prebrani.length === 1)
+  let mesane = null
+  try { K.zdruziFaze([{ leto: '2026', tekme: [] }, { leto: '2025', tekme: [] }]) } catch (e) { mesane = e.message }
+  preveri('ksi: faze iz različnih sezon ustavijo uvoz', /različnih sezon/.test(mesane ?? ''))
+}
+
 // --- vir fcf (Španija, Katalonija, fcf.cat) ----------------------------------------
 {
   const C = await import('./viri/fcf.mjs')

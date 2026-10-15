@@ -31,6 +31,7 @@ import lff from './lff.mjs'
 import ffm from './ffm.mjs'
 import fcf from './fcf.mjs'
 import fas from './fas.mjs'
+import ksi from './ksi.mjs'
 
 const VIRI = {
   mnzg,
@@ -82,6 +83,8 @@ const VIRI = {
   // Španija (Asturija): FutbolAsturiano.es (WordPress SportsPress), ne zveza;
   // liga je blok šifer objav tekem ene sezone, igralec s potjo profila.
   fas,
+  // Islandija (KSÍ) prek ksi.is: šifre igralcev, vratar (M), koledarska sezona.
+  ksi,
 }
 
 /**
