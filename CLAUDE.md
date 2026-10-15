@@ -2857,20 +2857,26 @@ strežnika, ASP.NET/Umbraco).
   vrst: `/resultater/raekkesoeg/?unionid=1&genderid=0&divisionid=1&season=<S>`
   (S je leto KONCA sezone: `2026` = 2025/26; brez `season` tekoča) →
   `/resultater/Raekke/<id>` → pulje.
-- **Krogov vir ne objavi** (`dodeliKroge`): tekme po sklopih dni (Pet–Pon,
-  Tor–Čet); v sklopu, kjer bi klub igral dvakrat, nov podsklop (tekma gre v
-  ZADNJI podsklop — velika noč 2027: krog v četrtek in v ponedeljek, sobotna
-  tekma vmes gre v četrtkovega). Krogov je R = tekem / ⌊klubov / 2⌋, krogi so R
-  največjih podsklopov po datumu, ostale tekme gredo v krog brez obeh klubov,
-  najbližji po datumu. Program nosi ves razpored sezone, zato so številke
-  stalne. **Tveganje**: če se prestavi skoraj cel prihodnji krog, lahko krog
-  izgine in se poznejši preštevilčijo — ob padcu števila krogov (22 / 18)
-  preveri razpored pred uvozom.
+- **Krogov vir ne objavi, tekme pa oštevilči po krogih** (`krogiPulje`):
+  zaporedni blok ⌊klubov / 2⌋ številk tekem je en krog (vmes so vrzeli,
+  308842 → 308885). Številka tekme se ob prestavitvi ne spremeni, zato je krog
+  **stalen** — prestavljena tekma ali cel prestavljen krog ostane v svojem
+  krogu, odigrane tekme in zaklenjeni krogi se ne preštevilčijo; sredin krog
+  (velika noč 2027: četrtek in ponedeljek) je svoj blok. Preverba 15. 10. 2026:
+  vseh 16 pulj (obe sezoni, s fazami) — vsak blok je cel krog brez kluba
+  dvakrat in enak krogom po datumih. **Prej** so bili krogi izpeljani iz
+  datumov: prestavitev 4 od 6 tekem kroga je krog izbrisala, poznejše
+  preštevilčila in odigrane tekme premaknila (uvoz razporeda bi jih podvojil v
+  drugih krogih, zaklenjeni krogi bi izgubili tekme). Blok, ki ni krog (DBU je
+  tekmo izbrisal ali dodal, klub je izstopil in tekme so šle proč, klub
+  dvakrat), **ustavi uvoz** z napako — odloči človek (popravek vira), ne
+  tiho preštevilčenje.
 - **Več faz** (`+`): pulja se zamakne za zadnji krog prejšnjih pulj, s
   katerimi si deli klube (`kroziPulj`); vzporedni pulji (Oprykningsspil in
   Kvalifikationsspil) si delita številke 23–32. **2. in 3. division se
   spomladi razdelita** na Oprykningsspil in Kvalifikationsspil (2025/26: svoji
-  pulji, klubi iste lige): ko pulji nastaneta, ju pripni šifri z migracijo
+  pulji, klubi iste lige): ko pulji nastaneta, ju vpiši v `DBU_PULJE` v viru
+  in pripni šifri z migracijo
   (`update competitions set source_league_code = '508656+<opryk>+<kval>' …`)
   pred rokom prvega kroga. **Danmarksserien** igra 18 krogov v puljah; nato
   sta Oprykningsspil in Kvalifikationsspil **mešani** (klubi več pulj) — ne
@@ -2902,11 +2908,18 @@ strežnika, ASP.NET/Umbraco).
   kluba piše enako — "Holstebro B" je 2026/27 v 3. division (ekipa 6038) in v
   DS pulji 4 (6068), isti klub 255 (logotip). `IME_EKIPE` v viru preimenuje po
   id-ju ekipe (`/resultater/hold/<id>_<pulja>`) v "Holstebro B 2". Id ekipe je
-  last sezone: ob novi sezoni (in pred uvozom arhiva) preveri trke znova.
+  **stalen čez sezone** (6038 je prva ekipa 2025/26 v DS pulji 4 in 2026/27 v
+  3. division, Næstved 109644 obe sezoni). **Varovalo**: vsaka pulja, ki jo
+  uvoz bere, mora biti v `DBU_PULJE` (po sezonah, tudi arhivi in pripete
+  faze), sicer se uvoz ustavi; uvoz zapisnikov prebere programe vseh pulj iz
+  `DBU_PULJE` (sosednje iz predpomnilnika) in se ustavi, če ima isto ime
+  (ključ kluba po `IME_EKIPE`) dva id-ja ekipe (`trkiEkip`) — trk reši vpis v
+  `IME_EKIPE`. **Nova sezona**: nove pulje najprej v `DBU_PULJE`, nato
+  migracija s šiframi.
 - Šifra zapisnika v bazi je `dk<številka tekme>`.
 - **Predpomnilnik**: v `zaPredpomnilnik` gre le program pulje in stran tekme
-  z obema postavama, dogodki in goli = izid. Nepopolna stran se bere znova
-  (`preberiKamp` = `zapisnikSvez`), napaka in izziv nikoli ne gredo v
+  z obema postavama, dogodki in goli = izid. Nepopolna stran zato ob vsakem
+  uvozu pride sveža (enkrat na zagon), napaka in izziv nikoli ne gredo v
   predpomnilnik. Goli ≠ izid je 7 dni `nepopoln` (brez `imported_at`), nato
   opozorilo. Stran tekme prve 3 dni vedno sveža.
 - Kontumacija: 3:0 / 0:3 brez postav in golov, starejša od tedna
@@ -2961,8 +2974,16 @@ pulji 1 in 2 imata po 4 kluba iz 2025/26 pulj 1 in 2 (arhiv 1 → 1, 2 → 2),
 pulji 3 in 4 po 6 iz 3 in 4. Trki imen (vse pulje obeh sezon, logotip
 `/images/club/<id>/`): le Holstebro B 2 (2026/27) in Næstved 2 ("Næstved
 I.F.", DS 2025/26) — v `IME_EKIPE`. **Danmarksserien 4 2025/26 ima prvo ekipo
-Holstebro B, 2026/27 pa drugo (Holstebro B 2)** — igralci arhiva so pri klubu
-Holstebro B.
+Holstebro B, 2026/27 pa drugo (Holstebro B 2)** — to **ni mešanje podatkov**
+(preverjeno 15. 10. 2026: arhiv DS 4 ima ekipo 6038, isti id kot prva ekipa v
+3. division 2026/27). Prva ekipa je napredovala, druga je prišla v DS: igralci
+arhiva so v ligi dk-danmarksserien-4 pri klubu Holstebro B (prava prva ekipa,
+klub je isti kot v 3. division), in uvoz razporeda jih v DS 4 deaktivira, ker
+Holstebro B letos tam ne igra. Kdor je iz prve prešel v drugo ekipo, se po
+imenu prestavi k Holstebro B 2 z arhivskimi minutami (res jih je odigral).
+Posledica je kot pri vsakem napredovalcu: prva ekipa v **dk-3-division nima
+arhiva** (njeni lanski nastopi so v ligi DS 4), zato njeni igralci dobijo
+privzeto ceno 4.5, dokler ne naberejo minut.
 
 Uvoz (ena za drugo, brez baze ni bil pognan): `gh workflow run uvoz-lige.yml
 -f liga=dk-2-division -f arhiv=474114+498951+498952 -f cene=true`. Liga je

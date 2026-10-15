@@ -16,15 +16,16 @@
 // "31-07 2026", ura — **kopenhagenski čas = ljubljanski**, domači, gostje,
 // izid, povezava `/resultater/kamp/<številka>_<pulja>/kampinfo`).
 //
-// KROGOV vir NE objavi. Izpeljemo jih iz datumov (`dodeliKroge`): tekme
-// razdelimo po sklopih dni (Pet–Pon vikend, Tor–Čet sredi tedna), sklop, v
-// katerem klub nastopi dvakrat, razcepimo; največjih R sklopov (R = tekem /
-// tekem na krog) so krogi po datumu, ostale (prestavljene) tekme gredo v krog,
-// v katerem obeh klubov ni, najbližji po datumu. Ker program nosi ves razpored
-// sezone, so številke stalne, dokler se prihodnji krogi ne prestavljajo
-// množično. Pri več puljah se krogi poznejše pulje zamaknejo za zadnji krog
-// pulje, s katero si deli klube (skupini za napredovanje in obstanek sta
+// KROGOV vir NE objavi, tekme pa oštevilči po krogih: zaporedni blok ⌊klubov / 2⌋
+// številk tekem je krog (`krogiPulje`). Številka tekme se ob prestavitvi ne
+// spremeni, zato krog ostane stalen (datumi ga ne premaknejo); blok, ki ni cel
+// krog, ustavi uvoz. Pri več puljah se krogi poznejše pulje zamaknejo za zadnji
+// krog pulje, s katero si deli klube (skupini za napredovanje in obstanek sta
 // vzporedni in si delita številke).
+//
+// DRUGA EKIPA Z IMENOM PRVE ("Holstebro B" v 3. division in v DS): `IME_EKIPE`
+// po id-ju ekipe. Vsaka brana pulja mora biti v `DBU_PULJE`, uvoz zapisnikov pa
+// preveri, da v vseh naštetih puljah nobeno ime nima dveh id-jev (`trkiEkip`).
 //
 // STRAN TEKME: "Holdopstillinger" — za vsako ekipo tabela začetnikov (dres in
 // "Ime Priimek"), tabela "Reserver" (klop) in "Officials" (osebje — ne beremo
@@ -41,7 +42,7 @@
 // Sodnikov, osebja, igrišča in telefonov ne hranimo. Beremo odkrito
 // (User-Agent SLFF, 3 s med zahtevki). V predpomnilnik gre le cela stran
 // (`zaPredpomnilnik`): program pulje in stran tekme z obema postavama, z
-// dogodki in z goli = izid. Nepopolna stran se bere znova (`zapisnikSvez`).
+// dogodki in z goli = izid. Nepopolna stran zato ob vsakem uvozu pride sveža.
 import { razpakiraj } from '../klubi.mjs'
 import { sezonaIz } from '../razpored.mjs'
 import { nastopi } from './hlf.mjs'
@@ -191,8 +192,9 @@ export function kratkoImeDk(polno) {
  * Druga ekipa kluba z istim imenom kot prva. DBU v programu obe ekipi piše
  * enako ("Holstebro B" v 3. division in v Danmarksserien 2026/27 — isti klub 255
  * v logotipu, ekipi 6038 in 6068); brez tega bi bili v bazi en klub. Ključ je
- * id ekipe (`/resultater/hold/<id>_<pulja>`), ki je last SEZONE: ob novi
- * sezoni preveri trke znova (CLAUDE.md, Danska) in dopiši nove id-je.
+ * id ekipe (`/resultater/hold/<id>_<pulja>`), ki je stalen čez sezone (6038 je
+ * prva ekipa 2025/26 v DS pulji 4 in 2026/27 v 3. division; Næstved 109644 obe
+ * sezoni). Nov trk javi `trkiEkip` ob uvozu zapisnikov in uvoz ustavi.
  */
 export const IME_EKIPE = {
   6068: 'Holstebro B 2', // Herre-DS 2026/27, pulja 4 (prva ekipa je v 3. division)
@@ -241,97 +243,51 @@ export function tekmePulje(html, pulja) {
 
 // --- krogi -------------------------------------------------------------------------------
 
-/** Ključ "tedna tekem": Pet–Pon (vikend, datum sobote) in Tor–Čet (sredi tedna, datum srede). */
-export function sklopDneva(datum) {
-  if (!datum) return null
-  const d = new Date(`${datum}T00:00:00Z`)
-  const zamik = { 5: 1, 6: 0, 0: -1, 1: -2, 2: 1, 3: 0, 4: -1 }[d.getUTCDay()]
-  d.setUTCDate(d.getUTCDate() + zamik)
-  return d.toISOString().slice(0, 10)
-}
-
-const dniMed = (a, b) => Math.abs(Date.parse(`${a}T00:00:00Z`) - Date.parse(`${b}T00:00:00Z`)) / DAN
-
 /**
- * Krogi ene pulje iz datumov: [{ stevilka, datum, tekme }], opozorila.
+ * Krogi ene pulje: [{ stevilka, tekme }].
  *
- * 1. Tekme (z datumom) po sklopih dni; v sklopu, kjer bi klub nastopil
- *    dvakrat, tekma odpre nov podsklop (dva kroga v istem vikendu, npr.
- *    velika noč: četrtek in ponedeljek).
- * 2. Krogov je R = vseh tekem / tekem na krog (⌊klubov / 2⌋). Krogi so R
- *    največjih podsklopov z vsaj polovico tekem kroga, po datumu.
- * 3. Ostale tekme (prestavljene) gredo v krog, v katerem obeh klubov ni in ni
- *    poln, najbližji po datumu (ob enakem raje prejšnji); sicer v krog brez
- *    obeh klubov; sicer najbližji (opozorilo: klub ima v krogu dve tekmi).
+ * DBU krogov ne objavi, tekme pulje pa oštevilči PO KROGIH: zaporedni blok
+ * ⌊klubov / 2⌋ številk je en krog (vmes so lahko vrzeli, npr. 308842 → 308885).
+ * Številka tekme se ob prestavitvi ne spremeni, zato je krog STALEN: prestavljena
+ * tekma (tudi cel krog, sneg v marcu) ostane v svojem krogu, odigrane tekme in
+ * zaklenjeni krogi se nikoli ne preštevilčijo. Prej je bil krog izpeljan iz
+ * datumov; množična prestavitev je tam izbrisala krog in preštevilčila vse
+ * poznejše, uvoz razporeda pa bi odigrane tekme podvojil v drugih krogih.
+ * Sredin krog (velika noč: četrtek in ponedeljek) je svoj blok kot vsak drug.
+ *
+ * Preverba 15. 10. 2026: pri vseh 16 puljah (2. in 3. division, Danmarksserien,
+ * 2025/26 s fazami in 2026/27) je vsak blok cel krog in se ujema s krogi po datumih.
+ * Če blok ni krog (klub dvakrat, število tekem ni večkratnik — DBU je tekmo
+ * izbrisal ali dodal, klub je izstopil), se uvoz USTAVI: tiho preštevilčenje
+ * je slabše od napake (CLAUDE.md, Danska).
  */
-export function dodeliKroge(tekme) {
-  const vse = tekme.filter((t) => t.domaci && t.gostje)
-  const xs = vse.filter((t) => t.datum).sort((a, b) => (a.datum < b.datum ? -1 : a.datum > b.datum ? 1 : a.kamp - b.kamp))
-  const klubi = new Set(vse.flatMap((t) => [t.domaci, t.gostje]))
-  const naKrog = Math.max(1, Math.floor(klubi.size / 2))
-  const R = Math.round(vse.length / naKrog)
-  const podsklopi = []
-  const poSklopu = new Map()
-  for (const t of xs) {
-    const sk = sklopDneva(t.datum)
-    if (!poSklopu.has(sk)) poSklopu.set(sk, [])
-    const moji = poSklopu.get(sk)
-    // Tekma gre v ZADNJI podsklop (tekme so po datumu): velikonočni četrtek in
-    // ponedeljek sta dva kroga, sobotna tekma med njima ostane sama in se
-    // pozneje doda krogu, v katerem obeh klubov ni.
-    let p = moji.at(-1)
-    if (p && (p.klubi.has(t.domaci) || p.klubi.has(t.gostje))) p = null
-    if (!p) {
-      p = { sklop: sk, tekme: [], klubi: new Set() }
-      moji.push(p)
-      podsklopi.push(p)
-    }
-    p.tekme.push(t)
-    p.klubi.add(t.domaci)
-    p.klubi.add(t.gostje)
+export function krogiPulje(tekme, pulja = '?') {
+  const vse = tekme.filter((t) => t.domaci && t.gostje).sort((a, b) => a.kamp - b.kamp)
+  if (vse.length !== tekme.length) throw new Error(`dbu: pulja ${pulja} ima tekmo brez kluba — uvoz ustavljen`)
+  const naKrog = Math.floor(new Set(vse.flatMap((t) => [t.domaci, t.gostje])).size / 2)
+  if (!naKrog) return []
+  if (vse.length % naKrog)
+    throw new Error(`dbu: pulja ${pulja} ima ${vse.length} tekem, kar ni večkratnik ${naKrog} tekem na krog — krogov po številkah tekem ni mogoče določiti, uvoz ustavljen (CLAUDE.md, Danska)`)
+  const krogi = []
+  for (let i = 0; i < vse.length; i += naKrog) {
+    const ts = vse.slice(i, i + naKrog)
+    const klubi = ts.flatMap((t) => [t.domaci, t.gostje])
+    if (new Set(klubi).size !== klubi.length)
+      throw new Error(`dbu: pulja ${pulja}, tekme ${ts[0].kamp}–${ts.at(-1).kamp} (${krogi.length + 1}. krog po številkah) imajo klub dvakrat — številke niso po krogih, uvoz ustavljen (CLAUDE.md, Danska)`)
+    krogi.push({ stevilka: krogi.length + 1, tekme: ts })
   }
-  const prviDatum = (p) => p.tekme[0].datum
-  const kandidati = podsklopi
-    .filter((p) => p.tekme.length >= Math.ceil(naKrog / 2))
-    .sort((a, b) => b.tekme.length - a.tekme.length || (prviDatum(a) < prviDatum(b) ? -1 : 1))
-    .slice(0, R)
-  const izbrani = new Set(kandidati)
-  const krogi = [...kandidati]
-    .sort((a, b) => (najpogostejsi(a.tekme.map((t) => t.datum)) < najpogostejsi(b.tekme.map((t) => t.datum)) ? -1 : 1))
-    .map((p, i) => ({ stevilka: i + 1, datum: najpogostejsi(p.tekme.map((t) => t.datum)), tekme: [...p.tekme], klubi: new Set(p.klubi) }))
-  const ostale = podsklopi.filter((p) => !izbrani.has(p)).flatMap((p) => p.tekme)
-  const opozorila = []
-  const prost = (k, t) => !k.klubi.has(t.domaci) && !k.klubi.has(t.gostje)
-  const najblizji = (ks, t) =>
-    [...ks].sort((a, b) => dniMed(a.datum, t.datum) - dniMed(b.datum, t.datum) || a.stevilka - b.stevilka)[0] ?? null
-  for (const t of ostale) {
-    let k = najblizji(krogi.filter((x) => prost(x, t) && x.tekme.length < naKrog), t) ?? najblizji(krogi.filter((x) => prost(x, t)), t)
-    if (!k) {
-      k = najblizji(krogi, t)
-      if (!k) continue
-      opozorila.push(`${t.domaci} : ${t.gostje} (${t.datum}) — klub ima v ${k.stevilka}. krogu dve tekmi`)
-    }
-    k.tekme.push(t)
-    k.klubi.add(t.domaci)
-    k.klubi.add(t.gostje)
-  }
-  return {
-    krogi: krogi.map(({ stevilka, datum, tekme: ts }) => ({ stevilka, datum, tekme: ts.sort((a, b) => a.kamp - b.kamp) })),
-    opozorila,
-  }
+  return krogi
 }
 
 /**
  * Krogi več pulj (`+`): pulja se zamakne za zadnji krog prejšnjih pulj, s
  * katerimi si deli klube; vzporedni pulji (brez skupnega kluba) si delita
- * številke. Vrne { krogi, opozorila, krogTekme: Map(kamp → krog) }.
+ * številke. Vrne { krogi, krogTekme: Map(kamp → krog) }.
  */
 export function kroziPulj(pulje) {
   const faze = []
-  const opozorila = []
   for (const { pulja, tekme } of pulje) {
-    const { krogi, opozorila: o } = dodeliKroge(tekme)
-    opozorila.push(...o.map((x) => `pulja ${pulja}: ${x}`))
+    const krogi = krogiPulje(tekme, pulja)
     const klubi = new Set(tekme.flatMap((t) => [t.domaci, t.gostje]).filter(Boolean))
     const zamik = Math.max(0, ...faze.filter((f) => [...f.klubi].some((k) => klubi.has(k))).map((f) => f.zamik + f.krogi.length))
     faze.push({ pulja, krogi, klubi, zamik })
@@ -346,7 +302,46 @@ export function kroziPulj(pulje) {
   const krogi = [...poStevilki.values()].sort((a, b) => a.stevilka - b.stevilka)
   const krogTekme = new Map()
   for (const k of krogi) for (const t of k.tekme) krogTekme.set(t.kamp, k.stevilka)
-  return { krogi, opozorila, krogTekme }
+  return { krogi, krogTekme }
+}
+
+// --- pulje sezon in trki imen ------------------------------------------------------------
+
+/**
+ * Vse pulje DBU, ki jih beremo (tekoče, arhivi in pripete faze), po sezonah.
+ * Uvoz pulje, ki je tu ni, se ustavi: novo sezono ali novo fazo (Oprykningsspil,
+ * Kvalifikationsspil) najprej vpiši sem. Uvoz zapisnikov nato preveri trke
+ * imen čez VSE naštete pulje (`trkiEkip`) — tako se druga ekipa z imenom prve
+ * (Holstebro B) ne more tiho zliti s prvo.
+ */
+export const DBU_PULJE = {
+  '2025/26': ['474114', '498951', '498952', '474115', '498953', '498954', '473826', '473827', '473828', '473829'],
+  '2026/27': ['508656', '508657', '499766', '499767', '499768', '499769'],
+}
+
+/** Pulje šifre, ki niso v `DBU_PULJE` za sezono `sezona` (prazno = vse vpisane). */
+export const neznanePulje = (pulje, sezona) => pulje.filter((p) => !(DBU_PULJE[sezona] ?? []).includes(p))
+
+/**
+ * Trki imen: isti ključ kluba pri dveh id-jih ekipe (po `IME_EKIPE`) v
+ * programih pulj [{ pulja, html }]. Id ekipe je stalen čez sezone (Holstebro B
+ * 6038 je 2025/26 v DS in 2026/27 v 3. division), zato se gleda čez vse sezone.
+ * Vrne [{ kljuc, ekipe: [{ id, ime, pulje }] }].
+ */
+export function trkiEkip(programi) {
+  const poKljucu = new Map()
+  for (const { pulja, html } of programi)
+    for (const [, id, surovo] of String(html ?? '').matchAll(/href="\/resultater\/hold\/(\d+)_\d+">([\s\S]*?)<\/a>/g)) {
+      const ime = IME_EKIPE[id] ?? imeKluba(surovo)
+      const k = kljucKlubaDk(ime)
+      if (!poKljucu.has(k)) poKljucu.set(k, new Map())
+      const e = poKljucu.get(k).get(id) ?? { id, ime, pulje: new Set() }
+      e.pulje.add(pulja)
+      poKljucu.get(k).set(id, e)
+    }
+  return [...poKljucu]
+    .filter(([, m]) => m.size > 1)
+    .map(([kljuc, m]) => ({ kljuc, ekipe: [...m.values()].map((e) => ({ ...e, pulje: [...e.pulje] })) }))
 }
 
 // --- stran tekme -------------------------------------------------------------------------
@@ -681,7 +676,10 @@ export function zaPredpomnilnik(besedilo, datoteka = '') {
 
 // --- branje ------------------------------------------------------------------------------
 
-/** Programi vseh pulj šifre (vedno sveži); pulja brez tekem ustavi uvoz. */
+/**
+ * Programi vseh pulj šifre (vedno sveži); pulja brez tekem ustavi uvoz, prav
+ * tako pulja, ki je ni v `DBU_PULJE` za svojo sezono (trki imen niso preverjeni).
+ */
 async function preberiPulje(koda, prenesi) {
   const out = []
   for (const pulja of razbijKodo(koda).pulje) {
@@ -690,15 +688,39 @@ async function preberiPulje(koda, prenesi) {
     if (!jeProgram(html)) throw new Error(`dbu: ${url} ni program pulje (${html.length} B) — uvoz ustavljen`)
     const tekme = tekmePulje(html, pulja)
     if (!tekme.length) throw new Error(`dbu: ${url} — pulja nima tekem — uvoz ustavljen`)
-    out.push({ pulja, ime: imePuljeStrani(html), tekme })
+    out.push({ pulja, ime: imePuljeStrani(html), tekme, html })
   }
+  const sezona = sezonaPulj(out)
+  const neznane = neznanePulje(out.map((p) => p.pulja), sezona)
+  if (neznane.length)
+    throw new Error(`dbu: pulja ${neznane.join(', ')} (sezona ${sezona}) ni v DBU_PULJE — vpiši jo v scripts/viri/dbu.mjs, da uvoz preveri trke imen ekip (CLAUDE.md, Danska); uvoz ustavljen`)
   return out
+}
+
+/**
+ * Druga ekipa z imenom prve: programi vseh pulj iz `DBU_PULJE` (iz
+ * predpomnilnika, ko so tam; id-ji ekip se med sezono ne menjajo), nato
+ * `trkiEkip`. Trk ustavi uvoz, dokler ena ekipa ne dobi imena v `IME_EKIPE`.
+ */
+async function preveriTrke(prebrane, prenesi) {
+  const programi = new Map(prebrane.map((p) => [p.pulja, p.html]))
+  for (const pulja of new Set(Object.values(DBU_PULJE).flat())) {
+    if (programi.has(pulja)) continue
+    const html = await beri(prenesi, naslovPulje(pulja), imePulje(pulja), false)
+    if (!jeProgram(html)) throw new Error(`dbu: ${naslovPulje(pulja)} ni program pulje — trkov imen ni mogoče preveriti, uvoz ustavljen`)
+    programi.set(pulja, html)
+  }
+  const trki = trkiEkip([...programi].map(([pulja, html]) => ({ pulja, html })))
+  if (trki.length)
+    throw new Error(
+      'dbu: isto ime, dve ekipi — uvoz bi ju zlil v en klub; eno preimenuj v IME_EKIPE (scripts/viri/dbu.mjs): ' +
+        trki.map((t) => t.ekipe.map((e) => `"${e.ime}" ekipa ${e.id} (pulja ${e.pulje.join(', ')})`).join(' / ')).join('; '),
+    )
 }
 
 /** Razpored iz pulj: [{ stevilka, tekme: [...] }]. Kontumacije označi `vir.kontumacije`. */
 export function razporedIzPulj(pulje, { danes = Date.now() } = {}) {
-  const { krogi, opozorila } = kroziPulj(pulje)
-  for (const o of opozorila) console.warn(`dbu: ${o}`)
+  const { krogi } = kroziPulj(pulje)
   return krogi.map((k) => ({
     stevilka: k.stevilka,
     tekme: k.tekme.map((t) => ({
@@ -720,18 +742,16 @@ export function razporedIzPulj(pulje, { danes = Date.now() } = {}) {
 /** Sezona šifre: najpogostejša sezona datumov tekem ("2026/27"). */
 export const sezonaPulj = (pulje) => najpogostejsi(pulje.flatMap((p) => p.tekme.map((t) => (t.datum ? sezonaIz(t.datum) : null))))
 
-/** Stran tekme; iz predpomnilnika nepopolna ali neprebrana se prebere še enkrat sveža (`zapisnikSvez`). */
+/**
+ * Stran tekme: prve 3 dni sveža, pozneje iz predpomnilnika. V predpomnilniku je
+ * le cela stran (`zaPredpomnilnik`), zato se nepopolna ob vsakem uvozu prebere
+ * znova sama od sebe — drugo branje v istem zagonu je odveč (prej je bil vsak
+ * nepopoln zapisnik prebran dvakrat zapored).
+ */
 async function preberiKamp(prenesi, t, danes) {
   const url = naslovKampa(t.pulja, t.kamp)
-  const ime = imeKampa(t.pulja, t.kamp)
-  const sveze = starostDni(t.datum, danes) <= 3
-  let html = await beri(prenesi, url, ime, sveze)
-  let z = jeStranKampa(html) ? vZapisnik(html, { tekma: t, danes }) : null
-  if (!sveze && (!z || z.nepopoln || !z.imaDogodke)) {
-    html = await beri(prenesi, url, ime, true)
-    z = jeStranKampa(html) ? vZapisnik(html, { tekma: t, danes }) : null
-  }
-  return { url, html, z }
+  const html = await beri(prenesi, url, imeKampa(t.pulja, t.kamp), starostDni(t.datum, danes) <= 3)
+  return { url, html, z: jeStranKampa(html) ? vZapisnik(html, { tekma: t, danes }) : null }
 }
 
 const vir = {
@@ -751,7 +771,7 @@ const vir = {
   zaPredpomnilnik,
   zavrnitev: (sporocilo, status = null) => new DbuZavrnitev(`dbu: ${sporocilo} — uvoz ustavljen, ne obhajamo`, status),
 
-  /** Razpored: krogi iz datumov (glej `dodeliKroge`). */
+  /** Razpored: krogi po številkah tekem (glej `krogiPulje`). */
   async razporedVseStrani(koda, prenesi) {
     return razporedIzPulj(await preberiPulje(koda, prenesi))
   },
@@ -763,6 +783,7 @@ const vir = {
    */
   async zapisniki(koda, prenesi, danes = Date.now()) {
     const pulje = await preberiPulje(koda, prenesi)
+    await preveriTrke(pulje, prenesi)
     const sezona = sezonaPulj(pulje)
     const { krogTekme } = kroziPulj(pulje)
     const out = []

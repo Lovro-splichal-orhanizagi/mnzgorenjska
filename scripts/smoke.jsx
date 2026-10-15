@@ -5611,18 +5611,34 @@ preveri(
     const po = D.razporedIzPulj([{ pulja: '508656', tekme: prestavljena }])
     preveri('dbu: krogi so stalni — prestavitev tekme na sredo ne premakne odigranih, tekma ostane v krogu brez obeh klubov',
       po.length === 22 && [...prej].every(([k, n]) => vKrogu(po, k) === n) && vKrogu(po, 308975) === 14 && vKrogu(po, 308919) === 12)
+    // Množična prestavitev (sneg, marec): 4 od 6 tekem 11. kroga na sredo za
+    // 13. krogom. Krog se ne sme izgubiti in poznejši se ne smejo preštevilčiti
+    // (odigrane tekme bi uvoz razporeda podvojil v drugih krogih).
+    const vsiPrej = new Map(tekme.map((t) => [t.kamp, vKrogu(raz, t.kamp)]))
+    const sneg = tekme.map((t) => ([308912, 308913, 308914, 308915].includes(t.kamp) ? { ...t, datum: '2026-10-28', izid: null } : t))
+    let po2 = null
+    try { po2 = D.razporedIzPulj([{ pulja: '508656', tekme: sneg }]) } catch {}
+    preveri('dbu: krogi so stalni — množična prestavitev kroga ne preštevilči nobene tekme',
+      po2?.length === 22 && tekme.every((t) => vKrogu(po2, t.kamp) === vsiPrej.get(t.kamp)) && vKrogu(po2, 308913) === 11,
+      JSON.stringify(tekme.filter((t) => vKrogu(po2 ?? [], t.kamp) !== vsiPrej.get(t.kamp)).map((t) => [t.kamp, vsiPrej.get(t.kamp), vKrogu(po2 ?? [], t.kamp)]).slice(0, 8)))
   }
   {
     // Velika noč (3. division 2027): krog v četrtek in krog v ponedeljek; sobotna
     // tekma vmes sodi k četrtkovemu krogu, ponedeljkov krog ostane cel.
     const t = (kamp, datum, domaci, gostje) => ({ kamp, pulja: '1', datum, ura: '14:00', domaci, gostje, izid: null })
-    const { krogi } = D.dodeliKroge([
+    const vel = [
       t(1, '2027-03-20', 'A', 'B'), t(2, '2027-03-20', 'C', 'D'), t(3, '2027-03-20', 'E', 'F'),
       t(4, '2027-03-25', 'A', 'C'), t(5, '2027-03-25', 'B', 'E'), t(6, '2027-03-27', 'D', 'F'),
       t(7, '2027-03-29', 'A', 'D'), t(8, '2027-03-29', 'B', 'C'), t(9, '2027-03-29', 'E', 'F'),
-    ])
+    ]
+    const krogi = D.krogiPulje(vel)
     preveri('dbu: krogi — velikonočni četrtek in ponedeljek sta dva kroga, sobotna tekma gre v četrtkovega',
       krogi.map((k) => k.tekme.map((x) => x.kamp).join('+')).join(' ') === '1+2+3 4+5+6 7+8+9', JSON.stringify(krogi.map((k) => k.tekme.map((x) => x.kamp))))
+    // Blok številk, ki ni krog (DBU je tekmo izbrisal, klub dvakrat), ustavi uvoz — ne preštevilči tiho.
+    const napaka = (xs) => { try { D.krogiPulje(xs, '1'); return null } catch (e) { return e.message } }
+    preveri('dbu: krogi — izbrisana tekma ali blok s klubom dvakrat ustavi uvoz',
+      /ni večkratnik/.test(napaka(vel.filter((x) => x.kamp !== 5)) ?? '') && /klub dvakrat/.test(napaka(vel.map((x) => (x.kamp === 3 ? { ...x, kamp: 10 } : x))) ?? '') &&
+      /brez kluba/.test(napaka(vel.map((x) => (x.kamp === 1 ? { ...x, gostje: null } : x))) ?? ''))
   }
   {
     // Več pulj: osnovni del + skupini za napredovanje in obstanek (vzporedni, iste številke).
@@ -5774,12 +5790,34 @@ preveri(
   console.warn = () => {}
   const zs = await D.default.zapisniki('508656', prenesiVzorce, Date.parse('2026-10-15T12:00:00Z'))
   console.warn = izvirniWarn
-  preveri('dbu: zapisniki — le odigrane, krog iz datumov, sezona 2026/27, 404 preskočen; nepopolna stran se prebere še enkrat sveža', zs.length === 9 &&
+  preveri('dbu: zapisniki — le odigrane, krog po številkah, sezona 2026/27, 404 preskočen; vsaka stran tekme prebrana enkrat', zs.length === 9 &&
     zs.every((x) => x.z.sezona === '2026/27' && x.id.startsWith('dk') && x.url.startsWith('https://www.dbu.dk/resultater/kamp/')) &&
     zs.find((x) => x.id === 'dk308917').z.krog === 11 && zs.find((x) => x.id === 'dk308808').z.krog === 1 &&
-    klici.filter((c) => c.ime === 'kamp-308917_508656.html').map((c) => c.sveze).join() === 'false,true' &&
+    klici.filter((c) => c.ime === 'kamp-308917_508656.html').map((c) => c.sveze).join() === 'false' &&
     klici.filter((c) => c.ime === 'kamp-308808_508656.html').map((c) => c.sveze).join() === 'false' &&
     klici.find((c) => c.ime === 'pulje-508656.html')?.sveze === true)
+  // Trki imen: vse pulje iz DBU_PULJE (sosednje iz predpomnilnika), ime z dvema id-jema ustavi uvoz.
+  const vsePulje = [...new Set(Object.values(D.DBU_PULJE).flat())]
+  preveri('dbu: trki imen — zapisniki preberejo programe vseh pulj iz DBU_PULJE (sosednje brez zahteve po sveži strani)',
+    vsePulje.every((p) => klici.some((c) => c.ime === `pulje-${p}.html`)) &&
+    klici.filter((c) => c.ime.startsWith('pulje-') && c.ime !== 'pulje-508656.html').every((c) => !c.sveze) && D.DBU_PULJE['2026/27'].includes('508656'))
+  {
+    const drugaEkipa = prog.replaceAll('href="/resultater/hold/18483_508656">FC Roskilde', 'href="/resultater/hold/99999_499769">FC Roskilde')
+    const trki = D.trkiEkip([{ pulja: '508656', html: prog }, { pulja: '499769', html: drugaEkipa }])
+    const holstebro = (id, p) => `<a class="link" href="/resultater/hold/${id}_${p}">Holstebro B</a>`
+    preveri('dbu: trki imen — FC Roskilde z dvema id-jema je trk; Holstebro B 6038 in 6068 ni (IME_EKIPE)',
+      trki.length === 1 && trki[0].kljuc === 'fc roskilde' && trki[0].ekipe.map((e) => e.id).sort().join() === '18483,99999' &&
+      D.trkiEkip([{ pulja: '508657', html: holstebro(6038, 508657) }, { pulja: '499769', html: holstebro(6068, 499769) }, { pulja: '473829', html: holstebro(6038, 473829) }]).length === 0 &&
+      D.trkiEkip([{ pulja: '508657', html: holstebro(6038, 508657) }, { pulja: '499768', html: holstebro(7777, 499768) }]).length === 1)
+    let trk = null
+    console.warn = () => {}
+    try { await D.default.zapisniki('508656', async (url, ime) => (ime === 'pulje-499769.html' ? drugaEkipa : ime.startsWith('pulje-') ? prog : beri('dk-dbu-kamp-308808.html'))) } catch (e) { trk = e }
+    console.warn = izvirniWarn
+    preveri('dbu: trki imen — neznana druga ekipa z imenom prve ustavi uvoz zapisnikov', /isto ime, dve ekipi/.test(trk?.message ?? '') && /99999/.test(trk.message), trk?.message)
+    let neznana = null
+    try { await D.default.razporedVseStrani('508656+123456', async () => prog) } catch (e) { neznana = e }
+    preveri('dbu: pulja, ki je ni v DBU_PULJE, ustavi uvoz (razpored in zapisniki)', /123456 \(sezona 2026\/27\) ni v DBU_PULJE/.test(neznana?.message ?? ''), neznana?.message)
+  }
 
   let izziv = null
   try { await D.default.zapisniki('508656', async () => '<title>Just a moment...</title>') } catch (e) { izziv = e }
