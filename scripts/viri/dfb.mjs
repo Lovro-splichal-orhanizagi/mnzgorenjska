@@ -162,9 +162,15 @@ export function vZapisnik(html, { id, tekma } = {}) {
   const runningScore=[0,0]
   let previous=0
   for (const row of elements(sections.get('Spielverlauf'),'div','m-MatchDetails-history-item')) {
-    const time = text(one(row.inner,'div','m-MatchDetails-history-minute').inner).match(/^(\d+)(?:\+(\d+))?'$/)
+    const rawMinute=text(one(row.inner,'div','m-MatchDetails-history-minute').inner)
+    // Observed official report 2426025 prints `90 12'` / `90 13'` as plain
+    // text. The participating club confirms the 12th added-minute equalizer.
+    // Accept only this bounded 90-space-added form, not arbitrary integers.
+    const spaced=rawMinute.match(/^90 ([1-9]|[12]\d|30)'$/)
+    const time = (spaced?`90+${spaced[1]}'`:rawMinute).match(/^(\d+)(?:\+(\d+))?'$/)
     if (!time || +time[1]>90 || +(time[2]??0)>30) fail('nepodprta minuta dogodka')
     const order=+time[1]*100+ +(time[2]??0), minute=Math.min(+time[1],90)
+    if(spaced)opozorila.push(`Minuta ${rawMinute}: presledek v uradnem zapisu dodatka k 90. minuti; izvorni zapis ohranjen.`)
     if(order<previous)fail('neveljavno časovno zaporedje');previous=order
     const events=elements(row.inner,'div','m-MatchDetails-history-event').filter(e=>!has(e.tag,'is-empty'))
     if (!events.length || events.length>2)fail('nepopoln dogodek')
@@ -185,7 +191,7 @@ export function vZapisnik(html, { id, tekma } = {}) {
         }
         return p
       }
-      const event=(p,personSide=side)=>({ime:p.ime,st:p.st,virId:p.virId,ekipaIdx:personSide,minuta:minute})
+      const event=(p,personSide=side)=>({ime:p.ime,st:p.st,virId:p.virId,ekipaIdx:personSide,minuta:minute,...(spaced?{minutaZapis:rawMinute}:{})})
       if (/m-MatchDetails-icon-goal--/.test(icon)) {
         const kind=icon.match(/m-MatchDetails-icon-goal--([\w-]+)/)?.[1]
         if(!['goal','penalty','own-goal'].includes(kind) || segments.length!==1)fail('nepodprt gol')
@@ -384,11 +390,21 @@ export function zaPredpomnilnik(html){
     tekmeEkipe(html,`regionalliga-nordost/${path[1]}`,path[2]);return true
   }catch{return false}
 }
-async function beri(prenesi,url,name,fresh){
+async function prenesiStran(prenesi,url,name,fresh){
   let html
   try {html=await prenesi(url,name,fresh)}catch(e){if([401,403,429].includes(e.status))throw new DfbZavrnitev(`HTTP ${e.status}`,e.status);throw e}
   if(jeIzziv(html))throw new DfbZavrnitev('izziv (CAPTCHA)')
-  if(!zaPredpomnilnik(html))fail('nepopolna javna stran')
+  if(Buffer.byteLength(String(html))>2*1024*1024)fail('odgovor presega omejitev velikosti 2 MiB')
+  return html
+}
+async function beri(prenesi,url,name,fresh){
+  const html=await prenesiStran(prenesi,url,name,fresh)
+  if(!zaPredpomnilnik(html)){
+    // The cache hook must return a boolean, but callers need the actual report
+    // failure to diagnose a new format or inconsistent upstream data.
+    if(Buffer.byteLength(String(html))<=2*1024*1024&&/class="m-MatchDetails"/.test(html))vZapisnik(html)
+    fail('nepopolna javna stran')
+  }
   return html
 }
 
@@ -427,12 +443,22 @@ const vir={
   naslovRazporeda:koda=>naslovEkipe(koda),
   jeIzziv,zaPredpomnilnik,zavrnitev:(s,status)=>new DfbZavrnitev(s,status),fetch:varniFetch,
   async razporedVseStrani(koda,prenesi){return vRazpored(await tekmeSezone(koda,prenesi))},
-  async zapisniki(koda,prenesi){
+  nepopolni:[],
+  async zapisniki(koda,prenesi,{zberiNapake=false}={}){
+    vir.nepopolni=[]
     const all=await tekmeSezone(koda,prenesi),out=[]
     for(const t of all.filter(t=>t.izid)){
       const fresh=Date.now()-Date.parse(`${t.datum}T00:00:00Z`)<=7*86400000
-      const z=vZapisnik(await beri(prenesi,t.url,`match-${t.id}.html`,fresh),{id:t.id,tekma:t})
-      out.push({id:z.zapisnikId,z,url:t.url})
+      // Network, refusal, challenge and body-bound failures remain fatal even
+      // during an audit. Only recognized strict report-parser errors collect.
+      const html=await prenesiStran(prenesi,t.url,`match-${t.id}.html`,fresh)
+      try {
+        const z=vZapisnik(html,{id:t.id,tekma:t})
+        out.push({id:z.zapisnikId,z,url:t.url})
+      }catch(e){
+        if(!zberiNapake||!['DFB_INVALID_REPORT','DFB_UNSUPPORTED_FORMAT','DFB_INCOMPLETE_REPORT'].includes(e.koda))throw e
+        vir.nepopolni.push({id:`de-dfb-${t.id}`,url:t.url,razlog:e.message,status:e.koda})
+      }
     }
     return out
   },

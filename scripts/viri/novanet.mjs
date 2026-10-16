@@ -3,7 +3,7 @@ import { ustvariAnonimniPrenos } from './novanet-transport.mjs'
 import { NovanetPredpomnilnik, starostZapisnika, URA } from './novanet-predpomnilnik.mjs'
 import { nastopi as nastopiOsnova } from './hlf.mjs'
 import { izidNovanet, preslikaveNovanet } from './novanet-izidi.mjs'
-const fail = (s) => { throw new Error(`novanet: ${s}`) }
+const fail = (s) => { throw Object.assign(new Error(`novanet: ${s}`),{razclenitev:true}) }
 export class NovanetNepopoln extends Error {
  constructor(message){super(`novanet: zapisnik nepopoln: ${message}`);this.name='NovanetNepopoln';this.nepopoln=true}
 }
@@ -383,7 +383,7 @@ export function ustvariVir({predpomnilnik='scripts/.predpomnilnik/novanet/prever
   const {zveza}=razberiKodo(koda)
   return (await preberiKroge(koda,prenesi,{cache,danes})).map(({stevilka,tekme})=>({stevilka,tekme:tekme.map(t=>({...t,domaci:imeKlubaZaUvoz(t.domaci,zveza),gostje:imeKlubaZaUvoz(t.gostje,zveza)}))}))
  },
- async zapisniki(koda,prenesi){
+ async zapisniki(koda,prenesi,{zberiNapake=false}={}){
   nepopolni.length=0
   const {zveza}=razberiKodo(koda),out=[]
   let pricakovanih=0
@@ -392,14 +392,18 @@ export function ustvariVir({predpomnilnik='scripts/.predpomnilnik/novanet/prever
    pricakovanih++
    const url=naslovZapisnika(koda,t.virId)
    let z
+   const napakeValidatorja=new WeakSet()
    try{z=await beriPreverjeno(prenesi,url,`report-${zveza}-${t.virId}.html`,html=>{
+    try{
     const z=vZapisnik(html,{zveza,sezona:r.sezona})
     if(z.zapisnikId!==identity(zveza,t.virId)||z.krog!==r.stevilka||kljucKluba(z.domaci.ime)!==kljucKluba(t.domaci)||kljucKluba(z.gostje.ime)!==kljucKluba(t.gostje)||z.datum!==t.datum||z.ura!==t.ura||z.rezultat.domaci!==t.izid.domaci||z.rezultat.gostje!==t.izid.gostje)fail('zapisnik in krog se ne ujemata')
     z.zaprt=true;return z
+    }catch(e){if(e?.razclenitev===true)napakeValidatorja.add(e);throw e}
    },{cache,danes,ttl:starostZapisnika})
    }catch(e){
-    if(!(e instanceof NovanetNepopoln)&&e.status!==404)throw e
-    const notice={id:identity(zveza,t.virId),url,razlog:e.message,status:e.status??null}
+    const razclenitev=zberiNapake&&napakeValidatorja.has(e)
+    if(!(e instanceof NovanetNepopoln)&&e.status!==404&&!razclenitev)throw e
+    const notice={id:identity(zveza,t.virId),url,razlog:e.message,status:e.status??null,...(razclenitev?{razclenitev:true}:{})}
     nepopolni.push(notice);opozori(`novanet: zapisnik nepopoln: ${notice.id} — statistika cele tekme zadržana; ${e.message}`)
     continue
    }

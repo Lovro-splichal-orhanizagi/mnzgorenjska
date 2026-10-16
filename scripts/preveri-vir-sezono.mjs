@@ -81,9 +81,9 @@ export async function preveriSezono({vir,koda,sezona,mapa,fetchFn=globalThis.fet
  let razpored=[],zapisniki=[],porocilo
  try {
   razpored=await vir.razporedVseStrani(koda,prenesi)
-  zapisniki=await vir.zapisniki(koda,prenesi)
+  zapisniki=await vir.zapisniki(koda,prenesi,{zberiNapake:true})
   porocilo=preveriPokritost({sezona,razpored,zapisniki,nepopolni:vir.nepopolni??[]})
- }catch(e){porocilo={sezona,pripravljeno:false,pokritost:false,napake:[e.message],status:e.status??null,zavrnitev:!!e.zavrnitev,url:e.url??null};if(e.nepopolni)opozorila.push(...e.nepopolni)}
+ }catch(e){porocilo={sezona,pripravljeno:false,pokritost:false,napake:[e.message],status:e.status??null,zavrnitev:!!e.zavrnitev,url:e.url??null};opozorila.push(...(e.nepopolni??vir.nepopolni??[]))}
  porocilo={vir:vir.ime,koda,preverjeno:new Date().toISOString(),...porocilo,prenesenih:requests.length,opozorila}
  writeFileSync(resolve(mapa,'porocilo.json'),JSON.stringify(porocilo,null,2)+'\n')
  writeFileSync(resolve(mapa,'razpored.json'),JSON.stringify(razpored,null,2)+'\n')

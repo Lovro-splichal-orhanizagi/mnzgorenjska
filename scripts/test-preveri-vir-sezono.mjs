@@ -98,3 +98,33 @@ test('live audit never retries an explicit source refusal',async()=>{
   assert.equal(r.pripravljeno,false)
  }finally{rmSync(mapa,{recursive:true,force:true})}
 })
+test('read-only audit opts into collecting every parser failure and still fails its release gate',async()=>{
+ const mapa=mkdtempSync(join(tmpdir(),'slff-audit-collect-')),x=sample();let mode
+ try{
+  const vir={ime:'test',nepopolni:[],razporedVseStrani:async()=>x.razpored,zapisniki:async(_k,_p,options)=>{
+   mode=options
+   if(options?.zberiNapake)vir.nepopolni.push({id:'bad-report',razlog:'unsupported event format'})
+   return x.zapisniki
+  }}
+  const r=await preveriSezono({vir,koda:'x',sezona:x.sezona,mapa})
+  assert.deepEqual(mode,{zberiNapake:true})
+  assert.equal(r.pokritost,false)
+  assert.equal(r.pripravljeno,false)
+  assert.match(r.napake.join(' '),/bad-report.*unsupported event format/)
+ }finally{rmSync(mapa,{recursive:true,force:true})}
+})
+test('a later transport refusal preserves earlier collected parser failures in artifacts',async()=>{
+ const mapa=mkdtempSync(join(tmpdir(),'slff-audit-prior-')),x=sample()
+ const notice={id:'earlier-bad-report',url:'https://datencenter.dfb.de/public-bad',razlog:'unsupported event'}
+ try{
+  const vir={ime:'test',nepopolni:[],razporedVseStrani:async()=>x.razpored,zapisniki:async()=>{
+   vir.nepopolni.push(notice)
+   throw Object.assign(Error('HTTP 403'),{status:403,zavrnitev:true})
+  }}
+  const r=await preveriSezono({vir,koda:'x',sezona:x.sezona,mapa})
+  assert.equal(r.status,403)
+  assert.equal(r.pripravljeno,false)
+  assert.deepEqual(r.opozorila,[notice])
+  assert.deepEqual(JSON.parse(readFileSync(join(mapa,'porocilo.json'),'utf8')).opozorila,[notice])
+ }finally{rmSync(mapa,{recursive:true,force:true})}
+})

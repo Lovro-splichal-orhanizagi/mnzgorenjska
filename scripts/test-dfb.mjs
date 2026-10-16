@@ -10,6 +10,30 @@ const penalty = readFileSync(new URL('./vzorci/de-dfb-2426054.html', import.meta
 const load = () => import(moduleUrl)
 const actual = id => readFileSync(new URL(`./vzorci/de-dfb-${id}.html`, import.meta.url), 'utf8')
 
+test('actual archive card outside the published lineup and substitutions remains unresolved', async () => {
+  const {vZapisnik,zaPredpomnilnik}=await load(),html=actual('2401897')
+  // The named official profile alone establishes no match role: no bench is
+  // published, and the same-season roster does not resolve player vs staff.
+  assert.throws(()=>vZapisnik(html,{id:'2401897'}),e=>e.koda==='DFB_INVALID_REPORT'&&e.message.includes('neznanega igralca Luis Zwick'))
+  assert.equal(zaPredpomnilnik(html),false)
+})
+
+test('actual 90-space-added labels preserve corroborated stoppage timing without general integer guessing', async () => {
+  const {vZapisnik}=await load(),html=actual('2426025'),z=vZapisnik(html,{id:'2426025'})
+  const goal=z.goli.find(g=>g.ime==='Joshua Okpalaike'),card=z.rumeni.find(c=>c.ime==='Luis Pohlenz')
+  assert.equal(goal.minuta,90)
+  assert.equal(goal.minutaZapis,"90 12'")
+  assert.equal(card.minuta,90)
+  assert.equal(card.minutaZapis,"90 13'")
+  assert.equal(z.opozorila.filter(s=>s.includes('presledek')).length,2)
+  for(const invalid of ["89 12'","45 12'","90 31'","90 0'"]){
+    assert.throws(()=>vZapisnik(html.replaceAll("90 12'",invalid)),/nepodprta minuta/)
+  }
+  assert.throws(()=>vZapisnik(html.replaceAll("90 13'","90 11'")),/časovno zaporedje/)
+  const k=html.indexOf('>Tore</div>')
+  assert.throws(()=>vZapisnik(html.slice(0,k)+html.slice(k).replace("90 12'","90 11'")),/neujemajoči dogodki/)
+})
+
 test('real own goals follow the beneficiary score but belong to the opposite lineup player', async () => {
   const {vZapisnik,nastopi}=await load()
   for(const [id,name,side,minute,score] of [
@@ -246,6 +270,51 @@ test('season discovery reads exactly the 18 discovered teams and emits 306 uniqu
   const corrupted=new Map(pages),key=[...pages.keys()][1]
   corrupted.set(key,pages.get(key).replace('01.08.2026','02.08.2026'))
   await assert.rejects(()=>vir.razporedVseStrani('regionalliga-nordost/2026-2027',async url=>corrupted.get(url)),/razpored.*ujem/)
+})
+
+test('fetched invalid reports preserve the concrete parser reason after cache rejection', async () => {
+  const {default:vir}=await load(),pages=fullSeasonPages()
+  // One played synthetic match, using actual malformed report markup for the
+  // report-parser failure. The reason must survive the cache validation hook.
+  for(const [url,html] of pages)pages.set(url,html.replace('9000000">- : -</a>','9000000">4 : 1</a>'))
+  const malformed=current.replaceAll('2425990','9000000').replaceAll("26'","89 12'")
+  await assert.rejects(()=>vir.zapisniki('regionalliga-nordost/2026-2027',async url=>pages.get(url)??malformed),/nepodprta minuta dogodka/)
+})
+
+test('audit opt-in withholds two bad reports, continues to valid data and never swallows refusals or transport errors', async () => {
+  const {default:vir,DfbZavrnitev}=await load(),pages=fullSeasonPages()
+  const rounds=await vir.razporedVseStrani('regionalliga-nordost/2026-2027',async url=>pages.get(url))
+  const matches=rounds[0].tekme.slice(0,3),reports=new Map()
+  for(const t of matches){
+    for(const [url,html] of pages)pages.set(url,html.replace(`${t.id}">- : -</a>`,`${t.id}">4 : 1</a>`))
+    reports.set(t.url,current.replaceAll('2425990',t.id)
+      .replaceAll('FC Rot-Weiß Erfurt','__HOME__').replaceAll('BFC Dynamo','__AWAY__')
+      .replaceAll('fc-rot-weiss-erfurt','__HOMEID__').replaceAll('bfc-dynamo','__AWAYID__')
+      .replaceAll('__HOME__',t.domaci).replaceAll('__AWAY__',t.gostje)
+      .replaceAll('__HOMEID__',t.domaciId).replaceAll('__AWAYID__',t.gostjeId)
+      .replaceAll('24. Juli 2026','1. August 2026').replaceAll('19:00 Uhr','14:00 Uhr'))
+  }
+  reports.set(matches[0].url,reports.get(matches[0].url).replaceAll("26'","89 12'"))
+  reports.set(matches[1].url,reports.get(matches[1].url).replaceAll('(4:0)','(0:0)'))
+  const calls=[],fetch=async url=>{if(pages.has(url))return pages.get(url);calls.push(url);return reports.get(url)}
+  const out=await vir.zapisniki('regionalliga-nordost/2026-2027',fetch,{zberiNapake:true})
+  assert.deepEqual(out.map(x=>x.id),[`de-dfb-${matches[2].id}`])
+  assert.equal(calls.length,3)
+  assert.deepEqual(vir.nepopolni.map(x=>[x.id,x.url,x.status]),matches.slice(0,2).map((t,i)=>[`de-dfb-${t.id}`,t.url,i===0?'DFB_UNSUPPORTED_FORMAT':'DFB_INVALID_REPORT']))
+  assert(vir.nepopolni.every(x=>x.razlog.startsWith('dfb:')))
+  await assert.rejects(()=>vir.zapisniki('regionalliga-nordost/2026-2027',fetch),/nepodprta minuta/)
+  assert.deepEqual(vir.nepopolni,[])
+  for(const refusal of [new DfbZavrnitev('HTTP 429',429),new Error('transport timeout'),'captcha']){
+    const visited=[]
+    await assert.rejects(()=>vir.zapisniki('regionalliga-nordost/2026-2027',async url=>{
+      if(pages.has(url))return pages.get(url)
+      visited.push(url)
+      if(url===matches[1].url){if(typeof refusal==='string')return refusal;throw refusal}
+      return reports.get(url)
+    },{zberiNapake:true}),/429|transport timeout|CAPTCHA/)
+    assert.equal(visited.length,2)
+    assert.equal(vir.nepopolni.length,1)
+  }
 })
 
 test('DFB archive added time and changing profile publication preserve club-name identity', async () => {

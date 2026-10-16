@@ -3,7 +3,7 @@
 // razpakiramo podatkovni niz in sprejmemo le preverjeno formulo ntype.
 // Celoten podprt vir sestavi novanet.mjs; ta modul dekodira le izide.
 
-const napaka = (s) => new Error(`novanet: ${s}`)
+const napaka = (s) => Object.assign(new Error(`novanet: ${s}`),{razclenitev:true})
 const skripti = (html) => [...String(html).matchAll(/<script\b[^>]*>([\s\S]*?)<\/script\s*>/gi)].map((m) => m[1])
 const PAKIRNIK = String.raw`eval(function(p,a,c,k,e,d){e=function(c){return c.toString(36)};if(!"".replace(/^/,String)){while(c--){d[c.toString(a)]=k[c]||c.toString(a)}k=[function(e){return d[e]}];e=function(){return"\\w+"};c=1}while(c--){if(k[c]){p=p.replace(new RegExp("\\b"+e(c)+"\\b","g"),k[c])}}return p}`.replace(/\s+/g, '')
 

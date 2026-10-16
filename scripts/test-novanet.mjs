@@ -477,3 +477,33 @@ test('sentinel card timing withholds one whole match while multiple validated re
  assert.equal(vir.nepopolni.length,3)
  assert.match(vir.nepopolni.find(n=>n.id==='es-novanet-galicia-1448237').razlog,/999/)
 })
+test('audit mode collects only branded parser failures and keeps default fatal',async()=>{
+ const original=fixture('galicia-round1'),select=original.match(/(<select\b[^>]*name=jornada[^>]*>)([\s\S]*?)(<\/select>)/i),first=select[2].match(/<option value=1>[\s\S]*?<\/option>/i)[0]
+ const round=original.replace(select[0],`${select[1]}${first}${select[3]}`)
+ const badDecoder=fixture('galicia-1448233').replace('return p}', 'return changed}')
+ assert.notEqual(badDecoder,fixture('galicia-1448233'))
+ const badCard=fixture('galicia-1448237').replaceAll('tarj_amar.gif','unknown_card.gif')
+ const read=async url=>{
+  if(url.includes('NFG_CmpJornada'))return round
+  if(url.includes('CodActa=1448233&'))return badDecoder
+  if(url.includes('CodActa=1448235&'))return fixture('galicia-1448235')
+  if(url.includes('CodActa=1448237&'))return badCard
+  throw Object.assign(new Error('missing'),{status:404})
+ }
+ const source=()=>ustvariVir({predpomnilnik:false,opozori:()=>{}})
+ await assert.rejects(source().zapisniki('galicia:22:26990830:27759837',read),/novanet:/)
+ const audit=source(),reports=await audit.zapisniki('galicia:22:26990830:27759837',read,{zberiNapake:true})
+ assert.deepEqual(reports.map(r=>r.id),['es-novanet-galicia-1448235'])
+ assert.equal(audit.nepopolni.length,4)
+ assert.equal(audit.nepopolni.filter(n=>n.razclenitev).length,2)
+ for(const failure of[
+  Object.assign(new Error('denied'),{status:403,zavrnitev:true}),
+  new TypeError('programming failure'),
+  Object.assign(new Error('fetch validation-like error'),{razclenitev:true}),
+ ])await assert.rejects(source().zapisniki('galicia:22:26990830:27759837',async url=>{
+  if(url.includes('NFG_CmpJornada'))return round
+  throw failure
+ },{zberiNapake:true}),e=>e===failure||failure.zavrnitev&&e.zavrnitev)
+ // A programming error thrown inside parser input conversion is not branded.
+ await assert.rejects(source().zapisniki('galicia:22:26990830:27759837',async url=>url.includes('NFG_CmpJornada')?round:{toString(){throw new TypeError('parser programming failure')}},{zberiNapake:true}),/parser programming failure/)
+})

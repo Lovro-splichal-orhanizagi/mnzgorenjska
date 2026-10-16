@@ -14,6 +14,8 @@ Captured by the parent agent through ordinary public browser navigation on
 | de-dfb-2401965.html | https://datencenter.dfb.de/datencenter/regionalliga-nordost/2025-2026/10-spieltag/vsg-altglienicke-bfc-dynamo-2401965 | 65f6233af3eeda4fbf98dc1d794feba4c77eb5db0f634396357b9c4ea606d4ce |
 | de-dfb-2402004.html | https://datencenter.dfb.de/datencenter/regionalliga-nordost/2025-2026/14-spieltag/1-fc-lok-leipzig-bfc-dynamo-2402004 | 109096a0e5d67bba4655b2cbaabf21ff3bef21a95c789f889d2882b2173ec566 |
 | de-dfb-2402013.html | https://datencenter.dfb.de/datencenter/regionalliga-nordost/2025-2026/15-spieltag/bfc-dynamo-fc-carl-zeiss-jena-2402013 | 00bb89b45e14c5bd175806d97301c30445ffc682ff2a16abc5a02ac945be7110 |
+| de-dfb-2426025.html | https://datencenter.dfb.de/datencenter/regionalliga-nordost/2026-2027/5-spieltag/sv-babelsberg-03-rsv-eintracht-1949-2426025 | c6a0bc7a5d7715e8cbfed1a2c7f94daab2bd5cb6271623cece55ff3e12f85564 |
+| de-dfb-2401897.html | https://datencenter.dfb.de/datencenter/regionalliga-nordost/2025-2026/3-spieltag/vsg-altglienicke-fc-carl-zeiss-jena-2401897 | f6de7c46111be47171101530afcc55815b95520d6a6c009b0b66e97a609f80af |
 
 `de-dfb-2426054.html` is the parent's additional ordinary public capture of
 https://datencenter.dfb.de/datencenter/regionalliga-nordost/2026-2027/8-spieltag/bfc-dynamo-sv-tasmania-berlin-2426054 .
@@ -58,6 +60,26 @@ represented as `minuta: null, izpeljanIz: 'drugi-rumeni'`, with an explicit
 `opozorila` entry. No prior minute is invented. When the first caution is
 explicit, it is retained once. The real dismissal minute is always preserved;
 source event counts and duplicate-section comparison exclude derived cautions.
+
+Report 2426025 was captured by the live audit on 2026-10-16. Its raw minute
+elements contain the plain text `90 12'` and `90 13'`, without nested markup or
+a CSS-generated plus. The participating club's
+[official match report](https://www.rsv-eintracht-fussball.de/spielbericht/111248/dreierpack-von-baraze-adam-beim-3-3-in-babelsberg)
+independently confirms the equalizer in the twelfth minute of stoppage time.
+The parser accepts this observed `90 <added 1..30>'` form, preserves it as
+`minutaZapis`, emits a warning, and keeps minute 90 for the fantasy contract.
+It does not generalize this to `45 <added>` or arbitrary two-integer labels.
+Source-section agreement and chronological added-time ordering still apply.
+
+Archive 2401897 is intentionally a rejected fixture, captured unchanged by the
+live audit on 2026-10-16. It names Luis Zwick in a yellow-card event linked to
+[official profile 379608](https://datencenter.dfb.de/profil/379608), but publishes
+neither a bench table nor a substitution involving him. The official profile
+identifies a player, yet its VSG career entry ends on 2025-06-30; the captured
+[2025/26 VSG roster](https://datencenter.dfb.de/competitions/regionalliga-nordost/seasons/2025-2026/teams/vsg-altglienicke)
+does not include him. This evidence does not establish his match role as an
+unused player rather than additional staff. The whole report stays rejected
+with the concrete unknown-person reason and cannot enter the report cache.
 
 `test-dfb.mjs` additionally constructs an explicitly synthetic 18-team double
 round-robin using the captured row schema to test bounded discovery and
