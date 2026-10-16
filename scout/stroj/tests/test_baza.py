@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 import psycopg
 import pytest
 
-from stroj.nalaganje import nalozi
+from stroj.nalaganje import SQL_IZKLJUCENI, nalozi
 from stroj.pisanje import zapisi
 
 URL = os.environ.get("SCOUT_TEST_DB", "postgresql://postgres:postgres@127.0.0.1:54322/postgres")
@@ -164,6 +164,66 @@ def test_mladinec_s_polnoletno_letnico(conn):
     conn.execute("update scout.privolitve set letnik = 2000 where player_id = -914005")
     conn.execute("set role scout_stroj")
     assert -914005 in set(nalozi(conn)[0]["player_id"].tolist())
+
+
+# Mladinec brez šifre v klubu X (-914001) in isto ime v članski ekipi kluba Y
+# (-914002): dve `oseba`, a ista oseba. Soimenjak v tretjem klubu (-914003).
+DVOJNI = """
+insert into teams (id, name, short_name, country_id) overriding system value
+values (-914003, 'Test Scout 3', 'TS3', (select id from countries where code = 'SI'));
+insert into players (id, team_id, competition_id, first_name, last_name, full_name, position,
+                     value, value_start) overriding system value
+values (-914040, -914001, -914002, 'Dvojni', 'Scout', 'Scout Dvojni', 'MID', 6, 6),
+       (-914041, -914002, -914001, 'Dvojni', 'Scout', 'Scout Dvojni', 'MID', 6, 6),
+       (-914042, -914003, -914001, 'Dvojni', 'Scout', 'Scout Dvojni', 'MID', 6, 6);
+insert into appearances (match_id, player_id, team_id, started, minute_on, minute_off, minutes_played, goals, penalties_scored)
+values (-914001, -914041, -914002, true, 0, 90, 90, 0, 0);
+"""
+
+
+def prijavi_letnico(conn, player_id, n):
+    """Potrjen profil z letnico 2000 na vrstici player_id (kot admin, nato nazaj v scout_stroj)."""
+    uid = f"e5c00000-0000-4000-8000-00000091404{n}"
+    conn.execute("reset role")
+    conn.execute("insert into auth.users (id, email, raw_user_meta_data, created_at) "
+                 "values (%s, %s, '{}', now())", (uid, f"scout-dvojni{n}@example.invalid"))
+    conn.execute("insert into zahtevki_igralca (player_id, user_id, status, potrdil, decided_at) "
+                 "values (%s, %s, 'potrjen', 'admin', now())", (player_id, uid))
+    conn.execute("insert into scout.privolitve (player_id, letnik) values (%s, 2000)", (player_id,))
+    conn.execute("set role scout_stroj")
+
+
+def igralci(conn):
+    return set(nalozi(conn)[0]["player_id"].tolist())
+
+
+def test_mladinec_v_drugem_klubu(conn):
+    """Mladinska vrstica v klubu X izloči tudi člansko vrstico istega imena v klubu Y."""
+    conn.execute("reset role")
+    conn.execute(DVOJNI)
+    conn.execute("set role scout_stroj")
+    assert -914041 not in igralci(conn)
+
+
+def test_mladinec_v_drugem_klubu_z_letnico(conn):
+    """Prijava letnice na članski vrstici odpre njeno osebo."""
+    conn.execute("reset role")
+    conn.execute(DVOJNI)
+    prijavi_letnico(conn, -914041, 1)
+    assert -914041 in igralci(conn)
+
+
+def test_soimenjakova_letnica_ne_odpre(conn):
+    """Prijava soimenjaka v klubu Z (-914042) odpre le njegovo osebo, ne članske
+    vrstice mladinca v klubu Y."""
+    conn.execute("reset role")
+    conn.execute(DVOJNI)
+    prijavi_letnico(conn, -914042, 2)
+    assert -914041 not in igralci(conn)
+    izlocene = {r[0] for r in conn.execute(SQL_IZKLJUCENI).fetchall()}
+    si = conn.execute("select id from countries where code = 'SI'").fetchone()[0]
+    assert f"i{si}:scout dvojni:-914003" not in izlocene  # soimenjak sam vstopi
+    assert f"i{si}:scout dvojni:-914002" in izlocene
 
 
 def test_zapisi_in_obrezi(conn):

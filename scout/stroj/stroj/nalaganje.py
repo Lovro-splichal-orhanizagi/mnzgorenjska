@@ -13,9 +13,12 @@ OSEBA = """case when p.reg_st is not null
        || lower(coalesce(p.full_name, p.last_name || ' ' || p.first_name)) || ':' || p.team_id end"""
 
 # Izločene osebe (vse vrstice osebe):
-# - mladinska vrstica, razen če je oseba na potrjenem profilu prijavila
-#   letnico, s katero je polnoletna vse leto (scout.odrasle_vrstice: glavna in
-#   povezane vrstice);
+# - mladinska vrstica ali vrstica z istim ključem (ime ali šifra v državi) kot
+#   katerakoli mladinska vrstica: ista oseba brez šifre v drugem klubu je druga
+#   `oseba`, a izpade z njo (tudi soimenjak). Izjema so le `oseba` vrstic, za
+#   katere je potrjen profil prijavil letnico, s katero je polnoleten vse leto
+#   (scout.odrasle_vrstice: glavna in povezane vrstice) — soimenjakova
+#   prijava tako ne odpre nikogar drugega;
 #   članske minute ima, kdor je sploh v SQL_SEZONE;
 # - ugovor (scout.ugovori) in anonimizacija (anonimizirani_igralci) po
 #   zgoščenih ključih država + ime in država + šifra: velja za vse vrstice
@@ -29,8 +32,15 @@ with vrstice as (
          public.anonimizacijski_kljuc(c.country_id || '|reg|' || p.reg_st) as kljuc_reg
   from public.players p join public.competitions c on c.id = p.competition_id
   where p.anonimiziran_at is null
+), mladi as (
+  select kljuc_ime as kljuc from vrstice where mladinski
+  union select kljuc_reg from vrstice where mladinski
 )
-(select v.oseba from vrstice v where v.mladinski
+((select v.oseba from vrstice v where v.mladinski
+  union
+  select v.oseba from vrstice v
+  cross join lateral (values (v.kljuc_ime), (v.kljuc_reg)) k(kljuc)
+  join mladi m on m.kljuc = k.kljuc)
  except
  select v.oseba from vrstice v join scout.odrasle_vrstice() o on o.player_id = v.id)
 union

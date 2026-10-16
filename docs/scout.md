@@ -58,8 +58,11 @@ Viri so po državah, zato ena oseba nikoli ne zajame dveh držav.
 
 V izračun ne vstopi cela oseba (vse njene vrstice), če ima:
 
-- vrstico v mladinski ligi (`je_mladinski_slug`) — katerokoli, tudi staro;
-  dokler faza 2 ne prinese letnice, je to edini varen znak mladoletnosti;
+- vrstico v mladinski ligi (`je_mladinski_slug`) — katerokoli, tudi staro —
+  ali vrstico z istim ključem imena ali šifre v državi kot katerakoli mladinska
+  vrstica (ista oseba brez šifre v drugem klubu, tudi soimenjak); izjema je le
+  oseba vrstice, za katero je potrjen profil prijavil polnoletno letnico
+  (`scout.odrasle_vrstice()`), soimenjakova prijava ne odpre nikogar drugega;
   mladinske lige same tudi niso v izračunu;
 - `players.scout_skrit` v katerikoli vrstici (ugovor); ugovor zajame tudi
   vrstice z istim ključem imena ali šifre v državi (kot anonimizacija spodaj),
