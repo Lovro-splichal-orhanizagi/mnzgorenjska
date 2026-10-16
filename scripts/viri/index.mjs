@@ -46,6 +46,8 @@ import fscg from './fscg.mjs'
 import mfa from './mfa.mjs'
 import isthmian from './isthmian.mjs'
 import pflUa from './pfl-ua.mjs'
+import nsfbih from './nsfbih.mjs'
+import nfsbih from './nfsbih.mjs'
 
 const VIRI = {
   mnzg,
@@ -141,6 +143,12 @@ const VIRI = {
   // Ukrajina: Професіональна футбольна ліга (pfl.ua) — Perša liga, Druga liga A in B;
   // koledar JSON, šifra igralca, vratar iz postavitve.
   'pfl-ua': pflUa,
+  // Bosna in Hercegovina: NS FBiH prek nsfbih.ba (COMET, Prva in Druga liga
+  // FBiH), brez šifer igralcev (ime + klub), vratar je prvi začetnik (namig).
+  nsfbih,
+  // Bosna in Hercegovina, državna raven: NFSBiH prek nfsbih.ba (WWIN liga BiH;
+  // isti COMET, druga stran), ime + klub (šifra v povezavi ni stalna), vratar "(GK)".
+  nfsbih,
 }
 
 /**

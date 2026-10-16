@@ -55,6 +55,9 @@ const vsePozicije = process.argv.includes('--vse-pozicije')
 // glej scripts/viri/jalgpall.mjs) ali lff (vratar "(G)", glej scripts/viri/lff.mjs) ali
 // ffm (vratar je namig: prvi začetnik, glej scripts/viri/ffm.mjs) ali ffa (isto,
 // glej scripts/viri/ffa.mjs).
+// ffm (vratar je namig: prvi začetnik, glej scripts/viri/ffm.mjs) ali nsfbih
+// (isto, glej scripts/viri/nsfbih.mjs) ali nfsbih (vratar "(GK)", glej
+// scripts/viri/nfsbih.mjs).
 // Pri hns glasove da baza: `appearances.is_goalkeeper` na vsaki tekmi. Uvoz ga
 // polni od združitve #93 (7. 10. 2026 21:06 UTC); starejše vrstice so vse
 // `false` in bi prave vratarje prestavile v polje, zato štejemo le tekme,
@@ -143,6 +146,7 @@ for (const liga of lige) {
   // MLSZ vratarja ne označi; `is_goalkeeper` je namig (prvi začetnik), ki ga
   // večina tekem potrdi ali ovrže enako kot oznako HNS.
   if (VIR === 'hns' || VIR === 'mlsz' || VIR === 'oefb' || VIR === 'fsb' || VIR === 'fss' || VIR === 'fssid' || VIR === 'jalgpall' || VIR === 'lff' || VIR === 'ffm' || VIR === 'fcf' || VIR === 'fas' || VIR === 'aft' || VIR === 'hoff-km' || VIR === 'ffa' || VIR === 'mascot' || VIR === 'lowland' || VIR === 'eps' || VIR === 'ltfutbolas' || VIR === 'fscg' || VIR === 'mfa' || VIR === 'isthmian' || VIR === 'pfl-ua') { await uskladiHns(liga); continue }
+  if (VIR === 'hns' || VIR === 'mlsz' || VIR === 'oefb' || VIR === 'fsb' || VIR === 'fss' || VIR === 'fssid' || VIR === 'jalgpall' || VIR === 'lff' || VIR === 'ffm' || VIR === 'fcf' || VIR === 'fas' || VIR === 'nsfbih' || VIR === 'nfsbih') { await uskladiHns(liga); continue }
   // Tekoča sezona lige ("2026/27" ali pri koledarski ligi "2026").
   const { data: sezona, error: eSezona } = await db.rpc('sezona_lige', { p_competition_id: liga.id })
   if (eSezona || !sezona) {

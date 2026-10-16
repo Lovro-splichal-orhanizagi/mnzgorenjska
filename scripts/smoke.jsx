@@ -5618,6 +5618,279 @@ preveri(
     zavrnjen.status === 403 && A.default.zavrnitev('x', 429).zavrnitev === true)
 }
 
+// --- vir nsfbih (Bosna in Hercegovina, NS FBiH, nsfbih.ba; COMET) -------------------
+{
+  const N = await import('./viri/nsfbih.mjs')
+  const { default: viri } = await import('./viri/index.mjs')
+  const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  preveri('nsfbih: vir je vpisan, 3 s, User-Agent SLFF', viri.nsfbih === N.default && N.default.drzava === 'BA' &&
+    N.default.imaRegistracije === false && N.default.premorMs >= 3000 && N.default.glave['User-Agent'] === 'SLFF fantasy (https://slff.eu)')
+  const k = N.razberiKodo('druga-liga-fbih-jug/2026-27')
+  preveri('nsfbih: šifra lige (slug + sezona), naslovi, šifra zapisnika ba<id>', k.slug === 'druga-liga-fbih-jug' && k.sezona === '2026/27' &&
+    N.default.naslovRazporeda('druga-liga-fbih-jug/2026-27') === 'https://www.nsfbih.ba/takmicenja/druga-liga-fbih-jug' &&
+    N.default.naslovZapisnika('wwin-prva-liga-fbih/2026-27', 'ba54189095') === 'https://www.nsfbih.ba/takmicenja/wwin-prva-liga-fbih/54189095' &&
+    N.sifraZapisnika(54209932) === 'ba54209932' && N.sifraZapisnika('ba54209932') === 'ba54209932')
+  let slabaSifra = null
+  try { N.razberiKodo('druga-liga-fbih-jug') } catch (e) { slabaSifra = e.message }
+  let slabaSezona = null
+  try { N.razberiKodo('druga-liga-fbih-jug/2026-28') } catch (e) { slabaSezona = e.message }
+  preveri('nsfbih: šifra brez sezone ali z nemogočo sezono ustavi uvoz', /<slug>\/<sezona>/.test(slabaSifra ?? '') && /<slug>\/<sezona>/.test(slabaSezona ?? ''))
+  preveri('nsfbih: ključ kluba ohrani obliko (FK/NK VITEZ) in šumnike, kratko ime je polno', N.kljucKlubaBa('FK VITEZ') !== N.kljucKlubaBa('NK VITEZ') &&
+    N.kljucKlubaBa('NK ČELIĆ') === 'nk čelić' && N.kljucKlubaBa('FK RUDAR (K)') !== N.kljucKlubaBa('FK RUDAR') &&
+    N.kratkoImeBa('HNK SLOGA') === 'HNK SLOGA' && N.kratkoImeBa(' NK  TROGLAV 1918 ') === 'NK TROGLAV 1918')
+  preveri('nsfbih: izid, zelena miza, neodigrana', N.izidIz('<b>7:0</b> ').izid?.domaci === 7 && !N.izidIz('<b>7:0</b>').zelenaMiza &&
+    N.izidIz('<b>3:0</b> * ').zelenaMiza && N.izidIz(' - ').izid === null)
+
+  const stran = beri('ba-nsfbih-liga-druga-liga-fbih-jug.html')
+  const t = N.tekmeStrani(stran)
+  preveri('nsfbih: stran lige — 16 krogov po 6 tekem, 13 klubov, 48 odigranih, vse z uro', t.length === 96 && new Set(t.map((x) => x.krog)).size === 16 &&
+    new Set(t.flatMap((x) => [x.domaci, x.gostje])).size === 13 && t.filter((x) => x.izid).length === 48 && t.every((x) => x.datum && x.ura))
+  const t1 = t.find((x) => x.id === '54209932')
+  preveri('nsfbih: tekma s strani lige (datum, ura, klubi, izid)', t1?.krog === 1 && t1.datum === '2026-08-23' && t1.ura === '17:00' &&
+    t1.domaci === 'HNK RAMA' && t1.gostje === 'NK TROGLAV 1918' && t1.izid.domaci === 1 && t1.izid.gostje === 5 && !t1.zelenaMiza &&
+    t.at(-1).id === '54210027' && t.at(-1).izid === null && t.at(-1).datum === '2027-03-27')
+  const krogi = N.razcleniRazpored('druga-liga-fbih-jug/2026-27', stran)
+  const kont = krogi.flatMap((x) => x.tekme).filter((x) => x.kontumacija)
+  preveri('nsfbih: razpored — 16 krogov, zelena miza (3:0 *) je kontumacija z izidom', krogi.length === 16 && krogi[0].stevilka === 1 &&
+    kont.length === 1 && kont[0].domaci === 'NK KAMEŠNICA' && kont[0].izid.domaci === 3 && kont[0].izid.gostje === 0 &&
+    krogi.flatMap((x) => x.tekme).filter((x) => x.odigrana).length === 48)
+  let drugaSezona = null
+  try { N.razcleniRazpored('druga-liga-fbih-jug/2027-28', stran) } catch (e) { drugaSezona = e.message }
+  preveri('nsfbih: stran druge sezone ustavi uvoz', /kaže sezono 2026\/27, ne 2027\/28/.test(drugaSezona ?? ''))
+  let niStran = null
+  try { N.razcleniRazpored('druga-liga-fbih-jug/2026-27', '<html><body>Not found</body></html>') } catch (e) { niStran = e.message }
+  preveri('nsfbih: stran brez razporeda ustavi uvoz', /ni stran lige/.test(niStran ?? ''))
+
+  const minute = (nn, i) => nn.filter((x) => x.ekipaIdx === i).reduce((a, x) => a + x.minute, 0)
+  const z = N.vZapisnik(beri('ba-nsfbih-tekma-54209932.html'), { id: 'ba54209932' })
+  const n = N.nastopi(z)
+  preveri('nsfbih: zapisnik — glava (klubi, izid, polčas, sezona, krog, datum, ura)', z.domaci.ime === 'HNK RAMA' && z.gostje.ime === 'NK TROGLAV 1918' &&
+    z.rezultat.domaci === 1 && z.rezultat.gostje === 5 && z.polcas.domaci === 1 && z.polcas.gostje === 2 && z.sezona === '2026/27' &&
+    z.krog === 1 && z.datum === '2026-08-23' && z.ura === '17:00' && z.zapisnikId === 'ba54209932')
+  preveri('nsfbih: 11 + 11, klop 3 + 4, dresi, goli = izid, brez opozoril', z.domaci.postava.length === 11 && z.gostje.postava.length === 11 &&
+    z.domaci.rezerve.length === 3 && z.gostje.rezerve.length === 4 && z.domaci.postava[1].st === 2 && z.domaci.postava[1].ime === 'Lovrić Marko' &&
+    z.goli.length === 6 && z.goli.filter((g) => g.ekipaIdx === 1).length === 5 && z.rumeni.length === 3 && z.opozorila.length === 0)
+  preveri('nsfbih: menjave v parih z minuto, 990 + 990 minut, 5 nastopov s klopi', z.menjave.length === 5 &&
+    z.menjave.some((m) => m.minuta === 56 && m.noter.ime === 'Cvitanović Zvonimir' && m.ven.ime === 'Markešić Marin') &&
+    minute(n, 0) === 990 && minute(n, 1) === 990 && n.filter((x) => !x.zacetnik).length === 5 &&
+    n.find((x) => x.ime === 'Burić Stjepan')?.minutaOd === 62 && n.find((x) => x.ime === 'Imamović Azer')?.minute === 62 &&
+    n.find((x) => x.ime === 'Vrgoč Martin')?.goli === 2)
+  preveri('nsfbih: vratar je prvi začetnik (namig: 12 pred urejenimi dresi)', n.filter((x) => x.vratar).map((x) => x.st).join() === '12,1' &&
+    n.find((x) => x.ime === 'Ćališ Ivan')?.pozicija === 'GK' && n.filter((x) => x.pozicija).length === 2)
+
+  const ag = N.vZapisnik(beri('ba-nsfbih-tekma-54209938-avtogol.html'))
+  preveri('nsfbih: avtogol "(AG)" je pri strelcu v njegovi ekipi in šteje nasprotniku (4:1)', ag.goli.filter((g) => g.avtogol).length === 1 &&
+    ag.goli.find((g) => g.avtogol)?.ekipaIdx === 1 && ag.goli.find((g) => g.avtogol)?.minuta === 25 && ag.rezultat.domaci === 4 &&
+    ag.opozorila.length === 0 && N.nastopi(ag).find((x) => x.ime === 'Bilić Ronald')?.avtogoli === 1)
+  const p = N.vZapisnik(beri('ba-nsfbih-tekma-54227112-11m.html'))
+  preveri('nsfbih: gol z 11 m "(P)"', p.goli.filter((g) => g.enajstmetrovka).length === 1 && p.goli.find((g) => g.enajstmetrovka)?.minuta === 66 &&
+    p.goli.length === 3 && p.opozorila.length === 0 && N.nastopi(p).find((x) => x.ime === 'Dedić Anel')?.goliIzEnajstmetrovke === 1)
+  const rd = N.vZapisnik(beri('ba-nsfbih-tekma-54227164-rdeci.html'))
+  const nrd = N.nastopi(rd)
+  preveri('nsfbih: rumeni + rdeči (drugi rumeni) — 1 rumeni + 1 rdeči, nastop do izključitve, 947 minut', rd.rdeci.length === 2 &&
+    nrd.find((x) => x.ime === 'Hrvat Ibrahim')?.minute === 79 && nrd.find((x) => x.ime === 'Hrvat Ibrahim')?.rumeni === 1 &&
+    nrd.find((x) => x.ime === 'Spahić Eman')?.rdeci === 1 && minute(nrd, 0) === 947 && minute(nrd, 1) === 990 && rd.opozorila.length === 0)
+  const dv = N.vZapisnik(beri('ba-nsfbih-tekma-54189113-dvojni-vstop.html'))
+  const ndv = N.nastopi(dv)
+  preveri('nsfbih: dvojni vstop rezerve — drugi je izstop, menjava v paru, 990 minut, opozorilo', minute(ndv, 0) === 990 &&
+    ndv.find((x) => x.ime === 'Kobilica Belmin')?.minute === 23 && dv.menjave.some((m) => m.minuta === 79 && m.noter.ime === 'Čago Safet' && m.ven.ime === 'Kobilica Belmin') &&
+    dv.opozorila.length === 1 && /dvakrat vstopi/.test(dv.opozorila[0]) && dv.goli.filter((g) => g.enajstmetrovka).length === 1)
+  const bm = N.vZapisnik(beri('ba-nsfbih-tekma-54189129-rumeni-brez-minute.html'))
+  preveri('nsfbih: rumeni brez minute ostane rumeni, z opozorilom', bm.rumeni.some((r) => r.ime === 'Avdagić Harun' && r.minuta === null) &&
+    bm.opozorila.length === 1 && /brez minute/.test(bm.opozorila[0]) && N.nastopi(bm).find((x) => x.ime === 'Avdagić Harun')?.rumeni === 1)
+  const zm = beri('ba-nsfbih-tekma-54189095-zelena-miza.html')
+  preveri('nsfbih: zelena miza "0:3*" (odigrano 3:1) in kontumacija z eno postavo nimata zapisnika', N.vZapisnik(zm) === null &&
+    N.glavaTekme(zm).zelenaMiza && N.glavaTekme(zm).izid.gostje === 3 && N.vZapisnik(beri('ba-nsfbih-tekma-54209969-kontumacija.html')) === null)
+  const nd = beri('ba-nsfbih-tekma-54210027-neodigrana.html')
+  preveri('nsfbih: neodigrana — glava s krogom, datumom in uro, brez zapisnika', N.vZapisnik(nd) === null && N.glavaTekme(nd).izid === null &&
+    N.glavaTekme(nd).krog === 16 && N.glavaTekme(nd).datum === '2027-03-27' && N.glavaTekme(nd).ura === '15:30' && N.glavaTekme(nd).sezona === '2026/27')
+  preveri('nsfbih: vzorci brez sodnikov, delegata in gledalcev', !/sudija|Delegat|Promatrač|Gledalaca/.test(
+    ['ba-nsfbih-tekma-54209932.html', 'ba-nsfbih-tekma-54189095-zelena-miza.html', 'ba-nsfbih-tekma-54227164-rdeci.html'].map(beri).join('')))
+
+  // Uvoz zapisnikov: stran lige iz vzorca, zapisnik 1. kroga, ostali še niso prebrani (prazni).
+  const prebrani = []
+  const prenesi = async (url, ime) => {
+    prebrani.push(ime)
+    if (url.endsWith('/druga-liga-fbih-jug')) return stran
+    if (url.endsWith('/54209932')) return beri('ba-nsfbih-tekma-54209932.html')
+    return '<html></html>'
+  }
+  const zs = await N.default.zapisniki('druga-liga-fbih-jug/2026-27', prenesi)
+  preveri('nsfbih: uvoz zapisnikov — 47 odigranih brez kontumacije, šifra ba<id>, ime kluba in krog s strani lige', zs.length === 1 &&
+    zs[0].id === 'ba54209932' && zs[0].z.sezona === '2026/27' && zs[0].z.krog === 1 && !prebrani.some((x) => /54209969/.test(x)) &&
+    prebrani.filter((x) => x.startsWith('nsfbih-tekma-')).length >= 47)
+  let izziv = null
+  try { await N.default.zapisniki('druga-liga-fbih-jug/2026-27', async () => '<title>Just a moment...</title>') } catch (e) { izziv = e }
+  let zavrnjen = null
+  try { await N.default.zapisniki('druga-liga-fbih-jug/2026-27', async () => { const e = new Error('403'); e.status = 403; throw e }) } catch (e) { zavrnjen = e }
+  preveri('nsfbih: 403 in izziv vržeta NsfbihZavrnitev (uvoz izhod 4)', izziv instanceof N.NsfbihZavrnitev && zavrnjen instanceof N.NsfbihZavrnitev &&
+    zavrnjen.status === 403 && N.default.zavrnitev('x', 429).zavrnitev === true && N.jeIzziv('<div class="cf-turnstile">') && !N.jeIzziv(stran))
+  let neprijavljen = null
+  try { await N.default.razporedVseStrani('druga-liga-fbih-jug/2026-27', async () => { const e = new Error('401'); e.status = 401; throw e }) } catch (e) { neprijavljen = e }
+  preveri('nsfbih: 401 na razporedu vrže NsfbihZavrnitev', neprijavljen instanceof N.NsfbihZavrnitev && neprijavljen.status === 401)
+  preveri('nsfbih: v predpomnilnik gre le prava stran lige ali tekme, ne napaka ali vzdrževanje', N.default.zaPredpomnilnik(stran, 'nsfbih-liga-x.html') &&
+    N.default.zaPredpomnilnik(beri('ba-nsfbih-tekma-54210027-neodigrana.html'), 'nsfbih-tekma-54210027.html') &&
+    !N.default.zaPredpomnilnik('<html><body><h1>503 Service Unavailable</h1></body></html>', 'nsfbih-tekma-1.html') &&
+    !N.default.zaPredpomnilnik('<html><body>Održavanje</body></html>', 'nsfbih-liga-x.html') &&
+    !N.default.zaPredpomnilnik(beri('ba-nsfbih-tekma-54209932.html'), 'nsfbih-liga-x.html'))
+  // Uvoz: shranjena stran, ki ni stran tekme (napaka, vzdrževanje), se prebere še enkrat sveže (kot zapisnikSvez).
+  const branja = []
+  await N.default.zapisniki('druga-liga-fbih-jug/2026-27', async (url, ime, sveze) => {
+    if (url.endsWith('/druga-liga-fbih-jug')) return stran
+    branja.push([ime, sveze])
+    return '<html></html>'
+  })
+  preveri('nsfbih: stran brez glave tekme se ne vzame iz predpomnilnika — vsaka tekma se prebere še sveže', branja.length >= 47 &&
+    new Set(branja.filter(([, s]) => s === true).map(([x]) => x)).size === new Set(branja.map(([x]) => x)).size)
+}
+
+// --- vir nsfbih: Omladinska liga BiH juniori (U19) -----------------------------------
+{
+  const N = await import('./viri/nsfbih.mjs')
+  const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  const stran = beri('ba-nsfbih-liga-omladinska-liga-bih-juniori-jug.html')
+  const t = N.tekmeStrani(stran)
+  const klubi = new Set(t.flatMap((x) => [x.domaci, x.gostje]))
+  preveri('nsfbih U19: stran Juniori Jug — 13 krogov, 13 klubov, vse z uro, sezona 2026/27', new Set(t.map((x) => x.krog)).size === 13 &&
+    klubi.size === 13 && t.every((x) => x.datum && x.ura) && N.sezonaTekem(t) === '2026/27' && klubi.has('FK VELEŽ') && klubi.has('NK TROGLAV 1918'))
+  const krogi = N.razcleniRazpored('omladinska-liga-bih-juniori-jug/2026-27', stran)
+  preveri('nsfbih U19: razpored — zelena miza je kontumacija, ostale odigrane z izidom', krogi.flatMap((k) => k.tekme).filter((x) => x.kontumacija).length === 1 &&
+    krogi.flatMap((k) => k.tekme).filter((x) => x.odigrana).length === t.filter((x) => x.izid).length)
+  const z = N.vZapisnik(beri('ba-nsfbih-tekma-54190492-u19.html'))
+  const n = N.nastopi(z)
+  const min = (i) => n.filter((x) => x.ekipaIdx === i).reduce((a, x) => a + x.minute, 0)
+  preveri('nsfbih U19: zapisnik juniorov — 11 + 11, goli = izid, menjave z minuto, 990 + 990, vratar je prvi začetnik', z.domaci.postava.length === 11 &&
+    z.gostje.postava.length === 11 && z.goli.filter((g) => (g.avtogol ? 1 - g.ekipaIdx : g.ekipaIdx) === 0).length === z.rezultat.domaci &&
+    z.goli.filter((g) => (g.avtogol ? 1 - g.ekipaIdx : g.ekipaIdx) === 1).length === z.rezultat.gostje && z.menjave.length > 0 &&
+    z.menjave.every((m) => m.minuta != null) && min(0) === 990 && min(1) === 990 && n.filter((x) => x.vratar).length >= 2 && z.opozorila.length === 0)
+  preveri('nsfbih U19: glava (FK ROMANIJA : FK NOVI GRAD 3:2, 5. kolo, 13. 9. 12:30, 2026/27), 11 m, menjava v paru', z.domaci.ime === 'FK ROMANIJA' &&
+    z.gostje.ime === 'FK NOVI GRAD' && z.rezultat.domaci === 3 && z.rezultat.gostje === 2 && z.krog === 5 && z.datum === '2026-09-13' && z.ura === '12:30' &&
+    z.sezona === '2026/27' && z.goli.filter((g) => g.enajstmetrovka).length === 1 &&
+    z.menjave.some((m) => m.minuta === 75 && m.noter.ime === 'Radović Vladan' && m.ven.ime === 'Srndović Mihajlo'))
+  preveri('nsfbih U19: vzorci brez sodnikov, delegata in gledalcev', !/sudija|Delegat|Gledalaca|pomoćnik/.test(beri('ba-nsfbih-tekma-54190492-u19.html')))
+}
+
+// --- vir nfsbih (Bosna in Hercegovina, NFSBiH, nfsbih.ba; WWIN liga BiH) ------------
+{
+  const F = await import('./viri/nfsbih.mjs')
+  const NS = await import('./viri/nsfbih.mjs')
+  const { default: viri } = await import('./viri/index.mjs')
+  const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  preveri('nfsbih: vir je vpisan, 3 s, User-Agent SLFF, država BA, isti ključ kluba kot nsfbih', viri.nfsbih === F.default && F.default.drzava === 'BA' &&
+    F.default.premorMs >= 3000 && F.default.glave['User-Agent'] === 'SLFF fantasy (https://slff.eu)' && F.default.kljucKluba === NS.kljucKlubaBa)
+  const k = F.razberiKodo('wwin-liga-bih/54152223')
+  let slaba = null
+  try { F.razberiKodo('wwin-liga-bih/2026-27') } catch (e) { slaba = e.message }
+  preveri('nfsbih: šifra lige (slug + id tekmovanja), naslovi, šifra zapisnika ba<id>', k.slug === 'wwin-liga-bih' && k.id === '54152223' &&
+    F.default.naslovRazporeda('wwin-liga-bih/54152223') === 'https://www.nfsbih.ba/takmicenja/nogomet-muskarci/wwin-liga-bih?view=fixtures&id=54152223' &&
+    F.default.naslovZapisnika('wwin-liga-bih/54152223', 'ba54152314') === 'https://www.nfsbih.ba/takmicenja/nogomet-muskarci/wwin-liga-bih?view=match&id=54152314' &&
+    F.sifraZapisnika(54152314) === 'ba54152314' && /<slug>\/<id tekmovanja>/.test(slaba ?? ''))
+
+  const stran = beri('ba-nfsbih-razpored-54152223.html')
+  const t = F.tekmeStrani(stran)
+  const klubi = new Set(t.flatMap((x) => [x.domaci, x.gostje]))
+  preveri('nfsbih: razpored 2026/27 — 10 krogov po 5 tekem, 10 klubov, 45 odigranih, vse z uro', t.length === 50 && new Set(t.map((x) => x.krog)).size === 10 &&
+    klubi.size === 10 && t.filter((x) => x.izid).length === 45 && t.every((x) => x.datum && x.ura) && F.sezonaNaslova(stran) === '2026/27')
+  const t1 = t.find((x) => x.id === '54152274')
+  preveri('nfsbih: tekma z razporeda (datum, ura, klubi, izid; "- : -" je neodigrana)', t1?.krog === 1 && t1.datum === '2026-08-07' && t1.ura === '20:00' &&
+    t1.domaci === 'FK ŽELJEZNIČAR' && t1.gostje === 'BSK' && t1.izid.domaci === 2 && t1.izid.gostje === 1 && t.find((x) => x.id === '54152319')?.izid === null)
+  preveri('nfsbih: isto ime, drug klub — državni klubi dobijo kraj po šifri COMET (Borac, Velež, Radnik)', klubi.has('FK BORAC (Banja Luka)') &&
+    klubi.has('FK VELEŽ (Mostar)') && klubi.has('FK RADNIK (Bijeljina)') && !klubi.has('FK BORAC') &&
+    NS.kljucKlubaBa('FK BORAC (Banja Luka)') !== NS.kljucKlubaBa('FK BORAC') && NS.kljucKlubaBa('FK VELEŽ (Mostar)') !== NS.kljucKlubaBa('FK VELEŽ'))
+  const krogi = F.razcleniRazpored('wwin-liga-bih/54152223', stran)
+  preveri('nfsbih: razpored v obliki uvoza — 10 krogov, 45 odigranih, brez kontumacij', krogi.length === 10 &&
+    krogi.flatMap((x) => x.tekme).filter((x) => x.odigrana).length === 45 && krogi.flatMap((x) => x.tekme).every((x) => !x.kontumacija))
+  let drugaSezona = null
+  try { F.tekmeLige('wwin-liga-bih/54152223', stran.replace('WWIN liga BiH 26/27', 'WWIN liga BiH 27/28')) } catch (e) { drugaSezona = e.message }
+  let niStran = null
+  try { F.razcleniRazpored('wwin-liga-bih/54152223', '<html><body><div id="akeeba-renderjoomla">Greška</div></body></html>') } catch (e) { niStran = e.message }
+  preveri('nfsbih: naslov sezone, ki se ne ujema z datumi, in stran brez razporeda ustavita uvoz', /sezona v naslovu 2027\/28/.test(drugaSezona ?? '') &&
+    /ni razpored/.test(niStran ?? ''))
+
+  const arhiv = beri('ba-nfsbih-razpored-46565761-arhiv.html')
+  const ta = F.tekmeStrani(arhiv)
+  preveri('nfsbih: arhiv 2025/26 — 36 krogov, 180 tekem z izidi, 10 klubov; zapisnik brez postav nima nastopov', F.sezonaNaslova(arhiv) === '2025/26' &&
+    new Set(ta.map((x) => x.krog)).size === 36 && ta.length === 180 && ta.every((x) => x.izid) && new Set(ta.flatMap((x) => [x.domaci, x.gostje])).size === 10 &&
+    F.vZapisnik(beri('ba-nfsbih-tekma-46565816-arhiv-brez-postav.html')) === null && F.glavaTekme(beri('ba-nfsbih-tekma-46565816-arhiv-brez-postav.html')).izid?.domaci === 6)
+
+  const min = (nn, i) => nn.filter((x) => x.ekipaIdx === i).reduce((a, x) => a + x.minute, 0)
+  const z = F.vZapisnik(beri('ba-nfsbih-tekma-54152314.html'), { id: 'ba54152314' })
+  const n = F.nastopi(z)
+  preveri('nfsbih: zapisnik — glava (klubi, izid, polčas, sezona, datum, ura)', z.domaci.ime === 'FK BORAC (Banja Luka)' && z.gostje.ime === 'BSK' &&
+    z.rezultat.domaci === 2 && z.rezultat.gostje === 0 && z.polcas.domaci === 0 && z.sezona === '2026/27' && z.datum === '2026-10-10' && z.ura === '18:30')
+  preveri('nfsbih: 11 + 11, klop, "(GK)" je vratar, "(C)" ni pozicija', z.domaci.postava.length === 11 && z.gostje.postava.length === 11 &&
+    z.domaci.rezerve.length === 11 && z.domaci.postava[0].ime === 'Jurkas Mladen' && z.domaci.postava[0].vratar &&
+    !z.domaci.postava[1].vratar && n.filter((x) => x.vratar).length === 2 && z.opozorila.length === 0)
+  // Šifra v povezavi (`view=player&id=…`, `/stats/player/…`) je vrstica strani, ne
+  // oseba: 15. 10. 2026 jo je stran v nekaj urah preštevilčila (Marčetić Stefan
+  // 22294400 → 22294693, vsi igralci +293). Kot reg_st bi vsak nov nabor šifer
+  // ustvaril nove igralce in razklal minute — identiteta je ime + klub.
+  const preStevilceno = beri('ba-nfsbih-tekma-54152314.html').replace(/(view=player&amp;id=|\/stats\/player\/)(\d+)/g, (_, p, d) => p + (Number(d) + 293))
+  const zp = F.vZapisnik(preStevilceno, { id: 'ba54152314' })
+  const brezSifre = ({ sifraStrani: _s, ...x }) => x
+  preveri('nfsbih: šifra iz povezave ni reg_st — preštevilčena stran da iste nastope in gole', n.every((x) => x.regSt == null) &&
+    [...z.goli, ...z.rumeni, ...z.rdeci].every((x) => x.regSt == null) &&
+    [...z.domaci.postava, ...z.domaci.rezerve, ...z.gostje.postava, ...z.gostje.rezerve].every((x) => x.regSt == null) &&
+    JSON.stringify(F.nastopi(zp)) === JSON.stringify(n) && JSON.stringify(zp.goli.map(brezSifre)) === JSON.stringify(z.goli.map(brezSifre)))
+  preveri('nfsbih: menjave v parih po minuti, 990 + 990, strelec s klopi, goli = izid', z.menjave.length === 10 && min(n, 0) === 990 && min(n, 1) === 990 &&
+    z.menjave.some((m) => m.minuta === 79 && m.ven.ime === 'Juričić Luka' && m.noter.ime === 'Perić Karlo') &&
+    n.find((x) => x.ime === 'Deket Matej')?.minutaOd === 61 && n.find((x) => x.ime === 'Deket Matej')?.goli === 1 && z.goli.length === 2 &&
+    n.find((x) => x.ime === 'Juričić Luka')?.minute === 79)
+  const r = F.vZapisnik(beri('ba-nfsbih-tekma-54152279-rdeca.html'))
+  const nr = F.nastopi(r)
+  preveri('nfsbih: rdeči karton — nastop do izključitve (983 in 925 minut)', r.rdeci.length === 2 && min(nr, 0) === 983 && min(nr, 1) === 925 &&
+    nr.find((x) => x.ime === 'Mohamed Abdallah Abdallah')?.minute === 25 && nr.find((x) => x.ime === 'Mohamed Abdallah Abdallah')?.rdeci === 1 && r.opozorila.length === 0)
+  const a = F.vZapisnik(beri('ba-nfsbih-tekma-54152294-avtogol.html'))
+  preveri('nfsbih: avtogol je pri strelcu v njegovi ekipi in šteje nasprotniku (3:1)', a.goli.filter((g) => g.avtogol).length === 1 &&
+    a.goli.find((g) => g.avtogol)?.ime === 'Karačić Goran' && a.goli.find((g) => g.avtogol)?.ekipaIdx === 0 && a.rezultat.gostje === 1 &&
+    F.nastopi(a).find((x) => x.ime === 'Karačić Goran')?.avtogoli === 1 && a.opozorila.length === 0)
+  const s = F.vZapisnik(beri('ba-nfsbih-tekma-54152310-stats-povezave.html'))
+  preveri('nfsbih: povezava /stats/player/<šifra>-… se prebere kot igralec (brez reg_st)', s.domaci.postava[0].ime === 'Abdulahović Tarik' && s.domaci.postava[0].vratar &&
+    F.nastopi(s).every((x) => x.regSt == null) && F.nastopi(s).length === 31 && s.goli.length === 2 && min(F.nastopi(s), 0) === 990)
+  const v = F.vZapisnik(beri('ba-nfsbih-tekma-54152295-vstop-brez-izstopa.html'))
+  preveri('nfsbih: vstop brez izstopa (napaka vira) — opozorilo, ekipa čez 990 minut', min(F.nastopi(v), 1) === 1034 && v.opozorila.length === 1 &&
+    /Kosi Filip vstopi v 46\. minuti/.test(v.opozorila[0]))
+  const nd = beri('ba-nfsbih-tekma-54152319-neodigrana.html')
+  preveri('nfsbih: neodigrana ("Zakazana", v glavi 0 : 0) nima izida ne zapisnika', F.vZapisnik(nd) === null && F.glavaTekme(nd).izid === null &&
+    F.glavaTekme(nd).status === 'Zakazana' && F.glavaTekme(nd).datum === '2026-10-17' && F.jeStranTekme(nd) &&
+    F.glavaTekme(nd.replace('Status: <strong>Zakazana', 'Status: <strong>Neodigrana')).izid === null)
+  preveri('nfsbih: v predpomnilnik gre le prava stran (razpored ali tekma), ne napaka', F.default.zaPredpomnilnik(stran, 'nfsbih-liga-x.html') &&
+    F.default.zaPredpomnilnik(nd, 'nfsbih-tekma-54152319.html') &&
+    !F.default.zaPredpomnilnik('<div id="error-page"><h1 class="error-code">403</h1>Pristup zabranjen.</div>', 'nfsbih-tekma-1.html') &&
+    !F.default.zaPredpomnilnik(nd, 'nfsbih-liga-x.html'))
+  preveri('nfsbih: vzorci brez sodnikov, delegata, posmatrača in gledalcev', !/Sudija|Delegat|Posmatrač|Gledalaca/.test(
+    ['ba-nfsbih-tekma-54152314.html', 'ba-nfsbih-tekma-54152279-rdeca.html', 'ba-nfsbih-tekma-54152319-neodigrana.html', 'ba-nfsbih-tekma-46565816-arhiv-brez-postav.html'].map(beri).join('')))
+
+  // Uvoz zapisnikov: razpored iz vzorca, ena tekma, ostale prazne (še niso vnesene).
+  const prebrani = []
+  const zs = await F.default.zapisniki('wwin-liga-bih/54152223', async (url, ime, sveze) => {
+    prebrani.push([ime, sveze])
+    if (url.includes('view=fixtures')) return stran
+    if (url.endsWith('id=54152314')) return beri('ba-nfsbih-tekma-54152314.html')
+    return '<html></html>'
+  })
+  preveri('nfsbih: uvoz zapisnikov — šifra ba<id>, krog, sezona in ime kluba z razporeda; prazna stran se prebere še sveže', zs.length === 1 &&
+    zs[0].id === 'ba54152314' && zs[0].z.krog === 9 && zs[0].z.sezona === '2026/27' && zs[0].z.domaci.ime === 'FK BORAC (Banja Luka)' &&
+    prebrani.filter(([x]) => x.startsWith('nfsbih-tekma-')).length >= 45 && prebrani.some(([x, s]) => x.startsWith('nfsbih-tekma-') && s === true))
+  let izziv = null
+  try { await F.default.zapisniki('wwin-liga-bih/54152223', async () => '<title>Just a moment...</title>') } catch (e) { izziv = e }
+  const zavrni = (status) => async () => { const e = new Error(String(status)); e.status = status; throw e }
+  const zavrnitve = []
+  for (const st of [401, 403, 429]) {
+    try { await F.default.razporedVseStrani('wwin-liga-bih/54152223', zavrni(st)) } catch (e) { zavrnitve.push(e) }
+  }
+  let tekma403 = null
+  try {
+    await F.default.zapisniki('wwin-liga-bih/54152223', async (url) => {
+      if (url.includes('view=fixtures')) return stran
+      const e = new Error('403'); e.status = 403; throw e
+    })
+  } catch (e) { tekma403 = e }
+  preveri('nfsbih: 401, 403, 429 in izziv na razporedu ali tekmi vržejo NfsbihZavrnitev (uvoz izhod 4)', izziv instanceof F.NfsbihZavrnitev &&
+    zavrnitve.length === 3 && zavrnitve.every((e) => e instanceof F.NfsbihZavrnitev && e.zavrnitev) && tekma403 instanceof F.NfsbihZavrnitev &&
+    tekma403.status === 403 && F.default.zavrnitev('x', 429).zavrnitev === true && !F.jeIzziv(stran))
+}
+
 // --- vir pfl-ua (Ukrajina, Професіональна футбольна ліга, pfl.ua) -----------------
 {
   const U = await import('./viri/pfl-ua.mjs')
