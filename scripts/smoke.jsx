@@ -5624,6 +5624,239 @@ preveri(
   }
 }
 
+// --- vir hoff-km (Ukrajina, Hmeljnicka oblast, hoff.km.ua) -----------------------
+{
+  const H = await import('./viri/hoff-km.mjs')
+  const { default: viri } = await import('./viri/index.mjs')
+  const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  preveri('hoff-km: vir je vpisan, 3 s, User-Agent SLFF, svoj fetch, predpomnilnik', viri['hoff-km'] === H.default && H.default.drzava === 'UA' &&
+    H.default.imaRegistracije === false && H.default.premorMs >= 3000 && H.default.glave['User-Agent'] === 'SLFF fantasy (https://slff.eu)' &&
+    H.default.fetch === H.hoffFetch && typeof H.default.zaPredpomnilnik === 'function')
+  const k = H.razberiKodo('chho-2026-vyshha-liga')
+  let slabaSifra = null
+  try { H.razberiKodo('vyshha-liga') } catch (e) { slabaSifra = e.message }
+  preveri('hoff-km: šifra lige (slug z letom) in naslovi', k.slug === 'chho-2026-vyshha-liga' && k.leto === 2026 && H.razberiKodo('chho-2025').leto === 2025 &&
+    /leto|z letom/.test(slabaSifra ?? '') && H.naslovLige('chho-2025') === 'https://hoff.km.ua/chho-2025/' &&
+    H.naslovSeznama(2026, 2).includes('after=2026-01-01T00:00:00&before=2027-01-01T00:00:00') && H.naslovSeznama(2026, 2).includes('page=2') &&
+    !H.naslovSeznama(2026, 1).includes('content') && H.naslovVsebine([1, 2]).includes('include=1,2') && H.naslovVsebine([1]).includes('content') &&
+    H.sifraZapisnika(33306) === 'hk33306' && H.default.naslovZapisnika('x', 'hk33306') === 'https://hoff.km.ua/?p=33306')
+  preveri('hoff-km: datum (dve in štiri števke), kijevski čas → ljubljanski, minuta', H.datumIz('09.05.26') === '2026-05-09' && H.datumIz('31.05.2026') === '2026-05-31' &&
+    H.casIz('2026-05-09', '15:00').ura === '14:00' && H.casIz('2026-05-09', '00:30').datum === '2026-05-08' && H.casIz('2026-05-09', '').ura === null &&
+    H.minuta('90+2') === 90 && H.minuta('45+1') === 45 && H.minuta('58-пен.') === 58)
+  const iz = (s) => H.izidCelice(s)
+  preveri('hoff-km: celica izida — zvezdice, (+:-), prazna, "2 :2"', iz('6:0').izid?.domaci === 6 && iz('0:3*').zvezdice === '*' && iz('3:0 (+:-)').plusMinus &&
+    iz('0:0**').zvezdice === '**' && iz('').izid === null && iz('2 :2').izid?.gostje === 2)
+  preveri('hoff-km: klubi — ključ s cirilico brez ФК in apostrofa, vzdevki Колос in ДЮСШ-2, kratko ime', H.kljucKlubaUa('ФК Заслав’я Віньківці') === 'заславя віньківці' &&
+    H.kljucKlubaUa('Колос') === H.kljucKlubaUa('Колос Полонне') && H.imeKluba('Колос') === 'Колос Полонне' && H.kljucKlubaUa('ДЮСШ-2') === H.kljucKlubaUa('ДЮСШ-2 Імпульс') &&
+    H.kratkoImeUa('ФК Вишнівчик') === 'Вишнівчик' && H.poenostaviUa('Нива Летичів') !== H.poenostaviUa('Нива (Вінниця)') &&
+    H.kljucObjave('ФК “Заслав’я” Віньківці') === 'заславя' && H.kljucObjave('“Заславя” Віньківці') === 'заславя' && H.kljucObjave('ЄВА АГРО') === 'єва')
+
+  // Razpored: stolpci po glavi (2025 ima "№ матчу" pred datumom), krog za prazne vrstice, opombe.
+  const v26 = H.tekmeLige(beri('ua-hoff-liga-chho-2026-vyshha-liga.html'), 'chho-2026-vyshha-liga')
+  const v25 = H.tekmeLige(beri('ua-hoff-liga-chho-2025.html'), 'chho-2025')
+  const p26 = H.tekmeLige(beri('ua-hoff-liga-chho-2026-persha-liga.html'))
+  const st = (r, n) => r.tekme.find((t) => t.st === n)
+  preveri('hoff-km: razpored Vyshcha 2026 — 45 tekem, 15 krogov, datum in krog, ime kluba', v26.leto === 2026 && v26.tekme.length === 45 &&
+    new Set(v26.tekme.map((t) => t.krog)).size === 15 && st(v26, 3).krog === 1 && st(v26, 3).datum === '2026-07-01' && st(v26, 3).ura === null &&
+    st(v26, 3).domaci === 'Енергетик-ХАЕС Нетішин' && st(v26, 3).izid?.gostje === 6 && st(v26, 38).izid === null)
+  preveri('hoff-km: tehnični izidi — KDK z zvezdico, (+:-); prekinjena tekma (**) ni odigrana', st(v26, 16).tehnicni && st(v26, 16).izid?.gostje === 3 &&
+    st(v26, 42).tehnicni && st(v26, 43).tehnicni && !st(v26, 44).tehnicni && st(v26, 32).izid === null && !st(v26, 32).tehnicni &&
+    p26.tekme.filter((t) => t.tehnicni).map((t) => t.st).join(',') === '9,11,20,25' && /КДК/.test(st(p26, 11).opomba))
+  preveri('hoff-km: razpored 2025 — drug vrstni red stolpcev, vzdevek ДЮСШ-2 Імпульс, Колос', v25.leto === 2025 && v25.tekme.length === 42 &&
+    st(v25, 1).datum === '2025-05-10' && st(v25, 1).domaci === 'Адреналін-ДЮСШ-1' && st(v25, 24).domaci === 'ДЮСШ-2 Імпульс' &&
+    H.kljucKlubaUa(st(v25, 3).gostje) === H.kljucKlubaUa(st(v25, 24).domaci) && st(v25, 6).domaci === 'Колос Полонне' &&
+    v25.tekme.filter((t) => t.tehnicni).map((t) => t.st).join(',') === '16,19,23,28')
+  let napacnaSezona = null
+  try { H.tekmeLige(beri('ua-hoff-liga-chho-2025.html'), 'chho-2026-vyshha-liga') } catch (e) { napacnaSezona = e.message }
+  preveri('hoff-km: stran druge sezone ustavi uvoz', /sezona 2025/.test(napacnaSezona ?? ''))
+
+  // Postava: kapetan, verige menjav, rezerva brez minute, manjkajoč začetnik, ostanek za piko.
+  const pos = (s) => H.postavaIzVrstice(s)
+  const a = pos('Слободян, Антонюк – к (Пудло, 45), Гизлик, Самарук (Чабак, 20 (Омельчук, 64)), Федюк (Гацький, 46, Чуб, 57)), Власюк (Одінцов 46).')
+  const za = (p, ime) => p.igralci.find((x) => x.ime === ime)
+  preveri('hoff-km: postava — kapetan, menjava z minuto, veriga (gnezdena in ploska), brez vejice', a.igralci.filter((x) => x.zacetnik).length === 6 &&
+    za(a, 'Антонюк').kapetan && za(a, 'Антонюк').preklopi.join() === '45' && za(a, 'Пудло').preklopi.join() === '45' && za(a, 'Пудло').zamenjal === za(a, 'Антонюк') &&
+    za(a, 'Чабак').preklopi.join() === '20,64' && za(a, 'Омельчук').zamenjal === za(a, 'Чабак') && za(a, 'Чуб').zamenjal === za(a, 'Гацький') &&
+    za(a, 'Одінцов').preklopi.join() === '46' && a.opozorila.length === 0)
+  const b = pos('Чуб (Діденко (46), Пожидаєв (Тарасенко, 82), Дібаєв, Самсонюк (Пахно, 85),  (Муляр, 90+3), Закорчменний, (Бондаренко, 79), Навроцький (Григор’єв), Олійник.')
+  preveri('hoff-km: postava — neuravnotežen oklepaj, rezerva brez začetnika, oklepaj za vejico, rezerva brez minute', za(b, 'Діденко').preklopi.join() === '46' &&
+    za(b, 'Пожидаєв').zacetnik && za(b, 'Тарасенко').zamenjal === za(b, 'Пожидаєв') && za(b, 'Муляр').zamenjal === null && za(b, 'Пахно').preklopi.join() === '85' &&
+    za(b, 'Бондаренко').zamenjal === za(b, 'Закорчменний') && !za(b, 'Григор’єв').zacetnik && za(b, 'Григор’єв').preklopi.length === 0 &&
+    za(b, 'Навроцький').preklopi.length === 0 && b.opozorila.length === 3)
+  const c = pos('Остапов, Бойко Н., Самарук, Шуляк, Нехаєнко, Соломко, Чернюк, Чабак, Борисенко, Гапон, Омельчук. (Муляр, 63), Гудзь (Міщук, 46)')
+  preveri('hoff-km: postava — ostanek za koncem stavka izpuščen, začetnica ni konec', c.igralci.filter((x) => x.zacetnik).length === 11 && !za(c, 'Гудзь') &&
+    !!za(c, 'Бойко Н') && /za koncem stavka/.test(c.opozorila[0] ?? ''))
+  const ig = [{ ime: 'Олійник' }, { ime: 'Сідорчук Владислав' }, { ime: 'Сідорчук Станіслав' }, { ime: 'Шаврін' }, { ime: 'Козар' }, { ime: 'Бойко Н' }]
+  preveri('hoff-km: igralec po imenu — priimek, ime, soimenjaka, ruska črka, obrnjen vrstni red, začetnica', H.najdiIgralca('Олійник Владислав', ig) === ig[0] &&
+    H.najdiIgralca('Сідорчук Станіслав', ig) === ig[2] && H.najdiIgralca('Сідорчук', ig) === null && H.najdiIgralca('Шаврын Вадим', ig) === ig[3] &&
+    H.najdiIgralca('Іван Козар', ig) === ig[4] && H.najdiIgralca('Бойко Назар', ig) === ig[5] && H.najdiIgralca('Нікого', ig) === null)
+
+  // Zapisniki prek vira (vzorec: seznam in vsebina izbranih objav 2026), dan 15. 10. 2026.
+  const opozorilaKonzole = []
+  const tiho = async (fn, dan = '2026-10-15T12:00:00Z') => {
+    const [warn, zdaj] = [console.warn, Date.now]
+    console.warn = (s) => opozorilaKonzole.push(String(s))
+    Date.now = () => Date.parse(dan)
+    try { return await fn() } finally { console.warn = warn; Date.now = zdaj }
+  }
+  const klici = []
+  const prenesi = (zamenjaj = (s) => s) => async (url, ime, sveze) => {
+    klici.push([ime, !!sveze])
+    if (ime.startsWith('liga-')) return zamenjaj(beri(`ua-hoff-${ime}`))
+    if (ime === 'seznam-2026-1.json') return beri('ua-hoff-seznam-2026.json')
+    if (ime === 'vsebina-2026-0.json') return beri('ua-hoff-objave-2026.json')
+    throw new Error(`neznan ${ime}`)
+  }
+  const zs = await tiho(() => H.default.zapisniki('chho-2026-vyshha-liga', prenesi()))
+  const z = (id) => zs.find((x) => x.id === id)?.z
+  const n = (id) => H.default.nastopi(z(id))
+  const minute = (id, i) => n(id).filter((x) => x.ekipaIdx === i).reduce((s, x) => s + x.minute, 0)
+  const zaEkipo = (zz, i) => zz.goli.filter((g) => (g.avtogol ? 1 - g.ekipaIdx : g.ekipaIdx) === i).length
+  preveri('hoff-km: zapisniki Vyshcha (vzorec) — 10 objav pripisanih tekmam, šifra hk<id>, sezona 2026, klubi in krog z razporeda', zs.length === 10 &&
+    zs.every(({ id, z: x }) => id === x.zapisnikId && /^hk\d+$/.test(id) && x.sezona === '2026') && z('hk33306').krog === 15 &&
+    z('hk33306').domaci.ime === 'Оболонь-Чемерівці' && z('hk33306').gostje.ime === 'Енергетик-ХАЕС Нетішин' && z('hk33306').datum === '2026-10-10' &&
+    klici.find(([ime]) => ime === 'seznam-2026-1.json')?.[1] === true && klici.find(([ime]) => ime === 'vsebina-2026-0.json')?.[1] === true)
+  preveri('hoff-km: 11 + 11, kapetan, vratar (prvi začetnik) kot namig, menjave z minuto, 990 minut, goli = izid', z('hk33306').domaci.postava.length === 11 &&
+    z('hk33306').gostje.postava.length === 11 && z('hk33306').domaci.postava.find((x) => x.kapetan)?.ime === 'Антонюк' &&
+    z('hk33306').domaci.postava.filter((x) => x.vratar).map((x) => x.ime).join() === 'Слободян' && z('hk33306').menjave.length === 4 &&
+    z('hk33306').menjave.find((m) => m.noter.ime === 'Пудло')?.ven.ime === 'Антонюк' && z('hk33306').menjave.find((m) => m.noter.ime === 'Пудло')?.minuta === 45 &&
+    minute('hk33306', 0) === 990 && minute('hk33306', 1) === 990 && zaEkipo(z('hk33306'), 0) === 4 && zaEkipo(z('hk33306'), 1) === 1 && z('hk33306').polcas?.domaci === 3)
+  preveri('hoff-km: ime igralca je ime iz postave ob prvem nastopu — strelec "Олійник Владислав" je "Олійник" kot v postavi (gol ima nastop)', n('hk33306').some((x) => x.ime === 'Олійник' && x.goli === 2 && x.minute === 69) &&
+    !n('hk33306').some((x) => x.ime === 'Олійник Владислав') &&
+    zs.every(({ z: x }) => x.goli.every((g) => !g.ime || H.default.nastopi(x).some((y) => y.ekipaIdx === g.ekipaIdx && y.ime === g.ime))))
+  // Nočni uvoz bere vse objave leta, uvozi pa le zadnjih 21 dni: ime igralca na
+  // tekmi se ne sme spremeniti, ko pridejo nove objave (sicer en igralec razpade
+  // na dva: "Матанчук" in "Матанчук Денис"). Objave po datumu, vsak rez znova.
+  const imenaDo = async (rez) => {
+    const doRez = (s) => JSON.stringify(JSON.parse(s).filter((x) => String(x.date).slice(0, 10) <= rez))
+    const prenesiDo = async (url, ime, sveze) => {
+      if (ime === 'seznam-2026-1.json' || ime === 'vsebina-2026-0.json') return doRez(await prenesi()(url, ime, sveze))
+      return prenesi()(url, ime, sveze)
+    }
+    const m = new Map()
+    for (const liga of ['chho-2026-vyshha-liga', 'chho-2026-persha-liga']) {
+      for (const { id, z: x } of await tiho(() => H.default.zapisniki(liga, prenesiDo))) {
+        for (const [i, e] of [x.domaci, x.gostje].entries()) [...e.postava, ...e.rezerve].forEach((y, j) => m.set(`${id}|${i}|${j}`, y.ime))
+      }
+    }
+    return m
+  }
+  const imenaKonec = await imenaDo('2026-12-31')
+  const rezi = [...new Set(JSON.parse(beri('ua-hoff-objave-2026.json')).map((x) => String(x.date).slice(0, 10)))].sort()
+  const premiki = []
+  for (const rez of rezi) for (const [k, ime] of await imenaDo(rez)) if (imenaKonec.get(k) !== ime) premiki.push(`${rez} ${k}: ${ime} → ${imenaKonec.get(k)}`)
+  preveri(`hoff-km: ime igralca se z novimi objavami ne spremeni (vzorec, ${rezi.length} rezov)${premiki.length ? ` — ${premiki.slice(0, 3).join('; ')}` : ''}`,
+    imenaKonec.size > 300 && premiki.length === 0)
+  // Ista oseba ohrani eno ime po vrsti objav: golo ime, nato strelec z imenom,
+  // nato soimenjak v klubu; vrstni red v klicu ni pomemben (datum, id objave).
+  const igr = (ime, ekipaIdx = 0) => ({ ime, ekipaIdx, zacetnik: true, preklopi: [] })
+  const objavaZ = (id, datum, imena, goli = []) => {
+    const ig = imena.map((ime) => igr(ime))
+    return { id, datum, klubi: ['а', 'б'], r: { ekipe: [{ igralci: ig }, { igralci: [igr('Тест', 1)] }], goli: goli.map(([i, ime]) => ({ igralec: ig[i], imeDogodka: ime })), zgresene: [] } }
+  }
+  const zaporedje = () => [
+    objavaZ(5, '2026-05-01', ['Матанчук', 'Сушинський', 'Бойко']),
+    objavaZ(6, '2026-05-08', ['Матанчук', 'Сушинський', 'Бойко Назар'], [[0, 'Матанчук Денис']]),
+    objavaZ(7, '2026-05-15', ['Матанчук Денис', 'Сушинський', 'Бойко Н.']),
+    objavaZ(8, '2026-05-22', ['Матанчук Д.', 'Матанчук Андрій', 'Сушинський Назарій', 'Бойко З.', 'Бойко Назар']),
+    objavaZ(9, '2026-05-29', ['Матанчук', 'Матанчук Андрій', 'Сушинський']),
+  ]
+  const poRezih = [1, 2, 3, 4, 5].map((n) => {
+    const v = zaporedje().slice(0, n)
+    H.poenotiImena([...v].reverse())
+    return v.map((x) => x.r.ekipe[0].igralci.map((y) => y.ime))
+  })
+  const koncno = poRezih.at(-1)
+  preveri('hoff-km: poenotena imena so stalna — vsak rez da iste nastope, Матанчук/Матанчук Денис/Матанчук Д. je en "Матанчук", soimenjak Андрій svoj',
+    poRezih.every((p) => p.every((imena, i) => imena.join('|') === koncno[i].join('|'))) &&
+    koncno.map((x) => x[0]).join('|') === 'Матанчук|Матанчук|Матанчук|Матанчук|Матанчук' && koncno[3][1] === 'Матанчук Андрій' && koncno[4][1] === 'Матанчук Андрій' &&
+    new Set(koncno.map((x) => x.find((y) => y.startsWith('Сушинський')))).size === 1 &&
+    koncno.slice(0, 3).every((x) => x[2] === 'Бойко') && koncno[3][4] === 'Бойко' && koncno[3][3] === 'Бойко З.')
+  preveri('hoff-km: strelec za pomišljajem druge ekipe gre k svoji (Самсонюк), opozorilo', zaEkipo(z('hk33305'), 0) === 2 && zaEkipo(z('hk33305'), 1) === 0 &&
+    z('hk33305').opozorila.some((o) => /Самсонюк.*druge ekipe/.test(o)))
+  preveri('hoff-km: 11 m (pen.), zgrešena 11 m, kartoni po stranéh in po postavi', z('hk33163').goli.filter((g) => g.enajstmetrovka).length === 1 &&
+    z('hk33163').zgresene.length === 1 && n('hk33163').find((x) => x.ime === 'Тринадцятко')?.zgreseneEnajstmetrovke === 1 &&
+    z('hk33163').rumeni.length === 4 && z('hk33163').rumeni.filter((x) => x.ekipaIdx === 1).length === 2 && z('hk33306').rumeni.find((x) => x.ime === 'Форманюк')?.ekipaIdx === 1)
+  preveri('hoff-km: rdeči po tekmi ("по завершенню гри") ne skrajša nastopa', z('hk33015').rdeci.length === 1 && z('hk33015').rdeci[0].minuta === 90 &&
+    n('hk33015').find((x) => x.ime === 'Гарбарук')?.minute === 28 && n('hk33015').find((x) => x.ime === 'Гарбарук')?.rdeci === 1)
+  preveri('hoff-km: izid "1</strong><strong>0:1" je 10:1, glava z napako (isti klub dvakrat) — objavo najde naslov', zaEkipo(z('hk32168'), 0) === 10 &&
+    !z('hk32168').opozorila.length && z('hk32835')?.domaci.ime === 'Епіцентр Дунаївці' && zaEkipo(z('hk32835'), 0) === 2)
+  preveri('hoff-km: zatipkan strelec (Шаврын) in seznam golov brez pomišljaja — vsi goli gostom', zaEkipo(z('hk31815'), 1) === 6 && zaEkipo(z('hk31815'), 0) === 0 &&
+    n('hk31815').find((x) => x.ime === 'Шаврін')?.goli === 2)
+  preveri('hoff-km: tehnični izid KDK z objavo — uradni 0:3, prejeti goli in čista mreža z igrišča (1:0)', z('hk31654').rezultat.gostje === 3 &&
+    z('hk31654').izidIgrisca?.domaci === 1 && n('hk31654').find((x) => x.ekipaIdx === 0 && x.vratar && x.zacetnik)?.cleanSheet === true &&
+    n('hk31654').find((x) => x.ekipaIdx === 1 && x.vratar && x.zacetnik)?.prejetiGoli === 1 && z('hk31654').opozorila.some((o) => /tehnični izid/.test(o)))
+  preveri('hoff-km: manjkajoč začetnik — 10 + rezerva brez para, opozorili', z('hk30939').gostje.postava.length === 10 &&
+    z('hk30939').opozorila.some((o) => /10 igralcev/.test(o)) && z('hk30939').menjave.some((m) => m.noter.ime === 'Муляр' && m.ven.ime === null))
+  const r = await tiho(() => H.default.razporedVseStrani('chho-2026-vyshha-liga', prenesi()))
+  const t = (krog, dom) => r.find((x) => x.stevilka === krog)?.tekme.find((x) => x.domaci.startsWith(dom))
+  preveri('hoff-km: razpored — 15 krogov po 3, kontumacija le (+:-) brez objave, starejša od tedna; KDK z objavo ni; prekinjena ni odigrana', r.length === 15 &&
+    r.every((x) => x.tekme.length === 3) && t(14, 'Колос').kontumacija && t(14, 'Колос').izid?.domaci === 3 && !t(15, 'Колос').kontumacija &&
+    !t(6, 'Епіцентр').kontumacija && t(6, 'Епіцентр').odigrana && !t(11, 'Поділля').odigrana && t(11, 'Поділля').izid === null &&
+    r.every((x) => x.tekme.every((y) => y.ura === null)))
+
+  // Perša liga: avtogol "а/g" pri minuti, ostanek za piko, dvakrat isto ime, oklepaj za vejico.
+  const zp = await tiho(() => H.default.zapisniki('chho-2026-persha-liga', prenesi()))
+  const p = (id) => zp.find((x) => x.id === id)?.z
+  preveri('hoff-km: Perša — avtogol "6 – а/г" šteje nasprotniku, 1:2', p('hk32510')?.goli.filter((g) => g.avtogol).length === 1 &&
+    zaEkipo(p('hk32510'), 0) === 1 && zaEkipo(p('hk32510'), 1) === 2 && H.default.nastopi(p('hk32510')).find((x) => x.ime === 'Куліковський')?.avtogoli === 1)
+  preveri('hoff-km: Perša — ostanek za piko izpuščen (11 + 11), dvakrat isto ime le enkrat, veriga Чабак', p('hk32577')?.gostje.postava.length === 11 &&
+    p('hk32577').opozorila.some((o) => /za koncem stavka/.test(o)) && p('hk32866')?.opozorila.some((o) => /Шуляк je v postavi dvakrat/.test(o)) &&
+    H.default.nastopi(p('hk32866')).filter((x) => x.ime === 'Шуляк').length === 1 &&
+    H.default.nastopi(p('hk32866')).find((x) => x.ime === 'Чабак')?.minute === 44 && p('hk31428')?.menjave.find((m) => m.noter.ime === 'Бондаренко Максим')?.ven.ime === 'Закорчменний')
+  preveri('hoff-km: objava brez golov (3:0) — opozorilo neujemanja, uvozi se', /goli iz objave \(0:0\) se ne ujemajo z izidom 3:0/.test(p('hk32187')?.opozorila.join('|')) &&
+    !p('hk32187').nepopoln)
+  preveri('hoff-km: izid brez objave je opozorilo v dnevniku', opozorilaKonzole.some((s) => /ima izid, objave s postavama ni/.test(s)))
+
+  // Arhiv (preteklo leto) iz predpomnilnika; če tekmi do 45 dni manjka objava, še enkrat svež.
+  klici.length = 0
+  await tiho(() => H.tekmeZObjavami('chho-2026-persha-liga', prenesi(), { danes: Date.parse('2027-03-01T00:00:00Z') }))
+  const arhivSveze = klici.filter(([ime]) => ime.startsWith('seznam-')).map(([, s]) => s).join()
+  klici.length = 0
+  await tiho(() => H.tekmeZObjavami('chho-2026-persha-liga', prenesi((s) => s.replaceAll('27.09.26', '20.12.26')), { danes: Date.parse('2027-01-10T00:00:00Z') }))
+  const nepopolnSveze = klici.filter(([ime]) => ime.startsWith('seznam-')).map(([, s]) => s).join()
+  preveri('hoff-km: arhiv iz predpomnilnika, a objava, ki manjka tekmi do 45 dni, se prebere še enkrat sveže', arhivSveze === 'false' && nepopolnSveze === 'false,true')
+
+  // Nepopolna objava zadnjega tedna (goli ≠ izid) ostane brez `imported_at`.
+  const o = JSON.parse(beri('ua-hoff-objave-2026.json')).find((x) => x.id === 33306)
+  const kos = { ...o, content: { rendered: o.content.rendered.replace(', Навроцький Андрій (85)', '') } }
+  const nep = H.vZapisnik(kos, { imeni: ['Оболонь-Чемерівці', 'Енергетик-ХАЕС Нетішин'], datum: '2026-10-10', danes: Date.parse('2026-10-12T00:00:00Z') })
+  const star = H.vZapisnik(kos, { imeni: ['Оболонь-Чемерівці', 'Енергетик-ХАЕС Нетішин'], datum: '2026-10-10', danes: Date.parse('2026-11-12T00:00:00Z') })
+  preveri('hoff-km: goli ≠ izid zadnji teden → nepopoln (zapisnik nepopoln), pozneje le opozorilo', nep.nepopoln && nep.opozorila[0].startsWith('zapisnik nepopoln') &&
+    !star.nepopoln && /se ne ujemajo/.test(star.opozorila[0]))
+
+  // Predpomnilnik: le prava stran lige in pravi seznam; stran vzdrževanja ali napaka WordPressa ne.
+  preveri('hoff-km: v predpomnilnik le stran lige z razporedom in JSON seznam objav', H.zaPredpomnilnik(beri('ua-hoff-liga-chho-2025.html'), 'liga-chho-2025.html') &&
+    !H.zaPredpomnilnik('<html><body>Сайт на технічному обслуговуванні</body></html>', 'liga-chho-2025.html') &&
+    H.zaPredpomnilnik(beri('ua-hoff-seznam-2026.json'), 'seznam-2026-1.json') && !H.zaPredpomnilnik('{"code":"rest_post_invalid_page_number"}', 'seznam-2026-2.json') &&
+    !H.zaPredpomnilnik(beri('ua-hoff-seznam-2026.json'), 'vsebina-2026-0.json') && H.zaPredpomnilnik(beri('ua-hoff-objave-2026.json'), 'vsebina-2026-0.json') &&
+    !H.zaPredpomnilnik('[{"id":1', 'seznam-2026-1.json') && !H.zaPredpomnilnik('<title>Just a moment...</title>', 'x.html'))
+  preveri('hoff-km: izziv — Cloudflare in stran s CAPTCHO; reCAPTCHA v obrazcu navadne strani ni izziv', H.jeIzziv('<title>Just a moment...</title>') &&
+    H.jeIzziv('<html><div class="g-recaptcha"></div>Підтвердіть, що ви не робот</html>') &&
+    !H.jeIzziv(beri('ua-hoff-liga-chho-2025.html').replace('</article>', '<div class="g-recaptcha"></div></article>')) && !H.jeIzziv(beri('ua-hoff-seznam-2026.json')))
+  preveri('hoff-km: vzorci brez sodnikov, opazovalcev in slik',!/Арбіт|Асистен|Спостер|<img|<iframe/.test(
+    ['ua-hoff-objave-2026.json', 'ua-hoff-liga-chho-2026-vyshha-liga.html', 'ua-hoff-liga-chho-2026-persha-liga.html', 'ua-hoff-liga-chho-2025.html'].map(beri).join('')))
+
+  // Zavrnitev: 401, 403, 429 in izziv na vsaki poti (stran lige, seznam, vsebina, fetch vira).
+  const zavrni = (status, na) => async (url, ime) => {
+    if (ime.startsWith(na)) { const e = new Error(String(status)); e.status = status; throw e }
+    return prenesi()(url, ime)
+  }
+  const ujemi = async (fn) => { try { await fn() } catch (e) { return e } return null }
+  const e1 = await ujemi(() => tiho(() => H.default.zapisniki('chho-2026-vyshha-liga', zavrni(403, 'liga-'))))
+  const e2 = await ujemi(() => tiho(() => H.default.zapisniki('chho-2026-vyshha-liga', zavrni(401, 'seznam-'))))
+  const e3 = await ujemi(() => tiho(() => H.default.razporedVseStrani('chho-2026-vyshha-liga', zavrni(429, 'vsebina-'))))
+  const e4 = await ujemi(() => tiho(() => H.default.zapisniki('chho-2026-vyshha-liga', async () => '<title>Just a moment...</title>')))
+  const fetchPrej = globalThis.fetch
+  globalThis.fetch = async () => new Response('x', { status: 401 })
+  const e5 = await ujemi(() => H.hoffFetch('https://hoff.km.ua/chho-2025/'))
+  globalThis.fetch = async () => new Response('ok', { status: 200 })
+  const ok = await H.hoffFetch('https://hoff.km.ua/chho-2025/')
+  globalThis.fetch = fetchPrej
+  preveri('hoff-km: 401, 403, 429 in izziv vržejo HoffZavrnitev na vseh poteh (uvoz izhod 4)', [e1, e2, e3, e4, e5].every((e) => e instanceof H.HoffZavrnitev && e.zavrnitev) &&
+    e1.status === 403 && e2.status === 401 && e3.status === 429 && e5.status === 401 && ok.status === 200 && H.default.zavrnitev('x', 429).zavrnitev === true)
+}
+
 // --- vir fsb (Srbija, Fudbalski savez Beograda) ---------------------------------
 {
   const F = await import('./viri/fsb.mjs')

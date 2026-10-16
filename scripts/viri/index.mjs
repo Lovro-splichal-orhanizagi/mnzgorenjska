@@ -33,6 +33,7 @@ import fcf from './fcf.mjs'
 import fas from './fas.mjs'
 import aft from './aft.mjs'
 import ncefl from './ncefl.mjs'
+import hoffKm from './hoff-km.mjs'
 
 const VIRI = {
   mnzg,
@@ -90,6 +91,9 @@ const VIRI = {
   // Anglija (step 5–6): Northern Counties East League prek ncefl.org.uk; brez
   // šifer igralcev (ime + klub), krog je teden (stran krogov ne pozna).
   ncefl,
+  // Ukrajina (Hmeljnicka oblast): ХОАФ prek hoff.km.ua (WordPress): razpored je
+  // tabela strani lige, zapisnik objava tekme (REST), imena brez šifer.
+  'hoff-km': hoffKm,
 }
 
 /**
