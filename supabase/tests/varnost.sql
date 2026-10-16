@@ -3508,6 +3508,60 @@ select pg_temp.preveri('scout3: odstranjen s seznama', not exists (select 1 from
 reset role;
 select set_config('request.jwt.claim.sub','',true);
 
+-- Scout 3, plačila (stripe-webhook kliče kot service_role).
+select pg_temp.preveri('scout3: placila zapise le servis',
+  not has_function_privilege('authenticated', 'public.scout_iz_placila(bigint, uuid, text, timestamp with time zone, text, text)', 'EXECUTE')
+  and not has_function_privilege('authenticated', 'public.scout_podaljsaj(text, timestamp with time zone)', 'EXECUTE')
+  and not has_function_privilege('authenticated', 'public.scout_narocnina_konec(text, timestamp with time zone)', 'EXECUTE')
+  and has_function_privilege('service_role', 'public.scout_iz_placila(bigint, uuid, text, timestamp with time zone, text, text)', 'EXECUTE')
+  and not has_function_privilege('anon', 'public.scout_pripravi_nakup(text)', 'EXECUTE')
+  and not has_function_privilege('anon', 'public.scout_portal_kupec()', 'EXECUTE'));
+select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000005',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('scout3: brez sedeza ni nakupa', $$select * from scout_pripravi_nakup('mesec')$$);
+select pg_temp.preveri('scout3: tujec nima kupca za portal', scout_portal_kupec() is null);
+reset role;
+select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.napaka('scout3: neveljavno obdobje', $$select * from scout_pripravi_nakup('teden')$$, 'scout-filter');
+select pg_temp.preveri('scout3: sedez pripravi nakup s svojim mailom',
+  (select team_id = -913001 and email = 'scout-k1@example.invalid' from scout_pripravi_nakup('mesec')));
+reset role;
+select set_config('request.jwt.claim.sub','',true);
+select pg_temp.preveri('scout3: placilo aktivira paket Klub',
+  scout_iz_placila(-913001, 'e5c30000-0000-4000-8000-000000000001', 'mesec', now() + interval '33 days', 'cus_s3', 'sub_s3') = 'aktivna');
+-- Ločen stavek: posnetek klica ne vidi spremembe, ki jo naredi funkcija v istem stavku.
+select pg_temp.preveri('scout3: placilo zapise paket Klub, obdobje in placnika',
+  (select paket = 'klub' and obdobje = 'mesec' and placal = 'e5c30000-0000-4000-8000-000000000001'
+         from scout.narocnine where team_id = -913001));
+select pg_temp.preveri('scout3: ponovljen dogodek je idempotenten',
+  scout_iz_placila(-913001, 'e5c30000-0000-4000-8000-000000000001', 'mesec', now() + interval '33 days', 'cus_s3', 'sub_s3') = 'aktivna');
+select pg_temp.preveri('scout3: drugo placilo istega kluba je dvojno',
+  scout_iz_placila(-913001, 'e5c30000-0000-4000-8000-000000000002', 'sezona', now() + interval '1 year', 'cus_s3b', 'sub_s3b') = 'dvojno');
+select pg_temp.preveri('scout3: podaljsanje le naprej',
+  scout_podaljsaj('sub_s3', now() + interval '1 day') = 'podaljsano'
+  and (select velja_do > now() + interval '30 days' from scout.narocnine where team_id = -913001));
+select pg_temp.preveri('scout3: tuja narocnina je neznana', scout_podaljsaj('sub_tuja', now()) = 'neznana');
+select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.napaka('scout3: placan klub ne kupi znova', $$select * from scout_pripravi_nakup('sezona')$$, 'scout-ze-placano');
+reset role;
+select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000002',true);
+set local role authenticated;
+select pg_temp.preveri('scout3: vsak uradni racun kluba odpre portal', scout_portal_kupec() = 'cus_s3');
+reset role;
+select set_config('request.jwt.claim.sub','',true);
+select pg_temp.preveri('scout3: konec narocnine', scout_narocnina_konec('sub_s3', now() - interval '1 second') = 'koncano');
+select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('scout3: po koncu narocnine ni iskanja', $$select * from scout_isci()$$);
+reset role;
+select set_config('request.jwt.claim.sub','',true);
+select pg_temp.preveri('scout3: novo placilo vrne staro narocnino za preklic',
+  scout_iz_placila(-913001, 'e5c30000-0000-4000-8000-000000000002', 'sezona', now() + interval '1 year', 'cus_s3', 'sub_s3c') = 'aktivna:sub_s3');
+select pg_temp.preveri('scout3: novo placilo zapise novo narocnino',
+  (select stripe_subscription_id = 'sub_s3c' and obdobje = 'sezona' from scout.narocnine where team_id = -913001));
+
 do $$
 declare v_napak int;
 begin
