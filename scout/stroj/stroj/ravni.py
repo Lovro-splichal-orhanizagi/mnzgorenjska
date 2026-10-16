@@ -18,6 +18,14 @@ ES_AS = {"tercera": 1, "primera": 2}
 GR_EPS = {"a1": 1, "a": 2, "a2": 2, "b": 3, "g": 4}
 EE_FIKSNE = {"ee-premium-liiga": 1, "ee-esiliiga": 2, "ee-esiliiga-b": 3}
 EE_NIZJE = {"ii": 4, "iii": 5, "iv": 6}
+IS_FIKSNE = {"is-besta-deild": 1, "is-lengjudeild": 2}
+# (predpona, vrh, vzorec nižjih z (\d)): raven vrha in 1 + številka ostalih.
+ABS_PIRAMIDE = [
+    ("md-", "md-super-liga", r"^md-liga-(\d)"),
+    ("lt-", "lt-a-lyga", r"^lt-(\d)-lyga"),
+    ("fo-", "fo-betri-deildin", r"^fo-(\d)-deild"),
+    ("kz-", "kz-premier-liga", r"^kz-(\d)-liga"),
+]
 
 
 def raven_lige(slug: str, ime: str | None = None, zveza: str | None = None) -> tuple[int | None, str] | None:
@@ -51,16 +59,51 @@ def raven_lige(slug: str, ime: str | None = None, zveza: str | None = None) -> t
         return None, regija
     if slug.startswith("es-ct-"):
         return (ES_CT[tretji], "drzava") if tretji in ES_CT else None
+    # Turčija (vir tff): 1. Lig 2, 2. Lig 3, 3. Lig 4, PGL 5; Süper Lig ni vpisana.
+    if slug.startswith("tr-"):
+        if slug == "tr-1-lig":
+            return 2, "drzava"
+        for predpona, r in (("tr-2-lig-", 3), ("tr-3-lig-", 4), ("tr-pgl-", 5)):
+            if slug.startswith(predpona):
+                return r, "drzava"
+        return None, regija
     if slug.startswith("es-as-"):
         return (ES_AS[tretji], "es-as") if tretji in ES_AS else None
     # Grčija (vir eps): `gr-<zveza>-<kategorija>[-<skupina>]`, raven le znotraj zveze.
     if slug.startswith("gr-"):
         return (GR_EPS[tretji], f"gr-{drugi}") if tretji in GR_EPS else None
+    # Anglija (vir isthmian): Premier Division je step 3, ostale divizije step 4.
+    if slug.startswith("gb-"):
+        return (1 if re.match(r"^gb-[a-z]+-premier(-|$)", slug) else 2), "drzava"
     if slug.startswith("ee-"):
         if slug in EE_FIKSNE:
             return EE_FIKSNE[slug], "drzava"
         m = re.match(r"^ee-(ii|iii|iv)-liiga", slug)
         return (EE_NIZJE[m[1]], "drzava") if m else None
+    # Ukrajina (upl 1, pfl-ua: Perša 2, Druga A/B 3).
+    if slug.startswith("ua-"):
+        if slug == "ua-upl":
+            return 1, "drzava"
+        m = re.match(r"^ua-(\d)-liga", slug)
+        return (int(m[1]) + 1, "drzava") if m else None
+    # Islandija (vir ksi): Utandeild je zunaj piramide.
+    if slug.startswith("is-"):
+        if slug in IS_FIKSNE:
+            return IS_FIKSNE[slug], "drzava"
+        m = re.match(r"^is-(\d)-deild", slug)
+        return (1 + int(m[1]), "drzava") if m else None
+    # Norveška (vir nff): OBOS-ligaen 2, "<n>div" 1 + n; Eliteserien ni vpisana.
+    if slug.startswith("no-"):
+        if slug == "no-obos":
+            return 2, "drzava"
+        m = re.search(r"-(\d)div(-|$)", slug)
+        return (1 + int(m[1]), "drzava") if m else None
+    for predpona, vrh, vzorec in ABS_PIRAMIDE:
+        if slug.startswith(predpona):
+            if slug == vrh:
+                return 1, "drzava"
+            m = re.match(vzorec, slug)
+            return (1 + int(m[1]), "drzava") if m else None
     if slug.startswith("lv-"):
         if slug == "lv-virsliga":
             return 1, "drzava"
