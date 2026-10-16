@@ -342,8 +342,8 @@ objava, testi): `docs/scout.md`. Bistvo:
   ni. Backtest je zdaj `padel` (moč lig ne premaga ablacije za 1 %), zato
   model ni objavljen.
 - Shema `scout` ni dostopna `anon`/`authenticated`; delavec se prijavi kot
-  `scout_stroj` (geslo, če sploh, ročno, nikoli v git). Država se odpre v
-  `scout.drzave` — **pred drugo državo mora pisanje teči pretočno**, sicer
+  `scout_stroj` z geslom (nastavi ga lastnik ročno na strežniku, nikoli v
+  git). Država se odpre v `scout.drzave` — **pred drugo državo mora pisanje teči pretočno**, sicer
   delavec preseže `mem_limit: 1g`.
 - `ravenLige` ima prepis v `scout/stroj/stroj/ravni.py` (test enakosti).
   CI ga ne objavi (`scripts/hetzner/objavi-scout.sh`) in Pythonovih testov ne

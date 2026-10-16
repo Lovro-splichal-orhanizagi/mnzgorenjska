@@ -174,26 +174,27 @@ smiselnosti); `--pisi` zapiše model.
 
 ## Objava (strežnik)
 
-CI delavca ne objavi. Enkrat ustvari `/opt/slff-scout/.env` (chmod 600, ni v
-gitu):
+CI delavca ne objavi. Migracija ustvari vlogo `scout_stroj` brez gesla (bere
+tabele zapisnikov, piše le shemo `scout`). Delavec teče v gostiteljevem
+omrežju, `supabase-db` pa na mostu Dockerja (vrata objavljena na
+`127.0.0.1:5432`): povezava v kontejner prispe iz `172.18.0.x`, ki ga `pg_hba`
+preverja s `scram-sha-256`. **Brez gesla se delavec ne prijavi.**
 
-```
-SCOUT_DB_URL=postgresql://scout_stroj@127.0.0.1:5432/postgres
-```
-
-Na strežniku Postgres posluša na `127.0.0.1:5432` in `pg_hba` zaupa
-`127.0.0.1`; delavec teče v gostiteljevem omrežju, zato geslo tam ni
-potrebno. **Vloga v naslovu mora biti vseeno `scout_stroj`** (ne
-`supabase_admin` ali `postgres`): le ta sme pisati le shemo `scout`.
-
-Če bo kdaj geslo treba (drug gostitelj, strožji `pg_hba`), ga nastavi ročno
-— nikoli v git, ne v zgodovino lupine — in ga dodaj v `.env`:
+Ko je migracija uveljavljena, lastnik enkrat nastavi geslo — interaktivno,
+da ne pristane v zgodovini lupine ali v gitu:
 
 ```bash
-read -rs GESLO && ssh slff "docker exec -i supabase-db psql -U supabase_admin -d postgres" \
-  <<< "alter role scout_stroj password '$GESLO';"
-# .env: SCOUT_DB_URL=postgresql://scout_stroj:<to geslo>@127.0.0.1:5432/postgres
+ssh slff 'docker exec -it supabase-db psql -U supabase_admin -d postgres -c "\password scout_stroj"'
 ```
+
+in ga zapiše v `/opt/slff-scout/.env` (chmod 600, ni v gitu):
+
+```
+SCOUT_DB_URL=postgresql://scout_stroj:<geslo>@127.0.0.1:5432/postgres
+```
+
+Vloga v naslovu mora biti `scout_stroj` (ne `supabase_admin` ali
+`postgres`): le ta sme pisati le shemo `scout`.
 
 Nato `scripts/hetzner/objavi-scout.sh` — zavrne necommitane spremembe v
 `scout/stroj`/`scripts/hetzner/scout` in vse razen veje `main`, enake
