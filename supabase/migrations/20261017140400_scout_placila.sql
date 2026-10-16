@@ -61,13 +61,14 @@ begin
   if n.paket = 'klub' and n.velja_do > now() then
     return 'dvojno';
   end if;
-  if p_obdobje is null or p_obdobje not in ('mesec', 'sezona') then
+  if p_obdobje is null or p_obdobje not in ('mesec', 'sezona')
+     or p_velja_do is null or p_subscription is null or p_customer is null then
     return 'neveljavno';
   end if;
   -- Prejšnja naročnina (potekla, morda še past_due) se ne sme zaračunavati naprej.
   v_stara := n.stripe_subscription_id;
   update scout.narocnine
-     set paket = 'klub', obdobje = p_obdobje, velja_do = p_velja_do, stripe_customer_id = p_customer,
+     set paket = 'klub', obdobje = p_obdobje, velja_do = greatest(velja_do, p_velja_do), stripe_customer_id = p_customer,
          stripe_subscription_id = p_subscription, placal = p_user_id, updated_at = now()
    where team_id = p_team_id;
   perform preverjeni_na_discord(format('💶 Scout plačan: %s (%s)', (select name from teams where id = p_team_id), p_obdobje));

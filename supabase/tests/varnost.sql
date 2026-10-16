@@ -3557,6 +3557,10 @@ set local role authenticated;
 select pg_temp.zavrnjeno('scout3: po koncu narocnine ni iskanja', $$select * from scout_isci()$$);
 reset role;
 select set_config('request.jwt.claim.sub','',true);
+select pg_temp.preveri('scout3: placilo brez roka, narocnine ali kupca je neveljavno',
+  scout_iz_placila(-913001, 'e5c30000-0000-4000-8000-000000000002', 'sezona', null, 'cus_s3', 'sub_s3n') = 'neveljavno'
+  and scout_iz_placila(-913001, 'e5c30000-0000-4000-8000-000000000002', 'sezona', now() + interval '1 year', 'cus_s3', null) = 'neveljavno'
+  and scout_iz_placila(-913001, 'e5c30000-0000-4000-8000-000000000002', 'sezona', now() + interval '1 year', null, 'sub_s3n') = 'neveljavno');
 select pg_temp.preveri('scout3: novo placilo vrne staro narocnino za preklic',
   scout_iz_placila(-913001, 'e5c30000-0000-4000-8000-000000000002', 'sezona', now() + interval '1 year', 'cus_s3', 'sub_s3c') = 'aktivna:sub_s3');
 select pg_temp.preveri('scout3: novo placilo zapise novo narocnino',
