@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Link } from '../components/Povezava'
 import { supabase } from '../lib/supabase'
 import { vseVrstice } from '../lib/strani'
 import { povezavaNaPrijavo } from '../lib/prijava'
@@ -12,6 +11,7 @@ import { useAuth } from '../lib/useAuth'
 import { preberiVabilo, pozabiVabilo } from '../lib/miniLige'
 import PovabiSoigralce from '../components/PovabiSoigralce'
 import { zabeleziKorak } from '../lib/lijak'
+import { naTrgu, pozabiOsnutek, preberiOsnutek, shraniOsnutek, veljavenOsnutek } from '../lib/osnutek'
 import { osvetliCilj } from '../lib/podporaOrodja'
 import {
   ustaviVodic,
@@ -98,10 +98,6 @@ interface IgralecTrga {
   izstopil_at?: string | null
   [k: string]: any
 }
-
-/** Ali se igralca da kupiti: aktiven in klub ni izstopil iz lige. */
-const naTrgu = (i: { active?: boolean | null; izstopil_at?: string | null }) =>
-  i.active !== false && !i.izstopil_at
 
 /** Vrstica kadra, kakor jo hrani stran pred shranjevanjem. */
 interface VrsticaKadra {
@@ -229,6 +225,9 @@ function odsotnostZaIgrisce(o: PorociloOdsotnosti | undefined): IgralecNaIgriscu
   return { vrsta: o.kind, opis: opisOdsotnosti(o) }
 }
 
+/** Koliko zadnjih krogov svoje ekipe vidi lastnik v zgodovini. */
+const KROGOV_ZGODOVINE = 3
+
 export default function MojaEkipa() {
   const { session, loading } = useAuth()
   // Ob osvežitvi žetona (in ob vrnitvi v zavihek) useAuth nastavi NOV objekt
@@ -249,6 +248,11 @@ export default function MojaEkipa() {
   const [shranjenKljuc, setShranjenKljuc] = useState(PRAZEN_KADER)
   // Kader je iz gumba "Sestavi mi ekipo"; dokler ni shranjen, se sme žrebati znova.
   const [izPredloga, setIzPredloga] = useState(false)
+  // Kader je osnutek, sestavljen pred prijavo (src/lib/osnutek.ts) — čaka na Shrani.
+  const [izOsnutka, setIzOsnutka] = useState(false)
+  // Liga, ki ji pripada naloženi kader: ob preklopu lige se stari kader ne sme
+  // zapisati kot osnutek nove.
+  const osnutekLiga = useRef<number | null>(null)
   const [krogi, setKrogi] = useState<KrogRok[]>([])
   const [naslednjiKrog, setNaslednjiKrog] = useState<KrogRok | null>(null)
   const [zadnjiKrog, setZadnjiKrog] = useState<KrogRok | null>(null)
@@ -401,7 +405,9 @@ export default function MojaEkipa() {
   }, [razveljavi])
 
   // Neshranjene spremembe: kader, postava, trak ali vrstni red klopi.
+  // Neprijavljenemu se osnutek shrani v brskalnik sam, zato ga ne ustavljamo.
   const neshranjeno =
+    uporabnikId != null &&
     !nalaganje &&
     !napakaNalaganja &&
     (kljucKadra(izbrani) !== shranjenKljuc || (ekipa != null && imeEkipe.trim() !== ekipa.name))
@@ -474,10 +480,8 @@ export default function MojaEkipa() {
     setNapaka(null)
     setRazveljavi(null)
     setGibanje(null)
-    if (!uporabnikId) {
-      setNalaganje(false)
-      return
-    }
+    setIzOsnutka(false)
+    osnutekLiga.current = null
     const ligaId = tekmovanjeId
     const uid = uporabnikId
     // Odgovor stare lige, ki prispe po preklopu, ne sme pristati v novi.
@@ -556,12 +560,15 @@ export default function MojaEkipa() {
           .select('id, number, season, played_on, deadline_at')
           .eq('competition_id', ligaId)
           .maybeSingle(),
-        supabase
-          .from('fantasy_teams')
-          .select('id, name, budget, cash')
-          .eq('owner_id', uid)
-          .eq('competition_id', ligaId)
-          .maybeSingle(),
+        // Neprijavljen sestavlja osnutek: ekipe nima, trg in krogi so javni.
+        uid
+          ? supabase
+              .from('fantasy_teams')
+              .select('id, name, budget, cash')
+              .eq('owner_id', uid)
+              .eq('competition_id', ligaId)
+              .maybeSingle()
+          : Promise.resolve({ data: null, error: null }),
         supabase
           .from('settings')
           .select('key, value')
@@ -714,9 +721,10 @@ export default function MojaEkipa() {
           }
           poKrogih.set(key, prej)
         }
-        const zgod = [...poKrogih.values()].sort(
-          (a, b) => (b.krog?.number ?? 0) - (a.krog?.number ?? 0),
-        )
+        // Zgodovina kaže le zadnje tri kroge (odločitev lastnika, 15. 10. 2026).
+        const zgod = [...poKrogih.values()]
+          .sort((a, b) => (b.krog?.number ?? 0) - (a.krog?.number ?? 0))
+          .slice(0, KROGOV_ZGODOVINE)
         ekipaStanje = { nabor, chips: podatki(rChips) ?? [], posnetki, zgod }
       }
       if (!veljavno) return
@@ -752,6 +760,16 @@ export default function MojaEkipa() {
         // (ime je bilo pogoj za shranjevanje). Spremeni ga lahko kadarkoli.
         setImeEkipe(privzetoImeEkipe())
       }
+      // Osnutek izpred prijave napolni le prazno ekipo; shranjen kader ima prednost.
+      if (ekipaStanje?.nabor.length) pozabiOsnutek(ligaId)
+      else {
+        const osnutek = veljavenOsnutek(preberiOsnutek(ligaId), zStatistiko)
+        if (osnutek.length) {
+          setIzbrani(osnutek)
+          if (uid) setIzOsnutka(true)
+        }
+      }
+      osnutekLiga.current = ligaId
       setNalaganje(false)
     }
     nalozi().catch((e) => {
@@ -768,6 +786,13 @@ export default function MojaEkipa() {
       veljavno = false
     }
   }, [uporabnikId, loading, tekmovanjeId, poskus])
+
+  // Neprijavljen: vsaka sprememba kadra gre v osnutek te lige.
+  useEffect(() => {
+    if (uporabnikId || nalaganje || tekmovanjeId == null || osnutekLiga.current !== tekmovanjeId) return
+    shraniOsnutek(tekmovanjeId, izbrani)
+    if (izbrani.length) zabeleziKorak('osnutek_brez_prijave')
+  }, [uporabnikId, nalaganje, tekmovanjeId, izbrani])
 
   const poId = useMemo(
     () => Object.fromEntries(igralci.map((i) => [i.id, i])),
@@ -1049,18 +1074,45 @@ export default function MojaEkipa() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nalaganje, napakaNalaganja, session, ekipa, izbrani.length, igralci.length, lokacija.search])
 
-  // Vodič za novince (src/lib/vodic.ts): prijavljen, v tej ligi brez ekipe,
-  // prazno igrišče in predlog je mogoč. Enkrat na ligo; kdor pride z
-  // `?sestavi=1`, ima predlog že sestavljen in vodiča ne dobi.
+  // `?dodaj=<id>` s strani igralca ("Izberi ga v svojo ekipo"): ko je trg
+  // te lige naložen, ga dodamo kot gumb na trgu in parameter pobrišemo, da ga
+  // osvežitev ne doda znova.
+  const zeDodan = useRef(false)
+  useEffect(() => {
+    const iskanje = new URLSearchParams(lokacija.search)
+    const id = Number(iskanje.get('dodaj'))
+    if (!id || zeDodan.current || nalaganje || napakaNalaganja) return
+    // Trg mora biti iz lige v naslovu, ne iz prej izbrane.
+    const liga = iskanje.get('t')
+    if (tekmovanjeId == null || osnutekLiga.current !== tekmovanjeId || (liga && tekmovanje?.slug !== liga))
+      return
+    zeDodan.current = true
+    iskanje.delete('dodaj')
+    navigate({ search: iskanje.toString() ? `?${iskanje}` : '', hash: lokacija.hash }, { replace: true })
+    const igralec = poId[id]
+    if (izbrani.some((s) => s.player_id === id))
+      return setSporocilo(t('mojaEkipa.sporocila.zeVEkipi', { ime: ime(id) }))
+    if (!igralec || !naTrgu(igralec)) return setSporocilo(t('mojaEkipa.sporocila.niNaTrgu'))
+    // Ne gre (pozicija, klub, denar): dodaj pokaže razlog kot gumb na trgu.
+    if (zakajNeGre(igralec, izbraniPodrobno, preostalo)) return dodaj(igralec)
+    dodaj(igralec)
+    setSporocilo(t('mojaEkipa.sporocila.dodan', { ime: ime(id) }))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nalaganje, napakaNalaganja, tekmovanjeId, tekmovanje?.slug, lokacija.search])
+
+  // Vodič za novince (src/lib/vodic.ts): v tej ligi brez ekipe (tudi
+  // neprijavljen — Shrani ga pelje v registracijo), prazno igrišče in predlog
+  // je mogoč. Enkrat na ligo; kdor pride z `?sestavi=1`, ima predlog že
+  // sestavljen in vodiča ne dobi.
   const praznaZaVodic =
     !nalaganje &&
     !napakaNalaganja &&
-    Boolean(session) &&
     !ekipa &&
     izbrani.length === 0 &&
     igralci.length > 0 &&
     zakajNiPredloga == null &&
-    !new URLSearchParams(lokacija.search).has('sestavi')
+    !new URLSearchParams(lokacija.search).has('sestavi') &&
+    !new URLSearchParams(lokacija.search).has('dodaj')
   useEffect(() => {
     if (!praznaZaVodic || tekmovanjeId == null || !vodicNaVrsti(tekmovanjeId)) return
     return zacniVodic(tekmovanjeId)
@@ -1196,6 +1248,26 @@ export default function MojaEkipa() {
     )
   }
 
+  // Menjava s tapom (Igrisce preveri veljavnost z lahkoZamenjata): igralca
+  // si zamenjata mesto v postavi in na klopi (tudi vrstni red klopi), trak
+  // pa preide na igralca, ki stopi v postavo.
+  function zamenjajVPostavi(a: IgralecNaIgriscu, b: IgralecNaIgriscu) {
+    setSporocilo(null)
+    const [ven, noter] = a.is_starter ? [a, b] : [b, a]
+    const iVen = izbrani.findIndex((s) => s.player_id === Number(ven.id))
+    const iNoter = izbrani.findIndex((s) => s.player_id === Number(noter.id))
+    if (iVen < 0 || iNoter < 0) return
+    const s = izbrani[iVen]
+    if (s.is_captain)
+      setSporocilo(t('mojaEkipa.sporocila.kapetanPrevzel', { ime: ime(Number(noter.id)) }))
+    else if (s.is_vice)
+      setSporocilo(t('mojaEkipa.sporocila.namestnikPrevzel', { ime: ime(Number(noter.id)) }))
+    const kopija = [...izbrani]
+    kopija[iVen] = { ...izbrani[iNoter], is_starter: true, is_captain: s.is_captain, is_vice: s.is_vice }
+    kopija[iNoter] = { ...s, is_starter: false, is_captain: false, is_vice: false }
+    setIzbrani(kopija)
+  }
+
   // Vrstni red klopi: kdo prvi vskoči ob samodejni menjavi.
   function premakniNaKlopi(igralec: IgralecNaIgriscu, smer: -1 | 1) {
     // Isti seznam kot klop na igrišču: igralci brez pozicije tam ne stojijo.
@@ -1251,6 +1323,11 @@ export default function MojaEkipa() {
   function poskusiShraniti() {
     if (shranjujem) return
     vodicObShranjevanju()
+    // Brez računa: osnutek je že v brskalniku, po registraciji se vrne sem.
+    if (!uporabnikId) {
+      navigate(`${povezavaNaPrijavo(lokacija.pathname + lokacija.search)}&nacin=registracija`)
+      return
+    }
     if (!imeEkipe.trim()) {
       setSporocilo(null)
       setNapaka(t('mojaEkipa.napake.vpisiIme'))
@@ -1324,6 +1401,11 @@ export default function MojaEkipa() {
     // ekipa je lahko pravkar nastala (prazna).
     window.dispatchEvent(new Event(EKIPA_SHRANJENA))
     if (error) return setNapaka(napakaShranjevanja(error))
+    if (tekmovanjeId != null) pozabiOsnutek(tekmovanjeId)
+    if (izOsnutka) {
+      setIzOsnutka(false)
+      zabeleziKorak('osnutek_shranjen')
+    }
 
     const izid = rezultat as {
       cash?: number
@@ -1456,18 +1538,6 @@ export default function MojaEkipa() {
 
   if (loading || nalaganje)
     return <p className="animiraj-utrip text-slate-400">{t('skupno.nalaganje')}</p>
-  if (!session)
-    return (
-      <div className="kartica space-y-3 p-6 text-center text-slate-300">
-        <p>{t('mojaEkipa.prijavaPotrebna')}</p>
-        <Link
-          to={povezavaNaPrijavo(lokacija.pathname + lokacija.search)}
-          className="gumb-glavni inline-block px-4 py-2 text-sm"
-        >
-          {t('mojaEkipa.prijava')}
-        </Link>
-      </div>
-    )
   if (napakaNalaganja)
     return (
       <div role="alert" className="kartica space-y-3 p-6 text-center">
@@ -1517,6 +1587,17 @@ export default function MojaEkipa() {
   const naslednjiZaPripomocek = krogiZaPripomocek[0]
 
   // Prestop je igralec, ki ga v zadnji zaklenjeni postavi ni bilo.
+  // Ekipa še nima posnetka v tej sezoni, liga pa je že zaklenila kroge.
+  const medSezono =
+    !nalaganje &&
+    zaklenjenaPostava == null &&
+    naslednjiKrog?.season != null &&
+    krogi.some(
+      (k) =>
+        k.season === naslednjiKrog.season &&
+        k.lineups_locked_at != null &&
+        (k.number ?? 0) < (naslednjiKrog.number ?? 0),
+    )
   const prestopi = zaklenjenaPostava
     ? izbrani.filter((s) => !zaklenjenaPostava.includes(s.player_id)).length
     : 0
@@ -1628,6 +1709,15 @@ export default function MojaEkipa() {
         )}
       </h1>
 
+      {izOsnutka && (
+        <p
+          role="status"
+          className="rounded-xl border border-gnl-400/40 bg-gnl-500/10 px-3 py-2 text-sm font-semibold text-gnl-200"
+        >
+          {t('mojaEkipa.brezPrijave.pripravljena')}
+        </p>
+      )}
+
       {pokaziVabilo && ekipa?.id && (
         <PovabiSoigralce ekipaId={ekipa.id} naZapri={() => setPokaziVabilo(false)} />
       )}
@@ -1638,7 +1728,10 @@ export default function MojaEkipa() {
         <div className="flex items-center gap-2">
           {/* Ime je mogoče spremeniti kadarkoli (od 6. 10. 2026); lestvica kaže trenutno. */}
           <div data-pomoc="ime-ekipe" className="flex min-w-0 flex-1 items-center">
-            {urejamIme ? (
+            {!uporabnikId ? (
+              // Brez računa ime ni pomembno: predlaga se ob prvi shrambi.
+              <p className="text-xs text-slate-400 sm:text-sm">{t('mojaEkipa.brezPrijave.opis')}</p>
+            ) : urejamIme ? (
               <>
                 <label htmlFor="ime-ekipe" className="sr-only">
                   {t('mojaEkipa.povzetek.imeEkipe')}
@@ -1693,7 +1786,11 @@ export default function MojaEkipa() {
               disabled={shranjujem}
               className="gumb-glavni whitespace-nowrap px-4 py-2 text-sm disabled:cursor-wait disabled:opacity-60"
             >
-              {shranjujem ? t('mojaEkipa.povzetek.shranjujem') : t('mojaEkipa.povzetek.shraniEkipo')}
+              {shranjujem
+                ? t('mojaEkipa.povzetek.shranjujem')
+                : uporabnikId
+                  ? t('mojaEkipa.povzetek.shraniEkipo')
+                  : t('mojaEkipa.brezPrijave.shrani')}
             </button>
           </div>
         </div>
@@ -1748,6 +1845,18 @@ export default function MojaEkipa() {
             </>
           )}
         </p>
+
+        {/* Zamudnik: prvi posnetek ekipe nima s čim primerjati, zato zakleni_krog
+            prestopov ne šteje; od naslednjega kroga veljajo prosti in kazen. */}
+        {medSezono && naslednjiKrog && (
+          <p className="text-xs text-sky-200/90">
+            {t('mojaEkipa.prestopi.medSezono', {
+              n: pravila.prosti,
+              krog: naslednjiKrog.number,
+              kazen: mnozina(pravila.kazen, TOCKE),
+            })}
+          </p>
+        )}
 
         {/* Na večjem zaslonu je prostora še za vrednost ekipe in zasedenost mest. */}
         <div className="hidden flex-wrap items-center justify-between gap-2 text-xs text-slate-500 sm:flex">
@@ -1880,6 +1989,7 @@ export default function MojaEkipa() {
             naOdstrani={(i) => odstrani(i as IgralecTrga)}
             naPraznoMesto={naPraznoMesto}
             naPremakniKlop={premakniNaKlopi}
+            naZamenjaj={zamenjajVPostavi}
             naInfo={(i) => setInfo(i as IgralecTrga)}
           />
           </div>
@@ -1887,7 +1997,7 @@ export default function MojaEkipa() {
           {/* Kaj še manjka — edino mesto s celim seznamom. Spodnji pas na
               telefonu izpiše prvo napako in vodi sem. */}
           {(() => {
-            const brezImena = !imeEkipe.trim()
+            const brezImena = uporabnikId != null && !imeEkipe.trim()
             if (izbrani.length === 0 || (!brezImena && napakeEkipe.length === 0)) return null
             return (
               <section id="status-ekipe" className="text-sm">
@@ -1967,7 +2077,8 @@ export default function MojaEkipa() {
           )}
 
           {/* Vse, kar ni sestava ekipe, je zloženo: na telefonu zaprto, na
-              računalniku odprto. */}
+              računalniku odprto. Brez računa ni ne pripomočkov ne zgodovine. */}
+          {uporabnikId && (
           <details
             open={odprtoVec}
             onToggle={(e) => setOdprtoVec(e.currentTarget.open)}
@@ -2275,6 +2386,7 @@ export default function MojaEkipa() {
               )}
             </div>
           </details>
+          )}
         </div>
 
         {/* trg — na velikih zaslonih stranski stolpec, ki ostane na mestu */}
@@ -2394,14 +2506,14 @@ export default function MojaEkipa() {
               onClick={poskusiShraniti}
             disabled={shranjujem}
             title={
-              !imeEkipe.trim() || napakeEkipe.length
+              (uporabnikId && !imeEkipe.trim()) || napakeEkipe.length
                 ? t('mojaEkipa.telefon.osnutekNamig')
                 : undefined
             }
             className="gumb-glavni relative min-h-[44px] shrink-0 px-4 text-sm disabled:cursor-wait disabled:opacity-60"
           >
             {shranjujem ? t('mojaEkipa.povzetek.shranjujem') : t('skupno.shrani')}
-            {!shranjujem && (!imeEkipe.trim() || napakeEkipe.length > 0) && (
+            {!shranjujem && ((uporabnikId && !imeEkipe.trim()) || napakeEkipe.length > 0) && (
               <span
                 aria-label={t('mojaEkipa.telefon.neIzpolnjuje')}
                 className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-amber-400 ring-2 ring-slate-950"

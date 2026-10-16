@@ -30,6 +30,7 @@ export default function DeliSliko({
   imeSlike,
   gumbDeli,
   gumbPrenesi,
+  naDeljeno,
 }: {
   /** Izriše sliko; klic mora biti ponovljiv. */
   narisi: () => Promise<Blob | null>
@@ -42,6 +43,8 @@ export default function DeliSliko({
   /** Napis na glavnem gumbu, kadar slika ni kar "slika" (npr. tedenski pregled). */
   gumbDeli?: string
   gumbPrenesi?: string
+  /** Po deljenju slike ali povezave oz. prenosu (lijak). */
+  naDeljeno?: () => void
 }) {
   const [dela, setDela] = useState(false)
   const [sporocilo, setSporocilo] = useState<string | null>(null)
@@ -75,6 +78,7 @@ export default function DeliSliko({
     if (navigator.share) {
       try {
         await navigator.share({ title: t('lestvice.deliSliko.naslov', { naslov }), text: besedilo, url: povezava })
+        naDeljeno?.()
       } catch {
         // Uporabnik je meni zaprl — to ni napaka.
       }
@@ -82,6 +86,7 @@ export default function DeliSliko({
     }
     try {
       await navigator.clipboard.writeText(`${besedilo} ${povezava}`)
+      naDeljeno?.()
       setSporocilo(t('lestvice.deliSliko.kopirana'))
     } catch {
       setSporocilo(povezava)
@@ -109,6 +114,7 @@ export default function DeliSliko({
       // Povezava gre v besedilo: ob sliki jo aplikacije (WhatsApp) obdržijo,
       // polje `url` pa mnoge zavržejo.
       await navigator.share({ files: [datoteka], text: `${besedilo} ${povezava}` })
+      naDeljeno?.()
     } catch (e) {
       if ((e as Error).name === 'AbortError') return
       // Brskalnik je zavrnil (risanje je trajalo predolgo) — slika je zdaj
@@ -136,6 +142,7 @@ export default function DeliSliko({
         URL.revokeObjectURL(url)
         a.remove()
       }, 30000)
+      naDeljeno?.()
       setSporocilo(t('lestvice.deliSliko.shranjena'))
     } catch (e) {
       setSporocilo(t('lestvice.deliSliko.napaka', { napaka: (e as Error).message }))

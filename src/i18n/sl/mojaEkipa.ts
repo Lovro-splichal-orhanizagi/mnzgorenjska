@@ -75,6 +75,8 @@ export const mojaEkipa = {
       'V postavi ni prostora za še enega igralca na tej poziciji — najprej daj koga na klop.',
     niVecNamestnik: '{ime} ni več namestnik — izberi novega.',
     niVecKapetan: '{ime} ni več kapetan — izberi novega.',
+    kapetanPrevzel: '{ime} je prevzel kapetanski trak.',
+    namestnikPrevzel: '{ime} je zdaj namestnik kapetana.',
     rokPotekel: 'Rok {krog}. kroga je že potekel, zato spremembe veljajo od naslednjega kroga.',
     shranjenaZaKrog: 'Ekipa je shranjena in pripravljena za {krog}. krog.',
     shranjenaVeljavna: 'Ekipa je shranjena in izpolnjuje pravila.',
@@ -90,10 +92,16 @@ export const mojaEkipa = {
     zapriObvestilo: 'Zapri obvestilo',
     odstranjen: '{ime} je odstranjen.',
     razveljavi: 'Razveljavi',
+    dodan: '{ime} je v tvoji ekipi — pritisni Shrani.',
+    zeVEkipi: '{ime} je že v tvoji ekipi.',
+    niNaTrgu: 'Tega igralca trenutno ni mogoče kupiti.',
   },
 
-  prijavaPotrebna: 'Za sestavo ekipe se moraš prijaviti.',
-  prijava: 'Prijava',
+  brezPrijave: {
+    opis: 'Ekipo sestaviš brez računa. Ostane v tem brskalniku, dokler je ne shraniš.',
+    shrani: 'Shrani in ustvari račun',
+    pripravljena: 'Tvoja ekipa je pripravljena — shrani jo.',
+  },
   locenaLiga:
     'Ekipa v ligi <liga>{liga}</liga> je ločena od ekip v drugih ligah — s svojim proračunom in svojo lestvico. Točke štejejo od {krog}. kroga naprej, ker se do takrat še vrstijo prestopi in prehodi med selekcijami.',
 
@@ -101,6 +109,17 @@ export const mojaEkipa = {
   vec: 'Več: pripomočki, zgodovina, pravila',
 
   prestopi: {
+    /**
+     * Ekipa brez posnetka v tekoči sezoni, liga pa je že zaklenila kroge. Prvi
+     * posnetek nima s čim primerjati, zato prestopov ne šteje (zakleni_krog);
+     * nato `prosti_prestopi` na krog, vsak nadaljnji `kazen_prestopa`.
+     */
+    medSezono: {
+      one: 'Pridružuješ se med sezono: do roka {krog}. kroga ekipo sestaviš brez kazni. Nato imaš vsak krog {n} brezplačen prestop, vsak nadaljnji stane −{kazen}.',
+      two: 'Pridružuješ se med sezono: do roka {krog}. kroga ekipo sestaviš brez kazni. Nato imaš vsak krog {n} brezplačna prestopa, vsak nadaljnji stane −{kazen}.',
+      few: 'Pridružuješ se med sezono: do roka {krog}. kroga ekipo sestaviš brez kazni. Nato imaš vsak krog {n} brezplačne prestope, vsak nadaljnji stane −{kazen}.',
+      other: 'Pridružuješ se med sezono: do roka {krog}. kroga ekipo sestaviš brez kazni. Nato imaš vsak krog {n} brezplačnih prestopov, vsak nadaljnji stane −{kazen}.',
+    },
     stevec: 'Prestopi: {n}/{prosti}',
     wildcard: 'wildcard — brez kazni',
     odbitek: 'odbitek {tock} v tem krogu',
@@ -291,8 +310,13 @@ export const mojaEkipa = {
 
   // Igrišče pri sestavi ekipe (components/Igrisce.tsx).
   igrisce: {
-    naKlop: 'Premakni na klop',
-    vPostavo: 'Uvrsti v prvo postavo',
+    namigZamenjave: 'Tapni dres igralca, nato tistega, s katerim ga zamenjaš.',
+    zapriNamig: 'Zapri namig',
+    izberiZaMenjavo: '{ime}: izberi za menjavo',
+    prekliciIzbiro: '{ime}: prekliči izbiro',
+    zamenjajZ: '{ime}: zamenjaj z igralcem {drugi}',
+    izbran: 'Izbran je {ime}. Tapni označenega igralca za menjavo ali istega znova za preklic.',
+    brezMenjave: 'Za igralca {ime} ni veljavne menjave. Tapni ga znova za preklic.',
     niVecVLigiNamig: 'Igralec ni več v ligi — kader z njim ne dobi točk.',
     niVecVLigi: 'ni več v ligi',
     poskodba: 'poškodba',

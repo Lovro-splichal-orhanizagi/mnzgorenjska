@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { Link } from './Povezava'
+import { drzavaVstopa } from '../lib/drzavaUgib'
 import { supabase } from '../lib/supabase'
 import { useTekmovanje } from '../lib/tekmovanje'
 import { t, datumUra } from '../i18n'
@@ -45,6 +47,7 @@ export default function RokKroga() {
   // Ko rok poteče, je "naslednji krog" že drug — osvežimo, da pas ne obtiči
   // na zaklenjenem, dokler kdo ne naloži strani znova.
   const [osvezitev, setOsvezitev] = useState(0)
+  const vstop = drzavaVstopa(useLocation().pathname)
 
   useEffect(() => {
     if (!tekmovanjeId) return
@@ -82,6 +85,8 @@ export default function RokKroga() {
 
   // Med nalaganjem prazen pas iste višine: pas, ki se pojavi nad glavo,
   // bi sicer potisnil vso stran navzdol (premik postavitve, CLS).
+  // Vstopna stran države ni stran lige: rok izbrane lige bi bil tam tuj.
+  if (vstop) return null
   if (krog === undefined && !brezLig) return <div className="h-7 bg-gnl-500/10 sm:h-8" aria-hidden />
   if (!krog?.deadline_at || preostanek == null) return null
 

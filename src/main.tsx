@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { lazy, Suspense } from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App'
@@ -7,6 +7,9 @@ import { jezikSlovarja, naloziSlovar, t } from './i18n'
 import { pripraviNativno } from './lib/platforma'
 import { pripraviOta } from './lib/ota'
 import { pripraviAnalitiko } from './lib/analitika'
+
+// Prosojnice objav (scripts/objave.mjs) so brez glave, noge in okna prvega obiska.
+const Objava = lazy(() => import('./pages/Objava'))
 
 pripraviNativno()
 pripraviOta()
@@ -44,7 +47,13 @@ void naloziSlovar().then(() => {
   ReactDOM.createRoot(koren).render(
     <React.StrictMode>
       <BrowserRouter>
-        <App />
+        {location.pathname === '/objava' ? (
+          <Suspense fallback={null}>
+            <Objava />
+          </Suspense>
+        ) : (
+          <App />
+        )}
       </BrowserRouter>
     </React.StrictMode>,
   )
