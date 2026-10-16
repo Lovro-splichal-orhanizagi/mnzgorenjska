@@ -1,0 +1,93 @@
+name: Cene lig
+
+# Samo korak cen iz uvoz-lige, brez ponovnega uvoza zapisnikov. Za lige, ki so
+# ze v bazi, a so ostale pri privzeti 4.5 (npr. Katalonija po 2–4 krogih brez
+# arhiva): uvoz traja 20–25 minut na ligo, cene nekaj sekund.
+#
+# Preskoci vklopljene lige (cene tam vodi borza; ovrednoti-igralce.mjs jih
+# brez --dovoli-aktivno zavrne tudi sam) in lige, ki cenik ze imajo
+# (prestanejo pripravljenost). Na starejse uvoze ne caka: dolga vrsta uvozov
+# drugih lig bi ga zadrzala za ure, pise pa le cene nevklopljenih lig.
+on:
+  workflow_dispatch:
+    inputs:
+      lige:
+        description: 'Slugi lig, loceni s presledkom ali vejico'
+        required: false
+        default: ''
+        type: string
+      predpona:
+        description: 'Vse NEVKLOPLJENE lige s to predpono sluga (npr. es-)'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cene-lig
+  cancel-in-progress: false
+
+jobs:
+  cene:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+
+      - name: Pozicije, cene in pripravljenost
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          LIGE: ${{ inputs.lige }}
+          PREDPONA: ${{ inputs.predpona }}
+        run: |
+          # GitHub poganja bash z -e; prazen grep (npr. nobena liga ni preskocena)
+          # bi sicer koncal korak, se preden se zacne.
+          set +e -uo pipefail
+          # Le NEVKLOPLJENE lige: lazni-vratarji nima varovala za vklopljeno ligo.
+          FILTER=""
+          [ -n "$PREDPONA" ] && [ -z "$LIGE" ] && FILTER="&slug=like.$PREDPONA*"
+          curl -sf "$SUPABASE_URL/rest/v1/competitions?select=slug&active=eq.false&order=slug&limit=5000$FILTER" \
+            -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>JSON.parse(s).forEach(l=>console.log(l.slug)))' > /tmp/izklopljene.txt \
+            || { echo "::error::Seznama lig ni mogoce prebrati."; exit 1; }
+          { echo "$LIGE" | tr ', ' '\n\n'; [ -n "$PREDPONA" ] && grep "^$PREDPONA" /tmp/izklopljene.txt; } | grep -v '^$' | sort -u > /tmp/zelene.txt
+          grep -vxFf /tmp/izklopljene.txt /tmp/zelene.txt | sed 's/^/Preskocena (vklopljena ali je ni): /' || true
+          grep -xFf /tmp/izklopljene.txt /tmp/zelene.txt > /tmp/lige.txt
+          echo "Lige: $(tr '\n' ' ' < /tmp/lige.txt)"
+          [ -s /tmp/lige.txt ] || { echo "::error::Ni lig."; exit 1; }
+          padle=""
+          while IFS= read -r liga; do
+            # Liga, ki cenik ze ima (prestane pripravljenost), ostane pri miru.
+            if node scripts/pripravljenost-lige.mjs --tekmovanje "$liga" </dev/null >/dev/null 2>&1; then
+              echo "ze ima cene, preskocena $liga" | tee -a /tmp/povzetek.txt
+              continue
+            fi
+            echo "::group::$liga"
+            if node scripts/lazni-vratarji.mjs    --tekmovanje "$liga" --pisi </dev/null \
+              && node scripts/ugani-pozicije.mjs  --tekmovanje "$liga" --pisi </dev/null \
+              && node scripts/ovrednoti-igralce.mjs --tekmovanje "$liga" --pisi </dev/null; then
+              :
+            else
+              echo "::warning title=Cene::$liga ni uspela; ostale se nadaljujejo"
+              padle="$padle $liga"
+            fi
+            echo "::endgroup::"
+            if node scripts/pripravljenost-lige.mjs --tekmovanje "$liga" </dev/null > /tmp/p.txt 2>&1; then
+              echo "PRIPRAVLJENA $liga" | tee -a /tmp/povzetek.txt
+            else
+              echo "ni pripravljena $liga: $(grep -m1 'privzeto ceno' /tmp/p.txt | tr -s ' ')" | tee -a /tmp/povzetek.txt
+            fi
+          done < /tmp/lige.txt
+          { echo '### Pripravljenost'; echo '```'; cat /tmp/povzetek.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          if [ -n "$padle" ]; then
+            echo "::error title=Neuspele lige::$padle"
+            exit 1
+          fi

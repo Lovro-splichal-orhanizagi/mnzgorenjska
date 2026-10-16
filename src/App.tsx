@@ -12,6 +12,8 @@ import NapakaOprijem from './components/NapakaOprijem'
 import Podpora from './components/Podpora'
 import Pivo from './components/Pivo'
 import Facebook from './components/Facebook'
+import Instagram from './components/Instagram'
+import Trgovine from './components/Trgovine'
 import VstopDrzave from './components/VstopDrzave'
 import IzbiraDrzave from './components/IzbiraDrzave'
 import IzbiraJezika from './components/IzbiraJezika'
@@ -187,6 +189,8 @@ export default function App() {
             <div className="mb-4 flex flex-wrap justify-center gap-2">
               {!jeNativno() && <Pivo src="noga" />}
               <Facebook />
+              <Instagram />
+              <Trgovine />
             </div>
             {!jeNativno() && (
               <div className="mb-3">
