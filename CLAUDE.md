@@ -122,6 +122,7 @@ tabelo šifer tam, ne tu.
 | Danska | `docs/viri/danska.md` | `dbu` |
 | Norveška | `docs/viri/norveska.md` | `nff` |
 | Kazahstan | `docs/viri/kazahstan.md` | `kff` |
+| Moldavija | `docs/viri/moldavija.md` | `fmf` |
 
 Pravila, ki veljajo za vse vire (podrobnosti v datotekah):
 

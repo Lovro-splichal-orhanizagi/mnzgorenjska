@@ -6311,6 +6311,204 @@ preveri(
     zavrnjen.status === 403 && C.default.zavrnitev('x', 429).zavrnitev === true)
 }
 
+// --- vir fmf (Moldavija, fmf.md; zapisniki COMET kot PDF, vzorci so očiščeno besedilo) ---
+{
+  const M = await import('./viri/fmf.mjs')
+  const { default: viri } = await import('./viri/index.mjs')
+  const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  preveri('fmf: vir je vpisan, 3 s, User-Agent SLFF', viri.fmf === M.default && M.default.drzava === 'MD' && M.default.premorMs >= 3000 &&
+    M.default.glave['User-Agent'] === 'SLFF fantasy (https://slff.eu)' && typeof M.default.fetch === 'function')
+  preveri('fmf: šifra in naslovi', M.razbijKodo('liga-2-1782306996/877').slug === 'liga-2-1782306996' &&
+    M.default.naslovRazporeda('liga-2-1782306996/877') === 'https://www.fmf.md/home/printeaza-detalii-competitii?competition=877' &&
+    M.naslovKroga('liga-2-1782306996/877', '8068') === 'https://www.fmf.md/home/competitii/masculin/liga-2-1782306996?menu=matches&edition=8068' &&
+    M.default.naslovZapisnika(null, 'md50492') === 'https://www.fmf.md/home/meciuri-info?match=50492' &&
+    M.sifraZapisnika('50492') === 'md50492' && M.sifraZapisnika('md50492') === 'md50492' &&
+    M.naslovPdf('cdn/matches/50492/CF Edineț - FC Constructorul Leova.pdf') === 'https://www.fmf.md/cdn/matches/50492/CF%20Edine%C8%9B%20-%20FC%20Constructorul%20Leova.pdf')
+  let slaba = null
+  try { M.razbijKodo('liga-2-1782306996') } catch (e) { slaba = e.message }
+  preveri('fmf: šifra brez številke tekmovanja ustavi uvoz', /<slug>\/<competition>/.test(slaba ?? ''))
+
+  // Tiskana stran: Liga 1 Grupa B, 5 klubov, 15 krogov po 2 tekmi (en prost), ura −1 h.
+  const tisk = beri('md-fmf-tisk-879.html')
+  const raz = M.default.razcleniRazpored([], tisk)
+  const vse = raz.flatMap((k) => k.tekme)
+  preveri('fmf: razpored s tiskane strani — 15 krogov po 2, 18 odigranih, 5 klubov, sezona 2026/27',
+    raz.length === 15 && raz.every((k) => k.tekme.length === 2) && vse.filter((t) => t.odigrana).length === 18 &&
+    new Set(vse.flatMap((t) => [t.domaci, t.gostje])).size === 5 && M.sezonaTiska(tisk) === '2026/27' && M.jeTisk(tisk) && !M.jeTisk('<html></html>'))
+  preveri('fmf: tekma s tiskane strani (kišinjevski 18:00 → ljubljanski 17:00, izid, ime brez " - ")',
+    vse[0].domaci === 'FC Victoria' && vse[0].gostje === 'FC Oguz' && vse[0].datum === '2026-07-31' && vse[0].ura === '17:00' &&
+    vse[0].izid.domaci === 0 && vse[0].izid.gostje === 1 && vse.filter((t) => !t.izid).every((t) => !t.odigrana && t.ura))
+  let dvojno = null
+  try { M.tekmeTiska('<th colspan="6" class="text-center">Etapa 1</th><tr><td>1</td><td>01.08.2026</td><td>A - B - C</td><td>1 - 0</td><td>x</td><td>18:00</td>') } catch (e) { dvojno = e.message }
+  preveri('fmf: ime z " - " (domači/gostje nejasni) ustavi uvoz', /ne znam ločiti/.test(dvojno ?? ''))
+
+  // Meni krogov, stran kroga, stran tekme.
+  const meni = M.krogiTekmovanja(beri('md-fmf-tekmovanje-liga-2.html'))
+  preveri('fmf: meni tekmovanja — 30 krogov z edition', meni.size === 30 && meni.get(1) === '8056' && meni.get(14) === '8069' && meni.get(30) === '8085')
+  const krog = M.tekmeKroga(beri('md-fmf-krog-8068.html'))
+  const neodigran = M.tekmeKroga(beri('md-fmf-krog-8069-neodigran.html'))
+  preveri('fmf: stran kroga — 7 tekem s šifro in izidom, neodigran krog brez izida',
+    krog.length === 7 && krog.find((t) => t.id === '50492')?.izid?.domaci === 7 && krog.every((t) => t.izid) &&
+    neodigran.length === 7 && neodigran.every((t) => !t.izid) && M.jeStranKroga(beri('md-fmf-krog-8068.html')))
+  preveri('fmf: stran tekme — pot PDF, brez zapisnika null',
+    M.potZapisnika(beri('md-fmf-tekma-50492.html')) === 'cdn/matches/50492/CF Edineț - FC Constructorul Leova.pdf' &&
+    M.potZapisnika(beri('md-fmf-tekma-50482-brez-zapisnika.html')) === null && M.jeStranTekme(beri('md-fmf-tekma-50482-brez-zapisnika.html')))
+
+  const minute = (n, idx) => n.filter((x) => x.ekipaIdx === idx).reduce((s, x) => s + x.minute, 0)
+  // Oblika A (šifre COMET): Edineț 7:0 Constructorul Leova, 10. 10. 2026.
+  const zA = M.vZapisnik(beri('md-fmf-raport-50492-a.txt'), { id: 'md50492' })
+  const nA = M.nastopi(zA)
+  preveri('fmf A: 11 + 11, klop 6 + 10, krog 13, sezona, datum in ura (−1 h), brez opozoril',
+    zA.oblika === 'A' && zA.domaci.postava.length === 11 && zA.gostje.postava.length === 11 && zA.domaci.rezerve.length === 6 &&
+    zA.gostje.rezerve.length === 10 && zA.krog === 13 && zA.sezona === '2026/27' && zA.datum === '2026-10-10' && zA.ura === '14:00' &&
+    zA.domaci.ime === 'CF Edineț' && zA.gostje.ime === 'FC Constructorul Leova' && zA.opozorila.length === 0, JSON.stringify(zA.opozorila))
+  preveri('fmf A: vsi nastopi s šifro COMET, vratar G in kapetan C',
+    nA.every((x) => /^\d{4,7}$/.test(x.regSt)) && nA.find((x) => x.st === 89 && x.ekipaIdx === 0)?.regSt === '40935' &&
+    zA.domaci.postava.find((i) => i.st === 89)?.vratar && zA.domaci.postava.find((i) => i.st === 89)?.kapetan &&
+    zA.gostje.postava.filter((i) => i.vratar).map((i) => i.st).join() === '1' && zA.gostje.postava.find((i) => i.st === 89)?.kapetan)
+  preveri('fmf A: goli 7:0 (Creciun 3), rumeni gostov 3, 7 menjav z minuto, 990 minut na ekipo',
+    zA.goli.length === 7 && zA.goli.every((g) => g.ekipaIdx === 0) && nA.find((x) => x.ime === 'Creciun Eduard')?.goli === 3 &&
+    zA.rumeni.length === 3 && zA.rumeni.every((r) => r.ekipaIdx === 1) && zA.rumeni.find((r) => r.st === 18)?.minuta === 62 &&
+    zA.menjave.length === 7 && zA.menjave.every((m) => m.minuta && m.noter.st && m.ven.st) &&
+    nA.find((x) => x.ime === 'Grosu Alexandru')?.minutaOd === 67 && nA.find((x) => x.ime === 'Ursu Elyas')?.minute === 67 &&
+    minute(nA, 0) === 990 && minute(nA, 1) === 990 && nA.filter((x) => !x.zacetnik).length === 7)
+  preveri('fmf A: zamenjani vratar (81\') in starost ni v besedilu', nA.find((x) => x.ime === 'Mogoreanu Cristian')?.minute === 9 &&
+    !/\d+An\b/.test(beri('md-fmf-raport-50492-a.txt')))
+
+  // Oblika B (brez šifer), romunska: Constructorul Leova 0:1 Sheriff-2, 11 m v 89., rumeni "AM".
+  const zB = M.vZapisnik(beri('md-fmf-raport-50413-b.txt'))
+  const nB = M.nastopi(zB)
+  preveri('fmf B: 11 + 11, brez šifer, gol z 11 m, rumeni po tekmi (AM) šteje, 4 menjave, 990 minut',
+    zB.oblika === 'B' && zB.domaci.postava.length === 11 && zB.gostje.postava.length === 11 && nB.every((x) => x.regSt === null) &&
+    zB.goli.length === 1 && zB.goli[0].enajstmetrovka && zB.goli[0].ekipaIdx === 1 && zB.goli[0].minuta === 89 &&
+    zB.rumeni.length === 3 && zB.rumeni.find((r) => r.st === 14)?.minuta === 90 && zB.menjave.length === 4 &&
+    minute(nB, 0) === 990 && minute(nB, 1) === 990 && zB.opozorila.length === 0, JSON.stringify(zB.opozorila))
+  // Ruska predloga (ГОЛЫ, ЖЁЛТЫЕ КАРТОЧКИ, menjave pod ЗАПАСНЫЕ ИГРОКИ, vratar В, kapetan К).
+  const zR = M.vZapisnik(beri('md-fmf-raport-50402-b-ru.txt'))
+  const nR = M.nastopi(zR)
+  preveri('fmf B (ruska predloga): 3:4, vratar В, kapetan К, Пенальти, 6 menjav, krog 2, datum',
+    zR.rezultat.domaci === 3 && zR.rezultat.gostje === 4 && zR.goli.length === 7 && zR.goli.filter((g) => g.enajstmetrovka).length === 1 &&
+    zR.domaci.postava.filter((i) => i.vratar).map((i) => i.st).join() === '23' && zR.gostje.postava.find((i) => i.st === 11)?.kapetan &&
+    zR.menjave.length === 6 && zR.krog === 2 && zR.datum === '2026-07-25' && zR.ura === '17:00' && zR.rumeni.length === 3 &&
+    minute(nR, 0) === 990 && minute(nR, 1) === 990 && zR.opozorila.length === 0, JSON.stringify(zR.opozorila))
+  // Avtogol ("Auto-gol") je pri strelcu v njegovi ekipi in šteje nasprotniku; rdeči v 90+3.
+  const zO = M.vZapisnik(beri('md-fmf-raport-50418-avtogol-rdeci.txt'))
+  const avto = zO.goli.find((g) => g.avtogol)
+  preveri('fmf: avtogol šteje nasprotniku (2:1), rdeči v 90+3 → 90',
+    avto?.ekipaIdx === 1 && avto.st === 4 && zO.rezultat.domaci === 2 && zO.opozorila.length === 0 &&
+    zO.rdeci.length === 1 && zO.rdeci[0].minuta === 90 && M.nastopi(zO).find((x) => x.avtogoli === 1)?.ime === 'Novicov Artiom', JSON.stringify(zO.opozorila))
+  // Ruska predloga: avtogol "Гол в свои ворота" (Atletico 3:0 Locomotiva Ocnita).
+  const zRo = M.vZapisnik(beri('md-fmf-raport-50403-ru-avtogol.txt'))
+  preveri('fmf: ruski avtogol (Гол в свои ворота) šteje nasprotniku, 3:0 brez opozoril',
+    zRo.rezultat.domaci === 3 && zRo.goli.filter((g) => g.avtogol).length === 1 && zRo.goli.find((g) => g.avtogol)?.ekipaIdx === 1 &&
+    zRo.opozorila.length === 0, JSON.stringify(zRo.opozorila))
+  // Dva rdeča v 76. (po en na ekipo): 976 minut vsaka.
+  const zD = M.vZapisnik(beri('md-fmf-raport-50466-dva-rdeca.txt'))
+  const nD = M.nastopi(zD)
+  preveri('fmf: rdeči karton skrajša nastop (dva v 76. → 976 + 976)', zD.rdeci.length === 2 && minute(nD, 0) === 976 && minute(nD, 1) === 976 &&
+    nD.find((x) => x.ime === 'Celeadnic Eugeniu')?.rdeci === 1 && nD.find((x) => x.ime === 'Celeadnic Eugeniu')?.minutaDo === 76)
+
+  // Čiščenje: sodniki, osebje, podpisi, opombe, tiskalec in starost ne ostanejo.
+  const surovo = [
+    'COMET - Federația Moldovenească de Fotbal       Data/Timp: 10.10.2026 17:57:30 EEST Imprimat de: Ion Tiskar (123)',
+    '                 Raportul meciului', '                 LIGA 2 26/27',
+    '        CF A          2:0          CF B',
+    '   calendar_month Data/Timp: 10.10.2026 15:00 EEST       trophy Tur: 3',
+    '                 PERSOANELE OFICIALE', '  Arbitrul principal: Sodnik Ion (Bălţi)',
+    '                 LINEUPS', '  CF A                                       CF B',
+    '  1 Vratar Ana          G   C     37An   40935  MDA       1   Vratar Bor    G      34An   110007   MDA',
+    '                 STAFF', '  Antrenorul principal: Trener Ion           110004',
+    ' check_circle CONFIRMAT       Podpis Ion 10.10.2026 13:52:03 EEST',
+    '                 CARTONAŞE GALBENE', '        1 Vratar Ana                    ', '   62\'                  75\'          Josu Victor      Administrator',
+    '                 OBSERVAȚIILE DELEGAȚILOR', ' Mașină de serviciu: NAB 844.',
+    ' check_circle Meci jucat      Sodnik Ion 10.10.2026 17:05:58 EEST',
+    'Raportul meciului: CF A - CF B          Pagină 1 / 2',
+  ].join('\n')
+  const cisto = M.ocisti(surovo)
+  preveri('fmf: ocisti odstrani sodnike, osebje, podpise, opombe, tiskalca in starost',
+    !/Sodnik|Trener|Podpis|Tiskar|Josu|Administrator|NAB 844|37An|Imprimat|PERSOANELE|STAFF/.test(cisto) &&
+    /40935/.test(cisto) && /Vratar Ana/.test(cisto) && /check_circle Meci jucat\s*$/m.test(cisto) && /62'/.test(cisto), cisto)
+  for (const f of ['md-fmf-raport-50403-ru-avtogol.txt', 'md-fmf-raport-50492-a.txt', 'md-fmf-raport-50413-b.txt', 'md-fmf-raport-50402-b-ru.txt', 'md-fmf-raport-50418-avtogol-rdeci.txt', 'md-fmf-raport-50466-dva-rdeca.txt'])
+    preveri(`fmf: vzorec ${f} je očiščen (ocisti ga ne spremeni)`, M.ocisti(beri(f)) === beri(f) && !/Arbitr|Imprimat|CONFIRMAT|Antrenor|Doctor|\d+An\b/.test(beri(f)))
+
+  // Stara predloga (Analyticom, 2025/26) ustavi uvoz; prazno besedilo je null.
+  let stara = null
+  try { M.vZapisnik('Analyticom COMET\n   Raport de meci\n   LIGA 2 25/26 Seria NORD\n') } catch (e) { stara = e.message }
+  preveri('fmf: predloga Analyticom (arhiv 2025/26) ustavi uvoz, prazno je null', /Analyticom/.test(stara ?? '') && M.vZapisnik('') === null)
+
+  // Predpomnilnik: le veljavne strani in popoln zapisnik.
+  const nepopoln = beri('md-fmf-raport-50492-a.txt').replace(/ check_circle Meci jucat\s*$/, '')
+  preveri('fmf: zapisnik brez podpisa sodnika je nepopoln (bere se znova)', M.vZapisnik(nepopoln).opozorila[0]?.startsWith('zapisnik nepopoln') &&
+    M.vZapisnik(beri('md-fmf-raport-50492-a.txt')).odigrana === true)
+  // Nepopoln zapisnik (brez podpisa ali ekipa pod 7 začetniki) mora uvozu povedati `nepopoln`,
+  // sicer dobi tekma `imported_at` in lestvica ter borza jo štejeta za končno.
+  const malo = beri('md-fmf-raport-50492-a.txt').replace(/^  (?:7|9|10|11|14) .*\n/gm, '')
+  preveri('fmf: nepopoln zapisnik ima z.nepopoln (uvoz pusti imported_at prazen), popoln ne',
+    M.vZapisnik(nepopoln).nepopoln === true && M.vZapisnik(beri('md-fmf-raport-50492-a.txt')).nepopoln === false &&
+    M.vZapisnik(malo).domaci.postava.length < 7 && M.vZapisnik(malo).nepopoln === true &&
+    M.vZapisnik(malo).opozorila[0]?.startsWith('zapisnik nepopoln'), JSON.stringify(M.vZapisnik(malo).opozorila))
+  preveri('fmf: predpomnilnik — popoln zapisnik da, brez podpisa sodnika ne, stran brez PDF ne, prazen krog ne',
+    M.zaPredpomnilnik(beri('md-fmf-raport-50492-a.txt'), 'raport-50492.txt') && !M.zaPredpomnilnik(nepopoln, 'raport-50492.txt') &&
+    !M.zaPredpomnilnik('Analyticom COMET', 'raport-40960.txt') &&
+    M.zaPredpomnilnik(beri('md-fmf-tekma-50492.html'), 'tekma-50492.html') && !M.zaPredpomnilnik(beri('md-fmf-tekma-50482-brez-zapisnika.html'), 'tekma-50482.html') &&
+    !M.zaPredpomnilnik('<html>Eroare</html>', 'krog-8068.html') && M.zaPredpomnilnik(beri('md-fmf-krog-8068.html'), 'krog-8068.html') &&
+    M.zaPredpomnilnik(tisk, 'tisk-879.html') && !M.zaPredpomnilnik('<html></html>', 'razpored-x.html') &&
+    !M.zaPredpomnilnik('<html></html>', 'tekmovanje-liga-2.html'))
+
+  // Zavrnitev in izziv na vsaki poti (fetch vira): 401, 403, 429, CAPTCHA → FmfZavrnitev, brez ponovitve.
+  const odg = (status, telo = '', vrsta = 'text/html') => async () => new Response(telo, { status, headers: { 'content-type': vrsta } })
+  const zavrne = async (fn, url = 'https://www.fmf.md/home/meciuri-info?match=1') => {
+    try { await M.fmfFetch(url, {}, { fetchFn: fn }); return false } catch (e) { return e.zavrnitev === true && e.name === 'FmfZavrnitev' }
+  }
+  preveri('fmf: 401, 403, 429 in izziv so zavrnitev (izhod 4)',
+    (await zavrne(odg(401))) && (await zavrne(odg(403))) && (await zavrne(odg(429))) &&
+    (await zavrne(odg(200, '<html><title>Just a moment...</title></html>'))) &&
+    (await zavrne(odg(200, '<html>captcha</html>', 'application/pdf'), 'https://www.fmf.md/cdn/matches/1/a.pdf')))
+  const pdfOdg = await M.fmfFetch('https://www.fmf.md/cdn/matches/1/A%20-%20B.pdf', {}, {
+    fetchFn: odg(200, '%PDF-1.4 x', 'application/pdf'), pdf: async () => surovo,
+  })
+  const nf = await M.fmfFetch('https://www.fmf.md/x', {}, { fetchFn: odg(404) })
+  preveri('fmf: PDF se vrne kot očiščeno besedilo, 404 ostane 404 (ni zavrnitev)', (await pdfOdg.text()) === cisto && nf.status === 404)
+
+  // Šifre COMET za zapisnike oblike B iz zapisnikov oblike A iste lige.
+  const zB2 = M.vZapisnik(beri('md-fmf-raport-50413-b.txt'))
+  const zA2 = M.vZapisnik(beri('md-fmf-raport-50492-a.txt'))
+  const brez = M.dopolniSifre([zA2, zB2])
+  preveri('fmf: igralec oblike B dobi šifro iz oblike A (isti klub in ime)',
+    zB2.domaci.postava.find((i) => i.ime === 'Vlas Alexandru')?.comet === '42746' &&
+    zB2.gostje.postava.every((i) => i.comet === null) && brez > 0)
+
+  const { ravenLige: ravenMd, koliko: kolikoMd } = await import('./visja-liga.mjs')
+  preveri('fmf: raven — Liga 1 (obe skupini) eno nad Liga 2', kolikoMd(ravenMd({ slug: 'md-liga-1-a' }), ravenMd({ slug: 'md-liga-2' })) === 1 &&
+    kolikoMd(ravenMd({ slug: 'md-liga-1-b' }), ravenMd({ slug: 'md-liga-2' })) === 1 && kolikoMd(ravenMd({ slug: 'md-liga-1-a' }), ravenMd({ slug: 'md-liga-1-b' })) === 0)
+  preveri('fmf: ključ in kratko ime kluba (ş/ș, ţ/ț)', M.kljucKlubaMd('CF Edineţ') === M.kljucKlubaMd('CF Edineț') &&
+    M.kratkoImeMd('FC Speranța Drochia') === 'Speranța Drochia' && M.kratkoImeMd('CF Edineț') === 'Edineț' && M.kratkoImeMd('Sheriff-2') === 'Sheriff-2' &&
+    M.imeIgralca('BORSHCH MAXIM') === 'Borshch Maxim' && M.imeIgralca('Beşleagă Andrei') === 'Beșleagă Andrei')
+
+  // Super Liga 2026/27 se je začela 27. 6. — uvoz razporeda bi jo vpisal v 2025/26; zapisniki to ustavijo.
+  const junij = tisk.replace('31.07.2026', '27.06.2026')
+  let sezonaNapaka = null
+  try { await M.default.zapisniki('liga-x-1/1', async () => junij) } catch (e) { sezonaNapaka = e.message }
+  preveri('fmf: liga, ki začne pred 1. julijem, ustavi uvoz (meja sezone)', /pred 1\. julijem/.test(sezonaNapaka ?? ''), sezonaNapaka)
+
+  // Identiteta: igralec, ki je bil vpisan brez šifre (krogi 1–6, oblika B) in pozneje
+  // zaigra s šifro, ne sme postati drugi zapis (dvojna statistika in cena): uvoz
+  // ga po klubu in imenu posvoji in mu vpiše šifro (vir.sifraPozneje).
+  const { posvojiBrezSifre } = await import('./prestop.mjs')
+  const uvozZap = readFileSync(new URL('./uvoz-zapisnikov.mjs', import.meta.url), 'utf8')
+  const brezS = { id: 7, reg_st: null }
+  preveri('fmf: vir pove, da šifra pride pozneje (sifraPozneje)', M.default.sifraPozneje === true)
+  preveri('posvojiBrezSifre: en zapis brez šifre da, zaseden, dva ali s šifro ne',
+    posvojiBrezSifre([brezS], new Set())?.id === 7 && posvojiBrezSifre([brezS], new Set([7])) === null &&
+    posvojiBrezSifre([brezS, { id: 8, reg_st: null }], new Set()) === null && posvojiBrezSifre([{ id: 9, reg_st: '123' }], new Set()) === null &&
+    posvojiBrezSifre([], new Set()) === null && posvojiBrezSifre(null, null) === null)
+  const iReg = uvozZap.indexOf('vir.sifraPozneje')
+  preveri('uvoz-zapisnikov: šifra brez zapisa najprej posvoji zapis brez šifre istega kluba in imena (pred vstavljanjem)',
+    iReg > 0 && iReg < uvozZap.indexOf('reg_st: regSt,\n        position:') && /posvojiBrezSifre\(/.test(uvozZap.slice(iReg, iReg + 1500)) &&
+    /select\(`\$\{POLJA_IGRALCA\}, reg_st`\)/.test(uvozZap.slice(iReg, iReg + 1500)) &&
+    /const popravek = \{ reg_st: regSt \}[\s\S]{0,400}\.update\(popravek\)\.eq\('id', brez\.id\)/.test(uvozZap.slice(iReg, iReg + 2000)))
+}
+
 // --- vir fas (Španija, Asturija, futbolasturiano.es) ------------------------------
 {
   const A = await import('./viri/fas.mjs')

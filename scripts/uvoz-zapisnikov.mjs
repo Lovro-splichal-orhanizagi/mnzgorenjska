@@ -25,7 +25,7 @@ import { prenesiSPonovitvami, fetchZaBazo } from './prenos.mjs'
 import { dodajStrelceSKlopi } from './zapisnik.mjs'
 import { imeHash, regHash } from './anonimizacija.mjs'
 import { NEPOPOLN } from './viri/frf.mjs'
-import { prestopSkladen } from './prestop.mjs'
+import { prestopSkladen, posvojiBrezSifre } from './prestop.mjs'
 
 // Vir je zavrnil (jalgpall: 403, 429, izziv): izhod 4, da nočna zanka države
 // ne bere naprej (uvoz-zapisnikov.yml). Ostale napake ostanejo izhod 1.
@@ -361,6 +361,38 @@ async function igralecId(
       igralci.set(kljucReg, poReg.id)
       klubPoReg.set(kljucReg, { team: popravek.team_id ?? poReg.team_id, datum })
       return poReg.id
+    }
+
+    // Vir, pri katerem šifra pride pozneje (fmf: krogi 1–6 brez šifer), je
+    // igralca morda že vpisal brez nje. Zapis brez šifre istega kluba in imena
+    // je isti človek: dobi šifro, sicer bi nastal dvojnik z ločeno statistiko,
+    // ceno in lastniki. Soimenjake (dva zapisa, oba na tej tekmi) pusti.
+    if (vir.sifraPozneje && !dvoumno) {
+      const { data: poImenu } = await db
+        .from('players')
+        .select(`${POLJA_IGRALCA}, reg_st`)
+        .eq('competition_id', tekmovanje.id)
+        .eq('team_id', teamId)
+        .eq('full_name', polnoIme)
+        .order('id')
+        .limit(3)
+      const brez = posvojiBrezSifre(poImenu, zasedeni)
+      if (brez) {
+        const popravek = { reg_st: regSt }
+        if (st != null) popravek.shirt_number = st
+        javiVratarjaIzPolja(brez)
+        if (vratar && smeVVrata(brez)) {
+          popravek.position = 'GK'
+          popravek.position_source = 'zapisnik'
+        }
+        if (tekocaSezona && brez.active === false && !brez.odsel_at && !brez.izstopil_at) popravek.active = true
+        const { error: ePosv } = await db.from('players').update(popravek).eq('id', brez.id)
+        if (ePosv) throw new Error(`igralec ${polnoIme} (reg ${regSt}): ${ePosv.message}`)
+        console.log(`  šifra ${regSt} → ${polnoIme} (vpisan brez šifre, id ${brez.id})`)
+        igralci.set(kljucReg, brez.id)
+        klubPoReg.set(kljucReg, { team: teamId, datum })
+        return brez.id
+      }
     }
 
     const { priimek, ime } = razdeliIme(polnoIme)

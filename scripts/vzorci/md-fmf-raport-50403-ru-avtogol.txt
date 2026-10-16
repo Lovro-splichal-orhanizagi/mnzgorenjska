@@ -1,0 +1,87 @@
+COMET - Federația Moldovenească de Fotbal
+
+                                                                                      Протокол матча
+
+                                                                                     LIGA 2 26/27
+
+                                                          CSFCJT Atletico                                       3:0                        CF Locomotiva Ocnita
+      И      В                                                                                                                                                                                     И            В
+
+      calendar_month Дата/Время: 25.07.2026 18:00                                                                    frame_person Возрастная категория: Взрослые Мужской Футбол
+
+      stadium Стадион: Stadionul Locomotiv or. Bălți (Bălţi)                                                         trophy Раунд: 2
+
+      groups Количество зрителей:                                                                                    assignment_turned_in Match number: 10
+
+                                                                                                                LINEUPS
+
+  CSFCJT Atletico                                                                                                     CF Locomotiva Ocnita
+
+  1        CRISTOFOVICI DENIS           В                                                                             69 Țenchiu Radu                В
+                                                                                                                                                                                                       keyboard_arrow_down78'
+  2        Drosu Artiom                                                                                               4     BOICIUC VLADISLAV                                                                     77'
+
+  3        Derenco Mihail                                                           32'   keyboard_arrow_down60'      7     Fedco Valentin                                                                        73'
+
+  4        Novicov Artiom      К                                                                             17'      8     Denisiuc Artiom                                                            keyboard_arrow_down68'
+  6        Gorea Vlad                                                                                                 9     Murguleţ Renat               К
+                                                                                                                                                                                                       keyboard_arrow_down68'
+  7        Babiuc Alexandr                                                          50'   keyboard_arrow_down71'      13 Vasilat Veaceslav                                                                        76'
+
+  8        Roman Eduard                                                             52'   keyboard_arrow_down87'      15 Ciumac Eugen                                                                  keyboard_arrow_down36'
+  9        Braga Eduard                                                                   keyboard_arrow_down87'      17 Șuleac Artiom
+
+  10 Palii Nicolai                                                                                              9'    19 COLBASIUC ALEXANDRU                                                           keyboard_arrow_down46'
+  17 Musteața Kirill                                                                      keyboard_arrow_down87'      21 Cojocaru Oleg
+
+  18 Axenti Andrei                                                                                                    22 Eremciuc Mihail                                                                          36'
+
+                                                                                               SUBSTITUTES
+
+  33 Șaragov Vladislav              В                                                                                 1     Manoli Viorel                                                              keyboard_arrow_up78'
+  5        Androşciuc Nichita                                                             keyboard_arrow_up71'        2     Vlas Andrei
+
+  11 Golubovschi Nichita                                                                  keyboard_arrow_up  87'      3     Nedelea Catalin
+
+  12 Cliucvin Maxim                                                                       keyboard_arrow_up87'        5     Spac Anatoli                                                               keyboard_arrow_up36'
+  14 Crihan Dorin                                                                         keyboard_arrow_up  60'      11 Mandalac Anatoli                                                              keyboard_arrow_up68'
+  19 Sumişevschi Vadim                                                                    keyboard_arrow_up87'        14 Gogoli Edvin
+
+                                                                                                                      18 Cebotari Vasilii                                                              keyboard_arrow_up46'
+                                                                                                                      20 Cucereavii Vitalii                                                            keyboard_arrow_up68'
+
+                                                                                                                 ГОЛЫ
+
+      9'         10 Palii Nicolai                                                                                         77'      4 BOICIUC VLADISLAV                                   Гол в свои ворота
+
+      32'        3 Derenco Mihail
+
+                                                                                                      DISCIPLINARY
+
+                                                                                                   ЖЁЛТЫЕ КАРТОЧКИ
+
+                        4 Novicov Artiom                                                                                  22 Eremciuc Mihail
+    17'                                                                                                        36'
+                        2. Неспортивное поведение – срыв перспективной атаки.                                             5. Неспортивное поведение - демонстрирует неуважение к игре.
+
+                        7 Babiuc Alexandr                                                                                 7 Fedco Valentin
+    50'                                                                                                        73'
+                        1. Неспортивное поведение – фол совершённый в безрассудной манере.                                1. Неспортивное поведение – фол совершённый в безрассудной манере.
+
+                        8 Roman Eduard                                                                                    13 Vasilat Veaceslav
+    52'                                                                                                        76'
+                        2. Неспортивное поведение – срыв перспективной атаки.                                             15. Демонстрации несогласия действием.
+
+                                                                                                   ЗАПАСНЫЕ ИГРОКИ
+
+    60'        3        Derenco Mihail               chevron_forward   14   Crihan Dorin                       36'   15   Ciumac Eugen                           chevron_forward   5    Spac Anatoli
+
+    71'        7        Babiuc Alexandr              chevron_forward   5    Androşciuc Nichita                 46'   19   COLBASIUC ALEXANDRU                    chevron_forward   18   Cebotari Vasilii
+
+    87'       17        Musteața Kirill              chevron_forward   12   Cliucvin Maxim                     68'   9    Murguleţ Renat                         chevron_forward   11   Mandalac Anatoli
+
+    87'        8        Roman Eduard                 chevron_forward   11   Golubovschi Nichita                68'   8    Denisiuc Artiom                        chevron_forward   20   Cucereavii Vitalii
+
+    87'        9        Braga Eduard                 chevron_forward   19   Sumişevschi Vadim                  78'   69   Țenchiu Radu                           chevron_forward   1    Manoli Viorel
+
+ check_circle Meci jucat

@@ -25,6 +25,7 @@ import fss from './fss.mjs'
 import fssid from './fssid.mjs'
 import frf from './frf.mjs'
 import hlf from './hlf.mjs'
+import fmf from './fmf.mjs'
 import pzpn from './pzpn.mjs'
 import jalgpall from './jalgpall.mjs'
 import lff from './lff.mjs'
@@ -94,6 +95,9 @@ const VIRI = {
   hlf,
   // Poljska: uradni zapisniki PZPN (Extranet) prek javnega gradnika vojvodske zveze.
   pzpn,
+  // Moldavija (FMF) prek fmf.md: zapisniki COMET kot PDF (pdftotext), šifra osebe
+  // COMET, vratar (G).
+  fmf,
   // Estonija (EJL) prek jalgpall.ee: šifre igralcev, pozicije iz postavitve,
   // koledarska sezona.
   jalgpall,
