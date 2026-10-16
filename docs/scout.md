@@ -60,7 +60,9 @@ V izračun ne vstopi cela oseba (vse njene vrstice), če ima:
 - vrstico v mladinski ligi (`je_mladinski_slug`) — katerokoli, tudi staro;
   dokler faza 2 ne prinese letnice, je to edini varen znak mladoletnosti;
   mladinske lige same tudi niso v izračunu;
-- `players.scout_skrit` v katerikoli vrstici (ugovor);
+- `players.scout_skrit` v katerikoli vrstici (ugovor); ugovor zajame tudi
+  vrstice z istim ključem imena ali šifre v državi (kot anonimizacija spodaj),
+  torej isto osebo brez šifre v drugem klubu;
 - anonimizirano vrstico: ta izpade sama (`anonimiziran_at`), ostale vrstice
   iste osebe pa po ključih `anonimizacijski_kljuc(country|ime)` in
   `(country|reg|reg_st)` v `anonimizirani_igralci`. Ključ imena nima kluba,

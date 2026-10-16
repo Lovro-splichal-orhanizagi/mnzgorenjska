@@ -12,7 +12,8 @@ OSEBA = """case when p.reg_st is not null
   else 'i' || coalesce(c.country_id, 0) || ':'
        || lower(coalesce(p.full_name, p.last_name || ' ' || p.first_name)) || ':' || p.team_id end"""
 
-# Ugovor (scout_skrit) velja za vse vrstice osebe; kdor ima vrstico v
+# Ugovor (scout_skrit) velja za vse vrstice osebe v državi (po istih ključih
+# kot anonimizacija, tudi v drugem klubu brez šifre); kdor ima vrstico v
 # mladinski ligi, je izločen, dokler faza 2 ne prinese prijavljene letnice.
 # Anonimizacija počisti le svojo vrstico; ista oseba v drugi ligi izpade po
 # zgoščenih ključih (država + ime ali država + šifra, kot anonimiziraj_igralca).
@@ -20,13 +21,17 @@ OSEBA = """case when p.reg_st is not null
 # soimenjak v drugem klubu iste države izpade z njim (varneje za zasebnost).
 SQL_IZKLJUCENI = f"""
 with vrstice as (
-  select p.id, {OSEBA} as oseba, p.scout_skrit or public.je_mladinski_slug(c.slug) as izlocen,
+  select p.id, {OSEBA} as oseba, p.scout_skrit as skrit,
+         p.scout_skrit or public.je_mladinski_slug(c.slug) as izlocen,
          public.anonimizacijski_kljuc(c.country_id || '|' || p.full_name) as kljuc_ime,
          public.anonimizacijski_kljuc(c.country_id || '|reg|' || p.reg_st) as kljuc_reg
   from public.players p join public.competitions c on c.id = p.competition_id
   where p.anonimiziran_at is null
 )
 select v.oseba from vrstice v where v.izlocen
+union
+select v.oseba from vrstice v
+join vrstice s on s.skrit and (s.kljuc_ime = v.kljuc_ime or s.kljuc_reg = v.kljuc_reg)
 union
 select v.oseba from vrstice v
 cross join lateral (values (v.kljuc_ime), (v.kljuc_reg)) k(kljuc)

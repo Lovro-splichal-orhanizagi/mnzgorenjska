@@ -118,6 +118,28 @@ def test_anonimiziran_v_drugi_ligi(conn):
     assert not igralci & {-914020, -914021, -914022, -914023}
 
 
+UGOVOR = """
+insert into players (id, team_id, competition_id, first_name, last_name, full_name, position,
+                     value, value_start, scout_skrit) overriding system value
+values (-914030, -914001, -914001, 'Ugovor', 'Scout', 'Scout Ugovor', 'MID', 6, 6, true),
+       (-914031, -914002, -914001, 'Ugovor', 'Scout', 'Scout Ugovor', 'MID', 6, 6, false);
+insert into appearances (match_id, player_id, team_id, started, minute_on, minute_off, minutes_played, goals, penalties_scored)
+values (-914001, -914031, -914002, true, 0, 90, 90, 0, 0);
+"""
+
+
+def test_ugovor_v_drugem_klubu(conn):
+    """Ugovor (scout_skrit) velja za vse vrstice osebe v državi: isto ime brez
+    šifre v drugem klubu je druga `oseba`, a izpade po ključu imena."""
+    conn.execute("reset role")
+    conn.execute(UGOVOR)
+    conn.execute("set role scout_stroj")
+    sezone, _, _ = nalozi(conn)
+    igralci = set(sezone["player_id"].tolist())
+    assert -914002 in igralci  # soigralec z drugim imenom ostane
+    assert not igralci & {-914030, -914031}
+
+
 def test_zapisi_in_obrezi(conn):
     """Piše kot scout_stroj (fikstura), torej skozi politike RLS `stroj`."""
     assert conn.execute("select current_user").fetchone()[0] == "scout_stroj"
