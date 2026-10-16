@@ -34,6 +34,7 @@ import fas from './fas.mjs'
 import aft from './aft.mjs'
 import ncefl from './ncefl.mjs'
 import hoffKm from './hoff-km.mjs'
+import askf from './askf.mjs'
 
 const VIRI = {
   mnzg,
@@ -94,6 +95,9 @@ const VIRI = {
   // Ukrajina (Hmeljnicka oblast): ХОАФ prek hoff.km.ua (WordPress): razpored je
   // tabela strani lige, zapisnik objava tekme (REST), imena brez šifer.
   'hoff-km': hoffKm,
+  // Turčija: pokrajinske amaterske zveze ASKF (platforma FYS: Çanakkale, Aydın);
+  // razpored s postbacki ASP.NET, šifra licence TFF igralca.
+  askf,
 }
 
 /**

@@ -5857,6 +5857,208 @@ preveri(
     e1.status === 403 && e2.status === 401 && e3.status === 429 && e5.status === 401 && ok.status === 200 && H.default.zavrnitev('x', 429).zavrnitev === true)
 }
 
+// --- vir askf (Turčija, pokrajinske ASKF na platformi FYS: Çanakkale, Aydın) -------
+{
+  const T = await import('./viri/askf.mjs')
+  const { default: viri } = await import('./viri/index.mjs')
+  const { prenesiSPonovitvami } = await import('./prenos.mjs')
+  const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  const minute = (nn, i) => nn.filter((x) => x.ekipaIdx === i).reduce((a, x) => a + x.minute, 0)
+  preveri('askf: vir je vpisan, 3 s, User-Agent SLFF', viri.askf === T.default && T.default.drzava === 'TR' &&
+    T.default.imaRegistracije === false && T.default.premorMs >= 3000 && T.default.glave['User-Agent'] === 'SLFF fantasy (https://slff.eu)')
+  const k = T.razberiKodo('aydin/2026-2027/1amator/2')
+  preveri('askf: šifra lige (zveza/sezona/liga/skupina) in naslovi', k.zveza === 'aydin' && k.sezona === '2026/2027' && k.liga === '1amator' && k.skupina === '2' &&
+    T.razberiKodo('canakkale/2025-2026/samator').skupina === null &&
+    T.default.naslovRazporeda('canakkale/2025-2026/samator') === 'https://www.canakkaleaskf.org/fikstur#sezona=2025/2026&liga=samator' &&
+    T.default.naslovZapisnika('aydin/2026-2027/samator', 'askf-aydin-6208') === 'https://www.aydinaskf.com/macdetay?macID=6208' &&
+    T.sifraZapisnika('canakkale', 10300) === 'askf-canakkale-10300' && T.kljucImena('S.AMATÖR') === 'samator' && T.kljucImena('1.AMATÖR') === '1amator')
+  const slabe = ['izmir/2026-2027/samator', 'canakkale/2026-2028/samator', 'canakkale/samator'].map((s) => { try { T.razberiKodo(s); return null } catch (e) { return e.message } })
+  preveri('askf: neznana zveza ali sezona ustavi uvoz', slabe.every((m) => /<zveza>\/<leto>-<leto\+1>/.test(m ?? '')))
+  preveri('askf: minuta ("DA" = polčas, "MS" = po koncu), datum glave, istanbulski čas → ljubljanski', T.minuta("36'") === 36 && T.minuta("90+2'") === 90 &&
+    T.minuta("45+1'") === 45 && T.minuta('DA') === 45 && T.minuta('MS') === 90 && T.minuta('') === null &&
+    T.casGlave('15 Kasım 2025 Cumartesi - 15:00').datum === '2025-11-15' && T.casGlave('01 Mart 2026 Pazar - 15:00').ura === '15:00' &&
+    T.vLjubljanskiCas('2025-11-15', '15:00').ura === '13:00' && T.vLjubljanskiCas('2026-04-12', '14:00').ura === '13:00' &&
+    T.vLjubljanskiCas('2026-03-14', '00:00').ura === null)
+  preveri('askf: imena in klubi po turško', T.lepoIme('MUSTAFA DENİZ DAĞ') === 'Mustafa Deniz Dağ' && T.vPriimekIme('Mustafa Deniz Dağ') === 'Dağ Mustafa Deniz' &&
+    T.kljucKlubaTr('BİGA ADASPOR') === 'biga adaspor' && T.kratkoImeTr('İNCİRLİOVA BLD.SPOR') === 'İncirliova Bld.Spor')
+
+  // Razpored: cela stran (obrezana za vzorec) — trije deli (play-off final, polfinale, redni del).
+  const f1 = beri('tr-askf-fikstur-canakkale-1amator-2526.html')
+  const st = T.stanjeStrani(f1)
+  preveri('askf: stanje strani — sezona, liga, meni lig sezone', st.sezona === '2025/2026' && st.liga === '1amator' && st.meni.length === 20 &&
+    st.meni[1].kljuc === 'samator' && /rptAnaLiglerMenu\$ctl01\$lbl1DevreSec$/.test(st.meni[1].cilj) && st.skupine.length === 0)
+  const deli = T.deliStrani(f1)
+  const t1 = T.tekmeLige('canakkale/2025-2026/1amator', f1)
+  preveri('askf: le redni del z letnim razporedom (play-off ne), 3 tedni po 5 tekem, ljubljanski čas', deli.length === 3 &&
+    deli.filter((d) => d.letni).length === 1 && t1.length === 15 && new Set(t1.map((t) => t.krog)).size === 3 &&
+    t1.every((t) => t.izid && t.id && t.domaciId) && t1[0].id === 10178 && t1[0].datum === '2025-10-25' && t1[0].ura === '14:00' && t1[0].domaci === 'HASTANEBAYIRISPOR')
+  const playoff = deli.find((d) => /FİNAL/.test(d.ime) && !/YARI/.test(d.ime))?.krogi[0]?.tekme[0]
+  preveri('askf: izid s podaljškom ("1-4 N.S.:0-0/Uzt.:1-4") je končni izid', playoff?.izid?.domaci === 1 && playoff?.izid?.gostje === 4)
+  const kont = t1.filter((t) => t.kontumacija)
+  const r1 = T.razporedIzTekem(t1)
+  preveri('askf: kontumacija iz opombe ("Bu Maça Çıkmadı", "Hükmen") z izidom v razporedu', kont.length === 1 && kont[0].id === 10181 &&
+    r1.length === 3 && r1.flatMap((k) => k.tekme).filter((t) => t.kontumacija).length === 1 &&
+    r1.flatMap((k) => k.tekme).find((t) => t.kontumacija)?.izid?.gostje === 3 && r1.every((k) => k.tekme.every((t) => t.odigrana)))
+  const obrezan = T.fiksturVStran(T.razcleniFikstur(f1))
+  preveri('askf: razpored v predpomnilniku (JSON) da isto kot cela stran', obrezan.length < 10000 &&
+    JSON.stringify(T.tekmeLige('canakkale/2025-2026/1amator', obrezan)) === JSON.stringify(t1) &&
+    T.zaPredpomnilnik(obrezan, 'razpored-x.html') && !T.zaPredpomnilnik(f1, 'fikstur-x.html'))
+  const napake = ['canakkale/2025-2026/samator', 'canakkale/2026-2027/1amator', 'canakkale/2025-2026/1amator/1'].map((s) => { try { T.tekmeLige(s, f1); return null } catch (e) { return e.message } })
+  preveri('askf: stran druge lige, sezone ali skupine ustavi uvoz', napake.every((m) => /kaže 2025\/2026 1amator, ne/.test(m ?? '')), napake.join(' / '))
+  const fa = beri('tr-askf-fikstur-aydin-1amator-2-2627.html')
+  const ta = T.tekmeLige('aydin/2026-2027/1amator/2', fa)
+  let brezSkupine = null
+  try { T.tekmeLige('aydin/2026-2027/1amator', fa) } catch (e) { brezSkupine = e.message }
+  let drugaSkupina = null
+  try { T.tekmeLige('aydin/2026-2027/1amator/1', fa) } catch (e) { drugaSkupina = e.message }
+  preveri('askf: skupina — izbrana po postbacku (naslov strani prazen), brez nje ali druga ustavi', T.stanjeStrani(fa).skupine.map((g) => `${g.kljuc}${g.izbrana ? '*' : ''}`).join() === '1,2*' &&
+    ta.length === 10 && ta.every((t) => !t.izid) && ta[0].datum === '2026-10-24' && ta[0].ura === '13:00' &&
+    /šifra mora povedati skupino/.test(brezSkupine ?? '') && /skupina 2, ne/.test(drugaSkupina ?? ''))
+  // Opomba pod klubom vrstic tekme `macId` (letni razpored in tekoči teden): `stran` home/away, po želji izid namesto "-".
+  const zOpombo = (html, macId, stran, opomba, izid = null) =>
+    html.replace(new RegExp(`(<li id="[^"]*_musabaka_\\d+" class="table-row">(?:(?!</li>)[\\s\\S])*?macID=${macId}"(?:(?!</li>)[\\s\\S])*?</li>)`, 'g'), (vrstica) => {
+      let v = vrstica.replace(new RegExp(`(<div class="fixture-match-${stran} table-cell">\\s*<a [^>]*>[^<]*</a>)`), `$1 \n<br><span>${opomba}</span>`)
+      if (izid) v = v.replace(/(macID=\d+">)\s*-\s*(<\/a>)/, `$1\n${izid}\n$2`)
+      return v
+    })
+  let fo = zOpombo(fa, 7678, 'away', 'Bu Maça Gitmeyecek')
+  fo = zOpombo(fo, 7679, 'home', 'Ligden Çekildi')
+  fo = zOpombo(fo, 7676, 'home', 'Ligden Çıkarıldı', '0-3')
+  fo = zOpombo(fo, 7677, 'away', 'Ertelendi', '1-1')
+  const to = T.tekmeLige('aydin/2026-2027/1amator/2', fo)
+  const vo = (id) => to.find((t) => t.id === id)
+  preveri('askf: "Ligden Çıkarıldı" (izključen iz lige) z izidom je kontumacija in odstop', vo(7676)?.kontumacija === true && vo(7676)?.odstop === true &&
+    vo(7676)?.izid?.gostje === 3, JSON.stringify(vo(7676)))
+  const ro = T.razporedIzTekem(to).flatMap((k) => k.tekme)
+  const rv = (d) => ro.find((t) => t.domaci === d)
+  preveri('askf: napovedan izostanek ("Bu Maça Gitmeyecek") ali izstop ("Ligden Çekildi") brez izida je že kontumacija, izstop še odstop',
+    vo(7678)?.kontumacija === true && vo(7678)?.odstop === false && !vo(7678)?.izid && vo(7679)?.kontumacija === true && vo(7679)?.odstop === true &&
+    rv('GÜZELÇAMLI BLD.SPOR')?.kontumacija === true && !('izid' in rv('GÜZELÇAMLI BLD.SPOR')) && rv('SALİH UÇAR KOÇARLI A.MENDERES')?.odstop === true &&
+    rv('YAZIDERESPOR')?.izid?.gostje === 3 && to.filter((t) => t.kontumacija).length === 3, JSON.stringify([vo(7678), vo(7679)]))
+  preveri('askf: neznana opomba ob izidu se javi (ni kontumacija, ni tiho)', vo(7677)?.kontumacija === false &&
+    JSON.stringify(vo(7677)?.neznaneOpombe) === '["Ertelendi"]' && to.filter((t) => t.neznaneOpombe?.length).length === 1, JSON.stringify(vo(7677)))
+
+  // Zapisnik.
+  const z = T.vZapisnik(beri('tr-askf-mac-10300.html'), { id: 'askf-canakkale-10300' })
+  const n = T.nastopi(z)
+  preveri('askf: glava — klubi, izid, datum, ura (istanbulska → ljubljanska), teden', z.domaci.ime === 'BİGA ADASPOR' && z.gostje.ime === 'AYVACIK BELEDİYESPOR' &&
+    z.rezultat.domaci === 0 && z.rezultat.gostje === 1 && z.datum === '2025-11-15' && z.ura === '13:00' && z.krog === 6 && z.sifreKlubov.join() === '9,5')
+  preveri('askf: 11 + 11, klop, šifre licence, goli = izid, brez opozoril', z.domaci.postava.length === 11 && z.gostje.postava.length === 11 &&
+    z.domaci.rezerve.length === 10 && z.gostje.rezerve.length === 10 && n.every((x) => Number.isInteger(x.regSt)) && z.goli.length === 1 &&
+    z.goli[0].ekipaIdx === 1 && z.goli[0].minuta === 17 && z.opozorila.length === 0 && !z.nepopoln &&
+    z.domaci.postava[0].ime === 'Akgün Emirhan' && z.domaci.postava[0].st === 33 && z.domaci.postava[0].regSt === 5016743 && n.every((x) => !x.vratar))
+  preveri('askf: menjave z minuto ("DA" = 45), leteča menjava, 990 / 984 (rdeči v 84.)', z.menjave.length === 8 && minute(n, 0) === 990 && minute(n, 1) === 984 &&
+    n.find((x) => x.ime === 'Öztürk Hüseyin Emre')?.minute === 35 && n.find((x) => x.ime === 'Tuğan Çınar')?.minutaOd === 80 &&
+    z.menjave.find((m) => m.noter.ime === 'Usta Bayram')?.ven.ime === 'Irmak Ziver' && z.rdeci.length === 1 && z.rdeci[0].minuta === 84)
+  const p = T.vZapisnik(beri('tr-askf-mac-11m-rdeci-10268.html'))
+  preveri('askf: gol z 11 m, rdeči v 90+4, karton osebja ("TK") ne šteje in ga v vzorcu ni', p.goli.length === 1 && p.goli[0].enajstmetrovka &&
+    p.rdeci.length === 1 && p.rdeci[0].minuta === 90 && p.opozorila.length === 0 && !/>TK</.test(beri('tr-askf-mac-11m-rdeci-10268.html')))
+  const ag = T.vZapisnik(beri('tr-askf-mac-avtogol-10322.html'))
+  preveri('askf: avtogol ("Gol - Kendi Kalesine") je pri strelčevi ekipi in šteje nasprotniku', ag.goli.filter((g) => g.avtogol).length === 2 &&
+    ag.rezultat.domaci === 3 && ag.rezultat.gostje === 1 && ag.opozorila.length === 0 && ag.goli.find((g) => g.avtogol && g.minuta === 52)?.ekipaIdx === 0)
+  // Aydın 6149: avtogol domačega igralca (dres 4) vpisan pri gostih, ki imajo
+  // svojega z dresom 4 — strelca najprej po imenu v obeh ekipah, šele nato po dresu.
+  const agd = T.vZapisnik(beri('tr-askf-mac-avtogol-dres-aydin-6149.html'))
+  preveri('askf: avtogol pri ekipi, ki ji je štel, z dresom, ki ga ima tudi ta ekipa', agd.goli.find((g) => g.avtogol)?.ekipaIdx === 0 &&
+    agd.goli.find((g) => g.avtogol)?.ime === 'Kırıkoğlu Cemil' && agd.rezultat.domaci === 1 && agd.rezultat.gostje === 2 &&
+    !agd.opozorila.some((o) => /se ne ujemajo/.test(o)))
+  const hk = beri('tr-askf-mac-kontumacija-10377.html')
+  preveri('askf: kontumacija — glava z izidom in "Hükmen", brez postav: zapisnika ni', T.vZapisnik(hk) === null && T.glavaZapisnika(hk).izid.domaci === 3 &&
+    T.glavaZapisnika(hk).opombe.includes('Hükmen') && T.jeStranTekme(hk))
+  preveri('askf: kontumacija s postavo ekipe, ki je prišla ("Bu Maça Çıkmadı") — zapisnika ni', T.vZapisnik(beri('tr-askf-mac-kontumacija-postava-aydin-6080.html')) === null &&
+    /Bu Maça Çıkmadı/.test(beri('tr-askf-mac-kontumacija-postava-aydin-6080.html')))
+  preveri('askf: tekma ekipe, izključene iz lige ("Ligden Çıkarıldı"), s postavo nasprotnika — zapisnika ni',
+    T.vZapisnik(beri('tr-askf-mac-kontumacija-postava-aydin-6080.html').replace(/Bu Maça Çıkmadı/g, 'Ligden Çıkarıldı')) === null)
+  preveri('askf: odigrana tekma brez vnesenih postav — zapisnika (še) ni', T.vZapisnik(beri('tr-askf-mac-brez-postav-10374.html')) === null &&
+    T.glavaZapisnika(beri('tr-askf-mac-brez-postav-10374.html')).izid.gostje === 3)
+  // Ena ekipa brez postave in goli, ki se pri sveži tekmi ne ujemajo: nepopoln (uvoz ga bere znova).
+  const brezGostov = beri('tr-askf-mac-10300.html').replace(/MusabakaMsOyuncuAdi/g, 'x')
+  const nz = T.vZapisnik(brezGostov)
+  const brezGola = beri('tr-askf-mac-10300.html').replace('title="Gol - Ayak"', 'title="Sarı Kart"')
+  const svez = T.vZapisnik(brezGola, { danes: Date.parse('2025-11-17T00:00:00Z') })
+  const star = T.vZapisnik(brezGola, { danes: Date.parse('2026-01-17T00:00:00Z') })
+  preveri('askf: ena postava ali neujemanje golov pri sveži tekmi → nepopoln; starejša le opozorilo', nz.nepopoln && nz.opozorila[0].startsWith(T.NEPOPOLN) &&
+    T.nastopi(nz).every((x) => x.ekipaIdx === 0) && svez.nepopoln && svez.opozorila[0].startsWith(T.NEPOPOLN) && !star.nepopoln && /se ne ujemajo/.test(star.opozorila[0]))
+  preveri('askf: obrezana stran tekme da isto, brez sodnikov in osebja; vzdrževanje ne gre v predpomnilnik',
+    JSON.stringify(T.vZapisnik(T.obreziTekmo(beri('tr-askf-mac-10300.html')))) === JSON.stringify(T.vZapisnik(beri('tr-askf-mac-10300.html'))) &&
+    !/Hakem|Sağlıkçı|Komiser|Teknik Sorumlu|Yönetici/.test(['tr-askf-mac-10300.html', 'tr-askf-mac-11m-rdeci-10268.html', 'tr-askf-mac-avtogol-10322.html',
+      'tr-askf-mac-kontumacija-10377.html', 'tr-askf-mac-brez-postav-10374.html', 'tr-askf-mac-kontumacija-postava-aydin-6080.html'].map(beri).join('')) &&
+    T.zaPredpomnilnik(beri('tr-askf-mac-10300.html'), 'mac-canakkale-10300.html') &&
+    !T.zaPredpomnilnik('<h1>Server Error in \'/\' Application.</h1>', 'mac-canakkale-1.html') && !T.zaPredpomnilnik('<html>Bakım</html>', 'mac-aydin-1.html'))
+  preveri('askf: izziv — gradnik CAPTCHA da, skript recaptcha na vsaki strani ne', T.jeIzziv('<div class="g-recaptcha" data-sitekey="x">') &&
+    T.jeIzziv('<title>Just a moment...</title>') && !T.jeIzziv(`<script src='https://www.google.com/recaptcha/api.js'></script>${beri('tr-askf-mac-10300.html')}`))
+
+  // Zapisnik iz predpomnilnika: zadnji teden sveže; do 45 dni nerazčlenjen ali nepopoln še enkrat sveže; starejši ne.
+  const klici = []
+  const razcleni = (h) => (h === 'polno' ? { nepopoln: false, opozorila: [] } : null)
+  const beriStran = async (sveze) => { klici.push(sveze); return sveze ? 'polno' : 'prazno' }
+  const d = (dni) => Date.parse('2026-04-01T00:00:00Z') + dni * 86400000
+  const a1 = await T.zapisnikSvez(beriStran, razcleni, '2026-04-01', d(3))
+  const k1 = klici.splice(0).join()
+  const a2 = await T.zapisnikSvez(beriStran, razcleni, '2026-04-01', d(20))
+  const k2 = klici.splice(0).join()
+  const a3 = await T.zapisnikSvez(beriStran, razcleni, '2026-04-01', d(60))
+  const k3 = klici.splice(0).join()
+  preveri('askf: nepopoln zapisnik se ne zamrzne v predpomnilniku (do 45 dni še enkrat sveže)', a1 && k1 === 'true' && a2 && k2 === 'false,true' && a3 === null && k3 === 'false')
+
+  // Postback: stran 1. Amatör, zahtevana Süper Amatör — en POST z menijem sezone, 3 s premora.
+  const fs = beri('tr-askf-fikstur-canakkale-samator-2526.html')
+  const pravi = globalThis.fetch
+  const zahtevki = []
+  const odgovor = (telo, status = 200) => new Response(telo, { status, headers: { 'content-type': 'text/html' } })
+  globalThis.fetch = async (url, o = {}) => { zahtevki.push({ url: String(url), metoda: o.method, telo: o.body, ua: o.headers?.['User-Agent'], cas: Date.now() }); return odgovor(o.method === 'POST' ? fs : f1) }
+  let postback = null
+  try { postback = await (await T.askfFetch('https://www.canakkaleaskf.org/fikstur#sezona=2025/2026&liga=samator')).text() } finally { globalThis.fetch = pravi }
+  const tp = T.tekmeLige('canakkale/2025-2026/samator', postback)
+  preveri('askf: postback — GET, nato POST s sezono in ligo iz menija, 3 s premora, rezultat je JSON', zahtevki.length === 2 && zahtevki[0].metoda === 'GET' &&
+    zahtevki[1].metoda === 'POST' && zahtevki[1].url === 'https://www.canakkaleaskf.org/fikstur' && zahtevki.every((x) => x.ua === 'SLFF fantasy (https://slff.eu)') &&
+    /__EVENTTARGET=ctl00%24ContentPlaceHolder1%24rptAnaLiglerMenu%24ctl01%24lbl1DevreSec/.test(zahtevki[1].telo) &&
+    /ctl00%24ContentPlaceHolder1%24lstSezon=2025%2F2026/.test(zahtevki[1].telo) && zahtevki[1].cas - zahtevki[0].cas >= 2900 &&
+    tp.length === 12 && tp.filter((t) => t.kontumacija).length >= 1, `${zahtevki.length} ${tp.length}`)
+
+  // Zavrnitev (401, 403, 429) in izziv na VSAKI poti: GET, postback, tekma, prek prenosa (429 brez ponovitve).
+  const zFetch = async (odz) => {
+    globalThis.fetch = odz
+    try { await T.askfFetch('https://www.canakkaleaskf.org/fikstur#sezona=2025/2026&liga=samator'); return null } catch (e) { return e } finally { globalThis.fetch = pravi }
+  }
+  const e403 = await zFetch(async () => odgovor('', 403))
+  const e429post = await zFetch(async (_u, o = {}) => (o.method === 'POST' ? odgovor('', 429) : odgovor(f1)))
+  const eIzziv = await zFetch(async () => odgovor('<title>Just a moment...</title>'))
+  let n429 = 0
+  globalThis.fetch = async () => { n429++; return odgovor('', 429) }
+  let ePrenos = null
+  try { await prenesiSPonovitvami('https://www.aydinaskf.com/macdetay?macID=1', { glave: T.default.glave, fetchFn: T.default.fetch, log: () => {} }) } catch (e) { ePrenos = e } finally { globalThis.fetch = pravi }
+  preveri('askf: 403, 429 na postbacku, izziv in 429 prek prenosa vržejo AskfZavrnitev (izhod 4), brez ponovitve', e403 instanceof T.AskfZavrnitev && e403.status === 403 &&
+    e429post instanceof T.AskfZavrnitev && e429post.status === 429 && eIzziv instanceof T.AskfZavrnitev && ePrenos instanceof T.AskfZavrnitev && n429 === 1 &&
+    T.default.zavrnitev('x', 401).zavrnitev === true)
+  {
+    const { mkdtempSync, rmSync } = await import('node:fs')
+    const { tmpdir } = await import('node:os')
+    const mapa = mkdtempSync(`${tmpdir()}/askf-smoke-`)
+    const prej = process.env.SLFF_ASKF_MAPA
+    process.env.SLFF_ASKF_MAPA = mapa
+    const razpored = T.fiksturVStran(T.razcleniFikstur(fs))
+    const zz = async (prenesi) => { try { await T.default.zapisniki('canakkale/2025-2026/samator', prenesi); return null } catch (e) { return e } }
+    const t403 = await zz(async (url) => { if (/fikstur/.test(url)) return razpored; const e = new Error('401'); e.status = 401; throw e })
+    const tIzziv = await zz(async (url) => (/fikstur/.test(url) ? razpored : '<div class="g-recaptcha"></div>'))
+    const fIzziv = await zz(async () => '<title>Just a moment...</title>')
+    const ok = await T.default.zapisniki('canakkale/2025-2026/samator', async (url) => (/fikstur/.test(url) ? razpored : beri('tr-askf-mac-10300.html')))
+    const razporedN = T.fiksturVStran(T.razcleniFikstur(zOpombo(fs, 10273, 'home', 'Ertelendi')))
+    const okN = await T.default.zapisniki('canakkale/2025-2026/samator', async (url) => (/fikstur/.test(url) ? razporedN : beri('tr-askf-mac-10300.html')))
+    if (prej === undefined) delete process.env.SLFF_ASKF_MAPA
+    else process.env.SLFF_ASKF_MAPA = prej
+    rmSync(mapa, { recursive: true, force: true })
+    preveri('askf: 401 in izziv na strani tekme ali razporeda v uvozu zapisnikov → AskfZavrnitev', t403 instanceof T.AskfZavrnitev && t403.status === 401 &&
+      tIzziv instanceof T.AskfZavrnitev && fIzziv instanceof T.AskfZavrnitev)
+    preveri('askf: uvoz zapisnikov — kontumacij ne bere, klub, krog in sezona iz razporeda', ok.length === 12 - T.tekmeLige('canakkale/2025-2026/samator', fs).filter((t) => t.kontumacija).length &&
+      ok.every((x) => x.z.sezona === '2025/26' && x.id.startsWith('askf-canakkale-')) && ok[0].z.krog === 1 &&
+      ok.some((x) => x.z.opozorila.some((o) => /niso klubi razporeda/.test(o))))
+    preveri('askf: neznana opomba razporeda ob izidu gre v opozorila zapisnika', okN.length === ok.length &&
+      okN.filter((x) => x.z.opozorila.some((o) => /neznana opomba razporeda: Ertelendi/.test(o))).length === 1 &&
+      !ok.some((x) => x.z.opozorila.some((o) => /neznana opomba/.test(o))))
+  }
+}
+
 // --- vir fsb (Srbija, Fudbalski savez Beograda) ---------------------------------
 {
   const F = await import('./viri/fsb.mjs')
