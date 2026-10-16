@@ -1,0 +1,23 @@
+{
+  "vrsta": "ekipa",
+  "od": "2026-10-05",
+  "do": "2026-10-12",
+  "igralci": [
+    { "ime": "Ádám Erik", "klub": "TJ Družstevník Želovce", "grb": null, "liga": "VII. liga NZ", "drzava": "SK", "pozicija": "GK", "krog": 10, "tocke": 16, "goli": 1 },
+    { "ime": "Petrović Lazar", "klub": "MORAVA", "grb": null, "liga": "Srpska Istok", "drzava": "RS", "pozicija": "GK", "krog": 8, "tocke": 13, "goli": 0 },
+    { "ime": "Bizjak Luka", "klub": "Sava Kranj", "grb": null, "liga": "1. GNL", "drzava": "SI", "pozicija": "DEF", "krog": 8, "tocke": 14, "goli": 1 },
+    { "ime": "Wagner Tobias", "klub": "Rust (NÖ)", "grb": null, "liga": "2. Klasse Ost", "drzava": "AT", "pozicija": "DEF", "krog": 11, "tocke": 15, "goli": 1 },
+    { "ime": "Tóth Bence", "klub": "Kiskunfélegyházi HTK", "grb": null, "liga": "BK III. Dél", "drzava": "HU", "pozicija": "DEF", "krog": 9, "tocke": 13, "goli": 1 },
+    { "ime": "Kovačević Marin", "klub": "NK Podravina", "grb": null, "liga": "KC Elitna", "drzava": "HR", "pozicija": "DEF", "krog": 9, "tocke": 12, "goli": 1 },
+    { "ime": "Novak Žan", "klub": "Ilirija", "grb": null, "liga": "LJ 1", "drzava": "SI", "pozicija": "DEF", "krog": 8, "tocke": 9, "goli": 0 },
+    { "ime": "Horvat Ivan", "klub": "NK Mladost Ždralovi", "grb": null, "liga": "BJ I.", "drzava": "HR", "pozicija": "MID", "krog": 9, "tocke": 21, "goli": 2 },
+    { "ime": "Huber Maximilian", "klub": "ASKÖ Gmünd", "grb": null, "liga": "Kärntner Liga", "drzava": "AT", "pozicija": "MID", "krog": 11, "tocke": 18, "goli": 1 },
+    { "ime": "Jovanović Nikola", "klub": "BORAC (Ostružnica)", "grb": null, "liga": "Zonska BG", "drzava": "RS", "pozicija": "MID", "krog": 8, "tocke": 17, "goli": 2 },
+    { "ime": "Nowak Jakub", "klub": "KS Spartakus Daleszyce", "grb": null, "liga": "IV liga ŚK", "drzava": "PL", "pozicija": "MID", "krog": 10, "tocke": 15, "goli": 2 },
+    { "ime": "Nagy Péter", "klub": "Balatonfüredi FC", "grb": null, "liga": "Veszprém II.", "drzava": "HU", "pozicija": "MID", "krog": 9, "tocke": 14, "goli": 1 },
+    { "ime": "Gruber Lukas", "klub": "SV Union St. Marienkirchen", "grb": null, "liga": "Gebietsliga NW", "drzava": "AT", "pozicija": "FWD", "krog": 11, "tocke": 24, "goli": 4 },
+    { "ime": "Szentgyörgyi-Kovács Kristóf", "klub": "Zalaszentgróti VFC", "grb": null, "liga": "Zala I.", "drzava": "HU", "pozicija": "FWD", "krog": 9, "tocke": 20, "goli": 3 },
+    { "ime": "Kovač Tine", "klub": "Eltron Preddvor", "grb": null, "liga": "1. GNL", "drzava": "SI", "pozicija": "FWD", "krog": 8, "tocke": 19, "goli": 3 },
+    { "ime": "Popescu Andrei", "klub": "CS Viitorul Cluj", "grb": null, "liga": "Liga 4 Cluj", "drzava": "RO", "pozicija": "FWD", "krog": 7, "tocke": 18, "goli": 3 }
+  ]
+}

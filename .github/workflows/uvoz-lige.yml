@@ -13,7 +13,7 @@ run-name: Uvoz lige ${{ inputs.liga }}
 # navrzi dve, `ovrednoti-igralce` pa jih sesteje.
 #
 # Sifra lige pripada SEZONI, ne ligi. Tekoca je v `competitions.source_league_code`,
-# arhivske se podajo tu (glej tabelo v CLAUDE.md).
+# arhivske se podajo tu (glej tabele v docs/viri/).
 #
 # Na VKLOPLJENI ligi je ta tok nevaren: pozicije in cene bi prepisal igralcem,
 # ki jih imajo ljudje v ekipah. Zato je `cene` privzeto izklopljen, skripti pa

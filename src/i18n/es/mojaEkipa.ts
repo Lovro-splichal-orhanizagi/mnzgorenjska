@@ -75,6 +75,8 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
       'En el once no hay sitio para otro jugador en esta posición: primero manda a alguien al banquillo.',
     niVecNamestnik: '{ime} ya no es vicecapitán: elige otro.',
     niVecKapetan: '{ime} ya no es capitán: elige otro.',
+    kapetanPrevzel: '{ime} lleva ahora el brazalete de capitán.',
+    namestnikPrevzel: '{ime} es ahora el vicecapitán.',
     rokPotekel: 'El cierre de la jornada {krog} ya ha pasado, así que los cambios valen desde la jornada siguiente.',
     shranjenaZaKrog: 'Equipo guardado y listo para la jornada {krog}.',
     shranjenaVeljavna: 'Equipo guardado; cumple las reglas.',
@@ -90,16 +92,27 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     zapriObvestilo: 'Cerrar la notificación',
     odstranjen: '{ime} eliminado.',
     razveljavi: 'Deshacer',
+    dodan: '{ime} está en tu equipo — pulsa Guardar.',
+    zeVEkipi: '{ime} ya está en tu equipo.',
+    niNaTrgu: 'Ahora mismo no se puede fichar a este jugador.',
   },
 
-  prijavaPotrebna: 'Para hacer un equipo tienes que iniciar sesión.',
-  prijava: 'Iniciar sesión',
+  brezPrijave: {
+    opis: 'Puedes hacer tu equipo sin cuenta. Se queda en este navegador hasta que lo guardes.',
+    shrani: 'Guardar y crear cuenta',
+    pripravljena: 'Tu equipo está listo: guárdalo.',
+  },
   locenaLiga:
     'El equipo en la liga <liga>{liga}</liga> va aparte de los equipos de otras ligas, con su propio presupuesto y su propia clasificación. Los puntos cuentan desde la jornada {krog}, porque hasta entonces siguen los traspasos y los cambios entre categorías.',
 
   vec: 'Más: comodines, historial, reglas',
 
   prestopi: {
+    medSezono: {
+      one: 'Te unes con la temporada en marcha: hasta el cierre de la jornada {krog} montas tu equipo sin penalización. Después tienes {n} fichaje gratis por jornada; cada uno extra cuesta −{kazen}.',
+      many: 'Te unes con la temporada en marcha: hasta el cierre de la jornada {krog} montas tu equipo sin penalización. Después tienes {n} fichajes gratis por jornada; cada uno extra cuesta −{kazen}.',
+      other: 'Te unes con la temporada en marcha: hasta el cierre de la jornada {krog} montas tu equipo sin penalización. Después tienes {n} fichajes gratis por jornada; cada uno extra cuesta −{kazen}.',
+    },
     stevec: 'Fichajes: {n}/{prosti}',
     wildcard: 'wildcard: sin penalización',
     odbitek: 'penalización de {tock} en esta jornada',
@@ -281,8 +294,13 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   },
 
   igrisce: {
-    naKlop: 'Pasar al banquillo',
-    vPostavo: 'Meter en el once inicial',
+    namigZamenjave: 'Toca la camiseta de un jugador y luego la del jugador por el que lo cambias.',
+    zapriNamig: 'Cerrar consejo',
+    izberiZaMenjavo: '{ime}: elegir para el cambio',
+    prekliciIzbiro: '{ime}: cancelar selección',
+    zamenjajZ: '{ime}: cambiar por {drugi}',
+    izbran: 'Has elegido a {ime}. Toca un jugador marcado para cambiarlo o vuelve a tocarlo para cancelar.',
+    brezMenjave: 'No hay ningún cambio válido para {ime}. Tócalo de nuevo para cancelar.',
     niVecVLigiNamig: 'El jugador ya no está en la liga: una plantilla con él no puntúa.',
     niVecVLigi: 'ya no está en la liga',
     poskodba: 'lesión',
@@ -316,7 +334,7 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     skupaj: '{tocke} puntos',
     brezPostave: 'El acta no indica la alineación de este equipo.',
     klop: 'Banquillo',
-    vstopilo: '{n} entraron en juego',
+    vstopilo: '· entraron en juego: {n}',
   },
 
   enajsterica: {
