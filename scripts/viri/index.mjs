@@ -56,6 +56,7 @@ import ksi from './ksi.mjs'
 import fsf from './fsf.mjs'
 import modular11 from './modular11.mjs'
 import dbu from './dbu.mjs'
+import nff from './nff.mjs'
 
 const VIRI = {
   mnzg,
@@ -180,6 +181,9 @@ const VIRI = {
   // Danska: Dansk Boldspil-Union prek dbu.dk/resultater (HTML), pulje po sezoni,
   // brez šifer igralcev (ime + klub); krogi iz datumov. Pisno dovoljenje DBU.
   dbu,
+  // Norveška (NFF) prek fotball.no (FIKS): šifra osebe, koledarska sezona,
+  // nižje lige pogosto brez menjav; zajem s pisnim dovoljenjem NFF.
+  nff,
 }
 
 /**

@@ -120,6 +120,7 @@ tabelo šifer tam, ne tu.
 | Ferski otoki | `docs/viri/ferski-otoki.md` | `fsf` |
 | ZDA | `docs/viri/zda.md` | `modular11` |
 | Danska | `docs/viri/danska.md` | `dbu` |
+| Norveška | `docs/viri/norveska.md` | `nff` |
 
 Pravila, ki veljajo za vse vire (podrobnosti v datotekah):
 
