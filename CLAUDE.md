@@ -3018,7 +3018,7 @@ Vir `hoff-km` (`scripts/viri/hoff-km.mjs`) bere **hoff.km.ua**, spletišče
 Vyshcha liga (6 klubov) in Persha liga (5 klubov), raven 5 in 6. Ime vira je
 `hoff-km` (ne `hoff.km`), ker delovni tokovi sprejmejo le `[a-z0-9-]`. Država
 `UA` (vpiše jo ta migracija ali `pfl-ua`, `on conflict do nothing`), zveza
-`hoaf-km` (migracija 20261015161500); **vmesnika v ukrajinščini, kartice in
+`hoaf-km` (migracija 20261015230700); **vmesnika v ukrajinščini, kartice in
 pošte še ni in `UA` ni v matriki nočnega uvoza** — oboje pred vklopom. Šifra
 lige se začne z `ua-`.
 
@@ -3118,7 +3118,7 @@ nastopa strelca. **Sezona 2026 je ob vpisu končana** (Vyshcha še 13. krog
 Вишнівчик : Колос in prekinjena Поділля : Оболонь, 17. 10.) — vklop realno
 za 2027 (nov slug). Persha liga ima pet klubov — spodnja meja (3 iz kluba × 5).
 
-Vpisani ligi (migracija 20261015161500), **neaktivni**, zveza `hoaf-km`:
+Vpisani ligi (migracija 20261015230700), **neaktivni**, zveza `hoaf-km`:
 
 | liga | klubov | tekoča 2026 | arhiv |
 |---|---|---|---|
