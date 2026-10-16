@@ -326,9 +326,19 @@ export default function Navbar() {
                 )}
               </div>
             ) : (
-              <NavLink to="/login" className="gumb-glavni whitespace-nowrap text-sm">
-                {t('aplikacija.meni.prijava')}
-              </NavLink>
+              // Novinec je pogostejši od vračajočega: glavni gumb odpre
+              // registracijo, prijava je tiha povezava ob njem (na telefonu v meniju).
+              <div className="flex items-center gap-3">
+                <NavLink
+                  to="/login"
+                  className="hidden whitespace-nowrap text-slate-300 hover:text-white sm:inline"
+                >
+                  {t('aplikacija.meni.prijava')}
+                </NavLink>
+                <NavLink to="/login?nacin=registracija" className="gumb-glavni whitespace-nowrap px-3 text-sm sm:px-4">
+                  {t('aplikacija.meni.zacni')}
+                </NavLink>
+              </div>
             )}
           </div>
 
@@ -371,9 +381,13 @@ export default function Navbar() {
                   {p.pot === '/assists' && znacka(cakaGlasov)}
                 </NavLink>
               ))}
-              {session && (
+              {session ? (
                 <NavLink to="/reminders" className={slogMobilni} onClick={() => setOdprt(false)}>
                   {t('aplikacija.meni.opomniki')}
+                </NavLink>
+              ) : (
+                <NavLink to="/login" className={slogMobilni} onClick={() => setOdprt(false)}>
+                  {t('aplikacija.meni.prijava')}
                 </NavLink>
               )}
               <button

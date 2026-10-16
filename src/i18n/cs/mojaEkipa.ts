@@ -74,6 +74,8 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
       'V sestavě není místo pro dalšího hráče na této pozici. Nejdřív někoho pošli na lavičku.',
     niVecNamestnik: '{ime} už není zástupce kapitána, vyber nového.',
     niVecKapetan: '{ime} už není kapitán, vyber nového.',
+    kapetanPrevzel: '{ime} převzal kapitánskou pásku.',
+    namestnikPrevzel: '{ime} je teď zástupce kapitána.',
     rokPotekel: 'Uzávěrka {krog}. kola už vypršela, změny proto platí od dalšího kola.',
     shranjenaZaKrog: 'Tým je uložený a připravený na {krog}. kolo.',
     shranjenaVeljavna: 'Tým je uložený a splňuje pravidla.',
@@ -89,10 +91,16 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     zapriObvestilo: 'Zavřít oznámení',
     odstranjen: '{ime} je odebrán.',
     razveljavi: 'Vrátit zpět',
+    dodan: '{ime} je ve tvém týmu. Stiskni Uložit.',
+    zeVEkipi: '{ime} už je ve tvém týmu.',
+    niNaTrgu: 'Tohoto hráče teď nelze koupit.',
   },
 
-  prijavaPotrebna: 'Pokud si chceš sestavit tým, musíš se přihlásit.',
-  prijava: 'Přihlášení',
+  brezPrijave: {
+    opis: 'Tým si sestavíš i bez účtu. Zůstane v tomto prohlížeči, dokud ho neuložíš.',
+    shrani: 'Uložit a vytvořit účet',
+    pripravljena: 'Tvůj tým je připravený. Ulož ho.',
+  },
   locenaLiga:
     'Tým v lize <liga>{liga}</liga> je oddělený od týmů v jiných ligách: má vlastní rozpočet a vlastní žebříček. Body se počítají od {krog}. kola, protože do té doby ještě probíhají přestupy a přesuny mezi kategoriemi.',
 
@@ -100,6 +108,12 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   vec: 'Víc: bonusy, historie, pravidla',
 
   prestopi: {
+    medSezono: {
+      one: 'Přidáváš se během sezóny: do uzávěrky {krog}. kola sestavíš tým bez trestu. Pak máš v každém kole {n} přestup zdarma, každý další stojí −{kazen}.',
+      few: 'Přidáváš se během sezóny: do uzávěrky {krog}. kola sestavíš tým bez trestu. Pak máš v každém kole {n} přestupy zdarma, každý další stojí −{kazen}.',
+      many: 'Přidáváš se během sezóny: do uzávěrky {krog}. kola sestavíš tým bez trestu. Pak máš v každém kole {n} přestupu zdarma, každý další stojí −{kazen}.',
+      other: 'Přidáváš se během sezóny: do uzávěrky {krog}. kola sestavíš tým bez trestu. Pak máš v každém kole {n} přestupů zdarma, každý další stojí −{kazen}.',
+    },
     stevec: 'Přestupy: {n}/{prosti}',
     wildcard: 'žolík, bez trestu',
     odbitek: 'minus {tock} v tomto kole',
@@ -218,7 +232,7 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
       'Jednou za sezónu: v tomto kole můžeš vyměnit libovolný počet hráčů bez odečtu bodů.',
     zaklenjen: 'zamčeno',
     preklici: 'zrušit',
-    prekliciDo: 'Zrušit můžeš ještě <odstevanje></odstevanje>',
+    prekliciDo: 'Na zrušení máš <odstevanje></odstevanje>',
     izberiKrog: 'Vyber kolo …',
     niKroga: 'Žádné budoucí kolo s uzávěrkou',
     krogSezona: '{krog}. kolo ({sezona})',
@@ -283,8 +297,13 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   },
 
   igrisce: {
-    naKlop: 'Přesunout na lavičku',
-    vPostavo: 'Zařadit do základní sestavy',
+    namigZamenjave: 'Ťukni na dres hráče a pak na toho, se kterým ho vyměníš.',
+    zapriNamig: 'Zavřít tip',
+    izberiZaMenjavo: '{ime}: vyber k výměně',
+    prekliciIzbiro: '{ime}: zruš výběr',
+    zamenjajZ: '{ime}: vyměň s hráčem {drugi}',
+    izbran: 'Vybraný je {ime}. Ťukni na označeného hráče k výměně nebo znovu na téhož pro zrušení.',
+    brezMenjave: 'Pro hráče {ime} není platná výměna. Ťukni na něj znovu pro zrušení.',
     niVecVLigiNamig: 'Hráč už není v lize, soupiska s ním nezíská body.',
     niVecVLigi: 'už není v lize',
     poskodba: 'zranění',
