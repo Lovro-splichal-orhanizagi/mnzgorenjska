@@ -12,6 +12,8 @@ import type { Pozicija } from '../lib/tipi'
 import Dres from './Dres'
 import ZnakPreverjen from './ZnakPreverjen'
 import Grb from './Grb'
+import { RazlagaTock } from './Razlaga'
+import { razloziTocke } from '../lib/tockovanje'
 import { t } from '../i18n'
 
 /** Nastop igralca na tekmi, kot ga vrne pogled `appearance_points`. */
@@ -31,6 +33,9 @@ export interface NastopNaTekmi {
   red_cards?: number | null
   goals_conceded?: number | null
   clean_sheet?: boolean | null
+  zmaga?: boolean | null
+  /** Različica pravil kroga (`rounds.pravila_tockovanja`). */
+  pravila?: number | null
 }
 
 /** Klub, ki mu pripada ta polovica igrišča. */
@@ -73,24 +78,47 @@ function Kartica({
 }) {
   const tocke = Number(nastop.points ?? 0)
   const znaki = dogodki(nastop)
+  const razlaga = razloziTocke(
+    {
+      minute: nastop.minutes_played,
+      goli: nastop.goals,
+      asistence: nastop.assists,
+      cleanSheet: nastop.clean_sheet,
+      prejetiGoli: nastop.goals_conceded,
+      zmaga: nastop.zmaga,
+      pravila: nastop.pravila,
+      obranjeneEnajstmetrovke: nastop.penalties_saved,
+      zgreseneEnajstmetrovke: nastop.penalties_missed,
+      avtogoli: nastop.own_goals,
+      rumeni: nastop.yellow_cards,
+      rdeci: nastop.red_cards,
+    },
+    nastop.position ?? null,
+    tocke,
+  )
+  // Dres in ime vodita na igralca, točke odprejo razlago — gumb ne sme biti
+  // v povezavi.
   return (
-    <Link
-      to={`/player/${nastop.player_id}`}
-      title={opisNastopa(nastop)}
-      className={`block w-[3.8rem] text-center transition duration-150
-                  active:scale-95 lg:w-[4.4rem] lg:hover:-translate-y-0.5 ${
-                    zatemnjen ? 'opacity-70' : ''
-                  }`}
+    <div
+      className={`w-[3.8rem] text-center lg:w-[4.4rem] ${zatemnjen ? 'opacity-70' : ''}`}
     >
-      <div className="flex justify-center">
-        <Dres pozicija={nastop.position} razred="h-7 w-8 lg:h-9 lg:w-10" igralecId={nastop.player_id} />
-      </div>
-      <div className="mt-0.5 flex items-center justify-center rounded-t-md bg-slate-900/90 px-1 py-0.5 text-[10px] font-semibold leading-tight lg:text-[11px]">
-        <span className="min-w-0 truncate">{prikazniIme(nastop.full_name).split(' ').slice(-1)[0]}</span>
-        <ZnakPreverjen id={nastop.player_id} velikost={10} className="ml-0.5 shrink-0" />
-      </div>
-      <div
-        className={`rounded-b-md px-1 py-0.5 text-[10px] font-black leading-tight tabular-nums ${
+      <Link
+        to={`/player/${nastop.player_id}`}
+        title={opisNastopa(nastop)}
+        className="block transition duration-150 active:scale-95 lg:hover:-translate-y-0.5"
+      >
+        <div className="flex justify-center">
+          <Dres pozicija={nastop.position} razred="h-7 w-8 lg:h-9 lg:w-10" igralecId={nastop.player_id} />
+        </div>
+        <div className="mt-0.5 flex items-center justify-center rounded-t-md bg-slate-900/90 px-1 py-0.5 text-[10px] font-semibold leading-tight lg:text-[11px]">
+          <span className="min-w-0 truncate">{prikazniIme(nastop.full_name).split(' ').slice(-1)[0]}</span>
+          <ZnakPreverjen id={nastop.player_id} velikost={10} className="ml-0.5 shrink-0" />
+        </div>
+      </Link>
+      <RazlagaTock
+        razlaga={razlaga}
+        naslov={prikazniIme(nastop.full_name)}
+        className={`block w-full rounded-b-md px-1 py-0.5 text-[10px] font-black leading-tight tabular-nums underline decoration-dotted underline-offset-2 ${
           tocke > 0
             ? 'bg-gnl-500/90 text-slate-950'
             : tocke < 0
@@ -99,13 +127,13 @@ function Kartica({
         }`}
       >
         {formatirajTocke(tocke)}
-      </div>
+      </RazlagaTock>
       {znaki.length > 0 && (
         <div className="mt-0.5 truncate text-[9px] leading-none">
           {znaki.join('')}
         </div>
       )}
-    </Link>
+    </div>
   )
 }
 

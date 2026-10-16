@@ -1,0 +1,12 @@
+{
+  "vrsta": "strelci",
+  "do": "2026-10-14",
+  "igralci": [
+    { "ime": "Gruber Lukas", "klub": "SV Union St. Marienkirchen", "grb": null, "liga": "Gebietsliga NW", "drzava": "AT", "pozicija": "FWD", "goli": 19 },
+    { "ime": "Szentgyörgyi-Kovács Kristóf", "klub": "Zalaszentgróti VFC", "grb": null, "liga": "Zala I.", "drzava": "HU", "pozicija": "FWD", "goli": 16 },
+    { "ime": "Suljanović Edvin", "klub": "Sava Kranj", "grb": null, "liga": "1. GNL", "drzava": "SI", "pozicija": "FWD", "goli": 14 },
+    { "ime": "Babić Marko", "klub": "NK Varteks", "grb": null, "liga": "VŽ Elitna", "drzava": "HR", "pozicija": "FWD", "goli": 13 },
+    { "ime": "Kováč Peter", "klub": "FK Slovan Levice", "grb": null, "liga": "VII. liga LV", "drzava": "SK", "pozicija": "FWD", "goli": 12 },
+    { "ime": "Popescu Andrei", "klub": "CS Viitorul Cluj", "grb": null, "liga": "Liga 4 Cluj", "drzava": "RO", "pozicija": "FWD", "goli": 11 }
+  ]
+}

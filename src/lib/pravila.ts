@@ -80,6 +80,21 @@ export function lahkoZacne(pozicija: Pozicija, prvi: IgralecZaPravila[]): boolea
 }
 
 /**
+ * Ali se igralca lahko zamenjata med postavo in klopjo? Eden mora biti v
+ * prvi postavi, drugi na klopi, oba s pozicijo, in postava po menjavi mora
+ * spoštovati meje (vratar le za vratarja).
+ */
+export function lahkoZamenjata(
+  a: IgralecVKadru,
+  b: IgralecVKadru,
+  prvi: IgralecVKadru[],
+): boolean {
+  if (!a.position || !b.position || !!a.is_starter === !!b.is_starter) return false
+  const [ven, noter] = a.is_starter ? [a, b] : [b, a]
+  return lahkoZacne(noter.position!, prvi.filter((i) => i.id !== ven.id))
+}
+
+/**
  * Zakaj igralca ni mogoče dodati v kader? Vrne razlog ali null, če ga je.
  * Isti razlogi so uporabljeni na trgu igralcev, da gumbi in opozorila povedo
  * isto zgodbo.

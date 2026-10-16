@@ -121,6 +121,14 @@ export function ravenLige({ slug, name, zveza }) {
     const r = { tercera: 1, primera: 2 }[slug.split('-')[2]]
     return r ? { raven: r, obmocje: 'es-as', drzavna: false, mladinska } : null
   }
+  // Grčija (vir eps): kategorije regionalne zveze EPS, `gr-<zveza>-<kategorija>[-<skupina>]`.
+  // A1 nad A2 (Argolida) in A (Halkidika), A nad B nad Γ; le znotraj iste zveze
+  // (šifre igralcev so po zvezah, vsaka EPS je svoja piramida).
+  if (slug.startsWith('gr-')) {
+    const [, zv, kat] = slug.split('-')
+    const r = { a1: 1, a: 2, a2: 2, b: 3, g: 4 }[kat]
+    return r ? { raven: r, obmocje: `gr-${zv}`, drzavna: false, mladinska } : null
+  }
 
   if (slug.startsWith('ee-')) {
     if (slug === 'ee-premium-liiga') return abs(1)

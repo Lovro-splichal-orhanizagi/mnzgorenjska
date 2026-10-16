@@ -1,0 +1,72 @@
+{
+  "od": "2026-10-05",
+  "do": "2026-10-12",
+  "drzave": [
+    {
+      "drzava": "SI", "uporabnikov": 412, "lig": 9,
+      "igralci": [
+        { "ime": "Kovač Tine", "klub": "Eltron Preddvor", "grb": null, "pozicija": "FWD", "liga": "1. GNL", "slug": "clani", "krog": 8, "tocke": 19, "goli": 3 },
+        { "ime": "Bizjak Luka", "klub": "Sava Kranj", "grb": null, "pozicija": "DEF", "liga": "1. GNL", "slug": "clani", "krog": 8, "tocke": 14, "goli": 1 },
+        { "ime": "Novak Bor", "klub": "Ilirija", "grb": null, "pozicija": "MID", "liga": "LJ 1", "slug": "lj-1-liga", "krog": 8, "tocke": 13, "goli": 2 }
+      ]
+    },
+    {
+      "drzava": "HR", "uporabnikov": 288, "lig": 41,
+      "igralci": [
+        { "ime": "Horvat Ivan", "klub": "NK Mladost Ždralovi", "grb": null, "pozicija": "MID", "liga": "BJ I.", "slug": "hr-bj-1znl", "krog": 9, "tocke": 21, "goli": 2 },
+        { "ime": "Babić Marko", "klub": "NK Varteks", "grb": null, "pozicija": "FWD", "liga": "VŽ Elitna", "slug": "hr-vz-elitna", "krog": 9, "tocke": 17, "goli": 3 },
+        { "ime": "Kovačević Luka", "klub": "NK Polet (SK)", "grb": null, "pozicija": "GK", "liga": "MZ I.", "slug": "hr-mz-1mnl", "krog": 9, "tocke": 12, "goli": 0 }
+      ]
+    },
+    {
+      "drzava": "SK", "uporabnikov": 120, "lig": 22,
+      "igralci": [
+        { "ime": "Ádám Erik", "klub": "TJ Družstevník Želovce", "grb": null, "pozicija": "GK", "liga": "VII. liga NZ", "slug": "sk-nz-7liga", "krog": 10, "tocke": 16, "goli": 1 },
+        { "ime": "Kováč Peter", "klub": "FK Slovan Levice", "grb": null, "pozicija": "FWD", "liga": "VII. liga LV", "slug": "sk-lv-7liga", "krog": 10, "tocke": 15, "goli": 2 }
+      ]
+    },
+    {
+      "drzava": "AT", "uporabnikov": 95, "lig": 162,
+      "igralci": [
+        { "ime": "Gruber Lukas", "klub": "SV Union Raiffeisen Sankt Marienkirchen an der Polsenz", "grb": null, "pozicija": "FWD", "liga": "Gebietsliga Nordwest/Waldviertel", "slug": "at-noe-gebietsliga-nordwest-waldviertel", "krog": 11, "tocke": 24, "goli": 4 },
+        { "ime": "Huber Maximilian", "klub": "ASKÖ Gmünd", "grb": null, "pozicija": "MID", "liga": "Kärntner Liga", "slug": "at-k-kaerntner-liga", "krog": 11, "tocke": 18, "goli": 1 },
+        { "ime": "Wagner Tobias", "klub": "Rust (NÖ)", "grb": null, "pozicija": "DEF", "liga": "2. Klasse Ost", "slug": "at-noe-2-klasse-ost", "krog": 11, "tocke": 15, "goli": 1 }
+      ]
+    },
+    {
+      "drzava": "HU", "uporabnikov": 61, "lig": 70,
+      "igralci": [
+        { "ime": "Szentgyörgyi-Kovács Kristóf Benedek", "klub": "Zalaszentgróti VFC", "grb": null, "pozicija": "FWD", "liga": "Zala I.", "slug": "hu-za-1", "krog": 9, "tocke": 20, "goli": 3 },
+        { "ime": "Nagy Péter", "klub": "Balatonfüredi FC", "grb": null, "pozicija": "MID", "liga": "Veszprém II.", "slug": "hu-ve-2", "krog": 9, "tocke": 14, "goli": 1 },
+        { "ime": "Tóth Bence", "klub": "Kiskunfélegyházi HTK", "grb": null, "pozicija": "DEF", "liga": "BK III. Dél", "slug": "hu-bk-3-del", "krog": 9, "tocke": 13, "goli": 1 }
+      ]
+    },
+    {
+      "drzava": "RS", "uporabnikov": 40, "lig": 18,
+      "igralci": [
+        { "ime": "Jovanović Nikola", "klub": "BORAC (Ostružnica)", "grb": null, "pozicija": "MID", "liga": "Zonska BG", "slug": "rs-bg-zonska", "krog": 8, "tocke": 17, "goli": 2 },
+        { "ime": "Petrović Lazar", "klub": "MORAVA", "grb": null, "pozicija": "GK", "liga": "Srpska Istok", "slug": "rs-srpska-istok", "krog": 8, "tocke": 13, "goli": 0 }
+      ]
+    },
+    {
+      "drzava": "RO", "uporabnikov": 22, "lig": 26,
+      "igralci": [
+        { "ime": "Popescu Andrei", "klub": "CS Viitorul Cluj", "grb": null, "pozicija": "FWD", "liga": "Liga 4 Cluj", "slug": "ro-cj-l4", "krog": 7, "tocke": 18, "goli": 3 }
+      ]
+    },
+    {
+      "drzava": "PL", "uporabnikov": 9, "lig": 8,
+      "igralci": [
+        { "ime": "Nowak Jakub", "klub": "KS Spartakus Daleszyce", "grb": null, "pozicija": "MID", "liga": "IV liga ŚK", "slug": "pl-sk-4-liga", "krog": 10, "tocke": 15, "goli": 2 },
+        { "ime": "Wiśniewski Kacper", "klub": "Wierna Małogoszcz", "grb": null, "pozicija": "DEF", "liga": "IV liga ŚK", "slug": "pl-sk-4-liga", "krog": 10, "tocke": 12, "goli": 1 },
+        { "ime": "Kowalczyk Szymon", "klub": "Orlicz Suchedniów", "grb": null, "pozicija": "FWD", "liga": "Okręgówka ŚK", "slug": "pl-sk-okregowa", "krog": 10, "tocke": 11, "goli": 2 }
+      ]
+    },
+    {
+      "drzava": "ES", "uporabnikov": 3, "lig": 2,
+      "igralci": [
+        { "ime": "García Javier", "klub": "Club Deportivo Covadonga", "grb": null, "pozicija": "FWD", "liga": "Tercera G2", "slug": "es-as-tercera-g2", "krog": 7, "tocke": 14, "goli": 2 }
+      ]
+    }
+  ]
+}

@@ -43,7 +43,7 @@ export const skupno: NonNullable<Prevod['skupno']> = {
     niDovoljenja: 'Du darfst dieses Team nicht bearbeiten.',
     kodaNeUstvarjena: 'Der Code für die Mini-Liga konnte nicht erstellt werden. Versuch es noch einmal.',
     golOdlocen: 'Über dieses Tor ist schon entschieden, die Abstimmung ist beendet.',
-    zePoznavalec: 'Du bist schon Insider dieser Liga.',
+    zePoznavalec: 'Du bist schon Kenner dieser Liga.',
     prosnjaCaka: 'Deine Anfrage für diese Liga wartet bereits.',
     prosnjaZavrnjena: 'Deine Anfrage für diese Liga wurde kürzlich abgelehnt. Eine neue kannst du 14 Tage nach der Ablehnung stellen.',
     klubNeIgra: 'Der gewählte Klub spielt nicht in dieser Liga.',
