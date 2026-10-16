@@ -6,10 +6,10 @@ on:
   workflow_dispatch:
     inputs:
       vir:
-        description: 'Vir lig: sportnet (Slovaska), hns (Hrvaska), mlsz (Madzarska), oefb (Avstrija), fsb, fss ali fssid (Srbija), jalgpall (Estonija), lff (Latvija), ffm (Severna Makedonija), fcf (Katalonija), fas (Asturija), aft (Ukrajina, Ternopil), hoff-km (Ukrajina, Hmeljnicka oblast), ffa (Armenija), mascot (Grcija, Mascotnet), lowland (Skotska), eps (Grcija), ltfutbolas (Litva), fscg (Crna gora), mfa (Malta), isthmian (Anglija), pfl-ua (Ukrajina), nsfbih ali nfsbih (BiH), gff (Gruzija), pfl-ua in upl (Ukrajina), ffl (Ukrajina, Lviv)'
+        description: 'Vir lig: sportnet (Slovaska), hns (Hrvaska), mlsz (Madzarska), oefb (Avstrija), fsb, fss ali fssid (Srbija), jalgpall (Estonija), lff (Latvija), ffm (Severna Makedonija), fcf (Katalonija), fas (Asturija), aft (Ukrajina, Ternopil), hoff-km (Ukrajina, Hmeljnicka oblast), ffa (Armenija), mascot (Grcija, Mascotnet), lowland (Skotska), eps (Grcija), ltfutbolas (Litva), fscg (Crna gora), mfa (Malta), isthmian (Anglija), pfl-ua (Ukrajina), nsfbih ali nfsbih (BiH), gff (Gruzija), pfl-ua in upl (Ukrajina), ffl (Ukrajina, Lviv), ksi (Islandija)'
         required: false
         type: choice
-        options: [sportnet, hns, mlsz, oefb, fsb, fss, fssid, jalgpall, lff, ffm, fcf, fas, aft, hoff-km, ffa, mascot, lowland, eps, ltfutbolas, fscg, mfa, isthmian, pfl-ua, nsfbih, nfsbih, gff, upl, ffl]
+        options: [sportnet, hns, mlsz, oefb, fsb, fss, fssid, jalgpall, lff, ffm, fcf, fas, aft, hoff-km, ffa, mascot, lowland, eps, ltfutbolas, fscg, mfa, isthmian, pfl-ua, nsfbih, nfsbih, gff, upl, ffl, ksi]
         default: sportnet
       tekmovanje:
         description: 'Slug lige (prazno = vse lige vira)'

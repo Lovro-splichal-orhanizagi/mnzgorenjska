@@ -52,6 +52,7 @@ import gff from './gff.mjs'
 import pflUa from './pfl-ua.mjs'
 import upl from './upl.mjs'
 import ffl from './ffl.mjs'
+import ksi from './ksi.mjs'
 
 const VIRI = {
   mnzg,
@@ -165,6 +166,8 @@ const VIRI = {
   // Ukrajina (Lvivska oblast): Львівська асоціація футболу prek ffl.org.ua;
   // postave iz novic (članek lige na dan), 10 s med zahtevki (Crawl-delay).
   ffl,
+  // Islandija (KSÍ) prek ksi.is: šifre igralcev, vratar (M), koledarska sezona.
+  ksi,
 }
 
 /**
