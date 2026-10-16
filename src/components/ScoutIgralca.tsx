@@ -1,6 +1,7 @@
 // SLFF Scout na prevzetem profilu (faza 2): privolitev (odprt za prestop,
 // letnica, regije, stik) in ugovor. Vidi jo le potrjeni lastnik med urejanjem
-// profila in le, ko je država lige odprta za Scout. Vsa preverjanja so v bazi
+// profila, ko je država lige odprta za Scout — v zaprti državi le še preklic
+// privolitve oziroma ugovora (GDPR: umik kadarkoli). Vsa preverjanja so v bazi
 // (scout_*, migracija 20261016160100).
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { supabase } from '../lib/supabase'
@@ -54,7 +55,7 @@ export function ScoutIgralca({ glavni }: { glavni: number }) {
     void nalozi()
   }, [nalozi])
 
-  if (!stanje?.drzava_odprta) return null
+  if (!stanje || !(stanje.drzava_odprta || stanje.letnik != null || stanje.skrit)) return null
 
   // Strežnik je merilo: njegovo napako pokažemo (prevedeno, kjer jo poznamo).
   async function klic(fn: () => PromiseLike<{ error: { message: string } | null }>, uspeh: string) {
@@ -83,6 +84,13 @@ export function ScoutIgralca({ glavni }: { glavni: number }) {
     )
   }
 
+  function preklici() {
+    void klic(
+      () => supabase.rpc('scout_preklici_privolitev', { p_player_id: glavni }),
+      t('igralci.scout.preklicano'),
+    )
+  }
+
   function ugovor(skrij: boolean) {
     void klic(() => supabase.rpc('scout_ugovor', { p_player_id: glavni, p_skrij: skrij }), t('igralci.scout.shranjeno'))
   }
@@ -98,6 +106,15 @@ export function ScoutIgralca({ glavni }: { glavni: number }) {
             {t('igralci.scout.razkrij')}
           </button>
         </>
+      ) : !stanje.drzava_odprta ? (
+        <button
+          type="button"
+          disabled={dela}
+          onClick={preklici}
+          className="gumb-tih disabled:opacity-50"
+        >
+          {t('igralci.scout.preklici')}
+        </button>
       ) : (
         <form onSubmit={shrani} className="space-y-3">
           <label className="flex min-h-11 items-center gap-2">
@@ -154,12 +171,7 @@ export function ScoutIgralca({ glavni }: { glavni: number }) {
               <button
                 type="button"
                 disabled={dela}
-                onClick={() =>
-                  void klic(
-                    () => supabase.rpc('scout_preklici_privolitev', { p_player_id: glavni }),
-                    t('igralci.scout.preklicano'),
-                  )
-                }
+                onClick={preklici}
                 className="gumb-tih disabled:opacity-50"
               >
                 {t('igralci.scout.preklici')}
