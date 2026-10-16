@@ -16,13 +16,18 @@ on:
         type: choice
         options: [all, novanet, dfb]
         default: all
+      sezona:
+        description: Tekoča sezona, arhiv ali obe
+        type: choice
+        options: [all, current, archive]
+        default: all
 
 permissions:
   contents: read
 
 # Nov push na isto vejo prekine prejšnji tek — zadnje stanje je edino, ki šteje.
 concurrency:
-  group: ci-${{ github.ref }}-${{ inputs.vir || 'code' }}
+  group: ci-${{ github.ref }}-${{ inputs.vir || 'code' }}-${{ inputs.sezona || 'all' }}
   cancel-in-progress: true
 
 jobs:
@@ -31,6 +36,7 @@ jobs:
     uses: ./.github/workflows/preveri-nova-vira.yml
     with:
       vir: ${{ inputs.vir || 'all' }}
+      sezona: ${{ inputs.sezona || 'all' }}
 
   preveri:
     name: Tipi, build, izris
