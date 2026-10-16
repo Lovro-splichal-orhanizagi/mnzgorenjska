@@ -31,6 +31,7 @@ import lff from './lff.mjs'
 import ffm from './ffm.mjs'
 import fcf from './fcf.mjs'
 import fas from './fas.mjs'
+import aft from './aft.mjs'
 import ncefl from './ncefl.mjs'
 
 const VIRI = {
@@ -83,6 +84,9 @@ const VIRI = {
   // Španija (Asturija): FutbolAsturiano.es (WordPress SportsPress), ne zveza;
   // liga je blok šifer objav tekem ene sezone, igralec s potjo profila.
   fas,
+  // Ukrajina (Ternopilska oblast): Асоціація футболу Тернопільщини prek
+  // aft.com.ua; postave iz novic (ponatis Газета 1), koledarska sezona.
+  aft,
   // Anglija (step 5–6): Northern Counties East League prek ncefl.org.uk; brez
   // šifer igralcev (ime + klub), krog je teden (stran krogov ne pozna).
   ncefl,

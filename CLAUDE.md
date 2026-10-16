@@ -2919,6 +2919,99 @@ Uvoz (ena za drugo, ~2 s na zapisnik — arhiv 240 zapisnikov je ~10 minut):
 `gh workflow run uvoz-lige.yml -f liga=mk-prva-mfl -f arhiv=prva-mfl-25-26 -f
 cene=true`.
 
+### Ukrajina — vir `aft` (Ternopilska oblast)
+
+Vir `aft` (`scripts/viri/aft.mjs`) bere **aft.com.ua** (Асоціація футболу
+Тернопільщини): oblastno prvenstvo, Вища ліга (raven 5, pod AAFU) in Перша
+ліга (raven 6). Država `UA` ("Україна") in zveza `aft` sta v migraciji
+20261015230500 (država z `on conflict do nothing`, ker jo vpiše tudi vir
+`pfl-ua`). Ukrajinskega vmesnika, kartice in pošte še ni, `UA` ni v matriki
+nočnega uvoza — oboje pred vklopom. Šifra lige se začne z `ua-`.
+
+- **Sezona je koledarsko leto** (maj–oktober, `sezona_koledarska`): `"2026"`.
+  Vir jo vzame iz naslova turnirja ("Чемпіонат Тернопільської області 2026")
+  in preveri, da je to leto tekem.
+- **Šifra lige je id turnirja** (`/tournament/champinship/<id>`): 36 = Вища
+  ліга 2026, 37 = Перша ліга 2026. Vsaka sezona ima svojega — spomladi 2027
+  se šifra popravi, 2026 postane arhiv (`arhiv=36` oz. `37`).
+- **Razpored** je stran turnirja: "Тур N", kartice tekem z id-jem
+  (`/match/<id>`), datumom in krajem, klubi (kraj v `alt` grba) in izidom ali
+  uro neodigrane (kijevski čas → ljubljanski −1 h). **Izid 3:0/0:3 brez kraja
+  je kontumacija** (Нараїв od avgusta 2026 ne igra več: 8 tekem). Prestavljena
+  tekma stoji v krogu dvakrat (neodigrana s starim datumom, odigrana z novim);
+  neodigrana vrstica odpade.
+- **Postav na strani tekme ni** (`/match/<id>` ima le izid, uro in sodnike;
+  "Склад команди" je prazen). Postave so v **novicah** (ponatis iz časopisa
+  Газета 1): Вища ліга en članek na tekmo s prostim naslovom, Перша ліга en
+  članek na krog. Članka brez sluga ni mogoče nasloviti (`/news/1800` → 404),
+  zato vir bere seznam novic (`/news?page=N`, 12 na stran) in ga hrani v
+  `scripts/.predpomnilnik/aft/novice.json`; vsak zagon prebere sveže le prve
+  strani do že znanih novic, starejših od dveh tednov (pozneje objavljen
+  članek z zgodnejšim datumom stoji globlje). Prvi zagon sezone bere ~40
+  strani in ~470 člankov (strežnik je počasen, 3–10 s na stran: ~45 minut).
+  **Izbrisan članek** (404, 410 — umaknjena novica, spremenjen slug) lige ne
+  ustavi: opozorilo, članek izpade iz `novice.json`, uvoz gre naprej.
+  401, 403, 429, izziv in 5xx še vedno ustavijo uvoz.
+- **Blok tekme** v članku: glava `«Дом» (kraj) – «Gost» (kraj) – 1:0 (0:0)`,
+  datum ("11 жовтня"), postavi `«Klub»: …`, "Гол(и):", "Попереджені:",
+  "Вилучений:", stavek "На 34-й хвилині … не реалізував пенальті" in pri Вищі
+  "ТАКТИЧНА РОЗСТАНОВКА" (polna imena po mestih, "Воротар – …"). Blok se ujame
+  s tekmo razporeda po klubih (ime in kraj, številka se mora ujemati:
+  "Борщів-2" ni "Борщів") in datumu ±3 dni; ime v članku je pogosto drugo
+  ("ФАТ-Вікнини" = Вікнини, "Арсенал" = Арсенал-Теребовля). Kadar je datum v
+  članku napačen ("16 липня" namesto avgusta) ali je bila tekma dokončana
+  pozneje ("у дограванні"), se tekma brez poročila ujame še ohlapno po klubih
+  in izidu (opozorilo).
+- **Postava**: enajst priimkov, "-к" kapetan, soimenjak z začetnico
+  ("Семенець Т.", "Д. Марчук" → "Марчук Д."), menjava v oklepaju
+  ("Грабчак (Марцінковський, 64)", veriga "(Гринь, 60, Дума, 90+4)"), za
+  "Заміна:" neuporabljena klop. **Identiteta je priimek + klub** (kot fsb);
+  isti igralec se lahko piše različno ("Пшивий Волод.", "Пшивий Володимир") in
+  dobi dve vrstici. Tipkarske napake vira, ki jih vir popravi z opozorilom:
+  manjkajoča vejica pri desetih začetnikih ("Чемерейко Слободян" → dva, a ne,
+  če je druga beseda ime: "Кладочний Михайло"), odvečna vejica pred menjavo,
+  pika ali vprašaj namesto vejice, "Заміна" brez dvopičja.
+- **Goli in kartoni** so s polnim imenom brez kluba: igralec se najde po
+  priimku (in začetnici), soimenjaka v obeh klubih loči taktična razporeditev,
+  sicer izid. Avtogol "(3, а/г)" ali "автогол"; gol, ki ga izid zahteva kot
+  neoznačen avtogol (vratar gostov pri 1:0), se šteje kot avtogol z
+  opozorilom. Drugi rumeni "(90+4, друге попередження)" → 1 rumeni + rdeči.
+  Kartoni trenerjev in uradnih oseb ("тренер", "офіційна особа") ne štejejo.
+- **Vratar**: "Воротар" iz taktične razporeditve, sicer prvi začetnik (namig,
+  kot mlsz). *Uskladi pozicije* z `vir = aft`.
+- **Predpomnilnik**: stran turnirja in seznam novic vedno sveža; članek
+  zadnjega tedna svež, do 45 dni še enkrat svež, če ima nepopoln blok (postava
+  ni 11 ali goli niso izid). `zaPredpomnilnik` ne shrani vzdrževalne strani.
+
+**Pravice.** robots.txt: `User-agent: * / Disallow:` (nič prepovedanega),
+pogojev uporabe ni. Lastnik pravi, da imamo dovoljenje za branje. Beremo
+odkrito (User-Agent SLFF, 3 s med zahtevki). **Ob 401, 403, 429 ali izzivu se
+uvoz ustavi** (`AftZavrnitev`, izhod 4) — ne obhajaj. Sodnikov, opazovalcev
+in osebja ne beremo; vzorci `scripts/vzorci/ua-aft-*` so brez njih.
+
+Preizkus v živo (15. 10. 2026, vsa sezona 2026, brez pisanja v bazo):
+
+| liga | tekem | kontumacij | s poročilom | goli = izid | postav po 11 | 990 minut | nastopov (s klopi) |
+|---|---|---|---|---|---|---|---|
+| Вища ліга (`36`, 9 klubov, 18 krogov) | 72 | 8 | 62/64 | 62/62 (188) | 124/124 | 118/124 (6 z rdečim) | 1870 (506) |
+| Перша ліга (`37`, 7 klubov, 21 krog) | 60 + 3 neodigrane | 0 | 60/60 | 60/60 (171) | 118/120 | 113/120 | 1760 (440) |
+
+Brez poročila sta Агрон–Сокіл (12. 9.) in Борщів–Поділля ВБ (3. 10.) —
+članek je le pripoved. Перша: dve postavi nista po 11 (Арсенал z 10, napaka
+vira z 12), 5 menjav brez minute (rezerva brez nastopa). Igralcev z vsaj 270
+minutami: 145 od 214 (Вища), 122 od 187 (Перша).
+
+| liga | klubov | tekoča 2026 | arhiv |
+|---|---|---|---|
+| ua-te-vyshcha | 9 | `36` | — (2026 postane arhiv sezone 2027) |
+| ua-te-persha | 7 | `37` | — |
+
+Izpuščeno: Ліга Тернопільщини 2026/27 (le goli in kartoni, brez postav),
+Ліга чемпіонів, kupi, veterani, futsal, ДЮФЛ (mladinske).
+
+Uvoz (ena za drugo; lige so **neaktivne**): `gh workflow run uvoz-lige.yml -f
+liga=ua-te-vyshcha -f cene=true` (brez arhiva).
+
 ### Država obiskovalca
 
 Domena je ena, **lige druge države so skrite**: `useTekmovanje().tekmovanja`
