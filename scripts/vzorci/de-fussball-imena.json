@@ -1,0 +1,256 @@
+{
+  "provenance": {
+    "pageUrl": "https://www.fussball.de/spiel/fv-08-hockenheim-sc-olympia-neulussheim/-/spiel/031EQBPLDS000000VS5489BTVUS470OH",
+    "fontId": "pnvb8vew",
+    "captured": "2026-10-15",
+    "fontFixture": "de-fussball-pnvb8vew-metadata.woff",
+    "note": "Only original cmap/post tables recovered from a browser-captured WOFF response, in a metadata-only WOFF container. Not a complete/renderable font. Expected names derived from preserved glyph names; Burak Bayrakal and Julius Grossmann additionally match clear-text best-scorer labels on the same page. The remaining names have not been visually cross-checked. Staff omitted."
+  },
+  "players": [
+    {
+      "encoded": [
+        "",
+        ""
+      ],
+      "expected": "Joud Nono"
+    },
+    {
+      "encoded": [
+        "",
+        ""
+      ],
+      "expected": "Daniel Senn"
+    },
+    {
+      "encoded": [
+        "",
+        ""
+      ],
+      "expected": "Felix Reinkunz"
+    },
+    {
+      "encoded": [
+        " ",
+        ""
+      ],
+      "expected": "Muhammed Fatih Sen"
+    },
+    {
+      "encoded": [
+        "",
+        ""
+      ],
+      "expected": "Burak Bayrakal"
+    },
+    {
+      "encoded": [
+        "",
+        ""
+      ],
+      "expected": "Elias-Joel Amato"
+    },
+    {
+      "encoded": [
+        "",
+        ""
+      ],
+      "expected": "Niels Kiefer"
+    },
+    {
+      "encoded": [
+        "",
+        ""
+      ],
+      "expected": "Aron Späth"
+    },
+    {
+      "encoded": [
+        "",
+        ""
+      ],
+      "expected": "Grzegorz Michalski"
+    },
+    {
+      "encoded": [
+        "",
+        ""
+      ],
+      "expected": "Jan Zimmermann"
+    },
+    {
+      "encoded": [
+        "",
+        ""
+      ],
+      "expected": "Nils Werner"
+    },
+    {
+      "encoded": [
+        "",
+        ""
+      ],
+      "expected": "Patrick Morscheid"
+    },
+    {
+      "encoded": [
+        "",
+        ""
+      ],
+      "expected": "Marvin Pelzl"
+    },
+    {
+      "encoded": [
+        "",
+        ""
+      ],
+      "expected": "Tim Barth"
+    },
+    {
+      "encoded": [
+        "",
+        ""
+      ],
+      "expected": "Marcel Pfau"
+    },
+    {
+      "encoded": [
+        "",
+        ""
+      ],
+      "expected": "Felix Erler"
+    },
+    {
+      "encoded": [
+        "",
+        ""
+      ],
+      "expected": "Cedric Aßmann"
+    },
+    {
+      "encoded": [
+        "",
+        ""
+      ],
+      "expected": "Eric Lutz"
+    },
+    {
+      "encoded": [
+        "",
+        ""
+      ],
+      "expected": "Vittorio Cammilleri"
+    },
+    {
+      "encoded": [
+        "",
+        ""
+      ],
+      "expected": "Julius Grossmann"
+    },
+    {
+      "encoded": [
+        "",
+        ""
+      ],
+      "expected": "Max Lauer"
+    },
+    {
+      "encoded": [
+        "",
+        ""
+      ],
+      "expected": "Timo Gund"
+    },
+    {
+      "encoded": [
+        "",
+        ""
+      ],
+      "expected": "Christopher Klein"
+    },
+    {
+      "encoded": [
+        "",
+        ""
+      ],
+      "expected": "Agron Lokaj"
+    },
+    {
+      "encoded": [
+        "",
+        ""
+      ],
+      "expected": "Ward Nono"
+    },
+    {
+      "encoded": [
+        "",
+        ""
+      ],
+      "expected": "Maximilian Geiß"
+    },
+    {
+      "encoded": [
+        "",
+        ""
+      ],
+      "expected": "Simon Schuhmacher"
+    },
+    {
+      "encoded": [
+        "",
+        ""
+      ],
+      "expected": "Leon Düster"
+    },
+    {
+      "encoded": [
+        "",
+        ""
+      ],
+      "expected": "Kenan Hodzic"
+    },
+    {
+      "encoded": [
+        "",
+        ""
+      ],
+      "expected": "Kevin Roderig"
+    },
+    {
+      "encoded": [
+        "",
+        ""
+      ],
+      "expected": "Nicolai Neugebauer"
+    },
+    {
+      "encoded": [
+        "",
+        ""
+      ],
+      "expected": "Oliver Gund"
+    },
+    {
+      "encoded": [
+        "",
+        ""
+      ],
+      "expected": "Andrei Grigore"
+    },
+    {
+      "encoded": [
+        "",
+        ""
+      ],
+      "expected": "Magnus Biskup"
+    },
+    {
+      "encoded": [
+        "",
+        ""
+      ],
+      "expected": "Yannick Martin"
+    }
+  ]
+}

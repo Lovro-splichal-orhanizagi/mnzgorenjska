@@ -13,7 +13,7 @@
     "db:reset": "supabase db reset",
     "db:start": "supabase start",
     "db:stop": "supabase stop",
-    "smoke": "vite-node scripts/smoke.jsx",
+    "smoke": "npm run test:sources && vite-node scripts/smoke.jsx",
     "typecheck": "tsc --noEmit",
     "tipi": "npx --yes supabase gen types typescript --local > /tmp/baza.types.ts && mv /tmp/baza.types.ts src/lib/baza.types.ts",
     "testno-okolje": "bash scripts/testno-okolje.sh",
@@ -29,7 +29,11 @@
     "preizkus-zivosti": "docker exec -i supabase_db_mnzgorenjska psql -U postgres -d postgres -v ON_ERROR_STOP=1 < scripts/preizkus-zivosti.sql",
     "preveri-predlog": "vite-node scripts/preveri-predlog.mjs",
     "prevodi": "vite-node scripts/prevodi.ts",
-    "preizkus-html": "node scripts/hetzner/html/preizkus.mjs"
+    "preizkus-html": "node scripts/hetzner/html/preizkus.mjs",
+    "test:novanet": "node --test scripts/test-novanet-izidi.mjs scripts/test-novanet.mjs scripts/test-novanet-predpomnilnik.mjs",
+    "test:fussball": "node --test scripts/test-fussball-pisava.mjs scripts/test-fussball-datum.mjs scripts/test-fussball.mjs scripts/test-fussball-validation.mjs",
+    "test:dfb": "node --test scripts/test-dfb.mjs",
+    "test:sources": "node --test scripts/test-novanet-izidi.mjs scripts/test-novanet.mjs scripts/test-novanet-predpomnilnik.mjs scripts/test-fussball-pisava.mjs scripts/test-fussball-datum.mjs scripts/test-fussball.mjs scripts/test-fussball-validation.mjs scripts/test-dfb.mjs scripts/test-preveri-vir-sezono.mjs scripts/test-rezervni-predpomnilnik.mjs"
   },
   "dependencies": {
     "@capacitor-firebase/messaging": "^8.5.2",

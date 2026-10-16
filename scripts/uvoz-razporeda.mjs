@@ -24,6 +24,7 @@ import { razcleniRazpored, sezonaIz, oznakaBrezIzida, tekmaDrugegaKroga, odvecne
 import { rokKroga } from './razporedi.mjs'
 import { vseVrstice } from './strani.mjs'
 import { prenesiSPonovitvami, fetchZaBazo } from './prenos.mjs'
+import { preberiRezervo } from './viri/rezervni-predpomnilnik.mjs'
 
 // Vir je zavrnil (jalgpall: 403, 429, izziv): izhod 4, da nočna zanka države
 // ne bere naprej (uvoz-zapisnikov.yml). Ostale napake ostanejo izhod 1.
@@ -115,9 +116,10 @@ async function prenesi(url, ime) {
   } catch (e) {
     // Zavrnitve vira (jalgpall: 403, 429, izziv) ne obidemo s shranjeno stranjo.
     if (e.zavrnitev || (vir.zavrnitev && [403, 429].includes(e.status))) throw vir.zavrnitev(e.message, e.status)
-    if (!existsSync(pot)) throw e
+    const shranjeno = preberiRezervo(pot, vir, ime)
+    if (shranjeno === null) throw e
     console.log(`  vir ni dosegljiv (${e.message}) — uporabim zadnji shranjeni razpored`)
-    return readFileSync(pot, 'utf8')
+    return shranjeno
   }
 }
 
