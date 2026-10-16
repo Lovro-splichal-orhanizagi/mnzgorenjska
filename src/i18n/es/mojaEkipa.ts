@@ -334,7 +334,7 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     skupaj: '{tocke} puntos',
     brezPostave: 'El acta no indica la alineación de este equipo.',
     klop: 'Banquillo',
-    vstopilo: '{n} entraron en juego',
+    vstopilo: '· entraron en juego: {n}',
   },
 
   enajsterica: {

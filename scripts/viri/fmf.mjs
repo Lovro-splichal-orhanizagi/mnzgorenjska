@@ -2,7 +2,7 @@
 //
 // FMF vodi državne lige (Liga 7777 = Super Liga, Liga 1 v dveh skupinah,
 // Liga 2) v COMET in na fmf.md objavi razpored, izide in za vsako tekmo
-// zapisnik COMET kot PDF ("Raportul meciului"). Glej CLAUDE.md (Moldavija).
+// zapisnik COMET kot PDF ("Raportul meciului"). Glej docs/viri/moldavija.md (Moldavija).
 //
 // ŠIFRA LIGE je `<slug>/<competition>`: `<slug>` je pot strani tekmovanja pod
 // /home/competitii/masculin/ (`liga-2-1782306996`), `<competition>` številka
@@ -38,7 +38,7 @@
 // ("67'  7 Ursu Elyas > 8 Grosu Alexandru") — minute so točne.
 // Starejša predloga "Analyticom COMET / Raport de meci" (sezona 2025/26 in
 // prej: dogodki kot številke v stolpcih tabele) je NE beremo — uvoz se ob njej
-// ustavi z napako, zato arhiva 2025/26 ni (glej CLAUDE.md).
+// ustavi z napako, zato arhiva 2025/26 ni (glej docs/viri/moldavija.md).
 //
 // IDENTITETA: šifra osebe COMET (→ `reg_st`). Igralcu v zapisniku oblike B jo
 // vir poišče v zapisnikih oblike A iste lige (klub + ime); kdor je igral le v

@@ -158,7 +158,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   izbris: {
     naslov: 'Zrušenie účtu',
     moraPrijava: 'Na zrušenie účtu sa musíš <prijava>prihlásiť</prijava>.',
-    opis: 'Zrušíme účet {email}: profil, všetky tvoje tímy s históriou bodov, hlasy a minilgy, ktoré si vytvoril. Zrušenie sa nedá vrátiť. Zmazaním účtu skončí aj odznak overeného hráča a predplatné sa zastaví bez vrátenia peňazí.',
+    opis: 'Zrušíme účet {email}: profil, všetky tvoje tímy s históriou bodov, hlasy a miniligy, ktoré si vytvoril. Zrušenie sa nedá vrátiť. Zmazaním účtu skončí aj odznak overeného hráča a predplatné sa zastaví bez vrátenia peňazí.',
     gumb: 'Zrušiť účet',
     potrdi: 'Áno, zrušiť navždy',
     preklici: 'Zrušiť',
@@ -182,7 +182,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     podatkiNaprava:
       '<b>Token zariadenia pre upozornenia.</b> Ak v mobilnej aplikácii povolíš upozornenia, uložíme token, cez ktorý ti pošleme pripomienku pred uzávierkou kola. Pri odhlásení ho vymažeme.',
     neHranimo:
-      'Neuchovávame telefónne číslo ani údaje platobnej karty a adresu len vtedy, ak si objednáš vytlačený odznak (pozri nižšie). Nepoužívame sledovacie cookies ani reklamné nástroje. V prehliadači je uložená tvoja prihlasovacia relácia, identifikátor konverzácie v chate podpory, ak ho otvoríš, a značky relácie, vďaka ktorým návštevu stránky počítame len raz. Koľko ľudí otvorilo ktorú stránku uchovávame len ako denný súčet — bez tvojho mena, účtu, zariadenia či IP adresy. Všeobecnú štatistiku návštev (ktoré stránky, odkiaľ návštevníci prichádzajú, typ zariadenia a krajina, niekoľko akcií ako zostavenie tímu) zaznamenáva <b>Umami</b> na našom serveri: bez cookies, IP adresu neukladá a návštevu nespája s tvojím účtom. Ak má prehliadač zapnutú možnosť „Nesledovať“, nezaznamenáva sa nič.',
+      'Neuchovávame telefónne číslo ani údaje platobnej karty; adresu len vtedy, ak si objednáš vytlačený odznak (pozri nižšie). Nepoužívame sledovacie cookies ani reklamné nástroje. V prehliadači je uložená tvoja prihlasovacia relácia, identifikátor konverzácie v chate podpory, ak ho otvoríš, a značky relácie, vďaka ktorým návštevu stránky počítame len raz. Koľko ľudí otvorilo ktorú stránku uchovávame len ako denný súčet — bez tvojho mena, účtu, zariadenia či IP adresy. Všeobecnú štatistiku návštev (ktoré stránky, odkiaľ návštevníci prichádzajú, typ zariadenia a krajina, niekoľko akcií ako zostavenie tímu) zaznamenáva <b>Umami</b> na našom serveri: bez cookies, IP adresu neukladá a návštevu nespája s tvojím účtom. Ak má prehliadač zapnutú možnosť „Nesledovať“, nezaznamenáva sa nič.',
     dostopNaslov: 'Kto má k údajom prístup',
     dostop:
       'Údaje sú uložené na našom serveri u poskytovateľa <b>Hetzner</b> (Nemecko, EÚ), prevádzka k nemu ide cez <b>Cloudflare</b> (ochrana a doručovanie stránky). Potvrdzovacie e-maily a e-maily na obnovenie hesla sa odosielajú z nášho poštového servera (tiež Hetzner), upozornenia v mobilnej aplikácii cez <b>Google Firebase Cloud Messaging</b> (iba token zariadenia a text upozornenia). Chat podpory v pravom dolnom rohu beží cez <b>HelpStack</b>: odovzdáva sa tam to, čo doň napíšeš, a — ak si prihlásený — tvoje zobrazované meno, aby sme vedeli, komu odpovedáme. Keď ti asistent v chate pomáha, môže si pozrieť aj to, na ktorej stránke a v ktorej lige si a či je tvoj tím platný. Tvoj e-mail mu neposkytujeme. Nikomu inému údaje neposkytujeme a nepredávame ich.',

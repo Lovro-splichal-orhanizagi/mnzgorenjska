@@ -1,0 +1,11 @@
+{
+  "vrsta": "kapetani",
+  "do": "2026-10-16",
+  "igralci": [
+    { "ime": "Gruber Lukas", "klub": "SV Union St. Marienkirchen", "grb": null, "liga": "Gebietsliga NW", "drzava": "AT", "pozicija": "FWD", "cena": 11.8, "tocke": 52, "po_krogih": [14, 14, 24] },
+    { "ime": "Suljanović Edvin", "klub": "Sava Kranj", "grb": null, "liga": "1. GNL", "drzava": "SI", "pozicija": "FWD", "cena": 13.7, "tocke": 34, "po_krogih": [10, 22, 2] },
+    { "ime": "Horvat Ivan", "klub": "NK Mladost Ždralovi", "grb": null, "liga": "BJ I.", "drzava": "HR", "pozicija": "MID", "cena": 9.4, "tocke": 33, "po_krogih": [5, 7, 21] },
+    { "ime": "Ádám Erik", "klub": "TJ Družstevník Želovce", "grb": null, "liga": "VII. liga NZ", "drzava": "SK", "pozicija": "GK", "cena": 6.1, "tocke": 31, "po_krogih": [8, 7, 16] },
+    { "ime": "Nagy Péter", "klub": "Balatonfüredi FC", "grb": null, "liga": "Veszprém II.", "drzava": "HU", "pozicija": "MID", "cena": 8.2, "tocke": 29, "po_krogih": [9, 6, 14] }
+  ]
+}

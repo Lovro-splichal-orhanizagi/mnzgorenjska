@@ -11,7 +11,7 @@
 //   - VZPOREDNI pove, iz koliko poslov hkrati sme brati posamezen vir. Vir, ki
 //     ga ni na seznamu, bere en sam posel (vse njegove lige so v istem košu):
 //     majhna spletišča MNZ, jalgpall.ee in fcf.cat (skupen proračun branja),
-//     facr (posrednik, CAPTCHA), hlf (brskalnik), frf, lff, pzpn, ffm, fsb.
+//     facr (posrednik, CAPTCHA), hlf (brskalnik), frf, lff, pzpn, wmzpn, ffm, fsb.
 //   - Faktor premora: vir, ki ga bere k poslov, v vsakem bere s k-krat daljšim
 //     premorom (`SLFF_PREMOR_FAKTOR`, prenos.mjs). Skupni tempo zahtevkov k viru
 //     tako ni večji kot pri enem poslu — hitrost pride iz baze (uvoz zapisnika je

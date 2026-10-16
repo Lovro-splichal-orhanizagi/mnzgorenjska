@@ -232,7 +232,7 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
       'Jednou za sezónu: v tomto kole můžeš vyměnit libovolný počet hráčů bez odečtu bodů.',
     zaklenjen: 'zamčeno',
     preklici: 'zrušit',
-    prekliciDo: 'Zrušit můžeš ještě <odstevanje></odstevanje>',
+    prekliciDo: 'Na zrušení máš <odstevanje></odstevanje>',
     izberiKrog: 'Vyber kolo …',
     niKroga: 'Žádné budoucí kolo s uzávěrkou',
     krogSezona: '{krog}. kolo ({sezona})',

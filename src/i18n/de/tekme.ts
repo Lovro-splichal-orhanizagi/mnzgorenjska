@@ -131,14 +131,14 @@ export const tekme: NonNullable<Prevod['tekme']> = {
     arhiv: 'Archiv',
     preteklaSezona:
       'Du stimmst über eine vergangene Saison ab. Auf die Punkte der laufenden Liga hat das keinen Einfluss, es korrigiert nur die Geschichte.',
-    izberiKrog: '1. Runde wählen',
-    izberiTekmo: '2. Spiel wählen',
+    izberiKrog: '1. Wähle eine Runde',
+    izberiTekmo: '2. Wähle ein Spiel',
     vsePotrjeno: 'Alles bestätigt',
     zaprto: 'geschlossen',
     poglejTekmo: 'Aufstellungen und Punkte dieses Spiels ansehen →',
     niGolov: 'In diesem Spiel fielen keine Tore.',
     vsePotrjene: 'Alle Torvorlagen in diesem Spiel sind bestätigt. 🎉',
-    zaprtoOpis: 'Die Abstimmung über dieses Spiel ist geschlossen: Sie ist bis zur Deadline der nächsten Runde offen.',
+    zaprtoOpis: 'Die Abstimmung über dieses Spiel ist geschlossen: Sie war bis zur Deadline der nächsten Runde offen.',
     brezPotrjene: 'Ohne bestätigte Torvorlage: {goli}.',
   },
 
@@ -180,7 +180,7 @@ export const tekme: NonNullable<Prevod['tekme']> = {
     status: {
       naslov: 'Mein Status als Abstimmender',
       utezOpis:
-        'Gewicht einer einzelnen Stimme: Es wird mit dem Insider-Bonus addiert, wenn du für einen Spieler deines Vereins stimmst.',
+        'Gewicht einer einzelnen Stimme: Es wird mit dem Kenner-Bonus addiert, wenn du für einen Spieler deines Vereins stimmst.',
       utez: 'Gewicht {utez}×',
       tocnih: '({pravilni}/{vsi} richtig)',
       klubPoznam: 'Verein, den ich gut kenne (Kenner): Meine Stimme für Spieler dieses Vereins zählt mehr:',
@@ -190,7 +190,7 @@ export const tekme: NonNullable<Prevod['tekme']> = {
     },
     igralec: {
       statistika: '{tekme} · {minute} Min. · {goli} · {cs} ohne Gegentor',
-      izZapisnika: 'Aus dem Spielbericht: Der Tormann ist mit (V) markiert',
+      izZapisnika: 'Aus dem Spielbericht: Der Tormann ist markiert',
       odKluba: 'Position vom Verein gesetzt',
       klub: ' · Verein',
       izStatistike: 'Aus der Statistik (Rückennummer, Tore, Karten): Stimmen können sie korrigieren',

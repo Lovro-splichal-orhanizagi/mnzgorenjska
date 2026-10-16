@@ -122,6 +122,7 @@ async function main() {
   const { vseVrstice, vrsticeIgralcevLige } = await import('./strani.mjs')
   const { tekmovanje: najdiTekmovanje, slugTekmovanja } = await import('./tekmovanje.mjs')
   const { viraZa } = await import('./viri/index.mjs')
+  const { fetchZaBazo } = await import('./prenos.mjs')
 
   const pisi = process.argv.includes('--pisi')
   const BASE = process.env.SUPABASE_URL ?? 'http://127.0.0.1:54321'
@@ -130,7 +131,7 @@ async function main() {
     console.error('Manjka SUPABASE_SERVICE_ROLE_KEY (za izpis zadošča SUPABASE_ANON_KEY).')
     process.exit(1)
   }
-  const db = createClient(BASE, KLJUC, { auth: { persistSession: false } })
+  const db = createClient(BASE, KLJUC, { auth: { persistSession: false }, global: { fetch: fetchZaBazo() } })
   const liga = await najdiTekmovanje(db, slugTekmovanja(null))
   if (!viraZa(liga).vratarPoVecini) {
     console.log(`${liga.slug}: vir ${liga.source} ni med viri z vratarjem po večini — preskočeno`)

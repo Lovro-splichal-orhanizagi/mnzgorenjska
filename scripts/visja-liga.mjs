@@ -18,8 +18,8 @@
 //   tudi kadar regijske ravni ne poznamo.
 // - mladinske lige se primerjajo le z mladinskimi, članske s članskimi.
 //
-// Države brez pravila (SI, RS, RO, PL, CZ, MK) in viri brez šifer osebe
-// (stari CMS MNZ, fsb, fss, fssid, ffm) ostanejo pri 4.5.
+// Države brez pravila (SI, RS, RO, PL, CZ, MK, ME) in viri brez šifer osebe
+// (stari CMS MNZ, fsb, fss, fssid, ffm, fscg) ostanejo pri 4.5.
 
 /** Mladinska liga po šifri (isto pravilo kot `jeMladinskiSlug` v src/lib/prevzem.ts). */
 export function jeMladinska(slug) {
@@ -106,9 +106,35 @@ export function ravenLige({ slug, name, zveza }) {
   }
   // Asturija (vir fas): Tercera Federación nad Primero AsturFútbol; raven le
   // znotraj Asturije (katalonske lige so druga piramida in drug vir).
+  // Turčija (vir tff): državna piramida TFF — 1. Lig (raven 2) nad 2. Lig (3)
+  // nad 3. Lig (4) nad Profesyonelliğe Geçiş Ligi (5); skupine iste ravni se
+  // ne primerjajo. Süper Lig (1) ni vpisana.
+  if (slug.startsWith('tr-')) {
+    if (mladinska) return null
+    if (slug === 'tr-1-lig') return drz(2)
+    if (slug.startsWith('tr-2-lig-')) return drz(3)
+    if (slug.startsWith('tr-3-lig-')) return drz(4)
+    if (slug.startsWith('tr-pgl-')) return drz(5)
+    return reg(null)
+  }
   if (slug.startsWith('es-as-')) {
     const r = { tercera: 1, primera: 2 }[slug.split('-')[2]]
     return r ? { raven: r, obmocje: 'es-as', drzavna: false, mladinska } : null
+  }
+  // Grčija (vir eps): kategorije regionalne zveze EPS, `gr-<zveza>-<kategorija>[-<skupina>]`.
+  // A1 nad A2 (Argolida) in A (Halkidika), A nad B nad Γ; le znotraj iste zveze
+  // (šifre igralcev so po zvezah, vsaka EPS je svoja piramida).
+  if (slug.startsWith('gr-')) {
+    const [, zv, kat] = slug.split('-')
+    const r = { a1: 1, a: 2, a2: 2, b: 3, g: 4 }[kat]
+    return r ? { raven: r, obmocje: `gr-${zv}`, drzavna: false, mladinska } : null
+}
+
+  // Anglija (vir isthmian): Premier Division vseh treh lig je step 3, ostale
+  // divizije step 4 — ista narodna piramida.
+  if (slug.startsWith('gb-')) {
+    if (mladinska) return null
+    return abs(/^gb-[a-z]+-premier(-|$)/.test(slug) ? 1 : 2)
   }
 
   if (slug.startsWith('ee-')) {
@@ -118,6 +144,36 @@ export function ravenLige({ slug, name, zveza }) {
     if ((m = slug.match(/^ee-(ii|iii|iv)-liiga/))) return abs({ ii: 4, iii: 5, iv: 6 }[m[1]])
     return null
   }
+
+  // Ukrajina (vir pfl-ua): Perša liga (raven 2) nad Drugo ligo A in B (3).
+  if (slug.startsWith('ua-')) {
+    if (mladinska) return null
+}
+
+  // Ukrajina: Premier liga (vir upl, raven 1) nad Peršo ligo (pfl-ua, 2) in
+  // Drugo ligo A in B (3). Cena iz višje lige velja le znotraj istega vira.
+  if (slug.startsWith('ua-')) {
+    if (mladinska) return null
+    if (slug === 'ua-upl') return abs(1)
+    if ((m = slug.match(/^ua-(\d)-liga/))) return abs(Number(m[1]) + 1)
+}
+
+  // Islandija (vir ksi): Besta deild, Lengjudeild, 2.–5. deild; Utandeild je
+  // zunaj piramide (brez ravni).
+  if (slug.startsWith('is-')) {
+    if (mladinska) return null
+    const r = { 'is-besta-deild': 1, 'is-lengjudeild': 2 }[slug]
+    if (r) return abs(r)
+    if ((m = slug.match(/^is-(\d)-deild/))) return abs(1 + Number(m[1]))
+}
+
+  // Norveška (vir nff): OBOS-ligaen je 2. raven (Eliteserien ni vpisana),
+  // "2div" 3., "3div" (Norsk Tipping-ligaen) 4., kretsove "4div" 5. in "5div" 6.
+  if (slug.startsWith('no-')) {
+    if (mladinska) return null
+    if (slug === 'no-obos') return abs(2)
+    if ((m = slug.match(/-(\d)div(-|$)/))) return abs(1 + Number(m[1]))
+}
 
   // Moldavija (vir fmf, šifra osebe COMET): Super Liga (Liga 7777) 1, Liga 1 (skupini) 2, Liga 2 3.
   if (slug.startsWith('md-')) {
@@ -131,6 +187,29 @@ export function ravenLige({ slug, name, zveza }) {
     if (mladinska) return null
     if (slug === 'lv-virsliga') return abs(1)
     if ((m = slug.match(/^lv-(\d)-liga/))) return abs(1 + Number(m[1]))
+    return null
+  }
+
+  // Litva (vir ltfutbolas, šifra osebe z /zaidejai/): A lyga (TOPLYGA), I lyga, II lyga A/B.
+  if (slug.startsWith('lt-')) {
+    if (mladinska) return null
+    if (slug === 'lt-a-lyga') return abs(1)
+    if ((m = slug.match(/^lt-(\d)-lyga/))) return abs(1 + Number(m[1]))
+}
+
+  // Ferski otoki (vir fsf): Betri deildin, 1. in 2. deild (druge ekipe klubov).
+  if (slug.startsWith('fo-')) {
+    if (mladinska) return null
+    if (slug === 'fo-betri-deildin') return abs(1)
+    if ((m = slug.match(/^fo-(\d)-deild/))) return abs(1 + Number(m[1]))
+}
+
+  // Kazahstan (vir kff): Premier liga 1, Prva liga 2, Druga liga (obe
+  // konferenci) 3. Šifra osebe KFF je ista v vseh ligah.
+  if (slug.startsWith('kz-')) {
+    if (mladinska) return null
+    if (slug === 'kz-premier-liga') return abs(1)
+    if ((m = slug.match(/^kz-(\d)-liga/))) return abs(1 + Number(m[1]))
     return null
   }
 

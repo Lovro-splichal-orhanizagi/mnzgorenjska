@@ -17,7 +17,7 @@ import {
   kratkiNaslov,
   type PodatkiKartice,
 } from '../lib/karticaIgralca'
-import { formatirajTocke, formatirajPremik, KRATKA_POZICIJA } from '../lib/pomozno'
+import { formatirajTocke, formatirajPremik, KRATKA_POZICIJA, zacetniceKluba } from '../lib/pomozno'
 import { t, stevilo } from '../i18n'
 import { zabeleziKorak } from '../lib/lijak'
 import { naslovSlike } from '../lib/platforma'
@@ -89,17 +89,6 @@ function platno() {
   return { p, c }
 }
 
-/** Do tri začetnice kluba: "Niko Železniki" -> "NŽ". */
-function zacetnice(ime: string, kratko: string | null): string {
-  if (kratko) return kratko.slice(0, 3).toUpperCase()
-  return ime
-    .split(/\s+/)
-    .filter((d) => /[a-zčšžA-ZČŠŽ0-9]/.test(d))
-    .map((d) => d[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 3)
-}
 
 const vBlob = (p: HTMLCanvasElement) => new Promise<Blob | null>((r) => p.toBlob((b) => r(b), 'image/png'))
 
@@ -264,7 +253,7 @@ export async function narisiKartico(p: PodatkiKartice, foto: FotoKartice | null 
     c.drawImage(grb, gx - (grb.width * r) / 2, gy - (grb.height * r) / 2, grb.width * r, grb.height * r)
   } else {
     c.fillStyle = CRNILO
-    napisi(c, zacetnice(p.klub, p.klubKratko), gx, gy + 16, G - 20, (v) => oz(800, v), 46, 28)
+    napisi(c, zacetniceKluba(p.klub, p.klubKratko), gx, gy + 16, G - 20, (v) => oz(800, v), 46, 28)
   }
   // desno: fotografija, če jo je kdo izbral, sicer velika številka dresa
   if (foto) {

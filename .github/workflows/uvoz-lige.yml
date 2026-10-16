@@ -13,7 +13,7 @@ run-name: Uvoz lige ${{ inputs.liga }}
 # navrzi dve, `ovrednoti-igralce` pa jih sesteje.
 #
 # Sifra lige pripada SEZONI, ne ligi. Tekoca je v `competitions.source_league_code`,
-# arhivske se podajo tu (glej tabelo v CLAUDE.md).
+# arhivske se podajo tu (glej tabele v docs/viri/).
 #
 # Na VKLOPLJENI ligi je ta tok nevaren: pozicije in cene bi prepisal igralcem,
 # ki jih imajo ljudje v ekipah. Zato je `cene` privzeto izklopljen, skripti pa
@@ -115,6 +115,11 @@ jobs:
       # poskus lige nadaljuje, kjer je prejšnji obstal, namesto da vse bere
       # znova. Najprej se obnovi zadnji predpomnilnik te lige, šele nato
       # splošni (sicer je ponovni poskus dobil predpomnilnik druge države).
+      # Vmes predpomnilnik druge lige iste države (predpona šifre, `kz-`): vir
+      # kff prvič prebere vse tekme leta (~860 strani) za vse tri lige enake.
+      - name: Predpona drzave
+        id: drzava
+        run: echo "predpona=${LIGA%%-*}-" >> "$GITHUB_OUTPUT"
       - name: Predpomnilnik zapisnikov
         uses: actions/cache/restore@v4
         with:
@@ -122,6 +127,7 @@ jobs:
           key: zapisniki-${{ inputs.liga }}-${{ github.run_id }}
           restore-keys: |
             zapisniki-${{ inputs.liga }}-
+            zapisniki-${{ steps.drzava.outputs.predpona }}
             zapisniki-
 
       # Liga mora obstajati, sicer se skripte ustavijo sele na pol poti.
