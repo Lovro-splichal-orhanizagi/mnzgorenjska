@@ -3,7 +3,7 @@
 Vir `pfl-az` (`scripts/viri/pfl-az.mjs`) bere **Peşəkar Futbol Liqası**
 (PFL, pfl.az): I Liqa (raven 2) in II Liqa (raven 3). Nižje (AFFA Region
 Liqası) objavljajo le izide. Država `AZ` ("Azərbaycan"), zveza `pfl-az`, lige
-`az-liqa1` in `az-liqa2` (migracija 20261015195100), **neaktivne**. Vmesnika v
+`az-liqa1` in `az-liqa2` (migracija 20261016094500), **neaktivne**. Vmesnika v
 azerbajdžanščini, kartice, pošte in matrike nočnega uvoza **še ni**; šifra
 lige se začne z `az-`. Pozicije razen vratarja na glasovanje.
 
