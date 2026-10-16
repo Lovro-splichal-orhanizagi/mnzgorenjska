@@ -111,7 +111,7 @@ slff.eu
 }
 
 // Estonščina sklanja, zato ime lige stoji samo za dvopičjem ali v oklepaju,
-// klub za besedo "klubi"/"klubist" (glej CLAUDE.md *Estonija*). Brez pomišljajev.
+// klub za besedo "klubi"/"klubist" (glej docs/viri/estonija.md). Brez pomišljajev.
 // Besedila ne trdijo, da imamo dovoljenje zveze.
 function estonsko(k, p, vrsta, url) {
   const { ime_lige: liga, klub } = k
