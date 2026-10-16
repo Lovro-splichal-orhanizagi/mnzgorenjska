@@ -21,7 +21,7 @@ import { viraZa } from './viri/index.mjs'
 import { zaprtje } from './odtis-kode.mjs'
 import { mapaKlubov } from './klubi.mjs'
 import { vseVrstice } from './strani.mjs'
-import { prenesiSPonovitvami } from './prenos.mjs'
+import { prenesiSPonovitvami, fetchZaBazo } from './prenos.mjs'
 import { dodajStrelceSKlopi } from './zapisnik.mjs'
 import { imeHash, regHash } from './anonimizacija.mjs'
 import { NEPOPOLN } from './viri/frf.mjs'
@@ -90,7 +90,7 @@ if (pocisti) {
   }
 }
 
-const db = createClient(BASE, SERVICE, { auth: { persistSession: false } })
+const db = createClient(BASE, SERVICE, { auth: { persistSession: false }, global: { fetch: fetchZaBazo() } })
 
 const tekmovanje = await najdiTekmovanje(db, arg('tekmovanje', 'clani'))
 // Brez `--liga` vzamemo tekočo sezono tekmovanja; arhiv se navede izrecno.

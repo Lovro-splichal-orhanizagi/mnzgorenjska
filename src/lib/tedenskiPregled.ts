@@ -12,7 +12,7 @@
 // pade iz kvadrata in da se dolga imena ne prelijejo.
 
 import { t } from '../i18n/jedro.ts'
-import { formatirajTocke, tockZ } from './pomozno'
+import { formatirajTocke, tockZ, zacetniceKluba } from './pomozno'
 import { imeZaPlakat, skrajsajIme, prilagodiVelikost } from './plakat'
 import type { VrsticaTuje } from './tujaEkipa'
 
@@ -201,15 +201,7 @@ export type ElementPregleda =
 export type Meri = (besedilo: string, px: number, teza: number) => number
 
 /** Zacetnice kluba za znacko brez grba (kot `Grb.tsx`). */
-export function zacetniceKluba(ime: string | null): string {
-  return (ime ?? '')
-    .split(/\s+/)
-    .filter((d) => /[a-zčšžA-ZČŠŽ0-9]/.test(d))
-    .map((d) => d[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 3)
-}
+export { zacetniceKluba }
 
 /** Velikost imena ekipe — izhodisce, ki ga `prilagodiVelikost` se zmanjsa. */
 export function velikostImenaEkipe(ime: string): number {

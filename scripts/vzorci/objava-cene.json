@@ -1,0 +1,11 @@
+{
+  "vrsta": "cene",
+  "od": "2026-10-09",
+  "do": "2026-10-16",
+  "igralci": [
+    { "ime": "Gruber Lukas", "klub": "SV Union St. Marienkirchen", "grb": null, "liga": "Gebietsliga NW", "drzava": "AT", "pozicija": "FWD", "staro": 10.8, "novo": 11.8 },
+    { "ime": "Horvat Ivan", "klub": "NK Mladost Ždralovi", "grb": null, "liga": "BJ I.", "drzava": "HR", "pozicija": "MID", "staro": 8.5, "novo": 9.4 },
+    { "ime": "Murn Aljaž", "klub": "Polet", "grb": null, "liga": "1. GNL", "drzava": "SI", "pozicija": "MID", "staro": 4.5, "novo": 5.3 },
+    { "ime": "Popescu Andrei", "klub": "CS Viitorul Cluj", "grb": null, "liga": "Liga 4 Cluj", "drzava": "RO", "pozicija": "FWD", "staro": 7.0, "novo": 7.7 }
+  ]
+}

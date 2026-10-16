@@ -1,5 +1,5 @@
 // Vir: Львівська асоціація футболу (ЛАФ) — ffl.org.ua, Ukrajina (Lvivska
-// oblast). Glej CLAUDE.md (Ukrajina — vir ffl).
+// oblast). Glej docs/viri/ukrajina.md (Ukrajina — vir ffl).
 //
 // ЛАФ vodi oblastno prvenstvo odraslih: Прем'єр-ліга, Перша, Друга, Третя
 // (skupine) in Четверта ліга (skupine). Sezona je jesen–pomlad ("Сезон-2026/2027"

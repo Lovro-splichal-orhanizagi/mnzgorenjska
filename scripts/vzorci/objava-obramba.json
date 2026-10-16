@@ -1,0 +1,17 @@
+{
+  "vrsta": "obramba",
+  "do": "2026-10-18",
+  "ekipe": [
+    { "ime": "Eltron Preddvor", "grb": null, "liga": "1. GNL", "drzava": "SI", "tekem": 8, "prejeti": 3 },
+    { "ime": "NK Bjelovar", "grb": null, "liga": "BJ I.", "drzava": "HR", "tekem": 9, "prejeti": 4 },
+    { "ime": "SV Spittal/Drau", "grb": null, "liga": "Kärntner Liga", "drzava": "AT", "tekem": 11, "prejeti": 5 },
+    { "ime": "FK Slovan Levice", "grb": null, "liga": "VII. liga LV", "drzava": "SK", "tekem": 10, "prejeti": 5 },
+    { "ime": "Csesztregi Juventus SE", "grb": null, "liga": "Zala I.", "drzava": "HU", "tekem": 9, "prejeti": 5 }
+  ],
+  "vratarji": [
+    { "ime": "Ádám Erik", "klub": "TJ Družstevník Želovce", "grb": null, "liga": "VII. liga NZ", "drzava": "SK", "ciste": 7 },
+    { "ime": "Petrović Lazar", "klub": "MORAVA", "grb": null, "liga": "Srpska Istok", "drzava": "RS", "ciste": 6 },
+    { "ime": "Zupan Matic", "klub": "Eltron Preddvor", "grb": null, "liga": "1. GNL", "drzava": "SI", "ciste": 5 },
+    { "ime": "Kovačević Luka", "klub": "NK Polet (SK)", "grb": null, "liga": "MZ I.", "drzava": "HR", "ciste": 5 }
+  ]
+}

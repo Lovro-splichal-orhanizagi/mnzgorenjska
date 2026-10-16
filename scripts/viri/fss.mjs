@@ -1,7 +1,7 @@
 // Vir: Fudbalski savez Srbije (fss.rs) — državni ligi Superliga in Prva liga.
 //
 // Ostale srbske zveze (Vojvodina, Zahod, Vzhod) zapisnikov ne objavljajo;
-// Beograd bere vir `fsb`. Glej CLAUDE.md (Srbija).
+// Beograd bere vir `fsb`. Glej docs/viri/srbija.md.
 //
 // STRAN LIGE (`/takmicenje/<slug>/?script=lat`)
 // - Šifra lige je slug strani (`mozzart-bet-super-liga-srbije-26-27`); arhiv

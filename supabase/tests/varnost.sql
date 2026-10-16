@@ -3004,6 +3004,37 @@ select pg_temp.preveri('zamrznitev: pogled pokaže zamrznjeno ceno in potrditev'
 select pg_temp.zavrnjeno('zamrznitev: zadržanih padcev ni mogoče brati', $$select * from zadrzani_padci$$);
 reset role;
 
+-- Želje lig ("Moje lige ni"): tabela zaprta, servisne funkcije niso javne,
+-- neprijavljen potrebuje e-naslov, ponovitev ne podvoji, admin vidi seštevek.
+reset role;
+select set_config('request.jwt.claim.sub', '', true), set_config('request.jwt.claims', '{}', true);
+set local role anon;
+select pg_temp.zavrnjeno('zelje lig: tabela ni berljiva', $$select * from zelje_lig$$);
+select zelim_ligo('HR', 'Test MŽNL Brod', -913002, 'Zelja@Example.invalid', 'hr');
+select zelim_ligo('HR', 'Test MŽNL Brod', -913002, 'zelja@example.invalid', 'hr');
+reset role;
+select pg_temp.preveri('zelje lig: neprijavljen z e-naslovom, brez podvojitve, vezano na neaktivno ligo',
+  (select count(*) = 1 and bool_and(competition_id = -913002 and email = 'zelja@example.invalid')
+     from zelje_lig where email = 'zelja@example.invalid'));
+select pg_temp.preveri('zelje lig: servisne funkcije niso javne',
+  not has_function_privilege('anon', 'kandidati_za_zivo_ligo(int)', 'execute')
+  and not has_function_privilege('authenticated', 'kandidati_za_zivo_ligo(int)', 'execute')
+  and not has_function_privilege('authenticated', 'zelja_lige_poslana(bigint,boolean)', 'execute'));
+set local role anon;
+do $$
+begin
+  perform zelim_ligo('IT', 'Serie D', null, null);
+  perform pg_temp.preveri('zelje lig: brez e-naslova zavrne', false);
+exception when others then
+  perform pg_temp.preveri('zelje lig: brez e-naslova zavrne', sqlerrm = 'Manjka e-naslov.');
+end;
+$$;
+reset role;
+select set_config('request.jwt.claim.sub','a3a10000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('zelje lig: admin pregled le za admina', $$select * from admin_zelje_lig()$$);
+reset role;
+
 do $$
 declare v_napak int;
 begin

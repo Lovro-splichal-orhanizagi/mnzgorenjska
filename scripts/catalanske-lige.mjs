@@ -9,7 +9,7 @@
 // prepoveduje — skupin zato ne naštejemo s strani, ampak iz zapisnikov:
 // skupina ene sezone je strnjen blok šifer, urejen po krogih, med bloki je
 // "Acta no trobada". Seme (en zapisnik skupine) najdeš na strani kluba v
-// brskalniku ali v bližini lanskega bloka (glej CLAUDE.md, Španija — vir fcf).
+// brskalniku ali v bližini lanskega bloka (glej docs/viri/spanija.md, vir fcf).
 // Meji bloka poišče bisekcija (~10 strani na mejo).
 //
 // Vljudno kot vir: User-Agent SLFF, 3 s med zahtevki, predpomnilnik
