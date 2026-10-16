@@ -45,6 +45,7 @@ import ltfutbolas from './ltfutbolas.mjs'
 import fscg from './fscg.mjs'
 import mfa from './mfa.mjs'
 import isthmian from './isthmian.mjs'
+import pflUa from './pfl-ua.mjs'
 
 const VIRI = {
   mnzg,
@@ -137,6 +138,9 @@ const VIRI = {
   // Anglija (step 3–4): Isthmian, Northern Premier in Southern League prek skupnega
   // javnega JSON platforme (glava x-tenant-id); šifra osebe, vratar.
   isthmian,
+  // Ukrajina: Професіональна футбольна ліга (pfl.ua) — Perša liga, Druga liga A in B;
+  // koledar JSON, šifra igralca, vratar iz postavitve.
+  'pfl-ua': pflUa,
 }
 
 /**

@@ -4612,6 +4612,92 @@ Uvoz (ena za drugo, **šele po vljudnostnem mailu ligam**): `gh workflow run
 uvoz-lige.yml -f liga=gb-isthmian-premier -f
 arhiv=isthmian/67d7d01f749090308acc101e/2025-26 -f cene=true`; SFL brez
 `arhiv`. Liga je ~10 zahtevkov po 3 s.
+### Ukrajina — vir `pfl-ua`
+
+Vir `pfl-ua` (`scripts/viri/pfl-ua.mjs`) bere **pfl.ua** (Професіональна
+футбольна ліга України): Peršo ligo (raven 2) ter Drugo ligo A in B (raven 3).
+Nižjih lig na pfl.ua ni (amaterska liga AAFU in oblastne zveze so drugje;
+Lviv `ffl.org.ua` je poznejši vir). Država `UA` ("Україна") in zveza
+`pfl-ua` (migracija 20261016091900); **vmesnika v ukrajinščini, kartice in
+pošte še ni in `UA` ni v matriki nočnega uvoza** — oboje pred vklopom. Šifra
+lige se začne z `ua-`.
+
+- **Šifra lige je `<koledar>/<turnir>`** (`2a/1354`): oznaka javnega
+  koledarja (`1`, `2a`, `2b`; ob delitvi Perše lige `1a`, `1b`) in id
+  tekmovanja ene sezone. Ob novi sezoni se popravi le `<turnir>` (izbirnik
+  sezon je na `/calendar/<turnir>`).
+- **Razpored**: javni JSON `/calendar-json/<koledar>` (stran `/custom/6`:
+  "Авторизація та API-ключ не потрібні") — tours[].matches[] z matchId,
+  datumom, uro (kijevski čas → ljubljanski −1 h; `null`, dokler ni objavljena),
+  klubi s teamId in izidom (`score.finished`). JSON da le tekočo sezono; če
+  kaže drug turnir (arhiv, nova sezona), vir bere HTML koledar
+  `/calendar/<turnir>` (zavihki `id="tourN"`, datum "02.08.26", ura ali
+  "не визнач.", izid "2 : 3" ali "– : –"). Oba dasta za 2026/27 iste tekme.
+- **Zapisnik** `/game/index/<id>`: glava ("1-й тур", izid v `#m<id>`, datum z
+  dvomestno letnico "02.08.26", ura po kijevsko), zavihek "Склади" z obema
+  postavama: vrstica `bg-white` začetnik, `bg-dark-subtle` klop; dres, priimek
+  in ime s povezavo `/player/view/<id>` (**stalna šifra osebe → `reg_st`**),
+  "(K)" kapetan. Dogodki pri igralcu z minuto ("90+3'" → 90, **"ПМ'" = po
+  tekmi → 90**): `icon-ball` gol, `icon-ball-plus` gol z 11 m, `icon-autogoal`
+  avtogol (pri strelcu v njegovi ekipi, šteje nasprotniku), `icon-ball-miss`
+  zgrešena 11 m, `icon-yellow`, `icon-cards` drugi rumeni (→ 1 rumeni + rdeči),
+  `icon-red`. Menjava je povezava z `icon-up`/`icon-down` in minuto; opis
+  "46': <ven>, <noter>" da par. Leteče menjave šteje `minuteIzPreklopov`.
+  **Polčasa ni.** Šifra zapisnika v bazi je `ua<id>`. `nastopi` je hlf-ov
+  (po šifri osebe) z zgrešenimi 11-metrovkami (`penalties_missed`).
+- **Predpomnilnik**: zapisnik, starejši od tedna, se bere iz predpomnilnika;
+  stran z izidom, a brez postav (shranjena, preden je klub vnesel postave)
+  vir do 45 dni po tekmi prebere še enkrat svežo, sicer bi obtičala. Tekma z
+  izidom brez postav, ki ni 3:0, je opozorilo `pfl-ua: <id> ima izid,
+  zapisnik brez postav` v dnevniku uvoza.
+- **Vratar** ni označen; zavihek "Схема" ima postavitev začetnikov, vsaka
+  ekipa na svojem igrišču — vratar je edini začetnik ob golovi črti (domači
+  najmanjši `top`, gostje največji). Namig kot pri mlsz; *Uskladi pozicije*
+  z `vir = pfl-ua`. Ostale pozicije na glasovanje.
+- **Tehnični poraz** (KDK UAF) je opomba `bg-warning-subtle` nad zapisnikom
+  ("зараховано технічну поразку 0:3"): izid je za zeleno mizo, postave in goli
+  z igrišča (Нива : Рух, 1. krog 2a 2026/27: 3:0, na igrišču 2:1) — opozorilo
+  `tehnični poraz`. **Pravilo:** uradni izid (`rezultat`) velja za tekmo,
+  lestvico in zmago; prejeti goli in čista mreža igralcev so z igrišča
+  (`z.izidIgrisca`, `nastopi`) — vratar Ниве ima 1 prejeti gol, ne čiste
+  mreže. Tako `goals_conceded` ustreza golom v `goals` in točke prejetih golov
+  med igranjem (`prejeti_na_igriscu`) se računajo. Kontumacija brez postav (3:0 brez zapisnika, starejša od
+  tedna) gre prek `vir.kontumacije`; videli je še nismo.
+- **Isto ime, drug klub**: "Нива" je Ternopil (Perša, teamId 1170) in Vinnica
+  (2a, 1175; 2025/26 kot 1177). `IME_KLUBA` v viru ju preimenuje po teamId v
+  "Нива (Тернопіль)" in "Нива (Вінниця)". **teamId ni nujno stalen med
+  sezonami** — ob novi sezoni ali arhivu preveri trke imen. Ključ kluba
+  ohrani cirilico; latinične črke sredi cirilične besede ("Гірник-Cпорт" z
+  latiničnim C) postanejo cirilične. Rezervne ekipe ("Полісся-2", "Колос-2")
+  so svoj klub.
+- Arhiv: zapisniki 2025/26 so polni (preverjeno po 3 na ligo), sezone okoli
+  2022 in starejše le delno (postave brez dogodkov).
+
+**Pravice (pregled 15. 10. 2026, ni pravni nasvet).** robots.txt:
+"User-agent: * / Allow: /". Stran API (`/custom/6`) koledar in lestvice JSON
+ponuja javno brez ključa; pogojev uporabe nismo našli. Dovoljenja PFL nimamo.
+Beremo odkrito (User-Agent `SLFF fantasy (https://slff.eu)`, **3 s** med
+zahtevki, zapisnikov, starejših od tedna, ne beremo znova). Sodnikov in
+osebja ne beremo; vzorci `scripts/vzorci/ua-pfl-*` so brez njih. **Ob izzivu,
+CAPTCHI, 403 ali 429 se uvoz ustavi — ne obhajaj** (`PflZavrnitev`, izhod 4).
+
+Preizkus v živo (15. 10. 2026, 40 zapisnikov tekoče sezone): Perša 17
+zapisnikov, goli = izid 17/17 (52), postav po 11 34/34, vratar 34/34, 147
+menjav; Druga A 11, goli = izid 10/11 (en tehnični poraz), postav po 11
+22/22, 97 menjav; Druga B 12, goli = izid 12/12 (30), postav po 11 24/24, 93
+menjav. Ekipa ima 990 minut razen pri rdečem kartonu.
+
+Vpisane so 3 lige (migracija 20261016091900), **neaktivne**, zveza `pfl-ua`,
+`rok_pomak_ur = 2` (tekme dopoldne):
+
+| liga | klubov | tekoča 2026/27 | arhiv 2025/26 |
+|---|---|---|---|
+| ua-1-liga | 16 | `1/1353` | `1/1347` (VBET Перша ліга, 16 klubov) |
+| ua-2-liga-a | 9 | `2a/1354` | `2a/1348` (11 klubov, 165 tekem, 152 z izidom) |
+| ua-2-liga-b | 9 | `2b/1355` | `2b/1349` (11 klubov) |
+
+Druga liga ima 9 klubov (vsak krog en prost). Uvoz (ena za drugo): `gh
+workflow run uvoz-lige.yml -f liga=ua-1-liga -f arhiv=1/1347 -f cene=true`.
 
 ### Država obiskovalca
 
@@ -4704,6 +4790,7 @@ dobi ceno iz tamkajšnje: percentil, prebran iz cene, vsaka raven višje zapre
 lige"). Raven lige je pravilo po šifri in imenu v `ravenLige`, ne stolpec:
 HR (državne lige, županijske po imenu le znotraj iste zveze), SK, HU, ES, EE,
 LV, TR (1. Lig nad 2. Lig nad 3. Lig nad PGL) po uradni piramidi, AT le državne nad deželnimi; mladinske se primerjajo le
+LV, UA po uradni piramidi, AT le državne nad deželnimi; mladinske se primerjajo le
 z mladinskimi. Brez pravila (SI, RS, RO, PL, CZ, MK) in brez šifer osebe ostane
 LV, LT po uradni piramidi, AT le državne nad deželnimi; mladinske se primerjajo le
 z mladinskimi. Brez pravila (SI, RS, RO, PL, CZ, MK, ME) in brez šifer osebe ostane

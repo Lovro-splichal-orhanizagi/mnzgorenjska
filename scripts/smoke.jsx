@@ -5618,6 +5618,138 @@ preveri(
     zavrnjen.status === 403 && A.default.zavrnitev('x', 429).zavrnitev === true)
 }
 
+// --- vir pfl-ua (Ukrajina, Професіональна футбольна ліга, pfl.ua) -----------------
+{
+  const U = await import('./viri/pfl-ua.mjs')
+  const { default: viri } = await import('./viri/index.mjs')
+  const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  preveri('pfl-ua: vir je vpisan, 3 s, User-Agent SLFF', viri['pfl-ua'] === U.default && U.default.drzava === 'UA' &&
+    U.default.imaRegistracije === false && U.default.premorMs >= 2000 && U.default.glave['User-Agent'] === 'SLFF fantasy (https://slff.eu)')
+  const k = U.razberiKodo('2a/1354')
+  preveri('pfl-ua: šifra lige (koledar + turnir) in naslovi', k.liga === '2a' && k.turnir === 1354 &&
+    U.default.naslovRazporeda('2a/1354') === 'https://pfl.ua/calendar-json/2a' && U.naslovKoledarja('2b/1349') === 'https://pfl.ua/calendar/1349' &&
+    U.default.naslovZapisnika('x', 'ua16602') === 'https://pfl.ua/game/index/16602' && U.sifraZapisnika(16602) === 'ua16602')
+  let slabaSifra = null
+  try { U.razberiKodo('1354') } catch (e) { slabaSifra = e.message }
+  preveri('pfl-ua: šifra brez oznake koledarja ustavi uvoz', /<liga>\/<turnir>/.test(slabaSifra ?? ''))
+  preveri('pfl-ua: datum (dve števki leta), kijevski čas → ljubljanski, sezona, minuta', U.datumIz('02.08.26') === '2026-08-02' &&
+    U.datumIz('20.03.2027') === '2027-03-20' && U.casIz('2026-08-02', '16:00').ura === '15:00' && U.casIz('2026-10-25', '00:30').datum === '2026-10-24' &&
+    U.casIz('2027-03-20', 'не визнач.').ura === null && U.sezonaIz('2025/26 VBET Перша ліга') === '2025/26' &&
+    U.minuta("58'") === 58 && U.minuta("90+3'") === 90 && U.minuta("ПМ'") === 90)
+  preveri('pfl-ua: klubi — ključ s cirilico, isto ime "Нива" sta dva kluba, latinični C v cirilici', U.kljucKlubaUa('Скала 1911') === 'скала 1911' &&
+    U.imeKluba(1170, 'Нива') === 'Нива (Тернопіль)' && U.imeKluba(1175, 'Нива') === 'Нива (Вінниця)' && U.imeKluba(1177, 'Нива') === 'Нива (Вінниця)' &&
+    U.imeKluba(1592, 'Брацлав') === 'Брацлав' && U.kljucKlubaUa('Гірник-Cпорт') === U.kljucKlubaUa('Гірник-Спорт') &&
+    U.kljucKlubaUa("Авер'янов") === 'аверянов' && U.kratkoImeUa('Самбір-Нива-2') === 'Самбір-Нива-2')
+  const { ravenLige, koliko } = await import('./visja-liga.mjs')
+  preveri('pfl-ua: raven — Perša liga eno nad Drugo ligo A in B, A in B ista raven', koliko(ravenLige({ slug: 'ua-1-liga' }), ravenLige({ slug: 'ua-2-liga-a' })) === 1 &&
+    koliko(ravenLige({ slug: 'ua-1-liga' }), ravenLige({ slug: 'ua-2-liga-b' })) === 1 && koliko(ravenLige({ slug: 'ua-2-liga-a' }), ravenLige({ slug: 'ua-2-liga-b' })) === 0)
+
+  const j = U.tekmeJson(beri('ua-pfl-koledar-2b.json'))
+  const r = U.razporedIzTekem(j.tekme)
+  preveri('pfl-ua: koledar JSON — turnir, sezona, 18 krogov po 4 (9 klubov), odigrane, ura po ljubljansko', j.turnir === 1355 && j.sezona === '2026/27' &&
+    j.tekme.length === 72 && j.tekme.filter((t) => t.izid).length === 39 && r.length === 18 && r.every((x) => x.tekme.length === 4) &&
+    r[0].tekme[0].domaci === 'Тростянець' && r[0].tekme[0].ura === '10:00' && r[0].tekme[0].odigrana && r[0].tekme[0].pflId === 16692 &&
+    !r[17].tekme[0].odigrana && r[17].tekme[0].ura === null && r[17].tekme[0].datum === '2027-03-20')
+  const h = U.tekmeKoledarja(beri('ua-pfl-koledar-1348.html'), 1348)
+  preveri('pfl-ua: HTML koledar (arhiv 2025/26) — sezona iz izbirnika, krogi, izid, neodigrana, Нива 1177', h.sezona === '2025/26' && h.tekme.length === 10 &&
+    h.tekme.filter((t) => t.krog === 33).length === 5 && h.tekme[0].id === 15261 && h.tekme[0].ura === '09:00' && h.tekme[0].izid?.domaci === 1 &&
+    h.tekme.find((t) => t.id === 15807)?.izid === null && h.tekme.find((t) => t.id === 15807)?.ura === null &&
+    h.tekme.find((t) => t.id === 15265)?.domaci === 'Нива (Вінниця)')
+
+  const z = U.vZapisnik(beri('ua-pfl-tekma-16602.html'), { id: 16602 })
+  const n = U.nastopi(z)
+  const minute = (nn, i) => nn.filter((x) => x.ekipaIdx === i).reduce((a, x) => a + x.minute, 0)
+  preveri('pfl-ua: glava — klubi, izid, datum, ura (Kijev −1 h), krog, tekmovanje', z.domaci.ime === 'Вільхівці' && z.gostje.ime === 'Самбір-Нива-2' &&
+    z.rezultat.domaci === 2 && z.rezultat.gostje === 3 && z.datum === '2026-08-02' && z.ura === '15:00' && z.krog === 1 && z.liga === 'Друга ліга А')
+  preveri('pfl-ua: 11 + 11, klop, šifre igralcev, kapetan, vratar iz postavitve, goli = izid', z.domaci.postava.length === 11 && z.gostje.postava.length === 11 &&
+    z.domaci.rezerve.length === 12 && z.gostje.rezerve.length === 5 && n.every((x) => Number.isInteger(x.regSt)) &&
+    n.find((x) => x.ime === 'Нємчанінов Дмитро')?.kapetan && n.find((x) => x.ime === 'Дмитроченко Вадим')?.vratar &&
+    n.find((x) => x.ime === 'Бакус Маркіян')?.vratar && n.filter((x) => x.vratar).length === 2 && z.goli.length === 5 && z.opozorila.length === 0)
+  preveri('pfl-ua: menjave z minuto in pari iz opisa, leteča menjava, 990 minut, zgrešena 11 m', z.menjave.length === 9 && minute(n, 0) === 990 && minute(n, 1) === 990 &&
+    n.find((x) => x.ime === 'Жиленко Арсеній')?.minute === 25 && n.find((x) => x.ime === 'Вагін Ігор')?.minutaOd === 46 &&
+    z.menjave.find((m) => m.noter.ime === 'Вагін Ігор')?.ven.ime === 'Жиленко Арсеній' && z.menjave.find((m) => m.noter.ime === 'Станкович Іван')?.ven.ime === 'Богомаз Назарій' &&
+    n.find((x) => x.ime === 'Абрамов Михайло') === undefined && z.zgresene.length === 1 && z.zgresene[0].ime === 'Кобак Едвард' && z.zgresene[0].minuta === 80)
+  preveri('pfl-ua: zgrešena 11 m pride v nastop (penalties_missed)', n.find((x) => x.ime === 'Кобак Едвард')?.zgreseneEnajstmetrovke === 1 &&
+    n.filter((x) => x.zgreseneEnajstmetrovke > 0).length === 1)
+  const ag = U.vZapisnik(beri('ua-pfl-tekma-16144.html'))
+  preveri('pfl-ua: avtogol (icon-autogoal) pri strelcu, šteje nasprotniku', ag.goli.filter((g) => g.avtogol).length === 1 &&
+    ag.goli.find((g) => g.avtogol)?.ime === 'Малиш Станіслав-Нурі' && ag.goli.find((g) => g.avtogol)?.ekipaIdx === 1 && ag.rezultat.domaci === 3 && ag.opozorila.length === 0)
+  const p = U.vZapisnik(beri('ua-pfl-tekma-16204.html'))
+  preveri('pfl-ua: gol z 11 m (icon-ball-plus)', p.goli.length === 4 && p.goli.filter((g) => g.enajstmetrovka).length === 1 &&
+    U.nastopi(p).find((x) => x.ime === 'Сахненко Олексій')?.goliIzEnajstmetrovke === 1 && p.opozorila.length === 0)
+  const dr = U.vZapisnik(beri('ua-pfl-tekma-16178.html'))
+  const ndr = U.nastopi(dr)
+  preveri('pfl-ua: drugi rumeni (icon-cards) — 1 rumeni + rdeči, nastop do izključitve', dr.rdeci.length === 1 && dr.rdeci[0].minuta === 42 &&
+    ndr.find((x) => x.ime === 'Порох Богдан')?.rumeni === 1 && ndr.find((x) => x.ime === 'Порох Богдан')?.minute === 42 && minute(ndr, 1) === 942)
+  const rd = U.vZapisnik(beri('ua-pfl-tekma-16733.html'))
+  preveri('pfl-ua: rdeči karton (icon-red) z minuto', rd.rdeci.length === 1 && rd.rdeci[0].ime === 'Близнюк Володимир' && rd.rdeci[0].minuta === 76 &&
+    U.nastopi(rd).find((x) => x.ime === 'Близнюк Володимир')?.minute === 76 && rd.opozorila.length === 0)
+  const pm = U.vZapisnik(beri('ua-pfl-tekma-16207.html'))
+  preveri('pfl-ua: karton po tekmi ("ПМ") ne skrajša nastopa', pm.rdeci.length === 1 && pm.rdeci[0].minuta === 90 &&
+    U.nastopi(pm).find((x) => x.ime === 'Малиш Станіслав-Нурі')?.minute === 90 && pm.opozorila.length === 0)
+  const th = U.vZapisnik(beri('ua-pfl-tekma-16604.html'))
+  preveri('pfl-ua: tehnični poraz (KDK) — izid 3:0 za zeleno mizo, goli z igrišča, opozorilo', th.rezultat.domaci === 3 && th.goli.length === 3 &&
+    th.opozorila.length === 1 && /tehnični poraz/.test(th.opozorila[0]) && th.domaci.ime === 'Нива (Вінниця)')
+  const nth = U.nastopi(th)
+  const vrataTh = (i) => nth.find((x) => x.ekipaIdx === i && x.vratar)
+  preveri('pfl-ua: tehnični poraz — prejeti goli in čista mreža z igrišča (2:1), izid ostane 3:0', th.tehnicnaPoraza === true &&
+    th.izidIgrisca?.domaci === 2 && th.izidIgrisca?.gostje === 1 && vrataTh(0)?.prejetiGoli === 1 && vrataTh(0)?.cleanSheet === false &&
+    vrataTh(1)?.prejetiGoli === 2 && vrataTh(1)?.cleanSheet === false && th.rezultat.domaci === 3 && th.rezultat.gostje === 0 &&
+    U.vZapisnik(beri('ua-pfl-tekma-16602.html')).izidIgrisca === undefined)
+  const nd = beri('ua-pfl-tekma-16687.html')
+  preveri('pfl-ua: neodigrana tekma — glava brez izida in ure, brez zapisnika', U.vZapisnik(nd) === null && U.glavaStrani(nd)?.izid === null &&
+    U.glavaStrani(nd)?.krog === 18 && U.glavaStrani(nd)?.datum === '2027-03-20' && U.glavaStrani(nd)?.ura === null)
+  preveri('pfl-ua: vzorci brez sodnikov in osebja', !/Арбітр|Липко|Спостерігач|Головний тренер|Представники/.test(
+    ['ua-pfl-tekma-16602.html', 'ua-pfl-tekma-16604.html', 'ua-pfl-tekma-16687.html', 'ua-pfl-koledar-1348.html'].map(beri).join('')))
+
+  // Uvoz zapisnikov z dnem 15. 10. 2026 (starost tekem odloča o ponovnem branju),
+  // opozorila vira se zberejo, ne izpišejo.
+  const opozorilaKonzole = []
+  const tiho = async (fn) => {
+    const [warn, zdaj] = [console.warn, Date.now]
+    console.warn = (s) => opozorilaKonzole.push(String(s))
+    Date.now = () => Date.parse('2026-10-15T12:00:00Z')
+    try { return await fn() } finally { console.warn = warn; Date.now = zdaj }
+  }
+  // Uvoz zapisnikov prek vira: koledar JSON, le odigrane, ime kluba, krog in sezona s koledarja.
+  const zs = await tiho(() => U.default.zapisniki('2b/1355', async (url) => {
+    if (url.includes('/calendar-json/')) return beri('ua-pfl-koledar-2b.json')
+    return url.endsWith('/16733') ? beri('ua-pfl-tekma-16733.html') : beri('ua-pfl-tekma-16687.html')
+  }))
+  preveri('pfl-ua: zapisniki — šifra ua<id>, sezona 2026/27 s koledarja', zs.length === 1 && zs[0].id === 'ua16733' && zs[0].z.sezona === '2026/27' &&
+    zs[0].z.krog === 9 && zs[0].z.domaci.ime === 'Металург')
+  // Stran v predpomnilniku brez postav (izid je bil, postav še ne): starejšo od tedna preberemo še enkrat svežo.
+  // 16733 (4. 10.) je v predpomnilniku prazna, sveža ima postave; 16692 (31. 7.) je
+  // starejša od 45 dni in se ne bere znova; 16707 (3:0) je kontumacija brez opozorila.
+  const klici = []
+  opozorilaKonzole.length = 0
+  const zsp = await tiho(() => U.default.zapisniki('2b/1355', async (url, _ime, sveze) => {
+    if (url.includes('/calendar-json/')) return beri('ua-pfl-koledar-2b.json')
+    klici.push([url.split('/').pop(), sveze])
+    return url.endsWith('/16733') && sveze ? beri('ua-pfl-tekma-16733.html') : beri('ua-pfl-tekma-16687.html')
+  }))
+  const brano = (id) => klici.filter(([x]) => x === id).map(([, sv]) => sv).join(',')
+  preveri('pfl-ua: prazna stran v predpomnilniku se do 45 dni prebere znova (sveže) in ne obtiči', zsp.length === 1 && zsp[0].id === 'ua16733' &&
+    brano('16733') === 'false,true' && brano('16692') === 'false' && brano('16740') === 'true' &&
+    opozorilaKonzole.some((s) => s.startsWith('pfl-ua: 16692 ima izid, zapisnik brez postav')) &&
+    !opozorilaKonzole.some((s) => s.startsWith('pfl-ua: 16707 ')) && !opozorilaKonzole.some((s) => s.startsWith('pfl-ua: 16733 ')))
+  // JSON kaže drug turnir (arhiv) → HTML koledar.
+  const brani = []
+  const ar = await U.default.razporedVseStrani('2a/1348', async (url) => {
+    brani.push(url)
+    return url.includes('/calendar-json/') ? beri('ua-pfl-koledar-2b.json') : beri('ua-pfl-koledar-1348.html')
+  })
+  preveri('pfl-ua: arhiv — JSON drugega turnirja, razpored iz HTML koledarja', brani.length === 2 && brani[1] === 'https://pfl.ua/calendar/1348' &&
+    ar.length === 2 && ar[0].stevilka === 1 && ar[1].stevilka === 33)
+
+  let izziv = null
+  try { await U.default.zapisniki('2a/1354', async () => '<title>Just a moment...</title>') } catch (e) { izziv = e }
+  let zavrnjen = null
+  try { await U.default.zapisniki('2a/1354', async () => { const e = new Error('403'); e.status = 403; throw e }) } catch (e) { zavrnjen = e }
+  preveri('pfl-ua: 403 in izziv vržeta PflZavrnitev (uvoz izhod 4)', izziv instanceof U.PflZavrnitev && zavrnjen instanceof U.PflZavrnitev &&
+    zavrnjen.status === 403 && U.default.zavrnitev('x', 429).zavrnitev === true)
+}
+
 // --- vir isthmian (Anglija, Isthmian / NPL / Southern League, skupni JSON) ---------
 {
   const I = await import('./viri/isthmian.mjs')
