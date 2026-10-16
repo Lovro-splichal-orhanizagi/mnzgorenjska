@@ -86,3 +86,31 @@ def test_nepopoln_zapisnik(conn):
     i = sezone["player_id"].tolist().index(-914001)
     stolpci = ("nastopi", "minute", "goli_np", "ekipa_minute", "ekipa_goli", "gr_on", "min_on", "ekipa_gr", "ekipa_min_zmin")
     assert [sezone[c][i] for c in stolpci] == [2, 180, 3, 180, 4, 1, 90, 1, 90]
+
+
+ANONIMIZIRANI = """
+insert into competitions (id, slug, name, short_name, active, country_id, source) overriding system value
+values (-914003, 'test-scout-b', 'test-scout-b', 'T', false, (select id from countries where code = 'SI'), 'mnzg');
+insert into players (id, team_id, competition_id, first_name, last_name, full_name, position,
+                     value, value_start, reg_st) overriding system value
+values (-914020, -914002, -914001, 'Ime', 'Scout', 'Scout Ime', 'MID', 6, 6, null),
+       (-914021, -914002, -914001, 'Reg', 'Scout', 'Scout Reg', 'MID', 6, 6, 99101),
+       (-914022, -914001, -914003, 'Ime', 'Scout', 'Scout Ime', 'MID', 6, 6, null),
+       (-914023, -914001, -914003, 'Ime', 'Drugo', 'Drugo Ime', 'MID', 6, 6, 99101);
+insert into appearances (match_id, player_id, team_id, started, minute_on, minute_off, minutes_played, goals, penalties_scored)
+values (-914001, -914020, -914002, true, 0, 90, 90, 0, 0),
+       (-914001, -914021, -914002, true, 0, 90, 90, 0, 0);
+select public.anonimiziraj_igralca(-914022), public.anonimiziraj_igralca(-914023);
+"""
+
+
+def test_anonimiziran_v_drugi_ligi(conn):
+    """Anonimizacija velja za vrstico; ista oseba v drugi ligi (isto ime v državi
+    ali ista šifra) izpade po ključih v anonimizirani_igralci."""
+    conn.execute("reset role")
+    conn.execute(ANONIMIZIRANI)
+    conn.execute("set role scout_stroj")
+    sezone, _, _ = nalozi(conn)
+    igralci = set(sezone["player_id"].tolist())
+    assert -914002 in igralci  # soigralec ostane
+    assert not igralci & {-914020, -914021, -914022, -914023}

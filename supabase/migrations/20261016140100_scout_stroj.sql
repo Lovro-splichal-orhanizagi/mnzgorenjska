@@ -160,5 +160,10 @@ grant usage on schema public, scout to scout_stroj;
 grant select on public.players, public.appearances, public.goals, public.matches, public.rounds,
   public.competitions, public.federations, public.countries, public.teams to scout_stroj;
 grant execute on function public.je_mladinski_slug(text), public.is_admin() to scout_stroj;
+-- Anonimizacija počisti le eno vrstico; stroj izloči še ostale vrstice iste
+-- osebe po zgoščenih ključih (tabela ima RLS brez politik, zato svojo).
+grant select on public.anonimizirani_igralci to scout_stroj;
+create policy stroj_bere on public.anonimizirani_igralci for select to scout_stroj using (true);
+grant execute on function public.anonimizacijski_kljuc(text) to scout_stroj;
 grant select, insert, update, delete on all tables in schema scout to scout_stroj;
 grant usage, select on all sequences in schema scout to scout_stroj;
