@@ -24,6 +24,7 @@ import JavnaMiniLiga from '../src/pages/JavnaMiniLiga'
 import Ekipa from '../src/pages/Ekipa'
 import Profil from '../src/pages/Profil'
 import { preveriJavnoLigo, napakaJavnosti } from '../src/lib/javneMiniLige'
+import { predlogEposte } from '../src/lib/eposta'
 import { preveriImeProfila, napakaIzBaze, zacetniceImena, barvaAvatarja, naslednjaSpremembaImena, BARVE_AVATARJA } from '../src/lib/profil'
 import Klub from '../src/pages/Klub'
 import InfoIgralca from '../src/components/InfoIgralca'
@@ -253,6 +254,28 @@ try {
     === 'sitemap-x.xml:2 sitemap-x-2.xml:2 sitemap-x-3.xml:1')
   preveri('obisk: /table se šteje kot tabela', imeStrani('/table') === 'tabela')
   preveri('obisk: /u/<id> se šteje kot profil', imeStrani('/u/b8a06635-2322') === 'profil')
+}
+
+// --- e-pošta: predlog domene ob tipkarski napaki (src/lib/eposta.ts) -------
+{
+  const napake = [
+    ['gmail.con', 'gmail.com'], ['gmail.comb', 'gmail.com'], ['gmail.comj', 'gmail.com'], ['gamil.com', 'gmail.com'],
+    ['gmial.com', 'gmail.com'], ['GMAIL.CON', 'gmail.com'], ['hotmial.com', 'hotmail.com'], ['outlok.com', 'outlook.com'],
+    ['yaho.com', 'yahoo.com'], ['iclod.com', 'icloud.com'], ['freemial.hu', 'freemail.hu'], ['citromal.hu', 'citromail.hu'],
+    ['azet.sl', 'azet.sk'], ['cenrtum.sk', 'centrum.sk'], ['sezanm.cz', 'seznam.cz'], ['siol.ent', 'siol.net'],
+    ['tcom.hr', 't-com.hr'], ['gmx.ta', 'gmx.at'], ['wbe.de', 'web.de'],
+  ]
+  const narobe = napake.filter(([d, p]) => predlogEposte(`Jan.Novak@${d}`) !== `Jan.Novak@${p}`)
+  preveri('predlog domene: tipkarske napake dobijo pravo domeno', narobe.length === 0, narobe.map(([d]) => d).join(', '))
+  const prave = [
+    'gmail.com', 'hotmail.com', 'outlook.com', 'yahoo.com', 'icloud.com', 'freemail.hu', 'citromail.hu', 'azet.sk',
+    'centrum.sk', 'seznam.cz', 'siol.net', 't-com.hr', 'gmx.at', 'web.de', 'GMAIL.COM', 'gmx.de', 'gmx.net',
+    'centrum.cz', 'mail.com', 'email.com', 'ymail.com', 'hotmail.co.uk', 'yahoo.de', 'net.hr', 'amis.net',
+    'telemach.net', 'fs.uni-lj.si', 'guest.arnes.si', 'zoznam.sk', 'wp.pl', 'abv.bg',
+  ]
+  const lazni = prave.filter((d) => predlogEposte(`jan@${d}`) !== null)
+  preveri('predlog domene: prave domene brez predloga', lazni.length === 0, lazni.join(', '))
+  preveri('predlog domene: brez domene ali brez @ ni predloga', predlogEposte('jan') === null && predlogEposte('jan@') === null && predlogEposte('@gmail.con') === null)
 }
 
 // --- profil: pravila prikaznega imena in avatar (src/lib/profil.ts) --------

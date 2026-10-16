@@ -28,6 +28,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     nimasRacuna: 'Nemaš nalog? Registruj se',
     pozabljenoGeslo: 'Zaboravljena lozinka?',
     nazajNaPrijavo: '← Nazad na prijavu',
+    predlogEposte: 'Da li ste mislili {eposta}?',
   },
   // Greške Supabase Autha, prevedene u lib/prijava.
   napake: {

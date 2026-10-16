@@ -28,6 +28,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     nimasRacuna: 'Nemáš účet? Zaregistruj se',
     pozabljenoGeslo: 'Zapomenuté heslo?',
     nazajNaPrijavo: '← Zpět na přihlášení',
+    predlogEposte: 'Mysleli jste {eposta}?',
   },
   // Napake Supabase Auth, prevedene v lib/prijava.
   napake: {

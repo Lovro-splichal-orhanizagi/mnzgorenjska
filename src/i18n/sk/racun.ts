@@ -27,6 +27,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     nimasRacuna: 'Nemáš účet? Zaregistruj sa',
     pozabljenoGeslo: 'Zabudnuté heslo?',
     nazajNaPrijavo: '← Späť na prihlásenie',
+    predlogEposte: 'Mysleli ste {eposta}?',
   },
   napake: {
     napacnaPrijava: 'Nesprávna e-mailová adresa alebo heslo.',
