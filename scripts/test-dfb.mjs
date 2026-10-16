@@ -137,12 +137,58 @@ test('verified correction IDs reject every unreviewed partial source or identity
   }
 })
 
-test('actual archive card outside the published lineup and substitutions remains unresolved', async () => {
+test('exact same-match primary bench proof preserves DFB identity and zero-minute discipline', async () => {
+  const {vZapisnik,zaPredpomnilnik,nastopi}=await load(),html=actual('2401897'),z=vZapisnik(html)
+  const p=z.domaci.rezerve.find(p=>p.ime==='Luis Zwick'),a=nastopi(z).find(p=>p.ime==='Luis Zwick')
+  assert.equal(p.profilId,'379608');assert.equal(p.virId,'de-dfb-vsg-altglienicke-luis zwick')
+  assert.equal(p.noter,undefined);assert.equal(p.vratar,null)
+  assert.equal(z.rumeni.find(c=>c.ime==='Luis Zwick').minuta,90)
+  assert.equal(a.minute,0);assert.equal(a.rumeni,1);assert.equal(a.rdeci,0)
+  assert.equal(a.cleanSheet,false);assert.equal(a.vratar,false);assert.equal(a.kartonSKlopi,true)
+  assert.equal(z.dopolnitveVlog.length,1)
+  assert.equal(z.dopolnitveVlog[0].alias.fussball.name,'Luis Maria Zwick')
+  assert.equal(z.dopolnitveVlog[0].alias.fussball.goalkeeperMarker,true)
+  assert.deepEqual(p.dokazVloge,z.dopolnitveVlog[0])
+  assert(z.opozorila.some(s=>s.includes('Luis Zwick')&&s.includes('iste tekme')))
+  assert.equal(zaPredpomnilnik(html),true)
+})
+
+const reserveProof=JSON.parse(readFileSync(new URL('./viri/dfb-rezerve.json',import.meta.url),'utf8')).matches[0]
+const proofFiles=()=>Object.fromEntries(Object.entries(reserveProof.files).map(([key,f])=>[key,readFileSync(new URL(`./vzorci/${f.file}`,import.meta.url))]))
+test('same-match bench proof verifies exact original documents and font-decoded reserve identity',async()=>{
+  const {preveriDokazRezerve}=await load(),files=proofFiles(),proof=preveriDokazRezerve(reserveProof,files)
+  assert.equal(proof.alias.fussball.name,'Luis Maria Zwick')
+  assert.equal(proof.alias.dfb.name,'Luis Zwick')
+  for(const key of Object.keys(files)){
+    const changed={...files,[key]:Buffer.concat([files[key],Buffer.from('changed')])}
+    assert.throws(()=>preveriDokazRezerve(reserveProof,changed),e=>e.koda==='DFB_INVALID_REPORT')
+  }
+  for(const change of [p=>p.alias.fussball.name='Luis Zwick',p=>p.alias.fussball.identity='de-fussball-userid-00000000000000000000000000000000',p=>p.files.font.sha256='0'.repeat(64),p=>p.sourceFixtureSha256='0'.repeat(64),p=>p.date='2025-08-09',p=>p.teamIds.reverse()]){
+    const changed=structuredClone(reserveProof);change(changed)
+    assert.throws(()=>preveriDokazRezerve(changed,files),e=>e.koda==='DFB_INVALID_REPORT')
+  }
+})
+
+test('same-match role enrichment rejects every unreviewed source change and unrelated unknown recipient',async()=>{
   const {vZapisnik,zaPredpomnilnik}=await load(),html=actual('2401897')
-  // The named official profile alone establishes no match role: no bench is
-  // published, and the same-season roster does not resolve player vs staff.
-  assert.throws(()=>vZapisnik(html,{id:'2401897'}),e=>e.koda==='DFB_INVALID_REPORT'&&e.message.includes('neznanega igralca Luis Zwick'))
-  assert.equal(zaPredpomnilnik(html),false)
+  for(const changed of [html.replaceAll('Luis Zwick','Luis Different'),html.replaceAll('/profil/379608','/profil/999999'),html.replaceAll("90+5'","90+4'"),html.replaceAll('vsg-altglienicke','other-team'),html.replaceAll('8. August 2025','9. August 2025'),html.replace('>Luis Zwick</a>','>Different Person</a>'),html.replaceAll('2401897','9999999'),html.replaceAll('>Nico Lübke</a>','>Different Starter</a>'),html.replaceAll('>Ersan Parlatan</a>','>Different Coach</a>'),html.replaceAll('Florian Lukawski','Different Referee')]){
+    assert.notEqual(changed,html)
+    assert.throws(()=>vZapisnik(changed),e=>e.koda==='DFB_INVALID_REPORT')
+    assert.equal(zaPredpomnilnik(changed),false)
+  }
+})
+
+test('upstream own bench supersedes saved role proof and never falls back when recipient is absent',async()=>{
+  const {vZapisnik}=await load(),html=actual('2401897')
+  const bench=name=>{
+    const home=[[name,1],['Sydney Sylla',24],['Johannes Manske',9],['Anthony Roczen',33],['Julien Friedrich',29]],away=[['Marcel Hoppe',15],['Kay Seidemann',21],['Maurice Hehne',6],['Osazee Aghatise',4],['Timon Burmeister',28]]
+    const cell=(p,side)=>`<td class="m-MatchDetails-lineup-person m-MatchDetails-lineup-person--${side}">${p[0]}</td><td class="m-MatchDetails-lineup-number m-MatchDetails-lineup-number--${side}">${p[1]}</td>`
+    return `<table class="m-MatchDetails-lineup-table"><thead>Auswechselspieler</thead><tbody>${home.map((p,i)=>`<tr>${cell(p,'home')}${cell(away[i],'away')}</tr>`).join('')}</tbody></table>`
+  }
+  const own=html.replace(/(<table class="m-MatchDetails-lineup-table">[\s\S]*?<\/table>)/,`$1${bench('Luis Zwick')}`)
+  assert.notEqual(own,html)
+  assert.deepEqual(vZapisnik(own).dopolnitveVlog,[])
+  assert.throws(()=>vZapisnik(own.replace('>Luis Zwick</td>','>Another Reserve</td>')),/neznanega igralca Luis Zwick/)
 })
 
 test('actual 90-space-added labels preserve corroborated stoppage timing without general integer guessing', async () => {

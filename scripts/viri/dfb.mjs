@@ -6,9 +6,11 @@ import { razpakiraj } from '../klubi.mjs'
 import { nastopi as nastopiPoImenu } from './fss.mjs'
 import { readFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
+import { razberiPostavo as fussballPostava, jeIzziv as fussballIzziv } from './fussball.mjs'
 
 // Public factual evidence only. The registry never changes time/person/side.
 const correctionRegistry=JSON.parse(readFileSync(new URL('./dfb-korekcije.json',import.meta.url),'utf8'))
+const reserveRegistry=JSON.parse(readFileSync(new URL('./dfb-rezerve.json',import.meta.url),'utf8'))
 
 const BASE = 'https://datencenter.dfb.de'
 const fail = s => {
@@ -184,6 +186,79 @@ function metadata(html, id) {
   return { zapisnikId: `de-dfb-${key[4]}`, url, sezona: `${key[1]}/${key[2].slice(2)}`, krog: +key[3], datum, ura: date[4] }
 }
 
+const sha256=bytes=>createHash('sha256').update(bytes).digest('hex')
+// This is a semantic guard over the complete relevant published report, not
+// its changing page shell. Keep all four event copies, profile IDs, source
+// spellings/clocks/icons, shirt numbers, goalkeeper markers and staff roles.
+export function prstniOdtisVloge(html){
+  const profiles=s=>[...s.matchAll(/\/profil\/(\d+)(?:[?"'])/g)].map(m=>m[1])
+  const icons=s=>[...s.matchAll(/\bclass=["']([^"']*)["']/g)].flatMap(m=>m[1].split(/\s+/).filter(c=>c.startsWith('m-MatchDetails-icon-')))
+  const result=one(html,'div','m-MatchDetails-result').inner
+  const tables=elements(html,'table','m-MatchDetails-lineup-table').map(t=>({
+    title:text(one(t.inner,'thead').inner),
+    rows:elements(one(t.inner,'tbody').inner,'tr').map(row=>elements(row.inner,'td').map(c=>({class:attr(c.tag,'class')??'',text:text(c.inner).normalize('NFC'),profiles:profiles(c.inner),icons:icons(c.inner)}))),
+    staff:elements(t.inner,'tfoot').map(f=>({text:text(f.inner).normalize('NFC'),profiles:profiles(f.inner),cells:elements(f.inner,'td').map(c=>[attr(c.tag,'class')??'',text(c.inner).normalize('NFC'),profiles(c.inner)])}))
+  }))
+  const sections=elements(html,'div','m-MatchDetails-history').map(h=>({
+    title:text(one(h.inner,'div','m-MatchDetails-history-title').inner),
+    rows:elements(h.inner,'div','m-MatchDetails-history-item').map(row=>({
+      clock:text(one(row.inner,'div','m-MatchDetails-history-minute').inner),
+      events:elements(row.inner,'div','m-MatchDetails-history-event').map(e=>({class:attr(e.tag,'class'),icons:icons(e.inner),segments:elements(e.inner,'div','m-MatchDetails-history-event-text-segment').map(s=>({text:text(s.inner).normalize('NFC'),profiles:profiles(s.inner),icons:icons(s.inner)}))}))
+    }))
+  }))
+  const officials=elements(html,'div','m-MatchDetails-referees').map(e=>({text:text(e.inner).normalize('NFC'),profiles:profiles(e.inner)}))
+  return sha256(JSON.stringify({metadata:metadata(html),subline:text(one(html,'h4','m-MatchDetails-subline').inner),headerInfo:text(one(html,'div','m-MatchDetails-info').inner).normalize('NFC'),officials,result:text(result).normalize('NFC'),teamPaths:elements(result,'a').map(a=>new URL(attr(a.tag,'href'),BASE).pathname),tables,sections}))
+}
+
+/** Verify pinned ordinary public same-match documents with the existing strict
+ * font decoder. The fragment has no own match ID: its captured URL+hash MUST
+ * be the exact AJAX anchor published by the canonical main document. */
+export function preveriDokazRezerve(entry,files){
+  const reject=()=>fail('neveljaven primarni dokaz rezerve iste tekme')
+  try{
+    if(entry.sourceFixtureSha256!==entry.files.dfb.sha256)reject()
+    for(const [key,f]of Object.entries(entry.files))if(!files[key]||!/^[a-f0-9]{64}$/.test(f.sha256)||sha256(files[key])!==f.sha256)reject()
+    const main=files.main.toString('utf8'),lineup=files.lineup.toString('utf8'),css=files.css.toString('utf8'),dfb=files.dfb.toString('utf8')
+    // The ordinary FF page includes an optional contact-form captcha. Use
+    // that source's existing challenge detector, never interact with the form.
+    if(fussballIzziv(main)||fussballIzziv(lineup)||!/<\/html>\s*$/i.test(main))reject()
+    // link/meta are void elements; inspect their opening tags directly.
+    const links=[...main.matchAll(/<link\b[^>]*>/g)].filter(m=>attr(m[0],'rel')==='canonical')
+    const og=[...main.matchAll(/<meta\b[^>]*>/g)].filter(m=>attr(m[0],'property')==='og:url')
+    const title=[...main.matchAll(/<meta\b[^>]*>/g)].filter(m=>attr(m[0],'property')==='og:title')
+    const date=entry.date.split('-').reverse().join('.')
+    if(links.length!==1||og.length!==1||title.length!==1||attr(links[0][0],'href')!==entry.files.main.url||attr(og[0][0],'content')!==entry.files.main.url||!entry.files.main.url.endsWith(`/spiel/${entry.matchId}`)||attr(title[0][0],'content')!==`${entry.teams.join(' - ')} Ergebnis: Regionalliga Nordost - Herren - ${date}`)reject()
+    const anchors=elements(main,'a').filter(a=>attr(a.tag,'href')===entry.files.lineup.url&&attr(a.tag,'data-ajax-resource')===entry.files.lineup.url&&text(a.inner)==='Aufstellung')
+    if(anchors.length!==1||entry.files.lineup.url!==`https://www.fussball.de/ajax.match.lineup/-/mode/PAGE/spiel/${entry.matchId}/ticker-id/selectedTickerId`)reject()
+    if(text(one(main,'ul','stage-meta-right').inner)!==`Staffel-ID: ${entry.staffelId} Spiel: ${entry.matchNumber} / ${entry.round}. Spieltag`)reject()
+    if(!main.includes('data-obfuscation-stylesheet="//www.fussball.de/export.fontface/-/id/%ID%/type/css"')||entry.files.css.url!==`https://www.fussball.de/export.fontface/-/id/${entry.fontId}/type/css`||entry.files.font.url!==`https://www.fussball.de/export.fontface/-/format/woff/id/${entry.fontId}/type/font`||!css.includes(`url('//www.fussball.de/export.fontface/-/format/woff/id/${entry.fontId}/type/font') format('woff')`))reject()
+    const heads=elements(one(lineup,'div','head').inner,'div','club-name')
+    if(heads.length!==2||heads.some((h,i)=>text(h.inner)!==entry.teams[i]||!attr(one(h.inner,'a').tag,'href')?.endsWith(`/saison/2526/team-id/${entry.teamIds[i]}`)))reject()
+    const teams=fussballPostava(lineup,{fonts:{[entry.fontId]:{bytes:files.font,sha256:entry.files.font.sha256}}}),a=entry.alias
+    const reserve=teams[a.dfb.side]?.rezerve.filter(p=>p.virId===a.fussball.identity)
+    if(reserve?.length!==1||reserve[0].ime!==a.fussball.name||reserve[0].st!==a.fussball.jersey||reserve[0].vratar!==a.fussball.goalkeeperMarker)reject()
+    if(metadata(dfb).zapisnikId!==`de-dfb-${entry.id}`||prstniOdtisVloge(dfb)!==entry.semanticSha256)reject()
+    const cards=elements(dfb,'div','m-MatchDetails-history-event-text-segment').filter(s=>identity(s.inner).profilId===a.dfb.profileId)
+    if(cards.length!==2||cards.some(s=>identity(s.inner).ime!==a.dfb.name))reject()
+    return structuredClone({vrsta:'rezerva-iste-tekme',zapisnikId:`de-dfb-${entry.id}`,alias:a,dokazi:entry.files,preverjeno:entry.checkedAt,vzorecSha256:entry.sourceFixtureSha256,semantikaSha256:entry.semanticSha256,obseg:entry.scope,ujemanjeProfila:entry.aliasEvidence})
+  }catch(e){if(e.koda==='DFB_INVALID_REPORT')throw e;reject()}
+}
+
+function verifiedReserve(html,meta,tables,teams,players,coaches){
+  const entry=reserveRegistry.matches.find(e=>`de-dfb-${e.id}`===meta.zapisnikId)
+  // An upstream published bench always owns its role decisions. Never fall
+  // back if that bench fails to name the recipient or supplies a conflict.
+  if(!entry||tables.length!==1)return []
+  if(prstniOdtisVloge(html)!==entry.semanticSha256)fail('nepregledana sprememba zapisnika z dokazom rezerve')
+  let files
+  try{files=Object.fromEntries(Object.entries(entry.files).map(([key,f])=>[key,readFileSync(new URL(`../vzorci/${f.file}`,import.meta.url))]))}catch{fail('manjka primarni dokaz rezerve iste tekme')}
+  const proof=preveriDokazRezerve(entry,files),a=entry.alias.dfb,key=nameKey(a.name),side=a.side
+  if(teams[side]?.virId!==a.teamId||players[side].has(key)||coaches[side].has(key)||[...players[side].values()].some(p=>p.st===entry.alias.fussball.jersey))fail('nasprotujoča identiteta dokazane rezerve')
+  const p={ime:a.name,profilId:a.profileId,st:entry.alias.fussball.jersey,regSt:null,virId:`de-dfb-${a.teamId}-${key}`,vratar:null,vratarVir:null,zacetnik:false,dokazVloge:proof}
+  teams[side].rezerve.push(p);players[side].set(key,p)
+  return [proof]
+}
+
 /** A complete played public match report; every discrepancy rejects the report. */
 export function vZapisnik(html, { id, tekma } = {}) {
   const meta = metadata(String(html), id)
@@ -201,7 +276,8 @@ export function vZapisnik(html, { id, tekma } = {}) {
   if (polcas.domaci > rezultat.domaci || polcas.gostje > rezultat.gostje) fail('neveljaven polčas')
   const tables = elements(html, 'table', 'm-MatchDetails-lineup-table')
   // Some official archive reports omit the bench entirely. Named incoming
-  // substitutions below establish played reserves; unused bench is irrelevant.
+  // substitutions establish played reserves. Unknown unused recipients need
+  // an individually reviewed same-match primary proof; otherwise reject.
   if (![1,2].includes(tables.length) || !/Aufstellung/.test(tables[0].inner) || (tables[1]&&!/Auswechselspieler/.test(tables[1].inner))) fail('nepopolna postava ali klop')
   const coaches = [new Set(), new Set()]
   for (const [idx, table] of tables.entries()) {
@@ -249,6 +325,7 @@ export function vZapisnik(html, { id, tekma } = {}) {
   const histories = elements(html, 'div', 'm-MatchDetails-history')
   const sections = new Map(histories.map(h=>[text(one(h.inner,'div','m-MatchDetails-history-title').inner),h.inner]))
   if (histories.length!==4 || sections.size !== 4 || ['Spielverlauf','Tore','Karten','Wechsel'].some(k=>!sections.has(k))) fail('nepopolni dogodki zapisnika')
+  const dopolnitveVlog=verifiedReserve(html,meta,tables,teams,players,coaches)
   // An archive may omit the bench, yet caution a substitute before his entry.
   // Predeclare ONLY explicit incoming players in this same full timeline.
   // This establishes match role, never playing time; chronological processing
@@ -274,6 +351,7 @@ export function vZapisnik(html, { id, tekma } = {}) {
   const scoreCorrections=verifiedScoreCorrections(html,meta,teams,rezultat,polcas,sections)
   const popravki=[...scoreCorrections.values()]
   const goli=[], rumeni=[], rdeci=[], menjave=[], uradneKazni=[], opozorila=popravki.map(c=>`Uradni vmesni izid ${c.izvorno.score.join(':')}: preverjen popravek v ${c.popravljeno.join(':')} za ${c.izvorno.scorer} (${c.izvorno.clock}); izvor in dokazi so ohranjeni.`)
+  for(const proof of dopolnitveVlog)opozorila.push(`${proof.alias.dfb.name}: vloga navedene rezerve dokazana z uradno klopjo iste tekme; brez izpeljanega vstopa, minut ali clean sheeta.`)
   const active=teams.map(t=>new Set(t.postava.map(p=>p.virId)))
   const counters={goal:0,card:0,substitute:0}
   // Eligibility survives leaving/never entering the pitch. The active set alone
@@ -387,7 +465,7 @@ export function vZapisnik(html, { id, tekma } = {}) {
     if(!p.zacetnik && p.noter==null && goli.some(g=>g.ekipaIdx===side&&g.ime===p.ime))fail('gol rezerve brez vstopa')
     if(p.ven!=null && (p.noter??0)>p.ven)fail('izstop pred vstopom')
   }
-  const z={...meta,domaci:teams[0],gostje:teams[1],rezultat,polcas,goli,rumeni,rdeci,menjave,zgresene:[],uradneKazni,opozorila,popravki}
+  const z={...meta,domaci:teams[0],gostje:teams[1],rezultat,polcas,goli,rumeni,rdeci,menjave,zgresene:[],uradneKazni,opozorila,popravki,dopolnitveVlog}
   if(tekma) {
     for(const k of ['krog','datum','ura','sezona'])if(tekma[k]!=null&&tekma[k]!==z[k])fail(`razpored: neujemanje ${k}`)
     for(const k of ['domaci','gostje'])if(tekma[k]!=null&&tekma[k]!==z[k].ime)fail(`razpored: neujemanje ${k}`)

@@ -53,3 +53,5 @@ Tekoči pregled teka38962574407 po končnih popravkih potrdi vseh 18 krogov in 1
 
 
 Poznejši posamezni zajem1306467 je vrnil HTTP200, ISO-8859-15 in49.549bajtov; stroga razčlenitev potrdi zapisnik z razporedom. Prejšnji prazni odgovori zato niso dokaz trajno manjkajočih dokumentov; njihov vzrok še ni ugotovljen. Običajni premor med zahtevami je povečan z2na5sekund, s čimer zmanjšamo obremenitev izvora. To ni dokaz odpravljene napake: prvi prazen odgovor ali zavrnitev še vedno takoj ustavi zagon, brez menjave sej/IP-ja ali ponavljanja po zavrnitvi.
+
+Ponovljeni arhivski pregled teka38969114648 s5sekundami med zahtevami je ponovno prejel prazen HTTP200 pri1306467, po18 razporedih in12 nepraznih zapisnikih. Zagon se je pravilno ustavil ob prvem praznem odgovoru (31 zajetih zahtev), ohranil izvorne bajte in dve že ugotovljeni nepopolnosti. Posamezni zapisnik je v ločenem običajnem zajemu veljaven, zato to ostaja nepojasnjena ponovljiva omejitev celotnega pregleda, ne dokaz manjkajoče tekme. Nadaljnjih zahtev ali menjave seje po praznem odgovoru ni. Arhivska pokritost in dokaz vratarjev ostajata pogoj za aktivacijo.

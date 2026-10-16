@@ -33,7 +33,7 @@ celoten razpored BFC Dynamo s 34 tekmami. Celotni živi pregled teka38939351677 
 podeduje že potrjeno vlogo vratarja; to je sklep iz menjave in ne samostojen
 dokaz začetnega vratarja kluba. Arhivski zapisnik nima celotne klopi, zato
 igralce, ki so dejansko vstopili, poda samo uradni par menjave. Manjkajočih
-rezerv ali številk dresov ne dopolnjujemo.
+rezerv ali številk dresov ne dopolnjujemo brez natančno vezanega uradnega dokaza iste tekme.
 
 Javne profilne povezave niso registrske številke. Igralci se trenutno
 ujemajo po uradnem imenu in klubu; enakoimenska igralca iste ekipe zahtevata
@@ -125,10 +125,12 @@ ustvarja stikov ali odhodne pošte. Tudi nemška imena hišnih lastnikov
 
 ## Sklep celotnega zajema
 
-Ponovitev vseh 414 dejanskih zapisnikov po razčlenitvi ohrani 108/108 tekočih in 305/306 arhivskih zapisnikov. Podvojene povsem enake celice postave se združijo samo znotraj iste strani in tabele; skupni označevalec gola ne izbriše posameznih izvornih strelcev in vmesnih izidov. Dve izrecni obliki časa v zaključnem sodnikovem dodatku se združita samo, če je vsaka podsekvenca že urejena; običajno neurejenih dogodkov ne popravljamo.
+Ponovitev vseh 414 dejanskih zapisnikov po razčlenitvi ohrani 108/108 tekočih in 306/306 arhivskih zapisnikov. Podvojene povsem enake celice postave se združijo samo znotraj iste strani in tabele; skupni označevalec gola ne izbriše posameznih izvornih strelcev in vmesnih izidov. Dve izrecni obliki časa v zaključnem sodnikovem dodatku se združita samo, če je vsaka podsekvenca že urejena; običajno neurejenih dogodkov ne popravljamo.
 
-Arhivski zapisnik 2401897 ostaja zavrnjen zaradi nedokazane vloge Luis Zwick. Uradni klubski zapisnik navaja začetno postavo in dejanske menjave, brez celotne klopi. Sekundarni zapisnik ga sicer navede med rezervami, vendar ima drugačne strelce in minute pri drugih dogodkih; tega ne uporabimo za samodejno dopolnitev vloge. Arhivska pokritost zato še ni popolna; izdaja in uvoz ostajata ustavljena. Celotna ponovitev uporablja dejanske klubovske razporede in preveri tudi sezono, datum, uro in izid.
+Arhivski zapisnik 2401897 ima omejeno dopolnitev vloge Luis Zwick iz uradne klopi iste tekme na FUSSBALL.DE. Glavna stran, njen izrecni URL postave, CSS in pisava so shranjeni nespremenjeno s SHA-256. Strogi dekoder potrdi Luis Maria Zwick kot domačo rezervo; uradna profila z enakim datumom rojstva potrdita izrecno pregledani vzdevek. Register `scripts/viri/dfb-rezerve.json` velja samo za to tekmo, popolno semantično identiteto izvirnega zapisnika in te dokazne bajte. DFB ime, profil in karton pri90+5 ostanejo nespremenjeni. Dodana vloga ne pomeni vstopa ali minut: nastop ima0minut,1rumeni in brez clean sheeta; vloga vratarja v nastopu ostane neznana. Spremenjen dokaz, dogodek, postava, sodnik ali nepovezan neznan prejemnik se zavrne. Izrecna DFB klop ima prednost in se je ne dopolnjuje, če igralca ne vsebuje.
+
+Celotna ponovitev preveri vseh450 izvornih SHA-256, dejanske klubovske razporede, sezono, datum, uro in izid ter potrdi izrecne začetne vratarje vseh18 klubov v obeh sezonah. To potrdi podatkovni vir; produkcijski uvoz, cenik, pozicije, prihodnji prvi fantasy krog in dejanska strežniška objava imajo še ločene preverbe.
 
 Pri 2401959, 2402023 in 2402046 so uradni zapisi sodelujočih klubov potrdili pravilne strelce in čase, vendar napačne vmesne oznake izida v DFB. Podatkovni register `scripts/viri/dfb-korekcije.json` za te tri zgodovinske tekme vsebuje celotno pričakovano identiteto, obe ekipi, datum, polčas, končni izid ter vsak izvorni gol z imenom, stranjo, surovim časom, oznakami in izidom. Pred uporabo se morata izvirna razdelka časovnice in golov ujemati. Spremeni se samo šest konkretno potrjenih vmesnih izidov; izvorni izid, izvorni celoten podatek, dokazni URL, datum preverbe ter SHA vzorca in dejanskega dokumenta ostanejo v `rezultatVir`, `popravekIzida` in `popravki`, skupaj z opozorilom.
 
-Pravila sprejmejo samo celoten znani napačni vzorec ali celoten pričakovani vzorec, če DFB oznake popravi sam. Delna sprememba ali drug odmik zahteva ponovno preverbo in zavrnitev. Strelcev, časa, strani ali vrstnega reda ne spreminjamo. Vse običajne preverbe aktivnih igralcev, polčasa, končnega izida in dogodkov se nato izvedejo še vedno. Nespremenjeni zajemi in regresijski preizkusi vsebujejo tako potrjene popravke kot nespremenjeno zavrnitev Luisovega primera.
+Pravila sprejmejo samo celoten znani napačni vzorec ali celoten pričakovani vzorec, če DFB oznake popravi sam. Delna sprememba ali drug odmik zahteva ponovno preverbo in zavrnitev. Strelcev, časa, strani ali vrstnega reda ne spreminjamo. Vse običajne preverbe aktivnih igralcev, polčasa, končnega izida in dogodkov se nato izvedejo še vedno. Nespremenjeni zajemi in regresijski preizkusi vsebujejo potrjene popravke, omejeno uradno dopolnitev Luisove vloge ter zavrnitve vseh nepregledanih odstopanj.

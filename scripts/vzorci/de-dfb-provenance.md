@@ -78,15 +78,46 @@ The parser accepts this observed `90 <added 1..30>'` form, preserves it as
 It does not generalize this to `45 <added>` or arbitrary two-integer labels.
 Source-section agreement and chronological added-time ordering still apply.
 
-Archive 2401897 is intentionally a rejected fixture, captured unchanged by the
-live audit on 2026-10-16. It names Luis Zwick in a yellow-card event linked to
-[official profile 379608](https://datencenter.dfb.de/profil/379608), but publishes
-neither a bench table nor a substitution involving him. The official profile
-identifies a player, yet its VSG career entry ends on 2025-06-30; the captured
-[2025/26 VSG roster](https://datencenter.dfb.de/competitions/regionalliga-nordost/seasons/2025-2026/teams/vsg-altglienicke)
-does not include him. This evidence does not establish his match role as an
-unused player rather than additional staff. The whole report stays rejected
-with the concrete unknown-person reason and cannot enter the report cache.
+Archive 2401897 remains an unchanged fixture. DFB names Luis Zwick in a home
+yellow-card event at 90+5, linked to profile379608, but omits the bench and
+publishes no substitution involving him. On 2026-10-16 ordinary public
+NOFV navigation led to the exact same-match
+[FUSSBALL.DE report](https://www.fussball.de/spiel/vsg-altglienicke-berlin-fc-carl-zeiss-jena/-/spiel/02TMCK1048000000VS5489BTVT4H6CF2).
+Its actual published AJAX lineup anchor supplies a home `Ersatzbank` entry
+decoding to Luis Maria Zwick, jersey01, explicit `T`, user profile
+02ENUBHM0K000000VUM1DNP5VS320AA4. The existing strict font decoder reads all39
+players from the exact published WOFF, with no guessed glyphs. Both the
+[DFB Luis Zwick profile](https://datencenter.dfb.de/datencenter/personen/luis-zwick/spieler)
+and [FUSSBALL.DE Luis Maria Zwick profile](https://www.fussball.de/spielerprofil/-/userid/02ENUBHM0K000000VUM1DNP5VS320AA4)
+publish the same birth date, 24.05.1994, corroborating this explicitly scoped
+alias. There is no general middle-name stripping or other-match roster lookup.
+
+`dfb-rezerve.json` records all exact public URLs, capture hashes, alias evidence
+and the complete relevant DFB semantic fingerprint. The fingerprint includes
+metadata, source team paths, every XI name/profile/number/marker, staff and all
+four event sections including raw clocks, icons, text and profile IDs. Only the
+exact absent-bench state can gain the single listed-reserve role; all drift
+requires review. At use, every pinned primary document is hash-checked, main
+canonical/OG/date/round/teams/actual lineup anchor are verified, and the lineup
+is decoded and matched to its home bench. The fragment has no own match ID, so
+its captured URL and hash must bind to that exact observed main-page anchor.
+DFB name, stable identity and original card minute remain intact. The explicit
+reserve `T` remains proof metadata only (`vratar:null`); no entry, playing time
+or clean sheet is invented. The zero-minute disciplinary row retains the card.
+Returned report/player provenance and a warning expose the enrichment.
+If DFB itself publishes a bench, ordinary parsing supersedes the saved proof;
+an own bench missing Luis still rejects. Other unknown recipients still reject.
+
+The following unchanged primary fixtures were captured with HTTP200, without
+login, challenge or refusal. The exact URL and SHA256 for each is in the proof
+manifest. Main capture: CI38968427190/job117200579157; published font capture:
+CI38969114609/job117202823461. Their optional contact-form captcha was never
+used and is not an access challenge for the public report.
+
+- `de-dfb-2401897-fussball-main.html`
+- `de-dfb-2401897-fussball-lineup.html`
+- `de-dfb-2401897-g81svi9e.css`
+- `de-dfb-2401897-g81svi9e.woff`
 
 The full-season audit captured these additional unchanged reports:
 
@@ -136,8 +167,8 @@ original factual tuple, replacement tuple, primary URLs, checked date, fixture
 SHA and actual document SHA. Report-level `popravki` and warnings expose every
 correction. All usual player activity, timeline, score progression, halftime,
 final result and schedule checks still run. A fully upstream-fixed fingerprint
-passes with no correction metadata or correction warning. Unknown unused-card
-recipient Luis Zwick in 2401897 remains unresolved and rejected.
+passes with no correction metadata or correction warning. The separate
+same-match reserve-role proof above resolves Luis Zwick without a score edit.
 
 `test-dfb.mjs` additionally constructs an explicitly synthetic 18-team double
 round-robin using the captured row schema to test bounded discovery and
