@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { t } from '../i18n'
 import { naslovSlike } from '../lib/platforma'
+import { zacetniceKluba } from '../lib/pomozno'
 
 const BARVE: Array<[string, string]> = [
   ['#38bdf8', '#0c4a6e'],
@@ -23,16 +24,6 @@ function barvaKluba(ime = ''): [string, string] {
   return BARVE[vsota % BARVE.length]
 }
 
-function zacetnice(ime = '', kratko?: string | null): string {
-  if (kratko) return kratko.slice(0, 3).toUpperCase()
-  return ime
-    .split(/\s+/)
-    .filter((d) => /[a-zčšžA-ZČŠŽ0-9]/.test(d))
-    .map((d) => d[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 3)
-}
 
 export default function Grb({
   ime,
@@ -68,7 +59,7 @@ export default function Grb({
     )
 
   const [svetla, temna] = barvaKluba(ime ?? '')
-  const crke = zacetnice(ime ?? '', kratko)
+  const crke = zacetniceKluba(ime, kratko)
   return (
     <svg
       viewBox="0 0 32 36"

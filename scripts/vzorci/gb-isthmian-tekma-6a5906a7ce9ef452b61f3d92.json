@@ -1,0 +1,468 @@
+{
+ "id": "6a5906a7ce9ef452b61f3d92",
+ "date": "2026-08-15",
+ "time": "15:00",
+ "dateTime": "2026-08-15T15:00:00.000Z",
+ "status": "FullTime",
+ "round": {
+  "id": "Match 3",
+  "name": "Match 3"
+ },
+ "competition": {
+  "id": "67d7d01f749090308acc101e",
+  "name": "Premier Division",
+  "shortName": "Premier Division",
+  "type": "league"
+ },
+ "homeTeamName": "Chatham Town",
+ "awayTeamName": "Three Bridges",
+ "score": {
+  "current": {
+   "home": 3,
+   "away": 1
+  },
+  "halfTime": {
+   "home": 1,
+   "away": 0
+  }
+ },
+ "homeTeam": {
+  "id": "68072deabda6e04641c6e03f",
+  "fullName": "Chatham Town",
+  "shortName": "Chatham",
+  "club": {
+   "id": "666a1efab183cf948dc3e6f9",
+   "fullName": "Chatham Town",
+   "shortName": "Chatham"
+  }
+ },
+ "awayTeam": {
+  "id": "680743c8bda6e04641c6e0a5",
+  "fullName": "Three Bridges",
+  "shortName": "Three Bridges",
+  "club": {
+   "id": "666a3232b183cf948dc3ed4a",
+   "fullName": "Three Bridges",
+   "shortName": "Three Bridges"
+  }
+ },
+ "homeLineup": [
+  {
+   "personId": "3bb5f9b0-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Nathan Harvey",
+   "number": 39,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": "GK"
+  },
+  {
+   "personId": "3bb613ef-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Ollie Evans",
+   "number": 42,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3be1c527-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Jordy Robins",
+   "number": 4,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3be1bb12-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Reece Butler",
+   "number": 5,
+   "isCaptain": true,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3ba257d4-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Brad Stevenson",
+   "number": 31,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bb5ff53-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Kian Moynes",
+   "number": 8,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3be47234-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Jimmy Wild",
+   "number": 9,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bad53b8-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Adam Leathers",
+   "number": 58,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bb577cb-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Jack Turner",
+   "number": 14,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bc19dec-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Oliver Hobden",
+   "number": 43,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bb6dd51-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Alex Giles",
+   "number": 35,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3b8d1bc3-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Ben Coker",
+   "number": 24,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  },
+  {
+   "personId": "3bb63bf2-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Kian Garlinge",
+   "number": 12,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  },
+  {
+   "personId": "3bce3c3e-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Ben Allen",
+   "number": 11,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  },
+  {
+   "personId": "3bf2edc0-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Stanley Oldfield",
+   "number": 18,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  },
+  {
+   "personId": "3bdc27da-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Dapo Olugbodi",
+   "number": 23,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  }
+ ],
+ "homeSubs": [
+  {
+   "minute": 65,
+   "personOffId": "3bb5ff53-6ee9-11f0-aa15-02eebc336bd5",
+   "personOffName": "Kian Moynes",
+   "personOnId": "3bb63bf2-6ee9-11f0-aa15-02eebc336bd5",
+   "personOnName": "Kian Garlinge",
+   "phase": "SecondHalf"
+  },
+  {
+   "minute": 75,
+   "personOffId": "3ba257d4-6ee9-11f0-aa15-02eebc336bd5",
+   "personOffName": "Brad Stevenson",
+   "personOnId": "3bce3c3e-6ee9-11f0-aa15-02eebc336bd5",
+   "personOnName": "Ben Allen",
+   "phase": "SecondHalf"
+  },
+  {
+   "minute": 76,
+   "personOffId": "3be47234-6ee9-11f0-aa15-02eebc336bd5",
+   "personOffName": "Jimmy Wild",
+   "personOnId": "3bf2edc0-6ee9-11f0-aa15-02eebc336bd5",
+   "personOnName": "Stanley Oldfield",
+   "phase": "SecondHalf"
+  },
+  {
+   "minute": 80,
+   "personOffId": "3bc19dec-6ee9-11f0-aa15-02eebc336bd5",
+   "personOffName": "Oliver Hobden",
+   "personOnId": "3b8d1bc3-6ee9-11f0-aa15-02eebc336bd5",
+   "personOnName": "Ben Coker",
+   "phase": "SecondHalf"
+  },
+  {
+   "minute": 94,
+   "personOffId": "3bf2edc0-6ee9-11f0-aa15-02eebc336bd5",
+   "personOffName": "Stanley Oldfield",
+   "personOnId": "3bdc27da-6ee9-11f0-aa15-02eebc336bd5",
+   "personOnName": "Dapo Olugbodi",
+   "phase": "SecondHalf"
+  }
+ ],
+ "homeGoals": [
+  {
+   "personId": "3ba257d4-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Brad Stevenson",
+   "minute": 26,
+   "goalType": "penalty",
+   "phase": "FirstHalf"
+  },
+  {
+   "personId": "3bb613ef-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Ollie Evans",
+   "minute": 56,
+   "goalType": "normal",
+   "phase": "SecondHalf"
+  },
+  {
+   "personId": "3bce3c3e-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Ben Allen",
+   "minute": 86,
+   "goalType": "normal",
+   "phase": "SecondHalf"
+  }
+ ],
+ "homeCards": [
+  {
+   "personId": "3bce3c3e-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Ben Allen",
+   "minute": 100,
+   "cardType": "first_yellow_card",
+   "phase": "SecondHalf"
+  },
+  {
+   "personId": "3bb577cb-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Jack Turner",
+   "minute": 36,
+   "cardType": "first_yellow_card",
+   "phase": "FirstHalf"
+  },
+  {
+   "personId": "3bc19dec-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Oliver Hobden",
+   "minute": 52,
+   "cardType": "first_yellow_card",
+   "phase": "SecondHalf"
+  },
+  {
+   "personId": "3bb63bf2-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Kian Garlinge",
+   "minute": 83,
+   "cardType": "red_card",
+   "phase": "SecondHalf"
+  },
+  {
+   "personId": "3be1c527-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Jordy Robins",
+   "minute": 85,
+   "cardType": "first_yellow_card",
+   "phase": "SecondHalf"
+  },
+  {
+   "personId": "3be1bb12-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Reece Butler",
+   "minute": 91,
+   "cardType": "first_yellow_card",
+   "phase": "SecondHalf"
+  }
+ ],
+ "awayLineup": [
+  {
+   "personId": "3bddc2c9-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Sam Roberts",
+   "number": 1,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": "GK"
+  },
+  {
+   "personId": "3be2da6f-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Dan Ferreira",
+   "number": 2,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bd2ea6b-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Ade Adeyinka",
+   "number": 4,
+   "isCaptain": true,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bc0d54b-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Sam Bull",
+   "number": 5,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bc157bf-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Carlos Richards",
+   "number": 7,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bbf602f-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Kevin Rivera",
+   "number": 10,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3be306fa-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Jamie Watson",
+   "number": 14,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3be1bf7a-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Ben Holden",
+   "number": 16,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3be3ac69-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Hayden Velvick",
+   "number": 17,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3be1d2c7-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Billy Irving",
+   "number": 18,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bf2a432-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Charlie Bennett",
+   "number": 20,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "4646d3a4-97ce-11f1-b56e-0204f6006b57",
+   "personName": "Lewie William Retter",
+   "number": 6,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  },
+  {
+   "personId": "3ba16a6c-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Noel Leighton",
+   "number": 9,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  },
+  {
+   "personId": "3be2020e-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Tresor Difika",
+   "number": 12,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  },
+  {
+   "personId": "3bc1f82c-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Connor Hayden-Pickering",
+   "number": 15,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  },
+  {
+   "personId": "3bb6ef59-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Will Dupray",
+   "number": 19,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  }
+ ],
+ "awaySubs": [
+  {
+   "minute": 47,
+   "personOffId": "3bc0d54b-6ee9-11f0-aa15-02eebc336bd5",
+   "personOffName": "Sam Bull",
+   "personOnId": "3bb6ef59-6ee9-11f0-aa15-02eebc336bd5",
+   "personOnName": "Will Dupray",
+   "phase": "FirstHalf"
+  },
+  {
+   "minute": 54,
+   "personOffId": "3be306fa-6ee9-11f0-aa15-02eebc336bd5",
+   "personOffName": "Jamie Watson",
+   "personOnId": "3bc1f82c-6ee9-11f0-aa15-02eebc336bd5",
+   "personOnName": "Connor Hayden-Pickering",
+   "phase": "SecondHalf"
+  }
+ ],
+ "awayGoals": [
+  {
+   "personId": "3bbf602f-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Kevin Rivera",
+   "minute": 68,
+   "goalType": "normal",
+   "phase": "SecondHalf"
+  }
+ ],
+ "awayCards": [
+  {
+   "personId": "3be1bf7a-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Ben Holden",
+   "minute": 20,
+   "cardType": "first_yellow_card",
+   "phase": "FirstHalf"
+  },
+  {
+   "personId": "3ba16a6c-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Noel Leighton",
+   "minute": 25,
+   "cardType": "first_yellow_card",
+   "phase": "FirstHalf"
+  },
+  {
+   "personId": "3be1d2c7-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Billy Irving",
+   "minute": 79,
+   "cardType": "first_yellow_card",
+   "phase": "SecondHalf"
+  }
+ ]
+}

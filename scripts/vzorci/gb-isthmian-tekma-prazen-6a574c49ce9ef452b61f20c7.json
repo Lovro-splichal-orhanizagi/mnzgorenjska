@@ -1,0 +1,54 @@
+{
+ "id": "6a574c49ce9ef452b61f20c7",
+ "date": "2025-08-09",
+ "time": "15:00",
+ "dateTime": "2025-08-09T15:00:00.000Z",
+ "status": "FullTime",
+ "round": {
+  "id": "Match 1",
+  "name": "Match 1"
+ },
+ "competition": {
+  "id": "69d0bd99b616bafb97331d3f",
+  "name": "Premier South",
+  "shortName": "Premier South",
+  "type": "league"
+ },
+ "homeTeamName": "Walton & Hersham",
+ "awayTeamName": "Plymouth Parkway",
+ "score": {
+  "current": {
+   "home": 6,
+   "away": 3
+  },
+  "halfTime": null
+ },
+ "homeTeam": {
+  "id": null,
+  "fullName": "Walton & Hersham",
+  "shortName": "Walton & Hersham",
+  "club": {
+   "id": null,
+   "fullName": null,
+   "shortName": null
+  }
+ },
+ "awayTeam": {
+  "id": "6a0adf9eda5d0d0847a02442",
+  "fullName": "Plymouth Parkway",
+  "shortName": "Plymouth Parkway",
+  "club": {
+   "id": "6a0adf9eda5d0d0847a023b0",
+   "fullName": "Plymouth Parkway",
+   "shortName": "Plymouth Parkway"
+  }
+ },
+ "homeLineup": [],
+ "homeSubs": [],
+ "homeGoals": [],
+ "homeCards": [],
+ "awayLineup": [],
+ "awaySubs": [],
+ "awayGoals": [],
+ "awayCards": []
+}

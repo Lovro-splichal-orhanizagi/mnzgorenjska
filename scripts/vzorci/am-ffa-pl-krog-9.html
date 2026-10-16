@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Armenian Premier League</title></head>
+<body>
+<section class="section"><div class="container"><div class="row"><div class="col-lg-9">
+<div wire:id="DwJLb88y9X1ZfSivfMPq" wire:initial-data="{&quot;fingerprint&quot;:{&quot;id&quot;:&quot;DwJLb88y9X1ZfSivfMPq&quot;,&quot;name&quot;:&quot;games-index&quot;,&quot;locale&quot;:&quot;en&quot;,&quot;path&quot;:&quot;en\/games&quot;,&quot;method&quot;:&quot;GET&quot;,&quot;v&quot;:&quot;acj&quot;},&quot;effects&quot;:{&quot;listeners&quot;:[]},&quot;serverMemo&quot;:{&quot;children&quot;:[],&quot;errors&quot;:[],&quot;htmlHash&quot;:&quot;507131bc&quot;,&quot;data&quot;:{&quot;tours&quot;:[&quot;1&quot;,&quot;2&quot;,&quot;3&quot;,&quot;4&quot;,&quot;5&quot;,&quot;6&quot;,&quot;7&quot;,&quot;8&quot;,&quot;9&quot;,&quot;10&quot;,&quot;11&quot;,&quot;12&quot;,&quot;13&quot;,&quot;14&quot;,&quot;15&quot;,&quot;16&quot;,&quot;17&quot;,&quot;18&quot;,&quot;19&quot;,&quot;20&quot;,&quot;21&quot;,&quot;22&quot;,&quot;23&quot;,&quot;24&quot;,&quot;25&quot;,&quot;26&quot;,&quot;27&quot;,&quot;28&quot;,&quot;29&quot;,&quot;30&quot;,&quot;31&quot;,&quot;32&quot;,&quot;33&quot;],&quot;matches&quot;:[],&quot;group&quot;:28,&quot;tour&quot;:&quot;9&quot;,&quot;translations&quot;:{&quot;facilities.\u0535\u0580\u0587\u0561\u0576 \u0548\u0552\u0580\u0561\u0580\u057f\u0578\u0582-1&quot;:&quot;Urartu-1 stadium&quot;,&quot;facilities.\u0535\u0580\u0587\u0561\u0576 \u0556\u0578\u0582\u057f\u0562\u0578\u056c\u056b \u0561\u056f\u0561\u0564\u0565\u0574\u056b\u0561&quot;:&quot;Football Academy&quot;,&quot;facilities.\u0549\u0561\u0580\u0565\u0576\u0581\u0561\u057e\u0561\u0576 \u0584\u0561\u0572\u0561\u0584\u0561\u0575\u056b\u0576&quot;:&quot;City stadium&quot;,&quot;cities.\u0535\u0580\u0587\u0561\u0576&quot;:&quot;Yerevan&quot;,&quot;cities.\u0531\u0562\u0578\u057e\u0575\u0561\u0576&quot;:&quot;Abovyan&quot;,&quot;cities.\u0549\u0561\u0580\u0565\u0576\u0581\u0561\u057e\u0561\u0576&quot;:&quot;Charentsavan&quot;,&quot;facilities.\u054e\u0561\u0570\u0561\u0563\u0576 \u0539\u0578\u0582\u0574\u0561\u057d\u0575\u0561\u0576\u056b \u0561\u0576\u057e\u0561\u0576 \u0574\u0561\u0580\u0566\u0561\u0570\u0561\u0574\u0561\u056c\u056b\u0580&quot;:&quot;Sports complex after Vahagn Tumasyan&quot;,&quot;facilities.\u054d\u056b\u057d\u056b\u0561\u0576 \u0584\u0561\u0572\u0561\u0584\u0561\u0575\u056b\u0576&quot;:&quot;\u054d\u056b\u057d\u056b\u0561\u0576 \u0584\u0561\u0572\u0561\u0584\u0561\u0575\u056b\u0576&quot;}},&quot;dataMeta&quot;:{&quot;collections&quot;:[&quot;tours&quot;],&quot;modelCollections&quot;:{&quot;matches&quot;:{&quot;class&quot;:&quot;App\\Models\\Game&quot;,&quot;id&quot;:[7106,7109,7107,7105,7110,7108],&quot;relations&quot;:[&quot;homeClub&quot;,&quot;awayClub&quot;],&quot;connection&quot;:&quot;mysql&quot;}}},&quot;checksum&quot;:&quot;f4f36d523b36922bf50666e60195c171f964ff7b635ae87124427f26a78cfb97&quot;}}" class="row" xmlns:wire="http://www.w3.org/1999/xhtml">
+<div class="col-lg-9 col-md-8">
+<div class="history">
+<div class="history__title mt-3">
+<div class="page-title">Matches and results</div>
+</div>
+<div class="history__page-title">
+<div class="title-inner title-inner--pt-10  title-inner--blue">Matchday <span
+class="tour-text"></span></div>
+</div>
+<div class="history__pagination pt-1">
+<nav aria-label="..." class="d-flex align-items-center">
+<div id="ul-tours-prev"></div>
+<div id="ul-tours-parent" style="flex: 1;overflow: hidden;">
+<ul id="ul-tours" class="pagination" style="display: inline-flex;flex-wrap: nowrap;">
+<a href="javascript:void(0)" wire:click="handleParseTour('1')">
+<li
+class="pagination__page-item  "
+aria-current="page">
+<span class="pagination__page-link">1</span>
+</li>
+</a>
+<a href="javascript:void(0)" wire:click="handleParseTour('2')">
+<li
+class="pagination__page-item  "
+aria-current="page">
+<span class="pagination__page-link">2</span>
+</li>
+</a>
+<a href="javascript:void(0)" wire:click="handleParseTour('3')">
+<li
+class="pagination__page-item  "
+aria-current="page">
+<span class="pagination__page-link">3</span>
+</li>
+</a>
+<a href="javascript:void(0)" wire:click="handleParseTour('4')">
+<li
+class="pagination__page-item  "
+aria-current="page">
+<span class="pagination__page-link">4</span>
+</li>
+</a>
+<a href="javascript:void(0)" wire:click="handleParseTour('5')">
+<li
+class="pagination__page-item  "
+aria-current="page">
+<span class="pagination__page-link">5</span>
+</li>
+</a>
+<a href="javascript:void(0)" wire:click="handleParseTour('6')">
+<li
+class="pagination__page-item  "
+aria-current="page">
+<span class="pagination__page-link">6</span>
+</li>
+</a>
+<a href="javascript:void(0)" wire:click="handleParseTour('7')">
+<li
+class="pagination__page-item  "
+aria-current="page">
+<span class="pagination__page-link">7</span>
+</li>
+</a>
+<a href="javascript:void(0)" wire:click="handleParseTour('8')">
+<li
+class="pagination__page-item  "
+aria-current="page">
+<span class="pagination__page-link">8</span>
+</li>
+</a>
+<a href="javascript:void(0)" wire:click="handleParseTour('9')">
+<li
+class="pagination__page-item  active  "
+aria-current="page">
+<span class="pagination__page-link">9</span>
+</li>
+</a>
+<a href="javascript:void(0)" wire:click="handleParseTour('10')">
+<li
+class="pagination__page-item  "
+aria-current="page">
+<span class="pagination__page-link">10</span>
+</li>
+</a>
+<a href="javascript:void(0)" wire:click="handleParseTour('11')">
+<li
+class="pagination__page-item  "
+aria-current="page">
+<span class="pagination__page-link">11</span>
+</li>
+</a>
+<a href="javascript:void(0)" wire:click="handleParseTour('12')">
+<li
+class="pagination__page-item  "
+aria-current="page">
+<span class="pagination__page-link">12</span>
+</li>
+</a>
+<a href="javascript:void(0)" wire:click="handleParseTour('13')">
+<li
+class="pagination__page-item  "
+aria-current="page">
+<span class="pagination__page-link">13</span>
+</li>
+</a>
+<a href="javascript:void(0)" wire:click="handleParseTour('14')">
+<li
+class="pagination__page-item  "
+aria-current="page">
+<span class="pagination__page-link">14</span>
+</li>
+</a>
+<a href="javascript:void(0)" wire:click="handleParseTour('15')">
+<li
+class="pagination__page-item  "
+aria-current="page">
+<span class="pagination__page-link">15</span>
+</li>
+</a>
+<a href="javascript:void(0)" wire:click="handleParseTour('16')">
+<li
+class="pagination__page-item  "
+aria-current="page">
+<span class="pagination__page-link">16</span>
+</li>
+</a>
+<a href="javascript:void(0)" wire:click="handleParseTour('17')">
+<li
+class="pagination__page-item  "
+aria-current="page">
+<span class="pagination__page-link">17</span>
+</li>
+</a>
+<a href="javascript:void(0)" wire:click="handleParseTour('18')">
+<li
+class="pagination__page-item  "
+aria-current="page">
+<span class="pagination__page-link">18</span>
+</li>
+</a>
+<a href="javascript:void(0)" wire:click="handleParseTour('19')">
+<li
+class="pagination__page-item  "
+aria-current="page">
+<span class="pagination__page-link">19</span>
+</li>
+</a>
+<a href="javascript:void(0)" wire:click="handleParseTour('20')">
+<li
+class="pagination__page-item  "
+aria-current="page">
+<span class="pagination__page-link">20</span>
+</li>
+</a>
+<a href="javascript:void(0)" wire:click="handleParseTour('21')">
+<li
+class="pagination__page-item  "
+aria-current="page">
+<span class="pagination__page-link">21</span>
+</li>
+</a>
+<a href="javascript:void(0)" wire:click="handleParseTour('22')">
+<li
+class="pagination__page-item  "
+aria-current="page">
+<span class="pagination__page-link">22</span>
+</li>
+</a>
+<a href="javascript:void(0)" wire:click="handleParseTour('23')">
+<li
+class="pagination__page-item  "
+aria-current="page">
+<span class="pagination__page-link">23</span>
+</li>
+</a>
+<a href="javascript:void(0)" wire:click="handleParseTour('24')">
+<li
+class="pagination__page-item  "
+aria-current="page">
+<span class="pagination__page-link">24</span>
+</li>
+</a>
+<a href="javascript:void(0)" wire:click="handleParseTour('25')">
+<li
+class="pagination__page-item  "
+aria-current="page">
+<span class="pagination__page-link">25</span>
+</li>
+</a>
+<a href="javascript:void(0)" wire:click="handleParseTour('26')">
+<li
+class="pagination__page-item  "
+aria-current="page">
+<span class="pagination__page-link">26</span>
+</li>
+</a>
+<a href="javascript:void(0)" wire:click="handleParseTour('27')">
+<li
+class="pagination__page-item  "
+aria-current="page">
+<span class="pagination__page-link">27</span>
+</li>
+</a>
+<a href="javascript:void(0)" wire:click="handleParseTour('28')">
+<li
+class="pagination__page-item  "
+aria-current="page">
+<span class="pagination__page-link">28</span>
+</li>
+</a>
+<a href="javascript:void(0)" wire:click="handleParseTour('29')">
+<li
+class="pagination__page-item  "
+aria-current="page">
+<span class="pagination__page-link">29</span>
+</li>
+</a>
+<a href="javascript:void(0)" wire:click="handleParseTour('30')">
+<li
+class="pagination__page-item  "
+aria-current="page">
+<span class="pagination__page-link">30</span>
+</li>
+</a>
+<a href="javascript:void(0)" wire:click="handleParseTour('31')">
+<li
+class="pagination__page-item  "
+aria-current="page">
+<span class="pagination__page-link">31</span>
+</li>
+</a>
+<a href="javascript:void(0)" wire:click="handleParseTour('32')">
+<li
+class="pagination__page-item  "
+aria-current="page">
+<span class="pagination__page-link">32</span>
+</li>
+</a>
+<a href="javascript:void(0)" wire:click="handleParseTour('33')">
+<li
+class="pagination__page-item  "
+aria-current="page">
+<span class="pagination__page-link">33</span>
+</li>
+</a>
+</ul>
+</div>
+<div id="ul-tours-next"></div>
+</nav>
+</div>
+</div>
+<div class="text-center">
+<div class="spinner-grow" role="status" wire:loading>
+</div>
+</div>
+<div wire:loading.remove>
+<div class="matches all-matches" >
+<div class="matches__title matches__title--mt">10.10.2026 16:00</div>
+<div>
+<a  href="https://premierleague.ffa.am/en/games/f96152" >
+<div class="match-item admin-editable"
+>
+<div class="match-item__teams">
+<div style="display: flex; flex-direction: column; flex: 1">
+<div style="display: flex">
+<div style="flex: 1;margin-right: 7px;" class="match-item__team admin-editable"
+>
+<div class="match-item__team-block">
+<img class="match-item__logo"
+src="https://premierleague.ffa.am/storage/uploads/clubs/DPRHSQL1ul0wJ1cUxdGEkACkNB.png"
+alt="">
+<span>FC Van</span>
+</div>
+</div>
+<div style="flex: 1;margin-left: 7px;" class="match-item__team admin-editable"
+>
+<div class="match-item__team-block">
+<img class="match-item__logo"
+src="https://premierleague.ffa.am/storage/uploads/clubs/4a75aecb8e9924219730dd4f585a947f.png"
+alt="">
+<span>FC Gandzasar</span>
+</div>
+</div>
+</div>
+<div class="single-game-teams__stadium">
+<p> Charentsavan, City stadium </p>
+</div>
+</div>
+<div class="match-item__team-arrow">
+<img src="https://premierleague.ffa.am/img/icons/more.png" alt="">
+</div>
+</div>
+<div class="match-item__goals">
+2:0
+</div>
+</div>
+</a>
+</div>
+</div>
+<div class="matches all-matches" >
+<div class="matches__title matches__title--mt">10.10.2026 19:00</div>
+<div>
+<a  href="https://premierleague.ffa.am/en/games/f96155" >
+<div class="match-item admin-editable"
+>
+<div class="match-item__teams">
+<div style="display: flex; flex-direction: column; flex: 1">
+<div style="display: flex">
+<div style="flex: 1;margin-right: 7px;" class="match-item__team admin-editable"
+>
+<div class="match-item__team-block">
+<img class="match-item__logo"
+src="https://premierleague.ffa.am/storage/uploads/clubs/284357615f6752f323fada657f57d984.png"
+alt="">
+<span>FC Ararat-Armenia</span>
+</div>
+</div>
+<div style="flex: 1;margin-left: 7px;" class="match-item__team admin-editable"
+>
+<div class="match-item__team-block">
+<img class="match-item__logo"
+src="https://premierleague.ffa.am/storage/uploads/clubs/3f039f3ec403393393976077bdbc487e.png"
+alt="">
+<span>FC Alashkert</span>
+</div>
+</div>
+</div>
+<div class="single-game-teams__stadium">
+<p> Abovyan, Sports complex after Vahagn Tumasyan </p>
+</div>
+</div>
+<div class="match-item__team-arrow">
+<img src="https://premierleague.ffa.am/img/icons/more.png" alt="">
+</div>
+</div>
+<div class="match-item__goals">
+1:1
+</div>
+</div>
+</a>
+</div>
+</div>
+<div class="matches all-matches" >
+<div class="matches__title matches__title--mt">11.10.2026 16:00</div>
+<div>
+<a  href="https://premierleague.ffa.am/en/games/f96153" >
+<div class="match-item admin-editable"
+>
+<div class="match-item__teams">
+<div style="display: flex; flex-direction: column; flex: 1">
+<div style="display: flex">
+<div style="flex: 1;margin-right: 7px;" class="match-item__team admin-editable"
+>
+<div class="match-item__team-block">
+<img class="match-item__logo"
+src="https://premierleague.ffa.am/storage/uploads/clubs/ba049a05a649de5a7fb8a9f904357316.png"
+alt="">
+<span>Sardarapat FC</span>
+</div>
+</div>
+<div style="flex: 1;margin-left: 7px;" class="match-item__team admin-editable"
+>
+<div class="match-item__team-block">
+<img class="match-item__logo"
+src="https://premierleague.ffa.am/storage/uploads/clubs/e9db98c1c08b56f4fce2da50d1f6fdd9.png"
+alt="">
+<span>FC Noah</span>
+</div>
+</div>
+</div>
+<div class="single-game-teams__stadium">
+<p> Abovyan, Sports complex after Vahagn Tumasyan </p>
+</div>
+</div>
+<div class="match-item__team-arrow">
+<img src="https://premierleague.ffa.am/img/icons/more.png" alt="">
+</div>
+</div>
+<div class="match-item__goals">
+1:5
+</div>
+</div>
+</a>
+</div>
+</div>
+<div class="matches all-matches" >
+<div class="matches__title matches__title--mt">11.10.2026 20:00</div>
+<div>
+<a  href="https://premierleague.ffa.am/en/games/f96151" >
+<div class="match-item admin-editable"
+>
+<div class="match-item__teams">
+<div style="display: flex; flex-direction: column; flex: 1">
+<div style="display: flex">
+<div style="flex: 1;margin-right: 7px;" class="match-item__team admin-editable"
+>
+<div class="match-item__team-block">
+<img class="match-item__logo"
+src="https://premierleague.ffa.am/storage/uploads/clubs/b58e3c7b81abfe2dd5837a742050487c.png"
+alt="">
+<span>FC Urartu</span>
+</div>
+</div>
+<div style="flex: 1;margin-left: 7px;" class="match-item__team admin-editable"
+>
+<div class="match-item__team-block">
+<img class="match-item__logo"
+src="https://premierleague.ffa.am/storage/uploads/clubs/7eef2bb93590cb60ad514c49022d3381.png"
+alt="">
+<span>FC Ararat</span>
+</div>
+</div>
+</div>
+<div class="single-game-teams__stadium">
+<p> Yerevan, Urartu-1 stadium </p>
+</div>
+</div>
+<div class="match-item__team-arrow">
+<img src="https://premierleague.ffa.am/img/icons/more.png" alt="">
+</div>
+</div>
+<div class="match-item__goals">
+2:2
+</div>
+</div>
+</a>
+</div>
+</div>
+<div class="matches all-matches" >
+<div class="matches__title matches__title--mt">12.10.2026 16:00</div>
+<div>
+<a  href="https://premierleague.ffa.am/en/games/f96156" >
+<div class="match-item admin-editable"
+>
+<div class="match-item__teams">
+<div style="display: flex; flex-direction: column; flex: 1">
+<div style="display: flex">
+<div style="flex: 1;margin-right: 7px;" class="match-item__team admin-editable"
+>
+<div class="match-item__team-block">
+<img class="match-item__logo"
+src="https://premierleague.ffa.am/storage/uploads/clubs/9a5a632b763e5b25855c6652400f8ffb.png"
+alt="">
+<span>FC Syunik</span>
+</div>
+</div>
+<div style="flex: 1;margin-left: 7px;" class="match-item__team admin-editable"
+>
+<div class="match-item__team-block">
+<img class="match-item__logo"
+src="https://premierleague.ffa.am/storage/uploads/clubs/67760a64f51d72c26500bed71e852503.png"
+alt="">
+<span>SC Shirak</span>
+</div>
+</div>
+</div>
+<div class="single-game-teams__stadium">
+<p> Սիսիան, Սիսիան քաղաքային </p>
+</div>
+</div>
+<div class="match-item__team-arrow">
+<img src="https://premierleague.ffa.am/img/icons/more.png" alt="">
+</div>
+</div>
+<div class="match-item__goals">
+2:0
+</div>
+</div>
+</a>
+</div>
+</div>
+<div class="matches all-matches" >
+<div class="matches__title matches__title--mt">12.10.2026 19:00</div>
+<div>
+<a  href="https://premierleague.ffa.am/en/games/f96154" >
+<div class="match-item admin-editable"
+>
+<div class="match-item__teams">
+<div style="display: flex; flex-direction: column; flex: 1">
+<div style="display: flex">
+<div style="flex: 1;margin-right: 7px;" class="match-item__team admin-editable"
+>
+<div class="match-item__team-block">
+<img class="match-item__logo"
+src="https://premierleague.ffa.am/storage/uploads/clubs/ccd6b1fd69a8fa5d90c0fdea3de6ca8d.png"
+alt="">
+<span>FC Pyunik</span>
+</div>
+</div>
+<div style="flex: 1;margin-left: 7px;" class="match-item__team admin-editable"
+>
+<div class="match-item__team-block">
+<img class="match-item__logo"
+src="https://premierleague.ffa.am/storage/uploads/clubs/b217400d07b7f0eae3c593cce9b56b55.png"
+alt="">
+<span>FC BKMA</span>
+</div>
+</div>
+</div>
+<div class="single-game-teams__stadium">
+<p> Yerevan, Football Academy </p>
+</div>
+</div>
+<div class="match-item__team-arrow">
+<img src="https://premierleague.ffa.am/img/icons/more.png" alt="">
+</div>
+</div>
+<div class="match-item__goals">
+5:0
+</div>
+</div>
+</a>
+</div></div>
+</div></div></div></section>
+</body>
+</html>

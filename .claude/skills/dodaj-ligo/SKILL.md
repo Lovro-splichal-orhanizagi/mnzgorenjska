@@ -224,7 +224,7 @@ je to hkrati dokaz, da gre res za isti klub.
 
 **Šifra lige pripada SEZONI, ne ligi.** Ob novi sezoni se popravi
 `competitions.source_league_code`, ne skripta. Arhiv poiščeš prek POST obrazca
-za izbiro sezone in šifre zapišeš v CLAUDE.md.
+za izbiro sezone in šifre zapišeš v docs/viri/<država>.md.
 
 ## 3. Migracija — liga se vpiše NEAKTIVNA
 
@@ -410,7 +410,7 @@ update competitions set active = true where slug = '<slug>';
 
 Nočni uvoz seznam lig prebere iz baze (`scripts/nocni-kosi.mjs`), zato
 delovnega toka ni treba spreminjati — nova liga se začne uvažati sama in
-pristane v košu svoje države (CLAUDE.md, *Nočni uvoz: države in koši*). Le
+pristane v košu svoje države (docs/nocni-uvoz.md). Le
 **nova država** mora v matriko `uvoz-zapisnikov.yml`, **nov vir**, ki sme brati
 iz več košev, pa v `VZPOREDNI` (sicer bere en sam koš, kar je varno).
 
@@ -435,6 +435,7 @@ dobi ceno iz tamkajšnje: percentil, prebran iz cene, vsaka raven višje zapre
 (`scripts/visja-liga.mjs`, `ovrednoti-igralce` izpiše seznam "Cena iz višje
 lige"). Raven lige je pravilo po šifri in imenu v `ravenLige`, ne stolpec:
 HR (državne lige, županijske po imenu le znotraj iste zveze), SK, HU, ES, EE,
+LV, FO po uradni piramidi, AT le državne nad deželnimi; mladinske se primerjajo le
 LV, NO po uradni piramidi, AT le državne nad deželnimi; mladinske se primerjajo le
 z mladinskimi. Brez pravila (SI, RS, RO, PL, CZ, MK) in brez šifer osebe ostane
 4.5. Ob novi ligi z novim poimenovanjem ravni preveri `ravenLige` (smoke).
@@ -1006,4 +1007,4 @@ v uvozu zapisnikov, poglej razpored pri viru.
 
 `npm run smoke`, `npm test`, `npm run typecheck`, `npm run build` — vsi zeleni,
 in **vzorec obstoječe zveze mora dati znak za znak enak izid kot prej**.
-Posodobi `CLAUDE.md` (šifre lig po sezonah) in dopiši, kar te je presenetilo.
+Posodobi `docs/viri/<država>.md` (šifre lig po sezonah; nova država še vrstico v tabeli v `CLAUDE.md`) in dopiši, kar te je presenetilo.

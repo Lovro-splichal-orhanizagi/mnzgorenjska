@@ -1468,6 +1468,8 @@ export function sestaviTedenskiPregled(liga: Liga, m: PregledKroga): Sporocilo {
   const premikZnak = premik > 0 ? ` (+${premik})` : premik < 0 ? ` (${premik})` : ''
   const najboljsiVLigi = m.najvec != null && m.tocke >= m.najvec && m.ekip > 1
   const najboljsiNiKapetan = m.najboljsi && m.najboljsi !== m.kapetan
+  // Pivo le po dobrem krogu: točke in vsaj povprečje lige.
+  const dobrKrog = m.tocke > 0 && m.povprecje != null && m.tocke >= m.povprecje
 
   const B = {
     sk: {
@@ -1481,6 +1483,7 @@ export function sestaviTedenskiPregled(liga: Liga, m: PregledKroga): Sporocilo {
       kapetan: m.kapetan ? `Kapitán ${esc(m.kapetan)}: ${tock(m.kapetan_tocke ?? 0)}.` : '',
       najboljsi: najboljsiNiKapetan ? `Najlepší v tíme: ${esc(m.najboljsi!)} (${tock(m.najboljsi_tocke ?? 0)}).` : '',
       gumb: 'Priprav tím na ďalšie kolo →',
+      pivo: 'P.S. SLFF je zadarmo a beží na pive. Ak ti toto kolo spríjemnilo pondelok, pozvi nás na jedno a získaš miesto na pivnej stene:',
       odjava: 'Nechcem už dostávať e-maily',
     },
     hr: {
@@ -1494,6 +1497,7 @@ export function sestaviTedenskiPregled(liga: Liga, m: PregledKroga): Sporocilo {
       kapetan: m.kapetan ? `Kapetan ${esc(m.kapetan)}: ${tock(m.kapetan_tocke ?? 0)}.` : '',
       najboljsi: najboljsiNiKapetan ? `Najbolji u momčadi: ${esc(m.najboljsi!)} (${tock(m.najboljsi_tocke ?? 0)}).` : '',
       gumb: 'Pripremi momčad za sljedeće kolo →',
+      pivo: 'P.S. SLFF je besplatan i radi na pivu. Ako ti je ovo kolo uljepšalo ponedjeljak, počasti nas jednim i dobij mjesto na pivskom zidu:',
       odjava: 'Ne želim više primati e-mailove',
     },
     cs: {
@@ -1507,6 +1511,7 @@ export function sestaviTedenskiPregled(liga: Liga, m: PregledKroga): Sporocilo {
       kapetan: m.kapetan ? `Kapitán ${esc(m.kapetan)}: ${tock(m.kapetan_tocke ?? 0)}.` : '',
       najboljsi: najboljsiNiKapetan ? `Nejlepší v týmu: ${esc(m.najboljsi!)} (${tock(m.najboljsi_tocke ?? 0)}).` : '',
       gumb: 'Připrav tým na další kolo →',
+      pivo: 'P.S. SLFF je zdarma a běží na pivu. Jestli ti tohle kolo zpříjemnilo pondělí, kup nám jedno a získáš místo na pivní zdi:',
       odjava: 'Nechci už dostávat e-maily',
     },
     // Madžarščina: člen a/az pred številko je odvisen od izgovora, zato
@@ -1522,6 +1527,7 @@ export function sestaviTedenskiPregled(liga: Liga, m: PregledKroga): Sporocilo {
       kapetan: m.kapetan ? `Csapatkapitány (${esc(m.kapetan)}): ${tock(m.kapetan_tocke ?? 0)}.` : '',
       najboljsi: najboljsiNiKapetan ? `Legjobb a csapatban: ${esc(m.najboljsi!)} (${tock(m.najboljsi_tocke ?? 0)}).` : '',
       gumb: 'Készítsd fel a csapatodat a következő fordulóra →',
+      pivo: 'U.i. Az SLFF ingyenes, és sörből működik. Ha ez a forduló feldobta a hétfődet, hívj meg minket egyre, és felkerülsz a sörfalra:',
       odjava: 'Nem kérek több e-mailt',
     },
     de: {
@@ -1535,6 +1541,7 @@ export function sestaviTedenskiPregled(liga: Liga, m: PregledKroga): Sporocilo {
       kapetan: m.kapetan ? `Kapitän ${esc(m.kapetan)}: ${tock(m.kapetan_tocke ?? 0)}.` : '',
       najboljsi: najboljsiNiKapetan ? `Bester im Team: ${esc(m.najboljsi!)} (${tock(m.najboljsi_tocke ?? 0)}).` : '',
       gumb: 'Mach dein Team für die nächste Runde bereit →',
+      pivo: 'PS: SLFF ist kostenlos und läuft mit Bier. Wenn dir diese Runde den Montag versüßt hat, spendier uns eins und hol dir einen Platz an der Bierwand:',
       odjava: 'Keine E-Mails mehr',
     },
     sr: {
@@ -1548,6 +1555,7 @@ export function sestaviTedenskiPregled(liga: Liga, m: PregledKroga): Sporocilo {
       kapetan: m.kapetan ? `Kapiten ${esc(m.kapetan)}: ${tock(m.kapetan_tocke ?? 0)}.` : '',
       najboljsi: najboljsiNiKapetan ? `Najbolji u timu: ${esc(m.najboljsi!)} (${tock(m.najboljsi_tocke ?? 0)}).` : '',
       gumb: 'Pripremi tim za sledeće kolo →',
+      pivo: 'P.S. SLFF je besplatan i radi na pivu. Ako ti je ovo kolo ulepšalo ponedeljak, časti nas jednim i dobij mesto na pivskom zidu:',
       odjava: 'Ne želim više da primam imejlove',
     },
     ro: {
@@ -1561,6 +1569,7 @@ export function sestaviTedenskiPregled(liga: Liga, m: PregledKroga): Sporocilo {
       kapetan: m.kapetan ? `Căpitanul ${esc(m.kapetan)}: ${tock(m.kapetan_tocke ?? 0)}.` : '',
       najboljsi: najboljsiNiKapetan ? `Cel mai bun din echipă: ${esc(m.najboljsi!)} (${tock(m.najboljsi_tocke ?? 0)}).` : '',
       gumb: 'Pregătește echipa pentru etapa următoare →',
+      pivo: 'P.S. SLFF este gratuit și merge cu bere. Dacă etapa asta ți-a înseninat ziua de luni, fă-ne cinste cu una și primești un loc pe zidul berilor:',
       odjava: 'Nu mai vreau e-mailuri',
     },
     et: {
@@ -1574,6 +1583,7 @@ export function sestaviTedenskiPregled(liga: Liga, m: PregledKroga): Sporocilo {
       kapetan: m.kapetan ? `Kapten ${esc(m.kapetan)}: ${tock(m.kapetan_tocke ?? 0)}.` : '',
       najboljsi: najboljsiNiKapetan ? `Meeskonna parim: ${esc(m.najboljsi!)} (${tock(m.najboljsi_tocke ?? 0)}).` : '',
       gumb: 'Valmista meeskond järgmiseks vooruks ette →',
+      pivo: 'P.S. SLFF on tasuta ja töötab õlle peal. Kui see voor tegi su esmaspäeva paremaks, osta meile üks ja saad koha õlleseinal:',
       odjava: 'Ma ei soovi enam kirju',
     },
     pl: {
@@ -1587,6 +1597,7 @@ export function sestaviTedenskiPregled(liga: Liga, m: PregledKroga): Sporocilo {
       kapetan: m.kapetan ? `Kapitan ${esc(m.kapetan)}: ${tock(m.kapetan_tocke ?? 0)}.` : '',
       najboljsi: najboljsiNiKapetan ? `Najlepszy w drużynie: ${esc(m.najboljsi!)} (${tock(m.najboljsi_tocke ?? 0)}).` : '',
       gumb: 'Przygotuj drużynę na następną kolejkę →',
+      pivo: 'P.S. SLFF jest darmowy i działa na piwie. Jeśli ta kolejka umiliła ci poniedziałek, postaw nam jedno i zdobądź miejsce na ścianie piw:',
       odjava: 'Nie chcę więcej e-maili',
     },
     es: {
@@ -1600,6 +1611,7 @@ export function sestaviTedenskiPregled(liga: Liga, m: PregledKroga): Sporocilo {
       kapetan: m.kapetan ? `Capitán ${esc(m.kapetan)}: ${tock(m.kapetan_tocke ?? 0)}.` : '',
       najboljsi: najboljsiNiKapetan ? `El mejor del equipo: ${esc(m.najboljsi!)} (${tock(m.najboljsi_tocke ?? 0)}).` : '',
       gumb: 'Prepara el equipo para la próxima jornada →',
+      pivo: 'P. D. SLFF es gratis y funciona a base de cañas. Si esta jornada te ha alegrado el lunes, invítanos a una y consigue un sitio en el muro de cañas:',
       odjava: 'No quiero más correos',
     },
     lv: {
@@ -1613,6 +1625,7 @@ export function sestaviTedenskiPregled(liga: Liga, m: PregledKroga): Sporocilo {
       kapetan: m.kapetan ? `Kapteinis ${esc(m.kapetan)}: ${tock(m.kapetan_tocke ?? 0)}.` : '',
       najboljsi: najboljsiNiKapetan ? `Labākais komandā: ${esc(m.najboljsi!)} (${tock(m.najboljsi_tocke ?? 0)}).` : '',
       gumb: 'Sagatavot komandu nākamajai kārtai →',
+      pivo: 'P.S. SLFF ir bez maksas un darbojas uz alus. Ja šī kārta tev padarīja pirmdienu labāku, uzsauc mums vienu un iegūsti vietu uz alus sienas:',
       odjava: 'Vairs nevēlos saņemt e-pastus',
     },
     mk: {
@@ -1626,6 +1639,7 @@ export function sestaviTedenskiPregled(liga: Liga, m: PregledKroga): Sporocilo {
       kapetan: m.kapetan ? `Капитен ${esc(m.kapetan)}: ${tock(m.kapetan_tocke ?? 0)}.` : '',
       najboljsi: najboljsiNiKapetan ? `Најдобар во тимот: ${esc(m.najboljsi!)} (${tock(m.najboljsi_tocke ?? 0)}).` : '',
       gumb: 'Подготви го тимот за следното коло →',
+      pivo: 'П.С. SLFF е бесплатен и работи на пиво. Ако ова коло ти го разубави понеделникот, почести нè со едно и добиј место на ѕидот на пива:',
       odjava: 'Не сакам повеќе да добивам пораки',
     },
     sl: {
@@ -1639,6 +1653,7 @@ export function sestaviTedenskiPregled(liga: Liga, m: PregledKroga): Sporocilo {
       kapetan: m.kapetan ? `Kapetan ${esc(m.kapetan)}: ${tock(m.kapetan_tocke ?? 0)}.` : '',
       najboljsi: najboljsiNiKapetan ? `Najboljši v ekipi: ${esc(m.najboljsi!)} (${tock(m.najboljsi_tocke ?? 0)}).` : '',
       gumb: 'Pripravi ekipo za naslednji krog →',
+      pivo: 'P.S. SLFF je brezplačen in teče na pivu. Če ti je ta krog polepšal ponedeljek, nas počasti z enim, pa dobiš mesto na pivskem zidu:',
       odjava: 'Ne želim več e-pošte',
     },
   }[j]
@@ -1655,7 +1670,8 @@ export function sestaviTedenskiPregled(liga: Liga, m: PregledKroga): Sporocilo {
       ${vrstica(B.najboljsi)}
       <p style="text-align: center; margin: 24px 0;">
         <a href="${p.ekipa}" style="${GUMB}">${B.gumb}</a>
-      </p>`,
+      </p>
+      ${dobrKrog ? vrstica(`${B.pivo} <a href="${SITE}/pivo?src=mail-krog" style="color:#64748b;">slff.eu/pivo</a>`, 'font-size: 13px; color: #64748b; margin: 16px 0 0;') : ''}`,
     ` ·
         <a href="${p.odjava}" style="color:#94a3b8;">${B.odjava}</a>`,
   )
