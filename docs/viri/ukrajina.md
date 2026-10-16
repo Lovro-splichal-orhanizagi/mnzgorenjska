@@ -394,3 +394,129 @@ pojasni rdeči karton), 2092 menjav, 7350 nastopov, vsi s šifro, 0 opozoril.
 
 Uvoz: `gh workflow run uvoz-lige.yml -f liga=ua-upl -f arhiv=428 -f
 cene=true`. Arhiv 240 zapisnikov po 3 s je ~15 minut.
+
+## Ukrajina — vir `ffl` (Lvivska oblast)
+
+Vir `ffl` (`scripts/viri/ffl.mjs`) bere **ffl.org.ua** (Львівська асоціація
+футболу, ЛАФ): oblastno prvenstvo odraslih, Прем'єр-ліга, Перша, Друга,
+Третя (tri skupine) in Четверта ліга (dve skupini). Država `UA` je v migraciji
+z `on conflict do nothing` (vpišeta jo tudi `pfl-ua` in `aft`), zveza `laf`
+in lige v migraciji 20261015165300. Ukrajinskega vmesnika, kartice in pošte še
+ni, `UA` ni v matriki nočnega uvoza — oboje pred vklopom. Šifra lige se začne
+z `ua-`.
+
+- **Sezona je jesen–pomlad** ("Сезон-2026/2027" → `"2026/27"`), ne koledarska.
+  Pred njo je bila prehodna pomladna sezona "2026" (april–julij 2026, članki
+  "Прем'єр-ліга Львівщини-2026: матчі …" v isti obliki); šifer njenih
+  tekmovanj nismo poiskali — arhiv je TODO.
+- **Šifra lige je id tekmovanja** (`/cup/<id>`): 837 Прем'єр, 838 Перша, 839
+  Друга, 840–842 Третя (skupine 1–3), 844–845 Четверта (skupini 1–2). Vsaka
+  sezona ima svojega.
+- **Razpored** je stran tekmovanja: drsnik "Тур N" s tekmami (datum in ura,
+  kijevski čas → ljubljanski −1 h; "00:00" = ura ni znana), klubi s šifro
+  (`/team/<id>`) in izid "3 - 1" ali "-". **Stran kaže le kroge, ki so se že
+  začeli** — prihodnjih krogov in njihovih rokov vir vnaprej ne objavi.
+  **Izid 3:0/0:3 brez ure je kontumacija** (Муроване/Ямпіль : Воля, Перша,
+  13. 9. 2026; članek: "Матч … не відбувся"). Prestavljena tekma ostane v svojem
+  krogu z novim datumom ali kot "-" brez ure.
+- **Strani tekme ni**, tekma nima šifre: šifra zapisnika je
+  `ffl<liga>-<krog>-<manjša šifra kluba>-<večja šifra kluba>` — ne po
+  domačinu, da zveza, ki po uvozu obrne domačina in gosta, ne da druge uvožene
+  tekme z istimi nastopi (nova vrstica pade na `matches_zapisnik_id_key`;
+  popravi ročno). Prestavljena tekma ostane v svojem krogu, zato se šifra ne
+  spremeni; če bi jo zveza prestavila v drug krog, ostane stara neuvožena
+  vrstica (preverba jo javi).
+- **Postave so v novicah** (`/news/<id>`, naslov brez sluga). Članek lige na
+  dan ali konec tedna ("Прем'єр-ліга Львівщини-2026/2027: матчі 11-го жовтня")
+  ima povezavo na tekmovanje (`/cup/<id>` — pri Третій in Четвертій eno na
+  skupino v istem članku), "ТУР N", dan ("Неділя, 11-те жовтня.") in blok na
+  tekmo: glava `ФК «Олесько» – ФК «Новий Розділ» 1:3`, "Голи:", postavi
+  `«Klub»: …`, "Вилучення:", "Нереалізований пенальті:". Vir bere seznam
+  novic (`/news?page=N`, 20 na stran, `scripts/.predpomnilnik/ffl/novice.json`,
+  sveže le prve strani do znanih, starejših od dveh tednov) in le naslove
+  "<Ліга> Львівщини-…" v **imenovalniku** — "Огляди матчів … Прем'єр-ліги"
+  (rodilnik) je pripoved brez postav. Blok gre v ligo zadnje povezave
+  `/cup/<id>` nad njim, s tekmo se ujame po krogu in klubih; kadar je "ТУР N"
+  v članku napačen (Друга, 23. 8.: "ТУР 2" za 3. krog), po dnevu ±3 in klubih,
+  a le za tekme brez poročila (opozorilo).
+- **Postava**: enajst "Priimek Ime" (ime je polno, včasih z očetovim imenom:
+  "Боднар Віталій Михайлович"), menjava v oklepaju ("(Стегніцький Павло, 68)",
+  veriga s podpičjem "(Грушевський Іван, 46; Наконечний Ігор, 71)").
+  **Klopi (neuporabljenih rezerv) vir ne našteje.** Identiteta je ime + klub
+  (kot fsb).
+- **Goli** po straneh ("domači – gostje"; brez " – " je dala gole ekipa, ki ni
+  pri nuli), strelec s priimkom in začetnicami ("Грабовський М.", "Боднар
+  В.М."), minute s podpičjem ("(10; 44)"), "з пен." 11 m, "автогол" pri ekipi,
+  ki ji gol šteje (strelec je v nasprotni). Strelec, ki ga ni v ekipi strani,
+  je pa v nasprotni, šteje kot avtogol (opozorilo).
+- **Kartoni**: rumenih vir ne objavi (nikjer, 66 člankov) — rumeni so le pri
+  drugem rumenem ("друге попередження" → 1 rumeni + rdeči). Izključitve po
+  straneh, vnosi ločeni s podpičjem; uradna oseba ("адміністратор",
+  "керівник СФК …") ne šteje; izključitev "після завершення матчу" nastopa ne
+  skrajša. Zgrešene 11 m ("Нереалізований пенальті: Цюра (29, воротар) –
+  Піддубний (43, повз ворота)") so po straneh.
+- **Vratar ni označen**: prvi začetnik (in rezerva, ki ga zamenja) je vratar
+  kot namig (mlsz). *Uskladi pozicije* z `vir = ffl`.
+- **Predpomnilnik**: stran tekmovanja in seznam novic vedno sveža; članek
+  zadnjega tedna svež, do 45 dni še enkrat svež, če blok ni popoln (postava ni
+  11 ali goli niso izid). `zaPredpomnilnik` ne shrani strani brez vsebine.
+
+**Pravice.** robots.txt: `User-agent: * / Crawl-delay: 10` (nič
+prepovedanega), pogojev uporabe nismo našli. **Med zahtevki je 10 s**
+(`premorMs`), zato je prvi uvoz lige počasen: stran tekmovanja, ~15 strani
+seznama novic in 7–20 člankov (~5–6 minut); seznam in članki so v skupnem
+predpomnilniku vira, druga liga istega zagona bere le svoje članke. Beremo
+odkrito (User-Agent SLFF). **Ob 401, 403, 429 ali izzivu se uvoz ustavi
+takoj** (`FflZavrnitev`, izhod 4; `vir.fetch` 429 in izziv s 5xx ne ponavlja)
+— ne obhajaj.
+Izbrisan članek (404, 410) lige ne ustavi: opozorilo in izpade iz
+`novice.json`; 5xx ustavi. Sodnikov, opazovalcev, trenerjev in stadionov ne
+beremo; vzorci `scripts/vzorci/ua-ffl-*` so brez njih.
+
+Preizkus v živo (15. 10. 2026, vsa jesen 2026/27, brez pisanja v bazo; 66
+člankov, 30 strani seznama, 8 strani tekmovanj):
+
+| liga | klubov | krogov | odigranih | s poročilom | goli = izid | postav po 11 | 990 minut | nastopov (s klopi) | ≥ 270 min |
+|---|---|---|---|---|---|---|---|---|---|
+| Прем'єр (`837`) | 14 | 11 | 76 | 76/76 | 76/76 (248) | 152/152 | 140/152 (14 rdečih) | 2379 (707) | 208 / 323 |
+| Перша (`838`) | 13 | 10 | 59 (1 kontumacija) | 58/58 | 57/58 (202) | 116/116 | 112/116 | 1763 (487) | 186 / 325 |
+| Друга (`839`) | 14 | 10 | 70 | 70/70 (6 po dnevu) | 70/70 (219) | 140/140 | 131/140 | 2063 (523) | 192 / 332 |
+| Третя 1 (`840`) | 10 | 8 | 40 | 40/40 | 38/40 (139) | 79/80 | 75/80 | 1212 (333) | 129 / 284 |
+| Третя 2 (`841`) | 9 | 9 | 33 | 33/33 | 31/33 (147) | 66/66 | 60/66 | 1013 (287) | 106 / 241 |
+| Третя 3 (`842`) | 10 | 8 | 40 | 40/40 | 38/40 (133) | 79/80 | 71/80 | 1156 (277) | 129 / 260 |
+| Четверта 1 (`844`) | 10 | 7 | 34 | 34/34 | 32/34 (146) | 65/68 | 61/68 | 1012 (267) | 111 / 271 |
+| Четверта 2 (`845`) | 10 | 7 | 35 | 35/35 | 35/35 (151) | 69/70 | 64/70 | 1073 (302) | 118 / 281 |
+
+Celoten tok vira (`prenesiSPonovitvami`, `vir.fetch`, 10 s) za Першу na
+praznem predpomnilniku: 27 zahtevkov v 284 s, isti izid (58 zapisnikov, 1763
+nastopov). Kjer goli niso izid, strelca ni v nobeni postavi (napaka vira: "Черкаський",
+"Ліпецький" ×3, "Бобк") ali sta v ekipi dva soimenjaka ("Слобода"). Postave
+z 10 so take v članku (vir jih ne dopolni); ena z 12 (Хирів, 4. ліга) je
+napaka vira. Pod 990 minut je sicer vedno rdeči karton. Menjav brez minute ni.
+Pri Покрові (Прем'єр) je "Сеник Олександр" začetnik in menjava (opozorilo).
+
+| liga | klubov | tekoča 2026/27 | arhiv |
+|---|---|---|---|
+| ua-lv-premier | 14 | `837` | — (pomlad 2026: TODO) |
+| ua-lv-persha | 13 | `838` | — |
+| ua-lv-druha | 14 | `839` | — |
+| ua-lv-tretia-1 / -2 / -3 | 10 / 9 / 10 | `840` / `841` / `842` | — |
+| ua-lv-chetverta-1 / -2 | 10 / 10 | `844` / `845` | — |
+
+Izpuščeno: kupi (Кубок Третьої/Четвертої ліги, Кубок Львівщини), stikovi in
+plej-of tekme, Чемпіонат юніорів, ДЮФЛ, ženske, futsal, memoriali.
+
+Uvoz (ena za drugo; lige so **neaktivne**): `gh workflow run uvoz-lige.yml -f
+liga=ua-lv-premier -f cene=true` (brez arhiva).
+
+**Vklop zdaj ni mogoč — roka kroga ni vnaprej.** Stran tekmovanja pokaže
+krog šele, ko se začne (15. 10. 2026: 12. krog, 17.–18. 10., ga še ni;
+"Календар ігор" v meniju vodi na naslovnico, ki ima isti drsnik). Uvoz
+razporeda zato krog vpiše po prvi tekmi z rokom, ki je že mimo: krog se
+zaklene ob naslednjem zaklepu s kadrom, kakršen je takrat — kdor po začetku
+kroga (in pred uvozom razporeda) zamenja igralce, jih dobi v krog; pred
+krogom pa ni roka ne "naslednjega kroga". Pred vklopom je potreben vir
+datumov vnaprej (koledar ЛАФ, objava razporeda v novicah) ali ocena roka
+prihodnjega kroga, kot jo ima `fssid` (`ocenjeniDatumi`), le da tu pari
+prihodnjega kroga niso znani — uvoz razporeda bi moral sprejeti krog brez
+tekem z ocenjenim rokom.

@@ -1,5 +1,5 @@
 // Vir: regionalne zveze EPS na platformi Mascot Network Hellas (Mascotnet) —
-// Grčija. Glej CLAUDE.md (Grčija — vir mascot).
+// Grčija. Glej docs/viri/grcija.md (Grčija — vir mascot).
 //
 // Mascotnet (mascotnet.com) gosti in vodi spletišča desetih EPS (Ένωση
 // Ποδοσφαιρικών Σωματείων), vsako na svoji domeni: Makedonija/Solun (epsm.gr),

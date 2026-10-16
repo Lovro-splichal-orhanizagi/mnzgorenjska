@@ -1,7 +1,7 @@
 // Skupni razčlenjevalnik spletišč COMET podjetja Auris (auris.hr): strani
 // zvez, ki podatke COMET izrišejo s strežnika v isti predlogi kot lff.lv.
 // Uporabljata ga vira `ltfutbolas` (Litva, lietuvosfutbolas.lt) in `fscg`
-// (Črna gora, regijske strani centar/sjever/jug.fscg.me). Glej CLAUDE.md
+// (Črna gora, regijske strani centar/sjever/jug.fscg.me). Glej docs/viri/litva-crna-gora.md
 // (Litva — vir ltfutbolas, Črna gora — vir fscg).
 //
 // STRAN TEKMOVANJA ima zavihek z VSEMI tekmami (`table.fixtures style2`):

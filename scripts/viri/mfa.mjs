@@ -3,7 +3,7 @@
 //
 // Brez ključa in prijave; stran sama pošlje glavo `x-version: 2`, zato jo
 // pošljemo tudi mi. robots.txt na www. in matchcentre. vse dovoli, na api.
-// ga ni (404). Glej CLAUDE.md (Malta — vir mfa).
+// ga ni (404). Glej docs/viri/malta.md (Malta — vir mfa).
 //
 // ŠIFRA LIGE je `<tip>/<sezona>[/<tekmovanje>[+<tekmovanje>…]]`:
 // - `<tip>` je id vrste tekmovanja (competitionTypeId), stalen čez sezone:

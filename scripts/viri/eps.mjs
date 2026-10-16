@@ -6,7 +6,7 @@
 //
 // Vsaka zveza ima svojo domeno in svojo bazo, koda (noga "Shipwrecked Frontier
 // Pioneer & UnScrupulous", pri Atenah "Stargoose") pa je ista. Lige so A/B/Γ
-// Κατηγορία zveze (raven 4–6), po skupinah. Glej CLAUDE.md (Grčija — vir eps).
+// Κατηγορία zveze (raven 4–6), po skupinah. Glej docs/viri/grcija.md (Grčija — vir eps).
 //
 // ŠIFRA LIGE je `<domena>:<league_id>` (`epspeir.gr:726` = Pireja, Α Κατηγορία
 // 1. skupina 2026/27). Vsaka sezona ima svoj league_id (izbirnik sezone na

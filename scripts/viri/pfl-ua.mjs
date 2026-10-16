@@ -1,6 +1,6 @@
 // Vir: Професіональна футбольна ліга України (PFL) — pfl.ua.
 //
-// PFL vodi Peršo ligo (raven 2) in Drugo ligo A in B (raven 3). Glej CLAUDE.md
+// PFL vodi Peršo ligo (raven 2) in Drugo ligo A in B (raven 3). Glej docs/viri/ukrajina.md
 // (Ukrajina — vir pfl-ua). Nižjih lig (amaterji AAFU, oblastne zveze) na
 // pfl.ua ni.
 //
