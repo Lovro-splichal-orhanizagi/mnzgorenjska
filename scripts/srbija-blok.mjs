@@ -2,7 +2,7 @@
 // (vir `fssid`) in izpiše šifro lige, število klubov, klube 1. kroga in ali je
 // liga članska (zapisnik ima četrtega sodnika in kontrolorja sojenja —
 // mladinske lige jih nimajo; nižje članske lige — zone, okružne, opštinske —
-// jih tudi ne, tam odločijo dan in ura tekem ter klubi, glej CLAUDE.md).
+// jih tudi ne, tam odločijo dan in ura tekem ter klubi, glej docs/viri/srbija.md).
 //
 //   node scripts/srbija-blok.mjs 75912400
 //

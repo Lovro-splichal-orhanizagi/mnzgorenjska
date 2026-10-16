@@ -7980,6 +7980,21 @@ preveri(
     tHr.naslov === 'SLFF 1. MNL: 5. kolo, 22 boda, 3. mjesto (+2)' && tHr.html.includes('Bok, Ana!') &&
       !slovenskoHr.test(tHr.naslov + tHr.html.replace(/href="[^"]*"/g, '')) &&
       !pomisljaj.test(tHr.naslov + brezNoge(tHr.html)), tHr.naslov)
+  preveri('e-pošta: tedenski pregled, pivo le po krogu nad povprečjem',
+    tSi.html.includes('https://slff.eu/pivo?src=mail-krog') && tSi.html.includes('P.S. SLFF je brezplačen') &&
+      !tSk.html.includes('/pivo') && !tCs.html.includes('/pivo') &&
+      !E.sestaviTedenskiPregled(si, { ...krog, tocke: 0, povprecje: 0 }).html.includes('/pivo') &&
+      !E.sestaviTedenskiPregled(si, { ...krog, povprecje: null }).html.includes('/pivo'))
+  // P.S. v vseh jezikih: brez slovenščine in pomišljajev.
+  for (const [liga, slo] of [
+    [sk, slovensko], [hrL, slovenskoHr], [czL, slovenskoCs], [huL, slovenskoHu], [atL, slovenskoDe], [rsL, slovenskoSr],
+    [roL, slovenskoRo], [eeL, slovenskoEt], [plL, slovenskoPl], [esL, slovenskoEs], [lvL, slovenskoLv], [mkL, slovenskoMk],
+  ]) {
+    const m = E.sestaviTedenskiPregled(liga, { ...krog, tocke: 50 })
+    preveri(`e-pošta: tedenski pregled s pivom ${liga.drzava}`,
+      m.html.includes('/pivo?src=mail-krog') && !slo.test(m.naslov + m.html.replace(/href="[^"]*"/g, '')) &&
+        !pomisljaj.test(m.naslov + brezNoge(m.html)), m.naslov)
+  }
 }
 
 // --- kontumacije: Ptuj, Murska Sobota, Lendava, Maribor ---------------------
@@ -8571,6 +8586,111 @@ preveri(
   klici = []
   await o.objaviZapadle({ db, env, mapa: '/mediji', zdaj: ob(10), f: lazenFetch(klici), cakajMs: async () => {} })
   preveri('objave: napake ne objavi znova', klici.length === 0)
+
+  // Objave vsak dan (torek–nedelja): vrsta po tednu ISO, vsebina iz vzorcev, prosojnice in reeli.
+  preveri('objave: teden ISO in vrsta A/B', o.tedenISO('2026-10-12') === 42 && o.tedenISO('2026-12-28') === 53 && o.tedenISO('2027-01-04') === 1
+    && o.vrstaTermina('tor', '2026-10-12') === 'ekipa' && o.vrstaTermina('tor', '2026-10-19') === 'strelci'
+    && o.vrstaTermina('ned', '2026-10-19') === 'obramba' && o.vrstaTermina('pon', '2026-10-19') === 'pon')
+  preveri('objave: sreda 17:30 (osnova), vsak dan osnutek ≥ 5 h pred prvo možno objavo',
+    lj(o.termin('sre', '2026-10-12').objavaOb) === '17:30'
+    && Object.values(o.TERMINI).every((x) => (x.objava - x.osnutek) * 60 + x.razpon[0] >= o.VETO / 60e3))
+  const dni = Object.values(o.TERMINI).map((x) => x.dan)
+  preveri('objave: vsak dan v tednu en termin', new Set(dni).size === 7)
+  const { POZICIJE: _p, VELIKOST_EKIPE, STEVILO_PRVIH, PRORACUN, MAX_IZ_KLUBA, KAPETAN_MNOZITELJ } = await import('../src/lib/pravila.ts')
+  const { TOCKE } = await import('../src/lib/tockovanje.ts')
+  const P = o.PRAVILA
+  preveri('objave: pravila v objavi = src/lib/pravila.ts in tockovanje.ts', P.kader === VELIKOST_EKIPE && P.prvih === STEVILO_PRVIH
+    && P.proracun === PRORACUN && P.izKluba === MAX_IZ_KLUBA && P.kapetan === KAPETAN_MNOZITELJ && P.asistenca === TOCKE.asistenca
+    && JSON.stringify(P.gol) === JSON.stringify(TOCKE.gol) && P.cista.GK === TOCKE.cleanSheet.GK && P.cista.DEF === TOCKE.cleanSheet.DEF)
+  const { Reel } = await import('../src/pages/ObjavaReel')
+  const SLOTI = { ekipa: 'tor', strelci: 'tor', liga: 'sre', drzava: 'sre', kapetani: 'pet', cene: 'pet', predogled: 'sob', pravila: 'sob', stat: 'ned', obramba: 'ned' }
+  for (const [vrsta, slot] of Object.entries(SLOTI)) {
+    const v = o.vsebinaVrste(beri(`objava-${vrsta}.json`), vrsta, slot)
+    if (!v) { preveri(`objave: vzorec ${vrsta}`, false); continue }
+    const nn = o.predlogaNapisa(v)
+    const tuje = o.preveriNapis(nn, o.dejstvaZaNapis(v))
+    preveri(`objave: predloga ${vrsta} prestane preverbo`, !tuje.length && !/undefined|null|NaN/.test(nn) && nn.includes(o.povezava(v)), tuje.join())
+    const besedilo = (html) => html.replace(/<style[\s\S]*?<\/style>/g, '').replace(/<[^>]+>/g, '')
+    if (o.REELI.has(vrsta)) {
+      const html = renderToString(<StaticRouter location="/objava"><Reel v={v} /></StaticRouter>)
+      preveri(`objave: reel ${vrsta}`, html.includes('id="prosojnica"') && !/undefined|NaN|null/.test(besedilo(html)))
+      continue
+    }
+    const seznam = prosojnice(v)
+    preveri(`objave: ${vrsta} — naslovnica/vsebina/poziv, največ 10`, seznam.length >= 3 && seznam.length <= 10 && seznam.at(-1) === 'poziv')
+    for (let k = 0; k < seznam.length; k++) {
+      const html = besedilo(renderToString(<StaticRouter location="/objava"><Prosojnica v={v} n={k} /></StaticRouter>).replace(/<!-- -->/g, ''))
+      preveri(`objave: izris ${vrsta} ${k + 1}`, html.includes(`${k + 1}/${seznam.length}`) && !/undefined|NaN|null/.test(html), html.slice(0, 200))
+    }
+  }
+  const ek = o.izberiEkipo(beri('objava-ekipa.json').igralci)
+  preveri('objave: ekipa tedna — najboljša formacija, 11 igralcev, en vratar', ek.formacija === '3-4-3' && ek.igralci.length === 11
+    && ek.igralci.filter((x) => x.pozicija === 'GK').length === 1 && ek.tocke === 192, `${ek.formacija} ${ek.tocke}`)
+  preveri('objave: brez novice ni objave', o.vsebinaVrste({ igralci: [] }, 'strelci', 'tor') === null
+    && o.vsebinaVrste({ liga: null }, 'liga', 'sre') === null && o.vsebinaVrste({ tekem: 0 }, 'stat', 'ned') === null
+    && o.vsebinaVrste({ tekme: [] }, 'predogled', 'sob') === null && o.vsebinaVrste({}, 'pravila', 'sob') !== null)
+  const liga = o.vsebinaVrste(beri('objava-liga.json'), 'liga', 'sre')
+  preveri('objave: liga tedna vodi v svojo ligo', o.povezava(liga) === 'https://slff.eu/?t=clani&src=ig')
+  preveri('objave: najmanj rabljena skladba', o.najmanjRabljena(['a.mp3', 'b.mp3', 'c.mp3'], [
+    { glasba: 'a.mp3', ustvarjeno: '2026-10-01' }, { glasba: 'b.mp3', ustvarjeno: '2026-09-01' }, { glasba: 'c.mp3', ustvarjeno: '2026-10-05' },
+  ]) === 'b.mp3' && o.najmanjRabljena(['a.mp3', 'z.mp3'], [{ glasba: 'a.mp3', ustvarjeno: '2026-10-01' }]) === 'z.mp3')
+  preveri('objave: začetek skladbe 0–12 s', [0, 1, 120, 121, 4e9].every((s) => o.zacetekGlasbe(s) >= 0 && o.zacetekGlasbe(s) <= 12))
+  const wav = o.sintetiziraj({ trajanje: 2, bpm: 124, seme: 7 })
+  const wav2 = o.sintetiziraj({ trajanje: 2, bpm: 124, seme: 8 })
+  preveri('objave: sintetizirana glasba (WAV, 2 s, seme da drugo zanko)', wav.toString('ascii', 0, 4) === 'RIFF' && wav.length === 44 + 2 * 44100 * 4
+    && !wav.equals(wav2) && wav.readInt16LE(44 + 44100 * 2) !== 0)
+  klici = []
+  const reel = await o.objaviInstagramReel({ video: 'https://slff.eu/objave-mediji/r/reel.mp4', naslovnica: 'https://slff.eu/objave-mediji/r/naslovnica.jpg', napis: 'N', env, f: lazenFetch(klici), cakajMs: async () => {} })
+  preveri('objave: Instagram reel (REELS z videom, objava)', reel === 'https://www.instagram.com/p/X/' && klici[0].params.media_type === 'REELS'
+    && klici[0].params.video_url.endsWith('reel.mp4') && klici.some((k) => k.pot.endsWith('/media_publish')))
+  klici = []
+  // Facebook: status videa se sprašuje, dokler ni objavljen (ali napaka).
+  const lazenFb = (stanja) => async (url, init) => {
+    klici.push({ url: String(url), init })
+    if (String(url).includes('rupload')) return Response.json({ success: true })
+    if (init?.body?.get?.('upload_phase') === 'start') return Response.json({ video_id: 'V1' })
+    if (!init && String(url).includes('fields=status')) return Response.json({ status: stanja.shift() })
+    if (!init) return Response.json({ permalink_url: '/reel/V1' })
+    return Response.json({ success: true })
+  }
+  const obdelava = { video_status: 'processing', publishing_phase: { status: 'not_started' } }
+  const objavljen = { video_status: 'ready', publishing_phase: { status: 'complete' } }
+  const fbr = await o.objaviFacebookReel({ video: 'https://slff.eu/objave-mediji/r/reel.mp4', napis: 'N', env, f: lazenFb([obdelava, objavljen]), cakajMs: async () => {} })
+  const rup = klici.find((k) => k.url.includes('rupload'))
+  preveri('objave: Facebook reel (start, rupload z file_url, finish, čaka na objavo)', fbr === 'https://www.facebook.com/reel/V1'
+    && rup.init.headers.file_url.endsWith('reel.mp4') && klici.some((k) => k.init?.body?.get?.('upload_phase') === 'finish')
+    && klici.filter((k) => k.url.includes('fields=status')).length === 2)
+  klici = []
+  napaka = ''
+  await o.objaviFacebookReel({ video: 'x.mp4', napis: 'N', env, cakajMs: async () => {},
+    f: lazenFb([{ video_status: 'error', processing_phase: { status: 'error', error: { message: 'slab video' } } }]) }).catch((e) => { napaka = e.message })
+  preveri('objave: Facebook reel z napako obdelave vrže napako', napaka.includes('slab video'), napaka)
+  napaka = ''
+  await o.objaviFacebookReel({ video: 'x.mp4', napis: 'N', env, cakajMs: async () => {}, f: lazenFb(Array(70).fill(obdelava)) }).catch((e) => { napaka = e.message })
+  preveri('objave: Facebook reel brez objave v 10 minutah je napaka', napaka.includes('10 minutah'), napaka)
+
+  // Pregled: tri teme pravil, zaporedna liha tedna drugačna; začetnice grbov; poskusi.
+  const B = ['2026-10-12', '2026-10-26', '2026-11-09', '2026-11-23'].map((x) => o.dodajDni(x, 7)) // lihi tedni 43, 45, 47, 49
+  const teme = B.map(o.temaPravil)
+  preveri('objave: pravila — tema se menja vsak lihi teden', B.every((x) => o.tedenISO(x) % 2 === 1)
+    && teme.every((x, i) => i === 0 || x !== teme[i - 1]) && new Set(teme).size === 3, teme.join())
+  preveri('objave: pravila — kader po pozicijah in minute iz src', JSON.stringify(P.pozicije) === JSON.stringify(Object.fromEntries(Object.entries(_p).map(([k, x]) => [k, x.kader])))
+    && P.minute === TOCKE.nastopOd60)
+  for (const tema of o.TEME_PRAVIL) {
+    const v = o.vsebinaVrste({ tema }, 'pravila', 'sob')
+    const nn = o.predlogaNapisa(v)
+    const html = renderToString(<StaticRouter location="/objava"><Reel v={v} /></StaticRouter>).replace(/<style[\s\S]*?<\/style>/g, '').replace(/<[^>]+>/g, '')
+    preveri(`objave: pravila — tema ${tema}`, v.pravila.tema === tema && !o.preveriNapis(nn, o.dejstvaZaNapis(v)).length && !/undefined|NaN|null/.test(html),
+      o.preveriNapis(nn, o.dejstvaZaNapis(v)).join())
+  }
+  const { zacetniceKluba } = await import('../src/lib/pomozno.ts')
+  preveri('grb: začetnice brez oklepajev in ločil', zacetniceKluba('Rust (NÖ)') === 'R' && zacetniceKluba('BORAC (Ostružnica)') === 'B'
+    && zacetniceKluba('NK Polet (SK)') === 'NP' && zacetniceKluba('Niko Železniki') === 'NŽ' && zacetniceKluba('SV Spittal/Drau') === 'SS'
+    && zacetniceKluba('"Колос" Полонне') === 'КП' && zacetniceKluba('X', 'abcd') === 'ABC' && zacetniceKluba(null) === '')
+  const neuspehi = new Map([['tor 2026-10-12', 2]])
+  preveri('objave: največ trije poskusi na termin in teden', o.smeZnova(neuspehi, 'tor 2026-10-12') && o.smeZnova(neuspehi, 'sre 2026-10-12')
+    && !o.smeZnova(new Map([['tor 2026-10-12', 3]]), 'tor 2026-10-12'))
+  preveri('objave: predogled brez forme (W/D/L)', !JSON.stringify(o.vsebinaVrste(beri('objava-predogled.json'), 'predogled', 'sob')).includes('forma'))
 }
 
 {

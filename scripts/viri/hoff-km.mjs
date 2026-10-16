@@ -1,7 +1,7 @@
 // Vir: Хмельницька обласна асоціація футболу (ХОАФ) — hoff.km.ua.
 //
 // Chempionat Hmeljnicke oblasti (ЧХО): Vyshcha liga (6 klubov) in Persha liga
-// (5 klubov), raven 5 in 6 v Ukrajini. Glej CLAUDE.md (Ukrajina — vir hoff-km).
+// (5 klubov), raven 5 in 6 v Ukrajini. Glej docs/viri/ukrajina.md (vir hoff-km).
 // Sezona je KOLEDARSKO leto (maj–oktober), oznaka "2026".
 //
 // ŠIFRA LIGE je slug strani lige (`chho-2026-vyshha-liga`, arhiv `chho-2025`);
