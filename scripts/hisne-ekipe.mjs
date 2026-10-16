@@ -301,6 +301,226 @@ const IMENA_MK = [
   'Дванаесеттиот Играч', 'Асистенција ФК', 'Златна Глава', 'Прв Допир ФК', 'Шумски Диви Свињи',
 ]
 
+// Grške lige: zabavna, izmišljena imena, brez imen pravih klubov.
+const IMENA_GR = [
+  'Αετοί του Ολύμπου', 'Αγριοκάτσικα της Κρήτης', 'Δελφίνια του Αιγαίου', 'Χελώνες της Ζακύνθου', 'Αρκούδες της Πίνδου',
+  'Λύκοι της Ροδόπης', 'Πελεκάνοι των Πρεσπών', 'Φώκιες της Αλοννήσου', 'Γλάροι του Λιμανιού', 'Γαϊδουράκια της Ύδρας',
+  'Χταπόδια της Καλύμνου', 'Σαρδέλες της Καλλονής', 'Ελάφια της Ρόδου', 'Κατσίκες της Νάξου', 'Αχινοί FC',
+  'Ήρωες της Κυριακής', 'Ήρωες του Σαββάτου', 'Παράταση FC', 'Αδέρφια του Πάγκου', 'Οφσάιντ FC',
+  'Λόμπα FC', 'Δοκάρι Γιουνάιτεντ', 'Σημαιάκι Κόρνερ FC', 'Η Ενδεκάδα FC', 'Κόρνερ Ρέιντζερς',
+  'Κίτρινη Κάρτα FC', 'Κόκκινη Κάρτα Γιουνάιτεντ', 'Περιβραχιόνιο FC', 'Τα Παιδιά του Συνθετικού', 'Χωμάτινο Γήπεδο FC',
+  'Αντεπίθεση FC', 'Ψηλή Πίεση FC', 'Λίμπερο FC', 'Το Εννιάρι FC', 'Το Δεκάρι Σίτι',
+  'Σουβλάκι FC', 'Φέτα Γιουνάιτεντ', 'Γύρος Πίτα FC', 'Τζατζίκι Τζούνιορς', 'Μπουγάτσα FC',
+  'Σπανακόπιτα Γιουνάιτεντ', 'Τυρόπιτα FC', 'Λουκουμάδες Σίτι', 'Φραπέ FC', 'Φρέντο Εσπρέσο Γιουνάιτεντ',
+  'Ούζο μετά το Ματς', 'Τσίπουρο και Μεζέδες', 'Κοκορέτσι FC', 'Μουσακάς Σίτι', 'Χωριάτικη FC',
+  'Πρωταθλητές του Δήμου', 'Μπίρα μετά τον Αγώνα', 'Ψησταριά Γιουνάιτεντ', 'Καφενείο FC', 'Πανηγύρι FC',
+  'Μικτή του Χωριού', 'Η Παλιά Φρουρά', 'Οι Θείοι της Κερκίδας', 'Πολιτιστικός Σύλλογος FC', 'Αιώνιοι Αναπληρωματικοί',
+  'Ο Δωδέκατος Παίκτης', 'Ασίστ FC', 'Χρυσό Κεφάλι', 'Πρώτη Επαφή FC', 'Αγριογούρουνα του Δάσους',
+  'Ψαλίδι FC', 'Τάκλιν Σίτι', 'Χαμένο Πέναλτι FC', 'Αλλαγή στο 89', 'Κατενάτσιο FC',
+  'Τίκι Τάκα Γιουνάιτεντ', 'Σέντρα FC', 'Κεφαλιά Σίτι', 'Χατ Τρικ Γιουνάιτεντ', 'Σφυρίχτρα FC',
+  'Μπετό Άμυνα', 'Προπονητές του Καναπέ', 'Μπάλα στην Κερκίδα', 'Λασπωμένα Παπούτσια', 'Ρετσίνα Ρέιντζερς',
+]
+
+// Turške lige: zabavna, izmišljena imena, brez imen pravih klubov.
+const IMENA_TR = [
+  'Erciyes Kurtları', 'Kaçkar Ayıları', 'Toros Keçileri', 'Van Kedileri', 'Kangal Çobanları',
+  'Munzur Dağ Keçileri', 'Manyas Leylekleri', 'Eğirdir Sazanları', 'Çukurova Turnaları', 'Bafra Mandaları',
+  'Uludağ Karakulakları', 'Karadeniz Hamsileri', 'Ağrı Dağı Şahinleri', 'Ilgaz Tilkileri', 'Kazdağı Geyikleri',
+  'Tuz Gölü Flamingoları', 'Pazar Kahramanları', 'Cumartesi Topçuları', 'Uzatma Dakikaları FK', 'Üçüncü Yarı',
+  'Yedek Kulübesi FK', 'Değişiklik Hakkı', 'Ofsayt FK', 'Hakem Görmedi', 'Direkten Döndü',
+  'Üst Direk FK', 'Kramponlar Bodrumdan', 'Halı Saha Efsaneleri', 'Çamurlu Saha FK', 'Suni Çim Çocukları',
+  'Ağları Delenler', 'İlk Dokunuş FK', 'Kontra Atak FK', 'Önde Baskı FK', 'Libero FK',
+  'On Numara FK', 'Dokuz Numaralar', 'Sarı Kart United', 'Kırmızı Kart FK', 'Kaptanlık Bandı',
+  'Korner Bayrağı', 'Penaltı Noktası', 'On İkinci Adam', 'Altın Krampon FK', 'Kilit Pas FK',
+  'Asist Kralları', 'Rövanşta Görüşürüz', 'Kale Arkası Tayfası', 'Taca Atanlar', 'Lahmacun FK',
+  'Kokoreç United', 'Mantı SK', 'Döner United', 'İskender FK', 'Simit SK',
+  'Börek United', 'Baklava FK', 'Künefe United', 'Pide SK', 'Ayran FK',
+  'Çay Ocağı FK', 'Menemen United', 'Kumpir FK', 'Tantuni SK', 'Gözleme United',
+  'Kuru Fasulye FK', 'Midye Dolma SK', 'Çiğ Köfte FK', 'Mangal United', 'Köy Karması',
+  'Emektarlar FK', 'İtfaiye FK', 'Muhtarın Takımı', 'Kahvehane FK', 'Maç Sonu Çay',
+  'Devre Arası Simit', 'Mahalle Takımı', 'Ebedi Yedekler', 'İlçe Şampiyonları', 'Düğün Salonu FK',
+]
+
+// Українські ліги: веселі, вигадані, без назв справжніх клубів.
+const IMENA_UA = [
+  'Поліські Лосі', 'Карпатські Ведмеді', 'Подільські Лелеки', 'Дністровські Соми', 'Слобожанські Їжаки',
+  'Гуцульські Вівчарі', 'Черкаські Чаплі', 'Житомирські Зубри', 'Закарпатські Буйволи', 'Чернігівські Журавлі',
+  'Тернопільські Коропи', 'Шацькі Щуки', 'Степові Бабаки', 'Сульські Бобри', 'Росинські Карасі',
+  'Недільні Герої', 'Суботні Легенди', 'ФК Останній Шанс', 'Третій Тайм', 'Лава Запасних ФК',
+  'Офсайд ФК', 'Суддя Не Бачив', 'ФК Штанга', 'ФК Поперечина', 'Бутси з Горища',
+  'Вареник ФК', 'Борщ Юнайтед', 'Сало ФК', 'Деруни Юнайтед', 'Галушки ФК',
+  'Голубці Юнайтед', 'Банош ФК', 'Пампушки з Часником', 'Узвар ФК', 'Сирники Юнайтед',
+  'Налисники ФК', 'Холодець ФК', 'Квас Юнайтед', 'Вергуни ФК', 'Кавуни Юнайтед',
+  'Сільська Збірна', 'Ветерани ФК', 'Пожежники ФК', 'Будинок Культури ФК', 'Вічні Запасні',
+  'Дванадцятий Гравець', 'ФК Пенальті', 'Кутовий Прапорець', 'Гольовий Пас ФК', 'Капітанська Пов’язка',
+  'Жовта Картка Юнайтед', 'Червона Картка ФК', 'Додатковий Час', 'Штучна Трава ФК', 'Болото Юнайтед',
+  'Рвачі Сітки', 'Перший Дотик ФК', 'Контратака ФК', 'Пресинг ФК', 'Ліберо ФК',
+  'Десятка ФК', 'Дев’ятка Юнайтед', 'Пиво після Матчу', 'Шашлик Юнайтед', 'Чемпіони Району',
+  'Весілля ФК', 'Кум ФК', 'Медівник Юнайтед', 'Тренер Сказав', 'Золота Голова',
+  'Мокрий М’яч ФК', 'Сусіди по Полю', 'Полтавські Галушки', 'Вінницькі Горобці', 'Сумські Сови',
+  'Луцькі Дятли', 'Рівненські Лиси', 'Хмельницькі Цвіркуни', 'Львівські Коти', 'Ужгородські Ящірки',
+]
+
+// Հայկական լիգաներ: զվարճալի, հորինված, առանց իրական ակումբների անունների.
+const IMENA_AM = [
+  'Սյունիքի Ընձառյուծներ', 'Սևանի Իշխաններ', 'Արագածի Արծիվներ', 'Լոռվա Արջեր', 'Տավուշի Եղնիկներ',
+  'Գեղարքունիքի Կռունկներ', 'Շիրակյան Գայլեր', 'Կոտայքի Բազեներ', 'Վայոց Ձորի Այծյամներ', 'Արմավիրի Արագիլներ',
+  'Դիլիջանի Աղվեսներ', 'Գյումրու Ագռավներ', 'Սևանի Ճայեր', 'Հրազդանի Ձկնորսներ', 'Աշտարակի Ծիրանագործներ',
+  'Արենիի Գինեգործներ', 'Եղեգնաձորի Խաղողագործներ', 'Մեղրու Նռներ', 'Ջերմուկի Աղբյուրներ', 'Երևանյան Կատուներ',
+  'Խորոված ՖԱ', 'Լավաշ Յունայթեդ', 'Դոլմա ՖԱ', 'Խաշից Հետո', 'Ժենգյալով Հաց ՖԱ',
+  'Գաթա Յունայթեդ', 'Ծիրան ՖԱ', 'Բաստուրմա ՖԱ', 'Սուջուխ Յունայթեդ', 'Խաշլամա ՖԱ',
+  'Թան ՖԱ', 'Մածուն Յունայթեդ', 'Լահմաջո ՖԱ', 'Քյաբաբ Յունայթեդ', 'Ղափամա ՖԱ',
+  'Սուրճ ու Նարդի', 'Չորաթան ՖԱ', 'Ալանի Յունայթեդ', 'Թթու Լավաշ ՖԱ', 'Քյուֆթա ՖԱ',
+  'Կիրակնօրյա Հերոսներ', 'Շաբաթվա Լեգենդներ', 'Լրացուցիչ Ժամանակ ՖԱ', 'Նստարանի Եղբայրներ', 'Օֆսայդ ՖԱ',
+  'Խաչաձող Յունայթեդ', 'Անկյունային Դրոշակ ՖԱ', 'Դեղին Քարտ ՖԱ', 'Կարմիր Քարտ Յունայթեդ', 'Ավագի Թևկապ ՖԱ',
+  'Արհեստական Խոտի Տղերք', 'Ցեխոտ Դաշտ ՖԱ', 'Հակագրոհ ՖԱ', 'Բարձր Պրեսինգ ՖԱ', 'Լիբերո ՖԱ',
+  'Իննյակը ՖԱ', 'Տասնյակը Յունայթեդ', 'Մրցավարը Չտեսավ', 'Վերջին Րոպե ՖԱ', 'Երրորդ Խաղակես',
+  'Գյուղի Հավաքական', 'Հին Գվարդիա', 'Հավերժ Պահեստայիններ', 'Տասներկուերորդ Խաղացող', 'Գոլային Փոխանցում ՖԱ',
+  'Ոսկե Գլուխ', 'Առաջին Հպում ՖԱ', 'Ոտքերի Արանքով', 'Համայնքի Չեմպիոններ', 'Բակի Տղերք',
+  'Խաղից Հետո Գարեջուր', 'Նարդու Վարպետներ', 'Ցանցի Տղերք', 'Տասնմեկ Մետր ՖԱ', 'Ինքնագոլ Յունայթեդ',
+  'Դարպասաձողի Տղերք', 'Կոշիկներ Նկուղից', 'Պահեստային Ավագներ', 'Դաշտի Թագավորներ', 'Հեթ-տրիկ ՖԱ',
+]
+
+// Azərbaycan liqaları: əyləncəli, uydurma, real klub adları olmadan.
+const IMENA_AZ = [
+  'Qaya Qartalları', 'Hirkan Pələngləri', 'Xınalıq Dağ Keçiləri', 'Qağayılar FK', 'Dağ Gölü Qızılbalıqları',
+  'Ceyranlar FK', 'Qafqaz Canavarları', 'Dağ Kəklikləri', 'Suitilər FK', 'Ağ Leyləklər',
+  'Nərə Balıqları FK', 'Çöl Dovşanları', 'Qafqaz Bəbirləri', 'Sərçələr FK', 'Qarğalar Yunayted',
+  'Plov FK', 'Dolma Yunayted', 'Qutab FK', 'Şəki Halvası', 'Paxlava Yunayted',
+  'Lavaş FK', 'Dovğa FK', 'Düşbərə Yunayted', 'Kabab Ustaları', 'Tikə FK',
+  'Piti Yunayted', 'Şəkərbura FK', 'Qovurma FK', 'Ləvəngi Yunayted', 'Çay Dəstgahı',
+  'Armudu Stəkan FK', 'Nar Yunayted', 'Qoğal FK', 'Ayran FK', 'Badımcan Dolması',
+  'Dürmək FK', 'Bazar Qəhrəmanları', 'Şənbə Əfsanələri', 'Əlavə Vaxt FK', 'Skamya Qardaşları',
+  'Ofsayd FK', 'Dirək Yunayted', 'Künc Bayrağı FK', 'On Bir Metr FK', 'Sarı Vərəqə FK',
+  'Qırmızı Vərəqə Yunayted', 'Kapitan Sarğısı FK', 'Süni Ot Oğlanları', 'Palçıqlı Meydan FK', 'Əks-hücum FK',
+  'Yüksək Pressinq', 'Libero FK', 'Doqquzuncu Nömrə', 'Onuncu Nömrə Yunayted', 'Rayon Çempionları',
+  'Matçdan Sonra Çay', 'Kənd Seçməsi', 'Köhnə Qvardiya', 'Əbədi Ehtiyatlar', 'On İkinci Oyunçu',
+  'Asist FK', 'Qızıl Baş', 'İlk Toxunuş FK', 'Penalti Seriyası', 'Həyət Futbolu FK',
+  'Məhəllə Uşaqları', 'Toy Komandası', 'Çayxana FK', 'Nərd Ustaları', 'Avtobusu Park Edənlər',
+  'Uzaq Dirək FK', 'Qapıçı Hücumda', 'Topu Ver FK', 'Son Dəqiqə FK', 'Qol Ovçuları',
+  'Bazar Ertəsi Yorğunları', 'Ehtiyat Formalar FK', 'Tənəffüs Yunayted', 'Saqqız Topu FK', 'Bənövşəyi Butsalar',
+]
+
+// Danske lige: zabavna, izmišljena imena, brez imen pravih klubov.
+const IMENA_DK = [
+  'Vestjyske Vildsvin', 'Fynske Fasaner', 'Sjællandske Svaner', 'Himmerlandske Hjorte', 'Thy-Ørnene',
+  'Vadehavets Sæler', 'Mols Bjergbukke', 'Djurslands Dådyr', 'Amagers Agerhøns', 'Langelands Ugler',
+  'Møns Klintefalke', 'Limfjordens Østerskonger', 'Sallings Storke', 'Lollandske Lunder', 'Stevns Skarver',
+  'Ærøs Ællinger', 'Odsherreds Ræve', 'Hedens Hugorme', 'Smørrebrød FC', 'Frikadellerne',
+  'Rødgrød United', 'Flæskesteg FC', 'Leverpostej United', 'Rugbrødsdrengene', 'Wienerbrød FC',
+  'Pølsevognen FC', 'Æbleskiverne', 'Remoulade United', 'Stegt Flæsk FC', 'Brunsviger Boys',
+  'Koldskål United', 'Medisterpølserne', 'Hotdog med det Hele FC', 'Ristede Løg FC', 'Tarteletterne',
+  'Kanelsnegle FC', 'Risalamande United', 'Bornholmske Røgsild', 'Offside FC', 'Stolpe ud United',
+  'Hjørneflaget FC', 'Træskeens Venner', 'Bænkevarmerne', 'Søndagsheltene', 'Tredje Halvleg FC',
+  'Overtid United', 'Kunstgræsdrengene', 'Mudderbanen FC', 'Gult Kort United', 'Udskiftningsbænken',
+  'Lange Bolde FC', 'Tunnel FC', 'Krydsfeltet FC', 'Straffesparkskongerne', 'Indkast United',
+  'Nul-nul FC', 'Øl efter Kampen FC', 'Omklædningsrummet', 'Trænerens Favoritter', 'Kantinen FC',
+  'Old Boys med Ambitioner', 'Den Tolvte Mand', 'Sidste Mand FC', 'Frispark United', 'Hovedstød FC',
+  'Saksesparket', 'Boldklubben Bajer', 'Boldklubben Bøfsandwich', 'Boldklubben Hyggelig', 'Boldklubben Næsten God',
+  'Boldklubben Kaffepausen', 'Boldklubben Sidste Øjeblik', 'Boldklubben Brokkehovederne', 'Boldklubben Fredagsbar', 'Boldklubben Gummistøvlen',
+  'Boldklubben Kridtstregen', 'Landsbyholdet', 'Sognets Stolthed', 'Mesterne fra Marken', 'Kommunens Mestre',
+]
+
+// Britanske lige (Anglija, Škotska): zabavna, izmišljena imena, brez imen pravih klubov.
+const IMENA_GB = [
+  'Pennine Foxes', 'Cotswold Badgers', 'Highland Stags', 'Fenland Otters', 'Peak District Hares',
+  'Lakeland Herons', 'Cairngorm Ospreys', 'Dartmoor Ponies', 'Broads Kingfishers', 'Moorland Grouse',
+  'Severn Salmon', 'Clyde Seagulls', 'Tweed Trout', 'Mersey Cormorants', 'Downs Skylarks',
+  'Sunday Legends', 'Saturday Heroes', 'Injury Time FC', 'Third Half FC', 'Bench Warmers',
+  'Offside Trap FC', 'Ref Didn’t See It', 'Off the Crossbar', 'Corner Flag FC', 'Muddy Boots FC',
+  'Plastic Pitch Boys', 'Last Orders FC', 'Half-Time Oranges', 'Pie at the Break', 'Hot Bovril FC',
+  'Fish and Chips FC', 'Full English FC', 'Sausage Roll FC', 'Scotch Egg Athletic', 'Haggis Hunters',
+  'Tattie Scone FC', 'Shortbread Strollers', 'Mushy Peas United', 'Chip Butty FC', 'Cornish Pasty FC',
+  'Black Pudding Boys', 'Ploughman’s Lunch FC', 'Cup of Tea FC', 'Pub Quiz Champions', 'Village Select XI',
+  'The Old Guard', 'Five-a-Side Kings', 'Long Ball FC', 'Route One United', 'Hoof It FC',
+  'Two Banks of Four', 'Parked Bus FC', 'Nutmeg FC', 'Top Bins FC', 'Worldie Merchants',
+  'Back Post FC', 'Cold Night FC', 'Rainy Saturday FC', 'Tracksuit Managers', 'Sideline Dads',
+  'Twelfth Man FC', 'Golden Boot FC', 'Hat-Trick Heroes', 'Clean Sheet Club', 'Penalty Box Poets',
+  'Volley Kings', 'Header FC', 'Sliding Tackle FC', 'Early Kick-Off FC', 'Wooden Spoon United',
+  'Mid-Table Mediocrity', 'Relegation Dodgers', 'Promotion Chasers', 'Hangover XI', 'Away Day Boys',
+  'Kit Man FC', 'Free Kick FC', 'Linesman’s Flag FC', 'Grass Roots United', 'Cup Run Dreamers',
+]
+
+// Malteške lige: zabavna, izmišljena imena (malteško in angleško), brez imen pravih klubov.
+const IMENA_MT = [
+  'Il-Fniek FC', 'Il-Gremxul United', 'Il-Lampuki FC', 'Il-Qarnit United', 'Il-Gamiem FC',
+  'Il-Ħuttief FC', 'Kelb tal-Fenek FC', 'Il-Bebbux United', 'Il-Fkieren FC', 'Il-Gawwi FC',
+  'Il-Merill FC', 'Il-Pastizzi FC', 'Ħobż biż-Żejt United', 'Ftira FC', 'Imqaret FC',
+  'Kannoli United', 'Bigilla FC', 'Timpana United', 'Stuffat tal-Fenek FC', 'Ġbejniet FC',
+  'Qassatat United', 'Lampuki Pie FC', 'Imqarrun il-Forn FC', 'Ħelwa tat-Tork FC', 'L-Eroj tal-Ħadd',
+  'Il-Leġġendi tas-Sibt', 'Ħin Miżjud FC', 'It-Tielet Nofs', 'Il-Bank tar-Riżervi', 'Offside FC',
+  'Ir-Referee Ma Rax', 'Mill-Lasta FC', 'Korner FC', 'Ramel FC', 'Turf Sintetiku FC',
+  'Karta Ħamra FC', 'Karta Safra United', 'Il-Kaptan FC', 'Kontrattakk FC', 'Pressing Għoli FC',
+  'Libero FC', 'Numru Għaxra FC', 'Numru Disgħa United', 'Il-Plejer Tnax', 'Assist FC',
+  'Ras tad-Deheb', 'L-Ewwel Mess FC', 'Il-Gwardja l-Qadima', 'Riżervi għal Dejjem', 'Il-Pompieri FC',
+  'Każin tal-Banda FC', 'Il-Festa FC', 'Murtali FC', 'Il-Luzzu FC', 'Il-Majjistral FC',
+  'Il-Grigal United', 'Ix-Xemx FC', 'Il-Bajja FC', 'Franka FC', 'Il-Karrozzin FC',
+  'Ix-Xarabank United', 'Kantuniera FC', 'Bar tal-Pjazza FC', 'Birra wara l-Partita', 'Kafè u Pastizz FC',
+  'Ċampjins tar-Raħal', 'Selezzjoni tar-Raħal', 'Il-Ħbieb tal-Ħadd', 'Daqqa ta’ Ras FC', 'Penalty FC',
+  'Hat-Trick United', 'Il-Lejl tal-Ġimgħa', 'Ħuta Friska FC', 'Ġbejna Pikkanti United', 'Is-Sajjieda FC',
+  'Il-Bdiewa FC', 'Il-Furnara FC', 'Ħaddiema tal-Port FC', 'Għeneb u Tin FC', 'Zalza u Ħobż FC',
+]
+
+// Crnogorske lige: zabavna, izmišljena imena, brez imen pravih klubov.
+const IMENA_ME = [
+  'Durmitorski vukovi', 'Lovćenski orlovi', 'Skadarski pelikani', 'Bjelasički medvjedi', 'Prokletijski risovi',
+  'Orjenski sokolovi', 'Bokeški delfini', 'Pivske pastrmke', 'Morački somovi', 'Limske vidre',
+  'Sinjajevinski ovčari', 'Biogradski srndaći', 'Kotorske mačke', 'Cetinjski gavranovi', 'Plavski labudovi',
+  'Žabljački risovi', 'Kolašinski medvjedi', 'Jadranski delfini', 'Hercegnovske mimoze', 'Barske masline',
+  'Solanske čaplje', 'Budvanski galebovi', 'Njeguški pršut FK', 'Kačamak junajted', 'Cicvara FK',
+  'Popara FK', 'Priganice junajted', 'Njeguški sir FK', 'Vranac poslije utakmice', 'Krtola FK',
+  'Raštan junajted', 'Brav u mlijeku FK', 'Lepinja FK', 'Burek sa sirom FK', 'Riblja čorba junajted',
+  'Lignje sa žara FK', 'Kafa na terasi FK', 'Nedjeljni heroji', 'Subotnje legende', 'Produžeci FK',
+  'Rezervna klupa FK', 'Ofsajd FK', 'Sudija nije vidio', 'Vratnica FK', 'Prečka junajted',
+  'Korner zastavica FK', 'Jedanaesterac FK', 'Žuti karton FK', 'Crveni karton junajted', 'Kapitenska traka FK',
+  'Momci sa vještačke trave', 'Blatnjavi teren FK', 'Kontranapad FK', 'Visoki presing FK', 'Libero FK',
+  'Devetka FK', 'Desetka junajted', 'Dvanaesti igrač', 'Asistencija FK', 'Zlatna glava',
+  'Prvi dodir FK', 'Seoska selekcija', 'Stara garda FK', 'Vatrogasci FK', 'Dom kulture FK',
+  'Vječiti rezervisti', 'Šampioni opštine', 'Pivo poslije utakmice', 'Roštilj junajted', 'Kafana kod terena',
+  'Svadbari FK', 'Kumovi FK', 'Bokeški ribari', 'Maslinjak junajted', 'Ljetna liga FK',
+  'Peraške barke', 'Primorski čempresi', 'Gorštaci FK', 'Katunski čobani', 'Ribnjak FK',
+]
+
+// Bosanskohercegovske lige: zabavna, izmišljena imena, brez imen pravih klubov.
+const IMENA_BA = [
+  'Neretvanske pastrmke', 'Unske vidre', 'Bjelašnički vukovi', 'Vranički medvjedi', 'Plivski mlinari',
+  'Prenjski orlovi', 'Čvrsnički divokozi', 'Vlašićki ovčari', 'Hutovske čaplje', 'Trebevićki risovi',
+  'Savski šarani', 'Vrbaski kajakaši', 'Unski splavari', 'Dinarski sokolovi', 'Treskavički jeleni',
+  'Ćevapi u somunu FK', 'Burek junajted', 'Sirnica FK', 'Zeljanica junajted', 'Krompiruša FK',
+  'Begova čorba FK', 'Klepe junajted', 'Japrak FK', 'Bosanski lonac FK', 'Tufahija junajted',
+  'Hurmašice FK', 'Baklava junajted', 'Somun FK', 'Kajmak junajted', 'Kahva i rahatlokum',
+  'Uštipci FK', 'Pita od jabuka FK', 'Nedjeljni junaci', 'Subotnje legende', 'Produžeci FK',
+  'Rezervna klupa FK', 'Ofsajd FK', 'Sudija nije vidio', 'Stativa FK', 'Prečka junajted',
+  'Korner zastavica FK', 'Jedanaesterac junajted', 'Žuti karton FK', 'Crveni karton junajted', 'Kapitenska traka FK',
+  'Momci s vještačke trave', 'Blatnjavi teren FK', 'Kontranapad FK', 'Visoki presing FK', 'Libero FK',
+  'Devetka FK', 'Desetka junajted', 'Dvanaesti igrač FK', 'Asistencija FK', 'Zlatna glava',
+  'Prvi dodir FK', 'Mahalska selekcija', 'Stara garda FK', 'Vatrogasci FK', 'Dom kulture FK',
+  'Vječiti rezervisti', 'Šampioni općine', 'Pivo poslije utakmice', 'Roštilj junajted', 'Ćevabdžinica kod terena',
+  'Svadbari FK', 'Komšije FK', 'Avlija FK', 'Sevdah junajted', 'Džezva FK',
+  'Kišobran FK', 'Penal FK', 'Hat-trik junajted', 'Bicikla FK', 'Teferič FK',
+  'Kantar FK', 'Šadrvan junajted', 'Mostarski skakači', 'Jajački slapovi', 'Rakitnički lisci',
+]
+
+// Moldavske lige: zabavna, izmišljena imena, brez imen pravih klubov.
+const IMENA_MD = [
+  'Berzele de la Nistru', 'Somnii din Prut', 'Știucile de pe Nistru', 'Ciocârliile de câmpie', 'Bufnițele din pădure',
+  'Cerbii din Pădurea Domnească', 'Lebedele de la Manta', 'Vulpile de pe deal', 'Iepurii de stepă', 'Pescărușii de baltă',
+  'Bursucii din vie', 'Cocorii de toamnă', 'Ariciul de grădină', 'Mistreții din crâng', 'Privighetorile FC',
+  'Mămăliga FC', 'Plăcintă United', 'Zeamă FC', 'Sarmale United', 'Brânză de oi FC',
+  'Colțunași FC', 'Pârjoale United', 'Vin de casă FC', 'Compot United', 'Covrigi FC',
+  'Mujdei United', 'Friptură FC', 'Cozonac United', 'Chișleag FC', 'Turtă dulce FC',
+  'Struguri de toamnă FC', 'Fetească Neagră United', 'Mere de livadă FC', 'Nuci și miere FC', 'Eroii de duminică',
+  'Legendele de sâmbătă', 'Prelungiri FC', 'Banca de rezerve FC', 'Ofsaid FC', 'Arbitrul n-a văzut',
+  'Bara FC', 'Transversala United', 'Steagul de corner FC', 'Penalti FC', 'Cartonaș galben FC',
+  'Cartonaș roșu United', 'Banderola FC', 'Băieții de pe gazon sintetic', 'Teren cu noroi FC', 'Contraatac FC',
+  'Pressing înalt FC', 'Libero FC', 'Numărul 9 FC', 'Numărul 10 United', 'Al doisprezecelea jucător',
+  'Pasă decisivă FC', 'Cap de aur', 'Prima atingere FC', 'Selecționata satului', 'Vechea gardă',
+  'Pompierii FC', 'Casa de cultură FC', 'Rezerve pe viață', 'Campionii raionului', 'Bere după meci',
+  'Grătar United', 'Cârciuma de lângă teren', 'Nuntași FC', 'Cumetrii FC', 'Hora FC',
+  'Fanfara satului', 'Fântâna din sat FC', 'Căruța FC', 'Tractoriștii FC', 'Lăutarii FC',
+  'Podgorenii FC', 'Prispa United', 'Prisaca FC', 'Ulița mare FC', 'Lunca Prutului FC',
+]
+
 // Postave v mejah POZICIJE (vratar 1, branilci 3–5, vezisti 2–5, napadalci 1–3).
 const POSTAVE = [
   [4, 4, 2], [4, 3, 3], [3, 5, 2], [3, 4, 3], [5, 3, 2], [4, 5, 1], [5, 4, 1],
@@ -688,7 +908,9 @@ for (const l of seznam) {
     if (eK) throw new Error(eK.message)
     for (const r of kadri ?? []) izbranost.set(r.player_id, (izbranost.get(r.player_id) ?? 0) + 1)
   }
-  const imena = premesaj({ SI: IMENA_SI, HR: IMENA_HR, CZ: IMENA_CZ, HU: IMENA_HU, AT: IMENA_AT, RS: IMENA_RS, RO: IMENA_RO, EE: IMENA_EE, PL: IMENA_PL, ES: IMENA_ES, LV: IMENA_LV, MK: IMENA_MK }[DRZAVA] ?? IMENA, generator('imena:' + l.slug))
+  const imena = premesaj({ SI: IMENA_SI, HR: IMENA_HR, CZ: IMENA_CZ, HU: IMENA_HU, AT: IMENA_AT, RS: IMENA_RS, RO: IMENA_RO, EE: IMENA_EE, PL: IMENA_PL, ES: IMENA_ES, LV: IMENA_LV, MK: IMENA_MK,
+    GR: IMENA_GR, TR: IMENA_TR, UA: IMENA_UA, AM: IMENA_AM, AZ: IMENA_AZ, DK: IMENA_DK, GB: IMENA_GB, MT: IMENA_MT, ME: IMENA_ME, BA: IMENA_BA, MD: IMENA_MD,
+  }[DRZAVA] ?? IMENA, generator('imena:' + l.slug))
     .filter((i) => !zasedena.has(i.toLowerCase()))
 
   console.log(
