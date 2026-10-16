@@ -30,8 +30,12 @@ with vrstice as (
 )
 select v.oseba from vrstice v where v.izlocen
 union
+-- Ne kot join z OR: brez statistike na scout_skrit planer izbere nested loop
+-- čez CTE (produkcija je obvisela); unija ključev omogoči hash join.
 select v.oseba from vrstice v
-join vrstice s on s.skrit and (s.kljuc_ime = v.kljuc_ime or s.kljuc_reg = v.kljuc_reg)
+cross join lateral (values (v.kljuc_ime), (v.kljuc_reg)) k(kljuc)
+join (select kljuc_ime as kljuc from vrstice where skrit
+      union select kljuc_reg from vrstice where skrit) s on s.kljuc = k.kljuc
 union
 select v.oseba from vrstice v
 cross join lateral (values (v.kljuc_ime), (v.kljuc_reg)) k(kljuc)
