@@ -46,3 +46,23 @@ Production public captures collected 2026-10-16 by the parent research session:
 Official URLs: `https://www.futgal.es/pnfg/NPcd/NFG_CmpPartido?cod_primaria=1000120&CodActa={id}&cod_acta={id}`.
 1448235 demonstrates report `S.D. POL B` versus schedule `S.D. POL "B"`.
 1448237/38 demonstrate an explicitly empty final card table without a Tarjetas heading.
+
+`es-novanet-galicia-live-round1-20261016.html` is the unchanged live CI public HTTP
+capture at 2026-10-16T17:08:29.416Z, after anonymous server-issued session bootstrap.
+URL: `https://www.futgal.es/pnfg/NPcd/NFG_CmpJornada?cod_primaria=1000120&CodTemporada=22&CodCompeticion=26990830&CodGrupo=27759837&CodJornada=1`.
+SHA256: `b8a3d6c0e4631fe78b56c8db3f9171421fc09bd7930b0494727b51197d1599f9`.
+The call `ntype("idh444742",2,0,"fa-12")` removes a multi-digit decoy class;
+the separately validated fixed table contains 9 at index 2. Expected five scores
+also agree with the independently captured reports 1448236/33/35/37/34.
+
+Archive CI captures copied unchanged from `live-galicia-archive-v2`, 2026-10-16:
+- `es-novanet-galicia-1306462.html`, SHA256 `2110e21843f82566dc0f43f7289c486e3018128ea8c44c426595b42122b9f0d2`:
+  official card timestamps 999, including a second recorded yellow after90+4.
+  No event timing or dismissal semantics are inferred; whole match is withheld.
+- `es-novanet-galicia-1306457.html`, SHA256 `9ae3a9f3abe28f5e67d1a9790f2e6655bc0dfb080fc2ee3a57b6f76223697964`:
+  guest substitutions heading/table absent, with no explicit empty-change table;
+  whole match remains incomplete.
+URLs follow `https://www.futgal.es/pnfg/NPcd/NFG_CmpPartido?cod_primaria=1000120&CodActa={id}&cod_acta={id}`.
+The source continuation test separately injects the exact observed999 card spelling
+into a current fixture; this synthetic mutation tests withholding rather than
+claiming that current match had such a card.

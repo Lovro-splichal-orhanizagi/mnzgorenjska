@@ -448,3 +448,32 @@ test('schedule club keys must not collapse distinct names',async()=>{
  const round=singleMatchRound().replaceAll('C.D. SAN CIPRIAN','A.D. RIO "OURO"')
  await assert.rejects(ustvariVir({predpomnilnik:false}).razporedVseStrani('galicia:22:26990830:27759837',async()=>round),/dvoumna kluba/)
 })
+test('archive999 card timing withholds whole match without guessing second-yellow chronology',()=>{
+ const html=fixture('galicia-1306462')
+ assert.ok(html.includes("(999')"))
+ assert.throws(()=>vZapisnik(html,{zveza:'galicia'}),e=>e.nepopoln===true&&/999/.test(e.message))
+ // Only the observed sentinel gets the incomplete classification; other bad
+ // timing and even a goal using999 remain unsupported format failures.
+ assert.throws(()=>vZapisnik(html.replaceAll("(999')","(998')"),{zveza:'galicia'}),e=>!e.nepopoln&&/minuta/.test(e.message))
+ assert.throws(()=>vZapisnik(html.replace("(4')","(999')"),{zveza:'galicia'}),e=>!e.nepopoln&&/minuta/.test(e.message))
+})
+test('archive absence of substitution section has no explicit zero-change evidence',()=>{
+ assert.throws(()=>vZapisnik(fixture('galicia-1306457'),{zveza:'galicia'}),e=>e.nepopoln===true&&/razdelki/.test(e.message))
+})
+test('sentinel card timing withholds one whole match while multiple validated reports continue',async()=>{
+ const vir=ustvariVir({predpomnilnik:false,opozori:()=>{}}),original=fixture('galicia-round1')
+ const select=original.match(/(<select\b[^>]*name=jornada[^>]*>)([\s\S]*?)(<\/select>)/i),first=select[2].match(/<option value=1>[\s\S]*?<\/option>/i)[0]
+ const round=original.replace(select[0],`${select[1]}${first}${select[3]}`)
+ const raw=fixture('galicia-1448237'),sentinel=raw.replace(/(tarj_amar\.gif[\s\S]*?class=font-blue>)\([^<]*\)/,"$1(999')")
+ assert.notEqual(sentinel,raw)
+ const reports=await vir.zapisniki('galicia:22:26990830:27759837',async url=>{
+  if(url.includes('NFG_CmpJornada'))return round
+  if(url.includes('CodActa=1448233&'))return fixture('galicia-1448233')
+  if(url.includes('CodActa=1448235&'))return fixture('galicia-1448235')
+  if(url.includes('CodActa=1448237&'))return sentinel
+  throw Object.assign(new Error('missing'),{status:404})
+ })
+ assert.deepEqual(reports.map(r=>r.id).sort(),['es-novanet-galicia-1448233','es-novanet-galicia-1448235'])
+ assert.equal(vir.nepopolni.length,3)
+ assert.match(vir.nepopolni.find(n=>n.id==='es-novanet-galicia-1448237').razlog,/999/)
+})

@@ -142,3 +142,18 @@ test('Novanet CLI: preveri shranjeno stran in vrne prave izide brez omrežja', (
   assert.equal(r.status, 0, r.stderr)
   assert.deepEqual(JSON.parse(r.stdout), { izid: [4, 0], vmesniIzidi: [[1, 0], [2, 0], [3, 0], [4, 0]], opozorila: [] })
 })
+
+test('Novanet: live round accepts multi-digit decoy class and retains validated table score',async()=>{
+ const html=vzorec('es-novanet-galicia-live-round1-20261016.html')
+ assert.ok(html.includes('ntype("idh444742",2,0,"fa-12")'))
+ const context=preslikaveNovanet(html)
+ // Independently read fixed observed data: t[2] = 9; fa-12 is only removed.
+ assert.equal(context.stevke.get('idh444742'),'9')
+ const {razcleniKrog}=await import('./viri/novanet.mjs')
+ assert.deepEqual(razcleniKrog(html,{zveza:'galicia'}).tekme.map(t=>[t.virId,t.izid.domaci,t.izid.gostje]),[
+  ['1448236',1,9],['1448233',3,2],['1448235',2,1],['1448237',2,1],['1448234',1,1],
+ ])
+ assert.throws(()=>preslikaveNovanet(html.replace('2,0,"fa-12"','99,0,"fa-12"')),/neveljaven indeks/)
+ assert.throws(()=>preslikaveNovanet(html.replace('"fa-12"','"fa-12");unknown("x"')),/neznan klic/)
+ assert.throws(()=>preslikaveNovanet(html.replace('"fa-12"','"unknown-class"')),/neznan klic/)
+})

@@ -29,6 +29,8 @@ Audit je brez baze in brez ključev. Shrani surove dokumente s SHA-256, razpored
 
 Razpored se ponovno preveri po 15 minutah, novi zapisniki in tisti iz prvih treh dni po eni uri, starejši zaprti zapisniki po 30 dneh. Časovna meja se računa ob zadnji veljavni potrditvi; zgodnji zajem se ne spremeni sam v trajen arhiv. V predpomnilnik gre samo razčlenjen in medsebojno preverjen dokument.
 
+Prenos uporablja samo anonimno javno sejo z novimi piškotki, ki jih strežnik izda sam. Seje ostanejo v pomnilniku in znotraj izvorne domene; piškotkov prijavljenega brskalnika ali klicatelja ne uvaža. Preusmeritve ne smejo zamenjati izvora. Prehodne omrežne napake se omejeno ponovijo, izrecne zavrnitve pa ne.
+
 401/403/429 ali izziv ustavi vir brez obhajanja s shranjenim dokumentom. Znan manjkajoč zapisnik zadrži statistiko cele tekme in opozori v `vir.nepopolni`; obstoječe statistike ne izbriše. Če manjka vsak odigrani zapisnik, zagon pade. Ob delni pokritosti audit vedno pade; nočni nadzor mora zaznati tekme brez pravočasnega uvoza.
 
 Karton rezerve brez vstopa ustvari ničminutni disciplinski nastop. Ponovni vstop zavrnemo, ker skupni model baze hrani le en interval nastopa. Klubi imajo pri shranjevanju pripono zveze zaradi imenjakov med španskimi zvezami; pred uvozom preveri tudi isti klub med sezonama.

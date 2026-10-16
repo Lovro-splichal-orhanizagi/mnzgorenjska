@@ -123,6 +123,9 @@ export function preglejZapisnik(html,{zveza,sezona:pricakovanaSezona=null}={}) {
   }
   for(const row of rows(cards[1])) {
    const cs=cells(row);if(cs.length!==2) fail('neznan karton')
+   // Observed archive placeholder has no trustworthy event time. In
+   // particular it cannot safely establish a second caution or dismissal.
+   if(/^\(999'\)/.test(text(cs[1])))nepopolno('neznan čas kartona 999; statistika cele tekme zadržana')
    const d=minute(cs[1])
    const staff=[...t.chunk.matchAll(/<h5\b[^>]*><strong>[^<]*<\/strong>([\s\S]*?)<\/h5>/gi)].map(m=>text(m[1]))
    if(staff.includes(d.ime)){ if(all.some(p=>p.ekipaIdx===idx&&p.ime===d.ime))fail('dvoumen igralec in trener'); osebje.push({ekipaIdx:idx,...d}); continue }

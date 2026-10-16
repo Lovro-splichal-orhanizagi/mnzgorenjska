@@ -116,7 +116,9 @@ export function preslikaveNovanet(html) {
       continue
     }
     if (!/\bntype\s*\(/.test(skript)) continue
-    const m = skript.trim().match(/^ntype\(\s*["']([\w-]+)["']\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*["']fa-\d["']\s*\);?$/)
+    // oc is a numeric CSS class label to remove, not a score digit. The live
+    // template also emits fa-12; only the validated table/index supplies score.
+    const m = skript.trim().match(/^ntype\(\s*["']([\w-]+)["']\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*["']fa-\d+["']\s*\);?$/)
     if (!m) throw napaka('neznan klic ntype')
     if (!formula) throw napaka('manjka tabela preslikav ntype')
     const n = Number(m[2]), i = Number(m[3])
