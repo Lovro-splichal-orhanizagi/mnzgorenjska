@@ -1,0 +1,25 @@
+# Stroj SLFF Scout (python -m stroj --zanka) na VM: /opt/slff-scout/
+#   docker-compose.yml   ta datoteka
+#   Dockerfile           python:3.12-slim + paket iz app/
+#   .env                 SCOUT_DB_URL=postgresql://scout_stroj:<geslo vloge>@127.0.0.1:5432/postgres
+#                        (chmod 600, ustvari lastnik, NI v gitu)
+#   app/                 scout/stroj/ brez testov (objavi-scout.sh)
+# Objava: scripts/hetzner/objavi-scout.sh. CI tega ne objavi.
+# Dnevnik: docker logs slff-scout. Preizkus brez pisanja:
+#   docker compose run --rm scout python -m stroj
+services:
+  scout:
+    build: .
+    image: slff-scout:1
+    container_name: slff-scout
+    restart: unless-stopped
+    init: true
+    # Gostiteljevo omrežje: Postgres posluša na 127.0.0.1:5432 (docker-compose.slff.yml).
+    network_mode: host
+    environment:
+      TZ: Europe/Ljubljana
+      PYTHONUNBUFFERED: "1"
+    env_file: .env
+    # Strežnik CPX22 (4 GB) nosi še bazo, Supabase in slff-objave (1536m); vrh izmeri Task 12.
+    mem_limit: 1g
+    cpus: 1.0
