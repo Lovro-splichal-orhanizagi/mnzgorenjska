@@ -4211,7 +4211,7 @@ zapisnikov po 3 s — prvi uvoz okoli 20–30 minut.
 Obe spletišči (in fscg.me z državnimi ligami) izrišeta podatke COMET s
 strežnika v isti predlogi podjetja Auris kot lff.lv, zato imata skupen razčlenjevalnik
 (`scripts/viri/comet-auris.mjs`) in vsak svoj tanek vir. Državi `LT`
-("Lietuva") in `ME` ("Crna Gora") vpiše migracija lig (20261015163100);
+("Lietuva") in `ME` ("Crna Gora") vpiše migracija lig (20261016091300);
 vmesnika v litovščini ali črnogorščini, kartic in pošte **še ni**, `LT` in
 `ME` **nista** v matriki nočnega uvoza — oboje pred vklopom. Šifre lig se
 začnejo z `lt-` oziroma `me-`. Uvoz za ligo ne potrebuje ničesar več.
@@ -4366,7 +4366,7 @@ Sjever 2025/26 jih ima 25, ker so klubi spomladi odstopili):
 Centar 2024/25 id-ja nismo našli (posnetek septembra 2024 še kaže 2023/24
 `6381521`).
 
-Vpisanih je 10 lig (migracija 20261015163100), **neaktivnih**:
+Vpisanih je 10 lig (migracija 20261016091300), **neaktivnih**:
 
 | liga | klubov | tekoča | arhiv | zveza |
 |---|---|---|---|---|
