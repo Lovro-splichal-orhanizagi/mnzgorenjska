@@ -25,6 +25,9 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && startsWith(github.ref, 'refs/heads/codex/spain-germany-production')
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    concurrency:
+      group: live-source-${{ matrix.vir }}-${{ github.ref }}
+      cancel-in-progress: false
     strategy:
       fail-fast: false
       max-parallel: 2
@@ -51,6 +54,21 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Anonimna javna seja — samo status in imena piskotkov
+        if: matrix.vir == 'novanet'
+        run: |
+          node --input-type=module <<'JS'
+          import { jeJavniCookieGate } from './scripts/viri/novanet-transport.mjs'
+          const urls=['https://www.futgal.es/pnfg/NPcd/NFG_CmpJornada?cod_primaria=1000120&CodTemporada=22&CodCompeticion=26990830&CodGrupo=27759837&CodJornada=1','https://www.futgal.es/pnfg/NPortada']
+          for(const url of urls){
+            const r=await fetch(url,{redirect:'manual',signal:AbortSignal.timeout(30000)})
+            if([401,403,429].includes(r.status)){await r.body?.cancel();throw new Error('Public probe stopped: HTTP '+r.status)}
+            const names=(r.headers.getSetCookie?.()??[]).map(s=>s.slice(0,s.indexOf('='))).filter(s=>/^[A-Za-z0-9_-]{1,100}$/.test(s))
+            const body=await r.text()
+            console.log(JSON.stringify({path:new URL(url).pathname,status:r.status,cookieNames:names,bytes:Buffer.byteLength(body),cookieGate:jeJavniCookieGate(body)}))
+            if(!jeJavniCookieGate(body))break
+          }
+          JS
       - name: Cela sezona — brez baze in brez servisnega kljuca
         env:
           VIR: ${{ matrix.vir }}
