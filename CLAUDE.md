@@ -4960,7 +4960,7 @@ Uvoz (ena za drugo, ~10 s na zapisnik — arhiv 240 zapisnikov je ~40 minut):
 Vir `upl` (`scripts/viri/upl.mjs`) bere **upl.ua** (Українська Прем'єр-Ліга):
 najvišjo ligo, 16 klubov, 30 krogov. Perša in Druga liga sta pri `pfl-ua`
 (zgoraj). Država `UA` je iz migracije PFL; zveza `upl` in liga `ua-upl`
-(migracija 20261015165100), **neaktivna**. Za vmesnik, kartico, pošto in nočni
+(migracija 20261016092500), **neaktivna**. Za vmesnik, kartico, pošto in nočni
 uvoz velja isto kot pri `pfl-ua` — pred vklopom.
 
 - **Šifra lige je id prvenstva sezone** (`432` = 2026/27, `428` = 2025/26,
