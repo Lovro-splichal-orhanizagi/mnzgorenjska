@@ -105,14 +105,16 @@ napovedi pri igralcih, ki so zamenjali ligo (prestopniki): model, naivno
 Pogoj šteje le **pokrite prestopnike** (`n_pokriti`): obe ligi para imata moč
 z virom `model` ali `piramida`, ne nadomestne (`drzava`, `brez`). Pri ligi
 brez naučene moči je model kar ablacija in razlike ni mogoče izmeriti.
-`n`, `mae_model`, `mae_naivno`, `mae_brez_moci` veljajo za vse pare,
-`n_prestopi` za vse prestopnike, `mae_*_prestopi` in izboljšavi le za pokrite.
+`n`, `mae_model`, `mae_naivno`, `mae_brez_moci` veljajo za vse pare in
+`n_prestopi` šteje vse prestopnike; `mae_*_prestopi`, `izboljsava_prestopi` in
+`izboljsava_moci` pa so izračunani **le na pokritih** prestopnikih.
 
 **Ciljna sezona** (`izberi_ciljno_leto`): od zadnje (`max(leto)`) navzdol,
 največ tri, prva z vsaj 200 pokritimi prestopniki (šteje jih le prilagoditev
 moči, brez kazalnikov). Če je ni, je `stanje` `premalo podatkov` in
-`ciljno_leto` prazno. Tekoča sezona je lahko ciljna: je šumnejša (nedokončana),
-a pogosto edina z dovolj zgodovine pred sabo.
+`ciljno_leto` prazno. **Ciljna je lahko tudi tekoča sezona** — namerna
+izbira: zgodaj v sezoni je ocena šumnejša (malo minut), a je pogosto edina z
+dovolj zgodovine pred sabo.
 
 `stanje`:
 
@@ -124,9 +126,12 @@ a pogosto edina z dovolj zgodovine pred sabo.
 Raziskava (10/2026, produkcija, branje brez pisanja): stari pogoj s ciljno
 2025 je bil `padel` s +0,0015 % proti ablaciji, ker 2025 skoraj nima
 zgodovine (pred njo le 2024) — moč se je naučila za 2 ligi, 918 od 926 lig je
-dobilo 0 in 99,9 % prestopnikov je imelo enako moč obeh lig. Ciljna 2026
-(5563 pokritih prestopnikov): **+7,3 % proti ablaciji, +18,7 % proti naivni**,
-torej `prestal`; 2026 je tekoča sezona, zato je ocena šumnejša.
+dobilo 0 in 99,9 % prestopnikov je imelo enako moč obeh lig.
+
+Prvi zagon z novim pogojem na produkciji (16. 10. 2026, branje brez pisanja):
+ciljna 2026, 5563 pokritih prestopnikov, **+18,6 % proti naivni, +7,3 %
+proti ablaciji**, `prestal`. Trajal je 61 s, največ ~600 MB pomnilnika
+(lokalno). 2026 je tekoča sezona, zato je ocena šumnejša.
 
 ## Urnik
 

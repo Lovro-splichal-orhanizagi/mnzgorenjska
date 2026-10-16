@@ -65,7 +65,8 @@ def zagon(conn: psycopg.Connection, pisi: bool, sili_moc: bool) -> int | None:
         moc, elo_koef = prilagodi(sezone, lige, elo_lig)
         leto = izberi_ciljno_leto(sezone, lige, elo_lig)
         bt = backtest(sezone, lige, elo_lig, leto) if leto is not None else {
-            "ciljno_leto": None, "stanje": "premalo podatkov", "prestal": False}
+            "ciljno_leto": None, "n": 0, "n_prestopi": 0, "n_pokriti": 0,
+            "stanje": "premalo podatkov", "prestal": False}
         izracunano, objavljen = zdaj, bool(bt.get("prestal"))
     else:
         # dan brez backtesta podeduje njegov izid: objavljen=False bi vsak dan
