@@ -123,6 +123,7 @@ tabelo šifer tam, ne tu.
 | Norveška | `docs/viri/norveska.md` | `nff` |
 | Kazahstan | `docs/viri/kazahstan.md` | `kff` |
 | Moldavija | `docs/viri/moldavija.md` | `fmf` |
+| Azerbajdžan | `docs/viri/azerbajdzan.md` | `pfl-az` |
 
 Pravila, ki veljajo za vse vire (podrobnosti v datotekah):
 

@@ -59,6 +59,7 @@ import modular11 from './modular11.mjs'
 import dbu from './dbu.mjs'
 import nff from './nff.mjs'
 import kff from './kff.mjs'
+import pflAz from './pfl-az.mjs'
 
 const VIRI = {
   mnzg,
@@ -192,6 +193,9 @@ const VIRI = {
   // Kazahstan (KFF) prek kffleague.kz: JSON v drevesu RSC strani tekme, šifra
   // osebe, pozicije iz postave, koledarska sezona.
   kff,
+  // Azerbajdžan: PFL (I in II Liqa) prek javnega API-ja pfl.az (razpored) in
+  // zapisnikov PDF (pdftotext); brez šifer igralcev, vratar je prvi začetnik (namig).
+  'pfl-az': pflAz,
 }
 
 /**
