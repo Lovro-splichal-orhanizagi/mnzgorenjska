@@ -50,6 +50,40 @@ function cardEntries(icon,segments){
   // shared by all names, or icons and names align one-for-one in public order.
   return segments.map((segment,i)=>({segment,kind:kinds.length===1?kinds[0]:kinds[i]}))
 }
+function goalEntries(icon,segments){
+  const kinds=[...icon.matchAll(/m-MatchDetails-icon-goal--([\w-]+)/g)].map(m=>m[1])
+  if(!segments.length||kinds.length!==1||!['goal','penalty','own-goal'].includes(kinds[0]))fail('nepodprt gol')
+  // Actual reports group consecutive same-minute score steps under one icon.
+  // Each explicit name+score segment remains an independently verified goal.
+  return segments.map(segment=>({segment,kind:kinds[0]}))
+}
+function orderedTimeline(section){
+  const rows=elements(section,'div','m-MatchDetails-history-item').map((row,index)=>{
+    const rawMinute=text(one(row.inner,'div','m-MatchDetails-history-minute').inner)
+    // Actual DFB labels print plain `90 12'`; a participating club confirms
+    // the 12th added-minute goal. Do not generalize to arbitrary two integers.
+    const spaced=rawMinute.match(/^90 ([1-9]|[12]\d|30)'$/)
+    const time=(spaced?`90+${spaced[1]}'`:rawMinute).match(/^(\d+)(?:\+(\d+))?'$/)
+    if(!time||+time[1]>90||+(time[2]??0)>30)fail('nepodprta minuta dogodka')
+    return {row,index,rawMinute,spaced,base:+time[1],minute:Math.min(+time[1],90),order:+time[1]*100+ +(time[2]??0)}
+  })
+  let standardOrder=0,spacedOrder=0,spaceSeen=false
+  for(const r of rows){
+    if(r.spaced){
+      if(r.order<spacedOrder)fail('neveljavno časovno zaporedje')
+      spacedOrder=r.order;spaceSeen=true
+    }else{
+      // Only mixed spellings within the terminal 90-minute tail may merge.
+      // Never repair ordinary timing errors or a return to an earlier minute.
+      if(r.order<standardOrder||(spaceSeen&&r.base<90))fail('neveljavno časovno zaporedje')
+      standardOrder=r.order
+    }
+  }
+  // Both subsequences are already monotonic. A stable merge corrects the
+  // observed `90 11' before `90+3'` presentation without inventing timestamps.
+  const ordered=spaceSeen?[...rows].sort((a,b)=>a.order-b.order||a.index-b.index):rows
+  return {rows:ordered,reordered:ordered.some((r,i)=>r.index!==i)}
+}
 function eventSignatures(section) {
   const out=[]
   for(const row of elements(section,'div','m-MatchDetails-history-item')){
@@ -62,6 +96,10 @@ function eventSignatures(section) {
       const rawSegments=elements(e.inner,'div','m-MatchDetails-history-event-text-segment')
       if(kinds.length&&kinds.every(k=>k[1]==='card')){
         for(const {segment,kind} of cardEntries(icon,rawSegments))out.push({type:'card',key:JSON.stringify([side,minute,`m-MatchDetails-icon-card--${kind}`,[text(segment.inner).normalize('NFC')]])})
+        continue
+      }
+      if(kinds.length&&kinds.every(k=>k[1]==='goal')){
+        for(const {segment,kind} of goalEntries(icon,rawSegments))out.push({type:'goal',key:JSON.stringify([side,minute,`m-MatchDetails-icon-goal--${kind}`,[text(segment.inner).normalize('NFC')]])})
         continue
       }
       if(kinds.length!==1)fail('neenolična vrsta dogodka')
@@ -123,11 +161,20 @@ export function vZapisnik(html, { id, tekma } = {}) {
   const coaches = [new Set(), new Set()]
   for (const [idx, table] of tables.entries()) {
     const body = one(table.inner, 'tbody').inner
+    const seenPeople=[new Set(),new Set()]
     for (const row of elements(body, 'tr')) {
       for (const [side, sideName] of ['home','away'].entries()) {
         const person = one(row.inner, 'td', `m-MatchDetails-lineup-person--${sideName}`)
-        const number = text(one(row.inner, 'td', `m-MatchDetails-lineup-number--${sideName}`).inner)
+        const numberCell=one(row.inner, 'td', `m-MatchDetails-lineup-number--${sideName}`)
+        const number = text(numberCell.inner)
         if (!text(person.inner) && !number) continue
+        // Report2401942 repeats exact person+jersey cells in XI and bench;
+        // unequal bench lengths pair them with different opposite-side rows.
+        // Collapse identical source cells only, never conflicting identities,
+        // optional profiles, goalkeeper markers or jersey numbers.
+        const sourceCells=JSON.stringify([person.outer,numberCell.outer])
+        if(seenPeople[side].has(sourceCells))continue
+        seenPeople[side].add(sourceCells)
         const p = identity(person.inner)
         if (!/^\d{1,3}$/.test(number)) fail('igralec brez dresa')
         const markedKeeper=/\(T\)\s*$/.test(text(person.inner))
@@ -138,7 +185,10 @@ export function vZapisnik(html, { id, tekma } = {}) {
       }
     }
     const foot = elements(table.inner, 'tfoot')[0]?.inner ?? ''
-    for (const [side, name] of ['home','away'].entries()) for (const cell of elements(foot, 'td', `m-MatchDetails-lineup-person--${name}`)) if (text(cell.inner)) coaches[side].add(nameKey(text(cell.inner)))
+    for (const [side, name] of ['home','away'].entries()) for (const cell of elements(foot, 'td', `m-MatchDetails-lineup-person--${name}`)) {
+      // Repeated public coach entries may share one cell separated by <br>.
+      for(const fragment of cell.inner.split(/<br\s*\/?\s*>/i))if(text(fragment))coaches[side].add(nameKey(identity(fragment).ime))
+    }
   }
   const players = teams.map((t,side) => {
     if (t.postava.length !== 11 || t.postava.filter(p=>p.vratar).length !== 1) fail('nepopolna začetna postava ali vratar')
@@ -183,18 +233,10 @@ export function vZapisnik(html, { id, tekma } = {}) {
   // cannot distinguish an unused reserve from a reserve dismissed on the bench.
   const discipline=new Map()
   const runningScore=[0,0]
-  let previous=0
-  for (const row of elements(sections.get('Spielverlauf'),'div','m-MatchDetails-history-item')) {
-    const rawMinute=text(one(row.inner,'div','m-MatchDetails-history-minute').inner)
-    // Observed official report 2426025 prints `90 12'` / `90 13'` as plain
-    // text. The participating club confirms the 12th added-minute equalizer.
-    // Accept only this bounded 90-space-added form, not arbitrary integers.
-    const spaced=rawMinute.match(/^90 ([1-9]|[12]\d|30)'$/)
-    const time = (spaced?`90+${spaced[1]}'`:rawMinute).match(/^(\d+)(?:\+(\d+))?'$/)
-    if (!time || +time[1]>90 || +(time[2]??0)>30) fail('nepodprta minuta dogodka')
-    const order=+time[1]*100+ +(time[2]??0), minute=Math.min(+time[1],90)
+  const timeline=orderedTimeline(sections.get('Spielverlauf'))
+  if(timeline.reordered)opozorila.push('Popravljen vrstni red mešanih zapisov dodatka k 90. minuti po izrecnih časih; vrstni red vsake oblike je ohranjen.')
+  for (const {row,rawMinute,spaced,minute} of timeline.rows) {
     if(spaced)opozorila.push(`Minuta ${rawMinute}: presledek v uradnem zapisu dodatka k 90. minuti; izvorni zapis ohranjen.`)
-    if(order<previous)fail('neveljavno časovno zaporedje');previous=order
     const events=elements(row.inner,'div','m-MatchDetails-history-event').filter(e=>!has(e.tag,'is-empty'))
     if (!events.length || events.length>2)fail('nepopoln dogodek')
     for (const e of events) {
@@ -216,22 +258,22 @@ export function vZapisnik(html, { id, tekma } = {}) {
       }
       const event=(p,personSide=side)=>({ime:p.ime,st:p.st,virId:p.virId,ekipaIdx:personSide,minuta:minute,...(spaced?{minutaZapis:rawMinute}:{})})
       if (/m-MatchDetails-icon-goal--/.test(icon)) {
-        const kind=icon.match(/m-MatchDetails-icon-goal--([\w-]+)/)?.[1]
-        if(!['goal','penalty','own-goal'].includes(kind) || segments.length!==1)fail('nepodprt gol')
-        const avtogol=kind==='own-goal'||/\bEigentor\b/.test(text(segments[0].inner))
+        for(const {segment,kind} of goalEntries(icon,segments)){
+        const avtogol=kind==='own-goal'||/\bEigentor\b/.test(text(segment.inner))
         const personSide=avtogol?1-side:side
-        const p=resolve(segments[0].inner,false,false,personSide)
+        const p=resolve(segment.inner,false,false,personSide)
         if(p.offiziell)fail('gol uradne osebe')
         if(!active[personSide].has(p.virId))fail('gol neaktivnega igralca: ni vstopa ali je že izstopil')
         // Actual DFB penalties retain the ordinary goal icon; their distinction
         // is the explicit public `(Elfmeter)` text next to the player's name.
-        const enajstmetrovka=kind==='penalty'||/\(Elfmeter\)/.test(text(segments[0].inner))
+        const enajstmetrovka=kind==='penalty'||/\(Elfmeter\)/.test(text(segment.inner))
         // In all observed own-goal formats the event sits on the beneficiary
         // side, while the named scorer belongs to the opposite official XI.
         runningScore[side]++
-        const stageScore=text(segments[0].inner).match(/\b(\d+):(\d+)\b/)
+        const stageScore=text(segment.inner).match(/\b(\d+):(\d+)\b/)
         if(!stageScore || +stageScore[1]!==runningScore[0] || +stageScore[2]!==runningScore[1])fail('neveljavno zaporedje izidov pri golih')
         goli.push({...event(p,personSide),avtogol,enajstmetrovka,rezultat:[...runningScore]});counters.goal++
+        }
       } else if (/m-MatchDetails-icon-card--/.test(icon)) {
         for(const {segment,kind} of cardEntries(icon,segments)){
         const p=resolve(segment.inner)

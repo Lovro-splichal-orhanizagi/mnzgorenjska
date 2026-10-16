@@ -40,3 +40,13 @@ Za ponovljive preizkuse: `npm run test:novanet`, `npm run test:sources`. Zajeti 
 Pri obeh zgoraj preverjenih ligah Tercera Futgal je redni del90 minut: izvorni absolutni čas95/96 se zato ob izrecnem kontekstu pretvori v90+5/90+6. Izvorni zapis ostane ohranjen, minute za fantasy pa omejene na90. Splošna razčlenitev in druge šifre tega pravila ne dobijo; minute999, podaljški in dvoumni zapisi ostanejo zavrnjeni.
 
 Neznan ali dvoumen charset nikoli ne povzroči ugibanja imen. Audit tak odgovor zadrži in shrani omejene izvorne bajte kot `.bin`, z javnim Content-Type in napako v manifestu; piškotki niso del dokaza.
+
+
+## Celotni živi pregled 16. 10. 2026
+
+Arhivski pregled je zajel vseh 18 krogov in poskusil vseh 90 odigranih tekem. Deset zapisnikov je veljavnih; zapisnika1306457 (manjkajoče menjave) in1306462 (karton pri999) ostajata nepopolna. Preostalih78 odgovorov je bilo praznih, brez bajtov in brez navedene kodne strani. Vzrok ni ugotovljen; to niso veljavni zapisniki in ni dovoljeno sklepati, da ni bilo dogodkov. Dokaz je artefakt `vir-galicia-2025` teka38941059903.
+
+Prenos zdaj ob prvem praznem odgovoru ustavi celoten zagon. Shrani prazne izvorne bajte, dejanski HTTP status in javni Content-Type; takšnega odgovora ne ponavlja in ga ne zbere kot preskočljivo napako razčlenitve. Tudi napaka pri zapiranju telesa odgovora ne sme prekriti prvotne zavrnitve preusmeritve ali omejitve velikosti. Pregled tekoče sezone je ločen od arhivskega, da ne ponavlja že ugotovljenih praznih odgovorov.
+
+
+Tekoči pregled teka38962574407 po končnih popravkih potrdi vseh 18 krogov in 10/10 odigranih zapisnikov: 20 postav po11, 45 golov, 83 menjav, 46 rumenih in5 rdečih kartonov. `pokritost=true`, `napake=[]`; `pripravljeno=false` ostane zaradi vseh desetih klubov brez izrecne oznake vratarja. Ta rezultat ne odpravi arhivskih vrzeli ali zahtev pozicij/cenika. Artefakt `vir-galicia-2026` vsebuje vseh28 izvornih dokumentov.

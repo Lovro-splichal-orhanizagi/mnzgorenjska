@@ -27,9 +27,7 @@ Vir je `scripts/viri/dfb.mjs`, ne `fussball`.
 Pravi javni zajemi so navedeni v
 [`de-dfb-provenance.md`](../../scripts/vzorci/de-dfb-provenance.md):
 tekoči zapisnik `2425990`, arhivski `2401894`, dodatni tekoči `2426054` in
-celoten razpored BFC Dynamo s 34 tekmami. Sintetična sezona v testih preverja
-prehod med 18 klubskimi stranmi in združevanje 306 tekem; ni dokaz dejansko
-prenesenih vseh 306 zapisnikov.
+celoten razpored BFC Dynamo s 34 tekmami. Celotni živi pregled teka38939351677 je nato dejansko zajel vseh306 arhivskih in108 tekočih zapisnikov, skupaj s klubskimi razporedi. Izvorni dokumenti in poročili sta v artefaktih `vir-dfb-2025` in `vir-dfb-2026`. Sintetična sezona v testih dodatno preverja prehod med18 klubskimi stranmi in združevanje306 tekem; ni nadomestilo za te prave zajeme.
 
 `(T)` je izrecna oznaka vratarja. Vstopnik v uradnem paru menjave lahko
 podeduje že potrjeno vlogo vratarja; to je sklep iz menjave in ne samostojen
@@ -123,3 +121,10 @@ Omejitev `klub_stik_drzava_check` še ne sprejme DE. To zadeva ločeno
 funkcionalnost klubskih stikov; migracija je namenoma ne razširi in ne
 ustvarja stikov ali odhodne pošte. Tudi nemška imena hišnih lastnikov
 (`ime_hisnega_lastnika`) so ločena priprava pred ustvarjanjem hišnih ekip.
+
+
+## Sklep celotnega zajema
+
+Ponovitev vseh 414 dejanskih zapisnikov po razčlenitvi ohrani 108/108 tekočih in 302/306 arhivskih zapisnikov. Podvojene povsem enake celice postave se združijo samo znotraj iste strani in tabele; skupni označevalec gola ne izbriše posameznih izvornih strelcev in vmesnih izidov. Dve izrecni obliki časa v zaključnem sodnikovem dodatku se združita samo, če je vsaka podsekvenca že urejena; običajno neurejenih dogodkov ne popravljamo.
+
+Štirje arhivski zapisniki ostajajo zavrnjeni: 2401897 (nedokazana vloga Luis Zwick), 2401959, 2402023 in 2402046 (vmesni izidi nasprotujejo objavljenim časom golov). Nespremenjeni zajemi in negativni regresijski preizkusi varujejo te primere. Arhivska pokritost zato še ni popolna; to je pogoj za ustavitev izdaje in uvoza, ne dovoljenje za izpuščanje tekem ali izmišljanje minut. Celotna ponovitev uporablja dejanske klubovske razporede in preveri tudi sezono, datum, uro in izid.

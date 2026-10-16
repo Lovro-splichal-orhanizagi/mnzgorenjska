@@ -10,6 +10,68 @@ const penalty = readFileSync(new URL('./vzorci/de-dfb-2426054.html', import.meta
 const load = () => import(moduleUrl)
 const actual = id => readFileSync(new URL(`./vzorci/de-dfb-${id}.html`, import.meta.url), 'utf8')
 
+test('actual duplicated XI and bench cells deduplicate only byte-identical evidence', async () => {
+  const {vZapisnik}=await load(),html=actual('2401942'),z=vZapisnik(html)
+  assert.equal(z.domaci.postava.length,11)
+  assert.equal(z.gostje.postava.length,11)
+  assert.equal(z.domaci.postava.filter(p=>p.vratar).length,1)
+  assert.equal(z.domaci.rezerve.length,9)
+  assert.equal(z.gostje.rezerve.length,9)
+  assert.equal(z.uradneKazni.filter(c=>c.ime==='Volkan Uluc').length,1)
+  // A conflicting duplicate is not the observed repeated presentation row.
+  const changed=html.replace('>Marius Liesegang (T)</a>','>Different Person (T)</a>')
+  assert.notEqual(changed,html)
+  assert.throws(()=>vZapisnik(changed),/postava|vratar|dvoum/)
+  // Mutate the exact linked keeper entry rather than relying on a profile ID.
+  const keeperLink=html.match(/<a href="[^"]+">Marius Liesegang \(T\)<\/a>/)[0]
+  for(const replace of [keeperLink.replace(/\/profil\/\d+/, '/profil/999999'),keeperLink.replace(' (T)','')]){
+    const conflict=html.replace(keeperLink,replace)
+    assert.notEqual(conflict,html)
+    assert.throws(()=>vZapisnik(conflict),/postava|vratar|dvoum/)
+  }
+})
+
+test('actual mixed terminal stoppage formats merge only separately ordered subsequences', async () => {
+  const {vZapisnik}=await load(),html=actual('2426049'),z=vZapisnik(html)
+  assert.deepEqual(z.rezultat,{domaci:1,gostje:1})
+  assert.deepEqual(z.uradneKazni.filter(c=>c.ime==='Marco Grote').map(c=>[c.minuta,c.minutaZapis,c.vrsta]),[[90,"90 11'",'red']])
+  assert.equal(z.goli.find(g=>g.ime==='David Vogt').minuta,90)
+  assert(z.opozorila.some(s=>s.includes('vrstni red')))
+  for(const [from,to] of [["90+3'","80'"],["90+8'","90+2'"]]){
+    const conflict=html.replaceAll(from,to)
+    assert.notEqual(conflict,html)
+    assert.throws(()=>vZapisnik(conflict),/časovno zaporedje/)
+  }
+  // At equal exact times preserve source order: the originally earlier spaced
+  // event is an explicit caution, followed by that player's second yellow.
+  const tied=html.replaceAll("90 11'","90 3'").replaceAll('m-MatchDetails-icon-card--red','m-MatchDetails-icon-card--yellow')
+    .replace(/(<div class="m-MatchDetails-history-event-text-segment">)([\s\S]*?)(<\/div>)/g,(whole,start,body,end)=>start+body.replace('Marco Grote','Sören Reddemann')+end)
+  assert.notEqual(tied,html)
+  const tiedZ=vZapisnik(tied)
+  assert.deepEqual(tiedZ.rumeni.filter(c=>c.ime==='Sören Reddemann').map(c=>[c.minutaZapis,c.izpeljanIz]),[["90 3'",undefined]])
+})
+
+test('actual grouped goals retain every named score step at the published minute', async () => {
+  const {vZapisnik,nastopi}=await load()
+  const a=vZapisnik(actual('2402050'))
+  assert.deepEqual(a.goli.filter(g=>g.minuta===39).map(g=>[g.ime,g.rezultat]),[['Niclas Stierlin',[1,1]],['Joscha Wosz',[1,2]]])
+  assert.equal(nastopi(a).find(p=>p.ime==='Niclas Stierlin').goli,3)
+  const b=vZapisnik(actual('2426063'))
+  assert.deepEqual(b.goli.filter(g=>g.minuta===76).map(g=>[g.ime,g.rezultat]),[['Djamal Ziane',[1,2]],['Djamal Ziane',[2,2]]])
+  assert.equal(nastopi(b).find(p=>p.ime==='Djamal Ziane').goli,2)
+  const original=actual('2426063'),changed=original.replace(/(<div class="m-MatchDetails-history-event-text-segment">)([\s\S]*?)(<\/div>)/g,(whole,start,body,end)=>body.includes('Djamal Ziane')?start+body.replace('2:2','1:2')+end:whole)
+  assert.notEqual(changed,original)
+  assert.throws(()=>vZapisnik(changed),/zaporedje izidov/)
+})
+
+test('actual score steps contradicting their published stoppage minutes remain rejected', async () => {
+  const {vZapisnik,zaPredpomnilnik}=await load()
+  for(const id of ['2401959','2402023','2402046']){
+    assert.throws(()=>vZapisnik(actual(id)),/neveljavno zaporedje izidov pri golih/)
+    assert.equal(zaPredpomnilnik(actual(id)),false)
+  }
+})
+
 test('actual archive card outside the published lineup and substitutions remains unresolved', async () => {
   const {vZapisnik,zaPredpomnilnik}=await load(),html=actual('2401897')
   // The named official profile alone establishes no match role: no bench is

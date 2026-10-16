@@ -18,7 +18,7 @@ The user has requested completion of the remaining production work. This superse
 - [x] Fix canonical Novanet public season, validated cache expiry, card-only bench appearances and non-destructive missing report handling with regressions.
 - [x] Implement and review DFB source, current/archive and malformed-page regression corpus.
 - [x] Add a read-only whole-season audit, explicit coverage and goalkeeper evidence gates, and live audit artifact capture.
-- [ ] Run full live audits in a normal CI runner; address actual source variation with captured regressions.
+- [x] Run full live audits in a normal CI runner; address supported source variation with captured regressions and document unresolved source data.
 - [x] Add verified inactive seeds, source documentation and nightly import registration.
 - [ ] Verify the feature branch against current main in CI, including fresh database tests.
 - [ ] Import inactive leagues using production workflow, inspect roster identity/position/price readiness, then activate only leagues passing all gates.
@@ -27,12 +27,12 @@ Any remaining blocker must be reported as a concrete failed gate with its eviden
 
 ## Validation checkpoint
 
-- Feature branch: `codex/spain-germany-production`, draft PR #334. Newer main was merged on 2026-10-16; all three conflicts were resolved while retaining new upstream sources, the HTTP401 refusal guard, and source-validated schedule fallback.
-- 169 focused source, country and audit tests pass. Full build/types/rendering and fresh database security/concurrency/freeze/publication checks passed in feature CI before the latest audit-only changes; final PR CI must confirm the latest commit.
-- Public anonymous Novanet HTTP sessions now work without browser cookies. The live numeric decoy class variant is covered by an unchanged fixture.
-- Galicia archive reports1306457 (no explicit substitutions section) and1306462 (card minute999) remain withheld. Goalkeeper roles are absent from official report/PDF/player pages; they are not guessed.
-- DFB actual90-space-added notation is corroborated by the participating club and preserved with raw-label warnings. Archive2401897 still has an unclassified named card recipient outside its published lineup/substitutions and no bench.
-- The read-only audit now collects strict parser failures throughout the season, while transport/refusal/challenge/programming failures still stop the run. Any collected failure keeps coverage/readiness false. Normal imports retain fatal unknown-format behavior.
-- Complete live audit rerun started at commit86640bf8b4f29e78f60f1a88d191d5ba189c012b. No production migration/import/activation has run.
-
-- Final source hardening additionally covers omitted-bench cautions before a same-report later substitution, explicit unplayed round previews, ambiguous charset refusal with raw-byte evidence, and context-bound absolute added-time clocks. Independent review found no remaining material code issues. The complete169-test suite passes; live data gates still remain separate.
+- Feature branch: `codex/spain-germany-production`, draft PR #334. Newer main sources and country integrations are preserved. The later upstream duplicate-PFL cleanup required retaining one import/registration in the combined tree; the final PR CI validates that integration.
+- 182 focused source, country and audit tests pass. Independent review found no remaining material findings in the final Novanet transport and DFB format patches. Full build/types/rendering and fresh database security/concurrency/freeze/publication checks passed on9ae83f6 in manual feature CI38962574407; its separate source job correctly fails the goalkeeper evidence gate. Final PR CI must also pass against newer main.
+- Spain current live audit38962574407 fetched all18 rounds and10/10 played reports with schedule/report agreement and complete coverage. Goalkeeper evidence is absent for all10 clubs.
+- Spain archive audit38941059903 attempted90 reports:10 valid,2 explicitly incomplete,78 empty zero-byte responses. The reason for empty source bodies is unknown. The importer/audit now stops at the first empty successful response and preserves its HTTP status and raw evidence. No additional archive crawl is needed to establish this failed gate.
+- Galicia reports1306457 (missing substitutions) and1306462 (card minute999) remain withheld. Official report/PDF/player pages do not establish goalkeeper roles; they are not guessed. Absolute95/96-minute clocks are supported only under the two verified regular90-minute league contexts.
+- German complete live capture38939351677 includes all306 archive and108 current reports. Final replay through actual18-team schedules accepts302/306 archive and108/108 current. Archive2401897 has an unresolved card recipient's match role;2401959,2402023 and2402046 contain conflicting score/time sequences. They remain rejected with unchanged fixture regressions and cache refusal.
+- Whole-season audits collect recognized parser failures for diagnosis; transport/refusal/challenge/programming errors stop immediately. Any incomplete match or unverified goalkeeper gate keeps readiness false. Normal imports retain fatal unknown-format behavior.
+- Inactive seeds, country entry/localization, nightly registration and reusable source/season audit selectors are implemented. No production migration, import, valuation, activation or server/function deployment has run.
+- Release is blocked by concrete source data/position gates. Price validation and future-round activation must follow resolved coverage and position evidence; no league is claimed production ready.

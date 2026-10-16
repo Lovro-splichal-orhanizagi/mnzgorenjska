@@ -25,6 +25,7 @@ import fss from './fss.mjs'
 import fssid from './fssid.mjs'
 import frf from './frf.mjs'
 import hlf from './hlf.mjs'
+import fmf from './fmf.mjs'
 import pzpn from './pzpn.mjs'
 import jalgpall from './jalgpall.mjs'
 import lff from './lff.mjs'
@@ -55,8 +56,15 @@ import upl from './upl.mjs'
 import ffl from './ffl.mjs'
 import ksi from './ksi.mjs'
 import fsf from './fsf.mjs'
+import modular11 from './modular11.mjs'
+import dbu from './dbu.mjs'
+import nff from './nff.mjs'
+import kff from './kff.mjs'
+import pflAz from './pfl-az.mjs'
 
 const VIRI = {
+  // Ukrajina: Profesionalna nogometna liga prek pfl.ua.
+  'pfl-ua': pflUa,
   mnzg,
   mnzlj,
   mnzce,
@@ -91,6 +99,9 @@ const VIRI = {
   hlf,
   // Poljska: uradni zapisniki PZPN (Extranet) prek javnega gradnika vojvodske zveze.
   pzpn,
+  // Moldavija (FMF) prek fmf.md: zapisniki COMET kot PDF (pdftotext), šifra osebe
+  // COMET, vratar (G).
+  fmf,
   // Estonija (EJL) prek jalgpall.ee: šifre igralcev, pozicije iz postavitve,
   // koledarska sezona.
   jalgpall,
@@ -160,9 +171,6 @@ const VIRI = {
   // Gruzija (GFF) prek liga.gff.ge: Liga 3 in 4, brez šifer igralcev (ime + klub),
   // vratar je prvi začetnik (namig), koledarska sezona, Crawl-delay 10 s.
   gff,
-  // Ukrajina: Професіональна футбольна ліга (pfl.ua) — Perša liga, Druga liga A in B;
-  // koledar JSON, šifra igralca, vratar iz postavitve.
-  'pfl-ua': pflUa,
   // Ukrajina: Українська Прем'єр-Ліга (upl.ua) — koledar prvenstva in raport arbitra;
   // šifra igralca, vratar iz postavitve.
   upl,
@@ -174,6 +182,21 @@ const VIRI = {
   // Ferski otoki (FSF) prek javnega posrednika COMET na fsf.fo (JSON, ki ga
   // stran kliče sama): šifre oseb, vratar, koledarska sezona, druge ekipe ("B36 II").
   fsf,
+  // ZDA: USL League Two prek Modular11 (prvi vir zunaj Evrope); razpored je
+  // GET seznam tekem divizije, zapisnik JSON v strani tekme, krog je teden.
+  modular11,
+  // Danska: Dansk Boldspil-Union prek dbu.dk/resultater (HTML), pulje po sezoni,
+  // brez šifer igralcev (ime + klub); krogi iz datumov. Pisno dovoljenje DBU.
+  dbu,
+  // Norveška (NFF) prek fotball.no (FIKS): šifra osebe, koledarska sezona,
+  // nižje lige pogosto brez menjav; zajem s pisnim dovoljenjem NFF.
+  nff,
+  // Kazahstan (KFF) prek kffleague.kz: JSON v drevesu RSC strani tekme, šifra
+  // osebe, pozicije iz postave, koledarska sezona.
+  kff,
+  // Azerbajdžan: PFL (I in II Liqa) prek javnega API-ja pfl.az (razpored) in
+  // zapisnikov PDF (pdftotext); brez šifer igralcev, vratar je prvi začetnik (namig).
+  'pfl-az': pflAz,
 }
 
 /**
