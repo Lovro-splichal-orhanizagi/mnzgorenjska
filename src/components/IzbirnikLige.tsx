@@ -13,7 +13,7 @@
 // nazadnje izbrane lige, nad seznamom izbira ravni (člani, U19), kadar ima
 // država oboje. Iskanje gre čez vse države in vse lige pokaže razprte.
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useTekmovanje, type Tekmovanje } from '../lib/tekmovanje'
 import { potrdiZapustitev } from '../lib/neshranjeno'
 import { drzaveZLigami, preklopiDrzavo } from '../lib/drzava'
@@ -24,6 +24,7 @@ import SpustniMeni from './SpustniMeni'
 import Zastava from './Zastava'
 import FotoIgralca from './FotoIgralca'
 import ZnakPreverjen from './ZnakPreverjen'
+import { ZelimLigoOkno } from './ZelimLigo'
 import {
   dovoljZaIskanje,
   opisIgralca,
@@ -32,6 +33,7 @@ import {
   type NajdenIgralec,
 } from '../lib/iskanjeIgralcev'
 import { prikazniIme } from '../lib/pomozno'
+import { drzavaVstopa } from '../lib/drzavaUgib'
 
 /** Toliko igralcev pokaže razdelek "Igralci" pod ligami. */
 const IGRALCEV_V_IZBIRNIKU = 6
@@ -165,8 +167,15 @@ function Puscica({ obrnjena, className = '' }: { obrnjena: boolean; className?: 
 }
 
 export default function IzbirnikLige() {
-  const { slug, tekmovanja, vsaTekmovanja, drzava, tekmovanje, nastavi } = useTekmovanje()
+  const { slug, tekmovanja, vsaTekmovanja, drzava: drzavaLige, tekmovanje: izbranaLiga, nastavi } = useTekmovanje()
+  // Vstopna stran države (`/at`) ne izbere lige: shranjena ali privzeta liga
+  // je lahko iz druge države in glava bi na avstrijski strani kazala "Člani".
+  const vstop = drzavaVstopa(useLocation().pathname)
+  const tujaLiga = vstop != null && izbranaLiga?.country_code !== vstop
+  const drzava = tujaLiga ? vstop : drzavaLige
+  const tekmovanje = tujaLiga ? null : izbranaLiga
   const [odprt, setOdprt] = useState(false)
+  const [zelja, setZelja] = useState(false)
   const [iskanje, setIskanje] = useState('')
   // Država, katere lige plošča kaže. Izbira le brska — stran se ne naloži
   // znova, dokler človek ne izbere lige.
@@ -351,7 +360,7 @@ export default function IzbirnikLige() {
     if (t.slug !== slug && !potrdiZapustitev()) return
     if (t.slug !== slug) zapisiNedavno(t.slug, slug)
     // Liga druge države: jezik se med obiskom ne menja, zato stran naloži znova.
-    if (t.country_code && t.country_code !== drzava) {
+    if (t.country_code && t.country_code !== drzavaLige) {
       preklopiDrzavo(t.country_code, vsaTekmovanja, { liga: t.slug })
       return
     }
@@ -364,7 +373,7 @@ export default function IzbirnikLige() {
   const izberiIgralca = (z: NajdenIgralec) => {
     if (!potrdiZapustitev()) return
     const pot = potIgralca(z)
-    if (z.drzava && z.drzava !== drzava) {
+    if (z.drzava && z.drzava !== drzavaLige) {
       // Druga država: jezik se zamenja le ob nalaganju strani.
       preklopiDrzavo(z.drzava, vsaTekmovanja, { liga: z.liga, pojdi: () => window.location.assign(pot) })
       return
@@ -656,8 +665,23 @@ export default function IzbirnikLige() {
               </div>
             </div>
           )}
+          {!drzaveOdprte && (
+            <div className="border-t border-white/10 px-3 py-2 text-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setOdprt(false)
+                  setZelja(true)
+                }}
+                className="text-xs text-slate-400 underline decoration-dotted underline-offset-2 hover:text-slate-200"
+              >
+                {prevod('aplikacija.zelimLigo.povezava')}
+              </button>
+            </div>
+          )}
         </div>
       )}
+      {zelja && <ZelimLigoOkno drzava={zavihek} zapri={() => setZelja(false)} />}
     </div>
   )
 }

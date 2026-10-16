@@ -75,6 +75,8 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
       'A kezdőcsapatban nincs több hely ezen a poszton. Előbb ültess le valakit a kispadra.',
     niVecNamestnik: '{ime} már nem alkapitány, válassz újat.',
     niVecKapetan: '{ime} már nem csapatkapitány, válassz újat.',
+    kapetanPrevzel: 'A csapatkapitányi karszalagot átvette: {ime}.',
+    namestnikPrevzel: 'Az új alkapitány: {ime}.',
     rokPotekel: 'A(z) {krog}. forduló határideje lejárt, a változtatások a következő fordulótól érvényesek.',
     shranjenaZaKrog: 'A csapatod elmentve, készen áll a(z) {krog}. fordulóra.',
     shranjenaVeljavna: 'A csapatod elmentve, és megfelel a szabályoknak.',
@@ -90,10 +92,16 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     zapriObvestilo: 'Értesítés bezárása',
     odstranjen: 'Eltávolítva: {ime}.',
     razveljavi: 'Visszavonás',
+    dodan: '{ime} bekerült a csapatodba. Nyomd meg a Mentés gombot.',
+    zeVEkipi: '{ime} már a csapatodban van.',
+    niNaTrgu: 'Ezt a játékost most nem lehet megvenni.',
   },
 
-  prijavaPotrebna: 'A csapat összeállításához be kell jelentkezned.',
-  prijava: 'Bejelentkezés',
+  brezPrijave: {
+    opis: 'A csapatot fiók nélkül is összeállíthatod. Ebben a böngészőben marad, amíg el nem mented.',
+    shrani: 'Mentés és fiók létrehozása',
+    pripravljena: 'A csapatod kész, mentsd el.',
+  },
   locenaLiga:
     'A csapatod itt: <liga>{liga}</liga>, külön van a többi bajnokságban lévő csapataidtól, saját költségvetéssel és saját tabellával. A pontok a(z) {krog}. fordulótól számítanak, mert addig még zajlanak az átigazolások és a korosztályok közti váltások.',
 
@@ -101,6 +109,10 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   vec: 'Még: bónuszok, előzmények, szabályok',
 
   prestopi: {
+    medSezono: {
+      one: 'Szezon közben csatlakozol: a következő határidőig ({krog}. forduló) büntetés nélkül állíthatod össze a csapatod. Utána fordulónként {n} ingyenes átigazolásod van, minden további −{kazen}.',
+      other: 'Szezon közben csatlakozol: a következő határidőig ({krog}. forduló) büntetés nélkül állíthatod össze a csapatod. Utána fordulónként {n} ingyenes átigazolásod van, minden további −{kazen}.',
+    },
     stevec: 'Átigazolások: {n}/{prosti}',
     wildcard: 'wildcard, levonás nélkül',
     odbitek: 'Levonás ebben a fordulóban: {tock}',
@@ -287,8 +299,13 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
 
   // Pálya a csapatépítőben (components/Igrisce.tsx).
   igrisce: {
-    naKlop: 'Kispadra',
-    vPostavo: 'Be a kezdőbe',
+    namigZamenjave: 'Koppints egy játékos mezére, majd arra, akivel cserélnéd.',
+    zapriNamig: 'Tipp bezárása',
+    izberiZaMenjavo: '{ime}: kiválasztás cseréhez',
+    prekliciIzbiro: '{ime}: kiválasztás törlése',
+    zamenjajZ: '{ime}: csere vele: {drugi}',
+    izbran: 'Kiválasztva: {ime}. Koppints egy kiemelt játékosra a cseréhez, vagy újra rá a törléshez.',
+    brezMenjave: 'Nincs érvényes csere ehhez a játékoshoz: {ime}. Koppints rá újra a törléshez.',
     niVecVLigiNamig: 'Ez a játékos már nincs a bajnokságban, vele a keret nem szerez pontot.',
     niVecVLigi: 'már nincs a bajnokságban',
     poskodba: 'sérülés',

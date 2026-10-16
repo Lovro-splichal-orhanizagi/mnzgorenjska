@@ -89,7 +89,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     napakaShranjevanja: 'Čuvanje nije uspelo. Pokušaj ponovo.',
     profilNaslov: 'Profil',
     mojProfil: 'Pogledaj svoj javni profil',
-    prikaznoIme: 'Prikazano ime',
+    prikaznoIme: 'Ime za prikaz',
     imeOpis: 'Drugi ga vide na tabelama. Od 3 do 24 znaka, možeš da ga promeniš jednom u 7 dana.',
     imeNaslednjic: 'Ime možeš ponovo da promeniš {datum}.',
     shraniIme: 'Sačuvaj ime',
@@ -110,7 +110,7 @@ export const racun: NonNullable<Prevod['racun']> = {
       navijac: 'Navijač',
     },
     klubNaslov: 'Klub za koji navijaš',
-    klubOpis: 'Prikazuje se na tvom profilu, a tvoji bodovi se računaju među navijače kluba.',
+    klubOpis: 'Prikazuje se na tvom profilu, a tvoji bodovi se računaju među navijačima kluba.',
     klubIsci: 'Pronađi klub …',
     klubNiZadetkov: 'Nijedan klub nije pronađen.',
     klubBrez: 'Još nisi izabrao klub.',
@@ -120,7 +120,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     obvestilaNaslov: 'Obaveštenja',
     zasebnostNaslov: 'Privatnost',
     javniProfil: 'Javni profil',
-    javniProfilOpis: 'Drugi na tvom profilu vide tvoje timove, klub i dostignuća. Isključen profil prikazuje samo prikazano ime.',
+    javniProfilOpis: 'Drugi na tvom profilu vide tvoje timove, klub i dostignuća. Isključen profil prikazuje samo ime za prikaz.',
     prijavaNaslov: 'Prijava i lozinka',
     prijavljenZ: 'Prijavljen si imejl adresom {email}.',
     geslo: 'Promeni lozinku',
@@ -129,12 +129,12 @@ export const racun: NonNullable<Prevod['racun']> = {
     gesloNapaka: 'Link nije bilo moguće poslati. Pokušaj ponovo za nekoliko minuta.',
     eposta: 'Za promenu imejl adrese piši nam na <eposta>info@slff.eu</eposta>.',
     napake: {
-      dolzina: 'Prikazano ime mora imati od 3 do 24 znaka.',
-      znaki: 'Prikazano ime sadrži nedozvoljene znakove.',
+      dolzina: 'Ime za prikaz mora imati od 3 do 24 znaka.',
+      znaki: 'Ime za prikaz sadrži nedozvoljene znakove.',
       rezervirano: 'Ovo ime je rezervisano za tim SLFF. Izaberi drugo.',
       neprimerno: 'Ovo ime nije prikladno. Izaberi drugo.',
-      prepogosto: 'Prikazano ime možeš da promeniš jednom u 7 dana.',
-      zasedeno: 'Ovo prikazano ime je već zauzeto.',
+      prepogosto: 'Ime za prikaz možeš da promeniš jednom u 7 dana.',
+      zasedeno: 'Ovo ime za prikaz je već zauzeto.',
     },
   },
   // Javni profil (slff.eu/u/<id>).
@@ -143,12 +143,12 @@ export const racun: NonNullable<Prevod['racun']> = {
     niProfila: 'Ovaj profil ne postoji. Možda je nalog obrisan.',
     nazaj: 'Na tabelu',
     zaseben: 'Ovaj profil je privatan.',
-    tvojZaseben: 'Tvoj profil je privatan: drugi vide samo prikazano ime.',
+    tvojZaseben: 'Tvoj profil je privatan: drugi vide samo ime za prikaz.',
     uredi: 'Uredi profil',
     clanOd: 'Član od {datum}',
     navija: 'Navija za',
     ekipe: 'Timovi',
-    brezEkip: 'U aktivnim ligama još nema tim.',
+    brezEkip: 'U aktivnim ligama još nema timova.',
     mesto: '{mesto}. mesto od {ekip}',
     miniLige: 'Zajedničke mini lige',
     dosezki: 'Dostignuća',
@@ -170,7 +170,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   // Privatnost i uslovi. <b> je podebljano, ostale oznake su linkovi.
   pravno: {
     naslov: 'Privatnost i uslovi',
-    zadnjaSprememba: 'Poslednja izmena: 12. oktobar 2026.',
+    zadnjaSprememba: 'Poslednja izmena: 12. oktobra 2026.',
     kajJeNaslov: 'Šta je SLFF',
     kajJe:
       'SLFF (Sunday League Fantasy Football) je navijačka fantasy liga za amaterske fudbalske lige. Vodimo je amaterski i nije povezana sa Fudbalskim savezom Srbije (FSS), regionalnim i okružnim fudbalskim savezima niti sa klubovima. Igra je besplatna, bez novčanih uloga i nagrada.',
@@ -218,7 +218,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     placljivoNaslov:
       'Usluge koje se plaćaju: provereni igrači',
     placljivoUvod:
-      'Igra je i ostaje besplatna. Plaća se samo neobavezna značka proverenog igrača, koju može da kupi igrač koji je potvrdio da je profil njegov. Značka nikad ne utiče na poene, cene, fantasy timove ni pravila igre. Ovi uslovi važe za tu kupovinu.',
+      'Igra je i ostaje besplatna. Plaća se samo neobavezna značka proverenog igrača, koju može da kupi igrač koji je potvrdio da je profil njegov. Značka nikad ne utiče na bodove, cene, fantasy timove ni pravila igre. Ovi uslovi važe za tu kupovinu.',
     prodajalec:
       '<b>Prodavac:</b> SPACE GUARDIAN, računalniško programiranje, d.o.o., Ulica Hermana Potočnika 5, 1000 Ljubljana, Slovenija, upisano u sudski registar pri Okružnom sudu u Ljubljani. Matični broj 9850538000, PDV ID SI42765153. Kontakt: <eposta>info@slff.eu</eposta>.',
     kupis:
