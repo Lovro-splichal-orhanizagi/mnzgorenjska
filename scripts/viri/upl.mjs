@@ -1,6 +1,6 @@
 // Vir: Українська Прем'єр-Ліга (УПЛ) — upl.ua.
 //
-// UPL vodi najvišjo ligo (16 klubov, 30 krogov). Glej CLAUDE.md (Ukrajina —
+// UPL vodi najvišjo ligo (16 klubov, 30 krogov). Glej docs/viri/ukrajina.md (Ukrajina —
 // vir upl). Perša in Druga liga sta pri `pfl-ua` (pfl.ua).
 //
 // ŠIFRA LIGE je id prvenstva ene sezone (`432` = 2026/27, `428` = 2025/26;
@@ -107,7 +107,7 @@ export const jeStranTekme = (html) => /class="match-main-info"/.test(html ?? '')
 // Isto ime, drug klub: imena UPL so kratka in brez kraja. Ključ kluba je
 // skupen z virom pfl-ua (država UA), zato ime, ki ga PFL nosi za drug klub,
 // tu dobi kraj. Pregled 15. 10. 2026 (UPL 2025/26 in 2026/27 proti Perši in
-// Drugi ligi 2025/26 in 2026/27) trka ni našel — glej CLAUDE.md. Ob novi
+// Drugi ligi 2025/26 in 2026/27) trka ni našel — glej docs/viri/ukrajina.md. Ob novi
 // sezoni preveri znova.
 const IME_KLUBA = new Map([])
 export const imeKluba = (ime) => {

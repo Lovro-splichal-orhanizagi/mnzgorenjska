@@ -5,7 +5,7 @@
 // `<pageID>`, glej `vrsticeTedna1Lig`), Nesine 2. Lig (raven 3, dve skupini), Nesine 3. Lig
 // (raven 4, tri skupine v 2026/27) in PGL (raven 5, 12 skupin). Pokrajinske
 // amaterske lige (ASKF) niso na tff.org. Süper Lig namenoma ne beremo (TFF
-// ima svojo fantasy igro). Glej CLAUDE.md (Turčija — vir tff).
+// ima svojo fantasy igro). Glej docs/viri/turcija.md (Turčija — vir tff).
 //
 // Stran je ASP.NET iz strežnika v kodiranju **windows-1254** (ğ, ı, İ, ş) —
 // `tffFetch` jo prebere kot bajte in pretvori v UTF-8, sicer bi bila turška
