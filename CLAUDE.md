@@ -121,6 +121,7 @@ tabelo šifer tam, ne tu.
 | ZDA | `docs/viri/zda.md` | `modular11` |
 | Danska | `docs/viri/danska.md` | `dbu` |
 | Norveška | `docs/viri/norveska.md` | `nff` |
+| Kazahstan | `docs/viri/kazahstan.md` | `kff` |
 
 Pravila, ki veljajo za vse vire (podrobnosti v datotekah):
 
