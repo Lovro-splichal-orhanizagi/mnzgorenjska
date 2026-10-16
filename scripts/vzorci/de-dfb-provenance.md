@@ -1,0 +1,175 @@
+# Official DFB public HTML fixtures
+
+Captured by the parent agent through ordinary public browser navigation on
+2026-10-16. No login or protected endpoints. Files are full HTML snapshots.
+
+| File | Official URL | SHA-256 |
+| --- | --- | --- |
+| de-dfb-2425990.html | https://datencenter.dfb.de/datencenter/regionalliga-nordost/2026-2027/1-spieltag/fc-rot-weiss-erfurt-bfc-dynamo-2425990 | 59de33e3ac5bdb652345479996890a10586894b91ca553c07f84ae25d3d2efc0 |
+| de-dfb-2401894.html | https://datencenter.dfb.de/datencenter/regionalliga-nordost/2025-2026/2/bfc-dynamo-fc-rot-weiss-erfurt-2401894 | 8824fda6ef4dd9ea793b0ae7822dd00267a53fce191ee4783c4b5a97193f6bb9 |
+| de-dfb-team-current.html | https://datencenter.dfb.de/competitions/regionalliga-nordost/seasons/2026-2027/teams/bfc-dynamo?datacenter_name=datencenter | 89a7266957a3e25d494ec08281ec586dbf4b4500f9b613868938f8cd378b9068 |
+| de-dfb-2401912.html | https://datencenter.dfb.de/datencenter/regionalliga-nordost/2025-2026/4-spieltag/bfc-dynamo-zfc-meuselwitz-2401912 | 023a6da69daa9cc850609a55a8c136d4ebb2f0db983b00bb8b0a6caba1b561cd |
+| de-dfb-2401938.html | https://datencenter.dfb.de/datencenter/regionalliga-nordost/2025-2026/7-spieltag/hertha-bsc-ii-bfc-dynamo-2401938 | 63475928f9be547b37873e90879a1caf195f4cfec9e14d897cc25b43702b2ecd |
+| de-dfb-2401995.html | https://datencenter.dfb.de/datencenter/regionalliga-nordost/2025-2026/13-spieltag/bfc-dynamo-fc-eilenburg-2401995 | 8ddcb4258e4e692e6f133901c443a6e867c41a4491d806236e5f53af1e394668 |
+| de-dfb-2401965.html | https://datencenter.dfb.de/datencenter/regionalliga-nordost/2025-2026/10-spieltag/vsg-altglienicke-bfc-dynamo-2401965 | 65f6233af3eeda4fbf98dc1d794feba4c77eb5db0f634396357b9c4ea606d4ce |
+| de-dfb-2402004.html | https://datencenter.dfb.de/datencenter/regionalliga-nordost/2025-2026/14-spieltag/1-fc-lok-leipzig-bfc-dynamo-2402004 | 109096a0e5d67bba4655b2cbaabf21ff3bef21a95c789f889d2882b2173ec566 |
+| de-dfb-2402013.html | https://datencenter.dfb.de/datencenter/regionalliga-nordost/2025-2026/15-spieltag/bfc-dynamo-fc-carl-zeiss-jena-2402013 | 00bb89b45e14c5bd175806d97301c30445ffc682ff2a16abc5a02ac945be7110 |
+| de-dfb-2426025.html | https://datencenter.dfb.de/datencenter/regionalliga-nordost/2026-2027/5-spieltag/sv-babelsberg-03-rsv-eintracht-1949-2426025 | c6a0bc7a5d7715e8cbfed1a2c7f94daab2bd5cb6271623cece55ff3e12f85564 |
+| de-dfb-2401897.html | https://datencenter.dfb.de/datencenter/regionalliga-nordost/2025-2026/3-spieltag/vsg-altglienicke-fc-carl-zeiss-jena-2401897 | f6de7c46111be47171101530afcc55815b95520d6a6c009b0b66e97a609f80af |
+| de-dfb-2401942.html | https://datencenter.dfb.de/datencenter/regionalliga-nordost/2025-2026/8-spieltag/fc-carl-zeiss-jena-1-fc-lok-leipzig-2401942 | 6d680f77e537c465fbe988440a088898e797a22d02f2f1d0f3f9e668b251e3ae |
+| de-dfb-2401959.html | https://datencenter.dfb.de/datencenter/regionalliga-nordost/2025-2026/9-spieltag/hertha-bsc-ii-1-fc-lok-leipzig-2401959 | d771235b47a0a410758a24d28bd955b518418d368895ae1573bfca36d36b438c |
+| de-dfb-2402023.html | https://datencenter.dfb.de/datencenter/regionalliga-nordost/2025-2026/17-spieltag/fsv-63-luckenwalde-zfc-meuselwitz-2402023 | f1bb5fc8b3c699a8677e26a29bcc915d893a342dc3118040f42221219a70fa0b |
+| de-dfb-2402046.html | https://datencenter.dfb.de/datencenter/regionalliga-nordost/2025-2026/19-spieltag/hertha-bsc-ii-fc-carl-zeiss-jena-2402046 | a0cae41c813359620884ec56265945ccf4281f53dc54186ebe2ce10334d5f967 |
+| de-dfb-2402050.html | https://datencenter.dfb.de/datencenter/regionalliga-nordost/2025-2026/20-spieltag/hertha-03-zehlendorf-hallescher-fc-2402050 | 04903c4fcb147e5bd1989f15273848fcda23be1f862505c921036ab2efe1a323 |
+| de-dfb-2426049.html | https://datencenter.dfb.de/datencenter/regionalliga-nordost/2026-2027/7-spieltag/chemnitzer-fc-fc-carl-zeiss-jena-2426049 | 86af01adce5c906db4b40f65ba06863b788fbb1bf9996803748dc01bf69ec4af |
+| de-dfb-2426063.html | https://datencenter.dfb.de/datencenter/regionalliga-nordost/2026-2027/9-spieltag/1-fc-lok-leipzig-bfc-dynamo-2426063 | f67d1415ac80ebda1ae6924ee83a55744efbb83f56c62c54ff774c07f205de82 |
+
+`de-dfb-2426054.html` is the parent's additional ordinary public capture of
+https://datencenter.dfb.de/datencenter/regionalliga-nordost/2026-2027/8-spieltag/bfc-dynamo-sv-tasmania-berlin-2426054 .
+Its penalties have the ordinary `goal--goal` icon and explicit `(Elfmeter)` text.
+Bekdemir's 90+4 event has the `card--red` icon. Grigoriadis receives a yellow
+card at 28 while still on the bench and enters at the halftime substitution.
+
+Archive report 2401894 publishes starting XIs but no bench table. Played
+reserves are explicitly named by incoming substitution segments; their jerseys
+are unknown. Current report 2425990 publishes both starting XIs and full benches.
+Public profile links vary independently of names and are not registration IDs.
+Identity consistently uses public name + official team slug, rejecting
+same-team name collisions; this matches the existing importer's no-registration
+path. Unknown/anonymous names or unsupported event types reject the report.
+
+Goalkeeper policy: `(T)` is the explicit official marker (`vratarVir: 'oznaka-T'`).
+A substitute without this marker has unknown goalkeeper status (`vratar: null`),
+whether the bench table is present or absent. If the official substitution pair
+explicitly replaces a player already established as goalkeeper, the incoming
+player receives the on-pitch role with `vratarVir: 'menjava-vratarja'`. This is
+inference from the official pair, not an independent roster position or a jersey
+guess. Contradictory markers producing two active keepers reject the report.
+An inferred reserve role cannot establish a club's explicit starting-keeper gate.
+
+Archive 2401912, 2401938 and 2401995 publish bare `Eigentor` before/after
+the scorer, with an ordinary goal icon on the beneficiary's side. The scorer
+belongs to the opposite official lineup; score progression verifies attribution.
+Archive 2401965 groups a player and coach under one shared yellow icon.
+Archive 2402004 groups two named players with two ordered card icons.
+
+Dismissal remains permanent across pitch/bench state. Entry after dismissal,
+cards after dismissal and duplicate unpaired cautions reject the report.
+Unused carded reserves retain zero-minute disciplinary records, with no
+invented keeper status or clean sheet.
+
+Archives 2402004 (Pestic) and 2402013 (Shcherbakovski) publish a `yellow-red`
+card without separately publishing the earlier caution. The official
+[DFBnet Spielbericht handbook, section on yellow cards](https://portal.dfbnet.org/fileadmin/content/downloads/handbuecher/Spielbericht/151021_Spielbericht-Handbuch-Vereine-Schiedsrichter.R5.50.pdf)
+states that the system detects the second yellow and displays Gelb-Rot with
+dismissal. Thus exactly one prior caution is certain. When absent, it is
+represented as `minuta: null, izpeljanIz: 'drugi-rumeni'`, with an explicit
+`opozorila` entry. No prior minute is invented. When the first caution is
+explicit, it is retained once. The real dismissal minute is always preserved;
+source event counts and duplicate-section comparison exclude derived cautions.
+
+Report 2426025 was captured by the live audit on 2026-10-16. Its raw minute
+elements contain the plain text `90 12'` and `90 13'`, without nested markup or
+a CSS-generated plus. The participating club's
+[official match report](https://www.rsv-eintracht-fussball.de/spielbericht/111248/dreierpack-von-baraze-adam-beim-3-3-in-babelsberg)
+independently confirms the equalizer in the twelfth minute of stoppage time.
+The parser accepts this observed `90 <added 1..30>'` form, preserves it as
+`minutaZapis`, emits a warning, and keeps minute 90 for the fantasy contract.
+It does not generalize this to `45 <added>` or arbitrary two-integer labels.
+Source-section agreement and chronological added-time ordering still apply.
+
+Archive 2401897 remains an unchanged fixture. DFB names Luis Zwick in a home
+yellow-card event at 90+5, linked to profile379608, but omits the bench and
+publishes no substitution involving him. On 2026-10-16 ordinary public
+NOFV navigation led to the exact same-match
+[FUSSBALL.DE report](https://www.fussball.de/spiel/vsg-altglienicke-berlin-fc-carl-zeiss-jena/-/spiel/02TMCK1048000000VS5489BTVT4H6CF2).
+Its actual published AJAX lineup anchor supplies a home `Ersatzbank` entry
+decoding to Luis Maria Zwick, jersey01, explicit `T`, user profile
+02ENUBHM0K000000VUM1DNP5VS320AA4. The existing strict font decoder reads all39
+players from the exact published WOFF, with no guessed glyphs. Both the
+[DFB Luis Zwick profile](https://datencenter.dfb.de/datencenter/personen/luis-zwick/spieler)
+and [FUSSBALL.DE Luis Maria Zwick profile](https://www.fussball.de/spielerprofil/-/userid/02ENUBHM0K000000VUM1DNP5VS320AA4)
+publish the same birth date, 24.05.1994, corroborating this explicitly scoped
+alias. There is no general middle-name stripping or other-match roster lookup.
+
+`dfb-rezerve.json` records all exact public URLs, capture hashes, alias evidence
+and the complete relevant DFB semantic fingerprint. The fingerprint includes
+metadata, source team paths, every XI name/profile/number/marker, staff and all
+four event sections including raw clocks, icons, text and profile IDs. Only the
+exact absent-bench state can gain the single listed-reserve role; all drift
+requires review. At use, every pinned primary document is hash-checked, main
+canonical/OG/date/round/teams/actual lineup anchor are verified, and the lineup
+is decoded and matched to its home bench. The fragment has no own match ID, so
+its captured URL and hash must bind to that exact observed main-page anchor.
+DFB name, stable identity and original card minute remain intact. The explicit
+reserve `T` remains proof metadata only (`vratar:null`); no entry, playing time
+or clean sheet is invented. The zero-minute disciplinary row retains the card.
+Returned report/player provenance and a warning expose the enrichment.
+If DFB itself publishes a bench, ordinary parsing supersedes the saved proof;
+an own bench missing Luis still rejects. Other unknown recipients still reject.
+
+The following unchanged primary fixtures were captured with HTTP200, without
+login, challenge or refusal. The exact URL and SHA256 for each is in the proof
+manifest. Main capture: CI38968427190/job117200579157; published font capture:
+CI38969114609/job117202823461. Their optional contact-form captcha was never
+used and is not an access challenge for the public report.
+
+- `de-dfb-2401897-fussball-main.html`
+- `de-dfb-2401897-fussball-lineup.html`
+- `de-dfb-2401897-g81svi9e.css`
+- `de-dfb-2401897-g81svi9e.woff`
+
+The full-season audit captured these additional unchanged reports:
+
+- 2401942 repeats exact same-side person and jersey cells in both XI and bench.
+  Only byte-identical cell pairs within the same side/table are deduplicated;
+  different opposite-side row pairings do not affect identity. Conflicting
+  name, profile, goalkeeper marker or jersey remains a rejection. Its coach
+  cell also repeats explicit linked coach names separated by `<br>`; each
+  entry is validated independently as a named official.
+- 2402050 and 2426063 group multiple consecutive score/name segments under one
+  goal icon at the same minute. Every segment is a separate goal, checked
+  against active players, exact score progression, halftime and final totals,
+  and the corresponding dedicated section. No extra goal time is invented.
+- 2426049 lists the plain `90 11'` coach dismissal before `90+3'` and `90+8'`.
+  Both source-format subsequences must independently be chronological, and
+  no ordinary minute below 90 may follow the first space-format entry. Only
+  these terminal 90-minute subsequences merge by explicit numeric timestamps;
+  equal-time rows retain source order. Reordering emits a warning and raw
+  space-format labels remain attached to their events.
+- 2401959, 2402023 and 2402046 have wrong intermediate score annotations.
+  Their scorer order and exact times were independently confirmed by the
+  participating clubs on 2026-10-16. Only the six enumerated score labels are
+  corrected; no event is reordered and no goal time, scorer or side changes.
+
+## Narrow intermediate-score corrections
+
+The data-only [registry](../viri/dfb-korekcije.json) records the complete original
+goal sequences, canonical match/season/round/date/time, official team IDs,
+final/half scores, primary evidence URLs, checked date and captured fixture SHA.
+It accepts exactly the observed malformed sequence or the fully fixed upstream
+sequence. Partial fixes or other changes to those semantic fingerprints reject
+as `DFB_INVALID_REPORT`. The original full timeline and dedicated goal section
+must agree before any correction. Full HTML hashes identify evidence captures;
+runtime acceptance uses the semantic fingerprint rather than volatile markup.
+
+| Report | Exact event | Published label | Verified label | Primary evidence |
+| --- | --- | --- | --- | --- |
+| 2401959 | Maderer, away, 90' | 2:7 | 2:6 | [Hertha](https://www.herthabsc.com/de/nachrichten/2025/09/u23-spielbericht-bsclok-2526), [Lok](https://lok-leipzig.com/profis/spielbericht?cHash=f5ff86a87576ea0909ebe8cfbfeba38b&cfc_league_fe%5BmatchId%5D=1047) |
+| 2401959 | Kang, away, 90+3' | 2:6 | 2:7 | Same two club reports |
+| 2402023 | Schneider, home Luckenwalde, 90' | 2:2 | 2:1 | [ZFC](https://www.zfc.de/spielbericht.php?call_script=spielplan&mannschaft=1752215226&oliga=1466877277&paarung=1752216035) |
+| 2402023 | Trübenbach, away ZFC, 90+4' | 1:2 | 2:2 | Same ZFC report |
+| 2402046 | Telib, home Hertha player / away Jena beneficiary, own goal, 90' | 2:3 | 2:2 | [Jena](https://www.fc-carlzeiss-jena.de/news/club-profis/details/willenssieg-in-der-nachspielzeit.html.html), [Hertha](https://www.herthabsc.com/de/nachrichten/2025/12/u23-spielbericht-bscfcc-2526) |
+| 2402046 | Burmeister, away Jena, 90+4' | 2:2 | 2:3 | Same two club reports |
+
+Corrected goals preserve `rezultatVir` and `popravekIzida`, including their full
+original factual tuple, replacement tuple, primary URLs, checked date, fixture
+SHA and actual document SHA. Report-level `popravki` and warnings expose every
+correction. All usual player activity, timeline, score progression, halftime,
+final result and schedule checks still run. A fully upstream-fixed fingerprint
+passes with no correction metadata or correction warning. The separate
+same-match reserve-role proof above resolves Luis Zwick without a score edit.
+
+`test-dfb.mjs` additionally constructs an explicitly synthetic 18-team double
+round-robin using the captured row schema to test bounded discovery and
+deduplication. It is not represented as a fetched official season.

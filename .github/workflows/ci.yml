@@ -10,17 +10,46 @@ on:
   # Za zagone, ki jih sprozi drug delovni tok (grbi z NZS potisnejo z
   # GITHUB_TOKEN, ki CI ne sprozi sam).
   workflow_dispatch:
+    inputs:
+      vir:
+        description: Javni vir za podatkovni audit
+        type: choice
+        options: [all, novanet, dfb]
+        default: all
+      sezona:
+        description: Tekoča sezona, arhiv ali obe
+        type: choice
+        options: [all, current, archive]
+        default: all
+      diagnostika:
+        description: Samo dva fiksna javna dokumenta, brez celotnega audita
+        type: boolean
+        default: false
 
 permissions:
   contents: read
 
 # Nov push na isto vejo prekine prejšnji tek — zadnje stanje je edino, ki šteje.
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.ref }}-${{ inputs.vir || 'code' }}-${{ inputs.sezona || 'all' }}-${{ inputs.diagnostika && 'diagnostic' || 'normal' }}
   cancel-in-progress: true
 
 jobs:
+  novi-viri:
+    if: github.event_name == 'workflow_dispatch' && !inputs.diagnostika && startsWith(github.ref, 'refs/heads/codex/spain-germany-production')
+    uses: ./.github/workflows/preveri-nova-vira.yml
+    with:
+      vir: ${{ inputs.vir || 'all' }}
+      sezona: ${{ inputs.sezona || 'all' }}
+
+  diagnostika-virov:
+    if: github.event_name == 'workflow_dispatch' && inputs.diagnostika
+    uses: ./.github/workflows/diagnostika-javnih-virov.yml
+    with:
+      vir: ${{ inputs.vir == 'dfb' && 'fussball' || inputs.vir || 'all' }}
+
   preveri:
+    if: ${{ !inputs.diagnostika }}
     name: Tipi, build, izris
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -70,6 +99,7 @@ jobs:
           VITE_SUPABASE_ANON_KEY: sb_publishable_ci_ni_pravi_kljuc
 
   varnost:
+    if: ${{ !inputs.diagnostika }}
     name: Pravice in roki v svezi bazi
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -109,7 +139,7 @@ jobs:
   migracije:
     name: Migracije baze
     needs: [preveri, varnost]
-    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    if: inputs.diagnostika != true && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -161,7 +191,7 @@ jobs:
   objavi:
     name: Objava na Vercel
     needs: [preveri, varnost, migracije]
-    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    if: inputs.diagnostika != true && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -241,7 +271,7 @@ jobs:
   objavi-vm:
     name: Objava na Hetzner VM
     needs: [preveri, varnost, migracije]
-    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    if: inputs.diagnostika != true && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     concurrency: objava-vm
@@ -293,7 +323,7 @@ jobs:
   preveri-deploy:
     name: Je nova različica res v zraku?
     needs: [objavi, objavi-vm]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: inputs.diagnostika != true && github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

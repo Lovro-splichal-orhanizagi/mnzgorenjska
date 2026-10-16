@@ -1,0 +1,410 @@
+{
+  "provenance": "10 saved research captures from 2026-10-15: 6 match-report captures (4 distinct matches) and 4 result rounds (30 match listings). Only score markup retained. Expected literals independently derived by executing the inspected original ntype numeric script in an isolated offline VM, then reading pseudo-element and hidden-element semantics with BeautifulSoup; the production decoder was not used to derive them. Not a live-site or cross-season validation.",
+  "pages": [
+    {
+      "capture": "es/a6.html",
+      "kind": "report",
+      "scripts": [
+        "eval(function(p,a,c,k,e,d){e=function(c){return c.toString(36)};if(!\"\".replace(/^/,String)){while(c--){d[c.toString(a)]=k[c]||c.toString(a)}k=[function(e){return d[e]}];e=function(){return\"\\\\w+\"};c=1}while(c--){if(k[c]){p=p.replace(new RegExp(\"\\\\b\"+e(c)+\"\\\\b\",\"g\"),k[c])}}return p}(\"k o(a,n,i,f){g d=[2,5,9,4,1,0,8,6,3,7,1,3,5,7,9,0,2,4,6,8,0,2,4,6,8,1,3,5,7,9,7,5,2,0,9,6,3,8,4,1];c.b(a).e.j(f);c.b(a).e.l('m-'+d[(i*h)+n])}\",25,25,\"||||||||||id|getElementById|document|t|classList|oc|var|10||remove|function|add|fa||ntype\".split(\"|\"),0,{}));"
+      ],
+      "fragments": [
+        "<h2 class=\"ntype\"> <strong> <i class=\"fa-solid\"><style>#idh411901:before{content:\"\\0034\"}</style><span id=\"idh411901\"></span></i> - <i class=\"fa-solid\">0</i> </strong> </h2>",
+        "<strong><a class=\"img lgol\" title=\"Gol normal\"><i class=\"fa-solid fa-futbol\" style=\"color: #0fa020;\"></i></a>   <i class=\"fa-solid\">1</i> - <script>eval(function(p,a,c,k,e,d){e=function(c){return c.toString(36)};if(!\"\".replace(/^/,String)){while(c--){d[c.toString(a)]=k[c]||c.toString(a)}k=[function(e){return d[e]}];e=function(){return\"\\\\w+\"};c=1}while(c--){if(k[c]){p=p.replace(new RegExp(\"\\\\b\"+e(c)+\"\\\\b\",\"g\"),k[c])}}return p}(\"k o(a,n,i,f){g d=[2,5,9,4,1,0,8,6,3,7,1,3,5,7,9,0,2,4,6,8,0,2,4,6,8,1,3,5,7,9,7,5,2,0,9,6,3,8,4,1];c.b(a).e.j(f);c.b(a).e.l('m-'+d[(i*h)+n])}\",25,25,\"||||||||||id|getElementById|document|t|classList|oc|var|10||remove|function|add|fa||ntype\".split(\"|\"),0,{}));</script><i class=\"fa-solid\"><i class=\"fa-1\" id=\"idh411904\" style=\"font-style:normal\"><script>ntype(\"idh411904\",5,0,\"fa-1\");</script></i></i> </strong>",
+        "<strong><a class=\"img lgol\" title=\"Gol normal\"><i class=\"fa-solid fa-futbol\" style=\"color: #0fa020;\"></i></a>   <i class=\"fa-solid\"><i class=\"fa-5\" id=\"idh411905\" style=\"font-style:normal\"><script>ntype(\"idh411905\",0,0,\"fa-5\");</script><span style=\"display:none;\">5</span></i></i> - <i class=\"fa-solid\"><i class=\"fa-2\" id=\"idh411906\" style=\"font-style:normal\"><script>ntype(\"idh411906\",5,0,\"fa-2\");</script><span style=\"display:none;\">2</span></i></i> </strong>",
+        "<strong> <a class=\"img lpenalti\" title=\"Gol de penalti\"><i class=\"fa-solid fa-futbol\" style=\"color: rgb(21, 114, 228);\"></i></a>  <i class=\"fa-solid\"><i class=\"fa-3\" id=\"idh411907\" style=\"font-style:normal\"><script>ntype(\"idh411907\",8,0,\"fa-3\");</script><span style=\"display:none;\">3</span></i></i> - <i class=\"fa-solid\"><i class=\"fa-0\" id=\"idh411908\" style=\"font-style:normal\"><script>ntype(\"idh411908\",5,0,\"fa-0\");</script><span style=\"display:none;\">0</span></i></i> </strong>",
+        "<strong> <a class=\"img lgolpp\" title=\"Gol en propia puerta\"><i class=\"fa-solid fa-futbol\" style=\"color: red;\"></i></a>   <i class=\"fa-solid\"><i class=\"fa-3\" id=\"idh411909\" style=\"font-style:normal\"><script>ntype(\"idh411909\",3,0,\"fa-3\");</script><span style=\"display:none;\">3</span></i></i> - <i class=\"fa-solid\"><i class=\"fa-1\" id=\"idh411910\" style=\"font-style:normal\"><script>ntype(\"idh411910\",5,0,\"fa-1\");</script><span style=\"display:none;\">1</span></i></i> </strong>"
+      ],
+      "expected": [
+        [
+          4,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          4,
+          0
+        ]
+      ]
+    },
+    {
+      "capture": "es/g4.html",
+      "kind": "report",
+      "scripts": [
+        "eval(function(p,a,c,k,e,d){e=function(c){return c.toString(36)};if(!\"\".replace(/^/,String)){while(c--){d[c.toString(a)]=k[c]||c.toString(a)}k=[function(e){return d[e]}];e=function(){return\"\\\\w+\"};c=1}while(c--){if(k[c]){p=p.replace(new RegExp(\"\\\\b\"+e(c)+\"\\\\b\",\"g\"),k[c])}}return p}(\"k o(a,n,i,f){g d=[2,5,9,4,1,0,8,6,3,7,1,3,5,7,9,0,2,4,6,8,0,2,4,6,8,1,3,5,7,9,7,5,2,0,9,6,3,8,4,1];c.b(a).e.j(f);c.b(a).e.l('m-'+d[(i*h)+n])}\",25,25,\"||||||||||id|getElementById|document|t|classList|oc|var|10||remove|function|add|fa||ntype\".split(\"|\"),0,{}));"
+      ],
+      "fragments": [
+        "<h2 class=\"ntype\"> <strong> <i class=\"fa-solid\">2</i> - <i class=\"fa-solid\"><style>#idh380344:before{content:\"0\"}</style><span id=\"idh380344\"><span style=\"display:none;\">0</span></span></i> </strong> </h2>",
+        "<strong><a class=\"img lgol\" title=\"Gol normal\"><i class=\"fa-solid fa-futbol\" style=\"color: #0fa020;\"></i></a>   <script>eval(function(p,a,c,k,e,d){e=function(c){return c.toString(36)};if(!\"\".replace(/^/,String)){while(c--){d[c.toString(a)]=k[c]||c.toString(a)}k=[function(e){return d[e]}];e=function(){return\"\\\\w+\"};c=1}while(c--){if(k[c]){p=p.replace(new RegExp(\"\\\\b\"+e(c)+\"\\\\b\",\"g\"),k[c])}}return p}(\"k o(a,n,i,f){g d=[2,5,9,4,1,0,8,6,3,7,1,3,5,7,9,0,2,4,6,8,0,2,4,6,8,1,3,5,7,9,7,5,2,0,9,6,3,8,4,1];c.b(a).e.j(f);c.b(a).e.l('m-'+d[(i*h)+n])}\",25,25,\"||||||||||id|getElementById|document|t|classList|oc|var|10||remove|function|add|fa||ntype\".split(\"|\"),0,{}));</script><i class=\"fa-solid\"><i class=\"fa-0\" id=\"idh380345\" style=\"font-style:normal\"><script>ntype(\"idh380345\",4,0,\"fa-0\");</script><span style=\"display:none;\">0</span></i></i> - <i class=\"fa-solid\"><i class=\"fa-4\" id=\"idh380346\" style=\"font-style:normal\"><script>ntype(\"idh380346\",5,0,\"fa-4\");</script></i></i> </strong>",
+        "<strong><a class=\"img lgol\" title=\"Gol normal\"><i class=\"fa-solid fa-futbol\" style=\"color: #0fa020;\"></i></a>   <i class=\"fa-solid\"><i class=\"fa-0\" id=\"idh380347\" style=\"font-style:normal\"><script>ntype(\"idh380347\",0,0,\"fa-0\");</script></i></i> - <i class=\"fa-solid\"><i class=\"fa-1\" id=\"idh380348\" style=\"font-style:normal\"><script>ntype(\"idh380348\",5,0,\"fa-1\");</script></i></i> </strong>"
+      ],
+      "expected": [
+        [
+          2,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ]
+      ]
+    },
+    {
+      "capture": "fg1.html",
+      "kind": "report",
+      "scripts": [
+        "eval(function(p,a,c,k,e,d){e=function(c){return c.toString(36)};if(!\"\".replace(/^/,String)){while(c--){d[c.toString(a)]=k[c]||c.toString(a)}k=[function(e){return d[e]}];e=function(){return\"\\\\w+\"};c=1}while(c--){if(k[c]){p=p.replace(new RegExp(\"\\\\b\"+e(c)+\"\\\\b\",\"g\"),k[c])}}return p}(\"k o(a,n,i,f){g d=[2,5,9,4,1,0,8,6,3,7,1,3,5,7,9,0,2,4,6,8,0,2,4,6,8,1,3,5,7,9,7,5,2,0,9,6,3,8,4,1];c.b(a).e.j(f);c.b(a).e.l('m-'+d[(i*h)+n])}\",25,25,\"||||||||||id|getElementById|document|t|classList|oc|var|10||remove|function|add|fa||ntype\".split(\"|\"),0,{}));"
+      ],
+      "fragments": [
+        "<h2 class=\"ntype\"> <strong> <i class=\"fa-solid\"><style>#idh382317:after{content:\"\\0030\";display:none}</style><span id=\"idh382317\">2<span style=\"display:none;\">1</span></span></i> - <i class=\"fa-solid\">0</i> </strong> </h2>",
+        "<strong><a class=\"img lgol\" title=\"Gol normal\"><i class=\"fa-solid fa-futbol\" style=\"color: #0fa020;\"></i></a>   <script>eval(function(p,a,c,k,e,d){e=function(c){return c.toString(36)};if(!\"\".replace(/^/,String)){while(c--){d[c.toString(a)]=k[c]||c.toString(a)}k=[function(e){return d[e]}];e=function(){return\"\\\\w+\"};c=1}while(c--){if(k[c]){p=p.replace(new RegExp(\"\\\\b\"+e(c)+\"\\\\b\",\"g\"),k[c])}}return p}(\"k o(a,n,i,f){g d=[2,5,9,4,1,0,8,6,3,7,1,3,5,7,9,0,2,4,6,8,0,2,4,6,8,1,3,5,7,9,7,5,2,0,9,6,3,8,4,1];c.b(a).e.j(f);c.b(a).e.l('m-'+d[(i*h)+n])}\",25,25,\"||||||||||id|getElementById|document|t|classList|oc|var|10||remove|function|add|fa||ntype\".split(\"|\"),0,{}));</script><i class=\"fa-solid\"><i class=\"fa-0\" id=\"idh382319\" style=\"font-style:normal\"><script>ntype(\"idh382319\",4,0,\"fa-0\");</script><span style=\"display:none;\">0</span></i></i> - <i class=\"fa-solid\"><i class=\"fa-1\" id=\"idh382320\" style=\"font-style:normal\"><script>ntype(\"idh382320\",5,0,\"fa-1\");</script><span style=\"display:none;\">1</span></i></i> </strong>",
+        "<strong><a class=\"img lgol\" title=\"Gol normal\"><i class=\"fa-solid fa-futbol\" style=\"color: #0fa020;\"></i></a>   <i class=\"fa-solid\"><style>#idh382321:before{content:\"\\0030\";display:none}</style><span id=\"idh382321\">2<span style=\"display:none;\">0</span></span></i> - <i class=\"fa-solid\">0</i> </strong>"
+      ],
+      "expected": [
+        [
+          2,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ]
+      ]
+    },
+    {
+      "capture": "fg2.html",
+      "kind": "report",
+      "scripts": [
+        "eval(function(p,a,c,k,e,d){e=function(c){return c.toString(36)};if(!\"\".replace(/^/,String)){while(c--){d[c.toString(a)]=k[c]||c.toString(a)}k=[function(e){return d[e]}];e=function(){return\"\\\\w+\"};c=1}while(c--){if(k[c]){p=p.replace(new RegExp(\"\\\\b\"+e(c)+\"\\\\b\",\"g\"),k[c])}}return p}(\"k o(a,n,i,f){g d=[2,5,9,4,1,0,8,6,3,7,1,3,5,7,9,0,2,4,6,8,0,2,4,6,8,1,3,5,7,9,7,5,2,0,9,6,3,8,4,1];c.b(a).e.j(f);c.b(a).e.l('m-'+d[(i*h)+n])}\",25,25,\"||||||||||id|getElementById|document|t|classList|oc|var|10||remove|function|add|fa||ntype\".split(\"|\"),0,{}));"
+      ],
+      "fragments": [
+        "<h2 class=\"ntype\"> <strong> <i class=\"fa-solid\"><style>#idh382771:after{content:\"\\0032\";display:none}</style><span id=\"idh382771\">3<span style=\"display:none;\">3</span></span></i> - <script>eval(function(p,a,c,k,e,d){e=function(c){return c.toString(36)};if(!\"\".replace(/^/,String)){while(c--){d[c.toString(a)]=k[c]||c.toString(a)}k=[function(e){return d[e]}];e=function(){return\"\\\\w+\"};c=1}while(c--){if(k[c]){p=p.replace(new RegExp(\"\\\\b\"+e(c)+\"\\\\b\",\"g\"),k[c])}}return p}(\"k o(a,n,i,f){g d=[2,5,9,4,1,0,8,6,3,7,1,3,5,7,9,0,2,4,6,8,0,2,4,6,8,1,3,5,7,9,7,5,2,0,9,6,3,8,4,1];c.b(a).e.j(f);c.b(a).e.l('m-'+d[(i*h)+n])}\",25,25,\"||||||||||id|getElementById|document|t|classList|oc|var|10||remove|function|add|fa||ntype\".split(\"|\"),0,{}));</script><i class=\"fa-solid\"><i class=\"fa-4\" id=\"idh382772\" style=\"font-style:normal\"><script>ntype(\"idh382772\",0,0,\"fa-4\");</script><span style=\"display:none;\">4</span></i></i> </strong> </h2>",
+        "<strong><a class=\"img lgol\" title=\"Gol normal\"><i class=\"fa-solid fa-futbol\" style=\"color: #0fa020;\"></i></a>   <i class=\"fa-solid\"><i class=\"fa-3\" id=\"idh382773\" style=\"font-style:normal\"><script>ntype(\"idh382773\",4,0,\"fa-3\");</script><span style=\"display:none;\">3</span></i></i> - <i class=\"fa-solid\"><i class=\"fa-0\" id=\"idh382774\" style=\"font-style:normal\"><script>ntype(\"idh382774\",5,0,\"fa-0\");</script><span style=\"display:none;\">0</span></i></i> </strong>",
+        "<strong><a class=\"img lgol\" title=\"Gol normal\"><i class=\"fa-solid fa-futbol\" style=\"color: #0fa020;\"></i></a>   <i class=\"fa-solid\"><i class=\"fa-5\" id=\"idh382775\" style=\"font-style:normal\"><script>ntype(\"idh382775\",0,0,\"fa-5\");</script></i></i> - <i class=\"fa-solid\"><i class=\"fa-4\" id=\"idh382776\" style=\"font-style:normal\"><script>ntype(\"idh382776\",5,0,\"fa-4\");</script><span style=\"display:none;\">4</span></i></i> </strong>",
+        "<strong> <a class=\"img lgolpp\" title=\"Gol en propia puerta\"><i class=\"fa-solid fa-futbol\" style=\"color: red;\"></i></a>   <i class=\"fa-solid\"><i class=\"fa-4\" id=\"idh382777\" style=\"font-style:normal\"><script>ntype(\"idh382777\",8,0,\"fa-4\");</script></i></i> - <i class=\"fa-solid\">0</i> </strong>",
+        "<strong> <a class=\"img lpenalti\" title=\"Gol de penalti\"><i class=\"fa-solid fa-futbol\" style=\"color: rgb(21, 114, 228);\"></i></a>  <i class=\"fa-solid\"><i class=\"fa-7\" id=\"idh382779\" style=\"font-style:normal\"><script>ntype(\"idh382779\",8,0,\"fa-7\");</script><span style=\"display:none;\">7</span></i></i> - <i class=\"fa-solid\"><i class=\"fa-5\" id=\"idh382780\" style=\"font-style:normal\"><script>ntype(\"idh382780\",4,0,\"fa-5\");</script></i></i> </strong>",
+        "<strong><a class=\"img lgol\" title=\"Gol normal\"><i class=\"fa-solid fa-futbol\" style=\"color: #0fa020;\"></i></a>   <i class=\"fa-solid\"><i class=\"fa-1\" id=\"idh382781\" style=\"font-style:normal\"><script>ntype(\"idh382781\",8,0,\"fa-1\");</script><span style=\"display:none;\">1</span></i></i> - <i class=\"fa-solid\">2</i> </strong>"
+      ],
+      "expected": [
+        [
+          3,
+          2
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          2
+        ]
+      ]
+    },
+    {
+      "capture": "arag/m1.html",
+      "kind": "report",
+      "scripts": [
+        "eval(function(p,a,c,k,e,d){e=function(c){return c.toString(36)};if(!\"\".replace(/^/,String)){while(c--){d[c.toString(a)]=k[c]||c.toString(a)}k=[function(e){return d[e]}];e=function(){return\"\\\\w+\"};c=1}while(c--){if(k[c]){p=p.replace(new RegExp(\"\\\\b\"+e(c)+\"\\\\b\",\"g\"),k[c])}}return p}(\"k o(a,n,i,f){g d=[2,5,9,4,1,0,8,6,3,7,1,3,5,7,9,0,2,4,6,8,0,2,4,6,8,1,3,5,7,9,7,5,2,0,9,6,3,8,4,1];c.b(a).e.j(f);c.b(a).e.l('m-'+d[(i*h)+n])}\",25,25,\"||||||||||id|getElementById|document|t|classList|oc|var|10||remove|function|add|fa||ntype\".split(\"|\"),0,{}));"
+      ],
+      "fragments": [
+        "<h2 class=\"ntype\"> <strong> <i class=\"fa-solid\"><style>#idh415043:after{content:\"\\0034\"}</style><span id=\"idh415043\"><span style=\"display:none;\">7</span></span></i> - <i class=\"fa-solid\">0</i> </strong> </h2>",
+        "<strong><a class=\"img lgol\" title=\"Gol normal\"><i class=\"fa-solid fa-futbol\" style=\"color: #0fa020;\"></i></a>   <i class=\"fa-solid\"><style>#idh415045:after{content:\"\\0031\"}</style><span id=\"idh415045\"></span></i> - <script>eval(function(p,a,c,k,e,d){e=function(c){return c.toString(36)};if(!\"\".replace(/^/,String)){while(c--){d[c.toString(a)]=k[c]||c.toString(a)}k=[function(e){return d[e]}];e=function(){return\"\\\\w+\"};c=1}while(c--){if(k[c]){p=p.replace(new RegExp(\"\\\\b\"+e(c)+\"\\\\b\",\"g\"),k[c])}}return p}(\"k o(a,n,i,f){g d=[2,5,9,4,1,0,8,6,3,7,1,3,5,7,9,0,2,4,6,8,0,2,4,6,8,1,3,5,7,9,7,5,2,0,9,6,3,8,4,1];c.b(a).e.j(f);c.b(a).e.l('m-'+d[(i*h)+n])}\",25,25,\"||||||||||id|getElementById|document|t|classList|oc|var|10||remove|function|add|fa||ntype\".split(\"|\"),0,{}));</script><i class=\"fa-solid\"><i class=\"fa-3\" id=\"idh415046\" style=\"font-style:normal\"><script>ntype(\"idh415046\",5,0,\"fa-3\");</script><span style=\"display:none;\">3</span></i></i> </strong>",
+        "<strong><a class=\"img lgol\" title=\"Gol normal\"><i class=\"fa-solid fa-futbol\" style=\"color: #0fa020;\"></i></a>   <i class=\"fa-solid\"><style>#idh415047:before{content:\"2\"}</style><span id=\"idh415047\"><span style=\"display:none;\">4</span></span></i> - <i class=\"fa-solid\"><i class=\"fa-3\" id=\"idh415048\" style=\"font-style:normal\"><script>ntype(\"idh415048\",5,0,\"fa-3\");</script><span style=\"display:none;\">3</span></i></i> </strong>",
+        "<strong> <a class=\"img lpenalti\" title=\"Gol de penalti\"><i class=\"fa-solid fa-futbol\" style=\"color: rgb(21, 114, 228);\"></i></a>  <i class=\"fa-solid\"><i class=\"fa-5\" id=\"idh415049\" style=\"font-style:normal\"><script>ntype(\"idh415049\",8,0,\"fa-5\");</script><span style=\"display:none;\">5</span></i></i> - <i class=\"fa-solid\"><i class=\"fa-4\" id=\"idh415050\" style=\"font-style:normal\"><script>ntype(\"idh415050\",5,0,\"fa-4\");</script><span style=\"display:none;\">4</span></i></i> </strong>",
+        "<strong> <a class=\"img lgolpp\" title=\"Gol en propia puerta\"><i class=\"fa-solid fa-futbol\" style=\"color: red;\"></i></a>   <i class=\"fa-solid\"><style>#idh415051:after{content:\"4\"}</style><span id=\"idh415051\"><span style=\"display:none;\">5</span></span></i> - <i class=\"fa-solid\"><i class=\"fa-1\" id=\"idh415052\" style=\"font-style:normal\"><script>ntype(\"idh415052\",5,0,\"fa-1\");</script><span style=\"display:none;\">1</span></i></i> </strong>"
+      ],
+      "expected": [
+        [
+          4,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          4,
+          0
+        ]
+      ]
+    },
+    {
+      "capture": "arag/m2.html",
+      "kind": "report",
+      "scripts": [
+        "eval(function(p,a,c,k,e,d){e=function(c){return c.toString(36)};if(!\"\".replace(/^/,String)){while(c--){d[c.toString(a)]=k[c]||c.toString(a)}k=[function(e){return d[e]}];e=function(){return\"\\\\w+\"};c=1}while(c--){if(k[c]){p=p.replace(new RegExp(\"\\\\b\"+e(c)+\"\\\\b\",\"g\"),k[c])}}return p}(\"k o(a,n,i,f){g d=[2,5,9,4,1,0,8,6,3,7,1,3,5,7,9,0,2,4,6,8,0,2,4,6,8,1,3,5,7,9,7,5,2,0,9,6,3,8,4,1];c.b(a).e.j(f);c.b(a).e.l('m-'+d[(i*h)+n])}\",25,25,\"||||||||||id|getElementById|document|t|classList|oc|var|10||remove|function|add|fa||ntype\".split(\"|\"),0,{}));"
+      ],
+      "fragments": [
+        "<h2 class=\"ntype\"> <strong> <script>eval(function(p,a,c,k,e,d){e=function(c){return c.toString(36)};if(!\"\".replace(/^/,String)){while(c--){d[c.toString(a)]=k[c]||c.toString(a)}k=[function(e){return d[e]}];e=function(){return\"\\\\w+\"};c=1}while(c--){if(k[c]){p=p.replace(new RegExp(\"\\\\b\"+e(c)+\"\\\\b\",\"g\"),k[c])}}return p}(\"k o(a,n,i,f){g d=[2,5,9,4,1,0,8,6,3,7,1,3,5,7,9,0,2,4,6,8,0,2,4,6,8,1,3,5,7,9,7,5,2,0,9,6,3,8,4,1];c.b(a).e.j(f);c.b(a).e.l('m-'+d[(i*h)+n])}\",25,25,\"||||||||||id|getElementById|document|t|classList|oc|var|10||remove|function|add|fa||ntype\".split(\"|\"),0,{}));</script><i class=\"fa-solid\"><i class=\"fa-4\" id=\"idh415279\" style=\"font-style:normal\"><script>ntype(\"idh415279\",1,0,\"fa-4\");</script><span style=\"display:none;\">4</span></i></i> - <i class=\"fa-solid\">1</i> </strong> </h2>",
+        "<strong><a class=\"img lgol\" title=\"Gol normal\"><i class=\"fa-solid fa-futbol\" style=\"color: #0fa020;\"></i></a>   <i class=\"fa-solid\"><i class=\"fa-1\" id=\"idh415281\" style=\"font-style:normal\"><script>ntype(\"idh415281\",4,0,\"fa-1\");</script></i></i> - <i class=\"fa-solid\"><i class=\"fa-2\" id=\"idh415282\" style=\"font-style:normal\"><script>ntype(\"idh415282\",5,0,\"fa-2\");</script></i></i> </strong>",
+        "<strong><a class=\"img lgol\" title=\"Gol normal\"><i class=\"fa-solid fa-futbol\" style=\"color: #0fa020;\"></i></a>   <i class=\"fa-solid\"><i class=\"fa-4\" id=\"idh415283\" style=\"font-style:normal\"><script>ntype(\"idh415283\",0,0,\"fa-4\");</script></i></i> - <i class=\"fa-solid\"><i class=\"fa-0\" id=\"idh415284\" style=\"font-style:normal\"><script>ntype(\"idh415284\",5,0,\"fa-0\");</script><span style=\"display:none;\">0</span></i></i> </strong>",
+        "<strong><a class=\"img lgol\" title=\"Gol normal\"><i class=\"fa-solid fa-futbol\" style=\"color: #0fa020;\"></i></a>   <i class=\"fa-solid\"><style>#idh415285:before{content:\"3\"}</style><span id=\"idh415285\"><span style=\"display:none;\">5</span></span></i> - <i class=\"fa-solid\">0</i> </strong>",
+        "<strong><a class=\"img lgol\" title=\"Gol normal\"><i class=\"fa-solid fa-futbol\" style=\"color: #0fa020;\"></i></a>   <i class=\"fa-solid\">4</i> - <i class=\"fa-solid\"><i class=\"fa-4\" id=\"idh415288\" style=\"font-style:normal\"><script>ntype(\"idh415288\",5,0,\"fa-4\");</script><span style=\"display:none;\">4</span></i></i> </strong>",
+        "<strong><a class=\"img lgol\" title=\"Gol normal\"><i class=\"fa-solid fa-futbol\" style=\"color: #0fa020;\"></i></a>   <i class=\"fa-solid\"><i class=\"fa-1\" id=\"idh415289\" style=\"font-style:normal\"><script>ntype(\"idh415289\",1,0,\"fa-1\");</script><span style=\"display:none;\">1</span></i></i> - <i class=\"fa-solid\"><style>#idh415290:before{content:\"\\0030\"}</style><span id=\"idh415290\"></span></i> </strong>",
+        "<strong><a class=\"img lgol\" title=\"Gol normal\"><i class=\"fa-solid fa-futbol\" style=\"color: #0fa020;\"></i></a>   <i class=\"fa-solid\"><i class=\"fa-4\" id=\"idh415291\" style=\"font-style:normal\"><script>ntype(\"idh415291\",1,0,\"fa-4\");</script><span style=\"display:none;\">4</span></i></i> - <i class=\"fa-solid\"><style>#idh415292:before{content:\"\\0031\"}</style><span id=\"idh415292\"><span style=\"display:none;\">1</span></span></i> </strong>"
+      ],
+      "expected": [
+        [
+          5,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          5,
+          1
+        ]
+      ]
+    },
+    {
+      "capture": "es/a5.html",
+      "kind": "round",
+      "scripts": [
+        "eval(function(p,a,c,k,e,d){e=function(c){return c.toString(36)};if(!\"\".replace(/^/,String)){while(c--){d[c.toString(a)]=k[c]||c.toString(a)}k=[function(e){return d[e]}];e=function(){return\"\\\\w+\"};c=1}while(c--){if(k[c]){p=p.replace(new RegExp(\"\\\\b\"+e(c)+\"\\\\b\",\"g\"),k[c])}}return p}(\"k o(a,n,i,f){g d=[2,5,9,4,1,0,8,6,3,7,1,3,5,7,9,0,2,4,6,8,0,2,4,6,8,1,3,5,7,9,7,5,2,0,9,6,3,8,4,1];c.b(a).e.j(f);c.b(a).e.l('m-'+d[(i*h)+n])}\",25,25,\"||||||||||id|getElementById|document|t|classList|oc|var|10||remove|function|add|fa||ntype\".split(\"|\"),0,{}));"
+      ],
+      "fragments": [
+        "<span class=\"wid2_resultado_cerrada ntype\"> <script>eval(function(p,a,c,k,e,d){e=function(c){return c.toString(36)};if(!\"\".replace(/^/,String)){while(c--){d[c.toString(a)]=k[c]||c.toString(a)}k=[function(e){return d[e]}];e=function(){return\"\\\\w+\"};c=1}while(c--){if(k[c]){p=p.replace(new RegExp(\"\\\\b\"+e(c)+\"\\\\b\",\"g\"),k[c])}}return p}(\"k o(a,n,i,f){g d=[2,5,9,4,1,0,8,6,3,7,1,3,5,7,9,0,2,4,6,8,0,2,4,6,8,1,3,5,7,9,7,5,2,0,9,6,3,8,4,1];c.b(a).e.j(f);c.b(a).e.l('m-'+d[(i*h)+n])}\",25,25,\"||||||||||id|getElementById|document|t|classList|oc|var|10||remove|function|add|fa||ntype\".split(\"|\"),0,{}));</script><i class=\"fa-solid\"><i class=\"fa-0\" id=\"idh411879\" style=\"font-style:normal\"><script>ntype(\"idh411879\",5,0,\"fa-0\");</script></i></i> -</span><span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\"><i class=\"fa-7\" id=\"idh411880\" style=\"font-style:normal\"><script>ntype(\"idh411880\",8,0,\"fa-7\");</script><span style=\"display:none;\">7</span></i></i></span>",
+        "<span class=\"wid2_resultado_cerrada ntype\"> <i class=\"fa-solid\"><i class=\"fa-4\" id=\"idh411881\" style=\"font-style:normal\"><script>ntype(\"idh411881\",5,0,\"fa-4\");</script><span style=\"display:none;\">4</span></i></i> -</span><span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\">4</i></span>",
+        "<span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\"><i class=\"fa-4\" id=\"idh411883\" style=\"font-style:normal\"><script>ntype(\"idh411883\",3,0,\"fa-4\");</script><span style=\"display:none;\">4</span></i></i> -</span><span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\"><i class=\"fa-7\" id=\"idh411884\" style=\"font-style:normal\"><script>ntype(\"idh411884\",3,0,\"fa-7\");</script><span style=\"display:none;\">7</span></i></i></span>",
+        "<span class=\"wid2_resultado_cerrada ntype\"> <i class=\"fa-solid\"><i class=\"fa-3\" id=\"idh411885\" style=\"font-style:normal\"><script>ntype(\"idh411885\",5,0,\"fa-3\");</script><span style=\"display:none;\">3</span></i></i> -</span><span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\">4</i></span>",
+        "<span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\"><i class=\"fa-4\" id=\"idh411887\" style=\"font-style:normal\"><script>ntype(\"idh411887\",4,0,\"fa-4\");</script><span style=\"display:none;\">4</span></i></i> -</span><span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\"><i class=\"fa-1\" id=\"idh411888\" style=\"font-style:normal\"><script>ntype(\"idh411888\",0,0,\"fa-1\");</script></i></i></span>",
+        "<span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\">1</i> -</span><span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\"><i class=\"fa-2\" id=\"idh411890\" style=\"font-style:normal\"><script>ntype(\"idh411890\",0,0,\"fa-2\");</script><span style=\"display:none;\">2</span></i></i></span>",
+        "<span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\">3</i> -</span><span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\"><i class=\"fa-4\" id=\"idh411892\" style=\"font-style:normal\"><script>ntype(\"idh411892\",5,0,\"fa-4\");</script><span style=\"display:none;\">4</span></i></i></span>",
+        "<span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\"><i class=\"fa-3\" id=\"idh411893\" style=\"font-style:normal\"><script>ntype(\"idh411893\",0,0,\"fa-3\");</script><span style=\"display:none;\">3</span></i></i> -</span><span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\"><style>#idh411894:before{content:\"\\0033\"}</style><span id=\"idh411894\"><span style=\"display:none;\">0</span></span></i></span>",
+        "<span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\"><i class=\"fa-5\" id=\"idh411895\" style=\"font-style:normal\"><script>ntype(\"idh411895\",3,0,\"fa-5\");</script><span style=\"display:none;\">5</span></i></i> -</span><span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\"><i class=\"fa-0\" id=\"idh411896\" style=\"font-style:normal\"><script>ntype(\"idh411896\",5,0,\"fa-0\");</script><span style=\"display:none;\">0</span></i></i></span>"
+      ],
+      "expected": [
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          4,
+          0
+        ]
+      ]
+    },
+    {
+      "capture": "es/g3.html",
+      "kind": "round",
+      "scripts": [
+        "eval(function(p,a,c,k,e,d){e=function(c){return c.toString(36)};if(!\"\".replace(/^/,String)){while(c--){d[c.toString(a)]=k[c]||c.toString(a)}k=[function(e){return d[e]}];e=function(){return\"\\\\w+\"};c=1}while(c--){if(k[c]){p=p.replace(new RegExp(\"\\\\b\"+e(c)+\"\\\\b\",\"g\"),k[c])}}return p}(\"k o(a,n,i,f){g d=[2,5,9,4,1,0,8,6,3,7,1,3,5,7,9,0,2,4,6,8,0,2,4,6,8,1,3,5,7,9,7,5,2,0,9,6,3,8,4,1];c.b(a).e.j(f);c.b(a).e.l('m-'+d[(i*h)+n])}\",25,25,\"||||||||||id|getElementById|document|t|classList|oc|var|10||remove|function|add|fa||ntype\".split(\"|\"),0,{}));"
+      ],
+      "fragments": [
+        "<span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\">2</i> -</span><span class=\"wid2_resultado_cerrada ntype\"><script>eval(function(p,a,c,k,e,d){e=function(c){return c.toString(36)};if(!\"\".replace(/^/,String)){while(c--){d[c.toString(a)]=k[c]||c.toString(a)}k=[function(e){return d[e]}];e=function(){return\"\\\\w+\"};c=1}while(c--){if(k[c]){p=p.replace(new RegExp(\"\\\\b\"+e(c)+\"\\\\b\",\"g\"),k[c])}}return p}(\"k o(a,n,i,f){g d=[2,5,9,4,1,0,8,6,3,7,1,3,5,7,9,0,2,4,6,8,0,2,4,6,8,1,3,5,7,9,7,5,2,0,9,6,3,8,4,1];c.b(a).e.j(f);c.b(a).e.l('m-'+d[(i*h)+n])}\",25,25,\"||||||||||id|getElementById|document|t|classList|oc|var|10||remove|function|add|fa||ntype\".split(\"|\"),0,{}));</script><i class=\"fa-solid\"><i class=\"fa-0\" id=\"idh380320\" style=\"font-style:normal\"><script>ntype(\"idh380320\",5,0,\"fa-0\");</script><span style=\"display:none;\">0</span></i></i></span>",
+        "<span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\"><i class=\"fa-0\" id=\"idh380321\" style=\"font-style:normal\"><script>ntype(\"idh380321\",3,0,\"fa-0\");</script><span style=\"display:none;\">0</span></i></i> -</span><span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\"><i class=\"fa-1\" id=\"idh380322\" style=\"font-style:normal\"><script>ntype(\"idh380322\",5,0,\"fa-1\");</script></i></i></span>",
+        "<span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\"><i class=\"fa-2\" id=\"idh380323\" style=\"font-style:normal\"><script>ntype(\"idh380323\",3,0,\"fa-2\");</script><span style=\"display:none;\">2</span></i></i> -</span><span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\">7</i></span>",
+        "<span class=\"wid2_resultado_cerrada ntype\"> <i class=\"fa-solid\"><i class=\"fa-3\" id=\"idh380325\" style=\"font-style:normal\"><script>ntype(\"idh380325\",5,0,\"fa-3\");</script><span style=\"display:none;\">3</span></i></i> -</span><span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\">2</i></span>",
+        "<span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\"><i class=\"fa-2\" id=\"idh380327\" style=\"font-style:normal\"><script>ntype(\"idh380327\",4,0,\"fa-2\");</script><span style=\"display:none;\">2</span></i></i> -</span><span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\"><style>#idh380328:after{content:\"1\"}</style><span id=\"idh380328\"></span></i></span>",
+        "<span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\"><style>#idh380329:after{content:\"\\0031\";display:none}</style><span id=\"idh380329\">4<span style=\"display:none;\">2</span></span></i> -</span><span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\"><i class=\"fa-0\" id=\"idh380330\" style=\"font-style:normal\"><script>ntype(\"idh380330\",4,0,\"fa-0\");</script><span style=\"display:none;\">0</span></i></i></span>",
+        "<span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\"><i class=\"fa-2\" id=\"idh380331\" style=\"font-style:normal\"><script>ntype(\"idh380331\",0,0,\"fa-2\");</script></i></i> -</span><span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\"><i class=\"fa-4\" id=\"idh380332\" style=\"font-style:normal\"><script>ntype(\"idh380332\",8,0,\"fa-4\");</script><span style=\"display:none;\">4</span></i></i></span>",
+        "<span class=\"wid2_resultado_cerrada ntype\"> <i class=\"fa-solid\"><i class=\"fa-4\" id=\"idh380333\" style=\"font-style:normal\"><script>ntype(\"idh380333\",5,0,\"fa-4\");</script><span style=\"display:none;\">4</span></i></i> -</span><span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\"><style>#idh380334:after{content:\"5\"}</style><span id=\"idh380334\"><span style=\"display:none;\">5</span></span></i></span>",
+        "<span class=\"wid2_resultado_cerrada ntype\"> <i class=\"fa-solid\"><i class=\"fa-2\" id=\"idh380335\" style=\"font-style:normal\"><script>ntype(\"idh380335\",5,0,\"fa-2\");</script></i></i> -</span><span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\">1</i></span>"
+      ],
+      "expected": [
+        [
+          2,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          4,
+          7
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          0,
+          5
+        ],
+        [
+          0,
+          1
+        ]
+      ]
+    },
+    {
+      "capture": "jor3.html",
+      "kind": "round",
+      "scripts": [
+        "eval(function(p,a,c,k,e,d){e=function(c){return c.toString(36)};if(!\"\".replace(/^/,String)){while(c--){d[c.toString(a)]=k[c]||c.toString(a)}k=[function(e){return d[e]}];e=function(){return\"\\\\w+\"};c=1}while(c--){if(k[c]){p=p.replace(new RegExp(\"\\\\b\"+e(c)+\"\\\\b\",\"g\"),k[c])}}return p}(\"k o(a,n,i,f){g d=[2,5,9,4,1,0,8,6,3,7,1,3,5,7,9,0,2,4,6,8,0,2,4,6,8,1,3,5,7,9,7,5,2,0,9,6,3,8,4,1];c.b(a).e.j(f);c.b(a).e.l('m-'+d[(i*h)+n])}\",25,25,\"||||||||||id|getElementById|document|t|classList|oc|var|10||remove|function|add|fa||ntype\".split(\"|\"),0,{}));"
+      ],
+      "fragments": [
+        "<span class=\"wid2_resultado_cerrada ntype\"><script>eval(function(p,a,c,k,e,d){e=function(c){return c.toString(36)};if(!\"\".replace(/^/,String)){while(c--){d[c.toString(a)]=k[c]||c.toString(a)}k=[function(e){return d[e]}];e=function(){return\"\\\\w+\"};c=1}while(c--){if(k[c]){p=p.replace(new RegExp(\"\\\\b\"+e(c)+\"\\\\b\",\"g\"),k[c])}}return p}(\"k o(a,n,i,f){g d=[2,5,9,4,1,0,8,6,3,7,1,3,5,7,9,0,2,4,6,8,0,2,4,6,8,1,3,5,7,9,7,5,2,0,9,6,3,8,4,1];c.b(a).e.j(f);c.b(a).e.l('m-'+d[(i*h)+n])}\",25,25,\"||||||||||id|getElementById|document|t|classList|oc|var|10||remove|function|add|fa||ntype\".split(\"|\"),0,{}));</script><i class=\"fa-solid\"><i class=\"fa-1\" id=\"idh382723\" style=\"font-style:normal\"><script>ntype(\"idh382723\",4,0,\"fa-1\");</script><span style=\"display:none;\">1</span></i></i> -</span><span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\"><i class=\"fa-1\" id=\"idh382724\" style=\"font-style:normal\"><script>ntype(\"idh382724\",2,0,\"fa-1\");</script><span style=\"display:none;\">1</span></i></i></span>",
+        "<span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\"><i class=\"fa-0\" id=\"idh382725\" style=\"font-style:normal\"><script>ntype(\"idh382725\",8,0,\"fa-0\");</script><span style=\"display:none;\">0</span></i></i> -</span><span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\"><style>#idh382726:before{content:\"\\0031\";display:none}</style><span id=\"idh382726\">2<span style=\"display:none;\">5</span></span></i></span>",
+        "<span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\">2</i> -</span><span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\">1</i></span>",
+        "<span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\"><i class=\"fa-5\" id=\"idh382729\" style=\"font-style:normal\"><script>ntype(\"idh382729\",0,0,\"fa-5\");</script></i></i> -</span><span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\"><i class=\"fa-0\" id=\"idh382730\" style=\"font-style:normal\"><script>ntype(\"idh382730\",4,0,\"fa-0\");</script><span style=\"display:none;\">0</span></i></i></span>",
+        "<span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\"><i class=\"fa-4\" id=\"idh382731\" style=\"font-style:normal\"><script>ntype(\"idh382731\",4,0,\"fa-4\");</script><span style=\"display:none;\">4</span></i></i> -</span><span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\"><style>#idh382732:before{content:\"1\"}</style><span id=\"idh382732\"><span style=\"display:none;\">3</span></span></i></span>"
+      ],
+      "expected": [
+        [
+          1,
+          9
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          1,
+          1
+        ]
+      ]
+    },
+    {
+      "capture": "arag/g.html",
+      "kind": "round",
+      "scripts": [
+        "eval(function(p,a,c,k,e,d){e=function(c){return c.toString(36)};if(!\"\".replace(/^/,String)){while(c--){d[c.toString(a)]=k[c]||c.toString(a)}k=[function(e){return d[e]}];e=function(){return\"\\\\w+\"};c=1}while(c--){if(k[c]){p=p.replace(new RegExp(\"\\\\b\"+e(c)+\"\\\\b\",\"g\"),k[c])}}return p}(\"k o(a,n,i,f){g d=[2,5,9,4,1,0,8,6,3,7,1,3,5,7,9,0,2,4,6,8,0,2,4,6,8,1,3,5,7,9,7,5,2,0,9,6,3,8,4,1];c.b(a).e.j(f);c.b(a).e.l('m-'+d[(i*h)+n])}\",25,25,\"||||||||||id|getElementById|document|t|classList|oc|var|10||remove|function|add|fa||ntype\".split(\"|\"),0,{}));"
+      ],
+      "fragments": [
+        "<span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\"><style>#idh415233:after{content:\"\\0039\"}</style><span id=\"idh415233\"><span style=\"display:none;\">0</span></span></i> -</span><span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\"><style>#idh415234:after{content:\"\\0030\";display:none}</style><span id=\"idh415234\">0<span style=\"display:none;\">4</span></span></i></span>",
+        "<span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\">2</i> -</span><span class=\"wid2_resultado_cerrada ntype\"><script>eval(function(p,a,c,k,e,d){e=function(c){return c.toString(36)};if(!\"\".replace(/^/,String)){while(c--){d[c.toString(a)]=k[c]||c.toString(a)}k=[function(e){return d[e]}];e=function(){return\"\\\\w+\"};c=1}while(c--){if(k[c]){p=p.replace(new RegExp(\"\\\\b\"+e(c)+\"\\\\b\",\"g\"),k[c])}}return p}(\"k o(a,n,i,f){g d=[2,5,9,4,1,0,8,6,3,7,1,3,5,7,9,0,2,4,6,8,0,2,4,6,8,1,3,5,7,9,7,5,2,0,9,6,3,8,4,1];c.b(a).e.j(f);c.b(a).e.l('m-'+d[(i*h)+n])}\",25,25,\"||||||||||id|getElementById|document|t|classList|oc|var|10||remove|function|add|fa||ntype\".split(\"|\"),0,{}));</script><i class=\"fa-solid\"><i class=\"fa-4\" id=\"idh415236\" style=\"font-style:normal\"><script>ntype(\"idh415236\",8,0,\"fa-4\");</script><span style=\"display:none;\">4</span></i></i></span>",
+        "<span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\"><i class=\"fa-3\" id=\"idh415237\" style=\"font-style:normal\"><script>ntype(\"idh415237\",1,0,\"fa-3\");</script></i></i> -</span><span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\"><i class=\"fa-1\" id=\"idh415238\" style=\"font-style:normal\"><script>ntype(\"idh415238\",4,0,\"fa-1\");</script><span style=\"display:none;\">1</span></i></i></span>",
+        "<span class=\"wid2_resultado_cerrada ntype\"> <i class=\"fa-solid\"><i class=\"fa-3\" id=\"idh415239\" style=\"font-style:normal\"><script>ntype(\"idh415239\",5,0,\"fa-3\");</script><span style=\"display:none;\">3</span></i></i> -</span><span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\">4</i></span>",
+        "<span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\">4</i> -</span><span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\"><i class=\"fa-4\" id=\"idh415242\" style=\"font-style:normal\"><script>ntype(\"idh415242\",4,0,\"fa-4\");</script><span style=\"display:none;\">4</span></i></i></span>",
+        "<span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\"><style>#idh415243:before{content:\"\\0034\"}</style><span id=\"idh415243\"><span style=\"display:none;\">0</span></span></i> -</span><span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\">1</i></span>",
+        "<span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\"><style>#idh415245:after{content:\"\\0033\"}</style><span id=\"idh415245\"><span style=\"display:none;\">2</span></span></i> -</span><span class=\"wid2_resultado_cerrada ntype\"><i class=\"fa-solid\"><i class=\"fa-6\" id=\"idh415246\" style=\"font-style:normal\"><script>ntype(\"idh415246\",8,0,\"fa-6\");</script><span style=\"display:none;\">6</span></i></i></span>"
+      ],
+      "expected": [
+        [
+          9,
+          0
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          3,
+          3
+        ]
+      ]
+    }
+  ]
+}

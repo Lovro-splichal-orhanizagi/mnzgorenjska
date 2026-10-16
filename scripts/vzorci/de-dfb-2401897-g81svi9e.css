@@ -1,0 +1,10 @@
+@font-face {
+	font-family: font-g81svi9e;
+	src: 
+		url('//www.fussball.de/export.fontface/-/format/woff/id/g81svi9e/type/font') format('woff'),
+		url('//www.fussball.de/export.fontface/-/format/ttf/id/g81svi9e/type/font') format('truetype');
+}
+
+.results-c-g81svi9e {
+	font-family: font-g81svi9e !important;
+}

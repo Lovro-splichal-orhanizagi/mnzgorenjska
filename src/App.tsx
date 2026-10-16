@@ -135,6 +135,7 @@ export default function App() {
               <Route path="/cz" element={<VstopDrzave drzava="CZ" />} />
               <Route path="/hu" element={<VstopDrzave drzava="HU" />} />
               <Route path="/at" element={<VstopDrzave drzava="AT" />} />
+              <Route path="/de" element={<VstopDrzave drzava="DE" />} />
               <Route path="/rs" element={<VstopDrzave drzava="RS" />} />
               <Route path="/ro" element={<VstopDrzave drzava="RO" />} />
               <Route path="/ee" element={<VstopDrzave drzava="EE" />} />

@@ -1,5 +1,7 @@
 # Španija
 
+Novanet (Galicija / Aragón): preverjene šifre, decoder, omejitve in podatkovni audit so v [novanet.md](novanet.md). Tercera Futgal Lugo grupo 1 je vpisana neaktivno; vratarji v pregledanem viru niso označeni in pogoj za aktivacijo še ni izpolnjen.
+
 Država `ES` ("España", migracija 20261012040000) ima vmesnik v španščini
 (`src/i18n/es/`, jezik `es`, `es-ES`: "3 oct", decimalna vejica, cena
 "13,2 M€"; `JEZIK_DRZAVE.ES`), vstop `slff.eu/es`, kartico ob deljenju

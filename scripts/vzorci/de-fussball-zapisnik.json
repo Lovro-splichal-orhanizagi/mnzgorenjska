@@ -1,0 +1,69 @@
+{
+  "provenance": {
+    "capturedAt": "2026-10-16",
+    "method": "Ordinary public fussball.de browser requests; no bypass",
+    "matchUrl": "https://www.fussball.de/spiel/-/spiel/031EQBPLF4000000VS5489BTVUS470OH",
+    "lineupUrl": "https://www.fussball.de/ajax.match.lineup/-/mode/PAGE/spiel/031EQBPLF4000000VS5489BTVUS470OH/ticker-id/selectedTickerId",
+    "note": "Full main document and public lineup fragment; event display names are deliberately unreliable. Names are bound by profile IDs to the lineup. Cards lack player identities.",
+    "roundUrl": "https://www.fussball.de/spieltag/kreisliga-mannheim-kreis-mannheim-kreisliga-herren-saison2627-baden/-/staffel/031EKNM2HG00000LVS5489BUVUR5FS5A-G",
+    "roundFixture": "de-fussball-krog8.html",
+    "validation": "Browser screenshots independently verify teams, date, time, round, final score and 18 visible lineup names including both goalkeepers. Other detailed lineup names/events are decoder-and-ID consistency checks.",
+    "visuallyVerifiedNames": [
+      "Patrick Obsada",
+      "Tobias Schneider",
+      "Robin Hadameck",
+      "Tobias Baumann",
+      "Christopher Steinhauer",
+      "Patrick Heinzelmann",
+      "Schad Bendiyan",
+      "Mike Blumhardt",
+      "Mansoor Abdo",
+      "Simon Felix Knauf",
+      "Tamino Lechner",
+      "Moritz Braun",
+      "Mert Tut",
+      "Marco Seibert",
+      "Vincent Steck",
+      "Robby Lange",
+      "Patrick Schleich",
+      "David Peipp"
+    ]
+  },
+  "expected": {
+    "domaci": "SpVgg 03 Ilvesheim",
+    "gostje": "SG Oftersheim",
+    "datum": "2026-10-11",
+    "ura": "15:00",
+    "krog": 8,
+    "rezultat": {
+      "domaci": 2,
+      "gostje": 3
+    }
+  },
+  "fonts": {
+    "q73uvs1t": {
+      "file": "de-fussball-q73uvs1t.woff",
+      "sha256": "7c2ff041b7dc2ae22e9f4a63353cbcf320284d5552c62497fdb19690e76335d5"
+    },
+    "vcfjwdpb": {
+      "file": "de-fussball-vcfjwdpb.woff",
+      "sha256": "d7a18ce18318164282fda51b4cc9f37348cd050d2f97d5d0783eb9a455ccca39"
+    },
+    "ug2c6646": {
+      "file": "de-fussball-ug2c6646.woff",
+      "sha256": "9f2a4c6f4a705e55a29eddc73e793edf5e28c1035318514660a59341f43ee21e"
+    },
+    "rki8aouq": {
+      "file": "de-fussball-rki8aouq.woff",
+      "sha256": "84da3ee65f00a1bd1cb08d2a4e025f64f91ca23c594999bfe410fe9d5ce3e4f9"
+    },
+    "lr7yqdau": {
+      "file": "de-fussball-lr7yqdau.woff",
+      "sha256": "6605f01b640cbb495fa605e963dd68a5852fa5fb77bb14825d40bb5486cb328e"
+    },
+    "vugrbwqv": {
+      "file": "de-fussball-vugrbwqv.woff",
+      "sha256": "7f6e063a6f2d633e809f987833d0bf7983ad6c770ac093bf03127814b577f59e"
+    }
+  }
+}

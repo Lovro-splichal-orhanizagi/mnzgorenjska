@@ -1,0 +1,91 @@
+name: Preveri nova vira (brez baze)
+
+on:
+  workflow_dispatch:
+    inputs:
+      vir:
+        description: Javni vir za celoten podatkovni audit
+        type: choice
+        options: [all, novanet, dfb]
+        default: all
+      sezona:
+        description: Tekoča sezona, arhiv ali obe
+        type: choice
+        options: [all, current, archive]
+        default: all
+  workflow_call:
+    inputs:
+      vir:
+        type: string
+        default: all
+      sezona:
+        type: string
+        default: all
+
+permissions:
+  contents: read
+
+jobs:
+  novanet:
+    name: Zivi vir — novanet ${{ matrix.sezona }}
+    if: inputs.vir == 'all' || inputs.vir == 'novanet'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    concurrency:
+      group: live-source-novanet-${{ github.ref }}
+      cancel-in-progress: false
+    strategy:
+      fail-fast: false
+      matrix:
+        sezona: ${{ fromJSON(inputs.sezona == 'current' && '["2026/27"]' || inputs.sezona == 'archive' && '["2025/26"]' || '["2026/27","2025/26"]') }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Cela sezona — brez baze in brez servisnega kljuca
+        env:
+          VIR: novanet
+          KODA: ${{ matrix.sezona == '2026/27' && 'galicia:22:26990830:27759837' || 'galicia:21:24123231:24820329' }}
+          SEZONA: ${{ matrix.sezona }}
+          MAPA: galicia-${{ matrix.sezona == '2026/27' && '2026' || '2025' }}
+        run: node scripts/preveri-vir-sezono.mjs "$VIR" "$KODA" "$SEZONA" "audit/$MAPA"
+      - name: Dokazi in surovi dokumenti
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vir-galicia-${{ matrix.sezona == '2026/27' && '2026' || '2025' }}
+          path: audit/galicia-${{ matrix.sezona == '2026/27' && '2026' || '2025' }}/
+          retention-days: 14
+
+  dfb:
+    name: Zivi vir — dfb ${{ matrix.sezona }}
+    if: inputs.vir == 'all' || inputs.vir == 'dfb'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    concurrency:
+      group: live-source-dfb-${{ github.ref }}
+      cancel-in-progress: false
+    strategy:
+      fail-fast: false
+      matrix:
+        sezona: ${{ fromJSON(inputs.sezona == 'current' && '["2026/27"]' || inputs.sezona == 'archive' && '["2025/26"]' || '["2026/27","2025/26"]') }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Cela sezona — brez baze in brez servisnega kljuca
+        env:
+          VIR: dfb
+          KODA: ${{ matrix.sezona == '2026/27' && 'regionalliga-nordost/2026-2027' || 'regionalliga-nordost/2025-2026' }}
+          SEZONA: ${{ matrix.sezona }}
+          MAPA: dfb-${{ matrix.sezona == '2026/27' && '2026' || '2025' }}
+        run: node scripts/preveri-vir-sezono.mjs "$VIR" "$KODA" "$SEZONA" "audit/$MAPA"
+      - name: Dokazi in surovi dokumenti
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vir-dfb-${{ matrix.sezona == '2026/27' && '2026' || '2025' }}
+          path: audit/dfb-${{ matrix.sezona == '2026/27' && '2026' || '2025' }}/
+          retention-days: 14

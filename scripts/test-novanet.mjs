@@ -1,0 +1,670 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import { preglejZapisnik, vZapisnik, jeIzziv, ustvariVir } from './viri/novanet.mjs'
+const fixture = (name) => readFileSync(new URL(`./vzorci/es-novanet-${['aragon-940027','galicia-1446110'].includes(name)?`${name}-full`:name}.html`, import.meta.url), 'utf8')
+const ar = fixture('aragon-940027')
+const ga = fixture('galicia-1446110')
+test('Aragón real report: metadata, decoy-free result, identities and own goal', () => {
+ const z = preglejZapisnik(ar, { zveza: 'aragon' })
+ assert.equal(z.domaci.ime, 'CUARTE-C.D.')
+ assert.equal(z.gostje.ime, 'EL GANCHO C.F.')
+ assert.equal(z.datum, '2026-10-04')
+ assert.equal(z.ura, '19:30')
+ assert.equal(z.krog, 5)
+ assert.deepEqual(z.rezultat, { domaci: 4, gostje: 0 })
+ assert.equal(z.zapisnikId, 'es-novanet-aragon-940027')
+ assert.equal(z.domaci.postava.length, 11)
+ assert.equal(z.domaci.postava[0].regSt, -1010000634315)
+ assert.equal(z.domaci.postava[0].vratar, null)
+ assert.equal(z.domaci.postava[0].ime, 'SOLBES ALLOZA, EMILIO')
+ assert.equal(z.goli.length, 4)
+ assert.equal(z.goli[2].enajstmetrovka, true)
+ assert.equal(z.goli[3].avtogol, true)
+ assert.equal(z.goli[3].ekipaIdx, 1)
+ assert.equal(z.menjave[0].minuta, 74)
+ assert.equal(z.domaci.postava.find(p => p.st === 20).minute, 74)
+ assert.equal(z.domaci.rezerve.find(p => p.st === 91).minute, 16)
+ assert.equal(z.rumeni.length, 8)
+})
+test('Galicia real report independently identified result and player', () => {
+ const z = preglejZapisnik(ga, { zveza: 'galicia' })
+ assert.equal(z.domaci.ime, 'C.D. ALLARIZ')
+ assert.equal(z.gostje.ime, 'C.D. SEIXALBO')
+ assert.equal(z.datum, '2026-09-19')
+ assert.equal(z.krog, 3)
+ assert.deepEqual(z.rezultat, { domaci: 2, gostje: 0 })
+ assert.equal(z.domaci.postava[0].regSt, -1020000148494)
+})
+test('unknown keeper stays unknown and second yellow ends valid minutes', () => {
+ const z=vZapisnik(ar,{zveza:'aragon'})
+ assert.equal(z.domaci.postava[0].vratar,null)
+ assert.equal(z.rdeci.length,1)
+ assert.equal(z.rdeci[0].drugiRumeni,true)
+ assert.equal(z.rdeci[0].minuta,79)
+ assert.equal(z.gostje.rezerve.find(p=>p.ime==='MUÑOZ ZEUFACK, YANNICK').minute,34)
+ assert.equal(z.osebje[0].ime,'MAQUEDA HERRERO, ALEJANDRO')
+})
+test('missing identity, truncated report, wrong scope and inconsistent score reject', () => {
+ assert.throws(() => preglejZapisnik(ar.replace('jugador=634315', 'jugador='), { zveza:'aragon' }), /igral|postav|identit/)
+ assert.throws(() => preglejZapisnik(ar.slice(0, ar.length / 2), { zveza:'aragon' }), /nepopoln/)
+ assert.throws(() => preglejZapisnik(ar, { zveza:'galicia' }), /zveza/)
+ assert.throws(() => preglejZapisnik(ar.replace('content:"\\0034"', 'content:"\\0035"'), { zveza:'aragon' }), /izid|goli/)
+})
+test('challenge rejects before metadata and unknown federation rejects', () => {
+ assert.equal(jeIzziv('<title>Just a moment...</title>'), true)
+ assert.throws(() => preglejZapisnik('<title>Just a moment...</title>'), /izziv/)
+ assert.throws(() => preglejZapisnik(ar, { zveza:'other' }), /zveza/)
+})
+test('second real Aragón report and round agree', async () => {
+ const { razcleniKrog } = await import('./viri/novanet.mjs')
+ const r=razcleniKrog(fixture('aragon-round4'), {zveza:'aragon'})
+ assert.equal(r.koda,'aragon:22:23183364:23183365')
+ assert.equal(r.stevilka,4)
+ assert.equal(r.krogi.length,30)
+ const t=r.tekme.find(t=>t.virId==='953743')
+ assert.deepEqual(t.izid,{domaci:5,gostje:1})
+ assert.equal(t.domaci,'SAN MATEO-C.D.')
+ assert.equal(t.gostje,'RACING HISPANIDAD')
+ const z=preglejZapisnik(fixture('aragon-953743'),{zveza:'aragon'})
+ assert.equal(z.domaci.ime,t.domaci)
+ assert.equal(z.gostje.ime,t.gostje)
+ assert.equal(z.datum,t.datum)
+ assert.equal(z.ura,t.ura)
+ assert.deepEqual(z.rezultat,t.izid)
+})
+test('report/round pairs agree on match details; contradictory season selection rejects', async () => {
+ const {razcleniKrog}=await import('./viri/novanet.mjs')
+ for(const [zveza,id,round]of[['aragon','940027',5],['aragon','953743',4],['galicia','1446110',3],['galicia','1448233',1]]){
+  const r=razcleniKrog(fixture(`${zveza}-round${round}`),{zveza})
+  const z=vZapisnik(fixture(`${zveza}-${id}`),{zveza})
+  if(id==='940027')assert.throws(()=>vZapisnik(fixture(`${zveza}-${id}`),{zveza,sezona:r.sezona}),/sezona/)
+  else assert.equal(z.sezonaZacetek,r.sezona)
+  const t=r.tekme.find(t=>t.virId===id)
+  assert.equal(t.domaci,z.domaci.ime)
+  assert.equal(t.gostje,z.gostje.ime)
+  assert.equal(t.datum,z.datum)
+  assert.equal(t.ura,z.ura)
+  assert.deepEqual(t.izid,z.rezultat)
+ }
+})
+// Synthetic traversal reduction only: retain an unchanged real match table,
+// active scope bindings and report; limit the round selector to that real round.
+function singleMatchRound(id='1448233'){
+ let html=fixture('galicia-round1')
+ const formula=[...html.matchAll(/<script\b[^>]*>[\s\S]*?<\/script>/gi)].map(m=>m[0]).find(s=>s.includes('eval(function(p,a,c,k,e,d)'))
+ const spans=[],stack=[]
+ for(const m of html.matchAll(/<\/?table\b[^>]*>/gi)){
+  if(/^<\//.test(m[0])){const start=stack.pop();if(start!=null)spans.push({start,end:m.index+m[0].length})}
+  else stack.push(m.index)
+ }
+ const removals=spans.filter(({start,end})=>{
+  const s=html.slice(start,end)
+  return (s.match(/class=(?:["']font_widgetV["']|font_widgetV)[\s>]/g)??[]).length===1&&!s.includes(`CodActa=${id}`)
+ })
+ for(const {start,end}of removals.sort((a,b)=>b.start-a.start))html=html.slice(0,start)+html.slice(end)
+ html=html.replace(/<head>/i,`<head>${formula}`)
+ const select=html.match(/(<select\b[^>]*name=jornada[^>]*>)([\s\S]*?)(<\/select>)/i)
+ const option=select[2].match(/<option value=1>[\s\S]*?<\/option>/i)[0]
+ return html.replace(select[0],`${select[1]}${option}${select[3]}`)
+}
+test('source contract traverses round, parses report and computes usable statistics',async()=>{
+ const vir=ustvariVir({predpomnilnik:false})
+ const round=singleMatchRound(),calls=[]
+ const prenesi=async(url,name,fresh)=>{calls.push({url,name,fresh});return url.includes('NFG_CmpJornada')?round:fixture('galicia-1448233')}
+ const out=await vir.zapisniki('galicia:22:26990830:27759837',prenesi)
+ assert.equal(out.length,1)
+ assert.equal(out[0].id,'es-novanet-galicia-1448233')
+ const appearances=vir.nastopi(out[0].z)
+ assert.ok(appearances.length>=22)
+ assert.ok(appearances.every(p=>p.minute>=0&&p.minute<=90))
+ assert.equal(appearances.reduce((sum,p)=>sum+p.goli+p.avtogoli,0),5)
+ assert.ok(calls.every(c=>c.fresh===true))
+ assert.equal(vir.zaPredpomnilnik(round),false)
+ const schedule=await vir.razporedVseStrani('galicia:22:26990830:27759837',prenesi)
+ assert.equal(schedule[0].tekme[0].domaci,'A.D. RIO OURO (Galicia)')
+})
+test('source rejects cross-document mismatch, access denial and truncated cached pages',async()=>{
+ const vir=ustvariVir({predpomnilnik:false})
+ const round=singleMatchRound(),code='galicia:22:26990830:27759837'
+ await assert.rejects(vir.zapisniki(code,async(url)=>url.includes('NFG_CmpJornada')?round:fixture('galicia-1446110')),/ne ujemata/)
+ for(const status of[401,403,429])await assert.rejects(vir.zapisniki(code,async()=>{throw Object.assign(new Error('denied'),{status})}),e=>e.zavrnitev&&e.status===status)
+ await assert.rejects(vir.zapisniki(code,async()=>round.slice(0,-20)),/nepopoln/)
+ await assert.rejects(vir.zapisniki(code,async()=>'<title>Just a moment</title>'),e=>e.zavrnitev)
+})
+test('missing scorer, damaged score script, unknown card icon and impossible changes reject',()=>{
+ assert.throws(()=>vZapisnik(ar.replace(' ALGABA LOPEZ, ALEJANDRO </td>',' UNKNOWN, PLAYER </td>'),{zveza:'aragon'}),/igralec/)
+ assert.throws(()=>vZapisnik(ar.replace('tarj_amar.gif','tarj_unknown.gif'),{zveza:'aragon'}),/ikona/)
+ assert.throws(()=>vZapisnik(ar.replace('ntype("idh415046",5,0','ntype("idh415046",500,0'),{zveza:'aragon'}),/indeks/)
+ assert.throws(()=>vZapisnik(ar.replace('<td class=font_responsive>BECERRIL CORZAN, JORGE</td>','<td class=font_responsive>ALGABA LOPEZ, ALEJANDRO</td>'),{zveza:'aragon'}),/menjav|igralca/)
+ const duplicated=ar.replace(/(<h4>Sustituciones<\/h4>\s*)(<table\b[\s\S]*?<\/table>)/i,'$1$2$2')
+ assert.throws(()=>vZapisnik(duplicated,{zveza:'aragon'}),/časovnica/)
+})
+test('registration namespace is numeric, safe and disjoint from raw Spain IDs',async()=>{
+ const {registracija,naslovZapisnika,razberiKodo}=await import('./viri/novanet.mjs')
+ assert.notEqual(registracija('aragon',123),registracija('galicia',123))
+ assert.ok(Number.isSafeInteger(registracija('aragon',9999999999)))
+ assert.ok(registracija('aragon',123)<0)
+ assert.throws(()=>registracija('aragon',10000000000),/identiteta/)
+ assert.throws(()=>naslovZapisnika('aragon:22:1:2','es-novanet-galicia-123'),/zveza/)
+ assert.throws(()=>razberiKodo('aragon:22:1:2&evil=1'),/šifra/)
+})
+test('fetch decodes source charset and rejects access denial or unknown encoding',async()=>{
+ const {novanetFetch}=await import('./viri/novanet.mjs')
+ const original=globalThis.fetch
+ try{
+  globalThis.fetch=async(_url,options)=>{
+   assert.ok(options.signal instanceof AbortSignal)
+   return new Response(Uint8Array.from([77,85,209,79,90]),{headers:{'content-type':'text/html; charset=ISO-8859-15'}})
+  }
+  assert.equal(await(await novanetFetch('https://www.futbolaragon.com/')).text(),'MUÑOZ')
+  globalThis.fetch=async()=>new Response('denied',{status:401})
+  await assert.rejects(novanetFetch('https://www.futbolaragon.com/'),e=>e.zavrnitev&&e.status===401)
+  globalThis.fetch=async()=>new Response('hello',{headers:{'content-type':'text/html; charset=x-unknown'}})
+  await assert.rejects(novanetFetch('https://www.futbolaragon.com/'),/nabor znakov/)
+ }finally{globalThis.fetch=original}
+})
+test('unfinalized scores do not silently become completed imports',async()=>{
+ const {razcleniKrog}=await import('./viri/novanet.mjs')
+ assert.throws(()=>razcleniKrog(fixture('aragon-round4').replace('class="wid2_resultado_cerrada ntype"','class="wid2_resultado_prov ntype"'),{zveza:'aragon'}),/provisionalni/)
+})
+test('consumer minutes equal validated intervals across every real fixture',async()=>{
+ const vir=ustvariVir({predpomnilnik:false})
+ for(const [zveza,id]of[['aragon','940027'],['aragon','953743'],['galicia','1446110'],['galicia','1448233']]){
+  const z=vZapisnik(fixture(`${zveza}-${id}`),{zveza})
+  const app=vir.nastopi(z)
+  assert.equal(app.reduce((n,p)=>n+p.rumeni,0),z.rumeni.length,`${id}: yellow cards`)
+  assert.equal(app.reduce((n,p)=>n+p.rdeci,0),z.rdeci.length,`${id}: red cards`)
+  for(const p of[...z.domaci.postava,...z.domaci.rezerve,...z.gostje.postava,...z.gostje.rezerve]){
+   const a=app.find(a=>a.regSt===p.regSt)
+   assert.equal(a?.minute??0,p.minute,`${id}/${p.ime}`)
+  }
+ }
+})
+test('round class tokens are supported and malformed candidate matches never disappear',async()=>{
+ const {razcleniKrog}=await import('./viri/novanet.mjs')
+ const html=fixture('aragon-round4')
+ const expected=razcleniKrog(html,{zveza:'aragon'})
+ const extra=html.replace('class=font_widgetL>','class="font_widgetL extra">')
+ assert.deepEqual(razcleniKrog(extra,{zveza:'aragon'}),expected)
+ const missing=html.replace('class=font_widgetL>','class=unexpected_name>')
+ assert.throws(()=>razcleniKrog(missing,{zveza:'aragon'}),/nepopoln.*ekip/)
+ const missingAway=html.replace('class=font_widgetV>','class=unexpected_name>')
+ assert.throws(()=>razcleniKrog(missingAway,{zveza:'aragon'}),/nepopoln.*ekip/)
+ const nested=html.replace('class=font_widgetL>','class=font_widgetL><table><tr><td>unexpected</td></tr></table>')
+ assert.throws(()=>razcleniKrog(nested,{zveza:'aragon'}),/nepopoln.*ekip/)
+})
+test('unused reserve cards produce explicit zero-minute appearances without invented play',()=>{
+ const changed=ar.replace("<span class=font-blue>(24')</span> MORENILLA GERIQUE, LUCAS", "<span class=font-blue>(24')</span> JIMENEZ ORTEGA, RUBEN")
+ assert.notEqual(changed,ar)
+ const z=vZapisnik(changed,{zveza:'aragon'}),vir=ustvariVir({predpomnilnik:false})
+ const bench=vir.nastopi(z).find(p=>p.ime==='JIMENEZ ORTEGA, RUBEN')
+ assert.equal(bench.minute,0);assert.equal(bench.minutaOd,0);assert.equal(bench.minutaDo,0)
+ assert.equal(bench.rumeni,1);assert.equal(bench.cleanSheet,false);assert.equal(bench.prejetiGoli,0)
+ assert.equal(bench.zacetnik,false)
+ const red=vZapisnik(changed.replace('tarj_amar.gif','tarj_roja.gif'),{zveza:'aragon'})
+ const sent=vir.nastopi(red).find(p=>p.ime==='JIMENEZ ORTEGA, RUBEN')
+ assert.equal(sent.minute,0);assert.equal(sent.rdeci,1)
+})
+function addGuestRed(html,minute,name='PEREZ CAMACHO, MIGUEL'){
+ const start=html.lastIndexOf('<h4>Tarjetas</h4>')
+ const end=html.indexOf('</table>',start)
+ return html.slice(0,end)+`<tr><td><img src="tarj_roja.gif"></td><td><span class=font-blue>(${minute})</span> ${name}</td></tr>`+html.slice(end)
+}
+test('stoppage ordering rejects goal or substitution after dismissal',()=>{
+ const afterRed=addGuestRed(ar.replace("(83')</span> PEREZ CAMACHO, MIGUEL","(90'+5)</span> PEREZ CAMACHO, MIGUEL"),"90'+1")
+ assert.throws(()=>vZapisnik(afterRed,{zveza:'aragon'}),/gol po izključitvi/)
+ const beforeRed=addGuestRed(ar.replace("(83')</span> PEREZ CAMACHO, MIGUEL","(90'+1)</span> PEREZ CAMACHO, MIGUEL"),"90'+5")
+ assert.equal(vZapisnik(beforeRed,{zveza:'aragon'}).goli[3].minuta,90)
+ const subAfterRed=addGuestRed(ar.replace("(54')</span> GARCIA JUNQUERA, ANGEL","(90'+5)</span> GARCIA JUNQUERA, ANGEL"),"90'+1",'GARCIA JUNQUERA, ANGEL')
+ assert.throws(()=>vZapisnik(subAfterRed,{zveza:'aragon'}),/časovnica/)
+})
+test('45+5 remains before46 while both retain fantasy base minutes',()=>{
+ const changed=ar.replace("(42')</span> MONTERO DEL AMA, DAVID","(45'+5)</span> MONTERO DEL AMA, DAVID").replace("(45')</span> ALGABA LOPEZ, ALEJANDRO","(46')</span> ALGABA LOPEZ, ALEJANDRO")
+ const z=vZapisnik(changed,{zveza:'aragon'})
+ assert.equal(z.goli[1].cas,4505)
+ assert.equal(z.goli[2].cas,4600)
+ assert.equal(z.goli[1].minuta,45)
+ assert.equal(z.goli[2].minuta,46)
+})
+test('round enumeration cannot skip a round and selected season label must agree with report',async()=>{
+ const {razcleniKrog}=await import('./viri/novanet.mjs')
+ const missing=fixture('aragon-round4').replace(/<option value=2>\s*2 - [^<]*<\/option>/,'')
+ assert.throws(()=>razcleniKrog(missing,{zveza:'aragon'}),/seznam krogov/)
+ const r=razcleniKrog(fixture('aragon-round5'),{zveza:'aragon'})
+ assert.equal(r.sezona,2025)
+ assert.throws(()=>vZapisnik(ar,{zveza:'aragon',sezona:r.sezona}),/sezona/)
+})
+test('schedule import rejects source-season contradictions before returning rounds',async()=>{
+ const vir=ustvariVir({predpomnilnik:false})
+ // Original active season21 label2025-2026 and every original date retained;
+ // only select the first requested round so traversal reaches season validation.
+ const prenesi=async(url)=>{
+  const n=new URL(url).searchParams.get('CodJornada')
+  return fixture('aragon-round5')
+   .replace(/(Select_Preselecciona\(document\.getElementById\("jornada"\),")5("\))/,(_m,a,b)=>`${a}${n}${b}`)
+   .replace(/CodActa=(\d+)/g,(_m,id)=>`CodActa=${id}${n}`)
+ }
+ await assert.rejects(vir.razporedVseStrani('aragon:21:23183349:23183350',prenesi),/obdobje sezone/)
+})
+test('schedule import independently checks selector dates and actual match dates',async()=>{
+ const vir=ustvariVir({predpomnilnik:false})
+ const code='galicia:22:26990830:27759837',page=singleMatchRound()
+ const matchOutside=page.replace(/(<span\b[^>]*class=["']?horario["']?[^>]*>\s*)26-09-2026/,(_m,a)=>`${a}26-09-2028`)
+ assert.notEqual(matchOutside,page)
+ await assert.rejects(vir.razporedVseStrani(code,async()=>matchOutside),/obdobje sezone/)
+ const selectorOutside=page.replace(/(<option value=1>[^<]*)2026/,(_m,a)=>`${a}2028`)
+ assert.notEqual(selectorOutside,page)
+ await assert.rejects(vir.razporedVseStrani(code,async()=>selectorOutside),/obdobje sezone/)
+})
+test('persisted club names and keys distinguish Novanet federations and raw FCF names',async()=>{
+ const {imeKlubaZaUvoz}=await import('./viri/novanet.mjs');const vir=ustvariVir({predpomnilnik:false})
+ const raw='C.D. SAN JOSE',a=imeKlubaZaUvoz(raw,'aragon'),g=imeKlubaZaUvoz(raw,'galicia')
+ assert.equal(a,'C.D. SAN JOSE (Aragón)')
+ assert.equal(g,'C.D. SAN JOSE (Galicia)')
+ assert.notEqual(a,g)
+ assert.notEqual(vir.kljucKluba(a),vir.kljucKluba(g))
+ assert.notEqual(vir.kljucKluba(a),vir.kljucKluba(raw))
+ assert.notEqual(vir.kljucKluba(g),vir.kljucKluba(raw))
+ assert.equal(vir.kratkoIme(a),raw)
+ assert.equal(vir.kratkoIme(g),raw)
+ assert.equal(vir.poenostavi,vir.kljucKluba)
+})
+test('schedule, report and appearances persist the same federation-qualified clubs',async()=>{
+ const vir=ustvariVir({predpomnilnik:false})
+ const read=async(url)=>url.includes('NFG_CmpJornada')?singleMatchRound():fixture('galicia-1448233')
+ const code='galicia:22:26990830:27759837'
+ const schedule=await vir.razporedVseStrani(code,read),reports=await vir.zapisniki(code,read)
+ assert.equal(schedule[0].tekme[0].domaci,'A.D. RIO OURO (Galicia)')
+ assert.equal(reports[0].z.domaci.ime,schedule[0].tekme[0].domaci)
+ assert.equal(reports[0].z.gostje.ime,schedule[0].tekme[0].gostje)
+ assert.equal(vir.nastopi(reports[0].z)[0].ekipa,reports[0].z.domaci.ime)
+ assert.equal(vZapisnik(fixture('galicia-1448233'),{zveza:'galicia'}).domaci.ime,'A.D. RIO OURO')
+})
+test('consumer report season uses canonical database2026/27 representation',async()=>{
+ const z=vZapisnik(fixture('galicia-1448233'),{zveza:'galicia',sezona:2026})
+ assert.equal(z.sezona,'2026/27')
+ assert.equal(z.sezonaZacetek,2026)
+ const vir=ustvariVir({predpomnilnik:false})
+ const out=await vir.zapisniki('galicia:22:26990830:27759837',async(url)=>url.includes('NFG_CmpJornada')?singleMatchRound():fixture('galicia-1448233'))
+ assert.equal(out[0].z.sezona,'2026/27')
+})
+test('validated source cache reuses full reports, refreshes schedules and recent reports',async()=>{
+ const {ustvariVir}=await import('./viri/novanet.mjs')
+ const {mkdtempSync,rmSync}=await import('node:fs'),{tmpdir}=await import('node:os'),{join}=await import('node:path')
+ const dir=mkdtempSync(join(tmpdir(),'novanet-source-'));let now=Date.parse('2026-09-27T12:00Z'),calls=[]
+ try{
+  const vir=ustvariVir({predpomnilnik:dir,danes:()=>now})
+  const read=async(url)=>{calls.push(url);return url.includes('NFG_CmpJornada')?singleMatchRound():fixture('galicia-1448233')}
+  const code='galicia:22:26990830:27759837'
+  await vir.zapisniki(code,read);assert.equal(calls.length,2)
+  await vir.zapisniki(code,read);assert.equal(calls.length,2)
+  now+=16*60_000;await vir.zapisniki(code,read);assert.equal(calls.length,3)
+  now+=60*60_000;await vir.zapisniki(code,read);assert.equal(calls.length,5)
+ }finally{rmSync(dir,{recursive:true,force:true})}
+})
+test('known missing reports withhold whole match, warn NEPOPOLN and retry next run',async()=>{
+ const warnings=[],vir=ustvariVir({predpomnilnik:false,opozori:m=>warnings.push(m)}),code='galicia:22:26990830:27759837'
+ let missing=true
+ const read=async(url)=>{
+  if(url.includes('NFG_CmpJornada'))return singleMatchRound()
+  if(missing)throw Object.assign(new Error('not found'),{status:404})
+  return fixture('galicia-1448233')
+ }
+ await assert.rejects(vir.zapisniki(code,read),e=>e.code==='NOVANET_ALL_WITHHELD')
+ assert.equal(vir.nepopolni.length,1)
+ assert.match(warnings[0],/zapisnik nepopoln/)
+ missing=false
+ assert.equal((await vir.zapisniki(code,read)).length,1)
+ assert.equal(vir.nepopolni.length,0)
+})
+test('known missing lineup withholds match; unknown event format still fails league closed',async()=>{
+ const warnings=[],vir=ustvariVir({predpomnilnik:false,opozori:m=>warnings.push(m)}),code='galicia:22:26990830:27759837'
+ const original=fixture('galicia-1448233')
+ const partial=original.replace(/(<h5><strong>Titulares<\/strong><\/h5>\s*<table\b[^>]*>)[\s\S]*?(<\/table>)/i,'$1$2')
+ assert.notEqual(partial,original)
+ await assert.rejects(vir.zapisniki(code,async(url)=>url.includes('NFG_CmpJornada')?singleMatchRound():partial),e=>e.code==='NOVANET_ALL_WITHHELD')
+ assert.equal(vir.nepopolni.length,1)
+ await assert.rejects(vir.zapisniki(code,async(url)=>url.includes('NFG_CmpJornada')?singleMatchRound():original.replace('tarj_amar.gif','tarj_unknown.gif')),/ikona/)
+})
+test('first-three-day report never becomes a long-lived cache without a fresh validation',async()=>{
+ const {mkdtempSync,rmSync}=await import('node:fs'),{tmpdir}=await import('node:os'),{join}=await import('node:path')
+ const dir=mkdtempSync(join(tmpdir(),'novanet-day3-'));let now=Date.parse('2026-09-27T12:00Z'),reports=0
+ try{
+  const vir=ustvariVir({predpomnilnik:dir,danes:()=>now})
+  const read=async(url)=>{if(url.includes('NFG_CmpJornada'))return singleMatchRound();reports++;return fixture('galicia-1448233')}
+  const code='galicia:22:26990830:27759837'
+  await vir.zapisniki(code,read);assert.equal(reports,1)
+  now+=4*86_400_000;await vir.zapisniki(code,read);assert.equal(reports,2)
+  now+=86_400_000;await vir.zapisniki(code,read);assert.equal(reports,2)
+ }finally{rmSync(dir,{recursive:true,force:true})}
+})
+test('expired cache never falls back on challenge or caches incomplete reports',async()=>{
+ const {mkdtempSync,rmSync}=await import('node:fs'),{tmpdir}=await import('node:os'),{join}=await import('node:path')
+ const dir=mkdtempSync(join(tmpdir(),'novanet-expired-'));let now=Date.parse('2026-09-27T12:00Z'),mode='full',reports=0
+ try{
+  const vir=ustvariVir({predpomnilnik:dir,danes:()=>now,opozori:()=>{}}),code='galicia:22:26990830:27759837'
+  const read=async(url)=>{
+   if(mode==='challenge')return '<title>Just a moment</title>'
+   if(url.includes('NFG_CmpJornada'))return singleMatchRound()
+   reports++
+   return mode==='missing'?fixture('galicia-1448233').replace(/(<h5><strong>Titulares<\/strong><\/h5>\s*<table\b[^>]*>)[\s\S]*?(<\/table>)/i,'$1$2'):fixture('galicia-1448233')
+  }
+  await vir.zapisniki(code,read)
+  now+=2*3_600_000;mode='challenge'
+  await assert.rejects(vir.zapisniki(code,read),e=>e.zavrnitev)
+  mode='missing';await assert.rejects(vir.zapisniki(code,read),e=>e.code==='NOVANET_ALL_WITHHELD');assert.equal(reports,2)
+  mode='full';assert.equal((await vir.zapisniki(code,read)).length,1);assert.equal(reports,3)
+ }finally{rmSync(dir,{recursive:true,force:true})}
+})
+test('recognized full header with no roster identities is withheld, not guessed',async()=>{
+ const vir=ustvariVir({predpomnilnik:false,opozori:()=>{}})
+ const empty=fixture('galicia-1448233').replace(/<tr\b[^>]*onclick="location.href='NFG_EstadisticasJugador[^>]*>[\s\S]*?<\/tr>/gi,'')
+ assert.notEqual(empty,fixture('galicia-1448233'))
+ await assert.rejects(vir.zapisniki('galicia:22:26990830:27759837',async(url)=>url.includes('NFG_CmpJornada')?singleMatchRound():empty),e=>e.code==='NOVANET_ALL_WITHHELD')
+ assert.equal(vir.nepopolni.length,1)
+})
+test('non-OK plain responses retain status for missing-report policy and shared retries',async()=>{
+ const {novanetFetch}=await import('./viri/novanet.mjs'),original=globalThis.fetch
+ try{
+  for(const status of[404,503]){
+   globalThis.fetch=async()=>new Response('plain failure',{status,headers:{'content-type':'text/plain'}})
+   const response=await novanetFetch('https://www.futgal.es/')
+   assert.equal(response.status,status);assert.equal(response.ok,false)
+  }
+ }finally{globalThis.fetch=original}
+})
+test('goal progressive score survives in consumer rezultat field',()=>{
+ const z=vZapisnik(ar,{zveza:'aragon'})
+ assert.deepEqual(z.goli.map(g=>g.rezultat),[[1,0],[2,0],[3,0],[4,0]])
+})
+test('withholding every played match makes the nightly source run fail explicitly',async()=>{
+ const vir=ustvariVir({predpomnilnik:false,opozori:()=>{}})
+ await assert.rejects(vir.zapisniki('galicia:22:26990830:27759837',async(url)=>{
+  if(url.includes('NFG_CmpJornada'))return singleMatchRound()
+  throw Object.assign(new Error('missing'),{status:404})
+ }),e=>e.nepopoln&&e.code==='NOVANET_ALL_WITHHELD'&&e.nepopolni.length===1&&e.nepopolni[0].status===404)
+})
+test('re-entry is rejected because consumer stores one continuous on/off interval',()=>{
+ const changed=ar.replace("(45')</span> ALGABA LOPEZ, ALEJANDRO","(50')</span> ALGABA LOPEZ, ALEJANDRO")
+  .replace('<td align=center class=font_responsive>17</td> <td class=font_responsive>CORTES BRUNA, IGNACIO</td>','<td align=center class=font_responsive>8</td> <td class=font_responsive>MAQUEDA HERRERO, HECTOR</td>')
+ assert.notEqual(changed,ar)
+ assert.throws(()=>vZapisnik(changed,{zveza:'aragon'}),/ponovni vstop/)
+})
+test('shared downloader sees raw404 and retries raw503 through novanetFetch',async()=>{
+ const {novanetFetch}=await import('./viri/novanet.mjs'),{prenesiSPonovitvami,pozabiPadle}=await import('./prenos.mjs')
+ const original=globalThis.fetch;let attempts=0
+ try{
+  pozabiPadle();globalThis.fetch=async()=>{attempts++;return new Response('missing',{status:404,headers:{'content-type':'text/plain'}})}
+  const missing=await prenesiSPonovitvami('https://www.futgal.es/test404',{fetchFn:novanetFetch,zamiki:[0],log:()=>{}})
+  assert.equal(missing.status,404);assert.equal(attempts,1)
+  attempts=0;globalThis.fetch=async()=>{
+   attempts++
+   return attempts===1?new Response('temporarily unavailable',{status:503,headers:{'content-type':'text/plain'}}):new Response('valid',{headers:{'content-type':'text/html; charset=utf-8'}})
+  }
+  const success=await prenesiSPonovitvami('https://www.futgal.es/test503',{fetchFn:novanetFetch,zamiki:[0],log:()=>{}})
+  assert.equal(success.status,200);assert.equal(attempts,2)
+ }finally{globalThis.fetch=original;pozabiPadle()}
+})
+test('one valid match can import while other known reports are withheld',async()=>{
+ const vir=ustvariVir({predpomnilnik:false,opozori:()=>{}}),original=fixture('galicia-round1')
+ const select=original.match(/(<select\b[^>]*name=jornada[^>]*>)([\s\S]*?)(<\/select>)/i),first=select[2].match(/<option value=1>[\s\S]*?<\/option>/i)[0]
+ const round=original.replace(select[0],`${select[1]}${first}${select[3]}`)
+ const reports=await vir.zapisniki('galicia:22:26990830:27759837',async(url)=>{
+  if(url.includes('NFG_CmpJornada'))return round
+  if(url.includes('CodActa=1448233&'))return fixture('galicia-1448233')
+  throw Object.assign(new Error('missing'),{status:404})
+ })
+ assert.equal(reports.length,1);assert.equal(vir.nepopolni.length,4)
+})
+test('captured empty card table without heading is explicit no-card evidence',()=>{
+ for(const id of['1448237','1448238']){
+  const html=fixture(`galicia-${id}`)
+  const z=preglejZapisnik(html,{zveza:'galicia'})
+  assert.ok(z.menjave.length>0)
+  // Deleting the explicit empty table must not turn missing data into no cards.
+  assert.throws(()=>preglejZapisnik(html.replace(/<table class="table table-striped table-hover" width='100%'>\s*<\/table>/,''),{zveza:'galicia'}),/nepopoln/)
+ }
+})
+test('cross-document punctuation uses club key and persists schedule spelling',async()=>{
+ const round=singleMatchRound().replaceAll('A.D. RIO OURO','A.D. RIO "OURO"')
+ const vir=ustvariVir({predpomnilnik:false})
+ const read=async url=>url.includes('NFG_CmpJornada')?round:fixture('galicia-1448233')
+ const reports=await vir.zapisniki('galicia:22:26990830:27759837',read)
+ const schedule=await vir.razporedVseStrani('galicia:22:26990830:27759837',read)
+ assert.equal(reports[0].z.domaci.ime,schedule[0].tekme[0].domaci)
+})
+
+test('actual Pol B report matches quoted schedule name without changing identity',async()=>{
+ const round=singleMatchRound('1448235'),report=fixture('galicia-1448235')
+ assert.ok(round.includes('S.D. POL "B"'))
+ assert.equal(preglejZapisnik(report,{zveza:'galicia'}).domaci.ime,'S.D. POL B')
+ const read=async u=>u.includes('NFG_CmpJornada')?round:report
+ const vir=ustvariVir({predpomnilnik:false})
+ const out=await vir.zapisniki('galicia:22:26990830:27759837',read)
+ assert.equal(out[0].z.domaci.ime,'S.D. POL "B" (Galicia)')
+})
+test('schedule club keys must not collapse distinct names',async()=>{
+ const round=singleMatchRound().replaceAll('C.D. SAN CIPRIAN','A.D. RIO "OURO"')
+ await assert.rejects(ustvariVir({predpomnilnik:false}).razporedVseStrani('galicia:22:26990830:27759837',async()=>round),/dvoumna kluba/)
+})
+test('archive999 card timing withholds whole match without guessing second-yellow chronology',()=>{
+ const html=fixture('galicia-1306462')
+ assert.ok(html.includes("(999')"))
+ assert.throws(()=>vZapisnik(html,{zveza:'galicia'}),e=>e.nepopoln===true&&/999/.test(e.message))
+ // Only the observed sentinel gets the incomplete classification; other bad
+ // timing and even a goal using999 remain unsupported format failures.
+ assert.throws(()=>vZapisnik(html.replaceAll("(999')","(998')"),{zveza:'galicia'}),e=>!e.nepopoln&&/minuta/.test(e.message))
+ assert.throws(()=>vZapisnik(html.replace("(4')","(999')"),{zveza:'galicia'}),e=>!e.nepopoln&&/minuta/.test(e.message))
+})
+test('archive absence of substitution section has no explicit zero-change evidence',()=>{
+ assert.throws(()=>vZapisnik(fixture('galicia-1306457'),{zveza:'galicia'}),e=>e.nepopoln===true&&/razdelki/.test(e.message))
+})
+test('sentinel card timing withholds one whole match while multiple validated reports continue',async()=>{
+ const vir=ustvariVir({predpomnilnik:false,opozori:()=>{}}),original=fixture('galicia-round1')
+ const select=original.match(/(<select\b[^>]*name=jornada[^>]*>)([\s\S]*?)(<\/select>)/i),first=select[2].match(/<option value=1>[\s\S]*?<\/option>/i)[0]
+ const round=original.replace(select[0],`${select[1]}${first}${select[3]}`)
+ const raw=fixture('galicia-1448237'),sentinel=raw.replace(/(tarj_amar\.gif[\s\S]*?class=font-blue>)\([^<]*\)/,"$1(999')")
+ assert.notEqual(sentinel,raw)
+ const reports=await vir.zapisniki('galicia:22:26990830:27759837',async url=>{
+  if(url.includes('NFG_CmpJornada'))return round
+  if(url.includes('CodActa=1448233&'))return fixture('galicia-1448233')
+  if(url.includes('CodActa=1448235&'))return fixture('galicia-1448235')
+  if(url.includes('CodActa=1448237&'))return sentinel
+  throw Object.assign(new Error('missing'),{status:404})
+ })
+ assert.deepEqual(reports.map(r=>r.id).sort(),['es-novanet-galicia-1448233','es-novanet-galicia-1448235'])
+ assert.equal(vir.nepopolni.length,3)
+ assert.match(vir.nepopolni.find(n=>n.id==='es-novanet-galicia-1448237').razlog,/999/)
+})
+test('audit mode collects only branded parser failures and keeps default fatal',async()=>{
+ const original=fixture('galicia-round1'),select=original.match(/(<select\b[^>]*name=jornada[^>]*>)([\s\S]*?)(<\/select>)/i),first=select[2].match(/<option value=1>[\s\S]*?<\/option>/i)[0]
+ const round=original.replace(select[0],`${select[1]}${first}${select[3]}`)
+ const badDecoder=fixture('galicia-1448233').replace('return p}', 'return changed}')
+ assert.notEqual(badDecoder,fixture('galicia-1448233'))
+ const badCard=fixture('galicia-1448237').replaceAll('tarj_amar.gif','unknown_card.gif')
+ const read=async url=>{
+  if(url.includes('NFG_CmpJornada'))return round
+  if(url.includes('CodActa=1448233&'))return badDecoder
+  if(url.includes('CodActa=1448235&'))return fixture('galicia-1448235')
+  if(url.includes('CodActa=1448237&'))return badCard
+  throw Object.assign(new Error('missing'),{status:404})
+ }
+ const source=()=>ustvariVir({predpomnilnik:false,opozori:()=>{}})
+ await assert.rejects(source().zapisniki('galicia:22:26990830:27759837',read),/novanet:/)
+ const audit=source(),reports=await audit.zapisniki('galicia:22:26990830:27759837',read,{zberiNapake:true})
+ assert.deepEqual(reports.map(r=>r.id),['es-novanet-galicia-1448235'])
+ assert.equal(audit.nepopolni.length,4)
+ assert.equal(audit.nepopolni.filter(n=>n.razclenitev).length,2)
+ for(const failure of[
+  Object.assign(new Error('denied'),{status:403,zavrnitev:true}),
+  new TypeError('programming failure'),
+  Object.assign(new Error('fetch validation-like error'),{razclenitev:true}),
+ ])await assert.rejects(source().zapisniki('galicia:22:26990830:27759837',async url=>{
+  if(url.includes('NFG_CmpJornada'))return round
+  throw failure
+ },{zberiNapake:true}),e=>e===failure||failure.zavrnitev&&e.zavrnitev)
+ // A programming error thrown inside parser input conversion is not branded.
+ await assert.rejects(source().zapisniki('galicia:22:26990830:27759837',async url=>url.includes('NFG_CmpJornada')?round:{toString(){throw new TypeError('parser programming failure')}},{zberiNapake:true}),/parser programming failure/)
+})
+test('quoted standard charsets decode strictly and unsupported labels retain safe body diagnostics',async()=>{
+ const {novanetFetch}=await import('./viri/novanet.mjs'),original=globalThis.fetch
+ try{
+  for(const contentType of['text/html; charset="ISO-8859-15"',"text/html; charset='iso-8859-15'",'text/html; charset = "iso-8859-15"; other=ok']){
+   globalThis.fetch=async()=>new Response(Uint8Array.of(0xd1),{headers:{'content-type':contentType}})
+   assert.equal(await(await novanetFetch('https://charset-test.example/report')).text(),'Ñ')
+  }
+  const body='<meta charset="x-unknown"><p>raw evidence</p>',contentType='text/html; charset="x-other"'
+  globalThis.fetch=async()=>new Response(body,{headers:{'content-type':contentType,'set-cookie':'must_not_log=private-test; Path=/'}})
+  await assert.rejects(novanetFetch('https://charset-test.example/report'),e=>{
+   assert.equal(e.koda,'NOVANET_UNSUPPORTED_CHARSET')
+   assert.match(e.message,/charset-test.example\/report/);assert.match(e.message,/x-other/);assert.match(e.message,/x-unknown/)
+   assert.ok(!e.message.includes('must_not_log'))
+   assert.equal(e.dokument.contentType,contentType)
+   assert.equal(new TextDecoder().decode(e.dokument.bytes),body)
+   return true
+  })
+  for(const contentType of['text/html; charset="utf-8','text/html; charset="utf-8"junk','text/html; charset=x-unknown']){
+   globalThis.fetch=async()=>new Response('<meta charset="utf-8">',{headers:{'content-type':contentType}})
+   await assert.rejects(novanetFetch('https://charset-test.example/report'),e=>e.koda==='NOVANET_UNSUPPORTED_CHARSET')
+  }
+ }finally{globalThis.fetch=original}
+})
+test('audit withholds actual source charset errors but not forged fetch codes',async()=>{
+ const {novanetFetch}=await import('./viri/novanet.mjs'),originalFetch=globalThis.fetch
+ const original=fixture('galicia-round1'),select=original.match(/(<select\b[^>]*name=jornada[^>]*>)([\s\S]*?)(<\/select>)/i),first=select[2].match(/<option value=1>[\s\S]*?<\/option>/i)[0]
+ const round=original.replace(select[0],`${select[1]}${first}${select[3]}`),code='galicia:22:26990830:27759837'
+ const source=()=>ustvariVir({predpomnilnik:false,opozori:()=>{}})
+ try{
+  globalThis.fetch=async()=>new Response('unknown encoding body',{headers:{'content-type':'text/html'}})
+  const read=async url=>{
+   if(url.includes('NFG_CmpJornada'))return round
+   if(url.includes('CodActa=1448233&'))return fixture('galicia-1448233')
+   if(url.includes('CodActa=1448235&'))return(await novanetFetch(url)).text()
+   throw Object.assign(new Error('missing'),{status:404})
+  }
+  await assert.rejects(source().zapisniki(code,read),e=>e.koda==='NOVANET_UNSUPPORTED_CHARSET')
+  const audit=source(),out=await audit.zapisniki(code,read,{zberiNapake:true})
+  assert.equal(out.length,1);assert.equal(audit.nepopolni.length,4)
+  assert.equal(audit.nepopolni.find(n=>n.id==='es-novanet-galicia-1448235').koda,'NOVANET_UNSUPPORTED_CHARSET')
+  const forged=Object.assign(new Error('forged encoding error'),{koda:'NOVANET_UNSUPPORTED_CHARSET'})
+  await assert.rejects(source().zapisniki(code,async url=>{if(url.includes('NFG_CmpJornada'))return round;throw forged},{zberiNapake:true}),e=>e===forged)
+ }finally{globalThis.fetch=originalFetch}
+})
+test('observed future round uses explicit empty score and match-preview link, never zero-zero',async()=>{
+ const {razcleniKrog}=await import('./viri/novanet.mjs'),html=fixture('galicia-live-round3-20261016')
+ const round=razcleniKrog(html,{zveza:'galicia'})
+ assert.equal(round.stevilka,3);assert.equal(round.tekme.length,5)
+ assert.ok(round.tekme.every(t=>!t.odigrana&&t.izid===null))
+ assert.deepEqual(round.tekme.map(t=>t.datum),['2026-10-17','2026-10-18','2026-10-18','2026-10-18','2026-10-18'])
+ assert.deepEqual(round.tekme.map(t=>t.virId).sort(),['1448243','1448244','1448245','1448246','1448247'])
+ for(const malformed of[
+  html.replaceAll('NFG_CmpPrevio','NFG_CmpPartido'),
+  html.replace('<h4><strong> </strong> </h4>','<h4><strong>0 - 0</strong> </h4>'),
+  html.replace('<h4><strong> </strong> </h4>',''),
+  html.replace('<h4><strong> </strong> </h4>','<h4><strong><span class="wid2_resultado_cerrada"></span></strong></h4>'),
+ ])assert.throws(()=>razcleniKrog(malformed,{zveza:'galicia'}),/izida kroga/)
+})
+test('archive absolute95/96 timestamps remain unsupported without inferred period',()=>{
+ const html=fixture('galicia-1306469')
+ assert.ok(html.includes("(96')"));assert.ok(html.includes("(95')"))
+ assert.throws(()=>vZapisnik(html,{zveza:'galicia'}),e=>e.razclenitev===true&&/neznana minuta/.test(e.message))
+})
+test('malformed charset parameter cannot hide before a second valid declaration',async()=>{
+ const {novanetFetch}=await import('./viri/novanet.mjs'),original=globalThis.fetch
+ try{
+  for(const contentType of[
+   'text/html; charset="utf-8"junk; charset=iso-8859-15',
+   'text/html; charset=; charset=iso-8859-15',
+   'text/html; charset; charset=iso-8859-15',
+   'text/html; charset=utf-8; charset=utf-8',
+   'text/html; charset',
+   'text/html; charset; other=ok',
+  ]){
+   globalThis.fetch=async()=>new Response('<meta charset="utf-8">Ñ',{headers:{'content-type':contentType}})
+   await assert.rejects(novanetFetch('https://charset-duplicate-test.example/'),e=>e.koda==='NOVANET_UNSUPPORTED_CHARSET')
+  }
+ }finally{globalThis.fetch=original}
+})
+test('verified regular90 context normalizes absolute95/96 while preserving source clock labels',()=>{
+ const html=fixture('galicia-1306469')
+ const z=vZapisnik(html,{zveza:'galicia',rednaLiga90:true})
+ assert.deepEqual(z.rezultat,{domaci:4,gostje:4})
+ const goal=z.goli.find(g=>g.virMinuta===96),card=z.menjave.find(c=>c.virMinuta===95)
+ assert.ok(goal);assert.ok(card)
+ assert.equal(goal.minuta,90);assert.equal(goal.dodatek,6);assert.equal(goal.cas,9006);assert.equal(goal.virCas,"(96')")
+ assert.equal(card.minuta,90);assert.equal(card.dodatek,5);assert.equal(card.cas,9005)
+ assert.ok(z.opozorila.some(s=>/absolutne minute/.test(s)))
+ assert.ok(ustvariVir({predpomnilnik:false}).nastopi(z).every(p=>p.minute<=90))
+ assert.ok(z.goli.some(g=>g.virMinuta===46&&g.minuta===46&&g.cas===4600))
+ assert.equal(vZapisnik(html.replace("(96')","(120')"),{zveza:'galicia',rednaLiga90:true}).goli.at(-1).cas,9030)
+ for(const label of["(121')","(96'+1)"]){
+  assert.throws(()=>vZapisnik(html.replace("(96')",label),{zveza:'galicia',rednaLiga90:true}),/minuta|dodatek/)
+ }
+ for(const marker of['Prórroga','Tanda de penaltis'])assert.throws(()=>vZapisnik(html.replace('Ficha de Partido',`Ficha de Partido ${marker}`),{zveza:'galicia',rednaLiga90:true}),/podaljš|enajstmetrovk/)
+ assert.throws(()=>vZapisnik(fixture('galicia-1306462'),{zveza:'galicia',rednaLiga90:true}),e=>e.nepopoln&&/999/.test(e.message))
+})
+test('absolute and explicit stoppage notation share one chronology only in regular90 context',()=>{
+ const html=fixture('galicia-1306469')
+ const equivalent=vZapisnik(html.replace("(95')","(90'+5)").replace("(96')","(90'+6)"),{zveza:'galicia'})
+ const absolute=vZapisnik(html,{zveza:'galicia',rednaLiga90:true})
+ assert.deepEqual(absolute.goli.map(g=>[g.minuta,g.cas]),equivalent.goli.map(g=>[g.minuta,g.cas]))
+ // Dismissing the final scorer at95 must prohibit the goal at90+6.
+ const last=absolute.goli.at(-1)
+ assert.equal(last.ekipaIdx,0)
+ const marker=html.match(/<h4>Tarjetas<\/h4>/g)
+ assert.ok(marker.length)
+ const changed=html.replace("(96')","(90'+6)").replace(/(<h4>Tarjetas<\/h4>\s*<table\b[^>]*>)/,`$1<tr><td><img src="tarj_roja.gif"></td><td>(95') ${last.ime}</td></tr>`)
+ assert.throws(()=>vZapisnik(changed,{zveza:'galicia',rednaLiga90:true}),/gol po izključitvi/)
+})
+test('source enables absolute clocks only for the two verified Galicia league codes',async()=>{
+ const raw=fixture('galicia-1448235'),report=raw.replaceAll("(90'+3)","(95')")
+ assert.notEqual(report,raw)
+ const round=singleMatchRound('1448235'),read=async u=>u.includes('NFG_CmpJornada')?round:report
+ const out=await ustvariVir({predpomnilnik:false}).zapisniki('galicia:22:26990830:27759837',read)
+ assert.equal(out.length,1);assert.equal(out[0].z.rdeci.at(-1).virMinuta,95)
+ const unknown=round.replaceAll('26990830','26990831')
+ await assert.rejects(ustvariVir({predpomnilnik:false}).zapisniki('galicia:22:26990831:27759837',async u=>u.includes('NFG_CmpJornada')?unknown:report),/neznana minuta/)
+})
+test('observed preview-unavailable marker explicitly identifies unplayed scheduled matches',async()=>{
+ const {razcleniKrog}=await import('./viri/novanet.mjs'),html=fixture('galicia-live-round4-20261016')
+ const round=razcleniKrog(html,{zveza:'galicia'})
+ assert.equal(round.stevilka,4);assert.equal(round.tekme.length,5)
+ assert.ok(round.tekme.every(t=>!t.odigrana&&t.izid===null&&t.virId===null))
+ assert.deepEqual(round.tekme.map(t=>t.datum),['2026-10-24','2026-10-24','2026-10-25','2026-10-25','2026-10-25'])
+ for(const malformed of[
+  html.replaceAll('title="Previo no disponible"','title="Unknown status"'),
+  html.replaceAll('fa-eye-slash','fa-question'),
+  html.replace('<h4><strong> </strong> </h4>','<h4><strong>0 - 0</strong></h4>'),
+  html.replace('<h4><strong> </strong> </h4>','<h4><strong><span class="wid2_resultado_cerrada"></span></strong></h4>'),
+ ])assert.throws(()=>razcleniKrog(malformed,{zveza:'galicia'}),/izida kroga/)
+})
+test('unavailable preview rejects report IDs and result signals anywhere in its match table',async()=>{
+ const {razcleniKrog}=await import('./viri/novanet.mjs'),html=fixture('galicia-live-round4-20261016')
+ for(const signal of[
+  '<a href="NFG_CmpPartido?CodActa=123456">Report</a>',
+  '<a href="NFG_CmpPrevio?CodActa=123456">Preview</a>',
+  '<span class="wid2_resultado_cerrada">0</span>',
+  '<span class="wid2_resultado_prov">0</span>',
+  '<span class="ntype">0</span>',
+ ]){
+  const bad=html.replace('<div class=font_widgetL>',`${signal}<div class=font_widgetL>`)
+  assert.notEqual(bad,html)
+  assert.throws(()=>razcleniKrog(bad,{zveza:'galicia'}),/izida kroga/)
+ }
+})
+test('source audit and normal imports stop on first actual empty response',async()=>{
+ const {novanetFetch}=await import('./viri/novanet.mjs'),original=globalThis.fetch
+ try{
+  for(const status of[200,204])for(const zberiNapake of[false,true]){
+   let fetches=0,reportRequests=0
+   globalThis.fetch=async()=>{fetches++;return new Response(null,{status})}
+   const vir=ustvariVir({predpomnilnik:false,opozori:()=>{}})
+   await assert.rejects(vir.zapisniki('galicia:22:26990830:27759837',async url=>{
+    if(url.includes('NFG_CmpJornada'))return singleMatchRound()
+    reportRequests++;return(await novanetFetch(url)).text()
+   },{zberiNapake}),e=>e.koda==='NOVANET_EMPTY_RESPONSE'&&e.status===status&&!e.zavrnitev)
+   assert.equal(fetches,1);assert.equal(reportRequests,1);assert.deepEqual(vir.nepopolni,[])
+  }
+ }finally{globalThis.fetch=original}
+})

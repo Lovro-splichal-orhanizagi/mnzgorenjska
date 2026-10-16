@@ -1,0 +1,73 @@
+{
+  "matches": [
+    {
+      "id": "2401897",
+      "checkedAt": "2026-10-16",
+      "sourceFixtureSha256": "f6de7c46111be47171101530afcc55815b95520d6a6c009b0b66e97a609f80af",
+      "semanticSha256": "163cbea02852b1bcffc629e87fbe36a8e56cbd71932a01ca7b2fd7c39b133c00",
+      "matchId": "02TMCK1048000000VS5489BTVT4H6CF2",
+      "fontId": "g81svi9e",
+      "date": "2025-08-08",
+      "teams": [
+        "VSG Altglienicke Berlin",
+        "FC Carl Zeiss Jena"
+      ],
+      "teamIds": [
+        "011MICUBU4000000VTVG0001VTR8C1K7",
+        "011MIC6ARO000000VTVG0001VTR8C1K7"
+      ],
+      "files": {
+        "main": {
+          "file": "de-dfb-2401897-fussball-main.html",
+          "url": "https://www.fussball.de/spiel/vsg-altglienicke-berlin-fc-carl-zeiss-jena/-/spiel/02TMCK1048000000VS5489BTVT4H6CF2",
+          "sha256": "2584b31a359e320b68555d9dfb9572b613232d41e4ff2e850d1b8fa65446129e"
+        },
+        "lineup": {
+          "file": "de-dfb-2401897-fussball-lineup.html",
+          "url": "https://www.fussball.de/ajax.match.lineup/-/mode/PAGE/spiel/02TMCK1048000000VS5489BTVT4H6CF2/ticker-id/selectedTickerId",
+          "sha256": "da9ef08db3533af5ecfc793f94fb4176d40366c44f340d0d81ad076370b5ada6"
+        },
+        "css": {
+          "file": "de-dfb-2401897-g81svi9e.css",
+          "url": "https://www.fussball.de/export.fontface/-/id/g81svi9e/type/css",
+          "sha256": "1e5c746c1a435d001fd66c537045ab0ad6c9f0a4716aa20667c51d6188a1697d"
+        },
+        "font": {
+          "file": "de-dfb-2401897-g81svi9e.woff",
+          "url": "https://www.fussball.de/export.fontface/-/format/woff/id/g81svi9e/type/font",
+          "sha256": "a14050bdd84da81641ef0e6e71fe694299c27c0e64162993722acba1423d2394"
+        },
+        "dfb": {
+          "file": "de-dfb-2401897.html",
+          "url": "https://datencenter.dfb.de/datencenter/regionalliga-nordost/2025-2026/3-spieltag/vsg-altglienicke-fc-carl-zeiss-jena-2401897",
+          "sha256": "f6de7c46111be47171101530afcc55815b95520d6a6c009b0b66e97a609f80af"
+        }
+      },
+      "alias": {
+        "dfb": {
+          "name": "Luis Zwick",
+          "profileId": "379608",
+          "teamId": "vsg-altglienicke",
+          "side": 0
+        },
+        "fussball": {
+          "name": "Luis Maria Zwick",
+          "identity": "de-fussball-userid-02ENUBHM0K000000VUM1DNP5VS320AA4",
+          "jersey": 1,
+          "goalkeeperMarker": true
+        }
+      },
+      "scope": "Same-match listed reserve role only. No inferred entry, playing time or clean sheet. Explicit reviewed middle-name alias; never a generic normalization rule.",
+      "staffelId": "690047",
+      "matchNumber": "690047024",
+      "round": 3,
+      "aliasEvidence": {
+        "birthDate": "1994-05-24",
+        "dfbUrl": "https://datencenter.dfb.de/datencenter/personen/luis-zwick/spieler",
+        "fussballUrl": "https://www.fussball.de/spielerprofil/-/userid/02ENUBHM0K000000VUM1DNP5VS320AA4",
+        "checkedAt": "2026-10-16",
+        "facts": "Both official profiles publish the same birth date; same-match primary lineup publishes Luis Maria Zwick as VSG reserve goalkeeper. Scoped reviewed alias to DFB Luis Zwick profile379608 only."
+      }
+    }
+  ]
+}

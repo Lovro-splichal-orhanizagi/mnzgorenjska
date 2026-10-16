@@ -20,6 +20,7 @@ const PO_POTI: Record<string, string> = {
   '/cz': 'vstop_drzave',
   '/hu': 'vstop_drzave',
   '/at': 'vstop_drzave',
+  '/de': 'vstop_drzave',
   '/rs': 'vstop_drzave',
   '/ro': 'vstop_drzave',
   '/ee': 'vstop_drzave',

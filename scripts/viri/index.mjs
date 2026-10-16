@@ -37,6 +37,8 @@ import ncefl from './ncefl.mjs'
 import hoffKm from './hoff-km.mjs'
 import askf from './askf.mjs'
 import ffa from './ffa.mjs'
+import novanet from './novanet.mjs'
+import dfb from './dfb.mjs'
 import mascot from './mascot.mjs'
 import lowland from './lowland.mjs'
 import eps from './eps.mjs'
@@ -61,6 +63,8 @@ import kff from './kff.mjs'
 import pflAz from './pfl-az.mjs'
 
 const VIRI = {
+  // Ukrajina: Profesionalna nogometna liga prek pfl.ua.
+  'pfl-ua': pflUa,
   mnzg,
   mnzlj,
   mnzce,
@@ -128,6 +132,10 @@ const VIRI = {
   // Armenija: Football Federation of Armenia (ffa.am), Prva liga; brez šifer
   // igralcev (ime + klub), vratar je prvi začetnik (namig).
   ffa,
+  // Španija (Galicija / Aragón): Novanet, preverjeni izidi in identitete.
+  novanet,
+  // Nemčija: javni zapisniki DFB Datencenter, Regionalliga Nordost.
+  dfb,
   // Grčija: regionalne zveze EPS na platformi Mascotnet (deset domen, šifra
   // `<domena>:<diorganosi>`), brez šifer igralcev, vratar prvi začetnik (namig).
   // Pisno dovoljenje upravljavca (Lovro, oktober 2026).
@@ -154,9 +162,6 @@ const VIRI = {
   // Anglija (step 3–4): Isthmian, Northern Premier in Southern League prek skupnega
   // javnega JSON platforme (glava x-tenant-id); šifra osebe, vratar.
   isthmian,
-  // Ukrajina: Професіональна футбольна ліга (pfl.ua) — Perša liga, Druga liga A in B;
-  // koledar JSON, šifra igralca, vratar iz postavitve.
-  'pfl-ua': pflUa,
   // Bosna in Hercegovina: NS FBiH prek nsfbih.ba (COMET, Prva in Druga liga
   // FBiH), brez šifer igralcev (ime + klub), vratar je prvi začetnik (namig).
   nsfbih,
