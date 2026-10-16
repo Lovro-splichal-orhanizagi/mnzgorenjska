@@ -3302,6 +3302,149 @@ select scout.pocisti();
 select pg_temp.preveri('scout3: dnevnik hrani 12 mesecev',
   (select count(*) = 1 from scout.dnevnik where team_id = -913001 and created_at < now() - interval '10 months'));
 
+-- Scout 3, branje. Model -> objavljen (s3.model) in novejši neobjavljen.
+-- -930001 viden, -930002 skrit (ugovor), -930003 mladinska liga, -930004
+-- anonimiziran, -930005 zaprta država (HR), -930006 le v neobjavljenem,
+-- -930007 viden v klubu K (-913001).
+reset role;
+select set_config('request.jwt.claim.sub','',true);
+insert into competitions(id, slug, name, short_name, active, country_id, source) overriding system value
+values (-930100, 'test-scout3-u19', 'Scout3 U19', 'S3U', false, (select id from countries where code='SI'), 'mnzg'),
+       (-930200, 'test-scout3-hr', 'Scout3 HR', 'S3H', false, (select id from countries where code='HR'), 'hns');
+insert into teams(id, name, short_name, country_id) overriding system value
+values (-930201, 'Scout3 HR klub', 'S3H', (select id from countries where code='HR'));
+insert into players(id, team_id, competition_id, first_name, last_name, full_name, position, position_source, value, value_start, active) overriding system value
+values (-930001, -913002, -913001, 'Scout', 'Vidni', 'Scout Vidni', 'FWD', 'admin', 6, 6, true),
+       (-930002, -913002, -913001, 'Scout', 'Skriti', 'Scout Skriti', 'FWD', 'admin', 6, 6, true),
+       (-930003, -913002, -930100, 'Scout', 'Mladi', 'Scout Mladi', 'FWD', 'admin', 6, 6, true),
+       (-930004, -913002, -913001, 'Scout', 'Anonimni', 'Scout Anonimni', 'FWD', 'admin', 6, 6, true),
+       (-930005, -930201, -930200, 'Scout', 'Hrvat', 'Scout Hrvat', 'FWD', 'admin', 6, 6, true),
+       (-930006, -913002, -913001, 'Scout', 'Neobjavljeni', 'Scout Neobjavljeni', 'FWD', 'admin', 6, 6, true),
+       (-930007, -913001, -913001, 'Scout', 'Domaci', 'Scout Domaci', 'MID', 'admin', 6, 6, true),
+       (-930008, -913003, -913001, 'Scout', 'Anonimni', 'Scout Anonimni', 'FWD', 'admin', 6, 6, true);
+-- -930008 je ista oseba kot -930004 (isto ime v državi): anonimizacija skrije obe vrstici.
+insert into anonimizirani_igralci (player_id, kljuc) select * from scout.kljuci_vrstic(array[-930004]::bigint[]);
+update players set anonimiziran_at = now() where id = -930004;
+insert into scout.ugovori (player_id, kljuc) select * from scout.kljuci_vrstic(array[-930002]::bigint[]);
+insert into scout.modeli (leto, backtest, parametri, objavljen) values (2026, '{}', '{}', true);
+insert into scout.modeli (leto, backtest, parametri, objavljen) values (2026, '{}', '{}', false);
+create temporary table s3 as
+select (select max(id) from scout.modeli where objavljen) as model,
+       (select max(id) from scout.modeli where not objavljen) as neobjavljen;
+insert into scout.lige_moc (model_id, competition_id, moc, vir, prestopov, izracunano_at)
+select s3.model, c, 0, 'model', 0, now() from s3, unnest(array[-913001, -930100, -930200]::bigint[]) c;
+insert into scout.ekipe_elo (model_id, team_id, competition_id, leto, elo)
+select s3.model, -913001, -913001, 2026, 1500 from s3;
+insert into scout.indeks (model_id, player_id, skupina, indeks, percentil, zaupanje)
+select s3.model, p.id, p.position, 1, 90, 1
+  from s3, players p where p.id in (-930001, -930002, -930003, -930004, -930005, -930007, -930008);
+insert into scout.indeks (model_id, player_id, skupina, indeks, percentil, zaupanje)
+select s3.neobjavljen, -930006, 'FWD', 1, 99, 1 from s3;
+insert into scout.kazalniki (model_id, player_id, competition_id, sezona, leto, team_id, skupina, minute,
+  delez_minut, zacetki_delez, cele_delez, goli_ref_90, delez_golov, enajstm, onoff_ref_90, prejeti_ref_90,
+  ciste_delez, kartoni_90, vratar_ref_90, stalnost, trend_minut, prehod_ravni, zaupanje)
+select s3.model, p.id, p.competition_id, '2026/27', 2026, p.team_id, p.position, 900,
+       0.8, 0.8, 0.7, 0.5, 0.3, 0, 0.2, 1.1, 0.2, 0.1, 0, 0.9, 0, null, 1
+  from s3, players p where p.id in (-930001, -930002, -930003, -930004, -930005, -930007, -930008);
+insert into scout.vektorji (model_id, player_id, skupina, vektor, podobni, podobnost)
+select s3.model, -930001, 'FWD', array[0.1, 0.2],
+       array[-930002, -930003, -930004, -930005, -930006, -930007]::bigint[], array[0.9, 0.8, 0.7, 0.6, 0.5, 0.4]
+  from s3;
+insert into scout.vrzeli (model_id, team_id, competition_id, skupina, vrsta, player_id, vrednost)
+select s3.model, -913001, -913001, 'FWD', 'tanka', null, 1 from s3
+union all select s3.model, -913001, -913001, 'MID', 'padajoce_minute', -930007, -0.4 from s3
+union all select s3.model, -913001, -913001, 'FWD', 'disciplina', -930002, 0.5 from s3;
+
+select pg_temp.preveri('scout3: anon ne bere, notranjih funkcij brskalnik ne klice',
+  not has_function_privilege('anon', 'public.scout_isci(text, text, bigint[], integer, boolean, integer)', 'EXECUTE')
+  and not has_function_privilege('anon', 'public.scout_igralec(bigint)', 'EXECUTE')
+  and not has_function_privilege('anon', 'public.scout_podobni(bigint)', 'EXECUTE')
+  and not has_function_privilege('anon', 'public.scout_vrzeli()', 'EXECUTE')
+  and not has_function_privilege('authenticated', 'scout.dostop(text, bigint, jsonb)', 'EXECUTE')
+  and not has_function_privilege('authenticated', 'scout.vidni(bigint, bigint)', 'EXECUTE')
+  and has_table_privilege('authenticated', 'public.federations', 'SELECT'));
+
+select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000005',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('scout3: brez sedeza ni iskanja', $$select * from scout_isci()$$);
+select pg_temp.zavrnjeno('scout3: brez sedeza ni profila', $$select scout_igralec(-930001)$$);
+select pg_temp.zavrnjeno('scout3: brez sedeza ni podobnih', $$select * from scout_podobni(-930001)$$);
+select pg_temp.zavrnjeno('scout3: brez sedeza ni vrzeli', $$select * from scout_vrzeli()$$);
+reset role;
+
+select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.preveri('scout3: iskanje vrne le vidne igralce odprte drzave iz objavljenega modela, brez lastnih',
+  (select array_agg(player_id order by player_id) = array[-930001]::bigint[] from scout_isci()));
+select pg_temp.preveri('scout3: profil vidnega igralca s sezonami',
+  (select (j->>'ime') = 'Scout Vidni' and jsonb_array_length(j->'sezone') = 1 from scout_igralec(-930001) j));
+select pg_temp.preveri('scout3: skrit, mladinec, anonimiziran (tudi druga vrstica osebe), zaprta drzava in neobjavljen nimajo profila',
+  scout_igralec(-930002) is null and scout_igralec(-930003) is null and scout_igralec(-930004) is null
+  and scout_igralec(-930005) is null and scout_igralec(-930006) is null and scout_igralec(-930008) is null);
+select pg_temp.preveri('scout3: podobni le vidni',
+  (select array_agg(player_id) = array[-930007]::bigint[] from scout_podobni(-930001)));
+select pg_temp.preveri('scout3: vrzeli brez skritih igralcev',
+  (select count(*) = 2 and bool_and(player_id is distinct from -930002) from scout_vrzeli()));
+select pg_temp.napaka('scout3: neveljaven filter', $$select * from scout_isci('XYZ')$$, 'scout-filter');
+reset role;
+select pg_temp.preveri('scout3: vsak klic v dnevniku',
+  (select count(*) = 10 from scout.dnevnik
+    where team_id = -913001 and user_id = 'e5c30000-0000-4000-8000-000000000001'));
+select pg_temp.preveri('scout3: dnevnik iskanja in podobnih hrani vrnjene igralce',
+  (select bool_and(case vrsta when 'isci' then parametri->'igralci' = '[-930001]'::jsonb
+                             else parametri->'igralci' = '[-930007]'::jsonb end)
+     from scout.dnevnik where team_id = -913001 and vrsta in ('isci', 'podobni')
+      and user_id = 'e5c30000-0000-4000-8000-000000000001'));
+
+-- Privolitev brez "odprt za prestop" se klubu ne pokaže; stika klub ne vidi (faza 4).
+insert into zahtevki_igralca(player_id, user_id, status, potrdil, decided_at)
+values (-930001, 'e5c30000-0000-4000-8000-000000000005', 'potrjen', 'admin', now());
+insert into scout.privolitve (player_id, odprt_za_prestop, letnik, regije, kontakt_dovoljen)
+values (-930001, false, 1995, '{}', true);
+select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.preveri('scout3: privolitev brez odprt za prestop se ne pokaze',
+  (select (j->'privolitev') = 'null'::jsonb from scout_igralec(-930001) j)
+  and not exists (select 1 from scout_isci(p_samo_odprti => true)));
+reset role;
+update scout.privolitve set odprt_za_prestop = true where player_id = -930001;
+select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.preveri('scout3: odprt za prestop se pokaze, stik ne',
+  (select (j->'privolitev'->>'letnik') = '1995' and not (j->'privolitev' ? 'kontakt_dovoljen')
+     from scout_igralec(-930001) j)
+  and (select array_agg(player_id) = array[-930001]::bigint[] from scout_isci(p_samo_odprti => true)));
+reset role;
+
+insert into scout.dnevnik (team_id, vrsta, player_id)
+select -913001, 'igralec', -930001 from generate_series(1, 500);
+select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.napaka('scout3: dnevna meja profilov', $$select scout_igralec(-930001)$$, 'scout-meja');
+select pg_temp.preveri('scout3: iskanje ima svojo mejo', (select count(*) = 1 from scout_isci()));
+reset role;
+delete from scout.dnevnik where team_id = -913001 and user_id is null and vrsta = 'igralec';
+
+update scout.narocnine set velja_do = now() - interval '1 second' where team_id = -913001;
+select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('scout3: potekla narocnina', $$select * from scout_isci()$$);
+reset role;
+update scout.narocnine set velja_do = now() + interval '14 days' where team_id = -913001;
+update scout.drzave set stanje = 'zaprto' where country_id = (select id from countries where code = 'SI');
+select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('scout3: zaprta drzava', $$select * from scout_isci()$$);
+reset role;
+update scout.drzave set stanje = 'odprto' where country_id = (select id from countries where code = 'SI');
+update klubski_racuni set preklican_at = now() where user_id = 'e5c30000-0000-4000-8000-000000000001';
+select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('scout3: preklican klubski racun', $$select * from scout_isci()$$);
+reset role;
+update klubski_racuni set preklican_at = null where user_id = 'e5c30000-0000-4000-8000-000000000001';
+select set_config('request.jwt.claim.sub','',true);
+
 do $$
 declare v_napak int;
 begin
