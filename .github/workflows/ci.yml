@@ -21,22 +21,30 @@ on:
         type: choice
         options: [all, current, archive]
         default: all
+      diagnostika:
+        description: Samo dva fiksna javna dokumenta, brez celotnega audita
+        type: boolean
+        default: false
 
 permissions:
   contents: read
 
 # Nov push na isto vejo prekine prejšnji tek — zadnje stanje je edino, ki šteje.
 concurrency:
-  group: ci-${{ github.ref }}-${{ inputs.vir || 'code' }}-${{ inputs.sezona || 'all' }}
+  group: ci-${{ github.ref }}-${{ inputs.vir || 'code' }}-${{ inputs.sezona || 'all' }}-${{ inputs.diagnostika && 'diagnostic' || 'normal' }}
   cancel-in-progress: true
 
 jobs:
   novi-viri:
-    if: github.event_name == 'workflow_dispatch' && startsWith(github.ref, 'refs/heads/codex/spain-germany-production')
+    if: github.event_name == 'workflow_dispatch' && !inputs.diagnostika && startsWith(github.ref, 'refs/heads/codex/spain-germany-production')
     uses: ./.github/workflows/preveri-nova-vira.yml
     with:
       vir: ${{ inputs.vir || 'all' }}
       sezona: ${{ inputs.sezona || 'all' }}
+
+  diagnostika-virov:
+    if: github.event_name == 'workflow_dispatch' && inputs.diagnostika && startsWith(github.ref, 'refs/heads/codex/spain-germany-production')
+    uses: ./.github/workflows/diagnostika-javnih-virov.yml
 
   preveri:
     name: Tipi, build, izris

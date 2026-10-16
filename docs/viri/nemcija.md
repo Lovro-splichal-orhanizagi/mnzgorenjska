@@ -2,7 +2,7 @@
 
 DFB lahko prvo opozorilo pri izključitvi Gelb-Rot izpusti. Uradna oznaka drugega rumenega dokazuje en predhodni rumeni karton: statistika ohrani en rumeni in en rdeči, čas izpuščenega prvega ostane `null`, zapisnik pa ima izrecno opozorilo in sled `izpeljanIz: drugi-rumeni`. Obstoječega prvega kartona ne podvoji. Pri menjavi uradno označenega vratarja isti par menjave poda vlogo vstopajočega v obeh oblikah zapisnika; označena je kot izpeljana iz menjave, ne iz dresa.
 
-Migracija `20261016170000_nemcija_galicija_neaktivni.sql` vpiše samo dve
+Migracija `20261016211600_nemcija_galicija_neaktivni.sql` vpiše samo dve
 preverjeni začetni tekmovanji. Obe imata `active = false`; igralci, tekme in
 fantasy ekipe se z migracijo ne ustvarijo. `prvi_fantasy_krog = 1` je začetna
 nastavitev, ne dovoljenje za retroaktivno igranje. Ob poznejšem vklopu sredi
