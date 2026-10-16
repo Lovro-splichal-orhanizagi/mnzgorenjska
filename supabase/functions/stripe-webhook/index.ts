@@ -31,6 +31,15 @@
 //   charge.dispute.created → preverjen_vracilo kot spor
 //   charge.dispute.closed (won) → preverjen_spor_dobljen
 //
+// SLFF Scout (metadata app=slff-scout, faza 3): seja → scout_iz_placila
+// (postavke po scout.ts; 'aktivna:<stara>' → prekliče staro naročnino;
+// 'dvojno', 'zaprt', 'ni_narocnine' → preklic nove + Discord "vrni denar"),
+// invoice.paid in subscription.updated → scout_podaljsaj le, če ima naročnina
+// samo cene Scouta ('zaprt' ali tuja cena → preklic), deleted →
+// scout_narocnina_konec.
+// Vračil in sporov Scouta ne obdelujemo samodejno: admin naročnino prekliče v
+// Stripe, kar pride kot subscription.deleted.
+//
 // Oblike objektov se med različicami API razlikujejo (basil: obdobje na
 // postavkah, naročnina računa pod `parent`, račun plačila prek
 // invoice_payments); beremo obe.
@@ -42,6 +51,7 @@
 
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4'
 import { veljavenPodpis } from './podpis.ts'
+import { scoutCeneNarocnine, scoutPostavkeVeljajo } from './scout.ts'
 
 // deno-lint-ignore no-explicit-any
 type Obj = Record<string, any>
@@ -209,6 +219,7 @@ async function obdelaj(tip: string, o: Obj): Promise<string> {
     case 'checkout.session.completed':
     case 'checkout.session.async_payment_succeeded': {
       const m = o.metadata ?? {}
+      if (m.app === 'slff-scout') return await scoutSeja(o)
       if (m.app !== 'slff') return 'ignored'
       if (!['paid', 'no_payment_required'].includes(o.payment_status)) return 'unpaid'
       const vir = m.vir
@@ -258,13 +269,15 @@ async function obdelaj(tip: string, o: Obj): Promise<string> {
     case 'invoice.paid': {
       const podrobno = o.parent?.subscription_details ?? o.subscription_details ?? {}
       const sub = id(o.subscription) ?? id(podrobno.subscription)
-      if (podrobno.metadata?.app !== 'slff' || !sub) return 'ignored'
+      const app = podrobno.metadata?.app
+      if ((app !== 'slff' && app !== 'slff-scout') || !sub) return 'ignored'
       const konec = Math.max(0, ...(o.lines?.data ?? []).map((l: Obj) => l.period?.end ?? 0))
       if (!konec) return 'no period'
-      return await podaljsaj(sub, konec)
+      return app === 'slff-scout' ? await scoutPodaljsaj(await beri(`subscriptions/${sub}`), konec) : await podaljsaj(sub, konec)
     }
     case 'customer.subscription.updated':
     case 'customer.subscription.deleted': {
+      if (o.metadata?.app === 'slff-scout') return await scoutNarocnina(tip, o)
       if (o.metadata?.app !== 'slff') return 'ignored'
       if (tip === 'customer.subscription.deleted' || ['canceled', 'incomplete_expired'].includes(o.status))
         return await rpc('preverjen_narocnina_konec', {
@@ -315,4 +328,67 @@ async function podaljsaj(sub: string, konec: number): Promise<string> {
     await discord('⚠️ Naročnina brez veljavne pravice je preklicana (preveri vračilo zadnjega plačila v Stripe).')
   }
   return izid
+}
+
+// --- SLFF Scout (metadata app=slff-scout) -----------------------------------
+
+async function scoutSeja(o: Obj): Promise<string> {
+  const m = o.metadata ?? {}
+  if (!['paid', 'no_payment_required'].includes(o.payment_status)) return 'unpaid'
+  const sub = id(o.subscription)
+  if (!sub) return 'brez naročnine'
+  const postavke = await beri(`checkout/sessions/${o.id}/line_items?limit=10`)
+  if (!scoutPostavkeVeljajo(postavke.data ?? [], m.obdobje)) {
+    await discord(`⚠️ Scout seja ${o.id}: postavke se ne ujemajo, naročnine ni (preveri in vrni denar).`)
+    await prekliciNarocnino(sub)
+    return 'neveljavne postavke'
+  }
+  const konec = konecObdobja(await beri(`subscriptions/${sub}`))
+  // Brez konca obdobja bi naročnina veljala za vedno: raje napaka in ponovitev.
+  if (!konec) throw new Error('naročnina brez konca obdobja')
+  const izid = await rpc('scout_iz_placila', {
+    p_team_id: Number(m.team_id),
+    p_user_id: m.user_id,
+    p_obdobje: m.obdobje,
+    p_velja_do: iso(konec + MILOST_S),
+    p_customer: id(o.customer),
+    p_subscription: sub,
+  })
+  if (izid.startsWith('aktivna:')) {
+    // Nova naročnina zamenja staro (potekla, morda še past_due): stara ne sme teči naprej.
+    await prekliciNarocnino(izid.slice('aktivna:'.length))
+    return 'aktivna'
+  }
+  if (izid !== 'aktivna') {
+    await discord(`⚠️ Scout seja ${o.id}: ${izid}, naročnina preklicana (vrni denar v Stripe).`)
+    await prekliciNarocnino(sub)
+  }
+  return izid
+}
+
+/** Obnova; `sub` je objekt naročnine (s postavkami), ne le id. */
+async function scoutPodaljsaj(sub: Obj, konec: number): Promise<string> {
+  if (!scoutCeneNarocnine(sub)) {
+    await prekliciNarocnino(sub.id)
+    await discord(`⚠️ Scout: naročnina ${sub.id} ima tujo ceno, preklicana (preveri vračilo v Stripe).`)
+    return 'tuja cena'
+  }
+  const izid = await rpc('scout_podaljsaj', { p_subscription: sub.id, p_velja_do: iso(konec + MILOST_S) })
+  if (izid === 'zaprt') {
+    await prekliciNarocnino(sub.id)
+    await discord('⚠️ Scout: obnova zaprtega kluba, naročnina preklicana (preveri vračilo v Stripe).')
+  }
+  return izid
+}
+
+async function scoutNarocnina(tip: string, o: Obj): Promise<string> {
+  if (tip === 'customer.subscription.deleted' || ['canceled', 'incomplete_expired'].includes(o.status))
+    return await rpc('scout_narocnina_konec', {
+      p_subscription: o.id,
+      p_konec: iso(o.ended_at ?? o.canceled_at) ?? new Date().toISOString(),
+    })
+  // past_due in unpaid: dostop velja do roka, nato poteče sam.
+  const konec = konecObdobja(o)
+  if (!konec || !['active', 'trialing'].includes(o.status)) return 'unchanged'
+  return await scoutPodaljsaj(o, konec)
 }
