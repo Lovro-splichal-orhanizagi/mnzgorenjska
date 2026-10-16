@@ -13,13 +13,13 @@ do $$ begin
  end if;
 end $$;
 create temporary table de_clubs as
- select n,(-923000-n)::bigint id,'DE fixture club '||n name from generate_series(0,17)n;
+ select n,(-923000-n)::bigint id,'DE fixture club '||n name from generate_series(0,19)n;
 insert into teams(id,name,short_name,country_id) overriding system value
  select id,name,'DE'||n,(select id from countries where code='DE') from de_clubs;
 insert into players(id,team_id,competition_id,first_name,last_name,full_name,position,position_source,value,value_start,active) overriding system value
  select -924000-t.n*20-p.n,t.id,c.id,'Player',p.n::text,t.name||' Player '||p.n,
    case when p.n=0 or p.n=11 then 'GK' when p.n<5 then 'DEF' when p.n<9 then 'MID' else 'FWD' end,
-   'zapisnik',case when t.n=0 and p.n=0 then 8 else 4 end,4,true
+   'zapisnik',case when t.n=0 and p.n=0 then 8 else 4 end,4,t.n<18
  from de_clubs t cross join generate_series(0,15)p(n) cross join competitions c where c.slug='de-regionalliga-nordost';
 insert into rounds(id,competition_id,season,number,deadline_at,played_on) overriding system value
  select -925000-s.n*100-r.n,c.id,case s.n when 0 then '2025/26' else '2026/27' end,r.n,
@@ -35,7 +35,8 @@ create temporary table de_fixtures as
  ) select s,leg*17+r+1 round,slot,
    (-926000-s*1000-(leg*17+r+1)*10-slot)::bigint id,
    'de-dfb-'||(8000000+s*1000+(leg*17+r+1)*10+slot) report,
-   case leg when 0 then a else b end home,case leg when 0 then b else a end away,
+   (case leg when 0 then a else b end)+case s when 0 then 2 else 0 end home,
+   (case leg when 0 then b else a end)+case s when 0 then 2 else 0 end away,
    (s=0 or leg*17+r+1=1) played
  from pair cross join generate_series(0,1)leg cross join generate_series(0,1)s;
 insert into matches(id,round_id,home_team_id,away_team_id,played_on,zapisnik_id,source_url,imported_at) overriding system value
@@ -86,14 +87,44 @@ end $$;
 select pg_temp.de_reject('missing archive report', $$update matches set imported_at=null where id=-926010$$);
 select pg_temp.de_reject('wrong report identity', $$update matches set zapisnik_id='de-dfb-99999999' where id=-926010$$);
 select pg_temp.de_reject('score without goal', $$update matches set home_goals=1 where id=-926010$$);
+select pg_temp.de_reject('unplayed fixture must remain a 0-0 placeholder', $$update matches set home_goals=1 where id=-927020$$);
 select pg_temp.de_reject('missing starter', $$delete from appearances where match_id=-926010 and player_id=(select min(player_id) from appearances where match_id=-926010 and started)$$);
 select pg_temp.de_reject('wrong keeper role', $$update appearances set is_goalkeeper=false where match_id=-926010 and is_goalkeeper$$);
+select pg_temp.de_reject('archive club cannot replace a current selectable club even with 18 active clubs', $$update players set team_id=-923018 where team_id=-923000 and active$$);
+select pg_temp.de_reject('current official keeper must be priced as a keeper', $$update players set position='MID' where team_id=-923000 and id=-924000$$);
 select pg_temp.de_reject('unreviewed warnings', $$update matches set import_warnings=array['unexpected'] where id=-926010$$);
 select pg_temp.de_reject('unaffordable roster', $$update players set value=15 where competition_id=(select id from competitions where slug='de-regionalliga-nordost')$$);
 select pg_temp.de_reject('no future deadline', $$update rounds set deadline_at=now()-interval '1 day' where competition_id=(select id from competitions where slug='de-regionalliga-nordost')$$);
 select pg_temp.de_reject('locked eligible round', $$update rounds set lineups_locked_at=now() where id=-925102$$);
 select pg_temp.de_reject('stale source capture', $$update de_manifest set raw=jsonb_set(raw::jsonb,'{seasons,1,capturedAt}',to_jsonb(now()-interval '13 hours'))::text$$);
 select pg_temp.de_reject('wrong league scope', $$update de_manifest set raw=jsonb_set(raw::jsonb,'{slug}','"some-other-league"')::text$$);
+-- A valid normal goal and valid own goal both pass. Moving the scorer and
+-- team to the other valid side, keeping the same total, must fail.
+do $$ declare own boolean; m matches%rowtype; rejected boolean; begin
+ foreach own in array array[false,true] loop
+  begin
+   select * into strict m from matches where id=-926010;
+   update matches set home_goals=1 where id=m.id;
+   update de_manifest set raw=jsonb_set(raw::jsonb,'{seasons,0,fixtures,0,homeGoals}','1')::text;
+   insert into goals(match_id,team_id,scorer_id,is_own_goal)
+    select m.id,case when own then m.away_team_id else m.home_team_id end,p.id,own
+     from players p where p.team_id=case when own then m.away_team_id else m.home_team_id end and p.last_name='0';
+   perform pg_temp.de_check();
+   update goals g set team_id=case when own then m.home_team_id else m.away_team_id end,
+     scorer_id=(select p.id from players p where p.team_id=case when own then m.home_team_id else m.away_team_id end and p.last_name='0')
+    where g.match_id=m.id;
+   rejected:=false;
+   begin perform pg_temp.de_check(); exception when others then
+    if sqlerrm not like 'DE_RELEASE: per-match goals%' then raise; end if;
+    rejected:=true;
+   end;
+   if not rejected then raise exception 'Opposite-side goal accepted (own=%)',own; end if;
+   raise exception using errcode='P9998',message='rollback goal mutation';
+  exception when sqlstate 'P9998' then null;
+  end;
+  raise notice 'PASS per-side goal accounting (own=%)',own;
+ end loop;
+end $$;
 do $$ declare r jsonb; begin
  begin
   perform varen_vklop_nemcije((select raw from de_manifest),repeat('0',64),false);

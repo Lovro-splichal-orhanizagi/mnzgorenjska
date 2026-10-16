@@ -121,7 +121,7 @@ begin
           or (e.played and (a.zapisnik_id is distinct from e.id or a.imported_at is null
               or a.home_goals is distinct from e.home_goals or a.away_goals is distinct from e.away_goals
               or a.source_url is distinct from e.source_url or to_jsonb(a.import_warnings) is distinct from e.warnings))
-          or (not e.played and (a.imported_at is not null or a.zapisnik_id is not null
+          or (not e.played and (a.imported_at is not null or a.zapisnik_id is not null or a.home_goals<>0 or a.away_goals<>0
               or exists(select 1 from public.appearances ap where ap.match_id=a.id)
               or exists(select 1 from public.goals g where g.match_id=a.id)))) then
     raise exception 'DE_RELEASE: report coverage/metadata/warnings differ from approved evidence';
@@ -165,6 +165,30 @@ begin
     raise exception 'DE_RELEASE: per-match goals, scorers or current substitutions incomplete';
   end if;
 
+  -- A count of 18 is insufficient: an archive-only club must not substitute
+  -- for a current club without a selectable roster. Historical ap.team_id is
+  -- deliberately retained above; current roster membership is checked here.
+  if exists(
+    (select distinct p.team_id from public.players p where p.competition_id=c.id and p.active
+     except select a.home_team_id from pg_temp._slff_de_actual a where a.season='2026/27'
+     except select a.away_team_id from pg_temp._slff_de_actual a where a.season='2026/27')
+    union all
+    (select a.home_team_id from pg_temp._slff_de_actual a where a.season='2026/27'
+     except select distinct p.team_id from public.players p where p.competition_id=c.id and p.active)
+    union all
+    (select a.away_team_id from pg_temp._slff_de_actual a where a.season='2026/27'
+     except select distinct p.team_id from public.players p where p.competition_id=c.id and p.active)
+  ) or exists(select 1 from pg_temp._slff_de_actual a join public.appearances ap on ap.match_id=a.id
+       join public.players p on p.id=ap.player_id
+      where a.season='2026/27' and ap.started and ap.is_goalkeeper and p.active and p.position is distinct from 'GK')
+    or exists(select 1 from (select home_team_id id from pg_temp._slff_de_actual where season='2026/27'
+                            union select away_team_id from pg_temp._slff_de_actual where season='2026/27') t
+       where not exists(select 1 from pg_temp._slff_de_actual a join public.appearances ap on ap.match_id=a.id
+                          join public.players p on p.id=ap.player_id
+                         where a.season='2026/27' and ap.team_id=t.id and ap.started and ap.is_goalkeeper
+                           and p.active and p.team_id=t.id and p.position='GK')) then
+    raise exception 'DE_RELEASE: current selectable club set/official keeper positions incomplete';
+  end if;
   s := public.stanje_lige(c.id);
   v_cena := public.najcenejsi_kader(s->'igralci');
   if (s->>'klubov')::int<>18 or v_cena is null or v_cena>100
