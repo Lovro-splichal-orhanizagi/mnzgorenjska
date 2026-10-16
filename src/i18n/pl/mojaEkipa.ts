@@ -33,7 +33,7 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     niVecVLigi: '{ime} nie gra już w lidze — wymień go.',
     pozicijaVKadru: '{pozicija} w kadrze: {n} — musi ich być {kader}.',
     pozicijaVPostavi: '{pozicija} w wyjściowym składzie: {n} — dozwolone {min}–{max}.',
-    dolociKapetana: 'Wybierz kapitana — w kolejce zdobywa {n}-krotne punkty.',
+    dolociKapetana: 'Wybierz kapitana — w kolejce zdobywa {n} razy więcej punktów.',
     enKapetan: 'Kapitan może być tylko jeden.',
     dolociNamestnika: 'Wybierz wicekapitana, który przejmie opaskę, jeśli kapitan nie zagra.',
     istiKlub: 'Z jednego klubu możesz wybrać najwyżej {n} zawodników.',
@@ -75,6 +75,8 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
       'W składzie nie ma miejsca na kolejnego zawodnika na tej pozycji — najpierw przesuń kogoś na ławkę.',
     niVecNamestnik: '{ime} nie jest już wicekapitanem — wybierz nowego.',
     niVecKapetan: '{ime} nie jest już kapitanem — wybierz nowego.',
+    kapetanPrevzel: 'Opaskę kapitana przejął {ime}.',
+    namestnikPrevzel: 'Wicekapitanem jest teraz {ime}.',
     rokPotekel: 'Termin {krog}. kolejki już minął, więc zmiany obowiązują od następnej kolejki.',
     shranjenaZaKrog: 'Drużyna jest zapisana i gotowa na {krog}. kolejkę.',
     shranjenaVeljavna: 'Drużyna jest zapisana i spełnia zasady.',
@@ -90,6 +92,9 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     zapriObvestilo: 'Zamknij powiadomienie',
     odstranjen: '{ime} został usunięty.',
     razveljavi: 'Cofnij',
+    dodan: '{ime} jest w twojej drużynie — naciśnij Zapisz.',
+    zeVEkipi: '{ime} jest już w twojej drużynie.',
+    niNaTrgu: 'Tego zawodnika nie można teraz kupić.',
   },
 
   brezPrijave: {
@@ -98,11 +103,17 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     pripravljena: 'Twoja drużyna jest gotowa — zapisz ją.',
   },
   locenaLiga:
-    'Drużyna w lidze <liga>{liga}</liga> jest oddzielna od drużyn w innych ligach — z własnym budżetem i własną tabelą. Punkty liczą się od {krog}. kolejki, bo do tego czasu wciąż trwają transfery i przejścia między drużynami.',
+    'Drużyna w lidze <liga>{liga}</liga> jest oddzielna od drużyn w innych ligach — z własnym budżetem i własnym rankingiem. Punkty liczą się od {krog}. kolejki, bo do tego czasu wciąż trwają transfery i przejścia między kategoriami wiekowymi.',
 
   vec: 'Więcej: chipy, historia, zasady',
 
   prestopi: {
+    medSezono: {
+      one: 'Dołączasz w trakcie sezonu: do terminu {krog}. kolejki składasz drużynę bez kary. Potem masz w każdej kolejce {n} darmowy transfer, każdy kolejny kosztuje −{kazen}.',
+      few: 'Dołączasz w trakcie sezonu: do terminu {krog}. kolejki składasz drużynę bez kary. Potem masz w każdej kolejce {n} darmowe transfery, każdy kolejny kosztuje −{kazen}.',
+      many: 'Dołączasz w trakcie sezonu: do terminu {krog}. kolejki składasz drużynę bez kary. Potem masz w każdej kolejce {n} darmowych transferów, każdy kolejny kosztuje −{kazen}.',
+      other: 'Dołączasz w trakcie sezonu: do terminu {krog}. kolejki składasz drużynę bez kary. Potem masz w każdej kolejce {n} darmowego transferu, każdy kolejny kosztuje −{kazen}.',
+    },
     stevec: 'Transfery: {n}/{prosti}',
     wildcard: 'wildcard — bez kary',
     odbitek: 'odjęcie {tock} w tej kolejce',
@@ -194,7 +205,7 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
 
   kajCe: {
     prinesla: 'Obecny skład w <krog>{krog}. kolejce</krog> ({sezona}) zdobyłby',
-    opis: 'Podgląd "co by było, gdyby" — to nie jest historyczny wynik, zmienia się przy każdej wymianie. Rzeczywiste punkty za minione kolejki znajdziesz w tabeli i w zapisie składu.',
+    opis: 'Podgląd "co by było, gdyby" — to nie jest historyczny wynik, zmienia się przy każdej wymianie. Rzeczywiste punkty za minione kolejki znajdziesz w rankingu i w zapisie składu.',
   },
 
   status: {
@@ -211,17 +222,17 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   pripomocki: {
     klopPlusNaslov: 'Chip Ławka+',
     klopPlusVlozenZa: 'Aktywowany na {krog}. kolejkę ({sezona}) — liczą się w niej też punkty ławki.',
-    klopPlusVlozen: 'Ławka+ jest już aktywowana — liczą się w niej też punkty ławki.',
+    klopPlusVlozen: 'Ławka+ jest już aktywowana — w tej kolejce liczą się też punkty ławki.',
     klopPlusOpis:
       'Raz na sezon: w wybranej kolejce doliczane są też punkty wszystkich czterech rezerwowych.',
     wildcardNaslov: 'Chip Wildcard',
     wildcardVlozenZa: 'Aktywowany na {krog}. kolejkę ({sezona}) — transfery w niej są darmowe.',
-    wildcardVlozen: 'Wildcard jest już aktywowany — transfery w nim są darmowe.',
+    wildcardVlozen: 'Wildcard jest już aktywowany — transfery w tej kolejce są darmowe.',
     wildcardOpis:
       'Raz na sezon: w tej kolejce możesz wymienić dowolną liczbę zawodników, bez odjęcia punktów.',
     zaklenjen: 'zablokowany',
     preklici: 'anuluj',
-    prekliciDo: 'Możesz anulować do <odstevanje></odstevanje>',
+    prekliciDo: 'Na anulowanie masz <odstevanje></odstevanje>',
     izberiKrog: 'Wybierz kolejkę…',
     niKroga: 'Brak przyszłej kolejki z terminem',
     krogSezona: '{krog}. kolejka ({sezona})',
@@ -286,8 +297,13 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   },
 
   igrisce: {
-    naKlop: 'Przesuń na ławkę',
-    vPostavo: 'Wstaw do wyjściowego składu',
+    namigZamenjave: 'Dotknij koszulki zawodnika, a potem tego, z którym go zamieniasz.',
+    zapriNamig: 'Zamknij wskazówkę',
+    izberiZaMenjavo: '{ime}: wybierz do zmiany',
+    prekliciIzbiro: '{ime}: anuluj wybór',
+    zamenjajZ: '{ime}: zamień z zawodnikiem {drugi}',
+    izbran: 'Wybrany: {ime}. Dotknij zaznaczonego zawodnika, aby zamienić, albo ponownie wybranego, aby anulować.',
+    brezMenjave: 'Dla zawodnika {ime} nie ma prawidłowej zmiany. Dotknij go ponownie, aby anulować.',
     niVecVLigiNamig: 'Zawodnik nie gra już w lidze — kadra z nim nie zdobywa punktów.',
     niVecVLigi: 'nie gra już w lidze',
     poskodba: 'kontuzja',

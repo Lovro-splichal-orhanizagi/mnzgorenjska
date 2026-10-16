@@ -140,7 +140,7 @@ export const tekme: NonNullable<Prevod['tekme']> = {
     poglejTekmo: 'Vezi echipele de start și punctele acestui meci →',
     niGolov: 'În acest meci nu s-au marcat goluri.',
     vsePotrjene: 'Toate pasele decisive din acest meci sunt confirmate. 🎉',
-    zaprtoOpis: 'Votul pentru acest meci este închis: rămâne deschis până la termenul etapei următoare.',
+    zaprtoOpis: 'Votul pentru acest meci este închis: a fost deschis până la termenul etapei următoare.',
     brezPotrjene: 'Fără pasă decisivă confirmată: {goli}.',
   },
 
@@ -192,8 +192,8 @@ export const tekme: NonNullable<Prevod['tekme']> = {
     },
     igralec: {
       statistika: '{tekme} · {minute} min · {goli} · {cs} fără gol primit',
-      izZapisnika: 'Din raportul de meci: portarul e marcat cu (P)',
-      odKluba: 'Post setat de club',
+      izZapisnika: 'Din raportul de meci: portarul e marcat',
+      odKluba: 'Poziție setată de club',
       klub: ' · club',
       izStatistike: 'Din statistici (nr. tricou, goluri, cartonașe): voturile o pot corecta',
       potrdilaSkupnost: 'Confirmată de comunitate',
@@ -215,6 +215,25 @@ export const tekme: NonNullable<Prevod['tekme']> = {
       gumbPrior: ' · estimare {odstotek}%',
       gumbPoznavalec: ' · votul tău de cunoscător contează mai mult',
       vodi: 'Conduce {pozicija}: pondere {utez} / {prag}',
+    },
+  },
+  // Razlaga točk in cene na mestu (components/Razlaga.tsx).
+  razlaga: {
+    zakaj: 'De ce {tocke}? Detalierea punctelor',
+    zapri: 'Închide',
+    ostalo: 'Altele',
+    brezPozicije: 'Poziția nu este încă stabilită, așa că golul nu aduce încă puncte. După ce comunitatea confirmă poziția, punctele se recalculează.',
+    pravila1: 'Această etapă se punctează după regulile mai vechi: meci fără gol primit pentru portar +4, fără puncte pentru victorie.',
+    asistence: 'Pasele decisive sunt confirmate prin votul comunității; o pasă decisivă neconfirmată nu aduce încă puncte.',
+    zadnjiKrog: 'Ultimul meci: etapa {krog}',
+    cena: {
+      zakaj: 'De ce acest preț?',
+      zdaj: 'Prețul actual',
+      izhodisce: 'Prețul de pornire',
+      izhodisceOpis: 'Prețul de pornire se calculează din minutele și punctele din sezonul trecut, comparate cu ceilalți jucători din ligă.',
+      privzeta: 'Cine a jucat mai puțin de {minut} de minute în sezonul trecut pornește de la {cena}; cu excepția celor care au jucat într-o ligă superioară; atunci prețul vine de acolo.',
+      borza: 'După fiecare etapă prețul se mișcă: +{korak} pentru fiecare două puncte peste 2 (cel mult +{najvec} pe etapă), −{korak} după o etapă slabă sau o formă slabă și −{korak} dacă jucătorul nu joacă a doua etapă la rând, deși clubul lui joacă.',
+      razpon: 'Prețul este mereu între {od} și {do}.',
     },
   },
 }

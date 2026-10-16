@@ -75,6 +75,8 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
       'Во составот нема место за уште еден играч на таа позиција. Прво прати некого на клупа.',
     niVecNamestnik: '{ime} повеќе не е вице-капитен. Избери нов.',
     niVecKapetan: '{ime} повеќе не е капитен. Избери нов.',
+    kapetanPrevzel: '{ime} ја презеде капитенската лента.',
+    namestnikPrevzel: '{ime} сега е вице-капитен.',
     rokPotekel: 'Рокот за {krog}. коло веќе истече, па промените важат од следното коло.',
     shranjenaZaKrog: 'Тимот е зачуван и подготвен за {krog}. коло.',
     shranjenaVeljavna: 'Тимот е зачуван и ги исполнува правилата.',
@@ -90,6 +92,9 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     zapriObvestilo: 'Затвори го известувањето',
     odstranjen: '{ime} е отстранет.',
     razveljavi: 'Поништи',
+    dodan: '{ime} е во твојот тим. Притисни Зачувај.',
+    zeVEkipi: '{ime} е веќе во твојот тим.',
+    niNaTrgu: 'Овој играч моментално не може да се купи.',
   },
 
   brezPrijave: {
@@ -104,6 +109,10 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   vec: 'Повеќе: бонуси, историја, правила',
 
   prestopi: {
+    medSezono: {
+      one: 'Се приклучуваш во текот на сезоната: до рокот за {krog}. коло тимот го составуваш без казна. Потоа секое коло имаш {n} бесплатен трансфер, секој следен чини −{kazen}.',
+      other: 'Се приклучуваш во текот на сезоната: до рокот за {krog}. коло тимот го составуваш без казна. Потоа секое коло имаш {n} бесплатни трансфери, секој следен чини −{kazen}.',
+    },
     stevec: 'Трансфери: {n}/{prosti}',
     wildcard: 'wildcard, без казна',
     odbitek: 'одбивање {tock} во ова коло',
@@ -214,12 +223,12 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   pripomocki: {
     klopPlusNaslov: 'Бонус Клупа+',
     klopPlusVlozenZa: 'Активиран за {krog}. коло ({sezona}): во него се бројат и поените од клупата.',
-    klopPlusVlozen: 'Клупа+ е веќе активирана: во неа се бројат и поените од клупата.',
+    klopPlusVlozen: 'Клупа+ е веќе активирана: во тоа коло се бројат и поените од клупата.',
     klopPlusOpis:
       'Еднаш во сезоната: во избраното коло се додаваат и поените на сите четири резерви.',
     wildcardNaslov: 'Бонус Wildcard',
     wildcardVlozenZa: 'Активиран за {krog}. коло ({sezona}): трансферите во него се бесплатни.',
-    wildcardVlozen: 'Wildcard е веќе активиран: трансферите во него се бесплатни.',
+    wildcardVlozen: 'Wildcard е веќе активиран: трансферите во тоа коло се бесплатни.',
     wildcardOpis:
       'Еднаш во сезоната: во тоа коло можеш да замениш колку сакаш играчи, без одбивање поени.',
     zaklenjen: 'заклучено',
@@ -289,8 +298,13 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
 
   // Igrišče pri sestavljanju ekipe (components/Igrisce.tsx).
   igrisce: {
-    naKlop: 'Премести на клупа',
-    vPostavo: 'Стави во првиот состав',
+    namigZamenjave: 'Допри го дресот на играчот, а потоа оној со кого го менуваш.',
+    zapriNamig: 'Затвори совет',
+    izberiZaMenjavo: '{ime}: избери за измена',
+    prekliciIzbiro: '{ime}: откажи избор',
+    zamenjajZ: '{ime}: замени со играчот {drugi}',
+    izbran: 'Избран е {ime}. Допри означен играч за измена или повторно истиот за откажување.',
+    brezMenjave: 'За играчот {ime} нема важечка измена. Допри го повторно за откажување.',
     niVecVLigiNamig: 'Играчот повеќе не е во лигата, тимот со него не добива поени.',
     niVecVLigi: 'повеќе не е во лигата',
     poskodba: 'повреда',

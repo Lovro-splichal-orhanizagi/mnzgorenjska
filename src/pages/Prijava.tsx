@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
@@ -28,6 +28,10 @@ export default function Prijava() {
   const [nacin, setNacin] = useState<Nacin>(() =>
     params.get('nacin') === 'registracija' ? 'registracija' : 'prijava',
   )
+  // Glava ima na /login "Začni brezplačno" in "Prijava": klik na drugo na isti
+  // strani zamenja le poizvedbo, zato način sledi naslovu.
+  const nacinVNaslovu = params.get('nacin') === 'registracija' ? 'registracija' : 'prijava'
+  useEffect(() => setNacin(nacinVNaslovu), [nacinVNaslovu])
   const [email, setEmail] = useState('')
   const [geslo, setGeslo] = useState('')
   const [ime, setIme] = useState('')

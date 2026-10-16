@@ -75,6 +75,8 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
       'Algkoosseisus pole selle positsiooni jaoks rohkem ruumi: pane kõigepealt keegi pingile.',
     niVecNamestnik: '{ime} pole enam asekapten: vali uus.',
     niVecKapetan: '{ime} pole enam kapten: vali uus.',
+    kapetanPrevzel: 'Kaptenipaela kannab nüüd {ime}.',
+    namestnikPrevzel: 'Asekapten on nüüd {ime}.',
     rokPotekel: '{krog}. vooru tähtaeg on möödas, muudatused kehtivad järgmisest voorust.',
     shranjenaZaKrog: 'Sinu meeskond on salvestatud ja {krog}. vooruks valmis.',
     shranjenaVeljavna: 'Sinu meeskond on salvestatud ja vastab reeglitele.',
@@ -90,6 +92,9 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     zapriObvestilo: 'Sulge teade',
     odstranjen: '{ime} eemaldatud.',
     razveljavi: 'Võta tagasi',
+    dodan: '{ime} on sinu meeskonnas. Vajuta Salvesta.',
+    zeVEkipi: '{ime} on juba sinu meeskonnas.',
+    niNaTrgu: 'Seda mängijat praegu osta ei saa.',
   },
 
   brezPrijave: {
@@ -104,6 +109,10 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   vec: 'Veel: boonused, ajalugu, reeglid',
 
   prestopi: {
+    medSezono: {
+      one: 'Liitud hooaja keskel: {krog}. vooru tähtajani paned meeskonna kokku ilma karistuseta. Seejärel on sul igas voorus {n} tasuta üleminek, iga järgmine maksab −{kazen}.',
+      other: 'Liitud hooaja keskel: {krog}. vooru tähtajani paned meeskonna kokku ilma karistuseta. Seejärel on sul igas voorus {n} tasuta üleminekut, iga järgmine maksab −{kazen}.',
+    },
     stevec: 'Üleminekud: {n}/{prosti}',
     wildcard: 'wildcard, karistuseta',
     odbitek: 'selles voorus maha {tock}',
@@ -290,8 +299,13 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
 
   // Väljak meeskonna koostajas (components/Igrisce.tsx).
   igrisce: {
-    naKlop: 'Pane pingile',
-    vPostavo: 'Pane algkoosseisu',
+    namigZamenjave: 'Puuduta mängija särki ja siis seda, kellega ta vahetad.',
+    zapriNamig: 'Sulge vihje',
+    izberiZaMenjavo: '{ime}: vali vahetuseks',
+    prekliciIzbiro: '{ime}: tühista valik',
+    zamenjajZ: '{ime}: vaheta mängijaga {drugi}',
+    izbran: 'Valitud: {ime}. Puuduta vahetuseks märgitud mängijat või tühistamiseks uuesti valitud mängijat.',
+    brezMenjave: 'Mängijale {ime} pole sobivat vahetust. Tühistamiseks puuduta teda uuesti.',
     niVecVLigiNamig: 'See mängija pole enam liigas: koosseis temaga punkte ei saa.',
     niVecVLigi: 'pole enam liigas',
     poskodba: 'vigastus',
