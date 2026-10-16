@@ -2559,7 +2559,7 @@ postav po 11 115/116, brez menjav 114/116, vsi nastopi s šifro. Razpored
 2025/26: gr. 1 izstop Znicz II (jesen), gr. 3 Zryw Jedwabno (jesen) in
 Omulew II (pomlad) — vzorec razporeda `pl-wmzpn-liga-klasa-b-2025.html`.
 
-Vpisanih je 12 lig (migracija 20261015162900), **neaktivnih**, zveza `wmzpn`.
+Vpisanih je 12 lig (migracija 20261016091100), **neaktivnih**, zveza `wmzpn`.
 Šifra je `<leagueN>/<play>/<season>`; arhiv je ista skupina 2025/26 (po
 skupnih klubih):
 
