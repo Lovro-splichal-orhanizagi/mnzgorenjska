@@ -620,9 +620,13 @@ function Urejevalnik({
  * Mesto v vrsti in povabilo prijatelja: kdor pripelje prijatelja, ki se
  * prijavi prek njegove povezave in sestavi ekipo, je pregledan prej
  * (`moje_mesto_v_vrsti`, migracija 20261014233100).
+ *
+ * Prosilec vidi le, koliko zahtevkov je še pred njim (mesto - 1), brez
+ * skupnega števila v vrsti: dolga vrsta za njim ga ne zanima, le kako
+ * hitro pride na vrsto. Število je vedno pravo, nikoli zaokroženo navzgor.
  */
 function VrstaZahtevka({ zahtevekId, naKopirano }: { zahtevekId: number; naKopirano: () => void }) {
-  const [vrsta, setVrsta] = useState<{ mesto: number; v_vrsti: number; pripeljanih: number } | null>(null)
+  const [vrsta, setVrsta] = useState<{ mesto: number; pripeljanih: number } | null>(null)
   const [dela, setDela] = useState(false)
 
   useEffect(() => {
@@ -640,7 +644,9 @@ function VrstaZahtevka({ zahtevekId, naKopirano }: { zahtevekId: number; naKopir
     <div className="space-y-1 pt-1">
       {vrsta && (
         <p className="text-sm text-slate-200">
-          {t('igralci.prevzem.cakaMesto', { mesto: vrsta.mesto, skupaj: vrsta.v_vrsti })}
+          {vrsta.mesto > 1
+            ? t('igralci.prevzem.cakaPred', { n: vrsta.mesto - 1 })
+            : t('igralci.prevzem.cakaPrvi')}
           {vrsta.pripeljanih > 0 && (
             <span className="text-gnl-300"> · {t('igralci.prevzem.cakaPripeljal', { n: vrsta.pripeljanih })}</span>
           )}
