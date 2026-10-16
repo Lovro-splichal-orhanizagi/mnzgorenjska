@@ -148,6 +148,7 @@ for (const liga of lige) {
   if (VIR === 'hns' || VIR === 'mlsz' || VIR === 'oefb' || VIR === 'fsb' || VIR === 'fss' || VIR === 'fssid' || VIR === 'jalgpall' || VIR === 'lff' || VIR === 'ffm' || VIR === 'fcf' || VIR === 'fas' || VIR === 'aft' || VIR === 'hoff-km' || VIR === 'ffa' || VIR === 'mascot' || VIR === 'lowland' || VIR === 'eps' || VIR === 'ltfutbolas' || VIR === 'fscg' || VIR === 'mfa' || VIR === 'isthmian' || VIR === 'pfl-ua') { await uskladiHns(liga); continue }
   if (VIR === 'hns' || VIR === 'mlsz' || VIR === 'oefb' || VIR === 'fsb' || VIR === 'fss' || VIR === 'fssid' || VIR === 'jalgpall' || VIR === 'lff' || VIR === 'ffm' || VIR === 'fcf' || VIR === 'fas' || VIR === 'nsfbih' || VIR === 'nfsbih') { await uskladiHns(liga); continue }
   if (VIR === 'hns' || VIR === 'mlsz' || VIR === 'oefb' || VIR === 'fsb' || VIR === 'fss' || VIR === 'fssid' || VIR === 'jalgpall' || VIR === 'lff' || VIR === 'ffm' || VIR === 'fcf' || VIR === 'fas' || VIR === 'gff') { await uskladiHns(liga); continue }
+  if (VIR === 'hns' || VIR === 'mlsz' || VIR === 'oefb' || VIR === 'fsb' || VIR === 'fss' || VIR === 'fssid' || VIR === 'jalgpall' || VIR === 'lff' || VIR === 'ffm' || VIR === 'fcf' || VIR === 'fas' || VIR === 'pfl-ua' || VIR === 'upl') { await uskladiHns(liga); continue }
   // Tekoča sezona lige ("2026/27" ali pri koledarski ligi "2026").
   const { data: sezona, error: eSezona } = await db.rpc('sezona_lige', { p_competition_id: liga.id })
   if (eSezona || !sezona) {
