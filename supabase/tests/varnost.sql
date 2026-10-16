@@ -3463,6 +3463,51 @@ reset role;
 update klubski_racuni set preklican_at = null where user_id = 'e5c30000-0000-4000-8000-000000000001';
 select set_config('request.jwt.claim.sub','',true);
 
+-- Scout 3, opazovalni seznam (klub -913001, do 30).
+select pg_temp.preveri('scout3: anon nima seznama',
+  not has_function_privilege('anon', 'public.scout_opazuj(bigint, boolean)', 'EXECUTE')
+  and not has_function_privilege('anon', 'public.scout_opazovani()', 'EXECUTE'));
+select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000005',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('scout3: brez sedeza ni seznama', $$select * from scout_opazovani()$$);
+select pg_temp.zavrnjeno('scout3: brez sedeza ni dodajanja', $$select scout_opazuj(-930001, true)$$);
+reset role;
+select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select scout_opazuj(-930001, true);
+select pg_temp.preveri('scout3: igralec na seznamu',
+  (select array_agg(player_id) = array[-930001]::bigint[] from scout_opazovani()));
+select pg_temp.preveri('scout3: profil ve, da ga klub opazuje', (scout_igralec(-930001)->>'opazujem')::boolean);
+select pg_temp.napaka('scout3: skritega ni mogoce opazovati', $$select scout_opazuj(-930002, true)$$, 'scout-ni-igralca');
+reset role;
+insert into scout.ugovori (player_id, kljuc) select * from scout.kljuci_vrstic(array[-930001]::bigint[]);
+select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.preveri('scout3: ugovor skrije igralca s seznama takoj, vrstica ostane do ciscenja',
+  not exists (select 1 from scout_opazovani()));
+reset role;
+select pg_temp.preveri('scout3: dodajanje in branje seznama v dnevniku',
+  exists (select 1 from scout.dnevnik where team_id = -913001 and vrsta = 'opazuj' and player_id = -930001)
+  and exists (select 1 from scout.dnevnik where team_id = -913001 and vrsta = 'opazovani')
+  and exists (select 1 from scout.opazovani where team_id = -913001 and player_id = -930001));
+delete from scout.ugovori where player_id = -930001;
+insert into scout.opazovani (team_id, player_id) select -913001, -940000 - n from generate_series(1, 29) n;
+select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.napaka('scout3: seznam ima najvec 30', $$select scout_opazuj(-930007, true)$$, 'scout-seznam-poln');
+reset role;
+insert into scout.opazovani (team_id, player_id) values (-913001, -930002);
+select scout.pocisti();
+select pg_temp.preveri('scout3: ciscenje odstrani skrite in neobstojece s seznama',
+  not exists (select 1 from scout.opazovani where team_id = -913001 and player_id in (-930002, -940001))
+  and exists (select 1 from scout.opazovani where team_id = -913001 and player_id = -930001));
+select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select scout_opazuj(-930001, false);
+select pg_temp.preveri('scout3: odstranjen s seznama', not exists (select 1 from scout_opazovani()));
+reset role;
+select set_config('request.jwt.claim.sub','',true);
+
 do $$
 declare v_napak int;
 begin
