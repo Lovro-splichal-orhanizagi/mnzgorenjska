@@ -26,12 +26,12 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     lestvicaDomov: 'Piwny ranking',
     // Stran /beers (pages/Piva.tsx): brez zneskov.
     stran: {
-      uvod: 'SLFF jest darmowy. Za serwer i domenę płacimy sami, więc każde piwo naprawdę pomaga. Dziękujemy wszystkim, którzy już nam postawili!',
+      uvod: 'SLFF jest darmowy dla tysięcy menedżerów w setkach amatorskich lig w całej Europie: bez reklam, bez zakładów, bez paywalla. Twoje piwo opłaca serwer, pocztę i domenę, a potem ląduje właśnie tutaj, na ścianie, z twoim imieniem i wiadomością. Punktów nie daje, tylko bardzo wdzięczny poniedziałek. 🍺',
       skupaj: { one: 'Do tej pory {n} piwo', few: 'Do tej pory {n} piwa', many: 'Do tej pory {n} piw', other: 'Do tej pory {n} piwa' },
       piv: { one: '{n} piwo', few: '{n} piwa', many: '{n} piw', other: '{n} piwa' },
       lestvica: 'Ranking wspierających',
       anonimni: 'Anonimowi wspierający',
-      prazno: 'Na ścianie nie ma jeszcze żadnego piwa. Bądź pierwszy!',
+      prazno: 'Na ścianie jest jeszcze miejsce na twoje imię. Bądź wśród pierwszych! 🍻',
     },
   },
   noga: {
@@ -53,7 +53,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     asistence: 'Asysty',
     pozicije: 'Pozycje',
     odsotnosti: 'Absencje',
-    slovenija: 'Słowenia',
+    slovenija: 'Polska',
     admin: 'Admin',
     vec: 'Więcej',
     racun: 'Konto',
@@ -208,7 +208,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     zapri: 'Zamknij',
     napaka: 'Nie udało się wysłać. Spróbuj ponownie.',
     napakaEmail: 'Wpisz poprawny adres e-mail.',
-    napakaOmejitev: 'Na dziś wysłałeś już wystarczająco próśb. Spróbuj jutro.',
+    napakaOmejitev: 'Na dziś wysłałeś już wystarczająco dużo próśb. Spróbuj jutro.',
     napakaBesedilo: 'Sprawdź nazwę kraju i ligi.',
   },
 }

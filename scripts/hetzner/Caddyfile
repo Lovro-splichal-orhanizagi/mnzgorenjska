@@ -181,6 +181,16 @@ slff.eu {
 		file_server
 	}
 
+	# Slides of automated social posts (scripts/objave.mjs, container slff-objave): Instagram and
+	# Facebook fetch them by URL when publishing. Read-only, no listing (file_server without
+	# browse), never indexed. Each draft directory has a random suffix, so drafts are not guessable.
+	handle_path /objave-mediji/* {
+		root * /opt/slff-objave/mediji
+		header X-Robots-Tag "noindex"
+		header Cache-Control "public, max-age=86400"
+		file_server
+	}
+
 	# Strani igralca, kluba, tekme, lig in vstopne strani držav (/si, /at …): strežnik HTML (scripts/hetzner/html/, kontejner
 	# slff-html) vpiše naslov, opis, kanonični naslov, JSON-LD in povzetek v predlogo.
 	# Ob napaki sam vrne nespremenjeno predlogo. Če ne teče (dial) ali v 1,5 s ne

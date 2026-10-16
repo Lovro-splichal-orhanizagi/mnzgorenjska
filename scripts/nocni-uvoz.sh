@@ -17,6 +17,8 @@
 #     poskus, če je čas.
 #   - Izhod 4 = vir je zavrnil (403, 429, izziv): tega vira ne beremo naprej,
 #     drugih virov koša pa.
+#   - Izhod 3 uvoza razporeda = razpored ima klub manj kot baza (izstop ali
+#     okrnjena stran): uvoz je uspel, liga ni padla, koš izpiše opozorilo.
 set -uo pipefail
 
 : "${DRZAVA:?}" "${KOS:=1}" "${KOSOV:=1}" "${URNIK:=}" "${ROK_MIN:=190}"
@@ -42,7 +44,12 @@ teci() { "$@" </dev/null; zadnji_izhod=$?; return "$zadnji_izhod"; }
 uvozi() {
   local liga=$1 ok=1 zavrnil=0
   export SLFF_PREMOR_FAKTOR=$2
-  teci node scripts/uvoz-razporeda.mjs --tekmovanje "$liga" --pisi || { ok=0; [ "$zadnji_izhod" = 4 ] && zavrnil=1; }
+  # Izhod 3: klub manjka v razporedu (izstop?) — odloči človek, liga ni padla.
+  teci node scripts/uvoz-razporeda.mjs --tekmovanje "$liga" --pisi || case $zadnji_izhod in
+    3) odlocitve="$odlocitve $liga" ;;
+    4) ok=0; zavrnil=1 ;;
+    *) ok=0 ;;
+  esac
   node scripts/uvoz-delegiranja.mjs --tekmovanje "$liga" --pisi </dev/null || ok=0
   rm -f /tmp/uvozenih
   local dodatno=""
@@ -68,6 +75,7 @@ uvozi() {
 }
 
 padle=""
+odlocitve=""   # razpored ima klub manj kot baza: izstop kluba ali --dovoli-manj-klubov
 zacasno=""      # padle v prvem krogu, za ponovni poskus: "liga faktor vir"
 preskocene=""
 while read -r liga faktor vir; do
@@ -108,6 +116,9 @@ done <<< "$zacasno"
 if [ -n "$preskocene" ]; then
   # Ni napaka: naslednji zagon začne prav pri njih (najdlje neosvežene prve).
   echo "::warning title=Zmanjkalo časa::po $ROK_MIN min niso prišle na vrsto:$preskocene"
+fi
+if [ -n "$odlocitve" ]; then
+  echo "::warning title=Klub manjka v razporedu::$(echo $odlocitve | tr ' ' '\n' | sort -u | tr '\n' ' ')— izstop kluba (delovni tok Izstop kluba), uvoz z --dovoli-manj-klubov ali le okrnjena stran vira (naslednji zagon jo prebere znova)"
 fi
 echo "Koš $KOS/$KOSOV končan v $(minut) min."
 if [ -n "$padle" ]; then

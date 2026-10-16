@@ -1,5 +1,5 @@
 // Vir: Kazahstan — kffleague.kz (uradna stran lig KFF: Premier liga, Prva liga,
-// Druga liga, ženske, pokal). Glej CLAUDE.md (Kazahstan).
+// Druga liga, ženske, pokal). Glej docs/viri/kazahstan.md (Kazahstan).
 //
 // Stran je Next.js, a strežnik izriše vse, kar potrebujemo: v vsaki strani je
 // drevo React Server Components (`self.__next_f.push`), v katerem so podatki
@@ -52,7 +52,7 @@
 // Pogoji: noga strani "При использовании материалов обязательна ссылка на
 // официальный сайт" — navedba vira (povezava) je obvezna: `vir_ime` in
 // `vir_url` v nogi. Beremo odkrito (User-Agent SLFF, 6 s med zahtevki —
-// pregled s 3,5 s je po ~1700 zahtevkih ostal brez povezave, glej CLAUDE.md).
+// pregled s 3,5 s je po ~1700 zahtevkih ostal brez povezave, glej docs/viri/kazahstan.md).
 // **Ob 401, 403, 429, izzivu ali `NAJVEC_ZAPOREDNIH_NAPAK` zaporednih
 // omrežnih napakah (časovna omejitev, zavrnjena povezava) se uvoz ustavi
 // (`KffZavrnitev`, izhod 4) — ne obhajamo in ne ponavljamo v nedogled.**

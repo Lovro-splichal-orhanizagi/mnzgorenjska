@@ -144,14 +144,14 @@ rezervnih igralcev.
 | `goals` | Posamezni gol (strelec, minuta, 11m, avtogol, potrjena asistenca) |
 | `assist_votes` | Glasovi skupnosti o asistenci |
 | `position_votes` | Glasovi skupnosti o poziciji |
-| `fantasy_teams` / `fantasy_roster` | Ekipe uporabnikov in njihovi nabori (kapetan, namestnik, vrstni red klopi); `hisna` = hišna ekipa SLFF; neobvezni servisni `display_name` je prikazno ime lastnika samo te ekipe (glej CLAUDE.md) |
+| `fantasy_teams` / `fantasy_roster` | Ekipe uporabnikov in njihovi nabori (kapetan, namestnik, vrstni red klopi); `hisna` = hišna ekipa SLFF; neobvezni servisni `display_name` je prikazno ime lastnika samo te ekipe (glej docs/hisne-ekipe.md) |
 | `fantasy_chips` | Vloženi pripomočki ekipe (`klop_plus`, `wildcard`) — vsak enkrat na sezono (`season` iz kroga) |
 | `fantasy_lineups` | Posnetek postave ob roku kroga — po njem preteklih krogov ni več mogoče popravljati |
 | `teams.logo_url` | Grb kluba; brez njega aplikacija nariše ščit z začetnicami |
 | `player_scores` | Točke igralca po krogih |
 | `settings` | Pragova glasov (privzeto 5) |
 | `push_tokens` | Žetoni FCM naprav mobilne aplikacije; vpiše jih le `shrani_push_zeton`, bere le servis (`posli-opomnik`) |
-| `objave` | Osnutki samodejnih objav za Instagram in Facebook (dejstva, napis, slike, stanje); le servis (`scripts/objave.mjs`, dejstva iz `objava_dejstva`) |
+| `objave` | Samodejne objave za Instagram in Facebook (dejstva, napis, slike, stanje, `discord_at`, povezavi objav); le servis (`scripts/objave.mjs`, dejstva iz `objava_dejstva`). Anon le `ustavi_objavo(žeton)` (povezava "Ustavi objavo") |
 
 Vsi pogledi imajo stolpec `competition_id` — vmesnik po njem filtrira izbrano
 ligo. Pogled `competition_teams` pove, kateri klubi igrajo v kateri ligi.

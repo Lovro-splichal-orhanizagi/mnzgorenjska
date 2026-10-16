@@ -334,7 +334,7 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     goli: '{n} × Tor',
     asistence: '{n} × Assist',
     brezPrejetega: 'zu null',
-    prejetih: '{n} Gegentore',
+    prejetih: 'Gegentore: {n}',
     rumeni: 'Gelbe Karte',
     rdeci: 'Rote Karte',
     skupaj: '{tocke} Pkt.',

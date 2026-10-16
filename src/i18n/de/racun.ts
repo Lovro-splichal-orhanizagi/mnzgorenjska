@@ -60,7 +60,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     vklopljeni: 'Erinnerungen sind eingeschaltet.',
     izklopljeni: 'Wir schicken dir keine Erinnerungen mehr.',
     odjavaVprasanje: 'Willst du keine E-Mails von SLFF mehr (Erinnerungen an die Deadline und Hinweise zum Team)?',
-    odjavaGumb: 'Abmelden',
+    odjavaGumb: 'Abbestellen',
     odjavaNapaka: 'Dieser Link ist ungültig. Melde dich an und schalte die Erinnerungen in den Einstellungen aus.',
     push: 'Push-Benachrichtigungen',
     pushOpis: 'Am Tag vor der Deadline meldet sich dein Handy, wenn dein Kader nicht bereit ist.',
