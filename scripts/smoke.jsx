@@ -12804,7 +12804,7 @@ preveri(
   preveri('scout stripe: mesečna postavka gre', scoutPostavkeVeljajo([p('slff_scout_klub_mesec')], 'mesec'))
   preveri('scout stripe: napačno obdobje pade', !scoutPostavkeVeljajo([p('slff_scout_klub_mesec')], 'sezona'))
   preveri('scout stripe: dva kosa padeta', !scoutPostavkeVeljajo([p('slff_scout_klub_mesec', 2, 7800)], 'mesec'))
-  preveri('scout stripe: popust pade', !scoutPostavkeVeljajo([p('slff_scout_klub_mesec', 1, 1900)], 'mesec'))
+  preveri('scout stripe: popust pade', !scoutPostavkeVeljajo([{ ...p('slff_scout_klub_mesec'), amount_discount: 2000 }], 'mesec'))
   preveri('scout stripe: dodatna postavka pade', !scoutPostavkeVeljajo([p('slff_scout_klub_mesec'), p('slff_znacka')], 'mesec'))
   preveri('scout stripe: neznano obdobje pade', !scoutPostavkeVeljajo([p('slff_scout_klub_mesec')], 'teden'))
   // Obnova: vse postavke naročnine so cene Scouta (obramba v globino).

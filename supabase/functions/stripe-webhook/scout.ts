@@ -9,6 +9,7 @@ export const SCOUT_CENE: Record<string, string> = {
 export interface Postavka {
   quantity?: number | null
   amount_subtotal?: number | null
+  amount_discount?: number | null
   price?: { lookup_key?: string | null; unit_amount?: number | null } | null
 }
 
@@ -21,7 +22,8 @@ export function scoutPostavkeVeljajo(postavke: Postavka[], obdobje: string): boo
     postavke.length === 1 &&
     l?.quantity === 1 &&
     l.price?.lookup_key === kljuc &&
-    l.amount_subtotal === l.price.unit_amount
+    l.amount_subtotal === l.price.unit_amount &&
+    (l.amount_discount ?? 0) === 0
   )
 }
 

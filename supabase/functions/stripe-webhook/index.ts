@@ -343,11 +343,18 @@ async function scoutSeja(o: Obj): Promise<string> {
     await prekliciNarocnino(sub)
     return 'neveljavne postavke'
   }
+  // Brez kluba RPC pade vsakič: ponovitve ne pomagajo, naročnina se prekliče.
+  const klub = Number(m.team_id)
+  if (!m.team_id || !Number.isFinite(klub)) {
+    await discord(`⚠️ Scout seja ${o.id}: brez kluba v metapodatkih, naročnina preklicana (vrni denar v Stripe).`)
+    await prekliciNarocnino(sub)
+    return 'neveljavno'
+  }
   const konec = konecObdobja(await beri(`subscriptions/${sub}`))
   // Brez konca obdobja bi naročnina veljala za vedno: raje napaka in ponovitev.
   if (!konec) throw new Error('naročnina brez konca obdobja')
   const izid = await rpc('scout_iz_placila', {
-    p_team_id: Number(m.team_id),
+    p_team_id: klub,
     p_user_id: m.user_id,
     p_obdobje: m.obdobje,
     p_velja_do: iso(konec + MILOST_S),
