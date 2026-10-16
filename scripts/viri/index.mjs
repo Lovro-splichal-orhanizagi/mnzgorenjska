@@ -35,6 +35,7 @@ import aft from './aft.mjs'
 import ncefl from './ncefl.mjs'
 import hoffKm from './hoff-km.mjs'
 import askf from './askf.mjs'
+import ffa from './ffa.mjs'
 
 const VIRI = {
   mnzg,
@@ -98,6 +99,9 @@ const VIRI = {
   // Turčija: pokrajinske amaterske zveze ASKF (platforma FYS: Çanakkale, Aydın);
   // razpored s postbacki ASP.NET, šifra licence TFF igralca.
   askf,
+  // Armenija: Football Federation of Armenia (ffa.am), Prva liga; brez šifer
+  // igralcev (ime + klub), vratar je prvi začetnik (namig).
+  ffa,
 }
 
 /**
