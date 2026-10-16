@@ -5835,9 +5835,11 @@ preveri(
     !C.zaPredpomnilnik('<html><body><h1>Stranica je u održavanju</h1></body></html>') && !C.zaPredpomnilnik(''))
   // Zavrnitev med branjem kontumacij (strani tekem 3:0) ne sme obveljati za motnjo.
   const uvozRazporeda = readFileSync(new URL('./uvoz-razporeda.mjs', import.meta.url), 'utf8')
+  // Branje kontumacij je od PR #287 v razpored.mjs (preberiKontumacije).
+  const razporedJs = readFileSync(new URL('./razpored.mjs', import.meta.url), 'utf8')
   preveri('uvoz-razporeda: zavrnitev vira pri kontumacijah ustavi uvoz (izhod 4), ne preskoči',
-    /kontumacij ni bilo mogoče prebrati/.test(uvozRazporeda) &&
-    /catch \(e\) \{\s*(?:\/\/[^\n]*\n\s*)*if \(e\.zavrnitev\) throw e\s*console\.log\(`  kontumacij ni bilo/.test(uvozRazporeda))
+    /preberiKontumacije\(/.test(uvozRazporeda) && /kontumacij ni bilo mogoče prebrati/.test(razporedJs) &&
+    /catch \(e\) \{\s*if \(e\?\.zavrnitev\) throw e/.test(razporedJs))
   // 401 pri razporedu: brez tega prenesi vzame shranjeni razpored in uvoz teče naprej.
   preveri('uvoz-razporeda: 401, 403 in 429 so zavrnitev vira (ne rezerva iz predpomnilnika)',
     /vir\.zavrnitev && \[401, 403, 429\]\.includes\(e\.status\)\)+ throw vir\.zavrnitev/.test(uvozRazporeda))
