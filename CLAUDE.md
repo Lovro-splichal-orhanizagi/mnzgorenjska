@@ -4515,7 +4515,7 @@ cene=true`. Zapisnik sta dva zahtevka (izid in postava) po 3 s; arhiv 130–190
 tekem je ~15–20 minut na ligo.
 ### Anglija — vir `isthmian`
 
-Država `GB` ("England", migracija 20261015163500): koda ISO 3166-1, ker
+Država `GB` ("England", migracija 20261016091700): koda ISO 3166-1, ker
 `GB-ENG` (ISO 3166-2) z vezajem podre pravilo "šifra lige se začne s kodo
 države" in ker IP iz Anglije pove `GB`. **Šifra angleške lige se začne z
 `gb-`.** Vmesnika v angleščini za državo, kartice in pošte **še ni**
