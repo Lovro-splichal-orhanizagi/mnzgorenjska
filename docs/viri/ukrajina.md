@@ -206,3 +206,191 @@ Vpisani ligi (migracija 20261015230700), **neaktivni**, zveza `hoaf-km`:
 
 Uvoz (ena za drugo): `gh workflow run uvoz-lige.yml -f liga=ua-km-vyshcha -f
 arhiv=chho-2025 -f cene=true`; Persha brez `arhiv`.
+
+## Ukrajina — vir `pfl-ua`
+
+Vir `pfl-ua` (`scripts/viri/pfl-ua.mjs`) bere **pfl.ua** (Професіональна
+футбольна ліга України): Peršo ligo (raven 2) ter Drugo ligo A in B (raven 3).
+Nižjih lig na pfl.ua ni (amaterska liga AAFU in oblastne zveze so drugje;
+Lviv `ffl.org.ua` je poznejši vir). Država `UA` ("Україна") in zveza
+`pfl-ua` (migracija 20261016091900); **vmesnika v ukrajinščini, kartice in
+`pfl-ua` (migracija 20261015163700); **vmesnika v ukrajinščini, kartice in
+pošte še ni in `UA` ni v matriki nočnega uvoza** — oboje pred vklopom. Šifra
+lige se začne z `ua-`.
+
+- **Šifra lige je `<koledar>/<turnir>`** (`2a/1354`): oznaka javnega
+  koledarja (`1`, `2a`, `2b`; ob delitvi Perše lige `1a`, `1b`) in id
+  tekmovanja ene sezone. Ob novi sezoni se popravi le `<turnir>` (izbirnik
+  sezon je na `/calendar/<turnir>`).
+- **Razpored**: javni JSON `/calendar-json/<koledar>` (stran `/custom/6`:
+  "Авторизація та API-ключ не потрібні") — tours[].matches[] z matchId,
+  datumom, uro (kijevski čas → ljubljanski −1 h; `null`, dokler ni objavljena),
+  klubi s teamId in izidom (`score.finished`). JSON da le tekočo sezono; če
+  kaže drug turnir (arhiv, nova sezona), vir bere HTML koledar
+  `/calendar/<turnir>` (zavihki `id="tourN"`, datum "02.08.26", ura ali
+  "не визнач.", izid "2 : 3" ali "– : –"). Oba dasta za 2026/27 iste tekme.
+- **Zapisnik** `/game/index/<id>`: glava ("1-й тур", izid v `#m<id>`, datum z
+  dvomestno letnico "02.08.26", ura po kijevsko), zavihek "Склади" z obema
+  postavama: vrstica `bg-white` začetnik, `bg-dark-subtle` klop; dres, priimek
+  in ime s povezavo `/player/view/<id>` (**stalna šifra osebe → `reg_st`**),
+  "(K)" kapetan. Dogodki pri igralcu z minuto ("90+3'" → 90, **"ПМ'" = po
+  tekmi → 90**): `icon-ball` gol, `icon-ball-plus` gol z 11 m, `icon-autogoal`
+  avtogol (pri strelcu v njegovi ekipi, šteje nasprotniku), `icon-ball-miss`
+  zgrešena 11 m, `icon-yellow`, `icon-cards` drugi rumeni (→ 1 rumeni + rdeči),
+  `icon-red`. Menjava je povezava z `icon-up`/`icon-down` in minuto; opis
+  "46': <ven>, <noter>" da par. Leteče menjave šteje `minuteIzPreklopov`.
+  **Polčasa ni.** Šifra zapisnika v bazi je `ua<id>`. `nastopi` je hlf-ov
+  (po šifri osebe) z zgrešenimi 11-metrovkami (`penalties_missed`).
+- **Predpomnilnik**: zapisnik, starejši od tedna, se bere iz predpomnilnika;
+  stran z izidom, a brez postav (shranjena, preden je klub vnesel postave)
+  vir do 45 dni po tekmi prebere še enkrat svežo, sicer bi obtičala. Tekma z
+  izidom brez postav, ki ni 3:0, je opozorilo `pfl-ua: <id> ima izid,
+  zapisnik brez postav` v dnevniku uvoza.
+- **Vratar** ni označen; zavihek "Схема" ima postavitev začetnikov, vsaka
+  ekipa na svojem igrišču — vratar je edini začetnik ob golovi črti (domači
+  najmanjši `top`, gostje največji). Namig kot pri mlsz; *Uskladi pozicije*
+  z `vir = pfl-ua`. Ostale pozicije na glasovanje.
+- **Tehnični poraz** (KDK UAF) je opomba `bg-warning-subtle` nad zapisnikom
+  ("зараховано технічну поразку 0:3"): izid je za zeleno mizo, postave in goli
+  z igrišča (Нива : Рух, 1. krog 2a 2026/27: 3:0, na igrišču 2:1) — opozorilo
+  `tehnični poraz`. **Pravilo:** uradni izid (`rezultat`) velja za tekmo,
+  lestvico in zmago; prejeti goli in čista mreža igralcev so z igrišča
+  (`z.izidIgrisca`, `nastopi`) — vratar Ниве ima 1 prejeti gol, ne čiste
+  mreže. Tako `goals_conceded` ustreza golom v `goals` in točke prejetih golov
+  med igranjem (`prejeti_na_igriscu`) se računajo. Kontumacija brez postav (3:0 brez zapisnika, starejša od
+  tedna) gre prek `vir.kontumacije`; videli je še nismo.
+- **Isto ime, drug klub**: "Нива" je Ternopil (Perša, teamId 1170) in Vinnica
+  (2a, 1175; 2025/26 kot 1177). `IME_KLUBA` v viru ju preimenuje po teamId v
+  "Нива (Тернопіль)" in "Нива (Вінниця)". **teamId ni nujno stalen med
+  sezonami** — ob novi sezoni ali arhivu preveri trke imen. Ključ kluba
+  ohrani cirilico; latinične črke sredi cirilične besede ("Гірник-Cпорт" z
+  latiničnim C) postanejo cirilične. Rezervne ekipe ("Полісся-2", "Колос-2")
+  so svoj klub.
+- Arhiv: zapisniki 2025/26 so polni (preverjeno po 3 na ligo), sezone okoli
+  2022 in starejše le delno (postave brez dogodkov).
+
+**Pravice (pregled 15. 10. 2026, ni pravni nasvet).** robots.txt:
+"User-agent: * / Allow: /". Stran API (`/custom/6`) koledar in lestvice JSON
+ponuja javno brez ključa; pogojev uporabe nismo našli. Dovoljenja PFL nimamo.
+Beremo odkrito (User-Agent `SLFF fantasy (https://slff.eu)`, **3 s** med
+zahtevki, zapisnikov, starejših od tedna, ne beremo znova). Sodnikov in
+osebja ne beremo; vzorci `scripts/vzorci/ua-pfl-*` so brez njih. **Ob izzivu,
+CAPTCHI, 403 ali 429 se uvoz ustavi — ne obhajaj** (`PflZavrnitev`, izhod 4).
+
+Preizkus v živo (15. 10. 2026, 40 zapisnikov tekoče sezone): Perša 17
+zapisnikov, goli = izid 17/17 (52), postav po 11 34/34, vratar 34/34, 147
+menjav; Druga A 11, goli = izid 10/11 (en tehnični poraz), postav po 11
+22/22, 97 menjav; Druga B 12, goli = izid 12/12 (30), postav po 11 24/24, 93
+menjav. Ekipa ima 990 minut razen pri rdečem kartonu.
+
+Vpisane so 3 lige (migracija 20261016091900), **neaktivne**, zveza `pfl-ua`,
+Vpisane so 3 lige (migracija 20261015163700), **neaktivne**, zveza `pfl-ua`,
+`rok_pomak_ur = 2` (tekme dopoldne):
+
+| liga | klubov | tekoča 2026/27 | arhiv 2025/26 |
+|---|---|---|---|
+| ua-1-liga | 16 | `1/1353` | `1/1347` (VBET Перша ліга, 16 klubov) |
+| ua-2-liga-a | 9 | `2a/1354` | `2a/1348` (11 klubov, 165 tekem, 152 z izidom) |
+| ua-2-liga-b | 9 | `2b/1355` | `2b/1349` (11 klubov) |
+
+Druga liga ima 9 klubov (vsak krog en prost). Uvoz (ena za drugo): `gh
+workflow run uvoz-lige.yml -f liga=ua-1-liga -f arhiv=1/1347 -f cene=true`.
+
+## Ukrajina — vir `upl`
+
+Vir `upl` (`scripts/viri/upl.mjs`) bere **upl.ua** (Українська Прем'єр-Ліга):
+najvišjo ligo, 16 klubov, 30 krogov. Perša in Druga liga sta pri `pfl-ua`
+(zgoraj). Država `UA` je iz migracije PFL; zveza `upl` in liga `ua-upl`
+(migracija 20261016092500), **neaktivna**. Za vmesnik, kartico, pošto in nočni
+uvoz velja isto kot pri `pfl-ua` — pred vklopom.
+
+- **Šifra lige je id prvenstva sezone** (`432` = 2026/27, `428` = 2025/26,
+  `424` = 2024/25; izbirnik sezon je na strani prvenstva). Ob novi sezoni se
+  popravi le id. Neznan id vrne 404; vir sezono vzame le, če je v izbirniku
+  izbran iskani id, sicer ustavi uvoz.
+- **Razpored** `/ua/tournaments/championship/<id>/calendar`: vsi krogi na eni
+  strani, datum ("31.07.2026", 4-mestna letnica) nad tekmami, klubi le z
+  imenom (brez šifer). Celica izida je povezava `/ua/report/view/<id>`: izid s
+  presledki ("2 : 0") pri odigrani, **ura brez presledkov ("13:00", kijevski
+  čas → ljubljanski −1 h) pri razpisani**, "-" brez povezave pri nerazpisani.
+  Odigrana tekma ure v koledarju nima (ura je v zapisniku). Prestavljena tekma
+  ostane v svojem krogu z novim datumom (Динамо : Лівий Берег, 1. krog, 2. 12.).
+  **Izid brez datuma ni odigrana tekma** (Оболонь : Кривбас, 8. krog 2026/27:
+  1:0, dogodki do 43', brez datuma in postav — najverjetneje prekinjena);
+  uvoz jo javi kot `upl: 15940 ima izid, zapisnik brez postav`.
+- **Zapisnik** `/ua/report/view/<id>` ("Рапорт арбітра"): glava ("8-й тур",
+  datum in ura "03.08.2026. Понеділок, 18:00", klubi s `/clubs/view/<id>`,
+  izid), dva bloka `team-players` ("Стартовий склад", "Запасні", "Тренер" — tega
+  ne beremo): dres in `/ua/people/view/<id>` (**stalna šifra osebe → `reg_st`**),
+  "(К)" kapetan. **Dogodki so časovnica z imenom, ne šifro**: stran domačih je
+  `justify-content: flex-end`, gostje imajo prazno levo celico. `score-1` gol,
+  `score-3` gol z 11 m, `score-2` avtogol (pri ekipi strelca, šteje
+  nasprotniku), `score-4` zgrešena 11 m, `card-0` rumeni, `card-2` drugi
+  rumeni (prvi je svoj `card-0` → 1 rumeni + rdeči), `card-1` rdeči, `change`
+  menjava "ven<br>noter" — **minute so točne**. Ime iz časovnice se poveže z
+  igralcem ekipe (natanko, nato brez ločil); nepovezan gol ali menjava je
+  opozorilo, karton trenerju ne šteje. Vrste so razbrane iz 299 zapisnikov
+  (goli = izid). **Polčasa ni.** Šifra zapisnika v bazi je `upl<id>`.
+  `nastopi` je iz `pfl-ua` (po šifri osebe, zgrešene 11-metrovke).
+- **Vratar**: postavitev (`#field` domači, vratar zgoraj; `#field2` gostje,
+  vratar spodaj; `chip id="player_<šifra>"` s `top:`) — kot pri `pfl-ua`.
+  *Uskladi pozicije* z `vir = upl`; ostale pozicije na glasovanje.
+- **Predpomnilnik**: v predpomnilnik gre le prava stran (`zaPredpomnilnik`:
+  koledar s `tour-title`, tekma z `match-main-info`, nikoli izziv). Zapisnik,
+  starejši od tedna, se bere iz predpomnilnika; nepopolnega (izid brez postav)
+  vir do 45 dni po tekmi prebere še enkrat svežega.
+- **Kontumacija / tehnični poraz** (tudi tekme kluba, ki je izstopil):
+  koledar jo pokaže kot navaden izid ("0 : 3"), zapisnik ima opombo
+  `public-description` ("* Згідно з рішенням КДК УАФ … зараховано технічну
+  поразку з рахунком 0:3") in **nima postav** (Олександрія : Оболонь, 17. krog
+  2025/26). `vir.kontumacije` jo označi takoj, če je opomba, sicer 3:0 brez
+  postav po tednu dni. Koledar s "+ : -" / "- : +" ali "3 : 0 (тп)" bi jo
+  označil sam (te oblike nismo videli). Tehnični poraz **s** postavami bi
+  dobil `izidIgrisca` kot pri `pfl-ua`.
+- **Karton po koncu tekme** ima minuto "FT" → 90 (4 v 2025/26).
+- **Isto ime, drug klub**: ključ kluba je skupen s `pfl-ua` (`kljucKlubaUa`),
+  ker klubi v državi UA delijo `teams`. Pregled 15. 10. 2026 (UPL 2024/25,
+  2025/26, 2026/27 proti Perši in Drugi ligi 2025/26 in 2026/27): isti ključ
+  imajo le isti klubi, ki so izpadli ali napredovali (Чорноморець, Буковина,
+  Лівий Берег, Рух, Полтава, Олександрія, Ворскла, Інгулець); druge ekipe
+  ("Полісся-2", "Колос-2", "Олександрія-2" …) imajo svoj ključ, "Металіст 1925"
+  (UPL) in "Металіст" (PFL) sta dva kluba z dvema ključema. "Рух" v Drugi ligi A
+  2026/27 (PFL teamId 1484) nosi isti grb kot UPL Рух (Lviv) in deli zapis
+  kluba: stran ekipe na pfl.ua je "Рух (Львів)", ustanovljen 2003, Arena Lviv,
+  fcruhlviv.com — isti klub, ne drug. Kader so mladinci (letniki 2007–2010),
+  a prve ekipe Ruha 2026/27 ni ne v UPL ne v Perši ligi, zato to ni druga
+  ekipa ob prvi (pregled 15. 10. 2026; če se prva ekipa vrne, dobi PFL
+  ekipa ime "Рух-2" v `IME_KLUBA` pfl-ua). `IME_KLUBA` v viru je prazen; ob novi sezoni preveri trke znova.
+- **Cena iz višje lige** ne seže med `upl` in `pfl-ua` (šifre oseb so last
+  vira); `ravenLige` ima `ua-upl` vseeno na ravni 1.
+
+**Pravice (pregled 15. 10. 2026, ni pravni nasvet).** robots.txt:
+"User-agent: * / Disallow:" (vse dovoljeno). Pogojev uporabe strani ni (stran
+"Документи" so le pravilniki tekmovanj); noga pravi "Всі права захищені ©
+2008-2026". Dovoljenja UPL nimamo; vir (zveza `upl`, `site_url` upl.ua) je v
+nogi vsake strani.
+Beremo odkrito (User-Agent `SLFF fantasy (https://slff.eu)`, **3 s** med
+zahtevki, zapisnikov, starejših od tedna, ne beremo znova). Sodnikov,
+delegatov, trenerjev, stadiona in gledalcev ne beremo; vzorci
+`scripts/vzorci/ua-upl-*` so brez njih. **Ob izzivu, CAPTCHI, prijavi, 401,
+403 ali 429 se uvoz ustavi — ne obhajaj** (`UplZavrnitev`, izhod 4; tudi med
+branjem kontumacij v uvozu razporeda). Obrazec za novice v nogi strani
+(`<div class="captcha">`) ni izziv.
+
+Preizkus v živo (15. 10. 2026, brez pisanja v bazo, vsi zapisniki, 3 s med
+zahtevki): **2026/27** — 30 krogov, 240 tekem, 16 klubov, 61 z izidom (60
+zapisnikov + prekinjena 15940), 25 razpisanih z uro; goli = izid 60/60 (143,
+4 avtogoli, 14 z 11 m, 1 zgrešena), postav po 11 120/120, vratar 120/120, 990
+minut 107/120 (vseh 13 ostalih pojasni rdeči karton), 547 menjav vse z
+minuto in obema igralcema, 1867 nastopov (547 s klopi), vsi s šifro, 0
+opozoril. **2025/26** (arhiv `428`) — 240 tekem, 239 zapisnikov + 1 tehnični
+poraz; goli = izid 239/239 (614, 19 avtogolov, 55 z 11 m, 12 zgrešenih),
+postav po 11 478/478, vratar 478/478, 990 minut 452/478 (vseh 26 ostalih
+pojasni rdeči karton), 2092 menjav, 7350 nastopov, vsi s šifro, 0 opozoril.
+
+| liga | klubov | tekoča 2026/27 | arhiv 2025/26 |
+|---|---|---|---|
+| ua-upl | 16 | `432` | `428` (16 klubov, 240 tekem) |
+
+Uvoz: `gh workflow run uvoz-lige.yml -f liga=ua-upl -f arhiv=428 -f
+cene=true`. Arhiv 240 zapisnikov po 3 s je ~15 minut.

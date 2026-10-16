@@ -69,7 +69,7 @@
   v uvozni skripti naj gre skozenj, ne mimo z golim `fetch`. Vir, katerega
   strežnik ob preobremenitvi vrne 200 z obvestilom namesto strani, naj ima
   `zaPredpomnilnik(besedilo, datoteka)` (uvoz zapisnikov in razporeda tako
-  stran ne shranita in shranjene ne bereta; mlsz in razpored oefb)
+  stran ne shranita in shranjene ne bereta; mlsz, mfa in razpored oefb)
 - Baza: odjemalec Supabase v nočni verigi (uvoz razporeda, delegiranja,
   zapisnikov, registracij, lažni vratarji, ugibanje pozicij) ima
   `global.fetch: fetchZaBazo()` (`scripts/prenos.mjs`): "fetch failed",
