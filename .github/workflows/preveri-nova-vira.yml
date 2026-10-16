@@ -1,0 +1,56 @@
+name: Preveri nova vira (brez baze)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  novi-viri:
+    name: Zivi vir — ${{ matrix.vir }} ${{ matrix.sezona }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    concurrency:
+      group: live-source-${{ matrix.vir }}-${{ github.ref }}
+      cancel-in-progress: false
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include:
+          - vir: dfb
+            koda: regionalliga-nordost/2026-2027
+            sezona: 2026/27
+            mapa: dfb-2026
+          - vir: dfb
+            koda: regionalliga-nordost/2025-2026
+            sezona: 2025/26
+            mapa: dfb-2025
+          - vir: novanet
+            koda: galicia:22:26990830:27759837
+            sezona: 2026/27
+            mapa: galicia-2026
+          - vir: novanet
+            koda: galicia:21:24123231:24820329
+            sezona: 2025/26
+            mapa: galicia-2025
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Cela sezona — brez baze in brez servisnega kljuca
+        env:
+          VIR: ${{ matrix.vir }}
+          KODA: ${{ matrix.koda }}
+          SEZONA: ${{ matrix.sezona }}
+          MAPA: ${{ matrix.mapa }}
+        run: node scripts/preveri-vir-sezono.mjs "$VIR" "$KODA" "$SEZONA" "audit/$MAPA"
+      - name: Dokazi in surovi dokumenti
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vir-${{ matrix.mapa }}
+          path: audit/${{ matrix.mapa }}/
+          retention-days: 14
