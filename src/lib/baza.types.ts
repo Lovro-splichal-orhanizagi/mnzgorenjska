@@ -8404,6 +8404,42 @@ export type Database = {
         Returns: undefined
       }
       roster_je_veljaven: { Args: { p_team_id: number }; Returns: boolean }
+      scout_igralec: { Args: { p_player_id: number }; Returns: Json }
+      scout_isci: {
+        Args: {
+          p_min_minut?: number
+          p_od?: number
+          p_raven?: string
+          p_regije?: number[]
+          p_samo_odprti?: boolean
+          p_skupina?: string
+        }
+        Returns: {
+          delez_minut: number
+          goli_90_pri_nas: number
+          ime: string
+          klub: string
+          liga: string
+          minute: number
+          odprt_za_prestop: boolean
+          percentil: number
+          player_id: number
+          skupina: string
+          zaupanje: number
+        }[]
+      }
+      scout_iz_placila: {
+        Args: {
+          p_customer: string
+          p_obdobje: string
+          p_subscription: string
+          p_team_id: number
+          p_user_id: string
+          p_velja_do: string
+        }
+        Returns: string
+      }
+      scout_moj_klub: { Args: never; Returns: Json }
       scout_moj_profil: {
         Args: { p_player_id: number }
         Returns: {
@@ -8416,9 +8452,58 @@ export type Database = {
           skrit: boolean
         }[]
       }
+      scout_narocnina_konec: {
+        Args: { p_konec: string; p_subscription: string }
+        Returns: string
+      }
+      scout_opazovani: {
+        Args: never
+        Returns: {
+          dodano: string
+          ime: string
+          klub: string
+          liga: string
+          minute: number
+          odprt_za_prestop: boolean
+          percentil: number
+          player_id: number
+          skupina: string
+        }[]
+      }
+      scout_opazuj: {
+        Args: { p_opazuj: boolean; p_player_id: number }
+        Returns: undefined
+      }
+      scout_podaljsaj: {
+        Args: { p_subscription: string; p_velja_do: string }
+        Returns: string
+      }
+      scout_podobni: {
+        Args: { p_player_id: number }
+        Returns: {
+          ime: string
+          klub: string
+          liga: string
+          minute: number
+          odprt_za_prestop: boolean
+          percentil: number
+          player_id: number
+          podobnost: number
+          skupina: string
+        }[]
+      }
+      scout_portal_kupec: { Args: never; Returns: string }
       scout_preklici_privolitev: {
         Args: { p_player_id: number }
         Returns: undefined
+      }
+      scout_pripravi_nakup: {
+        Args: { p_obdobje: string }
+        Returns: {
+          email: string
+          stripe_customer_id: string
+          team_id: number
+        }[]
       }
       scout_shrani_privolitev: {
         Args: {
@@ -8430,10 +8515,27 @@ export type Database = {
         }
         Returns: undefined
       }
+      scout_sprosti_sedez: { Args: { p_user: string }; Returns: undefined }
       scout_ugovor: {
         Args: { p_player_id: number; p_skrij: boolean }
         Returns: undefined
       }
+      scout_vrzeli: {
+        Args: never
+        Returns: {
+          ime: string
+          liga: string
+          player_id: number
+          skupina: string
+          vrednost: number
+          vrsta: string
+        }[]
+      }
+      scout_zacni_preizkus: {
+        Args: { p_sprejmem_pogoje: boolean }
+        Returns: undefined
+      }
+      scout_zasedi_sedez: { Args: never; Returns: undefined }
       sem_v_mini_ligi: { Args: { p_liga: number }; Returns: boolean }
       sezona_lige: {
         Args: { p_competition_id: number; p_datum?: string }

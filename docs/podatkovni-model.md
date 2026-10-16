@@ -336,6 +336,15 @@
   Shema `scout` je zaprta (brez pravic za `anon`/`authenticated`,
   RLS s politiko le za vlogo `scout_stroj`); piše jo delavec `slff-scout`,
   `scout.drzave` pove, katere države so odprte. Podrobnosti: `docs/scout.md`
+- **Scout: klubi** (migracije 20261017140100–140400, `docs/scout.md` *Klubi*):
+  `scout.narocnine` (klub, preizkus ali Klub, `velja_do`, Stripe,
+  `prejsnja_subscription_id` za ponovljen preklic zamenjane naročnine),
+  `scout.sedezi` (do 3 uradni računi kluba), `scout.dnevnik` (vsak klic s
+  podatki igralcev, 12 mesecev), `scout.opazovani` (do 30). Brskalnik bere le
+  prek `scout_*` RPC, ki preverijo sedež, naročnino, državo in dnevno mejo in
+  berejo le zadnji objavljeni model. Plačila: `scout-placilo` in veja
+  `app=slff-scout` v `stripe-webhook`; **preklic naročnine mora biti vedno
+  mogoč** (`scout_portal_kupec`: plačnik ali kateri koli uradni račun kluba).
 - **Prevzem profila igralca** ("To sem jaz", migracija 20261012091100):
   `zahtevki_igralca` (en potrjen na igralca IN na uporabnika, en odprt na
   uporabnika; delna unikatna kazala), piše le prek RPC `prevzemi_igralca`,

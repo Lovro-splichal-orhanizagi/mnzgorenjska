@@ -54,6 +54,7 @@ import {
 } from '../src/lib/pravila'
 import { tockeZaNastop, razloziTocke } from '../src/lib/tockovanje'
 import { veljavenPodpis } from '../supabase/functions/stripe-webhook/podpis.ts'
+import { scoutPostavkeVeljajo, scoutCeneNarocnine } from '../supabase/functions/stripe-webhook/scout.ts'
 import { createHmac } from 'node:crypto'
 import { sestejOdKroga } from '../src/lib/lestvica'
 import { zdruziNavijace } from '../src/lib/navijaci'
@@ -12795,6 +12796,21 @@ preveri(
   preveri('stripe: star podpis pade', !(await veljavenPodpis(`t=${t},v1=${v1}`, telo, skr, t + 301)))
   preveri('stripe: druga skrivnost pade', !(await veljavenPodpis(`t=${t},v1=${v1}`, telo, 'whsec_drug', t)))
   preveri('stripe: brez glave pade', !(await veljavenPodpis(null, telo, skr, t)))
+}
+
+{
+  // Postavke seje Scout (stripe-webhook/scout.ts): ena cena obdobja, en kos, brez popusta.
+  const p = (kljuc, kos = 1, znesek = 3900) => ({ quantity: kos, amount_subtotal: znesek, price: { lookup_key: kljuc, unit_amount: 3900 } })
+  preveri('scout stripe: mesečna postavka gre', scoutPostavkeVeljajo([p('slff_scout_klub_mesec')], 'mesec'))
+  preveri('scout stripe: napačno obdobje pade', !scoutPostavkeVeljajo([p('slff_scout_klub_mesec')], 'sezona'))
+  preveri('scout stripe: dva kosa padeta', !scoutPostavkeVeljajo([p('slff_scout_klub_mesec', 2, 7800)], 'mesec'))
+  preveri('scout stripe: popust pade', !scoutPostavkeVeljajo([{ ...p('slff_scout_klub_mesec'), amount_discount: 2000 }], 'mesec'))
+  preveri('scout stripe: dodatna postavka pade', !scoutPostavkeVeljajo([p('slff_scout_klub_mesec'), p('slff_znacka')], 'mesec'))
+  preveri('scout stripe: neznano obdobje pade', !scoutPostavkeVeljajo([p('slff_scout_klub_mesec')], 'teden'))
+  // Obnova: vse postavke naročnine so cene Scouta (obramba v globino).
+  preveri('scout stripe: naročnina Scouta gre', scoutCeneNarocnine({ items: { data: [p('slff_scout_klub_sezona')] } }))
+  preveri('scout stripe: tuja cena v naročnini pade', !scoutCeneNarocnine({ items: { data: [p('slff_preverjen_letna')] } }))
+  preveri('scout stripe: naročnina brez postavk pade', !scoutCeneNarocnine({ items: { data: [] } }))
 }
 
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)
