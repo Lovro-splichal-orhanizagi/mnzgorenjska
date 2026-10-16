@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import { useNaslov } from '../lib/naslov'
 import { napakaPrijave, varnaPot } from '../lib/prijava'
+import { predlogEposte } from '../lib/eposta'
 import { jezik, t } from '../i18n'
 import { useTekmovanje } from '../lib/tekmovanje'
 import { JEZIK_DRZAVE } from '../lib/drzava'
@@ -33,6 +34,10 @@ export default function Prijava() {
   const nacinVNaslovu = params.get('nacin') === 'registracija' ? 'registracija' : 'prijava'
   useEffect(() => setNacin(nacinVNaslovu), [nacinVNaslovu])
   const [email, setEmail] = useState('')
+  // Predlog domene ("gmail.con" → "gmail.com") se pokaže, ko uporabnik zapusti
+  // polje, da med tipkanjem ne utripa. Oddaje ne ustavi.
+  const [emailZapuscen, setEmailZapuscen] = useState(false)
+  const predlog = emailZapuscen ? predlogEposte(email) : null
   const [geslo, setGeslo] = useState('')
   const [ime, setIme] = useState('')
   const [napaka, setNapaka] = useState<string | null>(null)
@@ -187,6 +192,7 @@ export default function Prijava() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            onBlur={() => setEmailZapuscen(true)}
             autoComplete="email"
             autoCapitalize="none"
             autoCorrect="off"
@@ -195,6 +201,15 @@ export default function Prijava() {
             className="mt-1 w-full rounded-xl border border-white/10 bg-slate-900 px-3 py-2"
           />
         </label>
+        {predlog && (
+          <button
+            type="button"
+            onClick={() => setEmail(predlog)}
+            className="-mt-1 block min-h-[44px] text-left text-sm text-amber-300 hover:underline"
+          >
+            {t('racun.prijava.predlogEposte', { eposta: predlog })}
+          </button>
+        )}
         {nacin !== 'pozabljeno' && (
           <label className="block text-sm text-slate-400">
             {t('racun.prijava.geslo')}

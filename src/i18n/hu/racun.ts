@@ -27,6 +27,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     nimasRacuna: 'Nincs még fiókod? Regisztrálj',
     pozabljenoGeslo: 'Elfelejtetted a jelszavad?',
     nazajNaPrijavo: '← Vissza a bejelentkezéshez',
+    predlogEposte: 'Erre gondoltál: {eposta}?',
   },
   napake: {
     napacnaPrijava: 'Hibás e-mail-cím vagy jelszó.',

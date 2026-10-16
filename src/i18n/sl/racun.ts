@@ -26,6 +26,7 @@ export const racun = {
     nimasRacuna: 'Nimaš računa? Registriraj se',
     pozabljenoGeslo: 'Pozabljeno geslo?',
     nazajNaPrijavo: '← Nazaj na prijavo',
+    predlogEposte: 'Ste mislili {eposta}?',
   },
   // Napake Supabase Auth, prevedene v lib/prijava.
   napake: {

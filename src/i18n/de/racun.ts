@@ -27,6 +27,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     nimasRacuna: 'Noch kein Konto? Registrieren',
     pozabljenoGeslo: 'Passwort vergessen?',
     nazajNaPrijavo: '← Zurück zur Anmeldung',
+    predlogEposte: 'Meintest du {eposta}?',
   },
   napake: {
     napacnaPrijava: 'Falsche E-Mail-Adresse oder falsches Passwort.',
