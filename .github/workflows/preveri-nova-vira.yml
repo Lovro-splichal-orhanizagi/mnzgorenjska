@@ -8,9 +8,17 @@ on:
         type: choice
         options: [all, novanet, dfb]
         default: all
+      sezona:
+        description: Tekoča sezona, arhiv ali obe
+        type: choice
+        options: [all, current, archive]
+        default: all
   workflow_call:
     inputs:
       vir:
+        type: string
+        default: all
+      sezona:
         type: string
         default: all
 
@@ -29,13 +37,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - koda: galicia:22:26990830:27759837
-            sezona: 2026/27
-            mapa: galicia-2026
-          - koda: galicia:21:24123231:24820329
-            sezona: 2025/26
-            mapa: galicia-2025
+        sezona: ${{ fromJSON(inputs.sezona == 'current' && '["2026/27"]' || inputs.sezona == 'archive' && '["2025/26"]' || '["2026/27","2025/26"]') }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -44,16 +46,16 @@ jobs:
       - name: Cela sezona — brez baze in brez servisnega kljuca
         env:
           VIR: novanet
-          KODA: ${{ matrix.koda }}
+          KODA: ${{ matrix.sezona == '2026/27' && 'galicia:22:26990830:27759837' || 'galicia:21:24123231:24820329' }}
           SEZONA: ${{ matrix.sezona }}
-          MAPA: ${{ matrix.mapa }}
+          MAPA: galicia-${{ matrix.sezona == '2026/27' && '2026' || '2025' }}
         run: node scripts/preveri-vir-sezono.mjs "$VIR" "$KODA" "$SEZONA" "audit/$MAPA"
       - name: Dokazi in surovi dokumenti
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: vir-${{ matrix.mapa }}
-          path: audit/${{ matrix.mapa }}/
+          name: vir-galicia-${{ matrix.sezona == '2026/27' && '2026' || '2025' }}
+          path: audit/galicia-${{ matrix.sezona == '2026/27' && '2026' || '2025' }}/
           retention-days: 14
 
   dfb:
@@ -67,13 +69,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - koda: regionalliga-nordost/2026-2027
-            sezona: 2026/27
-            mapa: dfb-2026
-          - koda: regionalliga-nordost/2025-2026
-            sezona: 2025/26
-            mapa: dfb-2025
+        sezona: ${{ fromJSON(inputs.sezona == 'current' && '["2026/27"]' || inputs.sezona == 'archive' && '["2025/26"]' || '["2026/27","2025/26"]') }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -82,14 +78,14 @@ jobs:
       - name: Cela sezona — brez baze in brez servisnega kljuca
         env:
           VIR: dfb
-          KODA: ${{ matrix.koda }}
+          KODA: ${{ matrix.sezona == '2026/27' && 'regionalliga-nordost/2026-2027' || 'regionalliga-nordost/2025-2026' }}
           SEZONA: ${{ matrix.sezona }}
-          MAPA: ${{ matrix.mapa }}
+          MAPA: dfb-${{ matrix.sezona == '2026/27' && '2026' || '2025' }}
         run: node scripts/preveri-vir-sezono.mjs "$VIR" "$KODA" "$SEZONA" "audit/$MAPA"
       - name: Dokazi in surovi dokumenti
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: vir-${{ matrix.mapa }}
-          path: audit/${{ matrix.mapa }}/
+          name: vir-dfb-${{ matrix.sezona == '2026/27' && '2026' || '2025' }}
+          path: audit/dfb-${{ matrix.sezona == '2026/27' && '2026' || '2025' }}/
           retention-days: 14
