@@ -5618,6 +5618,106 @@ preveri(
     zavrnjen.status === 403 && A.default.zavrnitev('x', 429).zavrnitev === true)
 }
 
+// --- vir gff (Gruzija, liga.gff.ge) ----------------------------------------------------
+{
+  const G = await import('./viri/gff.mjs')
+  const { default: viri } = await import('./viri/index.mjs')
+  const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  preveri('gff: vir je vpisan, 10 s (Crawl-delay), User-Agent SLFF', viri.gff === G.default && G.default.drzava === 'GE' &&
+    G.default.imaRegistracije === false && G.default.premorMs >= 10000 &&
+    G.default.glave['User-Agent'] === 'SLFF fantasy (https://slff.eu)')
+  preveri('gff: šifra in naslovi', G.razberiKodo('44/3').sezona === '44' && G.razberiKodo('44/3').liga === '3' &&
+    G.default.naslovRazporeda('41/4') === 'https://liga.gff.ge/results?season=41&league=4' &&
+    G.naslovKoledarja('44/3') === 'https://liga.gff.ge/calendar?season=44&league=3' &&
+    G.naslovZapisnika('4921', '/game/4921-alg-bax') === 'https://liga.gff.ge/game/4921-alg-bax' &&
+    G.default.naslovZapisnika(null, 'ge4921') === 'https://liga.gff.ge/node/4921' &&
+    G.sifraZapisnika('4921') === 'ge4921' && G.sifraZapisnika('ge4921') === 'ge4921')
+  let slabaSifra = null
+  try { G.razberiKodo('liga-3') } catch (e) { slabaSifra = e.message }
+  preveri('gff: šifra brez <sezona>/<liga> ustavi uvoz', /<sezona>\/<liga>/.test(slabaSifra ?? ''))
+  preveri('gff: datum (gruzinski mesec), čas (Tbilisi → Ljubljana), minuta', G.datumIz('ხუთშაბათი, 8 ოქტომბერი', '2026') === '2026-10-08' &&
+    G.datumIz('8 ოქტ. 2026', '2026') === '2026-10-08' && G.datumIz('1 აპრილი', '2026') === '2026-04-01' && G.datumIz('x', '2026') === null &&
+    G.vLjubljanskiCas('2026-10-08', '20:00').ura === '18:00' && G.vLjubljanskiCas('2026-11-05', '15:00').ura === '12:00' &&
+    G.vLjubljanskiCas('2026-04-02', '01:00').datum === '2026-04-01' && G.minuta(45) === 45 && G.minuta(93) === 90 && G.minuta(201) === null)
+  preveri('gff: ključ in kratko ime kluba — druga ekipa je svoj klub', G.kljucKlubaGe('სამგურალი 2') !== G.kljucKlubaGe('სამგურალი') &&
+    G.kljucKlubaGe(' კოლხეთი 1913-2 ') === 'კოლხეთი 1913 2' && G.kratkoImeGe('მერანი 2 მრ') === 'მერანი 2 მრ')
+  preveri('gff: ime za primerjavo in razdalja (tipkarska napaka v dogodku)', G.kljucImena('ოთარ  ხარშილაძე') === 'ოთარ ხარშილაძე' &&
+    G.razdalja('გიორგი მაღალდაძემ', 'გიორგი მაღალდაძე') === 1)
+
+  const rez = G.tekmeStrani('44/4', beri('ge-gff-results-44-4.html'))
+  const kol = G.tekmeStrani('44/4', beri('ge-gff-calendar-44-4.html'))
+  preveri('gff: rezultati — leto iz izbirnika, krogi, datum brez ure, izid', rez.leto === '2026' && rez.tekme.length === 16 &&
+    rez.tekme.every((t) => t.izid && t.datum && t.ura === null && /^\/game\/\d+-/.test(t.pot)) &&
+    rez.tekme[0].krog === 23 && rez.tekme[0].id === '4921' && rez.tekme[0].domaci === 'ალგეთი' && rez.tekme[0].datum === '2026-10-08')
+  preveri('gff: koledar — neodigrane z uro (Tbilisi 15:00 → 13:00)', kol.tekme.length === 16 && kol.tekme.every((t) => !t.izid) &&
+    kol.tekme[0].krog === 24 && kol.tekme[0].id === '4930' && kol.tekme[0].datum === '2026-10-15' && kol.tekme[0].ura === '13:00')
+  const krogi = G.razporedIzStrani(rez.tekme, kol.tekme)
+  preveri('gff: razpored iz obeh strani — 4 krogi po 8, odigrane le z izidom', krogi.map((k) => k.stevilka).join() === '22,23,24,25' &&
+    krogi.every((k) => k.tekme.length === 8) && krogi[1].tekme.every((t) => t.odigrana) && krogi[2].tekme.every((t) => !t.odigrana && t.ura))
+  let tujaStran = null
+  try { G.tekmeStrani('41/4', beri('ge-gff-results-44-4.html')) } catch (e) { tujaStran = e.message }
+  preveri('gff: stran druge sezone ali lige (neznan id) ustavi uvoz', /ne kaže lige 41\/4/.test(tujaStran ?? ''))
+
+  const h = beri('ge-gff-game-4921.html')
+  preveri('gff: navadna stran ni izziv, izziv je', !G.jeIzziv(h) && G.jeIzziv('<title>Just a moment...</title>'))
+  const z = G.vZapisnik(h, { id: '4921' })
+  const n = G.nastopi(z)
+  const minute = (nn, i) => nn.filter((x) => x.ekipaIdx === i).reduce((a, x) => a + x.minute, 0)
+  preveri('gff: glava — klubi, izid, datum in ura (20:00 Tbilisi → 18:00), liga, sezona, krog', z.domaci.ime === 'ალგეთი' &&
+    z.gostje.ime === 'ბახმარო' && z.rezultat.domaci === 3 && z.rezultat.gostje === 1 && z.datum === '2026-10-08' && z.ura === '18:00' &&
+    z.liga === 'ლიგა 4' && z.sezona === '2026' && z.krog === 23 && z.polcas === null)
+  preveri('gff: 11 + 11, klop, dres, Priimek Ime, kapetan, vratar = prvi začetnik (namig)', z.domaci.postava.length === 11 &&
+    z.gostje.postava.length === 11 && z.domaci.rezerve.length === 7 && z.gostje.rezerve.length === 2 &&
+    z.domaci.postava[0].st === 12 && z.domaci.postava[0].vratar && z.domaci.postava[0].pozicija === 'GK' &&
+    z.domaci.postava.filter((i) => i.vratar).length === 1 && z.domaci.postava[4].ime === 'ხარშილაძე ოთარ' && z.domaci.postava[4].kapetan &&
+    z.gostje.rezerve.every((i) => !i.vratar))
+  preveri('gff: goli = izid, rumeni, menjave (noter / ven) z minuto, 990 minut, brez opozoril', z.goli.length === 4 && z.rumeni.length === 4 &&
+    z.menjave.length === 5 && z.menjave.every((m) => m.noter.st && m.ven.st) && minute(n, 0) === 990 && minute(n, 1) === 990 &&
+    n.find((x) => x.ime === 'ბაბაქიშიევი რუფან')?.minute === 82 && n.find((x) => x.ime === 'ბაბაქიშიევი რუფან')?.goli === 1 &&
+    n.find((x) => x.ime === 'ტოროშელიძე ნიკა')?.minutaOd === 82 && n.find((x) => x.ime === 'ნადირაძე ლუკა') === undefined &&
+    z.opozorila.length === 0)
+
+  const ag = G.vZapisnik(beri('ge-gff-game-4892-avtogol.html'))
+  const nag = G.nastopi(ag)
+  preveri('gff: avtogol (goal_auto na strani ekipe, ki ji šteje) je pri strelcu v nasprotni ekipi', ag.goli.filter((x) => x.avtogol).length === 1 &&
+    ag.goli.find((x) => x.avtogol)?.ekipaIdx === 1 && ag.rezultat.domaci === 3 && ag.opozorila.length === 0)
+  preveri('gff: rdeči karton (45+2 → 45), nastop do izključitve', ag.rdeci.length === 1 && ag.rdeci[0].minuta === 45 &&
+    nag.find((x) => x.rdeci)?.minute === 45 && minute(nag, 1) === 945)
+  const p = G.vZapisnik(beri('ge-gff-game-4682-11m.html'))
+  preveri('gff: gol z 11 m (goal_p), tipkarska napaka v imenu dogodka se ujame z edinim bližnjim', p.goli.filter((x) => x.enajstmetrovka).length === 1 &&
+    p.goli.length === 3 && p.menjave.every((m) => m.noter.st && m.ven.st) && minute(G.nastopi(p), 0) === 990 && p.opozorila.length === 0)
+  const dr = G.vZapisnik(beri('ge-gff-game-4889-drugi-rumeni.html'))
+  const ndr = G.nastopi(dr)
+  preveri('gff: drugi rumeni (yellow_red_card) rezervi — 1 rumeni + 1 rdeči, nastop od vstopa do izključitve', dr.rdeci.length === 1 &&
+    ndr.find((x) => x.rdeci)?.rumeni === 1 && ndr.find((x) => x.rdeci)?.minutaOd === 46 && ndr.find((x) => x.rdeci)?.minutaDo === 69 &&
+    dr.rumeni.length === 3 && dr.opozorila.length === 0)
+  const ob = G.vZapisnik(beri('ge-gff-game-4605-obrnjena.html'))
+  preveri('gff: obrnjen vnos menjave (začetnik / rezerva) se zamenja z opozorilom, 990 minut', ob.opozorila.length === 1 &&
+    /vpisana obrnjeno/.test(ob.opozorila[0]) && minute(G.nastopi(ob), 1) === 990 &&
+    ob.menjave.find((m) => m.minuta === 86 && m.ven.st === 40)?.noter.st === 6)
+  const nd = beri('ge-gff-game-4930-neodigrana.html')
+  preveri('gff: neodigrana tekma — glava z datumom in uro, brez zapisnika', G.vZapisnik(nd) === null && G.glavaTekme(nd).izid === null &&
+    G.glavaTekme(nd).krog === 24 && G.glavaTekme(nd).datum === '2026-10-15' && G.glavaTekme(nd).ura === '13:00')
+  preveri('gff: vzorci brez sodnikov, kaznovanih in trenerjev', !/მსაჯ|არბიტრ|დისკვალიფიც|მწვრთნელ/.test(
+    ['ge-gff-game-4921.html', 'ge-gff-game-4892-avtogol.html', 'ge-gff-game-4682-11m.html', 'ge-gff-game-4889-drugi-rumeni.html',
+      'ge-gff-game-4605-obrnjena.html', 'ge-gff-game-4930-neodigrana.html'].map(beri).join('')))
+
+  const zs = await G.default.zapisniki('44/4', async (url) => (url.includes('/results') ? beri('ge-gff-results-44-4.html') : h))
+  preveri('gff: zapisniki() — šifra ge<nid>, ime, krog in sezona z razporeda, neujemanje izida je opozorilo', zs.length === 16 &&
+    zs.every((x) => /^ge\d+$/.test(x.id) && x.z.zapisnikId === x.id) && zs[0].id === 'ge4921' && zs[0].z.opozorila.length === 0 &&
+    zs[1].z.domaci.ime === 'სქური' && zs[1].z.krog === 23 && zs[1].z.sezona === '2026' && zs[1].url.endsWith('/game/4922-sku-arg') &&
+    zs[1].z.opozorila.some((o) => /ni izid razporeda/.test(o)))
+  const razp = await G.default.razporedVseStrani('44/4', async (url) =>
+    url.includes('/results') ? beri('ge-gff-results-44-4.html') : beri('ge-gff-calendar-44-4.html'))
+  preveri('gff: razporedVseStrani() bere rezultate in koledar', razp.length === 4 && razp.flatMap((k) => k.tekme).length === 32)
+  let zavrnjen = null
+  try { await G.default.zapisniki('44/4', async () => { const e = new Error('HTTP 403'); e.status = 403; throw e }) } catch (e) { zavrnjen = e }
+  let izziv = null
+  try { await G.default.zapisniki('44/4', async () => '<title>Just a moment...</title>') } catch (e) { izziv = e }
+  preveri('gff: 403 in izziv vržeta GffZavrnitev (uvoz izhod 4)', zavrnjen instanceof G.GffZavrnitev && zavrnjen.status === 403 &&
+    izziv instanceof G.GffZavrnitev && G.default.zavrnitev('x', 429).zavrnitev === true)
+}
+
 // --- vir nsfbih (Bosna in Hercegovina, NS FBiH, nsfbih.ba; COMET) -------------------
 {
   const N = await import('./viri/nsfbih.mjs')

@@ -48,6 +48,7 @@ import isthmian from './isthmian.mjs'
 import pflUa from './pfl-ua.mjs'
 import nsfbih from './nsfbih.mjs'
 import nfsbih from './nfsbih.mjs'
+import gff from './gff.mjs'
 
 const VIRI = {
   mnzg,
@@ -149,6 +150,9 @@ const VIRI = {
   // Bosna in Hercegovina, državna raven: NFSBiH prek nfsbih.ba (WWIN liga BiH;
   // isti COMET, druga stran), ime + klub (šifra v povezavi ni stalna), vratar "(GK)".
   nfsbih,
+  // Gruzija (GFF) prek liga.gff.ge: Liga 3 in 4, brez šifer igralcev (ime + klub),
+  // vratar je prvi začetnik (namig), koledarska sezona, Crawl-delay 10 s.
+  gff,
 }
 
 /**
