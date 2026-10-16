@@ -63,10 +63,12 @@ V izračun ne vstopi cela oseba (vse njene vrstice), če ima:
   vrstica (ista oseba brez šifre v drugem klubu, tudi soimenjak); izjema je le
   oseba vrstice, za katero je potrjen profil prijavil polnoletno letnico
   (`scout.odrasle_vrstice()`), soimenjakova prijava ne odpre nikogar drugega;
+  ključ je po vseh sezonah, polnoletna letnica pomeni `letnik <= letos - 19`
+  (polnoleten vse leto), v izračunu pa je le, kdor ima članske minute;
   mladinske lige same tudi niso v izračunu;
-- `players.scout_skrit` v katerikoli vrstici (ugovor); ugovor zajame tudi
-  vrstice z istim ključem imena ali šifre v državi (kot anonimizacija spodaj),
-  torej isto osebo brez šifre v drugem klubu;
+- ugovor: ključ katerekoli vrstice (država + ime ali država + šifra) v
+  `scout.ugovori`; zajame tudi isto osebo brez šifre v drugem klubu,
+  soimenjaka v državi in poznejše uvoze (kot anonimizacija spodaj);
 - anonimizirano vrstico: ta izpade sama (`anonimiziran_at`), ostale vrstice
   iste osebe pa po ključih `anonimizacijski_kljuc(country|ime)` in
   `(country|reg|reg_st)` v `anonimizirani_igralci`. Ključ imena nima kluba,
@@ -153,13 +155,47 @@ zadnjega modela; kazalniki, indeks, podobni in vrzeli so vedno sveži.
 `drzave` (zaprto/pilot/odprto, SI odprta), `modeli` (različica, backtest,
 `parametri.elo_koef`, `objavljen`), `lige_moc`, `ekipe_elo`, `kazalniki` (vse
 sezone odprtih držav), `indeks`, `vektorji` (z-vektor in 20 najbližjih),
-`vrzeli`. Migracija `20261016140100_scout_stroj`.
+`vrzeli`. Migracija `20261016140100_scout_stroj`. Faza 2 (migracija
+`20261016160100_scout_igralec`): `ugovori` (zgoščena ključa osebe, kot
+`anonimizirani_igralci`) in `privolitve` (odprt za prestop, letnica, regije
+= `federations` države, stik; ključ glavna vrstica potrjenega profila;
+preklic = izbris vrstice). Notranje funkcije `kljuci_vrstic`,
+`vrstice_profila`, `je_skrit`, `odrasle_vrstice`; vlogi `scout_stroj` je
+odprta le `odrasle_vrstice` (`privolitve` stroj ne bere neposredno,
+`ugovori` bere). `players.scout_skrit` je prenesen v `ugovori` in se ne bere
+več; stolpec odstrani `20261017090100` (po prvem rednem zagonu novega
+delavca). Poizvedba izločenih (`SQL_IZKLJUCENI`) na produkciji: 4,7 s, le
+hash joini (join z OR je obvisel).
 
 Brskalnik sheme ne bere: ni v API, `anon`/`authenticated` nimata pravic, RLS
 je vklopljen. Vloga `scout_stroj` ima na vsaki tabeli politiko `stroj` (ne
 BYPASSRLS), bere le tabele zapisnikov. Funkcije faze 3 naj berejo zadnji
-`objavljen` model in ob branju še enkrat preverijo `scout_skrit` in
-`anonimiziran_at` (model nastane enkrat na dan).
+`objavljen` model in ob branju še enkrat preverijo `scout.je_skrit(array[id])`
+in `anonimiziran_at` (model nastane enkrat na dan).
+
+## Stran igralca (faza 2)
+
+Lastnik potrjenega profila na `/player/<id>` (Uredi) vidi razdelek SLFF Scout,
+če država lige v `scout.drzave` ni `zaprto` (`ScoutIgralca.tsx`, bere
+`scout_moj_profil`): privolitev (`scout_shrani_privolitev`, letnica obvezna in
+`<= letos - 19`, regije le zveze države; z veljavnim ugovorom zavrne) in
+ugovor (`scout_ugovor(glavni, true|false)`). Privolitev izbrišejo njen
+preklic (`scout_preklici_privolitev`), lastnikov ugovor in
+`prevzem_odstrani_predstavitev` (preklic profila, anonimizacija, izbris
+računa). Igralec brez prevzetega profila ugovarja po povezavi na dnu vsake
+javne strani igralca (ne mladinske, ne anonimizirane) na `/legal#scout`: mail
+na info@slff.eu, admin v 14 dneh v Administracija → Igralec → *Skrij iz Scouta
+(ugovor)* (`admin_scout_skrij(ids[])`, izbira vrstic osebe kot pri
+anonimizaciji). `kontakt_dovoljen` se le hrani; sporočila pridejo v fazi 3.
+
+**Soimenjak.** Stroj izloča po ključu imena brez kluba, zato soimenjakov
+ugovor izloči tudi lastnika profila z istim imenom v državi (namerno, varneje
+za zasebnost). Lastnik pa vidi in prekliče le ugovore svojih vrstic
+(`scout.ugovori.player_id` med `vrstice_profila`): soimenjak ga ne zaklene,
+privolitev lahko shrani, a v izračun ne vstopi, dokler ugovor soimenjaka velja.
+Preklic z `false` pobriše le ključe njegovih vrstic. Enako pri mladinskem
+izločanju: polnoletna letnica odpre le osebo prijaviteljevih vrstic, ne
+soimenjaka.
 
 ## Spomin
 
