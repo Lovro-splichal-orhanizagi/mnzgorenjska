@@ -1,6 +1,6 @@
 # Moldavija — vir `fmf`
 
-Država `MD` ("Moldova", migracija 20261015171900) — **vmesnika (romunščina za
+Država `MD` ("Moldova", migracija 20261016094300) — **vmesnika (romunščina za
 Moldavijo), kartice in pošte še ni**, `MD` **ni** v matriki nočnega uvoza;
 oboje pred vklopom. Šifra lige se začne z `md-`. Lige so **neaktivne**.
 
@@ -87,7 +87,7 @@ spletišče ne pokaže) so v predlogi Analyticom. Cene dajo minute tekoče sezon
 (uvoz brez `arhiv`, s `cene`, kot hlf): oktobra ima redni igralec Lige 2 že
 13 krogov.
 
-Vpisane lige (migracija 20261015171900, **neaktivne**, zveza `fmf`):
+Vpisane lige (migracija 20261016094300, **neaktivne**, zveza `fmf`):
 
 | liga | klubov | tekoča 2026/27 | arhiv |
 |---|---|---|---|
