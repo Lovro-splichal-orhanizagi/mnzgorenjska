@@ -55,3 +55,56 @@ def test_slovenija_brez_ravni():
     assert izid[1] == (0.4, "drzava", 0)
     izid = dopolni_moc({4: 0.5}, {4: 30}, lige)
     assert izid[1] == (0.0, "brez", 0) and izid[2] == (0.0, "brez", 0)
+
+
+def _skupina(rng, prava, n_oseb, sposobnost, predpona):
+    """Osebe, ki igrajo v dveh ligah iz `prava` (liga → moč); y = sposobnost − moč + šum."""
+    oseba, liga, y = [], [], []
+    for i in range(n_oseb):
+        s = rng.normal(sposobnost, 0.3)
+        for l in rng.choice(list(prava), 2, replace=False).tolist():
+            oseba.append(f"{predpona}{i}")
+            liga.append(l)
+            y.append(s - prava[l] + rng.normal(0, 0.1))
+    return oseba, liga, y
+
+
+def _oceni(skupine, drzava):
+    rng = np.random.default_rng(2)
+    oseba, liga, y = [], [], []
+    for args in skupine:
+        o, l, yy = _skupina(rng, *args)
+        oseba += o
+        liga += l
+        y += yy
+    return oceni_moc(np.array(oseba, dtype=object), np.array(liga), np.zeros(len(y)), np.array(y), drzava)
+
+
+def test_locena_skupina_v_drzavi_gre_na_dopolnitev():
+    # lige 4 in 5 nimata skupnih igralcev z 1–3; njuni igralci so boljši za 1.0,
+    # kar bi brez izločitve pristalo v moči lig
+    moc, _, stevci = _oceni([({1: 0.0, 2: 0.5, 3: 1.0}, 300, 0.0, "a"), ({4: 0.0, 5: 0.5}, 100, 1.0, "b")],
+                            {l: 1 for l in range(1, 6)})
+    assert set(moc) == {1, 2, 3}
+    assert abs(moc[2]) < 1e-9 and abs(moc[3] - moc[1] - 1.0) < 0.05
+    assert stevci[4] == 100
+    lige = {"id": np.arange(1, 6), "slug": np.array(["clani"] * 5, dtype=object),
+            "name": np.array([None] * 5, dtype=object), "zveza": np.array([None] * 5, dtype=object),
+            "country_id": np.ones(5, dtype=int)}
+    assert dopolni_moc(moc, stevci, lige)[4][1] == "drzava"
+
+
+def test_vsaka_drzava_ima_svojo_nicelno_mediano():
+    # državi nista povezani; igralci druge so boljši za 2.0, kar ne sme premakniti lestvice
+    moc, _, _ = _oceni([({1: 0.0, 2: 0.5, 3: 1.0}, 300, 0.0, "a"), ({4: 0.0, 5: 0.3, 6: 0.6}, 300, 2.0, "b")],
+                       {1: 1, 2: 1, 3: 1, 4: 2, 5: 2, 6: 2})
+    assert set(moc) == {1, 2, 3, 4, 5, 6}
+    assert abs(np.median([moc[1], moc[2], moc[3]])) < 1e-9 and abs(np.median([moc[4], moc[5], moc[6]])) < 1e-9
+    assert abs(moc[3] - moc[1] - 1.0) < 0.05 and abs(moc[6] - moc[4] - 0.6) < 0.05
+
+
+def test_piramida_brez_modelnih_lig_je_brez():
+    lige = {"id": np.array([1, 2]), "slug": np.array(["sk-nike-liga", "sk-sfz-2liga"], dtype=object),
+            "name": np.array([None] * 2, dtype=object), "zveza": np.array([None] * 2, dtype=object),
+            "country_id": np.array([2, 2])}
+    assert dopolni_moc({}, {}, lige) == {1: (0.0, "brez", 0), 2: (0.0, "brez", 0)}
