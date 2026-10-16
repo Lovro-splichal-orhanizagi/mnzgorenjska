@@ -3,6 +3,7 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { prenesiSPonovitvami } from './prenos.mjs'
 
 const key = (k,d,g) => JSON.stringify([k,d,g])
 export function preveriPokritost({sezona,razpored,zapisniki,nepopolni=[]}) {
@@ -56,8 +57,17 @@ export async function preveriSezono({vir,koda,sezona,mapa,fetchFn=globalThis.fet
   // Preserve the exact first response to compare against one consistent snapshot.
   if(documents.has(url))return documents.get(url)
   if(requests.length>=1500)throw Error('presežena omejitev 1500 dokumentov')
-  if(requests.length)await new Promise(r=>setTimeout(r,vir.premorMs??2000))
-  const response=await (vir.fetch??fetchFn)(url,{headers:vir.glave,signal:AbortSignal.timeout(60000)})
+  let response
+  try{
+   response=await prenesiSPonovitvami(url,{glave:vir.glave,premorMs:vir.premorMs??2000,fetchFn:async(u,options)=>{
+    const r=await (vir.fetch??fetchFn)(u,options)
+    if([401,403,429].includes(r.status)){
+     await r.body?.cancel().catch(()=>{})
+     throw Object.assign(Error(`HTTP ${r.status}: ${u}`),{status:r.status,zavrnitev:true})
+    }
+    return r
+   }})
+  }catch(e){e.url??=url;throw e}
   if(!response.ok){const e=Error(`HTTP ${response.status}: ${url}`);e.status=response.status;throw e}
   const html=await response.text()
   if(Buffer.byteLength(html)>5_000_000)throw Error('prevelik dokument vira')
@@ -73,7 +83,7 @@ export async function preveriSezono({vir,koda,sezona,mapa,fetchFn=globalThis.fet
   razpored=await vir.razporedVseStrani(koda,prenesi)
   zapisniki=await vir.zapisniki(koda,prenesi)
   porocilo=preveriPokritost({sezona,razpored,zapisniki,nepopolni:vir.nepopolni??[]})
- }catch(e){porocilo={sezona,pripravljeno:false,pokritost:false,napake:[e.message],status:e.status??null,zavrnitev:!!e.zavrnitev};if(e.nepopolni)opozorila.push(...e.nepopolni)}
+ }catch(e){porocilo={sezona,pripravljeno:false,pokritost:false,napake:[e.message],status:e.status??null,zavrnitev:!!e.zavrnitev,url:e.url??null};if(e.nepopolni)opozorila.push(...e.nepopolni)}
  porocilo={vir:vir.ime,koda,preverjeno:new Date().toISOString(),...porocilo,prenesenih:requests.length,opozorila}
  writeFileSync(resolve(mapa,'porocilo.json'),JSON.stringify(porocilo,null,2)+'\n')
  writeFileSync(resolve(mapa,'razpored.json'),JSON.stringify(razpored,null,2)+'\n')

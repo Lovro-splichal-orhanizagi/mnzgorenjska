@@ -90,7 +90,7 @@ test('report/round pairs agree on match details; contradictory season selection 
 })
 // Synthetic traversal reduction only: retain an unchanged real match table,
 // active scope bindings and report; limit the round selector to that real round.
-function singleMatchRound(){
+function singleMatchRound(id='1448233'){
  let html=fixture('galicia-round1')
  const formula=[...html.matchAll(/<script\b[^>]*>[\s\S]*?<\/script>/gi)].map(m=>m[0]).find(s=>s.includes('eval(function(p,a,c,k,e,d)'))
  const spans=[],stack=[]
@@ -100,7 +100,7 @@ function singleMatchRound(){
  }
  const removals=spans.filter(({start,end})=>{
   const s=html.slice(start,end)
-  return (s.match(/class=(?:["']font_widgetV["']|font_widgetV)[\s>]/g)??[]).length===1&&!s.includes('CodActa=1448233')
+  return (s.match(/class=(?:["']font_widgetV["']|font_widgetV)[\s>]/g)??[]).length===1&&!s.includes(`CodActa=${id}`)
  })
  for(const {start,end}of removals.sort((a,b)=>b.start-a.start))html=html.slice(0,start)+html.slice(end)
  html=html.replace(/<head>/i,`<head>${formula}`)
@@ -416,4 +416,35 @@ test('one valid match can import while other known reports are withheld',async()
   throw Object.assign(new Error('missing'),{status:404})
  })
  assert.equal(reports.length,1);assert.equal(vir.nepopolni.length,4)
+})
+test('captured empty card table without heading is explicit no-card evidence',()=>{
+ for(const id of['1448237','1448238']){
+  const html=fixture(`galicia-${id}`)
+  const z=preglejZapisnik(html,{zveza:'galicia'})
+  assert.ok(z.menjave.length>0)
+  // Deleting the explicit empty table must not turn missing data into no cards.
+  assert.throws(()=>preglejZapisnik(html.replace(/<table class="table table-striped table-hover" width='100%'>\s*<\/table>/,''),{zveza:'galicia'}),/nepopoln/)
+ }
+})
+test('cross-document punctuation uses club key and persists schedule spelling',async()=>{
+ const round=singleMatchRound().replaceAll('A.D. RIO OURO','A.D. RIO "OURO"')
+ const vir=ustvariVir({predpomnilnik:false})
+ const read=async url=>url.includes('NFG_CmpJornada')?round:fixture('galicia-1448233')
+ const reports=await vir.zapisniki('galicia:22:26990830:27759837',read)
+ const schedule=await vir.razporedVseStrani('galicia:22:26990830:27759837',read)
+ assert.equal(reports[0].z.domaci.ime,schedule[0].tekme[0].domaci)
+})
+
+test('actual Pol B report matches quoted schedule name without changing identity',async()=>{
+ const round=singleMatchRound('1448235'),report=fixture('galicia-1448235')
+ assert.ok(round.includes('S.D. POL "B"'))
+ assert.equal(preglejZapisnik(report,{zveza:'galicia'}).domaci.ime,'S.D. POL B')
+ const read=async u=>u.includes('NFG_CmpJornada')?round:report
+ const vir=ustvariVir({predpomnilnik:false})
+ const out=await vir.zapisniki('galicia:22:26990830:27759837',read)
+ assert.equal(out[0].z.domaci.ime,'S.D. POL "B" (Galicia)')
+})
+test('schedule club keys must not collapse distinct names',async()=>{
+ const round=singleMatchRound().replaceAll('C.D. SAN CIPRIAN','A.D. RIO "OURO"')
+ await assert.rejects(ustvariVir({predpomnilnik:false}).razporedVseStrani('galicia:22:26990830:27759837',async()=>round),/dvoumna kluba/)
 })

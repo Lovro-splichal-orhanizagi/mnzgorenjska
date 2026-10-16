@@ -1,4 +1,5 @@
 // Evidence-backed Novanet report parser. No script execution or score guessing.
+import { ustvariAnonimniPrenos } from './novanet-transport.mjs'
 import { NovanetPredpomnilnik, starostZapisnika, URA } from './novanet-predpomnilnik.mjs'
 import { nastopi as nastopiOsnova } from './hlf.mjs'
 import { izidNovanet, preslikaveNovanet } from './novanet-izidi.mjs'
@@ -102,8 +103,14 @@ export function preglejZapisnik(html,{zveza,sezona:pricakovanaSezona=null}={}) {
  if(prev.some((v,i)=>v!==score[i])) fail('goli se ne ujemajo z izidom')
  const menjave=[],rumeni=[],rdeci=[],osebje=[]
  teams.forEach((t,idx)=>{
-  const sub=t.chunk.match(/<h4>Sustituciones<\/h4>([\s\S]*?)<h4>Tarjetas<\/h4>/i)
-  const cards=t.chunk.match(/<h4>Tarjetas<\/h4>\s*<table\b[^>]*>([\s\S]*?)<\/table>/i)
+  let sub=t.chunk.match(/<h4>Sustituciones<\/h4>([\s\S]*?)<h4>Tarjetas<\/h4>/i)
+  let cards=t.chunk.match(/<h4>Tarjetas<\/h4>\s*<table\b[^>]*>([\s\S]*?)<\/table>/i)
+  // Observed full reports omit Tarjetas when its final table is explicitly
+  // empty. Require that table; absence of the whole section remains incomplete.
+  if(!cards){
+   const empty=t.chunk.match(/<h4>Sustituciones<\/h4>((?:\s*<table\b[^>]*>[\s\S]*?<\/table>)*?)\s*<table\b[^>]*\bwidth=['"]100%['"][^>]*>\s*<\/table>\s*(?=<\/div>)/i)
+   if(empty){sub=empty;cards=['','']}
+  }
   if(!sub||!cards) nepopolno('manjkajoči razdelki menjav ali kartonov')
   for(const table of sub[1].matchAll(/<table\b[^>]*>([\s\S]*?)<\/table>/gi)) {
    const rs=rows(table[1]); if(rs.length!==2) fail('neznana menjava')
@@ -308,13 +315,21 @@ export async function preberiKroge(koda,prenesi,{cache=null,danes=()=>Date.now()
   if(r.sezona!==first.sezona||r.krogi.join(',')!==first.krogi.join(','))fail('seznam krogov se je spremenil')
   out.push(r)
  }
+ const names=new Map()
+ for(const r of out)for(const t of r.tekme)for(const name of[t.domaci,t.gostje]){
+  const key=kljucKluba(name)
+  if(names.has(key)&&names.get(key)!==name)fail('dvoumna kluba z istim ključem v razporedu')
+  names.set(key,name)
+ }
+ for(const r of out)for(const t of r.tekme)if(kljucKluba(t.domaci)===kljucKluba(t.gostje))fail('dvoumna kluba z istim ključem v razporedu')
  const ids=out.flatMap(r=>r.tekme.filter(t=>t.virId).map(t=>t.virId))
  if(ids.length>1000||new Set(ids).size!==ids.length)fail('podvojene tekme med krogi')
  return out.sort((a,b)=>a.stevilka-b.stevilka)
 }
 /** Explicit charset decoding; fetch().text() corrupts ISO-8859-15 names. */
+const anonimniPrenos=ustvariAnonimniPrenos({jeIzziv,zavrnitev:(m,s)=>new NovanetZavrnitev(m,s)})
 export async function novanetFetch(url,options={}) {
- const response=await fetch(url,{...options,signal:AbortSignal.timeout(60000)})
+ const response=await anonimniPrenos(url,options)
  if([401,403,429].includes(response.status))throw new NovanetZavrnitev(`HTTP ${response.status}`,response.status)
  // Preserve HTTP failures untouched so shared retry/missing-report handling sees
  // their status even when an error body has no HTML charset.
@@ -376,7 +391,7 @@ export function ustvariVir({predpomnilnik='scripts/.predpomnilnik/novanet/prever
    let z
    try{z=await beriPreverjeno(prenesi,url,`report-${zveza}-${t.virId}.html`,html=>{
     const z=vZapisnik(html,{zveza,sezona:r.sezona})
-    if(z.zapisnikId!==identity(zveza,t.virId)||z.krog!==r.stevilka||z.domaci.ime!==t.domaci||z.gostje.ime!==t.gostje||z.datum!==t.datum||z.ura!==t.ura||z.rezultat.domaci!==t.izid.domaci||z.rezultat.gostje!==t.izid.gostje)fail('zapisnik in krog se ne ujemata')
+    if(z.zapisnikId!==identity(zveza,t.virId)||z.krog!==r.stevilka||kljucKluba(z.domaci.ime)!==kljucKluba(t.domaci)||kljucKluba(z.gostje.ime)!==kljucKluba(t.gostje)||z.datum!==t.datum||z.ura!==t.ura||z.rezultat.domaci!==t.izid.domaci||z.rezultat.gostje!==t.izid.gostje)fail('zapisnik in krog se ne ujemata')
     z.zaprt=true;return z
    },{cache,danes,ttl:starostZapisnika})
    }catch(e){
@@ -385,8 +400,8 @@ export function ustvariVir({predpomnilnik='scripts/.predpomnilnik/novanet/prever
     nepopolni.push(notice);opozori(`novanet: zapisnik nepopoln: ${notice.id} — statistika cele tekme zadržana; ${e.message}`)
     continue
    }
-   z.domaci={...z.domaci,ime:imeKlubaZaUvoz(z.domaci.ime,zveza)}
-   z.gostje={...z.gostje,ime:imeKlubaZaUvoz(z.gostje.ime,zveza)}
+   z.domaci={...z.domaci,ime:imeKlubaZaUvoz(t.domaci,zveza)}
+   z.gostje={...z.gostje,ime:imeKlubaZaUvoz(t.gostje,zveza)}
    z.url=url;out.push({id:z.zapisnikId,z,url})
   }
   if(pricakovanih>0&&!out.length){

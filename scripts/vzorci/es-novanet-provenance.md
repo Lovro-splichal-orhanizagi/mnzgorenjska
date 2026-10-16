@@ -38,3 +38,11 @@ Active source configuration bindings observed in original round pages:
 These captures do not verify any current/archive league pair. They do not authorize league activation.
 
 Adapter consumer output adds federation suffixes `(Aragón)` / `(Galicia)` to persisted club names only after raw report/round checks. Pure fixture parsers retain the original names. This prevents cross-federation and ordinary unqualified-FCF exact-name fallback merges. Within-federation homonymous distinct clubs are not resolved by the current name-keyed schema; no validated cross-template club-ID mapping was established.
+
+Production public captures collected 2026-10-16 by the parent research session:
+`es-novanet-galicia-1448235.html`, `es-novanet-galicia-1448237.html`,
+`es-novanet-galicia-1448238.html`, copied unchanged from
+`/private/tmp/slff-production-research/galicia-{id}.html`.
+Official URLs: `https://www.futgal.es/pnfg/NPcd/NFG_CmpPartido?cod_primaria=1000120&CodActa={id}&cod_acta={id}`.
+1448235 demonstrates report `S.D. POL B` versus schedule `S.D. POL "B"`.
+1448237/38 demonstrate an explicitly empty final card table without a Tarjetas heading.

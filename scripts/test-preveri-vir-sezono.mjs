@@ -75,3 +75,26 @@ test('a failed audit replaces the previous manifest and records failure artifact
   assert.equal(JSON.parse(readFileSync(join(mapa,'porocilo.json'),'utf8')).prenesenih,0)
  }finally{rmSync(mapa,{recursive:true,force:true})}
 })
+test('live audit retries a transient timeout and preserves the successful document',async()=>{
+ const mapa=mkdtempSync(join(tmpdir(),'slff-audit-retry-')),x=sample();let calls=0
+ try{
+  const vir={ime:'test',premorMs:0,razporedVseStrani:async(_k,p)=>{await p('https://datencenter.dfb.de/public-fixture','r.html');return x.razpored},zapisniki:async()=>x.zapisniki}
+  const r=await preveriSezono({vir,koda:'x',sezona:x.sezona,mapa,fetchFn:async()=>{calls++;if(calls===1)throw Object.assign(Error('temporary timeout'),{name:'TimeoutError'});return new Response('<html>fixture response</html>')}})
+  assert.equal(calls,2)
+  assert.equal(r.pokritost,true)
+  assert.equal(r.prenesenih,1)
+  const docs=JSON.parse(readFileSync(join(mapa,'prenosi.json'),'utf8'))
+  assert.equal(readFileSync(join(mapa,docs[0].file),'utf8'),'<html>fixture response</html>')
+ }finally{rmSync(mapa,{recursive:true,force:true})}
+})
+test('live audit never retries an explicit source refusal',async()=>{
+ const mapa=mkdtempSync(join(tmpdir(),'slff-audit-refusal-'));let calls=0
+ try{
+  const vir={ime:'test',premorMs:0,razporedVseStrani:async(_k,p)=>p('https://datencenter.dfb.de/public-refusal','r.html')}
+  const r=await preveriSezono({vir,koda:'x',sezona:'2026/27',mapa,fetchFn:async()=>{calls++;return new Response('denied',{status:429})}})
+  assert.equal(calls,1)
+  assert.equal(r.status,429)
+  assert.equal(r.zavrnitev,true)
+  assert.equal(r.pripravljeno,false)
+ }finally{rmSync(mapa,{recursive:true,force:true})}
+})
