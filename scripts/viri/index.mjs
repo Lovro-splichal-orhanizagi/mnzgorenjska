@@ -50,7 +50,6 @@ import pflUa from './pfl-ua.mjs'
 import nsfbih from './nsfbih.mjs'
 import nfsbih from './nfsbih.mjs'
 import gff from './gff.mjs'
-import pflUa from './pfl-ua.mjs'
 import upl from './upl.mjs'
 import ffl from './ffl.mjs'
 import ksi from './ksi.mjs'
@@ -167,9 +166,6 @@ const VIRI = {
   // Gruzija (GFF) prek liga.gff.ge: Liga 3 in 4, brez šifer igralcev (ime + klub),
   // vratar je prvi začetnik (namig), koledarska sezona, Crawl-delay 10 s.
   gff,
-  // Ukrajina: Професіональна футбольна ліга (pfl.ua) — Perša liga, Druga liga A in B;
-  // koledar JSON, šifra igralca, vratar iz postavitve.
-  'pfl-ua': pflUa,
   // Ukrajina: Українська Прем'єр-Ліга (upl.ua) — koledar prvenstva in raport arbitra;
   // šifra igralca, vratar iz postavitve.
   upl,
