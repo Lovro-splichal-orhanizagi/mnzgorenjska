@@ -27,12 +27,12 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     lestvicaDomov: 'Pivska tabela',
     // Stran /beers (pages/Piva.tsx): brez zneskov.
     stran: {
-      uvod: 'SLFF je besplatan. Server i domen plaćamo sami, pa svako pivo zaista pomaže. Hvala svima koji su nas već častili!',
+      uvod: 'SLFF je besplatan za hiljade menadžera u stotinama amaterskih liga širom Evrope: bez reklama, bez klađenja, bez pretplata. Tvoje pivo plaća server, poštu i domen, a zatim završi baš ovde, na zidu, sa tvojim imenom i porukom. Bodove ne donosi, samo veoma zahvalan ponedeljak. 🍺',
       skupaj: { one: 'Do sada {n} pivo', few: 'Do sada {n} piva', other: 'Do sada {n} piva' },
       piv: { one: '{n} pivo', few: '{n} piva', other: '{n} piva' },
       lestvica: 'Tabela podržavalaca',
       anonimni: 'Anonimni podržavaoci',
-      prazno: 'Na zidu još nema nijednog piva. Budi prvi!',
+      prazno: 'Na zidu još ima mesta za tvoje ime. Budi među prvima! 🍻',
     },
   },
   noga: {

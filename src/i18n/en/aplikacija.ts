@@ -27,12 +27,12 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     lestvicaDomov: 'Beer leaderboard',
     // Stran /beers (pages/Piva.tsx): brez zneskov.
     stran: {
-      uvod: 'SLFF is free. We pay for the server and the domain ourselves, so every beer really helps. Thanks to everyone who has bought us one!',
+      uvod: 'SLFF is free for thousands of managers in hundreds of amateur leagues across Europe: no ads, no betting, no paywall. Your beer pays for the server, the mail and the domain, then lands right here on the wall with your name and your message. It buys no points, just a very grateful Monday. 🍺',
       skupaj: { one: '{n} beer so far', other: '{n} beers so far' },
       piv: { one: '{n} beer', other: '{n} beers' },
       lestvica: 'Top supporters',
       anonimni: 'Anonymous supporters',
-      prazno: 'No beers on the wall yet. Be the first!',
+      prazno: "There's still room on the wall for your name. Be one of the first! 🍻",
     },
   },
   noga: {
