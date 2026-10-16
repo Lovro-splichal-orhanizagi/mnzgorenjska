@@ -3221,6 +3221,87 @@ select pg_temp.preveri('vklop sredi sezone: koncana sezona je zavrnjena',
   (select not (r->>'vklopljena')::boolean and r->>'prvi_krog' is null and r->>'razlog' like 'Za zadnjim krogom z zapisniki (3)%'
      from (select vklopi_ligo_sredi_sezone('test-vklop-konec') r) x));
 
+-- ---------------------------------------------------------------------------
+-- Scout, faza 3 (migracije 20261017140100-140400): računi, branje, seznam,
+-- plačila. K1..K4 (e5c3...001-004) so uradni računi kluba -913001 (SI), X
+-- (e5c3...005) nima kluba. Igralci -930001.. so v testnih ligah.
+-- ---------------------------------------------------------------------------
+reset role;
+select set_config('request.jwt.claim.sub','',true);
+insert into auth.users(id,email,raw_user_meta_data,created_at) values
+ ('e5c30000-0000-4000-8000-000000000001','scout-k1@example.invalid','{"display_name":"ScoutK1"}',now()),
+ ('e5c30000-0000-4000-8000-000000000002','scout-k2@example.invalid','{"display_name":"ScoutK2"}',now()),
+ ('e5c30000-0000-4000-8000-000000000003','scout-k3@example.invalid','{"display_name":"ScoutK3"}',now()),
+ ('e5c30000-0000-4000-8000-000000000004','scout-k4@example.invalid','{"display_name":"ScoutK4"}',now()),
+ ('e5c30000-0000-4000-8000-000000000005','scout-x@example.invalid','{"display_name":"ScoutX"}',now());
+insert into klubski_racuni (user_id, team_id)
+select ('e5c30000-0000-4000-8000-00000000000' || n)::uuid, -913001 from generate_series(1, 4) n;
+
+select pg_temp.preveri('scout3: anon ne klice funkcij racunov, notranjih nihce',
+  not has_function_privilege('anon', 'public.scout_moj_klub()', 'EXECUTE')
+  and not has_function_privilege('anon', 'public.scout_zacni_preizkus(boolean)', 'EXECUTE')
+  and not has_function_privilege('anon', 'public.scout_zasedi_sedez()', 'EXECUTE')
+  and not has_function_privilege('anon', 'public.scout_sprosti_sedez(uuid)', 'EXECUTE')
+  and has_function_privilege('authenticated', 'public.scout_moj_klub()', 'EXECUTE')
+  and not has_function_privilege('authenticated', 'scout.pocisti()', 'EXECUTE'));
+
+select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000005',true);
+set local role authenticated;
+select pg_temp.preveri('scout3: brez klubskega racuna ni kluba', scout_moj_klub() is null);
+select pg_temp.zavrnjeno('scout3: brez klubskega racuna ni preizkusa', $$select scout_zacni_preizkus(true)$$);
+select pg_temp.zavrnjeno('scout3: brskalnik ne bere narocnin', $$select * from scout.narocnine$$);
+select pg_temp.zavrnjeno('scout3: brskalnik ne bere dnevnika', $$select * from scout.dnevnik$$);
+select pg_temp.zavrnjeno('scout3: brskalnik ne pise sedezev',
+  $$insert into scout.sedezi (user_id, team_id) values (auth.uid(), -913001)$$);
+reset role;
+
+select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.napaka('scout3: preizkus brez pogojev zavrnjen', $$select scout_zacni_preizkus(false)$$, 'scout-pogoji');
+select scout_zacni_preizkus(true);
+select pg_temp.preveri('scout3: preizkus 14 dni in sedez zacetnika',
+  (select (k->'narocnina'->>'paket') = 'preizkus' and (k->>'sedez')::boolean and (k->'narocnina'->>'velja')::boolean
+          and (k->'narocnina'->>'velja_do')::timestamptz between now() + interval '13 days' and now() + interval '15 days'
+     from scout_moj_klub() k));
+reset role;
+
+select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000002',true);
+set local role authenticated;
+select pg_temp.napaka('scout3: drug preizkus istega kluba zavrnjen', $$select scout_zacni_preizkus(true)$$, 'scout-preizkus-porabljen');
+select scout_zasedi_sedez();
+reset role;
+select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000003',true);
+set local role authenticated;
+select scout_zasedi_sedez();
+reset role;
+select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000004',true);
+set local role authenticated;
+select pg_temp.napaka('scout3: cetrti sedez zavrnjen', $$select scout_zasedi_sedez()$$, 'scout-sedezi-polni');
+reset role;
+select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select scout_sprosti_sedez('e5c30000-0000-4000-8000-000000000003');
+reset role;
+select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000004',true);
+set local role authenticated;
+select scout_zasedi_sedez();
+select pg_temp.preveri('scout3: sproscen sedez zasede drug racun',
+  (select jsonb_array_length(k->'sedezi') = 3 and (k->>'sedez')::boolean from scout_moj_klub() k));
+reset role;
+select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000005',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('scout3: tujec ne sprosti sedeza',
+  $$select scout_sprosti_sedez('e5c30000-0000-4000-8000-000000000001')$$);
+reset role;
+select set_config('request.jwt.claim.sub','',true);
+
+insert into scout.dnevnik (team_id, user_id, vrsta, created_at) values
+  (-913001, null, 'isci', now() - interval '13 months'),
+  (-913001, null, 'isci', now() - interval '11 months');
+select scout.pocisti();
+select pg_temp.preveri('scout3: dnevnik hrani 12 mesecev',
+  (select count(*) = 1 from scout.dnevnik where team_id = -913001 and created_at < now() - interval '10 months'));
+
 do $$
 declare v_napak int;
 begin
