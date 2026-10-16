@@ -20,9 +20,9 @@ export default function Pivo({ src }: { src: string }) {
       target="_blank"
       rel="noopener noreferrer"
       onClick={() => zabeleziKorak('pivo')}
-      className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/5 px-3.5 py-1.5 text-sm font-semibold text-slate-100 ring-1 ring-white/15 transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gnl-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+      className="group inline-flex shrink-0 items-center gap-1.5 rounded-full bg-gradient-to-b from-amber-300 to-amber-500 px-4 py-2 text-sm font-bold text-amber-950 shadow-lg shadow-amber-500/25 ring-1 ring-amber-200/60 transition hover:from-amber-200 hover:to-amber-400 hover:shadow-amber-400/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gnl-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
     >
-      <span aria-hidden>🍺</span>
+      <span aria-hidden className="animiraj-pivo inline-block text-base group-hover:[animation-duration:0.8s]">🍺</span>
       {t('aplikacija.pivo.gumb')}
     </a>
   )

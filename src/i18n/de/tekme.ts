@@ -131,14 +131,14 @@ export const tekme: NonNullable<Prevod['tekme']> = {
     arhiv: 'Archiv',
     preteklaSezona:
       'Du stimmst über eine vergangene Saison ab. Auf die Punkte der laufenden Liga hat das keinen Einfluss, es korrigiert nur die Geschichte.',
-    izberiKrog: '1. Runde wählen',
-    izberiTekmo: '2. Spiel wählen',
+    izberiKrog: '1. Wähle eine Runde',
+    izberiTekmo: '2. Wähle ein Spiel',
     vsePotrjeno: 'Alles bestätigt',
     zaprto: 'geschlossen',
     poglejTekmo: 'Aufstellungen und Punkte dieses Spiels ansehen →',
     niGolov: 'In diesem Spiel fielen keine Tore.',
     vsePotrjene: 'Alle Torvorlagen in diesem Spiel sind bestätigt. 🎉',
-    zaprtoOpis: 'Die Abstimmung über dieses Spiel ist geschlossen: Sie ist bis zur Deadline der nächsten Runde offen.',
+    zaprtoOpis: 'Die Abstimmung über dieses Spiel ist geschlossen: Sie war bis zur Deadline der nächsten Runde offen.',
     brezPotrjene: 'Ohne bestätigte Torvorlage: {goli}.',
   },
 
@@ -180,7 +180,7 @@ export const tekme: NonNullable<Prevod['tekme']> = {
     status: {
       naslov: 'Mein Status als Abstimmender',
       utezOpis:
-        'Gewicht einer einzelnen Stimme: Es wird mit dem Insider-Bonus addiert, wenn du für einen Spieler deines Vereins stimmst.',
+        'Gewicht einer einzelnen Stimme: Es wird mit dem Kenner-Bonus addiert, wenn du für einen Spieler deines Vereins stimmst.',
       utez: 'Gewicht {utez}×',
       tocnih: '({pravilni}/{vsi} richtig)',
       klubPoznam: 'Verein, den ich gut kenne (Kenner): Meine Stimme für Spieler dieses Vereins zählt mehr:',
@@ -190,7 +190,7 @@ export const tekme: NonNullable<Prevod['tekme']> = {
     },
     igralec: {
       statistika: '{tekme} · {minute} Min. · {goli} · {cs} ohne Gegentor',
-      izZapisnika: 'Aus dem Spielbericht: Der Tormann ist mit (V) markiert',
+      izZapisnika: 'Aus dem Spielbericht: Der Tormann ist markiert',
       odKluba: 'Position vom Verein gesetzt',
       klub: ' · Verein',
       izStatistike: 'Aus der Statistik (Rückennummer, Tore, Karten): Stimmen können sie korrigieren',
@@ -213,6 +213,25 @@ export const tekme: NonNullable<Prevod['tekme']> = {
       gumbPrior: ' · Vorannahme {odstotek}%',
       gumbPoznavalec: ' · deine Stimme als Kenner zählt mehr',
       vodi: 'Vorne: {pozicija}, Gewicht {utez} / {prag}',
+    },
+  },
+  // Razlaga točk in cene na mestu (components/Razlaga.tsx).
+  razlaga: {
+    zakaj: 'Warum {tocke}? Punkte im Detail',
+    zapri: 'Schließen',
+    ostalo: 'Sonstiges',
+    brezPozicije: 'Die Position ist noch nicht festgelegt, daher bringt ein Tor noch keine Punkte. Sobald die Community die Position bestätigt, werden die Punkte neu berechnet.',
+    pravila1: 'Diese Runde wird nach den älteren Regeln gewertet: Zu-null-Spiel des Tormanns +4, keine Punkte für den Sieg.',
+    asistence: 'Torvorlagen bestätigt die Community per Abstimmung; eine unbestätigte Torvorlage bringt noch keine Punkte.',
+    zadnjiKrog: 'Letztes Spiel: {krog}. Runde',
+    cena: {
+      zakaj: 'Warum dieser Preis?',
+      zdaj: 'Aktueller Preis',
+      izhodisce: 'Startpreis',
+      izhodisceOpis: 'Der Startpreis ergibt sich aus den Minuten und Punkten der Vorsaison im Vergleich mit den anderen Spielern der Liga.',
+      privzeta: 'Wer in der Vorsaison weniger als {minut} Minuten gespielt hat, startet bei {cena}; außer er hat in einer höheren Liga gespielt; dann kommt der Preis von dort.',
+      borza: 'Nach jeder Runde bewegt sich der Preis: +{korak} für je zwei Punkte über 2 (höchstens +{najvec} pro Runde), −{korak} nach einer schwachen Runde oder schwacher Form und −{korak}, wenn der Spieler die zweite Runde in Folge nicht spielt, obwohl sein Verein spielt.',
+      razpon: 'Der Preis liegt immer zwischen {od} und {do}.',
     },
   },
 }

@@ -147,7 +147,7 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     // lib/miniLige
     vpisiKodo: 'Gib den Code der Mini-Liga ein.',
     dolzinaKode: 'Der Code hat {dolzina} Zeichen, du hast {vpisal} eingegeben.',
-    slabiZnaki: 'Der Code enthält die Zeichen {znaki} nicht. Schau, ob du 0 und O oder 1 und I verwechselt hast.',
+    slabiZnaki: 'Codes enthalten die Zeichen {znaki} nicht. Schau, ob du 0 und O oder 1 und I verwechselt hast.',
     besediloVabila: 'Komm in meine Mini-Liga "{ime}" bei SLFF und schlag mich: {povezava}',
     naslovVabila: 'Mini-Liga {ime} · SLFF',
     privzetoIme: '{ime} und Freunde',
@@ -218,7 +218,7 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     naslovLiga: 'Noch jemanden in {ime} einladen',
     naslovNova: 'Aufgestellt. Jetzt lad deine Mitspieler ein.',
     opisLiga: 'Wer den Link anklickt, ist mit einem Klick in der Liga.',
-    opisNova: 'Wer ist der bessere Manager? Eine Mini-Liga ist eine Tabelle nur für deine Runde.',
+    opisNova: 'Wer ist der bessere Manager? Eine Mini-Liga ist eine Tabelle nur für deine Leute.',
     trenutek: 'Einen Moment …',
     deliPovabilo: 'Einladung teilen',
     ustvariInPovabi: 'Mini-Liga erstellen und einladen',
@@ -297,7 +297,7 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
       'Für eine Mini-Liga brauchst du ein Team. Stell eines auf, das dauert eine Minute, und beim Speichern bist du automatisch in der Liga.',
     sestaviEkipo: 'Team aufstellen',
     sKateroEkipo: 'Mit welchem Team?',
-    vstopam: 'Trete bei …',
+    vstopam: 'Beitritt läuft …',
     pridruziSe: 'Mit dem Team {ime} beitreten',
   },
 

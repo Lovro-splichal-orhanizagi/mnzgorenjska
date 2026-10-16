@@ -217,4 +217,23 @@ export const tekme: NonNullable<Prevod['tekme']> = {
       vodi: 'Vodi {pozicija} — težina {utez} / {prag}',
     },
   },
+  // Razlaga točk in cene na mestu (components/Razlaga.tsx).
+  razlaga: {
+    zakaj: 'Zašto {tocke}? Objašnjenje bodova',
+    zapri: 'Zatvori',
+    ostalo: 'Ostalo',
+    brezPozicije: 'Pozicija još nije određena pa gol još ne donosi bodove. Kad zajednica potvrdi poziciju, bodovi se preračunaju.',
+    pravila1: 'Ovo kolo boduje se po starijim pravilima: čista mreža vratara +4, bez bodova za pobjedu.',
+    asistence: 'Asistencije potvrđuje zajednica glasovanjem — nepotvrđena asistencija još ne donosi bodove.',
+    zadnjiKrog: 'Zadnja utakmica: {krog}. kolo',
+    cena: {
+      zakaj: 'Zašto ova cijena?',
+      zdaj: 'Trenutna cijena',
+      izhodisce: 'Početna cijena',
+      izhodisceOpis: 'Početna cijena izračunana je iz minuta i bodova prošle sezone, u usporedbi s ostalim igračima lige.',
+      privzeta: 'Tko je prošle sezone odigrao manje od {minut} minuta, počinje s {cena} — osim ako je igrao u višoj ligi; tada dobiva cijenu iz nje.',
+      borza: 'Nakon svakog kola cijena se mijenja: +{korak} za svaka dva boda iznad 2 (najviše +{najvec} po kolu), −{korak} nakon lošeg kola ili loše forme i −{korak} ako igrač drugo kolo zaredom ne igra, a njegov klub igra.',
+      razpon: 'Cijena je uvijek između {od} i {do}.',
+    },
+  },
 }

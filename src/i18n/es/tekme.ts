@@ -175,7 +175,7 @@ export const tekme: NonNullable<Prevod['tekme']> = {
     status: {
       naslov: 'Mi estado como votante',
       utezOpis:
-        'Peso de cada voto; se suma al bono de experto si votas a un jugador de tu club.',
+        'Peso de cada voto; se le suma el bono de experto si votas a un jugador de tu club.',
       utez: 'peso {utez}×',
       tocnih: '({pravilni}/{vsi} acertados)',
       klubPoznam: 'Club que conozco bien (experto): mi voto para los jugadores de este club cuenta más:',
@@ -208,6 +208,25 @@ export const tekme: NonNullable<Prevod['tekme']> = {
       gumbPrior: ' · estimación {odstotek}%',
       gumbPoznavalec: ' · tu voto como experto cuenta más',
       vodi: 'Va ganando {pozicija}: peso {utez} / {prag}',
+    },
+  },
+  // Razlaga točk in cene na mestu (components/Razlaga.tsx).
+  razlaga: {
+    zakaj: '¿Por qué {tocke}? Desglose de puntos',
+    zapri: 'Cerrar',
+    ostalo: 'Otros',
+    brezPozicije: 'La posición aún no está fijada, así que el gol todavía no da puntos. Cuando la comunidad confirme la posición, los puntos se recalculan.',
+    pravila1: 'Esta jornada se puntúa con las reglas anteriores: portería a cero del portero +4, sin puntos por la victoria.',
+    asistence: 'Las asistencias las confirma la comunidad por votación: una asistencia sin confirmar todavía no da puntos.',
+    zadnjiKrog: 'Último partido: jornada {krog}',
+    cena: {
+      zakaj: '¿Por qué este precio?',
+      zdaj: 'Precio actual',
+      izhodisce: 'Precio inicial',
+      izhodisceOpis: 'El precio inicial sale de los minutos y puntos de la temporada pasada, comparados con los demás jugadores de la liga.',
+      privzeta: 'Quien jugó menos de {minut} minutos la temporada pasada empieza en {cena}, salvo que haya jugado en una liga superior; entonces el precio viene de allí.',
+      borza: 'Tras cada jornada el precio se mueve: +{korak} por cada dos puntos por encima de 2 (hasta +{najvec} por jornada), −{korak} tras una mala jornada o mala forma y −{korak} si el jugador no juega por segunda jornada seguida aunque su club sí juegue.',
+      razpon: 'El precio siempre está entre {od} y {do}.',
     },
   },
 }

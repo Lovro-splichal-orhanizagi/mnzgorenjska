@@ -215,4 +215,23 @@ export const tekme: NonNullable<Prevod['tekme']> = {
       vodi: 'Leading: {pozicija} — weight {utez} / {prag}',
     },
   },
+  // Razlaga točk in cene na mestu (components/Razlaga.tsx).
+  razlaga: {
+    zakaj: 'Why {tocke}? Points breakdown',
+    zapri: 'Close',
+    ostalo: 'Other',
+    brezPozicije: 'Position not set yet, so goals don\'t score points yet. Once the community confirms the position, the points are recalculated.',
+    pravila1: 'This round uses the older rules: goalkeeper clean sheet +4, no win bonus.',
+    asistence: 'Assists are confirmed by community vote — an unconfirmed assist doesn\'t score yet.',
+    zadnjiKrog: 'Last match: round {krog}',
+    cena: {
+      zakaj: 'Why this price?',
+      zdaj: 'Current price',
+      izhodisce: 'Starting price',
+      izhodisceOpis: 'The starting price comes from last season\'s minutes and points, compared with the other players in the league.',
+      privzeta: 'Players with fewer than {minut} minutes last season start at {cena} — unless they played in a higher league, then the price comes from there.',
+      borza: 'After every round the price moves: +{korak} for every two points above 2 (up to +{najvec} per round), −{korak} after a poor round or poor form, and −{korak} if the player misses a second round in a row while his club plays.',
+      razpon: 'The price always stays between {od} and {do}.',
+    },
+  },
 }
