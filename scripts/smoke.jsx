@@ -31,6 +31,7 @@ import ZivostSkupnosti from '../src/components/admin/Zivost'
 import Administracija from '../src/pages/Administracija'
 import PotrditevPrevzema from '../src/pages/PotrditevPrevzema'
 import PrevzemIgralca from '../src/components/PrevzemIgralca'
+import { ScoutIgralca } from '../src/components/ScoutIgralca'
 import Prevzemi from '../src/components/admin/Prevzemi'
 import Piva from '../src/pages/Piva'
 import PivskiZidAdmin from '../src/components/admin/Piva'
@@ -137,6 +138,7 @@ const strani = [
   // Te se do odgovora baze izrišejo prazne; ovoj preveri, da izris ne pade.
   ['Potrditev prevzema', () => <div><PotrditevPrevzema /></div>, '/claim'],
   ['Prevzem igralca', () => <div><PrevzemIgralca igralecId={1} slugLige="mladinci" anonimiziran={false} /></div>, '/player/1'],
+  ['Scout igralca', () => <div><ScoutIgralca glavni={1} /></div>, '/player/1'],
   ['Admin: prevzemi', () => <div><Prevzemi /></div>, '/admin'],
   ['Pivski zid', Piva, '/beers'],
   ['Admin: pivski zid', () => <div><PivskiZidAdmin /></div>, '/admin'],
