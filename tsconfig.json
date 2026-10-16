@@ -33,5 +33,5 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src", "api"]
+  "include": ["src", "api", "scout/src"]
 }

@@ -1,5 +1,6 @@
 node_modules
 dist
+dist-scout/
 .env
 .env.local
 .DS_Store

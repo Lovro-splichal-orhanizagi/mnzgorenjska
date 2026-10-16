@@ -32,6 +32,34 @@ stats.slff.eu {
 	reverse_proxy localhost:3100
 }
 
+# SLFF Scout (docs/scout.md): SPA that CI rsyncs to /srv/slff-scout/releases/<sha> and
+# switches `current`. Proxied A record `scout` in Cloudflare; the origin cert must cover
+# it (*.slff.eu). The API stays at api.slff.eu (cross-origin, like the mobile app).
+# A paid tool for logged-in clubs: nothing on it is for search engines.
+scout.slff.eu {
+	import origin_tls
+	root * /srv/slff-scout/current
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		?Cache-Control "no-cache"
+		X-Frame-Options DENY
+		Content-Security-Policy "frame-ancestors 'none'"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		X-Robots-Tag "noindex"
+	}
+	header -Server
+	# Hashed by Vite; a new build means new names.
+	header /assets/* Cache-Control "public, max-age=31536000, immutable"
+	# Only paths without a dot fall through to the SPA (as on slff.eu): a missing
+	# /assets/*.js is a 404, never index.html cached as immutable.
+	@spa not path *.*
+	rewrite @spa /index.html
+	file_server
+}
+
 # www is the same site twice for search engines: one address, a permanent redirect.
 www.slff.eu {
 	import origin_tls
