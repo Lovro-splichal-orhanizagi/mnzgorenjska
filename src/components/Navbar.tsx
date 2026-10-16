@@ -20,6 +20,9 @@ interface Povezava {
 // Glavne povezave so tiste, ki jih manager odpre vsak teden. Vse ostalo je
 // pod "Več": enajst enakovrednih povezav je pomenilo, da nobena ne izstopa.
 // Grb vodi domov, zato "Domov" ne potrebuje svoje povezave.
+/** Države, kjer zapisnik pozicij ne pozna in jih določi glasovanje (stran Pozicije v meniju). */
+const DRZAVE_Z_GLASOVANJEM = ['SI', 'HR', 'CZ', 'HU', 'AT', 'RS', 'RO', 'EE', 'PL', 'ES', 'LV', 'MK', 'GR', 'TR', 'UA', 'AM', 'AZ', 'DK', 'GB', 'MT', 'ME', 'BA', 'MD']
+
 const glavne: Povezava[] = [
   { pot: '/my-team', get naslov() { return t('aplikacija.meni.mojaEkipa') } },
   { pot: '/players', get naslov() { return t('aplikacija.meni.igralci') } },
@@ -156,8 +159,8 @@ export default function Navbar() {
   }, [uporabnikId])
 
   // Glasovanje o pozicijah je nadomestek za zapisnik, ki pozicij ne pozna
-  // (Slovenija, Hrvaška, Češka, Madžarska, Avstrija, Srbija, Romunija, Estonija, Poljska, Španija, Latvija). Slovaški zapisnik jih ima, zato stran tam nima kaj početi.
-  const zaDrzavo = drzava === 'SI' || drzava === 'HR' || drzava === 'CZ' || drzava === 'HU' || drzava === 'AT' || drzava === 'RS' || drzava === 'RO' || drzava === 'EE' || drzava === 'PL' || drzava === 'ES' || drzava === 'LV' || drzava === 'MK' ? ostale : ostale.filter((p) => p.pot !== '/positions')
+  // (vse države razen Slovaške). Slovaški zapisnik jih ima, zato stran tam nima kaj početi.
+  const zaDrzavo = drzava && DRZAVE_Z_GLASOVANJEM.includes(drzava) ? ostale : ostale.filter((p) => p.pot !== '/positions')
   // Administracija je samo na spletu, mobilna aplikacija je za igralce.
   // Pivski zid je le na spletu (kot gumb "Časti pivo", glej Pivo.tsx).
   const zSpletom = jeNativno() ? zaDrzavo : [...zaDrzavo, { pot: '/beers', get naslov() { return t('aplikacija.pivo.zid') } }]

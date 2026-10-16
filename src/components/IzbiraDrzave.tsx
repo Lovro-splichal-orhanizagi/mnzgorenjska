@@ -29,6 +29,17 @@ export function imeDrzave(koda: string): string {
   if (koda === 'ES') return t('aplikacija.izbiraDrzave.imena.ES')
   if (koda === 'LV') return t('aplikacija.izbiraDrzave.imena.LV')
   if (koda === 'MK') return t('aplikacija.izbiraDrzave.imena.MK')
+  if (koda === 'GR') return t('aplikacija.izbiraDrzave.imena.GR')
+  if (koda === 'TR') return t('aplikacija.izbiraDrzave.imena.TR')
+  if (koda === 'UA') return t('aplikacija.izbiraDrzave.imena.UA')
+  if (koda === 'AM') return t('aplikacija.izbiraDrzave.imena.AM')
+  if (koda === 'AZ') return t('aplikacija.izbiraDrzave.imena.AZ')
+  if (koda === 'DK') return t('aplikacija.izbiraDrzave.imena.DK')
+  if (koda === 'GB') return t('aplikacija.izbiraDrzave.imena.GB')
+  if (koda === 'MT') return t('aplikacija.izbiraDrzave.imena.MT')
+  if (koda === 'ME') return t('aplikacija.izbiraDrzave.imena.ME')
+  if (koda === 'BA') return t('aplikacija.izbiraDrzave.imena.BA')
+  if (koda === 'MD') return t('aplikacija.izbiraDrzave.imena.MD')
   return koda
 }
 
