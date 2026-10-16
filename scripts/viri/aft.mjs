@@ -1,5 +1,5 @@
 // Vir: Асоціація футболу Тернопільщини (AFT) — aft.com.ua, Ukrajina
-// (Ternopilska oblast). Glej CLAUDE.md (Ukrajina — vir aft).
+// (Ternopilska oblast). Glej docs/viri/ukrajina.md (vir aft).
 //
 // AFT vodi oblastno prvenstvo (Вища ліга, Перша ліга). Sezona je KOLEDARSKO
 // leto (maj–oktober): "2026", ne "2026/27" (`competitions.sezona_koledarska`).

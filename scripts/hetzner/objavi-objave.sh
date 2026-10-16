@@ -5,7 +5,7 @@
 #   scripts/hetzner/objavi-objave.sh
 #
 # Iz posodobljenega main. Prejšnjo različico shrani v /opt/slff/backup-objave/<čas>/.
-# /opt/slff-objave/.env ustvari lastnik enkrat (glej CLAUDE.md *Samodejne objave*);
+# /opt/slff-objave/.env ustvari lastnik enkrat (glej docs/objave.md);
 # skripta ga ne piše in ne bere.
 set -euo pipefail
 cd "$(dirname "$0")/../.."
@@ -21,7 +21,7 @@ grep -q "image: $SLIKA" scripts/hetzner/objave/docker-compose.yml \
   || { echo "docker-compose.yml naj ima image: $SLIKA (playwright iz package-lock.json)"; exit 1; }
 CILJ=/opt/slff-objave
 CAS=$(date +%Y%m%d-%H%M%S)
-ssh SLFF "test -f $CILJ/.env || { echo 'Manjka $CILJ/.env (ustvari ga lastnik, glej CLAUDE.md)'; exit 1; }; \
+ssh SLFF "test -f $CILJ/.env || { echo 'Manjka $CILJ/.env (ustvari ga lastnik, glej docs/objave.md)'; exit 1; }; \
   mkdir -p /opt/slff/backup-objave && { [ -d $CILJ/app/scripts ] && cp -a $CILJ/app/scripts /opt/slff/backup-objave/$CAS || true; } \
   && rm -rf $CILJ/app.novo && mkdir -p $CILJ/app.novo"
 rsync -aR "${DATOTEKE[@]}" "SLFF:$CILJ/app.novo/"

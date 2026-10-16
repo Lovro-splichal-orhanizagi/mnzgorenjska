@@ -5,7 +5,7 @@
 // Prvo ligo (raven 2) in amaterske lige (Amateur League A in B). Premier Liga
 // je na svojem spletišču (premierleague.ffa.am, ista predloga strani tekme,
 // šifra lige je blok strani tekem — glej razdelek "Premier Liga" spodaj). HTML
-// iz strežnika, spredaj Cloudflare brez izziva. Glej CLAUDE.md (Armenija — vir ffa).
+// iz strežnika, spredaj Cloudflare brez izziva. Glej docs/viri/armenija.md.
 //
 // SEZONA je jesen–pomlad (avgust–maj): "2026/27".
 //
@@ -25,7 +25,7 @@
 //
 // IZSTOP KLUBA: klub, ki je izstopil (Hayq 2026/27 po 4. krogu), ostane v
 // razporedu z vrsticami brez termina, izida in povezave tudi v že odigranih
-// krogih. Njegove neodigrane tekme izpustimo (CLAUDE.md: ob odstopu kluba
+// krogih. Njegove neodigrane tekme izpustimo (docs/viri/armenija.md: ob odstopu kluba
 // neodigrane tekme proč, odigrane ostanejo); tehnični izidi pred izstopom so
 // kontumacije.
 //

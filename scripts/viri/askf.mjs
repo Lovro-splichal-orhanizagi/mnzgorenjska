@@ -1,7 +1,7 @@
 // Vir: pokrajinske amaterske zveze (ASKF) v Turčiji na platformi FYS
 // ("Futbol Yönetim Sistemi") — Çanakkale (canakkaleaskf.org) in Aydın
 // (aydinaskf.com). Obe spletišči sta isti program ASP.NET WebForms, zato en vir;
-// spletišče izbere šifra lige. Glej CLAUDE.md (Turčija — vir askf).
+// spletišče izbere šifra lige. Glej docs/viri/turcija.md.
 //
 // Pokrajinske amaterske lige (Süper Amatör, 1. Amatör, 2. Amatör) niso na
 // tff.org (vir `tff` ima le 2. Lig, 3. Lig in PGL); TFF 3. Lig in PGL, ki ju

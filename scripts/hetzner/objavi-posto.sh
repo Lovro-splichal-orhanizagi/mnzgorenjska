@@ -5,7 +5,7 @@
 #   scripts/hetzner/objavi-posto.sh
 #
 # Iz posodobljenega main. Prejšnjo različico shrani v /opt/slff/backup-posta/<čas>/.
-# /opt/slff-posta/.env ustvari lastnik enkrat (glej CLAUDE.md *Vrsta pošte*);
+# /opt/slff-posta/.env ustvari lastnik enkrat (glej docs/posta-klubom.md);
 # skripta ga ne piše in ne bere.
 set -euo pipefail
 cd "$(dirname "$0")/../.."
@@ -23,7 +23,7 @@ for f in "${DATOTEKE[@]}"; do node --check "$f"; done
 SUPABASE_JS=$(node -p "require('./package-lock.json').packages['node_modules/@supabase/supabase-js'].version")
 CILJ=/opt/slff-posta
 CAS=$(date +%Y%m%d-%H%M%S)
-ssh SLFF "test -f $CILJ/.env || { echo 'Manjka $CILJ/.env (ustvari ga lastnik, glej CLAUDE.md)'; exit 1; }; \
+ssh SLFF "test -f $CILJ/.env || { echo 'Manjka $CILJ/.env (ustvari ga lastnik, glej docs/posta-klubom.md)'; exit 1; }; \
   mkdir -p /opt/slff/backup-posta && { [ -d $CILJ/app/scripts ] && cp -a $CILJ/app/scripts /opt/slff/backup-posta/$CAS || true; } \
   && rm -rf $CILJ/app.novo && mkdir -p $CILJ/app.novo"
 rsync -aR "${DATOTEKE[@]}" "SLFF:$CILJ/app.novo/"
