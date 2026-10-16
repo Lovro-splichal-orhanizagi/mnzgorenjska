@@ -316,6 +316,11 @@
   šele po uspešni posodobitvi. `imeHash`/`regHash` v
   `scripts/anonimizacija.mjs` morata ostati enaka SQL
   `anonimizacijski_kljuc` (smoke in `test:varnost`)
+- `players.scout_skrit` → ugovor proti Scoutu (migracija 20261016140100):
+  stroj izloči vso osebo (ista šifra v viru ali ime in klub v državi), fantasy
+  igra ostane. Shema `scout` je zaprta (brez pravic za `anon`/`authenticated`,
+  RLS s politiko le za vlogo `scout_stroj`); piše jo delavec `slff-scout`,
+  `scout.drzave` pove, katere države so odprte. Podrobnosti: `docs/scout.md`
 - **Prevzem profila igralca** ("To sem jaz", migracija 20261012091100):
   `zahtevki_igralca` (en potrjen na igralca IN na uporabnika, en odprt na
   uporabnika; delna unikatna kazala), piše le prek RPC `prevzemi_igralca`,

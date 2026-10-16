@@ -328,6 +328,27 @@ Bistvo: **objava le slavi** (nikoli padec cene ali slaba predstava, nikoli
 mladinske lige, anonimizirani igralci, hišne ekipe, imena uporabnikov);
 `npm run preizkus-objav`; CI je ne objavi (`scripts/hetzner/objavi-objave.sh`).
 
+## SLFF Scout (stroj)
+
+Delavec `slff-scout` (Python 3.12, `scout/stroj/`) vsak dan ob 11:00 (po
+nočnih uvozih) izračuna moč lig (tedensko), Elo, kazalnike, indeks, podobne
+in vrzeli ter jih zapiše v zaprto shemo `scout` kot novo različico
+(`scout.modeli`) v eni transakciji. Vse ostalo (izločanje, backtest, spomin,
+objava, testi): `docs/scout.md`. Bistvo:
+
+- **Mladinske lige, osebe z vrstico v mladinski ligi, `scout_skrit` in
+  anonimizirani (tudi ista oseba v drugih ligah) ne vstopijo v izračun.**
+- Moč lig je **lestvica znotraj države**; primerjav in projekcij čez države
+  ni. Backtest je zdaj `padel` (moč lig ne premaga ablacije za 1 %), zato
+  model ni objavljen.
+- Shema `scout` ni dostopna `anon`/`authenticated`; delavec se prijavi kot
+  `scout_stroj` (geslo, če sploh, ročno, nikoli v git). Država se odpre v
+  `scout.drzave` — **pred drugo državo mora pisanje teči pretočno**, sicer
+  delavec preseže `mem_limit: 1g`.
+- `ravenLige` ima prepis v `scout/stroj/stroj/ravni.py` (test enakosti).
+  CI ga ne objavi (`scripts/hetzner/objavi-scout.sh`) in Pythonovih testov ne
+  poganja: `cd scout/stroj && .venv/bin/pytest -q`.
+
 ## Poti
 
 Poti so **angleške** (`/my-team`, `/players`, `/match/:id` …), ker jih vidi
