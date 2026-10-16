@@ -11,6 +11,7 @@ import { Link } from '../components/Povezava'
 import Avatar from '../components/Avatar'
 import Grb from '../components/Grb'
 import IzbiraJezika from '../components/IzbiraJezika'
+import Trgovine from '../components/Trgovine'
 import IzbiraDrzave from '../components/IzbiraDrzave'
 import NastavitveObvestil from '../components/NastavitveObvestil'
 import { UpravljanjeNarocnine } from '../components/PreverjeniProfil'
@@ -177,6 +178,10 @@ function Nastavitve({ uporabnikId, email, zGeslom }: { uporabnikId: string; emai
 
       <Razdelek naslov={t('racun.nastavitve.obvestilaNaslov')}>
         <NastavitveObvestil vgrajeno />
+        {/* Obvestila na telefon najzanesljiveje pridejo v aplikaciji. */}
+        <div className="flex flex-wrap gap-2">
+          <Trgovine />
+        </div>
       </Razdelek>
 
       {profil && (

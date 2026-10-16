@@ -3,16 +3,26 @@
 //
 //   node scripts/vrsta-poste-klubom.mjs --drzava AT              # načrt (le številke)
 //   node scripts/vrsta-poste-klubom.mjs --drzava EE --pisi [--poslji-od 2027-03-01T08:00:00Z]
+//   node scripts/vrsta-poste-klubom.mjs --drzava HU --suho --koda 67/20/33915 [--najvec 5]
+//     (brez baze: prebere ligo in nekaj strani klubov, izpiše zakrite naslove)
 //
 // Naslov je **le uradni naslov kluba**, nikoli osebni naslov funkcionarja:
 // - AT: vereine.oefb.at/<društvo>/News/ → blok "Kontakt" (EMAIL), ne
 //   "funktionaere". Šifro društva da razpored lige (heimMannschaftUrl).
-//   Bundesliga in 2. Liga sta izpuščeni (pisarne profesionalnih klubov), z
+//   Bundesliga in 2. Liga (in HU NB I, NB II) so izpuščene (pisarne profesionalnih klubov), z
 //   njima vsak naslov, ki ga ima tudi klub teh dveh lig. 1,5 s med stranmi.
 // - EE: stran ekipe jalgpall.ee/voistlused/<liga>/team/<id> → "E-post"
 //   (naslov kluba), ne "Esindaja" (zastopnik, osebni naslov). Povezave ekip
 //   so v razporedu lige. robots.txt: Crawl-Delay 5 (vir.premorMs); ajax.php
 //   in /otsing ne beremo. Estonske lige so neaktivne — maili čakajo na vklop.
+// - HU: adatbank.mlsz.hu/club/<liga>/1/<ekipa>.html → "Klub adatok" E-mail
+//   (naslov, ki ga klub vodi pri MLSZ). Ekipe da stranski seznam strani 1.
+//   kroga. Crawl-delay 1 (beremo po 1,5 s); ostanek "Too many connections"
+//   ni stran kluba — umik in ponovitev, nato klub preskočimo (brez vrstice,
+//   da ga naslednji zagon prebere znova). Le aktivne lige.
+// - HR, RS: uradnega naslova kluba vir ne objavi (Semafor ima pri klubu le
+//   naslov in stadion, fsb/fss.rs nič); ŽNS ga imajo le v PDF "adresar
+//   klubova" — ni podprto.
 // 403, 429 ali izziv ustavi branje takoj (izhod 2) — ne obhajamo.
 // Teče na strežniku (docker compose run --rm posta …, scripts/hetzner/posta/).
 //
@@ -28,6 +38,7 @@ import { vseVrstice } from './strani.mjs'
 import { mapaKlubov, razpakiraj } from './klubi.mjs'
 import oefb, { naslovRazporeda as razporedAt, predhodniPodatki, imeEkipe, kljucKlubaAt } from './viri/oefb.mjs'
 import jalgpall, { naslovRazporeda as razporedEe, jeIzziv } from './viri/jalgpall.mjs'
+import mlsz, { naslovKroga, naslovKluba, ekipeLige, emailKluba, UMIK_MS } from './viri/mlsz.mjs'
 import { OD, stareZaOpomnik } from './posta-klubom.mjs'
 
 const arg = (ime) => {
@@ -38,28 +49,18 @@ const drzava = arg('--drzava')
 const pisi = process.argv.includes('--pisi')
 const posljiOd = arg('--poslji-od') || null
 const env = process.env
-if (!['AT', 'EE'].includes(drzava)) {
-  console.error('Uporaba: --drzava AT|EE [--pisi] [--poslji-od <ISO>]')
+if (!['AT', 'EE', 'HU'].includes(drzava)) {
+  console.error('Uporaba: --drzava AT|EE|HU [--pisi] [--poslji-od <ISO>]  (HR in RS: vir naslovov klubov ne objavi)')
   process.exit(1)
 }
 if (posljiOd && Number.isNaN(Date.parse(posljiOd))) {
   console.error(`--poslji-od ni datum: ${posljiOd}`)
   process.exit(1)
 }
-if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
-  console.error('Manjka SUPABASE_URL ali SUPABASE_SERVICE_ROLE_KEY.')
-  process.exit(1)
-}
-const db = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } })
-const preveri = ({ data, error }) => {
-  if (error) throw new Error(error.message)
-  return data
-}
-
-const IZPUSTI = new Set(['at-bundesliga', 'at-2-liga'])
+const IZPUSTI = new Set(['at-bundesliga', 'at-2-liga', 'hu-nb1', 'hu-nb2'])
 const REZERVA = /(\b1[b-d]\b|\(1b\)|\bII+\b|Juniors|Amateure|\bU2[0-3]\b)/
 const VELJAVEN = /^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i
-const vir = drzava === 'AT' ? oefb : jalgpall
+const vir = { AT: oefb, EE: jalgpall, HU: mlsz }[drzava]
 
 // 403/429 ustavi takoj, brez ponovitve (prenesiSPonovitvami bi 429 ponovil).
 class Zavrnitev extends Error {}
@@ -87,6 +88,47 @@ async function stran(url) {
     process.exit(2)
   }
   return o.ok ? t : null
+}
+
+// HU: ada1bank ob preobremenitvi vrne 200 z "Too many connections" — umik in
+// ponovitev (kot stranKroga v viru); vztrajen ostanek vrne null.
+async function stranHu(url, prava) {
+  for (const ms of [0, ...UMIK_MS]) {
+    if (ms) await new Promise((r) => setTimeout(r, ms))
+    const h = await stran(url)
+    if (prava(h)) return h
+  }
+  return null
+}
+const ekipeHu = async (koda) => ekipeLige(await stranHu(naslovKroga(koda, 1), (h) => ekipeLige(h).length > 0))
+const naslovHu = async (koda, id) => emailKluba(await stranHu(naslovKluba(koda, id), (h) => emailKluba(h) !== undefined))
+
+// Preizkus brez baze (bere le javne strani, naslove zakrije).
+if (process.argv.includes('--suho')) {
+  const koda = arg('--koda')
+  if (drzava !== 'HU' || !koda) {
+    console.error('--suho zna le: --drzava HU --suho --koda <évad/sz/verseny> [--najvec 5]')
+    process.exit(1)
+  }
+  const ekipe = await ekipeHu(koda)
+  let najdenih = 0
+  for (const e of ekipe.slice(0, Number(arg('--najvec') ?? 5))) {
+    const email = await naslovHu(koda, e.id)
+    if (email) najdenih++
+    console.log(`${e.ime}\t${email === undefined ? '? (ni strani kluba)' : email ? email.replace(/^(.)[^@]*/, '$1***') : '-'}`)
+  }
+  console.log(`\nHU ${koda}: ekip ${ekipe.length}, prebranih ${Math.min(ekipe.length, Number(arg('--najvec') ?? 5))}, z naslovom ${najdenih}`)
+  process.exit(0)
+}
+
+if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
+  console.error('Manjka SUPABASE_URL ali SUPABASE_SERVICE_ROLE_KEY.')
+  process.exit(1)
+}
+const db = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } })
+const preveri = ({ data, error }) => {
+  if (error) throw new Error(error.message)
+  return data
 }
 
 // jalgpall.ee ima en proračun branja (Crawl-Delay 5) za vse nas skupaj. Uvozi
@@ -131,7 +173,7 @@ if (drzava === 'EE') {
 
 // --- lige, klubi, igralci z nastopi ---------------------------------------------
 let q = db.from('competitions').select('id, slug, active, source_league_code').like('slug', `${drzava.toLowerCase()}-%`).order('slug')
-if (drzava === 'AT') q = q.eq('active', true)
+if (drzava !== 'EE') q = q.eq('active', true)
 const lige = preveri(await q)
 const obstojeci = await vseVrstice((od, do_) =>
   db.from('klub_stik').select('id, team_id, email, drzava, v_vrsti, posiljatelj, stanje, opomba').order('id').range(od, do_),
@@ -156,9 +198,16 @@ for (const l of lige) {
   const beri = ekipe.filter((e) => profi || (!imaVrstico.has(e.team_id) && igralcev.get(e.team_id)))
   if (!beri.length) continue
 
-  const html = await stran(drzava === 'AT' ? razporedAt(l.source_league_code.split('+')[0]) : razporedEe(l.source_league_code))
-  const povezave = new Map() // ključ kluba → šifra društva (AT) ali naslov strani ekipe (EE)
-  if (drzava === 'AT') {
+  const html = drzava === 'HU' ? null : await stran(drzava === 'AT' ? razporedAt(l.source_league_code.split('+')[0]) : razporedEe(l.source_league_code))
+  const povezave = new Map() // ključ kluba → šifra društva (AT), naslov strani ekipe (EE) ali šifra ekipe (HU)
+  if (drzava === 'HU') {
+    const ekipeVira = await ekipeHu(l.source_league_code)
+    if (!ekipeVira.length) {
+      console.log(`${l.slug}\t(stran kroga ni prebrana — liga preskočena)`)
+      continue
+    }
+    for (const x of ekipeVira) povezave.set(mlsz.kljucKluba(x.ime), x.id)
+  } else if (drzava === 'AT') {
     for (const p of predhodniPodatki(html ?? ''))
       for (const t of [...(p.ergebnisse ?? []), ...(p.spiele ?? [])])
         for (const [ime, url] of [[t.heimMannschaft, t.heimMannschaftUrl], [t.gastMannschaft, t.gastMannschaftUrl]]) {
@@ -184,6 +233,16 @@ for (const l of lige) {
           naslovDrustva.set(s, h?.match(/"Kontakt":\{"bezeichnung":"Kontakt","infos":\{[^}]*?"EMAIL":\["([^"]+)"/)?.[1] ?? null)
         }
         email = naslovDrustva.get(s)
+      }
+    } else if (drzava === 'HU') {
+      const id = povezave.get(mlsz.kljucKluba(e.name))
+      if (id) {
+        virUrl = naslovKluba(l.source_league_code, id)
+        email = await naslovHu(l.source_league_code, id)
+        if (email === undefined) {
+          console.log(`${l.slug}\t${e.name}\t? (ni strani kluba — naslednjič)`)
+          continue
+        }
       }
     } else {
       virUrl = povezave.get(e.team_id) ?? null
