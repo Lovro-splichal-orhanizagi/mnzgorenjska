@@ -307,13 +307,23 @@ scout.slff.eu streže ta commit — a le ob spremenljivki repozitorija
    ni v CI): `caddy validate`, kopija stare, `systemctl reload caddy`. Cela
    stran je `noindex` (orodje za prijavljene klube), SPA le za poti brez pike.
 4. **GoTrue**: `https://scout.slff.eu/**` v `ADDITIONAL_REDIRECT_URLS`
-   (`/opt/supabase/.env`, nato znova zaženi `auth`). Brez tega GoTrue
+   (`/opt/supabase/.env`), nato `cd /opt/supabase && docker compose -f
+   docker-compose.yml -f docker-compose.slff.yml up -d auth`. Brez tega GoTrue
    `redirect_to` tiho zavrže in prijava z Googlom pristane na slff.eu (seja
    tam, ne v Scoutu), brez napake.
 5. `SCOUT_OBJAVA=1` (`gh variable set SCOUT_OBJAVA --body 1`): aplikacija je
    dosegljiva, a še ne oznanjena; plačilo javi napako, dokler ni Stripa.
-6. **Funkciji** `scout-placilo` in `stripe-webhook`
-   (`scripts/hetzner/objavi-funkcije.sh`) in **Stripe**:
+6. **Ročni preizkus v testnem načinu Stripe — LOKALNO**, ne na produkciji.
+   Produkcijski `STRIPE_SECRET_KEY` je skupen s plačili preverjenih igralcev,
+   zato ga **nikoli ne zamenjaj s testnim**. Lokalni sklad (`npx supabase
+   start`), `npx supabase functions serve --no-verify-jwt --env-file <datoteka>`
+   (testni `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` iz `stripe listen`,
+   `SCOUT_URL=http://localhost:5174`), `stripe listen --forward-to
+   http://127.0.0.1:54321/functions/v1/stripe-webhook`, `npm run dev:scout`.
+   V testnem načinu ustvari izdelek, ceni in konfiguracijo portala (kot v
+   točki 7) in preizkusi preizkus, sedeže, plačilo, portal in preklic.
+7. **Stripe v živem načinu na produkciji**, funkciji `scout-placilo` in
+   `stripe-webhook` (`scripts/hetzner/objavi-funkcije.sh`):
    - izdelek "SLFF Scout" (metadata `app=slff-scout`), ceni z `lookup_key`
      `slff_scout_klub_mesec` (3900, mesečno) in `slff_scout_klub_sezona`
      (29000, letno), obe `tax_behavior=exclusive` (Checkout druge zavrne);
@@ -321,12 +331,13 @@ scout.slff.eu streže ta commit — a le ob spremenljivki repozitorija
    - lastna konfiguracija Billing Portala z metapodatkom `app=slff-scout`
      (preklic ob koncu obdobja, brez menjave paketa). Brez nje gumb portala
      na `/account` javi napako — preklic mora biti vedno mogoč;
-   - Stripe Tax aktiven (`/v1/tax/settings`: `status` `active`, država
-     `SI`); sicer Checkout z `automatic_tax` sejo zavrne.
-7. **Ročni preizkus v testnem načinu Stripe** na scout.slff.eu (preizkus,
-   sedeži, plačilo, portal, preklic). Živi ključi so lastnikova odločitev in
-   veljajo tudi za preverjene igralce.
-8. Šele nato oznanitev klubom.
+   - Stripe Tax aktiven v živem načinu (`/v1/tax/settings`: `status`
+     `active`, država `SI`); sicer Checkout z `automatic_tax` sejo zavrne.
+8. **Preverjanje na produkciji brez plačila**: na scout.slff.eu se Checkout
+   odpre s pravim zneskom in vrstico DDV (nato nazaj, brez plačila), portal
+   se odpre (gumb je le pri klubu s kupcem Stripe; sicer preveri, da živa
+   konfiguracija portala obstaja).
+9. Šele nato oznanitev klubom.
 
 ## Spomin
 

@@ -1985,13 +1985,15 @@ Počakaj na neodvisen pregled in zelen CI (`objavi-scout` je preskočen, dokler 
 
 ---
 
-### Task 8: Objava in obvezen ročni preizkus v testnem načinu Stripe
+### Task 8: Objava, obvezen lokalni preizkus v testnem načinu Stripe in živi katalog
 
 **Files:** brez (operativni koraki po združitvi; lastnik pri korakih, označenih *lastnik*).
 
 **Interfaces:**
-- Consumes: združena 3a in 3b, `ssh slff`, Cloudflare, `stripe -p slff` (testni način), `gh`.
-- Produces: `https://scout.slff.eu` v zraku, funkciji objavljeni, katalog Stripe (test), zapisnik ročnega preizkusa.
+- Consumes: združena 3a in 3b, `ssh slff`, Cloudflare, `stripe -p slff` (testni način lokalno, `--live` za produkcijo), lokalni Supabase sklad, `gh`.
+- Produces: `https://scout.slff.eu` v zraku, funkciji objavljeni, zapisnik lokalnega preizkusa (test), katalog in portal Stripe v živem načinu, preverjanje na produkciji brez plačila.
+
+**Produkcijski `STRIPE_SECRET_KEY` se nikoli ne zamenja s testnim**: je skupen s plačili preverjenih igralcev. Testni način teče le lokalno (Step 7–8).
 
 - [ ] **Step 1: DNS (Claude prek lastnikovega brskalnika, po izrecni potrditvi) in certifikat**
 
@@ -2066,7 +2068,9 @@ curl -s -o /dev/null -w '%{http_code}\n' -X POST https://api.slff.eu/functions/v
 
 Expected: obe objavi `OPTIONS → 200`; webhook `400` (podpis, ne 401); `scout-placilo` brez JWT `401`.
 
-- [ ] **Step 7: Katalog Stripe (testni način)**
+- [ ] **Step 7: Katalog Stripe (testni način, za lokalni preizkus)**
+
+`stripe -p slff` brez `--live` piše v testni način; isti ukazi z `--live` so Step 9.
 
 ```bash
 stripe -p slff prices list --lookup-keys slff_scout_klub_mesec --lookup-keys slff_scout_klub_sezona
@@ -2076,9 +2080,9 @@ stripe -p slff prices create -d product="$IZDELEK" -d currency=eur -d unit_amoun
 stripe -p slff prices list --lookup-keys slff_scout_klub_mesec --lookup-keys slff_scout_klub_sezona | grep -E '"lookup_key"|"unit_amount"|"livemode"'
 ```
 
-Expected: prvi `list` prazen (če ni, izdelka ne ustvarjaj znova); na koncu dve ceni, `"livemode": false`, `"interval": "year"` pri sezoni. Webhook endpoint `https://api.slff.eu/functions/v1/stripe-webhook` že obstaja za preverjene igralce; dogodki so isti.
+Expected: prvi `list` prazen (če ni, izdelka ne ustvarjaj znova); na koncu dve ceni, `"livemode": false`, `"interval": "year"` pri sezoni. Lokalno dogodke posreduje `stripe listen` (Step 8); na produkciji webhook endpoint `https://api.slff.eu/functions/v1/stripe-webhook` že obstaja za preverjene igralce.
 
-Portal Scouta (lastna konfiguracija, da kupec ne more preklopiti na drugo ceno ali izdelek; privzete konfiguracije na produkciji ni treba preverjati). Ustvari se ročno enkrat na način, kot katalog, ker je enkratna nastavitev računa; funkcija jo le poišče po metapodatku:
+Portal Scouta (lastna konfiguracija, da kupec ne more preklopiti na drugo ceno ali izdelek; privzete konfiguracije na produkciji ni treba preverjati). Ustvari se ročno enkrat na način (test tu, živi v Step 9), kot katalog, ker je enkratna nastavitev računa; funkcija jo le poišče po metapodatku:
 
 ```bash
 stripe -p slff get /v1/billing_portal/configurations -d active=true -d limit=100 | grep -c '"app": "slff-scout"'
@@ -2106,21 +2110,39 @@ stripe -p slff get /v1/tax/settings | grep -E '"status"|"country"'
 
 Expected: `"status": "active"` in `"country": "SI"`. Če ni `active`, ustavi se: lastnik v Stripe (Settings → Tax) vklopi Stripe Tax z izvorom SI (registracija SI, za EU OSS); brez tega Scout ne zaračuna DDV in plačila ni.
 
-- [ ] **Step 8: Obvezen ročni preizkus (testni ključi; pred živimi ključi ga ni mogoče preskočiti)**
+- [ ] **Step 8: Obvezen ročni preizkus LOKALNO v testnem načinu (pred oznanitvijo ga ni mogoče preskočiti)**
 
-Predpogoj: na produkciji je objavljen model (sicer klub ne vidi nikogar):
+Lokalni sklad in funkcije s testnim ključem (datoteka okolja v začasni mapi, ne v git):
 
 ```bash
-ssh slff 'docker exec supabase-db psql -U supabase_admin -d postgres -Atc "select count(*), max(ustvarjen_at) from scout.modeli where objavljen"'
+cd /Users/lukazlatecan/Work/SLFF/mnzgorenjska
+npx supabase start
+stripe -p slff listen --forward-to http://127.0.0.1:54321/functions/v1/stripe-webhook   # izpiše whsec_…, pusti teči
+cat > "$TMPDIR/scout-funkcije.env" <<ENV
+STRIPE_SECRET_KEY=<testni ključ računa slff, sk_test_…>
+STRIPE_WEBHOOK_SECRET=<whsec_ iz stripe listen>
+SCOUT_URL=http://localhost:5174
+SITE_URL=http://localhost:5173
+ENV
+npx supabase functions serve --no-verify-jwt --env-file "$TMPDIR/scout-funkcije.env"   # pusti teči
+npm run dev:scout
 ```
 
-Expected: število ≥ 1. Če je 0 (backtest `padel`), se ustavi in javi lastniku: Scout brez objavljenega modela nima vsebine (`docs/scout.md`, *Backtest*).
+Expected: `STRIPE_SECRET_KEY` se začne s `sk_test_` ali `rk_test_`. Lokalna baza: `PSQL="psql postgresql://postgres:postgres@127.0.0.1:54322/postgres"`.
+
+Predpogoj: lokalno je objavljen model (sicer klub ne vidi nikogar):
+
+```bash
+$PSQL -Atc "select count(*), max(ustvarjen_at) from scout.modeli where objavljen"
+```
+
+Expected: število ≥ 1. Če je 0, poženi stroj lokalno (`docs/scout.md`); če backtest `padel`, se ustavi in javi lastniku.
 
 Testni klub za lastnikov račun (e-naslov se vpiše ob zagonu, ne v git ali zgodovino ukazov):
 
 ```bash
-printf 'E-naslov tvojega računa na slff.eu: '; read -r SCOUT_TEST_EMAIL
-ssh slff "docker exec -i supabase-db psql -U supabase_admin -d postgres -X -v ON_ERROR_STOP=1 -v email='$SCOUT_TEST_EMAIL'" <<'SQL'
+printf 'E-naslov lokalnega računa: '; read -r SCOUT_TEST_EMAIL
+$PSQL -X -v ON_ERROR_STOP=1 -v email="$SCOUT_TEST_EMAIL" <<'SQL'
 insert into teams (name, short_name, country_id)
 values ('SLFF Scout preizkus', 'SSP', (select id from countries where code = 'SI')) returning id as klub \gset
 insert into klubski_racuni (user_id, team_id) select id, :klub from auth.users where email = :'email';
@@ -2128,9 +2150,9 @@ select :klub as testni_klub, (select count(*) from klubski_racuni where team_id 
 SQL
 ```
 
-Expected: `racunov = 1`. Nato v brskalniku na `https://scout.slff.eu` odkljukaj vsak korak:
+Expected: `racunov = 1`. Nato v brskalniku na `http://localhost:5174` odkljukaj vsak korak:
 
-1. `/login` z e-pošto in geslom → `/account` pokaže "SLFF Scout preizkus" in ponudbo preizkusa; odjava, nato prijava z Googlom vrne na `/account`.
+1. `/login` z e-pošto in geslom → `/account` pokaže "SLFF Scout preizkus" in ponudbo preizkusa; odjava in ponovna prijava (Google se preveri na produkciji, Step 9).
 2. Brez kljukice pogojev je gumb onemogočen; s kljukico → "Preizkus, velja do …" (14 dni), sedež "(ti)", v glavi Iskanje, Vrzeli, Opazovani.
 3. Iskanje brez filtrov vrne slovenske igralce z utemeljitvijo; filter Napadalci + Samo odprti za prestop vrne le odprte (ali "Za te pogoje ni igralcev."); "Naslednjih 25" doda vrstice.
 4. Profil: tabela sezon, "Pokaži podobne" vrne seznam; "Dodaj na seznam" → `/watchlist` ga pokaže; "Odstrani" ga odstrani.
@@ -2144,22 +2166,21 @@ Expected: `racunov = 1`. Nato v brskalniku na `https://scout.slff.eu` odkljukaj 
 Preveri bazo in dnevnik webhooka:
 
 ```bash
-ssh slff "docker exec -i supabase-db psql -U supabase_admin -d postgres -X" <<'SQL'
+$PSQL -X <<'SQL'
 select n.paket, n.obdobje, n.velja_do <= now() as konec, n.stripe_subscription_id is not null as stripe
   from scout.narocnine n join teams t on t.id = n.team_id where t.name = 'SLFF Scout preizkus';
 select vrsta, count(*), bool_or(parametri ? 'igralci') as igralci from scout.dnevnik d join teams t on t.id = d.team_id
  where t.name = 'SLFF Scout preizkus' group by vrsta order by vrsta;
 select tip, obdelano_at is not null as obdelano from stripe_dogodki order by created_at desc limit 8;
 SQL
-ssh slff 'docker logs --since 1h supabase-edge-functions 2>&1 | grep -E "stripe-webhook|scout-placilo" | tail -10'
 ```
 
-Expected: `klub | mesec | t | t`; dnevnik ima `igralec`, `isci`, `opazovani`, `opazuj`, `podobni`, `vrzeli`, vrstice `isci` imajo `parametri.igralci`; zadnji dogodki obdelani; v dnevniku funkcij `checkout.session.completed … → aktivna` in `customer.subscription.deleted … → koncano`, brez napak. Če kateri korak pade: popravek kot nov PR, nato ta korak znova.
+Expected: `klub | mesec | t | t`; dnevnik ima `igralec`, `isci`, `opazovani`, `opazuj`, `podobni`, `vrzeli`, vrstice `isci` imajo `parametri.igralci`; zadnji dogodki obdelani; v izpisu `functions serve` `checkout.session.completed … → aktivna` in `customer.subscription.deleted … → koncano`, brez napak. Če kateri korak pade: popravek kot nov PR, nato ta korak znova.
 
 Počisti testni klub (Stripe testni kupci ostanejo v testnem načinu):
 
 ```bash
-ssh slff "docker exec -i supabase-db psql -U supabase_admin -d postgres -X -v ON_ERROR_STOP=1" <<'SQL'
+$PSQL -X -v ON_ERROR_STOP=1 <<'SQL'
 select id as klub from teams where name = 'SLFF Scout preizkus' \gset
 delete from scout.dnevnik where team_id = :klub;
 delete from scout.narocnine where team_id = :klub;
@@ -2168,9 +2189,14 @@ delete from teams where id = :klub;
 SQL
 ```
 
-- [ ] **Step 9: Živi način (ni del tega načrta)**
+- [ ] **Step 9: Živi katalog na produkciji, preverjanje brez plačila, oznanitev**
 
-Preklop `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET` na žive ključe velja hkrati za preverjene igralce in Scout, zato ga sproži le lastnik, ko: (a) je Step 8 v celoti uspel, (b) so odprte točke preverjenih igralcev zaprte (`docs/podatkovni-model.md`, *Pred vklopom v živo*), (c) je lastnik potrdil besedilo pogojev, (d) je Stripe Tax v živem načinu aktiven (SI, OSS). Ob preklopu se v živem načinu ustvari isti katalog in ista konfiguracija portala (Step 7 z `--live`).
+Predpogoj: Step 8 je v celoti uspel in produkcijski ključ je živ (`sk_live_`/`rk_live_`; preklop je lastnikova odločitev, velja tudi za preverjene igralce). Testnega ključa na produkciji ni nikoli.
+
+1. Iste ukaze kot v Step 7 (izdelek, ceni s `tax_behavior=exclusive`, konfiguracija portala z `metadata[app]=slff-scout`, preklic ob koncu obdobja, brez menjave paketa) poženi z `--live`, npr. `stripe -p slff --live prices list --lookup-keys slff_scout_klub_mesec --lookup-keys slff_scout_klub_sezona`. Expected: na koncu dve ceni z `"livemode": true` in ena živa konfiguracija portala.
+2. `stripe -p slff --live get /v1/tax/settings | grep -E '"status"|"country"'` → `"status": "active"`, `"country": "SI"`; sicer se ustavi (lastnik vklopi Stripe Tax, SI, OSS).
+3. Na `https://scout.slff.eu` z lastnikovim klubskim računom (prijava z Googlom vrne na `/account`): "39 € na mesec" odpre Stripe Checkout z 39,00 € in vrstico DDV → **nazaj brez plačila**; enako "290 € na sezono". Portal: če ima klub kupca Stripe, "Upravljaj ali odpovej naročnino" odpre portal "SLFF Scout" brez menjave paketa; sicer zadošča živa konfiguracija iz točke 1.
+4. Šele nato oznanitev klubom.
 
 - [ ] **Step 10: Merilo faze**
 
@@ -2190,17 +2216,17 @@ Pogoj za fazo 4 (spec 5): vrednost ≥ 5.
 |---|---|
 | 4: vmesnik Vite + React + TS v `scout/`, deli `src/lib`, lasten oblikovni sistem | 1 (deli tipe baze; Tailwind svoj, trezen slate videz brez maskote) |
 | 1: slovenščina in angleščina | 1 (`besede.ts`, typecheck in smoke za popolnost) |
-| 4: Caddy streže `scout.slff.eu`, CI zgradi in objavi ob obstoječi strani | 7, 8 |
+| 4: Caddy streže `scout.slff.eu`, CI zgradi in objavi ob obstoječi strani | 7, 8 (Step 1–6) |
 | 5 faza 3: prijava | 1 (isti računi; registracija in klubski račun ostaneta na slff.eu) |
 | 5 faza 3: iskanje, profil, vrzeli, podobni, opazovalni seznam | 3, 4, 5 |
-| 5 faza 3: Stripe | 2 (Checkout, portal), 8 (katalog, ročni preizkus); zaledje 3a |
+| 5 faza 3: Stripe | 2 (Checkout, portal), 8 (lokalni preizkus v testnem načinu, živi katalog in preverjanje brez plačila); zaledje 3a |
 | 5 faza 3: dnevnik, meje | 3a; pogoji jih razložijo (6), napaka `scout-meja` (1) |
 | 2: pogoji za klube pred prvim plačilom | 6, kljukica ob preizkusu (2) |
 | 2: besedišče, brez negativnih oznak | 1 (smoke), 3 (`utemeljitev`), 5 (`opisVrzeli`) |
 | 5 preizkusi: typecheck, smoke izris vseh strani | 1–7 |
-| 5 preizkusi: Playwright od preizkusa do seznama proti Stripe v testnem načinu | **namesto skripte obvezen ročni preizkus (8)**: tok gre čez Stripe Checkout (tuja stran) in potrebuje objavljen model in klubski račun; avtomatizacija sodi v pilot (faza 4), ko je tok ustaljen |
+| 5 preizkusi: Playwright od preizkusa do seznama proti Stripe v testnem načinu | **namesto skripte obvezen lokalni ročni preizkus (8, Step 8)**: tok gre čez Stripe Checkout (tuja stran) in potrebuje objavljen model in klubski račun; avtomatizacija sodi v pilot (faza 4), ko je tok ustaljen |
 | 5 merilo: 5 poskusnih klubov tedensko | 8 (Step 10) |
 | odprta točka: ali `authenticated` bere `federations` | da (privzete pravice `20260828100000`, politika "zveze so javne"); test v 3a nalogi 2 |
-| odprta točka: ali privzeti portal na produkciji dovoli menjavo paketa | ni pomembno: Scout uporablja lastno konfiguracijo portala (8, Step 7) |
+| odprta točka: ali privzeti portal na produkciji dovoli menjavo paketa | ni pomembno: Scout uporablja lastno konfiguracijo portala (8, Step 7 test, Step 9 živo) |
 | lastnik: cene brez DDV, DDV prek Stripe Tax | 3a (`tax_behavior=exclusive`, `automatic_tax`), 6 (pogoji), 8 (Step 7 preveri Stripe Tax) |
 | sporočila, tedensko poročilo, vaba, Pro, PDF, primerjava, CSV | **ni v fazi 3** (glej *Spec coverage* v načrtu 3a) |
