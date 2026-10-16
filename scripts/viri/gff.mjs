@@ -2,7 +2,7 @@
 //
 // GFF na liga.gff.ge (Drupal, izdelal Omedia) objavi tretjo in četrto ligo
 // (raven 3 in 4) z zapisnikom vsake tekme. HTML iz strežnika, brez izziva.
-// Glej CLAUDE.md (Gruzija — vir gff).
+// Glej docs/viri/gruzija.md (Gruzija — vir gff).
 //
 // SEZONA je koledarsko leto (marec–november): 2026 = "2026"
 // (`competitions.sezona_koledarska`). Leto pove izbirnik sezone na strani lige.

@@ -2,7 +2,7 @@
 //
 // LFF in regijske zveze vodijo tekmovanja v COMET; portal jih izriše s
 // strežnika v predlogi Auris (kot lff.lv, razčlenjevalnik je skupen:
-// `comet-auris.mjs`). Glej CLAUDE.md (Litva — vir ltfutbolas).
+// `comet-auris.mjs`). Glej docs/viri/litva-crna-gora.md (Litva — vir ltfutbolas).
 //
 // SEZONA je koledarsko leto (april–oktober): "2026" (`sezona_koledarska`).
 // Vir jo vzame iz datumov razporeda (najpogostejše leto).

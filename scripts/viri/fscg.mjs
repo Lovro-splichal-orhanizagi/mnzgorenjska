@@ -5,7 +5,7 @@
 // regijah: Regionalna liga Centar, Prvenstvo Sjeverne in Južne regije.
 // Udruženja klubova jih vodijo v COMET in objavijo na svojih poddomenah.
 // Vse strani so v predlogi Auris (razčlenjevalnik je skupen:
-// `comet-auris.mjs`). Glej CLAUDE.md (Črna gora — vir fscg).
+// `comet-auris.mjs`). Glej docs/viri/litva-crna-gora.md (Črna gora — vir fscg).
 //
 // SEZONA je jesen–pomlad ("2026/27"), iz najzgodnejšega datuma razporeda.
 //
