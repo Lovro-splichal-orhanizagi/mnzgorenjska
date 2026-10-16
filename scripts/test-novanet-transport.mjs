@@ -94,3 +94,19 @@ test('parent-domain cookies are accepted but remain bound to issuing origin',asy
  await read('https://futgal.es/pnfg/other')
  assert.deepEqual(calls,[null,'public_parent=test',null])
 })
+test('errored denial bodies preserve explicit refusal and never enter shared retries',async()=>{
+ const {prenesiSPonovitvami,pozabiPadle}=await import('./prenos.mjs')
+ for(const status of[401,403,429]){
+  let calls=0
+  const transport=ustvariAnonimniPrenos({fetchFn:async()=>{
+   calls++
+   const stream=new ReadableStream({start(controller){controller.error(new TypeError('fetch failed',{cause:{code:'ECONNRESET'}}))}})
+   return new Response(stream,{status})
+  }})
+  try{
+   pozabiPadle()
+   await assert.rejects(prenesiSPonovitvami(url,{fetchFn:transport,zamiki:[0],log:()=>{}}),e=>e.zavrnitev===true&&e.status===status)
+   assert.equal(calls,1,`HTTP ${status} must never retry after failed body cancellation`)
+  }finally{pozabiPadle()}
+ }
+})

@@ -18,7 +18,12 @@ export function ustvariAnonimniPrenos({fetchFn=(...args)=>globalThis.fetch(...ar
    const requestHeaders=new Headers(headers),cookie=cookieHeader(url)
    if(cookie)requestHeaders.set('cookie',cookie)
    const response=await fetchFn(url.href,{...options,headers:requestHeaders,redirect:'manual',signal})
-   if([401,403,429].includes(response.status)){await response.body?.cancel();throw zavrnitev(`HTTP ${response.status}`,response.status)}
+   if([401,403,429].includes(response.status)){
+    // Disposal is best-effort: an errored body must never replace a refusal
+    // with a transient transport error that the shared downloader retries.
+    try{await response.body?.cancel()}catch{}
+    throw zavrnitev(`HTTP ${response.status}`,response.status)
+   }
    for(const raw of response.headers.getSetCookie?.()??[]){
     const [pair,...parts]=raw.split(';'),eq=pair.indexOf('=')
     if(eq<1)continue
