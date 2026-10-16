@@ -134,13 +134,33 @@ test('a rejected source encoding preserves bounded original bytes without interp
  try{
   const vir={ime:'test',premorMs:0,razporedVseStrani:async(_k,p)=>p('https://www.futgal.es/public-encoding','r.html')}
   const r=await preveriSezono({vir,koda:'x',sezona:'2026/27',mapa,fetchFn:async()=>{
-   throw Object.assign(Error('unsupported source encoding'),{dokument:{bytes,contentType:'text/html; charset=x-unknown'}})
+   throw Object.assign(Error('unsupported source encoding'),{dokument:{bytes,contentType:'text/html; charset=x-unknown',status:200}})
   }})
   assert.equal(r.pripravljeno,false)
   const docs=JSON.parse(readFileSync(join(mapa,'prenosi.json'),'utf8'))
   assert.equal(docs.length,1)
   assert.equal(docs[0].contentType,'text/html; charset=x-unknown')
+  assert.equal(docs[0].status,200)
   assert.match(docs[0].napaka,/unsupported source encoding/)
   assert.deepEqual([...readFileSync(join(mapa,docs[0].file))],[...bytes])
+ }finally{rmSync(mapa,{recursive:true,force:true})}
+})
+test('an empty successful HTTP document stops the audit before requesting further matches',async()=>{
+ const mapa=mkdtempSync(join(tmpdir(),'slff-audit-empty-'));let calls=0
+ try{
+  const vir={ime:'test',premorMs:0,razporedVseStrani:async(_k,p)=>{
+   await p('https://datencenter.dfb.de/public-empty','empty.html')
+   await p('https://datencenter.dfb.de/should-not-request','later.html')
+   return []
+  }}
+  const r=await preveriSezono({vir,koda:'x',sezona:'2026/27',mapa,fetchFn:async()=>{calls++;return new Response('',{status:200})}})
+  assert.equal(calls,1)
+  assert.equal(r.pripravljeno,false)
+  assert.equal(r.status,200)
+  assert.equal(r.url,'https://datencenter.dfb.de/public-empty')
+  const docs=JSON.parse(readFileSync(join(mapa,'prenosi.json'),'utf8'))
+  assert.equal(docs.length,1)
+  assert.equal(readFileSync(join(mapa,docs[0].file)).length,0)
+  assert.match(docs[0].napaka,/empty public document/)
  }finally{rmSync(mapa,{recursive:true,force:true})}
 })

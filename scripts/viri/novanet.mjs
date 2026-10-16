@@ -276,7 +276,15 @@ export function razcleniKrog(html,{zveza,koda=null,krog=null}={}) {
    // preview (CmpPrevio), rather than a report. Missing score alone is unsafe.
    const previews=[...scoreCell.matchAll(/\bhref=["'](?:\/pnfg\/NPcd\/)?NFG_CmpPrevio\?[^"'<>]*\bCodActa=(\d+)[^"'<>]*["']/gi)]
    const empty=/<h4>\s*<strong>\s*<\/strong>\s*<\/h4>/i.test(scoreCell)
-   if(!empty||previews.length!==1||/\bntype\b|\bwid2_resultado|NFG_CmpPartido/i.test(scoreCell))fail('nepodprta oblika izida kroga')
+   // Later scheduled rounds explicitly say that no preview is available.
+   // Require both the official title and eye-slash icon, not blank markup alone.
+   const unavailable=[...scoreCell.matchAll(/<a\b(?=[^>]*\bhref=["']#["'])(?=[^>]*\btitle=["']Previo no disponible["'])[\s\S]*?<\/a>/gi)].filter(m=>/\bclass=["']fa fa-eye-slash["']/.test(m[0]))
+   const brezPredogleda=previews.length===0&&unavailable.length===1
+   const pending=previews.length===1&&unavailable.length===0||brezPredogleda
+   // A report ID or result anywhere in this match contradicts the no-preview
+   // state. Do not misclassify a damaged played match as an unplayed fixture.
+   if(brezPredogleda&&/\bCodActa=|NFG_CmpPartido|\bntype\b|\bwid2_resultado/i.test(table))fail('nepodprta oblika izida kroga')
+   if(!empty||!pending||/\bntype\b|\bwid2_resultado|NFG_CmpPartido/i.test(scoreCell))fail('nepodprta oblika izida kroga')
    scoreBlock=''
   }
   const score=izidNovanet(scoreBlock,mapping)

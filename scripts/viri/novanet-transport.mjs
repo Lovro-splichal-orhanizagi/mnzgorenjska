@@ -1,4 +1,11 @@
 // Anonymous public HTTP sessions only. Never imports browser or caller cookies.
+export class NovanetEmptyResponse extends Error {
+ constructor(url,status,contentType,bytes){
+  super(`novanet: prazen odgovor HTTP ${status} ${url}`)
+  this.name='NovanetEmptyResponse';this.koda='NOVANET_EMPTY_RESPONSE';this.status=status
+  this.dokument={bytes,contentType,status}
+ }
+}
 export const jeJavniCookieGate=s=>String(s).replace(/\s+/g,'').toLowerCase()==='<html><head><title></title></head><body><!--<h1>nosehaaceptadoelcookie</h1>--></body></html>'
 const zavrni=(message,status=null)=>Object.assign(new Error(`novanet: ${message}`),{zavrnitev:true,status})
 export function ustvariAnonimniPrenos({fetchFn=(...args)=>globalThis.fetch(...args),jeIzziv=()=>false,zavrnitev=zavrni,maxPreusmeritev=5,najvecBajtov=5_000_000}={}){
@@ -43,7 +50,7 @@ export function ustvariAnonimniPrenos({fetchFn=(...args)=>globalThis.fetch(...ar
     if(!previous||previous.value!==value)fresh.add(key)
    }
    if([301,302,303,307,308].includes(response.status)){
-    await response.body?.cancel()
+    try{await response.body?.cancel()}catch{}
     const location=response.headers.get('location')
     if(!location)throw zavrnitev('preusmeritev brez cilja')
     const next=new URL(location,url)
@@ -54,8 +61,9 @@ export function ustvariAnonimniPrenos({fetchFn=(...args)=>globalThis.fetch(...ar
    // Preserve status-only failures for the shared transient retry contract.
    if(!response.ok)return response
    const chunks=[];let size=0
-   if(response.body){const reader=response.body.getReader();while(true){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>najvecBajtov){await reader.cancel();throw zavrnitev('prevelik dokument')}chunks.push(value)}}
+   if(response.body){const reader=response.body.getReader();while(true){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>najvecBajtov){try{await reader.cancel()}catch{};throw zavrnitev('prevelik dokument')}chunks.push(value)}}
    const bytes=new Uint8Array(size);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength}
+   if(size===0)throw new NovanetEmptyResponse(url.href,response.status,response.headers.get('content-type')??'',bytes)
    const body=new TextDecoder().decode(bytes)
    if(jeIzziv(body))throw zavrnitev('izziv')
    if(jeJavniCookieGate(body)){

@@ -82,3 +82,11 @@ Generic parsing rejects them. In explicitly verified regular90-minute league
 context only, their clock keys normalize to90+6/90+5, source labels remain
 preserved, and fantasy minutes remain capped at90. Unknown league contexts,
 extra-time and shootout markers remain unsupported.
+
+`es-novanet-galicia-live-round4-20261016.html` is unchanged CI capture at
+2026-10-16T17:37:30.261Z, SHA256 `f70d33357c5857c7f33348050d6af696bf6e0bc1eb6d396cbd470aeb82ccd1d8`.
+Current round URL above uses `CodJornada=4`. Five scheduled matches have an
+explicit blank score heading and an anchor titled `Previo no disponible` with
+`fa-eye-slash`; no acta ID exists yet. Dates are24/25October2026.
+Only that positive no-preview status, together with blank score and absent
+closed/provisional score markers, supports unplayed/null result classification.

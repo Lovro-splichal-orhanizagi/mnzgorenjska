@@ -76,12 +76,17 @@ export async function preveriSezono({vir,koda,sezona,mapa,fetchFn=globalThis.fet
   }catch(e){
    e.url??=url
    const d=e.dokument
-   if(d?.bytes instanceof Uint8Array&&d.bytes.byteLength<=5_000_000)shrani(url,ime,d.bytes,{napaka:e.message,contentType:d.contentType??null})
+   if(d?.bytes instanceof Uint8Array&&d.bytes.byteLength<=5_000_000)shrani(url,ime,d.bytes,{napaka:e.message,contentType:d.contentType??null,status:d.status??null})
    throw e
   }
   if(!response.ok){const e=Error(`HTTP ${response.status}: ${url}`);e.status=response.status;throw e}
   const html=await response.text()
   if(Buffer.byteLength(html)>5_000_000)throw Error('prevelik dokument vira')
+  if(!html.trim()){
+   const e=Object.assign(Error(`${vir.ime}: empty public document (HTTP ${response.status})`),{status:response.status,url})
+   shrani(url,ime,html,{napaka:e.message,contentType:response.headers.get('content-type'),status:response.status})
+   throw e
+  }
   if(vir.jeIzziv?.(html))throw vir.zavrnitev('izziv (CAPTCHA)')
   shrani(url,ime,html)
   documents.set(url,html);return html

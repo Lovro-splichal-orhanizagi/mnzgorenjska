@@ -110,3 +110,38 @@ test('errored denial bodies preserve explicit refusal and never enter shared ret
   }finally{pozabiPadle()}
  }
 })
+test('successful empty200/204 responses are fatal body errors and never shared-retried',async()=>{
+ const {prenesiSPonovitvami,pozabiPadle}=await import('./prenos.mjs')
+ for(const status of[200,204]){
+  let calls=0
+  const read=ustvariAnonimniPrenos({fetchFn:async()=>{calls++;return new Response(null,{status})}})
+  try{
+   pozabiPadle()
+   await assert.rejects(prenesiSPonovitvami(url,{fetchFn:read,zamiki:[0],log:()=>{}}),e=>{
+    assert.equal(e.koda,'NOVANET_EMPTY_RESPONSE');assert.equal(e.status,status)
+    assert.ok(!e.zavrnitev);assert.ok(!e.razclenitev)
+    assert.ok(e.message.includes(url));assert.match(e.message,new RegExp(`HTTP ${status}`))
+    assert.equal(e.dokument.status,status);assert.equal(e.dokument.contentType,'')
+    assert.equal(e.dokument.bytes.byteLength,0)
+    return true
+   })
+   assert.equal(calls,1)
+  }finally{pozabiPadle()}
+ }
+})
+for(const kind of['redirect','oversize'])for(const shared of[false,true])test(`errored disposal preserves ${kind} rejection (${shared?'shared':'direct'})`,async()=>{
+ const {prenesiSPonovitvami,pozabiPadle}=await import('./prenos.mjs')
+ const reset=()=>new TypeError('fetch failed',{cause:{code:'ECONNRESET'}})
+  let calls=0
+  const read=ustvariAnonimniPrenos({najvecBajtov:4,fetchFn:async()=>{
+   calls++
+   if(kind==='redirect')return new Response(new ReadableStream({start(c){c.error(reset())}}),{status:302,headers:{location:'https://elsewhere.example/'}})
+   return new Response(new ReadableStream({start(c){c.enqueue(Uint8Array.of(1,2,3,4,5))},pull(c){c.error(reset())}}),{status:200})
+  }})
+  try{
+   pozabiPadle()
+   const request=shared?prenesiSPonovitvami(url,{fetchFn:read,zamiki:[0],log:()=>{}}):read(url)
+   await assert.rejects(request,e=>e.zavrnitev===true&&(kind==='redirect'?/same-origin/.test(e.message):/prevelik/.test(e.message)))
+   assert.equal(calls,1,`${kind} ${shared?'shared':'direct'} must preserve rejection without retry`)
+  }finally{pozabiPadle()}
+})

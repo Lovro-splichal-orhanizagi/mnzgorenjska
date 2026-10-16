@@ -626,3 +626,45 @@ test('source enables absolute clocks only for the two verified Galicia league co
  const unknown=round.replaceAll('26990830','26990831')
  await assert.rejects(ustvariVir({predpomnilnik:false}).zapisniki('galicia:22:26990831:27759837',async u=>u.includes('NFG_CmpJornada')?unknown:report),/neznana minuta/)
 })
+test('observed preview-unavailable marker explicitly identifies unplayed scheduled matches',async()=>{
+ const {razcleniKrog}=await import('./viri/novanet.mjs'),html=fixture('galicia-live-round4-20261016')
+ const round=razcleniKrog(html,{zveza:'galicia'})
+ assert.equal(round.stevilka,4);assert.equal(round.tekme.length,5)
+ assert.ok(round.tekme.every(t=>!t.odigrana&&t.izid===null&&t.virId===null))
+ assert.deepEqual(round.tekme.map(t=>t.datum),['2026-10-24','2026-10-24','2026-10-25','2026-10-25','2026-10-25'])
+ for(const malformed of[
+  html.replaceAll('title="Previo no disponible"','title="Unknown status"'),
+  html.replaceAll('fa-eye-slash','fa-question'),
+  html.replace('<h4><strong> </strong> </h4>','<h4><strong>0 - 0</strong></h4>'),
+  html.replace('<h4><strong> </strong> </h4>','<h4><strong><span class="wid2_resultado_cerrada"></span></strong></h4>'),
+ ])assert.throws(()=>razcleniKrog(malformed,{zveza:'galicia'}),/izida kroga/)
+})
+test('unavailable preview rejects report IDs and result signals anywhere in its match table',async()=>{
+ const {razcleniKrog}=await import('./viri/novanet.mjs'),html=fixture('galicia-live-round4-20261016')
+ for(const signal of[
+  '<a href="NFG_CmpPartido?CodActa=123456">Report</a>',
+  '<a href="NFG_CmpPrevio?CodActa=123456">Preview</a>',
+  '<span class="wid2_resultado_cerrada">0</span>',
+  '<span class="wid2_resultado_prov">0</span>',
+  '<span class="ntype">0</span>',
+ ]){
+  const bad=html.replace('<div class=font_widgetL>',`${signal}<div class=font_widgetL>`)
+  assert.notEqual(bad,html)
+  assert.throws(()=>razcleniKrog(bad,{zveza:'galicia'}),/izida kroga/)
+ }
+})
+test('source audit and normal imports stop on first actual empty response',async()=>{
+ const {novanetFetch}=await import('./viri/novanet.mjs'),original=globalThis.fetch
+ try{
+  for(const status of[200,204])for(const zberiNapake of[false,true]){
+   let fetches=0,reportRequests=0
+   globalThis.fetch=async()=>{fetches++;return new Response(null,{status})}
+   const vir=ustvariVir({predpomnilnik:false,opozori:()=>{}})
+   await assert.rejects(vir.zapisniki('galicia:22:26990830:27759837',async url=>{
+    if(url.includes('NFG_CmpJornada'))return singleMatchRound()
+    reportRequests++;return(await novanetFetch(url)).text()
+   },{zberiNapake}),e=>e.koda==='NOVANET_EMPTY_RESPONSE'&&e.status===status&&!e.zavrnitev)
+   assert.equal(fetches,1);assert.equal(reportRequests,1);assert.deepEqual(vir.nepopolni,[])
+  }
+ }finally{globalThis.fetch=original}
+})
