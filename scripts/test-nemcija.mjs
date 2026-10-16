@@ -8,7 +8,7 @@ import { runInNewContext } from 'node:vm'
 import { stripTypeScriptTypes } from 'node:module'
 import { ugibajDrzavo, drzavaLige, drzavaVstopa, zeljenJezik, znaneDrzave } from '../src/lib/drzavaUgib.ts'
 import { jezikLige, izpisRoka, PAS_DRZAVE } from '../supabase/functions/posli-opomnik/sporocila.ts'
-import { stran } from './hetzner/html/streznik.mjs'
+import { stran, obdelovalec } from './hetzner/html/streznik.mjs'
 import config from '../vite.config.js'
 
 test('Germany is recognized by explicit country, German region and Berlin without claiming Austria or Switzerland', () => {
@@ -74,6 +74,20 @@ test('the real country-card build plugin produces German HTML with Germany local
     assert.match(html, /property="og:url" content="https:\/\/slff.eu\/de"/)
     assert.match(html, /Fantasy-Liga/)
     assert.match(readFileSync(join(output, 'at.html'), 'utf8'), /content="de_AT"/)
+    writeFileSync(join(output, 'html-besede.json'), JSON.stringify({ de: {} }))
+    const handler = obdelovalec({ koren: output, rest: async () => [{ slug: 'de-regionalliga-nordost', name: 'Regionalliga Nordost', country_code: 'DE', country_name: 'Deutschland', active: true }] })
+    let body, status
+    await handler({ url: '/de', method: 'GET' }, { writeHead: s => { status = s }, end: value => { body = value } })
+    assert.equal(status, 200)
+    assert.match(body, /<html lang="de">/, 'HTTP handler must select the generated German card')
+    assert.match(body, /property="og:locale" content="de_DE"/)
+    assert.match(body, /property="og:description" content="[^"]*Fantasy-Liga/)
+    const fallback = obdelovalec({ koren: output, rest: async () => { throw Error('public API unavailable') } })
+    for (const url of ['/de/', '/table?t=de-regionalliga-nordost']) {
+      await fallback({ url, method: 'GET' }, { writeHead: s => { status = s }, end: value => { body = value } })
+      assert.equal(status, 200)
+      assert.equal(body, html, 'API failure must preserve the German country card')
+    }
   } finally { rmSync(output, { recursive: true, force: true }) }
 })
 
