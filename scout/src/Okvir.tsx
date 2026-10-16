@@ -26,7 +26,7 @@ export function Okvir({ children }: { children: ReactNode }) {
             )}
             {seja && <NavLink to="/account" className={povezava}>{t('nav.racun')}</NavLink>}
             {seja && (
-              <button type="button" onClick={() => void supabase.auth.signOut()} className="rounded px-2 py-1 text-slate-700 hover:bg-slate-200">
+              <button type="button" onClick={() => void supabase.auth.signOut({ scope: 'local' })} className="rounded px-2 py-1 text-slate-700 hover:bg-slate-200">
                 {t('nav.odjava')}
               </button>
             )}

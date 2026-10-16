@@ -31,7 +31,7 @@ function stripeNaslov(url: string): boolean {
 }
 
 export function Racun() {
-  const { seja, nalaga, klub, osvezi } = useSeja()
+  const { seja, nalaga, klub, napakaKluba, osvezi } = useSeja()
   const [q] = useSearchParams()
   const placilo = q.get('placilo')
   const [sprejmem, setSprejmem] = useState(false)
@@ -96,7 +96,11 @@ export function Racun() {
       {placilo === 'uspeh' && <p className="rounded bg-emerald-50 p-3 text-emerald-900">{t('racun.placiloUspeh')}</p>}
       {placilo === 'preklic' && <p className="rounded bg-slate-100 p-3">{t('racun.placiloPreklic')}</p>}
       {sporocilo && <p className="text-red-700">{sporocilo}</p>}
-      {!klub ? (
+      {napakaKluba ? (
+        <Okno>
+          <p className="text-red-700">{t('napaka.splosna')}</p>
+        </Okno>
+      ) : !klub ? (
         <Okno>
           <p>{t('racun.niKlub')}</p>
           <a className="underline" href="https://slff.eu/account">{t('racun.slffRacun')}</a>
