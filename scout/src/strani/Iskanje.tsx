@@ -8,6 +8,17 @@ const RAVNI = ['vse', 'ista_ali_nizja', 'nizja'] as const
 const STRAN = 25
 const NAJVEC = 200 // baza vrne največ prvih 200
 
+/** Filtri iz naslova; neznano ali pokvarjeno pade na privzeto (naslov lahko kdo prilepi). */
+function filtri(q: URLSearchParams) {
+  return {
+    skupina: SKUPINE.find((s) => s === q.get('skupina')),
+    raven: RAVNI.find((r) => r === q.get('raven')) ?? 'vse',
+    regije: (q.get('regije') ?? '').split(',').map(Number).filter((n) => Number.isInteger(n) && n > 0),
+    min: Math.max(0, Number(q.get('min')) || 0),
+    odprti: q.get('odprti') === '1',
+  }
+}
+
 /** Enovrstična utemeljitev: razvrstitev in prednosti, brez negativnih oznak (spec 2). */
 export function utemeljitev(z: Pick<Zadetek, 'percentil' | 'skupina' | 'minute' | 'delez_minut' | 'goli_90_pri_nas'>): string {
   const deli = [
@@ -27,7 +38,7 @@ export function Iskanje() {
   const [q, setQ] = useSearchParams()
   const [zveze, setZveze] = useState<{ id: number; name: string }[]>([])
   const drzava = klub?.country_id
-  const izbrane = (q.get('regije') ?? '').split(',').filter(Boolean).map(Number)
+  const f = filtri(q)
 
   useEffect(() => {
     if (!drzava) return
@@ -41,17 +52,17 @@ export function Iskanje() {
 
   function isci(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    const f = new FormData(e.currentTarget)
+    const podatki = new FormData(e.currentTarget)
     const novo = new URLSearchParams()
-    const skupina = String(f.get('skupina') ?? '')
-    const raven = String(f.get('raven') ?? 'vse')
-    const min = Number(f.get('min') ?? 0)
-    const regije = f.getAll('regije').map(String)
+    const skupina = String(podatki.get('skupina') ?? '')
+    const raven = String(podatki.get('raven') ?? 'vse')
+    const min = Number(podatki.get('min') ?? 0)
+    const regije = podatki.getAll('regije').map(String)
     if (skupina) novo.set('skupina', skupina)
     if (raven !== 'vse') novo.set('raven', raven)
     if (min > 0) novo.set('min', String(min))
     if (regije.length) novo.set('regije', regije.join(','))
-    if (f.get('odprti')) novo.set('odprti', '1')
+    if (podatki.get('odprti')) novo.set('odprti', '1')
     setQ(novo)
   }
 
@@ -62,7 +73,7 @@ export function Iskanje() {
       <form key={`filtri?${iskanje}`} onSubmit={isci} className="grid gap-4 rounded border border-slate-200 bg-white p-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
         <label className="flex flex-col gap-1">
           {t('iskanje.pozicija')}
-          <select name="skupina" defaultValue={q.get('skupina') ?? ''} className="rounded border border-slate-300 px-2 py-1">
+          <select name="skupina" defaultValue={f.skupina ?? ''} className="rounded border border-slate-300 px-2 py-1">
             <option value="">{t('iskanje.vse')}</option>
             {SKUPINE.map((s) => (
               <option key={s} value={s}>{t(`skupina.${s}` as Kljuc)}</option>
@@ -71,7 +82,7 @@ export function Iskanje() {
         </label>
         <label className="flex flex-col gap-1">
           {t('iskanje.raven')}
-          <select name="raven" defaultValue={q.get('raven') ?? 'vse'} className="rounded border border-slate-300 px-2 py-1">
+          <select name="raven" defaultValue={f.raven} className="rounded border border-slate-300 px-2 py-1">
             {RAVNI.map((r) => (
               <option key={r} value={r}>{t(`iskanje.raven.${r}` as Kljuc)}</option>
             ))}
@@ -79,10 +90,10 @@ export function Iskanje() {
         </label>
         <label className="flex flex-col gap-1">
           {t('iskanje.minMinut')}
-          <input name="min" type="number" min={0} defaultValue={q.get('min') ?? '0'} className="rounded border border-slate-300 px-2 py-1" />
+          <input name="min" type="number" min={0} defaultValue={f.min} className="rounded border border-slate-300 px-2 py-1" />
         </label>
         <label className="flex items-center gap-2 self-end">
-          <input type="checkbox" name="odprti" defaultChecked={q.get('odprti') === '1'} />
+          <input type="checkbox" name="odprti" defaultChecked={f.odprti} />
           {t('iskanje.odprti')}
         </label>
         {zveze.length > 1 && (
@@ -90,7 +101,7 @@ export function Iskanje() {
             <legend className="mb-1">{t('iskanje.regije')}</legend>
             {zveze.map((z) => (
               <label key={z.id} className="flex items-center gap-1">
-                <input type="checkbox" name="regije" value={z.id} defaultChecked={izbrane.includes(z.id)} />
+                <input type="checkbox" name="regije" value={z.id} defaultChecked={f.regije.includes(z.id)} />
                 {z.name}
               </label>
             ))}
@@ -111,16 +122,16 @@ function Rezultati({ iskanje }: { iskanje: string }) {
   const [napakaI, setNapakaI] = useState<string | null>(null)
 
   useEffect(() => {
-    const q = new URLSearchParams(iskanje)
+    const f = filtri(new URLSearchParams(iskanje))
     let velja = true
     setStanje('nalaga')
     void supabase
       .rpc('scout_isci', {
-        p_skupina: q.get('skupina') || undefined,
-        p_raven: q.get('raven') ?? 'vse',
-        p_regije: (q.get('regije') ?? '').split(',').filter(Boolean).map(Number),
-        p_min_minut: Number(q.get('min') ?? 0),
-        p_samo_odprti: q.get('odprti') === '1',
+        p_skupina: f.skupina,
+        p_raven: f.raven,
+        p_regije: f.regije,
+        p_min_minut: f.min,
+        p_samo_odprti: f.odprti,
         p_od: od,
       })
       .then(({ data, error }) => {
@@ -139,7 +150,7 @@ function Rezultati({ iskanje }: { iskanje: string }) {
     }
   }, [iskanje, od])
 
-  if (napakaI) return <p className="text-red-700">{napakaI}</p>
+  if (napakaI && vrstice.length === 0) return <p className="text-red-700">{napakaI}</p>
   if (stanje !== 'nalaga' && vrstice.length === 0) return <p className="text-slate-500">{t('iskanje.prazno')}</p>
   return (
     <div className="space-y-3">
@@ -154,6 +165,7 @@ function Rezultati({ iskanje }: { iskanje: string }) {
         ))}
       </ul>
       {stanje === 'nalaga' && <Nalaganje />}
+      {napakaI && <p className="text-red-700">{napakaI}</p>}
       {stanje === 'ok' && (
         <button type="button" onClick={() => setOd(od + STRAN)} className="rounded border border-slate-300 px-3 py-1 text-sm">
           {t('iskanje.vec')}
