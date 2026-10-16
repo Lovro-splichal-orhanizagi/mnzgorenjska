@@ -1,10 +1,12 @@
 """Integracijski test proti lokalni bazi (npx supabase start); vse se razveljavi."""
 import os
+from datetime import datetime, timezone
 
 import psycopg
 import pytest
 
 from stroj.nalaganje import nalozi
+from stroj.pisanje import zapisi
 
 URL = os.environ.get("SCOUT_TEST_DB", "postgresql://postgres:postgres@127.0.0.1:54322/postgres")
 
@@ -114,3 +116,30 @@ def test_anonimiziran_v_drugi_ligi(conn):
     igralci = set(sezone["player_id"].tolist())
     assert -914002 in igralci  # soigralec ostane
     assert not igralci & {-914020, -914021, -914022, -914023}
+
+
+def test_zapisi_in_obrezi(conn):
+    """Piše kot scout_stroj (fikstura), torej skozi politike RLS `stroj`."""
+    assert conn.execute("select current_user").fetchone()[0] == "scout_stroj"
+    vrstice = {
+        "lige_moc": [(-914001, 0.1, "model", 25, datetime.now(timezone.utc))],
+        "ekipe_elo": [(-914001, -914001, 2098, 1510.0)],
+        "kazalniki": [(-914001, -914001, "2098/99", 2098, -914001, "FWD", 90, 1.0, 1.0, 1.0, 0.5, 0.5, 1,
+                       0.1, 1.0, 0.0, 0.0, 0.0, 1.0, float("nan"), float("nan"), 0.05)],
+        "indeks": [(-914001, "FWD", 0.7, 100.0, 0.05)],
+        "vektorji": [(-914001, "FWD", [0.1, 0.2], [-914002], [0.9])],
+        "vrzeli": [(-914001, -914001, "DEF", "tanka", None, 1.0)],
+    }
+    # n == 0: brez ključev mae_*; NaN v backtestu postane JSON null
+    model = {"leto": 2098, "backtest": {"n": 0, "prestal": False, "izboljsava": float("nan")},
+             "parametri": {"elo_koef": 0.2}, "objavljen": False}
+    prvi = zapisi(conn, model, vrstice)
+    assert conn.execute("select count(*) from scout.kazalniki where model_id = %s and trend_minut is null "
+                        "and prehod_ravni is null", (prvi,)).fetchone()[0] == 1
+    assert conn.execute("select backtest from scout.modeli where id = %s", (prvi,)).fetchone()[0] == \
+        {"n": 0, "prestal": False, "izboljsava": None}
+    for _ in range(3):
+        zadnji = zapisi(conn, model | {"objavljen": True}, vrstice)
+    ostali = [r[0] for r in conn.execute("select id from scout.modeli where id >= %s order by id", (prvi,))]
+    assert prvi not in ostali and zadnji in ostali and len(ostali) == 3
+    assert conn.execute("select count(*) from scout.vrzeli where model_id = %s", (prvi,)).fetchone()[0] == 0
