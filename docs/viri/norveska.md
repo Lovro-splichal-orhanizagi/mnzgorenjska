@@ -3,7 +3,7 @@
 Vir `nff` (`scripts/viri/nff.mjs`) bere **fotball.no** (Norges
 Fotballforbund), javne strani FIKS (`/fotballdata/`), na katerih NFF in vseh 18
 kretsov objavljajo vsa tekmovanja od OBOS-ligaen do najnižje divisjon. HTML iz
-strežnika. Država `NO` ("Norge", migracija 20261015172700) **še nima vmesnika**
+strežnika. Država `NO` ("Norge", migracija 20261016093900) **še nima vmesnika**
 (jezika, kartice, pošte, `JEZIK_DRZAVE`) in **ni v matriki nočnega uvoza** — oboje
 pred vklopom (glej spodaj). **Šifra norveške lige se začne z `no-`.**
 
@@ -125,7 +125,7 @@ je ~90 % (sezona se konča konec oktobra).
   Trøndelag, Hordaland, Agder, Indre Østland, Østfold, Troms), 44/45 polnih,
   menjav ni nikjer, 8–11 klubov; ni vpisana.
 
-Vpisanih je 46 lig (migracija 20261015172700), **neaktivnih**, zveze `nff` (državna:
+Vpisanih je 46 lig (migracija 20261016093900), **neaktivnih**, zveze `nff` (državna:
 OBOS, 2. in 3. divisjon) in `nff-<krets>`:
 
 | liga | klubov | 2026 | arhiv 2025 (skupnih klubov) | polnih 2026 / 2025 | ekip z menjavami 2026 |
