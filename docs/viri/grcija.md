@@ -1,9 +1,25 @@
 # Grčija — vir `mascot` (Mascotnet)
 
 Država `GR` ("Ελλάδα") — vpiše jo ta migracija (20261016090300) ali migracija
-vira `eps`, kar pride prej (obe `on conflict do nothing`). Vmesnika v grščini,
-kartice in pošte **še ni**, `GR` **ni** v matriki nočnega uvoza — oboje pred
-vklopom. Šifra lige se začne z `gr-`.
+vira `eps`, kar pride prej (obe `on conflict do nothing`). Šifra lige se začne
+z `gr-`. Lige ostanejo neaktivne, dokler jih lastnik ne vklopi.
+
+**Vmesnik in pošta.** Grčija ima vmesnik v grščini (`src/i18n/el/`, jezik `el`,
+lokale `el-GR-u-hc-h23`, ker sama `el-GR` piše uro z "π.μ."; **grška pisava**,
+`JEZIK_DRZAVE.GR`), izbirnik jezika "Ελληνικά", vstop `slff.eu/gr`, kartico ob deljenju `gr.html` (Caddy jo vrne za `/gr` in `?t=gr-…`, tudi rezerva `:3201`, `vercel.json`), grško vejo pošte (`sporocila.ts`;
+pozdrav v klicniku "Γεια σου, Νίκο!", `klicnikEl`; avtentikacijske predloge in
+zadeve v `docker-compose.slff.yml`), grška imena lastnikov hišnih ekip in
+`klub_stik.drzava` (migracija 20261016213700) ter `IMENA_GR` v *Hisne ekipe*. Ugib:
+brskalnik `el` ali pas `Europe/Athens`; rok v pošti je po atensko (uro več kot
+Ljubljana). Krog je vedno "Nη αγωνιστική", točke one/other ("1 πόντος, 2
+πόντοι"), ime lige stoji samostojno za dvopičjem (`ligaVTozilniku` ga pusti).
+Stran Pozicije je v meniju (glasovanje). **Nočni uvoz:** `GR` ima 6 košev
+(`KOSOV.GR`): `eps` (32 lig, 12–20 minut na ligo) bere iz štirih košev
+(`VZPOREDNI.eps = 4`, vsak s 4 × 3 s premora, skupni tempo ostane 3 s),
+`mascot` (31 lig, ~4 minute) iz enega; koš 6 je zaradi zamika zgoščenke
+virov prazen (pri 5 koših bi mascot delil koš z 9 ligami eps). Manjka še: grški
+kanal v HelpStacku (`Podpora.tsx` za `el` uporabi slovenskega) in **pregled
+prevoda pri naravnem govorcu**.
 
 **Pisno dovoljenje za zajem: pridobil Lovro, oktober 2026.** Pogoji
 Mascotneta (`mascotnet.com/terms.asp`, "Όροι χρήσης" v nogi vsake strani)
@@ -163,9 +179,9 @@ liga=gr-mak-a1 -f cene=true`. Liga ~60 zapisnikov po 3 s je ~3–4 minute.
 
 ## Grčija — vir `eps`
 
-Država `GR` ("Ελλάδα", migracija 20261016090700). Vmesnika v grščini, kartice
-in pošte **še ni**, `GR` **ni** v matriki nočnega uvoza — oboje pred vklopom
-(nočni uvoz vklopljene lige sicer tiho ne bere). Šifra lige se začne z `gr-`.
+Država `GR` ("Ελλάδα", migracija 20261016090700). Vmesnik, pošta in nočni uvoz
+so pripravljeni (glej začetek datoteke; `eps` bere iz štirih košev). Šifra
+lige se začne z `gr-`.
 
 Vir `eps` (`scripts/viri/eps.mjs`) bere regionalne zveze EPS (Ένωση
 Ποδοσφαιρικών Σωματείων), ki imajo vsaka svojo domeno, a isto platformo

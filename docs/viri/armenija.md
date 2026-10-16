@@ -5,9 +5,20 @@ Armenia, Laravel + Livewire, spredaj Cloudflare brez izziva), kjer FFA objavi
 tekmovanja, ki jih vodi sama: **Prvo ligo** (Առաջին խումբ, raven 2) in
 amaterski ligi A in B, in **premierleague.ffa.am** (**Premier Liga**,
 Հայաստանի Պրեմիեր լիգա, raven 1; glej *Premier Liga* spodaj). Država `AM`
-("Հայաստան", vpiše jo migracija lig); vmesnika v armenščini, kartice in pošte
-**še ni** in `AM` **ni** v `JEZIK_DRZAVE` ne v matriki nočnega uvoza — oboje
-pred vklopom. Šifra lige se začne z `am-`.
+("Հայաստան", vpiše jo migracija lig). Šifra lige se začne z `am-`. Lige
+ostanejo neaktivne, dokler jih lastnik ne vklopi.
+
+**Vmesnik in pošta.** Armenija ima vmesnik v armenščini (`src/i18n/hy/`, jezik
+`hy`, `hy-AM`, **armenska pisava**, `JEZIK_DRZAVE.AM`; vstop je po kodi države
+`/am`, kot `/at` → `de`), izbirnik jezika "Հայերեն", vstop `slff.eu/am`, kartico ob deljenju `am.html` (Caddy jo vrne za `/am` in `?t=am-…`, tudi rezerva `:3201`, `vercel.json`),
+armensko vejo pošte (pozdrav "Բարև", konec stavka "։", vrstilni števnik
+`hyDas`: 1-ին, 3-րդ; avtentikacijske predloge in zadeve), armenska imena
+lastnikov hišnih ekip in `klub_stik.drzava` (migracija 20261016213700), `IMENA_AM` v
+*Hisne ekipe* in `AM` v matriki nočnega uvoza (en koš). Ugib: brskalnik `hy`
+ali pas `Asia/Yerevan`; rok v pošti je po erevansko (UTC+4, dve uri poleti in
+tri pozimi več kot Ljubljana). Krog je "Տուր N", samostalnik za številom ostane
+v ednini ("2 միավոր"). Manjka še: armenski kanal v HelpStacku in **pregled
+prevoda pri naravnem govorcu**.
 
 - **Šifra lige je `<pot>/<skupina>`**: pot strani pod `/en/` (`first-league`)
   in id skupine iz gradnika Livewire `cascade-tour-matches`

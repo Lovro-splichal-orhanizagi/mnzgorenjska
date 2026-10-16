@@ -4,8 +4,20 @@ Vir `aft` (`scripts/viri/aft.mjs`) bere **aft.com.ua** (Асоціація фу�
 Тернопільщини): oblastno prvenstvo, Вища ліга (raven 5, pod AAFU) in Перша
 ліга (raven 6). Država `UA` ("Україна") in zveza `aft` sta v migraciji
 20261015230500 (država z `on conflict do nothing`, ker jo vpiše tudi vir
-`pfl-ua`). Ukrajinskega vmesnika, kartice in pošte še ni, `UA` ni v matriki
-nočnega uvoza — oboje pred vklopom. Šifra lige se začne z `ua-`.
+`pfl-ua`). Šifra lige se začne z `ua-`.
+
+**Vmesnik in pošta.** Ukrajina ima vmesnik v ukrajinščini (`src/i18n/uk/`,
+jezik `uk`, `uk-UA`, **cirilica**, `JEZIK_DRZAVE.UA`; jezik `uk` ni Združeno
+kraljestvo, vstop je `/ua`), izbirnik jezika "Українська", vstop `slff.eu/ua`, kartico ob deljenju `ua.html` (Caddy jo vrne za `/ua` in `?t=ua-…`, tudi rezerva `:3201`, `vercel.json`),
+ukrajinsko vejo pošte (pozdrav "Привіт", množine one/few/many/other: "1 очко,
+2 очки, 5 очок, 21 очко", avtentikacijske predloge in zadeve), ukrajinska imena
+lastnikov hišnih ekip in `klub_stik.drzava` (migracija 20261016213700), `IMENA_UA` v
+*Hisne ekipe* in `UA` v matriki nočnega uvoza (en koš). Ugib: brskalnik `uk`
+ali pas `Europe/Kyiv` (tudi stara imena pasov); **ruski brskalnik ne kaže na
+Ukrajino**. Rok v pošti je po kijevsko (uro več kot Ljubljana). Krog je "5-й
+тур", ime lige stoji samostojno za dvopičjem. Manjka še: ukrajinski kanal v
+HelpStacku in **pregled prevoda pri naravnem govorcu**. Lige ostanejo
+neaktivne, dokler jih lastnik ne vklopi.
 
 - **Sezona je koledarsko leto** (maj–oktober, `sezona_koledarska`): `"2026"`.
   Vir jo vzame iz naslova turnirja ("Чемпіонат Тернопільської області 2026")
@@ -97,9 +109,8 @@ Vir `hoff-km` (`scripts/viri/hoff-km.mjs`) bere **hoff.km.ua**, spletišče
 Vyshcha liga (6 klubov) in Persha liga (5 klubov), raven 5 in 6. Ime vira je
 `hoff-km` (ne `hoff.km`), ker delovni tokovi sprejmejo le `[a-z0-9-]`. Država
 `UA` (vpiše jo ta migracija ali `pfl-ua`, `on conflict do nothing`), zveza
-`hoaf-km` (migracija 20261015230700); **vmesnika v ukrajinščini, kartice in
-pošte še ni in `UA` ni v matriki nočnega uvoza** — oboje pred vklopom. Šifra
-lige se začne z `ua-`.
+`hoaf-km` (migracija 20261015230700); vmesnik, pošta in nočni uvoz so
+pripravljeni (glej začetek datoteke). Šifra lige se začne z `ua-`.
 
 - **Sezona je koledarsko leto** (maj–oktober, `sezona_koledarska`): oznaka
   `"2026"`. **Šifra lige je slug strani lige** (`chho-2026-vyshha-liga`,
@@ -213,10 +224,8 @@ Vir `pfl-ua` (`scripts/viri/pfl-ua.mjs`) bere **pfl.ua** (Професіонал
 футбольна ліга України): Peršo ligo (raven 2) ter Drugo ligo A in B (raven 3).
 Nižjih lig na pfl.ua ni (amaterska liga AAFU in oblastne zveze so drugje;
 Lviv `ffl.org.ua` je poznejši vir). Država `UA` ("Україна") in zveza
-`pfl-ua` (migracija 20261016091900); **vmesnika v ukrajinščini, kartice in
-`pfl-ua` (migracija 20261015163700); **vmesnika v ukrajinščini, kartice in
-pošte še ni in `UA` ni v matriki nočnega uvoza** — oboje pred vklopom. Šifra
-lige se začne z `ua-`.
+`pfl-ua` (migracija 20261016091900); vmesnik, pošta in nočni uvoz so
+pripravljeni (glej začetek datoteke). Šifra lige se začne z `ua-`.
 
 - **Šifra lige je `<koledar>/<turnir>`** (`2a/1354`): oznaka javnega
   koledarja (`1`, `2a`, `2b`; ob delitvi Perše lige `1a`, `1b`) in id
@@ -301,8 +310,8 @@ workflow run uvoz-lige.yml -f liga=ua-1-liga -f arhiv=1/1347 -f cene=true`.
 Vir `upl` (`scripts/viri/upl.mjs`) bere **upl.ua** (Українська Прем'єр-Ліга):
 najvišjo ligo, 16 klubov, 30 krogov. Perša in Druga liga sta pri `pfl-ua`
 (zgoraj). Država `UA` je iz migracije PFL; zveza `upl` in liga `ua-upl`
-(migracija 20261016092500), **neaktivna**. Za vmesnik, kartico, pošto in nočni
-uvoz velja isto kot pri `pfl-ua` — pred vklopom.
+(migracija 20261016092500), **neaktivna**. Vmesnik, kartica, pošta in nočni
+uvoz so pripravljeni (glej začetek datoteke).
 
 - **Šifra lige je id prvenstva sezone** (`432` = 2026/27, `428` = 2025/26,
   `424` = 2024/25; izbirnik sezon je na strani prvenstva). Ob novi sezoni se
@@ -401,9 +410,8 @@ Vir `ffl` (`scripts/viri/ffl.mjs`) bere **ffl.org.ua** (Львівська ас�
 футболу, ЛАФ): oblastno prvenstvo odraslih, Прем'єр-ліга, Перша, Друга,
 Третя (tri skupine) in Четверта ліга (dve skupini). Država `UA` je v migraciji
 z `on conflict do nothing` (vpišeta jo tudi `pfl-ua` in `aft`), zveza `laf`
-in lige v migraciji 20261015165300. Ukrajinskega vmesnika, kartice in pošte še
-ni, `UA` ni v matriki nočnega uvoza — oboje pred vklopom. Šifra lige se začne
-z `ua-`.
+in lige v migraciji 20261015165300. Vmesnik, pošta in nočni uvoz so
+pripravljeni (glej začetek datoteke). Šifra lige se začne z `ua-`.
 
 - **Sezona je jesen–pomlad** ("Сезон-2026/2027" → `"2026/27"`), ne koledarska.
   Pred njo je bila prehodna pomladna sezona "2026" (april–julij 2026, članki

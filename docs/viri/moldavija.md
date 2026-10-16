@@ -1,8 +1,13 @@
 # Moldavija — vir `fmf`
 
-Država `MD` ("Moldova", migracija 20261016094300) — **vmesnika (romunščina za
-Moldavijo), kartice in pošte še ni**, `MD` **ni** v matriki nočnega uvoza;
-oboje pred vklopom. Šifra lige se začne z `md-`. Lige so **neaktivne**.
+Država `MD` ("Moldova", migracija 20261016094300). Šifra lige se začne z
+`md-`. Lige so **neaktivne**. Moldavija dobi romunski vmesnik
+(`JEZIK_DRZAVE.MD = 'ro'`), vstop `slff.eu/md`, kartico ob deljenju `md.html` (Caddy jo vrne za `/md` in `?t=md-…`, tudi rezerva `:3201`, `vercel.json`), romunsko vejo pošte (rok po kišinjevsko,
+uro več kot Ljubljana), moldavska imena lastnikov hišnih ekip in
+`klub_stik.drzava` (migracija 20261016213700), `IMENA_MD` v *Hisne ekipe* in `MD` v
+matriki nočnega uvoza (en koš; korak pdftotext že teče za `MD`). Ugib: IP,
+brskalnik `ro-MD` ali pas `Europe/Chisinau` (`ro-RO` in gola `ro` ostaneta
+Romunija).
 
 Vir `fmf` (`scripts/viri/fmf.mjs`) bere **www.fmf.md** (Federația
 Moldovenească de Fotbal). Razpored, izidi in seznami tekem so HTML, zapisnik

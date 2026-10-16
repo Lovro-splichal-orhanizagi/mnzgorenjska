@@ -12,8 +12,17 @@ robots.txt dovoli `/resultater/pulje|kamp|Raekke|hold`, prepove
 in `/umbraco/` — izvoza v Excel (`/Umbraco/DBUFront/…`) ne beremo.
 
 Država `DK` ("Danmark", migracija 20261016093700), **šifra lige se začne z
-`dk-`**, zveza `dbu`. Vmesnika v danščini, kartice in pošte **še ni**, `DK` ni
-v matriki nočnega uvoza (`uvoz-zapisnikov.yml`, `KOSOV`) — oboje pred vklopom.
+`dk-`**, zveza `dbu`. Lige ostanejo neaktivne, dokler jih lastnik ne vklopi.
+
+**Vmesnik in pošta.** Danska ima vmesnik v danščini (`src/i18n/da/`, jezik `da`,
+`da-DK`, `JEZIK_DRZAVE.DK`; vstop po kodi države `/dk`), izbirnik jezika
+"Dansk", vstop `slff.eu/dk`, kartico ob deljenju `dk.html` (Caddy jo vrne za `/dk` in `?t=dk-…`, tudi rezerva `:3201`, `vercel.json`), dansko vejo pošte (pozdrav "Hej", avtentikacijske predloge in
+zadeve; `da-DK` piše uro s piko, "10.00"), danska imena lastnikov hišnih ekip
+in `klub_stik.drzava` (migracija 20261016213700), `IMENA_DK` v *Hisne ekipe* in `DK` v
+matriki nočnega uvoza (en koš). Ugib: brskalnik `da` ali pas
+`Europe/Copenhagen`. Krog je "5. runde", točke "point" v obeh oblikah
+(`one` pokrije tudi 0,5 in 1,5). Manjka še: danski kanal v HelpStacku in
+**pregled prevoda pri naravnem govorcu** (tudi pravnih besedil).
 Sezona je jesen–pomlad: oznaka `"2026/27"` (ne koledarska).
 
 Vir `dbu` (`scripts/viri/dbu.mjs`) bere **dbu.dk/resultater** (HTML s
