@@ -5,6 +5,7 @@
 //   ... --tekmovanje mladinci   (mladinska liga; brez tega člani)
 //   ... --pisi        (dejansko zapiše; brez tega samo pokaže, kaj bi naredil)
 //   ... --dovoli-manj-klubov  (klub je res odstopil: deaktiviraj kljub manj klubom)
+// Izhod 3: razpored ima manj klubov kot baza (glej spodaj), sicer vse uvoženo.
 //   SUPABASE_URL=...  (za projekt v oblaku; sicer vzame VITE_SUPABASE_URL iz .env)
 //
 // Zapisniki nastanejo šele po odigrani tekmi, zato brez razporeda baza ne ve
@@ -567,7 +568,9 @@ if (smemoDeaktivirati) {
           'Deaktivacijo igralcev in brisanje tekem preskočim. Če je klub res ' +
           'odstopil, poženi znova z --dovoli-manj-klubov.',
       )
-      process.exitCode = 1
+      // 3 = uvoz je uspel, odločiti mora človek (izstop kluba); nočni uvoz
+      // lige zato ne šteje za padlo. Poznejša napaka (1) ima prednost.
+      if (!process.exitCode) process.exitCode = 3
       smemoDeaktivirati = false
     }
   } catch (e) {
