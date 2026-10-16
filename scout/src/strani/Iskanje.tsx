@@ -10,11 +10,12 @@ const NAJVEC = 200 // baza vrne največ prvih 200
 
 /** Filtri iz naslova; neznano ali pokvarjeno pade na privzeto (naslov lahko kdo prilepi). */
 function filtri(q: URLSearchParams) {
+  const m = Number(q.get('min'))
   return {
     skupina: SKUPINE.find((s) => s === q.get('skupina')),
     raven: RAVNI.find((r) => r === q.get('raven')) ?? 'vse',
-    regije: (q.get('regije') ?? '').split(',').map(Number).filter((n) => Number.isInteger(n) && n > 0),
-    min: Math.max(0, Number(q.get('min')) || 0),
+    regije: (q.get('regije') ?? '').split(',').map(Number).filter((n) => Number.isSafeInteger(n) && n > 0),
+    min: Number.isFinite(m) ? Math.min(Math.max(0, Math.round(m)), 100000) : 0,
     odprti: q.get('odprti') === '1',
   }
 }
