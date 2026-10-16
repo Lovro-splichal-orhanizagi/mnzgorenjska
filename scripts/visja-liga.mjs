@@ -128,6 +128,13 @@ export function ravenLige({ slug, name, zveza }) {
     const [, zv, kat] = slug.split('-')
     const r = { a1: 1, a: 2, a2: 2, b: 3, g: 4 }[kat]
     return r ? { raven: r, obmocje: `gr-${zv}`, drzavna: false, mladinska } : null
+}
+
+  // Anglija (vir isthmian): Premier Division vseh treh lig je step 3, ostale
+  // divizije step 4 — ista narodna piramida.
+  if (slug.startsWith('gb-')) {
+    if (mladinska) return null
+    return abs(/^gb-[a-z]+-premier(-|$)/.test(slug) ? 1 : 2)
   }
 
   if (slug.startsWith('ee-')) {

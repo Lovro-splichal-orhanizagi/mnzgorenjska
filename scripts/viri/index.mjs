@@ -44,6 +44,7 @@ import wmzpn from './wmzpn.mjs'
 import ltfutbolas from './ltfutbolas.mjs'
 import fscg from './fscg.mjs'
 import mfa from './mfa.mjs'
+import isthmian from './isthmian.mjs'
 
 const VIRI = {
   mnzg,
@@ -133,6 +134,9 @@ const VIRI = {
   // Malta (MFA) prek javnega JSON API-ja Match Centra (api.mfa.com.mt, COMET):
   // šifra osebe, vratar, menjave z minuto; krog iz zaporedja šifer tekem.
   mfa,
+  // Anglija (step 3–4): Isthmian, Northern Premier in Southern League prek skupnega
+  // javnega JSON platforme (glava x-tenant-id); šifra osebe, vratar.
+  isthmian,
 }
 
 /**
