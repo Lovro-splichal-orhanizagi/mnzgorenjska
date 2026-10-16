@@ -216,4 +216,23 @@ export const tekme = {
       vodi: 'Vodi {pozicija} — utež {utez} / {prag}',
     },
   },
+  // Razlaga točk in cene na mestu (components/Razlaga.tsx).
+  razlaga: {
+    zakaj: 'Zakaj {tocke}? Razlaga točk',
+    zapri: 'Zapri',
+    ostalo: 'Ostalo',
+    brezPozicije: 'Pozicija še ni določena, zato gol še ne prinese točk. Ko skupnost pozicijo potrdi, se točke preračunajo.',
+    pravila1: 'Ta krog se točkuje po starejših pravilih: čista mreža vratarja +4, brez točk za zmago.',
+    asistence: 'Asistence potrdi skupnost z glasovanjem — nepotrjena asistenca še ne prinese točk.',
+    zadnjiKrog: 'Zadnja tekma: {krog}. krog',
+    cena: {
+      zakaj: 'Zakaj ta cena?',
+      zdaj: 'Cena zdaj',
+      izhodisce: 'Izhodiščna cena',
+      izhodisceOpis: 'Izhodiščna cena je izračunana iz minut in točk prejšnje sezone, v primerjavi z drugimi igralci lige.',
+      privzeta: 'Kdor je v prejšnji sezoni odigral manj kot {minut} minut, začne pri {cena} — razen če je igral v višji ligi; takrat dobi ceno iz nje.',
+      borza: 'Po vsakem krogu se cena premakne: +{korak} za vsaki dve točki nad 2 (največ +{najvec} na krog), −{korak} po slabem krogu ali slabi formi in −{korak}, če igralec drugi krog zapored ne igra, čeprav njegov klub igra.',
+      razpon: 'Cena je vedno med {od} in {do}.',
+    },
+  },
 }

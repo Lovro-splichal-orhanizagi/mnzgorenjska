@@ -1,0 +1,14 @@
+{
+  "vrsta": "liga",
+  "od": "2026-09-28",
+  "do": "2026-10-14",
+  "liga": {
+    "slug": "clani", "ime": "1. GNL — člani", "kratko": "1. GNL", "drzava": "SI", "krog": 8, "upraviteljev": 412, "ekip": 431,
+    "lestvica": [
+      { "mesto": 1, "ime": "Polet", "grb": null, "tekme": 8, "zmage": 6, "tocke": 19, "razlika": 17 },
+      { "mesto": 2, "ime": "Sava Kranj", "grb": null, "tekme": 7, "zmage": 5, "tocke": 16, "razlika": 11 },
+      { "mesto": 3, "ime": "Eltron Preddvor", "grb": null, "tekme": 8, "zmage": 4, "tocke": 15, "razlika": 8 }
+    ],
+    "strelec": { "ime": "Drobnjak Jaša", "klub": "Polet", "goli": 9 }
+  }
+}

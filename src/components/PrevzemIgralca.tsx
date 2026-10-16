@@ -44,10 +44,13 @@ export default function PrevzemIgralca({
   igralecId,
   slugLige,
   anonimiziran,
+  naLastnika,
 }: {
   igralecId: number
   slugLige: string | undefined
   anonimiziran: boolean
+  /** Pove strani, ali je prijavljeni potrjeni lastnik profila (kartica). */
+  naLastnika?: (jeLastnik: boolean) => void
 }) {
   const { session } = useAuth()
   const uid = session?.user.id ?? null
@@ -94,6 +97,10 @@ export default function PrevzemIgralca({
   useEffect(() => {
     void nalozi()
   }, [nalozi])
+
+  useEffect(() => {
+    naLastnika?.(!!potrjen && moji.some((z) => z.status === 'potrjen' && z.player_id === potrjen.glavni))
+  }, [potrjen, moji, naLastnika])
 
   if (potrjen === undefined) return null
 

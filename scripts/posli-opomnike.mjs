@@ -11,6 +11,8 @@
 //   ... VRSTA=opozorilo node scripts/posli-opomnike.mjs                  # opozorila
 //   ... VRSTA=opomnik-push node scripts/posli-opomnike.mjs               # push "še nimaš ekipe"
 //   ... VRSTA=dobrodoslica node scripts/posli-opomnike.mjs               # dan po registraciji, brez lige
+//   ... VRSTA=brez-ekipe node scripts/posli-opomnike.mjs                 # do trije opomniki po dobrodošlici
+//   ... VRSTA=liga-zivi node scripts/posli-opomnike.mjs                  # želena liga je zaživela (Moje lige ni)
 //
 // Opomnik gre vsem brez ekipe (353 ljudi) in je zato ročna odločitev.
 // Opozorilo gre samo tistim, ki ekipo IMAJO in se jim ne bo zaklenila — to
@@ -38,7 +40,7 @@ if (!SERVICE) { console.error('Manjka SUPABASE_SERVICE_ROLE_KEY'); process.exit(
 // Suho je PRIVZETO. Pošiljanje pošte resničnim ljudem mora biti izrecna
 // izbira, ne privzeta posledica zagona.
 const suho = String(process.env.SUHO ?? 'true').toLowerCase() !== 'false'
-const vrsta = ['opozorilo', 'opomnik-push', 'tedenski-pregled', 'dobrodoslica'].includes(process.env.VRSTA) ? process.env.VRSTA : 'opomnik'
+const vrsta = ['opozorilo', 'opomnik-push', 'tedenski-pregled', 'dobrodoslica', 'brez-ekipe', 'liga-zivi'].includes(process.env.VRSTA) ? process.env.VRSTA : 'opomnik'
 // Opozorilo, push opomnik in tedenski pregled tečejo po urniku; varuje jih meja na ligo.
 const poUrniku = vrsta !== 'opomnik'
 // Opomnik in tedenski pregled gresta po pošti v velikem številu: oba omejuje
@@ -61,7 +63,8 @@ const db = createClient(BASE, SERVICE, { auth: { persistSession: false } })
 
 // Dobrodošlica ni vezana na ligo: kosi po 10, dokler je kaj kandidatov ali do
 // NAJVEC_DOBRODOSLIC na zagon (urni zagon: zaostanek ~500 gre v pol dneva).
-if (vrsta === 'dobrodoslica') {
+// Opomnik brez ekipe enako (zaostanek ~1800 po 60 na uro gre v dan in pol).
+if (vrsta === 'dobrodoslica' || vrsta === 'brez-ekipe' || vrsta === 'liga-zivi') {
   let ostane = Number(process.env.NAJVEC_DOBRODOSLIC ?? 60)
   let poslano = 0
   for (;;) {
@@ -71,14 +74,14 @@ if (vrsta === 'dobrodoslica') {
       body: JSON.stringify({ vrsta, suho, najvec_poslati: Math.min(10, ostane) }),
     })
     const izid = await o.json().catch(() => ({}))
-    if (!o.ok) { console.error(`DOBRODOŠLICA NAPAKA ${o.status}: ${izid.error ?? ''}`); process.exit(1) }
-    if (suho) { console.log(`DOBRODOŠLICA — suhi tek: ${izid.kandidati_stevilo} kandidatov.`); process.exit(0) }
+    if (!o.ok) { console.error(`${vrsta.toUpperCase()} NAPAKA ${o.status}: ${izid.error ?? ''}`); process.exit(1) }
+    if (suho) { console.log(`${vrsta.toUpperCase()} — suhi tek: ${izid.kandidati_stevilo} kandidatov.`); process.exit(0) }
     poslano += izid.poslano ?? 0
     ostane -= izid.kandidati_stevilo ?? 0
     // Kos brez uspeha (vsi padli) ali zadnji kos: konec, ostali pridejo naslednjo uro.
     if (!izid.kandidati_stevilo || !izid.poslano || ostane <= 0) break
   }
-  console.log(`DOBRODOŠLICA — poslano ${poslano}.`)
+  console.log(`${vrsta.toUpperCase()} — poslano ${poslano}.`)
   process.exit(0)
 }
 const { data: lige, error } = await db

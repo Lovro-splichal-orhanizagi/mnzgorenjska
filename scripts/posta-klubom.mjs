@@ -42,7 +42,7 @@ const NA_DAN = 100
 const DNI_DO_OPOMNIKA = 3
 
 // Okno pošiljanja po državi prejemnika; država brez okna (in besedil) ne dobi nič.
-export const OKNA = { AT: 'Europe/Vienna', EE: 'Europe/Tallinn' }
+export const OKNA = { AT: 'Europe/Vienna', EE: 'Europe/Tallinn', HR: 'Europe/Zagreb', HU: 'Europe/Budapest', RS: 'Europe/Belgrade' }
 
 /** Je čas `zdaj` v oknu države (08–18, pon–sob, krajevni čas)? */
 export function vOknu(drzava, zdaj = new Date()) {
@@ -94,7 +94,7 @@ slff.eu
     zadeva: ekip >= 5 ? `${klub}: Ihre Spieler sind schon in ${ekip} Fantasy-Teams` : `${klub} im Fantasy-Spiel: so läuft es für Ihre Spieler`,
     telo: `Guten Tag,
 
-vor ein paar Tagen habe ich Ihnen über SLFF geschrieben, das kostenlose Fantasy-Spiel für die ${liga}. Kurz: Die Spieler von ${klub} sind im Spiel und sammeln Punkte${ekip >= 5 ? `, und sie stehen schon in ${ekip} Fantasy-Teams` : ''}.${naj ? ` Bester bisher: ${naj}.` : ''}
+vor ein paar Tagen habe ich Ihnen über SLFF geschrieben, das kostenlose Fantasy-Spiel für die ${liga}. Kurz: Die Spieler von ${klub} sind im Spiel und sammeln Punkte${ekip >= 5 ? `, und sie stehen schon in ${ekip} Fantasy-Teams` : ''}.${naj ? ` Bisher bester Spieler: ${naj}.` : ''}
 
 Die Vereinsseite mit Statistiken und einem fertigen Bild zum Teilen:
 ${url}
@@ -111,7 +111,7 @@ slff.eu
 }
 
 // Estonščina sklanja, zato ime lige stoji samo za dvopičjem ali v oklepaju,
-// klub za besedo "klubi"/"klubist" (glej CLAUDE.md *Estonija*). Brez pomišljajev.
+// klub za besedo "klubi"/"klubist" (glej docs/viri/estonija.md). Brez pomišljajev.
 // Besedila ne trdijo, da imamo dovoljenje zveze.
 function estonsko(k, p, vrsta, url) {
   const { ime_lige: liga, klub } = k
@@ -157,7 +157,163 @@ slff.eu
   }
 }
 
-const BESEDILA = { AT: { sestavi: nemsko, odjava: 'Abmelden' }, EE: { sestavi: estonsko, odjava: 'Loobu' } }
+// Hrvaščina in srbščina: 1, 21 … ednina, 2–4 (22–24 …) dvojina, sicer rodilnik množine.
+const slovansko = (n, ena, dve, pet) => {
+  n = Math.abs(Number(n ?? 0))
+  if (!Number.isInteger(n)) return dve
+  const e = n % 10
+  const d = n % 100
+  return e === 1 && d !== 11 ? ena : e >= 2 && e <= 4 && (d < 12 || d > 14) ? dve : pet
+}
+
+// Ime lige stoji v imenovalniku ("Odnedavno je u igri i 1. ŽNL Karlovac"),
+// klub za besedo "kluba"; števila ekip ne sklanjamo ("… s njima već ima 7").
+// Besedila ne trdijo, da imamo dovoljenje zveze.
+function hrvasko(k, p, vrsta, url) {
+  const { ime_lige: liga, klub } = k
+  const naj = p.naj ? `${p.naj}, ${tocke(p.tocke)} ${slovansko(p.tocke, 'bod', 'boda', 'bodova')}` : null
+  if (vrsta === 'prvi') {
+    return {
+      zadeva: `Igrači kluba ${klub} u fantasy nogometu (${liga})`,
+      telo: `Poštovani,
+
+ja sam Luka iz SLFF-a, besplatne fantasy nogometne igre za amaterske lige. Odnedavno je u igri i ${liga}: navijači slažu svoju momčad od stvarnih igrača lige, a bodovi dolaze iz službenih zapisnika utakmica na semafor.hns.family. U igri je već ${p.igralcev} ${slovansko(p.igralcev, 'igrač', 'igrača', 'igrača')} kluba ${klub}:
+${url}
+${naj ? `
+Dosad najbolji igrač: ${naj}.
+` : ''}
+Ako vam se sviđa, slobodno podijelite poveznicu u klupskoj grupi ili na Facebooku. Neki klubovi to vide kao malu dodatnu motivaciju za igrače, jer se nakon svakog kola vidi tko skuplja bodove. Igra je besplatna.
+
+Ako neki igrač ne želi biti u igri pod svojim imenom ili ne želite više poruka, dovoljan je kratak odgovor.
+
+Lijep pozdrav
+Luka
+slff.eu
+`,
+    }
+  }
+  const ekip = p.ekip ?? 0
+  return {
+    zadeva: ekip >= 5 ? `${klub}: vaši igrači su već u fantasy momčadima (${ekip})` : `${klub} u fantasy igri: kako stoje vaši igrači`,
+    telo: `Poštovani,
+
+prije nekoliko dana pisao sam vam o SLFF-u, besplatnoj fantasy igri (${liga}). Ukratko: igrači kluba ${klub} su u igri i skupljaju bodove${ekip >= 5 ? `, a fantasy momčadi s njima već ima ${ekip}` : ''}.${naj ? ` Dosad najbolji: ${naj}.` : ''}
+
+Stranica kluba sa statistikom i gotovom slikom za dijeljenje:
+${url}
+
+Ako stavite poveznicu u klupsku grupu ili na Facebook, navijači, ali i sami igrači mogu se međusobno natjecati. Igra je besplatna.
+
+Ovo mi je posljednja poruka o tome. Ako neki igrač ne želi biti u igri pod svojim imenom, dovoljan je kratak odgovor.
+
+Lijep pozdrav
+Luka
+slff.eu
+`,
+  }
+}
+
+// Srbščina: ekavica, latinica (kot vmesnik). Vir zapisnikov je fsb.org.rs za
+// beograjske lige, sicer fss.rs.
+function srbsko(k, p, vrsta, url) {
+  const { ime_lige: liga, klub } = k
+  const vir = /^rs-(u19-)?bg-/.test(k.liga_slug ?? '') ? 'fsb.org.rs' : 'fss.rs'
+  const naj = p.naj ? `${p.naj}, ${tocke(p.tocke)} ${slovansko(p.tocke, 'poen', 'poena', 'poena')}` : null
+  if (vrsta === 'prvi') {
+    return {
+      zadeva: `Igrači kluba ${klub} u fantasy fudbalu (${liga})`,
+      telo: `Poštovani,
+
+ja sam Luka iz SLFF-a, besplatne fantasy fudbalske igre za amaterske lige. Odnedavno je u igri i ${liga}: navijači sastavljaju svoj tim od stvarnih igrača lige, a poeni dolaze iz zvaničnih zapisnika sa utakmica na ${vir}. U igri je već ${p.igralcev} ${slovansko(p.igralcev, 'igrač', 'igrača', 'igrača')} kluba ${klub}:
+${url}
+${naj ? `
+Do sada najbolji igrač: ${naj}.
+` : ''}
+Ako Vam se dopada, slobodno podelite link u klupskoj grupi ili na Fejsbuku. Neki klubovi to vide kao malu dodatnu motivaciju za igrače, jer se posle svakog kola vidi ko skuplja poene. Igra je besplatna.
+
+Ako neki igrač ne želi da bude u igri pod svojim imenom ili ne želite više poruka, dovoljan je kratak odgovor.
+
+Srdačan pozdrav
+Luka
+slff.eu
+`,
+    }
+  }
+  const ekip = p.ekip ?? 0
+  return {
+    zadeva: ekip >= 5 ? `${klub}: Vaši igrači su već u fantasy timovima (${ekip})` : `${klub} u fantasy igri: kako stoje Vaši igrači`,
+    telo: `Poštovani,
+
+pre nekoliko dana sam Vam pisao o SLFF-u, besplatnoj fantasy igri (${liga}). Ukratko: igrači kluba ${klub} su u igri i skupljaju poene${ekip >= 5 ? `, a fantasy timova sa njima već ima ${ekip}` : ''}.${naj ? ` Do sada najbolji: ${naj}.` : ''}
+
+Stranica kluba sa statistikom i gotovom slikom za deljenje:
+${url}
+
+Ako postavite link u klupsku grupu ili na Fejsbuk, navijači, ali i sami igrači mogu međusobno da se takmiče. Igra je besplatna.
+
+Ovo mi je poslednja poruka o tome. Ako neki igrač ne želi da bude u igri pod svojim imenom, dovoljan je kratak odgovor.
+
+Srdačan pozdrav
+Luka
+slff.eu
+`,
+  }
+}
+
+// Madžarščina sklanja s priponami, zato ime lige in kluba stojita brez njih:
+// za dvopičjem, v oklepaju ali pred "játékosai" / "közül". Za številom ednina
+// ("55 pont"). Vikanje kluba (Önök).
+function madzarsko(k, p, vrsta, url) {
+  const { ime_lige: liga, klub } = k
+  const naj = p.naj ? `${p.naj}, ${tocke(p.tocke)} pont` : null
+  if (vrsta === 'prvi') {
+    return {
+      zadeva: `${klub} játékosai a fantasy fociban (${liga})`,
+      telo: `Jó napot kívánok!
+
+Luka vagyok az SLFF-től, amely egy ingyenes fantasy futballjáték amatőr bajnokságoknak. Nemrég bekerült a játékba ez a bajnokság is: ${liga}. A szurkolók a bajnokság valódi játékosaiból állítják össze a csapatukat, a pontok pedig a hivatalos mérkőzés-jegyzőkönyvekből származnak (adatbank.mlsz.hu). ${klub} játékosai közül már ${p.igralcev} szerepel a játékban:
+${url}
+${naj ? `
+Eddigi legjobb játékos: ${naj}.
+` : ''}
+Ha tetszik Önöknek, nyugodtan osszák meg a linket a klub csoportjában vagy a Facebookon. Néhány klub ezt kis plusz motivációnak tekinti a játékosok számára, mert minden forduló után látszik, ki gyűjti a pontokat. A játék ingyenes.
+
+Ha valamelyik játékos nem szeretne a saját nevével szerepelni, vagy nem kérnek több levelet, elég egy rövid válasz.
+
+Üdvözlettel
+Luka
+slff.eu
+`,
+    }
+  }
+  const ekip = p.ekip ?? 0
+  return {
+    zadeva: ekip >= 5 ? `${klub} játékosai már ${ekip} fantasy csapatban szerepelnek` : `${klub} a fantasy játékban: így állnak a játékosok`,
+    telo: `Jó napot kívánok!
+
+Néhány napja írtam Önöknek az SLFF-ről, az ingyenes fantasy játékról (bajnokság: ${liga}). Röviden: ${klub} játékosai a játékban vannak és pontokat gyűjtenek${ekip >= 5 ? `, és már ${ekip} fantasy csapatban szerepelnek` : ''}.${naj ? ` Eddig a legjobb: ${naj}.` : ''}
+
+A klub oldala statisztikákkal és megosztásra kész képpel:
+${url}
+
+Ha kiteszik a linket a klub csoportjába vagy a Facebookra, a szurkolók és maguk a játékosok is versenyezhetnek egymással. A játék ingyenes.
+
+Ez az utolsó levelem ebben a témában. Ha valamelyik játékos nem szeretne a saját nevével szerepelni, elég egy rövid válasz.
+
+Üdvözlettel
+Luka
+slff.eu
+`,
+  }
+}
+
+const BESEDILA = {
+  AT: { sestavi: nemsko, odjava: 'Abmelden' },
+  EE: { sestavi: estonsko, odjava: 'Loobu' },
+  HR: { sestavi: hrvasko, odjava: 'Odjava' },
+  HU: { sestavi: madzarsko, odjava: 'Leiratkozás' },
+  RS: { sestavi: srbsko, odjava: 'Odjava' },
+}
 
 /**
  * Zadeva, telo in zadeva odjave za mail klubu, ali null za državo brez besedil.

@@ -29,18 +29,21 @@ import ZnakPreverjen from '../components/ZnakPreverjen'
 import PrevzemIgralca from '../components/PrevzemIgralca'
 import UradneOdsotnostiIgralca from '../components/UradnaOdsotnost'
 import KarticaIgralca from '../components/KarticaIgralca'
-import { useFotografija } from '../lib/prevzem'
-import { dosezkiNastopa, vrsticaTekme, type NastopZaKartico } from '../lib/karticaIgralca'
+import { jeMladinskiSlug, useFotografija } from '../lib/prevzem'
+import { dosezkiNastopa, odstotekIzbranosti } from '../lib/karticaIgralca'
 import {
   VRSTE,
   VrsticaPorocila,
   type Porocilo,
   type VrstaPorocila,
 } from '../components/Odsotnost'
-import { tockeZaNastop } from '../lib/tockovanje'
-import type { Pozicija, Postavka } from '../lib/tipi'
+import { naloziRazlage, type Razlaga } from '../lib/razlagaTock'
+import { SeznamPostavk, RazlagaCene } from '../components/Razlaga'
+import type { Pozicija } from '../lib/tipi'
 import { t, tx } from '../i18n'
 import { izvor } from '../lib/platforma'
+import { naTrgu } from '../lib/osnutek'
+import { zabeleziKorak } from '../lib/lijak'
 import { prevediNapako } from '../lib/napake'
 import { NalaganjeZaBralnik, Skelet } from '../components/Skelet'
 
@@ -51,6 +54,8 @@ type Profil = Record<string, any> & {
   team_id?: number | null
   position?: Pozicija | null
   full_name?: string | null
+  active?: boolean | null
+  izstopil_at?: string | null
 }
 
 /** Številke tekoče sezone (`player_season_standings`). */
@@ -60,22 +65,6 @@ interface Sezonsko {
   matches: number | null
   goals: number | null
   minutes: number | null
-}
-
-/** Razlaga tock v enem krogu. */
-interface Razlaga {
-  round_id: number
-  number: number | null
-  season: string | null
-  played_on: string | null
-  match_id: number
-  minute: number | null
-  postavke: Postavka[]
-  skupaj: number
-  /** Surove številke nastopa — za kartico igralca. */
-  nastop: NastopZaKartico
-  /** "Domači 2 : 1 Gostje" — za kartico igralca. */
-  tekma: string | null
 }
 
 const POZICIJE: Pozicija[] = ['GK', 'DEF', 'MID', 'FWD']
@@ -115,6 +104,10 @@ export default function Igralec() {
   const [nalaganje, setNalaganje] = useState(true)
   // Za kartico: v koliko ekipah je igralec.
   const [ekipZIgralcem, setEkipZIgralcem] = useState<number | null>(null)
+  // Imenovalec izbranosti na kartici: človeške ekipe lige (kot stran Igralci).
+  const [ekipVLigi, setEkipVLigi] = useState<number | null>(null)
+  // Potrjeni lastnik profila deli "svojo" kartico.
+  const [jeLastnik, setJeLastnik] = useState(false)
   // "Ime Priimek (Klub)": isto ime v drugem klubu je drug igralec.
   useNaslov(
     igralec
@@ -141,24 +134,8 @@ export default function Igralec() {
           .select('value_start')
           .eq('id', igralecId)
           .maybeSingle(),
-        // Razlaga točk per krog — nastopi + goli + asistence; tekma nosi še
-        // izid in klube za kartico.
-        supabase
-          .from('appearances')
-          .select(
-            'match_id, minutes_played, goals, own_goals, penalties_missed, penalties_saved, yellow_cards, red_cards, goals_conceded, clean_sheet, matches(round_id, home_goals, away_goals, domaci:teams!matches_home_team_id_fkey(name), gostje:teams!matches_away_team_id_fkey(name), rounds(number, season, played_on))',
-          )
-          .eq('player_id', igralecId),
-        // Asistence: število golov, kjer je ta igralec confirmed asistent
-        supabase
-          .from('goals')
-          .select('match_id')
-          .eq('assist_player_id', igralecId),
-        // Zmago, prejete gole med igranjem in različico pravil kroga pove pogled.
-        supabase
-          .from('appearance_points')
-          .select('match_id, zmaga, prejeti_na_igriscu, cista_mreza, pravila')
-          .eq('player_id', igralecId),
+        // Razlaga točk po krogih; tekma nosi še izid in klube za kartico.
+        naloziRazlage(igralecId),
         uporabnikId
           ? supabase
               .from('position_votes')
@@ -189,7 +166,7 @@ export default function Igralec() {
       const ligaId = p.competition_id ?? 0
 
       const [
-        [{ data: g }, { data: zac }, { data: nastopi }, { data: asistGoli }, { data: izPogleda }, { data: moj }],
+        [{ data: g }, { data: zac }, raz, { data: moj }],
         { data: tek },
         [tekocaSez, ss, c, zk],
       ] = await Promise.all([
@@ -265,6 +242,14 @@ export default function Igralec() {
           : null,
       )
       setEkipZIgralcem(ss?.owners != null ? Number(ss.owners) : null)
+      supabase
+        .from('fantasy_teams')
+        .select('id', { count: 'exact', head: true })
+        .eq('competition_id', ligaId)
+        .eq('hisna', false)
+        .then(({ count }) => {
+          if (!preklican) setEkipVLigi(count ?? null)
+        })
       // Brez letošnjega nastopa igralec v player_season_standings nima vrstice,
       // v ekipah pa je lahko vseeno. Le takrat vprašamo player_standings (z
       // ligo v filtru) — mimo nalaganja, ker kartica na to ne čaka.
@@ -295,54 +280,6 @@ export default function Igralec() {
       )
       setMojGlas((moj?.position as Pozicija | null) ?? null)
 
-      const asistPoMatchu = new Map<number, number>()
-      for (const gg of (asistGoli ?? []) as any[])
-        asistPoMatchu.set(gg.match_id, (asistPoMatchu.get(gg.match_id) ?? 0) + 1)
-      const poMatchu = new Map((izPogleda ?? []).map((x) => [x.match_id, x]))
-
-      // Brez potrjene pozicije tock ni mogoce razcleniti; privzamemo vezista,
-      // kakor je racunala tudi prejsnja razlicica.
-      const pozicija = ((p as Profil | null)?.position ?? 'MID') as Pozicija
-      const raz: Razlaga[] = []
-      for (const n of (nastopi ?? []) as any[]) {
-        const r = n.matches?.rounds
-        if (!r) continue
-        const v = poMatchu.get(n.match_id)
-        const nastop = {
-          minute: n.minutes_played,
-          goli: n.goals,
-          asistence: asistPoMatchu.get(n.match_id) ?? 0,
-          cleanSheet: v?.cista_mreza ?? n.clean_sheet,
-          prejetiGoli: v?.prejeti_na_igriscu ?? n.goals_conceded,
-          zmaga: v?.zmaga,
-          pravila: v?.pravila,
-          obranjeneEnajstmetrovke: n.penalties_saved,
-          zgreseneEnajstmetrovke: n.penalties_missed,
-          avtogoli: n.own_goals,
-          rumeni: n.yellow_cards,
-          rdeci: n.red_cards,
-        }
-        const { skupaj, postavke } = tockeZaNastop(nastop, pozicija)
-        raz.push({
-          nastop: {
-            minute: n.minutes_played,
-            goli: n.goals,
-            asistence: asistPoMatchu.get(n.match_id) ?? 0,
-            cistaMreza: nastop.cleanSheet,
-            obranjene: n.penalties_saved,
-          },
-          tekma: vrsticaTekme(n.matches.domaci?.name ?? null, n.matches.gostje?.name ?? null, n.matches.home_goals, n.matches.away_goals),
-          round_id: n.matches.round_id,
-          number: r.number,
-          season: r.season,
-          played_on: r.played_on,
-          match_id: n.match_id,
-          minute: n.minutes_played,
-          postavke,
-          skupaj,
-        })
-      }
-      raz.sort((a, b) => (b.played_on ?? '').localeCompare(a.played_on ?? ''))
       setRazlage(raz)
       setNalaganje(false)
     }
@@ -496,6 +433,13 @@ export default function Igralec() {
   const slugLige = vsaTekmovanja.find((tm) => tm.id === igralec.competition_id)?.slug
   const vLigo = slugLige ? `?t=${encodeURIComponent(slugLige)}` : ''
 
+  const anonimiziran = String(igralec.full_name ?? '').startsWith('#')
+  // Kartice ni za mladinske lige (mladoletni) in za igralce s skritim imenom.
+  const smeKartico = !anonimiziran && !!slugLige && !jeMladinskiSlug(slugLige)
+  const povezavaKartice = smeKartico
+    ? `${izvor()}/player/${igralec.id}?t=${encodeURIComponent(slugLige)}&src=kartica`
+    : ''
+
   const zadnjaSprememba = cene[0]
   const premik = zadnjaSprememba
     ? Number(zadnjaSprememba.new_value) - Number(zadnjaSprememba.old_value)
@@ -553,14 +497,28 @@ export default function Igralec() {
               </span>
             )}
           </div>
+          <RazlagaCene cena={igralec.value} izhodisce={izhodisce} />
         </div>
       </div>
+
+      {/* Deljena povezava na igralca vodi v igro: dodaj ga v svojo ekipo (tudi brez računa). */}
+      {slugLige && naTrgu(igralec) && !String(igralec.full_name ?? '').startsWith('#') && (
+        <Link
+          to={zLigo(`/my-team?dodaj=${igralec.id}`, slugLige)}
+          onClick={() => zabeleziKorak('igralec_cta')}
+          className="gumb-glavni w-full flex-col"
+        >
+          <span>{t('igralci.profil.vEkipo')}</span>
+          <span className="text-xs font-normal opacity-80">{t('igralci.profil.vEkipoBrezplacno')}</span>
+        </Link>
+      )}
 
       {/* prevzem profila: značka in predstavitev potrjenega igralca, "To sem jaz" */}
       <PrevzemIgralca
         igralecId={igralec.id}
         slugLige={slugLige}
-        anonimiziran={String(igralec.full_name ?? '').startsWith('#')}
+        anonimiziran={anonimiziran}
+        naLastnika={setJeLastnik}
       />
 
       {/* številke — tekoča sezona; seštevek vseh sezon je drugotna vrstica */}
@@ -688,16 +646,17 @@ export default function Igralec() {
                   velikost={20}
                 />
                 {tk.opponent_id ? (
-                  <Link to={zLigo(`/club/${tk.opponent_id}`, slugLige)} className="font-semibold hover:text-gnl-300 hover:underline">
-                    {tk.opponent_short}
+                  <Link to={zLigo(`/club/${tk.opponent_id}`, slugLige)} className="max-w-[12rem] truncate font-semibold hover:text-gnl-300 hover:underline">
+                    {tk.opponent_name ?? tk.opponent_short}
                   </Link>
                 ) : (
-                  <span className="font-semibold">{tk.opponent_short}</span>
+                  <span className="max-w-[12rem] truncate font-semibold">{tk.opponent_name ?? tk.opponent_short}</span>
                 )}
+                {/* Polno ime in "doma"/"v gosteh": kratici "JM G" nihče ni razumel. */}
                 <span
                   className={`text-xs ${tk.doma ? 'text-gnl-300' : 'text-slate-500'}`}
                 >
-                  {tk.doma ? t('igralci.profil.domaKratko') : t('igralci.profil.vGostehKratko')}
+                  {tk.doma ? t('igralci.info.doma') : t('igralci.info.vGosteh')}
                 </span>
               </li>
             ))}
@@ -833,38 +792,7 @@ export default function Igralec() {
                   </button>
                   {odprto && (
                     <div className="px-3 pb-3">
-                      {r.postavke.length === 0 ? (
-                        <p className="text-xs text-slate-500">
-                          {t('igralci.profil.niIgralnegaCasa')}
-                        </p>
-                      ) : (
-                        <ul className="space-y-1 text-xs">
-                          {r.postavke.map((p, i) => (
-                            <li
-                              key={i}
-                              className="flex justify-between gap-3"
-                            >
-                              <span className="text-slate-400">{p.opis}</span>
-                              <span
-                                className={`font-bold tabular-nums ${
-                                  p.tocke > 0
-                                    ? 'text-gnl-300'
-                                    : 'text-rose-400'
-                                }`}
-                              >
-                                {p.tocke > 0 ? '+' : ''}
-                                {p.tocke}
-                              </span>
-                            </li>
-                          ))}
-                          <li className="mt-1 flex justify-between gap-3 border-t border-white/10 pt-1 text-slate-300">
-                            <span className="font-semibold">{t('igralci.profil.skupaj')}</span>
-                            <span className="font-black tabular-nums">
-                              {formatirajTocke(r.skupaj)}
-                            </span>
-                          </li>
-                        </ul>
-                      )}
+                      <SeznamPostavk razlaga={r} />
                     </div>
                   )}
                 </li>
@@ -876,9 +804,11 @@ export default function Igralec() {
 
       {/* kartica za objavo — za igralca, starše in navijače; pod statistiko,
           da na telefonu ne odrine podatkov za cel zaslon */}
-      {(zadnjiNastop || (sezonsko && (sezonsko.matches ?? 0) > 0)) && (
+      {smeKartico && (zadnjiNastop || (sezonsko && (sezonsko.matches ?? 0) > 0)) && (
         <section>
-          <h2 className={NASLOV}>{t('igralci.profil.deliKartico')}</h2>
+          <h2 className={NASLOV}>
+            {jeLastnik ? t('igralci.profil.deliSvojoKartico') : t('igralci.profil.deliKartico')}
+          </h2>
           <KarticaIgralca
             podatki={{
               ime: igralec.first_name ?? '',
@@ -901,14 +831,13 @@ export default function Igralec() {
                     golov: Number(sezonsko.goals ?? 0),
                   }
                 : null,
-              ekip: ekipZIgralcem,
+              cena: igralec.value != null ? Number(igralec.value) : null,
+              premikCene: premik,
+              izbran: odstotekIzbranosti(ekipZIgralcem, ekipVLigi),
+              naslov: povezavaKartice,
             }}
             fotografija={fotoProfila}
-            povezava={
-              typeof window !== 'undefined'
-                ? `${izvor()}/player/${igralec.id}${slugLige ? `?t=${slugLige}` : ''}`
-                : ''
-            }
+            povezava={povezavaKartice}
           />
         </section>
       )}

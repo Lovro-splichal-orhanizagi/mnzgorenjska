@@ -126,3 +126,55 @@ export async function prenesiSPonovitvami(url, moznosti = {}) {
     await cakaj(premor)
   }
 }
+
+// --- baza -------------------------------------------------------------------
+// Uvozi pišejo v bazo na strežniku (api.slff.eu prek Cloudflara). Ponoči jih
+// teče več hkrati in posamezen zahtevek kdaj pade: "TypeError: fetch failed",
+// Cloudflare 520, PostgREST "schema cache" (503). Ena taka napaka je podrla
+// ligo (at-regionalliga-nord, at-ooe-bezirksliga-ost, at-noe-1-klasse-ost,
+// at-k-2-klasse-d, 11.–14. 10. 2026), čeprav je bila baza sekundo pozneje v
+// redu. Zato odjemalec Supabase v uvozih dobi `fetchZaBazo`.
+//
+// Ponovimo le, kar ponovitev ne more pokvariti: branje, PATCH/PUT/DELETE,
+// upsert in RPC, ki tekmo zamenja v celoti. Navaden INSERT ali drug RPC
+// ponovimo samo, kadar zahtevek baze zagotovo ni dosegel (povezave ni bilo,
+// Cloudflare strežnika ni dosegel: 521–523).
+export const ZAMIKI_BAZE_MS = [2000, 5000, 15000, 30000]
+const NEDOSEGLJIVO = /^(ECONNREFUSED|ENOTFOUND|EAI_AGAIN|EHOSTUNREACH|ENETUNREACH|UND_ERR_CONNECT_TIMEOUT)$/
+const PONOVLJIVI_RPC = /\/rpc\/zamenjaj_nastope_tekme$/
+
+/** Je zahtevek na PostgREST varno ponoviti, tudi če je baza morda že pisala? */
+export function jeIdempotenten(url, init = {}) {
+  const metoda = String(init.method ?? 'GET').toUpperCase()
+  if (['GET', 'HEAD', 'PUT', 'PATCH', 'DELETE'].includes(metoda)) return true
+  if (/resolution=(merge|ignore)-duplicates/.test(new Headers(init.headers).get('prefer') ?? '')) return true
+  return PONOVLJIVI_RPC.test(new URL(String(url)).pathname)
+}
+
+/** `fetch` za odjemalca Supabase s ponovitvami prehodnih napak (glej zgoraj). */
+export function fetchZaBazo({ fetchFn = (...a) => fetch(...a), zamiki = ZAMIKI_BAZE_MS, log = (v) => console.log(v) } = {}) {
+  return async (url, init = {}) => {
+    const varno = jeIdempotenten(url, init)
+    for (let poskus = 0; ; poskus++) {
+      let odgovor, napaka
+      try {
+        odgovor = await fetchFn(url, init)
+      } catch (e) {
+        if (!jePrehodnaNapaka(e)) throw e
+        napaka = e
+      }
+      const status = odgovor?.status
+      const ponovi = napaka
+        ? varno || NEDOSEGLJIVO.test(String(napaka.cause?.code ?? napaka.code ?? ''))
+        : [521, 522, 523].includes(status) || (varno && [502, 503, 504, 520, 524].includes(status))
+      if (!ponovi || poskus >= zamiki.length) {
+        if (napaka) throw napaka
+        return odgovor
+      }
+      await odgovor?.body?.cancel().catch(() => {})
+      const razlog = napaka ? (napaka.cause?.code ?? napaka.message) : `HTTP ${status}`
+      log(`  baza: ponovim (${poskus + 1}/${zamiki.length}) čez ${zamiki[poskus] / 1000} s: ${razlog}`)
+      await cakaj(zamiki[poskus])
+    }
+  }
+}

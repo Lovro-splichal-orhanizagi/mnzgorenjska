@@ -6,7 +6,7 @@
 // shramba ekipe, stikalo na strani Obvestila (`registrirajPush(true)`) in pas
 // po prijavi, dokler dovoljenje ni odločeno (ekipo je večina sestavila na
 // spletu, zato prve shrambe v aplikaciji nikoli ni bilo). "Zapri" pas skrije
-// za teden dni.
+// za mesec dni (tudi "Dovoli", ki ga brskalnik ne potrdi).
 //
 // V brskalniku gre isti vtičnik prek Firebase JS (spletna aplikacija "SLFF web"
 // v projektu slff-cb58e, privzeti ključ VAPID); obvestilo prikaže
@@ -27,7 +27,26 @@ import { varnaPot } from '../lib/prijava'
 import { t } from '../i18n'
 
 const ZAPRTO = 'slff-push-pas-zaprt'
-const TEDEN = 7 * 86400e3
+// Pas se po "Zapri" ali neodločenem "Dovoli" vrne šele po mesecu: prej je
+// "Dovoli" brez odločitve brskalnika (Chrome okno pogosto skrije v naslovno
+// vrstico) pustil dovoljenje neodločeno in pas se je kazal ob vsakem obisku.
+const PREMOR = 30 * 86400e3
+
+function zadnjicZaprt(): number {
+  try {
+    return Number(localStorage.getItem(ZAPRTO) ?? 0)
+  } catch {
+    return 0
+  }
+}
+
+function zapomniZaprtje() {
+  try {
+    localStorage.setItem(ZAPRTO, String(Date.now()))
+  } catch {
+    /* zasebno okno */
+  }
+}
 // Prva gradnja trgovine z nastavitvijo Firebase (1.0.1, gradnja 3).
 const PUSH_OD_GRADNJE = 3
 
@@ -136,7 +155,7 @@ export default function PotisnaObvestila() {
       return
     }
     void registrirajPush(false).then(async (d) => {
-      if (d !== 'prompt' || Date.now() - Number(localStorage.getItem(ZAPRTO) ?? 0) < TEDEN) return
+      if (d !== 'prompt' || Date.now() - zadnjicZaprt() < PREMOR) return
       // Gradnja 1 (iOS in Android 1.0) je brez Firebase: žetona ne dobi, pas bi lagal.
       if (jeNativno() && Number((await App.getInfo()).build) < PUSH_OD_GRADNJE) return
       const { data } = await supabase.from('profiles').select('brez_push').eq('id', uporabnik).maybeSingle()
@@ -155,7 +174,10 @@ export default function PotisnaObvestila() {
           className="gumb-glavni min-h-[44px] flex-1 px-3 py-2"
           onClick={() => {
             setPas(false)
-            void registrirajPush(true)
+            // Brez odločitve (okno zaprto ali prezrto) ne sprašuj znova ob vsakem obisku.
+            void registrirajPush(true).then((d) => {
+              if (d !== 'granted') zapomniZaprtje()
+            })
           }}
         >
           {t('racun.opomniki.pushDovoli')}
@@ -164,7 +186,7 @@ export default function PotisnaObvestila() {
           type="button"
           className="gumb-tih min-h-[44px] px-3 py-2"
           onClick={() => {
-            localStorage.setItem(ZAPRTO, String(Date.now()))
+            zapomniZaprtje()
             setPas(false)
           }}
         >
