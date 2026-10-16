@@ -9,7 +9,7 @@ import { Okvir } from './src/Okvir'
 import { Prijava } from './src/strani/Prijava'
 import { Racun } from './src/strani/Racun'
 import { Iskanje, utemeljitev } from './src/strani/Iskanje'
-import { Igralec } from './src/strani/Igralec'
+import { Igralec, idIzNaslova } from './src/strani/Igralec'
 import { Vrzeli, opisVrzeli } from './src/strani/Vrzeli'
 import { Opazovani } from './src/strani/Opazovani'
 import { Pogoji } from './src/strani/Pogoji'
@@ -61,6 +61,9 @@ preveri('besede: brez negativnih oznak (spec 2)', negativni.length === 0, negati
 
 const u = utemeljitev({ percentil: 87.4, skupina: 'MID', minute: 900, delez_minut: 0.81, goli_90_pri_nas: 0.41 })
 preveri('iskanje: utemeljitev s percentilom, deležem in projekcijo', u.includes('87.') && u.includes('81 %') && u.includes('0,41'), u)
+const idji: [string | undefined, number | null][] = [['123', 123], ['0', null], ['-5', null], ['1.5', null], ['1e3', null], ['abc', null], ['9007199254740993', null], [undefined, null]]
+const slabiId = idji.filter(([v, pricakovano]) => idIzNaslova(v) !== pricakovano).map(([v]) => String(v))
+preveri('igralec: id iz naslova le varno pozitivno celo število', slabiId.length === 0, slabiId.join(', '))
 const v = opisVrzeli({ vrsta: 'odvisnost', skupina: 'FWD', ime: 'Ana Novak', vrednost: 0.45 })
 preveri('vrzeli: delež golov v odstotkih', v.includes('Ana Novak') && v.includes('45 %'), v)
 
