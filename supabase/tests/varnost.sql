@@ -3565,6 +3565,9 @@ select pg_temp.preveri('scout3: novo placilo vrne staro narocnino za preklic',
   scout_iz_placila(-913001, 'e5c30000-0000-4000-8000-000000000002', 'sezona', now() + interval '1 year', 'cus_s3', 'sub_s3c') = 'aktivna:sub_s3');
 select pg_temp.preveri('scout3: novo placilo zapise novo narocnino',
   (select stripe_subscription_id = 'sub_s3c' and obdobje = 'sezona' from scout.narocnine where team_id = -913001));
+-- Ponovitev po spodletelem preklicu stare: webhook mora staro dobiti znova.
+select pg_temp.preveri('scout3: ponovljeno placilo spet vrne staro narocnino za preklic',
+  scout_iz_placila(-913001, 'e5c30000-0000-4000-8000-000000000002', 'sezona', now() + interval '1 year', 'cus_s3', 'sub_s3c') = 'aktivna:sub_s3');
 
 do $$
 declare v_napak int;

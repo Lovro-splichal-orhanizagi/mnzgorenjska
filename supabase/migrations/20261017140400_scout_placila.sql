@@ -5,6 +5,10 @@
 -- ključ) zapiše plačilo, obnovo in konec. Preklic mora biti vedno mogoč:
 -- portal dobi plačnik ali katerikoli uradni račun kluba, ne glede na sedež.
 
+-- Zamenjana naročnina, dokler je webhook ne prekliče: ponovljen dogodek jo
+-- vrne znova, če je preklic prvič spodletel (Stripe ponovi dogodek po 500).
+alter table scout.narocnine add column prejsnja_subscription_id text;
+
 create function public.scout_pripravi_nakup(p_obdobje text)
 returns table (team_id bigint, stripe_customer_id text, email text)
 language plpgsql security definer set search_path = public
@@ -53,7 +57,8 @@ begin
     return 'ni_narocnine';
   end if;
   if n.stripe_subscription_id = p_subscription then
-    return 'aktivna';  -- ponovljen dogodek
+    -- Ponovljen dogodek: staro vrne znova, preklic že preklicane je no-op.
+    return case when n.prejsnja_subscription_id is null then 'aktivna' else 'aktivna:' || n.prejsnja_subscription_id end;
   end if;
   if n.zaprt_at is not null then
     return 'zaprt';
@@ -69,7 +74,8 @@ begin
   v_stara := n.stripe_subscription_id;
   update scout.narocnine
      set paket = 'klub', obdobje = p_obdobje, velja_do = greatest(velja_do, p_velja_do), stripe_customer_id = p_customer,
-         stripe_subscription_id = p_subscription, placal = p_user_id, updated_at = now()
+         stripe_subscription_id = p_subscription, prejsnja_subscription_id = v_stara, placal = p_user_id,
+         updated_at = now()
    where team_id = p_team_id;
   perform preverjeni_na_discord(format('💶 Scout plačan: %s (%s)', (select name from teams where id = p_team_id), p_obdobje));
   return case when v_stara is null then 'aktivna' else 'aktivna:' || v_stara end;
