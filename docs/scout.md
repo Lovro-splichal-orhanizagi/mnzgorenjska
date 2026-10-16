@@ -10,8 +10,9 @@ poziciji, podobne igralce in vrzeli v kadrih. Vse zapiše v zaprto shemo
 `scout` kot novo različico (`scout.modeli`) v eni transakciji. Vmesnika
 (faza 3) še ni.
 
-**Stanje (10/2026): moč lig trenutno ne prinese merljive vrednosti.** Backtest
-na produkcijskih podatkih je `padel`, zato model ne bo objavljen (glej *Backtest*).
+**Stanje (10/2026):** prvi backtest (ciljna 2025) je bil `padel`, ker 2025 ni
+imela zgodovine za moč lig; na pokritih prestopnikih ciljne 2026 moč lig
+izboljša napoved za 7,3 % (glej *Backtest*).
 
 ## Tok
 
@@ -96,28 +97,36 @@ po imenu in klubu, torej večinoma napredovanja in izpadi klubov.
 
 ## Backtest
 
-Napove gole brez 11 m na 90 v zadnji zaključeni sezoni iz prejšnjih (brez
-puščanja: moč, Elo in kazalniki vidijo le starejše sezone) za vse države.
-Primerja tri napovedi pri igralcih, ki so zamenjali ligo (prestopniki):
-model, naivno (lanski učinek) in ablacijo brez moči lig (le krčenje).
+Napove gole brez 11 m na 90 v ciljni sezoni iz prejšnjih (brez puščanja: moč,
+Elo in kazalniki vidijo le starejše sezone) za vse države. Primerja tri
+napovedi pri igralcih, ki so zamenjali ligo (prestopniki): model, naivno
+(lanski učinek) in ablacijo brez moči lig (le krčenje).
+
+Pogoj šteje le **pokrite prestopnike** (`n_pokriti`): obe ligi para imata moč
+z virom `model` ali `piramida`, ne nadomestne (`drzava`, `brez`). Pri ligi
+brez naučene moči je model kar ablacija in razlike ni mogoče izmeriti.
+`n`, `mae_model`, `mae_naivno`, `mae_brez_moci` veljajo za vse pare,
+`n_prestopi` za vse prestopnike, `mae_*_prestopi` in izboljšavi le za pokrite.
+
+**Ciljna sezona** (`izberi_ciljno_leto`): od zadnje (`max(leto)`) navzdol,
+največ tri, prva z vsaj 200 pokritimi prestopniki (šteje jih le prilagoditev
+moči, brez kazalnikov). Če je ni, je `stanje` `premalo podatkov` in
+`ciljno_leto` prazno. Tekoča sezona je lahko ciljna: je šumnejša (nedokončana),
+a pogosto edina z dovolj zgodovine pred sabo.
 
 `stanje`:
 
-- `premalo podatkov` — manj kot 200 prestopnikov;
+- `premalo podatkov` — manj kot 200 pokritih prestopnikov;
 - `prestal` — ≥ 15 % manjša napaka od naivne **in** ≥ 1 % manjša od ablacije
   (`MIN_IZBOLJSAVA_MOCI = 0.01`); le tak model je `objavljen`;
 - `padel` — sicer.
 
-Izmerjeno na produkciji (ciljna sezona 2025, branje brez pisanja):
-
-| obseg | prestopnikov | proti naivni | proti ablaciji | stanje |
-|---|---|---|---|---|
-| vse države | 3081 | +16,8 % | +0,0015 % | `padel` |
-| le SI | 66 | +12,8 % | 0 | `premalo podatkov` |
-
-Izboljšava proti naivni pride od krčenja, ne od moči lig. **Moč lig zdaj ne
-prinese merljive vrednosti**, zato model ni objavljen, dokler se metoda ne
-izboljša (vmesnika, ki bi ga bral, še ni).
+Raziskava (10/2026, produkcija, branje brez pisanja): stari pogoj s ciljno
+2025 je bil `padel` s +0,0015 % proti ablaciji, ker 2025 skoraj nima
+zgodovine (pred njo le 2024) — moč se je naučila za 2 ligi, 918 od 926 lig je
+dobilo 0 in 99,9 % prestopnikov je imelo enako moč obeh lig. Ciljna 2026
+(5563 pokritih prestopnikov): **+7,3 % proti ablaciji, +18,7 % proti naivni**,
+torej `prestal`; 2026 je tekoča sezona, zato je ocena šumnejša.
 
 ## Urnik
 
