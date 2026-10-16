@@ -4618,7 +4618,7 @@ Vir `pfl-ua` (`scripts/viri/pfl-ua.mjs`) bere **pfl.ua** (Професіонал
 футбольна ліга України): Peršo ligo (raven 2) ter Drugo ligo A in B (raven 3).
 Nižjih lig na pfl.ua ni (amaterska liga AAFU in oblastne zveze so drugje;
 Lviv `ffl.org.ua` je poznejši vir). Država `UA` ("Україна") in zveza
-`pfl-ua` (migracija 20261015163700); **vmesnika v ukrajinščini, kartice in
+`pfl-ua` (migracija 20261016091900); **vmesnika v ukrajinščini, kartice in
 pošte še ni in `UA` ni v matriki nočnega uvoza** — oboje pred vklopom. Šifra
 lige se začne z `ua-`.
 
@@ -4687,7 +4687,7 @@ menjav; Druga A 11, goli = izid 10/11 (en tehnični poraz), postav po 11
 22/22, 97 menjav; Druga B 12, goli = izid 12/12 (30), postav po 11 24/24, 93
 menjav. Ekipa ima 990 minut razen pri rdečem kartonu.
 
-Vpisane so 3 lige (migracija 20261015163700), **neaktivne**, zveza `pfl-ua`,
+Vpisane so 3 lige (migracija 20261016091900), **neaktivne**, zveza `pfl-ua`,
 `rok_pomak_ur = 2` (tekme dopoldne):
 
 | liga | klubov | tekoča 2026/27 | arhiv 2025/26 |
