@@ -1,7 +1,8 @@
 import numpy as np
 from pomoc import sezone
 
-from stroj.backtest import backtest, napovedi
+import stroj.backtest as bt_modul
+from stroj.backtest import MIN_IZBOLJSAVA_MOCI, PRAG, backtest, napovedi
 
 
 def _sinteticno(oseb: int = 900):
@@ -31,6 +32,21 @@ def test_premaga_naivno_in_ablacijo_pri_prestopih():
     assert rez["n_prestopi"] >= 200
     assert rez["mae_model_prestopi"] < min(rez["mae_brez_moci_prestopi"], rez["mae_naivno_prestopi"])
     assert rez["stanje"] == "prestal" and rez["prestal"] is True
+
+
+def test_moc_le_izenaci_ablacijo_je_padel(monkeypatch):
+    """Naivno premaga za 50 %, moč lig doda le šum (kot produkcija 10/2026): padel."""
+    n = 300
+    dejansko = np.ones(n)
+    monkeypatch.setattr(bt_modul, "napovedi", lambda *a: {
+        "i": np.arange(n), "j": np.arange(n), "prestop": np.ones(n, dtype=bool),
+        "model": dejansko + 0.1, "brez_moci": dejansko + 0.1 + 1e-6, "naivno": dejansko + 0.2,
+        "dejansko": dejansko, "utez": np.ones(n)})
+    rez = backtest({}, {}, {}, 2025)
+    assert rez["n_prestopi"] >= 200
+    assert rez["izboljsava_prestopi"] >= PRAG
+    assert 0 < rez["izboljsava_moci"] < MIN_IZBOLJSAVA_MOCI
+    assert rez["stanje"] == "padel" and rez["prestal"] is False
 
 
 def test_premalo_prestopov_ni_prestal():

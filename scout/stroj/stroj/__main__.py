@@ -61,7 +61,7 @@ def zagon(conn: psycopg.Connection, pisi: bool, sili_moc: bool) -> int | None:
     elo_lig = elo(tekme)
     zdaj = datetime.now(PAS)
     prejsnji = conn.execute(SQL_PREJSNJI).fetchone()
-    if sili_moc or prejsnji is None or zdaj - prejsnji[3] > TEDEN:
+    if sili_moc or prejsnji is None or zdaj - prejsnji[3] > TEDEN - timedelta(hours=1):  # zdaj je vzet po ~1 min nalaganja, brez ure bi teden zdrsnil na 8 dni
         moc, elo_koef = prilagodi(sezone, lige, elo_lig)
         bt = backtest(sezone, lige, elo_lig, int(sezone["leto"].max()) - 1)
         izracunano, objavljen = zdaj, bool(bt.get("prestal"))

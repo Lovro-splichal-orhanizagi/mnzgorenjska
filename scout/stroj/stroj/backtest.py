@@ -13,6 +13,8 @@ from stroj.moc_lig import MIN_MINUT, prilagodi
 
 PRAG = 0.15
 MIN_PRESTOPOV = 200
+# moč lig mora ablacijo premagati opazno, ne za šum (produkcija 10/2026: +0,0015 %)
+MIN_IZBOLJSAVA_MOCI = 0.01
 
 
 def _glavne(t: Tabela, leto: int) -> dict:
@@ -71,6 +73,6 @@ def backtest(s: Tabela, lige: Tabela, elo: dict[tuple[int, int, int], float], ci
         return rez
     rez["izboljsava_prestopi"] = 1 - rez["mae_model_prestopi"] / max(rez["mae_naivno_prestopi"], 1e-12)
     rez["izboljsava_moci"] = 1 - rez["mae_model_prestopi"] / max(rez["mae_brez_moci_prestopi"], 1e-12)
-    rez["prestal"] = bool(rez["izboljsava_prestopi"] >= PRAG and rez["izboljsava_moci"] > 0)
+    rez["prestal"] = bool(rez["izboljsava_prestopi"] >= PRAG and rez["izboljsava_moci"] >= MIN_IZBOLJSAVA_MOCI)
     rez["stanje"] = "prestal" if rez["prestal"] else "padel"
     return rez
