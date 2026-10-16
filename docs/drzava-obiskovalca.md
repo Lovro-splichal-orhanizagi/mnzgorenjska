@@ -62,6 +62,18 @@ Isto vsebino za iskalnike izriše strežnik HTML (`drzava` v `streznik.mjs`).
 **Kampanjska povezava mora nositi `src` ali `utm_*`**, sicer kaže vstopno
 stran, ne lige; države si vstopna stran ne zapomni, le kampanja.
 
+**Ugib po jeziku brskalnika**: cela oznaka ima prednost pred osnovo (`ro-MD`
+→ Moldavija, `sr-ME` → Črna gora, `bs-BA` in `hr-BA` → Bosna in
+Hercegovina, sicer `ro` → Romunija, `sr` → Srbija, gola `bs` → Hrvaška).
+Angleščina ni država (tudi `en-GB` ne): Združeno kraljestvo ugane le IP ali
+pas `Europe/London`, Malto še `mt`/`en-MT`. Ruski brskalnik ne kaže na
+Ukrajino. Države z lastnim vmesnikom in pošto: SI, SK, HR, CZ, HU, AT in DE (de),
+RS (sr), RO, EE (et), PL, ES, LV, MK, GR (el), TR, UA (uk), AM (hy), AZ, DK
+(da); z jezikom sosede: GB in MT (en), ME (sr), BA (hr), MD (ro). Vse imajo
+vstop `/<koda države>`, kartico `<koda>.html` in vrstico v matriki nočnega
+uvoza (`docs/nocni-uvoz.md`); lige novih držav ostanejo neaktivne, dokler jih
+lastnik ne vklopi.
+
 **Slovaška je odprta** za vse (ugib po IP in jeziku). **Državo zapreš** tako,
 da jo dodaš v `SAMO_S_POVEZAVO` v `src/lib/drzavaUgib.ts` (npr. `['SK']`):
 lige ostanejo vklopljene, a IP, jezik in pas je ne odprejo — vanjo pride le,

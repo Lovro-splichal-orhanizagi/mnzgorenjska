@@ -3,9 +3,20 @@
 Vir `pfl-az` (`scripts/viri/pfl-az.mjs`) bere **Peşəkar Futbol Liqası**
 (PFL, pfl.az): I Liqa (raven 2) in II Liqa (raven 3). Nižje (AFFA Region
 Liqası) objavljajo le izide. Država `AZ` ("Azərbaycan"), zveza `pfl-az`, lige
-`az-liqa1` in `az-liqa2` (migracija 20261016094500), **neaktivne**. Vmesnika v
-azerbajdžanščini, kartice, pošte in matrike nočnega uvoza **še ni**; šifra
+`az-liqa1` in `az-liqa2` (migracija 20261016094500), **neaktivne**; šifra
 lige se začne z `az-`. Pozicije razen vratarja na glasovanje.
+
+**Vmesnik in pošta.** Azerbajdžan ima vmesnik v azerbajdžanščini
+(`src/i18n/az/`, jezik `az`, `az-Latn-AZ`, latinica, `JEZIK_DRZAVE.AZ`),
+izbirnik jezika "Azərbaycanca", vstop `slff.eu/az`, kartico ob deljenju `az.html` (Caddy jo vrne za `/az` in `?t=az-…`, tudi rezerva `:3201`, `vercel.json`), azerbajdžansko vejo pošte (pozdrav
+"Salam", avtentikacijske predloge in zadeve), azerbajdžanska imena lastnikov
+hišnih ekip in `klub_stik.drzava` (migracija 20261016213700), `IMENA_AZ` v *Hisne
+ekipe* in `AZ` v matriki nočnega uvoza (en koš; korak pdftotext že teče za
+`AZ`). Ugib: brskalnik `az` ali pas `Asia/Baku`; rok v pošti je po bakujsko
+(dve uri poleti, tri pozimi več kot Ljubljana). Krog je "Tur N" (brez
+vrstilnega števnika, pripona bi rabila harmonijo), samostalnik za številom v
+ednini ("2 xal"). Imena v SQL se ne začnejo z "İ". Manjka še: kanal v
+HelpStacku in **pregled prevoda pri naravnem govorcu**.
 
 - **Dostop.** pfl.az je stran React, podatke si naloži iz javnega API-ja
   `https://pfl.az/api/v1` brez ključa (v svežnju liqa2.pfl.az ni ključa ne

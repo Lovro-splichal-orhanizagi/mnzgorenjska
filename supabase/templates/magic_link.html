@@ -86,6 +86,55 @@
     <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Најави се →</a>
   </p>
   <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Ако не побара најава ти, само игнорирај ја оваа порака.</p>
+{{ else if eq (printf "%v" .Data.jezik) "el" }}
+  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Σύνδεση στο SLFF</p>
+  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Πάτα το κουμπί και είσαι μέσα. Ο σύνδεσμος ισχύει μία ώρα και χρησιμοποιείται μόνο μία φορά.</p>
+  <p style="text-align: center; margin: 24px 0;">
+    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Σύνδεση →</a>
+  </p>
+  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Αν δεν ζήτησες εσύ σύνδεση, απλώς αγνόησε αυτό το μήνυμα.</p>
+{{ else if eq (printf "%v" .Data.jezik) "tr" }}
+  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">SLFF’ye giriş</p>
+  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Butona bas, giriş yapmış olursun. Bağlantı bir saat geçerli ve yalnızca bir kez kullanılabilir.</p>
+  <p style="text-align: center; margin: 24px 0;">
+    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Giriş yap →</a>
+  </p>
+  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Girişi sen istemediysen bu e-postayı görmezden gelebilirsin.</p>
+{{ else if eq (printf "%v" .Data.jezik) "uk" }}
+  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Вхід у SLFF</p>
+  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Натисни кнопку, і ти в акаунті. Посилання дійсне одну годину, і скористатися ним можна лише раз.</p>
+  <p style="text-align: center; margin: 24px 0;">
+    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Увійти →</a>
+  </p>
+  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Якщо ти не просив про вхід, просто проігноруй цей лист.</p>
+{{ else if eq (printf "%v" .Data.jezik) "hy" }}
+  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Մուտք SLFF</p>
+  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Սեղմիր կոճակը, և մուտք կգործես։ Հղումը գործում է մեկ ժամ և կարող է օգտագործվել միայն մեկ անգամ։</p>
+  <p style="text-align: center; margin: 24px 0;">
+    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Մուտք գործել →</a>
+  </p>
+  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Եթե դու մուտք չես խնդրել, պարզապես անտեսիր այս նամակը։</p>
+{{ else if eq (printf "%v" .Data.jezik) "az" }}
+  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">SLFF-ə giriş</p>
+  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Düyməni bas və daxil olmusan. Keçid bir saat etibarlıdır və yalnız bir dəfə istifadə oluna bilər.</p>
+  <p style="text-align: center; margin: 24px 0;">
+    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Daxil ol →</a>
+  </p>
+  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Girişi sən istəməmisənsə, bu məktubu nəzərə alma.</p>
+{{ else if eq (printf "%v" .Data.jezik) "da" }}
+  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Log ind på SLFF</p>
+  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Tryk på knappen, så er du logget ind. Linket gælder i en time og kan kun bruges én gang.</p>
+  <p style="text-align: center; margin: 24px 0;">
+    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Log ind →</a>
+  </p>
+  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Har du ikke selv bedt om at logge ind, kan du bare se bort fra denne mail.</p>
+{{ else if eq (printf "%v" .Data.jezik) "en" }}
+  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Sign in to SLFF</p>
+  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Tap the button and you’re in. The link is valid for one hour and works only once.</p>
+  <p style="text-align: center; margin: 24px 0;">
+    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Sign in →</a>
+  </p>
+  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">If you didn’t ask to sign in, just ignore this email.</p>
 {{ else }}
   <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Prijava v SLFF</p>
   <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Klikni gumb in prijavljen/a si. Povezava velja eno uro in jo lahko uporabiš le enkrat.</p>

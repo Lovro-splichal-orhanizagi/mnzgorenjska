@@ -283,6 +283,17 @@ export default function KlubiStiki() {
         <option value="ES">ES</option>
         <option value="LV">LV</option>
         <option value="MK">MK</option>
+        <option value="GR">GR</option>
+        <option value="TR">TR</option>
+        <option value="UA">UA</option>
+        <option value="AM">AM</option>
+        <option value="AZ">AZ</option>
+        <option value="DK">DK</option>
+        <option value="GB">GB</option>
+        <option value="MT">MT</option>
+        <option value="ME">ME</option>
+        <option value="BA">BA</option>
+        <option value="MD">MD</option>
       </select>
       <input value={nov.liga_slug} onChange={(e) => setNov({ ...nov, liga_slug: e.target.value })} placeholder="Liga (npr. hr-mz-1mnl)" className={VNOS} />
       <input value={nov.email} onChange={(e) => setNov({ ...nov, email: e.target.value })} placeholder="E-naslov" className={VNOS} />
@@ -348,6 +359,17 @@ export default function KlubiStiki() {
           <option value="ES">Španija</option>
           <option value="LV">Latvija</option>
           <option value="MK">Severna Makedonija</option>
+          <option value="GR">Grčija</option>
+          <option value="TR">Turčija</option>
+          <option value="UA">Ukrajina</option>
+          <option value="AM">Armenija</option>
+          <option value="AZ">Azerbajdžan</option>
+          <option value="DK">Danska</option>
+          <option value="GB">Združeno kraljestvo</option>
+          <option value="MT">Malta</option>
+          <option value="ME">Črna gora</option>
+          <option value="BA">Bosna in Hercegovina</option>
+          <option value="MD">Moldavija</option>
         </select>
         <input
           value={iskanje}

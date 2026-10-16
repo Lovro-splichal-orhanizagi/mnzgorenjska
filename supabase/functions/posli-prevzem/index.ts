@@ -112,11 +112,41 @@ const BESEDILA: Record<string, { jezik: string; naslov: string; uvod: string; pr
     uvod: 'SLFF (slff.eu) е бесплатна фантази лига за аматерски фудбал, поените се пресметуваат од официјалните записници.',
     prosnja: 'Корисникот {p} тврди дека е {i}, играч на вашиот клуб {k} ({l}). Ако го познавате, ве молиме потврдете или одбијте:',
     gumb: 'Потврдете или одбијте', velja: 'Врската важи до {d} и само еднаш. Потврдениот играч може да додаде прекар, фотографија и опис; официјалните податоци од записниците не може да ги менува. За прашања одговорете на оваа порака.', podpis: 'Jernej, SLFF' },
+  GR: { jezik: 'el-GR', naslov: 'Είναι ο {i} παίκτης σας;', pozdrav: 'Καλησπέρα σας,',
+    uvod: 'Το SLFF (slff.eu) είναι ένα δωρεάν fantasy πρωτάθλημα για το ερασιτεχνικό ποδόσφαιρο. Οι πόντοι υπολογίζονται από τα επίσημα φύλλα αγώνα.',
+    prosnja: 'Ο χρήστης {p} δηλώνει ότι είναι ο {i}, παίκτης του συλλόγου σας {k} ({l}). Αν τον γνωρίζετε, παρακαλούμε επιβεβαιώστε ή απορρίψτε:',
+    gumb: 'Επιβεβαίωση ή απόρριψη', velja: 'Ο σύνδεσμος ισχύει έως {d} και μόνο μία φορά. Ένας επιβεβαιωμένος παίκτης μπορεί να προσθέσει ψευδώνυμο, φωτογραφία και περιγραφή, αλλά δεν μπορεί να αλλάξει τα επίσημα στοιχεία των φύλλων αγώνα. Για ερωτήσεις απαντήστε σε αυτό το email.', podpis: 'Jernej, SLFF' },
+  TR: { jezik: 'tr-TR', naslov: '{i} sizin oyuncunuz mu?', pozdrav: 'Sayın yetkili,',
+    uvod: 'SLFF (slff.eu), amatör futbol için ücretsiz bir fantezi ligidir; puanlar resmi maç raporlarından hesaplanır.',
+    prosnja: 'Kullanıcı {p}, kulübünüzün oyuncusu {i} olduğunu belirtiyor (kulüp: {k}, lig: {l}). Kendisini tanıyorsanız lütfen onaylayın veya reddedin:',
+    gumb: 'Onaylayın veya reddedin', velja: 'Bağlantı {d} tarihine kadar ve yalnızca bir kez geçerlidir. Onaylanan oyuncu profiline takma ad, fotoğraf ve açıklama ekleyebilir; maç raporlarındaki resmi bilgileri değiştiremez. Sorularınız için bu e-postayı yanıtlayın.', podpis: 'Jernej, SLFF' },
+  UA: { jezik: 'uk-UA', naslov: '{i} ваш гравець?', pozdrav: 'Добрий день,',
+    uvod: 'SLFF (slff.eu) це безкоштовна фентезі-ліга для аматорського футболу, очки рахуються за офіційними протоколами матчів.',
+    prosnja: 'Користувач {p} стверджує, що він {i}, гравець вашого клубу {k} ({l}). Якщо ви його знаєте, будь ласка, підтвердьте або відхиліть:',
+    gumb: 'Підтвердити або відхилити', velja: 'Посилання дійсне до {d} і лише один раз. Підтверджений гравець може додати до профілю нік, фото й опис; офіційні дані з протоколів він змінити не може. Із запитаннями просто відповідайте на цей лист.', podpis: 'Jernej, SLFF' },
+  AM: { jezik: 'hy-AM', naslov: 'Արդյո՞ք {i} ձեր խաղացողն է', pozdrav: 'Հարգելի գործընկերներ,',
+    uvod: 'SLFF-ը (slff.eu) անվճար ֆենթեզի լիգա է սիրողական ֆուտբոլի համար, միավորները հաշվարկվում են պաշտոնական արձանագրություններից։',
+    prosnja: 'Օգտատերը ({p}) հայտնում է, որ ինքը ձեր ակումբի խաղացողն է՝ {i} (ակումբ՝ {k}, լիգա՝ {l})։ Եթե ճանաչում եք նրան, խնդրում ենք հաստատել կամ մերժել։',
+    gumb: 'Հաստատել կամ մերժել', velja: 'Հղումը գործում է մինչև {d} և միայն մեկ անգամ։ Հաստատված խաղացողը կարող է իր պրոֆիլում ավելացնել մականուն, լուսանկար և նկարագրություն, բայց չի կարող փոխել արձանագրությունների պաշտոնական տվյալները։ Հարցերի դեպքում պատասխանեք այս նամակին։', podpis: 'Jernej, SLFF' },
+  AZ: { jezik: 'az-Latn-AZ', naslov: '{i} sizin oyunçunuzdur?', pozdrav: 'Salam,',
+    uvod: 'SLFF (slff.eu) həvəskar futbol üçün pulsuz fantasy liqadır, xallar rəsmi oyun protokollarından hesablanır.',
+    prosnja: '{p} istifadəçisi sizin {k} ({l}) klubunuzun oyunçusu {i} olduğunu bildirir. Onu tanıyırsınızsa, zəhmət olmasa təsdiqləyin və ya rədd edin:',
+    gumb: 'Təsdiqləyin və ya rədd edin', velja: 'Keçid {d} tarixinə qədər və yalnız bir dəfə etibarlıdır. Təsdiqlənmiş oyunçu profilinə ləqəb, şəkil və təsvir əlavə edə bilər; oyun protokollarındakı rəsmi məlumatları dəyişə bilməz. Suallarınız üçün bu məktuba cavab yazın.', podpis: 'Jernej, SLFF' },
+  DK: { jezik: 'da-DK', naslov: 'Er {i} jeres spiller?', pozdrav: 'Hej,',
+    uvod: 'SLFF (slff.eu) er en gratis fantasyliga for amatørfodbold; pointene beregnes ud fra de officielle kamprapporter.',
+    prosnja: 'Brugeren {p} oplyser at være {i}, spiller i jeres klub {k} ({l}). Hvis I kender ham, så bekræft eller afvis venligst:',
+    gumb: 'Bekræft eller afvis', velja: 'Linket gælder til {d} og kun én gang. En bekræftet spiller kan tilføje kaldenavn, foto og beskrivelse til sin profil, men kan ikke ændre de officielle data fra kamprapporterne. Har I spørgsmål, så svar blot på denne mail.', podpis: 'Jernej, SLFF' },
   EN: { jezik: 'en-GB', naslov: 'Is {i} your player?', pozdrav: 'Hello,',
     uvod: 'SLFF (slff.eu) is a free fantasy league for amateur football; points come from the official match reports.',
     prosnja: 'The user {p} says they are {i}, a player of your club {k} ({l}). If you know them, please confirm or reject:',
     gumb: 'Confirm or reject', velja: 'The link is valid until {d} and works once. A confirmed player can add a nickname, photo and short bio to their profile; official match report data cannot be changed. For questions, just reply to this email.', podpis: 'Jernej, SLFF' },
 }
+
+// Črna gora, Bosna in Hercegovina in Moldavija pišejo v jeziku sosede (kot
+// vmesnik), datum po svoje. Združeno kraljestvo in Malta dobita angleščino (EN).
+BESEDILA.ME = { ...BESEDILA.RS, jezik: 'sr-Latn-ME' }
+BESEDILA.BA = { ...BESEDILA.HR, jezik: 'hr-BA' }
+BESEDILA.MD = { ...BESEDILA.RO, jezik: 'ro-MD' }
 
 function sestavi(v: Vrstica): { naslov: string; html: string; besedilo: string } {
   const b = BESEDILA[v.drzava ?? ''] ?? BESEDILA.EN
@@ -167,9 +197,25 @@ const POTRJEN: Record<string, { naslov: string; telo: string; gumb: string }> = 
     telo: 'Sveiks,\n\nmēs apstiprinājām, ka tu esi {i} ({k}, {l}). Profils tagad ir tavs.\n\nTu vari pievienot foto, iesauku, īsu aprakstu un Instagram, TikTok vai Facebook. Pieslēdzies ar to pašu kontu un atver savu profilu:\n{u}\n\nOficiālos protokolu datus (vārds, klubs, statistika) mainīt nevar. Ja kaut kas nav pareizi, atbildi uz šo e-pastu.' },
   MK: { naslov: 'Твојот профил на SLFF е потврден', gumb: 'Отвори го мојот профил',
     telo: 'Здраво,\n\nпотврдивме дека си {i} ({k}, {l}). Профилот сега е твој.\n\nМожеш да додадеш фотографија, прекар, краток опис и Instagram, TikTok или Facebook. Најави се со истата сметка и отвори го својот профил:\n{u}\n\nОфицијалните податоци од записниците (име, клуб, статистика) не може да се менуваат. Ако нешто не е во ред, одговори на оваа порака.' },
+  GR: { naslov: 'Το προφίλ σου στο SLFF επιβεβαιώθηκε', gumb: 'Άνοιξε το προφίλ μου',
+    telo: 'Γεια σου,\n\nεπιβεβαιώσαμε ότι είσαι ο {i} ({k}, {l}). Το προφίλ είναι πλέον δικό σου.\n\nΜπορείς να προσθέσεις φωτογραφία, ψευδώνυμο, σύντομη περιγραφή και Instagram, TikTok ή Facebook. Συνδέσου με τον ίδιο λογαριασμό και άνοιξε το προφίλ σου:\n{u}\n\nΤα επίσημα στοιχεία των φύλλων αγώνα (όνομα, σύλλογος, στατιστικά) δεν αλλάζουν. Αν κάτι δεν είναι σωστό, απάντησε σε αυτό το email.' },
+  TR: { naslov: 'SLFF profilin onaylandı', gumb: 'Profilimi aç',
+    telo: 'Merhaba,\n\n{i} olduğunu onayladık ({k}, {l}). Profil artık senin.\n\nProfiline fotoğraf, takma ad, kısa bir açıklama ve Instagram, TikTok veya Facebook ekleyebilirsin. Aynı hesapla giriş yap ve profilini aç:\n{u}\n\nMaç raporlarındaki resmi bilgiler (ad, kulüp, istatistikler) değiştirilemez. Bir şey yanlışsa bu e-postayı yanıtla.' },
+  UA: { naslov: 'Твій профіль у SLFF підтверджено', gumb: 'Відкрити мій профіль',
+    telo: 'Привіт,\n\nми підтвердили, що ти {i} ({k}, {l}). Тепер профіль твій.\n\nМожеш додати фото, нік, короткий опис та Instagram, TikTok чи Facebook. Увійди з тим самим акаунтом і відкрий свій профіль:\n{u}\n\nОфіційні дані з протоколів (ім’я, клуб, статистика) змінити не можна. Якщо щось не так, відповідай на цей лист.' },
+  AM: { naslov: 'Քո SLFF պրոֆիլը հաստատված է', gumb: 'Բացել իմ պրոֆիլը',
+    telo: 'Բարև,\n\nհաստատեցինք, որ դու {i} ես ({k}, {l})։ Պրոֆիլն այժմ քոնն է։\n\nԿարող ես ավելացնել լուսանկար, մականուն, կարճ նկարագրություն և Instagram, TikTok կամ Facebook։ Մուտք գործիր նույն հաշվով և բացիր քո պրոֆիլը:\n{u}\n\nԱրձանագրությունների պաշտոնական տվյալները (անուն, ակումբ, վիճակագրություն) հնարավոր չէ փոխել։ Եթե ինչ-որ բան ճիշտ չէ, պատասխանիր այս նամակին։' },
+  AZ: { naslov: 'SLFF profilin təsdiqləndi', gumb: 'Profilimi aç',
+    telo: 'Salam,\n\n{i} ({k}, {l}) olduğunu təsdiqlədik. Profil artıq sənindir.\n\nOna şəkil, ləqəb, qısa təsvir və Instagram, TikTok və ya Facebook əlavə edə bilərsən. Eyni hesabla daxil ol və profilini aç:\n{u}\n\nOyun protokollarındakı rəsmi məlumatları (ad, klub, statistika) dəyişmək olmaz. Nəsə düz deyilsə, bu məktuba cavab yaz.' },
+  DK: { naslov: 'Din SLFF-profil er bekræftet', gumb: 'Åbn min profil',
+    telo: 'Hej,\n\nvi har bekræftet, at du er {i} ({k}, {l}). Profilen er nu din.\n\nDu kan tilføje et foto, et kaldenavn, en kort beskrivelse og Instagram, TikTok eller Facebook. Log ind med den samme konto, og åbn din profil:\n{u}\n\nDe officielle data fra kamprapporterne (navn, klub, statistik) kan ikke ændres. Er der noget, der ikke passer, så svar på denne mail.' },
   EN: { naslov: 'Your SLFF profile is confirmed', gumb: 'Open my profile',
     telo: 'Hi,\n\nwe have confirmed that you are {i} ({k}, {l}). The profile is now yours.\n\nYou can add a photo, a nickname, a short bio and your Instagram, TikTok or Facebook. Sign in with the same account and open your profile:\n{u}\n\nOfficial data from the match reports (name, club, stats) cannot be changed. If something is not right, just reply to this email.' },
 }
+
+POTRJEN.ME = POTRJEN.RS
+POTRJEN.BA = POTRJEN.HR
+POTRJEN.MD = POTRJEN.RO
 
 interface Neobvescen {
   zahtevek_id: number

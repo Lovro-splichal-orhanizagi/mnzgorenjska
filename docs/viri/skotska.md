@@ -9,8 +9,8 @@ se uvoz ustavi (`LowlandZavrnitev`, izhod 4) — ne obhajaj. Zavrne že
 
 Država `GB` (migracija 20261016090500, ime "United Kingdom" — isto kodo vpiše
 tudi vir `isthmian` za Anglijo, kdor je prvi, da ime). **Šifra škotske lige se
-začne z `gb-`.** Vmesnika v angleščini za državo, kartice in pošte **še ni**,
-`GB` ni v matriki nočnega uvoza — oboje pred vklopom.
+začne z `gb-`.** Vmesnik (angleščina), kartica `gb.html`, pošta in `GB` v
+matriki nočnega uvoza so pripravljeni (glej `docs/viri/anglija.md`).
 
 Vir `lowland` (`scripts/viri/lowland.mjs`) bere **Match Centre lige**
 (slfl.co.uk, WordPress Scoot Digital, podatki COMET škotske zveze — "All data

@@ -143,6 +143,17 @@ export default function App() {
               <Route path="/es" element={<VstopDrzave drzava="ES" />} />
               <Route path="/lv" element={<VstopDrzave drzava="LV" />} />
               <Route path="/mk" element={<VstopDrzave drzava="MK" />} />
+              <Route path="/gr" element={<VstopDrzave drzava="GR" />} />
+              <Route path="/tr" element={<VstopDrzave drzava="TR" />} />
+              <Route path="/ua" element={<VstopDrzave drzava="UA" />} />
+              <Route path="/am" element={<VstopDrzave drzava="AM" />} />
+              <Route path="/az" element={<VstopDrzave drzava="AZ" />} />
+              <Route path="/dk" element={<VstopDrzave drzava="DK" />} />
+              <Route path="/gb" element={<VstopDrzave drzava="GB" />} />
+              <Route path="/mt" element={<VstopDrzave drzava="MT" />} />
+              <Route path="/me" element={<VstopDrzave drzava="ME" />} />
+              <Route path="/ba" element={<VstopDrzave drzava="BA" />} />
+              <Route path="/md" element={<VstopDrzave drzava="MD" />} />
               <Route path="/si" element={<VstopDrzave drzava="SI" />} />
               <Route path="/my-team" element={<MojaEkipa />} />
               <Route path="/assists" element={<Glasovanje />} />

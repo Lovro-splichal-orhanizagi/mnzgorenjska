@@ -3,10 +3,19 @@
 Obe spletišči (in fscg.me z državnimi ligami) izrišeta podatke COMET s
 strežnika v isti predlogi podjetja Auris kot lff.lv, zato imata skupen razčlenjevalnik
 (`scripts/viri/comet-auris.mjs`) in vsak svoj tanek vir. Državi `LT`
-("Lietuva") in `ME` ("Crna Gora") vpiše migracija lig (20261016091300);
-vmesnika v litovščini ali črnogorščini, kartic in pošte **še ni**, `LT` in
-`ME` **nista** v matriki nočnega uvoza — oboje pred vklopom. Šifre lig se
-začnejo z `lt-` oziroma `me-`. Uvoz za ligo ne potrebuje ničesar več.
+("Lietuva") in `ME` ("Crna Gora") vpiše migracija lig (20261016091300).
+Šifre lig se začnejo z `lt-` oziroma `me-`. Uvoz za ligo ne potrebuje ničesar
+več.
+
+**Črna gora** dobi srbski vmesnik v latinici (`JEZIK_DRZAVE.ME = 'sr'`,
+ekavski; črnogorščina je ijekavska, zato je to kompromis do lastnega
+prevoda), vstop `slff.eu/me`, kartico ob deljenju `me.html` (Caddy jo vrne za `/me` in `?t=me-…`, tudi rezerva `:3201`, `vercel.json`), srbsko vejo pošte (rok po podgoriško, kot Ljubljana),
+črnogorska imena lastnikov hišnih ekip in `klub_stik.drzava` (migracija
+20261016213700), `IMENA_ME` v *Hisne ekipe* in `ME` v matriki nočnega uvoza (en koš).
+Ugib: IP, brskalnik `sr-ME`, `sr-Latn-ME`, `cnr` ali pas `Europe/Podgorica`
+(cela oznaka ima prednost pred osnovo, `sr-RS` ostane Srbija). **Litve še
+ni**: vmesnika v litovščini, kartice in pošte ni, `LT` ni v matriki nočnega
+uvoza; oboje pred vklopom.
 
 - **Stran tekmovanja**: zavihek vseh tekem `table.fixtures style2`, krogi
   `tr.th1` ("14. turas", "5. kolo"), tekma je vrstica z `data-id` (id tekme

@@ -1,9 +1,13 @@
 # Bosna in Hercegovina — vir `nsfbih`
 
-Država `BA` ("Bosna i Hercegovina", migracija 20261016092100). **Vmesnika v
-bosanščini/hrvaščini še ni** (ne `JEZIK_DRZAVE`, ne kartice, ne pošte) in `BA`
-**ni** v matriki nočnega uvoza (`uvoz-zapisnikov.yml`) — oboje pred vklopom.
-Šifra lige se začne z `ba-`. Viri sta dva: `nsfbih` (NS FBiH, spodaj) in
+Država `BA` ("Bosna i Hercegovina", migracija 20261016092100). Šifra lige se
+začne z `ba-`. Lige ostanejo neaktivne, dokler jih lastnik ne vklopi. BiH
+dobi hrvaški vmesnik (`JEZIK_DRZAVE.BA = 'hr'`), vstop `slff.eu/ba`, kartico ob deljenju `ba.html` (Caddy jo vrne za `/ba` in `?t=ba-…`, tudi rezerva `:3201`, `vercel.json`), hrvaško vejo pošte
+(rok po sarajevsko, kot Ljubljana), imena lastnikov hišnih ekip in
+`klub_stik.drzava` (migracija 20261016213700), `IMENA_BA` v *Hisne ekipe* (imena brez
+etničnih in političnih tem) in `BA` v matriki nočnega uvoza (en koš: `nsfbih`,
+`nfsbih`). Ugib: IP, brskalnik `bs-BA`, `hr-BA`, `sr-BA` ali pas
+`Europe/Sarajevo`; gola `bs` (brez regije) ostane Hrvaška, kot doslej. Viri sta dva: `nsfbih` (NS FBiH, spodaj) in
 `nfsbih` (NFSBiH, državna WWIN liga BiH, naslednji razdelek); oba sta isti
 COMET in imata isti ključ kluba (`kljucKlubaBa`), zato je klub skupen.
 

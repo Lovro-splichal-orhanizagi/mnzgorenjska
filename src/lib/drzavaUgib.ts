@@ -13,6 +13,10 @@ const KLJUC = 'slff-drzava'
  * Oznaka z `=` velja le natanko: `=es` je gola španščina (brez regije), ki
  * je večinoma Španija; `es-MX`, `es-419`, `es-AR` … so Latinska Amerika in
  * na Španijo ne kažejo (tujec, kot `de` brez `-AT`).
+ * Cela oznaka ima prednost pred osnovo: `ro-MD` je Moldavija, čeprav je `ro`
+ * Romunija, `sr-ME` Črna gora, `bs-BA` Bosna (gola `bs` ostane Hrvaška).
+ * Angleščina ni država (tudi `en-GB` ima pol Evrope): Združeno kraljestvo
+ * ugane le IP ali pas, Malto še `mt` ali `en-MT`. Ruščine ne preslikamo v Ukrajino.
  */
 const DRZAVE: Record<string, { jeziki: string[]; pasovi: string[] }> = {
   SI: { jeziki: ['sl'], pasovi: ['Europe/Ljubljana'] },
@@ -29,6 +33,17 @@ const DRZAVE: Record<string, { jeziki: string[]; pasovi: string[] }> = {
   ES: { jeziki: ['=es', 'es-es', 'ca-es', 'gl-es', 'eu-es'], pasovi: ['Europe/Madrid', 'Atlantic/Canary', 'Africa/Ceuta'] },
   LV: { jeziki: ['lv'], pasovi: ['Europe/Riga'] },
   MK: { jeziki: ['mk'], pasovi: ['Europe/Skopje'] },
+  GR: { jeziki: ['el'], pasovi: ['Europe/Athens'] },
+  TR: { jeziki: ['tr'], pasovi: ['Europe/Istanbul', 'Asia/Istanbul'] },
+  UA: { jeziki: ['uk'], pasovi: ['Europe/Kyiv', 'Europe/Kiev', 'Europe/Uzhgorod', 'Europe/Zaporozhye'] },
+  AM: { jeziki: ['hy'], pasovi: ['Asia/Yerevan'] },
+  AZ: { jeziki: ['az'], pasovi: ['Asia/Baku'] },
+  DK: { jeziki: ['da'], pasovi: ['Europe/Copenhagen'] },
+  GB: { jeziki: [], pasovi: ['Europe/London', 'Europe/Belfast'] },
+  MT: { jeziki: ['mt', 'en-mt'], pasovi: ['Europe/Malta'] },
+  ME: { jeziki: ['sr-me', 'sr-latn-me', 'sr-cyrl-me', 'cnr'], pasovi: ['Europe/Podgorica'] },
+  BA: { jeziki: ['bs-ba', 'bs-latn-ba', 'hr-ba', 'sr-ba', 'sr-latn-ba', 'sr-cyrl-ba'], pasovi: ['Europe/Sarajevo'] },
+  MD: { jeziki: ['ro-md', 'mo'], pasovi: ['Europe/Chisinau'] },
 }
 export const znaneDrzave = () => Object.keys(DRZAVE)
 
@@ -69,9 +84,10 @@ export function ugibajDrzavo({
   const odprte = Object.entries(DRZAVE).filter(([k]) => jeOdprta(k))
   for (const j of jeziki ?? []) {
     const oznaka = j.toLowerCase()
-    const d = odprte.find(
-      ([, v]) => v.jeziki.includes(oznaka.slice(0, 2)) || v.jeziki.includes(oznaka) || v.jeziki.includes('=' + oznaka),
-    )
+    // Najprej cela oznaka (`ro-md` → Moldavija), šele nato osnova (`ro` → Romunija).
+    const d =
+      odprte.find(([, v]) => v.jeziki.includes(oznaka) || v.jeziki.includes('=' + oznaka)) ??
+      odprte.find(([, v]) => v.jeziki.includes(oznaka.slice(0, 2)))
     if (d) return d[0]
   }
   const poPasu = odprte.find(([, v]) => casovniPas && v.pasovi.includes(casovniPas))
@@ -233,12 +249,13 @@ export const jeTujIp = (ip: string | null | undefined, drzaveZLigami: readonly s
   Boolean(ip && drzaveZLigami.length && !drzaveZLigami.includes(ip))
 
 /**
- * Jezik tujca: angleščina, razen če je prvi jezik brskalnika sl, sk, hr, cs, hu, de, sr, ro, et, pl ali es.
+ * Jezik tujca: angleščina, razen če je prvi jezik brskalnika eden od naših
+ * (sl, sk, hr, cs, hu, de, sr, ro, et, pl, es, lv, mk, el, tr, uk, hy, az, da).
  * Kot nemščina (de-DE) dobi tudi vsaka španščina (es-MX, es-AR …) španski vmesnik.
  */
 export function jezikTujca(jeziki: readonly string[] | null | undefined): string {
   const prvi = (jeziki?.[0] ?? '').toLowerCase().slice(0, 2)
-  return prvi === 'sl' || prvi === 'sk' || prvi === 'hr' || prvi === 'cs' || prvi === 'hu' || prvi === 'de' || prvi === 'sr' || prvi === 'ro' || prvi === 'et' || prvi === 'pl' || prvi === 'es' || prvi === 'lv' || prvi === 'mk' ? prvi : 'en'
+  return prvi === 'sl' || prvi === 'sk' || prvi === 'hr' || prvi === 'cs' || prvi === 'hu' || prvi === 'de' || prvi === 'sr' || prvi === 'ro' || prvi === 'et' || prvi === 'pl' || prvi === 'es' || prvi === 'lv' || prvi === 'mk' || prvi === 'el' || prvi === 'tr' || prvi === 'uk' || prvi === 'hy' || prvi === 'az' || prvi === 'da' ? prvi : 'en'
 }
 
 /**
@@ -291,7 +308,9 @@ export function drzavaLige(slug: string | null | undefined): string | null {
 }
 
 /** Jezik vmesnika za državo. */
-export const JEZIK_DRZAVE: Record<string, string> = { SI: 'sl', SK: 'sk', HR: 'hr', CZ: 'cs', HU: 'hu', AT: 'de', DE: 'de', RS: 'sr', RO: 'ro', EE: 'et', PL: 'pl', ES: 'es', LV: 'lv', MK: 'mk' }
+export const JEZIK_DRZAVE: Record<string, string> = { SI: 'sl', SK: 'sk', HR: 'hr', CZ: 'cs', HU: 'hu', AT: 'de', DE: 'de', RS: 'sr', RO: 'ro', EE: 'et', PL: 'pl', ES: 'es', LV: 'lv', MK: 'mk',
+  GR: 'el', TR: 'tr', UA: 'uk', AM: 'hy', AZ: 'az', DK: 'da', GB: 'en', MT: 'en', ME: 'sr', BA: 'hr', MD: 'ro',
+}
 
 /** Država vstopne strani (`/at` → 'AT'), sicer null. */
 export function drzavaVstopa(pot: string): string | null {

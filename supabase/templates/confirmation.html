@@ -89,6 +89,55 @@
     <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Потврди ја е-поштата →</a>
   </p>
   <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Ако не се регистрираше ти, само игнорирај ја оваа порака.</p>
+{{ else if eq (printf "%v" .Data.jezik) "el" }}
+  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Γεια σου!</p>
+  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Ευχαριστούμε για την εγγραφή σου στο SLFF. Πάτα το κουμπί για να επιβεβαιώσεις το email σου και μπορείς αμέσως να φτιάξεις ομάδα.</p>
+  <p style="text-align: center; margin: 24px 0;">
+    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Επιβεβαίωση email →</a>
+  </p>
+  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Αν δεν έκανες εσύ την εγγραφή, απλώς αγνόησε αυτό το μήνυμα.</p>
+{{ else if eq (printf "%v" .Data.jezik) "tr" }}
+  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Merhaba!</p>
+  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">SLFF’ye kaydolduğun için teşekkürler. E-posta adresini doğrulamak için butona bas, hemen takımını kurabilirsin.</p>
+  <p style="text-align: center; margin: 24px 0;">
+    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">E-postamı doğrula →</a>
+  </p>
+  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Kaydı sen yapmadıysan bu e-postayı görmezden gelebilirsin.</p>
+{{ else if eq (printf "%v" .Data.jezik) "uk" }}
+  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Привіт!</p>
+  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Дякуємо за реєстрацію в SLFF. Натисни кнопку, щоб підтвердити свою електронну пошту, і одразу можеш збирати команду.</p>
+  <p style="text-align: center; margin: 24px 0;">
+    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Підтвердити пошту →</a>
+  </p>
+  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Якщо ти не реєструвався, просто проігноруй цей лист.</p>
+{{ else if eq (printf "%v" .Data.jezik) "hy" }}
+  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Բարև!</p>
+  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Շնորհակալություն SLFF-ում գրանցվելու համար։ Սեղմիր կոճակը՝ էլ. հասցեդ հաստատելու համար, և կարող ես անմիջապես թիմ կազմել։</p>
+  <p style="text-align: center; margin: 24px 0;">
+    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Հաստատել էլ. հասցեն →</a>
+  </p>
+  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Եթե դու չես գրանցվել, պարզապես անտեսիր այս նամակը։</p>
+{{ else if eq (printf "%v" .Data.jezik) "az" }}
+  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Salam!</p>
+  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">SLFF-də qeydiyyatdan keçdiyin üçün təşəkkürlər. E-poçtunu təsdiqləmək üçün düyməni bas və dərhal komanda yığa bilərsən.</p>
+  <p style="text-align: center; margin: 24px 0;">
+    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">E-poçtu təsdiqlə →</a>
+  </p>
+  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Qeydiyyatdan sən keçməmisənsə, bu məktubu nəzərə alma.</p>
+{{ else if eq (printf "%v" .Data.jezik) "da" }}
+  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Hej!</p>
+  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Tak, fordi du har oprettet dig på SLFF. Tryk på knappen for at bekræfte din e-mail, så kan du straks sætte dit hold.</p>
+  <p style="text-align: center; margin: 24px 0;">
+    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Bekræft e-mail →</a>
+  </p>
+  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Har du ikke selv oprettet dig, kan du bare se bort fra denne mail.</p>
+{{ else if eq (printf "%v" .Data.jezik) "en" }}
+  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Hi!</p>
+  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Thanks for signing up to SLFF. Tap the button to confirm your email and you can start building your team straight away.</p>
+  <p style="text-align: center; margin: 24px 0;">
+    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Confirm email →</a>
+  </p>
+  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">If you didn’t sign up yourself, just ignore this email.</p>
 {{ else }}
   <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Živjo!</p>
   <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Hvala za registracijo v SLFF. S klikom na gumb potrdiš svoj e-naslov in lahko začneš sestavljati ekipo.</p>

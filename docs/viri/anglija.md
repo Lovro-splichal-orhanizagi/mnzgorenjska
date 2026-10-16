@@ -2,8 +2,13 @@
 
 Država `GB` ("England"; vpišeta jo ta migracija in migracija lig `isthmian`,
 obe z `on conflict do nothing`). **Šifra angleške lige se začne z `gb-`.**
-Vmesnika v angleščini za državo, kartice in pošte še ni (`JEZIK_DRZAVE.GB`),
-`GB` ni v matriki nočnega uvoza — oboje pred vklopom.
+**Vmesnik in pošta.** Združeno kraljestvo dobi angleški vmesnik
+(`JEZIK_DRZAVE.GB = 'en'`, `en-GB`), vstop `slff.eu/gb`, kartico ob deljenju `gb.html` (Caddy jo vrne za `/gb` in `?t=gb-…`, tudi rezerva `:3201`, `vercel.json`), angleško vejo pošte (vse
+funkcije `sporocila.ts`, pozdrav "Hi …,", avtentikacijske predloge in zadeve
+za `jezik = en`), britanska imena lastnikov hišnih ekip in `klub_stik.drzava`
+(migracija 20261016213700), `IMENA_GB` v *Hisne ekipe* in `GB` v matriki nočnega uvoza
+(en koš: `isthmian`, `ncefl`, `lowland`). Ugib: le IP ali pas `Europe/London`
+(`en-GB` ni država); rok v pošti po londonsko (uro manj kot Ljubljana). Lige ostanejo neaktivne, dokler jih lastnik ne vklopi.
 
 Vir `ncefl` (`scripts/viri/ncefl.mjs`) bere **Northern Counties East Football
 League** (NCEL, step 5–6) z lastne strani lige www.ncefl.org.uk — HTML s
@@ -89,9 +94,8 @@ je okoli 20 minut na ligo.
 Država `GB` ("England", migracija 20261016091700): koda ISO 3166-1, ker
 `GB-ENG` (ISO 3166-2) z vezajem podre pravilo "šifra lige se začne s kodo
 države" in ker IP iz Anglije pove `GB`. **Šifra angleške lige se začne z
-`gb-`.** Vmesnika v angleščini za državo, kartice in pošte **še ni**
-(`JEZIK_DRZAVE.GB` ni vpisan), `GB` ni v matriki nočnega uvoza — oboje pred
-vklopom.
+`gb-`.** Vmesnik, pošta in nočni uvoz za `GB` so pripravljeni (glej začetek
+datoteke).
 
 Vir `isthmian` (`scripts/viri/isthmian.mjs`) bere step 3–4 angleške piramide:
 **Isthmian League, Northern Premier League (NPL) in Southern League (SFL)**,

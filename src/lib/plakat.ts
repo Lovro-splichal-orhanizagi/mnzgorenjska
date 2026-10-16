@@ -110,6 +110,25 @@ export function ligaVTozilniku(liga: string, j: Jezik = jezikSlovarja()): string
   // Makedonščina ne sklanja, a člen je pripona (лигата); ime lige zato stoji
   // samostojno za dvopičjem ali v oklepaju.
   if (j === 'mk') return liga
+  // Grščina sklanja, a ime lige (Α1 Ερασιτεχνική …) stoji v prevodih samostojno
+  // za dvopičjem ali v oklepaju, brez člena; zato ostane v imenovalniku.
+  if (j === 'el') return liga
+  // Turščina sklon pripne kot pripono po samoglasniški harmoniji zadnje besede
+  // ("Lig'e", "Grubu'na"); ime lige zato stoji samostojno za dvopičjem
+  // ("Fantezi lig açıldı: {liga}").
+  if (j === 'tr') return liga
+  // Ukrajinščina ima 7 sklonov; ime lige ostane v imenovalniku in stoji
+  // samostojno za dvopičjem ("Фентезі-лігу відкрито: Друга ліга").
+  if (j === 'uk') return liga
+  // Armenščina ima sklone kot pripone (լիգան, լիգայում); ime lige zato stoji
+  // samostojno za dvopičjem.
+  if (j === 'hy') return liga
+  // Azerbajdžanščina: sklon je pripona po samoglasniški harmoniji; ime lige
+  // zato stoji samostojno za dvopičjem ali v oklepaju.
+  if (j === 'az') return liga
+  // Danščina ne sklanja (le rodilnik na -s); ime lige zato stoji samostojno
+  // za dvopičjem ("Fantasyligaen er åben: Serie 1").
+  if (j === 'da') return liga
   if (j === 'sk') return liga.replace(/(^|\s)liga(?=\s|$)/, '$1ligu').replace(/(^|\s)trieda(?=\s|$)/, '$1triedu')
   // Hrvaščina: ženske besede imena pred " — " na -a dobijo -u: "Treća NL Sjever"
   // -> "Treću NL Sjever", "Prva zagrebačka liga" -> "Prvu zagrebačku ligu".

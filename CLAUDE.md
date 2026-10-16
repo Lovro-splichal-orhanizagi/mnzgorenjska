@@ -404,9 +404,9 @@ kanonični `?t=` po svoji ligi.
   `src/i18n` — nikoli `toLocaleString('sl-SI')`.
 - Drugi jezik (`src/i18n/hr/`) je lahko delen; manjkajoče pride iz
   slovenščine. `npm run prevodi -- hr` izpiše, kaj manjka. Brskalnik izbere
-  jezik sam šele, ko je v `PRIPRAVLJENI` (`sl`, `hr`, `sk`, `cs`, `hu`, `de`, `sr`, `ro`, `et`, `pl`, `es`, `lv`, `mk`, `en`). Hrvaščina,
-  slovaščina, češčina, madžarščina, nemščina, srbščina, romunščina, estonščina, latvijščina, makedonščina in angleščina so popolne — smoke preveri, da imajo vse ključe ter iste
-  `{parametre}` in `<oznake>`; nov slovenski niz zato dodaj v vseh devet.
+  jezik sam šele, ko je v `PRIPRAVLJENI` (`sl`, `hr`, `sk`, `cs`, `hu`, `de`, `sr`, `ro`, `et`, `pl`, `es`, `lv`, `mk`, `el`, `tr`, `uk`, `hy`, `az`, `da`, `en`). Hrvaščina,
+  slovaščina, češčina, madžarščina, nemščina, srbščina, romunščina, estonščina, latvijščina, makedonščina, grščina, turščina, ukrajinščina, armenščina, azerbajdžanščina, danščina in angleščina so popolne — smoke preveri, da imajo vse ključe ter iste
+  `{parametre}` in `<oznake>`; nov slovenski niz zato dodaj v vseh.
 - **Kateri jezik** (`zeljenJezik` v `src/lib/drzavaUgib.ts`, isto pravilo v
   `izberi()` ob nalaganju in v varovalu konteksta lige):
   1. izbira z izbirnika **"SL · SK · EN"** (`IzbiraJezika`, v nogi in na vrhu

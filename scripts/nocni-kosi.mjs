@@ -11,7 +11,9 @@
 //   - VZPOREDNI pove, iz koliko poslov hkrati sme brati posamezen vir. Vir, ki
 //     ga ni na seznamu, bere en sam posel (vse njegove lige so v istem košu):
 //     majhna spletišča MNZ, jalgpall.ee in fcf.cat (skupen proračun branja),
-//     facr (posrednik, CAPTCHA), hlf (brskalnik), frf, lff, pzpn, wmzpn, ffm, fsb.
+//     facr (posrednik, CAPTCHA), hlf (brskalnik), frf, lff, pzpn, wmzpn, ffm, fsb,
+//     mascot, askf, tff, aft, hoff-km, pfl-ua, upl, ffl, ffa, pfl-az, dbu,
+//     ncefl, isthmian, lowland, mfa, fscg, nsfbih, nfsbih, fmf.
 //   - Faktor premora: vir, ki ga bere k poslov, v vsakem bere s k-krat daljšim
 //     premorom (`SLFF_PREMOR_FAKTOR`, prenos.mjs). Skupni tempo zahtevkov k viru
 //     tako ni večji kot pri enem poslu — hitrost pride iz baze (uvoz zapisnika je
@@ -42,10 +44,17 @@ export const VZPOREDNI = {
   // fss.rs (državni ligi in regijske po šifri COMET), 2 s med zahtevki.
   fss: 2,
   fssid: 2,
+  // EPS (Grčija): devet regijskih zvez, vsaka na svoji domeni, 3 s med zahtevki
+  // (Atene odgovarjajo ~5 s). 32 lig po 12–20 minut v enem poslu ne gre v
+  // 190 minut; v štirih koših (vsak z 12 s premora) jih ima koš 7–9. Mascot
+  // (31 lig po ~4 minute) ostane v enem košu, ki ga eps ne deli (glej KOSOV GR).
+  eps: 4,
 }
 
 /** Koliko poslov ima država (1 = kot doslej). Matrika v uvoz-zapisnikov.yml mora biti ista. */
-export const KOSOV = { AT: 4, HR: 3, HU: 3, SK: 2, RS: 2, SI: 2 }
+// GR 6: zamik zgoščenke da eps koše 2–5 in mascot koš 1, koš 6 ostane prazen
+// (pri 5 koših bi mascot delil koš z 9 ligami eps).
+export const KOSOV = { AT: 4, HR: 3, HU: 3, SK: 2, RS: 2, SI: 2, GR: 6 }
 
 /** FNV-1a, 32 bitov: stabilna zgoščenka niza (brez kripto, enaka v vsakem Node). */
 export function zgoscenka(niz) {

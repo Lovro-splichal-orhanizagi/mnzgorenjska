@@ -88,6 +88,55 @@
     <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Постави нова лозинка →</a>
   </p>
   <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Ако не побара нова лозинка ти, само игнорирај ја оваа порака. Старата лозинка сè уште важи.</p>
+{{ else if eq (printf "%v" .Data.jezik) "el" }}
+  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Νέος κωδικός</p>
+  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Κάποιος (ελπίζουμε εσύ) ζήτησε νέο κωδικό για το SLFF. Πάτα το κουμπί και γράψε τον νέο σου κωδικό.</p>
+  <p style="text-align: center; margin: 24px 0;">
+    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Ορισμός νέου κωδικού →</a>
+  </p>
+  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Αν δεν ζήτησες εσύ νέο κωδικό, απλώς αγνόησε αυτό το μήνυμα. Ο παλιός κωδικός ισχύει ακόμα.</p>
+{{ else if eq (printf "%v" .Data.jezik) "tr" }}
+  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Yeni şifre</p>
+  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Birisi (umarız sensin) SLFF için yeni bir şifre istedi. Butona bas ve yeni şifreni gir.</p>
+  <p style="text-align: center; margin: 24px 0;">
+    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Yeni şifre belirle →</a>
+  </p>
+  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Yeni şifreyi sen istemediysen bu e-postayı görmezden gelebilirsin. Eski şifren hâlâ geçerli.</p>
+{{ else if eq (printf "%v" .Data.jezik) "uk" }}
+  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Новий пароль</p>
+  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Хтось (сподіваємося, що ти) попросив новий пароль для SLFF. Натисни кнопку і введи новий пароль.</p>
+  <p style="text-align: center; margin: 24px 0;">
+    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Встановити новий пароль →</a>
+  </p>
+  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Якщо ти не просив новий пароль, просто проігноруй цей лист. Старий пароль і далі дійсний.</p>
+{{ else if eq (printf "%v" .Data.jezik) "hy" }}
+  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Նոր գաղտնաբառ</p>
+  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Ինչ-որ մեկը (հուսով ենք՝ դու) նոր գաղտնաբառ է խնդրել SLFF-ի համար։ Սեղմիր կոճակը և մուտքագրիր նոր գաղտնաբառը։</p>
+  <p style="text-align: center; margin: 24px 0;">
+    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Սահմանել նոր գաղտնաբառ →</a>
+  </p>
+  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Եթե դու նոր գաղտնաբառ չես խնդրել, պարզապես անտեսիր այս նամակը։ Հին գաղտնաբառը դեռ գործում է։</p>
+{{ else if eq (printf "%v" .Data.jezik) "az" }}
+  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Yeni şifrə</p>
+  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Kimsə (ümid edirik ki, sən) SLFF üçün yeni şifrə istəyib. Düyməni bas və yeni şifrəni daxil et.</p>
+  <p style="text-align: center; margin: 24px 0;">
+    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Yeni şifrə təyin et →</a>
+  </p>
+  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Yeni şifrəni sən istəməmisənsə, bu məktubu nəzərə alma. Köhnə şifrən hələ də etibarlıdır.</p>
+{{ else if eq (printf "%v" .Data.jezik) "da" }}
+  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Ny adgangskode</p>
+  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Nogen (forhåbentlig dig) har bedt om en ny adgangskode til SLFF. Tryk på knappen, og skriv din nye adgangskode.</p>
+  <p style="text-align: center; margin: 24px 0;">
+    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Vælg ny adgangskode →</a>
+  </p>
+  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">Har du ikke selv bedt om en ny adgangskode, kan du bare se bort fra denne mail. Din gamle adgangskode virker stadig.</p>
+{{ else if eq (printf "%v" .Data.jezik) "en" }}
+  <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">New password</p>
+  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Someone (hopefully you) asked for a new SLFF password. Tap the button and enter your new password.</p>
+  <p style="text-align: center; margin: 24px 0;">
+    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery" style="display: inline-block; background: #22c55e; color: #052e16; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 10px;">Set a new password →</a>
+  </p>
+  <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">If you didn’t ask for a new password, just ignore this email. Your old password still works.</p>
 {{ else }}
   <p style="font-size: 18px; font-weight: 700; margin: 0 0 12px;">Ponastavitev gesla</p>
   <p style="font-size: 15px; line-height: 1.5; margin: 0 0 20px;">Nekdo (upamo, da ti) je zahteval novo geslo za SLFF. Klikni gumb in vpiši novo geslo.</p>

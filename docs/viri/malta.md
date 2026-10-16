@@ -3,9 +3,13 @@
 Vir `mfa` (`scripts/viri/mfa.mjs`) bere **javni JSON API Match Centra MFA**
 (`api.mfa.com.mt/api`, podatki iz COMET), ki ga bere tudi
 matchcentre.mfa.com.mt — brez ključa in prijave, z glavo `x-version: 2` (jo
-pošlje stran sama). Država `MT` ("Malta", vpiše jo migracija lig); vmesnika,
-kartice, pošte **ni**, `MT` **ni** v matriki nočnega uvoza in ne v
-`JEZIK_DRZAVE` — vse to pred vklopom (lige so neaktivne, uvoz ni bil pognan).
+pošlje stran sama). Država `MT` ("Malta", vpiše jo migracija lig); lige so
+neaktivne, uvoz ni bil pognan. Malta dobi angleški vmesnik
+(`JEZIK_DRZAVE.MT = 'en'`), vstop `slff.eu/mt`, kartico ob deljenju `mt.html` (Caddy jo vrne za `/mt` in `?t=mt-…`, tudi rezerva `:3201`, `vercel.json`), angleško vejo pošte (rok po malteško, kot
+Ljubljana), malteška imena lastnikov hišnih ekip in `klub_stik.drzava`
+(migracija 20261016213700), `IMENA_MT` v *Hisne ekipe* (malteško in angleško) in `MT`
+v matriki nočnega uvoza (en koš). Ugib: IP, brskalnik `mt` ali `en-MT`, pas
+`Europe/Malta`.
 Šifra lige se začne z `mt-`. Gozo FA (gozofa.com, ločena piramida, postave le
 v prostem besedilu) ni vpisana.
 

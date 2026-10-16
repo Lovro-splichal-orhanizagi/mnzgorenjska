@@ -24,10 +24,10 @@ on:
         type: boolean
         default: false
       drzava:
-        description: 'Drzava (SK, SI, HR, CZ, HU, AT, RS, RO, EE, PL, ES, LV ali MK)'
+        description: 'Drzava (SK, SI, HR, CZ, HU, AT, RS, RO, EE, PL, ES, LV, MK, GR, TR, UA, AM, AZ, DK, GB, MT, ME, BA ali MD)'
         required: false
         type: choice
-        options: [SK, SI, HR, CZ, HU, AT, RS, RO, EE, PL, ES, LV, MK]
+        options: [SK, SI, HR, CZ, HU, AT, RS, RO, EE, PL, ES, LV, MK, GR, TR, UA, AM, AZ, DK, GB, MT, ME, BA, MD]
         default: SK
       po_velikosti:
         description: 'Cilj po stevilu klubov (vecja liga, vec ekip)'
@@ -79,7 +79,7 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           set -euo pipefail
-          [[ "$DRZAVA" =~ ^(SK|SI|HR|CZ|HU|AT|RS|RO|EE|PL|ES|LV|MK)$ ]] || { echo "drzava mora biti SK, SI, HR, CZ, HU, AT, RS, RO, EE, PL, ES, LV ali MK"; exit 1; }
+          [[ "$DRZAVA" =~ ^(SK|SI|HR|CZ|HU|AT|RS|RO|EE|PL|ES|LV|MK|GR|TR|UA|AM|AZ|DK|GB|MT|ME|BA|MD)$ ]] || { echo "drzava mora biti SK, SI, HR, CZ, HU, AT, RS, RO, EE, PL, ES, LV, MK, GR, TR, UA, AM, AZ, DK, GB, MT, ME, BA ali MD"; exit 1; }
           args=(--drzava "$DRZAVA")
           if [ -n "$LIGA" ]; then
             [[ "$LIGA" =~ ^[a-z0-9-]+$ ]] || { echo "neveljaven slug lige"; exit 1; }

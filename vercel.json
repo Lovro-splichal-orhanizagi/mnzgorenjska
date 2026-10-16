@@ -114,6 +114,50 @@
       "destination": "/mk.html"
     },
     {
+      "source": "/gr",
+      "destination": "/gr.html"
+    },
+    {
+      "source": "/tr",
+      "destination": "/tr.html"
+    },
+    {
+      "source": "/ua",
+      "destination": "/ua.html"
+    },
+    {
+      "source": "/am",
+      "destination": "/am.html"
+    },
+    {
+      "source": "/az",
+      "destination": "/az.html"
+    },
+    {
+      "source": "/dk",
+      "destination": "/dk.html"
+    },
+    {
+      "source": "/gb",
+      "destination": "/gb.html"
+    },
+    {
+      "source": "/mt",
+      "destination": "/mt.html"
+    },
+    {
+      "source": "/me",
+      "destination": "/me.html"
+    },
+    {
+      "source": "/ba",
+      "destination": "/ba.html"
+    },
+    {
+      "source": "/md",
+      "destination": "/md.html"
+    },
+    {
       "source": "/((?!api/)(?!.*\\.).*)",
       "has": [
         {
@@ -255,6 +299,127 @@
         }
       ],
       "destination": "/mk.html"
+    },
+    {
+      "source": "/((?!api/)(?!.*\\.).*)",
+      "has": [
+        {
+          "type": "query",
+          "key": "t",
+          "value": "gr-.*"
+        }
+      ],
+      "destination": "/gr.html"
+    },
+    {
+      "source": "/((?!api/)(?!.*\\.).*)",
+      "has": [
+        {
+          "type": "query",
+          "key": "t",
+          "value": "tr-.*"
+        }
+      ],
+      "destination": "/tr.html"
+    },
+    {
+      "source": "/((?!api/)(?!.*\\.).*)",
+      "has": [
+        {
+          "type": "query",
+          "key": "t",
+          "value": "ua-.*"
+        }
+      ],
+      "destination": "/ua.html"
+    },
+    {
+      "source": "/((?!api/)(?!.*\\.).*)",
+      "has": [
+        {
+          "type": "query",
+          "key": "t",
+          "value": "am-.*"
+        }
+      ],
+      "destination": "/am.html"
+    },
+    {
+      "source": "/((?!api/)(?!.*\\.).*)",
+      "has": [
+        {
+          "type": "query",
+          "key": "t",
+          "value": "az-.*"
+        }
+      ],
+      "destination": "/az.html"
+    },
+    {
+      "source": "/((?!api/)(?!.*\\.).*)",
+      "has": [
+        {
+          "type": "query",
+          "key": "t",
+          "value": "dk-.*"
+        }
+      ],
+      "destination": "/dk.html"
+    },
+    {
+      "source": "/((?!api/)(?!.*\\.).*)",
+      "has": [
+        {
+          "type": "query",
+          "key": "t",
+          "value": "gb-.*"
+        }
+      ],
+      "destination": "/gb.html"
+    },
+    {
+      "source": "/((?!api/)(?!.*\\.).*)",
+      "has": [
+        {
+          "type": "query",
+          "key": "t",
+          "value": "mt-.*"
+        }
+      ],
+      "destination": "/mt.html"
+    },
+    {
+      "source": "/((?!api/)(?!.*\\.).*)",
+      "has": [
+        {
+          "type": "query",
+          "key": "t",
+          "value": "me-.*"
+        }
+      ],
+      "destination": "/me.html"
+    },
+    {
+      "source": "/((?!api/)(?!.*\\.).*)",
+      "has": [
+        {
+          "type": "query",
+          "key": "t",
+          "value": "ba-.*"
+        }
+      ],
+      "destination": "/ba.html"
+    },
+    {
+      "source": "/((?!api/)(?!.*\\.).*)",
+      "has": [
+        {
+          "type": "query",
+          "key": "t",
+          "value": "md-.*"
+        }
+      ],
+      "destination": "/md.html"
     },
     {
       "source": "/((?!api/)(?!.*\\.).*)",

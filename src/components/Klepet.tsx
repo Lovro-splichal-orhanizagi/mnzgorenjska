@@ -166,6 +166,87 @@ const BESEDE: Record<string, { pridevniki: string[]; samostalniki: string[] }> =
       'Орел', 'Змеј', 'Бик', 'Коњ', 'Сокол', 'Рис',
     ],
   },
+  // Grščina: pridevnik moškega spola pred samostalnikom ("Χρυσός Σκόρερ 42"),
+  // vsi samostalniki so moškega spola.
+  el: {
+    pridevniki: [
+      'Μπλε', 'Κόκκινος', 'Πράσινος', 'Κίτρινος', 'Μαύρος', 'Λευκός', 'Ασημένιος', 'Χρυσός',
+      'Γρήγορος', 'Άγριος', 'Ήσυχος', 'Φλογερός', 'Παγωμένος', 'Νυχτερινός', 'Πρωινός',
+      'Σιδερένιος', 'Χάλκινος', 'Ηλιόλουστος', 'Ουράνιος', 'Αμείλικτος',
+    ],
+    samostalniki: [
+      'Τερματοφύλακας', 'Αμυντικός', 'Μέσος', 'Επιθετικός', 'Αρχηγός', 'Διαιτητής', 'Προπονητής',
+      'Οπαδός', 'Σκόρερ', 'Πασαδόρος', 'Αναπληρωματικός', 'Βετεράνος', 'Ήρωας', 'Λύκος',
+      'Αετός', 'Δράκος', 'Ταύρος', 'Λέοντας', 'Γλάρος', 'Λύγκας',
+    ],
+  },
+  // Turščina: pridevnik pred samostalnikom, brez ujemanja ("Mavi Kaleci 42").
+  tr: {
+    pridevniki: [
+      'Mavi', 'Kırmızı', 'Yeşil', 'Sarı', 'Kara', 'Beyaz', 'Gümüş', 'Altın',
+      'Hızlı', 'Vahşi', 'Sessiz', 'Ateşli', 'Buzlu', 'Gizemli', 'Uykusuz',
+      'Demir', 'Bakır', 'Güneşli', 'Göksel', 'Acımasız',
+    ],
+    samostalniki: [
+      'Kaleci', 'Stoper', 'Bek', 'Forvet', 'Kaptan', 'Hakem', 'Hoca',
+      'Taraftar', 'Golcü', 'Libero', 'Yedek', 'Emektar', 'Kahraman', 'Kurt',
+      'Kartal', 'Ejder', 'Boğa', 'At', 'Şahin', 'Vaşak',
+    ],
+  },
+  // Ukrajinščina: pridevnik moškega spola pred samostalnikom ("Синій Воротар 42"),
+  // vsi samostalniki so moškega spola.
+  uk: {
+    pridevniki: [
+      'Синій', 'Червоний', 'Зелений', 'Жовтий', 'Чорний', 'Білий', 'Срібний', 'Золотий',
+      'Швидкий', 'Дикий', 'Тихий', 'Вогняний', 'Крижаний', 'Нічний', 'Ранковий',
+      'Залізний', 'Мідний', 'Сонячний', 'Небесний', 'Невблаганний',
+    ],
+    samostalniki: [
+      'Воротар', 'Захисник', 'Хавбек', 'Нападник', 'Капітан', 'Суддя', 'Тренер',
+      'Уболівальник', 'Бомбардир', 'Плеймейкер', 'Запасний', 'Ветеран', 'Герой', 'Вовк',
+      'Орел', 'Змій', 'Бик', 'Кінь', 'Сокіл', 'Рись',
+    ],
+  },
+  // Armenščina: pridevnik pred samostalnikom ("Կապույտ Դարպասապահ 42"), pridevnik se ne sklanja.
+  hy: {
+    pridevniki: [
+      'Կապույտ', 'Կարմիր', 'Կանաչ', 'Դեղին', 'Սև', 'Սպիտակ', 'Արծաթե', 'Ոսկե',
+      'Արագ', 'Վայրի', 'Լուռ', 'Հրեղեն', 'Սառցե', 'Գիշերային', 'Առավոտյան',
+      'Երկաթե', 'Պղնձե', 'Արևոտ', 'Երկնային', 'Անողոք',
+    ],
+    samostalniki: [
+      'Դարպասապահ', 'Պաշտպան', 'Կիսապաշտպան', 'Հարձակվող', 'Ավագ', 'Մրցավար', 'Մարզիչ',
+      'Երկրպագու', 'Ռմբարկու', 'Խաղավար', 'Պահեստային', 'Վետերան', 'Հերոս', 'Գայլ',
+      'Արծիվ', 'Վիշապ', 'Ցուլ', 'Ձի', 'Բազե', 'Ընձառյուծ',
+    ],
+  },
+  // Azerbajdžanščina: pridevnik pred samostalnikom ("Mavi Qapıçı 42"), brez spola in sklanjatve.
+  az: {
+    pridevniki: [
+      'Mavi', 'Qırmızı', 'Yaşıl', 'Sarı', 'Qara', 'Ağ', 'Gümüş', 'Qızıl',
+      'Cəld', 'Vəhşi', 'Sakit', 'Odlu', 'Buzlu', 'Gecə', 'Səhər',
+      'Dəmir', 'Mis', 'Günəşli', 'Səmavi', 'Amansız',
+    ],
+    samostalniki: [
+      'Qapıçı', 'Bek', 'Hücumçu', 'Kapitan', 'Hakim', 'Məşqçi', 'Azarkeş',
+      'Bombardir', 'Pleymeyker', 'Ehtiyatçı', 'Veteran', 'Qəhrəman', 'Canavar', 'Qartal',
+      'Əjdaha', 'Buğa', 'At', 'Şahin', 'Vaşaq', 'Pələng',
+    ],
+  },
+  // Danščina: pridevnik pred samostalnikom ("Blå Målmand 42"), vsi samostalniki
+  // so skupnega spola, pridevnik ostane v osnovni obliki.
+  da: {
+    pridevniki: [
+      'Blå', 'Rød', 'Grøn', 'Gul', 'Sort', 'Hvid', 'Sølvblank', 'Gylden',
+      'Hurtig', 'Vild', 'Stille', 'Flammende', 'Iskold', 'Natlig', 'Morgenfrisk',
+      'Jernhård', 'Kobberrød', 'Solbrændt', 'Himmelblå', 'Nådesløs',
+    ],
+    samostalniki: [
+      'Målmand', 'Back', 'Kant', 'Angriber', 'Kaptajn', 'Dommer', 'Træner',
+      'Fan', 'Målscorer', 'Playmaker', 'Reserve', 'Veteran', 'Helt', 'Ulv',
+      'Ørn', 'Drage', 'Tyr', 'Hest', 'Falk', 'Los',
+    ],
+  },
   de: {
     pridevniki: [
       'Blauer', 'Roter', 'Grüner', 'Gelber', 'Schwarzer', 'Weißer', 'Silberner', 'Goldener',

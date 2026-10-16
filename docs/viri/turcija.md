@@ -5,8 +5,21 @@ Vir `askf` (`scripts/viri/askf.mjs`) bere **pokrajinske amaterske zveze
 **Çanakkale** (canakkaleaskf.org) in **Aydın** (aydinaskf.com) — en vir, ker
 je program isti; spletišče izbere šifra lige. To so lige pod TFF (Süper
 Amatör = raven 6, 1. Amatör = 7), ki jih tff.org nima; TFF 3. Lig in PGL, ki ju
-spletišči tudi naštejeta, so pri viru `tff`. Država `TR` (vmesnik, pošta, nočni
-uvoz) še ni pripravljena — lige so **neaktivne**.
+spletišči tudi naštejeta, so pri viru `tff`. Lige so **neaktivne**, dokler
+jih lastnik ne vklopi.
+
+**Vmesnik in pošta.** Turčija ima vmesnik v turščini (`src/i18n/tr/`, jezik
+`tr`, `tr-TR`, `JEZIK_DRZAVE.TR`), izbirnik jezika "Türkçe", vstop `slff.eu/tr`, kartico ob deljenju `tr.html` (Caddy jo vrne za `/tr` in `?t=tr-…`, tudi rezerva `:3201`, `vercel.json`),
+turško vejo pošte (pozdrav "Merhaba", avtentikacijske predloge in zadeve),
+turška imena lastnikov hišnih ekip in `klub_stik.drzava` (migracija 20261016213700),
+`IMENA_TR` v *Hisne ekipe* in `TR` v matriki nočnega uvoza (en koš; `askf` in
+`tff` vsak iz enega posla). Ugib: brskalnik `tr` ali pas `Europe/Istanbul`
+(rok v pošti po istanbulsko: UTC+3 vse leto, uro ali dve več kot Ljubljana).
+Krog je **hafta** ("5. hafta"), samostalnik za številom ostane v ednini ("2
+puan"), ime lige stoji samostojno (pripone po samoglasniški harmoniji).
+Pripomoček Wildcard je povsod "Joker". Imena v SQL se ne začnejo z "İ"
+(`lower()`). Manjka še: turški kanal v HelpStacku in **pregled prevoda pri
+naravnem govorcu**.
 
 - **Šifra lige** je `<zveza>/<sezona>/<liga>[/<skupina>]`:
   `canakkale/2026-2027/samator`, `aydin/2026-2027/1amator/2`. `<liga>` je
@@ -127,10 +140,10 @@ Nesine 2. Lig (raven 3, skupini Beyaz in Kırmızı), Nesine 3. Lig
 (PGL, raven 5, nekdanji BAL, 12 skupin po 10–14 klubov, prvi krog 17.–18. 10.
 2026). Pokrajinske amaterske lige (Süper Amatör in nižje, ASKF) na tff.org
 niso. **Süper Lig namenoma ni vpisana**: TFF ima svojo fantasy igro, pogoji
-so nekomercialni — o njej odloči lastnik posebej. Država `TR` ("Türkiye") in zveza `tff` vpiše migracija lig; vmesnika v
-turščini, kartice, pošte in `TR` v matriki nočnega uvoza **še ni** — oboje
-pred vklopom (`TR` je le v `SKUPEN_VIR`, da ročni uvozi turških lig tečejo
-eden za drugim). Šifra lige se začne s `tr-`.
+so nekomercialni — o njej odloči lastnik posebej. Država `TR` ("Türkiye") in zveza `tff` vpiše migracija lig; vmesnik, pošta
+in nočni uvoz so pripravljeni (glej začetek datoteke; `TR` je tudi v
+`SKUPEN_VIR`, da ročni uvozi turških lig tečejo eden za drugim). Šifra lige se
+začne s `tr-`.
 
 - **Kodiranje**: ASP.NET iz strežnika v **windows-1254**. `vir.fetch`
   (`tffFetch`) bajte pretvori v UTF-8; brez tega so ğ, ı, İ, ş pokvarjeni.

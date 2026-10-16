@@ -34,11 +34,12 @@ import {
   KLJUC_IZBRANEGA_JEZIKA,
 } from '../lib/drzavaUgib.ts'
 
-export type Jezik = 'sl' | 'hr' | 'sk' | 'cs' | 'hu' | 'de' | 'sr' | 'ro' | 'et' | 'pl' | 'es' | 'lv' | 'mk' | 'en'
+export type Jezik = 'sl' | 'hr' | 'sk' | 'cs' | 'hu' | 'de' | 'sr' | 'ro' | 'et' | 'pl' | 'es' | 'lv' | 'mk' | 'el' | 'tr' | 'uk' | 'hy' | 'az' | 'da' | 'en'
 
 /** Množinske oblike; `other` je obvezna, ostale po pravilih jezika. */
 // `many` rabi slovaščina za necela števila ("2,5 bodu"), `zero` latvijščina
-// ("0 punktu, 10 punktu").
+// ("0 punktu, 10 punktu"); ukrajinščina ima one/few/many/other kot poljščina,
+// grščina, turščina, armenščina, azerbajdžanščina in danščina one/other.
 export type Mnozina = { zero?: string; one?: string; two?: string; few?: string; many?: string; other: string }
 type Vrednost = string | Mnozina
 type Drevo = { [k: string]: Vrednost | Drevo }
@@ -70,6 +71,12 @@ const NALAGALNIKI: Record<Exclude<Jezik, 'sl'>, () => Promise<Drevo>> = {
   es: () => import('./es/index.ts').then((m) => m.es as Drevo),
   lv: () => import('./lv/index.ts').then((m) => m.lv as Drevo),
   mk: () => import('./mk/index.ts').then((m) => m.mk as Drevo),
+  el: () => import('./el/index.ts').then((m) => m.el as Drevo),
+  tr: () => import('./tr/index.ts').then((m) => m.tr as Drevo),
+  uk: () => import('./uk/index.ts').then((m) => m.uk as Drevo),
+  hy: () => import('./hy/index.ts').then((m) => m.hy as Drevo),
+  az: () => import('./az/index.ts').then((m) => m.az as Drevo),
+  da: () => import('./da/index.ts').then((m) => m.da as Drevo),
   en: () => import('./en/index.ts').then((m) => m.en as Drevo),
 }
 const SL = sl as Drevo
@@ -109,10 +116,12 @@ export async function naloziSlovar(rokMs = 3000): Promise<void> {
   jezikVRabi = d ? j : 'sl'
 }
 /** Jeziki, ki so dovolj prevedeni, da jih vmesnik izbere sam. */
-export const PRIPRAVLJENI: Jezik[] = ['sl', 'hr', 'sk', 'cs', 'hu', 'de', 'sr', 'ro', 'et', 'pl', 'es', 'lv', 'mk', 'en']
+export const PRIPRAVLJENI: Jezik[] = ['sl', 'hr', 'sk', 'cs', 'hu', 'de', 'sr', 'ro', 'et', 'pl', 'es', 'lv', 'mk', 'el', 'tr', 'uk', 'hy', 'az', 'da', 'en']
 // Angleščina v britanski obliki: "3 Oct", 24-urni čas, decimalna pika.
 // Srbščina v latinici (`sr-Latn-RS`): sama `sr-RS` bi datume pisala v cirilici.
-const LOKALE: Record<Jezik, string> = { sl: 'sl-SI', hr: 'hr-HR', sk: 'sk-SK', cs: 'cs-CZ', hu: 'hu-HU', de: 'de-AT', sr: 'sr-Latn-RS', ro: 'ro-RO', et: 'et-EE', pl: 'pl-PL', es: 'es-ES', lv: 'lv-LV', mk: 'mk-MK', en: 'en-GB' }
+// Azerbajdžanščina v latinici (`az-Latn-AZ`), kot jo pišejo v Azerbajdžanu.
+// Grščina s 24-urnim časom (`-u-hc-h23`): sama `el-GR` piše "11:00 π.μ.".
+const LOKALE: Record<Jezik, string> = { sl: 'sl-SI', hr: 'hr-HR', sk: 'sk-SK', cs: 'cs-CZ', hu: 'hu-HU', de: 'de-AT', sr: 'sr-Latn-RS', ro: 'ro-RO', et: 'et-EE', pl: 'pl-PL', es: 'es-ES', lv: 'lv-LV', mk: 'mk-MK', el: 'el-GR-u-hc-h23', tr: 'tr-TR', uk: 'uk-UA', hy: 'hy-AM', az: 'az-Latn-AZ', da: 'da-DK', en: 'en-GB' }
 const SHRAMBA = 'slff-jezik'
 
 export const jePripravljen = (j: string): j is Jezik => PRIPRAVLJENI.includes(j as Jezik)

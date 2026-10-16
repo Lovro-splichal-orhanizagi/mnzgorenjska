@@ -17,6 +17,13 @@ import { aplikacija as aplikacijaPl } from './src/i18n/pl/aplikacija.ts'
 import { aplikacija as aplikacijaEs } from './src/i18n/es/aplikacija.ts'
 import { aplikacija as aplikacijaLv } from './src/i18n/lv/aplikacija.ts'
 import { aplikacija as aplikacijaMk } from './src/i18n/mk/aplikacija.ts'
+import { aplikacija as aplikacijaEl } from './src/i18n/el/aplikacija.ts'
+import { aplikacija as aplikacijaTr } from './src/i18n/tr/aplikacija.ts'
+import { aplikacija as aplikacijaUk } from './src/i18n/uk/aplikacija.ts'
+import { aplikacija as aplikacijaHy } from './src/i18n/hy/aplikacija.ts'
+import { aplikacija as aplikacijaAz } from './src/i18n/az/aplikacija.ts'
+import { aplikacija as aplikacijaDa } from './src/i18n/da/aplikacija.ts'
+import { aplikacija as aplikacijaEn } from './src/i18n/en/aplikacija.ts'
 import { sl } from './src/i18n/sl/index.ts'
 import { sk } from './src/i18n/sk/index.ts'
 import { hr } from './src/i18n/hr/index.ts'
@@ -30,6 +37,13 @@ import { pl } from './src/i18n/pl/index.ts'
 import { es } from './src/i18n/es/index.ts'
 import { lv } from './src/i18n/lv/index.ts'
 import { mk } from './src/i18n/mk/index.ts'
+import { el } from './src/i18n/el/index.ts'
+import { tr } from './src/i18n/tr/index.ts'
+import { uk } from './src/i18n/uk/index.ts'
+import { hy } from './src/i18n/hy/index.ts'
+import { az } from './src/i18n/az/index.ts'
+import { da } from './src/i18n/da/index.ts'
+import { en } from './src/i18n/en/index.ts'
 
 /**
  * V zgrajeno stran zapiše commit, iz katerega je nastala.
@@ -71,7 +85,8 @@ function znamkaCommita() {
 }
 
 /**
- * Različice `index.html` za kartico ob deljenju (sk.html, hr.html, cz.html, hu.html, at.html, rs.html, ro.html, ee.html, pl.html, es.html, lv.html, mk.html).
+ * Različice `index.html` za kartico ob deljenju (sk.html, hr.html, cz.html, hu.html, at.html, rs.html, ro.html, ee.html, pl.html, es.html, lv.html, mk.html,
+ * gr.html, tr.html, ua.html, am.html, az.html, dk.html, gb.html, mt.html, me.html, ba.html, md.html).
  *
  * Facebook, WhatsApp in iskalniki JS ne poženejo in vidijo le statični HTML —
  * slovenski. Klub, ki deli povezavo `slff.eu/club/…?t=sk-…`, bi objavil
@@ -108,6 +123,25 @@ function karticeDrzav() {
     { koda: 'lv', jezik: 'lv', locale: 'lv_LV', n: aplikacijaLv.naslovStrani },
     // Severna Makedonija: datoteka po kodi države (/mk, ?t=mk-…), jezik je mk.
     { koda: 'mk', jezik: 'mk', locale: 'mk_MK', n: aplikacijaMk.naslovStrani },
+    // Grčija: datoteka po kodi države (/gr, ?t=gr-…), jezik je el.
+    { koda: 'gr', jezik: 'el', locale: 'el_GR', n: aplikacijaEl.naslovStrani },
+    // Turčija: koda države in jezika sta isti (/tr, ?t=tr-…).
+    { koda: 'tr', jezik: 'tr', locale: 'tr_TR', n: aplikacijaTr.naslovStrani },
+    // Ukrajina: datoteka po kodi države (/ua, ?t=ua-…), jezik je uk (ne Združeno kraljestvo).
+    { koda: 'ua', jezik: 'uk', locale: 'uk_UA', n: aplikacijaUk.naslovStrani },
+    // Armenija: datoteka po kodi države (/am, ?t=am-…), jezik je hy.
+    { koda: 'am', jezik: 'hy', locale: 'hy_AM', n: aplikacijaHy.naslovStrani },
+    // Azerbajdžan: koda države in jezika sta isti (/az, ?t=az-…).
+    { koda: 'az', jezik: 'az', locale: 'az_AZ', n: aplikacijaAz.naslovStrani },
+    // Danska: datoteka po kodi države (/dk, ?t=dk-…), jezik je da.
+    { koda: 'dk', jezik: 'da', locale: 'da_DK', n: aplikacijaDa.naslovStrani },
+    // Združeno kraljestvo (Anglija, Škotska) in Malta: angleščina.
+    { koda: 'gb', jezik: 'en-GB', locale: 'en_GB', n: aplikacijaEn.naslovStrani },
+    { koda: 'mt', jezik: 'en', locale: 'en_GB', n: aplikacijaEn.naslovStrani },
+    // Črna gora: srbščina v latinici; Bosna in Hercegovina: hrvaščina; Moldavija: romunščina.
+    { koda: 'me', jezik: 'sr-Latn', locale: 'sr_RS', n: aplikacijaSr.naslovStrani },
+    { koda: 'ba', jezik: 'hr', locale: 'hr_HR', n: aplikacijaHr.naslovStrani },
+    { koda: 'md', jezik: 'ro', locale: 'ro_RO', n: aplikacijaRo.naslovStrani },
   ]
   const zamenjaj = (html, datoteka, atribut, ime, vsebina) => {
     const re = new RegExp(`(<meta ${atribut}="${ime}" content=")[^"]*(")`)
@@ -150,7 +184,7 @@ function besedeZaHtml() {
     'tekme.rezultati.naslov', 'tekme.rezultati.uvod', 'tekme.tekma.naslov',
     'igralci.seznam.naslov', 'igralci.profil.naslov', 'igralci.preverjen.znacka', 'lestvice.lestvica.naslov', 'lestvice.klub.naslov',
   ]
-  const SLOVARJI = { sl, sk, hr, cs, hu, de, sr, ro, et, pl, es, lv, mk }
+  const SLOVARJI = { sl, sk, hr, cs, hu, de, sr, ro, et, pl, es, lv, mk, el, tr, uk, hy, az, da, en }
   const vzemi = (drevo, kljuc) => kljuc.split('.').reduce((d, k) => d?.[k], drevo)
   let izhod = 'dist'
   return {

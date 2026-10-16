@@ -69,6 +69,24 @@ const KANALI: Record<string, string> = {
   // Makedonskega kanala še ni: makedonski obiskovalci dobijo slovenskega, ki
   // odgovarja v jeziku vprašanja.
   mk: 'cmucx868b000cv2atsowgly81',
+  // Grškega kanala še ni: grški obiskovalci dobijo slovenskega, ki
+  // odgovarja v jeziku vprašanja.
+  el: 'cmucx868b000cv2atsowgly81',
+  // Turškega kanala še ni: turški obiskovalci dobijo slovenskega, ki
+  // odgovarja v jeziku vprašanja.
+  tr: 'cmucx868b000cv2atsowgly81',
+  // Ukrajinskega kanala še ni: ukrajinski obiskovalci dobijo slovenskega, ki
+  // odgovarja v jeziku vprašanja.
+  uk: 'cmucx868b000cv2atsowgly81',
+  // Armenskega kanala še ni: armenski obiskovalci dobijo slovenskega, ki
+  // odgovarja v jeziku vprašanja.
+  hy: 'cmucx868b000cv2atsowgly81',
+  // Azerbajdžanskega kanala še ni: azerbajdžanski obiskovalci dobijo slovenskega, ki
+  // odgovarja v jeziku vprašanja.
+  az: 'cmucx868b000cv2atsowgly81',
+  // Danskega kanala še ni: danski obiskovalci dobijo slovenskega, ki
+  // odgovarja v jeziku vprašanja.
+  da: 'cmucx868b000cv2atsowgly81',
 }
 const skripta = (id: string) => `https://helpstack.eu/widget.js?id=${id}`
 

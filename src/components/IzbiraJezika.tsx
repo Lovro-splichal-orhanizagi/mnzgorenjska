@@ -25,6 +25,12 @@ const IMENA: Partial<Record<Jezik, string>> = {
   es: 'Español',
   lv: 'Latviešu',
   mk: 'Македонски',
+  el: 'Ελληνικά',
+  tr: 'Türkçe',
+  uk: 'Українська',
+  hy: 'Հայերեն',
+  az: 'Azərbaycanca',
+  da: 'Dansk',
   en: 'English',
 }
 
