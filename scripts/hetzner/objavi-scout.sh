@@ -12,6 +12,10 @@ cd "$(dirname "$0")/../.."
 if [[ -n $(git status --porcelain -- scout/stroj scripts/hetzner/scout) ]]; then
   echo "Uncommitted changes in the Scout engine; publish only what is on main."; exit 1
 fi
+git fetch -q origin main
+if [[ $(git rev-parse --abbrev-ref HEAD) != main || $(git rev-parse HEAD) != $(git rev-parse origin/main) ]]; then
+  echo "Publish only from main equal to origin/main (git switch main && git pull)."; exit 1
+fi
 CILJ=/opt/slff-scout
 CAS=$(date +%Y%m%d-%H%M%S)
 ssh SLFF "test -f $CILJ/.env || { echo 'Manjka $CILJ/.env (ustvari ga lastnik, glej docs/scout.md)'; exit 1; }; \
