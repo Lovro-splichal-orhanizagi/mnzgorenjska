@@ -3229,7 +3229,7 @@ ostanejo neaktivne in jih ne beremo — ne obhajaj (drug IP, brskalnik, manjši
 tempo brez dogovora). Çanakkale zavrnitve ni vrnil (~260 zahtevkov). Ob
 11:15 istega dne je en sam GET `/fikstur` spet dobil 403 — zapora traja.
 
-Vpisanih je 5 lig (migracija 20261015161700), **neaktivnih**, zvezi
+Vpisanih je 5 lig (migracija 20261015230900), **neaktivnih**, zvezi
 `askf-canakkale` in `askf-aydin`. Sezona 2026/27 se začne konec oktobra
 (Aydın 24.–25. 10.); Çanakkale razporeda 2026/27 še ni datiral — uvoz
 razporeda do takrat konča z "Razporeda ni bilo mogoče razbrati".
