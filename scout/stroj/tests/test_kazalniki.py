@@ -51,3 +51,10 @@ def test_vratar_proti_ekipi():
 def test_stalnost():
     s = sezone(3, oseba=["r1:7"] * 3, leto=[2024, 2025, 2026], minute=[900, 200, 900], ekipa_minute=[1000] * 3)
     assert izracunaj(s, MODEL, {}, 0.0)["stalnost"].tolist() == pytest.approx([1.0, 0.5, 2 / 3])
+
+
+def test_vratar_kot_ekipa_je_nic():
+    # šibka ekipa (30 prejetih) in močna (5): vratar prejema kot ekipa
+    s = sezone(2, skupina=["GK", "GK"], team_id=[1, 2], minute=[450, 900], prejeti=[15, 5],
+               ekipa_prejeti=[30, 5], ekipa_minute=[900, 900])
+    assert izracunaj(s, MODEL, {}, 0.0)["vratar_ref_90"].tolist() == pytest.approx([0.0, 0.0])

@@ -44,7 +44,7 @@ def _pot(k: Tabela) -> tuple[np.ndarray, np.ndarray]:
 
 
 def _stalnost(k: Tabela) -> np.ndarray:
-    """Delež dosedanjih sezon osebe, v katerih je bila (glavna vrstica) redna."""
+    """Delež dosedanjih sezon osebe, v katerih je bila redna v vsaj eni vrstici leta."""
     redna: dict = {}
     for o, y, d in zip(k["oseba"].tolist(), k["leto"].tolist(), k["delez_minut"].tolist()):
         sezone = redna.setdefault(o, {})
@@ -63,6 +63,9 @@ def izracunaj(s: Tabela, moc: dict[int, tuple[float, str, int]], elo: dict[tuple
     min_off = np.maximum(s["ekipa_min_zmin"] - s["min_on"], 0).astype(float)
     utez = np.minimum(s["min_on"], min_off).astype(float)
     prejeti = _skrci(s["prejeti"].astype(float), minute, kljuc)
+    ekipa_na_min = _deli(s["ekipa_prejeti"], s["ekipa_minute"])
+    # vratar skrčen proti svoji ekipi, ne povprečju lige: enak ekipi = 0 ne glede na njeno moč
+    vratar = (ekipa_na_min * 90 - (s["prejeti"] + ekipa_na_min * K_MINUT) / (minute + K_MINUT) * 90) / f
     onoff = (_deli(s["gr_on"], s["min_on"]) - _deli(s["ekipa_gr"] - s["gr_on"], min_off)) * 90
     k: Tabela = {c: s[c] for c in PREPISANI}
     k |= {
@@ -74,7 +77,7 @@ def izracunaj(s: Tabela, moc: dict[int, tuple[float, str, int]], elo: dict[tuple
         "delez_golov": _deli(s["goli_np"], s["ekipa_goli"]),
         "onoff_ref_90": onoff * utez / (utez + K_MINUT) * f,
         "prejeti_ref_90": prejeti / f,
-        "vratar_ref_90": np.where(s["skupina"] == "GK", (_deli(s["ekipa_prejeti"], s["ekipa_minute"]) * 90 - prejeti) / f, 0.0),
+        "vratar_ref_90": np.where(s["skupina"] == "GK", vratar, 0.0),
         "ciste_delez": _deli(s["ciste"], s["nastopi"]),
         "kartoni_90": _skrci((s["rumeni"] + 3 * s["rdeci"]).astype(float), minute, kljuc),
         "zaupanje": np.minimum(1.0, minute / 1800) * np.where(s["ima_sifro"], 1.0, 0.7) * vir,
