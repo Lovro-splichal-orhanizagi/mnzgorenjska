@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { supabase, type Podoben, type ProfilIgralca, type SezonaIgralca } from '../baza'
 import { napaka, stevilo, t, type Kljuc } from '../besede'
@@ -37,8 +37,12 @@ export function Igralec() {
   // Napaka gumba (meja, poln seznam) profil pusti na strani.
   const [napakaA, setNapakaA] = useState<string | null>(null)
   const [dela, setDela] = useState(false)
+  // Odgovor gumba za prejšnjega igralca ne sme prepisati trenutnega.
+  const trenutni = useRef(pid)
 
   useEffect(() => {
+    trenutni.current = pid
+    setDela(false)
     if (pid == null) return
     let velja = true
     setProfil(undefined)
@@ -59,6 +63,7 @@ export function Igralec() {
     setDela(true)
     setNapakaA(null)
     const { error } = await supabase.rpc('scout_opazuj', { p_player_id: p.player_id, p_opazuj: !p.opazujem })
+    if (trenutni.current !== p.player_id) return
     setDela(false)
     if (error) setNapakaA(napaka(error))
     else setProfil({ ...p, opazujem: !p.opazujem })
@@ -69,6 +74,7 @@ export function Igralec() {
     setDela(true)
     setNapakaA(null)
     const { data, error } = await supabase.rpc('scout_podobni', { p_player_id: id })
+    if (trenutni.current !== id) return
     setDela(false)
     if (error) setNapakaA(napaka(error))
     else setPodobni(data ?? [])
