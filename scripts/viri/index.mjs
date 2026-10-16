@@ -36,6 +36,7 @@ import ncefl from './ncefl.mjs'
 import hoffKm from './hoff-km.mjs'
 import askf from './askf.mjs'
 import ffa from './ffa.mjs'
+import mascot from './mascot.mjs'
 
 const VIRI = {
   mnzg,
@@ -102,6 +103,10 @@ const VIRI = {
   // Armenija: Football Federation of Armenia (ffa.am), Prva liga; brez šifer
   // igralcev (ime + klub), vratar je prvi začetnik (namig).
   ffa,
+  // Grčija: regionalne zveze EPS na platformi Mascotnet (deset domen, šifra
+  // `<domena>:<diorganosi>`), brez šifer igralcev, vratar prvi začetnik (namig).
+  // Pisno dovoljenje upravljavca (Lovro, oktober 2026).
+  mascot,
 }
 
 /**
