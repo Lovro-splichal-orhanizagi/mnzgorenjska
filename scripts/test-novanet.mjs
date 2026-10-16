@@ -507,3 +507,122 @@ test('audit mode collects only branded parser failures and keeps default fatal',
  // A programming error thrown inside parser input conversion is not branded.
  await assert.rejects(source().zapisniki('galicia:22:26990830:27759837',async url=>url.includes('NFG_CmpJornada')?round:{toString(){throw new TypeError('parser programming failure')}},{zberiNapake:true}),/parser programming failure/)
 })
+test('quoted standard charsets decode strictly and unsupported labels retain safe body diagnostics',async()=>{
+ const {novanetFetch}=await import('./viri/novanet.mjs'),original=globalThis.fetch
+ try{
+  for(const contentType of['text/html; charset="ISO-8859-15"',"text/html; charset='iso-8859-15'",'text/html; charset = "iso-8859-15"; other=ok']){
+   globalThis.fetch=async()=>new Response(Uint8Array.of(0xd1),{headers:{'content-type':contentType}})
+   assert.equal(await(await novanetFetch('https://charset-test.example/report')).text(),'Ñ')
+  }
+  const body='<meta charset="x-unknown"><p>raw evidence</p>',contentType='text/html; charset="x-other"'
+  globalThis.fetch=async()=>new Response(body,{headers:{'content-type':contentType,'set-cookie':'must_not_log=private-test; Path=/'}})
+  await assert.rejects(novanetFetch('https://charset-test.example/report'),e=>{
+   assert.equal(e.koda,'NOVANET_UNSUPPORTED_CHARSET')
+   assert.match(e.message,/charset-test.example\/report/);assert.match(e.message,/x-other/);assert.match(e.message,/x-unknown/)
+   assert.ok(!e.message.includes('must_not_log'))
+   assert.equal(e.dokument.contentType,contentType)
+   assert.equal(new TextDecoder().decode(e.dokument.bytes),body)
+   return true
+  })
+  for(const contentType of['text/html; charset="utf-8','text/html; charset="utf-8"junk','text/html; charset=x-unknown']){
+   globalThis.fetch=async()=>new Response('<meta charset="utf-8">',{headers:{'content-type':contentType}})
+   await assert.rejects(novanetFetch('https://charset-test.example/report'),e=>e.koda==='NOVANET_UNSUPPORTED_CHARSET')
+  }
+ }finally{globalThis.fetch=original}
+})
+test('audit withholds actual source charset errors but not forged fetch codes',async()=>{
+ const {novanetFetch}=await import('./viri/novanet.mjs'),originalFetch=globalThis.fetch
+ const original=fixture('galicia-round1'),select=original.match(/(<select\b[^>]*name=jornada[^>]*>)([\s\S]*?)(<\/select>)/i),first=select[2].match(/<option value=1>[\s\S]*?<\/option>/i)[0]
+ const round=original.replace(select[0],`${select[1]}${first}${select[3]}`),code='galicia:22:26990830:27759837'
+ const source=()=>ustvariVir({predpomnilnik:false,opozori:()=>{}})
+ try{
+  globalThis.fetch=async()=>new Response('unknown encoding body',{headers:{'content-type':'text/html'}})
+  const read=async url=>{
+   if(url.includes('NFG_CmpJornada'))return round
+   if(url.includes('CodActa=1448233&'))return fixture('galicia-1448233')
+   if(url.includes('CodActa=1448235&'))return(await novanetFetch(url)).text()
+   throw Object.assign(new Error('missing'),{status:404})
+  }
+  await assert.rejects(source().zapisniki(code,read),e=>e.koda==='NOVANET_UNSUPPORTED_CHARSET')
+  const audit=source(),out=await audit.zapisniki(code,read,{zberiNapake:true})
+  assert.equal(out.length,1);assert.equal(audit.nepopolni.length,4)
+  assert.equal(audit.nepopolni.find(n=>n.id==='es-novanet-galicia-1448235').koda,'NOVANET_UNSUPPORTED_CHARSET')
+  const forged=Object.assign(new Error('forged encoding error'),{koda:'NOVANET_UNSUPPORTED_CHARSET'})
+  await assert.rejects(source().zapisniki(code,async url=>{if(url.includes('NFG_CmpJornada'))return round;throw forged},{zberiNapake:true}),e=>e===forged)
+ }finally{globalThis.fetch=originalFetch}
+})
+test('observed future round uses explicit empty score and match-preview link, never zero-zero',async()=>{
+ const {razcleniKrog}=await import('./viri/novanet.mjs'),html=fixture('galicia-live-round3-20261016')
+ const round=razcleniKrog(html,{zveza:'galicia'})
+ assert.equal(round.stevilka,3);assert.equal(round.tekme.length,5)
+ assert.ok(round.tekme.every(t=>!t.odigrana&&t.izid===null))
+ assert.deepEqual(round.tekme.map(t=>t.datum),['2026-10-17','2026-10-18','2026-10-18','2026-10-18','2026-10-18'])
+ assert.deepEqual(round.tekme.map(t=>t.virId).sort(),['1448243','1448244','1448245','1448246','1448247'])
+ for(const malformed of[
+  html.replaceAll('NFG_CmpPrevio','NFG_CmpPartido'),
+  html.replace('<h4><strong> </strong> </h4>','<h4><strong>0 - 0</strong> </h4>'),
+  html.replace('<h4><strong> </strong> </h4>',''),
+  html.replace('<h4><strong> </strong> </h4>','<h4><strong><span class="wid2_resultado_cerrada"></span></strong></h4>'),
+ ])assert.throws(()=>razcleniKrog(malformed,{zveza:'galicia'}),/izida kroga/)
+})
+test('archive absolute95/96 timestamps remain unsupported without inferred period',()=>{
+ const html=fixture('galicia-1306469')
+ assert.ok(html.includes("(96')"));assert.ok(html.includes("(95')"))
+ assert.throws(()=>vZapisnik(html,{zveza:'galicia'}),e=>e.razclenitev===true&&/neznana minuta/.test(e.message))
+})
+test('malformed charset parameter cannot hide before a second valid declaration',async()=>{
+ const {novanetFetch}=await import('./viri/novanet.mjs'),original=globalThis.fetch
+ try{
+  for(const contentType of[
+   'text/html; charset="utf-8"junk; charset=iso-8859-15',
+   'text/html; charset=; charset=iso-8859-15',
+   'text/html; charset; charset=iso-8859-15',
+   'text/html; charset=utf-8; charset=utf-8',
+   'text/html; charset',
+   'text/html; charset; other=ok',
+  ]){
+   globalThis.fetch=async()=>new Response('<meta charset="utf-8">Ñ',{headers:{'content-type':contentType}})
+   await assert.rejects(novanetFetch('https://charset-duplicate-test.example/'),e=>e.koda==='NOVANET_UNSUPPORTED_CHARSET')
+  }
+ }finally{globalThis.fetch=original}
+})
+test('verified regular90 context normalizes absolute95/96 while preserving source clock labels',()=>{
+ const html=fixture('galicia-1306469')
+ const z=vZapisnik(html,{zveza:'galicia',rednaLiga90:true})
+ assert.deepEqual(z.rezultat,{domaci:4,gostje:4})
+ const goal=z.goli.find(g=>g.virMinuta===96),card=z.menjave.find(c=>c.virMinuta===95)
+ assert.ok(goal);assert.ok(card)
+ assert.equal(goal.minuta,90);assert.equal(goal.dodatek,6);assert.equal(goal.cas,9006);assert.equal(goal.virCas,"(96')")
+ assert.equal(card.minuta,90);assert.equal(card.dodatek,5);assert.equal(card.cas,9005)
+ assert.ok(z.opozorila.some(s=>/absolutne minute/.test(s)))
+ assert.ok(ustvariVir({predpomnilnik:false}).nastopi(z).every(p=>p.minute<=90))
+ assert.ok(z.goli.some(g=>g.virMinuta===46&&g.minuta===46&&g.cas===4600))
+ assert.equal(vZapisnik(html.replace("(96')","(120')"),{zveza:'galicia',rednaLiga90:true}).goli.at(-1).cas,9030)
+ for(const label of["(121')","(96'+1)"]){
+  assert.throws(()=>vZapisnik(html.replace("(96')",label),{zveza:'galicia',rednaLiga90:true}),/minuta|dodatek/)
+ }
+ for(const marker of['Prórroga','Tanda de penaltis'])assert.throws(()=>vZapisnik(html.replace('Ficha de Partido',`Ficha de Partido ${marker}`),{zveza:'galicia',rednaLiga90:true}),/podaljš|enajstmetrovk/)
+ assert.throws(()=>vZapisnik(fixture('galicia-1306462'),{zveza:'galicia',rednaLiga90:true}),e=>e.nepopoln&&/999/.test(e.message))
+})
+test('absolute and explicit stoppage notation share one chronology only in regular90 context',()=>{
+ const html=fixture('galicia-1306469')
+ const equivalent=vZapisnik(html.replace("(95')","(90'+5)").replace("(96')","(90'+6)"),{zveza:'galicia'})
+ const absolute=vZapisnik(html,{zveza:'galicia',rednaLiga90:true})
+ assert.deepEqual(absolute.goli.map(g=>[g.minuta,g.cas]),equivalent.goli.map(g=>[g.minuta,g.cas]))
+ // Dismissing the final scorer at95 must prohibit the goal at90+6.
+ const last=absolute.goli.at(-1)
+ assert.equal(last.ekipaIdx,0)
+ const marker=html.match(/<h4>Tarjetas<\/h4>/g)
+ assert.ok(marker.length)
+ const changed=html.replace("(96')","(90'+6)").replace(/(<h4>Tarjetas<\/h4>\s*<table\b[^>]*>)/,`$1<tr><td><img src="tarj_roja.gif"></td><td>(95') ${last.ime}</td></tr>`)
+ assert.throws(()=>vZapisnik(changed,{zveza:'galicia',rednaLiga90:true}),/gol po izključitvi/)
+})
+test('source enables absolute clocks only for the two verified Galicia league codes',async()=>{
+ const raw=fixture('galicia-1448235'),report=raw.replaceAll("(90'+3)","(95')")
+ assert.notEqual(report,raw)
+ const round=singleMatchRound('1448235'),read=async u=>u.includes('NFG_CmpJornada')?round:report
+ const out=await ustvariVir({predpomnilnik:false}).zapisniki('galicia:22:26990830:27759837',read)
+ assert.equal(out.length,1);assert.equal(out[0].z.rdeci.at(-1).virMinuta,95)
+ const unknown=round.replaceAll('26990830','26990831')
+ await assert.rejects(ustvariVir({predpomnilnik:false}).zapisniki('galicia:22:26990831:27759837',async u=>u.includes('NFG_CmpJornada')?unknown:report),/neznana minuta/)
+})

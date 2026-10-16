@@ -128,3 +128,19 @@ test('a later transport refusal preserves earlier collected parser failures in a
   assert.deepEqual(JSON.parse(readFileSync(join(mapa,'porocilo.json'),'utf8')).opozorila,[notice])
  }finally{rmSync(mapa,{recursive:true,force:true})}
 })
+test('a rejected source encoding preserves bounded original bytes without interpreting player names',async()=>{
+ const mapa=mkdtempSync(join(tmpdir(),'slff-audit-encoding-'))
+ const bytes=Uint8Array.from([60,104,116,109,108,62,209,60,47,104,116,109,108,62])
+ try{
+  const vir={ime:'test',premorMs:0,razporedVseStrani:async(_k,p)=>p('https://www.futgal.es/public-encoding','r.html')}
+  const r=await preveriSezono({vir,koda:'x',sezona:'2026/27',mapa,fetchFn:async()=>{
+   throw Object.assign(Error('unsupported source encoding'),{dokument:{bytes,contentType:'text/html; charset=x-unknown'}})
+  }})
+  assert.equal(r.pripravljeno,false)
+  const docs=JSON.parse(readFileSync(join(mapa,'prenosi.json'),'utf8'))
+  assert.equal(docs.length,1)
+  assert.equal(docs[0].contentType,'text/html; charset=x-unknown')
+  assert.match(docs[0].napaka,/unsupported source encoding/)
+  assert.deepEqual([...readFileSync(join(mapa,docs[0].file))],[...bytes])
+ }finally{rmSync(mapa,{recursive:true,force:true})}
+})

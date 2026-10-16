@@ -50,6 +50,12 @@ export async function preveriSezono({vir,koda,sezona,mapa,fetchFn=globalThis.fet
  mkdirSync(mapa,{recursive:true})
  writeFileSync(resolve(mapa,'prenosi.json'),'[]\n')
  const requests=[],documents=new Map(),opozorila=[]
+ const shrani=(url,ime,body,extra={})=>{
+  const sha256=createHash('sha256').update(body).digest('hex'),file=`${sha256}.${extra.napaka?'bin':'html'}`
+  writeFileSync(resolve(mapa,file),body)
+  requests.push({url,ime,file,sha256,at:new Date().toISOString(),...extra})
+  writeFileSync(resolve(mapa,'prenosi.json'),JSON.stringify(requests,null,2)+'\n')
+ }
  const prenesi=async(url,ime)=>{
   const parsed=new URL(url)
   if(parsed.protocol!=='https:'||!['www.futgal.es','www.futbolaragon.com','datencenter.dfb.de'].includes(parsed.hostname))throw Error('nedovoljen naslov vira')
@@ -67,15 +73,17 @@ export async function preveriSezono({vir,koda,sezona,mapa,fetchFn=globalThis.fet
     }
     return r
    }})
-  }catch(e){e.url??=url;throw e}
+  }catch(e){
+   e.url??=url
+   const d=e.dokument
+   if(d?.bytes instanceof Uint8Array&&d.bytes.byteLength<=5_000_000)shrani(url,ime,d.bytes,{napaka:e.message,contentType:d.contentType??null})
+   throw e
+  }
   if(!response.ok){const e=Error(`HTTP ${response.status}: ${url}`);e.status=response.status;throw e}
   const html=await response.text()
   if(Buffer.byteLength(html)>5_000_000)throw Error('prevelik dokument vira')
   if(vir.jeIzziv?.(html))throw vir.zavrnitev('izziv (CAPTCHA)')
-  const sha256=createHash('sha256').update(html).digest('hex'),file=`${sha256}.html`
-  writeFileSync(resolve(mapa,file),html)
-  requests.push({url,ime,file,sha256,at:new Date().toISOString()})
-  writeFileSync(resolve(mapa,'prenosi.json'),JSON.stringify(requests,null,2)+'\n')
+  shrani(url,ime,html)
   documents.set(url,html);return html
  }
  let razpored=[],zapisniki=[],porocilo

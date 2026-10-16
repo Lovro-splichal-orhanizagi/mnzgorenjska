@@ -107,6 +107,22 @@ test('actual Tasmania report preserves penalties and cards before a bench player
   assert.equal(a.find(p=>p.ime==='Rufat Dadaschow').goliIzEnajstmetrovke,1)
 })
 
+test('an omitted bench uses only same-report incoming substitutions to resolve earlier cards', async () => {
+  const {vZapisnik,nastopi}=await load()
+  let table=0
+  const noBench=penalty.replace(/<table class="m-MatchDetails-lineup-table">[\s\S]*?<\/table>/g,whole=>++table===2?'':whole)
+  assert.notEqual(noBench,penalty)
+  const z=vZapisnik(noBench),p=nastopi(z).find(p=>p.ime==='Konstantinos Grigoriadis')
+  assert.equal(p.minute,45)
+  assert.equal(p.rumeni,1)
+  assert.equal(z.rumeni.find(c=>c.ime===p.ime).minuta,28)
+  assert.equal(z.gostje.rezerve.find(c=>c.ime===p.ime).st,null)
+  assert.throws(()=>vZapisnik(noBench.replaceAll('m-MatchDetails-icon-card--yellow','m-MatchDetails-icon-card--red')),/vstop izključenega/)
+  for(const html of [penalty.replaceAll('Sven Körner','Rufat Dadaschow'),noBench.replaceAll('Bahman Foroutan','Konstantinos Grigoriadis')]){
+    assert.throws(()=>vZapisnik(html),/nasprotujoča vloga igralca in uradne osebe/)
+  }
+})
+
 test('second-yellow dismissals derive only an unrecorded prior caution and never double count it', async () => {
   const {vZapisnik,nastopi}=await load()
   const secondYellow=penalty.replaceAll('m-MatchDetails-icon-card--red','m-MatchDetails-icon-card--yellow-red')

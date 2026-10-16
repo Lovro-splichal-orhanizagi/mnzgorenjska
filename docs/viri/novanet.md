@@ -36,3 +36,7 @@ Prenos uporablja samo anonimno javno sejo z novimi piškotki, ki jih strežnik i
 Karton rezerve brez vstopa ustvari ničminutni disciplinski nastop. Ponovni vstop zavrnemo, ker skupni model baze hrani le en interval nastopa. Klubi imajo pri shranjevanju pripono zveze zaradi imenjakov med španskimi zvezami; pred uvozom preveri tudi isti klub med sezonama.
 
 Za ponovljive preizkuse: `npm run test:novanet`, `npm run test:sources`. Zajeti vzorci in izvor: `scripts/vzorci/es-novanet-provenance.md`.
+
+Pri obeh zgoraj preverjenih ligah Tercera Futgal je redni del90 minut: izvorni absolutni čas95/96 se zato ob izrecnem kontekstu pretvori v90+5/90+6. Izvorni zapis ostane ohranjen, minute za fantasy pa omejene na90. Splošna razčlenitev in druge šifre tega pravila ne dobijo; minute999, podaljški in dvoumni zapisi ostanejo zavrnjeni.
+
+Neznan ali dvoumen charset nikoli ne povzroči ugibanja imen. Audit tak odgovor zadrži in shrani omejene izvorne bajte kot `.bin`, z javnim Content-Type in napako v manifestu; piškotki niso del dokaza.

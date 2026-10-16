@@ -66,3 +66,19 @@ URLs follow `https://www.futgal.es/pnfg/NPcd/NFG_CmpPartido?cod_primaria=1000120
 The source continuation test separately injects the exact observed999 card spelling
 into a current fixture; this synthetic mutation tests withholding rather than
 claiming that current match had such a card.
+
+`es-novanet-galicia-live-round3-20261016.html` is unchanged CI capture at
+2026-10-16T17:25:53.913Z, SHA256 `8ee2a31670ca85acdafd49dd110b953307d8a2e410359f0d294a810067ff1a51`.
+Official round URL is the current round1 URL above with `CodJornada=3`.
+Five future matches show an explicitly empty `<h4><strong> </strong></h4>`
+and `NFG_CmpPrevio` link; dates are 17 October (1448244) and18 October (others).
+These are unplayed, with null scores, not0–0 or missing tables.
+
+`es-novanet-galicia-1306469.html` is unchanged CI archive capture, SHA256
+`ce5d1955409462579692c65df922fbed02b661ee559601cac70d28f2e0b2f5ae`.
+Official match URL follows the report URL pattern above with ID1306469.
+A goal at96 and substitution at95 have no explicit base/stoppage split.
+Generic parsing rejects them. In explicitly verified regular90-minute league
+context only, their clock keys normalize to90+6/90+5, source labels remain
+preserved, and fantasy minutes remain capped at90. Unknown league contexts,
+extra-time and shootout markers remain unsupported.

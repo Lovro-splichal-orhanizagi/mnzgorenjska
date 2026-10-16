@@ -140,11 +140,12 @@ export function vZapisnik(html, { id, tekma } = {}) {
     const foot = elements(table.inner, 'tfoot')[0]?.inner ?? ''
     for (const [side, name] of ['home','away'].entries()) for (const cell of elements(foot, 'td', `m-MatchDetails-lineup-person--${name}`)) if (text(cell.inner)) coaches[side].add(nameKey(text(cell.inner)))
   }
-  const players = teams.map(t => {
+  const players = teams.map((t,side) => {
     if (t.postava.length !== 11 || t.postava.filter(p=>p.vratar).length !== 1) fail('nepopolna začetna postava ali vratar')
     const map = new Map()
     for (const p of [...t.postava,...t.rezerve]) {
       if (map.has(nameKey(p.ime))) fail('dvoumna identiteta: soimenjaka v isti ekipi')
+      if(coaches[side].has(nameKey(p.ime)))fail('nasprotujoča vloga igralca in uradne osebe')
       if ([...map.values()].some(x=>x.st===p.st)) fail('podvojen dres')
       map.set(nameKey(p.ime),p)
     }
@@ -153,6 +154,28 @@ export function vZapisnik(html, { id, tekma } = {}) {
   const histories = elements(html, 'div', 'm-MatchDetails-history')
   const sections = new Map(histories.map(h=>[text(one(h.inner,'div','m-MatchDetails-history-title').inner),h.inner]))
   if (histories.length!==4 || sections.size !== 4 || ['Spielverlauf','Tore','Karten','Wechsel'].some(k=>!sections.has(k))) fail('nepopolni dogodki zapisnika')
+  // An archive may omit the bench, yet caution a substitute before his entry.
+  // Predeclare ONLY explicit incoming players in this same full timeline.
+  // This establishes match role, never playing time; chronological processing
+  // still rejects entry after dismissal and all invalid substitution pairs.
+  if(tables.length===1)for(const row of elements(sections.get('Spielverlauf'),'div','m-MatchDetails-history-item')){
+    for(const e of elements(row.inner,'div','m-MatchDetails-history-event').filter(e=>!has(e.tag,'is-empty'))){
+      if(!/m-MatchDetails-icon-playing--substitute-in/.test(e.inner))continue
+      const side=has(e.tag,'m-MatchDetails-history-event--home')?0:has(e.tag,'m-MatchDetails-history-event--away')?1:null
+      if(side==null)fail('dogodek brez ekipe')
+      const segments=elements(e.inner,'div','m-MatchDetails-history-event-text-segment')
+      if(!segments.length||segments.length%2)fail('menjava brez para')
+      for(let i=0;i<segments.length;i+=2){
+        if(!/m-MatchDetails-icon-caret-right--green/.test(segments[i].inner)||!/m-MatchDetails-icon-caret-right--red/.test(segments[i+1].inner))fail('menjava brez smeri')
+        const who=identity(segments[i].inner.replace(/(?:&nbsp;|\u00a0|\s)+für\s*$/,'')),key=nameKey(who.ime)
+        if(coaches[side].has(key))fail('nasprotujoča vloga igralca in uradne osebe')
+        if(!players[side].has(key)){
+          const p={...who,st:null,regSt:null,virId:`de-dfb-${teams[side].virId}-${key}`,vratar:null,vratarVir:null,zacetnik:false}
+          players[side].set(key,p);teams[side].rezerve.push(p)
+        }
+      }
+    }
+  }
   const goli=[], rumeni=[], rdeci=[], menjave=[], uradneKazni=[], opozorila=[]
   const active=teams.map(t=>new Set(t.postava.map(p=>p.virId)))
   const counters={goal:0,card:0,substitute:0}

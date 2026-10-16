@@ -12,16 +12,19 @@ export const jeIzziv = (s) => /<title>\s*(?:Just a moment|Attention Required)|cf
 const text = (s) => String(s).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'').replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi,'').replace(/<[^>]*>/g,' ').replace(/&nbsp;|&#160;/gi,' ').replace(/&amp;/gi,'&').replace(/\s+/g,' ').trim()
 const cells = s => [...s.matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/gi)].map(m=>m[1])
 const rows = s => [...s.matchAll(/<tr\b[^>]*>[\s\S]*?<\/tr>/gi)].map(m=>m[0])
-const minute = s => {
+const minute = (s,rednaLiga90=false) => {
  const m=text(s).match(/^\((\d+)(?:'\s*\+\s*(\d+)|\s*\+\s*(\d+)'|')\)\s*/)
- if (!m || +m[1]>90 || (+m[2]||+m[3]||0)>30) fail('neznana minuta dogodka')
- const base=+m[1],extra=+(m[2]??m[3]??0)
+ if (!m || +m[1]>120 || (+m[2]||+m[3]||0)>30) fail('neznana minuta dogodka')
+ const virMinuta=+m[1],explicitExtra=m[2]!=null||m[3]!=null
+ if(virMinuta>90&&(!rednaLiga90||explicitExtra))fail('neznana minuta dogodka')
+ const base=virMinuta>90?90:virMinuta,extra=virMinuta>90?virMinuta-90:+(m[2]??m[3]??0)
  if(extra&&base!==45&&base!==90)fail('nepodprt dodatek zunaj konca polčasa')
  // Lexicographic base/extra order: 45+5 precedes46, 90+1 precedes90+5.
  // Fantasy minutes retain the ordinary capped base minute.
- return { minuta: Math.min(90,base), cas:base*100+extra, dodatek:extra, ime:text(s).slice(m[0].length).trim() }
+ return { minuta: Math.min(90,base), cas:base*100+extra, dodatek:extra, virMinuta, virCas:m[0].trim(), ime:text(s).slice(m[0].length).trim() }
 }
 const scope = { aragon:'futbolaragon.com', galicia:'futgal.es' }
+const redneLige90=new Set(['galicia:22:26990830:27759837','galicia:21:24123231:24820329'])
 const identity = (z,id) => `es-novanet-${z}-${id}`
 // Negative, disjoint federation ranges; bounded IDs cannot collide with existing
 // positive federation registrations. Original source IDs remain in virId.
@@ -42,8 +45,15 @@ function players(section,zveza,id) {
  return out
 }
 /** Full validated report, with source-scoped IDs and unknown keeper explicit. */
-export function preglejZapisnik(html,{zveza,sezona:pricakovanaSezona=null}={}) {
+export function preglejZapisnik(html,{zveza,sezona:pricakovanaSezona=null,rednaLiga90=false}={}) {
  html=String(html)
+ if(/\bpr[oó]rroga\b|\btanda\s+de\s+penaltis\b/i.test(text(html)))fail('podaljšek ali serija enajstmetrovk ni podprta')
+ const opozorila=['Vir ne označi vratarjev; potrebna je neodvisna določitev pozicij.']
+ const casDogodka=s=>{
+  const d=minute(s,rednaLiga90===true)
+  if(d.virMinuta>90&&!opozorila.some(v=>v.includes('absolutne minute')))opozorila.push('Vir uporablja absolutne minute nad90; v preverjeni redni ligi90 so normalizirane v90+N, izvorni čas je ohranjen.')
+  return d
+ }
  if (jeIzziv(html)) fail('izziv — uvoz ustavljen')
  if (!scope[zveza] || !html.includes(scope[zveza])) fail('neznana ali napačna zveza')
  if (!/<\/html\s*>\s*$/i.test(html) || !/Ficha (?:de )?Partido/i.test(text(html))) fail('nepopoln zapisnik')
@@ -82,7 +92,7 @@ export function preglejZapisnik(html,{zveza,sezona:pricakovanaSezona=null}={}) {
   if(found.length!==1) fail(`manjkajoč ali dvoumen igralec dogodka: ${ime}`)
   return found[0]
  }
- const who=(p,d)=>({ekipaIdx:p.ekipaIdx,st:p.st,ime:p.ime,regSt:p.regSt,minuta:d.minuta,cas:d.cas,dodatek:d.dodatek})
+ const who=(p,d)=>({ekipaIdx:p.ekipaIdx,st:p.st,ime:p.ime,regSt:p.regSt,minuta:d.minuta,cas:d.cas,dodatek:d.dodatek,virMinuta:d.virMinuta,virCas:d.virCas})
  const goalsBlock=html.slice(html.indexOf('>Goles</div>'), starts[0])
  const goli=[]; let prev=[0,0]
  for(const row of rows(goalsBlock)) {
@@ -92,7 +102,7 @@ export function preglejZapisnik(html,{zveza,sezona:pricakovanaSezona=null}={}) {
   if(!['lgol','lgolpp','lpenalti'].includes(kind))fail('neznana ikona gola')
   if(cs.length!==2) fail('neznana vrstica gola')
   const state=izidNovanet(cs[0].replace(/<a\b[\s\S]*?<\/a>/i,''),mapping)
-  const d=minute(cs[1]),p=find(d.ime)
+  const d=casDogodka(cs[1]),p=find(d.ime)
   const own=/lgolpp/.test(row),pen=/lpenalti/.test(row)
   const team=own?1-p.ekipaIdx:p.ekipaIdx
   const expected=[...prev]; expected[team]++
@@ -116,17 +126,17 @@ export function preglejZapisnik(html,{zveza,sezona:pricakovanaSezona=null}={}) {
    const rs=rows(table[1]); if(rs.length!==2) fail('neznana menjava')
    const cs=rs.map(cells)
    if(!/fa-arrow-left/.test(rs[0])||!/fa-arrow-right/.test(rs[1])) fail('neznana smer menjave')
-   const d=minute(cs[1][1]),vstop=find(text(cs[0][1]),idx),izstop=find(d.ime,idx)
+   const d=casDogodka(cs[1][1]),vstop=find(text(cs[0][1]),idx),izstop=find(d.ime,idx)
    if(vstop.st!==+text(cs[0][0])||izstop.st!==+text(cs[1][0])) fail('neujemanje igralca menjave')
    vstop.preklopi.push(d.minuta); izstop.preklopi.push(d.minuta)
-   menjave.push({ekipaIdx:idx,minuta:d.minuta,cas:d.cas,dodatek:d.dodatek,vstop:who(vstop,d),izstop:who(izstop,d)})
+   menjave.push({ekipaIdx:idx,minuta:d.minuta,cas:d.cas,dodatek:d.dodatek,virMinuta:d.virMinuta,virCas:d.virCas,vstop:who(vstop,d),izstop:who(izstop,d)})
   }
   for(const row of rows(cards[1])) {
    const cs=cells(row);if(cs.length!==2) fail('neznan karton')
    // Observed archive placeholder has no trustworthy event time. In
    // particular it cannot safely establish a second caution or dismissal.
    if(/^\(999'\)/.test(text(cs[1])))nepopolno('neznan čas kartona 999; statistika cele tekme zadržana')
-   const d=minute(cs[1])
+   const d=casDogodka(cs[1])
    const staff=[...t.chunk.matchAll(/<h5\b[^>]*><strong>[^<]*<\/strong>([\s\S]*?)<\/h5>/gi)].map(m=>text(m[1]))
    if(staff.includes(d.ime)){ if(all.some(p=>p.ekipaIdx===idx&&p.ime===d.ime))fail('dvoumen igralec in trener'); osebje.push({ekipaIdx:idx,...d}); continue }
    const p=find(d.ime,idx)
@@ -166,7 +176,7 @@ export function preglejZapisnik(html,{zveza,sezona:pricakovanaSezona=null}={}) {
   if(red&&g.cas>red.cas)fail('gol po izključitvi')
  }
  const clean=({chunk,...t})=>t
- return {zapisnikId:identity(zveza,id),sezona:`${meta[1]}/${meta[2].slice(-2)}`,sezonaZacetek:+meta[1],krog:+meta[3],datum,ura:meta[7],domaci:clean(teams[0]),gostje:clean(teams[1]),rezultat:{domaci:score[0],gostje:score[1]},goli,rumeni,rdeci,menjave,osebje,opozorila:['Vir ne označi vratarjev; potrebna je neodvisna določitev pozicij.']}
+ return {zapisnikId:identity(zveza,id),sezona:`${meta[1]}/${meta[2].slice(-2)}`,sezonaZacetek:+meta[1],krog:+meta[3],datum,ura:meta[7],domaci:clean(teams[0]),gostje:clean(teams[1]),rezultat:{domaci:score[0],gostje:score[1]},goli,rumeni,rdeci,menjave,osebje,opozorila}
 }
 /** Validated import shape; unknown goalkeeper remains unknown for position voting. */
 export function vZapisnik(html, options) {
@@ -259,8 +269,16 @@ export function razcleniKrog(html,{zveza,koda=null,krog=null}={}) {
   if(teamCells.length!==3)fail('nepopoln krog: celice ekip')
   const d=nameOf(teamCells[0],'L'),g=nameOf(teamCells[2],'V')
   if(/^Descansa$/i.test(d)||/^Descansa$/i.test(g))continue
-  const scoreBlock=table.match(/<h4>\s*<strong>\s*(<span\b[^>]*class=["'][^"']*\bntype\b[\s\S]*?)<\/strong>\s*<\/h4>/i)?.[1]
-  if(!scoreBlock)fail('nepodprta oblika izida kroga')
+  const scoreCell=teamCells[1]
+  let scoreBlock=scoreCell.match(/<h4>\s*<strong>\s*(<span\b[^>]*class=["'][^"']*\bntype\b[\s\S]*?)<\/strong>\s*<\/h4>/i)?.[1]
+  if(!scoreBlock){
+   // Captured future matches explicitly render a blank score heading and a
+   // preview (CmpPrevio), rather than a report. Missing score alone is unsafe.
+   const previews=[...scoreCell.matchAll(/\bhref=["'](?:\/pnfg\/NPcd\/)?NFG_CmpPrevio\?[^"'<>]*\bCodActa=(\d+)[^"'<>]*["']/gi)]
+   const empty=/<h4>\s*<strong>\s*<\/strong>\s*<\/h4>/i.test(scoreCell)
+   if(!empty||previews.length!==1||/\bntype\b|\bwid2_resultado|NFG_CmpPartido/i.test(scoreCell))fail('nepodprta oblika izida kroga')
+   scoreBlock=''
+  }
   const score=izidNovanet(scoreBlock,mapping)
   const statuses=scoreBlock.match(/\bwid2_resultado(?:_[a-z]+)?\b/g)??[]
   if(score&&(statuses.length!==2||statuses.some(s=>s!=='wid2_resultado_cerrada')))fail('provisionalni izid: nepodprt nepopoln zapisnik')
@@ -329,6 +347,37 @@ export async function preberiKroge(koda,prenesi,{cache=null,danes=()=>Date.now()
  if(ids.length>1000||new Set(ids).size!==ids.length)fail('podvojene tekme med krogi')
  return out.sort((a,b)=>a.stevilka-b.stevilka)
 }
+const izvorneNapakeKodiranja=new WeakSet()
+class NovanetUnsupportedCharset extends Error {
+ constructor(url,contentType,headerLabels,metaLabels,bytes){
+  const diagnostic=JSON.stringify({url:String(url),contentType,headerCharsets:headerLabels,metaCharsets:metaLabels})
+  super(`novanet: nepodprt nabor znakov ${diagnostic}`)
+  this.name='NovanetUnsupportedCharset';this.koda='NOVANET_UNSUPPORTED_CHARSET'
+  this.dokument={bytes:new Uint8Array(bytes),contentType}
+ }
+}
+// Parse complete parameter values, including correctly paired standard quotes.
+// A malformed declared header must not fall back to a different meta encoding.
+function oznakeCharset(value){
+ const labels=[]
+ for(const m of String(value).matchAll(/(?:^|;)\s*charset\s*=\s*(?:"([^"\r\n]*)"|'([^'\r\n]*)'|([^;\s"']+))\s*(?=;|$)/gi))labels.push(m[1]??m[2]??m[3])
+ // Every declared charset parameter must have matched the complete grammar.
+ // Otherwise a malformed first declaration could be silently replaced by a
+ // valid second one and corrupt names with the wrong decoder.
+ const declarations=[...String(value).matchAll(/(?:^|;)\s*charset(?=\s*(?:=|;|$))/gi)].length
+ return declarations===labels.length?labels:[null,...labels]
+}
+function metaCharset(head){
+ const labels=[]
+ for(const [tag]of head.matchAll(/<meta\b[^>]*>/gi)){
+  const direct=tag.match(/\scharset\s*=\s*(?:"([\w-]+)"|'([\w-]+)'|([\w-]+)(?=[\s/>]))/i)
+  if(direct){labels.push(direct[1]??direct[2]??direct[3]);continue}
+  const content=tag.match(/\scontent\s*=\s*(?:"([^"]*)"|'([^']*)')/i)
+  if(content)labels.push(...oznakeCharset(content[1]??content[2]))
+ }
+ return labels
+}
+
 /** Explicit charset decoding; fetch().text() corrupts ISO-8859-15 names. */
 const anonimniPrenos=ustvariAnonimniPrenos({jeIzziv,zavrnitev:(m,s)=>new NovanetZavrnitev(m,s)})
 export async function novanetFetch(url,options={}) {
@@ -340,8 +389,15 @@ export async function novanetFetch(url,options={}) {
  const bytes=await response.arrayBuffer()
  if(bytes.byteLength>5_000_000)fail('prevelik dokument')
  const head=new TextDecoder('iso-8859-15').decode(bytes.slice(0,4096))
- const charset=response.headers.get('content-type')?.match(/charset=([^;\s]+)/i)?.[1]??head.match(/charset[=\s]+["']?([\w-]+)/i)?.[1]
- if(!charset||! /^(?:utf-8|iso-8859-15|iso-8859-1|windows-1252)$/i.test(charset))fail('nepodprt nabor znakov')
+ const contentType=response.headers.get('content-type')??''
+ const headerLabels=oznakeCharset(contentType),metaLabels=metaCharset(head)
+ const declared=/(?:^|;)\s*charset(?=\s*(?:=|;|$))/i.test(contentType)
+ const labels=declared?headerLabels:metaLabels
+ const charset=labels[0]
+ if(!charset||labels.length!==1||! /^(?:utf-8|iso-8859-15|iso-8859-1|windows-1252)$/i.test(charset)){
+  const e=new NovanetUnsupportedCharset(url,contentType,headerLabels,metaLabels,bytes)
+  izvorneNapakeKodiranja.add(e);throw e
+ }
  const html=new TextDecoder(charset,{fatal:true}).decode(bytes)
  if(jeIzziv(html))throw new NovanetZavrnitev('izziv')
  return new Response(html,{status:response.status,statusText:response.statusText,headers:{'Content-Type':'text/html; charset=utf-8'}})
@@ -395,15 +451,16 @@ export function ustvariVir({predpomnilnik='scripts/.predpomnilnik/novanet/prever
    const napakeValidatorja=new WeakSet()
    try{z=await beriPreverjeno(prenesi,url,`report-${zveza}-${t.virId}.html`,html=>{
     try{
-    const z=vZapisnik(html,{zveza,sezona:r.sezona})
+    const z=vZapisnik(html,{zveza,sezona:r.sezona,rednaLiga90:redneLige90.has(koda)})
     if(z.zapisnikId!==identity(zveza,t.virId)||z.krog!==r.stevilka||kljucKluba(z.domaci.ime)!==kljucKluba(t.domaci)||kljucKluba(z.gostje.ime)!==kljucKluba(t.gostje)||z.datum!==t.datum||z.ura!==t.ura||z.rezultat.domaci!==t.izid.domaci||z.rezultat.gostje!==t.izid.gostje)fail('zapisnik in krog se ne ujemata')
     z.zaprt=true;return z
     }catch(e){if(e?.razclenitev===true)napakeValidatorja.add(e);throw e}
    },{cache,danes,ttl:starostZapisnika})
    }catch(e){
+    const kodiranje=zberiNapake&&e instanceof NovanetUnsupportedCharset&&izvorneNapakeKodiranja.has(e)
     const razclenitev=zberiNapake&&napakeValidatorja.has(e)
-    if(!(e instanceof NovanetNepopoln)&&e.status!==404&&!razclenitev)throw e
-    const notice={id:identity(zveza,t.virId),url,razlog:e.message,status:e.status??null,...(razclenitev?{razclenitev:true}:{})}
+    if(!(e instanceof NovanetNepopoln)&&e.status!==404&&!razclenitev&&!kodiranje)throw e
+    const notice={id:identity(zveza,t.virId),url,razlog:e.message,status:e.status??null,...(razclenitev?{razclenitev:true}:{}),...(kodiranje?{koda:e.koda}:{})}
     nepopolni.push(notice);opozori(`novanet: zapisnik nepopoln: ${notice.id} — statistika cele tekme zadržana; ${e.message}`)
     continue
    }
