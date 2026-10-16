@@ -145,7 +145,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     ekipe: 'Echipe',
     brezEkip: 'Nu are încă nicio echipă în ligile active.',
     mesto: 'Locul {mesto} din {ekip}',
-    miniLige: 'Mini ligi comune',
+    miniLige: 'Mini-ligi comune',
     dosezki: 'Realizări',
     sezone: 'Sezoane',
     krogi: 'Etape jucate',
@@ -154,7 +154,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   izbris: {
     naslov: 'Ștergerea contului',
     moraPrijava: 'Ca să îți ștergi contul, trebuie să te <prijava>autentifici</prijava>.',
-    opis: 'Vom șterge contul {email}: profilul, toate echipele tale cu istoricul punctelor, voturile și miniligile pe care le-ai creat. Ștergerea nu poate fi anulată. Odată cu ștergerea încetează și insigna de jucător verificat, iar abonamentul se oprește fără rambursare.',
+    opis: 'Vom șterge contul {email}: profilul, toate echipele tale cu istoricul punctelor, voturile și mini-ligile pe care le-ai creat. Ștergerea nu poate fi anulată. Odată cu ștergerea încetează și insigna de jucător verificat, iar abonamentul se oprește fără rambursare.',
     gumb: 'Șterge contul',
     potrdi: 'Da, șterge definitiv',
     preklici: 'Anulează',
@@ -232,7 +232,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   klubskiRacun: {
     naslov: 'Cont oficial de club',
     aktiven: 'Acest cont reprezintă clubul {klub}.',
-    pravice: 'Ca și club poți edita posturile, adăuga jucători și aproba profilurile jucătorilor tăi.',
+    pravice: 'Ca club poți edita pozițiile, adăuga jucători și aproba profilurile jucătorilor tăi.',
     vprasanje: 'Reprezinți un club?',
     pojasnilo: 'Dacă te autentifici cu adresa oficială a clubului pe care o avem, primești automat un cont de club. Dacă nu o avem, cere-o mai jos și o verificăm.',
     klub: 'Club',
