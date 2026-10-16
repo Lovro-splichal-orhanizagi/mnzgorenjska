@@ -1093,6 +1093,9 @@ preveri(
     koliko(r('hu-za-1'), r('hu-bp-3-2')) === 2)
   preveri('višja liga: avstrijske deželne med sabo ne', koliko(r('at-k-kaerntner-liga', '', 'kfv'), r('at-k-1-klasse-ost', '', 'kfv')) === 0 &&
     koliko(r('at-regionalliga-ost', '', 'oefb'), r('at-w-stadtliga', '', 'wfv')) === 1)
+  preveri('višja liga: Litva — A lyga nad I lyga nad II lyga, Črna gora brez pravila',
+    koliko(r('lt-a-lyga'), r('lt-1-lyga')) === 1 && koliko(r('lt-1-lyga'), r('lt-2-lyga-a')) === 1 &&
+    koliko(r('lt-a-lyga'), r('lt-2-lyga-b')) === 2 && r('me-1-cfl') === null)
   preveri('višja liga: država brez pravila nič', r('rs-srpska-istok') === null && r('clani') === null)
 
   const MID = [4.0, 12.0]
@@ -5420,6 +5423,24 @@ preveri(
   preveri('lff: zapisniki() — šifra lv<id>, ime, krog in sezona z razporeda, neujemanje izida je opozorilo', zs.length === 30 &&
     zs.every((x) => /^lv\d+$/.test(x.id) && x.z.zapisnikId === x.id) && zs[0].z.domaci.ime === 'Futbola Parks Academy' &&
     zs[0].z.krog === 1 && zs[0].z.sezona === '2026' && zs[0].url.endsWith('-24131448/') && zs[0].z.opozorila.some((o) => /ni izid razporeda/.test(o)))
+  {
+    // Prazna stran v predpomnilniku (zajeta pred vnosom postav) se pri tekmi
+    // do 45 dni prebere še enkrat sveže (SKILL dodaj-ligo, napaka 2).
+    const praviCas = Date.now
+    Date.now = () => Date.parse('2026-10-15T12:00:00Z')
+    const sveze = []
+    let zs2
+    try {
+      zs2 = await L.default.zapisniki('tresa-liga/23836414', async (url, _ime, svez) => {
+        if (url.includes('/sacensibas/')) return rietumi
+        if (!url.includes('24131474')) return beri('lv-lff-spele-24131474.html')
+        if (svez) sveze.push(url)
+        return svez ? beri('lv-lff-spele-24131474.html') : beri('lv-lff-spele-24131450-prazen.html')
+      })
+    } finally { Date.now = praviCas }
+    preveri('lff: prazen zapisnik v predpomnilniku (25 dni) se prebere sveže in uvozi', sveze.length === 1 &&
+      zs2.some((x) => x.id === 'lv24131474'))
+  }
   let zavrnjen = null
   try { await L.default.zapisniki('tresa-liga/23836414', async () => { const e = new Error('HTTP 403'); e.status = 403; throw e }) } catch (e) { zavrnjen = e }
   let izziv = null
@@ -5595,6 +5616,233 @@ preveri(
   try { await A.default.zapisniki('3-rfef:1-2', async () => { const e = new Error('403'); e.status = 403; throw e }) } catch (e) { zavrnjen = e }
   preveri('fas: 403 in izziv vržeta FasZavrnitev (uvoz izhod 4)', izziv instanceof A.FasZavrnitev && zavrnjen instanceof A.FasZavrnitev &&
     zavrnjen.status === 403 && A.default.zavrnitev('x', 429).zavrnitev === true)
+}
+
+// --- vira ltfutbolas (Litva) in fscg (Črna gora): skupna predloga COMET Auris -----
+{
+  const C = await import('./viri/comet-auris.mjs')
+  const LT = await import('./viri/ltfutbolas.mjs')
+  const ME = await import('./viri/fscg.mjs')
+  const { default: viri } = await import('./viri/index.mjs')
+  const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  preveri('ltfutbolas, fscg: vira sta vpisana, 3 s, User-Agent SLFF', viri.ltfutbolas === LT.default && viri.fscg === ME.default &&
+    LT.default.drzava === 'LT' && ME.default.drzava === 'ME' &&
+    [LT.default, ME.default].every((v) => v.premorMs >= 3000 && v.glave['User-Agent'] === 'SLFF fantasy (https://slff.eu)' && v.imaRegistracije === false))
+  preveri('ltfutbolas: šifra (id tekmovanja), naslovi, šifra zapisnika lt<id>', LT.razbijKodo('23383524') === '23383524' &&
+    LT.default.naslovRazporeda('23383524') === 'https://lietuvosfutbolas.lt/varzybos/23383524/lyga/' &&
+    LT.naslovZapisnika('24835254', '/rungtynes/a-b-24835254/') === 'https://lietuvosfutbolas.lt/rungtynes/a-b-24835254/' &&
+    LT.sifraZapisnika('24835254') === 'lt24835254' && LT.sifraZapisnika('lt24835254') === 'lt24835254')
+  preveri('fscg: šifra <regija>/<slug>/<tekmovanje>, naslovi, šifra zapisnika me<id>', ME.razbijKodo('jug/seniorska-liga/9391667').regija === 'jug' &&
+    ME.default.naslovRazporeda('sjever/seniorska-liga/9344268') === 'https://sjever.fscg.me/takmicenja/seniorska-liga/' &&
+    ME.naslovZapisnika('9391703', '/utakmice/a-b-9391703/', 'jug/seniorska-liga/9391667') === 'https://jug.fscg.me/utakmice/a-b-9391703/' &&
+    ME.sifraZapisnika('9391703') === 'me9391703')
+  const slabe = []
+  for (const [f, k] of [[LT.razbijKodo, 'ii-lyga'], [ME.razbijKodo, 'seniorska-liga'], [ME.razbijKodo, 'istok/seniorska-liga/1']]) {
+    try { f(k) } catch (e) { slabe.push(e.message) }
+  }
+  preveri('ltfutbolas, fscg: napačna šifra ustavi uvoz', slabe.length === 3)
+  preveri('comet-auris: minuta, datum, ura, sezona iz naslova', C.minuta("90'+1'") === 90 && C.minuta('46') === 46 && C.minuta('') === null &&
+    C.datumIz('Penktadienis, 11-09-2026 18:00') === '2026-09-11' && C.datumIz('04.10.2026.') === '2026-10-04' && C.datumIz('2026-04-08') === '2026-04-08' &&
+    C.uraIz('11-09-2026 18:00') === '18:00' && C.sezonaIzNaslova('Regionalna liga Centar 26/27') === '2026/27' &&
+    C.sezonaIzNaslova('II lyga A divizionas 2026') === '2026')
+  preveri('comet-auris: ključ in kratko ime kluba (OFK ostane)', C.kljucKluba('FK Švyturys') === 'fk švyturys' &&
+    C.kljucKluba('Gusinje') !== C.kljucKluba('OFK Gusinje') && C.kratkoIme('FKS Ukmergė') === 'Ukmergė' &&
+    C.kratkoIme('OFK Titograd') === 'OFK Titograd' && C.kratkoIme('Crvena stijena Tološi') === 'Crvena stijena Tološi')
+  preveri('comet-auris: navadna stran ni izziv, izziv je', !C.jeIzziv(beri('me-fscg-tekma-9332053.html')) && C.jeIzziv('<title>Just a moment...</title>'))
+
+  // Razpored
+  const ltStran = beri('lt-ltfutbolas-varzybos-23383524.html')
+  const lt = LT.tekmeLige('23383524', ltStran)
+  const ltKrogi = LT.razcleniRazpored('23383524', ltStran)
+  preveri('ltfutbolas: razpored II lyga A 2026 — 30 krogov, 210 tekem, 15 klubov, 181 z izidom, leto 2026', lt.length === 210 &&
+    ltKrogi.length === 30 && new Set(lt.flatMap((x) => [x.domaci, x.gostje])).size === 15 && lt.filter((x) => x.izid).length === 181 &&
+    C.letoTekem(lt) === '2026' && lt.filter((x) => x.izid).every((x) => x.pot?.endsWith(`-${x.id}/`)))
+  preveri('ltfutbolas: razpored — vilenski čas → ljubljanski (19:30 → 18:30), neodigrana brez izida', ltKrogi[0].tekme[0].datum === '2026-04-08' &&
+    ltKrogi[0].tekme[0].ura === '18:30' && ltKrogi[0].tekme[0].domaci === 'FK Utenos Utenis' &&
+    ltKrogi.flatMap((k) => k.tekme).filter((x) => !x.odigrana).length === 29 && ltKrogi.flatMap((k) => k.tekme).every((x) => !x.kontumacija))
+  let tujaStran = null
+  try { LT.tekmeLige('23384849', ltStran) } catch (e) { tujaStran = e.message }
+  preveri('ltfutbolas: stran drugega tekmovanja (?cid) ustavi uvoz', /kaže tekmovanje 23383524, ne 23384849/.test(tujaStran ?? ''))
+  const centar = beri('me-fscg-centar-seniorska-liga.html')
+  const me = ME.tekmeLige('centar/seniorska-liga/9331975', centar)
+  const meKrogi = ME.razcleniRazpored('centar/seniorska-liga/9331975', centar)
+  preveri('fscg: razpored Centar 26/27 — 13 krogov, 78 tekem, 13 klubov, 36 odigranih, ura brez pretvorbe', me.length === 78 &&
+    meKrogi.length === 13 && new Set(me.flatMap((x) => [x.domaci, x.gostje])).size === 13 && me.filter((x) => x.izid).length === 36 &&
+    C.sezonaTekem(me) === '2026/27' && meKrogi[0].tekme[0].datum === '2026-09-05' && meKrogi[0].tekme[0].ura === '21:00' &&
+    meKrogi[0].tekme[0].domaci === 'FK Internacional' && meKrogi[0].tekme[0].gostje === 'OFK Titograd')
+  let novaSezona = null
+  try { ME.tekmeLige('centar/seniorska-liga/9000000', centar) } catch (e) { novaSezona = e.message }
+  preveri('fscg: drug id tekmovanja (nova sezona) ustavi uvoz', /kaže tekmovanje 9331975, ne 9000000/.test(novaSezona ?? ''))
+  const arhiv = beri('me-fscg-arhiva-jug-8373775.html')
+  const arh = ME.tekmeLige('jug/arhiva/8373775', arhiv)
+  let tujArhiv = null
+  try { ME.tekmeLige('jug/arhiva/7487412', arhiv) } catch (e) { tujArhiv = e.message }
+  preveri('fscg: arhiv <regija>/arhiva/<id> → ?cid=, Jug 2025/26 — 21 krogov, 63 tekem z zapisnikom, 7 klubov, drug id ustavi uvoz',
+    ME.default.naslovRazporeda('jug/arhiva/8373775') === 'https://jug.fscg.me/takmicenja/arhiva/?cid=8373775' &&
+    ME.razcleniRazpored('jug/arhiva/8373775', arhiv).length === 21 && arh.length === 63 && arh.every((x) => x.izid && x.pot) &&
+    new Set(arh.flatMap((x) => [x.domaci, x.gostje])).size === 7 && C.sezonaTekem(arh) === '2025/26' &&
+    /kaže tekmovanje 8373775, ne 7487412/.test(tujArhiv ?? ''))
+  preveri('fscg: razpored Jug — 8 krogov, 7 klubov',ME.razcleniRazpored('jug/seniorska-liga/9391667', beri('me-fscg-jug-seniorska-liga.html')).length === 8 &&
+    new Set(ME.tekmeLige('jug/seniorska-liga/9391667', beri('me-fscg-jug-seniorska-liga.html')).flatMap((x) => [x.domaci, x.gostje])).size === 7)
+
+  // Zapisniki
+  const minute = (n, i) => n.filter((x) => x.ekipaIdx === i).reduce((a, x) => a + x.minute, 0)
+  const a = C.vZapisnik(beri('lt-ltfutbolas-tekma-24835254.html'))
+  const an = C.nastopi(a)
+  preveri('ltfutbolas: zapisnik — 11 + 11, klop, datum, krog, sezona 2026, goli = izid 8:2, 990 minut, šifre igralcev', a.domaci.ime === 'FK Panevėžys B' &&
+    a.gostje.ime === 'FK Šilutė' && a.datum === '2026-09-11' && a.krog === 22 && a.sezona === '2026' && a.rezultat.domaci === 8 && a.rezultat.gostje === 2 &&
+    a.domaci.postava.length === 11 && a.gostje.postava.length === 11 && a.domaci.rezerve.length === 8 && a.gostje.rezerve.length === 5 &&
+    a.goli.length === 10 && minute(an, 0) === 990 && minute(an, 1) === 990 && an.every((x) => Number.isInteger(x.regSt)) &&
+    a.domaci.postava[0].vratar && a.domaci.postava[0].ime === 'Valius Liudvikas' && a.opozorila.length === 0)
+  preveri('ltfutbolas: avtogol pri strelčevi ekipi šteje nasprotniku, gol z 11 m, menjave v parih z minuto',
+    a.goli.filter((g) => g.avtogol).length === 1 && a.goli.find((g) => g.avtogol).ekipaIdx === 1 && a.goli.find((g) => g.avtogol).minuta === 69 &&
+    a.goli.filter((g) => g.enajstmetrovka).length === 1 && a.menjave.length === 8 && a.menjave.every((m) => m.noter.ime && m.ven.ime && m.minuta > 0) &&
+    an.filter((x) => !x.zacetnik).length === 8)
+  const zg = C.vZapisnik(beri('lt-ltfutbolas-tekma-24835452.html'))
+  preveri('ltfutbolas: zgrešena 11 m (penalty_failed) ni gol, goli = izid 6:5', zg.zgresene.length === 1 && zg.goli.length === 11 &&
+    C.nastopi(zg).find((x) => x.ime === 'Lubys Oskaras')?.zgreseneEnajstmetrovke === 1 && zg.opozorila.length === 0)
+  const rk = C.vZapisnik(beri('lt-ltfutbolas-tekma-24835542.html'))
+  const izkljucen = C.nastopi(rk).find((x) => x.rdeci)
+  preveri('ltfutbolas: drugi rumeni (76.) — 1 rumeni + 1 rdeči, 976 minut; rumeni brez minute je opozorilo', rk.rdeci.length === 1 &&
+    izkljucen?.ime === 'Kasperavičius Povilas' && izkljucen.rumeni === 1 && izkljucen.minute === 76 && minute(C.nastopi(rk), 0) === 976 &&
+    rk.opozorila.length === 1 && /brez minute/.test(rk.opozorila[0]))
+  const bm = C.vZapisnik(beri('lt-ltfutbolas-tekma-23832466-brez-menjav.html'))
+  preveri('ltfutbolas: KAFF-MAFF brez vpisanih menjav — začetniki po 90, klop brez nastopa', bm.menjave.length === 0 &&
+    C.nastopi(bm).length === 22 && minute(C.nastopi(bm), 0) === 990)
+
+  const p = C.vZapisnik(beri('me-fscg-tekma-9332053.html'))
+  const pn = C.nastopi(p)
+  preveri('fscg: zapisnik — 11 + 11, minuta v div.minute, sezona 26/27, krog, 990 minut, brez šifer', p.domaci.ime === 'Čelik' &&
+    p.gostje.ime === 'Ilarion' && p.datum === '2026-10-04' && p.krog === 5 && p.sezona === '2026/27' && p.domaci.rezerve.length === 9 &&
+    p.gostje.rezerve.length === 8 && p.menjave.length === 7 && p.rumeni.length === 4 && minute(pn, 0) === 990 && minute(pn, 1) === 990 &&
+    pn.every((x) => x.regSt === null) && p.domaci.postava.find((i) => i.st === 8)?.kapetan && p.opozorila.length === 0)
+  preveri('fscg: gol z 11 m ima razred li.penalty in šteje (2:0)', p.goli.length === 2 && p.goli.filter((g) => g.enajstmetrovka).length === 1 &&
+    p.goli.find((g) => g.enajstmetrovka).ime === 'Draganić Vuk')
+  const dr = C.vZapisnik(beri('me-fscg-tekma-9332059.html'))
+  preveri('fscg: drugi rumeni (second_yellow, 90.) — 1 rumeni + 1 rdeči', dr.rdeci.length === 1 && dr.rdeci[0].minuta === 90 &&
+    C.nastopi(dr).find((x) => x.rdeci)?.rumeni === 1 && dr.opozorila.length === 0)
+  const av = C.vZapisnik(beri('me-fscg-tekma-9391703.html'))
+  preveri('fscg: avtogol domačega šteje gostom (0:10)', av.goli.filter((g) => g.avtogol).length === 1 && av.goli.find((g) => g.avtogol).ekipaIdx === 0 &&
+    av.rezultat.gostje === 10 && av.opozorila.length === 0)
+  const deset = C.vZapisnik(beri('me-fscg-tekma-9344339.html'))
+  preveri('fscg: ekipa z 10 začetniki je opozorilo, ne izpad (900 minut)', deset.gostje.postava.length === 10 &&
+    minute(C.nastopi(deset), 1) === 900 && deset.opozorila.some((o) => /10 igralcev/.test(o)))
+  preveri('fscg: 3:0 z eno samo postavo (gostje niso prišli) je null', C.vZapisnik(beri('me-fscg-tekma-9391712-ena-postava.html')) === null)
+
+  // zapisniki() in kontumacije() brez omrežja
+  const jug = beri('me-fscg-jug-seniorska-liga.html')
+  const jugKrogi = ME.razcleniRazpored('jug/seniorska-liga/9391667', jug)
+  const zs = await ME.default.zapisniki('jug/seniorska-liga/9391667', async (url) =>
+    url.includes('/takmicenja/') ? jug : url.includes('9391712') ? beri('me-fscg-tekma-9391712-ena-postava.html') : beri('me-fscg-tekma-9391703.html'))
+  preveri('fscg: zapisniki() — šifra me<id>, ime, krog in sezona z razporeda, null izpade, neujemanje izida je opozorilo', zs.length === 11 &&
+    zs.every((x) => /^me\d+$/.test(x.id) && x.z.zapisnikId === x.id) && zs[0].z.sezona === '2026/27' && zs[0].z.krog === 1 &&
+    zs[0].url.startsWith('https://jug.fscg.me/utakmice/') && zs.some((x) => x.z.opozorila.some((o) => /ni izid razporeda/.test(o))))
+  const kont = await ME.default.kontumacije('jug/seniorska-liga/9391667', async (url) =>
+    url.includes('9391712') ? beri('me-fscg-tekma-9391712-ena-postava.html') : beri('me-fscg-tekma-9391703.html'), jugKrogi, '2026-10-20')
+  preveri('fscg: kontumacija — 3:0, starejša od tedna, zapisnik brez postave gostov (Igalo : Cetinje)', kont.length === 1 &&
+    kont[0].domaci === 'Igalo' && kont[0].gostje === 'Cetinje' && kont[0].krog === 4)
+  // Stran, zajeta pred vnosom postav (ali popravkom gola), ne sme obtičati v
+  // predpomnilniku: tekmo do 45 dni stare uvoz ob nerazčlenjeni strani ali
+  // neujemanju golov prebere še enkrat sveže (SKILL dodaj-ligo, napaka 2).
+  {
+    const praviCas = Date.now
+    const polna = beri('me-fscg-tekma-9391703.html')
+    const brezAvtogola = polna.replace('<li class="own_goal">', '<li class="xx">')
+    const nacrt = (cas, star) => async () => {
+      Date.now = () => Date.parse(cas)
+      const sveze = []
+      try {
+        const zs2 = await ME.default.zapisniki('jug/seniorska-liga/9391667', async (url, _ime, svez) => {
+          if (url.includes('/takmicenja/')) return jug
+          if (svez && url.includes('9391703')) sveze.push(url)
+          if (url.includes('9391703')) return svez ? polna : star
+          return url.includes('9391712') ? beri('me-fscg-tekma-9391712-ena-postava.html') : polna
+        })
+        return { zs: zs2, sveze }
+      } finally { Date.now = praviCas }
+    }
+    const brez = await nacrt('2026-10-15T12:00:00Z', beri('me-fscg-tekma-9391712-ena-postava.html'))()
+    preveri('comet-auris: zapisnik brez postav v predpomnilniku (26 dni) se prebere sveže in uvozi', brez.sveze.length === 1 &&
+      brez.zs.some((x) => x.id === 'me9391703'))
+    const goli = await nacrt('2026-10-15T12:00:00Z', brezAvtogola)()
+    preveri('comet-auris: neujemanje golov v predpomnilniku → sveže branje, popravljen zapisnik', goli.sveze.length === 1 &&
+      !goli.zs.find((x) => x.id === 'me9391703')?.z.opozorila.some((o) => /se ne ujemajo/.test(o)))
+    const staro = await nacrt('2026-12-15T12:00:00Z', beri('me-fscg-tekma-9391712-ena-postava.html'))()
+    preveri('comet-auris: tekme, starejše od 45 dni, ne beremo znova', staro.sveze.length === 0 && !staro.zs.some((x) => x.id === 'me9391703'))
+  }
+  const lzs = await LT.default.zapisniki('23383524', async (url) => (url.includes('/varzybos/') ? ltStran : beri('lt-ltfutbolas-tekma-24835254.html')))
+  preveri('ltfutbolas: zapisniki() — 181 tekem, šifra lt<id>, sezona 2026', lzs.length === 181 && lzs.every((x) => /^lt\d+$/.test(x.id)) &&
+    lzs[0].z.sezona === '2026' && lzs[0].z.domaci.ime === 'FK Utenos Utenis')
+  let zavrnjen = null
+  try { await LT.default.zapisniki('23383524', async () => { const e = new Error('HTTP 403'); e.status = 403; throw e }) } catch (e) { zavrnjen = e }
+  let izziv = null
+  try { await ME.default.zapisniki('jug/seniorska-liga/9391667', async () => '<title>Just a moment...</title>') } catch (e) { izziv = e }
+  preveri('ltfutbolas, fscg: 403 in izziv vržeta CometZavrnitev (uvoz izhod 4)', zavrnjen instanceof C.CometZavrnitev && zavrnjen.status === 403 &&
+    izziv instanceof C.CometZavrnitev && ME.default.zavrnitev('x', 429).zavrnitev === true)
+  // 401 (prijava) je zavrnitev kot 403 — ne preberemo shranjene strani in ne nadaljujemo.
+  let neprijavljen = null
+  try { await ME.default.zapisniki('jug/seniorska-liga/9391667', async () => { const e = new Error('HTTP 401'); e.status = 401; throw e }) } catch (e) { neprijavljen = e }
+  preveri('ltfutbolas, fscg: 401 vrže CometZavrnitev (uvoz izhod 4)', neprijavljen instanceof C.CometZavrnitev && neprijavljen.status === 401 &&
+    C.jeZavrnitev(401) && C.jeZavrnitev(403) && C.jeZavrnitev(429) && !C.jeZavrnitev(404) && !C.jeZavrnitev(500))
+
+  // Državne lige: A lyga in I lyga (Litva), 1. CFL, 2. CFL, Prva omladinska (fscg.me)
+  preveri('fscg: regija fscg je fscg.me brez poddomene (državne lige in arhiv)',
+    ME.default.naslovRazporeda('fscg/meridianbet-1-cfl/9278739') === 'https://fscg.me/takmicenja/meridianbet-1-cfl/' &&
+    ME.default.naslovRazporeda('fscg/arhiva/8208775') === 'https://fscg.me/takmicenja/arhiva/?cid=8208775' &&
+    ME.naslovZapisnika('9278788', '/utakmice/a-b-9278788/', 'fscg/meridianbet-1-cfl/9278739') === 'https://fscg.me/utakmice/a-b-9278788/' &&
+    ME.razbijKodo('fscg/prva-omladinska-liga/9312757').tekmovanje === '9312757')
+  const cfl = beri('me-fscg-1-cfl.html')
+  const cflTekme = ME.tekmeLige('fscg/meridianbet-1-cfl/9278739', cfl)
+  const cflKrogi = ME.razcleniRazpored('fscg/meridianbet-1-cfl/9278739', cfl)
+  preveri('fscg: razpored 1. CFL 26/27 — klubi kot povezave /klubovi/, 19 krogov, 95 tekem, 10 klubov, 48 odigranih, ura brez pretvorbe',
+    cflTekme.length === 95 && cflKrogi.length === 19 && new Set(cflTekme.flatMap((x) => [x.domaci, x.gostje])).size === 10 &&
+    cflTekme.filter((x) => x.izid).length === 48 && C.sezonaTekem(cflTekme) === '2026/27' && cflKrogi[0].tekme[0].domaci === 'Petrovac' &&
+    cflKrogi[0].tekme[0].gostje === 'Bokelj sbbet' && cflKrogi[0].tekme[0].datum === '2026-08-01' && cflKrogi[0].tekme[0].ura === '20:00' &&
+    cflKrogi.flatMap((k) => k.tekme).every((x) => !x.kontumacija))
+  let cflDrug = null
+  try { ME.tekmeLige('fscg/meridianbet-1-cfl/8208775', cfl) } catch (e) { cflDrug = e.message }
+  preveri('fscg: 1. CFL — drug id (lanska sezona) ustavi uvoz', /kaže tekmovanje 9278739, ne 8208775/.test(cflDrug ?? ''))
+  const cz = C.vZapisnik(beri('me-fscg-tekma-9278788.html'))
+  const czn = C.nastopi(cz)
+  preveri('fscg: zapisnik 1. CFL — minuta kot besedilo, avtogol gostov šteje domačim (2:1), 990 minut, /igraci/ ni šifra',
+    cz.domaci.ime === 'OFK Mladost Lob.bet' && cz.gostje.ime === 'Otrant-Olympic' && cz.krog === 1 && cz.sezona === '2026/27' &&
+    cz.datum === '2026-08-02' && cz.goli.length === 3 && cz.goli.find((g) => g.avtogol)?.ime === 'Radenović Vasilije' &&
+    cz.goli.find((g) => g.avtogol).ekipaIdx === 1 && cz.goli.find((g) => g.ime === 'Čepić Arsenije')?.minuta === 55 &&
+    cz.domaci.postava.length === 11 && cz.gostje.postava.length === 11 && cz.menjave.length === 8 &&
+    minute(czn, 0) === 990 && minute(czn, 1) === 990 && czn.every((x) => x.regSt === null) && cz.opozorila.length === 0 &&
+    /href="\/igraci\//.test(beri('me-fscg-tekma-9278788.html')))
+  const al = beri('lt-ltfutbolas-varzybos-23198513.html')
+  const alTekme = LT.tekmeLige('23198513', al)
+  const alKrogi = LT.razcleniRazpored('23198513', al)
+  preveri('ltfutbolas: razpored A lyga (TOPLYGA) 2026 — 36 krogov, 144 tekem, 9 klubov, 128 z izidom, 14:15 vilensko → 13:15',
+    alTekme.length === 144 && alKrogi.length === 36 && new Set(alTekme.flatMap((x) => [x.domaci, x.gostje])).size === 9 &&
+    alTekme.filter((x) => x.izid).length === 128 && C.letoTekem(alTekme) === '2026' && alKrogi[0].tekme[0].domaci === 'FK Žalgiris' &&
+    alKrogi[0].tekme[0].datum === '2026-02-21' && alKrogi[0].tekme[0].ura === '13:15')
+  const az = C.vZapisnik(beri('lt-ltfutbolas-tekma-24325343.html'))
+  const azn = C.nastopi(az)
+  preveri('ltfutbolas: zapisnik A lyga — 4:0 z avtogolom, rdeči v 45. (945 minut), menjave, vse šifre igralcev',
+    az.domaci.ime === 'FK Žalgiris' && az.gostje.ime === 'FK Sūduva' && az.krog === 22 && az.rezultat.domaci === 4 &&
+    az.goli.length === 4 && az.goli.filter((g) => g.avtogol).length === 1 && az.rdeci.length === 1 && az.menjave.length === 10 &&
+    minute(azn, 0) === 990 && minute(azn, 1) === 945 && azn.find((x) => x.rdeci)?.minute === 45 &&
+    azn.every((x) => Number.isInteger(x.regSt)) && az.opozorila.length === 0)
+  const alZs = await LT.default.zapisniki('23198513', async (url) => (url.includes('/varzybos/') ? al : beri('lt-ltfutbolas-tekma-24325343.html')))
+  preveri('ltfutbolas: zapisniki() — datum in ura zapisnika v ljubljanskem času (14:15 → 13:15), sezona 2026 z razporeda',
+    alZs.length === 128 && alZs[0].z.ura === '13:15' && alZs[0].z.datum === '2026-10-10' && alZs[0].z.sezona === '2026' && alZs[0].id === 'lt23353006')
+  preveri('comet-auris: stran vzdrževanja ali napake (200) ne gre v predpomnilnik, prava stran gre',
+    LT.default.zaPredpomnilnik === C.zaPredpomnilnik && ME.default.zaPredpomnilnik === C.zaPredpomnilnik &&
+    C.zaPredpomnilnik(al) && C.zaPredpomnilnik(cfl) && C.zaPredpomnilnik(beri('me-fscg-tekma-9278788.html')) &&
+    C.zaPredpomnilnik(beri('me-fscg-tekma-9391712-ena-postava.html')) &&
+    !C.zaPredpomnilnik('<html><body><h1>Stranica je u održavanju</h1></body></html>') && !C.zaPredpomnilnik(''))
+  // Zavrnitev med branjem kontumacij (strani tekem 3:0) ne sme obveljati za motnjo.
+  const uvozRazporeda = readFileSync(new URL('./uvoz-razporeda.mjs', import.meta.url), 'utf8')
+  // Branje kontumacij je od PR #287 v razpored.mjs (preberiKontumacije).
+  const razporedJs = readFileSync(new URL('./razpored.mjs', import.meta.url), 'utf8')
+  preveri('uvoz-razporeda: zavrnitev vira pri kontumacijah ustavi uvoz (izhod 4), ne preskoči',
+    /preberiKontumacije\(/.test(uvozRazporeda) && /kontumacij ni bilo mogoče prebrati/.test(razporedJs) &&
+    /catch \(e\) \{\s*if \(e\?\.zavrnitev\) throw e/.test(razporedJs))
+  // 401 pri razporedu: brez tega prenesi vzame shranjeni razpored in uvoz teče naprej.
+  preveri('uvoz-razporeda: 401, 403 in 429 so zavrnitev vira (ne rezerva iz predpomnilnika)',
+    /vir\.zavrnitev && \[401, 403, 429\]\.includes\(e\.status\)\)+ throw vir\.zavrnitev/.test(uvozRazporeda))
 }
 
 // --- vir tff (Turčija, tff.org) ----------------------------------------------------

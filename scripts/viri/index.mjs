@@ -41,6 +41,8 @@ import lowland from './lowland.mjs'
 import eps from './eps.mjs'
 import tff from './tff.mjs'
 import wmzpn from './wmzpn.mjs'
+import ltfutbolas from './ltfutbolas.mjs'
+import fscg from './fscg.mjs'
 
 const VIRI = {
   mnzg,
@@ -123,6 +125,10 @@ const VIRI = {
   // Poljska: Warmińsko-Mazurski ZPN (wmzpn.pl) — zapisniki PZPN Extranet prek
   // okna strani (admin-ajax match_history), šifre oseb PZPN kot pri pzpn.
   wmzpn,
+  // Litva (LFF) prek lietuvosfutbolas.lt in Črna gora (regije FSCG) prek
+  // centar/sjever/jug.fscg.me: ista predloga COMET (Auris), `comet-auris.mjs`.
+  ltfutbolas,
+  fscg,
 }
 
 /**

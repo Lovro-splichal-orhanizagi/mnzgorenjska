@@ -18,8 +18,8 @@
 //   tudi kadar regijske ravni ne poznamo.
 // - mladinske lige se primerjajo le z mladinskimi, članske s članskimi.
 //
-// Države brez pravila (SI, RS, RO, PL, CZ, MK) in viri brez šifer osebe
-// (stari CMS MNZ, fsb, fss, fssid, ffm) ostanejo pri 4.5.
+// Države brez pravila (SI, RS, RO, PL, CZ, MK, ME) in viri brez šifer osebe
+// (stari CMS MNZ, fsb, fss, fssid, ffm, fscg) ostanejo pri 4.5.
 
 /** Mladinska liga po šifri (isto pravilo kot `jeMladinskiSlug` v src/lib/prevzem.ts). */
 export function jeMladinska(slug) {
@@ -142,6 +142,14 @@ export function ravenLige({ slug, name, zveza }) {
     if (mladinska) return null
     if (slug === 'lv-virsliga') return abs(1)
     if ((m = slug.match(/^lv-(\d)-liga/))) return abs(1 + Number(m[1]))
+    return null
+  }
+
+  // Litva (vir ltfutbolas, šifra osebe z /zaidejai/): A lyga (TOPLYGA), I lyga, II lyga A/B.
+  if (slug.startsWith('lt-')) {
+    if (mladinska) return null
+    if (slug === 'lt-a-lyga') return abs(1)
+    if ((m = slug.match(/^lt-(\d)-lyga/))) return abs(1 + Number(m[1]))
     return null
   }
 
