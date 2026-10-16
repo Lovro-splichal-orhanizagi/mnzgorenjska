@@ -43,6 +43,7 @@ import tff from './tff.mjs'
 import wmzpn from './wmzpn.mjs'
 import ltfutbolas from './ltfutbolas.mjs'
 import fscg from './fscg.mjs'
+import mfa from './mfa.mjs'
 
 const VIRI = {
   mnzg,
@@ -129,6 +130,9 @@ const VIRI = {
   // centar/sjever/jug.fscg.me: ista predloga COMET (Auris), `comet-auris.mjs`.
   ltfutbolas,
   fscg,
+  // Malta (MFA) prek javnega JSON API-ja Match Centra (api.mfa.com.mt, COMET):
+  // šifra osebe, vratar, menjave z minuto; krog iz zaporedja šifer tekem.
+  mfa,
 }
 
 /**
