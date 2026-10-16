@@ -17,6 +17,21 @@ export const KRATKA_POZICIJA: Record<Pozicija, string> = {
   get FWD() { return t('skupno.pozicijaKratko.FWD') },
 }
 
+/**
+ * Do tri začetnice kluba za grb brez slike: prva črka ali števka vsake besede,
+ * brez delov v oklepaju in ločil ("Rust (NÖ)" -> "R", "Niko Železniki" -> "NŽ").
+ */
+export function zacetniceKluba(ime: string | null | undefined, kratko?: string | null): string {
+  if (kratko) return kratko.slice(0, 3).toUpperCase()
+  return (ime ?? '')
+    .replace(/\([^)]*\)/g, ' ')
+    .split(/\s+/)
+    .map((d) => d.match(/[\p{L}\p{N}]/u)?.[0] ?? '')
+    .join('')
+    .toUpperCase()
+    .slice(0, 3)
+}
+
 /** Iz "Priimek Ime" naredi "Ime Priimek" za prijaznejši prikaz. */
 export function prikazniIme(polno: string | null | undefined): string {
   if (!polno) return ''

@@ -7,8 +7,12 @@
 //
 // Ponedeljek: naslovnica, ena prosojnica na državo, poziv. Četrtek: naslovnica,
 // en dosežek na prosojnico, poziv. Mejnik: številka, številke SLFF, poziv.
+// Sreda, petek, nedelja: vrtiljak po vrsti (`v.vrsta`). Torek in sobota sta
+// reela (`?reel=1`, 1080 × 1920, src/pages/ObjavaReel.tsx).
 import Grb from '../components/Grb'
 import { useState, type ReactNode } from 'react'
+import { Reel } from './ObjavaReel'
+import { KAPETAN_MNOZITELJ } from '../lib/pravila'
 import { t, stevilo } from '../i18n'
 import { supabase } from '../lib/supabase'
 import { useNoindex } from '../lib/naslov'
@@ -56,8 +60,60 @@ export interface Dosezek {
   uporabnikov?: number
 }
 
+/** Vrste od torka do nedelje (teden A / B); reeli so ekipa, strelci, predogled, pravila. */
+export type VrstaObjave = 'ekipa' | 'strelci' | 'liga' | 'drzava' | 'kapetani' | 'cene' | 'predogled' | 'pravila' | 'stat' | 'obramba'
+
+/** Igralec na seznamu (strelci, kapetani, cene, vratarji, ekipa tedna). */
+export interface IgralecSeznama {
+  ime: string
+  klub: string
+  grb?: string | null
+  liga?: string
+  /** Angleško ime države in zastava. */
+  drzava?: string
+  zastava?: string
+  pozicija?: Pozicija | null
+  tocke?: number
+  goli?: number
+  cena?: number
+  staro?: number
+  novo?: number
+  po_krogih?: number[]
+  ciste?: number
+}
+
+/** Klub na lestvici (liga tedna, predogled). */
+export interface KlubLestvice {
+  mesto: number
+  ime: string
+  grb?: string | null
+  tocke: number
+  tekme?: number
+}
+
 export interface VsebinaObjave {
-  slot: 'pon' | 'cet' | 'mejnik'
+  slot: 'pon' | 'cet' | 'mejnik' | 'tor' | 'sre' | 'pet' | 'sob' | 'ned'
+  vrsta?: VrstaObjave
+  /** Ritem reela (udarcev na minuto); prizori se menjajo na udarce. */
+  bpm?: number
+  ekipa?: { formacija: string; tocke: number; igralci: IgralecSeznama[] }
+  strelci?: IgralecSeznama[]
+  igralci?: IgralecSeznama[]
+  liga?: {
+    slug: string; ime: string; kratko: string; drzava?: string; zastava?: string; krog: number; upraviteljev: number
+    lestvica: KlubLestvice[]; strelec?: { ime: string; klub: string; goli: number } | null
+  }
+  drzavaTedna?: DrzavaObjave & { lig: number; upraviteljev: number; ekip: number }
+  tekme?: { liga: string; drzava?: string; zastava?: string; dan: string; domaci: KlubLestvice; gostje: KlubLestvice }[]
+  pravila?: {
+    tema: 'kader' | 'tocke' | 'kapetan'; kader: number; prvih: number; proracun: number; izKluba: number; kapetan: number; asistenca: number
+    minute: number; pozicije: Record<Pozicija, number>; gol: Record<Pozicija, number>; cista: { GK: number; DEF: number }
+  }
+  stat?: {
+    golov: number; tekem: number; lig: number; drzav: number; naTekmo: number
+    tekma?: { liga: string; drzava?: string; zastava?: string; domaci: string; domaci_grb?: string | null; gostje: string; gostje_grb?: string | null; goli_domaci: number; goli_gostje: number } | null
+  }
+  obramba?: { ekipe: (IgralecSeznama & { tekem: number; prejeti: number })[]; vratarji: IgralecSeznama[] }
   /** Obdobje tekem ("5–11 Oct 2026"). */
   obdobje?: string
   drzave?: DrzavaObjave[]
@@ -72,7 +128,9 @@ declare global {
   }
 }
 
-type Prosojnica = 'naslovnica' | 'poziv' | 'mejnik' | 'mejnikStevilke' | `drzava-${number}` | `dosezek-${number}`
+type Prosojnica = 'naslovnica' | 'poziv' | 'mejnik' | 'mejnikStevilke' | `drzava-${number}` | `dosezek-${number}` | `igralec-${number}`
+  | 'ligaNaslovnica' | 'ligaLestvica' | 'ligaStrelec' | 'drzavaNaslovnica' | 'drzavaIgralec' | 'stat' | 'statTekma'
+  | 'obrambaEkipe' | 'obrambaVratarji'
 
 // Instagram Graph API: največ 10 slik. Pri devetih državah naslovnica odpade
 // (9 + poziv), obdobje nosi glava prve države; več kot 9 jih objave.mjs ne da.
@@ -83,6 +141,15 @@ const brezNaslovnice = (v: VsebinaObjave) => (v.drzave?.length ?? 0) > NASLOVNIC
 /** Prosojnice, ki jih vsebina ima (isti seznam bere generator). */
 export function prosojnice(v: VsebinaObjave): Prosojnica[] {
   if (v.mejnik) return ['mejnik', 'mejnikStevilke', 'poziv']
+  const ce = (pogoj: unknown, kaj: Prosojnica): Prosojnica[] => (pogoj ? [kaj] : [])
+  switch (v.vrsta) {
+    case 'liga': return ['ligaNaslovnica', 'ligaLestvica', ...ce(v.liga?.strelec, 'ligaStrelec'), 'poziv']
+    case 'drzava': return ['drzavaNaslovnica', 'drzavaIgralec', 'poziv']
+    case 'kapetani':
+    case 'cene': return ['naslovnica', ...(v.igralci ?? []).map((_, i): Prosojnica => `igralec-${i}`), 'poziv']
+    case 'stat': return ['stat', ...ce(v.stat?.tekma, 'statTekma'), 'poziv']
+    case 'obramba': return ['naslovnica', ...ce(v.obramba?.ekipe.length, 'obrambaEkipe'), ...ce(v.obramba?.vratarji.length, 'obrambaVratarji'), 'poziv']
+  }
   const srednje = v.drzave
     ? v.drzave.map((_, i): Prosojnica => `drzava-${i}`)
     : (v.dosezki ?? []).map((_, i): Prosojnica => `dosezek-${i}`)
@@ -150,7 +217,209 @@ function opisDosezka(d: Dosezek): { naslov: string; vrednost: string; pod?: stri
   }
 }
 
+/** Naslov vrste (naslovnica, reel). */
+export const naslovVrste = (vrsta: VrstaObjave) => t(`domov.objava.naslovi.${vrsta}`)
+
+const drzavaZ = (x: { zastava?: string; drzava?: string }) => (x.zastava ? `${x.zastava} ${x.drzava ?? ''}`.trim() : null)
+
+/** Vrstica seznama: mesto, grb, ime s klubom in ligo, vrednost desno. */
+function Vrstica({ mesto, ime, klub, grb, pod, vrednost }: { mesto: number; ime: string; klub?: string; grb?: string | null; pod: string; vrednost: string }) {
+  return (
+    <div className="flex items-center gap-6 rounded-3xl border border-white/10 bg-white/[0.06] px-8 py-5">
+      <div className="w-14 shrink-0 text-5xl font-black text-[color:var(--zlato)]">{mesto}</div>
+      <Grb ime={klub ?? ime} logo={grb} velikost={84} />
+      <div className="min-w-0 flex-1 text-left">
+        <div className="truncate text-4xl font-black">{ime}</div>
+        <div className="truncate text-2xl text-slate-300">{pod}</div>
+      </div>
+      <div className="shrink-0 text-4xl font-black text-[color:var(--zlato)]">{vrednost}</div>
+    </div>
+  )
+}
+
+function Seznam({ naslov, children }: { naslov: string; children: ReactNode }) {
+  return (
+    <div className="my-8 flex flex-1 flex-col justify-center gap-5">
+      <div className="mb-4 text-6xl font-black naslov">{naslov}</div>
+      {children}
+    </div>
+  )
+}
+
+/** Igralec čez celo prosojnico (kapetani, cene, liga, država). */
+function IgralecVelik({ oznaka, i, vrednost, pod }: { oznaka: string; i: IgralecSeznama; vrednost: string; pod?: ReactNode }) {
+  return (
+    <Sredina className="gap-6">
+      <Oznaka>{oznaka}</Oznaka>
+      <Grb ime={i.klub} logo={i.grb} velikost={190} />
+      <ImeIgralca ime={i.ime} />
+      <KlubLiga deli={[i.klub, i.liga]} />
+      <Ploscica>{vrednost}</Ploscica>
+      {pod && <div className="text-4xl text-slate-300">{pod}</div>}
+    </Sredina>
+  )
+}
+
+/** Prosojnice vrst od srede do nedelje (vrtiljak); null = ni prosojnica vrste. */
+function vsebinaVrste(v: VsebinaObjave, kaj: Prosojnica): { desno?: ReactNode; telo: ReactNode } | null {
+  if (kaj === 'naslovnica' && v.vrsta) {
+    const zastave = [...new Set([...(v.igralci ?? []), ...(v.obramba?.ekipe ?? [])].map((x) => x.zastava).filter(Boolean))]
+    return {
+      telo: (
+        <Sredina className="gap-10">
+          <Oznaka>{v.obdobje ?? (v.vrsta === 'kapetani' ? t('domov.objava.vFormi') : t('domov.objava.sezona'))}</Oznaka>
+          <div className="text-[7rem] font-black leading-[1.02] naslov">{naslovVrste(v.vrsta)}</div>
+          {v.vrsta === 'kapetani' && <div className="text-5xl font-bold text-[color:var(--zlato)]">{t('domov.objava.kapetanOpis', { n: KAPETAN_MNOZITELJ })}</div>}
+          {zastave.length > 0 && <div className="flex flex-wrap justify-center gap-5 text-7xl">{zastave.map((z) => <span key={z}>{z}</span>)}</div>}
+          <img src="/logo/slff-maskota.png" alt="" className="h-80" />
+        </Sredina>
+      ),
+    }
+  }
+  if (kaj.startsWith('igralec-') && v.igralci) {
+    const i = v.igralci[Number(kaj.slice('igralec-'.length))]
+    const cene = v.vrsta === 'cene'
+    return {
+      desno: drzavaZ(i),
+      telo: cene
+        ? <IgralecVelik oznaka={t('domov.objava.skok')} i={i} vrednost={`${cena(i.staro)} → ${cena(i.novo)}`} pod={`+${cena((i.novo ?? 0) - (i.staro ?? 0))}`} />
+        : <IgralecVelik oznaka={t('domov.objava.vFormi')} i={i} vrednost={tocke(i.tocke)}
+            pod={<>{t('domov.objava.zadnjiKrogi', { krogi: (i.po_krogih ?? []).map((x) => formatirajTocke(x)).join(' · ') })} · {cena(i.cena)}</>} />,
+    }
+  }
+  const l = v.liga
+  if (l && kaj === 'ligaNaslovnica') {
+    return {
+      telo: (
+        <Sredina className="gap-8">
+          <Oznaka>{naslovVrste('liga')}</Oznaka>
+          <div className="text-[10rem] leading-none">{l.zastava}</div>
+          <div className={`${l.ime.length > 26 ? 'text-7xl' : 'text-8xl'} font-black leading-[1.05] naslov`}>{l.ime}</div>
+          <div className="text-4xl text-slate-300">{[l.drzava, t('domov.krog', { krog: l.krog })].filter(Boolean).join(' · ')}</div>
+          {l.upraviteljev > 0 && (
+            <div className="flex items-baseline gap-4 rounded-3xl border border-white/10 bg-white/[0.06] px-10 py-5">
+              <span className="text-7xl font-black text-[color:var(--zlato)]">{stevilo(l.upraviteljev)}</span>
+              <span className="text-4xl font-bold text-slate-200">{t('domov.objava.upravitelji')}</span>
+            </div>
+          )}
+        </Sredina>
+      ),
+    }
+  }
+  if (l && kaj === 'ligaLestvica') {
+    return {
+      desno: <span>{l.zastava} {l.kratko}</span>,
+      telo: (
+        <Seznam naslov={t('domov.objava.vrhLestvice')}>
+          {l.lestvica.map((x) => (
+            <Vrstica key={x.ime} mesto={x.mesto} ime={x.ime} grb={x.grb} pod={t('domov.objava.tekem', { n: x.tekme ?? 0 })} vrednost={tocke(x.tocke)} />
+          ))}
+        </Seznam>
+      ),
+    }
+  }
+  if (l?.strelec && kaj === 'ligaStrelec') {
+    return {
+      desno: <span>{l.zastava} {l.kratko}</span>,
+      telo: <IgralecVelik oznaka={t('domov.objava.najStrelec')} i={{ ...l.strelec, liga: l.kratko }} vrednost={mnozina(l.strelec.goli, GOLI)} />,
+    }
+  }
+  const d = v.drzavaTedna
+  if (d && kaj === 'drzavaNaslovnica') {
+    const vrstice: [number, string][] = [[d.lig, t('domov.objava.lig')], [d.upraviteljev, t('domov.objava.upravitelji')], [d.ekip, t('domov.objava.ekip')]]
+    return {
+      telo: (
+        <Sredina className="gap-7">
+          <Oznaka>{naslovVrste('drzava')}</Oznaka>
+          <div className="text-[11rem] leading-none">{d.zastava}</div>
+          <div className="text-8xl font-black naslov">{d.ime}</div>
+          <div className="mt-4 flex w-full justify-center gap-6">
+            {vrstice.filter(([n]) => n > 0).map(([n, oznaka]) => (
+              <div key={oznaka} className="flex-1 rounded-3xl border border-white/10 bg-white/[0.06] px-6 py-6">
+                <div className="text-7xl font-black text-[color:var(--zlato)]">{stevilo(n)}</div>
+                <div className="text-3xl font-bold text-slate-200">{oznaka}</div>
+              </div>
+            ))}
+          </div>
+        </Sredina>
+      ),
+    }
+  }
+  if (d && kaj === 'drzavaIgralec') {
+    const i = d.igralec
+    return {
+      desno: <span>{d.zastava} {d.ime}</span>,
+      telo: <IgralecVelik oznaka={t('domov.objava.igralecKroga')} i={i} vrednost={tocke(i.tocke)}
+        pod={i.goli > 0 ? `⚽ ${mnozina(i.goli, GOLI)}` : undefined} />,
+    }
+  }
+  const s = v.stat
+  if (s && kaj === 'stat') {
+    return {
+      telo: (
+        <Sredina className="gap-6">
+          <Oznaka>{naslovVrste('stat')}</Oznaka>
+          <div className="text-4xl font-bold text-slate-300">{v.obdobje}</div>
+          <div className="text-[15rem] font-black leading-none tracking-tight text-[color:var(--zlato)] drop-shadow-[0_8px_30px_rgba(255,209,102,0.35)]">
+            {stevilo(s.golov)}
+          </div>
+          <div className="text-6xl font-black naslov">{t('domov.objava.golovTedna')}</div>
+          <div className="text-4xl text-slate-300">{t('domov.objava.tekemLigDrzav', { tekme: stevilo(s.tekem), lige: stevilo(s.lig), drzave: stevilo(s.drzav) })}</div>
+          <Ploscica>{t('domov.objava.naTekmo', { n: stevilo(s.naTekmo, { maximumFractionDigits: 1 }) })}</Ploscica>
+          <img src="/logo/slff-maskota.png" alt="" className="mt-2 h-60" />
+        </Sredina>
+      ),
+    }
+  }
+  if (s?.tekma && kaj === 'statTekma') {
+    const m = s.tekma
+    return {
+      desno: drzavaZ(m),
+      telo: (
+        <Sredina className="gap-8">
+          <Oznaka>{t('domov.objava.tekmaTedna')}</Oznaka>
+          <div className="text-4xl text-slate-300">{m.liga}</div>
+          <div className="flex w-full items-center justify-center gap-8">
+            <div className="flex flex-1 flex-col items-center gap-4"><Grb ime={m.domaci} logo={m.domaci_grb} velikost={170} /><div className="text-4xl font-black">{m.domaci}</div></div>
+            <div className="text-[9rem] font-black leading-none text-[color:var(--zlato)]">{m.goli_domaci}:{m.goli_gostje}</div>
+            <div className="flex flex-1 flex-col items-center gap-4"><Grb ime={m.gostje} logo={m.gostje_grb} velikost={170} /><div className="text-4xl font-black">{m.gostje}</div></div>
+          </div>
+          <div className="text-5xl font-black naslov">{t('domov.objava.golovNaTekmi', { n: m.goli_domaci + m.goli_gostje })}</div>
+        </Sredina>
+      ),
+    }
+  }
+  const o = v.obramba
+  if (o && kaj === 'obrambaEkipe') {
+    return {
+      telo: (
+        <Seznam naslov={t('domov.objava.najmanjPrejetih')}>
+          {o.ekipe.map((x, i) => (
+            <Vrstica key={x.ime + i} mesto={i + 1} ime={x.ime} grb={x.grb} pod={[x.zastava, x.liga].filter(Boolean).join(' ')}
+              vrednost={t('domov.objava.prejetihVTekmah', { prejeti: x.prejeti, tekem: x.tekem })} />
+          ))}
+        </Seznam>
+      ),
+    }
+  }
+  if (o && kaj === 'obrambaVratarji') {
+    return {
+      telo: (
+        <Seznam naslov={t('domov.objava.cisteMreze')}>
+          {o.vratarji.map((x, i) => (
+            <Vrstica key={x.ime + i} mesto={i + 1} ime={prikazniIme(x.ime)} klub={x.klub} grb={x.grb} pod={[x.zastava, x.klub].filter(Boolean).join(' ')}
+              vrednost={`🧤 ${x.ciste}`} />
+          ))}
+        </Seznam>
+      ),
+    }
+  }
+  return null
+}
+
 function vsebina(v: VsebinaObjave, kaj: Prosojnica): { desno?: ReactNode; telo: ReactNode } {
+  const vrsta = vsebinaVrste(v, kaj)
+  if (vrsta) return vrsta
   if (kaj === 'naslovnica') {
     return {
       telo: (
@@ -288,7 +557,7 @@ function vsebina(v: VsebinaObjave, kaj: Prosojnica): { desno?: ReactNode; telo: 
       <Sredina className="gap-12">
         <img src="/logo/slff-maskota.png" alt="" className="h-80" />
         <div className="text-7xl font-black naslov">{t('domov.objava.poziv')}</div>
-        <div className="text-4xl text-slate-300">{t('domov.uvod.geslo')}</div>
+        <div className="text-4xl text-slate-300">{v.liga ? t('domov.objava.pridruziSe', { liga: v.liga.kratko }) : t('domov.uvod.geslo')}</div>
         <div className="rounded-3xl bg-gnl-400 px-14 py-7 text-6xl font-black text-slate-950">slff.eu</div>
       </Sredina>
     ),
@@ -361,6 +630,7 @@ export default function Objava() {
   if (zeton) return <UstaviObjavo zeton={zeton} />
   const v = window.__OBJAVA__
   if (!v) return <p className="p-8 text-slate-400">Ni vsebine objave (window.__OBJAVA__).</p>
+  if (new URLSearchParams(location.search).has('reel')) return <Reel v={v} />
   // Generator prebere, koliko prosojnic naj posname.
   document.documentElement.dataset.prosojnic = String(prosojnice(v).length)
   return <Prosojnica v={v} n={Number(new URLSearchParams(location.search).get('slide') ?? 0)} />
