@@ -277,6 +277,56 @@ plačila) in `…-faza3b-aplikacija.md` (scout.slff.eu). Migracije
   select count(distinct team_id) from scout.dnevnik where created_at > now() - interval '7 days';
   ```
 
+## Aplikacija scout.slff.eu (faza 3b)
+
+Vite + React + TypeScript v `scout/` (`scout/src/`, `scout/vite.config.js`,
+lasten Tailwind), sveženj `dist-scout/`. Ukazi: `npm run dev:scout` (5174,
+lokalni stack), `npm run build:scout`, `npm run smoke:scout`. Isti računi kot
+slff.eu, seja je svoja (`storageKey` `slff-scout-seja`). Registracija,
+ponastavitev gesla in prošnja za klubski račun ostanejo na slff.eu; ob vsaki
+prijavi aplikacija pokliče `uveljavi_klubski_racun`. Bere le RPC `scout_*` in
+`federations` (regije države kluba). Nizi v `scout/src/besede.ts` (sl, en),
+ne v `src/i18n`. Poti: `/`, `/player/:id`, `/gaps`, `/watchlist`,
+`/account`, `/login`, `/terms`.
+
+### Objava aplikacije
+
+CI (`objavi-scout`) zgradi in prenese `dist-scout/` v
+`/srv/slff-scout/releases/<sha>`, premakne `current` in preveri, da
+scout.slff.eu streže ta commit — a le ob spremenljivki repozitorija
+`SCOUT_OBJAVA=1`; brez nje je posel preskočen. Korak `Scout` v `preveri`
+(build + smoke) teče vedno. Vse drugo je ročno, enkrat, po tem vrstnem redu
+(ukazi: načrt 3b, naloga 8):
+
+1. **DNS**: zapis `scout` v Cloudflare, enak kot `slff.eu`, Proxied. Doda ga
+   Claude v lastnikovem prijavljenem brskalniku, šele po lastnikovi izrecni
+   potrditvi. Origin certifikat mora pokriti `*.slff.eu`.
+2. **Mapa** `/srv/slff-scout/releases`, lastnik `deploy` (sicer rsync v CI
+   pade).
+3. **Caddy blok** `scout.slff.eu` iz `scripts/hetzner/Caddyfile` (Caddyfile
+   ni v CI): `caddy validate`, kopija stare, `systemctl reload caddy`. Cela
+   stran je `noindex` (orodje za prijavljene klube), SPA le za poti brez pike.
+4. **GoTrue**: `https://scout.slff.eu/**` v `ADDITIONAL_REDIRECT_URLS`
+   (`/opt/supabase/.env`, nato znova zaženi `auth`). Brez tega GoTrue
+   `redirect_to` tiho zavrže in prijava z Googlom pristane na slff.eu (seja
+   tam, ne v Scoutu), brez napake.
+5. **Funkciji** `scout-placilo` in `stripe-webhook`
+   (`scripts/hetzner/objavi-funkcije.sh`).
+6. **Stripe, cene**: izdelek "SLFF Scout" (metadata `app=slff-scout`), ceni
+   z `lookup_key` `slff_scout_klub_mesec` (3900, mesečno) in
+   `slff_scout_klub_sezona` (29000, letno), obe `tax_behavior=exclusive`
+   (Checkout druge zavrne). Obstoječi webhook zadošča.
+7. **Stripe, portal Scouta**: lastna konfiguracija Billing Portala z
+   metapodatkom `app=slff-scout` (preklic ob koncu obdobja, brez menjave
+   paketa). Brez nje gumb portala na `/account` javi napako — preklic mora
+   biti vedno mogoč.
+8. **Stripe Tax** aktiven (`/v1/tax/settings`: `status` `active`, država
+   `SI`); sicer Checkout z `automatic_tax` sejo zavrne.
+9. **Ročni preizkus v testnem načinu Stripe** (preizkus, sedeži, plačilo,
+   portal, preklic). Živi ključi so lastnikova odločitev in veljajo tudi za
+   preverjene igralce.
+10. Šele nato `SCOUT_OBJAVA=1` (`gh variable set SCOUT_OBJAVA --body 1`).
+
 ## Spomin
 
 | odprte države | trajanje | vrh RSS |

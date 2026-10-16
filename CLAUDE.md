@@ -355,6 +355,15 @@ objava, testi): `docs/scout.md`. Bistvo:
   CI ga ne objavi (`scripts/hetzner/objavi-scout.sh`) in Pythonovih testov ne
   poganja: `cd scout/stroj && .venv/bin/pytest -q`.
 
+## SLFF Scout (klubi, scout.slff.eu)
+
+Plačljivo orodje za klube: ločena Vite aplikacija v `scout/`
+(`npm run dev:scout`, `build:scout` → `dist-scout/`, `smoke:scout`), ista
+baza in računi, seja svoja. Bere **le** RPC `scout_*`; nizi so v
+`scout/src/besede.ts`. CI jo objavi le ob `SCOUT_OBJAVA=1`; DNS, Caddy blok,
+GoTrue, funkcije in Stripe so ročni. Vse: `docs/scout.md` (*Aplikacija
+scout.slff.eu*, *Objava aplikacije*).
+
 ## Poti
 
 Poti so **angleške** (`/my-team`, `/players`, `/match/:id` …), ker jih vidi
