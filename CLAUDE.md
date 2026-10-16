@@ -4700,7 +4700,7 @@ Druga liga ima 9 klubov (vsak krog en prost). Uvoz (ena za drugo): `gh
 workflow run uvoz-lige.yml -f liga=ua-1-liga -f arhiv=1/1347 -f cene=true`.
 ### Bosna in Hercegovina — vir `nsfbih`
 
-Država `BA` ("Bosna i Hercegovina", migracija 20261015163900). **Vmesnika v
+Država `BA` ("Bosna i Hercegovina", migracija 20261016092100). **Vmesnika v
 bosanščini/hrvaščini še ni** (ne `JEZIK_DRZAVE`, ne kartice, ne pošte) in `BA`
 **ni** v matriki nočnega uvoza (`uvoz-zapisnikov.yml`) — oboje pred vklopom.
 Šifra lige se začne z `ba-`. Viri sta dva: `nsfbih` (NS FBiH, spodaj) in
