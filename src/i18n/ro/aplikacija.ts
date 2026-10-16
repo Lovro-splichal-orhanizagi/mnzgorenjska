@@ -27,12 +27,12 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     lestvicaDomov: 'Clasamentul berilor',
     // Stran /beers (pages/Piva.tsx): brez zneskov.
     stran: {
-      uvod: 'SLFF este gratuit. Serverul și domeniul le plătim noi, așa că fiecare bere ajută cu adevărat. Mulțumim tuturor celor care ne-au făcut deja cinste!',
+      uvod: 'SLFF este gratuit pentru mii de manageri din sute de ligi amatoare din toată Europa: fără reclame, fără pariuri, fără conținut plătit. Berea ta plătește serverul, e-mailurile și domeniul, apoi ajunge chiar aici, pe zid, cu numele și mesajul tău. Nu aduce puncte, doar o zi de luni foarte recunoscătoare. 🍺',
       skupaj: { one: 'Până acum {n} bere', few: 'Până acum {n} beri', other: 'Până acum {n} de beri' },
       piv: { one: '{n} bere', few: '{n} beri', other: '{n} de beri' },
       lestvica: 'Clasamentul susținătorilor',
       anonimni: 'Susținători anonimi',
-      prazno: 'Încă nu e nicio bere pe zid. Fii primul!',
+      prazno: 'Pe zid mai e loc pentru numele tău. Fii printre primii! 🍻',
     },
   },
   noga: {
@@ -50,7 +50,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     lestvica: 'Clasament',
     rezultati: 'Rezultate',
     tabela: 'Clasamentul ligii',
-    miniLige: 'Miniligi',
+    miniLige: 'Mini-ligi',
     asistence: 'Pase decisive',
     pozicije: 'Poziții',
     odsotnosti: 'Absențe',

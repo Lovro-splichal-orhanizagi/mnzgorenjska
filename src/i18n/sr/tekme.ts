@@ -231,7 +231,7 @@ export const tekme: NonNullable<Prevod['tekme']> = {
       zdaj: 'Trenutna cena',
       izhodisce: 'Početna cena',
       izhodisceOpis: 'Početna cena je izračunata iz minuta i bodova prošle sezone, u poređenju sa ostalim igračima lige.',
-      privzeta: 'Ko je prošle sezone odigrao manje od {minut} minuta, počinje sa {cena}; osim ako je igrao u višoj ligi; tada dobija cenu iz nje.',
+      privzeta: 'Ko je prošle sezone odigrao manje od {minut} minuta, počinje sa {cena}, osim ako je igrao u višoj ligi: tada dobija cenu iz nje.',
       borza: 'Posle svakog kola cena se menja: +{korak} za svaka dva boda iznad 2 (najviše +{najvec} po kolu), −{korak} posle lošeg kola ili loše forme i −{korak} ako igrač drugo kolo zaredom ne igra, a njegov klub igra.',
       razpon: 'Cena je uvek između {od} i {do}.',
     },

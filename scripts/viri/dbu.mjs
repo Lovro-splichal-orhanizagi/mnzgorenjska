@@ -7,7 +7,7 @@
 // se uvoz ustavi (`DbuZavrnitev`, izhod 4) — ne obhajaj. robots.txt dovoli
 // `/resultater/pulje|kamp|Raekke`, prepove `/resultater/kampsoegAdvanceret/`,
 // `/turneringer_og_resultater/resultatsoegning/` in `/umbraco/` (izvoz v Excel
-// ne beremo). Glej CLAUDE.md (Danska — vir dbu).
+// ne beremo). Glej docs/viri/danska.md (Danska — vir dbu).
 //
 // ŠIFRA LIGE je id pulje (`508656`) ali več pulj ene sezone, ločenih s `+`
 // (`474114+498951+498952` = 2. division 2025/26: osnovni del, nato skupini za

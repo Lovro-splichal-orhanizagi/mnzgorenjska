@@ -223,12 +223,12 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   pripomocki: {
     klopPlusNaslov: 'Бонус Клупа+',
     klopPlusVlozenZa: 'Активиран за {krog}. коло ({sezona}): во него се бројат и поените од клупата.',
-    klopPlusVlozen: 'Клупа+ е веќе активирана: во неа се бројат и поените од клупата.',
+    klopPlusVlozen: 'Клупа+ е веќе активирана: во тоа коло се бројат и поените од клупата.',
     klopPlusOpis:
       'Еднаш во сезоната: во избраното коло се додаваат и поените на сите четири резерви.',
     wildcardNaslov: 'Бонус Wildcard',
     wildcardVlozenZa: 'Активиран за {krog}. коло ({sezona}): трансферите во него се бесплатни.',
-    wildcardVlozen: 'Wildcard е веќе активиран: трансферите во него се бесплатни.',
+    wildcardVlozen: 'Wildcard е веќе активиран: трансферите во тоа коло се бесплатни.',
     wildcardOpis:
       'Еднаш во сезоната: во тоа коло можеш да замениш колку сакаш играчи, без одбивање поени.',
     zaklenjen: 'заклучено',

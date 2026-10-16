@@ -21,6 +21,7 @@
 // sabo močno razlikujejo — v slabši ekipi ima najboljši strelec lahko manj
 // golov kot rezervni napadalec v najboljši.
 import { createClient } from '@supabase/supabase-js'
+import { fetchZaBazo } from './prenos.mjs'
 import { vseVrstice, vrsticeIgralcevLige } from './strani.mjs'
 import { readFileSync } from 'node:fs'
 import {
@@ -65,7 +66,7 @@ const pisi = process.argv.includes('--pisi')
 // ki pozicije še nimajo — tipično novinci, ki so prišli med sezono.
 const samoNove = process.argv.includes('--samo-nove')
 const dovoliAktivno = process.argv.includes('--dovoli-aktivno')
-const db = createClient(BASE, SERVICE, { auth: { persistSession: false } })
+const db = createClient(BASE, SERVICE, { auth: { persistSession: false }, global: { fetch: fetchZaBazo() } })
 
 // --- podatki ---------------------------------------------------------------
 // Razvrščamo znotraj kluba, klub pa ima lahko ekipo v obeh ligah — zato
