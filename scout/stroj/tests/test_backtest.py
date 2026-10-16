@@ -2,27 +2,30 @@ import numpy as np
 from pomoc import sezone
 
 import stroj.backtest as bt_modul
-from stroj.backtest import MIN_IZBOLJSAVA_MOCI, PRAG, backtest, napovedi
+from stroj.backtest import MIN_IZBOLJSAVA_MOCI, PRAG, backtest, izberi_ciljno_leto, napovedi
 
 
-def _sinteticno(oseb: int = 900):
+def _sinteticno(oseb: int = 900, z_2026: bool = False):
+    """Lige 1–3 se naučijo (vir model); liga 4 se pojavi šele 2026 (vir drzava, nepokrita)."""
     rng = np.random.default_rng(7)
-    prava = {1: 0.0, 2: 0.6, 3: 1.2}
+    prava = {1: 0.0, 2: 0.6, 3: 1.2, 4: 0.3}
     vrstice = []
     for i in range(oseb):
         sposobnost = rng.normal(0, 0.3)
         liga = int(rng.integers(1, 4))
-        for leto in (2023, 2024, 2025):
-            if rng.random() < 0.5:
+        for leto in (2023, 2024, 2025, 2026) if z_2026 else (2023, 2024, 2025):
+            if leto == 2026 and i % 2 == 0:
+                liga = 4
+            elif rng.random() < 0.5:
                 liga = int(rng.integers(1, 4))
             vrstice.append((f"r1:{i}", liga, leto, int(rng.poisson(np.exp(sposobnost - prava[liga]) * 20))))
     oseba, liga, leto, goli = (list(x) for x in zip(*vrstice))
     n = len(oseba)
     s = sezone(n, oseba=oseba, competition_id=liga, leto=leto, goli_np=goli, minute=[1800] * n,
                min_on=[1800] * n, ekipa_minute=[1800] * n, ekipa_min_zmin=[1800] * n)
-    lige = {"id": np.array([1, 2, 3]), "slug": np.array(["x-1", "x-2", "x-3"], dtype=object),
-            "name": np.array([None] * 3, dtype=object), "zveza": np.array([None] * 3, dtype=object),
-            "country_id": np.array([1, 1, 1])}
+    lige = {"id": np.array([1, 2, 3, 4]), "slug": np.array(["x-1", "x-2", "x-3", "x-4"], dtype=object),
+            "name": np.array([None] * 4, dtype=object), "zveza": np.array([None] * 4, dtype=object),
+            "country_id": np.array([1, 1, 1, 1])}
     return s, lige
 
 
@@ -40,6 +43,7 @@ def test_moc_le_izenaci_ablacijo_je_padel(monkeypatch):
     dejansko = np.ones(n)
     monkeypatch.setattr(bt_modul, "napovedi", lambda *a: {
         "i": np.arange(n), "j": np.arange(n), "prestop": np.ones(n, dtype=bool),
+        "pokrit": np.ones(n, dtype=bool),
         "model": dejansko + 0.1, "brez_moci": dejansko + 0.1 + 1e-6, "naivno": dejansko + 0.2,
         "dejansko": dejansko, "utez": np.ones(n)})
     rez = backtest({}, {}, {}, 2025)
@@ -58,7 +62,8 @@ def test_premalo_prestopov_ni_prestal():
 
 def test_brez_parov():
     s, lige = _sinteticno()
-    assert backtest(s, lige, {}, 2030) == {"ciljno_leto": 2030, "n": 0, "n_prestopi": 0, "izboljsava_prestopi": None,
+    assert backtest(s, lige, {}, 2030) == {"ciljno_leto": 2030, "n": 0, "n_prestopi": 0, "n_pokriti": 0,
+                                           "izboljsava_prestopi": None,
                                            "izboljsava_moci": None, "stanje": "premalo podatkov", "prestal": False}
 
 
@@ -82,3 +87,39 @@ def test_par_je_iz_iste_drzave():
     p = napovedi(s, lige, {}, 2025)
     assert len(p["i"]) > 0
     assert (s["country_id"][p["i"]] == s["country_id"][p["j"]]).all()
+
+
+def test_pogoj_le_na_pokritih_prestopnikih(monkeypatch):
+    """Prestopniki z nadomestno močjo ene od lig (drzava/brez) ne štejejo v pogoj."""
+    n = 300
+    dejansko = np.ones(2 * n)
+    pokrit = np.arange(2 * n) < n
+    monkeypatch.setattr(bt_modul, "napovedi", lambda *a: {
+        "i": np.arange(2 * n), "j": np.arange(2 * n), "prestop": np.ones(2 * n, dtype=bool), "pokrit": pokrit,
+        "model": np.where(pokrit, dejansko + 0.1, dejansko + 5.0), "brez_moci": dejansko + 0.2,
+        "naivno": dejansko + 0.3, "dejansko": dejansko, "utez": np.ones(2 * n)})
+    rez = backtest({}, {}, {}, 2025)
+    assert rez["n_prestopi"] == 2 * n and rez["n_pokriti"] == n
+    assert abs(rez["mae_model_prestopi"] - 0.1) < 1e-9
+    assert rez["mae_model"] > 2  # skupni MAE ostane na vseh vrsticah
+    assert rez["stanje"] == "prestal"
+
+
+def test_pokriti_sesteti_in_premalo_ce_jih_je_malo():
+    """2026: dovolj prestopnikov, a večina gre v ligo 4 brez modelne moči → premalo podatkov."""
+    s, lige = _sinteticno(z_2026=True)
+    p = napovedi(s, lige, {}, 2026)
+    cilj = s["competition_id"][p["j"]]
+    np.testing.assert_array_equal(p["pokrit"], cilj != 4)
+    rez = backtest(s, lige, {}, 2026)
+    assert rez["n_prestopi"] >= 200
+    assert rez["n_pokriti"] == int((p["prestop"] & (cilj != 4)).sum()) < 200
+    assert rez["stanje"] == "premalo podatkov" and rez["prestal"] is False
+    assert rez["izboljsava_prestopi"] is None
+
+
+def test_izberi_ciljno_leto():
+    s, lige = _sinteticno(z_2026=True)
+    assert izberi_ciljno_leto(s, lige, {}) == 2025  # 2026 nima dovolj pokritih
+    s, lige = _sinteticno(300)
+    assert izberi_ciljno_leto(s, lige, {}) is None

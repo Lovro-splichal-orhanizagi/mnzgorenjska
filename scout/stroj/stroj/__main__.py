@@ -16,7 +16,7 @@ import numpy as np
 import psycopg
 
 from stroj import Tabela, izberi
-from stroj.backtest import backtest
+from stroj.backtest import backtest, izberi_ciljno_leto
 from stroj.elo import elo
 from stroj.indeks import UTEZI, indeks, z_vrednosti
 from stroj.kazalniki import izracunaj
@@ -63,7 +63,9 @@ def zagon(conn: psycopg.Connection, pisi: bool, sili_moc: bool) -> int | None:
     prejsnji = conn.execute(SQL_PREJSNJI).fetchone()
     if sili_moc or prejsnji is None or zdaj - prejsnji[3] > TEDEN - timedelta(hours=1):  # zdaj je vzet po ~1 min nalaganja, brez ure bi teden zdrsnil na 8 dni
         moc, elo_koef = prilagodi(sezone, lige, elo_lig)
-        bt = backtest(sezone, lige, elo_lig, int(sezone["leto"].max()) - 1)
+        leto = izberi_ciljno_leto(sezone, lige, elo_lig)
+        bt = backtest(sezone, lige, elo_lig, leto) if leto is not None else {
+            "ciljno_leto": None, "stanje": "premalo podatkov", "prestal": False}
         izracunano, objavljen = zdaj, bool(bt.get("prestal"))
     else:
         # dan brez backtesta podeduje njegov izid: objavljen=False bi vsak dan
