@@ -5,6 +5,7 @@
 //   ... --tekmovanje mladinci   (mladinska liga; brez tega člani)
 //   ... --pisi        (dejansko zapiše; brez tega samo pokaže, kaj bi naredil)
 //   ... --dovoli-manj-klubov  (klub je res odstopil: deaktiviraj kljub manj klubom)
+// Izhod 3: razpored ima manj klubov kot baza (glej spodaj), sicer vse uvoženo.
 //   SUPABASE_URL=...  (za projekt v oblaku; sicer vzame VITE_SUPABASE_URL iz .env)
 //
 // Zapisniki nastanejo šele po odigrani tekmi, zato brez razporeda baza ne ve
@@ -19,7 +20,7 @@ import { tekmovanje as najdiTekmovanje, sifraLige } from './tekmovanje.mjs'
 import { viraZa } from './viri/index.mjs'
 import { mapaKlubov } from './klubi.mjs'
 import { sifra } from './viri/zapisniki.mjs'
-import { razcleniRazpored, sezonaIz, oznakaBrezIzida } from './razpored.mjs'
+import { razcleniRazpored, sezonaIz, oznakaBrezIzida, tekmaDrugegaKroga, odvecneVrsticePara, preberiKontumacije } from './razpored.mjs'
 import { rokKroga } from './razporedi.mjs'
 import { vseVrstice } from './strani.mjs'
 import { prenesiSPonovitvami, fetchZaBazo } from './prenos.mjs'
@@ -186,24 +187,19 @@ if (vir.kontumacije) {
     if (zadnjiDatum && zadnjiDatum < meja && existsSync(pot)) return readFileSync(pot, 'utf8')
     return prenesi(naslov, ime)
   }
-  try {
-    const najdene = await vir.kontumacije(liga, prenesiKrog, veljavni, danes)
-    let oznacenih = 0
-    for (const n of najdene) {
-      const krog = veljavni.find((k) => k.stevilka === n.krog)
-      const tekma = krog?.tekme.find(
-        (t) => vir.kljucKluba(t.domaci) === vir.kljucKluba(n.domaci) &&
-          vir.kljucKluba(t.gostje) === vir.kljucKluba(n.gostje),
-      )
-      if (tekma) { tekma.kontumacija = true; oznacenih++ }
-      else console.log(`  kontumacija ${n.domaci} : ${n.gostje} (${n.krog}. krog) ni v razporedu`)
-    }
-    if (najdene.length) console.log(`Kontumacij v razporedu: ${oznacenih}`)
-  } catch (e) {
-    // Zavrnitev vira (403, 429, izziv) ni motnja: uvoz se ustavi z izhodom 4.
-    if (e.zavrnitev) throw e
-    console.log(`  kontumacij ni bilo mogoče prebrati (${e.message}) — nadaljujem brez njih`)
+  // Zavrnitev (401/403/429, izziv) preberiKontumacije vrže naprej: izhod 4.
+  const najdene = await preberiKontumacije(vir, liga, prenesiKrog, veljavni, danes)
+  let oznacenih = 0
+  for (const n of najdene) {
+    const krog = veljavni.find((k) => k.stevilka === n.krog)
+    const tekma = krog?.tekme.find(
+      (t) => vir.kljucKluba(t.domaci) === vir.kljucKluba(n.domaci) &&
+        vir.kljucKluba(t.gostje) === vir.kljucKluba(n.gostje),
+    )
+    if (tekma) { tekma.kontumacija = true; oznacenih++ }
+    else console.log(`  kontumacija ${n.domaci} : ${n.gostje} (${n.krog}. krog) ni v razporedu`)
   }
+  if (najdene.length) console.log(`Kontumacij v razporedu: ${oznacenih}`)
 }
 
 const prviDatum = veljavni[0].tekme.find((t) => t.datum)?.datum
@@ -307,11 +303,16 @@ const obstojeciKrogi = new Map(
 )
 const idKrogov = [...obstojeciKrogi.values()].map((r) => r.id)
 const obstojeceTekme = new Map() // 'krog:domaci:gostje' -> prva tekma (po id)
+// Vir, pri katerem je krog teden (ncefl: stran krogov ne pozna), prestavljeno
+// tekmo pokaže v drugem krogu. Par domači:gostje igra v sezoni enkrat, zato
+// tekmo istega para iz drugega kroga premaknemo, namesto da bi nastala druga
+// vrstica (stara bi ostala "neuvožena" do konca sezone).
+const tekmePara = new Map() // 'domaci:gostje' -> tekme sezone (le vir.krogiPoTednih)
 if (idKrogov.length) {
   const vrstice = await vseVrstice((od, do_) =>
     db
       .from('matches')
-      .select('id, round_id, home_team_id, away_team_id, played_on, imported_at, kontumacija, vir_brez_izida')
+      .select('id, round_id, home_team_id, away_team_id, played_on, imported_at, kontumacija, vir_brez_izida, zapisnik_id, home_goals, away_goals')
       .in('round_id', idKrogov)
       .order('id')
       .range(od, do_),
@@ -319,6 +320,10 @@ if (idKrogov.length) {
   for (const m of vrstice) {
     const kljuc = `${m.round_id}:${m.home_team_id}:${m.away_team_id}`
     if (!obstojeceTekme.has(kljuc)) obstojeceTekme.set(kljuc, m)
+    if (vir.krogiPoTednih) {
+      const par = `${m.home_team_id}:${m.away_team_id}`
+      tekmePara.set(par, [...(tekmePara.get(par) ?? []), m])
+    }
   }
 }
 const istiCas = (a, b) => (a == null || b == null ? a == b : new Date(a).getTime() === new Date(b).getTime())
@@ -414,12 +419,16 @@ for (const k of veljavni) {
       // borza pa je zaradi nje zadrzala cel krog. Datum popravimo SAMO, dokler
       // tekma ni uvozena: odigrana tekma ima pravi datum iz zapisnika.
       const obstojeca = obstojTekme[0]
-      if (t.kontumacija && !obstojeca.kontumacija && !obstojeca.imported_at) {
+      // Kontumacija, označena pred izidom (askf: napovedan izostanek, izstop
+      // kluba; v bazi 0:0), dobi izid, ko ga vir objavi.
+      const izidKontumacije = t.kontumacija && obstojeca.kontumacija && !!t.izid &&
+        (obstojeca.home_goals !== t.izid.domaci || obstojeca.away_goals !== t.izid.gostje)
+      if (t.kontumacija && (!obstojeca.kontumacija || izidKontumacije) && !obstojeca.imported_at) {
         // Izid dodeljene zmage, kjer ga vir pove (HNS); sicer ostane, kot je.
         const izid = t.izid ? { home_goals: t.izid.domaci, away_goals: t.izid.gostje } : {}
         const { error } = await db.from('matches').update({ kontumacija: true, ...izid }).eq('id', obstojeca.id)
         if (error) console.log(`  tekma ${t.domaci} : ${t.gostje}: ${error.message}`)
-        else console.log(`  kontumacija: ${t.domaci} : ${t.gostje}`)
+        else console.log(`  kontumacija${izidKontumacije ? ' (izid)' : ''}: ${t.domaci} : ${t.gostje}`)
       }
       // Oznaka "vir brez izida" velja le za neuvoženo tekmo; pišemo jo samo ob
       // spremembi, ker vsak zapis v `matches` preračuna točke kroga.
@@ -446,6 +455,32 @@ for (const k of veljavni) {
       continue
     }
 
+    if (vir.krogiPoTednih) {
+      const { odigrana, prestavljena } = tekmaDrugegaKroga(tekmePara.get(`${domaciId}:${gostjeId}`), krogId)
+      // Odigrana tekma para v drugem krogu: razpored jo kaže drugje, kot jo je
+      // uvozil zapisnik — ne podvajamo, zapisnik ima pravi datum.
+      if (odigrana) {
+        console.log(`  ${t.domaci} : ${t.gostje} je uvožena v drugem krogu — krog ${k.stevilka} je ne dobi`)
+        continue
+      }
+      if (prestavljena) {
+        const { error } = await db
+          .from('matches')
+          .update({ round_id: krogId, played_on: t.datum })
+          .eq('id', prestavljena.id)
+          .is('imported_at', null)
+        if (error) console.log(`  tekma ${t.domaci} : ${t.gostje}: ${error.message}`)
+        else {
+          console.log(`  prestavljena v krog ${k.stevilka}: ${t.domaci} : ${t.gostje}  ${prestavljena.played_on} -> ${t.datum}`)
+          prestavljenih++
+          const m = { ...prestavljena, round_id: krogId, played_on: t.datum }
+          obstojeceTekme.set(`${krogId}:${domaciId}:${gostjeId}`, m)
+          tekmePara.set(`${domaciId}:${gostjeId}`, [m])
+        }
+        continue
+      }
+    }
+
     const { data: nova, error } = await db
       .from('matches')
       .insert({
@@ -458,14 +493,36 @@ for (const k of veljavni) {
         vir_brez_izida: brezIzidaPriViru(t) === true,
         ...(t.kontumacija && t.izid ? { home_goals: t.izid.domaci, away_goals: t.izid.gostje } : {}),
       })
-      .select('id, round_id, home_team_id, away_team_id, played_on, imported_at, kontumacija, vir_brez_izida')
+      .select('id, round_id, home_team_id, away_team_id, played_on, imported_at, kontumacija, vir_brez_izida, home_goals, away_goals')
       .single()
     if (error) console.log(`  tekma ${t.domaci} : ${t.gostje}: ${error.message}`)
     else {
       novihTekem++
       // Ista tekma dvakrat v razporedu ne sme dati dveh vrstic.
       obstojeceTekme.set(`${krogId}:${domaciId}:${gostjeId}`, nova)
+      if (vir.krogiPoTednih) tekmePara.set(`${domaciId}:${gostjeId}`, [...(tekmePara.get(`${domaciId}:${gostjeId}`) ?? []), nova])
     }
+  }
+}
+
+// Krog je teden (vir.krogiPoTednih): uvoz zapisnikov tekmo, odigrano v drugem
+// tednu, kot jo je imel razpored, vpiše v krog zapisnika, preden jo razpored
+// premakne. Neuvožena vrstica istega para v drugem krogu je takrat odveč.
+if (vir.krogiPoTednih) {
+  const krogPara = new Map() // 'domaci:gostje' -> krog v razporedu
+  for (const [krogId, pari] of pariKrogov) for (const par of pari) krogPara.set(par, krogId)
+  const odvec = odvecneVrsticePara(tekmePara, krogPara)
+  if (odvec.length) {
+    const { error } = await db
+      .from('matches')
+      .delete()
+      .in('id', odvec.map((m) => m.id))
+      .is('imported_at', null)
+      .is('zapisnik_id', null)
+    if (error) {
+      console.error(`  podvojene tekme prestavljenih parov: ${error.message}`)
+      process.exitCode = 1
+    } else console.log(`Odstranjenih podvojenih vrstic prestavljenih tekem: ${odvec.length} (${odvec.map((m) => m.id).join(', ')})`)
   }
 }
 
@@ -508,7 +565,10 @@ if (smemoDeaktivirati) {
           'Deaktivacijo igralcev in brisanje tekem preskočim. Če je klub res ' +
           'odstopil, poženi znova z --dovoli-manj-klubov.',
       )
-      process.exitCode = 1
+      // 3 = uvoz je uspel, odločiti mora človek (izstop kluba); nočni uvoz
+      // lige zato ne šteje za padlo. Prejšnja napaka (1) ostane; poznejših korakov
+      // (deaktivacija) varovalo ne izvede.
+      if (!process.exitCode) process.exitCode = 3
       smemoDeaktivirati = false
     }
   } catch (e) {
@@ -601,7 +661,13 @@ if (smemoDeaktivirati) {
   for (const pari of pariKrogov.values()) velikosti.set(pari.size, (velikosti.get(pari.size) ?? 0) + 1)
   const obicajen = [...velikosti].sort((a, b) => b[1] - a[1] || b[0] - a[0])[0]?.[0] ?? 0
   const polnKrog = Math.max(1, Math.min(Math.floor(letosnjiKlubi.size / 2), obicajen))
-  const preverjeniKrogi = [...pariKrogov].filter(([, pari]) => pari.size >= polnKrog).map(([id]) => id)
+  // Vir, pri katerem je krog teden (`vir.razporedCel`, modular11), razpored
+  // prebere ves (vse strani; neveljavna stran ustavi uvoz) in tekmo, prestavljeno
+  // v drug teden, pokaže v drugem krogu. Tedni so različno polni, zato velja za
+  // vse kroge sezone, tudi tiste, ki jih razpored nima več.
+  const preverjeniKrogi = vir.razporedCel
+    ? [...new Set([...idKrogov, ...pariKrogov.keys()])]
+    : [...pariKrogov].filter(([, pari]) => pari.size >= polnKrog).map(([id]) => id)
   if (preverjeniKrogi.length) {
     const { data: neuvozene, error: eBeri } = await db
       .from('matches')
@@ -615,7 +681,7 @@ if (smemoDeaktivirati) {
       process.exitCode = 1
     }
     const umaknjene = (neuvozene ?? []).filter(
-      (m) => !pariKrogov.get(m.round_id).has(`${m.home_team_id}:${m.away_team_id}`),
+      (m) => !pariKrogov.get(m.round_id)?.has(`${m.home_team_id}:${m.away_team_id}`),
     )
     if (umaknjene.length) {
       const { error } = await db

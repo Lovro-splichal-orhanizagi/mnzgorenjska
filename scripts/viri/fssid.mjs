@@ -5,11 +5,11 @@
 // Regijske zveze (FSRIS, FSRZS, FSV) zapisnikov ne objavljajo, FSS pa na
 // `/izvestaj-sa-utakmice/<id>/?script=lat` izriše KATERO KOLI tekmo COMET, tudi
 // regijsko. Strani lige na fss.rs za te lige ni, zato ligo naslovimo z blokom
-// šifer. Glej CLAUDE.md (Srbija — vir fssid).
+// šifer. Glej docs/viri/srbija.md (vir fssid).
 //
 // BLOK ŠIFER
 // - Tekmovanje-sezona je EN strnjen blok N×(N−1) šifer (dvokrožna liga z N
-//   klubi), urejen po krogih: N/2 šifer na krog, krog = (id − od) div (N/2) + 1.
+//   klubi; trikrožna 3·N(N−1)/2), urejen po krogih: N/2 šifer na krog, krog = (id − od) div (N/2) + 1.
 //   Pri lihem N je vsak krog en klub prost: (N−1)/2 šifer na krog, 2N krogov.
 //   Šifra lige je "<od>-<do>" (npr. `75912381-75912620`, Srpska liga Istok
 //   2026/27, 16 klubov, 240 tekem).
@@ -65,20 +65,36 @@ export const DATUMI = {
 
 // --- blok ----------------------------------------------------------------------
 
-/** "75912381-75912620" → { od, do, tekem, klubov, naKrog, krogov }. */
+/**
+ * "75912381-75912620" → { od, do, tekem, klubov, naKrog, krogov, krozni }.
+ * `krozni` je, kolikokrat se vsak par sreča: 2 (dvokrožna, privzeto), sicer
+ * 3, 4 ali 1 (opštinske lige z malo klubi igrajo večkrožno — Malo Crniće
+ * 2026/27, 8 klubov, 84 šifer = 3 × 28; Krupanj 6 klubov, 60 = 4 × 15).
+ * Velikost je le ugib: blok mora biti cel (meji iz `srbija-blok.mjs`), sicer
+ * se okrnjen blok lahko prebere kot drugo število klubov.
+ */
 export function razberiKodo(koda) {
   const m = String(koda ?? '').trim().match(/^(\d+)-(\d+)$/)
   if (!m) throw new Error(`fssid: šifra lige "${koda}" ni oblike "<od>-<do>"`)
   const od = Number(m[1])
   const do_ = Number(m[2])
   const tekem = do_ - od + 1
-  const klubov = (1 + Math.sqrt(1 + 4 * tekem)) / 2
-  if (!(tekem > 0) || !Number.isInteger(klubov) || klubov < 3)
-    throw new Error(`fssid: blok ${koda} ima ${tekem} šifer, kar ni N×(N−1) za N klubov`)
-  // Liho število klubov: vsak krog en klub prost, (N−1)/2 tekem na krog in 2N
-  // krogov (opštinske lige s 13 klubi; preverjeno na predpomnjenih zapisnikih).
+  // Dvokrožna najprej (N×(N−1)); nato k × N(N−1)/2 za k = 3, 4 in 1.
+  let klubov = null
+  let krozni = null
+  for (const k of [2, 3, 4, 1]) {
+    const n = (1 + Math.sqrt(1 + (8 * tekem) / k)) / 2
+    if (tekem > 0 && Number.isInteger(n) && n >= 3) {
+      klubov = n
+      krozni = k
+      break
+    }
+  }
+  if (!klubov) throw new Error(`fssid: blok ${koda} ima ${tekem} šifer, kar ni k × N(N−1)/2 (k = 1–4) za N klubov`)
+  // Liho število klubov: vsak krog en klub prost, (N−1)/2 tekem na krog in
+  // k·N krogov (opštinske lige s 13 klubi; preverjeno na predpomnjenih zapisnikih).
   const naKrog = Math.floor(klubov / 2)
-  return { od, do: do_, tekem, klubov, naKrog, krogov: tekem / naKrog }
+  return { od, do: do_, tekem, klubov, naKrog, krogov: tekem / naKrog, krozni }
 }
 
 /** Krog po mestu šifre v bloku. */
@@ -153,6 +169,15 @@ const IME_V_BLOKU = {
   '75993822-75994061': { BUDUĆNOST: 'BUDUĆNOST (Miliva)', HAJDUK: 'HAJDUK (Čepure)', RUDAR: 'RUDAR (Plažane)' }, // MFL Jug
   '76045363-76045602': { MLADOST: 'MLADOST (Donji Katun)', OMLADINAC: 'OMLADINAC (Pojate)' }, // Rasinska prva
   '76162366-76162605': { HAJDUK: 'HAJDUK (Rujevica)' }, // Zaječarska okružna
+  // 15. 10. 2026 (kraj s stadiona domačih tekem v zapisniku COMET).
+  '76235200-76235409': { // MOL Kikinda-Žitište
+    BEGA: 'BEGA (Novi Itebej)', 'BORAC (A)': 'BORAC (Aleksandrovo)', 'BORAC (I)': 'BORAC (Iđoš)',
+    BUDUĆNOST: 'BUDUĆNOST (Banatski Dvor)', PROLETER: 'PROLETER (Međa)',
+  },
+  // Opštinska liga Sopot: drugi MLADOST je MLADOST (Guberevac); kraja prvega ne
+  // pove ne COMET (stadion prazen) ne fsb.org.rs ("Mesto: ---") — občina, kot
+  // pri Mladenovcu v fsb. Bare MLADOST bi sicer postal MLADOST (Lučani).
+  '77527270-77527325': { MLADOST: 'MLADOST (Sopot)' },
 }
 
 /**

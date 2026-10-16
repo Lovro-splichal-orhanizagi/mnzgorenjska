@@ -1,0 +1,111 @@
+COMET - Federația Moldovenească de Fotbal
+
+                                                                                         Raportul meciului
+
+                                                                                        LIGA 2 26/27
+
+      N/A    N/A
+                                                                  CF Edineț                      7:0                      FC Constructorul Leova
+                                                                                                                                                                                           N/A      N/A
+
+       J      G                                                                                                                                                                             J       G
+
+       calendar_month Data/Timp: 10.10.2026 15:00 EEST                                             frame_person Categoria pe vârstă: Seniorii M Fotbal
+
+       stadium Stadionul: Stadionul Edineț (Edineţ)                                                trophy Tur: 13
+
+       groups Spectatorii: 150                                                                     assignment_turned_in Match number: 99
+
+                                                                                             LINEUPS
+
+  CF Edineț                                                                                         FC Constructorul Leova
+
+  89 Beşleagă Andrei          G   C                                            40935      MDA       1      Tabarcea Ion           G                                               110007         MDA
+
+  7         Ursu Elyas                                                         48236      MDA       3      Fanari Vadim                                                           49573          MDA
+
+  9         Creciun Eduard                                                     47595      MDA       5      Gaponenco Alexandr                                                     105273         MDA
+
+  10 Bîzga Denis                                                               41099      MDA       6      Ciornîi Liviu                                                          46401          MDA
+
+  11 Popovici Serghei                                                          40931      MDA       9      Vlas Alexandru                                                         42746          MDA
+
+  14 Burlaca Ivan                                                              41401      MDA       11 Putregai Dorian                                                            102918         MDA
+
+  19 Chiril Marius                                                             103456     MDA       12 Botez Gheorghe                                                             103171         MDA
+
+  22 Braga Eduard                                                              112582     MDA       14 Carp Vladimir                                                              89551          MDA
+
+  44 Ababii Daniel                                                             110099     MDA       19 Daraban Dorin                                                              50991          MDA
+
+  66 Ciumac Alexei                                                             46280      MDA       22 Savițchi Vlad                                                              50132          MDA
+
+  77 Șoric Vladlen                                                             46253      MDA       89 Mostovei Ilie             C                                                113561         MDA
+
+                                                                                          SUBSTITUTES
+
+  5         Catarev Ion                                                        103383     MDA       4      Pascaru Ion                                                            123285         MDA
+
+  8         Grosu Alexandru                                                    40794      MDA       7      Diacenco Catalin                                                       102461         MDA
+
+  13 Eşanu Alexandru                                                           40939      MDA       8      Cornescu Ilie                                                          41290          MDA
+
+  30 Lupușor Crinu                                                             103382     MDA       13 Abrasin Mihail                                                             109861         MDA
+
+  81 Mogoreanu Cristian                                                        48987      MDA       17 Istrati Sergiu                                                             40804          MDA
+
+  99 Cercasov Vasili                                                           42265      MDA       18 Chirilă Marcel                                                             110001         MDA
+
+                                                                                                    32 Golubciuc Adrian                                                           41944          MDA
+
+                                                                                                    44 BORSHCH MAXIM                                                              107144         MDA
+
+                                                                                                    45 Dizov Alexei                                                               44112          MDA
+
+                                                                                                    55 Rusu Vasile                                                                40893          MDA
+
+                                                                                                  GOLURI
+
+     10'       9 Creciun Eduard
+
+     21'       9 Creciun Eduard
+
+     49'       9 Creciun Eduard
+
+     70'       44 Ababii Daniel
+
+     77'       66 Ciumac Alexei
+
+     85'       22 Braga Eduard
+
+     89'       10 Bîzga Denis
+
+                                                                                               DISCIPLINARY
+
+                                                                                            CARTONAŞE GALBENE
+
+                                                                                                                      18 Chirilă Marcel
+                                                                                                           62'
+                                                                                                                      14. Protest prin vorbe.
+
+                                                                                                                      14 Carp Vladimir
+                                                                                                           75'
+                                                                                                                      1. Comportare nesportiva – fault comis într-o manieră imprudentă.
+
+                                                                                                                      6 Ciornîi Liviu
+                                                                                                           87'
+                                                                                                                      2. Comportare nesportiva – intreruperea atacului de perspectiva.
+
+                                                                                               SUBSTITUTIONS
+
+     67'          7        Ursu Elyas         chevron_forward   8    Grosu Alexandru                       46'   11   Putregai Dorian                               chevron_forward   18   Chirilă Marcel
+
+     67'         14        Burlaca Ivan       chevron_forward   13   Eşanu Alexandru                       84'   5    Gaponenco Alexandr                            chevron_forward   4    Pascaru Ion
+
+     73'         19        Chiril Marius      chevron_forward   5    Catarev Ion
+
+     73'         11        Popovici Serghei   chevron_forward   30   Lupușor Crinu
+
+     81'         89        Beşleagă Andrei    chevron_forward   81   Mogoreanu Cristian
+
+ check_circle Meci jucat
