@@ -37,6 +37,7 @@ import hoffKm from './hoff-km.mjs'
 import askf from './askf.mjs'
 import ffa from './ffa.mjs'
 import mascot from './mascot.mjs'
+import lowland from './lowland.mjs'
 
 const VIRI = {
   mnzg,
@@ -107,6 +108,9 @@ const VIRI = {
   // `<domena>:<diorganosi>`), brez šifer igralcev, vratar prvi začetnik (namig).
   // Pisno dovoljenje upravljavca (Lovro, oktober 2026).
   mascot,
+  // Škotska (5. raven): Scottish Lowland Football League prek Match Centra
+  // slfl.co.uk (COMET); krogi iz šifer tekem, brez šifer igralcev. Pisno dovoljenje.
+  lowland,
 }
 
 /**

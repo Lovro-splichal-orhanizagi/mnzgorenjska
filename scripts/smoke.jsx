@@ -5421,6 +5421,198 @@ preveri(
     zavrnjen.status === 403 && A.default.zavrnitev('x', 429).zavrnitev === true)
 }
 
+// --- vir lowland (Škotska, Scottish Lowland Football League, slfl.co.uk) ------------
+{
+  const S = await import('./viri/lowland.mjs')
+  const { default: viri } = await import('./viri/index.mjs')
+  const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  preveri('lowland: vir je vpisan, 3 s, User-Agent SLFF, država GB, svoj fetch', viri.lowland === S.default && S.default.drzava === 'GB' &&
+    S.default.imaRegistracije === false && S.default.premorMs >= 3000 && S.default.glave['User-Agent'] === 'SLFF fantasy (https://slff.eu)' &&
+    typeof S.default.fetch === 'function' && typeof S.default.zaPredpomnilnik === 'function')
+  const k = S.razbijKodo('slfl/2026-2027/54193157')
+  preveri('lowland: šifra lige in naslovi', k.tekmovanje === 'slfl' && k.comet === '54193157' && k.sezona === '2026/27' &&
+    S.naslovLige('slfl/2026-2027/54193157') === 'https://slfl.co.uk/match-centre/slfl/2026-2027/' &&
+    S.default.naslovZapisnika('slfl/2026-2027/54193424', 'sc54381817') === 'https://slfl.co.uk/match-centre/slfl/2026-2027/54381817/' &&
+    S.sifraZapisnika(54383344) === 'sc54383344' && S.imeTekme('slfl/2026-2027/54193157', 54383344) === 'tekma-slfl-54383344.html' &&
+    S.imeLige('slfl/2026-2027/54193424') === 'seznam-slfl-2026-2027.html')
+  const slabe = ['slfl/2026-2028/54193157', 'slfl/2026-2027', '54193157', 'slfl/2026-27/54193157'].map((x) => {
+    try { S.razbijKodo(x); return null } catch (e) { return e.message }
+  })
+  preveri('lowland: napačna šifra ustavi uvoz', slabe.every((m) => /<tekmovanje>\/<LLLL-LLLL>\/<comet>/.test(m ?? '')))
+  preveri('lowland: datum, ura (Škotska + 1 h), minuta, izid', S.datumIz('Saturday 17 Oct, 2026') === '2026-10-17' &&
+    S.datumIz('Tuesday 28 Jul, 2026') === '2026-07-28' && S.vLjubljanskiCas('2026-10-17', 'KO 15:00').ura === '16:00' &&
+    JSON.stringify(S.vLjubljanskiCas('2026-10-17', 'KO 23:30')) === JSON.stringify({ datum: '2026-10-18', ura: '00:30' }) &&
+    S.vLjubljanskiCas('2026-10-17', 'KO TBC').ura === null && S.minuta("90+1'") === 90 && S.minuta("45+2'") === 45 && S.minuta("5'") === 5 &&
+    S.izidIz('4 : 0').domaci === 4 && S.izidIz('vs') === null)
+  preveri('lowland: klubi — brez "1st Team", apostrof, kratko ime', S.imeKluba('Bonnyrigg Rose Athletic 1st Team') === 'Bonnyrigg Rose Athletic' &&
+    S.kljucKlubaSc("Bo'ness United") === 'boness united' && S.kljucKlubaSc('Bonnyrigg Rose Athletic 1st Team') === S.kljucKlubaSc('Bonnyrigg Rose Athletic') &&
+    S.kratkoImeSc('Gretna 2008') === 'Gretna 2008')
+  preveri('lowland: imena — postava "I. Priimek" → "Priimek I.", velike in male črke poenotene', S.imeIgralca('C. Armour') === 'Armour C.' &&
+    S.imeIgralca('E. Spark (c)') === 'Spark E.' && S.imeIgralca('s. cameron') === 'Cameron S.' && S.imeIgralca('B. KLIMIONEK') === 'Klimionek B.' &&
+    S.imeIgralca("J. O'Connor") === "O'Connor J." && S.razstaviDogodek('MCCONNELL Mark James')[0].priimek === 'MCCONNELL' &&
+    S.razstaviDogodek('LINTON JAMES')[0].priimek === 'LINTON' && S.razstaviDogodek('DOS SANTOS Tuacenio')[0].priimek === 'DOS SANTOS')
+
+  // Stran lige: skupina East (vzorec brez West, lestvice in klubov).
+  const sez = beri('gb-lowland-seznam-east-2026-27.html')
+  const tekme = S.tekmeLige(sez, '54193157')
+  const t1 = tekme.find((t) => t.id === 54383377)
+  preveri('lowland: stran lige — 238 tekem East, odigrane z izidom, ura, igrišče, oznaka, "1st Team" odrezan', tekme.length === 238 &&
+    tekme.filter((t) => t.izid).length === 77 && t1.datum === '2026-10-17' && t1.ura === '16:00' && t1.domaci === 'Berwick Rangers' &&
+    t1.igrisce === 'Shielfield Park' && t1.oznaka === 'Lowland League East 2026-27' && !t1.izid &&
+    tekme.every((t) => !/1st Team/.test(t.domaci + t.gostje)) && S.tekmeLige(sez, '54193424').length === 0 &&
+    S.skupineLige(sez)['54193424'] === 'Lowland League West')
+
+  // Krogi iz šifer COMET: blok po krogih, prestavljena tekma v krog svojega dne.
+  const raz = S.razporedIzTekem(tekme)
+  const krog = (n) => raz.find((x) => x.stevilka === n)
+  const vKrogu = (sifra) => raz.find((x) => x.tekme.some((t) => t.sifra === sifra))?.stevilka
+  preveri('lowland: krogi — 31 krogov, vse tekme, noben klub dvakrat v krogu', raz.length === 31 &&
+    raz.reduce((a, x) => a + x.tekme.length, 0) === 238 &&
+    raz.every((x) => { const kl = x.tekme.flatMap((t) => [t.domaci, t.gostje]); return new Set(kl).size === kl.length }) &&
+    krog(1).tekme.length === 7 && krog(2).tekme.length === 6 && krog(5).tekme.length === 2 && krog(31).tekme.length === 8)
+  preveri('lowland: zamenjani tekmi istih klubov (Bo\'ness : Lochee 15. 9. in Lochee : Bo\'ness 18. 11.) v krogu svojega dne',
+    vKrogu(54383410) === 9 && vKrogu(54383361) === 16 && krog(9).tekme.length === 8 && krog(16).tekme.length === 8)
+  preveri('lowland: prestavljena tekma brez kroga na svoj dan ostane v svojem krogu; pozno vpisana gre v krog brez obeh klubov',
+    vKrogu(54383355) === 9 && vKrogu(60152607) === 11 && krog(11).tekme.length === 7)
+  {
+    // Stalnost: prestavitev ali izbris prihodnje tekme in nova pozna tekma ne premakneta odigranih.
+    const prej = new Map(tekme.filter((t) => t.izid).map((t) => [t.id, vKrogu(t.id)]))
+    const spremenjene = tekme
+      .filter((t) => t.id !== 54383417)
+      .map((t) => (t.id === 54383401 ? { ...t, datum: '2026-10-20', datumLj: '2026-10-20' } : t))
+      .concat([{ ...tekme.find((t) => t.id === 54383500), id: 60200000, datum: '2026-12-01', datumLj: '2026-12-01', domaci: 'Brechin City', gostje: 'Cowdenbeath' }])
+    const izvirni = console.warn
+    console.warn = () => {}
+    const po = S.razporedIzTekem(spremenjene)
+    console.warn = izvirni
+    const poKrogu = (sifra) => po.find((x) => x.tekme.some((t) => t.sifra === sifra))?.stevilka
+    preveri('lowland: krogi so stalni — prestavitev, izbris in nova tekma ne premaknejo odigranih; tekma, prestavljena več krogov prej, gre v krog svojega dne',
+      po.length === 31 && [...prej].every(([id, n]) => poKrogu(id) === n) && poKrogu(60200000) === 5 && poKrogu(54383401) === 12)
+  }
+
+  const zap = (id, danes = Date.parse('2026-10-15T12:00:00Z')) =>
+    S.vZapisnik(beri(`gb-lowland-tekma-${id}.html`), { tekma: tekme.find((t) => t.id === id), danes })
+  const minute = (nn, i) => nn.filter((x) => x.ekipaIdx === i).reduce((a, x) => a + x.minute, 0)
+  const z = zap(54383323)
+  const n = S.nastopi(z)
+  const ena = (nn, ime) => nn.find((x) => x.ime === ime)
+  preveri('lowland: glava — klubi, izid, datum in ura s strani lige', z.domaci.ime === 'Brechin City' && z.gostje.ime === 'Berwick Rangers' &&
+    z.rezultat.domaci === 4 && z.rezultat.gostje === 3 && z.datum === '2026-08-08' && z.ura === '16:00' && z.zapisnikId === 'sc54383323')
+  preveri('lowland: 11 + 11, klop 7 + 7, vratar (prvi začetnik), kapetan, brez šifer, brez opozoril', z.domaci.postava.length === 11 &&
+    z.gostje.postava.length === 11 && z.domaci.rezerve.length === 7 && z.gostje.rezerve.length === 7 &&
+    z.domaci.postava[0].vratar && z.domaci.postava[0].ime === 'Gourlay K.' && z.domaci.postava.filter((x) => x.vratar).length === 1 &&
+    ena(n, 'Spark E.')?.kapetan && n.every((x) => x.regSt === null) && z.opozorila.length === 0)
+  preveri('lowland: goli = izid, 11 m, menjave z minuto (vstop in izstop rezerve), 990 minut', z.goli.length === 7 &&
+    z.goli.filter((g) => g.enajstmetrovka).length === 1 && ena(n, 'Hilson D.')?.goliIzEnajstmetrovke === 1 && z.menjave.length === 7 &&
+    ena(n, 'Clark L.')?.minutaOd === 5 && ena(n, 'Clark L.')?.minute === 77 && ena(n, 'Spark E.')?.minute === 5 &&
+    ena(n, 'MacLeod F.')?.goli === 2 && minute(n, 0) === 990 && minute(n, 1) === 990)
+  const ag = zap(54383344)
+  preveri('lowland: avtogol v stolpcu ekipe strelca šteje nasprotniku (3:2 z dvema avtogoloma)', ag.goli.filter((g) => g.avtogol).length === 2 &&
+    ag.goli.filter((g) => g.avtogol).every((g) => g.ekipaIdx === 0) && ena(S.nastopi(ag), 'Skinner G.')?.avtogoli === 1 &&
+    ag.rezultat.domaci === 3 && ag.rezultat.gostje === 2 && ag.opozorila.length === 0)
+  const dr = zap(54383357)
+  const ndr = S.nastopi(dr)
+  preveri('lowland: drugi rumeni — 1 rumeni + rdeči, nastop do izključitve', dr.rdeci.length === 2 && ena(ndr, 'Webb A.')?.rumeni === 1 &&
+    ena(ndr, 'Webb A.')?.rdeci === 1 && ena(ndr, 'Webb A.')?.minute === 71 && minute(ndr, 1) === 965 && dr.opozorila.length === 0)
+  const rd = zap(54383363)
+  preveri('lowland: rdeči v 5. minuti — 905 minut ekipe, 0:0 brez golov', rd.rdeci.length === 1 && ena(S.nastopi(rd), 'Robinson A.')?.minute === 5 &&
+    minute(S.nastopi(rd), 0) === 905 && rd.goli.length === 0 && !rd.nepopoln && rd.opozorila.length === 0)
+  const zg = zap(54383307)
+  preveri('lowland: zgrešena 11-metrovka ni gol; ime z velikimi črkami se ujame z dogodkom', zg.zgresene.length === 1 && zg.goli.length === 4 &&
+    zg.opozorila.length === 0 && ena(S.nastopi(zg), 'Klimionek B.')?.minutaOd === 82 && zg.gostje.postava[0].st === 25 && zg.gostje.postava[0].vratar)
+  const os = zap(54383372)
+  preveri('lowland: izključitev in karton osebja (brez imena) ne štejeta', os.rdeci.length === 1 && os.rdeci[0].ime === 'Blane L.' &&
+    os.opozorila.length === 0 && os.goli.length === 5)
+  preveri('lowland: vzorci brez sodnikov, osebja in slik', !/referee|manager|<img|<script/i.test(
+    ['gb-lowland-seznam-east-2026-27.html', ...[54383323, 54383344, 54383357, 54383307, 54383372, 54383363].map((i) => `gb-lowland-tekma-${i}.html`)].map(beri).join('')))
+
+  // Nepopolna stran (postave še niso vnesene) in goli, ki se še dopolnjujejo.
+  const h = beri('gb-lowland-tekma-54383323.html')
+  const brezPostav = h.replace(/<div class="lineup-player">[\s\S]*?<\/div>/g, '').replace(/<div class="event (home|away)">[\s\S]*?<div class="event--details">&nbsp;<\/div><\/div>/g, '')
+  const np = S.vZapisnik(brezPostav, { tekma: tekme.find((t) => t.id === 54383323) })
+  const brezGola = h.replace(/<div class="event home"><div class="event--details goal">[\s\S]*?MACLEOD Fraser[\s\S]*?<div class="event--details">&nbsp;<\/div><\/div>/, '')
+  const t23 = tekme.find((t) => t.id === 54383323)
+  const sveza = S.vZapisnik(brezGola, { tekma: t23, danes: Date.parse('2026-08-09T12:00:00Z') })
+  const stara = S.vZapisnik(brezGola, { tekma: t23, danes: Date.parse('2026-08-30T12:00:00Z') })
+  preveri('lowland: brez postav — nepopoln in prazen; manjkajoč gol do 7 dni nepopoln, nato opozorilo', np.nepopoln && np.prazen &&
+    np.opozorila[0].startsWith(S.NEPOPOLN) && S.nastopi(np).length === 0 && sveza.nepopoln && sveza.goli.length === 6 &&
+    sveza.opozorila[0].startsWith(S.NEPOPOLN) && !stara.nepopoln && /se ne ujemajo/.test(stara.opozorila.join()))
+  const kont = S.vZapisnik(brezPostav.replace('<span class="score">4 : 3</span>', '<span class="score">3 : 0</span>'), { tekma: { ...t23, izid: { domaci: 3, gostje: 0 } } })
+  preveri('lowland: kontumacija — 3:0 brez postav in dogodkov', kont.kontumacija && !np.kontumacija && !z.kontumacija)
+  preveri('lowland: v predpomnilnik le cela stran (ne nepopolna, ne vzdrževalna, ne izziv)', S.zaPredpomnilnik(h, 'tekma-slfl-54383323.html') &&
+    !S.zaPredpomnilnik(brezPostav, 'tekma-slfl-54383323.html') && !S.zaPredpomnilnik(brezGola, 'tekma-slfl-54383323.html') &&
+    S.zaPredpomnilnik(sez, 'seznam-slfl-2026-2027.html') && !S.zaPredpomnilnik('<html><title>Maintenance</title></html>', 'seznam-slfl-2026-2027.html') &&
+    !S.zaPredpomnilnik('<title>Just a moment...</title><main id="view__match-centre">mc-fixture-list__match', 'seznam-slfl-2026-2027.html'))
+
+  // Zapisniki prek vmesnika vira: stran lige + strani tekem iz vzorcev.
+  const vzorcne = new Set([54383323, 54383344, 54383357, 54383307, 54383372, 54383363])
+  const prenesiVzorce = async (url, ime) => {
+    if (ime.startsWith('seznam-')) return sez
+    const id = Number(url.match(/\/(\d+)\/$/)?.[1])
+    if (vzorcne.has(id)) return beri(`gb-lowland-tekma-${id}.html`)
+    const e = new Error(`${url} -> HTTP 404`)
+    e.status = 404
+    throw e
+  }
+  const izvirniWarn = console.warn
+  console.warn = () => {}
+  const zs = await S.default.zapisniki('slfl/2026-2027/54193157', prenesiVzorce, Date.parse('2026-10-15T12:00:00Z'))
+  console.warn = izvirniWarn
+  preveri('lowland: zapisniki — le odigrane, krog iz šifer, sezona iz šifre, 404 tekma preskočena', zs.length === 6 &&
+    zs.every((x) => x.z.sezona === '2026/27' && x.id.startsWith('sc') && x.url.startsWith('https://slfl.co.uk/match-centre/slfl/2026-2027/')) &&
+    zs.find((x) => x.id === 'sc54383357').z.krog === 9 && zs.find((x) => x.id === 'sc54383307').z.krog === 2)
+
+  let izziv = null
+  try { await S.default.zapisniki('slfl/2026-2027/54193157', async () => '<title>Just a moment...</title>') } catch (e) { izziv = e }
+  let zavrnjen = null
+  try { await S.default.zapisniki('slfl/2026-2027/54193157', async () => { const e = new Error('403'); e.status = 403; throw e }) } catch (e) { zavrnjen = e }
+  let vzdrz = null
+  try { await S.default.zapisniki('slfl/2026-2027/54193157', async () => '<html>Down for maintenance</html>') } catch (e) { vzdrz = e }
+  let izzivTekme = null
+  try {
+    await S.default.zapisniki('slfl/2026-2027/54193157', async (url, ime) => (ime.startsWith('seznam-') ? sez : '<html><form id="loginform"></form></html>'))
+  } catch (e) { izzivTekme = e }
+  preveri('lowland: 403, izziv in prijava vržejo LowlandZavrnitev (izhod 4) na strani lige in tekme; vzdrževalna stran ustavi', izziv instanceof S.LowlandZavrnitev &&
+    zavrnjen instanceof S.LowlandZavrnitev && zavrnjen.status === 403 && izzivTekme instanceof S.LowlandZavrnitev &&
+    S.default.zavrnitev('x', 429).zavrnitev === true && /ni stran Match Centra/.test(vzdrz?.message ?? ''))
+  {
+    // Gostitelj razporeda zavrnitev prepozna le pri 403 in 429 (po ponovitvah),
+    // pri 401 vzame shranjeni razpored. Vir zato zavrne že v svojem `fetch`.
+    const { prenesiSPonovitvami, pozabiPadle } = await import('./prenos.mjs')
+    const pravi = globalThis.fetch
+    const izid = {}
+    for (const status of [401, 403, 429]) {
+      let klicev = 0
+      globalThis.fetch = async () => { klicev++; return new Response('', { status }) }
+      let napaka = null
+      try {
+        await prenesiSPonovitvami(S.naslovLige('slfl/2026-2027/54193157'), { glave: S.default.glave, fetchFn: S.default.fetch, zamiki: [0, 0, 0], log: () => {} })
+      } catch (e) { napaka = e }
+      izid[status] = { zavrnitev: napaka?.zavrnitev === true && napaka.status === status, klicev }
+      pozabiPadle?.()
+    }
+    globalThis.fetch = pravi
+    preveri('lowland: 401, 403 in 429 so zavrnitev že v vir.fetch (brez ponovitve)', Object.values(izid).every((x) => x.zavrnitev && x.klicev === 1), JSON.stringify(izid))
+  }
+  {
+    // Kontumacije uvoza razporeda: stran tekme 3:0 se bere sveže (brez postav
+    // ne gre v predpomnilnik). Zavrnitev tam mora ustaviti uvoz (izhod 4),
+    // ne le izpustiti oznak; druga napaka razporeda ne ustavi.
+    const { preberiKontumacije } = await import('./razpored.mjs')
+    const krogi = [{ stevilka: 1, tekme: [{ sifra: 54383323, datum: '2026-08-01', domaci: 'A', gostje: 'B', izid: { domaci: 3, gostje: 0 } }] }]
+    const poskusi = async (prenesiKrog) => {
+      try { return { vrnil: await preberiKontumacije(S.default, 'slfl/2026-2027/54193157', prenesiKrog, krogi, '2026-10-15', () => {}) } } catch (e) { return { napaka: e } }
+    }
+    const izziv = typeof preberiKontumacije === 'function' ? await poskusi(async () => '<title>Just a moment...</title>') : {}
+    const z403 = typeof preberiKontumacije === 'function' ? await poskusi(async () => { throw S.default.zavrnitev('HTTP 403', 403) }) : {}
+    const omrezje = typeof preberiKontumacije === 'function' ? await poskusi(async () => { throw new Error('ECONNRESET') }) : {}
+    preveri('lowland: zavrnitev (izziv, 403) na strani tekme kontumacije ustavi uvoz razporeda; omrežna napaka ne',
+      izziv.napaka?.zavrnitev === true && z403.napaka?.zavrnitev === true && z403.napaka.status === 403 &&
+        Array.isArray(omrezje.vrnil) && omrezje.vrnil.length === 0,
+      JSON.stringify({ izziv: izziv.napaka?.message ?? izziv.vrnil, z403: z403.napaka?.message ?? z403.vrnil, omrezje: omrezje.napaka?.message ?? omrezje.vrnil }))
+  }
+}
+
 // --- vir mascot (Grčija, spletišča EPS na platformi Mascotnet) -----------------
 {
   const M = await import('./viri/mascot.mjs')
