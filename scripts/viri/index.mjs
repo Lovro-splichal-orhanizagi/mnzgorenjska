@@ -51,6 +51,7 @@ import nfsbih from './nfsbih.mjs'
 import gff from './gff.mjs'
 import pflUa from './pfl-ua.mjs'
 import upl from './upl.mjs'
+import ffl from './ffl.mjs'
 
 const VIRI = {
   mnzg,
@@ -161,6 +162,9 @@ const VIRI = {
   // Ukrajina: Українська Прем'єр-Ліга (upl.ua) — koledar prvenstva in raport arbitra;
   // šifra igralca, vratar iz postavitve.
   upl,
+  // Ukrajina (Lvivska oblast): Львівська асоціація футболу prek ffl.org.ua;
+  // postave iz novic (članek lige na dan), 10 s med zahtevki (Crawl-delay).
+  ffl,
 }
 
 /**
