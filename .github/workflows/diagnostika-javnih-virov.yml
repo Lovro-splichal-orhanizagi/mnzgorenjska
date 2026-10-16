@@ -3,6 +3,10 @@ name: Diagnostika dveh javnih zapisnikov
 on:
   workflow_dispatch:
   workflow_call:
+    inputs:
+      vir:
+        type: string
+        default: all
 
 permissions:
   contents: read
@@ -14,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        vir: [novanet, fussball]
+        vir: ${{ fromJSON(inputs.vir == 'novanet' && '["novanet"]' || inputs.vir == 'fussball' && '["fussball"]' || '["novanet","fussball"]') }}
     concurrency:
       group: live-source-${{ matrix.vir }}-${{ github.ref }}
       cancel-in-progress: false
@@ -38,7 +42,7 @@ jobs:
           const source=process.env.VIR
           const urls={
             novanet:'https://www.futgal.es/pnfg/NPcd/NFG_CmpPartido?cod_primaria=1000120&CodActa=1306467&cod_acta=1306467',
-            fussball:'https://www.fussball.de/spiel/vsg-altglienicke-berlin-fc-carl-zeiss-jena/-/spiel/02TMCK1048000000VS5489BTVT4H6CF2'
+            fussball:'https://www.fussball.de/ajax.match.lineup/-/mode/PAGE/spiel/02TMCK1048000000VS5489BTVT4H6CF2/ticker-id/selectedTickerId'
           }
           const url=urls[source]
           if(!url)throw Error('Unknown fixed diagnostic case')
@@ -65,6 +69,29 @@ jobs:
             process.exitCode=1
           }
           if(bytes){writeFileSync(`${folder}/document.bin`,bytes);result.bytes=bytes.length;result.sha256=createHash('sha256').update(bytes).digest('hex')}
+          const assets=[]
+          const asset=async(file,address)=>{
+            await new Promise(resolve=>setTimeout(resolve,5000))
+            const r=await transport(address,{headers:{'User-Agent':'SLFF fantasy (slff.eu; splih.94@gmail.com)'},signal:AbortSignal.timeout(60000)})
+            if(!r.ok){try{await r.body?.cancel()}catch{};throw Object.assign(Error(`HTTP ${r.status}`),{status:r.status})}
+            const data=new Uint8Array(await r.arrayBuffer()),sha256=createHash('sha256').update(data).digest('hex')
+            writeFileSync(`${folder}/${file}`,data);assets.push({file,url:address,sha256,bytes:data.length})
+            console.log('SLFF_PUBLIC_ASSET:'+JSON.stringify({file,url:address,sha256,gzipBase64:gzipSync(data).toString('base64')}))
+            return data
+          }
+          if(source==='fussball'&&bytes&&!result.error)try{
+            const html=new TextDecoder().decode(bytes),ids=[...new Set([...html.matchAll(/data-obfuscation="([a-z0-9]{8})"/g)].map(m=>m[1]))]
+            if(!ids.length||ids.length>4)throw Error('Unexpected number of published lineup fonts')
+            for(const id of ids){
+              const css=await asset(`${id}.css`,`https://www.fussball.de/export.fontface/-/id/${id}/type/css`)
+              const links=[...new TextDecoder().decode(css).matchAll(/url\(\s*['"]?([^'"()\s]+)['"]?\s*\)\s*format\(\s*['"]woff['"]\s*\)/g)]
+              if(links.length!==1)throw Error('Expected one explicitly published WOFF font')
+              const address=new URL(links[0][1],`https://www.fussball.de/export.fontface/-/id/${id}/type/css`)
+              if(address.origin!=='https://www.fussball.de'||!address.pathname.startsWith(`/export.fontface/-/id/${id}/`))throw Error('Unexpected font origin or identity')
+              await asset(`${id}.woff`,address.href)
+            }
+          }catch(e){result.assetError=e.message;process.exitCode=1}
+          result.assets=assets
           save();writeFileSync(`${folder}/result.json`,JSON.stringify(result,null,2)+'\n');console.log(JSON.stringify(result,null,2))
           if(bytes)console.log('SLFF_PUBLIC_DOCUMENT_GZIP_BASE64:'+gzipSync(bytes).toString('base64'))
           NODE
