@@ -310,22 +310,23 @@ scout.slff.eu streže ta commit — a le ob spremenljivki repozitorija
    (`/opt/supabase/.env`, nato znova zaženi `auth`). Brez tega GoTrue
    `redirect_to` tiho zavrže in prijava z Googlom pristane na slff.eu (seja
    tam, ne v Scoutu), brez napake.
-5. **Funkciji** `scout-placilo` in `stripe-webhook`
-   (`scripts/hetzner/objavi-funkcije.sh`).
-6. **Stripe, cene**: izdelek "SLFF Scout" (metadata `app=slff-scout`), ceni
-   z `lookup_key` `slff_scout_klub_mesec` (3900, mesečno) in
-   `slff_scout_klub_sezona` (29000, letno), obe `tax_behavior=exclusive`
-   (Checkout druge zavrne). Obstoječi webhook zadošča.
-7. **Stripe, portal Scouta**: lastna konfiguracija Billing Portala z
-   metapodatkom `app=slff-scout` (preklic ob koncu obdobja, brez menjave
-   paketa). Brez nje gumb portala na `/account` javi napako — preklic mora
-   biti vedno mogoč.
-8. **Stripe Tax** aktiven (`/v1/tax/settings`: `status` `active`, država
-   `SI`); sicer Checkout z `automatic_tax` sejo zavrne.
-9. **Ročni preizkus v testnem načinu Stripe** (preizkus, sedeži, plačilo,
-   portal, preklic). Živi ključi so lastnikova odločitev in veljajo tudi za
-   preverjene igralce.
-10. Šele nato `SCOUT_OBJAVA=1` (`gh variable set SCOUT_OBJAVA --body 1`).
+5. `SCOUT_OBJAVA=1` (`gh variable set SCOUT_OBJAVA --body 1`): aplikacija je
+   dosegljiva, a še ne oznanjena; plačilo javi napako, dokler ni Stripa.
+6. **Funkciji** `scout-placilo` in `stripe-webhook`
+   (`scripts/hetzner/objavi-funkcije.sh`) in **Stripe**:
+   - izdelek "SLFF Scout" (metadata `app=slff-scout`), ceni z `lookup_key`
+     `slff_scout_klub_mesec` (3900, mesečno) in `slff_scout_klub_sezona`
+     (29000, letno), obe `tax_behavior=exclusive` (Checkout druge zavrne);
+     obstoječi webhook zadošča;
+   - lastna konfiguracija Billing Portala z metapodatkom `app=slff-scout`
+     (preklic ob koncu obdobja, brez menjave paketa). Brez nje gumb portala
+     na `/account` javi napako — preklic mora biti vedno mogoč;
+   - Stripe Tax aktiven (`/v1/tax/settings`: `status` `active`, država
+     `SI`); sicer Checkout z `automatic_tax` sejo zavrne.
+7. **Ročni preizkus v testnem načinu Stripe** na scout.slff.eu (preizkus,
+   sedeži, plačilo, portal, preklic). Živi ključi so lastnikova odločitev in
+   veljajo tudi za preverjene igralce.
+8. Šele nato oznanitev klubom.
 
 ## Spomin
 

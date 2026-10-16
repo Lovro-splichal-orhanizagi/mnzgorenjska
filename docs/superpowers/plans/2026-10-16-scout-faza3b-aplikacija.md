@@ -2053,7 +2053,7 @@ curl -sI https://scout.slff.eu/ | grep -iE '^HTTP|x-robots'
 curl -sI https://scout.slff.eu/watchlist | grep -iE '^HTTP|x-robots'
 ```
 
-Expected: posel `Objava Scout na Hetzner VM` zelen ("OK — scout.slff.eu streže …"); `/` 200 brez `x-robots-tag`, `/watchlist` 200 z `x-robots-tag: noindex`.
+Expected: posel `Objava Scout na Hetzner VM` zelen ("OK — scout.slff.eu streže …"); `/` in `/watchlist` 200, oba z `x-robots-tag: noindex` (cela stran je noindex).
 
 - [ ] **Step 6: Funkciji**
 
