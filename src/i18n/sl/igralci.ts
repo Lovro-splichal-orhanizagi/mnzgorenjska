@@ -416,4 +416,25 @@ export const igralci = {
     tekme: 'Tekme',
     cena: 'Najvišja cena',
   },
+  // SLFF Scout na prevzetem profilu (ScoutIgralca) in povezava za ugovor na
+  // strani igralca. <pravno> je povezava na /legal#scout.
+  scout: {
+    naslov: 'SLFF Scout',
+    opis: 'Klubi, ki iščejo igralce, v SLFF Scoutu vidijo kazalnike iz tvojih tekem. Tu dodaš, kar vidijo le s tvojo privolitvijo.',
+    odprt: 'Odprt za prestop',
+    letnik: 'Letnica rojstva (Scout je le za igralce, ki letos dopolnijo vsaj 19 let)',
+    regije: 'Kje bi igral (zveze)',
+    kontakt: 'Klubi mi lahko pišejo prek Scouta (moj e-naslov ostane skrit)',
+    privolitev: 'S shranjevanjem privoliš, da to vidijo klubi v Scoutu. Privolitev lahko kadarkoli prekličeš in podatke izbrišemo. <pravno>Več o Scoutu</pravno>',
+    shrani: 'Shrani',
+    shranjeno: 'Shranjeno.',
+    preklici: 'Prekliči privolitev',
+    preklicano: 'Privolitev preklicana, podatki izbrisani.',
+    skrij: 'Skrij me iz Scouta',
+    skrijPotrdi: 'Te skrijemo iz Scouta? Klubi te ne bodo videli, v fantasy igri ostaneš. Privolitev se izbriše.',
+    skrit: 'Iz Scouta si skrit. Klubi te ne vidijo.',
+    razkrij: 'Prekliči ugovor',
+    napaka: 'Ni uspelo. Poskusi znova.',
+    ugovorPovezava: 'Ne želiš biti v SLFF Scoutu? Tako ugovarjaš.',
+  },
 }

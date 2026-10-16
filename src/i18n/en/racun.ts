@@ -169,7 +169,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   },
   pravno: {
     naslov: 'Privacy and terms',
-    zadnjaSprememba: 'Last updated: 12 October 2026',
+    zadnjaSprememba: 'Last updated: 16 October 2026',
     kajJeNaslov: 'What SLFF is',
     kajJe:
       'SLFF (Sunday League Fantasy Football) is a fan-made fantasy league for local amateur football leagues. It is run by volunteers and is not affiliated with the regional football associations, the national football association or the clubs. The game is free, with no stakes or prizes.',
@@ -234,6 +234,15 @@ export const racun: NonNullable<Prevod['racun']> = {
       '<b>Refunds.</b> We do not refund in case of misuse or a false profile claim. If the badge ends because of our mistake, at the football association\'s request or because we discontinue the service, we refund the unused months of a yearly subscription pro rata. For a forever purchase we refund the full amount within the first 12 months after buying, and after that a pro rata share of what remains of 5 years from the purchase. The printed badge and postage are not refunded on discontinuation (the badge stays yours), only for defects.',
     pritozbe:
       '<b>Questions and complaints.</b> Write to <eposta>info@slff.eu</eposta>; we reply within 8 working days. We do not recognise any provider of out-of-court consumer dispute resolution. Slovenian law applies; this does not take away the protection given to you by the law of the country where you live.',
+    scoutNaslov: 'SLFF Scout: player search for clubs',
+    scoutKaj:
+      'From the same public match reports we calculate indicators for players in senior leagues: share of minutes, goals, impact on the pitch, goals conceded, cards and progress across seasons, adjusted for league strength. These are indicators from match data, not an assessment of the person. Clubs with an SLFF Scout subscription who are looking for players will see them; a person at the club always makes the decision. We do not process youth leagues. Anyone who has ever played in a youth league is excluded until they have minutes in a senior league and enter, on their own profile, a year of birth showing that they turn 19 or older this year.',
+    scoutPodlaga:
+      'The legal basis is legitimate interest (Article 6(1)(f) GDPR): helping clubs find players from publicly published results. We recalculate the indicators every day and keep only the latest calculations. Club views will be logged for 12 months to prevent abuse and so that we can tell a player, on request, which clubs viewed them.',
+    scoutPrivolitev:
+      'A player with a claimed profile can add that they are open to a transfer, their year of birth, preferred regions and permission to be contacted. This is consent (Article 6(1)(a) GDPR): only clubs in Scout see it, it can be withdrawn at any time on the profile, and on withdrawal we delete the data. A club writes to the player only through Scout and does not see their email address.',
+    scoutUgovor:
+      'Objection: on a claimed profile click Hide me from Scout, or write to <eposta>info@slff.eu</eposta> with a link to the player page. Within 14 days we hide the player from Scout in all our leagues of that country, including future imports. The player stays in the fantasy game.',
   },
   klubskiRacun: {
     naslov: 'Official club account',

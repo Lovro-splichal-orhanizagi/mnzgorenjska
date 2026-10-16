@@ -170,7 +170,7 @@ export const racun = {
   // Zasebnost in pogoji. <b> je krepko, ostale oznake so povezave.
   pravno: {
     naslov: 'Zasebnost in pogoji',
-    zadnjaSprememba: 'Zadnja sprememba: 12. oktober 2026',
+    zadnjaSprememba: 'Zadnja sprememba: 16. oktober 2026',
     kajJeNaslov: 'Kaj je SLFF',
     kajJe:
       'SLFF (Sunday League Fantasy Football) je navijaška fantasy liga za slovenske medobčinske nogometne lige. Vodimo jo ljubiteljsko in ni povezana z medobčinskimi nogometnimi zvezami, NZS ali s klubi. Igra je brezplačna in brez denarnih vložkov ali nagrad.',
@@ -235,6 +235,15 @@ export const racun = {
       '<b>Vračila.</b> Pri zlorabi ali lažni potrditvi profila denarja ne vračamo. Če značka preneha po naši napaki, na zahtevo zveze ali ker storitev ukinemo, ti pri letni naročnini vrnemo sorazmerni del za neporabljene mesece. Pri nakupu za vedno vrnemo celoten znesek v prvih 12 mesecih po nakupu, pozneje pa sorazmerni del preostanka do 5 let od nakupa. Natisnjene značke in poštnine ob ukinitvi ne vračamo (značka ostane tvoja), le pri napaki ali okvari.',
     pritozbe:
       '<b>Vprašanja in pritožbe.</b> Piši na <eposta>info@slff.eu</eposta>, odgovorimo v 8 delovnih dneh. Ne priznavamo nobenega izvajalca izvensodnega reševanja potrošniških sporov (IRPS). Velja slovensko pravo; to ti ne odvzame varstva, ki ti ga daje pravo države, v kateri živiš.',
+    scoutNaslov: 'SLFF Scout: iskanje igralcev za klube',
+    scoutKaj:
+      'Iz istih javnih zapisnikov izračunamo kazalnike igralcev članskih lig: delež minut, gole, vpliv na igrišču, prejete gole, kartone in pot čez sezone, prilagojene moči lige. To so kazalniki iz podatkov tekem, ne ocena osebe. Videli jih bodo klubi z naročnino na SLFF Scout, ki iščejo igralce; odloči vedno človek v klubu. Mladinskih lig ne obdelujemo. Kdor je kdaj igral v mladinski ligi, je izločen, dokler nima minut v članski ligi in na svojem profilu ne vpiše letnice rojstva, po kateri letos dopolni vsaj 19 let.',
+    scoutPodlaga:
+      'Pravna podlaga je zakoniti interes (člen 6(1)(f) GDPR): klubom pomagati najti igralce iz javno objavljenih rezultatov. Kazalnike izračunamo vsak dan znova in hranimo le zadnje izračune. Oglede klubov bomo beležili 12 mesecev, da preprečimo zlorabo in da igralcu na zahtevo povemo, kateri klubi so ga gledali.',
+    scoutPrivolitev:
+      'Igralec s prevzetim profilom lahko doda, da je odprt za prestop, letnico rojstva, želene regije in dovoljenje za stik. To je privolitev (člen 6(1)(a) GDPR): vidijo jo le klubi v Scoutu, prekliče jo kadarkoli na profilu in ob preklicu podatke izbrišemo. Klub igralcu piše le prek Scouta in njegovega e-naslova ne vidi.',
+    scoutUgovor:
+      'Ugovor: na prevzetem profilu klikni Skrij me iz Scouta ali piši na <eposta>info@slff.eu</eposta> s povezavo na stran igralca. V 14 dneh igralca skrijemo iz Scouta v vseh naših ligah te države, tudi ob poznejših uvozih. V fantasy igri ostane.',
   },
   // Komponenta KlubskiRacun na strani Račun.
   klubskiRacun: {

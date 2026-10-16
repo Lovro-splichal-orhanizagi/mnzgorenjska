@@ -163,7 +163,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   },
   pravno: {
     naslov: 'Confidențialitate și termeni',
-    zadnjaSprememba: 'Ultima modificare: 12 octombrie 2026',
+    zadnjaSprememba: 'Ultima modificare: 16 octombrie 2026',
     kajJeNaslov: 'Ce este SLFF',
     kajJe:
       'SLFF (Sunday League Fantasy Football) este o ligă fantasy a suporterilor pentru ligile de fotbal amator. O facem din pasiune și nu are legătură cu Federația Română de Fotbal (FRF), asociațiile județene de fotbal sau cu cluburile. Jocul este gratuit, fără mize în bani și fără premii.',
@@ -228,6 +228,15 @@ export const racun: NonNullable<Prevod['racun']> = {
       '<b>Rambursări.</b> În caz de abuz sau confirmare falsă a profilului nu returnăm bani. Dacă insigna încetează din greșeala noastră, la cererea federației sau pentru că închidem serviciul, la abonamentul anual returnăm proporțional lunile nefolosite. La varianta pentru totdeauna returnăm întreaga sumă în primele 12 luni de la cumpărare, iar după aceea partea proporțională din ce a rămas din cei 5 ani de la cumpărare. Insigna tipărită și poșta nu le returnăm la închiderea serviciului (insigna rămâne a ta), doar în caz de defect.',
     pritozbe:
       '<b>Întrebări și reclamații.</b> Scrie la <eposta>info@slff.eu</eposta>, răspundem în 8 zile lucrătoare. Nu recunoaștem nicio entitate de soluționare extrajudiciară a litigiilor cu consumatorii. Se aplică legea slovenă; asta nu îți ia protecția pe care ți-o oferă legea țării în care locuiești.',
+    scoutNaslov: 'SLFF Scout: căutare de jucători pentru cluburi',
+    scoutKaj:
+      'Din aceleași rapoarte publice de joc calculăm indicatori pentru jucătorii din ligile de seniori: ponderea minutelor, goluri, impact pe teren, goluri primite, cartonașe și evoluția de la un sezon la altul, ajustate după puterea ligii. Sunt indicatori din datele meciurilor, nu o evaluare a persoanei. Îi vor vedea cluburile cu abonament SLFF Scout care caută jucători; decizia o ia întotdeauna un om din club. Nu prelucrăm ligile de juniori. Cine a jucat vreodată într-o ligă de juniori este exclus până când are minute într-o ligă de seniori și își introduce pe profil un an al nașterii din care reiese că împlinește anul acesta cel puțin 19 ani.',
+    scoutPodlaga:
+      'Temeiul juridic este interesul legitim (articolul 6 alineatul (1) litera (f) din GDPR): să ajutăm cluburile să găsească jucători din rezultate publicate public. Recalculăm indicatorii în fiecare zi și păstrăm doar ultimele calcule. Vom înregistra vizualizările cluburilor timp de 12 luni, pentru a preveni abuzurile și pentru a-i putea spune unui jucător, la cerere, ce cluburi l-au văzut.',
+    scoutPrivolitev:
+      'Un jucător cu profil revendicat poate adăuga că este deschis pentru un transfer, anul nașterii, regiunile dorite și permisiunea de a fi contactat. Este un consimțământ (articolul 6 alineatul (1) litera (a) din GDPR): îl văd doar cluburile din Scout, poate fi retras oricând pe profil, iar la retragere ștergem datele. Un club îi scrie jucătorului doar prin Scout și nu îi vede adresa de e-mail.',
+    scoutUgovor:
+      'Opoziție: pe profilul revendicat apasă Ascunde-mă din Scout sau scrie la <eposta>info@slff.eu</eposta> cu un link către pagina jucătorului. În 14 zile ascundem jucătorul din Scout în toate ligile noastre din acea țară, inclusiv la importurile ulterioare. În jocul fantasy rămâne.',
   },
   klubskiRacun: {
     naslov: 'Cont oficial de club',
