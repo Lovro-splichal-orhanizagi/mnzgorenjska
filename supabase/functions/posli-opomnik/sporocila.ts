@@ -11,10 +11,17 @@
 // vmesnik, ko odpre povezavo `?t=sk-…`. Kdor ima ekipi v obeh državah, dobi
 // dva ločena maila, vsakega v jeziku svoje lige.
 
-export type Jezik = 'sl' | 'sk' | 'hr' | 'cs' | 'hu' | 'de' | 'sr' | 'ro' | 'et' | 'pl' | 'es' | 'lv' | 'mk'
+export type Jezik = 'sl' | 'sk' | 'hr' | 'cs' | 'hu' | 'de' | 'sr' | 'ro' | 'et' | 'pl' | 'es' | 'lv' | 'mk' | 'el' | 'tr' | 'uk' | 'hy' | 'az' | 'da' | 'en'
 
-/** Jezik države lige (enako kot `JEZIK_DRZAVE` v vmesniku). */
-export const JEZIK_DRZAVE: Record<string, Jezik> = { SI: 'sl', SK: 'sk', HR: 'hr', CZ: 'cs', HU: 'hu', AT: 'de', DE: 'de', RS: 'sr', RO: 'ro', EE: 'et', PL: 'pl', ES: 'es', LV: 'lv', MK: 'mk' }
+/**
+ * Jezik države lige (enako kot `JEZIK_DRZAVE` v vmesniku). Združeno kraljestvo
+ * in Malta dobita angleščino, Črna gora srbščino, Bosna in Hercegovina
+ * hrvaščino, Moldavija romunščino (rok pa v svojem pasu, `PAS_DRZAVE`).
+ */
+export const JEZIK_DRZAVE: Record<string, Jezik> = {
+  SI: 'sl', SK: 'sk', HR: 'hr', CZ: 'cs', HU: 'hu', AT: 'de', DE: 'de', RS: 'sr', RO: 'ro', EE: 'et', PL: 'pl', ES: 'es', LV: 'lv', MK: 'mk',
+  GR: 'el', TR: 'tr', UA: 'uk', AM: 'hy', AZ: 'az', DK: 'da', GB: 'en', MT: 'en', ME: 'sr', BA: 'hr', MD: 'ro',
+}
 /** Časovni pas, v katerem so roki lige. */
 export const PAS_DRZAVE: Record<string, string> = {
   SI: 'Europe/Ljubljana',
@@ -31,8 +38,20 @@ export const PAS_DRZAVE: Record<string, string> = {
   ES: 'Europe/Madrid',
   LV: 'Europe/Riga',
   MK: 'Europe/Skopje',
+  GR: 'Europe/Athens',
+  TR: 'Europe/Istanbul',
+  UA: 'Europe/Kyiv',
+  AM: 'Asia/Yerevan',
+  AZ: 'Asia/Baku',
+  DK: 'Europe/Copenhagen',
+  GB: 'Europe/London',
+  MT: 'Europe/Malta',
+  ME: 'Europe/Podgorica',
+  BA: 'Europe/Sarajevo',
+  MD: 'Europe/Chisinau',
 }
-const LOKALE: Record<Jezik, string> = { sl: 'sl-SI', sk: 'sk-SK', hr: 'hr-HR', cs: 'cs-CZ', hu: 'hu-HU', de: 'de-AT', sr: 'sr-Latn-RS', ro: 'ro-RO', et: 'et-EE', pl: 'pl-PL', es: 'es-ES', lv: 'lv-LV', mk: 'mk-MK' }
+// Grščina s 24-urnim časom (`-u-hc-h23`): sama `el-GR` piše "11:00 π.μ.".
+const LOKALE: Record<Jezik, string> = { sl: 'sl-SI', sk: 'sk-SK', hr: 'hr-HR', cs: 'cs-CZ', hu: 'hu-HU', de: 'de-AT', sr: 'sr-Latn-RS', ro: 'ro-RO', et: 'et-EE', pl: 'pl-PL', es: 'es-ES', lv: 'lv-LV', mk: 'mk-MK', el: 'el-GR-u-hc-h23', tr: 'tr-TR', uk: 'uk-UA', hy: 'hy-AM', az: 'az-Latn-AZ', da: 'da-DK', en: 'en-GB' }
 
 export const SITE = 'https://slff.eu'
 
@@ -93,7 +112,7 @@ export function esc(s: string): string {
     .replaceAll("'", '&#39;')
 }
 
-const pozdrav = (j: Jezik | 'en', ime: string | null | undefined) => {
+const pozdrav = (j: Jezik, ime: string | null | undefined) => {
   const prvo = ime?.trim().split(' ')[0]
   if (j === 'sk' || j === 'cs') return prvo ? `Ahoj, ${esc(prvo)}!` : 'Ahoj!'
   if (j === 'hr') return prvo ? `Bok, ${esc(prvo)}!` : 'Bok!'
@@ -104,6 +123,12 @@ const pozdrav = (j: Jezik | 'en', ime: string | null | undefined) => {
   if (j === 'et') return prvo ? `Tere, ${esc(prvo)}!` : 'Tere!'
   if (j === 'lv') return prvo ? `Sveiki, ${esc(prvo)}!` : 'Sveiki!'
   if (j === 'mk') return prvo ? `Здраво, ${esc(prvo)}!` : 'Здраво!'
+  if (j === 'el') return prvo ? `Γεια σου, ${esc(klicnikEl(prvo))}!` : 'Γεια σου!'
+  if (j === 'tr') return prvo ? `Merhaba, ${esc(prvo)}!` : 'Merhaba!'
+  if (j === 'uk') return prvo ? `Привіт, ${esc(prvo)}!` : 'Привіт!'
+  if (j === 'hy') return prvo ? `Բարև, ${esc(prvo)}!` : 'Բարև!'
+  if (j === 'az') return prvo ? `Salam, ${esc(prvo)}!` : 'Salam!'
+  if (j === 'da') return prvo ? `Hej, ${esc(prvo)}!` : 'Hej!'
   if (j === 'pl') return prvo ? `Cześć, ${esc(prvo)}!` : 'Cześć!'
   if (j === 'es') return prvo ? `¡Hola, ${esc(prvo)}!` : '¡Hola!'
   if (j === 'en') return prvo ? `Hi ${esc(prvo)},` : 'Hi,'
@@ -124,7 +149,7 @@ function ovoj(vsebina: string, noga: string): string {
   `
 }
 
-const ODJAVA: Record<Jezik | 'en', string> = {
+const ODJAVA: Record<Jezik, string> = {
   sl: 'Ne želim več opomnikov',
   en: 'Stop these reminders',
   sk: 'Nechcem už dostávať pripomienky',
@@ -139,9 +164,15 @@ const ODJAVA: Record<Jezik | 'en', string> = {
   pl: 'Nie chcę więcej przypomnień',
   es: 'No quiero más recordatorios',
   mk: 'Не сакам повеќе потсетници',
+  el: 'Δεν θέλω άλλες υπενθυμίσεις',
+  tr: 'Artık hatırlatma almak istemiyorum',
+  uk: 'Більше не хочу нагадувань',
+  hy: 'Այլևս չեմ ուզում հիշեցումներ ստանալ',
+  az: 'Daha xatırlatma almaq istəmirəm',
+  da: 'Jeg vil ikke have flere påmindelser',
 }
 
-const nogaOdjave = (j: Jezik | 'en', odjava: string) =>
+const nogaOdjave = (j: Jezik, odjava: string) =>
   ` ·
         <a href="${odjava}" style="color:#94a3b8;">${ODJAVA[j]}</a>`
 
@@ -298,6 +329,89 @@ export function sestaviOpomnik(
       opomba:
         'Ако не ти треба потсетник (оваа сезона нема да составуваш тим), оваа порака можеш да ја игнорираш. Следниот пат ќе ти пишеме дури пред следното коло.',
     },
+    // Grščina: ime lige stoji samostojno za dvopičjem, brez člena.
+    el: {
+      naslov: meta.brez_ekipe
+        ? `SLFF ${ozn}: δεν έχεις ακόμα ομάδα για την επόμενη αγωνιστική`
+        : `SLFF ${ozn}: ολοκλήρωσε την ομάδα σου πριν από την επόμενη αγωνιστική`,
+      glavno: meta.brez_ekipe
+        ? `Δεν έχεις φτιάξει ακόμα fantasy ομάδα (πρωτάθλημα: ${OZN}). Χωρίς ομάδα δεν θα πάρεις πόντους στην επόμενη αγωνιστική.`
+        : `Η fantasy ομάδα σου (πρωτάθλημα: ${OZN}) δεν είναι ακόμα πλήρης (λείπει ρόστερ, αρχηγός, υπαρχηγός ή κάτι παρόμοιο). Χωρίς έγκυρη ομάδα δεν θα πάρεις πόντους στην επόμενη αγωνιστική.`,
+      gumb: 'Φτιάξε / διόρθωσε την ομάδα →',
+      opomba:
+        'Αν δεν χρειάζεσαι την υπενθύμιση (φέτος δεν θα φτιάξεις ομάδα), αγνόησε αυτό το μήνυμα. Την επόμενη φορά θα σου γράψουμε μόνο πριν από την επόμενη αγωνιστική.',
+    },
+    // Turščina: ime lige stoji samostojno za dvopičjem (brez pripone).
+    tr: {
+      naslov: meta.brez_ekipe
+        ? `SLFF ${ozn}: gelecek hafta için henüz takımın yok`
+        : `SLFF ${ozn}: gelecek haftadan önce takımını tamamla`,
+      glavno: meta.brez_ekipe
+        ? `Henüz bir fantezi takım kurmadın (lig: ${OZN}). Takımın olmadan gelecek hafta puan alamazsın.`
+        : `Fantezi takımın (lig: ${OZN}) henüz tamamlanmadı (kadro, kaptan, yardımcı kaptan ya da başka bir şey eksik). Geçerli bir takımın olmadan gelecek hafta puan alamazsın.`,
+      gumb: 'Takımını kur / düzelt →',
+      opomba:
+        'Hatırlatmaya ihtiyacın yoksa (bu sezon takım kurmayacaksan) bu e-postayı görmezden gelebilirsin. Sana bir dahaki sefere ancak gelecek haftadan önce yazacağız.',
+    },
+    // Ukrajinščina: ime lige stoji samostojno za dvopičjem (ne sklanjamo).
+    uk: {
+      naslov: meta.brez_ekipe
+        ? `SLFF ${ozn}: у тебе ще немає команди на наступний тур`
+        : `SLFF ${ozn}: доповни команду до наступного туру`,
+      glavno: meta.brez_ekipe
+        ? `Ти ще не зібрав фентезі-команду (ліга: ${OZN}). Без неї в наступному турі ти не набереш очок.`
+        : `Твоя фентезі-команда (ліга: ${OZN}) ще не повна (бракує складу, капітана, віцекапітана чи чогось іншого). Без дійсної команди в наступному турі ти не набереш очок.`,
+      gumb: 'Зібрати / виправити команду →',
+      opomba:
+        'Якщо нагадування тобі не потрібне (цього сезону ти не збиратимеш команду), цей лист можна проігнорувати. Наступного разу напишемо лише перед наступним туром.',
+    },
+    // Armenščina: ime lige stoji samostojno za dvopičjem (sklonov ne lepimo nanj).
+    hy: {
+      naslov: meta.brez_ekipe
+        ? `SLFF ${ozn}: դեռ թիմ չունես հաջորդ տուրի համար`
+        : `SLFF ${ozn}: ավարտիր թիմդ մինչև հաջորդ տուրը`,
+      glavno: meta.brez_ekipe
+        ? `Դեռ չես կազմել ֆենթեզի թիմ (լիգա: ${OZN})։ Առանց դրա հաջորդ տուրում միավորներ չես վաստակի։`
+        : `Քո ֆենթեզի թիմը (լիգա: ${OZN}) դեռ ամբողջական չէ (պակասում է կազմը, ավագը, փոխավագը կամ նման մի բան)։ Առանց կանոններին համապատասխանող թիմի հաջորդ տուրում միավորներ չես վաստակի։`,
+      gumb: 'Կազմիր / ուղղիր թիմը →',
+      opomba:
+        'Եթե հիշեցման կարիք չունես (այս մրցաշրջանում թիմ չես կազմելու), կարող ես անտեսել այս նամակը։ Հաջորդ անգամ կգրենք միայն հաջորդ տուրից առաջ։',
+    },
+    // Azerbajdžanščina: ime lige stoji samostojno v oklepaju (sklon je pripona).
+    az: {
+      naslov: meta.brez_ekipe
+        ? `SLFF ${ozn}: növbəti tur üçün hələ komandan yoxdur`
+        : `SLFF ${ozn}: növbəti turdan əvvəl komandanı tamamla`,
+      glavno: meta.brez_ekipe
+        ? `Hələ fantasy komandan yoxdur (liqa: ${OZN}). Onsuz növbəti turda xal toplamayacaqsan.`
+        : `Fantasy komandan (liqa: ${OZN}) hələ tam deyil (heyət, kapitan, kapitan müavini və ya başqa bir şey çatışmır). Qaydalara uyğun komanda olmadan növbəti turda xal toplamayacaqsan.`,
+      gumb: 'Komandanı yığ / düzəlt →',
+      opomba:
+        'Xatırlatmaya ehtiyacın yoxdursa (bu mövsüm komanda yığmayacaqsan), bu məktubu nəzərə alma. Növbəti dəfə sənə yalnız növbəti turdan əvvəl yazacağıq.',
+    },
+    // Danščina: ime lige stoji samostojno za dvopičjem.
+    da: {
+      naslov: meta.brez_ekipe
+        ? `SLFF ${ozn}: du har endnu intet hold til næste runde`
+        : `SLFF ${ozn}: gør dit hold færdigt før næste runde`,
+      glavno: meta.brez_ekipe
+        ? `Du har endnu ikke sat et fantasyhold (liga: ${OZN}). Uden et hold får du ingen point i næste runde.`
+        : `Dit fantasyhold (liga: ${OZN}) er endnu ikke komplet (der mangler trup, kaptajn, vicekaptajn eller lignende). Uden et gyldigt hold får du ingen point i næste runde.`,
+      gumb: 'Sæt / ret holdet →',
+      opomba:
+        'Har du ikke brug for påmindelsen (du sætter ikke hold i denne sæson), kan du se bort fra denne mail. Næste gang skriver vi først før næste runde.',
+    },
+    en: {
+      naslov: meta.brez_ekipe
+        ? `SLFF ${ozn}: you don’t have a team for the next round yet`
+        : `SLFF ${ozn}: finish your team before the next round`,
+      glavno: meta.brez_ekipe
+        ? `You haven’t built a fantasy team yet (league: ${OZN}). Without one you won’t score points in the next round.`
+        : `Your fantasy team (league: ${OZN}) isn’t complete yet (the squad, captain, vice-captain or similar is missing). Without a valid team you won’t score points in the next round.`,
+      gumb: 'Build / fix my team →',
+      opomba:
+        'If you don’t need the reminder (you won’t build a team this season), you can ignore this email. Next time we’ll only write before the next round.',
+    },
     sl: {
       naslov: meta.brez_ekipe
         ? `SLFF ${ozn} — še nimaš ekipe za naslednji krog`
@@ -345,6 +459,13 @@ export function sestaviPushOpomnik(
     es: { naslov: `SLFF ${ozn}: aún no tienes equipo`, besedilo: `Cierre de la jornada: ${kdaj}. Haz tu equipo para sumar puntos.` },
     lv: { naslov: `SLFF ${ozn}: tev vēl nav komandas`, besedilo: `Kārtas termiņš: ${kdaj}. Sastādi komandu, lai krātu punktus.` },
     mk: { naslov: `SLFF ${ozn}: сè уште немаш тим`, besedilo: `Рок за колото: ${kdaj}. Состави тим за да собираш поени.` },
+    el: { naslov: `SLFF ${ozn}: δεν έχεις ακόμα ομάδα`, besedilo: `Προθεσμία αγωνιστικής: ${kdaj}. Φτιάξε ομάδα για να μαζεύεις πόντους.` },
+    tr: { naslov: `SLFF ${ozn}: henüz takımın yok`, besedilo: `Haftanın son tarihi: ${kdaj}. Puan toplamak için takımını kur.` },
+    uk: { naslov: `SLFF ${ozn}: у тебе ще немає команди`, besedilo: `Дедлайн туру: ${kdaj}. Збери команду, щоб набирати очки.` },
+    hy: { naslov: `SLFF ${ozn}: դեռ թիմ չունես`, besedilo: `Տուրի վերջնաժամկետը: ${kdaj}։ Կազմիր թիմ, որպեսզի միավորներ վաստակես։` },
+    az: { naslov: `SLFF ${ozn}: hələ komandan yoxdur`, besedilo: `Turun son tarixi: ${kdaj}. Xal toplamaq üçün komanda yığ.` },
+    da: { naslov: `SLFF ${ozn}: du har endnu intet hold`, besedilo: `Deadline for runden: ${kdaj}. Sæt dit hold for at samle point.` },
+    en: { naslov: `SLFF ${ozn}: you don’t have a team yet`, besedilo: `Round deadline: ${kdaj}. Build your team to score points.` },
     sl: { naslov: `SLFF ${ozn}: še nimaš ekipe`, besedilo: `Rok za krog je ${kdaj}. Sestavi ekipo, da dobiš točke.` },
   }[jezikLige(liga)]
 }
@@ -358,8 +479,9 @@ export function sestaviOpomnikBrezLige(
   jezik: string | null | undefined,
   meta: { display_name: string | null },
 ): Sporocilo {
-  // `en` le dobrodošlica uporabniku brez znanega jezika (Google prijava).
-  const j: Jezik | 'en' = jezik === 'sk' || jezik === 'hr' || jezik === 'cs' || jezik === 'hu' || jezik === 'de' || jezik === 'sr' || jezik === 'ro' || jezik === 'et' || jezik === 'pl' || jezik === 'es' || jezik === 'lv' || jezik === 'mk' || jezik === 'en' ? jezik : 'sl'
+  // `en`: dobrodošlica uporabniku brez znanega jezika (Google prijava) ali iz
+  // Združenega kraljestva in Malte.
+  const j: Jezik = jeJezik(jezik) ? jezik : 'sl'
   // Naravnost na Mojo ekipo s predlogom (`?sestavi=1`): ekipa je ob odprtju
   // že sestavljena, ostane le Shrani. Državo in ligo ugane stran (IP, jezik).
   const vstop = `${SITE}/my-team?sestavi=1`
@@ -376,6 +498,42 @@ export function sestaviOpomnikBrezLige(
       glavno: 'Се регистрираше, но сè уште немаш фантази тим. Тимот ти го составуваме со еден клик, замени кого сакаш и зачувај. Поени собираш веќе во следното коло.',
       gumb: 'Состави ми тим →',
       opomba: 'Ако нема да составуваш тим, оваа порака можеш да ја игнорираш.',
+    },
+    el: {
+      naslov: 'SLFF: διάλεξε το πρωτάθλημά σου και φτιάξε ομάδα',
+      glavno: 'Έκανες εγγραφή, αλλά δεν έχεις ακόμα fantasy ομάδα. Σου φτιάχνουμε ομάδα με ένα κλικ, άλλαξε όποιον θέλεις και αποθήκευσε. Πόντους μαζεύεις ήδη από την επόμενη αγωνιστική.',
+      gumb: 'Φτιάξε μου ομάδα →',
+      opomba: 'Αν δεν θέλεις να φτιάξεις ομάδα, αγνόησε αυτό το μήνυμα.',
+    },
+    tr: {
+      naslov: 'SLFF: ligini seç ve takımını kur',
+      glavno: 'Kayıt oldun ama henüz bir fantezi takımın yok. Takımını tek tıkla biz kuralım, istediğin oyuncuyu değiştir ve kaydet. Puan toplamaya daha gelecek hafta başlarsın.',
+      gumb: 'Takımımı kur →',
+      opomba: 'Takım kurmayacaksan bu e-postayı görmezden gelebilirsin.',
+    },
+    uk: {
+      naslov: 'SLFF: обери свою лігу і збери команду',
+      glavno: 'Ти зареєструвався, але ще не маєш фентезі-команди. Ми зберемо її тобі одним кліком: заміни кого хочеш і збережи. Очки набираєш уже в наступному турі.',
+      gumb: 'Збери мені команду →',
+      opomba: 'Якщо не збиратимеш команду, цей лист можна проігнорувати.',
+    },
+    hy: {
+      naslov: 'SLFF: ընտրիր քո լիգան և կազմիր թիմ',
+      glavno: 'Գրանցվել ես, բայց դեռ ֆենթեզի թիմ չունես։ Թիմը քեզ համար կկազմենք մեկ սեղմումով, փոխարինիր ում ուզում ես և պահպանիր։ Միավորներ կվաստակես արդեն հաջորդ տուրում։',
+      gumb: 'Կազմիր ինձ համար թիմ →',
+      opomba: 'Եթե թիմ չես կազմելու, կարող ես անտեսել այս նամակը։',
+    },
+    az: {
+      naslov: 'SLFF: liqanı seç və komanda yığ',
+      glavno: 'Qeydiyyatdan keçmisən, amma hələ fantasy komandan yoxdur. Komandanı bir kliklə sənin üçün yığırıq, istədiyini dəyiş və yadda saxla. Xalları elə növbəti turda toplamağa başlayırsan.',
+      gumb: 'Mənə komanda yığ →',
+      opomba: 'Komanda yığmayacaqsansa, bu məktubu nəzərə alma.',
+    },
+    da: {
+      naslov: 'SLFF: vælg din liga og sæt dit hold',
+      glavno: 'Du har oprettet dig, men har endnu intet fantasyhold. Vi sætter et hold til dig med ét klik: skift ud, som du vil, og gem. Du samler point allerede i næste runde.',
+      gumb: 'Sæt mit hold →',
+      opomba: 'Vil du ikke sætte et hold, kan du se bort fra denne mail.',
     },
     hr: {
       naslov: 'SLFF: odaberi svoju ligu i složi momčad',
@@ -471,8 +629,7 @@ export function sestaviOpomnikBrezEkipe(
   jezik: string | null | undefined,
   meta: { display_name: string | null; liga: Liga | null; rok: string | null },
 ): Sporocilo {
-  const j: Jezik | 'en' =
-    jezik === 'en' || Object.values(JEZIK_DRZAVE).includes(jezik as Jezik) ? (jezik as Jezik | 'en') : 'sl'
+  const j: Jezik = jeJezik(jezik) ? jezik : 'sl'
   const { liga, rok } = meta
   const t = liga ? `&t=${encodeURIComponent(liga.slug)}` : ''
   const vstop = `${SITE}/my-team?sestavi=1${t}`
@@ -491,10 +648,16 @@ export function sestaviOpomnikBrezEkipe(
     es: { naslov: 'tu equipo aún te espera', glavno: 'Todavía no tienes equipo fantasy. «Hazme el equipo» lo hace con un clic: cambia a quien quieras y guarda.', rok: 'Cierre', gumb: 'Hazme el equipo →' },
     lv: { naslov: 'komanda tevi joprojām gaida', glavno: 'Tev joprojām nav fantāzijas komandas. “Sastādi man komandu” to izdara ar vienu klikšķi: nomaini, ko vēlies, un saglabā.', rok: 'Termiņš', gumb: 'Sastādīt man komandu →' },
     mk: { naslov: 'тимот сè уште те чека', glavno: 'Сè уште немаш фантази тим. „Состави ми тим“ го прави со еден клик: замени кого сакаш и зачувај.', rok: 'Рок', gumb: 'Состави ми тим →' },
+    el: { naslov: 'η ομάδα σου σε περιμένει ακόμα', glavno: 'Δεν έχεις ακόμα fantasy ομάδα. Το «Φτιάξε μου ομάδα» τη φτιάχνει με ένα κλικ: άλλαξε όποιον θέλεις και αποθήκευσε.', rok: 'Προθεσμία', gumb: 'Φτιάξε μου ομάδα →' },
+    tr: { naslov: 'takımın hâlâ seni bekliyor', glavno: 'Hâlâ bir fantezi takımın yok. “Takımımı kur” onu tek tıkla kurar: istediğin oyuncuyu değiştir ve kaydet.', rok: 'Son tarih', gumb: 'Takımımı kur →' },
+    uk: { naslov: 'команда ще чекає на тебе', glavno: 'У тебе досі немає фентезі-команди. «Збери мені команду» зробить її одним кліком: заміни кого хочеш і збережи.', rok: 'Дедлайн', gumb: 'Збери мені команду →' },
+    hy: { naslov: 'թիմը դեռ սպասում է քեզ', glavno: 'Դեռ ֆենթեզի թիմ չունես։ «Կազմիր ինձ համար թիմ» կոճակը դա անում է մեկ սեղմումով. փոխարինիր ում ուզում ես և պահպանիր։', rok: 'Վերջնաժամկետ', gumb: 'Կազմիր ինձ համար թիմ →' },
+    az: { naslov: 'komandan hələ səni gözləyir', glavno: 'Hələ fantasy komandan yoxdur. “Mənə komanda yığ” onu bir kliklə edir: istədiyini dəyiş və yadda saxla.', rok: 'Son tarix', gumb: 'Mənə komanda yığ →' },
+    da: { naslov: 'dit hold venter stadig', glavno: 'Du har stadig intet fantasyhold. "Sæt mit hold" klarer det med ét klik: skift ud, som du vil, og gem.', rok: 'Deadline', gumb: 'Sæt mit hold →' },
     en: { naslov: 'your team is still waiting', glavno: 'You still don’t have a fantasy team. “Build my team” makes one in a single click: swap anyone you like and save.', rok: 'Deadline', gumb: 'Build my team →' },
   }[j]
   const kdaj = liga && rok
-    ? new Date(rok).toLocaleString(j === 'en' ? 'en-GB' : LOKALE[j], {
+    ? new Date(rok).toLocaleString(LOKALE[j], {
         weekday: 'long', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit',
         timeZone: PAS_DRZAVE[liga.drzava ?? 'SI'] ?? PAS_DRZAVE.SI,
       })
@@ -511,7 +674,7 @@ export function sestaviOpomnikBrezEkipe(
       </p>`,
     nogaOdjave(j, odjava),
   )
-  return { naslov: `SLFF${liga ? ` ${liga.oznaka}` : ''} — ${B.naslov}`, html, odjava }
+  return { naslov: `SLFF${liga ? ` ${liga.oznaka}` : ''}: ${B.naslov}`, html, odjava }
 }
 
 // --- liga, ki si jo je kdo želel, je zaživela -------------------------------
@@ -523,8 +686,7 @@ export function sestaviLigaZivi(
   meta: { display_name: string | null; liga: Liga },
 ): Sporocilo {
   const { liga } = meta
-  const j: Jezik | 'en' =
-    jezik === 'en' || Object.values(JEZIK_DRZAVE).includes(jezik as Jezik) ? (jezik as Jezik | 'en') : jezikLige(liga)
+  const j: Jezik = jeJezik(jezik) ? jezik : jezikLige(liga)
   const vstop = `${SITE}/my-team?sestavi=1&t=${encodeURIComponent(liga.slug)}`
   const B = {
     sl: { naslov: 'tvoja liga je tu', glavno: 'Želel/a si si to ligo in zdaj je v SLFF. Sestavi ekipo, preden se začne naslednji krog.', gumb: 'Sestavi ekipo →', opomba: 'To je edini mail o tej želji.' },
@@ -540,6 +702,12 @@ export function sestaviLigaZivi(
     es: { naslov: 'tu liga ya está aquí', glavno: 'Pediste esta liga y ya está en SLFF. Haz tu equipo antes de la próxima jornada.', gumb: 'Haz tu equipo →', opomba: 'Este es el único correo sobre tu petición.' },
     lv: { naslov: 'tava līga ir klāt', glavno: 'Tu vēlējies šo līgu, un tagad tā ir SLFF. Sastādi komandu pirms nākamās kārtas.', gumb: 'Sastādīt komandu →', opomba: 'Šī ir vienīgā vēstule par tavu vēlmi.' },
     mk: { naslov: 'твојата лига е тука', glavno: 'Ја посака оваа лига и сега е во SLFF. Состави тим пред следното коло.', gumb: 'Состави тим →', opomba: 'Ова е единствената порака за твојата желба.' },
+    el: { naslov: 'το πρωτάθλημά σου είναι εδώ', glavno: 'Ζήτησες αυτό το πρωτάθλημα και τώρα είναι στο SLFF. Φτιάξε ομάδα πριν από την επόμενη αγωνιστική.', gumb: 'Φτιάξε ομάδα →', opomba: 'Αυτό είναι το μοναδικό μήνυμα για το αίτημά σου.' },
+    tr: { naslov: 'ligin burada', glavno: 'Bu ligi istemiştin, artık SLFF’de. Gelecek hafta başlamadan takımını kur.', gumb: 'Takımını kur →', opomba: 'İsteğinle ilgili göndereceğimiz tek e-posta bu.' },
+    uk: { naslov: 'твоя ліга вже тут', glavno: 'Ти хотів цю лігу, і тепер вона в SLFF. Збери команду до початку наступного туру.', gumb: 'Зібрати команду →', opomba: 'Це єдиний лист щодо твого побажання.' },
+    hy: { naslov: 'քո լիգան արդեն այստեղ է', glavno: 'Դու ցանկացել էիր այս լիգան, և այժմ այն SLFF-ում է։ Կազմիր թիմ մինչև հաջորդ տուրը։', gumb: 'Կազմիր թիմ →', opomba: 'Սա քո խնդրանքի վերաբերյալ միակ նամակն է։' },
+    az: { naslov: 'liqan buradadır', glavno: 'Bu liqanı istəmişdin, indi o SLFF-dədir. Növbəti turdan əvvəl komanda yığ.', gumb: 'Komanda yığ →', opomba: 'Bu, istəyinlə bağlı yeganə məktubdur.' },
+    da: { naslov: 'din liga er her', glavno: 'Du ønskede dig denne liga, og nu er den på SLFF. Sæt dit hold før næste runde.', gumb: 'Sæt dit hold →', opomba: 'Dette er den eneste mail om dit ønske.' },
     en: { naslov: 'your league is here', glavno: 'You asked for this league and now it’s on SLFF. Build your team before the next round.', gumb: 'Build my team →', opomba: 'This is the only email about your request.' },
   }[j]
   const html = ovoj(
@@ -552,7 +720,7 @@ export function sestaviLigaZivi(
       <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 20px 0 0;">${B.opomba}</p>`,
     '',
   )
-  return { naslov: `SLFF ${liga.oznaka} — ${B.naslov}`, html }
+  return { naslov: `SLFF ${liga.oznaka}: ${B.naslov}`, html }
 }
 
 // --- opozorilo: ekipa se ob roku ne bo zaklenila ----------------------------
@@ -705,6 +873,86 @@ export function sestaviOpozorilo(
         gumb: 'Поправи го тимот →',
         opomba:
           'Инаку тимот сам се пренесува од коло во коло и не мора ништо да правиш. Ти пишуваме само кога тоа не е можно.',
+      }
+    },
+    el: () => {
+      const agon = u.round_number ? `την ${u.round_number}η αγωνιστική` : 'την επόμενη αγωνιστική'
+      return {
+        naslov: `SLFF ${ozn}: η ομάδα σου δεν θα πάρει πόντους για ${agon}`,
+        glavno: `Η ομάδα ${ekipa} δεν τηρεί τους κανόνες, γι’ αυτό δεν θα κλειδώσει για ${agon} και δεν θα πάρει πόντους σε αυτήν.`,
+        rok: rok && `Μπορείς να τη διορθώσεις μέχρι την προθεσμία: ${rok}.`,
+        gumb: 'Διόρθωσε την ομάδα →',
+        opomba:
+          'Κανονικά η ομάδα περνά μόνη της από αγωνιστική σε αγωνιστική και δεν χρειάζεται να κάνεις τίποτα. Σου γράφουμε μόνο όταν αυτό δεν είναι δυνατό.',
+      }
+    },
+    tr: () => {
+      const hafta = u.round_number ? `${u.round_number}. hafta` : 'gelecek hafta'
+      return {
+        naslov: `SLFF ${ozn}: takımın ${hafta} için puan alamayacak`,
+        glavno: `${ekipa} takımın kurallara uymuyor. Bu yüzden ${hafta} için kilitlenmeyecek ve o hafta puan alamayacak.`,
+        rok: rok && `Son tarihe kadar düzeltebilirsin: ${rok}.`,
+        gumb: 'Takımını düzelt →',
+        opomba:
+          'Normalde takımın haftadan haftaya kendiliğinden aktarılır, senin bir şey yapman gerekmez. Sana sadece bu mümkün olmadığında yazıyoruz.',
+      }
+    },
+    uk: () => {
+      const tur = u.round_number ? `${u.round_number}-й тур` : 'наступний тур'
+      const uTuri = u.round_number ? `у ${u.round_number}-му турі` : 'у наступному турі'
+      return {
+        naslov: `SLFF ${ozn}: твоя команда не набере очок ${uTuri}`,
+        glavno: `Команда ${ekipa} не відповідає правилам, тому на ${tur} вона не закриється і ${uTuri} не набере очок.`,
+        rok: rok && `Виправити її можна до дедлайну: ${rok}.`,
+        gumb: 'Виправити команду →',
+        opomba:
+          'Зазвичай команда сама переходить з туру в тур, і тобі нічого не потрібно робити. Ми пишемо лише тоді, коли це неможливо.',
+      }
+    },
+    hy: () => {
+      // Dve obliki, ker se sklon lepi na "տուր": "տուր 5-ի համար" / "հաջորդ տուրի համար".
+      const zaTur = u.round_number ? `տուր ${u.round_number}-ի համար` : 'հաջորդ տուրի համար'
+      const vTuru = u.round_number ? `տուր ${u.round_number}-ում` : 'հաջորդ տուրում'
+      return {
+        naslov: `SLFF ${ozn}: քո թիմը միավորներ չի վաստակի ${vTuru}`,
+        glavno: `${ekipa} թիմը չի համապատասխանում կանոններին, ուստի ${zaTur} այն չի փակվի և ${vTuru} միավորներ չի վաստակի։`,
+        rok: rok && `Կարող ես ուղղել մինչև վերջնաժամկետը: ${rok}։`,
+        gumb: 'Ուղղիր թիմը →',
+        opomba:
+          'Սովորաբար թիմն ինքնաբերաբար անցնում է տուրից տուր, և ոչինչ անել պետք չէ։ Գրում ենք միայն այն դեպքում, երբ դա հնարավոր չէ։',
+      }
+    },
+    az: () => {
+      const tur = u.round_number ? `tur ${u.round_number}` : 'növbəti tur'
+      return {
+        naslov: `SLFF ${ozn}: komandan ${tur} üçün xal toplamayacaq`,
+        glavno: `${ekipa} komandası qaydalara uyğun deyil, ona görə ${tur} üçün bağlanmayacaq və həmin turda xal toplamayacaq.`,
+        rok: rok && `Son tarixə qədər düzəldə bilərsən: ${rok}.`,
+        gumb: 'Komandanı düzəlt →',
+        opomba:
+          'Adətən komanda turdan tura özü keçir və heç nə etməli deyilsən. Yalnız bu mümkün olmayanda yazırıq.',
+      }
+    },
+    da: () => {
+      const runde = u.round_number ? `${u.round_number}. runde` : 'næste runde'
+      return {
+        naslov: `SLFF ${ozn}: dit hold får ingen point i ${runde}`,
+        glavno: `Holdet ${ekipa} overholder ikke reglerne, så det bliver ikke låst til ${runde} og får ingen point i den.`,
+        rok: rok && `Du kan rette det frem til deadline: ${rok}.`,
+        gumb: 'Ret holdet →',
+        opomba:
+          'Ellers går holdet selv videre fra runde til runde, og du behøver ikke gøre noget. Vi skriver kun, når det ikke er muligt.',
+      }
+    },
+    en: () => {
+      const krog = u.round_number ? `round ${u.round_number}` : 'the next round'
+      return {
+        naslov: `SLFF ${ozn}: your team won’t score points in ${krog}`,
+        glavno: `Your team ${ekipa} doesn’t meet the rules, so it won’t be locked for ${krog} and won’t score points in it.`,
+        rok: rok && `You can fix it until the deadline: ${rok}.`,
+        gumb: 'Fix my team →',
+        opomba:
+          'Normally your team carries over from round to round on its own and you don’t need to do anything. We only write when that isn’t possible.',
       }
     },
     sl: () => {
@@ -951,6 +1199,125 @@ export function sestaviPoznavalca(
       gumbUrl: p.pozicije,
       vprasanja: 'Ако нешто не ти е јасно, одговори на оваа порака.',
     },
+    el: {
+      naslov: 'SLFF: εγκρίναμε το αίτημά σου για γνώστη',
+      kaj:
+        meta.obseg === 'liga'
+          ? `Από τώρα είσαι γνώστης του πρωταθλήματος (πρωτάθλημα: <strong>${imeLige}</strong>): η ψήφος σου μόνη της επιβεβαιώνει τη θέση ενός παίκτη ή μια ασίστ, χωρίς να περιμένεις άλλες ψήφους.`
+          : `Από τώρα είσαι γνώστης του συλλόγου (σύλλογος: <strong>${klub}</strong>, πρωτάθλημα: ${imeLige}): η ψήφος σου για τους παίκτες αυτού του συλλόγου μετράει τριπλά.`,
+      hvala: 'Σε ευχαριστούμε που προσφέρθηκες.',
+      prosnja:
+        'Μια παράκληση: αυτό είναι θέμα εμπιστοσύνης. Γράφε μόνο ό,τι πραγματικά ξέρεις και μην προσαρμόζεις τα δεδομένα στη fantasy ομάδα σου. Από αυτά εξαρτώνται οι πόντοι όλων στο πρωτάθλημα. Αν αποδειχθεί ότι τα δεδομένα είναι εσκεμμένα λάθος, χάνεις την ιδιότητα του γνώστη.',
+      kje: `Τις θέσεις τις αλλάζεις στη σελίδα <a href="${p.pozicije}" style="color:#15803d;">Θέσεις</a>
+        (ισχύουν κάθε Δευτέρα πρωί), τις ασίστ στη σελίδα
+        <a href="${p.asistence}" style="color:#15803d;">Ασίστ</a> (αμέσως).
+        Έναν παίκτη που δεν παίζει πια στον σύλλογο μπορείς να τον σημειώσεις με "δεν παίζει πια".`,
+      gumb: 'Άνοιξε τις Θέσεις →',
+      gumbUrl: p.pozicije,
+      vprasanja: 'Αν κάτι δεν είναι σαφές, απάντησε σε αυτό το μήνυμα.',
+    },
+    tr: {
+      naslov: 'SLFF: uzmanlık başvurunu onayladık',
+      kaj:
+        meta.obseg === 'liga'
+          ? `Artık lig uzmanısın (lig: <strong>${imeLige}</strong>): bir oyuncunun mevkisini veya bir asisti tek başına senin oyun onaylar, başka oyları beklemeye gerek yok.`
+          : `Artık kulüp uzmanısın (kulüp: <strong>${klub}</strong>, lig: ${imeLige}): bu kulübün oyuncuları için verdiğin oy üç kat sayılır.`,
+      hvala: 'Başvurduğun için teşekkürler.',
+      prosnja:
+        'Bir ricamız var: bu bir güven meselesi. Sadece gerçekten bildiğin bilgileri gir ve verileri kendi fantezi takımına göre ayarlama. Ligdeki herkesin puanı buna bağlı. Verilerin bilerek yanlış girildiği ortaya çıkarsa uzmanlık statünü kaybedersin.',
+      kje: `Mevkileri <a href="${p.pozicije}" style="color:#15803d;">Mevkiler</a> sayfasında düzenlersin
+        (her pazartesi sabahı uygulanır), asistleri ise
+        <a href="${p.asistence}" style="color:#15803d;">Asistler</a> sayfasında (hemen uygulanır).
+        Artık kulüpte oynamayan bir oyuncuyu "artık oynamıyor" olarak işaretleyebilirsin.`,
+      gumb: 'Mevkileri aç →',
+      gumbUrl: p.pozicije,
+      vprasanja: 'Bir şey net değilse bu e-postayı yanıtla.',
+    },
+    uk: {
+      naslov: 'SLFF: твою заявку на статус знавця схвалено',
+      kaj:
+        meta.obseg === 'liga'
+          ? `Відтепер ти знавець ліги (ліга: <strong>${imeLige}</strong>): твій голос сам підтверджує позицію гравця або асист, чекати інших голосів не потрібно.`
+          : `Відтепер ти знавець клубу (клуб: <strong>${klub}</strong>, ліга: ${imeLige}): твій голос за гравців цього клубу важить утричі більше.`,
+      hvala: 'Дякуємо, що подав заявку.',
+      prosnja:
+        'Одне прохання: це питання довіри. Вводь лише те, що справді знаєш, і не підлаштовуй дані під свою фентезі-команду. Від цього залежать очки всіх у лізі. Якщо виявиться, що дані навмисно хибні, ти втратиш статус знавця.',
+      kje: `Позиції редагуєш на сторінці <a href="${p.pozicije}" style="color:#15803d;">Позиції</a>
+        (застосовуються щопонеділка вранці), асисти на сторінці
+        <a href="${p.asistence}" style="color:#15803d;">Асисти</a> (одразу).
+        Гравця, який більше не грає за клуб, можна позначити як "більше не грає".`,
+      gumb: 'Відкрити Позиції →',
+      gumbUrl: p.pozicije,
+      vprasanja: 'Якщо щось незрозуміло, просто відповідай на цей лист.',
+    },
+    hy: {
+      naslov: 'SLFF: հաստատեցինք գիտակ դառնալու քո հայտը',
+      kaj:
+        meta.obseg === 'liga'
+          ? `Այսուհետ դու լիգայի գիտակ ես (լիգա: <strong>${imeLige}</strong>). քո ձայնն ինքնին հաստատում է խաղացողի դիրքը կամ գոլային փոխանցումը, այլ ձայների սպասել պետք չէ։`
+          : `Այսուհետ դու ակումբի գիտակ ես (ակումբ: <strong>${klub}</strong>, լիգա: ${imeLige}). այդ ակումբի խաղացողների վերաբերյալ քո ձայնը եռակի արժեք ունի։`,
+      hvala: 'Շնորհակալություն, որ դիմեցիր։',
+      prosnja:
+        'Մի խնդրանք. սա վստահության հարց է։ Մուտքագրիր միայն այն, ինչ իսկապես գիտես, և տվյալները մի հարմարեցրու քո ֆենթեզի թիմին։ Դրանից են կախված լիգայի բոլոր մասնակիցների միավորները։ Եթե պարզվի, որ տվյալները միտումնավոր սխալ են, կկորցնես գիտակի կարգավիճակը։',
+      kje: `Դիրքերը խմբագրում ես <a href="${p.pozicije}" style="color:#15803d;">Դիրքեր</a> էջում
+        (կիրառվում են ամեն երկուշաբթի առավոտ), գոլային փոխանցումները՝
+        <a href="${p.asistence}" style="color:#15803d;">Գոլային փոխանցումներ</a> էջում (անմիջապես)։
+        Ակումբում այլևս չխաղացող խաղացողին կարող ես նշել «այլևս չի խաղում» նշումով։`,
+      gumb: 'Բացել Դիրքերը →',
+      gumbUrl: p.pozicije,
+      vprasanja: 'Եթե ինչ-որ բան պարզ չէ, պատասխանիր այս նամակին։',
+    },
+    az: {
+      naslov: 'SLFF: bilici müraciətini təsdiqlədik',
+      kaj:
+        meta.obseg === 'liga'
+          ? `Artıq liqanın bilicisisən (liqa: <strong>${imeLige}</strong>): sənin səsin oyunçunun mövqeyini və ya asisti özü təsdiqləyir, başqa səsləri gözləmək lazım deyil.`
+          : `Artıq klubun bilicisisən (klub: <strong>${klub}</strong>, liqa: ${imeLige}): həmin klubun oyunçularına verdiyin səs üç qat sayılır.`,
+      hvala: 'Müraciət etdiyin üçün təşəkkürlər.',
+      prosnja:
+        'Bir xahiş: bu, etimad məsələsidir. Yalnız həqiqətən bildiyini daxil et və məlumatları öz fantasy komandana uyğunlaşdırma. Liqadakı hər kəsin xalları bundan asılıdır. Məlumatların qəsdən səhv olduğu məlum olsa, bilici statusunu itirirsən.',
+      kje: `Mövqeləri <a href="${p.pozicije}" style="color:#15803d;">Mövqelər</a> səhifəsində redaktə edirsən
+        (hər bazar ertəsi səhər qüvvəyə minir), asistləri isə
+        <a href="${p.asistence}" style="color:#15803d;">Asistlər</a> səhifəsində (dərhal).
+        Artıq klubda oynamayan oyunçunu "artıq oynamır" ilə qeyd edə bilərsən.`,
+      gumb: 'Mövqeləri aç →',
+      gumbUrl: p.pozicije,
+      vprasanja: 'Nəsə aydın deyilsə, bu məktuba cavab yaz.',
+    },
+    da: {
+      naslov: 'SLFF: vi har godkendt din anmodning om at blive insider',
+      kaj:
+        meta.obseg === 'liga'
+          ? `Fra nu af er du insider i ligaen (liga: <strong>${imeLige}</strong>): din stemme alene bekræfter en spillers position eller en assist, uden at der skal ventes på andre stemmer.`
+          : `Fra nu af er du insider i klubben (klub: <strong>${klub}</strong>, liga: ${imeLige}): din stemme om spillerne fra denne klub tæller tredobbelt.`,
+      hvala: 'Tak, fordi du meldte dig.',
+      prosnja:
+        'En enkelt bøn: det her handler om tillid. Indtast kun det, du virkelig ved, og tilpas ikke dataene til dit eget fantasyhold. Alles point i ligaen afhænger af det. Viser det sig, at data bevidst er forkerte, mister du din status som insider.',
+      kje: `Positioner redigerer du på siden <a href="${p.pozicije}" style="color:#15803d;">Positioner</a>
+        (træder i kraft hver mandag morgen), assists på siden
+        <a href="${p.asistence}" style="color:#15803d;">Assists</a> (med det samme).
+        En spiller, der ikke længere spiller for klubben, kan du markere med "spiller ikke længere".`,
+      gumb: 'Åbn Positioner →',
+      gumbUrl: p.pozicije,
+      vprasanja: 'Er der noget, du er i tvivl om, så svar på denne mail.',
+    },
+    en: {
+      naslov: 'SLFF: your insider request is approved',
+      kaj:
+        meta.obseg === 'liga'
+          ? `From now on you are a league insider (league: <strong>${imeLige}</strong>): your vote alone confirms a player’s position or an assist, with no need to wait for other votes.`
+          : `From now on you are a club insider (club: <strong>${klub}</strong>, league: ${imeLige}): your vote on this club’s players counts three times.`,
+      hvala: 'Thanks for volunteering.',
+      prosnja:
+        'One request: this is about trust. Only enter what you really know and don’t bend the data to suit your fantasy team. Everyone’s points in the league depend on it. If the data turns out to be deliberately wrong, you lose your insider status.',
+      kje: `You edit positions on the <a href="${p.pozicije}" style="color:#15803d;">Positions</a> page
+        (applied every Monday morning), assists on the
+        <a href="${p.asistence}" style="color:#15803d;">Assists</a> page (straight away).
+        A player who no longer plays for the club can be marked as "no longer plays".`,
+      gumb: 'Open Positions →',
+      gumbUrl: p.pozicije,
+      vprasanja: 'If anything is unclear, just reply to this email.',
+    },
     sl: {
       naslov: 'SLFF — odobrili smo tvojo prošnjo za poznavalca',
       kaj:
@@ -1005,7 +1372,14 @@ const POZICIJA_LV: Record<string, string> = { DEF: 'aizsargs', MID: 'pussargs', 
 const POZICIJA_MK: Record<string, string> = { DEF: 'одбранбен', MID: 'среден ред', FWD: 'напаѓач' }
 const POZICIJA_PL: Record<string, string> = { DEF: 'obrońca', MID: 'pomocnik', FWD: 'napastnik' }
 const POZICIJA_ES: Record<string, string> = { DEF: 'defensa', MID: 'centrocampista', FWD: 'delantero' }
-const POZICIJA: Record<Jezik, Record<string, string>> = { sl: POZICIJA_SL, sk: POZICIJA_SK, hr: POZICIJA_HR, cs: POZICIJA_CS, hu: POZICIJA_HU, de: POZICIJA_DE, sr: POZICIJA_SR, ro: POZICIJA_RO, et: POZICIJA_ET, pl: POZICIJA_PL, es: POZICIJA_ES, lv: POZICIJA_LV, mk: POZICIJA_MK }
+const POZICIJA_EL: Record<string, string> = { DEF: 'αμυντικός', MID: 'μέσος', FWD: 'επιθετικός' }
+const POZICIJA_TR: Record<string, string> = { DEF: 'defans', MID: 'orta saha', FWD: 'forvet' }
+const POZICIJA_UK: Record<string, string> = { DEF: 'захисник', MID: 'півзахисник', FWD: 'нападник' }
+const POZICIJA_HY: Record<string, string> = { DEF: 'պաշտպան', MID: 'կիսապաշտպան', FWD: 'հարձակվող' }
+const POZICIJA_AZ: Record<string, string> = { DEF: 'müdafiəçi', MID: 'yarımmüdafiəçi', FWD: 'hücumçu' }
+const POZICIJA_DA: Record<string, string> = { DEF: 'forsvarsspiller', MID: 'midtbanespiller', FWD: 'angriber' }
+const POZICIJA_EN: Record<string, string> = { DEF: 'defender', MID: 'midfielder', FWD: 'forward' }
+const POZICIJA: Record<Jezik, Record<string, string>> = { sl: POZICIJA_SL, sk: POZICIJA_SK, hr: POZICIJA_HR, cs: POZICIJA_CS, hu: POZICIJA_HU, de: POZICIJA_DE, sr: POZICIJA_SR, ro: POZICIJA_RO, et: POZICIJA_ET, pl: POZICIJA_PL, es: POZICIJA_ES, lv: POZICIJA_LV, mk: POZICIJA_MK, el: POZICIJA_EL, tr: POZICIJA_TR, uk: POZICIJA_UK, hy: POZICIJA_HY, az: POZICIJA_AZ, da: POZICIJA_DA, en: POZICIJA_EN }
 
 export function sestaviPopravekPozicije(
   liga: Liga,
@@ -1032,6 +1406,13 @@ export function sestaviPopravekPozicije(
       if (j === 'et') return poz ? `${ime} (nüüd ${poz})` : ime
       if (j === 'lv') return poz ? `${ime} (tagad ${poz})` : ime
       if (j === 'mk') return poz ? `${ime} (сега ${poz})` : ime
+      if (j === 'el') return poz ? `${ime} (τώρα ${poz})` : ime
+      if (j === 'tr') return poz ? `${ime} (artık ${poz})` : ime
+      if (j === 'uk') return poz ? `${ime} (тепер ${poz})` : ime
+      if (j === 'hy') return poz ? `${ime} (այժմ ${poz})` : ime
+      if (j === 'az') return poz ? `${ime} (indi ${poz})` : ime
+      if (j === 'da') return poz ? `${ime} (nu ${poz})` : ime
+      if (j === 'en') return poz ? `${ime} (now ${poz})` : ime
       if (j === 'pl') return poz ? `${ime} (teraz ${poz})` : ime
       if (j === 'es') return poz ? `${ime} (ahora ${poz})` : ime
       return poz ? `${ime} (zdaj ${poz})` : ime
@@ -1194,6 +1575,97 @@ export function sestaviPopravekPozicije(
         'коло се веќе пресметани одново. Ако го продадеш, на неговото место ќе мора да купиш голман.',
       gumb: 'Отвори го мојот тим →',
       opomba: 'Се извинуваме за грешката.',
+    },
+    el: {
+      naslov: `SLFF ${ozn}: διόρθωση θέσης παίκτη στην ομάδα σου`,
+      glavno:
+        `Στην ομάδα σου ${ekipa ? `<strong>${ekipa}</strong> ` : ''}έχεις τον παίκτη ${kdo}, ` +
+        'τον οποίο κατά λάθος είχαμε ως τερματοφύλακα. Το φύλλο ενός αγώνα τον είχε σημειώσει μία φορά ως τερματοφύλακα, ' +
+        'αλλά στην πραγματικότητα παίζει παίκτης γηπέδου. Διορθώσαμε τη θέση του.',
+      body:
+        'Τι σημαίνει αυτό για σένα: στο ρόστερ σου μένει στη θέση του τερματοφύλακα, οπότε η ομάδα παραμένει έγκυρη ' +
+        'και δεν χρειάζεται να κάνεις τίποτα. Από εδώ και πέρα όμως παίρνει πόντους ως παίκτης γηπέδου, και οι πόντοι της τελευταίας ' +
+        'αγωνιστικής έχουν ήδη υπολογιστεί ξανά. Αν τον πουλήσεις, στη θέση του θα πρέπει να αγοράσεις τερματοφύλακα.',
+      gumb: 'Άνοιξε την ομάδα μου →',
+      opomba: 'Ζητούμε συγγνώμη για το λάθος.',
+    },
+    tr: {
+      naslov: `SLFF ${ozn}: takımındaki bir oyuncunun mevkisi düzeltildi`,
+      glavno:
+        `${ekipa ? `<strong>${ekipa}</strong> takımında` : 'Takımında'} şu oyuncu var: ${kdo}. ` +
+        'Onu yanlışlıkla kaleci olarak kaydetmiştik. Bir maç raporu onu bir kez kaleci olarak göstermişti, ' +
+        'ama aslında sahada oynuyor. Mevkisini düzelttik.',
+      body:
+        'Bunun senin için anlamı: kadronda kaleci yerinde kalmaya devam ediyor, yani takımın hâlâ geçerli ' +
+        've bir şey yapman gerekmiyor. Ancak bundan sonra puanlarını saha oyuncusu olarak alacak; son haftanın ' +
+        'puanları da yeniden hesaplandı. Onu satarsan yerine bir kaleci alman gerekecek.',
+      gumb: 'Takımımı aç →',
+      opomba: 'Hata için özür dileriz.',
+    },
+    uk: {
+      naslov: `SLFF ${ozn}: виправлення позиції гравця у твоїй команді`,
+      glavno:
+        `У твоїй команді ${ekipa ? `<strong>${ekipa}</strong> ` : ''}є гравець ${kdo}, ` +
+        'якого ми помилково вели як воротаря. Протокол одного матчу якось позначив його воротарем, ' +
+        'але насправді він польовий гравець. Ми виправили його позицію.',
+      body:
+        'Що це означає для тебе: у твоєму складі він залишається на місці воротаря, тож команда й далі дійсна ' +
+        'і тобі нічого не потрібно робити. Але відтепер він отримує очки як польовий гравець, а очки за останній ' +
+        'тур уже перераховано. Якщо продаси його, на його місце доведеться купити воротаря.',
+      gumb: 'Відкрити мою команду →',
+      opomba: 'Перепрошуємо за помилку.',
+    },
+    hy: {
+      naslov: `SLFF ${ozn}: քո թիմի խաղացողի դիրքի ուղղում`,
+      glavno:
+        `Քո ${ekipa ? `<strong>${ekipa}</strong> ` : ''}թիմում ունես ${kdo} խաղացողին, ` +
+        'որին սխալմամբ հաշվառել էինք որպես դարպասապահ։ Մի խաղի արձանագրությունում նա մեկ անգամ նշվել էր որպես դարպասապահ, ' +
+        'բայց իրականում խաղում է դաշտում։ Ուղղեցինք նրա դիրքը։',
+      body:
+        'Ինչ է դա նշանակում քեզ համար. քո կազմում նա մնում է դարպասապահի տեղում, այնպես որ թիմը շարունակում է համապատասխանել կանոններին, ' +
+        'և ոչինչ անել պետք չէ։ Սակայն այսուհետ նա միավորներ է ստանում որպես դաշտային խաղացող, իսկ վերջին ' +
+        'տուրի միավորներն արդեն վերահաշվարկված են։ Եթե վաճառես նրան, նրա փոխարեն պետք է դարպասապահ գնես։',
+      gumb: 'Բացել իմ թիմը →',
+      opomba: 'Ներողություն ենք խնդրում սխալի համար։',
+    },
+    az: {
+      naslov: `SLFF ${ozn}: komandandakı oyunçunun mövqeyində düzəliş`,
+      glavno:
+        `Komandanda ${ekipa ? `(<strong>${ekipa}</strong>) ` : ''}${kdo} oyunçusu var, ` +
+        'onu səhvən qapıçı kimi qeyd etmişdik. Bir oyunun protokolu onu bir dəfə qapıçı kimi göstərmişdi, ' +
+        'amma o, əslində meydan oyunçusudur. Mövqeyini düzəltdik.',
+      body:
+        'Bu sənin üçün nə deməkdir: heyətində qapıçı yerində qalır, ona görə komanda yenə qaydalara uyğundur ' +
+        'və heç nə etməli deyilsən. Amma xallarını bundan sonra meydan oyunçusu kimi alır, son turun xalları ' +
+        'isə artıq yenidən hesablanıb. Onu satsan, yerinə qapıçı almalı olacaqsan.',
+      gumb: 'Komandamı aç →',
+      opomba: 'Səhvə görə üzr istəyirik.',
+    },
+    da: {
+      naslov: `SLFF ${ozn}: rettelse af en spillers position på dit hold`,
+      glavno:
+        `På dit hold ${ekipa ? `<strong>${ekipa}</strong> ` : ''}har du spilleren ${kdo}, ` +
+        'som vi ved en fejl havde registreret som målmand. Kamprapporten fra en enkelt kamp havde én gang markeret ham som målmand, ' +
+        'men han spiller faktisk ude på banen. Vi har rettet hans position.',
+      body:
+        'Hvad betyder det for dig: i din trup bliver han på målmandspladsen, så holdet er stadig gyldigt, ' +
+        'og du behøver ikke gøre noget. Fra nu af får han dog point som markspiller, og pointene fra seneste ' +
+        'runde er allerede genberegnet. Sælger du ham, skal du købe en målmand i hans sted.',
+      gumb: 'Åbn mit hold →',
+      opomba: 'Vi beklager fejlen.',
+    },
+    en: {
+      naslov: `SLFF ${ozn}: position fix for a player in your team`,
+      glavno:
+        `In your team ${ekipa ? `<strong>${ekipa}</strong> ` : ''}you have ${kdo}, ` +
+        'whom we had listed as a goalkeeper by mistake. One match report once marked him as the goalkeeper, ' +
+        'but he actually plays outfield. We have fixed his position.',
+      body:
+        'What this means for you: in your squad he stays in the goalkeeper slot, so your team is still valid ' +
+        'and you don’t need to do anything. From now on, though, he scores points as an outfield player, and the points ' +
+        'of the last round have already been recalculated. If you sell him, you will have to buy a goalkeeper in his place.',
+      gumb: 'Open my team →',
+      opomba: 'Sorry for the mistake.',
     },
     sl: {
       naslov: `SLFF ${ozn} — popravek pozicije igralca v tvoji ekipi`,
@@ -1379,6 +1851,83 @@ export function sestaviIzstopKluba(
         'Поените што веќе ги освоија на одиграните натпревари ти остануваат. Никој повеќе не може да ги купи.',
       gumb: 'Замени ги играчите →',
     },
+    el: {
+      naslov: `SLFF ${ozn}: ο σύλλογος του παίκτη σου αποσύρθηκε από το πρωτάθλημα`,
+      glavno:
+        `Ο σύλλογος ${klubi} αποσύρθηκε από το πρωτάθλημα. ` +
+        `${ekipa ? `Στην ομάδα <strong>${ekipa}</strong> έχεις` : 'Στην ομάδα σου έχεις'} παίκτες του: ${kdo}.`,
+      body:
+        'Αυτοί οι παίκτες δεν θα ξαναπαίξουν, οπότε δεν θα παίρνεις πια πόντους από αυτούς. Η ομάδα μένει έγκυρη και οι υπόλοιποι ' +
+        'παίκτες παίρνουν πόντους κανονικά. Παρ’ όλα αυτά σου προτείνουμε να τους αντικαταστήσεις πριν από την επόμενη προθεσμία. ' +
+        'Οι πόντοι που ήδη μάζεψαν στους αγώνες που έγιναν μένουν σε σένα. Κανείς δεν μπορεί πια να τους αγοράσει.',
+      gumb: 'Αντικατάστησε τους παίκτες →',
+    },
+    tr: {
+      naslov: `SLFF ${ozn}: oyuncunun kulübü ligden çekildi`,
+      glavno:
+        `${klubi} kulübü ligden çekildi. ` +
+        `${ekipa ? `<strong>${ekipa}</strong> takımında` : 'Takımında'} bu kulübün oyuncuları var: ${kdo}.`,
+      body:
+        'Bu oyuncular artık oynamayacak, bu yüzden onlardan puan alamayacaksın. Takımın geçerli kalır, diğer ' +
+        'oyuncuların normal şekilde puan alır. Yine de onları bir sonraki son tarihten önce değiştirmeni öneririz. ' +
+        'Oynanan maçlarda topladıkları puanlar sende kalır. Artık kimse onları satın alamaz.',
+      gumb: 'Oyuncuları değiştir →',
+    },
+    uk: {
+      naslov: `SLFF ${ozn}: клуб твого гравця знявся з ліги`,
+      glavno:
+        `Клуб ${klubi} знявся з ліги. ` +
+        `${ekipa ? `У команді <strong>${ekipa}</strong> у тебе є` : 'У команді в тебе є'} його гравці: ${kdo}.`,
+      body:
+        'Ці гравці більше не гратимуть, тож очок за них ти більше не отримуватимеш. Команда залишається дійсною, а інші ' +
+        'гравці набирають очки як завжди. Проте радимо замінити їх до наступного дедлайну. ' +
+        'Очки, які вони вже набрали в зіграних матчах, залишаються тобі. Ніхто більше не може їх купити.',
+      gumb: 'Замінити гравців →',
+    },
+    hy: {
+      naslov: `SLFF ${ozn}: քո խաղացողի ակումբը դուրս է եկել լիգայից`,
+      glavno:
+        `${klubi} ակումբը դուրս է եկել լիգայից։ ` +
+        `${ekipa ? `<strong>${ekipa}</strong> թիմում ունես` : 'Թիմում ունես'} նրա խաղացողներին: ${kdo}։`,
+      body:
+        'Այդ խաղացողներն այլևս չեն խաղալու, ուստի նրանց համար միավորներ այլևս չես ստանա։ Թիմը մնում է կանոններին համապատասխան, իսկ մյուս ' +
+        'խաղացողները միավորներ են ստանում սովորականի պես։ Այնուամենայնիվ, խորհուրդ ենք տալիս փոխարինել նրանց մինչև հաջորդ վերջնաժամկետը։ ' +
+        'Անցկացված խաղերում արդեն վաստակած միավորները մնում են քեզ։ Այլևս ոչ ոք չի կարող նրանց գնել։',
+      gumb: 'Փոխարինել խաղացողներին →',
+    },
+    az: {
+      naslov: `SLFF ${ozn}: oyunçunun klubu liqadan çıxıb`,
+      glavno:
+        `${klubi} klubu liqadan çıxıb. ` +
+        `${ekipa ? `<strong>${ekipa}</strong> komandanda` : 'Komandanda'} onun oyunçuları var: ${kdo}.`,
+      body:
+        'Bu oyunçular artıq oynamayacaq, ona görə onlar üçün daha xal almayacaqsan. Komanda qaydalara uyğun qalır, digər ' +
+        'oyunçular isə adi qaydada xal toplayır. Yenə də onları növbəti son tarixdən əvvəl əvəz etməyi tövsiyə edirik. ' +
+        'Oynanmış oyunlarda artıq topladıqları xallar səndə qalır. Onları daha heç kim ala bilməz.',
+      gumb: 'Oyunçuları əvəz et →',
+    },
+    da: {
+      naslov: `SLFF ${ozn}: din spillers klub har trukket sig fra ligaen`,
+      glavno:
+        `Klubben ${klubi} har trukket sig fra ligaen. ` +
+        `${ekipa ? `På holdet <strong>${ekipa}</strong> har du` : 'På dit hold har du'} klubbens spillere: ${kdo}.`,
+      body:
+        'Disse spillere kommer ikke til at spille mere, så du får ikke flere point for dem. Holdet forbliver gyldigt, og de øvrige ' +
+        'spillere får point som normalt. Vi anbefaler dog, at du skifter dem ud før næste deadline. ' +
+        'De point, de allerede har hentet i de spillede kampe, beholder du. Ingen kan længere købe dem.',
+      gumb: 'Skift spillerne ud →',
+    },
+    en: {
+      naslov: `SLFF ${ozn}: your player’s club has withdrawn from the league`,
+      glavno:
+        `The club ${klubi} has withdrawn from the league. ` +
+        `${ekipa ? `In your team <strong>${ekipa}</strong> you have` : 'In your team you have'} its players: ${kdo}.`,
+      body:
+        'These players won’t play any more, so you won’t get points for them. Your team stays valid and the other ' +
+        'players score as normal. We still recommend replacing them before the next deadline. ' +
+        'The points they already scored in the matches played stay with you. Nobody can buy them any more.',
+      gumb: 'Replace the players →',
+    },
     sl: {
       naslov: `SLFF ${ozn} — klub tvojega igralca je izstopil iz lige`,
       glavno:
@@ -1462,6 +2011,20 @@ export function sestaviTedenskiPregled(liga: Liga, m: PregledKroga): Sporocilo {
                           ? lvMn(n, 'punktu', 'punkts', 'punkti')
                           : j === 'mk'
                             ? mkMn(n, 'поен', 'поени')
+                            : j === 'el'
+                              ? elMn(n, 'πόντος', 'πόντοι')
+                            : j === 'tr'
+                              ? 'puan' // turščina za številom ne pozna množine
+                            : j === 'uk'
+                              ? ukMn(n, 'очко', 'очки', 'очок', 'очка')
+                            : j === 'hy'
+                              ? 'միավոր'
+                            : j === 'az'
+                              ? 'xal' // azerbajdžanščina za številom ne pozna množine
+                            : j === 'da'
+                              ? 'point' // danščina: "1 point", "2 point", "2,5 point"
+                            : j === 'en'
+                              ? (n === 1 ? 'point' : 'points')
                             : slMn(cela(n), 'točka', 'točki', 'točke', 'točk')
     }`
   const ekipa = `<strong>${esc(m.ekipa)}</strong>`
@@ -1643,6 +2206,104 @@ export function sestaviTedenskiPregled(liga: Liga, m: PregledKroga): Sporocilo {
       pivo: 'П.С. SLFF е бесплатен и работи на пиво. Ако ова коло ти го разубави понеделникот, почести нè со едно и добиј место на ѕидот на пива:',
       odjava: 'Не сакам повеќе да добивам пораки',
     },
+    el: {
+      naslov: `SLFF ${ozn}: ${m.krog}η αγωνιστική, ${tock(m.tocke)}, ${m.mesto}η θέση${premikZnak}`,
+      glavno: `Η ομάδα σου ${ekipa} στην ${m.krog}η αγωνιστική: <strong>${tock(m.tocke)}</strong> (πρωτάθλημα: ${OZN}).`,
+      liga: m.povprecje != null && m.najvec != null
+        ? `Μέσος όρος πρωταθλήματος: ${st(m.povprecje)}, ρεκόρ αγωνιστικής: ${st(m.najvec)}.` : '',
+      top: 'Η καλύτερη βαθμολογία σε όλο το πρωτάθλημα σε αυτή την αγωνιστική.',
+      mesto: `Στην κατάταξη είσαι <strong>${m.mesto}ος</strong> από ${m.ekip}` +
+        (m.mesto_prej == null || premik === 0 ? '.' : ` (πριν ${m.mesto_prej}ος).`),
+      kapetan: m.kapetan ? `Αρχηγός ${esc(m.kapetan)}: ${tock(m.kapetan_tocke ?? 0)}.` : '',
+      najboljsi: najboljsiNiKapetan ? `Ο καλύτερος της ομάδας: ${esc(m.najboljsi!)} (${tock(m.najboljsi_tocke ?? 0)}).` : '',
+      gumb: 'Ετοίμασε την ομάδα για την επόμενη αγωνιστική →',
+      pivo: 'Υ.Γ. Το SLFF είναι δωρεάν και δουλεύει με μπίρα. Αν αυτή η αγωνιστική σού έφτιαξε τη Δευτέρα, κέρασέ μας μία και πάρε μια θέση στον τοίχο της μπίρας:',
+      odjava: 'Δεν θέλω άλλα email',
+    },
+    tr: {
+      naslov: `SLFF ${ozn}: ${m.krog}. hafta, ${tock(m.tocke)}, ${m.mesto}. sıra${premikZnak}`,
+      glavno: `${ekipa} takımın ${m.krog}. haftada <strong>${tock(m.tocke)}</strong> topladı (lig: ${OZN}).`,
+      liga: m.povprecje != null && m.najvec != null
+        ? `Lig ortalaması: ${st(m.povprecje)}, en yüksek: ${st(m.najvec)}.` : '',
+      top: 'Bu hafta tüm ligdeki en yüksek puan.',
+      mesto: `Puan durumunda ${m.ekip} takım arasında <strong>${m.mesto}.</strong> sıradasın` +
+        (m.mesto_prej == null || premik === 0 ? '.' : ` (önceki: ${m.mesto_prej}.).`),
+      kapetan: m.kapetan ? `Kaptan ${esc(m.kapetan)}: ${tock(m.kapetan_tocke ?? 0)}.` : '',
+      najboljsi: najboljsiNiKapetan ? `Takımının en iyisi: ${esc(m.najboljsi!)} (${tock(m.najboljsi_tocke ?? 0)}).` : '',
+      gumb: 'Takımını gelecek haftaya hazırla →',
+      pivo: 'Not: SLFF ücretsiz ve biraya çalışıyor. Bu hafta pazartesini güzelleştirdiyse bize bir bira ısmarla, bira duvarında yerini al:',
+      odjava: 'Artık e-posta almak istemiyorum',
+    },
+    uk: {
+      naslov: `SLFF ${ozn}: ${m.krog}-й тур, ${tock(m.tocke)}, № ${m.mesto}${premikZnak}`,
+      glavno: `Твоя команда ${ekipa} у ${m.krog}-му турі набрала <strong>${tock(m.tocke)}</strong> (ліга: ${OZN}).`,
+      liga: m.povprecje != null && m.najvec != null
+        ? `Середнє в лізі: ${st(m.povprecje)}, найбільше: ${st(m.najvec)}.` : '',
+      top: 'Найбільше очок у всій лізі в цьому турі.',
+      mesto: `У рейтингу ти на <strong>${m.mesto}-му</strong> місці з ${m.ekip}` +
+        (m.mesto_prej == null || premik === 0 ? '.' : ` (раніше № ${m.mesto_prej}).`),
+      kapetan: m.kapetan ? `Капітан ${esc(m.kapetan)}: ${tock(m.kapetan_tocke ?? 0)}.` : '',
+      najboljsi: najboljsiNiKapetan ? `Найкращий у команді: ${esc(m.najboljsi!)} (${tock(m.najboljsi_tocke ?? 0)}).` : '',
+      gumb: 'Підготувати команду до наступного туру →',
+      pivo: 'P.S. SLFF безкоштовний і працює на пиві. Якщо цей тур зробив твій понеділок кращим, пригости нас кухлем і отримай місце на пивній стіні:',
+      odjava: 'Більше не хочу отримувати листи',
+    },
+    hy: {
+      naslov: `SLFF ${ozn}: տուր ${m.krog}, ${tock(m.tocke)}, ${hyDas(m.mesto)} տեղ${premikZnak}`,
+      glavno: `Քո ${ekipa} թիմը տուր ${m.krog}-ում վաստակեց <strong>${tock(m.tocke)}</strong> (լիգա: ${OZN})։`,
+      liga: m.povprecje != null && m.najvec != null
+        ? `Լիգայի միջինը: ${st(m.povprecje)}, առավելագույնը: ${st(m.najvec)}։` : '',
+      top: 'Այս տուրում ամենաշատ միավորն ամբողջ լիգայում։',
+      mesto: `Աղյուսակում դու <strong>${hyDas(m.mesto)}</strong> տեղում ես ${m.ekip} թիմից` +
+        (m.mesto_prej == null || premik === 0 ? '։' : ` (նախկինում՝ ${hyDas(m.mesto_prej)})։`),
+      kapetan: m.kapetan ? `Ավագ ${esc(m.kapetan)}: ${tock(m.kapetan_tocke ?? 0)}։` : '',
+      najboljsi: najboljsiNiKapetan ? `Թիմի լավագույնը: ${esc(m.najboljsi!)} (${tock(m.najboljsi_tocke ?? 0)})։` : '',
+      gumb: 'Պատրաստիր թիմը հաջորդ տուրի համար →',
+      pivo: 'Հ.Գ. SLFF-ն անվճար է և աշխատում է գարեջրով։ Եթե այս տուրը գեղեցկացրեց քո երկուշաբթին, հյուրասիրիր մեզ մեկ գարեջուր և տեղ ստացիր գարեջրի պատին:',
+      odjava: 'Այլևս չեմ ուզում նամակներ ստանալ',
+    },
+    az: {
+      naslov: `SLFF ${ozn}: tur ${m.krog}, ${tock(m.tocke)}, yer ${m.mesto}${premikZnak}`,
+      glavno: `${ekipa} komandan tur ${m.krog} ərzində <strong>${tock(m.tocke)}</strong> topladı (liqa: ${OZN}).`,
+      liga: m.povprecje != null && m.najvec != null
+        ? `Liqanın ortası: ${st(m.povprecje)}, ən çox: ${st(m.najvec)}.` : '',
+      top: 'Bu turda bütün liqada ən çox xal.',
+      mesto: `Cədvəldə yerin: <strong>${m.mesto}</strong> / ${m.ekip}` +
+        (m.mesto_prej == null || premik === 0 ? '.' : ` (əvvəl ${m.mesto_prej}).`),
+      kapetan: m.kapetan ? `Kapitan ${esc(m.kapetan)}: ${tock(m.kapetan_tocke ?? 0)}.` : '',
+      najboljsi: najboljsiNiKapetan ? `Komandanın ən yaxşısı: ${esc(m.najboljsi!)} (${tock(m.najboljsi_tocke ?? 0)}).` : '',
+      gumb: 'Komandanı növbəti tura hazırla →',
+      pivo: 'P.S. SLFF pulsuzdur və pivə ilə işləyir. Bu tur bazar ertəni gözəlləşdiribsə, bizi birinə qonaq et və pivə divarında yer al:',
+      odjava: 'Daha məktub almaq istəmirəm',
+    },
+    da: {
+      naslov: `SLFF ${ozn}: ${m.krog}. runde, ${tock(m.tocke)}, ${m.mesto}. plads${premikZnak}`,
+      glavno: `Dit hold ${ekipa} fik <strong>${tock(m.tocke)}</strong> i ${m.krog}. runde (liga: ${OZN}).`,
+      liga: m.povprecje != null && m.najvec != null
+        ? `Ligaens gennemsnit: ${st(m.povprecje)}, højeste: ${st(m.najvec)}.` : '',
+      top: 'Flest point i hele ligaen i denne runde.',
+      mesto: `I ranglisten er du nr. <strong>${m.mesto}</strong> af ${m.ekip}` +
+        (m.mesto_prej == null || premik === 0 ? '.' : ` (før nr. ${m.mesto_prej}).`),
+      kapetan: m.kapetan ? `Kaptajn ${esc(m.kapetan)}: ${tock(m.kapetan_tocke ?? 0)}.` : '',
+      najboljsi: najboljsiNiKapetan ? `Bedst på holdet: ${esc(m.najboljsi!)} (${tock(m.najboljsi_tocke ?? 0)}).` : '',
+      gumb: 'Gør holdet klar til næste runde →',
+      pivo: 'PS: SLFF er gratis og kører på øl. Gjorde denne runde din mandag bedre, så giv os en og få en plads på ølvæggen:',
+      odjava: 'Jeg vil ikke have flere mails',
+    },
+    en: {
+      naslov: `SLFF ${ozn}: round ${m.krog}, ${tock(m.tocke)}, ${enMesto(m.mesto)} place${premikZnak}`,
+      glavno: `Your team ${ekipa} scored <strong>${tock(m.tocke)}</strong> in round ${m.krog} (league: ${OZN}).`,
+      liga: m.povprecje != null && m.najvec != null
+        ? `League average: ${st(m.povprecje)}, highest: ${st(m.najvec)}.` : '',
+      top: 'The highest score in the whole league this round.',
+      mesto: `You are <strong>${enMesto(m.mesto)}</strong> of ${m.ekip} in the table` +
+        (m.mesto_prej == null || premik === 0 ? '.' : ` (previously ${enMesto(m.mesto_prej)}).`),
+      kapetan: m.kapetan ? `Captain ${esc(m.kapetan)}: ${tock(m.kapetan_tocke ?? 0)}.` : '',
+      najboljsi: najboljsiNiKapetan ? `Best in your team: ${esc(m.najboljsi!)} (${tock(m.najboljsi_tocke ?? 0)}).` : '',
+      gumb: 'Get your team ready for the next round →',
+      pivo: 'P.S. SLFF is free and runs on beer. If this round made your Monday better, buy us one and get a spot on the beer wall:',
+      odjava: 'Stop these emails',
+    },
     sl: {
       naslov: `SLFF ${ozn} — ${m.krog}. krog: ${tock(m.tocke)}, ${m.mesto}. mesto${premikZnak}`,
       glavno: `Tvoja ekipa ${ekipa} je v ${m.krog}. krogu ${OZN} zbrala <strong>${tock(m.tocke)}</strong>.`,
@@ -1690,9 +2351,9 @@ const skMn = (n: number, one: string, few: string, other: string) =>
  * ga prepoznamo po obliki in prevedemo; neznano obliko (SQL se je spremenil)
  * nadomesti splošen stavek, da v slovaškem mailu ni slovenščine.
  *
- * `'en'` rabi le vmesnik (angleški obiskovalec) — pošta je vedno sl/sk/hr/cs/hu/de/sr/ro/et/pl/es/lv/mk.
+ * `'en'` rabi vmesnik (angleški obiskovalec) in pošta lig Združenega kraljestva in Malte.
  */
-export function prevediRazlog(razlog: string | null | undefined, j: Jezik | 'en'): string {
+export function prevediRazlog(razlog: string | null | undefined, j: Jezik): string {
   if (j === 'sl') return razlog ?? 'Kader ni veljaven.'
   if (j === 'en') return razlogVAngliscini(razlog)
   if (j === 'hr') return razlogVHrvascini(razlog)
@@ -1704,6 +2365,12 @@ export function prevediRazlog(razlog: string | null | undefined, j: Jezik | 'en'
   if (j === 'et') return razlogVEstonscini(razlog)
   if (j === 'lv') return razlogVLatviescini(razlog)
   if (j === 'mk') return razlogVMakedonscini(razlog)
+  if (j === 'el') return razlogVGrscini(razlog)
+  if (j === 'tr') return razlogVTurscini(razlog)
+  if (j === 'uk') return razlogVUkrajinscini(razlog)
+  if (j === 'hy') return razlogVArmenscini(razlog)
+  if (j === 'az') return razlogVAzerbajdzanscini(razlog)
+  if (j === 'da') return razlogVDanscini(razlog)
   if (j === 'pl') return razlogVPoljscini(razlog)
   if (j === 'es') return razlogVSpanscini(razlog)
   if (!razlog) return 'Káder nie je platný.'
@@ -1742,21 +2409,21 @@ export function prevediRazlog(razlog: string | null | undefined, j: Jezik | 'en'
   return 'Tím nespĺňa pravidlá — pozri si podrobnosti v sekcii Môj tím.'
 }
 
-/** Isti razlogi v angleščini (za angleški vmesnik). */
+/** Isti razlogi v angleščini (za angleški vmesnik in pošto GB, MT). */
 function razlogVAngliscini(razlog: string | null | undefined): string {
   if (!razlog) return 'The squad is not valid.'
   const r = razlog.trim()
   let m: RegExpMatchArray | null
   const igralcev = (n: number) => (n === 1 ? '1 player' : `${n} players`)
 
-  if (r === 'Ekipa je prazna — kadra ni.') return 'The team is empty — there is no squad.'
+  if (r === 'Ekipa je prazna — kadra ni.') return 'The team is empty: there is no squad.'
   if ((m = r.match(/^V kadru je (\d+) igralcev namesto (\d+)\.$/)))
     return `The squad has ${igralcev(Number(m[1]))} instead of ${m[2]}.`
   if ((m = r.match(/^V kadru ni vec aktivnih igralcev: (.*)\. Klub letos ne igra ali je igralec odsel\.$/s)))
     return `Your squad has players who are no longer active: ${m[1]}. Their club isn't playing this season or the player has left.`
   if ((m = r.match(/^Iz kluba (.+) imas (\d+) igralce, dovoljeni so (\d+)\./s)))
     return `You have ${m[2]} players from ${m[1]}; ${m[3]} are allowed. ` +
-      'This can happen without any change of yours — if a player transfers mid-season to a club you already have players from.'
+      'This can happen without any change of yours: if a player transfers mid-season to a club you already have players from.'
   if ((m = r.match(/^Pri (\d+) igralcih ni znana pozicija\.$/)))
     return `The position of ${igralcev(Number(m[1]))} is unknown.`
   if ((m = r.match(/^Kader mora imeti 2 vratarja, 5 branilcev, 5 vezistov in 3 napadalce; ima ([\d-]+)\.$/)))
@@ -1766,7 +2433,7 @@ function razlogVAngliscini(razlog: string | null | undefined): string {
   if (r === 'Ekipa nima natanko enega kapetana.') return 'The team does not have exactly one captain.'
   if (r === 'Ekipa nima natanko enega namestnika kapetana.')
     return 'The team does not have exactly one vice-captain.'
-  return 'The team breaks the rules — see My Team for details.'
+  return 'The team breaks the rules. See My Team for details.'
 }
 
 /** Hrvaška množina: 1, 21 … / 2–4, 22–24 … / ostalo (brez 11–14). */
@@ -2117,4 +2784,210 @@ function razlogVMakedonscini(razlog: string | null | undefined): string {
   if (r === 'Ekipa nima natanko enega namestnika kapetana.')
     return 'Тимот нема точно еден вице-капитен.'
   return 'Тимот не ги исполнува правилата. Детали има во делот Мој тим.'
+}
+
+/** Ali je niz eden od jezikov pošte (sicer velja privzeti). */
+const jeJezik = (j: string | null | undefined): j is Jezik => !!j && j in LOKALE
+
+// Grščina: one le za 1, sicer other; decimalke so other ("1,5 πόντοι").
+const elMn = (n: number, one: string, other: string) => (n === 1 ? one : other)
+
+// Klicnik grških moških imen: -ος → -ο (dva zloga: Νίκος → Νίκο) ali -ε (daljša:
+// Κωνσταντίνος → Κωνσταντίνε), -ης → -η, -ας → -α. Ženska imena in latinica ostanejo.
+function klicnikEl(ime: string): string {
+  if (!/^[Ͱ-Ͽἀ-῿]+$/.test(ime)) return ime
+  const zlogi = (ime.match(/[αεηιουωάέήίόύώϊϋΐΰ]+/gi) ?? []).length
+  if (/ος$/.test(ime)) return ime.slice(0, -2) + (zlogi <= 2 ? 'ο' : 'ε')
+  if (/ός$/.test(ime)) return ime.slice(0, -2) + 'έ'
+  if (/(ης|ής|ας|άς)$/.test(ime)) return ime.slice(0, -1)
+  return ime
+}
+
+// Ukrajinščina: one (1, 21, 31 …, ne 11), few (2-4, 22-24 …, ne 12-14),
+// many (0, 5-20, 25 …); decimalke so other ("1,5 очка").
+const ukMn = (n: number, one: string, few: string, many: string, other: string) => {
+  if (!Number.isInteger(n)) return other
+  const d = n % 10, s = n % 100
+  if (d === 1 && s !== 11) return one
+  if (d >= 2 && d <= 4 && (s < 12 || s > 14)) return few
+  return many
+}
+
+// Armenščina: vrstilni števnik 1-ին, sicer N-րդ.
+const hyDas = (n: number) => (n === 1 ? '1-ին' : `${n}-րդ`)
+
+// Angleščina: vrstilni števnik (1st, 2nd, 3rd, 4th, 11th, 21st).
+const enMesto = (n: number) => {
+  const s = n % 100
+  const pripona = s >= 11 && s <= 13 ? 'th' : n % 10 === 1 ? 'st' : n % 10 === 2 ? 'nd' : n % 10 === 3 ? 'rd' : 'th'
+  return `${n}${pripona}`
+}
+
+/** Isti razlogi v grščini (za grški mail in vmesnik). */
+function razlogVGrscini(razlog: string | null | undefined): string {
+  if (!razlog) return 'Το ρόστερ δεν είναι έγκυρο.'
+  const r = razlog.trim()
+  let m: RegExpMatchArray | null
+  // Αιτιατική: "έχει 1 παίκτη, 3 παίκτες".
+  const paiktes = (n: number) => `${n} ${elMn(n, 'παίκτη', 'παίκτες')}`
+
+  if (r === 'Ekipa je prazna — kadra ni.') return 'Η ομάδα είναι άδεια, το ρόστερ δεν έχει κανέναν παίκτη.'
+  if ((m = r.match(/^V kadru je (\d+) igralcev namesto (\d+)\.$/)))
+    return `Το ρόστερ έχει ${paiktes(Number(m[1]))} αντί για ${m[2]}.`
+  if ((m = r.match(/^V kadru ni vec aktivnih igralcev: (.*)\. Klub letos ne igra ali je igralec odsel\.$/s)))
+    return `Το ρόστερ έχει παίκτες που δεν είναι πια ενεργοί: ${m[1]}. Ο σύλλογός τους δεν αγωνίζεται φέτος ή ο παίκτης έφυγε.`
+  if ((m = r.match(/^Iz kluba (.+) imas (\d+) igralce, dovoljeni so (\d+)\./s)))
+    return `Από τον σύλλογο ${m[1]} έχεις ${paiktes(Number(m[2]))}, επιτρέπονται ${m[3]}. ` +
+      'Αυτό μπορεί να συμβεί και χωρίς δική σου αλλαγή: αν ένας παίκτης μέσα στη σεζόν πάει σε σύλλογο από τον οποίο έχεις ήδη παίκτες.'
+  if ((m = r.match(/^Pri (\d+) igralcih ni znana pozicija\.$/)))
+    return `Για ${paiktes(Number(m[1]))} η θέση δεν είναι γνωστή.`
+  if ((m = r.match(/^Kader mora imeti 2 vratarja, 5 branilcev, 5 vezistov in 3 napadalce; ima ([\d-]+)\.$/)))
+    return `Το ρόστερ πρέπει να έχει 2 τερματοφύλακες, 5 αμυντικούς, 5 μέσους και 3 επιθετικούς. Έχει ${m[1]}.`
+  if ((m = r.match(/^V postavi je (\d+) igralcev namesto (\d+)\.$/)))
+    return `Η ενδεκάδα έχει ${paiktes(Number(m[1]))} αντί για ${m[2]}.`
+  if (r === 'Ekipa nima natanko enega kapetana.') return 'Η ομάδα δεν έχει ακριβώς έναν αρχηγό.'
+  if (r === 'Ekipa nima natanko enega namestnika kapetana.')
+    return 'Η ομάδα δεν έχει ακριβώς έναν υπαρχηγό.'
+  return 'Η ομάδα δεν τηρεί τους κανόνες. Λεπτομέρειες στην ενότητα Η ομάδα μου.'
+}
+
+/** Isti razlogi v turščini (za turški mail in vmesnik). */
+function razlogVTurscini(razlog: string | null | undefined): string {
+  if (!razlog) return 'Kadro geçerli değil.'
+  const r = razlog.trim()
+  let m: RegExpMatchArray | null
+  // Turščina: samostalnik za številom ostane v ednini ("3 oyuncu").
+  const oyuncu = (n: number) => `${n} oyuncu`
+
+  if (r === 'Ekipa je prazna — kadra ni.') return 'Takım boş, kadroda hiç oyuncu yok.'
+  if ((m = r.match(/^V kadru je (\d+) igralcev namesto (\d+)\.$/)))
+    return `Kadroda ${m[2]} yerine ${oyuncu(Number(m[1]))} var.`
+  if ((m = r.match(/^V kadru ni vec aktivnih igralcev: (.*)\. Klub letos ne igra ali je igralec odsel\.$/s)))
+    return `Kadroda artık aktif olmayan oyuncular var: ${m[1]}. Kulüpleri bu sezon oynamıyor ya da oyuncu takımdan ayrıldı.`
+  if ((m = r.match(/^Iz kluba (.+) imas (\d+) igralce, dovoljeni so (\d+)\./s)))
+    return `${m[1]} kulübünden ${oyuncu(Number(m[2]))} var, en fazla ${m[3]} oyuncuya izin veriliyor. ` +
+      'Bu, sen bir değişiklik yapmasan da olabilir: sezon içinde bir oyuncu, zaten oyuncuların olan bir kulübe geçerse.'
+  if ((m = r.match(/^Pri (\d+) igralcih ni znana pozicija\.$/)))
+    return `${oyuncu(Number(m[1]))} için mevki bilinmiyor.`
+  if ((m = r.match(/^Kader mora imeti 2 vratarja, 5 branilcev, 5 vezistov in 3 napadalce; ima ([\d-]+)\.$/)))
+    return `Kadroda 2 kaleci, 5 defans, 5 orta saha ve 3 forvet olmalı; şu an ${m[1]}.`
+  if ((m = r.match(/^V postavi je (\d+) igralcev namesto (\d+)\.$/)))
+    return `İlk 11'de ${m[2]} yerine ${oyuncu(Number(m[1]))} var.`
+  if (r === 'Ekipa nima natanko enega kapetana.') return 'Takımda tam olarak bir kaptan yok.'
+  if (r === 'Ekipa nima natanko enega namestnika kapetana.')
+    return 'Takımda tam olarak bir yardımcı kaptan yok.'
+  return 'Takım kurallara uymuyor. Ayrıntılar Takımım bölümünde.'
+}
+
+/** Isti razlogi v ukrajinščini (za ukrajinski mail in vmesnik). */
+function razlogVUkrajinscini(razlog: string | null | undefined): string {
+  if (!razlog) return 'Склад не відповідає правилам.'
+  const r = razlog.trim()
+  let m: RegExpMatchArray | null
+  // Називний ("у складі 3 гравці") in rodilnik ("для 3 гравців").
+  const gravci = (n: number) => `${n} ${ukMn(n, 'гравець', 'гравці', 'гравців', 'гравця')}`
+  const gravciRod = (n: number) => `${n} ${ukMn(n, 'гравця', 'гравців', 'гравців', 'гравця')}`
+
+  if (r === 'Ekipa je prazna — kadra ni.') return 'Команда порожня, у складі немає жодного гравця.'
+  if ((m = r.match(/^V kadru je (\d+) igralcev namesto (\d+)\.$/)))
+    return `У складі ${gravci(Number(m[1]))} замість ${m[2]}.`
+  if ((m = r.match(/^V kadru ni vec aktivnih igralcev: (.*)\. Klub letos ne igra ali je igralec odsel\.$/s)))
+    return `У складі є гравці, які більше не активні: ${m[1]}. Їхній клуб цього сезону не грає або гравець пішов.`
+  if ((m = r.match(/^Iz kluba (.+) imas (\d+) igralce, dovoljeni so (\d+)\./s)))
+    return `З клубу ${m[1]} у тебе ${gravci(Number(m[2]))}, дозволено ${m[3]}. ` +
+      'Таке може статися і без твоїх змін: якщо гравець посеред сезону перейшов у клуб, з якого в тебе вже є гравці.'
+  if ((m = r.match(/^Pri (\d+) igralcih ni znana pozicija\.$/)))
+    return `Для ${gravciRod(Number(m[1]))} позиція невідома.`
+  if ((m = r.match(/^Kader mora imeti 2 vratarja, 5 branilcev, 5 vezistov in 3 napadalce; ima ([\d-]+)\.$/)))
+    return `У складі мають бути 2 воротарі, 5 захисників, 5 півзахисників і 3 нападники; зараз ${m[1]}.`
+  if ((m = r.match(/^V postavi je (\d+) igralcev namesto (\d+)\.$/)))
+    return `У стартовій одинадцятці ${gravci(Number(m[1]))} замість ${m[2]}.`
+  if (r === 'Ekipa nima natanko enega kapetana.') return 'У команді немає рівно одного капітана.'
+  if (r === 'Ekipa nima natanko enega namestnika kapetana.')
+    return 'У команді немає рівно одного віцекапітана.'
+  return 'Команда не відповідає правилам. Подробиці в розділі Моя команда.'
+}
+
+/** Isti razlogi v armenščini (za armenski mail in vmesnik). Samostalnik za številom ostane v ednini. */
+function razlogVArmenscini(razlog: string | null | undefined): string {
+  if (!razlog) return 'Կազմը կանոններին չի համապատասխանում։'
+  const r = razlog.trim()
+  let m: RegExpMatchArray | null
+  const igraci = (n: number) => `${n} խաղացող`
+
+  if (r === 'Ekipa je prazna — kadra ni.') return 'Թիմը դատարկ է, կազմում ոչ մի խաղացող չկա։'
+  if ((m = r.match(/^V kadru je (\d+) igralcev namesto (\d+)\.$/)))
+    return `Կազմում կա ${igraci(Number(m[1]))}՝ ${m[2]}-ի փոխարեն։`
+  if ((m = r.match(/^V kadru ni vec aktivnih igralcev: (.*)\. Klub letos ne igra ali je igralec odsel\.$/s)))
+    return `Կազմում կան խաղացողներ, որոնք այլևս ակտիվ չեն: ${m[1]}։ Նրանց ակումբն այս մրցաշրջանում չի խաղում, կամ խաղացողը հեռացել է։`
+  if ((m = r.match(/^Iz kluba (.+) imas (\d+) igralce, dovoljeni so (\d+)\./s)))
+    return `${m[1]} ակումբից ունես ${igraci(Number(m[2]))}, թույլատրվում է ${m[3]}-ը։ ` +
+      'Դա կարող է պատահել նաև առանց քո փոփոխության. եթե խաղացողը մրցաշրջանի ընթացքում տեղափոխվի ակումբ, որից արդեն խաղացողներ ունես։'
+  if ((m = r.match(/^Pri (\d+) igralcih ni znana pozicija\.$/)))
+    return `${igraci(Number(m[1]))}ի դիրքը հայտնի չէ։`
+  if ((m = r.match(/^Kader mora imeti 2 vratarja, 5 branilcev, 5 vezistov in 3 napadalce; ima ([\d-]+)\.$/)))
+    return `Կազմում պետք է լինի 2 դարպասապահ, 5 պաշտպան, 5 կիսապաշտպան և 3 հարձակվող. այժմ կա ${m[1]}։`
+  if ((m = r.match(/^V postavi je (\d+) igralcev namesto (\d+)\.$/)))
+    return `Հիմնական կազմում կա ${igraci(Number(m[1]))}՝ ${m[2]}-ի փոխարեն։`
+  if (r === 'Ekipa nima natanko enega kapetana.') return 'Թիմում պետք է լինի ճիշտ մեկ ավագ։'
+  if (r === 'Ekipa nima natanko enega namestnika kapetana.')
+    return 'Թիմում պետք է լինի ճիշտ մեկ փոխավագ։'
+  return 'Թիմը կանոններին չի համապատասխանում։ Մանրամասները՝ «Իմ թիմը» բաժնում։'
+}
+
+/** Isti razlogi v azerbajdžanščini (za azerbajdžanski mail in vmesnik). Samostalnik za številom v ednini. */
+function razlogVAzerbajdzanscini(razlog: string | null | undefined): string {
+  if (!razlog) return 'Heyət qaydalara uyğun deyil.'
+  const r = razlog.trim()
+  let m: RegExpMatchArray | null
+  const oyuncu = (n: number) => `${n} oyunçu`
+
+  if (r === 'Ekipa je prazna — kadra ni.') return 'Komanda boşdur, heyətdə heç bir oyunçu yoxdur.'
+  if ((m = r.match(/^V kadru je (\d+) igralcev namesto (\d+)\.$/)))
+    return `Heyətdə ${m[2]} yerinə ${oyuncu(Number(m[1]))} var.`
+  if ((m = r.match(/^V kadru ni vec aktivnih igralcev: (.*)\. Klub letos ne igra ali je igralec odsel\.$/s)))
+    return `Heyətdə artıq aktiv olmayan oyunçular var: ${m[1]}. Onların klubu bu mövsüm oynamır və ya oyunçu gedib.`
+  if ((m = r.match(/^Iz kluba (.+) imas (\d+) igralce, dovoljeni so (\d+)\./s)))
+    return `${m[1]} klubundan ${oyuncu(Number(m[2]))}n var, icazə verilən ${m[3]}. ` +
+      'Bu, sənin dəyişikliyin olmadan da baş verə bilər: oyunçu mövsüm ərzində artıq oyunçuların olan kluba keçərsə.'
+  if ((m = r.match(/^Pri (\d+) igralcih ni znana pozicija\.$/)))
+    return `${oyuncu(Number(m[1]))}nun mövqeyi məlum deyil.`
+  if ((m = r.match(/^Kader mora imeti 2 vratarja, 5 branilcev, 5 vezistov in 3 napadalce; ima ([\d-]+)\.$/)))
+    return `Heyətdə 2 qapıçı, 5 müdafiəçi, 5 yarımmüdafiəçi və 3 hücumçu olmalıdır; indi ${m[1]}.`
+  if ((m = r.match(/^V postavi je (\d+) igralcev namesto (\d+)\.$/)))
+    return `Əsas heyətdə ${m[2]} yerinə ${oyuncu(Number(m[1]))} var.`
+  if (r === 'Ekipa nima natanko enega kapetana.') return 'Komandanın düz bir kapitanı yoxdur.'
+  if (r === 'Ekipa nima natanko enega namestnika kapetana.')
+    return 'Komandanın düz bir kapitan müavini yoxdur.'
+  return 'Komanda qaydalara uyğun deyil. Ətraflı məlumat Komandam bölməsindədir.'
+}
+
+// Danščina: one (1) in other; razlogi imajo le cela števila.
+const daMn = (n: number, one: string, other: string) => (n === 1 ? one : other)
+
+/** Isti razlogi v danščini (za danski mail in vmesnik). */
+function razlogVDanscini(razlog: string | null | undefined): string {
+  if (!razlog) return 'Truppen er ikke gyldig.'
+  const r = razlog.trim()
+  let m: RegExpMatchArray | null
+  const spillere = (n: number) => `${n} ${daMn(n, 'spiller', 'spillere')}`
+
+  if (r === 'Ekipa je prazna — kadra ni.') return 'Holdet er tomt, der er ingen spillere i truppen.'
+  if ((m = r.match(/^V kadru je (\d+) igralcev namesto (\d+)\.$/)))
+    return `Der er ${spillere(Number(m[1]))} i truppen i stedet for ${m[2]}.`
+  if ((m = r.match(/^V kadru ni vec aktivnih igralcev: (.*)\. Klub letos ne igra ali je igralec odsel\.$/s)))
+    return `Der er spillere i truppen, som ikke længere er aktive: ${m[1]}. Deres klub spiller ikke i denne sæson, eller spilleren har forladt klubben.`
+  if ((m = r.match(/^Iz kluba (.+) imas (\d+) igralce, dovoljeni so (\d+)\./s)))
+    return `Du har ${spillere(Number(m[2]))} fra klubben ${m[1]}, højst ${m[3]} er tilladt. ` +
+      'Det kan også ske, uden at du har ændret noget: hvis en spiller i løbet af sæsonen skifter til en klub, du allerede har spillere fra.'
+  if ((m = r.match(/^Pri (\d+) igralcih ni znana pozicija\.$/)))
+    return `For ${spillere(Number(m[1]))} er positionen ikke kendt.`
+  if ((m = r.match(/^Kader mora imeti 2 vratarja, 5 branilcev, 5 vezistov in 3 napadalce; ima ([\d-]+)\.$/)))
+    return `Truppen skal have 2 målmænd, 5 forsvarsspillere, 5 midtbanespillere og 3 angribere; den har ${m[1]}.`
+  if ((m = r.match(/^V postavi je (\d+) igralcev namesto (\d+)\.$/)))
+    return `Der er ${spillere(Number(m[1]))} i startelleveren i stedet for ${m[2]}.`
+  if (r === 'Ekipa nima natanko enega kapetana.') return 'Holdet har ikke præcis én kaptajn.'
+  if (r === 'Ekipa nima natanko enega namestnika kapetana.')
+    return 'Holdet har ikke præcis én vicekaptajn.'
+  return 'Holdet overholder ikke reglerne. Detaljer finder du under Mit hold.'
 }
