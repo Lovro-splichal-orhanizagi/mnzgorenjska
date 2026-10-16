@@ -119,6 +119,7 @@ tabelo šifer tam, ne tu.
 | Islandija | `docs/viri/islandija.md` | `ksi` |
 | Ferski otoki | `docs/viri/ferski-otoki.md` | `fsf` |
 | ZDA | `docs/viri/zda.md` | `modular11` |
+| Danska | `docs/viri/danska.md` | `dbu` |
 
 Pravila, ki veljajo za vse vire (podrobnosti v datotekah):
 

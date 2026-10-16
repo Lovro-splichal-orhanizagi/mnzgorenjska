@@ -55,6 +55,7 @@ import ffl from './ffl.mjs'
 import ksi from './ksi.mjs'
 import fsf from './fsf.mjs'
 import modular11 from './modular11.mjs'
+import dbu from './dbu.mjs'
 
 const VIRI = {
   mnzg,
@@ -176,6 +177,9 @@ const VIRI = {
   // ZDA: USL League Two prek Modular11 (prvi vir zunaj Evrope); razpored je
   // GET seznam tekem divizije, zapisnik JSON v strani tekme, krog je teden.
   modular11,
+  // Danska: Dansk Boldspil-Union prek dbu.dk/resultater (HTML), pulje po sezoni,
+  // brez šifer igralcev (ime + klub); krogi iz datumov. Pisno dovoljenje DBU.
+  dbu,
 }
 
 /**
