@@ -10,79 +10,27 @@ on:
   # Za zagone, ki jih sprozi drug delovni tok (grbi z NZS potisnejo z
   # GITHUB_TOKEN, ki CI ne sprozi sam).
   workflow_dispatch:
+    inputs:
+      vir:
+        description: Javni vir za podatkovni audit
+        type: choice
+        options: [all, novanet, dfb]
+        default: all
 
 permissions:
   contents: read
 
 # Nov push na isto vejo prekine prejšnji tek — zadnje stanje je edino, ki šteje.
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.ref }}-${{ inputs.vir || 'code' }}
   cancel-in-progress: true
 
 jobs:
   novi-viri:
-    name: Zivi vir — ${{ matrix.vir }} ${{ matrix.sezona }}
     if: github.event_name == 'workflow_dispatch' && startsWith(github.ref, 'refs/heads/codex/spain-germany-production')
-    runs-on: ubuntu-latest
-    timeout-minutes: 40
-    concurrency:
-      group: live-source-${{ matrix.vir }}-${{ github.ref }}
-      cancel-in-progress: false
-    strategy:
-      fail-fast: false
-      max-parallel: 4
-      matrix:
-        include:
-          - vir: dfb
-            koda: regionalliga-nordost/2026-2027
-            sezona: 2026/27
-            mapa: dfb-2026
-          - vir: dfb
-            koda: regionalliga-nordost/2025-2026
-            sezona: 2025/26
-            mapa: dfb-2025
-          - vir: novanet
-            koda: galicia:22:26990830:27759837
-            sezona: 2026/27
-            mapa: galicia-2026
-          - vir: novanet
-            koda: galicia:21:24123231:24820329
-            sezona: 2025/26
-            mapa: galicia-2025
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - name: Anonimna javna seja — samo status in imena piskotkov
-        if: matrix.vir == 'novanet'
-        run: |
-          node --input-type=module <<'JS'
-          import { jeJavniCookieGate } from './scripts/viri/novanet-transport.mjs'
-          const urls=['https://www.futgal.es/pnfg/NPcd/NFG_CmpJornada?cod_primaria=1000120&CodTemporada=22&CodCompeticion=26990830&CodGrupo=27759837&CodJornada=1','https://www.futgal.es/pnfg/NPortada']
-          for(const url of urls){
-            const r=await fetch(url,{redirect:'manual',signal:AbortSignal.timeout(30000)})
-            if([401,403,429].includes(r.status)){await r.body?.cancel();throw new Error('Public probe stopped: HTTP '+r.status)}
-            const names=(r.headers.getSetCookie?.()??[]).map(s=>s.slice(0,s.indexOf('='))).filter(s=>/^[A-Za-z0-9_-]{1,100}$/.test(s))
-            const body=await r.text()
-            console.log(JSON.stringify({path:new URL(url).pathname,status:r.status,cookieNames:names,bytes:Buffer.byteLength(body),cookieGate:jeJavniCookieGate(body)}))
-            if(!jeJavniCookieGate(body))break
-          }
-          JS
-      - name: Cela sezona — brez baze in brez servisnega kljuca
-        env:
-          VIR: ${{ matrix.vir }}
-          KODA: ${{ matrix.koda }}
-          SEZONA: ${{ matrix.sezona }}
-          MAPA: ${{ matrix.mapa }}
-        run: node scripts/preveri-vir-sezono.mjs "$VIR" "$KODA" "$SEZONA" "audit/$MAPA"
-      - name: Dokazi in surovi dokumenti
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: vir-${{ matrix.mapa }}
-          path: audit/${{ matrix.mapa }}/
-          retention-days: 14
+    uses: ./.github/workflows/preveri-nova-vira.yml
+    with:
+      vir: ${{ inputs.vir || 'all' }}
 
   preveri:
     name: Tipi, build, izris
