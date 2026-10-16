@@ -106,6 +106,17 @@ export function ravenLige({ slug, name, zveza }) {
   }
   // Asturija (vir fas): Tercera Federación nad Primero AsturFútbol; raven le
   // znotraj Asturije (katalonske lige so druga piramida in drug vir).
+  // Turčija (vir tff): državna piramida TFF — 1. Lig (raven 2) nad 2. Lig (3)
+  // nad 3. Lig (4) nad Profesyonelliğe Geçiş Ligi (5); skupine iste ravni se
+  // ne primerjajo. Süper Lig (1) ni vpisana.
+  if (slug.startsWith('tr-')) {
+    if (mladinska) return null
+    if (slug === 'tr-1-lig') return drz(2)
+    if (slug.startsWith('tr-2-lig-')) return drz(3)
+    if (slug.startsWith('tr-3-lig-')) return drz(4)
+    if (slug.startsWith('tr-pgl-')) return drz(5)
+    return reg(null)
+  }
   if (slug.startsWith('es-as-')) {
     const r = { tercera: 1, primera: 2 }[slug.split('-')[2]]
     return r ? { raven: r, obmocje: 'es-as', drzavna: false, mladinska } : null

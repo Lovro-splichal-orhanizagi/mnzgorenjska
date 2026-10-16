@@ -39,6 +39,7 @@ import ffa from './ffa.mjs'
 import mascot from './mascot.mjs'
 import lowland from './lowland.mjs'
 import eps from './eps.mjs'
+import tff from './tff.mjs'
 
 const VIRI = {
   mnzg,
@@ -115,6 +116,9 @@ const VIRI = {
   // Grčija: regionalne zveze EPS na skupni platformi results.php (ena domena na
   // zvezo, šifra `<domena>:<league_id>`), player_id, brez dresov in vratarja.
   eps,
+  // Turčija (TFF) prek tff.org: 2. Lig, 3. Lig in PGL; šifra osebe (kisiId),
+  // brez vratarja in pozicij, stran v windows-1254.
+  tff,
 }
 
 /**
