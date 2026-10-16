@@ -27,7 +27,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     lestvicaDomov: 'Pivska tabela',
     // Stran /beers (pages/Piva.tsx): brez zneskov.
     stran: {
-      uvod: 'SLFF je besplatan za hiljade menadžera u stotinama amaterskih liga širom Evrope: bez reklama, bez klađenja, bez naplatnih zidova. Tvoje pivo plaća server, poštu i domen, a zatim završi baš ovde, na zidu, sa tvojim imenom i porukom. Bodove ne donosi, samo veoma zahvalan ponedeljak. 🍺',
+      uvod: 'SLFF je besplatan za hiljade menadžera u stotinama amaterskih liga širom Evrope: bez reklama, bez klađenja, bez pretplata. Tvoje pivo plaća server, poštu i domen, a zatim završi baš ovde, na zidu, sa tvojim imenom i porukom. Bodove ne donosi, samo veoma zahvalan ponedeljak. 🍺',
       skupaj: { one: 'Do sada {n} pivo', few: 'Do sada {n} piva', other: 'Do sada {n} piva' },
       piv: { one: '{n} pivo', few: '{n} piva', other: '{n} piva' },
       lestvica: 'Tabela podržavalaca',

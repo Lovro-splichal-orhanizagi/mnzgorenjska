@@ -33,7 +33,7 @@ export const aplikacija = {
     lestvicaDomov: 'Pivska lestvica',
     // Stran /beers (pages/Piva.tsx): brez zneskov.
     stran: {
-      uvod: 'SLFF je brezplačen za tisoče upraviteljev v stotinah amaterskih lig po Evropi: brez oglasov, brez stav, brez plačljivih zidov. Tvoje pivo plača strežnik, pošto in domeno, nato pa pristane prav tu, na zidu, s tvojim imenom in sporočilom. Točk ne prinese, le zelo hvaležen ponedeljek. 🍺',
+      uvod: 'SLFF je brezplačen za tisoče upraviteljev v stotinah amaterskih lig po Evropi: brez oglasov, brez stav, brez naročnin. Tvoje pivo plača strežnik, pošto in domeno, nato pa pristane prav tu, na zidu, s tvojim imenom in sporočilom. Točk ne prinese, le zelo hvaležen ponedeljek. 🍺',
       skupaj: { one: 'Doslej {n} pivo', two: 'Doslej {n} piva', few: 'Doslej {n} piva', other: 'Doslej {n} piv' },
       piv: { one: '{n} pivo', two: '{n} piva', few: '{n} piva', other: '{n} piv' },
       lestvica: 'Lestvica podpornikov',

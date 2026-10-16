@@ -26,7 +26,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     lestvicaDomov: 'Alus tabula',
     // Stran /beers (pages/Piva.tsx): brez zneskov.
     stran: {
-      uvod: 'SLFF ir bez maksas tūkstošiem menedžeru simtiem amatieru līgu visā Eiropā: bez reklāmām, bez derībām, bez maksas sienām. Tavs alus apmaksā serveri, pastu un domēnu, un tad nonāk tieši šeit, uz sienas, ar tavu vārdu un ziņu. Punktus tas nedod, tikai ļoti pateicīgu pirmdienu. 🍺',
+      uvod: 'SLFF ir bez maksas tūkstošiem menedžeru simtos amatieru līgu visā Eiropā: bez reklāmām, bez derībām, bez maksas satura. Tavs alus apmaksā serveri, pastu un domēnu, un tad nonāk tieši šeit, uz sienas, ar tavu vārdu un ziņu. Punktus tas nedod, tikai ļoti pateicīgu pirmdienu. 🍺',
       skupaj: { zero: 'Līdz šim {n} alus', one: 'Līdz šim {n} alus', other: 'Līdz šim {n} alus' },
       piv: { zero: '{n} alus', one: '{n} alus', other: '{n} alus' },
       lestvica: 'Atbalstītāju tabula',

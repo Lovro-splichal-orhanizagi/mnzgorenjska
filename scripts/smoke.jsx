@@ -7725,9 +7725,18 @@ preveri(
   preveri('e-pošta: tedenski pregled, pivo le po krogu nad povprečjem',
     tSi.html.includes('https://slff.eu/pivo?src=mail-krog') && tSi.html.includes('P.S. SLFF je brezplačen') &&
       !tSk.html.includes('/pivo') && !tCs.html.includes('/pivo') &&
-      E.sestaviTedenskiPregled(sk, { ...krog, tocke: 40 }).html.includes('pivnej stene') &&
-      E.sestaviTedenskiPregled(si, { ...krog, povprecje: null, mesto: 12 }).html.includes('/pivo') &&
-      !E.sestaviTedenskiPregled(si, { ...krog, povprecje: null, mesto: 13 }).html.includes('/pivo'))
+      !E.sestaviTedenskiPregled(si, { ...krog, tocke: 0, povprecje: 0 }).html.includes('/pivo') &&
+      !E.sestaviTedenskiPregled(si, { ...krog, povprecje: null }).html.includes('/pivo'))
+  // P.S. v vseh jezikih: brez slovenščine in pomišljajev.
+  for (const [liga, slo] of [
+    [sk, slovensko], [hrL, slovenskoHr], [czL, slovenskoCs], [huL, slovenskoHu], [atL, slovenskoDe], [rsL, slovenskoSr],
+    [roL, slovenskoRo], [eeL, slovenskoEt], [plL, slovenskoPl], [esL, slovenskoEs], [lvL, slovenskoLv], [mkL, slovenskoMk],
+  ]) {
+    const m = E.sestaviTedenskiPregled(liga, { ...krog, tocke: 50 })
+    preveri(`e-pošta: tedenski pregled s pivom ${liga.drzava}`,
+      m.html.includes('/pivo?src=mail-krog') && !slo.test(m.naslov + m.html.replace(/href="[^"]*"/g, '')) &&
+        !pomisljaj.test(m.naslov + brezNoge(m.html)), m.naslov)
+  }
 }
 
 // --- kontumacije: Ptuj, Murska Sobota, Lendava, Maribor ---------------------

@@ -1468,8 +1468,8 @@ export function sestaviTedenskiPregled(liga: Liga, m: PregledKroga): Sporocilo {
   const premikZnak = premik > 0 ? ` (+${premik})` : premik < 0 ? ` (${premik})` : ''
   const najboljsiVLigi = m.najvec != null && m.tocke >= m.najvec && m.ekip > 1
   const najboljsiNiKapetan = m.najboljsi && m.najboljsi !== m.kapetan
-  // Pivo le po dobrem krogu: vsaj povprečje lige (brez njega zgornja polovica lestvice).
-  const dobrKrog = m.povprecje != null ? m.tocke >= m.povprecje : m.mesto <= m.ekip / 2
+  // Pivo le po dobrem krogu: točke in vsaj povprečje lige.
+  const dobrKrog = m.tocke > 0 && m.povprecje != null && m.tocke >= m.povprecje
 
   const B = {
     sk: {
@@ -1597,7 +1597,7 @@ export function sestaviTedenskiPregled(liga: Liga, m: PregledKroga): Sporocilo {
       kapetan: m.kapetan ? `Kapitan ${esc(m.kapetan)}: ${tock(m.kapetan_tocke ?? 0)}.` : '',
       najboljsi: najboljsiNiKapetan ? `Najlepszy w drużynie: ${esc(m.najboljsi!)} (${tock(m.najboljsi_tocke ?? 0)}).` : '',
       gumb: 'Przygotuj drużynę na następną kolejkę →',
-      pivo: 'PS SLFF jest darmowy i działa na piwie. Jeśli ta kolejka umiliła ci poniedziałek, postaw nam jedno i zdobądź miejsce na ścianie piw:',
+      pivo: 'P.S. SLFF jest darmowy i działa na piwie. Jeśli ta kolejka umiliła ci poniedziałek, postaw nam jedno i zdobądź miejsce na ścianie piw:',
       odjava: 'Nie chcę więcej e-maili',
     },
     es: {
