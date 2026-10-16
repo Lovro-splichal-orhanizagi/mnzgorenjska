@@ -119,6 +119,7 @@ jobs:
           - { drzava: EE, kos: 1, kosov: 1 }
           - { drzava: PL, kos: 1, kosov: 1 }
           - { drzava: ES, kos: 1, kosov: 1 }
+          - { drzava: DE, kos: 1, kosov: 1 }
           - { drzava: LV, kos: 1, kosov: 1 }
           - { drzava: MK, kos: 1, kosov: 1 }
     # Ime "uvoz HU" pri enem košu, "uvoz HU 2/3" pri več (cakaj-na-uvoze.mjs
