@@ -23,6 +23,8 @@
 - Brez Capacitorja, OTA, `src/lib/supabase.ts`, `useAuth`, `Povezava` (te so za slff.eu); brez novih odvisnosti.
 - Za slff.eu se nič ne spremeni (`<Routes>`, `@ni_strani`, `STRANI_LIGE`, `PO_POTI` ostanejo).
 - Caddyfile, funkcije, GoTrue in katalog Stripe CI ne objavi: ročni koraki v nalogi 8.
+- Odločitve lastnika (16. 10.): cene so **brez DDV** (DDV doda Stripe Tax, `automatic_tax`); "sezona" je letna naročnina (odpoved kadarkoli, velja do konca obdobja); MVP **brez stika** klub → igralec (faza 4), zato vmesnik stika ne kaže; zapis DNS doda Claude prek lastnikovega prijavljenega brskalnika (Cloudflare) šele po lastnikovi izrecni potrditvi.
+- Preklic naročnine mora biti vedno dosegljiv: gumb portala je na `/account` v vsakem stanju (tudi brez klubskega računa ali sedeža), kadar `scout_portal_kupec()` vrne kupca.
 - **Živi ključi Stripe niso del tega načrta**: obvezen je ročni preizkus v testnem načinu (naloga 8); preklop v živo je odločitev lastnika in velja tudi za preverjene igralce (isti ključ).
 - Commit sporočila: conventional, zadnja vrstica `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
 
@@ -398,9 +400,9 @@ export const SL = {
   'pogoji.h.meje': 'Meje',
   'pogoji.meje': 'Klub si lahko na dan ogleda največ 500 profilov igralcev in opravi največ 300 drugih poizvedb (iskanja, podobni igralci, vrzeli, seznam). Na opazovalnem seznamu je lahko največ 30 igralcev.',
   'pogoji.h.dnevnik': 'Dnevnik',
-  'pogoji.dnevnik': 'Vsak ogled in iskanje zabeležimo (klub, uporabnik, igralec, čas) in hranimo 12 mesecev, da preprečimo zlorabo in da igralcu na zahtevo povemo, kateri klubi so si ga ogledali.',
+  'pogoji.dnevnik': 'Vsak ogled profila in vsako iskanje zabeležimo (klub, uporabnik, čas, igralec oziroma igralci v rezultatih iskanja in med podobnimi) in hranimo 12 mesecev, da preprečimo zlorabo in da igralcu na zahtevo povemo, kateri klubi so ga videli.',
   'pogoji.h.cene': 'Cene in plačilo',
-  'pogoji.cene': 'Preizkus traja 14 dni, je brezplačen, brez kartice in ga klub dobi enkrat. Paket Klub stane 39 € na mesec ali 290 € na sezono (eno leto); cene ne vključujejo DDV. Naročnina se samodejno podaljša. Plačilo obdela Stripe.',
+  'pogoji.cene': 'Preizkus traja 14 dni, je brezplačen, brez kartice in ga klub dobi enkrat. Paket Klub stane 39 € na mesec ali 290 € na sezono (letna naročnina); cene ne vključujejo DDV, ki ga obračunamo po veljavnih predpisih (pri veljavni davčni številki EU izven Slovenije obrnjena davčna obveznost). Naročnina se samodejno podaljša in jo lahko kadarkoli odpoveš. Plačilo obdela Stripe.',
   'pogoji.h.odpoved': 'Odpoved',
   'pogoji.odpoved': 'Naročnino lahko kadarkoli odpove plačnik ali kateri koli uradni račun kluba z gumbom Upravljaj ali odpovej naročnino na strani Račun kluba. Dostop ostane do konca plačanega obdobja; za začeto obdobje denarja ne vračamo.',
   'pogoji.h.krsitev': 'Kršitev',
@@ -546,9 +548,9 @@ export const EN: Record<Kljuc, string> = {
   'pogoji.h.meje': 'Limits',
   'pogoji.meje': 'A club can open up to 500 player profiles and run up to 300 other queries (searches, similar players, gaps, watchlist) per day. The watchlist holds up to 30 players.',
   'pogoji.h.dnevnik': 'Log',
-  'pogoji.dnevnik': 'We log every profile view and search (club, user, player, time) and keep it for 12 months to prevent abuse and to tell a player on request which clubs viewed them.',
+  'pogoji.dnevnik': 'We log every profile view and every search (club, user, time, and the player or the players shown in search results and among similar players) and keep it for 12 months to prevent abuse and to tell a player on request which clubs saw them.',
   'pogoji.h.cene': 'Prices and payment',
-  'pogoji.cene': 'The trial lasts 14 days, is free, needs no card and is available once per club. The Club plan costs €39 per month or €290 per season (one year); prices exclude VAT. The subscription renews automatically. Payments are processed by Stripe.',
+  'pogoji.cene': 'The trial lasts 14 days, is free, needs no card and is available once per club. The Club plan costs €39 per month or €290 per season (yearly subscription); prices exclude VAT, which is charged as required by law (reverse charge for a valid EU VAT number outside Slovenia). The subscription renews automatically and can be cancelled at any time. Payments are processed by Stripe.',
   'pogoji.h.odpoved': 'Cancellation',
   'pogoji.odpoved': 'The payer or any official club account can cancel at any time with Manage or cancel subscription on the Club account page. Access continues until the end of the paid period; we do not refund a started period.',
   'pogoji.h.krsitev': 'Breach',
@@ -640,7 +642,6 @@ export interface Klub {
     obdobje: 'mesec' | 'sezona' | null
     velja_do: string
     velja: boolean
-    placljiva: boolean
   } | null
   sedezi: { user_id: string; ime: string | null }[]
 }
@@ -680,7 +681,8 @@ export interface ProfilIgralca {
   moc_lige: number | null
   moc_kluba: number | null
   opazujem: boolean
-  privolitev: { odprt_za_prestop: boolean; letnik: number; kontakt_dovoljen: boolean; regije: string[] } | null
+  /** Le pri "odprt za prestop"; stika ni (faza 4). */
+  privolitev: { letnik: number; regije: string[] } | null
   sezone: SezonaIgralca[] | null
 }
 ```
@@ -1013,7 +1015,7 @@ MSG
 - Modify: `scout/src/strani/Racun.tsx`
 
 **Interfaces:**
-- Consumes: `useSeja().klub/osvezi`, RPC `scout_zacni_preizkus(p_sprejmem_pogoje)`, `scout_zasedi_sedez()`, `scout_sprosti_sedez(p_user)`, funkcija `scout-placilo` (`checkout`, `portal`), `napaka`, `datum`.
+- Consumes: `useSeja().klub/osvezi`, RPC `scout_zacni_preizkus(p_sprejmem_pogoje)`, `scout_zasedi_sedez()`, `scout_sprosti_sedez(p_user)`, `scout_portal_kupec()`, funkcija `scout-placilo` (`checkout`, `portal`; napaka nosi `hint` v telesu 400), `napaka`, `datum`.
 - Produces: `export function Racun()` (stran `/account`; `?placilo=uspeh|preklic` po vrnitvi s Stripe).
 
 - [ ] **Step 1: `scout/src/strani/Racun.tsx`**
@@ -1047,6 +1049,7 @@ export function Racun() {
   const [sprejmem, setSprejmem] = useState(false)
   const [sporocilo, setSporocilo] = useState<string | null>(null)
   const [poteka, setPoteka] = useState(false)
+  const [portal, setPortal] = useState(false)
 
   // Webhook zapiše plačilo v nekaj sekundah po vrnitvi s Stripe.
   useEffect(() => {
@@ -1054,6 +1057,14 @@ export function Racun() {
     const ure = [3000, 8000, 15000].map((ms) => setTimeout(() => void osvezi(), ms))
     return () => ure.forEach(clearTimeout)
   }, [placilo, osvezi])
+
+  // Preklic mora biti vedno dosegljiv: plačnik ali kateri koli uradni račun
+  // kluba, ne glede na sedež in naročnino (scout_portal_kupec v 3a).
+  const uid = seja?.user.id
+  useEffect(() => {
+    if (!uid) return
+    void supabase.rpc('scout_portal_kupec').then(({ data }) => setPortal(typeof data === 'string'))
+  }, [uid, klub])
 
   if (nalaga) return <Nalaganje />
   if (!seja) return <Navigate to="/login" replace />
@@ -1072,7 +1083,9 @@ export function Racun() {
     setSporocilo(null)
     const { data, error } = await supabase.functions.invoke<{ url?: string }>('scout-placilo', { body: { ...telo, jezik } })
     if (error || !data?.url) {
-      setSporocilo(t('napaka.splosna'))
+      // Napaka 400 nosi kodo baze v telesu ({ error, hint }); brez nje splošna.
+      const telo: unknown = error && 'context' in error ? await (error.context as Response).json().catch(() => null) : null
+      setSporocilo(napaka((telo as { hint?: string | null } | null) ?? null))
       setPoteka(false)
       return
     }
@@ -1151,12 +1164,12 @@ export function Racun() {
               <p className="text-xs text-slate-500">{t('racun.ddv')}</p>
             </Okno>
           )}
-          {n.placljiva && (
-            <button type="button" disabled={poteka} className="text-sm underline" onClick={() => void stripe({ akcija: 'portal' })}>
-              {t('racun.upravljaj')}
-            </button>
-          )}
         </>
+      )}
+      {portal && (
+        <button type="button" disabled={poteka} className="text-sm underline" onClick={() => void stripe({ akcija: 'portal' })}>
+          {t('racun.upravljaj')}
+        </button>
       )}
     </div>
   )
@@ -1480,7 +1493,7 @@ export function Igralec() {
         </button>
       </header>
 
-      {p.privolitev?.odprt_za_prestop && (
+      {p.privolitev && (
         <section className="space-y-1 rounded border border-emerald-200 bg-emerald-50 p-3 text-sm">
           <p className="font-medium text-emerald-900">{t('igralec.odprt')}</p>
           <p>{t('igralec.letnik', { letnik: p.privolitev.letnik })}</p>
@@ -1980,9 +1993,19 @@ Počakaj na neodvisen pregled in zelen CI (`objavi-scout` je preskočen, dokler 
 - Consumes: združena 3a in 3b, `ssh slff`, Cloudflare, `stripe -p slff` (testni način), `gh`.
 - Produces: `https://scout.slff.eu` v zraku, funkciji objavljeni, katalog Stripe (test), zapisnik ročnega preizkusa.
 
-- [ ] **Step 1 (lastnik): DNS in certifikat**
+- [ ] **Step 1: DNS (Claude prek lastnikovega brskalnika, po izrecni potrditvi) in certifikat**
 
-V Cloudflare dodaj zapis `A scout → 2.31.6.53`, proxied. Preveri, da origin certifikat pokrije poddomeno:
+Zapis doda Claude (kontroler) v lastnikovem prijavljenem brskalniku (Claude in Chrome, `mcp__claude-in-chrome__*`), ne prek API ključa:
+
+1. Odpri `https://dash.cloudflare.com` → domena `slff.eu` → DNS → Records in preberi zapis za ime `slff.eu` (vrsta in vsebina, pričakovano `A` → `2.31.6.53`, Proxied).
+2. Lastniku pokaži točen zapis, ki ga boš dodal: ime `scout`, ista vrsta in vsebina kot `slff.eu`, Proxy status **Proxied**, TTL Auto. **Počakaj na lastnikovo izrecno potrditev v pogovoru**; brez nje ne klikaj Save.
+3. Po potrditvi Add record → vpiši zgornje → Save; preveri, da je zapis na seznamu oranžen (Proxied).
+
+```bash
+dig +short scout.slff.eu
+```
+
+Expected: naslova Cloudflare (ne `2.31.6.53`, ker je zapis proxied). Nato preveri, da origin certifikat pokrije poddomeno:
 
 ```bash
 ssh slff 'openssl x509 -in /etc/caddy/certs/slff-origin.pem -noout -ext subjectAltName'
@@ -2053,7 +2076,35 @@ stripe -p slff prices create -d product="$IZDELEK" -d currency=eur -d unit_amoun
 stripe -p slff prices list --lookup-keys slff_scout_klub_mesec --lookup-keys slff_scout_klub_sezona | grep -E '"lookup_key"|"unit_amount"|"livemode"'
 ```
 
-Expected: prvi `list` prazen (če ni, izdelka ne ustvarjaj znova); na koncu dve ceni, `"livemode": false`. Webhook endpoint `https://api.slff.eu/functions/v1/stripe-webhook` in portal (preklic ob koncu obdobja) že obstajata za preverjene igralce; dogodki so isti.
+Expected: prvi `list` prazen (če ni, izdelka ne ustvarjaj znova); na koncu dve ceni, `"livemode": false`, `"interval": "year"` pri sezoni. Webhook endpoint `https://api.slff.eu/functions/v1/stripe-webhook` že obstaja za preverjene igralce; dogodki so isti.
+
+Portal Scouta (lastna konfiguracija, da kupec ne more preklopiti na drugo ceno ali izdelek; privzete konfiguracije na produkciji ni treba preverjati). Ustvari se ročno enkrat na način, kot katalog, ker je enkratna nastavitev računa; funkcija jo le poišče po metapodatku:
+
+```bash
+stripe -p slff get /v1/billing_portal/configurations -d active=true -d limit=100 | grep -c '"app": "slff-scout"'
+stripe -p slff post /v1/billing_portal/configurations \
+  -d "metadata[app]=slff-scout" \
+  -d "business_profile[headline]=SLFF Scout" \
+  -d "features[subscription_cancel][enabled]=true" \
+  -d "features[subscription_cancel][mode]=at_period_end" \
+  -d "features[subscription_update][enabled]=false" \
+  -d "features[payment_method_update][enabled]=true" \
+  -d "features[invoice_history][enabled]=true" \
+  -d "features[customer_update][enabled]=true" \
+  -d "features[customer_update][allowed_updates][]=address" \
+  -d "features[customer_update][allowed_updates][]=tax_id"
+stripe -p slff get /v1/billing_portal/configurations -d active=true -d limit=100 | grep -c '"app": "slff-scout"'
+```
+
+Expected: prvi `grep` `0` (sicer ne ustvarjaj znova), zadnji `1`.
+
+DDV: Stripe Tax mora biti vklopljen, sicer Checkout z `automatic_tax` zavrne sejo (pri preverjenih igralcih je že v rabi):
+
+```bash
+stripe -p slff get /v1/tax/settings | grep -E '"status"|"country"'
+```
+
+Expected: `"status": "active"` in `"country": "SI"`. Če ni `active`, ustavi se: lastnik v Stripe (Settings → Tax) vklopi Stripe Tax z izvorom SI (registracija SI, za EU OSS); brez tega Scout ne zaračuna DDV in plačila ni.
 
 - [ ] **Step 8: Obvezen ročni preizkus (testni ključi; pred živimi ključi ga ni mogoče preskočiti)**
 
@@ -2085,9 +2136,9 @@ Expected: `racunov = 1`. Nato v brskalniku na `https://scout.slff.eu` odkljukaj 
 4. Profil: tabela sezon, "Pokaži podobne" vrne seznam; "Dodaj na seznam" → `/watchlist` ga pokaže; "Odstrani" ga odstrani.
 5. `/gaps` se odpre brez napake ("Izrazitih vrzeli ni." je pričakovano: testni klub nima tekem).
 6. Jezik EN: vsi nizi angleški, številke `0.41`, datumi `17 October 2026`.
-7. "39 € na mesec" → Stripe Checkout (testni način, polje za davčno številko) → kartica `4242 4242 4242 4242`, poljuben datum in CVC → vrnitev na `/account?placilo=uspeh` → v 15 s "Paket Klub, velja do …" (mesec + 3 dni), gumbov za plačilo ni več.
-8. "Upravljaj ali odpovej naročnino" odpre portal; "Cancel subscription" → vrnitev; dostop ostane do konca obdobja.
-9. V nadzorni plošči Stripe (test) naročnino prekliči takoj ("Cancel immediately") → v nekaj sekundah `/` preusmeri na `/account` z "Dostop je potekel."
+7. "39 € na mesec" → Stripe Checkout (testni način): cena 39,00 € + vrstica DDV (22 % za naslov v Sloveniji brez davčne številke), polje za davčno številko → kartica `4242 4242 4242 4242`, poljuben datum in CVC → vrnitev na `/account?placilo=uspeh` → v 15 s "Paket Klub, velja do …" (mesec + 3 dni), gumbov za plačilo ni več.
+8. "Upravljaj ali odpovej naročnino" odpre portal z naslovom "SLFF Scout" in **brez** menjave paketa; "Cancel subscription" → vrnitev; dostop ostane do konca obdobja.
+9. V nadzorni plošči Stripe (test) naročnino prekliči takoj ("Cancel immediately") → po nekaj sekundah (webhook) **osveži stran**: `/` preusmeri na `/account` z "Dostop je potekel." (aplikacija stanja kluba ne bere sama v ozadju); gumb "Upravljaj ali odpovej naročnino" ostane.
 10. Kartica `4000 0000 0000 0002` (zavrnjena) na "290 € na sezono" → Checkout javi zavrnitev, naročnina se ne spremeni.
 
 Preveri bazo in dnevnik webhooka:
@@ -2096,14 +2147,14 @@ Preveri bazo in dnevnik webhooka:
 ssh slff "docker exec -i supabase-db psql -U supabase_admin -d postgres -X" <<'SQL'
 select n.paket, n.obdobje, n.velja_do <= now() as konec, n.stripe_subscription_id is not null as stripe
   from scout.narocnine n join teams t on t.id = n.team_id where t.name = 'SLFF Scout preizkus';
-select vrsta, count(*) from scout.dnevnik d join teams t on t.id = d.team_id
+select vrsta, count(*), bool_or(parametri ? 'igralci') as igralci from scout.dnevnik d join teams t on t.id = d.team_id
  where t.name = 'SLFF Scout preizkus' group by vrsta order by vrsta;
 select tip, obdelano_at is not null as obdelano from stripe_dogodki order by created_at desc limit 8;
 SQL
 ssh slff 'docker logs --since 1h supabase-edge-functions 2>&1 | grep -E "stripe-webhook|scout-placilo" | tail -10'
 ```
 
-Expected: `klub | mesec | t | t`; dnevnik ima `igralec`, `isci`, `opazovani`, `opazuj`, `podobni`, `vrzeli`; zadnji dogodki obdelani; v dnevniku funkcij `checkout.session.completed … → aktivna` in `customer.subscription.deleted … → koncano`, brez napak. Če kateri korak pade: popravek kot nov PR, nato ta korak znova.
+Expected: `klub | mesec | t | t`; dnevnik ima `igralec`, `isci`, `opazovani`, `opazuj`, `podobni`, `vrzeli`, vrstice `isci` imajo `parametri.igralci`; zadnji dogodki obdelani; v dnevniku funkcij `checkout.session.completed … → aktivna` in `customer.subscription.deleted … → koncano`, brez napak. Če kateri korak pade: popravek kot nov PR, nato ta korak znova.
 
 Počisti testni klub (Stripe testni kupci ostanejo v testnem načinu):
 
@@ -2119,7 +2170,7 @@ SQL
 
 - [ ] **Step 9: Živi način (ni del tega načrta)**
 
-Preklop `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET` na žive ključe velja hkrati za preverjene igralce in Scout, zato ga sproži le lastnik, ko: (a) je Step 8 v celoti uspel, (b) so odprte točke preverjenih igralcev zaprte (`docs/podatkovni-model.md`, *Pred vklopom v živo*), (c) je lastnik potrdil cene brez DDV in besedilo pogojev. Ob preklopu se v živem načinu ustvari isti katalog (Step 7 z `--live`).
+Preklop `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET` na žive ključe velja hkrati za preverjene igralce in Scout, zato ga sproži le lastnik, ko: (a) je Step 8 v celoti uspel, (b) so odprte točke preverjenih igralcev zaprte (`docs/podatkovni-model.md`, *Pred vklopom v živo*), (c) je lastnik potrdil besedilo pogojev, (d) je Stripe Tax v živem načinu aktiven (SI, OSS). Ob preklopu se v živem načinu ustvari isti katalog in ista konfiguracija portala (Step 7 z `--live`).
 
 - [ ] **Step 10: Merilo faze**
 
@@ -2149,4 +2200,7 @@ Pogoj za fazo 4 (spec 5): vrednost ≥ 5.
 | 5 preizkusi: typecheck, smoke izris vseh strani | 1–7 |
 | 5 preizkusi: Playwright od preizkusa do seznama proti Stripe v testnem načinu | **namesto skripte obvezen ročni preizkus (8)**: tok gre čez Stripe Checkout (tuja stran) in potrebuje objavljen model in klubski račun; avtomatizacija sodi v pilot (faza 4), ko je tok ustaljen |
 | 5 merilo: 5 poskusnih klubov tedensko | 8 (Step 10) |
+| odprta točka: ali `authenticated` bere `federations` | da (privzete pravice `20260828100000`, politika "zveze so javne"); test v 3a nalogi 2 |
+| odprta točka: ali privzeti portal na produkciji dovoli menjavo paketa | ni pomembno: Scout uporablja lastno konfiguracijo portala (8, Step 7) |
+| lastnik: cene brez DDV, DDV prek Stripe Tax | 3a (`tax_behavior=exclusive`, `automatic_tax`), 6 (pogoji), 8 (Step 7 preveri Stripe Tax) |
 | sporočila, tedensko poročilo, vaba, Pro, PDF, primerjava, CSV | **ni v fazi 3** (glej *Spec coverage* v načrtu 3a) |

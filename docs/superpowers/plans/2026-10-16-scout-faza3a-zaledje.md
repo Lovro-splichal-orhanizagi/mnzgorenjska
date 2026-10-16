@@ -20,8 +20,10 @@
 - Država kluba je `teams.country_id`; odprta pomeni `scout.drzave.stanje <> 'zaprto'` (enako kot stroj in faza 2).
 - Meje (konstante v `scout.dostop`): 500 klicev `igralec` in 300 ostalih klicev na klub na ljubljanski dan; iskanje 25 vrstic na stran, odmik največ 175 (prvih 200); podobni 10; seznam 30; sedeži 3.
 - Kode napak za vmesnik so v `hint` (`scout-pogoji`, `scout-preizkus-porabljen`, `scout-drzava`, `scout-ni-narocnine`, `scout-sedezi-polni`, `scout-meja`, `scout-filter`, `scout-ni-igralca`, `scout-seznam-poln`, `scout-ze-placano`); brez sedeža ali veljavne naročnine `insufficient_privilege` (42501).
-- Dnevnik: vsak klic s podatki igralcev (`isci`, `igralec`, `podobni`, `vrzeli`, `opazuj`, `opazovani`), hramba 12 mesecev (`scout.pocisti()`, pg_cron `47 4 * * *`). Zavrnjen klic se ne zapiše (napaka razveljavi transakcijo).
-- Stripe: cene po `lookup_key` `slff_scout_klub_mesec` (3900 EUR centov, mesečno) in `slff_scout_klub_sezona` (29000, letno), `tax_behavior=exclusive`; metapodatki `app=slff-scout`, `team_id`, `user_id`, `obdobje` na seji in naročnini; milost 3 dni kot pri preverjenih. Id-jev Stripe ni v kodi.
+- Dnevnik: vsak klic s podatki igralcev (`isci`, `igralec`, `podobni`, `vrzeli`, `opazuj`, `opazovani`), hramba 12 mesecev (`scout.pocisti()`, pg_cron `47 4 * * *`). Pri `isci` in `podobni` so v `parametri.igralci` še id-ji vrnjenih igralcev (največ 25 oziroma 10), da odgovor "kateri klubi so me gledali" zajame tudi rezultate. Zavrnjen klic se ne zapiše (napaka razveljavi transakcijo).
+- Klub ne vidi stika igralca (`kontakt_dovoljen`) ne privolitve brez "odprt za prestop": stik klub → igralec je faza 4 (odločitev lastnika).
+- `public.federations` je berljiv za `authenticated` (privzete pravice `20260828100000` + politika "zveze so javne"); test v nalogi 2 to zaklene.
+- Stripe: cene po `lookup_key` `slff_scout_klub_mesec` (3900 EUR centov, mesečno) in `slff_scout_klub_sezona` (29000, letna naročnina, interval `year`, odpoved kadarkoli), **brez DDV** (`tax_behavior=exclusive`, odločitev lastnika). DDV obračuna Stripe Tax prek `automatic_tax` (isto kot pri preverjenih igralcih; kupec z veljavno davčno številko EU izven SI dobi obrnjeno davčno obveznost); vklop Stripe Tax preveri naloga 8 načrta 3b. Metapodatki `app=slff-scout`, `team_id`, `user_id`, `obdobje` na seji in naročnini; milost 3 dni kot pri preverjenih. Portal Scouta je lastna konfiguracija Billing Portal (metapodatek `app=slff-scout`, preklic da, menjava paketa ne), ki jo `scout-placilo` najde po metapodatku; id-jev Stripe ni v kodi.
 - **Preklic naročnine mora biti vedno mogoč**: `scout_portal_kupec()` vrne kupca plačniku ali kateremukoli aktivnemu klubskemu računu kluba, ne glede na sedež, naročnino in zaprtje.
 - Vsaka nova poizvedba se pred združitvijo izmeri na produkciji v transakciji z `rollback` (pravilo po 16. 10.: join z OR je na produkciji obvisel); sprejemljivo pod 1000 ms na klic.
 - Besedišče (spec 2): "kazalniki iz podatkov tekem", brez negativnih oznak (velja za vmesnik v 3b; v SQL ni nizov za uporabnika razen sporočil napak).
@@ -273,8 +275,7 @@ as $$
     'drzava_odprta', coalesce(d.stanje <> 'zaprto', false),
     'narocnina', (select jsonb_build_object(
                      'paket', n.paket, 'obdobje', n.obdobje, 'velja_do', n.velja_do,
-                     'velja', n.velja_do > now() and n.zaprt_at is null,
-                     'placljiva', n.stripe_customer_id is not null)
+                     'velja', n.velja_do > now() and n.zaprt_at is null)
                     from scout.narocnine n where n.team_id = r.team_id),
     'sedez', exists (select 1 from scout.sedezi s where s.user_id = auth.uid() and s.team_id = r.team_id),
     'sedezi', coalesce((select jsonb_agg(jsonb_build_object('user_id', s.user_id, 'ime', p.display_name)
@@ -404,16 +405,16 @@ MSG
 - Modify: `supabase/tests/varnost.sql`
 
 **Interfaces:**
-- Consumes: naloga 1 (`scout.narocnine`, `scout.sedezi`, `scout.dnevnik`, `scout.opazovani`); faza 1 (`scout.modeli.objavljen`, `scout.indeks`, `scout.kazalniki`, `scout.vektorji`, `scout.vrzeli`, `scout.lige_moc`, `scout.ekipe_elo`, `scout.drzave`); faza 2 (`scout.ugovori`, `scout.privolitve`, `scout.kljuci_vrstic`); `public.anonimizacijski_kljuc(text)`, `public.je_mladinski_slug(text)`, `public.je_klubski_racun(uuid, bigint)`, `public.zahtevki_igralca`, `public.povezani_igralci`, `public.federations`.
+- Consumes: naloga 1 (`scout.narocnine`, `scout.sedezi`, `scout.dnevnik`, `scout.opazovani`); `public.anonimizirani_igralci(player_id, kljuc)`; faza 1 (`scout.modeli.objavljen`, `scout.indeks`, `scout.kazalniki`, `scout.vektorji`, `scout.vrzeli`, `scout.lige_moc`, `scout.ekipe_elo`, `scout.drzave`); faza 2 (`scout.ugovori`, `scout.privolitve`, `scout.kljuci_vrstic`); `public.anonimizacijski_kljuc(text)`, `public.je_mladinski_slug(text)`, `public.je_klubski_racun(uuid, bigint)`, `public.zahtevki_igralca`, `public.povezani_igralci`, `public.federations`.
 - Produces:
   - `scout.zadnji_model() returns bigint`
-  - `scout.dostop(p_vrsta text, p_player_id bigint, p_parametri jsonb) returns table(model_id bigint, team_id bigint, country_id bigint)`
+  - `scout.dostop(p_vrsta text, p_player_id bigint, p_parametri jsonb) returns table(model_id bigint, team_id bigint, country_id bigint, dnevnik_id bigint)`
   - `scout.vidni(p_model bigint, p_country bigint) returns table(player_id bigint, skupina text, indeks double precision, percentil double precision, zaupanje double precision)`
-  - `scout.privolitve_vrstic() returns table(player_id bigint, odprt_za_prestop boolean, letnik int, regije bigint[], kontakt_dovoljen boolean)`
+  - `scout.privolitve_vrstic() returns table(player_id bigint, odprt_za_prestop boolean, letnik int, regije bigint[])`
   - `scout.liga_kluba(p_model bigint, p_team bigint) returns table(competition_id bigint, moc double precision)`
   - `scout.isci_jedro(p_model, p_country, p_team bigint, p_skupina text, p_raven text, p_regije bigint[], p_min_minut int, p_samo_odprti boolean, p_od int)`, `scout.igralec_jedro(p_model, p_country, p_team, p_player bigint) returns jsonb`, `scout.podobni_jedro(p_model, p_country, p_team, p_player bigint)`, `scout.vrzeli_jedro(p_model, p_country, p_team bigint)`
   - `public.scout_isci(p_skupina text default null, p_raven text default 'vse', p_regije bigint[] default '{}', p_min_minut int default 0, p_samo_odprti boolean default false, p_od int default 0) returns table(player_id bigint, ime text, klub text, liga text, skupina text, percentil double precision, zaupanje double precision, minute int, delez_minut double precision, goli_90_pri_nas double precision, odprt_za_prestop boolean)`
-  - `public.scout_igralec(p_player_id bigint) returns jsonb` (null, če igralec ni viden): ključi `player_id, ime, klub, liga, skupina, indeks, percentil, zaupanje, moc_lige, moc_kluba, opazujem, privolitev{odprt_za_prestop, letnik, kontakt_dovoljen, regije[]}|null, sezone[{sezona, liga, klub, minute, delez_minut, zacetki_delez, cele_delez, goli_ref_90, goli_90_pri_nas, delez_golov, enajstm, onoff_ref_90, prejeti_ref_90, ciste_delez, kartoni_90, vratar_ref_90, stalnost, trend_minut, zaupanje}]|null`
+  - `public.scout_igralec(p_player_id bigint) returns jsonb` (null, če igralec ni viden): ključi `player_id, ime, klub, liga, skupina, indeks, percentil, zaupanje, moc_lige, moc_kluba, opazujem, privolitev{letnik, regije[]}|null (le pri odprt_za_prestop), sezone[{sezona, liga, klub, minute, delez_minut, zacetki_delez, cele_delez, goli_ref_90, goli_90_pri_nas, delez_golov, enajstm, onoff_ref_90, prejeti_ref_90, ciste_delez, kartoni_90, vratar_ref_90, stalnost, trend_minut, zaupanje}]|null`
   - `public.scout_podobni(p_player_id bigint) returns table(player_id bigint, ime text, klub text, liga text, skupina text, podobnost double precision, percentil double precision, minute int, odprt_za_prestop boolean)`
   - `public.scout_vrzeli() returns table(liga text, skupina text, vrsta text, player_id bigint, ime text, vrednost double precision)`
 
@@ -440,7 +441,10 @@ values (-930001, -913002, -913001, 'Scout', 'Vidni', 'Scout Vidni', 'FWD', 'admi
        (-930004, -913002, -913001, 'Scout', 'Anonimni', 'Scout Anonimni', 'FWD', 'admin', 6, 6, true),
        (-930005, -930201, -930200, 'Scout', 'Hrvat', 'Scout Hrvat', 'FWD', 'admin', 6, 6, true),
        (-930006, -913002, -913001, 'Scout', 'Neobjavljeni', 'Scout Neobjavljeni', 'FWD', 'admin', 6, 6, true),
-       (-930007, -913001, -913001, 'Scout', 'Domaci', 'Scout Domaci', 'MID', 'admin', 6, 6, true);
+       (-930007, -913001, -913001, 'Scout', 'Domaci', 'Scout Domaci', 'MID', 'admin', 6, 6, true),
+       (-930008, -913003, -913001, 'Scout', 'Anonimni', 'Scout Anonimni', 'FWD', 'admin', 6, 6, true);
+-- -930008 je ista oseba kot -930004 (isto ime v državi): anonimizacija skrije obe vrstici.
+insert into anonimizirani_igralci (player_id, kljuc) select * from scout.kljuci_vrstic(array[-930004]::bigint[]);
 update players set anonimiziran_at = now() where id = -930004;
 insert into scout.ugovori (player_id, kljuc) select * from scout.kljuci_vrstic(array[-930002]::bigint[]);
 insert into scout.modeli (leto, backtest, parametri, objavljen) values (2026, '{}', '{}', true);
@@ -454,7 +458,7 @@ insert into scout.ekipe_elo (model_id, team_id, competition_id, leto, elo)
 select s3.model, -913001, -913001, 2026, 1500 from s3;
 insert into scout.indeks (model_id, player_id, skupina, indeks, percentil, zaupanje)
 select s3.model, p.id, p.position, 1, 90, 1
-  from s3, players p where p.id in (-930001, -930002, -930003, -930004, -930005, -930007);
+  from s3, players p where p.id in (-930001, -930002, -930003, -930004, -930005, -930007, -930008);
 insert into scout.indeks (model_id, player_id, skupina, indeks, percentil, zaupanje)
 select s3.neobjavljen, -930006, 'FWD', 1, 99, 1 from s3;
 insert into scout.kazalniki (model_id, player_id, competition_id, sezona, leto, team_id, skupina, minute,
@@ -462,7 +466,7 @@ insert into scout.kazalniki (model_id, player_id, competition_id, sezona, leto, 
   ciste_delez, kartoni_90, vratar_ref_90, stalnost, trend_minut, prehod_ravni, zaupanje)
 select s3.model, p.id, p.competition_id, '2026/27', 2026, p.team_id, p.position, 900,
        0.8, 0.8, 0.7, 0.5, 0.3, 0, 0.2, 1.1, 0.2, 0.1, 0, 0.9, 0, null, 1
-  from s3, players p where p.id in (-930001, -930002, -930003, -930004, -930005, -930007);
+  from s3, players p where p.id in (-930001, -930002, -930003, -930004, -930005, -930007, -930008);
 insert into scout.vektorji (model_id, player_id, skupina, vektor, podobni, podobnost)
 select s3.model, -930001, 'FWD', array[0.1, 0.2],
        array[-930002, -930003, -930004, -930005, -930006, -930007]::bigint[], array[0.9, 0.8, 0.7, 0.6, 0.5, 0.4]
@@ -478,7 +482,8 @@ select pg_temp.preveri('scout3: anon ne bere, notranjih funkcij brskalnik ne kli
   and not has_function_privilege('anon', 'public.scout_podobni(bigint)', 'EXECUTE')
   and not has_function_privilege('anon', 'public.scout_vrzeli()', 'EXECUTE')
   and not has_function_privilege('authenticated', 'scout.dostop(text, bigint, jsonb)', 'EXECUTE')
-  and not has_function_privilege('authenticated', 'scout.vidni(bigint, bigint)', 'EXECUTE'));
+  and not has_function_privilege('authenticated', 'scout.vidni(bigint, bigint)', 'EXECUTE')
+  and has_table_privilege('authenticated', 'public.federations', 'SELECT'));
 
 select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000005',true);
 set local role authenticated;
@@ -494,9 +499,9 @@ select pg_temp.preveri('scout3: iskanje vrne le vidne igralce odprte drzave iz o
   (select array_agg(player_id order by player_id) = array[-930001]::bigint[] from scout_isci()));
 select pg_temp.preveri('scout3: profil vidnega igralca s sezonami',
   (select (j->>'ime') = 'Scout Vidni' and jsonb_array_length(j->'sezone') = 1 from scout_igralec(-930001) j));
-select pg_temp.preveri('scout3: skrit, mladinec, anonimiziran, zaprta drzava in neobjavljen nimajo profila',
+select pg_temp.preveri('scout3: skrit, mladinec, anonimiziran (tudi druga vrstica osebe), zaprta drzava in neobjavljen nimajo profila',
   scout_igralec(-930002) is null and scout_igralec(-930003) is null and scout_igralec(-930004) is null
-  and scout_igralec(-930005) is null and scout_igralec(-930006) is null);
+  and scout_igralec(-930005) is null and scout_igralec(-930006) is null and scout_igralec(-930008) is null);
 select pg_temp.preveri('scout3: podobni le vidni',
   (select array_agg(player_id) = array[-930007]::bigint[] from scout_podobni(-930001)));
 select pg_temp.preveri('scout3: vrzeli brez skritih igralcev',
@@ -504,8 +509,33 @@ select pg_temp.preveri('scout3: vrzeli brez skritih igralcev',
 select pg_temp.napaka('scout3: neveljaven filter', $$select * from scout_isci('XYZ')$$, 'scout-filter');
 reset role;
 select pg_temp.preveri('scout3: vsak klic v dnevniku',
-  (select count(*) = 9 from scout.dnevnik
+  (select count(*) = 10 from scout.dnevnik
     where team_id = -913001 and user_id = 'e5c30000-0000-4000-8000-000000000001'));
+select pg_temp.preveri('scout3: dnevnik iskanja in podobnih hrani vrnjene igralce',
+  (select bool_and(case vrsta when 'isci' then parametri->'igralci' = '[-930001]'::jsonb
+                             else parametri->'igralci' = '[-930007]'::jsonb end)
+     from scout.dnevnik where team_id = -913001 and vrsta in ('isci', 'podobni')
+      and user_id = 'e5c30000-0000-4000-8000-000000000001'));
+
+-- Privolitev brez "odprt za prestop" se klubu ne pokaže; stika klub ne vidi (faza 4).
+insert into zahtevki_igralca(player_id, user_id, status, potrdil, decided_at)
+values (-930001, 'e5c30000-0000-4000-8000-000000000005', 'potrjen', 'admin', now());
+insert into scout.privolitve (player_id, odprt_za_prestop, letnik, regije, kontakt_dovoljen)
+values (-930001, false, 1995, '{}', true);
+select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.preveri('scout3: privolitev brez odprt za prestop se ne pokaze',
+  (select (j->'privolitev') = 'null'::jsonb from scout_igralec(-930001) j)
+  and not exists (select 1 from scout_isci(p_samo_odprti => true)));
+reset role;
+update scout.privolitve set odprt_za_prestop = true where player_id = -930001;
+select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.preveri('scout3: odprt za prestop se pokaze, stik ne',
+  (select (j->'privolitev'->>'letnik') = '1995' and not (j->'privolitev' ? 'kontakt_dovoljen')
+     from scout_igralec(-930001) j)
+  and (select array_agg(player_id) = array[-930001]::bigint[] from scout_isci(p_samo_odprti => true)));
+reset role;
 
 insert into scout.dnevnik (team_id, vrsta, player_id)
 select -913001, 'igralec', -930001 from generate_series(1, 500);
@@ -537,7 +567,7 @@ update klubski_racuni set preklican_at = null where user_id = 'e5c30000-0000-400
 select set_config('request.jwt.claim.sub','',true);
 ```
 
-Število 9 v dnevniku: iskanje 1 + profil 1 + profil 5 + podobni 1 + vrzeli 1 (neveljaven filter pade pred dnevnikom).
+Število 10 v dnevniku: iskanje 1 + profil 1 + profil 6 + podobni 1 + vrzeli 1 (neveljaven filter pade pred dnevnikom).
 
 ```bash
 npm run test:varnost
@@ -564,11 +594,12 @@ returns bigint language sql stable
 as $$ select id from scout.modeli where objavljen order by id desc limit 1 $$;
 
 create function scout.dostop(p_vrsta text, p_player_id bigint, p_parametri jsonb)
-returns table (model_id bigint, team_id bigint, country_id bigint)
+returns table (model_id bigint, team_id bigint, country_id bigint, dnevnik_id bigint)
 language plpgsql set search_path = public
 as $$
 declare
   v_uid uuid := auth.uid();
+  v_dnevnik bigint;
   n scout.narocnine;
   v_danes timestamptz := ((now() at time zone 'Europe/Ljubljana')::date)::timestamp at time zone 'Europe/Ljubljana';
   v_meja int := case when p_vrsta = 'igralec' then 500 else 300 end;
@@ -591,13 +622,16 @@ begin
     raise exception 'Scout: klub je danes dosegel mejo.' using hint = 'scout-meja';
   end if;
   insert into scout.dnevnik (team_id, user_id, vrsta, player_id, parametri)
-  values (n.team_id, v_uid, p_vrsta, p_player_id, coalesce(p_parametri, '{}'::jsonb));
-  return query select scout.zadnji_model(), n.team_id, n.country_id;
+  values (n.team_id, v_uid, p_vrsta, p_player_id, coalesce(p_parametri, '{}'::jsonb))
+  returning id into v_dnevnik;
+  return query select scout.zadnji_model(), n.team_id, n.country_id, v_dnevnik;
 end;
 $$;
 
--- Igralci, ki jih klub sme videti v modelu: odprta država, ne skrit (ključi
--- kot scout.kljuci_vrstic), ne anonimiziran, ne mladinska liga.
+-- Igralci, ki jih klub sme videti v modelu: odprta država, ne mladinska liga,
+-- ne anonimiziran in ne skrit. Ugovor in anonimizacija po zgoščenih ključih
+-- osebe (kot scout.kljuci_vrstic in SQL_IZKLJUCENI stroja), zato takoj izpadejo
+-- tudi druge vrstice iste osebe, ne šele ob naslednjem modelu.
 create function scout.vidni(p_model bigint, p_country bigint)
 returns table (player_id bigint, skupina text, indeks double precision, percentil double precision,
                zaupanje double precision)
@@ -608,26 +642,28 @@ as $$
     join public.players p on p.id = i.player_id
     join public.competitions c on c.id = p.competition_id
     join scout.drzave d on d.country_id = c.country_id and d.stanje <> 'zaprto'
+    cross join lateral (select array[
+      public.anonimizacijski_kljuc(c.country_id || '|' || nullif(p.full_name, '')),
+      public.anonimizacijski_kljuc(c.country_id || '|reg|' || p.reg_st)] as k) kk
    where i.model_id = p_model and c.country_id = p_country
      and p.anonimiziran_at is null
      and not public.je_mladinski_slug(c.slug)
-     -- = any(array) namesto OR: indeks ugovori_kljuc, brez join z OR (16. 10.)
-     and not exists (select 1 from scout.ugovori u
-                      where u.kljuc = any (array[
-                        public.anonimizacijski_kljuc(c.country_id || '|' || nullif(p.full_name, '')),
-                        public.anonimizacijski_kljuc(c.country_id || '|reg|' || p.reg_st)]))
+     -- = any(array) namesto OR: indeksa na kljuc, brez join z OR (16. 10.)
+     and not exists (select 1 from scout.ugovori u where u.kljuc = any (kk.k))
+     and not exists (select 1 from public.anonimizirani_igralci a where a.kljuc = any (kk.k))
 $$;
 
--- Privolitve na vseh vrsticah potrjenega profila (glavna in povezane).
+-- Privolitve na vseh vrsticah potrjenega profila (glavna in povezane). Stik
+-- (kontakt_dovoljen) se ne bere: sporočila klub → igralec so faza 4.
 create function scout.privolitve_vrstic()
-returns table (player_id bigint, odprt_za_prestop boolean, letnik int, regije bigint[], kontakt_dovoljen boolean)
+returns table (player_id bigint, odprt_za_prestop boolean, letnik int, regije bigint[])
 language sql stable
 as $$
-  select z.player_id, s.odprt_za_prestop, s.letnik, s.regije, s.kontakt_dovoljen
+  select z.player_id, s.odprt_za_prestop, s.letnik, s.regije
     from public.zahtevki_igralca z join scout.privolitve s on s.player_id = z.player_id
    where z.status = 'potrjen'
   union
-  select pi.player_id, s.odprt_za_prestop, s.letnik, s.regije, s.kontakt_dovoljen
+  select pi.player_id, s.odprt_za_prestop, s.letnik, s.regije
     from public.povezani_igralci pi
     join public.zahtevki_igralca z on z.id = pi.zahtevek_id and z.status = 'potrjen'
     join scout.privolitve s on s.player_id = z.player_id
@@ -694,12 +730,13 @@ as $$
     'indeks', v.indeks, 'percentil', v.percentil, 'zaupanje', v.zaupanje,
     'moc_lige', m.moc, 'moc_kluba', (select k.moc from k),
     'opazujem', exists (select 1 from scout.opazovani w where w.team_id = p_team and w.player_id = v.player_id),
+    -- Privolitev le pri "odprt za prestop" (spec 2); stik je faza 4.
     'privolitev', (select jsonb_build_object(
-                     'odprt_za_prestop', o.odprt_za_prestop, 'letnik', o.letnik,
-                     'kontakt_dovoljen', o.kontakt_dovoljen,
+                     'letnik', o.letnik,
                      'regije', (select coalesce(jsonb_agg(f.name order by f.name), '[]'::jsonb)
                                   from public.federations f where f.id = any (o.regije)))
-                     from scout.privolitve_vrstic() o where o.player_id = v.player_id limit 1),
+                     from scout.privolitve_vrstic() o
+                    where o.player_id = v.player_id and o.odprt_za_prestop limit 1),
     'sezone', (select jsonb_agg(jsonb_build_object(
                  'sezona', z.sezona, 'liga', zc.name, 'klub', zt.name, 'minute', z.minute,
                  'delez_minut', z.delez_minut, 'zacetki_delez', z.zacetki_delez, 'cele_delez', z.cele_delez,
@@ -767,10 +804,12 @@ create function public.scout_isci(p_skupina text default null, p_raven text defa
 returns table (player_id bigint, ime text, klub text, liga text, skupina text, percentil double precision,
                zaupanje double precision, minute int, delez_minut double precision,
                goli_90_pri_nas double precision, odprt_za_prestop boolean)
-language plpgsql security definer set search_path = public
+-- Filtri (p_x is null or …): generičen plan po petem klicu v seji bi bil slab.
+language plpgsql security definer set search_path = public set plan_cache_mode = force_custom_plan
 as $$
 declare
   d record;
+  v_ids bigint[] := '{}';
 begin
   if (p_skupina is not null and p_skupina not in ('GK', 'DEF', 'MID', 'FWD'))
      or coalesce(p_raven, 'vse') not in ('vse', 'ista_ali_nizja', 'nizja')
@@ -780,8 +819,17 @@ begin
   select * into d from scout.dostop('isci', null, jsonb_build_object(
     'skupina', p_skupina, 'raven', p_raven, 'regije', p_regije, 'min_minut', p_min_minut,
     'samo_odprti', p_samo_odprti, 'od', p_od));
-  return query select * from scout.isci_jedro(d.model_id, d.country_id, d.team_id, p_skupina, p_raven,
-                                              p_regije, p_min_minut, p_samo_odprti, p_od);
+  -- Vrnjeni igralci v dnevnik (največ 25): "kateri klubi so me gledali".
+  for player_id, ime, klub, liga, skupina, percentil, zaupanje, minute, delez_minut, goli_90_pri_nas,
+      odprt_za_prestop in
+    select * from scout.isci_jedro(d.model_id, d.country_id, d.team_id, p_skupina, p_raven,
+                                   p_regije, p_min_minut, p_samo_odprti, p_od)
+  loop
+    v_ids := v_ids || player_id;
+    return next;
+  end loop;
+  update scout.dnevnik x set parametri = x.parametri || jsonb_build_object('igralci', to_jsonb(v_ids))
+   where x.id = d.dnevnik_id;
 end;
 $$;
 
@@ -803,9 +851,17 @@ language plpgsql security definer set search_path = public
 as $$
 declare
   d record;
+  v_ids bigint[] := '{}';
 begin
   select * into d from scout.dostop('podobni', p_player_id, '{}'::jsonb);
-  return query select * from scout.podobni_jedro(d.model_id, d.country_id, d.team_id, p_player_id);
+  for player_id, ime, klub, liga, skupina, podobnost, percentil, minute, odprt_za_prestop in
+    select * from scout.podobni_jedro(d.model_id, d.country_id, d.team_id, p_player_id)
+  loop
+    v_ids := v_ids || player_id;
+    return next;
+  end loop;
+  update scout.dnevnik x set parametri = x.parametri || jsonb_build_object('igralci', to_jsonb(v_ids))
+   where x.id = d.dnevnik_id;
 end;
 $$;
 
@@ -1020,7 +1076,7 @@ MSG
 - Produces:
   - `public.scout_pripravi_nakup(p_obdobje text) returns table(team_id bigint, stripe_customer_id text, email text)` (authenticated; JWT kupca)
   - `public.scout_portal_kupec() returns text` (authenticated; null, če kupca ni)
-  - `public.scout_iz_placila(p_team_id bigint, p_user_id uuid, p_obdobje text, p_velja_do timestamptz, p_customer text, p_subscription text) returns text` (`aktivna` | `dvojno` | `zaprt` | `ni_narocnine` | `neveljavno`; service_role)
+  - `public.scout_iz_placila(p_team_id bigint, p_user_id uuid, p_obdobje text, p_velja_do timestamptz, p_customer text, p_subscription text) returns text` (`aktivna` | `aktivna:<stara naročnina>` (webhook staro prekliče) | `dvojno` | `zaprt` | `ni_narocnine` | `neveljavno`; service_role)
   - `public.scout_podaljsaj(p_subscription text, p_velja_do timestamptz) returns text` (`podaljsano` | `zaprt` | `neznana`; service_role)
   - `public.scout_narocnina_konec(p_subscription text, p_konec timestamptz) returns text` (`koncano` | `neznana`; service_role)
 
@@ -1076,6 +1132,9 @@ set local role authenticated;
 select pg_temp.zavrnjeno('scout3: po koncu narocnine ni iskanja', $$select * from scout_isci()$$);
 reset role;
 select set_config('request.jwt.claim.sub','',true);
+select pg_temp.preveri('scout3: novo placilo vrne staro narocnino za preklic',
+  scout_iz_placila(-913001, 'e5c30000-0000-4000-8000-000000000002', 'sezona', now() + interval '1 year', 'cus_s3', 'sub_s3c') = 'aktivna:sub_s3'
+  and (select stripe_subscription_id = 'sub_s3c' and obdobje = 'sezona' from scout.narocnine where team_id = -913001));
 ```
 
 ```bash
@@ -1135,6 +1194,7 @@ returns text language plpgsql security definer set search_path = public
 as $$
 declare
   n scout.narocnine;
+  v_stara text;
 begin
   select * into n from scout.narocnine where team_id = p_team_id for update;
   if not found then
@@ -1152,12 +1212,14 @@ begin
   if p_obdobje is null or p_obdobje not in ('mesec', 'sezona') then
     return 'neveljavno';
   end if;
+  -- Prejšnja naročnina (potekla, morda še past_due) se ne sme zaračunavati naprej.
+  v_stara := n.stripe_subscription_id;
   update scout.narocnine
      set paket = 'klub', obdobje = p_obdobje, velja_do = p_velja_do, stripe_customer_id = p_customer,
          stripe_subscription_id = p_subscription, placal = p_user_id, updated_at = now()
    where team_id = p_team_id;
   perform preverjeni_na_discord(format('💶 Scout plačan: %s (%s)', (select name from teams where id = p_team_id), p_obdobje));
-  return 'aktivna';
+  return case when v_stara is null then 'aktivna' else 'aktivna:' || v_stara end;
 end;
 $$;
 
@@ -1233,15 +1295,15 @@ MSG
 **Interfaces:**
 - Consumes: `scout_pripravi_nakup`, `scout_portal_kupec`, `scout_iz_placila`, `scout_podaljsaj`, `scout_narocnina_konec` (naloga 4); v `index.ts` obstoječe `beri`, `rpc`, `discord`, `prekliciNarocnino`, `konecObdobja`, `iso`, `id`, `MILOST_S`.
 - Produces:
-  - `export function scoutPostavkeVeljajo(postavke: Postavka[], obdobje: string): boolean` in `export const SCOUT_CENE: Record<string, string>` v `stripe-webhook/scout.ts`
-  - Edge funkcija `scout-placilo`: POST `{"akcija":"checkout","obdobje":"mesec"|"sezona","jezik"?:"sl"|"en"}` → `{"url"}`; `{"akcija":"portal"}` → `{"url"}`; napaka `{"error", "hint"}`.
+  - `export function scoutPostavkeVeljajo(postavke: Postavka[], obdobje: string): boolean`, `export function scoutCeneNarocnine(sub: { items?: { data?: Postavka[] | null } | null }): boolean` in `export const SCOUT_CENE: Record<string, string>` v `stripe-webhook/scout.ts`
+  - Edge funkcija `scout-placilo`: POST `{"akcija":"checkout","obdobje":"mesec"|"sezona","jezik"?:"sl"|"en"}` → `{"url"}`; `{"akcija":"portal"}` → `{"url"}` (konfiguracija portala z `metadata.app = slff-scout`); napaka `{"error", "hint"}` (400) ali `{"error"}`.
 
 - [ ] **Step 1: Test v smoke (pade, ker datoteke ni)**
 
 V `scripts/smoke.jsx` za vrstico `import { veljavenPodpis } from '../supabase/functions/stripe-webhook/podpis.ts'` dodaj:
 
 ```js
-import { scoutPostavkeVeljajo } from '../supabase/functions/stripe-webhook/scout.ts'
+import { scoutPostavkeVeljajo, scoutCeneNarocnine } from '../supabase/functions/stripe-webhook/scout.ts'
 ```
 
 in za blokom, ki se konča z `preveri('stripe: brez glave pade', !(await veljavenPodpis(null, telo, skr, t)))` in `}`, dodaj:
@@ -1256,6 +1318,10 @@ in za blokom, ki se konča z `preveri('stripe: brez glave pade', !(await veljave
   preveri('scout stripe: popust pade', !scoutPostavkeVeljajo([p('slff_scout_klub_mesec', 1, 1900)], 'mesec'))
   preveri('scout stripe: dodatna postavka pade', !scoutPostavkeVeljajo([p('slff_scout_klub_mesec'), p('slff_znacka')], 'mesec'))
   preveri('scout stripe: neznano obdobje pade', !scoutPostavkeVeljajo([p('slff_scout_klub_mesec')], 'teden'))
+  // Obnova: vse postavke naročnine so cene Scouta (obramba v globino).
+  preveri('scout stripe: naročnina Scouta gre', scoutCeneNarocnine({ items: { data: [p('slff_scout_klub_sezona')] } }))
+  preveri('scout stripe: tuja cena v naročnini pade', !scoutCeneNarocnine({ items: { data: [p('slff_preverjen_letna')] } }))
+  preveri('scout stripe: naročnina brez postavk pade', !scoutCeneNarocnine({ items: { data: [] } }))
 }
 ```
 
@@ -1294,6 +1360,13 @@ export function scoutPostavkeVeljajo(postavke: Postavka[], obdobje: string): boo
     l.amount_subtotal === l.price.unit_amount
   )
 }
+
+/** Naročnina (objekt subscription) ima le cene Scouta: obnova tuje cene ne podaljša dostopa. */
+export function scoutCeneNarocnine(sub: { items?: { data?: Postavka[] | null } | null }): boolean {
+  const postavke = sub.items?.data ?? []
+  const kljuci = Object.values(SCOUT_CENE)
+  return postavke.length > 0 && postavke.every((l) => kljuci.includes(l.price?.lookup_key ?? ''))
+}
 ```
 
 - [ ] **Step 3: Veja v `supabase/functions/stripe-webhook/index.ts`**
@@ -1308,9 +1381,11 @@ z
 
 ```ts
 // SLFF Scout (metadata app=slff-scout, faza 3): seja → scout_iz_placila
-// (postavke po scout.ts; 'dvojno', 'zaprt', 'ni_narocnine' → preklic +
-// Discord "vrni denar"), invoice.paid in subscription.updated →
-// scout_podaljsaj ('zaprt' → preklic), deleted → scout_narocnina_konec.
+// (postavke po scout.ts; 'aktivna:<stara>' → prekliče staro naročnino;
+// 'dvojno', 'zaprt', 'ni_narocnine' → preklic nove + Discord "vrni denar"),
+// invoice.paid in subscription.updated → scout_podaljsaj le, če ima naročnina
+// samo cene Scouta ('zaprt' ali tuja cena → preklic), deleted →
+// scout_narocnina_konec.
 // Vračil in sporov Scouta ne obdelujemo samodejno: admin naročnino prekliče v
 // Stripe, kar pride kot subscription.deleted.
 //
@@ -1327,7 +1402,7 @@ z
 
 ```ts
 import { veljavenPodpis } from './podpis.ts'
-import { scoutPostavkeVeljajo } from './scout.ts'
+import { scoutCeneNarocnine, scoutPostavkeVeljajo } from './scout.ts'
 ```
 
 Zamenjaj
@@ -1363,7 +1438,7 @@ z
       if ((app !== 'slff' && app !== 'slff-scout') || !sub) return 'ignored'
       const konec = Math.max(0, ...(o.lines?.data ?? []).map((l: Obj) => l.period?.end ?? 0))
       if (!konec) return 'no period'
-      return app === 'slff-scout' ? await scoutPodaljsaj(sub, konec) : await podaljsaj(sub, konec)
+      return app === 'slff-scout' ? await scoutPodaljsaj(await beri(`subscriptions/${sub}`), konec) : await podaljsaj(sub, konec)
 ```
 
 Zamenjaj
@@ -1409,6 +1484,11 @@ async function scoutSeja(o: Obj): Promise<string> {
     p_customer: id(o.customer),
     p_subscription: sub,
   })
+  if (izid.startsWith('aktivna:')) {
+    // Nova naročnina zamenja staro (potekla, morda še past_due): stara ne sme teči naprej.
+    await prekliciNarocnino(izid.slice('aktivna:'.length))
+    return 'aktivna'
+  }
   if (izid !== 'aktivna') {
     await discord(`⚠️ Scout seja ${o.id}: ${izid}, naročnina preklicana (vrni denar v Stripe).`)
     await prekliciNarocnino(sub)
@@ -1416,10 +1496,16 @@ async function scoutSeja(o: Obj): Promise<string> {
   return izid
 }
 
-async function scoutPodaljsaj(sub: string, konec: number): Promise<string> {
-  const izid = await rpc('scout_podaljsaj', { p_subscription: sub, p_velja_do: iso(konec + MILOST_S) })
+/** Obnova; `sub` je objekt naročnine (s postavkami), ne le id. */
+async function scoutPodaljsaj(sub: Obj, konec: number): Promise<string> {
+  if (!scoutCeneNarocnine(sub)) {
+    await prekliciNarocnino(sub.id)
+    await discord(`⚠️ Scout: naročnina ${sub.id} ima tujo ceno, preklicana (preveri vračilo v Stripe).`)
+    return 'tuja cena'
+  }
+  const izid = await rpc('scout_podaljsaj', { p_subscription: sub.id, p_velja_do: iso(konec + MILOST_S) })
   if (izid === 'zaprt') {
-    await prekliciNarocnino(sub)
+    await prekliciNarocnino(sub.id)
     await discord('⚠️ Scout: obnova zaprtega kluba, naročnina preklicana (preveri vračilo v Stripe).')
   }
   return izid
@@ -1434,7 +1520,7 @@ async function scoutNarocnina(tip: string, o: Obj): Promise<string> {
   // past_due in unpaid: dostop velja do roka, nato poteče sam.
   const konec = konecObdobja(o)
   if (!konec || !['active', 'trialing'].includes(o.status)) return 'unchanged'
-  return await scoutPodaljsaj(o.id, konec)
+  return await scoutPodaljsaj(o, konec)
 }
 ```
 
@@ -1453,7 +1539,10 @@ async function scoutNarocnina(tip: string, o: Obj): Promise<string> {
 // Kaj sme, odloči baza z JWT kupca (scout_pripravi_nakup: sedež, klubski
 // račun, ni že plačano, država odprta; scout_portal_kupec). Naročnino zapiše
 // šele stripe-webhook (metadata app=slff-scout). Cene po lookup_key; B2B:
-// davčna številka (tax_id_collection), cene brez DDV (tax_behavior exclusive).
+// davčna številka (tax_id_collection), cene brez DDV (tax_behavior exclusive),
+// DDV doda Stripe Tax (automatic_tax). Portal je lastna konfiguracija Scouta
+// (metadata app=slff-scout: preklic da, menjava paketa ne; ustvari jo lastnik
+// enkrat na način, načrt 3b naloga 8), da kupec ne preklopi na ceno preverjenih.
 //
 // Env: STRIPE_SECRET_KEY, SUPABASE_URL, SUPABASE_ANON_KEY, SCOUT_URL (neobvezno,
 // privzeto https://scout.slff.eu). Objava: scripts/hetzner/objavi-funkcije.sh scout-placilo
@@ -1507,7 +1596,16 @@ Deno.serve(async (req) => {
     if (vhod.akcija === 'portal') {
       const { data, error } = await baza.rpc('scout_portal_kupec')
       if (error || typeof data !== 'string') return json({ error: NAPAKA }, 400)
-      const s = await stripe<{ url: string }>('billing_portal/sessions', { customer: data, return_url: `${SCOUT}/account` })
+      const konfig = await stripe<{ data: { id: string; metadata: Record<string, string> }[] }>(
+        'billing_portal/configurations?active=true&limit=100',
+      )
+      const configuration = konfig.data.find((c) => c.metadata?.app === 'slff-scout')?.id
+      if (!configuration) throw new Error('Portal Scouta (metadata app=slff-scout) v Stripe ne obstaja.')
+      const s = await stripe<{ url: string }>('billing_portal/sessions', {
+        customer: data,
+        configuration,
+        return_url: `${SCOUT}/account`,
+      })
       return json({ url: s.url })
     }
     if (vhod.akcija !== 'checkout') return json({ error: 'akcija: checkout ali portal.' }, 400)
@@ -1564,7 +1662,7 @@ npm run smoke 2>&1 | grep -E 'scout stripe|VSE OK|NAPAK'
 npx --yes deno@2.7.14 check supabase/functions/scout-placilo/index.ts supabase/functions/stripe-webhook/index.ts
 ```
 
-Expected: šest `PASS scout stripe: …`, `VSE OK`; `deno check` brez napak.
+Expected: devet `PASS scout stripe: …`, `VSE OK`; `deno check` brez napak.
 
 - [ ] **Step 6: Commit**
 
@@ -1621,10 +1719,13 @@ plačila) in `…-faza3b-aplikacija.md` (scout.slff.eu). Migracije
 - **Dostop.** Vsak klic s podatki igralcev gre skozi `scout.dostop`: sedež,
   aktiven klubski račun, `velja_do > now()`, `zaprt_at is null`, država ni
   zaprta, dnevna meja (500 profilov in 300 drugih klicev na klub na ljubljanski
-  dan) in vrstica v `scout.dnevnik`. Zavrnjen klic se ne zapiše.
+  dan) in vrstica v `scout.dnevnik` (pri iskanju in podobnih še id-ji vrnjenih
+  igralcev v `parametri.igralci`). Zavrnjen klic se ne zapiše.
 - **Kaj klub vidi.** Le zadnji **objavljeni** model (`scout.zadnji_model()`).
   `scout.vidni(model, država)` ob branju znova izloči skrite (ključi
-  `scout.ugovori`), anonimizirane, vrstice mladinskih lig in zaprte države;
+  `scout.ugovori`), anonimizirane (ključi `anonimizirani_igralci`, tudi druge
+  vrstice osebe), vrstice mladinskih lig in zaprte države; privolitev le pri
+  "odprt za prestop", stik nikoli (faza 4);
   celo osebo z mladinsko vrstico izloča stroj enkrat na dan. Iskanje: 25 na
   stran, največ prvih 200, brez lastnih igralcev; raven `ista_ali_nizja` /
   `nizja` primerja moč lige igralca z ligo kluba (`scout.liga_kluba`, ± 0.1);
@@ -1632,7 +1733,11 @@ plačila) in `…-faza3b-aplikacija.md` (scout.slff.eu). Migracije
 - **Plačila.** `scout-placilo` (Checkout, portal) in `stripe-webhook`
   (`metadata.app = slff-scout`). Cene po `lookup_key`
   `slff_scout_klub_mesec` (39 €/mesec), `slff_scout_klub_sezona` (290 €/leto),
-  brez DDV, z davčno številko kupca. Naročnina velja do konca obdobja + 3 dni.
+  brez DDV (DDV doda Stripe Tax, `automatic_tax`), z davčno številko kupca;
+  sezona je letna naročnina. Naročnina velja do konca obdobja + 3 dni. Novo
+  plačilo kluba s staro (potečeno) naročnino staro prekliče; obnova z naročnino,
+  ki ima tujo ceno, se prekliče. Portal je lastna konfiguracija (metapodatek
+  `app=slff-scout`, brez menjave paketa).
   Drugo plačilo istega kluba (`dvojno`), zaprt klub ali seja brez naročnine →
   takojšen preklic + Discord "vrni denar". Vračil in sporov Scout ne obdeluje
   samodejno: admin naročnino prekliče v Stripe (`subscription.deleted` →
@@ -1647,8 +1752,14 @@ plačila) in `…-faza3b-aplikacija.md` (scout.slff.eu). Migracije
 
   ```sql
   select t.name, d.vrsta, d.created_at from scout.dnevnik d join teams t on t.id = d.team_id
-   where d.player_id = any(array[<id vrstic osebe>]::bigint[]) order by d.created_at desc;
+   where d.player_id = any(:'ids'::bigint[])
+      or exists (select 1 from jsonb_array_elements_text(d.parametri->'igralci') e
+                  where e::bigint = any(:'ids'::bigint[]))
+   order by d.created_at desc;
   ```
+
+  `ids` je psql spremenljivka z vsemi vrsticami osebe (izbrane kot pri
+  anonimizaciji), npr. `psql -v ids='{101,202}'`.
 
 - **Merilo faze 3** (5 poskusnih klubov tedensko):
 
@@ -1735,14 +1846,44 @@ explain (analyze) select * from scout.vrzeli_jedro(:m, :si, :ekipa);
 explain (analyze) select * from scout.opazovani_jedro(:m, :si, :ekipa);
 explain (analyze) select count(*) from scout.dnevnik where team_id = :ekipa and created_at >= now() - interval '1 day';
 explain (analyze) select scout.pocisti();
+-- Prava pot (dostop + dnevnik + ovoj) s sedežem, ki ga rollback pobriše; 7 klicev
+-- zaporedoma ujame preklop na generičen plan (po petem v seji).
+select p.id as uid from profiles p
+ where not exists (select 1 from klubski_racuni r where r.user_id = p.id and r.preklican_at is null)
+ order by p.created_at limit 1 \gset
+insert into klubski_racuni (user_id, team_id) values (:'uid', :ekipa);
+insert into scout.narocnine (team_id, country_id, paket, velja_do, pogoji_sprejeti_at)
+values (:ekipa, :si, 'preizkus', now() + interval '1 day', now());
+insert into scout.sedezi (user_id, team_id) values (:'uid', :ekipa);
+select set_config('request.jwt.claim.sub', :'uid', true);
+set local role authenticated;
+\timing on
+select count(*) from scout_isci();
+select count(*) from scout_isci();
+select count(*) from scout_isci();
+select count(*) from scout_isci();
+select count(*) from scout_isci();
+select count(*) from scout_isci();
+select count(*) from scout_isci();
+select count(*) from scout_isci('FWD', 'ista_ali_nizja', '{}', 450, true, 0);
+select count(*) from scout_isci('FWD', 'ista_ali_nizja', '{}', 450, true, 0);
+select count(*) from scout_isci('FWD', 'ista_ali_nizja', '{}', 450, true, 0);
+select count(*) from scout_isci('FWD', 'ista_ali_nizja', '{}', 450, true, 0);
+select count(*) from scout_isci('FWD', 'ista_ali_nizja', '{}', 450, true, 0);
+select count(*) from scout_isci('FWD', 'ista_ali_nizja', '{}', 450, true, 0);
+select count(*) from scout_isci('FWD', 'ista_ali_nizja', '{}', 450, true, 0);
+select scout_igralec(:igralec) is not null as profil;
+select count(*) from scout_podobni(:igralec);
+\timing off
+reset role;
 SQL
 { echo 'begin;'; echo 'set local statement_timeout = 60000;'; \
   cat supabase/migrations/2026101714*_scout_*.sql /private/tmp/scout-meritve.sql; echo 'rollback;'; } \
   | ssh slff 'docker exec -i supabase-db psql -U supabase_admin -d postgres -X -v ON_ERROR_STOP=1' 2>&1 \
-  | grep -E 'Execution Time|ERROR|ROLLBACK'
+  | grep -E 'Execution Time|^Time:|ERROR|ROLLBACK'
 ```
 
-Expected: devet vrstic `Execution Time`, vsaka pod 1000 ms (`vidni` pod 500 ms), na koncu `ROLLBACK`, brez `ERROR`. Če je katera nad mejo: ne združi; zaženi isto z `explain (analyze, buffers)` telesa jedra z vstavljenimi vrednostmi (kopiraj SQL iz migracije), poišči `Nested Loop` brez indeksa ali `Seq Scan` na `scout.ugovori`/`scout.kazalniki` in popravi jedro (nova meritev, nov commit).
+Expected: devet vrstic `Execution Time`, vsaka pod 1000 ms (`vidni` pod 500 ms); nato 16 vrstic `Time:` (prava pot prek `scout_isci`, `scout_igralec`, `scout_podobni` z dnevnikom), vsaka pod 1000 ms in 6. in 7. klic iste oblike ne več kot dvakrat počasnejša od prvih petih (`plan_cache_mode = force_custom_plan`); na koncu `ROLLBACK`, brez `ERROR`. Če je katera nad mejo: ne združi; zaženi isto z `explain (analyze, buffers)` telesa jedra z vstavljenimi vrednostmi (kopiraj SQL iz migracije), poišči `Nested Loop` brez indeksa ali `Seq Scan` na `scout.ugovori`/`scout.kazalniki` in popravi jedro (nova meritev, nov commit).
 
 - [ ] **Step 3: PR**
 
@@ -1790,7 +1931,7 @@ Expected: `f|f|1`. Funkcij (`stripe-webhook`, `scout-placilo`) v tej fazi **ne**
 | 1: razdalja | **ni**: klubi nimajo koordinat; regija (zveza) pokrije potrebo |
 | 1: vrzeli s predlogi | 2 (predlogi = iskanje s pozicijo vrzeli, 3b) |
 | 1: podobni igralci, prilagojeni ravni | 2 (vektorji stroja so na lestvici države) |
-| 2/4: sporočila klub → igralec (`scout.sporocila`) | **ni v fazi 3**: vrstica faze 3 jih ne našteje; potrebujejo posredovanje pošte s skritim naslovom, obvestilo in odjavo igralca ter zaščito pred zlorabo; pogoj faze 3 je tedenska raba. `kontakt_dovoljen` se vrne v profilu, prikaz in sporočila so faza 4 |
+| 2/4: sporočila klub → igralec (`scout.sporocila`) | **ni v fazi 3**: vrstica faze 3 jih ne našteje; potrebujejo posredovanje pošte s skritim naslovom, obvestilo in odjavo igralca ter zaščito pred zlorabo; pogoj faze 3 je tedenska raba. Klub ne vidi `kontakt_dovoljen` (odločitev lastnika: MVP brez stika) |
 | 2: samo odrasli, ugovor skrije, odprta država | 2 (`scout.vidni` ob branju; celo osebo izloča stroj) |
 | 2: dnevnik 12 mesecev, odgovor "kateri klubi so me gledali" | 1 (`scout.pocisti`), 6 (SQL v `docs/scout.md`) |
 | 2: pogoji za klube | 1 (`pogoji_sprejeti_at`), besedilo v 3b |
