@@ -21,6 +21,7 @@ const DRZAVE: Record<string, { jeziki: string[]; pasovi: string[] }> = {
   CZ: { jeziki: ['cs'], pasovi: ['Europe/Prague'] },
   HU: { jeziki: ['hu'], pasovi: ['Europe/Budapest'] },
   AT: { jeziki: ['de-at'], pasovi: ['Europe/Vienna'] },
+  DE: { jeziki: ['de-de'], pasovi: ['Europe/Berlin'] },
   RS: { jeziki: ['sr'], pasovi: ['Europe/Belgrade'] },
   RO: { jeziki: ['ro'], pasovi: ['Europe/Bucharest'] },
   EE: { jeziki: ['et'], pasovi: ['Europe/Tallinn'] },
@@ -290,7 +291,7 @@ export function drzavaLige(slug: string | null | undefined): string | null {
 }
 
 /** Jezik vmesnika za državo. */
-export const JEZIK_DRZAVE: Record<string, string> = { SI: 'sl', SK: 'sk', HR: 'hr', CZ: 'cs', HU: 'hu', AT: 'de', RS: 'sr', RO: 'ro', EE: 'et', PL: 'pl', ES: 'es', LV: 'lv', MK: 'mk' }
+export const JEZIK_DRZAVE: Record<string, string> = { SI: 'sl', SK: 'sk', HR: 'hr', CZ: 'cs', HU: 'hu', AT: 'de', DE: 'de', RS: 'sr', RO: 'ro', EE: 'et', PL: 'pl', ES: 'es', LV: 'lv', MK: 'mk' }
 
 /** Država vstopne strani (`/at` → 'AT'), sicer null. */
 export function drzavaVstopa(pot: string): string | null {

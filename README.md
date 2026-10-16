@@ -280,6 +280,8 @@ v `matches.import_warnings` in jih pokaže v Administraciji.
 | `npm test` | end-to-end test proti bazi (RLS, glasovanje, pragovi, točkovanje, proračun) |
 | `npm run test:varnost` | regresije pravic in rokov v lokalni transakciji; vse spremembe se razveljavijo |
 | `npm run test:socasnost` | sočasno shranjevanje in zaklepanje prek ločenih povezav v lokalno bazo |
+| `npm run test:sources` | dekoderji, novi viri, podatkovni audit in vključitev Nemčije brez baze |
+| `npm run test:novanet` / `npm run test:dfb` | regresije dejansko zajetih španskih in nemških zapisnikov |
 | `npm run smoke` | izris vseh strani + vsa pravila točkovanja in sestave ekipe |
 | `npm run db:start` / `db:stop` | zagon/ustavitev lokalnega Supabase |
 | `npm run db:reset` | ponovna uporaba migracij in seed podatkov |

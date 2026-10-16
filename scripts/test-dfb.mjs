@@ -8,6 +8,42 @@ const archive = readFileSync(new URL('./vzorci/de-dfb-2401894.html', import.meta
 const team = readFileSync(new URL('./vzorci/de-dfb-team-current.html', import.meta.url), 'utf8')
 const penalty = readFileSync(new URL('./vzorci/de-dfb-2426054.html', import.meta.url), 'utf8')
 const load = () => import(moduleUrl)
+const actual = id => readFileSync(new URL(`./vzorci/de-dfb-${id}.html`, import.meta.url), 'utf8')
+
+test('real own goals follow the beneficiary score but belong to the opposite lineup player', async () => {
+  const {vZapisnik,nastopi}=await load()
+  for(const [id,name,side,minute,score] of [
+    ['2401912','Willi Reincke',0,23,[0,1]],
+    ['2401938','Leandro Putaro',1,54,[1,1]],
+    ['2401995','Adrian Jarosch',1,76,[2,1]],
+  ]){
+    const z=vZapisnik(actual(id),{id}),own=z.goli.filter(g=>g.avtogol)
+    assert.deepEqual(own.map(g=>[g.ime,g.ekipaIdx,g.minuta,g.rezultat]),[[name,side,minute,score]])
+    assert.equal(nastopi(z).find(p=>p.ime===name&&p.ekipaIdx===side).avtogoli,1)
+  }
+})
+
+test('a shared card icon applies to each explicitly named person including officials', async () => {
+  const {vZapisnik}=await load(),z=vZapisnik(actual('2401965'),{id:'2401965'})
+  assert.equal(z.rumeni.length,7)
+  assert.deepEqual(z.uradneKazni.map(c=>[c.ime,c.minuta,c.vrsta]),[['Dennis Kutrieb',60,'yellow']])
+  assert.equal(z.rumeni.find(c=>c.ime==='Moritz Polte').minuta,60)
+})
+
+test('actual compressed Gelb-Rot reports establish one prior caution with an unknown minute', async () => {
+  const {vZapisnik,nastopi}=await load()
+  for(const [id,name,minute] of [['2402004','Dominik Pestic',90],['2402013','Jan Shcherbakovski',88]]){
+    const z=vZapisnik(actual(id),{id}),yellow=z.rumeni.filter(c=>c.ime===name)
+    assert.equal(yellow.length,1)
+    assert.equal(yellow[0].minuta,null)
+    assert.equal(yellow[0].izpeljanIz,'drugi-rumeni')
+    assert.deepEqual(z.rdeci.filter(c=>c.ime===name).map(c=>c.minuta),[minute])
+    assert(z.opozorila.some(s=>s.includes(name)&&s.includes('neznana minuta')))
+    const p=nastopi(z).find(p=>p.ime===name)
+    assert.equal(p.rumeni,1)
+    assert.equal(p.rdeci,1)
+  }
+})
 
 test('DFB public current report produces attributable goals, cards and timed appearances', async () => {
   const { vZapisnik, nastopi } = await load()
@@ -45,6 +81,100 @@ test('actual Tasmania report preserves penalties and cards before a bench player
   assert.deepEqual(z.rdeci.map(p=>[p.ime,p.minuta]),[['Ensar Bekdemir',90]])
   assert.equal(a.find(p=>p.ime==='Ensar Bekdemir').minute,3)
   assert.equal(a.find(p=>p.ime==='Rufat Dadaschow').goliIzEnajstmetrovke,1)
+})
+
+test('second-yellow dismissals derive only an unrecorded prior caution and never double count it', async () => {
+  const {vZapisnik,nastopi}=await load()
+  const secondYellow=penalty.replaceAll('m-MatchDetails-icon-card--red','m-MatchDetails-icon-card--yellow-red')
+  const compressed=vZapisnik(secondYellow)
+  assert.deepEqual(compressed.rumeni.filter(c=>c.ime==='Ensar Bekdemir').map(c=>[c.minuta,c.izpeljanIz]),[[null,'drugi-rumeni']])
+  const withCaution=secondYellow.replace(/(<div class="m-MatchDetails-history-event-text-segment">)([\s\S]*?)(<\/div>)/g,(whole,start,body,end)=>body.includes('m-MatchDetails-icon-caret-right')?whole:start+body.replace('Konstantinos Grigoriadis','Ensar Bekdemir')+end)
+  const explicit=vZapisnik(withCaution)
+  assert.deepEqual(explicit.rumeni.filter(c=>c.ime==='Ensar Bekdemir').map(c=>[c.minuta,c.izpeljanIz]),[[28,undefined]])
+  assert.deepEqual(explicit.opozorila,[])
+  const p=nastopi(explicit).find(p=>p.ime==='Ensar Bekdemir')
+  assert.equal(p.rumeni,1)
+  assert.equal(p.rdeci,1)
+  assert.equal(p.minute,3)
+})
+
+test('an unused reserve retains his caution without invented playing minutes or clean sheet', async () => {
+  const {vZapisnik,nastopi}=await load()
+  const cardOnly=current.replace(/(<div class="m-MatchDetails-history-event-text-segment">)([\s\S]*?)(<\/div>)/g,(whole,start,body,end)=>{
+    if(body.includes('m-MatchDetails-icon-caret-right'))return whole
+    return start+body.replace('Laurenz Dehl','Emmanuel Mensah')+end
+  })
+  assert.notEqual(cardOnly,current)
+  const z=vZapisnik(cardOnly),a=nastopi(z),p=a.find(x=>x.ime==='Emmanuel Mensah')
+  assert.equal(z.rumeni.filter(x=>x.ime==='Emmanuel Mensah').length,1)
+  assert(p)
+  assert.equal(p.minute,0)
+  assert.equal(p.minutaOd,0)
+  assert.equal(p.minutaDo,0)
+  assert.equal(p.zacetnik,false)
+  assert.equal(p.rumeni,1)
+  assert.equal(p.rdeci,0)
+  assert.equal(p.cleanSheet,false)
+  assert.equal(p.pozicija,null)
+  assert.equal(p.kartonSKlopi,true)
+})
+
+function unusedBenchCard(html) {
+  return html.replace(/(<div class="m-MatchDetails-history-event-text-segment">)([\s\S]*?)(<\/div>)/g,(whole,start,body,end)=>body.includes('m-MatchDetails-icon-caret-right')?whole:start+body.replace('Laurenz Dehl','Emmanuel Mensah')+end)
+}
+
+test('dismissal is permanent for bench entry, subsequent cards and outgoing substitutions', async () => {
+  const {vZapisnik}=await load()
+  const redBench=unusedBenchCard(current).replaceAll('m-MatchDetails-icon-card--yellow','m-MatchDetails-icon-card--red')
+  const laterEntry=redBench.replaceAll(/Benjamin Dreca(?:&nbsp;|\u00a0|\s)+für/g,'Emmanuel Mensah&nbsp;für')
+  assert.notEqual(laterEntry,redBench)
+  assert.throws(()=>vZapisnik(laterEntry),/izključ|rdeč/)
+
+  // Duplicate the explicitly named 26-minute caution in both event sections,
+  // preserving their agreement; the second card after a dismissal is invalid.
+  const starts=[...redBench.matchAll(/<div class="m-MatchDetails-history-item">/g)].map(m=>m.index)
+  const laterCard=starts.map((start,i)=>{
+    const row=redBench.slice(start,starts[i+1]??redBench.length)
+    if(!/m-MatchDetails-history-event-text-segment">\s*(?:<a[^>]*>)?Emmanuel Mensah/.test(row)||row.includes('m-MatchDetails-icon-caret-right'))return row
+    return row+row.replace("26'","27'")
+  }).join('')
+  const withPrefix=redBench.slice(0,starts[0])+laterCard
+  assert.notEqual(withPrefix,redBench)
+  assert.throws(()=>vZapisnik(withPrefix),/karton po izključitvi/)
+  assert.throws(()=>vZapisnik(withPrefix.replaceAll('m-MatchDetails-icon-card--red','m-MatchDetails-icon-card--yellow')),/podvojen rumeni/)
+
+  // A dismissed starter cannot later leave via a substitution either.
+  const redStarter=current.replaceAll('m-MatchDetails-icon-card--yellow','m-MatchDetails-icon-card--red')
+  assert.throws(()=>vZapisnik(redStarter),/menjav|izključ/)
+})
+
+test('goalkeeper substitution inference agrees with and without a published bench', async () => {
+  const {vZapisnik,nastopi}=await load()
+  const keeperPair=current.replace(/(m-MatchDetails-icon-caret-right--red"><\/div>\s*)(?:<a\b[^>]*>)?Laurenz Dehl(?:<\/a>)?/g,'$1Lorenz Otto')
+  assert.notEqual(keeperPair,current)
+  let table=0
+  const noBench=keeperPair.replace(/<table class="m-MatchDetails-lineup-table">[\s\S]*?<\/table>/g,whole=>++table===2?'':whole)
+  for(const html of [keeperPair,noBench]){
+    const z=vZapisnik(html),p=z.domaci.rezerve.find(p=>p.ime==='Robbie Felßberg'),a=nastopi(z).find(p=>p.ime==='Robbie Felßberg')
+    assert.equal(p.vratar,true)
+    assert.equal(p.vratarVir,'menjava-vratarja')
+    assert.equal(a.pozicija,'GK')
+    assert.equal(a.minute,45)
+  }
+  const baseline=vZapisnik(current)
+  assert.equal(baseline.domaci.rezerve.find(p=>p.ime==='Robbie Felßberg').vratar,null)
+  const contradictory=current.replaceAll('>Robbie Felßberg</a>','>Robbie Felßberg (T)</a>')
+  assert.throws(()=>vZapisnik(contradictory),/vratar/)
+})
+
+test('dedicated event sections and halftime must agree with the timed full report', async () => {
+  const {vZapisnik}=await load()
+  const k=current.indexOf('>Karten</div>')
+  assert(k>0)
+  const contradictory=current.slice(0,k)+current.slice(k).replace('Laurenz Dehl','Emmanuel Mensah')
+  assert.throws(()=>vZapisnik(contradictory),/neujemajoči dogodki|razdel/)
+  const wrongHalf=current.replaceAll('(4:0)','(0:0)')
+  assert.throws(()=>vZapisnik(wrongHalf),/polčas/)
 })
 
 test('public team schedule supplies all 34 rounds and 18 bounded season team links', async () => {

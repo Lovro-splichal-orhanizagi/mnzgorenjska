@@ -23,7 +23,7 @@ import { fileURLToPath } from 'node:url'
 const DOMENA = 'https://slff.eu'
 const PRIVZETO = 'clani'
 // Kot JEZIK_DRZAVE v src/lib/drzavaUgib.ts in LOKALE v src/i18n/jedro.ts.
-const JEZIK = { SI: 'sl', SK: 'sk', HR: 'hr', CZ: 'cs', HU: 'hu', AT: 'de', RS: 'sr', RO: 'ro', EE: 'et', PL: 'pl', ES: 'es', LV: 'lv', MK: 'mk' }
+const JEZIK = { SI: 'sl', SK: 'sk', HR: 'hr', CZ: 'cs', HU: 'hu', AT: 'de', DE: 'de', RS: 'sr', RO: 'ro', EE: 'et', PL: 'pl', ES: 'es', LV: 'lv', MK: 'mk' }
 const LOKALE = { sl: 'sl-SI', sk: 'sk-SK', hr: 'hr-HR', cs: 'cs-CZ', hu: 'hu-HU', de: 'de-AT', sr: 'sr-Latn-RS', ro: 'ro-RO', et: 'et-EE', pl: 'pl-PL', es: 'es-ES', lv: 'lv-LV', mk: 'mk-MK' }
 // Kartice držav, ki jih zapiše vite.config.js (karticeDrzav); Slovenija je index.html.
 const KARTICE = ['sk', 'hr', 'cz', 'hu', 'at', 'rs', 'ro', 'ee', 'pl', 'es', 'lv', 'mk']

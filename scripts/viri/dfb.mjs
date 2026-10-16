@@ -6,7 +6,14 @@ import { razpakiraj } from '../klubi.mjs'
 import { nastopi as nastopiPoImenu } from './fss.mjs'
 
 const BASE = 'https://datencenter.dfb.de'
-const fail = s => { throw new Error(`dfb: ${s}`) }
+const fail = s => {
+  const e=new Error(`dfb: ${s}`)
+  e.koda=/^nepodprt|^neenolična vrsta/.test(s)?'DFB_UNSUPPORTED_FORMAT':'DFB_INVALID_REPORT'
+  throw e
+}
+export class DfbNepopoln extends Error {
+  constructor(s){super(`dfb: nepopoln javni zapisnik: ${s}`);this.nepopoln=true;this.koda='DFB_INCOMPLETE_REPORT'}
+}
 const text = s => razpakiraj(String(s ?? '').replace(/<[^>]*>/g, ' ')).replace(/\s+/g, ' ').trim()
 const attr = (s, k) => s.match(new RegExp(`\\b${k}=["']([^"']*)["']`))?.[1]
 const has = (tag, cls) => (attr(tag, 'class') ?? '').split(/\s+/).includes(cls)
@@ -35,6 +42,35 @@ const one = (s, tag, cls) => {
   const a = elements(s, tag, cls)
   if (a.length !== 1) fail(`nepopoln ali podvojen element ${cls}`)
   return a[0]
+}
+function cardEntries(icon,segments){
+  const kinds=[...icon.matchAll(/m-MatchDetails-icon-card--([\w-]+)/g)].map(m=>m[1])
+  if(!segments.length||!kinds.length||!(kinds.length===1||kinds.length===segments.length)||kinds.some(k=>!['yellow','red','yellow-red'].includes(k)))fail('nepodprt karton')
+  // Actual DFB groups several named people at the same minute: one icon is
+  // shared by all names, or icons and names align one-for-one in public order.
+  return segments.map((segment,i)=>({segment,kind:kinds.length===1?kinds[0]:kinds[i]}))
+}
+function eventSignatures(section) {
+  const out=[]
+  for(const row of elements(section,'div','m-MatchDetails-history-item')){
+    const minute=text(one(row.inner,'div','m-MatchDetails-history-minute').inner)
+    for(const e of elements(row.inner,'div','m-MatchDetails-history-event').filter(e=>!has(e.tag,'is-empty'))){
+      const side=has(e.tag,'m-MatchDetails-history-event--home')?'home':has(e.tag,'m-MatchDetails-history-event--away')?'away':null
+      if(!side)fail('dogodek brez ekipe')
+      const icon=one(e.inner,'div',`m-MatchDetails-history-event-icon--${side}`).inner
+      const kinds=[...icon.matchAll(/m-MatchDetails-icon-(goal|card|playing)--([\w-]+)/g)]
+      const rawSegments=elements(e.inner,'div','m-MatchDetails-history-event-text-segment')
+      if(kinds.length&&kinds.every(k=>k[1]==='card')){
+        for(const {segment,kind} of cardEntries(icon,rawSegments))out.push({type:'card',key:JSON.stringify([side,minute,`m-MatchDetails-icon-card--${kind}`,[text(segment.inner).normalize('NFC')]])})
+        continue
+      }
+      if(kinds.length!==1)fail('neenolična vrsta dogodka')
+      const type=kinds[0][1]==='playing'?'substitute':kinds[0][1]
+      const segments=rawSegments.map(s=>text(s.inner).normalize('NFC'))
+      out.push({type,key:JSON.stringify([side,minute,kinds[0][0],segments])})
+    }
+  }
+  return out
 }
 export const kljucKluba = s => text(s).normalize('NFC').toLocaleLowerCase('de').replace(/[^\p{L}\p{N}]+/gu, ' ').trim()
 const nameKey = kljucKluba
@@ -94,7 +130,9 @@ export function vZapisnik(html, { id, tekma } = {}) {
         if (!text(person.inner) && !number) continue
         const p = identity(person.inner)
         if (!/^\d{1,3}$/.test(number)) fail('igralec brez dresa')
-        p.st = +number; p.vratar = /\(T\)\s*$/.test(text(person.inner)); p.zacetnik = idx === 0
+        const markedKeeper=/\(T\)\s*$/.test(text(person.inner))
+        p.st = +number; p.vratar = markedKeeper?true:idx===0?false:null; p.zacetnik = idx === 0
+        p.vratarVir=markedKeeper?'oznaka-T':null
         p.regSt = null; p.virId = `de-dfb-${teams[side].virId}-${nameKey(p.ime)}`
         teams[side][idx ? 'rezerve':'postava'].push(p)
       }
@@ -114,10 +152,13 @@ export function vZapisnik(html, { id, tekma } = {}) {
   })
   const histories = elements(html, 'div', 'm-MatchDetails-history')
   const sections = new Map(histories.map(h=>[text(one(h.inner,'div','m-MatchDetails-history-title').inner),h.inner]))
-  if (sections.size !== 4 || ['Spielverlauf','Tore','Karten','Wechsel'].some(k=>!sections.has(k))) fail('nepopolni dogodki zapisnika')
-  const goli=[], rumeni=[], rdeci=[], menjave=[], uradneKazni=[]
+  if (histories.length!==4 || sections.size !== 4 || ['Spielverlauf','Tore','Karten','Wechsel'].some(k=>!sections.has(k))) fail('nepopolni dogodki zapisnika')
+  const goli=[], rumeni=[], rdeci=[], menjave=[], uradneKazni=[], opozorila=[]
   const active=teams.map(t=>new Set(t.postava.map(p=>p.virId)))
   const counters={goal:0,card:0,substitute:0}
+  // Eligibility survives leaving/never entering the pitch. The active set alone
+  // cannot distinguish an unused reserve from a reserve dismissed on the bench.
+  const discipline=new Map()
   const runningScore=[0,0]
   let previous=0
   for (const row of elements(sections.get('Spielverlauf'),'div','m-MatchDetails-history-item')) {
@@ -132,50 +173,75 @@ export function vZapisnik(html, { id, tekma } = {}) {
       if(side==null)fail('dogodek brez ekipe')
       const icon=one(e.inner,'div',`m-MatchDetails-history-event-icon--${side?'away':'home'}`).inner
       const segments=elements(e.inner,'div','m-MatchDetails-history-event-text-segment')
-      const resolve=(fragment, suffix=false, incoming=false)=>{
-        const raw=text(fragment).replace(suffix?/\s+für$/:/$^/,'').replace(/\(Elfmeter\)|\(Eigentor\)/g,'').replace(/\b\d+:\d+\b/g,'').trim()
-        const who=identity(raw); let p=players[side].get(nameKey(who.ime))
+      const resolve=(fragment, suffix=false, incoming=false,personSide=side)=>{
+        const raw=text(fragment).replace(suffix?/\s+für$/:/$^/,'').replace(/\(Elfmeter\)|\(Eigentor\)/g,'').replace(/\bEigentor\b/g,'').replace(/\b\d+:\d+\b/g,'').trim()
+        const who=identity(raw); let p=players[personSide].get(nameKey(who.ime))
         if(!p) {
-          if(coaches[side].has(nameKey(who.ime)))return {ime:who.ime,offiziell:true}
+          if(coaches[personSide].has(nameKey(who.ime)))return {ime:who.ime,offiziell:true}
           if(incoming && tables.length===1){
-            p={...who,st:null,regSt:null,virId:`de-dfb-${teams[side].virId}-${nameKey(who.ime)}`,vratar:false,zacetnik:false}
-            players[side].set(nameKey(who.ime),p);teams[side].rezerve.push(p)
+            p={...who,st:null,regSt:null,virId:`de-dfb-${teams[personSide].virId}-${nameKey(who.ime)}`,vratar:null,vratarVir:null,zacetnik:false}
+            players[personSide].set(nameKey(who.ime),p);teams[personSide].rezerve.push(p)
           } else fail(`dogodek vsebuje neznanega igralca ${who.ime}`)
         }
         return p
       }
-      const event=p=>({ime:p.ime,st:p.st,virId:p.virId,ekipaIdx:side,minuta:minute})
+      const event=(p,personSide=side)=>({ime:p.ime,st:p.st,virId:p.virId,ekipaIdx:personSide,minuta:minute})
       if (/m-MatchDetails-icon-goal--/.test(icon)) {
         const kind=icon.match(/m-MatchDetails-icon-goal--([\w-]+)/)?.[1]
         if(!['goal','penalty','own-goal'].includes(kind) || segments.length!==1)fail('nepodprt gol')
-        const p=resolve(segments[0].inner)
+        const avtogol=kind==='own-goal'||/\bEigentor\b/.test(text(segments[0].inner))
+        const personSide=avtogol?1-side:side
+        const p=resolve(segments[0].inner,false,false,personSide)
         if(p.offiziell)fail('gol uradne osebe')
-        if(!active[side].has(p.virId))fail('gol neaktivnega igralca: ni vstopa ali je že izstopil')
+        if(!active[personSide].has(p.virId))fail('gol neaktivnega igralca: ni vstopa ali je že izstopil')
         // Actual DFB penalties retain the ordinary goal icon; their distinction
         // is the explicit public `(Elfmeter)` text next to the player's name.
-        const avtogol=kind==='own-goal'||/\(Eigentor\)/.test(text(segments[0].inner))
         const enajstmetrovka=kind==='penalty'||/\(Elfmeter\)/.test(text(segments[0].inner))
-        runningScore[avtogol?1-side:side]++
+        // In all observed own-goal formats the event sits on the beneficiary
+        // side, while the named scorer belongs to the opposite official XI.
+        runningScore[side]++
         const stageScore=text(segments[0].inner).match(/\b(\d+):(\d+)\b/)
         if(!stageScore || +stageScore[1]!==runningScore[0] || +stageScore[2]!==runningScore[1])fail('neveljavno zaporedje izidov pri golih')
-        goli.push({...event(p),avtogol,enajstmetrovka,rezultat:[...runningScore]});counters.goal++
+        goli.push({...event(p,personSide),avtogol,enajstmetrovka,rezultat:[...runningScore]});counters.goal++
       } else if (/m-MatchDetails-icon-card--/.test(icon)) {
-        const kind=icon.match(/m-MatchDetails-icon-card--([\w-]+)/)?.[1]
-        if(!['yellow','red','yellow-red'].includes(kind) || segments.length!==1)fail('nepodprt karton')
-        const p=resolve(segments[0].inner)
+        for(const {segment,kind} of cardEntries(icon,segments)){
+        const p=resolve(segment.inner)
+        const key=p.virId??`${side}|official|${nameKey(p.ime)}`
+        const state=discipline.get(key)??{yellow:false,dismissed:false}
+        if(state.dismissed)fail('karton po izključitvi')
+        if(kind==='yellow'&&state.yellow)fail('podvojen rumeni karton brez izključitve')
+        // DFBnet defines Gelb-Rot as the second caution plus dismissal. Some
+        // official reports only publish that combined event. Its earlier
+        // caution is certain, but its time is unknown; never backdate it.
+        // Derived cautions do not enter source counters/signatures below.
+        if(kind==='yellow-red'&&!state.yellow&&!p.offiziell){
+          rumeni.push({...event(p),minuta:null,izpeljanIz:'drugi-rumeni'})
+          opozorila.push(`${p.ime}: predhodni rumeni karton izpeljan iz uradne oznake Gelb-Rot; neznana minuta.`)
+        }
+        if(kind==='yellow')state.yellow=true
+        else state.dismissed=true
+        discipline.set(key,state)
         if(p.offiziell)uradneKazni.push({...event(p),vrsta:kind})
         else if(kind==='yellow')rumeni.push(event(p))
-        else {p.rdec=minute;rdeci.push(event(p));active[side].delete(p.virId)}
+        else {
+          p.rdec=minute;rdeci.push(event(p));active[side].delete(p.virId)
+        }
         counters.card++
+        }
       } else if (/m-MatchDetails-icon-playing--substitute-in/.test(icon)) {
         if(!segments.length || segments.length%2)fail('menjava brez para')
         for(let i=0;i<segments.length;i+=2){
           if(!/m-MatchDetails-icon-caret-right--green/.test(segments[i].inner)||!/m-MatchDetails-icon-caret-right--red/.test(segments[i+1].inner))fail('menjava brez smeri')
           const noter=resolve(segments[i].inner,true,true),ven=resolve(segments[i+1].inner)
+          if(noter.rdec!=null||discipline.get(noter.virId)?.dismissed)fail('vstop izključenega igralca po rdečem kartonu')
           if(noter.offiziell||ven.offiziell||noter===ven||noter.zacetnik||noter.noter!=null||ven.ven!=null||active[side].has(noter.virId)||!active[side].has(ven.virId))fail('neveljaven par menjave')
           const t=minute===46?45:minute
           noter.noter=t;ven.ven=t
-          if(tables.length===1 && ven.vratar)noter.vratar=true
+          // Bench absence of `(T)` is unknown in BOTH formats. An explicit
+          // official pair replacing the goalkeeper establishes the on-pitch
+          // role, not an independent roster position or a guessed shirt role.
+          if(ven.vratar===true && noter.vratar==null){noter.vratar=true;noter.vratarVir='menjava-vratarja'}
+          if(noter.vratar===true && [...players[side].values()].some(p=>p!==ven&&p.vratar===true&&active[side].has(p.virId)))fail('nasprotujoča oznaka vratarja: dva aktivna vratarja')
           active[side].delete(ven.virId);active[side].add(noter.virId)
           menjave.push({ekipaIdx:side,minuta:t,noter:{st:noter.st,ime:noter.ime},ven:{st:ven.st,ime:ven.ime}})
         }
@@ -183,19 +249,25 @@ export function vZapisnik(html, { id, tekma } = {}) {
       } else fail('nepodprt dogodek')
     }
   }
-  // The duplicate event sections are a useful independent completeness signal.
+  // Compare identity, type, side, exact added-time minute and score/text, not
+  // merely counts. Dedicated sections must describe precisely the same events.
+  const timelineSignatures=eventSignatures(sections.get('Spielverlauf'))
   for(const [section,kind] of [['Tore','goal'],['Karten','card'],['Wechsel','substitute']]){
-    const count=elements(sections.get(section),'div','m-MatchDetails-history-event').filter(e=>!has(e.tag,'is-empty')).length
-    if(count!==counters[kind])fail('nepopolni ali neujemajoči dogodki')
+    const expected=timelineSignatures.filter(e=>e.type===kind).map(e=>e.key).sort()
+    const observed=eventSignatures(sections.get(section)).map(e=>e.key).sort()
+    if(observed.length!==counters[kind]||JSON.stringify(expected)!==JSON.stringify(observed))fail(`nepopolni ali neujemajoči dogodki razdelka ${section}`)
   }
   const scored=[0,0]
   for(const g of goli)scored[g.avtogol?1-g.ekipaIdx:g.ekipaIdx]++
   if(scored[0]!==rezultat.domaci||scored[1]!==rezultat.gostje)fail('goli se ne ujemajo z izidom')
+  const halftime=[0,0]
+  for(const g of goli.filter(g=>g.minuta<=45))halftime[g.avtogol?1-g.ekipaIdx:g.ekipaIdx]++
+  if(halftime[0]!==polcas.domaci||halftime[1]!==polcas.gostje)fail('polčas se ne ujema s časovno označenimi goli')
   for(const [side,t] of teams.entries())for(const p of [...t.postava,...t.rezerve]){
     if(!p.zacetnik && p.noter==null && goli.some(g=>g.ekipaIdx===side&&g.ime===p.ime))fail('gol rezerve brez vstopa')
     if(p.ven!=null && (p.noter??0)>p.ven)fail('izstop pred vstopom')
   }
-  const z={...meta,domaci:teams[0],gostje:teams[1],rezultat,polcas,goli,rumeni,rdeci,menjave,zgresene:[],uradneKazni,opozorila:[]}
+  const z={...meta,domaci:teams[0],gostje:teams[1],rezultat,polcas,goli,rumeni,rdeci,menjave,zgresene:[],uradneKazni,opozorila}
   if(tekma) {
     for(const k of ['krog','datum','ura','sezona'])if(tekma[k]!=null&&tekma[k]!==z[k])fail(`razpored: neujemanje ${k}`)
     for(const k of ['domaci','gostje'])if(tekma[k]!=null&&tekma[k]!==z[k].ime)fail(`razpored: neujemanje ${k}`)
@@ -204,7 +276,19 @@ export function vZapisnik(html, { id, tekma } = {}) {
   }
   return z
 }
-export const nastopi = z => nastopiPoImenu(z)
+export function nastopi(z) {
+  const out=nastopiPoImenu(z),known=new Set(out.map(p=>`${p.ekipaIdx}|${nameKey(p.ime)}`))
+  // An unused substitute can receive a caution/dismissal. Keep the discipline
+  // in a zero-minute record; this never grants play, keeper status or a CS.
+  for(const [ekipaIdx,e] of [z.domaci,z.gostje].entries())for(const p of e.rezerve){
+    if(known.has(`${ekipaIdx}|${nameKey(p.ime)}`))continue
+    const own=c=>c.ekipaIdx===ekipaIdx&&c.virId===p.virId
+    const rumeni=z.rumeni.filter(own).length,rdeci=z.rdeci.some(own)?1:0
+    if(!rumeni&&!rdeci)continue
+    out.push({ekipaIdx,ekipa:e.ime,st:p.st,ime:p.ime,regSt:null,pozicija:null,vratar:false,zacetnik:false,minutaOd:0,minutaDo:0,minute:0,goli:0,goliIzEnajstmetrovke:0,avtogoli:0,zgreseneEnajstmetrovke:0,rumeni,rdeci,prejetiGoli:0,cleanSheet:false,kartonSKlopi:true})
+  }
+  return out
+}
 
 export function razberiKodo(koda) {
   const m=String(koda??'').match(/^regionalliga-nordost\/(\d{4})-(\d{4})$/)

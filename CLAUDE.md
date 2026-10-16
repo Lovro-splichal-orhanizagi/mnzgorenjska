@@ -104,7 +104,8 @@ tabelo šifer tam, ne tu.
 | Estonija | `docs/viri/estonija.md` | `jalgpall` |
 | Latvija | `docs/viri/latvija.md` | `lff` |
 | Poljska | `docs/viri/poljska.md` | `pzpn` |
-| Španija | `docs/viri/spanija.md` | `fcf`, `fas` |
+| Španija | `docs/viri/spanija.md`, `docs/viri/novanet.md` | `fcf`, `fas`, `novanet` |
+| Nemčija | `docs/viri/nemcija.md` | `dfb` (Regionalliga Nordost; pred vklopom audit obeh sezon) |
 | Anglija | `docs/viri/anglija.md` | `ncefl` |
 | Severna Makedonija | `docs/viri/makedonija.md` | `ffm` |
 | Ukrajina | `docs/viri/ukrajina.md` | `aft`, `hoff-km` |

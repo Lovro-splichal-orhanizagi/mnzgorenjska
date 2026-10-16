@@ -36,6 +36,8 @@ import ncefl from './ncefl.mjs'
 import hoffKm from './hoff-km.mjs'
 import askf from './askf.mjs'
 import ffa from './ffa.mjs'
+import novanet from './novanet.mjs'
+import dfb from './dfb.mjs'
 
 const VIRI = {
   mnzg,
@@ -102,6 +104,10 @@ const VIRI = {
   // Armenija: Football Federation of Armenia (ffa.am), Prva liga; brez šifer
   // igralcev (ime + klub), vratar je prvi začetnik (namig).
   ffa,
+  // Španija (Galicija / Aragón): Novanet, preverjeni izidi in identitete.
+  novanet,
+  // Nemčija: javni zapisniki DFB Datencenter, Regionalliga Nordost.
+  dfb,
 }
 
 /**

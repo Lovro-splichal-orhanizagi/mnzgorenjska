@@ -82,6 +82,10 @@
       "destination": "/at.html"
     },
     {
+      "source": "/de",
+      "destination": "/de.html"
+    },
+    {
       "source": "/rs",
       "destination": "/rs.html"
     },
@@ -163,6 +167,17 @@
         }
       ],
       "destination": "/at.html"
+    },
+    {
+      "source": "/((?!api/)(?!.*\\.).*)",
+      "has": [
+        {
+          "type": "query",
+          "key": "t",
+          "value": "de-.*"
+        }
+      ],
+      "destination": "/de.html"
     },
     {
       "source": "/((?!api/)(?!.*\\.).*)",

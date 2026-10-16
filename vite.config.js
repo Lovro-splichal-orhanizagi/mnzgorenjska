@@ -93,6 +93,7 @@ function karticeDrzav() {
     { koda: 'hu', jezik: 'hu', locale: 'hu_HU', n: aplikacijaHu.naslovStrani },
     // Avstrija: datoteka po kodi države (/at, ?t=at-…), jezik je de.
     { koda: 'at', jezik: 'de', locale: 'de_AT', n: aplikacijaDe.naslovStrani },
+    { koda: 'de', jezik: 'de', locale: 'de_DE', n: aplikacijaDe.naslovStrani },
     // Srbija: datoteka po kodi države (/rs, ?t=rs-…), jezik je sr v latinici.
     { koda: 'rs', jezik: 'sr-Latn', locale: 'sr_RS', n: aplikacijaSr.naslovStrani },
     // Romunija: datoteka po kodi države (/ro, ?t=ro-…), jezik je ro.
