@@ -24,7 +24,12 @@ SQL_SEZONE = f"""
 with tekme as (
   select m.id, m.home_team_id, m.away_team_id, m.home_goals, m.away_goals,
          r.season as sezona, r.competition_id,
-         not exists (select 1 from public.goals g where g.match_id = m.id and g.minute is null) as ima_minute
+         -- popoln zapisnik (kot točkovanje vratarjev): vsak gol ima minuto in goli
+         -- po straneh (avtogol šteje nasprotniku) se seštejejo v izid
+         (select coalesce(bool_and(g.minute is not null), true)
+                 and count(*) filter (where (g.team_id = m.home_team_id) <> g.is_own_goal) = m.home_goals
+                 and count(*) filter (where (g.team_id = m.away_team_id) <> g.is_own_goal) = m.away_goals
+          from public.goals g where g.match_id = m.id) as ima_minute
   from public.matches m
   join public.rounds r on r.id = m.round_id
   join public.competitions c on c.id = r.competition_id

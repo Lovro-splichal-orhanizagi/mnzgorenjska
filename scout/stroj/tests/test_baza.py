@@ -61,3 +61,28 @@ def test_nalozi(conn):
     assert sezone["skupina"][j] == "DEF" and sezone["oseba"][i].startswith("i")
     assert -914002 not in lige["id"].tolist()
     assert (-914001, 2098) in set(zip(tekme["competition_id"].tolist(), tekme["leto"].tolist()))
+
+
+NEPOPOLNA = """
+insert into rounds (id, season, number, deadline_at, competition_id) overriding system value
+values (-914002, '2098/99', 2, now() + interval '2 day', -914001);
+insert into matches (id, round_id, home_team_id, away_team_id, home_goals, away_goals, zapisnik_id, played_on)
+overriding system value
+values (-914002, -914002, -914001, -914002, 2, 0, 'test-scout-2', '2098-09-08');
+insert into appearances (match_id, player_id, team_id, started, minute_on, minute_off, minutes_played, goals, penalties_scored)
+values (-914002, -914001, -914001, true, 0, 90, 90, 2, 0);
+insert into goals (match_id, scorer_id, team_id, minute, is_penalty)
+values (-914002, -914001, -914001, 20, false);
+"""
+
+
+def test_nepopoln_zapisnik(conn):
+    """Tekma z manj goli v zapisniku kot po izidu (2:0, en gol) ne šteje v on/off,
+    v minute in gole pa."""
+    conn.execute("reset role")
+    conn.execute(NEPOPOLNA)
+    conn.execute("set role scout_stroj")
+    sezone, _, _ = nalozi(conn)
+    i = sezone["player_id"].tolist().index(-914001)
+    stolpci = ("nastopi", "minute", "goli_np", "ekipa_minute", "ekipa_goli", "gr_on", "min_on", "ekipa_gr", "ekipa_min_zmin")
+    assert [sezone[c][i] for c in stolpci] == [2, 180, 3, 180, 4, 1, 90, 1, 90]
