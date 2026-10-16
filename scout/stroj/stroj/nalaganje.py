@@ -139,6 +139,9 @@ def v_stolpce(conn: psycopg.Connection, sql: str) -> Tabela:
     """Rezultat poizvedbe kot stolpci, brano v kosih (strežniški kazalec);
     besedilo in NULL ostaneta object."""
     with conn.transaction(), conn.cursor(name="stroj") as cur:
+        # beremo vse vrstice: privzeti 0.1 da kazalcu načrt za prve vrstice (na
+        # produkciji gnezdena zanka players × sezone, > 10 min namesto 25 s)
+        conn.execute("set local cursor_tuple_fraction = 1")
         cur.itersize = KOS
         cur.execute(sql)
         imena = [d.name for d in cur.description]
