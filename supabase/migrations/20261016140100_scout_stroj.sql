@@ -142,6 +142,17 @@ begin
   end if;
 end;
 $$;
+-- RLS ostane vklopljen (brez politik za brskalnik); stroj dobi svojo
+-- politiko na vsaki tabeli namesto BYPASSRLS.
+create policy stroj on scout.drzave for all to scout_stroj using (true) with check (true);
+create policy stroj on scout.modeli for all to scout_stroj using (true) with check (true);
+create policy stroj on scout.lige_moc for all to scout_stroj using (true) with check (true);
+create policy stroj on scout.ekipe_elo for all to scout_stroj using (true) with check (true);
+create policy stroj on scout.kazalniki for all to scout_stroj using (true) with check (true);
+create policy stroj on scout.indeks for all to scout_stroj using (true) with check (true);
+create policy stroj on scout.vektorji for all to scout_stroj using (true) with check (true);
+create policy stroj on scout.vrzeli for all to scout_stroj using (true) with check (true);
+
 -- Lastnik migracij (lokalno postgres) sme preklopiti v vlogo (set role), da
 -- integracijski test preveri prav te pravice.
 grant scout_stroj to current_user;
