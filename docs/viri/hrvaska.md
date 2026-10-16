@@ -41,6 +41,16 @@ vrh ni bil vpisan. Zapisnik je isti kot pri Treći NL.
 | hr-1nl | `114348034` (16) | `100413651` |
 | hr-2nl | `114348039` (16) | `100418001` |
 
+**Veteranske lige imena ne povedo** (pregled 15. 10. 2026): ZNS Zagreb ima
+2026/27 "Premier liga" (`115622586`), "1. liga skupina A/B" (`115624020`,
+`115628588`) in "2. liga skupina A/B/C" (`115630270`, `115632903`,
+`115635697`) — veteranske, klubi "VNK …" in veteranske ekipe NK. Filter
+`IZPUSTI` jih po imenu ne ujame, zato `hrvaske-lige.mjs` ligo izpusti še po
+klubih (`jeVeteranska`: klub "VNK …" ali "… veterani"; trki imen jih ne
+štejejo). `IZPUSTI` izpusti še pokale "HNK …" (HNKŽ, HNK NSKŽ), futsal "ŽNML"
+(klubi MNK) in "djevojčice/zagičice". Pregled vseh 40 zvez po popravku: drugih
+takih lig ni, nobena ni vpisana v bazi.
+
 **Mladinske lige (juniori, U19)** (migracija 20261013110100, 28 lig,
 **neaktivnih**): pregled 12. 10. 2026 je prečesal seznam tekmovanj vseh 40
 zvez (`/handlers/getCompetitions/`, sezoni 2026/2027 in 2025/2026; skripta

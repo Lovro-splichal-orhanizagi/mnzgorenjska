@@ -144,6 +144,20 @@ končane) — vklop bo realno za 2027, takrat leto v šifri popravi na 2027.
 | ee-iv-liiga-pohja-ida | 8 | `267/2026` | `267/2025`, `267/2024` |
 | ee-iv-liiga-pohja-laane | 7 | `268/2026` | `268/2025`, `268/2024` |
 
+**U19 Eliitliiga** (migracija 20261015172300, `ee-u19-eliitliiga`,
+**neaktivna**, `prvi_fantasy_krog = 2`, `rok_pomak_ur = 2`): `89/2026`, arhiv
+`89/2025`. Stran se imenuje "U19 Eliitliiga Esiliiga": 19 klubov enokrožno,
+19 krogov (eden prost). Ekipe so "U-19 <klub>"; `imeEkipe` predpono odreže
+(klub skupen s člani), "U-19 FC Tallinn I" je "FC Tallinn", "… II" ostane
+svoj klub. Preizkus (15. 10. 2026, vsi zapisniki): 2026 — 171 tekem, 44
+kontumacij (FC Kuressaare in JK Tallinna Kalev sta izstopila, "- : -"),
+124 zapisnikov, goli = izid 124/124 (843), postav po 11 245/248, vratar (VV)
+248/248, pozicija pri 1508/2723 začetnikih, 3519 nastopov (796 s klopi), vsi s
+šifro; 2025 — 153 tekem, 9 kontumacij, 144 zapisnikov, goli = izid 144/144
+(897), postav po 11 287/288, 4156 nastopov, vsi s šifro. Ob vpisu ostaja en
+krog (20. 10.) — vklop realno 2027 (leto v šifri na 2027). Uvoz: `gh workflow
+run uvoz-lige.yml -f liga=ee-u19-eliitliiga -f arhiv=89/2025 -f cene=true`.
+
 Izpuščeno: kvalifikacije (üleminekumängud: Premium 283, II liiga 281, II
 liiga B 560), zaključni turnirji (III liiga võitja 180, II B võitja 559, IV
 liiga võitja 181), Rahvaliiga (rekreativni sistem s prijavo, ne zapisniki
