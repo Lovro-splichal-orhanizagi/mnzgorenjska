@@ -34,6 +34,7 @@ import PrevzemIgralca from '../src/components/PrevzemIgralca'
 import { ScoutIgralca } from '../src/components/ScoutIgralca'
 import Prevzemi from '../src/components/admin/Prevzemi'
 import Piva from '../src/pages/Piva'
+import Pravno from '../src/pages/Pravno'
 import PivskiZidAdmin from '../src/components/admin/Piva'
 import { lestvicaPodpornikov, vsehPiv } from '../src/lib/piva'
 import { ocistiSporocilo } from '../supabase/functions/bmc-pivo/sporocilo.ts'
@@ -160,6 +161,17 @@ for (const [ime, Komponenta, pot] of strani) {
     preveri(`izris: ${ime}`, false, e.message)
   }
 }
+
+preveri('pravno: razdelek Scout s sidrom #scout (povezava za ugovor)',
+  renderToString(
+    <StaticRouter location="/legal">
+      <AuthProvider>
+        <TekmovanjeProvider>
+          <Pravno />
+        </TekmovanjeProvider>
+      </AuthProvider>
+    </StaticRouter>,
+  ).includes('id="scout"'))
 
 // --- pivski zid (src/lib/piva.ts, bmc-pivo/sporocilo.ts) -------------------
 {
