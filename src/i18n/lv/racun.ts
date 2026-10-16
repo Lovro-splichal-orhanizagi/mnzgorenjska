@@ -27,6 +27,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     nimasRacuna: 'Tev nav konta? Reģistrējies',
     pozabljenoGeslo: 'Aizmirsi paroli?',
     nazajNaPrijavo: '← Atpakaļ uz pieteikšanos',
+    predlogEposte: 'Vai domāji {eposta}?',
   },
   napake: {
     napacnaPrijava: 'Nepareiza e-pasta adrese vai parole.',
@@ -163,7 +164,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   },
   pravno: {
     naslov: 'Privātums un noteikumi',
-    zadnjaSprememba: 'Pēdējās izmaiņas: 2026. gada 12. oktobris',
+    zadnjaSprememba: 'Pēdējās izmaiņas: 2026. gada 16. oktobris',
     kajJeNaslov: 'Kas ir SLFF',
     kajJe:
       'SLFF (Sunday League Fantasy Football) ir līdzjutēju veidota fantāzijas līga vietējām amatieru futbola līgām. To vada brīvprātīgie, un tā nav saistīta ar reģionālajām futbola federācijām, nacionālo futbola federāciju vai klubiem. Spēle ir bez maksas, bez naudas likmēm un balvām.',
@@ -228,6 +229,15 @@ export const racun: NonNullable<Prevod['racun']> = {
       '<b>Atmaksas.</b> Ļaunprātīgas izmantošanas vai nepatiesa profila apstiprinājuma gadījumā naudu neatmaksājam. Ja nozīmīte beidzas mūsu kļūdas dēļ, pēc federācijas lūguma vai tāpēc, ka pārtraucam pakalpojumu, gada abonementam atmaksājam proporcionālu daļu par neizmantotajiem mēnešiem. Pirkumam uz visiem laikiem pirmajos 12 mēnešos pēc pirkuma atmaksājam visu summu, vēlāk proporcionālu daļu no atlikušā laika līdz 5 gadiem no pirkuma. Drukāto nozīmīti un pasta izdevumus pakalpojuma pārtraukšanas gadījumā neatmaksājam (nozīmīte paliek tev), tikai defekta gadījumā.',
     pritozbe:
       '<b>Jautājumi un sūdzības.</b> Raksti uz <eposta>info@slff.eu</eposta>, atbildam 8 darba dienu laikā. Mēs neatzīstam nevienu patērētāju strīdu ārpustiesas risināšanas struktūru. Piemēro Slovēnijas tiesības; tas tev neatņem aizsardzību, ko sniedz tavas dzīvesvietas valsts tiesības.',
+    scoutNaslov: 'SLFF Scout: spēlētāju meklēšana klubiem',
+    scoutKaj:
+      'No tiem pašiem publiskajiem spēļu protokoliem mēs aprēķinām pieaugušo līgu spēlētāju rādītājus: spēles minūšu daļu, vārtus, ietekmi laukumā, ielaistos vārtus, kartītes un attīstību pa sezonām, pielāgotus līgas spēkam. Tie ir rādītāji no spēļu datiem, nevis personas vērtējums. Tos redzēs klubi ar SLFF Scout abonementu, kas meklē spēlētājus; lēmumu vienmēr pieņem cilvēks klubā. Jaunatnes līgas mēs neapstrādājam. Kas kādreiz spēlējis jaunatnes līgā, ir izslēgts, līdz viņam ir spēles minūtes pieaugušo līgā un savā profilā viņš norāda dzimšanas gadu, pēc kura viņam šogad aprit vismaz 19 gadi.',
+    scoutPodlaga:
+      'Juridiskais pamats ir leģitīmās intereses (VDAR 6. panta 1. punkta f) apakšpunkts): palīdzēt klubiem atrast spēlētājus no publiski publicētiem rezultātiem. Rādītājus pārrēķinām katru dienu un glabājam tikai pēdējos aprēķinus. Klubu skatījumus reģistrēsim 12 mēnešus, lai novērstu ļaunprātīgu izmantošanu un lai pēc pieprasījuma varētu spēlētājam pateikt, kuri klubi viņu skatījuši.',
+    scoutPrivolitev:
+      'Spēlētājs ar pārņemtu profilu var pievienot, ka ir atvērts pārejai, savu dzimšanas gadu, vēlamos reģionus un atļauju sazināties. Tā ir piekrišana (VDAR 6. panta 1. punkta a) apakšpunkts): to redz tikai klubi Scout, to var jebkurā laikā atsaukt profilā, un pēc atsaukšanas mēs dzēšam datus. Klubs spēlētājam raksta tikai caur Scout un neredz viņa e-pasta adresi.',
+    scoutUgovor:
+      'Iebildums: pārņemtajā profilā noklikšķini Paslēpt mani no Scout vai raksti uz <eposta>info@slff.eu</eposta> ar saiti uz spēlētāja lapu. 14 dienu laikā mēs paslēpjam spēlētāju no Scout visās mūsu šīs valsts līgās, arī turpmākajos importos. Fantāzijas spēlē viņš paliek.',
   },
   klubskiRacun: {
     naslov: 'Kluba oficiālais konts',

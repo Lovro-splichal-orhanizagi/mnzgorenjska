@@ -53,7 +53,7 @@ const popravekLiga = arg('--tekmovanje')
 // tega vira (run-name "Grbi klubov <vir>").
 // Španija: vse lige bere fcf.cat (en zapisnik na tekmo, 3 s med zahtevki).
 // Turčija: vse lige bere tff.org (3 s med zahtevki, brez dovoljenja TFF).
-const SKUPEN_VIR = { EE: 'jalgpall', ES: 'fcf', TR: 'tff' }
+const SKUPEN_VIR = { EE: 'jalgpall', ES: 'fcf', TR: 'tff', NO: 'nff' }
 
 const { GITHUB_RUN_ID, GITHUB_REPOSITORY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = process.env
 if (!GITHUB_RUN_ID || !GITHUB_REPOSITORY) {

@@ -108,7 +108,7 @@ tabelo šifer tam, ne tu.
 | Nemčija | `docs/viri/nemcija.md` | `dfb` (Regionalliga Nordost; pred vklopom audit obeh sezon) |
 | Anglija | `docs/viri/anglija.md` | `ncefl`, `isthmian` |
 | Severna Makedonija | `docs/viri/makedonija.md` | `ffm` |
-| Ukrajina | `docs/viri/ukrajina.md` | `aft`, `hoff-km`, `pfl-ua`, `upl` |
+| Ukrajina | `docs/viri/ukrajina.md` | `aft`, `hoff-km`, `pfl-ua`, `upl`, `ffl` |
 | Turčija | `docs/viri/turcija.md` | `askf`, `tff` |
 | Armenija | `docs/viri/armenija.md` | `ffa` |
 | Grčija | `docs/viri/grcija.md` | `mascot`, `eps` |
@@ -117,6 +117,14 @@ tabelo šifer tam, ne tu.
 | Malta | `docs/viri/malta.md` | `mfa` |
 | Bosna in Hercegovina | `docs/viri/bih.md` | `nsfbih`, `nfsbih` |
 | Gruzija | `docs/viri/gruzija.md` | `gff` |
+| Islandija | `docs/viri/islandija.md` | `ksi` |
+| Ferski otoki | `docs/viri/ferski-otoki.md` | `fsf` |
+| ZDA | `docs/viri/zda.md` | `modular11` |
+| Danska | `docs/viri/danska.md` | `dbu` |
+| Norveška | `docs/viri/norveska.md` | `nff` |
+| Kazahstan | `docs/viri/kazahstan.md` | `kff` |
+| Moldavija | `docs/viri/moldavija.md` | `fmf` |
+| Azerbajdžan | `docs/viri/azerbajdzan.md` | `pfl-az` |
 
 Pravila, ki veljajo za vse vire (podrobnosti v datotekah):
 
@@ -163,8 +171,8 @@ dobi ceno iz tamkajšnje: percentil, prebran iz cene, vsaka raven višje zapre
 (`scripts/visja-liga.mjs`, `ovrednoti-igralce` izpiše seznam "Cena iz višje
 lige"). Raven lige je pravilo po šifri in imenu v `ravenLige`, ne stolpec:
 HR (državne lige, županijske po imenu le znotraj iste zveze), SK, HU, ES, EE,
-LV, TR (1. Lig nad 2. Lig nad 3. Lig nad PGL), UA, LT, GB, GR (znotraj iste zveze EPS) po uradni piramidi, AT le državne nad deželnimi; mladinske se primerjajo le
-z mladinskimi. Brez pravila (SI, RS, RO, PL, CZ, MK, ME) in brez šifer osebe ostane
+LV, TR (1. Lig nad 2. Lig nad 3. Lig nad PGL), UA, LT, GB, GR (znotraj iste zveze EPS), FO, IS, NO, KZ, MD po uradni piramidi, AT le državne nad deželnimi; mladinske se primerjajo le
+z mladinskimi. Brez pravila (SI, RS, RO, PL, CZ, MK, ME, AZ) in brez šifer osebe ostane
 4.5. Ob novi ligi z novim poimenovanjem ravni preveri `ravenLige` (smoke).
 Na vklopljeni ligi pride do nove cene le **tedensko prevrednotenje** (največ
 1.0 na teden, sidro potuje z njo) — tudi pri igralcu, ki je že na borzi,
@@ -320,6 +328,31 @@ izpade (brez polnila). Vse podrobnosti: `docs/objave.md`.
 Bistvo: **objava le slavi** (nikoli padec cene ali slaba predstava, nikoli
 mladinske lige, anonimizirani igralci, hišne ekipe, imena uporabnikov);
 `npm run preizkus-objav`; CI je ne objavi (`scripts/hetzner/objavi-objave.sh`).
+
+## SLFF Scout (stroj)
+
+Delavec `slff-scout` (Python 3.12, `scout/stroj/`) vsak dan ob 11:00 (po
+nočnih uvozih) izračuna moč lig (tedensko), Elo, kazalnike, indeks, podobne
+in vrzeli ter jih zapiše v zaprto shemo `scout` kot novo različico
+(`scout.modeli`) v eni transakciji. Vse ostalo (izločanje, backtest, spomin,
+objava, testi): `docs/scout.md`. Bistvo:
+
+- **Mladinske lige, osebe z vrstico v mladinski ligi (razen s polnoletno
+  letnico na potrjenem profilu, le prijavitelj), ugovor (`scout.ugovori`) in
+  anonimizirani (tudi ista oseba v drugih ligah) ne vstopijo v izračun.**
+- Privolitev igralca (odprt za prestop, letnica, regije, stik) je v zaprti
+  `scout.privolitve`, ne v javnem `profil_igralca`; piše le
+  `scout_shrani_privolitev`. Ugovor nikoli ne gre v javno tabelo.
+- Moč lig je **lestvica znotraj države**; primerjav in projekcij čez države
+  ni. Backtest je zdaj `padel` (moč lig ne premaga ablacije za 1 %), zato
+  model ni objavljen.
+- Shema `scout` ni dostopna `anon`/`authenticated`; delavec se prijavi kot
+  `scout_stroj` z geslom (nastavi ga lastnik ročno na strežniku, nikoli v
+  git). Država se odpre v `scout.drzave` — **pred drugo državo mora pisanje teči pretočno**, sicer
+  delavec preseže `mem_limit: 1g`.
+- `ravenLige` ima prepis v `scout/stroj/stroj/ravni.py` (test enakosti).
+  CI ga ne objavi (`scripts/hetzner/objavi-scout.sh`) in Pythonovih testov ne
+  poganja: `cd scout/stroj && .venv/bin/pytest -q`.
 
 ## Poti
 

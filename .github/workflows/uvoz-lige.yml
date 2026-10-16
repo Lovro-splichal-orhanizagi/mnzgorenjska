@@ -93,6 +93,10 @@ jobs:
       - name: Chromium za vir hlf
         if: startsWith(inputs.liga, 'ro-')
         run: npx playwright install chromium --only-shell --with-deps
+      # Vira fmf (fmf.md) in pfl-az (Azerbajdžan) bereta zapisnike PDF s pdftotext (poppler-utils).
+      - name: pdftotext za vira fmf in pfl-az
+        if: startsWith(inputs.liga, 'md-') || startsWith(inputs.liga, 'az-')
+        run: command -v pdftotext || (sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils)
 
       # Druzina uvozov (uvoz-zapisnikov, uvoz-lige, zdruzi-klube,
       # tedensko-cene) pise v iste tabele: klube, igralce, tekme, cene. Kar se
@@ -111,6 +115,11 @@ jobs:
       # poskus lige nadaljuje, kjer je prejšnji obstal, namesto da vse bere
       # znova. Najprej se obnovi zadnji predpomnilnik te lige, šele nato
       # splošni (sicer je ponovni poskus dobil predpomnilnik druge države).
+      # Vmes predpomnilnik druge lige iste države (predpona šifre, `kz-`): vir
+      # kff prvič prebere vse tekme leta (~860 strani) za vse tri lige enake.
+      - name: Predpona drzave
+        id: drzava
+        run: echo "predpona=${LIGA%%-*}-" >> "$GITHUB_OUTPUT"
       - name: Predpomnilnik zapisnikov
         uses: actions/cache/restore@v4
         with:
@@ -118,6 +127,7 @@ jobs:
           key: zapisniki-${{ inputs.liga }}-${{ github.run_id }}
           restore-keys: |
             zapisniki-${{ inputs.liga }}-
+            zapisniki-${{ steps.drzava.outputs.predpona }}
             zapisniki-
 
       # Liga mora obstajati, sicer se skripte ustavijo sele na pol poti.

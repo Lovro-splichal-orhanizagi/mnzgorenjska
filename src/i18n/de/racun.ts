@@ -27,6 +27,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     nimasRacuna: 'Noch kein Konto? Registrieren',
     pozabljenoGeslo: 'Passwort vergessen?',
     nazajNaPrijavo: '← Zurück zur Anmeldung',
+    predlogEposte: 'Meintest du {eposta}?',
   },
   napake: {
     napacnaPrijava: 'Falsche E-Mail-Adresse oder falsches Passwort.',
@@ -167,7 +168,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   },
   pravno: {
     naslov: 'Datenschutz und Nutzungsbedingungen',
-    zadnjaSprememba: 'Zuletzt geändert: 12. Oktober 2026',
+    zadnjaSprememba: 'Zuletzt geändert: 16. Oktober 2026',
     kajJeNaslov: 'Was SLFF ist',
     kajJe:
       'SLFF (Sunday League Fantasy Football) ist eine Fantasy-Liga von Fans für den regionalen Amateurfußball. Sie wird von Freiwilligen betrieben und steht in keiner Verbindung zu den Landes- oder Regionalverbänden, zum nationalen Fußballverband oder zu den Klubs. Das Spiel ist gratis, ohne Einsätze und ohne Preise.',
@@ -232,6 +233,15 @@ export const racun: NonNullable<Prevod['racun']> = {
       '<b>Erstattungen.</b> Bei Missbrauch oder einer falschen Profilbestätigung erstatten wir nichts. Endet das Abzeichen durch unseren Fehler, auf Wunsch des Verbands oder weil wir die Leistung einstellen, erstatten wir beim Jahresabo anteilig die ungenutzten Monate. Beim Kauf für immer erstatten wir in den ersten 12 Monaten nach dem Kauf den vollen Betrag, danach anteilig den Rest von 5 Jahren ab dem Kauf. Das gedruckte Abzeichen und das Porto erstatten wir bei Einstellung nicht (das Abzeichen bleibt deines), nur bei Mängeln.',
     pritozbe:
       '<b>Fragen und Beschwerden.</b> Schreib an <eposta>info@slff.eu</eposta>, wir antworten innerhalb von 8 Werktagen. Wir erkennen keine Stelle zur außergerichtlichen Beilegung von Verbraucherstreitigkeiten an. Es gilt slowenisches Recht; der Schutz, den dir das Recht deines Wohnsitzlandes gibt, bleibt dir erhalten.',
+    scoutNaslov: 'SLFF Scout: Spielersuche für Vereine',
+    scoutKaj:
+      'Aus denselben öffentlichen Spielberichten berechnen wir Kennzahlen für Spieler der Erwachsenenligen: Anteil der Spielminuten, Tore, Einfluss auf dem Platz, Gegentore, Karten und Entwicklung über die Saisons, angepasst an die Stärke der Liga. Das sind Kennzahlen aus Spieldaten, keine Bewertung der Person. Sehen werden sie Vereine mit einem SLFF-Scout-Abo, die Spieler suchen; die Entscheidung trifft immer ein Mensch im Verein. Nachwuchsligen verarbeiten wir nicht. Wer je in einer Nachwuchsliga gespielt hat, ist ausgeschlossen, bis er Spielminuten in einer Erwachsenenliga hat und in seinem Profil ein Geburtsjahr angibt, nach dem er dieses Jahr mindestens 19 wird.',
+    scoutPodlaga:
+      'Rechtsgrundlage ist das berechtigte Interesse (Art. 6 Abs. 1 lit. f DSGVO): Vereinen helfen, Spieler aus öffentlich veröffentlichten Ergebnissen zu finden. Die Kennzahlen berechnen wir jeden Tag neu und bewahren nur die letzten Berechnungen auf. Aufrufe durch Vereine werden wir 12 Monate protokollieren, um Missbrauch zu verhindern und einem Spieler auf Anfrage sagen zu können, welche Vereine ihn angesehen haben.',
+    scoutPrivolitev:
+      'Ein Spieler mit übernommenem Profil kann angeben, dass er offen für einen Wechsel ist, sein Geburtsjahr, gewünschte Regionen und die Erlaubnis zur Kontaktaufnahme. Das ist eine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO): Sie sehen nur Vereine in Scout, sie kann jederzeit im Profil widerrufen werden, und beim Widerruf löschen wir die Daten. Ein Verein schreibt dem Spieler nur über Scout und sieht seine E-Mail-Adresse nicht.',
+    scoutUgovor:
+      'Widerspruch: Klicke im übernommenen Profil auf Mich in Scout verbergen oder schreibe an <eposta>info@slff.eu</eposta> mit einem Link zur Spielerseite. Innerhalb von 14 Tagen verbergen wir den Spieler in Scout in allen unseren Ligen dieses Landes, auch bei späteren Importen. Im Fantasy-Spiel bleibt er.',
   },
   klubskiRacun: {
     naslov: 'Offizielles Vereinskonto',

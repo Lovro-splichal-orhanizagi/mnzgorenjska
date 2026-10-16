@@ -663,7 +663,13 @@ if (smemoDeaktivirati) {
   for (const pari of pariKrogov.values()) velikosti.set(pari.size, (velikosti.get(pari.size) ?? 0) + 1)
   const obicajen = [...velikosti].sort((a, b) => b[1] - a[1] || b[0] - a[0])[0]?.[0] ?? 0
   const polnKrog = Math.max(1, Math.min(Math.floor(letosnjiKlubi.size / 2), obicajen))
-  const preverjeniKrogi = [...pariKrogov].filter(([, pari]) => pari.size >= polnKrog).map(([id]) => id)
+  // Vir, pri katerem je krog teden (`vir.razporedCel`, modular11), razpored
+  // prebere ves (vse strani; neveljavna stran ustavi uvoz) in tekmo, prestavljeno
+  // v drug teden, pokaže v drugem krogu. Tedni so različno polni, zato velja za
+  // vse kroge sezone, tudi tiste, ki jih razpored nima več.
+  const preverjeniKrogi = vir.razporedCel
+    ? [...new Set([...idKrogov, ...pariKrogov.keys()])]
+    : [...pariKrogov].filter(([, pari]) => pari.size >= polnKrog).map(([id]) => id)
   if (preverjeniKrogi.length) {
     const { data: neuvozene, error: eBeri } = await db
       .from('matches')
@@ -677,7 +683,7 @@ if (smemoDeaktivirati) {
       process.exitCode = 1
     }
     const umaknjene = (neuvozene ?? []).filter(
-      (m) => !pariKrogov.get(m.round_id).has(`${m.home_team_id}:${m.away_team_id}`),
+      (m) => !pariKrogov.get(m.round_id)?.has(`${m.home_team_id}:${m.away_team_id}`),
     )
     if (umaknjene.length) {
       const { error } = await db

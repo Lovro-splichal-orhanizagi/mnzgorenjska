@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Pogoj za fazo 2+: backtest premaga naivno osnovo (lanski učinek) za **≥ 15 %** (utežen MAE golov brez 11 m na 90) pri igralcih, ki so zamenjali ligo, in je boljši od istega modela brez moči lig (ablacija); pod 200 pari prestopnikov (`MIN_PRESTOPOV`) je izid "premalo podatkov", ne prestal; prag `PRAG = 0.15`, `scout.modeli.objavljen` = prestal.
+- Pogoj za fazo 2+: backtest premaga naivno osnovo (lanski učinek) za **≥ 15 %** (utežen MAE golov brez 11 m na 90) pri igralcih, ki so zamenjali ligo, in je za **≥ 1 %** boljši od istega modela brez moči lig (ablacija, `MIN_IZBOLJSAVA_MOCI = 0.01`); pod 200 pari prestopnikov (`MIN_PRESTOPOV`) je izid "premalo podatkov", ne prestal; prag `PRAG = 0.15`, `scout.modeli.objavljen` = prestal.
 - Samo odrasli: lige, kjer `je_mladinski_slug(slug)`, ne vstopijo nikamor; oseba z **katerokoli** vrstico v mladinski ligi je izločena (letnice še ni, pride v fazi 2).
 - `players.scout_skrit` (nov stolpec, privzeto `false`) in `players.anonimiziran_at is not null` izločita osebo iz izračuna v celoti.
 - Identiteta osebe: `r<competitions.source>:<reg_st>`, kjer je šifra (šifre so po viru: RS, ES, UA, RO imajo več virov z ločenimi številkami); sicer `i<country_id>:<lower(full_name)>:<players.team_id>` (Slovenija: ime + klub).

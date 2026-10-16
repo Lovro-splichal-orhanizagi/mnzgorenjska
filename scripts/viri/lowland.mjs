@@ -5,7 +5,7 @@
 // **Pisno dovoljenje za zajem: pridobil Lovro, oktober 2026** (pogoji uporabe
 // strani avtomatsko branje sicer prepovedujejo). Dovoljenje ne pokriva tehnične
 // zaščite: ob CAPTCHI, izzivu, prijavi ali 401/403/429 se uvoz ustavi — ne obhajaj.
-// Glej CLAUDE.md (Škotska — vir lowland).
+// Glej docs/viri/skotska.md (Škotska — vir lowland).
 //
 // ŠIFRA LIGE je `<tekmovanje>/<sezona>/<comet>` (`slfl/2026-2027/54193157`):
 // pot Match Centra (`/match-centre/<tekmovanje>/<sezona>/`) in id skupine COMET

@@ -27,6 +27,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     nimasRacuna: '¿No tienes cuenta? Regístrate',
     pozabljenoGeslo: '¿Has olvidado la contraseña?',
     nazajNaPrijavo: '← Volver a iniciar sesión',
+    predlogEposte: '¿Quisiste decir {eposta}?',
   },
   napake: {
     napacnaPrijava: 'Correo electrónico o contraseña incorrectos.',
@@ -163,7 +164,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   },
   pravno: {
     naslov: 'Privacidad y condiciones',
-    zadnjaSprememba: 'Última modificación: 12 de octubre de 2026',
+    zadnjaSprememba: 'Última modificación: 16 de octubre de 2026',
     kajJeNaslov: 'Qué es SLFF',
     kajJe:
       'SLFF (Sunday League Fantasy Football) es una liga fantasy hecha por aficionados para ligas de fútbol regionales y aficionadas. La llevamos de forma voluntaria y no tiene relación con las federaciones territoriales, la federación nacional ni los clubes. El juego es gratuito, sin apuestas ni premios.',
@@ -228,6 +229,15 @@ export const racun: NonNullable<Prevod['racun']> = {
       '<b>Reembolsos.</b> No reembolsamos en caso de abuso o de una confirmación falsa del perfil. Si la insignia termina por un error nuestro, a petición de la federación o porque cerramos el servicio, devolvemos la parte proporcional de los meses no usados de la suscripción anual. En la opción para siempre devolvemos el importe íntegro durante los primeros 12 meses tras la compra y, después, la parte proporcional de lo que quede de 5 años desde la compra. La insignia impresa y el envío no se reembolsan si cerramos el servicio (la insignia sigue siendo tuya), solo en caso de defecto.',
     pritozbe:
       '<b>Preguntas y reclamaciones.</b> Escribe a <eposta>info@slff.eu</eposta>; respondemos en un plazo de 8 días hábiles. No reconocemos ninguna entidad de resolución extrajudicial de litigios de consumo. Se aplica la ley eslovena; esto no te quita la protección que te da la ley del país donde vives.',
+    scoutNaslov: 'SLFF Scout: búsqueda de jugadores para clubes',
+    scoutKaj:
+      'A partir de las mismas actas públicas calculamos indicadores de los jugadores de ligas sénior: porcentaje de minutos, goles, impacto en el campo, goles encajados, tarjetas y evolución a lo largo de las temporadas, ajustados a la fuerza de la liga. Son indicadores de datos de partidos, no una valoración de la persona. Los verán los clubes con suscripción a SLFF Scout que buscan jugadores; la decisión la toma siempre una persona del club. No tratamos ligas juveniles. Quien haya jugado alguna vez en una liga juvenil queda excluido hasta que tenga minutos en una liga sénior e indique en su perfil un año de nacimiento según el cual cumple al menos 19 años este año.',
+    scoutPodlaga:
+      'La base jurídica es el interés legítimo (artículo 6, apartado 1, letra f, del RGPD): ayudar a los clubes a encontrar jugadores a partir de resultados publicados públicamente. Recalculamos los indicadores cada día y solo conservamos los últimos cálculos. Registraremos las consultas de los clubes durante 12 meses para evitar abusos y poder decir a un jugador, si lo pide, qué clubes lo han consultado.',
+    scoutPrivolitev:
+      'Un jugador con perfil reclamado puede añadir que está abierto a un traspaso, su año de nacimiento, las regiones que prefiere y el permiso para ser contactado. Es un consentimiento (artículo 6, apartado 1, letra a, del RGPD): solo lo ven los clubes de Scout, se puede retirar en cualquier momento en el perfil y, al retirarlo, borramos los datos. Un club escribe al jugador solo a través de Scout y no ve su correo electrónico.',
+    scoutUgovor:
+      'Oposición: en un perfil reclamado pulsa Ocúltame de Scout o escribe a <eposta>info@slff.eu</eposta> con un enlace a la página del jugador. En un plazo de 14 días ocultamos al jugador en Scout en todas nuestras ligas de ese país, también en importaciones posteriores. En el juego fantasy sigue.',
   },
   klubskiRacun: {
     naslov: 'Cuenta oficial del club',

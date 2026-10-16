@@ -4,7 +4,7 @@
 // iz istega COMET kot pri `nsfbih` (šifre tekem 46xxxxxx = 2025/26, 54xxxxxx =
 // 2026/27), stran je Joomla z lastno komponento, HTML iz strežnika. Druga
 // stran in druga oblika kot nsfbih.ba (NS FBiH), zato svoj vir. fsrs.org
-// (Republika Srpska) NI ta vir in ga ne beremo. Glej CLAUDE.md (Bosna in
+// (Republika Srpska) NI ta vir in ga ne beremo. Glej docs/viri/bih.md (Bosna in
 // Hercegovina — vir nfsbih).
 //
 // ŠIFRA LIGE je `<slug>/<id tekmovanja COMET>`, npr. `wwin-liga-bih/54152223`

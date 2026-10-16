@@ -20,7 +20,7 @@
 // Neodigrana tekma vrne "Brak danych na temat tego spotkania.".
 //
 // ŠIFRA LIGE je `<leagueN>/<play>/<season>` (trije UUID iz naslova strani
-// skupine). Vsaka sezona ima svoj `play` in `season`; arhiv je v CLAUDE.md.
+// skupine). Vsaka sezona ima svoj `play` in `season`; arhiv je v docs/viri/poljska.md.
 //
 // Šifre tekem in oseb so iste kot v Extranetu (in pri viru pzpn), zato je
 // zapisnik_id kar UUID tekme.

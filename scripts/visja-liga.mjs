@@ -165,6 +165,21 @@ export function ravenLige({ slug, name, zveza }) {
     const r = { 'is-besta-deild': 1, 'is-lengjudeild': 2 }[slug]
     if (r) return abs(r)
     if ((m = slug.match(/^is-(\d)-deild/))) return abs(1 + Number(m[1]))
+}
+
+  // Norveška (vir nff): OBOS-ligaen je 2. raven (Eliteserien ni vpisana),
+  // "2div" 3., "3div" (Norsk Tipping-ligaen) 4., kretsove "4div" 5. in "5div" 6.
+  if (slug.startsWith('no-')) {
+    if (mladinska) return null
+    if (slug === 'no-obos') return abs(2)
+    if ((m = slug.match(/-(\d)div(-|$)/))) return abs(1 + Number(m[1]))
+}
+
+  // Moldavija (vir fmf, šifra osebe COMET): Super Liga (Liga 7777) 1, Liga 1 (skupini) 2, Liga 2 3.
+  if (slug.startsWith('md-')) {
+    if (mladinska) return null
+    if (slug === 'md-super-liga') return abs(1)
+    if ((m = slug.match(/^md-liga-(\d)/))) return abs(1 + Number(m[1]))
     return null
   }
 
@@ -187,6 +202,14 @@ export function ravenLige({ slug, name, zveza }) {
     if (mladinska) return null
     if (slug === 'fo-betri-deildin') return abs(1)
     if ((m = slug.match(/^fo-(\d)-deild/))) return abs(1 + Number(m[1]))
+}
+
+  // Kazahstan (vir kff): Premier liga 1, Prva liga 2, Druga liga (obe
+  // konferenci) 3. Šifra osebe KFF je ista v vseh ligah.
+  if (slug.startsWith('kz-')) {
+    if (mladinska) return null
+    if (slug === 'kz-premier-liga') return abs(1)
+    if ((m = slug.match(/^kz-(\d)-liga/))) return abs(1 + Number(m[1]))
     return null
   }
 

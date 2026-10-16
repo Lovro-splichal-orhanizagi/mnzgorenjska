@@ -4,7 +4,7 @@
 // skupinah (Jug, Sjever, Centar, Zapad; 3. raven). Podatki so iz COMET
 // (šifre tekem 54xxxxxx so šifre COMET), stran jih izriše kot navaden HTML
 // iz strežnika. Kantonalnih lig (4. raven in nižje) na strani ni. fsrs.org
-// (Republika Srpska) NI ta vir in ga ne beremo. Glej CLAUDE.md (Bosna in
+// (Republika Srpska) NI ta vir in ga ne beremo. Glej docs/viri/bih.md (Bosna in
 // Hercegovina — vir nsfbih).
 //
 // ŠIFRA LIGE je `<slug>/<sezona>`, npr. `druga-liga-fbih-jug/2026-27`:

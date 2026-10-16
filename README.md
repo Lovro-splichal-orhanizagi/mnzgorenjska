@@ -127,8 +127,9 @@ rezervnih igralcev.
 | `profiles` | Profili uporabnikov, zastavica `is_admin`, odjava od e-poštnih opomnikov `brez_opomnikov` in od potisnih obvestil `brez_push`, avatar (`avatar_barva`, `avatar_ikona`), `javni_profil`, `display_name_changed_at` |
 | `competitions` | Ligi: `clani` in `mladinci` (šifra vira, prvi fantasy krog) |
 | `teams` | Klubi — **skupni** obema ligama (grb, ime) |
-| `players` | Igralci ene lige (cena, pozicija, vir pozicije); ista oseba je v obeh ligah dve vrstici; `anonimiziran_at` = ime skrito (GDPR) |
+| `players` | Igralci ene lige (cena, pozicija, vir pozicije); ista oseba je v obeh ligah dve vrstici; `anonimiziran_at` = ime skrito (GDPR); `scout_skrit` = stari ugovor proti Scoutu, se ne bere več (ugovor in privolitev sta v zaprti shemi `scout`) |
 | `anonimizirani_igralci` | Zgoščeno izvirno ime in šifra anonimiziranega igralca, da ga uvoz še prepozna in nov zapis iste osebe z ugovorom anonimizira (zaprta tabela) |
+| `scout.*` | Rezultati nočnega stroja Scout (`drzave`, `modeli`, `lige_moc`, `ekipe_elo`, `kazalniki`, `indeks`, `vektorji`, `vrzeli`); zaprta shema, glej `docs/scout.md` |
 | `zahtevki_igralca` | Zahtevki "To sem jaz": uporabnik prevzame profil igralca (`cakajoc`, `potrjen`, `zavrnjen`, `preklican`; potrdil `klub`, `soigralci` ali `admin`). Največ en potrjen na igralca in na uporabnika; piše le prek RPC |
 | `povezani_igralci` | Druge vrstice iste osebe (druga liga, mladinci, prestop), ki jih admin poveže k potrjenemu profilu |
 | `profil_igralca` | Predstavitev potrjenega igralca (vzdevek, opis, omrežja, fotografija); ureja jo le potrjen lastnik, uradnih podatkov ne |

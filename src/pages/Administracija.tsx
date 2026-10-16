@@ -150,7 +150,7 @@ export default function Administracija() {
   const [cakaIgralec, setCakaIgralec] = useState<
     | { id: number; vrsta: 'pozicija'; pozicija: Pozicija }
     | { id: number; vrsta: 'klub'; klubId: number }
-    | { id: number; vrsta: 'anonimizacija'; ista: IstaOseba[]; izbrani: number[] }
+    | { id: number; vrsta: 'anonimizacija' | 'scout'; ista: IstaOseba[]; izbrani: number[] }
     | null
   >(null)
   const [shranjujemIgralca, setShranjujemIgralca] = useState(false)
@@ -568,11 +568,22 @@ export default function Administracija() {
 
   // Ista oseba v drugih vrsticah: z isto šifro gre zraven sama, soimenjake
   // admin odkljuka.
-  async function pripraviAnonimizacijo(id: number) {
+  async function pripraviAnonimizacijo(id: number, vrsta: 'anonimizacija' | 'scout' = 'anonimizacija') {
     setNapaka(null)
     const { data, error } = await supabase.rpc('admin_ista_oseba', { p_player_id: id })
     if (error) return setNapaka(error.message)
-    setCakaIgralec({ id, vrsta: 'anonimizacija', ista: data ?? [], izbrani: [] })
+    setCakaIgralec({ id, vrsta, ista: data ?? [], izbrani: [] })
+  }
+
+  // Ugovor proti Scoutu (mail na info@, v 14 dneh): ključi izbranih vrstic.
+  async function skrijIzScouta(ids: number[]) {
+    setNapaka(null)
+    setShranjujemIgralca(true)
+    const { data, error } = await supabase.rpc('admin_scout_skrij', { p_player_ids: ids })
+    setShranjujemIgralca(false)
+    setCakaIgralec(null)
+    if (error) return setNapaka(error.message)
+    setSporocilo(`Ugovor proti Scoutu vpisan (novih ključev: ${data}).`)
   }
 
   async function anonimiziraj(ids: number[]) {
@@ -1449,6 +1460,15 @@ SUPABASE_SERVICE_ROLE_KEY=... node scripts/ovrednoti-igralce.mjs --tekmovanje ${
                           Anonimiziraj (ugovor)
                         </button>
                       )}
+                      {!z.full_name?.startsWith('#') && (
+                        <button
+                          onClick={() => pripraviAnonimizacijo(z.id, 'scout')}
+                          disabled={shranjujemIgralca}
+                          className="text-amber-300 underline disabled:opacity-50"
+                        >
+                          Skrij iz Scouta (ugovor)
+                        </button>
+                      )}
                     </div>
                     {cakaIgralec?.id === z.id &&
                       (() => {
@@ -1462,7 +1482,9 @@ SUPABASE_SERVICE_ROLE_KEY=... node scripts/ovrednoti-igralce.mjs --tekmovanje ${
                                   ? nastaviPozicijo(z.id, c.pozicija)
                                   : c.vrsta === 'klub'
                                     ? premakniKlub(z.id, c.klubId)
-                                    : anonimiziraj([z.id, ...c.izbrani])
+                                    : c.vrsta === 'scout'
+                                      ? skrijIzScouta([z.id, ...c.izbrani])
+                                      : anonimiziraj([z.id, ...c.izbrani])
                               }
                               preklici={() => setCakaIgralec(null)}
                               zaseden={shranjujemIgralca}
@@ -1474,12 +1496,22 @@ SUPABASE_SERVICE_ROLE_KEY=... node scripts/ovrednoti-igralce.mjs --tekmovanje ${
                                   <strong>{IME_POZICIJE[c.pozicija]}</strong>? Povozi
                                   glasovanje in spremeni točke za gole ter kvote v kadrih.
                                 </>
-                              ) : c.vrsta === 'anonimizacija' ? (
+                              ) : c.vrsta !== 'klub' ? (
                                 <>
-                                  Ime igralca {prikazniIme(z.full_name)} (id {z.id}) zamenjam z{' '}
-                                  <strong>#{z.id}</strong>? Za vedno — tudi uvoz ga ne vrne, nov
-                                  igralec z istim imenom ali šifro v tej državi nastane že
-                                  anonimiziran. Statistika in točke ostanejo.
+                                  {c.vrsta === 'scout' ? (
+                                    <>
+                                      Igralca {prikazniIme(z.full_name)} (id {z.id}) skrijem iz Scouta?
+                                      Velja za izbrane vrstice in vse z istim imenom ali šifro v tej
+                                      državi, tudi ob poznejših uvozih. V fantasy igri ostane.
+                                    </>
+                                  ) : (
+                                    <>
+                                      Ime igralca {prikazniIme(z.full_name)} (id {z.id}) zamenjam z{' '}
+                                      <strong>#{z.id}</strong>? Za vedno — tudi uvoz ga ne vrne, nov
+                                      igralec z istim imenom ali šifro v tej državi nastane že
+                                      anonimiziran. Statistika in točke ostanejo.
+                                    </>
+                                  )}
                                   {c.ista.length > 0 && (
                                     <ul className="mt-2 space-y-1">
                                       {c.ista.map((o) => (

@@ -316,6 +316,26 @@
   šele po uspešni posodobitvi. `imeHash`/`regHash` v
   `scripts/anonimizacija.mjs` morata ostati enaka SQL
   `anonimizacijski_kljuc` (smoke in `test:varnost`)
+- **Scout: ugovor in privolitev** (migraciji 20261016140100, 20261016160100;
+  `players.scout_skrit` ostane do 20261017090100 in se ne bere več).
+  Ugovor je v zaprti `scout.ugovori` (zgoščena ključa država + ime in država +
+  šifra, kot `anonimizirani_igralci`; v javnem `players` bi bil seznam
+  ugovornikov javen): stroj izloči vso osebo, tudi soimenjaka v državi in ob
+  poznejših uvozih, fantasy igra ostane. Vpiše ga lastnik potrjenega profila
+  (`scout_ugovor(glavni, true)`; preklic z `false` pobriše le ključe njegovih
+  vrstic, soimenjak z lastnim ugovorom ostane skrit) ali admin po mailu na
+  info@ (`admin_scout_skrij(ids[])`). Privolitev (odprt za prestop, letnica,
+  s katero je polnoleten vse leto, tj. `<= letos - 19`, regije =
+  `federations` države, stik) je v zaprti `scout.privolitve` (ključ glavna
+  vrstica), **ne** v javnem `profil_igralca`; piše `scout_shrani_privolitev`,
+  briše `scout_preklici_privolitev`, lastnikov ugovor in
+  `prevzem_odstrani_predstavitev` (preklic profila, anonimizacija, izbris
+  računa); bere `scout_moj_profil` (le lastnik). Mladinca (ključi katerekoli
+  mladinske vrstice v državi, vse sezone) potrjena polnoletna letnica vrne v
+  izračun, a le osebo prijaviteljevih vrstic (`scout.odrasle_vrstice()`).
+  Shema `scout` je zaprta (brez pravic za `anon`/`authenticated`,
+  RLS s politiko le za vlogo `scout_stroj`); piše jo delavec `slff-scout`,
+  `scout.drzave` pove, katere države so odprte. Podrobnosti: `docs/scout.md`
 - **Prevzem profila igralca** ("To sem jaz", migracija 20261012091100):
   `zahtevki_igralca` (en potrjen na igralca IN na uporabnika, en odprt na
   uporabnika; delna unikatna kazala), piše le prek RPC `prevzemi_igralca`,

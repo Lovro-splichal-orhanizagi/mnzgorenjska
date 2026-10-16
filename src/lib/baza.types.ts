@@ -2566,6 +2566,7 @@ export type Database = {
           reg_st: number | null
           repriced_at: string | null
           repriced_week: string | null
+          scout_skrit: boolean
           shirt_number: number | null
           team_id: number
           value: number
@@ -2595,6 +2596,7 @@ export type Database = {
           reg_st?: number | null
           repriced_at?: string | null
           repriced_week?: string | null
+          scout_skrit?: boolean
           shirt_number?: number | null
           team_id: number
           value?: number
@@ -2623,6 +2625,7 @@ export type Database = {
           reg_st?: number | null
           repriced_at?: string | null
           repriced_week?: string | null
+          scout_skrit?: boolean
           shirt_number?: number | null
           team_id?: number
           value?: number
@@ -7395,6 +7398,14 @@ export type Database = {
           z_ekipo: number
         }[]
       }
+      admin_povabila_po_uporabniku: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          brez_ekipe: number
+          povabil: number
+          user_id: string
+        }[]
+      }
       admin_povezi_igralca: {
         Args: { p_player_id: number; p_povezi?: boolean; p_zahtevek_id: number }
         Returns: undefined
@@ -7510,6 +7521,10 @@ export type Database = {
           slug: string
           teden: string
         }[]
+      }
+      admin_scout_skrij: {
+        Args: { p_player_ids: number[] }
+        Returns: number
       }
       admin_skrij_pivo: {
         Args: { p_id: number; p_skrito: boolean }
@@ -8389,6 +8404,36 @@ export type Database = {
         Returns: undefined
       }
       roster_je_veljaven: { Args: { p_team_id: number }; Returns: boolean }
+      scout_moj_profil: {
+        Args: { p_player_id: number }
+        Returns: {
+          country_id: number
+          drzava_odprta: boolean
+          kontakt_dovoljen: boolean
+          letnik: number
+          odprt_za_prestop: boolean
+          regije: number[]
+          skrit: boolean
+        }[]
+      }
+      scout_preklici_privolitev: {
+        Args: { p_player_id: number }
+        Returns: undefined
+      }
+      scout_shrani_privolitev: {
+        Args: {
+          p_kontakt: boolean
+          p_letnik: number
+          p_odprt: boolean
+          p_player_id: number
+          p_regije: number[]
+        }
+        Returns: undefined
+      }
+      scout_ugovor: {
+        Args: { p_player_id: number; p_skrij: boolean }
+        Returns: undefined
+      }
       sem_v_mini_ligi: { Args: { p_liga: number }; Returns: boolean }
       sezona_lige: {
         Args: { p_competition_id: number; p_datum?: string }

@@ -930,6 +930,15 @@ export default function Igralec() {
           </ul>
         </section>
       )}
+
+      {/* ugovor proti SLFF Scout: na vsaki javni strani igralca (spec, razdelek 2) */}
+      {!anonimiziran && !!slugLige && !jeMladinskiSlug(slugLige) && (
+        <p className="text-xs text-slate-500">
+          <Link to="/legal#scout" className="underline hover:text-slate-300">
+            {t('igralci.scout.ugovorPovezava')}
+          </Link>
+        </p>
+      )}
     </div>
   )
 }

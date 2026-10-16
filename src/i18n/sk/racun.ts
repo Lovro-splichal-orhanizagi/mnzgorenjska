@@ -27,6 +27,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     nimasRacuna: 'Nemáš účet? Zaregistruj sa',
     pozabljenoGeslo: 'Zabudnuté heslo?',
     nazajNaPrijavo: '← Späť na prihlásenie',
+    predlogEposte: 'Mysleli ste {eposta}?',
   },
   napake: {
     napacnaPrijava: 'Nesprávna e-mailová adresa alebo heslo.',
@@ -168,7 +169,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   // Súkromie a podmienky. <b> je tučné písmo, ostatné značky sú odkazy.
   pravno: {
     naslov: 'Súkromie a podmienky',
-    zadnjaSprememba: 'Posledná zmena: 12. októbra 2026',
+    zadnjaSprememba: 'Posledná zmena: 16. októbra 2026',
     kajJeNaslov: 'Čo je SLFF',
     kajJe:
       'SLFF (Sunday League Fantasy Football) je fanúšikovská fantasy liga pre amatérske futbalové súťaže. Prevádzkujeme ju amatérsky a nie je prepojená so Slovenským futbalovým zväzom (SFZ), regionálnymi ani oblastnými futbalovými zväzmi, ani s klubmi. Hra je bezplatná, bez peňažných vkladov a bez výhier.',
@@ -233,6 +234,15 @@ export const racun: NonNullable<Prevod['racun']> = {
       '<b>Vrátenie peňazí.</b> Pri zneužití alebo nepravdivom potvrdení profilu peniaze nevraciame. Ak odznak skončí našou chybou, na žiadosť zväzu alebo preto, že službu zrušíme, pri ročnom predplatnom vrátime pomernú časť za nevyužité mesiace. Pri kúpe navždy vrátime celú sumu v prvých 12 mesiacoch od kúpy, neskôr pomernú časť zostatku do 5 rokov od kúpy. Vytlačený odznak a poštovné pri zrušení služby nevraciame (odznak zostane tvoj), len pri vade.',
     pritozbe:
       '<b>Otázky a reklamácie.</b> Napíš na <eposta>info@slff.eu</eposta>, odpovieme do 8 pracovných dní. Neuznávame žiadny subjekt alternatívneho riešenia spotrebiteľských sporov. Platí slovinské právo; tým neprichádzaš o ochranu, ktorú ti dáva právo krajiny, v ktorej žiješ.',
+    scoutNaslov: 'SLFF Scout: hľadanie hráčov pre kluby',
+    scoutKaj:
+      'Z tých istých verejných zápisov o stretnutí vypočítavame ukazovatele hráčov seniorských súťaží: podiel minút, góly, vplyv na ihrisku, inkasované góly, karty a vývoj naprieč sezónami, upravené podľa sily súťaže. Sú to ukazovatele z údajov o zápasoch, nie hodnotenie osoby. Uvidia ich kluby s predplatným SLFF Scout, ktoré hľadajú hráčov; rozhoduje vždy človek v klube. Mládežnícke súťaže nespracúvame. Kto niekedy hral v mládežníckej súťaži, je vylúčený, kým nemá minúty v seniorskej súťaži a na svojom profile nezadá rok narodenia, podľa ktorého tento rok dovŕši aspoň 19 rokov.',
+    scoutPodlaga:
+      'Právnym základom je oprávnený záujem (článok 6 ods. 1 písm. f) GDPR): pomôcť klubom nájsť hráčov z verejne zverejnených výsledkov. Ukazovatele vypočítavame každý deň nanovo a uchovávame len posledné výpočty. Zobrazenia klubov budeme zaznamenávať 12 mesiacov, aby sme zabránili zneužitiu a aby sme hráčovi na požiadanie povedali, ktoré kluby si ho pozreli.',
+    scoutPrivolitev:
+      'Hráč s prevzatým profilom môže pridať, že je otvorený prestupu, rok narodenia, želané regióny a povolenie na kontakt. Ide o súhlas (článok 6 ods. 1 písm. a) GDPR): vidia ho iba kluby v Scoute, dá sa kedykoľvek odvolať na profile a po odvolaní údaje vymažeme. Klub píše hráčovi iba cez Scout a jeho e-mailovú adresu nevidí.',
+    scoutUgovor:
+      'Námietka: na prevzatom profile klikni Skry ma zo Scoutu alebo napíš na <eposta>info@slff.eu</eposta> s odkazom na stránku hráča. Do 14 dní hráča skryjeme zo Scoutu vo všetkých našich súťažiach danej krajiny, aj pri neskorších importoch. Vo fantasy hre zostáva.',
   },
   klubskiRacun: {
     naslov: 'Oficiálny účet klubu',

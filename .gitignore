@@ -24,3 +24,9 @@ docs/trgovine/posnetki/
 *-firebase-adminsdk-*.json
 slff-cb58e-*.json
 .playwright-mcp/
+
+# Stroj Scout (Python)
+scout/stroj/.venv/
+__pycache__/
+.pytest_cache/
+*.egg-info/

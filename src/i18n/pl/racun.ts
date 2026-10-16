@@ -27,6 +27,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     nimasRacuna: 'Nie masz konta? Zarejestruj się',
     pozabljenoGeslo: 'Nie pamiętasz hasła?',
     nazajNaPrijavo: '← Wróć do logowania',
+    predlogEposte: 'Czy chodziło o {eposta}?',
   },
   napake: {
     napacnaPrijava: 'Nieprawidłowy e-mail lub hasło.',
@@ -163,7 +164,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   },
   pravno: {
     naslov: 'Prywatność i regulamin',
-    zadnjaSprememba: 'Ostatnia zmiana: 12 października 2026',
+    zadnjaSprememba: 'Ostatnia zmiana: 16 października 2026',
     kajJeNaslov: 'Czym jest SLFF',
     kajJe:
       'SLFF (Sunday League Fantasy Football) to kibicowska liga fantasy dla lokalnych lig amatorskich. Prowadzimy ją hobbystycznie i nie jest powiązana z Polskim Związkiem Piłki Nożnej (PZPN), wojewódzkimi związkami piłki nożnej ani z klubami. Gra jest darmowa, bez wpłat pieniężnych i bez nagród.',
@@ -228,6 +229,15 @@ export const racun: NonNullable<Prevod['racun']> = {
       '<b>Zwroty.</b> W razie nadużycia lub fałszywego potwierdzenia profilu nie zwracamy pieniędzy. Jeśli odznaka wygaśnie z naszej winy, na prośbę związku lub dlatego, że wycofamy usługę, przy subskrypcji rocznej zwracamy proporcjonalną część za niewykorzystane miesiące. Przy zakupie na zawsze zwracamy całą kwotę w ciągu pierwszych 12 miesięcy od zakupu, a później proporcjonalną część za okres pozostały do 5 lat od zakupu. Drukowanej odznaki i kosztów wysyłki przy wycofaniu usługi nie zwracamy (odznaka zostaje twoja), tylko w razie wady.',
     pritozbe:
       '<b>Pytania i reklamacje.</b> Napisz na <eposta>info@slff.eu</eposta>, odpowiemy w ciągu 8 dni roboczych. Nie uznajemy żadnego podmiotu pozasądowego rozwiązywania sporów konsumenckich. Obowiązuje prawo słoweńskie; nie pozbawia cię to ochrony, którą daje ci prawo kraju, w którym mieszkasz.',
+    scoutNaslov: 'SLFF Scout: wyszukiwanie zawodników dla klubów',
+    scoutKaj:
+      'Z tych samych publicznych protokołów meczowych obliczamy wskaźniki zawodników lig seniorskich: udział minut, gole, wpływ na boisku, stracone gole, kartki i rozwój na przestrzeni sezonów, dostosowane do siły ligi. To wskaźniki z danych meczowych, a nie ocena osoby. Zobaczą je kluby z subskrypcją SLFF Scout, które szukają zawodników; decyzję zawsze podejmuje człowiek w klubie. Nie przetwarzamy lig młodzieżowych. Kto kiedykolwiek grał w lidze młodzieżowej, jest wykluczony, dopóki nie ma minut w lidze seniorskiej i nie poda na swoim profilu roku urodzenia, według którego w tym roku kończy co najmniej 19 lat.',
+    scoutPodlaga:
+      'Podstawą prawną jest prawnie uzasadniony interes (art. 6 ust. 1 lit. f RODO): pomoc klubom w znalezieniu zawodników na podstawie publicznie opublikowanych wyników. Wskaźniki obliczamy codziennie od nowa i przechowujemy tylko ostatnie obliczenia. Wyświetlenia profili przez kluby będziemy rejestrować przez 12 miesięcy, aby zapobiegać nadużyciom i aby na prośbę zawodnika powiedzieć mu, które kluby go oglądały.',
+    scoutPrivolitev:
+      'Zawodnik z przejętym profilem może dodać, że jest otwarty na transfer, rok urodzenia, preferowane regiony i zgodę na kontakt. To zgoda (art. 6 ust. 1 lit. a RODO): widzą ją tylko kluby w Scout, można ją w każdej chwili wycofać na profilu, a po wycofaniu usuwamy dane. Klub pisze do zawodnika tylko przez Scout i nie widzi jego adresu e-mail.',
+    scoutUgovor:
+      'Sprzeciw: na przejętym profilu kliknij Ukryj mnie w Scout albo napisz na <eposta>info@slff.eu</eposta> z linkiem do strony zawodnika. W ciągu 14 dni ukryjemy zawodnika w Scout we wszystkich naszych ligach danego kraju, także przy późniejszych importach. W grze fantasy zostaje.',
   },
   klubskiRacun: {
     naslov: 'Oficjalne konto klubu',
