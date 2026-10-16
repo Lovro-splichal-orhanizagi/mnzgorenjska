@@ -1,0 +1,12 @@
+{
+  "vrsta": "drzava",
+  "od": "2026-10-05",
+  "do": "2026-10-14",
+  "drzava": {
+    "drzava": "HR", "uporabnikov": 288, "lig": 41, "aktivnih_lig": 63, "ekip": 301,
+    "igralci": [
+      { "ime": "Horvat Ivan", "klub": "NK Mladost Ždralovi", "grb": null, "pozicija": "MID", "liga": "BJ I.", "slug": "hr-bj-1znl", "krog": 9, "tocke": 21, "goli": 2 },
+      { "ime": "Babić Marko", "klub": "NK Varteks", "grb": null, "pozicija": "FWD", "liga": "VŽ Elitna", "slug": "hr-vz-elitna", "krog": 9, "tocke": 17, "goli": 3 }
+    ]
+  }
+}

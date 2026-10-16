@@ -7,12 +7,12 @@
 // štirje razmiki (gap-2.5) dajo (100% − 2.5rem) / 5 = 20% − 0.5rem; vzamemo
 // 0.55rem za rezervo pri zaokroževanju. `vw` je štel tudi drsnik in robove,
 // zato se je vrsta pri 375–390 px prelomila. Od `sm` navzgor se poveča.
-import { POZICIJE, VRSTNI_RED } from '../lib/pravila'
+import { POZICIJE, VRSTNI_RED, lahkoZacne, lahkoZamenjata } from '../lib/pravila'
 import {
   KRATKA_POZICIJA,
   prikazniIme,
 } from '../lib/pomozno'
-import type { ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import type { IgralecVKadru, Pozicija } from '../lib/tipi'
 import Grb from './Grb'
 import Dres from './Dres'
@@ -40,9 +40,14 @@ function KarticaIgralca({
   zatemnjen,
   premik,
   naInfo,
+  izbira,
+  izbranIme,
 }: {
   igralec: IgralecNaIgriscu
   naKlik: () => void
+  /** Menjava s tapom: ta je izbran, je cilj ali (med izbiro) ni cilj. */
+  izbira?: 'izbran' | 'cilj' | 'ne'
+  izbranIme?: string
   naOdstrani: () => void
   naInfo?: () => void
   zatemnjen?: boolean
@@ -52,27 +57,35 @@ function KarticaIgralca({
   const ime = prikazniIme(igralec.full_name)
   return (
     <div
+      data-zamenjava
       className={`group relative w-[min(3.9rem,calc(20%-0.55rem))] text-center sm:w-[4.75rem] ${
-        zatemnjen ? 'opacity-70' : ''
+        izbira === 'ne' ? 'opacity-40' : zatemnjen && !izbira ? 'opacity-70' : ''
       }`}
     >
       {/* Dres z značkami je svoj relativni okvir: ✕ se sidra nanj, ne na
           celo kartico — sicer bi na klopi prekril puščici pod njim.
-          Kartica ima dve dejanji brez dodatnih gumbov: dres prestavi med
-          postavo in klopjo, ime s ceno odpre podatke (tam je tudi
-          "Odstrani"). ✕ je le bližnjica ob lebdenju na računalniku. */}
+          Kartica ima dve dejanji brez dodatnih gumbov: dres izbere igralca
+          za menjavo (nato tap na označenega soigralca), ime s ceno odpre
+          podatke (tam je tudi "Odstrani"). ✕ je le bližnjica ob lebdenju na
+          računalniku. */}
       <div className="relative">
       <button
         onClick={naKlik}
-        title={
-          igralec.is_starter
-            ? t('mojaEkipa.igrisce.naKlop')
-            : t('mojaEkipa.igrisce.vPostavo')
+        aria-pressed={izbira === 'izbran'}
+        aria-label={
+          izbira === 'izbran'
+            ? t('mojaEkipa.igrisce.prekliciIzbiro', { ime })
+            : izbira === 'cilj'
+              ? t('mojaEkipa.igrisce.zamenjajZ', { ime, drugi: izbranIme ?? '' })
+              : t('mojaEkipa.igrisce.izberiZaMenjavo', { ime })
         }
-        aria-label={`${ime}: ${
-          igralec.is_starter ? t('mojaEkipa.igrisce.naKlop') : t('mojaEkipa.igrisce.vPostavo')
+        className={`flex w-full justify-center rounded-lg pb-0.5 transition duration-150 active:scale-95 sm:hover:-translate-y-0.5 ${
+          izbira === 'izbran'
+            ? 'bg-amber-300/30 ring-2 ring-amber-300'
+            : izbira === 'cilj'
+              ? 'animate-pulse bg-gnl-400/25 ring-2 ring-gnl-300'
+              : ''
         }`}
-        className="flex w-full justify-center pb-0.5 transition duration-150 active:scale-95 sm:hover:-translate-y-0.5"
       >
         <Dres pozicija={igralec.position} razred="h-7 w-8 sm:h-9 sm:w-10" igralecId={igralec.id} />
       </button>
@@ -222,6 +235,8 @@ function PraznoMesto({
   )
 }
 
+const NAMIG_KLJUC = 'slff-namig-zamenjave'
+
 const Vrsta = ({ children }: { children: ReactNode }) => (
   <div className="flex flex-wrap items-start justify-center gap-2.5 sm:gap-3">
     {children}
@@ -235,6 +250,7 @@ export default function Igrisce({
   naPraznoMesto,
   naPremakniKlop,
   naInfo,
+  naZamenjaj,
 }: {
   izbrani: IgralecNaIgriscu[]
   naPreklopPrvo: (i: IgralecNaIgriscu) => void
@@ -244,8 +260,65 @@ export default function Igrisce({
   naPremakniKlop?: (i: IgralecNaIgriscu, smer: -1 | 1) => void
   /** Podatki o igralcu (statistika, cena) brez zapuščanja strani. */
   naInfo?: (i: IgralecNaIgriscu) => void
+  /** Menjava med postavo in klopjo (prvi je izbrani, drugi cilj). */
+  naZamenjaj: (a: IgralecNaIgriscu, b: IgralecNaIgriscu) => void
 }) {
   const prvi = izbrani.filter((i) => i.is_starter && i.position)
+  const [izbranId, setIzbranId] = useState<IgralecNaIgriscu['id'] | null>(null)
+  const izbran = izbrani.find((i) => i.id === izbranId) ?? null
+  const [namig, setNamig] = useState(() => {
+    try {
+      return !localStorage.getItem(NAMIG_KLJUC)
+    } catch {
+      return false
+    }
+  })
+
+  // Tap drugam ali Esc prekliče izbiro.
+  useEffect(() => {
+    if (izbranId == null) return
+    const drugam = (e: PointerEvent) => {
+      if (!(e.target as Element).closest?.('[data-zamenjava]')) setIzbranId(null)
+    }
+    const esc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIzbranId(null)
+    }
+    document.addEventListener('pointerdown', drugam)
+    document.addEventListener('keydown', esc)
+    return () => {
+      document.removeEventListener('pointerdown', drugam)
+      document.removeEventListener('keydown', esc)
+    }
+  }, [izbranId])
+
+  function zapriNamig() {
+    setNamig(false)
+    try {
+      localStorage.setItem(NAMIG_KLJUC, '1')
+    } catch {
+      /* zasebno okno */
+    }
+  }
+
+  function naKlik(i: IgralecNaIgriscu) {
+    if (izbran?.id === i.id) return setIzbranId(null)
+    if (izbran && lahkoZamenjata(izbran, i, prvi)) {
+      setIzbranId(null)
+      if (namig) zapriNamig()
+      return naZamenjaj(izbran, i)
+    }
+    // Brez pozicije (sporočilo) ali prosto mesto v postavi: kot doslej.
+    if (!i.position || (!i.is_starter && lahkoZacne(i.position, prvi))) {
+      setIzbranId(null)
+      return naPreklopPrvo(i)
+    }
+    setIzbranId(i.id)
+  }
+
+  const izbira = (i: IgralecNaIgriscu) =>
+    !izbran ? undefined : izbran.id === i.id ? 'izbran' : lahkoZamenjata(izbran, i, prvi) ? 'cilj' : 'ne'
+  const izbranIme = izbran ? prikazniIme(izbran.full_name) : undefined
+  const imaCilje = izbran != null && izbrani.some((i) => lahkoZamenjata(izbran, i, prvi))
   const klop = izbrani.filter((i) => !i.is_starter && i.position)
   const neuvrsceni = izbrani.filter((i) => !i.position)
 
@@ -265,6 +338,29 @@ export default function Igrisce({
 
   return (
     <div className="space-y-3">
+      {(izbran || (namig && prvi.length > 0)) && (
+        <p
+          role="status"
+          className="flex items-center gap-2 rounded-lg bg-white/5 px-3 py-1.5 text-xs text-slate-300"
+        >
+          <span className="min-w-0 flex-1">
+            {izbran
+              ? imaCilje
+                ? t('mojaEkipa.igrisce.izbran', { ime: izbranIme ?? '' })
+                : t('mojaEkipa.igrisce.brezMenjave', { ime: izbranIme ?? '' })
+              : t('mojaEkipa.igrisce.namigZamenjave')}
+          </span>
+          {!izbran && (
+            <button
+              onClick={zapriNamig}
+              aria-label={t('mojaEkipa.igrisce.zapriNamig')}
+              className="-my-1 h-8 w-8 shrink-0 rounded-md text-slate-400 hover:bg-white/10 hover:text-white"
+            >
+              ✕
+            </button>
+          )}
+        </p>
+      )}
       <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-[#14603f] to-[#0b3d2e] p-2 shadow-xl shadow-black/30 sm:rounded-3xl sm:p-4">
         <div className="igrisce pointer-events-none absolute inset-0" />
         {/* črte igrišča */}
@@ -282,9 +378,11 @@ export default function Igrisce({
                   <KarticaIgralca
                     key={i.id}
                     igralec={i}
-                    naKlik={() => naPreklopPrvo(i)}
+                    naKlik={() => naKlik(i)}
                     naOdstrani={() => naOdstrani(i)}
                     naInfo={naInfo && (() => naInfo(i))}
+                    izbira={izbira(i)}
+                    izbranIme={izbranIme}
                   />
                 ))}
               {Array.from({ length: naIgriscu[koda] }, (_, n) => (
@@ -309,9 +407,11 @@ export default function Igrisce({
               key={i.id}
               igralec={i}
               zatemnjen
-              naKlik={() => naPreklopPrvo(i)}
+              naKlik={() => naKlik(i)}
               naOdstrani={() => naOdstrani(i)}
               naInfo={naInfo && (() => naInfo(i))}
+              izbira={izbira(i)}
+              izbranIme={izbranIme}
               premik={
                 naPremakniKlop && klop.length > 1
                   ? {

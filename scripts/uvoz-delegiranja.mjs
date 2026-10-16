@@ -22,7 +22,7 @@ import { tekmovanje as najdiTekmovanje, sifraLige } from './tekmovanje.mjs'
 import { viraZa } from './viri/index.mjs'
 import { sifra } from './viri/zapisniki.mjs'
 import { isoLjubljana } from './cas.mjs'
-import { prenesiSPonovitvami } from './prenos.mjs'
+import { prenesiSPonovitvami, fetchZaBazo } from './prenos.mjs'
 
 const PREDPOMNILNIK = 'scripts/.predpomnilnik'
 
@@ -61,7 +61,7 @@ const arg = (ime, privzeto = null) => {
 }
 const sezonaArg = arg('sezona', null)
 const pisi = process.argv.includes('--pisi')
-const db = createClient(BASE, SERVICE, { auth: { persistSession: false } })
+const db = createClient(BASE, SERVICE, { auth: { persistSession: false }, global: { fetch: fetchZaBazo() } })
 
 const tekmovanje = await najdiTekmovanje(db, arg('tekmovanje', 'clani'))
 const vir = viraZa(tekmovanje)

@@ -78,7 +78,7 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
 
   slovenija: {
     naslovStrani: 'Clasificación nacional',
-    naslov: 'Eslovenia',
+    naslov: 'España',
     pripravlja: 'La clasificación nacional se está preparando. Vuelve a intentarlo en unos minutos.',
     povzetek: 'Todos los equipos de todas las ligas juntos: {ekip} de {lig} y {zvez}.',
     lig: { one: '{n} liga', many: '{n} ligas', other: '{n} ligas' },
@@ -106,7 +106,7 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     klubiVec: 'Mostrar más',
     klubiOpomba:
       'El primer equipo y el juvenil de un mismo club van por separado. Los puntos no incluyen asistencias. Un jugador que cambia de club empieza de cero en el nuevo; los puntos que sumó antes se quedan en el club anterior.',
-    vrhNaslov: '¿Quién manda en Eslovenia?',
+    vrhNaslov: '¿Quién manda en el país?',
     vrhPoglejVse: 'Ver los 10 mejores →',
     vrhUvod: 'Los 10 mejores de todas las ligas · temporada {sezona}',
     vrhTocke: 'Más puntos',

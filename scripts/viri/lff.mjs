@@ -1,7 +1,7 @@
 // Vir: Latvijas Futbola federācija — lff.lv (sacensības, vīrieši).
 //
 // LFF vodi lige odraslih (Virslīga, 1. līga, 2. līga, 3. līga) v COMET in jih
-// objavi na lff.lv. HTML iz strežnika, brez izziva. Glej CLAUDE.md (Latvija).
+// objavi na lff.lv. HTML iz strežnika, brez izziva. Glej docs/viri/latvija.md.
 //
 // SEZONA je koledarsko leto (marec–november): 2026 = "2026", ne "2026/27"
 // (`competitions.sezona_koledarska`). Vir jo vzame iz datumov razporeda.

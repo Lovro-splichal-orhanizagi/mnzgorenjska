@@ -5,7 +5,7 @@
 // Regijske zveze (FSRIS, FSRZS, FSV) zapisnikov ne objavljajo, FSS pa na
 // `/izvestaj-sa-utakmice/<id>/?script=lat` izriše KATERO KOLI tekmo COMET, tudi
 // regijsko. Strani lige na fss.rs za te lige ni, zato ligo naslovimo z blokom
-// šifer. Glej CLAUDE.md (Srbija — vir fssid).
+// šifer. Glej docs/viri/srbija.md (vir fssid).
 //
 // BLOK ŠIFER
 // - Tekmovanje-sezona je EN strnjen blok N×(N−1) šifer (dvokrožna liga z N

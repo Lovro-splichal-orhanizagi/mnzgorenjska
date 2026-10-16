@@ -45,10 +45,11 @@
   }
 }
 
-/* Klepet za podporo (HelpStack, glej Podpora.tsx) ostane tudi na telefonu,
-   a ne sme prekrivati gumbov: upošteva domačo vrstico, nad spodnjim pasom
-   Moje ekipe se dvigne, med odprtim oknom čez ves zaslon (trg, podatki
-   igralca) pa se umakne. Dno strani ima zanj prostor (<main> v App.tsx). */
+/* Klepet za podporo (HelpStack, glej Podpora.tsx) na telefonu ne sme
+   prekrivati gumbov: je manjši, ob robu in upošteva domačo vrstico. Na Moji
+   ekipi se dvigne nad spodnji pas (tam novinci največ sprašujejo, kako
+   sestaviti ekipo, zato ostane). Med odprtim oknom čez ves zaslon (trg, podatki
+   igralca) se umakne. Dno strani ima zanj prostor (<main> v App.tsx). */
 /* Naš gumb stoji na mestu mehurčka, dokler se widget ne naloži. */
 body:has(#chat-widget-bubble) [data-podpora] {
   display: none;
@@ -57,6 +58,15 @@ body:has(#chat-widget-bubble) [data-podpora] {
   #chat-widget-bubble,
   [data-podpora] {
     bottom: calc(60px + var(--dno)) !important;
+    right: 12px !important;
+  }
+  [data-podpora] {
+    width: 48px !important;
+    height: 48px !important;
+  }
+  #chat-widget-bubble {
+    transform: scale(0.8);
+    transform-origin: bottom right;
   }
   #chat-widget-branding {
     bottom: calc(20px + var(--dno)) !important;
@@ -157,10 +167,21 @@ body:has(#chat-widget-bubble) [data-podpora] {
   }
   .animiraj-pulz { animation: pulz-obroc 1.2s ease-out; }
 
+  /* Pivo nazdravi: dvig in nagib, nato premor (gumb Pivo.tsx). */
+  @keyframes nazdravi {
+    0%, 60%, 100% { transform: none; }
+    68% { transform: translateY(-3px) rotate(-18deg) scale(1.15); }
+    76% { transform: translateY(-3px) rotate(12deg) scale(1.15); }
+    84% { transform: translateY(-1px) rotate(-8deg) scale(1.05); }
+    92% { transform: rotate(4deg); }
+  }
+  .animiraj-pivo { animation: nazdravi 3.2s ease-in-out infinite; transform-origin: 50% 85%; }
+
   @media (prefers-reduced-motion: reduce) {
     .animiraj-utrip,
     .animiraj-vstop,
-    .animiraj-pulz {
+    .animiraj-pulz,
+    .animiraj-pivo {
       animation: none;
     }
   }
