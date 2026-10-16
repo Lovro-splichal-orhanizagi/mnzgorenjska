@@ -3035,6 +3035,67 @@ set local role authenticated;
 select pg_temp.zavrnjeno('zelje lig: admin pregled le za admina', $$select * from admin_zelje_lig()$$);
 reset role;
 
+-- Scout, faza 1: shema stroja je zaprta za brskalnik, Slovenija odprta.
+select pg_temp.preveri('scout: Slovenija je odprta',
+  (select d.stanje = 'odprto' from scout.drzave d join countries c on c.id = d.country_id where c.code = 'SI'));
+select pg_temp.preveri('scout: scout_skrit privzeto false',
+  (select column_default = 'false' from information_schema.columns
+    where table_schema = 'public' and table_name = 'players' and column_name = 'scout_skrit'));
+set local role anon;
+select pg_temp.zavrnjeno('scout: anon ne bere kazalnikov', $$select * from scout.kazalniki$$);
+select pg_temp.zavrnjeno('scout: anon ne bere kljucev anonimizacije', $$select * from public.anonimizirani_igralci$$);
+reset role;
+set local role authenticated;
+select pg_temp.zavrnjeno('scout: authenticated ne bere moci lig', $$select * from scout.lige_moc$$);
+select pg_temp.zavrnjeno('scout: authenticated ne odpre drzave', $$update scout.drzave set stanje = 'odprto'$$);
+select pg_temp.zavrnjeno('scout: authenticated ne bere kljucev anonimizacije', $$select * from public.anonimizirani_igralci$$);
+reset role;
+select pg_temp.preveri('scout: stroj bere zapisnike in ne pise vanje',
+  has_table_privilege('scout_stroj', 'public.appearances', 'SELECT')
+  and not has_table_privilege('scout_stroj', 'public.players', 'UPDATE'));
+select pg_temp.preveri('scout: anon in authenticated nimata sheme scout',
+  not has_schema_privilege('anon', 'scout', 'USAGE') and not has_schema_privilege('authenticated', 'scout', 'USAGE'));
+-- Stroj (scout_stroj) pise shemo scout skozi RLS in vidi vse vrstice, ki jih
+-- bere nalaganje (scout/stroj, SQL_SEZONE/SQL_TEKME/SQL_LIGE/SQL_IZKLJUCENI).
+select pg_temp.preveri('scout: vsaka tabela scout ima politiko za stroj',
+  (select count(*) = 8 from pg_policies where schemaname = 'scout' and 'scout_stroj' = any(roles)));
+create function pg_temp.stroj_model() returns boolean language plpgsql as $$
+declare v_id bigint; v_vidi boolean;
+begin
+  insert into scout.modeli (leto, backtest, parametri) values (2026, '{}', '{}') returning id into v_id;
+  select count(*) = 1 into v_vidi from scout.modeli where id = v_id;
+  delete from scout.modeli where id = v_id;
+  return v_vidi and not exists (select 1 from scout.modeli where id = v_id);
+exception when insufficient_privilege then return false;
+end;
+$$;
+create function pg_temp.stevilo(p_sql text) returns bigint language plpgsql as $$
+declare v bigint;
+begin
+  execute 'select count(*) from (' || p_sql || ') q' into v;
+  return v;
+end;
+$$;
+create temporary table scout_stevci (poizvedba text, vse bigint);
+insert into scout_stevci
+select q, pg_temp.stevilo(q) from unnest(array[
+  'select * from public.players', 'select * from public.appearances', 'select * from public.goals',
+  'select * from public.matches', 'select * from public.rounds', 'select * from public.competitions',
+  'select * from public.federations', 'select * from public.countries', 'select * from public.teams',
+  'select * from scout.drzave', 'select * from public.anonimizirani_igralci',
+  'select public.anonimizacijski_kljuc(''1|x'')',
+  'select 1 from public.matches m join public.rounds r on r.id = m.round_id join public.competitions c on c.id = r.competition_id where m.zapisnik_id is not null and not m.kontumacija and not public.je_mladinski_slug(c.slug)',
+  'select 1 from public.players p join public.competitions c on c.id = p.competition_id where p.scout_skrit or public.je_mladinski_slug(c.slug)'
+]) q;
+grant select on scout_stevci to scout_stroj;
+grant select, insert on izidi to scout_stroj;
+grant execute on function pg_temp.preveri(text, boolean), pg_temp.stroj_model(), pg_temp.stevilo(text) to scout_stroj;
+set local role scout_stroj;
+select pg_temp.preveri('scout: stroj vpise, prebere in izbrise model', pg_temp.stroj_model());
+select pg_temp.preveri('scout: stroj vidi vse vrstice: ' || left(poizvedba, 60), pg_temp.stevilo(poizvedba) = vse)
+from scout_stevci;
+reset role;
+
 do $$
 declare v_napak int;
 begin
