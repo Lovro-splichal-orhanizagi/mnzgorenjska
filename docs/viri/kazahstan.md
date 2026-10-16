@@ -1,6 +1,6 @@
 # Kazahstan — vir `kff`
 
-Država `KZ` ("Қазақстан", migracija 20261015171700) ima le lige; vmesnika v
+Država `KZ` ("Қазақстан", migracija 20261016094100) ima le lige; vmesnika v
 kazaščini/ruščini, kartice, pošte in hišnih ekip **še ni**, `KZ` **ni** v
 matriki nočnega uvoza — vse to pred vklopom. Šifra lige se začne s `kz-`.
 Sezona je **koledarska** (marec–november, `sezona_koledarska`, oznaka
