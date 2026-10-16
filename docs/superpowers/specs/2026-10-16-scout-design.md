@@ -57,7 +57,7 @@ Podlage po plasteh:
 | plast | vsebina | podlaga |
 |---|---|---|
 | javna dejstva | minute, goli, kartoni, klubi, lige iz uradnih zapisnikov | zakoniti interes; že javno na slff.eu |
-| naše ocene | indeksi, priporočila, podobnost, ujemanje z vrzelmi | zakoniti interes z zapisano tehtnico (LIA), pregled pravnika pred zagonom; ni avtomatiziranega odločanja po čl. 22 (odloči človek v klubu) |
+| naše ocene | indeksi, priporočila, podobnost, ujemanje z vrzelmi | zakoniti interes (javni podatki); ni avtomatiziranega odločanja po čl. 22 (odloči človek v klubu) |
 | profil s privolitvijo | odprt za prestop, letnica, regije, stik | privolitev igralca, preklic kadarkoli, ob preklicu izbris |
 
 Pravila v izdelku:
@@ -65,12 +65,12 @@ Pravila v izdelku:
 - **Samo odrasli.** Mladinske lige (`je_mladinski_slug`) nikoli. Igralec, ki se pojavi tudi v mladinski ligi, je izključen, dokler nima članskih minut in sam ne prijavi letnice ≥ 18 let. Brez prijavljene starosti velja za odraslega, kdor igra le v članskih ligah.
 - **Ugovor = skrit iz Scouta v 14 dneh**: novo stikalo `players.scout_skrit` (velja za vse vrstice osebe v državi, kot anonimizacija); v fantasy igri igralec ostane. Povezava za ugovor na vsaki javni strani igralca.
 - **Obvestilo po čl. 14**: nov razdelek "Scout" na `/legal` (kaj klubi vidijo, zakaj, kako dolgo, kako ugovarjati).
-- **Država po državi**: tabela `scout.drzave` (`zaprto` / `pilot` / `odprto`). Država se odpre šele z zapisanim dovoljenjem vira (pisno soglasje zveze, kjer je mogoče, sicer pravni pregled). Slovenija: pisna prošnja NZS in MNZG. Katalonija (FCF), Romunija (frf) in Češka ostanejo zaprte.
+- **Država po državi**: tabela `scout.drzave` (`zaprto` / `pilot` / `odprto`). Odpre jo lastnik (odločitev 16. 10. 2026: podatki so javni, posebnih soglasij zvez ne iščemo). Slovenija je `odprto` od začetka. Katalonija (FCF), Romunija (frf) in Češka ostanejo zaprte.
 - **Dnevnik**: vsako iskanje in ogled profila (klub, igralec, čas), hramba 12 mesecev; zloraba in odgovor na zahtevo po dostopu ("kateri klubi so me gledali").
 - **Pogoji za klube**: le za iskanje igralcev, brez preprodaje, strganja in objave ocen; stik z odprtimi igralci le prek Scouta. Kršitev = zaprt račun.
 - **Besedišče**: "kazalniki iz podatkov tekem", ne ocena osebe; brez negativnih oznak, le razvrstitve in prednosti.
 
-**Pred prvim plačilom**: pregled LIA pri pravniku, DPIA, pisna soglasja za Slovenijo, posodobljena `/legal` in pogoji Scouta.
+**Pred prvim plačilom**: posodobljena `/legal` (razdelek Scout), pogoji Scouta in stikalo ugovora delujejo.
 
 ## 3. Analitični stroj
 
@@ -120,12 +120,12 @@ slff.eu (fantasy)      scout.slff.eu (nova aplikacija Vite, isti repozitorij: sc
 
 | faza | tedni | vsebina | pogoj za naprej |
 |---|---|---|---|
-| 0 Pravo | 1–3 (vzporedno) | LIA, DPIA, pravnik, soglasji NZS in MNZG, pogoji Scouta, `/legal` čl. 14, stikalo ugovora | vse odobreno; noben klub ne plača pred tem |
+| 0 Pravila | v fazi 2 | pogoji Scouta, `/legal` čl. 14, stikalo ugovora (brez pravnika in soglasij zvez — odločitev lastnika) | noben klub ne plača pred tem |
 | 1 Stroj | 1–5 | posel Python, moč lig, Elo, kazalniki, indeks, podobnost, vrzeli, backtest | backtest premaga naivno osnovo (lanski učinek) za ≥ 15 % pri igralcih, ki so zamenjali ligo |
 | 2 Stran igralca | 4–6 | odprt za prestop, letnica, regije, stik na profilu slff.eu; razdelek Scout na `/legal` | prijava deluje in je razložena igralcem |
 | 3 MVP Scout | 5–9 | scout.slff.eu: prijava, iskanje, profil, vrzeli, podobni, opazovalni seznam, Stripe, dnevnik, meje; sl + en | 5 poskusnih klubov ga uporablja tedensko |
 | 4 Pilot | 9–13 | 10 slovenskih klubov: preizkus, nato plačljivo; tedensko poročilo; pogovor s klubom vsaka 2 tedna | ≥ 5 plačujočih klubov, zadrževanje > 70 % po dveh mesecih |
-| 5 Širitev | potem | Avstrija (razširitev dovoljenja ÖFB), Hrvaška, Madžarska; PDF, primerjava, Pro | pravni pogoj po državah |
+| 5 Širitev | potem | Avstrija (razširitev dovoljenja ÖFB), Hrvaška, Madžarska; PDF, primerjava, Pro | odločitev lastnika po državah |
 
 Preizkusi:
 
