@@ -4,8 +4,8 @@
 // Ni zveza: tekme vpisuje uredništvo. Postave (začetniki, klop s številkami in
 // pozicijami), menjave z minuto, goli in kartoni z minuto so objavljeni za
 // Tercera Federación, skupina 2 (Asturija) in Primera AsturFútbol; nižje
-// asturijske lige imajo le izide — teh ne beremo. Glej CLAUDE.md (Španija —
-// vir fas).
+// asturijske lige imajo le izide — teh ne beremo. Glej docs/viri/spanija.md
+// (vir fas).
 //
 // ŠIFRA LIGE je `<liga>:<od>-<do>`:
 // - `<liga>` je izraz SportsPress `sp_league` (stran `/competicion/<liga>/`,

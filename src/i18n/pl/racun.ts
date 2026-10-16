@@ -55,7 +55,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     nalagam: 'Wczytuję…',
     moraPrijava: 'Aby zarządzać przypomnieniami, musisz się <prijava>zalogować</prijava>.',
     opis: 'Przed terminem kolejki wyślemy ci krótką wiadomość na {email}, żebyś nie zapomniał ustawić drużyny.',
-    posiljaj: 'Przypomnienia e-mail',
+    posiljaj: 'Przypomnienia e-mailem',
     shranjujem: 'Zapisuję…',
     vklopljeni: 'Przypomnienia są włączone.',
     izklopljeni: 'Nie będziemy już wysyłać ci przypomnień.',
@@ -86,7 +86,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     profilNaslov: 'Profil',
     mojProfil: 'Zobacz swój publiczny profil',
     prikaznoIme: 'Nazwa wyświetlana',
-    imeOpis: 'Widzą ją inni w tabelach. Od 3 do 24 znaków, możesz ją zmienić raz na 7 dni.',
+    imeOpis: 'Widzą ją inni w rankingach. Od 3 do 24 znaków, możesz ją zmienić raz na 7 dni.',
     imeNaslednjic: 'Nazwę możesz ponownie zmienić od {datum}.',
     shraniIme: 'Zapisz nazwę',
     avatar: 'Awatar',
@@ -99,7 +99,7 @@ export const racun: NonNullable<Prevod['racun']> = {
       zoga: 'Piłka',
       gol: 'Bramka',
       pokal: 'Puchar',
-      copat: 'Korek',
+      copat: 'But piłkarski',
       rokavice: 'Rękawice bramkarskie',
       dres: 'Koszulka',
       zastavica: 'Chorągiewka rożna',
@@ -136,7 +136,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   profil: {
     naslov: 'Profil',
     niProfila: 'Ten profil nie istnieje. Konto mogło zostać usunięte.',
-    nazaj: 'Do tabeli',
+    nazaj: 'Do rankingu',
     zaseben: 'Ten profil jest prywatny.',
     tvojZaseben: 'Twój profil jest prywatny: inni widzą tylko wyświetlaną nazwę.',
     uredi: 'Edytuj profil',
@@ -225,7 +225,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     konec:
       '<b>Kiedy odznaka wygasa.</b> Odznaka wygasa, jeśli okaże się, że profil nie jest twój i cofniemy potwierdzenie, jeśli nazwisko zawodnika ukryjemy na jego prośbę lub prośbę związku albo jeśli usuniesz konto. Subskrypcja zatrzymuje się wtedy automatycznie i nie jest już pobierana. Jeśli zakwestionujesz płatność w banku (chargeback), odznaka zostaje odebrana.',
     vracila:
-      '<b>Zwroty.</b> W razie nadużycia lub fałszywego potwierdzenia profilu nie zwracamy pieniędzy. Jeśli odznaka wygaśnie z naszej winy, na prośbę związku lub dlatego, że wycofamy usługę, przy subskrypcji rocznej zwracamy proporcjonalną część za niewykorzystane miesiące. Przy zakupie na zawsze zwracamy całą kwotę w ciągu pierwszych 12 miesięcy od zakupu, a później proporcjonalną część pozostałej części 5 lat od zakupu. Drukowanej odznaki i kosztów wysyłki przy wycofaniu usługi nie zwracamy (odznaka zostaje twoja), tylko w razie wady.',
+      '<b>Zwroty.</b> W razie nadużycia lub fałszywego potwierdzenia profilu nie zwracamy pieniędzy. Jeśli odznaka wygaśnie z naszej winy, na prośbę związku lub dlatego, że wycofamy usługę, przy subskrypcji rocznej zwracamy proporcjonalną część za niewykorzystane miesiące. Przy zakupie na zawsze zwracamy całą kwotę w ciągu pierwszych 12 miesięcy od zakupu, a później proporcjonalną część za okres pozostały do 5 lat od zakupu. Drukowanej odznaki i kosztów wysyłki przy wycofaniu usługi nie zwracamy (odznaka zostaje twoja), tylko w razie wady.',
     pritozbe:
       '<b>Pytania i reklamacje.</b> Napisz na <eposta>info@slff.eu</eposta>, odpowiemy w ciągu 8 dni roboczych. Nie uznajemy żadnego podmiotu pozasądowego rozwiązywania sporów konsumenckich. Obowiązuje prawo słoweńskie; nie pozbawia cię to ochrony, którą daje ci prawo kraju, w którym mieszkasz.',
   },

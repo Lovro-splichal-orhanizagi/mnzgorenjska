@@ -41,7 +41,7 @@ export const skupno: NonNullable<Prevod['skupno']> = {
     miniLigaNi: 'Ilyen kódú miniliga nincs.',
     niTvojaEkipa: 'Ez nem a te csapatod.',
     imeMiniLige: 'A miniliga neve 2 és 40 karakter között legyen.',
-    prijavaMiniLiga: 'A minibajnoksághoz be kell jelentkezned.',
+    prijavaMiniLiga: 'A miniligához be kell jelentkezned.',
     niDovoljenja: 'Nincs jogod szerkeszteni ezt a csapatot.',
     kodaNeUstvarjena: 'Nem sikerült létrehozni a miniliga kódját. Próbáld újra.',
     golOdlocen: 'Erről a gólról már döntöttek, a szavazás lezárult.',
