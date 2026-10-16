@@ -40,6 +40,7 @@ import mascot from './mascot.mjs'
 import lowland from './lowland.mjs'
 import eps from './eps.mjs'
 import tff from './tff.mjs'
+import wmzpn from './wmzpn.mjs'
 
 const VIRI = {
   mnzg,
@@ -119,6 +120,9 @@ const VIRI = {
   // Turčija (TFF) prek tff.org: 2. Lig, 3. Lig in PGL; šifra osebe (kisiId),
   // brez vratarja in pozicij, stran v windows-1254.
   tff,
+  // Poljska: Warmińsko-Mazurski ZPN (wmzpn.pl) — zapisniki PZPN Extranet prek
+  // okna strani (admin-ajax match_history), šifre oseb PZPN kot pri pzpn.
+  wmzpn,
 }
 
 /**
