@@ -54,6 +54,7 @@ import upl from './upl.mjs'
 import ffl from './ffl.mjs'
 import ksi from './ksi.mjs'
 import fsf from './fsf.mjs'
+import modular11 from './modular11.mjs'
 
 const VIRI = {
   mnzg,
@@ -172,6 +173,9 @@ const VIRI = {
   // Ferski otoki (FSF) prek javnega posrednika COMET na fsf.fo (JSON, ki ga
   // stran kliče sama): šifre oseb, vratar, koledarska sezona, druge ekipe ("B36 II").
   fsf,
+  // ZDA: USL League Two prek Modular11 (prvi vir zunaj Evrope); razpored je
+  // GET seznam tekem divizije, zapisnik JSON v strani tekme, krog je teden.
+  modular11,
 }
 
 /**

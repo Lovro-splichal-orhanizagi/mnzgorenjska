@@ -118,6 +118,7 @@ tabelo šifer tam, ne tu.
 | Gruzija | `docs/viri/gruzija.md` | `gff` |
 | Islandija | `docs/viri/islandija.md` | `ksi` |
 | Ferski otoki | `docs/viri/ferski-otoki.md` | `fsf` |
+| ZDA | `docs/viri/zda.md` | `modular11` |
 
 Pravila, ki veljajo za vse vire (podrobnosti v datotekah):
 

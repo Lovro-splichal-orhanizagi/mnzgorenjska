@@ -5462,6 +5462,168 @@ preveri(
     L.kratkoImeLv('FK Tukums 2000/TSS') === 'Tukums 2000/TSS')
 }
 
+// --- vir modular11 (ZDA, USL League Two) --------------------------------------------
+{
+  const U = await import('./viri/modular11.mjs')
+  const { default: viri } = await import('./viri/index.mjs')
+  const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  preveri('modular11: vir je vpisan, 3 s, User-Agent SLFF', viri.modular11 === U.default && U.default.drzava === 'US' &&
+    U.default.imaRegistracije === false && U.default.premorMs >= 3000 &&
+    U.default.glave['User-Agent'] === 'SLFF fantasy (https://slff.eu)')
+  preveri('modular11: šifra in naslovi (GET, divizija, leto, stran)', U.razbijKodo('24/52/2026').divizija === '52' &&
+    U.razbijKodo('24/52/2027').leto === '2027' &&
+    U.default.naslovRazporeda('24/52/2026') === 'https://www.modular11.com/public_schedule/league/get_matches?tournament=24&start_date=2026-01-01%2000:00:00&end_date=2026-12-31%2023:59:59&match_type=2&groups=52&open_page=1' &&
+    U.naslovStrani('24/41/2026', 3).endsWith('&groups=41&open_page=3') &&
+    U.default.naslovZapisnika(null, 'us116529') === 'https://www.modular11.com/match_details/116529/2' &&
+    U.sifraZapisnika('116529') === 'us116529' && U.sifraZapisnika('us116529') === 'us116529')
+  let slabaSifra = null
+  try { U.razbijKodo('24/52') } catch (e) { slabaSifra = e.message }
+  preveri('modular11: šifra brez leta ustavi uvoz', /<turnir>\/<divizija>\/<leto>/.test(slabaSifra ?? ''))
+  // Pasovi: lokalni čas prizorišča → Ljubljana, s poletnim časom obeh (Arizona ga nima).
+  const lj = (d, u, p) => { const x = U.vLjubljano(d, u, p); return `${x.datum} ${x.ura}` }
+  preveri('modular11: čas prizorišča → Ljubljana (New York, Chicago, Denver, Phoenix, Los Angeles, Honolulu)',
+    lj('2026-06-01', '19:00', 'America/New_York') === '2026-06-02 01:00' &&
+    lj('2026-06-01', '19:00', 'America/Chicago') === '2026-06-02 02:00' &&
+    lj('2026-06-01', '19:00', 'America/Denver') === '2026-06-02 03:00' &&
+    lj('2026-06-01', '19:00', 'America/Phoenix') === '2026-06-02 04:00' &&
+    lj('2026-06-01', '19:00', 'America/Los_Angeles') === '2026-06-02 04:00' &&
+    lj('2026-06-01', '12:00', 'Pacific/Honolulu') === '2026-06-02 00:00' &&
+    lj('2026-03-28', '19:00', 'America/New_York') === '2026-03-29 00:00' &&
+    U.vLjubljano('2026-06-01', null, 'America/New_York').ura === null && U.vLjubljano('2026-06-01', '19:00', null).ura === null)
+  preveri('modular11: lokalni čas razporeda, krog = teden (pon–ned)', U.lokalniCas('06/01/26 07:00pm').ura === '19:00' &&
+    U.lokalniCas('06/01/26 12:30pm').ura === '12:30' && U.lokalniCas('06/01/26 12:15am').ura === '00:15' &&
+    U.lokalniCas('05/16/26 06:30pm').datum === '2026-05-16' &&
+    U.krogTedna('2026-05-16', '2026-05-16') === 1 && U.krogTedna('2026-05-17', '2026-05-16') === 1 &&
+    U.krogTedna('2026-05-18', '2026-05-16') === 2 && U.krogTedna('2026-07-11', '2026-05-16') === 9)
+  // Krog šteje od stalnega začetka (teden 1. maja), ne od prve tekme divizije.
+  preveri('modular11: krog je stalen — teden 1. maja je krog 1 (2026: od pon 27. 4.), tekma pred njim krog 1',
+    U.zacetekSezone('2026') === '2026-04-27' && U.zacetekSezone('2025') === '2025-04-28' && U.zacetekSezone('2027') === '2027-04-26' &&
+    U.krogIzDatuma('2026-05-03', '2026') === 1 && U.krogIzDatuma('2026-05-04', '2026') === 2 && U.krogIzDatuma('2026-05-16', '2026') === 3 &&
+    U.krogIzDatuma('2026-04-20', '2026') === 1 && U.krogIzDatuma('2026-07-12', '2026') === 11)
+  preveri('modular11: pozicija iz formacije (mesto 1 vratar, prva vrsta branilci, zadnja napadalci)',
+    U.pozicijaIzFormacije('4 3 3', 1) === 'GK' && U.pozicijaIzFormacije('4 3 3', 5) === 'DEF' && U.pozicijaIzFormacije('4 3 3', 6) === 'MID' &&
+    U.pozicijaIzFormacije('4 3 3', 11) === 'FWD' && U.pozicijaIzFormacije('4 2 3 1', 9) === 'MID' && U.pozicijaIzFormacije('4 2 3 1', 11) === 'FWD' &&
+    U.pozicijaIzFormacije('', 5) === null && U.pozicijaIzFormacije('', 1) === 'GK' && U.pozicijaIzFormacije('4 4', 5) === null)
+  preveri('modular11: navadna stran ni izziv, izziv je', !U.jeIzziv(beri('us-m11-tekma-116529.html')) && U.jeIzziv('<title>Just a moment...</title>') &&
+    U.default.zaPredpomnilnik(beri('us-m11-tekma-116529.html')) && U.default.zaPredpomnilnik(beri('us-m11-razpored-24-52-2026-1.html')) &&
+    !U.default.zaPredpomnilnik('<div style="color:red;"><p>Date is invalid.</p></div>') && !U.default.zaPredpomnilnik(''))
+  const brezTekem = '<h2 class="text-center block-without-matches">No matches you are looking for.</h2>'
+  preveri('modular11: divizija brez tekem v letu je prava stran z 0 tekmami', U.jeStranRazporeda(brezTekem) &&
+    U.steviloStrani(brezTekem) === 0 && U.tekmeLige('24/273/2025', [brezTekem]).length === 0)
+
+  const strani = [1, 2].map((p) => beri(`us-m11-razpored-24-52-2026-${p}.html`))
+  const t = U.tekmeLige('24/52/2026', strani)
+  preveri('modular11: razpored Southwest 2026 — 2 strani, 48 tekem, 8 klubov, 9 tednov, vse odigrane', U.steviloStrani(strani[0]) === 2 &&
+    t.length === 48 && new Set(t.flatMap((x) => [x.domaci, x.gostje])).size === 8 && new Set(t.map((x) => x.krog)).size === 9 &&
+    t.every((x) => x.izid && x.del === 'League' && x.divizija === 'Southwest'))
+  const krogi = U.razcleniRazpored('24/52/2026', strani)
+  preveri('modular11: razpored — prvi krog je 3 (teden 16. 5.), Eagles : City SC (tor 19. 5.) je krog 4', krogi[0].stevilka === 3 &&
+    krogi[0].tekme.length === 2 && krogi[1].stevilka === 4 && krogi[1].tekme.some((x) => x.domaci === 'Southern California Eagles' && x.gostje === 'City SC') &&
+    krogi.every((k) => k.tekme.every((x) => x.odigrana && x.m11Id && x.izid)))
+  // Prestavljena prva tekma (16. 5. → 1. 7.) ne sme premakniti številk drugih krogov:
+  // sicer bi uvoz razporeda tekme že zaklenjenih krogov vpisal v druge kroge.
+  const prestavljena = U.tekmeLige('24/52/2026', strani.map((h) => h.replaceAll('05/16/26', '07/01/26')))
+  const krogPrej = new Map(t.map((x) => [x.id, x.krog]))
+  const premaknjene = prestavljena.filter((x) => krogPrej.get(x.id) !== x.krog)
+  preveri('modular11: prestavljena prva tekma ne premakne številk drugih krogov', prestavljena.length === 48 &&
+    premaknjene.length > 0 && premaknjene.every((x) => x.datumLokalno === '2026-07-01' && x.krog === 10))
+  // Isti par drugič v istem tednu (Mountain 2025: Utah United : Colorado Storm,
+  // čet + sob): tekma druge vrstice kroga 4 dobi klube prve. V bazi je tekma
+  // enolična po (krog, domači, gostje), zato gre poznejša v naslednji krog.
+  const prva = t.find((x) => x.krog === 4)
+  const druga = t.find((x) => x.krog === 4 && x.id !== prva.id && x.datumLokalno >= prva.datumLokalno)
+  const ponaredi = (h) => h.split('<!-- desktop version -->').map((r) => (new RegExp(`uid-mobile-style">\\s*${druga.id}\\b`).test(r)
+    ? r.replaceAll(`teams/${druga.domaciId}"`, 'teams/DOMACI"').replaceAll(`teams/${druga.gostjeId}"`, `teams/${prva.gostjeId}"`).replaceAll('teams/DOMACI"', `teams/${prva.domaciId}"`)
+    : r)).join('<!-- desktop version -->')
+  const dvakrat = U.tekmeLige('24/52/2026', strani.map(ponaredi))
+  const paraKrog = dvakrat.filter((x) => x.domaciId === prva.domaciId && x.gostjeId === prva.gostjeId && [prva.id, druga.id].includes(x.id))
+  preveri('modular11: isti par dvakrat v istem tednu — poznejša tekma gre v naslednji krog, ostali ostanejo',
+    paraKrog.length === 2 && paraKrog.find((x) => x.id === prva.id)?.krog === 4 && paraKrog.find((x) => x.id === druga.id)?.krog === 5 &&
+    dvakrat.filter((x) => x.id !== druga.id).every((x) => krogPrej.get(x.id) === x.krog))
+  // Prestavljena tekma je v drugem krogu (tednu): uvoz razporeda staro neuvoženo
+  // vrstico odstrani v vsakem krogu, ne le v polnem. Ne krogiPoTednih (ncefl):
+  // isti par igra v USL2 tudi dvakrat (Great Plains 2026), tam bi se tekma izgubila.
+  const uvozRazporeda = readFileSync(new URL('./uvoz-razporeda.mjs', import.meta.url), 'utf8')
+  preveri('modular11: prestavljena tekma ne ostane v starem krogu (razporedCel), 401 in kontumacije → izhod 4',
+    U.default.razporedCel === true && !U.default.krogiPoTednih && /vir\.razporedCel\s*\?/.test(uvozRazporeda) &&
+    /\[401, 403, 429\]\.includes\(e\.status\)/.test(uvozRazporeda) && /preberiKontumacije\(/.test(uvozRazporeda) &&
+    /if \(e\?\.zavrnitev\) throw e/.test(readFileSync(new URL('./razpored.mjs', import.meta.url), 'utf8')))
+
+  const z = U.vZapisnik(beri('us-m11-tekma-116529.html'), { id: '116529' })
+  const n = U.nastopi(z)
+  const minute = (nn, i) => nn.filter((x) => x.ekipaIdx === i).reduce((a, x) => a + x.minute, 0)
+  preveri('modular11: zapisnik Stars FC : Southern California Eagles 2:1 — 11 + 11, klop, goli = izid, 990 minut, popoln', z.domaci.ime === 'Stars FC' &&
+    z.gostje.ime === 'Southern California Eagles' && z.rezultat.domaci === 2 && z.rezultat.gostje === 1 &&
+    z.domaci.postava.length === 11 && z.gostje.postava.length === 11 && z.domaci.rezerve.length === 9 && z.gostje.rezerve.length === 7 &&
+    z.goli.length === 3 && z.menjave.length === 11 && z.rumeni.length === 4 && minute(n, 0) === 990 && minute(n, 1) === 990 &&
+    !z.nepopoln && z.opozorila.length === 0)
+  preveri('modular11: Phoenix 19:00 → Ljubljana 2. 6. ob 04:00; sezona 2026', z.pas === 'America/Phoenix' && z.datumLokalno === '2026-06-01' &&
+    z.datum === '2026-06-02' && z.ura === '04:00' && z.sezona === '2026')
+  preveri('modular11: igralec — Priimek Ime, dres, šifra (reg_st), vratar mesto 1, pozicije iz 4 3 3', z.domaci.postava[0].ime === 'Lawrence Noah' &&
+    z.domaci.postava[0].st === 1 && z.domaci.postava[0].regSt === 192189 && z.domaci.postava[0].vratar && z.domaci.postava[0].pozicija === 'GK' &&
+    z.domaci.postava.map((i) => i.pozicija).join(',') === 'GK,DEF,DEF,DEF,DEF,MID,MID,MID,FWD,FWD,FWD' &&
+    [z.domaci, z.gostje].every((e) => e.postava.filter((i) => i.vratar).length === 1) && n.every((x) => x.regSt))
+  preveri('modular11: zapisnik ne nosi datuma rojstva ne letnika', !JSON.stringify(z).match(/birth|2004-04-22|university/i))
+  preveri('modular11: gol s podaljškom (45+1) je 45. minuta, menjava v paru', z.goli.find((g) => g.ime === 'Anderholt Cash')?.minuta === 45 &&
+    z.menjave[0].noter.ime === 'Moreno Jonathan' && z.menjave[0].ven.ime === 'Tendale Ace' && z.menjave[0].minuta === 45)
+
+  const av = U.vZapisnik(beri('us-m11-tekma-116437.html'))
+  preveri('modular11: avtogol je pri strelčevi ekipi (UID_team je ekipa, ki ji šteje), izključitev', av.goli.filter((g) => g.avtogol).length === 1 &&
+    av.goli.find((g) => g.avtogol)?.ekipaIdx === 0 && av.rezultat.gostje === 2 && !av.nepopoln &&
+    av.rdeci.length === 1 && av.rdeci[0].minuta === 76 && U.nastopi(av).find((x) => x.rdeci)?.minutaDo === 76)
+  preveri('modular11: napačna menjava (igralec gre ven dvakrat) je opozorilo', av.opozorila.some((o) => /ni na igrišču|že na igrišču/.test(o)))
+  const bs = U.vZapisnik(beri('us-m11-tekma-116672.html'))
+  preveri('modular11: avtogol brez strelca ostane gol (izid drži), zapisnik je popoln', bs.goli.length === 4 &&
+    bs.goli.filter((g) => g.avtogol && g.regSt == null).length === 2 && !bs.nepopoln && bs.opozorila.some((o) => /brez strelca/.test(o)))
+  const bm = U.vZapisnik(beri('us-m11-tekma-116758.html'))
+  preveri('modular11: zapisnik brez menjav je nepopoln (NEPOPOLN prvo opozorilo)', bm.nepopoln && bm.opozorila[0].startsWith(U.NEPOPOLN) &&
+    /brez menjav/.test(bm.opozorila[0]) && bm.goli.length === 5)
+  const d10 = U.vZapisnik(beri('us-m11-tekma-117042.html'))
+  preveri('modular11: ekipa z 10 začetniki je nepopoln zapisnik', d10.nepopoln && /10 začetnikov/.test(d10.opozorila[0]))
+  const dr = U.vZapisnik(beri('us-m11-tekma-116342.html'))
+  const drN = U.nastopi(dr).find((x) => x.rdeci)
+  preveri('modular11: drugi rumeni (dva opomina + izključitev) — 1 rumeni + 1 rdeči, 30 minut', dr.rdeci.length === 1 &&
+    drN?.ime === 'Stinson Wade' && drN.rumeni === 1 && drN.minute === 30 && !dr.nepopoln)
+  const nz = U.vZapisnik(beri('us-m11-tekma-116778.html'))
+  preveri('modular11: nezaključen zapisnik (final_report 0) je nepopoln', nz.nepopoln && /ni zaključen/.test(nz.opozorila[0]))
+  const ff = beri('us-m11-tekma-117019.html')
+  preveri('modular11: kontumacija (Forfeit, 3 avtogoli v 1. minuti) nima zapisnika', U.vZapisnik(ff) === null &&
+    U.jeKontumacija(U.predmet(ff, 'details')) && !U.jeKontumacija(U.predmet(beri('us-m11-tekma-116529.html'), 'details')))
+  // Nepopoln zapisnik iz same oblike: goli v 1. minuti brez menjav, a z navadnim strelcem.
+  const enice = U.vZapisnik(beri('us-m11-tekma-116529.html').replace(/"minute":"\d+"/g, '"minute":"1"').replace(/"UID_player_in":"\d+"/g, '"UID_player_in":"0"'))
+  preveri('modular11: minute dogodkov same enice so nepopoln zapisnik', enice?.nepopoln && /enice/.test(enice.opozorila[0]))
+
+  const kont = await U.default.kontumacije('24/41/2026', async (url) => (/117019/.test(url) ? ff : beri('us-m11-tekma-116529.html')), [
+    { stevilka: 7, tekme: [
+      { domaci: 'Seacoast United Phantoms', gostje: 'Black Rock FC', datum: '2026-06-29', izid: { domaci: 3, gostje: 0 }, m11Id: '117019' },
+      { domaci: 'Stars FC', gostje: 'Southern California Eagles', datum: '2026-06-02', izid: { domaci: 3, gostje: 0 }, m11Id: '116529' },
+      { domaci: 'A', gostje: 'B', datum: '2026-06-02', izid: { domaci: 2, gostje: 1 }, m11Id: '117019' },
+    ] },
+  ], '2026-10-15')
+  preveri('modular11: kontumacije — le 3:0 / 0:3 z zapisnikom dodeljene zmage', kont.length === 1 && kont[0].krog === 7 &&
+    kont[0].domaci === 'Seacoast United Phantoms')
+  const zs = await U.default.zapisniki('24/52/2026', async (url) => {
+    if (url.includes('get_matches')) return strani[/open_page=2/.test(url) ? 1 : 0]
+    return url.includes('/116529/') ? beri('us-m11-tekma-116529.html') : beri('us-m11-tekma-116672.html')
+  })
+  preveri('modular11: zapisniki() — šifra us<id>, ime, krog in sezona z razporeda, neujemanje izida je opozorilo', zs.length === 48 &&
+    zs.every((x) => /^us\d+$/.test(x.id) && x.z.zapisnikId === x.id && x.z.sezona === '2026') &&
+    zs.find((x) => x.id === 'us116529')?.z.krog === 6 && zs.find((x) => x.id === 'us116529')?.z.opozorila.length === 0 &&
+    zs[0].z.domaci.ime === 'City SC' && zs[0].z.opozorila.some((o) => /ni izid razporeda/.test(o)))
+  let zavrnjen = null
+  try { await U.default.zapisniki('24/52/2026', async () => { const e = new Error('HTTP 403'); e.status = 403; throw e }) } catch (e) { zavrnjen = e }
+  let izziv = null
+  try { await U.default.zapisniki('24/52/2026', async () => '<title>Just a moment...</title>') } catch (e) { izziv = e }
+  let napaka = null
+  try { await U.default.zapisniki('24/52/2026', async () => '<div style="color:red;"><p>Date is invalid.</p></div>') } catch (e) { napaka = e }
+  preveri('modular11: 401/403/429 in izziv vržejo Modular11Zavrnitev (izhod 4), stran napake ustavi uvoz', zavrnjen instanceof U.Modular11Zavrnitev &&
+    zavrnjen.status === 403 && izziv instanceof U.Modular11Zavrnitev && U.default.zavrnitev('x', 429).zavrnitev === true &&
+    U.jeZavrnitev(401) && U.jeZavrnitev(429) && !U.jeZavrnitev(404) && /ni stran razporeda/.test(napaka?.message ?? ''))
+  preveri('modular11: ključ in kratko ime kluba', U.kljucKlubaUs('Southern California Eagles') === 'southern california eagles' &&
+    U.kratkoImeUs('Stars FC') === 'Stars' && U.kratkoImeUs('FC Tucson') === 'Tucson' && U.kratkoImeUs('AMSG FC') === 'AMSG' &&
+    U.kratkoImeUs('Southern California Eagles') === 'Southern California Eagles')
+}
+
 // --- vir fsf (Ferski otoki, javni posrednik COMET na fsf.fo) -----------------------
 {
   const F = await import('./viri/fsf.mjs')
