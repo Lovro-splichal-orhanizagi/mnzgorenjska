@@ -141,7 +141,7 @@ async function uskladiHns(liga) {
 for (const liga of lige) {
   // MLSZ vratarja ne označi; `is_goalkeeper` je namig (prvi začetnik), ki ga
   // večina tekem potrdi ali ovrže enako kot oznako HNS.
-  if (VIR === 'hns' || VIR === 'mlsz' || VIR === 'oefb' || VIR === 'fsb' || VIR === 'fss' || VIR === 'fssid' || VIR === 'jalgpall' || VIR === 'lff' || VIR === 'ffm' || VIR === 'fcf' || VIR === 'fas' || VIR === 'hoff-km') { await uskladiHns(liga); continue }
+  if (VIR === 'hns' || VIR === 'mlsz' || VIR === 'oefb' || VIR === 'fsb' || VIR === 'fss' || VIR === 'fssid' || VIR === 'jalgpall' || VIR === 'lff' || VIR === 'ffm' || VIR === 'fcf' || VIR === 'fas' || VIR === 'aft' || VIR === 'hoff-km') { await uskladiHns(liga); continue }
   // Tekoča sezona lige ("2026/27" ali pri koledarski ligi "2026").
   const { data: sezona, error: eSezona } = await db.rpc('sezona_lige', { p_competition_id: liga.id })
   if (eSezona || !sezona) {

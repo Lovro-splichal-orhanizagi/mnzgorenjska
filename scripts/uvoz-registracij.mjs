@@ -28,7 +28,7 @@ import {
   tekmovanje as najdiTekmovanje,
 } from './tekmovanje.mjs'
 import { viraZa } from './viri/index.mjs'
-import { prenesiSPonovitvami } from './prenos.mjs'
+import { prenesiSPonovitvami, fetchZaBazo } from './prenos.mjs'
 
 const PREDPOMNILNIK = 'scripts/.predpomnilnik'
 
@@ -88,7 +88,7 @@ const arg = (ime, privzeto = null) => {
 }
 const leto = arg('leto', String(new Date().getFullYear()))
 const pisi = process.argv.includes('--pisi')
-const db = createClient(BASE, SERVICE, { auth: { persistSession: false } })
+const db = createClient(BASE, SERVICE, { auth: { persistSession: false }, global: { fetch: fetchZaBazo() } })
 
 // Tekmovanje razrešimo takoj: iz njega dobimo vir, ta pa naslove — potrebni
 // so že pri seznamu zapisnikov niže.

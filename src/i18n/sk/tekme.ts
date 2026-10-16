@@ -213,4 +213,23 @@ export const tekme: NonNullable<Prevod['tekme']> = {
       vodi: 'Vedie {pozicija} — váha {utez} / {prag}',
     },
   },
+  // Razlaga točk in cene na mestu (components/Razlaga.tsx).
+  razlaga: {
+    zakaj: 'Prečo {tocke}? Rozpis bodov',
+    zapri: 'Zavrieť',
+    ostalo: 'Ostatné',
+    brezPozicije: 'Pozícia ešte nie je určená, preto gól zatiaľ neprináša body. Keď komunita pozíciu potvrdí, body sa prepočítajú.',
+    pravila1: 'Toto kolo sa boduje podľa starších pravidiel: čisté konto brankára +4, bez bodov za víťazstvo.',
+    asistence: 'Asistencie potvrdzuje komunita hlasovaním — nepotvrdená asistencia zatiaľ neprináša body.',
+    zadnjiKrog: 'Posledný zápas: {krog}. kolo',
+    cena: {
+      zakaj: 'Prečo táto cena?',
+      zdaj: 'Aktuálna cena',
+      izhodisce: 'Východisková cena',
+      izhodisceOpis: 'Východisková cena vychádza z minút a bodov minulej sezóny v porovnaní s ostatnými hráčmi ligy.',
+      privzeta: 'Kto v minulej sezóne odohral menej ako {minut} minút, začína na {cena} — okrem prípadu, že hral vo vyššej lige; vtedy dostane cenu odtiaľ.',
+      borza: 'Po každom kole sa cena pohne: +{korak} za každé dva body nad 2 (najviac +{najvec} za kolo), −{korak} po slabom kole alebo slabej forme a −{korak}, ak hráč druhé kolo za sebou nehrá, hoci jeho klub hrá.',
+      razpon: 'Cena je vždy medzi {od} a {do}.',
+    },
+  },
 }

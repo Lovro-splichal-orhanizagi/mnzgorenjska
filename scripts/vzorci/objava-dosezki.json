@@ -1,0 +1,27 @@
+{
+  "od": "2026-10-08",
+  "do": "2026-10-15",
+  "hattrick": [
+    { "ime": "Gruber Lukas", "klub": "SV Union Raiffeisen Sankt Marienkirchen an der Polsenz", "grb": null, "liga": "Gebietsliga Nordwest/Waldviertel", "drzava": "AT", "goli": 4 },
+    { "ime": "Babić Marko", "klub": "NK Varteks", "grb": null, "liga": "VŽ Elitna", "drzava": "HR", "goli": 3 },
+    { "ime": "Kovač Tine", "klub": "Eltron Preddvor", "grb": null, "liga": "1. GNL", "drzava": "SI", "goli": 3 }
+  ],
+  "vratar_gol": [
+    { "ime": "Ádám Erik", "klub": "TJ Družstevník Želovce", "grb": null, "liga": "VII. liga NZ", "drzava": "SK", "goli": 1 }
+  ],
+  "najvec_tock": [
+    { "ime": "Gruber Lukas", "klub": "SV Union Raiffeisen Sankt Marienkirchen an der Polsenz", "grb": null, "liga": "Gebietsliga Nordwest/Waldviertel", "drzava": "AT", "krog": 11, "tocke": 24, "goli": 4 }
+  ],
+  "rekord_lige": [
+    { "ime": "Szentgyörgyi-Kovács Kristóf Benedek", "klub": "Zalaszentgróti VFC", "grb": null, "liga": "Zala I.", "drzava": "HU", "krog": 9, "tocke": 20, "prej": 18 }
+  ],
+  "skok": [
+    { "ime": "Horvat Ivan", "klub": "NK Mladost Ždralovi", "grb": null, "liga": "BJ I.", "drzava": "HR", "staro": 7.4, "novo": 8.4 }
+  ],
+  "cista_mreza": [
+    { "ime": "Kovačević Luka", "klub": "NK Polet (SK)", "grb": null, "liga": "MZ I.", "drzava": "HR", "niz": 5 }
+  ],
+  "manager_tedna": { "tocke": 112, "drzava": "HR" },
+  "novih_upraviteljev": 286,
+  "uporabnikov": 3912
+}
