@@ -186,7 +186,7 @@ računa). Igralec brez prevzetega profila ugovarja po povezavi na dnu vsake
 javne strani igralca (ne mladinske, ne anonimizirane) na `/legal#scout`: mail
 na info@slff.eu, admin v 14 dneh v Administracija → Igralec → *Skrij iz Scouta
 (ugovor)* (`admin_scout_skrij(ids[])`, izbira vrstic osebe kot pri
-anonimizaciji). `kontakt_dovoljen` se le hrani; sporočila pridejo v fazi 3.
+anonimizaciji). `kontakt_dovoljen` se le hrani; sporočila pridejo v fazi 4.
 
 **Soimenjak.** Stroj izloča po ključu imena brez kluba, zato soimenjakov
 ugovor izloči tudi lastnika profila z istim imenom v državi (namerno, varneje
@@ -196,6 +196,86 @@ privolitev lahko shrani, a v izračun ne vstopi, dokler ugovor soimenjaka velja.
 Preklic z `false` pobriše le ključe njegovih vrstic. Enako pri mladinskem
 izločanju: polnoletna letnica odpre le osebo prijaviteljevih vrstic, ne
 soimenjaka.
+
+## Klubi (faza 3)
+
+Načrta `docs/superpowers/plans/2026-10-16-scout-faza3a-zaledje.md` (baza,
+plačila) in `…-faza3b-aplikacija.md` (scout.slff.eu). Migracije
+`20261017140100`–`140400`.
+
+- **Račun in sedeži.** Naročnina (`scout.narocnine`, ključ `team_id`) pripada
+  klubu, sedež (`scout.sedezi`, ključ `user_id`) uradnemu računu kluba
+  (`klubski_racuni`, potrjen naslov iz `klub_stik`). Do 3 sedeži (štejejo le
+  računi, ki so še uradni računi kluba); sedež sprosti njegov imetnik ali drug
+  sedež kluba. Preizkus 14 dni enkrat na klub, brez kartice, s sprejetjem
+  pogojev (`pogoji_sprejeti_at`). Država naročnine je država kluba, le če v
+  `scout.drzave` ni `zaprto`. `narocnine.team_id` nima kaskade: `zdruzi-klube`
+  pade na klubu z naročnino, prenesi jo ročno.
+- **Dostop.** Vsak klic s podatki igralcev gre skozi `scout.dostop`: sedež,
+  aktiven klubski račun, `velja_do > now()`, `zaprt_at is null`, država ni
+  zaprta, dnevna meja (500 profilov in 300 drugih klicev na klub na ljubljanski
+  dan; med drugimi so tudi `scout_opazuj`, dodajanje in odstranjevanje, in
+  `scout_opazovani`) in vrstica v `scout.dnevnik` (pri iskanju in podobnih še
+  id-ji vrnjenih igralcev v `parametri.igralci`). Zavrnjen klic se ne zapiše.
+- **Kaj klub vidi.** Le zadnji **objavljeni** model (`scout.zadnji_model()`).
+  `scout.vidni(model, država)` ob branju znova izloči skrite (ključi
+  `scout.ugovori`), anonimizirane (ključi `anonimizirani_igralci`, tudi druge
+  vrstice osebe), vrstice mladinskih lig in zaprte države; privolitev le pri
+  "odprt za prestop", stik nikoli (faza 4); celo osebo z mladinsko vrstico
+  izloča stroj enkrat na dan. Privolitev je ena na vrstico
+  (`scout.privolitve_vrstic()`): če vrstico pokrivata dva potrjena profila
+  (neposredno in prek povezave), zmaga odprta, nato neposredna, nato manjši id
+  vira — igralec se v iskanju ne podvoji. Iskanje: 25 na stran, največ prvih
+  200, brez lastnih igralcev; raven `ista_ali_nizja` / `nizja` primerja moč
+  lige igralca z ligo kluba (`scout.liga_kluba`, ± 0.1; brez lige kluba v
+  modelu filter ne velja); projekcija golov na raven kluba le znotraj države.
+  Podobni 10, seznam 30.
+- **Plačila.** `scout-placilo` (Checkout, portal) in `stripe-webhook`
+  (`metadata.app = slff-scout`, veja v `stripe-webhook/scout.ts`). Cene po
+  `lookup_key` `slff_scout_klub_mesec` (39 €/mesec), `slff_scout_klub_sezona`
+  (290 €/leto), brez DDV: Checkout vzame le ceno s `tax_behavior = exclusive`
+  (sicer napaka), DDV doda Stripe Tax (`automatic_tax`), z davčno številko in
+  naslovom kupca; sezona je letna naročnina. Naročnina velja do konca obdobja
+  + 3 dni. Seja mora imeti natanko eno postavko (cena obdobja, en kos, brez
+  popusta), sicer preklic + Discord. Novo plačilo kluba s staro (potečeno)
+  naročnino staro prekliče: `scout_iz_placila` vrne `aktivna:<stara>` in jo
+  hrani v `prejsnja_subscription_id`, zato ponovljen dogodek (Stripe ga
+  ponovi po napaki 500) preklic poskusi znova. Obnova (`invoice.paid`,
+  `subscription.updated` v `active`/`trialing`) z naročnino, ki ima tujo ceno,
+  ali obnova zaprtega kluba se prekliče. Portal je lastna konfiguracija
+  (metapodatek `app=slff-scout`, brez menjave paketa; ustvari jo lastnik
+  enkrat, načrt 3b); brez nje portal javi napako.
+  Drugo plačilo istega kluba (`dvojno`), zaprt klub (`zaprt`), klub brez
+  naročnine (`ni_narocnine`) ali seja z neveljavnim obdobjem ali brez kupca
+  (`neveljavno`) → takojšen preklic + Discord "vrni denar". Naročnina brez
+  konca obdobja je napaka 500 (Stripe dogodek ponovi), ne preklic. Vračil in sporov
+  Scout ne obdeluje samodejno: admin naročnino prekliče v Stripe
+  (`subscription.deleted` → `velja_do = least(velja_do, ended_at)`). Portal
+  (preklic) dobi plačnik ali kateri koli uradni račun kluba, tudi brez sedeža
+  in pri zaprtem klubu.
+- **Zaprt klub** (kršitev pogojev):
+  `update scout.narocnine set zaprt_at = now() where team_id = <klub>` in
+  takojšen preklic naročnine v Stripe.
+- **Dnevnik** 12 mesecev (`scout.pocisti()`, pg_cron `scout-pocisti` 04:47; s
+  seznamov odstrani tudi skrite, anonimizirane in izbrisane igralce). Zahteva
+  igralca "kateri klubi so me gledali":
+
+  ```sql
+  select t.name, d.vrsta, d.created_at from scout.dnevnik d join teams t on t.id = d.team_id
+   where d.player_id = any(:'ids'::bigint[])
+      or exists (select 1 from jsonb_array_elements_text(d.parametri->'igralci') e
+                  where e::bigint = any(:'ids'::bigint[]))
+   order by d.created_at desc;
+  ```
+
+  `ids` je psql spremenljivka z vsemi vrsticami osebe (izbrane kot pri
+  anonimizaciji), npr. `psql -v ids='{101,202}'`.
+
+- **Merilo faze 3** (5 poskusnih klubov tedensko):
+
+  ```sql
+  select count(distinct team_id) from scout.dnevnik where created_at > now() - interval '7 days';
+  ```
 
 ## Spomin
 
