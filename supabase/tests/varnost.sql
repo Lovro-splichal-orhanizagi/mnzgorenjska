@@ -3416,6 +3416,24 @@ select pg_temp.preveri('scout3: odprt za prestop se pokaze, stik ne',
   and (select array_agg(player_id) = array[-930001]::bigint[] from scout_isci(p_samo_odprti => true)));
 reset role;
 
+-- Vrstico -930001 pokrivata dva profila: neposredni (odprt) in povezava iz
+-- drugega profila (zaprt). Iskanje in podobni vrneta igralca enkrat, z odprto.
+insert into zahtevki_igralca(player_id, user_id, status, potrdil, decided_at)
+values (-930002, 'e5c30000-0000-4000-8000-000000000002', 'potrjen', 'admin', now());
+insert into povezani_igralci (player_id, zahtevek_id)
+select -930001, id from zahtevki_igralca where player_id = -930002 and status = 'potrjen';
+insert into scout.privolitve (player_id, odprt_za_prestop, letnik, regije, kontakt_dovoljen)
+values (-930002, false, 1990, '{}', false);
+select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.preveri('scout3: dva profila na isti vrstici, en zadetek z odprto privolitvijo',
+  (select count(*) = 1 and bool_and(odprt_za_prestop) from scout_isci() where player_id = -930001)
+  and (select (j->'privolitev'->>'letnik') = '1995' from scout_igralec(-930001) j));
+reset role;
+delete from povezani_igralci where player_id = -930001;
+delete from scout.privolitve where player_id = -930002;
+delete from zahtevki_igralca where player_id = -930002;
+
 insert into scout.dnevnik (team_id, vrsta, player_id)
 select -913001, 'igralec', -930001 from generate_series(1, 500);
 select set_config('request.jwt.claim.sub','e5c30000-0000-4000-8000-000000000001',true);

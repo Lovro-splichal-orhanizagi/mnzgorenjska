@@ -75,18 +75,23 @@ $$;
 
 -- Privolitve na vseh vrsticah potrjenega profila (glavna in povezane). Stik
 -- (kontakt_dovoljen) se ne bere: sporočila klub → igralec so faza 4.
+-- Ena vrstica na igralca: vrstico lahko pokrivata dva profila (neposredno in
+-- prek povezave). Zmaga odprta privolitev, nato neposredna, nato manjši id
+-- vira; letnik in regije ostaneta iz iste privolitve, ne zmešana.
 create function scout.privolitve_vrstic()
 returns table (player_id bigint, odprt_za_prestop boolean, letnik int, regije bigint[])
 language sql stable
 as $$
-  select z.player_id, s.odprt_za_prestop, s.letnik, s.regije
-    from public.zahtevki_igralca z join scout.privolitve s on s.player_id = z.player_id
-   where z.status = 'potrjen'
-  union
-  select pi.player_id, s.odprt_za_prestop, s.letnik, s.regije
-    from public.povezani_igralci pi
-    join public.zahtevki_igralca z on z.id = pi.zahtevek_id and z.status = 'potrjen'
-    join scout.privolitve s on s.player_id = z.player_id
+  select distinct on (x.player_id) x.player_id, x.odprt_za_prestop, x.letnik, x.regije
+    from (select z.player_id, s.odprt_za_prestop, s.letnik, s.regije, 0 as red, s.player_id as vir
+            from public.zahtevki_igralca z join scout.privolitve s on s.player_id = z.player_id
+           where z.status = 'potrjen'
+          union all
+          select pi.player_id, s.odprt_za_prestop, s.letnik, s.regije, 1, s.player_id
+            from public.povezani_igralci pi
+            join public.zahtevki_igralca z on z.id = pi.zahtevek_id and z.status = 'potrjen'
+            join scout.privolitve s on s.player_id = z.player_id) x
+   order by x.player_id, x.odprt_za_prestop desc, x.red, x.vir
 $$;
 
 -- Liga kluba za projekcijo: najmočnejša članska liga zadnje sezone v modelu.
