@@ -170,7 +170,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   // Privatnost i uvjeti. <b> je podebljano, ostale oznake su poveznice.
   pravno: {
     naslov: 'Privatnost i uvjeti',
-    zadnjaSprememba: 'Zadnja izmjena: 12. listopada 2026.',
+    zadnjaSprememba: 'Zadnja izmjena: 16. listopada 2026.',
     kajJeNaslov: 'Što je SLFF',
     kajJe:
       'SLFF (Sunday League Fantasy Football) je navijačka fantasy liga za amaterske nogometne lige. Vodimo je amaterski i nije povezana s Hrvatskim nogometnim savezom (HNS), županijskim nogometnim savezima ni s klubovima. Igra je besplatna, bez novčanih uloga i nagrada.',
@@ -235,6 +235,15 @@ export const racun: NonNullable<Prevod['racun']> = {
       '<b>Povrat novca.</b> Kod zlouporabe ili lažne potvrde profila ne vraćamo novac. Ako značka prestane zbog naše pogreške, na zahtjev saveza ili zato što ukinemo uslugu, kod godišnje pretplate vraćamo razmjerni dio za neiskorištene mjesece. Kod kupnje zauvijek vraćamo cijeli iznos u prvih 12 mjeseci od kupnje, a nakon toga razmjerni dio preostatka do 5 godina od kupnje. Tiskanu značku i poštarinu kod ukidanja ne vraćamo (značka ostaje tvoja), samo kod nedostatka ili kvara.',
     pritozbe:
       '<b>Pitanja i prigovori.</b> Piši na <eposta>info@slff.eu</eposta>, odgovaramo u roku od 8 radnih dana. Ne priznajemo nijedno tijelo za izvansudsko rješavanje potrošačkih sporova. Primjenjuje se slovensko pravo; time ne gubiš zaštitu koju ti daje pravo države u kojoj živiš.',
+    scoutNaslov: 'SLFF Scout: traženje igrača za klubove',
+    scoutKaj:
+      'Iz istih javnih zapisnika izračunavamo pokazatelje igrača seniorskih liga: udio minuta, golove, utjecaj na terenu, primljene golove, kartone i put kroz sezone, prilagođene snazi lige. To su pokazatelji iz podataka utakmica, a ne ocjena osobe. Vidjet će ih klubovi s pretplatom na SLFF Scout koji traže igrače; odluku uvijek donosi čovjek u klubu. Juniorske lige ne obrađujemo. Tko je ikad igrao u juniorskoj ligi, isključen je dok nema minuta u seniorskoj ligi i na svom profilu ne upiše godinu rođenja prema kojoj ove godine navršava najmanje 19 godina.',
+    scoutPodlaga:
+      'Pravna osnova je legitimni interes (članak 6. stavak 1. točka (f) GDPR-a): pomoći klubovima pronaći igrače iz javno objavljenih rezultata. Pokazatelje izračunavamo svaki dan iznova i čuvamo samo zadnje izračune. Preglede klubova bilježit ćemo 12 mjeseci kako bismo spriječili zlouporabu i kako bismo igraču na zahtjev rekli koji su ga klubovi gledali.',
+    scoutPrivolitev:
+      'Igrač s preuzetim profilom može dodati da je otvoren za transfer, godinu rođenja, željene regije i dopuštenje za kontakt. To je privola (članak 6. stavak 1. točka (a) GDPR-a): vide je samo klubovi u Scoutu, može se povući u bilo kojem trenutku na profilu, a nakon povlačenja podatke brišemo. Klub igraču piše samo putem Scouta i ne vidi njegovu e-adresu.',
+    scoutUgovor:
+      'Prigovor: na preuzetom profilu klikni Sakrij me iz Scouta ili piši na <eposta>info@slff.eu</eposta> s poveznicom na stranicu igrača. U roku od 14 dana igrača skrivamo iz Scouta u svim našim ligama te države, i pri kasnijim uvozima. U fantasy igri ostaje.',
   },
   klubskiRacun: {
     naslov: 'Službeni račun kluba',

@@ -3058,7 +3058,7 @@ select pg_temp.preveri('scout: anon in authenticated nimata sheme scout',
 -- Stroj (scout_stroj) pise shemo scout skozi RLS in vidi vse vrstice, ki jih
 -- bere nalaganje (scout/stroj, SQL_SEZONE/SQL_TEKME/SQL_LIGE/SQL_IZKLJUCENI).
 select pg_temp.preveri('scout: vsaka tabela scout ima politiko za stroj',
-  (select count(*) = 8 from pg_policies where schemaname = 'scout' and 'scout_stroj' = any(roles)));
+  (select count(*) = 9 from pg_policies where schemaname = 'scout' and 'scout_stroj' = any(roles)));
 create function pg_temp.stroj_model() returns boolean language plpgsql as $$
 declare v_id bigint; v_vidi boolean;
 begin
@@ -3085,7 +3085,8 @@ select q, pg_temp.stevilo(q) from unnest(array[
   'select * from scout.drzave', 'select * from public.anonimizirani_igralci',
   'select public.anonimizacijski_kljuc(''1|x'')',
   'select 1 from public.matches m join public.rounds r on r.id = m.round_id join public.competitions c on c.id = r.competition_id where m.zapisnik_id is not null and not m.kontumacija and not public.je_mladinski_slug(c.slug)',
-  'select 1 from public.players p join public.competitions c on c.id = p.competition_id where p.scout_skrit or public.je_mladinski_slug(c.slug)'
+  'select 1 from public.players p join public.competitions c on c.id = p.competition_id where p.scout_skrit or public.je_mladinski_slug(c.slug)',
+  'select * from scout.ugovori', 'select * from scout.odrasle_vrstice()'
 ]) q;
 grant select on scout_stevci to scout_stroj;
 grant select, insert on izidi to scout_stroj;
@@ -3095,6 +3096,103 @@ select pg_temp.preveri('scout: stroj vpise, prebere in izbrise model', pg_temp.s
 select pg_temp.preveri('scout: stroj vidi vse vrstice: ' || left(poizvedba, 60), pg_temp.stevilo(poizvedba) = vse)
 from scout_stevci;
 reset role;
+
+-- ---------------------------------------------------------------------------
+-- Scout, faza 2 (migracija 20261016160100): ugovor in privolitev igralca.
+-- L (...e5c...001) je potrjeni lastnik -918001; povezana vrstica -918002 je
+-- v drugi ligi z istim imenom. T (...002) je tujec. -918003 skrije admin.
+-- ---------------------------------------------------------------------------
+reset role;
+select set_config('request.jwt.claim.sub','',true);
+insert into auth.users(id,email,raw_user_meta_data,created_at) values
+ ('e5c00000-0000-4000-8000-000000000001','scout-lastnik@example.invalid','{"display_name":"ScoutL"}',now()),
+ ('e5c00000-0000-4000-8000-000000000002','scout-tujec@example.invalid','{"display_name":"ScoutT"}',now());
+update profiles set is_admin = true where id = 'b8a06635-2322-4444-8c42-44e419f912ad';
+insert into players(id, team_id, competition_id, first_name, last_name, full_name, position, position_source, value, value_start, active) overriding system value
+values (-918001, -913001, -913001, 'Scout', 'Lastnik', 'Scout Lastnik', 'MID', 'admin', 6, 6, true),
+       (-918002, -913002, -913002, 'Scout', 'Lastnik', 'Scout Lastnik', 'MID', 'admin', 6, 6, true),
+       (-918003, -913003, -913001, 'Scout', 'Admin', 'Scout Admin', 'MID', 'admin', 6, 6, true),
+       (-918004, -913004, -913001, 'Scout', 'Soimenjak', 'Scout Lastnik', 'MID', 'admin', 6, 6, true);
+insert into zahtevki_igralca(player_id, user_id, status, potrdil, decided_at)
+values (-918001, 'e5c00000-0000-4000-8000-000000000001', 'potrjen', 'admin', now());
+insert into povezani_igralci(player_id, zahtevek_id)
+select -918002, id from zahtevki_igralca where player_id = -918001 and status = 'potrjen';
+-- Soimenjak -918004 (drug klub, isto ime v državi) je ugovarjal sam: njegov
+-- ključ imena je enak lastnikovemu.
+insert into scout.ugovori (player_id, kljuc) select * from scout.kljuci_vrstic(array[-918004]::bigint[]);
+
+select pg_temp.preveri('scout: funkcij Scouta anon ne klice, notranjih nihce iz brskalnika',
+  not has_function_privilege('anon', 'public.scout_moj_profil(bigint)', 'EXECUTE')
+  and not has_function_privilege('anon', 'public.scout_ugovor(bigint, boolean)', 'EXECUTE')
+  and not has_function_privilege('anon', 'public.admin_scout_skrij(bigint[])', 'EXECUTE')
+  and not has_function_privilege('authenticated', 'scout.odrasle_vrstice()', 'EXECUTE')
+  and not has_function_privilege('authenticated', 'scout.kljuci_vrstic(bigint[])', 'EXECUTE')
+  and has_function_privilege('scout_stroj', 'scout.odrasle_vrstice()', 'EXECUTE'));
+
+select set_config('request.jwt.claim.sub','e5c00000-0000-4000-8000-000000000002',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('scout: tujec ne bere tuje privolitve', $$select * from scout_moj_profil(-918001)$$);
+select pg_temp.zavrnjeno('scout: tujec ne vpise tuje privolitve',
+  $$select scout_shrani_privolitev(-918001, true, 1995, '{}'::bigint[], true)$$);
+select pg_temp.zavrnjeno('scout: tujec ne skrije tujega igralca', $$select scout_ugovor(-918001, true)$$);
+select pg_temp.zavrnjeno('scout: navaden uporabnik ne skrije kot admin', $$select admin_scout_skrij(array[-918003]::bigint[])$$);
+select pg_temp.zavrnjeno('scout: brskalnik ne bere ugovorov', $$select * from scout.ugovori$$);
+select pg_temp.zavrnjeno('scout: brskalnik ne bere privolitev', $$select * from scout.privolitve$$);
+reset role;
+
+select set_config('request.jwt.claim.sub','e5c00000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.napaka('scout: letnica, ki letos ni vse leto polnoletna, zavrnjena',
+  $$select scout_shrani_privolitev(-918001, true, extract(year from current_date)::int - 18, '{}'::bigint[], true)$$, null);
+select pg_temp.napaka('scout: neznana regija zavrnjena',
+  $$select scout_shrani_privolitev(-918001, true, 1995, array[-1]::bigint[], true)$$, null);
+select scout_shrani_privolitev(-918001, true, 1995, array(select id::bigint from federations where code = 'mnzg'), true);
+select pg_temp.preveri('scout: lastnik vpise in prebere privolitev',
+  (select drzava_odprta and not skrit and odprt_za_prestop and letnik = 1995 and kontakt_dovoljen
+          and cardinality(regije) = 1
+     from scout_moj_profil(-918001)));
+reset role;
+select pg_temp.preveri('scout: soimenjakov ugovor ne zaklene lastnika, stroj pa ga izloci',
+  (select letnik = 1995 from scout.privolitve where player_id = -918001)
+  and scout.je_skrit(array[-918001]::bigint[]));
+select pg_temp.preveri('scout: polnoletna privolitev odpre glavno in povezano vrstico',
+  (select count(*) = 2 from scout.odrasle_vrstice() where player_id in (-918001, -918002)));
+
+select set_config('request.jwt.claim.sub','e5c00000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select scout_ugovor(-918001, true);
+select pg_temp.preveri('scout: ugovor skrije in izbrise privolitev',
+  (select skrit and letnik is null from scout_moj_profil(-918001)));
+select pg_temp.napaka('scout: skrit igralec ne vpise privolitve',
+  $$select scout_shrani_privolitev(-918001, true, 1995, '{}'::bigint[], true)$$, null);
+reset role;
+select pg_temp.preveri('scout: ugovor zajame povezano vrstico',
+  scout.je_skrit(array[-918002]::bigint[]) and exists (select 1 from scout.ugovori where player_id = -918002));
+
+select set_config('request.jwt.claim.sub','e5c00000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select scout_ugovor(-918001, false);
+select pg_temp.preveri('scout: lastnik preklice ugovor', (select not skrit from scout_moj_profil(-918001)));
+select scout_shrani_privolitev(-918001, false, 1990, '{}'::bigint[], false);
+select scout_preklici_privolitev(-918001);
+reset role;
+select pg_temp.preveri('scout: preklic privolitve izbrise vrstico',
+  not exists (select 1 from scout.privolitve where player_id = -918001));
+
+select set_config('request.jwt.claim.sub','e5c00000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select scout_shrani_privolitev(-918001, true, 1990, '{}'::bigint[], true);
+select preklici_moj_zahtevek((select id from zahtevki_igralca where user_id = auth.uid() and status = 'potrjen'));
+reset role;
+select pg_temp.preveri('scout: preklic profila izbrise privolitev',
+  not exists (select 1 from scout.privolitve where player_id = -918001));
+
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+select pg_temp.preveri('scout: admin skrije igralca', admin_scout_skrij(array[-918003]::bigint[]) > 0);
+reset role;
+select pg_temp.preveri('scout: adminov ugovor velja', scout.je_skrit(array[-918003]::bigint[]));
+select set_config('request.jwt.claim.sub','',true);
 
 do $$
 declare v_napak int;

@@ -168,7 +168,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   // Zasebnost in pogoji. <b> je krepko, ostale oznake so povezave.
   pravno: {
     naslov: 'Adatvédelem és feltételek',
-    zadnjaSprememba: 'Utolsó módosítás: 2026. október 12.',
+    zadnjaSprememba: 'Utolsó módosítás: 2026. október 16.',
     kajJeNaslov: 'Mi az SLFF',
     kajJe:
       'Az SLFF (Sunday League Fantasy Football) szurkolói fantasy bajnokság a helyi amatőr labdarúgó-bajnokságokhoz. Önkéntesen működtetjük, és nem kapcsolódik a megyei vagy az országos labdarúgó-szövetségekhez, sem a klubokhoz. A játék ingyenes, nincs benne pénzes tét vagy nyeremény.',
@@ -233,6 +233,15 @@ export const racun: NonNullable<Prevod['racun']> = {
       '<b>Visszatérítés.</b> Visszaélés vagy hamis profiligazolás esetén nem adunk vissza pénzt. Ha a jelvény a mi hibánkból, a szövetség kérésére vagy a szolgáltatás megszüntetése miatt szűnik meg, éves előfizetésnél a fel nem használt hónapok arányos részét visszaadjuk. Örökre szóló vásárlásnál a vásárlást követő első 12 hónapban a teljes összeget, azután a vásárlástól számított 5 évből hátralévő idő arányos részét adjuk vissza. A nyomtatott jelvényt és a postaköltséget megszüntetéskor nem térítjük vissza (a jelvény a tiéd marad), csak hiba esetén.',
     pritozbe:
       '<b>Kérdések és panaszok.</b> Írj az <eposta>info@slff.eu</eposta> címre, 8 munkanapon belül válaszolunk. Nem ismerünk el egyetlen fogyasztói jogviták bíróságon kívüli rendezésére jogosult szervet sem. A szlovén jog az irányadó; ez nem veszi el azt a védelmet, amelyet a lakóhelyed szerinti ország joga biztosít.',
+    scoutNaslov: 'SLFF Scout: játékoskeresés kluboknak',
+    scoutKaj:
+      'Ugyanazokból a nyilvános jegyzőkönyvekből a felnőtt bajnokságok játékosaira mutatókat számolunk: a játékpercek aránya, gólok, hatás a pályán, kapott gólok, lapok és az idények közötti fejlődés, a bajnokság erősségéhez igazítva. Ezek a meccsadatokból számolt mutatók, nem a személy értékelése. Az SLFF Scout előfizetéssel rendelkező, játékost kereső klubok fogják látni őket; a döntést mindig a klub egy embere hozza meg. Utánpótlás bajnokságokat nem dolgozunk fel. Aki valaha utánpótlás bajnokságban játszott, ki van zárva, amíg nincsenek játékpercei felnőtt bajnokságban, és a saját profilján meg nem adja a születési évét, amely szerint idén betölti legalább a 19. életévét.',
+    scoutPodlaga:
+      'A jogalap a jogos érdek (a GDPR 6. cikk (1) bekezdés f) pontja): segíteni a kluboknak játékost találni a nyilvánosan közzétett eredményekből. A mutatókat minden nap újraszámoljuk, és csak a legutóbbi számításokat őrizzük meg. A klubok megtekintéseit 12 hónapig naplózni fogjuk, hogy megakadályozzuk a visszaéléseket, és kérésre megmondhassuk a játékosnak, mely klubok nézték meg.',
+    scoutPrivolitev:
+      'Az átvett profillal rendelkező játékos megadhatja, hogy nyitott az átigazolásra, a születési évét, a kívánt régiókat és a kapcsolatfelvétel engedélyét. Ez hozzájárulás (a GDPR 6. cikk (1) bekezdés a) pontja): csak a Scoutban lévő klubok látják, bármikor visszavonható a profilon, és visszavonáskor töröljük az adatokat. A klub csak a Scouton keresztül ír a játékosnak, és nem látja az e-mail-címét.',
+    scoutUgovor:
+      'Tiltakozás: az átvett profilon kattints a Rejts el a Scoutból gombra, vagy írj az <eposta>info@slff.eu</eposta> címre a játékos oldalának linkjével. 14 napon belül elrejtjük a játékost a Scoutból az adott ország összes bajnokságunkban, a későbbi importoknál is. A fantasy játékban marad.',
   },
   klubskiRacun: {
     naslov: 'Hivatalos klubfiók',

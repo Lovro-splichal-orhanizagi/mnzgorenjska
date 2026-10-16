@@ -336,8 +336,12 @@ in vrzeli ter jih zapiše v zaprto shemo `scout` kot novo različico
 (`scout.modeli`) v eni transakciji. Vse ostalo (izločanje, backtest, spomin,
 objava, testi): `docs/scout.md`. Bistvo:
 
-- **Mladinske lige, osebe z vrstico v mladinski ligi, `scout_skrit` in
+- **Mladinske lige, osebe z vrstico v mladinski ligi (razen s polnoletno
+  letnico na potrjenem profilu, le prijavitelj), ugovor (`scout.ugovori`) in
   anonimizirani (tudi ista oseba v drugih ligah) ne vstopijo v izračun.**
+- Privolitev igralca (odprt za prestop, letnica, regije, stik) je v zaprti
+  `scout.privolitve`, ne v javnem `profil_igralca`; piše le
+  `scout_shrani_privolitev`. Ugovor nikoli ne gre v javno tabelo.
 - Moč lig je **lestvica znotraj države**; primerjav in projekcij čez države
   ni. Backtest je zdaj `padel` (moč lig ne premaga ablacije za 1 %), zato
   model ni objavljen.

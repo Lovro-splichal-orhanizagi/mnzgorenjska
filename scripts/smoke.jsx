@@ -31,8 +31,10 @@ import ZivostSkupnosti from '../src/components/admin/Zivost'
 import Administracija from '../src/pages/Administracija'
 import PotrditevPrevzema from '../src/pages/PotrditevPrevzema'
 import PrevzemIgralca from '../src/components/PrevzemIgralca'
+import { ScoutIgralca } from '../src/components/ScoutIgralca'
 import Prevzemi from '../src/components/admin/Prevzemi'
 import Piva from '../src/pages/Piva'
+import Pravno from '../src/pages/Pravno'
 import PivskiZidAdmin from '../src/components/admin/Piva'
 import { lestvicaPodpornikov, vsehPiv } from '../src/lib/piva'
 import { ocistiSporocilo } from '../supabase/functions/bmc-pivo/sporocilo.ts'
@@ -137,6 +139,7 @@ const strani = [
   // Te se do odgovora baze izrišejo prazne; ovoj preveri, da izris ne pade.
   ['Potrditev prevzema', () => <div><PotrditevPrevzema /></div>, '/claim'],
   ['Prevzem igralca', () => <div><PrevzemIgralca igralecId={1} slugLige="mladinci" anonimiziran={false} /></div>, '/player/1'],
+  ['Scout igralca', () => <div><ScoutIgralca glavni={1} /></div>, '/player/1'],
   ['Admin: prevzemi', () => <div><Prevzemi /></div>, '/admin'],
   ['Pivski zid', Piva, '/beers'],
   ['Admin: pivski zid', () => <div><PivskiZidAdmin /></div>, '/admin'],
@@ -158,6 +161,17 @@ for (const [ime, Komponenta, pot] of strani) {
     preveri(`izris: ${ime}`, false, e.message)
   }
 }
+
+preveri('pravno: razdelek Scout s sidrom #scout (povezava za ugovor)',
+  renderToString(
+    <StaticRouter location="/legal">
+      <AuthProvider>
+        <TekmovanjeProvider>
+          <Pravno />
+        </TekmovanjeProvider>
+      </AuthProvider>
+    </StaticRouter>,
+  ).includes('id="scout"'))
 
 // --- pivski zid (src/lib/piva.ts, bmc-pivo/sporocilo.ts) -------------------
 {

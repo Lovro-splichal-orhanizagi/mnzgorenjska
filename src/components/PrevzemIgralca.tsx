@@ -16,6 +16,7 @@ import {
   razlicicaFotografije,
 } from '../lib/prevzem'
 import PreverjeniProfil from './PreverjeniProfil'
+import { ScoutIgralca } from './ScoutIgralca'
 import PredstavitevIgralca, { OMREZJA, type Omrezje, type Potrdil, type Predstavitev } from './PredstavitevIgralca'
 
 interface MojZahtevek {
@@ -180,6 +181,9 @@ export default function PrevzemIgralca({
           }}
         />
       )}
+
+      {/* SLFF Scout: privolitev in ugovor (le lastnik, le odprta država) */}
+      {jeLastnik && urejam && potrjen && <ScoutIgralca glavni={potrjen.glavni} />}
 
       {/* čakajoči zahtevek: vidi ga le prosilec */}
       {mojOdprt && mojOdprt.player_id === igralecId && (

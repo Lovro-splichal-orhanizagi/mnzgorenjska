@@ -167,7 +167,7 @@ export const racun: NonNullable<Prevod['racun']> = {
   },
   pravno: {
     naslov: 'Privaatsus ja tingimused',
-    zadnjaSprememba: 'Viimati muudetud: 12. oktoober 2026',
+    zadnjaSprememba: 'Viimati muudetud: 16. oktoober 2026',
     kajJeNaslov: 'Mis on SLFF',
     kajJe:
       'SLFF (Sunday League Fantasy Football) on fännide tehtud fantaasialiiga kohalikele amatöörliigadele. Seda veavad vabatahtlikud ja see pole seotud piirkondlike jalgpalliliitude, riikliku jalgpalliliidu ega klubidega. Mäng on tasuta, ilma panuste ja auhindadeta.',
@@ -232,6 +232,15 @@ export const racun: NonNullable<Prevod['racun']> = {
       '<b>Tagastused.</b> Kuritarvituse või vale profiilikinnituse korral raha ei tagastata. Kui märk lõpeb meie vea tõttu, liidu soovil või seetõttu, et lõpetame teenuse, tagastame aastatellimuse kasutamata kuude eest proportsionaalse osa. Igavese ostu puhul tagastame esimese 12 kuu jooksul pärast ostu kogu summa, hiljem proportsionaalse osa ostust arvates 5 aastast järelejäänud ajast. Trükitud märki ja postikulu teenuse lõpetamisel ei tagastata (märk jääb sulle), ainult puuduse korral.',
     pritozbe:
       '<b>Küsimused ja kaebused.</b> Kirjuta aadressile <eposta>info@slff.eu</eposta>, vastame 8 tööpäeva jooksul. Me ei tunnusta ühtegi tarbijavaidluste kohtuvälise lahendamise üksust. Kehtib Sloveenia õigus; see ei võta sinult kaitset, mida annab sinu elukohariigi õigus.',
+    scoutNaslov: 'SLFF Scout: mängijate otsing klubidele',
+    scoutKaj:
+      'Samadest avalikest mängu protokollidest arvutame täiskasvanute liigade mängijatele näitajaid: mänguminutite osakaal, väravad, mõju väljakul, lastud väravad, kaardid ja areng hooaegade lõikes, kohandatud liiga tugevusele. Need on mänguandmete näitajad, mitte isiku hinnang. Neid näevad SLFF Scouti tellimusega klubid, kes otsivad mängijaid; otsuse teeb alati inimene klubis. Noorteliigasid me ei töötle. Kes on kunagi mänginud noorteliigas, on välja jäetud, kuni tal on mänguminuteid täiskasvanute liigas ja ta sisestab oma profiilil sünniaasta, mille järgi ta saab sel aastal vähemalt 19-aastaseks.',
+    scoutPodlaga:
+      'Õiguslik alus on õigustatud huvi (GDPR artikli 6 lõike 1 punkt f): aidata klubidel leida mängijaid avalikult avaldatud tulemuste põhjal. Arvutame näitajad iga päev uuesti ja säilitame ainult viimased arvutused. Klubide vaatamisi hakkame logima 12 kuud, et vältida kuritarvitamist ja et saaksime mängijale tema soovil öelda, millised klubid teda vaatasid.',
+    scoutPrivolitev:
+      'Ülevõetud profiiliga mängija saab lisada, et ta on valmis üleminekuks, oma sünniaasta, soovitud piirkonnad ja loa temaga ühendust võtta. See on nõusolek (GDPR artikli 6 lõike 1 punkt a): seda näevad ainult Scouti klubid, selle saab igal ajal profiilil tagasi võtta ja tagasivõtmisel kustutame andmed. Klubi kirjutab mängijale ainult Scouti kaudu ega näe tema e-posti aadressi.',
+    scoutUgovor:
+      'Vastuväide: klõpsa ülevõetud profiilil Peida mind Scoutist või kirjuta aadressile <eposta>info@slff.eu</eposta> ja lisa link mängija lehele. 14 päeva jooksul peidame mängija Scoutist kõigis meie selle riigi liigades, ka hilisematel importidel. Fantaasiamängus jääb ta alles.',
   },
   klubskiRacun: {
     naslov: 'Klubi ametlik konto',

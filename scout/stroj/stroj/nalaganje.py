@@ -12,34 +12,43 @@ OSEBA = """case when p.reg_st is not null
   else 'i' || coalesce(c.country_id, 0) || ':'
        || lower(coalesce(p.full_name, p.last_name || ' ' || p.first_name)) || ':' || p.team_id end"""
 
-# Ugovor (scout_skrit) velja za vse vrstice osebe v državi (po istih ključih
-# kot anonimizacija, tudi v drugem klubu brez šifre); kdor ima vrstico v
-# mladinski ligi, je izločen, dokler faza 2 ne prinese prijavljene letnice.
-# Anonimizacija počisti le svojo vrstico; ista oseba v drugi ligi izpade po
-# zgoščenih ključih (država + ime ali država + šifra, kot anonimiziraj_igralca).
-# Ključa se izračunata enkrat na vrstico igralca, ime brez klubskega dela:
-# soimenjak v drugem klubu iste države izpade z njim (varneje za zasebnost).
+# Izločene osebe (vse vrstice osebe):
+# - mladinska vrstica ali vrstica z istim ključem (ime ali šifra v državi) kot
+#   katerakoli mladinska vrstica: ista oseba brez šifre v drugem klubu je druga
+#   `oseba`, a izpade z njo (tudi soimenjak). Izjema so le `oseba` vrstic, za
+#   katere je potrjen profil prijavil letnico, s katero je polnoleten vse leto
+#   (scout.odrasle_vrstice: glavna in povezane vrstice) — soimenjakova
+#   prijava tako ne odpre nikogar drugega;
+#   članske minute ima, kdor je sploh v SQL_SEZONE;
+# - ugovor (scout.ugovori) in anonimizacija (anonimizirani_igralci) po
+#   zgoščenih ključih država + ime in država + šifra: velja za vse vrstice
+#   osebe v državi, tudi v drugem klubu brez šifre in ob poznejših uvozih.
+#   Ključ imena nima kluba, zato izpade tudi soimenjak (varneje za zasebnost).
+# Anonimizirana vrstica sama izpade že po anonimiziran_at.
 SQL_IZKLJUCENI = f"""
 with vrstice as (
-  select p.id, {OSEBA} as oseba, p.scout_skrit as skrit,
-         p.scout_skrit or public.je_mladinski_slug(c.slug) as izlocen,
+  select p.id, {OSEBA} as oseba, public.je_mladinski_slug(c.slug) as mladinski,
          public.anonimizacijski_kljuc(c.country_id || '|' || p.full_name) as kljuc_ime,
          public.anonimizacijski_kljuc(c.country_id || '|reg|' || p.reg_st) as kljuc_reg
   from public.players p join public.competitions c on c.id = p.competition_id
   where p.anonimiziran_at is null
+), mladi as (
+  select kljuc_ime as kljuc from vrstice where mladinski
+  union select kljuc_reg from vrstice where mladinski
 )
-select v.oseba from vrstice v where v.izlocen
+((select v.oseba from vrstice v where v.mladinski
+  union
+  select v.oseba from vrstice v
+  cross join lateral (values (v.kljuc_ime), (v.kljuc_reg)) k(kljuc)
+  join mladi m on m.kljuc = k.kljuc)
+ except
+ select v.oseba from vrstice v join scout.odrasle_vrstice() o on o.player_id = v.id)
 union
--- Ne kot join z OR: brez statistike na scout_skrit planer izbere nested loop
--- čez CTE (produkcija je obvisela); unija ključev omogoči hash join.
+-- Unija ključev omogoči hash join (join z OR je na produkciji obvisel).
 select v.oseba from vrstice v
 cross join lateral (values (v.kljuc_ime), (v.kljuc_reg)) k(kljuc)
-join (select kljuc_ime as kljuc from vrstice where skrit
-      union select kljuc_reg from vrstice where skrit) s on s.kljuc = k.kljuc
-union
-select v.oseba from vrstice v
-cross join lateral (values (v.kljuc_ime), (v.kljuc_reg)) k(kljuc)
-join public.anonimizirani_igralci a on a.kljuc = k.kljuc
+join (select kljuc from scout.ugovori
+      union select kljuc from public.anonimizirani_igralci) s on s.kljuc = k.kljuc
 """
 
 SQL_SEZONE = f"""

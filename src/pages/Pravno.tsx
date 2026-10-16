@@ -61,6 +61,14 @@ export default function Pravno() {
         <p className="text-slate-300">{t('racun.pravno.grbi')}</p>
       </section>
 
+      <section id="scout" className="scroll-mt-20 space-y-3">
+        <h2 className="text-lg font-bold">{t('racun.pravno.scoutNaslov')}</h2>
+        <p className="text-slate-300">{t('racun.pravno.scoutKaj')}</p>
+        <p className="text-slate-300">{t('racun.pravno.scoutPodlaga')}</p>
+        <p className="text-slate-300">{t('racun.pravno.scoutPrivolitev')}</p>
+        <p className="text-slate-300">{tx('racun.pravno.scoutUgovor', {}, { eposta })}</p>
+      </section>
+
       <section className="space-y-3">
         <h2 className="text-lg font-bold">{t('racun.pravno.fotografijeNaslov')}</h2>
         <p className="text-slate-300">

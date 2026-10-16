@@ -64,6 +64,7 @@ Pravila v izdelku:
 
 - **Samo odrasli.** Mladinske lige (`je_mladinski_slug`) nikoli. Igralec, ki se pojavi tudi v mladinski ligi, je izključen, dokler nima članskih minut in sam ne prijavi letnice ≥ 18 let. Brez prijavljene starosti velja za odraslega, kdor igra le v članskih ligah.
 - **Ugovor = skrit iz Scouta v 14 dneh**: novo stikalo `players.scout_skrit` (velja za vse vrstice osebe v državi, kot anonimizacija); v fantasy igri igralec ostane. Povezava za ugovor na vsaki javni strani igralca.
+  *Faza 2 je to nadomestila (zasebnost):* ugovori so v zaprti `scout.ugovori`, privolitve v zaprti `scout.privolitve` namesto `players.scout_skrit` in stolpcev v `profil_igralca` — glej `docs/scout.md`.
 - **Obvestilo po čl. 14**: nov razdelek "Scout" na `/legal` (kaj klubi vidijo, zakaj, kako dolgo, kako ugovarjati).
 - **Država po državi**: tabela `scout.drzave` (`zaprto` / `pilot` / `odprto`). Odpre jo lastnik (odločitev 16. 10. 2026: podatki so javni, posebnih soglasij zvez ne iščemo). Slovenija je `odprto` od začetka. Katalonija (FCF), Romunija (frf) in Češka ostanejo zaprte.
 - **Dnevnik**: vsako iskanje in ogled profila (klub, igralec, čas), hramba 12 mesecev; zloraba in odgovor na zahtevo po dostopu ("kateri klubi so me gledali").
@@ -111,6 +112,7 @@ slff.eu (fantasy)      scout.slff.eu (nova aplikacija Vite, isti repozitorij: sc
   - stroj: `lige_moc`, `ekipe_elo`, `kazalniki` (igralec × sezona × liga), `indeks`, `vektorji`, `vrzeli` (po klubu), `modeli` (različica, datum, natančnost backtesta);
   - delo kluba: `opazovani`, `dnevnik`, `sporocila` (klub → igralec, posreduje e-pošta, naslov igralca ostane skrit).
 - **Stran igralca na slff.eu**: novi stolpci v `profil_igralca`: `odprt_za_prestop`, `letnik`, `regije`, `kontakt_dovoljen`; `players.scout_skrit`.
+  *Nadomeščeno v fazi 2* z zaprtima tabelama `scout.privolitve` in `scout.ugovori` (`docs/scout.md`).
 - **Dostop**: brskalnik sheme `scout` ne bere neposredno. Vse prek SECURITY DEFINER funkcij (`scout_isci`, `scout_igralec`, `scout_podobni`, `scout_vrzeli`, `scout_opazuj` …), ki preverijo: sedež kluba z aktivno naročnino, odprto državo, igralec ni skrit in ni mladoleten, dnevna meja kluba (npr. 500 profilov na dan); vsak klic gre v dnevnik.
 - **Nočni posel** `slff-scout` (kontejner na strežniku, 05:30, po uvozih): moč lig enkrat tedensko, kazalniki, indeksi in vrzeli vsak dan. Vsak zagon je nova različica modela v eni transakciji — vmesnik nikoli ne vidi napol izračunanih števil.
 - **Tedensko poročilo**: ob ponedeljkih Node delavec (ob delavcu objav) sestavi maile opazovalnih seznamov in vrzeli in jih pošlje prek Mailcowa. PDF prek slike Playwright, ki jo že ima delavec objav.
