@@ -38,6 +38,7 @@ import askf from './askf.mjs'
 import ffa from './ffa.mjs'
 import mascot from './mascot.mjs'
 import lowland from './lowland.mjs'
+import eps from './eps.mjs'
 
 const VIRI = {
   mnzg,
@@ -111,6 +112,9 @@ const VIRI = {
   // Škotska (5. raven): Scottish Lowland Football League prek Match Centra
   // slfl.co.uk (COMET); krogi iz šifer tekem, brez šifer igralcev. Pisno dovoljenje.
   lowland,
+  // Grčija: regionalne zveze EPS na skupni platformi results.php (ena domena na
+  // zvezo, šifra `<domena>:<league_id>`), player_id, brez dresov in vratarja.
+  eps,
 }
 
 /**

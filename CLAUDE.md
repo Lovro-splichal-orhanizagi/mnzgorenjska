@@ -3716,6 +3716,169 @@ Vratar (prvi začetnik) v vseh 330 postavah.
 
 Uvoz (ena za drugo, **brez arhiva**): `gh workflow run uvoz-lige.yml -f
 liga=gb-lowland-east -f cene=true`. Liga je ~80–90 strani tekem po 3 s.
+### Grčija — vir `eps`
+
+Država `GR` ("Ελλάδα", migracija 20261016090700). Vmesnika v grščini, kartice
+in pošte **še ni**, `GR` **ni** v matriki nočnega uvoza — oboje pred vklopom
+(nočni uvoz vklopljene lige sicer tiho ne bere). Šifra lige se začne z `gr-`.
+
+Vir `eps` (`scripts/viri/eps.mjs`) bere regionalne zveze EPS (Ένωση
+Ποδοσφαιρικών Σωματείων), ki imajo vsaka svojo domeno, a isto platformo
+"results.php" (noga "Shipwrecked Frontier Pioneer & UnScrupulous"): epspeir,
+epsana, epsda, epsip, epsdod, epsarg, epsarkadias, epshalkidikis, epski,
+epskyklades, epslak, epsmes, epsxiou, epsf, epsath, epsevias (vse `.gr`;
+Atene imajo nogo "Stargoose"). Lige so Α/Β/Γ
+Κατηγορία zveze (raven 4–6), po skupinah (Όμιλος). HTML iz strežnika,
+Cloudflare brez izziva.
+
+- **Šifra lige je `<domena>:<league_id>`** (`epspeir.gr:726`). Vsaka sezona
+  ima svoj league_id; seznam lig sezone je na `/results/results.php`
+  (izbirnik `period_id`, sezone od 2013-14). Ob novi sezoni se popravi šifra.
+- **Razpored** `/results/display_schedule.php?league_id=N`: krogi
+  `<h2>Nη Αγωνιστική</h2>`, vrstica "Domači - Gostje" (zmagovalec krepko),
+  igrišče, dan, datum `dd/mm/yy`, ura (**atenski čas → ljubljanski −1 h**;
+  `00:00` = ure ni), sodniki, izid. Vrstice nimajo vedno `</tr>`. Atene pišejo
+  sezono s presledkom ("Περιόδου 2026 2027"). **Ime kluba ima lahko " - "**
+  ("ΑΠΟΛΛΩΝ ΑΘΗΝΩΝ - ΔΑΦΝΗ", Atene Β2): par "Domači - Gostje" se razreši po
+  imenih iz ostalih vrstic, prostega kroga (`Ρεπό:`) in krepkega zmagovalca;
+  par, ki ga ni mogoče razrešiti, ustavi uvoz razporeda (prej je vrstica tiho
+  izpadla — 1 tekma na krog). Krogi brez
+  datuma (še nerazpisani) gredo v uvoz šele, ko dobijo datum.
+  **Kontumacija** je izid z oznako `α.α.` (άνευ αγώνος, "0-3 α.α."); igrišče
+  "ΔΕΝ ΘΑ ΔΙΕΞΑΧΘΕΙ" pomeni, da tekme ne bo (klub je izstopil).
+- **Povezavo na tekmo ima razpored le pri nekaterih odigranih** (Vzhodna Atika
+  Γ: 8 od 14). Vse odigrane da **mreža** `/results/display_results.php?league_id=N`
+  (`display_game.php?game_id=N` z izidom); povezava brez izida je neodigrana
+  tekma — je ne beremo.
+- **Zapisnik** `/results/display_game.php?game_id=N`: naslov s sezono, ligo in
+  krogom, klubi, izid, časovnica "Διακύμανση Αποτελέσματος" (ikona, stanje,
+  minuta, igralec v stolpcu domačih ali gostov), postavi "Συμμετοχές"
+  (vrstice 1–11 začetniki, za "Αναπληρωματικοί" klop do 20) in "Γενικές
+  Πληροφορίες" (datum `dd-mm-yyyy`, ura). Ikone: `ball` gol, `ball_yellow` gol
+  z 11 m, `ball_red` **avtogol** (igralec je v stolpcu SVOJE ekipe, gol šteje
+  nasprotniku), `yellowCard`, `redCard`, `yellowRedCards` (drugi rumeni; prvi
+  je svoj dogodek → 1 rumeni + 1 rdeči), `redArrow` izstop, `greenArrow`
+  vstop — **minute so točne**. Dogodke beremo iz časovnice, stolpci postave
+  (minute menjav, goli) so preverba (opozorilo ob neujemanju).
+- **Številka vrstice NI dres** (ista za obe ekipi); dresov vir nima (`st:
+  null`). Postava je v klasičnem vrstnem redu 1–11: **prvi začetnik je
+  vratar** (namig → GK, kot ffm, mlsz; v 71 postavah vzorca 3 izstopi in 1 gol
+  od 111, največ golov v vrstici 9). *Uskladi pozicije* z `vir = eps`; ostale
+  pozicije na glasovanje.
+- **Identiteta**: `player_id` iz `display_player.php?player_id=N`, a vsaka
+  zveza šteje svoje. Šifra osebe (`reg_st`) je zato `<zveza> × 10^7 +
+  player_id` (`ZVEZE` v viru: epspeir 1, epsana 2, epsda 3, epsip 4, epsdod 5,
+  epsarg 6, epsarkadias 7, epshalkidikis 8, epski 9, epskyklades 10, epslak 11,
+  epsmes 12, epsxiou 13, epsf 14, epsath 15, epsevias 16 — **številk nikoli ne
+  spreminjaj**), šifra
+  zapisnika `gr<zveza>-<game_id>` (`gr1-27822`). Imena so "PRIIMEK IME" v
+  velikih grških črkah brez naglasov, kot jih piše zveza — ne pretvarjamo jih
+  (male črke brez naglasov niso pravilna grščina). Letnice rojstva ne beremo
+  (Atene `ageAttention`, Evbeja "(1989)" ob imenu).
+- **Klubi**: ključ brez naglasov, ločil in presledkov (`Α.Ε.` = `ΑΕ`,
+  "Π.Α.Σ.ΑΛΜΥΡΟΣ"), latinične dvojnice grških črk (ΜΕΤΑΣΟYΜΗ) poenotene;
+  druga ekipa ("ΑΡΗΣ ΒΟΥΛΑΣ Β") je svoj klub. Kratko ime brez oblike društva
+  spredaj (ΑΕ, ΑΟ, ΑΣ, ΑΠΣ, ΓΣ, ΠΑΣ …). **Isto ime, drug klub**: zveze so
+  ločene piramide, klub pa je enoličen v državi — `IME_V_ZVEZI` v viru
+  (`<domena>|<ključ>` → ime): ΑΡΓΟΝΑΥΤΗΣ je v Pireju in v Argolidi
+  ("ΑΡΓΟΝΑΥΤΗΣ (Αργολίδα)"), ΠΡΟΜΗΘΕΑΣ je v Pireju in v Atenah
+  ("ΠΡΟΜΗΘΕΑΣ (Αθήνα)"). Pregled 15. 10. 2026 zajel 432 klubov 33 lig (vse
+  vpisane z Atenami in Evbejo); ob novi zvezi ali sezoni preveri trke znova.
+- **Napake strežnika**: Dodekanez (epsdod.gr) vrne **vsako** stran s HTTP 500,
+  a celo; Epir (epsip.gr) vrne 500 pri tekmi s pripombami ("Λοιπές
+  Παρατηρήσεις"), stran pa je odrezana šele za podatki tekme. `epsFetch` obe
+  vzame kot 200; 500 brez cele strani ostane napaka in `zapisniki` tako tekmo
+  preskoči z opozorilom (ne ustavi lige). **401, 403, 429 in izziv** vrže že
+  `epsFetch` (`EpsZavrnitev`, brez ponovitev in brez shranjene strani, izhod 4
+  pri uvozu razporeda in zapisnikov). `vir.zaPredpomnilnik` v predpomnilnik
+  pusti (in iz njega bere) le celo stran platforme ali odrezano tekmo — stran
+  vzdrževanja ali izziv ne obvelja za vselej.
+- **Nepopolni zapisniki**: nekatere tekme imajo le izid brez postav (kot pri
+  `frf`, `fcf`): izid se zapiše, `imported_at` ostane prazen, tekma se bere
+  znova (shranjen nepopoln zapisnik ne velja). Zapisnik, starejši od tedna in
+  poln, se ne bere znova. Nepopoln je tudi zapisnik z obema postavama in
+  izidom z goli, a brez gola v časovnici (Evbeja Γ3 8371, 1:4): zveza
+  časovnico vpiše pozneje, sicer bi tekma po tednu obstala z 0 goli in brez
+  menjav.
+- **Strelec s klopi brez vstopa** (Atene Γ3 84218, Evbeja Β1 7829, Γ3 8373):
+  dobi nastop od gola, ekipa ima zato čez 990 minut (kot pri `fcf`).
+- Navedba vira: zveza (`site_url`) v nogi; `vir_ime`/`vir_url` sta prazna.
+
+**Pravice (pregled 15. 10. 2026, ni pravni nasvet).** robots.txt vrne 404 na
+prvih 14 domenah (brez pravil), pogojev uporabe na straneh ni. **epsath.gr
+(Atene) in epsevias.gr (Evbeja)** tečeta na isti platformi, a robots.txt
+prepove `/results/` (Atene izrecno tudi ClaudeBot in druge AI pajke).
+**Pisno dovoljenje za zajem: pridobil Lovro, oktober 2026** (dovoljenje
+upravljavca za Atene in Evbejo) — beremo ju **le zaradi tega dovoljenja**; če
+ga umaknejo, `gr-ath-` in `gr-ev-` lige izklopi. Dovoljenje NE pokriva
+tehnične zaščite: CAPTCHA, izziv Cloudflare, prijava, 401/403/429 ali
+zakriti podatki uvoz ustavijo — **ne obhajaj**. Za ostale zveze dovoljenja
+nimamo. Beremo odkrito (User-Agent `SLFF fantasy (https://slff.eu)`, **3 s**
+med zahtevki), zaključenih zapisnikov ne beremo znova. **Ob izzivu, CAPTCHI,
+401, 403 ali 429 se uvoz ustavi** (`EpsZavrnitev`, izhod 4). Če nas zveza
+prosi, naj nehamo, njene lige izklopimo.
+
+Preizkus v živo (15. 10. 2026, brez pisanja v bazo): po 8 odigranih tekem vsake
+lige (Arkadija 4, Epir Γ po 5), skupaj 126 zapisnikov, od tega 116 polnih
+(ostali le izid: Vzhodna Atika 5, Zahodna Atika 2, Dodekanez 2, Epir Γ-Β 1),
+postave po 11 pri 228 od 232 ekip (4 z 10 igralci), goli = izid pri vseh
+polnih (386/386), 875 menjav z minuto, 990 minut na ekipo razen ob rdečem
+kartonu ali 10 igralcih. Od konca do konca (razpored, mreža, zapisniki,
+nastopi) Arkadija Α in Epir Γ-Α: 9 zapisnikov, 18/18 postav po 11, goli 36/36.
+
+Preizkus v živo Aten in Evbeje (15. 10. 2026, vsi zapisniki vseh odigranih
+tekem 16 lig, 3,5 s med zahtevki, brez pisanja v bazo): 270 zapisnikov, 256
+polnih, 14 le izid (nepopolni), goli = izid 254/256 (Atene Α2 82981 — strelec
+ni v postavi; Evbeja Γ3 8371 — prazna časovnica pri 1:4), postave po 11 pri
+504/512 ekip (ostale 9–10 igralcev), 1970 menjav, vse z minuto, 990 minut na
+ekipo razen ob rdečem kartonu, manj kot 11 igralcih ali strelcu s klopi brez
+vstopa. Arhiv 2025/26: po dva zapisnika (1. in zadnji krog) vsakega od 15
+arhivov — 30/30 razčlenjenih, 11 + 11 (enkrat 10), goli = izid 29/30.
+
+Vpisanih je 32 lig devetih zvez (migracija 20261016090700), **neaktivnih**:
+
+| liga | tekoča 2026/27 | klubov | arhiv 2025/26 |
+|---|---|---|---|
+| gr-peir-a-1 / -a-2 | `epspeir.gr:726` / `727` | 12 / 12 | `epspeir.gr:605` / `606` (6 / 5 skupnih) |
+| gr-peir-b-1 / -b-2 | `epspeir.gr:738` / `729` | 13 / 13 | `epspeir.gr:607` / `608` (5 / 4) |
+| gr-peir-g-1 / -g-2 | `epspeir.gr:735` / `736` | 12 / 11 | `epspeir.gr:610` / `609` (4 / 4) |
+| gr-ana-a / -b / -g | `epsana.gr:747` / `749` / `748` | 16 / 16 / 14 | `epsana.gr:689` / `690` / `691` |
+| gr-da-a | `epsda.gr:278` | 14 | `epsda.gr:244` |
+| gr-ip-a / -b | `epsip.gr:328` / `329` | 14 / 14 | `epsip.gr:300` / `301` |
+| gr-ip-g-a / -g-b | `epsip.gr:331` / `332` | 11 / 10 | `epsip.gr:303` / `304` (6 / 6) |
+| gr-dod-a | `epsdod.gr:495` | 14 | `epsdod.gr:443` |
+| gr-arg-a1 | `epsarg.gr:1042` | 15 | `epsarg.gr:1020` |
+| gr-ark-a | `epsarkadias.gr:222` | 9 | `epsarkadias.gr:205` |
+| gr-ath-a-1 / -a-2 | `epsath.gr:1534` / `1535` | 17 / 16 | `epsath.gr:1410` / `1411` (5 / 6 skupnih) |
+| gr-ath-b-1 / -b-2 / -b-3 | `epsath.gr:1537` / `1538` / `1539` | 16 / 15 / 16 | `epsath.gr:1413` / `1412` / `1414` (3 / 4 / 4) |
+| gr-ath-g-1 / -g-2 / -g-3 / -g-4 | `epsath.gr:1541` / `1542` / `1543` / `1544` | 12 vsaka | `epsath.gr:1436` / `1435` / `1437` / `1434` (4 / 3 / 3 / 3) |
+| gr-ev-a | `epsevias.gr:272` | 16 | `epsevias.gr:224` (12) |
+| gr-ev-b-1 / -b-2 | `epsevias.gr:273` / `279` | 14 / 14 | `epsevias.gr:218` / `219` (7 / 9) |
+| gr-ev-g-1 / -g-2 / -g-3 | `epsevias.gr:275` / `276` / `277` | 9 / 12 / 11 | `epsevias.gr:220` / `221` / `222` (7 / 7 / 6) |
+
+Pirej in Atene sta skupine 2026/27 preuredila — arhiv je izbran po skupnih
+klubih in je šibek (3–6); vsak arhiv ima ena sama liga. Arhiv Aten in Evbeje:
+`results.php?period_id=14` (Atene) oz. `=4` (Evbeja). Atene Α1 ima 17 klubov
+(prost krog). Play-off, play-out in razvrstilne tekme (`Αγώνες Κατάταξης`) so
+svoja tekmovanja — za arhiv jih ne uvažaj. Vsak arhiv preštej pred uvozom
+(arhivski zapisnik Pireja 2025/26 se razčleni enako kot tekoči).
+
+**Ni vpisano** (15. 10. 2026): Halkidika (`epshalkidikis.gr:110`, `112`),
+Kikladi (`epskyklades.gr:520`, `521`) in Hios (`epsxiou.gr:384`, `385`) — le
+izidi, brez postav (0 od 4 vzorčnih); Ftiotida (`epsf.gr:13`, `14`, `15`) —
+postave brez menjav (11 od 12 zapisnikov), strelci s klopi brez vstopa.
+Skupine vpisanih zvez brez odigrane tekme: Argolida Α2 (`epsarg.gr:1043`,
+`1044`), Arkadija Β (`epsarkadias.gr:223`), Zahodna Atika Β (`epsda.gr:279`),
+Dodekanez Β in Γ (`epsdod.gr:496`, `497`, `501`, `498`, `499`) — vpiši, ko
+se prvi zapisniki razčlenijo. Lakonija (`epslak.gr:407`, `408`) še nima
+odigrane tekme; Kilkis in Mesenija sezone 2026/27 na strani še nimata. Γ
+Εθνική na straneh zvez (raven 3, vodi jo EPO) ni vpisana. Evbeja Γ 4.
+skupina (`epsevias.gr:278`) ni vpisana: en sam poln zapisnik, brez menjav —
+vpiši, ko se menjave pokažejo. Mladinske (Κ12–Κ17) niso vpisane.
+
+Uvoz (ena za drugo): `gh workflow run uvoz-lige.yml -f liga=gr-peir-a-1 -f
+arhiv=epspeir.gr:605 -f cene=true`. Arhiv 240 zapisnikov po 3 s je okoli
+12 minut na ligo (Atene odgovarjajo počasneje, ~5 s na stran).
 
 ### Država obiskovalca
 
