@@ -29,7 +29,7 @@ const JEZIK = { SI: 'sl', SK: 'sk', HR: 'hr', CZ: 'cs', HU: 'hu', AT: 'de', DE: 
 const LOKALE = { sl: 'sl-SI', sk: 'sk-SK', hr: 'hr-HR', cs: 'cs-CZ', hu: 'hu-HU', de: 'de-AT', sr: 'sr-Latn-RS', ro: 'ro-RO', et: 'et-EE', pl: 'pl-PL', es: 'es-ES', lv: 'lv-LV', mk: 'mk-MK',
   el: 'el-GR-u-hc-h23', tr: 'tr-TR', uk: 'uk-UA', hy: 'hy-AM', az: 'az-Latn-AZ', da: 'da-DK', en: 'en-GB' }
 // Kartice držav, ki jih zapiše vite.config.js (karticeDrzav); Slovenija je index.html.
-const KARTICE = ['sk', 'hr', 'cz', 'hu', 'at', 'rs', 'ro', 'ee', 'pl', 'es', 'lv', 'mk', 'gr', 'tr', 'ua', 'am', 'az', 'dk', 'gb', 'mt', 'me', 'ba', 'md']
+const KARTICE = ['sk', 'hr', 'cz', 'hu', 'at', 'de', 'rs', 'ro', 'ee', 'pl', 'es', 'lv', 'mk', 'gr', 'tr', 'ua', 'am', 'az', 'dk', 'gb', 'mt', 'me', 'ba', 'md']
 
 export const esc = (s) =>
   String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])

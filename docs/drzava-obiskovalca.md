@@ -67,7 +67,7 @@ stran, ne lige; države si vstopna stran ne zapomni, le kampanja.
 Hercegovina, sicer `ro` → Romunija, `sr` → Srbija, gola `bs` → Hrvaška).
 Angleščina ni država (tudi `en-GB` ne): Združeno kraljestvo ugane le IP ali
 pas `Europe/London`, Malto še `mt`/`en-MT`. Ruski brskalnik ne kaže na
-Ukrajino. Države z lastnim vmesnikom in pošto: SI, SK, HR, CZ, HU, AT (de),
+Ukrajino. Države z lastnim vmesnikom in pošto: SI, SK, HR, CZ, HU, AT in DE (de),
 RS (sr), RO, EE (et), PL, ES, LV, MK, GR (el), TR, UA (uk), AM (hy), AZ, DK
 (da); z jezikom sosede: GB in MT (en), ME (sr), BA (hr), MD (ro). Vse imajo
 vstop `/<koda države>`, kartico `<koda>.html` in vrstico v matriki nočnega

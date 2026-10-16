@@ -12022,7 +12022,8 @@ preveri(
     const hisne = readFileSync(new URL('./hisne-ekipe.mjs', import.meta.url), 'utf8')
     const tok = readFileSync(new URL('../.github/workflows/hisne-ekipe.yml', import.meta.url), 'utf8')
     const vite = readFileSync(new URL('../vite.config.js', import.meta.url), 'utf8')
-    const drzave = Object.keys(E.JEZIK_DRZAVE).filter((d) => d !== 'SI')
+    // Nemčija (#334) še nima imen hišnih ekip ne klub_stik; ko jih dobi, jo vzemi s seznama izjem.
+    const drzave = Object.keys(E.JEZIK_DRZAVE).filter((d) => d !== 'SI' && d !== 'DE')
     const manjka = drzave.filter((d) => !(d in E.PAS_DRZAVE) || !lastnik.includes(`v_drzava = '${d}'`) || !stik.includes(`'${d}'`) ||
       // Slovaška ima privzeti seznam IMENA.
       (d !== 'SK' && (!new RegExp(`\\b${d}: IMENA_${d}\\b`).test(hisne) || !new RegExp(`const IMENA_${d} = \\[`).test(hisne))) ||
