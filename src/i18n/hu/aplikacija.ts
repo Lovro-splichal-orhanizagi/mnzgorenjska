@@ -27,12 +27,12 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     lestvicaDomov: 'Sörtoplista',
     // Stran /beers (pages/Piva.tsx): brez zneskov.
     stran: {
-      uvod: 'Az SLFF ingyenes. A szervert és a domaint mi fizetjük, ezért minden sör sokat segít. Köszönjük mindenkinek, aki már meghívott minket!',
+      uvod: 'Az SLFF ingyenes menedzserek ezreinek Európa amatőr bajnokságainak százaiban: reklámok, fogadás és fizetős falak nélkül. A söröd fizeti a szervert, a levelezést és a domaint, aztán itt landol a falon, a neveddel és az üzeneteddel. Pontot nem hoz, csak egy nagyon hálás hétfőt. 🍺',
       skupaj: { one: 'Eddig {n} sör', other: 'Eddig {n} sör' },
       piv: { one: '{n} sör', other: '{n} sör' },
       lestvica: 'Támogatók toplistája',
       anonimni: 'Névtelen támogatók',
-      prazno: 'A falon még nincs sör. Légy te az első!',
+      prazno: 'A falon még van hely a nevednek. Légy az elsők között! 🍻',
     },
   },
   noga: {

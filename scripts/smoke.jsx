@@ -7722,6 +7722,12 @@ preveri(
     tHr.naslov === 'SLFF 1. MNL: 5. kolo, 22 boda, 3. mjesto (+2)' && tHr.html.includes('Bok, Ana!') &&
       !slovenskoHr.test(tHr.naslov + tHr.html.replace(/href="[^"]*"/g, '')) &&
       !pomisljaj.test(tHr.naslov + brezNoge(tHr.html)), tHr.naslov)
+  preveri('e-pošta: tedenski pregled, pivo le po krogu nad povprečjem',
+    tSi.html.includes('https://slff.eu/pivo?src=mail-krog') && tSi.html.includes('P.S. SLFF je brezplačen') &&
+      !tSk.html.includes('/pivo') && !tCs.html.includes('/pivo') &&
+      E.sestaviTedenskiPregled(sk, { ...krog, tocke: 40 }).html.includes('pivnej stene') &&
+      E.sestaviTedenskiPregled(si, { ...krog, povprecje: null, mesto: 12 }).html.includes('/pivo') &&
+      !E.sestaviTedenskiPregled(si, { ...krog, povprecje: null, mesto: 13 }).html.includes('/pivo'))
 }
 
 // --- kontumacije: Ptuj, Murska Sobota, Lendava, Maribor ---------------------
