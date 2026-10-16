@@ -163,6 +163,17 @@ export const domov = {
     pravilaKlub: 'Največ {n} iz enega kluba',
     pravilaKapetan: 'Kapetan dobi ×{n}',
     pravilaGol: 'Točke za gol',
-    pravilaOstalo: 'Čista mreža: GK +{gk} · DEF +{def} · Asistenca +{a}',
+    pravilaTeme: {
+      kader: 'Tvoj kader',
+      tocke: 'Točke',
+      kapetan: 'Kapetan in pripomočki',
+    },
+    pravilaCista: 'Čista mreža',
+    pravilaAsistenca: 'Asistenca',
+    pravilaMinute: '60+ minut',
+    pravilaVice: 'Če kapetan ne igra, trak prevzame namestnik',
+    pravilaPripomocki: 'Pripomočki',
+    pravilaWildcard: 'Wildcard: ekipo sestaviš na novo brez kazni',
+    pravilaKlopPlus: 'Klop+: točke šteje tudi klop',
   },
 }

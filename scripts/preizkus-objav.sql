@@ -251,8 +251,8 @@ begin
 
   -- 10. Objave vsak dan (migracija 20261016090000). Liga A dobi tretji klub
   --     (tri tekme 0:0 v krogih 1–3) in neodigrano tekmo 6. kroga (2099-01-10).
-  if exists (select 1 from objava_lige() where slug in ('test-zy-u19', 'test-objave-off'))
-     or not exists (select 1 from objava_lige() where slug = 'test-zy-a') then
+  if exists (select 1 from objava_lige where slug in ('test-zy-u19', 'test-objave-off'))
+     or not exists (select 1 from objava_lige where slug = 'test-zy-a') then
     raise exception '10a. objava_lige: le aktivne članske lige';
   end if;
   insert into teams(id, name, short_name, country_id) overriding system value values (-924003, 'Objave tretji', 'OT', drzava);
@@ -311,7 +311,7 @@ begin
   if has_function_privilege('anon', 'objava_ekipa_tedna(date, date)', 'execute')
      or has_function_privilege('authenticated', 'objava_liga(date, date, text[])', 'execute')
      or has_function_privilege('anon', 'objava_tekme(date, date)', 'execute')
-     or has_function_privilege('authenticated', 'objava_lige()', 'execute') then
+     or has_table_privilege('authenticated', 'objava_lige', 'select') or has_table_privilege('anon', 'objava_lige', 'select') then
     raise exception '10k. nove funkcije objav naj bodo le servisne';
   end if;
   insert into objave (slot, teden, vrsta, jezik, dejstva, napis, objava_ob) values ('tor', '1999-01-05', 'ekipa', 'en', '{}', 'x', now());

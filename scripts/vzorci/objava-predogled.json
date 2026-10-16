@@ -4,16 +4,16 @@
   "do": "2026-10-19",
   "tekme": [
     { "liga": "1. GNL", "drzava": "SI", "datum": "2026-10-18",
-      "domaci": { "ime": "Polet", "grb": null, "mesto": 1, "tocke": 19, "forma": "WWDWW" },
-      "gostje": { "ime": "Sava Kranj", "grb": null, "mesto": 2, "tocke": 16, "forma": "WLWWD" } },
+      "domaci": { "ime": "Polet", "grb": null, "mesto": 1, "tocke": 19 },
+      "gostje": { "ime": "Sava Kranj", "grb": null, "mesto": 2, "tocke": 16 } },
     { "liga": "Kärntner Liga", "drzava": "AT", "datum": "2026-10-17",
-      "domaci": { "ime": "ASKÖ Gmünd", "grb": null, "mesto": 2, "tocke": 24, "forma": "WWWDL" },
-      "gostje": { "ime": "SV Spittal/Drau", "grb": null, "mesto": 1, "tocke": 26, "forma": "WDWWW" } },
+      "domaci": { "ime": "ASKÖ Gmünd", "grb": null, "mesto": 2, "tocke": 24 },
+      "gostje": { "ime": "SV Spittal/Drau", "grb": null, "mesto": 1, "tocke": 26 } },
     { "liga": "Zala I.", "drzava": "HU", "datum": "2026-10-18",
-      "domaci": { "ime": "Zalaszentgróti VFC", "grb": null, "mesto": 1, "tocke": 22, "forma": "WWWWD" },
-      "gostje": { "ime": "Csesztregi Juventus SE", "grb": null, "mesto": 3, "tocke": 19, "forma": "LWWDW" } },
+      "domaci": { "ime": "Zalaszentgróti VFC", "grb": null, "mesto": 1, "tocke": 22 },
+      "gostje": { "ime": "Csesztregi Juventus SE", "grb": null, "mesto": 3, "tocke": 19 } },
     { "liga": "BJ I.", "drzava": "HR", "datum": "2026-10-18",
-      "domaci": { "ime": "NK Mladost Ždralovi", "grb": null, "mesto": 3, "tocke": 17, "forma": "DWWLW" },
-      "gostje": { "ime": "NK Bjelovar", "grb": null, "mesto": 1, "tocke": 21, "forma": "WWWWL" } }
+      "domaci": { "ime": "NK Mladost Ždralovi", "grb": null, "mesto": 3, "tocke": 17 },
+      "gostje": { "ime": "NK Bjelovar", "grb": null, "mesto": 1, "tocke": 21 } }
   ]
 }

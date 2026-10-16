@@ -30,8 +30,12 @@ nadoknadi.
   | sob | 04:00 | 10:30 −50…+75 | **reel** napoved vikenda (`predogled`) | **reel** kako se igra (`pravila`) |
   | ned | 12:00 | 19:00 −45…+90 | številka tedna (`stat`) | najboljše obrambe (`obramba`) |
 
-  Dejstva (servisne SQL, vse prek `objava_lige()` = aktivne, ne mladinske;
-  le uvožene tekme, ne kontumacije; okna v `OKNA` glede na ponedeljek tedna):
+  Dejstva (servisne SQL, vse prek pogleda `objava_lige` = aktivne, ne mladinske,
+  samo za servis; le uvožene tekme, ne kontumacije; okna v `OKNA` glede na
+  ponedeljek tedna). Vse začnejo pri ligah in tekoči sezoni ali oknu krogov,
+  nastope berejo prek indeksov tekme ali igralca; strelci in čiste mreže
+  najprej vzamejo kandidate iz `statistika_igralcev` (60 oz. 40) in jih
+  natančno preštejejo le iz uvoženih tekem:
   - `objava_ekipa_tedna(od, do)` — pet najboljših po poziciji zadnjega kroga
     vsake lige v prejšnjem tednu; `izberiEkipo` izbere formacijo z največ točkami
     (3-4-3 … 5-4-1). Reel: naslov, igrišče (vrste se pojavijo na udarce,
@@ -39,8 +43,9 @@ nadoknadi.
   - `objava_strelci(do)` — strelci sezone (sezona vsake lige, `sezona_lige`).
     Reel: odštevanje #5…#2, #1 s števcem golov, poziv. Najmanj trije.
   - `objava_liga(od, do, izkljuci)` — liga z uvoženo tekmo v zadnjih dveh
-    tednih z največ upravitelji (brez hišnih), lestvica (`lestvica_lige`) z
-    vsaj tremi klubi s tremi tekmami; vrh treh, strelec. **Ista liga ne prej
+    tednih z največ upravitelji (brez hišnih) in vsaj tremi klubi s tremi
+    tekmami (en prehod čez tekme); vrh treh iz `lestvica_lige` (le za izbrano
+    ligo), strelec. **Ista liga ne prej
     kot v 8 tednih** (`LIGA_PREMOR_TEDNOV`: `izkljuci` so `objave.liga`
     srednih objav). Povezava napisa `https://slff.eu/?t=<liga>&src=ig`.
   - `objava_drzava(od, do, izkljuci)` — prva država iz `objava_drzave` (po
@@ -52,10 +57,15 @@ nadoknadi.
   - `objava_cene(od, do)` — največji dvigi cene tedna (le dvigi).
   - `objava_tekme(od, do)` — neodigrane tekme sobote in nedelje, kjer igra
     klub z vrha (oba z vsaj tremi tekmami); najzanimivejša na ligo (vsota mest,
-    razlika točk), največ štiri. Reel: tekma na prizor (domači, VS, gostje, forma).
+    razlika točk), največ štiri. Mesto po pravilu `lestvica_lige`, izračunano v
+    enem prehodu za vse lige s tekmo. Reel: tekma na prizor (domači, VS, gostje
+    z mestom in točkami; **brez forme W/D/L**, objava le slavi).
   - pravila — brez baze: `PRAVILA` v `objave.mjs` (smoke preveri, da je enako
-    `src/lib/pravila.ts` in `tockovanje.ts`). Reel: 15 igralcev, €100M, največ 3
-    iz kluba, kapetan ×3, točke za gol.
+    `src/lib/pravila.ts` in `tockovanje.ts`). **Tri teme** (`temaPravil`:
+    `TEME_PRAVIL[floor(teden ISO / 2) % 3]`, zaporedna liha tedna drugačna):
+    `kader` (15 igralcev, €100M, po pozicijah, največ 3 iz kluba), `tocke` (gol
+    po poziciji, čista mreža, asistenca, 60 minut), `kapetan` (×3, namestnik,
+    Wildcard in Klop+).
   - `objava_stat(od, do)` — goli, tekme, lige in države tedna; "golijada" le,
     ko sta oba kluba dala vsaj tri (slavi oba).
   - `objava_obramba(do)` — klubi z najmanj prejetimi na tekmo (vsaj pet tekem)
@@ -72,6 +82,15 @@ nadoknadi.
   `recordVideo`, ki na enem jedru izpušča sličice). Slika delavca je
   `scripts/hetzner/objave/Dockerfile` (Playwright + ffmpeg iz apt; Playwrightov
   ffmpeg zna le VP8). Mediji osnutka: `reel.mp4`, `naslovnica.jpg`.
+  Za eno jedro in 1,5 GB (`mem_limit: 1536m`): libx264 `veryfast`, ena nit,
+  `rc-lookahead=10`; dnevnik izpiše vrh pomnilnika (node, ffmpeg). Trajanje
+  mora biti 3–90 s (`REEL_TRAJANJE`). Zgodnji izhod ffmpeg, napaka posnetka ali
+  rok **6 minut** (`REEL_ROK`) vrže napako: ffmpeg se ubije, brskalnik zapre,
+  vrstice v `objave` ni.
+- **Neuspel osnutek**: slike ali reel nastanejo pred napisom (Claude se ne
+  kliče, če posnetek pade). Zanka termin, ki pade, poskusi največ trikrat na
+  teden (`NAJVEC_POSKUSOV`, števec v pomnilniku delavca), nato ga ta teden
+  izpusti.
 - **Glasba**: skladbe v `scripts/objave-glasba/` (README: vir in licenca vsake;
   le licence, ki dovolijo rabo v videih na omrežjih, npr. CC0). Izbere se
   najmanj nedavno rabljena (`najmanjRabljena` po `objave.glasba`), začetek
@@ -81,8 +100,9 @@ nadoknadi.
 - **Objava reela**: Instagram vsebnik `media_type=REELS` z `video_url` (in
   `cover_url`), čakanje na FINISHED (do 10 minut), `media_publish`; Facebook
   `/{stran}/video_reels` (start → `rupload.facebook.com` s `file_url` → finish
-  `PUBLISHED`). Napaka kot pri vrtiljaku: `napaka`, brez samodejne ponovitve.
-  Discord dobi MP4 kot priponko (≤ 9,5 MB, sicer povezavo) in gumb "Ustavi".
+  `PUBLISHED`), nato sprašuje `status`, dokler ni objavljen (napaka obdelave ali
+  10 minut → `napaka`). Napaka kot pri vrtiljaku: `napaka`, brez samodejne ponovitve.
+  Discord dobi priponke do skupaj 9,5 MB (kar ne gre zraven, je povezava) in gumb "Ustavi".
 - **Ura objave je naključna** (lastnik: naj bo videti kot človek):
   `casObjave(osnova, razpon, zdaj, rng)` — osnova (pon 10:00, čet 18:00,
   mejnik `objavaMejnika`) + enakomeren odmik iz `TERMINI[slot].razpon`

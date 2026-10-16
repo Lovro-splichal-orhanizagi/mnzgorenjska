@@ -252,9 +252,15 @@ export function vsebinaDosezkov(d) {
 // Pravila igre za reel "How to play". Kopija src/lib/pravila.ts in tockovanje.ts
 // (delavec na strežniku nima src/); smoke preveri, da se ujemata.
 export const PRAVILA = {
-  kader: 15, prvih: 11, proracun: 100, izKluba: 3, kapetan: 3, asistenca: 3,
+  kader: 15, prvih: 11, proracun: 100, izKluba: 3, kapetan: 3, asistenca: 3, minute: 2,
+  pozicije: { GK: 2, DEF: 5, MID: 5, FWD: 3 },
   gol: { GK: 10, DEF: 6, MID: 5, FWD: 4 }, cista: { GK: 5, DEF: 4 },
 }
+
+// Reel "How to play" ima tri teme, da se lihi tedni (B) ne ponavljajo: kader in
+// proračun, točke, kapetan in pripomočki. Zaporedna liha tedna imata drugo temo.
+export const TEME_PRAVIL = ['kader', 'tocke', 'kapetan']
+export const temaPravil = (teden) => TEME_PRAVIL[Math.floor(tedenISO(teden) / 2) % TEME_PRAVIL.length]
 
 // Postave ekipe tedna (branilci-vezisti-napadalci); izbere se tista z največ točkami.
 const FORMACIJE = [[3, 4, 3], [3, 5, 2], [4, 3, 3], [4, 4, 2], [4, 5, 1], [5, 3, 2], [5, 4, 1]]
@@ -345,7 +351,7 @@ export function vsebinaVrste(d, vrsta, slot) {
       return tekme.length ? { ...v, obdobje: obdobje(d.od, d.do), tekme } : null
     }
     case 'pravila':
-      return { ...v, pravila: PRAVILA }
+      return { ...v, pravila: { ...PRAVILA, tema: TEME_PRAVIL.includes(d.tema) ? d.tema : TEME_PRAVIL[0] } }
     case 'stat': {
       if (!(stevilo(d.tekem) > 0)) return null
       const t = d.tekma
@@ -471,21 +477,38 @@ export const NAPISI = {
   },
   pravila: {
     oznaka: 'kako se igra (reel)',
-    poziv: 'The facts are the rules of SLFF. Explain in a few short lines how to play: squad, budget, club limit, captain, and what goals and clean sheets are worth.',
+    poziv: 'The facts are one part of the SLFF rules (the "topic"). Explain that part in a few short, fun lines; do not add rules that are not in the facts.',
     dejstva: (v) => {
       const p = v.pravila
+      if (p.tema === 'tocke') {
+        return {
+          topic: 'scoring', goal_points: { goalkeeper: p.gol.GK, defender: p.gol.DEF, midfielder: p.gol.MID, forward: p.gol.FWD },
+          clean_sheet_points: { goalkeeper: p.cista.GK, defender: p.cista.DEF }, assist_points: p.asistenca, points_for_60_minutes: p.minute,
+        }
+      }
+      if (p.tema === 'kapetan') {
+        return {
+          topic: 'captain and chips', captain_points_multiplier: p.kapetan,
+          vice_captain: 'takes the armband if the captain does not play', chips: ['Wildcard', 'Bench+'],
+        }
+      }
       return {
-        squad_players: p.kader, starting_players: p.prvih, budget_million_euro: p.proracun, max_players_per_club: p.izKluba,
-        captain_points_multiplier: p.kapetan, assist_points: p.asistenca,
-        goal_points: { goalkeeper: p.gol.GK, defender: p.gol.DEF, midfielder: p.gol.MID, forward: p.gol.FWD },
-        clean_sheet_points: { goalkeeper: p.cista.GK, defender: p.cista.DEF },
+        topic: 'squad and budget', squad_players: p.kader, starting_players: p.prvih, budget_million_euro: p.proracun,
+        max_players_per_club: p.izKluba, squad_by_position: p.pozicije,
       }
     },
     vrstice: (v) => {
       const p = v.pravila
-      return ['📋 How to play SLFF', '', `👕 Pick ${p.kader} players with €${p.proracun}M, ${p.prvih} start.`,
-        `🏟️ At most ${p.izKluba} from one club.`, `©️ Your captain scores ×${p.kapetan}.`,
-        `⚽ A goal: ${p.gol.FWD} to ${p.gol.GK} points, an assist ${p.asistenca}, a clean sheet up to ${p.cista.GK}.`]
+      if (p.tema === 'tocke') {
+        return ['📋 How to play SLFF: points', '', `⚽ A goal: ${p.gol.FWD} (FWD) to ${p.gol.GK} (GK) points.`,
+          `🧤 A clean sheet: GK ${p.cista.GK}, DEF ${p.cista.DEF}.`, `🅰️ An assist: ${p.asistenca}. Playing 60 minutes: ${p.minute}.`]
+      }
+      if (p.tema === 'kapetan') {
+        return ['📋 How to play SLFF: captain and chips', '', `©️ Your captain scores ×${p.kapetan}.`,
+          '🔁 The vice-captain takes the armband if the captain does not play.', '🃏 Chips: Wildcard and Bench+.']
+      }
+      return ['📋 How to play SLFF: your squad', '', `👕 Pick ${p.kader} players with €${p.proracun}M, ${p.prvih} start.`,
+        `🧩 ${p.pozicije.GK} GK, ${p.pozicije.DEF} DEF, ${p.pozicije.MID} MID, ${p.pozicije.FWD} FWD.`, `🏟️ At most ${p.izKluba} from one club.`]
     },
   },
   stat: {
@@ -888,11 +911,37 @@ export function sintetiziraj({ trajanje, bpm = 124, seme = 1 }) {
  * strežniku. Sličice gredo v ffmpeg (H.264 + AAC, 30 fps, faststart).
  * Vrne [video.mp4, naslovnica.jpg].
  */
-export async function posnemiReel(v, url, mapa, { glasba = null, seme = 1 } = {}) {
+// Reel: Instagram sprejme 3–90 s; vse posnetje mora končati v REEL_ROK.
+export const REEL_TRAJANJE = [3, 90]
+export const REEL_ROK = 6 * 60e3
+
+/** Največja poraba pomnilnika procesa v MB (Linux: /proc/<pid>/status VmHWM); null drugje. */
+async function vrhPomnilnika(pid) {
+  try {
+    const m = (await readFile(`/proc/${pid}/status`, 'utf8')).match(/VmHWM:\s+(\d+) kB/)
+    return m ? Math.round(Number(m[1]) / 1024) : null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Posname reel strani /objava?reel=1: animacije (CSS in WAAPI) ustavi in vsako
+ * sličico nastavi na točen čas, zato je video gladek tudi na počasnem
+ * strežniku. Sličice gredo v ffmpeg (H.264 + AAC, 30 fps, faststart).
+ * Neuspeh (ffmpeg, brskalnik, REEL_ROK) vrže napako; ffmpeg in brskalnik se
+ * vedno ustavita. Vrne [video.mp4, naslovnica.jpg].
+ */
+export async function posnemiReel(v, url, mapa, { glasba = null, seme = 1, rok = REEL_ROK } = {}) {
   const { chromium } = await import('playwright')
   await mkdir(mapa, { recursive: true })
   const brskalnik = await chromium.launch({ headless: true })
-  try {
+  let ff = null
+  let casovnik
+  const prekinitev = new Promise((_, ne) => {
+    casovnik = setTimeout(() => ne(new Error(`reel: posnetje ni končalo v ${Math.round(rok / 1000)} s`)), rok)
+  })
+  const posnemi = async () => {
     const ctx = await brskalnik.newContext({ viewport: { width: 1080, height: 1920 }, ignoreHTTPSErrors: true })
     await ctx.route(/stats\.slff\.eu/, (r) => r.abort())
     await ctx.addInitScript(([vsebina, j]) => {
@@ -906,6 +955,7 @@ export async function posnemiReel(v, url, mapa, { glasba = null, seme = 1 } = {}
     await stran.evaluate(() => document.fonts.ready)
     await stran.evaluate(() => Promise.all([...document.images].map((i) => i.decode().catch(() => {}))))
     const trajanje = Number(await stran.evaluate(() => document.documentElement.dataset.trajanje))
+    if (!(trajanje >= REEL_TRAJANJE[0] && trajanje <= REEL_TRAJANJE[1])) throw new Error(`reel: trajanje ${trajanje} s ni med ${REEL_TRAJANJE.join(' in ')} s`)
     const naslovnicaOb = Number(await stran.evaluate(() => document.documentElement.dataset.naslovnica ?? 1.5))
     let zvok
     if (glasba) zvok = join(MAPA_GLASBE, glasba)
@@ -915,23 +965,32 @@ export async function posnemiReel(v, url, mapa, { glasba = null, seme = 1 } = {}
     }
     const video = join(mapa, 'reel.mp4')
     const naslovnica = join(mapa, 'naslovnica.jpg')
-    const ff = spawn('ffmpeg', [
+    // Strežnik ima eno jedro in 1,5 GB: hiter preset, ena nit, kratek pogled naprej.
+    ff = spawn('ffmpeg', [
       '-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-',
       // Skladba (30 s): naključen začetek v prvih 12 s, da reeli z isto skladbo zvenijo drugače.
       ...(glasba ? ['-stream_loop', '-1', '-ss', String(zacetekGlasbe(seme)), '-accurate_seek'] : []), '-i', zvok,
       '-map', '0:v:0', '-map', '1:a:0', '-t', String(trajanje),
       '-af', `afade=t=in:st=0:d=0.4,afade=t=out:st=${Math.max(trajanje - 1.5, 0)}:d=1.5`,
-      '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p', '-r', String(FPS), '-g', String(FPS * 2),
+      '-c:v', 'libx264', '-preset', 'veryfast', '-threads', '1', '-x264-params', 'rc-lookahead=10', '-crf', '21',
+      '-pix_fmt', 'yuv420p', '-r', String(FPS), '-g', String(FPS * 2),
       '-c:a', 'aac', '-b:a', '160k', '-ar', '48000', '-ac', '2', '-movflags', '+faststart', video,
-    ], { stdio: ['pipe', 'inherit', 'pipe'] })
+    ], { stdio: ['pipe', 'ignore', 'pipe'] })
     let napaka = ''
-    ff.stderr.on('data', (x) => { napaka += x })
+    ff.stderr.on('data', (x) => { napaka = (napaka + x).slice(-2000) })
+    // Zgodnji izhod ffmpeg: zapis v cev da EPIPE, ki ne sme podreti delavca.
+    ff.stdin.on('error', () => {})
     const konec = new Promise((ok, ne) => {
       ff.on('error', ne)
       ff.on('close', (koda) => (koda === 0 ? ok() : ne(new Error(`ffmpeg ${koda}: ${napaka.slice(-500)}`))))
     })
+    konec.catch(() => {}) // obdelamo spodaj; brez tega bi zgodnja napaka postala neobdelana
+    let koncan = false
+    konec.then(() => { koncan = true }, () => { koncan = true })
+    let vrhFf = null
     const slik = Math.round(trajanje * FPS)
     for (let i = 0; i < slik; i++) {
+      if (koncan) await konec // ffmpeg je odšel pred koncem: vrže njegovo napako
       await stran.evaluate((ms) => {
         for (const a of document.getAnimations()) {
           a.pause()
@@ -940,15 +999,26 @@ export async function posnemiReel(v, url, mapa, { glasba = null, seme = 1 } = {}
       }, (i * 1000) / FPS)
       const slika = await stran.screenshot({ type: 'jpeg', quality: 92 })
       if (i === Math.round(naslovnicaOb * FPS)) await writeFile(naslovnica, slika)
-      if (!ff.stdin.write(slika)) await new Promise((r) => ff.stdin.once('drain', r))
+      if (!ff.stdin.write(slika)) await Promise.race([new Promise((r) => ff.stdin.once('drain', r)), konec])
+      if (i % FPS === 0) vrhFf = (await vrhPomnilnika(ff.pid)) ?? vrhFf
     }
     ff.stdin.end()
     await konec
+    const mb = (x) => (x == null ? '?' : `${x} MB`)
+    console.log(`${new Date().toISOString()} Reel ${v.vrsta}: ${slik} sličic, pomnilnik vrh node ${mb(Math.round(process.resourceUsage().maxRSS / 1024))}, ffmpeg ${mb(vrhFf)}`)
     return [video, naslovnica]
+  }
+  const delo = posnemi()
+  delo.catch(() => {}) // po prekinitvi se delo konča z napako zaprtega brskalnika; ta ni več pomembna
+  try {
+    return await Promise.race([delo, prekinitev])
   } finally {
-    await brskalnik.close()
+    clearTimeout(casovnik)
+    if (ff && ff.exitCode === null) ff.kill('SIGKILL')
+    await brskalnik.close().catch(() => {})
   }
 }
+
 
 // --- Discord ------------------------------------------------------------------------
 
@@ -980,12 +1050,16 @@ async function vDiscord(webhook, { naslov, napis: besedilo, povzetek: pov, poti,
   const obrazec = new FormData()
   const vec = []
   let i = 0
+  let skupaj = 0
   for (const pot of poti) {
     const mp4 = pot.endsWith('.mp4')
-    if (mp4 && (await stat(pot)).size > DISCORD_NAJVEC) {
-      vec.push(`🎬 Video (prevelik za Discord): <${povezave[pot] ?? pot}>`)
+    // Meja velja za vse priponke skupaj; kar je ne prestane, gre kot povezava.
+    const velikost = (await stat(pot)).size
+    if (skupaj + velikost > DISCORD_NAJVEC) {
+      vec.push(`${mp4 ? '🎬 Video' : '🖼️ Slika'} (prevelik za Discord): <${povezave[pot] ?? pot}>`)
       continue
     }
+    skupaj += velikost
     obrazec.append(`files[${i}]`, new Blob([await readFile(pot)], { type: mp4 ? 'video/mp4' : 'image/jpeg' }), mp4 ? 'reel.mp4' : `${i + 1}.jpg`)
     i++
   }
@@ -1110,7 +1184,7 @@ export async function objaviInstagramReel({ video, naslovnica, napis: besedilo, 
  * Facebook reel strani: začetek nalaganja, Facebook sam prenese video z
  * naslova (rupload, `file_url`), konec z objavo. Vrne povezavo.
  */
-export async function objaviFacebookReel({ video, napis: besedilo, env, f = fetch }) {
+export async function objaviFacebookReel({ video, napis: besedilo, env, f = fetch, cakajMs = cakaj }) {
   const osnova = grafOsnova(env)
   const token = env.META_PAGE_TOKEN
   const stran = env.META_PAGE_ID
@@ -1121,6 +1195,16 @@ export async function objaviFacebookReel({ video, napis: besedilo, env, f = fetc
   const o = await r.json().catch(() => ({}))
   if (!r.ok || o.error || !o.success) throw new Error(`Meta rupload: ${o.error?.message ?? o.debug_info?.message ?? r.status}`)
   await graf(f, osnova, `${stran}/video_reels`, { upload_phase: 'finish', video_id: id, video_state: 'PUBLISHED', description: besedilo, access_token: token })
+  // Facebook video obdela sam; počakamo, da je objavljen ali da javi napako (največ 10 minut).
+  for (let i = 0; ; i++) {
+    const { status: s = {} } = await graf(f, osnova, id, { fields: 'status', access_token: token }, 'GET')
+    if (s.video_status === 'error' || s.processing_phase?.status === 'error' || s.publishing_phase?.status === 'error') {
+      throw new Error(`Meta reel ${id}: ${s.processing_phase?.error?.message ?? s.publishing_phase?.error?.message ?? 'napaka obdelave'}`)
+    }
+    if (s.video_status === 'ready' && (!s.publishing_phase || s.publishing_phase.status === 'complete')) break
+    if (i >= 59) throw new Error(`Meta reel ${id}: ni objavljen v 10 minutah`)
+    await cakajMs(10e3)
+  }
   const { permalink_url: url } = await graf(f, osnova, id, { fields: 'permalink_url', access_token: token }, 'GET').catch(() => ({}))
   return url ? new URL(url, 'https://www.facebook.com').href : `https://www.facebook.com/reel/${id}`
 }
@@ -1145,7 +1229,7 @@ async function nedavneSrede(db, stolpec, teden) {
  * (objava_dosezki), ostali dnevi po vrsti tedna (RPC); pravila ne rabijo baze.
  */
 async function dejstvaTermina(db, slot, teden, vrsta = slot) {
-  if (vrsta === 'pravila') return {}
+  if (vrsta === 'pravila') return { tema: temaPravil(teden) }
   const { od, do: doo } = TERMINI[slot].vrsti ? oknoVrste(vrsta, teden) : okno(slot, teden)
   const p = { ...(od ? { p_od: od } : {}), p_do: doo }
   const klic = async (x) => {
@@ -1166,6 +1250,10 @@ async function dejstvaTermina(db, slot, teden, vrsta = slot) {
 export const vsebinaTermina = (d, slot) => (slot === 'pon' ? vsebinaDrzav(d) : vsebinaDosezkov(d))
 
 const cakaj = (ms) => new Promise((r) => setTimeout(r, ms))
+
+// Osnutek, ki pade (reel, Claude, Discord), zanka poskusi največ trikrat na termin in teden.
+export const NAJVEC_POSKUSOV = 3
+export const smeZnova = (neuspehi, kljuc) => (neuspehi.get(kljuc) ?? 0) < NAJVEC_POSKUSOV
 
 const log = (s) => console.log(`${new Date().toISOString()} ${s}`)
 
@@ -1204,7 +1292,7 @@ export async function osnutek({ db, slot, teden, vrsta, dejstva, suho, url, mapa
   }
   const jezik = JEZIK
   const oznaka = mejnik ? `mejnik ${mejnik}` : NAPISI[v.vrsta]?.oznaka ?? (slot === 'pon' ? 'države' : 'dosežki tedna')
-  const n = await napis(v, env.ANTHROPIC_API_KEY)
+  // Najprej slike ali reel (lahko padejo), šele nato Claude: neuspel poskus ne stane napisa.
   // Naključni del: slike so javne (/objave-mediji/), osnutek pa naj se ne da uganiti.
   const pot = join(mapa, `${teden}-${slot}-${randomBytes(6).toString('hex')}`)
   let glasba = null
@@ -1217,6 +1305,7 @@ export async function osnutek({ db, slot, teden, vrsta, dejstva, suho, url, mapa
   } else {
     poti = await posnemi(v, url, pot)
   }
+  const n = await napis(v, env.ANTHROPIC_API_KEY)
   const pov = povzetek(v)
   // Čas objave šele zdaj (po napisu in slikah), da veto res traja VETO.
   const objavaOb = casObjave(osnova, razpon, new Date(Math.max(zdaj.getTime(), Date.now())))
@@ -1287,7 +1376,7 @@ export async function objaviZapadle({ db, env, mapa, zdaj = Date.now(), f = fetc
       if (slike[0]?.endsWith('.mp4')) {
         const [video, naslovnica] = slike
         izid.ig_povezava = await objaviInstagramReel({ video, naslovnica, napis: o.napis, env, f, cakajMs })
-        izid.fb_povezava = await objaviFacebookReel({ video, napis: o.napis, env, f })
+        izid.fb_povezava = await objaviFacebookReel({ video, napis: o.napis, env, f, cakajMs })
       } else {
         izid.ig_povezava = await objaviInstagram({ slike, napis: o.napis, env, f, cakajMs })
         izid.fb_povezava = await objaviFacebook({ slike, napis: o.napis, env, f })
@@ -1343,14 +1432,19 @@ async function main() {
     return
   }
   log('Objave: zanka teče (vsakih 10 minut).')
+  // Neuspeli poskusi po terminu in tednu: največ NAJVEC_POSKUSOV, nato termin ta teden izpade.
+  const neuspehi = new Map()
   for (;;) {
     const zdaj = new Date()
     // Mejnik uporabnikov: vsak obhod pogleda, ali je dosežen (osnutek enkrat na mejnik).
     for (const t of [...terminiZdaj(zdaj), { slot: 'mejnik', teden: ponedeljek(datumLj(zdaj)) }]) {
+      const kljuc = `${t.slot} ${t.teden}`
+      if (!smeZnova(neuspehi, kljuc)) continue
       try {
         await osnutek({ db, slot: t.slot, teden: t.teden, suho: false, url, mapa, env })
       } catch (e) {
-        console.error(`Objava ${t.slot} ${t.teden} ni uspela: ${e.message}`)
+        neuspehi.set(kljuc, (neuspehi.get(kljuc) ?? 0) + 1)
+        console.error(`Objava ${kljuc} ni uspela (${neuspehi.get(kljuc)}. poskus od ${NAJVEC_POSKUSOV}): ${e.message}`)
       }
     }
     try {

@@ -191,13 +191,6 @@ function KlubTekme({ k, ob, kako }: { k: KlubLestvice; ob: number; kako: 'levo' 
           <Cip className="text-4xl">#{k.mesto}</Cip>
           <span className="font-bold text-slate-200">{stevilo(k.tocke)} {t('domov.objava.tock')}</span>
         </div>
-        {k.forma && (
-          <div className="mt-3 flex gap-2">
-            {[...k.forma].map((f, i) => (
-              <span key={i} className={`grid h-11 w-11 place-items-center rounded-lg text-2xl font-black ${f === 'W' ? 'bg-emerald-400 text-slate-950' : f === 'D' ? 'bg-slate-300 text-slate-950' : 'bg-rose-400/80 text-slate-950'}`}>{f}</span>
-            ))}
-          </div>
-        )}
       </div>
     </Vstop>
   )
@@ -295,19 +288,32 @@ function prizori(v: VsebinaObjave, udarec: number): { seznam: PrizorReela[]; nas
       ],
     }
   }
-  // Pravila igre.
+  // Pravila igre: tri teme (kader, točke, kapetan), da se lihi tedni ne ponavljajo.
   const p = v.pravila!
   const vrstice: [string, number][] = [['GK', p.gol.GK], ['DEF', p.gol.DEF], ['MID', p.gol.MID], ['FWD', p.gol.FWD]]
-  return {
-    naslovnica: prvi,
-    seznam: [
-      [4, (od, doo) => <Uvod od={od} doo={doo} naslov={naslov} oznaka="SLFF" udarec={u} />],
+  const Ploscice = ({ od, kosi }: { od: number; kosi: [ReactNode, string][] }) => (
+    <div className="flex w-full justify-center gap-6">
+      {kosi.map(([vrednost, oznaka], k) => (
+        <Vstop key={oznaka} ob={od + 0.1 + k * u * 0.5} kako="pop" className="flex-1 rounded-[2rem] border border-white/10 bg-white/[0.07] px-6 py-8">
+          <div className={`text-8xl font-black ${Z}`}>{vrednost}</div>
+          <div className="mt-2 text-4xl font-bold text-slate-200">{oznaka}</div>
+        </Vstop>
+      ))}
+    </div>
+  )
+  const prizoriTeme: Record<'kader' | 'tocke' | 'kapetan', PrizorReela[]> = {
+    kader: [
       [4, (od, doo) => (
         <Prizor od={od} doo={doo}>
           <Vstop ob={od + 0.05} kako="udarec"><div className={`text-[16rem] font-black leading-none ${Z}`}><Stevec cilj={p.kader} ob={od + 0.1} trajanje={0.8} /></div></Vstop>
           <Vstop ob={od + u}><div className="text-6xl font-black">{t('domov.objava.pravilaKader')}</div></Vstop>
           <Vstop ob={od + u * 2} kako="pop"><Cip className="text-5xl">{t('domov.objava.pravilaProracun', { n: p.proracun })}</Cip></Vstop>
           <Vstop ob={od + u * 2.5}><div className="text-4xl text-slate-300">{t('domov.objava.pravilaPrvih', { n: p.prvih })}</div></Vstop>
+        </Prizor>
+      )],
+      [4, (od, doo) => (
+        <Prizor od={od} doo={doo}>
+          <Ploscice od={od} kosi={(['GK', 'DEF', 'MID', 'FWD'] as const).map((poz): [ReactNode, string] => [<Stevec key={poz} cilj={p.pozicije[poz]} ob={od + 0.2} trajanje={0.5} />, poz])} />
         </Prizor>
       )],
       [4, (od, doo) => (
@@ -320,15 +326,8 @@ function prizori(v: VsebinaObjave, udarec: number): { seznam: PrizorReela[]; nas
           <Vstop ob={od + u * 2.2}><div className="text-7xl font-black">{t('domov.objava.pravilaKlub', { n: p.izKluba })}</div></Vstop>
         </Prizor>
       )],
-      [4, (od, doo) => (
-        <Prizor od={od} doo={doo}>
-          <Vstop ob={od + 0.05} kako="pop">
-            <div className="grid h-72 w-72 place-items-center rounded-full border-[12px] border-slate-950 bg-[color:var(--zlato)] text-[10rem] font-black text-slate-950">C</div>
-          </Vstop>
-          <Vstop ob={od + u} kako="udarec"><div className={`text-[11rem] font-black leading-none ${Z}`}>×{p.kapetan}</div></Vstop>
-          <Vstop ob={od + u * 2}><div className="text-6xl font-black">{t('domov.objava.pravilaKapetan', { n: p.kapetan })}</div></Vstop>
-        </Prizor>
-      )],
+    ],
+    tocke: [
       [6, (od, doo) => (
         <Prizor od={od} doo={doo}>
           <Vstop ob={od + 0.05}><div className="text-7xl font-black">⚽ {t('domov.objava.pravilaGol')}</div></Vstop>
@@ -343,15 +342,61 @@ function prizori(v: VsebinaObjave, udarec: number): { seznam: PrizorReela[]; nas
               </div>
             ))}
           </div>
-          <Vstop ob={od + u * 3.5}>
-            <div className="text-4xl text-slate-200">{t('domov.objava.pravilaOstalo', { gk: p.cista.GK, def: p.cista.DEF, a: p.asistenca })}</div>
-          </Vstop>
         </Prizor>
       )],
+      [4, (od, doo) => (
+        <Prizor od={od} doo={doo}>
+          <Vstop ob={od + 0.05} kako="pop"><div className="text-[9rem] leading-none">🧤</div></Vstop>
+          <Vstop ob={od + u * 0.5}><div className="text-7xl font-black">{t('domov.objava.pravilaCista')}</div></Vstop>
+          <Ploscice od={od + u} kosi={[[`+${p.cista.GK}`, 'GK'], [`+${p.cista.DEF}`, 'DEF']]} />
+        </Prizor>
+      )],
+      [4, (od, doo) => (
+        <Prizor od={od} doo={doo}>
+          <Ploscice od={od} kosi={[[`+${p.asistenca}`, t('domov.objava.pravilaAsistenca')], [`+${p.minute}`, t('domov.objava.pravilaMinute')]]} />
+        </Prizor>
+      )],
+    ],
+    kapetan: [
+      [4, (od, doo) => (
+        <Prizor od={od} doo={doo}>
+          <Vstop ob={od + 0.05} kako="pop">
+            <div className="grid h-72 w-72 place-items-center rounded-full border-[12px] border-slate-950 bg-[color:var(--zlato)] text-[10rem] font-black text-slate-950">C</div>
+          </Vstop>
+          <Vstop ob={od + u} kako="udarec"><div className={`text-[11rem] font-black leading-none ${Z}`}>×{p.kapetan}</div></Vstop>
+          <Vstop ob={od + u * 2}><div className="text-6xl font-black">{t('domov.objava.pravilaKapetan', { n: p.kapetan })}</div></Vstop>
+        </Prizor>
+      )],
+      [4, (od, doo) => (
+        <Prizor od={od} doo={doo}>
+          <Vstop ob={od + 0.05} kako="pop">
+            <div className="grid h-60 w-60 place-items-center rounded-full border-[10px] border-[color:var(--zlato)] bg-slate-950 text-[8rem] font-black text-[color:var(--zlato)]">V</div>
+          </Vstop>
+          <Vstop ob={od + u}><div className="text-6xl font-black leading-tight">{t('domov.objava.pravilaVice')}</div></Vstop>
+        </Prizor>
+      )],
+      [5, (od, doo) => (
+        <Prizor od={od} doo={doo}>
+          <Vstop ob={od + 0.05}><div className="text-7xl font-black">🃏 {t('domov.objava.pravilaPripomocki')}</div></Vstop>
+          {[t('domov.objava.pravilaWildcard'), t('domov.objava.pravilaKlopPlus')].map((x, k) => (
+            <Vstop key={x} ob={od + u * (1 + k)} kako={k ? 'desno' : 'levo'} className="w-full rounded-[2rem] border border-white/10 bg-white/[0.07] px-10 py-8 text-5xl font-black">
+              {x}
+            </Vstop>
+          ))}
+        </Prizor>
+      )],
+    ],
+  }
+  return {
+    naslovnica: prvi,
+    seznam: [
+      [4, (od, doo) => <Uvod od={od} doo={doo} naslov={naslov} oznaka={t(`domov.objava.pravilaTeme.${p.tema}`)} udarec={u} />],
+      ...prizoriTeme[p.tema],
       poziv,
     ],
   }
 }
+
 
 export function Reel({ v }: { v: VsebinaObjave }) {
   const udarec = 60 / (v.bpm ?? 124)

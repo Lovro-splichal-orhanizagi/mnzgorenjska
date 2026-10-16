@@ -89,7 +89,6 @@ export interface KlubLestvice {
   grb?: string | null
   tocke: number
   tekme?: number
-  forma?: string
 }
 
 export interface VsebinaObjave {
@@ -106,7 +105,10 @@ export interface VsebinaObjave {
   }
   drzavaTedna?: DrzavaObjave & { lig: number; upraviteljev: number; ekip: number }
   tekme?: { liga: string; drzava?: string; zastava?: string; dan: string; domaci: KlubLestvice; gostje: KlubLestvice }[]
-  pravila?: { kader: number; prvih: number; proracun: number; izKluba: number; kapetan: number; asistenca: number; gol: Record<Pozicija, number>; cista: { GK: number; DEF: number } }
+  pravila?: {
+    tema: 'kader' | 'tocke' | 'kapetan'; kader: number; prvih: number; proracun: number; izKluba: number; kapetan: number; asistenca: number
+    minute: number; pozicije: Record<Pozicija, number>; gol: Record<Pozicija, number>; cista: { GK: number; DEF: number }
+  }
   stat?: {
     golov: number; tekem: number; lig: number; drzav: number; naTekmo: number
     tekma?: { liga: string; drzava?: string; zastava?: string; domaci: string; domaci_grb?: string | null; gostje: string; gostje_grb?: string | null; goli_domaci: number; goli_gostje: number } | null

@@ -8371,17 +8371,53 @@ preveri(
   preveri('objave: Instagram reel (REELS z videom, objava)', reel === 'https://www.instagram.com/p/X/' && klici[0].params.media_type === 'REELS'
     && klici[0].params.video_url.endsWith('reel.mp4') && klici.some((k) => k.pot.endsWith('/media_publish')))
   klici = []
-  const lazenFb = async (url, init) => {
+  // Facebook: status videa se sprašuje, dokler ni objavljen (ali napaka).
+  const lazenFb = (stanja) => async (url, init) => {
     klici.push({ url: String(url), init })
     if (String(url).includes('rupload')) return Response.json({ success: true })
     if (init?.body?.get?.('upload_phase') === 'start') return Response.json({ video_id: 'V1' })
+    if (!init && String(url).includes('fields=status')) return Response.json({ status: stanja.shift() })
     if (!init) return Response.json({ permalink_url: '/reel/V1' })
     return Response.json({ success: true })
   }
-  const fbr = await o.objaviFacebookReel({ video: 'https://slff.eu/objave-mediji/r/reel.mp4', napis: 'N', env, f: lazenFb })
+  const obdelava = { video_status: 'processing', publishing_phase: { status: 'not_started' } }
+  const objavljen = { video_status: 'ready', publishing_phase: { status: 'complete' } }
+  const fbr = await o.objaviFacebookReel({ video: 'https://slff.eu/objave-mediji/r/reel.mp4', napis: 'N', env, f: lazenFb([obdelava, objavljen]), cakajMs: async () => {} })
   const rup = klici.find((k) => k.url.includes('rupload'))
-  preveri('objave: Facebook reel (start, rupload z file_url, finish)', fbr === 'https://www.facebook.com/reel/V1'
-    && rup.init.headers.file_url.endsWith('reel.mp4') && klici.some((k) => k.init?.body?.get?.('upload_phase') === 'finish'))
+  preveri('objave: Facebook reel (start, rupload z file_url, finish, čaka na objavo)', fbr === 'https://www.facebook.com/reel/V1'
+    && rup.init.headers.file_url.endsWith('reel.mp4') && klici.some((k) => k.init?.body?.get?.('upload_phase') === 'finish')
+    && klici.filter((k) => k.url.includes('fields=status')).length === 2)
+  klici = []
+  napaka = ''
+  await o.objaviFacebookReel({ video: 'x.mp4', napis: 'N', env, cakajMs: async () => {},
+    f: lazenFb([{ video_status: 'error', processing_phase: { status: 'error', error: { message: 'slab video' } } }]) }).catch((e) => { napaka = e.message })
+  preveri('objave: Facebook reel z napako obdelave vrže napako', napaka.includes('slab video'), napaka)
+  napaka = ''
+  await o.objaviFacebookReel({ video: 'x.mp4', napis: 'N', env, cakajMs: async () => {}, f: lazenFb(Array(70).fill(obdelava)) }).catch((e) => { napaka = e.message })
+  preveri('objave: Facebook reel brez objave v 10 minutah je napaka', napaka.includes('10 minutah'), napaka)
+
+  // Pregled: tri teme pravil, zaporedna liha tedna drugačna; začetnice grbov; poskusi.
+  const B = ['2026-10-12', '2026-10-26', '2026-11-09', '2026-11-23'].map((x) => o.dodajDni(x, 7)) // lihi tedni 43, 45, 47, 49
+  const teme = B.map(o.temaPravil)
+  preveri('objave: pravila — tema se menja vsak lihi teden', B.every((x) => o.tedenISO(x) % 2 === 1)
+    && teme.every((x, i) => i === 0 || x !== teme[i - 1]) && new Set(teme).size === 3, teme.join())
+  preveri('objave: pravila — kader po pozicijah in minute iz src', JSON.stringify(P.pozicije) === JSON.stringify(Object.fromEntries(Object.entries(_p).map(([k, x]) => [k, x.kader])))
+    && P.minute === TOCKE.nastopOd60)
+  for (const tema of o.TEME_PRAVIL) {
+    const v = o.vsebinaVrste({ tema }, 'pravila', 'sob')
+    const nn = o.predlogaNapisa(v)
+    const html = renderToString(<StaticRouter location="/objava"><Reel v={v} /></StaticRouter>).replace(/<style[\s\S]*?<\/style>/g, '').replace(/<[^>]+>/g, '')
+    preveri(`objave: pravila — tema ${tema}`, v.pravila.tema === tema && !o.preveriNapis(nn, o.dejstvaZaNapis(v)).length && !/undefined|NaN|null/.test(html),
+      o.preveriNapis(nn, o.dejstvaZaNapis(v)).join())
+  }
+  const { zacetniceKluba } = await import('../src/lib/pomozno.ts')
+  preveri('grb: začetnice brez oklepajev in ločil', zacetniceKluba('Rust (NÖ)') === 'R' && zacetniceKluba('BORAC (Ostružnica)') === 'B'
+    && zacetniceKluba('NK Polet (SK)') === 'NP' && zacetniceKluba('Niko Železniki') === 'NŽ' && zacetniceKluba('SV Spittal/Drau') === 'SS'
+    && zacetniceKluba('"Колос" Полонне') === 'КП' && zacetniceKluba('X', 'abcd') === 'ABC' && zacetniceKluba(null) === '')
+  const neuspehi = new Map([['tor 2026-10-12', 2]])
+  preveri('objave: največ trije poskusi na termin in teden', o.smeZnova(neuspehi, 'tor 2026-10-12') && o.smeZnova(neuspehi, 'sre 2026-10-12')
+    && !o.smeZnova(new Map([['tor 2026-10-12', 3]]), 'tor 2026-10-12'))
+  preveri('objave: predogled brez forme (W/D/L)', !JSON.stringify(o.vsebinaVrste(beri('objava-predogled.json'), 'predogled', 'sob')).includes('forma'))
 }
 
 {

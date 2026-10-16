@@ -163,6 +163,17 @@ export const domov: NonNullable<Prevod['domov']> = {
     pravilaKlub: 'Max {n} from one club',
     pravilaKapetan: 'Your captain scores ×{n}',
     pravilaGol: 'Points for a goal',
-    pravilaOstalo: 'Clean sheet: GK +{gk} · DEF +{def} · Assist +{a}',
+    pravilaTeme: {
+      kader: 'Your squad',
+      tocke: 'Points',
+      kapetan: 'Captain & chips',
+    },
+    pravilaCista: 'Clean sheet',
+    pravilaAsistenca: 'Assist',
+    pravilaMinute: '60+ minutes',
+    pravilaVice: 'Your vice-captain takes the armband if the captain doesn’t play',
+    pravilaPripomocki: 'Chips',
+    pravilaWildcard: 'Wildcard: rebuild your team for free',
+    pravilaKlopPlus: 'Bench+: your bench scores too',
   },
 }
