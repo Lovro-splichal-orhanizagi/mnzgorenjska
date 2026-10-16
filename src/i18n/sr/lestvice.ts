@@ -254,7 +254,7 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     objavljena: 'Mini liga je sada javna.',
     skrita: 'Mini liga je ponovo privatna.',
     shranjeno: 'Sačuvano.',
-    pravila: 'Ime i opis javne lige vide svi, pa za njih važe ista pravila kao za prikazno ime.',
+    pravila: 'Ime i opis javne lige vide svi, pa za njih važe ista pravila kao za ime za prikaz.',
     brezEkipe: 'Za javnu mini ligu ti treba tim u ligi u kojoj je objavljuješ.',
     stran: 'Javna stranica lige',
     niLige: 'Ova mini liga ne postoji ili nije javna.',

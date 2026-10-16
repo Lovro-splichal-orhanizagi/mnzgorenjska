@@ -2,14 +2,14 @@
 //
 // USL League Two (amaterska 4. raven v ZDA, maj–avgust) vodi tekme v sistemu
 // Modular11; uslleaguetwo.com ga vgradi (iframe modular11.com/league-schedule/
-// league-two). Prvi vir zunaj Evrope. Glej CLAUDE.md (ZDA — vir `modular11`).
+// league-two). Prvi vir zunaj Evrope. Glej docs/viri/zda.md (ZDA — vir `modular11`).
 //
 // SEZONA je koledarsko leto: 2026 = "2026" (`competitions.sezona_koledarska`).
 //
 // ŠIFRA LIGE je `<turnir>/<divizija>/<leto>` (`24/52/2026` = Southwest 2026).
 // Turnir 24 je League Two, divizija je id iz izbirnika "Division" (Southwest 52,
 // Northeast 41 …), leto omeji razpon datumov. Ob novi sezoni se popravi le leto
-// (glej CLAUDE.md, kako preveriti, da so id-ji divizij ostali isti).
+// (glej docs/viri/zda.md, kako preveriti, da so id-ji divizij ostali isti).
 //
 // RAZPORED je navaden GET `/public_schedule/league/get_matches?tournament=24&
 // start_date=<leto>-01-01 00:00:00&end_date=<leto>-12-31 23:59:59&match_type=2&
@@ -442,7 +442,7 @@ export function vZapisnik(html, { id = null, url = null, pas: pasRazporeda = nul
     if (noter) { noter.vratar = true; noter.pozicija = 'GK' }
   }
 
-  // Popolnost (glej CLAUDE.md): 11 začetnikov pri obeh, goli = izid, vsaka
+  // Popolnost (glej docs/viri/zda.md): 11 začetnikov pri obeh, goli = izid, vsaka
   // ekipa ima vsaj eno menjavo z minuto in minute niso same enice (vnos brez
   // minut — 1 je privzeta vrednost obrazca).
   const zaEkipo = (idx) => goli.filter((g) => (g.avtogol ? 1 - g.ekipaIdx : g.ekipaIdx) === idx).length

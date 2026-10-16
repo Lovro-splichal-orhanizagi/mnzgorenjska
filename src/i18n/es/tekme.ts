@@ -175,7 +175,7 @@ export const tekme: NonNullable<Prevod['tekme']> = {
     status: {
       naslov: 'Mi estado como votante',
       utezOpis:
-        'Peso de cada voto; se suma al bono de experto si votas a un jugador de tu club.',
+        'Peso de cada voto; se le suma el bono de experto si votas a un jugador de tu club.',
       utez: 'peso {utez}×',
       tocnih: '({pravilni}/{vsi} acertados)',
       klubPoznam: 'Club que conozco bien (experto): mi voto para los jugadores de este club cuenta más:',

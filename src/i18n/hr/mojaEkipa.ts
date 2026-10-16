@@ -173,7 +173,7 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     naprej: 'Dalje',
     razumem: 'Razumijem',
     sestaviNaslov: 'Momčad u jednom kliku',
-    sestaviOpis: 'Klikni ovdje i složit ćemo ti valjanu momčad unutar budžeta. Zatim zamijeni koga god želiš.',
+    sestaviOpis: 'Klikni ovdje i složit ćemo ti valjanu momčad unutar proračuna. Zatim zamijeni koga god želiš.',
     igrisceNaslov: 'Ovo je tvoja momčad',
     igrisceOpis: 'Klikni igrača da vidiš podatke ili ga zamijeniš. Bodove donosi prvih 11, igrač s klupe ulazi ako netko ne igra.',
     shraniNaslov: 'Još samo jedan korak: Spremi',
@@ -227,12 +227,12 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   pripomocki: {
     klopPlusNaslov: 'Bonus Klupa+',
     klopPlusVlozenZa: 'Aktiviran za {krog}. kolo ({sezona}) — u njemu se računaju i bodovi s klupe.',
-    klopPlusVlozen: 'Klupa+ je već aktivirana — u njoj se računaju i bodovi s klupe.',
+    klopPlusVlozen: 'Klupa+ je već aktivirana — u tom kolu se računaju i bodovi s klupe.',
     klopPlusOpis:
       'Jednom u sezoni: u odabranom kolu pribrajaju se i bodovi sve četvorice rezervi.',
     wildcardNaslov: 'Bonus Wildcard',
     wildcardVlozenZa: 'Aktiviran za {krog}. kolo ({sezona}) — prijelazi u njemu su besplatni.',
-    wildcardVlozen: 'Wildcard je već aktiviran — prijelazi u njemu su besplatni.',
+    wildcardVlozen: 'Wildcard je već aktiviran — prijelazi u tom kolu su besplatni.',
     wildcardOpis:
       'Jednom u sezoni: u tom kolu možeš zamijeniti koliko god igrača želiš, bez odbitka bodova.',
     zaklenjen: 'zaključano',
