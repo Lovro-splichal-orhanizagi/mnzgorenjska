@@ -12551,6 +12551,21 @@ preveri(
 }
 
 {
+  // Vite-node uvoze prepiše in podvojenega uvoza ne opazi (16. 10. 2026: dva
+  // `import pflUa` v viri/index.mjs, vsi nočni uvozi padli, smoke zelen).
+  // Zato vire naloži pravi Node, skripte nočnega uvoza pa le preveri (--check),
+  // ker ob uvozu že tečejo.
+  const { spawnSync } = await import('node:child_process')
+  const viri = spawnSync(process.execPath, ['--input-type=module', '-e',
+    `await import(${JSON.stringify(new URL('./viri/index.mjs', import.meta.url).href)})`], { encoding: 'utf8' })
+  preveri('uvoz: Node naloži scripts/viri/index.mjs', viri.status === 0, viri.stderr.split('\n').find(v => /Error/.test(v)) ?? '')
+  for (const skripta of ['uvoz-zapisnikov', 'uvoz-razporeda', 'uvoz-delegiranja', 'uvoz-registracij', 'ugani-pozicije', 'lazni-vratarji', 'nocni-kosi']) {
+    const z = spawnSync(process.execPath, ['--check', new URL(`./${skripta}.mjs`, import.meta.url).pathname], { encoding: 'utf8' })
+    preveri(`uvoz: node --check ${skripta}.mjs`, z.status === 0, z.stderr.split('\n').find(v => /Error/.test(v)) ?? '')
+  }
+}
+
+{
   // Podpis Stripe (stripe-webhook): HMAC-SHA256 nad "t.telo", 5 minut, več v1.
   const skr = 'whsec_test_smoke'
   const telo = '{"id":"evt_1","type":"checkout.session.completed"}'
