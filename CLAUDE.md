@@ -343,8 +343,9 @@ objava, testi): `docs/scout.md`. Bistvo:
   `scout.privolitve`, ne v javnem `profil_igralca`; piše le
   `scout_shrani_privolitev`. Ugovor nikoli ne gre v javno tabelo.
 - Moč lig je **lestvica znotraj države**; primerjav in projekcij čez države
-  ni. Backtest je zdaj `padel` (moč lig ne premaga ablacije za 1 %), zato
-  model ni objavljen.
+  ni. Backtest šteje le pokrite prestopnike in leto izbere po zgodovini;
+  od 16. 10. 2026 je `prestal` (2026: +18,6 % proti naivni, +7,3 % od moči
+  lig) in model je objavljen. Vmesnik bere le zadnji objavljeni model.
 - Shema `scout` ni dostopna `anon`/`authenticated`; delavec se prijavi kot
   `scout_stroj` z geslom (nastavi ga lastnik ročno na strežniku, nikoli v
   git). Država se odpre v `scout.drzave` — **pred drugo državo mora pisanje teči pretočno**, sicer
