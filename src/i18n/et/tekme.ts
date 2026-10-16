@@ -215,4 +215,23 @@ export const tekme: NonNullable<Prevod['tekme']> = {
       vodi: 'Juhib: {pozicija}, kaal {utez} / {prag}',
     },
   },
+  // Razlaga točk in cene na mestu (components/Razlaga.tsx).
+  razlaga: {
+    zakaj: 'Miks {tocke}? Punktide jaotus',
+    zapri: 'Sulge',
+    ostalo: 'Muu',
+    brezPozicije: 'Positsioon pole veel määratud, seega värav punkte veel ei too. Kui kogukond positsiooni kinnitab, arvutatakse punktid ümber.',
+    pravila1: 'Seda vooru punktitatakse vanemate reeglite järgi: väravavahi nullimäng +4, võidu eest punkte ei ole.',
+    asistence: 'Resultatiivsed söödud kinnitab kogukond hääletusega; kinnitamata sööt punkte veel ei too.',
+    zadnjiKrog: 'Viimane mäng: {krog}. voor',
+    cena: {
+      zakaj: 'Miks selline hind?',
+      zdaj: 'Praegune hind',
+      izhodisce: 'Algushind',
+      izhodisceOpis: 'Algushind arvutatakse eelmise hooaja minutitest ja punktidest, võrreldes liiga teiste mängijatega.',
+      privzeta: 'Kes mängis eelmisel hooajal vähem kui {minut} minutit, alustab hinnaga {cena}, välja arvatud juhul, kui ta mängis kõrgemas liigas; siis tuleb hind sealt.',
+      borza: 'Pärast iga vooru hind muutub: +{korak} iga kahe punkti eest üle 2 (kuni +{najvec} voorus), −{korak} pärast nõrka vooru või nõrka vormi ja −{korak}, kui mängija ei mängi teist vooru järjest, kuigi tema klubi mängib.',
+      razpon: 'Hind on alati vahemikus {od} kuni {do}.',
+    },
+  },
 }

@@ -31,6 +31,12 @@ import lff from './lff.mjs'
 import ffm from './ffm.mjs'
 import fcf from './fcf.mjs'
 import fas from './fas.mjs'
+import aft from './aft.mjs'
+import ncefl from './ncefl.mjs'
+import hoffKm from './hoff-km.mjs'
+import askf from './askf.mjs'
+import ffa from './ffa.mjs'
+import mascot from './mascot.mjs'
 import lowland from './lowland.mjs'
 
 const VIRI = {
@@ -83,6 +89,25 @@ const VIRI = {
   // Španija (Asturija): FutbolAsturiano.es (WordPress SportsPress), ne zveza;
   // liga je blok šifer objav tekem ene sezone, igralec s potjo profila.
   fas,
+  // Ukrajina (Ternopilska oblast): Асоціація футболу Тернопільщини prek
+  // aft.com.ua; postave iz novic (ponatis Газета 1), koledarska sezona.
+  aft,
+  // Anglija (step 5–6): Northern Counties East League prek ncefl.org.uk; brez
+  // šifer igralcev (ime + klub), krog je teden (stran krogov ne pozna).
+  ncefl,
+  // Ukrajina (Hmeljnicka oblast): ХОАФ prek hoff.km.ua (WordPress): razpored je
+  // tabela strani lige, zapisnik objava tekme (REST), imena brez šifer.
+  'hoff-km': hoffKm,
+  // Turčija: pokrajinske amaterske zveze ASKF (platforma FYS: Çanakkale, Aydın);
+  // razpored s postbacki ASP.NET, šifra licence TFF igralca.
+  askf,
+  // Armenija: Football Federation of Armenia (ffa.am), Prva liga; brez šifer
+  // igralcev (ime + klub), vratar je prvi začetnik (namig).
+  ffa,
+  // Grčija: regionalne zveze EPS na platformi Mascotnet (deset domen, šifra
+  // `<domena>:<diorganosi>`), brez šifer igralcev, vratar prvi začetnik (namig).
+  // Pisno dovoljenje upravljavca (Lovro, oktober 2026).
+  mascot,
   // Škotska (5. raven): Scottish Lowland Football League prek Match Centra
   // slfl.co.uk (COMET); krogi iz šifer tekem, brez šifer igralcev. Pisno dovoljenje.
   lowland,

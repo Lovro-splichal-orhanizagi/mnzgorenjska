@@ -2,8 +2,8 @@
 // regijske lige (Region 1–6, od 2026/27 namesto Treta liga).
 //
 // Ista WordPressova predloga kot fss.rs, s predpono `ffm-` namesto `fss-` in
-// podatki iz COMET (šifre tekem so šifre COMET). Glej CLAUDE.md (Severna
-// Makedonija — vir ffm).
+// podatki iz COMET (šifre tekem so šifre COMET). Glej docs/viri/makedonija.md
+// (vir ffm).
 //
 // STRAN LIGE (`/natprevaruvanje/<slug>/`)
 // - Šifra lige je slug strani (`region-1-sezona-26-27`, `prva-mfl27`); arhiv je

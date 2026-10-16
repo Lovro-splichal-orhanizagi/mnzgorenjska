@@ -76,6 +76,8 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
       'U postavi nema mesta za još jednog igrača na toj poziciji. Prvo pošalji nekoga na klupu.',
     niVecNamestnik: '{ime} više nije zamenik. Izaberi novog.',
     niVecKapetan: '{ime} više nije kapiten. Izaberi novog.',
+    kapetanPrevzel: '{ime} je preuzeo kapitensku traku.',
+    namestnikPrevzel: '{ime} je sada zamenik kapitena.',
     rokPotekel: 'Rok {krog}. kola je već istekao, pa promene važe od sledećeg kola.',
     shranjenaZaKrog: 'Tim je sačuvan i spreman za {krog}. kolo.',
     shranjenaVeljavna: 'Tim je sačuvan i ispunjava pravila.',
@@ -91,10 +93,16 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     zapriObvestilo: 'Zatvori obaveštenje',
     odstranjen: '{ime} je uklonjen.',
     razveljavi: 'Poništi',
+    dodan: '{ime} je u tvom timu. Pritisni Sačuvaj.',
+    zeVEkipi: '{ime} je već u tvom timu.',
+    niNaTrgu: 'Ovog igrača trenutno nije moguće kupiti.',
   },
 
-  prijavaPotrebna: 'Za sastavljanje tima moraš da se prijaviš.',
-  prijava: 'Prijava',
+  brezPrijave: {
+    opis: 'Tim možeš da sastaviš bez naloga. Ostaje u ovom pregledaču dok ga ne sačuvaš.',
+    shrani: 'Sačuvaj i napravi nalog',
+    pripravljena: 'Tvoj tim je spreman, sačuvaj ga.',
+  },
   locenaLiga:
     'Tim u ligi <liga>{liga}</liga> odvojen je od timova u drugim ligama, sa svojim budžetom i svojom tabelom. Liga je uključena usred sezone, pa se bodovi računaju od {krog}. kola nadalje. Ranije odigrana kola se ne računaju nikome.',
 
@@ -102,6 +110,11 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   vec: 'Više: bonusi, istorija, pravila',
 
   prestopi: {
+    medSezono: {
+      one: 'Pridružuješ se usred sezone: do roka {krog}. kola tim sastavljaš bez kazne. Zatim svako kolo imaš {n} besplatan transfer, svaki sledeći košta −{kazen}.',
+      few: 'Pridružuješ se usred sezone: do roka {krog}. kola tim sastavljaš bez kazne. Zatim svako kolo imaš {n} besplatna transfera, svaki sledeći košta −{kazen}.',
+      other: 'Pridružuješ se usred sezone: do roka {krog}. kola tim sastavljaš bez kazne. Zatim svako kolo imaš {n} besplatnih transfera, svaki sledeći košta −{kazen}.',
+    },
     stevec: 'Transferi: {n}/{prosti}',
     wildcard: 'wildcard, bez kazne',
     odbitek: 'odbitak {tock} u ovom kolu',
@@ -162,9 +175,9 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     sestaviNaslov: 'Tim u jednom kliku',
     sestaviOpis: 'Klikni ovde i sastavićemo ti važeći tim u okviru budžeta. Zatim zameni koga god želiš.',
     igrisceNaslov: 'Ovo je tvoj tim',
-    igrisceOpis: 'Klikni igrača da vidiš podatke ili ga zameniš. Poene donosi prvih 11, igrač sa klupe ulazi ako neko ne igra.',
+    igrisceOpis: 'Klikni igrača da vidiš podatke ili ga zameniš. Bodove donosi prvih 11, igrač sa klupe ulazi ako neko ne igra.',
     shraniNaslov: 'Još samo jedan korak: Sačuvaj',
-    shraniOpis: 'Kad sačuvaš, skupljaš poene već u sledećem kolu. Tim možeš da menjaš do roka.',
+    shraniOpis: 'Kad sačuvaš, skupljaš bodove već u sledećem kolu. Tim možeš da menjaš do roka.',
   },
   zacetek: {
     naslov: 'Odakle početi?',
@@ -214,12 +227,12 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   pripomocki: {
     klopPlusNaslov: 'Bonus Klupa+',
     klopPlusVlozenZa: 'Aktiviran za {krog}. kolo ({sezona}): u njemu se računaju i bodovi sa klupe.',
-    klopPlusVlozen: 'Klupa+ je već aktivirana: u njoj se računaju i bodovi sa klupe.',
+    klopPlusVlozen: 'Klupa+ je već aktivirana: u tom kolu se računaju i bodovi sa klupe.',
     klopPlusOpis:
       'Jednom u sezoni: u izabranom kolu dodaju se i bodovi sve četvorice rezervi.',
     wildcardNaslov: 'Bonus Wildcard',
     wildcardVlozenZa: 'Aktiviran za {krog}. kolo ({sezona}): transferi u njemu su besplatni.',
-    wildcardVlozen: 'Wildcard je već aktiviran: transferi u njemu su besplatni.',
+    wildcardVlozen: 'Wildcard je već aktiviran: transferi u tom kolu su besplatni.',
     wildcardOpis:
       'Jednom u sezoni: u tom kolu možeš da zameniš koliko god igrača želiš, bez odbitka bodova.',
     zaklenjen: 'zaključano',
@@ -290,8 +303,13 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
 
   // Teren pri sastavljanju tima (components/Igrisce.tsx).
   igrisce: {
-    naKlop: 'Premesti na klupu',
-    vPostavo: 'Stavi u prvu postavu',
+    namigZamenjave: 'Dodirni dres igrača, zatim onog s kojim ga menjaš.',
+    zapriNamig: 'Zatvori savet',
+    izberiZaMenjavo: '{ime}: izaberi za izmenu',
+    prekliciIzbiro: '{ime}: poništi izbor',
+    zamenjajZ: '{ime}: zameni sa igračem {drugi}',
+    izbran: 'Izabran je {ime}. Dodirni označenog igrača za izmenu ili ponovo istog za poništavanje.',
+    brezMenjave: 'Za igrača {ime} nema važeće izmene. Dodirni ga ponovo za poništavanje.',
     niVecVLigiNamig: 'Igrač više nije u ligi, tim sa njim ne dobija bodove.',
     niVecVLigi: 'više nije u ligi',
     poskodba: 'povreda',

@@ -80,17 +80,67 @@ Vsak vir zato pripelje svoj slovar v `naredikljucKluba`.
 `competitions.source_league_code`, ne skripte. Arhiv prejšnje sezone se poda
 z `--liga`.
 
-| zveza | tekoča 2026/27 | arhiv 2025/26 | arhiv 2024/25 |
-|---|---|---|---|
-| mnzg — člani / mladinci | 1601 / 1603 | 1502 / 1503 | — |
-| mnzlj — 1. / 2. liga | 2003 / 2004 | 1904 / 1905 | 1804 / 1805 |
+Šifre slovenskih lig po sezonah (MNZ, 3. SNL `<koda>@<vir>`, U19) in
+posebnosti Nove Gorice so v `docs/viri/slovenija.md`.
 
-**Pri 3. SNL arhiv ni pri istem viru kot tekoča sezona.** Ligo vodi NZS,
-objavi pa jo tista medobčinska zveza, ki ji jo je NZS za to sezono zaupala —
-in skrbništvo se seli. Zato ima šifra v delovnem toku obliko `<koda>@<vir>`:
+## Lige po državah in virih
 
-| liga | tekoča 2026/27 | arhiv |
+Vsaka država oziroma vir ima svojo datoteko: šifre lig (tekoča sezona in
+arhiv), kako vir bere strani, pravice in pogoji branja, kontumacije, vratarji,
+trki imen klubov, preizkusi in ukaz za uvoz. **Preden se dotakneš vira, lige
+ali uvoza države, preberi njeno datoteko**; ob novi ligi ali sezoni posodobi
+tabelo šifer tam, ne tu.
+
+| država | datoteka | viri |
 |---|---|---|
+| Slovenija | `docs/viri/slovenija.md` | stari CMS MNZ, nzs |
+| Slovaška | `docs/viri/slovaska.md` | `sportnet` |
+| Hrvaška | `docs/viri/hrvaska.md` | `hns` |
+| Češka (ustavljeno, CAPTCHA) | `docs/viri/ceska.md` | `facr` |
+| Madžarska | `docs/viri/madzarska.md` | `mlsz` |
+| Avstrija | `docs/viri/avstrija.md` | `oefb` (dovoljenje ÖFB) |
+| Srbija | `docs/viri/srbija.md` | `fsb`, `fss`, `fssid` |
+| Romunija | `docs/viri/romunija.md` | `frf` (brez dovoljenja), `hlf` |
+| Estonija | `docs/viri/estonija.md` | `jalgpall` |
+| Latvija | `docs/viri/latvija.md` | `lff` |
+| Poljska | `docs/viri/poljska.md` | `pzpn` |
+| Španija | `docs/viri/spanija.md` | `fcf`, `fas` |
+| Anglija | `docs/viri/anglija.md` | `ncefl` |
+| Severna Makedonija | `docs/viri/makedonija.md` | `ffm` |
+| Ukrajina | `docs/viri/ukrajina.md` | `aft`, `hoff-km` |
+| Turčija | `docs/viri/turcija.md` | `askf` |
+| Armenija | `docs/viri/armenija.md` | `ffa` |
+
+Pravila, ki veljajo za vse vire (podrobnosti v datotekah):
+
+- **Beremo odkrito in vljudno**: `User-Agent: SLFF fantasy …`, premor med
+  zahtevki po viru, popolnih zapisnikov ne beremo znova, vir je v nogi.
+  **Ob izzivu, CAPTCHI, 401/403/429 se uvoz ustavi (izhod 4) — nikoli ne
+  obhajaj** (drug IP, brskalnik brez glave, nova seja, nižji tempo brez
+  dogovora). Če zveza prosi, naj nehamo, lige države izklopimo.
+- Šifra lige zunaj Slovenije se začne s kodo države (`sk-`, `hr-`, `at-` …),
+  da jezik ob nalaganju ve, katero državo gleda.
+- Nova država potrebuje: vmesnik (`src/i18n/<jezik>/`, `JEZIK_DRZAVE`),
+  kartico `<kd>.html` in Caddy, vejo pošte, imena hišnih ekip in vrstico v
+  matriki nočnega uvoza (`docs/nocni-uvoz.md`) — sicer se njene lige ponoči
+  tiho ne uvažajo.
+- Arhiv lahko uvozi **le ena liga** (`matches.zapisnik_id` je enoličen čez
+  vse vire; zato imajo novejši viri predpono šifre zapisnika, npr. `ee<id>`).
+- Isto ime kluba v dveh zvezah ali krajih je lahko drug klub: vsak vir ima
+  svoj slovar preimenovanj; ob novi ligi preveri trke imen.
+- Koledarska sezona (EE, LV, UA): `competitions.sezona_koledarska`,
+  `sezona_lige(liga)`, oznaka `'2026'` (glej `docs/viri/estonija.md`).
+- Lige z delitvijo sezone (Avstrija `+`, Madžarska felső/alsóház): delitev za
+  arhiv osnovne lige ne uvažaj, sicer pripelje igralce drugih skupin.
+
+Država obiskovalca (katere lige vidi, ugib po IP/jeziku/pasu, tujec, vstopne
+strani `/si`, `/at` …, izbira države): `docs/drzava-obiskovalca.md`. Kratko:
+lige druge države so skrite, `useTekmovanje().tekmovanja` vrne le lige
+gledane države — **nova stran, ki našteva lige ali ekipe več lig, mora
+filtrirati po državi**.
+
+Nočni uvoz po državah in koših (`uvoz-zapisnikov.yml`, `nocni-kosi.mjs`,
+`KOSOV` = matrika): `docs/nocni-uvoz.md`.
 | snl3-vzhod | mnzpt `2026:96` | `2025-26/3-snl-v-25-26@mnzle`, `2024-25/3-snl-v-24-25@mnzle` |
 | snl3-zahod | mnzng `2785` | `1703@mnzlj` (23/24), `1603@mnzlj` (22/23) |
 
@@ -946,6 +996,11 @@ Strani izriše JavaScript, podatki pa so v strani kot JSON
   zamenjanim domačinom) — izpustimo jo. **Kontumacija** ima izid in namesto
   zapisnika povezavo `strafverifiziert` (`#`); v arhivih 14 lig pet takih.
   Kot rezerva šteje še 3:0 s prazno postavo po tednu dni.
+  oefb.at kdaj za minuto vrne stran razporeda s statusom 200, a brez JSON-a
+  razporeda (`appPreloads['NO_DATA']`): nočni uvoz je javljal "Razporeda ni
+  bilo mogoče razbrati", uvoz zapisnikov pa tiho 0 tekem (13.–15. 10. 2026).
+  `stranRazporeda` jo prebere znova po 30 s in 2 min, nato uvoz pade z
+  jasno napako; taka stran ne gre v predpomnilnik (`zaPredpomnilnik`).
 - **Zapisnik** `/bewerbe/Spiel/Spielbericht/<id>/`: začetniki v skupinah
   `tor`/`abwehr`/`mittelfeld`/`sturm` ali vsi v `weitere`, klop v `ersatz`,
   šifra igralca iz `/Profile/Spieler/<id>` → `reg_st`. Dogodki: `goal`
@@ -2688,6 +2743,92 @@ brez baze; ves blok, ~690 strani po 3 s, 0 zavrnitev):
 Uvoz (ena za drugo, brez arhiva): `gh workflow run uvoz-lige.yml -f
 liga=es-as-tercera-g2 -f cene=true`.
 
+### Anglija — vir `ncefl`
+
+Država `GB` ("England"; vpišeta jo ta migracija in migracija lig `isthmian`,
+obe z `on conflict do nothing`). **Šifra angleške lige se začne z `gb-`.**
+Vmesnika v angleščini za državo, kartice in pošte še ni (`JEZIK_DRZAVE.GB`),
+`GB` ni v matriki nočnega uvoza — oboje pred vklopom.
+
+Vir `ncefl` (`scripts/viri/ncefl.mjs`) bere **Northern Counties East Football
+League** (NCEL, step 5–6) z lastne strani lige www.ncefl.org.uk — HTML s
+strežnika, brez izziva. robots.txt vrne 404 (pravil ni), pogojev uporabe
+stran nima. **Lastnik ima dovoljenje lige.** Beremo odkrito (`User-Agent:
+SLFF fantasy (https://slff.eu)`, **3 s** med zahtevki, popolnih zapisnikov
+ne beremo znova). **Ob 401, 403, 429 ali izzivu se uvoz ustavi** —
+`NceflZavrnitev` že v `vir.fetch` (brez ponovitve in mimo shranjenega
+razporeda), izhod 4. Ne obhajaj.
+
+- **Šifra lige je `<divizija>/<leto>`** (`ncelpremierdivision/2026` =
+  2026/27), kot v naslovu strani divizije `/matches/<divizija>/<leto>/`.
+  Ob novi sezoni se popravi le leto; arhiv je isto z lanskim letom. Stran
+  preveri, da je v izbirniku sezone izbrana prav ta pot.
+- **Stran divizije** nosi vse tekme sezone po dnevih (`mddate`): odigrane z
+  izidom ("2-1", "Att", "HT") in povezavo na zapisnik (`mdteamsheet` →
+  `/matches/day/<LLLL>/<LLLLMMDD>/<id>/`), prihodnje z uro ("3:00pm",
+  angleški čas → ljubljanski +1 h). Odigrane nimajo ure.
+- **Krogov stran ne pozna** (ne stran divizije ne zapisnik). Krog je zato
+  **teden** (ponedeljek–nedelja), štet od tedna zadnje julijske sobote
+  (`krogIzDatuma`: 2026/27 od 20. 7. 2026, sobota 25. 7. je 1. krog, torek
+  28. 7. 2. krog). Številka ne zavisi od drugih tekem, zato prestavitev ne
+  preštevilči ostalih. Klub ima lahko v krogu dve tekmi (torek in sobota, kot
+  "double gameweek") ali nobene; v sezoni so tedni brez tekem (vrzel v
+  številkah, npr. Premier 2026/27: 36 krogov od 1 do 37). Borza gleda
+  prejšnji krog po številki — za tednom brez tekem ga ni.
+- **Prestavljena tekma zamenja krog.** Vir ima `krogiPoTednih: true`; uvoz
+  razporeda tekmo istega para (domači:gostje igra v sezoni enkrat) iz drugega
+  kroga **premakne** (`tekmaDrugegaKroga` v `razpored.mjs`), namesto da bi
+  nastala druga vrstica, in pobriše neuvoženo dvojnico para, ki jo je pustil
+  uvoz zapisnikov (`odvecneVrsticePara`). Krog, iz katerega so odšle vse
+  tekme, ostane prazen (zaklene se brez točk).
+- **Posebne vrstice**: "A-A" je prekinjena tekma — s pripisom "… points
+  awarded …" (`mdcomments`) je kontumacija brez izida, sicer čaka ponovitev
+  (neodigrana, `vir_brez_izida`). Izid brez zapisnika s pripisom "unable to
+  field a team - 2-0 win awarded" je kontumacija z izidom (brez pripisa, a z
+  `mdnoinfo`, šele po tednu dni). Odigrana tekma brez zapisnika (2023/24 trije
+  primeri) ostane neuvožena. Izstopljen klub ("record expunged following
+  their resignation", Doncaster City 15. 9. 2026) s strani izgine z vsemi
+  tekmami — uvoz razporeda zato zahteva `--dovoli-manj-klubov`.
+- **Zapisnik**: glava z izidom, polčasom in strelci po imenu z minuto
+  ("41, 71", "82pen", "45og" — avtogol stoji pri ekipi, ki ji gol šteje, z
+  imenom nasprotnika; "Unknown" = brez strelca); nato "<klub> starting
+  line-up" in "Substitutes" obeh ekip. Igralec: dres, ime ("Ime Priimek" →
+  "Priimek Ime"), goli (`Ball20.png` + število), karton (`yellowcard`,
+  `yellowredcard` = drugi rumeni → 1 rumeni + 1 rdeči, `redcard`), menjava
+  (`down.gif NN` izstop, `up.gif NN` vstop) — **minute menjav so točne,
+  kartoni so brez minute** (izključeni igra do konca ali izstopa, ekipa ima
+  990). Goli: število po igralcu iz glave, sicer iz ikon; strelec glave, ki ga
+  ni v postavi, je gol ekipe brez strelca. Šifer igralcev ni (ime + klub kot
+  fss/lff), vratar ni označen — začetnik z dresom 1 dobi `vratar` kot namig
+  (*Uskladi pozicije* vira še ne pozna).
+- **Šifra zapisnika v bazi je `ncel<id>`** (`sifraZapisnika`).
+- **Predpomnilnik** (`vir.zaPredpomnilnik`): le stran divizije s tekmami ali
+  zapisnik s postavo; stran vzdrževanja ne. Zapisnik zadnjega tedna se bere
+  sveže, do 45 dni še enkrat sveže, če iz predpomnilnika nima postav ali se
+  goli ne ujemajo z izidom (`zapisnikSvez`); goli mimo izida so prvih 7 dni
+  `nepopoln` (brez `imported_at`, bere se znova).
+
+Vpisani ligi (migracija 20261015230300, **neaktivni**), zveza `ncefl`:
+
+| liga | klubov | tekoča 2026/27 | arhiv 2025/26 |
+|---|---|---|---|
+| gb-ncel-premier | 20 | `ncelpremierdivision/2026` | `ncelpremierdivision/2025` (380 tekem, vse z zapisnikom) |
+| gb-ncel-division-one | 21 | `nceldivisionone/2026` | `nceldivisionone/2025` (462, vse z zapisnikom) |
+
+Preizkus v živo (15. 10. 2026, po poti uvoza brez baze, 3,5 s med zahtevki):
+Premier 2026/27 — 380 tekem (20 klubov, 36 tednov), 134 odigranih, vseh 134
+zapisnikov razčlenjenih, goli = izid 134/134, postav po 11 268/268, 990
+minut 267/268, 930 menjav z minuto, 20 rdečih; Division One 2026/27 — 420
+tekem (21 klubov), 153 zapisnikov, goli = izid 153/153, postav po 11 306/306,
+990 minut 303/306, 1109 menjav. Odstopanja so napake vira: rezerva z vstopom
+brez para (Selby Town) in strelec s klopi brez vstopa (dobi nastop od gola).
+Arhiv 2025/26 (vzorec vsake 8. tekme): Premier 48/48 goli = izid, 96/96 po
+11 in 990 minut; Division One 57/58 (56246: v glavi 4 goli gostov, izid 1:3).
+
+Uvoz (ena za drugo): `gh workflow run uvoz-lige.yml -f liga=gb-ncel-premier
+-f arhiv=ncelpremierdivision/2025 -f cene=true`. Arhiv 380 zapisnikov po 3 s
+je okoli 20 minut na ligo.
+
 ### Severna Makedonija — vir `ffm`
 
 Država `MK` ("Северна Македонија", migracija 20261012053100) ima vmesnik v
@@ -2828,6 +2969,660 @@ Uvoz (ena za drugo, ~2 s na zapisnik — arhiv 240 zapisnikov je ~10 minut):
 `gh workflow run uvoz-lige.yml -f liga=mk-prva-mfl -f arhiv=prva-mfl-25-26 -f
 cene=true`.
 
+### Ukrajina — vir `aft` (Ternopilska oblast)
+
+Vir `aft` (`scripts/viri/aft.mjs`) bere **aft.com.ua** (Асоціація футболу
+Тернопільщини): oblastno prvenstvo, Вища ліга (raven 5, pod AAFU) in Перша
+ліга (raven 6). Država `UA` ("Україна") in zveza `aft` sta v migraciji
+20261015230500 (država z `on conflict do nothing`, ker jo vpiše tudi vir
+`pfl-ua`). Ukrajinskega vmesnika, kartice in pošte še ni, `UA` ni v matriki
+nočnega uvoza — oboje pred vklopom. Šifra lige se začne z `ua-`.
+
+- **Sezona je koledarsko leto** (maj–oktober, `sezona_koledarska`): `"2026"`.
+  Vir jo vzame iz naslova turnirja ("Чемпіонат Тернопільської області 2026")
+  in preveri, da je to leto tekem.
+- **Šifra lige je id turnirja** (`/tournament/champinship/<id>`): 36 = Вища
+  ліга 2026, 37 = Перша ліга 2026. Vsaka sezona ima svojega — spomladi 2027
+  se šifra popravi, 2026 postane arhiv (`arhiv=36` oz. `37`).
+- **Razpored** je stran turnirja: "Тур N", kartice tekem z id-jem
+  (`/match/<id>`), datumom in krajem, klubi (kraj v `alt` grba) in izidom ali
+  uro neodigrane (kijevski čas → ljubljanski −1 h). **Izid 3:0/0:3 brez kraja
+  je kontumacija** (Нараїв od avgusta 2026 ne igra več: 8 tekem). Prestavljena
+  tekma stoji v krogu dvakrat (neodigrana s starim datumom, odigrana z novim);
+  neodigrana vrstica odpade.
+- **Postav na strani tekme ni** (`/match/<id>` ima le izid, uro in sodnike;
+  "Склад команди" je prazen). Postave so v **novicah** (ponatis iz časopisa
+  Газета 1): Вища ліга en članek na tekmo s prostim naslovom, Перша ліга en
+  članek na krog. Članka brez sluga ni mogoče nasloviti (`/news/1800` → 404),
+  zato vir bere seznam novic (`/news?page=N`, 12 na stran) in ga hrani v
+  `scripts/.predpomnilnik/aft/novice.json`; vsak zagon prebere sveže le prve
+  strani do že znanih novic, starejših od dveh tednov (pozneje objavljen
+  članek z zgodnejšim datumom stoji globlje). Prvi zagon sezone bere ~40
+  strani in ~470 člankov (strežnik je počasen, 3–10 s na stran: ~45 minut).
+  **Izbrisan članek** (404, 410 — umaknjena novica, spremenjen slug) lige ne
+  ustavi: opozorilo, članek izpade iz `novice.json`, uvoz gre naprej.
+  401, 403, 429, izziv in 5xx še vedno ustavijo uvoz.
+- **Blok tekme** v članku: glava `«Дом» (kraj) – «Gost» (kraj) – 1:0 (0:0)`,
+  datum ("11 жовтня"), postavi `«Klub»: …`, "Гол(и):", "Попереджені:",
+  "Вилучений:", stavek "На 34-й хвилині … не реалізував пенальті" in pri Вищі
+  "ТАКТИЧНА РОЗСТАНОВКА" (polna imena po mestih, "Воротар – …"). Blok se ujame
+  s tekmo razporeda po klubih (ime in kraj, številka se mora ujemati:
+  "Борщів-2" ni "Борщів") in datumu ±3 dni; ime v članku je pogosto drugo
+  ("ФАТ-Вікнини" = Вікнини, "Арсенал" = Арсенал-Теребовля). Kadar je datum v
+  članku napačen ("16 липня" namesto avgusta) ali je bila tekma dokončana
+  pozneje ("у дограванні"), se tekma brez poročila ujame še ohlapno po klubih
+  in izidu (opozorilo).
+- **Postava**: enajst priimkov, "-к" kapetan, soimenjak z začetnico
+  ("Семенець Т.", "Д. Марчук" → "Марчук Д."), menjava v oklepaju
+  ("Грабчак (Марцінковський, 64)", veriga "(Гринь, 60, Дума, 90+4)"), za
+  "Заміна:" neuporabljena klop. **Identiteta je priimek + klub** (kot fsb);
+  isti igralec se lahko piše različno ("Пшивий Волод.", "Пшивий Володимир") in
+  dobi dve vrstici. Tipkarske napake vira, ki jih vir popravi z opozorilom:
+  manjkajoča vejica pri desetih začetnikih ("Чемерейко Слободян" → dva, a ne,
+  če je druga beseda ime: "Кладочний Михайло"), odvečna vejica pred menjavo,
+  pika ali vprašaj namesto vejice, "Заміна" brez dvopičja.
+- **Goli in kartoni** so s polnim imenom brez kluba: igralec se najde po
+  priimku (in začetnici), soimenjaka v obeh klubih loči taktična razporeditev,
+  sicer izid. Avtogol "(3, а/г)" ali "автогол"; gol, ki ga izid zahteva kot
+  neoznačen avtogol (vratar gostov pri 1:0), se šteje kot avtogol z
+  opozorilom. Drugi rumeni "(90+4, друге попередження)" → 1 rumeni + rdeči.
+  Kartoni trenerjev in uradnih oseb ("тренер", "офіційна особа") ne štejejo.
+- **Vratar**: "Воротар" iz taktične razporeditve, sicer prvi začetnik (namig,
+  kot mlsz). *Uskladi pozicije* z `vir = aft`.
+- **Predpomnilnik**: stran turnirja in seznam novic vedno sveža; članek
+  zadnjega tedna svež, do 45 dni še enkrat svež, če ima nepopoln blok (postava
+  ni 11 ali goli niso izid). `zaPredpomnilnik` ne shrani vzdrževalne strani.
+
+**Pravice.** robots.txt: `User-agent: * / Disallow:` (nič prepovedanega),
+pogojev uporabe ni. Lastnik pravi, da imamo dovoljenje za branje. Beremo
+odkrito (User-Agent SLFF, 3 s med zahtevki). **Ob 401, 403, 429 ali izzivu se
+uvoz ustavi** (`AftZavrnitev`, izhod 4) — ne obhajaj. Sodnikov, opazovalcev
+in osebja ne beremo; vzorci `scripts/vzorci/ua-aft-*` so brez njih.
+
+Preizkus v živo (15. 10. 2026, vsa sezona 2026, brez pisanja v bazo):
+
+| liga | tekem | kontumacij | s poročilom | goli = izid | postav po 11 | 990 minut | nastopov (s klopi) |
+|---|---|---|---|---|---|---|---|
+| Вища ліга (`36`, 9 klubov, 18 krogov) | 72 | 8 | 62/64 | 62/62 (188) | 124/124 | 118/124 (6 z rdečim) | 1870 (506) |
+| Перша ліга (`37`, 7 klubov, 21 krog) | 60 + 3 neodigrane | 0 | 60/60 | 60/60 (171) | 118/120 | 113/120 | 1760 (440) |
+
+Brez poročila sta Агрон–Сокіл (12. 9.) in Борщів–Поділля ВБ (3. 10.) —
+članek je le pripoved. Перша: dve postavi nista po 11 (Арсенал z 10, napaka
+vira z 12), 5 menjav brez minute (rezerva brez nastopa). Igralcev z vsaj 270
+minutami: 145 od 214 (Вища), 122 od 187 (Перша).
+
+| liga | klubov | tekoča 2026 | arhiv |
+|---|---|---|---|
+| ua-te-vyshcha | 9 | `36` | — (2026 postane arhiv sezone 2027) |
+| ua-te-persha | 7 | `37` | — |
+
+Izpuščeno: Ліга Тернопільщини 2026/27 (le goli in kartoni, brez postav),
+Ліга чемпіонів, kupi, veterani, futsal, ДЮФЛ (mladinske).
+
+Uvoz (ena za drugo; lige so **neaktivne**): `gh workflow run uvoz-lige.yml -f
+liga=ua-te-vyshcha -f cene=true` (brez arhiva).
+### Ukrajina — vir `hoff-km` (Hmeljnicka oblast)
+
+Vir `hoff-km` (`scripts/viri/hoff-km.mjs`) bere **hoff.km.ua**, spletišče
+Хмельницька обласна асоціація футболу (ХОАФ): oblastno prvenstvo (ЧХО),
+Vyshcha liga (6 klubov) in Persha liga (5 klubov), raven 5 in 6. Ime vira je
+`hoff-km` (ne `hoff.km`), ker delovni tokovi sprejmejo le `[a-z0-9-]`. Država
+`UA` (vpiše jo ta migracija ali `pfl-ua`, `on conflict do nothing`), zveza
+`hoaf-km` (migracija 20261015230700); **vmesnika v ukrajinščini, kartice in
+pošte še ni in `UA` ni v matriki nočnega uvoza** — oboje pred vklopom. Šifra
+lige se začne z `ua-`.
+
+- **Sezona je koledarsko leto** (maj–oktober, `sezona_koledarska`): oznaka
+  `"2026"`. **Šifra lige je slug strani lige** (`chho-2026-vyshha-liga`,
+  arhiv `chho-2025`), leto v slugu je sezona; stran druge sezone uvoz ustavi.
+  Ob novi sezoni se vpiše nov slug. Seznam strani: `/wp-json/wp/v2/pages?search=ЧХО`
+  (ali meni "АРХІВ ЧХО", ki 2024 in 2025 ne našteje).
+- **Razpored** je ročno vnesena tabela v vsebini strani lige ("Тур | Дата |
+  № гри | Господарі | Гості | Рахунок"; 2025 je "№ матчу" pred datumom —
+  stolpci po glavi). **Ure ni** (`ura: null`, rok kroga po privzetem); če bi
+  bila, je kijevska → ljubljanska (−1 h). Krog brez številke vzame prejšnjega.
+  Tekme istega kroga so lahko mesece narazen (1. krog 2026: 9. 5. in 1. 7.).
+- **Tehnični izid** je zvezdica z opombo pod tabelo ("* Матч №9 – неявка
+  гостей… техічна перемога", "КДК анулював результат") ali "3:0 (+:-)".
+  Brez objave s postavami (neigra) in starejši od tedna je **kontumacija**;
+  z objavo (KDK je razveljavil odigrano tekmo: 1:0 → 0:3) je tekma z uradnim
+  izidom, prejeti goli in čista mreža pa so z igrišča (`izidIgrisca`, kot
+  `pfl-ua`). Opomba s "призупинено / догравання / перенесено" (letalski alarm
+  pri 0:0) pomeni, da tekma še ni odigrana — brez izida.
+- **Zapisnik je objava tekme** ("ЧЕМПІОНАТ ОБЛАСТІ: A – B", 2025 "ЧХО-2025.
+  14 ТУР. A – B"). Beremo **javni REST WordPressa** (robots.txt zapre le
+  /wp-admin/): seznam vseh objav leta (le id, datum, naslov; ~3 strani po
+  100), filter po naslovu, nato vsebina objav tekem po 100 — ~5 zahtevkov na
+  ligo. **Oznake in kategorije niso popolne** (`sezon-2026`,
+  `chempionat-oblasti` in "ОБЛАСНІ ТУРНІРИ" vsaka zgreši nekaj tekem; Нива :
+  Олімп 2026 je le v "Новини"), zato ne filtriramo po njih. Objava gre tekmi
+  po paru klubov iz naslova (prva beseda imena brez "ФК"; glava objave je
+  rezerva — v 12. krogu 2026 piše "Енергетик – Енергетик"), med več takimi po
+  krogu ("Матч 15 туру", "14 ТУР") in nato po najbližjem datumu.
+- **Postava**: "“Колос”: Бушняк, …, Бартошук – к, Музичук (Панфілов, 78)."
+  Le enajsterica in rezerve, ki so prišle; **neuporabljene klopi ni**. V
+  oklepaju rezerva in minuta vstopa; veriga "(Чабак, 20 (Омельчук, 64))" ali
+  "(Гацький, 46, Чуб, 57)" — tudi rezerva gre ven (`preklopi`). Ročne napake,
+  ki jih razčlenjevalnik prenese z opozorilom: neuravnotežen oklepaj, rezerva
+  brez minute ("(Григор’єв)" → brez nastopa), manjkajoč začetnik ("…,  (Муляр,
+  90+3)"), oklepaj za vejico ("Закорчменний, (Бондаренко, 79)"), isto ime
+  dvakrat (drugi vnos izpuščen), ostanek za koncem stavka ("Омельчук. (Муляр,
+  63), Гудзь…" — izpuščen). **Vratar ni označen**; prvi začetnik (in kdor ga
+  zamenja) je vratar kot namig (kot mlsz, ffm); *Uskladi pozicije* z
+  `vir = hoff-km`.
+- **Dogodki**: "Голи: A (18, 32), B (58-пен.) – C (61)", avtogol pri minuti
+  ("6 – а/г", "75–а/г") šteje nasprotniku, "На 58 хв. … не реалізував
+  пенальті" (zgrešena 11 m), "Попередження:" rumeni, "Вилучення:" rdeči
+  ("друге попередження" = 1 rumeni + rdeči, "по завершенню гри" → 90). Strelca
+  in karton **pripišemo ekipi po postavi, ne po strani pomišljaja** (Вишнівчик
+  2:0 Поділля, 10. 10. 2026: domači strelec za pomišljajem); neznan strelec je
+  gol ekipe brez strelca (ne nov igralec — sicer gol brez nastopa). Karton
+  trenerja ne šteje.
+- **Identiteta: ime + klub**, šifer ni. Objave pišejo večinoma le priimek, ime
+  le ob soimenjaku ali pri strelcu ("Олійник" / "Олійник Владислав"), ista
+  oseba pa je kdaj "Матанчук", "Матанчук Денис" in "Матанчук Д.". **Ime se z
+  novimi objavami ne sme spremeniti**: uvoz išče igralca po polnem imenu, nočni
+  uvoz znova uvozi le zadnjih 21 dni, zato bi preimenovanje enega igralca
+  razdelilo na dva (pregled sezone 2026: 86 od 1186 nastopov Vyshcha in 65 od
+  737 Persha, preden je bilo popravljeno). `poenotiImena` gre skozi objave po vrsti
+  (datum, id) in osebi kluba da ime, kot ga je postava napisala ob njenem
+  **prvem** nastopu; poznejšo obliko (golo ime, ime, začetnica) pripiše
+  obstoječi osebi le iz prejšnjih objav in iste objave, ime strelca se le
+  nauči. Nova objava tako starih imen ne spremeni (smoke: vsak rez po datumu).
+  Dvoumno (dva Бойка, golo "Бойко") ostane, kot je napisano; soimenjaka v
+  klubu, ki ju postava piše z imenom, sta dva igralca (Сідорчук Владислав in
+  Станіслав). Ime v naslednji sezoni je spet ime iz postave (večinoma golo),
+  zato se med sezonama ujema bolje kot polno ime strelca.
+  Šifra zapisnika v bazi je `hk<id objave>`.
+- **Predpomnilnik**: stran lige vedno sveža; seznam in vsebina objav tekočega
+  leta vedno sveža, arhiv iz predpomnilnika — a če kateri tekmi do 45 dni
+  manjka objava ali je nepopolna, še enkrat svež. Goli ≠ izid v zadnjem tednu
+  je `zapisnik nepopoln` (brez `imported_at`, nočni uvoz bere znova), pozneje
+  le opozorilo. V predpomnilnik gre le stran lige z razporedom in pravi JSON
+  (`zaPredpomnilnik`), ne stran vzdrževanja ali napaka WordPressa.
+- **Isto ime, drug klub**: "Колос" (2025) = "Колос Полонне", "ДЮСШ-2" =
+  "ДЮСШ-2 Імпульс" (preimenovan sredi 2025) — `IME_KLUBA` v viru. Natančno ime
+  (`poenostavi`) ohrani kraj, zato "Нива Летичів" ni "Нива (Вінниця)" iz
+  `pfl-ua`.
+
+**Pravice (pregled 15. 10. 2026, ni pravni nasvet).** robots.txt je privzeti
+WordPressov (Disallow /wp-admin/), pogojev uporabe ni; po besedah lastnika (15. 10. 2026) za branje
+imamo dovoljenje. Beremo odkrito (User-Agent `SLFF fantasy (https://slff.eu)`,
+**3 s** med zahtevki, `hoffFetch`). Sodnikov, opazovalcev, fotografij in
+videov ne beremo; vzorci `scripts/vzorci/ua-hoff-*` so brez njih. **Ob 401,
+403, 429, izzivu ali CAPTCHI se uvoz ustavi — ne obhajaj** (`HoffZavrnitev`,
+izhod 4; `hoffFetch` zavrne že pred ponovitvijo 429 in pred shranjenim
+razporedom).
+
+Preizkus v živo (15. 10. 2026, vse tekme, brez baze; ~30 zahtevkov z raziskavo vred):
+
+| liga | tekem / z izidom | kontumacij | zapisnikov | goli = izid | postav po 11 | menjav (z minuto in parom) | 990 minut |
+|---|---|---|---|---|---|---|---|
+| Vyshcha 2026 | 45 / 43 | 1 (+1 mlajša od tedna) | 41 | 41/41 | 81/82 | 284 (283) | 80/82 |
+| Persha 2026 | 30 / 30 | 3 | 27 | 25/27 | 52/54 | 140 (140) | 48/54 |
+| ЧХО 2025 (arhiv) | 42 / 42 | 4 | 38 | 37/38 | 73/76 | 292 (292) | 70/76 |
+
+Vsa odstopanja so napake vnosa (objava brez vrstice "Голи", 10 ali 13 imen v
+enajsterici, gol premalo); opozorila so v `import_warnings`. Noben gol ni brez
+nastopa strelca. **Sezona 2026 je ob vpisu končana** (Vyshcha še 13. krog
+Вишнівчик : Колос in prekinjena Поділля : Оболонь, 17. 10.) — vklop realno
+za 2027 (nov slug). Persha liga ima pet klubov — spodnja meja (3 iz kluba × 5).
+
+Vpisani ligi (migracija 20261015230700), **neaktivni**, zveza `hoaf-km`:
+
+| liga | klubov | tekoča 2026 | arhiv |
+|---|---|---|---|
+| ua-km-vyshcha | 6 | `chho-2026-vyshha-liga` | `chho-2025` (7 klubov, skupna Колос Полонне in Оболонь-Чемерівці) |
+| ua-km-persha | 5 | `chho-2026-persha-liga` | — (lani je ni bilo) |
+
+Uvoz (ena za drugo): `gh workflow run uvoz-lige.yml -f liga=ua-km-vyshcha -f
+arhiv=chho-2025 -f cene=true`; Persha brez `arhiv`.
+### Turčija — vir askf
+
+Vir `askf` (`scripts/viri/askf.mjs`) bere **pokrajinske amaterske zveze
+(ASKF)** na platformi FYS ("Futbol Yönetim Sistemi", ASP.NET WebForms):
+**Çanakkale** (canakkaleaskf.org) in **Aydın** (aydinaskf.com) — en vir, ker
+je program isti; spletišče izbere šifra lige. To so lige pod TFF (Süper
+Amatör = raven 6, 1. Amatör = 7), ki jih tff.org nima; TFF 3. Lig in PGL, ki ju
+spletišči tudi naštejeta, so pri viru `tff`. Država `TR` (vmesnik, pošta, nočni
+uvoz) še ni pripravljena — lige so **neaktivne**.
+
+- **Šifra lige** je `<zveza>/<sezona>/<liga>[/<skupina>]`:
+  `canakkale/2026-2027/samator`, `aydin/2026-2027/1amator/2`. `<liga>` je
+  vrednost izbirnika lig brez ločil in turških črk ("S.AMATÖR" → `samator`),
+  `<skupina>` naslov gumba skupine. Sezona je del šifre — ob novi sezoni se
+  šifra popravi; liga s skupinami brez skupine v šifri ustavi uvoz.
+- **Razpored** je `/fikstur`, a sezona, liga in skupina so **postbacki**
+  (`__VIEWSTATE` ~120 kB), ne naslov. `askfFetch` za psevdonaslov
+  `/fikstur#sezona=…&liga=…[&skupina=…]` odpre stran in pošlje 1–3 postbacke
+  (3 s premora): meni lig je meni **prikazane** sezone (indeks se med sezonami
+  zamakne), zato ob menjavi sezone ligo poišče znova. Kaj stran res kaže, pove
+  glava "1.AMATÖR 2025/2026 SEZONU" (naslov strani je po postbacku skupine
+  prazen) in izbrani gumb skupine; `tekmeLige` ob neujemanju ustavi uvoz. V
+  predpomnilnik gre le razčlenjen razpored (JSON v komentarju, nekaj kB namesto
+  0,5 MB). Uvoz zapisnikov razpored vedno prebere svež (uvoz razporeda ga
+  shrani tik prej, `razporedVseStrani` ga ne bere dvakrat).
+- Stran ima več **delov lige** (`rptLigler`): play-off final, polfinale, redni
+  del. Beremo le redni del z letnim razporedom ("YILLIK FİKSTÜR", tedni
+  "N. HAFTA"); izpadnih delov ne uvažamo. Izid s podaljškom
+  ("1-4 N.S.:0-0/Uzt.:1-4") vzame končni par.
+- **Čas** je istanbulski (UTC+3 vse leto) → ljubljanski (−1 h poleti, −2 h
+  pozimi); "00:00" pomeni brez ure (kontumacije).
+- **Kontumacija**: pod klubom v razporedu stoji opomba — "Hükmen" (zmagovalec),
+  "Bu Maça Gitmeyecek/Çıkmadı", "Ligden Çekildi" (izstopil), "Ligden
+  Çıkarıldı" (izključen). Taka tekma je v razporedu `kontumacija`, **tudi brez
+  izida**: "Gitmeyecek" (ne bo prišel) zveza vpiše pred tekmo, "Çekildi" na vse
+  tekme izstopljenega kluba. Izstop in izključitev sta še `odstop`. Izid se
+  vpiše, ko ga zveza objavi (do takrat je v bazi 0:0, lestvica lige jo šteje kot
+  remi). Zapisnika uvoz ne bere. Stran tekme ima tedaj le postavo ekipe, ki je
+  prišla (ali nobene) — `vZapisnik` z opombo kontumacije in eno postavo vrne
+  null, da igralci ne dobijo nastopa. **Neznana opomba** se ne razume kot
+  kontumacija: uvoz razporeda jo javi (`::warning::`), zapisnik dobi opozorilo
+  — ob novi obliki dopolni `OPOMBA_KONTUMACIJE`. Kontumacij je veliko: Aydın
+  SAL 2025/26 41 od 108, Çanakkale SAL 25 od 132.
+- **Zapisnik** `/macdetay?macID=<id>`: "İLK 11" in "YEDEKLER" obeh ekip z
+  dresom in **šifro licence TFF** (`/oyuncular?lisansno=` → `reg_st`, ista v
+  obeh pokrajinah); časovnica "OLAYLAR": `estakimli` domači, `mstakimli` gostje,
+  igralec z dresom in imenom, vrsta v `title` ikone: "Gol - Ayak/Kafa/Penaltı",
+  "Gol - Kendi Kalesine" (avtogol, **navadno pri ekipi, ki ji je štel** —
+  strelca išče najprej po imenu v obeh ekipah, šele nato po dresu: dres 4
+  gostov ni domači strelec z dresom 4), "Sarı Kart", "Kırmızı Kart", "Çıkan
+  Oyuncu", "Giren Oyuncu" — **minute so točne**, menjave v pare po minuti,
+  leteče menjave šteje `minuteIzPreklopov`. "DA" (polčas) = 45, "MS" (po koncu)
+  = 90, "90+4'" = 90. Kartoni trenerjev imajo namesto dresa "TK" — ne štejejo in
+  `obreziTekmo` jih z imeni vred vrže proč. Vratarja in pozicij ni (glasovanje).
+  Šifra zapisnika v bazi je `askf-<zveza>-<macID>`.
+- **Nepopoln**: ekipa z manj kot 7 začetniki (le ena postava) ali goli, ki se
+  pri tekmi zadnjega tedna ne ujemajo z izidom → `nepopoln` (izid brez
+  `imported_at`). `zapisnikSvez`: tekma zadnjega tedna sveže, do 45 dni iz
+  predpomnilnika, a nerazčlenjena ali nepopolna stran še enkrat sveže.
+- **Predpomnilnik** (`scripts/.predpomnilnik/askf`, `zaPredpomnilnik`): le
+  razčlenjen razpored in stran tekme z glavo; stran napake ali vzdrževanja ne.
+  Stran tekme se obreže (`obreziTekmo`): brez sodnikov, delegata, zdravnika,
+  trenerjev in stadiona; vzorci `scripts/vzorci/tr-askf-*` so taki.
+
+**Pravice (pregled 15. 10. 2026, ni pravni nasvet).** robots.txt na obeh
+spletiščih ni (404), pogojev uporabe ni, noga pravi le "Tüm Hakları Saklıdır".
+Lastnik ima dovoljenje za branje. Beremo odkrito (`User-Agent: SLFF fantasy
+(https://slff.eu)`, **3 s** med zahtevki tudi med postbacki, zaključenih
+zapisnikov ne beremo znova). Vse strani naložijo `recaptcha/api.js` (obrazec
+za stik) — to ni izziv; izziv je gradnik `g-recaptcha` ali Cloudflare. **Ob
+izzivu, CAPTCHI, 401, 403 ali 429 se uvoz ustavi** (`AskfZavrnitev` že v
+`askfFetch`, brez ponovitve, izhod 4) — ne obhajaj. Strežnik je počasen (stran
+tekme 5–20 s): arhiv lige (~130 strani) je 30–45 minut; lige iste zveze uvažaj
+ena za drugo.
+
+Preizkus v živo (15. 10. 2026, brez baze; prešteto z razčlenjevalnikom iz PR):
+
+| liga 2025/26 | tekem | odigranih | kontumacij | zapisnikov | goli = izid | postav po 11 | menjav (vse z minuto) | ekip z 990 min |
+|---|---|---|---|---|---|---|---|---|
+| Çanakkale SAL (vse) | 132 | 132 | 25 | 105 (+2 brez postav) | 390 / 390 | 210 / 210 | 747 | 181 / 210 |
+| Çanakkale 1. Amatör (prvih 46) | 90 | 46 | 1 | 44 | 179 / 179 | 88 / 88 | 366 | 73 / 88 |
+| Aydın SAL (vse) | 110 | 108 | 41 | 67 | 331 / 331 | 134 / 134 | 510 | 108 / 134 |
+| Aydın 1. Amatör 1 (prvih 40) | 72 | 40 | 8 | 32 | 144 / 144 | 64 / 64 | 251 | 51 / 64 |
+| Aydın 1. Amatör 2 (prvih 40) | 72 | 40 | 0 | 40 (9 nepopolnih) | 149 / 186 | 71 / 71 | 282 | 55 / 71 |
+
+Ekipe brez 990 minut pojasni rdeči karton ali strelec s klopi brez vpisanega
+vstopa (vstop ob golu, opozorilo). Napake vira: menjava z minuto "-150'"
+(opozorilo, menjava izpade), dve odigrani tekmi Çanakkale SAL brez postav.
+V Aydın 1. Amatör 2 2025/26 **KOÇARLI BLD.SPOR ni vnesel nobene postave** —
+vseh 9 njegovih tekem je nepopolnih (izid, nastopi le nasprotnika; arhiv
+nepopolnih ne uvaža).
+
+**Aydın: 403 (15. 10. 2026, 10:58).** Med preizkusom je aydinaskf.com po
+~200 zahtevkih v ~70 minutah (3 s premora, stran tekme 5–20 s) na stran tekme
+(`macID=5992`) vrnil **HTTP 403**. Preizkus se je ustavil (`AskfZavrnitev`) in
+spletišča nismo več brali — ne vemo, ali je zapora trajna, časovna ali le ta
+stran. Aydın 1. Amatör 3 zato ni preštet. **Pred uvozom aydınskih lig** naj
+lastnik preveri dostop (ali vpraša Aydın ASKF); če 403 ostane, `aydin` lige
+ostanejo neaktivne in jih ne beremo — ne obhajaj (drug IP, brskalnik, manjši
+tempo brez dogovora). Çanakkale zavrnitve ni vrnil (~260 zahtevkov). Ob
+11:15 istega dne je en sam GET `/fikstur` spet dobil 403 — zapora traja.
+
+Vpisanih je 5 lig (migracija 20261015230900), **neaktivnih**, zvezi
+`askf-canakkale` in `askf-aydin`. Sezona 2026/27 se začne konec oktobra
+(Aydın 24.–25. 10.); Çanakkale razporeda 2026/27 še ni datiral — uvoz
+razporeda do takrat konča z "Razporeda ni bilo mogoče razbrati".
+
+| liga | klubov | tekoča 2026/27 | arhiv 2025/26 (skupnih klubov) |
+|---|---|---|---|
+| tr-canakkale-sal | 11 | `canakkale/2026-2027/samator` | `canakkale/2025-2026/samator` (12 lani) |
+| tr-canakkale-1-amator | 11 | `canakkale/2026-2027/1amator` | `canakkale/2025-2026/1amator` |
+| tr-aydin-sal | 13 | `aydin/2026-2027/samator` | `aydin/2025-2026/samator` (11 lani) |
+| tr-aydin-1-amator-1 | 11 | `aydin/2026-2027/1amator/1` | `aydin/2025-2026/1amator/1` (6) |
+| tr-aydin-1-amator-2 | 11 | `aydin/2026-2027/1amator/2` | `aydin/2025-2026/1amator/2`, `aydin/2025-2026/1amator/3` (5 + 4) |
+
+Izpuščeno: 2. Amatör (2026/27 ni razpisana; Çanakkale 2025/26 skupine A–C po
+5–6 klubov, le spomladi), mladinske (U19–U11), ženske, veterani, pokali,
+play-off. Uvoz (**ena za drugo**): `gh workflow run uvoz-lige.yml -f
+liga=tr-canakkale-sal -f arhiv=canakkale/2025-2026/samator -f cene=true`.
+### Armenija — vir `ffa`
+
+Vir `ffa` (`scripts/viri/ffa.mjs`) bere **ffa.am** (Football Federation of
+Armenia, Laravel + Livewire, spredaj Cloudflare brez izziva), kjer FFA objavi
+tekmovanja, ki jih vodi sama: **Prvo ligo** (Առաջին խումբ, raven 2) in
+amaterski ligi A in B, in **premierleague.ffa.am** (**Premier Liga**,
+Հայաստանի Պրեմիեր լիգա, raven 1; glej *Premier Liga* spodaj). Država `AM`
+("Հայաստան", vpiše jo migracija lig); vmesnika v armenščini, kartice in pošte
+**še ni** in `AM` **ni** v `JEZIK_DRZAVE` ne v matriki nočnega uvoza — oboje
+pred vklopom. Šifra lige se začne z `am-`.
+
+- **Šifra lige je `<pot>/<skupina>`**: pot strani pod `/en/` (`first-league`)
+  in id skupine iz gradnika Livewire `cascade-tour-matches`
+  (`wire:initial-data`, `dataMeta.groups`; 902 = Prva liga 2026/27). Stran
+  vedno pokaže **tekočo** skupino; pretekle sezone (802 = 2025/26, …) in
+  druge skupine (amaterske A1/A2) bi zahtevale zahtevek Livewire (POST), ki
+  ga ne pošiljamo — **arhiva zato ni**, cene so iz tekoče sezone. Če stran
+  pokaže drugo skupino (nova sezona), se uvoz ustavi: popravi
+  `source_league_code`. Sezona je leto skupine v gradniku ("2026-2027" →
+  "2026/27"; skupine in leta so našteti vzporedno, najnovejše prvo).
+- **Razpored** je ena stran: `<tbody tour="N">` (krogi pomešani), vrstica
+  domači, izid ("2:1", tehnični izid "3:0(3:0)", neodigrana " : "), gostje,
+  termin "04/08 17:00" **brez leta** (julij–december prvo leto sezone,
+  januar–junij drugo) ali "Postponed", kraj, stadion in povezava
+  `/en/match-info/f<id>`. **Erevanski čas (UTC+4, brez poletnega) →
+  ljubljanski** (−2 h poleti, −3 h pozimi). Tehnični izid je kontumacija.
+- **Izstop kluba**: klub, ki je izstopil (Hayq 2026/27), ostane na strani z
+  vrsticami brez termina, izida in povezave tudi v odigranih krogih.
+  `izstopljeniKlubi` ga prepozna (vsaj dve taki vrstici, od prve nobene prave
+  tekme) in `razporedIzTekem` njegove neodigrane tekme izpusti (25); tehnični
+  izidi pred izstopom ostanejo kot kontumacije.
+- **Zapisnik** `/en/match-info/f<id>` (šifra v bazi `am<id>`): glava ("…
+  (2026-2027): 1" = sezona in krog, "04.08.2026 17:00", imeni, izid,
+  "Technical defeat" pri kontumaciji → zapisnik null), "Players" (začetniki)
+  in "Substitutes" (klop), levo domači, desno gostje. Dogodki so ikone z
+  minuto: `down.png` izstop, `up.png` vstop, `ball.png` gol, `yc.png`
+  rumeni, `rc.png` rdeči — **levo ikona pred minuto, desno minuta pred
+  ikono**, zato razčlenjujemo HTML. Rumeni in rdeči ob isti minuti (ali dva
+  rumena) je drugi rumeni → 1 rumeni + 1 rdeči. Polčasa stran ne pove.
+  Trenerjev ("Coaches"), sodnikov in delegata ne beremo; vzorci `am-ffa-*`
+  so brez njih.
+- **Goli iz glave**: pod imenom kluba, ki mu gol šteje, so strelci z
+  minutami, "(11m)" = 11 m, "(OG)" = **avtogol igralca nasprotne ekipe** (pri
+  nas je pri strelcu v njegovi ekipi). Igralca najde ikona žoge iste minute
+  (glava ime včasih obrne: "Abayomi David"), sicer ime. Ikone v postavi same
+  avtogola ne ločijo — s samimi ikonami bi se 4 od 59 tekem ne ujemale z
+  izidom.
+- **Napake vira**: menjava, vpisana obrnjeno (rezerva "vstopi" po izstopu:
+  "67 noter, 20 ven", f98471, f98509, f98518), se zamenja z opozorilom. Kadar
+  vstop rezerve manjka (Olympia, f98492: dva izstopa v 82., brez vstopa), ima
+  ekipa manj kot 990 minut.
+- **Identiteta: ime + klub** (kot fss, gff), šifer igralcev ni. Ime je
+  latinica ("Hayk Hovakimyan" → "Hovakimyan Hayk"), nekaj imen tujcev je
+  delno v armenski pisavi, kot jih piše zveza.
+- **Vratar ni označen**: prvi začetnik je vratar le kot namig (kot ffm,
+  gff); v 118 postavah ima dres 1, 12, 13 ali 25 v 59, sicer 31, 33, 71, 88 …
+  *Uskladi pozicije* z `vir = ffa`.
+- Druge ekipe ("Ararat-2", "BKMA-2", "Urartu-2") so svoj klub; ključ ohrani
+  števke. Oblika "FC"/"SC" v ključu odpade (`kljucKlubaAm`): Premier Liga piše
+  "FC Urartu", "SC Shirak", "Sardarapat FC", ffa.am "Urartu" — ob prestopu
+  lige je to isti klub.
+
+**Amaterske lige niso vpisane**: Amateur League A 2026/27 ima skupini A1 in
+A2 po **4 klube** (6 krogov), League B je le 2025/26 (skupini in play-off po
+4–5 klubov). Pri 15 igralcih in največ treh iz kluba je pet klubov spodnja
+meja — kadra ni mogoče sestaviti. Zapisnik je ista predloga (vzorec
+`am-ffa-tekma-95922-amaterska.html` se razčleni, 11 + 11, goli = izid).
+
+**Pravice (pregled 15. 10. 2026, ni pravni nasvet).** robots.txt:
+`User-agent: *` z `Disallow:` (prazno — nič prepovedano), brez Crawl-delay.
+Noga zahteva aktivno povezavo na ffa.am ob uporabi gradiva (`vir_ime` FFA,
+`vir_url` → stran lige v nogi). Po besedah lastnika imamo dovoljenje za
+branje (15. 10. 2026). Beremo odkrito (`User-Agent: SLFF fantasy (https://slff.eu)`, **4 s**
+med zahtevki, zapisnikov, starejših od tedna, ne beremo znova — razen
+nepopolnih do 45 dni, `zapisnikSvez`). **Ob 401, 403, 429 ali izzivu se uvoz
+ustavi — ne obhajaj** (`FfaZavrnitev` že v `vir.fetch`, izhod 4). Navadne
+strani nosijo Cloudflarov skript `/cdn-cgi/challenge-platform/…/jsd/` — to
+ni izziv. V predpomnilnik gre le prava stran (`vir.zaPredpomnilnik`: stran
+lige z gradnikom, stran tekme z glavo). Če nas FFA prosi, naj nehamo, `am-`
+lige izklopimo.
+
+Preizkus v živo (15. 10. 2026, brez pisanja v bazo; stran lige in 79 strani
+tekem po 4 s): 30 krogov, 222 vrstic, 15 klubov (14 + Hayq, izstopil), v
+razporedu 197 tekem (25 neodigranih Hayqa izpuščenih), 63 odigranih, od tega 4
+tehnični izidi (kontumacije) in 59 zapisnikov: goli = izid 59/59 (211),
+postav po 11 118/118, 547 menjav z minuto (547 nastopov s klopi), 990 minut
+102/118 (15 rdečih kartonov, 1 manjkajoč vstop), 4 opozorila (obrnjene
+menjave). Igralcev z vsaj 270 minutami 199 od 368 (54 %).
+
+| liga | klubov | tekoča 2026/27 | arhiv |
+|---|---|---|---|
+| am-premier-liga | 12 | `premierleague/96103-96300` | `premierleague/38786-38920` (2025/26, 10 klubov) |
+| am-1-liga | 14 (+ Hayq, izstopil) | `first-league/902` | — (le prek Livewire) |
+
+Uvoz (ena za drugo): `gh workflow run uvoz-lige.yml -f liga=am-premier-liga
+-f arhiv=premierleague/38786-38920 -f cene=true`, nato `gh workflow run
+uvoz-lige.yml -f liga=am-1-liga -f cene=true` (brez arhiva). Prvi uvoz
+Premier Lige prebere 135 + 198 strani po 4 s (~25 minut), Prva liga 59
+zapisnikov (~5 minut).
+
+#### Premier Liga (premierleague.ffa.am)
+
+Isti vir `ffa`, druga oblika šifre. Spletišče je ista Laravel + Livewire
+predloga kot ffa.am; robots.txt `User-agent: *` z `Disallow:` (nič
+prepovedano). Šifre tekem so v istem prostoru kot na ffa.am (f96151 je na
+obeh ista tekma), zato `am<id>` ostane enolična.
+
+- **Razpored cele sezone stran ne pokaže**: `/en/games` ima le tekoči krog
+  (gradnik `games-index`, podatek `tour`), drugi krogi so le prek zahtevka
+  Livewire (POST), ki ga ne pošiljamo; `?tour=N` stran prezre, stran kluba
+  kaže le zadnje in naslednje tekme. **Strani tekem pa so strnjen blok šifer,
+  urejen po krogih** (kot fssid, fcf), zunaj bloka 404. Šifra lige je zato
+  `premierleague/<od>-<do>`: 2026/27 `96103-96300` (12 klubov, 33 krogov po 6),
+  2025/26 `38786-38920` (10 klubov, 27 krogov po 5; meje preverjene z 404 na
+  obeh straneh). **Nova sezona**: poišči prvo in zadnjo tekmo (stran `/en/games`
+  ali stran kluba da šifre tekočega kroga; blok je klubov/2 × krogov) in popravi
+  `source_league_code`. Stran kroga s tekmami zunaj bloka: vse zunaj
+  nedokončanega bloka ustavi uvoz (nova sezona ali nov blok), nekaj zunaj
+  (tekma, dodana za zgornjo mejo) je opozorilo — blok razširi.
+- **Stran tekme** `/en/games/f<id>` (beremo `/en/`; `/hy/` ima imena v
+  armenski pisavi): naslov "2025-2026 Fastex Premier League : Matchday 1"
+  (tekoča sezona le ": Matchday 9"), termin "11.10.2026 20:00" (erevanski čas
+  → ljubljanski), imena "FC Urartu", "SC Shirak", "Sardarapat FC". Neodigrana
+  tekma ima krog in termin, **nerazpisana** "To schedule" brez kroga in termina
+  — krog se izpelje iz mesta v bloku (`sestaviBlokPl`: klubov/2 tekem na krog,
+  odmik iz strani s krogom). Postave in dogodki so ista predloga kot ffa.am,
+  razlike: ikone v `/img/icons/` (tudi desno ikona pred minuto), dva
+  `players__box` brez `mr-2`/`ml-2`, `<div` in `class=` v dveh vrsticah,
+  stadion pod izidom (pred desnim stolpcem strelcev). "(OG)" in "(11m)" sta
+  v glavi kot na ffa.am, "Technical defeat" je kontumacija.
+- **Branje bloka** (`preberiBlokPl`, predpomnilnik `scripts/.predpomnilnik/ffa/tekma-pl-<id>.html`):
+  odigrana s postavama se ne bere znova (zapisnik zadnjega tedna sveže,
+  nepopoln do 45 dni — `zapisnikSvez`), izid brez postav dnevno do 45 dni,
+  neodigrana na vrsti (od dneva pred terminom do 14 dni po njem) vsako uro,
+  sicer tedensko, "To schedule" tedensko (pred tekočim krogom — prestavljena
+  brez termina — dnevno). Stran kroga (uvoz razporeda jo
+  prenese kot `naslovRazporeda`) pove izid in termin tekočega kroga — tekmo,
+  ki jo kaže drugače kot predpomnilnik, preberemo takoj. Prvi uvoz bloka
+  prebere vse strani. Krog brez termina (vse "To schedule") v razpored ne
+  gre, pride z naslednjim uvozom, ko ga razpišejo. Izid brez postav, starejši
+  od tedna, je kontumacija; neodigrane tekme kluba, ki je izstopil
+  (`izstopljeniVBloku`), izpustimo.
+- Zavrnitev kot pri ffa.am: 401, 403, 429 in izziv vržejo `FfaZavrnitev` na
+  vsaki poti (stran kroga, stran tekme), izhod 4; vzdrževalna stran ne gre v
+  predpomnilnik in ustavi uvoz ("ni stran tekme").
+- **Vratar** ni označen, prvi začetnik je namig: v 54 tekmah 2026/27 ima vsak
+  klub 1–3 različne prve začetnike (znani vratarji: Beglaryan, Buchnev,
+  Ayvazov …), nobeden ni dal gola, zamenjan dvakrat.
+- **Trki imen** s Prvo ligo: jih ni — druge ekipe ("Urartu-2", "Sardarapat
+  FC-2") imajo števko, ostali klubi Prve lige so drugi (Olympia, MIKA, Avshar
+  Ararat …). Vseh 10 klubov 2025/26 igra tudi 2026/27.
+
+Preizkus v živo (15. 10. 2026, brez pisanja v bazo; 198 + 135 strani tekem po
+3,5–4,5 s, nato pot `vir.fetch` + `prenesiSPonovitvami` s predpomnilnikom — 7
+zahtevkov):
+
+| | 2026/27 (`96103-96300`) | 2025/26 (`38786-38920`) |
+|---|---|---|
+| strani / klubov / krogov | 198 / 12 / 33 (12 razpisanih, 21 "To schedule") | 135 / 10 / 27 |
+| odigranih | 54 (krogi 1–9) | 135 (1 tehnični poraz, BKMA : Urartu 0:3) |
+| goli = izid | 54/54 (161; 7 avtogolov, 13 z 11 m) | 134/134 (347; 12 avtogolov, 54 z 11 m) |
+| postav po 11 | 108/108 | 268/268 |
+| menjave z minuto | 511 (511 nastopov s klopi) | 1232 |
+| 990 minut na ekipo | 101/108 (7 z rdečim kartonom) | 248/268 (19 z rdečim, 1 vstop brez izstopa v viru: f38847, 1006 min) |
+| krog strani ≠ mesto v bloku | 0 (od 72 s krogom) | 0 |
+### Grčija — vir `mascot` (Mascotnet)
+
+Država `GR` ("Ελλάδα") — vpiše jo ta migracija (20261016090300) ali migracija
+vira `eps`, kar pride prej (obe `on conflict do nothing`). Vmesnika v grščini,
+kartice in pošte **še ni**, `GR` **ni** v matriki nočnega uvoza — oboje pred
+vklopom. Šifra lige se začne z `gr-`.
+
+**Pisno dovoljenje za zajem: pridobil Lovro, oktober 2026.** Pogoji
+Mascotneta (`mascotnet.com/terms.asp`, "Όροι χρήσης" v nogi vsake strani)
+samodejno branje prepovedujejo; upravljavec ga je SLFF pisno dovolil.
+Dovoljenje **ne pokriva tehnične zaščite**: ob 401, 403, 429, izzivu ali
+CAPTCHI se uvoz ustavi (`MascotZavrnitev`, izhod 4) — ne obhajaj (ne novih
+sej, IP-jev ali brskalnika). Če upravljavec dovoljenje umakne: vse lige vira
+izklopi (`update competitions set active = false where source = 'mascot'`).
+Beremo vljudno: User-Agent `SLFF fantasy (https://slff.eu)`, **3 s** med
+zahtevki (robots.txt nima `Crawl-delay`; epsm in epsl zapreta le `/form*/`
+in `app*`, ostale domene robots.txt nimajo), popolnih zapisnikov ne beremo
+znova.
+
+Vir `mascot` (`scripts/viri/mascot.mjs`) bere spletišča EPS, ki jih gosti
+Mascot Network Hellas: epsm.gr (Makedonija/Solun), epsachaias.gr, epspellas.gr,
+epsdramas.gr, epskozanis.gr, epskerkyras.gr, epsthesprotias.gr, epsl.gr
+(Lezbos in Limnos), eps-imathias.gr, epsprevezas-lefkadas.gr (`DOMENE`; kratica
+zveze je v slugu in šifri zapisnika — **nikoli je ne spreminjaj**). Koda je
+ista (ASP), predloge pa se med domenami razlikujejo (štiri različice razporeda —
+epsm, Ahaja `table.asp`, Krf, Lezbos z izidom v isti vrstici — in dve strani
+tekme), zato se razčlenjevalnik drži besedila in razredov
+`epsm-…`, ne postavitve.
+
+- **Šifra lige je `<domena>:<diorganosi>`**, `diorganosi` natanko kot v meniju
+  domene (`table.asp?diorganosi=Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ`; zakomentirani
+  vnosi menija so lanski play-off/out). **Arhiva ni**: stran lige vedno kaže
+  tekočo sezono (Ahaja ima pretekle sezone le kot slike), cene so le iz
+  tekoče sezone. Ob novi sezoni šifra ostane, če zveza ligo imenuje enako.
+  Grške črke v šifri `sifra()` (zapisniki.mjs) spremeni v `_`, zato vir svoje
+  datoteke imenuje z zgostitvijo šifre (`imeRazporeda`) in preveri, da je
+  stran res ta liga (naslov strani, `jeStranLige`).
+- **Razpored** je `table_analytika.asp` (epsm, Krf, Lezbos) ali `table.asp`
+  (ostale): krogi "N<sup>η</sup> ΑΓΩΝΙΣΤΙΚΗ", vrstica "Domači / - / Gostje"
+  (ime kluba ima lahko " - ": "ΑΟ ΤΡΙΤΑΙΑΣ - Ο ΤΡΙΤΑΙΙΚΟΣ"), izid, povezava
+  `game.asp?game_number=N&match_date=dd.mm.yyyy`; Ahaja, Kozani, Imatija, Drama
+  in Pela imajo pri tekmi še datum in uro, epsm le pri odigranih (s povezave).
+  **Čas je atenski → ljubljanski −1 h.** Neodigrani tekmi brez datuma vir
+  datum vzame s **strani tekme** (obstaja pred tekmo), številko pa iz
+  razporeda ali okvirja "ΕΠΟΜΕΝΗ ΑΓΩΝΙΣΤΙΚΗ" na `table.asp` (epsm) — le za
+  naslednja dva kroga, v lastnem predpomnilniku (ura do 12 ur). Krog brez
+  znanega datuma prve polovice sezone se oceni (+7 dni, `datum_ocenjen`, kot
+  fssid), druga polovica izpade, dokler ne dobi datuma.
+- **Številka tekme se vsako sezono ponovi** (vsaka liga ima svoj tisočak:
+  epsm Α1 1xxx, Α 1. skupina 2xxx …; `match_date` stran prezre). Šifra
+  zapisnika je zato `gr-<zveza>-<leto začetka sezone>-<N>` (`gr-mak-2026-2018`),
+  datoteka strani tekme v predpomnilniku prav tako
+  (`mascot-tekma-mak-2026-2018.html`, `imeTekme`) — brez sezone bi lanska stran
+  s postavami obveljala za letošnjo tekmo. Shranjena stran z datumom več kot tri
+  tedne od datuma razporeda se prebere sveže.
+- **Zapisnik** `game.asp`: imeni klubov, izid, strelci po ekipah ("27'
+  ΧΑΤΖΗΛΙΑΣ Π.", 95' → 90; podaljšek "45' +1 ΙΜΕ" ali "45+1'" → 45), datum in ura ("ΗΜΕΡΟΜΗΝΙΑ", "ΩΡΑ"), za vsako ekipo
+  seznam "NN. ΠΡΙΙΜΕΚ Ι." — **pred `<hr>` začetniki, za njim klop** (dres je
+  prava številka: začetnik ima lahko 17, klop 03), nato menjave "61' ΙΖSTOP -
+  VSTOP" ("ΗΜ.'" = polčas → 45). **Kartonov in asistenc ni.** Igralec v
+  izključitvi zato dobi vse minute.
+- **Smer menjave** pove, kdo je na igrišču (gre ven) in kdo še ni igral (gre
+  noter) — klubi jo pišejo različno. Kjer veljata obe (soimenjaka "ΚΑΛΟΓΡΙΔΗΣ
+  Ν. - ΚΑΛΟΓΡΙΔΗΣ Ν."), odloči običajna smer domene (`menjava`). Napake vira
+  (prazno ime, oba igralca na klopi, oba na igrišču) dajo le izstop ali le
+  vstop ali nič, vedno z opozorilom.
+- **Ahaja (epsachaias.gr) klopi ne objavi**: le začetniki, menjave "VSTOP -
+  IZSTOP" in pogosto le s priimkom ("46' ΚΕΡΑΜΙΔΑΣ - ΠΑΣΒΑΝΤΙΔΗΣ"). Rezerva, ki
+  je vstopila, dobi nastop brez dresa; če ima klub v zapisnikih lige natanko
+  enega igralca s tem začetkom imena, dobi njegovo polno ime (`dopolniImena`),
+  sicer bi bila ista oseba v bazi dvakrat.
+- **Vratar ni označen**: prvi začetnik je vratar (namig → GK, kot `eps`,
+  `ffm`); *Uskladi pozicije* z `vir = mascot`, ostale pozicije na glasovanje.
+- **Identiteta je ime + klub** (kot fsb, ffm): "ΠΡΙΙΜΕΚ Ι." v velikih grških
+  črkah, kot ga piše zveza (male črke brez naglasov niso pravilna grščina);
+  soimenjaka loči dres. Isti dres pri dveh igralcih ekipe je opozorilo.
+- **Kontumacija**: izid brez strani tekme ali z oznako "α.α." / "ΑΝΕΥ ΑΓΩΝΑ"
+  / "ΑΠΟΣΥΡ…" / "ΔΕΝ ΘΑ ΔΙΕΞΑΧΘΕΙ" (`BREZ_BORBE`; velike "Α. Α." so začetnice
+  igrišča, ne oznaka), ali 3:0 / 0:3, starejša od tedna, katere stran nima
+  postav (`vir.kontumacije`). Nepopoln zapisnik (ekipa z manj kot 7
+  začetniki) kot pri `frf`: izid se zapiše, `imported_at` ostane prazen.
+- **Predpomnilnik**: v predpomnilnik gre le stran z glavo tekme oziroma
+  razpored s krogi (`zaPredpomnilnik`) — vzdrževalna stran ne. Prve tri dni po
+  tekmi se stran bere sveže. Shranjena stran je dokončna šele, če je bila
+  **shranjena** več kot tri dni po tekmi (čas datoteke, ne starost tekme: stran
+  z dne tekme ima lahko postave brez menjav in strelcev; GR ni v nočnem uvozu).
+  Nedokončan zapisnik (`nedokoncan`: brez postav, nepopoln, goli ≠ izid, strelca
+  ni, menjava brez para) se do 45 dni bere sveže; dokončan nikoli več.
+- **Isto ime, drug klub**: zveze so ločene piramide, klub pa je enoličen v
+  državi (tudi proti viru `eps`). `IME_V_ZVEZI` (`<domena>|<ključ>` → ime s
+  krajem zveze). Pregled 15. 10. 2026 (vseh 41 lig desetih domen in
+206 klubov vira `eps`): en trk, Α.Ε. Αμπελοκήπων (Solun, epsm Α 2. skupina,
+in Drama, Β) — dramski in njegova druga ekipa sta "Α.Ε. ΑΜΠΕΛΟΚΗΠΩΝ (Δράμα)"
+in "… Β (Δράμα)"; z `eps` trkov ni. Ob novi ligi ali sezoni:
+  `node scripts/mascot-lige.mjs --trki`.
+
+Seznam lig in preizkus (brez baze, po poti uvoza):
+
+```bash
+node scripts/mascot-lige.mjs                        # lige iz menijev vseh domen: krogi, tekme, odigrane
+node scripts/mascot-lige.mjs epsm.gr --preveri      # še vsi zapisniki (goli, postave, menjave, minute)
+node scripts/mascot-lige.mjs --trki                 # isto ime kluba v dveh zvezah
+```
+
+Preizkus v živo (15. 10. 2026, vse lige vseh desetih domen, vsi zapisniki,
+po poti uvoza brez baze; ~500 zahtevkov po 3 s, nobenega 403, 429 ali
+izziva): v 31 vpisanih ligah 384 odigranih tekem, 380 zapisnikov (stran 4 tekem
+še ni dala zapisnika — vir jo bere znova do 45 dni), 1 nepopoln (epsm Γ3, ekipa brez postave);
+goli = izid 362/379 — razlika je napaka vira (strelec, ki ga ni na seznamu
+igralcev, ali gol brez strelca), izid ostane izid zapisnika; postav po 11
+758/759 (Λήμνος: ekipa z 10); 2811 menjav z minuto, 990 minut ima 738/759
+ekip — ostale imajo menjavo, ki jo je klub vpisal le do polovice (le izstop
+ali le vstop, opozorilo), ali menjavo, pri kateri vir ne ve, kdo gre ven. Ahaja: 386
+nastopov s klopi brez dresa (klopi ne objavi). Nobena tekma ni bila brez
+borbe.
+
+Vpisanih je 31 lig (migracija 20261016090300), **neaktivnih**, brez arhiva:
+
+| liga | šifra (`<domena>:<diorganosi>`) | klubov | odigranih / zapisnikov | goli = izid | postav po 11 | 990 minut |
+|---|---|---|---|---|---|---|
+| gr-mak-a1 | `epsm.gr:Α1 ΕΡΑΣΙΤΕΧΝΙΚΗ` | 16 | 56 / 56 | 55/56 | 112/112 | 109/112 |
+| gr-mak-a-1 | `epsm.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ` | 14 | 21 / 21 | 21/21 | 42/42 | 40/42 |
+| gr-mak-a-2 | `epsm.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 2ος ΟΜΙΛΟΣ` | 14 | 21 / 21 | 19/21 | 42/42 | 39/42 |
+| gr-mak-a-3 | `epsm.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 3ος ΟΜΙΛΟΣ` | 15 | 27 / 27 | 25/27 | 54/54 | 54/54 |
+| gr-mak-b-1 | `epsm.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ` | 11 | 5 / 4 | 4/4 | 8/8 | 8/8 |
+| gr-mak-b-2 | `epsm.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ - 2ος ΟΜΙΛΟΣ` | 12 | 6 / 6 | 6/6 | 12/12 | 11/12 |
+| gr-mak-b-3 | `epsm.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ - 3ος ΟΜΙΛΟΣ` | 12 | 6 / 5 | 5/5 | 10/10 | 9/10 |
+| gr-mak-b-4 | `epsm.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ - 4ος ΟΜΙΛΟΣ` | 12 | 5 / 5 | 5/5 | 10/10 | 10/10 |
+| gr-mak-g-1 | `epsm.gr:Γ ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ` | 10 | 5 / 5 | 5/5 | 10/10 | 8/10 |
+| gr-mak-g-2 | `epsm.gr:Γ ΕΡΑΣΙΤΕΧΝΙΚΗ - 2ος ΟΜΙΛΟΣ` | 11 | 4 / 3 | 3/3 | 6/6 | 5/6 |
+| gr-mak-g-3 | `epsm.gr:Γ ΕΡΑΣΙΤΕΧΝΙΚΗ - 3ος ΟΜΙΛΟΣ` | 10 | 4 / 4 (1 nepopoln) | 3/3 | 7/7 | 7/7 |
+| gr-mak-g-4 | `epsm.gr:Γ ΕΡΑΣΙΤΕΧΝΙΚΗ - 4ος ΟΜΙΛΟΣ` | 10 | 3 / 3 | 3/3 | 6/6 | 5/6 |
+| gr-mak-g-5 | `epsm.gr:Γ ΕΡΑΣΙΤΕΧΝΙΚΗ - 5ος ΟΜΙΛΟΣ` | 11 | 4 / 4 | 4/4 | 8/8 | 8/8 |
+| gr-ach-a-1 | `epsachaias.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ` | 10 | 15 / 15 | 14/15 | 30/30 | 30/30 |
+| gr-ach-a-2 | `epsachaias.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ - 2ος ΟΜΙΛΟΣ` | 10 | 15 / 14 | 12/14 | 28/28 | 28/28 |
+| gr-ach-b-1 | `epsachaias.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ - 1ος ΟΜΙΛΟΣ` | 13 | 12 / 12 | 12/12 | 24/24 | 24/24 |
+| gr-ach-b-2 | `epsachaias.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ - 2ος ΟΜΙΛΟΣ` | 13 | 12 / 12 | 11/12 | 24/24 | 24/24 |
+| gr-pel-a1 | `epspellas.gr:Α1 ΕΡΑΣΙΤΕΧΝΙΚΗ` | 11 | 5 / 5 | 4/5 | 10/10 | 10/10 |
+| gr-pel-a | `epspellas.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ` | 12 | 6 / 6 | 5/6 | 12/12 | 12/12 |
+| gr-dra-a | `epsdramas.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ (ΠΡΩΤΑΘΛΗΜΑ)` | 12 | 24 / 24 | 24/24 | 48/48 | 47/48 |
+| gr-dra-b-a | `epsdramas.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ - Α ΟΜΙΛΟΣ (ΠΡΩΤΑΘΛΗΜΑ)` | 12 | 18 / 18 | 18/18 | 36/36 | 34/36 |
+| gr-dra-b-b | `epsdramas.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ - Β ΟΜΙΛΟΣ (ΠΡΩΤΑΘΛΗΜΑ)` | 12 | 17 / 17 | 15/17 | 34/34 | 33/34 |
+| gr-koz-a | `epskozanis.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ (ΠΡΩΤΑΘΛΗΜΑ)` | 11 | 10 / 10 | 10/10 | 20/20 | 19/20 |
+| gr-koz-b | `epskozanis.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ (ΠΡΩΤΑΘΛΗΜΑ)` | 13 | 12 / 12 | 11/12 | 24/24 | 24/24 |
+| gr-ker-a | `epskerkyras.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ` | 12 | 5 / 5 | 5/5 | 10/10 | 10/10 |
+| gr-ker-b | `epskerkyras.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ` | 16 | 8 / 8 | 7/8 | 16/16 | 16/16 |
+| gr-les-a-lesvos | `epsl.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ (ΟΜΙΛΟΣ ΛΕΣΒΟΥ)` | 8 | 4 / 4 | 3/4 | 8/8 | 8/8 |
+| gr-les-a-limnos | `epsl.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ (ΟΜΙΛΟΣ ΛΗΜΝΟΥ)` | 8 | 4 / 4 | 4/4 | 7/8 | 7/8 |
+| gr-les-b | `epsl.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ ΛΕΣΒΟΥ` | 15 | 4 / 4 | 4/4 | 8/8 | 7/8 |
+| gr-ima-a | `eps-imathias.gr:Α ΕΡΑΣΙΤΕΧΝΙΚΗ ΚΑΤΗΓΟΡΙΑ ΚΑΝΟΝΙΚΗ ΠΕΡΙΟΔΟΣ` | 14 | 28 / 28 | 27/28 | 56/56 | 56/56 |
+| gr-ima-b | `eps-imathias.gr:Β ΕΡΑΣΙΤΕΧΝΙΚΗ ΚΑΤΗΓΟΡΙΑ ΚΑΝΟΝΙΚΗ ΠΕΡΙΟΔΟΣ` | 12 | 18 / 18 | 18/18 | 36/36 | 36/36 |
+
+**Ni vpisano** (15. 10. 2026): Thesprotia (epsthesprotias.gr, Α:
+6 klubov, nič odigranega) in Preveza-Lefkada (epsprevezas-lefkadas.gr, Α nič
+odigranega, Β 1. in 2. skupina brez razporeda) nimata nobene lige; Ahaja Γ
+1. in 2. skupina, Pela Β 1. in 2. skupina in Imatija Γ (brez razporeda) še
+nič odigranega. Vpiši jih, ko `node scripts/mascot-lige.mjs <domena>
+--preveri` pokaže zapisnike. Mlajše kategorije, ženske, pokali in play-off /
+play-out (zakomentirani vnosi menija) niso vpisani.
+
+Uvoz (ena za drugo, brez arhiva): `gh workflow run uvoz-lige.yml -f
+liga=gr-mak-a1 -f cene=true`. Liga ~60 zapisnikov po 3 s je ~3–4 minute.
 ### Škotska — vir `lowland`
 
 **Pisno dovoljenje za zajem: pridobil Lovro, oktober 2026.** Pogoji uporabe
@@ -3045,617 +3840,45 @@ vzorec** — sicer se prvi tak hrošč opazi šele na lestvici.
 
 ## Glavni koncepti podatkovnega modela
 
-- `players` → realni igralci, vezani na realni klub (`teams`) in tekmovanje
-- **Soimenjak pri drugem klubu ni samodejno prestop.** Vir brez šifre igralca
-  (stari CMS MNZ, NZS, fsb, fss, fssid, ffm) pozna le ime in klub; uvoz je
-  istoimenskega igralca drugega kluba imel za prestop tudi, ko sta igrala
-  hkrati (Petrović Lazar, rs-srpska-istok, 10/2026: vratar Morave in igralec
-  Malošišta v istih krogih, en zapis, vsota točk). Zdaj ga `prestopSkladen`
-  (`scripts/prestop.mjs`) sprejme le, če je skladen s časom: brez **trka**
-  (isti dan ali isti krog ≤ 6 dni narazen), nov klub za vsemi nastopi starega,
-  vrnitev ne v obdobju drugega kluba; sicer nov zapis (dvojnika `zdruzi-duplikate`
-  združi, zapisov s trkom pa ne). Igralca s šifro (`reg_st`) po imenu ne
-  posvoji. Šifra je identiteta: pri sportnet/oefb/hns/mlsz dva kluba v istem
-  krogu niso zlitje (dvojna registracija, prestavljena tekma, krogi faz).
-  Že zlite razdeli delovni tok *Razdeli zlite igralce*
-  (`scripts/razdeli-zlite-igralce.mjs` → SQL `zliti_igralci`,
-  `razdeli_zlitega_igralca`, migracija 20261011233100): gruča je klub, id
-  ostane klubu, ki ga imajo lastniki (pozicija ob nakupu, sicer klub zadnjega
-  kroga pred prvim posnetkom postave), sicer trenutnemu klubu; drugi klubi
-  dobijo svojega igralca z nastopi, goli in asistencami, točke krogov se
-  preračunajo. Najprej brez `pisi`, najprej neaktivne lige; ponoven zagon nič ne spremeni
-- `fantasy_teams` → ekipe uporabnikov, `fantasy_roster` → izbrani igralci
-  (`is_starter`, `is_captain`, `is_vice`, `bench_order`)
-- `fantasy_teams.hisna` → **hišna ekipa**: sistemska ekipa SLFF, da slovaške
-  lige z eno ekipo niso prazne (glej *Hišne ekipe* spodaj)
-- `fantasy_chips` → vloženi pripomočki (`klop_plus`, `wildcard`), vsak enkrat na
-  sezono: ključ je `(fantasy_team_id, chip, season)`, `season` vpiše sprožilec
-  iz kroga. Vmesnik naj bere in briše pripomočke **s filtrom na sezono**.
-- `fantasy_lineups` → posnetek postave po krogih; nastane s `zakleni_krog(krog)`
-  oz. `zakleni_zapadle_kroge()` (za cron). Točkovanje bere posnetek, če obstaja.
-- **Ekipe so zasebne** (migracija 20261012137100): sestavo ekipe (kader,
-  posnetki, kapetan, klop, pripomočki) vidi le lastnik in admin, tudi po roku
-  in tudi pri hišnih ekipah. RLS na `fantasy_roster`, `fantasy_lineups`,
-  `fantasy_chips`; `tuja_postava` vrne vrstice le, če `sme_videti_ekipo(ekipa)`
-  (lastnik, admin, servis). Javno ostane, kar sestave ne izda: lestvice (ime,
-  lastnik, točke, mesto, točke kroga, število prestopov in kazen iz
-  `fantasy_transfers`), mini lige in izbranost. Izbranost (`owners` v
-  `player_standings`, `player_season_standings`) je NULL, dokler ima zadnji
-  zaklenjeni krog lige manj kot **5 človeških ekip** — sicer seštevek izda
-  ekipo. Stran `/team/:id` tujcu pokaže le ime, lastnika, točke in mesto;
-  ime ekipe na lestvicah je povezava le pri svoji ekipi (`ImeEkipe.tsx`).
-  Funkcija ali pogled, ki bere tuje posnetke, mora teči kot lastnik sheme
-  (SECURITY DEFINER / pogled brez `security_invoker`) in sama paziti, kaj
-  vrne.
-- `rounds.lineups_locked_at` → dokončan zajem, tudi za neveljavne/prazne ekipe;
-  odsotnost posnetka ni dovoljenje za poznejši zajem. `fantasy_teams.roster_updated_at`
-  beleži čas shranjevanja. `shrani_ekipo` pred spremembo zajame zapadle kroge;
-  shranjevanje, zaklep in urejanje pripomočkov si delijo transakcijski zaklep lige.
-- `rounds` → krogi sezone, `matches` → tekme (z izvorom `zapisnik_id`).
-  `matches.kontumacija` = tekma ni bila odigrana, izid je dodeljen in
-  zapisnika ne bo; borza in preverba nanjo ne čakata. Označi jo uvoz razporeda:
-  Sportnet `contumation`; stari CMS izid brez polčasa `3 : 0()` ali `(u.d.)`
-  (Celje); Maribor izid brez polčasa **in** brez kraja (s krajem je zelena
-  miza z zapisnikom); Ptuj, Murska Sobota, Lendava prazna kartica 3:0 brez
-  sodnika in postav na strani zapisnikov kroga (`vir.kontumacije`). Pri Novi
-  Gorici in NZS primera še nismo videli — tam admin z
-  `update matches set kontumacija = true where id = …`
-- `matches.vir_brez_izida` → vir ob zadnjem uvozu razporeda za to minulo,
-  neuvoženo tekmo ni kazal izida: zveza jo je prestavila brez novega datuma
-  (Bled Bohinj : Sava Kranj, 4. 10. 2026). Piše jo uvoz razporeda iz
-  `odigrana`, ki ga dajo razčlenjevalniki starega CMS-a (Kranj, Ljubljana,
-  Celje), hns, sportnet, mlsz, facr, fsb in frf (`oznakaBrezIzida` v `razpored.mjs`);
-  ostali viri ga nimajo in tekme ostanejo neoznačene. Preverba podatkov takih
-  tekem ne javi kot `tekma-ni-uvozena`, šele po 30 dneh kot `tekma-brez-izida`
-  (človek odloči: kontumacija ali izbris). Nov vir naj tekmi da `odigrana`
-  (ali ima vir izid), kadar ga razpored pozna.
-- Omrežje: uvozi berejo prek `prenesiSPonovitvami` (`scripts/prenos.mjs`) —
-  ponovi omrežne napake, 5xx in 429 (2 s, 6 s, 15 s), 4xx nikoli. Nov prenos
-  v uvozni skripti naj gre skozenj, ne mimo z golim `fetch`. Vir, katerega
-  strežnik ob preobremenitvi vrne 200 z obvestilom namesto strani, naj ima
-  `zaPredpomnilnik(besedilo, datoteka)` (uvoz zapisnikov in razporeda tako
-  stran ne shranita in shranjene ne bereta; zdaj le mlsz)
-- Nastope tekme (in spremenjene gole) uvoz zamenja s
-  `zamenjaj_nastope_tekme(tekma, nastopi, goli)` v eni transakciji (servisna,
-  migracija 20261013181100). Prej sta bila izbris in vstavljanje dva zahtevka
-  in padec omrežja vmes je živo tekmo pustil brez nastopov (tekma 148981,
-  12. 10. 2026)
-- borza (`preracunaj_cene`, nočno `uveljavi_zapadle_cene`) premakne ceno po
-  točkah kroga (+0.1 na dve točki nad osnovnima dvema, največ +1.0; forma
-  treh krogov je spodnja meja), odsotnost pa kaznuje šele drugi zaporedni krog.
-  Cena se giblje v razponu 4.0–14.0 (`meje_borze()`) in od izhodiščne
-  `value_start` ni omejena — kdor igra dobro vso sezono, lahko pride do vrha.
-  Cron vsak dan znova obračuna odigrane kroge zadnjih 14 dni, zato sprememba
-  pravil **ne sme seči nazaj**: `rounds.borza_po_starem` zapre kroge, odigrane
-  pred zadnjo spremembo (migracija 20260924100000). Ob naslednji spremembi
-  pravil jih zapri enako. Kadar se spremenijo le meje cene, krog ne zapri,
-  ampak ga označi, da ga borza obračuna po starih mejah — tako je
-  `rounds.borza_z_odmikom` (20260925100000) ohranil odmik 3.0 od izhodiščne
-  za kroge, odigrane pred ukinitvijo, in igralci, ki čakajo na zapisnik,
-  premika ne izgubijo.
-- `appearances` → nastop igralca na tekmi (minute, goli, kartoni, prejeti goli)
-- `goals` → posamezen gol; nosi tudi potrjeno asistenco
-- `assist_votes`, `position_votes` → glasovanje skupnosti (prag v `settings`)
-- `player_scores` → točke igralca na krog (iz pogleda `appearance_points`);
-  posnetek se osveži sam, ko se spremeni pozicija igralca ali potrdi asistenca
-  — pozicija odloča, koliko je vreden gol, zato bi brez tega lestvica kazala
-  stanje ob uvozu, ko je pozicijo poznal samo vratar
-- `rounds.pravila_tockovanja` → različica pravil, po kateri se krog točkuje
-  (`tocke_za_nastop(…, zmaga, pravila)`, migracija 20260928100000). Nočni
-  preračun bi sicer spremembo pravil prenesel na že podeljene točke. Različica
-  2: vratar čista mreža +5, zmaga +2 za vratarja in branilca, prejeti goli le
-  med igranjem (`appearance_points.prejeti_na_igriscu`; `goals_conceded` in
-  `clean_sheet` ostaneta izid cele tekme). Ob novi spremembi dodaj različico
-  3, zapri začete kroge in jo prenesi v `src/lib/tockovanje.ts`
-- `ucinkovita_postava(ekipa, krog)` → postava po samodejnih menjavah z množitelji;
-  iz nje računa `fantasy_round_points_izracun`. Izid hrani tabela `tocke_krogov`
-  in `fantasy_round_points` (ter z njim obe lestvici) bere **tabelo**, ker je
-  sprotni izračun anonimnim obiskovalcem presegel 3 s. Tabelo po krogih osvežijo
-  sprožilci na `player_scores`, `fantasy_lineups`, `fantasy_transfers`,
-  `fantasy_chips`, `appearances` in `matches`; ponoči jo cron obnovi vso. Nov
-  vhod v izračun **potrebuje svoj sprožilec**, sicer lestvica zaostaja do noči
-  (`npm run preizkus-tock-krogov` primerja tabelo z izračunom).
-- `tedenski_pregled_mini_lige(liga, krog)` → zgodbe končanega kroga mini lige
-  (točke kroga, premiki na lestvici mini lige, kapetan, klop) kot jsonb;
-  besedila sestavi `src/lib/miniLige.ts` (`zgodbeKroga`). Krog je **številka**
-  tekoče sezone, ker mini liga gre čez lige; končane kroge ekip da
-  `koncani_krogi_mini_lige`. Tujec mini lige (`sem_v_mini_ligi`) dobi `null`.
-  Pregled teče kot lastnik sheme (bere tuje posnetke za točke klopi), a
-  kapetana izbere le med ekipami, ki jih klicatelj sme videti (svojo), aduta
-  ne vrne več (izdal bi, česa tekmeci nimajo); vrstice nosijo `lastnik_id`
-- **Javne mini lige** (migracija 20261012139100): `mini_lige.javna`, `opis`
-  (≤ 120), `competition_id` (liga, v kateri je javna; mini liga sama še vedno
-  gre čez lige) in `javna_zaklenjena_at` (admin jo je skril, lastnik je ne more
-  spet objaviti). Javnost nastavi le ustvarjalec prek
-  `nastavi_javnost_mini_lige` (potrebuje ekipo v tej ligi); neposredno sme
-  lastnik spremeniti le `name` (stolpčna pravica). Sprožilec `varuj_mini_ligo`
-  ime in opis javne lige preveri s `prepovedano_besedilo` (isto pravilo kot
-  prikazno ime: znaki, rezervirane besede, žaljivke; JS `prepovedanoBesedilo`)
-  in omeji na 3 javne lige istega lastnika v ligi. Branje gre le prek
-  SECURITY DEFINER RPC (tabela nosi kodo, RLS ostane za člane):
-  `javne_mini_lige(liga, iskanje)` (anon, največ 100, po številu ekip),
-  `mini_liga_glava(id)` in `lestvica_javne_mini_lige(id)` (javna vsem,
-  zasebna članom; le lestvica, nikoli postave ali koda). Pridružitev brez kode
-  `pridruzi_javni_mini_ligi(liga, ekipa)`: liga javna, ekipa svoja in iz lige
-  mini lige. Prijave v `prijave_mini_lig` (`prijavi_mini_ligo`, ena odprta na
-  uporabnika in ligo, največ 10 odprtih); Administracija → Prijave mini lig
-  (`admin_prijave_mini_lig`, `admin_odloci_mini_ligo`: skrij in zakleni ali
-  zavrni). Stran `/mini-leagues/:id` (`JavnaMiniLiga.tsx`, noindex)
-- `player_standings` → lestvica igralcev (točke, forma, na tekmo, izbranost)
-- `statistika_igralcev` → statistika igralca po ligi in sezoni (nastopi,
-  minute, goli, kartoni, čiste mreže, točke, asistence, zadnji krog, forma).
-  `player_season_stats`, `player_overview` in `player_season_standings` jo
-  berejo namesto sprotnega seštevanja vseh nastopov (prej 0,7–2,5 s na klic,
-  tri četrtine časa baze; migracija 20261002120000). Izračun je
-  `player_season_stats_izracun`; tabelo osvežijo sprožilci na `appearances`,
-  `player_scores`, `goals`, `matches` (izid) in `players` (pozicija), ponoči
-  jo cron obnovi vso. Nov vhod v izračun **potrebuje svoj sprožilec**
-  (`npm run preizkus-statistike` primerja tabelo z izračunom)
-- `isci_igralce(iskanje, omejitev)` → igralci **vseh aktivnih lig** po imenu
-  (javna, anon): id, ime, klub, liga (šifra, kratko ime, država), pozicija,
-  cena, `podobno`. Brez šumnikov, vrstni red besed poljuben, od treh znakov;
-  najprej natančno (vsaka beseda v imenu), šele brez zadetka podobnost
-  (pg_trgm `%` in `<%`, kazalo `players_ime_brez_sumnikov_trgm`). Brez
-  anonimiziranih in neaktivnih lig. Bere jo izbirnik lige (razdelek Igralci
-  pod ligami, izbira preklopi ligo in odpre `/player/<id>?t=<liga>`) in stran
-  Igralci, ko iskanje v ligi ne najde nikogar ("Najdeno v drugih ligah").
-  Odjemalec: `src/lib/iskanjeIgralcev.ts`. V produkciji (125k igralcev)
-  najslabši primer "ric" ~210 ms, običajno 1–40 ms
-- `vrh_drzave(drzava, koliko)` → vrh igralcev tekoče sezone vseh aktivnih lig
-  države (točke brez asistenc, goli, čiste mreže vratarjev) za zavihek Igralci na
-  strani Slovenija. Bere tabele (`player_scores`, `appearances`, `goals`), ne
-  `appearance_points`: prek pogleda je poizvedba trajala 10 s, iz tabel ~150 ms
-- `navijaci_klubov(liga)` → klubi lige po povprečju točk navijačev (zavihek
-  Navijači klubov na Lestvici, `#fans`; razdelek na strani kluba). Navijač je
-  `profiles.navijam_team_id` — en klub na človeka, ne po ligah (klubi so
-  skupni); šteje le v ligi, kjer klub igra. Navijanje **ni** poznavalec
-  (`insider_team_id`, trikratna utež glasu za pozicije), zato povabilo piše
-  samo `navijam_team_id`; ob uvedbi je dobil klub vsak poznavalec. Mesto dobi klub z vsaj `min_navijacev_kluba` navijači
-  (privzeto 3). Točke bere iz `fantasy_round_points` (tabela), ne računa sproti
-- stran Rezultati (`/results`, `/match/:id`) sestavi postavi tekme iz
-  `appearances` + `appearance_points`; nove sheme ne potrebuje
-- `lestvica_lige(liga, sezona)` → **prava** lestvica lige (stran `/table`, meni
-  "Lestvica lige"; `/standings` je fantasy). Iz `matches`: odigrana = ima
-  zapisnik ali je kontumacija (z dodeljenim izidom); 3/1/0, točke → gol razlika
-  → dani goli → ime. Medsebojnih tekem in odvzetih točk ne pozna — stran to
-  pove kot približek. Privzeta sezona je zadnja z odigrano tekmo. Pod njo
-  strelci iz `player_season_standings`
-- **Zemljevid strani**: `public/sitemap.xml` ima le stalne poti brez lige (`/`, `/table` … privzete lige so v `sitemap-clani.xml`); po ligah ga
-  ponoči sestavi `scripts/sitemap.mjs` (delovni tok `sitemap.yml`, anon ključ:
-  strani lige s `?t=` — privzeta liga `clani` brez njega, kot kanonični —,
-  klubi, igralci z minutami letos ali lani, odigrane tekme, v
-  `sitemap-drzave.xml` še vstopne strani držav z aktivno ligo) in ga z rsync prenese v `/srv/slff/sitemap/` na strežniku — ne v
-  repozitorij in ne v `dist/`, ker objava zamenja mapo izdaje. Caddy streže
-  `/sitemap-index.xml` in `/sitemap-*.xml` iz te mape. Nova javna stran lige
-  sodi tudi v `STRANI_LIGE` v skripti. *Uvoz Avstrije (vrsta)* ga po vklopu
-  lige zažene takoj, ne šele ponoči
-- `match_assist_status` → odigrane tekme s številom golov brez asistence
-  (stran Asistence izbira po korakih: krog → tekma → gol)
-- `naslednji_krog` → prvi krog, ki se še ni zaklenil (rok na strani Moja ekipa)
-- `stevilo_ekip_lig` → število ekip po ligah (s hišnimi) za okno prvega
-  obiska; `security_invoker`, le branje. Prej je odjemalec prenesel vse ekipe
-- `stanje_mojih_ekip()` → za prijavljenega vse njegove ekipe v aktivnih ligah:
-  veljavnost, razlog, ali bo ob roku brez točk (prvi fantasy krog se zaklene
-  tudi nepopoln) in igralci s poročilom o poškodbi/odsotnosti. Bere ga pas
-  `OpozoriloEkipe` (rdeče napake, rumena opozorila, ki se dajo skriti);
-  besedila sestavi `src/lib/stanjeEkip.ts`
-- `lijak_dnevno` → lijak začetka: dnevni seštevki korakov `prazna_ekipa`,
-  `predlog` ("Sestavi mi ekipo"), `prva_shramba`, `sestavi_iz_maila` (povezava
-  `/my-team?sestavi=1` sestavi ekipo ob odprtju). Le števci, brez uporabnika;
-  piše `zabelezi_korak`, bere admin. Ime ekipe se predlaga ("FC Ime") in se ga
-  da spremeniti kadarkoli (od 6. 10. 2026; prej je bilo po prvi shrambi fiksno)
-- `obiski_dnevno` → obiski strani: dnevni seštevki po strani in starosti
-  računa (`nov` = registriran v zadnjih 7 dneh, `star`, `neprijavljen`).
-  Odgovarja na "kam gre tisti, ki ekipe ne sestavi" — lijak sam tega ne pove.
-  Piše `zabelezi_obisk(stran)`, bere admin. Šteje se **ena stran na sejo na
-  dan** (doseg, ne ogledi); ime strani določi `imeStrani()` v
-  `src/lib/obiski.ts`, dinamični deli poti (id igralca, koda mini lige)
-  odpadejo. Starost računa izračuna baza iz `auth.users.created_at`, zato je
-  odjemalec ne more lagati in v tabeli kljub temu ni uporabnika ne naprave.
-  **Nova stran se ne šteje sama**: dodaj jo v `PO_POTI`/`PO_PREDPONI` in v
-  seznam v `zabelezi_obisk()`, sicer se zapis tiho zavrže. Oboje skupaj kaže
-  razdelek *Kje ljudje obtičijo* v adminu (`src/components/admin/Lijak.tsx`)
-- `trgovine_dnevno` (trgovina `ios`/`android`, dan, `skupaj`, `novi`) in
-  `trgovine_stanje` (zadnje stanje različice iOS) → namestitve aplikacije.
-  Piše le delovni tok *Trgovine* (`scripts/trgovine.mjs`, vsak dan 07:30 UTC,
-  servisni ključ; RLS brez pravic za anon/authenticated). iOS: dnevna
-  prodajna poročila ASC, zadnjih 8 dni znova; Android: vse mesečne datoteke
-  `stats/installs/` v vedru Play. Discord javi vsak nov mejnik po 10
-  namestitev (nad `trgovine_stanje.mejnik`, najvišjim že javljenim, zato
-  padec seštevka ne javi znova) in spremembo stanja iOS. `--suho` ne piše in
-  ne javlja
-- `admin_rast(od)` → po dnevih (ljubljanski dan): novi in skupni uporabniki
-  (kot `skupaj_uporabnikov()`, brez hišnega profila), nove ne-hišne ekipe,
-  `obiskovalcev` (najbolj obiskana stran dneva iz `obiski_dnevno`, spodnja
-  meja sej) in namestitve; plus `stanje` trgovin. Le admin. Razdelek *Rast*
-  v adminu (`src/components/admin/Rast.tsx`)
-- **Statistika obiska** je Umami na strežniku (`src/lib/analitika.ts`, `stats.slff.eu`, nastavitev v
-  `docs/migracija-hetzner.md` 6c): brez piškotkov, ogledi strani in nekaj dogodkov
-  (`dogodek('ime', {…})`). Vsak korak `zabeleziKorak` gre tudi tja. Nov dogodek naj nima
-  podatkov o uporabniku; parametri iz naslova se počistijo (ostanejo `t`, `utm_*`, `src`)
-- `push_tokens` → žeton FCM naprave mobilne aplikacije ali brskalnika
-  (`platforma` `web`: Firebase JS, spletna aplikacija "SLFF web" v projektu
-  slff-cb58e, privzeti ključ VAPID, obvestilo prikaže `public/obvestila-sw.js`;
-  Safari na iPhonu le v aplikaciji na zaslonu) (ključ je žeton, ob
-  prijavi drugega uporabnika na isti napravi se preseli). Vpiše ga le
-  `shrani_push_zeton`, bere servis: `posli-opomnik` pošlje isto sporočilo še
-  kot obvestilo (`push.ts`, skrivnost `FIREBASE_SERVICE_ACCOUNT`). Kanala sta
-  neodvisna: pošta gre, če ni `profiles.brez_opomnikov`, push, če ni
-  `profiles.brez_push` (oboje stran `/reminders`, naslov "Obvestila");
-  kandidati vrnejo `email_vklop`/`push_vklop`, `email_log.kanal` pove, kaj je
-  prišlo. Za dovoljenje vpraša prva shramba ekipe, stikalo na tej strani in pas
-  po prijavi v aplikaciji ali brskalniku (`PotisnaObvestila.tsx`), dokler
-  dovoljenje ni odločeno in `brez_push` ni vklopljen; "Zapri" ga skrije za teden
-- `kandidati_za_dobrodoslico(najvec)` → dan po registraciji mail in push
-  "sestavi ekipo" (`/my-team?sestavi=1`) vsem brez (neprazne) ekipe:
-  registracija pred 20 urami do 7 dni, potrjen naslov, enkrat na človeka
-  (`email_log` vrsta `dobrodoslica`, neuspela največ trikrat). Jezik iz
-  registracije, sicer država prve ekipe ali kluba navijanja, sicer angleščina
-  (Google jezika ne pove; `useAuth` ga ob prvi seji zapiše iz vmesnika). Teče
-  vsako uro v `opozorila.yml` (`VRSTA=dobrodoslica`, največ 60 na zagon)
-- `kandidati_za_push_opomnik(liga)` → samo push "še nimaš ekipe": kdor ima
-  napravo in v ligi nima ekipe (ali ima prazno; brez ekipe šteje domača liga
-  kot pri opomniku), 24 ur pred rokom, enkrat na krog (`email_log` vrsta
-  `opomnik-push`). Teče vsako uro v `opozorila.yml` (`VRSTA=opomnik-push`)
-- `javni_profil(id)` → javna stran profila `/u/:id` (SECURITY DEFINER, le
-  javna polja): ime, avatar, član od, navijam, ekipe v aktivnih ligah z mestom
-  na lestvici lige, dosežki (sezone, krogi, najboljši krog) in mini lige, v
-  katerih je tudi gledalec (`sem_v_mini_ligi`; mini lige so zasebne).
-  `profiles.javni_profil = false` pokaže drugim le ime; izbrisan profil in
-  sistemski lastnik hišnih ekip vrneta NULL. Lestvični pogledi
-  (`fantasy_team_standings`, `fantasy_round_standings`, `lestvica_drzavna`,
-  `mini_liga_lestvica`) imajo na koncu `owner_id` (pri hišnih NULL), da ime
-  lastnika vodi na profil (`ImeLastnika.tsx`), ime ekipe pa na ekipo le pri
-  svoji (`ImeEkipe.tsx`, ekipe so zasebne). `isci_klube(iskanje)` je
-  izbirnik kluba (navijam) čez klube aktivnih lig
-- `izbrisi_moj_racun()` → uporabnik izbriše svoj račun (stran `/account`,
-  zahteva obeh trgovin); kaskada odnese profil, ekipe, glasove in mini lige
-- `players.anonimiziran_at` → igralcu je ime skrito (GDPR, migracija
-  20261009180000, obvestilo po čl. 14 na strani `/legal`). `full_name` in
-  `last_name` postaneta `#<id>`; `first_name`, `reg_st` (javna šifra osebe
-  pri viru, z njo bi se ime dalo poiskati), `nzs_*` in poročila o poškodbah
-  gredo proč. Statistika, točke in cena ostanejo. Vse strani berejo ime iz
-  `players`, zato anonimizacija velja povsod.
-  `anonimiziraj_igralca(id, razlog)` je servisna. Ugovor (igralec ali zveza,
-  info@slff.eu, v 14 dneh) admin vnese v Administracija → Igralec (iskanje
-  čez vse lige, tudi po id-ju): `admin_ista_oseba(id)` našteje druge vrstice
-  iste osebe v isti državi, `admin_anonimiziraj_igralca(ids[])` anonimizira
-  izbrane in **vse z isto šifro** v državi; soimenjake brez šifre admin
-  odkljuka ročno. `anonimiziran_razlog`: `ugovor` je dokončen; `neaktiven`
-  nastavi nočni cron `anonimiziraj_neaktivne()` (04:30, ne 03:30 zaradi
-  `uveljavi-cene`) **le v Avstriji** (obljuba ÖFB), neaktivnemu igralcu brez
-  nastopa 18 mesecev, ki ni v nobenem kadru.
-  **Uvoz imena in šifre nikoli ne povozi.** Anonimiziranega igralca najde po
-  zgoščenih ključih `sha256("<country_id>|<ime>")` in
-  `sha256("<country_id>|reg|<reg_st>")` v zaprti tabeli
-  `anonimizirani_igralci` (RLS brez pravic, ker je `players` javen); nov
-  igralec, ki se ujema s ključem igralca z ugovorom, nastane že anonimiziran.
-  Letošnji nastop vrne ime (in šifro) le `neaktiven` igralcu, ključe pobriše
-  šele po uspešni posodobitvi. `imeHash`/`regHash` v
-  `scripts/anonimizacija.mjs` morata ostati enaka SQL
-  `anonimizacijski_kljuc` (smoke in `test:varnost`)
-- **Prevzem profila igralca** ("To sem jaz", migracija 20261012091100):
-  `zahtevki_igralca` (en potrjen na igralca IN na uporabnika, en odprt na
-  uporabnika; delna unikatna kazala), piše le prek RPC `prevzemi_igralca`,
-  `preklici_moj_zahtevek`, `odloci_zahtevek_klub`, `potrdi_soigralca`,
-  `prevzem_odloci_z_zetonom`, `admin_odloci_zahtevek`. Potrdi: **poznavalec
-  kluba** (`insider_team_id` + odobrena `poznavalec_prosnje` `klub` za ta klub
-  in ligo, ali `insider_competition_id` lige; sam nastavljen klub ne šteje),
-  **dva različna potrjena soigralca** istega kluba in lige, **klub po mailu**
-  ali **admin**. **Vsak zahtevek najprej vidi admin** (Administracija →
-  Prevzemi profilov: vsi čakajoči, spori, prijave; migracija 20261012141100)
-  in ima tri gumbe: *potrdi*, *pošlji klubu* in *zavrni*. *Pošlji klubu*
-  pokliče funkcijo `posli-prevzem` z admin žetonom (`{zahtevek, na}`); žeton
-  da `admin_prevzem_zeton_za_klub` (enkraten, 14 dni, v bazi le sha256,
-  prejšnja povezava zahtevka poteče), naslov je vpisani ali prvi uporaben iz
-  `klub_stik` (nov naslov gre v stike, mail v `klub_stik_posta`). Mail in stran
-  `/claim` pokažeta ime **in e-naslov prosilca** (to piše v oknu "To sem jaz");
-  samodejnega pošiljanja klubom ni. Nov zahtevek in prijava lažnega profila
-  gresta takoj na Discord (sprožilec `trg_prevzem_na_discord`, webhook iz Vaulta,
-  brez e-naslova). Preizkus brez kluba: servis
-  `{"test_zahtevek", "test_na"}`. Zahtevek za že potrjenega ali čakajočega igralca je `spor`
-  (odloči le admin). Mladinska liga (`je_mladinski_slug`: `mladinci`, `-u19`,
-  `sml1/2`; isto v `src/lib/prevzem.ts`) zahteva potrdilo "vsaj 16 let"
-  (`star_vsaj_16`), datuma rojstva ne zbiramo. **Ista oseba v več vrsticah**
-  (člani in mladinci, druga liga, prestop) je ena: admin poveže vrstice v
-  `povezani_igralci` (predlogi `admin_predlogi_povezav`: isto ime brez šumnikov
-  ali šifra v državi), povezane kažejo isto značko in predstavitev.
-  `profil_igralca` (ključ je glavna vrstica): vzdevek, opis, uporabniška imena
-  omrežij, `fotografija` (pot v vedru `fotografije-igralcev`,
-  `<igralec>/<ime>.webp` 256 px in `-64.webp`; izrez in pomanjšava v
-  brskalniku). Fotografije na seznamih bere pogled `fotografije_igralcev` v
-  enem zahtevku na stran (`useFotografije`, `FotoIgralca`, `Dres igralecId`).
-  `skrij_moje_ime()` je le servisna (od 20261012145100 igralec imena ne skrije sam:
-  v fantasy igri ga poznajo drugi; ugovor gre prek info@ in admina);
-  anonimizacija vedno pobriše predstavitev. **Storage na strežniku** je
-  `storage-api` z datotekami na disku (`/opt/supabase/volumes/storage`, brez
-  MinIO), vklop, varnostna kopija in povrnitev v `docs/hetzner-shramba.md`.
-  Vedro in pravila ustvari `prevzem_pripravi_shrambo()` šele, ko tabele
-  `storage` obstajajo (storage-api jih ustvari sam ob zagonu) — po vklopu jo
-  pokliči. SQL brisanje (`prevzem_odstrani_fotografije`) odstrani le vrstico,
-  datoteka ostane na disku (osirotelo, ni javna; čiščenje v istem dokumentu).
-- **Preverjeni igralci** (faza 1 brez plačil, migracija 20261012190100):
-  potrjen igralec z veljavno pravico dobi modro kljukico ob imenu (stran
-  igralca, Igralci, Klub, Ekipa, igrišča, tekma, iskanje lige; vzdevek na
-  seznamih) in dodatke profila. **Stikalo** `preverjeni_racuni` v `settings`:
-  0 izklopljeno (privzeto), 1 preizkus (admin in `testerji`), 2 v živo.
-  Vsako branje gre skozi `vidi_preverjene()`; pri 0 ne vidi nihče ničesar,
-  tudi lastnik ne (kot `sponzorji_vidni`). Admin → Igralci → *Preverjeni*:
-  stikalo, preizkuševalci (`admin_nastavi_testerja`), dodelitev in odvzem.
-  - `preverjeni_racuni` (pravica): `user_id`, `player_id` = glavna vrstica,
-    `vir` `rocno`/`letna`/`dozivljenjska`, `status` `aktiven`/`preklican`/`potekel`,
-    `velja_do` (null = brez roka), `star_vsaj_18` (CHECK: plačljiv vir zahteva
-    true, ročni sme null), `stripe_customer_id`/`stripe_subscription_id` (prazna,
-    za fazo 2). En aktiven na igralca. Zaprta tabela, piše le admin:
-    `admin_dodeli_preverjen(igralec, 'rocno', velja_do)` (zahteva potrjen
-    zahtevek, vzame njegovega uporabnika; plačljivih virov ne vpiše),
-    `admin_odvzemi_preverjen(id)`, seznam `admin_preverjeni()`. Potek ne
-    potrebuje crona: `je_preverjen` primerja `velja_do` s časom.
-  - `je_preverjen(igralec)`: stikalo + potrjen zahtevek (tudi povezane
-    vrstice) + aktivna, nepotekla pravica **istega uporabnika** + ime ni
-    skrito. Seznami kličejo `preverjeni_igralci_za(ids[])` (id in vzdevek, do
-    300 na klic) v enem zahtevku na stran (`usePreverjeni`, `ZnakPreverjen`,
-    `src/lib/preverjeni.ts`), kot fotografije.
-  - `profil_igralca_plus` (ključ glavna vrstica): opis do 500 (navadni opis
-    160 ostane), `youtube`, `x`, `splet` (https, ≤ 200), `pasica`
-    (`<glavni>/banner-<ime>.webp` v vedru `fotografije-igralcev`, 1200 × 400,
-    ≤ 2 MB, izrez v brskalniku; nalaganje dovoli `prevzem_sme_pisati_foto` le
-    preverjenemu), `barva` (ena od osmih), `tekma_id` (svoja tekma) ali
-    `statistika` (ključ sezone), `sporocilo` do 140. Bere vsak le, če
-    `je_preverjen`; piše lastnik, ki je preverjen. Sprožilec
-    `varuj_profil_igralca_plus`: ročici (YouTube, X) gresta skozi strogo
-    `prepovedano_besedilo`, opis, sporočilo in spletna stran skozi
-    `prepovedane_besede` (po besedah: žaljivka je beseda ali začetek besede,
-    rezervirana beseda — admin, slff, moderator … — le cela; ločila,
-    številke, `/ @ # " %` so dovoljeni, prepovedani le kontrolni in nevidni
-    znaki ter `< >`). Opis obdrži nove vrstice, največ dve zapored. Brisati
-    svoje datoteke (tudi pasico po poteku) sme lastnik brez pravice
-    (`prevzem_sme_brisati_foto`), nalagati pasico le preverjen.
-  - Brisanje: `prevzem_odstrani_predstavitev` (preklic, anonimizacija, izbris
-    računa prek sprožilca `prevzem_izbris_zahtevka`) pobriše predstavitev,
-    dodatke in datoteke (pasica gre z mapo igralca) in aktivno pravico igralca
-    postavi na `preklican`. Mesto (en aktiven na igralca) se tako sprosti za
-    naslednjega lastnika; **isti uporabnik ob ponovnem prevzemu kljukice ne
-    dobi sam** — potrebna je nova dodelitev (faza 2 plačano obnovi izrecno).
-    `admin_dodeli_preverjen` prekliče aktivno pravico drugega uporabnika,
-    `admin_preverjeni` pokaže aktivno pravico igralca ne glede na uporabnika
-    (`aktivna`, `drug_uporabnik`). `user_id` je `on delete set null`: izbris
-    računa pusti zgodovino (pomembno za plačila).
-  - Lastnik potrjenega profila, ki ni preverjen, pri vklopljenem stikalu
-    vidi nakup (spodaj); v aplikaciji je skrit (`jeNativno`, pravila trgovin).
-  - **Faza 2: Stripe Checkout** (testni način, migracija 20261012210100).
-    Kartica "Preveri profil": letno (9,99 €) ali za vedno (29 €), pri
-    doživljenjski še "+ natisnjena značka" (5 €, poštnina 2 € SI / 4 € EU)
-    z izbiro dostave "Slovenija / druga država EU" (seja dobi le to tarifo in
-    le te države: SI ali EU-26) in imenom na znački (≤ 30,
-    `prepovedane_besede`), obvezni potrditvi 18+ in soglasja o takojšnji
-    zagotovitvi (izguba 14-dnevne pravice do odstopa); obe se shranita
-    (`star_vsaj_18`, `odpoved_pravici`, CHECK za plačljiv vir). Gumb kliče
-    funkcijo **`preverjen-placilo`** (JWT kupca): `checkout` →
-    `preverjen_pripravi_nakup` z JWT kupca (stikalo, svoj potrjen profil prek
-    `povezani_igralci`, ime ni skrito, ni že preverjen, ime na znački), cene po
-    lookup_key (`slff_preverjen_letna`, `slff_preverjen_dozivljenjska`,
-    `slff_znacka`), poštnina po metapodatku `kljuc` — id-jev Stripe v kodi ni.
-    Checkout: `automatic_tax`, `billing_address_collection=required`, kupec iz
-    prejšnje pravice ali `customer_email`, metapodatki `app=slff`, `user_id`,
-    `player_id` (glavna), `vir`, `znacka`, `ime_na_znacki`, `dostava` tudi na
-    naročnini/plačilu. Neznane napake baze funkcija vrne kot splošno
-    "Plačila ni bilo mogoče začeti.". Povratek
-    `SITE_URL/player/<id>?t=<liga>&placilo=uspeh|preklic`; ob `uspeh` kartica
-    ~20 s sprašuje `je_preverjen` ("plačilo se še obdeluje", nato "plačilo
-    prejeto"). **Preklic naročnine mora biti vedno mogoč**: `portal` vzame
-    kupca iz `preverjen_moje_narocnine()` (lastne aktivne letne, ne glede na
-    stikalo in profil); "Upravljaj naročnino" je na profilu in na `/account`
-    (v aplikaciji le opomba "na slff.eu", brez povezave na nakup).
-  - **`stripe-webhook`** (brez JWT): podpis `Stripe-Signature` (HMAC-SHA256
-    `t.telo`, 5 minut, stalni čas; `podpis.ts`, preverja ga smoke). Dogodek
-    se zapiše v `stripe_dogodki`; z `obdelano_at` se ne obdela znova, brez
-    njega (napaka → 500) ga ponovitev obdela. Seje in naročnine štejejo le z
-    `metadata.app = slff` (račun je skupen več znamkam); vračila in spori se
-    iščejo **v bazi**: payment_intent, sicer račun → naročnina (stari API
-    `charge.invoice`, basil `invoice_payments`); neznano → 200 in nič.
-    Servisne funkcije (`service_role`):
-    - `preverjen_iz_placila`: postavke seje najprej preveri webhook
-      (lookup_key, en kos, `amount_subtotal` = cena × količina; sicer brez pravice in Discord),
-      `znesek_pravice` se shrani. Seja enkrat (`stripe_checkout_id`, po
-      zaklepu). Letna `velja_do` = konec obdobja + 3 dni milosti (obnova se
-      plača nekaj ur po izteku), doživljenjska brez roka. Ročna ali tuja
-      aktivna pravica pade. Profil ni več kupčev, ime skrito, dvojno plačilo
-      ali izbrisan račun (`user_id` null) → vrstica `preklican`, izbrisan
-      igralec → brez vrstice; vselej Discord "vrni denar" in takojšen preklic
-      naročnine. Z značko vrstica v `narocila_znack`.
-    - `preverjen_podaljsaj` (`invoice.paid`, `subscription.updated` active):
-      rok le naprej; potekla vrstica iste naročnine oživi, če pravica spet
-      lahko velja (`preverjen_lahko_velja`). Naša naročnina brez pravice
-      (`brez_pravice`) → webhook jo prekliče in javi (varovalo).
-    - `preverjen_narocnina_konec` (`deleted`, canceled, incomplete_expired →
-      `potekel`). `past_due` in `unpaid` pustita pravico do roka;
-      `cancel_at_period_end` do konca obdobja.
-    - `preverjen_vracilo` (`charge.refunded`: znesek vrnjeno/plačano): polno
-      vračilo, spor (`charge.dispute.created`) ali vračilo vsaj celotne cene
-      doživljenjske → `preklican` (in značka); manjše pri odprtem naročilu →
-      le značka; sicer le Discord. Postavke seje: `amount_subtotal` =
-      cena × količina, `znesek_pravice` = `amount_total`.
-    - `preverjen_spor_dobljen` (`charge.dispute.closed`, won): pravica se
-      vrne, če profil še velja (zastarele aktivne vrstice najprej `potekel`,
-      tudi pri oživitvi v `preverjen_podaljsaj`), sicer Discord.
-  - **Ustavitev zaračunavanja.** Vsak prehod letne pravice z naročnino v
-    `preklican` (preklic profila, anonimizacija, izbris računa, admin odvzem,
-    dodelitev drugemu, sumljivo plačilo, vračilo, spor) sprožilec
-    `preverjeni_oznaci_preklic` označi `stripe_preklic = 'caka'`.
-    `stripe-webhook` čakajoče prekliče (`DELETE subscriptions/<id>`, nato
-    `preverjen_preklic_opravljen`): po vsakem dogodku Stripe, ob
-    `{"akcija":"preklici"}` z admin JWT (Administracija → Preverjeni po vsakem
-    dejanju) ali servisnim ključem — delovni tok *Preverjeni: preklici
-    naročnin* (`preverjeni-preklici.yml`, vsako uro; 404 pred objavo je le
-    opozorilo; izpis le kode HTTP). Po dobljenem sporu naročnina ostane
-    preklicana, letna velja do `velja_do` (`subscription.deleted` sami
-    preklicane naročnine roka ne skrajša).
-  - `narocila_znack`: ime, naslov (jsonb), poštnina, `za_tisk` →
-    `natisnjeno` → `poslano` (`poslano_at`) ali `preklicano`; zaprta,
-    `admin_narocila_znack`, `admin_nastavi_narocilo_znacke` (Administracija →
-    Preverjeni → Naročila značk). Izbris računa ali anonimizacija naročila ne
-    pobrišeta, `user_id` gre na null; 90 dni po pošiljanju ali preklicu ostane
-    v naslovu le država (`preverjen_pocisti_naslove`, pg_cron 04:23), naročilu,
-    ki obvisi v `za_tisk`/`natisnjeno`, pa 12 mesecev po naročilu (migracija
-    20261012233100).
-  - **Vklop testnega načina (lastnik):** na strežniku v `/opt/supabase/.env`
-    `STRIPE_SECRET_KEY=sk_test_…`, `STRIPE_WEBHOOK_SECRET=whsec_…`,
-    `SITE_URL=https://slff.eu` (compose jih poda funkcijam; compose ročno),
-    nato `scripts/hetzner/objavi-funkcije.sh preverjen-placilo` in
-    `… stripe-webhook` (CI funkcij ne objavi). **Po objavi preveri, da je
-    stripe-webhook dosegljiv brez JWT**: `curl -s -o /dev/null -w '%{http_code}'
-    -X POST https://api.slff.eu/functions/v1/stripe-webhook -H
-    'Stripe-Signature: t=1,v1=x' -d '{}'` mora vrniti 400 (podpis), ne 401.
-    V Stripe (testni način) Webhooks → endpoint
-    `https://api.slff.eu/functions/v1/stripe-webhook` z dogodki
-    `checkout.session.completed`, `checkout.session.async_payment_succeeded`,
-    `invoice.paid`, `customer.subscription.updated`,
-    `customer.subscription.deleted`, `charge.refunded`,
-    `charge.dispute.created`, `charge.dispute.closed`; skrivnost podpisa na
-    strežnik. Portal (Settings → Billing → Customer portal) vklopi preklic
-    naročnine. Stripe Tax mora biti vklopljen (sicer `automatic_tax` seje
-    zavrne). Testna kartica `4242 4242 4242 4242`, 3DS
-    `4000 0027 6000 3184`, zavrnjena `4000 0000 0000 0002`. Stikalo 1 +
-    preizkuševalec za preizkus.
-  - **Faza 3: pogoji nakupa.** So razdelek `/legal#placljivo` ("Plačljive
-    storitve: preverjeni igralci", ne svoja pot, zato brez sprememb Caddyja in
-    zemljevida): prodajalec SPACE GUARDIAN d.o.o. (naslov, matična 9850538000,
-    DDV SI42765153, info@slff.eu), ponudba in cene z DDV, Stripe, 18+, odpoved
-    naročnine (ob koncu plačanega leta), izguba pravice do odstopa za digitalno
-    vsebino (čl. 16(m)) in izjema za značko po meri (čl. 16(c)) ob ohranjenem
-    jamstvu, prenehanje (preklic potrditve, skrito ime, izbris računa,
-    chargeback), vračila (zloraba nič; naša napaka, zahteva zveze ali ukinitev:
-    letna sorazmerno, za vedno vse v prvih 12 mesecih, nato sorazmerno do 5
-    let; natisnjene značke in poštnine ob ukinitvi ne vračamo) in pritožbe
-    (odgovor v 8 delovnih dneh, ne priznavamo izvajalca IRPS). Prodajalec je
-    "vpisan v sodni register pri Okrožnem sodišču v Ljubljani". "Brez jamstva"
-    velja le za brezplačno igro. Zasebnost pove, kaj hranimo o nakupu (10 let
-    zapis, naslov 90 dni po pošiljanju ali preklicu, največ 12 mesecev), da
-    plačila obdeluje Stripe in da izbris računa konča značko in naročnino brez
-    vračila. Ključi `racun.pravno.*` v vseh 13 jezikih; sprememba pogojev =
-    nov datum v `zadnjaSprememba`. Kartica nakupa ima pod potrditvama
-    povezavo "Pogoji nakupa" (nov zavihek) in "Prodajalec: Space Guardian
-    d.o.o."; Checkout ima nad gumbom opombo o takojšnji zagotovitvi
-    (`custom_text.submit`, sl ali en po `jezik` iz vmesnika). Ista opomba z
-    naslovom pogojev je **na računu** (trajni nosilec potrditve): pri enkratnem
-    plačilu `invoice_creation` z `invoice_data.footer` (Stripe zaračuna
-    Invoicing za račune po plačilu; račun sproži `invoice.paid` brez
-    naročnine, ki ga webhook prezre), pri naročnini `subscription_data.description`
-    (`invoice_creation` v načinu subscription ni dovoljen) — nogo računov
-    naročnine da privzeta noga v Stripe (spodaj). **`STRIPE_TOS=1`**
-    (env funkcij, compose) doda `consent_collection[terms_of_service]=required`;
-    vklopi ga šele, ko je v Stripe Settings → Public details vpisan Terms of
-    service URL `https://slff.eu/legal#placljivo`, sicer Stripe sejo zavrne.
-    Strežnik HTML na strani igralca ob imenu izriše "✓ Preverjen igralec"
-    (`preverjeni_igralci_za` z anon ključem, ki vrne kaj šele pri stikalu 2;
-    napaka kljukico izpusti).
-  - **Pred vklopom v živo (lastnik):** aktivacija računa Stripe v živem načinu
-    s podatki Space Guardian (znamka SLFF, Public details: ime, podpora
-    info@slff.eu, Terms of service URL zgoraj); katalog v živem načinu (CLI:
-    cene z lookup_key `slff_preverjen_letna`, `slff_preverjen_dozivljenjska`,
-    `slff_znacka`, poštnini z metapodatkom `kljuc` `postnina_si`/`postnina_eu`,
-    davčna koda in `tax_behavior=inclusive`); Stripe Tax: registracija SI (in
-    OSS za EU); e-poštna potrdila kupcem (Settings → Customer emails); živi
-    webhook endpoint z istimi dogodki in portal; na strežniku `sk_live_…`,
-    nov `whsec_…`, `STRIPE_TOS=1`, objava obeh funkcij; preizkus z eno pravo
-    kartico in vračilom; šele nato stikalo `preverjeni_racuni = 2`. Še:
-    - **Trajni nosilec**: Settings → Invoices → privzeta noga (Default footer)
-      in potrdila kupcem (Customer emails: successful payments) s stavkom o
-      odpovedi pravici in `https://slff.eu/legal#placljivo`; preveri na
-      testnem računu enkratnega plačila in naročnine, da je stavek na obeh.
-    - **Osnovni kapital** Space Guardian d.o.o. dopiši v `racun.pravno.prodajalec`
-      (vseh 13 jezikov) — zdaj ga ni (TODO lastnik).
-    - **Davčno potrjevanje računov (ZDavPR)**: spletna plačila s kartico so
-      lahko zavezana davčno potrjenim računom (EOR/ZOI) — pred živim načinom
-      potrdi z računovodjo, ali račun Stripe zadošča.
-    - **Pravnik**: ali je značka digitalna vsebina (odpoved po čl. 16(m)) ali
-      digitalna storitev (sorazmerno plačilo ob odstopu) — od tega je odvisno
-      besedilo odpovedi.
-    - **Portal v živem načinu**: preklic naročnine ob koncu obdobja (v
-      testnem je tako nastavljen; ponovi v živem).
-- **Uradne odsotnosti** (migracija 20261012135100): potrjeni igralec (lastnik
-  potrjenega `zahtevki_igralca`, tudi za povezane vrstice) sam javi odsotnost
-  (`objavi_uradno_odsotnost`: vrsta `poskodba`/`bolezen`/`dopust`/`kazen`/`drugo`,
-  od, vrnitev ali neznano, opomba do 140 znakov) in jo zapre
-  ("Spet sem nared", `zapri_uradno_odsotnost`, brez posledic). Naenkrat ena
-  odprta na osebo. Tabela `uradne_odsotnosti` je zaprta (v njej je uporabnik);
-  javno jo kaže pogled `uradne_odsotnosti_view` (brez uporabnika, `moje` za
-  prijavljenega; profil, ki ni več potrjen, ne kaže ničesar). Na forumu
-  Odsotnosti stoji z značko "Uradno: igralec sam" nad skupnostnimi poročili
-  istega igralca (`zdruziZaForum` v `src/lib/uradneOdsotnosti.ts`), na strani
-  igralca razdelek `UradnaOdsotnost.tsx` (lastnik vidi opomine in obrazec).
-  **Preverba** `preveri_uradne_odsotnosti()` (servis) teče v poslu *skupno*
-  delovnega toka *Uvoz zapisnikov* (`scripts/preveri-uradne-odsotnosti.mjs`,
-  po združitvi duplikatov) in vsako uro prek pg_cron: če je igralec
-  (katerakoli vrstica osebe) igral z minutami > 0 na tekmi z datumom v
-  [od, vrnitev), po dnevu objave in pred dnem zaprtja, je odsotnost
-  `ni_drzalo` (javno "Ni držalo: igral DD. MM.") in to je opomin osebi.
-  Zapisnik pozna le datum, zato dan objave in dan zaprtja štejeta v korist
-  igralca. Zaprte odsotnosti pregleduje še 60 dni (zapisnik lahko zamuja).
-  Dva opomina v sezoni (`sezona_lige` lige vrstice, `uradne_odsotnosti_najvec()`)
-  = do konca sezone brez uradnih odsotnosti; navadna poročila lahko piše še
-  naprej. Nova sezona začne z nič. **Ni odbitka točk**: točke prihajajo le iz
-  uradnih zapisnikov, zato odsotnost na točke in izbiro ekip ne vpliva.
-  **Zamrznitev cene** (migracija 20261013233100, spec
-  `docs/superpowers/specs/2026-10-13-zamrznitev-cene-design.md`): poškodba ali
-  bolezen (ne dopust, kazen, drugo) zadrži padec borze "ni igral" (−0.1):
-  `zamrznjena_odsotnost(player, round)` šteje kroge lige od dneva `od`, največ
-  2, s potrditvijo klubskega računa (`klub_potrdi_odsotnost`,
-  `klub_odsotnosti` v Urejanju kluba) 6, do vrnitve/zaprtja in še en krog.
-  Dviga ne zadrži. `preracunaj_cene` zadržani padec zapiše v `zadrzani_padci`;
-  ob "ni držalo" ga `preveri_uradne_odsotnosti` uveljavi (vsoto naenkrat, ne
-  pod mejo borze, enkrat) — cena pade le na tisto, kar bi bila brez
-  zamrznitve. Pogled ima `cena_zamrznjena` in `klub_potrdil`. Preizkus
-  `npm run preizkus-zamrznitve` (tudi v CI). Anonimizacija vrstice jih
-  izbriše (kot skupnostna poročila).
-- `povzetek_rasti()` → ena vrstica številk (uporabniki, novi v 7 dneh, ekipe,
-  aktivne lige, namestitve, kliki na "Časti pivo" skupaj in v 7 dneh), pod njo
-  vrstica na državo (uporabniki z ekipo v ligi države in novi v 7 dneh, ekipe
-  in nove, aktivne lige; država je država lige) in število uporabnikov brez
-  ekipe — pod vsakim poročilom na Discord (mejnik uporabnikov,
-  `scripts/trgovine.mjs`). Le servis
-- **Pivski zid** (`/beers`, migracija 20261013150100): `piva` hrani nakupe
-  Buy Me a Coffee (funkcija `bmc-pivo`, servisni ključ, `zunanji_id` = BMC
-  `data.id`, idempotentno; vračilo postavi `vracilo`, `live_mode = false` je
-  `test`) in ročne vnose admina (`vir = 'rocno'`). **Zneska, valute in
-  e-naslova ne hranimo.** Sporočilo počisti sprožilec (`ocisti_sporocilo_piva`:
-  `<br>` → nova vrstica, oznake proč, entitete, 500 znakov; isto pravilo
-  `ocistiSporocilo` v `bmc-pivo/sporocilo.ts` za Discord), skrito na BMC se ne
-  shrani. Tabela je zaprta; javno le `javna_piva()` (ime ali null za
-  anonimne/"Someone", piva, sporočilo ali null, ko ga je admin skril, datum;
-  brez vračil in testov). Admin: `admin_piva`, `admin_skrij_pivo`,
-  `admin_dodaj_pivo`, `admin_izbrisi_pivo` (le ročni). Stran združi
-  podpornike po imenu (`src/lib/piva.ts`). Če zapis v bazo ne uspe, gre
-  Discord vseeno ven, BMC pa dobi 500 in ponovi. Stran in povezave so le na
-  spletu (kot gumb `Pivo.tsx`)
-- **Klubski računi** (migracija 20261013201100, spec
-  `docs/superpowers/specs/2026-10-13-klubski-racuni-design.md`): klub dobi
-  račun, ko se prijavi s **potrjenim** uradnim naslovom iz `klub_stik`
-  (`uveljavi_klubski_racun`, kliče ga `useAuth` ob vsaki prijavi). Do 5
-  računov na klub, en klub na uporabnika. Brez admina, razen: naslov brez
-  `team_id` (`brez_kluba`), poln klub (`polno`) in prošnja za nov naslov
-  (`klub_zaprosi_za_naslov`; predlagani naslov je vedno mail računa). Vse v
-  Administraciji → Klubski računi (`admin_odloci_klubski_zahtevek`; potrditev
-  vpiše ali popravi `klub_stik` s stanjem `sodeluje`). Preklican račun se ob
-  prijavi ne obnovi. Povsod velja `je_klubski_racun(uid, team_id)`.
-  **Faza 2** (migracije 20261013211100–215100): pozicija kluba
-  (`klub_nastavi_pozicijo`) čaka v `pozicije_klub_cakajo` in jo uveljavi
-  `uveljavi_pozicije()` v ponedeljek pred glasovanjem; vir `klub` je zaklenjen
-  kot `admin` (`potrdi_pozicijo`, `pozicije_v_cakanju`, `ugani-pozicije.mjs`,
-  `smeVVrata`), `admin` pa ga prepiše in klub `admin` ne; dnevnik
-  `pozicije_klub_dnevnik`. Klub potrjuje profile svojih igralcev
-  (`prevzem_je_poznavalec_kluba`). Stran kluba: `klub_predstavitev` (javno
-  branje), `ima_klubski_racun` (oznaka), grb v vedru `grbi-klubov`
-  (`klub_nastavi_grb`; `teams.logo_url` je relativna pot `/storage/…`, ki ji
-  `naslovSlike` doda `API_URL`); `teams.logo_vir = 'klub'` in sprožilec
-  `teams_grb_kluba` skriptam za grbe in `zdruzi-klube` preprečita povoziti
-  grb, dokler ga admin ne ponastavi (`admin_ponastavi_grb`). Dodajanje
-  igralcev in prijave napak sta fazi 3–4. Klub nikoli ne piše minut, golov, cen ali
-  `reg_st`. Hrvaški in srbski stiki so s klubi povezani po imenu in ligi
-  (migracija 20261013203100)
-- `teams.logo_url` → grb kluba; če je prazen, `src/components/Grb.jsx` nariše
-  ščit z začetnicami
+Podroben opis vseh tabel, pogledov in RPC (borza, točkovanje, statistika,
+mini lige, prevzem profila, preverjeni igralci in Stripe, uradne odsotnosti,
+klubski računi, pošta in push, anonimizacija, pivski zid, želje lig …) je v
+**`docs/podatkovni-model.md`** — preberi ustrezni razdelek, preden spreminjaš
+to področje. Bistvo, ki ga je treba vedeti vedno:
+
+- `players` (realni igralci, vrstica na ligo), `teams` (klubi, skupni),
+  `rounds`, `matches` (`zapisnik_id`, `kontumacija`, `vir_brez_izida`),
+  `appearances`, `goals`; `fantasy_teams`, `fantasy_roster`,
+  `fantasy_lineups` (posnetek ob roku), `fantasy_chips` (filtriraj po sezoni).
+- **Izračunane tabele potrebujejo sprožilce**: `tocke_krogov` (lestvice),
+  `statistika_igralcev`, `player_scores`. Nov vhod v izračun = nov sprožilec,
+  sicer številke zaostajajo do noči (`npm run preizkus-tock-krogov`,
+  `npm run preizkus-statistike`).
+- **Ekipe so zasebne**: sestavo vidi le lastnik in admin
+  (`sme_videti_ekipo`). Funkcija, ki bere tuje posnetke, teče kot lastnik
+  sheme in sama pazi, kaj vrne. Izbranost je NULL pod 5 človeškimi ekipami.
+- **Hišne ekipe** (`fantasy_teams.hisna`) se ne štejejo v izbranosti,
+  državni lestvici, pošti, mini ligah in statistiki — nova poizvedba, ki šteje
+  ljudi ali ekipe čez lige, naj izpusti `hisna` (`docs/hisne-ekipe.md`).
+- **Soimenjak pri drugem klubu ni samodejno prestop** (`prestopSkladen` v
+  `scripts/prestop.mjs`); šifra (`reg_st`) je identiteta.
+- **Pravila se ne smejo spremeniti za nazaj**: borza
+  (`rounds.borza_po_starem`, `borza_z_odmikom`) in točkovanje
+  (`rounds.pravila_tockovanja`, kopija v `src/lib/tockovanje.ts`) imata
+  različice po krogih.
+- Uvozi berejo prek `prenesiSPonovitvami` in pišejo prek `fetchZaBazo()`
+  (`scripts/prenos.mjs`); nastope tekme zamenja `zamenjaj_nastope_tekme` v eni
+  transakciji. Nov idempotenten RPC uvoza dodaj v `PONOVLJIVI_RPC`.
+- **Anonimiziran igralec** (`players.anonimiziran_at`): uvoz imena in šifre
+  nikoli ne povozi (`anonimizirani_igralci`, `scripts/anonimizacija.mjs` ↔ SQL
+  `anonimizacijski_kljuc`).
+- Obiski (`zabelezi_obisk`): **nova stran se ne šteje sama** — dodaj jo v
+  `PO_POTI`/`PO_PREDPONI` (`src/lib/obiski.ts`) in v `zabelezi_obisk()`.
+- Zemljevid strani: nova javna stran lige gre v `STRANI_LIGE` v
+  `scripts/sitemap.mjs`.
+- Plačila (preverjeni igralci, Stripe): stikalo `preverjeni_racuni`, webhook
+  `stripe-webhook`, **preklic naročnine mora biti vedno mogoč**; vse v
+  `docs/podatkovni-model.md` (*Preverjeni igralci*).
 
 ## Mobilna aplikacija
 
@@ -3686,51 +3909,14 @@ spletu; kar je drugače, je v `src/lib/platforma.ts`:
 
 ## Strežnik HTML (iskalniki, kartice)
 
-SPA vsem naslovom vrne isti prazen `index.html`. Za `/`, `/table`, `/results`,
-`/standings`, `/players`, `/player/*`, `/club/*`, `/match/*` (GET/HEAD) Caddy
-(`@html_strani`) vpraša **strežnik HTML** (`scripts/hetzner/html/streznik.mjs`,
-Node 22 brez odvisnosti, kontejner `slff-html` na 127.0.0.1:3200). Ta vzame
-predlogo iz `/srv/slff/current` (index.html ali kartico države lige, kot Caddy),
-prebere podatke iz PostgREST z anon ključem in vpiše `<title>`, opis, og:,
-kanonični naslov (isto pravilo kot `kanonicni` v `src/lib/naslov.ts`), JSON-LD
-(Person, SportsTeam, SportsEvent, BreadcrumbList) in povzetek s povezavami v
-`<div id="root">`, ki ga React ob zagonu zamenja (brez hidracije). Neznan id →
-404 z `noindex`. Reacta ne izriše; nizi pridejo iz `dist/html-besede.json`, ki
-ga build zapiše iz slovarjev (`besedeZaHtml` v `vite.config.js` — nov ključ
-dodaj v `KLJUCI` tam).
-
-- **Vstopne strani držav** (`/si`, `/at` … za vsako državo z aktivno ligo;
-  `drzava` v `streznik.mjs`): naslov je ime države, kanonični nase, v
-  `#root` vse aktivne lige po zvezah (domača stran in lestvica, privzeta liga
-  brez `?t=`). Predloga je kartica države (`at.html`), og:/twitter: opis
-  ostane s kartice. Država brez aktivne lige dobi nespremenjeno predlogo.
-  Vmesnik izriše isto stran (glej *Država obiskovalca*). `/` (domov) povezuje vse vstopne
-  strani, prva drobtina (BreadcrumbList) kaže nanje.
-- **Naslovi strani lige** (domov, lestvica lige, fantasy lestvica, rezultati,
-  igralci) imajo za imenom lige državo: "Bundesliga (Österreich)", ker ima
-  ime, kot je "Bundesliga" ali "2. Liga", več držav. Pravilo je preprosto:
-  vedno, razen če ime lige državo že vsebuje (`zDrzavo` v `src/lib/naslov.ts`,
-  kopija v `streznik.mjs`, ker kontejner nima `src/`; smoke ju primerja).
-  Isto velja za `useNaslov` teh strani v vmesniku. Opis teh strani je
-  po ligi (zveza, sezona, vrh lestvice ali zadnji izidi).
-- Poševnica na koncu (`/table/`) je ista stran: strežnik jo za kanonični
-  odreže, Caddy pa strani s seznama `@posevnica` preusmeri s 301 brez nje.
-
-- **Varovalo**: PostgREST ima 800 ms za vse poizvedbe strani; ob napaki ali
-  zamudi gre ven nespremenjena predloga s 200 (`X-Slff-Html: varovalo`,
-  brez predpomnjenja). Če strežnik ne teče ali v 1,5 s ne odgovori, Caddy
-  postreže isto predlogo z `:3201` (statično, kartica po `?t=`; blok brez
-  imena gostitelja, ker proxy pošlje `Host: slff.eu`).
-- **Predpomnilnik**: v pomnilniku 5 min (ključ pot + `?t=` le, kadar je znana
-  liga in jo stran rabi; nova objava ga izprazni) in `Cache-Control: public, max-age=300, s-maxage=3600`. Strani so
-  javne, piškotkov ne bere. Ker star HTML kaže na stare `/assets/*`, objava v CI
-  prenese v novo izdajo še lastna sredstva vseh ohranjenih izdaj (`assets/.lastna`).
-- **Objava**: `scripts/hetzner/objavi-html.sh` (iz main; preizkus, kopija
-  prejšnje, `docker compose up -d` v `/opt/slff-html`). CI ga ne objavi.
-- Preizkus brez baze: `npm run preizkus-html`. Lokalno proti bazi:
-  `KOREN=dist SUPABASE_URL=http://127.0.0.1:54321 SUPABASE_ANON_KEY=… PORT=3299 node scripts/hetzner/html/streznik.mjs`.
-- Nova javna stran, ki jo iskalniki morajo videti: funkcija v `SEZNAMI` ali
-  `ENTITETE` v `streznik.mjs` in pot v `@html_strani`.
+Caddy javne strani (`/`, `/table`, `/player/*` …) pošlje strežniku HTML
+(`scripts/hetzner/html/streznik.mjs`, kontejner `slff-html`), ki v predlogo
+vpiše naslov, opis, og:, kanonični naslov, JSON-LD in povzetek. Podrobnosti
+(varovalo, predpomnilnik, objava, preizkus): `docs/streznik-html.md`.
+Bistvo: nov niz zanj dodaj v `KLJUCI` v `vite.config.js`; `zDrzavo` v
+`src/lib/naslov.ts` ima kopijo v `streznik.mjs` (smoke ju primerja); nova
+javna stran za iskalnike = `SEZNAMI`/`ENTITETE` v `streznik.mjs` in pot v
+`@html_strani`. CI ga ne objavi (`scripts/hetzner/objavi-html.sh`).
 
 ## Smernice za razvoj
 
@@ -3763,57 +3949,21 @@ Ključ stikov je v `~/.config/slff/stiki-kljuc` ali `SLFF_STIKI_KLJUC` (da ga
 admin; **repo je javen, ključ in naslovi nikoli v git**). Brez ključa ne
 pošiljaj — vprašaj človeka. Funkcije: migracija `20261008143100_stiki_kljuc`.
 
-### Vrsta pošte (luka@slff.eu)
+Samodejno pošiljanje iz luka@slff.eu (vrsta, delavec `slff-posta` na
+strežniku, okna, polnjenje po državah, objava): `docs/posta-klubom.md`.
+CI ga ne objavi (`scripts/hetzner/objavi-posto.sh`).
 
-Maile iz luka@slff.eu ne pošilja več človek, ampak vrsta (migracija
-`20261012183100`): `klub_stik.v_vrsti` (naslov je v vrsti), `poslji_od` (prvi
-mail ne prej) in `posiljatelj`. Pošilja jo **delavec na strežniku**, ne GitHub
-Actions (dnevniki javnega repozitorija bi pokazali naslove): kontejner
-`slff-posta` (`/opt/slff-posta`, `scripts/hetzner/posta/docker-compose.yml`,
-node:22-alpine, omrežje gostitelja kot `slff-html`) poganja
-`scripts/posta-klubom.mjs --zanka`. Vsakih 10 minut pošlje največ dva maila
-(60–150 s narazen), le v oknu države prejemnika (08–18, pon–sob; AT dunajski,
-EE tallinski čas) in največ 100 na dunajski dan. Najprej opomniki (en sam, ≥ 3
-dni po našem prvem, brez pošte drugih — tudi klic ali drugo za vedno zapre
-opomnik), nato prvi maili (`nov`, brez pošte, liga **aktivna** — neaktivna
-liga čaka, tako Estonija do vklopa; izmenično po državah, `izmenicno`). Klub (isti `team_id` ali isto ime v
-državi) čaka, če je v 3 dneh dobil pošto od kogarkoli ali v 7 dneh od drugega,
-pravilo pa tik pred pošiljanjem preveri še enkrat na sveži pošti. **En stik na
-klub:** drug naslov kluba, ki je prvi mail ali opomnik že dobil, prvega ne dobi.
-Pred opomnikom pogleda v nabiralnik (IMAP, INBOX in Junk): mail z naslova ali
-citirana povezava na stran kluba → `odgovor`, odboj ali SMTP zavrnitev →
-`napacen_mail`. Pred SMTP vrstico prevzame (`v_vrsti = false`) in jo vrne šele
-po vpisu v `klub_stik_posta` (poslal `Luka (luka@slff.eu)`); napaka po začetku
-DATA ali neuspel vpis jo pusti zunaj vrste z opombo "poslano? preveri ročno" —
-**nikoli samodejno znova** (in šteje v dnevno mejo). Polnjenje vrne v vrsto le
-stare avstrijske vrstice pred vrsto (brez `posiljatelj`, `poslano`, brez opombe
-"poslano…") in jim ob tem vpiše pošiljatelja. Kopija gre v Sent. Številke v mailu so sveže;
-besedila (nemška, estonska) so v skripti in ne trdijo, da imamo dovoljenje
-zveze. Prehodne napake delavec le zabeleži; zavrnjena prijava: ura premora,
-nato izhod (Docker ga znova zažene).
+## Samodejne objave (Instagram, Facebook)
 
-**Dnevnik:** `ssh slff docker logs slff-posta` — brez naslovov (stik #id,
-klub; naslovi zakriti v `k***@domena`). **Objava:**
-`scripts/hetzner/objavi-posto.sh` iz main (skripte, ki jih pošta rabi, in le
-`@supabase/supabase-js`); **CI je ne objavi** — po vsaki spremembi pošte jo
-poženi ročno. **Enkratna nastavitev** (lastnik, skrivnosti niso v gitu): na
-strežniku `/opt/slff-posta/.env` s `SUPABASE_SERVICE_ROLE_KEY=` (servisni
-ključ iz `/opt/supabase/.env`) in `LUKA_SMTP_GESLO=` (geslo nabiralnika),
-`chmod 600`; `SUPABASE_URL` (`http://127.0.0.1:8000`) je v compose.
-
-**Polnjenje** teče na strežniku: `cd /opt/slff-posta && docker compose run --rm
-posta node scripts/vrsta-poste-klubom.mjs --drzava AT` (načrt), nato z
-`--pisi` (po želji `--poslji-od <ISO>`). Le uradni naslov kluba (AT: blok
-"Kontakt" na vereine.oefb.at, brez Bundeslige in 2. Lige; EE: "E-post" na
-strani ekipe jalgpall.ee, ne "Esindaja"), en naslov na klub, prva ekipa pred
-rezervno, klub brez igralcev z nastopi izpusti; 403, 429 ali izziv ustavi
-takoj. Vrstic drugih pošiljateljev in obstoječih naslovov ne spreminja.
-jalgpall.ee ima skupen proračun branja (`SKUPEN_VIR`), strežnik pa nima
-žetona za `cakaj-na-uvoze.mjs`: polnjenje EE zato prek javnega API GitHub
-pogleda, ali teče ali čaka uvoz, ki bere jalgpall.ee (*Uvoz lige ee-…*, posel
-*uvoz EE* nočnega uvoza, *Grbi klubov jalgpall*), in tedaj ne bere (izhod 3).
-Ne zaganjaj ga tik pred uvozom Estonije. `--suho` na posta-klubom izpiše
-naslednje maile brez pošiljanja.
+Delavec `slff-objave` (`scripts/objave.mjs`) pripravi **vsak dan** osnutek
+(ponedeljek vrtiljak držav, četrtek dosežki, ostali dnevi po dve vrsti, ki se
+menjata po sodem/lihem tednu ISO; torek in sobota sta **reela** z glasbo iz
+`scripts/objave-glasba/`, slika delavca ima ffmpeg), mejnike uporabnikov, jih
+pošlje na Discord z gumbom "Ustavi" in jih ob roku objavi. Dan brez novice
+izpade (brez polnila). Vse podrobnosti: `docs/objave.md`.
+Bistvo: **objava le slavi** (nikoli padec cene ali slaba predstava, nikoli
+mladinske lige, anonimizirani igralci, hišne ekipe, imena uporabnikov);
+`npm run preizkus-objav`; CI je ne objavi (`scripts/hetzner/objavi-objave.sh`).
 
 ## Poti
 
@@ -4004,82 +4154,13 @@ Geslo je `POSTGRES_PASSWORD` v `/opt/supabase/.env` na strežniku.
 
 ### Hišne ekipe
 
-V slovaških ligah (`sk-…`) je po 10 ± 2 **hišnih ekip** (`fantasy_teams.hisna`,
-migracija 20260930130000). Vse ima en sistemski lastnik, profil **SLFF**
-(`hisa@slff.eu`, `brez_opomnikov`, prijave ni). Neobvezni `display_name` je
-izmišljeno prikazno ime samo za hišne ekipe: obe ligaški lestvici in stran
-ekipe ga uporabijo namesto imena sistemskega profila. Piše ga le servis;
-`NULL` ime skrije. Migracija 20260930160000 ga dodeli obstoječim hišnim
-ekipam, sprožilec ob nastanku pa novim. Migracija 20260930180000 zamenja
-prejšnja generirana imena z mešanico vzdevkov, začetnic s številkami, imen
-in polnih imen; neodvisna izbira prepreči bloke enakih priimkov. Ime se
-shrani, generator pa preskoči že zasedena prikazna imena v isti ligi.
-Prave ekipe tega polja ne smejo imeti; njihovo ime ostane iz profila. En
-lastnik ima zato več ekip v ligi: unikatni indeks ena-ekipa-na-ligo velja le
-`where not hisna`, sprožilec pa lastniku hišnih ekip prepove človeške ekipe (in
-obratno). V ligi štejejo povsod (lestvica, število ekip, točke kroga); **ne
-štejejo** v izbranosti (`owners` in imenovalec deleža na strani Igralci),
-državni lestvici, e-pošti (`kandidati_za_*`, popravek pozicij), mini ligah
-(sprožilec na `mini_liga_clani`), admin statistiki in `skupaj_uporabnikov`.
-Nova poizvedba, ki šteje ljudi ali ekipe čez lige, naj izpusti `hisna`.
-
-Ustvari in odstrani jih samo delovni tok *Hisne ekipe* (`hisne-ekipe.yml` →
-`scripts/hisne-ekipe.mjs`), najprej brez `pisi` za načrt. Kader shrani baza
-(`ustvari_hisno_ekipo` → `shrani_ekipo` kot sistemski lastnik) in zavrne
-neveljavnega. Točke zbirajo od prvega roka po nastanku, nazaj ne. Ponoven
-zagon le dopolni do cilja (cilj je stalen po ligi). **Odstranitev:** isti tok
-z `odstrani` (in `pisi`) → `odstrani_hisne_ekipe`, ki zavrne ves paket, če
-kateri id ni hišna ekipa. Lokalno:
-
-```bash
-node scripts/hisne-ekipe.mjs --liga sk-za-1trieda          # načrt
-node scripts/hisne-ekipe.mjs --odstrani --pisi             # vse SK hišne ekipe proč
-```
-
-Hišna ekipa, ki ji igralec odide, postane neveljavna in ostane brez točk;
-skripta jih ob zagonu našteje.
+Sistemske ekipe SLFF v slovaških ligah (`fantasy_teams.hisna`), ustvari in
+odstrani jih le delovni tok *Hisne ekipe* (najprej brez `pisi`). Podrobnosti:
+`docs/hisne-ekipe.md`.
 
 Vrstni red ni izbiren: **arhiv → razpored → tekoča sezona → pozicije → cene**.
 Igralec pod 270 minutami dobi privzeto 4.5, zato bi liga brez arhiva imela vse
 igralce po isti ceni in prvi teden ne bi imel igre.
-
-Isto zaporedje za mladince — `--tekmovanje mladinci`, arhiv je `--liga 1503`:
-
-```bash
-node scripts/uvoz-zapisnikov.mjs --tekmovanje mladinci --liga 1503
-node scripts/uvoz-zapisnikov.mjs --tekmovanje mladinci
-node scripts/uvoz-razporeda.mjs  --tekmovanje mladinci --pisi
-node scripts/ugani-pozicije.mjs  --tekmovanje mladinci --pisi
-node scripts/ovrednoti-igralce.mjs --tekmovanje mladinci --sezona 2025/26 --pisi
-```
-
-Brez `--liga` skripte vzamejo šifro tekoče sezone iz `competitions.mnzg_liga`
-— ob novi sezoni je treba posodobiti njo, ne skript. `uvoz-razporeda` iz
-razporeda razbere, kateri klubi letos igrajo, in igralce klubov zunaj lige
-deaktivira (pri mladincih vsako leto odide cela generacija).
-
-Ljubljanski ligi (vpisani sta **neaktivni**; vklopi ju šele, ko so cene prave):
-
-```bash
-node scripts/uvoz-zapisnikov.mjs  --tekmovanje lj-1-liga --liga 1904
-node scripts/uvoz-razporeda.mjs   --tekmovanje lj-1-liga --pisi
-node scripts/uvoz-zapisnikov.mjs  --tekmovanje lj-1-liga
-node scripts/ugani-pozicije.mjs   --tekmovanje lj-1-liga --pisi
-node scripts/ovrednoti-igralce.mjs --tekmovanje lj-1-liga --sezona 2025/26 --pisi
-# isto za lj-2-liga, arhiv je --liga 1905
-```
-
-Preden ligo vklopiš, **preveri razpon cen** — mora biti primerljiv z
-Gorenjsko (povprečje okoli 5, resničen vrh, ne vsi po 4.5):
-
-```sql
-select round(avg(value),2), min(value), max(value),
-       count(*) filter (where value = 4.5) * 100.0 / count(*) as odst_privzetih
-  from players p join competitions c on c.id = p.competition_id
- where c.slug = 'lj-1-liga' and p.active;
-
-update competitions set active = true where slug in ('lj-1-liga','lj-2-liga');
-```
 
 ## Preverjanje sprememb
 

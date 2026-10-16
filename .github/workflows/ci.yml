@@ -89,6 +89,8 @@ jobs:
       - run: npm run test:socasnost
       # Zamrznitev cene ob poškodbi: borza in kazen na sestavljenih krogih.
       - run: npm run preizkus-zamrznitve
+      # Objave: brez mladinskih lig, anonimiziranih igralcev in hišnih ekip.
+      - run: npm run preizkus-objav
       - if: always()
         run: npx --yes supabase@2.117.0 stop --no-backup
 

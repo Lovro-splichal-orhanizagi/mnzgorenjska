@@ -34,7 +34,13 @@ export interface PodatkiKartice {
   nastop: NastopZaKartico | null
   tekma: string | null
   sezona: { tocke: number; tekem: number; golov: number } | null
-  ekip: number | null
+  /** Trenutna cena in zadnji premik borze. */
+  cena: number | null
+  premikCene: number
+  /** Odstotek človeških ekip lige z igralcem; null, ko je izbranost skrita (`owners`). */
+  izbran: number | null
+  /** Kratka povezava, izpisana na sliki ("slff.eu/player/123"). */
+  naslov: string
 }
 
 /**
@@ -76,10 +82,15 @@ export function podnapisTock(tocke: number, krog: number | null): string {
   return krog ? t('igralci.kartica.tockVKrogu', { beseda, krog }) : t('igralci.kartica.tockVSezoni', { beseda })
 }
 
-/** "V 34 fantasy ekipah" — kolikim je ta igralec v ekipi. */
-export function stavekEkip(n: number | null): string | null {
-  if (!n || n < 1) return null
-  return t('igralci.kartica.vEkipah', { n })
+/** Izbranost v odstotkih; brez lastnikov (skrita) ali ekip je ni. */
+export function odstotekIzbranosti(lastnikov: number | null, ekip: number | null): number | null {
+  if (lastnikov == null || !ekip) return null
+  return Math.min(100, Math.round((lastnikov / ekip) * 100))
+}
+
+/** Povezava za na sliko: brez sheme in poizvedbe ("slff.eu/player/123"). */
+export function kratkiNaslov(povezava: string): string {
+  return povezava.replace(/^[a-z]+:\/\//i, '').replace(/[?#].*$/, '')
 }
 
 /**

@@ -1,0 +1,10 @@
+{
+  "vrsta": "stat",
+  "od": "2026-10-11",
+  "do": "2026-10-18",
+  "golov": 3418,
+  "tekem": 1012,
+  "lig": 287,
+  "drzav": 11,
+  "tekma": { "liga": "2. Klasse Ost", "drzava": "AT", "domaci": "Rust (NÖ)", "domaci_grb": null, "gostje": "SC Leopoldsdorf", "gostje_grb": null, "goli_domaci": 5, "goli_gostje": 4 }
+}
