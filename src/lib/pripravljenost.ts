@@ -194,7 +194,7 @@ export function oceniPripravljenost(s: StanjeLige): Ocena {
       kljuc: 'cene',
       kaj: `Privzeto ceno ima ${odstotekPrivzetih} % igralcev, najvišja je ${s.najvisjaCena}.`,
       zakaj:
-        'Cena je percentil znotraj lige, igralec pod 270 minutami pa dobi privzeto 4.5. ' +
+        'Cena je percentil znotraj lige, igralec pod pragom minut (270, zgodaj v sezoni manj) pa dobi privzeto 4.5. ' +
         'Uvozi še eno arhivsko sezono in poženi vrednotenje brez `--sezona`, da sešteje vse.',
     })
 

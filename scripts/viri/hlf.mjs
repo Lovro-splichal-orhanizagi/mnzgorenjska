@@ -4,7 +4,7 @@
 // številkami dresov, registrirana pozicija igralca ("Portar" = vratar),
 // kapetan, strelci z minuto (11 m, avtogol, 90+1'), kartoni, menjave z
 // minuto, polčas; vsak igralec ima stalni FRF `playerId` (UUID). Pokritost je
-// po županijah različna — glej CLAUDE.md, "Romunija — vir hlf".
+// po županijah različna — glej docs/viri/romunija.md (vir hlf).
 //
 // DOSTOP. Stran je Angularjeva aplikacija; podatke (JSON) si naloži sama z
 // `api.datalake.frf.ro/HaiLaFotbal/…` po tem, ko si priskrbi žeton.

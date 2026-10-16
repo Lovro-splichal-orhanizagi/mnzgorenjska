@@ -73,6 +73,8 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
       'Pamatsastāvā nav vietas vēl vienam šīs pozīcijas spēlētājam: vispirms nosēdini kādu uz soliņa.',
     niVecNamestnik: '{ime} vairs nav vicekapteinis: izvēlies jaunu.',
     niVecKapetan: '{ime} vairs nav kapteinis: izvēlies jaunu.',
+    kapetanPrevzel: 'Kapteiņa apsēju tagad nēsā {ime}.',
+    namestnikPrevzel: 'Vicekapteinis tagad ir {ime}.',
     rokPotekel: '{krog}. kārtas termiņš jau ir beidzies, tāpēc izmaiņas stājas spēkā no nākamās kārtas.',
     shranjenaZaKrog: 'Komanda ir saglabāta un gatava {krog}. kārtai.',
     shranjenaVeljavna: 'Komanda ir saglabāta un atbilst noteikumiem.',
@@ -88,16 +90,27 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     zapriObvestilo: 'Aizvērt paziņojumu',
     odstranjen: '{ime} ir noņemts.',
     razveljavi: 'Atsaukt',
+    dodan: '{ime} ir tavā komandā. Nospied Saglabāt.',
+    zeVEkipi: '{ime} jau ir tavā komandā.',
+    niNaTrgu: 'Šo spēlētāju pašlaik nevar nopirkt.',
   },
 
-  prijavaPotrebna: 'Lai sastādītu komandu, tev jāpiesakās.',
-  prijava: 'Pieteikties',
+  brezPrijave: {
+    opis: 'Komandu vari sastādīt arī bez konta. Tā paliek šajā pārlūkā, līdz to saglabāsi.',
+    shrani: 'Saglabāt un izveidot kontu',
+    pripravljena: 'Tava komanda ir gatava. Saglabā to.',
+  },
   locenaLiga:
     'Komanda līgā <liga>{liga}</liga> ir atsevišķa no komandām citās līgās, ar savu budžetu un savu kopvērtējumu. Punkti tiek skaitīti no {krog}. kārtas, jo līdz tam vēl notiek pārejas starp klubiem un vecuma grupām.',
 
   vec: 'Vairāk: bonusi, vēsture, noteikumi',
 
   prestopi: {
+    medSezono: {
+      zero: 'Tu pievienojies sezonas laikā: līdz {krog}. kārtas termiņam komandu sastādi bez soda. Pēc tam katrā kārtā tev ir {n} bezmaksas transfēru, katrs nākamais maksā −{kazen}.',
+      one: 'Tu pievienojies sezonas laikā: līdz {krog}. kārtas termiņam komandu sastādi bez soda. Pēc tam katrā kārtā tev ir {n} bezmaksas transfērs, katrs nākamais maksā −{kazen}.',
+      other: 'Tu pievienojies sezonas laikā: līdz {krog}. kārtas termiņam komandu sastādi bez soda. Pēc tam katrā kārtā tev ir {n} bezmaksas transfēri, katrs nākamais maksā −{kazen}.',
+    },
     stevec: 'Transfēri: {n}/{prosti}',
     wildcard: 'wildcard, bez soda',
     odbitek: 'atskaitījums šajā kārtā: {tock}',
@@ -279,8 +292,13 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   },
 
   igrisce: {
-    naKlop: 'Pārvietot uz soliņu',
-    vPostavo: 'Iekļaut pamatsastāvā',
+    namigZamenjave: 'Pieskaries spēlētāja kreklam un tad tam, ar kuru viņu mainīsi.',
+    zapriNamig: 'Aizvērt padomu',
+    izberiZaMenjavo: '{ime}: izvēlēties maiņai',
+    prekliciIzbiro: '{ime}: atcelt izvēli',
+    zamenjajZ: '{ime}: mainīt ar spēlētāju {drugi}',
+    izbran: 'Izvēlēts: {ime}. Pieskaries iezīmētam spēlētājam maiņai vai vēlreiz izvēlētajam, lai atceltu.',
+    brezMenjave: 'Spēlētājam {ime} nav derīgas maiņas. Pieskaries vēlreiz, lai atceltu.',
     niVecVLigiNamig: 'Spēlētājs vairs nav līgā: sastāvs ar viņu nesaņem punktus.',
     niVecVLigi: 'vairs nav līgā',
     poskodba: 'trauma',

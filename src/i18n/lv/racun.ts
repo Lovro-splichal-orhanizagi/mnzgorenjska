@@ -169,7 +169,7 @@ export const racun: NonNullable<Prevod['racun']> = {
       'SLFF (Sunday League Fantasy Football) ir līdzjutēju veidota fantāzijas līga vietējām amatieru futbola līgām. To vada brīvprātīgie, un tā nav saistīta ar reģionālajām futbola federācijām, nacionālo futbola federāciju vai klubiem. Spēle ir bez maksas, bez naudas likmēm un balvām.',
     podatkiNaslov: 'Kādi dati tiek glabāti',
     podatkiEposta:
-      '<b>E-pasta adrese un parole.</b> Tās vajadzīgas pieteikšanās brīdim. Parole tiek glabāta šifrēta, un mēs to neredzam.',
+      '<b>E-pasta adrese un parole.</b> Tās vajadzīgas, lai pieteiktos. Parole tiek glabāta šifrēta, un mēs to neredzam.',
     podatkiIme:
       '<b>Redzamais vārds un komandas nosaukums.</b> Tie ir redzami kopvērtējumā. Ja nevēlies rādīt savu vārdu, izmanto segvārdu.',
     podatkiEkipa:
@@ -177,7 +177,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     podatkiNaprava:
       '<b>Ierīces žetons paziņojumiem.</b> Ja mobilajā lietotnē atļauj paziņojumus, mēs saglabājam žetonu, ar kuru tev nosūtām atgādinājumu pirms kārtas termiņa. Izrakstoties mēs to izdzēšam.',
     neHranimo:
-      'Mēs neglabājam tālruņa numuru vai kartes datus, un adresi tikai tad, ja pasūti drukātu nozīmīti (skatīt zemāk). Mēs neizmantojam izsekošanas sīkdatnes un reklāmas rīkus. Pārlūkā tiek saglabāta tava pieteikšanās sesija, palīdzības tērzēšanas sarunas atzīme, ja to atver, un sesijas atzīmes, ar kurām lapas apmeklējumu saskaitām tikai vienreiz. Cik cilvēku atvēruši kuru lapu, mēs skaitām tikai kā dienas kopsummu, bez tava vārda, konta, ierīces vai IP adreses. Vispārējo apmeklējumu statistiku (kuras lapas, no kurienes apmeklētāji nāk, ierīces veids un valsts, dažas darbības, piemēram, komandas sastādīšana) reģistrē <b>Umami</b> mūsu serverī: bez sīkdatnēm, IP adresi tas nesaglabā un apmeklējumu nesasaista ar tavu kontu. Ja pārlūkā ir ieslēgta opcija «Neizsekot», netiek reģistrēts nekas.',
+      'Mēs neglabājam tālruņa numuru vai kartes datus; adresi glabājam tikai tad, ja pasūti drukātu nozīmīti (skatīt zemāk). Mēs neizmantojam izsekošanas sīkdatnes un reklāmas rīkus. Pārlūkā tiek saglabāta tava pieteikšanās sesija, palīdzības tērzēšanas sarunas atzīme, ja to atver, un sesijas atzīmes, ar kurām lapas apmeklējumu saskaitām tikai vienreiz. Cik cilvēku atvēruši kuru lapu, mēs skaitām tikai kā dienas kopsummu, bez tava vārda, konta, ierīces vai IP adreses. Vispārējo apmeklējumu statistiku (kuras lapas, no kurienes apmeklētāji nāk, ierīces veids un valsts, dažas darbības, piemēram, komandas sastādīšana) reģistrē <b>Umami</b> mūsu serverī: bez sīkdatnēm, IP adresi tas nesaglabā un apmeklējumu nesasaista ar tavu kontu. Ja pārlūkā ir ieslēgta opcija «Neizsekot», netiek reģistrēts nekas.',
     dostopNaslov: 'Kam dati ir pieejami',
     dostop:
       'Dati atrodas mūsu serverī pie pakalpojumu sniedzēja <b>Hetzner</b> (Vācija, ES), datu plūsma uz to iet caur <b>Cloudflare</b> (aizsardzība un lapu piegāde). Apstiprinājuma un paroles atjaunošanas vēstules iet caur mūsu pasta serveri (arī Hetzner), paziņojumi mobilajā lietotnē caur <b>Google Firebase Cloud Messaging</b> (tikai ierīces žetons un paziņojuma teksts). Palīdzības tērzēšana apakšējā labajā stūrī darbojas caur <b>HelpStack</b>: tur nonāk tas, ko tajā uzraksti, un, ja esi pieteicies, tavs redzamais vārds, lai zinātu, kam atbildam. Kad palīgs tērzēšanā tev palīdz, tas var redzēt arī, kurā lapā un kurā līgā tu esi un vai tava komanda ir derīga. E-pastu mēs tam nenododam. Nevienam citam datus nenododam un nepārdodam.',
@@ -234,7 +234,7 @@ export const racun: NonNullable<Prevod['racun']> = {
     aktiven: 'Šis konts pārstāv klubu {klub}.',
     pravice: 'Kā klubs vari labot pozīcijas, pievienot spēlētājus un apstiprināt savu spēlētāju profilus.',
     vprasanje: 'Vai pārstāvi klubu?',
-    pojasnilo: 'Ja pieslēdzies ar kluba oficiālo adresi, kas mums ir, kluba kontu saņem automātiski. Ja tās mums nav, piesakies zemāk, un mēs to pārbaudīsim.',
+    pojasnilo: 'Ja piesakies ar kluba oficiālo adresi, kas mums ir, kluba kontu saņemsi automātiski. Ja tās mums nav, piesakies zemāk, un mēs to pārbaudīsim.',
     klub: 'Klubs',
     isciKlub: 'Meklēt klubu …',
     vloga: 'Tava loma klubā',

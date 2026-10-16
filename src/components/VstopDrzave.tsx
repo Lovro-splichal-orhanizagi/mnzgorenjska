@@ -20,6 +20,7 @@ import { oznaciVstopDrzave } from './PrviObisk'
 import { privzetaLiga, zapomniDrzavo } from '../lib/drzava'
 import { useNaslov } from '../lib/naslov'
 import { t } from '../i18n'
+import ZelimLigo from './ZelimLigo'
 
 const jeKampanja = (iskanje: string) =>
   [...new URLSearchParams(iskanje).keys()].some((k) => k === 'src' || k.startsWith('utm_'))
@@ -76,6 +77,7 @@ export default function VstopDrzave({ drzava }: { drzava: string }) {
           </ul>
         </section>
       ))}
+      <ZelimLigo drzava={drzava} />
     </div>
   )
 }

@@ -75,6 +75,8 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
       'There’s no room in the starting XI for another player in this position — bench someone first.',
     niVecNamestnik: '{ime} is no longer vice-captain — pick a new one.',
     niVecKapetan: '{ime} is no longer captain — pick a new one.',
+    kapetanPrevzel: '{ime} now wears the captain’s armband.',
+    namestnikPrevzel: '{ime} is now vice-captain.',
     rokPotekel: 'The round {krog} deadline has passed, so changes apply from the next round.',
     shranjenaZaKrog: 'Your team is saved and ready for round {krog}.',
     shranjenaVeljavna: 'Your team is saved and meets the rules.',
@@ -90,10 +92,16 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
     zapriObvestilo: 'Close notice',
     odstranjen: '{ime} removed.',
     razveljavi: 'Undo',
+    dodan: '{ime} is in your team — tap Save.',
+    zeVEkipi: '{ime} is already in your team.',
+    niNaTrgu: 'This player can’t be bought right now.',
   },
 
-  prijavaPotrebna: 'You need to log in to build a team.',
-  prijava: 'Log in',
+  brezPrijave: {
+    opis: 'You can build your team without an account. It stays in this browser until you save it.',
+    shrani: 'Save and create account',
+    pripravljena: 'Your team is ready — save it.',
+  },
   locenaLiga:
     'Your team in <liga>{liga}</liga> is separate from your teams in other leagues — with its own budget and its own standings. Points count from round {krog} onwards, because transfers and moves between age groups are still happening until then.',
 
@@ -101,6 +109,10 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
   vec: 'More: chips, history, rules',
 
   prestopi: {
+    medSezono: {
+      one: 'You are joining mid-season: until the round {krog} deadline you can build your team with no penalty. After that you get {n} free transfer per round; each extra one costs −{kazen}.',
+      other: 'You are joining mid-season: until the round {krog} deadline you can build your team with no penalty. After that you get {n} free transfers per round; each extra one costs −{kazen}.',
+    },
     stevec: 'Transfers: {n}/{prosti}',
     wildcard: 'wildcard — no penalty',
     odbitek: '{tock} deducted this round',
@@ -287,8 +299,13 @@ export const mojaEkipa: NonNullable<Prevod['mojaEkipa']> = {
 
   // Pitch in the team builder (components/Igrisce.tsx).
   igrisce: {
-    naKlop: 'Move to bench',
-    vPostavo: 'Move into starting XI',
+    namigZamenjave: 'Tap a player’s shirt, then the player you want to swap him with.',
+    zapriNamig: 'Close tip',
+    izberiZaMenjavo: '{ime}: select for substitution',
+    prekliciIzbiro: '{ime}: cancel selection',
+    zamenjajZ: '{ime}: swap with {drugi}',
+    izbran: '{ime} is selected. Tap a highlighted player to swap, or the same player again to cancel.',
+    brezMenjave: 'No valid swap for {ime}. Tap him again to cancel.',
     niVecVLigiNamig: 'This player is no longer in the league — a squad with him scores no points.',
     niVecVLigi: 'no longer in the league',
     poskodba: 'injury',
