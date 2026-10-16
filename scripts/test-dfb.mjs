@@ -9,6 +9,16 @@ const team = readFileSync(new URL('./vzorci/de-dfb-team-current.html', import.me
 const penalty = readFileSync(new URL('./vzorci/de-dfb-2426054.html', import.meta.url), 'utf8')
 const load = () => import(moduleUrl)
 const actual = id => readFileSync(new URL(`./vzorci/de-dfb-${id}.html`, import.meta.url), 'utf8')
+const correctionData=JSON.parse(readFileSync(new URL('./viri/dfb-korekcije.json',import.meta.url),'utf8'))
+function goalSegments(html,change){
+  return html.replace(/(<div class="m-MatchDetails-history-event-text-segment">)([\s\S]*?)(<\/div>)/g,(whole,start,body,end)=>start+change(body)+end)
+}
+function fixLabels(html,entry,changes=entry.corrections){
+  return goalSegments(html,body=>{
+    for(const c of changes)if(body.includes(entry.goals[c.index].scorer)&&body.includes(c.from.join(':')))return body.replace(c.from.join(':'),c.to.join(':'))
+    return body
+  })
+}
 
 test('actual duplicated XI and bench cells deduplicate only byte-identical evidence', async () => {
   const {vZapisnik}=await load(),html=actual('2401942'),z=vZapisnik(html)
@@ -64,11 +74,66 @@ test('actual grouped goals retain every named score step at the published minute
   assert.throws(()=>vZapisnik(changed),/zaporedje izidov/)
 })
 
-test('actual score steps contradicting their published stoppage minutes remain rejected', async () => {
+test('exact verified score-label defects preserve source facts and evidence; fully fixed sources need no correction', async () => {
   const {vZapisnik,zaPredpomnilnik}=await load()
-  for(const id of ['2401959','2402023','2402046']){
-    assert.throws(()=>vZapisnik(actual(id)),/neveljavno zaporedje izidov pri golih/)
-    assert.equal(zaPredpomnilnik(actual(id)),false)
+  for(const entry of correctionData.matches){
+    const original=actual(entry.id),z=vZapisnik(original)
+    assert.equal(z.popravki.length,2)
+    assert.deepEqual(z.goli.map(g=>[g.ime,g.ekipaIdx,g.minuta,g.avtogol,g.enajstmetrovka]),entry.goals.map(g=>[g.scorer,g.ownGoal?1-g.side:g.side,g.normalizedClock[0],g.ownGoal,g.penalty]))
+    for(const c of entry.corrections){
+      const goal=z.goli[c.index]
+      assert.deepEqual(goal.rezultat,c.to)
+      assert.deepEqual(goal.rezultatVir,c.from)
+      assert.deepEqual(goal.popravekIzida.izvorno,entry.goals[c.index])
+      assert.deepEqual(goal.popravekIzida.dokazi,entry.evidence)
+      assert.equal(goal.popravekIzida.vzorecSha256,entry.sourceFixtureSha256)
+      assert.equal(goal.popravekIzida.dokumentSha256,entry.sourceFixtureSha256)
+      assert.equal(goal.popravekIzida.preverjeno,correctionData.checkedAt)
+    }
+    assert.equal(zaPredpomnilnik(original),true)
+    const fixed=fixLabels(original,entry)
+    assert.notEqual(fixed,original)
+    const uncorrected=vZapisnik(fixed)
+    assert.deepEqual(uncorrected.popravki,[])
+    assert.equal(uncorrected.goli.some(g=>g.rezultatVir||g.popravekIzida),false)
+    assert.deepEqual(uncorrected.goli.map(g=>g.rezultat),z.goli.map(g=>g.rezultat))
+    assert.equal(uncorrected.opozorila.some(s=>s.includes('preverjen popravek')),false)
+    assert.equal(zaPredpomnilnik(fixed),true)
+  }
+})
+
+test('verified correction IDs reject every unreviewed partial source or identity drift', async () => {
+  const {vZapisnik,zaPredpomnilnik}=await load()
+  for(const entry of correctionData.matches){
+    const html=actual(entry.id),c=entry.corrections[0],name=entry.goals[c.index].scorer,score=c.from.join(':')
+    const onlyTarget=fn=>goalSegments(html,body=>body.includes(name)&&body.includes(score)?fn(body):body)
+    const day=+entry.metadata.date.slice(8),month={9:'September',11:'November',12:'Dezember'}[+entry.metadata.date.slice(5,7)]
+    const changes=[
+      fixLabels(html,entry,[c]),
+      onlyTarget(body=>body.replace(name,'Different Player')),
+      onlyTarget(body=>body.replace(score,'9:9')),
+      onlyTarget(body=>body+' 7:7'),
+      onlyTarget(body=>body+' (Elfmeter)'),
+      html.replaceAll(entry.goals.at(-1).clock,"90+9'"),
+      html.replaceAll(entry.metadata.teams[0].id,'unexpected-club'),
+      html.replaceAll(entry.id,'9999999'),
+      html.replaceAll('2025-2026','2024-2025').replaceAll('2025/2026','2024/2025'),
+      html.replaceAll(`${entry.metadata.time} Uhr`,'13:59 Uhr'),
+      html.replaceAll(`${day}. ${month} 2025`,`${day+1}. ${month} 2025`),
+      html.replaceAll(`/${entry.metadata.round}-spieltag/`,`/${entry.metadata.round+1}-spieltag/`).replaceAll(`${entry.metadata.round}. Spieltag`,`${entry.metadata.round+1}. Spieltag`),
+      html.replaceAll(entry.metadata.finalScore.join(':'),'8:8'),
+      html.replaceAll(`(${entry.metadata.halfScore.join(':')})`,'(0:0)'),
+    ]
+    if(entry.goals.some(g=>g.ownGoal))changes.push(html.replaceAll('Eigentor',''))
+    const k=html.indexOf('>Tore</div>')
+    changes.push(html.slice(0,k)+html.slice(k).replace(name,'Different Player'))
+    // Extra source goal in both copies must not be discarded while guarding.
+    changes.push(html.replace(/(<div class="m-MatchDetails-history-event-text-segment">)([\s\S]*?)(<\/div>)/g,(whole,start,body,end)=>body.includes(name)&&body.includes(score)?whole+whole:whole))
+    for(const changed of changes){
+      assert.notEqual(changed,html)
+      assert.throws(()=>vZapisnik(changed),e=>e.koda==='DFB_INVALID_REPORT')
+      assert.equal(zaPredpomnilnik(changed),false)
+    }
   }
 })
 

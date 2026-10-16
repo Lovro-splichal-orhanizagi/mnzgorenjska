@@ -4,6 +4,11 @@
 // with same-team name collisions rejected. Numeric profile IDs are metadata.
 import { razpakiraj } from '../klubi.mjs'
 import { nastopi as nastopiPoImenu } from './fss.mjs'
+import { readFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
+
+// Public factual evidence only. The registry never changes time/person/side.
+const correctionRegistry=JSON.parse(readFileSync(new URL('./dfb-korekcije.json',import.meta.url),'utf8'))
 
 const BASE = 'https://datencenter.dfb.de'
 const fail = s => {
@@ -109,6 +114,46 @@ function eventSignatures(section) {
     }
   }
   return out
+}
+function verifiedScoreCorrections(html,meta,teams,rezultat,polcas,sections){
+  const entry=correctionRegistry.matches.find(e=>`de-dfb-${e.id}`===meta.zapisnikId)
+  if(!entry)return new Map()
+  const reject=()=>fail('nepregledana sprememba zapisnika z omejenim popravkom izida')
+  // Compare both ORIGINAL copies first. No correction can hide disagreement.
+  const timeline=eventSignatures(sections.get('Spielverlauf')).filter(e=>e.type==='goal').map(e=>e.key).sort()
+  const summary=eventSignatures(sections.get('Tore')).map(e=>e.key).sort()
+  if(JSON.stringify(timeline)!==JSON.stringify(summary))fail('neujemajoči izvorni dogodki razdelka Tore pred popravkom')
+  const metadata={url:meta.url,season:meta.sezona,round:meta.krog,date:meta.datum,time:meta.ura,teams:teams.map(t=>({id:t.virId,name:t.ime})),finalScore:[rezultat.domaci,rezultat.gostje],halfScore:[polcas.domaci,polcas.gostje]}
+  if(JSON.stringify(metadata)!==JSON.stringify(entry.metadata))reject()
+  const goals=[]
+  for(const row of elements(sections.get('Spielverlauf'),'div','m-MatchDetails-history-item')){
+    const clock=text(one(row.inner,'div','m-MatchDetails-history-minute').inner)
+    const normalized=clock.replace(/^90 ([1-9]|[12]\d|30)'$/,"90+$1'").match(/^(\d+)(?:\+(\d+))?'$/)
+    if(!normalized)reject()
+    for(const e of elements(row.inner,'div','m-MatchDetails-history-event').filter(e=>!has(e.tag,'is-empty'))){
+      const home=has(e.tag,'m-MatchDetails-history-event--home'),away=has(e.tag,'m-MatchDetails-history-event--away')
+      if(home===away)reject()
+      const side=home?0:1,icon=one(e.inner,'div',`m-MatchDetails-history-event-icon--${home?'home':'away'}`).inner
+      if(!/m-MatchDetails-icon-goal--/.test(icon))continue
+      for(const {segment,kind}of goalEntries(icon,elements(e.inner,'div','m-MatchDetails-history-event-text-segment'))){
+        const sourceText=text(segment.inner).normalize('NFC'),tokens=[...sourceText.matchAll(/\b(\d+):(\d+)\b/g)]
+        if(tokens.length!==1)reject()
+        const scorer=identity(sourceText.replace(/\(Elfmeter\)|\(Eigentor\)/g,'').replace(/\bEigentor\b/g,'').replace(/\b\d+:\d+\b/g,'').trim()).ime
+        goals.push({side,scorer,clock,normalizedClock:[+normalized[1],+(normalized[2]??0)],ownGoal:kind==='own-goal'||/\bEigentor\b/.test(sourceText),penalty:kind==='penalty'||/\(Elfmeter\)/.test(sourceText),kind,score:[+tokens[0][1],+tokens[0][2]],text:sourceText})
+      }
+    }
+  }
+  const fixed=entry.goals.map(g=>({...g}))
+  for(const c of entry.corrections){
+    const g=fixed[c.index]
+    fixed[c.index]={...g,score:c.to,text:g.text.replace(c.from.join(':'),c.to.join(':'))}
+  }
+  // Whitelist exactly two complete states. Partial upstream fixes, even if
+  // individually plausible, require review rather than mixed corrections.
+  if(JSON.stringify(goals)===JSON.stringify(fixed))return new Map()
+  if(JSON.stringify(goals)!==JSON.stringify(entry.goals))reject()
+  const documentSha256=createHash('sha256').update(html).digest('hex')
+  return new Map(entry.corrections.map(c=>[c.index,{vrsta:'vmesni-izid',indeksGola:c.index,izvorno:goals[c.index],popravljeno:[...c.to],dokazi:[...entry.evidence],preverjeno:correctionRegistry.checkedAt,vzorecSha256:entry.sourceFixtureSha256,dokumentSha256:documentSha256}]))
 }
 export const kljucKluba = s => text(s).normalize('NFC').toLocaleLowerCase('de').replace(/[^\p{L}\p{N}]+/gu, ' ').trim()
 const nameKey = kljucKluba
@@ -226,7 +271,9 @@ export function vZapisnik(html, { id, tekma } = {}) {
       }
     }
   }
-  const goli=[], rumeni=[], rdeci=[], menjave=[], uradneKazni=[], opozorila=[]
+  const scoreCorrections=verifiedScoreCorrections(html,meta,teams,rezultat,polcas,sections)
+  const popravki=[...scoreCorrections.values()]
+  const goli=[], rumeni=[], rdeci=[], menjave=[], uradneKazni=[], opozorila=popravki.map(c=>`Uradni vmesni izid ${c.izvorno.score.join(':')}: preverjen popravek v ${c.popravljeno.join(':')} za ${c.izvorno.scorer} (${c.izvorno.clock}); izvor in dokazi so ohranjeni.`)
   const active=teams.map(t=>new Set(t.postava.map(p=>p.virId)))
   const counters={goal:0,card:0,substitute:0}
   // Eligibility survives leaving/never entering the pitch. The active set alone
@@ -270,9 +317,11 @@ export function vZapisnik(html, { id, tekma } = {}) {
         // In all observed own-goal formats the event sits on the beneficiary
         // side, while the named scorer belongs to the opposite official XI.
         runningScore[side]++
-        const stageScore=text(segment.inner).match(/\b(\d+):(\d+)\b/)
-        if(!stageScore || +stageScore[1]!==runningScore[0] || +stageScore[2]!==runningScore[1])fail('neveljavno zaporedje izidov pri golih')
-        goli.push({...event(p,personSide),avtogol,enajstmetrovka,rezultat:[...runningScore]});counters.goal++
+        const scoreTokens=[...text(segment.inner).matchAll(/\b(\d+):(\d+)\b/g)]
+        if(scoreTokens.length!==1)fail('neveljavno zaporedje izidov pri golih')
+        const sourceScore=[+scoreTokens[0][1],+scoreTokens[0][2]],correction=scoreCorrections.get(counters.goal),stageScore=correction?.popravljeno??sourceScore
+        if(stageScore[0]!==runningScore[0]||stageScore[1]!==runningScore[1])fail('neveljavno zaporedje izidov pri golih')
+        goli.push({...event(p,personSide),avtogol,enajstmetrovka,rezultat:[...runningScore],...(correction?{rezultatVir:sourceScore,popravekIzida:correction}:{})});counters.goal++
         }
       } else if (/m-MatchDetails-icon-card--/.test(icon)) {
         for(const {segment,kind} of cardEntries(icon,segments)){
@@ -338,7 +387,7 @@ export function vZapisnik(html, { id, tekma } = {}) {
     if(!p.zacetnik && p.noter==null && goli.some(g=>g.ekipaIdx===side&&g.ime===p.ime))fail('gol rezerve brez vstopa')
     if(p.ven!=null && (p.noter??0)>p.ven)fail('izstop pred vstopom')
   }
-  const z={...meta,domaci:teams[0],gostje:teams[1],rezultat,polcas,goli,rumeni,rdeci,menjave,zgresene:[],uradneKazni,opozorila}
+  const z={...meta,domaci:teams[0],gostje:teams[1],rezultat,polcas,goli,rumeni,rdeci,menjave,zgresene:[],uradneKazni,opozorila,popravki}
   if(tekma) {
     for(const k of ['krog','datum','ura','sezona'])if(tekma[k]!=null&&tekma[k]!==z[k])fail(`razpored: neujemanje ${k}`)
     for(const k of ['domaci','gostje'])if(tekma[k]!=null&&tekma[k]!==z[k].ime)fail(`razpored: neujemanje ${k}`)

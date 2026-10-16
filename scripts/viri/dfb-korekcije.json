@@ -1,0 +1,488 @@
+{
+  "version": 1,
+  "checkedAt": "2026-10-16",
+  "matches": [
+    {
+      "id": "2401959",
+      "sourceFixtureSha256": "d771235b47a0a410758a24d28bd955b518418d368895ae1573bfca36d36b438c",
+      "evidence": [
+        "https://www.herthabsc.com/de/nachrichten/2025/09/u23-spielbericht-bsclok-2526",
+        "https://lok-leipzig.com/profis/spielbericht?cHash=f5ff86a87576ea0909ebe8cfbfeba38b&cfc_league_fe%5BmatchId%5D=1047"
+      ],
+      "metadata": {
+        "url": "https://datencenter.dfb.de/datencenter/regionalliga-nordost/2025-2026/9-spieltag/hertha-bsc-ii-1-fc-lok-leipzig-2401959",
+        "season": "2025/26",
+        "round": 9,
+        "date": "2025-09-21",
+        "time": "14:00",
+        "teams": [
+          {
+            "id": "hertha-bsc-ii",
+            "name": "Hertha BSC II"
+          },
+          {
+            "id": "1-fc-lok-leipzig",
+            "name": "1. FC Lok Leipzig"
+          }
+        ],
+        "finalScore": [
+          2,
+          7
+        ],
+        "halfScore": [
+          1,
+          3
+        ]
+      },
+      "goals": [
+        {
+          "side": 1,
+          "scorer": "Jonas Arcalean",
+          "clock": "17'",
+          "normalizedClock": [
+            17,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            0,
+            1
+          ],
+          "text": "0:1 Jonas Arcalean"
+        },
+        {
+          "side": 1,
+          "scorer": "Eren Öztürk",
+          "clock": "20'",
+          "normalizedClock": [
+            20,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            0,
+            2
+          ],
+          "text": "0:2 Eren Öztürk"
+        },
+        {
+          "side": 1,
+          "scorer": "Stefan Maderer",
+          "clock": "33'",
+          "normalizedClock": [
+            33,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            0,
+            3
+          ],
+          "text": "0:3 Stefan Maderer"
+        },
+        {
+          "side": 0,
+          "scorer": "Dion Ajvazi",
+          "clock": "36'",
+          "normalizedClock": [
+            36,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": true,
+          "kind": "goal",
+          "score": [
+            1,
+            3
+          ],
+          "text": "Dion Ajvazi (Elfmeter) 1:3"
+        },
+        {
+          "side": 1,
+          "scorer": "Dorian Cevis",
+          "clock": "52'",
+          "normalizedClock": [
+            52,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            1,
+            4
+          ],
+          "text": "1:4 Dorian Cevis"
+        },
+        {
+          "side": 0,
+          "scorer": "Janne Berner",
+          "clock": "64'",
+          "normalizedClock": [
+            64,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            2,
+            4
+          ],
+          "text": "Janne Berner 2:4"
+        },
+        {
+          "side": 1,
+          "scorer": "Stefan Maderer",
+          "clock": "78'",
+          "normalizedClock": [
+            78,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            2,
+            5
+          ],
+          "text": "2:5 Stefan Maderer"
+        },
+        {
+          "side": 1,
+          "scorer": "Stefan Maderer",
+          "clock": "90'",
+          "normalizedClock": [
+            90,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            2,
+            7
+          ],
+          "text": "2:7 Stefan Maderer"
+        },
+        {
+          "side": 1,
+          "scorer": "Mingi Kang",
+          "clock": "90+3'",
+          "normalizedClock": [
+            90,
+            3
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            2,
+            6
+          ],
+          "text": "2:6 Mingi Kang"
+        }
+      ],
+      "corrections": [
+        {
+          "index": 7,
+          "from": [
+            2,
+            7
+          ],
+          "to": [
+            2,
+            6
+          ]
+        },
+        {
+          "index": 8,
+          "from": [
+            2,
+            6
+          ],
+          "to": [
+            2,
+            7
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2402023",
+      "sourceFixtureSha256": "f1bb5fc8b3c699a8677e26a29bcc915d893a342dc3118040f42221219a70fa0b",
+      "evidence": [
+        "https://www.zfc.de/spielbericht.php?call_script=spielplan&mannschaft=1752215226&oliga=1466877277&paarung=1752216035"
+      ],
+      "metadata": {
+        "url": "https://datencenter.dfb.de/datencenter/regionalliga-nordost/2025-2026/17-spieltag/fsv-63-luckenwalde-zfc-meuselwitz-2402023",
+        "season": "2025/26",
+        "round": 17,
+        "date": "2025-11-28",
+        "time": "19:00",
+        "teams": [
+          {
+            "id": "fsv-63-luckenwalde",
+            "name": "FSV 63 Luckenwalde"
+          },
+          {
+            "id": "zfc-meuselwitz",
+            "name": "ZFC Meuselwitz"
+          }
+        ],
+        "finalScore": [
+          2,
+          2
+        ],
+        "halfScore": [
+          1,
+          1
+        ]
+      },
+      "goals": [
+        {
+          "side": 0,
+          "scorer": "Tim Maciejewski",
+          "clock": "23'",
+          "normalizedClock": [
+            23,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            1,
+            0
+          ],
+          "text": "Tim Maciejewski 1:0"
+        },
+        {
+          "side": 1,
+          "scorer": "Andy Trübenbach",
+          "clock": "42'",
+          "normalizedClock": [
+            42,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            1,
+            1
+          ],
+          "text": "1:1 Andy Trübenbach"
+        },
+        {
+          "side": 0,
+          "scorer": "Fabio Schneider",
+          "clock": "90'",
+          "normalizedClock": [
+            90,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": true,
+          "kind": "goal",
+          "score": [
+            2,
+            2
+          ],
+          "text": "Fabio Schneider (Elfmeter) 2:2"
+        },
+        {
+          "side": 1,
+          "scorer": "Andy Trübenbach",
+          "clock": "90+4'",
+          "normalizedClock": [
+            90,
+            4
+          ],
+          "ownGoal": false,
+          "penalty": true,
+          "kind": "goal",
+          "score": [
+            1,
+            2
+          ],
+          "text": "1:2 (Elfmeter) Andy Trübenbach"
+        }
+      ],
+      "corrections": [
+        {
+          "index": 2,
+          "from": [
+            2,
+            2
+          ],
+          "to": [
+            2,
+            1
+          ]
+        },
+        {
+          "index": 3,
+          "from": [
+            1,
+            2
+          ],
+          "to": [
+            2,
+            2
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2402046",
+      "sourceFixtureSha256": "a0cae41c813359620884ec56265945ccf4281f53dc54186ebe2ce10334d5f967",
+      "evidence": [
+        "https://www.fc-carlzeiss-jena.de/news/club-profis/details/willenssieg-in-der-nachspielzeit.html.html",
+        "https://www.herthabsc.com/de/nachrichten/2025/12/u23-spielbericht-bscfcc-2526"
+      ],
+      "metadata": {
+        "url": "https://datencenter.dfb.de/datencenter/regionalliga-nordost/2025-2026/19-spieltag/hertha-bsc-ii-fc-carl-zeiss-jena-2402046",
+        "season": "2025/26",
+        "round": 19,
+        "date": "2025-12-14",
+        "time": "14:00",
+        "teams": [
+          {
+            "id": "hertha-bsc-ii",
+            "name": "Hertha BSC II"
+          },
+          {
+            "id": "fc-carl-zeiss-jena",
+            "name": "FC Carl Zeiss Jena"
+          }
+        ],
+        "finalScore": [
+          2,
+          3
+        ],
+        "halfScore": [
+          1,
+          0
+        ]
+      },
+      "goals": [
+        {
+          "side": 0,
+          "scorer": "Shalva Ogbaidze",
+          "clock": "31'",
+          "normalizedClock": [
+            31,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            1,
+            0
+          ],
+          "text": "Shalva Ogbaidze 1:0"
+        },
+        {
+          "side": 0,
+          "scorer": "Malik Talabidi",
+          "clock": "51'",
+          "normalizedClock": [
+            51,
+            0
+          ],
+          "ownGoal": true,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            2,
+            0
+          ],
+          "text": "2:0 Eigentor Malik Talabidi"
+        },
+        {
+          "side": 1,
+          "scorer": "Justin Schau",
+          "clock": "79'",
+          "normalizedClock": [
+            79,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            2,
+            1
+          ],
+          "text": "2:1 Justin Schau"
+        },
+        {
+          "side": 1,
+          "scorer": "Selim Telib",
+          "clock": "90'",
+          "normalizedClock": [
+            90,
+            0
+          ],
+          "ownGoal": true,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            2,
+            3
+          ],
+          "text": "Selim Telib Eigentor 2:3"
+        },
+        {
+          "side": 1,
+          "scorer": "Timon Burmeister",
+          "clock": "90+4'",
+          "normalizedClock": [
+            90,
+            4
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            2,
+            2
+          ],
+          "text": "2:2 Timon Burmeister"
+        }
+      ],
+      "corrections": [
+        {
+          "index": 3,
+          "from": [
+            2,
+            3
+          ],
+          "to": [
+            2,
+            2
+          ]
+        },
+        {
+          "index": 4,
+          "from": [
+            2,
+            2
+          ],
+          "to": [
+            2,
+            3
+          ]
+        }
+      ]
+    }
+  ]
+}

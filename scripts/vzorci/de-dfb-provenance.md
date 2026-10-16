@@ -106,10 +106,38 @@ The full-season audit captured these additional unchanged reports:
   these terminal 90-minute subsequences merge by explicit numeric timestamps;
   equal-time rows retain source order. Reordering emits a warning and raw
   space-format labels remain attached to their events.
-- 2401959, 2402023 and 2402046 intentionally remain rejected: their ordinary
-  `90'` goals advertise later running scores than goals at `90+3'` or `90+4'`.
-  Reordering by score would require inventing missing stoppage minutes or
-  ignoring contradictory timestamps. The source does not justify either.
+- 2401959, 2402023 and 2402046 have wrong intermediate score annotations.
+  Their scorer order and exact times were independently confirmed by the
+  participating clubs on 2026-10-16. Only the six enumerated score labels are
+  corrected; no event is reordered and no goal time, scorer or side changes.
+
+## Narrow intermediate-score corrections
+
+The data-only [registry](../viri/dfb-korekcije.json) records the complete original
+goal sequences, canonical match/season/round/date/time, official team IDs,
+final/half scores, primary evidence URLs, checked date and captured fixture SHA.
+It accepts exactly the observed malformed sequence or the fully fixed upstream
+sequence. Partial fixes or other changes to those semantic fingerprints reject
+as `DFB_INVALID_REPORT`. The original full timeline and dedicated goal section
+must agree before any correction. Full HTML hashes identify evidence captures;
+runtime acceptance uses the semantic fingerprint rather than volatile markup.
+
+| Report | Exact event | Published label | Verified label | Primary evidence |
+| --- | --- | --- | --- | --- |
+| 2401959 | Maderer, away, 90' | 2:7 | 2:6 | [Hertha](https://www.herthabsc.com/de/nachrichten/2025/09/u23-spielbericht-bsclok-2526), [Lok](https://lok-leipzig.com/profis/spielbericht?cHash=f5ff86a87576ea0909ebe8cfbfeba38b&cfc_league_fe%5BmatchId%5D=1047) |
+| 2401959 | Kang, away, 90+3' | 2:6 | 2:7 | Same two club reports |
+| 2402023 | Schneider, home Luckenwalde, 90' | 2:2 | 2:1 | [ZFC](https://www.zfc.de/spielbericht.php?call_script=spielplan&mannschaft=1752215226&oliga=1466877277&paarung=1752216035) |
+| 2402023 | Trübenbach, away ZFC, 90+4' | 1:2 | 2:2 | Same ZFC report |
+| 2402046 | Telib, home Hertha player / away Jena beneficiary, own goal, 90' | 2:3 | 2:2 | [Jena](https://www.fc-carlzeiss-jena.de/news/club-profis/details/willenssieg-in-der-nachspielzeit.html.html), [Hertha](https://www.herthabsc.com/de/nachrichten/2025/12/u23-spielbericht-bscfcc-2526) |
+| 2402046 | Burmeister, away Jena, 90+4' | 2:2 | 2:3 | Same two club reports |
+
+Corrected goals preserve `rezultatVir` and `popravekIzida`, including their full
+original factual tuple, replacement tuple, primary URLs, checked date, fixture
+SHA and actual document SHA. Report-level `popravki` and warnings expose every
+correction. All usual player activity, timeline, score progression, halftime,
+final result and schedule checks still run. A fully upstream-fixed fingerprint
+passes with no correction metadata or correction warning. Unknown unused-card
+recipient Luis Zwick in 2401897 remains unresolved and rejected.
 
 `test-dfb.mjs` additionally constructs an explicitly synthetic 18-team double
 round-robin using the captured row schema to test bounded discovery and
