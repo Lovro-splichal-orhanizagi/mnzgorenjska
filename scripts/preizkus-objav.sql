@@ -248,6 +248,73 @@ begin
      or has_function_privilege('authenticated', 'objava_dosezki(date, date)', 'execute') then
     raise exception '9d. objava_drzave in objava_dosezki naj bosta le servisni';
   end if;
+
+  -- 10. Objave vsak dan (migracija 20261016090000). Liga A dobi tretji klub
+  --     (tri tekme 0:0 v krogih 1–3) in neodigrano tekmo 6. kroga (2099-01-10).
+  if exists (select 1 from objava_lige() where slug in ('test-zy-u19', 'test-objave-off'))
+     or not exists (select 1 from objava_lige() where slug = 'test-zy-a') then
+    raise exception '10a. objava_lige: le aktivne članske lige';
+  end if;
+  insert into teams(id, name, short_name, country_id) overriding system value values (-924003, 'Objave tretji', 'OT', drzava);
+  insert into matches (round_id, home_team_id, away_team_id, home_goals, away_goals, played_on, imported_at)
+  select r.id, -924003, -924002, 0, 0, r.played_on, now() from rounds r where r.competition_id = -924011 and r.number <= 3;
+  insert into rounds (competition_id, season, number, deadline_at, played_on) values (-924011, '2098/99', 6, '2099-01-09', '2099-01-10')
+  returning id into k;
+  insert into matches (round_id, home_team_id, away_team_id, played_on) values (k, -924002, -924001, '2099-01-10');
+
+  d := objava_ekipa_tedna('2099-01-01', '2099-01-08');
+  if not d -> 'igralci' @> '[{"ime": "Dosezek-924011 1", "pozicija": "MID", "tocke": 10}, {"ime": "Dosezek-924011 2", "pozicija": "GK"}]'
+     or d::text ~ 'Dosezek-92401[2-4]|Dosezek-924011 4' then
+    raise exception '10b. objava_ekipa_tedna: %', d;
+  end if;
+  d := objava_strelci('2099-01-08');
+  if d #>> '{igralci,0,ime}' not in ('Dosezek-924011 1', 'Dosezek-924015 1') or (d #>> '{igralci,0,goli}')::int <> 3
+     or d::text ~ 'Dosezek-92401[2-4]|Dosezek-924011 4' then
+    raise exception '10c. objava_strelci: %', d;
+  end if;
+  d := objava_forma('2099-01-08');
+  if d #>> '{igralci,0,ime}' <> 'Dosezek-924011 3' or (d #>> '{igralci,0,tocke}')::numeric <> 25
+     or d::text ~ 'Dosezek-92401[2-5]|Dosezek-924011 4' then
+    raise exception '10d. objava_forma (tri krogi, le uvoženi, brez izločenih): %', d;
+  end if;
+  d := objava_cene('2099-01-01', '2099-01-08');
+  if jsonb_path_query_array(d, '$.igralci[*].ime') <> '["Dosezek-924011 3"]'::jsonb then
+    raise exception '10e. objava_cene: le dvig, brez anonimiziranega: %', d;
+  end if;
+  d := objava_stat('2099-01-01', '2099-01-08');
+  if (d ->> 'tekem')::int <> 2 or (d ->> 'golov')::int <> 8 or (d ->> 'lig')::int <> 2 or (d ->> 'drzav')::int <> 2
+     or d -> 'tekma' <> 'null'::jsonb then
+    raise exception '10f. objava_stat (le uvožene, brez U19 in kontumacij): %', d;
+  end if;
+  d := objava_obramba('2099-01-08');
+  if d #>> '{ekipe,0,ime}' <> 'Objave domači' or (d #>> '{ekipe,0,prejeti}')::int <> 0
+     or jsonb_path_query_array(d, '$.vratarji[*].ime') <> '["Dosezek-924011 2"]'::jsonb
+     or (d #>> '{vratarji,0,ciste}')::int <> 3 then
+    raise exception '10g. objava_obramba: %', d;
+  end if;
+  d := objava_tekme('2099-01-09', '2099-01-12');
+  if jsonb_array_length(d -> 'tekme') <> 1 or d #>> '{tekme,0,domaci,ime}' <> 'Objave gostje'
+     or (d #>> '{tekme,0,gostje,mesto}')::int <> 1 then
+    raise exception '10h. objava_tekme: %', d;
+  end if;
+  d := objava_liga('2099-01-01', '2099-01-08');
+  if d #>> '{liga,slug}' <> 'test-zy-a' or (d #>> '{liga,upraviteljev}')::int <> 1 or jsonb_array_length(d #> '{liga,lestvica}') <> 3
+     or d #>> '{liga,strelec,ime}' <> 'Dosezek-924011 1' or d::text ~* 'skrivn|hiša|@'
+     or objava_liga('2099-01-01', '2099-01-08', '{test-zy-a}') -> 'liga' <> 'null'::jsonb then
+    raise exception '10i. objava_liga (upravitelji brez hišnih, izključitev): %', d;
+  end if;
+  d := objava_drzava('2099-01-01', '2099-01-08');
+  if d #>> '{drzava,drzava}' <> 'ZY' or (d #>> '{drzava,aktivnih_lig}')::int <> 3 or (d #>> '{drzava,ekip}')::int <> 1
+     or objava_drzava('2099-01-01', '2099-01-08', '{ZY}') -> 'drzava' <> 'null'::jsonb then
+    raise exception '10j. objava_drzava: %', d;
+  end if;
+  if has_function_privilege('anon', 'objava_ekipa_tedna(date, date)', 'execute')
+     or has_function_privilege('authenticated', 'objava_liga(date, date, text[])', 'execute')
+     or has_function_privilege('anon', 'objava_tekme(date, date)', 'execute')
+     or has_function_privilege('authenticated', 'objava_lige()', 'execute') then
+    raise exception '10k. nove funkcije objav naj bodo le servisne';
+  end if;
+  insert into objave (slot, teden, vrsta, jezik, dejstva, napis, objava_ob) values ('tor', '1999-01-05', 'ekipa', 'en', '{}', 'x', now());
   raise notice 'preizkus objav: vse v redu';
 end $$;
 

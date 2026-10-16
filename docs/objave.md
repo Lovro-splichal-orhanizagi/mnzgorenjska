@@ -15,6 +15,74 @@ igralec kroga velik, do dva za njim), poziv "Pick your Sunday XI · slff.eu".
 en dosežek na prosojnico (največ 6), poziv. En osnutek na termin in teden
 (`objave`, delni unique `slot, teden` za pon/cet); zamujen termin se ne
 nadoknadi.
+- **Vsak dan ena objava** (lastnik, 16. 10. 2026; migracija 20261016090000).
+  Torek, sreda, petek, sobota in nedelja imajo po dve vrsti (`TERMINI[slot].vrsti`):
+  **teden A = sodi teden ISO**, B = lihi (`vrstaTermina`, `tedenISO`), v dveh
+  tednih 12 različnih objav. Torek in sobota sta **reela**.
+
+  | dan | osnutek | objava (osnova, razpon) | teden A | teden B |
+  |---|---|---|---|---|
+  | pon | 04:00 | 10:00 −40…+100 | vrtiljak držav | (isto) |
+  | tor | 05:00 | 12:00 −45…+80 | **reel** ekipa tedna (`ekipa`) | **reel** strelci sezone (`strelci`) |
+  | sre | 11:00 | 17:30 −50…+70 | liga tedna (`liga`) | država tedna (`drzava`) |
+  | čet | 12:00 | 18:00 −50…+100 | dosežki tedna | (isto) |
+  | pet | 09:00 | 16:00 −45…+90 | kapetani, igralci v formi (`kapetani`) | dvigi cen (`cene`) |
+  | sob | 04:00 | 10:30 −50…+75 | **reel** napoved vikenda (`predogled`) | **reel** kako se igra (`pravila`) |
+  | ned | 12:00 | 19:00 −45…+90 | številka tedna (`stat`) | najboljše obrambe (`obramba`) |
+
+  Dejstva (servisne SQL, vse prek `objava_lige()` = aktivne, ne mladinske;
+  le uvožene tekme, ne kontumacije; okna v `OKNA` glede na ponedeljek tedna):
+  - `objava_ekipa_tedna(od, do)` — pet najboljših po poziciji zadnjega kroga
+    vsake lige v prejšnjem tednu; `izberiEkipo` izbere formacijo z največ točkami
+    (3-4-3 … 5-4-1). Reel: naslov, igrišče (vrste se pojavijo na udarce,
+    števec skupnih točk), zvezda enajsterice, poziv.
+  - `objava_strelci(do)` — strelci sezone (sezona vsake lige, `sezona_lige`).
+    Reel: odštevanje #5…#2, #1 s števcem golov, poziv. Najmanj trije.
+  - `objava_liga(od, do, izkljuci)` — liga z uvoženo tekmo v zadnjih dveh
+    tednih z največ upravitelji (brez hišnih), lestvica (`lestvica_lige`) z
+    vsaj tremi klubi s tremi tekmami; vrh treh, strelec. **Ista liga ne prej
+    kot v 8 tednih** (`LIGA_PREMOR_TEDNOV`: `izkljuci` so `objave.liga`
+    srednih objav). Povezava napisa `https://slff.eu/?t=<liga>&src=ig`.
+  - `objava_drzava(od, do, izkljuci)` — prva država iz `objava_drzave` (po
+    upraviteljih), ki je ni bilo v 8 tednih (sicer katerakoli), z aktivnimi
+    ligami in ekipami; prosojnice: številke, igralec kroga, poziv.
+  - `objava_forma(do)` — vsota točk zadnjih treh krogov lige (vsaj dva krogi
+    igralca), le igralci, ki jih je mogoče kupiti; prosojnica na igralca s
+    točkami po krogih in ceno.
+  - `objava_cene(od, do)` — največji dvigi cene tedna (le dvigi).
+  - `objava_tekme(od, do)` — neodigrane tekme sobote in nedelje, kjer igra
+    klub z vrha (oba z vsaj tremi tekmami); najzanimivejša na ligo (vsota mest,
+    razlika točk), največ štiri. Reel: tekma na prizor (domači, VS, gostje, forma).
+  - pravila — brez baze: `PRAVILA` v `objave.mjs` (smoke preveri, da je enako
+    `src/lib/pravila.ts` in `tockovanje.ts`). Reel: 15 igralcev, €100M, največ 3
+    iz kluba, kapetan ×3, točke za gol.
+  - `objava_stat(od, do)` — goli, tekme, lige in države tedna; "golijada" le,
+    ko sta oba kluba dala vsaj tri (slavi oba).
+  - `objava_obramba(do)` — klubi z najmanj prejetimi na tekmo (vsaj pet tekem)
+    in vratarji z največ čistimi mrežami (vsaj tri, 60 minut).
+
+  **Brez novice dan izpade** (`vsebinaVrste` vrne null, v dnevnik "ni novice"),
+  polnila ni. `objave` hrani še `vrsta`, `glasba`, `liga` (sreda) in `drzava`.
+- **Reeli** (`src/pages/ObjavaReel.tsx`, `/objava?reel=1`, 1080 × 1920,
+  ~12–14 s): vse gibanje je CSS ali WAAPI (števci na `@property --n`), prizori
+  se menjajo na udarce (`v.bpm`, privzeto 124). `posnemiReel` animacije ustavi
+  in vsako sličico postavi na točen čas (`getAnimations().currentTime`), jo
+  posname in pošlje v **ffmpeg** (H.264 + AAC 48 kHz, 30 fps, `+faststart`,
+  ~2 MB). Zato je video gladek tudi na počasnem strežniku (namesto Playwrightovega
+  `recordVideo`, ki na enem jedru izpušča sličice). Slika delavca je
+  `scripts/hetzner/objave/Dockerfile` (Playwright + ffmpeg iz apt; Playwrightov
+  ffmpeg zna le VP8). Mediji osnutka: `reel.mp4`, `naslovnica.jpg`.
+- **Glasba**: skladbe v `scripts/objave-glasba/` (README: vir in licenca vsake;
+  le licence, ki dovolijo rabo v videih na omrežjih, npr. CC0). Izbere se
+  najmanj nedavno rabljena (`najmanjRabljena` po `objave.glasba`), začetek
+  naključno 0–12 s (`zacetekGlasbe`), pojemanje na začetku in koncu. Prazna
+  mapa: `sintetiziraj` naredi svojo plesno zanko (boben, hi-hat, bas, akordi,
+  arpeggio; tonaliteta in vzorci po semenu, `glasba = 'sinteza:<seme>'`).
+- **Objava reela**: Instagram vsebnik `media_type=REELS` z `video_url` (in
+  `cover_url`), čakanje na FINISHED (do 10 minut), `media_publish`; Facebook
+  `/{stran}/video_reels` (start → `rupload.facebook.com` s `file_url` → finish
+  `PUBLISHED`). Napaka kot pri vrtiljaku: `napaka`, brez samodejne ponovitve.
+  Discord dobi MP4 kot priponko (≤ 9,5 MB, sicer povezavo) in gumb "Ustavi".
 - **Ura objave je naključna** (lastnik: naj bo videti kot človek):
   `casObjave(osnova, razpon, zdaj, rng)` — osnova (pon 10:00, čet 18:00,
   mejnik `objavaMejnika`) + enakomeren odmik iz `TERMINI[slot].razpon`
@@ -104,6 +172,10 @@ nadoknadi.
   http://localhost:5173 --mapa /tmp/objave-vzorec` (napis je predloga, slike v mapi);
   četrtek: `--slot cet --dejstva scripts/vzorci/objava-dosezki.json`;
   mejnik: `--slot mejnik --dejstva scripts/vzorci/objava-mejnik.json`.
+  Ostali dnevi: `--slot tor --dejstva scripts/vzorci/objava-ekipa.json` (vrsta
+  pride iz `"vrsta"` v vzorcu ali `--vrsta`); vzorci `objava-{ekipa,strelci,liga,
+  drzava,kapetani,cene,predogled,pravila,stat,obramba}.json`. Reel potrebuje
+  lokalni `ffmpeg`.
 - **Objava**: `scripts/hetzner/objavi-objave.sh` iz main (CI je ne objavi).
   Enkratna nastavitev (lastnik): `/opt/slff-objave/.env` s
   `SUPABASE_SERVICE_ROLE_KEY=`, `ANTHROPIC_API_KEY=`, `DISCORD_OBJAVE_WEBHOOK=`,

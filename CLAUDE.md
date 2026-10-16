@@ -304,9 +304,12 @@ CI ga ne objavi (`scripts/hetzner/objavi-posto.sh`).
 
 ## Samodejne objave (Instagram, Facebook)
 
-Delavec `slff-objave` (`scripts/objave.mjs`) pripravi osnutke (ponedeljek
-vrtiljak držav, četrtek dosežki, mejniki uporabnikov), jih pošlje na Discord z
-gumbom "Ustavi" in jih ob roku objavi. Vse podrobnosti: `docs/objave.md`.
+Delavec `slff-objave` (`scripts/objave.mjs`) pripravi **vsak dan** osnutek
+(ponedeljek vrtiljak držav, četrtek dosežki, ostali dnevi po dve vrsti, ki se
+menjata po sodem/lihem tednu ISO; torek in sobota sta **reela** z glasbo iz
+`scripts/objave-glasba/`, slika delavca ima ffmpeg), mejnike uporabnikov, jih
+pošlje na Discord z gumbom "Ustavi" in jih ob roku objavi. Dan brez novice
+izpade (brez polnila). Vse podrobnosti: `docs/objave.md`.
 Bistvo: **objava le slavi** (nikoli padec cene ali slaba predstava, nikoli
 mladinske lige, anonimizirani igralci, hišne ekipe, imena uporabnikov);
 `npm run preizkus-objav`; CI je ne objavi (`scripts/hetzner/objavi-objave.sh`).
