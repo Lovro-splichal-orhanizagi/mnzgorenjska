@@ -38,6 +38,23 @@ import askf from './askf.mjs'
 import ffa from './ffa.mjs'
 import novanet from './novanet.mjs'
 import dfb from './dfb.mjs'
+import mascot from './mascot.mjs'
+import lowland from './lowland.mjs'
+import eps from './eps.mjs'
+import tff from './tff.mjs'
+import wmzpn from './wmzpn.mjs'
+import ltfutbolas from './ltfutbolas.mjs'
+import fscg from './fscg.mjs'
+import mfa from './mfa.mjs'
+import isthmian from './isthmian.mjs'
+import pflUa from './pfl-ua.mjs'
+import nsfbih from './nsfbih.mjs'
+import nfsbih from './nfsbih.mjs'
+import gff from './gff.mjs'
+import upl from './upl.mjs'
+import ffl from './ffl.mjs'
+import ksi from './ksi.mjs'
+import fsf from './fsf.mjs'
 
 const VIRI = {
   mnzg,
@@ -108,6 +125,55 @@ const VIRI = {
   novanet,
   // Nemčija: javni zapisniki DFB Datencenter, Regionalliga Nordost.
   dfb,
+  // Grčija: regionalne zveze EPS na platformi Mascotnet (deset domen, šifra
+  // `<domena>:<diorganosi>`), brez šifer igralcev, vratar prvi začetnik (namig).
+  // Pisno dovoljenje upravljavca (Lovro, oktober 2026).
+  mascot,
+  // Škotska (5. raven): Scottish Lowland Football League prek Match Centra
+  // slfl.co.uk (COMET); krogi iz šifer tekem, brez šifer igralcev. Pisno dovoljenje.
+  lowland,
+  // Grčija: regionalne zveze EPS na skupni platformi results.php (ena domena na
+  // zvezo, šifra `<domena>:<league_id>`), player_id, brez dresov in vratarja.
+  eps,
+  // Turčija (TFF) prek tff.org: 2. Lig, 3. Lig in PGL; šifra osebe (kisiId),
+  // brez vratarja in pozicij, stran v windows-1254.
+  tff,
+  // Poljska: Warmińsko-Mazurski ZPN (wmzpn.pl) — zapisniki PZPN Extranet prek
+  // okna strani (admin-ajax match_history), šifre oseb PZPN kot pri pzpn.
+  wmzpn,
+  // Litva (LFF) prek lietuvosfutbolas.lt in Črna gora (regije FSCG) prek
+  // centar/sjever/jug.fscg.me: ista predloga COMET (Auris), `comet-auris.mjs`.
+  ltfutbolas,
+  fscg,
+  // Malta (MFA) prek javnega JSON API-ja Match Centra (api.mfa.com.mt, COMET):
+  // šifra osebe, vratar, menjave z minuto; krog iz zaporedja šifer tekem.
+  mfa,
+  // Anglija (step 3–4): Isthmian, Northern Premier in Southern League prek skupnega
+  // javnega JSON platforme (glava x-tenant-id); šifra osebe, vratar.
+  isthmian,
+  // Bosna in Hercegovina: NS FBiH prek nsfbih.ba (COMET, Prva in Druga liga
+  // FBiH), brez šifer igralcev (ime + klub), vratar je prvi začetnik (namig).
+  nsfbih,
+  // Bosna in Hercegovina, državna raven: NFSBiH prek nfsbih.ba (WWIN liga BiH;
+  // isti COMET, druga stran), ime + klub (šifra v povezavi ni stalna), vratar "(GK)".
+  nfsbih,
+  // Gruzija (GFF) prek liga.gff.ge: Liga 3 in 4, brez šifer igralcev (ime + klub),
+  // vratar je prvi začetnik (namig), koledarska sezona, Crawl-delay 10 s.
+  gff,
+  // Ukrajina: Професіональна футбольна ліга (pfl.ua) — Perša liga, Druga liga A in B;
+  // koledar JSON, šifra igralca, vratar iz postavitve.
+  'pfl-ua': pflUa,
+  // Ukrajina: Українська Прем'єр-Ліга (upl.ua) — koledar prvenstva in raport arbitra;
+  // šifra igralca, vratar iz postavitve.
+  upl,
+  // Ukrajina (Lvivska oblast): Львівська асоціація футболу prek ffl.org.ua;
+  // postave iz novic (članek lige na dan), 10 s med zahtevki (Crawl-delay).
+  ffl,
+  // Islandija (KSÍ) prek ksi.is: šifre igralcev, vratar (M), koledarska sezona.
+  ksi,
+  // Ferski otoki (FSF) prek javnega posrednika COMET na fsf.fo (JSON, ki ga
+  // stran kliče sama): šifre oseb, vratar, koledarska sezona, druge ekipe ("B36 II").
+  fsf,
 }
 
 /**

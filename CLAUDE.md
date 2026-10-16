@@ -103,14 +103,20 @@ tabelo šifer tam, ne tu.
 | Romunija | `docs/viri/romunija.md` | `frf` (brez dovoljenja), `hlf` |
 | Estonija | `docs/viri/estonija.md` | `jalgpall` |
 | Latvija | `docs/viri/latvija.md` | `lff` |
-| Poljska | `docs/viri/poljska.md` | `pzpn` |
+| Poljska | `docs/viri/poljska.md` | `pzpn`, `wmzpn` |
 | Španija | `docs/viri/spanija.md`, `docs/viri/novanet.md` | `fcf`, `fas`, `novanet` |
 | Nemčija | `docs/viri/nemcija.md` | `dfb` (Regionalliga Nordost; pred vklopom audit obeh sezon) |
-| Anglija | `docs/viri/anglija.md` | `ncefl` |
+| Anglija | `docs/viri/anglija.md` | `ncefl`, `isthmian` |
 | Severna Makedonija | `docs/viri/makedonija.md` | `ffm` |
-| Ukrajina | `docs/viri/ukrajina.md` | `aft`, `hoff-km` |
-| Turčija | `docs/viri/turcija.md` | `askf` |
+| Ukrajina | `docs/viri/ukrajina.md` | `aft`, `hoff-km`, `pfl-ua`, `upl` |
+| Turčija | `docs/viri/turcija.md` | `askf`, `tff` |
 | Armenija | `docs/viri/armenija.md` | `ffa` |
+| Grčija | `docs/viri/grcija.md` | `mascot`, `eps` |
+| Škotska | `docs/viri/skotska.md` | `lowland` |
+| Litva in Črna gora | `docs/viri/litva-crna-gora.md` | `ltfutbolas`, `fscg` |
+| Malta | `docs/viri/malta.md` | `mfa` |
+| Bosna in Hercegovina | `docs/viri/bih.md` | `nsfbih`, `nfsbih` |
+| Gruzija | `docs/viri/gruzija.md` | `gff` |
 
 Pravila, ki veljajo za vse vire (podrobnosti v datotekah):
 
@@ -157,8 +163,8 @@ dobi ceno iz tamkajšnje: percentil, prebran iz cene, vsaka raven višje zapre
 (`scripts/visja-liga.mjs`, `ovrednoti-igralce` izpiše seznam "Cena iz višje
 lige"). Raven lige je pravilo po šifri in imenu v `ravenLige`, ne stolpec:
 HR (državne lige, županijske po imenu le znotraj iste zveze), SK, HU, ES, EE,
-LV po uradni piramidi, AT le državne nad deželnimi; mladinske se primerjajo le
-z mladinskimi. Brez pravila (SI, RS, RO, PL, CZ, MK) in brez šifer osebe ostane
+LV, TR (1. Lig nad 2. Lig nad 3. Lig nad PGL), UA, LT, GB, GR (znotraj iste zveze EPS) po uradni piramidi, AT le državne nad deželnimi; mladinske se primerjajo le
+z mladinskimi. Brez pravila (SI, RS, RO, PL, CZ, MK, ME) in brez šifer osebe ostane
 4.5. Ob novi ligi z novim poimenovanjem ravni preveri `ravenLige` (smoke).
 Na vklopljeni ligi pride do nove cene le **tedensko prevrednotenje** (največ
 1.0 na teden, sidro potuje z njo) — tudi pri igralcu, ki je že na borzi,
