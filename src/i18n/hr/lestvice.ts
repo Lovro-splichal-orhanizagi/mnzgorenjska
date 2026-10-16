@@ -320,7 +320,7 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     klop: 'Klupa',
     zasebna: 'Momčadi drugih igrača nisu javne.',
     zasebnaOpis:
-      'Postavu, kapetana, klupu i transfere vidi samo vlasnik momčadi. Bodovi i mjesto su na ljestvici.',
+      'Postavu, kapetana, klupu i prijelaze vidi samo vlasnik momčadi. Bodovi i mjesto su na ljestvici.',
   },
 
   klub: {

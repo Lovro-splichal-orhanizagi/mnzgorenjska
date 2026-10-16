@@ -1,0 +1,426 @@
+{
+ "id": "6a590638ce9ef452b61f32f1",
+ "date": "2026-08-15",
+ "time": "15:00",
+ "dateTime": "2026-08-15T15:00:00.000Z",
+ "status": "FullTime",
+ "round": {
+  "id": "Match 2",
+  "name": "Match 2"
+ },
+ "competition": {
+  "id": "67d7d0c1749090308acc1021",
+  "name": "North Division",
+  "shortName": "North Division",
+  "type": "league"
+ },
+ "homeTeamName": "Concord Rangers",
+ "awayTeamName": "AFC Sudbury",
+ "score": {
+  "current": {
+   "home": 3,
+   "away": 2
+  },
+  "halfTime": {
+   "home": 3,
+   "away": 0
+  }
+ },
+ "homeTeam": {
+  "id": "68072e11bda6e04641c6e042",
+  "fullName": "Concord Rangers",
+  "shortName": "Concord",
+  "club": {
+   "id": "666a244db183cf948dc3e8f9",
+   "fullName": "Concord Rangers",
+   "shortName": "Concord"
+  }
+ },
+ "awayTeam": {
+  "id": "6a0adf9eda5d0d0847a02445",
+  "fullName": "AFC Sudbury",
+  "shortName": "Sudbury",
+  "club": {
+   "id": "6a0adf9eda5d0d0847a023b3",
+   "fullName": "AFC Sudbury",
+   "shortName": "Sudbury"
+  }
+ },
+ "homeLineup": [
+  {
+   "personId": "3be0a93c-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Charlie Paul Brown",
+   "number": 1,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": "GK"
+  },
+  {
+   "personId": "3be5f528-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Hassan Saleh Togba",
+   "number": 2,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bb4634d-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Connor Hart",
+   "number": 4,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3be34d7f-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Callum Knowlden",
+   "number": 5,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bc62515-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Anton Matthews",
+   "number": 6,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "f07345a6-e657-11f0-bdf4-0204f6006b57",
+   "personName": "Toheeb Adebanjo Elegushi",
+   "number": 7,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bc17d39-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Samuel William Brogan",
+   "number": 8,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bb5eeed-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Khristopher Nana Yaw Oti",
+   "number": 9,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3be2f64d-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Charlie Thomas Allum",
+   "number": 10,
+   "isCaptain": true,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3c021c6a-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Kai Akwere Junior Udofot-Torres",
+   "number": 11,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3be461b9-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Tambeson Eyong",
+   "number": 20,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bbfaf33-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Max Riccardo Dorili",
+   "number": 12,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  },
+  {
+   "personId": "3be01af5-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Reggie Terry Gregory",
+   "number": 14,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  },
+  {
+   "personId": "c6313b83-22ce-11f1-bdf4-0204f6006b57",
+   "personName": "Mack Darron Polyblank",
+   "number": 15,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  },
+  {
+   "personId": "3bed5d6f-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Demi Elegushi",
+   "number": 16,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  },
+  {
+   "personId": "3bfccebc-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Wil Christopher Avis",
+   "number": 17,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  }
+ ],
+ "homeSubs": [
+  {
+   "minute": 59,
+   "personOffId": "3c021c6a-6ee9-11f0-aa15-02eebc336bd5",
+   "personOffName": "Kai Akwere Junior Udofot-Torres",
+   "personOnId": "3be01af5-6ee9-11f0-aa15-02eebc336bd5",
+   "personOnName": "Reggie Terry Gregory",
+   "phase": "SecondHalf"
+  },
+  {
+   "minute": 61,
+   "personOffId": "3bb5eeed-6ee9-11f0-aa15-02eebc336bd5",
+   "personOffName": "Khristopher Nana Yaw Oti",
+   "personOnId": "3bfccebc-6ee9-11f0-aa15-02eebc336bd5",
+   "personOnName": "Wil Christopher Avis",
+   "phase": "SecondHalf"
+  },
+  {
+   "minute": 75,
+   "personOffId": "3be5f528-6ee9-11f0-aa15-02eebc336bd5",
+   "personOffName": "Hassan Saleh Togba",
+   "personOnId": "c6313b83-22ce-11f1-bdf4-0204f6006b57",
+   "personOnName": "Mack Darron Polyblank",
+   "phase": "SecondHalf"
+  },
+  {
+   "minute": 77,
+   "personOffId": "3bc17d39-6ee9-11f0-aa15-02eebc336bd5",
+   "personOffName": "Samuel William Brogan",
+   "personOnId": "3bed5d6f-6ee9-11f0-aa15-02eebc336bd5",
+   "personOnName": "Demi Elegushi",
+   "phase": "SecondHalf"
+  }
+ ],
+ "homeGoals": [
+  {
+   "personId": "f07345a6-e657-11f0-bdf4-0204f6006b57",
+   "personName": "Toheeb Adebanjo Elegushi",
+   "minute": 13,
+   "goalType": "normal",
+   "phase": "FirstHalf"
+  },
+  {
+   "personId": "N/A",
+   "personName": "N/A",
+   "minute": 33,
+   "goalType": "normal",
+   "phase": "FirstHalf"
+  },
+  {
+   "personId": "3bb5eeed-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Khristopher Nana Yaw Oti",
+   "minute": 5,
+   "goalType": "normal",
+   "phase": "FirstHalf"
+  }
+ ],
+ "homeCards": [
+  {
+   "personId": "3c021c6a-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Kai Akwere Junior Udofot-Torres",
+   "minute": 30,
+   "cardType": "first_yellow_card",
+   "phase": "FirstHalf"
+  }
+ ],
+ "awayLineup": [
+  {
+   "personId": "3bbbbcd5-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Finley Iron",
+   "number": 13,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": "GK"
+  },
+  {
+   "personId": "3c01c6ec-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Jordan Barnett",
+   "number": 2,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3c0227ff-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Tommy Dettmar",
+   "number": 4,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3be07bc4-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "George Chenery",
+   "number": 5,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bb49836-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Kyran Clements",
+   "number": 6,
+   "isCaptain": true,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bed74d2-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Reuben Jon Chinnery",
+   "number": 9,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bb643a8-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Jack Manly",
+   "number": 11,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bab29b9-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Callum George Anderson",
+   "number": 12,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bc19fcf-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Oliver Bebe Reynolds",
+   "number": 14,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3badc9c1-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "George Keys",
+   "number": 15,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bdfed6b-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Tom Maycock",
+   "number": 20,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "61924cf4-292e-11f1-bdf4-0204f6006b57",
+   "personName": "Charlie Leon Oxborrow",
+   "number": 3,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  },
+  {
+   "personId": "3bfd0e03-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Kaidon Tower-King",
+   "number": 7,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  },
+  {
+   "personId": "3b8facbf-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Scott Christopher Sloots",
+   "number": 16,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  },
+  {
+   "personId": "3bc6a18e-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Archie Jolland",
+   "number": 17,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  },
+  {
+   "personId": "N/A",
+   "personName": "N/A",
+   "number": null,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  }
+ ],
+ "awaySubs": [
+  {
+   "minute": 52,
+   "personOffId": "3badc9c1-6ee9-11f0-aa15-02eebc336bd5",
+   "personOffName": "George Keys",
+   "personOnId": "61924cf4-292e-11f1-bdf4-0204f6006b57",
+   "personOnName": "Charlie Leon Oxborrow",
+   "phase": "SecondHalf"
+  },
+  {
+   "minute": 52,
+   "personOffId": "3c0227ff-6ee9-11f0-aa15-02eebc336bd5",
+   "personOffName": "Tommy Dettmar",
+   "personOnId": "3bfd0e03-6ee9-11f0-aa15-02eebc336bd5",
+   "personOnName": "Kaidon Tower-King",
+   "phase": "SecondHalf"
+  },
+  {
+   "minute": 53,
+   "personOffId": "3bb643a8-6ee9-11f0-aa15-02eebc336bd5",
+   "personOffName": "Jack Manly",
+   "personOnId": "3b8facbf-6ee9-11f0-aa15-02eebc336bd5",
+   "personOnName": "Scott Christopher Sloots",
+   "phase": "SecondHalf"
+  },
+  {
+   "minute": 77,
+   "personOffId": "3bab29b9-6ee9-11f0-aa15-02eebc336bd5",
+   "personOffName": "Callum George Anderson",
+   "personOnId": "3bc6a18e-6ee9-11f0-aa15-02eebc336bd5",
+   "personOnName": "Archie Jolland",
+   "phase": "SecondHalf"
+  }
+ ],
+ "awayGoals": [
+  {
+   "personId": "3bb49836-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Kyran Clements",
+   "minute": 58,
+   "goalType": "normal",
+   "phase": "SecondHalf"
+  },
+  {
+   "personId": "3bed74d2-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Reuben Jon Chinnery",
+   "minute": 79,
+   "goalType": "penalty",
+   "phase": "SecondHalf"
+  }
+ ],
+ "awayCards": []
+}

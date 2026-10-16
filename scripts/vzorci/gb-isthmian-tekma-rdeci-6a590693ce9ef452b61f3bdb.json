@@ -1,0 +1,497 @@
+{
+ "id": "6a590693ce9ef452b61f3bdb",
+ "date": "2026-08-11",
+ "time": "19:45",
+ "dateTime": "2026-08-11T19:45:00.000Z",
+ "status": "FullTime",
+ "round": {
+  "id": "Match 2",
+  "name": "Match 2"
+ },
+ "competition": {
+  "id": "67d7d01f749090308acc101e",
+  "name": "Premier Division",
+  "shortName": "Premier Division",
+  "type": "league"
+ },
+ "homeTeamName": "Enfield Town",
+ "awayTeamName": "St Albans City",
+ "score": {
+  "current": {
+   "home": 1,
+   "away": 2
+  },
+  "halfTime": {
+   "home": 1,
+   "away": 0
+  }
+ },
+ "homeTeam": {
+  "id": "6a3d41786a408533f65c78e0",
+  "fullName": "Enfield Town",
+  "shortName": "Enfield Town",
+  "club": {
+   "id": "6a3d41786a408533f65c78de",
+   "fullName": "Enfield Town",
+   "shortName": "Enfield Town"
+  }
+ },
+ "awayTeam": {
+  "id": "6853a4af21dd3fcf18f4fa31",
+  "fullName": "St Albans City",
+  "shortName": "St Albans",
+  "club": {
+   "id": "6853373c3d075ac588dd55fd",
+   "fullName": "St Albans City",
+   "shortName": "St Albans"
+  }
+ },
+ "homeLineup": [
+  {
+   "personId": "3bc1cab1-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Dylan Thompson",
+   "number": 1,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": "GK"
+  },
+  {
+   "personId": "3bcd44ba-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Sonny Hart",
+   "number": 2,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bd25156-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Franklin Domi",
+   "number": 3,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3b929095-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Adam Thompson",
+   "number": 5,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bb6eecd-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Amrit Bansal-Mcnulty",
+   "number": 7,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3be2da5e-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Sam Oliver Youngs",
+   "number": 8,
+   "isCaptain": true,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bad5b7f-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Billy Robert Leonard",
+   "number": 11,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bf2c287-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Declan Alistair Rydings",
+   "number": 15,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bb4374a-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Luke Deslandes",
+   "number": 16,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bcd2f1e-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Thomas Avgoustidis",
+   "number": 17,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bb6ced5-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Ayo Tanimowo",
+   "number": 24,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bae4923-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Edwin Mensah",
+   "number": 6,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  },
+  {
+   "personId": "3bf3f32d-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Luke May-Parrott",
+   "number": 10,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  },
+  {
+   "personId": "3b9df615-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Jesse Akubuine",
+   "number": 18,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  },
+  {
+   "personId": "3bb57410-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Mickey Charles Parcell",
+   "number": 20,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  },
+  {
+   "personId": "3bab128a-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Shiloh Remy",
+   "number": 25,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  }
+ ],
+ "homeSubs": [
+  {
+   "minute": 40,
+   "personOffId": "3bb6eecd-6ee9-11f0-aa15-02eebc336bd5",
+   "personOffName": "Amrit Bansal-Mcnulty",
+   "personOnId": "3bab128a-6ee9-11f0-aa15-02eebc336bd5",
+   "personOnName": "Shiloh Remy",
+   "phase": "FirstHalf"
+  },
+  {
+   "minute": 46,
+   "personOffId": "3bb4374a-6ee9-11f0-aa15-02eebc336bd5",
+   "personOffName": "Luke Deslandes",
+   "personOnId": "3bae4923-6ee9-11f0-aa15-02eebc336bd5",
+   "personOnName": "Edwin Mensah",
+   "phase": "FirstHalf"
+  },
+  {
+   "minute": 58,
+   "personOffId": "3bcd2f1e-6ee9-11f0-aa15-02eebc336bd5",
+   "personOffName": "Thomas Avgoustidis",
+   "personOnId": "3bb57410-6ee9-11f0-aa15-02eebc336bd5",
+   "personOnName": "Mickey Charles Parcell",
+   "phase": "SecondHalf"
+  }
+ ],
+ "homeGoals": [
+  {
+   "personId": "3be2da5e-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Sam Oliver Youngs",
+   "minute": 28,
+   "goalType": "normal",
+   "phase": "FirstHalf"
+  }
+ ],
+ "homeCards": [
+  {
+   "personId": "3be2da5e-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Sam Oliver Youngs",
+   "minute": 34,
+   "cardType": "first_yellow_card",
+   "phase": "FirstHalf"
+  },
+  {
+   "personId": "3bb6ced5-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Ayo Tanimowo",
+   "minute": 45,
+   "cardType": "first_yellow_card",
+   "phase": "FirstHalf"
+  },
+  {
+   "personId": "3bb6ced5-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Ayo Tanimowo",
+   "minute": 45,
+   "cardType": "second_yellow_card",
+   "phase": "FirstHalf"
+  },
+  {
+   "personId": "3bb6ced5-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Ayo Tanimowo",
+   "minute": 45,
+   "cardType": "red_card",
+   "phase": "FirstHalf"
+  },
+  {
+   "personId": "3bcd44ba-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Sonny Hart",
+   "minute": 45,
+   "cardType": "first_yellow_card",
+   "phase": "FirstHalf"
+  },
+  {
+   "personId": "3bcd44ba-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Sonny Hart",
+   "minute": 45,
+   "cardType": "second_yellow_card",
+   "phase": "FirstHalf"
+  },
+  {
+   "personId": "3bcd44ba-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Sonny Hart",
+   "minute": 45,
+   "cardType": "red_card",
+   "phase": "FirstHalf"
+  },
+  {
+   "personId": "3b929095-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Adam Thompson",
+   "minute": 59,
+   "cardType": "first_yellow_card",
+   "phase": "SecondHalf"
+  },
+  {
+   "personId": "3bc1cab1-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Dylan Thompson",
+   "minute": 94,
+   "cardType": "first_yellow_card",
+   "phase": "SecondHalf"
+  }
+ ],
+ "awayLineup": [
+  {
+   "personId": "3bdd7d39-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Sam Donkin",
+   "number": 1,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": "GK"
+  },
+  {
+   "personId": "3bbb8dfa-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Jack James",
+   "number": 43,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3b9dbb80-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Alex Dyer",
+   "number": 20,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bb64c4e-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Kieran Petrie",
+   "number": 35,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3b950f8b-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Jake Gray",
+   "number": 43,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3b94d3aa-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Zane Banton",
+   "number": 34,
+   "isCaptain": true,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bc1a80e-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Zak Sowden-Fletcher",
+   "number": 15,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bb316ec-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Kai Brown",
+   "number": 48,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bcd13d3-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Mikey Faulkner",
+   "number": 26,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bdf13a1-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Ollie Baker",
+   "number": 30,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3baa8153-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Darion Furlong",
+   "number": 29,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bc61792-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Inih Effiong",
+   "number": 9,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  },
+  {
+   "personId": "1e570beb-c3b3-11f0-bdf4-0204f6006b57",
+   "personName": "Joseph Beardon",
+   "number": 12,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  },
+  {
+   "personId": "3bb3e528-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Ollie Knight",
+   "number": 17,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  },
+  {
+   "personId": "3be3390d-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Charlie Edwards",
+   "number": 32,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  },
+  {
+   "personId": "3bbb98aa-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Jake Grante",
+   "number": 30,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  }
+ ],
+ "awaySubs": [
+  {
+   "minute": 46,
+   "personOffId": "3bdf13a1-6ee9-11f0-aa15-02eebc336bd5",
+   "personOffName": "Ollie Baker",
+   "personOnId": "3bbb98aa-6ee9-11f0-aa15-02eebc336bd5",
+   "personOnName": "Jake Grante",
+   "phase": "FirstHalf"
+  },
+  {
+   "minute": 62,
+   "personOffId": "3bb64c4e-6ee9-11f0-aa15-02eebc336bd5",
+   "personOffName": "Kieran Petrie",
+   "personOnId": "3bc61792-6ee9-11f0-aa15-02eebc336bd5",
+   "personOnName": "Inih Effiong",
+   "phase": "SecondHalf"
+  },
+  {
+   "minute": 70,
+   "personOffId": "3b950f8b-6ee9-11f0-aa15-02eebc336bd5",
+   "personOffName": "Jake Gray",
+   "personOnId": "3bb3e528-6ee9-11f0-aa15-02eebc336bd5",
+   "personOnName": "Ollie Knight",
+   "phase": "SecondHalf"
+  },
+  {
+   "minute": 94,
+   "personOffId": "3bcd13d3-6ee9-11f0-aa15-02eebc336bd5",
+   "personOffName": "Mikey Faulkner",
+   "personOnId": "3be3390d-6ee9-11f0-aa15-02eebc336bd5",
+   "personOnName": "Charlie Edwards",
+   "phase": "SecondHalf"
+  },
+  {
+   "minute": 97,
+   "personOffId": "3bb316ec-6ee9-11f0-aa15-02eebc336bd5",
+   "personOffName": "Kai Brown",
+   "personOnId": "1e570beb-c3b3-11f0-bdf4-0204f6006b57",
+   "personOnName": "Joseph Beardon",
+   "phase": "SecondHalf"
+  }
+ ],
+ "awayGoals": [
+  {
+   "personId": "3b9dbb80-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Alex Dyer",
+   "minute": 59,
+   "goalType": "normal",
+   "phase": "SecondHalf"
+  },
+  {
+   "personId": "3bc61792-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Inih Effiong",
+   "minute": 93,
+   "goalType": "normal",
+   "phase": "SecondHalf"
+  }
+ ],
+ "awayCards": [
+  {
+   "personId": "3bdf13a1-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Ollie Baker",
+   "minute": 37,
+   "cardType": "first_yellow_card",
+   "phase": "FirstHalf"
+  },
+  {
+   "personId": "3bc1a80e-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Zak Sowden-Fletcher",
+   "minute": 69,
+   "cardType": "first_yellow_card",
+   "phase": "SecondHalf"
+  },
+  {
+   "personId": "3b9dbb80-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Alex Dyer",
+   "minute": 88,
+   "cardType": "first_yellow_card",
+   "phase": "SecondHalf"
+  },
+  {
+   "personId": "3baa8153-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Darion Furlong",
+   "minute": 94,
+   "cardType": "first_yellow_card",
+   "phase": "SecondHalf"
+  }
+ ]
+}

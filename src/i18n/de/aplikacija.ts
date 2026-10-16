@@ -27,12 +27,12 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     lestvicaDomov: 'Bier-Rangliste',
     // Stran /beers (pages/Piva.tsx): brez zneskov.
     stran: {
-      uvod: 'SLFF ist kostenlos. Server und Domain zahlen wir selbst, darum hilft jedes Bier wirklich. Danke an alle, die uns schon eins spendiert haben!',
+      uvod: 'SLFF ist kostenlos für Tausende Manager in Hunderten Amateurligen quer durch Europa: keine Werbung, keine Wetten, keine Paywall. Dein Bier bezahlt Server, Mails und Domain und landet dann genau hier an der Wand, mit deinem Namen und deiner Nachricht. Punkte bringt es keine, nur einen sehr dankbaren Montag. 🍺',
       skupaj: { one: '{n} Bier bisher', other: '{n} Biere bisher' },
       piv: { one: '{n} Bier', other: '{n} Biere' },
       lestvica: 'Top-Unterstützer',
       anonimni: 'Anonyme Unterstützer',
-      prazno: 'Noch kein Bier an der Wand. Sei der Erste!',
+      prazno: 'An der Wand ist noch Platz für deinen Namen. Sei einer der Ersten! 🍻',
     },
   },
   noga: {
@@ -195,7 +195,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
   },
   zelimLigo: {
     povezava: 'Deine Liga fehlt? Sag es uns',
-    naslov: 'Welche Liga möchtest du spielen?',
+    naslov: 'In welcher Liga möchtest du spielen?',
     opis: 'Sag uns, welche Liga dir fehlt. Wir nehmen Ligen danach auf, wie viele sie sich wünschen.',
     drzava: 'Land',
     drugaDrzava: 'Anderes Land',

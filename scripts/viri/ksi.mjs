@@ -2,7 +2,7 @@
 //
 // KSÍ vodi vsa islandska tekmovanja v COMET (comet.ksi.is, za prijavo) in jih
 // objavi na ksi.is (Astro, HTML iz strežnika). robots.txt: "Allow: /" za vse.
-// Glej CLAUDE.md (Islandija — vir `ksi`).
+// Glej docs/viri/islandija.md (Islandija — vir `ksi`).
 //
 // SEZONA je koledarsko leto (april–oktober): 2026 = "2026", ne "2026/27"
 // (`competitions.sezona_koledarska`). Vir jo vzame iz izbirnika sezone na

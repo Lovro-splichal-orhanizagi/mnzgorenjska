@@ -1,0 +1,426 @@
+{
+ "id": "6a590696ce9ef452b61f3c1b",
+ "date": "2026-10-14",
+ "time": "19:45",
+ "dateTime": "2026-10-14T19:45:00.000Z",
+ "status": "FullTime",
+ "round": {
+  "id": "Match 7",
+  "name": "Match 7"
+ },
+ "competition": {
+  "id": "67d7c7bb74247876e6dae40b",
+  "name": "East Division",
+  "shortName": "East Division",
+  "type": "league"
+ },
+ "homeTeamName": "Stocksbridge Park Steels",
+ "awayTeamName": "Bridlington Town",
+ "score": {
+  "current": {
+   "home": 0,
+   "away": 1
+  },
+  "halfTime": {
+   "home": 0,
+   "away": 0
+  }
+ },
+ "homeTeam": {
+  "id": "68001756bda6e04641c6dfd5",
+  "fullName": "Stocksbridge Park Steels",
+  "shortName": "S'bridge PS",
+  "club": {
+   "id": "66633353685665e8224f21aa",
+   "fullName": "Stocksbridge Park Steels",
+   "shortName": "S'bridge PS"
+  }
+ },
+ "awayTeam": {
+  "id": "68001895bda6e04641c6dfde",
+  "fullName": "Bridlington Town",
+  "shortName": "Bridlington",
+  "club": {
+   "id": "6663318e685665e8224f211e",
+   "fullName": "Bridlington Town",
+   "shortName": "Bridlington"
+  }
+ },
+ "homeLineup": [
+  {
+   "personId": "3b93d824-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Lloyd Allinson",
+   "number": 1,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": "GK"
+  },
+  {
+   "personId": "3bbb963b-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Tom Shepherd",
+   "number": 2,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bc18b93-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Louis Poland",
+   "number": 3,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3b94ec15-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Connor Smythe",
+   "number": 4,
+   "isCaptain": true,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "8f067200-85a7-11f1-886a-0204f6006b57",
+   "personName": "Finlay Dyer",
+   "number": 5,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bc1dcc2-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Chris Bumhira",
+   "number": 6,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bb44c1b-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Thomas Marshall",
+   "number": 7,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bc1ac8e-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Derren Boyle",
+   "number": 8,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bf2b30c-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Romario Dunne",
+   "number": 9,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bb65a46-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Josiah Dyer",
+   "number": 10,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "375261b5-c3bf-11f1-b56e-0204f6006b57",
+   "personName": "Ryan Cook",
+   "number": 11,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bb44f3d-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Fedel Ross-Lang",
+   "number": 12,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  },
+  {
+   "personId": "3bcf7af0-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Elton Wamba Simo",
+   "number": 14,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  },
+  {
+   "personId": "3bcedcb4-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Reuben Theodore Adeyemi Akinola Selby",
+   "number": 15,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  },
+  {
+   "personId": "3bcf74f2-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Louie Ward",
+   "number": 16,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  },
+  {
+   "personId": "N/A",
+   "personName": "N/A",
+   "number": null,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  }
+ ],
+ "homeSubs": [
+  {
+   "minute": 63,
+   "personOffId": "3bb65a46-6ee9-11f0-aa15-02eebc336bd5",
+   "personOffName": "Josiah Dyer",
+   "personOnId": "3bb44f3d-6ee9-11f0-aa15-02eebc336bd5",
+   "personOnName": "Fedel Ross-Lang",
+   "phase": "SecondHalf"
+  },
+  {
+   "minute": 78,
+   "personOffId": "3bc18b93-6ee9-11f0-aa15-02eebc336bd5",
+   "personOffName": "Louis Poland",
+   "personOnId": "3bcedcb4-6ee9-11f0-aa15-02eebc336bd5",
+   "personOnName": "Reuben Theodore Adeyemi Akinola Selby",
+   "phase": "SecondHalf"
+  },
+  {
+   "minute": 79,
+   "personOffId": "3bc1ac8e-6ee9-11f0-aa15-02eebc336bd5",
+   "personOffName": "Derren Boyle",
+   "personOnId": "3bcf7af0-6ee9-11f0-aa15-02eebc336bd5",
+   "personOnName": "Elton Wamba Simo",
+   "phase": "SecondHalf"
+  }
+ ],
+ "homeGoals": [],
+ "homeCards": [
+  {
+   "personId": "3bc1dcc2-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Chris Bumhira",
+   "minute": 14,
+   "cardType": "first_yellow_card",
+   "phase": "FirstHalf"
+  },
+  {
+   "personId": "3b94ec15-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Connor Smythe",
+   "minute": 30,
+   "cardType": "first_yellow_card",
+   "phase": "FirstHalf"
+  }
+ ],
+ "awayLineup": [
+  {
+   "personId": "3bcd30c1-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Alex Baird",
+   "number": 1,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": "GK"
+  },
+  {
+   "personId": "3bc0e5d7-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Joe Batty",
+   "number": 2,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bb7062a-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Alex Markham",
+   "number": 3,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bbbd793-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Will Marshall",
+   "number": 4,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3be04be9-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Jacob Mcloughlin",
+   "number": 5,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3b9d28e0-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Tom Allan",
+   "number": 6,
+   "isCaptain": true,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bfb906b-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Eddie Kettlewell",
+   "number": 7,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bbf82ab-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Ben Tweed",
+   "number": 8,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "de63f895-fd05-11f0-bdf4-0204f6006b57",
+   "personName": "Ifeanyi \"Destiny\" Nnenanya",
+   "number": 9,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bb41d87-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Ahmed Salam",
+   "number": 10,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3bfe1507-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Luca Bolino",
+   "number": 11,
+   "isCaptain": false,
+   "hasStartedMatch": true,
+   "position": null
+  },
+  {
+   "personId": "3be0996a-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Liam Tibbett",
+   "number": 12,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  },
+  {
+   "personId": "3bd2dd10-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Kyle Fanning",
+   "number": 14,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  },
+  {
+   "personId": "2dc40e23-6fb9-11f1-886a-0204f6006b57",
+   "personName": "Toby Marriott",
+   "number": 15,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  },
+  {
+   "personId": "3bad3e05-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Casey Stewart",
+   "number": 16,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  },
+  {
+   "personId": "a08e6f03-876a-11f1-886a-0204f6006b57",
+   "personName": "Charlie Birdsall",
+   "number": 17,
+   "isCaptain": false,
+   "hasStartedMatch": false,
+   "position": null
+  }
+ ],
+ "awaySubs": [
+  {
+   "minute": 56,
+   "personOffId": "3bfb906b-6ee9-11f0-aa15-02eebc336bd5",
+   "personOffName": "Eddie Kettlewell",
+   "personOnId": "2dc40e23-6fb9-11f1-886a-0204f6006b57",
+   "personOnName": "Toby Marriott",
+   "phase": "SecondHalf"
+  },
+  {
+   "minute": 63,
+   "personOffId": "de63f895-fd05-11f0-bdf4-0204f6006b57",
+   "personOffName": "Ifeanyi \"Destiny\" Nnenanya",
+   "personOnId": "3bad3e05-6ee9-11f0-aa15-02eebc336bd5",
+   "personOnName": "Casey Stewart",
+   "phase": "SecondHalf"
+  },
+  {
+   "minute": 63,
+   "personOffId": "3bbbd793-6ee9-11f0-aa15-02eebc336bd5",
+   "personOffName": "Will Marshall",
+   "personOnId": "3bd2dd10-6ee9-11f0-aa15-02eebc336bd5",
+   "personOnName": "Kyle Fanning",
+   "phase": "SecondHalf"
+  },
+  {
+   "minute": 86,
+   "personOffId": "3bfe1507-6ee9-11f0-aa15-02eebc336bd5",
+   "personOffName": "Luca Bolino",
+   "personOnId": "a08e6f03-876a-11f1-886a-0204f6006b57",
+   "personOnName": "Charlie Birdsall",
+   "phase": "SecondHalf"
+  },
+  {
+   "minute": 86,
+   "personOffId": "3bb7062a-6ee9-11f0-aa15-02eebc336bd5",
+   "personOffName": "Alex Markham",
+   "personOnId": "3be0996a-6ee9-11f0-aa15-02eebc336bd5",
+   "personOnName": "Liam Tibbett",
+   "phase": "SecondHalf"
+  }
+ ],
+ "awayGoals": [
+  {
+   "personId": "N/A",
+   "personName": "N/A",
+   "minute": 50,
+   "goalType": "own-goal",
+   "phase": "SecondHalf"
+  }
+ ],
+ "awayCards": [
+  {
+   "personId": "3bb7062a-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Alex Markham",
+   "minute": 42,
+   "cardType": "first_yellow_card",
+   "phase": "FirstHalf"
+  },
+  {
+   "personId": "de63f895-fd05-11f0-bdf4-0204f6006b57",
+   "personName": "Ifeanyi \"Destiny\" Nnenanya",
+   "minute": 58,
+   "cardType": "first_yellow_card",
+   "phase": "SecondHalf"
+  },
+  {
+   "personId": "3bc0e5d7-6ee9-11f0-aa15-02eebc336bd5",
+   "personName": "Joe Batty",
+   "minute": 65,
+   "cardType": "first_yellow_card",
+   "phase": "SecondHalf"
+  }
+ ]
+}

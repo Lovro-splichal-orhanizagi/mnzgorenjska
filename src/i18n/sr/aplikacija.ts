@@ -27,12 +27,12 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     lestvicaDomov: 'Pivska tabela',
     // Stran /beers (pages/Piva.tsx): brez zneskov.
     stran: {
-      uvod: 'SLFF je besplatan. Server i domen plaćamo sami, pa svako pivo zaista pomaže. Hvala svima koji su nas već častili!',
+      uvod: 'SLFF je besplatan za hiljade menadžera u stotinama amaterskih liga širom Evrope: bez reklama, bez klađenja, bez pretplata. Tvoje pivo plaća server, poštu i domen, a zatim završi baš ovde, na zidu, sa tvojim imenom i porukom. Bodove ne donosi, samo veoma zahvalan ponedeljak. 🍺',
       skupaj: { one: 'Do sada {n} pivo', few: 'Do sada {n} piva', other: 'Do sada {n} piva' },
       piv: { one: '{n} pivo', few: '{n} piva', other: '{n} piva' },
       lestvica: 'Tabela podržavalaca',
       anonimni: 'Anonimni podržavaoci',
-      prazno: 'Na zidu još nema nijednog piva. Budi prvi!',
+      prazno: 'Na zidu još ima mesta za tvoje ime. Budi među prvima! 🍻',
     },
   },
   noga: {
@@ -154,7 +154,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     izbrisiVprasanje: 'Obrisati poruku?',
     naslov: 'Pomozi nam da bude bolje!',
     anonimno: 'anonimno',
-    uvod: 'Šta te smeta? Šta bi voleo da vidiš? Šta ti nedostaje? Tvoje mišljenje nam mnogo znači, <krepko>reci nam</krepko>. Čet je anoniman; niko ne vidi ko je šta napisao.',
+    uvod: 'Šta ti smeta? Šta bi voleo da vidiš? Šta ti nedostaje? Tvoje mišljenje nam mnogo znači, <krepko>reci nam</krepko>. Čet je anoniman; niko ne vidi ko je šta napisao.',
     prikazesKot: 'U četu se prikazuješ kao <ime>{ime}</ime>. Tvoje registrovano ime ostaje skriveno.',
     zaPisanje: 'Za pisanje se prijavi (čitanje je javno). Tvoje registrovano ime ostaje skriveno, pojavljuješ se pod nasumičnim nadimkom.',
     bodiPrvi: 'Budi prvi koji će napisati poruku.',

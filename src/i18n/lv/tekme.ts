@@ -205,7 +205,7 @@ export const tekme: NonNullable<Prevod['tekme']> = {
       dolocenaIzStatistike: 'Pozīcija ir noteikta no statistikas; ja tā nav pareiza, noklikšķini uz pareizās.',
       dolocilaSkupnost: 'Pozīciju noteica kopiena; ar balsīm to var izlabot.',
       gumbUtez: 'Svars {utez} / slieksnis {prag}',
-      gumbPrior: ' · priors {odstotek}%',
+      gumbPrior: ' · sākotnējais pieņēmums {odstotek}%',
       gumbPoznavalec: ' · tava eksperta balss skaitās vairāk',
       vodi: 'Vadībā {pozicija}: svars {utez} / {prag}',
     },
