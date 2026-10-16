@@ -20,6 +20,16 @@ function Gumb({ children, onClick, disabled }: { children: ReactNode; onClick: (
   )
 }
 
+/** Preusmerimo le na Stripe Checkout ali portal, nikamor drugam. */
+function stripeNaslov(url: string): boolean {
+  try {
+    const u = new URL(url)
+    return u.protocol === 'https:' && (u.host === 'checkout.stripe.com' || u.host === 'billing.stripe.com')
+  } catch {
+    return false
+  }
+}
+
 export function Racun() {
   const { seja, nalaga, klub, osvezi } = useSeja()
   const [q] = useSearchParams()
@@ -44,6 +54,13 @@ export function Racun() {
     void supabase.rpc('scout_portal_kupec').then(({ data }) => setPortal(typeof data === 'string'))
   }, [uid, klub])
 
+  // Nazaj s Stripe iz bfcache: stran se ne naloži znova, gumbi bi ostali onemogočeni.
+  useEffect(() => {
+    const ob = (e: PageTransitionEvent) => e.persisted && setPoteka(false)
+    addEventListener('pageshow', ob)
+    return () => removeEventListener('pageshow', ob)
+  }, [])
+
   if (nalaga) return <Nalaganje />
   if (!seja) return <Navigate to="/login" replace />
 
@@ -60,14 +77,15 @@ export function Racun() {
     setPoteka(true)
     setSporocilo(null)
     const { data, error } = await supabase.functions.invoke<{ url?: string }>('scout-placilo', { body: { ...vhod, jezik } })
-    if (error || !data?.url) {
+    const url = data?.url
+    if (error || !url || !stripeNaslov(url)) {
       // Napaka 400 nosi kodo baze v telesu ({ error, hint }); brez nje splošna.
       const telo: unknown = error instanceof FunctionsHttpError ? await (error.context as Response).json().catch(() => null) : null
       setSporocilo(napaka((telo as { hint?: string | null } | null) ?? null))
       setPoteka(false)
       return
     }
-    location.assign(data.url)
+    location.assign(url)
   }
 
   const n = klub?.narocnina ?? null
