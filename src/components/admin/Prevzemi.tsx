@@ -11,6 +11,7 @@ interface Zahtevek {
   player_name: string | null
   team_name: string | null
   liga: string | null
+  user_id: string
   prosilec: string | null
   email: string | null
   status: string
@@ -82,6 +83,8 @@ export default function Prevzemi() {
   const [naslovi, setNaslovi] = useState<Record<number, string>>({})
   const [sporocilo, setSporocilo] = useState<string | null>(null)
   const [povabila, setPovabila] = useState<{ registracij: number; z_ekipo: number } | null>(null)
+  // Povabila po prosilcu: vsa in tista, ki še niso postala ekipa.
+  const [povabil, setPovabil] = useState<Record<string, { povabil: number; brez_ekipe: number }>>({})
 
   const nalozi = useCallback(async () => {
     const { data, error } = await supabase.rpc('admin_zahtevki_igralcev')
@@ -89,6 +92,8 @@ export default function Prevzemi() {
     setVrstice((data ?? []) as Zahtevek[])
     const { data: pv } = await supabase.rpc('admin_povabila_skupaj')
     setPovabila(pv?.[0] ?? null)
+    const { data: po } = await supabase.rpc('admin_povabila_po_uporabniku')
+    setPovabil(Object.fromEntries((po ?? []).map((r) => [r.user_id, r])))
   }, [])
 
   useEffect(() => {
@@ -193,6 +198,11 @@ export default function Prevzemi() {
                       {z.potrditev > 0 && ` · soigralcev: ${z.potrditev}`}
                       {z.pripeljanih > 0 && (
                         <span className="znacka ml-1 bg-gnl-400/20 text-gnl-200">pripeljal {z.pripeljanih}</span>
+                      )}
+                      {(povabil[z.user_id]?.povabil ?? 0) > 0 && (
+                        <span className="znacka ml-1 bg-white/10">
+                          povabil {povabil[z.user_id].povabil} (brez ekipe {povabil[z.user_id].brez_ekipe})
+                        </span>
                       )}
                       {z.povezanih > 0 && ` · povezanih vrstic: ${z.povezanih}`}
                     </div>

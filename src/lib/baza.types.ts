@@ -7398,6 +7398,14 @@ export type Database = {
           z_ekipo: number
         }[]
       }
+      admin_povabila_po_uporabniku: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          brez_ekipe: number
+          povabil: number
+          user_id: string
+        }[]
+      }
       admin_povezi_igralca: {
         Args: { p_player_id: number; p_povezi?: boolean; p_zahtevek_id: number }
         Returns: undefined
