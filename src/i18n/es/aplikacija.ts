@@ -26,12 +26,12 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     lestvicaDomov: 'Ranking de cañas',
     // Stran /beers (pages/Piva.tsx): brez zneskov.
     stran: {
-      uvod: 'SLFF es gratis. El servidor y el dominio los pagamos nosotros, así que cada caña ayuda de verdad. ¡Gracias a todos los que ya nos habéis invitado!',
+      uvod: 'SLFF es gratis para miles de mánagers en cientos de ligas amateur de toda Europa: sin anuncios, sin apuestas, sin suscripciones. Tu caña paga el servidor, el correo y el dominio, y luego aterriza aquí mismo, en el muro, con tu nombre y tu mensaje. No da puntos, solo un lunes muy agradecido. 🍺',
       skupaj: { one: '{n} caña hasta ahora', many: '{n} cañas hasta ahora', other: '{n} cañas hasta ahora' },
       piv: { one: '{n} caña', many: '{n} cañas', other: '{n} cañas' },
       lestvica: 'Ranking de apoyos',
       anonimni: 'Apoyos anónimos',
-      prazno: 'Todavía no hay ninguna caña en el muro. ¡Sé el primero!',
+      prazno: 'Aún queda sitio en el muro para tu nombre. ¡Sé de los primeros! 🍻',
     },
   },
   noga: {
@@ -53,7 +53,7 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
     asistence: 'Asistencias',
     pozicije: 'Posiciones',
     odsotnosti: 'Ausencias',
-    slovenija: 'Eslovenia',
+    slovenija: 'España',
     admin: 'Admin',
     vec: 'Más',
     racun: 'Cuenta',

@@ -8592,6 +8592,7 @@ export type Database = {
         }[]
       }
       uveljavi_cene: { Args: { p_round_id: number }; Returns: number }
+      ustavi_objavo: { Args: { p_zeton: string }; Returns: boolean }
       uveljavi_klubski_racun: {
         Args: Record<PropertyKey, never>
         Returns: number

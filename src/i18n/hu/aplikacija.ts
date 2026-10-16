@@ -21,18 +21,18 @@ export const aplikacija: NonNullable<Prevod['aplikacija']> = {
   },
   /** Gumb za podporo na naslovnici (components/Pivo.tsx). */
   pivo: {
-    gumb: 'Fizess nekünk egy sört',
+    gumb: 'Hívj meg minket egy sörre',
     /** Povezava na pivski zid (/beers) ob gumbu in v meniju Več. */
     zid: 'Sörfal',
     lestvicaDomov: 'Sörtoplista',
     // Stran /beers (pages/Piva.tsx): brez zneskov.
     stran: {
-      uvod: 'Az SLFF ingyenes. A szervert és a domaint mi fizetjük, ezért minden sör sokat segít. Köszönjük mindenkinek, aki már meghívott minket!',
+      uvod: 'Az SLFF ingyenes: menedzserek ezrei játszanak vele Európa több száz amatőr bajnokságában, reklámok, fogadás és előfizetés nélkül. A söröd fizeti a szervert, a levelezést és a domaint, aztán itt landol a falon, a neveddel és az üzeneteddel. Pontot nem hoz, csak egy nagyon hálás hétfőt. 🍺',
       skupaj: { one: 'Eddig {n} sör', other: 'Eddig {n} sör' },
       piv: { one: '{n} sör', other: '{n} sör' },
       lestvica: 'Támogatók toplistája',
       anonimni: 'Névtelen támogatók',
-      prazno: 'A falon még nincs sör. Légy te az első!',
+      prazno: 'A falon még van hely a nevednek. Légy az elsők között! 🍻',
     },
   },
   noga: {

@@ -51,7 +51,7 @@ const DOLZINA_TEKME = 90
 
 // Id-ji tekmovanj po sezonah in ravneh (Betri deildin, 1. deild, 2. deild),
 // iz `data-competition-config` strani lig na fsf.fo. 3. deild ni vpisana
-// (zapisniki večinoma prazni, glej CLAUDE.md).
+// (zapisniki večinoma prazni, glej docs/viri/ferski-otoki.md).
 export const SEZONE = {
   2026: [6654857, 6654881, 6651271],
   2025: [6095440, 6095452, 6095465],
