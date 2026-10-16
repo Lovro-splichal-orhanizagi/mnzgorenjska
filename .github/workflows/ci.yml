@@ -43,10 +43,11 @@ jobs:
       sezona: ${{ inputs.sezona || 'all' }}
 
   diagnostika-virov:
-    if: github.event_name == 'workflow_dispatch' && inputs.diagnostika && startsWith(github.ref, 'refs/heads/codex/spain-germany-production')
+    if: github.event_name == 'workflow_dispatch' && inputs.diagnostika
     uses: ./.github/workflows/diagnostika-javnih-virov.yml
 
   preveri:
+    if: ${{ !inputs.diagnostika }}
     name: Tipi, build, izris
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -96,6 +97,7 @@ jobs:
           VITE_SUPABASE_ANON_KEY: sb_publishable_ci_ni_pravi_kljuc
 
   varnost:
+    if: ${{ !inputs.diagnostika }}
     name: Pravice in roki v svezi bazi
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -135,7 +137,7 @@ jobs:
   migracije:
     name: Migracije baze
     needs: [preveri, varnost]
-    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    if: inputs.diagnostika != true && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -187,7 +189,7 @@ jobs:
   objavi:
     name: Objava na Vercel
     needs: [preveri, varnost, migracije]
-    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    if: inputs.diagnostika != true && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -267,7 +269,7 @@ jobs:
   objavi-vm:
     name: Objava na Hetzner VM
     needs: [preveri, varnost, migracije]
-    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    if: inputs.diagnostika != true && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     concurrency: objava-vm
@@ -319,7 +321,7 @@ jobs:
   preveri-deploy:
     name: Je nova različica res v zraku?
     needs: [objavi, objavi-vm]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: inputs.diagnostika != true && github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

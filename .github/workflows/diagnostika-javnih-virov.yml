@@ -32,6 +32,7 @@ jobs:
           node --input-type=module <<'NODE'
           import {mkdirSync,writeFileSync} from 'node:fs'
           import {createHash} from 'node:crypto'
+          import {gzipSync} from 'node:zlib'
           import {ustvariAnonimniPrenos} from './scripts/viri/novanet-transport.mjs'
           import {jeIzziv} from './scripts/viri/fussball.mjs'
           const source=process.env.VIR
@@ -65,6 +66,7 @@ jobs:
           }
           if(bytes){writeFileSync(`${folder}/document.bin`,bytes);result.bytes=bytes.length;result.sha256=createHash('sha256').update(bytes).digest('hex')}
           save();writeFileSync(`${folder}/result.json`,JSON.stringify(result,null,2)+'\n');console.log(JSON.stringify(result,null,2))
+          if(bytes)console.log('SLFF_PUBLIC_DOCUMENT_GZIP_BASE64:'+gzipSync(bytes).toString('base64'))
           NODE
       - uses: actions/upload-artifact@v4
         if: always()
