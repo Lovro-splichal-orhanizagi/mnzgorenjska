@@ -17,6 +17,8 @@
 #     poskus, če je čas.
 #   - Izhod 4 = vir je zavrnil (403, 429, izziv): tega vira ne beremo naprej,
 #     drugih virov koša pa.
+#   - Izhod 3 uvoza razporeda = razpored ima klub manj kot baza (izstop ali
+#     okrnjena stran): uvoz je uspel, liga ni padla, koš izpiše opozorilo.
 set -uo pipefail
 
 : "${DRZAVA:?}" "${KOS:=1}" "${KOSOV:=1}" "${URNIK:=}" "${ROK_MIN:=190}"
@@ -116,7 +118,7 @@ if [ -n "$preskocene" ]; then
   echo "::warning title=Zmanjkalo časa::po $ROK_MIN min niso prišle na vrsto:$preskocene"
 fi
 if [ -n "$odlocitve" ]; then
-  echo "::warning title=Klub manjka v razporedu::$(echo $odlocitve | tr ' ' '\n' | sort -u | tr '\n' ' ')— izstop kluba (delovni tok Izstop kluba) ali uvoz z --dovoli-manj-klubov"
+  echo "::warning title=Klub manjka v razporedu::$(echo $odlocitve | tr ' ' '\n' | sort -u | tr '\n' ' ')— izstop kluba (delovni tok Izstop kluba), uvoz z --dovoli-manj-klubov ali le okrnjena stran vira (naslednji zagon jo prebere znova)"
 fi
 echo "Koš $KOS/$KOSOV končan v $(minut) min."
 if [ -n "$padle" ]; then

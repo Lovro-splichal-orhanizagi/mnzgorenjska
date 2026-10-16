@@ -34,7 +34,10 @@ Kako zdaj:
   so opozorilo "Zmanjkalo časa" (ne napaka) in pridejo naslednjič prve.
 - **Drugi poskus**: liga, ki pade (omrežje, `lock timeout` ob hkratnem pisanju
   dveh košev), dobi na koncu koša še en poskus. Izhod 4 (vir je zavrnil) ustavi
-  le lige tega vira v košu.
+  le lige tega vira v košu. Izhod 3 uvoza razporeda (razpored ima klub manj kot
+  baza) ni padec: liga se zabeleži kot obdelana, koš na koncu izpiše opozorilo
+  *Klub manjka v razporedu* — odloči človek (*Izstop kluba*,
+  `--dovoli-manj-klubov`) ali je bila stran vira le okrnjena.
 - **Predpomnilnik se shrani vedno** (`actions/cache/restore` + `save` z
   `if: always()`), tudi ob padcu ali preklicu.
 - **Odtis kode** (`scripts/odtis-kode.mjs`) zajame skupne datoteke uvoza in le

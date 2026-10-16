@@ -569,7 +569,8 @@ if (smemoDeaktivirati) {
           'odstopil, poženi znova z --dovoli-manj-klubov.',
       )
       // 3 = uvoz je uspel, odločiti mora človek (izstop kluba); nočni uvoz
-      // lige zato ne šteje za padlo. Poznejša napaka (1) ima prednost.
+      // lige zato ne šteje za padlo. Prejšnja napaka (1) ostane; poznejših korakov
+      // (deaktivacija) varovalo ne izvede.
       if (!process.exitCode) process.exitCode = 3
       smemoDeaktivirati = false
     }
