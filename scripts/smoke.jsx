@@ -5462,6 +5462,168 @@ preveri(
     L.kratkoImeLv('FK Tukums 2000/TSS') === 'Tukums 2000/TSS')
 }
 
+// --- vir fsf (Ferski otoki, javni posrednik COMET na fsf.fo) -----------------------
+{
+  const F = await import('./viri/fsf.mjs')
+  const { default: viri } = await import('./viri/index.mjs')
+  const { ravenLige, koliko } = await import('./visja-liga.mjs')
+  const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  const vir = F.default
+  preveri('fsf: vir je vpisan, 3 s, User-Agent SLFF, svoj fetch', viri.fsf === vir && vir.drzava === 'FO' && vir.imaRegistracije === false &&
+    vir.premorMs >= 3000 && vir.glave['User-Agent'] === 'SLFF fantasy (https://slff.eu)' && vir.fetch === F.fsfFetch)
+  preveri('fsf: šifra je id tekmovanja iz SEZONE (leto, raven, višje lige)', F.razbijKodo('6651271').leto === '2026' &&
+    F.razbijKodo('6651271').raven === 3 && F.razbijKodo('6651271').visje.join() === '6654857,6654881' &&
+    F.razbijKodo('6095440').raven === 1 && F.razbijKodo('6095440').visje.length === 0 &&
+    vir.naslovRazporeda('6654881') === 'https://www.fsf.fo/wp-json/comet-api/v2/matches?competitionId=6654881' &&
+    vir.naslovZapisnika(null, 'fo6656651') === 'https://www.fsf.fo/kappingar/dystur/?matchID=6656651' &&
+    F.naslovPostave('fo6656651') === 'https://www.fsf.fo/wp-json/comet-api/v2/match/lineup?matchId=6656651' &&
+    F.sifraZapisnika(6656651) === 'fo6656651' && F.sifraZapisnika('fo6656651') === 'fo6656651')
+  let neznana = null
+  try { F.razbijKodo('6659859') } catch (e) { neznana = e.message }
+  let slaba = null
+  try { F.razbijKodo('2-deild/2026') } catch (e) { slaba = e.message }
+  preveri('fsf: neznana sezona (3. deild) in napačna oblika ustavita uvoz', /ni v tabeli SEZONE/.test(neznana ?? '') && /id tekmovanja COMET/.test(slaba ?? ''))
+  preveri('fsf: čas — ferski (WEST) → ljubljanski +1 h, ferska polnoč = ura ni znana', F.datumUra(Date.parse('2026-04-24T19:00:00Z')).ura === '21:00' &&
+    F.datumUra(Date.parse('2026-12-05T14:00:00Z')).ura === '15:00' && F.datumUra(Date.parse('2026-10-23T23:00:00Z')).datum === '2026-10-24' &&
+    F.datumUra(Date.parse('2026-10-23T23:00:00Z')).ura === null && F.datumUra(Date.parse('2026-06-30T22:30:00Z')).datum === '2026-07-01' &&
+    F.datumUra(Date.parse('2026-06-30T22:30:00Z')).ura === '00:30' && F.datumUra(undefined).datum === null)
+  preveri('fsf: minuta od začetka tekme, podaljšek odrezan', F.minuta({ minute: 22, minuteFull: 67 }) === 67 &&
+    F.minuta({ minute: 45, minuteFull: 90, stoppageTime: 4 }) === 90 && F.minuta({}) === null &&
+    F.minuta({ matchPhase: { fcdName: 'AFTER_THE_MATCH' } }) === 90)
+  preveri('fsf: ime "PRIIMEK Ime" → "Priimek Ime"', F.imeIgralca('HANSEN Bárður Jógvansson') === 'Hansen Bárður Jógvansson' &&
+    F.imeIgralca('Á TJALDRAFLØTTI Kim') === 'Á Tjaldrafløtti Kim' && F.imeIgralca('WILLIAMS Robert Behson-Courage') === 'Williams Robert Behson-Courage' &&
+    F.imeIgralca('BISP POULSEN John Finn') === 'Bisp Poulsen John Finn' && F.imeIgralca('DAM Á LAKJUNI Jón') === 'Dam á Lakjuni Jón' &&
+    F.imeIgralca('DAHL - OLSEN Ari') === 'Dahl-Olsen Ari' && F.imeIgralca('JÓGVANSSON ÚR DÍMUN Sproti') === 'Jógvansson úr Dímun Sproti')
+  preveri('fsf: pozicija iz postavitve', ['GK', 'LB', 'RCB', 'LWB', 'LDM', 'CAM', 'RM', 'CF', 'LW', 'ST', 'X'].map(F.pozicijaPostavitve).join() ===
+    'GK,DEF,DEF,DEF,MID,MID,MID,FWD,FWD,FWD,')
+  preveri('fsf: ključ in kratko ime kluba', F.kljucKlubaFo('EB/Streymur') === 'eb streymur' && F.kljucKlubaFo('Skála ÍF') === 'skála íf' &&
+    F.kljucKlubaFo('B36 II') !== F.kljucKlubaFo('B36') && F.kratkoImeFo(' FC Suðuroy II ') === 'FC Suðuroy II')
+  preveri('fsf: druge ekipe — pripona po številu višjih lig iste sezone', F.imeEkipe({ id: 62, name: 'B36' }, []) === 'B36' &&
+    F.imeEkipe({ id: 62, name: 'B36' }, [new Set([62])]) === 'B36 II' && F.imeEkipe({ id: 61, name: 'NSÍ' }, [new Set([61]), new Set([61])]) === 'NSÍ III' &&
+    F.imeEkipe({ id: 97, name: 'MB' }, [new Set([61]), new Set([62])]) === 'MB')
+  preveri('fsf: raven — Betri nad 1. in 2. deild', koliko(ravenLige({ slug: 'fo-betri-deildin' }), ravenLige({ slug: 'fo-2-deild' })) === 2 &&
+    koliko(ravenLige({ slug: 'fo-1-deild' }), ravenLige({ slug: 'fo-2-deild' })) === 1 && koliko(ravenLige({ slug: 'fo-2-deild' }), ravenLige({ slug: 'fo-1-deild' })) === 0)
+  preveri('fsf: izziv, zavrnitev, predpomnilnik le za pravi JSON', F.jeIzziv('<title>Just a moment...</title>') && !F.jeIzziv(beri('fo-fsf-postava-6656651.json')) &&
+    F.jeZavrnitev(401) && F.jeZavrnitev(403) && F.jeZavrnitev(429) && !F.jeZavrnitev(404) &&
+    F.zaPredpomnilnik(beri('fo-fsf-tekme-6651271.json'), 'tekme-6651271.json') && F.zaPredpomnilnik('[]', 'dogodki-1.json') &&
+    F.zaPredpomnilnik('{"home":{"players":[]},"away":{"players":[]}}', 'postava-1.json') &&
+    !F.zaPredpomnilnik('{"code":"rest_no_route","message":"x"}', 'tekme-1.json') && !F.zaPredpomnilnik('<html>napaka</html>', 'dogodki-1.json') &&
+    !F.zaPredpomnilnik('[]', 'postava-1.json'))
+
+  // Razpored in zapisniki iz vzorcev (2. deild 2026; višji ligi le id-ji klubov).
+  const prenesi = async (url) => {
+    let m
+    if ((m = url.match(/competitionId=(\d+)/))) return beri(`fo-fsf-tekme-${m[1]}.json`)
+    if ((m = url.match(/(lineup|events)\?matchId=(\d+)/))) {
+      const ime = `fo-fsf-${m[1] === 'lineup' ? 'postava' : 'dogodki'}-${m[2]}.json`
+      try { return beri(ime) } catch { return m[1] === 'lineup' ? '{"home":{"players":[]},"away":{"players":[]}}' : '[]' }
+    }
+    throw new Error(`fsf smoke: ${url}`)
+  }
+  const krogi = await vir.razporedVseStrani('6651271', prenesi)
+  const klubi = [...new Set(krogi.flatMap((k) => k.tekme.flatMap((t) => [t.domaci, t.gostje])))].sort()
+  // Prazen ali tuj seznam višje lige bi tiho odnesel pripone: "B36 II" bi
+  // postal "B36" in druga ekipa bi se zlila s prvo v isti klub.
+  const visjaNapaka = async (seznam) => {
+    try {
+      await vir.razporedVseStrani('6651271', async (url) => (/competitionId=6654857/.test(url) ? seznam : prenesi(url)))
+      return null
+    } catch (e) { return e }
+  }
+  const prazna = await visjaNapaka('[]')
+  const tuja = await visjaNapaka(beri('fo-fsf-tekme-6651271.json'))
+  preveri('fsf: prazen ali tuj seznam višje lige ustavi uvoz (pripone drugih ekip)', /6654857/.test(prazna?.message ?? '') &&
+    /6654857/.test(tuja?.message ?? ''), `${prazna?.message} | ${tuja?.message}`)
+  preveri('fsf: razpored 2. deild 2026 — 22 krogov, 110 tekem, 100 odigranih, 11 ekip', krogi.length === 22 &&
+    krogi.reduce((a, k) => a + k.tekme.length, 0) === 110 && krogi.reduce((a, k) => a + k.tekme.filter((t) => t.odigrana).length, 0) === 100 &&
+    klubi.length === 11, klubi.join(' | '))
+  preveri('fsf: razpored — druge ekipe (NSÍ III, Víkingur III, B71 II), MB je prva ekipa', klubi.includes('NSÍ III') && klubi.includes('Víkingur III') &&
+    klubi.includes('B71 II') && klubi.includes('FC Suðuroy II') && klubi.includes('MB') && !klubi.includes('NSÍ'), klubi.join(' | '))
+  preveri('fsf: razpored — ura v ljubljanskem času, neodigrana brez ure', krogi[0].tekme[0].domaci === 'ÍF II' && krogi[0].tekme[0].datum === '2026-04-02' &&
+    krogi[0].tekme[0].ura === '16:00' && krogi.at(-1).tekme.at(-1).odigrana === false && krogi.at(-1).tekme.at(-1).ura === null)
+
+  const t2 = JSON.parse(beri('fo-fsf-tekme-6651271.json'))
+  const t3 = JSON.parse(beri('fo-fsf-tekme-3-deild.json'))
+  const zap = (id, imena) => F.vZapisnik([...t2, ...t3].find((x) => x.id === id), JSON.parse(beri(`fo-fsf-postava-${id}.json`)),
+    JSON.parse(beri(`fo-fsf-dogodki-${id}.json`)), imena)
+  const minute = (n, i) => n.filter((x) => x.ekipaIdx === i).reduce((a, x) => a + x.minute, 0)
+  const z = zap(6656651, { imeDomacih: 'NSÍ III', imeGostov: 'KÍ II' })
+  const n = vir.nastopi(z)
+  preveri('fsf: zapisnik — 11 + 11, klop, izid, polčas, krog, ura, imena ekip s pripono, brez opozoril', z.domaci.ime === 'NSÍ III' &&
+    z.gostje.ime === 'KÍ II' && z.domaci.postava.length === 11 && z.gostje.postava.length === 11 && z.domaci.rezerve.length === 5 &&
+    z.gostje.rezerve.length === 4 && z.rezultat.gostje === 3 && z.polcas?.domaci === 1 && z.krog === 20 && z.datum === '2026-10-10' &&
+    z.ura === '18:30' && z.sezona === '2026' && z.zapisnikId === 'fo6656651' && !z.nepopoln && z.opozorila.length === 0)
+  preveri('fsf: goli = izid, menjave v parih s šiframi, vratar (G), 990 minut na ekipo', z.goli.length === 4 &&
+    z.goli.every((g) => !g.avtogol && g.regSt) && z.menjave.length === 6 && z.menjave.every((m) => m.noter.regSt && m.ven.regSt && m.minuta) &&
+    z.domaci.postava[0].vratar && z.domaci.postava[0].pozicija === 'GK' && n.filter((x) => x.vratar && x.zacetnik).length === 2 &&
+    minute(n, 0) === 990 && minute(n, 1) === 990 && n.length === 28 && n.every((x) => x.regSt) && z.domaci.postava[0].ime === 'Vestergaard Dánjal')
+  const strelec = n.find((x) => x.regSt === 21246)
+  preveri('fsf: rezerva z golom (vstop 46.) — 44 minut, gol', strelec?.zacetnik === false && strelec.minute === 44 && strelec.goli === 1 &&
+    n.find((x) => x.regSt === 6994)?.minute === 46)
+  const dodatni = [...JSON.parse(beri('fo-fsf-dogodki-6656651.json')),
+    { eventType: { fcdName: 'SECOND_YELLOW' }, minute: 35, minuteFull: 80, player: { personId: 12992 }, homeTeam: true },
+    { eventType: { fcdName: 'EXPULSION' }, minute: 36, minuteFull: 81, homeTeam: false },
+    { eventType: { fcdName: 'YELLOW' }, matchPhase: { fcdName: 'SECOND_HALF' }, teamOfficial: { personId: 1 }, homeTeam: false },
+    { eventType: { fcdName: 'YELLOW' }, matchPhase: { fcdName: 'AFTER_THE_MATCH' }, player: { personId: 4897 }, homeTeam: true }]
+  const dr = F.vZapisnik(t2.find((x) => x.id === 6656651), JSON.parse(beri('fo-fsf-postava-6656651.json')), dodatni)
+  const hansen = vir.nastopi(dr).find((x) => x.regSt === 12992)
+  preveri('fsf: drugi rumeni (80.) — 1 rumeni + 1 rdeči, minute do izključitve; karton po tekmi šteje; kartoni in EXPULSION uradnih oseb ne',
+    dr.rdeci.length === 1 && hansen?.rumeni === 1 && hansen.rdeci === 1 && hansen.minute === 80 && dr.rumeni.length === 3 &&
+    minute(vir.nastopi(dr), 0) === 980 && dr.opozorila.length === 0, JSON.stringify(dr.opozorila))
+  const av = zap(6656570)
+  preveri('fsf: avtogol je pri strelčevi ekipi in šteje nasprotniku, 11 m', av.goli.filter((g) => g.avtogol).length === 1 &&
+    av.goli.find((g) => g.avtogol)?.ekipaIdx === 0 && av.goli.filter((g) => g.enajstmetrovka).length === 1 && av.rezultat.gostje === 3 &&
+    vir.nastopi(av).find((x) => x.avtogoli)?.ekipaIdx === 0 && av.opozorila.length === 0)
+  const zg = zap(6656560)
+  preveri('fsf: zgrešena 11-metrovka', zg.zgresene.length === 1 && vir.nastopi(zg).filter((x) => x.zgreseneEnajstmetrovke).length === 1 &&
+    zg.goli.length === 6 && zg.opozorila.length === 0)
+  const ena = zap(6659913)
+  preveri('fsf: ena postava (3. deild) je nepopoln — izid in znana ekipa ostaneta, prvo opozorilo NEPOPOLN', ena.nepopoln && !ena.prazen &&
+    ena.domaci.postava.length === 11 && ena.gostje.postava.length === 0 && /^zapisnik nepopoln: KÍ b/.test(ena.opozorila[0]) &&
+    vir.nastopi(ena).every((x) => x.ekipaIdx === 0) && F.jeNepopoln(ena))
+  const pos = zap(6659897)
+  preveri('fsf: pozicije iz postavitve (formation), le kadar je vnesena', pos.domaci.postava.map((i) => i.pozicija).join() ===
+    'GK,DEF,DEF,MID,FWD,MID,MID,FWD,DEF,DEF,FWD' && z.domaci.postava.slice(1).every((i) => i.pozicija === null))
+  preveri('fsf: prazni postavi (kontumacija ali neodigrana) → null', zap(6659888) === null)
+
+  const zs = await vir.zapisniki('6651271', prenesi)
+  preveri('fsf: zapisniki() — le tekme s postavami, šifra fo<id>, sezona 2026, imena z razporeda', zs.length === 3 &&
+    zs.every((x) => /^fo\d+$/.test(x.id) && x.z.zapisnikId === x.id && x.z.sezona === '2026' && x.url.includes('matchID=')) &&
+    zs.find((x) => x.id === 'fo6656651')?.z.domaci.ime === 'NSÍ III' && zs.find((x) => x.id === 'fo6656570')?.z.gostje.ime === 'FC Suðuroy II')
+  // Nepopoln zapisnik iz predpomnilnika (do 45 dni) se prebere še enkrat sveže.
+  const branja = []
+  const tekmaNep = { ...t2.find((x) => x.id === 6656651), dateTimeUTC: Date.now() - 20 * 86400000 }
+  await vir.zapisniki('6651271', async (url, ime, sveze) => {
+    if (/competitionId=6651271/.test(url)) return JSON.stringify([tekmaNep])
+    if (/competitionId=/.test(url)) return prenesi(url)
+    branja.push(`${ime}:${sveze ? 'sveze' : 'shramba'}`)
+    if (/lineup/.test(url)) return sveze ? beri('fo-fsf-postava-6656651.json') : '{"home":{"players":[]},"away":{"players":[]}}'
+    return beri('fo-fsf-dogodki-6656651.json')
+  })
+  preveri('fsf: prazen zapisnik iz predpomnilnika (20 dni) se prebere znova sveže', branja.join() ===
+    'postava-6656651.json:shramba,dogodki-6656651.json:shramba,postava-6656651.json:sveze,dogodki-6656651.json:sveze', branja.join())
+
+  const kont = await vir.kontumacije('6651271', async (url) => (/6656651/.test(url) ? '{"home":{"players":[]},"away":{"players":[]}}' : prenesi(url)),
+    [{ stevilka: 20, tekme: [{ domaci: 'NSÍ III', gostje: 'KÍ II', datum: '2026-10-01', fsfId: 6656651, izid: { domaci: 0, gostje: 3 } },
+      { domaci: 'A', gostje: 'B', datum: '2026-10-01', fsfId: 6656570, izid: { domaci: 3, gostje: 0 } },
+      { domaci: 'C', gostje: 'D', datum: '2026-10-14', fsfId: 6659888, izid: { domaci: 3, gostje: 0 } }] }], '2026-10-15')
+  preveri('fsf: kontumacija — 3:0/0:3 s praznima postavama, starejša od tedna', kont.length === 1 && kont[0].domaci === 'NSÍ III' && kont[0].krog === 20)
+
+  let zavrnjen = null
+  try { await vir.zapisniki('6651271', async () => { const e = new Error('HTTP 401'); e.status = 401; throw e }) } catch (e) { zavrnjen = e }
+  let izziv = null
+  try { await vir.razporedVseStrani('6651271', async () => '<title>Just a moment...</title>') } catch (e) { izziv = e }
+  let napaka = null
+  try { await vir.razporedVseStrani('6651271', async () => '<html>Kritisk feilur</html>') } catch (e) { napaka = e }
+  let fetchZavrnitev = null
+  const pravi = globalThis.fetch
+  globalThis.fetch = async () => new Response('stop', { status: 429 })
+  try { await F.fsfFetch('https://www.fsf.fo/x') } catch (e) { fetchZavrnitev = e } finally { globalThis.fetch = pravi }
+  preveri('fsf: 401/429 in izziv vržejo FsfZavrnitev (izhod 4), stran napake ni zavrnitev', zavrnjen instanceof F.FsfZavrnitev && zavrnjen.status === 401 &&
+    izziv instanceof F.FsfZavrnitev && fetchZavrnitev instanceof F.FsfZavrnitev && fetchZavrnitev.status === 429 &&
+    napaka && !napaka.zavrnitev && /pričakovanega JSON/.test(napaka.message) && vir.zavrnitev('x', 403).zavrnitev === true)
+}
+
 // --- vir ksi (Islandija, ksi.is) ---------------------------------------------------
 {
   const K = await import('./viri/ksi.mjs')

@@ -53,6 +53,7 @@ import pflUa from './pfl-ua.mjs'
 import upl from './upl.mjs'
 import ffl from './ffl.mjs'
 import ksi from './ksi.mjs'
+import fsf from './fsf.mjs'
 
 const VIRI = {
   mnzg,
@@ -168,6 +169,9 @@ const VIRI = {
   ffl,
   // Islandija (KSÍ) prek ksi.is: šifre igralcev, vratar (M), koledarska sezona.
   ksi,
+  // Ferski otoki (FSF) prek javnega posrednika COMET na fsf.fo (JSON, ki ga
+  // stran kliče sama): šifre oseb, vratar, koledarska sezona, druge ekipe ("B36 II").
+  fsf,
 }
 
 /**
