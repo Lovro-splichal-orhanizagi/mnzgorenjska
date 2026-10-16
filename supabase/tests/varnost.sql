@@ -3035,6 +3035,25 @@ set local role authenticated;
 select pg_temp.zavrnjeno('zelje lig: admin pregled le za admina', $$select * from admin_zelje_lig()$$);
 reset role;
 
+-- Scout, faza 1: shema stroja je zaprta za brskalnik, Slovenija odprta.
+select pg_temp.preveri('scout: Slovenija je odprta',
+  (select d.stanje = 'odprto' from scout.drzave d join countries c on c.id = d.country_id where c.code = 'SI'));
+select pg_temp.preveri('scout: scout_skrit privzeto false',
+  (select column_default = 'false' from information_schema.columns
+    where table_schema = 'public' and table_name = 'players' and column_name = 'scout_skrit'));
+set local role anon;
+select pg_temp.zavrnjeno('scout: anon ne bere kazalnikov', $$select * from scout.kazalniki$$);
+reset role;
+set local role authenticated;
+select pg_temp.zavrnjeno('scout: authenticated ne bere moci lig', $$select * from scout.lige_moc$$);
+select pg_temp.zavrnjeno('scout: authenticated ne odpre drzave', $$update scout.drzave set stanje = 'odprto'$$);
+reset role;
+select pg_temp.preveri('scout: stroj bere zapisnike in ne pise vanje',
+  has_table_privilege('scout_stroj', 'public.appearances', 'SELECT')
+  and not has_table_privilege('scout_stroj', 'public.players', 'UPDATE'));
+select pg_temp.preveri('scout: anon in authenticated nimata sheme scout',
+  not has_schema_privilege('anon', 'scout', 'USAGE') and not has_schema_privilege('authenticated', 'scout', 'USAGE'));
+
 do $$
 declare v_napak int;
 begin

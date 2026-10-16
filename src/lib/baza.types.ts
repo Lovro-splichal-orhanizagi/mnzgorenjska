@@ -2566,6 +2566,7 @@ export type Database = {
           reg_st: number | null
           repriced_at: string | null
           repriced_week: string | null
+          scout_skrit: boolean
           shirt_number: number | null
           team_id: number
           value: number
@@ -2595,6 +2596,7 @@ export type Database = {
           reg_st?: number | null
           repriced_at?: string | null
           repriced_week?: string | null
+          scout_skrit?: boolean
           shirt_number?: number | null
           team_id: number
           value?: number
@@ -2623,6 +2625,7 @@ export type Database = {
           reg_st?: number | null
           repriced_at?: string | null
           repriced_week?: string | null
+          scout_skrit?: boolean
           shirt_number?: number | null
           team_id?: number
           value?: number
