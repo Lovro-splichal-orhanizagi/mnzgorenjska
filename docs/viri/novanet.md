@@ -50,3 +50,6 @@ Prenos zdaj ob prvem praznem odgovoru ustavi celoten zagon. Shrani prazne izvorn
 
 
 Tekoči pregled teka38962574407 po končnih popravkih potrdi vseh 18 krogov in 10/10 odigranih zapisnikov: 20 postav po11, 45 golov, 83 menjav, 46 rumenih in5 rdečih kartonov. `pokritost=true`, `napake=[]`; `pripravljeno=false` ostane zaradi vseh desetih klubov brez izrecne oznake vratarja. Ta rezultat ne odpravi arhivskih vrzeli ali zahtev pozicij/cenika. Artefakt `vir-galicia-2026` vsebuje vseh28 izvornih dokumentov.
+
+
+Poznejši posamezni zajem1306467 je vrnil HTTP200, ISO-8859-15 in49.549bajtov; stroga razčlenitev potrdi zapisnik z razporedom. Prejšnji prazni odgovori zato niso dokaz trajno manjkajočih dokumentov; njihov vzrok še ni ugotovljen. Običajni premor med zahtevami je povečan z2na5sekund, s čimer zmanjšamo obremenitev izvora. To ni dokaz odpravljene napake: prvi prazen odgovor ali zavrnitev še vedno takoj ustavi zagon, brez menjave sej/IP-ja ali ponavljanja po zavrnitvi.

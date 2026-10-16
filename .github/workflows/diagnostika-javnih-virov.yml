@@ -87,7 +87,7 @@ jobs:
               const links=[...new TextDecoder().decode(css).matchAll(/url\(\s*['"]?([^'"()\s]+)['"]?\s*\)\s*format\(\s*['"]woff['"]\s*\)/g)]
               if(links.length!==1)throw Error('Expected one explicitly published WOFF font')
               const address=new URL(links[0][1],`https://www.fussball.de/export.fontface/-/id/${id}/type/css`)
-              if(address.origin!=='https://www.fussball.de'||!address.pathname.startsWith(`/export.fontface/-/id/${id}/`))throw Error('Unexpected font origin or identity')
+              if(address.origin!=='https://www.fussball.de'||address.pathname!==`/export.fontface/-/format/woff/id/${id}/type/font`)throw Error('Unexpected font origin or identity')
               await asset(`${id}.woff`,address.href)
             }
           }catch(e){result.assetError=e.message;process.exitCode=1}

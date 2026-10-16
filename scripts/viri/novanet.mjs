@@ -436,7 +436,7 @@ export function ustvariVir({predpomnilnik='scripts/.predpomnilnik/novanet/prever
  return {
  nepopolni,
  ime:'novanet',polnoIme:'Novanet — Aragón / Galicia',drzava:'ES',
- glave:{'User-Agent':'SLFF fantasy (slff.eu; splih.94@gmail.com)'},premorMs:2000,
+ glave:{'User-Agent':'SLFF fantasy (slff.eu; splih.94@gmail.com)'},premorMs:5000,
  fetch:novanetFetch,jeIzziv,zavrnitev:(m,s)=>new NovanetZavrnitev(m,s),
  // Generic consumer cache is disabled; only fully validated source cache is used.
  zaPredpomnilnik:()=>false,
