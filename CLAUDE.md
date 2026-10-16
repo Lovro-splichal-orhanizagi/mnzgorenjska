@@ -3718,7 +3718,7 @@ Uvoz (ena za drugo, **brez arhiva**): `gh workflow run uvoz-lige.yml -f
 liga=gb-lowland-east -f cene=true`. Liga je ~80–90 strani tekem po 3 s.
 ### Grčija — vir `eps`
 
-Država `GR` ("Ελλάδα", migracija 20261015162500). Vmesnika v grščini, kartice
+Država `GR` ("Ελλάδα", migracija 20261016090700). Vmesnika v grščini, kartice
 in pošte **še ni**, `GR` **ni** v matriki nočnega uvoza — oboje pred vklopom
 (nočni uvoz vklopljene lige sicer tiho ne bere). Šifra lige se začne z `gr-`.
 
@@ -3835,7 +3835,7 @@ ekipo razen ob rdečem kartonu, manj kot 11 igralcih ali strelcu s klopi brez
 vstopa. Arhiv 2025/26: po dva zapisnika (1. in zadnji krog) vsakega od 15
 arhivov — 30/30 razčlenjenih, 11 + 11 (enkrat 10), goli = izid 29/30.
 
-Vpisanih je 32 lig devetih zvez (migracija 20261015162500), **neaktivnih**:
+Vpisanih je 32 lig devetih zvez (migracija 20261016090700), **neaktivnih**:
 
 | liga | tekoča 2026/27 | klubov | arhiv 2025/26 |
 |---|---|---|---|
