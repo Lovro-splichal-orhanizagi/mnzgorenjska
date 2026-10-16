@@ -116,6 +116,7 @@ tabelo šifer tam, ne tu.
 | Malta | `docs/viri/malta.md` | `mfa` |
 | Bosna in Hercegovina | `docs/viri/bih.md` | `nsfbih`, `nfsbih` |
 | Gruzija | `docs/viri/gruzija.md` | `gff` |
+| ZDA | `docs/viri/zda.md` | `modular11` |
 
 Pravila, ki veljajo za vse vire (podrobnosti v datotekah):
 

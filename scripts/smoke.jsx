@@ -5546,7 +5546,8 @@ preveri(
   const uvozRazporeda = readFileSync(new URL('./uvoz-razporeda.mjs', import.meta.url), 'utf8')
   preveri('modular11: prestavljena tekma ne ostane v starem krogu (razporedCel), 401 in kontumacije → izhod 4',
     U.default.razporedCel === true && !U.default.krogiPoTednih && /vir\.razporedCel\s*\?/.test(uvozRazporeda) &&
-    /\[401, 403, 429\]\.includes\(e\.status\)/.test(uvozRazporeda) && /if \(e\.zavrnitev\) throw e/.test(uvozRazporeda))
+    /\[401, 403, 429\]\.includes\(e\.status\)/.test(uvozRazporeda) && /preberiKontumacije\(/.test(uvozRazporeda) &&
+    /if \(e\?\.zavrnitev\) throw e/.test(readFileSync(new URL('./razpored.mjs', import.meta.url), 'utf8')))
 
   const z = U.vZapisnik(beri('us-m11-tekma-116529.html'), { id: '116529' })
   const n = U.nastopi(z)
