@@ -11,7 +11,7 @@ robots.txt dovoli `/resultater/pulje|kamp|Raekke|hold`, prepove
 `/resultater/kampsoegAdvanceret/`, `/turneringer_og_resultater/resultatsoegning/`
 in `/umbraco/` — izvoza v Excel (`/Umbraco/DBUFront/…`) ne beremo.
 
-Država `DK` ("Danmark", migracija 20261015172500), **šifra lige se začne z
+Država `DK` ("Danmark", migracija 20261016093700), **šifra lige se začne z
 `dk-`**, zveza `dbu`. Vmesnika v danščini, kartice in pošte **še ni**, `DK` ni
 v matriki nočnega uvoza (`uvoz-zapisnikov.yml`, `KOSOV`) — oboje pred vklopom.
 Sezona je jesen–pomlad: oznaka `"2026/27"` (ne koledarska).
