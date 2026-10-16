@@ -1,0 +1,111 @@
+name: Preverjen vklop Nemcije
+run-name: Preverjen vklop de-regionalliga-nordost
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_commit:
+        description: Celoten pregledani SHA uspesnega DFB audita
+        required: true
+        type: string
+      archive_run:
+        description: Uspesen zagon preveri-nova-vira z artefaktom vir-dfb-2025
+        required: true
+        type: string
+      current_run:
+        description: Uspesen zagon preveri-nova-vira z artefaktom vir-dfb-2026 (zajem do 12 ur)
+        required: true
+        type: string
+      approved_sha256:
+        description: Pregledani SHA manifesta; prazno samo pripravi artefakt brez baze
+        required: false
+        type: string
+      activate:
+        description: Vklopi po vseh preverbah (privzeto samo preveri)
+        default: false
+        type: boolean
+      server_ready:
+        description: Za vklop potrdi preverjeno namestitev DE HTML/Caddy in nemskih opomnikov
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  actions: read
+
+# Same group as the sole DE league's manual import. Source audits are read-only.
+concurrency:
+  group: uvoz-lige-de-regionalliga-nordost
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 135
+    env:
+      SOURCE_COMMIT: ${{ inputs.source_commit }}
+      ARCHIVE_RUN: ${{ inputs.archive_run }}
+      CURRENT_RUN: ${{ inputs.current_run }}
+      APPROVED_SHA: ${{ inputs.approved_sha256 }}
+      ACTIVATE: ${{ inputs.activate }}
+      SERVER_READY: ${{ inputs.server_ready }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Preveri namen in dokaze uradnih zagonov
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [ "$ACTIVATE" = true ] && { [ -z "$APPROVED_SHA" ] || [ "$SERVER_READY" != true ]; }; then
+            echo 'Vklop potrebuje pregledani SHA in preverjeno namestitev HTML/Caddy/opomnikov.'; exit 1
+          fi
+          node scripts/preveri-zagona-nemcije.mjs "$SOURCE_COMMIT" "$ARCHIVE_RUN" "$CURRENT_RUN"
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.archive_run }}
+          name: vir-dfb-2025
+          path: audit/archive
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.current_run }}
+          name: vir-dfb-2026
+          path: audit/current
+      - name: Ponovno razcleni vse surove dokumente in pripravi pregledni manifest
+        run: |
+          set -euo pipefail
+          mkdir -p release
+          node scripts/vklopi-nemcijo.mjs prepare audit/archive audit/current "$SOURCE_COMMIT" "$ARCHIVE_RUN" "$CURRENT_RUN" release/manifest.json | tee release/summary.json
+      - name: Pocakaj na starejse uvoze
+        if: inputs.approved_sha256 != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/cakaj-na-uvoze.mjs --liga de-regionalliga-nordost
+      - name: Atomska preverba baze in izrecni vklop
+        if: inputs.approved_sha256 != ''
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          mode=check
+          if [ "$ACTIVATE" = true ]; then mode=activate; fi
+          node scripts/vklopi-nemcijo.mjs "$mode" release/manifest.json "$APPROVED_SHA" | tee release/database.json
+      - name: Manifest in kompaktni rezultat
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nemcija-release-${{ github.run_id }}
+          path: release/
+          if-no-files-found: ignore
+          retention-days: 90

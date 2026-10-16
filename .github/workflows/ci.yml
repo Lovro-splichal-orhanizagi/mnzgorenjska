@@ -68,6 +68,9 @@ jobs:
 
       # `npm run build` že poganja `tsc --noEmit`, a ločen korak pove, KATERI
       # od obeh je padel, brez brskanja po dnevniku.
+      - name: Germany activation manifest
+        run: node --test scripts/test-vklop-nemcije.mjs scripts/test-zagona-nemcije.mjs
+
       - name: Tipi
         run: npx tsc --noEmit
 
@@ -115,6 +118,8 @@ jobs:
       - run: npm ci --ignore-scripts
       # Zagon same baze preveri celotno verigo migracij na praznem Postgresu.
       - run: npx --yes supabase@2.117.0 db start
+      - name: Germany activation guard in fresh database
+        run: node scripts/test-vklop-nemcije-sql.mjs
       - run: npm run test:varnost
       - run: npm run test:socasnost
       # Zamrznitev cene ob poškodbi: borza in kazen na sestavljenih krogih.
