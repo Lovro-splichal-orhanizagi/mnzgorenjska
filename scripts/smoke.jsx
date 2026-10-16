@@ -5557,6 +5557,202 @@ preveri(
   preveri('fsb: stran, ki ni stran lige, ustavi uvoz', /ni stran lige/.test(niLiga))
 }
 
+// --- vir ncefl (Anglija, Northern Counties East League, ncefl.org.uk) ------------
+{
+  const N = await import('./viri/ncefl.mjs')
+  const { readdirSync } = await import('node:fs')
+  const { default: viri } = await import('./viri/index.mjs')
+  const { tekmaDrugegaKroga, odvecneVrsticePara } = await import('./razpored.mjs')
+  const beri = (ime) => readFileSync(new URL(`./vzorci/${ime}`, import.meta.url), 'utf8')
+  const danes = Date.parse('2026-10-15T12:00:00Z')
+  preveri('ncefl: vir je vpisan, 3 s, User-Agent SLFF, država GB, krog je teden', viri.ncefl === N.default && N.default.drzava === 'GB' &&
+    N.default.imaRegistracije === false && N.default.premorMs >= 3000 && N.default.glave['User-Agent'] === 'SLFF fantasy (https://slff.eu)' &&
+    typeof N.default.fetch === 'function' && N.default.krogiPoTednih === true)
+  const k = N.razbijKodo('ncelpremierdivision/2026')
+  preveri('ncefl: šifra lige (divizija/leto), naslovi, šifra zapisnika', k.divizija === 'ncelpremierdivision' && k.leto === 2026 && k.sezona === '2026/27' &&
+    N.razbijKodo('nceldivisionone/2099').sezona === '2099/00' && N.naslovLige('nceldivisionone/2025') === 'https://www.ncefl.org.uk/matches/nceldivisionone/2025/' &&
+    N.imeLige('nceldivisionone/2025') === 'liga-nceldivisionone-2025.html' && N.sifraZapisnika('57239') === 'ncel57239' && N.sifraZapisnika('ncel57239') === 'ncel57239')
+  const slabe = ['ncelpremierdivision', 'ncelpremierdivision/26', 'NCEL/2026', 'ncelpremierdivision/2026/27'].map((x) => {
+    try { N.razbijKodo(x); return null } catch (e) { return e.message }
+  })
+  preveri('ncefl: napačna šifra ustavi uvoz', slabe.every((m) => /<divizija>\/<leto>/.test(m ?? '')))
+  preveri('ncefl: krog = teden od tedna zadnje julijske sobote (stalna številka)', N.zacetekSezone(2026) === '2026-07-20' && N.zacetekSezone(2025) === '2025-07-21' &&
+    N.zacetekSezone(2024) === '2024-07-22' && N.krogIzDatuma('2026-07-25', 2026) === 1 && N.krogIzDatuma('2026-07-26', 2026) === 1 &&
+    N.krogIzDatuma('2026-07-27', 2026) === 2 && N.krogIzDatuma('2026-10-14', 2026) === 13 && N.krogIzDatuma('2026-10-17', 2026) === 13 &&
+    N.krogIzDatuma('2025-07-25', 2025) === 1 && N.krogIzDatuma('2026-07-11', 2026) === 1 && N.krogIzDatuma('2027-04-03', 2026) === 37 && N.krogIzDatuma(null, 2026) === null)
+  preveri('ncefl: angleška ura → ljubljanska (+1 h), minuta', N.vLjubljanskiCas('2026-10-17', '3:00pm').ura === '16:00' &&
+    N.vLjubljanskiCas('2026-10-20', '7:45pm').ura === '20:45' && N.vLjubljanskiCas('2026-10-17', '12:00pm').ura === '13:00' &&
+    JSON.stringify(N.vLjubljanskiCas('2026-10-17', '11:30pm')) === JSON.stringify({ datum: '2026-10-18', ura: '00:30' }) &&
+    N.vLjubljanskiCas('2026-10-17', null).ura === null && N.minuta('90+3') === 90 && N.minuta('82pen') === 82)
+  preveri('ncefl: klubi — "&" = "and", kratko ime brez AFC/FC', N.kljucKlubaNcel('Dearne & District') === N.kljucKlubaNcel('Dearne and District') &&
+    N.kljucKlubaNcel("T'nique") === 'tnique' && N.kratkoImeNcel('Goole AFC') === 'Goole' && N.kratkoImeNcel('Retford FC') === 'Retford' && N.kratkoImeNcel('LIV') === 'LIV')
+
+  // Stran divizije 2026/27 (izsek: 1., 2., 9. in 13. teden, prihodnje tekme z uro).
+  const s26 = beri('gb-ncefl-liga-nceldivisionone-2026.html')
+  const t26 = N.tekmeLige('nceldivisionone/2026', s26, danes)
+  const k26 = N.razcleniRazpored(t26)
+  const k13 = k26.find((x) => x.stevilka === 13)
+  preveri('ncefl: stran divizije — tekme po tednih, odigrane s povezavo, prihodnje z uro (Ljubljana)', t26.length === 39 &&
+    k26.map((x) => `${x.stevilka}:${x.tekme.length}`).join(',') === '1:10,2:8,9:10,13:11' &&
+    t26.filter((x) => x.izid).every((x) => x.id && x.pot.startsWith('/matches/day/2026/')) && k13.tekme.filter((x) => x.odigrana).length === 1 &&
+    k13.tekme.filter((x) => !x.odigrana).every((x) => x.datum === '2026-10-17' && x.ura === '16:00') &&
+    t26.find((x) => x.id === '57239')?.domaci === 'Athersley Recreation' && t26.every((x) => !x.kontumacija))
+  let drugaSezona = ''
+  try { N.tekmeLige('nceldivisionone/2025', s26) } catch (e) { drugaSezona = e.message }
+  let brezTekem = ''
+  try { N.tekmeLige('nceldivisionone/2026', '<p class="headerselect"><option value="/matches/nceldivisionone/2026/" SELECTED>x</option></p>') } catch (e) { brezTekem = e.message }
+  preveri('ncefl: stran druge sezone ali brez tekem ustavi uvoz', /kaže sezono \/matches\/nceldivisionone\/2026\//.test(drugaSezona) && /nima tekem/.test(brezTekem))
+
+  const t24 = N.tekmeLige('nceldivisionone/2024', beri('gb-ncefl-liga-nceldivisionone-2024.html'), danes)
+  const aa = t24.filter((x) => x.prekinjena)
+  const k24 = N.razcleniRazpored(t24).flatMap((x) => x.tekme).filter((x) => x.kontumacija)
+  preveri('ncefl: "A-A" s točkami za zeleno mizo — kontumacija brez izida, odigrana', aa.length === 2 && aa.every((x) => x.kontumacija && !x.izid && !x.id) &&
+    k24.length === 2 && k24.every((x) => x.odigrana && !x.izid) &&
+    !N.tekmeLige('nceldivisionone/2024', beri('gb-ncefl-liga-nceldivisionone-2024.html').replace(/\(Game abandoned[^)]*\)/, ''), danes).find((x) => x.prekinjena && x.datum === '2024-08-10').kontumacija)
+  const t23 = N.tekmeLige('nceldivisionone/2023', beri('gb-ncefl-liga-nceldivisionone-2023.html'), danes)
+  const r23 = N.razcleniRazpored(t23).flatMap((x) => x.tekme)
+  preveri('ncefl: "unable to field a team - 2-0 win awarded" — kontumacija z izidom; odigrana brez zapisnika ni kontumacija',
+    r23.filter((x) => x.kontumacija).map((x) => `${x.domaci}:${x.izid.domaci}-${x.izid.gostje}`).join(',') === 'Wombwell Town:2-0,Clay Cross Town:0-2' &&
+    r23.find((x) => x.domaci === 'Horbury Town').odigrana && !r23.find((x) => x.domaci === 'Horbury Town').kontumacija)
+  {
+    // Izid brez podatkov tekme (mdnoinfo) in brez pripisa je kontumacija šele po tednu dni.
+    const vrstica = (datum) => `<p class="headerselect"><option value="/matches/nceldivisionone/2026/" SELECTED>x</option></p><table><tr><td class="mddate"><a href="/matches/day/2026/${datum}/">d</a></td></tr></table>` +
+      '<table class="mdborder"><tr><td class="mdteamsheet"></td><td class="mdhometeam mdnoinfo"><a class="nomobile" href="/teams/a/">A<br></a></td>' +
+      '<td class="mdscore mdnoinfo"><font class="teamfixtures">3-0</font></td><td class="mdawayteam mdnoinfo"><a class="nomobile" href="/teams/b/">B<br></a></td></tr></table>'
+    preveri('ncefl: izid brez podatkov in pripisa — kontumacija šele po tednu dni', N.tekmeLige('nceldivisionone/2026', vrstica('20260901'), danes)[0].kontumacija &&
+      !N.tekmeLige('nceldivisionone/2026', vrstica('20261013'), danes)[0].kontumacija)
+  }
+
+  const z1 = N.vZapisnik(beri('gb-ncefl-tekma-57239.html'), { id: '57239', leto: 2026, danes })
+  const n1 = N.nastopi(z1)
+  const minute = (nn, i) => nn.filter((x) => x.ekipaIdx === i).reduce((a, x) => a + x.minute, 0)
+  const ena = (nn, ime) => nn.find((x) => x.ime === ime)
+  preveri('ncefl: zapisnik — klubi, izid, polčas, datum, krog (teden), sezona, šifra', z1.domaci.ime === 'Athersley Recreation' && z1.gostje.ime === 'Route One Rovers' &&
+    z1.rezultat.domaci === 3 && z1.rezultat.gostje === 1 && z1.polcas.domaci === 2 && z1.polcas.gostje === 1 && z1.datum === '2026-08-01' && z1.krog === 2 &&
+    z1.sezona === '2026/27' && z1.zapisnikId === 'ncel57239' && z1.ura === null && z1.opozorila.length === 0 && !z1.nepopoln)
+  preveri('ncefl: 11 + 11, klop, "Priimek Ime", vratar = začetnik z dresom 1 (namig)', z1.domaci.postava.length === 11 && z1.gostje.postava.length === 11 &&
+    z1.domaci.rezerve.length === 5 && z1.gostje.rezerve.length === 5 && n1.filter((x) => x.vratar).map((x) => x.ime).join('/') === 'Bason George/Shazad Adam' &&
+    ena(n1, 'Bason George').pozicija === 'GK' && n1.filter((x) => x.pozicija).length === 2)
+  preveri('ncefl: goli iz glave — 11 m, avtogol (ime nasprotnika) šteje domačim, minute; goli = izid', z1.goli.length === 4 &&
+    z1.goli.find((g) => g.avtogol)?.ime === 'Kanyi Muhammed' && z1.goli.find((g) => g.avtogol)?.ekipaIdx === 1 && z1.goli.find((g) => g.avtogol)?.minuta === 45 &&
+    ena(n1, 'Dyer Nathaneal').goliIzEnajstmetrovke === 1 && ena(n1, 'Kanyi Muhammed').avtogoli === 1 && ena(n1, 'Reece Kane').goli === 1 &&
+    z1.goli.find((g) => g.ime === 'Khan Zak')?.minuta === 2)
+  preveri('ncefl: menjave z minuto v parih, nastop rezerve od vstopa, 990 minut na ekipo, rumeni brez minute', z1.menjave.length === 8 &&
+    z1.menjave.every((m) => m.minuta != null && m.noter.ime && m.ven.ime) && ena(n1, 'Reece Kane').minutaOd === 19 && ena(n1, 'Reece Kane').minute === 71 &&
+    ena(n1, 'Perks Nathan').minute === 19 && minute(n1, 0) === 990 && minute(n1, 1) === 990 && z1.rumeni.length === 5 && z1.rumeni.every((r) => r.minuta === null) &&
+    !n1.some((x) => x.ime === 'Parker-Wells Callan'))
+  const z2 = N.vZapisnik(beri('gb-ncefl-tekma-57203.html'), { id: '57203', leto: 2026, danes })
+  const n2 = N.nastopi(z2)
+  preveri('ncefl: drugi rumeni (yellowredcard) = 1 rumeni + 1 rdeči, brez minute igra do konca', z2.rdeci.length === 1 && z2.rdeci[0].ime === 'Kirk Benjamin' &&
+    z2.rumeni.filter((r) => r.ime === 'Kirk Benjamin').length === 1 && ena(n2, 'Kirk Benjamin').rdeci === 1 && ena(n2, 'Kirk Benjamin').rumeni === 1 &&
+    ena(n2, 'Kirk Benjamin').minute === 90 && minute(n2, 0) === 990 && minute(n2, 1) === 990 && z2.krog === 6 && z2.goli.length === 3 && z2.opozorila.length === 0)
+  const z3 = N.vZapisnik(beri('gb-ncefl-tekma-57512.html'), { id: '57512', leto: 2026, danes })
+  const n3 = N.nastopi(z3)
+  preveri('ncefl: rdeči karton, "82pen", prazna vrstica klopi ni igralec', z3.rdeci.length === 1 && z3.rdeci[0].ime === 'Nichols Daniel' &&
+    z3.goli.filter((g) => g.ime === 'Nichols James').map((g) => `${g.minuta}${g.enajstmetrovka ? 'p' : ''}`).join(',') === '31,82p' &&
+    z3.gostje.rezerve.length === 4 && !n3.some((x) => !x.ime) && z3.goli.length === 5 && minute(n3, 0) === 990 && minute(n3, 1) === 990 && z3.opozorila.length === 0)
+  const z4 = N.vZapisnik(beri('gb-ncefl-tekma-57280.html'), { id: '57280', leto: 2026, danes })
+  preveri('ncefl: 3:3, dva gola istega strelca, 1. krog', z4.krog === 1 && z4.goli.length === 6 && z4.goli.filter((g) => g.ime === 'Hutchinson Scott').length === 2 &&
+    z4.opozorila.length === 0 && minute(N.nastopi(z4), 0) === 990)
+  {
+    // Gol brez glave (le ikona) šteje; glava brez ikone šteje; neznan strelec je gol ekipe brez strelca.
+    const html = beri('gb-ncefl-tekma-57239.html')
+    const brezGola = html.replace(/<font class="goalscorers">Zak Khan 2<\/font>/, '')
+    const zb = N.vZapisnik(brezGola, { id: 1, leto: 2026, danes })
+    const neznan = N.vZapisnik(html.replace('Zak Khan 2', 'Unknown 2').replace(/(Zak Khan<\/td>\s*<td[^>]*>)<img src="\/images\/Ball20\.png"[^>]*> 1/, '$1'), { id: 1, leto: 2026, danes })
+    preveri('ncefl: gol iz ikone brez glave, "Unknown" je gol brez strelca', zb.goli.find((g) => g.ime === 'Khan Zak')?.minuta === null && zb.goli.length === 4 &&
+      neznan.goli.length === 4 && neznan.goli.some((g) => g.ekipaIdx === 1 && g.ime === null && g.minuta === 2) && neznan.opozorila.length === 0)
+  }
+  {
+    // Goli se ne ujemajo z izidom: do 7 dni nepopoln (bere se znova), nato opozorilo.
+    const html = beri('gb-ncefl-tekma-57239.html').replace(/<font class="goalscorers">Zak Khan 2<\/font>/, '').replace(/(Zak Khan<\/td>\s*<td[^>]*>)<img src="\/images\/Ball20\.png"[^>]*> 1/, '$1')
+    const sveza = N.vZapisnik(html, { id: 1, leto: 2026, danes: Date.parse('2026-08-03T12:00:00Z') })
+    const stara = N.vZapisnik(html, { id: 1, leto: 2026, danes })
+    const prazna = N.vZapisnik(beri('gb-ncefl-tekma-57239.html').replace(/<div class="col-lg-6">[\s\S]*$/, ''), { id: 1, leto: 2026, danes })
+    preveri('ncefl: goli mimo izida do 7 dni nepopoln, nato opozorilo; brez postav nepopoln in prazen', sveza.nepopoln && sveza.opozorila[0].startsWith(N.NEPOPOLN) &&
+      !stara.nepopoln && /se ne ujemajo z izidom/.test(stara.opozorila.join()) && prazna.nepopoln && prazna.prazen && N.nastopi(prazna).length === 0 &&
+      N.vZapisnik('<html>vzdrževanje</html>') === null)
+  }
+  {
+    // Zapisnik, shranjen pred vnosom postav ali golov, ne obtiči v predpomnilniku.
+    const polna = beri('gb-ncefl-tekma-57239.html')
+    const prazna = polna.replace(/<div class="col-lg-6">[\s\S]*$/, '')
+    const poskus = async (starostDni) => {
+      const klici = []
+      const z = await N.zapisnikSvez(async (sveze) => { klici.push(sveze); return sveze ? polna : prazna },
+        (h) => N.vZapisnik(h, { id: 1, leto: 2026, danes }), new Date(danes - starostDni * 86400000).toISOString().slice(0, 10), danes)
+      return { klici: klici.join(','), polna: !z.nepopoln }
+    }
+    const [teden, mesec, staro] = [await poskus(3), await poskus(20), await poskus(60)]
+    preveri('ncefl: zapisnikSvez — zadnji teden sveže, do 45 dni še enkrat sveže, starejši iz predpomnilnika',
+      teden.klici === 'true' && teden.polna && mesec.klici === 'false,true' && mesec.polna && staro.klici === 'false' && !staro.polna)
+  }
+  {
+    const strani = { '/matches/day/2026/20260801/57239/': 'gb-ncefl-tekma-57239.html', '/matches/day/2026/20260725/57280/': 'gb-ncefl-tekma-57280.html' }
+    const prebrane = []
+    const opozorilo = console.warn
+    let preskocenih = 0
+    console.warn = () => { preskocenih++ }
+    const zs = await N.default.zapisniki('nceldivisionone/2026', async (url, ime, sveze) => {
+      prebrane.push({ url, ime, sveze })
+      if (url === 'https://www.ncefl.org.uk/matches/nceldivisionone/2026/') return s26
+      const pot = strani[url.replace('https://www.ncefl.org.uk', '')]
+      if (pot) return beri(pot)
+      const e = new Error('404'); e.status = 404; throw e
+    }, danes).finally(() => { console.warn = opozorilo })
+    preveri('ncefl: zapisniki() — le odigrane s povezavo, klub, krog in sezona s strani divizije, 404 preskoči', zs.length === 2 &&
+      zs.map((x) => x.id).sort().join(',') === 'ncel57239,ncel57280' && zs.every((x) => x.z.sezona === '2026/27' && x.url.startsWith('https://www.ncefl.org.uk/matches/day/2026/')) &&
+      zs.find((x) => x.id === 'ncel57239').z.krog === 2 && prebrane[0].sveze === true && prebrane.filter((p) => p.ime.startsWith('tekma-')).length === 29 && preskocenih === 27 &&
+      prebrane.every((p) => !p.ime.includes('/')))
+  }
+  {
+    let izziv = null
+    try { await N.default.zapisniki('nceldivisionone/2026', async () => '<title>Just a moment...</title>') } catch (e) { izziv = e }
+    let zavrnjen = null
+    try { await N.default.zapisniki('nceldivisionone/2026', async () => { const e = new Error('403'); e.status = 403; throw e }) } catch (e) { zavrnjen = e }
+    let tekma403 = null
+    try {
+      await N.default.zapisniki('nceldivisionone/2026', async (url) => {
+        if (url.endsWith('/nceldivisionone/2026/')) return s26
+        const e = new Error('429'); e.status = 429; throw e
+      }, danes)
+    } catch (e) { tekma403 = e }
+    preveri('ncefl: 403/429 in izziv vržejo NceflZavrnitev (izhod 4) — tudi pri strani tekme', izziv instanceof N.NceflZavrnitev &&
+      zavrnjen instanceof N.NceflZavrnitev && zavrnjen.status === 403 && tekma403 instanceof N.NceflZavrnitev && tekma403.status === 429 &&
+      N.default.zavrnitev('x', 401).zavrnitev === true)
+    const { prenesiSPonovitvami, pozabiPadle } = await import('./prenos.mjs')
+    const pravi = globalThis.fetch
+    const izid = {}
+    for (const status of [401, 403, 429]) {
+      let klicev = 0
+      globalThis.fetch = async () => { klicev++; return new Response('', { status }) }
+      let napaka = null
+      try {
+        await prenesiSPonovitvami(N.naslovLige('nceldivisionone/2026'), { glave: N.default.glave, fetchFn: N.default.fetch, zamiki: [0, 0, 0], log: () => {} })
+      } catch (e) { napaka = e }
+      izid[status] = { zavrnitev: napaka?.zavrnitev === true && napaka.status === status, klicev }
+      pozabiPadle?.()
+    }
+    globalThis.fetch = pravi
+    preveri('ncefl: 401, 403 in 429 so zavrnitev že v vir.fetch (brez ponovitve, brez shranjenega razporeda)',
+      Object.values(izid).every((x) => x.zavrnitev && x.klicev === 1), JSON.stringify(izid))
+    preveri('ncefl: v predpomnilnik le stran divizije s tekmami ali zapisnik s postavo', N.default.zaPredpomnilnik(s26) && N.default.zaPredpomnilnik(beri('gb-ncefl-tekma-57203.html')) &&
+      !N.default.zaPredpomnilnik('<html><body>Site maintenance</body></html>') && !N.default.zaPredpomnilnik('') &&
+      !N.default.zaPredpomnilnik(beri('gb-ncefl-tekma-57203.html').replace(/<div class="col-lg-6">[\s\S]*$/, '')) && !N.jeIzziv(s26))
+  }
+  {
+    // Uvoz razporeda (krogiPoTednih): prestavljena tekma se premakne, ne podvoji.
+    const a = { id: 1, round_id: 10, imported_at: null, zapisnik_id: null }
+    const b = { id: 2, round_id: 12, imported_at: '2026-10-01T00:00:00Z', zapisnik_id: 'ncel1' }
+    preveri('ncefl: uvoz razporeda — tekma para iz drugega tedna se premakne; uvožena se ne podvoji; odveč le neuvožena',
+      tekmaDrugegaKroga([a], 11).prestavljena === a && tekmaDrugegaKroga([a], 10).prestavljena === undefined && tekmaDrugegaKroga([a, b], 11).odigrana === true &&
+      JSON.stringify(tekmaDrugegaKroga(undefined, 11)) === '{}' &&
+      odvecneVrsticePara(new Map([['1:2', [a, b]], ['3:4', [{ ...a, id: 3 }]]]), new Map([['1:2', 12], ['3:4', 11]])).map((m) => m.id).join(',') === '1')
+  }
+  preveri('ncefl: vzorci brez sodnikov, osebja in skript', !/referee|official|manager|<script/i.test(
+    readdirSync(new URL('./vzorci/', import.meta.url)).filter((x) => x.startsWith('gb-ncefl')).map((x) => readFileSync(new URL(`./vzorci/${x}`, import.meta.url), 'utf8')).join('')))
+}
+
 // --- vir oefb (Avstrija, oefb.at) ------------------------------------------------
 {
   const O = await import('./viri/oefb.mjs')

@@ -19,7 +19,7 @@ import { tekmovanje as najdiTekmovanje, sifraLige } from './tekmovanje.mjs'
 import { viraZa } from './viri/index.mjs'
 import { mapaKlubov } from './klubi.mjs'
 import { sifra } from './viri/zapisniki.mjs'
-import { razcleniRazpored, sezonaIz, oznakaBrezIzida } from './razpored.mjs'
+import { razcleniRazpored, sezonaIz, oznakaBrezIzida, tekmaDrugegaKroga, odvecneVrsticePara } from './razpored.mjs'
 import { rokKroga } from './razporedi.mjs'
 import { vseVrstice } from './strani.mjs'
 import { prenesiSPonovitvami, fetchZaBazo } from './prenos.mjs'
@@ -305,11 +305,16 @@ const obstojeciKrogi = new Map(
 )
 const idKrogov = [...obstojeciKrogi.values()].map((r) => r.id)
 const obstojeceTekme = new Map() // 'krog:domaci:gostje' -> prva tekma (po id)
+// Vir, pri katerem je krog teden (ncefl: stran krogov ne pozna), prestavljeno
+// tekmo pokaže v drugem krogu. Par domači:gostje igra v sezoni enkrat, zato
+// tekmo istega para iz drugega kroga premaknemo, namesto da bi nastala druga
+// vrstica (stara bi ostala "neuvožena" do konca sezone).
+const tekmePara = new Map() // 'domaci:gostje' -> tekme sezone (le vir.krogiPoTednih)
 if (idKrogov.length) {
   const vrstice = await vseVrstice((od, do_) =>
     db
       .from('matches')
-      .select('id, round_id, home_team_id, away_team_id, played_on, imported_at, kontumacija, vir_brez_izida')
+      .select('id, round_id, home_team_id, away_team_id, played_on, imported_at, kontumacija, vir_brez_izida, zapisnik_id')
       .in('round_id', idKrogov)
       .order('id')
       .range(od, do_),
@@ -317,6 +322,10 @@ if (idKrogov.length) {
   for (const m of vrstice) {
     const kljuc = `${m.round_id}:${m.home_team_id}:${m.away_team_id}`
     if (!obstojeceTekme.has(kljuc)) obstojeceTekme.set(kljuc, m)
+    if (vir.krogiPoTednih) {
+      const par = `${m.home_team_id}:${m.away_team_id}`
+      tekmePara.set(par, [...(tekmePara.get(par) ?? []), m])
+    }
   }
 }
 const istiCas = (a, b) => (a == null || b == null ? a == b : new Date(a).getTime() === new Date(b).getTime())
@@ -444,6 +453,32 @@ for (const k of veljavni) {
       continue
     }
 
+    if (vir.krogiPoTednih) {
+      const { odigrana, prestavljena } = tekmaDrugegaKroga(tekmePara.get(`${domaciId}:${gostjeId}`), krogId)
+      // Odigrana tekma para v drugem krogu: razpored jo kaže drugje, kot jo je
+      // uvozil zapisnik — ne podvajamo, zapisnik ima pravi datum.
+      if (odigrana) {
+        console.log(`  ${t.domaci} : ${t.gostje} je uvožena v drugem krogu — krog ${k.stevilka} je ne dobi`)
+        continue
+      }
+      if (prestavljena) {
+        const { error } = await db
+          .from('matches')
+          .update({ round_id: krogId, played_on: t.datum })
+          .eq('id', prestavljena.id)
+          .is('imported_at', null)
+        if (error) console.log(`  tekma ${t.domaci} : ${t.gostje}: ${error.message}`)
+        else {
+          console.log(`  prestavljena v krog ${k.stevilka}: ${t.domaci} : ${t.gostje}  ${prestavljena.played_on} -> ${t.datum}`)
+          prestavljenih++
+          const m = { ...prestavljena, round_id: krogId, played_on: t.datum }
+          obstojeceTekme.set(`${krogId}:${domaciId}:${gostjeId}`, m)
+          tekmePara.set(`${domaciId}:${gostjeId}`, [m])
+        }
+        continue
+      }
+    }
+
     const { data: nova, error } = await db
       .from('matches')
       .insert({
@@ -463,7 +498,29 @@ for (const k of veljavni) {
       novihTekem++
       // Ista tekma dvakrat v razporedu ne sme dati dveh vrstic.
       obstojeceTekme.set(`${krogId}:${domaciId}:${gostjeId}`, nova)
+      if (vir.krogiPoTednih) tekmePara.set(`${domaciId}:${gostjeId}`, [...(tekmePara.get(`${domaciId}:${gostjeId}`) ?? []), nova])
     }
+  }
+}
+
+// Krog je teden (vir.krogiPoTednih): uvoz zapisnikov tekmo, odigrano v drugem
+// tednu, kot jo je imel razpored, vpiše v krog zapisnika, preden jo razpored
+// premakne. Neuvožena vrstica istega para v drugem krogu je takrat odveč.
+if (vir.krogiPoTednih) {
+  const krogPara = new Map() // 'domaci:gostje' -> krog v razporedu
+  for (const [krogId, pari] of pariKrogov) for (const par of pari) krogPara.set(par, krogId)
+  const odvec = odvecneVrsticePara(tekmePara, krogPara)
+  if (odvec.length) {
+    const { error } = await db
+      .from('matches')
+      .delete()
+      .in('id', odvec.map((m) => m.id))
+      .is('imported_at', null)
+      .is('zapisnik_id', null)
+    if (error) {
+      console.error(`  podvojene tekme prestavljenih parov: ${error.message}`)
+      process.exitCode = 1
+    } else console.log(`Odstranjenih podvojenih vrstic prestavljenih tekem: ${odvec.length} (${odvec.map((m) => m.id).join(', ')})`)
   }
 }
 

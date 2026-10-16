@@ -129,3 +129,37 @@ export function oznakaBrezIzida(krogi, danes) {
     !vePove || pokvarjen || typeof t.odigrana !== 'boolean' ? null : !t.odigrana && !!t.datum && t.datum < danes
   return { brezIzida, pokvarjen }
 }
+
+/**
+ * Vir, pri katerem je krog teden (`vir.krogiPoTednih`, ncefl): prestavljena
+ * tekma se pokaže v drugem krogu. Par domači:gostje igra v sezoni enkrat,
+ * zato je tekma istega para iz drugega kroga ista tekma.
+ *
+ * Vrne `{ odigrana }`, če je par v drugem krogu že uvožen (zapisnik ima pravi
+ * datum — ne podvajamo), `{ prestavljena }` z vrstico, ki jo je treba
+ * premakniti v `krogId`, ali `{}`, če para drugje ni.
+ *
+ * @param {{ id:number, round_id:number, imported_at?:string|null, zapisnik_id?:string|null }[]} tekmePara
+ * @param {number} krogId krog, v katerem je tekma v razporedu zdaj
+ */
+export function tekmaDrugegaKroga(tekmePara, krogId) {
+  const drugje = (tekmePara ?? []).filter((m) => m.round_id !== krogId)
+  if (drugje.some((m) => m.imported_at || m.zapisnik_id)) return { odigrana: true }
+  return drugje.length ? { prestavljena: drugje[0] } : {}
+}
+
+/**
+ * Neuvožene vrstice para v drugem krogu, kot ga kaže razpored, kadar je par v
+ * svojem krogu že vpisan (uvoz zapisnikov je tekmo, odigrano v drugem tednu,
+ * vpisal v krog zapisnika, preden jo je razpored premaknil).
+ *
+ * @param {Map<string, { id:number, round_id:number, imported_at?:string|null, zapisnik_id?:string|null }[]>} tekmePara 'domaci:gostje' → vrstice
+ * @param {Map<string, number>} krogPara 'domaci:gostje' → krog v razporedu
+ */
+export function odvecneVrsticePara(tekmePara, krogPara) {
+  return [...tekmePara.entries()].flatMap(([par, tekme]) =>
+    krogPara.has(par) && tekme.some((m) => m.round_id === krogPara.get(par))
+      ? tekme.filter((m) => m.round_id !== krogPara.get(par) && !m.imported_at && !m.zapisnik_id)
+      : [],
+  )
+}
