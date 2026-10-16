@@ -18,13 +18,14 @@ insert into teams (id, name, short_name, country_id) overriding system value
 select -914000 - n, 'Test Scout ' || n, 'TS' || n, (select id from countries where code = 'SI')
 from generate_series(1, 2) n;
 insert into players (id, team_id, competition_id, first_name, last_name, full_name, position,
-                     value, value_start, scout_skrit, anonimiziran_at) overriding system value
-values (-914001, -914001, -914001, 'Prvi', 'Scout', 'Scout Prvi', 'FWD', 6, 6, false, null),
-       (-914002, -914002, -914001, 'Drugi', 'Scout', 'Scout Drugi', 'DEF', 6, 6, false, null),
-       (-914003, -914001, -914001, 'Skriti', 'Scout', 'Scout Skriti', 'MID', 6, 6, true, null),
-       (-914004, -914001, -914001, 'Anonimni', 'Scout', 'Scout Anonimni', 'MID', 6, 6, false, now()),
-       (-914005, -914001, -914001, 'Mladi', 'Scout', 'Scout Mladi', 'MID', 6, 6, false, null),
-       (-914006, -914001, -914002, 'Mladi', 'Scout', 'Scout Mladi', 'MID', 6, 6, false, null);
+                     value, value_start, anonimiziran_at) overriding system value
+values (-914001, -914001, -914001, 'Prvi', 'Scout', 'Scout Prvi', 'FWD', 6, 6, null),
+       (-914002, -914002, -914001, 'Drugi', 'Scout', 'Scout Drugi', 'DEF', 6, 6, null),
+       (-914003, -914001, -914001, 'Skriti', 'Scout', 'Scout Skriti', 'MID', 6, 6, null),
+       (-914004, -914001, -914001, 'Anonimni', 'Scout', 'Scout Anonimni', 'MID', 6, 6, now()),
+       (-914005, -914001, -914001, 'Mladi', 'Scout', 'Scout Mladi', 'MID', 6, 6, null),
+       (-914006, -914001, -914002, 'Mladi', 'Scout', 'Scout Mladi', 'MID', 6, 6, null);
+insert into scout.ugovori (player_id, kljuc) select * from scout.kljuci_vrstic(array[-914003]::bigint[]);
 insert into rounds (id, season, number, deadline_at, competition_id) overriding system value
 values (-914001, '2098/99', 1, now() + interval '1 day', -914001);
 insert into matches (id, round_id, home_team_id, away_team_id, home_goals, away_goals, zapisnik_id, played_on)
@@ -56,7 +57,7 @@ def conn():
 def test_nalozi(conn):
     sezone, tekme, lige = nalozi(conn)
     vrsta = {p: i for i, p in enumerate(sezone["player_id"].tolist()) if -914006 <= p <= -914001}
-    assert set(vrsta) == {-914001, -914002}  # skriti, anonimni in mladi (ima mladinsko vrstico) izpadejo
+    assert set(vrsta) == {-914001, -914002}  # skriti (scout.ugovori), anonimni in mladi (mladinska vrstica brez letnice) izpadejo
     i, j = vrsta[-914001], vrsta[-914002]
     assert [sezone[c][i] for c in ("goli_np", "enajstm", "gr_on", "ekipa_gr", "ekipa_goli", "ekipa_prejeti", "leto")] == [1, 1, 1, 1, 2, 1, 2098]
     assert [sezone[c][j] for c in ("min_on", "gr_on", "ekipa_gr", "ekipa_min_zmin")] == [60, 0, -1, 90]
@@ -120,16 +121,17 @@ def test_anonimiziran_v_drugi_ligi(conn):
 
 UGOVOR = """
 insert into players (id, team_id, competition_id, first_name, last_name, full_name, position,
-                     value, value_start, scout_skrit) overriding system value
-values (-914030, -914001, -914001, 'Ugovor', 'Scout', 'Scout Ugovor', 'MID', 6, 6, true),
-       (-914031, -914002, -914001, 'Ugovor', 'Scout', 'Scout Ugovor', 'MID', 6, 6, false);
+                     value, value_start) overriding system value
+values (-914030, -914001, -914001, 'Ugovor', 'Scout', 'Scout Ugovor', 'MID', 6, 6),
+       (-914031, -914002, -914001, 'Ugovor', 'Scout', 'Scout Ugovor', 'MID', 6, 6);
 insert into appearances (match_id, player_id, team_id, started, minute_on, minute_off, minutes_played, goals, penalties_scored)
 values (-914001, -914031, -914002, true, 0, 90, 90, 0, 0);
+insert into scout.ugovori (player_id, kljuc) select * from scout.kljuci_vrstic(array[-914030]::bigint[]);
 """
 
 
 def test_ugovor_v_drugem_klubu(conn):
-    """Ugovor (scout_skrit) velja za vse vrstice osebe v državi: isto ime brez
+    """Ugovor (scout.ugovori) velja za vse vrstice osebe v državi: isto ime brez
     šifre v drugem klubu je druga `oseba`, a izpade po ključu imena."""
     conn.execute("reset role")
     conn.execute(UGOVOR)
@@ -138,6 +140,30 @@ def test_ugovor_v_drugem_klubu(conn):
     igralci = set(sezone["player_id"].tolist())
     assert -914002 in igralci  # soigralec z drugim imenom ostane
     assert not igralci & {-914030, -914031}
+
+
+MLADINEC = """
+insert into auth.users (id, email, raw_user_meta_data, created_at)
+values ('e5c00000-0000-4000-8000-000000000914', 'scout-mladi@example.invalid', '{"display_name":"ScoutMladi"}', now());
+insert into zahtevki_igralca (player_id, user_id, status, potrdil, decided_at)
+values (-914005, 'e5c00000-0000-4000-8000-000000000914', 'potrjen', 'admin', now());
+"""
+
+
+def test_mladinec_s_polnoletno_letnico(conn):
+    """Oseba z mladinsko vrstico (-914006) vstopi, ko na potrjenem profilu
+    prijavi letnico, s katero je polnoletna vse leto (<= letos - 19); letnica
+    letos - 18 je ne odpre."""
+    conn.execute("reset role")
+    conn.execute(MLADINEC)
+    conn.execute("insert into scout.privolitve (player_id, letnik) "
+                 "values (-914005, extract(year from current_date)::int - 18)")
+    conn.execute("set role scout_stroj")
+    assert -914005 not in set(nalozi(conn)[0]["player_id"].tolist())
+    conn.execute("reset role")
+    conn.execute("update scout.privolitve set letnik = 2000 where player_id = -914005")
+    conn.execute("set role scout_stroj")
+    assert -914005 in set(nalozi(conn)[0]["player_id"].tolist())
 
 
 def test_zapisi_in_obrezi(conn):
