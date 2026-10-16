@@ -3194,6 +3194,33 @@ reset role;
 select pg_temp.preveri('scout: adminov ugovor velja', scout.je_skrit(array[-918003]::bigint[]));
 select set_config('request.jwt.claim.sub','',true);
 
+-- Vklop sredi sezone (20261016183300): tekma zadnjega kroga, odigrana pred
+-- razporedom, ne pomeni konca sezone. -926001: krogi 1-4 odigrani, 5 in 6
+-- pred nami, iz 15. kroga ena tekma že odigrana. -926002: prestavljen 3. krog,
+-- 4-6 odigrani, zato velja staro pravilo (7). -926003: vsi krogi odigrani.
+insert into competitions(id, slug, name, short_name, active, country_id, source) overriding system value
+select id, slug, 'Test vklopa', 'TV', false, (select id from countries where code='SI'), 'mnzg'
+from (values (-926001, 'test-vklop-zgodaj'), (-926002, 'test-vklop-prestavljen'), (-926003, 'test-vklop-konec')) v(id, slug);
+insert into rounds(id, season, number, deadline_at, competition_id) overriding system value
+select -926000 - c * 100 - n, sezona_lige(-926000 - c), n,
+       now() + case when igrano then interval '-1 day' * (30 - n) else interval '1 day' * n end, -926000 - c
+from (values (1,1,true),(1,2,true),(1,3,true),(1,4,true),(1,5,false),(1,6,false),(1,15,true),
+             (2,1,true),(2,2,true),(2,3,false),(2,4,true),(2,5,true),(2,6,true),(2,7,false),
+             (3,1,true),(3,2,true),(3,3,true)) v(c, n, igrano);
+insert into matches(id, round_id, home_team_id, away_team_id) overriding system value
+select r.id, r.id, -913001, -913002 from rounds r where r.competition_id in (-926001, -926002, -926003);
+insert into appearances(match_id, player_id, team_id)
+select m.id, -913001, -913001
+  from matches m join rounds r on r.id = m.round_id
+ where r.competition_id in (-926001, -926002, -926003) and r.deadline_at < now();
+select pg_temp.preveri('vklop sredi sezone: zgodaj odigrana tekma zadnjega kroga ne konca sezone',
+  (vklopi_ligo_sredi_sezone('test-vklop-zgodaj')->>'prvi_krog')::int = 5);
+select pg_temp.preveri('vklop sredi sezone: po prestavljenem krogu prvi krog za zadnjim odigranim',
+  (vklopi_ligo_sredi_sezone('test-vklop-prestavljen')->>'prvi_krog')::int = 7);
+select pg_temp.preveri('vklop sredi sezone: koncana sezona je zavrnjena',
+  (select not (r->>'vklopljena')::boolean and r->>'prvi_krog' is null and r->>'razlog' like 'Za zadnjim krogom z zapisniki (3)%'
+     from (select vklopi_ligo_sredi_sezone('test-vklop-konec') r) x));
+
 do $$
 declare v_napak int;
 begin
