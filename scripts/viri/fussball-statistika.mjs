@@ -1,0 +1,349 @@
+// Offline, report-only statistics. This is intentionally not a source adapter.
+import {createHash} from 'node:crypto'
+import {razberiZapisnik} from './fussball.mjs'
+
+class ReportError extends Error {
+ constructor(reason,code='FUSSBALL_REPORT_UNSUPPORTED'){super(`fussball statistika: ${reason}`);this.name='FussballReportError';this.code=code}
+}
+const fail=reason=>{throw new ReportError(reason)}
+const requireProof=(condition,reason)=>{if(!condition)fail(reason)}
+const hash=raw=>createHash('sha256').update(raw).digest('hex')
+const decode=s=>s.replace(/&#x([a-f0-9]+);/gi,(_,n)=>String.fromCodePoint(parseInt(n,16))).replace(/&#(\d+);/g,(_,n)=>String.fromCodePoint(+n)).replace(/&(?:rsquo|apos);/g,"'").replace(/&nbsp;/g,' ')
+
+// Discover actual opening tags without interpreting comment/raw-text contents
+// or markup-shaped attribute values as elements. Keep original source offsets;
+// strict subtree parsing and row hashes still consume the unchanged raw HTML.
+function liveTags(html){
+ const tags=[],rawText=new Set(['script','style','title','textarea','iframe','xmp','noembed','noframes','noscript'])
+ let cursor=0,inHead=false,templates=0,heads=0,headEnds=0
+ while(cursor<html.length){
+  const start=html.indexOf('<',cursor);if(start<0)break
+  if(html.startsWith('<!--',start)){
+   const close=/--!?>/g;close.lastIndex=start+4
+   requireProof(close.exec(html),'odrezan komentar HTML');cursor=close.lastIndex;continue
+  }
+  // A doctype's quoted public/system identifier can itself contain > or markup.
+  if(/^<!doctype\b/i.test(html.slice(start))){
+   let end=start+2,quote=null
+   for(;end<html.length;end++){
+    const c=html[end]
+    if(quote){if(c===quote)quote=null}else if(c==='"'||c==="'")quote=c;else if(c==='>')break
+   }
+   requireProof(end<html.length,'odrezan doctype HTML');cursor=end+1;continue
+  }
+  // HTML bogus comments (including <?...> and HTML CDATA declarations) end
+  // at the first >; their markup-shaped contents cannot open an element.
+  if(html.startsWith('<!',start)||html.startsWith('<?',start)){
+   const end=html.indexOf('>',start+2)
+   requireProof(end>=0,'odrezana deklaracija HTML');cursor=end+1;continue
+  }
+  const prefix=/^<(\/?)([a-z][a-z0-9:-]*)(?=[\s/>])/i.exec(html.slice(start))
+  if(!prefix){cursor=start+1;continue}
+  let end=start+prefix[0].length,quote=null
+  for(;end<html.length;end++){
+   const c=html[end]
+   if(quote){if(c===quote)quote=null}else if(c==='"'||c==="'")quote=c;else if(c==='>')break
+  }
+  requireProof(end<html.length,'odrezana oznaka HTML');end++
+  const tag=prefix[2].toLowerCase(),closing=!!prefix[1],attrs=Object.create(null)
+  const body=html.slice(start+prefix[0].length,end-1).replace(/\/\s*$/,'')
+  const attr=/\s+([^\s"'<>/=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/gy
+  let position=0
+  while(position<body.length){
+   if(!body.slice(position).trim())break
+   attr.lastIndex=position;const m=attr.exec(body)
+   requireProof(m&&!closing,'nepodprti atributi oznake HTML')
+   const key=m[1].toLowerCase();requireProof(!Object.hasOwn(attrs,key),'podvojen atribut HTML')
+   attrs[key]=m[2]??m[3]??m[4]??null;position=attr.lastIndex
+  }
+  if(tag==='template')templates+=closing?-1:1
+  requireProof(templates>=0,'neveljavna meja predloge HTML')
+  if(!templates){
+   if(tag==='head'){
+    if(closing){requireProof(inHead,'neveljaven zaključek glave HTML');headEnds++;inHead=false}
+    else{requireProof(!inHead&&!heads,'podvojena glava HTML');heads++;inHead=true}
+   }
+   if(!closing)tags.push({tag,attrs,start,end,inHead})
+  }
+  cursor=end
+  if(!closing&&rawText.has(tag)){
+   const close=new RegExp(`</${tag}\\s*>`,'gi');close.lastIndex=cursor
+   requireProof(close.exec(html),'odrezana surova vsebina HTML');cursor=close.lastIndex
+  }else if(!closing&&tag==='plaintext')cursor=html.length
+ }
+ requireProof(!templates&&heads===1&&headEnds===1,'manjka enolična živa glava HTML')
+ return tags
+}
+function sourceUrl(tags,id){
+ const head=tags.filter(t=>t.inHead),canonical=head.filter(t=>t.tag==='link'&&t.attrs.rel==='canonical'),og=head.filter(t=>t.tag==='meta'&&t.attrs.property==='og:url')
+ requireProof(canonical.length===1&&og.length===1,'manjka enolična živa identiteta zapisnika')
+ const ownId=url=>url?.match(/^https:\/\/www\.fussball\.de\/spiel\/(?:[a-z0-9-]+\/)?-\/spiel\/([A-Z0-9]{32})$/)?.[1]
+ requireProof(ownId(canonical[0].attrs.href)===id&&ownId(og[0].attrs.content)===id,'živa identiteta zapisnika se ne ujema')
+ return canonical[0].attrs.href
+}
+
+// Closed refusal grammar for the captured lineup fragment, not HTML repair.
+// Every token must be consumed; only these ordinary HTML elements/attributes
+// can carry core evidence. No raw-text, inert, foreign or custom context exists
+// in this grammar, and attributes cannot contain markup-shaped source bytes.
+function lineupProof(html){
+ const allowed={div:['id','class'],a:['href','class'],span:['class','data-obfuscation','data-alt','data-responsive-image'],img:['src','alt'],h3:['class']}
+ const tokens=/<[^>]*>|[^<]+/gy,stack=[]
+ let cursor=0,root=false
+ while(cursor<html.length){
+  tokens.lastIndex=cursor;const m=tokens.exec(html)
+  requireProof(m,'nepodprta oznaka postave');cursor=tokens.lastIndex
+  const token=m[0]
+  if(!token.startsWith('<')){requireProof(stack.length||!token.trim(),'besedilo zunaj dokazne postave');continue}
+  const close=token.match(/^<\/([a-z][a-z0-9]*)>$/)
+  if(close){requireProof(stack.pop()===close[1],'neujemajoče meje dokazne postave');continue}
+  const open=token.match(/^<([a-z][a-z0-9]*)((?:\s+[a-z][a-z0-9-]*="[^"<>]*")*)>$/)
+  requireProof(open&&Object.hasOwn(allowed,open[1]),'nepodprta vrsta elementa dokazne postave')
+  const tag=open[1],attrs=Object.create(null)
+  for(const a of open[2].matchAll(/\s+([a-z][a-z0-9-]*)="([^"]*)"/g)){
+   requireProof(allowed[tag].includes(a[1])&&!Object.hasOwn(attrs,a[1]),'nepodprt ali podvojen atribut dokazne postave')
+   attrs[a[1]]=a[2]
+  }
+  if(!stack.length){
+   requireProof(!root&&tag==='div'&&Object.keys(attrs).length===1&&attrs.id==='match_course_body','manjka enoličen koren dokazne postave');root=true
+  }else{
+   requireProof(!['span','h3'].includes(stack.at(-1)),'nepodprta vsebina listnega elementa postave')
+   requireProof(!Object.hasOwn(attrs,'id'),'nepodprt notranji id postave')
+  }
+  requireProof(tag!=='a'||!stack.includes('a'),'gnezdene profilne povezave niso podprte')
+  if(tag!=='img')stack.push(tag)
+ }
+ requireProof(root&&!stack.length,'odrezana dokazna postava')
+}
+
+// A small closed grammar, not a browser/HTML repair parser: every tag, attribute,
+// non-whitespace text and child must be consumed by an explicitly known shape.
+function tree(html,start){
+ const stack=[],tokens=/<[^>]*>|[^<]+/g;tokens.lastIndex=start
+ let m,root
+ while((m=tokens.exec(html))){
+  const token=m[0]
+  if(token.startsWith('</')){
+   const close=token.match(/^<\/([a-z][a-z0-9]*)>$/),n=stack.pop()
+   requireProof(close&&n&&n.tag===close[1],'neujemajoče zaključne oznake dogodka')
+   n.end=tokens.lastIndex
+   if(!stack.length)return root
+  }else if(token.startsWith('<')){
+   const open=token.match(/^<([a-z][a-z0-9]*)((?:\s+[a-z][a-z0-9-]*="[^"<>]*")*)>$/)
+   requireProof(open,'nepodprta oznaka ali atribut dogodka')
+   const attrs=Object.create(null)
+   for(const a of open[2].matchAll(/\s+([a-z][a-z0-9-]*)="([^"]*)"/g)){
+    requireProof(!(a[1] in attrs),'podvojen atribut dogodka');attrs[a[1]]=a[2]
+   }
+   const n={tag:open[1],attrs,children:[],start:m.index}
+   if(stack.length)stack.at(-1).children.push(n);else root=n
+   stack.push(n)
+  }else if(token.trim()){
+   requireProof(stack.length,'besedilo zunaj dogodka');stack.at(-1).children.push(token.trim())
+  }
+ }
+ fail('odrezan razdelek dogodkov')
+}
+function shape(n,tag,attrs={},count){
+ requireProof(n&&typeof n==='object'&&n.tag===tag,`nepodprta struktura: pričakovan ${tag}`)
+ requireProof(Object.keys(n.attrs).length===Object.keys(attrs).length&&Object.entries(attrs).every(([k,v])=>n.attrs[k]===v),`nepodprti atributi ${tag}`)
+ if(count!=null)requireProof(n.children.length===count,`nepodprti podrejeni elementi ${tag}`)
+ return n.children
+}
+const box=(n,cls,count)=>shape(n,'div',{class:cls},count)
+function text(n,tag,attrs,pattern){const c=shape(n,tag,attrs,1);requireProof(typeof c[0]==='string'&&pattern.test(decode(c[0])),'nepodprto besedilo dogodka');return c[0]}
+function cell(n){return box(box(n,n.attrs.class,1)[0],'valign-table',1)[0]}
+function glyph(n){
+ requireProof(/^[a-z0-9]+$/.test(n?.attrs?.['data-obfuscation']??''),'manjka obfuscation dokaz')
+ text(n,'span',{'data-obfuscation':n.attrs['data-obfuscation']},/^[\uE000-\uF8FF ]+$/u)
+}
+function player(n,{goal=false}={}){
+ const url=n?.attrs?.href,m=url?.match(/^https:\/\/www\.fussball\.de\/spielerprofil\/-\/(player-id|userid)\/([A-Z0-9]{32})$/)
+ requireProof(m,'manjka točna profilna identiteta dogodka')
+ const c=shape(n,'a',{href:url},goal?2:1)
+ if(goal){
+  const image=shape(c[0],'span',{class:'player-image table-image'},1)[0]
+  const imageUrl=image?.attrs?.['data-responsive-image']
+  requireProof(/^(?:https:\/\/cdn\.fussball\.de\/public\/[A-Z0-9]{32}\.stamp|\/\/www\.fussball\.de\/export\.media\/-\/action\/getPlayerImage\/format\/15\/image-id\/NPI_[0-9]{28})$/.test(imageUrl??''),'nepodprta slika igralca')
+  shape(image,'span',{'data-alt':'player-image','data-responsive-image':imageUrl},0)
+ }
+ const name=c.at(-1)
+ if(name?.tag==='div'){for(const s of box(name,'player-name',goal?2:1))glyph(s)}else{requireProof(!goal,'manjka struktura imena strelca');glyph(name)}
+ return `de-fussball-${m[1]}-${m[2]}`
+}
+function rawEvent(n,half,ordinal,html){
+ const side=n?.attrs?.class==='row-event event-left'?0:1
+ const columns=box(n,`row-event event-${side===0?'left':'right'}`,3)
+ const [pn,en,tn]=side===0?columns:[columns[2],columns[1],columns[0]]
+ const pc=shape(cell(pn),'div',{class:'valign-cell'})
+ box(pn,'column-player',1);box(en,'column-event',1);box(tn,'column-time',1)
+ const ec=shape(cell(en),'div',{class:'valign-cell'},1)[0]
+ const time=box(tn,'column-time',1)[0],color=time?.attrs?.class
+ requireProof(['hexagon black','hexagon green'].includes(color),'nepodprt označevalec časa')
+ const [icon,inner]=box(time,color,2);shape(icon,'span',{class:'icon-hexagon'},0)
+ const clock=box(box(inner,'inner',1)[0],'valign-wrapper',1)[0]
+ const cas=text(clock,'div',{class:'valign-inner'},/^\d{1,2}(?:\s*\+\s*\d{1,2})?'$/)
+ const match=decode(cas).match(/^(\d{1,2})(?:\s*\+\s*(\d{1,2}))?'$/),base=+match[1],added=+(match[2]??0)
+ requireProof(added<=30&&(half===1?base>=1&&base<=45:base>=46&&base<=90)&&(!added||base===(half===1?45:90)),'čas ne pripada podprtemu polčasu')
+ const proof={ekipaIdx:side,cas,osnovnaMinuta:base,dodatek:added,minuta:Math.min(90,base),polcas:half,ordinal,eventSha256:hash(html.slice(n.start,n.end))}
+ let vrsta,refs
+ if(ec.tag==='i'){
+  const cls=ec.attrs.class
+  if(cls==='icon-substitute'){
+   shape(ec,'i',{class:cls},0);requireProof(pc.length===2,'nepodprta menjava')
+   text(pc[0],'div',{},/^Auswechslung$/)
+   const [incoming,outgoing]=box(pc[1],'substitute',2),oc=box(outgoing,'substitute',2)
+   requireProof(oc[0]==='für','nepodprta smer menjave')
+   refs=[player(incoming),player(oc[1])];vrsta='menjava'
+  }else{
+   const tokens=(cls??'').split(/\s+/)
+   requireProof(tokens.length===2&&new Set(tokens).size===2&&tokens.includes('icon-card')&&tokens.includes('yellow-card'),'nepodprt karton: samo izrecni običajni rumeni')
+   shape(ec,'i',{class:cls},0);requireProof(pc.length===1&&pc[0]==='Gelbe Karte','nepodprt pripisan ali spremenjen karton')
+   refs=[];vrsta='rumeni'
+  }
+  requireProof(color==='hexagon black','neskladna barva dogodka')
+ }else{
+  const scores=box(ec,'even',3)
+  for(const [i,cls] of [[0,'score-left'],[2,'score-right']]){
+   const s=scores[i],font=s?.attrs?.['data-obfuscation']
+   requireProof(/^[a-z0-9]+$/.test(font??''),'manjka pisava izida dogodka')
+   text(s,'span',{'data-obfuscation':font,class:cls},/^[\uE000-\uF8FF]+$/u)
+  }
+  text(scores[1],'span',{class:'colon'},/^:$/)
+  requireProof(pc.length===1&&color==='hexagon green','nepodprta oblika gola')
+  refs=[player(pc[0],{goal:true})];vrsta='gol'
+ }
+ return {...proof,vrsta,refs}
+}
+function keys(o,expected){requireProof(o&&typeof o==='object'&&!Array.isArray(o)&&Object.keys(o).length===expected.length&&expected.every(k=>Object.hasOwn(o,k)),'nepodprta oblika obdobij hitrega pregleda')}
+function summary(source){
+ // JSON.parse alone erases duplicate keys, which could hide a contradictory
+ // duration/type marker. The observed literal uses unescaped single quotes.
+ requireProof(!source.includes('\\'),'nepodprt ubežni znak hitrega pregleda')
+ const scopes=[]
+ for(const m of source.matchAll(/'([^']*)'|[{}]/g)){
+  if(m[0]==='{')scopes.push(new Set())
+  else if(m[0]==='}')requireProof(scopes.pop(),'neveljavna obdobja hitrega pregleda')
+  else if(/^\s*:/.test(source.slice(m.index+m[0].length))){
+   const seen=scopes.at(-1)
+   requireProof(seen&&!seen.has(m[1]),'podvojeno polje hitrega pregleda');seen.add(m[1])
+  }
+ }
+ requireProof(scopes.length===0,'odrezana obdobja hitrega pregleda')
+ try{return JSON.parse(source.replace(/'/g,'"'))}catch{fail('nepodprti podatki trajanja')}
+}
+function resultProof(html,z,raw,tags){
+ const starts=tags.filter((t,i)=>t.tag==='div'&&t.attrs.class==='result'&&tags[i+1]?.tag==='span'&&tags[i+1].attrs.class==='end-result')
+ requireProof(starts.length===1,'manjka enolična navadna oblika končnega izida')
+ const [end,half]=box(tree(html,starts[0].start),'result',2),c=shape(end,'span',{class:'end-result'},4)
+ for(const [i,cls] of [[0,'score-left'],[2,'score-right']]){
+  const font=c[i]?.attrs?.['data-obfuscation']
+  requireProof(/^[a-z0-9]+$/.test(font??''),'manjka pisava končnega izida')
+  text(c[i],'span',{'data-obfuscation':font,class:cls},/^[\uE000-\uF8FF]+$/u)
+ }
+ text(c[1],'span',{class:'colon'},/^:$/)
+ const verification=shape(c[3],'sub',{},2)
+ requireProof(verification[0]==='&nbsp;','manjka preverjeni izid')
+ shape(verification[1],'span',{class:'icon-verified'},0)
+ const score=decode(text(half,'span',{class:'half-result'},/^\[\d{1,2} : \d{1,2}\]$/)).match(/^\[(\d+) : (\d+)\]$/)
+ const count=raw.filter(e=>e.polcas===1&&e.vrsta==='gol').length,expected=count?z.goli[count-1].rezultat:{domaci:0,gostje:0}
+ requireProof(+score[1]===expected.domaci&&+score[2]===expected.gostje,'neskladen objavljeni polčasni izid')
+}
+function events(html,tags){
+ const starts=tags.filter(t=>t.tag==='div'&&t.attrs.class==='match-course')
+ requireProof(starts.length===1,'razdelek poteka ni enoličen')
+ const root=tree(html,starts[0].start),periods=box(root,'match-course',3),out=[]
+ for(const [i,period] of periods.slice(0,2).entries()){
+  const c=box(period,`${i?'second':'first'}-half ingame`,i?2:3)
+  const rows=box(box(c[0],'events',1)[0],'container')
+  for(const row of rows)out.push(rawEvent(row,i+1,out.length+1,html))
+  text(c[1],'div',{class:'row-time'},i?/^90'$/:/^45'$/)
+  if(!i)box(c[2],'arrow',0)
+ }
+ const final=box(box(periods[2],'final',1)[0],'headline',2)
+ text(final[0],'h3',{},/^Abpfiff$/);text(final[1],'span',{},/^(?:[01]\d|2[0-3]):[0-5]\dUhr$/)
+ const summaries=tags.filter(t=>Object.hasOwn(t.attrs,'data-match-events'))
+ requireProof(summaries.length===1,'manjka enoličen dokaz trajanja')
+ const evidence=summaries[0]
+ requireProof(evidence.tag==='div'&&evidence.attrs.id==='rangescontainer'&&evidence.attrs.class==='ranges'&&Object.hasOwn(evidence.attrs,'data-match-quick-view')&&Object.keys(evidence.attrs).length===4,'nepodprta živa oblika dokaza trajanja')
+ const q=summary(evidence.attrs['data-match-events'])
+ keys(q,['durationSections','duration','extraTimeDuration','first-half','second-half'])
+ requireProof(q.durationSections===2&&q.duration===90&&q.extraTimeDuration===0,'nepodprto trajanje tekme')
+ for(const [i,name] of ['first-half','second-half'].entries()){
+  const p=q[name];keys(p,['start','end','events'])
+  requireProof(p.start===(i?45:0)&&p.end===(i?90:45)&&Array.isArray(p.events),'nepodprte meje obdobij')
+  const actual=out.filter(e=>e.polcas===i+1)
+  requireProof(actual.length===p.events.length,'neskladje števila dogodkov po polčasih')
+  let previous=-1
+  for(const [j,e] of actual.entries()){
+   const raw=p.events[j];keys(raw,['time','type','team'])
+   const clock=`${e.osnovnaMinuta}${e.dodatek?`+${e.dodatek}`:''}`
+   requireProof(raw.time===clock&&raw.type===({gol:'goal',menjava:'substitute',rumeni:'yellow-card'})[e.vrsta]&&raw.team===(e.ekipaIdx?'away':'home'),'neskladje vrste, strani ali časa dogodka')
+   const order=e.osnovnaMinuta*100+e.dodatek
+   requireProof(order>=previous,'neurejeni izvorni časi');previous=order
+  }
+ }
+ return out
+}
+function associate(z,raw){
+ const queues={gol:[...z.goli],menjava:[...z.menjave],rumeni:[...z.nepripisaniKartoni]}
+ for(const e of raw){
+  const event=queues[e.vrsta].shift(),team=[z.domaci,z.gostje][e.ekipaIdx]
+  requireProof(event&&event.minuta===e.minuta,'neujemanje surovega dogodka z validatorjem')
+  if(e.vrsta==='gol')requireProof(event.virId===e.refs[0]&&event.rezultat&&(event.avtogol||event.ekipa===team.ime),'neujemanje identitete gola')
+  else if(e.vrsta==='menjava')requireProof(event.ekipa===team.ime&&event.noter.virId===e.refs[0]&&event.ven.virId===e.refs[1],'neujemanje identitet menjave')
+  else requireProof(event.ekipa===team.ime&&event.vrsta==='rumeni','neujemanje običajnega rumenega')
+ }
+ requireProof(Object.values(queues).every(q=>!q.length),'nepovezan dogodek validatorja')
+}
+function appearances(z,raw){
+ const teams=[z.domaci,z.gostje],roster=new Map(),active=new Set(),entered=new Set()
+ for(const [side,t] of teams.entries())for(const p of [...t.postava,...t.rezerve]){
+  const starter=t.postava.includes(p)
+  roster.set(p.virId,{...p,ekipaIdx:side,zacetnik:starter,od:starter?0:null,do:90})
+  if(starter){active.add(p.virId);entered.add(p.virId)}
+ }
+ // Equal raw clocks do not prove causal order. Disjoint substitutions commute;
+ // any shared participant, or a scorer crossing an entry/exit, is unsupported.
+ const groups=new Map()
+ for(const e of raw){const k=`${e.polcas}:${e.osnovnaMinuta}:${e.dodatek}`;if(!groups.has(k))groups.set(k,[]);groups.get(k).push(e)}
+ for(const group of groups.values()){
+  const used=new Set()
+  for(const e of group.filter(e=>e.vrsta==='menjava'))for(const ref of e.refs){requireProof(!used.has(ref),'neenolične sočasne menjave');used.add(ref)}
+  for(const e of group.filter(e=>e.vrsta==='gol'))requireProof(!used.has(e.refs[0]),'dvoumen čas strelca in menjave')
+ }
+ for(const e of raw){
+  if(e.vrsta==='gol')requireProof(active.has(e.refs[0]),'gol zunaj aktivnega intervala')
+  if(e.vrsta!=='menjava')continue
+  requireProof(![45,46].includes(e.osnovnaMinuta),'nepodprta dvoumna polčasna menjava')
+  const [incoming,outgoing]=e.refs.map(ref=>roster.get(ref))
+  requireProof(incoming&&outgoing&&incoming.ekipaIdx===e.ekipaIdx&&outgoing.ekipaIdx===e.ekipaIdx,'menjava napačne zgodovinske strani')
+  requireProof(!entered.has(incoming.virId)&&active.has(outgoing.virId),'ponovni vstop ali neveljaven izstop')
+  requireProof(incoming.vratar===outgoing.vratar,'nepotrjena menjava vloge vratarja')
+  outgoing.do=e.minuta;incoming.od=e.minuta
+  active.delete(outgoing.virId);active.add(incoming.virId);entered.add(incoming.virId)
+  for(const side of [0,1])requireProof([...active].filter(ref=>roster.get(ref).ekipaIdx===side&&roster.get(ref).vratar).length===1,'manjka enoličen aktivni vratar')
+ }
+ return [...roster.values()].filter(p=>p.od!=null).map(p=>{
+  requireProof(p.od<=p.do&&p.od>=0&&p.do<=90,'neveljaven interval nastopa')
+  const goals=z.goli.filter(g=>g.virId===p.virId),conceded=p.ekipaIdx===0?z.rezultat.gostje:z.rezultat.domaci
+  return {virId:p.virId,ekipaIdx:p.ekipaIdx,ekipa:teams[p.ekipaIdx].ime,st:p.st,ime:p.ime,regSt:null,pozicija:p.vratar?'GK':null,vratar:p.vratar,zacetnik:p.zacetnik,minutaOd:p.od,minutaDo:p.do,minute:p.do-p.od,goli:goals.filter(g=>!g.avtogol).length,goliIzEnajstmetrovke:0,avtogoli:goals.filter(g=>g.avtogol).length,zgreseneEnajstmetrovke:0,rumeni:0,rdeci:0,prejetiGoli:conceded,cleanSheet:conceded===0}
+ })
+}
+
+export function razberiFantasyZapisnik(mainHtml,lineupHtml,{fonts,id,lineupId}={}){
+ try{
+  requireProof(typeof mainHtml==='string'&&typeof lineupHtml==='string','zahtevani izvirni HTML nizi')
+  requireProof(lineupId===id&&/^[A-Z0-9]{32}$/.test(lineupId??''),'manjka vezana identiteta zajema postave')
+  lineupProof(lineupHtml)
+  const tags=liveTags(mainHtml),virUrl=sourceUrl(tags,id)
+  const z=razberiZapisnik(mainHtml,lineupHtml,{fonts,id,lineupId}),raw=events(mainHtml,tags)
+  associate(z,raw)
+  resultProof(mainHtml,z,raw,tags)
+  const nastopi=appearances(z,raw)
+  const dogodki=raw.map(({refs,...proof})=>({...proof,virId:refs[0]??null,virIds:refs,zapisnikId:z.zapisnikId,virUrl}))
+  const nepripisaniRumeni=dogodki.filter(e=>e.vrsta==='rumeni')
+  const opozorila=[`${nepripisaniRumeni.length} nepripisanih običajnih rumenih: vir ne objavi prejemnikov; ni ugibanih odbitkov. Statistika je potrjena samo za ta zapisnik; sezonski uvoz in vklop nista podprta.`]
+  return {reportStatistikaPripravljena:true,sezonskiUvozPodprt:false,activationEligible:false,z,nastopi,nepripisaniRumeni,dogodki,opozorila}
+ }catch(e){if(e instanceof ReportError)throw e;throw new ReportError(e.message,'FUSSBALL_REPORT_INVALID')}
+}
