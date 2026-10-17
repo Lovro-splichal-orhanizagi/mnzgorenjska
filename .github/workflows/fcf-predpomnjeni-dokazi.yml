@@ -1,0 +1,56 @@
+name: FCF predpomnjeni javni dokazi
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dokazi:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        cache_key:
+          - zapisniki-ES-k1od1-39053159080-1
+          - zapisniki-es-ct-elit-39067015141
+    steps:
+      - name: Prevzemi kodo za izvoz
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Obnovi samo tocni posnetek
+        id: restore
+        uses: actions/cache/restore@v4
+        with:
+          path: scripts/.predpomnilnik
+          key: ${{ matrix.cache_key }}
+
+      - name: Izvozi omejene izvirne dokaze in manifest
+        id: export
+        if: always()
+        shell: bash
+        env:
+          FCF_CACHE_KEY: ${{ matrix.cache_key }}
+          FCF_CACHE_MATCHED_KEY: ${{ steps.restore.outputs.cache-matched-key }}
+          FCF_CACHE_HIT: ${{ steps.restore.outputs.cache-hit }}
+          FCF_RESTORE_OUTCOME: ${{ steps.restore.outcome }}
+        run: node scripts/izvozi-fcf-predpomnjene-dokaze.mjs
+
+      - name: Shrani samo omejene javne dokaze
+        if: always() && steps.export.outputs.evidence_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fcf-dokazi-${{ matrix.cache_key }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: fcf-predpomnjeni-dokazi
+          if-no-files-found: warn
+          retention-days: 90
