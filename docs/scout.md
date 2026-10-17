@@ -162,9 +162,8 @@ sezone odprtih držav), `indeks`, `vektorji` (z-vektor in 20 najbližjih),
 preklic = izbris vrstice). Notranje funkcije `kljuci_vrstic`,
 `vrstice_profila`, `je_skrit`, `odrasle_vrstice`; vlogi `scout_stroj` je
 odprta le `odrasle_vrstice` (`privolitve` stroj ne bere neposredno,
-`ugovori` bere). `players.scout_skrit` je prenesen v `ugovori` in se ne bere
-več; stolpec odstrani `20261017090100` (po prvem rednem zagonu novega
-delavca). Poizvedba izločenih (`SQL_IZKLJUCENI`) na produkciji: 4,7 s, le
+`ugovori` bere). Stari javni `players.scout_skrit` je prenesen v `ugovori` in
+odstranjen (`20261017170100`). Poizvedba izločenih (`SQL_IZKLJUCENI`) na produkciji: 4,7 s, le
 hash joini (join z OR je obvisel).
 
 Brskalnik sheme ne bere: ni v API, `anon`/`authenticated` nimata pravic, RLS

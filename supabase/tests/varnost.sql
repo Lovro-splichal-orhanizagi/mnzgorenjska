@@ -3102,8 +3102,8 @@ reset role;
 -- Scout, faza 1: shema stroja je zaprta za brskalnik, Slovenija odprta.
 select pg_temp.preveri('scout: Slovenija je odprta',
   (select d.stanje = 'odprto' from scout.drzave d join countries c on c.id = d.country_id where c.code = 'SI'));
-select pg_temp.preveri('scout: scout_skrit privzeto false',
-  (select column_default = 'false' from information_schema.columns
+select pg_temp.preveri('scout: ugovor ni javni stolpec players',
+  not exists (select 1 from information_schema.columns
     where table_schema = 'public' and table_name = 'players' and column_name = 'scout_skrit'));
 set local role anon;
 select pg_temp.zavrnjeno('scout: anon ne bere kazalnikov', $$select * from scout.kazalniki$$);
@@ -3149,7 +3149,7 @@ select q, pg_temp.stevilo(q) from unnest(array[
   'select * from scout.drzave', 'select * from public.anonimizirani_igralci',
   'select public.anonimizacijski_kljuc(''1|x'')',
   'select 1 from public.matches m join public.rounds r on r.id = m.round_id join public.competitions c on c.id = r.competition_id where m.zapisnik_id is not null and not m.kontumacija and not public.je_mladinski_slug(c.slug)',
-  'select 1 from public.players p join public.competitions c on c.id = p.competition_id where p.scout_skrit or public.je_mladinski_slug(c.slug)',
+  'select 1 from public.players p join public.competitions c on c.id = p.competition_id where public.je_mladinski_slug(c.slug)',
   'select * from scout.ugovori', 'select * from scout.odrasle_vrstice()'
 ]) q;
 grant select on scout_stevci to scout_stroj;
