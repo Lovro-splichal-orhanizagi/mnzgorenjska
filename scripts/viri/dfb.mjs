@@ -419,6 +419,9 @@ export function vZapisnik(html, { id, tekma, liga='regionalliga-nordost' } = {})
   // Eligibility survives leaving/never entering the pitch. The active set alone
   // cannot distinguish an unused reserve from a reserve dismissed on the bench.
   const discipline=new Map()
+  // Unresolved recipients still supply identity evidence for later cards;
+  // retaining it here must never create a roster member or appearance.
+  const unresolvedRecipients=[new Map(),new Map()]
   const runningScore=[0,0]
   const timeline=orderedTimeline(sections.get('Spielverlauf'))
   if(timeline.reordered)opozorila.push('Popravljen vrstni red mešanih zapisov dodatka k 90. minuti po izrecnih časih; vrstni red vsake oblike je ohranjen.')
@@ -469,16 +472,17 @@ export function vZapisnik(html, { id, tekma, liga='regionalliga-nordost' } = {})
         const player=players[side].get(personKey),coach=coaches[side].get(personKey)
         // Unknown role is never proof of a bench appearance. Explicit opposite
         // side identity or a conflicting public profile is a contradiction.
-        const otherPeople=[...players[1-side].values(),...coaches[1-side].values()]
+        const otherPeople=[...players[1-side].values(),...coaches[1-side].values(),...unresolvedRecipients[1-side].values()]
         if(allowUnattributed&&otherPeople.some(p=>(!player&&!coach&&nameKey(p.ime)===personKey)||(who.profilId&&p.profilId===who.profilId)))fail('nasprotujoča identiteta ekipe pri kartonu')
-        if(allowUnattributed&&who.profilId&&[player,coach].some(p=>p?.profilId&&p.profilId!==who.profilId))fail('nasprotujoča profilna identiteta pri kartonu')
-        if(allowUnattributed&&who.profilId&&[...players[side].values(),...coaches[side].values()].some(p=>p.profilId===who.profilId&&nameKey(p.ime)!==personKey))fail('nasprotujoča profilna identiteta pri kartonu')
+        if(allowUnattributed&&who.profilId&&[player,coach,unresolvedRecipients[side].get(personKey)].some(p=>p?.profilId&&p.profilId!==who.profilId))fail('nasprotujoča profilna identiteta pri kartonu')
+        if(allowUnattributed&&who.profilId&&[...players[side].values(),...coaches[side].values(),...unresolvedRecipients[side].values()].some(p=>p.profilId===who.profilId&&nameKey(p.ime)!==personKey))fail('nasprotujoča profilna identiteta pri kartonu')
         const reason=playerCoaches[side].has(personKey)?'player-coach':!player&&!coach?'unknown-role':null
         if(allowUnattributed&&reason){
           if(kind!=='yellow')fail('neznana ali dvoumna vloga pri izključitvi')
           const key=`${side}|unattributed|${personKey}`
           if(discipline.get(key)?.yellow)fail('podvojen rumeni karton brez izključitve')
           discipline.set(key,{yellow:true,dismissed:false})
+          unresolvedRecipients[side].set(personKey,who)
           const evidence={source:'dfb',matchId:meta.zapisnikId,sourceUrl:meta.url,side,clock:rawMinute,minute,reason,eventSha256:sha256(JSON.stringify([meta.zapisnikId,side,rawMinute,kind,segment.outer])),ordinal:counters.card,profileId:who.profilId}
           nepripisaniRumeni.push(evidence);opozorila.push(encodeUnattributedYellow(evidence));counters.card++;continue
         }

@@ -55,6 +55,25 @@ test('two named ordinary yellows without dismissal remain a contradiction',()=>{
  const b=html('2402201').replaceAll('Florian Mayer','Paul Polauke').replaceAll('/profil/352879?','/profil/386163?')
  assert.throws(()=>parse('2402201',b),/podvojen rumeni/)
 })
+// Keep roster, clocks, icons and event cardinality intact: change only the
+// recipient in the matching timeline and dedicated-card text segments.
+function cardRecipient(body,fromName,fromProfile,toName,toProfile){
+ let changed=0
+ const result=body.replace(/<div class="m-MatchDetails-history-event-text-segment">[\s\S]*?<\/div>/g,segment=>{
+  if(!segment.includes(`>${fromName}</a>`)||!segment.includes(`/profil/${fromProfile}?`))return segment
+  changed++;return segment.replace(`>${fromName}</a>`,`>${toName}</a>`).replace(`/profil/${fromProfile}?`,`/profil/${toProfile}?`)
+ })
+ assert.equal(changed,2,'mutate precisely the timeline and dedicated-card recipients')
+ return result
+}
+test('unresolved recipient identity cannot recur on the opposite side',()=>{
+ const b=cardRecipient(html('2402201'),'Yannik Lührs','388069','Florian Mayer','352879')
+ assert.throws(()=>parse('2402201',b),/identitet/)
+})
+test('two unresolved recipient names cannot share a same-side public profile',()=>{
+ const b=cardRecipient(html('2402201'),'Paul Polauke','386163','Other Unknown Recipient','352879')
+ assert.throws(()=>parse('2402201',b),/identitet|podvojen rumeni/)
+})
 
 // The actual traversal must use fresh HTML for an exact historical repair and
 // honor a previously imported old skip before parsing an unrelated bad report.
