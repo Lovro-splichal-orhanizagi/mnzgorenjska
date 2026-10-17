@@ -82,3 +82,46 @@ test('report team links require the complete registered season identity',()=>{
   assert.throws(()=>dfb.vZapisnik(changed,{liga:'regionalliga-bayern'}),/identitete ekipe/)
  }
 })
+
+// Original failed Nord audit: facts and capture times remain unchanged.
+const nordAudit=JSON.parse(readFileSync(new URL('./vzorci/de-dfb-nord-audit-provenance.json',import.meta.url)))
+const nordHtml=id=>{
+ const m=nordAudit.find(m=>m.id===id),html=readFileSync(new URL(`./vzorci/${m.file}`,import.meta.url),'utf8')
+ assert.equal(createHash('sha256').update(html).digest('hex'),m.sha256)
+ return html
+}
+const parseNord=html=>dfb.vZapisnik(html,{liga:'regionalliga-nord'})
+for(const [id,goals,subs,yellows,reds]of[['2405305',7,10,2,1],['2405559',1,8,2,0]])test(`Nord captured ${id}: exact duplicated event segments count once`,()=>{
+ const z=parseNord(nordHtml(id))
+ assert.equal(z.goli.length,goals);assert.equal(z.menjave.length,subs);assert.equal(z.rumeni.length,yellows);assert.equal(z.rdeci.length,reds)
+ assert.equal(z.domaci.postava.length,11);assert.equal(z.gostje.postava.length,11)
+ if(id==='2405305')assert.deepEqual(z.goli.map(g=>g.rezultat),[[1,0],[1,1],[2,1],[2,2],[3,2],[4,2],[5,2]])
+ else assert.deepEqual(z.goli.map(g=>[g.ime,g.ekipaIdx,g.minuta,g.avtogol,g.rezultat]),[['Arber Mrijaj',0,18,true,[0,1]]])
+})
+for(const [id,name,minuteOn,minuteOff,totalGoals]of[['2405443','Leon Tasov',45,86,1],['2405457','Sebastian Haut',87,90,6],['2405488','Moses Otuali',45,90,5],['2405535','Christian Beck',64,90,5]])test(`Nord captured ${id}: official incoming scorer at same exact minute`,()=>{
+ const z=parseNord(nordHtml(id)),p=dfb.nastopi(z).find(p=>p.ime===name)
+ assert.equal(z.goli.length,totalGoals)
+ assert.equal(p.zacetnik,false);assert.equal(p.minutaOd,minuteOn);assert.equal(p.minutaDo,minuteOff);assert.equal(p.minute,minuteOff-minuteOn);assert.equal(p.goli,1)
+ assert.equal(z.menjave.filter(m=>m.noter.ime===name).length,1)
+})
+for(const [id,reason]of[['2405268',/postava|klop/],['2405441',/polčas/],['2405451',/zaporedje izidov/],['2405547',/zaporedje izidov/]])test(`Nord captured ${id}: absent or contradictory official facts remain blocked`,()=>{
+ assert.throws(()=>parseNord(nordHtml(id)),reason)
+})
+test('Nord captured duplicate support never merges differing person, profile or score segments',()=>{
+ const html=nordHtml('2405305')
+ for(const changed of [html.replace('Linus Schäfer','Mats Facklam'),html.replace('/profil/386685','/profil/999999'),html.replace('1:0','2:0')]){
+  assert.notEqual(changed,html);assert.throws(()=>parseNord(changed))
+ }
+})
+function moveNordIncoming(html,name,from,to){
+ let changed=0
+ const result=html.split('<div class="m-MatchDetails-history-item">').map(part=>{
+  if(!part.includes(name)||!part.includes('m-MatchDetails-icon-caret-right--green'))return part
+  return part.replace(new RegExp(`(m-MatchDetails-history-minute">\\s*)${from}'`),(whole,prefix)=>{changed++;return `${prefix}${to}'`})
+ }).join('<div class="m-MatchDetails-history-item">')
+ assert.equal(changed,2,'mutate timeline and dedicated substitution evidence only')
+ return result
+}
+test('Nord captured same-minute support does not move an incoming substitution across exact clocks',()=>{
+ for(const to of ['47','46+1'])assert.throws(()=>parseNord(moveNordIncoming(nordHtml('2405443'),'Leon Tasov','46',to)),/neaktiv|vstop/)
+})

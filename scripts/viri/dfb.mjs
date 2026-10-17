@@ -56,6 +56,28 @@ const one = (s, tag, cls) => {
   if (a.length !== 1) fail(`nepopoln ali podvojen element ${cls}`)
   return a[0]
 }
+function eventSegments(fragment){
+  // Captured Nord reports 2405305/2405559 repeat exact goal, card and
+  // substitution fragments under a single event icon. Collapse only identical
+  // source HTML within that event; different names/profiles/scores stay distinct.
+  const seen=new Set()
+  return elements(fragment,'div','m-MatchDetails-history-event-text-segment').filter(s=>{
+    if(seen.has(s.outer))return false
+    seen.add(s.outer);return true
+  })
+}
+function sameClockIncoming(rows,order,side,player){
+  // A minute is not an ordering of its HTML rows. These four actual reports
+  // put a reserve's goal before his explicit incoming pair at the same clock.
+  // The normal substitution parser still validates that pair later; this only
+  // establishes goal eligibility, never fabricates an entry or changes a time.
+  return rows.some(r=>r.order===order&&elements(r.row.inner,'div','m-MatchDetails-history-event').some(e=>{
+    if(!has(e.tag,`m-MatchDetails-history-event--${side?'away':'home'}`)||!/m-MatchDetails-icon-playing--substitute-in/.test(e.inner))return false
+    const segments=eventSegments(e.inner)
+    if(!segments.length||segments.length%2)return false
+    return segments.some((s,i)=>i%2===0&&/m-MatchDetails-icon-caret-right--green/.test(s.inner)&&/m-MatchDetails-icon-caret-right--red/.test(segments[i+1].inner)&&nameKey(identity(text(s.inner).replace(/\s+für$/,'')).ime)===nameKey(player.ime))
+  }))
+}
 function cardEntries(icon,segments){
   const kinds=[...icon.matchAll(/m-MatchDetails-icon-card--([\w-]+)/g)].map(m=>m[1])
   if(!segments.length||!kinds.length||!(kinds.length===1||kinds.length===segments.length)||kinds.some(k=>!['yellow','red','yellow-red'].includes(k)))fail('nepodprt karton')
@@ -106,7 +128,7 @@ function eventSignatures(section) {
       if(!side)fail('dogodek brez ekipe')
       const icon=one(e.inner,'div',`m-MatchDetails-history-event-icon--${side}`).inner
       const kinds=[...icon.matchAll(/m-MatchDetails-icon-(goal|card|playing)--([\w-]+)/g)]
-      const rawSegments=elements(e.inner,'div','m-MatchDetails-history-event-text-segment')
+      const rawSegments=eventSegments(e.inner)
       if(kinds.length&&kinds.every(k=>k[1]==='card')){
         for(const {segment,kind} of cardEntries(icon,rawSegments))out.push({type:'card',key:JSON.stringify([side,minute,`m-MatchDetails-icon-card--${kind}`,[text(segment.inner).normalize('NFC')]])})
         continue
@@ -387,7 +409,7 @@ export function vZapisnik(html, { id, tekma, liga='regionalliga-nordost' } = {})
   const runningScore=[0,0]
   const timeline=orderedTimeline(sections.get('Spielverlauf'))
   if(timeline.reordered)opozorila.push('Popravljen vrstni red mešanih zapisov dodatka k 90. minuti po izrecnih časih; vrstni red vsake oblike je ohranjen.')
-  for (const {row,rawMinute,spaced,minute} of timeline.rows) {
+  for (const {row,rawMinute,spaced,minute,order} of timeline.rows) {
     if(spaced)opozorila.push(`Minuta ${rawMinute}: presledek v uradnem zapisu dodatka k 90. minuti; izvorni zapis ohranjen.`)
     const events=elements(row.inner,'div','m-MatchDetails-history-event').filter(e=>!has(e.tag,'is-empty'))
     if (!events.length || events.length>2)fail('nepopoln dogodek')
@@ -395,7 +417,7 @@ export function vZapisnik(html, { id, tekma, liga='regionalliga-nordost' } = {})
       const side=has(e.tag,'m-MatchDetails-history-event--home')?0:has(e.tag,'m-MatchDetails-history-event--away')?1:null
       if(side==null)fail('dogodek brez ekipe')
       const icon=one(e.inner,'div',`m-MatchDetails-history-event-icon--${side?'away':'home'}`).inner
-      const segments=elements(e.inner,'div','m-MatchDetails-history-event-text-segment')
+      const segments=eventSegments(e.inner)
       const resolve=(fragment, suffix=false, incoming=false,personSide=side)=>{
         const raw=text(fragment).replace(suffix?/\s+für$/:/$^/,'').replace(/\(Elfmeter\)|\(Eigentor\)/g,'').replace(/\bEigentor\b/g,'').replace(/\b\d+:\d+\b/g,'').trim()
         const who=identity(raw); let p=players[personSide].get(nameKey(who.ime))
@@ -415,7 +437,7 @@ export function vZapisnik(html, { id, tekma, liga='regionalliga-nordost' } = {})
         const personSide=avtogol?1-side:side
         const p=resolve(segment.inner,false,false,personSide)
         if(p.offiziell)fail('gol uradne osebe')
-        if(!active[personSide].has(p.virId))fail('gol neaktivnega igralca: ni vstopa ali je že izstopil')
+        if(!active[personSide].has(p.virId)&&!(!p.zacetnik&&p.noter==null&&p.rdec==null&&sameClockIncoming(timeline.rows,order,personSide,p)))fail('gol neaktivnega igralca: ni vstopa ali je že izstopil')
         // Actual DFB penalties retain the ordinary goal icon; their distinction
         // is the explicit public `(Elfmeter)` text next to the player's name.
         const enajstmetrovka=kind==='penalty'||/\(Elfmeter\)/.test(text(segment.inner))
