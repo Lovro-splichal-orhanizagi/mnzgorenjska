@@ -1,0 +1,112 @@
+[
+  {
+    "id": "2405268",
+    "file": "de-dfb-2405268.html",
+    "url": "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/4-spieltag/sv-werder-bremen-ii-altona-93-2405268",
+    "sha256": "546a0578a0623346e3295397b98cb999550d8fa715ee07a5ed221b768ec24c19",
+    "capturedAt": "2026-10-17T11:27:37.887Z",
+    "runId": "39028219473",
+    "jobId": "117383322693",
+    "captureCommit": "a48fd89071aae0d2097603110c5442324fc59e3d",
+    "classification": "source-missing"
+  },
+  {
+    "id": "2405305",
+    "file": "de-dfb-2405305.html",
+    "url": "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/7-spieltag/vfb-oldenburg-fsv-schoeningen-2405305",
+    "sha256": "e4953917652d4795d0f505460f3ae8c14b2e765c0a2ba89dcba64a9d4f69e78d",
+    "capturedAt": "2026-10-17T11:31:11.686Z",
+    "runId": "39028219473",
+    "jobId": "117383322693",
+    "captureCommit": "a48fd89071aae0d2097603110c5442324fc59e3d",
+    "classification": "parser-support"
+  },
+  {
+    "id": "2405441",
+    "file": "de-dfb-2405441.html",
+    "url": "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/22-spieltag/kickers-emden-hsc-hannover-2405441",
+    "sha256": "34a9f0090f190ebe15d54e40ab60225b92bd0cd4e91ad522bb8b69014dd6dbba",
+    "capturedAt": "2026-10-17T11:52:15.816Z",
+    "runId": "39028219473",
+    "jobId": "117383322693",
+    "captureCommit": "a48fd89071aae0d2097603110c5442324fc59e3d",
+    "classification": "source-contradiction"
+  },
+  {
+    "id": "2405443",
+    "file": "de-dfb-2405443.html",
+    "url": "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/22-spieltag/fsv-schoeningen-sv-meppen-2405443",
+    "sha256": "547b99aef88090e1983677ddb34efab485c26d4806bbd492777629a365345ead",
+    "capturedAt": "2026-10-17T11:53:10.445Z",
+    "runId": "39028219473",
+    "jobId": "117383322693",
+    "captureCommit": "a48fd89071aae0d2097603110c5442324fc59e3d",
+    "classification": "parser-support"
+  },
+  {
+    "id": "2405451",
+    "file": "de-dfb-2405451.html",
+    "url": "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/23-spieltag/ssv-jeddeloh-vfb-luebeck-2405451",
+    "sha256": "be24a3435319a77083e39e3decc3c00bd4e58bb3f4ec9bacd4ec4674ec379936",
+    "capturedAt": "2026-10-17T11:54:24.488Z",
+    "runId": "39028219473",
+    "jobId": "117383322693",
+    "captureCommit": "a48fd89071aae0d2097603110c5442324fc59e3d",
+    "classification": "source-contradiction"
+  },
+  {
+    "id": "2405457",
+    "file": "de-dfb-2405457.html",
+    "url": "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/24-spieltag/sv-drochtersen-assel-eintracht-norderstedt-2405457",
+    "sha256": "40de6105f050b43d9dd3fbb6a406d2ce33ebfbab782b6368f04f0fd83076853a",
+    "capturedAt": "2026-10-17T11:54:42.822Z",
+    "runId": "39028219473",
+    "jobId": "117383322693",
+    "captureCommit": "a48fd89071aae0d2097603110c5442324fc59e3d",
+    "classification": "parser-support"
+  },
+  {
+    "id": "2405488",
+    "file": "de-dfb-2405488.html",
+    "url": "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/27-spieltag/hannover-96-ii-vfb-oldenburg-2405488",
+    "sha256": "2583e5c1ca1b9df08db4e376eb2cfce1d4045152e0d920c40038b9116816f6c5",
+    "capturedAt": "2026-10-17T11:59:09.746Z",
+    "runId": "39028219473",
+    "jobId": "117383322693",
+    "captureCommit": "a48fd89071aae0d2097603110c5442324fc59e3d",
+    "classification": "parser-support"
+  },
+  {
+    "id": "2405535",
+    "file": "de-dfb-2405535.html",
+    "url": "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/32-spieltag/fsv-schoeningen-hsc-hannover-2405535",
+    "sha256": "35c0a2c6b688c2556d8a528ddeea3d985ebdd08d680ef89cdb90cf5d8289b87f",
+    "capturedAt": "2026-10-17T12:06:29.980Z",
+    "runId": "39028219473",
+    "jobId": "117383322693",
+    "captureCommit": "a48fd89071aae0d2097603110c5442324fc59e3d",
+    "classification": "parser-support"
+  },
+  {
+    "id": "2405547",
+    "file": "de-dfb-2405547.html",
+    "url": "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/33-spieltag/blau-weiss-lohne-fsv-schoeningen-2405547",
+    "sha256": "6fb012ae8e08346624c9902409b481fa04c213cd1e043846afe9703e5f9269c6",
+    "capturedAt": "2026-10-17T12:07:45.447Z",
+    "runId": "39028219473",
+    "jobId": "117383322693",
+    "captureCommit": "a48fd89071aae0d2097603110c5442324fc59e3d",
+    "classification": "source-contradiction"
+  },
+  {
+    "id": "2405559",
+    "file": "de-dfb-2405559.html",
+    "url": "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/34-spieltag/vfb-luebeck-sc-weiche-flensburg-08-2405559",
+    "sha256": "3a37f2038c3abd1411d43cf3898174faaa175f892afbe88655f23a0aa5b08654",
+    "capturedAt": "2026-10-17T12:09:35.479Z",
+    "runId": "39028219473",
+    "jobId": "117383322693",
+    "captureCommit": "a48fd89071aae0d2097603110c5442324fc59e3d",
+    "classification": "parser-support"
+  }
+]

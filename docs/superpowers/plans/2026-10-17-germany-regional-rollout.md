@@ -72,3 +72,12 @@
 - [ ] Prepare manifest, verify provenance/raw replay, review exact bytes/SHA, then production preflight without activation. Investigate every mismatch.
 - [ ] Activate passing candidates through the guarded workflow; verify active status, future unlocked fantasy round, price spread and a valid squad within100.
 - [ ] Verify public country/league selection and player list; refresh HTML cache if required. Report exact activated/blocked counts and the lower-league feed dependency.
+
+### Task 4 refinement: Audited source repair and offline proof
+
+- Fix only the six demonstrated parser support failures with original raw fixtures and RED/GREEN; preserve the four official-source blockers. Replaying the same capture should accept302/306, with the original296 unchanged. Preserve full oldNordost schedules/reports/appearances and exact pending policy.
+- Implement the design's explicit version2 read-only Actions replay lineage after those repairs. Original capture parent may have a completed parser failure; its immutable raw artifact/index, original URL/SHA/time and exact GitHub identity/digest remain independently verified. New replay is a real successful Actions job at reviewed repaired parser commit; no source HTTP or DB credentials, no redating. Preserve version1 direct path.
+- Extend every prepare/import/check/activation provenance path and add a new service guard migration for required version2 identity fields. Existing exact statistics, scope, coverage, deadline, roles/prices/squad and locking checks remain unchanged. Never edit merged migrations.
+- TDD provenance and offline replay acceptance/rejection boundaries, run full unchangedNordost raw regression and disposable DB checks. Independent review and green CI before using new proof or production import. Root reviews exact candidate manifest SHA after actual replay jobs pass; live/finality evidence remains separate.
+
+- Additional independently verified source repair: West archive match2402377 publishes ordered stoppage clocks90+34,90+37 and90+39. A diagnostic changing only the added-time cap30→39 accepts the unchanged full report. Add the original raw fixture/provenance and RED/GREEN coverage, support these explicit clocks without rewriting any clock, preserve all role/phase/chronology checks and existing stoppage-to-statistical-minute policy. Keep the ten West source-data blockers rejected. Commit separately before final v2 fingerprint/proof validation; independent scoped review required.

@@ -83,9 +83,11 @@ end $$;
 do $$ declare r jsonb; begin
  r:=pg_temp.de_check();
  if (r->>'preverjeno')::boolean is distinct from true or (r->>'prvi_krog')::int<>3
+    or r->>'manifestSha256' is distinct from (select encode(sha256(convert_to(raw,'UTF8')),'hex') from de_manifest)
     or exists(select 1 from competitions where slug=current_setting('slff.test_slug') and active) then raise exception 'Nonmutating preflight failed: %',r; end if;
  raise notice 'PASS complete manifest preflight; inactive state retained';
 end $$;
+-- REPLAY_MUTATIONS
 select pg_temp.de_reject('missing archive report', $$update matches set imported_at=null where id=-926010$$);
 select pg_temp.de_reject('wrong report identity', $$update matches set zapisnik_id='de-dfb-99999999' where id=-926010$$);
 select pg_temp.de_reject('score without goal', $$update matches set home_goals=1 where id=-926010$$);

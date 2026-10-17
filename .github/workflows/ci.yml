@@ -69,7 +69,7 @@ jobs:
       # `npm run build` že poganja `tsc --noEmit`, a ločen korak pove, KATERI
       # od obeh je padel, brez brskanja po dnevniku.
       - name: Germany activation manifest
-        run: node --test scripts/test-vklop-nemcije.mjs scripts/test-zagona-nemcije.mjs scripts/test-vklop-dfb-regije.mjs scripts/test-dfb-regije-dokazi.mjs
+        run: node --test scripts/test-vklop-nemcije.mjs scripts/test-zagona-nemcije.mjs scripts/test-vklop-dfb-regije.mjs scripts/test-dfb-regije-dokazi.mjs scripts/test-dfb-regije-replay.mjs scripts/test-dfb-west-clock.mjs
 
       - name: Tipi
         run: npx tsc --noEmit

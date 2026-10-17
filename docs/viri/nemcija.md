@@ -234,3 +234,44 @@ Izolirani regresiji `scripts/test-vklop-dfb-regije-sql.mjs` in
 `SUPABASE_DB_CONTAINER` sveže, odstranljive baze. Preverjata sezoni
 18/34/306 in Bayern 19/38/342, zavrnitve spremenjenih podatkov ter
 blokiranje sočasnih zapisovalcev. Fixture se vedno razveljavi z ROLLBACK.
+
+## Ponovitev ohranjenega zajema po popravilu razčlenjevalnika
+
+Za pregledan popravek parserja obstaja ločena pot v2. Na pregledanem novem
+commitu sproži `ponovi-dfb-regijo.yml` za vsako sezono: `liga` vključuje
+`de-`, `season` je `2025/26` ali `2026/27`, `capture_run` in
+`capture_commit` pa označujeta izvirni zajem. GitHub API potrdi dejanski
+izvirni posel, točen sezonski korak in uspešen prenos dokazov. Dovoljen je
+zaključen neuspešen korak razčlenjevanja, nikoli preklican, časovno prekinjen,
+zavrnjen ali transportno nepopoln zajem. Prvotni neuspeh ostane neuspeh.
+
+Preneseni ZIP se mora ujemati z dejanskim API `artifact.digest`, ID-jem,
+velikostjo, imenom, zagonom in commitom. Preveri se vsak izvorni SHA, URL in
+UTC ter SHA nespremenjenih bajtov `prenosi.json`. Ponovitev teče v Linux
+omrežnem imenskem prostoru brez omrežja, brez podatkovnih ključev in z
+zaprtim zemljevidom URL-jev. Manjkajoča stran ali zapisnik ustavi celotno
+ponovitev; ni novega zajema ali nadomestnega vira.
+
+Artefakt `dfb-regional-replay-<liga-brez-de>-<leto>` vsebuje `replay.json`,
+`summary.json`, `razpored.json` in `zapisniki.json`. Notranji dokaz veže
+izvirni zajem ter dejanski novi run/job/commit, SHA workflowa in parserja.
+Čas generiranja je ločen od izvirnih časov. ID in SHA novega artefakta se
+pridobita šele po uspešni objavi iz GitHub API; artefakt ne vsebuje lastnega
+krožnega SHA. Izvirni surovi artefakt ostane ločen in nespremenjen.
+
+Pri pripravi/uvozu/vklopu podaj nova uspešna replay zagona kot `archive_run`
+in `current_run`, novi pregledani commit pa kot `source_commit`. Obe sezoni
+morata uporabljati isto pot (v1 neposredni zajem ali v2 ponovitev). Vsak
+workflow neodvisno preveri oba dejanska posla, oba artefakta in vsak dokument,
+znova strogo razčleni celotni sezoni ter primerja rezultate ponovitve.
+Celotna izvedbena koda v2 mora biti identična pregledanemu commitu. Manifest
+v2 doda `lineage.capture` in `lineage.replay`; odobritev SHA in izvorna
+svežina 7 dni/12 ur ostaneta obvezni. Ponovitev ne osveži zajema.
+
+Migracija `20261017220000` ohrani prejšnjo funkcijo nespremenjeno v zasebni
+shemi `private_dfb_release` brez pravice izvedbe za javne ali servisno vlogo.
+Javni servisni RPC preveri v2 lineage in nato v isti transakciji uporabi
+iste statistične, cenovne, časovne in zaklepne pogoje. V1 ostane podprt;
+Nordostov RPC ostane ločen. Dejanska zaključnost tekočih tekem je dodatna
+izvorna zahteva: zelen replay ne dokazuje, da je bil zajem narejen po koncu
+tekme. Uradno manjkajoči ali protislovni podatki ostanejo blokada.

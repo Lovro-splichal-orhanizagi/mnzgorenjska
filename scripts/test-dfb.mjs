@@ -71,7 +71,7 @@ test('actual grouped goals retain every named score step at the published minute
   assert.equal(nastopi(b).find(p=>p.ime==='Djamal Ziane').goli,2)
   const original=actual('2426063'),changed=original.replace(/(<div class="m-MatchDetails-history-event-text-segment">)([\s\S]*?)(<\/div>)/g,(whole,start,body,end)=>body.includes('Djamal Ziane')?start+body.replace('2:2','1:2')+end:whole)
   assert.notEqual(changed,original)
-  assert.throws(()=>vZapisnik(changed),/zaporedje izidov/)
+  assert.throws(()=>vZapisnik(changed),/zaporedje izidov|goli se ne ujemajo/)
 })
 
 test('exact verified score-label defects preserve source facts and evidence; fully fixed sources need no correction', async () => {
