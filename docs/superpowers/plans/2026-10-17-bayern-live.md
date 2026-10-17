@@ -9,39 +9,41 @@
 
 ## Global Constraints
 
-- Preserve source clocks, scorers, side, final/half-time scores and all unaffected output; Nordost unchanged.
-- No guessed identities, generic middle-name stripping, report omission, schema/RPC/types changes, production keys, provider outreach or source-refusal bypass.
-- Alias only match2425105, Wackerhome side0, NoahShawnAgbaje to NoahAgbaje/profile374531. Pin exact complete semantic state and proof bytes; reject partial changes.
-- All new parsing/evidence dependencies included in source fingerprint; original capture hashes and UTC immutable; archive7days/current12hours freshness retained.
-- Only actual successful lineage and reviewed manifest can authorize Actions import, pricing/readiness and activation. No direct production writes.
+- Preserve source clocks, scorers, side, final/half-time scores, and all unaffected output; Nordost remains unchanged.
+- No guessed identities, generic middle-name stripping, report omission, schema/RPC/types changes, production keys, provider outreach, or source-refusal bypass.
+- Alias only match 2425105, Wacker home side 0, Noah Shawn Agbaje to Noah Agbaje/profile 374531. Pin the exact complete semantic state and proof bytes; reject partial changes.
+- Include all new parsing/evidence dependencies in the source fingerprint. Keep original capture hashes and UTC immutable; retain archive freshness of 7 days and current freshness of 12 hours.
+- Only actual successful lineage and a reviewed manifest can authorize Actions import, pricing/readiness, and activation. No direct production writes.
 
 ## Review Focus
 
-- Opposite-side, different-profile, partial name correction or altered evidence must reject alias.
+- Opposite-side, different-profile, partial name correction, or altered evidence must reject the alias.
 - Duplicate/missing/extra grouped icons and differing summary/timeline copies must reject.
 - Partial upstream score fixes or different metadata must reject instead of mixing corrections.
 - Canonical appearances/goals must use roster identity while original scorer and verified alias provenance survive replay.
-- Existing accepted reports and historical parser hashes remain unchanged despite new registry dependencies.
+- Existing accepted reports and historical parser hashes must remain unchanged despite new registry dependencies.
 
-### Task1: Four bounded report repairs
+### Task 1: Four bounded report repairs
 
-**Files:** modify scripts/viri/dfb.mjs, scripts/viri/dfb-korekcije.json, scripts/vklopi-dfb-regijo.mjs sourceFiles, package.json test entrypoints and docs/viri/nemcija.md. Create scripts/viri/dfb-aliasi.json, scripts/test-dfb-bayern-repairs.mjs, authentic source/proof fixtures and safe provenance under scripts/vzorci/. Adjust historical replay tests only as required, no weakening.
-**Interfaces:** existing vZapisnik/nastopi/release outputs remain compatible; new alias provenance original name/evidence preserved in parsed goal/explicit warnings. prstniOdtisVloge may gain optional league argument with unchanged Nordost default. Existing score registry interface remains.
+**Files:** Modify `scripts/viri/dfb.mjs`, `scripts/viri/dfb-korekcije.json`, `scripts/vklopi-dfb-regijo.mjs` sourceFiles, `package.json` test entrypoints, and `docs/viri/nemcija.md`. Create `scripts/viri/dfb-aliasi.json`, `scripts/test-dfb-bayern-repairs.mjs`, authentic source/proof fixtures, and safe provenance under `scripts/vzorci/`. Adjust historical replay tests only as required; do not weaken them.
 
-- [ ] Add authentic four-report tests plus ReviewFocus mutations; run meaningful failing RED.
-- [ ] Register six exact score-label fixes, one-to-one goal icons and bounded verified alias; retain all strict identity/lineup/keeper/event checks.
-- [ ] Run focused GREEN, covering source/release tests and full saved offline replay. Expect Bayern306/306archive+132/132current, unchanged all previous valid stats including Nordost; record new sourcefingerprint and immutable historicalhashes.
-- [ ] Commit bounded code/evidence/docs and report; independent task review plus fresh final review before merge.
+**Interfaces:** Existing vZapisnik/nastopi/release outputs remain compatible; new alias provenance (original name/evidence) is preserved in parsed goal/explicit warnings. `prstniOdtisVloge` may gain an optional league argument with unchanged Nordost default. Existing score-registry interface remains.
 
-### Task2: Reviewed operations and activation
+- [ ] Add authentic tests for the four reports plus Review Focus mutations; run meaningful failing RED tests.
+- [ ] Register six exact score-label fixes, one-to-one goal icons, and the bounded verified alias; retain all strict identity/lineup/keeper/event checks.
+- [ ] Run focused GREEN tests, covering source/release tests, and the full saved offline replay. Expect Bayern 306/306 archive + 132/132 current, unchanged prior valid stats including Nordost; record the new source fingerprint and immutable historical hashes.
+- [ ] Commit bounded code/evidence/docs and report; complete independent task review plus fresh final review before merge.
 
-**Files:** no product changes expected; local release ledger and verified Actions artifacts.
-**Interfaces:** existing ponovi-dfb-regijo.yml, vklop-dfb-regije.yml, uvoz-dfb-regije.yml and guarded service RPC.
+### Task 2: Reviewed operations and activation
 
-- [ ] Run checked HEAD CI and merge/deploy only after code/freshDB gates pass.
-- [ ] Run actual Actions read-only archive/current replays from39048972242 and39054476978 at their exact original capture commits; inspect successful strictcoverage and lineage artifacts.
-- [ ] Prepare exact release manifest without keys/database, review SHA and counts.
-- [ ] Guarded import using approved SHA, verify source-to-database equality, legal affordable roster, explicit keeper coverage, price spread and future first fantasy round.
-- [ ] Guarded activation with server_ready=true after existing DE endpoint/reminder deployment verification. Confirm public league, counts, firstfantasydeadline and nightly inclusion. No Nordost repricing.
+**Files:** No product changes expected; local release ledger and verified Actions artifacts.
 
-Self-review: spec requirements map to Task1 or operationalTask2; one parser writer; sourceFiles/registry/proof bytes shared interfaces reviewed together. Current source evidence is sufficient without user decisions; researcher and independent builder-check confirmed exact corrections and alias. Execution already authorized by user's repeated go-live request.
+**Interfaces:** Existing `ponovi-dfb-regijo.yml`, `vklop-dfb-regije.yml`, `uvoz-dfb-regije.yml`, and guarded service RPC.
+
+- [ ] Run checked HEAD CI and merge/deploy only after code/fresh DB gates pass.
+- [ ] Run actual Actions read-only archive/current replays from 39048972242 and 39054476978 at their exact original capture commits; inspect successful strict coverage and lineage artifacts.
+- [ ] Prepare the exact release manifest without keys/database; review SHA and counts.
+- [ ] Perform guarded import using the approved SHA; verify source-to-database equality, legal affordable roster, explicit keeper coverage, price spread, and future first fantasy round.
+- [ ] Perform guarded activation with `server_ready=true` after existing DE endpoint/reminder deployment verification. Confirm public league, counts, first fantasy deadline, and nightly inclusion. No Nordost repricing.
+
+Self-review: Spec requirements map to Task 1 or operational Task 2; one parser writer; sourceFiles/registry/proof bytes shared interfaces reviewed together. Current source evidence is sufficient without user decisions; researcher and independent builder-check confirmed exact corrections and alias. Execution is already authorized by the user’s repeated go-live request.
