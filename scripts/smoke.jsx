@@ -80,7 +80,7 @@ import { oceniPripravljenost, najcenejsiKader } from '../src/lib/pripravljenost'
 import { serijaCen, premik, crta, zadnjiPremiki } from '../src/lib/gibanjeCene'
 import { dopolniKader, predlagajKader } from '../src/lib/predlogKadra'
 import { velikostImena, velikostEkipe, imeZaPlakat, najboljsiTrije, navijacev, stavekNavijacev, skrajsajIme, prilagodiVelikost, ligaVTozilniku, velikostLige, imeDatoteke } from '../src/lib/plakat'
-import { readFileSync } from 'node:fs'
+import { readFileSync, existsSync } from 'node:fs'
 import { xmlEscape, urlset, sitemapIndex, nasloviLige, datotekeLige } from './sitemap.mjs'
 import { imeStrani } from '../src/lib/obiski'
 import { zDrzavo } from '../src/lib/naslov'
@@ -2308,7 +2308,7 @@ preveri(
   delete globalThis.localStorage
 
   // Deljenje: WhatsApp in Viber dobita celo besedilo, pravilno kodirano.
-  const { povezaveDeljenja, zgodbeKroga, opisZgodbe, besediloPregleda } = await import('../src/lib/miniLige.ts')
+  const { povezaveDeljenja, zgodbeKroga, opisZgodbe, besediloPregleda, jeSaljiva } = await import('../src/lib/miniLige.ts')
   const deljenje = povezaveDeljenja(vabilo)
   preveri('mini: WhatsApp povezava nosi besedilo vabila',
     deljenje.whatsapp.startsWith('https://wa.me/?text=') &&
@@ -2331,11 +2331,41 @@ preveri(
     adut: { ekipa_id: 2, igralec_id: 15, igralec: 'Peti Adut', tocke: 4 },
   }
   const zgodbe = zgodbeKroga(pregled)
-  preveri('pregled: vse zgodbe v bralnem vrstnem redu',
-    zgodbe.map((z) => z.vrsta).join(',') === 'manager,kapetan,adut,skok,padec,klop,zlica',
+  // Dve ekipi: šaljivih nagrad ni (vsaj 4 ekipe), pohvale ostanejo.
+  preveri('pregled: med dvema ekipama le pohvale',
+    zgodbe.map((z) => z.vrsta).join(',') === 'manager,kapetan,adut,skok',
     zgodbe.map((z) => z.vrsta).join(','))
-  preveri('pregled: manager je A, zlica B',
-    zgodbe[0].ekipa === 'Pregled A' && zgodbe.at(-1).ekipa === 'Pregled B' && zgodbe.at(-1).tocke === 10)
+  preveri('pregled: manager je A', zgodbe[0].ekipa === 'Pregled A')
+
+  // Šaljive nagrade: pravila prijaznosti (docs/podatkovni-model.md).
+  const stiri = {
+    ...pregled, ekip: 4,
+    vrstice: [
+      ...pregled.vrstice,
+      { ekipa_id: 3, ekipa: 'Pregled C', lastnik: 'Cene', tocke: 8, mesto: 3, premik: 0 },
+      { ekipa_id: 4, ekipa: 'Pregled D', lastnik: 'Dora', tocke: 4, mesto: 4, premik: 0 },
+    ],
+  }
+  const vse = zgodbeKroga(stiri)
+  preveri('sale: med 4 ekipami vse nagrade v bralnem vrstnem redu',
+    vse.map((z) => z.vrsta).join(',') === 'manager,kapetan,adut,skok,padec,klop,zlica', vse.map((z) => z.vrsta).join(','))
+  preveri('sale: zlica gre zadnjemu', vse.at(-1).ekipa === 'Pregled D' && vse.at(-1).tocke === 4)
+  const tri = zgodbeKroga({ ...stiri, vrstice: stiri.vrstice.slice(0, 3) })
+  preveri('sale: pod 4 ekipami ni zlice, padca ne klopi',
+    !tri.some((z) => jeSaljiva(z.vrsta)) && tri.some((z) => z.vrsta === 'manager'), tri.map((z) => z.vrsta).join(','))
+  const izklop = zgodbeKroga({ ...stiri, saljive: false })
+  preveri('sale: lastnik jih izklopi, pohvale ostanejo',
+    izklop.map((z) => z.vrsta).join(',') === 'manager,kapetan,adut,skok', izklop.map((z) => z.vrsta).join(','))
+  const ponovno = zgodbeKroga({ ...stiri, zadnji_prej: [4] })
+  preveri('sale: ista ekipa ne dobi zlice dva kroga zapored (dobi spodbudo)',
+    !ponovno.some((z) => z.vrsta === 'zlica') && ponovno.at(-1).vrsta === 'spodbuda' && ponovno.at(-1).ekipa === 'Pregled D'
+      && !jeSaljiva('spodbuda'))
+  preveri('sale: zlica drugi ekipi, ce je bila prej zadnja druga',
+    zgodbeKroga({ ...stiri, zadnji_prej: [3] }).at(-1).vrsta === 'zlica')
+  preveri('sale: spodbuda ima besedilo', opisZgodbe(ponovno.at(-1)).includes('Pregled D'), opisZgodbe(ponovno.at(-1)))
+  // Šala nikoli o resničnem igralcu: igralec se pojavi le v pohvalah.
+  preveri('sale: igralec je omenjen le v kapetanu in adutu',
+    vse.filter((z) => z.igralec).every((z) => z.vrsta === 'kapetan' || z.vrsta === 'adut'))
   preveri('pregled: kapetan pove tocke z mnoziteljem',
     opisZgodbe(zgodbe[1]).includes('30 točk') && opisZgodbe(zgodbe[1]).includes('Kapetan Kovač'),
     opisZgodbe(zgodbe[1]))
@@ -2344,8 +2374,8 @@ preveri(
     opisZgodbe({ vrsta: 'skok', ekipa: 'X', tocke: 0, mest: 2, mesto: 1 }))
   const sam = zgodbeKroga({ ...pregled, vrstice: [pregled.vrstice[0]], adut: null })
   preveri('pregled: ena ekipa nima zmagovalca ne zlice',
-    sam.map((z) => z.vrsta).join(',') === 'kapetan,klop', sam.map((z) => z.vrsta).join(','))
-  const izenaceni = zgodbeKroga({ ...pregled, vrstice: pregled.vrstice.map((v) => ({ ...v, tocke: 5, premik: 0 })) })
+    sam.map((z) => z.vrsta).join(',') === 'kapetan', sam.map((z) => z.vrsta).join(','))
+  const izenaceni = zgodbeKroga({ ...stiri, vrstice: stiri.vrstice.map((v) => ({ ...v, tocke: 5, premik: 0 })) })
   preveri('pregled: pri izenacenju ni lesene zlice ne premikov',
     !izenaceni.some((z) => ['zlica', 'skok', 'padec'].includes(z.vrsta)))
   preveri('pregled: prazen pregled nima zgodb',
@@ -3254,6 +3284,79 @@ preveri(
   const brezMesta = postaviPregled({ ...osnova, mesto: null, premik: null, kapetan: null, najboljsi: null }, meri)
   preveri('pregled: brez mesta in igralcev ostane slika cela', !brezMesta.some((e) => e.id === 'mesto' || e.id === 'kapetan.ime') && brezMesta.some((e) => e.id === 'tocke'))
   preveri('pregled: ime datoteke', imeDatotekePregleda('Šenčurski Orli!', 5) === 'slff-sencurski-orli-5-krog.png', imeDatotekePregleda('Šenčurski Orli!', 5))
+
+  // Slike nagrad mini lige: poze maskote, mladi brez piva, nič s slike.
+  const { pozaNagrade, POZE_S_PIVOM, postaviNagrado, postaviCelPregled, imeDatotekeNagrade, MASKOTA_NAGRADE } = await import('../src/lib/slikaNagrade.ts')
+  const { POZE, S_PIJACO, svgPoze } = await import('./maskota-poze.mjs')
+  const vrste = ['manager', 'kapetan', 'adut', 'skok', 'padec', 'klop', 'zlica', 'spodbuda', 'pregled']
+  const datotekaPoze = (url) => new URL(`../public${url}`, import.meta.url)
+  preveri('maskota: seznam poz s pivom je isti v vmesniku in risarju', [...POZE_S_PIVOM].sort().join() === [...S_PIJACO].sort().join())
+  const mladim = vrste.map((v) => readFileSync(datotekaPoze(pozaNagrade(v, true)), 'utf8'))
+  preveri('maskota: mladinska mini liga nikoli ne dobi piva', mladim.every((svg) => !svg.includes('data-rekvizit="pivo"')))
+  preveri('maskota: poze s pivom imajo pivo, mladinska razlicica sok',
+    S_PIJACO.every((p) => readFileSync(datotekaPoze(`/logo/maskota/${p}.svg`), 'utf8').includes('data-rekvizit="pivo"')
+      && readFileSync(datotekaPoze(`/logo/maskota/${p}-mladi.svg`), 'utf8').includes('data-rekvizit="sok"')))
+  preveri('maskota: nobena poza nima cigarete',
+    Object.keys(POZE).every((p) => !/cigaret|dim/i.test(svgPoze(p, false)) && !/cigaret|dim/i.test(svgPoze(p, true))))
+  preveri('maskota: datoteke v public so iz risarja (node scripts/maskota-poze.mjs)',
+    Object.keys(POZE).every((p) => readFileSync(datotekaPoze(`/logo/maskota/${p}.svg`), 'utf8') === svgPoze(p, false))
+      && S_PIJACO.every((p) => readFileSync(datotekaPoze(`/logo/maskota/${p}-mladi.svg`), 'utf8') === svgPoze(p, true)))
+  preveri('maskota: vsaka nagrada ima pozo', vrste.every((v) => existsSync(datotekaPoze(pozaNagrade(v, false)))))
+
+  const { zgodbeKroga: zgodbeZa } = await import('../src/lib/miniLige.ts')
+  const vrsticaN = (id, ekipa, tocke, mesto, premik) => ({ ekipa_id: id, ekipa, lastnik: null, tocke, mesto, premik })
+  const krogN = {
+    sezona: '2098/99', krog: 2, krogi: [2, 1], ekip: 4, saljive: true,
+    vrstice: [vrsticaN(1, 'Orli', 32, 1, 1), vrsticaN(2, 'Sokoli', 10, 2, -1), vrsticaN(3, 'Vrane', 8, 3, 0), vrsticaN(4, 'Golobi', 4, 4, 0)],
+    kapetan: { ekipa_id: 1, igralec_id: 11, igralec: 'Kapetan Kovač', tocke: 10, skupaj: 30 },
+    klop: { ekipa_id: 1, tocke: 7 },
+    adut: { ekipa_id: 2, igralec_id: 15, igralec: 'Peti Adut', tocke: 4 },
+  }
+  const vse = zgodbeZa(krogN)
+  const ponovno = zgodbeZa({ ...krogN, zadnji_prej: [4] })
+  preveri('nagrada: primer ima vseh 7 nagrad in spodbudo', vse.length === 7 && ponovno.at(-1).vrsta === 'spodbuda')
+  const nagrade = [
+    ...vse, ...ponovno.slice(-1),
+    { vrsta: 'kapetan', ekipaId: 9, ekipa: 'FC Najdaljše ime ekipe v celi Sloveniji United Šenčur', lastnik: null, tocke: 9, skupaj: 18,
+      igralec: 'Isaac Raphaël Tshima Omombo Tshipamba-Mulowayi', igralecId: 1 },
+    { vrsta: 'zlica', ekipaId: 8, ekipa: 'Ձախ թևի Արծիվներ Երևան', lastnik: null, tocke: 3 },
+    { vrsta: 'padec', ekipaId: 7, ekipa: 'Шахтарські Друзі з Полтави', lastnik: null, tocke: 3, mest: 12, mesto: 14 },
+  ]
+  for (const z of nagrade) {
+    const el = postaviNagrado({ zgodba: z, liga: 'Stredoslovenský futbalový zväz — prijatelji iz službe in sosedje', krog: 12, mladinska: false }, meri)
+    const m = el.find((e) => e.vrsta === 'maskota')
+    const besedila = el.filter((e) => e.vrsta === 'besedilo')
+    const opis = `${z.vrsta} ${z.ekipa.slice(0, 12)}`
+    preveri(`nagrada (${opis}): vse bistveno v kvadratu`,
+      el.filter((e) => !e.samoPokoncno).every((e) => e.y > KVADRAT.y + 40 && e.y + (e.h ?? 0) <= KVADRAT.y + KVADRAT.visina))
+    const sirina = (e) => meri(e.besedilo, e.px, e.teza)
+    const levoX = (e) => (e.poravnava === 'left' ? e.x : e.poravnava === 'right' ? e.x - sirina(e) : e.x - sirina(e) / 2)
+    preveri(`nagrada (${opis}): besedilo ne sega cez rob`,
+      besedila.every((e) => levoX(e) >= ROB_P - 10 && levoX(e) + sirina(e) <= SIRINA_P - ROB_P + 10),
+      besedila.filter((e) => levoX(e) + sirina(e) > SIRINA_P - ROB_P + 10).map((e) => e.id).join())
+    preveri(`nagrada (${opis}): besedilo se ne zaleti v maskoto`,
+      besedila.filter((e) => !e.samoPokoncno && e.y > m.y + 40 && e.y - e.px < m.y + m.h).every((e) => levoX(e) + sirina(e) <= m.x + 12),
+      besedila.filter((e) => !e.samoPokoncno && e.y > m.y + 40 && levoX(e) + sirina(e) > m.x + 12).map((e) => e.id).join())
+    preveri(`nagrada (${opis}): naslov, ekipa, sala, slff.eu`,
+      ['naslov', 'ekipa', 'vrednost', 'sala.0', 'splet'].every((id) => besedila.some((e) => e.id === id)))
+  }
+  preveri('nagrada: maskota je velika', MASKOTA_NAGRADE.w >= 400)
+  const mladaSlika = postaviNagrado({ zgodba: vse[0], liga: 'U19', krog: 1, mladinska: true }, meri)
+  preveri('nagrada: mladinska slika ima sok, ne piva', mladaSlika.find((e) => e.vrsta === 'maskota').url.endsWith('manager-mladi.svg'))
+  preveri('nagrada: slika nima grba s cigareto', ![...mladaSlika, ...postaviCelPregled({ zgodbe: vse, liga: 'X', krog: 1, mladinska: false }, meri)].some((e) => e.vrsta === 'znak'))
+  const cel = postaviCelPregled({ zgodbe: [...vse, ...nagrade], liga: 'Bratje', krog: 3, mladinska: false }, meri)
+  const celB = cel.filter((e) => e.vrsta === 'besedilo')
+  preveri('pregled slika: najvec 8 vrstic, vse v kvadratu',
+    celB.filter((e) => e.id.endsWith('.glavno')).length === 8 && cel.filter((e) => !e.samoPokoncno).every((e) => e.y > KVADRAT.y + 40 && e.y < KVADRAT.y + KVADRAT.visina))
+  preveri('pregled slika: ime se ne zaleti v stevilko',
+    celB.filter((e) => e.id.endsWith('.glavno')).every((g) => {
+      const v = celB.find((e) => e.id === g.id.replace('glavno', 'vrednost'))
+      return g.x + meri(g.besedilo, g.px, g.teza) < v.x - meri(v.besedilo, v.px, v.teza)
+    }))
+  preveri('nagrada: ime datoteke', imeDatotekeNagrade('Bratje Šenčur', 7, 'zlica') === 'slff-bratje-sencur-7-krog-zlica.png')
+  // Samodejne objave ne berejo pregleda mini lig (šaljive nagrade izbere človek).
+  const objave = readFileSync(new URL('./objave.mjs', import.meta.url), 'utf8')
+  preveri('objave: brez nagrad mini lig', !/tedenski_pregled_mini_lige|zgodbeKroga|slikaNagrade|mini_lig/.test(objave))
 }
 
 // --- plakat za objavo ------------------------------------------------------

@@ -5,12 +5,15 @@ import { formatirajTocke } from '../lib/pomozno'
 import {
   besediloPregleda,
   deliBesedilo,
+  jeSaljiva,
   naslovZgodbe,
   opisZgodbe,
   zgodbeKroga,
   type IzidDeljenja,
   type TedenskiPregled as Pregled,
+  type VrstaZgodbe,
 } from '../lib/miniLige'
+import SlikaNagrade from './SlikaNagrade'
 import { t } from '../i18n'
 import { izvor } from '../lib/platforma'
 
@@ -25,6 +28,9 @@ export default function TedenskiPregled({ ligaId, ime, koda }: { ligaId: number;
   const [krog, setKrog] = useState<number | null>(null)
   const [pregled, setPregled] = useState<Pregled | null | undefined>(undefined)
   const [izid, setIzid] = useState<IzidDeljenja | null>(null)
+  // Odprta slika: ena nagrada ali cel pregled. Hkrati le ena, ker se slika
+  // izriše vnaprej (iOS) in osem platen naenkrat bi telefon upočasnilo.
+  const [slika, setSlika] = useState<VrstaZgodbe | 'pregled' | null>(null)
 
   // Nova liga začne pri zadnjem krogu.
   useEffect(() => setKrog(null), [ligaId])
@@ -33,6 +39,7 @@ export default function TedenskiPregled({ ligaId, ime, koda }: { ligaId: number;
     let veljavno = true
     setPregled(undefined)
     setIzid(null)
+    setSlika(null)
     supabase
       .rpc('tedenski_pregled_mini_lige', { p_liga: ligaId, p_krog: krog ?? undefined })
       .then(({ data, error }) => {
@@ -97,18 +104,26 @@ export default function TedenskiPregled({ ligaId, ime, koda }: { ligaId: number;
             // pove le barva naslova.
             <ul className="divide-y divide-white/10 sm:grid sm:grid-cols-2 sm:gap-x-6 sm:divide-y-0">
               {zgodbe.map((z) => (
-                <li key={z.vrsta} className="py-2">
-                  <div
-                    className={`text-xs font-bold uppercase tracking-wide ${
-                      z.vrsta === 'zlica' || z.vrsta === 'padec' || z.vrsta === 'klop'
-                        ? 'text-rose-300'
-                        : 'text-gnl-300'
-                    }`}
-                  >
-                    {naslovZgodbe(z)}
+                <li key={z.vrsta} className="flex items-start gap-2 py-2">
+                  <div className="min-w-0 flex-1">
+                    <div
+                      className={`text-xs font-bold uppercase tracking-wide ${
+                        jeSaljiva(z.vrsta) ? 'text-rose-300' : 'text-gnl-300'
+                      }`}
+                    >
+                      {naslovZgodbe(z)}
+                    </div>
+                    <p className="mt-0.5 text-sm text-slate-100">{opisZgodbe(z)}</p>
+                    {z.lastnik && <p className="mt-0.5 truncate text-xs text-slate-500">{z.lastnik}</p>}
                   </div>
-                  <p className="mt-0.5 text-sm text-slate-100">{opisZgodbe(z)}</p>
-                  {z.lastnik && <p className="mt-0.5 truncate text-xs text-slate-500">{z.lastnik}</p>}
+                  <button
+                    onClick={() => setSlika((prej) => (prej === z.vrsta ? null : z.vrsta))}
+                    aria-pressed={slika === z.vrsta}
+                    aria-label={t('lestvice.pregled.slikaNagrade', { nagrada: naslovZgodbe(z) })}
+                    className="shrink-0 rounded-md bg-white/5 px-2 py-1.5 text-xs font-semibold text-slate-300 hover:text-white aria-pressed:bg-gnl-500/20 aria-pressed:text-gnl-200"
+                  >
+                    {t('lestvice.pregled.slika')}
+                  </button>
                 </li>
               ))}
             </ul>
@@ -142,6 +157,17 @@ export default function TedenskiPregled({ ligaId, ime, koda }: { ligaId: number;
             </details>
           )}
 
+          {slika && pregled.krog != null && (
+            <SlikaNagrade
+              key={`${pregled.krog}-${slika}`}
+              koda={koda}
+              onZapri={() => setSlika(null)}
+              {...(slika === 'pregled'
+                ? { pregled: { zgodbe, liga: ime, krog: pregled.krog, mladinska: !!pregled.mladinska } }
+                : { nagrada: { zgodba: zgodbe.find((z) => z.vrsta === slika)!, liga: ime, krog: pregled.krog, mladinska: !!pregled.mladinska } })}
+            />
+          )}
+
           {zgodbe.length > 0 && (
             <div className="flex flex-wrap items-center gap-2">
               <button
@@ -156,6 +182,13 @@ export default function TedenskiPregled({ ligaId, ime, koda }: { ligaId: number;
                 className="gumb-glavni text-sm"
               >
                 {t('lestvice.pregled.deliPregled')}
+              </button>
+              <button
+                onClick={() => setSlika((prej) => (prej === 'pregled' ? null : 'pregled'))}
+                aria-pressed={slika === 'pregled'}
+                className="gumb-tih text-sm"
+              >
+                {t('lestvice.pregled.slikaVse')}
               </button>
               {izid && izid !== 'preklicano' && (
                 <span className={`text-sm ${izid === 'neuspelo' ? 'text-rose-400' : 'text-gnl-300'}`} role="status">

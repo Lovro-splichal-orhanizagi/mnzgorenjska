@@ -597,6 +597,11 @@ igralce po isti ceni in prvi teden ne bi imel igre.
 - V mini ligo se vstopi samo prek `pridruzi_mini_ligi` (s kodo),
   `pridruzi_javni_mini_ligi` (javna liga, ekipa iz njene lige) ali
   `ustvari_mini_ligo`; neposrednega vpisa v `mini_liga_clani` ni.
+- **Nagrade tedenskega pregleda mini lig** imajo pravila prijaznosti (šala le na
+  račun ekipe ali maskote, nikoli resničnega igralca; šaljive le od 4 ekip, ne
+  dvakrat zapored, lastnik jih izklopi; mladim brez piva; deli le človek) —
+  preberi jih v `docs/podatkovni-model.md` (*Nagrade tedenskega pregleda*),
+  preden dodaš nagrado, niz ali pozo maskote.
 - Mutacijski RPC-ji so servisni. Admin stran kliče `admin_preracunaj_krog`,
   ki izrecno preveri `is_admin()`. Novi javni RPC potrebuje izrecen `grant execute`;
   privzeto funkcije niso več odprte vlogama `anon` in `authenticated`.

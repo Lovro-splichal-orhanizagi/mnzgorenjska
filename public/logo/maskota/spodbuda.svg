@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-130 -170 1060 1190" width="1060" height="1190"><g transform="rotate(0 306 828)"><rect x="268" y="828" width="76" height="66" rx="10" fill="#f2e8d5" stroke="#16211c" stroke-width="18"/>
+     <rect x="228" y="884" width="160" height="80" rx="40" fill="#16211c"/>
+     <path d="M272 928 l26 -14 M286 938 l26 -14" stroke="#f2e8d5" stroke-width="7" stroke-linecap="round"/></g><g transform="rotate(0 494 828)"><rect x="456" y="828" width="76" height="66" rx="10" fill="#f2e8d5" stroke="#16211c" stroke-width="18"/>
+     <rect x="416" y="884" width="160" height="80" rx="40" fill="#16211c"/>
+     <path d="M460 928 l26 -14 M474 938 l26 -14" stroke="#f2e8d5" stroke-width="7" stroke-linecap="round"/></g><path d="M222 690 L598 690 L582 812 Q578 834 552 834 L446 834 Q424 834 420 812 L410 770 L400 812 Q396 834 374 834 L268 834 Q242 834 238 812 Z" fill="#16211c" stroke="#16211c" stroke-width="18" stroke-linejoin="round" stroke-linecap="round" /><clipPath id="trebuh"><ellipse cx="400" cy="526" rx="234" ry="204"/></clipPath>
+    <ellipse cx="400" cy="526" rx="234" ry="204" fill="#2f6b4f"/>
+    <g clip-path="url(#trebuh)"><rect x="150" y="382" width="500" height="56" fill="#f2e8d5"/><rect x="150" y="500" width="500" height="58" fill="#f2e8d5"/><rect x="150" y="618" width="500" height="58" fill="#f2e8d5"/></g>
+    <ellipse cx="400" cy="526" rx="234" ry="204" fill="none" stroke="#16211c" stroke-width="18"/><rect x="352" y="300" width="96" height="58" rx="6" fill="#e8b58c" stroke="#16211c" stroke-width="18"/><circle cx="400" cy="182" r="124" fill="#e8b58c" stroke="#16211c" stroke-width="18"/>
+    <path d="M268 192 A132 132 0 0 1 532 192 Q400 98 268 192 Z" fill="#16211c"/>
+    <circle cx="351" cy="191" r="16" fill="#16211c"/><circle cx="447" cy="191" r="16" fill="#16211c"/>
+    <path d="M380 278 Q400 294 420 278" fill="none" stroke="#16211c" stroke-width="8" stroke-linecap="round"/>
+    <path d="M400 244 C382 222 338 218 312 236 C322 266 362 284 400 262 C438 284 478 266 488 236 C462 218 418 222 400 244 Z" fill="#16211c"/><path d="M230 430 L120 470 L80 340" fill="none" stroke="#16211c" stroke-width="102" stroke-linecap="round" stroke-linejoin="round"/><path d="M120 470 L80 340" fill="none" stroke="#e8b58c" stroke-width="66" stroke-linecap="round" stroke-linejoin="round"/><path d="M230 430 L120 470" fill="none" stroke="#16211c" stroke-width="118" stroke-linecap="round" stroke-linejoin="round"/><path d="M230 430 L120 470" fill="none" stroke="#2f6b4f" stroke-width="82" stroke-linecap="round" stroke-linejoin="round"/><g data-rekvizit="pivo" transform="translate(80 340) rotate(-6)">
+    <path d="M60 -50 Q118 -50 118 2 Q118 50 60 50" fill="none" stroke="#16211c" stroke-width="30"/>
+    <rect x="-74" y="-92" width="148" height="160" rx="14" fill="#e0a32e" stroke="#16211c" stroke-width="18"/>
+    <rect x="-44" y="-58" width="16" height="96" rx="8" fill="#f3c766"/>
+    <path d="M-80 -86 Q-82 -128 -46 -124 Q-30 -150 0 -132 Q24 -152 48 -128 Q86 -132 80 -86 Z" fill="#fbf5e6" stroke="#16211c" stroke-width="18" stroke-linejoin="round"/>
+  </g><path d="M572 420 L690 470 L720 330" fill="none" stroke="#16211c" stroke-width="102" stroke-linecap="round" stroke-linejoin="round"/><path d="M690 470 L720 330" fill="none" stroke="#e8b58c" stroke-width="66" stroke-linecap="round" stroke-linejoin="round"/><path d="M572 420 L690 470" fill="none" stroke="#16211c" stroke-width="118" stroke-linecap="round" stroke-linejoin="round"/><path d="M572 420 L690 470" fill="none" stroke="#2f6b4f" stroke-width="82" stroke-linecap="round" stroke-linejoin="round"/><path d="M716 300 L716 236" stroke="#16211c" stroke-width="54" stroke-linecap="round"/>
+     <path d="M716 300 L716 236" stroke="#e8b58c" stroke-width="24" stroke-linecap="round"/>
+     <rect x="672" y="290" width="92" height="84" rx="30" fill="#e8b58c" stroke="#16211c" stroke-width="18"/>
+     <path d="M716 300 L716 252" stroke="#e8b58c" stroke-width="24" stroke-linecap="round"/>
+     <path d="M690 320 h50 M690 344 h50" stroke="#16211c" stroke-width="7" stroke-linecap="round"/></svg>

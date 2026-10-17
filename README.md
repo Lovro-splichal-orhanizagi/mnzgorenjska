@@ -29,7 +29,8 @@ Pri **5 glasovih** za istega kandidata se podatek potrdi in začne šteti.
 - **Lestvica** — skupna razvrstitev vseh fantasy ekip lige.
 - **Mini lige** — zasebna lestvica med znanci (tudi čez lige). Povabilo je povezava `/l/KODA`
   (deljenje prek sistemskega lista, WhatsAppa, Viberja ali kopiranja); po vsakem končanem
-  krogu **tedenski pregled**: manager kroga, kapetan, skriti adut, dvigalo, klop in lesena žlica.
+  krogu **tedenski pregled**: manager kroga, kapetan, skriti adut, dvigalo, klop in lesena žlica,
+  vsaka nagrada tudi kot slika z maskoto. Šaljive nagrade le med vsaj 4 ekipami; lastnik jih lahko izklopi.
   Ustvarjalec lahko mini ligo objavi v eni ligi (**javna mini liga**, do 3 na ligo, kratek opis):
   drugi jo najdejo na strani Mini lige in se pridružijo brez kode; tujci vidijo le lestvico
   (`/mini-leagues/:id`), prijava lige gre v Administracijo.
