@@ -300,9 +300,9 @@ scout.slff.eu streže ta commit — a le ob spremenljivki repozitorija
 1. **DNS**: zapis `scout` v Cloudflare, enak kot `slff.eu`, Proxied. Doda ga
    Claude v lastnikovem prijavljenem brskalniku, šele po lastnikovi izrecni
    potrditvi. Origin certifikat mora pokriti `*.slff.eu`.
-2. **Mapi** `/srv/slff-scout` in `/srv/slff-scout/releases`, obe lastnik
-   `deploy` (sicer rsync ali preklop `current` v CI
-   pade).
+2. **Mapi** `/srv/slff-scout` in `/srv/slff-scout/releases`, obe v lasti
+   uporabnika `deploy` (sicer rsync ali preklop `current` v CI pade z
+   `Permission denied`).
 3. **Caddy blok** `scout.slff.eu` iz `scripts/hetzner/Caddyfile` (Caddyfile
    ni v CI): `caddy validate`, kopija stare, `systemctl reload caddy`. Cela
    stran je `noindex` (orodje za prijavljene klube), SPA le za poti brez pike.
@@ -314,11 +314,14 @@ scout.slff.eu streže ta commit — a le ob spremenljivki repozitorija
 5. `SCOUT_OBJAVA=1` (`gh variable set SCOUT_OBJAVA --body 1`): aplikacija je
    dosegljiva, a še ne oznanjena; plačilo javi napako, dokler ni Stripa.
 6. **Ročni preizkus v testnem načinu Stripe — LOKALNO**, ne na produkciji.
-   Testni webhook računa SLFF kaže na `api.slff.eu`, zato isti dogodek dobi
-   tudi produkcija: klub brez naročnine tam → `ni_narocnine`, takojšen preklic
-   in Discord "vrni denar" (pričakovano, prezri). Lokalni preizkus naj zato
-   preveri le Checkout, zapis naročnine in portal, ne preklica. Do 17. 10. 2026
-   je ves Stripe SLFF (tudi preverjeni igralci) v testnem načinu.
+   Končna točka testnega webhooka računa SLFF je
+   `https://api.slff.eu/functions/v1/stripe-webhook`, zato isti dogodek dobi
+   tudi produkcija: klub brez naročnine tam → `ni_narocnine`, naročnina se
+   prekliče, Discord "vrni denar" (pričakovano, prezri). Lokalni preizkus naj
+   zato preveri le Checkout, zapis naročnine in portal, ne preklica. Zaenkrat
+   (17. 10. 2026) je ves Stripe SLFF, tudi preverjeni igralci, v testnem
+   načinu in produkcijski ključ je že testni; ob prehodu v živi način ta
+   opozorila odpadejo.
    Produkcijski `STRIPE_SECRET_KEY` je skupen s plačili preverjenih igralcev,
    zato ga **nikoli ne zamenjaj s testnim**. Lokalni sklad (`npx supabase
    start`), `npx supabase functions serve --no-verify-jwt --env-file <datoteka>`
