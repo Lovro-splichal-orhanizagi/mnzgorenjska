@@ -1,0 +1,1648 @@
+[
+  {
+    "file": "bayern-archive.html",
+    "sha256": "febac7731faa14c0f9e1c7f7e701b79f8fc910594dd753fe041e49de598558ef",
+    "capturedAt": "2026-10-17T08:55:13.507933+00:00",
+    "canonical": "https://datencenter.dfb.de/competitions/regionalliga-bayern/seasons/2025-2026/teams/bayern-muenchen-ii",
+    "title": "FC Bayern München II, Regionalliga Bayern 2025/26 - DFB Datencenter",
+    "teams": [
+      "1-fc-nuernberg-ii",
+      "DJK%20Vilzing",
+      "bayern-muenchen-ii",
+      "fc-augsburg-ii",
+      "fc-memmingen",
+      "fc-wuerzburger-kickers",
+      "fv-illertissen",
+      "spvgg-ansbach",
+      "spvgg-greuther-fuerth-ii",
+      "spvgg-hankofen-hailing",
+      "spvgg-oberfranken-bayreuth",
+      "spvgg-unterhaching",
+      "sv-wacker-burghausen",
+      "tsv-aubstadt",
+      "tsv-buchbach",
+      "tsv-schwaben-augsburg",
+      "vfb-eichstaett",
+      "viktoria-aschaffenburg"
+    ],
+    "schedule": [
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/1-spieltag/fc-augsburg-ii-bayern-muenchen-ii-2401581",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/2-spieltag/bayern-muenchen-ii-tsv-buchbach-2401584",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/3-spieltag/bayern-muenchen-ii-tsv-schwaben-augsburg-2401594",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/8-spieltag/spvgg-unterhaching-bayern-muenchen-ii-2401637",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/5-spieltag/bayern-muenchen-ii-spvgg-oberfranken-bayreuth-2401612",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/6-spieltag/fc-memmingen-bayern-muenchen-ii-2401619",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/4-spieltag/spvgg-hankofen-hailing-bayern-muenchen-ii-2401602",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/10-spieltag/djk-vilzing-bayern-muenchen-ii-2401661",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/11-spieltag/bayern-muenchen-ii-fc-wuerzburger-kickers-2401664",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/12-spieltag/spvgg-ansbach-bayern-muenchen-ii-2401672",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/14-spieltag/tsv-aubstadt-bayern-muenchen-ii-2401693",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/15-spieltag/bayern-muenchen-ii-fv-illertissen-2401700",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/7-spieltag/bayern-muenchen-ii-spvgg-greuther-fuerth-ii-2401631",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/16-spieltag/vfb-eichstaett-bayern-muenchen-ii-2401714",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/17-spieltag/bayern-muenchen-ii-sv-viktoria-aschaffenburg-2401722",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/19-spieltag/tsv-buchbach-bayern-muenchen-ii-2401738",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/20-spieltag/tsv-schwaben-augsburg-bayern-muenchen-ii-2401752",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/13-spieltag/bayern-muenchen-ii-1-fc-nuernberg-ii-2401682",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/9-spieltag/bayern-muenchen-ii-sv-wacker-burghausen-2401647",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/25-spieltag/bayern-muenchen-ii-spvgg-unterhaching-2401789",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/21-spieltag/bayern-muenchen-ii-spvgg-hankofen-hailing-2401756",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/22-spieltag/spvgg-oberfranken-bayreuth-bayern-muenchen-ii-2401767",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/18-spieltag/bayern-muenchen-ii-fc-augsburg-ii-2401729",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/23-spieltag/bayern-muenchen-ii-fc-memmingen-2401775",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/24-spieltag/spvgg-greuther-fuerth-ii-bayern-muenchen-ii-2401786",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/26-spieltag/sv-wacker-burghausen-bayern-muenchen-ii-2401799",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/27-spieltag/bayern-muenchen-ii-djk-vilzing-2401808",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/28-spieltag/fc-wuerzburger-kickers-bayern-muenchen-ii-2401819",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/29-spieltag/bayern-muenchen-ii-spvgg-ansbach-2401828",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/30-spieltag/1-fc-nuernberg-ii-bayern-muenchen-ii-2401834",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/31-spieltag/bayern-muenchen-ii-tsv-aubstadt-2401844",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/32-spieltag/fv-illertissen-bayern-muenchen-ii-2401853",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/33-spieltag/bayern-muenchen-ii-vfb-eichstaett-2401866",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/34-spieltag/sv-viktoria-aschaffenburg-bayern-muenchen-ii-2401875"
+    ],
+    "rounds": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34
+    ]
+  },
+  {
+    "file": "bayern-current.html",
+    "sha256": "829bc42a36bbe2045b09ba943e790b966da6643f24caaf3d81385396aa888aee",
+    "capturedAt": "2026-10-17T08:55:08.295507+00:00",
+    "canonical": "https://datencenter.dfb.de/competitions/regionalliga-bayern/seasons/2026-2027/teams/bayern-muenchen-ii",
+    "title": "FC Bayern München II, Regionalliga Bayern 2026/27 - DFB Datencenter",
+    "teams": [
+      "1-fc-nuernberg-ii",
+      "1-fc-schweinfurt-05",
+      "DJK%20Vilzing",
+      "bayern-muenchen-ii",
+      "fc-augsburg-ii",
+      "fc-memmingen",
+      "fv-illertissen",
+      "sc-eltersdorf",
+      "spvgg-ansbach",
+      "spvgg-greuther-fuerth-ii",
+      "spvgg-oberfranken-bayreuth",
+      "spvgg-unterhaching",
+      "sv-wacker-burghausen",
+      "tsv-1860-muenchen",
+      "tsv-aubstadt",
+      "tsv-buchbach",
+      "tsv-landsberg",
+      "tsv-schwaben-augsburg",
+      "vfb-eichstaett"
+    ],
+    "schedule": [
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/1-spieltag/fc-bayern-muenchen-ii-sc-eltersdorf-2425024",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/2-spieltag/sv-wacker-burghausen-fc-bayern-muenchen-ii-2425032",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/3-spieltag/fc-bayern-muenchen-ii-1-fc-schweinfurt-05-2425045",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/5-spieltag/fc-bayern-muenchen-ii-fc-memmingen-2425061",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/6-spieltag/fv-illertissen-fc-bayern-muenchen-ii-2425069",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/7-spieltag/fc-bayern-muenchen-ii-vfb-eichstaett-2425079",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/8-spieltag/tsv-buchbach-fc-bayern-muenchen-ii-2425088",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/9-spieltag/fc-bayern-muenchen-ii-fc-augsburg-ii-2425097",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/10-spieltag/tsv-aubstadt-fc-bayern-muenchen-ii-2425107",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/11-spieltag/fc-bayern-muenchen-ii-tsv-schwaben-augsburg-2425117",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/12-spieltag/spvgg-greuther-fuerth-ii-fc-bayern-muenchen-ii-2425120",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/13-spieltag/fc-bayern-muenchen-ii-spvgg-unterhaching-2425134",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/15-spieltag/tsv-muenchen-von-1860-fc-bayern-muenchen-ii-2425152",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/16-spieltag/fc-bayern-muenchen-ii-djk-vilzing-2425155",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/14-spieltag/1-fc-nuernberg-ii-fc-bayern-muenchen-ii-2425140",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/17-spieltag/tsv-landsberg-fc-bayern-muenchen-ii-2425180",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/18-spieltag/fc-bayern-muenchen-ii-spvgg-oberfranken-bayreuth-2425192",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/19-spieltag/spvgg-ansbach-fc-bayern-muenchen-ii-2425197",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/20-spieltag/sc-eltersdorf-fc-bayern-muenchen-ii-2425209",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/21-spieltag/fc-bayern-muenchen-ii-sv-wacker-burghausen-2425222",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/22-spieltag/1-fc-schweinfurt-05-fc-bayern-muenchen-ii-2425230",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/24-spieltag/fc-memmingen-fc-bayern-muenchen-ii-2425245",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/25-spieltag/fc-bayern-muenchen-ii-fv-illertissen-2425258",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/26-spieltag/vfb-eichstaett-fc-bayern-muenchen-ii-2425268",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/27-spieltag/fc-bayern-muenchen-ii-tsv-buchbach-2425275",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/28-spieltag/fc-augsburg-ii-fc-bayern-muenchen-ii-2425280",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/29-spieltag/fc-bayern-muenchen-ii-tsv-aubstadt-2425292",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/30-spieltag/tsv-schwaben-augsburg-fc-bayern-muenchen-ii-2425300",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/31-spieltag/fc-bayern-muenchen-ii-spvgg-greuther-fuerth-ii-2425312",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/32-spieltag/spvgg-unterhaching-fc-bayern-muenchen-ii-2425322",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/33-spieltag/fc-bayern-muenchen-ii-1-fc-nuernberg-ii-2425330",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/34-spieltag/fc-bayern-muenchen-ii-tsv-1860-muenchen-2425339",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/35-spieltag/djk-vilzing-fc-bayern-muenchen-ii-2425343",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/36-spieltag/fc-bayern-muenchen-ii-tsv-landsberg-2425357",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/37-spieltag/spvgg-oberfranken-bayreuth-fc-bayern-muenchen-ii-2425367",
+      "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/38-spieltag/fc-bayern-muenchen-ii-spvgg-ansbach-2425368"
+    ],
+    "rounds": [
+      1,
+      2,
+      3,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38
+    ]
+  },
+  {
+    "file": "nord-archive.html",
+    "sha256": "70968785f69cf8c79f8ecc6952873518430da494e87bbe941a084641a87223cd",
+    "capturedAt": "2026-10-17T08:54:40.987642+00:00",
+    "canonical": "https://datencenter.dfb.de/competitions/regionalliga-nord/seasons/2025-2026/teams/vfb-oldenburg",
+    "title": "VfB Oldenburg, Regionalliga Nord 2025/26 - DFB Datencenter",
+    "teams": [
+      "1-fc-phoenix-luebeck",
+      "altona-93",
+      "blau-weiss-lohne",
+      "bremer-sv",
+      "eintracht-norderstedt",
+      "fc-st-pauli-ii",
+      "fsv-schoeningen",
+      "hamburger-sv-ii-944",
+      "hannover-96-ii",
+      "hsc-hannover",
+      "kickers-emden",
+      "sc-weiche-flensburg-08",
+      "ssv-jeddeloh",
+      "sv-drochtersen-assel",
+      "sv-meppen",
+      "sv-werder-bremen-ii",
+      "vfb-luebeck",
+      "vfb-oldenburg"
+    ],
+    "schedule": [
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/1-spieltag/vfb-oldenburg-ssv-jeddeloh-2404208",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/2-spieltag/eintracht-norderstedt-vfb-oldenburg-2405253",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/3-spieltag/vfb-oldenburg-vfb-luebeck-2405255",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/4-spieltag/sv-meppen-vfb-oldenburg-2405267",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/5-spieltag/hamburger-sv-ii-vfb-oldenburg-2405286",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/6-spieltag/vfb-oldenburg-altona-93-2405289",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/7-spieltag/vfb-oldenburg-fsv-schoeningen-2405305",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/8-spieltag/vfb-oldenburg-hsc-hannover-2405311",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/9-spieltag/blau-weiss-lohne-vfb-oldenburg-2405323",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/10-spieltag/vfb-oldenburg-hannover-96-ii-2405327",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/11-spieltag/1-fc-phoenix-luebeck-vfb-oldenburg-2405343",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/12-spieltag/vfb-oldenburg-sv-drochtersen-assel-2405351",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/14-spieltag/vfb-oldenburg-kickers-emden-2405364",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/15-spieltag/sc-weiche-flensburg-08-vfb-oldenburg-2405373",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/16-spieltag/vfb-oldenburg-bremer-sv-2405382",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/17-spieltag/sv-werder-bremen-ii-vfb-oldenburg-2405395",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/18-spieltag/ssv-jeddeloh-vfb-oldenburg-2405406",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/19-spieltag/vfb-oldenburg-eintracht-norderstedt-2405411",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/21-spieltag/vfb-oldenburg-sv-meppen-2405433",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/13-spieltag/fc-st-pauli-ii-vfb-oldenburg-2405354",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/22-spieltag/vfb-oldenburg-hamburger-sv-ii-2405444",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/25-spieltag/hsc-hannover-vfb-oldenburg-2405473",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/26-spieltag/vfb-oldenburg-blau-weiss-lohne-2405474",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/27-spieltag/hannover-96-ii-vfb-oldenburg-2405488",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/28-spieltag/vfb-oldenburg-1-fc-phoenix-luebeck-2405495",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/29-spieltag/sv-drochtersen-assel-vfb-oldenburg-2405503",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/23-spieltag/altona-93-vfb-oldenburg-2405445",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/30-spieltag/vfb-oldenburg-fc-st-pauli-ii-2405515",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/24-spieltag/fsv-schoeningen-vfb-oldenburg-2405461",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/31-spieltag/kickers-emden-vfb-oldenburg-2405522",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/32-spieltag/vfb-oldenburg-sc-weiche-flensburg-08-2405532",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/20-spieltag/vfb-luebeck-vfb-oldenburg-2405424",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/33-spieltag/bremer-sv-vfb-oldenburg-2405542",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/34-spieltag/vfb-oldenburg-sv-werder-bremen-ii-2405560"
+    ],
+    "rounds": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34
+    ]
+  },
+  {
+    "file": "nord-current.html",
+    "sha256": "2860d9e919152526408c383bbc8d24ebc30b491b0139e6beb63326fe48eeee85",
+    "capturedAt": "2026-10-17T08:54:35.438006+00:00",
+    "canonical": "https://datencenter.dfb.de/competitions/regionalliga-nord/seasons/2026-2027/teams/vfb-oldenburg",
+    "title": "VfB Oldenburg, Regionalliga Nord 2026/27 - DFB Datencenter",
+    "teams": [
+      "1-fc-phoenix-luebeck",
+      "SV-Todesfelde",
+      "atlas-delmenhorst",
+      "bremer-sv",
+      "eimsbuetteler-tv",
+      "eintracht-norderstedt",
+      "fc-st-pauli-ii",
+      "fsv-schoeningen",
+      "hamburger-sv-ii-944",
+      "hannover-96-ii",
+      "hsc-hannover",
+      "kickers-emden",
+      "sc-weiche-flensburg-08",
+      "ssv-jeddeloh",
+      "sv-drochtersen-assel",
+      "sv-werder-bremen-ii",
+      "vfb-luebeck",
+      "vfb-oldenburg"
+    ],
+    "schedule": [
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2026-2027/1-spieltag/sv-werder-bremen-ii-vfb-oldenburg-2423027",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2026-2027/2-spieltag/vfb-oldenburg-sv-drochtersen-assel-2423055",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2026-2027/3-spieltag/vfb-luebeck-vfb-oldenburg-2423094",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2026-2027/4-spieltag/vfb-oldenburg-eintracht-norderstedt-2423104",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2026-2027/5-spieltag/sv-todesfelde-vfb-oldenburg-2423120",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2026-2027/6-spieltag/vfb-oldenburg-eimsbuetteler-tv-2423136",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2026-2027/7-spieltag/fsv-schoeningen-vfb-oldenburg-2423144",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2026-2027/8-spieltag/vfb-oldenburg-hannover-96-ii-2423150",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2026-2027/9-spieltag/bremer-sv-vfb-oldenburg-2423162",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2026-2027/10-spieltag/vfb-oldenburg-ssv-jeddeloh-2423172",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2026-2027/11-spieltag/1-fc-phoenix-luebeck-vfb-oldenburg-2423176",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2026-2027/12-spieltag/sc-weiche-flensburg-08-vfb-oldenburg-2423189",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2026-2027/13-spieltag/vfb-oldenburg-kickers-emden-2423194",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2026-2027/14-spieltag/hamburger-sv-ii-vfb-oldenburg-2423200",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2026-2027/15-spieltag/vfb-oldenburg-hsc-hannover-2423213",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2026-2027/16-spieltag/atlas-delmenhorst-vfb-oldenburg-2423225",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2026-2027/17-spieltag/vfb-oldenburg-fc-st-pauli-ii-2423234",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2026-2027/18-spieltag/sv-drochtersen-assel-vfb-oldenburg-2423244",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2026-2027/19-spieltag/eimsbuetteler-tv-vfb-oldenburg-2423249",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2026-2027/20-spieltag/vfb-oldenburg-sv-todesfelde-2423255",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2026-2027/21-spieltag/hsc-hannover-vfb-oldenburg-2423263",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2026-2027/22-spieltag/vfb-oldenburg-sv-werder-bremen-ii-2423276",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2026-2027/23-spieltag/vfb-oldenburg-hamburger-sv-ii-2423283",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2026-2027/24-spieltag/fc-st-pauli-ii-vfb-oldenburg-2423292",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2026-2027/25-spieltag/vfb-oldenburg-1-fc-phoenix-luebeck-2423304",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2026-2027/26-spieltag/ssv-jeddeloh-vfb-oldenburg-2423309",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2026-2027/27-spieltag/vfb-oldenburg-sc-weiche-flensburg-08-2423318",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2026-2027/28-spieltag/hannover-96-ii-vfb-oldenburg-2423330",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2026-2027/29-spieltag/vfb-oldenburg-fsv-schoeningen-2423339",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2026-2027/30-spieltag/kickers-emden-vfb-oldenburg-2423349",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2026-2027/31-spieltag/vfb-oldenburg-bremer-sv-2423359",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2026-2027/32-spieltag/vfb-oldenburg-vfb-luebeck-2423365",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2026-2027/33-spieltag/eintracht-norderstedt-vfb-oldenburg-2423377",
+      "https://datencenter.dfb.de/datencenter/regionalliga-nord/2026-2027/34-spieltag/vfb-oldenburg-atlas-delmenhorst-2423391"
+    ],
+    "rounds": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34
+    ]
+  },
+  {
+    "file": "report-bayern-archive-vilzing.html",
+    "sha256": "fd9868c920c7fe946147f0becf8a2d389f3c240b22a54e2f6ac803572bcfed7d",
+    "capturedAt": "2026-10-17T08:57:10.016111+00:00",
+    "canonical": "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/10-spieltag/djk-vilzing-bayern-muenchen-ii-2401661",
+    "title": "DJK Vilzing - FC Bayern München II, 1:0, Regionalliga Bayern 2025/26 10. Spieltag - DFB Datencenter",
+    "teamPaths": [
+      "https://datencenter.dfb.de/competitions/regionalliga-bayern/seasons/2025-2026/teams/DJK%20Vilzing",
+      "https://datencenter.dfb.de/competitions/regionalliga-bayern/seasons/2025-2026/teams/bayern-muenchen-ii"
+    ],
+    "tables": [
+      {
+        "head": "Aufstellung",
+        "rows": 11,
+        "homeNames": [
+          "Fabian Eutinger (T)",
+          "Alexis Fambo",
+          "Elija Härtl",
+          "Mario Kufner",
+          "Simon Sedlaczek",
+          "Andreas Jünger",
+          "Nik Leipold",
+          "Jonas Goß",
+          "Thomas Haas",
+          "Tobias Hoch",
+          "Felix Weber"
+        ],
+        "awayNames": [
+          "Leon Klanac (T)",
+          "Magnus Dalpiaz",
+          "Jussef Nasrawe",
+          "David Heindl",
+          "Robert Deziel",
+          "Benno Schmitz",
+          "Adin Licina",
+          "Kurt Rüger",
+          "Anton Heinz",
+          "Guido Della Rovere",
+          "Richard Meier"
+        ]
+      },
+      {
+        "head": "Auswechselspieler",
+        "rows": 9,
+        "homeNames": [
+          "Martin Mihaylov",
+          "Sandro Weber (T)",
+          "Jonas Blümel",
+          "Luis Bezjak",
+          "Benedikt Fischer",
+          "Josef Gottmeier",
+          "Lukas Schröder",
+          "Erol Özbay"
+        ],
+        "awayNames": [
+          "Jannis Bärtl",
+          "Maximilian Schuhbauer",
+          "Julien Yanda",
+          "Vincent Manuba",
+          "Artur Degraf",
+          "Bajung Darboe",
+          "Michael Scott",
+          "Grayson Dettoni",
+          "Max Mergner"
+        ]
+      }
+    ],
+    "histories": [
+      {
+        "title": "Spielverlauf",
+        "events": 15
+      },
+      {
+        "title": "Tore",
+        "events": 1
+      },
+      {
+        "title": "Karten",
+        "events": 7
+      },
+      {
+        "title": "Wechsel",
+        "events": 7
+      }
+    ]
+  },
+  {
+    "file": "report-bayern-archive.html",
+    "sha256": "225ace7a67fe29dd53c8bcde0e940cb95867d5409f9772e2131d4a6c1b4a4a8a",
+    "capturedAt": "2026-10-17T08:55:29.178014+00:00",
+    "canonical": "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/1-spieltag/fc-augsburg-ii-bayern-muenchen-ii-2401581",
+    "title": "FC Augsburg II - FC Bayern München II, 1:2, Regionalliga Bayern 2025/26 1. Spieltag - DFB Datencenter",
+    "teamPaths": [
+      "https://datencenter.dfb.de/competitions/regionalliga-bayern/seasons/2025-2026/teams/fc-augsburg-ii",
+      "https://datencenter.dfb.de/competitions/regionalliga-bayern/seasons/2025-2026/teams/bayern-muenchen-ii"
+    ],
+    "tables": [
+      {
+        "head": "Aufstellung",
+        "rows": 11,
+        "homeNames": [
+          "Noah George (T)",
+          "Lorenz Rachinger",
+          "Franz Bleicher",
+          "Kevin Motowilczuk",
+          "Mahmut Kücüksahin",
+          "Fynn Heinze",
+          "David Deger",
+          "Louis Stegmiller",
+          "Simon Mühlbauer",
+          "Hendrik Hofgärtner",
+          "Constantin Kresin"
+        ],
+        "awayNames": [
+          "Leon Klanac (T)",
+          "Magnus Dalpiaz",
+          "Julien Yanda",
+          "David Heindl",
+          "Tarek Buchmann",
+          "Benno Schmitz",
+          "Adin Licina",
+          "Felipe Chávez",
+          "Anton Heinz",
+          "Guido Della Rovere",
+          "Tim Binder"
+        ]
+      }
+    ],
+    "histories": [
+      {
+        "title": "Spielverlauf",
+        "events": 11
+      },
+      {
+        "title": "Tore",
+        "events": 3
+      },
+      {
+        "title": "Karten",
+        "events": 3
+      },
+      {
+        "title": "Wechsel",
+        "events": 5
+      }
+    ]
+  },
+  {
+    "file": "report-bayern-current.html",
+    "sha256": "7f5e6e5f18d54af61999b0fe26c81edb9cb1893391a5af9e2e1a45e16b27739d",
+    "capturedAt": "2026-10-17T08:55:34.317385+00:00",
+    "canonical": "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/1-spieltag/fc-bayern-muenchen-ii-sc-eltersdorf-2425024",
+    "title": "FC Bayern München II - SC Eltersdorf, 0:1, Regionalliga Bayern 2026/27 1. Spieltag - DFB Datencenter",
+    "teamPaths": [
+      "https://datencenter.dfb.de/competitions/regionalliga-bayern/seasons/2026-2027/teams/bayern-muenchen-ii",
+      "https://datencenter.dfb.de/competitions/regionalliga-bayern/seasons/2026-2027/teams/sc-eltersdorf"
+    ],
+    "tables": [
+      {
+        "head": "Aufstellung",
+        "rows": 11,
+        "homeNames": [
+          "Jannis Bärtl (T)",
+          "Rayan Moumouni",
+          "Artur Degraf",
+          "Luis Schäfer",
+          "Roko Mijatovic",
+          "Benno Schmitz",
+          "Michael Scott",
+          "Mudaser Sadat",
+          "Anton Heinz",
+          "Yll Gashi",
+          "Aristide Hentcho Nseke"
+        ],
+        "awayNames": [
+          "Axel Hofmann (T)",
+          "Valantis Floros",
+          "Maximilian Göbhardt",
+          "Patrick Ort",
+          "Moritz Fischer",
+          "Marco Niedermayer",
+          "Manuel Stark",
+          "Tom Feulner",
+          "Robin Renner",
+          "Sebastian Marx",
+          "Felix Rippert"
+        ]
+      },
+      {
+        "head": "Auswechselspieler",
+        "rows": 9,
+        "homeNames": [
+          "Raphael Pavlic",
+          "Afrim Gashi",
+          "Jakob Horvath",
+          "Kuba Horoszczak",
+          "Matteo Maric",
+          "Chris Afanou",
+          "Aviel Nseke",
+          "Philipp Von Taube",
+          "Leon Klanac (T)"
+        ],
+        "awayNames": [
+          "Oleksandr Churilov",
+          "Korbinian Stütz",
+          "Geremi Perera",
+          "Manfred Strobel",
+          "Leo Sommer",
+          "Yannik Jassmann",
+          "Samuel Arles",
+          "Hiroki Akimoto",
+          "Ensar Rexhepi"
+        ]
+      }
+    ],
+    "histories": [
+      {
+        "title": "Spielverlauf",
+        "events": 13
+      },
+      {
+        "title": "Tore",
+        "events": 1
+      },
+      {
+        "title": "Karten",
+        "events": 6
+      },
+      {
+        "title": "Wechsel",
+        "events": 6
+      }
+    ]
+  },
+  {
+    "file": "report-nord-archive.html",
+    "sha256": "ef07a490a8b6104f96134890d5f7c846627dd44e7ba7913b4c969163c80ab0c2",
+    "capturedAt": "2026-10-17T08:55:38.864724+00:00",
+    "canonical": "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/1-spieltag/vfb-oldenburg-ssv-jeddeloh-2404208",
+    "title": "VfB Oldenburg - SSV Jeddeloh, 1:3, Regionalliga Nord 2025/26 1. Spieltag - DFB Datencenter",
+    "teamPaths": [
+      "https://datencenter.dfb.de/competitions/regionalliga-nord/seasons/2025-2026/teams/vfb-oldenburg",
+      "https://datencenter.dfb.de/competitions/regionalliga-nord/seasons/2025-2026/teams/ssv-jeddeloh"
+    ],
+    "tables": [
+      {
+        "head": "Aufstellung",
+        "rows": 11,
+        "homeNames": [
+          "Jhonny Peitzmeier (T)",
+          "Nico Mai",
+          "Leon Deichmann",
+          "Vjekoslav Taritaš",
+          "Rafael Brand",
+          "Drilon Demaj",
+          "Marc Schröder",
+          "Nick Otto",
+          "Willem-Hendrik Hoffrogge",
+          "Mats Facklam",
+          "Ermal Pepshi"
+        ],
+        "awayNames": [
+          "Moritz Ben Onken (T)",
+          "Philip Gramberg",
+          "Keita Taguchi",
+          "Ebrima-Dominique Ndure",
+          "Simon Brinkmann",
+          "Kasra Ghawilu",
+          "Robin Krolikowski",
+          "Max Wegner",
+          "Tom Kanowski",
+          "Niklas-Leon von Aschwege",
+          "Gazi Siala"
+        ]
+      }
+    ],
+    "histories": [
+      {
+        "title": "Spielverlauf",
+        "events": 21
+      },
+      {
+        "title": "Tore",
+        "events": 4
+      },
+      {
+        "title": "Karten",
+        "events": 10
+      },
+      {
+        "title": "Wechsel",
+        "events": 7
+      }
+    ]
+  },
+  {
+    "file": "report-nord-current-sv-todesfelde.html",
+    "sha256": "7a24f611700430e4f3e59aa09e0e5bc9589cffdcf9bceca6fbf8b211fd46fc0e",
+    "capturedAt": "2026-10-17T08:57:04.142198+00:00",
+    "canonical": "https://datencenter.dfb.de/datencenter/regionalliga-nord/2026-2027/5-spieltag/sv-todesfelde-vfb-oldenburg-2423120",
+    "title": "SV Todesfelde - VfB Oldenburg, 1:4, Regionalliga Nord 2026/27 5. Spieltag - DFB Datencenter",
+    "teamPaths": [
+      "https://datencenter.dfb.de/competitions/regionalliga-nord/seasons/2026-2027/teams/SV-Todesfelde",
+      "https://datencenter.dfb.de/competitions/regionalliga-nord/seasons/2026-2027/teams/vfb-oldenburg"
+    ],
+    "tables": [
+      {
+        "head": "Aufstellung",
+        "rows": 11,
+        "homeNames": [
+          "Fabian Landvoigt (T)",
+          "Justin Henri Cloppatt",
+          "Pawel Erfmann",
+          "Ben Jablonski",
+          "Etienne Sohn",
+          "Morten Liebert",
+          "Marco Drawz",
+          "Moritz Bennet Grosche",
+          "Tyler Körting",
+          "Jan-Marc Schneider",
+          "Janek Sternberg"
+        ],
+        "awayNames": [
+          "Jhonny Peitzmeier (T)",
+          "Leon Deichmann",
+          "Anouar Adam",
+          "Vjekoslav Taritaš",
+          "Leon Demaj",
+          "Kai Pröger",
+          "Marc Schröder",
+          "Louis Hajdinaj",
+          "Dominik Kasper",
+          "Mats Facklam",
+          "Nico Knystock"
+        ]
+      },
+      {
+        "head": "Auswechselspieler",
+        "rows": 9,
+        "homeNames": [
+          "Jarmain Ozuzu",
+          "Lasse Kjell Schwiemann",
+          "Hendrik Holderbaum",
+          "Timon Julius Henk",
+          "Benjamin Petrick",
+          "Jonas Marschner",
+          "Lasse Jetz",
+          "Benny Soares",
+          "Omorogbe Noah Odiase"
+        ],
+        "awayNames": [
+          "Ole Springer",
+          "Nico Mai",
+          "Rafael Brand",
+          "Drilon Demaj",
+          "Nelio Hemberger",
+          "Vincent Hagen",
+          "Nick Otto",
+          "Ermal Pepshi",
+          "Abdul-Hussein Trad"
+        ]
+      }
+    ],
+    "histories": [
+      {
+        "title": "Spielverlauf",
+        "events": 17
+      },
+      {
+        "title": "Tore",
+        "events": 5
+      },
+      {
+        "title": "Karten",
+        "events": 5
+      },
+      {
+        "title": "Wechsel",
+        "events": 7
+      }
+    ]
+  },
+  {
+    "file": "report-nord-current.html",
+    "sha256": "9884a6f8cd49b335d3da8a223d66843983e5028c62f06c438bc4ef62d9e366ea",
+    "capturedAt": "2026-10-17T08:55:43.033075+00:00",
+    "canonical": "https://datencenter.dfb.de/datencenter/regionalliga-nord/2026-2027/1-spieltag/sv-werder-bremen-ii-vfb-oldenburg-2423027",
+    "title": "SV Werder Bremen II - VfB Oldenburg, 0:3, Regionalliga Nord 2026/27 1. Spieltag - DFB Datencenter",
+    "teamPaths": [
+      "https://datencenter.dfb.de/competitions/regionalliga-nord/seasons/2026-2027/teams/sv-werder-bremen-ii",
+      "https://datencenter.dfb.de/competitions/regionalliga-nord/seasons/2026-2027/teams/vfb-oldenburg"
+    ],
+    "tables": [
+      {
+        "head": "Aufstellung",
+        "rows": 11,
+        "homeNames": [
+          "Stefan Smarkalev (T)",
+          "Johann Wegner",
+          "Cimo Röcker",
+          "Jasha Barry",
+          "Jakob Wiehe",
+          "Mario Mbassi",
+          "Patrick Götzelmann",
+          "Paul Bellmann",
+          "Arian Römers",
+          "Noah Weißbach",
+          "Jannes Ossadnik"
+        ],
+        "awayNames": [
+          "Jhonny Peitzmeier (T)",
+          "Anouar Adam",
+          "Rafael Brand",
+          "Drilon Demaj",
+          "Leon Demaj",
+          "Kai Pröger",
+          "Marc Schröder",
+          "Nick Otto",
+          "Dominik Kasper",
+          "Mats Facklam",
+          "Nico Knystock"
+        ]
+      },
+      {
+        "head": "Auswechselspieler",
+        "rows": 9,
+        "homeNames": [
+          "Egor Greber",
+          "Boran-Firat Coskun",
+          "Jonas Horsch (T)",
+          "Christian Stark",
+          "Karlo Simic",
+          "Lennart Jendrik Baum",
+          "Princewill Mbock"
+        ],
+        "awayNames": [
+          "Ole Springer",
+          "Leon Deichmann",
+          "Vjekoslav Taritaš",
+          "Vincent Hagen",
+          "Samuel Pfluger",
+          "Louis Hajdinaj",
+          "Ermal Pepshi",
+          "Linus Schäfer",
+          "Abdul-Hussein Trad"
+        ]
+      }
+    ],
+    "histories": [
+      {
+        "title": "Spielverlauf",
+        "events": 18
+      },
+      {
+        "title": "Tore",
+        "events": 3
+      },
+      {
+        "title": "Karten",
+        "events": 9
+      },
+      {
+        "title": "Wechsel",
+        "events": 6
+      }
+    ]
+  },
+  {
+    "file": "report-suedwest-archive.html",
+    "sha256": "82db561e99dda780210250a376b4655030bc466d6b81e213b5eed2b1cb91ad1f",
+    "capturedAt": "2026-10-17T08:55:49.478371+00:00",
+    "canonical": "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/1-spieltag/sv-sandhausen-fsv-frankfurt-2402837",
+    "title": "SV Sandhausen - FSV Frankfurt, 1:2, Regionalliga Südwest 2025/26 1. Spieltag - DFB Datencenter",
+    "teamPaths": [
+      "https://datencenter.dfb.de/competitions/regionalliga-suedwest/seasons/2025-2026/teams/sv-sandhausen",
+      "https://datencenter.dfb.de/competitions/regionalliga-suedwest/seasons/2025-2026/teams/fsv-frankfurt"
+    ],
+    "tables": [
+      {
+        "head": "Aufstellung",
+        "rows": 11,
+        "homeNames": [
+          "Arthur Lyska (T)",
+          "Kwabenaboye Schulz",
+          "Louis Kolbe",
+          "Leon Ampadu",
+          "Jahn Herrmann",
+          "Luca De Meester",
+          "Yannick Osee",
+          "Berk Inaler",
+          "Denis Pfaffenrot",
+          "Teoman Akmestanli",
+          "Pascal Testroet"
+        ],
+        "awayNames": [
+          "Lucas Becker (T)",
+          "Tim Weißmann",
+          "Phil Kemper",
+          "Ben-Luca Fisher",
+          "Birkan Celik",
+          "Giorgio Del Vecchio",
+          "Amin Farouk",
+          "Ismail Harnafi",
+          "Lukas Gottwalt",
+          "Timo Hildmann",
+          "Emmanuel McDonald"
+        ]
+      }
+    ],
+    "histories": [
+      {
+        "title": "Spielverlauf",
+        "events": 14
+      },
+      {
+        "title": "Tore",
+        "events": 3
+      },
+      {
+        "title": "Karten",
+        "events": 6
+      },
+      {
+        "title": "Wechsel",
+        "events": 5
+      }
+    ]
+  },
+  {
+    "file": "report-suedwest-current.html",
+    "sha256": "cbba43fdd39145a0ece7edba9049f8276606f158ae5065a4e5c257c52e58fa7b",
+    "capturedAt": "2026-10-17T08:55:54.096435+00:00",
+    "canonical": "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/1-spieltag/fsv-frankfurt-vfr-mannheim-2426296",
+    "title": "FSV Frankfurt - VfR Mannheim, 2:2, Regionalliga Südwest 2026/27 1. Spieltag - DFB Datencenter",
+    "teamPaths": [
+      "https://datencenter.dfb.de/competitions/regionalliga-suedwest/seasons/2026-2027/teams/fsv-frankfurt",
+      "https://datencenter.dfb.de/competitions/regionalliga-suedwest/seasons/2026-2027/teams/vfr-mannheim"
+    ],
+    "tables": [
+      {
+        "head": "Aufstellung",
+        "rows": 11,
+        "homeNames": [
+          "Lucas Becker (T)",
+          "Christoph Ehlich",
+          "Phil Kemper",
+          "Elias Adam Breir",
+          "Daniel George Iorga",
+          "Giorgio Del Vecchio",
+          "Emmanuel McDonald",
+          "Cas Peters",
+          "Lukas Gottwalt",
+          "Nick Doktorczyk",
+          "Corvin Bock"
+        ],
+        "awayNames": [
+          "David Nreca-Bisinger (T)",
+          "Lukas Rupp",
+          "Alexander Esswein",
+          "Alexandru Paraschiv",
+          "Jannik Marx",
+          "Robin Becker",
+          "Flamur Berisha",
+          "Umut Şentürk",
+          "Nolhan Kanetchi Assafoua",
+          "Jonas Weik",
+          "Mehdi Hetemaj"
+        ]
+      },
+      {
+        "head": "Auswechselspieler",
+        "rows": 9,
+        "homeNames": [
+          "Louis Held",
+          "Amar Suljic",
+          "Filip Pandza",
+          "David Deger",
+          "Mohamed Akhouji",
+          "Leandro Simunic",
+          "Dwayn Meene",
+          "Tim Weißmann",
+          "Uche Destiny Obiogumu"
+        ],
+        "awayNames": [
+          "Malwin Zok",
+          "Hans-Juraj Hartmann",
+          "Christian Kuhn",
+          "Melvin Ramusovic",
+          "Kevin Krüger",
+          "Pasqual Pander",
+          "Marvin Kadner",
+          "Vincent Moreno Giesel",
+          "Tyrese Zeigler"
+        ]
+      }
+    ],
+    "histories": [
+      {
+        "title": "Spielverlauf",
+        "events": 17
+      },
+      {
+        "title": "Tore",
+        "events": 4
+      },
+      {
+        "title": "Karten",
+        "events": 6
+      },
+      {
+        "title": "Wechsel",
+        "events": 7
+      }
+    ]
+  },
+  {
+    "file": "report-west-archive.html",
+    "sha256": "5d4c0113bdadba4915cb503f38e28a5634dae421af4afd24ee664895e0713cfc",
+    "capturedAt": "2026-10-17T08:55:57.572682+00:00",
+    "canonical": "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/1-spieltag/rot-weiss-oberhausen-fc-guetersloh-2402192",
+    "title": "Rot-Weiß Oberhausen - FC Gütersloh, 0:2, Regionalliga West 2025/26 1. Spieltag - DFB Datencenter",
+    "teamPaths": [
+      "https://datencenter.dfb.de/competitions/regionalliga-west/seasons/2025-2026/teams/rot-weiss-oberhausen",
+      "https://datencenter.dfb.de/competitions/regionalliga-west/seasons/2025-2026/teams/fc-guetersloh"
+    ],
+    "tables": [
+      {
+        "head": "Aufstellung",
+        "rows": 11,
+        "homeNames": [
+          "Kevin Kratzsch (T)",
+          "Pierre Fassnacht",
+          "Mustafa Kourouma",
+          "Alexander Mühling",
+          "Christopher Schepp",
+          "Moritz Stoppelkamp",
+          "Eric Babacar Gueye",
+          "Nico Klaß",
+          "Matona-Glody Ngyombo",
+          "Lucas Halangk",
+          "Ayman Aourir"
+        ],
+        "awayNames": [
+          "Tim Matuschewsky (T)",
+          "Björn Rother",
+          "Jan-Lukas Liehr",
+          "Julius Langfeld",
+          "David Theodor Winke",
+          "Patrik Twardzik",
+          "Luis Frieling",
+          "Justus Henke",
+          "Aleksandar Kandic",
+          "Erik Lanfer",
+          "Fynn Arkenberg"
+        ]
+      }
+    ],
+    "histories": [
+      {
+        "title": "Spielverlauf",
+        "events": 9
+      },
+      {
+        "title": "Tore",
+        "events": 2
+      },
+      {
+        "title": "Karten",
+        "events": 1
+      },
+      {
+        "title": "Wechsel",
+        "events": 6
+      }
+    ]
+  },
+  {
+    "file": "report-west-current-12.html",
+    "sha256": "f1032e84717387670f86647e61f3c892b7a6406c6f7215ef9ab26564d46b5a6a",
+    "capturedAt": "2026-10-17T08:57:16.077570+00:00",
+    "canonical": "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/12-spieltag/rot-weiss-oberhausen-1-fc-bocholt-2425484",
+    "title": "Rot-Weiß Oberhausen - 1. FC Bocholt, 3:1, Regionalliga West 2026/27 12. Spieltag - DFB Datencenter",
+    "teamPaths": [
+      "https://datencenter.dfb.de/competitions/regionalliga-west/seasons/2026-2027/teams/rot-weiss-oberhausen",
+      "https://datencenter.dfb.de/competitions/regionalliga-west/seasons/2026-2027/teams/1-fc-bocholt"
+    ],
+    "tables": [
+      {
+        "head": "Aufstellung",
+        "rows": 11,
+        "homeNames": [
+          "Nicolas Glaus (T)",
+          "Tim Böhmer",
+          "Arda Süne",
+          "Alexander Mühling",
+          "Timur Mehmet Kesim",
+          "Luca Schlax",
+          "Kerem Yalcin",
+          "Nico Klaß",
+          "Joel Zambrano",
+          "Yassir Atty",
+          "Nils Winter"
+        ],
+        "awayNames": [
+          "Paul Grave (T)",
+          "Elano Lorenzo Yegen",
+          "Malek Fakhro",
+          "Arnold Budimbu",
+          "Dominik Lanius",
+          "Lennart Garlipp",
+          "Marlon Frey",
+          "Mika Walther",
+          "Alexander Hahn",
+          "Marvin Lorch",
+          "Tim Krohn"
+        ]
+      },
+      {
+        "head": "Auswechselspieler",
+        "rows": 9,
+        "homeNames": [
+          "Ryan Valentine",
+          "Justus Henke",
+          "Yannik Möker",
+          "Burinyuy Nyuydine",
+          "Hasan Onur",
+          "Travis Helmut Casper Anton de Jong",
+          "Lucas Halangk",
+          "Max Meyer",
+          "Denis Donkor"
+        ],
+        "awayNames": [
+          "Haakon Pomorin",
+          "Kilian Zaruba",
+          "Maximilian Jansen",
+          "Patrick Kurzen",
+          "Daniel Gerstmayer",
+          "Benjamin Friesen",
+          "Paul Seidel",
+          "Gianluca Swajkowski",
+          "Luca Felix Puhe"
+        ]
+      }
+    ],
+    "histories": [
+      {
+        "title": "Spielverlauf",
+        "events": 15
+      },
+      {
+        "title": "Tore",
+        "events": 4
+      },
+      {
+        "title": "Karten",
+        "events": 5
+      },
+      {
+        "title": "Wechsel",
+        "events": 6
+      }
+    ]
+  },
+  {
+    "file": "report-west-current.html",
+    "sha256": "3a0fe8c7fe367a95a31963d9f422338b1db200919a7fde58e6d9a3e012321821",
+    "capturedAt": "2026-10-17T08:56:01.584454+00:00",
+    "canonical": "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/1-spieltag/bonner-sc-rot-weiss-oberhausen-2425377",
+    "title": "Bonner SC - Rot-Weiß Oberhausen, 1:2, Regionalliga West 2026/27 1. Spieltag - DFB Datencenter",
+    "teamPaths": [
+      "https://datencenter.dfb.de/competitions/regionalliga-west/seasons/2026-2027/teams/bonner-sc",
+      "https://datencenter.dfb.de/competitions/regionalliga-west/seasons/2026-2027/teams/rot-weiss-oberhausen"
+    ],
+    "tables": [
+      {
+        "head": "Aufstellung",
+        "rows": 11,
+        "homeNames": [
+          "Elias-Jona Bördner (T)",
+          "Roman Doulashi",
+          "Nick Zimmermann",
+          "Frederic Baum",
+          "Maximilian Pommer",
+          "Jonas Berg",
+          "Diamant Berisha",
+          "Marcel Damaschek",
+          "Josue Santo",
+          "Younes Derbali",
+          "Julijan Popovic"
+        ],
+        "awayNames": [
+          "Nicolas Glaus (T)",
+          "Pierre Fassnacht",
+          "Tim Böhmer",
+          "Alexander Mühling",
+          "Timur Mehmet Kesim",
+          "Luca Schlax",
+          "Burinyuy Nyuydine",
+          "Kerem Yalcin",
+          "Nils Winter",
+          "Simon Ludwig",
+          "Michel Niemeyer"
+        ]
+      },
+      {
+        "head": "Auswechselspieler",
+        "rows": 9,
+        "homeNames": [
+          "Tobias Pawelczyk",
+          "Eray Isik",
+          "Cagatay Kader",
+          "Luca De Meester",
+          "William James McIntosh",
+          "Aaron-Xavier Tshimuanga",
+          "Simon Breuer",
+          "Yannik Dasbach",
+          "Tobias Knost"
+        ],
+        "awayNames": [
+          "Ryan Valentine",
+          "Arda Süne",
+          "Nico Klaß",
+          "Hasan Onur",
+          "Travis Helmut Casper Anton de Jong",
+          "Cankoray Mutlu",
+          "Sergio Jesus Terranova Rivera",
+          "Jannis Knoblauch"
+        ]
+      }
+    ],
+    "histories": [
+      {
+        "title": "Spielverlauf",
+        "events": 12
+      },
+      {
+        "title": "Tore",
+        "events": 3
+      },
+      {
+        "title": "Karten",
+        "events": 3
+      },
+      {
+        "title": "Wechsel",
+        "events": 6
+      }
+    ]
+  },
+  {
+    "file": "suedwest-archive.html",
+    "sha256": "ee50c565ab3d92f42805383382dd7f2c9948e50203c68d62ca7db94f32ed6b5e",
+    "capturedAt": "2026-10-17T08:54:51.128510+00:00",
+    "canonical": "https://datencenter.dfb.de/competitions/regionalliga-suedwest/seasons/2025-2026/teams/fsv-frankfurt",
+    "title": "FSV Frankfurt, Regionalliga Südwest 2025/26 - DFB Datencenter",
+    "teams": [
+      "1-fsv-mainz-05-ii",
+      "bahlinger-sc",
+      "bayern-alzenau",
+      "eintracht-trier",
+      "fc-08-homburg",
+      "fc-astoria-walldorf",
+      "fsv-frankfurt",
+      "hessen-kassel",
+      "kickers-offenbach",
+      "sc-freiburg-ii",
+      "sg-barockstadt-fulda-lehnerz",
+      "sg-sonnenhof-grossaspach",
+      "sgv-freiberg",
+      "stuttgarter-kickers",
+      "sv-sandhausen",
+      "tsg-balingen",
+      "tsv-schott-mainz",
+      "tsv-steinbach-haiger"
+    ],
+    "schedule": [
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/1-spieltag/sv-sandhausen-fsv-frankfurt-2402837",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/2-spieltag/fsv-frankfurt-sgv-freiberg-2402853",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/3-spieltag/sg-sonnenhof-grossaspach-fsv-frankfurt-2402857",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/4-spieltag/hessen-kassel-fsv-frankfurt-2402870",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/5-spieltag/fsv-frankfurt-tsv-schott-mainz-2402879",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/6-spieltag/tsg-balingen-fsv-frankfurt-2402890",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/7-spieltag/fsv-frankfurt-eintracht-trier-2402898",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/8-spieltag/bahlinger-sc-fsv-frankfurt-2402902",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/9-spieltag/fsv-frankfurt-sc-freiburg-ii-2402915",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/10-spieltag/fc-astoria-walldorf-fsv-frankfurt-2402921",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/11-spieltag/fsv-frankfurt-stuttgarter-kickers-2402934",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/12-spieltag/fc-08-homburg-fsv-frankfurt-2402940",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/13-spieltag/fsv-frankfurt-kickers-offenbach-2402951",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/14-spieltag/tsv-steinbach-haiger-fsv-frankfurt-2402960",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/15-spieltag/fsv-frankfurt-bayern-alzenau-2402971",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/16-spieltag/1-fsv-mainz-05-ii-fsv-frankfurt-2402972",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/17-spieltag/fsv-frankfurt-sg-barockstadt-fulda-lehnerz-2402988",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/18-spieltag/fsv-frankfurt-sv-sandhausen-2402997",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/19-spieltag/sgv-freiberg-fsv-frankfurt-2403005",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/20-spieltag/fsv-frankfurt-sg-sonnenhof-grossaspach-2403014",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/22-spieltag/tsv-schott-mainz-fsv-frankfurt-2403026",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/21-spieltag/fsv-frankfurt-hessen-kassel-2403021",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/23-spieltag/fsv-frankfurt-tsg-balingen-2403038",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/24-spieltag/eintracht-trier-fsv-frankfurt-2403047",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/25-spieltag/fsv-frankfurt-bahlinger-sc-2403055",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/26-spieltag/sc-freiburg-ii-fsv-frankfurt-2403068",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/27-spieltag/fsv-frankfurt-fc-astoria-walldorf-2403073",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/28-spieltag/stuttgarter-kickers-fsv-frankfurt-2403088",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/29-spieltag/fsv-frankfurt-fc-08-homburg-2403091",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/30-spieltag/kickers-offenbach-fsv-frankfurt-2403103",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/31-spieltag/fsv-frankfurt-tsv-steinbach-haiger-2403108",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/32-spieltag/bayern-alzenau-fsv-frankfurt-2403118",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/33-spieltag/fsv-frankfurt-1-fsv-mainz-05-ii-2403132",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/34-spieltag/sg-barockstadt-fulda-lehnerz-fsv-frankfurt-2403138"
+    ],
+    "rounds": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34
+    ]
+  },
+  {
+    "file": "suedwest-current.html",
+    "sha256": "6b169b8b529061e979cd95788c6735c6db62d88ff7df711e16ab27595a5b4f45",
+    "capturedAt": "2026-10-17T08:54:45.876300+00:00",
+    "canonical": "https://datencenter.dfb.de/competitions/regionalliga-suedwest/seasons/2026-2027/teams/fsv-frankfurt",
+    "title": "FSV Frankfurt, Regionalliga Südwest 2026/27 - DFB Datencenter",
+    "teams": [
+      "1-fc-kaiserslautern-ii",
+      "1-fsv-mainz-05-ii",
+      "eintracht-frankfurt-ii",
+      "eintracht-trier",
+      "fc-08-homburg",
+      "fc-astoria-walldorf",
+      "fsv-frankfurt",
+      "hessen-kassel",
+      "kickers-offenbach",
+      "sc-freiburg-ii",
+      "sg-barockstadt-fulda-lehnerz",
+      "sgv-freiberg",
+      "ssv-ulm-1846-fussball",
+      "stuttgarter-kickers",
+      "sv-sandhausen",
+      "tsv-steinbach-haiger",
+      "vfr-aalen",
+      "vfr-mannheim"
+    ],
+    "schedule": [
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/1-spieltag/fsv-frankfurt-vfr-mannheim-2426296",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/2-spieltag/1-fsv-mainz-05-ii-fsv-frankfurt-2426310",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/3-spieltag/fsv-frankfurt-fc-astoria-walldorf-2426321",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/4-spieltag/sg-barockstadt-fulda-lehnerz-fsv-frankfurt-2426326",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/5-spieltag/fsv-frankfurt-kickers-offenbach-2426335",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/6-spieltag/fsv-frankfurt-hessen-kassel-2426348",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/7-spieltag/ssv-ulm-1846-fussball-fsv-frankfurt-2426357",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/8-spieltag/fsv-frankfurt-stuttgarter-kickers-2426358",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/10-spieltag/vfr-aalen-fsv-frankfurt-2426378",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/11-spieltag/fsv-frankfurt-sv-sandhausen-2426392",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/9-spieltag/1-fc-kaiserslautern-ii-fsv-frankfurt-2426369",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/12-spieltag/eintracht-trier-fsv-frankfurt-2426400",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/13-spieltag/fsv-frankfurt-eintracht-frankfurt-ii-2426409",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/14-spieltag/tsv-steinbach-haiger-fsv-frankfurt-2426419",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/15-spieltag/fsv-frankfurt-sgv-heilbronn-freiberg-2426428",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/16-spieltag/fc-08-homburg-fsv-frankfurt-2426438",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/17-spieltag/fsv-frankfurt-sc-freiburg-ii-2426447",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/18-spieltag/vfr-mannheim-fsv-frankfurt-2426450",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/19-spieltag/fsv-frankfurt-1-fsv-mainz-05-ii-2426466",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/20-spieltag/fc-astoria-walldorf-fsv-frankfurt-2426470",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/21-spieltag/fsv-frankfurt-sg-barockstadt-fulda-lehnerz-2426478",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/22-spieltag/kickers-offenbach-fsv-frankfurt-2426487",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/23-spieltag/hessen-kassel-fsv-frankfurt-2426498",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/24-spieltag/fsv-frankfurt-ssv-ulm-1846-fussball-2426512",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/25-spieltag/stuttgarter-kickers-fsv-frankfurt-2426517",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/26-spieltag/fsv-frankfurt-1-fc-kaiserslautern-ii-2426527",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/27-spieltag/fsv-frankfurt-vfr-aalen-2426532",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/28-spieltag/sv-sandhausen-fsv-frankfurt-2426545",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/29-spieltag/fsv-frankfurt-eintracht-trier-2426551",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/30-spieltag/eintracht-frankfurt-ii-fsv-frankfurt-2426561",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/31-spieltag/fsv-frankfurt-tsv-steinbach-haiger-2426569",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/32-spieltag/sgv-freiberg-fsv-frankfurt-2426584",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/33-spieltag/fsv-frankfurt-fc-08-homburg-2426593",
+      "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/34-spieltag/sc-freiburg-ii-fsv-frankfurt-2426600"
+    ],
+    "rounds": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34
+    ]
+  },
+  {
+    "file": "west-archive.html",
+    "sha256": "1374b96eb8ae1b62fb584385c80e0b8750facd4b7120bb1200f40330087856c7",
+    "capturedAt": "2026-10-17T08:55:02.796453+00:00",
+    "canonical": "https://datencenter.dfb.de/competitions/regionalliga-west/seasons/2025-2026/teams/rot-weiss-oberhausen",
+    "title": "Rot-Weiß Oberhausen, Regionalliga West 2025/26 - DFB Datencenter",
+    "teams": [
+      "1-fc-bocholt",
+      "1-fc-koeln-ii",
+      "bonner-sc",
+      "borussia-dortmund-ii",
+      "borussia-moenchengladbach-ii",
+      "fc-guetersloh",
+      "fc-schalke-04-ii",
+      "fortuna-duesseldorf-ii",
+      "fortuna-koeln",
+      "rot-weiss-oberhausen",
+      "sc-paderborn-07-ii",
+      "sc-wiedenbrueck",
+      "sportfreunde-lotte",
+      "sportfreunde-siegen",
+      "ssvg-velbert",
+      "sv-roedinghausen",
+      "vfl-bochum-ii",
+      "wuppertaler-sv"
+    ],
+    "schedule": [
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/1-spieltag/rot-weiss-oberhausen-fc-guetersloh-2402192",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/2-spieltag/fortuna-duesseldorf-ii-rot-weiss-oberhausen-2402197",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/3-spieltag/rot-weiss-oberhausen-bonner-sc-2402204",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/4-spieltag/fortuna-koeln-rot-weiss-oberhausen-2402216",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/5-spieltag/rot-weiss-oberhausen-ssvg-velbert-2402222",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/6-spieltag/sv-roedinghausen-rot-weiss-oberhausen-2402236",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/7-spieltag/rot-weiss-oberhausen-borussia-dortmund-ii-2402239",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/8-spieltag/fc-schalke-04-ii-rot-weiss-oberhausen-2402248",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/9-spieltag/rot-weiss-oberhausen-1-fc-koeln-ii-2402258",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/10-spieltag/sc-wiedenbrueck-rot-weiss-oberhausen-2402268",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/11-spieltag/rot-weiss-oberhausen-sc-paderborn-07-ii-2402276",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/12-spieltag/sportfreunde-siegen-rot-weiss-oberhausen-2402289",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/13-spieltag/rot-weiss-oberhausen-sportfreunde-lotte-2402296",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/14-spieltag/wuppertaler-sv-rot-weiss-oberhausen-2402306",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/15-spieltag/rot-weiss-oberhausen-vfl-bochum-ii-2402314",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/16-spieltag/borussia-moenchengladbach-ii-rot-weiss-oberhausen-2402327",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/17-spieltag/rot-weiss-oberhausen-1-fc-bocholt-2402329",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/18-spieltag/fc-guetersloh-rot-weiss-oberhausen-2402339",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/19-spieltag/rot-weiss-oberhausen-fortuna-duesseldorf-ii-2402350",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/21-spieltag/rot-weiss-oberhausen-fortuna-koeln-2402364",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/22-spieltag/ssvg-velbert-rot-weiss-oberhausen-2402374",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/23-spieltag/rot-weiss-oberhausen-sv-roedinghausen-2402384",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/24-spieltag/borussia-dortmund-ii-rot-weiss-oberhausen-2402392",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/25-spieltag/rot-weiss-oberhausen-fc-schalke-04-ii-2402399",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/26-spieltag/1-fc-koeln-ii-rot-weiss-oberhausen-2402409",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/27-spieltag/rot-weiss-oberhausen-sc-wiedenbrueck-2402424",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/28-spieltag/sc-paderborn-07-ii-rot-weiss-oberhausen-2402426",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/29-spieltag/rot-weiss-oberhausen-sportfreunde-siegen-2402439",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/30-spieltag/sportfreunde-lotte-rot-weiss-oberhausen-2402445",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/31-spieltag/rot-weiss-oberhausen-wuppertaler-sv-2402461",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/20-spieltag/bonner-sc-rot-weiss-oberhausen-2402357",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/32-spieltag/vfl-bochum-ii-rot-weiss-oberhausen-2402463",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/33-spieltag/rot-weiss-oberhausen-borussia-moenchengladbach-ii-2402478",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/34-spieltag/1-fc-bocholt-rot-weiss-oberhausen-2402488"
+    ],
+    "rounds": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34
+    ]
+  },
+  {
+    "file": "west-current.html",
+    "sha256": "45ad4fd9ac04cd47083dcc24fce2496e863da50f926ce90fff8ffcb17b041e2e",
+    "capturedAt": "2026-10-17T08:54:57.826511+00:00",
+    "canonical": "https://datencenter.dfb.de/competitions/regionalliga-west/seasons/2026-2027/teams/rot-weiss-oberhausen",
+    "title": "Rot-Weiß Oberhausen, Regionalliga West 2026/27 - DFB Datencenter",
+    "teams": [
+      "1-fc-bocholt",
+      "1-fc-koeln-ii",
+      "bonner-sc",
+      "borussia-dortmund-ii",
+      "borussia-moenchengladbach-ii",
+      "fc-guetersloh",
+      "fc-schalke-04-ii",
+      "rot-weiss-oberhausen",
+      "sc-paderborn-07-ii",
+      "sc-wiedenbrueck",
+      "sg-wattenscheid-09-13217",
+      "sportfreunde-lotte",
+      "sportfreunde-siegen",
+      "sv-bergisch-gladbach-09",
+      "sv-roedinghausen",
+      "sv-westfalia-rhynern",
+      "vfb-03-hilden",
+      "vfl-bochum-ii"
+    ],
+    "schedule": [
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/1-spieltag/bonner-sc-rot-weiss-oberhausen-2425377",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/2-spieltag/rot-weiss-oberhausen-sportfreunde-lotte-2425387",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/3-spieltag/vfl-bochum-ii-rot-weiss-oberhausen-2425398",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/4-spieltag/rot-weiss-oberhausen-1-fc-koeln-ii-2425404",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/5-spieltag/sv-bergisch-gladbach-09-rot-weiss-oberhausen-2425418",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/6-spieltag/rot-weiss-oberhausen-sv-westfalia-rhynern-2425422",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/7-spieltag/vfb-03-hilden-rot-weiss-oberhausen-2425437",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/8-spieltag/rot-weiss-oberhausen-fc-schalke-04-ii-2425448",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/9-spieltag/rot-weiss-oberhausen-borussia-moenchengladbach-ii-2425450",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/10-spieltag/rot-weiss-oberhausen-sv-roedinghausen-2425459",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/11-spieltag/rot-weiss-oberhausen-sc-paderborn-07-ii-2425470",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/12-spieltag/rot-weiss-oberhausen-1-fc-bocholt-2425484",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/13-spieltag/sportfreunde-siegen-rot-weiss-oberhausen-2425489",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/14-spieltag/rot-weiss-oberhausen-sg-wattenscheid-09-2425495",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/15-spieltag/sc-wiedenbrueck-rot-weiss-oberhausen-2425508",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/16-spieltag/rot-weiss-oberhausen-borussia-dortmund-ii-2425515",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/17-spieltag/fc-guetersloh-rot-weiss-oberhausen-2425529",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/18-spieltag/rot-weiss-oberhausen-bonner-sc-2425534",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/19-spieltag/sportfreunde-lotte-rot-weiss-oberhausen-2425540",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/20-spieltag/rot-weiss-oberhausen-vfl-bochum-ii-2425551",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/21-spieltag/1-fc-koeln-ii-rot-weiss-oberhausen-2425565",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/22-spieltag/rot-weiss-oberhausen-sv-bergisch-gladbach-09-2425570",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/23-spieltag/sv-westfalia-rhynern-rot-weiss-oberhausen-2425583",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/24-spieltag/rot-weiss-oberhausen-vfb-03-hilden-2425588",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/25-spieltag/fc-schalke-04-ii-rot-weiss-oberhausen-2425601",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/26-spieltag/rot-weiss-oberhausen-borussia-moenchengladbach-ii-2425603",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/27-spieltag/sv-roedinghausen-rot-weiss-oberhausen-2425619",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/28-spieltag/rot-weiss-oberhausen-sc-paderborn-07-ii-2425622",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/29-spieltag/1-fc-bocholt-rot-weiss-oberhausen-2425636",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/30-spieltag/rot-weiss-oberhausen-sportfreunde-siegen-2425642",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/31-spieltag/sg-wattenscheid-09-rot-weiss-oberhausen-2425653",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/32-spieltag/rot-weiss-oberhausen-sc-wiedenbrueck-2425660",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/33-spieltag/borussia-dortmund-ii-rot-weiss-oberhausen-2425665",
+      "https://datencenter.dfb.de/datencenter/regionalliga-west/2026-2027/34-spieltag/rot-weiss-oberhausen-fc-guetersloh-2425673"
+    ],
+    "rounds": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34
+    ]
+  }
+]

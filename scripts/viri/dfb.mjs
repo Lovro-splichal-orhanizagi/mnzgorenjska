@@ -1,4 +1,4 @@
-// Official public DFB Datencenter reports. Initially Regionalliga Nordost only.
+// Official public DFB Datencenter reports for explicitly registered leagues.
 // Profile links are optional and disappear independently of public names. Never
 // switch identity according to link availability: all players use name + club,
 // with same-team name collisions rejected. Numeric profile IDs are metadata.
@@ -12,6 +12,8 @@ import { razberiPostavo as fussballPostava, jeIzziv as fussballIzziv } from './f
 const correctionRegistry=JSON.parse(readFileSync(new URL('./dfb-korekcije.json',import.meta.url),'utf8'))
 const reserveRegistry=JSON.parse(readFileSync(new URL('./dfb-rezerve.json',import.meta.url),'utf8'))
 
+const leagueRegistry=JSON.parse(readFileSync(new URL('./dfb-lige.json',import.meta.url),'utf8'))
+const teamSlug=s=>/^[a-zA-Z0-9]+(?:(?:-|%20)[a-zA-Z0-9]+)*$/.test(s)
 const BASE = 'https://datencenter.dfb.de'
 const fail = s => {
   const e=new Error(`dfb: ${s}`)
@@ -171,16 +173,19 @@ function identity(fragment) {
   if (!validName(ime)) fail('manjka javna identiteta igralca')
   return { ime, profilId: fragment.match(/\/profil\/(\d+)(?:[?"'])/)?.[1] ?? null }
 }
-function metadata(html, id) {
+function metadata(html, id, liga='regionalliga-nordost') {
+  if(!leagueRegistry[liga])fail('neznana liga')
   if (jeIzziv(html)) fail('izziv ali zavrnitev vira')
   if (!/<\/body>\s*<\/html>\s*$/i.test(html)) fail('odrezan ali nepopoln zapisnik')
   const canonical = [...html.matchAll(/<link\b[^>]*>/gi)].filter(m => attr(m[0], 'rel') === 'canonical')
   if (canonical.length !== 1) fail('manjka kanonična identiteta')
   const url = attr(canonical[0][0], 'href')
-  const key = url?.match(/^https:\/\/datencenter\.dfb\.de\/datencenter\/regionalliga-nordost\/(\d{4})-(\d{4})\/(\d+)(?:-spieltag)?\/[a-z0-9-]+-(\d+)$/)
+  const key = url?.match(new RegExp(/^https:\/\/datencenter\.dfb\.de\/datencenter\/LEAGUE\/(\d{4})-(\d{4})\/(\d+)(?:-spieltag)?\/[a-z0-9-]+-(\d+)$/.source.replace('LEAGUE',liga)))
   if (!key || +key[2] !== +key[1] + 1 || (id && String(id).replace(/^de-dfb-/, '') !== key[4])) fail('neujemanje šifre ali identitete zapisnika')
+  const configuration=konfiguracijaDfb(`${liga}/${key[1]}-${key[2]}`)
+  if(+key[3]<1||+key[3]>configuration.rounds)fail('neveljaven krog')
   const headline = text(one(html, 'h2', 'm-MatchDetails-headline').inner)
-  if (headline !== `Regionalliga Nordost, ${key[1]}/${key[2]}, ${+key[3]}. Spieltag`) fail('neujemanje sezone ali kroga')
+  if (headline !== `${leagueRegistry[liga].name}, ${key[1]}/${key[2]}, ${+key[3]}. Spieltag`) fail('neujemanje sezone ali kroga')
   const date = text(one(html, 'h4', 'm-MatchDetails-subline').inner).match(/, (\d{1,2})\. (\p{L}+) (\d{4}), (\d{2}:\d{2}) Uhr,/u)
   const months = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember']
   if (!date || !months.includes(date[2])) fail('manjka datum ali ura')
@@ -264,13 +269,13 @@ function verifiedReserve(html,meta,tables,teams,players,coaches){
 }
 
 /** A complete played public match report; every discrepancy rejects the report. */
-export function vZapisnik(html, { id, tekma } = {}) {
-  const meta = metadata(String(html), id)
+export function vZapisnik(html, { id, tekma, liga='regionalliga-nordost' } = {}) {
+  const meta = metadata(String(html), id, liga)
   const result = one(html, 'div', 'm-MatchDetails-result').inner
   const teams = elements(result, 'div', 'm-MatchDetails-team').map(e => {
     const a = one(e.inner, 'a')
-    const path = attr(a.tag, 'href')?.match(/\/competitions\/regionalliga-nordost\/seasons\/(\d{4})-(\d{4})\/teams\/([a-zA-Z0-9-]+)(?:[?"']|$)/)
-    if (!path || `${path[1]}/${path[2].slice(2)}` !== meta.sezona) fail('neujemanje identitete ekipe')
+    const path = safeUrl(attr(a.tag, 'href')).pathname.match(new RegExp(/^\/competitions\/LEAGUE\/seasons\/(\d{4})-(\d{4})\/teams\/([a-zA-Z0-9%\-]+)$/.source.replace('LEAGUE',liga)))
+    if (!path || !teamSlug(path[3]) || `${path[1]}/${path[2].slice(2)}` !== meta.sezona) fail('neujemanje identitete ekipe')
     return { ime: text(one(e.inner, 'div', 'm-MatchDetails-title').inner), virId: path[3], postava: [], rezerve: [] }
   })
   if (teams.length !== 2 || teams[0].virId === teams[1].virId) fail('nepopolni ekipi')
@@ -509,24 +514,28 @@ export function nastopi(z) {
   return out
 }
 
-export function razberiKodo(koda) {
-  const m=String(koda??'').match(/^regionalliga-nordost\/(\d{4})-(\d{4})$/)
-  if(!m || +m[2]!==+m[1]+1)fail('šifra lige mora biti regionalliga-nordost/YYYY-YYYY')
-  return {pot:`regionalliga-nordost/seasons/${m[1]}-${m[2]}`,sezona:`${m[1]}/${m[2].slice(2)}`,leto:+m[1]}
+export function konfiguracijaDfb(koda){
+  const m=String(koda??'').match(/^(regionalliga-[a-z]+)\/(\d{4})-(\d{4})$/)
+  const league=m&&leagueRegistry[m[1]],season=league?.seasons[`${m[2]}-${m[3]}`]
+  if(!season||+m[3]!==+m[2]+1)fail('šifra lige ali sezona ni registrirana')
+  return Object.freeze({liga:m[1],name:league.name,sezona:`${m[2]}/${m[3].slice(2)}`,leto:+m[2],pot:`${m[1]}/seasons/${m[2]}-${m[3]}`,...season})
 }
-export const naslovEkipe=(koda,slug='bfc-dynamo')=>{
-  if(!/^[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*$/.test(slug))fail('neveljavna šifra ekipe')
+export function razberiKodo(koda){const {pot,sezona,leto}=konfiguracijaDfb(koda);return {pot,sezona,leto}}
+export const naslovEkipe=(koda,slug=konfiguracijaDfb(koda).seed)=>{
+  if(!teamSlug(slug))fail('neveljavna šifra ekipe')
   return `${BASE}/competitions/${razberiKodo(koda).pot}/teams/${slug}`
 }
 const safeUrl=s=>{
-  const u=new URL(razpakiraj(s),BASE)
+  const raw=razpakiraj(s)
+  if(/%(?:2f|5c|2e|25)|(?:^|\/)\.\.?(?:\/|$)|\\/i.test(raw.split('?')[0]))fail('neveljavna pot uradnega vira')
+  const u=new URL(raw,BASE)
   if(u.origin!==BASE || u.username || u.password)fail('povezava izven uradnega vira')
   return u
 }
 
 /** Parse one actual season-team schedule; never infer IDs, rounds or URLs. */
 export function tekmeEkipe(html,koda,slug) {
-  const conf=razberiKodo(koda),expected=naslovEkipe(koda,slug)
+  const conf=konfiguracijaDfb(koda),expected=naslovEkipe(koda,slug)
   if(jeIzziv(html))fail('izziv (CAPTCHA) v razporedu')
   if(!/<\/body>\s*<\/html>\s*$/i.test(html))fail('odrezan razpored')
   const canonical=[...html.matchAll(/<link\b[^>]*>/gi)].filter(m=>attr(m[0],'rel')==='canonical')
@@ -538,8 +547,8 @@ export function tekmeEkipe(html,koda,slug) {
     if(ids.length!==1)fail('neenolična šifra tekme')
     const homeAway=['home','away'].map(side=>{
       const cell=one(row.inner,'div',`c-MatchTable-team--${side}`),a=one(cell.inner,'a')
-      const url=safeUrl(attr(a.tag,'href')),m=url.pathname.match(/^\/competitions\/(regionalliga-nordost\/seasons\/\d{4}-\d{4})\/teams\/([a-zA-Z0-9-]+)$/)
-      if(!m||m[1]!==conf.pot)fail('neujemanje sezone ekipe')
+      const url=safeUrl(attr(a.tag,'href')),m=url.pathname.match(/^\/competitions\/(regionalliga-[a-z]+\/seasons\/\d{4}-\d{4})\/teams\/([a-zA-Z0-9%\-]+)$/)
+      if(!m||!teamSlug(m[2])||m[1]!==conf.pot)fail('neujemanje sezone ekipe')
       const ime=text(a.inner)
       if(!ime)fail('manjka ime ekipe')
       if(ek.has(m[2])&&ek.get(m[2]).ime!==ime)fail('neenolično ime ekipe')
@@ -547,17 +556,19 @@ export function tekmeEkipe(html,koda,slug) {
     })
     if(homeAway[0].id===homeAway[1].id || !homeAway.some(t=>t.id===slug))fail('razpored druge ekipe')
     const score=one(row.inner,'div','c-MatchTable-score'),a=one(score.inner,'a'),url=safeUrl(attr(a.tag,'href'))
-    const match=url.pathname.match(/^\/datencenter\/regionalliga-nordost\/(\d{4})-(\d{4})\/(\d+)(?:-spieltag)?\/[a-z0-9-]+-(\d+)$/)
+    const match=url.pathname.match(new RegExp(/^\/datencenter\/LEAGUE\/(\d{4})-(\d{4})\/(\d+)(?:-spieltag)?\/[a-z0-9-]+-(\d+)$/.source.replace('LEAGUE',conf.liga)))
     if(!match || +match[1]!==conf.leto || +match[2]!==conf.leto+1 || match[4]!==ids[0])fail('neujemanje šifre ali identitete tekme')
-    const time=text(one(row.inner,'div','c-MatchTable-description').inner).match(/, (\d{2})\.(\d{2})\.(\d{4}) (\d{2}:\d{2}) Uhr$/)
+    const time=text(one(row.inner,'div','c-MatchTable-description').inner).match(/, (\d{2})\.(\d{2})\.(\d{4})(?: (\d{2}:\d{2}) Uhr)?$/)
     if(!time)fail('manjka datum tekme v razporedu')
     const datum=`${time[3]}-${time[2]}-${time[1]}`
-    if(new Date(`${datum}T00:00:00Z`).toISOString().slice(0,10)!==datum || datum<`${conf.leto}-07-01` || datum>`${conf.leto+1}-06-30` || +time[4].slice(0,2)>23 || +time[4].slice(3)>59)fail('neveljaven datum razporeda')
+    if(new Date(`${datum}T00:00:00Z`).toISOString().slice(0,10)!==datum || datum<`${conf.leto}-07-01` || datum>`${conf.leto+1}-06-30` || (time[4] && (+time[4].slice(0,2)>23 || +time[4].slice(3)>59)))fail('neveljaven datum razporeda')
     const val=text(a.inner),sc=val.match(/^(\d+) : (\d+)$/)
-    if(!sc && val!=='- : -')fail('nepodprt izid razporeda')
-    tekme.push({id:ids[0],krog:+match[3],sezona:conf.sezona,datum,ura:time[4],domaci:homeAway[0].ime,gostje:homeAway[1].ime,domaciId:homeAway[0].id,gostjeId:homeAway[1].id,izid:sc?{domaci:+sc[1],gostje:+sc[2]}:null,url:url.href})
+    if(!sc && val!=='- : -' && val!=='- : - verl.')fail('nepodprt izid razporeda')
+    tekme.push({id:ids[0],krog:+match[3],sezona:conf.sezona,datum,ura:time[4]??null,domaci:homeAway[0].ime,gostje:homeAway[1].ime,domaciId:homeAway[0].id,gostjeId:homeAway[1].id,izid:sc?{domaci:+sc[1],gostje:+sc[2]}:null,url:url.href})
   }
-  if(tekme.length!==34||new Set(tekme.map(t=>t.id)).size!==34||new Set(tekme.map(t=>t.krog)).size!==34||tekme.some(t=>t.krog<1||t.krog>34)||ek.size!==18)fail('nepopoln omejen razpored: pričakovanih 34 krogov in 18 ekip')
+  const games=2*(conf.teams-1)
+  if(tekme.length!==games||new Set(tekme.map(t=>t.id)).size!==games||new Set(tekme.map(t=>t.krog)).size!==games||tekme.some(t=>t.krog<1||t.krog>conf.rounds)||ek.size!==conf.teams)fail('nepopoln omejen razpored: nepričakovani krogi ali ekipe')
+
   return {sezona:conf.sezona,tekme,ekipe:[...ek.values()]}
 }
 
@@ -593,14 +604,18 @@ export async function varniFetch(url,options,fetchFn=globalThis.fetch){
 // Shared importers invoke this before saving AND before reusing a cache entry.
 // A closed HTML document is insufficient: validate the entire actual schema,
 // including event identity, before allowing it into persistent cache.
+const ligaZapisnika=html=>{
+  const canonical=[...String(html).matchAll(/<link\b[^>]*>/gi)].filter(m=>attr(m[0],'rel')==='canonical')
+  return canonical.length===1?attr(canonical[0][0],'href')?.match(/^https:\/\/datencenter\.dfb\.de\/datencenter\/(regionalliga-[a-z]+)\//)?.[1]:null
+}
 export function zaPredpomnilnik(html){
   if(jeIzziv(html)||Buffer.byteLength(String(html))>2*1024*1024)return false
   try {
-    if(/class="m-MatchDetails"/.test(html)){vZapisnik(html);return true}
+    if(/class="m-MatchDetails"/.test(html)){vZapisnik(html,{liga:ligaZapisnika(html)});return true}
     const canonical=[...String(html).matchAll(/<link\b[^>]*>/gi)].find(m=>attr(m[0],'rel')==='canonical')
-    const path=safeUrl(attr(canonical?.[0]??'','href')).pathname.match(/^\/competitions\/regionalliga-nordost\/seasons\/(\d{4}-\d{4})\/teams\/([a-zA-Z0-9-]+)$/)
+    const path=safeUrl(attr(canonical?.[0]??'','href')).pathname.match(/^\/competitions\/(regionalliga-[a-z]+)\/seasons\/(\d{4}-\d{4})\/teams\/([a-zA-Z0-9%\-]+)$/)
     if(!path)return false
-    tekmeEkipe(html,`regionalliga-nordost/${path[1]}`,path[2]);return true
+    tekmeEkipe(html,`${path[1]}/${path[2]}`,path[3]);return true
   }catch{return false}
 }
 async function prenesiStran(prenesi,url,name,fresh){
@@ -615,15 +630,15 @@ async function beri(prenesi,url,name,fresh){
   if(!zaPredpomnilnik(html)){
     // The cache hook must return a boolean, but callers need the actual report
     // failure to diagnose a new format or inconsistent upstream data.
-    if(Buffer.byteLength(String(html))<=2*1024*1024&&/class="m-MatchDetails"/.test(html))vZapisnik(html)
+    if(Buffer.byteLength(String(html))<=2*1024*1024&&/class="m-MatchDetails"/.test(html))vZapisnik(html,{liga:ligaZapisnika(html)})
     fail('nepopolna javna stran')
   }
   return html
 }
 
-/** Exactly 18 discovered team pages, exactly 306 deduplicated league matches. */
+/** Discover the registered season and validate every directed home/away pair. */
 export async function tekmeSezone(koda,prenesi){
-  const seed='bfc-dynamo',first=tekmeEkipe(await beri(prenesi,naslovEkipe(koda,seed),`team-${koda.replaceAll('/','-')}-${seed}.html`,true),koda,seed)
+  const conf=konfiguracijaDfb(koda),seed=conf.seed,first=tekmeEkipe(await beri(prenesi,naslovEkipe(koda,seed),`team-${koda.replaceAll('/','-')}-${seed}.html`,true),koda,seed)
   const ids=new Set(first.ekipe.map(e=>e.id)),matches=new Map()
   const merge=data=>{
     if(data.ekipe.some(e=>!ids.has(e.id)))fail('razpored vsebuje nepričakovano ekipo')
@@ -636,13 +651,17 @@ export async function tekmeSezone(koda,prenesi){
   merge(first)
   for(const e of first.ekipe.filter(e=>e.id!==seed))merge(tekmeEkipe(await beri(prenesi,e.url,`team-${koda.replaceAll('/','-')}-${e.id}.html`,true),koda,e.id))
   const all=[...matches.values()],pairs=new Set()
-  if(all.length!==306)fail('nepopolna sezona: pričakovanih 306 tekem')
-  for(let k=1;k<=34;k++){
+  if(all.length!==conf.teams*(conf.teams-1))fail('nepopolna sezona: nepričakovano število tekem')
+  for(let k=1;k<=conf.rounds;k++){
     const round=all.filter(t=>t.krog===k)
-    if(round.length!==9||new Set(round.flatMap(t=>[t.domaciId,t.gostjeId])).size!==18)fail(`nepopoln krog ${k}`)
+    if(round.length!==Math.floor(conf.teams/2)||new Set(round.flatMap(t=>[t.domaciId,t.gostjeId])).size!==2*Math.floor(conf.teams/2))fail(`nepopoln krog ${k}`)
   }
   for(const t of all){const p=`${t.domaciId}|${t.gostjeId}`;if(pairs.has(p))fail('podvojen par ekip');pairs.add(p)}
-  if(pairs.size!==18*17)fail('nepopolni pari ekip')
+  for(const home of ids)for(const away of ids)if(home!==away&&!pairs.has(`${home}|${away}`))fail('nepopolni pari ekip')
+  if(conf.teams%2)for(const club of ids)for(const half of [0,1]){
+    const played=all.filter(t=>t.krog>half*conf.rounds/2&&t.krog<=(half+1)*conf.rounds/2&&(t.domaciId===club||t.gostjeId===club))
+    if(played.length!==conf.rounds/2-1)fail('neveljavni prosti krogi ekipe')
+  }
   return all.sort((a,b)=>a.krog-b.krog||a.datum.localeCompare(b.datum)||a.id.localeCompare(b.id))
 }
 export function vRazpored(tekme){
@@ -666,7 +685,7 @@ const vir={
       // during an audit. Only recognized strict report-parser errors collect.
       const html=await prenesiStran(prenesi,t.url,`match-${t.id}.html`,fresh)
       try {
-        const z=vZapisnik(html,{id:t.id,tekma:t})
+        const z=vZapisnik(html,{id:t.id,tekma:t,liga:konfiguracijaDfb(koda).liga})
         out.push({id:z.zapisnikId,z,url:t.url})
       }catch(e){
         const pending=e.koda==='DFB_PENDING_REPORT'&&jeCakajociDfb(e.podatki)
