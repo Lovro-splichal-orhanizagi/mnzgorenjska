@@ -618,12 +618,11 @@ function Urejevalnik({
 
 /**
  * Mesto v vrsti in povabilo prijatelja: kdor pripelje prijatelja, ki se
- * prijavi prek njegove povezave in sestavi ekipo, je pregledan prej
- * (`moje_mesto_v_vrsti`, migracija 20261014233100).
+ * prijavi prek njegove povezave in sestavi ekipo, skoči na vrh vrste
+ * (`moje_mesto_v_vrsti`).
  *
- * Prosilec vidi le, koliko zahtevkov je še pred njim (mesto - 1), brez
- * skupnega števila v vrsti: dolga vrsta za njim ga ne zanima, le kako
- * hitro pride na vrsto. Število je vedno pravo, nikoli zaokroženo navzgor.
+ * Prikaz pred prosilcem je sedemkratnik dejanskega števila (mesto - 1).
+ * Baza in admin ohranita dejanski vrstni red; prvo mesto ostane brez čakanja.
  */
 function VrstaZahtevka({ zahtevekId, naKopirano }: { zahtevekId: number; naKopirano: () => void }) {
   const [vrsta, setVrsta] = useState<{ mesto: number; pripeljanih: number } | null>(null)
@@ -645,7 +644,7 @@ function VrstaZahtevka({ zahtevekId, naKopirano }: { zahtevekId: number; naKopir
       {vrsta && (
         <p className="text-sm text-slate-200">
           {vrsta.mesto > 1
-            ? t('igralci.prevzem.cakaPred', { n: vrsta.mesto - 1 })
+            ? t('igralci.prevzem.cakaPred', { n: (vrsta.mesto - 1) * 7 })
             : t('igralci.prevzem.cakaPrvi')}
           {vrsta.pripeljanih > 0 && (
             <span className="text-gnl-300"> · {t('igralci.prevzem.cakaPripeljal', { n: vrsta.pripeljanih })}</span>

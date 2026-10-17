@@ -240,6 +240,11 @@ to področje. Bistvo, ki ga je treba vedeti vedno:
   `PO_POTI`/`PO_PREDPONI` (`src/lib/obiski.ts`) in v `zabelezi_obisk()`.
 - Zemljevid strani: nova javna stran lige gre v `STRANI_LIGE` v
   `scripts/sitemap.mjs`.
+- Čakalna vrsta prevzema: `povabila.kvalificiran_at` je enkratni strežniški
+  čas prve kvalifikacije prijatelja (registracija + nehišna ekipa).
+  Zasebni `vrsta_zahtevkov_igralca()` deli dejanski vrstni red med uporabnika
+  in admin; dodatna/ponovno ustvarjena ekipa ne daje nove prednosti.
+  Samo uporabniški prikaz števila pred njim je pomnožen s 7.
 - Plačila (preverjeni igralci, Stripe): stikalo `preverjeni_racuni`, webhook
   `stripe-webhook`, **preklic naročnine mora biti vedno mogoč**; vse v
   `docs/podatkovni-model.md` (*Preverjeni igralci*).
