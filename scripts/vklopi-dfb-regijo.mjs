@@ -3,6 +3,7 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { createHash } from 'node:crypto'
+import { verifyLineage } from './dfb-replay-proof.mjs'
 import vir, { konfiguracijaDfb } from './viri/dfb.mjs'
 import { preveriPokritost } from './preveri-vir-sezono.mjs'
 import { preveriPosnetek as preveriSuroviPosnetek } from './vklopi-nemcijo.mjs'
@@ -56,26 +57,35 @@ export function sestaviSezono({slug,sezona,razpored,zapisniki,nepopolni=[],captu
 export function preveriOdobritev(raw,approvedSha,now=Date.now()){
  if(Buffer.byteLength(raw)>8*1024*1024||!/^[a-f0-9]{64}$/.test(approvedSha)||sha(raw)!==approvedSha)fail('approved manifest SHA/size mismatch')
  const m=JSON.parse(raw);configuration(m.slug)
- if(m.version!==1||!/^[a-f0-9]{40}$/.test(m.sourceCommit)||m.parserSha256!==parserSha256()||m.seasons?.length!==2)fail('scope/parser provenance mismatch')
+ if(![1,2].includes(m.version)||!/^[a-f0-9]{40}$/.test(m.sourceCommit)||m.parserSha256!==parserSha256()||m.seasons?.length!==2)fail('scope/parser provenance mismatch')
  for(const [i,season]of['2025/26','2026/27'].entries()){
   const s=m.seasons[i],c=configuration(m.slug,season),age=now-Date.parse(s.capturedAt)
   if(s.season!==season||s.code!==c.code||!Number.isFinite(age)||age< -300000||age>(i?12:168)*3600000||!/^\d{1,20}$/.test(s.runId)||!/^\d{1,20}$/.test(s.jobId)||!/^[a-f0-9]{64}$/.test(s.documentsSha256)||s.fixtures?.length!==c.teams*(c.teams-1))fail('invalid/stale capture provenance')
+  if(m.version===2)verifyLineage(s,m)
+  else if(s.lineage!=null)fail('Replay lineage requires version2')
  }
  return m
 }
 export async function pripravi({slug,archiveDir,currentDir,sourceCommit,proof}){
  configuration(slug)
  if(!/^[a-f0-9]{40}$/.test(sourceCommit)||proof?.sourceCommit!==sourceCommit||proof.slug!==slug||proof.sourceFilesIdentical!==true)fail('verified job provenance required')
- const seasons=[]
+ const seasons=[],version=proof.version??1
+ if(![1,2].includes(version))fail('Unknown provenance version')
  for(const [i,dir]of[archiveDir,currentDir].entries()){
   const season=['2025/26','2026/27'][i],p=proof.proof?.[i]
   if(p?.season!==season||p.captureCommit!==sourceCommit||p.seasonJobPassed!==true)fail('season capture job mismatch')
+  if(version===2){
+   verifyLineage({...p,capturedAt:p.lineage?.capture.capturedAt,documentsSha256:p.lineage?.capture.documentsSha256},{sourceCommit,parserSha256:parserSha256()})
+   const {readClosedCapture}=await import('./ponovi-dfb-regijo.mjs');readClosedCapture(dir,slug,season,p.lineage.capture)
+  }else if(p.lineage!=null)fail('Mixed direct/replay proof')
   const snapshot=preveriPosnetek(dir,JSON.parse(readFileSync(resolve(dir,'prenosi.json'),'utf8')))
   const read=async url=>{if(!snapshot.documents.has(url))fail(`missing captured URL ${url}`);return snapshot.documents.get(url)}
   const code=configuration(slug,season).code,razpored=await vir.razporedVseStrani(code,read),zapisniki=await vir.zapisniki(code,read,{zberiNapake:true})
-  seasons.push(sestaviSezono({slug,sezona:season,razpored,zapisniki,nepopolni:vir.nepopolni??[],...snapshot,runId:p.runId,jobId:p.jobId}))
+  const built=sestaviSezono({slug,sezona:season,razpored,zapisniki,nepopolni:vir.nepopolni??[],...snapshot,runId:p.runId,jobId:p.jobId})
+  if(version===2)built.lineage=p.lineage
+  seasons.push(built)
  }
- const m={version:1,slug,sourceCommit,parserSha256:parserSha256(),seasons};const raw=JSON.stringify(m)+'\n';preveriOdobritev(raw,sha(raw));return m
+ const m={version,slug,sourceCommit,parserSha256:parserSha256(),seasons};const raw=JSON.stringify(m)+'\n';preveriOdobritev(raw,sha(raw));return m
 }
 export function actionsOnly(){if(process.env.GITHUB_ACTIONS!=='true'||process.env.GITHUB_REPOSITORY!=='Lovro-splichal-orhanizagi/mnzgorenjska')fail('database operations require repository Actions')}
 export async function databaseCheck(raw,approvedSha,activate=false){

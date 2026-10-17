@@ -5,7 +5,8 @@ import assert from 'node:assert/strict'
 const container=process.env.SUPABASE_DB_CONTAINER
 if(!container)throw Error('Explicit disposable SUPABASE_DB_CONTAINER required')
 const args=['exec','-i',container,'psql','-U','postgres','-d',process.env.SUPABASE_TEST_DB??'postgres','-X','-v','ON_ERROR_STOP=1']
-const sql=readFileSync(new URL('../supabase/tests/vklop-dfb-regije.sql',import.meta.url),'utf8').split('do $$ declare r jsonb; begin')[0]
+for(const version of [1,2]){
+const sql=readFileSync(new URL('../supabase/tests/vklop-dfb-regije.sql',import.meta.url),'utf8').split('do $$ declare r jsonb; begin')[0].replace('create function pg_temp.de_check(',()=>version===2?readFileSync(new URL('../supabase/tests/dfb-replay-manifest.sql',import.meta.url),'utf8')+'\ncreate function pg_temp.de_check(':'create function pg_temp.de_check(')
 const child=spawn('docker',[...args,'-v','regional_slug=de-regionalliga-nord','-v','current_clubs=18','-v','current_rounds=34'],{stdio:['pipe','pipe','pipe']})
 let errors='',output=''
 child.stderr.on('data',d=>errors+=d)
@@ -23,3 +24,5 @@ try{
  console.log('PASS regional preflight holds all statistics tables and target competition through commit')
 }finally{child.stdin.end('rollback;\n')}
 await new Promise((ok,no)=>child.on('exit',code=>code===0?ok():no(Error(errors))))
+
+}

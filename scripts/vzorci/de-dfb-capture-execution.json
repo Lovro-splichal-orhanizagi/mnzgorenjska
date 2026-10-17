@@ -1,0 +1,115 @@
+{
+  "source": "GitHub Actions REST API retained 2026-10-17; original failed capture, never a successful replay",
+  "run": {
+    "id": 39028219473,
+    "head_sha": "a48fd89071aae0d2097603110c5442324fc59e3d",
+    "path": ".github/workflows/preveri-dfb-ligo.yml",
+    "event": "workflow_dispatch",
+    "status": "completed",
+    "conclusion": "failure",
+    "html_url": "https://github.com/Lovro-splichal-orhanizagi/mnzgorenjska/actions/runs/39028219473",
+    "repository": {
+      "full_name": "Lovro-splichal-orhanizagi/mnzgorenjska"
+    }
+  },
+  "jobs": [
+    {
+      "id": 117383322693,
+      "run_id": 39028219473,
+      "head_sha": "a48fd89071aae0d2097603110c5442324fc59e3d",
+      "name": "DFB regionalni audit",
+      "status": "completed",
+      "conclusion": "failure",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-17T11:18:55Z",
+          "completed_at": "2026-10-17T11:18:55Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-17T11:18:55Z",
+          "completed_at": "2026-10-17T11:18:59Z"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-17T11:18:59Z",
+          "completed_at": "2026-10-17T11:18:59Z"
+        },
+        {
+          "name": "Preveri vhod",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-17T11:18:59Z",
+          "completed_at": "2026-10-17T11:18:59Z"
+        },
+        {
+          "name": "Tekoča sezona — brez baze",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 5,
+          "started_at": "2026-10-17T11:18:59Z",
+          "completed_at": "2026-10-17T11:18:59Z"
+        },
+        {
+          "name": "Tekoča sezona — dokazi in surovi dokumenti",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 6,
+          "started_at": "2026-10-17T11:18:59Z",
+          "completed_at": "2026-10-17T11:18:59Z"
+        },
+        {
+          "name": "Arhiv sezona — brez baze",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 7,
+          "started_at": "2026-10-17T11:18:59Z",
+          "completed_at": "2026-10-17T12:09:44Z"
+        },
+        {
+          "name": "Arhiv sezona — dokazi in surovi dokumenti",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-10-17T12:09:44Z",
+          "completed_at": "2026-10-17T12:09:45Z"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 15,
+          "started_at": "2026-10-17T12:09:45Z",
+          "completed_at": "2026-10-17T12:09:45Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16,
+          "started_at": "2026-10-17T12:09:45Z",
+          "completed_at": "2026-10-17T12:09:46Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17,
+          "started_at": "2026-10-17T12:09:46Z",
+          "completed_at": "2026-10-17T12:09:46Z"
+        }
+      ]
+    }
+  ]
+}

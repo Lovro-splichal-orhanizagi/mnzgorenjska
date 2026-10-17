@@ -1,0 +1,65 @@
+name: Ponovitev DFB regije iz izvirnega zajema
+run-name: Ponovitev DFB ${{ inputs.liga }} ${{ inputs.season }}
+on:
+  workflow_dispatch:
+    inputs:
+      liga:
+        type: choice
+        required: true
+        options: [de-regionalliga-nord, de-regionalliga-west, de-regionalliga-suedwest, de-regionalliga-bayern]
+      season:
+        type: choice
+        required: true
+        options: ['2025/26', '2026/27']
+      capture_run:
+        description: Izvirni dejanski zajem
+        type: string
+        required: true
+      capture_commit:
+        description: Celotni pregledani SHA izvirnega zajema
+        type: string
+        required: true
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: dfb-replay-${{ inputs.liga }}-${{ inputs.season }}
+  cancel-in-progress: false
+jobs:
+  replay:
+    name: DFB regionalni replay
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      LIGA: ${{ inputs.liga }}
+      SEASON: ${{ inputs.season }}
+      CAPTURE_RUN: ${{ inputs.capture_run }}
+      CAPTURE_COMMIT: ${{ inputs.capture_commit }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --ignore-scripts
+      - name: Preveri izvirni posel in SHA prenesenega arhiva
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/ponovi-dfb-regijo.mjs capture "$LIGA" "$SEASON" "$CAPTURE_RUN" "$CAPTURE_COMMIT" original parent.json
+      - name: Ponovi sezono — brez omrežja in baze
+        run: |
+          set -euo pipefail
+          sudo -E unshare --net -- node scripts/ponovi-dfb-regijo.mjs replay "$LIGA" "$SEASON" original parent.json replay
+      - name: Ime dokaza
+        id: artifact
+        run: |
+          echo "name=dfb-regional-replay-${LIGA#de-}-${SEASON:0:4}" >> "$GITHUB_OUTPUT"
+      - name: Preverjena ponovitev
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.artifact.outputs.name }}
+          path: replay/
+          if-no-files-found: error
+          retention-days: 90

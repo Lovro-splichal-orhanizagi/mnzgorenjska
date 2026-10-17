@@ -1,0 +1,13 @@
+select pg_temp.de_reject('v2 missing parent', $$update de_manifest set raw=jsonb_set(raw::jsonb,'{seasons,0,lineage,capture}','null')::text$$);
+select pg_temp.de_reject('v2 cancelled parent', $$update de_manifest set raw=jsonb_set(raw::jsonb,'{seasons,0,lineage,capture,conclusion}','"cancelled"')::text$$);
+select pg_temp.de_reject('v2 fake artifact', $$update de_manifest set raw=jsonb_set(raw::jsonb,'{seasons,0,lineage,capture,artifactDigest}','"bad"')::text$$);
+select pg_temp.de_reject('v2 changed index', $$update de_manifest set raw=jsonb_set(raw::jsonb,'{seasons,0,lineage,capture,indexSha256}','null')::text$$);
+select pg_temp.de_reject('v2 changed raw time', $$update de_manifest set raw=jsonb_set(raw::jsonb,'{seasons,0,lineage,capture,capturedAt}','"2020-01-01"')::text$$);
+select pg_temp.de_reject('v2 changed raw digest', $$update de_manifest set raw=jsonb_set(raw::jsonb,'{seasons,0,lineage,capture,documentsSha256}','"changed"')::text$$);
+select pg_temp.de_reject('v2 wrong replay job', $$update de_manifest set raw=jsonb_set(raw::jsonb,'{seasons,0,lineage,replay,jobId}','"123"')::text$$);
+select pg_temp.de_reject('v2 wrong replay commit', $$update de_manifest set raw=jsonb_set(raw::jsonb,'{seasons,0,lineage,replay,commit}','"cccccccccccccccccccccccccccccccccccccccc"')::text$$);
+select pg_temp.de_reject('v2 wrong replay parser', $$update de_manifest set raw=jsonb_set(raw::jsonb,'{seasons,0,lineage,replay,parserSha256}','"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"')::text$$);
+select pg_temp.de_reject('v2 wrong replay workflow', $$update de_manifest set raw=jsonb_set(raw::jsonb,'{seasons,0,lineage,replay,workflow}','"bad"')::text$$);
+select pg_temp.de_reject('v2 wrong replay step', $$update de_manifest set raw=jsonb_set(raw::jsonb,'{seasons,0,lineage,replay,step}','"bad"')::text$$);
+select pg_temp.de_reject('v2 invalid generation time', $$update de_manifest set raw=jsonb_set(raw::jsonb,'{seasons,0,lineage,replay,generatedAt}','"infinity"')::text$$);
+do $$ begin if has_function_privilege('service_role','private_dfb_release.varen_vklop_dfb_regije(text,text,boolean)','EXECUTE') then raise exception 'Internal guard exposed'; end if; end $$;

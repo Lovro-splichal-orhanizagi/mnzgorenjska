@@ -9,15 +9,15 @@ on:
         required: true
         options: [de-regionalliga-nord, de-regionalliga-west, de-regionalliga-suedwest, de-regionalliga-bayern]
       source_commit:
-        description: Pregledani celotni SHA obeh uradnih zajemov
+        description: Pregledani celotni SHA obeh zajemov ali ponovitev
         type: string
         required: true
       archive_run:
-        description: Uspešen arhivski regionalni audit
+        description: Uspešen arhivski audit ali preverjena ponovitev
         type: string
         required: true
       current_run:
-        description: Uspešen tekoči regionalni audit (največ 12 ur)
+        description: Uspešen tekoči audit ali ponovitev (izvirni zajem največ 12 ur)
         type: string
         required: true
       approved_sha256:
@@ -51,26 +51,12 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts
       - name: Preveri dejanska sezonska posla in pregledani razčlenjevalnik
-        id: evidence
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           mkdir -p release
-          node scripts/preveri-zagona-dfb-regije.mjs "$LIGA" "$SOURCE_COMMIT" "$ARCHIVE_RUN" "$CURRENT_RUN" release/jobs.json
-          echo "region=${LIGA#de-}" >> "$GITHUB_OUTPUT"
-      - uses: actions/download-artifact@v4
-        with:
-          github-token: ${{ github.token }}
-          run-id: ${{ inputs.archive_run }}
-          name: vir-dfb-${{ steps.evidence.outputs.region }}-2025
-          path: audit/archive
-      - uses: actions/download-artifact@v4
-        with:
-          github-token: ${{ github.token }}
-          run-id: ${{ inputs.current_run }}
-          name: vir-dfb-${{ steps.evidence.outputs.region }}-2026
-          path: audit/current
+          node scripts/preveri-zagona-dfb-regije.mjs "$LIGA" "$SOURCE_COMMIT" "$ARCHIVE_RUN" "$CURRENT_RUN" release/jobs.json audit/archive audit/current
       - name: Ponovi vse izvorne bajte brez omrežja
         run: |
           set -euo pipefail
