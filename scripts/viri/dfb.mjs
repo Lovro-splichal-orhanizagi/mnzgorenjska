@@ -672,7 +672,7 @@ export function vRazpored(tekme){
 }
 const vir={
   ime:'dfb',polnoIme:'DFB Datencenter — Regionalliga Nordost',drzava:'DE',osnovniNaslov:BASE,
-  glave:{'User-Agent':'SLFF fantasy (slff.eu; splih.94@gmail.com)'},premorMs:3000,imaRegistracije:false,
+  glave:{'User-Agent':'SLFF fantasy (slff.eu; splih.94@gmail.com)'},premorMs:6000,imaRegistracije:false,
   naslovRazporeda:koda=>naslovEkipe(koda),
   jeIzziv,zaPredpomnilnik,zavrnitev:(s,status)=>new DfbZavrnitev(s,status),fetch:varniFetch,
   async razporedVseStrani(koda,prenesi){return vRazpored(await tekmeSezone(koda,prenesi))},

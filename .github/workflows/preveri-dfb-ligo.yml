@@ -1,0 +1,71 @@
+name: Preveri DFB regionalno ligo (brez baze)
+
+on:
+  workflow_dispatch:
+    inputs:
+      liga:
+        description: Registrirana DFB liga
+        type: choice
+        required: true
+        options: [regionalliga-nord, regionalliga-west, regionalliga-suedwest, regionalliga-bayern]
+      sezona:
+        description: Tekoča sezona, arhiv ali obe
+        type: choice
+        options: [all, current, archive]
+        default: all
+
+permissions:
+  contents: read
+
+jobs:
+  dfb:
+    name: DFB regionalni audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    concurrency:
+      group: live-source-dfb-readonly
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Preveri vhod
+        id: vhod
+        env:
+          LIGA: ${{ inputs.liga }}
+          SEZONA: ${{ inputs.sezona }}
+        run: |
+          case "$LIGA" in
+            regionalliga-nord|regionalliga-west|regionalliga-suedwest|regionalliga-bayern) ;;
+            *) echo 'Neznana liga'; exit 1 ;;
+          esac
+          case "$SEZONA" in all|current|archive) ;; *) exit 1 ;; esac
+      - name: Tekoča sezona — brez baze
+        if: ${{ always() && !cancelled() && steps.vhod.outcome == 'success' && (inputs.sezona == 'all' || inputs.sezona == 'current') }}
+        env:
+          KODA: ${{ inputs.liga }}/2026-2027
+          SEZONA: 2026/27
+          MAPA: dfb-${{ inputs.liga }}-2026
+        run: node scripts/preveri-vir-sezono.mjs dfb "$KODA" "$SEZONA" "audit/$MAPA"
+      - name: Tekoča sezona — dokazi in surovi dokumenti
+        if: ${{ always() && (inputs.sezona == 'all' || inputs.sezona == 'current') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: vir-dfb-${{ inputs.liga }}-2026
+          path: audit/dfb-${{ inputs.liga }}-2026/
+          retention-days: 14
+      - name: Arhiv sezona — brez baze
+        if: ${{ always() && !cancelled() && steps.vhod.outcome == 'success' && (inputs.sezona == 'all' || inputs.sezona == 'archive') }}
+        env:
+          KODA: ${{ inputs.liga }}/2025-2026
+          SEZONA: 2025/26
+          MAPA: dfb-${{ inputs.liga }}-2025
+        run: node scripts/preveri-vir-sezono.mjs dfb "$KODA" "$SEZONA" "audit/$MAPA"
+      - name: Arhiv sezona — dokazi in surovi dokumenti
+        if: ${{ always() && (inputs.sezona == 'all' || inputs.sezona == 'archive') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: vir-dfb-${{ inputs.liga }}-2025
+          path: audit/dfb-${{ inputs.liga }}-2025/
+          retention-days: 14
