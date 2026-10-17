@@ -133,10 +133,11 @@ export async function zajemi({ root, env = process.env, fetchFn = (...args) => f
   }
   const write = (name, bytes) => {
     checkOwned()
-    let fd
+    let fd, opened
     try {
       fd = openSync(join(output, name), 'wx', 0o600)
-      written.set(name, null)
+      opened = fstatSync(fd)
+      written.set(name, opened)
       writeFileSync(fd, bytes)
       written.set(name, fstatSync(fd))
       closeSync(fd); fd = undefined
@@ -147,6 +148,8 @@ export async function zajemi({ root, env = process.env, fetchFn = (...args) => f
         try {
           const stat = inspect(output, true)
           if (!stat || stat.dev !== owned.dev || stat.ino !== owned.ino) fail('output-write-failed')
+          const current = inspect(join(output, name))
+          if (!opened || !current?.isFile() || current.dev !== opened.dev || current.ino !== opened.ino) fail('output-write-failed')
           unlinkSync(join(output, name)); written.delete(name)
         } catch { outputSafe = false }
       }

@@ -187,3 +187,24 @@ test('replaced prior output bytes cannot become an invocation-owned artifact', a
   })
   assert.equal(result.artifactReady, false); assert.equal(f.calls.length, 2)
 })
+
+test('failed partial write preserves a foreign pathname replacement and refuses upload', async t => {
+  const f = setup(t), write = fs.writeFileSync, unlink = fs.unlinkSync
+  const path = join(f.root, 'fcf-javni-dokazi/acta-4109388.html')
+  t.mock.method(fs, 'writeFileSync', (fd, data, ...options) => {
+    if (typeof fd === 'number' && Buffer.isBuffer(data)) {
+      write(fd, data.subarray(0, 12), ...options)
+      unlink(path)
+      write(path, 'foreign replacement', { flag: 'wx' })
+      throw new Error('SECRET interrupted write')
+    }
+    return write(fd, data, ...options)
+  })
+  syncBuiltinESMExports()
+  t.after(() => { t.mock.restoreAll(); syncBuiltinESMExports() })
+  const result = await f.invoke(() => response(body()))
+  assert.equal(result.status, 1); assert.equal(result.artifactReady, false)
+  assert.equal(f.calls.length, 1)
+  assert.equal(readFileSync(path, 'utf8'), 'foreign replacement')
+  assert.deepEqual(readdirSync(join(f.root, 'fcf-javni-dokazi')), ['acta-4109388.html'])
+})
