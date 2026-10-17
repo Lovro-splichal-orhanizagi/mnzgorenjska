@@ -202,7 +202,51 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     klop: 'Ոսկի նստարանին',
     klopOpis: '{ekipa} · {tocke} նստարանին։ Մարզիչ, ո՞ւր էիր։',
     zlica: 'Փայտե գդալ',
-    zlicaOpis: '{ekipa} · {tocke}։ Հաջորդ տուրը ավելի լավ կլինի։ Գուցե։',
+    // Šala gre na maskoto (on joka v žlico), nikoli na človeka.
+    zlicaOpis: '{ekipa} · {tocke}։ Այս շաբաթ գդալը պահում է մեր բեղավորը։ Հաջորդ տուրը քոնն է։',
+    spodbuda: 'Հաջորդ տուրը քոնն է',
+    spodbudaOpis: '{ekipa} · {tocke}։ Բեղավորը քո կողքին է։ Այս շաբաթ գդալ չկա, միայն քաջալերանք։',
+    // Slike nagrad: šala brez imena ekipe (ime je na sliki posebej).
+    sala: {
+      manager: 'Պարծենալու իրավունք մինչև հաջորդ տուրը։',
+      kapetan: '{igralec}-ը ավագի թևկապով բերեց {tocke}։',
+      adut: '{igralec} ({tocke}). նրան կազմում ուրիշ ոչ ոք չուներ։',
+      skok: 'Հաջորդ կանգառը՝ աղյուսակի գագաթը։',
+      padec: 'Պարաշյուտը չբացվեց։ Բեղավորն արդեն պահեստայինն է ուղարկել։',
+      klop: 'Մարզիչ, ո՞ւր էիր։',
+      zlica: 'Այս շաբաթ գդալը պահում է մեր բեղավորը։ Հաջորդ տուրը քոնն է։',
+      spodbuda: 'Բեղավորը քո կողքին է։ Հաջորդ տուրը քոնն է։',
+    },
+    vrednostSkok: {
+      one: '▲ {n} տեղ · հիմա #{mesto}',
+      other: '▲ {n} տեղ · հիմա #{mesto}',
+    },
+    vrednostPadec: {
+      one: '▼ {n} տեղ · հիմա #{mesto}',
+      other: '▼ {n} տեղ · հիմա #{mesto}',
+    },
+    vrednostKlop: '{tocke} նստարանին',
+    slikaPregled: 'Տուրի ամփոփում',
+    slikaVabilo: 'Մինի լիգա ընկերների միջև · slff.eu',
+    slika: 'Նկար',
+    slikaNagrade: '{nagrada} մրցանակի նկարը',
+    slikaVse: 'Ամբողջ ամփոփման նկարը',
+    zapri: 'Փակել',
+    formatKvadrat: 'Քառակուսի (չատ)',
+    formatZgodba: 'Պատմություն (ուղղահայաց)',
+    predogled: 'Նկարի նախադիտում',
+    deli: 'Կիսվել նկարով',
+    prenesi: 'Ներբեռնել նկարը',
+    // Pred deljenjem šaljive nagrade: odloči človek, ne aplikacija.
+    opozoriloSale: 'Կատակը զվարճալի է, երբ ծիծաղում է նաև {ekipa}-ն։ Կիսվիր, եթե գիտես, որ կծիծաղի։',
+  },
+
+  saljiveNagrade: {
+    naslov: 'Կատակային մրցանակներ',
+    opis: 'Փայտե գդալը, Ազատ անկումը և Ոսկի նստարանին մրցանակը շաբաթվա ամփոփման մեջ երևում են միայն այն ժամանակ, երբ մինի լիգայում կա առնվազն 4 թիմ։ Եթե անջատես, կմնան միայն գովասանքները։',
+    vklop: 'Ցույց տալ կատակային մրցանակները',
+    shranjeno: 'Պահպանված է։',
+    napaka: 'Չհաջողվեց պահպանել կարգավորումը։',
   },
 
   mojeMiniLige: {

@@ -201,7 +201,51 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     klop: 'Guld på bænken',
     klopOpis: '{ekipa} · {tocke} på bænken. Træner, hvor var du henne?',
     zlica: 'Træskeen',
-    zlicaOpis: '{ekipa} · {tocke}. Næste runde bliver bedre. Måske.',
+    // Šala gre na maskoto (on joka v žlico), nikoli na človeka.
+    zlicaOpis: '{ekipa} · {tocke}. Træskeen bliver passet af vores overskægsmand i denne uge. Næste runde er din.',
+    spodbuda: 'Næste runde er din',
+    spodbudaOpis: '{ekipa} · {tocke}. Vores overskægsmand krydser fingre. Ingen træske i denne uge, kun opbakning.',
+    // Slike nagrad: šala brez imena ekipe (ime je na sliki posebej).
+    sala: {
+      manager: 'Retten til at prale frem til næste runde.',
+      kapetan: '{igralec} hentede {tocke} med anførerbindet.',
+      adut: '{igralec} ({tocke}): ingen andre havde ham på holdet.',
+      skok: 'Næste stop: toppen af tabellen.',
+      padec: 'Faldskærmen foldede sig ikke ud. Overskægsmanden har allerede sendt en reserve.',
+      klop: 'Træner, hvor var du henne?',
+      zlica: 'Træskeen bliver passet af vores overskægsmand i denne uge. Næste runde er din.',
+      spodbuda: 'Vores overskægsmand krydser fingre. Næste runde er din.',
+    },
+    vrednostSkok: {
+      one: '▲ {n} plads · nu nr. {mesto}',
+      other: '▲ {n} pladser · nu nr. {mesto}',
+    },
+    vrednostPadec: {
+      one: '▼ {n} plads · nu nr. {mesto}',
+      other: '▼ {n} pladser · nu nr. {mesto}',
+    },
+    vrednostKlop: '{tocke} på bænken',
+    slikaPregled: 'Rundens overblik',
+    slikaVabilo: 'Miniliga blandt venner · slff.eu',
+    slika: 'Billede',
+    slikaNagrade: 'Billede af prisen {nagrada}',
+    slikaVse: 'Billede af hele overblikket',
+    zapri: 'Luk',
+    formatKvadrat: 'Kvadrat (chat)',
+    formatZgodba: 'Story (stående)',
+    predogled: 'Forhåndsvisning af billede',
+    deli: 'Del billede',
+    prenesi: 'Hent billede',
+    // Pred deljenjem šaljive nagrade: odloči človek, ne aplikacija.
+    opozoriloSale: 'En joke er kun sjov, når {ekipa} også griner. Del den, hvis du ved, at de gør.',
+  },
+
+  saljiveNagrade: {
+    naslov: 'Sjove priser',
+    opis: 'Træskeen, Frit fald og Guld på bænken vises kun i ugens overblik, når miniligaen har mindst 4 hold. Slår du dem fra, er der kun ros tilbage.',
+    vklop: 'Vis sjove priser',
+    shranjeno: 'Gemt.',
+    napaka: 'Indstillingen kunne ikke gemmes.',
   },
 
   mojeMiniLige: {

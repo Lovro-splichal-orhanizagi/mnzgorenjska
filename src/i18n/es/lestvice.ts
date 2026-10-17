@@ -200,7 +200,53 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     klop: 'Oro en el banquillo',
     klopOpis: '{ekipa} · {tocke} en el banquillo. Míster, ¿dónde estabas?',
     zlica: 'La cuchara de madera',
-    zlicaOpis: '{ekipa} · {tocke}. La próxima jornada irá mejor. Quizá.',
+    // Šala gre na maskoto (on joka v žlico), nikoli na človeka.
+    zlicaOpis: '{ekipa} · {tocke}. Esta semana la cuchara la cuida nuestro bigotes. La próxima jornada es tuya.',
+    spodbuda: 'La próxima jornada es tuya',
+    spodbudaOpis: '{ekipa} · {tocke}. Nuestro bigotes cruza los dedos por ti. Esta semana no hay cuchara, solo ánimos.',
+    // Slike nagrad: šala brez imena ekipe (ime je na sliki posebej).
+    sala: {
+      manager: 'Derecho a presumir hasta la próxima jornada.',
+      kapetan: '{igralec} sumó {tocke} con el brazalete.',
+      adut: '{igralec} ({tocke}): nadie más lo tenía en el once.',
+      skok: 'Próxima parada: lo más alto de la tabla.',
+      padec: 'El paracaídas no se abrió. Nuestro bigotes ya ha mandado uno de repuesto.',
+      klop: 'Míster, ¿dónde estabas?',
+      zlica: 'Esta semana la cuchara la cuida nuestro bigotes. La próxima jornada es tuya.',
+      spodbuda: 'Nuestro bigotes cruza los dedos por ti. La próxima jornada es tuya.',
+    },
+    vrednostSkok: {
+      one: '▲ {n} puesto · ahora {mesto}.º',
+      many: '▲ {n} puestos · ahora {mesto}.º',
+      other: '▲ {n} puestos · ahora {mesto}.º',
+    },
+    vrednostPadec: {
+      one: '▼ {n} puesto · ahora {mesto}.º',
+      many: '▼ {n} puestos · ahora {mesto}.º',
+      other: '▼ {n} puestos · ahora {mesto}.º',
+    },
+    vrednostKlop: '{tocke} en el banquillo',
+    slikaPregled: 'Resumen de la jornada',
+    slikaVabilo: 'Miniliga entre amigos · slff.eu',
+    slika: 'Imagen',
+    slikaNagrade: 'Imagen del premio {nagrada}',
+    slikaVse: 'Imagen del resumen completo',
+    zapri: 'Cerrar',
+    formatKvadrat: 'Cuadrado (chat)',
+    formatZgodba: 'Historia (vertical)',
+    predogled: 'Vista previa de la imagen',
+    deli: 'Compartir imagen',
+    prenesi: 'Descargar imagen',
+    // Pred deljenjem šaljive nagrade: odloči človek, ne aplikacija.
+    opozoriloSale: 'Una broma tiene gracia cuando {ekipa} también se ríe. Compártela si sabes que se reirá.',
+  },
+
+  saljiveNagrade: {
+    naslov: 'Premios de broma',
+    opis: 'La cuchara de madera, Caída libre y Oro en el banquillo solo aparecen en el resumen semanal cuando la miniliga tiene al menos 4 equipos. Si los desactivas, solo quedan los elogios.',
+    vklop: 'Mostrar premios de broma',
+    shranjeno: 'Guardado.',
+    napaka: 'No se pudo guardar el ajuste.',
   },
 
   mojeMiniLige: {

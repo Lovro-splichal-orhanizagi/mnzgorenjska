@@ -216,7 +216,55 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     klop: 'Золото на лаві',
     klopOpis: '{ekipa} · {tocke} на лаві. Тренере, де ти був?',
     zlica: 'Дерев’яна ложка',
-    zlicaOpis: '{ekipa} · {tocke}. Наступний тур буде кращим. Можливо.',
+    // Šala gre na maskoto (on joka v žlico), nikoli na človeka.
+    zlicaOpis: '{ekipa} · {tocke}. Ложку цього тижня няньчить наш вусань. Наступний тур твій.',
+    spodbuda: 'Наступний тур твій',
+    spodbudaOpis: '{ekipa} · {tocke}. Вусань тримає кулаки. Цього тижня ложки немає, лише підтримка.',
+    // Slike nagrad: šala brez imena ekipe (ime je na sliki posebej).
+    sala: {
+      manager: 'Право хизуватися до наступного туру.',
+      kapetan: '{igralec} приніс {tocke} з пов’язкою.',
+      adut: '{igralec} ({tocke}): у складі його більше не мав ніхто.',
+      skok: 'Наступна зупинка: вершина таблиці.',
+      padec: 'Парашут не розкрився. Вусань уже надіслав запасний.',
+      klop: 'Тренере, де ти був?',
+      zlica: 'Ложку цього тижня няньчить наш вусань. Наступний тур твій.',
+      spodbuda: 'Вусань тримає кулаки. Наступний тур твій.',
+    },
+    vrednostSkok: {
+      one: '▲ {n} місце · тепер № {mesto}',
+      few: '▲ {n} місця · тепер № {mesto}',
+      many: '▲ {n} місць · тепер № {mesto}',
+      other: '▲ {n} місця · тепер № {mesto}',
+    },
+    vrednostPadec: {
+      one: '▼ {n} місце · тепер № {mesto}',
+      few: '▼ {n} місця · тепер № {mesto}',
+      many: '▼ {n} місць · тепер № {mesto}',
+      other: '▼ {n} місця · тепер № {mesto}',
+    },
+    vrednostKlop: '{tocke} на лаві',
+    slikaPregled: 'Підсумки туру',
+    slikaVabilo: 'Міні-ліга серед друзів · slff.eu',
+    slika: 'Зображення',
+    slikaNagrade: 'Зображення нагороди {nagrada}',
+    slikaVse: 'Зображення всіх підсумків',
+    zapri: 'Закрити',
+    formatKvadrat: 'Квадрат (чат)',
+    formatZgodba: 'Сторіс (вертикально)',
+    predogled: 'Попередній перегляд зображення',
+    deli: 'Поділитися зображенням',
+    prenesi: 'Завантажити зображення',
+    // Pred deljenjem šaljive nagrade: odloči človek, ne aplikacija.
+    opozoriloSale: 'Жарт смішний, коли сміється і {ekipa}. Ділися ним, якщо знаєш, що так і буде.',
+  },
+
+  saljiveNagrade: {
+    naslov: 'Жартівливі нагороди',
+    opis: 'Дерев’яна ложка, Вільне падіння і Золото на лаві з’являються в підсумках тижня лише тоді, коли в міні-лізі щонайменше 4 команди. Якщо їх вимкнути, залишаться тільки похвали.',
+    vklop: 'Показувати жартівливі нагороди',
+    shranjeno: 'Збережено.',
+    napaka: 'Не вдалося зберегти налаштування.',
   },
 
   mojeMiniLige: {

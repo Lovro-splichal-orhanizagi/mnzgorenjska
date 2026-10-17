@@ -195,7 +195,51 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     klop: 'Злато на клупата',
     klopOpis: '{ekipa} · {tocke} на клупата. Селекторе, каде беше?',
     zlica: 'Дрвена лажица',
-    zlicaOpis: '{ekipa} · {tocke}. Следното коло ќе биде подобро. Можеби.',
+    // Šala gre na maskoto (on joka v žlico), nikoli na človeka.
+    zlicaOpis: '{ekipa} · {tocke}. Лажицата оваа недела ја чува нашиот мустаклија. Следното коло е твое.',
+    spodbuda: 'Следното коло е твое',
+    spodbudaOpis: '{ekipa} · {tocke}. Мустаклијата држи палци. Оваа недела нема лажица, само поддршка.',
+    // Slike nagrad: šala brez imena ekipe (ime je na sliki posebej).
+    sala: {
+      manager: 'Правото на фалење важи до следното коло.',
+      kapetan: '{igralec} со лентата донесе {tocke}.',
+      adut: '{igralec} ({tocke}): во составот не го имаше никој друг.',
+      skok: 'Следна станица: врвот на табелата.',
+      padec: 'Падобранот не се отвори. Мустаклијата веќе испрати резервен.',
+      klop: 'Селекторе, каде беше?',
+      zlica: 'Лажицата оваа недела ја чува нашиот мустаклија. Следното коло е твое.',
+      spodbuda: 'Мустаклијата држи палци. Следното коло е твое.',
+    },
+    vrednostSkok: {
+      one: '▲ {n} место · сега {mesto}.',
+      other: '▲ {n} места · сега {mesto}.',
+    },
+    vrednostPadec: {
+      one: '▼ {n} место · сега {mesto}.',
+      other: '▼ {n} места · сега {mesto}.',
+    },
+    vrednostKlop: '{tocke} на клупата',
+    slikaPregled: 'Преглед на колото',
+    slikaVabilo: 'Мини лига меѓу пријатели · slff.eu',
+    slika: 'Слика',
+    slikaNagrade: 'Слика од наградата {nagrada}',
+    slikaVse: 'Слика од целиот преглед',
+    zapri: 'Затвори',
+    formatKvadrat: 'Квадрат (разговор)',
+    formatZgodba: 'Приказна (вертикално)',
+    predogled: 'Преглед на сликата',
+    deli: 'Сподели ја сликата',
+    prenesi: 'Преземи ја сликата',
+    // Pred deljenjem šaljive nagrade: odloči človek, ne aplikacija.
+    opozoriloSale: 'Шегата е смешна кога се смее и {ekipa}. Сподели ја ако знаеш дека ќе се насмее.',
+  },
+
+  saljiveNagrade: {
+    naslov: 'Шеговити награди',
+    opis: 'Дрвена лажица, Слободен пад и Злато на клупата се појавуваат во неделниот преглед само кога мини лигата има најмалку 4 екипи. Ако ги исклучиш, остануваат само пофалбите.',
+    vklop: 'Прикажи шеговити награди',
+    shranjeno: 'Зачувано.',
+    napaka: 'Поставката не можеше да се зачува.',
   },
 
   mojeMiniLige: {

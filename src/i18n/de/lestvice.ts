@@ -202,7 +202,51 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     klop: 'Gold auf der Bank',
     klopOpis: '{ekipa} · {tocke} auf der Bank. Trainer, wo warst du?',
     zlica: 'Holzlöffel',
-    zlicaOpis: '{ekipa} · {tocke}. Die nächste Runde wird besser. Vielleicht.',
+    // Šala gre na maskoto (on joka v žlico), nikoli na človeka.
+    zlicaOpis: '{ekipa} · {tocke}. Den Löffel hütet diese Woche unser Schnauzbart. Die nächste Runde gehört dir.',
+    spodbuda: 'Die nächste Runde gehört dir',
+    spodbudaOpis: '{ekipa} · {tocke}. Unser Schnauzbart drückt die Daumen. Diese Woche gibt es keinen Löffel, nur Rückenwind.',
+    // Slike nagrad: šala brez imena ekipe (ime je na sliki posebej).
+    sala: {
+      manager: 'Das Recht zum Angeben gilt bis zur nächsten Runde.',
+      kapetan: '{igralec} hat mit der Binde {tocke} geholt.',
+      adut: '{igralec} ({tocke}): Sonst hatte ihn niemand in der Startelf.',
+      skok: 'Nächster Halt: Tabellenspitze.',
+      padec: 'Der Fallschirm ist nicht aufgegangen. Unser Schnauzbart hat schon einen Ersatzschirm geschickt.',
+      klop: 'Trainer, wo warst du?',
+      zlica: 'Den Löffel hütet diese Woche unser Schnauzbart. Die nächste Runde gehört dir.',
+      spodbuda: 'Unser Schnauzbart drückt die Daumen. Die nächste Runde gehört dir.',
+    },
+    vrednostSkok: {
+      one: '▲ {n} Platz · jetzt {mesto}.',
+      other: '▲ {n} Plätze · jetzt {mesto}.',
+    },
+    vrednostPadec: {
+      one: '▼ {n} Platz · jetzt {mesto}.',
+      other: '▼ {n} Plätze · jetzt {mesto}.',
+    },
+    vrednostKlop: '{tocke} auf der Bank',
+    slikaPregled: 'Rückblick der Runde',
+    slikaVabilo: 'Mini-Liga unter Freunden · slff.eu',
+    slika: 'Bild',
+    slikaNagrade: 'Bild zur Auszeichnung {nagrada}',
+    slikaVse: 'Bild des ganzen Rückblicks',
+    zapri: 'Schließen',
+    formatKvadrat: 'Quadrat (Chat)',
+    formatZgodba: 'Story (hochkant)',
+    predogled: 'Bildvorschau',
+    deli: 'Bild teilen',
+    prenesi: 'Bild herunterladen',
+    // Pred deljenjem šaljive nagrade: odloči človek, ne aplikacija.
+    opozoriloSale: 'Ein Witz ist nur lustig, wenn auch {ekipa} lacht. Teile ihn, wenn du weißt, dass es so ist.',
+  },
+
+  saljiveNagrade: {
+    naslov: 'Spaßpreise',
+    opis: 'Holzlöffel, Freier Fall und Gold auf der Bank erscheinen im Wochenrückblick nur, wenn die Mini-Liga mindestens 4 Teams hat. Schaltest du sie aus, bleibt nur das Lob.',
+    vklop: 'Spaßpreise anzeigen',
+    shranjeno: 'Gespeichert.',
+    napaka: 'Die Einstellung konnte nicht gespeichert werden.',
   },
 
   mojeMiniLige: {
