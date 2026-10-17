@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useLocation, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { Link } from '../components/Povezava'
 import ImeLastnika from '../components/ImeLastnika'
+import IzstopMiniLige from '../components/IzstopMiniLige'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import { useNaslov } from '../lib/naslov'
@@ -32,6 +33,7 @@ export default function JavnaMiniLiga() {
   const { session, loading } = useAuth()
   const uporabnikId = session?.user.id
   const { pathname, search } = useLocation()
+  const pojdi = useNavigate()
   const [glava, setGlava] = useState<GlavaLige | null | undefined>(undefined)
   const [lestvica, setLestvica] = useState<MiniVrstica[]>([])
   const [ekipe, setEkipe] = useState<Ekipa[]>([])
@@ -99,6 +101,19 @@ export default function JavnaMiniLiga() {
   if (glava === undefined) return <p className="animiraj-utrip text-slate-400">{t('skupno.nalaganje')}</p>
 
   const mojaEkipa = ekipe.find((e) => e.competition_id === glava.competition_id) ?? null
+  const mojihVLigi = uporabnikId ? lestvica.filter((v) => v.owner_id === uporabnikId).length : 0
+
+  function poIzstopu(besedilo: string) {
+    // Zasebna liga po izstopu zadnje ekipe ni več vidna: nazaj na Mini lige.
+    // Gumb ima tujec le za svoje ekipe, zato je to vedno izstop, ne odstranitev.
+    if (glava && !glava.javna && !glava.sem_lastnik && mojihVLigi <= 1) {
+      pojdi('/mini-leagues')
+      return
+    }
+    setNapaka(null)
+    setSporocilo(besedilo)
+    setOsvezi((n) => n + 1)
+  }
 
   async function pridruzi() {
     if (!mojaEkipa || !glava) return
@@ -193,7 +208,7 @@ export default function JavnaMiniLiga() {
           {urejena.map((v) => (
             <li
               key={v.fantasy_team_id}
-              className="flex min-h-[52px] items-center gap-3 px-3 py-2 sm:px-4"
+              className="flex min-h-[52px] flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2 sm:px-4"
             >
               <span className="w-7 shrink-0 text-center text-sm font-bold text-slate-400">
                 {v.mesto <= 3 ? (
@@ -215,6 +230,20 @@ export default function JavnaMiniLiga() {
                 <div className="font-bold tabular-nums text-gnl-300">{formatirajTocke(v.total_points)}</div>
                 <div className="text-[11px] text-slate-500">{mnozina(v.rounds_played ?? 0, KROGI)}</div>
               </div>
+              {uporabnikId && v.fantasy_team_id != null && (v.owner_id === uporabnikId || glava.sem_lastnik) && (
+                <IzstopMiniLige
+                  ligaId={glava.id}
+                  imeLige={glava.name}
+                  ekipaId={v.fantasy_team_id}
+                  imeEkipe={v.team_name ?? ''}
+                  ligaEkipe={v.competition_short}
+                  nacin={v.owner_id === uporabnikId ? 'izstop' : 'odstrani'}
+                  zadnja={mojihVLigi <= 1}
+                  lastnik={glava.sem_lastnik}
+                  javna={glava.javna}
+                  onKoncano={poIzstopu}
+                />
+              )}
             </li>
           ))}
         </ol>
