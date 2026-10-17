@@ -1,0 +1,40 @@
+# Strežnik slik za predogled povezave (og:image) na VM: /opt/slff-predogledi/
+#   docker-compose.yml   ta datoteka
+#   .env                 ANON_KEY (javni anon ključ, objava ga prepiše iz /opt/supabase/.env)
+#   app/predogledi/      streznik.mjs, podatki.mjs, risbe.mjs, pisave/
+#   app/html/streznik.mjs  prevajalnik in pravila strežnika HTML (isti kot v /opt/slff-html)
+#   app/node_modules/    @napi-rs/canvas (različica iz package-lock.json)
+#   predpomnilnik/       narisane slike (največ 3000, najdlje nebrane gredo)
+# Objava: scripts/hetzner/objavi-predogledi.sh. CI tega ne objavi.
+# Caddy (scripts/hetzner/Caddyfile, /predogled/*) pošlje sem; če ne odgovori, vrne og/slff-og.png.
+services:
+  predogledi:
+    image: node:22-alpine
+    container_name: slff-predogledi
+    restart: unless-stopped
+    init: true
+    # Gostiteljevo omrežje: PostgREST prek envoy na 127.0.0.1:8000, posluša le 127.0.0.1:3202.
+    network_mode: host
+    user: node
+    working_dir: /app
+    command: ["node", "predogledi/streznik.mjs"]
+    environment:
+      PORT: 3202
+      NASLOV: 127.0.0.1
+      KOREN: /srv/slff/current
+      PREDPOMNILNIK: /predpomnilnik
+      SUPABASE_URL: http://127.0.0.1:8000
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+    volumes:
+      - ./app:/app:ro
+      - ./predpomnilnik:/predpomnilnik
+      # Grbi, logo, fotografija igrišča in privzeta slika iz zgrajene strani.
+      - /srv/slff:/srv/slff:ro
+    # Platno 1200 × 630 je 3 MB; risbi tečeta največ dve hkrati.
+    mem_limit: 256m
+    cpus: 0.5
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO /dev/null http://127.0.0.1:3202/zdravje || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
