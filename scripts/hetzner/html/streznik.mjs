@@ -23,10 +23,10 @@ import { fileURLToPath } from 'node:url'
 const DOMENA = 'https://slff.eu'
 const PRIVZETO = 'clani'
 // Kot JEZIK_DRZAVE v src/lib/drzavaUgib.ts in LOKALE v src/i18n/jedro.ts.
-const JEZIK = { SI: 'sl', SK: 'sk', HR: 'hr', CZ: 'cs', HU: 'hu', AT: 'de', DE: 'de', RS: 'sr', RO: 'ro', EE: 'et', PL: 'pl', ES: 'es', LV: 'lv', MK: 'mk',
+export const JEZIK = { SI: 'sl', SK: 'sk', HR: 'hr', CZ: 'cs', HU: 'hu', AT: 'de', DE: 'de', RS: 'sr', RO: 'ro', EE: 'et', PL: 'pl', ES: 'es', LV: 'lv', MK: 'mk',
   GR: 'el', TR: 'tr', UA: 'uk', AM: 'hy', AZ: 'az', DK: 'da', GB: 'en', MT: 'en', ME: 'sr', BA: 'hr', MD: 'ro' }
 // Grščina s 24-urnim časom (`-u-hc-h23`): sama `el-GR` piše "11:00 π.μ.".
-const LOKALE = { sl: 'sl-SI', sk: 'sk-SK', hr: 'hr-HR', cs: 'cs-CZ', hu: 'hu-HU', de: 'de-AT', sr: 'sr-Latn-RS', ro: 'ro-RO', et: 'et-EE', pl: 'pl-PL', es: 'es-ES', lv: 'lv-LV', mk: 'mk-MK',
+export const LOKALE = { sl: 'sl-SI', sk: 'sk-SK', hr: 'hr-HR', cs: 'cs-CZ', hu: 'hu-HU', de: 'de-AT', sr: 'sr-Latn-RS', ro: 'ro-RO', et: 'et-EE', pl: 'pl-PL', es: 'es-ES', lv: 'lv-LV', mk: 'mk-MK',
   el: 'el-GR-u-hc-h23', tr: 'tr-TR', uk: 'uk-UA', hy: 'hy-AM', az: 'az-Latn-AZ', da: 'da-DK', en: 'en-GB' }
 // Kartice držav, ki jih zapiše vite.config.js (karticeDrzav); Slovenija je index.html.
 const KARTICE = ['sk', 'hr', 'cz', 'hu', 'at', 'de', 'rs', 'ro', 'ee', 'pl', 'es', 'lv', 'mk', 'gr', 'tr', 'ua', 'am', 'az', 'dk', 'gb', 'mt', 'me', 'ba', 'md']
@@ -36,10 +36,27 @@ export const esc = (s) =>
 // JSON v <script>: "</script>" v imenu ne sme zapreti oznake.
 const jsonLd = (o) => JSON.stringify(o).replace(/</g, '\\u003c')
 // "Priimek Ime" -> "Ime Priimek", kot prikazniIme v src/lib/pomozno.ts.
-const prikazniIme = (polno) => {
+export const prikazniIme = (polno) => {
   const deli = String(polno ?? '').trim().split(/\s+/)
   return deli.length < 2 ? String(polno ?? '') : deli.slice(1).join(' ') + ' ' + deli[0]
 }
+/** Mladinska liga po šifri (kot `jeMladinskiSlug` v src/lib/prevzem.ts in SQL `je_mladinski_slug`). */
+export const jeMladinska = (slug) => !!slug && (/(^|-)(u19|mladinci)($|-)/.test(slug) || /^sml[0-9]/.test(slug))
+
+/**
+ * Slika za predogled povezave (og:image) iz strežnika slik
+ * (scripts/hetzner/predogledi/, Caddy /predogled/*). `v` je izvleček podatkov,
+ * ki jih slika kaže: ob novih podatkih nov naslov, da Facebook in WhatsApp ne
+ * ostaneta pri stari sliki. Nova oblika slik = višja RAZLICICA_PREDOGLEDOV.
+ */
+export const RAZLICICA_PREDOGLEDOV = 1
+export function razlicica(...deli) {
+  let h = 0x811c9dc5
+  for (const z of JSON.stringify([RAZLICICA_PREDOGLEDOV, ...deli])) h = Math.imul(h ^ z.codePointAt(0), 0x01000193) >>> 0
+  return h.toString(36)
+}
+export const slikaPredogleda = (vrsta, id, ...deli) => `${DOMENA}/predogled/${vrsta}/${id}.jpg?v=${razlicica(...deli)}`
+const anonimiziran = (ime) => String(ime ?? '').startsWith('#')
 const absolutno = (url) => (!url ? undefined : /^https?:/.test(url) ? url : DOMENA + url)
 
 /** Datoteka predloge za državo (koda države ali predpona šifre lige). */
@@ -121,7 +138,7 @@ async function tekocaSezona(rest, ligaId) {
 // null (te strani ne poznamo: nespremenjena predloga).
 
 async function igralec(id, { rest, lige, b }) {
-  const [p] = await rest(`player_overview?id=eq.${id}&select=id,full_name,position,team_id,team_name,competition_id`)
+  const [p] = await rest(`player_overview?id=eq.${id}&select=id,full_name,position,team_id,team_name,competition_id,value`)
   const liga = p && lige.find((l) => l.id === p.competition_id)
   if (!liga) return ni(b().t('igralci.profil.naslov'))
   const j = b(liga)
@@ -132,9 +149,13 @@ async function igralec(id, { rest, lige, b }) {
     rest('rpc/preverjeni_igralci_za', { p_ids: [Number(id)] }).then((v) => v.some((r) => r.player_id === Number(id)), () => false),
   ])
   const [s] = sezona
-    ? await rest(`player_season_standings?id=eq.${id}&competition_id=eq.${liga.id}&season=eq.${encodeURIComponent(sezona)}&select=points,matches,goals,minutes`)
+    ? await rest(`player_season_standings?id=eq.${id}&competition_id=eq.${liga.id}&season=eq.${encodeURIComponent(sezona)}&select=points,matches,goals,minutes,assists,value`)
     : []
   const ime = prikazniIme(p.full_name) || j.t('igralci.profil.naslov')
+  // Kartice ni za anonimizirane in mladinske lige (kot `smeKartico` v Igralec.tsx).
+  const slika = anonimiziran(p.full_name) || jeMladinska(liga.slug)
+    ? undefined
+    : slikaPredogleda('player', id, p.full_name, p.position, p.team_id, p.team_name, s?.points, s?.matches, s?.goals, s?.minutes, s?.assists, s?.value ?? p.value)
   const url = kanonicni(`/player/${id}`, brezPrivzete(liga))
   const klub = zLigo(`/club/${p.team_id}`, liga)
   const pozicija = p.position ? j.t(`skupno.pozicija.${p.position}`) : null
@@ -143,6 +164,7 @@ async function igralec(id, { rest, lige, b }) {
     status: 200,
     liga,
     naslov: `${ime}${p.team_name ? ` (${p.team_name})` : ''}`,
+    slika,
     opis: `${ime} — ${[pozicija, p.team_name, liga.name].filter(Boolean).join(', ')}.${stat ? ` ${sezona}: ${stat}.` : ''}`,
     kanonicni: url,
     jsonld: [
@@ -186,10 +208,12 @@ async function klub(id, { rest, lige, b, t }) {
   const j = b(liga)
   const url = kanonicni(`/club/${id}`, brezPrivzete(liga))
   const vrh = igralci.slice(0, 3).map((p) => `${prikazniIme(p.full_name)} (${j.mn('tocke', Number(p.points))})`)
+  const slika = slikaPredogleda('club', id, k.name, k.logo_url, liga.id, igralci.slice(0, 3).map((p) => [p.id, p.points]))
   return {
     status: 200,
     liga,
     naslov: `${k.name} · ${liga.name}`,
+    slika,
     opis: `${k.name} — ${liga.name}. ${j.mn('igralci', igralci.length)}${vrh.length ? `: ${vrh.join(', ')}` : ''}.`,
     kanonicni: url,
     jsonld: [
@@ -237,6 +261,7 @@ async function tekma(id, { rest, lige, b }) {
     status: 200,
     liga,
     naslov: `${m.home_name} : ${m.away_name} · ${liga.name}`,
+    slika: slikaPredogleda('match', id, m.home_name, m.away_name, m.home_goals, m.away_goals, m.played_on, goli.length),
     opis: `${izid} · ${[liga.name, dan].filter(Boolean).join(', ')}.${strelci.length ? ` ${j.t('tekme.tabela.strelci')}: ${strelci.join(', ')}.` : ''}`,
     kanonicni: url,
     jsonld: [
@@ -264,12 +289,16 @@ async function tekma(id, { rest, lige, b }) {
   }
 }
 
+/** Kar slika lige pokaže: vrh lestvice (mesto, klub, točke). */
+const vrhLestvice = (vrstice) => vrstice.slice(0, 5).map((v) => [v.mesto, v.team_id, v.tocke, v.grb])
+
 async function tabela(liga, { rest, j, url }) {
   const vrstice = await rest('rpc/lestvica_lige', { p_competition_id: liga.id })
   const sezona = vrstice[0]?.sezona ?? ''
   const s = (k) => esc(j.t(`tekme.tabela.stolpci.${k}`))
   const vrh = vrstice.slice(0, 3).map((v) => `${v.mesto}. ${v.ime} (${v.tocke})`).join(', ')
   return {
+    verzija: vrhLestvice(vrstice),
     naslov: j.t('tekme.tabela.zavihek', { liga: zDrzavo(liga) }),
     opis: `${j.t('tekme.tabela.uvod', { sezona, zveza: zveza(liga, j) })}${vrh ? ` ${vrh}.` : ''}`,
     drobtina: { ime: j.t('tekme.tabela.naslov'), url },
@@ -345,6 +374,7 @@ async function domov(liga, { rest, j, lige }) {
     ['/standings', j.t('lestvice.lestvica.naslov')],
   ]
   return {
+    verzija: vrhLestvice(vrstice),
     naslov: liga.slug === PRIVZETO ? null : zDrzavo(liga),
     opis: `${zDrzavo(liga)} — ${zveza(liga, j)}. ${j.t('aplikacija.naslovStrani.deljenjeKratko')}${vrh ? ` ${vrstice[0].sezona}: ${vrh}.` : ''}`,
     vsebina:
@@ -382,6 +412,49 @@ function drzava(koda, { lige, b }) {
   }
 }
 
+// --- mini lige: le kartica ob deljenju ------------------------------------------
+// Strani so zasebne (noindex, `@zasebne` v Caddyfile): brez kanoničnega, JSON-LD
+// in povzetka; le naslov, opis, og:url in slika. Kode mini lige ni v nobenem
+// besedilu, ki ga vidi kdo drug kot tisti, ki je povezavo že dobil.
+
+/** Koda mini lige: ZNAKI_KODE in DOLZINA_KODE v src/lib/miniLige.ts. */
+export const KODA_MINI_LIGE = /^[ABCDEFGHJKMNPQRSTUVWXYZ2-9]{6}$/
+
+/** Javna mini liga (/mini-leagues/:id); zasebne anon ne vidi (RPC ne vrne nič). */
+async function miniLiga(id, { rest, lige, b }) {
+  const [[g], lestvica] = await Promise.all([rest('rpc/mini_liga_glava', { p_liga: id }), rest('rpc/lestvica_javne_mini_lige', { p_liga: id })])
+  if (!g?.javna) return null
+  const liga = lige.find((l) => l.id === g.competition_id)
+  const j = b(liga)
+  const vrh = [...lestvica].sort((a, c) => Number(c.total_points) - Number(a.total_points) || a.fantasy_team_id - c.fantasy_team_id).slice(0, 5)
+  return {
+    status: 200,
+    liga,
+    zasebna: true,
+    naslov: g.name,
+    opis: [j.t('lestvice.vstop.miniLiga'), liga?.name, j.mn('ekipe', g.ekip ?? lestvica.length)].filter(Boolean).join(' · '),
+    ogUrl: `${DOMENA}/mini-leagues/${id}`,
+    slika: slikaPredogleda('mini', id, g.name, g.ekip, vrh.map((v) => [v.fantasy_team_id, v.team_name, v.total_points])),
+    jsonld: [],
+  }
+}
+
+/** Povabilo (/l/:koda): ime mini lige in število ekip, kot ju pokaže stran. */
+async function vabilo(koda, { rest, b }) {
+  const [l] = await rest('rpc/mini_liga_po_kodi', { p_koda: koda })
+  if (!l) return null
+  const j = b()
+  return {
+    status: 200,
+    zasebna: true,
+    naslov: j.t('lestvice.vstop.naslovLiga', { ime: l.name }),
+    opis: `${j.t('lestvice.vstop.miniLiga')} · ${j.mn('ekipe', l.ekip ?? 0)}`,
+    ogUrl: `${DOMENA}/l/${koda}`,
+    slika: slikaPredogleda('invite', koda, l.name, l.ekip),
+    jsonld: [],
+  }
+}
+
 const SEZNAMI = { '/': domov, '/table': tabela, '/results': rezultati, '/players': igralci, '/standings': lestvica }
 const ENTITETE = { player: igralec, club: klub, match: tekma }
 
@@ -403,6 +476,10 @@ export async function stran(pot, t, { rest, lige, besede }) {
     if (id === null) return ni(b().t(e[1] === 'player' ? 'igralci.profil.naslov' : e[1] === 'club' ? 'lestvice.klub.naslov' : 'tekme.tekma.naslov'))
     return ENTITETE[e[1]](id, { rest, lige, b, t })
   }
+  const ml = /^\/mini-leagues\/(\d{1,12})$/.exec(pot)
+  if (ml) return miniLiga(Number(ml[1]), { rest, lige, b })
+  const l = /^\/l\/([^/]+)$/.exec(pot)
+  if (l) return KODA_MINI_LIGE.test(l[1].toUpperCase()) ? vabilo(l[1].toUpperCase(), { rest, b }) : null
   const seznam = SEZNAMI[pot]
   if (!seznam) return null
   // Neznana ali neaktivna liga v `?t=`: vmesnik pokaže privzeto, kanonični brez `?t=`.
@@ -415,6 +492,8 @@ export async function stran(pot, t, { rest, lige, besede }) {
   return {
     status: 200,
     liga,
+    // Strani brez lestvice (rezultati, igralci …) ne poznajo vrha: različica je dan.
+    slika: slikaPredogleda('league', liga.id, liga.name, s.verzija ?? new Date().toISOString().slice(0, 10)),
     naslov: s.naslov,
     opis: s.opis,
     kanonicni: url,
@@ -441,7 +520,15 @@ export function izrisi(predloga, s, b) {
       meta('name', 'twitter:description', s.opis)
     }
   }
-  if (s.kanonicni) meta('property', 'og:url', s.kanonicni)
+  if (s.kanonicni || s.ogUrl) meta('property', 'og:url', s.kanonicni ?? s.ogUrl)
+  // Lastna slika strani; brez nje ostane privzeta s predloge (og/slff-og.png).
+  if (s.slika) {
+    meta('property', 'og:image', s.slika)
+    meta('name', 'twitter:image', s.slika)
+    meta('property', 'og:image:width', '1200')
+    meta('property', 'og:image:height', '630')
+    meta('name', 'twitter:card', 'summary_large_image')
+  }
   const glava = [
     s.kanonicni && `<link rel="canonical" href="${esc(s.kanonicni)}" />`,
     s.status === 404 && '<meta name="robots" content="noindex" />',

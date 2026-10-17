@@ -287,6 +287,15 @@ Bistvo: nov niz zanj dodaj v `KLJUCI` v `vite.config.js`; `zDrzavo` v
 javna stran za iskalnike = `SEZNAMI`/`ENTITETE` v `streznik.mjs` in pot v
 `@html_strani`. CI ga ne objavi (`scripts/hetzner/objavi-html.sh`).
 
+Vsaka taka stran (in javna mini liga, povabilo `/l/:koda`) ima ob deljenju svojo
+sliko (og:image 1200 × 630, kartica igralca, plakat kluba, izid, vrh lestvice), ki
+jo riše strežnik slik `scripts/hetzner/predogledi/` (kontejner `slff-predogledi`,
+`/predogled/*`, ob napaki privzeta `og/slff-og.png`). Risba je prepis
+`KarticaIgralca.tsx` in `Plakat.tsx`: spremembo oblike prenesi tja in dvigni
+`RAZLICICA_PREDOGLEDOV`. Brez kartice so anonimizirani in mladinske lige.
+Podrobnosti v `docs/streznik-html.md` (*Slike za predogled*); CI ga ne objavi
+(`scripts/hetzner/objavi-predogledi.sh`).
+
 ## Smernice za razvoj
 
 - Uporabniško vidni nizi **niso v komponentah**, ampak v slovarju
@@ -597,6 +606,11 @@ igralce po isti ceni in prvi teden ne bi imel igre.
 - V mini ligo se vstopi samo prek `pridruzi_mini_ligi` (s kodo),
   `pridruzi_javni_mini_ligi` (javna liga, ekipa iz njene lige) ali
   `ustvari_mini_ligo`; neposrednega vpisa v `mini_liga_clani` ni.
+- **Nagrade tedenskega pregleda mini lig** imajo pravila prijaznosti (šala le na
+  račun ekipe ali maskote, nikoli resničnega igralca; šaljive le od 4 ekip, ne
+  dvakrat zapored, lastnik jih izklopi; mladim brez piva; deli le človek) —
+  preberi jih v `docs/podatkovni-model.md` (*Nagrade tedenskega pregleda*),
+  preden dodaš nagrado, niz ali pozo maskote.
 - Mutacijski RPC-ji so servisni. Admin stran kliče `admin_preracunaj_krog`,
   ki izrecno preveri `is_admin()`. Novi javni RPC potrebuje izrecen `grant execute`;
   privzeto funkcije niso več odprte vlogama `anon` in `authenticated`.

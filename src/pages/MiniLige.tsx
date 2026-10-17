@@ -22,6 +22,7 @@ import TedenskiPregled from '../components/TedenskiPregled'
 import JavneMiniLige from '../components/JavneMiniLige'
 import JavnostMiniLige from '../components/JavnostMiniLige'
 import IzstopMiniLige from '../components/IzstopMiniLige'
+import SaljiveNagrade from '../components/SaljiveNagrade'
 import { t, tx } from '../i18n'
 import { dogodek } from '../lib/analitika'
 import { prevediNapako } from '../lib/napake'
@@ -37,6 +38,7 @@ interface MojaLiga {
   opis: string | null
   competition_id: number | null
   javna_zaklenjena_at: string | null
+  saljive_nagrade: boolean
 }
 
 interface MojaEkipa {
@@ -134,7 +136,7 @@ export default function MiniLige() {
     const ligaIdji = [...new Set((clanstva ?? []).map((c) => c.mini_liga_id))]
     const { data: moje } = await supabase
       .from('mini_lige')
-      .select('id, name, code, owner_id, javna, opis, competition_id, javna_zaklenjena_at')
+      .select('id, name, code, owner_id, javna, opis, competition_id, javna_zaklenjena_at, saljive_nagrade')
       .or(
         [
           `owner_id.eq.${uporabnikId}`,
@@ -467,7 +469,13 @@ export default function MiniLige() {
           )}
 
           {trenutna && (
-            <TedenskiPregled ligaId={trenutna.id} ime={trenutna.name} koda={trenutna.code} />
+            // Ob preklopu šaljivih nagrad se pregled naloži znova.
+            <TedenskiPregled
+              key={`${trenutna.id}-${trenutna.saljive_nagrade}`}
+              ligaId={trenutna.id}
+              ime={trenutna.name}
+              koda={trenutna.code}
+            />
           )}
 
           {trenutna && stanjeDeljenja === 'polna' && (
@@ -476,6 +484,10 @@ export default function MiniLige() {
 
           {trenutna && trenutna.owner_id === uporabnikId && (
             <JavnostMiniLige liga={trenutna} ekipe={ekipe} onSpremenjeno={naloziSvoje} />
+          )}
+
+          {trenutna && trenutna.owner_id === uporabnikId && (
+            <SaljiveNagrade liga={trenutna} onSpremenjeno={naloziSvoje} />
           )}
 
           <details className="group">

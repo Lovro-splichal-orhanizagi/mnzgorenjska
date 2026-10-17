@@ -209,7 +209,53 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     klop: 'Aur pe bancă',
     klopOpis: '{ekipa} · {tocke} pe bancă. Selecționerule, unde ai fost?',
     zlica: 'Lingura de lemn',
-    zlicaOpis: '{ekipa} · {tocke}. Etapa următoare va fi mai bună. Poate.',
+    // Šala gre na maskoto (on joka v žlico), nikoli na človeka.
+    zlicaOpis: '{ekipa} · {tocke}. Lingura o păzește săptămâna asta mustăciosul nostru. Etapa următoare e a ta.',
+    spodbuda: 'Etapa următoare e a ta',
+    spodbudaOpis: '{ekipa} · {tocke}. Mustăciosul îți ține pumnii. Săptămâna asta nu e nicio lingură, doar încurajare.',
+    // Slike nagrad: šala brez imena ekipe (ime je na sliki posebej).
+    sala: {
+      manager: 'Dreptul de a se lăuda e valabil până la etapa următoare.',
+      kapetan: '{igralec} a adus cu banderola {tocke}.',
+      adut: '{igralec} ({tocke}): nu l-a mai avut nimeni altcineva în echipă.',
+      skok: 'Următoarea stație: vârful clasamentului.',
+      padec: 'Parașuta nu s-a deschis. Mustăciosul a trimis deja una de rezervă.',
+      klop: 'Selecționerule, unde ai fost?',
+      zlica: 'Lingura o păzește săptămâna asta mustăciosul nostru. Etapa următoare e a ta.',
+      spodbuda: 'Mustăciosul îți ține pumnii. Etapa următoare e a ta.',
+    },
+    vrednostSkok: {
+      one: '▲ {n} loc · acum locul {mesto}',
+      few: '▲ {n} locuri · acum locul {mesto}',
+      other: '▲ {n} de locuri · acum locul {mesto}',
+    },
+    vrednostPadec: {
+      one: '▼ {n} loc · acum locul {mesto}',
+      few: '▼ {n} locuri · acum locul {mesto}',
+      other: '▼ {n} de locuri · acum locul {mesto}',
+    },
+    vrednostKlop: '{tocke} pe bancă',
+    slikaPregled: 'Rezumatul etapei',
+    slikaVabilo: 'Mini-ligă între prieteni · slff.eu',
+    slika: 'Imagine',
+    slikaNagrade: 'Imaginea premiului {nagrada}',
+    slikaVse: 'Imaginea întregului rezumat',
+    zapri: 'Închide',
+    formatKvadrat: 'Pătrat (chat)',
+    formatZgodba: 'Story (vertical)',
+    predogled: 'Previzualizare imagine',
+    deli: 'Distribuie imaginea',
+    prenesi: 'Descarcă imaginea',
+    // Pred deljenjem šaljive nagrade: odloči človek, ne aplikacija.
+    opozoriloSale: 'O glumă e amuzantă când râde și {ekipa}. Distribuie-o dacă știi că va râde.',
+  },
+
+  saljiveNagrade: {
+    naslov: 'Premii amuzante',
+    opis: 'Lingura de lemn, Cădere liberă și Aur pe bancă apar în rezumatul săptămânii doar când mini-liga are cel puțin 4 echipe. Dacă le dezactivezi, rămân doar laudele.',
+    vklop: 'Arată premiile amuzante',
+    shranjeno: 'Salvat.',
+    napaka: 'Setarea nu a putut fi salvată.',
   },
 
   mojeMiniLige: {

@@ -2164,6 +2164,7 @@ export type Database = {
           name: string
           opis: string | null
           owner_id: string
+          saljive_nagrade: boolean
         }
         ComputedFields: never
         Insert: {
@@ -2176,6 +2177,7 @@ export type Database = {
           name: string
           opis?: string | null
           owner_id: string
+          saljive_nagrade?: boolean
         }
         Update: {
           code?: string
@@ -2187,6 +2189,7 @@ export type Database = {
           name?: string
           opis?: string | null
           owner_id?: string
+          saljive_nagrade?: boolean
         }
         Relationships: [
           {
@@ -8327,6 +8330,10 @@ export type Database = {
           p_tekmovanje?: number
         }
         Returns: undefined
+      }
+      nastavi_saljive_nagrade: {
+        Args: { p_liga: number; p_vklop: boolean }
+        Returns: boolean
       }
       nastavitev_int: {
         Args: { p_key: string; p_privzeto: number }

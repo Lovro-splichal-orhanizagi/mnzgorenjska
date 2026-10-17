@@ -92,6 +92,13 @@ jobs:
           npm run preizkus-html
           node -e "const b=require('./dist/html-besede.json'); if(!b.sk?.['tekme.tabela.zavihek']) process.exit(1)"
 
+      # Strežnik slik za predogled (scripts/hetzner/predogledi/): vse vrste slik,
+      # privzeta slika ob napaki, zavrnjeni id-ji, omejen predpomnilnik; in nizi zanj.
+      - name: Slike za predogled
+        run: |
+          npm run preizkus-predogledov
+          node -e "const b=require('./dist/html-besede.json'); if(!b.hy?.['igralci.kartica.stat']?.gol) process.exit(1)"
+
       # Smoke izriše vse strani na strežniku in preveri pravila točkovanja in
       # sestave ekipe. Baze ne potrebuje: poizvedbe ob izrisu ne blokirajo,
       # zato zadošča veljaven (a izmišljen) URL.

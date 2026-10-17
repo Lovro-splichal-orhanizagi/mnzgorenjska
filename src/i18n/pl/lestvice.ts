@@ -210,7 +210,55 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     klop: 'Złoto na ławce',
     klopOpis: '{ekipa} · {tocke} na ławce. Trenerze, gdzie byłeś?',
     zlica: 'Drewniana łyżka',
-    zlicaOpis: '{ekipa} · {tocke}. Następna kolejka będzie lepsza. Może.',
+    // Šala gre na maskoto (on joka v žlico), nikoli na človeka.
+    zlicaOpis: '{ekipa} · {tocke}. Łyżkę w tym tygodniu niańczy nasz wąsacz — następna kolejka jest twoja.',
+    spodbuda: 'Następna kolejka jest twoja',
+    spodbudaOpis: '{ekipa} · {tocke}. Wąsacz trzyma kciuki — w tym tygodniu nie ma łyżki, jest tylko doping.',
+    // Slike nagrad: šala brez imena ekipe (ime je na sliki posebej).
+    sala: {
+      manager: 'Prawo do przechwałek obowiązuje do następnej kolejki.',
+      kapetan: '{igralec} z opaską przyniósł {tocke}.',
+      adut: '{igralec} ({tocke}) — w składzie nie miał go nikt inny.',
+      skok: 'Następny przystanek: szczyt tabeli.',
+      padec: 'Spadochron się nie otworzył. Wąsacz już wysłał zapasowy.',
+      klop: 'Trenerze, gdzie byłeś?',
+      zlica: 'Łyżkę w tym tygodniu niańczy nasz wąsacz. Następna kolejka jest twoja.',
+      spodbuda: 'Wąsacz trzyma kciuki. Następna kolejka jest twoja.',
+    },
+    vrednostSkok: {
+      one: '▲ {n} miejsce · teraz {mesto}.',
+      few: '▲ {n} miejsca · teraz {mesto}.',
+      many: '▲ {n} miejsc · teraz {mesto}.',
+      other: '▲ {n} miejsca · teraz {mesto}.',
+    },
+    vrednostPadec: {
+      one: '▼ {n} miejsce · teraz {mesto}.',
+      few: '▼ {n} miejsca · teraz {mesto}.',
+      many: '▼ {n} miejsc · teraz {mesto}.',
+      other: '▼ {n} miejsca · teraz {mesto}.',
+    },
+    vrednostKlop: '{tocke} na ławce',
+    slikaPregled: 'Podsumowanie kolejki',
+    slikaVabilo: 'Miniliga wśród znajomych · slff.eu',
+    slika: 'Obrazek',
+    slikaNagrade: 'Obrazek nagrody {nagrada}',
+    slikaVse: 'Obrazek całego podsumowania',
+    zapri: 'Zamknij',
+    formatKvadrat: 'Kwadrat (czat)',
+    formatZgodba: 'Relacja (pionowo)',
+    predogled: 'Podgląd obrazka',
+    deli: 'Udostępnij obrazek',
+    prenesi: 'Pobierz obrazek',
+    // Pred deljenjem šaljive nagrade: odloči človek, ne aplikacija.
+    opozoriloSale: 'Żart jest śmieszny, gdy śmieje się też {ekipa}. Udostępnij go, jeśli wiesz, że tak będzie.',
+  },
+
+  saljiveNagrade: {
+    naslov: 'Żartobliwe nagrody',
+    opis: 'Drewniana łyżka, Swobodny spadek i Złoto na ławce pojawiają się w podsumowaniu tygodnia tylko wtedy, gdy miniliga ma co najmniej 4 drużyny. Jeśli je wyłączysz, zostaną same pochwały.',
+    vklop: 'Pokazuj żartobliwe nagrody',
+    shranjeno: 'Zapisano.',
+    napaka: 'Nie udało się zapisać ustawienia.',
   },
 
   mojeMiniLige: {

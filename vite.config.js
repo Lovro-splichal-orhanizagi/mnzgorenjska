@@ -183,6 +183,10 @@ function besedeZaHtml() {
     'tekme.tabela.naslov', 'tekme.tabela.zavihek', 'tekme.tabela.uvod', 'tekme.tabela.stolpci', 'tekme.tabela.stolpciStrelcev', 'tekme.tabela.strelci',
     'tekme.rezultati.naslov', 'tekme.rezultati.uvod', 'tekme.tekma.naslov',
     'igralci.seznam.naslov', 'igralci.profil.naslov', 'igralci.preverjen.znacka', 'lestvice.lestvica.naslov', 'lestvice.klub.naslov',
+    // Mini lige (kartica ob deljenju) in slike za predogled (scripts/hetzner/predogledi/).
+    'lestvice.vstop.naslov', 'lestvice.vstop.naslovLiga', 'lestvice.vstop.miniLiga', 'lestvice.javneLige.pridruziSe',
+    'skupno.pozicijaKratko', 'skupno.cena', 'igralci.kartica.stat', 'igralci.kartica.tockVSezoni',
+    'lestvice.krog', 'lestvice.mesto', 'lestvice.plakat.najvecTock', 'lestvice.plakat.izNasihIgralcev',
   ]
   const SLOVARJI = { sl, sk, hr, cs, hu, de, sr, ro, et, pl, es, lv, mk, el, tr, uk, hy, az, da, en }
   const vzemi = (drevo, kljuc) => kljuc.split('.').reduce((d, k) => d?.[k], drevo)

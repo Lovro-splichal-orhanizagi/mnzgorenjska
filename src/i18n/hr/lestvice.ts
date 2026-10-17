@@ -205,7 +205,53 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     klop: 'Zlato na klupi',
     klopOpis: '{ekipa} · {tocke} na klupi. Izborniče, gdje si bio?',
     zlica: 'Drvena žlica',
-    zlicaOpis: '{ekipa} · {tocke}. Sljedeće kolo bit će bolje. Možda.',
+    // Šala gre na maskoto (on joka v žlico), nikoli na človeka.
+    zlicaOpis: '{ekipa} · {tocke}. Žlicu ovaj tjedan čuva naš brko — sljedeće kolo je tvoje.',
+    spodbuda: 'Sljedeće kolo je tvoje',
+    spodbudaOpis: '{ekipa} · {tocke}. Brko drži fige — ovaj tjedan nema žlice, samo podrška.',
+    // Slike nagrad: šala brez imena ekipe (ime je na sliki posebej).
+    sala: {
+      manager: 'Pravo na hvalisanje vrijedi do sljedećeg kola.',
+      kapetan: '{igralec} je s trakom donio {tocke}.',
+      adut: '{igralec} ({tocke}) — u postavi ga nije imao nitko drugi.',
+      skok: 'Sljedeća stanica: vrh ljestvice.',
+      padec: 'Padobran se nije otvorio. Brko je već poslao rezervni.',
+      klop: 'Izborniče, gdje si bio?',
+      zlica: 'Žlicu ovaj tjedan čuva naš brko. Sljedeće kolo je tvoje.',
+      spodbuda: 'Brko drži fige. Sljedeće kolo je tvoje.',
+    },
+    vrednostSkok: {
+      one: '▲ {n} mjesto · sada {mesto}.',
+      few: '▲ {n} mjesta · sada {mesto}.',
+      other: '▲ {n} mjesta · sada {mesto}.',
+    },
+    vrednostPadec: {
+      one: '▼ {n} mjesto · sada {mesto}.',
+      few: '▼ {n} mjesta · sada {mesto}.',
+      other: '▼ {n} mjesta · sada {mesto}.',
+    },
+    vrednostKlop: '{tocke} na klupi',
+    slikaPregled: 'Pregled kola',
+    slikaVabilo: 'Mini liga među prijateljima · slff.eu',
+    slika: 'Slika',
+    slikaNagrade: 'Slika nagrade {nagrada}',
+    slikaVse: 'Slika cijelog pregleda',
+    zapri: 'Zatvori',
+    formatKvadrat: 'Kvadrat (chat)',
+    formatZgodba: 'Priča (uspravno)',
+    predogled: 'Pregled slike',
+    deli: 'Podijeli sliku',
+    prenesi: 'Preuzmi sliku',
+    // Pred deljenjem šaljive nagrade: odloči človek, ne aplikacija.
+    opozoriloSale: 'Šala je smiješna kad se smije i {ekipa}. Podijeli je ako znaš da hoće.',
+  },
+
+  saljiveNagrade: {
+    naslov: 'Šaljive nagrade',
+    opis: 'Drvena žlica, Slobodni pad i Zlato na klupi pojavljuju se u tjednom pregledu samo kad mini liga ima barem 4 ekipe. Ako ih isključiš, ostaju samo pohvale.',
+    vklop: 'Prikaži šaljive nagrade',
+    shranjeno: 'Spremljeno.',
+    napaka: 'Postavku nije bilo moguće spremiti.',
   },
 
   mojeMiniLige: {

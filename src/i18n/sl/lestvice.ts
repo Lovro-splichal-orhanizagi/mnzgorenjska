@@ -214,7 +214,55 @@ export const lestvice = {
     klop: 'Zlato na klopi',
     klopOpis: '{ekipa} · {tocke} na klopi. Selektor, kje si bil?',
     zlica: 'Lesena žlica',
-    zlicaOpis: '{ekipa} · {tocke}. Naslednji krog bo boljši. Mogoče.',
+    // Šala gre na maskoto (on joka v žlico), nikoli na človeka.
+    zlicaOpis: '{ekipa} · {tocke}. Žlico ta teden pestuje naš brkač — naslednji krog je tvoj.',
+    spodbuda: 'Naslednji krog je tvoj',
+    spodbudaOpis: '{ekipa} · {tocke}. Brkač drži pesti — ta teden žlice ni, je samo spodbuda.',
+    // Slike nagrad: šala brez imena ekipe (ime je na sliki posebej).
+    sala: {
+      manager: 'Pravica do hvalisanja velja do naslednjega kroga.',
+      kapetan: '{igralec} je s trakom prinesel {tocke}.',
+      adut: '{igralec} ({tocke}) — v postavi ga ni imel nihče drug.',
+      skok: 'Naslednja postaja: vrh lestvice.',
+      padec: 'Padalo se ni odprlo. Brkač je že poslal nov rezervni.',
+      klop: 'Selektor, kje si bil?',
+      zlica: 'Žlico ta teden pestuje naš brkač. Naslednji krog je tvoj.',
+      spodbuda: 'Brkač drži pesti. Naslednji krog je tvoj.',
+    },
+    vrednostSkok: {
+      one: '▲ {n} mesto · zdaj {mesto}.',
+      two: '▲ {n} mesti · zdaj {mesto}.',
+      few: '▲ {n} mesta · zdaj {mesto}.',
+      other: '▲ {n} mest · zdaj {mesto}.',
+    },
+    vrednostPadec: {
+      one: '▼ {n} mesto · zdaj {mesto}.',
+      two: '▼ {n} mesti · zdaj {mesto}.',
+      few: '▼ {n} mesta · zdaj {mesto}.',
+      other: '▼ {n} mest · zdaj {mesto}.',
+    },
+    vrednostKlop: '{tocke} na klopi',
+    slikaPregled: 'Pregled kroga',
+    slikaVabilo: 'Mini liga med prijatelji · slff.eu',
+    slika: 'Slika',
+    slikaNagrade: 'Slika nagrade {nagrada}',
+    slikaVse: 'Slika celega pregleda',
+    zapri: 'Zapri',
+    formatKvadrat: 'Kvadrat (klepet)',
+    formatZgodba: 'Zgodba (pokončna)',
+    predogled: 'Predogled slike',
+    deli: 'Deli sliko',
+    prenesi: 'Prenesi sliko',
+    // Pred deljenjem šaljive nagrade: odloči človek, ne aplikacija.
+    opozoriloSale: 'Šala je smešna, ko se smeje tudi {ekipa}. Deli jo, če veš, da se bo.',
+  },
+
+  saljiveNagrade: {
+    naslov: 'Šaljive nagrade',
+    opis: 'Lesena žlica, Prosti pad in Zlato na klopi se v tedenskem pregledu pokažejo le, ko so v mini ligi vsaj 4 ekipe. Če jih izklopiš, ostanejo samo pohvale.',
+    vklop: 'Pokaži šaljive nagrade',
+    shranjeno: 'Shranjeno.',
+    napaka: 'Nastavitve ni bilo mogoče shraniti.',
   },
 
   mojeMiniLige: {

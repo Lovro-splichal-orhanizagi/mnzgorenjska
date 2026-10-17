@@ -203,7 +203,51 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     klop: 'Arany a kispadon',
     klopOpis: '{ekipa} · {tocke} a kispadon. Mester, hol jártál?',
     zlica: 'Fakanál',
-    zlicaOpis: '{ekipa} · {tocke}. A következő forduló jobb lesz. Talán.',
+    // Šala gre na maskoto (on joka v žlico), nikoli na človeka.
+    zlicaOpis: '{ekipa} · {tocke}. A fakanalat ezen a héten bajszos barátunk dédelgeti. A következő forduló a tiéd.',
+    spodbuda: 'A következő forduló a tiéd',
+    spodbudaOpis: '{ekipa} · {tocke}. Bajszos barátunk szorít neked. Ezen a héten nincs fakanál, csak biztatás.',
+    // Slike nagrad: šala brez imena ekipe (ime je na sliki posebej).
+    sala: {
+      manager: 'A következő fordulóig övé a dicsőség.',
+      kapetan: '{igralec} karszalaggal {tocke} pontot hozott.',
+      adut: '{igralec} ({tocke}): senki más nem tette be a kezdőcsapatába.',
+      skok: 'Következő megálló: a tabella csúcsa.',
+      padec: 'Az ejtőernyő nem nyílt ki. Bajszos barátunk már küldi a tartalékot.',
+      klop: 'Mester, hol jártál?',
+      zlica: 'A fakanalat ezen a héten bajszos barátunk dédelgeti. A következő forduló a tiéd.',
+      spodbuda: 'Bajszos barátunk szorít neked. A következő forduló a tiéd.',
+    },
+    vrednostSkok: {
+      one: '▲ {n} hely · most {mesto}.',
+      other: '▲ {n} hely · most {mesto}.',
+    },
+    vrednostPadec: {
+      one: '▼ {n} hely · most {mesto}.',
+      other: '▼ {n} hely · most {mesto}.',
+    },
+    vrednostKlop: '{tocke} a kispadon',
+    slikaPregled: 'A forduló összefoglalója',
+    slikaVabilo: 'Miniliga barátok között · slff.eu',
+    slika: 'Kép',
+    slikaNagrade: 'Kép: {nagrada}',
+    slikaVse: 'Kép a teljes összefoglalóról',
+    zapri: 'Bezárás',
+    formatKvadrat: 'Négyzet (chat)',
+    formatZgodba: 'Történet (álló)',
+    predogled: 'Kép előnézete',
+    deli: 'Kép megosztása',
+    prenesi: 'Kép letöltése',
+    // Pred deljenjem šaljive nagrade: odloči človek, ne aplikacija.
+    opozoriloSale: 'A vicc akkor jó, ha {ekipa} is nevet rajta. Csak akkor oszd meg, ha tudod, hogy így lesz.',
+  },
+
+  saljiveNagrade: {
+    naslov: 'Tréfás díjak',
+    opis: 'A Fakanál, a Szabadesés és az Arany a kispadon csak akkor jelenik meg a heti összefoglalóban, ha a miniligában legalább 4 csapat van. Ha kikapcsolod, csak a dicséretek maradnak.',
+    vklop: 'Tréfás díjak megjelenítése',
+    shranjeno: 'Mentve.',
+    napaka: 'A beállítást nem sikerült menteni.',
   },
 
   mojeMiniLige: {

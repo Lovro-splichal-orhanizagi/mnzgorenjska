@@ -193,7 +193,51 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     klop: 'Yedekte kalan altın',
     klopOpis: '{ekipa} · yedekte {tocke}. Hocam, neredeydin?',
     zlica: 'Tahta kaşık',
-    zlicaOpis: '{ekipa} · {tocke}. Gelecek hafta daha iyi olacak. Belki.',
+    // Šala gre na maskoto (on joka v žlico), nikoli na človeka.
+    zlicaOpis: '{ekipa} · {tocke}. Bu hafta kaşığı bizim bıyıklı kucaklıyor. Gelecek hafta senin.',
+    spodbuda: 'Gelecek hafta senin',
+    spodbudaOpis: '{ekipa} · {tocke}. Bıyıklı arkanda. Bu hafta kaşık yok, sadece moral.',
+    // Slike nagrad: šala brez imena ekipe (ime je na sliki posebej).
+    sala: {
+      manager: 'Gelecek haftaya kadar övünme hakkı onda.',
+      kapetan: '{igralec} kaptanlık bandıyla {tocke} getirdi.',
+      adut: '{igralec} ({tocke}): onu başka kimse ilk 11’ine almamıştı.',
+      skok: 'Sonraki durak: zirve.',
+      padec: 'Paraşüt açılmadı. Bıyıklı yedeğini çoktan yolladı.',
+      klop: 'Hocam, neredeydin?',
+      zlica: 'Bu hafta kaşığı bizim bıyıklı kucaklıyor. Gelecek hafta senin.',
+      spodbuda: 'Bıyıklı arkanda. Gelecek hafta senin.',
+    },
+    vrednostSkok: {
+      one: '▲ {n} sıra · şimdi {mesto}.',
+      other: '▲ {n} sıra · şimdi {mesto}.',
+    },
+    vrednostPadec: {
+      one: '▼ {n} sıra · şimdi {mesto}.',
+      other: '▼ {n} sıra · şimdi {mesto}.',
+    },
+    vrednostKlop: 'yedekte {tocke}',
+    slikaPregled: 'Haftanın özeti',
+    slikaVabilo: 'Arkadaşlar arası mini lig · slff.eu',
+    slika: 'Görsel',
+    slikaNagrade: '{nagrada} ödülünün görseli',
+    slikaVse: 'Tüm özetin görseli',
+    zapri: 'Kapat',
+    formatKvadrat: 'Kare (sohbet)',
+    formatZgodba: 'Hikâye (dikey)',
+    predogled: 'Görsel önizlemesi',
+    deli: 'Görseli paylaş',
+    prenesi: 'Görseli indir',
+    // Pred deljenjem šaljive nagrade: odloči človek, ne aplikacija.
+    opozoriloSale: 'Şaka, {ekipa} da gülünce komiktir. Güleceğini biliyorsan paylaş.',
+  },
+
+  saljiveNagrade: {
+    naslov: 'Esprili ödüller',
+    opis: 'Tahta kaşık, Serbest düşüş ve Yedekte kalan altın, haftalık özette yalnızca mini ligde en az 4 takım varsa görünür. Kapatırsan yalnızca övgüler kalır.',
+    vklop: 'Esprili ödülleri göster',
+    shranjeno: 'Kaydedildi.',
+    napaka: 'Ayar kaydedilemedi.',
   },
 
   mojeMiniLige: {

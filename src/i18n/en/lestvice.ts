@@ -202,7 +202,51 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     klop: 'Gold on the bench',
     klopOpis: '{ekipa} · {tocke} on the bench. Gaffer, where were you?',
     zlica: 'Wooden spoon',
-    zlicaOpis: '{ekipa} · {tocke}. Next round will be better. Maybe.',
+    // Šala gre na maskoto (on joka v žlico), nikoli na človeka.
+    zlicaOpis: '{ekipa} · {tocke}. Our moustache man is cradling the spoon this week — next round is yours.',
+    spodbuda: 'Next round is yours',
+    spodbudaOpis: '{ekipa} · {tocke}. Our moustache man has his fingers crossed — no spoon this week, just a bit of encouragement.',
+    // Slike nagrad: šala brez imena ekipe (ime je na sliki posebej).
+    sala: {
+      manager: 'Bragging rights until the next round.',
+      kapetan: '{igralec} brought in {tocke} with the armband.',
+      adut: '{igralec} ({tocke}) — nobody else had him in their lineup.',
+      skok: 'Next stop: top of the table.',
+      padec: 'The parachute didn’t open. Our moustache man has already sent a spare.',
+      klop: 'Gaffer, where were you?',
+      zlica: 'Our moustache man is cradling the spoon this week. Next round is yours.',
+      spodbuda: 'Our moustache man has his fingers crossed. Next round is yours.',
+    },
+    vrednostSkok: {
+      one: '▲ {n} place · now #{mesto}',
+      other: '▲ {n} places · now #{mesto}',
+    },
+    vrednostPadec: {
+      one: '▼ {n} place · now #{mesto}',
+      other: '▼ {n} places · now #{mesto}',
+    },
+    vrednostKlop: '{tocke} on the bench',
+    slikaPregled: 'Round recap',
+    slikaVabilo: 'A mini-league among friends · slff.eu',
+    slika: 'Image',
+    slikaNagrade: 'Image: {nagrada}',
+    slikaVse: 'Image of the whole recap',
+    zapri: 'Close',
+    formatKvadrat: 'Square (chat)',
+    formatZgodba: 'Story (portrait)',
+    predogled: 'Image preview',
+    deli: 'Share image',
+    prenesi: 'Download image',
+    // Pred deljenjem šaljive nagrade: odloči človek, ne aplikacija.
+    opozoriloSale: 'A joke is only funny if {ekipa} laughs too. Share it if you know they will.',
+  },
+
+  saljiveNagrade: {
+    naslov: 'Fun awards',
+    opis: 'Wooden spoon, Free fall and Gold on the bench only appear in the weekly recap when the mini-league has at least 4 teams. Switch them off and only the praise remains.',
+    vklop: 'Show fun awards',
+    shranjeno: 'Saved.',
+    napaka: 'Couldn’t save the setting.',
   },
 
   mojeMiniLige: {
