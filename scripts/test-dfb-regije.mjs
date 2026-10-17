@@ -1,3 +1,4 @@
+import './test-dfb-suedwest-repairs.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'

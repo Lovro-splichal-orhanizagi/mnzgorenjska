@@ -1,0 +1,102 @@
+{
+  "documents": [
+    {
+      "url": "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/15-spieltag/fc-astoria-walldorf-kickers-offenbach-2402963",
+      "ime": "match-2402963.html",
+      "file": "de-dfb-suedwest-2402963.html",
+      "sha256": "0fcb3831ea169ec7948a79949373bb7aff2d88b05ba27849cfd323017e335684",
+      "at": "2026-10-17T15:23:01.746Z",
+      "captureRun": "39043125440"
+    },
+    {
+      "url": "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/17-spieltag/fc-astoria-walldorf-tsg-balingen-2402984",
+      "ime": "match-2402984.html",
+      "file": "de-dfb-suedwest-2402984.html",
+      "sha256": "c631fc2fa9cee1bfa79109bfa34c78a4bf5aa595ba673b83e8cdf60b8424c894",
+      "at": "2026-10-17T15:26:46.978Z",
+      "captureRun": "39043125440"
+    },
+    {
+      "url": "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/11-spieltag/tsg-balingen-kickers-offenbach-2402929",
+      "ime": "match-2402929.html",
+      "file": "de-dfb-suedwest-2402929.html",
+      "sha256": "cda4f2b1cdd971e85cc34feab5c570e5388c733d69c474b02ca16a50f3d52296",
+      "at": "2026-10-17T15:17:51.730Z",
+      "captureRun": "39043125440"
+    },
+    {
+      "url": "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/19-spieltag/tsv-steinbach-haiger-tsg-balingen-2403004",
+      "ime": "match-2403004.html",
+      "file": "de-dfb-suedwest-2403004.html",
+      "sha256": "3fd9c5a0cf2d21a0ee76c06cef5e07f5fa836f725651ebc3cdc8e5daa0a3dfff",
+      "at": "2026-10-17T15:28:51.370Z",
+      "captureRun": "39043125440"
+    },
+    {
+      "url": "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/2-spieltag/ssv-ulm-1846-fussball-kickers-offenbach-2426312",
+      "ime": "match-2426312.html",
+      "file": "de-dfb-suedwest-2426312.html",
+      "sha256": "6812aee8354de244bca1e87788697dc1f63cd4d68dfddc512be44abf52ff6764",
+      "at": "2026-10-17T17:19:59.503Z",
+      "captureRun": "39052956125"
+    },
+    {
+      "url": "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/2-spieltag/sg-barockstadt-fulda-lehnerz-sv-sandhausen-2426309",
+      "ime": "match-2426309.html",
+      "file": "de-dfb-suedwest-2426309.html",
+      "sha256": "58218f9660538672d552405b68778ba854823eaf206babd29c44fb2059a17aee",
+      "at": "2026-10-17T17:21:22.485Z",
+      "captureRun": "39052956125"
+    },
+    {
+      "retrievalUrl": "https://fcastoria.de/wp-json/wp/v2/posts?search=Offenbach&after=2025-10-31T00%3A00%3A00&before=2025-11-03T23%3A59%3A59&per_page=1",
+      "articleUrl": "https://fcastoria.de/emotionen-pur/",
+      "at": "2026-10-17T21:56:00.551473Z",
+      "status": 200,
+      "file": "de-dfb-suedwest-proof-5aeacee316b874eb667f5b4d08894445efd568f51b02a4fa5b3ab503548b624f.html",
+      "sha256": "5aeacee316b874eb667f5b4d08894445efd568f51b02a4fa5b3ab503548b624f",
+      "bytes": 8125,
+      "url": "https://fcastoria.de/wp-json/wp/v2/posts?search=Offenbach&after=2025-10-31T00%3A00%3A00&before=2025-11-03T23%3A59%3A59&per_page=1"
+    },
+    {
+      "retrievalUrl": "https://www.tsg-fussball.de/2025/11/16/regionalliga-tsg-geht-in-walldorf-mit-06-unter/",
+      "articleUrl": "https://www.tsg-fussball.de/2025/11/16/regionalliga-tsg-geht-in-walldorf-mit-06-unter/",
+      "at": "2026-10-17T21:54:19.102901Z",
+      "status": 200,
+      "file": "de-dfb-suedwest-proof-6b44dea55f3ea8a5b3f8f5fdedf85f8100e8692613b7f6ace17df0785985f226.html",
+      "sha256": "6b44dea55f3ea8a5b3f8f5fdedf85f8100e8692613b7f6ace17df0785985f226",
+      "bytes": 206836,
+      "url": "https://www.tsg-fussball.de/2025/11/16/regionalliga-tsg-geht-in-walldorf-mit-06-unter/"
+    },
+    {
+      "retrievalUrl": "https://fcastoria.de/wp-json/wp/v2/posts?search=Balingen&after=2025-11-15T00%3A00%3A00&before=2025-11-18T23%3A59%3A59&per_page=1",
+      "articleUrl": "https://fcastoria.de/mit-kantersieg-zum-vereinsrekord/",
+      "at": "2026-10-17T21:56:13.677194Z",
+      "status": 200,
+      "file": "de-dfb-suedwest-proof-eb8a27d587bf9fc354f95da5d52682a92c6f9c189a01199f30b56b0b9f77561e.html",
+      "sha256": "eb8a27d587bf9fc354f95da5d52682a92c6f9c189a01199f30b56b0b9f77561e",
+      "bytes": 8009,
+      "url": "https://fcastoria.de/wp-json/wp/v2/posts?search=Balingen&after=2025-11-15T00%3A00%3A00&before=2025-11-18T23%3A59%3A59&per_page=1"
+    },
+    {
+      "retrievalUrl": "https://www.regionalliga-suedwest.de/aktuelles/zusammenfassung-2-spieltag-das-freitag-spiel/",
+      "articleUrl": "https://www.regionalliga-suedwest.de/aktuelles/zusammenfassung-2-spieltag-das-freitag-spiel/",
+      "at": "2026-10-17T21:53:53.125817Z",
+      "status": 200,
+      "file": "de-dfb-suedwest-proof-6ce2a34f4f99193420ee63e4ac7b655ce4aecca8cacaeebdd953a41e12c5106d.html",
+      "sha256": "6ce2a34f4f99193420ee63e4ac7b655ce4aecca8cacaeebdd953a41e12c5106d",
+      "bytes": 137516,
+      "url": "https://www.regionalliga-suedwest.de/aktuelles/zusammenfassung-2-spieltag-das-freitag-spiel/"
+    },
+    {
+      "retrievalUrl": "https://www.svs1916.de/aktuelles/news/detail/article/spielbericht-sgbsvs.html",
+      "articleUrl": "https://www.svs1916.de/aktuelles/news/detail/article/spielbericht-sgbsvs.html",
+      "at": "2026-10-17T21:53:53.793548Z",
+      "status": 200,
+      "file": "de-dfb-suedwest-proof-d617e70a340d7e90af5a46440c8cd0e2b1b0e30e830f91f02ed8bfd441ff068c.html",
+      "sha256": "d617e70a340d7e90af5a46440c8cd0e2b1b0e30e830f91f02ed8bfd441ff068c",
+      "bytes": 43969,
+      "url": "https://www.svs1916.de/aktuelles/news/detail/article/spielbericht-sgbsvs.html"
+    }
+  ]
+}

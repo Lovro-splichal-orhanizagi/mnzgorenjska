@@ -1,0 +1,46 @@
+{
+  "matches": [
+    {
+      "id": "2402984",
+      "league": "regionalliga-suedwest",
+      "sourceFixtureSha256": "c631fc2fa9cee1bfa79109bfa34c78a4bf5aa595ba673b83e8cdf60b8424c894",
+      "semanticSha256": "e11d6061c8d145bd6ca83aec3b4cfa522924ecda23a0bf47ea7dacbe77187ccf",
+      "side": 1,
+      "teamId": "tsg-balingen",
+      "clock": "46'",
+      "incoming": {
+        "name": "Jonas Brändle",
+        "profileId": "368170"
+      },
+      "outgoing": {
+        "name": "Ole Deininger",
+        "profileId": null
+      },
+      "pairIndex": 2,
+      "evidenceFiles": [
+        {
+          "retrievalUrl": "https://www.tsg-fussball.de/2025/11/16/regionalliga-tsg-geht-in-walldorf-mit-06-unter/",
+          "articleUrl": "https://www.tsg-fussball.de/2025/11/16/regionalliga-tsg-geht-in-walldorf-mit-06-unter/",
+          "at": "2026-10-17T21:54:19.102901Z",
+          "status": 200,
+          "file": "../vzorci/de-dfb-suedwest-proof-6b44dea55f3ea8a5b3f8f5fdedf85f8100e8692613b7f6ace17df0785985f226.html",
+          "sha256": "6b44dea55f3ea8a5b3f8f5fdedf85f8100e8692613b7f6ace17df0785985f226",
+          "bytes": 206836,
+          "url": "https://www.tsg-fussball.de/2025/11/16/regionalliga-tsg-geht-in-walldorf-mit-06-unter/"
+        },
+        {
+          "retrievalUrl": "https://fcastoria.de/wp-json/wp/v2/posts?search=Balingen&after=2025-11-15T00%3A00%3A00&before=2025-11-18T23%3A59%3A59&per_page=1",
+          "articleUrl": "https://fcastoria.de/mit-kantersieg-zum-vereinsrekord/",
+          "at": "2026-10-17T21:56:13.677194Z",
+          "status": 200,
+          "file": "../vzorci/de-dfb-suedwest-proof-eb8a27d587bf9fc354f95da5d52682a92c6f9c189a01199f30b56b0b9f77561e.html",
+          "sha256": "eb8a27d587bf9fc354f95da5d52682a92c6f9c189a01199f30b56b0b9f77561e",
+          "bytes": 8009,
+          "url": "https://fcastoria.de/wp-json/wp/v2/posts?search=Balingen&after=2025-11-15T00%3A00%3A00&before=2025-11-18T23%3A59%3A59&per_page=1"
+        }
+      ],
+      "checkedAt": "2026-10-17",
+      "warning": "Jonas Brändle: dokazani vstop ob polčasu pred izključitvijo pri isti izvorni uri 46; normalizirani vstop 45 / izključitev 46 / 1 zabeležena minuta je zaokrožen podatek, ne dokaz 60 sekund igre (klub: manj kot minuta, trener približno 30 sekund)."
+    }
+  ]
+}
