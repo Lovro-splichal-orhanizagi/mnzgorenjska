@@ -29,3 +29,24 @@ test('inactive Slovenian and unknown-country imports retain their nightly isolat
     assert.equal(crossing(country, [{ name: `uvoz ${country}`, status: 'in_progress' }]), false)
   }
 })
+
+test('coordination reads German leagues beyond the 1000-row boundary in stable pages', async () => {
+  const { vseVrstice } = await import('./strani.mjs')
+  const rows = Array.from({ length: 1079 }, (_, id) => ({ id, slug: id === 1078 ? 'de-regionalliga-bayern' : `league-${id}` }))
+  const calls = []
+  const db = { from(table) {
+    assert.equal(table, 'competitions')
+    return { select() {
+      return { then(resolve) { resolve({ data: rows.slice(0, 1000), error: null }) },
+        order(column) { assert.equal(column, 'id'); return {
+          range(start, end) { calls.push([start, end]); return Promise.resolve({ data: rows.slice(start, end + 1), error: null }) },
+        } },
+      }
+    } }
+  } }
+  const block = source.slice(source.indexOf('let lige\n'), source.indexOf('const ligaPoSlugu'))
+  const result = await vm.runInNewContext(`(async () => { ${block}\n return lige })()`, { db, vseVrstice, console, process })
+  assert.equal(result.length, 1079)
+  assert.equal(result.at(-1).slug, 'de-regionalliga-bayern')
+  assert.deepEqual(calls, [[0, 999], [1000, 1999]])
+})

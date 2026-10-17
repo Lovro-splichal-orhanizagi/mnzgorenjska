@@ -30,6 +30,7 @@
 import { execFileSync } from 'node:child_process'
 import { createClient } from '@supabase/supabase-js'
 import { locenaHkrati } from './hkratnost.mjs'
+import { vseVrstice } from './strani.mjs'
 
 const arg = (ime) => {
   const i = process.argv.indexOf(ime)
@@ -63,8 +64,13 @@ if (!GITHUB_RUN_ID || !GITHUB_REPOSITORY) {
 }
 const db = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } })
 
-const { data: lige, error } = await db.from('competitions').select('slug, active, source, countries!inner(code), federations(code)')
-if (error) {
+// V produkciji je več kot 1000 lig; tudi poznejši kandidati morajo dobiti državo.
+let lige
+try {
+  lige = await vseVrstice((od, do_) => db.from('competitions')
+    .select('slug, active, source, countries!inner(code), federations(code)')
+    .order('id').range(od, do_))
+} catch (error) {
   console.error(`Lig ni mogoče prebrati: ${error.message}`)
   process.exit(1)
 }
