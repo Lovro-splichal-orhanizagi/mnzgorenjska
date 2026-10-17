@@ -221,7 +221,7 @@ test('actual position sync, withdrawal, pricing and activation workflow paths wa
       ['uskladi-pozicije.yml', { pisi: true, suho: true }, ['--popravek', '--vir', 'fcf', '--tekmovanje', 'es-ct-primera-g1'], 'scripts/uskladi-pozicije.mjs'],
       ['izstop-kluba.yml', { pisi: false, suho: false }, ['--popravek', '--tekmovanje', 'es-ct-primera-g1'], 'scripts/izstop-kluba.mjs'],
       ['cene-lig.yml', {}, ['--popravek'], 'scripts/lazni-vratarji.mjs'],
-      ['vklop-katalonije.yml', {}, ['--drzava', 'ES'], 'scripts/vklopi-katalonijo.mjs'],
+      ['vklop-katalonije.yml', {}, ['--drzava', 'ES', '--najvec', '300'], 'scripts/vklopi-katalonijo.mjs'],
     ]
     for (const [workflow, flags, expectedArgs, mutator] of options) {
       const text = readFileSync(new URL(`../.github/workflows/${workflow}`, import.meta.url), 'utf8')
