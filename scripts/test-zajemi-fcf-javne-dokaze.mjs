@@ -21,7 +21,11 @@ function body(i = 0) {
 function setup(t) {
   assert.equal(typeof helper.zajemi, 'function', 'fixed source capture must exist')
   const root = realpathSync(mkdtempSync(join(tmpdir(), 'fcf-source-')))
-  t.after(() => rmSync(root, { recursive: true, force: true }))
+  t.after(() => {
+    t.mock.restoreAll()
+    syncBuiltinESMExports()
+    rmSync(root, { recursive: true, force: true })
+  })
   let time = 0
   t.mock.method(globalThis, 'setTimeout', (cb, ms) => { time += ms; queueMicrotask(cb); return 1 })
   t.mock.method(AbortSignal, 'timeout', ms => { assert.equal(ms, 90000); return new AbortController().signal })
@@ -173,7 +177,6 @@ test('partial body write plus failed cleanup never grants artifact upload eligib
   })
   t.mock.method(fs, 'unlinkSync', () => { throw new Error('SECRET unlink failure') })
   syncBuiltinESMExports()
-  t.after(() => { t.mock.restoreAll(); syncBuiltinESMExports() })
   const result = await f.invoke(() => response(body()))
   assert.equal(result.status, 1); assert.equal(result.artifactReady, false)
   assert.equal(f.calls.length, 1)
@@ -201,7 +204,6 @@ test('failed partial write preserves a foreign pathname replacement and refuses 
     return write(fd, data, ...options)
   })
   syncBuiltinESMExports()
-  t.after(() => { t.mock.restoreAll(); syncBuiltinESMExports() })
   const result = await f.invoke(() => response(body()))
   assert.equal(result.status, 1); assert.equal(result.artifactReady, false)
   assert.equal(f.calls.length, 1)
