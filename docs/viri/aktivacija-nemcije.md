@@ -6,7 +6,7 @@ ne uvaža podatkov in ne vklopi lige. Španija ostaja zunaj tega postopka.
 
 1. Na `main` mora uspeti sveža veriga migracij in običajni CI. Nato zaženi
    `preveri-nova-vira.yml`, `vir=dfb`, `sezona=all`, na pregledanem commitu.
-   Zahtevana sta uspešen celoten zagon in oba ohranjena artefakta
+   Zahtevana sta uspešna sezonska posla in oba ohranjena artefakta
    `vir-dfb-2025` ter `vir-dfb-2026`. Arhiv potrebuje vseh 306 zapisnikov;
    tekoča sezona vse objavljene zapisnike uradno že odigranih tekem. Edina
    pregledana izjema je povsem prazna uradna predloga 2426099, Hertha BSC II–RSV,
@@ -48,8 +48,17 @@ RPC zavrne vsako zgodovinsko izjemo v krogu, ki bi štel za fantasy. Ko zveza
 objavi popoln zapisnik, ga običajni nočni uvoz sam uvozi. Arhivskih izjem ni.
 
 Potek preveri izvorne GitHub zagone (isti repozitorij, točen workflow,
-`workflow_dispatch`, pregledani commit, končan uspeh). Koda razčlenjevalnika
-mora ostati enaka izvorni; guard je lahko dodan pozneje. Vsi prenosi prihajajo
+`workflow_dispatch`, pregledani commit, končan zagon in uspešen posel prav te
+sezone z istim `run_id` in `head_sha`). Neuspešen ali preklican sorodni posel
+druge sezone ne razveljavi že končanega uspešnega sezonskega zajema.
+Edini izrecno pregledani starejši arhivski zajem je zagon `38970734064` na
+commitu `6defb2484c9c2caaf7a217cf6763b4bca2e65a7a`: arhivski posel je uspel,
+tekoči takrat ne. Dovoljen je samo za arhiv 2025/26 in samo z dokazom uspeha
+arhivskega posla; poljubni drugi starejši commiti niso dovoljeni. Vsak od
+306 surovih arhivskih zapisnikov se vseeno ponovno razčleni s trenutno kodo
+in preveri njegov SHA; starost največ sedem dni ostane obvezna.
+Koda razčlenjevalnika
+mora ostati enaka pregledanemu tekočemu zajemu; guard je lahko dodan pozneje. Vsi prenosi prihajajo
 iz uradnega DFB izvora, vsak surovi dokument mora ustrezati shranjenemu SHA.
 Priprava uporablja le shranjene dokumente, brez tihih novih omrežnih branj.
 Po spremembi kode ali preteku svežine je potreben nov audit in pregledani SHA.

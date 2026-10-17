@@ -9,3 +9,22 @@ test('failed, unfinished, foreign, wrong-workflow or wrong-commit runs cannot es
   assert.throws(()=>preveriZagon({...run,...patch},'12345',commit),/izvor/)
  }
 })
+test('a completed successful current-season job survives cancellation of its unrelated archive sibling',()=>{
+ const partial={...run,conclusion:'cancelled'}
+ const proof={sezona:'2026/27',jobs:[{name:'Zivi vir — dfb 2026/27',run_id:12345,head_sha:commit,status:'completed',conclusion:'success'}]}
+ assert.doesNotThrow(()=>preveriZagon(partial,'12345',commit,proof))
+ for(const jobs of [[],[{...proof.jobs[0],conclusion:'failure'}],[{...proof.jobs[0],status:'in_progress'}],[{...proof.jobs[0],name:'Zivi vir — dfb 2025/26'}],[{...proof.jobs[0],run_id:42}],[{...proof.jobs[0],head_sha:'b'.repeat(40)}]]){
+  assert.throws(()=>preveriZagon(partial,'12345',commit,{...proof,jobs}),/izvor/)
+ }
+ assert.throws(()=>preveriZagon({...partial,status:'in_progress'},'12345',commit,proof),/izvor/)
+ for(const invalid of [{sezona:'invalid',jobs:proof.jobs},{sezona:'2026/27',jobs:null},{jobs:proof.jobs}])assert.throws(()=>preveriZagon(run,'12345',commit,invalid),/izvor/)
+})
+test('only the previously reviewed successful archive capture may use its older source commit',()=>{
+ const archive={...run,id:38970734064,conclusion:'failure',head_sha:'6defb2484c9c2caaf7a217cf6763b4bca2e65a7a'}
+ const proof={sezona:'2025/26',jobs:[{name:'Zivi vir — dfb 2025/26',run_id:38970734064,head_sha:archive.head_sha,status:'completed',conclusion:'success'}]}
+ assert.doesNotThrow(()=>preveriZagon(archive,'38970734064',commit,proof))
+ for(const patch of [{head_sha:'b'.repeat(40)},{id:38970734065},{path:'.github/workflows/ci.yml'},{event:'pull_request'}]){
+  assert.throws(()=>preveriZagon({...archive,...patch},String(archive.id),commit,proof),/izvor/)
+ }
+ assert.throws(()=>preveriZagon(archive,'38970734064',commit,{...proof,sezona:'2026/27'}),/izvor/)
+})
