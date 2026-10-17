@@ -5,15 +5,15 @@ on:
   workflow_dispatch:
     inputs:
       source_commit:
-        description: Celoten pregledani SHA uspesnega DFB audita
+        description: Celoten pregledani SHA uspesnega tekocega DFB sezonskega posla
         required: true
         type: string
       archive_run:
-        description: Uspesen zagon preveri-nova-vira z artefaktom vir-dfb-2025
+        description: Koncan zagon z uspesnim arhivskim poslom in artefaktom vir-dfb-2025
         required: true
         type: string
       current_run:
-        description: Uspesen zagon preveri-nova-vira z artefaktom vir-dfb-2026 (zajem do 12 ur)
+        description: Koncan zagon z uspesnim tekocim poslom in artefaktom vir-dfb-2026 (do 12 ur)
         required: true
         type: string
       approved_sha256:
