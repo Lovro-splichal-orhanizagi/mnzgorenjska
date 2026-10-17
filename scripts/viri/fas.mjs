@@ -207,9 +207,22 @@ export function glavaStrani(html) {
 /** Ekipi iz "convocatoria": [[igralci domačih], [igralci gostov]]. */
 export function postaviStrani(html) {
   const s = cisto(html)
-  const out = []
-  for (const del of s.split('<div class="fa-conv__team">').slice(1)) {
+  const deli = s.split('<div class="fa-conv__team">').slice(1)
+  const out = [[], []]
+  if (!deli.length) return out
+  const glava = glavaStrani(s)
+  const kljuci = [glava?.domaci, glava?.gostje].map((ime) => kljucKlubaFas(ime ?? ''))
+  if (kljuci.some((k) => !k) || kljuci[0] === kljuci[1])
+    throw new Error('fas: postavi zahtevata dve različni ekipi v glavi tekme')
+  const uporabljene = new Set()
+  for (const del of deli) {
     const tabela = del.slice(0, del.indexOf('</table>') + 8)
+    const naslov = besedilo(tabela.match(/<div class="fa-conv__team-title">([\s\S]*?)<\/div>/)?.[1])
+    const kljuc = kljucKlubaFas(popraviIme(naslov))
+    const idx = kljuci.indexOf(kljuc)
+    if (!kljuc || idx < 0) throw new Error(`fas: neznana ali manjkajoča ekipa postave "${naslov}"`)
+    if (uporabljene.has(idx)) throw new Error(`fas: podvojena postava ekipe "${naslov}"`)
+    uporabljene.add(idx)
     const igralci = []
     for (const [, razred, vrstica] of tabela.matchAll(/<tr class="(fa-conv__row[^"]*)">([\s\S]*?)<\/tr>/g)) {
       const celica = (ime) => vrstica.match(new RegExp(`<td class="fa-conv__${ime}">([\\s\\S]*?)</td>`))?.[1] ?? ''
@@ -234,7 +247,7 @@ export function postaviStrani(html) {
         pozicija: poz,
       })
     }
-    out.push(igralci)
+    out[idx] = igralci
   }
   return out
 }
