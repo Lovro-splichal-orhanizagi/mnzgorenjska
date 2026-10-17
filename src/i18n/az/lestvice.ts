@@ -202,7 +202,51 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     klop: 'Ehtiyatda qızıl',
     klopOpis: '{ekipa} · ehtiyatda {tocke}. Məşqçi, harada idin?',
     zlica: 'Taxta qaşıq',
-    zlicaOpis: '{ekipa} · {tocke}. Növbəti tur daha yaxşı olacaq. Bəlkə.',
+    // Šala gre na maskoto (on joka v žlico), nikoli na človeka.
+    zlicaOpis: '{ekipa} · {tocke}. Bu həftə qaşığı bizim bığlı qucaqlayır. Növbəti tur sənindir.',
+    spodbuda: 'Növbəti tur sənindir',
+    spodbudaOpis: '{ekipa} · {tocke}. Bığlı sənin yanındadır. Bu həftə qaşıq yoxdur, yalnız dəstək.',
+    // Slike nagrad: šala brez imena ekipe (ime je na sliki posebej).
+    sala: {
+      manager: 'Növbəti tura qədər öyünmək haqqı.',
+      kapetan: '{igralec} sarğı ilə {tocke} gətirdi.',
+      adut: '{igralec} ({tocke}): başqa heç kimin heyətində yox idi.',
+      skok: 'Növbəti dayanacaq: cədvəlin zirvəsi.',
+      padec: 'Paraşüt açılmadı. Bığlı artıq ehtiyat paraşüt göndərib.',
+      klop: 'Məşqçi, harada idin?',
+      zlica: 'Bu həftə qaşığı bizim bığlı qucaqlayır. Növbəti tur sənindir.',
+      spodbuda: 'Bığlı sənin yanındadır. Növbəti tur sənindir.',
+    },
+    vrednostSkok: {
+      one: '▲ {n} pillə · indi #{mesto}',
+      other: '▲ {n} pillə · indi #{mesto}',
+    },
+    vrednostPadec: {
+      one: '▼ {n} pillə · indi #{mesto}',
+      other: '▼ {n} pillə · indi #{mesto}',
+    },
+    vrednostKlop: 'ehtiyatda {tocke}',
+    slikaPregled: 'Turun icmalı',
+    slikaVabilo: 'Dostlar arasında mini-liqa · slff.eu',
+    slika: 'Şəkil',
+    slikaNagrade: '{nagrada} mükafatının şəkli',
+    slikaVse: 'Bütün icmalın şəkli',
+    zapri: 'Bağla',
+    formatKvadrat: 'Kvadrat (çat)',
+    formatZgodba: 'Hekayə (şaquli)',
+    predogled: 'Şəklin önizləməsi',
+    deli: 'Şəkli paylaş',
+    prenesi: 'Şəkli yüklə',
+    // Pred deljenjem šaljive nagrade: odloči človek, ne aplikacija.
+    opozoriloSale: 'Zarafat {ekipa} də güləndə gülməli olur. Güləcəyini bilirsənsə, paylaş.',
+  },
+
+  saljiveNagrade: {
+    naslov: 'Zarafatlı mükafatlar',
+    opis: 'Taxta qaşıq, Sərbəst düşüş və Ehtiyatda qızıl həftəlik icmalda yalnız mini-liqada ən azı 4 komanda olanda görünür. Söndürsən, yalnız təriflər qalır.',
+    vklop: 'Zarafatlı mükafatları göstər',
+    shranjeno: 'Yadda saxlanıldı.',
+    napaka: 'Ayarı yadda saxlamaq mümkün olmadı.',
   },
 
   mojeMiniLige: {

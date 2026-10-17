@@ -226,9 +226,28 @@ export interface TedenskiPregled {
   kapetan?: { ekipa_id: number; igralec_id: number; igralec: string; tocke: number; skupaj: number } | null
   klop?: { ekipa_id: number; tocke: number } | null
   adut?: { ekipa_id: number; igralec_id: number; igralec: string; tocke: number } | null
+  /** Lastnik mini lige ni izklopil šaljivih nagrad (`mini_lige.saljive_nagrade`). */
+  saljive?: boolean
+  /** V mini ligi je ekipa mladinske lige: slike brez piva. */
+  mladinska?: boolean
+  /** Ekipe z najmanj točkami prejšnjega končanega kroga (žlica ne dvakrat zapored). */
+  zadnji_prej?: number[]
 }
 
-export type VrstaZgodbe = 'manager' | 'zlica' | 'kapetan' | 'klop' | 'skok' | 'padec' | 'adut'
+export type VrstaZgodbe = 'manager' | 'zlica' | 'kapetan' | 'klop' | 'skok' | 'padec' | 'adut' | 'spodbuda'
+
+/**
+ * Šaljive nagrade — šala na račun ekipe. Pravila (docs/podatkovni-model.md,
+ * *Nagrade tedenskega pregleda*): le v mini ligi z vsaj
+ * `NAJMANJ_EKIP_ZA_SALE` ekipami, le če jih lastnik ni izklopil, in nikoli
+ * v samodejnih objavah.
+ */
+export const SALJIVE_ZGODBE: readonly VrstaZgodbe[] = ['zlica', 'padec', 'klop']
+export const NAJMANJ_EKIP_ZA_SALE = 4
+
+export function jeSaljiva(vrsta: VrstaZgodbe): boolean {
+  return SALJIVE_ZGODBE.includes(vrsta)
+}
 
 export interface Zgodba {
   vrsta: VrstaZgodbe
@@ -250,8 +269,13 @@ export interface Zgodba {
  * Iz surovega pregleda sestavi zgodbe kroga, v vrstnem redu, ki se bere kot
  * poročilo: zmagovalec, kapetan, adut, dvigalo, klop in na koncu žlica.
  *
- * Zgodba brez tekmeca ni zgodba: pri eni sami ekipi ostanejo le kapetan in
- * klop, žlica pa samo, kadar zadnji res zaostaja za prvim.
+ * Zgodba brez tekmeca ni zgodba: pri eni sami ekipi ostane le kapetan.
+ *
+ * Šaljive nagrade (žlica, prosti pad, zlato na klopi) so le med vsaj štirimi
+ * ekipami in le, če jih lastnik ni izklopil — v manjši ligi bi vedno
+ * zadele istega človeka. Žlica pride samo, kadar zadnji res zaostaja za
+ * prvim, in nikoli isti ekipi dva kroga zapored: kdor je bil zadnji že
+ * prejšnji krog, dobi namesto nje "Naslednji krog je tvoj".
  */
 export function zgodbeKroga(p: TedenskiPregled | null | undefined): Zgodba[] {
   const vrstice = p?.vrstice ?? []
@@ -288,21 +312,25 @@ export function zgodbeKroga(p: TedenskiPregled | null | undefined): Zgodba[] {
       igralecId: p.adut.igralec_id,
     })
 
+  const sale = p.saljive !== false && urejene.length >= NAJMANJ_EKIP_ZA_SALE
+
   if (vec) {
     // Največji skok in največji padec; ob enakem premiku zmaga višje mesto.
     const s = urejene.filter((v) => (v.premik ?? 0) !== 0)
     const gor = s.filter((v) => st(v.premik) > 0).sort((a, b) => st(b.premik) - st(a.premik) || a.mesto - b.mesto)[0]
     const dol = s.filter((v) => st(v.premik) < 0).sort((a, b) => st(a.premik) - st(b.premik) || a.mesto - b.mesto)[0]
     if (gor) zgodbe.push({ vrsta: 'skok', ...ekipa(gor.ekipa_id), tocke: st(gor.tocke), mest: st(gor.premik), mesto: gor.mesto })
-    if (dol) zgodbe.push({ vrsta: 'padec', ...ekipa(dol.ekipa_id), tocke: st(dol.tocke), mest: -st(dol.premik), mesto: dol.mesto })
+    if (sale && dol) zgodbe.push({ vrsta: 'padec', ...ekipa(dol.ekipa_id), tocke: st(dol.tocke), mest: -st(dol.premik), mesto: dol.mesto })
   }
 
-  if (p.klop && st(p.klop.tocke) > 0)
+  if (sale && p.klop && st(p.klop.tocke) > 0)
     zgodbe.push({ vrsta: 'klop', ...ekipa(p.klop.ekipa_id), tocke: st(p.klop.tocke) })
 
   const zadnji = urejene[urejene.length - 1]
-  if (vec && st(zadnji.tocke) < st(prvi.tocke))
-    zgodbe.push({ vrsta: 'zlica', ...ekipa(zadnji.ekipa_id), tocke: st(zadnji.tocke) })
+  if (sale && st(zadnji.tocke) < st(prvi.tocke)) {
+    const zeZadnji = (p.zadnji_prej ?? []).includes(zadnji.ekipa_id)
+    zgodbe.push({ vrsta: zeZadnji ? 'spodbuda' : 'zlica', ...ekipa(zadnji.ekipa_id), tocke: st(zadnji.tocke) })
+  }
 
   return zgodbe
 }
@@ -330,6 +358,8 @@ export function opisZgodbe(z: Zgodba): string {
       return t('lestvice.pregled.klopOpis', { ekipa: z.ekipa, tocke })
     case 'zlica':
       return t('lestvice.pregled.zlicaOpis', { ekipa: z.ekipa, tocke })
+    case 'spodbuda':
+      return t('lestvice.pregled.spodbudaOpis', { ekipa: z.ekipa, tocke })
   }
 }
 
@@ -346,6 +376,7 @@ export const IKONE_ZGODB: Record<VrstaZgodbe, string> = {
   padec: '🪂',
   klop: '🪑',
   zlica: '🥄',
+  spodbuda: '💪',
 }
 
 /**

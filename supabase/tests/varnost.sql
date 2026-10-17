@@ -712,6 +712,68 @@ select pg_temp.zavrnjeno('pregled: anonimni ga ne more klicati',
   $$select tedenski_pregled_mini_lige(-914001)$$);
 reset role;
 
+-- Šaljive nagrade (20261017233300): stikalo nastavi le lastnik mini lige,
+-- pregled pove, kdo je bil zadnji v prejšnjem krogu (žlica ne dvakrat
+-- zapored) in ali je v ligi mladinska ekipa (slike brez piva).
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
+select pg_temp.preveri('saljive: privzeto vklopljene, liga ni mladinska',
+  (select (j->>'saljive')::boolean and not (j->>'mladinska')::boolean
+     from (select tedenski_pregled_mini_lige(-914001) as j) x));
+-- Krog 1: A 8, B 18 — v 2. krogu je A prejšnji zadnji (zdaj je prvi).
+select pg_temp.preveri('saljive: zadnji v prejsnjem krogu',
+  (select j->'zadnji_prej' = '[-914001]'::jsonb
+     from (select tedenski_pregled_mini_lige(-914001) as j) x));
+select pg_temp.preveri('saljive: prvi krog nima prejsnjega zadnjega',
+  (select j->'zadnji_prej' = '[]'::jsonb
+     from (select tedenski_pregled_mini_lige(-914001, 1) as j) x));
+-- Lastnik tudi sam ne piše stolpca mimo funkcije (pravica le na `name`).
+select pg_temp.zavrnjeno('saljive: lastnik ne pise stolpca neposredno',
+  $$update mini_lige set saljive_nagrade = false where id = -914001$$);
+select pg_temp.preveri('saljive: lastnik izklopi prek funkcije',
+  nastavi_saljive_nagrade(-914001, false) = false);
+select pg_temp.preveri('saljive: pregled pove, da so izklopljene',
+  (select not (j->>'saljive')::boolean from (select tedenski_pregled_mini_lige(-914001) as j) x));
+reset role;
+-- B je član iste mini lige, a ne lastnik.
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ac',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('saljive: clan, ki ni lastnik, ne prizge stikala',
+  $$select nastavi_saljive_nagrade(-914001, true)$$);
+select pg_temp.zavrnjeno('saljive: clan ne pise stolpca neposredno',
+  $$update mini_lige set saljive_nagrade = true where id = -914001$$);
+select pg_temp.preveri('saljive: clan vidi izklop lastnika',
+  (select not (j->>'saljive')::boolean from (select tedenski_pregled_mini_lige(-914001) as j) x));
+reset role;
+-- C ni v mini ligi.
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('saljive: tujec ne prizge stikala',
+  $$select nastavi_saljive_nagrade(-914001, true)$$);
+reset role;
+select set_config('request.jwt.claim.sub','',true);
+set local role anon;
+select pg_temp.zavrnjeno('saljive: anonimni ne more klicati funkcije',
+  $$select nastavi_saljive_nagrade(-914001, true)$$);
+reset role;
+select pg_temp.preveri('saljive: stikalo je se vedno izklopljeno',
+  (select not saljive_nagrade from mini_lige where id = -914001));
+select pg_temp.preveri('saljive: funkcija ni odprta anonimnim',
+  not has_function_privilege('anon', 'public.nastavi_saljive_nagrade(bigint, boolean)', 'execute')
+  and has_function_privilege('authenticated', 'public.nastavi_saljive_nagrade(bigint, boolean)', 'execute'));
+select pg_temp.preveri('saljive: vloga authenticated nima pravice pisanja stolpca',
+  not has_column_privilege('authenticated', 'public.mini_lige', 'saljive_nagrade', 'update')
+  and not has_table_privilege('authenticated', 'public.mini_lige', 'update'));
+-- Mladinska liga: ekipa iz lige s šifro U19 → slike brez piva.
+update competitions set slug = 'test-pregled-u19' where id = -914001;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
+select pg_temp.preveri('saljive: mini liga z mladinsko ekipo je mladinska',
+  (select (j->>'mladinska')::boolean from (select tedenski_pregled_mini_lige(-914001) as j) x));
+select nastavi_saljive_nagrade(-914001, true);
+reset role;
+update competitions set slug = 'test-pregled' where id = -914001;
+
 -- Hisne ekipe: en sistemski lastnik z vec ekipami v ligi, ki jih izbranost,
 -- drzavna lestvica, posta in mini lige ne vidijo; v ligi pa stejejo.
 create function pg_temp.pade(p_opis text, p_sql text) returns void

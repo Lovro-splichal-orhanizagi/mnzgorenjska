@@ -202,7 +202,51 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     klop: 'Kuld pingil',
     klopOpis: '{ekipa} · {tocke} pingil. Treener, kus sa olid?',
     zlica: 'Puulusikas',
-    zlicaOpis: '{ekipa} · {tocke}. Järgmine voor tuleb parem. Võib-olla.',
+    // Šala gre na maskoto (on joka v žlico), nikoli na človeka.
+    zlicaOpis: '{ekipa} · {tocke}. Lusikat hoiab sel nädalal meie vuntsimees. Järgmine voor on sinu.',
+    spodbuda: 'Järgmine voor on sinu',
+    spodbudaOpis: '{ekipa} · {tocke}. Vuntsimees hoiab pöialt. Sel nädalal lusikat pole, ainult julgustus.',
+    // Slike nagrad: šala brez imena ekipe (ime je na sliki posebej).
+    sala: {
+      manager: 'Kiitlemisõigus kuni järgmise vooruni.',
+      kapetan: '{igralec} tõi kaptenipaelaga {tocke}.',
+      adut: '{igralec} ({tocke}): kellelgi teisel polnud teda koosseisus.',
+      skok: 'Järgmine peatus: tabeli tipp.',
+      padec: 'Langevari ei avanenud. Vuntsimees saatis juba varulangevarju.',
+      klop: 'Treener, kus sa olid?',
+      zlica: 'Lusikat hoiab sel nädalal meie vuntsimees. Järgmine voor on sinu.',
+      spodbuda: 'Vuntsimees hoiab pöialt. Järgmine voor on sinu.',
+    },
+    vrednostSkok: {
+      one: '▲ {n} koht · nüüd {mesto}.',
+      other: '▲ {n} kohta · nüüd {mesto}.',
+    },
+    vrednostPadec: {
+      one: '▼ {n} koht · nüüd {mesto}.',
+      other: '▼ {n} kohta · nüüd {mesto}.',
+    },
+    vrednostKlop: '{tocke} pingil',
+    slikaPregled: 'Vooru kokkuvõte',
+    slikaVabilo: 'Miniliiga sõprade vahel · slff.eu',
+    slika: 'Pilt',
+    slikaNagrade: 'Auhinna {nagrada} pilt',
+    slikaVse: 'Kogu kokkuvõtte pilt',
+    zapri: 'Sulge',
+    formatKvadrat: 'Ruut (vestlus)',
+    formatZgodba: 'Lugu (püstine)',
+    predogled: 'Pildi eelvaade',
+    deli: 'Jaga pilti',
+    prenesi: 'Laadi pilt alla',
+    // Pred deljenjem šaljive nagrade: odloči človek, ne aplikacija.
+    opozoriloSale: 'Nali on naljakas, kui ka {ekipa} naerab. Jaga seda, kui tead, et nii läheb.',
+  },
+
+  saljiveNagrade: {
+    naslov: 'Naljaauhinnad',
+    opis: 'Puulusikas, Vabalangus ja Kuld pingil ilmuvad nädala kokkuvõttesse ainult siis, kui miniliigas on vähemalt 4 meeskonda. Kui need välja lülitad, jäävad alles ainult kiitused.',
+    vklop: 'Näita naljaauhindu',
+    shranjeno: 'Salvestatud.',
+    napaka: 'Seadet ei õnnestunud salvestada.',
   },
 
   mojeMiniLige: {

@@ -126,6 +126,36 @@
   Pregled teče kot lastnik sheme (bere tuje posnetke za točke klopi), a
   kapetana izbere le med ekipami, ki jih klicatelj sme videti (svojo), aduta
   ne vrne več (izdal bi, česa tekmeci nimajo); vrstice nosijo `lastnik_id`
+- **Nagrade tedenskega pregleda** (migracija 20261017233300). Pregled vrne še
+  `saljive` (`mini_lige.saljive_nagrade`), `mladinska` (v mini ligi je ekipa
+  mladinske lige ali je javna v njej, `je_mladinski_slug`) in `zadnji_prej`
+  (ekipe z najmanj točkami prejšnjega končanega kroga). Nagrade izbere
+  `zgodbeKroga` (`src/lib/miniLige.ts`), sliko 1080×1080 (klepet) in 1080×1920
+  (zgodba) za vsako nagrado in za cel krog nariše `SlikaNagrade.tsx`
+  (postavitev `src/lib/slikaNagrade.ts`, poze maskote `public/logo/maskota/`,
+  risar `node scripts/maskota-poze.mjs`). **Pravila prijaznosti — veljajo za
+  vsako novo nagrado, niz ali sliko:**
+  - Šala gre le na račun fantasy ekipe v mini ligi (ljudi, ki so se vpisali
+    skupaj), nikoli resničnega igralca. Igralec se pojavi samo s pohvalo
+    (Kapetan kroga, Skriti adut); nobena nagrada ne smeši njegove igre,
+    telesa, let ali napak.
+  - Brez besed o pameti, telesu, denarju, družini. Žrtev šale je maskota
+    (brkač joka v žlico, padalo se mu ne odpre), ne človek; "Selektor, kje si
+    bil?" je meja.
+  - Šaljive nagrade (`SALJIVE_ZGODBE`: Lesena žlica, Prosti pad, Zlato na
+    klopi) le v mini ligi z vsaj 4 ekipami (`NAJMANJ_EKIP_ZA_SALE`) — v manjši
+    bi vedno zadele istega.
+  - Lesena žlica nikoli isti ekipi dva kroga zapored: kdor je v `zadnji_prej`,
+    dobi namesto nje "Naslednji krog je tvoj" (`spodbuda`).
+  - Lastnik mini lige šaljive nagrade izklopi (Mini lige → Šaljive nagrade);
+    pišeta le on in `nastavi_saljive_nagrade` (neposredne pravice na stolpec ni,
+    preizkus v `supabase/tests/varnost.sql`). Pohvale ostanejo.
+  - Deli vedno človek: predogled, nato sistemski list ali prenos, pri šaljivi
+    nagradi z opombo "Šala je smešna, ko se smeje tudi …". Samodejne objave
+    (`scripts/objave.mjs`) pregleda mini lig ne berejo (smoke to preveri).
+  - Mladim nikoli alkohola: v mladinski mini ligi so poze s pivom zamenjane
+    z `-mladi` (sok, `POZE_S_PIVOM`); nobena nova poza nima cigarete, zato
+    slike nagrad nimajo grba SLFF (na njem maskota kadi in pije), ampak napis.
 - **Javne mini lige** (migracija 20261012139100): `mini_lige.javna`, `opis`
   (≤ 120), `competition_id` (liga, v kateri je javna; mini liga sama še vedno
   gre čez lige) in `javna_zaklenjena_at` (admin jo je skril, lastnik je ne more

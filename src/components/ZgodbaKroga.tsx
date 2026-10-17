@@ -30,9 +30,9 @@ import { naslovSlike } from '../lib/platforma'
 import { naslovaVelikeFotografije } from '../lib/prevzem'
 
 const CRNILO = '#10251B'
-const pisava = (teza: number, px: number) => `${teza} ${px}px Inter, system-ui, sans-serif`
+export const pisava = (teza: number, px: number) => `${teza} ${px}px Inter, system-ui, sans-serif`
 
-function naloziSliko(src: string): Promise<HTMLImageElement | null> {
+export function naloziSliko(src: string): Promise<HTMLImageElement | null> {
   return new Promise((resolve) => {
     const s = new Image()
     // Grb z drugega streznika brez CORS bi platno "umazal" in toBlob bi
@@ -45,7 +45,7 @@ function naloziSliko(src: string): Promise<HTMLImageElement | null> {
 }
 
 /** Floodlit igrisce kot pri plakatu, le raztegnjeno na pokoncno. */
-async function ozadje(c: CanvasRenderingContext2D) {
+export async function ozadje(c: CanvasRenderingContext2D) {
   const foto = await naloziSliko('/foto/igrisce.jpg')
   if (foto) {
     const r = Math.max(SIRINA_P / foto.width, VISINA_P / foto.height)
@@ -65,7 +65,7 @@ async function ozadje(c: CanvasRenderingContext2D) {
   c.fillRect(0, 0, SIRINA_P, VISINA_P)
 }
 
-async function narisiElement(c: CanvasRenderingContext2D, e: ElementPregleda) {
+export async function narisiElement(c: CanvasRenderingContext2D, e: ElementPregleda) {
   if (e.vrsta === 'pravokotnik') {
     c.fillStyle = e.barva
     c.fillRect(e.x, e.y, e.w, e.h)

@@ -201,7 +201,53 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     klop: 'Zelts uz soliņa',
     klopOpis: '{ekipa} · {tocke} uz soliņa. Treneri, kur tu biji?',
     zlica: 'Koka karote',
-    zlicaOpis: '{ekipa} · {tocke}. Nākamā kārta būs labāka. Varbūt.',
+    // Šala gre na maskoto (on joka v žlico), nikoli na človeka.
+    zlicaOpis: '{ekipa} · {tocke}. Karoti šonedēļ auklē mūsu ūsainis. Nākamā kārta ir tava.',
+    spodbuda: 'Nākamā kārta ir tava',
+    spodbudaOpis: '{ekipa} · {tocke}. Ūsainis tur īkšķus. Šonedēļ karotes nav, tikai uzmundrinājums.',
+    // Slike nagrad: šala brez imena ekipe (ime je na sliki posebej).
+    sala: {
+      manager: 'Tiesības lielīties ir spēkā līdz nākamajai kārtai.',
+      kapetan: '{igralec} ar kapteiņa apsēju atnesa {tocke}.',
+      adut: '{igralec} ({tocke}): sastāvā viņš nebija nevienam citam.',
+      skok: 'Nākamā pietura: tabulas virsotne.',
+      padec: 'Izpletnis neatvērās. Ūsainis jau aizsūtīja rezerves izpletni.',
+      klop: 'Treneri, kur tu biji?',
+      zlica: 'Karoti šonedēļ auklē mūsu ūsainis. Nākamā kārta ir tava.',
+      spodbuda: 'Ūsainis tur īkšķus. Nākamā kārta ir tava.',
+    },
+    vrednostSkok: {
+      zero: '▲ {n} vietas · tagad {mesto}.',
+      one: '▲ {n} vieta · tagad {mesto}.',
+      other: '▲ {n} vietas · tagad {mesto}.',
+    },
+    vrednostPadec: {
+      zero: '▼ {n} vietas · tagad {mesto}.',
+      one: '▼ {n} vieta · tagad {mesto}.',
+      other: '▼ {n} vietas · tagad {mesto}.',
+    },
+    vrednostKlop: '{tocke} uz soliņa',
+    slikaPregled: 'Kārtas apskats',
+    slikaVabilo: 'Minilīga draugu lokā · slff.eu',
+    slika: 'Attēls',
+    slikaNagrade: 'Balvas {nagrada} attēls',
+    slikaVse: 'Visa apskata attēls',
+    zapri: 'Aizvērt',
+    formatKvadrat: 'Kvadrāts (čats)',
+    formatZgodba: 'Stāsts (vertikāli)',
+    predogled: 'Attēla priekšskatījums',
+    deli: 'Kopīgot attēlu',
+    prenesi: 'Lejupielādēt attēlu',
+    // Pred deljenjem šaljive nagrade: odloči človek, ne aplikacija.
+    opozoriloSale: 'Joks ir smieklīgs, ja smejas arī {ekipa}. Dalies ar to, ja zini, ka tā būs.',
+  },
+
+  saljiveNagrade: {
+    naslov: 'Jautrās balvas',
+    opis: 'Koka karote, Brīvais kritiens un Zelts uz soliņa nedēļas apskatā parādās tikai tad, ja minilīgā ir vismaz 4 komandas. Ja tās izslēgsi, paliks tikai uzslavas.',
+    vklop: 'Rādīt jautrās balvas',
+    shranjeno: 'Saglabāts.',
+    napaka: 'Iestatījumu neizdevās saglabāt.',
   },
 
   mojeMiniLige: {

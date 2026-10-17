@@ -205,7 +205,55 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     klop: 'Zlato na lavičce',
     klopOpis: '{ekipa} · {tocke} na lavičce. Trenére, kde jsi byl?',
     zlica: 'Dřevěná vařečka',
-    zlicaOpis: '{ekipa} · {tocke}. Příští kolo bude lepší. Možná.',
+    // Šala gre na maskoto (on joka v žlico), nikoli na človeka.
+    zlicaOpis: '{ekipa} · {tocke}. Vařečku tento týden opatruje náš fousáč. Příští kolo je tvoje.',
+    spodbuda: 'Příští kolo je tvoje',
+    spodbudaOpis: '{ekipa} · {tocke}. Fousáč drží palce. Tento týden žádná vařečka, jen povzbuzení.',
+    // Slike nagrad: šala brez imena ekipe (ime je na sliki posebej).
+    sala: {
+      manager: 'Právo se chlubit platí do dalšího kola.',
+      kapetan: '{igralec} přinesl s páskou {tocke}.',
+      adut: '{igralec} ({tocke}): v sestavě ho neměl nikdo jiný.',
+      skok: 'Příští zastávka: čelo tabulky.',
+      padec: 'Padák se neotevřel. Fousáč už posílá náhradní.',
+      klop: 'Trenére, kde jsi byl?',
+      zlica: 'Vařečku tento týden opatruje náš fousáč. Příští kolo je tvoje.',
+      spodbuda: 'Fousáč drží palce. Příští kolo je tvoje.',
+    },
+    vrednostSkok: {
+      one: '▲ {n} místo · teď {mesto}.',
+      few: '▲ {n} místa · teď {mesto}.',
+      many: '▲ {n} místa · teď {mesto}.',
+      other: '▲ {n} míst · teď {mesto}.',
+    },
+    vrednostPadec: {
+      one: '▼ {n} místo · teď {mesto}.',
+      few: '▼ {n} místa · teď {mesto}.',
+      many: '▼ {n} místa · teď {mesto}.',
+      other: '▼ {n} míst · teď {mesto}.',
+    },
+    vrednostKlop: '{tocke} na lavičce',
+    slikaPregled: 'Přehled kola',
+    slikaVabilo: 'Miniliga mezi kamarády · slff.eu',
+    slika: 'Obrázek',
+    slikaNagrade: 'Obrázek ocenění {nagrada}',
+    slikaVse: 'Obrázek celého přehledu',
+    zapri: 'Zavřít',
+    formatKvadrat: 'Čtverec (chat)',
+    formatZgodba: 'Příběh (na výšku)',
+    predogled: 'Náhled obrázku',
+    deli: 'Sdílet obrázek',
+    prenesi: 'Stáhnout obrázek',
+    // Pred deljenjem šaljive nagrade: odloči človek, ne aplikacija.
+    opozoriloSale: 'Vtip je vtipný, když se směje i {ekipa}. Sdílej ho, jen pokud víš, že se zasměje.',
+  },
+
+  saljiveNagrade: {
+    naslov: 'Vtipná ocenění',
+    opis: 'Dřevěná vařečka, Volný pád a Zlato na lavičce se v týdenním přehledu ukážou, jen když má miniliga aspoň 4 týmy. Když je vypneš, zůstanou jen pochvaly.',
+    vklop: 'Zobrazit vtipná ocenění',
+    shranjeno: 'Uloženo.',
+    napaka: 'Nastavení se nepodařilo uložit.',
   },
 
   mojeMiniLige: {

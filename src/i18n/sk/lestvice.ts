@@ -205,7 +205,55 @@ export const lestvice: NonNullable<Prevod['lestvice']> = {
     klop: 'Zlato na lavičke',
     klopOpis: '{ekipa} · {tocke} na lavičke. Tréner, kde si bol?',
     zlica: 'Drevená lyžica',
-    zlicaOpis: '{ekipa} · {tocke}. Ďalšie kolo bude lepšie. Možno.',
+    // Šala gre na maskoto (on joka v žlico), nikoli na človeka.
+    zlicaOpis: '{ekipa} · {tocke}. Lyžicu tento týždeň opatruje náš fúzač — ďalšie kolo je tvoje.',
+    spodbuda: 'Ďalšie kolo je tvoje',
+    spodbudaOpis: '{ekipa} · {tocke}. Fúzač drží palce — tento týždeň žiadna lyžica, len povzbudenie.',
+    // Slike nagrad: šala brez imena ekipe (ime je na sliki posebej).
+    sala: {
+      manager: 'Právo chváliť sa platí do ďalšieho kola.',
+      kapetan: '{igralec} priniesol s páskou {tocke}.',
+      adut: '{igralec} ({tocke}) — v zostave ho nemal nikto iný.',
+      skok: 'Ďalšia zastávka: vrchol tabuľky.',
+      padec: 'Padák sa neotvoril. Fúzač už poslal náhradný.',
+      klop: 'Tréner, kde si bol?',
+      zlica: 'Lyžicu tento týždeň opatruje náš fúzač. Ďalšie kolo je tvoje.',
+      spodbuda: 'Fúzač drží palce. Ďalšie kolo je tvoje.',
+    },
+    vrednostSkok: {
+      one: '▲ {n} miesto · teraz {mesto}.',
+      few: '▲ {n} miesta · teraz {mesto}.',
+      many: '▲ {n} miesta · teraz {mesto}.',
+      other: '▲ {n} miest · teraz {mesto}.',
+    },
+    vrednostPadec: {
+      one: '▼ {n} miesto · teraz {mesto}.',
+      few: '▼ {n} miesta · teraz {mesto}.',
+      many: '▼ {n} miesta · teraz {mesto}.',
+      other: '▼ {n} miest · teraz {mesto}.',
+    },
+    vrednostKlop: '{tocke} na lavičke',
+    slikaPregled: 'Prehľad kola',
+    slikaVabilo: 'Mini liga medzi kamarátmi · slff.eu',
+    slika: 'Obrázok',
+    slikaNagrade: 'Obrázok ocenenia {nagrada}',
+    slikaVse: 'Obrázok celého prehľadu',
+    zapri: 'Zavrieť',
+    formatKvadrat: 'Štvorec (chat)',
+    formatZgodba: 'Príbeh (na výšku)',
+    predogled: 'Náhľad obrázka',
+    deli: 'Zdieľať obrázok',
+    prenesi: 'Stiahnuť obrázok',
+    // Pred deljenjem šaljive nagrade: odloči človek, ne aplikacija.
+    opozoriloSale: 'Vtip je vtipný, keď sa smeje aj {ekipa}. Zdieľaj ho, ak vieš, že sa zasmeje.',
+  },
+
+  saljiveNagrade: {
+    naslov: 'Žartovné ocenenia',
+    opis: 'Drevená lyžica, Voľný pád a Zlato na lavičke sa v týždennom prehľade zobrazia, len keď má mini liga aspoň 4 tímy. Ak ich vypneš, zostanú iba pochvaly.',
+    vklop: 'Zobraziť žartovné ocenenia',
+    shranjeno: 'Uložené.',
+    napaka: 'Nastavenie sa nepodarilo uložiť.',
   },
 
   mojeMiniLige: {
