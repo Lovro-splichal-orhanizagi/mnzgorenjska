@@ -156,3 +156,22 @@ test('same-name opponents with different profiles retain their proven side and k
  assert.equal(z.nepripisaniRumeni,undefined);assert.equal(z.rumeni.length,7)
  assert.ok(z.rumeni.some(e=>e.ime==='Justin Ospelt'&&e.ekipaIdx===1))
 })
+
+import ncel from './viri/ncefl.mjs'
+test('importer preserves the NCEL numeric clock default and fresh reads for a recent match',async t=>{
+ // A third-argument DFB options object must not replace NCEL's numeric clock.
+ // Use the actual importer and actual NCEL traversal; replace only source HTTP.
+ t.mock.method(Date,'now',()=>Date.parse('2026-07-26T12:00:00Z'))
+ const source=readFileSync(new URL('./uvoz-zapisnikov.mjs',import.meta.url),'utf8')
+ const body=source.slice(source.indexOf('// --- seznam zapisnikov'),source.indexOf('// --- nespremenjeni zapisniki'))
+ const league=readFileSync(new URL('./vzorci/gb-ncefl-liga-nceldivisionone-2026.html',import.meta.url),'utf8'),reads=[]
+ const prenesi=async(url,file,fresh)=>{
+  if(url==='https://www.ncefl.org.uk/matches/nceldivisionone/2026/')return league
+  assert.equal(url,'https://www.ncefl.org.uk/matches/day/2026/20260725/57218/')
+  reads.push(fresh);throw Error('observed report freshness; stop before report parse')
+ }
+ await assert.rejects(()=>runInNewContext(`(async()=>{${body}})()`,{
+  vir:ncel,liga:'nceldivisionone/2026',prenesi,arg:()=>null,omeji:null,console:{log(){}},Date,Set,
+ }),/observed report freshness/)
+ assert.deepEqual(reads,[true],'recent NCEL report must bypass the stale cache')
+})

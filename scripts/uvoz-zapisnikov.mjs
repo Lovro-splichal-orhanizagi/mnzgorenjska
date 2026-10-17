@@ -661,7 +661,9 @@ if (vir.ime === 'dfb' && !samoZapisnik) {
     sveziZapisniki.add(String(m.zapisnik_id))
 }
 console.log(`Berem zapisnike vira ${vir.ime} (liga ${liga})`)
-let zapisniki = await vir.zapisniki(liga, prenesi, { samoZapisnik, preskoci, sveziZapisniki })
+let zapisniki = vir.ime === 'dfb'
+  ? await vir.zapisniki(liga, prenesi, { samoZapisnik, preskoci, sveziZapisniki })
+  : await vir.zapisniki(liga, prenesi)
 // Sources that do not implement traversal filtering retain the generic filter.
 if (samoZapisnik) zapisniki = zapisniki.filter((x) => String(x.id) === String(samoZapisnik))
 if (omeji) zapisniki = zapisniki.slice(0, omeji)
