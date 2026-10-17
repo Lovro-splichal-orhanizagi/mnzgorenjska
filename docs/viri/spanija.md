@@ -225,6 +225,48 @@ Uvoz (ena za drugo; dovoljenje FCF potrjeno 17. 10. 2026): `gh workflow run uvoz
 -f liga=es-ct-quarta-g1 -f cene=true` (z arhivom: `-f arhiv=<blok 2025/26>`).
 Prvi uvoz bloka je ~240 strani — ob počasnem strežniku do ene ure.
 
+## Nadzorovana osvežitev popravljenih FCF zapisnikov
+
+Za javno preverjen popravek, ki ga sedemdnevni predpomnilnik še drži kot
+prihodnjo/manjkajočo stran, ima obstoječi `uvoz-lige.yml` izbirni vhod
+`fcf_osvezi`. Primer na pregledanem **main** commitu:
+
+```bash
+gh workflow run uvoz-lige.yml --ref main -f liga=es-ct-elit \
+  -f fcf_osvezi=es4106977 -f tekoca=true -f cene=true
+```
+
+Vhod sprejme 1–8 unikatnih `esID`, ločenih z vejico. Dovoljenih je samo
+27 zgornjih katalonskih skupin, vir `fcf`, država ES, **neaktivna** liga,
+tekoča sezona in njen točno pregledani blok 2026/27. Nova sezona zahteva
+pregled blokov in posodobitev pomočnika. Arhiv, `zapisnik`, `tekoca=false`,
+`dovoli_manj_klubov` in `prepisi_aktivno` so v tem načinu zavrnjeni.
+
+Po obstoječem čakanju na druge pisce ES in obnovitvi predpomnilnika pomočnik
+prebere resnično metapodatkovno vrstico lige in RPC `sezona_lige` v Actions.
+Pred prvim brisanjem preveri **vse** šifre in poti, tudi prednike manjkajočih
+datotek; simbolne povezave in neregularne cilje zavrne. Izbriše samo izbrane
+`scripts/.predpomnilnik/fcf/acta-ID.html`; manjkajoča datoteka je varen no-op.
+Artefakt `fcf-refresh-RUN_ID-ATTEMPT/audit.json` ohrani izbrane šifre,
+odstranjene/manjkajoče datoteke in prejšnji SHA256/mtime tudi ob napaki.
+Ključev ne vsebuje. Drugih teles in časov datotek ne spreminja.
+
+Sledi **običajni celoten uvoz bloka**: osem omejuje samo izbris izbranih
+predpomnjenih strani, ne števila poznejših zahtevkov. Razpored, zapisniki,
+izbirne pozicije/cene in pripravljenost ohranijo obstoječa pravila,
+3-sekundni razmik in ustavitev ob zavrnitvi vira. Ni vbrizgavanja HTML ali
+popravljanja časov datotek. Uspešen uvoz lige še ne vklopi; za vklop je
+potreben nov pregledani manifest in spodnji strogi postopek.
+
+Samo ta izrecni način najprej obnovi najnovejši uppercase ES nočni/državni
+predpomnilnik, nato po potrebi starejši predpomnilnik lige/lowercase ES;
+splošnega predpomnilnika tuje države ne uporabi. Običajni zagoni brez vhoda
+ohranijo dosedanji vrstni red. Po uspehu pomočnika, tekočega uvoza in
+pripravljenosti na `main` se isti celoten predpomnilnik objavi še pod
+`zapisniki-ES-k1od1-RUN_ID-ATTEMPT`, da naslednji nočni uvoz dobi pristne
+sveže strani. Ob napaki, preklicu ali na drugi veji se ta objava ne izvede.
+Dosedanje ročno shranjevanje predpomnilnika tudi ob napaki ostaja.
+
 ## Preverjen vklop zgornjih katalonskih lig (17. 10. 2026)
 
 Vklop pokriva natanko 27 že uvoženih skupin: `es-ct-elit`, Primera 1–3,

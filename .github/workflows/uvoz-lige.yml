@@ -34,6 +34,10 @@ on:
         description: 'Samo ta zapisnik (popravilo ene tekme). Prazno = vsi. Ce je izpolnjen, se razpored in cene ne izvedejo.'
         required: false
         type: string
+      fcf_osvezi:
+        description: 'Nadzorovano osvezi 1–8 javnih FCF zapisnikov (esID,esID) neaktivne zgornje katalonske lige. Samo tekoca sezona, brez arhiva/override.'
+        required: false
+        type: string
       tekoca:
         description: 'Uvozi tudi razpored in zapisnike tekoce sezone'
         required: false
@@ -78,6 +82,8 @@ jobs:
       LIGA: ${{ inputs.liga }}
       ARHIV: ${{ inputs.arhiv }}
       ZAPISNIK: ${{ inputs.zapisnik }}
+      FCF_OSVEZI: ${{ inputs.fcf_osvezi }}
+      TEKOCA: ${{ inputs.tekoca }}
       DOVOLI_AKTIVNO: ${{ inputs.prepisi_aktivno && '--dovoli-aktivno' || '' }}
       DOVOLI_MANJ_KLUBOV: ${{ inputs.dovoli_manj_klubov && '--dovoli-manj-klubov' || '' }}
     steps:
@@ -120,7 +126,21 @@ jobs:
       - name: Predpona drzave
         id: drzava
         run: echo "predpona=${LIGA%%-*}-" >> "$GITHUB_OUTPUT"
+      # Opt-in refresh must start from the newest ES country snapshot, then
+      # legacy league/lowercase snapshots. No foreign-country global fallback.
+      - name: Predpomnilnik FCF osvezitve
+        if: inputs.fcf_osvezi != ''
+        uses: actions/cache/restore@v4
+        with:
+          path: scripts/.predpomnilnik
+          key: fcf-refresh-ES-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            zapisniki-ES-k1od1-
+            zapisniki-ES-
+            zapisniki-${{ inputs.liga }}-
+            zapisniki-${{ steps.drzava.outputs.predpona }}
       - name: Predpomnilnik zapisnikov
+        if: inputs.fcf_osvezi == ''
         uses: actions/cache/restore@v4
         with:
           path: scripts/.predpomnilnik
@@ -143,6 +163,16 @@ jobs:
           if ! grep -qx "$LIGA" /tmp/vse-lige.txt; then
             echo "Lige \"$LIGA\" ni. Na voljo:"; cat /tmp/vse-lige.txt; exit 1
           fi
+
+      # Validates ALL IDs, real DB metadata and filesystem paths before eviction.
+      # Failure stops every ordinary source/data mutator below.
+      - name: Osvezi izbrane FCF zapisnike
+        id: fcf_refresh
+        if: inputs.fcf_osvezi != ''
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/osvezi-fcf-predpomnilnik.mjs
 
       - name: Arhiv prejsnjih sezon
         if: inputs.arhiv != ''
@@ -184,6 +214,7 @@ jobs:
         run: node scripts/uvoz-zapisnikov.mjs --tekmovanje "$LIGA" --zapisnik "$ZAPISNIK"
 
       - name: Razpored in zapisniki tekoce sezone
+        id: current_import
         if: inputs.tekoca && inputs.zapisnik == ''
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -214,6 +245,7 @@ jobs:
       # Brez tega bi lahko ligo vklopili s cenikom, v katerem stane vsak
       # igralec 4.5 — 15 x 4.5 = 67.5 pri proracunu 100 in nobene izbire.
       - name: Ali je liga pripravljena na vklop
+        id: readiness
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -236,3 +268,20 @@ jobs:
         with:
           path: scripts/.predpomnilnik
           key: zapisniki-${{ inputs.liga }}-${{ github.run_id }}
+
+      # Only reviewed main refreshes can feed the next scheduled ES import.
+      # Save the same directory and authentic source mtimes, without touching files.
+      - name: Objavi FCF predpomnilnik za nocni ES uvoz
+        if: success() && inputs.fcf_osvezi != '' && github.ref == 'refs/heads/main' && steps.fcf_refresh.outcome == 'success' && steps.current_import.outcome == 'success' && steps.readiness.outcome == 'success'
+        uses: actions/cache/save@v4
+        with:
+          path: scripts/.predpomnilnik
+          key: zapisniki-ES-k1od1-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Shrani revizijo FCF osvezitve
+        if: always() && inputs.fcf_osvezi != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: fcf-refresh-${{ github.run_id }}-${{ github.run_attempt }}
+          path: release/fcf-refresh
+          if-no-files-found: warn
