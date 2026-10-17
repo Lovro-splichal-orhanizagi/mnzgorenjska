@@ -682,3 +682,16 @@
   (migracija 20261013203100)
 - `teams.logo_url` → grb kluba; če je prazen, `src/components/Grb.jsx` nariše
   ščit z začetnicami
+
+### Regionalni vklop DFB
+
+`varen_vklop_dfb_regije(p_manifest text, p_sha256 text, p_aktiviraj boolean
+ default false)` je servisni RPC samo za štiri nove nemške Regionallige.
+Preverja odobrene bajte manifesta v1 (največ 8 MiB), oba sveža zajema,
+celoten multiset nastopov in pripisanih golov, trenutne klube/vratarje,
+cenik in uradni prihodnji rok. Pod zaklepi vrne `preverjeno`, `slug`,
+`prvi_krog`, `rok`, `najcenejsi_kader` in `vklopljena`; privzeto ne spremeni
+produkcijskih tabel. Izrecna aktivacija uporabi obstoječi
+`vklopi_ligo_sredi_sezone` in preveri `razlika=0` ter ponovno prebere stanje.
+Nordostov `varen_vklop_nemcije` se s tem ne spreminja. Postopek, izvorni
+manifest in Actions sta opisana v `docs/viri/nemcija.md`.

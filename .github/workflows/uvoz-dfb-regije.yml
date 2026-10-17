@@ -1,0 +1,99 @@
+name: Uvoz odobrene DFB regije
+run-name: Uvoz odobrene DFB regije ${{ inputs.liga }}
+on:
+  workflow_dispatch:
+    inputs:
+      liga:
+        description: Neaktivna regionalna liga
+        type: choice
+        required: true
+        options: [de-regionalliga-nord, de-regionalliga-west, de-regionalliga-suedwest, de-regionalliga-bayern]
+      source_commit:
+        description: Pregledani celotni SHA obeh uradnih zajemov
+        type: string
+        required: true
+      archive_run:
+        description: Uspešen arhivski regionalni audit
+        type: string
+        required: true
+      current_run:
+        description: Uspešen tekoči regionalni audit (največ 12 ur)
+        type: string
+        required: true
+      approved_sha256:
+        description: Pregledani SHA manifesta
+        type: string
+        required: true
+
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: uvoz-lige-${{ inputs.liga }}
+  cancel-in-progress: false
+jobs:
+  regional:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      LIGA: ${{ inputs.liga }}
+      SOURCE_COMMIT: ${{ inputs.source_commit }}
+      ARCHIVE_RUN: ${{ inputs.archive_run }}
+      CURRENT_RUN: ${{ inputs.current_run }}
+      APPROVED_SHA: ${{ inputs.approved_sha256 }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Preveri dejanska sezonska posla in pregledani razčlenjevalnik
+        id: evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p release
+          node scripts/preveri-zagona-dfb-regije.mjs "$LIGA" "$SOURCE_COMMIT" "$ARCHIVE_RUN" "$CURRENT_RUN" release/jobs.json
+          echo "region=${LIGA#de-}" >> "$GITHUB_OUTPUT"
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.archive_run }}
+          name: vir-dfb-${{ steps.evidence.outputs.region }}-2025
+          path: audit/archive
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.current_run }}
+          name: vir-dfb-${{ steps.evidence.outputs.region }}-2026
+          path: audit/current
+      - name: Ponovi vse izvorne bajte brez omrežja
+        run: |
+          set -euo pipefail
+          node scripts/vklopi-dfb-regijo.mjs prepare "$LIGA" audit/archive audit/current "$SOURCE_COMMIT" release/jobs.json release/manifest.json | tee release/summary.json
+      - name: Počakaj na starejše uvoze
+        if: inputs.approved_sha256 != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/cakaj-na-uvoze.mjs --liga "$LIGA"
+      - name: Uvoz samo iz odobrenih zajemov in preverba brez vklopa
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          node scripts/uvozi-dfb-regijo.mjs release/manifest.json "$APPROVED_SHA" audit/archive audit/current release/jobs.json | tee release/import.txt
+      - name: Pregledni manifest in rezultat
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dfb-regional-import-${{ github.run_id }}
+          path: release/
+          if-no-files-found: ignore
+          retention-days: 90

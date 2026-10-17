@@ -176,3 +176,61 @@ Regionallig potrjujejo podporo razčlenjevalnika, ne pripravljenosti za vklop.
 Celotna arhivska in tekoča zgodovina, uradni začetni vratarji, dejanske
 menjave, produkcijska enakost in cenik potrebujejo ločene preverbe pred
 varovanim vklopom. Nordostova obstoječa aktivacija ostane ločena.
+
+## Varovan regionalni uvoz in vklop
+
+Migraciji `20261017180000` in `20261017180100` dodata samo štiri neaktivne
+kandidate in ločen servisni RPC `varen_vklop_dfb_regije(text,text,boolean)`.
+Zveze so `nfv-nord` (Norddeutscher Fußballverband e.V.), `wdfv`
+(Westdeutscher Fußballverband e.V.), `rlsw` (Regionalliga Südwest GmbH) in
+`bfv-bayern` (Bayerischer Fußball-Verband). Uradni URL zveze je ločen od
+navedbe vira DFB Datencenter. Nordostov RPC in aktivno stanje ostaneta ločena.
+
+Postopek uporablja dva uspešna sezonska zajema `preveri-dfb-ligo.yml` na
+istem pregledanem `source_commit`. Preveri dejanski posel `DFB regionalni
+audit` in točen uspešen korak posamezne sezone, ne le zelenega zagona ali
+obstoja artefakta. Razčlenjevalnik, register `dfb-lige.json` in njegovi
+pomočniki morajo biti identični zajemu. Trenutni čas priprave nikoli ne
+osveži zajema: najstarejši čas dokumenta ostane v manifestu (arhiv največ
+7 dni, tekoča sezona največ 12 ur).
+
+1. Sproži `vklop-dfb-regije.yml` brez `approved_sha256`. Prenese artefakta,
+   preveri vsak izvorni SHA/URL in brez omrežja ponovno razčleni vse
+   dokumente. Artefakt `dfb-regional-release-<run>` vsebuje `jobs.json`,
+   `manifest.json` in `summary.json`. Preglej manifest in njegov SHA-256.
+2. Sproži `uvoz-dfb-regije.yml` z istimi ligo, commitom, zagoni in odobrenim
+   SHA. Pred prvo spremembo baze znova preveri celoten manifest in zajeme.
+   Obstoječe skripte izvedejo arhiv → razpored → tekoče zapisnike →
+   `lazni-vratarji` → `ugani-pozicije` → `ovrednoti-igralce`.
+   `dfb-offline.mjs` oskrbi DFB samo z odobrenimi surovimi dokumenti;
+   manjkajoč URL nima omrežnega nadomestila. Svež checkout ne sme imeti
+   obnovljenega predpomnilnika. Baza uporablja običajni overjeni HTTP
+   odjemalec v Actions. Uvozni tok ne vklaplja lige.
+3. Ponovno sproži `vklop-dfb-regije.yml` z odobrenim SHA: privzeto je to
+   preverba brez spremembe produkcijskih tabel. Za vklop sta potrebna
+   `activate=true` in `server_ready=true` po preverjeni objavi nemškega
+   HTML/Caddy/opomnikov. Ključi ostanejo samo v Actions; ni obvestil ali pošte.
+
+Manifest v1 ima omejitev 8 MiB in veže obe dejanski službi zajema, izvorni
+commit, razčlenjevalnik in vse tekme: ID, krog, datum, tudi neznano uro
+(`null`), kluba, izid, URL, opozorila, 22 imen začetnikov in izrecna dokaza
+`oznaka-T`. Nastopi vsebujejo vsa polja, ki jih zapisuje uvoznik (tudi dres,
+minute vstopa/izstopa, kartone, enajstmetrovke, prejete gole in clean sheet),
+goli pa ime, zgodovinsko stran, minuto, oznaki in vmesni izid. Primerjava
+uporabi multiset z ohranjanjem podvojitev, po tekmi, zgodovinski strani in
+točnem imenu; trenutni klub igralca ne presoja arhivskega nastopa.
+
+Vsak arhivski in vsak odigrani tekoči zapisnik je obvezen. Regionalna pot
+nima izjem za manjkajoče zapisnike. Pod zaklepi preveri tudi trenutne
+izbirljive klube, uradne vratarje, resnične menjave, gole brez nastopa,
+najvišjo ceno vsaj 8, največ 70 % privzetih cen in veljaven kader 2/5/5/3
+z največ tremi igralci kluba za največ 100. Prvi fantasy krog mora biti
+prihodnji, nezaklenjen in v celoti neodigran. Neznana ura katerekoli tekme
+njegovega prvega dne prepreči vklop; rok se mora natančno ujemati z
+najzgodnejšim uradnim začetkom minus šest ur v `Europe/Berlin`.
+
+Izolirani regresiji `scripts/test-vklop-dfb-regije-sql.mjs` in
+`scripts/test-dfb-regije-locks.mjs` zahtevata izrecni
+`SUPABASE_DB_CONTAINER` sveže, odstranljive baze. Preverjata sezoni
+18/34/306 in Bayern 19/38/342, zavrnitve spremenjenih podatkov ter
+blokiranje sočasnih zapisovalcev. Fixture se vedno razveljavi z ROLLBACK.
