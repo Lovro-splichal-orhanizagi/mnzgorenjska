@@ -4,6 +4,9 @@ import {mkdtempSync,writeFileSync,readFileSync,rmSync} from 'node:fs'
 import {join} from 'node:path'
 import {tmpdir} from 'node:os'
 import {execFileSync} from 'node:child_process'
+import {runInNewContext} from 'node:vm'
+import {vZapisnik} from './viri/dfb.mjs'
+import {unattributedYellowEvents} from '../src/lib/nepripisaniRumeni.mjs'
 import {createHash} from 'node:crypto'
 const proof=await import('./dfb-replay-proof.mjs').catch(()=>({}))
 const artifact=await import('./dfb-artifacts.mjs').catch(()=>({}))
@@ -121,18 +124,50 @@ import {mkdirSync} from 'node:fs'
 import {loadApprovedDocuments} from './dfb-offline.mjs'
 test('complete offline replay prepares version2 from original bytes and import loader binds the exact index',async()=>{
  const root=mkdtempSync(join(tmpdir(),'dfb-replay-complete-')),dirs=['archive','current'].map(p=>join(root,p)),m=replayManifest();m.slug='de-regionalliga-west'
+ let expectedAppearances,warningReportUrl
  try{
   const proof={version:2,slug:m.slug,sourceCommit:fixed,sourceFilesIdentical:true,proof:[]}
   for(const [i,dir]of dirs.entries()){
-   mkdirSync(dir);syntheticCapture(dir,2025+i)
+   mkdirSync(dir);const records=syntheticCapture(dir,2025+i)
+   if(i===0){
+    // Synthetic implementation proof only: retain the genuine season captures
+    // separately. Change two copies of one ordinary-yellow event, never XI.
+    const rec=records.find(r=>r.url.includes('/datencenter/')),body=readFileSync(join(dir,rec.file),'utf8')
+    expectedAppearances=release.kanonicniNastopi(vZapisnik(body,{liga:'regionalliga-west'}))
+    expectedAppearances.find(p=>p.name==='Medin Kojic').yellow_cards=0
+    let changed=0
+    const updated=body.replace(/<div class="m-MatchDetails-history-event-text-segment">[\s\S]*?<\/div>/g,segment=>{
+     if(!segment.includes('Medin Kojic'))return segment
+     changed++;return segment.replace(/\/profil\/\d+\?/,'/profil/9999999?').replace('Medin Kojic','Unassigned Yellow Recipient')
+    })
+    assert.equal(changed,2);rmSync(join(dir,rec.file));rec.sha256=hash(updated);rec.file=rec.sha256+'.html';writeFileSync(join(dir,rec.file),updated)
+    writeFileSync(join(dir,'prenosi.json'),JSON.stringify(records)+'\n');warningReportUrl=rec.url
+   }
    const s=m.seasons[i],snapshot=replay.readClosedCapture(dir,m.slug,s.season)
    Object.assign(s.lineage.capture,{indexSha256:snapshot.indexSha256,documentsSha256:snapshot.documentsSha256,capturedAt:snapshot.capturedAt})
    proof.proof.push({season:s.season,runId:s.runId,jobId:s.jobId,captureCommit:fixed,seasonJobPassed:true,lineage:s.lineage})
   }
   const first=await replay.replaySnapshot({dir:dirs[0],slug:m.slug,season:'2025/26',capture:proof.proof[0].lineage.capture})
   assert.equal(first.reports.length,306);assert.equal(first.checked.fixtures.length,306)
+  const warningFixture=first.checked.fixtures.find(f=>f.url===warningReportUrl)
+  assert.equal(unattributedYellowEvents(warningFixture.warnings).length,1)
+  assert.deepEqual(warningFixture.appearances,expectedAppearances)
   const prepared=await release.pripravi({slug:m.slug,sourceCommit:fixed,archiveDir:dirs[0],currentDir:dirs[1],proof}),raw=JSON.stringify(prepared)+'\n'
-  assert.equal(prepared.version,2);assert.equal(loadApprovedDocuments(raw,hash(raw),dirs).size,648)
+  assert.equal(prepared.version,2);const documents=loadApprovedDocuments(raw,hash(raw),dirs);assert.equal(documents.size,648)
+  const loaded=vZapisnik(documents.get(warningReportUrl),{liga:'regionalliga-west'})
+  assert.deepEqual(loaded.opozorila,warningFixture.warnings);assert.deepEqual(release.kanonicniNastopi(loaded),expectedAppearances)
+  assert.deepEqual(prepared.seasons[0].fixtures.find(f=>f.url===warningReportUrl).warnings,warningFixture.warnings)
+  const tampered=structuredClone(prepared);tampered.seasons[0].fixtures.find(f=>f.url===warningReportUrl).warnings=[]
+  const tamperedRaw=JSON.stringify(tampered)+'\n'
+  assert.throws(()=>loadApprovedDocuments(tamperedRaw,hash(raw),dirs),/SHA/)
+  // Run the real Actions wrapper through its pre-write replay comparison. Even
+  // supplying a new approval SHA cannot make altered warnings match raw HTML.
+  const wrapper=readFileSync(new URL('./uvozi-dfb-regijo.mjs',import.meta.url),'utf8')
+  const main=wrapper.slice(wrapper.indexOf('async function main(){'),wrapper.indexOf('\nif(process.argv[1]'))
+  await assert.rejects(()=>runInNewContext(`(async()=>{${main};await main()})()`,{
+   process:{argv:['node','wrapper','manifest',hash(tamperedRaw),...dirs,'proof'],env:{}},
+   readFileSync:file=>file==='manifest'?tamperedRaw:JSON.stringify(proof),preveriOdobritev:release.preveriOdobritev,pripravi:release.pripravi,actionsOnly(){},
+  }),/differs from full offline replay/)
   assert.equal(prepared.seasons[0].capturedAt,proof.proof[0].lineage.capture.capturedAt)
   const index=readFileSync(join(dirs[0],'prenosi.json'))
   writeFileSync(join(dirs[0],'prenosi.json'),index.toString()+' ')
@@ -176,5 +211,25 @@ test('reviewed replay code identity includes provenance, import and workflow fil
   for(const file of ['scripts/viri/dfb.mjs','scripts/vklopi-nemcijo.mjs','scripts/preveri-zagona-dfb-regije.mjs','scripts/uvozi-dfb-regijo.mjs','.github/workflows/ponovi-dfb-regijo.yml']){
    writeFileSync(file,'changed bytes\n');assert.throws(()=>verifier.verifyCode(commit,2));writeFileSync(file,'reviewed bytes\n')
   }
+ }finally{process.chdir(before);rmSync(root,{recursive:true,force:true})}
+})
+for(const [commit,expected] of [
+ ['a48fd89071aae0d2097603110c5442324fc59e3d','8da6531575cdea2fc740c87eb437a897f796d9c27649dc4dcd56aff5119e1431'],
+ ['671643e4a50e6e50cc22628a157fb027e0b58deb','5aaa2067a4f152d62bc4df4bb49492d89e0852d04922fc8709fbf7fb1ea9ebd9'],
+]){
+ let available=true;try{execFileSync('git',['cat-file','-e',commit],{stdio:'pipe'})}catch{available=false}
+ test(`retained historical capture ${commit.slice(0,7)} keeps its original parser fingerprint`,{skip:!available},()=>{
+  assert.equal(replay.parserHashAt(commit),expected)
+ })
+}
+test('new parser history binds codec bytes and cannot omit a declared codec dependency',()=>{
+ const root=mkdtempSync(join(tmpdir(),'dfb-codec-history-')),before=process.cwd()
+ const git=(...args)=>execFileSync('git',['-C',root,...args],{encoding:'utf8',stdio:'pipe'}).trim()
+ const commit=()=>{git('add','-A');git('-c','user.name=Test','-c','user.email=test@example.invalid','commit','-qm','fixture');return git('rev-parse','HEAD')}
+ try{
+  for(const file of release.sourceFiles){const path=join(root,file);mkdirSync(join(path,'..'),{recursive:true});writeFileSync(path,file==='scripts/viri/dfb.mjs'?"import '../../src/lib/nepripisaniRumeni.mjs'\n":'reviewed bytes\n')}
+  git('init','-q');const original=commit();process.chdir(root);const initial=replay.parserHashAt(original)
+  writeFileSync('src/lib/nepripisaniRumeni.mjs','changed codec bytes\n');assert.notEqual(replay.parserHashAt(commit()),initial)
+  rmSync('src/lib/nepripisaniRumeni.mjs');assert.throws(()=>replay.parserHashAt(commit()),/nepripisaniRumeni/)
  }finally{process.chdir(before);rmSync(root,{recursive:true,force:true})}
 })

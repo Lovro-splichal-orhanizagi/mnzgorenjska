@@ -25,6 +25,7 @@ import { prenesiSPonovitvami, fetchZaBazo } from './prenos.mjs'
 import { dodajStrelceSKlopi } from './zapisnik.mjs'
 import { imeHash, regHash } from './anonimizacija.mjs'
 import { NEPOPOLN } from './viri/frf.mjs'
+import { unattributedYellowEvents } from '../src/lib/nepripisaniRumeni.mjs'
 import { prestopSkladen, posvojiBrezSifre } from './prestop.mjs'
 
 // Vir je zavrnil (jalgpall: 403, 429, izziv): izhod 4, da nočna zanka države
@@ -636,42 +637,38 @@ if (pocisti) {
 // Uvoz ne pozna oblike vira. Kranj, Ljubljana in Celje imajo stran na tekmo,
 // Ptuj, Murska Sobota in Lendava eno stran na krog, Nova Gorica in Maribor pa
 // svoje naslove — zato zapisnike vrne vir sam, ze razclenjene.
-console.log(`Berem zapisnike vira ${vir.ime} (liga ${liga})`)
-let zapisniki = await vir.zapisniki(liga, prenesi)
-
-// `--zapisnik <id>` popravi eno samo tekmo. Ponovni uvoz cele lige med sezono
-// premakne vec, kot je treba.
+// Determine bounded repairs BEFORE source traversal: stale cached HTML cannot
+// reveal that its missing attribution has since been corrected at the source.
 const samoZapisnik = arg('zapisnik')
-if (samoZapisnik) zapisniki = zapisniki.filter((x) => String(x.id) === String(samoZapisnik))
-if (omeji) zapisniki = zapisniki.slice(0, omeji)
-
-// `--sveze <dni>`: nocni uvoz. Vsak zapisnik se sicer uvozi znova, da ujame
-// popravek — a pri 24 ligah in do 180 tekmah na ligo je to ura in pol dela
-// za nic novega, in nocni zagon je padel na casovni omejitvi. Popravki
-// zapisnika pridejo v dnevih, ne mesecih; kar je uvozeno in starejse od meje,
-// pustimo. Prestavljena tekma nima `imported_at` in gre skozi; za starejsi
-// popravek je tu `--zapisnik <id>` ali rocni uvoz cele lige.
 const svezeDni = arg('sveze') ? Number(arg('sveze')) : null
+const preskoci = new Set(), sveziZapisniki = new Set()
 if (svezeDni != null && !samoZapisnik) {
   const meja = new Date(Date.now() - svezeDni * 86400000).toISOString().slice(0, 10)
-  const stare = await vseVrstice((od, do_) =>
-    db
-      .from('matches')
-      .select('zapisnik_id, rounds!inner(competition_id, played_on)')
-      .eq('rounds.competition_id', tekmovanje.id)
-      .lt('rounds.played_on', meja)
-      .not('imported_at', 'is', null)
-      .not('zapisnik_id', 'is', null)
-      .order('id')
-      .range(od, do_),
-  )
-  const preskoci = new Set(stare.map((m) => String(m.zapisnik_id)))
+  const stare = await vseVrstice((od, do_) => db.from('matches')
+    .select('zapisnik_id, rounds!inner(competition_id, played_on)')
+    .eq('rounds.competition_id', tekmovanje.id).lt('rounds.played_on', meja)
+    .not('imported_at', 'is', null).not('zapisnik_id', 'is', null)
+    .order('id').range(od, do_))
+  for (const m of stare) preskoci.add(String(m.zapisnik_id))
+}
+if (vir.ime === 'dfb' && !samoZapisnik) {
+  const meja = new Date(Date.now() - (svezeDni ?? 7) * 86400000).toISOString().slice(0, 10)
+  const recent = await vseVrstice((od, do_) => db.from('matches')
+    .select('zapisnik_id, import_warnings, rounds!inner(competition_id, played_on)')
+    .eq('rounds.competition_id', tekmovanje.id).gte('rounds.played_on', meja)
+    .not('zapisnik_id', 'is', null).order('id').range(od, do_))
+  for (const m of recent) if (unattributedYellowEvents(m.import_warnings).some(e => e.matchId === String(m.zapisnik_id)))
+    sveziZapisniki.add(String(m.zapisnik_id))
+}
+console.log(`Berem zapisnike vira ${vir.ime} (liga ${liga})`)
+let zapisniki = await vir.zapisniki(liga, prenesi, { samoZapisnik, preskoci, sveziZapisniki })
+// Sources that do not implement traversal filtering retain the generic filter.
+if (samoZapisnik) zapisniki = zapisniki.filter((x) => String(x.id) === String(samoZapisnik))
+if (omeji) zapisniki = zapisniki.slice(0, omeji)
+if (svezeDni != null && !samoZapisnik) {
   const prej = zapisniki.length
   zapisniki = zapisniki.filter((x) => !preskoci.has(String(x.id)))
-  console.log(
-    `Sveže (${svezeDni} dni): ${zapisniki.length} od ${prej} zapisnikov; ` +
-      `${prej - zapisniki.length} je uvoženih in starejših od ${meja}.`,
-  )
+  console.log(`Sveže (${svezeDni} dni): ${zapisniki.length} od ${prej} zapisnikov; ${prej - zapisniki.length} starejših že uvoženih.`)
 }
 console.log(`Najdenih zapisnikov: ${zapisniki.length}`)
 
@@ -688,6 +685,7 @@ const odtisKode = (() => {
   const h = createHash('sha256')
   const datoteke = [
     'scripts/uvoz-zapisnikov.mjs',
+    'src/lib/nepripisaniRumeni.mjs',
     'scripts/prestop.mjs',
     'scripts/klubi.mjs',
     'scripts/razporedi.mjs',
@@ -705,7 +703,7 @@ try {
   odtisi = JSON.parse(readFileSync(ODTISI, 'utf8'))
 } catch {}
 const noviOdtisi = { ...odtisi }
-if (svezeDni != null && zapisniki.length) {
+if ((svezeDni != null || samoZapisnik) && zapisniki.length) {
   const uvozene = new Set()
   const idji = zapisniki.map((x) => String(x.id))
   for (let i = 0; i < idji.length; i += 200) {

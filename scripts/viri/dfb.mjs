@@ -2,6 +2,7 @@
 // Profile links are optional and disappear independently of public names. Never
 // switch identity according to link availability: all players use name + club,
 // with same-team name collisions rejected. Numeric profile IDs are metadata.
+import { encodeUnattributedYellow } from '../../src/lib/nepripisaniRumeni.mjs'
 import { razpakiraj } from '../klubi.mjs'
 import { nastopi as nastopiPoImenu } from './fss.mjs'
 import { readFileSync } from 'node:fs'
@@ -119,7 +120,7 @@ function orderedTimeline(section){
   const ordered=spaceSeen?[...rows].sort((a,b)=>a.order-b.order||a.index-b.index):rows
   return {rows:ordered,reordered:ordered.some((r,i)=>r.index!==i)}
 }
-function eventSignatures(section) {
+function eventSignatures(section,profileIdentity=false) {
   const out=[]
   for(const row of elements(section,'div','m-MatchDetails-history-item')){
     const minute=text(one(row.inner,'div','m-MatchDetails-history-minute').inner)
@@ -130,7 +131,7 @@ function eventSignatures(section) {
       const kinds=[...icon.matchAll(/m-MatchDetails-icon-(goal|card|playing)--([\w-]+)/g)]
       const rawSegments=eventSegments(e.inner)
       if(kinds.length&&kinds.every(k=>k[1]==='card')){
-        for(const {segment,kind} of cardEntries(icon,rawSegments))out.push({type:'card',key:JSON.stringify([side,minute,`m-MatchDetails-icon-card--${kind}`,[text(segment.inner).normalize('NFC')]])})
+        for(const {segment,kind} of cardEntries(icon,rawSegments))out.push({type:'card',key:JSON.stringify([side,minute,`m-MatchDetails-icon-card--${kind}`,[text(segment.inner).normalize('NFC'),...(profileIdentity?[identity(segment.inner).profilId]:[])]])})
         continue
       }
       if(kinds.length&&kinds.every(k=>k[1]==='goal')){
@@ -325,10 +326,12 @@ export function vZapisnik(html, { id, tekma, liga='regionalliga-nordost' } = {})
     }
   }
   // Some official archive reports omit the bench entirely. Named incoming
-  // substitutions establish played reserves. Unknown unused recipients need
-  // an individually reviewed same-match primary proof; otherwise reject.
+  // substitutions establish played reserves. An unknown ordinary-yellow
+  // recipient never establishes a reserve role; Nordost retains its proof gate.
   if (![1,2].includes(tables.length) || !/Aufstellung/.test(tables[0].inner) || (tables[1]&&!/Auswechselspieler/.test(tables[1].inner))) fail('nepopolna postava ali klop')
-  const coaches = [new Set(), new Set()]
+  const coaches = [new Map(), new Map()]
+  const playerCoaches=[new Set(),new Set()]
+  const allowUnattributed=liga!=='regionalliga-nordost'
   for (const [idx, table] of tables.entries()) {
     const body = one(table.inner, 'tbody').inner
     const seenPeople=[new Set(),new Set()]
@@ -356,8 +359,14 @@ export function vZapisnik(html, { id, tekma, liga='regionalliga-nordost' } = {})
     }
     const foot = elements(table.inner, 'tfoot')[0]?.inner ?? ''
     for (const [side, name] of ['home','away'].entries()) for (const cell of elements(foot, 'td', `m-MatchDetails-lineup-person--${name}`)) {
+      const coachRow=elements(foot,'tr').find(row=>row.outer.includes(cell.outer))
       // Repeated public coach entries may share one cell separated by <br>.
-      for(const fragment of cell.inner.split(/<br\s*\/?\s*>/i))if(text(fragment))coaches[side].add(nameKey(identity(fragment).ime))
+      for(const fragment of cell.inner.split(/<br\s*\/?\s*>/i))if(text(fragment)){
+        const who=identity(fragment),key=nameKey(who.ime),prior=coaches[side].get(key)
+        if(allowUnattributed&&prior?.profilId&&who.profilId&&prior.profilId!==who.profilId)fail('nasprotujoča identiteta uradne osebe')
+        const trener=elements(coachRow?.inner??'','td','m-MatchDetails-lineup-role').some(c=>/(?:^|\s)(?:Co-)?Trainer(?:\/in)?(?:\s|$)/.test(text(c.inner)))
+        coaches[side].set(key,{...who,profilId:who.profilId??prior?.profilId??null,trener:(trener&&!!who.profilId)||prior?.trener===true})
+      }
     }
   }
   const players = teams.map((t,side) => {
@@ -365,7 +374,10 @@ export function vZapisnik(html, { id, tekma, liga='regionalliga-nordost' } = {})
     const map = new Map()
     for (const p of [...t.postava,...t.rezerve]) {
       if (map.has(nameKey(p.ime))) fail('dvoumna identiteta: soimenjaka v isti ekipi')
-      if(coaches[side].has(nameKey(p.ime)))fail('nasprotujoča vloga igralca in uradne osebe')
+      if(coaches[side].has(nameKey(p.ime))){
+        if(!allowUnattributed||!coaches[side].get(nameKey(p.ime)).trener||!p.profilId||p.profilId!==coaches[side].get(nameKey(p.ime)).profilId)fail('nasprotujoča vloga igralca in uradne osebe')
+        playerCoaches[side].add(nameKey(p.ime))
+      }
       if ([...map.values()].some(x=>x.st===p.st)) fail('podvojen dres')
       map.set(nameKey(p.ime),p)
     }
@@ -399,6 +411,7 @@ export function vZapisnik(html, { id, tekma, liga='regionalliga-nordost' } = {})
   }
   const scoreCorrections=verifiedScoreCorrections(html,meta,teams,rezultat,polcas,sections)
   const popravki=[...scoreCorrections.values()]
+  const nepripisaniRumeni=[]
   const goli=[], rumeni=[], rdeci=[], menjave=[], uradneKazni=[], opozorila=popravki.map(c=>`Uradni vmesni izid ${c.izvorno.score.join(':')}: preverjen popravek v ${c.popravljeno.join(':')} za ${c.izvorno.scorer} (${c.izvorno.clock}); izvor in dokazi so ohranjeni.`)
   for(const proof of dopolnitveVlog)opozorila.push(`${proof.alias.dfb.name}: vloga navedene rezerve dokazana z uradno klopjo iste tekme; brez izpeljanega vstopa, minut ali clean sheeta.`)
   const active=teams.map(t=>new Set(t.postava.map(p=>p.virId)))
@@ -452,6 +465,23 @@ export function vZapisnik(html, { id, tekma, liga='regionalliga-nordost' } = {})
         }
       } else if (/m-MatchDetails-icon-card--/.test(icon)) {
         for(const {segment,kind} of cardEntries(icon,segments)){
+        const who=identity(segment.inner),personKey=nameKey(who.ime)
+        const player=players[side].get(personKey),coach=coaches[side].get(personKey)
+        // Unknown role is never proof of a bench appearance. Explicit opposite
+        // side identity or a conflicting public profile is a contradiction.
+        const otherPeople=[...players[1-side].values(),...coaches[1-side].values()]
+        if(allowUnattributed&&otherPeople.some(p=>(!player&&!coach&&nameKey(p.ime)===personKey)||(who.profilId&&p.profilId===who.profilId)))fail('nasprotujoča identiteta ekipe pri kartonu')
+        if(allowUnattributed&&who.profilId&&[player,coach].some(p=>p?.profilId&&p.profilId!==who.profilId))fail('nasprotujoča profilna identiteta pri kartonu')
+        if(allowUnattributed&&who.profilId&&[...players[side].values(),...coaches[side].values()].some(p=>p.profilId===who.profilId&&nameKey(p.ime)!==personKey))fail('nasprotujoča profilna identiteta pri kartonu')
+        const reason=playerCoaches[side].has(personKey)?'player-coach':!player&&!coach?'unknown-role':null
+        if(allowUnattributed&&reason){
+          if(kind!=='yellow')fail('neznana ali dvoumna vloga pri izključitvi')
+          const key=`${side}|unattributed|${personKey}`
+          if(discipline.get(key)?.yellow)fail('podvojen rumeni karton brez izključitve')
+          discipline.set(key,{yellow:true,dismissed:false})
+          const evidence={source:'dfb',matchId:meta.zapisnikId,sourceUrl:meta.url,side,clock:rawMinute,minute,reason,eventSha256:sha256(JSON.stringify([meta.zapisnikId,side,rawMinute,kind,segment.outer])),ordinal:counters.card,profileId:who.profilId}
+          nepripisaniRumeni.push(evidence);opozorila.push(encodeUnattributedYellow(evidence));counters.card++;continue
+        }
         const p=resolve(segment.inner)
         const key=p.virId??`${side}|official|${nameKey(p.ime)}`
         const state=discipline.get(key)??{yellow:false,dismissed:false}
@@ -498,10 +528,10 @@ export function vZapisnik(html, { id, tekma, liga='regionalliga-nordost' } = {})
   }
   // Compare identity, type, side, exact added-time minute and score/text, not
   // merely counts. Dedicated sections must describe precisely the same events.
-  const timelineSignatures=eventSignatures(sections.get('Spielverlauf'))
+  const timelineSignatures=eventSignatures(sections.get('Spielverlauf'),allowUnattributed)
   for(const [section,kind] of [['Tore','goal'],['Karten','card'],['Wechsel','substitute']]){
     const expected=timelineSignatures.filter(e=>e.type===kind).map(e=>e.key).sort()
-    const observed=eventSignatures(sections.get(section)).map(e=>e.key).sort()
+    const observed=eventSignatures(sections.get(section),allowUnattributed).map(e=>e.key).sort()
     if(observed.length!==counters[kind]||JSON.stringify(expected)!==JSON.stringify(observed))fail(`nepopolni ali neujemajoči dogodki razdelka ${section}`)
   }
   const scored=[0,0]
@@ -514,7 +544,7 @@ export function vZapisnik(html, { id, tekma, liga='regionalliga-nordost' } = {})
     if(!p.zacetnik && p.noter==null && goli.some(g=>g.ekipaIdx===side&&g.ime===p.ime))fail('gol rezerve brez vstopa')
     if(p.ven!=null && (p.noter??0)>p.ven)fail('izstop pred vstopom')
   }
-  const z={...meta,domaci:teams[0],gostje:teams[1],rezultat,polcas,goli,rumeni,rdeci,menjave,zgresene:[],uradneKazni,opozorila,popravki,dopolnitveVlog}
+  const z={...meta,domaci:teams[0],gostje:teams[1],rezultat,polcas,goli,rumeni,rdeci,menjave,zgresene:[],uradneKazni,opozorila,popravki,dopolnitveVlog,...(nepripisaniRumeni.length?{nepripisaniRumeni}:{})}
   if(tekma) {
     for(const k of ['krog','datum','ura','sezona'])if(tekma[k]!=null&&tekma[k]!==z[k])fail(`razpored: neujemanje ${k}`)
     for(const k of ['domaci','gostje'])if(tekma[k]!=null&&tekma[k]!==z[k].ime)fail(`razpored: neujemanje ${k}`)
@@ -699,11 +729,11 @@ const vir={
   jeIzziv,zaPredpomnilnik,zavrnitev:(s,status)=>new DfbZavrnitev(s,status),fetch:varniFetch,
   async razporedVseStrani(koda,prenesi){return vRazpored(await tekmeSezone(koda,prenesi))},
   nepopolni:[],
-  async zapisniki(koda,prenesi,{zberiNapake=false}={}){
+  async zapisniki(koda,prenesi,{zberiNapake=false,samoZapisnik=null,preskoci=new Set(),sveziZapisniki=new Set()}={}){
     vir.nepopolni=[]
     const all=await tekmeSezone(koda,prenesi),out=[]
-    for(const t of all.filter(t=>t.izid)){
-      const fresh=Date.now()-Date.parse(`${t.datum}T00:00:00Z`)<=7*86400000
+    for(const t of all.filter(t=>t.izid&&(!samoZapisnik||`de-dfb-${t.id}`===String(samoZapisnik))&&!preskoci.has(`de-dfb-${t.id}`))){
+      const fresh=!!samoZapisnik||sveziZapisniki.has(`de-dfb-${t.id}`)||Date.now()-Date.parse(`${t.datum}T00:00:00Z`)<=7*86400000
       // Network, refusal, challenge and body-bound failures remain fatal even
       // during an audit. Only recognized strict report-parser errors collect.
       const html=await prenesiStran(prenesi,t.url,`match-${t.id}.html`,fresh)
