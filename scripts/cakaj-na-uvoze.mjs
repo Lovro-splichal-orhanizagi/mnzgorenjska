@@ -122,8 +122,8 @@ const mojId = Number(GITHUB_RUN_ID)
 
 // Ali zagon drugega toka piše v iste vrstice kot ta?
 function seKrize(tok, naslov, id) {
-  // One batch always owns ES; its optional list is not a single league slug.
-  if (tok === 'vklop-katalonije.yml') return !mojaDrzava || mojaDrzava === 'ES'
+  // Catalan activation and the fixed public FCF reader always share ES scope.
+  if (['vklop-katalonije.yml', 'fcf-javni-dokazi.yml'].includes(tok)) return !mojaDrzava || mojaDrzava === 'ES'
   if (['uskladi-pozicije.yml', 'izstop-kluba.yml', 'cene-lig.yml'].includes(tok)) {
     const p = obsegVzdrzevanja(tok, naslov)
     return p.pise && (!p.drzava || !mojaDrzava || p.drzava === mojaDrzava)
@@ -221,7 +221,7 @@ if (samoTece) {
 
 for (let min = KORAK_MIN; min <= NAJVEC_MIN; min += KORAK_MIN) {
   const pred = []
-  const tokovi = ['uvoz-zapisnikov.yml', 'uvoz-lige.yml', 'uvoz-dfb-regije.yml', 'vklop-dfb-regije.yml', 'vklop-katalonije.yml', 'uskladi-pozicije.yml', 'izstop-kluba.yml', 'cene-lig.yml', 'zdruzi-klube.yml', 'tedensko-cene.yml', 'razdeli-zlite-igralce.yml']
+  const tokovi = ['fcf-javni-dokazi.yml', 'uvoz-zapisnikov.yml', 'uvoz-lige.yml', 'uvoz-dfb-regije.yml', 'vklop-dfb-regije.yml', 'vklop-katalonije.yml', 'uskladi-pozicije.yml', 'izstop-kluba.yml', 'cene-lig.yml', 'zdruzi-klube.yml', 'tedensko-cene.yml', 'razdeli-zlite-igralce.yml']
   if (SKUPEN_VIR[mojaDrzava]) tokovi.push('grbi.yml')
   for (const tok of tokovi) {
     // Brez --status: tudi čakajoči (queued) starejši zagon mora priti prvi.
