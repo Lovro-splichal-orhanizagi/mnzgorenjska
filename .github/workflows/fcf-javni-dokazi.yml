@@ -1,0 +1,56 @@
+name: FCF javni dokazi
+run-name: FCF sedem javnih zapisnikov ES
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: fcf-javni-dokazi
+  cancel-in-progress: false
+
+jobs:
+  dokazi:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: Prevzemi kodo
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Namesti odvisnosti brez skript
+        run: npm ci --ignore-scripts
+
+      - name: Preveri omejitve brez omrezja
+        run: node --test scripts/test-zajemi-fcf-javne-dokaze.mjs scripts/test-cakaj-na-uvoze.mjs
+
+      - name: Pocakaj na starejse ES vire in uvoze
+        id: wait
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/cakaj-na-uvoze.mjs --drzava ES --najvec 300
+
+      - name: Zajemi samo sedem javnih zapisnikov
+        id: capture
+        run: node scripts/zajemi-fcf-javne-dokaze.mjs
+
+      - name: Shrani samo lastne javne dokaze
+        if: always() && steps.capture.outputs.evidence_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fcf-javni-dokazi-${{ github.run_id }}-${{ github.run_attempt }}
+          path: fcf-javni-dokazi
+          if-no-files-found: error
+          retention-days: 90

@@ -62,10 +62,12 @@ const fixtures = [
   { slug: 'si-example', active: false, source: 'nzs', countries: { code: 'SI' }, federations: { code: 'mnzg' } },
   { slug: 'at-one', active: false, source: 'oefb', countries: { code: 'AT' }, federations: { code: 'wfv' } },
   { slug: 'at-two', active: false, source: 'oefb', countries: { code: 'AT' }, federations: { code: 'wfv' } },
+  { slug: 'es-ct-primera-g1', active: false, source: 'fcf', countries: { code: 'ES' }, federations: { code: 'fcf' } },
+  { slug: 'es-active', active: true, source: 'fcf', countries: { code: 'ES' }, federations: { code: 'fcf' } },
 ]
 const startedAt = '2026-10-17T10:00:00Z'
 const run = (title, patch = {}) => ({ databaseId: 10, startedAt, status: 'in_progress', displayTitle: title, ...patch })
-async function coordinate(args, runs = {}) {
+async function coordinate(args, runs = {}, jobs = [{ name: 'uvoz DE', status: 'completed' }]) {
   class Exit extends Error { constructor(code) { super(); this.code = code } }
   const queried = [], logs = []
   const context = {
@@ -75,7 +77,7 @@ async function coordinate(args, runs = {}) {
     setTimeout: callback => { callback() },
     execFileSync: (command, a) => {
       assert.equal(command, 'gh')
-      if (a[1] === 'view') return JSON.stringify(a.includes('jobs') ? { jobs: [{ name: 'uvoz DE', status: 'completed' }] } : { startedAt })
+      if (a[1] === 'view') return JSON.stringify(a.includes('jobs') ? { jobs } : { startedAt })
       const workflow = a[a.indexOf('--workflow') + 1]; queried.push(workflow)
       return JSON.stringify(runs[workflow] ?? [])
     },
@@ -153,7 +155,6 @@ test('actual club-merge and weekly-price shell waiters see older regional jobs a
 })
 
 test('Catalan batch is a fixed ES writer in both directions, including nightly and manual imports', async () => {
-  fixtures.push({ slug: 'es-ct-primera-g1', active: false, source: 'fcf', countries: { code: 'ES' }, federations: { code: 'fcf' } })
   const workflow = 'vklop-katalonije.yml', title = 'Preverjen vklop Katalonije ES'
   for (const args of [['--drzava', 'ES'], ['--liga', 'es-ct-primera-g1'], ['--popravek', '--vir', 'fcf'], ['--popravek']]) {
     assert.equal((await coordinate(args, { [workflow]: [run(title)] })).code, 1, String(args))
@@ -254,4 +255,20 @@ test('actual position sync, withdrawal, pricing and activation workflow paths wa
       assert.match(text, /GH_TOKEN: \$\{\{ github.token \}\}/)
     }
   } finally { rmSync(dir, { recursive: true, force: true }) }
+})
+
+test('fixed FCF source reader serializes both ES directions without becoming a DB writer', async () => {
+  const workflow = 'fcf-javni-dokazi.yml'
+  for (const args of [['--drzava', 'ES'], ['--liga', 'es-active'], ['--liga', 'es-ct-primera-g1'], ['--popravek', '--vir', 'fcf'], ['--popravek']]) {
+    for (const patch of [{}, {status:'queued'}, {displayTitle:'Unknown historical title'}]) assert.equal((await coordinate(args, { [workflow]: [run('FCF public evidence', patch)] })).code, 1, String(args))
+  }
+  for (const args of [['--drzava', 'DE'], ['--liga', 'si-example']]) assert.equal((await coordinate(args, { [workflow]: [run('FCF')] })).code, 0)
+  for (const patch of [{databaseId:20}, {databaseId:30}, {status:'completed'}, {startedAt:'2026-10-17T10:00:01Z'}]) assert.equal((await coordinate(['--drzava','ES'], { [workflow]: [run('FCF',patch)] })).code, 0)
+  for (const slug of ['es-active', 'es-ct-primera-g1']) assert.equal((await coordinate(['--drzava','ES'], {'uvoz-lige.yml':[run('Uvoz lige '+slug)]})).code,1)
+  assert.equal((await coordinate(['--drzava','ES'], {'vklop-katalonije.yml':[run('Catalan preflight')]})).code,1)
+  const nightly = {'uvoz-zapisnikov.yml':[run('Nightly')]}
+  assert.equal((await coordinate(['--drzava','ES'],nightly,[{name:'uvoz ES',status:'in_progress'},{name:'uvoz DE',status:'completed'}])).code,1)
+  assert.equal((await coordinate(['--drzava','ES'],nightly,[{name:'uvoz ES',status:'completed'},{name:'uvoz DE',status:'in_progress'}])).code,0)
+  const diagnostic = await coordinate(['--tece'], { [workflow]: [run('FCF')] })
+  assert.equal(diagnostic.code,0); assert.ok(!diagnostic.queried.includes(workflow))
 })
