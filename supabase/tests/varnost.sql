@@ -426,6 +426,68 @@ select pg_temp.preveri('anonimni bere lestvico mini lige brez napake (prazno)',
   (select count(*)=0 from mini_liga_lestvica where mini_liga_id=-913001));
 reset role;
 
+-- Izstop iz mini lige in odstranitev ekipe (politika "odidi ali odstrani").
+-- A (…ab) ima v ligi dve ekipi iz dveh lig, B (…ac) eno, lastnik C (…ad) eno.
+insert into competitions(id, slug, name, short_name, active, country_id, source) overriding system value
+select id, slug, name, short_name, false, (select id from countries where code='SI'), 'mnzg'
+from (values (-916901, 'test-izstop', 'Test izstopa', 'IZST'),
+             (-916902, 'test-izstop-druga', 'Test izstopa 2', 'IZST2')) v(id,slug,name,short_name);
+insert into fantasy_teams(id,owner_id,name,competition_id,created_at) overriding system value
+values (-916901,'b8a06635-2322-4444-8c42-44e419f912ab','Dvojnik',-916901,now()-interval '2 days'),
+       (-916902,'b8a06635-2322-4444-8c42-44e419f912ab','Dvojnik',-916902,now()-interval '2 days'),
+       (-916903,'b8a06635-2322-4444-8c42-44e419f912ac','Ekipa B',-916901,now()-interval '2 days'),
+       (-916904,'b8a06635-2322-4444-8c42-44e419f912ad','Ekipa lastnika',-916901,now()-interval '2 days');
+insert into mini_lige(id, name, code, owner_id) overriding system value
+values (-916901, 'Izstop zasebna', 'IZSTOP916', 'b8a06635-2322-4444-8c42-44e419f912ad');
+-- Javna liga, ki jo je admin skril in zaklenil (`admin_odloci_mini_ligo`).
+insert into mini_lige(id, name, code, owner_id, javna, competition_id, javna_zaklenjena_at) overriding system value
+values (-916902, 'Izstop zaklenjena', 'IZSTOP917', 'b8a06635-2322-4444-8c42-44e419f912ad', false, -916901, now());
+insert into mini_liga_clani(mini_liga_id, fantasy_team_id)
+values (-916901,-916901),(-916901,-916902),(-916901,-916903),(-916901,-916904),
+       (-916902,-916901),(-916902,-916903),(-916902,-916904);
+
+set local role anon;
+delete from mini_liga_clani where mini_liga_id=-916901;
+reset role;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ac',true);
+set local role authenticated;
+delete from mini_liga_clani where mini_liga_id=-916901 and fantasy_team_id in (-916901,-916902,-916904);
+reset role;
+select pg_temp.preveri('izstop: anonimni in clan ne izbriseta tujega clanstva',
+  (select count(*)=4 from mini_liga_clani where mini_liga_id=-916901));
+
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
+with d as (delete from mini_liga_clani where mini_liga_id=-916901 and fantasy_team_id=-916902 returning 1)
+select pg_temp.preveri('izstop: lastnik ekipe izstopi z eno od dveh svojih ekip', count(*)=1) from d;
+select pg_temp.preveri('izstop: druga ekipa ostane, liga ostane vidna',
+  exists(select 1 from mini_liga_clani where mini_liga_id=-916901 and fantasy_team_id=-916901)
+  and sem_v_mini_ligi(-916901));
+reset role;
+select pg_temp.preveri('izstop: ekipa po izstopu ostane',
+  exists(select 1 from fantasy_teams where id=-916902));
+
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+with d as (delete from mini_liga_clani where mini_liga_id=-916901 and fantasy_team_id=-916903 returning 1)
+select pg_temp.preveri('izstop: lastnik mini lige odstrani tujo ekipo', count(*)=1) from d;
+with d as (delete from mini_liga_clani where mini_liga_id=-916901 and fantasy_team_id=-916904 returning 1)
+select pg_temp.preveri('izstop: lastnik mini lige izstopi s svojo zadnjo ekipo', count(*)=1) from d;
+select pg_temp.preveri('izstop: lastnik brez ekipe ostane lastnik in ligo vidi',
+  sem_v_mini_ligi(-916901)
+  and exists(select 1 from mini_lige where id=-916901 and owner_id=auth.uid()));
+with d as (delete from mini_liga_clani where mini_liga_id=-916902 and fantasy_team_id=-916903 returning 1)
+select pg_temp.preveri('izstop: lastnik odstrani ekipo tudi iz zaklenjene javne lige', count(*)=1) from d;
+reset role;
+
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ab',true);
+set local role authenticated;
+with d as (delete from mini_liga_clani where mini_liga_id=-916902 and fantasy_team_id=-916901 returning 1)
+select pg_temp.preveri('izstop: clan izstopi iz zaklenjene javne lige', count(*)=1) from d;
+select pg_temp.preveri('izstop: po izstopu zadnje ekipe liga ni vec vidna',
+  not sem_v_mini_ligi(-916902) and not exists(select 1 from mini_lige where id=-916902));
+reset role;
+
 select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ac',true);
 set local role authenticated;
 select pg_temp.zavrnjeno('razlog neveljavne ekipe ne razkrije tujega kadra',

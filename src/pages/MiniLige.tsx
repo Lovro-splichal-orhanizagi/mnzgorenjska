@@ -21,6 +21,7 @@ import DeliMiniLigo from '../components/DeliMiniLigo'
 import TedenskiPregled from '../components/TedenskiPregled'
 import JavneMiniLige from '../components/JavneMiniLige'
 import JavnostMiniLige from '../components/JavnostMiniLige'
+import IzstopMiniLige from '../components/IzstopMiniLige'
 import { t, tx } from '../i18n'
 import { dogodek } from '../lib/analitika'
 import { prevediNapako } from '../lib/napake'
@@ -77,6 +78,8 @@ export default function MiniLige() {
   const [vzdevek, setVzdevek] = useState<string | null>(null)
   // Pravkar ustvarjena liga: povabilo je takrat glavna stvar na strani.
   const [novaLiga, setNovaLiga] = useState<number | null>(null)
+  // Po izstopu ali odstranitvi ekipe lestvico naložimo znova.
+  const [osvezi, setOsvezi] = useState(0)
 
   useEffect(() => {
     const vstop = params.get('vstop')
@@ -143,7 +146,8 @@ export default function MiniLige() {
       .order('created_at')
     const ml = (moje as MojaLiga[]) ?? []
     setLige(ml)
-    setIzbrana((prej) => prej ?? ml[0]?.id ?? null)
+    // Liga, iz katere je odšla zadnja moja ekipa, ni več na seznamu: izberemo prvo.
+    setIzbrana((prej) => (prej != null && ml.some((l) => l.id === prej) ? prej : ml[0]?.id ?? null))
     setNalaganje(false)
   }, [uporabnikId])
 
@@ -171,11 +175,20 @@ export default function MiniLige() {
     return () => {
       veljavno = false
     }
-  }, [izbrana, sporocilo])
+  }, [izbrana, sporocilo, osvezi])
 
   const urejena = useMemo(() => razvrstiMini(lestvica), [lestvica])
   const kaziLigo = useMemo(() => vecLig(lestvica), [lestvica])
   const trenutna = lige.find((l) => l.id === izbrana) ?? null
+  const semLastnik = !!trenutna && trenutna.owner_id === uporabnikId
+  const mojihVLigi = lestvica.filter((v) => v.owner_id === uporabnikId).length
+
+  async function poIzstopu(besedilo: string) {
+    setNapaka(null)
+    setSporocilo(besedilo)
+    setOsvezi((n) => n + 1)
+    await naloziSvoje()
+  }
   // Liga z eno samo ekipo potrebuje tekmece bolj kot karkoli drugega.
   const stanjeDeljenja: 'nova' | 'sam' | 'polna' =
     trenutna && trenutna.id === novaLiga
@@ -403,7 +416,7 @@ export default function MiniLige() {
               {urejena.map((v) => (
                 <li
                   key={v.fantasy_team_id}
-                  className="relative flex min-h-[52px] items-center gap-3 px-3 py-2 transition hover:bg-white/5 sm:px-4"
+                  className="relative flex min-h-[52px] flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2 transition hover:bg-white/5 sm:px-4"
                 >
                   <span className="w-7 shrink-0 text-center text-sm font-bold text-slate-400">
                     {v.mesto <= 3 ? (
@@ -434,6 +447,20 @@ export default function MiniLige() {
                     </div>
                     <div className="text-[11px] text-slate-500">{mnozina(v.rounds_played ?? 0, KROGI)}</div>
                   </div>
+                  {trenutna && v.fantasy_team_id != null && (v.owner_id === uporabnikId || semLastnik) && (
+                    <IzstopMiniLige
+                      ligaId={trenutna.id}
+                      imeLige={trenutna.name}
+                      ekipaId={v.fantasy_team_id}
+                      imeEkipe={v.team_name ?? ''}
+                      ligaEkipe={v.competition_short}
+                      nacin={v.owner_id === uporabnikId ? 'izstop' : 'odstrani'}
+                      zadnja={mojihVLigi <= 1}
+                      lastnik={semLastnik}
+                      javna={trenutna.javna}
+                      onKoncano={poIzstopu}
+                    />
+                  )}
                 </li>
               ))}
             </ol>

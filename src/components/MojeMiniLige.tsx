@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link } from './Povezava'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../lib/useAuth'
+import IzstopMiniLige from './IzstopMiniLige'
 import { formatirajTocke } from '../lib/pomozno'
 import { razvrstiMini, type MiniVrstica } from '../lib/miniLige'
 import { t } from '../i18n'
@@ -12,6 +14,12 @@ interface Vrstica {
   ekip: number
   tocke: number
   vodilni: string | null
+  javna: boolean
+  semLastnik: boolean
+  /** Moja ekipa v tej mini ligi (ime in liga za vprašanje ob izstopu). */
+  ekipa: string
+  ligaEkipe: string | null
+  mojih: number
 }
 
 /**
@@ -22,7 +30,11 @@ interface Vrstica {
  * pogledat prav to. Brez mini lige pokaže povabilo, ne praznine.
  */
 export default function MojeMiniLige({ ekipaId }: { ekipaId: number | null }) {
+  const { session } = useAuth()
+  const uporabnikId = session?.user.id
   const [vrstice, setVrstice] = useState<Vrstica[] | null>(null)
+  const [osvezi, setOsvezi] = useState(0)
+  const [sporocilo, setSporocilo] = useState<string | null>(null)
 
   useEffect(() => {
     if (!ekipaId) {
@@ -41,10 +53,10 @@ export default function MojeMiniLige({ ekipaId }: { ekipaId: number | null }) {
         return
       }
       const [{ data: lige }, { data: lestvice }] = await Promise.all([
-        supabase.from('mini_lige').select('id, name').in('id', idji),
+        supabase.from('mini_lige').select('id, name, owner_id, javna').in('id', idji),
         supabase
           .from('mini_liga_lestvica')
-          .select('mini_liga_id, fantasy_team_id, team_name, owner_name, total_points, rounds_played, points_per_round, competition_short, federation_short')
+          .select('mini_liga_id, fantasy_team_id, team_name, owner_name, owner_id, total_points, rounds_played, points_per_round, competition_short, federation_short')
           .in('mini_liga_id', idji),
       ])
       if (!veljavno) return
@@ -61,6 +73,11 @@ export default function MojeMiniLige({ ekipaId }: { ekipaId: number | null }) {
           ekip: urejene.length,
           tocke: Number(moja?.total_points ?? 0),
           vodilni: urejene[0]?.team_name ?? null,
+          javna: !!l.javna,
+          semLastnik: !!uporabnikId && l.owner_id === uporabnikId,
+          ekipa: moja?.team_name ?? '',
+          ligaEkipe: moja?.competition_short ?? null,
+          mojih: urejene.filter((v) => !!uporabnikId && v.owner_id === uporabnikId).length,
         }
       })
       setVrstice(izid)
@@ -68,18 +85,21 @@ export default function MojeMiniLige({ ekipaId }: { ekipaId: number | null }) {
     return () => {
       veljavno = false
     }
-  }, [ekipaId])
+  }, [ekipaId, uporabnikId, osvezi])
 
   if (!ekipaId || vrstice === null) return null
 
   if (vrstice.length === 0)
     return (
-      <p className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-sm text-slate-400">
-        <span>{t('lestvice.mojeMiniLige.povabilo')}</span>
-        <Link to="/mini-leagues" className="font-semibold text-gnl-300 hover:underline">
-          {t('lestvice.mojeMiniLige.ustvari')} →
-        </Link>
-      </p>
+      <div className="space-y-1">
+        {sporocilo && <p role="status" className="text-sm text-gnl-300">{sporocilo}</p>}
+        <p className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-sm text-slate-400">
+          <span>{t('lestvice.mojeMiniLige.povabilo')}</span>
+          <Link to="/mini-leagues" className="font-semibold text-gnl-300 hover:underline">
+            {t('lestvice.mojeMiniLige.ustvari')} →
+          </Link>
+        </p>
+      </div>
     )
 
   return (
@@ -90,9 +110,10 @@ export default function MojeMiniLige({ ekipaId }: { ekipaId: number | null }) {
           {t('lestvice.mojeMiniLige.vse')}
         </Link>
       </div>
+      {sporocilo && <p role="status" className="text-sm text-gnl-300">{sporocilo}</p>}
       <ul className="divide-y divide-white/10">
         {vrstice.map((v) => (
-          <li key={v.id} className="relative flex items-center gap-3 py-2">
+          <li key={v.id} className="relative flex flex-wrap items-center gap-x-3 gap-y-2 py-2">
             <span
               className={`w-7 shrink-0 text-center text-sm font-bold ${
                 v.mesto === 1 ? 'text-gnl-300' : 'text-slate-400'
@@ -117,6 +138,23 @@ export default function MojeMiniLige({ ekipaId }: { ekipaId: number | null }) {
             <span className="shrink-0 font-bold tabular-nums text-gnl-300">
               {formatirajTocke(v.tocke)}
             </span>
+            {ekipaId && (
+              <IzstopMiniLige
+                ligaId={v.id}
+                imeLige={v.name}
+                ekipaId={ekipaId}
+                imeEkipe={v.ekipa}
+                ligaEkipe={v.ligaEkipe}
+                nacin="izstop"
+                zadnja={v.mojih <= 1}
+                lastnik={v.semLastnik}
+                javna={v.javna}
+                onKoncano={(besedilo) => {
+                  setSporocilo(besedilo)
+                  setOsvezi((n) => n + 1)
+                }}
+              />
+            )}
           </li>
         ))}
       </ul>
