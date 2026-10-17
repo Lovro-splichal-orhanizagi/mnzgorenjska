@@ -18,6 +18,7 @@ import type { Gol, Glas, Kandidat } from '../components/GolZaGlasovanje'
 import type { NastopNaTekmi } from '../components/IgrisceTocke'
 import type { TekmaVrstica } from '../lib/tipi'
 import { prevediNapako } from '../lib/napake'
+import { unattributedYellowEvents } from '../lib/nepripisaniRumeni.mjs'
 
 /**
  * Nastop na tekmi, kot ga sestavi ta stran: vrstica `appearances` z vlozenim
@@ -62,6 +63,22 @@ function Klub({ ime, kratko, logo, id, liga }: {
   )
 }
 
+/** Public summary only: source event details stay out of the match display. */
+export function OpozoriloRumenih({ opozorila, nedosegljivo = false }: {
+  opozorila: unknown
+  nedosegljivo?: boolean
+}) {
+  const n = unattributedYellowEvents(opozorila).length
+  if (!nedosegljivo && n === 0) return null
+  return (
+    <p role="status" className="rounded-lg border border-amber-300/20 bg-amber-300/5 px-3 py-2 text-sm text-amber-200">
+      {nedosegljivo
+        ? t('aplikacija.rumeniKartoni.nedosegljivo')
+        : t('aplikacija.rumeniKartoni.nepripisani', { n })}
+    </p>
+  )
+}
+
 export default function Tekma() {
   const { id } = useParams()
   // Iz naslova pride niz; stolpec je stevilcen. Doslej je pretvorbo tiho
@@ -84,6 +101,9 @@ export default function Tekma() {
   useNaslov(tekma ? `${tekma.home_name} : ${tekma.away_name}` : t('tekme.tekma.naslov'), liga?.name)
   const [nastopi, setNastopi] = useState<NastopTekme[]>([])
   const [goli, setGoli] = useState<Gol[]>([])
+  const [opozorilaRumenih, setOpozorilaRumenih] = useState<{
+    tekmaId: number; opozorila: unknown; nedosegljivo: boolean
+  } | null>(null)
   // goal_id -> glasovi, razvrsceni padajoce
   const [glasovi, setGlasovi] = useState<Record<string, Glas[]>>({})
   // goal_id -> igralec, za katerega sem glasoval (null = "brez asistence")
@@ -98,6 +118,7 @@ export default function Tekma() {
     let preklican = false
     async function nalozi() {
       setNalaganje(true)
+      setOpozorilaRumenih(null)
       // Nastope in tocke beremo iz obstojecih tabel in pogleda appearance_points
       // ter ju zdruzimo tu. Tako stran deluje brez nove migracije v bazi.
       const [
@@ -105,6 +126,7 @@ export default function Tekma() {
         { data: nastopiTekme, error: eN },
         { data: tockeNastopov, error: eP },
         { data: g, error: eG },
+        rumeni,
       ] = await Promise.all([
         supabase
           .from('match_assist_status')
@@ -129,8 +151,20 @@ export default function Tekma() {
           )
           .eq('match_id', tekmaId)
           .order('minute'),
+        // Optional public metadata must never turn known statistics into an error.
+        // Match IDs are globally unique; this also works for another league's link.
+        supabase
+          .from('matches')
+          .select('import_warnings')
+          .eq('id', tekmaId)
+          .maybeSingle()
+          .then(
+            ({ data, error }) => ({ opozorila: data?.import_warnings, nedosegljivo: !!error || !data }),
+            () => ({ opozorila: null, nedosegljivo: true }),
+          ),
       ])
       if (preklican) return
+      setOpozorilaRumenih({ tekmaId, ...rumeni })
       const napacno = eT ?? eN ?? eP ?? eG
       if (napacno) setNapaka(napacno.message)
 
@@ -292,6 +326,13 @@ export default function Tekma() {
         </span>
         <Klub ime={tekma.away_name} kratko={tekma.away_short} logo={tekma.away_logo} id={tekma.away_team_id} liga={slugLige} />
       </h1>
+
+      {opozorilaRumenih?.tekmaId === tekmaId && (
+        <OpozoriloRumenih
+          opozorila={opozorilaRumenih.opozorila}
+          nedosegljivo={opozorilaRumenih.nedosegljivo}
+        />
+      )}
 
       {nastopi.length === 0 ? (
         <p className="text-sm text-slate-400">

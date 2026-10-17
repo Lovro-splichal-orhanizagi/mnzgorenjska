@@ -2,6 +2,10 @@
 import type { Prevod } from '../jedro.ts'
 
 export const aplikacija: NonNullable<Prevod['aplikacija']> = {
+  rumeniKartoni: {
+    nepripisani: 'Təyin edilməmiş sarı vərəqələr: {n}. Bu vərəqələrə görə xal çıxılmayıb.',
+    nedosegljivo: 'Sarı vərəqələrin kimə aid olduğu barədə məlumat hazırda mövcud deyil.',
+  },
   naslovStrani: {
     osnova: 'SLFF - Sunday League Fantasy Football',
     zStranjo: '{naslov} · SLFF',

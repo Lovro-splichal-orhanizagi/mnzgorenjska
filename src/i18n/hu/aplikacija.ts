@@ -2,6 +2,10 @@
 import type { Prevod } from '../jedro.ts'
 
 export const aplikacija: NonNullable<Prevod['aplikacija']> = {
+  rumeniKartoni: {
+    nepripisani: 'Nem hozzárendelt sárga lapok: {n}. Ezekért a lapokért nem vontunk le pontot.',
+    nedosegljivo: 'A sárga lapok hozzárendelési adatai jelenleg nem érhetők el.',
+  },
   naslovStrani: {
     osnova: 'SLFF - Sunday League Fantasy Football',
     zStranjo: '{naslov} · SLFF',

@@ -2,6 +2,10 @@
 import type { Prevod } from '../jedro.ts'
 
 export const aplikacija: NonNullable<Prevod['aplikacija']> = {
+  rumeniKartoni: {
+    nepripisani: 'Unassigned yellow cards: {n}. No points have been deducted for these cards.',
+    nedosegljivo: 'Yellow card attribution status is currently unavailable.',
+  },
   naslovStrani: {
     osnova: 'SLFF — Sunday League Fantasy Football',
     zStranjo: '{naslov} · SLFF',
