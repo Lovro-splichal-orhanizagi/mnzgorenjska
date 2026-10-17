@@ -1,13 +1,20 @@
 # Izrecni vklop Regionallige Nordost
 
-Migracija `20261016233000_varen_vklop_nemcije.sql` samo namesti servisni RPC;
+Migraciji `20261016233000_varen_vklop_nemcije.sql` in
+`20261017153000_nemcija_zacetek_po_cakajocem.sql` samo namestita servisni RPC;
 ne uvaža podatkov in ne vklopi lige. Španija ostaja zunaj tega postopka.
 
 1. Na `main` mora uspeti sveža veriga migracij in običajni CI. Nato zaženi
    `preveri-nova-vira.yml`, `vir=dfb`, `sezona=all`, na pregledanem commitu.
    Zahtevana sta uspešen celoten zagon in oba ohranjena artefakta
    `vir-dfb-2025` ter `vir-dfb-2026`. Arhiv potrebuje vseh 306 zapisnikov;
-   tekoča sezona vse zapisnike uradno že odigranih tekem. Tekoči zajem je
+   tekoča sezona vse objavljene zapisnike uradno že odigranih tekem. Edina
+   pregledana izjema je povsem prazna uradna predloga 2426099, Hertha BSC II–RSV,
+   16. 10. 2026, 13. krog, 0–1 (0–0). Razčlenjevalnik preveri točno identiteto
+   in prazno strukturo; drugačen ali delno objavljen zapisnik ostane napaka.
+   Audit izjemo izrecno našteje v `cakajoci`, `pokritost=false`, vendar je
+   `pripravljeno=true`, če so vsi drugi podatki in vratarji potrjeni.
+   Tekoči zajem je
    veljaven 12 ur, arhivski sedem dni, merjeno od najstarejšega dokumenta.
 2. Z obstoječim `uvoz-lige.yml` uvozi `liga=de-regionalliga-nordost`,
    `arhiv=regionalliga-nordost/2025-2026`, `tekoca=true`, `cene=true`,
@@ -31,6 +38,14 @@ ne uvaža podatkov in ne vklopi lige. Španija ostaja zunaj tega postopka.
    Ponovi vse preverbe in atomarno pokliče obstoječi
    `vklopi_ligo_sredi_sezone`, preveri `vklopljena=true`, `razlika=0` ter
    dejansko aktivno stanje s prihodnjim, odklenjenim prvim fantasy krogom.
+
+Manifest z izjemo ima različico 2 in pravilo `future-round-with-pending-history`.
+Tekma ohrani uradni končni izid v manifestu in `pending=true`; v bazi ostane
+neuvožen placeholder brez nastopov in golov, ne ponarejen rezultat ali zapisnik.
+Javni rezultati in lestvica vključujejo samo uvožene tekme, zato ta tekma do
+objave manjka. Pred vklopom mora biti prvi fantasy krog strogo po 13. krogu;
+RPC zavrne vsako zgodovinsko izjemo v krogu, ki bi štel za fantasy. Ko zveza
+objavi popoln zapisnik, ga običajni nočni uvoz sam uvozi. Arhivskih izjem ni.
 
 Potek preveri izvorne GitHub zagone (isti repozitorij, točen workflow,
 `workflow_dispatch`, pregledani commit, končan uspeh). Koda razčlenjevalnika

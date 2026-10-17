@@ -1,7 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { sestaviSezono, preveriOdobritev, preveriPosnetek } from './vklopi-nemcijo.mjs'
-import { mkdtempSync, writeFileSync, rmSync } from 'node:fs'
+import { mkdtempSync, writeFileSync, rmSync, readFileSync } from 'node:fs'
+import {vZapisnik} from './viri/dfb.mjs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createHash } from 'node:crypto'
@@ -64,4 +65,37 @@ test('snapshot replay rejects missing files, mismatched hashes and nonofficial U
   writeFileSync(join(dir,file),'changed');assert.throws(()=>preveriPosnetek(dir,records),/SHA/)
   records[0].url='https://evil.example/x';assert.throws(()=>preveriPosnetek(dir,records),/uradn/)
  }finally{rmSync(dir,{recursive:true,force:true})}
+})
+
+function pendingSeason(){
+ let s=season('2026/27'),t=s.razpored[12].tekme[0],oldId=t.dfbId
+ const names=[t.domaci,t.gostje]
+ s=JSON.parse(JSON.stringify(s).replaceAll(names[0]+'"','Hertha BSC II"').replaceAll(names[1]+'"','RSV Eintracht 1949"'))
+ t=s.razpored[12].tekme[0]
+ Object.assign(t,{dfbId:'2426099',datum:'2026-10-16',ura:'19:00',izid:{domaci:0,gostje:1}})
+ s.zapisniki=s.zapisniki.filter(r=>r.id!==`de-dfb-${oldId}`)
+ try{vZapisnik(readFileSync(new URL('./vzorci/de-dfb-2426099-pending.html',import.meta.url),'utf8'))}catch(e){s.nepopolni=[{...e.podatki,status:e.koda,razlog:e.message}]}
+ return s
+}
+test('future-launch manifest names the one pending historical fixture without inventing starters or events',()=>{
+ const s=pendingSeason()
+ assert.throws(()=>sestaviSezono(s),/pokrit/)
+ const m=sestaviSezono({...s,dovoliCakajociDfb:true})
+ const p=m.fixtures.find(f=>f.id==='de-dfb-2426099')
+ assert.equal(m.fixtures.length,306)
+ assert.equal(m.fixtures.filter(f=>f.pending).length,1)
+ assert.equal(p.played,true)
+ assert.deepEqual(p.starters,[])
+ assert.equal(p.homeGoals,0);assert.equal(p.awayGoals,1)
+ assert.equal(p.pendingReason,'official-report-unpublished')
+ const manifest={version:2,launchPolicy:'future-round-with-pending-history',slug:'de-regionalliga-nordost',sourceCommit:'a'.repeat(40),parserSha256:'b'.repeat(64),seasons:[sestaviSezono(season()),m]}
+ const approve=x=>{const raw=JSON.stringify(x);return preveriOdobritev(raw,sha(raw),'b'.repeat(64))}
+ assert.equal(approve(manifest).version,2)
+ for(const mutate of [x=>x.version=1,x=>x.launchPolicy='skip-validation',x=>x.seasons[1].fixtures.find(f=>f.pending).awayGoals=2]){
+  const bad=structuredClone(manifest);mutate(bad);assert.throws(()=>approve(bad),/čakajoč/)
+ }
+ const extra=structuredClone(s);extra.zapisniki.pop()
+ assert.throws(()=>sestaviSezono({...extra,dovoliCakajociDfb:true}),/pokrit/)
+ s.sezona='2025/26'
+ assert.throws(()=>sestaviSezono({...s,dovoliCakajociDfb:true}),/pokrit/)
 })

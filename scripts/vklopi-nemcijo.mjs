@@ -30,9 +30,9 @@ export function preveriPosnetek(dir,records){
  proof.sort((a,b)=>a.url.localeCompare(b.url)||a.at.localeCompare(b.at))
  return {documents,documentsSha256:sha(JSON.stringify(proof)),capturedAt:proof.map(r=>r.at).sort()[0]}
 }
-export function sestaviSezono({sezona,razpored,zapisniki,capturedAt,runId,documentsSha256='0'.repeat(64)}){
+export function sestaviSezono({sezona,razpored,zapisniki,nepopolni=[],dovoliCakajociDfb=false,capturedAt,runId,documentsSha256='0'.repeat(64)}){
  if(!scope[sezona]||!/^\d+$/.test(runId))fail('neveljavna sezona ali zagon')
- const result=preveriPokritost({sezona,razpored,zapisniki})
+ const result=preveriPokritost({sezona,razpored,zapisniki,nepopolni,dovoliCakajociDfb})
  if(!result.pripravljeno)fail(`pokritost/vratarji: ${JSON.stringify(result.napake)} ${result.klubiBrezVratarja}`)
  const fixtures=razpored.flatMap(r=>r.tekme.map(t=>({...t,round:r.stevilka}))),pairs=new Set()
  if(razpored.length!==34||fixtures.length!==306||result.klubov!==18)fail('sezona zahteva 34 krogov, 18 klubov in 306 tekem')
@@ -45,8 +45,8 @@ export function sestaviSezono({sezona,razpored,zapisniki,capturedAt,runId,docume
   const id=`de-dfb-${t.dfbId??t.id}`
   if(!/^de-dfb-[1-9]\d{0,9}$/.test(id)||pairs.has(JSON.stringify([t.domaci,t.gostje])))fail('podvojena identiteta para ali zapisnika')
   pairs.add(JSON.stringify([t.domaci,t.gostje]))
-  const r=reports.get(id),played=t.odigrana===true
-  if(played!==!!r)fail('zapisnik in stanje odigrane tekme se ne ujemata')
+  const r=reports.get(id),played=t.odigrana===true,pending=result.cakajoci.some(n=>n.id===id)
+  if(played!==!!r&&!pending)fail('zapisnik in stanje odigrane tekme se ne ujemata')
   const starters=[]
   if(r)for(const [side,e] of [r.z.domaci,r.z.gostje].entries()){
    const gk=e.postava.filter(p=>p.vratar===true)
@@ -54,7 +54,8 @@ export function sestaviSezono({sezona,razpored,zapisniki,capturedAt,runId,docume
    for(const p of e.postava)starters.push({side,name:p.ime,keeper:p.vratar===true,proof:p.vratar===true?p.vratarVir:null})
   }
   return {id,round:t.round,date:t.datum,home:t.domaci,away:t.gostje,played,
-   homeGoals:r?.z.rezultat.domaci??null,awayGoals:r?.z.rezultat.gostje??null,url:r?.url??t.url??null,
+   ...(pending?{pending:true,pendingReason:'official-report-unpublished'}:{}),
+   homeGoals:r?.z.rezultat.domaci??(pending?t.izid.domaci:null),awayGoals:r?.z.rezultat.gostje??(pending?t.izid.gostje:null),url:r?.url??t.url??(pending?result.cakajoci.find(n=>n.id===id).url:null),
    starters:starters.sort((a,b)=>a.side-b.side||a.name.localeCompare(b.name)),warnings:r?.z.opozorila??[]}
  }).sort((a,b)=>a.round-b.round||a.id.localeCompare(b.id))
  if(sezona==='2025/26'&&out.some(f=>!f.played))fail('arhiv potrebuje vseh 306 zapisnikov')
@@ -64,7 +65,9 @@ export function preveriOdobritev(raw,approvedSha,fingerprint,now=Date.now()){
  if(!/^[a-f0-9]{64}$/.test(approvedSha)||sha(raw)!==approvedSha)fail('odobreni SHA256 manifesta se ne ujema')
  if(Buffer.byteLength(raw)>2_500_000)fail('prevelik manifest')
  const m=JSON.parse(raw)
- if(m.version!==1||m.slug!=='de-regionalliga-nordost'||!/^[a-f0-9]{40}$/.test(m.sourceCommit)||m.seasons?.length!==2)fail('neveljaven obseg manifesta')
+ if(![1,2].includes(m.version)||m.slug!=='de-regionalliga-nordost'||!/^[a-f0-9]{40}$/.test(m.sourceCommit)||m.seasons?.length!==2)fail('neveljaven obseg manifesta')
+ const pending=m.seasons.flatMap(s=>s.fixtures.filter(f=>f.pending===true).map(f=>({...f,season:s.season})))
+ if(m.version===1&&pending.length||m.version===2&&(m.launchPolicy!=='future-round-with-pending-history'||pending.length!==1||pending.some(f=>f.id!=='de-dfb-2426099'||f.season!=='2026/27'||f.round!==13||f.date!=='2026-10-16'||f.home!=='Hertha BSC II'||f.away!=='RSV Eintracht 1949'||f.homeGoals!==0||f.awayGoals!==1||f.played!==true||f.pendingReason!=='official-report-unpublished'||f.starters.length!==0||f.warnings.length!==0)))fail('neveljaven obseg čakajočega zgodovinskega zapisnika')
  if(m.parserSha256!==fingerprint)fail('razčlenjevalnik ni isti kot pri odobrenem manifestu')
  for(const [index,season] of ['2025/26','2026/27'].entries()){
   const s=m.seasons[index],age=now-Date.parse(s.capturedAt)
@@ -81,9 +84,10 @@ export async function pripravi({archiveDir,currentDir,sourceCommit,archiveRun,cu
   const read=async url=>{if(!snapshot.documents.has(url))fail(`v zajemu manjka uradna stran: ${url}`);return snapshot.documents.get(url)}
   const razpored=await vir.razporedVseStrani(scope[season],read)
   const zapisniki=await vir.zapisniki(scope[season],read,{zberiNapake:true})
-  seasons.push(sestaviSezono({sezona:season,razpored,zapisniki,runId,...snapshot}))
+  seasons.push(sestaviSezono({sezona:season,razpored,zapisniki,nepopolni:vir.nepopolni??[],dovoliCakajociDfb:season==='2026/27',runId,...snapshot}))
  }
- return {version:1,slug:'de-regionalliga-nordost',sourceCommit,parserSha256:parserSha256(),seasons}
+ const pending=seasons.some(s=>s.fixtures.some(f=>f.pending))
+ return {version:pending?2:1,...(pending?{launchPolicy:'future-round-with-pending-history'}:{}),slug:'de-regionalliga-nordost',sourceCommit,parserSha256:parserSha256(),seasons}
 }
 async function main(){
  const [mode,...args]=process.argv.slice(2)
@@ -93,7 +97,7 @@ async function main(){
   const m=await pripravi({archiveDir,currentDir,sourceCommit,archiveRun,currentRun,vir}),raw=JSON.stringify(m)+'\n'
   // Preparation also refuses stale captures; the reviewed digest binds the raw snapshot AND replay code.
   preveriOdobritev(raw,sha(raw),m.parserSha256)
-  writeFileSync(out,raw);console.log(JSON.stringify({manifest:out,sha256:sha(raw),sourceCommit,parserSha256:m.parserSha256,seasons:m.seasons.map(s=>({season:s.season,fixtures:s.fixtures.length,played:s.fixtures.filter(f=>f.played).length,capturedAt:s.capturedAt,runId:s.runId}))},null,2));return
+  writeFileSync(out,raw);console.log(JSON.stringify({manifest:out,sha256:sha(raw),sourceCommit,parserSha256:m.parserSha256,launchPolicy:m.launchPolicy??'complete-history',seasons:m.seasons.map(s=>({season:s.season,fixtures:s.fixtures.length,played:s.fixtures.filter(f=>f.played).length,pending:s.fixtures.filter(f=>f.pending).map(f=>({id:f.id,round:f.round,home:f.home,away:f.away})),capturedAt:s.capturedAt,runId:s.runId}))},null,2));return
  }
  if(['check','activate'].includes(mode)&&args.length===2){
   const raw=readFileSync(args[0],'utf8');preveriOdobritev(raw,args[1],parserSha256())

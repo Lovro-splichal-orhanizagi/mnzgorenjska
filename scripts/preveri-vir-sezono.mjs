@@ -4,10 +4,12 @@ import { createHash } from 'node:crypto'
 import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { prenesiSPonovitvami } from './prenos.mjs'
+import { jeCakajociDfb } from './viri/dfb.mjs'
 
 const key = (k,d,g) => JSON.stringify([k,d,g])
-export function preveriPokritost({sezona,razpored,zapisniki,nepopolni=[]}) {
+export function preveriPokritost({sezona,razpored,zapisniki,nepopolni=[],dovoliCakajociDfb=false}) {
  const napake=[],klubi=new Set(),keepers=new Set(),expected=new Map(),seen=new Set(),ids=new Set()
+ const cakajoci=[],pendingKeys=new Set()
  let postavPo11=0,golov=0,menjav=0,rumenih=0,rdecih=0
  if(!/^20\d{2}\/\d{2}$/.test(sezona))napake.push('neveljavna pričakovana sezona')
  for(const r of razpored)for(const t of r.tekme){
@@ -39,11 +41,16 @@ export function preveriPokritost({sezona,razpored,zapisniki,nepopolni=[]}) {
   if(z.goli.length!==z.rezultat.domaci+z.rezultat.gostje)napake.push(`nepopolni goli: ${id}`)
   golov+=z.goli.length;menjav+=z.menjave.length;rumenih+=z.rumeni.length;rdecih+=z.rdeci.length
  }
- for(const [k] of expected)if(!seen.has(k))napake.push(`manjka zapisnik: ${k}`)
- for(const n of nepopolni)napake.push(`nepopoln ${n.id}: ${n.razlog}`)
- if(expected.size!==zapisniki.length)napake.push(`odigranih ${expected.size}, zapisnikov ${zapisniki.length}`)
- const klubiBrezVratarja=[...klubi].filter(k=>!keepers.has(k)).sort(),pokritost=napake.length===0
- return {sezona,krogov:razpored.length,klubov:klubi.size,odigranih:expected.size,zapisnikov:zapisniki.length,postavPo11,golov,menjav,rumenih,rdecih,pokritost,klubiBrezVratarja,pripravljeno:pokritost&&klubiBrezVratarja.length===0,napake}
+ for(const n of nepopolni){
+  const k=key(n.krog,n.domaci,n.gostje),t=expected.get(k)
+  if(dovoliCakajociDfb&&sezona==='2026/27'&&jeCakajociDfb(n)&&t&&String(t.dfbId??t.id)==='2426099'&&t.datum===n.datum&&t.ura===n.ura&&t.izid?.domaci===n.domaciGoli&&t.izid?.gostje===n.gostjeGoli&&!seen.has(k)&&!pendingKeys.has(k)){
+   cakajoci.push(n);pendingKeys.add(k)
+  }else napake.push(`nepopoln ${n.id}: ${n.razlog}`)
+ }
+ for(const [k] of expected)if(!seen.has(k)&&!pendingKeys.has(k))napake.push(`manjka zapisnik: ${k}`)
+ if(expected.size!==zapisniki.length+cakajoci.length)napake.push(`odigranih ${expected.size}, zapisnikov ${zapisniki.length}`)
+ const klubiBrezVratarja=[...klubi].filter(k=>!keepers.has(k)).sort(),pokritost=napake.length===0&&cakajoci.length===0
+ return {sezona,krogov:razpored.length,klubov:klubi.size,odigranih:expected.size,zapisnikov:zapisniki.length,postavPo11,golov,menjav,rumenih,rdecih,pokritost,cakajoci,klubiBrezVratarja,pripravljeno:napake.length===0&&klubiBrezVratarja.length===0,napake}
 }
 
 export async function preveriSezono({vir,koda,sezona,mapa,fetchFn=globalThis.fetch}) {
@@ -95,7 +102,7 @@ export async function preveriSezono({vir,koda,sezona,mapa,fetchFn=globalThis.fet
  try {
   razpored=await vir.razporedVseStrani(koda,prenesi)
   zapisniki=await vir.zapisniki(koda,prenesi,{zberiNapake:true})
-  porocilo=preveriPokritost({sezona,razpored,zapisniki,nepopolni:vir.nepopolni??[]})
+  porocilo=preveriPokritost({sezona,razpored,zapisniki,nepopolni:vir.nepopolni??[],dovoliCakajociDfb:vir.ime==='dfb'&&sezona==='2026/27'})
  }catch(e){porocilo={sezona,pripravljeno:false,pokritost:false,napake:[e.message],status:e.status??null,zavrnitev:!!e.zavrnitev,url:e.url??null};opozorila.push(...(e.nepopolni??vir.nepopolni??[]))}
  porocilo={vir:vir.ime,koda,preverjeno:new Date().toISOString(),...porocilo,prenesenih:requests.length,opozorila}
  writeFileSync(resolve(mapa,'porocilo.json'),JSON.stringify(porocilo,null,2)+'\n')

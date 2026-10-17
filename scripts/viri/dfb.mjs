@@ -21,6 +21,10 @@ const fail = s => {
 export class DfbNepopoln extends Error {
   constructor(s){super(`dfb: nepopoln javni zapisnik: ${s}`);this.nepopoln=true;this.koda='DFB_INCOMPLETE_REPORT'}
 }
+// Independently reviewed empty official shell, before the first fantasy round.
+// This is a pending report, never a fabricated lineup, event or 0-0 result.
+const pendingHistorical={id:'de-dfb-2426099',url:'https://datencenter.dfb.de/datencenter/regionalliga-nordost/2026-2027/13-spieltag/hertha-bsc-ii-rsv-eintracht-1949-2426099',sezona:'2026/27',krog:13,datum:'2026-10-16',ura:'19:00',domaci:'Hertha BSC II',gostje:'RSV Eintracht 1949',domaciId:'hertha-bsc-ii',gostjeId:'rsv-eintracht-1949',domaciGoli:0,gostjeGoli:1,polcasDomaci:0,polcasGostje:0}
+export const jeCakajociDfb=n=>n?.status==='DFB_PENDING_REPORT'&&Object.entries(pendingHistorical).every(([k,v])=>n[k]===v)
 const text = s => razpakiraj(String(s ?? '').replace(/<[^>]*>/g, ' ')).replace(/\s+/g, ' ').trim()
 const attr = (s, k) => s.match(new RegExp(`\\b${k}=["']([^"']*)["']`))?.[1]
 const has = (tag, cls) => (attr(tag, 'class') ?? '').split(/\s+/).includes(cls)
@@ -275,6 +279,23 @@ export function vZapisnik(html, { id, tekma } = {}) {
   const rezultat = { domaci: +score[1], gostje: +score[2] }, polcas = { domaci: +score[3], gostje: +score[4] }
   if (polcas.domaci > rezultat.domaci || polcas.gostje > rezultat.gostje) fail('neveljaven polčas')
   const tables = elements(html, 'table', 'm-MatchDetails-lineup-table')
+  const pending={id:meta.zapisnikId,url:meta.url,sezona:meta.sezona,krog:meta.krog,datum:meta.datum,ura:meta.ura,domaci:teams[0].ime,gostje:teams[1].ime,domaciId:teams[0].virId,gostjeId:teams[1].virId,domaciGoli:rezultat.domaci,gostjeGoli:rezultat.gostje,polcasDomaci:polcas.domaci,polcasGostje:polcas.gostje,status:'DFB_PENDING_REPORT'}
+  if(!tables.length&&jeCakajociDfb(pending)){
+  if(tekma){
+    for(const k of ['krog','datum','ura','sezona'])if(tekma[k]!=null&&tekma[k]!==meta[k])fail(`razpored: neujemanje ${k}`)
+    for(const [i,k] of ['domaci','gostje'].entries()){
+      if(tekma[k]!=null&&tekma[k]!==teams[i].ime)fail(`razpored: neujemanje ${k}`)
+      if(tekma[`${k}Id`]!=null&&tekma[`${k}Id`]!==teams[i].virId)fail(`razpored: neujemanje identitete ${k}`)
+    }
+    if(tekma.izid&&(tekma.izid.domaci!==rezultat.domaci||tekma.izid.gostje!==rezultat.gostje))fail('razpored: neujemanje izida')
+  }
+    let rest=one(html,'div','m-MatchDetails-content').inner
+    for(const cls of ['m-MatchDetails-head','m-MatchDetails-result','m-MatchDetails-referees'])rest=rest.replace(one(rest,'div',cls).outer,'')
+    if(!rest.trim()&&!/m-MatchDetails-history|m-MatchDetails-lineup|\/profil\//.test(html)){
+      const e=new DfbNepopoln('2426099: uradna postava in dogodki še niso objavljeni')
+      e.koda='DFB_PENDING_REPORT';e.podatki=pending;throw e
+    }
+  }
   // Some official archive reports omit the bench entirely. Named incoming
   // substitutions establish played reserves. Unknown unused recipients need
   // an individually reviewed same-match primary proof; otherwise reject.
@@ -648,8 +669,10 @@ const vir={
         const z=vZapisnik(html,{id:t.id,tekma:t})
         out.push({id:z.zapisnikId,z,url:t.url})
       }catch(e){
-        if(!zberiNapake||!['DFB_INVALID_REPORT','DFB_UNSUPPORTED_FORMAT','DFB_INCOMPLETE_REPORT'].includes(e.koda))throw e
-        vir.nepopolni.push({id:`de-dfb-${t.id}`,url:t.url,razlog:e.message,status:e.koda})
+        const pending=e.koda==='DFB_PENDING_REPORT'&&jeCakajociDfb(e.podatki)
+        if(!pending&&(!zberiNapake||!['DFB_INVALID_REPORT','DFB_UNSUPPORTED_FORMAT','DFB_INCOMPLETE_REPORT'].includes(e.koda)))throw e
+        vir.nepopolni.push({...e.podatki,id:`de-dfb-${t.id}`,url:t.url,razlog:e.message,status:e.koda})
+        if(pending)console.warn(`DFB_PENDING_REPORT: ${t.id} — brez uvoženih nastopov ali golov; fantasy začne po 13. krogu.`)
       }
     }
     return out

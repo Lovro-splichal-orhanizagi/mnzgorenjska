@@ -125,6 +125,36 @@ do $$ declare own boolean; m matches%rowtype; rejected boolean; begin
   raise notice 'PASS per-side goal accounting (own=%)',own;
  end loop;
 end $$;
+-- Explicit pre-launch history gap. All other fixture, keeper and price checks
+-- remain identical; the missing match can never acquire fabricated statistics.
+do $$ declare f de_fixtures%rowtype; h text; a text; r jsonb; p jsonb; rejected boolean; begin
+ begin
+  select * into strict f from de_fixtures where s=1 and round=13 and slot=0;
+  select name into h from teams where id=(select home_team_id from matches where id=f.id);
+  select name into a from teams where id=(select away_team_id from matches where id=f.id);
+  update teams set name=case name when h then 'Hertha BSC II' else 'RSV Eintracht 1949' end where name in(h,a);
+  update players set full_name=replace(replace(full_name,h,'Hertha BSC II'),a,'RSV Eintracht 1949') where team_id in(select id from teams where name in('Hertha BSC II','RSV Eintracht 1949'));
+  update de_manifest set raw=replace(replace(raw,h,'Hertha BSC II'),a,'RSV Eintracht 1949');
+  select raw::jsonb#>'{seasons,1,fixtures,108}' into p from de_manifest;
+  p:=p||jsonb_build_object('id','de-dfb-2426099','date','2026-10-16','played',true,'pending',true,'pendingReason','official-report-unpublished','homeGoals',0,'awayGoals',1,'starters','[]'::jsonb,'url','https://datencenter.dfb.de/datencenter/regionalliga-nordost/2026-2027/13-spieltag/hertha-bsc-ii-rsv-eintracht-1949-2426099');
+  update de_manifest set raw=jsonb_set(raw::jsonb||jsonb_build_object('version',2,'launchPolicy','future-round-with-pending-history'),'{seasons,1,fixtures,108}',p)::text;
+  update matches set played_on='2026-10-16' where id=f.id;
+  update rounds set deadline_at=now()-interval '1 day' where competition_id=(select id from competitions where slug='de-regionalliga-nordost') and season='2026/27' and number between 2 and 13;
+  r:=pg_temp.de_check();
+  if (r->>'preverjeno')::boolean is distinct from true or (r->>'prvi_krog')::int<>14 then raise exception 'Pending history future-round preflight failed: %',r; end if;
+  perform pg_temp.de_reject('unapproved pending identity',$m$update de_manifest set raw=jsonb_set(raw::jsonb,'{seasons,1,fixtures,108,id}','"de-dfb-2426098"')::text$m$);
+  perform pg_temp.de_reject('pending match cannot have an imported report',format('update matches set imported_at=now() where id=%s',f.id));
+  perform pg_temp.de_reject('pending match cannot contain appearances',format('insert into appearances(match_id,player_id,team_id,started,minutes_played) select %s,p.id,p.team_id,true,90 from players p where p.team_id=(select home_team_id from matches where id=%s) limit 1',f.id,f.id));
+  perform pg_temp.de_reject('pending match cannot contain goals',format('insert into goals(match_id,team_id,scorer_id) select %s,p.team_id,p.id from players p where p.team_id=(select home_team_id from matches where id=%s) limit 1',f.id,f.id));
+  perform pg_temp.de_reject('pending history cannot overlap first fantasy round',$m$update rounds set deadline_at=now()+interval '1 day' where competition_id=(select id from competitions where slug='de-regionalliga-nordost') and season='2026/27' and number=13$m$);
+  perform pg_temp.de_reject('pending final score cannot drift',$m$update de_manifest set raw=jsonb_set(raw::jsonb,'{seasons,1,fixtures,108,awayGoals}','2')::text$m$);
+  r:=pg_temp.de_check(true);
+  if (r->>'vklopljena')::boolean is distinct from true or (r->>'prvi_krog')::int<>14 then raise exception 'Pending history activation failed: %',r; end if;
+  raise exception using errcode='P9998',message='rollback pending fixture and activation';
+ exception when sqlstate 'P9998' then null;
+ end;
+ raise notice 'PASS one explicit pending historical match permits only future round 14';
+end $$;
 do $$ declare r jsonb; begin
  begin
   perform varen_vklop_nemcije((select raw from de_manifest),repeat('0',64),false);
