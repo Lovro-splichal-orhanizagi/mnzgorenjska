@@ -363,6 +363,28 @@ izklopljen; beremo HTML.
   `sifraIgralca(slug)` (FNV-1a, 50 bitov + 2^52 — nad šiframi oseb FCF v isti
   državi). Dva igralca z istim dresom na isti tekmi (Sporting Atlético: 14
   in 14) loči šifra.
+- **Vezava postav na klub:** naslov `fa-conv__team-title` se po obstoječem
+  popravku »EI San Martín« in normalizaciji primerja z imenoma v glavi
+  tekme. Vrstni red tabel ni pomemben; edina tabela lahko pripada gostom,
+  manjkajoča stran ostane prazna. Brez tabel sta obe strani prazni.
+  Manjkajoč, tuj ali podvojen naslov oziroma manjkajoči ali normalizirano
+  enaki imeni v glavi ustavijo razčlenjevanje z napako `fas:`; brez ugibanja
+  po vrstnem redu, dresu ali imenu igralca.
+- **Vzorec 14507** (`es-fas-evento-nepopoln-14507.html`) je **obrezan
+  strukturni vzorec**, ne izvirni zajem. Izvirni URL
+  `https://www.futbolasturiano.es/?p=14507` je preusmeril na
+  `https://www.futbolasturiano.es/evento/astur-cf-caudal-deportivo/`;
+  potrdilo `spain/manifest.jsonl` v ohranjenem dokaznem paketu beleži HTTP
+  200, `text/html; charset=UTF-8`, zajem `2026-10-17T19:36:29.959356+00:00`,
+  90315 bajtov in SHA256 izvirnika
+  `e0824ca4a882760d11b8de5feacc4b229131cd6d333f7f530cdbf38638c80a86`.
+  Ohranili smo javno glavo in podrobnosti tekme, edino tabelo Caudala ter
+  objavljene razdelke dogodkov in časovnico; odstranili smo slike, ostalo
+  stran, oglase in podatek o igrišču. Navedeni hash pripada celotnemu
+  izvirniku, ne obrezanemu vzorcu. Astur nima postave, Caudal ima le dva
+  začetnika in eno rezervo: tekma ostane nepopolna, brez kanoničnih postav
+  in nastopov. Trije objavljeni goli se pravilno povežejo s Caudalom;
+  manjkajoče minute menjave in manjkajoče XI s tem niso dopolnjene.
 - **Dogodki** po prikaznem imenu (brez povezave) v razdelkih GOLES (oznaka
   `sp-res__gol-badge--penalti` = 11 m, `--propia` = avtogol, stolpec ekipe
   strelca, šteje nasprotniku), TARJETAS (`--yellow`, `--red`; drugi rumeni =
