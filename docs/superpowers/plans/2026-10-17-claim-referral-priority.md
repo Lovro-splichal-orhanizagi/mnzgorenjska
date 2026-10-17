@@ -1,0 +1,18 @@
+# Claim referral priority implementation plan
+
+User request: multiply displayed requests ahead by a number like7, and a friend referral moves the claim straight to the top. Controller default communicated:7× (14→98), qualification remains registration via referral link plus building a non-house fantasy team. User/admin queue must agree; claim verification remains required.
+
+### Task 1: Implement and verify claim queue change
+
+- Display `(actual position - 1) * 7`, keep zero queue message for first place and counts pluralized using displayednumber. Actual DB/admin ordering and rawposition remain unscaled. Update the existing comment that currently promises an unscaled count.
+- One qualifying friend puts the claimant ahead of every older referral priority, even a claimant with more prior friends. Order pending claims by latest qualifying friend event descending, then original claimtime andid for deterministic ties. Non-referral claims remain FIFO. Another newlyqualifyingfriend can boost again; extra teams for the samefriend cannot create another referral or reboost. Deleted/service-only changes should not introduce incorrect qualification.
+- Keep qualification definition consistent with existing pripeljanih(): referralregistered throughlink and non-house fantasyteam. Preserve authentication/RLS, useronly-own-request visibility, admin authorization, nonpending statuses and verification checks. Check timestamp provenance: don't let a client-provided future timestamp manufacture priority. Derive latest actual firstqualification from existing protected server timestamps if reliable; otherwise persistserver qualification once securely.
+- Match ordering in moje_mesto_v_vrsti and admin_zahtevki_igralcev. New migration only; do not edit oldmigrations. Share orderingdefinition or helper sensibly. No queue autoapproval, no fakeDBclaims or newnotifications.
+- Update cakaPrijatelj copy in all shipped locales to explain a qualifyingfriend movesclaim tofront/top, preserving registration+team prerequisite. Slovenian example: `Pripelji prijatelja in skoči na vrh čakalne vrste: ko se prijavi prek tvoje povezave in sestavi ekipo, ima tvoj zahtevek prednost.` Natural equivalentcopyperlocale, no placeholder/keydrift.
+- TDD behavioral SQL regressions before productionSQL: nonrefFIFO, firstfriend beating olderclaimwithmultiplefriends, subsequentdistinctfriendreboost, unqualifiedsignup/house-teamnoteligible, extra-teamnotreboost, deterministicties, identicaluser/adminordering, user-onlyrows and unauthorizedadmin rejection. Rollbackfixtures in a disposable fresh DB isolated from German/defaultDB. Small frontend arithmetic/copy change does not need mirrorimplementation tests; existing smoke/render catchespluralkeys; add only meaningful regression if needed.
+- Generate DBtypes from actual migrated disposable DB; no handwritten types. Read CLAUDE.md fully. Run relevant SQL/security tests, required npmtest (report missing localAPIcredentials ifblocked), fullsmoke/build once, workflowCI checks. No source/parser/D Germany changes, no productionwrites/PR/push byimplementer.
+- Selfreview and commit implementation. Fullreport with RED/GREEN, commands/output, scope/concerns in localSDDtaskreport. Independenttaskreviewrequired beforemerge.
+
+### Task 2: Integrate and deploy
+
+Controller reviews exactdiff, resolves findings, runs greenCI and merges under prioruserdeploymentauthorization. Verify productionmigration andfrontenddeployment, then readonlySQL verifies queuehelper/adminordering definitions without accessing other users' personaldata; public/mock UI verification of14→98 andzero/referralcopy without submitting realclaims/referrals. Report exactdeploymentstatus and keep Germanyaudits running.
