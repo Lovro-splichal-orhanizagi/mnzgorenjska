@@ -38,12 +38,13 @@ jobs:
           node --input-type=module <<'NODE'
           import {mkdirSync,writeFileSync} from 'node:fs'
           import {createHash} from 'node:crypto'
+          import {gzipSync} from 'node:zlib'
           import {ustvariAnonimniPrenos} from './scripts/viri/novanet-transport.mjs'
           import {jeIzziv} from './scripts/viri/fussball.mjs'
           const source=process.env.VIR
           const urls={
             novanet:'https://www.futgal.es/pnfg/NPcd/NFG_CmpPartido?cod_primaria=1000120&CodActa=1306467&cod_acta=1306467',
-            fussball:'https://www.fussball.de/ajax.match.lineup/-/mode/PAGE/spiel/02TMCK1048000000VS5489BTVT4H6CF2/ticker-id/selectedTickerId'
+            fussball:'https://www.fussball.de/spiel/hertha-bsc-u23-rsv-eintracht-1949/-/spiel/031DEIC4FC000000VS5489BUVUR5FS5A'
           }
           const url=urls[source]
           if(!url)throw Error('Unknown fixed diagnostic case')
@@ -69,6 +70,7 @@ jobs:
             if(e.dokument?.bytes instanceof Uint8Array)bytes=e.dokument.bytes
             process.exitCode=1
           }
+          if(bytes)console.log('FF_MAIN_CAPTURE:'+JSON.stringify({gzipBase64:gzipSync(bytes).toString('base64')}))
           if(bytes){writeFileSync(`${folder}/document.bin`,bytes);result.bytes=bytes.length;result.sha256=createHash('sha256').update(bytes).digest('hex')}
           const assets=[]
           const asset=async(file,address)=>{

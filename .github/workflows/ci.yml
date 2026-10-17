@@ -14,7 +14,7 @@ on:
       vir:
         description: Javni vir za podatkovni audit
         type: choice
-        options: [all, novanet, dfb]
+        options: [all, novanet, dfb, fussball]
         default: all
       sezona:
         description: Tekoča sezona, arhiv ali obe
