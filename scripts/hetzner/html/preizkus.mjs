@@ -1,7 +1,7 @@
 // Preizkus strežnika HTML brez omrežja in baze: lažen PostgREST, prava
 // predloga v začasni mapi. `npm run preizkus-html`.
 import assert from 'node:assert/strict'
-import { mkdirSync, mkdtempSync, rmSync, utimesSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, utimesSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { esc, izrisi, obdelovalec, prevajalnik, stran } from './streznik.mjs'
@@ -13,9 +13,14 @@ const PREDLOGA = `<!doctype html>
     <meta name="description" content="star opis" />
     <meta property="og:title" content="SLFF" />
     <meta property="og:description" content="star og" />
+    <meta property="og:image" content="https://slff.eu/og/slff-og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
     <meta property="og:url" content="https://slff.eu/" />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="SLFF" />
     <meta name="twitter:description" content="star tw" />
+    <meta name="twitter:image" content="https://slff.eu/og/slff-og.png" />
   </head>
   <body>
     <div id="root"></div>
@@ -34,7 +39,11 @@ const BESEDE = {
       tekme: { one: 'tekma', two: 'tekmi', few: 'tekme', other: 'tekem' },
       goli: { one: 'gol', two: 'gola', few: 'goli', other: 'golov' },
       igralci: { one: 'igralec', two: 'igralca', few: 'igralci', other: 'igralcev' },
+      ekipe: { one: 'ekipa', two: 'ekipi', few: 'ekipe', other: 'ekip' },
     },
+    'lestvice.vstop.naslovLiga': 'Povabilo: {ime}',
+    'lestvice.vstop.miniLiga': 'Mini liga',
+    'lestvice.klub.naslov': 'Klub',
     'skupno.pozicija': { GK: 'Vratar', FWD: 'Napadalec' },
     'tekme.tabela.naslov': 'Lestvica',
     'tekme.tabela.zavihek': '{liga} · lestvica',
@@ -60,6 +69,14 @@ const PODATKI = {
   'player_overview?id=eq.7': [{ id: 7, full_name: 'Novak "Janez" <b>', position: 'FWD', team_id: 3, team_name: 'Šenčur & Co', competition_id: 1 }],
   'player_overview?id=eq.8': [{ id: 8, full_name: 'Kováč Peter', position: null, team_id: 4, team_name: 'Rajec', competition_id: 2 }],
   'player_overview?id=eq.9': [],
+  'player_overview?id=eq.12': [{ id: 12, full_name: 'Mladi Jure', position: 'FWD', team_id: 3, team_name: 'Šenčur', competition_id: 4 }],
+  'player_overview?id=eq.13': [{ id: 13, full_name: '#a1b2c3', position: 'FWD', team_id: 3, team_name: 'Šenčur', competition_id: 1 }],
+  'sezone?competition_id=eq.4': [{ season: '2026/27' }],
+  'player_season_standings?id=eq.12': [{ points: 9, matches: 2, goals: 1, minutes: 120 }],
+  'player_season_standings?id=eq.13': [{ points: 9, matches: 2, goals: 1, minutes: 120 }],
+  'teams?id=eq.3': [{ id: 3, name: 'Šenčur', logo_url: '/grbi/sencur.jpg' }],
+  'competition_teams?team_id=eq.3': [{ competition_id: 1 }],
+  'player_season_standings?team_id=eq.3': [{ id: 7, full_name: 'Novak Janez', position: 'FWD', points: 21, goals: 3 }],
   'sezone?competition_id=eq.1': [{ season: '2026/27' }],
   'sezone?competition_id=eq.2': [{ season: '2026/27' }],
   'player_season_standings?id=eq.7': [{ points: 21, matches: 5, goals: 3, minutes: 410 }],
@@ -67,11 +84,18 @@ const PODATKI = {
   'match_assist_status?match_id=eq.5': [{ match_id: 5, season: '2026/27', played_on: '2026-09-13', home_name: 'Šenčur', away_name: 'Bled', home_goals: 2, away_goals: 1, home_team_id: 3, away_team_id: 6, competition_id: 1 }],
   'goals?match_id=eq.5': [{ minute: 12, team_id: 3, scorer: { full_name: 'Novak Janez' } }],
   'match_assist_status?competition_id=eq.1': [{ match_id: 5, season: '2026/27', played_on: '2026-09-13', home_name: 'Šenčur', away_name: 'Bled', home_goals: 2, away_goals: 1 }],
+  'player_season_standings?competition_id=eq.1': [{ id: 7, full_name: 'Novak Janez', team_name: 'Šenčur', points: 21 }],
   'fantasy_team_standings?competition_id=eq.1': [{ fantasy_team_id: 11, team_name: 'FC Luka', total_points: 40 }],
   'rpc/lestvica_lige': [{ mesto: 1, team_id: 3, ime: 'Šenčur', tekme: 5, zmage: 4, remiji: 1, porazi: 0, dani: 12, prejeti: 3, tocke: 13, sezona: '2026/27' }],
 }
 const PREVERJENI = [7]
+const MINI = {
+  'rpc/mini_liga_glava': (t) => (t.p_liga === 21 ? [{ id: 21, name: 'Gostilna <Pri Jožovcu>', javna: true, competition_id: 1, ekip: 7 }] : []),
+  'rpc/lestvica_javne_mini_lige': (t) => (t.p_liga === 21 ? [{ fantasy_team_id: 1, team_name: 'FC Luka', total_points: 40 }] : []),
+  'rpc/mini_liga_po_kodi': (t) => (t.p_koda === 'AB23CD' ? [{ id: 22, name: 'Sodelavci', owner_name: 'Luka', ekip: 4 }] : []),
+}
 const rest = async (pot, telo) => {
+  if (MINI[pot]) return MINI[pot](telo)
   // Kot baza: vrne le preverjene med vprašanimi (nepreverjen id → []).
   if (pot === 'rpc/preverjeni_igralci_za') return telo.p_ids.filter((i) => PREVERJENI.includes(i)).map((i) => ({ player_id: i, vzdevek: null }))
   const kljuc = Object.keys(PODATKI).find((k) => pot === k || pot.startsWith(k + '&'))
@@ -197,6 +221,71 @@ for (const pot of ['/player/9', '/player/abc']) {
   // Drobtina 1 kaže na vstopno stran države.
   const igr = await stran('/player/8', null, { rest, lige: LIGE, besede: BESEDE })
   assert.equal(igr.jsonld[1].itemListElement[0].item, 'https://slff.eu/sk')
+}
+
+// Slika za predogled (og:image, twitter:image) po vrsti strani; brez nje ostane privzeta.
+{
+  const slika = (html) => vzemi(html, /og:image" content="(.*?)"/)
+  const PREDOGLED = /^https:\/\/slff\.eu\/predogled\/(player|club|match|league|mini|invite)\/(\w+)\.jpg\?v=[0-9a-z]{1,8}$/
+  for (const [pot, vrsta, id] of [
+    ['/player/7', 'player', '7'],
+    ['/player/8', 'player', '8'],
+    ['/club/3', 'club', '3'],
+    ['/match/5', 'match', '5'],
+    ['/', 'league', '1'],
+    ['/table', 'league', '1'],
+    ['/results', 'league', '1'],
+    ['/standings', 'league', '1'],
+    ['/players', 'league', '1'],
+  ]) {
+    const { html } = await izris(pot, null)
+    const m = PREDOGLED.exec(slika(html) ?? '')
+    assert.ok(m, `${pot}: og:image ${slika(html)}`)
+    assert.deepEqual([m[1], m[2]], [vrsta, id], pot)
+    assert.equal(vzemi(html, /twitter:image" content="(.*?)"/), slika(html).replace(/&/g, '&amp;'), pot)
+    assert.equal(vzemi(html, /twitter:card" content="(.*?)"/), 'summary_large_image')
+    assert.equal(vzemi(html, /og:image:width" content="(.*?)"/), '1200')
+    assert.equal(vzemi(html, /og:image:height" content="(.*?)"/), '630')
+  }
+  // Mladinska liga, anonimiziran igralec, neznan id: privzeta slika s predloge.
+  for (const pot of ['/player/12', '/player/13', '/player/9', '/player/abc', '/si']) {
+    const { html } = await izris(pot, null)
+    assert.equal(slika(html), 'https://slff.eu/og/slff-og.png', pot)
+  }
+  // Novi podatki = nov naslov slike (Facebook in WhatsApp sliko hranita po naslovu).
+  const prej = (await stran('/player/7', null, { rest, lige: LIGE, besede: BESEDE })).slika
+  assert.equal((await stran('/player/7', null, { rest, lige: LIGE, besede: BESEDE })).slika, prej, 'isti podatki, isti naslov')
+  const star = PODATKI['player_season_standings?id=eq.7']
+  PODATKI['player_season_standings?id=eq.7'] = [{ ...star[0], points: 25 }]
+  assert.notEqual((await stran('/player/7', null, { rest, lige: LIGE, besede: BESEDE })).slika, prej, 'nove točke, nov naslov')
+  PODATKI['player_season_standings?id=eq.7'] = star
+}
+
+// Mini lige: le kartica (naslov, opis, og:url, slika), brez kanoničnega, JSON-LD in povzetka.
+{
+  const { s, html } = await izris('/mini-leagues/21', null)
+  assert.equal(s.status, 200)
+  assert.equal(vzemi(html, /<title>(.*?)<\/title>/), 'Gostilna &lt;Pri Jožovcu&gt; · SLFF')
+  assert.equal(vzemi(html, /og:description" content="(.*?)"/), 'Mini liga · 1. GNL · 7 ekip')
+  assert.equal(vzemi(html, /og:url" content="(.*?)"/), 'https://slff.eu/mini-leagues/21')
+  assert.match(vzemi(html, /og:image" content="(.*?)"/), /^https:\/\/slff\.eu\/predogled\/mini\/21\.jpg\?v=/)
+  assert.ok(!html.includes('rel="canonical"') && !html.includes('ld+json') && html.includes('<div id="root"></div>'))
+  const v = await izris('/l/ab23cd', null)
+  assert.equal(vzemi(v.html, /<title>(.*?)<\/title>/), 'Povabilo: Sodelavci · SLFF')
+  assert.equal(vzemi(v.html, /og:url" content="(.*?)"/), 'https://slff.eu/l/AB23CD')
+  assert.match(vzemi(v.html, /og:image" content="(.*?)"/), /^https:\/\/slff\.eu\/predogled\/invite\/AB23CD\.jpg\?v=/)
+  assert.ok(!v.html.includes('Luka'), 'ime lastnika ne gre v kartico')
+  // Zasebna ali neznana mini liga, napačna koda: predloga nespremenjena.
+  for (const pot of ['/mini-leagues/22', '/mini-leagues/abc', '/l/ZZ23CD', '/l/ab23c', '/l/AB23CO', '/l/AB23CD/x']) assert.equal(await stran(pot, null, { rest, lige: LIGE, besede: BESEDE }), null, pot)
+}
+
+// Caddy: strani mini lig gredo strežniku HTML, slike strežniku slik, rezerva je privzeta slika.
+{
+  const caddy = readFileSync(new URL('../Caddyfile', import.meta.url), 'utf8')
+  const html = /@html_strani \{[^}]*path ([^\n]*)/.exec(caddy)[1].split(' ')
+  for (const p of ['/player/*', '/mini-leagues/*', '/l/*']) assert.ok(html.includes(p), `@html_strani brez ${p}`)
+  assert.match(caddy, /handle \/predogled\/\* \{\s*reverse_proxy 127\.0\.0\.1:3202 127\.0\.0\.1:3201/)
+  assert.match(caddy.slice(caddy.indexOf('http://:3201')), /handle \/predogled\/\* \{\s*rewrite \* \/og\/slff-og\.png/)
 }
 
 // Neznana pot: predloga ostane nespremenjena.
