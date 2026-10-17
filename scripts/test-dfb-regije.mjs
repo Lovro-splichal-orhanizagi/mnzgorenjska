@@ -73,3 +73,12 @@ test('strict canonical, mixed competition team links and encoded path traversal 
  assert.throws(()=>dfb.vZapisnik(html.replaceAll('/competitions/regionalliga-bayern/','/competitions/regionalliga-west/'),{liga}))
  assert.throws(()=>dfb.vZapisnik(html.replaceAll('/teams/bayern-muenchen-ii','/teams/other/../bayern-muenchen-ii'),{liga}))
 })
+
+test('report team links require the complete registered season identity',()=>{
+ const html=read(metadata.find(m=>m.file==='report-bayern-current.html'))
+ for(const season of ['2026-2127','1926-2027','2026-2028']){
+  const changed=html.replaceAll('/seasons/2026-2027/teams/',`/seasons/${season}/teams/`)
+  assert.notEqual(changed,html)
+  assert.throws(()=>dfb.vZapisnik(changed,{liga:'regionalliga-bayern'}),/identitete ekipe/)
+ }
+})

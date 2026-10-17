@@ -62,3 +62,13 @@ All 453 original document hashes checked. All 110 serialized current report obje
 - The pre-existing source-level `polnoIme` Nordost label is preserved; regional competition attribution should use its actual competition metadata. This task does not change live Nordost naming contracts.
 - Representative samples establish parser support, not full-season readiness. Full audits, unresolved historical reports and all later release gates remain required; no general current/archive missing-report exemption was added.
 - E2E remains unverified locally because test credentials are unavailable. Source, smoke, build and the complete captured Nordost replay pass.
+
+## Review fix round 1: complete team-link season identity
+
+Confirmed the review finding: team-link validation shortened the ending year to two digits, allowing `2026-2127` to collide with canonical `2026-2027`.
+
+Added a focused regression before changing production code. It mutates both official team-link season paths to `2026-2127`, `1926-2027` and `2026-2028` and requires identity rejection. `node --test scripts/test-dfb-regije.mjs > /tmp/dfb-review-red.log 2>&1` produced `tests 23`, `pass 22`, `fail 1`, with `Missing expected exception` for the unreviewed century collision.
+
+The report parser now loads the already validated canonical's registered configuration and compares each team link's complete league/season path against `configuration.pot`. Reviewed nearby validation in this function: four-digit numeric years remain bounded by the path expression; exact registered-path comparison enforces both years and league; team slug safety and official origin remain checked. No report metadata, report defaults or correction policies changed.
+
+`npm run test:dfb > /tmp/dfb-review-green.log 2>&1` covers regional and existing DFB tests: `tests 65`, `pass 65`, `fail 0`. `git diff --check` passed. No full source/smoke/build repeats were needed for this narrowly scoped comparison fix. No additional concerns found.

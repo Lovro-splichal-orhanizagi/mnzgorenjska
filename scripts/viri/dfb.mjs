@@ -271,11 +271,12 @@ function verifiedReserve(html,meta,tables,teams,players,coaches){
 /** A complete played public match report; every discrepancy rejects the report. */
 export function vZapisnik(html, { id, tekma, liga='regionalliga-nordost' } = {}) {
   const meta = metadata(String(html), id, liga)
+  const configuration=konfiguracijaDfb(`${liga}/${new URL(meta.url).pathname.split('/')[3]}`)
   const result = one(html, 'div', 'm-MatchDetails-result').inner
   const teams = elements(result, 'div', 'm-MatchDetails-team').map(e => {
     const a = one(e.inner, 'a')
     const path = safeUrl(attr(a.tag, 'href')).pathname.match(new RegExp(/^\/competitions\/LEAGUE\/seasons\/(\d{4})-(\d{4})\/teams\/([a-zA-Z0-9%\-]+)$/.source.replace('LEAGUE',liga)))
-    if (!path || !teamSlug(path[3]) || `${path[1]}/${path[2].slice(2)}` !== meta.sezona) fail('neujemanje identitete ekipe')
+    if (!path || !teamSlug(path[3]) || `${liga}/seasons/${path[1]}-${path[2]}` !== configuration.pot) fail('neujemanje identitete ekipe')
     return { ime: text(one(e.inner, 'div', 'm-MatchDetails-title').inner), virId: path[3], postava: [], rezerve: [] }
   })
   if (teams.length !== 2 || teams[0].virId === teams[1].virId) fail('nepopolni ekipi')
