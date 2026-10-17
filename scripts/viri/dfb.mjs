@@ -99,7 +99,7 @@ function orderedTimeline(section){
     // the 12th added-minute goal. Do not generalize to arbitrary two integers.
     const spaced=rawMinute.match(/^90 ([1-9]|[12]\d|30)'$/)
     const time=(spaced?`90+${spaced[1]}'`:rawMinute).match(/^(\d+)(?:\+(\d+))?'$/)
-    if(!time||+time[1]>90||+(time[2]??0)>30)fail('nepodprta minuta dogodka')
+    if(!time||+time[1]>90||+(time[2]??0)>39)fail('nepodprta minuta dogodka')
     return {row,index,rawMinute,spaced,base:+time[1],minute:Math.min(+time[1],90),order:+time[1]*100+ +(time[2]??0)}
   })
   let standardOrder=0,spacedOrder=0,spaceSeen=false

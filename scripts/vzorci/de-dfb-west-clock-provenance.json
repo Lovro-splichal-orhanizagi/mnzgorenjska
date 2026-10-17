@@ -1,0 +1,172 @@
+{
+  "id": "de-dfb-2402377",
+  "url": "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/22-spieltag/sc-paderborn-07-ii-1-fc-bocholt-2402377",
+  "sha256": "682aa22256ee5de7b76ed50d4e0ba8ead23d26b912f5495cb9100384f745adf3",
+  "capturedAt": "2026-10-17T12:52:59.271Z",
+  "rawFile": "/private/tmp/slff-regional-evidence/regionalliga-west-2025-39032122832/682aa22256ee5de7b76ed50d4e0ba8ead23d26b912f5495cb9100384f745adf3.html",
+  "originalFailure": "dfb: nepodprta minuta dogodka",
+  "score": "0:0 (0:0)",
+  "scoreLine": 153,
+  "lineupTables": 2,
+  "historySections": [
+    "Spielverlauf",
+    "Tore",
+    "Karten",
+    "Wechsel"
+  ],
+  "tables": [
+    {
+      "title": "Aufstellung",
+      "line": 520,
+      "home": {
+        "publishedCells": 11,
+        "uniqueNamedTexts": 11,
+        "uniqueKeeperTexts": 1,
+        "names": [
+          "Florian Pruhs (T)",
+          "Lenny Hennig",
+          "Tim Böhmer",
+          "Medin Kojic",
+          "Bennit Bröger",
+          "Georg Ermolaev",
+          "Lasse Eickel",
+          "Fedir Babak",
+          "Pedro Naranjo",
+          "Luis Flörke",
+          "Niklas Mohr"
+        ]
+      },
+      "away": {
+        "publishedCells": 11,
+        "uniqueNamedTexts": 11,
+        "uniqueKeeperTexts": 1,
+        "names": [
+          "Paul Grave (T)",
+          "Julian Riedel",
+          "Stipe Batarilo",
+          "Arnold Budimbu",
+          "Dominik Lanius",
+          "Philipp Hanke",
+          "Marlon Frey",
+          "Jeff Mensah",
+          "Marvin Lorch",
+          "Jesaja Herrmann",
+          "Paul Seidel"
+        ]
+      }
+    },
+    {
+      "title": "Auswechselspieler",
+      "line": 815,
+      "home": {
+        "publishedCells": 9,
+        "uniqueNamedTexts": 9,
+        "uniqueKeeperTexts": 0,
+        "names": [
+          "Jens Balzukat",
+          "Nico Willeke",
+          "Kerem Yalcin",
+          "Kevin Krumme",
+          "Julius Bugenhagen",
+          "Marlon Becker",
+          "Noah Ringbeck",
+          "Lucas Kiewitt",
+          "Neo Lima Stacziwa"
+        ]
+      },
+      "away": {
+        "publishedCells": 9,
+        "uniqueNamedTexts": 9,
+        "uniqueKeeperTexts": 1,
+        "names": [
+          "Ozan Hot",
+          "Nazzareno Ciccarelli",
+          "Lucas Fox (T)",
+          "Ensar Celebi",
+          "Maximilian Adamski",
+          "Linus Olthoff",
+          "Johannes Dörfler",
+          "Cedric Euschen",
+          "Aaron Bayakala"
+        ]
+      }
+    }
+  ],
+  "decisiveEvents": [
+    {
+      "section": "Spielverlauf",
+      "line": 405,
+      "text": "90+34' Philipp Hanke"
+    },
+    {
+      "section": "Spielverlauf",
+      "line": 434,
+      "text": "90+37' Johannes Dörfler für Marvin Lorch Cedric Euschen für Marlon Frey"
+    },
+    {
+      "section": "Spielverlauf",
+      "line": 482,
+      "text": "Thomas Bertels 90+39'"
+    },
+    {
+      "section": "Karten",
+      "line": 1116,
+      "text": "90+34' Philipp Hanke"
+    },
+    {
+      "section": "Karten",
+      "line": 1145,
+      "text": "Thomas Bertels 90+39'"
+    },
+    {
+      "section": "Wechsel",
+      "line": 1327,
+      "text": "90+37' Johannes Dörfler für Marvin Lorch Cedric Euschen für Marlon Frey"
+    }
+  ],
+  "classification": "bounded-parser-clock-support-candidate",
+  "note": "Explicit plus clocks extend to90+39. No offset or time correction required or inferred. Isolated diagnostic changing only added-time cap30→39 accepts full original report; this is not product authorization. Raw full-clock order and matching dedicated sections remain verified. Existing output clamps stoppage statistics to90 as before.",
+  "timelineClocks": [
+    "13'",
+    "34'",
+    "46'",
+    "90+11'",
+    "90+21'",
+    "90+29'",
+    "90+30'",
+    "90+34'",
+    "90+37'",
+    "90+39'"
+  ],
+  "diagnostic": {
+    "isolatedCommit": "5398174",
+    "onlyChange": "orderedTimeline +(time[2]??0)>30 becomes >39",
+    "accepted": true,
+    "starters": [
+      11,
+      11
+    ],
+    "startingKeepers": [
+      1,
+      1
+    ],
+    "goals": 0,
+    "substitutionPairs": 6,
+    "yellowCards": 4,
+    "playerRedCards": 0,
+    "officialRedCards": 1,
+    "score": [
+      0,
+      0
+    ],
+    "half": [
+      0,
+      0
+    ],
+    "warnings": []
+  },
+  "awardOrAbandonmentTokens": [],
+  "runId": "39032122832",
+  "captureCommit": "a48fd89071aae0d2097603110c5442324fc59e3d",
+  "file": "de-dfb-2402377.html"
+}
