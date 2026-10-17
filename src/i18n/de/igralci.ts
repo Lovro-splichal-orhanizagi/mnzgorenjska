@@ -331,7 +331,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     preklici: 'Abbrechen',
     caka: 'Wartet auf Bestätigung.',
     cakaOpis: 'Bestätigen kann ihn ein Kenner des Vereins, zwei bestätigte Mitspieler oder SLFF. Den Antrag siehst nur du.',
-    cakaPrijatelj: 'Bring einen Freund mit und du bist früher dran: Jeder, der sich über deinen Link anmeldet und ein Team aufstellt, bringt dich nach vorne.',
+    cakaPrijatelj: 'Bring einen Freund mit und spring an die Spitze der Warteschlange: Sobald er sich über deinen Link registriert und ein Team aufstellt, steht dein Antrag ganz vorne.',
     cakaDeli: 'Freund einladen',
     cakaVabilo: 'Spielst du mit? SLFF ist eine kostenlose Fantasy-Liga mit unseren Spielen und Spielern. Melde dich über diesen Link an und stell ein Team auf: {povezava}',
     cakaPred: { one: 'Vor dir ist noch {n} Antrag.', other: 'Vor dir sind noch {n} Anträge.' },

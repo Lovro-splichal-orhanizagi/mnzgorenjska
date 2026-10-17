@@ -3069,17 +3069,20 @@ export type Database = {
       povabila: {
         Row: {
           created_at: string
+          kvalificiran_at: string | null
           povabil: string
           povabljeni: string
         }
         ComputedFields: never
         Insert: {
           created_at?: string
+          kvalificiran_at?: string | null
           povabil: string
           povabljeni: string
         }
         Update: {
           created_at?: string
+          kvalificiran_at?: string | null
           povabil?: string
           povabljeni?: string
         }
@@ -9144,6 +9147,16 @@ export type Database = {
           team_name: string
           team_short: string
           tocke: number
+        }[]
+      }
+      vrsta_zahtevkov_igralca: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          mesto: number
+          pripeljanih: number
+          user_id: string
+          v_vrsti: number
+          zahtevek_id: number
         }[]
       }
       zabelezi_korak: { Args: { p_korak: string }; Returns: undefined }

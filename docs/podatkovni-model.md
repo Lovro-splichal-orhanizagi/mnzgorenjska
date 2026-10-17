@@ -354,8 +354,16 @@
   in ligo, ali `insider_competition_id` lige; sam nastavljen klub ne šteje),
   **dva različna potrjena soigralca** istega kluba in lige, **klub po mailu**
   ali **admin**. **Vsak zahtevek najprej vidi admin** (Administracija →
-  Prevzemi profilov: vsi čakajoči, spori, prijave; migracija 20261012141100)
-  in ima tri gumbe: *potrdi*, *pošlji klubu* in *zavrni*. *Pošlji klubu*
+  Prevzemi profilov: vsi čakajoči, spori, prijave; migracija 20261012141100).
+  **Vrstni red čakajočih:** zadnji na novo kvalificirani prijatelj prestavi
+  zahtevek na vrh; nato odločata čas zahtevka in id. Kvalifikacija zahteva
+  registracijo prek povezave in obstoječo nehišno fantasy ekipo.
+  `povabila.kvalificiran_at` hrani prvi čas strežnika na prijatelja; dodatna
+  ali ponovno ustvarjena ekipa ga ne osveži, servisna menjava lastnika ga
+  ne ustvari. Zasebni `vrsta_zahtevkov_igralca()` določa isti vrstni red za
+  `moje_mesto_v_vrsti()` (le lastnikove vrstice) in admin. Prikaz števila
+  pred prosilcem je `(mesto - 1) * 7`; baza in admin ostaneta neskalirana.
+  Adminov pregled ima tri gumbe: *potrdi*, *pošlji klubu* in *zavrni*. *Pošlji klubu*
   pokliče funkcijo `posli-prevzem` z admin žetonom (`{zahtevek, na}`); žeton
   da `admin_prevzem_zeton_za_klub` (enkraten, 14 dni, v bazi le sha256,
   prejšnja povezava zahtevka poteče), naslov je vpisani ali prvi uporaben iz

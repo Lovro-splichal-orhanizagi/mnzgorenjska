@@ -333,7 +333,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     preklici: 'Anulează',
     caka: 'Așteaptă confirmarea.',
     cakaOpis: 'Poate fi confirmată de un cunoscător al clubului, de doi coechipieri confirmați sau de SLFF. Doar tu vezi cererea.',
-    cakaPrijatelj: 'Adu un prieten și ajungi mai repede la rând: fiecare care se înscrie prin linkul tău și își face echipa te mută în față.',
+    cakaPrijatelj: 'Adu un prieten și treci în fruntea cozii: după ce se înregistrează prin linkul tău și își face echipa, cererea ta ajunge pe primul loc.',
     cakaDeli: 'Invită un prieten',
     cakaVabilo: 'Joci cu mine? SLFF e o ligă fantasy gratuită cu meciurile și jucătorii noștri. Înscrie-te prin acest link și fă-ți echipa: {povezava}',
     cakaPred: { one: 'Înaintea ta mai este {n} cerere.', few: 'Înaintea ta mai sunt {n} cereri.', other: 'Înaintea ta mai sunt {n} de cereri.' },

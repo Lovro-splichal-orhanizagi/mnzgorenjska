@@ -331,7 +331,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     preklici: 'Vazgeç',
     caka: 'Onay bekleniyor.',
     cakaOpis: 'Kulüp uzmanı, iki onaylı takım arkadaşı veya SLFF onaylayabilir. Bu başvuruyu sadece sen görürsün.',
-    cakaPrijatelj: 'Bir arkadaşını getir, daha çabuk kontrol edilirsin: bağlantınla kayıt olup takım kuran herkes seni sırada öne taşır.',
+    cakaPrijatelj: 'Bir arkadaşını davet et ve sıranın başına geç: bağlantın üzerinden kayıt olup takım kurduğunda, başvurun ilk sıraya taşınır.',
     cakaDeli: 'Arkadaşını davet et',
     cakaVabilo: 'Benimle oynar mısın? SLFF bizim maçlarımız ve oyuncularımızla ücretsiz bir fantezi lig. Bu bağlantıyla kayıt ol ve takımını kur: {povezava}',
     cakaPred: { one: 'Senden önce {n} talep daha var.', other: 'Senden önce {n} talep daha var.' },

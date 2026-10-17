@@ -331,7 +331,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     preklici: 'Mégse',
     caka: 'Megerősítésre vár.',
     cakaOpis: 'Megerősítheti a klub szakértője, két megerősített csapattárs vagy az SLFF. A kérelmet csak te látod.',
-    cakaPrijatelj: 'Hozz egy barátot, és hamarabb sorra kerülsz: mindenki, aki a linkeden regisztrál és csapatot épít, előrébb visz a sorban.',
+    cakaPrijatelj: 'Hozz egy barátot, és ugorj a sor elejére: amint a linkeden keresztül regisztrál és összeállít egy csapatot, a kérelmed az első helyre kerül.',
     cakaDeli: 'Hívj meg egy barátot',
     cakaVabilo: 'Játszol velem? Az SLFF ingyenes fantasy liga a mi meccseinkkel és játékosainkkal. Regisztrálj ezen a linken, és állíts össze csapatot: {povezava}',
     cakaPred: { one: 'Előtted még {n} kérelem van.', other: 'Előtted még {n} kérelem van.' },
