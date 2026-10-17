@@ -1,4 +1,5 @@
 name: Uskladi pozicije (Sportnet)
+run-name: Uskladi pozicije ${{ inputs.tekmovanje || inputs.vir || 'sportnet' }}${{ inputs.pisi && ' (pisi)' || ' (suho)' }}
 
 # Pozicije slovaških igralcev po večini letošnjih zapisnikov
 # (scripts/uskladi-pozicije.mjs). Najprej brez `pisi` za seznam.
@@ -28,6 +29,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: uskladi-pozicije
@@ -36,8 +38,9 @@ concurrency:
 jobs:
   uskladi:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 180
     env:
+      VIR: ${{ inputs.vir || 'sportnet' }}
       TEKMOVANJE: ${{ inputs.tekmovanje }}
     steps:
       - uses: actions/checkout@v4
@@ -46,6 +49,17 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci --ignore-scripts
+      - name: Počakaj na starejše pisce iste države
+        if: inputs.pisi
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          args=(--popravek --vir "$VIR")
+          if [ -n "$TEKMOVANJE" ]; then args+=(--tekmovanje "$TEKMOVANJE"); fi
+          node scripts/cakaj-na-uvoze.mjs "${args[@]}"
       - name: Uskladi
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}

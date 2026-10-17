@@ -121,7 +121,26 @@ export function preveriLigo(s, now = Date.now(), { allowActive = false } = {}) {
   const clubs = new Set(matches.flatMap(m => [m.home_team_id, m.away_team_id]))
   if (matches.length !== 240 || clubs.size !== 16 || [...clubs].some(id => !integer(id, 1))) add('Razpored potrebuje 240 tekem in 16 klubov.')
   if (new Set(matches.map(m => `${m.home_team_id}/${m.away_team_id}`)).size !== 240 || matches.some(m => m.home_team_id === m.away_team_id)) add('Razpored potrebuje 240 različnih usmerjenih parov.')
-  if (new Set(matches.map(m => m.zapisnik_id)).size !== matches.length || matches.some(m => !/^es\d+$/.test(m.zapisnik_id ?? ''))) add('Neveljavna/podvojena identiteta zapisnika FCF.')
+  // Generic schedule imports do not assign a report id until the report is
+  // imported. Fixture completeness is independently bound by database ids,
+  // directed pairs and per-round participants; only present reports have ids.
+  const reports = matches.filter(m => m.zapisnik_id != null)
+  const block = /^(\d+)-(\d+)$/.exec(c.source_league_code ?? '')
+  const validBlock = block && integer(Number(block[1]), 1) && integer(Number(block[2]), Number(block[1]))
+  const invalidReport = m => {
+    const identity = /^es([1-9]\d*)$/.exec(m.zapisnik_id)
+    if (!identity || !validBlock || !integer(Number(identity[1]), Number(block[1]), Number(block[2]))) return true
+    // Pending schedule rows can retain the league's seed URL. Only an actual
+    // imported report URL must identify its own acta when the URL is present.
+    if (m.imported_at && m.source_url != null) {
+      try {
+        const url = new URL(m.source_url)
+        if (url.protocol !== 'https:' || !['www.fcf.cat', 'fcf.cat'].includes(url.host) || url.username || url.password || url.search || url.hash || url.pathname !== `/ca/competicio/acta/${identity[1]}`) return true
+      } catch { return true }
+    }
+    return false
+  }
+  if (!validBlock || new Set(reports.map(m => m.zapisnik_id)).size !== reports.length || reports.some(invalidReport) || matches.some(m => m.imported_at && m.zapisnik_id == null)) add('Neveljavna/podvojena identiteta zapisnika FCF.')
   for (const r of rounds) {
     const ms = matches.filter(m => m.round_id === r.id)
     if (ms.length !== 8 || new Set(ms.flatMap(m => [m.home_team_id, m.away_team_id])).size !== 16) add(`Krog ${r.number} nima 8 disjunktnih tekem 16 klubov.`)

@@ -1,4 +1,5 @@
 name: Izstop kluba
+run-name: Izstop kluba ${{ inputs.liga }}${{ !inputs.suho && ' (pisi)' || ' (suho)' }}
 
 # Klub je med sezono izstopil iz lige. Igralci ostanejo v kadrih (ekipa je
 # veljavna), kupiti jih ne more nihce vec, neodigrane tekme kluba se izbrisejo
@@ -24,6 +25,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: izstop-kluba
@@ -32,7 +34,7 @@ concurrency:
 jobs:
   izstop:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 140
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -40,6 +42,14 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci --ignore-scripts
+      - name: Počakaj na starejše pisce iste države
+        if: ${{ !inputs.suho }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          LIGA: ${{ inputs.liga }}
+        run: node scripts/cakaj-na-uvoze.mjs --popravek --tekmovanje "$LIGA"
       - name: Izstop kluba
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}

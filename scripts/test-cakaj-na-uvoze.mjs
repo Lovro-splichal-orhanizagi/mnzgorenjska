@@ -141,7 +141,7 @@ test('actual club-merge and weekly-price shell waiters see older regional jobs a
       const text = readFileSync(new URL(`../.github/workflows/${wf}`, import.meta.url), 'utf8')
       const block = text.slice(text.indexOf('      - name: Pocakaj na starejse uvoze')).split('        run: |\n')[1].split('\n      - name:')[0]
       const script = block.split('\n').filter(x => x.startsWith('          ')).map(x => x.slice(10)).join('\n')
-      for (const [workflow, title] of [...regional, ['vklop-katalonije.yml', 'Preverjen vklop Katalonije ES']]) for (const [patch, expected] of [[{},79],[{status:'queued'},79],[{databaseId:30,startedAt:'2026-10-17T09:59:59Z'},79],[{databaseId:30},0],[{databaseId:20},0],[{status:'completed'},0]]) {
+      for (const [workflow, title] of [...regional, ['vklop-katalonije.yml', 'Preverjen vklop Katalonije ES'], ...extraWriters]) for (const [patch, expected] of [[{},79],[{status:'queued'},79],[{databaseId:30,startedAt:'2026-10-17T09:59:59Z'},79],[{databaseId:30},0],[{databaseId:20},0],[{status:'completed'},0]]) {
         const result = spawnSync('bash', ['-c', script], { encoding: 'utf8', timeout: 10000,
           env: { ...process.env, PATH: `${dir}:${process.env.PATH}`, GITHUB_RUN_ID: '20', GITHUB_REPOSITORY: 'fixture/repo',
             COORDINATION_FIXTURE: JSON.stringify({ startedAt, workflow, runs: [run(title, patch)] }) } })
@@ -167,4 +167,91 @@ test('Catalan batch is a fixed ES writer in both directions, including nightly a
   assert.equal((await coordinate(['--tece'], { [workflow]: [run(title)] })).code, 3)
   for (const patch of [{ status: 'queued' }, { displayTitle: 'Historical title without a slug' }]) assert.equal((await coordinate(['--drzava', 'ES'], { [workflow]: [run(title, patch)] })).code, 1)
   for (const patch of [{ databaseId: 30 }, { databaseId: 20 }, { status: 'completed' }]) assert.equal((await coordinate(['--drzava', 'ES'], { [workflow]: [run(title, patch)] })).code, 0)
+})
+
+const extraWriters = [
+  ['uskladi-pozicije.yml', 'Uskladi pozicije fcf (pisi)'],
+  ['izstop-kluba.yml', 'Izstop kluba es-ct-primera-g1 (pisi)'],
+  ['cene-lig.yml', 'Cene lig'],
+]
+test('Catalan preflight waits for every overlapping position/withdrawal/price writer, including historical in-flight runs', async () => {
+  for (const [workflow, title] of extraWriters) {
+    for (const patch of [{}, { status: 'queued' }, { displayTitle: 'Historical writer without scope' }, { displayTitle: workflow === 'uskladi-pozicije.yml' ? 'Uskladi pozicije (Sportnet)' : workflow === 'izstop-kluba.yml' ? 'Izstop kluba' : 'Cene lig' }]) {
+      assert.equal((await coordinate(['--drzava', 'ES'], { [workflow]: [run(title, patch)] })).code, 1, workflow)
+    }
+    for (const patch of [{ status: 'completed' }, { databaseId: 30 }, { databaseId: 20 }]) {
+      assert.equal((await coordinate(['--drzava', 'ES'], { [workflow]: [run(title, patch)] })).code, 0, workflow)
+    }
+  }
+  for (const [workflow, title] of [
+    ['uskladi-pozicije.yml', 'Uskladi pozicije fcf (suho)'],
+    ['izstop-kluba.yml', 'Izstop kluba es-ct-primera-g1 (suho)'],
+    ['uskladi-pozicije.yml', 'Uskladi pozicije nzs (pisi)'],
+    ['izstop-kluba.yml', 'Izstop kluba si-example (pisi)'],
+  ]) assert.equal((await coordinate(['--drzava', 'ES'], { [workflow]: [run(title)] })).code, 0, title)
+})
+
+test('newer scoped maintenance and global price batches wait for older Catalan activation', async () => {
+  const older = { 'vklop-katalonije.yml': [run('Preverjen vklop Katalonije ES')] }
+  for (const args of [['--popravek', '--vir', 'fcf'], ['--popravek', '--tekmovanje', 'es-ct-primera-g1'], ['--popravek']]) {
+    assert.equal((await coordinate(args, older)).code, 1)
+  }
+  for (const args of [['--popravek', '--vir', 'nzs'], ['--popravek', '--tekmovanje', 'si-example']]) assert.equal((await coordinate(args, older)).code, 0)
+})
+
+// Execute actual workflow run bodies with only process/network boundaries fake.
+// A failed coordinator must stop the workflow before any real mutator is called.
+test('actual position sync, withdrawal, pricing and activation workflow paths wait before mutation; read-only modes skip wait', async () => {
+  const { spawnSync } = await import('node:child_process')
+  const { mkdtempSync, writeFileSync, rmSync, existsSync } = await import('node:fs')
+  const { join } = await import('node:path'), { tmpdir } = await import('node:os')
+  const dir = mkdtempSync(join(tmpdir(), 'slff-writer-path-'))
+  const node = process.execPath
+  try {
+    writeFileSync(join(dir, 'node'), `#!${node}\n` + `
+      const fs=require('node:fs'),a=process.argv.slice(2);fs.appendFileSync(process.env.CALL_LOG,JSON.stringify(a)+'\\n');
+      if(a[0]==='scripts/cakaj-na-uvoze.mjs')process.exit(process.env.BLOCK_WAIT==='true'?79:0);
+      if(a[0]==='-e'){process.stdin.resume();process.stdin.on('end',()=>process.stdout.write('es-ct-primera-g1\\n'));return}
+      if(a[0]==='scripts/pripravljenost-lige.mjs'){const f=process.env.CALL_LOG+'.ready';if(fs.existsSync(f))process.exit(0);fs.writeFileSync(f,'1');process.exit(1)}
+      process.exit(0);
+    `, { mode: 0o755 })
+    writeFileSync(join(dir, 'curl'), '#!/bin/sh\nprintf "[]"\n', { mode: 0o755 })
+    writeFileSync(join(dir, 'npm'), '#!/bin/sh\nexit 0\n', { mode: 0o755 })
+    const options = [
+      ['uskladi-pozicije.yml', { pisi: true, suho: true }, ['--popravek', '--vir', 'fcf', '--tekmovanje', 'es-ct-primera-g1'], 'scripts/uskladi-pozicije.mjs'],
+      ['izstop-kluba.yml', { pisi: false, suho: false }, ['--popravek', '--tekmovanje', 'es-ct-primera-g1'], 'scripts/izstop-kluba.mjs'],
+      ['cene-lig.yml', {}, ['--popravek'], 'scripts/lazni-vratarji.mjs'],
+      ['vklop-katalonije.yml', {}, ['--drzava', 'ES'], 'scripts/vklopi-katalonijo.mjs'],
+    ]
+    for (const [workflow, flags, expectedArgs, mutator] of options) {
+      const text = readFileSync(new URL(`../.github/workflows/${workflow}`, import.meta.url), 'utf8')
+      assert.match(text, /actions: read/, `${workflow}: coordinator needs Actions read permission`)
+      const steps = text.split(/^      - /m).slice(1)
+      const build = f => steps.flatMap(step => {
+        if (/if: inputs\.pisi/.test(step) && !f.pisi || /if:.*!inputs\.suho/.test(step) && f.suho) return []
+        const line = step.match(/^        run: (.*)$/m)
+        if (!line) return []
+        let body = line[1] === '|' ? step.slice(line.index + line[0].length + 1).split('\n').filter(x => x.startsWith('          ')).map(x => x.slice(10)).join('\n') : line[1]
+        body = body.replaceAll('${{ inputs.vir || \'sportnet\' }}', 'fcf').replaceAll("${{ inputs.vse_pozicije && 'args+=(--vse-pozicije)' || 'true' }}", 'true').replaceAll("${{ inputs.pisi && 'args+=(--pisi)' || 'true' }}", f.pisi ? 'args+=(--pisi)' : 'true')
+        body = body.replaceAll('/tmp/', `${dir}/`)
+        return [body]
+      }).join('\n')
+      for (const block of ['true', 'false']) {
+        const log = join(dir, `${workflow}-${block}.log`)
+        const result = spawnSync('bash', ['-euo', 'pipefail', '-c', build(flags)], { encoding: 'utf8', timeout: 10000,
+          env: { ...process.env, PATH: `${dir}:${process.env.PATH}`, BLOCK_WAIT: block, CALL_LOG: log,
+            VIR: 'fcf', TEKMOVANJE: 'es-ct-primera-g1', LIGA: 'es-ct-primera-g1', LIGE: 'es-ct-primera-g1', PREDPONA: '', ACTIVATE: 'true', APPROVED_SHA: 'a'.repeat(64), GITHUB_STEP_SUMMARY: join(dir, 'summary'),
+            SUPABASE_URL: 'https://fixture.invalid', SUPABASE_SERVICE_ROLE_KEY: 'fixture', SUHO: String(flags.suho) } })
+        const calls = existsSync(log) ? readFileSync(log, 'utf8').trim().split('\n').filter(Boolean).map(x => JSON.parse(x)) : []
+        assert.deepEqual(calls[0], ['scripts/cakaj-na-uvoze.mjs', ...expectedArgs], `${workflow}: actual waiter must precede mutation: ${result.stderr}`)
+        if (block === 'true') { assert.equal(result.status, 79, workflow); assert.equal(calls.length, 1, `${workflow}: failed wait cannot continue`) }
+        else { assert.equal(result.status, 0, `${workflow}: ${result.stderr} / ${result.stdout}`); assert.ok(calls.some(c => c[0] === mutator), `${workflow}: expected actual next step`) }
+      }
+      if (['uskladi-pozicije.yml', 'izstop-kluba.yml'].includes(workflow)) {
+        const readOnly = build({ pisi: false, suho: true })
+        assert.doesNotMatch(readOnly, /cakaj-na-uvoze/)
+      }
+      assert.match(text, /GH_TOKEN: \$\{\{ github.token \}\}/)
+    }
+  } finally { rmSync(dir, { recursive: true, force: true }) }
 })

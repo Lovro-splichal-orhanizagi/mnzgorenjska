@@ -15,7 +15,7 @@ export function liga(slug = 'es-ct-primera-g1') {
     for (let i = 0; i < 8; i++) {
       let [home, away] = [ring[i], ring[15 - i]]; if (leg) [home, away] = [away, home]
       const id = matches.length + 1, imported = round <= 6
-      matches.push({ id, round_id: round, home_team_id: home, away_team_id: away, home_goals: 0, away_goals: 0, played_on: imported ? `2026-10-0${round}` : '2026-10-25', imported_at: imported ? '2026-10-07T12:00:00Z' : null, zapisnik_id: `es${4108646 + id}`, kontumacija: false, vir_brez_izida: false, import_warnings: [] })
+      matches.push({ id, round_id: round, home_team_id: home, away_team_id: away, home_goals: 0, away_goals: 0, played_on: imported ? `2026-10-0${round}` : '2026-10-25', imported_at: imported ? '2026-10-07T12:00:00Z' : null, zapisnik_id: `es${4108646 + id - 1}`, kontumacija: false, vir_brez_izida: false, import_warnings: [] })
       if (imported) for (const team of [home, away]) for (let j = 0; j < 12; j++) appearances.push({ id: appearances.length + 1, match_id: id, player_id: (team - 1) * 15 + j + 1, team_id: team, started: j < 11, is_goalkeeper: j === 0, minute_on: j === 11 ? 60 : 0, minute_off: j === 1 ? 60 : 90, minutes_played: j === 11 ? 30 : j === 1 ? 60 : 90, goals: 0, own_goals: 0, penalties_scored: 0, penalties_missed: 0, penalties_saved: 0, yellow_cards: 0, red_cards: 0, goals_conceded: 0, clean_sheet: true })
     }
     ring.splice(1, 0, ring.pop())
@@ -218,4 +218,29 @@ test('workflow prepares by default, runs one fixed ES coordinator and retains pa
   assert.match(text, /cakaj-na-uvoze\.mjs --drzava ES/)
   assert.match(text, /if: always\(\)[\s\S]*actions\/upload-artifact/)
   assert.match(readFileSync(new URL('../.github/workflows/ci.yml', import.meta.url), 'utf8'), /node --test scripts\/test-vklop-katalonije\.mjs/)
+})
+
+test('real schedule importer shape: unimported scheduled/pending matches may lack report identity', () => {
+  // Derived from the read-only 2026-10-17 Primera G1 production snapshot:
+  // generic schedule rows have DB fixture ids but zapisnik_id=null; a pending
+  // row may retain the league seed URL rather than its own actual report URL.
+  const s = liga()
+  for (const m of s.matches.filter(m => !m.imported_at)) { m.zapisnik_id = null; m.source_url = null }
+  s.matches[56].played_on = '2026-10-03'; s.matches[56].vir_brez_izida = true
+  s.matches[56].source_url = 'https://www.fcf.cat/ca/competicio/acta/4108646'
+  assert.equal(check(s).pripravljena, true, check(s).tezave.join(' '))
+  s.matches[0].zapisnik_id = null
+  assert.match(check(s).tezave.join(' '), /identitet/)
+  s.matches[0].zapisnik_id = 'es4108647'; s.matches[1].zapisnik_id = 'es4108647'
+  assert.match(check(s).tezave.join(' '), /identitet/)
+  s.matches[0].zapisnik_id = 'foreign-id'
+  assert.match(check(s).tezave.join(' '), /identitet/)
+})
+
+
+test('present report ids belong to the configured block; imported URLs identify that report', () => {
+  const s = liga(); s.matches[100].zapisnik_id = 'es999999999'
+  assert.match(check(s).tezave.join(' '), /identitet/)
+  const t = liga(); t.matches[0].source_url = 'https://www.fcf.cat/ca/competicio/acta/9999999'
+  assert.match(check(t).tezave.join(' '), /identitet/)
 })

@@ -124,6 +124,10 @@ const mojId = Number(GITHUB_RUN_ID)
 function seKrize(tok, naslov, id) {
   // One batch always owns ES; its optional list is not a single league slug.
   if (tok === 'vklop-katalonije.yml') return !mojaDrzava || mojaDrzava === 'ES'
+  if (['uskladi-pozicije.yml', 'izstop-kluba.yml', 'cene-lig.yml'].includes(tok)) {
+    const p = obsegVzdrzevanja(tok, naslov)
+    return p.pise && (!p.drzava || !mojaDrzava || p.drzava === mojaDrzava)
+  }
   if (tok === 'zdruzi-klube.yml' || tok === 'tedensko-cene.yml') return true
   if (tok === 'razdeli-zlite-igralce.yml') {
     const p = drzavaPopravka(naslov)
@@ -183,9 +187,22 @@ function ligaZagona(tok, naslov) {
   return vzorci[tok]?.exec(naslov ?? '')?.[1]
 }
 
+// Position sync spans a source or league; withdrawal spans one league. Old
+// run names carry no reliable scope, so an already in-flight writer is global.
+// Pricing may still be writing after making readiness pass: always a writer.
+function obsegVzdrzevanja(tok, naslov) {
+  if (tok === 'cene-lig.yml') return { pise: true, drzava: null }
+  const vzorec = tok === 'uskladi-pozicije.yml'
+    ? /^Uskladi pozicije ([a-z0-9-]+) \((pisi|suho)\)$/
+    : /^Izstop kluba ([a-z0-9-]+) \((pisi|suho)\)$/
+  const m = vzorec.exec(naslov ?? '')
+  if (!m) return { pise: true, drzava: null }
+  return { pise: m[2] === 'pisi', drzava: ligaPoSlugu.get(m[1])?.drzava ?? drzavaVira.get(m[1]) ?? null }
+}
+
 if (samoTece) {
   const tecejo = []
-  for (const tok of ['uvoz-zapisnikov.yml', 'uvoz-lige.yml', 'uvoz-dfb-regije.yml', 'vklop-dfb-regije.yml', 'vklop-katalonije.yml', 'zdruzi-klube.yml', 'tedensko-cene.yml', 'razdeli-zlite-igralce.yml']) {
+  for (const tok of ['uvoz-zapisnikov.yml', 'uvoz-lige.yml', 'uvoz-dfb-regije.yml', 'vklop-dfb-regije.yml', 'vklop-katalonije.yml', 'uskladi-pozicije.yml', 'izstop-kluba.yml', 'cene-lig.yml', 'zdruzi-klube.yml', 'tedensko-cene.yml', 'razdeli-zlite-igralce.yml']) {
     const zagoni = JSON.parse(gh('run', 'list', '--workflow', tok, '--limit', '50', '--json', 'databaseId,status,displayTitle'))
     for (const z of zagoni) {
       if (z.status === 'completed') continue
@@ -193,6 +210,7 @@ if (samoTece) {
       const slug = ligaZagona(tok, z.displayTitle)
       // Vklop lahko še neaktivno ligo med preverbo vključi: nanj čakamo.
       if (['uvoz-lige.yml', 'uvoz-dfb-regije.yml'].includes(tok) && slug && ligaPoSlugu.get(slug)?.aktivna === false) continue
+      if (['uskladi-pozicije.yml', 'izstop-kluba.yml'].includes(tok) && !obsegVzdrzevanja(tok, z.displayTitle).pise) continue
       tecejo.push(`${z.displayTitle} (${z.databaseId})`)
     }
   }
@@ -203,7 +221,7 @@ if (samoTece) {
 
 for (let min = KORAK_MIN; min <= NAJVEC_MIN; min += KORAK_MIN) {
   const pred = []
-  const tokovi = ['uvoz-zapisnikov.yml', 'uvoz-lige.yml', 'uvoz-dfb-regije.yml', 'vklop-dfb-regije.yml', 'vklop-katalonije.yml', 'zdruzi-klube.yml', 'tedensko-cene.yml', 'razdeli-zlite-igralce.yml']
+  const tokovi = ['uvoz-zapisnikov.yml', 'uvoz-lige.yml', 'uvoz-dfb-regije.yml', 'vklop-dfb-regije.yml', 'vklop-katalonije.yml', 'uskladi-pozicije.yml', 'izstop-kluba.yml', 'cene-lig.yml', 'zdruzi-klube.yml', 'tedensko-cene.yml', 'razdeli-zlite-igralce.yml']
   if (SKUPEN_VIR[mojaDrzava]) tokovi.push('grbi.yml')
   for (const tok of tokovi) {
     // Brez --status: tudi čakajoči (queued) starejši zagon mora priti prvi.

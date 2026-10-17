@@ -271,7 +271,11 @@ delni rezultat, pri napaki po RPC je treba posebej preveriti aktivno stanje.
 
 Tok ima stalno skupino `vklop-katalonije` in se v obeh smereh usklajuje z
 ročnimi/nočnimi pisci ES, popravki igralcev, združevanjem klubov in tedenskimi
-cenami. **Obstoječi RPC ne preverja SHA atomsko v bazi.** Jamstvo velja za
+cenami. V isti družini so tudi zapisovalni zagoni usklajevanja pozicij
+(po viru/ligi), izstopa kluba (po ligi) in `cene-lig` (globalno, ker en
+seznam lahko pokriva več držav). Suha uskladitev/izstop ne čakata. Starejši
+zagon cen lahko pripravi veljaven cenik še pred zadnjim zapisom, zato tudi
+že tekoči cenovni zagon zadrži vklop. **Obstoječi RPC ne preverja SHA atomsko v bazi.** Jamstvo velja za
 usklajene Actions pisce in neposredno ponovno branje; ne varuje pred
 neusklajenim zunanjim piscem. Produkcijski servisni ključ ostane samo v
 Actions. Postopek ne pošilja pošte, ne ustvarja hišnih ekip in ne uvaža ali
