@@ -47,6 +47,60 @@ razlog za zavrnitev sicer popolne tekme; validator pa še vedno nima
 preverjenega celotnega sezonskega prehoda in ne vrača fantasy nastopov ter
 ni registriran produkcijski uvoznik.
 
+Ločeni `scripts/viri/fussball-statistika.mjs` zdaj iz istih izvirnih strani
+in vezanih bajtov pisav preveri statistiko **posameznega** podprtega zapisnika.
+`razberiFantasyZapisnik(mainHtml,lineupHtml,{fonts,id,lineupId})` sam pokliče
+obstoječi validator in nato preveri zaprto slovnico vseh dogodkov, izrecna
+polčasa 0–45/45–90, zaključka 45/90, Abpfiff in skladni hitri pregled.
+`lineupId` je obvezna identiteta zajema postave; sama fragmentna postava
+nima neodvisne šifre tekme. Imena se razberejo samo iz pripadajočih pisav,
+dogodki pa se povežejo po točnih profilnih šifrah. `player-id` in `userid`
+ostaneta ločena; `regSt` je `null`.
+
+Pravi vzorec Ilvesheim–Oftersheim (2 : 3, 11. 10. 2026) potrdi 30 nastopov,
+22 začetnikov, osem dejanskih vstopov, 990 minut na stran, oba izrecna
+90-minutna vratarja in pet pripisanih golov. Vstop pri 90 ima nič minut;
+neuporabljene rezerve nimajo nastopa. Prejeti goli ostanejo po obstoječem
+pravilu celotnega izida: tri za domače in dva za gostujoče udeležence,
+brez clean sheeta. To ni sprememba točkovanja po igralčevem intervalu.
+
+Tri anonimne običajne rumene ohrani ločeno v `nepripisaniRumeni`: stran,
+surovi čas, osnovno minuto, dodatek, polčas, ordinal, SHA-256 izvirne
+vrstice dogodka, ID tekme in njen kanonični URL. Njihovi prejemniki in
+odbitki se ne ugibajo. To je lokalna dokazna oblika; ni DFB-jevo kodirano
+opozorilo in še ni prikazano v uporabniškem vmesniku.
+
+Offline ukaz sprejme samo lokalne datoteke; manifest mora z `matchUrl` in
+`lineupUrl` vezati obe strani na zahtevani ID ter za vsako uporabljeno
+pisavo podati datoteko in SHA-256:
+
+```bash
+node scripts/preveri-fussball-statistiko.mjs 031EQBPLF4000000VS5489BTVUS470OH scripts/vzorci/de-fussball-ilvesheim-main.html scripts/vzorci/de-fussball-ilvesheim-lineup.html scripts/vzorci/de-fussball-zapisnik.json
+npm run test:fussball
+```
+
+Izhod 0 pomeni samo `reportStatistikaPripravljena:true`. Vedno ostaneta
+`sezonskiUvozPodprt:false`, `activationEligible:false` in izvirni
+`z.nepopoln:true`. Nepodprti ali neveljavni dokumenti imajo izhod 1,
+izrecno `koda`/`razlog`, false-ready zastavice in `nastopi:[]`.
+Stari validator in njegov izhod 3 ostajata nespremenjena.
+
+Podprt je samo preverjeni navadni format brez pripisanih kartonov in
+posebnih oznak zadetkov. Rdeči, drugi rumeni, mešane/neznane ikone,
+pripisani kartoni, enajstmetrovke in zgrešene enajstmetrovke, neznani
+podrejeni elementi dogodkov, podaljšek ali prekinitev zadržijo vse nastope.
+Prav tako se zavrne ponovni vstop, napačna stran, dvoumen istočasni strelec
+in menjava, nedokazana menjava vloge vratarja ter polčasna menjava 45/46.
+Neodvisna para pri 67 sta dovoljena. Dodatek ostane v dokazu, statistična
+minuta pa je omejena na 90; sintetična preverba dodatka ni zajem novega
+pristnega formata. Nove oblike zahtevajo pristne vzorce in nove regresije.
+
+Še vedno manjkajo registriran vir, varen omejen prenos in predpomnilnik
+celotnih dokazov, potrjena arhivska povezava 2025/26 za amatersko ligo,
+popoln prehod obeh sezon, trajna uvozna vezava profilnih identitet ter
+ločene preverbe vlog, cenika in vklopa. Ta ukaz ne dostopa do omrežja ali
+baze in ne aktivira nobene lige; ne dokazuje podpore 600 ligam.
+
 ## Galicija
 
 Ligo vodi in podatke objavlja [Real Federación Galega de Fútbol](https://www.futgal.es/).
