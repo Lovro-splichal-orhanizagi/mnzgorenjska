@@ -375,3 +375,8 @@ Podatki o klubih, igralcih in rezultatih 1. Gorenjske nogometne lige: [MNZG Kran
 ## Licenca
 
 Osebni/skupnostni projekt. Dodaj licenco po želji (npr. MIT).
+
+Štiri dodatne nemške Regionallige imajo ločen varovan uvoz/vklop iz
+odobrenih DFB zajemov (`uvoz-dfb-regije.yml`, `vklop-dfb-regije.yml`).
+Servisni RPC `varen_vklop_dfb_regije` privzeto samo preveri stanje;
+[postopek in dokazi](docs/viri/nemcija.md#varovan-regionalni-uvoz-in-vklop).

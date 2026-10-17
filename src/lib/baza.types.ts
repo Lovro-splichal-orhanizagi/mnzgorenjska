@@ -410,6 +410,13 @@ export type Database = {
             referencedColumns: ["code"]
           },
           {
+            foreignKeyName: "chat_messages_country_code_fkey"
+            columns: ["country_code"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["drzava"]
+          },
+          {
             foreignKeyName: "chat_messages_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -456,6 +463,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "lestvica_drzavna"
             referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "competition_settings_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -616,6 +630,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "lestvica_drzavna"
             referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "email_log_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "email_log_round_id_fkey"
@@ -1092,6 +1113,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "lestvica_drzavna"
             referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "fantasy_teams_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fantasy_teams_owner_id_fkey"
@@ -2183,6 +2211,13 @@ export type Database = {
             referencedColumns: ["competition_id"]
           },
           {
+            foreignKeyName: "mini_lige_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "mini_lige_owner_id_fkey"
             columns: ["owner_id"]
             isOneToOne: false
@@ -2313,6 +2348,82 @@ export type Database = {
           skupina?: string
           stevilo?: number
           stran?: string
+        }
+        Relationships: []
+      }
+      objave: {
+        Row: {
+          dejstva: NonNullable<Json>
+          discord_at: string | null
+          drzava: string | null
+          fb_povezava: string | null
+          glasba: string | null
+          id: number
+          ig_povezava: string | null
+          jezik: string
+          liga: string | null
+          mediji: string[]
+          mejnik: number | null
+          napaka: string | null
+          napis: string
+          napis_vir: string
+          objava_ob: string
+          objavljeno_at: string | null
+          slot: string
+          stanje: string
+          teden: string
+          ustavi_zeton_hash: string | null
+          ustvarjeno: string
+          vrsta: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          dejstva: NonNullable<Json>
+          discord_at?: string | null
+          drzava?: string | null
+          fb_povezava?: string | null
+          glasba?: string | null
+          id?: never
+          ig_povezava?: string | null
+          jezik: string
+          liga?: string | null
+          mediji?: string[]
+          mejnik?: number | null
+          napaka?: string | null
+          napis: string
+          napis_vir?: string
+          objava_ob: string
+          objavljeno_at?: string | null
+          slot: string
+          stanje?: string
+          teden: string
+          ustavi_zeton_hash?: string | null
+          ustvarjeno?: string
+          vrsta?: string | null
+        }
+        Update: {
+          dejstva?: NonNullable<Json>
+          discord_at?: string | null
+          drzava?: string | null
+          fb_povezava?: string | null
+          glasba?: string | null
+          id?: never
+          ig_povezava?: string | null
+          jezik?: string
+          liga?: string | null
+          mediji?: string[]
+          mejnik?: number | null
+          napaka?: string | null
+          napis?: string
+          napis_vir?: string
+          objava_ob?: string
+          objavljeno_at?: string | null
+          slot?: string
+          stanje?: string
+          teden?: string
+          ustavi_zeton_hash?: string | null
+          ustvarjeno?: string
+          vrsta?: string | null
         }
         Relationships: []
       }
@@ -2650,6 +2761,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "lestvica_drzavna"
             referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "players_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "players_odsel_by_fkey"
@@ -3270,6 +3388,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "lestvica_drzavna"
             referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "poznavalec_prosnje_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "poznavalec_prosnje_decided_by_fkey"
@@ -3898,6 +4023,13 @@ export type Database = {
             referencedColumns: ["competition_id"]
           },
           {
+            foreignKeyName: "profiles_insider_competition_id_fkey"
+            columns: ["insider_competition_id"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "profiles_insider_team_id_fkey"
             columns: ["insider_team_id"]
             isOneToOne: false
@@ -4068,6 +4200,13 @@ export type Database = {
             referencedRelation: "lestvica_drzavna"
             referencedColumns: ["competition_id"]
           },
+          {
+            foreignKeyName: "rounds_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["id"]
+          },
         ]
       }
       settings: {
@@ -4136,6 +4275,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "lestvica_drzavna"
             referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "sponsor_stats_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "sponsor_stats_sponsor_id_fkey"
@@ -4226,6 +4372,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "lestvica_drzavna"
             referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "sponsors_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "sponsors_country_id_fkey"
@@ -5015,6 +5168,13 @@ export type Database = {
             referencedColumns: ["competition_id"]
           },
           {
+            foreignKeyName: "zelje_lig_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "zelje_lig_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -5270,6 +5430,13 @@ export type Database = {
             referencedRelation: "lestvica_drzavna"
             referencedColumns: ["competition_id"]
           },
+          {
+            foreignKeyName: "players_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["id"]
+          },
         ]
       }
       competitions_view: {
@@ -5349,6 +5516,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "lestvica_drzavna"
             referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "fantasy_teams_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "tocke_krogov_fantasy_team_id_fkey"
@@ -5463,6 +5637,13 @@ export type Database = {
             referencedRelation: "lestvica_drzavna"
             referencedColumns: ["competition_id"]
           },
+          {
+            foreignKeyName: "fantasy_teams_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["id"]
+          },
         ]
       }
       fantasy_round_standings: {
@@ -5502,6 +5683,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "lestvica_drzavna"
             referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "fantasy_teams_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "tocke_krogov_fantasy_team_id_fkey"
@@ -5614,6 +5802,13 @@ export type Database = {
             referencedRelation: "lestvica_drzavna"
             referencedColumns: ["competition_id"]
           },
+          {
+            foreignKeyName: "fantasy_teams_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["id"]
+          },
         ]
       }
       fantasy_team_standings: {
@@ -5653,6 +5848,13 @@ export type Database = {
             referencedRelation: "lestvica_drzavna"
             referencedColumns: ["competition_id"]
           },
+          {
+            foreignKeyName: "fantasy_teams_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["id"]
+          },
         ]
       }
       fantasy_team_wealth: {
@@ -5687,6 +5889,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "lestvica_drzavna"
             referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "fantasy_teams_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -5738,6 +5947,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "countries"
             referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "chat_messages_country_code_fkey"
+            columns: ["country_code"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["drzava"]
           },
         ]
       }
@@ -5810,6 +6026,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "lestvica_drzavna"
             referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "rounds_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -5977,6 +6200,13 @@ export type Database = {
             referencedRelation: "lestvica_drzavna"
             referencedColumns: ["competition_id"]
           },
+          {
+            foreignKeyName: "rounds_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["id"]
+          },
         ]
       }
       mini_liga_lestvica: {
@@ -6128,7 +6358,25 @@ export type Database = {
             referencedRelation: "lestvica_drzavna"
             referencedColumns: ["competition_id"]
           },
+          {
+            foreignKeyName: "rounds_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      objava_lige: {
+        Row: {
+          drzava: string | null
+          id: number | null
+          ime: string | null
+          kratko: string | null
+          slug: string | null
+        }
+        ComputedFields: never
+        Relationships: []
       }
       odsotni_igralci: {
         Row: {
@@ -6203,6 +6451,13 @@ export type Database = {
             referencedRelation: "lestvica_drzavna"
             referencedColumns: ["competition_id"]
           },
+          {
+            foreignKeyName: "players_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["id"]
+          },
         ]
       }
       player_overview: {
@@ -6252,6 +6507,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "lestvica_drzavna"
             referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "players_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "players_team_id_fkey"
@@ -6378,6 +6640,13 @@ export type Database = {
             referencedRelation: "lestvica_drzavna"
             referencedColumns: ["competition_id"]
           },
+          {
+            foreignKeyName: "players_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["id"]
+          },
         ]
       }
       player_season_standings: {
@@ -6428,6 +6697,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "lestvica_drzavna"
             referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "players_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "players_team_id_fkey"
@@ -6635,6 +6911,13 @@ export type Database = {
             referencedRelation: "lestvica_drzavna"
             referencedColumns: ["competition_id"]
           },
+          {
+            foreignKeyName: "rounds_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["id"]
+          },
         ]
       }
       player_standings: {
@@ -6684,6 +6967,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "lestvica_drzavna"
             referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "players_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "players_team_id_fkey"
@@ -6933,6 +7223,13 @@ export type Database = {
             referencedColumns: ["competition_id"]
           },
           {
+            foreignKeyName: "players_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "players_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
@@ -7019,6 +7316,13 @@ export type Database = {
             referencedRelation: "lestvica_drzavna"
             referencedColumns: ["competition_id"]
           },
+          {
+            foreignKeyName: "rounds_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["id"]
+          },
         ]
       }
       stevilo_ekip_lig: {
@@ -7048,6 +7352,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "lestvica_drzavna"
             referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "fantasy_teams_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -7096,6 +7407,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "lestvica_drzavna"
             referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "players_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "uradne_odsotnosti_player_id_fkey"
@@ -7230,6 +7548,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "lestvica_drzavna"
             referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "rounds_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "objava_lige"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -7388,19 +7713,19 @@ export type Database = {
           vloga: string
         }[]
       }
-      admin_povabila_skupaj: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          registracij: number
-          z_ekipo: number
-        }[]
-      }
       admin_povabila_po_uporabniku: {
         Args: Record<PropertyKey, never>
         Returns: {
           brez_ekipe: number
           povabil: number
           user_id: string
+        }[]
+      }
+      admin_povabila_skupaj: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          registracij: number
+          z_ekipo: number
         }[]
       }
       admin_povezi_igralca: {
@@ -7519,10 +7844,7 @@ export type Database = {
           teden: string
         }[]
       }
-      admin_scout_skrij: {
-        Args: { p_player_ids: number[] }
-        Returns: number
-      }
+      admin_scout_skrij: { Args: { p_player_ids: number[] }; Returns: number }
       admin_skrij_pivo: {
         Args: { p_id: number; p_skrito: boolean }
         Returns: undefined
@@ -8042,6 +8364,31 @@ export type Database = {
         Returns: boolean
       }
       nova_koda_mini_lige: { Args: Record<PropertyKey, never>; Returns: string }
+      objava_cene: { Args: { p_do: string; p_od: string }; Returns: Json }
+      objava_dejstva: {
+        Args: { p_do: string; p_drzava: string; p_od: string }
+        Returns: Json
+      }
+      objava_dosezki: { Args: { p_do: string; p_od: string }; Returns: Json }
+      objava_drzava: {
+        Args: { p_do: string; p_izkljuci?: string[]; p_od: string }
+        Returns: Json
+      }
+      objava_drzave: { Args: { p_do: string; p_od: string }; Returns: Json }
+      objava_ekipa_tedna: {
+        Args: { p_do: string; p_od: string }
+        Returns: Json
+      }
+      objava_forma: { Args: { p_do: string }; Returns: Json }
+      objava_liga: {
+        Args: { p_do: string; p_izkljuci?: string[]; p_od: string }
+        Returns: Json
+      }
+      objava_mejnik_dejstva: { Args: Record<PropertyKey, never>; Returns: Json }
+      objava_obramba: { Args: { p_do: string }; Returns: Json }
+      objava_stat: { Args: { p_do: string; p_od: string }; Returns: Json }
+      objava_strelci: { Args: { p_do: string }; Returns: Json }
+      objava_tekme: { Args: { p_do: string; p_od: string }; Returns: Json }
       objavi_uradno_odsotnost: {
         Args: {
           p_od?: string
@@ -8436,7 +8783,7 @@ export type Database = {
         }
         Returns: string
       }
-      scout_moj_klub: { Args: never; Returns: Json }
+      scout_moj_klub: { Args: Record<PropertyKey, never>; Returns: Json }
       scout_moj_profil: {
         Args: { p_player_id: number }
         Returns: {
@@ -8454,7 +8801,7 @@ export type Database = {
         Returns: string
       }
       scout_opazovani: {
-        Args: never
+        Args: Record<PropertyKey, never>
         Returns: {
           dodano: string
           ime: string
@@ -8489,7 +8836,7 @@ export type Database = {
           skupina: string
         }[]
       }
-      scout_portal_kupec: { Args: never; Returns: string }
+      scout_portal_kupec: { Args: Record<PropertyKey, never>; Returns: string }
       scout_preklici_privolitev: {
         Args: { p_player_id: number }
         Returns: undefined
@@ -8518,7 +8865,7 @@ export type Database = {
         Returns: undefined
       }
       scout_vrzeli: {
-        Args: never
+        Args: Record<PropertyKey, never>
         Returns: {
           ime: string
           liga: string
@@ -8532,7 +8879,10 @@ export type Database = {
         Args: { p_sprejmem_pogoje: boolean }
         Returns: undefined
       }
-      scout_zasedi_sedez: { Args: never; Returns: undefined }
+      scout_zasedi_sedez: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       sem_v_mini_ligi: { Args: { p_liga: number }; Returns: boolean }
       sezona_lige: {
         Args: { p_competition_id: number; p_datum?: string }
@@ -8719,6 +9069,7 @@ export type Database = {
         Returns: number
       }
       uradne_odsotnosti_opomini: { Args: { p_user: string }; Returns: number }
+      ustavi_objavo: { Args: { p_zeton: string }; Returns: boolean }
       ustvari_hisno_ekipo: {
         Args: {
           p_competition_id: number
@@ -8736,13 +9087,20 @@ export type Database = {
         }[]
       }
       uveljavi_cene: { Args: { p_round_id: number }; Returns: number }
-      ustavi_objavo: { Args: { p_zeton: string }; Returns: boolean }
       uveljavi_klubski_racun: {
         Args: Record<PropertyKey, never>
         Returns: number
       }
       uveljavi_pozicije: { Args: Record<PropertyKey, never>; Returns: number }
       uveljavi_zapadle_cene: { Args: { p_okno?: string }; Returns: number }
+      varen_vklop_dfb_regije: {
+        Args: { p_aktiviraj?: boolean; p_manifest: string; p_sha256: string }
+        Returns: Json
+      }
+      varen_vklop_nemcije: {
+        Args: { p_aktiviraj?: boolean; p_manifest: string; p_sha256: string }
+        Returns: Json
+      }
       vidi_preverjene: { Args: Record<PropertyKey, never>; Returns: boolean }
       vklopi_ligo_sredi_sezone: { Args: { p_slug: string }; Returns: Json }
       voter_weight: { Args: { p_voter_id: string }; Returns: number }

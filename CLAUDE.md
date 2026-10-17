@@ -646,3 +646,10 @@ igralce po isti ceni in prvi teden ne bi imel igre.
   ga na novo ne proda nikomur, trg ga skrije, lastnik vidi opozorilo in dobi
   e-mail — in izbriše neodigrane tekme kluba. Odigrane tekme in točke ostanejo,
   tudi če zveza izide kluba na lestvici razveljavi.
+
+Regionalni DFB vklop uporablja ločen servisni `varen_vklop_dfb_regije` in
+odobrene zajeme v `uvoz-dfb-regije.yml` / `vklop-dfb-regije.yml`;
+`varen_vklop_nemcije` ostaja samo za Nordost. Regionalni manifest zahteva
+celotno zgodovino in ujemanje vseh uvoženih nastopov/golov. Postopek je v
+`docs/viri/nemcija.md`; testi zahtevajo izrecno odstranljivo bazo prek
+`SUPABASE_DB_CONTAINER`.
