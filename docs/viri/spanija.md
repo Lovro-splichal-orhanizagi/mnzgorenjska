@@ -102,8 +102,10 @@ Server Components (`self.__next_f.push`), ki ga `drevoRsc` sestavi
 **Pravice (pregled 11. 10. 2026, ni pravni nasvet).** robots.txt dovoli vse
 razen `/api/`, `/_next/` in iskanja; zapisniki so dovoljeni. Pravno obvestilo
 (Avís legal) prepoveduje reprodukcijo vsebin **"amb finalitats comercials"**
-brez dovoljenja FCF. SLFF je brezplačen in nekomercialen; **FCF smo obvestili
-oziroma prosili za soglasje** — do odgovora so lige **neaktivne**. Navedba
+brez dovoljenja FCF. SLFF je brezplačen in nekomercialen; **Dovoljenje FCF je prejeto: uporabnik je to izrecno potrdil
+17. 10. 2026 in naročil vklop preverjenih katalonskih lig.** Ta potrditev
+nadomesti prejšnje čakanje na soglasje; novega sporočila nismo pošiljali.
+Dovoljenje samo ne nadomesti preverbe podatkov pred vklopom. Navedba
 vira (`vir_ime` FCF, `vir_url` → fcf.cat) je v nogi. Beremo odkrito
 (User-Agent `SLFF fantasy (slff.eu; splih.94@gmail.com)`, **3 s** med
 zahtevki). Sodnikov, osebja (Equip Tècnic) in igrišča ne beremo; vzorci
@@ -219,9 +221,66 @@ odigrane tekme; grup 24–31 — nepregledano (strežnik je ponoči obstal), sem
 `4149996`, nadaljuj z `node scripts/catalanske-lige.mjs 4150000 --naprej 8
 --preveri`.
 
-Uvoz (ena za drugo, **šele s soglasjem FCF**): `gh workflow run uvoz-lige.yml
+Uvoz (ena za drugo; dovoljenje FCF potrjeno 17. 10. 2026): `gh workflow run uvoz-lige.yml
 -f liga=es-ct-quarta-g1 -f cene=true` (z arhivom: `-f arhiv=<blok 2025/26>`).
 Prvi uvoz bloka je ~240 strani — ob počasnem strežniku do ene ure.
+
+## Preverjen vklop zgornjih katalonskih lig (17. 10. 2026)
+
+Vklop pokriva natanko 27 že uvoženih skupin: `es-ct-elit`, Primera 1–3,
+Segona 1–6 in Tercera 1–17. Quarta zaradi manjkajočih menjav ostaja zunaj;
+FAS in Novanet imata ločena postopka. Obstoječih cen in pozicij ne spreminja.
+
+Ročni tok `vklop-katalonije.yml` privzeto **samo pripravi** paket. V enem
+usklajenem zagonu države ES prebere celotne tekoče kroge, tekme, nastope
+(tudi pri še neuvoženih tekmah), gole, igralce in `stanje_lige`. Vse strani
+uskladi z natančnim številom vrstic. Preveri 30 krogov, 16 klubov, 240
+usmerjenih parov, 8 disjunktnih tekem na krog, XI in izrecnega vratarja,
+minute in statistiko, gole po upravičencu (tudi avtogole), nič opozoril,
+dokaz vratarja in klopi za vsak klub ter obstoječo pripravljenost in
+najcenejši veljaven kader. Neuvožen zapisnik več kot 48 ur po **koncu UTC
+dneva tekme** blokira ligo, razen izrecnega `vir_brez_izida`; ta ostane
+neuvožen. Tudi označena čakajoča tekma ne sme za nazaj začeti fantasy kroga.
+
+```bash
+# Brez lige: vseh 27; opcijsko -f lige=es-ct-primera-g1,es-ct-tercera-g1
+# Uporabi pregledano vejo in ohrani isti commit za oba zagona.
+gh workflow run vklop-katalonije.yml --ref <pregledana-veja>
+gh run download <prepare-run> -n katalonija-release-<prepare-run> -D katalonija-review
+# Preglej summary.json, batch.json in vsak manifest. batch.sha256 je odobreni SHA.
+gh workflow run vklop-katalonije.yml --ref <ista-veja-isti-commit> \
+  -f activate=true -f approved_sha256=<pregledani-64-hex-SHA>
+```
+
+Izbirni seznam `lige` mora biti isti v obeh zagonih. `summary.json` pojasni
+vsako blokirano skupino; te ostanejo izklopljene. SHA veže celoten izbrani
+paket, vsako podatkovno stanje, cene/statistiko, preverbe, izvorni commit in
+datum potrditve dovoljenja; čas izdelave povzetka ni del odobritve. Nova
+sprememba podatkov ali commita zahteva novo pripravo in pregled SHA.
+
+Vklop je dovoljen samo v Actions tega repozitorija z izrecnim SHA. Pred
+prvim RPC primerja celoten paket; pred **vsako** ligo še enkrat v celoti
+prebere in primerja njen manifest ter tik pred RPC ponovno preveri čas.
+Izbira prvega fantasy kroga natančno sledi obstoječemu
+`vklopi_ligo_sredi_sezone` (do dva predčasno odigrana poznejša kroga).
+Izbrani krog nima nastopov, ima prihodnji rok, vsi njegovi datumi tekem pa
+so po današnjem dnevu UTC, ker baza hrani le datum tekme. Po klicu preveri
+odgovor in ponovno prebrano aktivno stanje/prvi krog ter nespremenjene
+cene, pozicije in statistiko. Napaka ustavi preostale klice; artefakt zabeleži
+delni rezultat, pri napaki po RPC je treba posebej preveriti aktivno stanje.
+
+Tok ima stalno skupino `vklop-katalonije` in se v obeh smereh usklajuje z
+ročnimi/nočnimi pisci ES, popravki igralcev, združevanjem klubov in tedenskimi
+cenami. V isti družini so tudi zapisovalni zagoni usklajevanja pozicij
+(po viru/ligi), izstopa kluba (po ligi) in `cene-lig` (globalno, ker en
+seznam lahko pokriva več držav). Suha uskladitev/izstop ne čakata. Starejši
+zagon cen lahko pripravi veljaven cenik še pred zadnjim zapisom, zato tudi
+že tekoči cenovni zagon zadrži vklop. **Obstoječi RPC ne preverja SHA atomsko v bazi.** Jamstvo velja za
+usklajene Actions pisce in neposredno ponovno branje; ne varuje pred
+neusklajenim zunanjim piscem. Produkcijski servisni ključ ostane samo v
+Actions. Postopek ne pošilja pošte, ne ustvarja hišnih ekip in ne uvaža ali
+vrednoti igralcev. Lokalni preizkus brez baze:
+`node --test scripts/test-vklop-katalonije.mjs scripts/test-cakaj-na-uvoze.mjs`.
 
 ## Španija — vir `fas` (Asturija)
 

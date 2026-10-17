@@ -6,8 +6,9 @@ name: Cene lig
 #
 # Preskoci vklopljene lige (cene tam vodi borza; ovrednoti-igralce.mjs jih
 # brez --dovoli-aktivno zavrne tudi sam) in lige, ki cenik ze imajo
-# (prestanejo pripravljenost). Na starejse uvoze ne caka: dolga vrsta uvozov
-# drugih lig bi ga zadrzala za ure, pise pa le cene nevklopljenih lig.
+# (prestanejo pripravljenost). Pred branjem in celotnim pisanjem pocaka na
+# starejse pisce: ze tekoci zagon lahko pripravljenost izboljsa, nato pa se
+# zapise zadnje pozicije/cene. Seznam lahko zajema vec drzav, zato caka globalno.
 on:
   workflow_dispatch:
     inputs:
@@ -24,6 +25,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: cene-lig
@@ -32,7 +34,7 @@ concurrency:
 jobs:
   cene:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 180
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -40,6 +42,13 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci --ignore-scripts
+
+      - name: Počakaj na starejše pisce
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/cakaj-na-uvoze.mjs --popravek
 
       - name: Pozicije, cene in pripravljenost
         env:

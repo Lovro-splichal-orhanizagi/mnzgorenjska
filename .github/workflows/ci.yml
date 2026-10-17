@@ -74,6 +74,9 @@ jobs:
       - name: Tipi
         run: npx tsc --noEmit
 
+      - name: Preverjen vklop Katalonije
+        run: node --test scripts/test-vklop-katalonije.mjs
+
       - name: Build
         run: npm run build
 

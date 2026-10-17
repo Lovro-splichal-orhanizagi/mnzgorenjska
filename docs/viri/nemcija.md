@@ -361,3 +361,47 @@ Agbaje. Napaka, ki jo parser vrne prvo, ni popoln seznam težav.
 Te štiri lige zato ostanejo neaktivne do vseh preostalih preverjenih
 pogojev. Politika ne dokazuje pripravljenosti drugih nemških lig ali
 600 živih lig; FUSSBALL.DE ostaja neregistriran validator shranjenih strani.
+
+## Preverjena Bayernova popravila (17. 10. 2026)
+
+Štiri zgornje Bayernove blokade so razrešene z omejenimi, preverjenimi
+popravili. `dfb-korekcije.json` za 2401658, 2401812 in 2425106 popravi samo
+šest napačnih vmesnih oznak izida; vsa izvorna imena, strani, ure dogodkov,
+končni izidi in polčasi ostanejo nespremenjeni. Register sprejme samo celotno
+izvorno ali celotno že popravljeno zaporedje v obeh razdelkih. Delni popravek
+ali druga metapodatkovna identiteta zahteva nov pregled. Surovi primarni
+klubski/zvezni dokazi so vezani s SHA-256, URL in prvotnim UTC.
+
+2425105 izrecno objavi dva strelca in dve ikoni pri skupnem času `45'`.
+Razčlenitev sprejme eno skupno podprto ikono ali natanko eno podprto ikono
+na razločen segment v objavljenem vrstnem redu. Ne sklepa o sodnikovem
+dodatku iz drugih klubskih poročil. Prvi gol ostane enajstmetrovka zaradi
+izrecnega izvornega `(Elfmeter)`.
+
+`dfb-aliasi.json` veže samo 2425105, Bayern, domači Wacker Burghausen in
+izvornega strelca Noah Shawn Agbaje na že navedenega Noah Agbaje/profil
+374531. Javna profila DFB in FSV Zwickau objavita isti rojstni datum
+23. 6. 2001; prestopna objava FSV potrdi prihod iz Wackerja. Celotni
+semantični odtis vključuje postavi, profile, vse razdelke dogodkov,
+uradne osebe in metapodatke. Spremenjen profil, stran, ime, dogodek ali
+manjkajoči/spremenjeni dokazni bajti se zavrnejo. Tudi celoten poznejši
+popravek imena zahteva pregled novega stanja. Vzdevek ne ustvari novega
+igralca, nastopa ali minut. Gol uporablja ime postave, polji `imeVir` in
+`dokazAliasa` ohranita izvorno ime in dokaz; izrecno opozorilo ostane v
+ponovitvi. Druga liga te veje ne uporablja.
+
+Izvirni štirje DFB dokumenti ter izbrani primarni dokazi imajo preverljivo
+[varno provenienco](../../scripts/vzorci/de-dfb-bayern-provenance.json), brez
+glav HTTP ali piškotkov. Regionalni izvorni odtis vključuje novi register in
+vse njegove ter nove korekcijske dokazne datoteke. Zgodovinska odtisa
+zajemov `a48fd89` in `671643e` ostaneta nespremenjena.
+
+`node --test scripts/test-dfb-bayern-repairs.mjs` preveri pristne dokumente,
+delne popravke, nasprotno stran, drugačen profil, spremenjene dokaze,
+neveljavne skupine ikon in kanonično identiteto. Shranjena celotna lokalna
+ponovitev brez HTTP potrdi 306/306 arhivskih in 132/132 tekočih Bayern
+zapisnikov, popolna razporeda in izrecne začetne vratarje. Vsi prej sprejeti
+regionalni in Nordostovi zapisniki/nastopi so nespremenjeni; druge regionalne
+blokade ostanejo. To je dokaz kode in lokalne ponovitve, dejanska Actions
+ponovitev, svežina, pregledani manifest, uvoz, cene in vklop imajo še vedno
+ločena obstoječa varovala.

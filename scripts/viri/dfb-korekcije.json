@@ -483,6 +483,457 @@
           ]
         }
       ]
+    },
+    {
+      "id": "2401658",
+      "sourceFixtureSha256": "f964aa55ce4472663c12e27a6eb4f476f4db0dfece57390bfbcb022d5d094639",
+      "evidence": [
+        "https://www.fvi1921.de/nachrichten/1-mannschaft/17658/spielbericht-tsv-aubstadt-fv-illertissen"
+      ],
+      "evidenceFiles": [
+        {
+          "url": "https://www.fvi1921.de/nachrichten/1-mannschaft/17658/spielbericht-tsv-aubstadt-fv-illertissen",
+          "finalUrl": "https://www.fvi1921.de/nachrichten/1-mannschaft/17658/spielbericht-tsv-aubstadt-fv-illertissen",
+          "sha256": "d64ad2f3ad4e83fdfea32813498adaa60c95a9981a713cef4f4c1583dac09cbb",
+          "at": "2026-10-17T19:35:22.771238+00:00",
+          "status": 200,
+          "bytes": 81345,
+          "file": "../vzorci/de-dfb-bayern-proof-d64ad2f3ad4e83fdfea32813498adaa60c95a9981a713cef4f4c1583dac09cbb.html",
+          "contentType": "text/html; charset=utf-8"
+        }
+      ],
+      "checkedAt": "2026-10-17",
+      "metadata": {
+        "url": "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/10-spieltag/tsv-aubstadt-fv-illertissen-2401658",
+        "season": "2025/26",
+        "round": 10,
+        "date": "2025-09-23",
+        "time": "19:00",
+        "teams": [
+          {
+            "id": "tsv-aubstadt",
+            "name": "TSV Aubstadt"
+          },
+          {
+            "id": "fv-illertissen",
+            "name": "FV Illertissen"
+          }
+        ],
+        "finalScore": [
+          3,
+          5
+        ],
+        "halfScore": [
+          2,
+          1
+        ]
+      },
+      "goals": [
+        {
+          "side": 1,
+          "scorer": "Milos Cocic",
+          "clock": "18'",
+          "normalizedClock": [
+            18,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            0,
+            1
+          ],
+          "text": "0:1 Milos Cocic"
+        },
+        {
+          "side": 0,
+          "scorer": "Severo Sturm",
+          "clock": "45'",
+          "normalizedClock": [
+            45,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            2,
+            1
+          ],
+          "text": "Severo Sturm 2:1"
+        },
+        {
+          "side": 0,
+          "scorer": "Marcel Fischer",
+          "clock": "45+6'",
+          "normalizedClock": [
+            45,
+            6
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            1,
+            1
+          ],
+          "text": "Marcel Fischer 1:1"
+        },
+        {
+          "side": 1,
+          "scorer": "Daniel Hausmann",
+          "clock": "65'",
+          "normalizedClock": [
+            65,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            2,
+            2
+          ],
+          "text": "2:2 Daniel Hausmann"
+        },
+        {
+          "side": 1,
+          "scorer": "Marco Hingerl",
+          "clock": "74'",
+          "normalizedClock": [
+            74,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            2,
+            3
+          ],
+          "text": "2:3 Marco Hingerl"
+        },
+        {
+          "side": 1,
+          "scorer": "Daniel Gerstmayer",
+          "clock": "85'",
+          "normalizedClock": [
+            85,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": true,
+          "kind": "goal",
+          "score": [
+            2,
+            4
+          ],
+          "text": "2:4 (Elfmeter) Daniel Gerstmayer"
+        },
+        {
+          "side": 1,
+          "scorer": "Daniel Gerstmayer",
+          "clock": "89'",
+          "normalizedClock": [
+            89,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            2,
+            5
+          ],
+          "text": "2:5 Daniel Gerstmayer"
+        },
+        {
+          "side": 0,
+          "scorer": "Max Grimm",
+          "clock": "90+3'",
+          "normalizedClock": [
+            90,
+            3
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            3,
+            5
+          ],
+          "text": "Max Grimm 3:5"
+        }
+      ],
+      "corrections": [
+        {
+          "index": 1,
+          "from": [
+            2,
+            1
+          ],
+          "to": [
+            1,
+            1
+          ]
+        },
+        {
+          "index": 2,
+          "from": [
+            1,
+            1
+          ],
+          "to": [
+            2,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2401812",
+      "sourceFixtureSha256": "d666a45b9b411082f98947cca9d4d06b2dcaed4b0f73f5139ac39a9125a787aa",
+      "evidence": [
+        "https://www.bfv.de/mspw/regionalliga-bayern/2025-26/regionalliga-bayern-der-27.-spieltag"
+      ],
+      "evidenceFiles": [
+        {
+          "url": "https://www.bfv.de/mspw/regionalliga-bayern/2025-26/regionalliga-bayern-der-27.-spieltag",
+          "finalUrl": "https://www.bfv.de/mspw/regionalliga-bayern/2025-26/regionalliga-bayern-der-27.-spieltag",
+          "sha256": "fbc26f66ed4f79432151fe720a888a8c0b1038a58ca2392a3abf512ffd3e5a2a",
+          "at": "2026-10-17T19:35:50.675695+00:00",
+          "status": 200,
+          "bytes": 269786,
+          "file": "../vzorci/de-dfb-bayern-proof-fbc26f66ed4f79432151fe720a888a8c0b1038a58ca2392a3abf512ffd3e5a2a.html",
+          "contentType": "text/html;charset=UTF-8"
+        }
+      ],
+      "checkedAt": "2026-10-17",
+      "metadata": {
+        "url": "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/27-spieltag/1-fc-nuernberg-ii-spvgg-greuther-fuerth-ii-2401812",
+        "season": "2025/26",
+        "round": 27,
+        "date": "2026-04-06",
+        "time": "14:00",
+        "teams": [
+          {
+            "id": "1-fc-nuernberg-ii",
+            "name": "1. FC Nürnberg II"
+          },
+          {
+            "id": "spvgg-greuther-fuerth-ii",
+            "name": "SpVgg Greuther Fürth II"
+          }
+        ],
+        "finalScore": [
+          2,
+          0
+        ],
+        "halfScore": [
+          2,
+          0
+        ]
+      },
+      "goals": [
+        {
+          "side": 0,
+          "scorer": "Khalid Abu El Haija",
+          "clock": "45'",
+          "normalizedClock": [
+            45,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            2,
+            0
+          ],
+          "text": "Khalid Abu El Haija 2:0"
+        },
+        {
+          "side": 0,
+          "scorer": "Noah Maboulou",
+          "clock": "45+2'",
+          "normalizedClock": [
+            45,
+            2
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            1,
+            0
+          ],
+          "text": "Noah Maboulou 1:0"
+        }
+      ],
+      "corrections": [
+        {
+          "index": 0,
+          "from": [
+            2,
+            0
+          ],
+          "to": [
+            1,
+            0
+          ]
+        },
+        {
+          "index": 1,
+          "from": [
+            1,
+            0
+          ],
+          "to": [
+            2,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2425106",
+      "sourceFixtureSha256": "fe6c2ac48676d12da2bfa710dcfd010200f0419d07d1d9057925ac0fc9cbd09a",
+      "evidence": [
+        "https://www.tsv-buchbach.de/fussball/zimmerer-und-muteba-finalisieren-naechsten-paukenschlag/"
+      ],
+      "evidenceFiles": [
+        {
+          "url": "https://www.tsv-buchbach.de/fussball/zimmerer-und-muteba-finalisieren-naechsten-paukenschlag/",
+          "finalUrl": "https://www.tsv-buchbach.de/fussball/zimmerer-und-muteba-finalisieren-naechsten-paukenschlag/",
+          "sha256": "313cddbd146aa4b3f90d2531317f4f2937c612ea88ffbf72d1423aadae8849c0",
+          "at": "2026-10-17T19:35:23.038963+00:00",
+          "status": 200,
+          "bytes": 88787,
+          "file": "../vzorci/de-dfb-bayern-proof-313cddbd146aa4b3f90d2531317f4f2937c612ea88ffbf72d1423aadae8849c0.html",
+          "contentType": "text/html; charset=UTF-8"
+        }
+      ],
+      "checkedAt": "2026-10-17",
+      "metadata": {
+        "url": "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/10-spieltag/tsv-buchbach-1-fc-schweinfurt-05-2425106",
+        "season": "2026/27",
+        "round": 10,
+        "date": "2026-09-18",
+        "time": "19:00",
+        "teams": [
+          {
+            "id": "tsv-buchbach",
+            "name": "TSV Buchbach"
+          },
+          {
+            "id": "1-fc-schweinfurt-05",
+            "name": "1. FC Schweinfurt 05"
+          }
+        ],
+        "finalScore": [
+          3,
+          1
+        ],
+        "halfScore": [
+          1,
+          0
+        ]
+      },
+      "goals": [
+        {
+          "side": 0,
+          "scorer": "Tobias Sztaf",
+          "clock": "18'",
+          "normalizedClock": [
+            18,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            1,
+            0
+          ],
+          "text": "Tobias Sztaf 1:0"
+        },
+        {
+          "side": 1,
+          "scorer": "Nils Piwernetz",
+          "clock": "57'",
+          "normalizedClock": [
+            57,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            1,
+            1
+          ],
+          "text": "1:1 Nils Piwernetz"
+        },
+        {
+          "side": 0,
+          "scorer": "Philipp Zimmerer",
+          "clock": "90'",
+          "normalizedClock": [
+            90,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            3,
+            1
+          ],
+          "text": "Philipp Zimmerer 3:1"
+        },
+        {
+          "side": 0,
+          "scorer": "Daniel Muteba",
+          "clock": "90+4'",
+          "normalizedClock": [
+            90,
+            4
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            2,
+            1
+          ],
+          "text": "Daniel Muteba 2:1"
+        }
+      ],
+      "corrections": [
+        {
+          "index": 2,
+          "from": [
+            3,
+            1
+          ],
+          "to": [
+            2,
+            1
+          ]
+        },
+        {
+          "index": 3,
+          "from": [
+            2,
+            1
+          ],
+          "to": [
+            3,
+            1
+          ]
+        }
+      ]
     }
   ]
 }

@@ -1,0 +1,73 @@
+name: Preverjen vklop Katalonije
+run-name: Preverjen vklop Katalonije ES
+on:
+  workflow_dispatch:
+    inputs:
+      lige:
+        description: Opcijski seznam zgornjih FCF skupin, ločen z vejicami (prazno vseh 27)
+        type: string
+        required: false
+      activate:
+        description: Vklopi samo pripravljene lige iz pregledanega paketa
+        type: boolean
+        default: false
+      approved_sha256:
+        description: Celotni SHA256 pregledanega paketa z ISTEGA commita (za vklop obvezen)
+        type: string
+        required: false
+
+permissions:
+  contents: read
+  actions: read
+# Fixed for the entire ES batch, including overlapping selected league lists.
+concurrency:
+  group: vklop-katalonije
+  cancel-in-progress: false
+jobs:
+  catalonia:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      LIGE: ${{ inputs.lige }}
+      ACTIVATE: ${{ inputs.activate }}
+      APPROVED_SHA: ${{ inputs.approved_sha256 }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Preveri izrecno odobritev vklopa
+        run: |
+          set -euo pipefail
+          if [ "$ACTIVATE" = true ] && ! [[ "$APPROVED_SHA" =~ ^[a-f0-9]{64}$ ]]; then
+            echo '::error::Vklop zahteva celoten pregledani SHA256.'
+            exit 1
+          fi
+      - name: Počakaj na starejše pisce Španije
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/cakaj-na-uvoze.mjs --drzava ES
+      - name: Celoten pregled in opcijski vklop
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          mode=prepare
+          if [ "$ACTIVATE" = true ]; then mode=activate; fi
+          args=("$mode" --output release/katalonija)
+          if [ -n "$LIGE" ]; then args+=(--lige "$LIGE"); fi
+          if [ -n "$APPROVED_SHA" ]; then args+=(--approved-sha256 "$APPROVED_SHA"); fi
+          node scripts/vklopi-katalonijo.mjs "${args[@]}"
+      - name: Manifesti, blokade in delni rezultat
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: katalonija-release-${{ github.run_id }}
+          path: release/katalonija/
+          if-no-files-found: ignore
+          retention-days: 90
