@@ -119,10 +119,10 @@ jobs:
       - name: Inspect three already-captured public reports (no source requests or database)
         run: |
           node --input-type=module <<'NODE'
-          import {readFileSync} from 'node:fs'
+          import {readFileSync,writeFileSync,mkdirSync} from 'node:fs'
           import {createHash} from 'node:crypto'
           import {gzipSync} from 'node:zlib'
-          import {vZapisnik} from './scripts/viri/dfb.mjs'
+          import {vZapisnik,varniFetch,jeIzziv} from './scripts/viri/dfb.mjs'
           const root='audit/failed-current',requests=JSON.parse(readFileSync(`${root}/prenosi.json`,'utf8'))
           const plain=s=>s.replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim()
           for(const id of ['2426097','2426099','2426100']){
@@ -138,4 +138,26 @@ jobs:
             console.log(JSON.stringify({id,url:r.url,at:r.at,sha256:sha,bytes:data.length,result,lineupTables:(html.match(/class="[^"]*m-MatchDetails-lineup-table[^"]*"/g)||[]).length,tables:[...html.matchAll(/<table\b[^>]*>[\s\S]*?<\/table>/gi)].map(m=>({tag:m[0].match(/^<table[^>]*>/)[0],rows:(m[0].match(/<tr\b/g)||[]).length,text:plain(m[0]).slice(0,3000)}))},null,2))
             console.log('DFB_CAPTURE:'+JSON.stringify({id,sha256:sha,gzipBase64:gzipSync(data).toString('base64')}))
           }
+          mkdirSync('audit/fresh-three',{recursive:true})
+          const fresh=[]
+          for(const id of ['2426097','2426099','2426100']){
+            const url=requests.find(r=>r.url.endsWith(`-${id}`)).url
+            await new Promise(r=>setTimeout(r,3000))
+            const response=await varniFetch(url,{headers:{'User-Agent':'SLFF fantasy (slff.eu; splih.94@gmail.com)'}})
+            if(!response.ok)throw Error(`HTTP ${response.status}: ${url}`)
+            const data=Buffer.from(await response.arrayBuffer()),sha256=createHash('sha256').update(data).digest('hex'),html=data.toString('utf8')
+            if(!html.trim()||jeIzziv(html))throw Error('Empty or challenged public document; stopping')
+            writeFileSync(`audit/fresh-three/${id}.html`,data)
+            let result
+            try{const z=vZapisnik(html,{id});result={accepted:true,home:z.domaci.postava.length,away:z.gostje.postava.length,goals:z.goli.length}}catch(e){result={accepted:false,error:e.message}}
+            fresh.push({id,url,at:new Date().toISOString(),sha256,bytes:data.length,result,tables:(html.match(/<table\b/g)||[]).length,histories:(html.match(/m-MatchDetails-history/g)||[]).length})
+            console.log('DFB_FRESH_CAPTURE:'+JSON.stringify({id,sha256,gzipBase64:gzipSync(data).toString('base64')}))
+          }
+          writeFileSync('audit/fresh-three/summary.json',JSON.stringify(fresh,null,2));console.log(JSON.stringify({fresh},null,2))
           NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dfb-fresh-three-${{ github.run_id }}
+          path: audit/fresh-three/
+          retention-days: 14
