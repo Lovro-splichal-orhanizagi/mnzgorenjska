@@ -141,7 +141,7 @@ test('actual club-merge and weekly-price shell waiters see older regional jobs a
       const text = readFileSync(new URL(`../.github/workflows/${wf}`, import.meta.url), 'utf8')
       const block = text.slice(text.indexOf('      - name: Pocakaj na starejse uvoze')).split('        run: |\n')[1].split('\n      - name:')[0]
       const script = block.split('\n').filter(x => x.startsWith('          ')).map(x => x.slice(10)).join('\n')
-      for (const [workflow, title] of regional) for (const [patch, expected] of [[{},79],[{status:'queued'},79],[{databaseId:30,startedAt:'2026-10-17T09:59:59Z'},79],[{databaseId:30},0],[{databaseId:20},0],[{status:'completed'},0]]) {
+      for (const [workflow, title] of [...regional, ['vklop-katalonije.yml', 'Preverjen vklop Katalonije ES']]) for (const [patch, expected] of [[{},79],[{status:'queued'},79],[{databaseId:30,startedAt:'2026-10-17T09:59:59Z'},79],[{databaseId:30},0],[{databaseId:20},0],[{status:'completed'},0]]) {
         const result = spawnSync('bash', ['-c', script], { encoding: 'utf8', timeout: 10000,
           env: { ...process.env, PATH: `${dir}:${process.env.PATH}`, GITHUB_RUN_ID: '20', GITHUB_REPOSITORY: 'fixture/repo',
             COORDINATION_FIXTURE: JSON.stringify({ startedAt, workflow, runs: [run(title, patch)] }) } })
@@ -150,4 +150,21 @@ test('actual club-merge and weekly-price shell waiters see older regional jobs a
       }
     }
   } finally { rmSync(dir, { recursive: true, force: true }) }
+})
+
+test('Catalan batch is a fixed ES writer in both directions, including nightly and manual imports', async () => {
+  fixtures.push({ slug: 'es-ct-primera-g1', active: false, source: 'fcf', countries: { code: 'ES' }, federations: { code: 'fcf' } })
+  const workflow = 'vklop-katalonije.yml', title = 'Preverjen vklop Katalonije ES'
+  for (const args of [['--drzava', 'ES'], ['--liga', 'es-ct-primera-g1'], ['--popravek', '--vir', 'fcf'], ['--popravek']]) {
+    assert.equal((await coordinate(args, { [workflow]: [run(title)] })).code, 1, String(args))
+  }
+  for (const args of [['--drzava', 'DE'], ['--liga', 'si-example'], ['--popravek', '--vir', 'nzs']]) {
+    assert.equal((await coordinate(args, { [workflow]: [run(title)] })).code, 0, String(args))
+  }
+  // The batch's own --drzava ES waits for older manual writes even when inactive.
+  assert.equal((await coordinate(['--drzava', 'ES'], { 'uvoz-lige.yml': [run('Uvoz lige es-ct-primera-g1')] })).code, 1)
+  assert.equal((await coordinate(['--drzava', 'ES'], { 'uvoz-zapisnikov.yml': [run('Nightly import')] })).code, 1)
+  assert.equal((await coordinate(['--tece'], { [workflow]: [run(title)] })).code, 3)
+  for (const patch of [{ status: 'queued' }, { displayTitle: 'Historical title without a slug' }]) assert.equal((await coordinate(['--drzava', 'ES'], { [workflow]: [run(title, patch)] })).code, 1)
+  for (const patch of [{ databaseId: 30 }, { databaseId: 20 }, { status: 'completed' }]) assert.equal((await coordinate(['--drzava', 'ES'], { [workflow]: [run(title, patch)] })).code, 0)
 })
