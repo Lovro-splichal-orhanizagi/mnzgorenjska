@@ -28,3 +28,20 @@ test('only the previously reviewed successful archive capture may use its older 
  }
  assert.throws(()=>preveriZagon(archive,'38970734064',commit,{...proof,sezona:'2026/27'}),/izvor/)
 })
+test('combined DFB job proves only the exact completed successful requested capture step',()=>{
+ const step={name:'Tekoča sezona — brez baze',status:'completed',conclusion:'success'}
+ const job={name:'Zivi vir — dfb',run_id:12345,head_sha:commit,status:'completed',conclusion:'success',steps:[step]}
+ const check=(jobs,sezona='2026/27',capture=run)=>preveriZagon(capture,'12345',commit,{sezona,jobs})
+ assert.doesNotThrow(()=>check([job]))
+ assert.throws(()=>check([job],'2025/26'),/izvor/)
+ const archive={name:'Arhiv sezona — brez baze',status:'completed',conclusion:'success'}
+ assert.doesNotThrow(()=>check([{...job,steps:[archive]}],'2025/26'))
+ for(const steps of [undefined,null,{},[],[null],[{}],[{...step,status:'in_progress'}],[{...step,status:'completed',conclusion:'skipped'}],[{...step,conclusion:'failure'}],[{...step,name:'Tekoča sezona — dokazi in surovi dokumenti'}],[archive],[step,step]]){
+  assert.throws(()=>check([{...job,steps}]),/izvor/)
+ }
+ for(const patch of [{run_id:42},{head_sha:'b'.repeat(40)},{status:'in_progress'},{conclusion:'failure'}])assert.throws(()=>check([{...job,...patch}]),/izvor/)
+ assert.throws(()=>check([job,job]),/izvor/)
+ assert.throws(()=>check([null]),/izvor/)
+ assert.throws(()=>check([job,{...job,name:'Zivi vir — dfb 2026/27'}]),/izvor/)
+ for(const patch of [{id:42},{path:'.github/workflows/ci.yml'},{head_sha:'b'.repeat(40)},{event:'pull_request'},{status:'in_progress'},{repository:{full_name:'other/repo'}}])assert.throws(()=>check([job],'2026/27',{...run,...patch}),/izvor/)
+})

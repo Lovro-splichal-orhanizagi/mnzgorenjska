@@ -11,7 +11,15 @@ export function preveriZagon(run,id,commit,{sezona,jobs}={}){
  const olderArchive=sezona==='2025/26'&&id===reviewedArchive.id&&run.head_sha===reviewedArchive.commit
  const requested=sezona!==undefined||jobs!==undefined
  const seasonProof=['2025/26','2026/27'].includes(sezona)&&Array.isArray(jobs)
- const passedJob=seasonProof&&jobs.filter(j=>j.name===`Zivi vir — dfb ${sezona}`&&String(j.run_id)===id&&j.head_sha===run.head_sha&&j.status==='completed'&&j.conclusion==='success').length===1
+ // Historical matrix jobs already bind their capture to the season in the name.
+ // Combined jobs need the exact capture step: an upload or the other season
+ // cannot establish that the requested season actually ran successfully.
+ const candidates=seasonProof?jobs.filter(j=>j&&(j.name===`Zivi vir — dfb ${sezona}`||j.name==='Zivi vir — dfb')):[]
+ const job=candidates.length===1?candidates[0]:null
+ const captureStep=sezona==='2026/27'?'Tekoča sezona — brez baze':'Arhiv sezona — brez baze'
+ const steps=Array.isArray(job?.steps)?job.steps.filter(s=>s?.name===captureStep):[]
+ const passedJob=!!job&&String(job.run_id)===id&&job.head_sha===run.head_sha&&job.status==='completed'&&job.conclusion==='success'
+  &&(job.name!=='Zivi vir — dfb'||(steps.length===1&&steps[0].status==='completed'&&steps[0].conclusion==='success'))
  if(requested&&!seasonProof||!/^[1-9][0-9]{0,19}$/.test(id)||!/^[a-f0-9]{40}$/.test(commit)
   ||String(run.id)!==id||run.repository?.full_name!==repo
   ||run.path!=='.github/workflows/preveri-nova-vira.yml'||(run.head_sha!==commit&&!olderArchive)
