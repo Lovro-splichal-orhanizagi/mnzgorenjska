@@ -447,7 +447,9 @@ values (-916901,-916901),(-916901,-916902),(-916901,-916903),(-916901,-916904),
        (-916902,-916901),(-916902,-916903),(-916902,-916904);
 
 set local role anon;
-delete from mini_liga_clani where mini_liga_id=-916901;
+-- Anon od 20261017163700 nima pravice DELETE; prej ga je ustavil RLS.
+select pg_temp.zavrnjeno('izstop: anonimni ne brise clanstev',
+  $$delete from mini_liga_clani where mini_liga_id=-916901$$);
 reset role;
 select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ac',true);
 set local role authenticated;
@@ -3630,6 +3632,225 @@ select pg_temp.preveri('scout3: novo placilo zapise novo narocnino',
 -- Ponovitev po spodletelem preklicu stare: webhook mora staro dobiti znova.
 select pg_temp.preveri('scout3: ponovljeno placilo spet vrne staro narocnino za preklic',
   scout_iz_placila(-913001, 'e5c30000-0000-4000-8000-000000000002', 'sezona', now() + interval '1 year', 'cus_s3', 'sub_s3c') = 'aktivna:sub_s3');
+
+-- --------------------------------------------------------------------------
+-- Pravice tabel po selitvi (20261017163700): katalog in prave poti aplikacije.
+-- Obnova baze na Hetzner je vrnila privzete pravice Supabase (ALL za anon in
+-- authenticated); tu je zapisano, kaj sme kdo, da se to ne ponovi neopazno.
+-- --------------------------------------------------------------------------
+reset role;
+select set_config('request.jwt.claim.sub','',true);
+
+select pg_temp.preveri('pravice: nihce nima TRUNCATE, REFERENCES, TRIGGER ali MAINTAIN v public',
+  not exists (
+    select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace
+    cross join lateral aclexplode(c.relacl) a
+    where n.nspname='public' and c.relkind in ('r','p','v','m','f')
+      and a.grantee in (0, 'anon'::regrole, 'authenticated'::regrole)
+      and a.privilege_type in ('TRUNCATE','REFERENCES','TRIGGER','MAINTAIN')));
+
+select pg_temp.preveri('pravice: v poglede ne pise nihce (pisanje prek pogleda obide RLS)',
+  not exists (
+    select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace
+    cross join lateral aclexplode(c.relacl) a
+    where n.nspname='public' and c.relkind in ('v','m')
+      and a.grantee in (0, 'anon'::regrole, 'authenticated'::regrole)
+      and a.privilege_type in ('INSERT','UPDATE','DELETE')));
+
+select pg_temp.preveri('pravice: anon ne pise v nobeno tabelo (niti v stolpce)',
+  not exists (
+    select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace
+    where n.nspname='public' and c.relkind in ('r','p')
+      and has_table_privilege('anon', c.oid, 'INSERT,UPDATE,DELETE'))
+  and not exists (
+    select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace
+    join pg_attribute att on att.attrelid=c.oid and att.attnum>0 and not att.attisdropped
+    where n.nspname='public' and c.relkind in ('r','p')
+      and has_column_privilege('anon', c.oid, att.attnum, 'INSERT,UPDATE')));
+
+-- Natanko seznam iz migracije; nova tabela, v katero pise vmesnik, mora biti
+-- dodana tu in imeti politiko RLS za ukaz.
+select pg_temp.preveri('pravice: authenticated pise (na ravni tabele) le v nameravane tabele',
+  (select string_agg(c.relname||':'||p.priv, ' ' order by c.relname, p.priv)
+     from pg_class c join pg_namespace n on n.oid=c.relnamespace
+     cross join (values ('DELETE'),('INSERT'),('UPDATE')) p(priv)
+    where n.nspname='public' and c.relkind in ('r','p')
+      and has_table_privilege('authenticated', c.oid, p.priv))
+  = 'appearances:DELETE appearances:INSERT appearances:UPDATE '
+    'assist_votes:DELETE assist_votes:INSERT assist_votes:UPDATE '
+    'chat_messages:DELETE chat_messages:INSERT '
+    'competition_settings:DELETE competition_settings:INSERT competition_settings:UPDATE '
+    'competitions:DELETE competitions:INSERT competitions:UPDATE '
+    'countries:DELETE countries:INSERT countries:UPDATE '
+    'fantasy_chips:DELETE fantasy_chips:INSERT fantasy_chips:UPDATE '
+    'fantasy_lineups:DELETE fantasy_lineups:INSERT fantasy_lineups:UPDATE '
+    'fantasy_transfers:DELETE fantasy_transfers:INSERT fantasy_transfers:UPDATE '
+    'federations:DELETE federations:INSERT federations:UPDATE '
+    'goals:DELETE goals:INSERT goals:UPDATE '
+    'klub_stik:DELETE klub_stik:INSERT klub_stik:UPDATE '
+    'klub_stik_posta:DELETE klub_stik_posta:INSERT klub_stik_posta:UPDATE '
+    'matches:DELETE matches:INSERT matches:UPDATE '
+    'mini_liga_clani:DELETE mini_lige:DELETE '
+    'player_reports:DELETE player_reports:INSERT '
+    'players:DELETE players:INSERT players:UPDATE '
+    'position_priors:DELETE position_priors:INSERT position_priors:UPDATE '
+    'position_votes:DELETE position_votes:INSERT position_votes:UPDATE '
+    'price_changes:DELETE price_changes:INSERT price_changes:UPDATE '
+    'rounds:DELETE rounds:INSERT rounds:UPDATE '
+    'settings:DELETE settings:INSERT settings:UPDATE '
+    'sponsors:DELETE sponsors:INSERT sponsors:UPDATE '
+    'teams:DELETE teams:INSERT teams:UPDATE');
+
+select pg_temp.preveri('pravice: vsaka pisalna pravica authenticated ima politiko RLS za ukaz',
+  not exists (
+    select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace
+    cross join (values ('DELETE'),('INSERT'),('UPDATE')) p(priv)
+    where n.nspname='public' and c.relkind in ('r','p')
+      and (has_table_privilege('authenticated', c.oid, p.priv)
+           or exists (select 1 from pg_attribute att
+                       where att.attrelid=c.oid and att.attnum>0 and not att.attisdropped
+                         and p.priv<>'DELETE'
+                         and has_column_privilege('authenticated', c.oid, att.attnum, p.priv)))
+      and not exists (select 1 from pg_policies pol
+                       where pol.schemaname='public' and pol.tablename=c.relname
+                         and pol.cmd in (p.priv, 'ALL'))));
+
+select pg_temp.preveri('pravice: profil in ekipa le prek izbranih stolpcev',
+  not has_table_privilege('authenticated', 'public.profiles', 'UPDATE')
+  and not has_column_privilege('authenticated', 'public.profiles', 'is_admin', 'UPDATE')
+  and has_column_privilege('authenticated', 'public.profiles', 'display_name', 'UPDATE')
+  and has_column_privilege('authenticated', 'public.profiles', 'javni_profil', 'UPDATE')
+  and not has_table_privilege('authenticated', 'public.fantasy_teams', 'INSERT,UPDATE,DELETE')
+  and not has_column_privilege('authenticated', 'public.fantasy_teams', 'cash', 'UPDATE')
+  and has_column_privilege('authenticated', 'public.fantasy_teams', 'name', 'UPDATE')
+  and not has_table_privilege('authenticated', 'public.fantasy_roster', 'INSERT,UPDATE,DELETE'));
+
+select pg_temp.preveri('pravice: izracunane tabele in pogledi niso javni',
+  not has_table_privilege('anon', 'public.statistika_igralcev', 'SELECT')
+  and not has_table_privilege('authenticated', 'public.tocke_krogov', 'SELECT')
+  and not has_table_privilege('anon', 'public.fantasy_round_points_izracun', 'SELECT')
+  and not has_table_privilege('anon', 'public.player_season_stats_izracun', 'SELECT'));
+
+select pg_temp.preveri('pravice: zaporedja v public niso dostopna API vlogama',
+  not exists (
+    select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace
+    cross join lateral aclexplode(c.relacl) a
+    where n.nspname='public' and c.relkind='S'
+      and a.grantee in (0, 'anon'::regrole, 'authenticated'::regrole)));
+
+select pg_temp.preveri('pravice: nove tabele in zaporedja (postgres, public) dobijo le SELECT',
+  not exists (
+    select 1 from pg_default_acl d cross join lateral aclexplode(d.defaclacl) a
+    where d.defaclrole='postgres'::regrole and d.defaclnamespace='public'::regnamespace
+      and d.defaclobjtype in ('r','S')
+      and a.grantee in ('anon'::regrole, 'authenticated'::regrole)
+      and not (d.defaclobjtype='r' and a.privilege_type='SELECT')));
+
+-- Prave poti aplikacije z lastnimi podatki (-9139xx).
+insert into competitions(id, slug, name, short_name, active, country_id, source) overriding system value
+values (-913901, 'test-pravice-pot', 'Test poti aplikacije', 'TPA', false, (select id from countries where code='SI'), 'mnzg');
+insert into players(id, team_id, competition_id, first_name, last_name, position,
+                    position_source, value, value_start, active) overriding system value
+select -913900-n, -913001-((n-1)%5), -913901, 'Pot', n::text,
+       case when n<=2 then 'GK' when n<=7 then 'DEF' when n<=12 then 'MID' else 'FWD' end,
+       'admin', 6, 6, true
+from generate_series(1,15) n;
+insert into rounds(id,season,number,deadline_at,competition_id) overriding system value
+values (-913901,'2099/00',2,now()+interval '1 day',-913901);
+insert into auth.users(id,email,raw_user_meta_data,created_at) values
+ ('b8a06635-2322-4444-8c42-44e419f91901','test-pot-a@example.invalid','{"display_name":"Pot A"}',now()-interval '2 days'),
+ ('b8a06635-2322-4444-8c42-44e419f91902','test-pot-b@example.invalid','{"display_name":"Pot B"}',now()-interval '2 days');
+create function pg_temp.kader_pot() returns jsonb language sql as $$
+  select jsonb_agg(jsonb_build_object(
+    'player_id', -913900-n,
+    'is_starter', n not in (2,7,12,15),
+    'is_captain', n=1, 'is_vice', n=3,
+    'bench_order', case n when 2 then 1 when 7 then 2 when 12 then 3 when 15 then 4 end
+  )) from generate_series(1,15) n;
+$$;
+grant execute on function pg_temp.kader_pot() to authenticated;
+
+-- B ustvari ekipo, ki se bo pridruzila ligi.
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f91902',true);
+set local role authenticated;
+insert into fantasy_teams(owner_id,name,competition_id) values(auth.uid(),'Pot B ekipa',-913901);
+reset role;
+
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f91901',true);
+set local role authenticated;
+update profiles set avatar_barva=2, javni_profil=true, navijam_team_id=-913001, brez_push=true where id=auth.uid();
+select pg_temp.preveri('pot: profil (avatar, javnost, klub, obvestila) se shrani',
+  (select avatar_barva=2 and javni_profil and navijam_team_id=-913001 and brez_push from profiles where id=auth.uid()));
+select pg_temp.zavrnjeno('pot: prijavljeni si ne nastavi admina (tabelna UPDATE pravica)',
+  $$update profiles set is_admin=true where id=auth.uid()$$);
+insert into fantasy_teams(owner_id,name,competition_id) values(auth.uid(),'Pot A ekipa',-913901);
+select set_config('test.pot_ekipa', (select id::text from fantasy_teams where owner_id=auth.uid() and competition_id=-913901), true);
+select pg_temp.preveri('pot: ustvarjanje fantasy ekipe', current_setting('test.pot_ekipa', true) is not null);
+update fantasy_teams set name='Pot A preimenovana' where id=current_setting('test.pot_ekipa')::bigint;
+select pg_temp.preveri('pot: preimenovanje ekipe',
+  (select name='Pot A preimenovana' from fantasy_teams where id=current_setting('test.pot_ekipa')::bigint));
+select pg_temp.zavrnjeno('pot: lastnik ne spremeni denarja ekipe',
+  $$update fantasy_teams set cash=9999 where id=current_setting('test.pot_ekipa')::bigint$$);
+select shrani_ekipo(current_setting('test.pot_ekipa')::bigint, pg_temp.kader_pot());
+select pg_temp.preveri('pot: shranjevanje postave (shrani_ekipo)',
+  (select count(*)=15 from fantasy_roster where fantasy_team_id=current_setting('test.pot_ekipa')::bigint));
+select pg_temp.zavrnjeno('pot: kadra ni mogoce pisati mimo shrani_ekipo',
+  $$delete from fantasy_roster where fantasy_team_id=current_setting('test.pot_ekipa')::bigint$$);
+insert into fantasy_chips(fantasy_team_id, chip, round_id)
+values (current_setting('test.pot_ekipa')::bigint, 'klop_plus', -913901);
+delete from fantasy_chips where fantasy_team_id=current_setting('test.pot_ekipa')::bigint and chip='klop_plus';
+select pg_temp.preveri('pot: pripomocek se vklopi in izklopi',
+  not exists (select 1 from fantasy_chips where fantasy_team_id=current_setting('test.pot_ekipa')::bigint));
+select set_config('test.pot_koda',
+  (select code from ustvari_mini_ligo('Pot liga', current_setting('test.pot_ekipa')::bigint)), true);
+select pg_temp.preveri('pot: ustvarjanje mini lige', current_setting('test.pot_koda', true) is not null);
+insert into chat_messages(user_id, content, alias, country_code) values (auth.uid(), 'Pot sporocilo', 'PotA', 'SI');
+select pg_temp.preveri('pot: sporocilo v klepetu (in je_moje v pogledu)',
+  (select je_moje from klepet_sporocila where content='Pot sporocilo'));
+select pg_temp.zavrnjeno('pot: sporocila se ne ureja',
+  $$update chat_messages set content='Spremenjeno' where user_id=auth.uid()$$);
+delete from chat_messages where user_id=auth.uid() and content='Pot sporocilo';
+select pg_temp.preveri('pot: avtor izbrise svoje sporocilo',
+  not exists (select 1 from klepet_sporocila where content='Pot sporocilo'));
+insert into player_reports(player_id, user_id, kind, content) values (-913901, auth.uid(), 'drugo', 'Pot prijava');
+delete from player_reports where user_id=auth.uid() and content='Pot prijava';
+select pg_temp.preveri('pot: prijava o igralcu se odda in umakne',
+  not exists (select 1 from player_reports where content='Pot prijava'));
+select pg_temp.zavrnjeno('pot: TRUNCATE ni dovoljen niti prijavljenemu',
+  $$truncate chat_messages$$);
+reset role;
+
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f91902',true);
+set local role authenticated;
+select pridruzi_mini_ligi(current_setting('test.pot_koda'),
+  (select id from fantasy_teams where owner_id=auth.uid() and competition_id=-913901));
+select pg_temp.preveri('pot: pridruzitev mini ligi s kodo',
+  exists (select 1 from mini_liga_clani c join fantasy_teams ft on ft.id=c.fantasy_team_id
+           where ft.owner_id=auth.uid() and ft.competition_id=-913901));
+select pg_temp.zavrnjeno('pot: clanstva ni mogoce vpisati mimo kode',
+  $$insert into mini_liga_clani(mini_liga_id, fantasy_team_id)
+    select mini_liga_id, fantasy_team_id from mini_liga_clani limit 1$$);
+delete from mini_liga_clani
+ where fantasy_team_id=(select id from fantasy_teams where owner_id=auth.uid() and competition_id=-913901);
+select pg_temp.preveri('pot: izstop iz mini lige',
+  not exists (select 1 from mini_liga_clani c join fantasy_teams ft on ft.id=c.fantasy_team_id
+               where ft.owner_id=auth.uid() and ft.competition_id=-913901));
+reset role;
+
+-- Administracija → Klubi piše stike neposredno.
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+insert into klub_stik(klub, drzava, team_id, stanje) values ('Pot klub', 'SI', -913001, 'ni_maila');
+update klub_stik set opomba='pot' where klub='Pot klub';
+insert into klub_stik_posta(stik_id, vrsta, zadeva) select id, 'prvi', 'Pot' from klub_stik where klub='Pot klub';
+select pg_temp.preveri('pot: admin vodi stike s klubi',
+  exists (select 1 from klub_stik_posta p join klub_stik s on s.id=p.stik_id where s.klub='Pot klub' and s.opomba='pot'));
+reset role;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f91901',true);
+set local role authenticated;
+select pg_temp.zavrnjeno('pot: stikov s klubi ne pise navaden uporabnik (RLS)',
+  $$insert into klub_stik(klub, drzava, stanje) values ('Vsiljen klub', 'SI', 'nov')$$);
+reset role;
 
 do $$
 declare v_napak int;
