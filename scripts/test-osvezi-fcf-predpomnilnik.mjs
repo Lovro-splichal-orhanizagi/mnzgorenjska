@@ -104,9 +104,9 @@ function condition(expr, context) {
 }
 function runWorkflow(t, { refresh = 'es4106977', branch = 'main', failure = '', patch = {} } = {}) {
   const f = fixture(t), bin = join(f.root, 'bin'); mkdirSync(bin)
-  const untouched = [f.other, f.foreign].map(snapshot)
+  const untouched = [f.other, f.foreign].map(snapshot), selectedBefore = snapshot(f.selected)
   const log = join(f.root, 'calls'), output = join(f.root, 'output')
-  writeFileSync(join(bin, 'node'), `#!${process.execPath}\n` + `const fs=require('node:fs'),a=process.argv.slice(2);fs.appendFileSync(process.env.CALL_LOG,a[0]+'\\n');if(a[0]===process.env.FAIL_SCRIPT)process.exit(79);if(a[0]==='scripts/aktivna-tekmovanja.mjs')console.log(process.env.LIGA);
+  writeFileSync(join(bin, 'node'), `#!${process.execPath}\n` + `const fs=require('node:fs'),a=process.argv.slice(2);fs.appendFileSync(process.env.CALL_LOG,JSON.stringify(a)+'\\n');if(a[0]===process.env.FAIL_SCRIPT)process.exit(79);if(a[0]==='scripts/aktivna-tekmovanja.mjs')console.log(process.env.LIGA);
     if(a[0]==='scripts/osvezi-fcf-predpomnilnik.mjs')import(${JSON.stringify(new URL('./osvezi-fcf-predpomnilnik.mjs', import.meta.url).href)}).then(({osvezi})=>{
       osvezi({root:process.cwd(),competition:JSON.parse(process.env.TARGET_COMPETITION),season:'2026/27',now:${now},sourceCommit:${JSON.stringify(SHA)},env:JSON.parse(process.env.ACTIONS_FIXTURE),ids:process.env.FCF_OSVEZI,tekoca:process.env.TEKOCA==='true',arhiv:process.env.ARHIV,zapisnik:process.env.ZAPISNIK,dovoliManjKlubov:Boolean(process.env.DOVOLI_MANJ_KLUBOV),prepisiAktivno:Boolean(process.env.DOVOLI_AKTIVNO)});
     }).catch(e=>{console.error(e.message);process.exitCode=79});`, { mode: 0o755 })
@@ -114,8 +114,10 @@ function runWorkflow(t, { refresh = 'es4106977', branch = 'main', failure = '', 
   let failed = false
   const steps = {}, visited = [], restores = [], saves = []
   const context = { inputs, github: { ref: `refs/heads/${branch}` }, steps, success: () => !failed }
-  // Consume actual job env expressions, so missing/incorrect input wiring fails.
+  // Consume actual job timeout/env expressions, so incorrect budget or input wiring fails.
   const workflow = readFileSync(new URL('../.github/workflows/uvoz-lige.yml', import.meta.url), 'utf8')
+  const timeout = workflow.match(/^    timeout-minutes: (.+)$/m)[1]
+  const timeoutMinutes = timeout.startsWith('${{') ? expression(timeout.replace(/^\$\{\{\s*|\s*\}\}$/g, ''), context) : Number(timeout)
   const envBlock = workflow.split('    env:\n')[1].split('    steps:')[0]
   const jobEnv = Object.fromEntries([...envBlock.matchAll(/^      ([A-Z_]+): \$\{\{ (.*?) \}\}$/gm)].map(([, name, value]) => [name, String(expression(value, context))]))
   for (const step of workflowSteps()) {
@@ -133,10 +135,32 @@ function runWorkflow(t, { refresh = 'es4106977', branch = 'main', failure = '', 
     if (step.id) steps[step.id] = { outcome: ok ? 'success' : 'failure' }
     if (!ok) failed = true
   }
-  const calls = existsSync(log) ? readFileSync(log, 'utf8').trim().split('\n') : []
+  const commands = existsSync(log) ? readFileSync(log, 'utf8').trim().split('\n').map(line => JSON.parse(line)) : []
+  const calls = commands.map(args => args[0])
   assert.deepEqual([f.other, f.foreign].map(snapshot), untouched, 'workflow must preserve unselected source bytes/mtimes')
-  return { calls, visited, restores, saves, failed }
+  return { calls, commands, timeoutMinutes, visited, restores, saves, failed, selectedBefore, selectedAfter: existsSync(f.selected) ? snapshot(f.selected) : null }
 }
+test('explicit refresh receives a five-hour coordinator wait within the six-hour job budget', t => {
+  const r = runWorkflow(t)
+  assert.deepEqual({ command: r.commands[0], timeoutMinutes: r.timeoutMinutes }, {
+    command: ['scripts/cakaj-na-uvoze.mjs', '--liga', 'es-ct-elit', '--najvec', '300'], timeoutMinutes: 360,
+  })
+})
+test('ordinary import retains the default coordinator wait and three-hour job budget', t => {
+  const r = runWorkflow(t, { refresh: '' })
+  assert.deepEqual(r.commands[0], ['scripts/cakaj-na-uvoze.mjs', '--liga', 'es-ct-elit'])
+  assert.equal(r.timeoutMinutes, 180)
+})
+test('failed coordinator preserves selected cache and prevents every downstream source/data mutation and promotion in either mode', t => {
+  for (const refresh of ['es4106977', '']) {
+    const r = runWorkflow(t, { refresh, failure: 'scripts/cakaj-na-uvoze.mjs' })
+    assert.equal(r.failed, true)
+    assert.deepEqual(r.calls, ['scripts/cakaj-na-uvoze.mjs'])
+    assert.deepEqual(r.selectedAfter, r.selectedBefore)
+    assert.deepEqual(r.restores, [])
+    assert.equal(r.saves.some(s => s.name === 'Objavi FCF predpomnilnik za nocni ES uvoz'), false)
+  }
+})
 test('actual workflow path waits/restores/checks/refreshes before ordinary full import and stops after wait/helper/readiness failures', t => {
   const ok = runWorkflow(t)
   assert.deepEqual(ok.calls.slice(0, 5), ['scripts/cakaj-na-uvoze.mjs', 'scripts/aktivna-tekmovanja.mjs', 'scripts/osvezi-fcf-predpomnilnik.mjs', 'scripts/uvoz-razporeda.mjs', 'scripts/uvoz-delegiranja.mjs'])

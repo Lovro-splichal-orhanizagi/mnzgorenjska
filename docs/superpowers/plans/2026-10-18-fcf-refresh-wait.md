@@ -27,7 +27,7 @@ Root amended the original brief before implementation: [GitHub-hosted jobs are l
 ## Review Focus
 
 - Explicit refresh must receive exactly the bounded 300-minute wait, while ordinary imports receive no override.
-- Conditional timeout must evaluate to 420 for explicit refresh and 180 for empty input.
+- Conditional timeout must evaluate to 360 for explicit refresh and 180 for empty input.
 - Coordinator failure must retain the selected cached report bytes/mtime and prevent all downstream mutations/promotion.
 - Existing incompatible refresh combinations remain fail closed before mutation.
 - Cancellation and skipped/failed required steps remain unable to promote nightly cache.
@@ -37,8 +37,8 @@ Root amended the original brief before implementation: [GitHub-hosted jobs are l
 **Files:** Modify `.github/workflows/uvoz-lige.yml` and `scripts/test-osvezi-fcf-predpomnilnik.mjs`.
 **Interfaces:** Consume existing `FCF_OSVEZI` job environment; emit coordinator argv and job timeout. The harness observes actual argv, evaluated timeout, selected-file state and step ordering.
 
-- [ ] Extend the existing harness to retain actual command argv and evaluate the job timeout; assert explicit argv `scripts/cakaj-na-uvoze.mjs --liga es-ct-elit --najvec 300`, timeout 360; ordinary argv without `--najvec`, timeout 180.
-- [ ] Run `node --test scripts/test-osvezi-fcf-predpomnilnik.mjs`; record expected RED for missing explicit budgets before workflow edits.
-- [ ] Add the conditional timeout and environment-driven bounded wait flag, retaining ordinary default invocation and failure propagation.
-- [ ] Run focused FCF tests plus coordinator tests, YAML parsing and `git diff --check`; review all allowed-file changes. The default `npm test` accesses DB and is prohibited by scope; record this verification limitation.
-- [ ] Commit owned changes and return exact HEAD plus ignored report with RED/GREEN commands/results and self-review. Root completes independent review and exact-HEAD CI before rollout.
+- [x] Extend the existing harness to retain actual command argv and evaluate the job timeout; assert explicit argv `scripts/cakaj-na-uvoze.mjs --liga es-ct-elit --najvec 300`, timeout 360; ordinary argv without `--najvec`, timeout 180.
+- [x] Run `node --test scripts/test-osvezi-fcf-predpomnilnik.mjs`; record expected RED for missing explicit budgets before workflow edits.
+- [x] Add the conditional timeout and environment-driven bounded wait flag, retaining ordinary default invocation and failure propagation.
+- [x] Run focused FCF tests plus coordinator tests, YAML parsing and `git diff --check`; review all allowed-file changes. The default `npm test` accesses DB and is prohibited by scope; record this verification limitation.
+- [x] Commit owned changes and return exact HEAD plus ignored report with RED/GREEN commands/results and self-review. Root completes independent review and exact-HEAD CI before rollout.
