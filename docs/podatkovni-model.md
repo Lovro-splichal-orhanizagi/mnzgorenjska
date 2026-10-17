@@ -316,8 +316,8 @@
   šele po uspešni posodobitvi. `imeHash`/`regHash` v
   `scripts/anonimizacija.mjs` morata ostati enaka SQL
   `anonimizacijski_kljuc` (smoke in `test:varnost`)
-- **Scout: ugovor in privolitev** (migraciji 20261016140100, 20261016160100;
-  `players.scout_skrit` ostane do 20261017090100 in se ne bere več).
+- **Scout: ugovor in privolitev** (migracije 20261016140100, 20261016160100,
+  20261017170100, ki je odstranila javni `players.scout_skrit`).
   Ugovor je v zaprti `scout.ugovori` (zgoščena ključa država + ime in država +
   šifra, kot `anonimizirani_igralci`; v javnem `players` bi bil seznam
   ugovornikov javen): stroj izloči vso osebo, tudi soimenjaka v državi in ob
