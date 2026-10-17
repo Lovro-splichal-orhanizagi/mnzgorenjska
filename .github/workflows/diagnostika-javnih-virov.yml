@@ -10,9 +10,11 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   dokument:
+    if: inputs.vir != 'dfb-capture'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     strategy:
@@ -98,3 +100,42 @@ jobs:
           name: diagnostic-${{ matrix.vir }}
           path: audit/document-${{ matrix.vir }}/
           retention-days: 14
+
+  dfb-capture:
+    if: inputs.vir == 'dfb-capture'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 38970734064
+          name: vir-dfb-2026
+          path: audit/failed-current
+      - name: Inspect three already-captured public reports (no source requests or database)
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs'
+          import {createHash} from 'node:crypto'
+          import {gzipSync} from 'node:zlib'
+          import {vZapisnik} from './scripts/viri/dfb.mjs'
+          const root='audit/failed-current',requests=JSON.parse(readFileSync(`${root}/prenosi.json`,'utf8'))
+          const plain=s=>s.replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim()
+          for(const id of ['2426097','2426099','2426100']){
+            const hits=requests.filter(r=>r.url.endsWith(`-${id}`))
+            if(hits.length!==1)throw Error(`Expected one captured report ${id}`)
+            const r=hits[0]
+            if(!/^[a-f0-9]{64}\.html$/.test(r.file))throw Error('Invalid captured filename')
+            const data=readFileSync(`${root}/${r.file}`),sha=createHash('sha256').update(data).digest('hex')
+            if(sha!==r.sha256)throw Error('Capture SHA mismatch')
+            const html=data.toString('utf8')
+            let result
+            try{const z=vZapisnik(html,{id});result={accepted:true,home:z.domaci.postava.length,away:z.gostje.postava.length}}catch(e){result={accepted:false,error:e.message}}
+            console.log(JSON.stringify({id,url:r.url,at:r.at,sha256:sha,bytes:data.length,result,lineupTables:(html.match(/class="[^"]*m-MatchDetails-lineup-table[^"]*"/g)||[]).length,tables:[...html.matchAll(/<table\b[^>]*>[\s\S]*?<\/table>/gi)].map(m=>({tag:m[0].match(/^<table[^>]*>/)[0],rows:(m[0].match(/<tr\b/g)||[]).length,text:plain(m[0]).slice(0,3000)}))},null,2))
+            console.log('DFB_CAPTURE:'+JSON.stringify({id,sha256:sha,gzipBase64:gzipSync(data).toString('base64')}))
+          }
+          NODE

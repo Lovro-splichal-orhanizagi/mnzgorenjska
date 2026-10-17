@@ -44,9 +44,12 @@ jobs:
 
   diagnostika-virov:
     if: github.event_name == 'workflow_dispatch' && inputs.diagnostika
+    permissions:
+      contents: read
+      actions: read
     uses: ./.github/workflows/diagnostika-javnih-virov.yml
     with:
-      vir: ${{ inputs.vir == 'dfb' && 'fussball' || inputs.vir || 'all' }}
+      vir: ${{ inputs.vir == 'dfb' && 'dfb-capture' || inputs.vir || 'all' }}
 
   preveri:
     if: ${{ !inputs.diagnostika }}
