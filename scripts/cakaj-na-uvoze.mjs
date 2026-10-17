@@ -128,8 +128,8 @@ function seKrize(tok, naslov, id) {
     if (!p.pise) return false
     return !p.drzava || !mojaDrzava || p.drzava === mojaDrzava
   }
-  if (tok === 'uvoz-lige.yml') {
-    const slug = /^Uvoz lige (\S+)$/.exec(naslov ?? '')?.[1]
+  if (['uvoz-lige.yml', 'uvoz-dfb-regije.yml', 'vklop-dfb-regije.yml'].includes(tok)) {
+    const slug = ligaZagona(tok, naslov)
     const liga = slug ? ligaPoSlugu.get(slug) : null
     if (!liga || !mojaDrzava) return true
     // Nočni uvoz bere le vklopljene lige, zato ga ročni uvoz nevklopljene ne
@@ -170,15 +170,27 @@ function seKrize(tok, naslov, id) {
   return true
 }
 
+// Regionalni uvoz/vklop uporabljata enak obseg države in lige kot ročni
+// uvoz. Neznan/starejši naslov ostane konservativno brez znanega obsega.
+function ligaZagona(tok, naslov) {
+  const vzorci = {
+    'uvoz-lige.yml': /^Uvoz lige (\S+)$/,
+    'uvoz-dfb-regije.yml': /^Uvoz odobrene DFB regije (de-regionalliga-(?:nord|west|suedwest|bayern))$/,
+    'vklop-dfb-regije.yml': /^Preverjen vklop DFB regije (de-regionalliga-(?:nord|west|suedwest|bayern))$/,
+  }
+  return vzorci[tok]?.exec(naslov ?? '')?.[1]
+}
+
 if (samoTece) {
   const tecejo = []
-  for (const tok of ['uvoz-zapisnikov.yml', 'uvoz-lige.yml', 'zdruzi-klube.yml', 'tedensko-cene.yml', 'razdeli-zlite-igralce.yml']) {
+  for (const tok of ['uvoz-zapisnikov.yml', 'uvoz-lige.yml', 'uvoz-dfb-regije.yml', 'vklop-dfb-regije.yml', 'zdruzi-klube.yml', 'tedensko-cene.yml', 'razdeli-zlite-igralce.yml']) {
     const zagoni = JSON.parse(gh('run', 'list', '--workflow', tok, '--limit', '50', '--json', 'databaseId,status,displayTitle'))
     for (const z of zagoni) {
       if (z.status === 'completed') continue
       // Ročni uvoz nevklopljene lige ne piše v nič, kar preverba gleda.
-      const slug = /^Uvoz lige (\S+)$/.exec(z.displayTitle ?? '')?.[1]
-      if (tok === 'uvoz-lige.yml' && slug && ligaPoSlugu.get(slug)?.aktivna === false) continue
+      const slug = ligaZagona(tok, z.displayTitle)
+      // Vklop lahko še neaktivno ligo med preverbo vključi: nanj čakamo.
+      if (['uvoz-lige.yml', 'uvoz-dfb-regije.yml'].includes(tok) && slug && ligaPoSlugu.get(slug)?.aktivna === false) continue
       tecejo.push(`${z.displayTitle} (${z.databaseId})`)
     }
   }
@@ -189,7 +201,7 @@ if (samoTece) {
 
 for (let min = KORAK_MIN; min <= NAJVEC_MIN; min += KORAK_MIN) {
   const pred = []
-  const tokovi = ['uvoz-zapisnikov.yml', 'uvoz-lige.yml', 'zdruzi-klube.yml', 'tedensko-cene.yml', 'razdeli-zlite-igralce.yml']
+  const tokovi = ['uvoz-zapisnikov.yml', 'uvoz-lige.yml', 'uvoz-dfb-regije.yml', 'vklop-dfb-regije.yml', 'zdruzi-klube.yml', 'tedensko-cene.yml', 'razdeli-zlite-igralce.yml']
   if (SKUPEN_VIR[mojaDrzava]) tokovi.push('grbi.yml')
   for (const tok of tokovi) {
     // Brez --status: tudi čakajoči (queued) starejši zagon mora priti prvi.
