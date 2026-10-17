@@ -30,6 +30,7 @@
 import { execFileSync } from 'node:child_process'
 import { createClient } from '@supabase/supabase-js'
 import { locenaHkrati } from './hkratnost.mjs'
+import { vseVrstice } from './strani.mjs'
 
 const arg = (ime) => {
   const i = process.argv.indexOf(ime)
@@ -53,7 +54,8 @@ const popravekLiga = arg('--tekmovanje')
 // tega vira (run-name "Grbi klubov <vir>").
 // Španija: vse lige bere fcf.cat (en zapisnik na tekmo, 3 s med zahtevki).
 // Turčija: vse lige bere tff.org (3 s med zahtevki, brez dovoljenja TFF).
-const SKUPEN_VIR = { EE: 'jalgpall', ES: 'fcf', TR: 'tff', NO: 'nff' }
+// Nemčija: en uvoz + en ločeno serializiran audit DFB, vsak s premorom 6 s.
+const SKUPEN_VIR = { EE: 'jalgpall', ES: 'fcf', TR: 'tff', NO: 'nff', DE: 'dfb' }
 
 const { GITHUB_RUN_ID, GITHUB_REPOSITORY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = process.env
 if (!GITHUB_RUN_ID || !GITHUB_REPOSITORY) {
@@ -62,8 +64,13 @@ if (!GITHUB_RUN_ID || !GITHUB_REPOSITORY) {
 }
 const db = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } })
 
-const { data: lige, error } = await db.from('competitions').select('slug, active, source, countries!inner(code), federations(code)')
-if (error) {
+// V produkciji je več kot 1000 lig; tudi poznejši kandidati morajo dobiti državo.
+let lige
+try {
+  lige = await vseVrstice((od, do_) => db.from('competitions')
+    .select('slug, active, source, countries!inner(code), federations(code)')
+    .order('id').range(od, do_))
+} catch (error) {
   console.error(`Lig ni mogoče prebrati: ${error.message}`)
   process.exit(1)
 }

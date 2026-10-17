@@ -134,3 +134,45 @@ Celotna ponovitev preveri vseh450 izvornih SHA-256, dejanske klubovske razporede
 Pri 2401959, 2402023 in 2402046 so uradni zapisi sodelujočih klubov potrdili pravilne strelce in čase, vendar napačne vmesne oznake izida v DFB. Podatkovni register `scripts/viri/dfb-korekcije.json` za te tri zgodovinske tekme vsebuje celotno pričakovano identiteto, obe ekipi, datum, polčas, končni izid ter vsak izvorni gol z imenom, stranjo, surovim časom, oznakami in izidom. Pred uporabo se morata izvirna razdelka časovnice in golov ujemati. Spremeni se samo šest konkretno potrjenih vmesnih izidov; izvorni izid, izvorni celoten podatek, dokazni URL, datum preverbe ter SHA vzorca in dejanskega dokumenta ostanejo v `rezultatVir`, `popravekIzida` in `popravki`, skupaj z opozorilom.
 
 Pravila sprejmejo samo celoten znani napačni vzorec ali celoten pričakovani vzorec, če DFB oznake popravi sam. Delna sprememba ali drug odmik zahteva ponovno preverbo in zavrnitev. Strelcev, časa, strani ali vrstnega reda ne spreminjamo. Vse običajne preverbe aktivnih igralcev, polčasa, končnega izida in dogodkov se nato izvedejo še vedno. Nespremenjeni zajemi in regresijski preizkusi vsebujejo potrjene popravke, omejeno uradno dopolnitev Luisove vloge ter zavrnitve vseh nepregledanih odstopanj.
+
+## Regionalni pregled DFB pred uvozom
+
+Register `scripts/viri/dfb-lige.json` izrecno veže vsako šifro na sezono,
+uradno pot in začetni klub. Kandidati še niso potrjeni s celotnim zajemom:
+
+| liga | tekoča šifra (2026/27) | arhivska šifra (2025/26) |
+| --- | --- | --- |
+| Nord | `regionalliga-nord/2026-2027` | `regionalliga-nord/2025-2026` |
+| West | `regionalliga-west/2026-2027` | `regionalliga-west/2025-2026` |
+| Südwest | `regionalliga-suedwest/2026-2027` | `regionalliga-suedwest/2025-2026` |
+| Bayern | `regionalliga-bayern/2026-2027` | `regionalliga-bayern/2025-2026` |
+
+Vsaka sezona ima 18 klubov, 34 krogov in 306 tekem, razen Bayern 2026/27:
+19 klubov, 38 krogov, 342 tekem in dva prosta kroga na klub. Uradnih
+identifikatorjev klubov ne sestavljamo iz prikazanih imen.
+
+Po pregledu kode se ročno sproži `preveri-dfb-ligo.yml` na pregledanem commitu:
+`liga` je ena od štirih zgornjih osnovnih šifer (brez `de-`), `sezona` pa
+`current`, `archive` ali privzeti `all`. En posel zaporedno zajame zahtevani
+sezoni; napaka prve ne preskoči druge, posel pa ostane neuspešen. Artefakta
+`vir-dfb-<liga>-2026` in `vir-dfb-<liga>-2025` se ohranita 14 dni, tudi ob
+zavrnitvi. Vsebujeta poročilo, prenose in dosegljive surove dokumente z
+URL, časom in SHA. Zajem nima ključa baze, SSH ali obvestil in ne piše v
+produkcijo. Skupni časovni limit za obe sezoni je 180 minut.
+
+Novi in starejši Nordost audit imata isto stalno skupino sočasnosti
+`live-source-dfb-readonly` čez vse veje. Tudi Nordost sezoni sta zaporedni,
+brez matrike; njegov limit je 90 minut. GitHub ohrani največ en čakajoči
+posel na skupino: operativno sprožaj en audit naenkrat, saj lahko dodatni
+čakajoči zagon zamenja prejšnjega. Uvozi DE se med seboj vrstijo prek
+obstoječe koordinacije skupnega vira `dfb`, tudi pri neaktivnih ligah.
+Največ en uvoz in en audit bereta s premorom šest sekund na bralca,
+skupaj povprečno največ en zahtevek na tri sekunde. CAPTCHA, izziv ali
+401/403/429 ustavijo zajem; zavrnitve ne obhajamo.
+
+Javni FUSSBALL.DE kartoni brez pripisanih imen ter nepovezani ticker dogodki
+ne zadoščajo za druge nemške lige. Reprezentativni zapisniki teh štirih
+Regionallig potrjujejo podporo razčlenjevalnika, ne pripravljenosti za vklop.
+Celotna arhivska in tekoča zgodovina, uradni začetni vratarji, dejanske
+menjave, produkcijska enakost in cenik potrebujejo ločene preverbe pred
+varovanim vklopom. Nordostova obstoječa aktivacija ostane ločena.

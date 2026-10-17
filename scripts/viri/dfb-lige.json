@@ -1,0 +1,77 @@
+{
+  "regionalliga-nordost": {
+    "name": "Regionalliga Nordost",
+    "seasons": {
+      "2025-2026": {
+        "seed": "bfc-dynamo",
+        "teams": 18,
+        "rounds": 34
+      },
+      "2026-2027": {
+        "seed": "bfc-dynamo",
+        "teams": 18,
+        "rounds": 34
+      }
+    }
+  },
+  "regionalliga-nord": {
+    "name": "Regionalliga Nord",
+    "seasons": {
+      "2025-2026": {
+        "seed": "vfb-oldenburg",
+        "teams": 18,
+        "rounds": 34
+      },
+      "2026-2027": {
+        "seed": "vfb-oldenburg",
+        "teams": 18,
+        "rounds": 34
+      }
+    }
+  },
+  "regionalliga-west": {
+    "name": "Regionalliga West",
+    "seasons": {
+      "2025-2026": {
+        "seed": "rot-weiss-oberhausen",
+        "teams": 18,
+        "rounds": 34
+      },
+      "2026-2027": {
+        "seed": "rot-weiss-oberhausen",
+        "teams": 18,
+        "rounds": 34
+      }
+    }
+  },
+  "regionalliga-suedwest": {
+    "name": "Regionalliga Südwest",
+    "seasons": {
+      "2025-2026": {
+        "seed": "fsv-frankfurt",
+        "teams": 18,
+        "rounds": 34
+      },
+      "2026-2027": {
+        "seed": "fsv-frankfurt",
+        "teams": 18,
+        "rounds": 34
+      }
+    }
+  },
+  "regionalliga-bayern": {
+    "name": "Regionalliga Bayern",
+    "seasons": {
+      "2025-2026": {
+        "seed": "bayern-muenchen-ii",
+        "teams": 18,
+        "rounds": 34
+      },
+      "2026-2027": {
+        "seed": "bayern-muenchen-ii",
+        "teams": 19,
+        "rounds": 38
+      }
+    }
+  }
+}

@@ -35,8 +35,8 @@
     "preizkus-html": "node scripts/hetzner/html/preizkus.mjs",
     "test:novanet": "node --test scripts/test-novanet-izidi.mjs scripts/test-novanet.mjs scripts/test-novanet-predpomnilnik.mjs scripts/test-novanet-transport.mjs",
     "test:fussball": "node --test scripts/test-fussball-pisava.mjs scripts/test-fussball-datum.mjs scripts/test-fussball.mjs scripts/test-fussball-validation.mjs",
-    "test:dfb": "node --test scripts/test-dfb.mjs scripts/test-dfb-cakajoci.mjs scripts/test-predpomnjen-vratar.mjs",
-    "test:sources": "node --test scripts/test-novanet-izidi.mjs scripts/test-novanet.mjs scripts/test-novanet-predpomnilnik.mjs scripts/test-fussball-pisava.mjs scripts/test-fussball-datum.mjs scripts/test-fussball.mjs scripts/test-fussball-validation.mjs scripts/test-dfb.mjs scripts/test-dfb-cakajoci.mjs scripts/test-preveri-vir-sezono.mjs scripts/test-rezervni-predpomnilnik.mjs scripts/test-nemcija.mjs scripts/test-novanet-transport.mjs scripts/test-predpomnjen-vratar.mjs"
+    "test:dfb": "node --test scripts/test-dfb.mjs scripts/test-dfb-regije.mjs scripts/test-dfb-cakajoci.mjs scripts/test-predpomnjen-vratar.mjs",
+    "test:sources": "node --test scripts/test-cakaj-na-uvoze.mjs scripts/test-novanet-izidi.mjs scripts/test-novanet.mjs scripts/test-novanet-predpomnilnik.mjs scripts/test-fussball-pisava.mjs scripts/test-fussball-datum.mjs scripts/test-fussball.mjs scripts/test-fussball-validation.mjs scripts/test-dfb.mjs scripts/test-dfb-regije.mjs scripts/test-dfb-cakajoci.mjs scripts/test-preveri-vir-sezono.mjs scripts/test-rezervni-predpomnilnik.mjs scripts/test-nemcija.mjs scripts/test-novanet-transport.mjs scripts/test-predpomnjen-vratar.mjs"
   },
   "dependencies": {
     "@capacitor-firebase/messaging": "^8.5.2",
