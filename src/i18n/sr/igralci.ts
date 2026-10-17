@@ -333,7 +333,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     preklici: 'Otkaži',
     caka: 'Čeka na potvrdu.',
     cakaOpis: 'Može da ga potvrdi poznavalac kluba, dva potvrđena saigrača ili SLFF. Zahtev vidiš samo ti.',
-    cakaPrijatelj: 'Dovedi prijatelja i brže dolaziš na red: svaki koji se prijavi preko tvog linka i sastavi tim pomera te napred.',
+    cakaPrijatelj: 'Dovedi prijatelja i skoči na vrh reda čekanja: kad se prijavi preko tvog linka i sastavi tim, tvoj zahtev dolazi na prvo mesto.',
     cakaDeli: 'Pozovi prijatelja',
     cakaVabilo: 'Igraš sa mnom? SLFF je besplatna fantasy liga sa našim utakmicama i igračima. Prijavi se preko ovog linka i sastavi tim: {povezava}',
     cakaPred: { one: 'Ispred tebe je još {n} zahtev.', few: 'Ispred tebe su još {n} zahteva.', other: 'Ispred tebe je još {n} zahteva.' },

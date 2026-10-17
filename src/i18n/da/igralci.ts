@@ -331,7 +331,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     preklici: 'Annuller',
     caka: 'Venter på bekræftelse.',
     cakaOpis: 'Den kan bekræftes af en insider i klubben, to bekræftede holdkammerater eller SLFF. Kun du kan se denne anmodning.',
-    cakaPrijatelj: 'Tag en ven med, så bliver du tjekket hurtigere: alle, der tilmelder sig via dit link og sætter et hold, rykker dig frem i køen.',
+    cakaPrijatelj: 'Invitér en ven og spring forrest i køen: når din ven tilmelder sig via dit link og sætter et hold, kommer din anmodning øverst.',
     cakaDeli: 'Inviter en ven',
     cakaVabilo: 'Spiller du med? SLFF er en gratis fantasyliga med vores kampe og spillere. Tilmeld dig via dette link og sæt et hold: {povezava}',
     cakaPred: { one: 'Der er {n} anmodning mere foran dig.', other: 'Der er {n} anmodninger mere foran dig.' },

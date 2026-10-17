@@ -336,7 +336,7 @@ export const igralci: NonNullable<Prevod['igralci']> = {
     preklici: 'Atcelt',
     caka: 'Gaida apstiprinājumu.',
     cakaOpis: 'Apstiprināt var kluba eksperts, divi apstiprināti komandas biedri vai SLFF. Pieprasījumu redzi tikai tu.',
-    cakaPrijatelj: 'Atved draugu, un tava kārta pienāks ātrāk: katrs, kurš reģistrējas ar tavu saiti un izveido komandu, pavirza tevi uz priekšu.',
+    cakaPrijatelj: 'Uzaicini draugu un nonāc rindas sākumā: kad viņš reģistrēsies ar tavu saiti un izveidos komandu, tavs pieteikums nonāks pirmajā vietā.',
     cakaDeli: 'Uzaicini draugu',
     cakaVabilo: 'Spēlē ar mani? SLFF ir bezmaksas fantāzijas līga ar mūsu spēlēm un spēlētājiem. Reģistrējies ar šo saiti un izveido komandu: {povezava}',
     cakaPred: { zero: 'Tev priekšā vēl ir {n} pieprasījumu.', one: 'Tev priekšā vēl ir {n} pieprasījums.', other: 'Tev priekšā vēl ir {n} pieprasījumi.' },

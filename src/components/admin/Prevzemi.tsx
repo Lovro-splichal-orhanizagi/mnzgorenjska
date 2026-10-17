@@ -158,8 +158,10 @@ export default function Prevzemi() {
       <p className="text-xs text-slate-500">
         Vsi čakajoči zahtevki, spori, prijavljeni profili in potrjeni v zadnjih 60 dneh. Čakajoči: potrdi sam,
         pošlji klubu (mail z enkratno povezavo in e-naslovom prosilca) ali zavrni. Potrdita ga lahko tudi
-        poznavalec kluba ali dva potrjena soigralca. Vrstni red: najprej tisti, ki so pripeljali prijatelje
-        (prijava prek njihove povezave in sestavljena ekipa), nato po starosti — tako je obljubljeno prosilcem.
+        poznavalec kluba ali dva potrjena soigralca. Čakajoči so razvrščeni po zadnjem prijatelju, ki se je
+        prijavil prek prosilčeve povezave in prvič sestavil nehišno ekipo: najnovejša kvalifikacija je prva.
+        Ob enakem času odločata čas zahtevka (starejši prej) in nato njegov ID. Brez kvalificiranih prijateljev
+        zahtevki sledijo po času oddaje, ob enakem času po ID-ju.
       </p>
       {povabila && povabila.registracij > 0 && (
         <p className="text-xs text-slate-400">
