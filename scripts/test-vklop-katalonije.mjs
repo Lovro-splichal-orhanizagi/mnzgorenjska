@@ -1,5 +1,9 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { spawnSync } from 'node:child_process'
 import { preveriLigo, izberiPrviKrog, pripraviBatch, aktivirajBatch, preberiPosnetek, preberiVse, kanonicno, sha256, KATALONSKE_LIGE } from './vklopi-katalonijo.mjs'
 
 const NOW = Date.parse('2026-10-17T12:00:00Z')
@@ -210,6 +214,51 @@ test('blocked and already-active candidates can be reviewed without making any a
     assert.equal(r.results.length, 0); assert.equal(db.mutations.length, 0)
   }
 })
+// Run the checked-in shell, replacing only the external node process boundary.
+function runReleaseShell(t, activate, failWait = false) {
+  const workflow = readFileSync(new URL('../.github/workflows/vklop-katalonije.yml', import.meta.url), 'utf8')
+  const steps = workflow.split(/^      - /m).slice(1).map(step => {
+    const line = step.match(/^        run: (.*)$/m)
+    return !line ? '' : line[1] === '|' ? step.slice(line.index + line[0].length + 1).split('\n').filter(l => l.startsWith('          ')).map(l => l.slice(10)).join('\n') : line[1]
+  })
+  const wait = steps.filter(s => s.includes('scripts/cakaj-na-uvoze.mjs'))
+  const helper = steps.filter(s => s.includes('scripts/vklopi-katalonijo.mjs'))
+  assert.equal(wait.length, 1)
+  assert.equal(helper.length, 1)
+  assert.ok(steps.indexOf(wait[0]) < steps.indexOf(helper[0]))
+  const root = mkdtempSync(join(tmpdir(), 'katalonija-wait-'))
+  t.after(() => rmSync(root, { recursive: true, force: true }))
+  const log = join(root, 'calls')
+  writeFileSync(log, '')
+  writeFileSync(join(root, 'node'), `#!${process.execPath}\nconst fs = require('node:fs'), args = process.argv.slice(2); fs.appendFileSync(process.env.CALL_LOG, JSON.stringify(args) + '\\n'); if (process.env.FAIL_WAIT === 'true' && args[0] === 'scripts/cakaj-na-uvoze.mjs') process.exit(79);`, { mode: 0o755 })
+  const result = spawnSync('bash', ['-euo', 'pipefail', '-c', `${wait[0]}\n${helper[0]}`], {
+    cwd: root, encoding: 'utf8', timeout: 5000,
+    env: { PATH: `${root}:${process.env.PATH}`, CALL_LOG: log, FAIL_WAIT: String(failWait), ACTIVATE: String(activate), LIGE: '', APPROVED_SHA: '' },
+  })
+  assert.ifError(result.error)
+  return { status: result.status, stderr: result.stderr, commands: readFileSync(log, 'utf8').trim().split('\n').filter(Boolean).map(line => JSON.parse(line)) }
+}
+
+test('release workflow bounds the hosted job to six hours', () => {
+  const workflow = readFileSync(new URL('../.github/workflows/vklop-katalonije.yml', import.meta.url), 'utf8')
+  assert.equal(Number(workflow.match(/^    timeout-minutes: (.+)$/m)[1]), 360)
+})
+for (const activate of [false, true]) {
+  test(`release workflow waits for ES with a fixed five-hour limit before ${activate ? 'activate' : 'prepare'}`, t => {
+    const result = runReleaseShell(t, activate)
+    assert.equal(result.status, 0, result.stderr)
+    assert.deepEqual(result.commands, [
+      ['scripts/cakaj-na-uvoze.mjs', '--drzava', 'ES', '--najvec', '300'],
+      ['scripts/vklopi-katalonijo.mjs', activate ? 'activate' : 'prepare', '--output', 'release/katalonija'],
+    ])
+  })
+  test(`failed release coordinator prevents the ${activate ? 'activate' : 'prepare'} helper`, t => {
+    const result = runReleaseShell(t, activate, true)
+    assert.equal(result.status, 79, result.stderr)
+    assert.deepEqual(result.commands, [['scripts/cakaj-na-uvoze.mjs', '--drzava', 'ES', '--najvec', '300']])
+  })
+}
+
 test('workflow prepares by default, runs one fixed ES coordinator and retains partial-failure evidence', async () => {
   const { readFileSync } = await import('node:fs')
   const text = readFileSync(new URL('../.github/workflows/vklop-katalonije.yml', import.meta.url), 'utf8')

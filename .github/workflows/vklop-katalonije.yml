@@ -26,7 +26,7 @@ concurrency:
 jobs:
   catalonia:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 360
     env:
       LIGE: ${{ inputs.lige }}
       ACTIVATE: ${{ inputs.activate }}
@@ -50,7 +50,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: node scripts/cakaj-na-uvoze.mjs --drzava ES
+        run: node scripts/cakaj-na-uvoze.mjs --drzava ES --najvec 300
       - name: Celoten pregled in opcijski vklop
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
