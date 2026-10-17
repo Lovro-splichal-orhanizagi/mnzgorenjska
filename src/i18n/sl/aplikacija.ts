@@ -1,6 +1,10 @@
 // Nizi za področje `aplikacija` (glej src/i18n/index.tsx): ogrodje strani —
 // meni, izbirnik lige, pojavna okna, noga, klepet, sponzor, napake in lib/.
 export const aplikacija = {
+  rumeniKartoni: {
+    nepripisani: 'Nepripisani rumeni kartoni: {n}. Zanje odbitki točk niso obračunani.',
+    nedosegljivo: 'Podatek o pripisanosti rumenih kartonov trenutno ni na voljo.',
+  },
   naslovStrani: {
     osnova: 'SLFF — Sunday League Fantasy Football',
     zStranjo: '{naslov} · SLFF',

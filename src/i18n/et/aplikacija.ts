@@ -2,6 +2,10 @@
 import type { Prevod } from '../jedro.ts'
 
 export const aplikacija: NonNullable<Prevod['aplikacija']> = {
+  rumeniKartoni: {
+    nepripisani: 'Määramata kollased kaardid: {n}. Nende kaartide eest pole punkte maha arvatud.',
+    nedosegljivo: 'Kollaste kaartide määramise teave pole praegu saadaval.',
+  },
   naslovStrani: {
     osnova: 'SLFF - Sunday League Fantasy Football',
     zStranjo: '{naslov} · SLFF',

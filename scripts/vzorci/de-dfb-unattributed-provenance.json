@@ -1,0 +1,32 @@
+[
+  {
+    "url": "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/2-spieltag/borussia-dortmund-ii-sportfreunde-siegen-2402201",
+    "ime": "match-2402201.html",
+    "file": "de-dfb-unattributed-2402201.html",
+    "sha256": "600693a5ad5d579e1ab43805382d49716cf5d274c5fddac50b87c3373f4c2c58",
+    "at": "2026-10-17T12:26:12.248Z",
+    "matchId": "de-dfb-2402201",
+    "league": "regionalliga-west",
+    "runId": "39032122832"
+  },
+  {
+    "url": "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/2-spieltag/tsv-schwaben-augsburg-vfb-eichstaett-2401588",
+    "ime": "match-2401588.html",
+    "file": "de-dfb-unattributed-2401588.html",
+    "sha256": "edfb464fb16dc91aaa7279487c423ba2bae1481f7e30dbc729cbde9cb24d3770",
+    "at": "2026-10-17T16:25:55.911Z",
+    "matchId": "de-dfb-2401588",
+    "league": "regionalliga-bayern",
+    "runId": "39048972242"
+  },
+  {
+    "url": "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/1-spieltag/1-fc-nuernberg-ii-tsv-schwaben-augsburg-2401579",
+    "ime": "match-2401579.html",
+    "file": "de-dfb-unattributed-2401579.html",
+    "sha256": "650ff13c59ffdc9b40ca32675b2c4d3d056c3a2931f178d63906ca2f5504f2f0",
+    "at": "2026-10-17T16:24:21.620Z",
+    "matchId": "de-dfb-2401579",
+    "league": "regionalliga-bayern",
+    "runId": "39048972242"
+  }
+]

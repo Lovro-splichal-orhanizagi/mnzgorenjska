@@ -42,8 +42,10 @@ razporedom pomagajo pri preverjanju vira, skupna baza klubov pa še vedno
 uporablja ime znotraj države. Preglej preslikavo klubov med sezonama.
 
 `scripts/viri/fussball.mjs` ostaja lokalni validator shranjenih strani.
-Zajeti javni kartoni nimajo pripisanega igralca, zato ta validator ne vrača
-fantasy nastopov in ni produkcijski uvoznik.
+Zajeti javni kartoni lahko nimajo pripisanega igralca. To samo po sebi ni
+razlog za zavrnitev sicer popolne tekme; validator pa še vedno nima
+preverjenega celotnega sezonskega prehoda in ne vrača fantasy nastopov ter
+ni registriran produkcijski uvoznik.
 
 ## Galicija
 
@@ -275,3 +277,87 @@ iste statistične, cenovne, časovne in zaklepne pogoje. V1 ostane podprt;
 Nordostov RPC ostane ločen. Dejanska zaključnost tekočih tekem je dodatna
 izvorna zahteva: zelen replay ne dokazuje, da je bil zajem narejen po koncu
 tekme. Uradno manjkajoči ali protislovni podatki ostanejo blokada.
+
+
+## Nepripisani običajni rumeni kartoni (17. 10. 2026)
+
+Prva produkcijska politika velja samo za štiri registrirane neaktivne DFB
+kandidate Nord, West, Südwest in Bayern. Nordostova privzeta razčlenitev,
+obstoječi podatki in ločen postopek vklopa se ne spreminjajo. Majhno število
+običajnih rumenih kartonov brez dokazane vloge prejemnika ne izloči sicer
+uporabne tekme. Ni izpuščanja celih zapisnikov in ni odstotkovnega praga.
+Vsi dokazani nastopi, minute, menjave, goli, izidi in pripisani kartoni se
+ohranijo. Nepripisan karton ne ustvari igralca, klopi ali nastopa in nima
+odbitka točk; odsotnost odbitka ne dokazuje nič rumenih kartonov.
+
+Vloga igralec-trener zahteva isto izrecno javno profilno šifro v postavi in
+vrstici trenerja iste strani. Ime samo, manjkajoča šifra ali različni šifri
+niso dokaz. Pri dokazani dvojni vlogi običajni rumeni ostane nepripisan,
+ker vir ne pove, v kateri vlogi je bil prejet. Znani igralci in uradne
+osebe ohranijo dosedanje kartone in sankcije. Rdeči in drugi rumeni nikoli
+ne dobijo te izjeme. Dva navadna rumena istega igralca brez izključitve,
+neveljaven čas, nasprotna stran, trk profila, neskladje razdelkov dogodkov,
+protislovni goli, manjkajoče postave ali vratarji in nepopoln razpored
+ostanejo blokade.
+
+Skupni kodek `src/lib/nepripisaniRumeni.mjs` preveri in kodira po eno omejeno
+opozorilo `SLFF_UNATTRIBUTED_YELLOW_V1:` na dogodek. `matches.import_warnings`
+hrani javno sled: vir in identiteto tekme, stran, celoten čas, minuto,
+razlog, SHA/ordinal dogodka in javni profil, če obstaja; brez surovega HTML
+ali osebnih opomb. Nepripisani dogodki niso v `rumeni`. Kodek je del
+pregledanega izvornega prstnega odtisa, manifest pa preveri vse bajte
+opozoril in znane nastope. Sprememba ne potrebuje migracije, RPC ali
+spremembe točkovanja.
+
+Stran tekme ločeno prebere javni `matches.import_warnings` za točni ID,
+preveri in združi podvojena opozorila s skupnim kodekom ter nad postavami
+pokaže prevedeno število in pojasnilo o manjkajočih odbitkih. Ne kaže JSON,
+profilnih šifer ali diagnostike parserja. Napaka tega neobveznega branja
+pokaže le splošno nedosegljivost podatka; znana statistika ostane na voljo.
+Po izvorni korekciji opozorilo izgine, obstoječa idempotentna zamenjava
+nastopov pa zapiše znani karton in odbitek enkrat.
+
+Ponovni sveži prenos opozorjenih tekem je omejen na običajno nastavljeno
+nedavno okno `--sveze` (če ni podano, 7 dni) in obstoječi proračun zahtevkov
+vira. Nočni uvoz ne pregleduje znova vsega zgodovinskega arhiva zaradi
+opozoril. Staro opozorilo se popravi z izrecnim ciljnim uvozom, npr. v
+odobrenem Actions okolju z običajnimi nastavitvami lige:
+
+```bash
+node scripts/uvoz-zapisnikov.mjs --tekmovanje de-regionalliga-west --liga regionalliga-west/2025-2026 --zapisnik de-dfb-2402201
+```
+
+`--zapisnik` zahteva sveži HTML prav tega starega zapisnika; ne posega v
+vse stare tekme. Enak izvorni odtis preskoči podvojen vpis, spremenjen pa
+zamenja nastope in opozorila. To ni obljuba zgodovinskega prevrednotenja
+cen ali spremembe pravil za nazaj; ceniki imajo svoj obstoječi postopek.
+
+Lokalna ponovitev ohranjenih nespremenjenih zajemov (ne nov živi zajem) je
+po tej politiki dala naslednjo pokritost. SHA/URL/prvotni UTC treh shranjenih
+regresijskih zapisnikov so v preverjenem
+[registru njihovega izvora](../../scripts/vzorci/de-dfb-unattributed-provenance.json).
+Ta register ne vsebuje celotnih sezonskih zajemov. Celotna lokalna diagnostika
+ponovitve in primerjava prej sprejetih statistik sta v
+`.superpowers/sdd/2026-10-17-unattributed-yellow-cards/task-1-report.md`;
+to je prezrto lokalno dokazno gradivo, ki ni v gitu in ob svežem checkoutu
+ni na voljo.
+
+| kandidat | arhiv 2025/26 | tekoči zajem 2026/27 | preostale blokade |
+| --- | --- | --- | --- |
+| Nord | 302/306 | zavrnjen razpored; le 18 klubskih strani | 4 arhivski zapisniki; podvojen usmerjeni par ekip v tekočem razporedu |
+| West | 297/306 | zavrnjen razpored; le 18 klubskih strani | 9 arhivskih zapisnikov; podvojen usmerjeni par ekip v tekočem razporedu |
+| Südwest | 302/306 | 103/105 zajetih odigranih zapisnikov | 4 arhivski in 2 tekoča zapisnika |
+| Bayern | 304/306 | 130/132 zajetih odigranih zapisnikov | 2 arhivska in 2 tekoča zapisnika |
+
+West `2402201` ohrani neznani običajni rumeni pri `90+4` brez izmišljenega
+nastopa. Bayern ima 32 sprejetih zapisnikov z dokazano dvojno vlogo profila
+`112345`, od tega 10 z nepripisanim rumenim. To ne razreši drugih napak:
+Südwest `2402929` še vedno nima potrjene začetne postave/vratarja,
+`2402984` ima vstop izključenega igralca in `2403004` dva rumena brez
+izključitve. Bayern `2425106` ostaja neskladen pri golih/izidu, `2425105`
+pa ima nepodprt združen gol ter še nerešeno identiteto Noah Shawn/Noah
+Agbaje. Napaka, ki jo parser vrne prvo, ni popoln seznam težav.
+
+Te štiri lige zato ostanejo neaktivne do vseh preostalih preverjenih
+pogojev. Politika ne dokazuje pripravljenosti drugih nemških lig ali
+600 živih lig; FUSSBALL.DE ostaja neregistriran validator shranjenih strani.

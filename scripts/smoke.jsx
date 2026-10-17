@@ -11,7 +11,9 @@ import Igralci from '../src/pages/Igralci'
 import Lestvica from '../src/pages/Lestvica'
 import Rezultati from '../src/pages/Rezultati'
 import Tabela from '../src/pages/Tabela'
-import Tekma from '../src/pages/Tekma'
+import Tekma, { OpozoriloRumenih } from '../src/pages/Tekma'
+import IgrisceTocke from '../src/components/IgrisceTocke'
+import { encodeUnattributedYellow } from '../src/lib/nepripisaniRumeni.mjs'
 import Prijava from '../src/pages/Prijava'
 import MojaEkipa from '../src/pages/MojaEkipa'
 import Glasovanje from '../src/pages/Glasovanje'
@@ -162,6 +164,46 @@ for (const [ime, Komponenta, pot] of strani) {
   } catch (e) {
     preveri(`izris: ${ime}`, false, e.message)
   }
+}
+
+// Match warning/codec boundary: removing validation/deduplication, retaining a
+// corrected warning, or suppressing statistics on unavailable metadata breaks this.
+{
+  const dogodek = {
+    source: 'dfb', matchId: 'de-dfb-2402201',
+    sourceUrl: 'https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/25-spieltag/test-2402201',
+    side: 0, clock: "90+4'", minute: 90, reason: 'unknown-role',
+    eventSha256: 'a'.repeat(64), ordinal: 0, profileId: '352879',
+  }
+  const prvi = encodeUnattributedYellow(dogodek)
+  const drugi = encodeUnattributedYellow({ ...dogodek, ordinal: 1, eventSha256: 'b'.repeat(64) })
+  const narobe = prvi.replace('"side":0', '"side":9')
+  const izris = (opozorila, nedosegljivo = false) => renderToString(
+    <StaticRouter location="/match/1">
+      <TekmovanjeProvider>
+        <OpozoriloRumenih opozorila={opozorila} nedosegljivo={nedosegljivo} />
+        <IgrisceTocke ekipa={{ ime: 'Known club' }} nastopi={[
+          { player_id: 42, full_name: 'Known Scorer', position: 'FWD', started: true,
+            minutes_played: 90, goals: 1, yellow_cards: 1, points: 5 },
+        ]} />
+      </TekmovanjeProvider>
+    </StaticRouter>,
+  ).replace(/<!-- -->/g, '')
+  const nepopolno = izris([prvi, prvi, drugi, narobe, 'unrelated parser diagnostic'])
+  preveri('tekma: nepripisani rumeni se validirajo in štejejo enkrat',
+    nepopolno.includes('Nepripisani rumeni kartoni: 2.') && nepopolno.includes('Zanje odbitki točk niso obračunani.'))
+  preveri('tekma: javno opozorilo ne izpiše JSON, profilov ali diagnostike',
+    !['SLFF_UNATTRIBUTED_YELLOW_V1', '352879', 'eventSha256', 'unrelated parser diagnostic'].some(x => nepopolno.includes(x)))
+  const popravljeno = izris([])
+  preveri('tekma: po pripisu kartona opozorilo izgine in znani nastopi ostanejo',
+    !popravljeno.includes('Nepripisani rumeni kartoni') && [nepopolno, popravljeno].every(x =>
+      x.includes('/player/42') && x.includes('Scorer') && x.includes('⚽') && x.includes('🟨')))
+  preveri('tekma: neveljavna opozorila se ne prikazujejo',
+    izris([narobe, 'SLFF_UNATTRIBUTED_YELLOW_V1:{']).includes('Nepripisani rumeni kartoni') === false)
+  const nedosegljivo = izris(null, true)
+  preveri('tekma: napaka neobveznih podatkov ne skrije znane statistike',
+    nedosegljivo.includes('Podatek o pripisanosti rumenih kartonov trenutno ni na voljo.') &&
+    nedosegljivo.includes('/player/42') && nedosegljivo.includes('⚽') && nedosegljivo.includes('🟨'))
 }
 
 preveri('pravno: razdelek Scout s sidrom #scout (povezava za ugovor)',

@@ -2,6 +2,10 @@
 import type { Prevod } from '../jedro.ts'
 
 export const aplikacija: NonNullable<Prevod['aplikacija']> = {
+  rumeniKartoni: {
+    nepripisani: 'Tarjetas amarillas sin asignar: {n}. No se han descontado puntos por estas tarjetas.',
+    nedosegljivo: 'La información sobre la asignación de tarjetas amarillas no está disponible en este momento.',
+  },
   naslovStrani: {
     osnova: 'SLFF — Sunday League Fantasy Football',
     zStranjo: '{naslov} · SLFF',

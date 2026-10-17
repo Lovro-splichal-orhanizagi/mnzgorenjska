@@ -13,9 +13,21 @@ export function workflowHash(commit,path){
  if(!original.equals(readFileSync(path)))throw Error('Capture/replay workflow differs from reviewed implementation')
  return sha256(original)
 }
+// These two immutable, reviewed capture implementations predate the warning
+// codec. Preserve their original ten-file fingerprint, never infer a smaller
+// dependency set from missing git objects. All other commits require the full
+// current sourceFiles list, including the codec, and fail closed if absent.
+const historicalParserHashes={
+ a48fd89071aae0d2097603110c5442324fc59e3d:'8da6531575cdea2fc740c87eb437a897f796d9c27649dc4dcd56aff5119e1431',
+ '671643e4a50e6e50cc22628a157fb027e0b58deb':'5aaa2067a4f152d62bc4df4bb49492d89e0852d04922fc8709fbf7fb1ea9ebd9',
+}
+const historicalSourceFiles=['scripts/viri/dfb.mjs','scripts/viri/dfb-lige.json','scripts/viri/dfb-korekcije.json','scripts/viri/dfb-rezerve.json','scripts/viri/fussball.mjs','scripts/viri/fussball-pisava.mjs','scripts/viri/fussball-datumski-glifi.json','scripts/viri/fss.mjs','scripts/klubi.mjs','scripts/preveri-vir-sezono.mjs']
 export function parserHashAt(commit){
  if(!/^[a-f0-9]{40}$/.test(commit))throw Error('Invalid parser commit')
- return sha256(JSON.stringify(sourceFiles.map(path=>[path,sha256(execFileSync('git',['show',`${commit}:${path}`]))])))
+ const expected=historicalParserHashes[commit],files=expected?historicalSourceFiles:sourceFiles
+ const hash=sha256(JSON.stringify(files.map(path=>[path,sha256(execFileSync('git',['show',`${commit}:${path}`]))])))
+ if(expected&&hash!==expected)throw Error('Historical parser fingerprint mismatch')
+ return hash
 }
 export function readClosedCapture(dir,slug,season,expected={}){
  const conf=configuration(slug,season),index=readFileSync(resolve(dir,'prenosi.json')),records=JSON.parse(index),snapshot=preveriPosnetek(dir,records),report=JSON.parse(readFileSync(resolve(dir,'porocilo.json')))
