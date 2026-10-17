@@ -24,6 +24,14 @@ function rows(html){
  return out
 }
 function edit(i,fn,html=main){const r=rows(html)[i];return html.slice(0,r.start)+fn(r.raw)+html.slice(r.end)}
+function elementRange(html,opening){
+ const start=html.indexOf(opening);assert.ok(start>=0,opening)
+ const tag=opening.match(/^<([a-z]+)/)[1],tokens=new RegExp(`<\\/?${tag}\\b[^>]*>`,'g');tokens.lastIndex=start
+ let depth=0,m
+ while((m=tokens.exec(html))){depth+=m[0].startsWith('</')?-1:1;if(!depth)return {start,end:tokens.lastIndex,raw:html.slice(start,tokens.lastIndex)}}
+ assert.fail(`unclosed test element ${opening}`)
+}
+function wrapElement(html,opening,before,after){const r=elementRange(html,opening);return html.slice(0,r.start)+before+r.raw+after+html.slice(r.end)}
 function quick(html,fn){return html.replace(/data-match-events="([^"]*)"/,(_,s)=>`data-match-events="${JSON.stringify(fn(JSON.parse(s.replace(/'/g,'"')))).replace(/"/g,"'")}"`)}
 function clock(i,value,html=main){
  html=edit(i,s=>s.replace(/class="valign-inner">[^<]+/,`class="valign-inner">${value}&rsquo;`),html)
@@ -185,6 +193,44 @@ test('result qualifiers cannot silently contradict the supported normal-time for
 })
 test('published halftime result must agree with first-half goals',()=>reject(main.replace('class="half-result">[0 : 0]','class="half-result">[1 : 0]')))
 
+test('commented and body canonical decoys cannot change exact-match proof URLs',()=>{
+ const decoy='<link rel="canonical" href="https://www.fussball.de/spiel/-/spiel/031EQBPLDS000000VS5489BTVUS470OH">'
+ const canonical=`https://www.fussball.de/spiel/spvgg-03-ilvesheim-sg-oftersheim/-/spiel/${id}`
+ for(const html of [`<!-- ${decoy} -->${main}`,main.replace('</head>','</head>'+decoy)]){
+  const r=parse(html);assert.equal(r.nastopi.length,30);assert.ok(r.dogodki.every(e=>e.virUrl===canonical&&e.zapisnikId===`de-fussball-${id}`));assert.deepEqual(r.dogodki,parse().dogodki)
+ }
+})
+for(const [name,mutate] of [
+ ['course',s=>wrapElement(s,'<div class="match-course">','<!--','-->')],
+ ['verified result',s=>wrapElement(s,'<div class="result"><span class="end-result">','<!--','-->')],
+ ['duration summary',s=>s.replace(/(<div data-match-events="[^"]*"[^>]*>)/,'<!--$1-->')],
+ ['head canonical',s=>s.replace(/(<link rel="canonical"[^>]*>)/,'<!--$1-->')],
+ ['head og identity',s=>s.replace(/(<meta property="og:url"[^>]*>)/,'<!--$1-->')],
+])test(`required live evidence hidden in comments refuses statistics: ${name}`,()=>reject(mutate(main)))
+for(const [name,before,after] of [
+ ['script raw text','<script type="text/plain">','</script>'],
+ ['template','<template>','</template>'],
+ ['textarea raw text','<textarea>','</textarea>'],
+ ['quoted attribute',"<div data-stale='","'></div>"],
+ ['bogus HTML comment','<!stale ','>'],
+ ['processing-instruction comment','<?stale ','>'],
+ ['HTML CDATA bogus comment','<![CDATA[',']]>'],
+ ['quoted doctype identifier',"<!DOCTYPE html PUBLIC 'discard > ","'>"],
+])test(`inert or quoted course cannot become live event evidence: ${name}`,()=>reject(wrapElement(main,'<div class="match-course">',before,after)))
+test('a duration summary embedded inside another attribute is not authoritative',()=>{
+ const html=main.replace(/data-match-events="([^"]*)"/,(_,value)=>`data-stale='data-match-events="${value.replace(/'/g,'&#039;')}"'`)
+ reject(html)
+})
+test('harmless semantic comments preserve exact original live event row hashes',()=>{
+ const range=elementRange(main,'<div class="match-course">'),html=main.slice(0,range.end)+'<!-- stale <div class="match-course"></div> -->'+main.slice(range.end)
+ const r=parse(html),original=parse()
+ assert.deepEqual(r.nastopi,original.nastopi);assert.deepEqual(r.dogodki,original.dogodki)
+})
+for(const [name,mutate] of [
+ ['whole lineup',s=>s.replace('<div class="match-lineup">','<!--<div class="match-lineup">').replace(/\s*<\/div>\s*$/,'-->\n</div>')],
+ ['keeper marker',s=>s.replace(/(<span class="c">T<\/span>)/,'<!--$1-->')],
+])test(`commented lineup evidence cannot supply appearances: ${name}`,()=>reject(main,mutate(lineup)))
+
 function cli(html=main,l=lineup,m=manifest,args=[]){
  const dir=mkdtempSync(join(tmpdir(),'slff-fussball-stats-'))
  try{
@@ -204,6 +250,12 @@ test('offline CLI prints zero appearances and explicit nonzero unsupported outco
  for(const html of [edit(0,s=>s.replace('yellow-card','yellow-card red-card')),edit(2,s=>s.replace('</a>','<span>Elfmeter</span></a>')),main.replace('class="row-time">90&#039;','class="row-time">120&#039;')]){
   const r=cli(html);assert.notEqual(r.status,0);const out=JSON.parse(r.stdout)
   assert.equal(out.reportStatistikaPripravljena,false);assert.equal(out.sezonskiUvozPodprt,false);assert.equal(out.activationEligible,false);assert.deepEqual(out.nastopi,[]);assert.ok(out.razlog);assert.ok(out.koda)
+ }
+})
+test('offline CLI refuses commented required course and head identity evidence',()=>{
+ for(const html of [wrapElement(main,'<div class="match-course">','<!--','-->'),main.replace(/(<link rel="canonical"[^>]*>)/,'<!--$1-->')]){
+  const r=cli(html);assert.notEqual(r.status,0);const out=JSON.parse(r.stdout)
+  assert.equal(out.reportStatistikaPripravljena,false);assert.equal(out.sezonskiUvozPodprt,false);assert.equal(out.activationEligible,false);assert.deepEqual(out.nastopi,[]);assert.ok(out.razlog)
  }
 })
 test('offline CLI rejects font corruption and malformed usage with the same false-ready envelope',()=>{

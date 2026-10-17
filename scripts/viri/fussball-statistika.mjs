@@ -10,6 +10,78 @@ const requireProof=(condition,reason)=>{if(!condition)fail(reason)}
 const hash=raw=>createHash('sha256').update(raw).digest('hex')
 const decode=s=>s.replace(/&#x([a-f0-9]+);/gi,(_,n)=>String.fromCodePoint(parseInt(n,16))).replace(/&#(\d+);/g,(_,n)=>String.fromCodePoint(+n)).replace(/&(?:rsquo|apos);/g,"'").replace(/&nbsp;/g,' ')
 
+// Discover actual opening tags without interpreting comment/raw-text contents
+// or markup-shaped attribute values as elements. Keep original source offsets;
+// strict subtree parsing and row hashes still consume the unchanged raw HTML.
+function liveTags(html){
+ const tags=[],rawText=new Set(['script','style','title','textarea','iframe','xmp','noembed','noframes','noscript'])
+ let cursor=0,inHead=false,templates=0,heads=0,headEnds=0
+ while(cursor<html.length){
+  const start=html.indexOf('<',cursor);if(start<0)break
+  if(html.startsWith('<!--',start)){
+   const close=/--!?>/g;close.lastIndex=start+4
+   requireProof(close.exec(html),'odrezan komentar HTML');cursor=close.lastIndex;continue
+  }
+  // A doctype's quoted public/system identifier can itself contain > or markup.
+  if(/^<!doctype\b/i.test(html.slice(start))){
+   let end=start+2,quote=null
+   for(;end<html.length;end++){
+    const c=html[end]
+    if(quote){if(c===quote)quote=null}else if(c==='"'||c==="'")quote=c;else if(c==='>')break
+   }
+   requireProof(end<html.length,'odrezan doctype HTML');cursor=end+1;continue
+  }
+  // HTML bogus comments (including <?...> and HTML CDATA declarations) end
+  // at the first >; their markup-shaped contents cannot open an element.
+  if(html.startsWith('<!',start)||html.startsWith('<?',start)){
+   const end=html.indexOf('>',start+2)
+   requireProof(end>=0,'odrezana deklaracija HTML');cursor=end+1;continue
+  }
+  const prefix=/^<(\/?)([a-z][a-z0-9:-]*)(?=[\s/>])/i.exec(html.slice(start))
+  if(!prefix){cursor=start+1;continue}
+  let end=start+prefix[0].length,quote=null
+  for(;end<html.length;end++){
+   const c=html[end]
+   if(quote){if(c===quote)quote=null}else if(c==='"'||c==="'")quote=c;else if(c==='>')break
+  }
+  requireProof(end<html.length,'odrezana oznaka HTML');end++
+  const tag=prefix[2].toLowerCase(),closing=!!prefix[1],attrs=Object.create(null)
+  const body=html.slice(start+prefix[0].length,end-1).replace(/\/\s*$/,'')
+  const attr=/\s+([^\s"'<>/=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/gy
+  let position=0
+  while(position<body.length){
+   if(!body.slice(position).trim())break
+   attr.lastIndex=position;const m=attr.exec(body)
+   requireProof(m&&!closing,'nepodprti atributi oznake HTML')
+   const key=m[1].toLowerCase();requireProof(!Object.hasOwn(attrs,key),'podvojen atribut HTML')
+   attrs[key]=m[2]??m[3]??m[4]??null;position=attr.lastIndex
+  }
+  if(tag==='template')templates+=closing?-1:1
+  requireProof(templates>=0,'neveljavna meja predloge HTML')
+  if(!templates){
+   if(tag==='head'){
+    if(closing){requireProof(inHead,'neveljaven zaključek glave HTML');headEnds++;inHead=false}
+    else{requireProof(!inHead&&!heads,'podvojena glava HTML');heads++;inHead=true}
+   }
+   if(!closing)tags.push({tag,attrs,start,end,inHead})
+  }
+  cursor=end
+  if(!closing&&rawText.has(tag)){
+   const close=new RegExp(`</${tag}\\s*>`,'gi');close.lastIndex=cursor
+   requireProof(close.exec(html),'odrezana surova vsebina HTML');cursor=close.lastIndex
+  }else if(!closing&&tag==='plaintext')cursor=html.length
+ }
+ requireProof(!templates&&heads===1&&headEnds===1,'manjka enolična živa glava HTML')
+ return tags
+}
+function sourceUrl(tags,id){
+ const head=tags.filter(t=>t.inHead),canonical=head.filter(t=>t.tag==='link'&&t.attrs.rel==='canonical'),og=head.filter(t=>t.tag==='meta'&&t.attrs.property==='og:url')
+ requireProof(canonical.length===1&&og.length===1,'manjka enolična živa identiteta zapisnika')
+ const ownId=url=>url?.match(/^https:\/\/www\.fussball\.de\/spiel\/(?:[a-z0-9-]+\/)?-\/spiel\/([A-Z0-9]{32})$/)?.[1]
+ requireProof(ownId(canonical[0].attrs.href)===id&&ownId(og[0].attrs.content)===id,'živa identiteta zapisnika se ne ujema')
+ return canonical[0].attrs.href
+}
+
 // A small closed grammar, not a browser/HTML repair parser: every tag, attribute,
 // non-whitespace text and child must be consumed by an explicitly known shape.
 function tree(html,start){
@@ -126,10 +198,10 @@ function summary(source){
  requireProof(scopes.length===0,'odrezana obdobja hitrega pregleda')
  try{return JSON.parse(source.replace(/'/g,'"'))}catch{fail('nepodprti podatki trajanja')}
 }
-function resultProof(html,z,raw){
- const starts=[...html.matchAll(/<div class="result">\s*<span class="end-result">/g)]
+function resultProof(html,z,raw,tags){
+ const starts=tags.filter((t,i)=>t.tag==='div'&&t.attrs.class==='result'&&tags[i+1]?.tag==='span'&&tags[i+1].attrs.class==='end-result')
  requireProof(starts.length===1,'manjka enolična navadna oblika končnega izida')
- const [end,half]=box(tree(html,starts[0].index),'result',2),c=shape(end,'span',{class:'end-result'},4)
+ const [end,half]=box(tree(html,starts[0].start),'result',2),c=shape(end,'span',{class:'end-result'},4)
  for(const [i,cls] of [[0,'score-left'],[2,'score-right']]){
   const font=c[i]?.attrs?.['data-obfuscation']
   requireProof(/^[a-z0-9]+$/.test(font??''),'manjka pisava končnega izida')
@@ -143,10 +215,10 @@ function resultProof(html,z,raw){
  const count=raw.filter(e=>e.polcas===1&&e.vrsta==='gol').length,expected=count?z.goli[count-1].rezultat:{domaci:0,gostje:0}
  requireProof(+score[1]===expected.domaci&&+score[2]===expected.gostje,'neskladen objavljeni polčasni izid')
 }
-function events(html){
- const starts=[...html.matchAll(/<div\b[^>]*class="match-course"[^>]*>/g)]
+function events(html,tags){
+ const starts=tags.filter(t=>t.tag==='div'&&t.attrs.class==='match-course')
  requireProof(starts.length===1,'razdelek poteka ni enoličen')
- const root=tree(html,starts[0].index),periods=box(root,'match-course',3),out=[]
+ const root=tree(html,starts[0].start),periods=box(root,'match-course',3),out=[]
  for(const [i,period] of periods.slice(0,2).entries()){
   const c=box(period,`${i?'second':'first'}-half ingame`,i?2:3)
   const rows=box(box(c[0],'events',1)[0],'container')
@@ -156,9 +228,11 @@ function events(html){
  }
  const final=box(box(periods[2],'final',1)[0],'headline',2)
  text(final[0],'h3',{},/^Abpfiff$/);text(final[1],'span',{},/^(?:[01]\d|2[0-3]):[0-5]\dUhr$/)
- const summaries=[...html.matchAll(/\bdata-match-events="([^"]*)"/g)]
+ const summaries=tags.filter(t=>Object.hasOwn(t.attrs,'data-match-events'))
  requireProof(summaries.length===1,'manjka enoličen dokaz trajanja')
- const q=summary(summaries[0][1])
+ const evidence=summaries[0]
+ requireProof(evidence.tag==='div'&&evidence.attrs.id==='rangescontainer'&&evidence.attrs.class==='ranges'&&Object.hasOwn(evidence.attrs,'data-match-quick-view')&&Object.keys(evidence.attrs).length===4,'nepodprta živa oblika dokaza trajanja')
+ const q=summary(evidence.attrs['data-match-events'])
  keys(q,['durationSections','duration','extraTimeDuration','first-half','second-half'])
  requireProof(q.durationSections===2&&q.duration===90&&q.extraTimeDuration===0,'nepodprto trajanje tekme')
  for(const [i,name] of ['first-half','second-half'].entries()){
@@ -227,11 +301,14 @@ export function razberiFantasyZapisnik(mainHtml,lineupHtml,{fonts,id,lineupId}={
  try{
   requireProof(typeof mainHtml==='string'&&typeof lineupHtml==='string','zahtevani izvirni HTML nizi')
   requireProof(lineupId===id&&/^[A-Z0-9]{32}$/.test(lineupId??''),'manjka vezana identiteta zajema postave')
-  const z=razberiZapisnik(mainHtml,lineupHtml,{fonts,id,lineupId}),raw=events(mainHtml)
+  // The supported raw lineup has no comments. Until its own live subtree
+  // grammar is established, comments cannot supply roster or keeper proof.
+  requireProof(!lineupHtml.includes('<!--'),'komentarji v dokazni postavi niso podprti')
+  const tags=liveTags(mainHtml),virUrl=sourceUrl(tags,id)
+  const z=razberiZapisnik(mainHtml,lineupHtml,{fonts,id,lineupId}),raw=events(mainHtml,tags)
   associate(z,raw)
-  resultProof(mainHtml,z,raw)
-  const nastopi=appearances(z,raw),virUrl=mainHtml.match(/<link rel="canonical" href="([^"]+)"/)?.[1]
-  requireProof(virUrl,'manjka izvorni URL dogodkov')
+  resultProof(mainHtml,z,raw,tags)
+  const nastopi=appearances(z,raw)
   const dogodki=raw.map(({refs,...proof})=>({...proof,virId:refs[0]??null,virIds:refs,zapisnikId:z.zapisnikId,virUrl}))
   const nepripisaniRumeni=dogodki.filter(e=>e.vrsta==='rumeni')
   const opozorila=[`${nepripisaniRumeni.length} nepripisanih običajnih rumenih: vir ne objavi prejemnikov; ni ugibanih odbitkov. Statistika je potrjena samo za ta zapisnik; sezonski uvoz in vklop nista podprta.`]
