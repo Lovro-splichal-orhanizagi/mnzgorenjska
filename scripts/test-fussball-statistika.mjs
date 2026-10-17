@@ -230,6 +230,22 @@ for(const [name,mutate] of [
  ['whole lineup',s=>s.replace('<div class="match-lineup">','<!--<div class="match-lineup">').replace(/\s*<\/div>\s*$/,'-->\n</div>')],
  ['keeper marker',s=>s.replace(/(<span class="c">T<\/span>)/,'<!--$1-->')],
 ])test(`commented lineup evidence cannot supply appearances: ${name}`,()=>reject(main,mutate(lineup)))
+for(const tag of ['template','script','textarea','style','title','xmp','iframe','noembed','noframes','noscript','plaintext','svg','math','select','object','custom-lineup']){
+ for(const part of ['whole lineup','keeper marker'])test(`closed lineup grammar rejects ${tag} around ${part}`,()=>{
+  const hidden=part==='whole lineup'?lineup.replace('<div class="match-lineup">',`<${tag}><div class="match-lineup">`).replace(/\s*<\/div>\s*$/,`</${tag}></div>`):lineup.replace('<span class="c">T</span>',`<${tag}><span class="c">T</span></${tag}>`)
+  reject(main,hidden)
+ })
+}
+for(const part of ['whole lineup','keeper marker'])test(`quoted attribute cannot supply ${part}`,()=>{
+ const hidden=part==='whole lineup'?wrapElement(lineup,'<div class="match-lineup">',"<div data-stale='","'></div>"):lineup.replace('<span class="c">T</span>',`<img alt='<span class="c">T</span>'>`)
+ reject(main,hidden)
+})
+for(const attr of ['hidden','inert','style="display:none"','data-role="stale"'])test(`closed lineup attributes reject unsupported context ${attr}`,()=>reject(main,lineup.replace('<div class="match-lineup">',`<div ${attr}><div class="match-lineup">`).replace(/\s*<\/div>\s*$/,'</div></div>')))
+test('closed lineup grammar rejects nested anchors and malformed element boundaries',()=>{
+ reject(main,lineup.replace('<span class="c">T</span>','<a><span class="c">T</span></a>'))
+ reject(main,lineup.replace('<span class="c">T</span>','<h3><span class="c">T</span></h3>'))
+ reject(main,lineup.replace('<span class="c">T</span>','<span class="c"><div>T</div></span>'))
+})
 
 function cli(html=main,l=lineup,m=manifest,args=[]){
  const dir=mkdtempSync(join(tmpdir(),'slff-fussball-stats-'))
@@ -257,6 +273,10 @@ test('offline CLI refuses commented required course and head identity evidence',
   const r=cli(html);assert.notEqual(r.status,0);const out=JSON.parse(r.stdout)
   assert.equal(out.reportStatistikaPripravljena,false);assert.equal(out.sezonskiUvozPodprt,false);assert.equal(out.activationEligible,false);assert.deepEqual(out.nastopi,[]);assert.ok(out.razlog)
  }
+})
+test('offline CLI withholds inert or attribute-carried lineup proof',()=>{
+ const hidden=[lineup.replace('<div class="match-lineup">','<template><div class="match-lineup">').replace(/\s*<\/div>\s*$/,'</template></div>'),lineup.replace('<span class="c">T</span>','<script><span class="c">T</span></script>'),lineup.replace('<span class="c">T</span>',`<img alt='<span class="c">T</span>'>`)]
+ for(const l of hidden){const r=cli(main,l);assert.notEqual(r.status,0);const out=JSON.parse(r.stdout);assert.equal(out.reportStatistikaPripravljena,false);assert.equal(out.sezonskiUvozPodprt,false);assert.equal(out.activationEligible,false);assert.deepEqual(out.nastopi,[]);assert.ok(out.razlog)}
 })
 test('offline CLI rejects font corruption and malformed usage with the same false-ready envelope',()=>{
  const bad=structuredClone(manifest);bad.fonts.q73uvs1t.sha256='0'.repeat(64)

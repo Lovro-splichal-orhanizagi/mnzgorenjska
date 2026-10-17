@@ -82,6 +82,40 @@ function sourceUrl(tags,id){
  return canonical[0].attrs.href
 }
 
+// Closed refusal grammar for the captured lineup fragment, not HTML repair.
+// Every token must be consumed; only these ordinary HTML elements/attributes
+// can carry core evidence. No raw-text, inert, foreign or custom context exists
+// in this grammar, and attributes cannot contain markup-shaped source bytes.
+function lineupProof(html){
+ const allowed={div:['id','class'],a:['href','class'],span:['class','data-obfuscation','data-alt','data-responsive-image'],img:['src','alt'],h3:['class']}
+ const tokens=/<[^>]*>|[^<]+/gy,stack=[]
+ let cursor=0,root=false
+ while(cursor<html.length){
+  tokens.lastIndex=cursor;const m=tokens.exec(html)
+  requireProof(m,'nepodprta oznaka postave');cursor=tokens.lastIndex
+  const token=m[0]
+  if(!token.startsWith('<')){requireProof(stack.length||!token.trim(),'besedilo zunaj dokazne postave');continue}
+  const close=token.match(/^<\/([a-z][a-z0-9]*)>$/)
+  if(close){requireProof(stack.pop()===close[1],'neujemajoče meje dokazne postave');continue}
+  const open=token.match(/^<([a-z][a-z0-9]*)((?:\s+[a-z][a-z0-9-]*="[^"<>]*")*)>$/)
+  requireProof(open&&Object.hasOwn(allowed,open[1]),'nepodprta vrsta elementa dokazne postave')
+  const tag=open[1],attrs=Object.create(null)
+  for(const a of open[2].matchAll(/\s+([a-z][a-z0-9-]*)="([^"]*)"/g)){
+   requireProof(allowed[tag].includes(a[1])&&!Object.hasOwn(attrs,a[1]),'nepodprt ali podvojen atribut dokazne postave')
+   attrs[a[1]]=a[2]
+  }
+  if(!stack.length){
+   requireProof(!root&&tag==='div'&&Object.keys(attrs).length===1&&attrs.id==='match_course_body','manjka enoličen koren dokazne postave');root=true
+  }else{
+   requireProof(!['span','h3'].includes(stack.at(-1)),'nepodprta vsebina listnega elementa postave')
+   requireProof(!Object.hasOwn(attrs,'id'),'nepodprt notranji id postave')
+  }
+  requireProof(tag!=='a'||!stack.includes('a'),'gnezdene profilne povezave niso podprte')
+  if(tag!=='img')stack.push(tag)
+ }
+ requireProof(root&&!stack.length,'odrezana dokazna postava')
+}
+
 // A small closed grammar, not a browser/HTML repair parser: every tag, attribute,
 // non-whitespace text and child must be consumed by an explicitly known shape.
 function tree(html,start){
@@ -301,9 +335,7 @@ export function razberiFantasyZapisnik(mainHtml,lineupHtml,{fonts,id,lineupId}={
  try{
   requireProof(typeof mainHtml==='string'&&typeof lineupHtml==='string','zahtevani izvirni HTML nizi')
   requireProof(lineupId===id&&/^[A-Z0-9]{32}$/.test(lineupId??''),'manjka vezana identiteta zajema postave')
-  // The supported raw lineup has no comments. Until its own live subtree
-  // grammar is established, comments cannot supply roster or keeper proof.
-  requireProof(!lineupHtml.includes('<!--'),'komentarji v dokazni postavi niso podprti')
+  lineupProof(lineupHtml)
   const tags=liveTags(mainHtml),virUrl=sourceUrl(tags,id)
   const z=razberiZapisnik(mainHtml,lineupHtml,{fonts,id,lineupId}),raw=events(mainHtml,tags)
   associate(z,raw)

@@ -56,8 +56,12 @@ Dokazi zahtevajo žive oznake HTML: komentar, surovo besedilo skripte ali
 textarea, vsebina predloge in besedilo drugega atributa niso dokazni elementi.
 URL dokazov je enolična živa kanonična povezava v glavi z isto šifro tekme;
 izvorni odmiki in bajti vrstic za SHA-256 se pri tem ne spreminjajo.
-Podprti fragment postave nima komentarjev; postave s komentarji se za zdaj
-zavrnejo, da skrite postave ali oznake vratarjev ne postanejo dokaz.
+Fragment postave se pred validatorjem preveri z zaprto slovnico oznak
+`div`, `a`, `span`, `img` in `h3`, njihovih znanih atributov ter uravnoteženih
+mej. Komentarji, neznane oznake/atributi, surovi ali inertni vsebniki,
+tuji imenski prostori, gnezdene povezave in oznake znotraj atributa se
+zavrnejo. To prepreči skrito postavo ali oznako vratarja; ne pomeni podpore
+poljubni popravljeni strukturi HTML ali dodatnim predlogam postave.
 `lineupId` je obvezna identiteta zajema postave; sama fragmentna postava
 nima neodvisne šifre tekme. Imena se razberejo samo iz pripadajočih pisav,
 dogodki pa se povežejo po točnih profilnih šifrah. `player-id` in `userid`
