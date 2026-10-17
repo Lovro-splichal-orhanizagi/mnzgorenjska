@@ -12,8 +12,9 @@ export function preveriPosnetek(dir,records){
  if(records.some(r=>Date.parse(r.at)>Date.now()+300000))throw Error('DFB capture timestamp is in the future')
  return snapshot
 }
-export const sourceFiles=['src/lib/nepripisaniRumeni.mjs','scripts/viri/dfb.mjs','scripts/viri/dfb-lige.json','scripts/viri/dfb-korekcije.json','scripts/viri/dfb-rezerve.json','scripts/viri/dfb-aliasi.json','scripts/viri/fussball.mjs','scripts/viri/fussball-pisava.mjs','scripts/viri/fussball-datumski-glifi.json','scripts/viri/fss.mjs','scripts/klubi.mjs','scripts/preveri-vir-sezono.mjs',
+export const sourceFiles=['src/lib/nepripisaniRumeni.mjs','scripts/viri/dfb.mjs','scripts/viri/dfb-lige.json','scripts/viri/dfb-korekcije.json','scripts/viri/dfb-kronologija.json','scripts/viri/dfb-rezerve.json','scripts/viri/dfb-aliasi.json','scripts/viri/fussball.mjs','scripts/viri/fussball-pisava.mjs','scripts/viri/fussball-datumski-glifi.json','scripts/viri/fss.mjs','scripts/klubi.mjs','scripts/preveri-vir-sezono.mjs',
  ...Object.values(JSON.parse(readFileSync(new URL('./viri/dfb-aliasi.json',import.meta.url))).matches.flatMap(e=>Object.values(e.files))).map(f=>`scripts/${f.file.replace('../','')}`),
+ ...JSON.parse(readFileSync(new URL('./viri/dfb-kronologija.json',import.meta.url))).matches.flatMap(e=>e.evidenceFiles).map(f=>`scripts/${f.file.replace('../','')}`),
  ...JSON.parse(readFileSync(new URL('./viri/dfb-korekcije.json',import.meta.url))).matches.flatMap(e=>e.evidenceFiles??[]).map(f=>`scripts/${f.file.replace('../','')}`)]
 export const sha=x=>createHash('sha256').update(x).digest('hex')
 const fail=x=>{throw Error(`DFB regional release: ${x}`)}

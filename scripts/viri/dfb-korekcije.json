@@ -934,6 +934,492 @@
           ]
         }
       ]
+    },
+    {
+      "id": "2426312",
+      "sourceFixtureSha256": "6812aee8354de244bca1e87788697dc1f63cd4d68dfddc512be44abf52ff6764",
+      "evidence": [
+        "https://www.regionalliga-suedwest.de/aktuelles/zusammenfassung-2-spieltag-das-freitag-spiel/"
+      ],
+      "evidenceFiles": [
+        {
+          "retrievalUrl": "https://www.regionalliga-suedwest.de/aktuelles/zusammenfassung-2-spieltag-das-freitag-spiel/",
+          "articleUrl": "https://www.regionalliga-suedwest.de/aktuelles/zusammenfassung-2-spieltag-das-freitag-spiel/",
+          "at": "2026-10-17T21:53:53.125817Z",
+          "status": 200,
+          "file": "../vzorci/de-dfb-suedwest-proof-6ce2a34f4f99193420ee63e4ac7b655ce4aecca8cacaeebdd953a41e12c5106d.html",
+          "sha256": "6ce2a34f4f99193420ee63e4ac7b655ce4aecca8cacaeebdd953a41e12c5106d",
+          "bytes": 137516,
+          "url": "https://www.regionalliga-suedwest.de/aktuelles/zusammenfassung-2-spieltag-das-freitag-spiel/"
+        }
+      ],
+      "checkedAt": "2026-10-17",
+      "metadata": {
+        "url": "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/2-spieltag/ssv-ulm-1846-fussball-kickers-offenbach-2426312",
+        "season": "2026/27",
+        "round": 2,
+        "date": "2026-08-14",
+        "time": "19:00",
+        "teams": [
+          {
+            "id": "ssv-ulm-1846-fussball",
+            "name": "SSV Ulm 1846 Fussball"
+          },
+          {
+            "id": "kickers-offenbach",
+            "name": "Kickers Offenbach"
+          }
+        ],
+        "finalScore": [
+          0,
+          2
+        ],
+        "halfScore": [
+          0,
+          2
+        ]
+      },
+      "goals": [
+        {
+          "side": 1,
+          "scorer": "Maximilian Schmid",
+          "clock": "45'",
+          "normalizedClock": [
+            45,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            0,
+            2
+          ],
+          "text": "0:2 Maximilian Schmid"
+        },
+        {
+          "side": 1,
+          "scorer": "Maximilian Wolfram",
+          "clock": "45+4'",
+          "normalizedClock": [
+            45,
+            4
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            0,
+            1
+          ],
+          "text": "0:1 Maximilian Wolfram"
+        }
+      ],
+      "corrections": [
+        {
+          "index": 0,
+          "from": [
+            0,
+            2
+          ],
+          "to": [
+            0,
+            1
+          ]
+        },
+        {
+          "index": 1,
+          "from": [
+            0,
+            1
+          ],
+          "to": [
+            0,
+            2
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2426309",
+      "sourceFixtureSha256": "58218f9660538672d552405b68778ba854823eaf206babd29c44fb2059a17aee",
+      "evidence": [
+        "https://www.svs1916.de/aktuelles/news/detail/article/spielbericht-sgbsvs.html"
+      ],
+      "evidenceFiles": [
+        {
+          "retrievalUrl": "https://www.svs1916.de/aktuelles/news/detail/article/spielbericht-sgbsvs.html",
+          "articleUrl": "https://www.svs1916.de/aktuelles/news/detail/article/spielbericht-sgbsvs.html",
+          "at": "2026-10-17T21:53:53.793548Z",
+          "status": 200,
+          "file": "../vzorci/de-dfb-suedwest-proof-d617e70a340d7e90af5a46440c8cd0e2b1b0e30e830f91f02ed8bfd441ff068c.html",
+          "sha256": "d617e70a340d7e90af5a46440c8cd0e2b1b0e30e830f91f02ed8bfd441ff068c",
+          "bytes": 43969,
+          "url": "https://www.svs1916.de/aktuelles/news/detail/article/spielbericht-sgbsvs.html"
+        }
+      ],
+      "checkedAt": "2026-10-17",
+      "metadata": {
+        "url": "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2026-2027/2-spieltag/sg-barockstadt-fulda-lehnerz-sv-sandhausen-2426309",
+        "season": "2026/27",
+        "round": 2,
+        "date": "2026-08-15",
+        "time": "14:00",
+        "teams": [
+          {
+            "id": "sg-barockstadt-fulda-lehnerz",
+            "name": "SG Barockstadt Fulda-Lehnerz"
+          },
+          {
+            "id": "sv-sandhausen",
+            "name": "SV Sandhausen"
+          }
+        ],
+        "finalScore": [
+          3,
+          4
+        ],
+        "halfScore": [
+          1,
+          4
+        ]
+      },
+      "goals": [
+        {
+          "side": 1,
+          "scorer": "Tasos Leonidis",
+          "clock": "11'",
+          "normalizedClock": [
+            11,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            0,
+            1
+          ],
+          "text": "0:1 Tasos Leonidis"
+        },
+        {
+          "side": 1,
+          "scorer": "Tim Korzuschek",
+          "clock": "20'",
+          "normalizedClock": [
+            20,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            0,
+            2
+          ],
+          "text": "0:2 Tim Korzuschek"
+        },
+        {
+          "side": 1,
+          "scorer": "Kwabenaboye Schulz",
+          "clock": "31'",
+          "normalizedClock": [
+            31,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            0,
+            3
+          ],
+          "text": "0:3 Kwabenaboye Schulz"
+        },
+        {
+          "side": 1,
+          "scorer": "David Mamutovic",
+          "clock": "45'",
+          "normalizedClock": [
+            45,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            1,
+            4
+          ],
+          "text": "1:4 David Mamutovic"
+        },
+        {
+          "side": 0,
+          "scorer": "Roko Ivankovic",
+          "clock": "45+3'",
+          "normalizedClock": [
+            45,
+            3
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            1,
+            3
+          ],
+          "text": "Roko Ivankovic 1:3"
+        },
+        {
+          "side": 0,
+          "scorer": "Milian Habermehl",
+          "clock": "50'",
+          "normalizedClock": [
+            50,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            2,
+            4
+          ],
+          "text": "Milian Habermehl 2:4"
+        },
+        {
+          "side": 0,
+          "scorer": "Emmanuel Elekwa",
+          "clock": "90+5'",
+          "normalizedClock": [
+            90,
+            5
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            3,
+            4
+          ],
+          "text": "Emmanuel Elekwa 3:4"
+        }
+      ],
+      "corrections": [
+        {
+          "index": 3,
+          "from": [
+            1,
+            4
+          ],
+          "to": [
+            0,
+            4
+          ]
+        },
+        {
+          "index": 4,
+          "from": [
+            1,
+            3
+          ],
+          "to": [
+            1,
+            4
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2402963",
+      "sourceFixtureSha256": "0fcb3831ea169ec7948a79949373bb7aff2d88b05ba27849cfd323017e335684",
+      "evidence": [
+        "https://fcastoria.de/emotionen-pur/"
+      ],
+      "evidenceFiles": [
+        {
+          "retrievalUrl": "https://fcastoria.de/wp-json/wp/v2/posts?search=Offenbach&after=2025-10-31T00%3A00%3A00&before=2025-11-03T23%3A59%3A59&per_page=1",
+          "articleUrl": "https://fcastoria.de/emotionen-pur/",
+          "at": "2026-10-17T21:56:00.551473Z",
+          "status": 200,
+          "file": "../vzorci/de-dfb-suedwest-proof-5aeacee316b874eb667f5b4d08894445efd568f51b02a4fa5b3ab503548b624f.html",
+          "sha256": "5aeacee316b874eb667f5b4d08894445efd568f51b02a4fa5b3ab503548b624f",
+          "bytes": 8125,
+          "url": "https://fcastoria.de/wp-json/wp/v2/posts?search=Offenbach&after=2025-10-31T00%3A00%3A00&before=2025-11-03T23%3A59%3A59&per_page=1"
+        }
+      ],
+      "checkedAt": "2026-10-17",
+      "metadata": {
+        "url": "https://datencenter.dfb.de/datencenter/regionalliga-suedwest/2025-2026/15-spieltag/fc-astoria-walldorf-kickers-offenbach-2402963",
+        "season": "2025/26",
+        "round": 15,
+        "date": "2025-11-01",
+        "time": "14:00",
+        "teams": [
+          {
+            "id": "fc-astoria-walldorf",
+            "name": "FC-Astoria Walldorf"
+          },
+          {
+            "id": "kickers-offenbach",
+            "name": "Kickers Offenbach"
+          }
+        ],
+        "finalScore": [
+          4,
+          3
+        ],
+        "halfScore": [
+          2,
+          2
+        ]
+      },
+      "goals": [
+        {
+          "side": 0,
+          "scorer": "Marcel Carl",
+          "clock": "12'",
+          "normalizedClock": [
+            12,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            1,
+            0
+          ],
+          "text": "Marcel Carl 1:0"
+        },
+        {
+          "side": 1,
+          "scorer": "Keanu Staude",
+          "clock": "15'",
+          "normalizedClock": [
+            15,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            1,
+            1
+          ],
+          "text": "1:1 Keanu Staude"
+        },
+        {
+          "side": 0,
+          "scorer": "Konrad Riehle",
+          "clock": "21'",
+          "normalizedClock": [
+            21,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            2,
+            1
+          ],
+          "text": "Konrad Riehle 2:1"
+        },
+        {
+          "side": 1,
+          "scorer": "Ron Berlinski",
+          "clock": "24'",
+          "normalizedClock": [
+            24,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            2,
+            2
+          ],
+          "text": "2:2 Ron Berlinski"
+        },
+        {
+          "side": 1,
+          "scorer": "Jona Borsum",
+          "clock": "73'",
+          "normalizedClock": [
+            73,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            2,
+            3
+          ],
+          "text": "2:3 Jona Borsum"
+        },
+        {
+          "side": 0,
+          "scorer": "Baton Hajrizaj",
+          "clock": "90'",
+          "normalizedClock": [
+            90,
+            0
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            4,
+            3
+          ],
+          "text": "Baton Hajrizaj 4:3"
+        },
+        {
+          "side": 0,
+          "scorer": "Yasin Zor",
+          "clock": "90+8'",
+          "normalizedClock": [
+            90,
+            8
+          ],
+          "ownGoal": false,
+          "penalty": false,
+          "kind": "goal",
+          "score": [
+            3,
+            3
+          ],
+          "text": "Yasin Zor 3:3"
+        }
+      ],
+      "corrections": [
+        {
+          "index": 5,
+          "from": [
+            4,
+            3
+          ],
+          "to": [
+            3,
+            3
+          ]
+        },
+        {
+          "index": 6,
+          "from": [
+            3,
+            3
+          ],
+          "to": [
+            4,
+            3
+          ]
+        }
+      ],
+      "warning": "Yasin Zor: DFB 90+8, uradni Walldorf 90+7; potrjena sta vrstni red strelcev in vmesni izid, izvorna ura DFB ostane nespremenjena."
     }
   ]
 }
