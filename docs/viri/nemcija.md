@@ -333,9 +333,14 @@ zamenja nastope in opozorila. To ni obljuba zgodovinskega prevrednotenja
 cen ali spremembe pravil za nazaj; ceniki imajo svoj obstoječi postopek.
 
 Lokalna ponovitev ohranjenih nespremenjenih zajemov (ne nov živi zajem) je
-po tej politiki dala naslednjo pokritost. Podrobni SHA/URL/prvotni UTC in
-primerjava prej sprejetih statistik so v
-[poročilu Task 1](../../.superpowers/sdd/2026-10-17-unattributed-yellow-cards/task-1-report.md).
+po tej politiki dala naslednjo pokritost. SHA/URL/prvotni UTC treh shranjenih
+regresijskih zapisnikov so v preverjenem
+[registru njihovega izvora](../../scripts/vzorci/de-dfb-unattributed-provenance.json).
+Ta register ne vsebuje celotnih sezonskih zajemov. Celotna lokalna diagnostika
+ponovitve in primerjava prej sprejetih statistik sta v
+`.superpowers/sdd/2026-10-17-unattributed-yellow-cards/task-1-report.md`;
+to je prezrto lokalno dokazno gradivo, ki ni v gitu in ob svežem checkoutu
+ni na voljo.
 
 | kandidat | arhiv 2025/26 | tekoči zajem 2026/27 | preostale blokade |
 | --- | --- | --- | --- |
