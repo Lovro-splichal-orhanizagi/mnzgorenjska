@@ -73,8 +73,9 @@ concurrency:
 jobs:
   uvoz:
     runs-on: ubuntu-latest
-    # 60 minut dela + do 120 minut cakanja na starejsi uvoz.
-    timeout-minutes: 180
+    # 60 minut dela + do 300 minut cakanja za FCF osvezitev, sicer 120.
+    # Skupaj najvec 360 minut (omejitev gostovanega GitHub izvajalca).
+    timeout-minutes: ${{ inputs.fcf_osvezi != '' && 360 || 180 }}
     permissions:
       contents: read
       actions: write
@@ -115,7 +116,13 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         # Na rocne uvoze iste drzave, na nocni le pri vklopljeni ligi, na
         # zdruzi-klube/tedensko-cene vedno (glej skripto).
-        run: node scripts/cakaj-na-uvoze.mjs --liga "$LIGA"
+        run: |
+          set -euo pipefail
+          if [ -n "$FCF_OSVEZI" ]; then
+            node scripts/cakaj-na-uvoze.mjs --liga "$LIGA" --najvec 300
+          else
+            node scripts/cakaj-na-uvoze.mjs --liga "$LIGA"
+          fi
 
       # Predpomnilnik se shrani TUDI ob padcu (spodaj, if: always()): ponovni
       # poskus lige nadaljuje, kjer je prejšnji obstal, namesto da vse bere
