@@ -309,6 +309,24 @@ async function igralecId(
       opozorila?.push(`${VRATAR_IZ_POLJA}: ${polnoIme} (${p.position})`)
   }
 
+  // Identiteta je lahko že v pomnilniku od prejšnjega nastopa s klopi,
+  // kjer vir vratarja ni označil. Poznejša oznaka iz začetne postave mora
+  // vseeno popraviti neznano/ugibano pozicijo, brez ponovnega iskanja osebe.
+  const potrdiPredpomnjenegaVratarja = async (id) => {
+    if (!vratar) return id
+    const { data: p, error } = await db.from('players')
+      .select('id, position, position_source').eq('id', id).single()
+    if (error) throw new Error(`igralec ${polnoIme}: ${error.message}`)
+    javiVratarjaIzPolja(p)
+    if (smeVVrata(p)) {
+      const { error: eUpd } = await db.from('players')
+        .update({ position: 'GK', position_source: 'zapisnik', shirt_number: st })
+        .eq('id', id).eq('position_source', p.position_source)
+      if (eUpd) throw new Error(`igralec ${polnoIme}: ${eUpd.message}`)
+    }
+    return id
+  }
+
   // Registrska stevilka NZS je edina zanesljiva identiteta, kar jih vir lahko
   // da: enolicna je za cloveka, prezivi prestop in menjavo dresa. Kjer je na
   // voljo (Ptuj, Murska Sobota, Lendava), ugibanje po imenu in dresu odpade —
@@ -323,7 +341,7 @@ async function igralecId(
         await db.from('players').update({ team_id: teamId }).eq('id', igralci.get(kljucReg))
         klubPoReg.set(kljucReg, { team: teamId, datum })
       }
-      return igralci.get(kljucReg)
+      return potrdiPredpomnjenegaVratarja(igralci.get(kljucReg))
     }
 
     let { data: poReg } = await db
@@ -419,7 +437,7 @@ async function igralecId(
   }
 
   const kljuc = `${teamId}|${polnoIme}#${st}`
-  if (igralci.has(kljuc)) return igralci.get(kljuc)
+  if (igralci.has(kljuc)) return potrdiPredpomnjenegaVratarja(igralci.get(kljuc))
 
   let poizvedba = db
     .from('players')
