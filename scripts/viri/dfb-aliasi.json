@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "matches": [
+    {
+      "id": "2425105",
+      "league": "regionalliga-bayern",
+      "sourceFixtureSha256": "76795488377d522e79aed9c90de702f7606024dcc6133912d4dc204730046e6e",
+      "semanticSha256": "91fb9a9cf6ec5f5e6339bb80a45b869031ef2d0174803bddff37f760bff88aee",
+      "side": 0,
+      "teamId": "sv-wacker-burghausen",
+      "source": {
+        "name": "Noah Shawn Agbaje",
+        "profileId": null
+      },
+      "target": {
+        "name": "Noah Agbaje",
+        "profileId": "374531"
+      },
+      "birthDate": "2001-06-23",
+      "checkedAt": "2026-10-17",
+      "scope": "goal-only; existing roster identity; no appearance or minutes added",
+      "files": {
+        "dfb": {
+          "url": "https://datencenter.dfb.de/profil/374531",
+          "finalUrl": "https://datencenter.dfb.de/datencenter/personen/noah-agbaje/spieler",
+          "sha256": "8cd5056e5494a22d509798d9f5b9c55c8b8c125601209414a92e922514183084",
+          "at": "2026-10-17T19:35:30.916486+00:00",
+          "status": 200,
+          "bytes": 72029,
+          "file": "../vzorci/de-dfb-bayern-proof-8cd5056e5494a22d509798d9f5b9c55c8b8c125601209414a92e922514183084.html",
+          "contentType": "text/html; charset=utf-8"
+        },
+        "fsv": {
+          "url": "https://fsv-zwickau.de/spieler/noah-shawn-agbaje/",
+          "finalUrl": "https://fsv-zwickau.de/spieler/noah-shawn-agbaje/",
+          "sha256": "9b5a4b9be42d0870674cbbd01e79b565cce9378375b431b262c198e283c6ab7e",
+          "at": "2026-10-17T19:36:10.075287+00:00",
+          "status": 200,
+          "bytes": 210104,
+          "file": "../vzorci/de-dfb-bayern-proof-9b5a4b9be42d0870674cbbd01e79b565cce9378375b431b262c198e283c6ab7e.html",
+          "contentType": "text/html; charset=UTF-8"
+        },
+        "transfer": {
+          "url": "https://fsv-zwickau.de/uncategorized/naechster-fsv-neuzugang-noah-shawn-agbaje-wechselt-nach-westsachsen/",
+          "finalUrl": "https://fsv-zwickau.de/uncategorized/naechster-fsv-neuzugang-noah-shawn-agbaje-wechselt-nach-westsachsen/",
+          "sha256": "9b4e19546d738c344ff57e47ca04f399a59addeab3a1f0103c4bdd9b771d5013",
+          "at": "2026-10-17T19:36:13.278103+00:00",
+          "status": 200,
+          "bytes": 183496,
+          "file": "../vzorci/de-dfb-bayern-proof-9b4e19546d738c344ff57e47ca04f399a59addeab3a1f0103c4bdd9b771d5013.html",
+          "contentType": "text/html; charset=UTF-8"
+        }
+      }
+    }
+  ]
+}

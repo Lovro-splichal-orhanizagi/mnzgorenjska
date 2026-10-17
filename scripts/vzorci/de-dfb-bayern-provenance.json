@@ -1,0 +1,92 @@
+{
+  "documents": [
+    {
+      "url": "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/10-spieltag/tsv-aubstadt-fv-illertissen-2401658",
+      "sha256": "f964aa55ce4472663c12e27a6eb4f476f4db0dfece57390bfbcb022d5d094639",
+      "at": "2026-10-17T16:37:05.678Z",
+      "captureRun": "39048972242",
+      "file": "de-dfb-2401658.html"
+    },
+    {
+      "url": "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2025-2026/27-spieltag/1-fc-nuernberg-ii-spvgg-greuther-fuerth-ii-2401812",
+      "sha256": "d666a45b9b411082f98947cca9d4d06b2dcaed4b0f73f5139ac39a9125a787aa",
+      "at": "2026-10-17T17:01:16.370Z",
+      "captureRun": "39048972242",
+      "file": "de-dfb-2401812.html"
+    },
+    {
+      "url": "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/10-spieltag/tsv-buchbach-1-fc-schweinfurt-05-2425106",
+      "sha256": "fe6c2ac48676d12da2bfa710dcfd010200f0419d07d1d9057925ac0fc9cbd09a",
+      "at": "2026-10-17T17:51:47.931Z",
+      "captureRun": "39054476978",
+      "file": "de-dfb-2425106.html"
+    },
+    {
+      "url": "https://datencenter.dfb.de/datencenter/regionalliga-bayern/2026-2027/10-spieltag/sv-wacker-burghausen-fc-augsburg-ii-2425105",
+      "sha256": "76795488377d522e79aed9c90de702f7606024dcc6133912d4dc204730046e6e",
+      "at": "2026-10-17T17:52:42.856Z",
+      "captureRun": "39054476978",
+      "file": "de-dfb-2425105.html"
+    },
+    {
+      "url": "https://www.fvi1921.de/nachrichten/1-mannschaft/17658/spielbericht-tsv-aubstadt-fv-illertissen",
+      "finalUrl": "https://www.fvi1921.de/nachrichten/1-mannschaft/17658/spielbericht-tsv-aubstadt-fv-illertissen",
+      "sha256": "d64ad2f3ad4e83fdfea32813498adaa60c95a9981a713cef4f4c1583dac09cbb",
+      "at": "2026-10-17T19:35:22.771238+00:00",
+      "status": 200,
+      "bytes": 81345,
+      "file": "de-dfb-bayern-proof-d64ad2f3ad4e83fdfea32813498adaa60c95a9981a713cef4f4c1583dac09cbb.html",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "url": "https://www.tsv-buchbach.de/fussball/zimmerer-und-muteba-finalisieren-naechsten-paukenschlag/",
+      "finalUrl": "https://www.tsv-buchbach.de/fussball/zimmerer-und-muteba-finalisieren-naechsten-paukenschlag/",
+      "sha256": "313cddbd146aa4b3f90d2531317f4f2937c612ea88ffbf72d1423aadae8849c0",
+      "at": "2026-10-17T19:35:23.038963+00:00",
+      "status": 200,
+      "bytes": 88787,
+      "file": "de-dfb-bayern-proof-313cddbd146aa4b3f90d2531317f4f2937c612ea88ffbf72d1423aadae8849c0.html",
+      "contentType": "text/html; charset=UTF-8"
+    },
+    {
+      "url": "https://datencenter.dfb.de/profil/374531",
+      "finalUrl": "https://datencenter.dfb.de/datencenter/personen/noah-agbaje/spieler",
+      "sha256": "8cd5056e5494a22d509798d9f5b9c55c8b8c125601209414a92e922514183084",
+      "at": "2026-10-17T19:35:30.916486+00:00",
+      "status": 200,
+      "bytes": 72029,
+      "file": "de-dfb-bayern-proof-8cd5056e5494a22d509798d9f5b9c55c8b8c125601209414a92e922514183084.html",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "url": "https://www.bfv.de/mspw/regionalliga-bayern/2025-26/regionalliga-bayern-der-27.-spieltag",
+      "finalUrl": "https://www.bfv.de/mspw/regionalliga-bayern/2025-26/regionalliga-bayern-der-27.-spieltag",
+      "sha256": "fbc26f66ed4f79432151fe720a888a8c0b1038a58ca2392a3abf512ffd3e5a2a",
+      "at": "2026-10-17T19:35:50.675695+00:00",
+      "status": 200,
+      "bytes": 269786,
+      "file": "de-dfb-bayern-proof-fbc26f66ed4f79432151fe720a888a8c0b1038a58ca2392a3abf512ffd3e5a2a.html",
+      "contentType": "text/html;charset=UTF-8"
+    },
+    {
+      "url": "https://fsv-zwickau.de/spieler/noah-shawn-agbaje/",
+      "finalUrl": "https://fsv-zwickau.de/spieler/noah-shawn-agbaje/",
+      "sha256": "9b5a4b9be42d0870674cbbd01e79b565cce9378375b431b262c198e283c6ab7e",
+      "at": "2026-10-17T19:36:10.075287+00:00",
+      "status": 200,
+      "bytes": 210104,
+      "file": "de-dfb-bayern-proof-9b5a4b9be42d0870674cbbd01e79b565cce9378375b431b262c198e283c6ab7e.html",
+      "contentType": "text/html; charset=UTF-8"
+    },
+    {
+      "url": "https://fsv-zwickau.de/uncategorized/naechster-fsv-neuzugang-noah-shawn-agbaje-wechselt-nach-westsachsen/",
+      "finalUrl": "https://fsv-zwickau.de/uncategorized/naechster-fsv-neuzugang-noah-shawn-agbaje-wechselt-nach-westsachsen/",
+      "sha256": "9b4e19546d738c344ff57e47ca04f399a59addeab3a1f0103c4bdd9b771d5013",
+      "at": "2026-10-17T19:36:13.278103+00:00",
+      "status": 200,
+      "bytes": 183496,
+      "file": "de-dfb-bayern-proof-9b4e19546d738c344ff57e47ca04f399a59addeab3a1f0103c4bdd9b771d5013.html",
+      "contentType": "text/html; charset=UTF-8"
+    }
+  ]
+}

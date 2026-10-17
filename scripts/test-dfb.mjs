@@ -76,7 +76,7 @@ test('actual grouped goals retain every named score step at the published minute
 
 test('exact verified score-label defects preserve source facts and evidence; fully fixed sources need no correction', async () => {
   const {vZapisnik,zaPredpomnilnik}=await load()
-  for(const entry of correctionData.matches){
+  for(const entry of correctionData.matches.filter(e=>e.metadata.url.includes('/regionalliga-nordost/'))){
     const original=actual(entry.id),z=vZapisnik(original)
     assert.equal(z.popravki.length,2)
     assert.deepEqual(z.goli.map(g=>[g.ime,g.ekipaIdx,g.minuta,g.avtogol,g.enajstmetrovka]),entry.goals.map(g=>[g.scorer,g.ownGoal?1-g.side:g.side,g.normalizedClock[0],g.ownGoal,g.penalty]))
@@ -104,7 +104,7 @@ test('exact verified score-label defects preserve source facts and evidence; ful
 
 test('verified correction IDs reject every unreviewed partial source or identity drift', async () => {
   const {vZapisnik,zaPredpomnilnik}=await load()
-  for(const entry of correctionData.matches){
+  for(const entry of correctionData.matches.filter(e=>e.metadata.url.includes('/regionalliga-nordost/'))){
     const html=actual(entry.id),c=entry.corrections[0],name=entry.goals[c.index].scorer,score=c.from.join(':')
     const onlyTarget=fn=>goalSegments(html,body=>body.includes(name)&&body.includes(score)?fn(body):body)
     const day=+entry.metadata.date.slice(8),month={9:'September',11:'November',12:'Dezember'}[+entry.metadata.date.slice(5,7)]

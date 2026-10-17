@@ -11,6 +11,7 @@ import { razberiPostavo as fussballPostava, jeIzziv as fussballIzziv } from './f
 
 // Public factual evidence only. The registry never changes time/person/side.
 const correctionRegistry=JSON.parse(readFileSync(new URL('./dfb-korekcije.json',import.meta.url),'utf8'))
+const aliasRegistry=JSON.parse(readFileSync(new URL('./dfb-aliasi.json',import.meta.url),'utf8'))
 const reserveRegistry=JSON.parse(readFileSync(new URL('./dfb-rezerve.json',import.meta.url),'utf8'))
 
 const leagueRegistry=JSON.parse(readFileSync(new URL('./dfb-lige.json',import.meta.url),'utf8'))
@@ -88,10 +89,11 @@ function cardEntries(icon,segments){
 }
 function goalEntries(icon,segments){
   const kinds=[...icon.matchAll(/m-MatchDetails-icon-goal--([\w-]+)/g)].map(m=>m[1])
-  if(!segments.length||kinds.length!==1||!['goal','penalty','own-goal'].includes(kinds[0]))fail('nepodprt gol')
+  if(!segments.length||!kinds.length||!(kinds.length===1||kinds.length===segments.length)||kinds.some(k=>!['goal','penalty','own-goal'].includes(k)))fail('nepodprt gol')
+  if(kinds.length>1&&new Set(segments.map(s=>text(s.inner))).size!==segments.length)fail('podvojen združen gol')
   // Actual reports group consecutive same-minute score steps under one icon.
   // Each explicit name+score segment remains an independently verified goal.
-  return segments.map(segment=>({segment,kind:kinds[0]}))
+  return segments.map((segment,i)=>({segment,kind:kinds.length===1?kinds[0]:kinds[i]}))
 }
 function orderedTimeline(section){
   const rows=elements(section,'div','m-MatchDetails-history-item').map((row,index)=>{
@@ -156,6 +158,8 @@ function verifiedScoreCorrections(html,meta,teams,rezultat,polcas,sections){
   if(JSON.stringify(timeline)!==JSON.stringify(summary))fail('neujemajoči izvorni dogodki razdelka Tore pred popravkom')
   const metadata={url:meta.url,season:meta.sezona,round:meta.krog,date:meta.datum,time:meta.ura,teams:teams.map(t=>({id:t.virId,name:t.ime})),finalScore:[rezultat.domaci,rezultat.gostje],halfScore:[polcas.domaci,polcas.gostje]}
   if(JSON.stringify(metadata)!==JSON.stringify(entry.metadata))reject()
+  if(entry.evidenceFiles)verifyPinnedFiles(entry.evidenceFiles)
+
   const goals=[]
   for(const row of elements(sections.get('Spielverlauf'),'div','m-MatchDetails-history-item')){
     const clock=text(one(row.inner,'div','m-MatchDetails-history-minute').inner)
@@ -184,7 +188,7 @@ function verifiedScoreCorrections(html,meta,teams,rezultat,polcas,sections){
   if(JSON.stringify(goals)===JSON.stringify(fixed))return new Map()
   if(JSON.stringify(goals)!==JSON.stringify(entry.goals))reject()
   const documentSha256=createHash('sha256').update(html).digest('hex')
-  return new Map(entry.corrections.map(c=>[c.index,{vrsta:'vmesni-izid',indeksGola:c.index,izvorno:goals[c.index],popravljeno:[...c.to],dokazi:[...entry.evidence],preverjeno:correctionRegistry.checkedAt,vzorecSha256:entry.sourceFixtureSha256,dokumentSha256:documentSha256}]))
+  return new Map(entry.corrections.map(c=>[c.index,{vrsta:'vmesni-izid',indeksGola:c.index,izvorno:goals[c.index],popravljeno:[...c.to],dokazi:[...entry.evidence],...(entry.evidenceFiles?{dokazniDokumenti:structuredClone(entry.evidenceFiles)}:{}),preverjeno:entry.checkedAt??correctionRegistry.checkedAt,vzorecSha256:entry.sourceFixtureSha256,dokumentSha256:documentSha256}]))
 }
 export const kljucKluba = s => text(s).normalize('NFC').toLocaleLowerCase('de').replace(/[^\p{L}\p{N}]+/gu, ' ').trim()
 const nameKey = kljucKluba
@@ -222,7 +226,7 @@ const sha256=bytes=>createHash('sha256').update(bytes).digest('hex')
 // This is a semantic guard over the complete relevant published report, not
 // its changing page shell. Keep all four event copies, profile IDs, source
 // spellings/clocks/icons, shirt numbers, goalkeeper markers and staff roles.
-export function prstniOdtisVloge(html){
+export function prstniOdtisVloge(html,liga='regionalliga-nordost'){
   const profiles=s=>[...s.matchAll(/\/profil\/(\d+)(?:[?"'])/g)].map(m=>m[1])
   const icons=s=>[...s.matchAll(/\bclass=["']([^"']*)["']/g)].flatMap(m=>m[1].split(/\s+/).filter(c=>c.startsWith('m-MatchDetails-icon-')))
   const result=one(html,'div','m-MatchDetails-result').inner
@@ -239,7 +243,35 @@ export function prstniOdtisVloge(html){
     }))
   }))
   const officials=elements(html,'div','m-MatchDetails-referees').map(e=>({text:text(e.inner).normalize('NFC'),profiles:profiles(e.inner)}))
-  return sha256(JSON.stringify({metadata:metadata(html),subline:text(one(html,'h4','m-MatchDetails-subline').inner),headerInfo:text(one(html,'div','m-MatchDetails-info').inner).normalize('NFC'),officials,result:text(result).normalize('NFC'),teamPaths:elements(result,'a').map(a=>new URL(attr(a.tag,'href'),BASE).pathname),tables,sections}))
+  return sha256(JSON.stringify({metadata:metadata(html,undefined,liga),subline:text(one(html,'h4','m-MatchDetails-subline').inner),headerInfo:text(one(html,'div','m-MatchDetails-info').inner).normalize('NFC'),officials,result:text(result).normalize('NFC'),teamPaths:elements(result,'a').map(a=>new URL(attr(a.tag,'href'),BASE).pathname),tables,sections}))
+}
+
+// Read every use: a changed or missing proof must never survive a cached parse.
+function verifyPinnedFiles(files){
+  const out={}
+  for(const [key,f]of Object.entries(files)){
+    let bytes
+    try{bytes=readFileSync(new URL(f.file,import.meta.url))}catch{fail('manjkajoč primarni dokaz')}
+    if(!/^[a-f0-9]{64}$/.test(f.sha256)||sha256(bytes)!==f.sha256)fail('spremenjen primarni dokaz')
+    out[key]=bytes
+  }
+  return out
+}
+export function preveriDokazAliasa(entry,files){
+  const reject=()=>fail('neveljaven primarni dokaz aliasa')
+  for(const [key,f]of Object.entries(entry.files))if(!files[key]||sha256(files[key])!==f.sha256)reject()
+  const dfb=text(files.dfb.toString('utf8')),fsv=text(files.fsv.toString('utf8')),transfer=text(files.transfer.toString('utf8'))
+  if(entry.birthDate!=='2001-06-23'||entry.target.profileId!=='374531'||entry.target.name!=='Noah Agbaje'||entry.source.name!=='Noah Shawn Agbaje'||entry.source.profileId!==null||entry.files.dfb.url!=='https://datencenter.dfb.de/profil/374531'||!dfb.includes('Noah Agbaje')||!dfb.includes('23.06.2001')||!dfb.includes('SV Wacker Burghausen')||!dfb.includes('FSV Zwickau')||!fsv.includes('Noah Shawn')||!fsv.includes('Agbaje')||!fsv.includes('23-06-2001')||!transfer.includes('Noah Shawn Agbaje')||!transfer.includes('Wacker Burghausen'))reject()
+  return structuredClone({vrsta:'match-only-scorer-alias',zapisnikId:`de-dfb-${entry.id}`,side:entry.side,teamId:entry.teamId,source:entry.source,target:entry.target,birthDate:entry.birthDate,dokazi:entry.files,preverjeno:entry.checkedAt,vzorecSha256:entry.sourceFixtureSha256,semantikaSha256:entry.semanticSha256,obseg:entry.scope})
+}
+function verifiedGoalAlias(html,meta,liga,teams,players){
+  if(liga!=='regionalliga-bayern')return null
+  const entry=aliasRegistry.matches.find(e=>`de-dfb-${e.id}`===meta.zapisnikId)
+  if(!entry)return null
+  if(liga!==entry.league||prstniOdtisVloge(html,liga)!==entry.semanticSha256)fail('nepregledana sprememba zapisnika z aliasom')
+  const p=players[entry.side]?.get(nameKey(entry.target.name))
+  if(teams[entry.side]?.virId!==entry.teamId||!p||p.profilId!==entry.target.profileId||players.some(m=>m.has(nameKey(entry.source.name))))fail('nasprotujoča identiteta aliasa')
+  return {entry,player:p,proof:preveriDokazAliasa(entry,verifyPinnedFiles(entry.files))}
 }
 
 /** Verify pinned ordinary public same-match documents with the existing strict
@@ -409,11 +441,13 @@ export function vZapisnik(html, { id, tekma, liga='regionalliga-nordost' } = {})
       }
     }
   }
+  const goalAlias=verifiedGoalAlias(html,meta,liga,teams,players)
   const scoreCorrections=verifiedScoreCorrections(html,meta,teams,rezultat,polcas,sections)
   const popravki=[...scoreCorrections.values()]
   const nepripisaniRumeni=[]
   const goli=[], rumeni=[], rdeci=[], menjave=[], uradneKazni=[], opozorila=popravki.map(c=>`Uradni vmesni izid ${c.izvorno.score.join(':')}: preverjen popravek v ${c.popravljeno.join(':')} za ${c.izvorno.scorer} (${c.izvorno.clock}); izvor in dokazi so ohranjeni.`)
   for(const proof of dopolnitveVlog)opozorila.push(`${proof.alias.dfb.name}: vloga navedene rezerve dokazana z uradno klopjo iste tekme; brez izpeljanega vstopa, minut ali clean sheeta.`)
+  if(goalAlias)opozorila.push(`${goalAlias.entry.source.name}: preverjen alias strelca za ${goalAlias.entry.target.name}; izvorno ime in primarni dokazi so ohranjeni.`)
   const active=teams.map(t=>new Set(t.postava.map(p=>p.virId)))
   const counters={goal:0,card:0,substitute:0}
   // Eligibility survives leaving/never entering the pitch. The active set alone
@@ -451,7 +485,8 @@ export function vZapisnik(html, { id, tekma, liga='regionalliga-nordost' } = {})
         for(const {segment,kind} of goalEntries(icon,segments)){
         const avtogol=kind==='own-goal'||/\bEigentor\b/.test(text(segment.inner))
         const personSide=avtogol?1-side:side
-        const p=resolve(segment.inner,false,false,personSide)
+        const alias=goalAlias&&personSide===goalAlias.entry.side&&identity(text(segment.inner).replace(/\(Elfmeter\)|\(Eigentor\)/g,'').replace(/\bEigentor\b/g,'').replace(/\b\d+:\d+\b/g,'').trim()).ime===goalAlias.entry.source.name?goalAlias:null
+        const p=alias?.player??resolve(segment.inner,false,false,personSide)
         if(p.offiziell)fail('gol uradne osebe')
         if(!active[personSide].has(p.virId)&&!(!p.zacetnik&&p.noter==null&&p.rdec==null&&sameClockIncoming(timeline.rows,order,personSide,p)))fail('gol neaktivnega igralca: ni vstopa ali je že izstopil')
         // Actual DFB penalties retain the ordinary goal icon; their distinction
@@ -464,7 +499,7 @@ export function vZapisnik(html, { id, tekma, liga='regionalliga-nordost' } = {})
         if(scoreTokens.length!==1)fail('neveljavno zaporedje izidov pri golih')
         const sourceScore=[+scoreTokens[0][1],+scoreTokens[0][2]],correction=scoreCorrections.get(counters.goal),stageScore=correction?.popravljeno??sourceScore
         if(stageScore[0]!==runningScore[0]||stageScore[1]!==runningScore[1])fail('neveljavno zaporedje izidov pri golih')
-        goli.push({...event(p,personSide),avtogol,enajstmetrovka,rezultat:[...runningScore],...(correction?{rezultatVir:sourceScore,popravekIzida:correction}:{})});counters.goal++
+        goli.push({...event(p,personSide),avtogol,enajstmetrovka,...(alias?{imeVir:alias.entry.source.name,dokazAliasa:alias.proof}:{}),rezultat:[...runningScore],...(correction?{rezultatVir:sourceScore,popravekIzida:correction}:{})});counters.goal++
         }
       } else if (/m-MatchDetails-icon-card--/.test(icon)) {
         for(const {segment,kind} of cardEntries(icon,segments)){
