@@ -77,6 +77,9 @@ jobs:
       - name: Preverjen vklop Katalonije
         run: node --test scripts/test-vklop-katalonije.mjs
 
+      - name: Nadzorovana FCF osvezitev
+        run: node --test scripts/test-osvezi-fcf-predpomnilnik.mjs
+
       - name: Build
         run: npm run build
 
