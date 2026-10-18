@@ -165,3 +165,14 @@ test('v4 releases exact reviewed calendars with explicit direct provenance and r
   for(const change of [x=>x.calendarReceiptSha256='0'.repeat(64),x=>x.provenanceVersion=3,x=>x.statisticsPolicy={},x=>x.statisticsPolicy=null,x=>delete x.seasons[1].fixtures.find(f=>f.calendarEvidence).calendarEvidence,x=>x.seasons[1].fixtures.find(f=>f.calendarEvidence).calendarEvidence.witnesses[0].sha256='bad',x=>x.seasons[0].fixtures[0].calendarEvidence={},x=>x.seasons[1].lineage={},x=>x.slug='de-regionalliga-suedwest']){const bad=structuredClone(m);change(bad);assert.throws(()=>check(bad))}
  }
 })
+test('v4 direct offline loader uses explicit provenance rather than treating version4 as replay',async()=>{
+ const {sestaviSezono,parserSha256,sha}=await import('./vklopi-dfb-regijo.mjs'),{loadApprovedDocuments}=await import('./dfb-offline.mjs'),dir=mkdtempSync(join(tmpdir(),'dfb-v4-direct-'))
+ try{
+  const current=sestaviSezono(builderInput('nord')),archive=sestaviSezono(builderInput('nord',true));archive.season='2025/26';archive.code='regionalliga-nord/2025-2026'
+  const body='<html>TEST ONLY closed capture</html>',at=new Date().toISOString(),records=[{url:'https://datencenter.dfb.de/TEST-ONLY-DIRECT',at,file:sha(body)+'.html',sha256:sha(body)}]
+  writeFileSync(join(dir,records[0].file),body);writeFileSync(join(dir,'prenosi.json'),JSON.stringify(records))
+  for(const s of[archive,current]){s.capturedAt=at;s.documentsSha256=sha(JSON.stringify(records.map(({url,sha256,at})=>({url,sha256,at}))))}
+  const m={version:4,provenanceVersion:1,calendarReceiptSha256:current.fixtures.find(f=>f.calendarEvidence).calendarEvidence.receiptSha256,slug:'de-regionalliga-nord',sourceCommit:'a'.repeat(40),parserSha256:parserSha256(),seasons:[archive,current]},raw=JSON.stringify(m)
+  assert.equal(loadApprovedDocuments(raw,sha(raw),[dir,dir]).size,1)
+ }finally{rmSync(dir,{recursive:true,force:true})}
+})

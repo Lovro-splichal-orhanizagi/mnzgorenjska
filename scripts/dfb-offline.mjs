@@ -18,7 +18,7 @@ export function loadApprovedDocuments(manifest,approvedSha,dirs){
  if(dirs.length!==2)throw Error('Two captured seasons required')
  for(const [i,dir]of dirs.entries()){
   const index=readFileSync(resolve(dir,'prenosi.json')),s=preveriPosnetek(dir,JSON.parse(index))
-  if(m.version>=2&&sha(index)!==m.seasons[i].lineage.capture.indexSha256)throw Error('Offline DFB: original index bytes changed')
+  if((m.version===2||m.version===3||m.version===4&&m.provenanceVersion===2)&&sha(index)!==m.seasons[i].lineage.capture.indexSha256)throw Error('Offline DFB: original index bytes changed')
   if(s.documentsSha256!==m.seasons[i].documentsSha256||s.capturedAt!==m.seasons[i].capturedAt)throw Error('Offline DFB: captured source changed')
   for(const [url,body]of s.documents){if(documents.has(url)&&documents.get(url)!==body)throw Error('Conflicting captured documents');documents.set(url,body)}
  }
