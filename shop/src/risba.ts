@@ -12,14 +12,15 @@
 //   data-luk="cx cy r"   besedilo po krožnem loku, sredina na vrhu (r < 0: spodnji lok)
 //   data-ce="ime"        element se skrije, če je polje prazno
 import { MOTIVI, type Motiv } from './motivi'
-import pisava from './motivi/anton.ttf?inline'
 
 export type VrednostiPolj = Record<string, string | number | null | undefined>
 
 export const PISAVA_MOTIVOV = "Anton, Impact, 'Arial Narrow', sans-serif"
 
+// Znaki, ki jih XML ne dovoli (kontrolni razen tab/LF/CR, U+FFFE/FFFF, osamljeni nadomestki), izpustimo.
+const PREPOVEDANI = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g
 const xml = (s: string): string =>
-  s.replace(/[&<>"']/g, (z) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[z]!)
+  s.replace(PREPOVEDANI, '').replace(/[&<>"']/g, (z) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[z]!)
 
 // Širine znakov pisave Anton v enotah 2048 na em (hmtx); neznan znak ≈ 1000.
 const SIRINE: Record<string, number> = {
@@ -186,6 +187,9 @@ function besedilo(oznaka: string, vsebina: string, vrednosti: VrednostiPolj): st
  * data-ce skrije svoj del. Z `mm` (mere cone nosilca) ima koren to širino in
  * višino v mm, motiv je sorazmerno na sredini; brez nje naravna velikost predloge.
  */
+// Vsak izris dobi svoje pripone id-jev: več motivov na isti strani (vitrina) si sicer deli #zvezda, clipPath …
+let izrisov = 0
+
 export function narisiMotiv(
   slug: string,
   polja: VrednostiPolj,
@@ -193,7 +197,11 @@ export function narisiMotiv(
   cona?: string,
   mm?: { sirina: number; visina: number },
 ): string {
+  const pripona = `-m${++izrisov}`
   let svg = predloga(slug, cona)
+    .replace(/\sid="([^"]+)"/g, ` id="$1${pripona}"`)
+    .replace(/url\(#([^)]+)\)/g, `url(#$1${pripona})`)
+    .replace(/href="#([^"]+)"/g, `href="#$1${pripona}"`)
   // Mere cone nosilca: viewBox ostane, privzeti preserveAspectRatio (xMidYMid meet)
   // motiv sorazmerno pomanjša in postavi na sredino cone.
   if (mm) svg = svg.replace(/^(<svg\b[^>]*>)/m, (o) => nastavi(nastavi(o, 'width', `${st(mm.sirina)}mm`), 'height', `${st(mm.visina)}mm`))
@@ -214,6 +222,11 @@ export function narisiMotiv(
   return svg
 }
 
-/** SVG z vgrajeno pisavo (data URL): za tiskarno in <img>/<canvas>, kjer pisava strani ne velja. */
-export const zVgrajenoPisavo = (svg: string): string =>
-  svg.replace(/(<svg\b[^>]*>)/, `$1<style>@font-face{font-family:Anton;src:url(${pisava}) format('truetype');}</style>`)
+/**
+ * SVG z vgrajeno pisavo (data URL): za tiskarno in <img>/<canvas>, kjer pisava strani ne velja.
+ * Pisava (~30 KB base64) se naloži šele tu, v svojem kosu, ne v vsakem, ki riše motive.
+ */
+export async function zVgrajenoPisavo(svg: string): Promise<string> {
+  const { default: pisava } = await import('./motivi/anton.ttf?inline')
+  return svg.replace(/(<svg\b[^>]*>)/, `$1<style>@font-face{font-family:Anton;src:url(${pisava}) format('truetype');}</style>`)
+}

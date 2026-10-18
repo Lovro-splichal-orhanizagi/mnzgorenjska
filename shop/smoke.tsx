@@ -247,6 +247,24 @@ preveri('pogoji: rok izdelave, darilni boni, popusti, personalizacija v zasebnos
 
 // Motivi: predloge ↔ seme v migraciji (polja po conah, barve shem), ubežanje, dolge in kratke vrednosti
 {
+  // Urejen XML brez razčlenjevalnika: oznake v paru, v besedilu ni golega '<' ali '&', atributi v narekovajih.
+  const urejenXml = (surovo: string): boolean => {
+    const x = surovo.replace(/<!--[^]*?-->/g, '')
+    const sklad: string[] = []
+    const ent = /&(?!(?:amp|lt|gt|quot|apos|#\d+);)/
+    let zadnji = 0
+    for (const m of x.matchAll(/<[^>]*>/g)) {
+      const vmes = x.slice(zadnji, m.index)
+      if (vmes.includes('<') || ent.test(vmes)) return false
+      zadnji = m.index! + m[0].length
+      const o = /^<(\/?)([\w:-]+)((?:\s+[\w:-]+="[^"<]*")*)\s*(\/?)>$/.exec(m[0])
+      if (!o || ent.test(o[3]!)) return false
+      if (o[1]) { if (sklad.pop() !== o[2]) return false } else if (!o[4]) sklad.push(o[2]!)
+    }
+    return sklad.length === 0 && !x.slice(zadnji).includes('<')
+  }
+  preveri('motivi: preverjanje XML zavrne pokvarjeno', urejenXml('<svg><text a="1">x &amp; y</text></svg>') && !urejenXml('<svg><text>a < b</text></svg>')
+    && !urejenXml('<svg><g></svg>') && !urejenXml('<svg><text>a & b</text></svg>'))
   const sql = readFileSync(new URL('../supabase/migrations/20261018230000_trgovina_motivi.sql', import.meta.url), 'utf8')
   const seme = sql.slice(sql.indexOf('insert into trgovina.motivi (slug'))
   type PoljeSemena = { kljuc: string; vrsta: string; max?: number; cona?: string }
@@ -270,7 +288,7 @@ preveri('pogoji: rok izdelave, darilni boni, popusti, personalizacija v zasebnos
     const vrednost = (p: PoljeSemena, dolgo: boolean): string | number =>
       p.vrsta === 'stevilka' ? (dolgo ? 88 : 1) : p.vrsta === 'leto' ? 1998
         : p.vrsta === 'prvak' ? (dolgo ? 'Prvak mini lige Pisarna United Kran… 2025/26' : 'Mini league champion ABC 2025/26')
-          : dolgo ? 'Ž<script>&W'.padEnd(p.max ?? 12, 'W') : 'Kos'
+          : dolgo ? 'Ž<script>&\u0001"W'.padEnd(p.max ?? 12, 'W') : 'Kos'
     for (const dolgo of [true, false]) {
       const polja = Object.fromEntries(sm.polja.map((p) => [p.kljuc, vrednost(p, dolgo)]))
       for (const c of coneMotiva(sm.slug)) {
@@ -279,7 +297,7 @@ preveri('pogoji: rok izdelave, darilni boni, popusti, personalizacija v zasebnos
         const velikosti = [...out.matchAll(/font-size="([\d.]+)"/g)].map((x) => Number(x[1]))
         preveri(`motiv ${sm.slug}/${c} ${dolgo ? 'dolgo' : 'kratko'}: izris, barve, ubežano, brez oznak predloge`,
           out.startsWith('<svg') && out.includes(`viewBox="0 0 ${sirina} ${visina}"`) && out.includes(`fill="${barve[0]}"`)
-          && !/<script/i.test(out) && (!dolgo || out.includes('&lt;SCRIPT&gt;&amp;') || out.includes('&lt;') || sm.slug === 'prvak-mini-lige')
+          && !/<script/i.test(out) && urejenXml(out) && !out.includes('\u0001')
           && !/data-(polje|sirina|luk|oblika|velike|vrstice)/.test(out) && velikosti.every((v) => v > 4)
           && (dolgo || !out.includes('>W<')), out.slice(0, 200))
       }
@@ -295,7 +313,15 @@ preveri('pogoji: rok izdelave, darilni boni, popusti, personalizacija v zasebnos
     && JSON.stringify(velikostMm('retro-dres')) === '{"sirina":300,"visina":400}'
     && narisiMotiv('kralj-kafane', { ime: 'A', goli: 3, sezona: 2025 }, ['#111', '#eee', '#000']).includes('>2025/26</text>')
     && (narisiMotiv('prvak-mini-lige', { prvak: 'Prvak mini lige Pisarna United Kran… 2025/26' }, ['#111', '#eee', '#000']).match(/>PISARNA<\/text>/g) ?? []).length === 2
-    && zVgrajenoPisavo(mm).includes('@font-face{font-family:Anton;src:url(data:font/ttf;base64,'), zVgrajenoPisavo(mm).slice(0, 300))
+    && (await zVgrajenoPisavo(mm)).includes('@font-face{font-family:Anton;src:url(data:font/ttf;base64,'), mm.slice(0, 300))
+  const ids = (x: string): string[] => [...x.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]!)
+  const a = narisiMotiv('prvak-mini-lige', { prvak: 'Prvak mini lige ABC 2025/26' }, ['#111', '#eee', '#000'])
+  const b = narisiMotiv('prvak-mini-lige', { prvak: 'Prvak mini lige ABC 2025/26' }, ['#111', '#eee', '#000'])
+  const sklici = (x: string): string[] => [...x.matchAll(/(?:href="#|url\(#)([^")]+)/g)].map((m) => m[1]!)
+  preveri('motivi: dva izrisa na isti strani brez skupnih id-jev, sklici kažejo na svoje', ids(a).length > 0 && ids(a).every((i) => !ids(b).includes(i))
+    && [a, b].every((x) => sklici(x).length > 0 && sklici(x).every((r) => ids(x).includes(r))))
+  preveri('motivi: prepovedani znaki XML izpuščeni', urejenXml(narisiMotiv('kapetan', { ime: 'A\u0000B\uFFFE\uD800C', stevilka: 1 }, ['#111', '#eee', '#000']))
+    && narisiMotiv('kapetan', { ime: 'A\u0000B\uFFFE\uD800C', stevilka: 1 }, ['#111', '#eee', '#000']).includes('>ABC</text>'))
 }
 
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)
