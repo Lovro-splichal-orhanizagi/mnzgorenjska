@@ -9,21 +9,26 @@ import { prestopSkladen } from './prestop.mjs'
 // boundary is replaced; projections matter so omitted status fields are caught.
 const source = readFileSync(new URL('./uvoz-zapisnikov.mjs', import.meta.url), 'utf8')
 const body = source.slice(source.indexOf('async function igralecId('), source.indexOf('\nasync function krogId('))
+const helpers = source.slice(source.indexOf('function vrnjenoIme('), source.indexOf('// Ugovor velja za osebo'))
 const fields = 'id, position, position_source, team_id, active, odsel_at, izstopil_at, anonimiziran_razlog'
 function importer({ team = 10404, current = true, overrides = {}, extraRows = [], history,
-  anonymous = false, writeFailure = false } = {}) {
+  anonymous = false, writeFailure = false, transferOnlyFailure = false, zeroActiveRows = false, zeroIdentityRows = false } = {}) {
   const row = { id: 383528, competition_id: 1114, team_id: team, full_name: 'Benedikt Grawe',
     position: 'GK', position_source: 'zapisnik', shirt_number: 1, reg_st: null,
     active: false, odsel_at: null, izstopil_at: null, anonimiziran_razlog: null, ...overrides }
   const rows = [row, ...extraRows]
   let inserts = 0
   let failing = writeFailure
+  let transferFails = transferOnlyFailure
+  let refuseActive = zeroActiveRows
+  let refuseIdentity = zeroIdentityRows
   const db = createClient('https://database.invalid', 'test-service-key', {
     auth: { persistSession: false },
     global: { fetch: async (input, init) => {
       const url = new URL(input)
+      if (url.pathname === '/rest/v1/anonimizirani_igralci' && init.method === 'DELETE') return new Response(null, { status: 204 })
       assert.equal(url.pathname, '/rest/v1/players')
-      const matching = rows.filter(p => [...url.searchParams].every(([field, value]) => {
+      let matching = rows.filter(p => [...url.searchParams].every(([field, value]) => {
         if (['select', 'order', 'limit'].includes(field)) return true
         const [op, ...rest] = value.split('.'), wanted = rest.join('.')
         if (op === 'eq') return String(p[field]) === wanted
@@ -31,9 +36,11 @@ function importer({ team = 10404, current = true, overrides = {}, extraRows = []
         throw Error(`Unexpected filter ${field}=${value}`)
       }))
       if (init.method === 'PATCH') {
-        if (failing) return new Response(JSON.stringify({ message: 'reactivation unavailable', code: 'XX000' }), { status: 500 })
+        const patch = JSON.parse(init.body)
+        if ((refuseActive && patch.active === true) || (refuseIdentity && patch.full_name != null)) matching = []
+        if (failing || (transferFails && patch.team_id != null)) return new Response(JSON.stringify({ message: 'reactivation unavailable', code: 'XX000' }), { status: 500 })
         for (const p of matching) Object.assign(p, JSON.parse(init.body))
-        return new Response(null, { status: 204 })
+        return new Response(null, { status: 204, headers: { 'Content-Range': `*/${matching.length}` } })
       }
       if (init.method === 'POST') {
         const p = { id: 900001 + inserts++, active: true, ...JSON.parse(init.body) }
@@ -46,22 +53,18 @@ function importer({ team = 10404, current = true, overrides = {}, extraRows = []
       return new Response(JSON.stringify(result), { headers: { 'Content-Type': 'application/json' } })
     } },
   })
-  const resolve = runInNewContext(`(${body})`, {
+  const resolve = runInNewContext(`${helpers}
+(${body})`, {
     db, igralci: new Map(), klubPoReg: new Map(), tekocaSezona: current,
     tekmovanje: { id: 1114, country_id: 44 }, POLJA_IGRALCA: fields,
     VRATAR_IZ_POLJA: 'v vratih, a vodimo ga v polju', prestopSkladen,
     nastopiIgralca: async () => history ?? [{ klub: 10404, tekma: 123, sezona: '2025/26', krog: 34, datum: '2026-05-16' }],
-    anonimiziranVLigi: async () => anonymous ? row : null,
+    anonimiziranVLigi: async () => anonymous ? { ...row } : null,
     imeHash: () => 'verified-anonymous-key',
-    vrnjenoIme: () => null,
-    posodobiIgralca: async (id, patch) => {
-      const { error } = await db.from('players').update(patch).eq('id', id)
-      if (error) throw Error(error.message)
-    },
     razdeliIme: () => ({ priimek: 'Grawe', ime: 'Benedikt' }),
     preveriUgovor: async () => {}, console: { log() {} },
   })
-  return { row, rows, failWrites: value => { failing = value }, resolve: options => resolve(10412, 'Benedikt Grawe', {
+  return { row, rows, failWrites: value => { failing = value }, failTransfer: value => { transferFails = value }, refuseActive: value => { refuseActive = value }, refuseIdentity: value => { refuseIdentity = value }, resolve: options => resolve(10412, 'Benedikt Grawe', {
     st: 1, vratar: true, datum: '2026-08-08',
     tekma: { id: 431607, sezona: current ? '2026/27' : '2025/26', krog: 1, datum: '2026-08-08' }, ...options,
   }) }
@@ -141,5 +144,68 @@ test('a failed reactivation does not populate the cache and bypass a later retry
   await assert.rejects(resolve({ vratar: false }), /reactivation unavailable/)
   failWrites(false)
   assert.equal(await resolve({ vratar: false }), 383528)
+  assert.equal(row.active, true)
+})
+
+test('a transfer-only database failure is propagated before cache and can be retried', async () => {
+  const { row, resolve, failTransfer } = importer({ transferOnlyFailure: true })
+  await assert.rejects(resolve(), /reactivation unavailable/)
+  assert.equal(row.team_id, 10404)
+  assert.equal(row.active, false)
+  failTransfer(false)
+  assert.equal(await resolve(), 383528)
+  assert.equal(row.team_id, 10412)
+  assert.equal(row.active, true)
+})
+test('a guarded reactivation matching zero rows refuses and does not poison the cache', async () => {
+  const { row, resolve, refuseActive } = importer({ team: 10412, zeroActiveRows: true })
+  await assert.rejects(resolve({ vratar: false }), /reactivation.*one player|natanko enega igralca/i)
+  assert.equal(row.active, false)
+  refuseActive(false)
+  assert.equal(await resolve({ vratar: false }), 383528)
+  assert.equal(row.active, true)
+})
+test('current inactivity anonymization is restored before detached status is used for reactivation', async () => {
+  const { row, resolve } = importer({ anonymous: true, overrides: {
+    full_name: '#383528', anonimiziran_razlog: 'neaktiven', anonimiziran_at: '2026-07-01T00:00:00Z' } })
+  assert.equal(await resolve(), 383528)
+  assert.equal(row.full_name, 'Benedikt Grawe')
+  assert.equal(row.anonimiziran_razlog, null)
+  assert.equal(row.anonimiziran_at, null)
+  assert.equal(row.active, true)
+  assert.equal(await resolve(), 383528)
+  assert.equal(row.active, true)
+})
+test('an archive appearance preserves inactivity-anonymized identity and inactive status', async () => {
+  const { row, resolve } = importer({ current: false, anonymous: true, overrides: {
+    full_name: '#383528', anonimiziran_razlog: 'neaktiven' } })
+  await resolve()
+  assert.equal(row.full_name, '#383528')
+  assert.equal(row.anonimiziran_razlog, 'neaktiven')
+  assert.equal(row.active, false)
+})
+test('failed identity restoration cannot clear privacy state or cache an active resolution', async () => {
+  const { row, resolve, failWrites } = importer({ anonymous: true, writeFailure: true, overrides: {
+    full_name: '#383528', anonimiziran_razlog: 'neaktiven' } })
+  await assert.rejects(resolve(), /reactivation unavailable/)
+  assert.equal(row.full_name, '#383528')
+  assert.equal(row.anonimiziran_razlog, 'neaktiven')
+  assert.equal(row.active, false)
+  failWrites(false)
+  assert.equal(await resolve(), 383528)
+  assert.equal(row.full_name, 'Benedikt Grawe')
+  assert.equal(row.active, true)
+})
+
+test('an unconfirmed identity-restoration PATCH refuses without caching and supports a later retry', async () => {
+  const { row, resolve, refuseIdentity } = importer({ anonymous: true, zeroIdentityRows: true, overrides: {
+    full_name: '#383528', anonimiziran_razlog: 'neaktiven' } })
+  await assert.rejects(resolve(), /vrnitev identitete ni potrjena/)
+  assert.equal(row.full_name, '#383528')
+  assert.equal(row.anonimiziran_razlog, 'neaktiven')
+  assert.equal(row.active, false)
+  refuseIdentity(false)
+  assert.equal(await resolve(), 383528)
+  assert.equal(row.full_name, 'Benedikt Grawe')
   assert.equal(row.active, true)
 })
