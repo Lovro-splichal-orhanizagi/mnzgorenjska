@@ -9,7 +9,18 @@ test('GH-only ES source coordinator clears only a complete known-empty older fam
 for(const[name,patch]of[
  ['older manual ES',{runs:{'uvoz-lige.yml':[run()]}}],['queued older source',{runs:{'fcf-javni-dokazi.yml':[{...run(),status:'queued'}]}}],['unknown older manual',{runs:{'uvoz-lige.yml':[run(122,'unknown')]}}],['known maintenance writer',{runs:{'cene-lig.yml':[run(122,'Cene lig vse')]}}],['same timestamp lower ID',{runs:{'uvoz-lige.yml':[{...run(122),created_at:execution.startedUTC}]}}],['unverified nightly jobs',{runs:{'uvoz-zapisnikov.yml':[run()]}}],['nightly ES running',{runs:{'uvoz-zapisnikov.yml':[run()]},jobs:[{name:'uvoz ES',status:'in_progress'}]}],['API uncertainty',{failure:true}],['FCF badge source',{runs:{'grbi.yml':[run(122,'Grbi klubov fcf')]}}],
 ])test(`source coordinator holds on ${name} within bounded wait`,async()=>{assert.equal(typeof api.waitForFcfInventorySourceSlot,'function');await assert.rejects(()=>coordinate(patch),/FCF_INVENTORY/)})
-test('completed non-ES nightly jobs and later runs do not block ES',async()=>{const r=await coordinate({runs:{'uvoz-zapisnikov.yml':[run()],'uvoz-lige.yml':[{...run(124),created_at:execution.startedUTC}]},jobs:[{name:'uvoz ES',status:'completed'},{name:'uvoz DE',status:'in_progress'}]});assert.equal(r.result.status,'clear')})
+test('completed non-ES nightly jobs and later runs do not block ES',async()=>{const r=await coordinate({runs:{'uvoz-zapisnikov.yml':[run()],'uvoz-lige.yml':[{...run(124),created_at:execution.startedUTC}]},jobs:[{id:1,name:'uvoz ES',status:'completed'},{id:2,name:'uvoz DE',status:'in_progress'}]});assert.equal(r.result.status,'clear')})
 test('cache-export history mode remains source-free',async()=>{assert.equal((await coordinate({runs:{'uvoz-fcf-zgodovina.yml':[run(122,'FCF history cache-export zapisniki-ES-k1od1-39053159080-1')]}})).result.status,'clear')})
 test('incomplete pagination/unknown jobs cannot supply clearance',async()=>{assert.equal(typeof api.waitForFcfInventorySourceSlot,'function');await assert.rejects(()=>api.waitForFcfInventorySourceSlot({execution,listRuns:async()=>({total_count:2,workflow_runs:[run()]}),listJobs:async()=>({total_count:0,jobs:[]}),pause:async()=>{},clock:()=>0,maximumWaitMinutes:3}),/FCF_INVENTORY/)})
 test('existing coordinator delegates source-only path before Supabase construction and sees history in both families',()=>{const text=readFileSync(new URL('./cakaj-na-uvoze.mjs',import.meta.url),'utf8');assert.ok(text.indexOf('--fcf-inventory-source-only')<text.indexOf('const db = createClient'));assert.ok((text.match(/uvoz-fcf-zgodovina\.yml/g)||[]).length>=3);assert.match(text,/mojaDrzava === 'ES'/)})
+
+for(const [name,jobs]of[
+ ['missing declared second ES shard',[{id:1,name:'uvoz ES 1/2',status:'completed'},{id:2,name:'uvoz DE',status:'in_progress'}]],
+ ['duplicate ES shard',[{id:1,name:'uvoz ES 1/2',status:'completed'},{id:2,name:'uvoz ES 1/2',status:'completed'}]],
+ ['mixed ES shard totals',[{id:1,name:'uvoz ES 1/2',status:'completed'},{id:2,name:'uvoz ES 2/3',status:'completed'}]],
+ ['mixed single and sharded ES',[{id:1,name:'uvoz ES',status:'completed'},{id:2,name:'uvoz ES 1/1',status:'completed'}]],
+ ['unknown ES shard identity',[{id:1,name:'uvoz ES unknown',status:'completed'}]],
+ ['missing native ES job ID',[{name:'uvoz ES',status:'completed'}]],
+ ['duplicate native ES job ID',[{id:1,name:'uvoz ES 1/2',status:'completed'},{id:1,name:'uvoz ES 2/2',status:'completed'}]],
+])test(`nightly ${name} holds the source slot`,async()=>{await assert.rejects(()=>coordinate({runs:{'uvoz-zapisnikov.yml':[run()]},jobs}),/FCF_INVENTORY/)})
+test('all unique declared ES shards terminal clears the source slot',async()=>{const r=await coordinate({runs:{'uvoz-zapisnikov.yml':[run()]},jobs:[{id:1,name:'uvoz ES 1/2',status:'completed'},{id:2,name:'uvoz ES 2/2',status:'completed'},{id:3,name:'uvoz DE',status:'in_progress'}]});assert.equal(r.result.status,'clear')})
