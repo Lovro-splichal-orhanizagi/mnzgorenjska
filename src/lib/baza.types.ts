@@ -9106,18 +9106,43 @@ export type Database = {
             }
             Returns: number
           }
+      trgovina_admin_boni: { Args: Record<PropertyKey, never>; Returns: Json }
       trgovina_admin_izdelki: {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
       trgovina_admin_narocila: { Args: { p_stanje?: string }; Returns: Json }
       trgovina_admin_narocilo: { Args: { p_id: number }; Returns: Json }
+      trgovina_admin_nova_serija: {
+        Args: { p_postavke: number[] }
+        Returns: Json
+      }
       trgovina_admin_poslano: {
         Args: { p_narocilo: number; p_sledilna: string }
         Returns: Json
       }
+      trgovina_admin_serija: { Args: { p_id: number }; Returns: Json }
+      trgovina_admin_serija_stanje: {
+        Args: { p_id: number; p_stanje: string }
+        Returns: Json
+      }
+      trgovina_admin_serije: { Args: Record<PropertyKey, never>; Returns: Json }
       trgovina_admin_shrani_izdelek: { Args: { p: Json }; Returns: number }
+      trgovina_admin_shrani_personalizacijo: {
+        Args: {
+          p_doplacilo: number
+          p_izdelek: number
+          p_obvezna: boolean
+          p_vrsta: string
+        }
+        Returns: undefined
+      }
       trgovina_admin_shrani_razlicico: { Args: { p: Json }; Returns: number }
+      trgovina_admin_za_tisk: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      trgovina_bon_porabljen: { Args: { p_promocija: string }; Returns: string }
       trgovina_iz_placila: {
         Args: {
           p_checkout: string
@@ -9139,6 +9164,8 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      trgovina_moja_znacka: { Args: Record<PropertyKey, never>; Returns: Json }
+      trgovina_moji_prvaki: { Args: Record<PropertyKey, never>; Returns: Json }
       trgovina_narocilo_seje: {
         Args: { p_checkout: string; p_odjemalec: string; p_user: string }
         Returns: Json
@@ -9162,6 +9189,17 @@ export type Database = {
       trgovina_vezi_sejo: {
         Args: { p_checkout: string; p_narocilo: number }
         Returns: undefined
+      }
+      trgovina_zabelezi_bon: {
+        Args: {
+          p_koda_hash: string
+          p_koda_konec: string
+          p_postavka: number
+          p_stripe_promocija: string
+          p_velja_do: string
+          p_zaporedje: number
+        }
+        Returns: string
       }
       tuja_postava: {
         Args: { p_round: number; p_team: number }

@@ -19,6 +19,18 @@ EU-27. Prodajalec SPACE GUARDIAN d.o.o. Spec:
   `trgovina_rezerviraj`, `_vezi_sejo`, `_iz_placila`, `_potekla`, `_sprosti`,
   `_narocilo_seje` kliče le `service_role` (funkcije). Admin RPC
   `trgovina_admin_*` preverijo `is_admin()`.
+- **Personalizacija, tisk, boni** (migracija `20261018190000_trgovina_personalizacija.sql`,
+  spec `docs/superpowers/specs/2026-10-18-trgovina-personalizacija-design.md`):
+  `izdelki.po_narocilu` / `digitalni` (brez zaloge), `personalizacije`
+  (možnosti in doplačila), `postavke.personalizacija` / `doplacilo` /
+  `stanje_tiska`, `serije`, `boni` (koda le sha256 + zadnji 4 znaki).
+  `rezerviraj` preveri personalizacijo (ime ekipe, poljubno ime s filtrom
+  `prepovedano_besedilo`, številka 0–99, prvak `trgovina.prvaki_uporabnika`,
+  značka `trgovina.znacka_uporabnika`); plačilo značke vpiše `narocila_znack`.
+  Kupec: `trgovina_moji_prvaki()`, `trgovina_moja_znacka()`; servis:
+  `trgovina_zabelezi_bon`, `trgovina_bon_porabljen`; admin: `_za_tisk`,
+  `_nova_serija`, `_serija`, `_serije`, `_serija_stanje`, `_boni`,
+  `_shrani_personalizacijo`.
 - **Rezervacija**: naročilo `caka_placilo` drži zalogo 35 min
   (`rezervirano_do`), Stripe seja poteče v 31 min. Na voljo = zaloga −
   rezervirano. Največ 5 odprtih naročil na prijavljenega uporabnika ali (gost)
