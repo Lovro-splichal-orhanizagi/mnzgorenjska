@@ -37,7 +37,8 @@
 // beremo znova (razen prve 3 dni in nepopolnih do 45 dni), neodigrane, ko so
 // na vrsti, sicer enkrat na teden. **Ob izzivu, CAPTCHI, 403 ali 429 se uvoz
 // ustavi — ne obhajaj.**
-import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { randomUUID } from 'node:crypto'
 import { razpakiraj } from '../klubi.mjs'
 import { nastopi } from './hlf.mjs'
 import { NEPOPOLN } from './frf.mjs'
@@ -595,21 +596,31 @@ export class FcfZavrnitev extends Error {
 }
 
 /** Iz predpomnilnika, če ni starejši od `najvec` ms; sicer prenese (in zapiše). */
-async function beri(prenesi, id, najvec) {
+async function beri(prenesi, id, najvec, preveri = null) {
   const ime = imeStrani(id)
   const c = izPredpomnilnika(ime)
-  if (c && c.starost <= najvec) return c.html
+  if (!preveri && c && c.starost <= najvec) return c.html
+  // Običajna klicatelja prenosa pišeta že pred vrnitvijo iz prenesi. Pri
+  // ciljni obnovi zato najprej pišeta v začasno datoteko, brez stare rezerve.
+  const imePrenosa = preveri ? `.paired-${id}-${randomUUID()}.html` : ime
+  if (preveri && existsSync(pot(imePrenosa))) throw napakaKoledarja('začasna datoteka že obstaja')
   let html
   try {
-    html = await prenesi(naslovZapisnika(id), ime, true)
+    html = await prenesi(naslovZapisnika(id), imePrenosa, true)
+    if (jeIzziv(html)) throw new FcfZavrnitev(`fcf: ${naslovZapisnika(id)} vrne izziv (CAPTCHA) — uvoz ustavljen, ne obhajamo`)
+    if (vrstaStrani(html) === 'neznano') throw new Error(`fcf: ${naslovZapisnika(id)} ni zapisnik (${html.length} B) — uvoz ustavljen`)
+    preveri?.(html)
+    // Ciljni odgovor ostane v pomnilniku do preverbe CELOTNEGA koledarja.
+    if (!preveri) {
+      mkdirSync(MAPA, { recursive: true })
+      writeFileSync(pot(ime), html)
+    }
   } catch (e) {
     if (e.zavrnitev || e.status === 403 || e.status === 429) throw new FcfZavrnitev(`fcf: ${naslovZapisnika(id)} → ${e.status ?? e.message} — uvoz ustavljen, ne obhajamo`, e.status)
     throw e
+  } finally {
+    if (preveri) rmSync(pot(imePrenosa), { force: true })
   }
-  if (jeIzziv(html)) throw new FcfZavrnitev(`fcf: ${naslovZapisnika(id)} vrne izziv (CAPTCHA) — uvoz ustavljen, ne obhajamo`)
-  if (vrstaStrani(html) === 'neznano') throw new Error(`fcf: ${naslovZapisnika(id)} ni zapisnik (${html.length} B) — uvoz ustavljen`)
-  mkdirSync(MAPA, { recursive: true })
-  writeFileSync(pot(ime), html)
   return html
 }
 
@@ -630,6 +641,94 @@ export function najvecStarost(g, danes = Date.now(), svezi = false) {
   return DAN // prestavljena tekma brez novega datuma
 }
 
+const klubPara = (g) => [kljucKlubaEs(g.domaci), kljucKlubaEs(g.gostje)]
+const kljucSkupine = (g) => `${g.tekmovanje}|${g.skupina}|${g.sezona}`
+const napakaKoledarja = (razlog) => new Error(`fcf: neskladen koledar — ${razlog}; uvoz ustavljen`)
+
+/** Natančni imeni in uradni povezavi na straneh glave, brez vzdevkov klubov. */
+function identitetaPara(html) {
+  const ovoj = prvi(drevoRsc(html), (e) => e.props?.title === 'Acta del partit')
+  const stolpci = ovoj && [...elementi(ovoj)].find((e) => e.tip === 'div' &&
+    e.otroci.filter(jeElement).length === 3 && /-/.test(besedilo(e.otroci.filter(jeElement)[1])))
+  if (!stolpci) throw napakaKoledarja('manjka glava para')
+  const deli = stolpci.otroci.filter(jeElement)
+  return [deli[0], deli[2]].map((stran) => {
+    const ime = kljucKlubaEs(besedilo(stran))
+    const povezave = new Set([...elementi(stran)].map((e) => e.props?.href)
+      .filter((href) => /^\/ca\/clubs\/[1-9][0-9]*\/categories\/[1-9][0-9]*$/.test(href ?? '')))
+    if (!ime || povezave.size !== 1) throw napakaKoledarja('nejasna uradna identiteta kluba')
+    return `${ime}|${[...povezave][0]}`
+  })
+}
+
+/** Obnova velja samo za en podvojen neodigran povratni par v polnem bloku. */
+async function obnoviPar(prave, glavna, ponovnoUporabljeni, prenesi) {
+  if (prave.length !== 240 || new Set(prave.flatMap((t) => klubPara(t.g))).size !== 16) return
+  const pari = new Map()
+  for (const t of prave) {
+    const key = klubPara(t.g).sort().join('|')
+    if (!pari.has(key)) pari.set(key, [])
+    pari.get(key).push(t)
+  }
+  const sporni = [...pari.values()].filter((ts) => ts.length === 2 &&
+    ts[0].g.krog === ts[1].g.krog && !ts[0].g.izid && !ts[1].g.izid &&
+    klubPara(ts[0].g)[0] === klubPara(ts[1].g)[1] && klubPara(ts[0].g)[1] === klubPara(ts[1].g)[0])
+  if (!sporni.length) return
+  if (sporni.length !== 1) throw napakaKoledarja('več spornih povratnih parov')
+  const par = sporni[0]
+  const kluba = klubPara(par[0].g).sort().join('|')
+  const klubi = new Set(prave.flatMap((t) => klubPara(t.g)))
+  // To preverjanje uporabimo pred branjem IN po njem: vseh 240 smeri mora
+  // biti enoličnih, brez samotekem in izvensezonskih krogov.
+  const krogi = () => {
+    const smeri = new Set(), out = new Map()
+    for (const t of prave) {
+      const [d, g] = klubPara(t.g), k = t.g.krog
+      if (d === g || !klubi.has(d) || !klubi.has(g) || !Number.isInteger(k) || k < 1 || k > 30)
+        throw napakaKoledarja('neveljaven klub ali krog')
+      smeri.add(`${d}|${g}`)
+      if (!out.has(k)) out.set(k, [])
+      out.get(k).push(t)
+    }
+    if (smeri.size !== 240 || out.size !== 30) throw napakaKoledarja('nepopolne ali podvojene smeri/krogi')
+    return out
+  }
+  let luknji = 0
+  for (const ts of krogi().values()) {
+    const ostale = ts.filter((t) => !par.includes(t))
+    const udelezeni = new Set(ostale.flatMap((t) => klubPara(t.g)))
+    if (udelezeni.size !== ostale.length * 2) throw napakaKoledarja('dodatna ponovitev kluba v krogu')
+    if (ostale.length === 7 && [...klubi].filter((k) => !udelezeni.has(k)).sort().join('|') === kluba) luknji++
+    else if (ostale.length !== 8) throw napakaKoledarja('dodatno neskladje kroga')
+  }
+  if (luknji !== 2) throw napakaKoledarja('par ni edino neskladje dveh krogov')
+  const zaBranje = par.filter((t) => ponovnoUporabljeni.has(t.id))
+  if (!zaBranje.length) throw napakaKoledarja('oba sporna zapisnika sta že sveže prebrana')
+  // Največ dve zaporedni logični branji; obstoječi transport ohrani svoje
+  // premore, ponovitve in meje izvornih zahtevkov. Ni rekurzivne obnove.
+  for (const t of zaBranje) {
+    const identiteta = identitetaPara(t.html).sort().join(';')
+    const html = await beri(prenesi, t.id, -1, (s) => {
+      const route = vrsticeRsc(tokRsc(s)).get('0')?.c
+      const g = glavaStrani(s)
+      if (!Array.isArray(route) || route.length !== 5 || route.join('/') !== `/ca/competicio/acta/${t.id}` ||
+        !g || kljucSkupine(g) !== glavna || klubPara(g).sort().join('|') !== kluba ||
+        identitetaPara(s).sort().join(';') !== identiteta)
+        throw napakaKoledarja(`osveženi zapisnik ${t.id} ne pripada istemu paru/skupini/sezoni`)
+    })
+    t.html = html
+    t.g = glavaStrani(html)
+  }
+  if (par[0].g.krog === par[1].g.krog || klubPara(par[0].g)[0] !== klubPara(par[1].g)[1] ||
+    klubPara(par[0].g)[1] !== klubPara(par[1].g)[0]) throw napakaKoledarja('povratni par ostaja neskladen')
+  for (const ts of krogi().values()) {
+    if (ts.length !== 8 || new Set(ts.flatMap((t) => klubPara(t.g))).size !== 16)
+      throw napakaKoledarja('po obnovi vsak krog potrebuje osem disjunktnih tekem')
+  }
+  // Noben zavrnjen par ne sme z delnim zapisom izbrisati svojega sprožilca.
+  for (const t of zaBranje) writeFileSync(pot(imeStrani(t.id)), t.html)
+}
+
 /**
  * Prebere blok zapisnikov: { tekme: [{ id, html, g }], tujih, ni }.
  * Tekma druge skupine (ali sezone) v bloku se izpusti z opozorilom.
@@ -637,10 +736,13 @@ export function najvecStarost(g, danes = Date.now(), svezi = false) {
 export async function preberiBlok(koda, prenesi, { danes = Date.now(), svezi = false } = {}) {
   const { od, do: do_ } = razberiKodo(koda)
   const strani = []
+  const ponovnoUporabljeni = new Set()
   for (let id = od; id <= do_; id++) {
     const c = izPredpomnilnika(imeStrani(id))
     const g = c ? glavaStrani(c.html) : null
-    const html = c && c.starost <= najvecStarost(g, danes, svezi) ? c.html : await beri(prenesi, id, -1)
+    const uporabi = c && c.starost <= najvecStarost(g, danes, svezi)
+    if (uporabi) ponovnoUporabljeni.add(id)
+    const html = uporabi ? c.html : await beri(prenesi, id, -1)
     strani.push({ id, html })
   }
   const tekme = []
@@ -651,7 +753,7 @@ export async function preberiBlok(koda, prenesi, { danes = Date.now(), svezi = f
     tekme.push({ ...s, g })
   }
   // Skupina bloka: najpogostejša (tekmovanje, skupina, sezona).
-  const kljuc = (g) => `${g.tekmovanje}|${g.skupina}|${g.sezona}`
+  const kljuc = kljucSkupine
   const stevec = new Map()
   for (const t of tekme) stevec.set(kljuc(t.g), (stevec.get(kljuc(t.g)) ?? 0) + 1)
   const glavna = [...stevec.entries()].sort((a, b) => b[1] - a[1])[0]?.[0]
@@ -659,6 +761,7 @@ export async function preberiBlok(koda, prenesi, { danes = Date.now(), svezi = f
   if (tuje.length) console.warn(`fcf: v bloku ${koda} so tekme drugih skupin (izpuščene): ${tuje.map((t) => `${t.id} (${kljuc(t.g)})`).join(', ')}`)
   // Prost krog: "vs undefined" (liho število klubov) ni tekma.
   const prave = tekme.filter((t) => kljuc(t.g) === glavna && t.g.domaci && t.g.gostje && !/^undefined$/i.test(t.g.gostje) && !/^undefined$/i.test(t.g.domaci))
+  await obnoviPar(prave, glavna, ponovnoUporabljeni, prenesi)
   return { tekme: prave, skupina: glavna, tujih: tuje.length, ni }
 }
 
