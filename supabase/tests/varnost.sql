@@ -5102,8 +5102,11 @@ select pg_temp.preveri('agent: ne bere e-pošte kupca', not has_column_privilege
 select pg_temp.preveri('agent: bere stanje naročila', has_column_privilege('agent_bralec', 'trgovina.narocila', 'stanje', 'select'));
 select pg_temp.preveri('agent: ne bere e-pošte v email_log', not has_column_privilege('agent_bralec', 'public.email_log', 'email', 'select'));
 select pg_temp.preveri('agent: ne piše', not has_table_privilege('agent_bralec', 'public.fantasy_teams', 'insert,update,delete'));
-select pg_temp.preveri('agent: ne dostopa do pg_net (URL-ji kljuk Discorda)',
-  to_regnamespace('net') is null or not has_schema_privilege('agent_bralec', 'net', 'usage'));
+-- Brez superuporabnika (sveža CI baza) migracija sheme net ne more zapreti in to
+-- izrecno zapiše; produkcijo preveri docs/agenti-baza.md.
+select pg_temp.preveri('agent: ne dostopa do pg_net (URL-ji kljuk Discorda) ali je zapisano opozorilo',
+  to_regnamespace('net') is null or not has_schema_privilege('agent_bralec', 'net', 'usage')
+  or exists (select 1 from agent.opozorila where kljuc = 'net'));
 select pg_temp.preveri('agent: aplikacija ohrani pg_net',
   to_regnamespace('net') is null or (has_schema_privilege('authenticated', 'net', 'usage')
     and has_table_privilege('postgres', 'net.http_request_queue', 'insert')));

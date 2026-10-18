@@ -43,6 +43,9 @@ create schema if not exists agent;
 revoke all on schema agent from public;
 grant usage on schema agent to agent_bralec;
 
+-- Koraki, ki jih migracija brez superuporabnika ne more narediti (ročno po docs).
+create table if not exists agent.opozorila (kljuc text primary key, besedilo text not null, created_at timestamptz default now());
+
 create table if not exists agent.zaprte_tabele (tabela text primary key, zakaj text not null);
 create table if not exists agent.zaprti_stolpci (tabela text, stolpec text, zakaj text not null, primary key (tabela, stolpec));
 
@@ -190,6 +193,8 @@ begin
     end loop;
   end if;
 exception when insufficient_privilege then
+  insert into agent.opozorila (kljuc, besedilo) values ('net', 'pravice PUBLIC na shemi net odvzemi ročno')
+  on conflict (kljuc) do nothing;
   raise warning 'net: pravice PUBLIC odvzemi ročno (docs/agenti-baza.md)';
 end $$;
 
