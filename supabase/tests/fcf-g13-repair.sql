@@ -84,6 +84,8 @@ select pg_temp.g13_reject('changed fixture date', $$update matches set played_on
 -- the pair would collide with the still-present surplus match309381.
 select pg_temp.g13_reject('invalid calendar opponent', 'update matches set home_team_id=8372 where id=427267');
 select pg_temp.g13_reject('unrecognized foreign key', 'create table public.g13_unknown_dependency(id int, team_id bigint references teams)');
+select pg_temp.g13_reject('installed historical policy', $$insert into private_historical_statistics.installed_policies(competition_id,policy_id,policy_sha256,first_fantasy_played_on) select 801,id,policy_sha256,current_date+7 from private_historical_statistics.policies where id='es-fcf-segona-g1-history-2026-10-18-v1'$$);
+select pg_temp.g13_reject('bound historical club', $$update private_historical_statistics.source_club_bindings set bound_team_id=8371 where provider='fcf' and source_club_id='5042'$$);
 select pg_temp.g13_reject('Scout non-FK dependency', $$insert into scout.dnevnik(team_id,vrsta) values(10388,'isci')$$);
 -- A trigger is allowed to run, but not silently corrupt a protected field.
 create function pg_temp.g13_corrupt_test() returns trigger language plpgsql as $$

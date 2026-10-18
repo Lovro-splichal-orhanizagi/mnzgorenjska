@@ -5,7 +5,10 @@ const container=process.env.SUPABASE_DB_CONTAINER
 if(!container||process.env.HISTORICAL_STATISTICS_DISPOSABLE_TEST!=='1')throw Error('Explicit owned disposable database required')
 const database=`historical_round_race_${process.pid}`
 const run=(sql)=>execFileSync('docker',['exec','-i',container,'psql','-U','postgres','-d',database,'-X','-A','-t','-v','ON_ERROR_STOP=1'],{input:sql,encoding:'utf8'})
-const snapshot=execFileSync('docker',['exec',container,'pg_dump','-U','postgres','-d','postgres','--no-owner','--no-privileges','--exclude-schema=cron','--exclude-schema=vault'],{maxBuffer:64*1024*1024})
+// Supabase's managed realtime functions carry superuser-only logging settings.
+// They do not participate in these fixture races; omit that background schema
+// rather than changing the restricted postgres role used by application tests.
+const snapshot=execFileSync('docker',['exec',container,'pg_dump','-U','postgres','-d','postgres','--no-owner','--no-privileges','--exclude-schema=cron','--exclude-schema=vault','--exclude-schema=realtime'],{maxBuffer:64*1024*1024})
 execFileSync('docker',['exec',container,'createdb','-U','postgres','-T','template0',database])
 try {
  run('create schema if not exists vault;\n'+snapshot.toString().replace(/^CREATE EXTENSION IF NOT EXISTS pg_cron[^\n]*;$/gm,'').replace(/^COMMENT ON EXTENSION pg_cron[^\n]*;$/gm,''))
