@@ -10,6 +10,8 @@
 
 **Spec:** `docs/superpowers/specs/2026-10-18-fcf-missing-inventory-design.md`.
 
+**Implementation checkpoint (2026-10-18):** Tasks1–4 are implemented in the isolated branch and await root's fresh independent review. Task5 is held until that review/followup; actual target main bb3106f has not been merged here. No live source, real claim, staging mutation, dispatch or production action has run. New suites remain explicit review commands until Task5 registers the final bridge regression set.
+
 ## Global constraints
 
 - Preset exactly `g1-then-g9-missing-v1`; G1/id783/block4109388–4109627/max239; G9/id797/block4118349–4118588/max238; combined477 native attempts, no retry/resume/redistribution.

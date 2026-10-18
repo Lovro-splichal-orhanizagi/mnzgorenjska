@@ -126,3 +126,59 @@ Load-bearing risks: original seed transport and protected create-only claim infr
 ## First offline implementation checkpoint
 
 Pure modules now implement the fixed plan/seed proof, actual RSC header/calendar closure, protected Git ref/commit/tree/blob/ruleset claim validation and authenticated consumption-artifact validation. They contain no source/DB/GitHub client or dispatch/reserve/reset CLI. A separate bounded ZIP helper leaves old artifact protocols unchanged. Claim readers consume actual GitHub commit/tree/blob metadata and verify the claim JSON blob identity; future workflow transport must obtain those authenticated records. Protected-ref creation itself stays root-owned and is not simulated as evidence of GitHub's server atomicity. Tests use synthetic Actions metadata; optional retained-byte replay validates all three genuine marker originals without claiming a real seed/consumption artifact exists.
+
+## Concrete root staging transport (implementation checkpoint)
+
+The new Actions stages have only `contents: read` and `actions: read`. The
+implementation creates no GitHub object, tag, ruleset, release, dispatch or
+artifact metadata. Root first creates a private **draft** release with tag
+`fcf-inventory-staging-v1` and uploads the reviewed local ZIP/approval JSON as
+actual assets. Each dispatch supplies the actual asset ID and independently
+reviewed SHA256. The CLI authenticates that draft release, paginates its assets,
+checks the actual uploaded size, downloads through the fixed repository API and
+rehashes the bytes. Publishing/deleting/changing a draft asset cannot change
+accepted bytes; a missing or different asset holds the run. No public arbitrary
+URL or legacy cache artifact is an input.
+
+1. On the final reviewed main, root runs the source-free local command
+   `node scripts/fcf-missing-inventory-actions.mjs pack-seed --originals-dir ABSOLUTE_ORIGINALS --source-commit REVIEWED_MAIN --output FRESH_ABSOLUTE_ZIP`.
+   The command preserves the full original receipt manifest and the three exact
+   marker bodies, validates all pinned hashes, and reports the actual ZIP,
+   seed-manifest and original-manifest hashes. It never invents an Actions proof.
+2. Root uploads that ZIP to the draft release, then dispatches `seed-stage` on
+   that same reviewed main with the actual `asset_id`, `asset_sha256`,
+   `asset_manifest_sha256`, and `original_manifest_sha256`. The successful run's
+   actual `missing-inventory-seed` job uploads the immutable seed artifact.
+3. Root authenticates that successful seed run/artifact and runs `prepare-approval`
+   with `--seed-run-id`, `--seed-attempt`, `--seed-artifact-id`, `--seed-digest`,
+   `--seed-commit`, `--seed-manifest-sha`, `--original-manifest-sha`,
+   `--source-commit`, `--ruleset-id`, and fresh `--output`. It reads real GitHub
+   metadata/ZIP, constructs the exact477 plan and reports its hash. Root reviews
+   and uploads the approval JSON as a distinct draft asset. No approval asset or
+   protected ruleset is assumed to exist before this root-owned preparation.
+4. Root dispatches `missing-inventory` with only fixed preset
+   `g1-then-g9-missing-v1` and that actual approval asset ID/SHA. Its consumption
+   job waits source-free for the one protected claim. The claim template command
+   `claim-template --approval ABSOLUTE_APPROVAL --run-id ACTUAL_HELD_RUN --output FRESH_ABSOLUTE_JSON`
+   authenticates the held main attempt1 and emits exact claim bytes/hash.
+5. Root verifies the active tag ruleset (tag target, exact reserved namespace,
+   update/deletion blocked, no bypass), creates the claim blob/tree/commit with
+   the reviewed main as its single parent, then performs one atomic GitHub
+   `POST git/refs` for `refs/tags/fcf-inventory-claim/<planSHA>`. An existing ref
+   is a consumed/lost reservation; never update/delete it or dispatch a second
+   execution/attempt2 for that plan, including after zero/unknown requests.
+   Root records the actual commit/JSON hashes. The workflow token cannot perform
+   this mutation and checks the actual protected ref/commit/tree/blob/ruleset
+   before consumption and again after source coordination.
+6. The immutable consumption upload outputs supply the actual artifact ID,
+   digest and manifest SHA to both source jobs. G1 captures, uploads, then audits
+   its actual uploaded ZIP offline. Only the completed successful G1 job and
+   independently reproduced full audit can enable G9. The receipt job always
+   records authenticated known counts; missing/unknown records yield a distinct
+   indeterminate diagnostic with null total and no admission.
+
+The staging/continuation/final proof readers remain distinct. Inventory seal is
+`statisticsAudit: not-run`; final target composition is still held until the
+separately reviewed Task5 adapter consumes terminal reader-issued inventory,
+offline audit, final receipt and consumption evidence. No actual staging asset,
+claim, run or source response is asserted by these implementation tests.

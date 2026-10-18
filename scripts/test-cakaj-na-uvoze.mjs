@@ -272,3 +272,18 @@ test('fixed FCF source reader serializes both ES directions without becoming a D
   const diagnostic = await coordinate(['--tece'], { [workflow]: [run('FCF')] })
   assert.equal(diagnostic.code,0); assert.ok(!diagnostic.queried.includes(workflow))
 })
+
+test('newer ES/global operations wait for the older one-shot inventory; unrelated countries remain independent', async () => {
+  const workflow = 'uvoz-fcf-zgodovina.yml', title = 'FCF history missing-inventory g1-then-g9-missing-v1'
+  for (const args of [['--drzava', 'ES'], ['--popravek'], ['--tece']]) {
+    assert.equal((await coordinate(args, { [workflow]: [run(title)] })).code, args.includes('--tece') ? 3 : 1)
+  }
+  assert.equal((await coordinate(['--drzava', 'DE'], { [workflow]: [run(title)] })).code, 0)
+})
+test('both legacy coordination loops classify history cache-export and seed-stage as source-free', async () => {
+  const workflow = 'uvoz-fcf-zgodovina.yml'
+  for (const mode of ['cache-export', 'seed-stage']) for (const args of [['--drzava', 'ES'], ['--tece']]) {
+    const result = await coordinate(args, { [workflow]: [run(`FCF history ${mode} fixed`)] })
+    assert.equal(result.code, 0); assert.ok(result.queried.includes(workflow))
+  }
+})

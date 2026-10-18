@@ -26,12 +26,11 @@ function validateSeedBinding(binding){
  exactKeys(binding,['artifactId','artifactDigest','manifestSha256','runId','runAttempt','jobId','retentionCommit','sourceCaptureCommit','originalManifestSha256'],'seed binding')
  if(!['artifactId','runId','runAttempt','jobId'].every(key=>nativeId(binding[key]))||!artifactDigest(binding.artifactDigest)||!sha256Id(binding.manifestSha256)||!sha256Id(binding.originalManifestSha256)||!commitId(binding.retentionCommit)||binding.sourceCaptureCommit!==sourceCaptureCommit)fail('seed artifact/source identity differs')
 }
-/** Authenticates real ZIP bytes plus independently expected GitHub metadata. */
-export function readFcfMissingInventorySeed({zipBytes,artifact,run,jobs,expected,now=Date.now()}){
- if(!Number.isFinite(now))fail('finite seed audit time required')
- const binding=verifyInventoryExecution({artifact,run,jobs,expected,jobName:'missing-inventory-seed',stepNames:['Validate retained FCF inventory originals','Retain reviewed FCF inventory seed'],artifactName:`fcf-inventory-seed-${expected?.runId}-${expected?.runAttempt}`,runPhase:'successful-run'})
- if(!sha256Id(expected.originalManifestSha256))fail('expected original manifest SHA required')
+/** Source-free staging checks content only, never creates Actions SeedEvidence. */
+export function validateFcfMissingInventorySeedBytes({zipBytes,expected,now=Date.now()}){
+ if(!expected||!Number.isFinite(now)||!commitId(expected.sourceCommit)||!sha256Id(expected.manifestSha256)||!sha256Id(expected.originalManifestSha256))fail('explicit seed staging hashes/commit required')
  policies(expected.policyHashes)
+ const artifact={size_in_bytes:zipBytes?.length}
  const members={'manifest.json':limits.maximumManifestBytes,'original-receipts.json':limits.maximumManifestBytes,...Object.fromEntries(pins.map(p=>[`acta-${p.id}.html`,limits.maximumBodyBytes]))}
  const files=readInventoryZip({zipBytes,artifact,expected,members}),manifest=jsonBytes(files.get('manifest.json'),'seed manifest'),originalBytes=files.get('original-receipts.json'),original=jsonBytes(originalBytes,'original receipts')
  exactKeys(manifest,['schemaVersion','kind','retentionCommit','sourceCaptureCommit','originalManifestSha256','policyHashes','originals'],'seed manifest')
@@ -50,8 +49,16 @@ export function readFcfMissingInventorySeed({zipBytes,artifact,run,jobs,expected
   classifyFcfHistoricalStatistics({competition:{slug:scope.targetSlug,source:'fcf',source_policy:'es-fcf-reviewed-history-v1',firstFantasyPlayedOn:'2026-10-24'},id:descriptor.id,html})
   originals.push({id:descriptor.id,bytes:Buffer.from(raw)})
  }
- const proof=frozenJSON({kind:'fcf-missing-inventory-seed-proof',binding:{...binding,sourceCaptureCommit,originalManifestSha256:expected.originalManifestSha256},policyHashes:clone(manifest.policyHashes),originals:descriptors})
- seeds.set(proof,originals)
+ return {kind:'fcf-missing-inventory-validated-seed-bytes',files,originals,descriptors,policyHashes:clone(manifest.policyHashes),sourceCaptureCommit,originalManifestSha256:expected.originalManifestSha256,manifestSha256:expected.manifestSha256}
+}
+export function getFcfMissingInventoryOriginalDescriptors(){return frozenJSON(pinnedDescriptors())}
+/** Authenticates real ZIP bytes plus independently expected GitHub metadata. */
+export function readFcfMissingInventorySeed({zipBytes,artifact,run,jobs,expected,now=Date.now()}){
+ const binding=verifyInventoryExecution({artifact,run,jobs,expected,jobName:'missing-inventory-seed',stepNames:['Validate retained FCF inventory originals','Retain reviewed FCF inventory seed'],artifactName:`fcf-inventory-seed-${expected?.runId}-${expected?.runAttempt}`,runPhase:'successful-run'})
+ if(!Buffer.isBuffer(zipBytes)||zipBytes.length!==artifact.size_in_bytes)fail('actual seed artifact bytes differ')
+ const staged=validateFcfMissingInventorySeedBytes({zipBytes,expected,now})
+ const proof=frozenJSON({kind:'fcf-missing-inventory-seed-proof',binding:{...binding,sourceCaptureCommit,originalManifestSha256:expected.originalManifestSha256},policyHashes:staged.policyHashes,originals:staged.descriptors})
+ seeds.set(proof,staged.originals)
  return proof
 }
 export function getFcfMissingInventorySeedOriginals(seedEvidence){
