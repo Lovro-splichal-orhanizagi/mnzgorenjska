@@ -1,28 +1,54 @@
-# Vrsta pošte (luka@slff.eu)
+# Vrsta pošte (luka@, lovro@, nejc@, klubi@slff.eu)
 
-Maile iz luka@slff.eu ne pošilja več človek, ampak vrsta (migracija
+Maile klubom ne pošilja več človek, ampak vrsta (migracija
 `20261012183100`): `klub_stik.v_vrsti` (naslov je v vrsti), `poslji_od` (prvi
-mail ne prej) in `posiljatelj`. Pošilja jo **delavec na strežniku**, ne GitHub
+mail ne prej) in `posiljatelj` (polnjenje vpiše `luka@slff.eu` kot oznako
+vrste; ob prvem mailu ga delavec prepiše z nabiralnikom, ki je poslal). Pošilja jo **delavec na strežniku**, ne GitHub
 Actions (dnevniki javnega repozitorija bi pokazali naslove): kontejner
 `slff-posta` (`/opt/slff-posta`, `scripts/hetzner/posta/docker-compose.yml`,
 node:22-alpine, omrežje gostitelja kot `slff-html`) poganja
-`scripts/posta-klubom.mjs --zanka`. Vsakih 10 minut pošlje največ dva maila
-(60–150 s narazen), le v oknu države prejemnika (08–18, pon–sob; krajevni
-čas: AT, EE, HR, HU, RS — `OKNA`) in največ 100 na dunajski dan. Najprej opomniki (en sam, ≥ 3
+`scripts/posta-klubom.mjs --zanka`. Vsakih 10 minut pošlje vsak dejaven
+pošiljatelj največ dva maila (med vsemi maili 60–150 s), le v oknu države
+prejemnika (08–18, pon–sob; krajevni čas: AT, EE, HR, HU, RS — `OKNA`) in
+vsak do svoje dnevne meje.
+
+**Pošiljatelji** (`POSILJATELJI` v skripti, nabiralniki na Mailcowu):
+
+| nabiralnik | podpis | `poslal` | geslo v `.env` | ogrevanje od |
+|---|---|---|---|---|
+| luka@slff.eu | Luka | `Luka (luka@slff.eu)` | `LUKA_SMTP_GESLO` | — (100/dan) |
+| lovro@slff.eu | Lovro | `Lovro (lovro@slff.eu)` | `LOVRO_SMTP_GESLO` | 19. 10. 2026 |
+| nejc@slff.eu | Nejc | `Nejc (nejc@slff.eu)` | `NEJC_SMTP_GESLO` | 19. 10. 2026 |
+| klubi@slff.eu | ekipa ("Das SLFF-Team", "SLFF tim" …) | `Ekipa SLFF (klubi@slff.eu)` | `KLUBI_SMTP_GESLO` | 19. 10. 2026 |
+
+Pošiljatelj brez gesla v okolju ne pošilja (z le `LUKA_SMTP_GESLO` je vse kot
+prej). Dnevna meja z ogrevanjem je `min(100, 20 + 10 × dunajskih dni od
+začetka)` (prvi dan 20, po osmih dneh 100), šteje se `klub_stik_posta.poslal`
+tega pošiljatelja na dunajski dan (in parkirani "poslano…" z njegovim
+naslovom v opombi). Prvi mail dobi pošiljatelj z največ prostora danes (enako →
+vrstni red v tabeli); opomnik in pregled nabiralnika vedno tisti, ki je poslal
+prvi mail (`poslal`) — če ni dejaven ali je poln, opomnik čaka. Besedila so
+enaka, le ime v predstavitvi in podpisu; klubi@ piše v množini ("wir sind das
+Team von SLFF") in v glavi `From: "SLFF"`. Zavrnjena prijava izklopi le tega
+pošiljatelja do ponovnega zagona. Najprej opomniki (en sam, ≥ 3
 dni po našem prvem, brez pošte drugih — tudi klic ali drugo za vedno zapre
 opomnik), nato prvi maili (`nov`, brez pošte, liga **aktivna** — neaktivna
 liga čaka, tako Estonija do vklopa; izmenično po državah, `izmenicno`). Klub (isti `team_id` ali isto ime v
 državi) čaka, če je v 3 dneh dobil pošto od kogarkoli ali v 7 dneh od drugega,
 pravilo pa tik pred pošiljanjem preveri še enkrat na sveži pošti. **En stik na
 klub:** drug naslov kluba, ki je prvi mail ali opomnik že dobil, prvega ne dobi.
-Pred opomnikom pogleda v nabiralnik (IMAP, INBOX in Junk): mail z naslova ali
+Pred opomnikom pogleda v nabiralnik pošiljatelja prvega maila (IMAP, prijava
+kot on, INBOX in Junk): mail z naslova ali
 citirana povezava na stran kluba → `odgovor`, odboj ali SMTP zavrnitev →
 `napacen_mail`. Pred SMTP vrstico prevzame (`v_vrsti = false`) in jo vrne šele
-po vpisu v `klub_stik_posta` (poslal `Luka (luka@slff.eu)`); napaka po začetku
+po vpisu v `klub_stik_posta` (`poslal` pošiljatelja); napaka po začetku
 DATA ali neuspel vpis jo pusti zunaj vrste z opombo "poslano? preveri ročno" —
 **nikoli samodejno znova** (in šteje v dnevno mejo). Polnjenje vrne v vrsto le
 stare avstrijske vrstice pred vrsto (brez `posiljatelj`, `poslano`, brez opombe
-"poslano…") in jim ob tem vpiše pošiljatelja. Kopija gre v Sent. Številke v mailu so sveže;
+"poslano…") in jim ob tem vpiše pošiljatelja. Kopija gre v Sent nabiralnika, ki je poslal.
+**Odgovori klubov pristanejo v nabiralniku pošiljatelja**: info@ in luka@ sta
+povezana s HelpStackom, lovro@, nejc@ in klubi@ **niso** — te berejo lastniki
+(ali Mailcow SOGo) sami. Številke v mailu so sveže;
 besedila (nemška, estonska, hrvaška, madžarska, srbska v latinici) so v
 skripti in ne trdijo, da imamo dovoljenje zveze. Prehodne napake delavec le zabeleži; zavrnjena prijava: ura premora,
 nato izhod (Docker ga znova zažene).
@@ -33,8 +59,9 @@ klub; naslovi zakriti v `k***@domena`). **Objava:**
 `@supabase/supabase-js`); **CI je ne objavi** — po vsaki spremembi pošte jo
 poženi ročno. **Enkratna nastavitev** (lastnik, skrivnosti niso v gitu): na
 strežniku `/opt/slff-posta/.env` s `SUPABASE_SERVICE_ROLE_KEY=` (servisni
-ključ iz `/opt/supabase/.env`) in `LUKA_SMTP_GESLO=` (geslo nabiralnika),
-`chmod 600`; `SUPABASE_URL` (`http://127.0.0.1:8000`) je v compose.
+ključ iz `/opt/supabase/.env`) in gesla nabiralnikov `LUKA_SMTP_GESLO=`,
+`LOVRO_SMTP_GESLO=`, `NEJC_SMTP_GESLO=`, `KLUBI_SMTP_GESLO=` (le tista, ki naj
+pošiljajo), `chmod 600`, nato `docker compose up -d` (nova gesla se preberejo ob zagonu); `SUPABASE_URL` (`http://127.0.0.1:8000`) je v compose.
 
 **Polnjenje** teče na strežniku: `cd /opt/slff-posta && docker compose run --rm
 posta node scripts/vrsta-poste-klubom.mjs --drzava AT` (načrt), nato z
