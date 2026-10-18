@@ -98,6 +98,21 @@ Server Components (`self.__next_f.push`), ki ga `drevoRsc` sestavi
   preizkusu 5–20 s na zahtevek s 3 s premora), zato je prvi uvoz skupine
   ~1 ura. Vse lige bere en gostitelj: `cakaj-na-uvoze.mjs` ima ES v
   `SKUPEN_VIR`, zagoni Španije se ne prekrivajo.
+- **Mešan prihodnji povratni par**: le v polnem bloku 240 tekem, 30 krogov
+  in 16 klubov vir prepozna en neodigran par z obema smerema v istem krogu,
+  če je to edino neskladje razporeda (oba kluba skupaj manjkata v drugem
+  krogu). Zaporedno ponovno prebere samo člana, dejansko vzeta iz
+  predpomnilnika v tem klicu: največ dve dodatni logični branji, nikoli
+  ponovitve že svežega člana. Prenos najprej uporabi začasno datoteko brez
+  stare rezerve; šele preverjena izvorna pot, skupina, sezona ter polni
+  imeni in uradni povezavi klubov smejo zamenjati redni predpomnilnik.
+  Pred vrnitvijo mora vseh 30 krogov imeti po 8 disjunktnih tekem, vseh
+  240 smeri pa biti enoličnih. Ob več spornih parih, dodatnem neskladju,
+  obeh že svežih članih ali neuspešni obnovi se uvoz ustavi. Veljajo iste
+  omejitve izvornega prenosa; položaja tekme ali rezultata ne ugibamo.
+  Regresija `scripts/test-fcf-calendar.mjs` uporablja tri pristne glave iz
+  zgodovinskega predpomnilnika brez dokazane svežine; celotni testni
+  koledar in odgovor povratne tekme v 5. krogu sta izrecno sintetična.
 - **Prenos praznega HTTP 200**: `fcfFetch` naredi največ dva izvorna
   zahtevka. Le prvi odgovor z natanko 0 znaki, statusom 200 in brez
   preusmeritve na izvirni niz
