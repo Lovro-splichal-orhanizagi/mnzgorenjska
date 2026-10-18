@@ -56,6 +56,8 @@ export function Kosarica() {
   const [poteka, setPoteka] = useState(false)
   // Po zavrnitvi zaradi zaloge: označimo vrstice z več kosi, kot jih je morda na voljo.
   const [premalo, setPremalo] = useState(false)
+  // Vrstica, ki je baza ni sprejela (ključ vrstice; strežnik vrne indeks).
+  const [napacna, setNapacna] = useState<string | null>(null)
   const [soglasje, setSoglasje] = useState(false)
   useNaslov(t('kosarica.naslov'))
   const slugi = useMemo(() => [...new Set(k.postavke.map((p) => p.slug))].sort(), [k.postavke])
@@ -86,6 +88,7 @@ export function Kosarica() {
     setPoteka(true)
     setSporocilo(null)
     setPremalo(false)
+    setNapacna(null)
     const { data, error } = await supabase.functions.invoke<{ url?: string; seja?: string; oznaka?: string }>('trgovina-nakup', {
       body: {
         postavke: k.postavke.map(({ razlicica_id, kolicina, personalizacija }) => ({ razlicica_id, kolicina, ...(personalizacija && { personalizacija }) })),
@@ -104,13 +107,15 @@ export function Kosarica() {
     let besedilo = t('napaka.splosna')
     if (error instanceof FunctionsHttpError) {
       const odziv = error.context as Response
-      const telo = (await odziv.json().catch(() => null)) as { hint?: string } | null
+      const telo = (await odziv.json().catch(() => null)) as { hint?: string; postavka?: number } | null
+      const vrstica = Number.isInteger(telo?.postavka) ? k.postavke[telo!.postavka!] : undefined
+      if (vrstica) setNapacna(kljuc(vrstica))
       if (odziv.status === 429) besedilo = t('napaka.prevec')
       else if (telo?.hint === 'trgovina-placano') {
         shraniPlacilo(null)
         izprazni()
         besedilo = t('kosarica.placano')
-      } else if (telo?.hint === 'trgovina-personalizacija' || telo?.hint === 'trgovina-prijava' || telo?.hint === 'trgovina-odstop') {
+      } else if (telo?.hint === 'trgovina-personalizacija' || telo?.hint === 'trgovina-besedilo' || telo?.hint === 'trgovina-prijava' || telo?.hint === 'trgovina-odstop') {
         besedilo = t(`napaka.${telo.hint}` as Kljuc)
       } else if (telo?.hint === 'trgovina-zaloga' || telo?.hint === 'trgovina-vnos') {
         besedilo = t(`napaka.${telo.hint}` as Kljuc)
@@ -176,6 +181,7 @@ export function Kosarica() {
                       {r && iz && iz.razlicice.length > 1 && <p className="text-sm text-slate-400">{po(r.oznaka_sl, r.oznaka_en)}</p>}
                       {p.opis && <p className="break-words text-sm font-semibold uppercase text-gnl-200">{p.opis}</p>}
                       {iz?.digitalni && <p className="text-xs text-slate-500">{t('izdelek.digitalni')}</p>}
+                      {napacna === vrstica && <p className="text-sm text-rose-300">{t('kosarica.napacnaVrstica')}</p>}
                     </div>
                     {kos !== null && <p className="shrink-0 font-bold tabular-nums">{cena(kos * p.kolicina)}</p>}
                   </div>
@@ -188,7 +194,7 @@ export function Kosarica() {
                     <div className="flex items-center rounded-lg border border-white/15 bg-white/5 text-sm" role="group" aria-label={t('izdelek.kolicina')}>
                       <button type="button" aria-label={t('izdelek.manj')} disabled={!r || p.kolicina <= 1} onClick={() => shrani(nastavi(k, vrstica, p.kolicina - 1))} className="px-2.5 py-1 font-bold disabled:opacity-30">−</button>
                       <span className="w-7 text-center tabular-nums">{p.kolicina}</span>
-                      <button type="button" aria-label={t('izdelek.vec')} disabled={!r || p.kolicina >= najvec} onClick={() => shrani(nastavi(k, vrstica, p.kolicina + 1))} className="px-2.5 py-1 font-bold disabled:opacity-30">+</button>
+                      <button type="button" aria-label={t('izdelek.vec')} disabled={!r || p.kolicina >= najvec} onClick={() => shrani(nastavi(k, vrstica, p.kolicina + 1, najvec))} className="px-2.5 py-1 font-bold disabled:opacity-30">+</button>
                     </div>
                     <button type="button" onClick={() => shrani(odstrani(k, vrstica))} className="text-sm text-slate-400 hover:text-rose-300">
                       {t('kosarica.odstrani')}

@@ -108,6 +108,7 @@ export const SL = {
   'kosarica.bon': 'Darilni bon pošljemo po e-pošti po plačilu. Velja 1 leto, porabi se v enem nakupu brez ostanka. Največ 5 bonov na naročilo.',
   'kosarica.koda': 'Promocijsko kodo ali darilni bon vneseš na strani za plačilo.',
   'kosarica.digitalno': 'Brez dostave: kodo dobiš po e-pošti.',
+  'kosarica.napacnaVrstica': 'Tega izdelka ne moremo sprejeti. Odstrani ga ali ga dodaj znova s strani izdelka.',
 
   'napaka.trgovina-zaloga': 'Za vse izdelke ni dovolj zaloge. Pri označenih izdelkih zmanjšaj količino in poskusi znova.',
   'napaka.trgovina-vnos': 'Košarica ni veljavna: največ 20 različnih izdelkov, 20 kosov posameznega in 50 kosov skupaj, vsi izdelki morajo biti v prodaji, največ 5 darilnih bonov. Preveri jo in poskusi znova.',
@@ -116,6 +117,7 @@ export const SL = {
   'napaka.nalaganje': 'Podatkov ni bilo mogoče naložiti. Osveži stran.',
   'napaka.trgovina-personalizacija': 'Personalizacije ni bilo mogoče potrditi: ekipa morda ni več tvoja, besedilo ni dovoljeno ali je značka že naročena. Preveri personalizirane izdelke.',
   'napaka.trgovina-prijava': 'Za izdelek z imenom ekipe, prvaka ali značko se prijavi.',
+  'napaka.trgovina-besedilo': 'Imena te mini lige ne natisnemo. Odstrani označeni izdelek.',
   'napaka.trgovina-odstop': 'Potrdi, da personaliziranih izdelkov ni mogoče vrniti.',
 
   'hvala.naslov': 'Hvala za nakup!',
@@ -285,6 +287,9 @@ export const SL = {
   'admin.boni.ustvarjena': 'Koda {koda} je ustvarjena. Prepiši jo zdaj: pozneje je ne pokažemo več.',
   'admin.boni.napaka': 'Kode ni bilo mogoče ustvariti: {napaka}',
   'admin.boni.napacno': 'Odstotek od 1 do 100 ali znesek v evrih, uporab od 1 do 1000, rok v prihodnosti (največ 2 leti).',
+  'admin.boni.znova': 'Pošlji bon znova',
+  'admin.boni.poslan': 'Kode naročila {oznaka} so znova poslane na {email}.',
+  'admin.boni.napakaZnova': 'Bona ni bilo mogoče poslati znova: {napaka}',
 }
 
 export type Kljuc = keyof typeof SL
@@ -388,6 +393,7 @@ export const EN: Record<Kljuc, string> = {
   'kosarica.bon': 'We email the gift card after payment. It is valid for 1 year and used up in one purchase, with no remaining balance. At most 5 gift cards per order.',
   'kosarica.koda': 'You enter a promotion code or gift card on the payment page.',
   'kosarica.digitalno': 'No delivery: you get the code by email.',
+  'kosarica.napacnaVrstica': 'We cannot accept this item. Remove it or add it again from the product page.',
 
   'napaka.trgovina-zaloga': 'There is not enough stock for all items. Lower the quantity of the marked items and try again.',
   'napaka.trgovina-vnos': 'The cart is not valid: at most 20 different items, 20 of each and 50 in total, and all items must be on sale, and at most 5 gift cards per order. Please check it and try again.',
@@ -396,6 +402,7 @@ export const EN: Record<Kljuc, string> = {
   'napaka.nalaganje': 'The data could not be loaded. Please refresh the page.',
   'napaka.trgovina-personalizacija': 'The personalisation could not be confirmed: the team may no longer be yours, the text is not allowed or the badge is already ordered. Please check the personalised items.',
   'napaka.trgovina-prijava': 'Sign in for products with a team name, champion title or badge.',
+  'napaka.trgovina-besedilo': 'We cannot print the name of this mini league. Please remove the marked item.',
   'napaka.trgovina-odstop': 'Please confirm that personalised products cannot be returned.',
 
   'hvala.naslov': 'Thank you for your order!',
@@ -565,6 +572,9 @@ export const EN: Record<Kljuc, string> = {
   'admin.boni.ustvarjena': 'Code {koda} was created. Copy it now: it is not shown again.',
   'admin.boni.napaka': 'The code could not be created: {napaka}',
   'admin.boni.napacno': 'Percent from 1 to 100 or an amount in euro, 1 to 1000 redemptions, a date in the future (at most 2 years).',
+  'admin.boni.znova': 'Resend gift card',
+  'admin.boni.poslan': 'The codes of order {oznaka} were sent again to {email}.',
+  'admin.boni.napakaZnova': 'The gift card could not be resent: {napaka}',
 }
 
 type Jezik = 'sl' | 'en'

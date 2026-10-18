@@ -57,6 +57,13 @@ export const napacnaTarifa = (kljuc: string | null, drzava: string | null): bool
 
 // --- Darilni boni ------------------------------------------------------------
 
+/**
+ * Izdelek "SLFF Trgovina" v Stripe (applies_to bonov): vse nedigitalne postavke
+ * gredo pod njim (trgovina-nakup/izdelki.ts, isti id; smoke primerja), zato bon
+ * velja tudi za izdelke, dodane po izdaji.
+ */
+export const IZDELEK_TRGOVINE = 'slff-shop'
+
 /** Brez 0/O in 1/I, da kode ni mogoče prebrati narobe. */
 const ABECEDA = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 

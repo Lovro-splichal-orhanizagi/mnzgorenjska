@@ -4421,6 +4421,7 @@ select pg_temp.zavrnjeno('trgovina2: uporabnik ne bere serije', $$select trgovin
 select pg_temp.zavrnjeno('trgovina2: uporabnik ne vidi serij', $$select trgovina_admin_serije()$$);
 select pg_temp.zavrnjeno('trgovina2: uporabnik ne premakne serije', $$select trgovina_admin_serija_stanje(1, 'poslana')$$);
 select pg_temp.zavrnjeno('trgovina2: uporabnik ne vidi bonov', $$select trgovina_admin_boni()$$);
+select pg_temp.zavrnjeno('trgovina2: uporabnik ne bere promocij bonov narocila', $$select trgovina_boni_narocila(1)$$);
 select pg_temp.zavrnjeno('trgovina2: uporabnik ne ureja doplacil',
   $$select trgovina_admin_shrani_personalizacijo(-927101, 'stevilka', 0, false)$$);
 reset role;
@@ -4595,15 +4596,70 @@ select pg_temp.napaka('trgovina2: prvak zahteva prijavo',
     null, 'sl', encode(sha256('t2a'), 'hex'))$$, 'trgovina-prijava');
 
 -- Značka: le doživljenjsko preverjen, en kos, enkrat.
+-- Ime mini lige gre skozi skupni filter, natisnjena vrstica ima največ 40 znakov.
+reset role;
+insert into mini_lige(id, name, code, owner_id, created_at) overriding system value
+values (-927004, 'Kurac liga', 'ZALJIVA927', 'f7a20000-0000-4000-8000-000000000001', now()-interval '300 days'),
+       (-927005, 'Zelo dolgo ime mini lige prijateljev', 'DOLGA927', 'f7a20000-0000-4000-8000-000000000001', now()-interval '300 days');
+insert into mini_liga_clani(mini_liga_id, fantasy_team_id, joined_at)
+select l, t, now()-interval '300 days'
+  from unnest(array[-927004, -927005]) l, unnest(array[-927001, -927002, -927003, -927004]) t;
+create function pg_temp.izid_brez_sledi(p_sql text) returns text
+language plpgsql as $$
+declare v text;
+begin
+  begin
+    execute p_sql into v;
+    raise exception using errcode = 'P9998', message = 'razveljavi';
+  exception when sqlstate 'P9998' then null;
+  end;
+  return v;
+end;
+$$;
+create function pg_temp.detail_napake(p_sql text) returns text
+language plpgsql as $$
+declare v text;
+begin
+  begin
+    execute p_sql;
+    raise exception using errcode = 'P9998', message = 'brez napake';
+  exception when others then
+    get stacked diagnostics v = pg_exception_detail;
+  end;
+  return v;
+end;
+$$;
+grant execute on function pg_temp.izid_brez_sledi(text), pg_temp.detail_napake(text) to authenticated, service_role;
+select set_config('request.jwt.claim.sub','f7a20000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.preveri('trgovina2: prvak lige z zaljivim imenom ni ponujen, dolgo ime je skrajsano',
+  not trgovina_moji_prvaki() @> '[{"mini_liga_id":-927004}]'
+  and trgovina_moji_prvaki() @> '[{"mini_liga_id":-927005,"besedilo_sl":"Prvak mini lige Zelo dolgo ime… 2025/26",
+                                   "besedilo_en":"Mini league champion Zelo dolgo… 2025/26"}]');
+reset role;
+select set_config('request.jwt.claim.sub','',true);
+set local role service_role;
+select pg_temp.napaka('trgovina2: zaljivo ime mini lige se ne natisne',
+  $$select trgovina_rezerviraj('[{"razlicica_id":-927103,"kolicina":1,"personalizacija":{"prvak":{"mini_liga_id":-927004,"sezona":"2025/26"}}}]',
+    'f7a20000-0000-4000-8000-000000000001', 'sl', encode(sha256('t2a'), 'hex'))$$, 'trgovina-besedilo');
+select pg_temp.preveri('trgovina2: dolgo ime mini lige se skrajsa na 40 znakov',
+  pg_temp.izid_brez_sledi($$select trgovina_rezerviraj('[{"razlicica_id":-927103,"kolicina":1,"personalizacija":{"prvak":{"mini_liga_id":-927005,"sezona":"2025/26"}}}]',
+    'f7a20000-0000-4000-8000-000000000001', 'en', encode(sha256('t2a'), 'hex'))->'postavke'->0->>'opis'$$)
+  = 'Mini league champion Zelo dolgo… 2025/26');
+select pg_temp.preveri('trgovina2: napaka personalizacije pove vrstico',
+  pg_temp.detail_napake($$select trgovina_rezerviraj('[{"razlicica_id":-927102,"kolicina":1,"personalizacija":{"poljubno_ime":"Ana"}},
+    {"razlicica_id":-927102,"kolicina":1,"personalizacija":{"poljubno_ime":"Kurac"}}]', null, 'sl', encode(sha256('t2a'), 'hex'))$$)
+  = 'postavka:1');
+
 select pg_temp.napaka('trgovina2: znacka brez preverjenosti je zavrnjena',
   $$select trgovina_rezerviraj('[{"razlicica_id":-927104,"kolicina":1,"personalizacija":{"znacka":{}}}]',
     'f7a20000-0000-4000-8000-000000000001', 'sl', encode(sha256('t2a'), 'hex'))$$, 'trgovina-personalizacija');
 select pg_temp.napaka('trgovina2: znacka z letno preverjenostjo je zavrnjena',
   $$select trgovina_rezerviraj('[{"razlicica_id":-927104,"kolicina":1,"personalizacija":{"znacka":{}}}]',
     'f7a20000-0000-4000-8000-000000000007', 'sl', encode(sha256('t2a'), 'hex'))$$, 'trgovina-personalizacija');
-select pg_temp.napaka('trgovina2: znacka le en kos',
-  $$select trgovina_rezerviraj('[{"razlicica_id":-927104,"kolicina":2,"personalizacija":{"znacka":{}}}]',
-    'f7a20000-0000-4000-8000-000000000006', 'sl', encode(sha256('t2a'), 'hex'))$$, 'trgovina-personalizacija');
+select pg_temp.preveri('trgovina2: znacka se omeji na en kos',
+  pg_temp.izid_brez_sledi($$select trgovina_rezerviraj('[{"razlicica_id":-927104,"kolicina":2,"personalizacija":{"znacka":{}}}]',
+    'f7a20000-0000-4000-8000-000000000006', 'sl', encode(sha256('t2a'), 'hex'))->'postavke'->0->>'kolicina'$$) = '1');
 select pg_temp.napaka('trgovina2: ime na znacki gre skozi filter',
   $$select trgovina_rezerviraj('[{"razlicica_id":-927104,"kolicina":1,"personalizacija":{"znacka":{"ime":"admin"}}}]',
     'f7a20000-0000-4000-8000-000000000006', 'sl', encode(sha256('t2a'), 'hex'))$$, 'trgovina-personalizacija');
@@ -4643,6 +4699,9 @@ select pg_temp.preveri('trgovina2: po narocilu in digitalno ne zmanjsata zaloge 
   (select bool_and(zaloga = 0) from trgovina.razlicice where id in (-927101, -927104, -927105))
   and (select bool_and(manjka = 0) from trgovina.narocila
         where stripe_checkout_id in ('cs_test_trg2_e', 'cs_test_trg2_b', 'cs_test_trg2_z')));
+select pg_temp.preveri('trgovina2: narocilo samih znack je takoj poslano, ostala placana',
+  (select stanje = 'poslano' and poslano_at is not null from trgovina.narocila where stripe_checkout_id = 'cs_test_trg2_z')
+  and (select bool_and(stanje = 'placano') from trgovina.narocila where stripe_checkout_id in ('cs_test_trg2_e', 'cs_test_trg2_b')));
 select pg_temp.preveri('trgovina2: personalizirana postavka je za tisk, znacka in bon nista',
   (select stanje_tiska = 'za_tisk' from trgovina.postavke where razlicica_id = -927101
      and narocilo_id = (current_setting('test.trg2_e')::jsonb->>'narocilo_id')::bigint)
@@ -4693,8 +4752,14 @@ select pg_temp.preveri('trgovina2: narocilo za posto nosi bone in personalizacij
 select pg_temp.preveri('trgovina2: mail bonov se se ni poslal',
   trgovina_narocilo_za_posto((current_setting('test.trg2_b')::jsonb->>'narocilo_id')::bigint)->>'bon_mail_at' is null);
 select trgovina_bon_poslan((current_setting('test.trg2_b')::jsonb->>'narocilo_id')::bigint);
-select pg_temp.preveri('trgovina2: mail bonov zabelezen',
-  trgovina_narocilo_za_posto((current_setting('test.trg2_b')::jsonb->>'narocilo_id')::bigint)->>'bon_mail_at' is not null);
+select pg_temp.preveri('trgovina2: servis prebere promocije izdanih bonov',
+  trgovina_boni_narocila((current_setting('test.trg2_b')::jsonb->>'narocilo_id')::bigint)
+    @> '[{"zaporedje":1,"znesek":2000,"stripe_promocija":"promo_test_1"},{"zaporedje":2,"stripe_promocija":"promo_test_2"}]'
+  and jsonb_array_length(trgovina_boni_narocila((current_setting('test.trg2_b')::jsonb->>'narocilo_id')::bigint)) = 2);
+select pg_temp.preveri('trgovina2: mail bonov zabelezen, narocilo samih bonov je poslano',
+  trgovina_narocilo_za_posto((current_setting('test.trg2_b')::jsonb->>'narocilo_id')::bigint)
+    @> '{"stanje":"poslano"}'
+  and trgovina_narocilo_za_posto((current_setting('test.trg2_b')::jsonb->>'narocilo_id')::bigint)->>'bon_mail_at' is not null);
 reset role;
 select pg_temp.preveri('trgovina2: koda bona ni shranjena v cistopisu',
   not exists (select 1 from trgovina.boni b where to_jsonb(b)::text like '%SLFF-%'));
@@ -4736,6 +4801,10 @@ select pg_temp.preveri('trgovina2: admin preklopi izdelavo po narocilu',
   trgovina_admin_izdelki() @> '[{"id":-927102,"po_narocilu":false}]');
 select pg_temp.napaka('trgovina2: neznana vrsta personalizacije',
   $$select trgovina_admin_shrani_personalizacijo(-927101, 'barva', 100, false)$$, 'trgovina-vnos');
+select pg_temp.napaka('trgovina2: digitalni izdelek nima personalizacije',
+  $$select trgovina_admin_shrani_personalizacijo(-927105, 'poljubno_ime', 100, false)$$, 'trgovina-vnos');
+select pg_temp.napaka('trgovina2: personaliziran izdelek ne postane digitalen',
+  $$select trgovina_admin_shrani_izdelek('{"id":-927101,"digitalni":true}')$$, 'trgovina-vnos');
 reset role;
 select set_config('request.jwt.claim.sub','',true);
 set local role service_role;

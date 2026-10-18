@@ -52,7 +52,7 @@ alter table trgovina.narocila
   add column bon_mail_at timestamptz,
   add column znesek_popust int not null default 0;
 comment on column trgovina.narocila.znesek_popust is 'Popust promocijske kode ali bona (total_details.amount_discount), centi.';
-comment on column trgovina.narocila.bon_mail_at is 'Kdaj je odšel mail z darilnimi boni (webhook ga ponovi, dokler je prazno).';
+comment on column trgovina.narocila.bon_mail_at is 'Kdaj je odšel mail z darilnimi boni (dokler je prazno, webhook vrne napako in Stripe dogodek ponovi).';
 
 create table trgovina.boni (
   id               bigint generated always as identity primary key,
@@ -128,6 +128,27 @@ as $$
     from mesta m join public.mini_lige l on l.id = m.mini_liga_id
    where m.mesto = 1 and m.owner_id = p_user
    order by m.season desc, l.name, m.mini_liga_id
+$$;
+
+-- Natisnjena vrstica prvaka, največ 40 znakov. Ime lige gre skozi skupni filter
+-- (prepovedano_besedilo, kot ime ekipe; zasebnih mini lig varuj_mini_ligo ne
+-- preveri), predolgo se skrajša s "…". Null = tega ne natisnemo.
+create function trgovina.besedilo_prvaka(p_liga text, p_sezona text, p_jezik text) returns text
+language plpgsql immutable
+as $$
+declare
+  v_pred text := case when p_jezik = 'en' then 'Mini league champion ' else 'Prvak mini lige ' end;
+  v_liga text := btrim(regexp_replace(coalesce(p_liga, ''), '\s+', ' ', 'g'));
+  v_prostor int := 40 - char_length(v_pred) - 1 - char_length(p_sezona);
+begin
+  if v_liga = '' or public.prepovedano_besedilo(v_liga) is not null then
+    return null;
+  end if;
+  if char_length(v_liga) > v_prostor then
+    v_liga := rtrim(left(v_liga, v_prostor - 1)) || '…';
+  end if;
+  return v_pred || v_liga || ' ' || p_sezona;
+end;
 $$;
 
 -- Doživljenjska aktivna pravica na kupčevem potrjenem profilu, brez
@@ -236,7 +257,7 @@ begin
     v := p_vhod->'prvak';
     if jsonb_typeof(v) = 'object' and jsonb_typeof(v->'mini_liga_id') = 'number' and jsonb_typeof(v->'sezona') = 'string' then
       select jsonb_build_object('vrsta', 'prvak',
-               'ime', case when p_jezik = 'en' then 'Mini league champion ' else 'Prvak mini lige ' end || pr.ime || ' ' || pr.sezona,
+               'ime', trgovina.besedilo_prvaka(pr.ime, pr.sezona, p_jezik),
                'mini_liga_id', pr.mini_liga_id, 'sezona', pr.sezona, 'fantasy_team_id', pr.fantasy_team_id)
         into personalizacija
         from trgovina.prvaki_uporabnika(p_user) pr
@@ -245,6 +266,8 @@ begin
     end if;
     if personalizacija is null or not personalizacija ? 'mini_liga_id' then
       raise exception 'Trgovina: nisi prvak te mini lige.' using hint = 'trgovina-personalizacija';
+    elsif personalizacija->>'ime' is null then
+      raise exception 'Trgovina: imena te mini lige ne natisnemo.' using hint = 'trgovina-besedilo';
     end if;
   end if;
 
@@ -285,6 +308,8 @@ $$;
 -- večkrat le z drugačno personalizacijo. Izhod kot v delu 1, postavke dobijo
 -- postavka_id, doplacilo, opis in personalizacija; poleg pismo še digitalno
 -- (vse postavke digitalne: brez dostave) in personalizirano (potrditev brez odstopa).
+-- Značka je vedno en kos. Napaka vrstice nosi detail 'postavka:<n>' (n od 0, po
+-- vrstnem redu vhoda), da košarica pokaže, katera vrstica ni veljavna.
 create or replace function trgovina.rezerviraj(p_postavke jsonb, p_user uuid, p_jezik text, p_odjemalec text) returns jsonb
 language plpgsql
 as $$
@@ -298,6 +323,9 @@ declare
   v_opis text;
   v_id bigint;
   v_znacka boolean := false;
+  v_sporocilo text;
+  v_namig text;
+  v_koda text;
 begin
   if jsonb_typeof(p_postavke) is distinct from 'array'
      or jsonb_array_length(p_postavke) not between 1 and 20
@@ -370,7 +398,7 @@ begin
 
   for vr in
     select x.n, (x.el->>'kolicina')::int as kolicina, x.el->'personalizacija' as vhod,
-           r.id as razlicica_id, r.cena, i.id as izdelek_id, i.tax_code,
+           r.id as razlicica_id, r.cena, i.id as izdelek_id, i.tax_code, i.digitalni,
            case when p_jezik = 'en' then i.ime_en || ' (' || r.oznaka_en || ')'
                 else i.ime_sl || ' (' || r.oznaka_sl || ')' end as ime
       from jsonb_array_elements(p_postavke) with ordinality x(el, n)
@@ -378,29 +406,35 @@ begin
       join trgovina.izdelki i on i.id = r.izdelek_id
      order by x.n
   loop
-    select p.personalizacija, p.doplacilo, p.opis into v_pers, v_dopl, v_opis
-      from trgovina.personaliziraj(vr.izdelek_id, vr.vhod, p_user, p_jezik) p;
-    if v_pers->>'vrsta' = 'znacka' then
-      if vr.kolicina <> 1 or v_znacka then
-        raise exception 'Trgovina: značka je ena.' using hint = 'trgovina-personalizacija';
+    begin
+      select p.personalizacija, p.doplacilo, p.opis into v_pers, v_dopl, v_opis
+        from trgovina.personaliziraj(vr.izdelek_id, vr.vhod, p_user, p_jezik) p;
+      if v_pers->>'vrsta' = 'znacka' then
+        vr.kolicina := 1;
+        if v_znacka then
+          raise exception 'Trgovina: značka je ena.' using hint = 'trgovina-personalizacija';
+        end if;
+        v_znacka := true;
+        -- Ista pravica v drugem odprtem naročilu: hkratni rezervaciji se vrstita.
+        perform 1 from public.preverjeni_racuni where id = (v_pers->>'preverjeni_racun_id')::bigint for update;
+        if exists (select 1 from trgovina.postavke p
+                     join trgovina.narocila n on n.id = p.narocilo_id
+                    where n.id <> v_narocilo.id and n.stanje = 'caka_placilo' and n.rezervirano_do > now()
+                      and p.personalizacija->>'vrsta' = 'znacka'
+                      and p.personalizacija->>'preverjeni_racun_id' = v_pers->>'preverjeni_racun_id') then
+          raise exception 'Trgovina: značka že čaka na plačilo.' using hint = 'trgovina-personalizacija';
+        end if;
       end if;
-      v_znacka := true;
-      -- Ista pravica v drugem odprtem naročilu: hkratni rezervaciji se vrstita.
-      perform 1 from public.preverjeni_racuni where id = (v_pers->>'preverjeni_racun_id')::bigint for update;
-      if exists (select 1 from trgovina.postavke p
-                   join trgovina.narocila n on n.id = p.narocilo_id
-                  where n.id <> v_narocilo.id and n.stanje = 'caka_placilo' and n.rezervirano_do > now()
-                    and p.personalizacija->>'vrsta' = 'znacka'
-                    and p.personalizacija->>'preverjeni_racun_id' = v_pers->>'preverjeni_racun_id') then
-        raise exception 'Trgovina: značka že čaka na plačilo.' using hint = 'trgovina-personalizacija';
-      end if;
-    end if;
-    insert into trgovina.postavke (narocilo_id, razlicica_id, ime, cena, kolicina, personalizacija, doplacilo)
-    values (v_narocilo.id, vr.razlicica_id, vr.ime, vr.cena, vr.kolicina, v_pers, v_dopl)
-    returning id into v_id;
+      insert into trgovina.postavke (narocilo_id, razlicica_id, ime, cena, kolicina, personalizacija, doplacilo)
+      values (v_narocilo.id, vr.razlicica_id, vr.ime, vr.cena, vr.kolicina, v_pers, v_dopl)
+      returning id into v_id;
+    exception when others then
+      get stacked diagnostics v_sporocilo = message_text, v_namig = pg_exception_hint, v_koda = returned_sqlstate;
+      raise exception using errcode = v_koda, message = v_sporocilo, hint = v_namig, detail = 'postavka:' || (vr.n - 1);
+    end;
     v_postavke := v_postavke || jsonb_build_object(
       'postavka_id', v_id, 'razlicica_id', vr.razlicica_id, 'ime', vr.ime, 'cena', vr.cena, 'doplacilo', v_dopl,
-      'kolicina', vr.kolicina, 'tax_code', vr.tax_code, 'opis', v_opis, 'personalizacija', v_pers);
+      'kolicina', vr.kolicina, 'tax_code', vr.tax_code, 'digitalni', vr.digitalni, 'opis', v_opis, 'personalizacija', v_pers);
   end loop;
 
   return jsonb_build_object(
@@ -428,6 +462,7 @@ $$;
 -- značke) gredo v za_tisk. Značka gre v narocila_znack (stripe_checkout_id =
 -- seja trgovine, postnina = dostava_kljuc); če pravica medtem ni več aktivna
 -- ali je značka že naročena, se šteje v manjka (vrne 'premalo': uredi s kupcem).
+-- Naročilo samih značk gre takoj v poslano (v trgovini ga ni kaj pakirati).
 -- Nov zadnji parameter p_popust (popust kode, privzeto 0) zamenja podpis dela 1.
 drop function if exists public.trgovina_iz_placila(text, text, text, text, jsonb, int, int, int, int, text);
 drop function if exists trgovina.iz_placila(text, text, text, text, jsonb, int, int, int, int, text);
@@ -440,6 +475,7 @@ as $$
 declare
   v_narocilo trgovina.narocila;
   v_manjka int;
+  v_koncano boolean;
   z record;
 begin
   select * into v_narocilo from trgovina.narocila where stripe_checkout_id = p_checkout for update;
@@ -492,8 +528,14 @@ begin
     end if;
   end loop;
 
+  -- Same značke: trgovina nima kaj pakirati (značka gre po toku narocila_znack),
+  -- naročilo je zato takoj poslano. Darilne bone zaključi bon_poslan.
+  v_koncano := v_manjka = 0 and not exists (select 1 from trgovina.postavke p where p.narocilo_id = v_narocilo.id
+                                              and p.personalizacija->>'vrsta' is distinct from 'znacka');
   update trgovina.narocila set
-    stanje = 'placano', placano_at = now(), stripe_payment_intent = p_payment_intent,
+    stanje = case when v_koncano then 'poslano' else 'placano' end,
+    poslano_at = case when v_koncano then now() end,
+    placano_at = now(), stripe_payment_intent = p_payment_intent,
     email = p_email, ime = p_ime, naslov = p_naslov,
     znesek_postavke = p_postavke, znesek_dostava = p_dostava, znesek_ddv = p_ddv,
     znesek_skupaj = p_skupaj, dostava_kljuc = p_dostava_kljuc, manjka = v_manjka, odjemalec = null,
@@ -619,12 +661,39 @@ end;
 $$;
 
 -- Mail z boni je odšel (webhook ga pošilja, dokler je bon_mail_at prazen).
+-- Naročilo brez česa za pakiranje (le boni in značke, nič ne manjka) gre v
+-- poslano, da ne ostane med plačanimi, ki jih admin ne vidi.
 create function trgovina.bon_poslan(p_narocilo bigint) returns void
-language sql
-as $$ update trgovina.narocila set bon_mail_at = coalesce(bon_mail_at, now()) where id = p_narocilo $$;
+language plpgsql
+as $$
+declare v_koncano boolean;
+begin
+  v_koncano := not exists (select 1 from trgovina.postavke p
+                             join trgovina.razlicice r on r.id = p.razlicica_id
+                             join trgovina.izdelki i on i.id = r.izdelek_id
+                            where p.narocilo_id = p_narocilo and not i.digitalni
+                              and p.personalizacija->>'vrsta' is distinct from 'znacka');
+  update trgovina.narocila set
+    bon_mail_at = coalesce(bon_mail_at, now()),
+    stanje = case when v_koncano and stanje = 'placano' and manjka = 0 then 'poslano' else stanje end,
+    poslano_at = case when v_koncano and stanje = 'placano' and manjka = 0 then now() else poslano_at end
+   where id = p_narocilo;
+end;
+$$;
 
--- Celotno vračilo plačila (charge.refunded): naročilo → vrnjeno, nenatisnjena
--- značka preklicana, nenatisnjene postavke iz tiska. Vrne {oznaka, promocije}
+-- Izdani boni naročila (servis: stripe-webhook kode ponovno pošlje tako, da jih
+-- prebere iz Stripe po stripe_promocija; čistopisa baza nima).
+create function trgovina.boni_narocila(p_narocilo bigint) returns jsonb
+language sql stable
+as $$
+  select coalesce(jsonb_agg(jsonb_build_object('postavka_id', b.postavka_id, 'zaporedje', b.zaporedje, 'znesek', b.znesek,
+                                               'velja_do', b.velja_do, 'stripe_promocija', b.stripe_promocija)
+                            order by b.postavka_id, b.zaporedje), '[]'::jsonb)
+    from trgovina.boni b where b.narocilo_id = p_narocilo
+$$;
+
+-- Celotno vračilo plačila (charge.refunded): naročilo → vrnjeno, še neodposlana
+-- značka (za_tisk ali natisnjeno) preklicana, nenatisnjene postavke iz tiska. Vrne {oznaka, promocije}
 -- (promocijske kode bonov naročila, webhook jih izklopi v Stripe) ali null (ni
 -- naše plačilo). Ponovljen dogodek vrne isto in v bazi ne spremeni ničesar več.
 create function trgovina.vracilo(p_payment_intent text) returns jsonb
@@ -651,9 +720,10 @@ end;
 $$;
 
 revoke all on function trgovina.prvaki_uporabnika(uuid), trgovina.znacka_uporabnika(uuid),
+  trgovina.besedilo_prvaka(text, text, text),
   trgovina.personaliziraj(bigint, jsonb, uuid, text), trgovina.serija_json(bigint),
   trgovina.zabelezi_bon(bigint, int, text, text, timestamptz, text), trgovina.bon_porabljen(text),
-  trgovina.bon_poslan(bigint), trgovina.vracilo(text)
+  trgovina.bon_poslan(bigint), trgovina.boni_narocila(bigint), trgovina.vracilo(text)
   from public, anon, authenticated;
 
 create function public.trgovina_zabelezi_bon(
@@ -675,11 +745,17 @@ create function public.trgovina_vracilo(p_payment_intent text) returns jsonb
 language sql security definer set search_path = public
 as $$ select trgovina.vracilo(p_payment_intent) $$;
 
+create function public.trgovina_boni_narocila(p_narocilo bigint) returns jsonb
+language sql stable security definer set search_path = public
+as $$ select trgovina.boni_narocila(p_narocilo) $$;
+
 revoke all on function public.trgovina_zabelezi_bon(bigint, int, text, text, timestamptz, text),
-  public.trgovina_bon_porabljen(text), public.trgovina_bon_poslan(bigint), public.trgovina_vracilo(text)
+  public.trgovina_bon_porabljen(text), public.trgovina_bon_poslan(bigint), public.trgovina_vracilo(text),
+  public.trgovina_boni_narocila(bigint)
   from public, anon, authenticated;
 grant execute on function public.trgovina_zabelezi_bon(bigint, int, text, text, timestamptz, text),
-  public.trgovina_bon_porabljen(text), public.trgovina_bon_poslan(bigint), public.trgovina_vracilo(text)
+  public.trgovina_bon_porabljen(text), public.trgovina_bon_poslan(bigint), public.trgovina_vracilo(text),
+  public.trgovina_boni_narocila(bigint)
   to service_role;
 
 -- --------------------------------------------------------------------------
@@ -728,10 +804,15 @@ $$;
 -- --------------------------------------------------------------------------
 -- Kupec: upravičenost (gumbi na strani izdelka)
 -- --------------------------------------------------------------------------
+-- Le lige, katerih ime natisnemo; besedilo_sl/en je natisnjena vrstica (predogled).
 create function public.trgovina_moji_prvaki() returns jsonb
 language sql stable security definer set search_path = public
 as $$
-  select coalesce(jsonb_agg(to_jsonb(p)), '[]'::jsonb) from trgovina.prvaki_uporabnika(auth.uid()) p
+  select coalesce(jsonb_agg(to_jsonb(p) || jsonb_build_object(
+           'besedilo_sl', trgovina.besedilo_prvaka(p.ime, p.sezona, 'sl'),
+           'besedilo_en', trgovina.besedilo_prvaka(p.ime, p.sezona, 'en'))), '[]'::jsonb)
+    from trgovina.prvaki_uporabnika(auth.uid()) p
+   where trgovina.besedilo_prvaka(p.ime, p.sezona, 'sl') is not null
 $$;
 
 -- {player_id, ime} (privzeto ime na znački) ali null.
@@ -777,6 +858,9 @@ begin
       raise exception 'Trgovina: ni izdelka.' using hint = 'trgovina-vnos';
     end if;
     r := jsonb_populate_record(r, p - 'id' - 'created_at');
+    if r.digitalni and exists (select 1 from trgovina.personalizacije where izdelek_id = r.id) then
+      raise exception 'Trgovina: digitalni izdelek nima personalizacije.' using hint = 'trgovina-vnos';
+    end if;
     update trgovina.izdelki set slug = r.slug, ime_sl = r.ime_sl, ime_en = r.ime_en, opis_sl = r.opis_sl,
       opis_en = r.opis_en, kategorija = r.kategorija, slike = r.slike, tax_code = r.tax_code,
       pismo = r.pismo, aktiven = r.aktiven, vrstni_red = r.vrstni_red,
@@ -797,7 +881,8 @@ begin
 end;
 $$;
 
--- Možnost personalizacije izdelka; p_doplacilo null jo odstrani.
+-- Možnost personalizacije izdelka; p_doplacilo null jo odstrani. Digitalni
+-- izdelek (darilni bon) je nima: šel bi v tisk.
 create function public.trgovina_admin_shrani_personalizacijo(p_izdelek bigint, p_vrsta text, p_doplacilo int, p_obvezna boolean)
 returns void
 language plpgsql security definer set search_path = public
@@ -807,6 +892,9 @@ begin
   if p_vrsta is null or p_vrsta not in ('ime_ekipe', 'poljubno_ime', 'stevilka', 'prvak', 'znacka')
      or p_doplacilo < 0 or not exists (select 1 from trgovina.izdelki where id = p_izdelek) then
     raise exception 'Trgovina: neveljavna personalizacija.' using hint = 'trgovina-vnos';
+  end if;
+  if p_doplacilo is not null and exists (select 1 from trgovina.izdelki where id = p_izdelek and digitalni) then
+    raise exception 'Trgovina: digitalni izdelek nima personalizacije.' using hint = 'trgovina-vnos';
   end if;
   if p_doplacilo is null then
     delete from trgovina.personalizacije where izdelek_id = p_izdelek and vrsta = p_vrsta;

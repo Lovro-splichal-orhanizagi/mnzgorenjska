@@ -58,8 +58,8 @@ import {
 import { tockeZaNastop, razloziTocke } from '../src/lib/tockovanje'
 import { veljavenPodpis } from '../supabase/functions/stripe-webhook/podpis.ts'
 import { scoutPostavkeVeljajo, scoutCeneNarocnine } from '../supabase/functions/stripe-webhook/scout.ts'
-import { trgovinaIzSeje, napacnaTarifa, novaKoda, idKupona, enoteBonov, kodeSeje, zgostiKodo } from '../supabase/functions/stripe-webhook/trgovina.ts'
-import { idIzdelka, izdelekPostavke, seznamPostavk } from '../supabase/functions/trgovina-nakup/izdelki.ts'
+import { trgovinaIzSeje, napacnaTarifa, novaKoda, idKupona, enoteBonov, kodeSeje, zgostiKodo, IZDELEK_TRGOVINE as IZDELEK_BONOV } from '../supabase/functions/stripe-webhook/trgovina.ts'
+import { IZDELEK_TRGOVINE, seznamPostavk } from '../supabase/functions/trgovina-nakup/izdelki.ts'
 import { sestaviMail as trgovinaMail, TELEFON as trgovinaTelefonMail, POGOJI_VERZIJA as trgovinaVerzijaMail } from '../supabase/functions/trgovina-posta/sporocila.ts'
 import { SL as trgovinaSL, EN as trgovinaEN, TELEFON as trgovinaTelefon, POGOJI_VERZIJA as trgovinaVerzija } from '../shop/src/besede.ts'
 import { EU27 as trgovinaEU27, tarifeZa } from '../supabase/functions/trgovina-nakup/tarife.ts'
@@ -13118,15 +13118,7 @@ preveri(
     JSON.stringify(enoteBonov([{ id: 1, cena: 2000, kolicina: 2, digitalni: true }, { id: 2, cena: 2500, kolicina: 1, digitalni: false }])) === '[[1,1,2000],[1,2,2000]]')
   preveri('trgovina bon: kode seje iz popustov (id ali objekt, brez podvojenih)',
     kodeSeje({ total_details: { breakdown: { discounts: [{ discount: { promotion_code: 'promo_1' } }] } }, discounts: [{ promotion_code: { id: 'promo_1' } }, { coupon: 'c' }] }).join() === 'promo_1')
-  const kat = [
-    { slug: 'majica', ime_sl: 'Majica', ime_en: 'T-shirt', digitalni: false },
-    { slug: 'majica-ime-ekipe', ime_sl: 'Majica z imenom ekipe', ime_en: 'Team name T-shirt', digitalni: false },
-  ]
-  preveri('trgovina stripe: izdelek postavke po imenu (daljše zmaga, jezik)',
-    izdelekPostavke('Majica z imenom ekipe (Črna / M)', 'sl', kat)?.slug === 'majica-ime-ekipe' &&
-    izdelekPostavke('Majica (Bela / S)', 'sl', kat)?.slug === 'majica' &&
-    izdelekPostavke('T-shirt (White / S)', 'en', kat)?.slug === 'majica' && izdelekPostavke('Skodelica (Bela)', 'sl', kat) === null &&
-    idIzdelka('majica', 'en') === 'slff-shop-majica-en')
+  preveri('trgovina stripe: postavke in boni pod istim izdelkom trgovine', IZDELEK_TRGOVINE === IZDELEK_BONOV)
   {
     const zdaj = Date.parse('2026-10-18T12:00:00Z')
     const v = vnosBona({ za: 'scout', odstotek: 20, uporab: 10, do: '2026-12-31' }, zdaj)

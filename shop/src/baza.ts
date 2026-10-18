@@ -87,6 +87,9 @@ export interface Prvak {
   sezona: string
   fantasy_team_id: number
   ekipa: string
+  /** Natisnjena vrstica (največ 40 znakov, ime lige po potrebi skrajšano). */
+  besedilo_sl: string
+  besedilo_en: string
 }
 
 /** Postavka v trgovina_admin_za_tisk() in seriji. */
@@ -123,6 +126,7 @@ export interface SerijaPovzetek {
 /** Element trgovina_admin_boni() (koda le zadnji 4 znaki). */
 export interface Bon {
   id: number
+  narocilo_id: number
   javna_oznaka: string
   email: string | null
   koda_konec: string

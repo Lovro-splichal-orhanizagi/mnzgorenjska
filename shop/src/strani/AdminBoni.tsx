@@ -38,6 +38,7 @@ export function AdminBoni({ zavrnjen, token }: { zavrnjen: () => void; token: st
   const [doDne, setDoDne] = useState('')
   const [koda, setKoda] = useState<string | null>(null)
   const [poteka, setPoteka] = useState(false)
+  const [poslano, setPoslano] = useState<string | null>(null)
 
   const nalozi = useCallback(async () => {
     const { data, error } = await supabase.rpc('trgovina_admin_boni')
@@ -70,10 +71,29 @@ export function AdminBoni({ zavrnjen, token }: { zavrnjen: () => void; token: st
     setVrednost('')
   }
 
+  /** Kode naročila znova po pošti (stripe-webhook jih prebere iz Stripe; baza čistopisa nima). */
+  async function znova(b: Bon) {
+    setPoteka(true)
+    setNapaka(null)
+    setPoslano(null)
+    const { error } = await supabase.functions.invoke('stripe-webhook', {
+      body: { akcija: 'bon_znova', narocilo_id: b.narocilo_id },
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    setPoteka(false)
+    if (error) {
+      const ctx = (error as { context?: Response } | null)?.context
+      setNapaka(t('admin.boni.napakaZnova', { napaka: ctx?.status ? String(ctx.status) : error.message }))
+      return
+    }
+    setPoslano(t('admin.boni.poslan', { oznaka: b.javna_oznaka, email: b.email ?? '' }))
+  }
+
   if (boni === null) return <Nalaganje />
   return (
     <div className="space-y-6">
       {napaka && <p className="opozorilo">{napaka}</p>}
+      {poslano && <p className="uspeh">{poslano}</p>}
       <section className="kartica space-y-4 p-5">
         <h2 className="text-lg font-bold">{t('admin.boni.nov')}</h2>
         <div className="grid gap-3 sm:grid-cols-2">
@@ -123,6 +143,9 @@ export function AdminBoni({ zavrnjen, token }: { zavrnjen: () => void; token: st
                 <span className="flex-1" />
                 <span className="font-mono text-slate-500">{b.javna_oznaka}</span>
                 {b.email && <span className="text-slate-500">{b.email}</span>}
+                {boni.findIndex((x) => x.narocilo_id === b.narocilo_id) === boni.indexOf(b) && (
+                  <button type="button" className="povezava text-xs" disabled={poteka} onClick={() => void znova(b)}>{t('admin.boni.znova')}</button>
+                )}
               </li>
             ))}
           </ul>

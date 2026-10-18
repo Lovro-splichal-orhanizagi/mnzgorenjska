@@ -24,24 +24,25 @@ export const NAJVEC = 20
 export const EU27 = 'AT BE BG CY CZ DE DK EE ES FI FR GR HR HU IE IT LT LU LV MT NL PL PT RO SE SI SK'.split(' ')
 export const PRAZNA: Kosarica = { postavke: [], drzava: 'SI' }
 
-const omeji = (n: number): number => Math.max(0, Math.min(NAJVEC, Math.floor(n)))
+const omeji = (n: number, najvec = NAJVEC): number => Math.max(0, Math.min(najvec, Math.floor(n)))
 
 /** Istovetnost vrstice: različica in personalizacija. */
 export const kljuc = (p: { razlicica_id: number; personalizacija?: Personalizacija }): string =>
   `${p.razlicica_id}|${p.personalizacija ? stabilno(p.personalizacija) : ''}`
 
-export function nastavi(k: Kosarica, vrstica: string, kolicina: number): Kosarica {
-  const n = omeji(kolicina)
+/** `najvec`: meja izdelka (značka 1, darilni bon 5), sicer 20. */
+export function nastavi(k: Kosarica, vrstica: string, kolicina: number, najvec = NAJVEC): Kosarica {
+  const n = omeji(kolicina, najvec)
   const postavke = n === 0
     ? k.postavke.filter((p) => kljuc(p) !== vrstica)
     : k.postavke.map((p) => (kljuc(p) === vrstica ? { ...p, kolicina: n } : p))
   return { ...k, postavke }
 }
 
-export function dodaj(k: Kosarica, razlicica_id: number, kolicina: number, slug: string, personalizacija?: Personalizacija, opis?: string): Kosarica {
-  const nova: Postavka = { razlicica_id, slug, kolicina: omeji(kolicina), ...(personalizacija && { personalizacija }), ...(opis && { opis }) }
+export function dodaj(k: Kosarica, razlicica_id: number, kolicina: number, slug: string, personalizacija?: Personalizacija, opis?: string, najvec = NAJVEC): Kosarica {
+  const nova: Postavka = { razlicica_id, slug, kolicina: omeji(kolicina, najvec), ...(personalizacija && { personalizacija }), ...(opis && { opis }) }
   const obstaja = k.postavke.find((p) => kljuc(p) === kljuc(nova))
-  if (obstaja) return nastavi(k, kljuc(nova), obstaja.kolicina + kolicina)
+  if (obstaja) return nastavi(k, kljuc(nova), obstaja.kolicina + kolicina, najvec)
   if (nova.kolicina === 0 || k.postavke.length >= NAJVEC) return k
   return { ...k, postavke: [...k.postavke, nova] }
 }

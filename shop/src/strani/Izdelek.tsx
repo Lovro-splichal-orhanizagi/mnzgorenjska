@@ -80,7 +80,7 @@ function Obrazec({ i, javi }: { i: TIzdelek; javi: (iz: Izbira) => void }) {
     if (zPrvakom) {
       if (p) {
         v.prvak = { mini_liga_id: p.mini_liga_id, sezona: p.sezona }
-        besedilo = `${jezik === 'en' ? 'Mini league champion' : 'Prvak mini lige'} ${p.ime} ${p.sezona}`
+        besedilo = jezik === 'en' ? p.besedilo_en : p.besedilo_sl
       } else manjka ||= ima('prvak')!.obvezna
     }
     if (zZnacko) {
@@ -197,7 +197,7 @@ export function IzdelekView({ i }: { i: TIzdelek }) {
     const k0 = kljuc({ razlicica_id: r.id, personalizacija: vnos })
     const imam = (k: typeof kosarica) => k.postavke.find((p) => kljuc(p) === k0)?.kolicina ?? 0
     const opis = [izbira.ime, izbira.st].filter((x) => x !== null && x !== '').join(' · ')
-    const nova = dodaj(kosarica, r.id, Math.min(kolicina, najvec), i.slug, vnos, opis || undefined)
+    const nova = dodaj(kosarica, r.id, kolicina, i.slug, vnos, opis || undefined, najvec)
     shrani(nova)
     setDodano(imam(nova) - imam(kosarica))
   }

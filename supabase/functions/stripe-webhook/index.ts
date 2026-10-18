@@ -6,7 +6,11 @@
 //    400. Dogodek (evt_…) se zapiše v `stripe_dogodki`; obdelan
 //    (`obdelano_at`) se ne obdela znova, neobdelan (napaka, 500) ob ponovitvi
 //    Stripe da. Servisne funkcije so idempotentne.
-// 2. Vrsta preklicev: `{"akcija": "preklici"}` s servisnim ključem (delovni
+// 2. Brez podpisa, servisni ključ ali admin JWT:
+//    `{"akcija": "bon_znova", "narocilo_id": <id>}` (admin trgovine, "Pošlji bon
+//    znova"): kode bonov naročila prebere iz Stripe (po stripe_promocija, baza
+//    čistopisa nima), manjkajoče izda in kupcu znova pošlje mail.
+//    Vrsta preklicev: `{"akcija": "preklici"}` s servisnim ključem (delovni
 //    tok *Preverjeni: preklici naročnin*, vsako uro) ali admin JWT (po odvzemu
 //    v Administraciji). Prekliče naročnine, ki jih je baza označila
 //    (`stripe_preklic = 'caka'`: preklic profila, anonimizacija, izbris
@@ -47,12 +51,16 @@
 // preklicano naročilo) se ne označi samo: Discord "ročno potrdi ali vrni
 // denar" in 200. checkout.session.expired in async_payment_failed →
 // trgovina_potekla (sprosti rezervacijo). Darilni boni (digitalne postavke,
-// tudi ob 'ze', da ponovitev dokonča prekinjeno izdajo): za vsako enoto kupon
-// s stalnim id (trgovina.ts idKupona; amount_off = cena, enkrat, applies_to =
-// izdelki trgovine v Stripe brez digitalnih, rok 1 leto, max_redemptions 1)
-// in ena promocijska koda SLFF-XXXX-XXXX. Ponovitev najde kupon in njegovo
-// kodo v Stripe in ne ustvari druge. Zapis trgovina_zabelezi_bon (le zgoščena
-// koda in zadnji 4 znaki), nove kode gredo kupcu (trgovina-posta, vrsta bon).
+// tudi ob 'ze', da ponovitev dokonča prekinjeno izdajo; le za placano ali
+// poslano naročilo, vrnjeno ne dobi kode): za vsako enoto kupon s stalnim id
+// (trgovina.ts idKupona; amount_off = cena, enkrat, applies_to = izdelek
+// "SLFF Trgovina" v Stripe, rok 1 leto, max_redemptions 1) in ena promocijska
+// koda SLFF-XXXX-XXXX. Že zabeležena enota (trgovina_boni_narocila) kodo
+// prebere iz Stripe po id; nova najde kupon in njegovo kodo in druge ne
+// ustvari. Zapis trgovina_zabelezi_bon (le zgoščena koda in zadnji 4 znaki),
+// kode gredo kupcu (trgovina-posta, vrsta bon). Dokler mail ni zabeležen
+// (bon_mail_at), dogodek vrne 500 in Stripe ga ponovi (do 3 dni); nato admin
+// "Pošlji bon znova".
 //
 // Promocijske kode: plačana seja trgovine, Scouta ali preverjenih s popustom
 // → trgovina_bon_porabljen za vsako kodo (le zapis, napaka ne ustavi dogodka).
@@ -69,7 +77,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4'
 import { veljavenPodpis } from './podpis.ts'
 import { scoutCeneNarocnine, scoutPostavkeVeljajo } from './scout.ts'
-import { enoteBonov, idKupona, kodeSeje, napacnaTarifa, novaKoda, trgovinaIzSeje, zgostiKodo } from './trgovina.ts'
+import { enoteBonov, idKupona, IZDELEK_TRGOVINE, kodeSeje, napacnaTarifa, novaKoda, trgovinaIzSeje, zgostiKodo } from './trgovina.ts'
 
 // deno-lint-ignore no-explicit-any
 type Obj = Record<string, any>
@@ -201,6 +209,17 @@ Deno.serve(async (req) => {
     }
     if (!sme) return new Response('bad signature', { status: 400, headers: CORS })
     const glavaJson = { ...CORS, 'Content-Type': 'application/json' }
+    const vhod = ((await req.json().catch(() => null)) ?? {}) as { akcija?: string; narocilo_id?: unknown }
+    if (vhod.akcija === 'bon_znova') {
+      if (!Number.isSafeInteger(vhod.narocilo_id)) return new Response(JSON.stringify({ error: 'narocilo_id' }), { status: 400, headers: glavaJson })
+      try {
+        const poslano = await bonZnova(vhod.narocilo_id as number)
+        return new Response(JSON.stringify({ poslano }), { status: poslano ? 200 : 400, headers: glavaJson })
+      } catch (e) {
+        console.error('stripe-webhook: bon znova', String(e))
+        return new Response(JSON.stringify({ error: 'bon' }), { status: 500, headers: glavaJson })
+      }
+    }
     try {
       return new Response(JSON.stringify({ preklicano: await prekliciCakajoce() }), { headers: glavaJson })
     } catch (e) {
@@ -461,7 +480,7 @@ async function trgovinaSeja(o: Obj): Promise<string> {
   return izid
 }
 
-/** Pošlje mail trgovine; napaka gre na Discord, dogodka ne ponovi. Vrne, ali je mail potrjeno odšel. */
+/** Pošlje mail trgovine; napaka gre na Discord. Vrne, ali je mail potrjeno odšel (bone ob false ponovi izdajBone). */
 async function postaTrgovine(telo: Obj, oznaka: string, kaj: string): Promise<boolean> {
   try {
     const r = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/trgovina-posta`, {
@@ -482,21 +501,8 @@ async function postaTrgovine(telo: Obj, oznaka: string, kaj: string): Promise<bo
   }
 }
 
-/** Izdelki trgovine v Stripe (brez digitalnih): darilni bon velja le zanje. */
-async function izdelkiZaBon(): Promise<string[]> {
-  const ids: string[] = []
-  let stran: string | null = null
-  do {
-    const q = encodeURIComponent("metadata['app']:'slff-shop' AND active:'true'")
-    const s = await beri(`products/search?limit=100&query=${q}${stran ? `&page=${stran}` : ''}`)
-    for (const p of s.data ?? []) if (p.metadata?.digitalni !== '1') ids.push(p.id)
-    stran = s.next_page ?? null
-  } while (stran)
-  return ids
-}
-
 /** Kupon in koda za enoto (najde obstoječa); vrne kodo v čistopisu, id kode in rok. */
-async function bonEnote(oznaka: string, narocilo: number, postavka: number, enota: number, znesek: number, izdelki: () => Promise<string[]>) {
+async function bonEnote(oznaka: string, narocilo: number, postavka: number, enota: number, znesek: number) {
   const kid = idKupona(oznaka, postavka, enota)
   const meta = { 'metadata[app]': 'slff-shop', 'metadata[narocilo]': String(narocilo), 'metadata[postavka]': String(postavka), 'metadata[enota]': String(enota) }
   let k = await stripe(`coupons/${kid}`, 'GET', undefined, RAZLICICA_BONOV)
@@ -505,13 +511,14 @@ async function bonEnote(oznaka: string, narocilo: number, postavka: number, enot
       id: kid, name: 'SLFF darilni bon', amount_off: znesek, currency: 'eur', duration: 'once', max_redemptions: 1,
       redeem_by: Math.floor(Date.now() / 1000) + 365 * 24 * 3600, ...meta,
     }
-    ;(await izdelki()).forEach((p, i) => (polja[`applies_to[products][${i}]`] = p))
+    polja['applies_to[products][0]'] = IZDELEK_TRGOVINE
     k = await stripe('coupons', 'POST', polja, RAZLICICA_BONOV)
     // Hkratna ponovitev ga je morda ravno ustvarila.
     if (!k.ok) k = await stripe(`coupons/${kid}`, 'GET', undefined, RAZLICICA_BONOV)
     if (!k.ok) throw new Error(`kupon ${kid}: ${k.j?.error?.message ?? k.status}`)
   }
-  const obstojeca = await stripe(`promotion_codes?coupon=${kid}&active=true&limit=1`, 'GET', undefined, RAZLICICA_BONOV)
+  // Tudi neaktivna: koda, ki jo je Stripe ustvaril, a je baza ni zabeležila, ostane edina.
+  const obstojeca = await stripe(`promotion_codes?coupon=${kid}&limit=1`, 'GET', undefined, RAZLICICA_BONOV)
   if (!obstojeca.ok) throw new Error(`kode ${kid}: ${obstojeca.j?.error?.message ?? obstojeca.status}`)
   let pc: Obj | undefined = obstojeca.j.data?.[0]
   if (!pc) {
@@ -528,39 +535,60 @@ async function bonEnote(oznaka: string, narocilo: number, postavka: number, enot
 /** Darilni boni plačanega naročila; napaka gre na Discord (brez kode) in ponovi dogodek. */
 async function boniNarocila(o: Obj, oznaka: string): Promise<void> {
   try {
-    await izdajBone(o, oznaka)
+    await izdajBone(Number(o.metadata?.narocilo_id), oznaka, false)
   } catch (e) {
-    await discord(`🛒 Trgovina: bon za ${oznaka} ni izdan — preveri`)
+    await discord(`🛒 Trgovina: bon za ${oznaka} ni izdan ali poslan — Stripe dogodek ponovi, sicer "Pošlji bon znova"`)
     throw e
   }
 }
 
+/** Admin "Pošlji bon znova": vse kode naročila znova po pošti. Vrne število kod (0 = ni bonov). */
+async function bonZnova(id_: number): Promise<number> {
+  const { data, error } = await baza.rpc('trgovina_narocilo_za_posto', { p_id: id_ })
+  if (error) throw new Error(`trgovina_narocilo_za_posto: ${error.message}`)
+  const oznaka = (data as Obj | null)?.javna_oznaka
+  return oznaka ? await izdajBone(id_, oznaka, true) : 0
+}
+
 /**
  * Izda manjkajoče bone in kupcu pošlje vse kode, dokler mail ni zabeležen
- * (bon_mail_at): ponovitev po padcu med zapisom in mailom mail še pošlje.
+ * (bon_mail_at; `znova` pošlje tudi po tem). Zabeležena enota kode ne izda
+ * znova: prebere jo iz Stripe po stripe_promocija. Mail, ki ni potrjeno odšel,
+ * je napaka (dogodek se ponovi). Vrnjeno ali preklicano naročilo kode ne dobi.
  */
-async function izdajBone(o: Obj, oznaka: string): Promise<void> {
-  const id_ = Number(o.metadata?.narocilo_id)
+async function izdajBone(id_: number, oznaka: string, znova: boolean): Promise<number> {
   const { data, error } = await baza.rpc('trgovina_narocilo_za_posto', { p_id: id_ })
   if (error) throw new Error(`trgovina_narocilo_za_posto: ${error.message}`)
   const narocilo = data as Obj | null
+  if (!narocilo || !['placano', 'poslano'].includes(narocilo.stanje)) return 0
   // Mail gre šele po izdaji vseh enot: zabeležen mail pomeni, da je vse izdano.
-  if (narocilo?.bon_mail_at) return
-  const enote = enoteBonov(narocilo?.postavke ?? [])
-  if (!enote.length) return
-  let izdelki: Promise<string[]> | null = null
-  const zaBon = () => (izdelki ??= izdelkiZaBon().then((x) => (x.length ? x : Promise.reject(new Error('ni izdelkov trgovine v Stripe')))))
+  if (narocilo.bon_mail_at && !znova) return 0
+  const enote = enoteBonov(narocilo.postavke ?? [])
+  if (!enote.length) return 0
+  const zb = await baza.rpc('trgovina_boni_narocila', { p_narocilo: id_ })
+  if (zb.error) throw new Error(`trgovina_boni_narocila: ${zb.error.message}`)
+  const izdani = new Map(((zb.data ?? []) as Obj[]).map((b) => [`${b.postavka_id}-${b.zaporedje}`, b]))
   const kode: { koda: string; znesek: number; velja_do: string }[] = []
   for (const [postavka, enota, znesek] of enote) {
-    const b = await bonEnote(oznaka, id_, postavka, enota, znesek, zaBon)
-    await rpc('trgovina_zabelezi_bon', {
+    const z = izdani.get(`${postavka}-${enota}`)
+    if (z) {
+      const pc = await stripe(`promotion_codes/${z.stripe_promocija}`, 'GET', undefined, RAZLICICA_BONOV)
+      if (!pc.ok) throw new Error(`koda ${z.stripe_promocija}: ${pc.j?.error?.message ?? pc.status}`)
+      kode.push({ koda: String(pc.j.code), znesek: z.znesek, velja_do: z.velja_do })
+      continue
+    }
+    const b = await bonEnote(oznaka, id_, postavka, enota, znesek)
+    const zapis = await rpc('trgovina_zabelezi_bon', {
       p_postavka: postavka, p_zaporedje: enota, p_koda_hash: await zgostiKodo(b.koda),
       p_koda_konec: b.koda.slice(-4), p_velja_do: b.velja_do, p_stripe_promocija: b.promocija,
     })
+    // Hkratna ponovitev je enoto zabeležila z drugo kodo: naslednja ponovitev pošlje zabeleženo.
+    if (zapis === 'ze') throw new Error(`bon ${postavka}-${enota} je zabeležen hkrati`)
     kode.push({ koda: b.koda, znesek, velja_do: b.velja_do })
   }
-  if (await postaTrgovine({ vrsta: 'bon', narocilo_id: id_, kode }, oznaka, 'darilni bon'))
-    await rpc('trgovina_bon_poslan', { p_narocilo: id_ })
+  if (!(await postaTrgovine({ vrsta: 'bon', narocilo_id: id_, kode }, oznaka, 'darilni bon'))) throw new Error('mail bonov ni odšel')
+  await rpc('trgovina_bon_poslan', { p_narocilo: id_ })
+  return kode.length
 }
 
 /**

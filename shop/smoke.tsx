@@ -136,6 +136,9 @@ preveri('kosarica: nastavi 0 in odstrani zbrišeta vrstico', nastavi(k, '5|', 0)
 preveri('kosarica: neveljavna količina se ne doda', dodaj(PRAZNA, 1, 0, 'x').postavke.length === 0 && dodaj(PRAZNA, 1, -3, 'x').postavke.length === 0)
 const polna = Array.from({ length: 20 }, (_, n) => n + 1).reduce((a, id) => dodaj(a, id, 1, 's'), PRAZNA)
 preveri('kosarica: največ 20 vrstic', dodaj(polna, 99, 1, 's').postavke.length === 20)
+const zn = dodaj(dodaj(PRAZNA, 9, 1, 'znacka', { znacka: {} }, undefined, 1), 9, 1, 'znacka', { znacka: {} }, undefined, 1)
+preveri('kosarica: značka ostane en kos tudi ob drugem kliku', zn.postavke.length === 1 && zn.postavke[0].kolicina === 1
+  && nastavi(zn, kljuc(zn.postavke[0]), 2, 1).postavke[0].kolicina === 1)
 preveri('kosarica: skupaj v centih, brez neznane cene', skupaj(k, { '1|': 2500 }) === 12500 && skupaj(k, { '1|': 2500, '5|': 2000 }) === 14500)
 preveri('kosarica: preberi zavrne smeti', preberi('{"postavke":[{"razlicica_id":"1","slug":"a","kolicina":1},{"razlicica_id":2,"slug":"b","kolicina":99}],"drzava":"US"}').postavke.length === 1
   && preberi('{"postavke":[{"razlicica_id":2,"slug":"b","kolicina":99}]}').postavke[0].kolicina === 20

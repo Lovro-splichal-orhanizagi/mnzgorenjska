@@ -37,9 +37,9 @@ function json(obj: unknown, status = 200) {
   return new Response(JSON.stringify(obj), { status, headers: { ...CORS, 'Content-Type': 'application/json' } })
 }
 
-async function stripe(pot: string, polja?: Record<string, string | number>): Promise<{ ok: boolean; j: Record<string, unknown> & { error?: { message?: string; code?: string } } }> {
+async function stripe(pot: string, polja?: Record<string, string | number>, metoda = polja ? 'POST' : 'GET'): Promise<{ ok: boolean; j: Record<string, unknown> & { error?: { message?: string; code?: string } } }> {
   const r = await fetch(`https://api.stripe.com/v1/${pot}`, {
-    method: polja ? 'POST' : 'GET',
+    method: metoda,
     headers: {
       Authorization: `Bearer ${Deno.env.get('STRIPE_SECRET_KEY')}`,
       'Stripe-Version': RAZLICICA,
@@ -95,10 +95,14 @@ Deno.serve(async (req) => {
   // Trk naključne kode je malo verjeten; ob napaki poskusimo še enkrat z drugo.
   let napaka = ''
   for (let poskus = 0; poskus < 2; poskus++) {
-    const pc = await stripe('promotion_codes', { coupon: String(k.j.id), code: novaKoda(), max_redemptions: v.uporab, expires_at: v.do, ...meta })
-    if (pc.ok) return json({ koda: pc.j.code, promocija: pc.j.id, velja_do: new Date(v.do * 1000).toISOString() })
+    // Koda poteče minuto pred kuponom (Stripe zavrne kodo, ki živi dlje od kupona; kot stripe-webhook).
+    const pc = await stripe('promotion_codes', { coupon: String(k.j.id), code: novaKoda(), max_redemptions: v.uporab, expires_at: v.do - 60, ...meta })
+    if (pc.ok) return json({ koda: pc.j.code, promocija: pc.j.id, velja_do: new Date((v.do - 60) * 1000).toISOString() })
     napaka = pc.j.error?.message ?? ''
   }
   console.error('trgovina-boni: koda', napaka)
+  // Kupon brez kode ne služi ničemur: pospravimo ga.
+  const brisi = await stripe(`coupons/${k.j.id}`, undefined, 'DELETE').catch(() => null)
+  if (!brisi?.ok) console.error('trgovina-boni: brisanje kupona', brisi?.j.error?.message ?? 'napaka')
   return json({ error: napaka || 'Kode ni bilo mogoče ustvariti.' }, 500)
 })
