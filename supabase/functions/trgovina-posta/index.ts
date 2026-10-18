@@ -5,12 +5,14 @@
 //   {"vrsta": "potrditev", "narocilo_id": <id>}  po plačilu (kliče stripe-webhook)
 //   {"vrsta": "poslano", "narocilo_id": <id>}    po vnosu sledilne številke (kliče
 //     admin iz /admin po trgovina_admin_poslano)
+//   {"vrsta": "bon", "narocilo_id": <id>, "kode": [{"koda", "znesek", "velja_do"}]}
+//     darilni boni (le servis: kode v čistopisu ima le stripe-webhook, baza hrani zgoščene)
 //
 // Kliče le servis (Bearer servisni ključ) ali admin (Bearer <access_token>,
 // preveri `is_admin`); anonimni klic dobi 403. Naročilo da
 // `trgovina_narocilo_za_posto` (servis). Potrditev le za placano/poslano,
 // odposlano le za poslano s sledilno številko. Mail gre v `email_log`
-// (vrsta trgovina-potrditev, trgovina-poslano).
+// (vrsta trgovina-potrditev, trgovina-poslano, trgovina-bon).
 //
 // Env: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY, SMTP_HOST,
 // SMTP_USER, SMTP_PASS, EMAIL_FROM, EMAIL_REPLY_TO (kot posli-opomnik),
@@ -19,7 +21,7 @@
 
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4'
 import nodemailer from 'npm:nodemailer@6.9.16'
-import { type Narocilo, sestaviMail } from './sporocila.ts'
+import { type Bon, type Narocilo, sestaviMail } from './sporocila.ts'
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -56,9 +58,15 @@ Deno.serve(async (req) => {
     if (admin !== true) return json({ error: 'Samo administrator.' }, 403)
   }
 
-  const vhod = ((await req.json().catch(() => null)) ?? {}) as { vrsta?: string; narocilo_id?: number }
+  const vhod = ((await req.json().catch(() => null)) ?? {}) as { vrsta?: string; narocilo_id?: number; kode?: unknown }
   const vrsta = vhod.vrsta
-  if (vrsta !== 'potrditev' && vrsta !== 'poslano') return json({ error: 'vrsta: potrditev ali poslano.' }, 400)
+  if (vrsta !== 'potrditev' && vrsta !== 'poslano' && vrsta !== 'bon') return json({ error: 'vrsta: potrditev, poslano ali bon.' }, 400)
+  const kode = (Array.isArray(vhod.kode) ? vhod.kode : []) as Bon[]
+  if (vrsta === 'bon') {
+    if (!jeStroj) return json({ error: 'Samo servis.' }, 403)
+    const ok = kode.length > 0 && kode.every((k) => typeof k?.koda === 'string' && Number.isInteger(k.znesek) && typeof k.velja_do === 'string')
+    if (!ok) return json({ error: 'kode: [{koda, znesek, velja_do}].' }, 400)
+  }
   if (!Number.isInteger(vhod.narocilo_id)) return json({ error: 'narocilo_id: številka naročila.' }, 400)
   if (!Deno.env.get('SMTP_PASS')) return json({ error: 'Pomanjkljiva nastavitev: SMTP_PASS.' }, 500)
 
@@ -73,7 +81,7 @@ Deno.serve(async (req) => {
   const sme = vrsta === 'poslano' ? n.stanje === 'poslano' && !!n.sledilna : ['placano', 'poslano'].includes(n.stanje)
   if (!sme) return json({ error: `Naročilo je v stanju ${n.stanje}.`, hint: 'trgovina-stanje' }, 400)
 
-  const s = sestaviMail(vrsta, n, (Deno.env.get('SHOP_URL') ?? 'https://shop.slff.eu').replace(/\/$/, ''))
+  const s = sestaviMail(vrsta, n, (Deno.env.get('SHOP_URL') ?? 'https://shop.slff.eu').replace(/\/$/, ''), kode)
   let napaka: string | null = null
   let id: string | null = null
   try {

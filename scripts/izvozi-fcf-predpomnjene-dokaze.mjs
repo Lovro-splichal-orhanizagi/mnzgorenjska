@@ -7,10 +7,14 @@ const KEYS = Object.freeze(['zapisniki-ES-k1od1-39053159080-1', 'zapisniki-es-ct
 const IDS = Object.freeze(['4109388', '4109643', '4109649', '4116202', '4116215', '4118352', '4118358'])
 const OUTPUT = 'fcf-predpomnjeni-dokazi'
 const MAX_BYTES = 2 * 1024 * 1024
+const HISTORY_BLOCKS = Object.freeze([['es-ct-segona-g1', 4109388, 4109627], ['es-ct-tercera-g2', 4116188, 4116427], ['es-ct-tercera-g9', 4118349, 4118588]])
+const LEGACY = { keys: KEYS, ids: IDS, output: OUTPUT, totalBytes: IDS.length * MAX_BYTES, requireAll: false }
+export const FCF_HISTORY_CACHE_KEYS = Object.freeze(['zapisniki-ES-k1od1-39053159080-1', 'zapisniki-ES-k1od1-39122610224-1', 'zapisniki-es-ct-tercera-g2-39130940424', 'zapisniki-es-ct-tercera-g4-39096381467'])
+const HISTORY = { keys: FCF_HISTORY_CACHE_KEYS, ids: HISTORY_BLOCKS.flatMap(([, start, end]) => Array.from({ length: end - start + 1 }, (_, i) => String(start + i))), output: 'fcf-historical-cache', totalBytes: 192 * 1024 * 1024, requireAll: true }
 const OPTION_NAMES = new Set(['root', 'output', 'requestedKey', 'matchedKey', 'cacheHit', 'restoreOutcome', 'extractionCommit', 'runId', 'runAttempt', 'cliValid'])
 const SHA = /^[a-f0-9]{40}$/
 const POSITIVE_ID = /^[1-9][0-9]{0,19}$/
-const safeKey = key => KEYS.includes(key) ? key : null
+const safeKey = (key, profile) => profile.keys.includes(key) ? key : null
 const safeHit = hit => ['true', 'false', ''].includes(hit) ? hit : null
 const safeOutcome = outcome => ['success', 'failure', 'cancelled', 'skipped'].includes(outcome) ? outcome : null
 function fail(reason) { throw new Error(reason) }
@@ -36,9 +40,9 @@ function inspect(path, directory = false) {
   return lstatSync(root)
 }
 
-function freshOutput(root, output) {
+function freshOutput(root, output, profile) {
   if (typeof root !== 'string' || !isAbsolute(root) || resolve(root) !== root) fail('unsafe-output')
-  if (output !== join(root, OUTPUT) || !inspect(root, true)) fail('unsafe-output')
+  if (output !== join(root, profile.output) || !inspect(root, true)) fail('unsafe-output')
   if (inspect(output)) fail('unsafe-output')
   // No recursive mkdir: the validated parent must already exist.
   mkdirSync(output, { mode: 0o700 })
@@ -48,9 +52,9 @@ function record(id) {
   return { id, url: `https://www.fcf.cat/ca/competicio/acta/${id}`, cachePath: `scripts/.predpomnilnik/fcf/acta-${id}.html`, status: 'not-inspected' }
 }
 
-function metadataState(options) {
+function metadataState(options, profile) {
   if (Object.keys(options).some(key => !OPTION_NAMES.has(key)) || options.cliValid === false ||
-      !safeKey(options.requestedKey) || safeHit(options.cacheHit) === null || !safeOutcome(options.restoreOutcome) ||
+      !safeKey(options.requestedKey, profile) || safeHit(options.cacheHit) === null || !safeOutcome(options.restoreOutcome) ||
       typeof options.extractionCommit !== 'string' || !SHA.test(options.extractionCommit) ||
       typeof options.runId !== 'string' || !POSITIVE_ID.test(options.runId) ||
       typeof options.runAttempt !== 'string' || !POSITIVE_ID.test(options.runAttempt)) return ['invalid', 'invalid-metadata']
@@ -71,38 +75,40 @@ function readOriginal(path, expected) {
     const stat = fstatSync(fd)
     if (!stat.isFile()) fail('not-regular')
     if (stat.size > MAX_BYTES) fail('oversized')
-    if (stat.dev !== expected.dev || stat.ino !== expected.ino || stat.size !== expected.size || stat.mtimeMs !== expected.mtimeMs) fail('source-changed')
+    if (stat.dev !== expected.dev || stat.ino !== expected.ino || stat.size !== expected.size || stat.mtimeMs !== expected.mtimeMs || stat.ctimeMs !== expected.ctimeMs) fail('source-changed')
     const buffer = Buffer.alloc(MAX_BYTES + 1)
     let length = 0, count
     while (length < buffer.length && (count = readSync(fd, buffer, length, buffer.length - length, null)) > 0) length += count
     const after = fstatSync(fd)
     if (length > MAX_BYTES) fail('oversized')
     if (length !== stat.size || after.size !== stat.size || after.mtimeMs !== stat.mtimeMs || after.ctimeMs !== stat.ctimeMs) fail('source-changed')
-    return buffer.subarray(0, length)
+    // Do not retain a 2MiB backing buffer for every small cached page.
+    return Buffer.from(buffer.subarray(0, length))
   } finally { if (fd !== undefined) closeSync(fd) }
 }
 
-const REASONS = new Set(['symlink', 'ancestor-not-directory', 'path-unreadable', 'not-regular', 'oversized', 'source-changed'])
+const REASONS = new Set(['symlink', 'ancestor-not-directory', 'path-unreadable', 'not-regular', 'oversized', 'source-changed', 'empty', 'snapshot-byte-limit'])
 const sourceReason = error => REASONS.has(error?.message) ? error.message : 'source-unreadable'
 
-/** Export only the fixed seven original public bodies.
+/** Export only a closed, registered set of original cached bodies.
  * An unsafe/nonfresh destination receives no writes. Other failures retain only
  * bounded, sanitized fixed-record diagnostics whenever the destination is safe.
  */
-function extract(options = {}) {
+function extract(options = {}, profile = LEGACY) {
   let artifactReady = false
   const finish = status => ({ status, artifactReady })
-  const { root, output = typeof root === 'string' ? join(root, OUTPUT) : null } = options
-  try { freshOutput(root, output) } catch { return finish(1) }
-  const [state, reason] = metadataState(options)
+  const { root, output = typeof root === 'string' ? join(root, profile.output) : null } = options
+  try { freshOutput(root, output, profile) } catch { return finish(1) }
+  const [state, reason] = metadataState(options, profile)
   const manifest = {
     schemaVersion: 1,
-    cache: { requestedKey: safeKey(options.requestedKey), matchedKey: safeKey(options.matchedKey), cacheHit: safeHit(options.cacheHit), restoreOutcome: safeOutcome(options.restoreOutcome), state, ...(reason ? { reason } : {}) },
+    ...(profile === HISTORY ? { kind: 'fcf-historical-cache', scopes: HISTORY_BLOCKS.map(([competitionSlug, start, end]) => ({ competitionSlug, sourceCode: `${start}-${end}` })) } : {}),
+    cache: { requestedKey: safeKey(options.requestedKey, profile), matchedKey: safeKey(options.matchedKey, profile), cacheHit: safeHit(options.cacheHit), restoreOutcome: safeOutcome(options.restoreOutcome), state, ...(reason ? { reason } : {}) },
     extraction: { commit: typeof options.extractionCommit === 'string' && SHA.test(options.extractionCommit) ? options.extractionCommit : null, runId: typeof options.runId === 'string' && POSITIVE_ID.test(options.runId) ? options.runId : null, runAttempt: typeof options.runAttempt === 'string' && POSITIVE_ID.test(options.runAttempt) ? options.runAttempt : null },
     sourceCaptureCommit: null,
     sourceFetchTime: null,
     freshness: 'unverified-historical-cache',
-    files: IDS.map(record),
+    files: profile.ids.map(record),
   }
   const save = () => {
     // The output starts empty and only fixed filenames are ever written.
@@ -117,14 +123,17 @@ function extract(options = {}) {
   }
 
   const selected = [], buffers = new Map()
-  let invalid = false
+  let invalid = false, totalBytes = 0
   // Validate every member before opening/copying any body.
   for (const file of manifest.files) {
     try {
       const path = join(root, file.cachePath), stat = inspect(path)
-      if (!stat) { file.status = 'missing'; continue }
+      if (!stat) { file.status = 'missing'; invalid ||= profile.requireAll; continue }
       if (!stat.isFile()) fail('not-regular')
       if (stat.size > MAX_BYTES) fail('oversized')
+      if (profile.requireAll && stat.size === 0) fail('empty')
+      totalBytes += stat.size
+      if (totalBytes > profile.totalBytes) fail('snapshot-byte-limit')
       if (!Number.isFinite(stat.mtimeMs)) fail('source-unreadable')
       selected.push({ file, path, stat })
     } catch (error) { invalid = true; file.status = 'invalid'; file.reason = sourceReason(error) }
@@ -162,7 +171,7 @@ function extract(options = {}) {
       }
     } catch { bodiesRemoved = false /* No recursive cleanup or traversal. */ }
     manifest.cache.state = 'error'; manifest.cache.reason = 'output-write-failed'
-    manifest.files = IDS.map(id => ({ ...record(id), reason: 'output-write-failed' }))
+    manifest.files = profile.ids.map(id => ({ ...record(id), reason: 'output-write-failed' }))
     try { save() } catch { /* Cannot safely retain diagnostics. */ }
     artifactReady &&= bodiesRemoved
     return finish(1)
@@ -170,14 +179,16 @@ function extract(options = {}) {
 }
 
 export function izvozi(options = {}) { return extract(options).status }
+export function izvoziZgodovino(options = {}) { return extract(options, HISTORY).status }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   const env = process.env
-  const cliValid = process.argv.length === 2 && env.GITHUB_ACTIONS === 'true' &&
+  const profile = env.FCF_EXPORT_KIND === 'history' ? HISTORY : LEGACY
+  const cliValid = (!env.FCF_EXPORT_KIND || env.FCF_EXPORT_KIND === 'history') && process.argv.length === 2 && env.GITHUB_ACTIONS === 'true' &&
     env.GITHUB_REPOSITORY === 'Lovro-splichal-orhanizagi/mnzgorenjska' && env.GITHUB_REF === 'refs/heads/main'
   const result = extract({ root: process.cwd(), requestedKey: env.FCF_CACHE_KEY, matchedKey: env.FCF_CACHE_MATCHED_KEY,
     cacheHit: env.FCF_CACHE_HIT, restoreOutcome: env.FCF_RESTORE_OUTCOME, extractionCommit: env.GITHUB_SHA,
-    runId: env.GITHUB_RUN_ID, runAttempt: env.GITHUB_RUN_ATTEMPT, cliValid })
+    runId: env.GITHUB_RUN_ID, runAttempt: env.GITHUB_RUN_ATTEMPT, cliValid }, profile)
   process.exitCode = result.status
   // Only this invocation's successfully written manifest authorizes upload.
   // In particular, an unsafe preexisting path must not become an artifact.

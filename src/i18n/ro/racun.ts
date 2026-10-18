@@ -13,6 +13,9 @@ export const racun: NonNullable<Prevod['racun']> = {
     racunUstvarjen:
       'Contul a fost creat. Ți-am trimis pe e-mail un link de confirmare: deschide-l și revino aici.',
     prijavljenKot: 'Ești autentificat ca {email}.',
+    posljiPotrditevZnova: 'Retrimite e-mailul de confirmare',
+    potrditevPoslanaZnova:
+      'Ți-am trimis un nou e-mail de confirmare. Verifică și folderul de spam.',
     zGooglom: 'Continuă cu Google',
     zApplom: 'Continuă cu Apple',
     aliZEposto: 'sau cu e-mail',
@@ -240,7 +243,7 @@ export const racun: NonNullable<Prevod['racun']> = {
       'Opoziție: pe profilul revendicat apasă Ascunde-mă din Scout sau scrie la <eposta>info@slff.eu</eposta> cu un link către pagina jucătorului. În 14 zile ascundem jucătorul din Scout în toate ligile noastre din acea țară, inclusiv la importurile ulterioare. În jocul fantasy rămâne.',
     trgovinaNaslov: 'Magazinul SLFF (shop.slff.eu)',
     trgovinaKaj:
-      'La cumpărare prelucrăm numele, e-mailul, adresa de livrare, produsele cumpărate și sumele, iar dacă ești autentificat și contul tău SLFF. Plata este procesată de Stripe: nu vedem și nu stocăm datele cardului. Numele și adresa le primește Pošta Slovenije pentru livrare. Pentru a limita abuzurile, la o cumpărare nefinalizată păstrăm temporar un hash (ireversibil) al adresei IP; se șterge la plată sau la expirarea cumpărării.',
+      'La cumpărare prelucrăm numele, e-mailul, adresa de livrare, produsele cumpărate și sumele, iar dacă ești autentificat și contul tău SLFF. Plata este procesată de Stripe: nu vedem și nu stocăm datele cardului. Numele și adresa le primește Pošta Slovenije pentru livrare. Pentru a limita abuzurile, la o cumpărare nefinalizată păstrăm temporar un hash (ireversibil) al adresei IP; se șterge la plată sau la expirarea cumpărării. Textul personalizării (nume, număr) și numele echipei fantasy de pe produs fac parte din comandă; textul îl primește și tipografia care realizează produsul.',
     trgovinaPodlaga:
       'Temeiul juridic este executarea contractului (articolul 6 alineatul (1) litera (b) GDPR) și obligațiile legale (contabilitate, taxe), iar pentru hash-ul adresei IP interesul legitim de a preveni abuzurile (articolul 6 alineatul (1) litera (f) GDPR). Operatorul este SPACE GUARDIAN, računalniško programiranje, d.o.o.',
     trgovinaHramba:

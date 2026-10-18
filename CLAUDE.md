@@ -340,9 +340,14 @@ Ključ stikov je v `~/.config/slff/stiki-kljuc` ali `SLFF_STIKI_KLJUC` (da ga
 admin; **repo je javen, ključ in naslovi nikoli v git**). Brez ključa ne
 pošiljaj — vprašaj človeka. Funkcije: migracija `20261008143100_stiki_kljuc`.
 
-Samodejno pošiljanje iz luka@slff.eu (vrsta, delavec `slff-posta` na
-strežniku, okna, polnjenje po državah, objava): `docs/posta-klubom.md`.
+Samodejno pošiljanje iz luka@, lovro@, nejc@ in klubi@slff.eu (vrsta, delavec
+`slff-posta` na strežniku, ogrevanje novih nabiralnikov, opomnik od istega
+pošiljatelja, okna, polnjenje po državah, objava): `docs/posta-klubom.md`.
 CI ga ne objavi (`scripts/hetzner/objavi-posto.sh`).
+Odgovore v lovro@, nejc@ in klubi@ (niso v HelpStacku, opomnik pregleda le
+INBOX in Junk) lastnik zabeleži v 3 dneh (`zabelezi --vrsta odgovor`).
+Skupni razmik 60–150 s: okoli 34 mailov/uro, 340/dan za vse skupaj. Med tekom
+kontejnerja `posta-klubom.mjs` le s `--suho`; objava izven okna pošiljanja.
 
 `klub_stik.drzava` sprejme tudi `DE` (migracija `20261018120600_stiki_nemcija`);
 pravila predhodnega preverjanja in beleženja veljajo enako za nemške klube.

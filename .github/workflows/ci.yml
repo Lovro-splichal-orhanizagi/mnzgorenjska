@@ -69,7 +69,10 @@ jobs:
       # `npm run build` že poganja `tsc --noEmit`, a ločen korak pove, KATERI
       # od obeh je padel, brez brskanja po dnevniku.
       - name: Germany activation manifest
-        run: node --test scripts/test-vklop-nemcije.mjs scripts/test-zagona-nemcije.mjs scripts/test-vklop-dfb-regije.mjs scripts/test-dfb-regije-dokazi.mjs scripts/test-dfb-regije-replay.mjs scripts/test-dfb-west-clock.mjs
+        run: node --test scripts/test-vklop-nemcije.mjs scripts/test-zagona-nemcije.mjs scripts/test-vklop-dfb-regije.mjs scripts/test-dfb-regije-dokazi.mjs scripts/test-dfb-regije-replay.mjs scripts/test-dfb-west-clock.mjs scripts/test-current-player-reactivation.mjs scripts/test-predpomnjen-vratar.mjs scripts/test-dfb-current-reactivation.mjs
+
+      - name: FCF closed evidence and current-only packet
+        run: node --test scripts/test-fcf-single-source-proof.mjs scripts/test-fcf-current-source-proof.mjs scripts/test-fcf-history-evidence.mjs scripts/test-fcf-historical-release.mjs scripts/test-fcf-final-audit-plan.mjs scripts/test-fcf-history-cache-proof.mjs
 
       - name: Tipi
         run: npx tsc --noEmit
@@ -150,9 +153,13 @@ jobs:
       - name: Regional DFB gate and concurrent writes
         env:
           SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska
+          SUPABASE_TEST_DB: postgres
         run: |
           node scripts/test-vklop-dfb-regije-sql.mjs
           node scripts/test-dfb-regije-locks.mjs
+          node scripts/test-dfb-historical-release-sql.mjs
+          node scripts/test-dfb-historical-locks.mjs
+          node scripts/test-dfb-current-reactivation-sql.mjs
       - name: Reviewed historical statistics and concurrent fixture identities
         env:
           SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska
@@ -160,6 +167,13 @@ jobs:
         run: |
           node scripts/test-historical-statistics-sql.mjs
           node scripts/test-historical-statistics-race.mjs
+      - name: Reviewed FCF cleanup, waiting writers and exact TEXT transport
+        env:
+          SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska
+          FCF_HISTORY_DISPOSABLE_TEST: '1'
+        run: |
+          node scripts/test-fcf-historical-sql.mjs
+          node scripts/test-fcf-historical-race.mjs
       - run: npm run test:varnost
       - run: npm run test:socasnost
       # Zamrznitev cene ob poškodbi: borza in kazen na sestavljenih krogih.

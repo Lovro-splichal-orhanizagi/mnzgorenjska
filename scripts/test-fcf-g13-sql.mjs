@@ -6,7 +6,7 @@ import assert from 'node:assert/strict'
 import { sessionSQL } from './fcf-g13-repair.mjs'
 const container=process.env.SUPABASE_DB_CONTAINER
 if (process.env.FCF_G13_DISPOSABLE_TEST!=='1' || !container?.startsWith('supabase_db_')) throw Error('Explicit disposable Supabase container and FCF_G13_DISPOSABLE_TEST=1 required')
-const args=['exec','-i',container,'psql','-U','postgres','-d','postgres','-X','-qAt','-v','ON_ERROR_STOP=1']
+const args=['exec','-i',container,'psql','-U','postgres','-d',process.env.SUPABASE_TEST_DB??'postgres','-X','-qAt','-v','ON_ERROR_STOP=1']
 const read=name=>readFileSync(new URL(`../supabase/tests/${name}`,import.meta.url),'utf8')
 const seed=`begin isolation level read committed;\n${sessionSQL()}\n${read('fcf-g13-fixture.sql')}`
 const run=(sql)=>execFileSync('docker',args,{input:sql,encoding:'utf8',timeout:180000,maxBuffer:8*1024*1024,stdio:['pipe','pipe','pipe']})
@@ -34,6 +34,8 @@ try {
       ['FK retarget existing child','update klub_predstavitev set team_id=10388 where team_id=8372'],
       ['existing appearance statistics','update appearances set yellow_cards=yellow_cards+1 where id=(select min(id) from appearances where match_id=427263)'],
       ['new fantasy team',"insert into fantasy_teams(owner_id,name,competition_id) values('00000000-0000-4000-8000-000000000013','TEST',801)"],
+      ['new historical policy',"insert into private_historical_statistics.installed_policies(competition_id,policy_id,policy_sha256,first_fantasy_played_on) select 801,id,policy_sha256,current_date+7 from private_historical_statistics.policies where id='es-fcf-segona-g1-history-2026-10-18-v1'"],
+      ['historical club binding',"update private_historical_statistics.source_club_bindings set bound_team_id=10388 where provider='fcf' and source_club_id='5042'"],
       ['new Scout non-FK reference',"insert into scout.dnevnik(team_id,vrsta) values(10388,'isci')"],
       ['new FK DDL','create table public.g13_concurrent_fk(team_id bigint references teams)'],
     ]

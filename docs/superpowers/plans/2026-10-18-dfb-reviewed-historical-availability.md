@@ -60,3 +60,13 @@ Modify `scripts/uvozi-dfb-regijo.mjs` and DFB import adapter; consume the HNS/Sp
 - [ ] Activate only the passing Südwest league through guarded Actions; read back future unlocked first round and public priced player list; report real live count and unresolved Nord/West source/schedule gaps.
 
 Read-only checkpoint now implements classification, manifest-v3 proof validation and closed replay with explicit writer-disable guards. Shared database/import/UI prerequisites and independently reviewed DFB RPC binding remain required; source packets do not activate anything.
+
+Writer checkpoint implementation is split deliberately: first installed-only DFB provider wrapper plus DFB-specific atomic metadata/bootstrap and fullrelease RPC tests; then remove the JS writer guards only after the shared common importer/factory is integrated and the dedicated offline Actions wrapper is tested. SQL prerequisite is reviewed common availability180000; DFB migration follows as20261018180100. The SQL tests include rollback on second-header conflict, actual service-role/anon boundaries, canonical/price/keeper/deadline mutations, preserved strictv1/v2 gates and independent release locks without inheriting bootstrap locks. All local SQL is confined to explicitly disposable owned test databases.
+
+### Final runtime implementation checkpoint
+
+Tasks1–3 are implemented for independent whole-branch review: authentic exact-two classification, v3 closed proof, installed-only provider, service-only atomic bootstrap/full SQL release, and Actions offline import wiring. Temporary read-only JS writer guards are removed only in the combined runtime checkpoint. The importer sends the exact original manifest text, awaits complete two-header bootstrap before normal imports, then performs a separate full preflight; it does not activate.
+
+The test-only closed packet exercises actual replay/factory/shared-loader paths and command ordering/refusals. It is separate from genuine launch evidence. Service-role SQL rollback tests cover the persisted-data and authorization boundary. Shared runtime/calendar/monitor successor is adopted unchanged apart from package command union. Existing strict v1/v2 paths remain covered.
+
+Task4 is still pending: final reviewed-code actual Actions policy replays of retained archive and fresh strict current39135160991, exact manifest review, fresh-chain CI, deployed UI verification and Actions-only import/preflight/activation. Fresh schedule confirms first future round13 begins2026-10-23 at19:00 local (cutoff11:00UTC); unpublished current fixtures2426395/2426400 remain ordinary pending and are not approved historical exceptions.

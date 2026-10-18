@@ -153,9 +153,8 @@ test('actual policy replay job requires its distinct successful step; strict pro
  assert(workflow.includes(`- name: ${policyReplayStep}`));assert(workflow.includes('capture-policy'));assert(workflow.includes('unshare --net -- node scripts/ponovi-dfb-regijo.mjs replay-policy'))
 })
 
-test('first checkpoint cannot invoke production writers before the shared DB/import release gate exists',async()=>{
- const {databaseCheck}=await import('./vklopi-dfb-regijo.mjs'),m=await manifest3(),raw=JSON.stringify(m)
- await assert.rejects(()=>databaseCheck(raw,sha(raw),false),/separately reviewed shared schema\/RPC checkpoint/)
- const source=readFileSync(new URL('./uvozi-dfb-regijo.mjs',import.meta.url),'utf8')
- assert(source.indexOf("if(m.version===3)throw Error('Historical import")<source.indexOf('actionsOnly()'))
+test('version3 database release still requires repository Actions before any request',async()=>{
+ const {databaseCheck}=await import('./vklopi-dfb-regijo.mjs'),m=await manifest3(),raw=JSON.stringify(m),before=process.env.GITHUB_ACTIONS
+ process.env.GITHUB_ACTIONS='false'
+ try{await assert.rejects(()=>databaseCheck(raw,sha(raw),false,{fetchFn(){throw Error('request forbidden')}}),/repository Actions/)}finally{if(before===undefined)delete process.env.GITHUB_ACTIONS;else process.env.GITHUB_ACTIONS=before}
 })

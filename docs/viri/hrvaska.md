@@ -41,6 +41,45 @@ vrh ni bil vpisan. Zapisnik je isti kot pri Treći NL.
 | hr-1nl | `114348034` (16) | `100413651` |
 | hr-2nl | `114348039` (16) | `100418001` |
 
+**MŽNL Vinkovci-Osijek** (migracija 20261018195100, **neaktivna**): pregled
+18. 10. 2026 po prošnji s podpore. `hrvaske-lige.mjs` jo je izpuščal, ker je
+`IZPUSTI` imel "mžnl" (zdaj ne; mladinske MŽNL ujame kadet/pionir/U-). Letos jo
+objavlja ŽNS vukovarsko-srijemski (oid 32), lani HNS (oid 1, "MŽNL Os-Vk
+25/26"), zato je skripta arhiva po imenu ne najde. Zapisnik isti; tekoča
+sezona 72 tekem, vseh 144 postav po 11, goli = izidi; arhiv 240 tekem, 479/480
+postav po 11, 788 golov, 13 skupnih klubov. Raven v `ravenLige`: MŽNL je nad
+1. ŽNL (kot Elitna).
+
+| liga | klubov | tekoča 2026/27 | arhiv 2025/26 |
+|---|---|---|---|
+| hr-vs-mznl-vinkovci-osijek | 16 | `114552510` | `100569067` |
+
+Ista napaka je skrivala **MŽNL SB-PŽ** (Brod-Požega; migracija
+20261018203700, **neaktivna**, pregled 18. 10. 2026 po prošnji uporabnikov).
+Letos jo objavlja ŽNS brodsko-posavski (oid 35, "MŽNL SB-PŽ 26/27"), lani ŽNS
+požeško-slavonski (oid 314, "MŽNL **PŽ-SB** 25/26") — zveza in vrstni red
+županij v imenu se menjata, zato je `hrvaske-lige.mjs` po imenu ne poveže.
+Tekoča sezona 63 od 91 tekem (Semafor ima le jesenski del), vseh 126 postav
+po 11, 229 golov = izidi, oba vratarja povsod; arhiv 182 tekem, 363/364 postav
+po 11, 738 golov proti 734 po izidih (4 tekme z izidom za zeleno mizo 3:0, v
+dogodkih ostanejo goli z igrišča), 12 skupnih klubov. Trkov imen ni: 10 od 16
+klubov že ima zapis (2. ŽNL Zapad NG, 1. ŽNL BPŽ, 1. ŽNL PŽ, Treća NL Istok,
+juniori BPŽ, 1. NL juniori Istok), pri vseh je šifra kluba na Semaforju ista.
+Želje v `zelje_lig` ob pregledu ni bilo ("2 Žnl Brodsko posavska" je II. ŽNL).
+
+| liga | klubov | tekoča 2026/27 | arhiv 2025/26 |
+|---|---|---|---|
+| hr-bp-mznl-sb-pz | 14 | `114477020` | `100642980` |
+
+1. ŽNL Vukovarsko-srijemska (seniorji) je `hr-vs-prva-znl` in je že vklopljena.
+
+Pregled je našel trk **NK Otok**: Međimurje (Semafor 347, II. MNL, zapis 738
+z grbom) in Otok pri Vinkovcih (40262, MŽNL in juniori VS). Ker
+`hrvaske-lige.mjs` trkov v mladinskih ligah ne išče, je uvoz `hr-vs-u19` oba
+vpisal v zapis 738. `IME_KLUBA` da 40262 ime "NK Otok (Vukovar)", migracija
+20261018195100 mu preseli igralce, nastope, gole in tekme `hr-vs-u19`. Po
+uvozu poženi *Grbi klubov* z `vir = hns` (nov zapis je brez grba).
+
 **Veteranske lige imena ne povedo** (pregled 15. 10. 2026): ZNS Zagreb ima
 2026/27 "Premier liga" (`115622586`), "1. liga skupina A/B" (`115624020`,
 `115628588`) in "2. liga skupina A/B/C" (`115630270`, `115632903`,

@@ -14,6 +14,9 @@ export const racun: NonNullable<Prevod['racun']> = {
     racunUstvarjen:
       'Účet je vytvořený. Na e-mail jsme ti poslali potvrzovací odkaz. Otevři ho a vrať se sem.',
     prijavljenKot: 'Jsi přihlášený jako {email}.',
+    posljiPotrditevZnova: 'Poslat potvrzovací e-mail znovu',
+    potrditevPoslanaZnova:
+      'Poslali jsme nový potvrzovací e-mail. Podívej se i do nevyžádané pošty.',
     zGooglom: 'Pokračovat přes Google',
     zApplom: 'Pokračovat přes Apple',
     aliZEposto: 'nebo přes e-mail',
@@ -247,7 +250,7 @@ export const racun: NonNullable<Prevod['racun']> = {
       'Námitka: na převzatém profilu klikni Skryj mě ze Scoutu nebo napiš na <eposta>info@slff.eu</eposta> s odkazem na stránku hráče. Do 14 dnů hráče skryjeme ze Scoutu ve všech našich soutěžích dané země, i při pozdějších importech. Ve fantasy hře zůstává.',
     trgovinaNaslov: 'SLFF Obchod (shop.slff.eu)',
     trgovinaKaj:
-      'Při nákupu zpracováváme jméno, e-mail, doručovací adresu, zakoupené produkty a částky, a pokud jsi přihlášen, i tvůj účet SLFF. Platbu provádí Stripe: údaje o kartě nevidíme ani neukládáme. Jméno a adresu dostane k doručení Pošta Slovenije. Pro omezení zneužití u nedokončeného nákupu dočasně uchováváme hash (nevratný) IP adresy; smaže se po zaplacení nebo vypršení nákupu.',
+      'Při nákupu zpracováváme jméno, e-mail, doručovací adresu, zakoupené produkty a částky, a pokud jsi přihlášen, i tvůj účet SLFF. Platbu provádí Stripe: údaje o kartě nevidíme ani neukládáme. Jméno a adresu dostane k doručení Pošta Slovenije. Pro omezení zneužití u nedokončeného nákupu dočasně uchováváme hash (nevratný) IP adresy; smaže se po zaplacení nebo vypršení nákupu. Text personalizace (jméno, číslo) a název fantasy týmu na produktu jsou součástí objednávky; text dostane i tiskárna, která produkt vyrobí.',
     trgovinaPodlaga:
       'Právním základem je plnění smlouvy (článek 6 odst. 1 písm. b) GDPR) a zákonné povinnosti (účetnictví, daně), u hashe IP adresy oprávněný zájem na předcházení zneužití (článek 6 odst. 1 písm. f) GDPR). Správcem je SPACE GUARDIAN, računalniško programiranje, d.o.o.',
     trgovinaHramba:

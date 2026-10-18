@@ -58,10 +58,12 @@ import {
 import { tockeZaNastop, razloziTocke } from '../src/lib/tockovanje'
 import { veljavenPodpis } from '../supabase/functions/stripe-webhook/podpis.ts'
 import { scoutPostavkeVeljajo, scoutCeneNarocnine } from '../supabase/functions/stripe-webhook/scout.ts'
-import { trgovinaIzSeje, napacnaTarifa } from '../supabase/functions/stripe-webhook/trgovina.ts'
+import { trgovinaIzSeje, napacnaTarifa, novaKoda, idKupona, enoteBonov, kodeSeje, zgostiKodo, IZDELEK_TRGOVINE as IZDELEK_BONOV } from '../supabase/functions/stripe-webhook/trgovina.ts'
+import { IZDELEK_TRGOVINE, seznamPostavk } from '../supabase/functions/trgovina-nakup/izdelki.ts'
 import { sestaviMail as trgovinaMail, TELEFON as trgovinaTelefonMail, POGOJI_VERZIJA as trgovinaVerzijaMail } from '../supabase/functions/trgovina-posta/sporocila.ts'
 import { SL as trgovinaSL, EN as trgovinaEN, TELEFON as trgovinaTelefon, POGOJI_VERZIJA as trgovinaVerzija } from '../shop/src/besede.ts'
 import { EU27 as trgovinaEU27, tarifeZa } from '../supabase/functions/trgovina-nakup/tarife.ts'
+import { preberiVnos as vnosBona } from '../supabase/functions/trgovina-boni/vnos.ts'
 import { createHmac } from 'node:crypto'
 import { sestejOdKroga } from '../src/lib/lestvica'
 import { zdruziNavijace } from '../src/lib/navijaci'
@@ -1188,6 +1190,14 @@ preveri(
   preveri('višja liga: nižja liga ni višja', koliko(brod2, brod1) === 0 && koliko(brod1, hnl3) === 0)
   preveri('višja liga: 4. NL nad 1. ŽNL iste zveze',
     koliko(r('hr-ri-4nl', '4. NL — NS Rijeka', 'zns-rijeka'), r('hr-ri-1-znl', '1. ŽNL — Rijeka', 'zns-rijeka')) === 1)
+  preveri('višja liga: MŽNL Vinkovci-Osijek nad Prvo ŽNL Vukovar, pod 3. NL',
+    koliko(r('hr-vs-mznl-vinkovci-osijek', 'MŽNL Vinkovci-Osijek', 'zns-vukovar'), r('hr-vs-prva-znl', 'Prva ŽNL — Vukovar', 'zns-vukovar')) === 1 &&
+    koliko(r('hr-3nl-istok', 'Treća NL Istok', 'hns'), r('hr-vs-mznl-vinkovci-osijek', 'MŽNL Vinkovci-Osijek', 'zns-vukovar')) === 1 &&
+    koliko(r('hr-vs-mznl-vinkovci-osijek', 'MŽNL Vinkovci-Osijek', 'zns-vukovar'), r('hr-3nl-istok', 'Treća NL Istok', 'hns')) === 0)
+  preveri('višja liga: MŽNL SB-PŽ nad 1. ŽNL Brod, pod 3. NL',
+    koliko(r('hr-bp-mznl-sb-pz', 'MŽNL SB-PŽ', 'zns-brod'), brod1) === 1 &&
+    koliko(hnl3, r('hr-bp-mznl-sb-pz', 'MŽNL SB-PŽ', 'zns-brod')) === 1 &&
+    koliko(brod1, r('hr-bp-mznl-sb-pz', 'MŽNL SB-PŽ', 'zns-brod')) === 0)
   preveri('višja liga: II pred I (rimske številke)', r('hr-bm-ii-znl-beli-manastir', 'II ŽNL Beli Manastir', 'ns-beli-manastir').raven === 3)
   preveri('višja liga: mladinska in članska se ne primerjata', koliko(hnl3, r('hr-zg-u19-1znl', '1. ZNL juniori', 'zns-zagreb')) === 0)
   preveri('višja liga: slovaška piramida je državna',
@@ -12582,6 +12592,17 @@ preveri(
     preveri('pošta klubom: en stik na klub (drug naslov istega kluba)', izb.length === 0)
     const sam = kandidati([a], [], new Set(['at-a']), zdaj, [a, b])
     preveri('pošta klubom: klub brez pošte dobi prvi mail', sam.length === 1)
+    // Parkirana vrstica "poslano…" (mail je šel, vpisa ni) blokira klub: po team_id in po imenu v državi.
+    for (const opomba of ['poslano (prvi, 2026-10-12, lovro@slff.eu), a vpis v klub_stik_posta ni uspel — vpiši ročno', 'Poslano? preveri ročno (prvi): SMTP konec DATA']) {
+      const park = { ...b, stanje: 'nov', opomba }
+      preveri(`pošta klubom: parkirana "${opomba.slice(0, 8)}" blokira klub (team_id)`, kandidati([a], [], new Set(['at-a']), zdaj, [a, park]).length === 0)
+      const poImenu = { ...park, team_id: null, klub: 'sv a' }
+      preveri(`pošta klubom: parkirana "${opomba.slice(0, 8)}" blokira klub (ime)`, kandidati([a], [], new Set(['at-a']), zdaj, [a, poImenu]).length === 0)
+    }
+    const drugaOpomba = { ...b, stanje: 'nov', opomba: 'odboj v luka@slff.eu (2026-10-12)' }
+    const drugKlub = { ...b, stanje: 'nov', team_id: 9, klub: 'SV B', opomba: 'poslano? preveri ročno' }
+    preveri('pošta klubom: druga opomba ali drug klub ne blokira', kandidati([a], [], new Set(['at-a']), zdaj, [a, drugaOpomba]).length === 1 &&
+      kandidati([a], [], new Set(['at-a']), zdaj, [a, drugKlub]).length === 1)
   }
   {
     // Stare vrstice za opomnik: le brez pošiljatelja, poslano, brez opombe "poslano…", vsa pošta Lukova.
@@ -12602,6 +12623,58 @@ preveri(
     preveri('pošta klubom: v vrsto za opomnik le stare vrstice (ne parkirane)', ids === '1', ids)
   }
   preveri('pošta klubom: naslov v dnevniku zakrit', zakrij('za <ana.novak@klub.at>: 550') === 'za <a***@klub.at>: 550')
+
+  // Več pošiljateljev: ogrevanje, izbira, opomnik pri istem, besedila po imenu ali ekipi.
+  const { POSILJATELJI, dnevnaMeja, izberiPosiljatelja, aktivniPosiljatelji } = await import('./posta-klubom.mjs')
+  const [luka, lovro, nejc, klubi] = POSILJATELJI
+  const meja = (po, t) => dnevnaMeja(po, new Date(t))
+  preveri('pošta klubom: ogrevanje (pred začetkom 0, 20 + 10 na dunajski dan, največ 100, Luka 100)',
+    meja(lovro, '2026-10-18T21:59:00Z') === 0 && meja(lovro, '2026-10-18T22:00:00Z') === 20 && meja(nejc, '2026-10-20T10:00:00Z') === 30 &&
+    meja(klubi, '2026-10-27T10:00:00Z') === 100 && meja(klubi, '2026-12-01T10:00:00Z') === 100 && meja(luka, '2026-10-18T10:00:00Z') === 100 &&
+    meja(lovro, '2026-10-26T06:00:00Z') === 90, [meja(lovro, '2026-10-18T22:00:00Z'), meja(lovro, '2026-10-26T06:00:00Z')].join())
+  {
+    const akt = aktivniPosiljatelji({ LUKA_SMTP_GESLO: 'a', NEJC_SMTP_GESLO: 'b', LOVRO_SMTP_GESLO: '' })
+    preveri('pošta klubom: pošiljatelj brez gesla ni dejaven', akt.map((po) => po.kljuc).join() === 'luka,nejc' && akt[1].geslo === 'b')
+    const pr = (o) => new Map(Object.entries(o).map(([k, [dan, krog]]) => [k, { dan, krog }]))
+    const vsi4 = POSILJATELJI
+    preveri('pošta klubom: prvi mail dobi pošiljatelj z največ prostora', izberiPosiljatelja(vsi4, pr({ luka: [10, 2], lovro: [20, 2], nejc: [5, 2], klubi: [20, 2] }))?.kljuc === 'lovro')
+    preveri('pošta klubom: brez prostora v krogu ali dnevu ne izbere', izberiPosiljatelja(vsi4, pr({ luka: [50, 0], lovro: [0, 2] }))?.kljuc === undefined &&
+      izberiPosiljatelja(vsi4, pr({ luka: [50, 0], lovro: [1, 2] }))?.kljuc === 'lovro')
+    preveri('pošta klubom: le dejavni pošiljatelji', izberiPosiljatelja([luka], pr({ luka: [3, 2], lovro: [90, 2] }))?.kljuc === 'luka')
+  }
+  {
+    // Opomnik gre od tistega, ki je poslal prvi mail; prvi mail drugega pošiljatelja SLFF ni "drug" zanj.
+    const a = { id: 1, v_vrsti: true, email: 'a@x.at', drzava: 'AT', liga_slug: 'at-a', stanje: 'poslano', team_id: 5, klub: 'SV A' }
+    const c = { ...a, id: 2, team_id: 6, klub: 'SV C', email: 'c@x.at' }
+    const izb = kandidati([a, c], [
+      { stik_id: 1, vrsta: 'prvi', poslal: nejc.poslal, poslano_at: dni(4) },
+      { stik_id: 2, vrsta: 'prvi', poslal: 'Jernej', poslano_at: dni(4) },
+    ], new Set(['at-a']), zdaj, [a, c])
+    preveri('pošta klubom: opomnik pri prvem pošiljatelju, ročni prvi mail brez opomnika', izb.length === 1 && izb[0].s.id === 1 && izb[0].posiljatelj === 'nejc', JSON.stringify(izb))
+    const z = kandidati([a], [
+      { stik_id: 1, vrsta: 'prvi', poslal: nejc.poslal, poslano_at: dni(4) },
+      { stik_id: 1, vrsta: 'klic', poslal: luka.poslal, poslano_at: dni(4) },
+    ], new Set(['at-a']), zdaj, [a])
+    preveri('pošta klubom: pošta drugega pošiljatelja SLFF zapre opomnik', z.length === 0)
+  }
+  for (const drzava of ['AT', 'EE', 'HR', 'HU', 'RS']) {
+    for (const vrsta of ['prvi', 'opomnik']) {
+      const bl = besedilo(k(drzava), p, vrsta, lovro).telo
+      preveri(`pošta klubom: ${drzava} ${vrsta} podpis Lovro`, /\nLovro\nslff\.eu/.test(bl) && !bl.includes('Luka'))
+      const be = besedilo(k(drzava), p, vrsta, klubi).telo
+      const ekipa = { AT: ['wir sind das Team von SLFF', 'Das SLFF-Team'], EE: ['Oleme SLFF-i meeskond.', 'SLFF meeskond'], HR: ['mi smo tim SLFF-a', 'SLFF tim'],
+        HU: ['Az SLFF csapata vagyunk.', 'Az SLFF csapata'], RS: ['mi smo tim SLFF-a', 'SLFF tim'] }[drzava]
+      preveri(`pošta klubom: ${drzava} ${vrsta} besedilo ekipe`, (vrsta === 'opomnik' || be.includes(ekipa[0])) && be.includes(`\n${ekipa[1]}\nslff.eu`) &&
+        !/Luka|Ekipa SLFF|undefined/.test(be) && !/\b(ich bin|Olen |ja sam|vagyok az)/.test(be))
+      if (drzava === 'HU') preveri(`pošta klubom: HU ${vrsta} pozdrav ekipe v množini`, be.startsWith('Jó napot kívánunk!\n') && bl.startsWith('Jó napot kívánok!\n'))
+      if (drzava === 'EE' && vrsta === 'prvi') preveri('pošta klubom: EE ekipa "SLFF on tasuta"', be.includes('Oleme SLFF-i meeskond. SLFF on tasuta') && bl.includes('SLFF-ist. See on tasuta'))
+    }
+  }
+  {
+    const m = (po) => sporocilo({ na: 'k@x.at', zadeva: 'Z', telo: 'T', odjava: 'Abmelden', id: 'x', po })
+    preveri('pošta klubom: From in odjava po pošiljatelju', m(nejc).includes('From: "Nejc (SLFF)" <nejc@slff.eu>') && m(nejc).includes('mailto:nejc@slff.eu?') &&
+      m(klubi).includes('From: "SLFF" <klubi@slff.eu>') && m(luka).includes('From: "Luka (SLFF)" <luka@slff.eu>'))
+  }
 }
 
 // --- samodejne objave (scripts/objave.mjs, src/pages/Objava.tsx) --------------
@@ -12972,7 +13045,7 @@ preveri(
   preveri('scout stripe: mesečna postavka gre', scoutPostavkeVeljajo([p('slff_scout_klub_mesec')], 'mesec'))
   preveri('scout stripe: napačno obdobje pade', !scoutPostavkeVeljajo([p('slff_scout_klub_mesec')], 'sezona'))
   preveri('scout stripe: dva kosa padeta', !scoutPostavkeVeljajo([p('slff_scout_klub_mesec', 2, 7800)], 'mesec'))
-  preveri('scout stripe: popust pade', !scoutPostavkeVeljajo([{ ...p('slff_scout_klub_mesec'), amount_discount: 2000 }], 'mesec'))
+  preveri('scout stripe: popust (promocijska koda) gre', scoutPostavkeVeljajo([{ ...p('slff_scout_klub_mesec'), amount_discount: 2000 }], 'mesec'))
   preveri('scout stripe: dodatna postavka pade', !scoutPostavkeVeljajo([p('slff_scout_klub_mesec'), p('slff_znacka')], 'mesec'))
   preveri('scout stripe: neznano obdobje pade', !scoutPostavkeVeljajo([p('slff_scout_klub_mesec')], 'teden'))
   // Obnova: vse postavke naročnine so cene Scouta (obramba v globino).
@@ -12991,7 +13064,8 @@ preveri(
     shipping_cost: { shipping_rate: 'shr_1' },
   }
   const { args, tarifa, drzava } = trgovinaIzSeje(seja)
-  preveri('trgovina stripe: zneski seje', args.p_postavke === 5000 && args.p_dostava === 390 && args.p_ddv === 972 && args.p_skupaj === 5390)
+  preveri('trgovina stripe: zneski seje', args.p_postavke === 5000 && args.p_dostava === 390 && args.p_ddv === 972 && args.p_skupaj === 5390 && args.p_popust === 0)
+  preveri('trgovina stripe: popust iz seje', trgovinaIzSeje({ ...seja, total_details: { ...seja.total_details, amount_discount: 2000 } }).args.p_popust === 2000)
   preveri('trgovina stripe: prejemnik in naslov iz dostave', args.p_ime === 'Prejemnik' && args.p_naslov?.city === 'Kranj' && args.p_email === 'kupec@example.com')
   preveri('trgovina stripe: tarifa in država', tarifa === 'shr_1' && drzava === 'SI' && args.p_payment_intent === 'pi_1')
   const star = trgovinaIzSeje({ id: 'cs_2', shipping_details: { name: 'X', address: { country: 'AT' } }, shipping_cost: { shipping_rate: { id: 'shr_2' } } })
@@ -13015,6 +13089,10 @@ preveri(
   const en = trgovinaMail('poslano', { ...n, jezik: 'en', stanje: 'poslano' }, 'https://shop.slff.eu')
   preveri('trgovina mail: poslano en s sledilno', en.naslov.includes('on its way') && en.besedilo.includes('RR123456789SI') && en.besedilo.includes('posta.si') && !/Pozdravljeni|naročilo/.test(en.besedilo))
   preveri('trgovina mail: en zneski', trgovinaMail('potrditev', { ...n, jezik: 'en' }, 'x').besedilo.includes('€53.90'))
+  preveri('trgovina mail: popust le, ko je bil (sl, en)',
+    !sl.besedilo.includes('Popust') &&
+    trgovinaMail('potrditev', { ...n, znesek_skupaj: 3390 }, 'x').besedilo.includes('Popust: −20,00 €') &&
+    trgovinaMail('potrditev', { ...n, jezik: 'en', znesek_skupaj: 3390 }, 'x').besedilo.includes('Discount: −€20.00'))
   preveri('trgovina mail: telefon in različica pogojev kot v trgovini', trgovinaTelefonMail === trgovinaTelefon && trgovinaVerzijaMail === trgovinaVerzija)
   // Trajni nosilec: potrditev nosi celoten pouk o odstopu in vzorčni obrazec v jeziku naročila.
   const enP = trgovinaMail('potrditev', { ...n, jezik: 'en' }, 'https://shop.slff.eu')
@@ -13022,6 +13100,62 @@ preveri(
     [[sl, trgovinaSL, 'Pogoji z dne'], [enP, trgovinaEN, 'Terms dated']].every(([m, B, z]) =>
       B['pogoji.s6.besedilo'].split('\n\n').every((o) => m.besedilo.includes(o)) &&
       m.besedilo.includes(B['odstop.vzorec']) && m.besedilo.includes(`${z} ${trgovinaVerzija}`) && m.besedilo.includes(trgovinaTelefon)))
+
+  // Personalizacija in boni (trgovina-posta, stripe-webhook/trgovina.ts, trgovina-nakup/izdelki.ts).
+  const np = {
+    ...n, naslov: null,
+    postavke: [
+      { ime: 'Majica z imenom ekipe (Črna / M)', cena: 2500, doplacilo: 800, kolicina: 1, personalizacija: { ime: 'Kranjski Tigri', stevilka: 10 }, po_narocilu: true },
+      { ime: 'Darilni bon (20 €)', cena: 2000, doplacilo: 0, kolicina: 1, personalizacija: null, digitalni: true },
+    ],
+  }
+  const pm = trgovinaMail('potrditev', np, 'https://shop.slff.eu')
+  preveri('trgovina mail: personalizacija, doplačilo, rok izdelave, bon posebej',
+    pm.besedilo.includes('1 × Majica z imenom ekipe (Črna / M): Kranjski Tigri · 10 — 33,00 €') &&
+    pm.besedilo.includes('1–2 tednih') && pm.besedilo.includes('posebnem mailu') && !pm.besedilo.includes('Naslov za dostavo'))
+  const bm = trgovinaMail('bon', np, 'https://shop.slff.eu', [{ koda: 'SLFF-ABCD-EFGH', znesek: 2000, velja_do: '2027-10-18T10:00:00Z' }])
+  const be = trgovinaMail('bon', { ...np, jezik: 'en' }, 'https://shop.slff.eu', [{ koda: 'SLFF-ABCD-EFGH', znesek: 2000, velja_do: '2027-10-18T10:00:00Z' }])
+  preveri('trgovina mail: bon sl/en (koda, znesek, rok, enkratna, trgovina)',
+    bm.besedilo.includes('SLFF-ABCD-EFGH — vrednost 20,00 €, velja do 18. 10. 2027') && bm.besedilo.includes('enkratna') && bm.besedilo.includes('https://shop.slff.eu') &&
+    be.besedilo.includes('SLFF-ABCD-EFGH — value €20.00, valid until 18 Oct 2027') && be.naslov.includes('gift card') && !bm.besedilo.includes('Odstop od pogodbe'))
+  const kode = Array.from({ length: 50 }, novaKoda)
+  preveri('trgovina bon: koda SLFF-XXXX-XXXX brez 0/O/1/I, različne', kode.every((k) => /^SLFF-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/.test(k)) && new Set(kode).size === 50)
+  preveri('trgovina bon: zgoščena koda je sha256 hex', /^[0-9a-f]{64}$/.test(await zgostiKodo('SLFF-ABCD-EFGH')))
+  preveri('trgovina bon: stalni id kupona po enoti', idKupona('AB12CD34', 5, 2) === 'slff-shop-bon-AB12CD34-5-2')
+  preveri('trgovina bon: enote le digitalnih postavk',
+    JSON.stringify(enoteBonov([{ id: 1, cena: 2000, kolicina: 2, digitalni: true }, { id: 2, cena: 2500, kolicina: 1, digitalni: false }])) === '[[1,1,2000],[1,2,2000]]')
+  preveri('trgovina bon: kode seje iz popustov (id ali objekt, brez podvojenih)',
+    kodeSeje({ total_details: { breakdown: { discounts: [{ discount: { promotion_code: 'promo_1' } }] } }, discounts: [{ promotion_code: { id: 'promo_1' } }, { coupon: 'c' }] }).join() === 'promo_1')
+  preveri('trgovina stripe: postavke in boni pod istim izdelkom trgovine', IZDELEK_TRGOVINE === IZDELEK_BONOV)
+  {
+    const zdaj = Date.parse('2026-10-18T12:00:00Z')
+    const v = vnosBona({ za: 'scout', odstotek: 20, uporab: 10, do: '2026-12-31' }, zdaj)
+    preveri('trgovina-boni: vnos (odstotek ali znesek, uporab 1–1000, rok v prihodnosti do 2 let)',
+      v?.za === 'scout' && v.odstotek === 20 && v.znesek === null && v.do === Date.parse('2026-12-31T23:59:59Z') / 1000
+      && vnosBona({ za: 'preverjen', znesek: 500, uporab: 1, do: '2027-01-01' }, zdaj)?.znesek === 500
+      && [
+        { za: 'shop', odstotek: 20, uporab: 1, do: '2026-12-31' },
+        { za: 'scout', uporab: 1, do: '2026-12-31' },
+        { za: 'scout', odstotek: 20, znesek: 100, uporab: 1, do: '2026-12-31' },
+        { za: 'scout', odstotek: 101, uporab: 1, do: '2026-12-31' },
+        { za: 'scout', odstotek: 2.5, uporab: 1, do: '2026-12-31' },
+        { za: 'scout', znesek: 0, uporab: 1, do: '2026-12-31' },
+        { za: 'scout', odstotek: 20, uporab: 0, do: '2026-12-31' },
+        { za: 'scout', odstotek: 20, uporab: 1001, do: '2026-12-31' },
+        { za: 'scout', odstotek: 20, uporab: 1, do: '2026-10-17' },
+        { za: 'scout', odstotek: 20, uporab: 1, do: '2029-01-01' },
+        { za: 'scout', odstotek: 20, uporab: 1, do: '31. 12. 2026' },
+        null,
+      ].every((x) => vnosBona(x, zdaj) === null))
+  }
+  {
+    const { racun: rSl } = await import('../src/i18n/sl/racun.ts')
+    const { racun: rEn } = await import('../src/i18n/en/racun.ts')
+    preveri('zasebnost #trgovina: personalizacija in ime ekipe (sl, en)',
+      rSl.pravno.trgovinaKaj.includes('Besedilo personalizacije') && rSl.pravno.trgovinaKaj.includes('fantasy ekipe')
+      && rEn.pravno.trgovinaKaj.includes('personalisation text') && rEn.pravno.trgovinaKaj.includes('fantasy team name'))
+  }
+  preveri('trgovina stripe: seznam postavk pod gumbom', seznamPostavk([{ ime: 'Majica (Črna / M)', kolicina: 2, opis: 'Ana · 7' }, { ime: 'Bon (20 €)', kolicina: 1, opis: null }]) === '2 × Majica (Črna / M): Ana · 7; 1 × Bon (20 €)')
 }
 
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)

@@ -489,8 +489,8 @@ export type Database = {
           slug: string
           sort_order: number
           source: string
-          source_policy: string | null
           source_league_code: string | null
+          source_policy: string | null
           vir_ime: string | null
           vir_url: string | null
         }
@@ -510,8 +510,8 @@ export type Database = {
           slug: string
           sort_order?: number
           source: string
-          source_policy?: string | null
           source_league_code?: string | null
+          source_policy?: string | null
           vir_ime?: string | null
           vir_url?: string | null
         }
@@ -530,8 +530,8 @@ export type Database = {
           slug?: string
           sort_order?: number
           source?: string
-          source_policy?: string | null
           source_league_code?: string | null
+          source_policy?: string | null
           vir_ime?: string | null
           vir_url?: string | null
         }
@@ -1949,9 +1949,9 @@ export type Database = {
           round_id: number
           source_phase: string | null
           source_round: number | null
-          statistics_status: string
-          statistics_reason: string | null
           source_url: string | null
+          statistics_reason: string | null
+          statistics_status: string
           vir_brez_izida: boolean
           zapisnik_id: string | null
         }
@@ -1969,9 +1969,9 @@ export type Database = {
           round_id: number
           source_phase?: string | null
           source_round?: number | null
-          statistics_status?: string
-          statistics_reason?: string | null
           source_url?: string | null
+          statistics_reason?: string | null
+          statistics_status?: string
           vir_brez_izida?: boolean
           zapisnik_id?: string | null
         }
@@ -1988,9 +1988,9 @@ export type Database = {
           round_id?: number
           source_phase?: string | null
           source_round?: number | null
-          statistics_status?: string
-          statistics_reason?: string | null
           source_url?: string | null
+          statistics_reason?: string | null
+          statistics_status?: string
           vir_brez_izida?: boolean
           zapisnik_id?: string | null
         }
@@ -6101,9 +6101,9 @@ export type Database = {
           played_on: string | null
           round_id: number | null
           round_number: number | null
-          statistics_status: string | null
-          statistics_reason: string | null
           season: string | null
+          statistics_reason: string | null
+          statistics_status: string | null
         }
         ComputedFields: never
         Relationships: [
@@ -7588,19 +7588,6 @@ export type Database = {
       }
     }
     Functions: {
-      apply_historical_statistics_policy: {
-        Args: { p_competition_id: number; p_policy_id: string; p_policy_sha256: string; p_entries: Json }
-        Returns: Json
-      }
-      upsert_unavailable_historical_match: {
-        Args: { p_competition_id: number; p_source_match_id: string; p_policy_id: string; p_policy_sha256: string; p_raw_sha256: string; p_header: Json }
-        Returns: Json
-      }
-      get_installed_historical_statistics_markers: {
-        Args: { p_competition_id: number }
-        Returns: Json
-      }
-
       adaptivni_prag: {
         Args: { p_player_id: number; p_position: string }
         Returns: number
@@ -8030,9 +8017,31 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      apply_fcf_historical_cleanup: {
+        Args: {
+          p_before_image_text: string
+          p_before_sha: string
+          p_main_sha: string
+          p_policy_hashes: Json
+        }
+        Returns: Json
+      }
+      apply_historical_statistics_policy: {
+        Args: {
+          p_competition_id: number
+          p_entries: Json
+          p_policy_id: string
+          p_policy_sha256: string
+        }
+        Returns: Json
+      }
       asistenca_odprta: { Args: { p_goal_id: number }; Returns: boolean }
       asistence_odprte_do: { Args: { p_match_id: number }; Returns: string }
       dan_kroga: { Args: { p_round_id: number }; Returns: string }
+      get_installed_historical_statistics_markers: {
+        Args: { p_competition_id: number }
+        Returns: Json
+      }
       ima_klubski_racun: { Args: { p_team_id: number }; Returns: boolean }
       ime_hisnega_lastnika: {
         Args: { p_competition_id: number; p_id: number }
@@ -8512,6 +8521,14 @@ export type Database = {
       potrdi_soigralca: { Args: { p_id: number }; Returns: string }
       povzetek_rasti: { Args: Record<PropertyKey, never>; Returns: string }
       preklici_moj_zahtevek: { Args: { p_id: number }; Returns: undefined }
+      prepare_dfb_historical_statistics: {
+        Args: { p_manifest: string; p_sha256: string }
+        Returns: Json
+      }
+      prepare_fcf_historical_cleanup: {
+        Args: { p_main_sha: string; p_policy_hashes: Json }
+        Returns: Json
+      }
       prepovedane_besede: { Args: { p_besedilo: string }; Returns: string }
       prepovedano_besedilo: { Args: { p_besedilo: string }; Returns: string }
       preracunaj_cene: {
@@ -8791,6 +8808,15 @@ export type Database = {
       recompute_round_scores: {
         Args: { p_round_id: number }
         Returns: undefined
+      }
+      reconcile_dfb_current_players: {
+        Args: {
+          p_manifest: string
+          p_plan: string
+          p_plan_sha256: string
+          p_sha256: string
+        }
+        Returns: Json
       }
       roster_je_veljaven: { Args: { p_team_id: number }; Returns: boolean }
       scout_igralec: { Args: { p_player_id: number }; Returns: Json }
@@ -9089,18 +9115,45 @@ export type Database = {
             }
             Returns: number
           }
+      trgovina_admin_boni: { Args: Record<PropertyKey, never>; Returns: Json }
       trgovina_admin_izdelki: {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
       trgovina_admin_narocila: { Args: { p_stanje?: string }; Returns: Json }
       trgovina_admin_narocilo: { Args: { p_id: number }; Returns: Json }
+      trgovina_admin_nova_serija: {
+        Args: { p_postavke: number[] }
+        Returns: Json
+      }
       trgovina_admin_poslano: {
         Args: { p_narocilo: number; p_sledilna: string }
         Returns: Json
       }
+      trgovina_admin_serija: { Args: { p_id: number }; Returns: Json }
+      trgovina_admin_serija_stanje: {
+        Args: { p_id: number; p_stanje: string }
+        Returns: Json
+      }
+      trgovina_admin_serije: { Args: Record<PropertyKey, never>; Returns: Json }
       trgovina_admin_shrani_izdelek: { Args: { p: Json }; Returns: number }
+      trgovina_admin_shrani_personalizacijo: {
+        Args: {
+          p_doplacilo: number
+          p_izdelek: number
+          p_obvezna: boolean
+          p_vrsta: string
+        }
+        Returns: undefined
+      }
       trgovina_admin_shrani_razlicico: { Args: { p: Json }; Returns: number }
+      trgovina_admin_za_tisk: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      trgovina_bon_porabljen: { Args: { p_promocija: string }; Returns: string }
+      trgovina_bon_poslan: { Args: { p_narocilo: number }; Returns: undefined }
+      trgovina_boni_narocila: { Args: { p_narocilo: number }; Returns: Json }
       trgovina_iz_placila: {
         Args: {
           p_checkout: string
@@ -9111,6 +9164,7 @@ export type Database = {
           p_ime: string
           p_naslov: Json
           p_payment_intent: string
+          p_popust?: number
           p_postavke: number
           p_skupaj: number
         }
@@ -9122,6 +9176,8 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      trgovina_moja_znacka: { Args: Record<PropertyKey, never>; Returns: Json }
+      trgovina_moji_prvaki: { Args: Record<PropertyKey, never>; Returns: Json }
       trgovina_narocilo_seje: {
         Args: { p_checkout: string; p_odjemalec: string; p_user: string }
         Returns: Json
@@ -9146,6 +9202,18 @@ export type Database = {
         Args: { p_checkout: string; p_narocilo: number }
         Returns: undefined
       }
+      trgovina_vracilo: { Args: { p_payment_intent: string }; Returns: Json }
+      trgovina_zabelezi_bon: {
+        Args: {
+          p_koda_hash: string
+          p_koda_konec: string
+          p_postavka: number
+          p_stripe_promocija: string
+          p_velja_do: string
+          p_zaporedje: number
+        }
+        Returns: string
+      }
       tuja_postava: {
         Args: { p_round: number; p_team: number }
         Returns: {
@@ -9166,6 +9234,17 @@ export type Database = {
           mnozitelj: number
           player_id: number
         }[]
+      }
+      upsert_unavailable_historical_match: {
+        Args: {
+          p_competition_id: number
+          p_header: Json
+          p_policy_id: string
+          p_policy_sha256: string
+          p_raw_sha256: string
+          p_source_match_id: string
+        }
+        Returns: Json
       }
       uradne_odsotnosti_najvec: {
         Args: Record<PropertyKey, never>
@@ -9381,7 +9460,8 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
@@ -9405,7 +9485,8 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
@@ -9429,7 +9510,8 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    keyof DefaultSchema["Enums"] | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }

@@ -5,7 +5,8 @@ import { preveriOdobritev, preveriPosnetek, sha } from './vklopi-dfb-regijo.mjs'
 export function offlineFetch(documents,network){
  return async(input,options={})=>{
   const raw=typeof input==='string'?input:input instanceof URL?input.href:input.url,url=new URL(raw)
-  if(url.hostname==='dfb.de'||url.hostname.endsWith('.dfb.de')){
+  const hostname=url.hostname.replace(/\.+$/,'')
+  if(hostname==='dfb.de'||hostname.endsWith('.dfb.de')){
    if(url.origin!=='https://datencenter.dfb.de'||url.username||url.password||url.hash||(options.method??input.method??'GET')!=='GET'||!documents.has(raw))throw Error(`Offline DFB: missing/unapproved URL or method ${raw}`)
    return new Response(documents.get(raw),{status:200,headers:{'Content-Type':'text/html; charset=utf-8'}})
   }

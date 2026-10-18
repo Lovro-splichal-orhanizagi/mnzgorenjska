@@ -25,6 +25,15 @@ on:
         type: string
         required: true
 
+      repair_current_players:
+        description: Samo pregledani popravek29 neaktivnih trenutnih igralcev, brez ponovnega uvoza/vklopa
+        type: boolean
+        default: false
+      repair_plan_sha256:
+        description: Izrecni pregledani SHA zaklenjenega načrta29 igralcev
+        type: string
+        required: false
+
 permissions:
   contents: read
   actions: read
@@ -41,6 +50,8 @@ jobs:
       ARCHIVE_RUN: ${{ inputs.archive_run }}
       CURRENT_RUN: ${{ inputs.current_run }}
       APPROVED_SHA: ${{ inputs.approved_sha256 }}
+      REPAIR_CURRENT: ${{ inputs.repair_current_players }}
+      REPAIR_PLAN_SHA: ${{ inputs.repair_plan_sha256 }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -56,11 +67,19 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p release
+          if [ "$REPAIR_CURRENT" = true ]; then
+            if [ "$LIGA" != de-regionalliga-suedwest ] || [ "$GITHUB_REF" != refs/heads/main ] || [ "$SOURCE_COMMIT" != "$GITHUB_SHA" ]; then exit 1; fi
+          elif [ -n "$REPAIR_PLAN_SHA" ]; then exit 1; fi
           node scripts/preveri-zagona-dfb-regije.mjs "$LIGA" "$SOURCE_COMMIT" "$ARCHIVE_RUN" "$CURRENT_RUN" release/jobs.json audit/archive audit/current
       - name: Ponovi vse izvorne bajte brez omrežja
         run: |
           set -euo pipefail
           node scripts/vklopi-dfb-regijo.mjs prepare "$LIGA" audit/archive audit/current "$SOURCE_COMMIT" release/jobs.json release/manifest.json | tee release/summary.json
+      - name: Preveri zaklenjeni načrt29 in nespremenjenih612 izvornih dejstev — brez poverilnic
+        if: inputs.repair_current_players
+        run: |
+          set -euo pipefail
+          node scripts/reconcile-dfb-current-players.mjs verify release/manifest.json "$APPROVED_SHA" "$REPAIR_PLAN_SHA" | tee release/repair-proof.json
       - name: Počakaj na starejše uvoze
         if: inputs.approved_sha256 != ''
         env:
@@ -68,13 +87,22 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node scripts/cakaj-na-uvoze.mjs --liga "$LIGA"
-      - name: Uvoz samo iz odobrenih zajemov in preverba brez vklopa
+      - name: Odobren bootstrap in uvoz samo iz zaprtih zajemov — brez vklopa
+        if: ${{ !inputs.repair_current_players }}
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           set -euo pipefail
           node scripts/uvozi-dfb-regijo.mjs release/manifest.json "$APPROVED_SHA" audit/archive audit/current release/jobs.json | tee release/import.txt
+      - name: Atomski aktivni popravek29 in celotna nespremenjena native preverba — brez vklopa
+        if: inputs.repair_current_players
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          node scripts/reconcile-dfb-current-players.mjs apply release/manifest.json "$APPROVED_SHA" "$REPAIR_PLAN_SHA" | tee release/reconciliation.json
       - name: Pregledni manifest in rezultat
         if: always()
         uses: actions/upload-artifact@v4
