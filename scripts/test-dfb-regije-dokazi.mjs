@@ -19,7 +19,7 @@ test('offline DFB fetch is closed; database HTTP still delegates normally',async
  let network=0
  const url='https://datencenter.dfb.de/competitions/test',fetch=offline.offlineFetch(new Map([[url,'body']]),async()=>{network++;return new Response('db')})
  assert.equal(await(await fetch(url)).text(),'body');assert.equal(network,0)
- for(const u of [url+'/missing','http://datencenter.dfb.de/competitions/test','https://datencenter.dfb.de:443/other','https://www.dfb.de/missing'])await assert.rejects(()=>fetch(u))
+ for(const u of [url+'/missing','http://datencenter.dfb.de/competitions/test','https://datencenter.dfb.de:443/other','https://www.dfb.de/missing','https://datencenter.dfb.de./missing','https://datencenter.dfb.de%2e/missing','https://www.dfb.de./missing','https://dfb.de../missing'])await assert.rejects(()=>fetch(u))
  await assert.rejects(()=>fetch(url,{method:'POST'}))
  assert.equal(network,0);assert.equal(await(await fetch('https://api.slff.eu/rest/v1/players')).text(),'db');assert.equal(network,1)
 })
