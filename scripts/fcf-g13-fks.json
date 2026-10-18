@@ -1,5 +1,35 @@
 [
   [
+    "private_historical_statistics.installed_policies",
+    "competition_id",
+    "competitions"
+  ],
+  [
+    "private_historical_statistics.markers",
+    "away_team_id",
+    "teams"
+  ],
+  [
+    "private_historical_statistics.markers",
+    "home_team_id",
+    "teams"
+  ],
+  [
+    "private_historical_statistics.markers",
+    "round_id",
+    "rounds"
+  ],
+  [
+    "private_historical_statistics.release_authorizations",
+    "competition_id",
+    "competitions"
+  ],
+  [
+    "private_historical_statistics.source_club_bindings",
+    "bound_team_id",
+    "teams"
+  ],
+  [
     "public.anonimizirani_igralci",
     "player_id",
     "players"
