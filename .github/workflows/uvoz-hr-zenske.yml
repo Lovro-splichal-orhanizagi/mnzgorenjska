@@ -1,0 +1,135 @@
+name: Uvoz HNS zena
+run-name: Uvoz HNS zena hr-prva-hnlz
+
+# Every mode verifies the closed source packet before database credentials.
+# Activation independently repeats every canonical gate in one locked transaction.
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Prepare, import, check or guarded activation of this one league'
+        required: true
+        type: choice
+        options: [prepare, import, check, activate]
+      reviewed_sha:
+        description: 'Exact reviewed main commit, also recorded in the packet'
+        required: true
+        type: string
+      release_id:
+        description: 'Draft evidence release ID in this repository'
+        required: true
+        type: string
+      asset_id:
+        description: 'Immutable hns-women-<reviewed SHA>.tar.gz asset ID'
+        required: true
+        type: string
+      archive_sha256:
+        description: 'Reviewed compressed archive SHA-256'
+        required: true
+        type: string
+      manifest_sha256:
+        description: 'Reviewed manifest SHA-256'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: uvoz-lige-hr-prva-hnlz
+  cancel-in-progress: false
+
+jobs:
+  evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      manifest_sha256: ${{ steps.proof.outputs.manifest_sha256 }}
+      reviewed_sha: ${{ steps.proof.outputs.reviewed_sha }}
+    steps:
+      - name: Require reviewed main
+        env:
+          REVIEWED_SHA: ${{ inputs.reviewed_sha }}
+        run: |
+          set -euo pipefail
+          [[ "$GITHUB_REF" == refs/heads/main ]]
+          [[ "$REVIEWED_SHA" =~ ^[a-f0-9]{40}$ && "$GITHUB_SHA" == "$REVIEWED_SHA" ]]
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Verify draft asset and replay every original source byte
+        id: proof
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REVIEWED_SHA: ${{ inputs.reviewed_sha }}
+          RELEASE_ID: ${{ inputs.release_id }}
+          ASSET_ID: ${{ inputs.asset_id }}
+          ARCHIVE_SHA256: ${{ inputs.archive_sha256 }}
+          MANIFEST_SHA256: ${{ inputs.manifest_sha256 }}
+        run: >-
+          node scripts/hr-zenske-izdaja.mjs stage
+          --reviewed-sha "$REVIEWED_SHA" --release-id "$RELEASE_ID" --asset-id "$ASSET_ID"
+          --archive-sha256 "$ARCHIVE_SHA256" --manifest-sha256 "$MANIFEST_SHA256"
+          --evidence-dir hns-release-evidence --packet-dir "$RUNNER_TEMP/hns-reader-packet"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hns-reviewed-source-evidence
+          path: hns-release-evidence/
+          if-no-files-found: error
+          retention-days: 7
+
+  writer:
+    needs: evidence
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    permissions:
+      contents: read
+      actions: write
+    env:
+      REVIEWED_SHA: ${{ needs.evidence.outputs.reviewed_sha }}
+      MANIFEST_SHA256: ${{ needs.evidence.outputs.manifest_sha256 }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.evidence.outputs.reviewed_sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - uses: actions/download-artifact@v4
+        with:
+          name: hns-reviewed-source-evidence
+          path: hns-release-evidence
+      - name: Revalidate retained archive before obtaining database credentials
+        env:
+          RELEASE_ID: ${{ inputs.release_id }}
+          ASSET_ID: ${{ inputs.asset_id }}
+          ARCHIVE_SHA256: ${{ inputs.archive_sha256 }}
+        run: >-
+          node scripts/hr-zenske-izdaja.mjs verify
+          --reviewed-sha "$REVIEWED_SHA" --manifest-sha256 "$MANIFEST_SHA256"
+          --release-id "$RELEASE_ID" --asset-id "$ASSET_ID" --archive-sha256 "$ARCHIVE_SHA256"
+          --evidence-dir hns-release-evidence --packet-dir "$RUNNER_TEMP/hns-writer-packet"
+      - name: Wait for older HR writers
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/cakaj-na-uvoze.mjs --drzava HR
+      - name: Run the selected guarded mode with the verified closed packet
+        env:
+          MODE: ${{ inputs.mode }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: >-
+          node scripts/hr-zenske-izdaja.mjs "$MODE"
+          --reviewed-sha "$REVIEWED_SHA" --manifest-sha256 "$MANIFEST_SHA256"
+          --packet-dir "$RUNNER_TEMP/hns-writer-packet"

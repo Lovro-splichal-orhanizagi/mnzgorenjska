@@ -82,6 +82,9 @@ jobs:
       - name: FCF native target offline planning (source-free)
         run: node --test scripts/test-fcf-target-native-plan.mjs scripts/test-fcf-target-native-adapter.mjs scripts/test-fcf-target-offline.mjs
 
+      - name: HNS public parser, packet, runtime and activation guards
+        run: npm run test:hns-women
+
       - name: Tipi
         run: npx tsc --noEmit
 
@@ -156,6 +159,11 @@ jobs:
       - run: npm ci --ignore-scripts
       # Zagon same baze preveri celotno verigo migracij na praznem Postgresu.
       - run: npx --yes supabase@2.117.0 db start
+      - name: HNS canonical release, target ACLs and waiting writers
+        env:
+          SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska
+          HNS_WOMEN_DISPOSABLE_TEST: '1'
+        run: npm run test:hns-women-ci
       - name: Germany activation guard in fresh database
         run: node scripts/test-vklop-nemcije-sql.mjs
       - name: Regional DFB gate and concurrent writes

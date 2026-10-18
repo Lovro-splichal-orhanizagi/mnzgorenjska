@@ -1,3 +1,5 @@
+import {validateHnsWomenClubBindings} from '../viri/hns-zenske-binding.mjs'
+import {assertHnsWomenOfflineAuthority} from '../hr-zenske-offline.mjs'
 import {getHistoricalStatisticsPolicy,validateInstalledHistoricalStatisticsMarkers,classifyHistoricalStatistics} from './historical-statistics-policy.mjs'
 
 /** Normal CLI cannot bootstrap or recover partial policies; dedicated packet writers do that atomically. */
@@ -9,7 +11,14 @@ export async function loadHistoricalStatisticsImportContext(db,original,{sourceO
   const {data,error}=await db.rpc('get_installed_historical_statistics_markers',{p_competition_id:competition.id})
   if(error)throw Error(`historical import: cannot verify installed markers: ${error.message}`)
   const installedHistoricalMarkers=validateInstalledHistoricalStatisticsMarkers({competition,binding:data})
-  return {competition:{...competition,firstFantasyPlayedOn:installedHistoricalMarkers.firstFantasyPlayedOn},installedHistoricalMarkers}
+  const prepared={...competition,firstFantasyPlayedOn:installedHistoricalMarkers.firstFantasyPlayedOn}
+  if(policy.provider==='hns') {
+    const {data:context,error:nativeError}=await db.rpc('get_hns_women_import_context',{p_competition_id:competition.id})
+    if(nativeError)throw Error(`HNS women native context: ${nativeError.message}`)
+    prepared.reviewedClubBindings=validateHnsWomenClubBindings(competition,context,installedHistoricalMarkers.markers)
+    if(competition.active!==true)assertHnsWomenOfflineAuthority(prepared)
+  }
+  return {competition:prepared,installedHistoricalMarkers}
 }
 
 /** Before per-match derivation/writes: approved unavailable reports belong only to the atomic packet writer. */
