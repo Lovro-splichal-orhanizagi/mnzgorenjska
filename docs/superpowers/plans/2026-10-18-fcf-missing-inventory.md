@@ -10,7 +10,7 @@
 
 **Spec:** `docs/superpowers/specs/2026-10-18-fcf-missing-inventory-design.md`.
 
-**Implementation checkpoint (2026-10-18):** Tasks1–4 are implemented in the isolated branch and await root's fresh independent review. Task5 is held until that review/followup; actual target main bb3106f has not been merged here. No live source, real claim, staging mutation, dispatch or production action has run. New suites remain explicit review commands until Task5 registers the final bridge regression set.
+**Implementation checkpoint (2026-10-18):** Tasks1–4 and their three reviewed fixes are independently approved. Actual main a144e8bf merged as93b5e0e8. Task5 adds final branded target admission/native data access and explicit CI/package registration; it awaits fresh root integration review before any dispatch. Capture source commit A remains distinct from later reviewed packet/writer execution commit B. No live source, real claim, staging mutation, dispatch or production action has run.
 
 ## Global constraints
 

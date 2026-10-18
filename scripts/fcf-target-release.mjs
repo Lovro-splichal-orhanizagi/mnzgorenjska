@@ -1,7 +1,7 @@
 // Separate v2 target compiler. No source/DB transport, importer or activation capability.
 import {createHash} from 'node:crypto'
 import {getHistoricalStatisticsPolicy,historicalStatisticsPolicySha256} from './lib/historical-statistics-policy.mjs'
-import {isVerifiedFcfCleanupEvidence} from './fcf-target-evidence.mjs'
+import {isVerifiedFcfCleanupEvidence,getFcfCapturedTargetData} from './fcf-target-evidence.mjs'
 import {FCF_HISTORICAL_GROUPS,proveFcfCurrentReleaseDocument,validateFcfCurrentReleaseCalendar} from './fcf-historical-release.mjs'
 import {fcfFinalAuditScope} from './fcf-final-audit.mjs'
 const ids=Object.freeze({'es-ct-segona-g1':783,'es-ct-tercera-g2':790,'es-ct-tercera-g9':797})
@@ -37,11 +37,11 @@ function cleanupBinding(e,now){
  if(typeof e.beforeImageText!=='string'||hash(e.beforeImageText)!==e.beforeSha256)fail('opaque cleanup TEXT/SHA differs')
  return{phase:e.phase,sourceCommit:e.sourceCommit,preparedUTC:e.preparedUTC,beforeImageText:e.beforeImageText,beforeSha256:e.beforeSha256,policyHashes:e.policyHashes,originals:e.originals.map(({html,...descriptor})=>descriptor),prepareArtifact:e.prepareArtifact,appliedReceipt:e.appliedReceipt}
 }
-function targetDocuments(targetSlug,e){
- // The separately owned new-inventory bridge must authenticate terminal parent,
- // offline audit, final receipt and consumption before a future reviewed admission.
+function targetDocuments(targetSlug,e,now){
+ // The new branch requires terminal parent, offline audit, final receipt and
+ // consumed source claim through the authenticated reader-issued capability.
  // Never relabel its workflow or trust a caller-written verified flag here.
- if(e?.evidenceKind==='fcf-missing-target-inventory')fail('new inventory evidence admission is not installed; authenticated bridge required')
+ if(e?.evidenceKind==='fcf-missing-target-inventory'){try{return new Map(getFcfCapturedTargetData({targetEvidence:e,targetSlug,now}).documents.map(d=>[d.id,d]))}catch(error){fail(`inventory target admission failed: ${error.message}`)}}
  if(!e||e.evidenceKind!=='fcf-target-cache-audit'||e.targetSlug!==targetSlug||Object.keys(e).sort().join(',')!=='competition,documents,evidenceKind,targetSlug'||!Array.isArray(e.documents)||e.documents.length!==240)fail('one exact cache/audit target evidence set required')
  const scope=fcfFinalAuditScope(targetSlug),[start,end]=scope.code.split('-').map(Number),documents=new Map()
  for(const d of e.documents){
@@ -53,7 +53,7 @@ function targetDocuments(targetSlug,e){
 function compile(input={},auditedUTC){
  const{targetSlug,sourceCommit,targetEvidence,cleanupEvidence,databaseInventory,now=Date.now()}=input
  if(!FCF_HISTORICAL_GROUPS.includes(targetSlug)||!COMMIT.test(sourceCommit??'')||!Number.isFinite(now))fail('exact allowlisted target/main/audit clock required')
- const binding=cleanupBinding(cleanupEvidence,now),{inventory,target}=validateFcfTargetReleaseInventory({targetSlug,databaseInventory,cleanupPhase:binding.phase,now}),documents=targetDocuments(targetSlug,targetEvidence)
+ const binding=cleanupBinding(cleanupEvidence,now),{inventory,target}=validateFcfTargetReleaseInventory({targetSlug,databaseInventory,cleanupPhase:binding.phase,now}),documents=targetDocuments(targetSlug,targetEvidence,now)
  auditedUTC??=new Date(now).toISOString()
  const audit=Date.parse(auditedUTC)
  if(!Number.isFinite(audit)||audit>now||now-audit>24*3600000)fail('target packet audit is stale/future')
@@ -73,7 +73,8 @@ function compile(input={},auditedUTC){
  if(target.nativeImportedIDs.some(id=>byId.get(`es${id}`)?.statisticsStatus==='pending'||!byId.has(`es${id}`)))fail('known imported target report cannot be missing or downgraded to pending')
  const r6=fixtures.filter(f=>f.round===6)
  if(r6.length!==8||r6.some(f=>f.statisticsStatus!=='pending')||r6.map(f=>f.date).sort()[0]!==c.firstFantasyPlayedOn)fail('genuine future first target fantasy R6 required')
- const canonical={competitionId:c.id,competitionSlug:targetSlug,sourceCode:scope.code,season:'2026/27',firstFantasyPlayedOn:c.firstFantasyPlayedOn,policyId:policy.id,policySha256:historicalStatisticsPolicySha256(policy),...validateFcfCurrentReleaseCalendar(fixtures),fixtures}
+ const admitted=targetEvidence.evidenceKind==='fcf-missing-target-inventory'?getFcfCapturedTargetData({targetEvidence,targetSlug,now}):null
+ const canonical={...(admitted?{sourceEvidence:admitted.binding}:{}),competitionId:c.id,competitionSlug:targetSlug,sourceCode:scope.code,season:'2026/27',firstFantasyPlayedOn:c.firstFantasyPlayedOn,policyId:policy.id,policySha256:historicalStatisticsPolicySha256(policy),...validateFcfCurrentReleaseCalendar(fixtures),fixtures}
  const manifest={schemaVersion:2,kind:'fcf-current-target-release',targetSlug,sourceCommit,auditedUTC,cleanupBinding:binding,databaseInventory:inventory,target:canonical},manifestText=JSON.stringify(manifest)
  if(Buffer.byteLength(manifestText)>8*1024*1024)fail('bounded target canonical manifest size exceeded')
  return{manifestText,manifestSha256:hash(manifestText)}

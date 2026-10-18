@@ -115,3 +115,6 @@ export function readFcfCleanupEvidence(input){
 }
 /** Consumers must receive the reader's object, never an asserted verified/phase flag. */
 export const isVerifiedFcfCleanupEvidence=value=>!!value&&verifiedCleanup.has(value)
+
+// Explicit new protocol only; no legacy cache evidence is branded by this export.
+export {readFcfCapturedTargetEvidence,composeFcfCapturedTargetEvidence,getFcfCapturedTargetData} from './fcf-missing-inventory-evidence.mjs'

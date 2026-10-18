@@ -1,10 +1,10 @@
 // Explicit staged/continuation/final raw evidence protocols. No network or DB client.
 import {historicalStatisticsPolicySha256 as hash} from './lib/historical-statistics-policy.mjs'
 import {validateFcfMissingInventoryPlan,deriveFcfInventoryHeader,validateFcfInventoryHeaders} from './fcf-missing-inventory-plan.mjs'
-import {requireFcfInventoryConsumption} from './fcf-missing-inventory-claim.mjs'
+import {requireFcfInventoryConsumption,readFcfInventoryExecutionClaim,readFcfInventoryConsumptionArtifact} from './fcf-missing-inventory-claim.mjs'
 import {proveFcfCurrentReleaseDocument,validateFcfCurrentReleaseCalendar} from './fcf-historical-release.mjs'
 import {inventoryFail as fail,exactKeys,rawSha256,jsonBytes,validUTC,frozenJSON,verifyInventoryExecution,readInventoryZip,nativeId} from './fcf-missing-inventory-artifact.mjs'
-const stages=new WeakMap(),children=new WeakMap(),continuations=new WeakMap(),finalReceipts=new WeakMap(),finals=new WeakMap(),audited=new WeakMap()
+const stages=new WeakMap(),children=new WeakMap(),continuations=new WeakMap(),finalReceipts=new WeakMap(),finals=new WeakMap(),audited=new WeakMap(),targets=new WeakMap()
 const equal=(a,b)=>hash(a)===hash(b),clone=value=>structuredClone(value)
 const steps=['Capture missing target inventory','Retain complete target inventory','Audit retained target inventory offline','Retain target inventory offline audit']
 const manifestKeys='schemaVersion kind status statisticsAudit preset targetSlug competitionId sourceCode season planSha256 childPlanSha256 sourceCommit execution claimBinding consumptionBinding seedBinding policyHashes limits maximumSourceGETs priorSourceGETs actualSourceGETs firstSourceUTC lastCompletedUTC startedUTC endedUTC stopReason attempts documents'.split(' ')
@@ -80,7 +80,7 @@ function readChild(input,diagnostic=false){
  }
  if(files.size!==expectedNames.size||[...files.keys()].some(name=>!expectedNames.has(name)))fail('unreferenced or missing artifact member')
  validateFcfInventoryHeaders({targetSlug:child.targetSlug,headers,complete:!diagnostic})
- return{manifest:clone(m),documents,binding,plan,consumption,child,now,input}
+ return{manifest:clone(m),documents,binding,plan:clone(plan),consumption,child,now,input}
 }
 export function readFcfMissingInventoryStagingArtifact(input){const ctx=readChild(input),m=ctx.manifest,proof=frozenJSON({kind:'fcf-missing-inventory-staged-proof',targetSlug:m.targetSlug,planSha256:m.planSha256,statisticsAudit:'not-run',binding:clone(ctx.binding),actualSourceGETs:m.actualSourceGETs,firstSourceUTC:m.firstSourceUTC,lastCompletedUTC:m.lastCompletedUTC});stages.set(proof,ctx);return proof}
 export function auditFcfMissingInventoryOffline({stagingProof,policyHashes,now=Date.now()}){const ctx=stages.get(stagingProof);if(!ctx||!equal(policyHashes,ctx.plan.policyHashes)||!Number.isFinite(now))fail('authenticated staged inventory/current policies required');const {fixtures,calendar}=prove(ctx,now),m=ctx.manifest;return frozenJSON({schemaVersion:1,kind:'fcf-missing-inventory-offline-audit',status:'passed',targetSlug:m.targetSlug,sourceCommit:m.sourceCommit,planSha256:m.planSha256,childPlanSha256:m.childPlanSha256,auditedUTC:new Date(now).toISOString(),execution:clone(m.execution),inventoryBinding:clone(ctx.binding),policyHashes:clone(policyHashes),canonicalSha256:hash(fixtures),calendarSha256:hash(calendar)})}
@@ -115,8 +115,8 @@ export function readFcfMissingInventoryFinalReceipt(input){const {plan,claimProo
  if(input.run.status!=='completed'||expected.runId!==p.runId||expected.runAttempt!=='1')fail('terminal reserved parent required')
  const files=readInventoryZip({...input,members:{'manifest.json':8*1024*1024}}),m=jsonBytes(files.get('manifest.json'),'final receipt')
  if(!validUTC(m.completedUTC)||Date.parse(m.completedUTC)>now||!equal(m,buildFcfMissingInventoryFinalReceipt({plan,claimProof,consumptionProof,childRecords,execution:{...m.execution,jobId:binding.jobId},now:Date.parse(m.completedUTC)}))||!m.admissible)fail('immutable parent receipt cannot admit these children')
- const proof=frozenJSON({kind:'fcf-missing-inventory-final-receipt-proof',planSha256:plan.planSha256,runId:p.runId,runAttempt:'1',binding,actualSourceGETs:m.actualSourceGETs,children:clone(m.children)});finalReceipts.set(proof,{manifest:m,childRecords});return proof}
-export function readFcfMissingInventoryArtifact(input){const receipt=finalReceipts.get(input.finalReceipt);if(!receipt||input.run?.status!=='completed')fail('terminal authenticated final receipt required');const ctx=readChild(input);verifyInventoryExecution({...input,jobName:childJob(ctx.manifest.targetSlug),stepNames:steps,artifactName:input.expected.name,runPhase:'inventory-record'});const summary=receipt.manifest.children.find(c=>c.targetSlug===ctx.manifest.targetSlug);if(!summary||summary.status!=='audited'||!equal(summary.inventoryBinding,ctx.binding))fail('selected child is not finally audited');const child=receipt.childRecords.find(c=>c.targetSlug===ctx.manifest.targetSlug),record=children.get(child);if(!record?.audit)fail('complete authenticated offline child audit required');prove(ctx,input.now??Date.now());const proof=frozenJSON({kind:'fcf-missing-inventory-final-proof',targetSlug:ctx.manifest.targetSlug,planSha256:ctx.plan.planSha256,binding:clone(ctx.binding),receiptBinding:clone(input.finalReceipt.binding)});finals.set(proof,{ctx,record});return proof}
+ const proof=frozenJSON({kind:'fcf-missing-inventory-final-receipt-proof',planSha256:plan.planSha256,runId:p.runId,runAttempt:'1',binding,actualSourceGETs:m.actualSourceGETs,children:clone(m.children)});finalReceipts.set(proof,{manifest:clone(m),childRecords:[...childRecords]});return proof}
+export function readFcfMissingInventoryArtifact(input){const receipt=finalReceipts.get(input.finalReceipt);if(!receipt||input.run?.status!=='completed')fail('terminal authenticated final receipt required');const ctx=readChild(input);verifyInventoryExecution({...input,jobName:childJob(ctx.manifest.targetSlug),stepNames:steps,artifactName:input.expected.name,runPhase:'inventory-record'});const summary=receipt.manifest.children.find(c=>c.targetSlug===ctx.manifest.targetSlug);if(!summary||summary.status!=='audited'||!equal(summary.inventoryBinding,ctx.binding))fail('selected child is not finally audited');const child=receipt.childRecords.find(c=>c.targetSlug===ctx.manifest.targetSlug),record=children.get(child);if(!record?.audit)fail('complete authenticated offline child audit required');prove(ctx,input.now??Date.now());const proof=frozenJSON({kind:'fcf-missing-inventory-final-proof',targetSlug:ctx.manifest.targetSlug,planSha256:ctx.plan.planSha256,binding:clone(ctx.binding),receiptBinding:clone(input.finalReceipt.binding)});finals.set(proof,{ctx,record,receipt:receipt.manifest,receiptBinding:clone(input.finalReceipt.binding)});return proof}
 export function readFcfMissingInventoryAuditArtifact({inventoryProof,...input}){const final=finals.get(inventoryProof);if(input.run?.status!=='completed')fail('terminal parent required for final audit');if(!final)fail('final-admitted inventory proof required');const binding=verifyInventoryExecution({...input,jobName:childJob(final.ctx.manifest.targetSlug),stepNames:steps,artifactName:`fcf-missing-inventory-audit-${final.ctx.manifest.targetSlug}-${final.ctx.binding.runId}-1`,runPhase:'inventory-record'});if(!equal(binding,final.record.auditBinding))fail('final offline audit artifact differs');const files=readInventoryZip({...input,members:{'manifest.json':8*1024*1024}});if(!equal(jsonBytes(files.get('manifest.json'),'final offline audit'),final.record.audit))fail('final offline audit bytes differ');prove(final.ctx,input.now??Date.now());const proof=frozenJSON({kind:'fcf-missing-inventory-audited-proof',targetSlug:inventoryProof.targetSlug,inventoryBinding:clone(final.ctx.binding),binding});audited.set(proof,final);return proof}
 /** Authenticated job metadata proves that its sole source step never ran. */
 export function readFcfMissingInventoryNotStartedChild({plan,targetSlug,run,jobs,expected,consumptionProof,now=Date.now()}){
@@ -129,4 +129,58 @@ export function readFcfMissingInventoryFailedAuditArtifact(input){
  const staged=readFcfMissingInventoryStagingArtifact(input),ctx=stages.get(staged),job=input.jobs.find(j=>j.name===childJob(ctx.manifest.targetSlug)),auditSteps=job?.steps.filter(s=>s.name===steps[2])
  if(job?.status!=='completed'||job.conclusion!=='failure'||auditSteps.length!==1||auditSteps[0].status!=='completed'||auditSteps[0].conclusion!=='failure')fail('actual failed offline audit job required')
  const m=ctx.manifest,proof=frozenJSON({kind:'fcf-missing-inventory-failed-audit-proof',targetSlug:m.targetSlug,planSha256:m.planSha256,sourceCommit:m.sourceCommit,runId:ctx.binding.runId,runAttempt:'1',claimCommit:ctx.consumption.claimCommit,status:'failed',actualSourceGETs:m.actualSourceGETs,firstSourceUTC:m.firstSourceUTC,lastCompletedUTC:m.lastCompletedUTC,stopReason:'offline-audit-failed',inventoryBinding:ctx.binding,auditBinding:null});children.set(proof,{ctx});return proof
+}
+
+/** Reusable capability from the matching terminal inventory and offline-audit readers. */
+export function composeFcfCapturedTargetEvidence({inventoryProof,auditProof,targetSlug,now=Date.now()}){
+ const final=finals.get(inventoryProof)
+ if(!final||audited.get(auditProof)!==final||!['es-ct-segona-g1','es-ct-tercera-g9'].includes(targetSlug)||final.ctx.manifest.targetSlug!==targetSlug||!Number.isFinite(now))fail('matching final inventory/audit target admission required')
+ validateFcfMissingInventoryPlan({plan:final.ctx.plan,expectedPlanSha256:final.ctx.manifest.planSha256,now});prove(final.ctx,now)
+ const m=final.ctx.manifest,competition={id:m.competitionId,slug:targetSlug,source:'fcf',source_policy:'es-fcf-reviewed-history-v1',source_league_code:m.sourceCode,active:false,sezona_koledarska:false,firstFantasyPlayedOn:'2026-10-24'},proof=frozenJSON({evidenceKind:'fcf-missing-target-inventory',targetSlug,competition,documents:clone(final.ctx.documents)})
+ targets.set(proof,final);return proof
+}
+/** Returns only independently reparsed data from this reader's capability. */
+export function getFcfCapturedTargetData({targetEvidence,targetSlug,now=Date.now()}){
+ const final=targets.get(targetEvidence)
+ if(!final||targetEvidence.evidenceKind!=='fcf-missing-target-inventory'||targetEvidence.targetSlug!==targetSlug||!Number.isFinite(now))fail('reader-issued inventory target admission required')
+ const {ctx,record,receipt,receiptBinding}=final,m=ctx.manifest
+ validateFcfMissingInventoryPlan({plan:ctx.plan,expectedPlanSha256:m.planSha256,now})
+ const {fixtures,calendar}=prove(ctx,now),headers=m.documents.map(d=>clone(d.header)),binding={schemaVersion:1,kind:'fcf-missing-target-admission',targetSlug,sourceCommit:m.sourceCommit,planSha256:m.planSha256,childPlanSha256:m.childPlanSha256,sourceClaimState:'consumed',maximumSourceGETs:477,actualSourceGETs:receipt.actualSourceGETs,claimBinding:clone(m.claimBinding),consumptionBinding:clone(m.consumptionBinding),seedBinding:clone(m.seedBinding),inventoryBinding:clone(ctx.binding),auditBinding:clone(record.auditBinding),finalReceiptBinding:clone(receiptBinding),policyHashes:clone(m.policyHashes)}
+ if(headers.length!==240||fixtures.length!==240||calendar.clubs.length!==16||headers.some((h,i)=>fixtures[i].id!==`es${h.id}`||fixtures[i].round!==h.round||fixtures[i].date!==h.playedOn||fixtures[i].time!==h.kickoff||fixtures[i].homeGoals!==h.homeGoals||fixtures[i].awayGoals!==h.awayGoals||[h.home,h.away].some((c,j)=>fixtures[i].clubs[j].sourceClubId!==c.sourceClubId||fixtures[i].clubs[j].sourceCategoryId!==c.sourceCategoryId||fixtures[i].clubs[j].name.replace(/\s+/g,' ').trim()!==c.name)))fail('authenticated header/fixture native bijection differs')
+ binding.sourceFingerprintSha256=hash({binding,documents:ctx.documents.map((d,i)=>({id:d.id,expectedSourceRound:d.expectedSourceRound,receipt:d.receipt,lineage:d.lineage,header:headers[i]}))})
+ return frozenJSON({evidenceKind:'fcf-missing-target-inventory',targetSlug,competition:clone(targetEvidence.competition),documents:clone(ctx.documents),headers,fixtures,clubs:calendar.clubs,verifiedKeeperClubs:calendar.verifiedKeeperClubs,binding})
+}
+function transportBundle(value,kind){
+ exactKeys(value,['zipBytes','artifact','run','jobs','expected'],`${kind} transport`)
+ exactKeys(value.expected,['runId','runAttempt','sourceCommit','jobId','artifactId','artifactDigest','manifestSha256','name',...(kind==='inventory'?['planSha256','childPlanSha256']:[])],`${kind} expected pins`)
+ return value
+}
+/** Cross-process entrypoint: actual ZIPs/metadata and independently pinned identities, no callbacks. */
+export function readFcfCapturedTargetEvidence(input){
+ if(!input||typeof input!=='object')fail('closed target admission transport required')
+ exactKeys(input,['plan','claim','consumption','children','finalReceipt','targetSlug',...(Object.hasOwn(input,'now')?['now']:[])],'target admission transport')
+ const {plan,claim,consumption,children:wire,finalReceipt:receiptWire,targetSlug,now=Date.now()}=input
+ if(!['es-ct-segona-g1','es-ct-tercera-g9'].includes(targetSlug)||!Number.isFinite(now)||!Array.isArray(wire)||wire.length!==2)fail('one allowlisted target and two closed parent records required')
+ exactKeys(claim,['execution','ref','claimCommit','claimBytes','rulesets','expected'],'claim transport')
+ exactKeys(claim.expected,['claimCommit','claimJsonSha256','rulesetId','planSha256','sourceCommit','runId','runAttempt'],'claim expected pins')
+ const claimProof=readFcfInventoryExecutionClaim({...claim,plan,now}),consumptionProof=readFcfInventoryConsumptionArtifact({...transportBundle(consumption,'consumption'),claimProof,now}),childRecords=[]
+ let continuationProof
+ for(const [i,raw]of wire.entries()){
+  exactKeys(raw,['targetSlug','inventory','audit','unstarted'],'parent child transport')
+  if(raw.targetSlug!==plan.children[i].targetSlug)fail('ordered exact parent targets required')
+  let child
+  if(raw.inventory===null){if(raw.audit!==null)fail('unstarted child cannot have audit');exactKeys(raw.unstarted,['run','jobs','expected'],'unstarted transport');exactKeys(raw.unstarted.expected,['planSha256','jobId'],'unstarted pins');child=readFcfMissingInventoryNotStartedChild({...raw.unstarted,plan,targetSlug:raw.targetSlug,consumptionProof,now})}
+  else{
+   if(raw.unstarted!==null)fail('captured child cannot assert unstarted')
+   const inventory={...transportBundle(raw.inventory,'inventory'),plan,targetSlug:raw.targetSlug,consumptionProof,continuationProof,now}
+   if(raw.inventory.expected.name.startsWith('fcf-missing-inventory-diagnostic-')){if(raw.audit!==null)fail('diagnostic cannot assert audit');child=readFcfMissingInventoryDiagnosticArtifact(inventory)}
+   else if(raw.audit===null)child=readFcfMissingInventoryFailedAuditArtifact(inventory)
+   else{const audit=transportBundle(raw.audit,'audit'),completed={inventoryMetadata:raw.inventory,auditMetadata:audit,inventoryZipBytes:raw.inventory.zipBytes,auditZipBytes:audit.zipBytes,plan,consumptionProof,continuationProof,now};child=readFcfMissingInventoryCompletedChildArtifact(completed);if(i===0)continuationProof=readFcfMissingInventoryContinuation(completed)}
+  }
+  childRecords.push(child)
+ }
+ const finalReceipt=readFcfMissingInventoryFinalReceipt({...transportBundle(receiptWire,'receipt'),plan,claimProof,consumptionProof,childRecords,now}),selected=wire.find(c=>c.targetSlug===targetSlug)
+ if(!selected?.inventory||!selected.audit)fail('selected target requires final successful inventory and audit')
+ const inventoryProof=readFcfMissingInventoryArtifact({...selected.inventory,plan,targetSlug,consumptionProof,continuationProof:targetSlug==='es-ct-tercera-g9'?continuationProof:undefined,finalReceipt,now}),auditProof=readFcfMissingInventoryAuditArtifact({...selected.audit,inventoryProof,now})
+ return composeFcfCapturedTargetEvidence({inventoryProof,auditProof,targetSlug,now})
 }

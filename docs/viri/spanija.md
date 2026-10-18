@@ -613,3 +613,27 @@ resnični SQL, atomarnost, zaščitene vrednosti, napačen digest/odvisnosti in
 ločene sočasne FK insert/update seje. Podatki v SQL testu so označeni kot
 izmišljeni testni podatki. Produkcijski apply še vedno zahteva ločen pregled
 predogleda in nato celoten običajni FCF gate; ta popravek ga ne obide.
+
+## Ločen zajem manjkajočih G1/G9 in v2 dokaz
+
+Pregledani način `g1-then-g9-missing-v1` zajame največ239 novih G1 in238 G9
+zapisnikov (skupaj477), z nespremenjenimi tremi izvirnimi markerji. Vsak
+zahtevek najprej trajno shrani izvirne bajte/račun, nato dejansko glavo in
+strogo preveri objavljeni navadni zapisnik. Zavrnitev ali nova napaka ustavi
+nadaljnje branje. Celoten G1 mora uspešno skozi ločen offline audit pred G9.
+Inventar sam ne pomeni pripravljenosti statistike.
+
+Končni v2 potrošnik sprejme le bralnikovo overjeno zmožnost za isti celoten
+cilj: terminalni parent, porabljen enkratni source claim, dejanske artefakte,
+končni račun in offline audit. [Konkretni API in transport](fcf-missing-inventory-admission.md)
+vračata240 dejanskih glav/razčlenjenih tekem ter16 uradnih klubskih/kategorijskih
+parov za vezavo pisca. Cleanup vseh štirih izvirnikov je ločen pogoj; G2 in
+Calonge ostaneta zadržana. Kasnejši pregledani pisec lahko iste nespremenjene
+izvirne artefakte ponovno preveri brez novih GET, ob veljavnih dejanskih urah
+in svežini. Ločena sta commit zajema in commit izvajanja pisca.
+
+Stara61/41 pot brez manjkajočih cache bajtov ne postane izvedljiva. Nov način
+ne odobri cen, vklopa, prejšnje sezone ali legal15. Dejanski zajem/produkcija
+ostajata ločena pregledana koraka. CI ima izrecen Node korak za novi protokol,
+sprejem in v2 target teste; zasebni pozitivni testi se v javnem CI preskočijo
+samo, kadar manjkajo pristni izvirni markerji.
