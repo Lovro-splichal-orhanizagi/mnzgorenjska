@@ -1,0 +1,328 @@
+// Nizi shop.slff.eu (sl, en). Ločen slovar od src/i18n, kot v Scoutu: trgovina
+// ima dva jezika. Angleščina je Record<Kljuc, string>: manjkajoč ključ javi
+// typecheck; smoke primerja {parametre} in zavrne prazne nize.
+// Pogoji prodaje (pogoji.*) so pravno besedilo: odstavki so ločeni s prazno
+// vrstico; ob spremembi popravi oba jezika in datum veljavnosti.
+
+const PRODAJALEC = 'SPACE GUARDIAN, računalniško programiranje, d.o.o., Ulica Hermana Potočnika 5, 1000 Ljubljana, Slovenija'
+
+export const SL = {
+  'app.ime': 'SLFF Trgovina',
+  'app.znacka': 'Trgovina',
+  'app.nalaganje': 'Nalagam …',
+  'nav.trgovina': 'Izdelki',
+  'nav.narocila': 'Moja naročila',
+  'nav.kosarica': 'Košarica ({n})',
+  'nav.prijava': 'Prijava',
+  'nav.odjava': 'Odjava',
+  'noga.pogoji': 'Pogoji prodaje',
+  'noga.odstop': 'Odstop od pogodbe',
+  'noga.zasebnost': 'Zasebnost',
+  'noga.slff': 'Fantasy na slff.eu',
+  'noga.prodajalec': `Prodajalec: ${PRODAJALEC} · ID za DDV SI42765153 · info@slff.eu`,
+
+  'katalog.naslov': 'Uradni izdelki SLFF',
+  'katalog.uvod': 'Majice, puloverji, šali in vse za pravega navijača lokalnega nogometa. Pakiramo sami, pošiljamo s Pošto Slovenije po vsej EU.',
+  'katalog.prazno': 'Trgovina se odpre kmalu. Prvi izdelki so v pripravi.',
+  'katalog.od': 'od {cena}',
+  'katalog.prednost1': 'Dostava po vsej EU',
+  'katalog.prednost2': '14 dni za odstop',
+  'katalog.prednost3': 'Varno plačilo s Stripe',
+  'voljo.da': 'Na zalogi',
+  'voljo.malo': 'Le še nekaj kosov',
+  'voljo.ne': 'Razprodano',
+  'kategorija.oblacila': 'Oblačila',
+  'kategorija.dodatki': 'Dodatki',
+  'kategorija.dom': 'Za dom',
+  'kategorija.nalepke': 'Nalepke',
+
+  'izdelek.ni': 'Tega izdelka ni ali ni več v prodaji.',
+  'izdelek.nazaj': 'Vsi izdelki',
+  'izdelek.izberi': 'Izberi različico',
+  'izdelek.kolicina': 'Količina',
+  'izdelek.manj': 'Manj',
+  'izdelek.vec': 'Več',
+  'izdelek.dodaj': 'Dodaj v košarico',
+  'izdelek.dodano': 'Dodano v košarico.',
+  'izdelek.vKosarico': 'Na košarico',
+  'izdelek.zDdv': 'Cena vključuje DDV.',
+  'izdelek.dostava': 'Pošiljamo s Pošto Slovenije v vse države EU.',
+  'izdelek.odstop': '14 dni za odstop od nakupa brez navedbe razloga.',
+  'izdelek.slika': 'Slika {n}',
+
+  'kosarica.naslov': 'Košarica',
+  'kosarica.prazna': 'Košarica je prazna.',
+  'kosarica.nakupuj': 'Na izdelke',
+  'kosarica.odstrani': 'Odstrani',
+  'kosarica.niVec': 'Ni več v prodaji. Odstrani ga iz košarice.',
+  'kosarica.razprodano': 'Trenutno razprodano. Odstrani ga iz košarice.',
+  'kosarica.vmesna': 'Vmesni seštevek',
+  'kosarica.drzava': 'Država dostave',
+  'kosarica.postnina': 'Poštnina',
+  'kosarica.postninaOd': 'od {cena}',
+  'kosarica.postninaOpis': 'Nalepke pošljemo v Sloveniji s pismom, vse ostalo kot paket Pošte Slovenije. Končno poštnino vidiš in izbereš ob plačilu.',
+  'kosarica.ddv': 'Cene vključujejo DDV. Poštnino in DDV po državi dostave dokončno izračunamo ob plačilu.',
+  'kosarica.placaj': 'Na plačilo',
+  'kosarica.poteka': 'Pripravljam plačilo …',
+  'kosarica.gost': 'Kupiš lahko kot gost. Če se prijaviš z računom SLFF, naročilo vidiš med svojimi naročili.',
+  'kosarica.pogoji': 'Pred plačilom potrdiš pogoje prodaje.',
+
+  'napaka.trgovina-zaloga': 'Za vse izdelke ni dovolj zaloge. Košarico smo posodobili; preveri jo in poskusi znova.',
+  'napaka.trgovina-vnos': 'Košarica ni veljavna: največ 20 različnih izdelkov, 20 kosov posameznega in 50 kosov skupaj, vsi izdelki morajo biti v prodaji. Košarico smo posodobili; preveri jo in poskusi znova.',
+  'napaka.prevec': 'Preveč poskusov. Poskusi znova čez nekaj minut.',
+  'napaka.splosna': 'Nekaj je šlo narobe. Poskusi znova.',
+  'napaka.nalaganje': 'Podatkov ni bilo mogoče naložiti. Osveži stran.',
+
+  'hvala.naslov': 'Hvala za nakup!',
+  'hvala.oznaka': 'Številka naročila',
+  'hvala.opis': 'Potrditev naročila smo poslali na tvoj e-naslov. Ko paket oddamo na pošto, dobiš še sledilno številko.',
+  'hvala.narocila': 'Moja naročila',
+  'hvala.nazaj': 'Nazaj v trgovino',
+
+  'narocila.naslov': 'Moja naročila',
+  'narocila.prazno': 'Pod tem računom še ni naročil. Naročila, oddana kot gost, najdeš v e-pošti s potrditvijo.',
+  'narocila.stanje.placano': 'Plačano, v pripravi',
+  'narocila.stanje.poslano': 'Poslano',
+  'narocila.stanje.preklicano': 'Preklicano',
+  'narocila.stanje.vrnjeno': 'Vrnjeno',
+  'narocila.naroceno': 'Naročeno {datum}',
+  'narocila.poslano': 'Poslano {datum}',
+  'narocila.sledilna': 'Sledilna številka: {st}',
+  'narocila.postnina': 'Poštnina',
+  'narocila.skupaj': 'Skupaj z DDV',
+
+  'prijava.naslov': 'Prijava v SLFF Trgovino',
+  'prijava.uvod': 'Prijaviš se z istim računom kot na slff.eu. Prijava ni obvezna: kupiš lahko tudi kot gost.',
+  'prijava.eposta': 'E-pošta',
+  'prijava.geslo': 'Geslo',
+  'prijava.gumb': 'Prijava',
+  'prijava.google': 'Prijava z Googlom',
+  'prijava.napaka': 'Prijava ni uspela. Preveri e-pošto in geslo.',
+  'prijava.brezRacuna': 'Še nimaš računa ali si pozabil geslo?',
+  'prijava.slff': 'Uredi to na slff.eu',
+
+  'odstop.naslov': 'Odstop od pogodbe',
+  'odstop.uvod': 'Od nakupa lahko odstopiš v 14 dneh od prejema blaga, brez navedbe razloga. Izpolni obrazec: gumb odpre tvoj e-poštni program s pripravljenim sporočilom za info@slff.eu. Lahko nam pišeš tudi sam ali pošlješ obrazec po pošti.',
+  'odstop.oznaka': 'Številka naročila',
+  'odstop.ime': 'Ime in priimek',
+  'odstop.naslovKupca': 'Naslov',
+  'odstop.eposta': 'E-pošta',
+  'odstop.izdelki': 'Izdelki, od katerih odstopaš',
+  'odstop.naroceno': 'Datum naročila',
+  'odstop.prejeto': 'Datum prejema',
+  'odstop.poslji': 'Odpri e-pošto z obrazcem',
+  'odstop.opomba': 'Če se e-poštni program ne odpre, pošlji iste podatke na info@slff.eu. Prejem odstopa ti potrdimo po e-pošti.',
+  'odstop.vrnitev': 'Blago vrni najpozneje v 14 dneh od sporočila o odstopu na naslov: SPACE GUARDIAN d.o.o., Ulica Hermana Potočnika 5, 1000 Ljubljana, Slovenija. Stroške vračila kriješ sam.',
+  'odstop.zadeva': 'Odstop od pogodbe, naročilo {oznaka}',
+  'odstop.telo': `Naslovnik: ${PRODAJALEC}, info@slff.eu\n\nObveščam, da odstopam od pogodbe o prodaji naslednjega blaga:\n{izdelki}\n\nŠtevilka naročila: {oznaka}\nDatum naročila: {naroceno}\nDatum prejema: {prejeto}\nIme potrošnika: {ime}\nNaslov potrošnika: {naslov}\nE-pošta: {eposta}\nDatum: {datum}`,
+  'odstop.vzorecNaslov': 'Vzorčni obrazec za odstop od pogodbe',
+  'odstop.vzorec': `(izpolnite in vrnite ta obrazec samo, če želite odstopiti od pogodbe)\n\n– Naslovnik: ${PRODAJALEC}, e-pošta info@slff.eu\n– Obveščam/obveščamo (*), da odstopam/odstopamo (*) od pogodbe o prodaji naslednjega blaga (*)/o opravljanju naslednje storitve (*)\n– Datum naročila (*)/datum prejema (*)\n– Ime potrošnika/potrošnikov\n– Naslov potrošnika/potrošnikov\n– Podpis potrošnika/potrošnikov (samo če se obrazec pošilja v papirni obliki)\n– Datum\n\n(*) Neustrezno prečrtajte.`,
+
+  'pogoji.naslov': 'Splošni pogoji prodaje',
+  'pogoji.velja': 'Veljajo od 18. oktobra 2026 za nakupe v spletni trgovini shop.slff.eu.',
+  'pogoji.s1.naslov': '1. Prodajalec',
+  'pogoji.s1.besedilo': `Prodajalec je ${PRODAJALEC}, matična številka 9850538000, identifikacijska številka za DDV SI42765153 (v nadaljevanju: prodajalec ali mi).\n\nKontakt: info@slff.eu. Na isti naslov sprejemamo vprašanja, pritožbe in odstope od pogodbe.`,
+  'pogoji.s2.naslov': '2. Uporaba pogojev in sklenitev pogodbe',
+  'pogoji.s2.besedilo': 'Pogoji veljajo za vse nakupe v spletni trgovini shop.slff.eu. Kupec je lahko potrošnik ali pravna oseba; določbe o odstopu, skladnosti blaga in reševanju sporov, ki se sklicujejo na potrošnike, veljajo za potrošnike.\n\nKupec izbere izdelke v košarici, izbere državo dostave in nadaljuje na plačilo. Pred plačilom vidi vse izdelke, ceno z DDV, poštnino in skupni znesek ter potrdi te pogoje. Pogodba je sklenjena, ko je plačilo uspešno. Potrditev naročila z vsemi podatki pošljemo na e-naslov, ki ga kupec navede ob plačilu.\n\nPogodbo sklepamo v slovenskem ali angleškem jeziku. Naročilo hranimo v elektronski obliki; prijavljen kupec ga vidi pod "Moja naročila", vsak kupec pa ga ima v potrditvenem e-sporočilu.',
+  'pogoji.s3.naslov': '3. Cene',
+  'pogoji.s3.besedilo': 'Cene so v evrih in vključujejo DDV. DDV obračunamo po stopnji države dostave; znesek DDV je prikazan pred plačilom. Poštnina ni vključena v ceno izdelka in je prikazana pred plačilom.\n\nVelja cena, prikazana ob oddaji naročila. Če bi bila cena zaradi očitne napake napačna, kupca obvestimo in mu omogočimo, da naročilo potrdi po pravi ceni ali od njega odstopi s polnim vračilom plačila.',
+  'pogoji.s4.naslov': '4. Plačilo',
+  'pogoji.s4.besedilo': 'Plača se vnaprej, s plačilno kartico ali drugim načinom, ki ga ponudi plačilna stran. Plačilo obdeluje Stripe Payments Europe, Ltd.; podatkov plačilne kartice ne prejmemo in ne hranimo.\n\nIzdelke rezerviramo za 30 minut od začetka plačila. Če plačilo v tem času ni opravljeno, se naročilo prekliče in zaloga sprosti.',
+  'pogoji.s5.naslov': '5. Dostava',
+  'pogoji.s5.besedilo': 'Dostavljamo v države Evropske unije s Pošto Slovenije. Nalepke v Sloveniji lahko pošljemo s pismom, druge izdelke pošljemo kot paket. Poštnina je odvisna od države dostave in vrste pošiljke in je prikazana pred plačilom.\n\nOkvirni roki dostave od oddaje na pošto so: pismo v Sloveniji 1–3 delovne dni, paket v Sloveniji 2–4 delovne dni, paket v drugo državo EU 4–10 delovnih dni. Ko pošiljko oddamo, kupcu pošljemo sledilno številko. Naročilo dostavimo najpozneje v 30 dneh od sklenitve pogodbe; če to ni mogoče, kupca obvestimo in lahko od pogodbe odstopi s polnim vračilom plačila.\n\nKupec ob prevzemu preveri pošiljko. Poškodovano ali nepopolno pošiljko naj čim prej sporoči na info@slff.eu, po možnosti s fotografijo.',
+  'pogoji.s6.naslov': '6. Odstop od pogodbe',
+  'pogoji.s6.besedilo': 'Potrošnik lahko v 14 dneh od dneva, ko on ali tretja oseba, ki ni prevoznik in jo je določil potrošnik, prevzame blago, odstopi od pogodbe brez navedbe razloga. Pri naročilu več kosov, dostavljenih ločeno, rok teče od prevzema zadnjega kosa.\n\nZa odstop nas obvestite z nedvoumno izjavo, na primer po e-pošti na info@slff.eu ali po pošti na naslov prodajalca. Uporabite lahko obrazec na strani "Odstop od pogodbe" ali vzorčni obrazec spodaj, ni pa obvezno. Rok je upoštevan, če obvestilo pošljete pred njegovim iztekom.\n\nBlago vrnite brez nepotrebnega odlašanja, najpozneje v 14 dneh od dneva, ko ste nam sporočili odstop, na naslov SPACE GUARDIAN d.o.o., Ulica Hermana Potočnika 5, 1000 Ljubljana, Slovenija. Neposredne stroške vračila blaga krijete sami.\n\nVse prejete plačila, vključno s stroški dostave (razen dodatnih stroškov, če ste izbrali dražjo vrsto dostave od najcenejše, ki jo ponujamo), vrnemo brez nepotrebnega odlašanja, najpozneje v 14 dneh od dneva, ko smo prejeli obvestilo o odstopu. Vračilo opravimo z enakim plačilnim sredstvom, kot ste ga uporabili ob nakupu, razen če se izrecno dogovorimo drugače; dodatnih stroškov zaradi vračila ne zaračunamo. Vračilo lahko zadržimo, dokler blaga ne prejmemo ali dokler ne dokažete, da ste ga poslali, kar nastopi prej.\n\nOdgovarjate le za zmanjšanje vrednosti blaga, ki je posledica ravnanja, ki ni nujno za ugotovitev narave, značilnosti in delovanja blaga (na primer nošenje ali pranje oblačil).\n\nPravice do odstopa ni pri blagu, izdelanem po navodilih potrošnika ali prilagojenem njegovim osebnim potrebam (personalizirani izdelki).',
+  'pogoji.s7.naslov': '7. Skladnost blaga (stvarna napaka) in garancija',
+  'pogoji.s7.besedilo': 'Za skladnost blaga s pogodbo odgovarjamo po Zakonu o varstvu potrošnikov (ZVPot-1). Odgovarjamo za neskladnost, ki obstaja ob dobavi in se pokaže v dveh letih od dobave. Za neskladnost, ki se pokaže v enem letu od dobave, se domneva, da je obstajala že ob dobavi.\n\nPotrošnik nas o neskladnosti obvesti v dveh mesecih od dneva, ko jo je odkril, na info@slff.eu, z opisom napake in po možnosti s fotografijo. Potrošnik lahko zahteva, da blago spravimo v skladnost s popravilom ali zamenjavo, brez stroškov zanj. Če to ni mogoče ali ni opravljeno v razumnem roku, lahko zahteva sorazmerno znižanje kupnine ali odstopi od pogodbe in dobi vrnjeno kupnino.\n\nZa izdelke v trgovini ni predpisana obvezna garancija za brezhibno delovanje in komercialne garancije ne dajemo. To ne vpliva na pravice zaradi neskladnosti blaga.',
+  'pogoji.s8.naslov': '8. Pritožbe in reševanje sporov',
+  'pogoji.s8.besedilo': 'Pritožbe sprejemamo na info@slff.eu ali po pošti na naslov prodajalca. Prejem pritožbe potrdimo v petih delovnih dneh, sporočimo, v kolikšnem času jo bomo obravnavali, in kupca obveščamo o poteku postopka.\n\nSpore rešujemo sporazumno. Potrošnik lahko spor rešuje tudi pri izvajalcu izvensodnega reševanja potrošniških sporov; seznam izvajalcev v Sloveniji objavlja ministrstvo, pristojno za gospodarstvo. Potrošnik iz druge države EU se lahko obrne na Evropski potrošniški center v svoji državi.\n\nZa pogodbo velja pravo Republike Slovenije. Za spore je pristojno sodišče v Ljubljani. To ne omejuje pravic, ki jih ima potrošnik po obveznih predpisih države svojega prebivališča, niti njegove pravice do tožbe pred sodiščem v kraju svojega prebivališča.',
+  'pogoji.s9.naslov': '9. Varstvo osebnih podatkov',
+  'pogoji.s9.besedilo': 'Ime, e-naslov, naslov za dostavo in podatke o naročilu obdelujemo za izvedbo naročila, dostavo, obveščanje o naročilu in izpolnjevanje zakonskih obveznosti (na primer hrambe računovodskih listin). Podatke prejmeta Stripe za plačilo in Pošta Slovenije za dostavo. Več o obdelavi in pravicah posameznika je na strani o zasebnosti na slff.eu.',
+  'pogoji.s10.naslov': '10. Končne določbe',
+  'pogoji.s10.besedilo': 'Pogoje lahko spremenimo. Za posamezen nakup veljajo pogoji, objavljeni ob oddaji naročila. Kodeksa ravnanja, ki bi nas zavezoval, ni.',
+  'pogoji.odstopObrazec': 'Odpri obrazec za odstop',
+  'pogoji.zasebnost': 'Zasebnost na slff.eu',
+}
+
+export type Kljuc = keyof typeof SL
+
+const SELLER = 'SPACE GUARDIAN, računalniško programiranje, d.o.o., Ulica Hermana Potočnika 5, 1000 Ljubljana, Slovenia'
+
+export const EN: Record<Kljuc, string> = {
+  'app.ime': 'SLFF Shop',
+  'app.znacka': 'Shop',
+  'app.nalaganje': 'Loading …',
+  'nav.trgovina': 'Products',
+  'nav.narocila': 'My orders',
+  'nav.kosarica': 'Cart ({n})',
+  'nav.prijava': 'Sign in',
+  'nav.odjava': 'Sign out',
+  'noga.pogoji': 'Terms of sale',
+  'noga.odstop': 'Withdrawal',
+  'noga.zasebnost': 'Privacy',
+  'noga.slff': 'Fantasy on slff.eu',
+  'noga.prodajalec': `Seller: ${SELLER} · VAT ID SI42765153 · info@slff.eu`,
+
+  'katalog.naslov': 'Official SLFF merchandise',
+  'katalog.uvod': 'T-shirts, hoodies, scarves and everything a true local football fan needs. Packed by us, shipped with Pošta Slovenije across the EU.',
+  'katalog.prazno': 'The shop opens soon. The first products are on their way.',
+  'katalog.od': 'from {cena}',
+  'katalog.prednost1': 'Delivery across the EU',
+  'katalog.prednost2': '14 days to withdraw',
+  'katalog.prednost3': 'Secure payment with Stripe',
+  'voljo.da': 'In stock',
+  'voljo.malo': 'Only a few left',
+  'voljo.ne': 'Sold out',
+  'kategorija.oblacila': 'Clothing',
+  'kategorija.dodatki': 'Accessories',
+  'kategorija.dom': 'Home',
+  'kategorija.nalepke': 'Stickers',
+
+  'izdelek.ni': 'This product does not exist or is no longer on sale.',
+  'izdelek.nazaj': 'All products',
+  'izdelek.izberi': 'Choose an option',
+  'izdelek.kolicina': 'Quantity',
+  'izdelek.manj': 'Less',
+  'izdelek.vec': 'More',
+  'izdelek.dodaj': 'Add to cart',
+  'izdelek.dodano': 'Added to cart.',
+  'izdelek.vKosarico': 'View cart',
+  'izdelek.zDdv': 'Price includes VAT.',
+  'izdelek.dostava': 'Shipped with Pošta Slovenije to all EU countries.',
+  'izdelek.odstop': '14 days to withdraw from the purchase without giving a reason.',
+  'izdelek.slika': 'Image {n}',
+
+  'kosarica.naslov': 'Cart',
+  'kosarica.prazna': 'Your cart is empty.',
+  'kosarica.nakupuj': 'Browse products',
+  'kosarica.odstrani': 'Remove',
+  'kosarica.niVec': 'No longer on sale. Please remove it from the cart.',
+  'kosarica.razprodano': 'Currently sold out. Please remove it from the cart.',
+  'kosarica.vmesna': 'Subtotal',
+  'kosarica.drzava': 'Delivery country',
+  'kosarica.postnina': 'Shipping',
+  'kosarica.postninaOd': 'from {cena}',
+  'kosarica.postninaOpis': 'Stickers ship as a letter within Slovenia, everything else as a Pošta Slovenije parcel. You see and choose the final shipping at checkout.',
+  'kosarica.ddv': 'Prices include VAT. Shipping and VAT for the delivery country are finalised at checkout.',
+  'kosarica.placaj': 'Checkout',
+  'kosarica.poteka': 'Preparing checkout …',
+  'kosarica.gost': 'You can buy as a guest. If you sign in with your SLFF account, the order appears under your orders.',
+  'kosarica.pogoji': 'You accept the terms of sale before paying.',
+
+  'napaka.trgovina-zaloga': 'There is not enough stock for all items. We updated your cart; please check it and try again.',
+  'napaka.trgovina-vnos': 'The cart is not valid: at most 20 different items, 20 of each and 50 in total, and all items must be on sale. We updated your cart; please check it and try again.',
+  'napaka.prevec': 'Too many attempts. Please try again in a few minutes.',
+  'napaka.splosna': 'Something went wrong. Please try again.',
+  'napaka.nalaganje': 'The data could not be loaded. Please refresh the page.',
+
+  'hvala.naslov': 'Thank you for your order!',
+  'hvala.oznaka': 'Order number',
+  'hvala.opis': 'We sent the order confirmation to your email address. When we hand the parcel to the post, you also get a tracking number.',
+  'hvala.narocila': 'My orders',
+  'hvala.nazaj': 'Back to the shop',
+
+  'narocila.naslov': 'My orders',
+  'narocila.prazno': 'There are no orders under this account yet. Orders placed as a guest are in your confirmation email.',
+  'narocila.stanje.placano': 'Paid, being prepared',
+  'narocila.stanje.poslano': 'Shipped',
+  'narocila.stanje.preklicano': 'Cancelled',
+  'narocila.stanje.vrnjeno': 'Returned',
+  'narocila.naroceno': 'Ordered {datum}',
+  'narocila.poslano': 'Shipped {datum}',
+  'narocila.sledilna': 'Tracking number: {st}',
+  'narocila.postnina': 'Shipping',
+  'narocila.skupaj': 'Total incl. VAT',
+
+  'prijava.naslov': 'Sign in to the SLFF Shop',
+  'prijava.uvod': 'Use the same account as on slff.eu. Signing in is optional: you can also buy as a guest.',
+  'prijava.eposta': 'Email',
+  'prijava.geslo': 'Password',
+  'prijava.gumb': 'Sign in',
+  'prijava.google': 'Sign in with Google',
+  'prijava.napaka': 'Sign-in failed. Check your email and password.',
+  'prijava.brezRacuna': 'No account yet or forgot your password?',
+  'prijava.slff': 'Sort it out on slff.eu',
+
+  'odstop.naslov': 'Withdrawal from the contract',
+  'odstop.uvod': 'You can withdraw from your purchase within 14 days of receiving the goods, without giving a reason. Fill in the form: the button opens your email app with a prepared message to info@slff.eu. You can also write to us yourself or send the form by post.',
+  'odstop.oznaka': 'Order number',
+  'odstop.ime': 'Full name',
+  'odstop.naslovKupca': 'Address',
+  'odstop.eposta': 'Email',
+  'odstop.izdelki': 'Items you are withdrawing from',
+  'odstop.naroceno': 'Order date',
+  'odstop.prejeto': 'Date received',
+  'odstop.poslji': 'Open email with the form',
+  'odstop.opomba': 'If your email app does not open, send the same details to info@slff.eu. We confirm receipt of your withdrawal by email.',
+  'odstop.vrnitev': 'Return the goods within 14 days of notifying us to: SPACE GUARDIAN d.o.o., Ulica Hermana Potočnika 5, 1000 Ljubljana, Slovenia. You bear the cost of returning them.',
+  'odstop.zadeva': 'Withdrawal from contract, order {oznaka}',
+  'odstop.telo': `To: ${SELLER}, info@slff.eu\n\nI hereby give notice that I withdraw from my contract of sale of the following goods:\n{izdelki}\n\nOrder number: {oznaka}\nOrdered on: {naroceno}\nReceived on: {prejeto}\nName of consumer: {ime}\nAddress of consumer: {naslov}\nEmail: {eposta}\nDate: {datum}`,
+  'odstop.vzorecNaslov': 'Model withdrawal form',
+  'odstop.vzorec': `(complete and return this form only if you wish to withdraw from the contract)\n\n– To: ${SELLER}, email info@slff.eu\n– I/We (*) hereby give notice that I/We (*) withdraw from my/our (*) contract of sale of the following goods (*)/for the provision of the following service (*)\n– Ordered on (*)/received on (*)\n– Name of consumer(s)\n– Address of consumer(s)\n– Signature of consumer(s) (only if this form is notified on paper)\n– Date\n\n(*) Delete as appropriate.`,
+
+  'pogoji.naslov': 'General terms of sale',
+  'pogoji.velja': 'Effective from 18 October 2026 for purchases in the online shop shop.slff.eu. The Slovenian version is the original; this is a translation.',
+  'pogoji.s1.naslov': '1. Seller',
+  'pogoji.s1.besedilo': `The seller is ${SELLER}, registration number 9850538000, VAT ID SI42765153 (the seller or we).\n\nContact: info@slff.eu. Questions, complaints and withdrawals are accepted at the same address.`,
+  'pogoji.s2.naslov': '2. Scope and conclusion of the contract',
+  'pogoji.s2.besedilo': 'These terms apply to all purchases in the online shop shop.slff.eu. The buyer can be a consumer or a legal entity; provisions on withdrawal, conformity of goods and dispute resolution that refer to consumers apply to consumers.\n\nThe buyer puts products in the cart, chooses the delivery country and proceeds to checkout. Before paying, the buyer sees all items, the price including VAT, shipping and the total, and accepts these terms. The contract is concluded when the payment succeeds. We send the order confirmation with all details to the email address the buyer gives at checkout.\n\nThe contract is concluded in Slovenian or English. We keep the order electronically; a signed-in buyer sees it under "My orders", and every buyer has it in the confirmation email.',
+  'pogoji.s3.naslov': '3. Prices',
+  'pogoji.s3.besedilo': 'Prices are in euro and include VAT. VAT is charged at the rate of the delivery country; the VAT amount is shown before payment. Shipping is not included in the product price and is shown before payment.\n\nThe price shown when the order is placed applies. If a price is wrong due to an obvious error, we inform the buyer and let them confirm the order at the correct price or withdraw with a full refund.',
+  'pogoji.s4.naslov': '4. Payment',
+  'pogoji.s4.besedilo': 'Payment is made in advance, by card or another method offered on the payment page. Payments are processed by Stripe Payments Europe, Ltd.; we do not receive or store card details.\n\nItems are reserved for 30 minutes from the start of checkout. If payment is not completed within that time, the order is cancelled and the stock released.',
+  'pogoji.s5.naslov': '5. Delivery',
+  'pogoji.s5.besedilo': 'We deliver to European Union countries with Pošta Slovenije. Stickers within Slovenia can be sent as a letter, other products are sent as a parcel. Shipping depends on the delivery country and type of shipment and is shown before payment.\n\nIndicative delivery times from handing the shipment to the post are: letter within Slovenia 1–3 working days, parcel within Slovenia 2–4 working days, parcel to another EU country 4–10 working days. When we send the shipment, we email the buyer a tracking number. We deliver no later than 30 days after the contract is concluded; if that is not possible, we inform the buyer, who may withdraw from the contract with a full refund.\n\nThe buyer checks the shipment on receipt. A damaged or incomplete shipment should be reported to info@slff.eu as soon as possible, ideally with a photo.',
+  'pogoji.s6.naslov': '6. Right of withdrawal',
+  'pogoji.s6.besedilo': 'A consumer may withdraw from the contract without giving a reason within 14 days of the day on which they, or a third party other than the carrier indicated by them, take possession of the goods. For multiple items delivered separately, the period runs from receipt of the last item.\n\nTo withdraw, inform us with a clear statement, for example by email to info@slff.eu or by post to the seller\'s address. You may use the form on the "Withdrawal" page or the model form below, but it is not obligatory. The deadline is met if you send your notice before it expires.\n\nReturn the goods without undue delay and no later than 14 days after notifying us, to SPACE GUARDIAN d.o.o., Ulica Hermana Potočnika 5, 1000 Ljubljana, Slovenia. You bear the direct cost of returning the goods.\n\nWe refund all payments received, including delivery costs (except supplementary costs if you chose a more expensive type of delivery than the cheapest we offer), without undue delay and no later than 14 days from the day we receive your withdrawal notice. We use the same means of payment you used for the purchase, unless expressly agreed otherwise; you incur no fees for the refund. We may withhold the refund until we receive the goods or you prove you have sent them, whichever is earlier.\n\nYou are only liable for any diminished value of the goods resulting from handling beyond what is necessary to establish their nature, characteristics and functioning (for example wearing or washing clothing).\n\nThere is no right of withdrawal for goods made to the consumer\'s specifications or clearly personalised (personalised products).',
+  'pogoji.s7.naslov': '7. Conformity of goods and guarantee',
+  'pogoji.s7.besedilo': 'We are liable for the conformity of the goods with the contract under the Slovenian Consumer Protection Act (ZVPot-1). We are liable for any lack of conformity that exists at delivery and becomes apparent within two years of delivery. A lack of conformity that becomes apparent within one year of delivery is presumed to have existed at delivery.\n\nThe consumer informs us of the lack of conformity within two months of discovering it, at info@slff.eu, with a description and ideally a photo. The consumer may require us to bring the goods into conformity by repair or replacement, free of charge. If that is not possible or not done within a reasonable time, the consumer may request a proportionate price reduction or terminate the contract and get the price refunded.\n\nThe products in the shop are not subject to a mandatory guarantee of faultless operation and we give no commercial guarantee. This does not affect the rights regarding lack of conformity.',
+  'pogoji.s8.naslov': '8. Complaints and dispute resolution',
+  'pogoji.s8.besedilo': 'Complaints are accepted at info@slff.eu or by post to the seller\'s address. We confirm receipt of a complaint within five working days, tell you how long handling will take and keep you informed.\n\nWe aim to resolve disputes amicably. A consumer may also take a dispute to an out-of-court consumer dispute resolution body; the list of such bodies in Slovenia is published by the ministry responsible for the economy. A consumer from another EU country can contact the European Consumer Centre in their country.\n\nThe contract is governed by the law of the Republic of Slovenia. The court in Ljubljana has jurisdiction over disputes. This does not limit the rights a consumer has under the mandatory law of their country of residence, nor their right to sue before the court of their place of residence.',
+  'pogoji.s9.naslov': '9. Personal data',
+  'pogoji.s9.besedilo': 'We process the name, email address, delivery address and order details to fulfil the order, deliver it, keep you informed about it and meet legal obligations (such as keeping accounting records). The data is shared with Stripe for payment and with Pošta Slovenije for delivery. More about processing and your rights is on the privacy page on slff.eu.',
+  'pogoji.s10.naslov': '10. Final provisions',
+  'pogoji.s10.besedilo': 'We may change these terms. Each purchase is governed by the terms published when the order was placed. We are not bound by any code of conduct.',
+  'pogoji.odstopObrazec': 'Open the withdrawal form',
+  'pogoji.zasebnost': 'Privacy on slff.eu',
+}
+
+type Jezik = 'sl' | 'en'
+const SHRAMBA = 'slff-shop-jezik'
+
+function izberi(): Jezik {
+  if (typeof window === 'undefined') return 'sl'
+  try {
+    const j = localStorage.getItem(SHRAMBA)
+    if (j === 'sl' || j === 'en') return j
+  } catch {}
+  return navigator.language.toLowerCase().startsWith('sl') ? 'sl' : 'en'
+}
+
+/** Jezik se izbere ob nalaganju; zamenjava stran naloži znova. */
+export const jezik: Jezik = izberi()
+const SLOVAR: Record<Kljuc, string> = jezik === 'sl' ? SL : EN
+const LOKALE = jezik === 'sl' ? 'sl-SI' : 'en-GB'
+
+export function t(k: Kljuc, p?: Record<string, string | number>): string {
+  return SLOVAR[k].replace(/\{(\w+)\}/g, (cel, ime: string) => (p && ime in p ? String(p[ime]) : cel))
+}
+
+export function izberiJezik(j: Jezik): void {
+  try {
+    localStorage.setItem(SHRAMBA, j)
+  } catch {}
+  location.reload()
+}
+
+export const datum = (d: string): string =>
+  new Date(d).toLocaleDateString(LOKALE, { day: 'numeric', month: 'long', year: 'numeric' })
+
+const EVRI = new Intl.NumberFormat(LOKALE, { style: 'currency', currency: 'EUR' })
+/** Centi → "25,00 €" (sl) ali "€25.00" (en). */
+export const cena = (centi: number): string => EVRI.format(centi / 100)
+
+const DRZAVE = new Intl.DisplayNames([LOKALE], { type: 'region' })
+export const imeDrzave = (koda: string): string => DRZAVE.of(koda) ?? koda
+
+/** Besedilo iz baze (ime, opis, oznaka) v jeziku strani. */
+export const po = (sl: string, en: string): string => (jezik === 'sl' ? sl : en)

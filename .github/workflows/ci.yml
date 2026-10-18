@@ -121,6 +121,13 @@ jobs:
           VITE_SUPABASE_URL: https://primer.supabase.co
           VITE_SUPABASE_ANON_KEY: sb_publishable_ci_ni_pravi_kljuc
 
+      # SLFF Trgovina (shop/): sveženj in izris strani brez baze.
+      - name: Trgovina
+        run: npm run build:shop && npm run smoke:shop
+        env:
+          VITE_SUPABASE_URL: https://primer.supabase.co
+          VITE_SUPABASE_ANON_KEY: sb_publishable_ci_ni_pravi_kljuc
+
   varnost:
     if: ${{ !inputs.diagnostika }}
     name: Pravice in roki v svezi bazi
