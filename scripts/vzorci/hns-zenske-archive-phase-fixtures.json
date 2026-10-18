@@ -1,0 +1,1132 @@
+{
+  "sourceUrl": "https://semafor.hns.family/natjecanja/108043476/x/",
+  "sourceSha256": "96d464f4a7e2238c6271d5ef984aac96f098d449b7c729ca41d9779103797372",
+  "note": "Reduced fixture facts and published phase membership extracted from captured public HTML; not the raw capture.",
+  "fixtures": [
+    {
+      "id": "100511726",
+      "krog": 1,
+      "datum": "2025-08-30",
+      "ura": "16:00",
+      "domaci": "ŽNK Hajduk Split",
+      "gostje": "ŽNK Međimurje Čakovec",
+      "domaciId": "520",
+      "gostjeId": "175835",
+      "izid": {
+        "domaci": 4,
+        "gostje": 0
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511725",
+      "krog": 1,
+      "datum": "2025-08-31",
+      "ura": "17:00",
+      "domaci": "ŽNK Agram",
+      "gostje": "ŽNK Split",
+      "domaciId": "649",
+      "gostjeId": "4266",
+      "izid": {
+        "domaci": 13,
+        "gostje": 0
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511728",
+      "krog": 1,
+      "datum": "2025-08-31",
+      "ura": "17:30",
+      "domaci": "HNK Gorica s.d.d.",
+      "gostje": "ŽNK Osijek",
+      "domaciId": "1274",
+      "gostjeId": "171",
+      "izid": {
+        "domaci": 1,
+        "gostje": 2
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511732",
+      "krog": 2,
+      "datum": "2025-09-06",
+      "ura": "16:10",
+      "domaci": "ŽNK Agram",
+      "gostje": "ŽNK Hajduk Split",
+      "domaciId": "649",
+      "gostjeId": "520",
+      "izid": {
+        "domaci": 0,
+        "gostje": 4
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511729",
+      "krog": 2,
+      "datum": "2025-09-07",
+      "ura": "11:00",
+      "domaci": "ŽNK Split",
+      "gostje": "ŽNK Osijek",
+      "domaciId": "4266",
+      "gostjeId": "171",
+      "izid": {
+        "domaci": 0,
+        "gostje": 9
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511730",
+      "krog": 2,
+      "datum": "2025-09-07",
+      "ura": "17:00",
+      "domaci": "ŽNK Dinamo",
+      "gostje": "HNK Gorica s.d.d.",
+      "domaciId": "108341",
+      "gostjeId": "1274",
+      "izid": {
+        "domaci": 3,
+        "gostje": 0
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511733",
+      "krog": 3,
+      "datum": "2025-09-14",
+      "ura": "16:00",
+      "domaci": "ŽNK Hajduk Split",
+      "gostje": "ŽNK Split",
+      "domaciId": "520",
+      "gostjeId": "4266",
+      "izid": {
+        "domaci": 8,
+        "gostje": 0
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511736",
+      "krog": 3,
+      "datum": "2025-09-14",
+      "ura": "16:00",
+      "domaci": "ŽNK Osijek",
+      "gostje": "ŽNK Dinamo",
+      "domaciId": "171",
+      "gostjeId": "108341",
+      "izid": {
+        "domaci": 0,
+        "gostje": 0
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511735",
+      "krog": 3,
+      "datum": "2025-09-14",
+      "ura": "17:00",
+      "domaci": "HNK Gorica s.d.d.",
+      "gostje": "ŽNK Međimurje Čakovec",
+      "domaciId": "1274",
+      "gostjeId": "175835",
+      "izid": {
+        "domaci": 0,
+        "gostje": 4
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511737",
+      "krog": 4,
+      "datum": "2025-09-21",
+      "ura": "16:00",
+      "domaci": "ŽNK Split",
+      "gostje": "ŽNK Dinamo",
+      "domaciId": "4266",
+      "gostjeId": "108341",
+      "izid": {
+        "domaci": 0,
+        "gostje": 6
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511739",
+      "krog": 4,
+      "datum": "2025-09-21",
+      "ura": "16:00",
+      "domaci": "ŽNK Agram",
+      "gostje": "HNK Gorica s.d.d.",
+      "domaciId": "649",
+      "gostjeId": "1274",
+      "izid": {
+        "domaci": 8,
+        "gostje": 0
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511738",
+      "krog": 4,
+      "datum": "2025-09-21",
+      "ura": "16:30",
+      "domaci": "ŽNK Međimurje Čakovec",
+      "gostje": "ŽNK Osijek",
+      "domaciId": "175835",
+      "gostjeId": "171",
+      "izid": {
+        "domaci": 3,
+        "gostje": 1
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511742",
+      "krog": 5,
+      "datum": "2025-09-28",
+      "ura": "15:00",
+      "domaci": "ŽNK Hajduk Split",
+      "gostje": "HNK Gorica s.d.d.",
+      "domaciId": "520",
+      "gostjeId": "1274",
+      "izid": {
+        "domaci": 5,
+        "gostje": 2
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511744",
+      "krog": 5,
+      "datum": "2025-09-28",
+      "ura": "15:30",
+      "domaci": "ŽNK Dinamo",
+      "gostje": "ŽNK Međimurje Čakovec",
+      "domaciId": "108341",
+      "gostjeId": "175835",
+      "izid": {
+        "domaci": 1,
+        "gostje": 0
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511743",
+      "krog": 5,
+      "datum": "2025-09-28",
+      "ura": "16:00",
+      "domaci": "ŽNK Osijek",
+      "gostje": "ŽNK Agram",
+      "domaciId": "171",
+      "gostjeId": "649",
+      "izid": {
+        "domaci": 1,
+        "gostje": 5
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511746",
+      "krog": 6,
+      "datum": "2025-10-05",
+      "ura": "13:30",
+      "domaci": "ŽNK Agram",
+      "gostje": "ŽNK Dinamo",
+      "domaciId": "649",
+      "gostjeId": "108341",
+      "izid": {
+        "domaci": 2,
+        "gostje": 3
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511745",
+      "krog": 6,
+      "datum": "2025-10-05",
+      "ura": "14:00",
+      "domaci": "ŽNK Split",
+      "gostje": "ŽNK Međimurje Čakovec",
+      "domaciId": "4266",
+      "gostjeId": "175835",
+      "izid": {
+        "domaci": 2,
+        "gostje": 5
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511747",
+      "krog": 6,
+      "datum": "2025-10-05",
+      "ura": "15:00",
+      "domaci": "ŽNK Hajduk Split",
+      "gostje": "ŽNK Osijek",
+      "domaciId": "520",
+      "gostjeId": "171",
+      "izid": {
+        "domaci": 2,
+        "gostje": 1
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511751",
+      "krog": 7,
+      "datum": "2025-10-12",
+      "ura": "13:00",
+      "domaci": "ŽNK Dinamo",
+      "gostje": "ŽNK Hajduk Split",
+      "domaciId": "108341",
+      "gostjeId": "520",
+      "izid": {
+        "domaci": 3,
+        "gostje": 2
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511749",
+      "krog": 7,
+      "datum": "2025-10-12",
+      "ura": "15:00",
+      "domaci": "HNK Gorica s.d.d.",
+      "gostje": "ŽNK Split",
+      "domaciId": "1274",
+      "gostjeId": "4266",
+      "izid": {
+        "domaci": 2,
+        "gostje": 0
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511752",
+      "krog": 7,
+      "datum": "2025-10-12",
+      "ura": "15:30",
+      "domaci": "ŽNK Međimurje Čakovec",
+      "gostje": "ŽNK Agram",
+      "domaciId": "175835",
+      "gostjeId": "649",
+      "izid": {
+        "domaci": 2,
+        "gostje": 5
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511753",
+      "krog": 8,
+      "datum": "2025-10-19",
+      "ura": "14:00",
+      "domaci": "ŽNK Split",
+      "gostje": "ŽNK Agram",
+      "domaciId": "4266",
+      "gostjeId": "649",
+      "izid": {
+        "domaci": 0,
+        "gostje": 5
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511754",
+      "krog": 8,
+      "datum": "2025-10-19",
+      "ura": "14:00",
+      "domaci": "ŽNK Međimurje Čakovec",
+      "gostje": "ŽNK Hajduk Split",
+      "domaciId": "175835",
+      "gostjeId": "520",
+      "izid": {
+        "domaci": 1,
+        "gostje": 1
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511756",
+      "krog": 8,
+      "datum": "2025-10-19",
+      "ura": "14:00",
+      "domaci": "ŽNK Osijek",
+      "gostje": "HNK Gorica s.d.d.",
+      "domaciId": "171",
+      "gostjeId": "1274",
+      "izid": {
+        "domaci": 5,
+        "gostje": 1
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511757",
+      "krog": 9,
+      "datum": "2025-11-02",
+      "ura": "11:00",
+      "domaci": "ŽNK Osijek",
+      "gostje": "ŽNK Split",
+      "domaciId": "171",
+      "gostjeId": "4266",
+      "izid": {
+        "domaci": 5,
+        "gostje": 0
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511758",
+      "krog": 9,
+      "datum": "2025-11-02",
+      "ura": "14:00",
+      "domaci": "HNK Gorica s.d.d.",
+      "gostje": "ŽNK Dinamo",
+      "domaciId": "1274",
+      "gostjeId": "108341",
+      "izid": {
+        "domaci": 0,
+        "gostje": 4
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511760",
+      "krog": 9,
+      "datum": "2025-11-02",
+      "ura": "14:15",
+      "domaci": "ŽNK Hajduk Split",
+      "gostje": "ŽNK Agram",
+      "domaciId": "520",
+      "gostjeId": "649",
+      "izid": {
+        "domaci": 2,
+        "gostje": 0
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511764",
+      "krog": 10,
+      "datum": "2025-11-09",
+      "ura": "13:00",
+      "domaci": "ŽNK Dinamo",
+      "gostje": "ŽNK Osijek",
+      "domaciId": "108341",
+      "gostjeId": "171",
+      "izid": {
+        "domaci": 5,
+        "gostje": 1
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511761",
+      "krog": 10,
+      "datum": "2025-11-09",
+      "ura": "14:00",
+      "domaci": "ŽNK Split",
+      "gostje": "ŽNK Hajduk Split",
+      "domaciId": "4266",
+      "gostjeId": "520",
+      "izid": {
+        "domaci": 0,
+        "gostje": 8
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511763",
+      "krog": 10,
+      "datum": "2025-11-09",
+      "ura": "18:00",
+      "domaci": "ŽNK Međimurje Čakovec",
+      "gostje": "HNK Gorica s.d.d.",
+      "domaciId": "175835",
+      "gostjeId": "1274",
+      "izid": {
+        "domaci": 3,
+        "gostje": 0
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511766",
+      "krog": 11,
+      "datum": "2025-11-16",
+      "ura": "13:00",
+      "domaci": "ŽNK Osijek",
+      "gostje": "ŽNK Međimurje Čakovec",
+      "domaciId": "171",
+      "gostjeId": "175835",
+      "izid": {
+        "domaci": 1,
+        "gostje": 1
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511767",
+      "krog": 11,
+      "datum": "2025-11-16",
+      "ura": "14:30",
+      "domaci": "HNK Gorica s.d.d.",
+      "gostje": "ŽNK Agram",
+      "domaciId": "1274",
+      "gostjeId": "649",
+      "izid": {
+        "domaci": 2,
+        "gostje": 6
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511765",
+      "krog": 11,
+      "datum": "2025-11-16",
+      "ura": "15:00",
+      "domaci": "ŽNK Dinamo",
+      "gostje": "ŽNK Split",
+      "domaciId": "108341",
+      "gostjeId": "4266",
+      "izid": {
+        "domaci": 11,
+        "gostje": 0
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511771",
+      "krog": 12,
+      "datum": "2025-11-20",
+      "ura": "13:00",
+      "domaci": "ŽNK Agram",
+      "gostje": "ŽNK Osijek",
+      "domaciId": "649",
+      "gostjeId": "171",
+      "izid": {
+        "domaci": 3,
+        "gostje": 0
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511772",
+      "krog": 12,
+      "datum": "2025-11-20",
+      "ura": "13:00",
+      "domaci": "ŽNK Međimurje Čakovec",
+      "gostje": "ŽNK Dinamo",
+      "domaciId": "175835",
+      "gostjeId": "108341",
+      "izid": {
+        "domaci": 4,
+        "gostje": 0
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511770",
+      "krog": 12,
+      "datum": "2025-11-20",
+      "ura": "14:00",
+      "domaci": "HNK Gorica s.d.d.",
+      "gostje": "ŽNK Hajduk Split",
+      "domaciId": "1274",
+      "gostjeId": "520",
+      "izid": {
+        "domaci": 1,
+        "gostje": 3
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511774",
+      "krog": 13,
+      "datum": "2025-12-07",
+      "ura": "12:30",
+      "domaci": "ŽNK Dinamo",
+      "gostje": "ŽNK Agram",
+      "domaciId": "108341",
+      "gostjeId": "649",
+      "izid": {
+        "domaci": 1,
+        "gostje": 2
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511773",
+      "krog": 13,
+      "datum": "2025-12-07",
+      "ura": "13:00",
+      "domaci": "ŽNK Međimurje Čakovec",
+      "gostje": "ŽNK Split",
+      "domaciId": "175835",
+      "gostjeId": "4266",
+      "izid": {
+        "domaci": 5,
+        "gostje": 2
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511775",
+      "krog": 13,
+      "datum": "2025-12-07",
+      "ura": "13:00",
+      "domaci": "ŽNK Osijek",
+      "gostje": "ŽNK Hajduk Split",
+      "domaciId": "171",
+      "gostjeId": "520",
+      "izid": {
+        "domaci": 1,
+        "gostje": 2
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511777",
+      "krog": 14,
+      "datum": "2026-02-15",
+      "ura": "13:00",
+      "domaci": "ŽNK Split",
+      "gostje": "HNK Gorica s.d.d.",
+      "domaciId": "4266",
+      "gostjeId": "1274",
+      "izid": {
+        "domaci": 0,
+        "gostje": 3
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511779",
+      "krog": 14,
+      "datum": "2026-02-15",
+      "ura": "15:00",
+      "domaci": "ŽNK Hajduk Split",
+      "gostje": "ŽNK Dinamo",
+      "domaciId": "520",
+      "gostjeId": "108341",
+      "izid": {
+        "domaci": 2,
+        "gostje": 1
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "100511780",
+      "krog": 14,
+      "datum": "2026-02-15",
+      "ura": "17:00",
+      "domaci": "ŽNK Agram",
+      "gostje": "ŽNK Međimurje Čakovec",
+      "domaciId": "649",
+      "gostjeId": "175835",
+      "izid": {
+        "domaci": 2,
+        "gostje": 0
+      },
+      "publishedPhase": "base"
+    },
+    {
+      "id": "108056162",
+      "krog": 1,
+      "datum": "2026-02-22",
+      "ura": "13:00",
+      "domaci": "ŽNK Hajduk Split",
+      "gostje": "ŽNK Dinamo",
+      "domaciId": "520",
+      "gostjeId": "108341",
+      "izid": {
+        "domaci": 1,
+        "gostje": 1
+      },
+      "publishedPhase": "playoff"
+    },
+    {
+      "id": "108056163",
+      "krog": 1,
+      "datum": "2026-03-11",
+      "ura": "15:30",
+      "domaci": "ŽNK Međimurje Čakovec",
+      "gostje": "ŽNK Agram",
+      "domaciId": "175835",
+      "gostjeId": "649",
+      "izid": {
+        "domaci": 1,
+        "gostje": 5
+      },
+      "publishedPhase": "playoff"
+    },
+    {
+      "id": "108056164",
+      "krog": 2,
+      "datum": "2026-03-15",
+      "ura": "13:00",
+      "domaci": "ŽNK Međimurje Čakovec",
+      "gostje": "ŽNK Hajduk Split",
+      "domaciId": "175835",
+      "gostjeId": "520",
+      "izid": {
+        "domaci": 0,
+        "gostje": 2
+      },
+      "publishedPhase": "playoff"
+    },
+    {
+      "id": "108056165",
+      "krog": 2,
+      "datum": "2026-03-15",
+      "ura": "15:00",
+      "domaci": "ŽNK Dinamo",
+      "gostje": "ŽNK Agram",
+      "domaciId": "108341",
+      "gostjeId": "649",
+      "izid": {
+        "domaci": 0,
+        "gostje": 3
+      },
+      "publishedPhase": "playoff"
+    },
+    {
+      "id": "108056166",
+      "krog": 3,
+      "datum": "2026-03-22",
+      "ura": "14:00",
+      "domaci": "ŽNK Dinamo",
+      "gostje": "ŽNK Međimurje Čakovec",
+      "domaciId": "108341",
+      "gostjeId": "175835",
+      "izid": {
+        "domaci": 2,
+        "gostje": 0
+      },
+      "publishedPhase": "playoff"
+    },
+    {
+      "id": "108056167",
+      "krog": 3,
+      "datum": "2026-03-22",
+      "ura": "15:00",
+      "domaci": "ŽNK Agram",
+      "gostje": "ŽNK Hajduk Split",
+      "domaciId": "649",
+      "gostjeId": "520",
+      "izid": {
+        "domaci": 1,
+        "gostje": 2
+      },
+      "publishedPhase": "playoff"
+    },
+    {
+      "id": "108056168",
+      "krog": 4,
+      "datum": "2026-03-29",
+      "ura": "11:00",
+      "domaci": "ŽNK Dinamo",
+      "gostje": "ŽNK Hajduk Split",
+      "domaciId": "108341",
+      "gostjeId": "520",
+      "izid": {
+        "domaci": 1,
+        "gostje": 0
+      },
+      "publishedPhase": "playoff"
+    },
+    {
+      "id": "108056169",
+      "krog": 4,
+      "datum": "2026-03-29",
+      "ura": "15:00",
+      "domaci": "ŽNK Agram",
+      "gostje": "ŽNK Međimurje Čakovec",
+      "domaciId": "649",
+      "gostjeId": "175835",
+      "izid": {
+        "domaci": 4,
+        "gostje": 2
+      },
+      "publishedPhase": "playoff"
+    },
+    {
+      "id": "108056170",
+      "krog": 5,
+      "datum": "2026-04-04",
+      "ura": "12:00",
+      "domaci": "ŽNK Agram",
+      "gostje": "ŽNK Dinamo",
+      "domaciId": "649",
+      "gostjeId": "108341",
+      "izid": {
+        "domaci": 0,
+        "gostje": 1
+      },
+      "publishedPhase": "playoff"
+    },
+    {
+      "id": "108056171",
+      "krog": 5,
+      "datum": "2026-04-04",
+      "ura": "13:00",
+      "domaci": "ŽNK Hajduk Split",
+      "gostje": "ŽNK Međimurje Čakovec",
+      "domaciId": "520",
+      "gostjeId": "175835",
+      "izid": {
+        "domaci": 5,
+        "gostje": 1
+      },
+      "publishedPhase": "playoff"
+    },
+    {
+      "id": "108056173",
+      "krog": 6,
+      "datum": "2026-04-26",
+      "ura": "13:00",
+      "domaci": "ŽNK Hajduk Split",
+      "gostje": "ŽNK Agram",
+      "domaciId": "520",
+      "gostjeId": "649",
+      "izid": {
+        "domaci": 1,
+        "gostje": 1
+      },
+      "publishedPhase": "playoff"
+    },
+    {
+      "id": "108056172",
+      "krog": 6,
+      "datum": "2026-04-26",
+      "ura": "17:00",
+      "domaci": "ŽNK Međimurje Čakovec",
+      "gostje": "ŽNK Dinamo",
+      "domaciId": "175835",
+      "gostjeId": "108341",
+      "izid": {
+        "domaci": 1,
+        "gostje": 4
+      },
+      "publishedPhase": "playoff"
+    },
+    {
+      "id": "108056174",
+      "krog": 7,
+      "datum": "2026-05-03",
+      "ura": "15:00",
+      "domaci": "ŽNK Hajduk Split",
+      "gostje": "ŽNK Dinamo",
+      "domaciId": "520",
+      "gostjeId": "108341",
+      "izid": {
+        "domaci": 1,
+        "gostje": 0
+      },
+      "publishedPhase": "playoff"
+    },
+    {
+      "id": "108056175",
+      "krog": 7,
+      "datum": "2026-05-03",
+      "ura": "15:00",
+      "domaci": "ŽNK Međimurje Čakovec",
+      "gostje": "ŽNK Agram",
+      "domaciId": "175835",
+      "gostjeId": "649",
+      "izid": {
+        "domaci": 0,
+        "gostje": 5
+      },
+      "publishedPhase": "playoff"
+    },
+    {
+      "id": "108056177",
+      "krog": 8,
+      "datum": "2026-05-06",
+      "ura": "16:00",
+      "domaci": "ŽNK Dinamo",
+      "gostje": "ŽNK Agram",
+      "domaciId": "108341",
+      "gostjeId": "649",
+      "izid": {
+        "domaci": 3,
+        "gostje": 2
+      },
+      "publishedPhase": "playoff"
+    },
+    {
+      "id": "108056176",
+      "krog": 8,
+      "datum": "2026-05-14",
+      "ura": "14:00",
+      "domaci": "ŽNK Međimurje Čakovec",
+      "gostje": "ŽNK Hajduk Split",
+      "domaciId": "175835",
+      "gostjeId": "520",
+      "izid": {
+        "domaci": 0,
+        "gostje": 4
+      },
+      "publishedPhase": "playoff"
+    },
+    {
+      "id": "108056178",
+      "krog": 9,
+      "datum": "2026-05-10",
+      "ura": "15:00",
+      "domaci": "ŽNK Dinamo",
+      "gostje": "ŽNK Međimurje Čakovec",
+      "domaciId": "108341",
+      "gostjeId": "175835",
+      "izid": {
+        "domaci": 2,
+        "gostje": 3
+      },
+      "publishedPhase": "playoff"
+    },
+    {
+      "id": "108056179",
+      "krog": 9,
+      "datum": "2026-05-10",
+      "ura": "17:00",
+      "domaci": "ŽNK Agram",
+      "gostje": "ŽNK Hajduk Split",
+      "domaciId": "649",
+      "gostjeId": "520",
+      "izid": {
+        "domaci": 0,
+        "gostje": 4
+      },
+      "publishedPhase": "playoff"
+    },
+    {
+      "id": "108056180",
+      "krog": 10,
+      "datum": "2026-05-17",
+      "ura": "15:00",
+      "domaci": "ŽNK Dinamo",
+      "gostje": "ŽNK Hajduk Split",
+      "domaciId": "108341",
+      "gostjeId": "520",
+      "izid": {
+        "domaci": 0,
+        "gostje": 2
+      },
+      "publishedPhase": "playoff"
+    },
+    {
+      "id": "108056181",
+      "krog": 10,
+      "datum": "2026-05-17",
+      "ura": "17:00",
+      "domaci": "ŽNK Agram",
+      "gostje": "ŽNK Međimurje Čakovec",
+      "domaciId": "649",
+      "gostjeId": "175835",
+      "izid": {
+        "domaci": 4,
+        "gostje": 1
+      },
+      "publishedPhase": "playoff"
+    },
+    {
+      "id": "108056183",
+      "krog": 11,
+      "datum": "2026-05-24",
+      "ura": "15:00",
+      "domaci": "ŽNK Hajduk Split",
+      "gostje": "ŽNK Međimurje Čakovec",
+      "domaciId": "520",
+      "gostjeId": "175835",
+      "izid": {
+        "domaci": 3,
+        "gostje": 0
+      },
+      "publishedPhase": "playoff"
+    },
+    {
+      "id": "108056182",
+      "krog": 11,
+      "datum": "2026-05-24",
+      "ura": "18:00",
+      "domaci": "ŽNK Agram",
+      "gostje": "ŽNK Dinamo",
+      "domaciId": "649",
+      "gostjeId": "108341",
+      "izid": {
+        "domaci": 2,
+        "gostje": 0
+      },
+      "publishedPhase": "playoff"
+    },
+    {
+      "id": "108056184",
+      "krog": 12,
+      "datum": "2026-05-31",
+      "ura": "14:00",
+      "domaci": "ŽNK Međimurje Čakovec",
+      "gostje": "ŽNK Dinamo",
+      "domaciId": "175835",
+      "gostjeId": "108341",
+      "izid": {
+        "domaci": 5,
+        "gostje": 3
+      },
+      "publishedPhase": "playoff"
+    },
+    {
+      "id": "108056185",
+      "krog": 12,
+      "datum": "2026-05-31",
+      "ura": "17:00",
+      "domaci": "ŽNK Hajduk Split",
+      "gostje": "ŽNK Agram",
+      "domaciId": "520",
+      "gostjeId": "649",
+      "izid": {
+        "domaci": 1,
+        "gostje": 2
+      },
+      "publishedPhase": "playoff"
+    },
+    {
+      "id": "108056736",
+      "krog": 1,
+      "datum": "2026-02-22",
+      "ura": "11:00",
+      "domaci": "ŽNK Osijek",
+      "gostje": "ŽNK Split",
+      "domaciId": "171",
+      "gostjeId": "4266",
+      "izid": {
+        "domaci": 1,
+        "gostje": 1
+      },
+      "publishedPhase": "playout"
+    },
+    {
+      "id": "108056737",
+      "krog": 2,
+      "datum": "2026-03-15",
+      "ura": "13:00",
+      "domaci": "HNK Gorica s.d.d.",
+      "gostje": "ŽNK Split",
+      "domaciId": "1274",
+      "gostjeId": "4266",
+      "izid": {
+        "domaci": 1,
+        "gostje": 3
+      },
+      "publishedPhase": "playout"
+    },
+    {
+      "id": "108056738",
+      "krog": 3,
+      "datum": "2026-03-21",
+      "ura": "13:30",
+      "domaci": "HNK Gorica s.d.d.",
+      "gostje": "ŽNK Osijek",
+      "domaciId": "1274",
+      "gostjeId": "171",
+      "izid": {
+        "domaci": 3,
+        "gostje": 0
+      },
+      "publishedPhase": "playout"
+    },
+    {
+      "id": "108056739",
+      "krog": 4,
+      "datum": "2026-03-29",
+      "ura": "11:00",
+      "domaci": "ŽNK Split",
+      "gostje": "ŽNK Osijek",
+      "domaciId": "4266",
+      "gostjeId": "171",
+      "izid": {
+        "domaci": 1,
+        "gostje": 3
+      },
+      "publishedPhase": "playout"
+    },
+    {
+      "id": "108056740",
+      "krog": 5,
+      "datum": "2026-04-04",
+      "ura": "13:00",
+      "domaci": "ŽNK Split",
+      "gostje": "HNK Gorica s.d.d.",
+      "domaciId": "4266",
+      "gostjeId": "1274",
+      "izid": {
+        "domaci": 1,
+        "gostje": 2
+      },
+      "publishedPhase": "playout"
+    },
+    {
+      "id": "108056741",
+      "krog": 6,
+      "datum": "2026-04-26",
+      "ura": "13:00",
+      "domaci": "ŽNK Osijek",
+      "gostje": "HNK Gorica s.d.d.",
+      "domaciId": "171",
+      "gostjeId": "1274",
+      "izid": {
+        "domaci": 3,
+        "gostje": 3
+      },
+      "publishedPhase": "playout"
+    },
+    {
+      "id": "108056742",
+      "krog": 7,
+      "datum": "2026-05-03",
+      "ura": "11:00",
+      "domaci": "ŽNK Osijek",
+      "gostje": "ŽNK Split",
+      "domaciId": "171",
+      "gostjeId": "4266",
+      "izid": {
+        "domaci": 7,
+        "gostje": 1
+      },
+      "publishedPhase": "playout"
+    },
+    {
+      "id": "108056743",
+      "krog": 8,
+      "datum": "2026-05-10",
+      "ura": "17:30",
+      "domaci": "HNK Gorica s.d.d.",
+      "gostje": "ŽNK Split",
+      "domaciId": "1274",
+      "gostjeId": "4266",
+      "izid": {
+        "domaci": 0,
+        "gostje": 2
+      },
+      "publishedPhase": "playout"
+    },
+    {
+      "id": "108056744",
+      "krog": 9,
+      "datum": "2026-05-17",
+      "ura": "17:30",
+      "domaci": "HNK Gorica s.d.d.",
+      "gostje": "ŽNK Osijek",
+      "domaciId": "1274",
+      "gostjeId": "171",
+      "izid": {
+        "domaci": 0,
+        "gostje": 3
+      },
+      "publishedPhase": "playout"
+    }
+  ]
+}
