@@ -29,6 +29,21 @@
       ]
     },
     {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "mnzgorenjska.vercel.app"
+        }
+      ],
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
       "source": "/app/latest.json",
       "headers": [
         {
