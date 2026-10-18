@@ -41,7 +41,16 @@ insert into auth.users(id,email,raw_user_meta_data) values('00000000-0000-4000-8
 -- Existing unrelated child for the concurrent FK-retarget probe.
 insert into klub_predstavitev(team_id,opis) values(8372,'TEST ONLY');
 
-insert into assist_votes(goal_id,voter_id,player_id) select min(id),'00000000-0000-4000-8000-000000000013',null from goals;
+-- Vote on the ordinary R5 goal whose team will be remapped; never on the
+-- first generated goal (a penalty). STRICT makes absent/ambiguous setup fail.
+do $$ declare eligible_goal bigint; begin
+ select id into strict eligible_goal from goals
+ where match_id=427263 and team_id=10388 and minute=12
+   and not is_penalty and not is_own_goal
+   and assist_player_id is null and assist_none_confirmed_at is null;
+ insert into assist_votes(goal_id,voter_id,player_id)
+ values(eligible_goal,'00000000-0000-4000-8000-000000000013',null);
+end $$;
 insert into profil_igralca_plus(player_id,tekma_id) values(313535,309307);
 insert into zahtevki_igralca(id,player_id,user_id,status) overriding system value values(-613,313535,'00000000-0000-4000-8000-000000000013','zavrnjen');
 insert into uradne_odsotnosti(player_id,zahtevek_id,user_id,vrsta,od,sezona,status,zaprto_at,ni_drzalo_datum,ni_drzalo_match_id)

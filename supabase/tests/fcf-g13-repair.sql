@@ -45,6 +45,12 @@ begin
 end;
 $$;
 do $$ declare old jsonb; a jsonb; b jsonb; begin
+ if (select count(*) from assist_votes v join goals g on g.id=v.goal_id
+     where v.voter_id='00000000-0000-4000-8000-000000000013'
+       and g.match_id=427263 and g.team_id=10388 and g.minute=12
+       and not g.is_penalty and not g.is_own_goal
+       and g.assist_player_id is null and g.assist_none_confirmed_at is null)<>1
+ then raise exception 'Fixture requires one vote on an eligible ordinary R5 goal';end if;
  old:=pg_temp.g13_test_snapshot();
  a:=pg_temp.fcf_g13_repair(false,null); b:=pg_temp.fcf_g13_repair(false,null);
  if old<>pg_temp.g13_test_snapshot() or a->>'sha256'<>b->>'sha256' then raise exception 'Preview changed data or unstable hash'; end if;
@@ -94,6 +100,11 @@ do $$ declare a jsonb; old jsonb; expected jsonb; after_state jsonb; kind text; 
   or (select count(*) from players where team_id=8371)<>21 then raise exception 'Incorrect result';end if;
  if not exists(select 1 from matches where id=427267 and home_team_id=8385 and away_team_id=8378)
   or not exists(select 1 from matches where id=427282 and home_team_id=8378 and away_team_id=8385) then raise exception 'Lost proven orientations';end if;
+ if (select count(*) from assist_votes v join goals g on g.id=v.goal_id
+     where v.voter_id='00000000-0000-4000-8000-000000000013'
+       and g.match_id=427263 and g.team_id=8371 and g.minute=12
+       and not g.is_penalty and not g.is_own_goal)<>1
+ then raise exception 'Vote lost its retained ordinary goal after team repair';end if;
  -- Independently compare every player field, not merely counts or repair's flag.
  select jsonb_agg(case when (p->>'team_id')::bigint=10388 then p||'{"team_id":8371}'::jsonb else p end order by (p->>'id')::bigint) into expected from jsonb_array_elements(old->'players')p;
  after_state:=pg_temp.g13_test_snapshot();
