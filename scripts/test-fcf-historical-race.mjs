@@ -62,7 +62,7 @@ try{
  execFileSync('docker',['run','-d','--name',rest,'--network',`container:${container}`,
   '-e',`PGRST_DB_URI=postgresql://supabase_admin@127.0.0.1:5432/${database}`,
   '-e','PGRST_DB_SCHEMAS=public','-e','PGRST_DB_ANON_ROLE=service_role','-e','PGRST_SERVER_PORT=31411',
-  '-e',`PGRST_JWT_SECRET=${secret}`,'public.ecr.aws/supabase/postgrest:v14.5'])
+  '-e',`PGRST_JWT_SECRET=${secret}`,'postgrest/postgrest@sha256:b574528fe109c8343c1247155734d03df8c34b462f342dca0ccc20244fc36ef9'])
  restStarted=true
  await until(()=>{try{return fcfPostgrestSchemaReady(execFileSync('docker',['exec',container,'curl','-s','--max-time','1','http://127.0.0.1:31411/'],{encoding:'utf8',maxBuffer:8*1024*1024}))}catch{return false}},'PostgREST RPC schema did not become ready',200)
  const bodies=[]

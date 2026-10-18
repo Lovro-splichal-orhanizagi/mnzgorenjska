@@ -12582,6 +12582,17 @@ preveri(
     preveri('pošta klubom: en stik na klub (drug naslov istega kluba)', izb.length === 0)
     const sam = kandidati([a], [], new Set(['at-a']), zdaj, [a, b])
     preveri('pošta klubom: klub brez pošte dobi prvi mail', sam.length === 1)
+    // Parkirana vrstica "poslano…" (mail je šel, vpisa ni) blokira klub: po team_id in po imenu v državi.
+    for (const opomba of ['poslano (prvi, 2026-10-12, lovro@slff.eu), a vpis v klub_stik_posta ni uspel — vpiši ročno', 'Poslano? preveri ročno (prvi): SMTP konec DATA']) {
+      const park = { ...b, stanje: 'nov', opomba }
+      preveri(`pošta klubom: parkirana "${opomba.slice(0, 8)}" blokira klub (team_id)`, kandidati([a], [], new Set(['at-a']), zdaj, [a, park]).length === 0)
+      const poImenu = { ...park, team_id: null, klub: 'sv a' }
+      preveri(`pošta klubom: parkirana "${opomba.slice(0, 8)}" blokira klub (ime)`, kandidati([a], [], new Set(['at-a']), zdaj, [a, poImenu]).length === 0)
+    }
+    const drugaOpomba = { ...b, stanje: 'nov', opomba: 'odboj v luka@slff.eu (2026-10-12)' }
+    const drugKlub = { ...b, stanje: 'nov', team_id: 9, klub: 'SV B', opomba: 'poslano? preveri ročno' }
+    preveri('pošta klubom: druga opomba ali drug klub ne blokira', kandidati([a], [], new Set(['at-a']), zdaj, [a, drugaOpomba]).length === 1 &&
+      kandidati([a], [], new Set(['at-a']), zdaj, [a, drugKlub]).length === 1)
   }
   {
     // Stare vrstice za opomnik: le brez pošiljatelja, poslano, brez opombe "poslano…", vsa pošta Lukova.
@@ -12602,6 +12613,58 @@ preveri(
     preveri('pošta klubom: v vrsto za opomnik le stare vrstice (ne parkirane)', ids === '1', ids)
   }
   preveri('pošta klubom: naslov v dnevniku zakrit', zakrij('za <ana.novak@klub.at>: 550') === 'za <a***@klub.at>: 550')
+
+  // Več pošiljateljev: ogrevanje, izbira, opomnik pri istem, besedila po imenu ali ekipi.
+  const { POSILJATELJI, dnevnaMeja, izberiPosiljatelja, aktivniPosiljatelji } = await import('./posta-klubom.mjs')
+  const [luka, lovro, nejc, klubi] = POSILJATELJI
+  const meja = (po, t) => dnevnaMeja(po, new Date(t))
+  preveri('pošta klubom: ogrevanje (pred začetkom 0, 20 + 10 na dunajski dan, največ 100, Luka 100)',
+    meja(lovro, '2026-10-18T21:59:00Z') === 0 && meja(lovro, '2026-10-18T22:00:00Z') === 20 && meja(nejc, '2026-10-20T10:00:00Z') === 30 &&
+    meja(klubi, '2026-10-27T10:00:00Z') === 100 && meja(klubi, '2026-12-01T10:00:00Z') === 100 && meja(luka, '2026-10-18T10:00:00Z') === 100 &&
+    meja(lovro, '2026-10-26T06:00:00Z') === 90, [meja(lovro, '2026-10-18T22:00:00Z'), meja(lovro, '2026-10-26T06:00:00Z')].join())
+  {
+    const akt = aktivniPosiljatelji({ LUKA_SMTP_GESLO: 'a', NEJC_SMTP_GESLO: 'b', LOVRO_SMTP_GESLO: '' })
+    preveri('pošta klubom: pošiljatelj brez gesla ni dejaven', akt.map((po) => po.kljuc).join() === 'luka,nejc' && akt[1].geslo === 'b')
+    const pr = (o) => new Map(Object.entries(o).map(([k, [dan, krog]]) => [k, { dan, krog }]))
+    const vsi4 = POSILJATELJI
+    preveri('pošta klubom: prvi mail dobi pošiljatelj z največ prostora', izberiPosiljatelja(vsi4, pr({ luka: [10, 2], lovro: [20, 2], nejc: [5, 2], klubi: [20, 2] }))?.kljuc === 'lovro')
+    preveri('pošta klubom: brez prostora v krogu ali dnevu ne izbere', izberiPosiljatelja(vsi4, pr({ luka: [50, 0], lovro: [0, 2] }))?.kljuc === undefined &&
+      izberiPosiljatelja(vsi4, pr({ luka: [50, 0], lovro: [1, 2] }))?.kljuc === 'lovro')
+    preveri('pošta klubom: le dejavni pošiljatelji', izberiPosiljatelja([luka], pr({ luka: [3, 2], lovro: [90, 2] }))?.kljuc === 'luka')
+  }
+  {
+    // Opomnik gre od tistega, ki je poslal prvi mail; prvi mail drugega pošiljatelja SLFF ni "drug" zanj.
+    const a = { id: 1, v_vrsti: true, email: 'a@x.at', drzava: 'AT', liga_slug: 'at-a', stanje: 'poslano', team_id: 5, klub: 'SV A' }
+    const c = { ...a, id: 2, team_id: 6, klub: 'SV C', email: 'c@x.at' }
+    const izb = kandidati([a, c], [
+      { stik_id: 1, vrsta: 'prvi', poslal: nejc.poslal, poslano_at: dni(4) },
+      { stik_id: 2, vrsta: 'prvi', poslal: 'Jernej', poslano_at: dni(4) },
+    ], new Set(['at-a']), zdaj, [a, c])
+    preveri('pošta klubom: opomnik pri prvem pošiljatelju, ročni prvi mail brez opomnika', izb.length === 1 && izb[0].s.id === 1 && izb[0].posiljatelj === 'nejc', JSON.stringify(izb))
+    const z = kandidati([a], [
+      { stik_id: 1, vrsta: 'prvi', poslal: nejc.poslal, poslano_at: dni(4) },
+      { stik_id: 1, vrsta: 'klic', poslal: luka.poslal, poslano_at: dni(4) },
+    ], new Set(['at-a']), zdaj, [a])
+    preveri('pošta klubom: pošta drugega pošiljatelja SLFF zapre opomnik', z.length === 0)
+  }
+  for (const drzava of ['AT', 'EE', 'HR', 'HU', 'RS']) {
+    for (const vrsta of ['prvi', 'opomnik']) {
+      const bl = besedilo(k(drzava), p, vrsta, lovro).telo
+      preveri(`pošta klubom: ${drzava} ${vrsta} podpis Lovro`, /\nLovro\nslff\.eu/.test(bl) && !bl.includes('Luka'))
+      const be = besedilo(k(drzava), p, vrsta, klubi).telo
+      const ekipa = { AT: ['wir sind das Team von SLFF', 'Das SLFF-Team'], EE: ['Oleme SLFF-i meeskond.', 'SLFF meeskond'], HR: ['mi smo tim SLFF-a', 'SLFF tim'],
+        HU: ['Az SLFF csapata vagyunk.', 'Az SLFF csapata'], RS: ['mi smo tim SLFF-a', 'SLFF tim'] }[drzava]
+      preveri(`pošta klubom: ${drzava} ${vrsta} besedilo ekipe`, (vrsta === 'opomnik' || be.includes(ekipa[0])) && be.includes(`\n${ekipa[1]}\nslff.eu`) &&
+        !/Luka|Ekipa SLFF|undefined/.test(be) && !/\b(ich bin|Olen |ja sam|vagyok az)/.test(be))
+      if (drzava === 'HU') preveri(`pošta klubom: HU ${vrsta} pozdrav ekipe v množini`, be.startsWith('Jó napot kívánunk!\n') && bl.startsWith('Jó napot kívánok!\n'))
+      if (drzava === 'EE' && vrsta === 'prvi') preveri('pošta klubom: EE ekipa "SLFF on tasuta"', be.includes('Oleme SLFF-i meeskond. SLFF on tasuta') && bl.includes('SLFF-ist. See on tasuta'))
+    }
+  }
+  {
+    const m = (po) => sporocilo({ na: 'k@x.at', zadeva: 'Z', telo: 'T', odjava: 'Abmelden', id: 'x', po })
+    preveri('pošta klubom: From in odjava po pošiljatelju', m(nejc).includes('From: "Nejc (SLFF)" <nejc@slff.eu>') && m(nejc).includes('mailto:nejc@slff.eu?') &&
+      m(klubi).includes('From: "SLFF" <klubi@slff.eu>') && m(luka).includes('From: "Luka (SLFF)" <luka@slff.eu>'))
+  }
 }
 
 // --- samodejne objave (scripts/objave.mjs, src/pages/Objava.tsx) --------------

@@ -2,11 +2,15 @@
 //
 // NE v GitHub Actions: dnevniki javnega repozitorija bi pokazali naslove.
 // Vrsto napolni scripts/vrsta-poste-klubom.mjs (`klub_stik.v_vrsti`). Vsak
-// krog (z --zanka vsakih 10 minut) pošlje največ `--najvec` mailov (privzeto 2, 60–150 s narazen):
-// najprej opomnike, nato prve maile. Pravila kot v CLAUDE.md *Pošta klubom*:
+// krog (z --zanka vsakih 10 minut) pošlje vsak dejaven pošiljatelj (POSILJATELJI)
+// največ `--najvec` mailov (privzeto 2; med vsemi maili 60–150 s): najprej
+// opomnike, nato prve maile. Pravila kot v CLAUDE.md *Pošta klubom*:
 //
-// - pišemo le v oknu prejemnikove države (08–18, pon–sob, `OKNA`), največ
-//   NA_DAN mailov na dan (dunajski dan, šteje klub_stik_posta tega pošiljatelja);
+// - pišemo le v oknu prejemnikove države (08–18, pon–sob, `OKNA`), vsak
+//   pošiljatelj do svoje dnevne meje (`dnevnaMeja`, ogrevanje; dunajski dan,
+//   šteje klub_stik_posta.poslal tega pošiljatelja);
+// - prvi mail dobi pošiljatelj z največ prostora danes, opomnik in preverjanje
+//   nabiralnika pa vedno tisti, ki je poslal prvi mail (sicer opomnik čaka);
 // - prvi mail: stanje `nov`, brez kakršnekoli pošte, `poslji_od` mimo,
 //   liga aktivna (neaktivna liga čaka — tako Estonija do vklopa);
 // - opomnik: en sam, ≥ 3 dni po našem prvem mailu, brez pošte drugih in brez
@@ -24,7 +28,8 @@
 // število človeških fantasy ekip z igralcem kluba). Besedila so po državi.
 // SMTP in IMAP sta tu na roko prek node:tls (brez nove odvisnosti).
 //
-//   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, LUKA_SMTP_GESLO
+//   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, vsaj eno od LUKA_SMTP_GESLO,
+//   LOVRO_SMTP_GESLO, NEJC_SMTP_GESLO, KLUBI_SMTP_GESLO (pošiljatelj brez gesla ne pošilja)
 //   node scripts/posta-klubom.mjs --zanka   (delavec: krog vsakih 10 minut, do zavrnjene prijave)
 //   node scripts/posta-klubom.mjs [--najvec 2]   (en krog)
 //   node scripts/posta-klubom.mjs --suho     (izpiše, kaj bi šlo; nič ne pošlje in ne piše, gesla ne rabi)
@@ -35,11 +40,46 @@ import { resolve } from 'node:path'
 import { createClient } from '@supabase/supabase-js'
 import { vseVrstice } from './strani.mjs'
 
-export const OD = 'luka@slff.eu'
-export const POSLAL = 'Luka (luka@slff.eu)'
+// Nabiralniki, iz katerih pošilja vrsta (vsi na Mailcowu). Pošiljatelj je
+// dejaven le, če je v okolju njegovo geslo. `zacetek`: ogrevanje — dnevna meja
+// 20 + 10 na vsak dunajski dan od začetka, največ 100; brez začetka 100.
+// `ekipa`: piše v imenu ekipe ("smo ekipa SLFF"), ne v prvi osebi.
+export const POSILJATELJI = [
+  { kljuc: 'luka', od: 'luka@slff.eu', ime: 'Luka', poslal: 'Luka (luka@slff.eu)', env: 'LUKA_SMTP_GESLO', zacetek: null },
+  { kljuc: 'lovro', od: 'lovro@slff.eu', ime: 'Lovro', poslal: 'Lovro (lovro@slff.eu)', env: 'LOVRO_SMTP_GESLO', zacetek: '2026-10-19' },
+  { kljuc: 'nejc', od: 'nejc@slff.eu', ime: 'Nejc', poslal: 'Nejc (nejc@slff.eu)', env: 'NEJC_SMTP_GESLO', zacetek: '2026-10-19' },
+  { kljuc: 'klubi', od: 'klubi@slff.eu', ime: 'Ekipa SLFF', poslal: 'Ekipa SLFF (klubi@slff.eu)', env: 'KLUBI_SMTP_GESLO', zacetek: '2026-10-19', ekipa: true },
+]
+export const OD = POSILJATELJI[0].od
+export const POSLAL = POSILJATELJI[0].poslal
 const GOSTITELJ = 'mail.slff.eu'
 const NA_DAN = 100
 const DNI_DO_OPOMNIKA = 3
+
+/** Dejavni pošiljatelji (z geslom v `env`), v vrstnem redu nastavitve. */
+export const aktivniPosiljatelji = (env) => POSILJATELJI.filter((po) => env[po.env]).map((po) => ({ ...po, geslo: env[po.env] }))
+
+/** Dnevna meja pošiljatelja: ogrevanje od `zacetek` (dunajski dnevi), pred začetkom 0. */
+export function dnevnaMeja(po, zdaj = new Date()) {
+  if (!po.zacetek) return NA_DAN
+  const dni = Math.round((Date.parse(danDunaj(zdaj)) - Date.parse(po.zacetek)) / DAN)
+  return dni < 0 ? 0 : Math.min(NA_DAN, 20 + 10 * dni)
+}
+
+/**
+ * Pošiljatelj za prvi mail: dejaven, z dnevnim prostorom in prostorom v krogu,
+ * največ dnevnega prostora; enako → prej v nastavitvi. `prostor`: kljuc → { dan, krog }.
+ */
+export function izberiPosiljatelja(aktivni, prostor) {
+  let naj = null
+  for (const po of aktivni) {
+    const x = prostor.get(po.kljuc)
+    if (x && x.dan > 0 && x.krog > 0 && (!naj || x.dan > prostor.get(naj.kljuc).dan)) naj = po
+  }
+  return naj
+}
+
+const DAN = 86400e3
 
 // Okno pošiljanja po državi prejemnika; država brez okna (in besedil) ne dobi nič.
 export const OKNA = { AT: 'Europe/Vienna', EE: 'Europe/Tallinn', HR: 'Europe/Zagreb', HU: 'Europe/Budapest', RS: 'Europe/Belgrade' }
@@ -55,7 +95,7 @@ export function vOknu(drzava, zdaj = new Date()) {
   return d.weekday !== 'Sun' && Number(d.hour) >= 8 && Number(d.hour) < 18
 }
 
-const danDunaj = (d) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Vienna' }).format(d)
+export const danDunaj = (d) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Vienna' }).format(d)
 
 // --- besedila ----------------------------------------------------------------
 
@@ -66,15 +106,17 @@ const tocke = (n) => {
 
 // Nemška besedila so prenesena dobesedno iz prvega pošiljanja (posli.py), da
 // opomnik ustreza že poslanim prvim mailom.
-function nemsko(k, p, vrsta, url) {
+function nemsko(k, p, vrsta, url, po) {
   const { ime_lige: liga, klub } = k
+  const ekipa = po.ekipa
+  const podpis = ekipa ? 'Das SLFF-Team' : po.ime
   const naj = p.naj ? `${p.naj}, ${tocke(p.tocke)} Punkte` : null
   if (vrsta === 'prvi') {
     return {
       zadeva: `Spieler von ${klub} im Fantasy-Spiel der ${liga}`,
       telo: `Guten Tag,
 
-ich bin Luka von SLFF, einem kostenlosen Fantasy-Fußballspiel für Amateurligen. Seit Kurzem ist auch die ${liga} dabei: Fans stellen ihr Team aus echten Spielern der Liga zusammen, die Punkte kommen aus den offiziellen Spielberichten auf oefb.at. ${p.igralcev} Spieler von ${klub} sind schon im Spiel:
+${ekipa ? 'wir sind das Team von SLFF' : `ich bin ${po.ime} von SLFF`}, einem kostenlosen Fantasy-Fußballspiel für Amateurligen. Seit Kurzem ist auch die ${liga} dabei: Fans stellen ihr Team aus echten Spielern der Liga zusammen, die Punkte kommen aus den offiziellen Spielberichten auf oefb.at. ${p.igralcev} Spieler von ${klub} sind schon im Spiel:
 ${url}
 ${naj ? `
 Bisher bester Spieler: ${naj}.
@@ -84,7 +126,7 @@ Wenn es Ihnen gefällt, teilen Sie den Link gerne in der Vereinsgruppe oder auf 
 Möchte ein Spieler nicht namentlich aufscheinen oder wollen Sie keine weiteren E-Mails, genügt eine kurze Antwort.
 
 Mit freundlichen Grüßen
-Luka
+${podpis}
 slff.eu
 `,
     }
@@ -94,17 +136,17 @@ slff.eu
     zadeva: ekip >= 5 ? `${klub}: Ihre Spieler sind schon in ${ekip} Fantasy-Teams` : `${klub} im Fantasy-Spiel: so läuft es für Ihre Spieler`,
     telo: `Guten Tag,
 
-vor ein paar Tagen habe ich Ihnen über SLFF geschrieben, das kostenlose Fantasy-Spiel für die ${liga}. Kurz: Die Spieler von ${klub} sind im Spiel und sammeln Punkte${ekip >= 5 ? `, und sie stehen schon in ${ekip} Fantasy-Teams` : ''}.${naj ? ` Bisher bester Spieler: ${naj}.` : ''}
+vor ein paar Tagen ${ekipa ? 'haben wir' : 'habe ich'} Ihnen über SLFF geschrieben, das kostenlose Fantasy-Spiel für die ${liga}. Kurz: Die Spieler von ${klub} sind im Spiel und sammeln Punkte${ekip >= 5 ? `, und sie stehen schon in ${ekip} Fantasy-Teams` : ''}.${naj ? ` Bisher bester Spieler: ${naj}.` : ''}
 
 Die Vereinsseite mit Statistiken und einem fertigen Bild zum Teilen:
 ${url}
 
 Wenn Sie den Link in die Vereinsgruppe oder auf Facebook stellen, können sich Fans und auch die Spieler selbst messen. Es ist kostenlos.
 
-Das ist meine letzte Nachricht dazu. Möchte ein Spieler nicht namentlich aufscheinen, genügt eine kurze Antwort.
+Das ist ${ekipa ? 'unsere' : 'meine'} letzte Nachricht dazu. Möchte ein Spieler nicht namentlich aufscheinen, genügt eine kurze Antwort.
 
 Mit freundlichen Grüßen
-Luka
+${podpis}
 slff.eu
 `,
   }
@@ -113,15 +155,17 @@ slff.eu
 // Estonščina sklanja, zato ime lige stoji samo za dvopičjem ali v oklepaju,
 // klub za besedo "klubi"/"klubist" (glej docs/viri/estonija.md). Brez pomišljajev.
 // Besedila ne trdijo, da imamo dovoljenje zveze.
-function estonsko(k, p, vrsta, url) {
+function estonsko(k, p, vrsta, url, po) {
   const { ime_lige: liga, klub } = k
+  const ekipa = po.ekipa
+  const podpis = ekipa ? 'SLFF meeskond' : po.ime
   const naj = p.naj ? `${p.naj}, ${tocke(p.tocke)} ${Number(p.tocke) === 1 ? 'punkt' : 'punkti'}` : null
   if (vrsta === 'prvi') {
     return {
       zadeva: `Klubi ${klub} mängijad fantaasiajalgpallis (${liga})`,
       telo: `Tere!
 
-Olen Luka SLFF-ist. See on tasuta fantaasiajalgpalli mäng amatöörliigadele. Nüüd on mängus ka uus liiga: ${liga}. Fännid panevad oma meeskonna kokku liiga päris mängijatest ja punktid tulevad ametlikest mänguprotokollidest lehel jalgpall.ee. Mängus on juba ${p.igralcev} ${p.igralcev === 1 ? 'mängija' : 'mängijat'} klubist ${klub}:
+${ekipa ? 'Oleme SLFF-i meeskond. SLFF on' : `Olen ${po.ime} SLFF-ist. See on`} tasuta fantaasiajalgpalli mäng amatöörliigadele. Nüüd on mängus ka uus liiga: ${liga}. Fännid panevad oma meeskonna kokku liiga päris mängijatest ja punktid tulevad ametlikest mänguprotokollidest lehel jalgpall.ee. Mängus on juba ${p.igralcev} ${p.igralcev === 1 ? 'mängija' : 'mängijat'} klubist ${klub}:
 ${url}
 ${naj ? `
 Seni parim mängija: ${naj}.
@@ -131,7 +175,7 @@ Kui see Teile meeldib, jagage linki julgelt klubi grupis või Facebookis. Mõni 
 Kui mõni mängija ei soovi oma nimega mängus olla või Te ei soovi rohkem kirju, piisab lühikesest vastusest.
 
 Lugupidamisega
-Luka
+${podpis}
 slff.eu
 `,
     }
@@ -141,17 +185,17 @@ slff.eu
     zadeva: ekip >= 5 ? `Klubi ${klub} mängijad on juba ${ekip} fantaasiameeskonnas` : `Klubi ${klub} fantaasiamängus: nii läheb Teie mängijatel`,
     telo: `Tere!
 
-Mõni päev tagasi kirjutasin Teile SLFF-ist, tasuta fantaasiajalgpallist (liiga: ${liga}). Lühidalt: klubi ${klub} mängijad on mängus ja koguvad punkte${ekip >= 5 ? ` ning nad on juba ${ekip} fantaasiameeskonnas` : ''}.${naj ? ` Seni parim: ${naj}.` : ''}
+Mõni päev tagasi ${ekipa ? 'kirjutasime' : 'kirjutasin'} Teile SLFF-ist, tasuta fantaasiajalgpallist (liiga: ${liga}). Lühidalt: klubi ${klub} mängijad on mängus ja koguvad punkte${ekip >= 5 ? ` ning nad on juba ${ekip} fantaasiameeskonnas` : ''}.${naj ? ` Seni parim: ${naj}.` : ''}
 
 Klubi leht statistika ja jagamiseks valmis pildiga:
 ${url}
 
 Kui panete lingi klubi gruppi või Facebooki, saavad fännid ja ka mängijad ise omavahel võistelda. See on tasuta.
 
-See on minu viimane kiri sel teemal. Kui mõni mängija ei soovi oma nimega mängus olla, piisab lühikesest vastusest.
+See on ${ekipa ? 'meie' : 'minu'} viimane kiri sel teemal. Kui mõni mängija ei soovi oma nimega mängus olla, piisab lühikesest vastusest.
 
 Lugupidamisega
-Luka
+${podpis}
 slff.eu
 `,
   }
@@ -169,15 +213,17 @@ const slovansko = (n, ena, dve, pet) => {
 // Ime lige stoji v imenovalniku ("Odnedavno je u igri i 1. ŽNL Karlovac"),
 // klub za besedo "kluba"; števila ekip ne sklanjamo ("… s njima već ima 7").
 // Besedila ne trdijo, da imamo dovoljenje zveze.
-function hrvasko(k, p, vrsta, url) {
+function hrvasko(k, p, vrsta, url, po) {
   const { ime_lige: liga, klub } = k
+  const ekipa = po.ekipa
+  const podpis = ekipa ? 'SLFF tim' : po.ime
   const naj = p.naj ? `${p.naj}, ${tocke(p.tocke)} ${slovansko(p.tocke, 'bod', 'boda', 'bodova')}` : null
   if (vrsta === 'prvi') {
     return {
       zadeva: `Igrači kluba ${klub} u fantasy nogometu (${liga})`,
       telo: `Poštovani,
 
-ja sam Luka iz SLFF-a, besplatne fantasy nogometne igre za amaterske lige. Odnedavno je u igri i ${liga}: navijači slažu svoju momčad od stvarnih igrača lige, a bodovi dolaze iz službenih zapisnika utakmica na semafor.hns.family. U igri je već ${p.igralcev} ${slovansko(p.igralcev, 'igrač', 'igrača', 'igrača')} kluba ${klub}:
+${ekipa ? 'mi smo tim SLFF-a' : `ja sam ${po.ime} iz SLFF-a`}, besplatne fantasy nogometne igre za amaterske lige. Odnedavno je u igri i ${liga}: navijači slažu svoju momčad od stvarnih igrača lige, a bodovi dolaze iz službenih zapisnika utakmica na semafor.hns.family. U igri je već ${p.igralcev} ${slovansko(p.igralcev, 'igrač', 'igrača', 'igrača')} kluba ${klub}:
 ${url}
 ${naj ? `
 Dosad najbolji igrač: ${naj}.
@@ -187,7 +233,7 @@ Ako vam se sviđa, slobodno podijelite poveznicu u klupskoj grupi ili na Faceboo
 Ako neki igrač ne želi biti u igri pod svojim imenom ili ne želite više poruka, dovoljan je kratak odgovor.
 
 Lijep pozdrav
-Luka
+${podpis}
 slff.eu
 `,
     }
@@ -197,17 +243,17 @@ slff.eu
     zadeva: ekip >= 5 ? `${klub}: vaši igrači su već u fantasy momčadima (${ekip})` : `${klub} u fantasy igri: kako stoje vaši igrači`,
     telo: `Poštovani,
 
-prije nekoliko dana pisao sam vam o SLFF-u, besplatnoj fantasy igri (${liga}). Ukratko: igrači kluba ${klub} su u igri i skupljaju bodove${ekip >= 5 ? `, a fantasy momčadi s njima već ima ${ekip}` : ''}.${naj ? ` Dosad najbolji: ${naj}.` : ''}
+prije nekoliko dana ${ekipa ? 'pisali smo' : 'pisao sam'} vam o SLFF-u, besplatnoj fantasy igri (${liga}). Ukratko: igrači kluba ${klub} su u igri i skupljaju bodove${ekip >= 5 ? `, a fantasy momčadi s njima već ima ${ekip}` : ''}.${naj ? ` Dosad najbolji: ${naj}.` : ''}
 
 Stranica kluba sa statistikom i gotovom slikom za dijeljenje:
 ${url}
 
 Ako stavite poveznicu u klupsku grupu ili na Facebook, navijači, ali i sami igrači mogu se međusobno natjecati. Igra je besplatna.
 
-Ovo mi je posljednja poruka o tome. Ako neki igrač ne želi biti u igri pod svojim imenom, dovoljan je kratak odgovor.
+Ovo ${ekipa ? 'nam' : 'mi'} je posljednja poruka o tome. Ako neki igrač ne želi biti u igri pod svojim imenom, dovoljan je kratak odgovor.
 
 Lijep pozdrav
-Luka
+${podpis}
 slff.eu
 `,
   }
@@ -215,8 +261,10 @@ slff.eu
 
 // Srbščina: ekavica, latinica (kot vmesnik). Vir zapisnikov je fsb.org.rs za
 // beograjske lige, sicer fss.rs.
-function srbsko(k, p, vrsta, url) {
+function srbsko(k, p, vrsta, url, po) {
   const { ime_lige: liga, klub } = k
+  const ekipa = po.ekipa
+  const podpis = ekipa ? 'SLFF tim' : po.ime
   const vir = /^rs-(u19-)?bg-/.test(k.liga_slug ?? '') ? 'fsb.org.rs' : 'fss.rs'
   const naj = p.naj ? `${p.naj}, ${tocke(p.tocke)} ${slovansko(p.tocke, 'poen', 'poena', 'poena')}` : null
   if (vrsta === 'prvi') {
@@ -224,7 +272,7 @@ function srbsko(k, p, vrsta, url) {
       zadeva: `Igrači kluba ${klub} u fantasy fudbalu (${liga})`,
       telo: `Poštovani,
 
-ja sam Luka iz SLFF-a, besplatne fantasy fudbalske igre za amaterske lige. Odnedavno je u igri i ${liga}: navijači sastavljaju svoj tim od stvarnih igrača lige, a poeni dolaze iz zvaničnih zapisnika sa utakmica na ${vir}. U igri je već ${p.igralcev} ${slovansko(p.igralcev, 'igrač', 'igrača', 'igrača')} kluba ${klub}:
+${ekipa ? 'mi smo tim SLFF-a' : `ja sam ${po.ime} iz SLFF-a`}, besplatne fantasy fudbalske igre za amaterske lige. Odnedavno je u igri i ${liga}: navijači sastavljaju svoj tim od stvarnih igrača lige, a poeni dolaze iz zvaničnih zapisnika sa utakmica na ${vir}. U igri je već ${p.igralcev} ${slovansko(p.igralcev, 'igrač', 'igrača', 'igrača')} kluba ${klub}:
 ${url}
 ${naj ? `
 Do sada najbolji igrač: ${naj}.
@@ -234,7 +282,7 @@ Ako Vam se dopada, slobodno podelite link u klupskoj grupi ili na Fejsbuku. Neki
 Ako neki igrač ne želi da bude u igri pod svojim imenom ili ne želite više poruka, dovoljan je kratak odgovor.
 
 Srdačan pozdrav
-Luka
+${podpis}
 slff.eu
 `,
     }
@@ -244,17 +292,17 @@ slff.eu
     zadeva: ekip >= 5 ? `${klub}: Vaši igrači su već u fantasy timovima (${ekip})` : `${klub} u fantasy igri: kako stoje Vaši igrači`,
     telo: `Poštovani,
 
-pre nekoliko dana sam Vam pisao o SLFF-u, besplatnoj fantasy igri (${liga}). Ukratko: igrači kluba ${klub} su u igri i skupljaju poene${ekip >= 5 ? `, a fantasy timova sa njima već ima ${ekip}` : ''}.${naj ? ` Do sada najbolji: ${naj}.` : ''}
+pre nekoliko dana ${ekipa ? 'smo Vam pisali' : 'sam Vam pisao'} o SLFF-u, besplatnoj fantasy igri (${liga}). Ukratko: igrači kluba ${klub} su u igri i skupljaju poene${ekip >= 5 ? `, a fantasy timova sa njima već ima ${ekip}` : ''}.${naj ? ` Do sada najbolji: ${naj}.` : ''}
 
 Stranica kluba sa statistikom i gotovom slikom za deljenje:
 ${url}
 
 Ako postavite link u klupsku grupu ili na Fejsbuk, navijači, ali i sami igrači mogu međusobno da se takmiče. Igra je besplatna.
 
-Ovo mi je poslednja poruka o tome. Ako neki igrač ne želi da bude u igri pod svojim imenom, dovoljan je kratak odgovor.
+Ovo ${ekipa ? 'nam' : 'mi'} je poslednja poruka o tome. Ako neki igrač ne želi da bude u igri pod svojim imenom, dovoljan je kratak odgovor.
 
 Srdačan pozdrav
-Luka
+${podpis}
 slff.eu
 `,
   }
@@ -263,15 +311,17 @@ slff.eu
 // Madžarščina sklanja s priponami, zato ime lige in kluba stojita brez njih:
 // za dvopičjem, v oklepaju ali pred "játékosai" / "közül". Za številom ednina
 // ("55 pont"). Vikanje kluba (Önök).
-function madzarsko(k, p, vrsta, url) {
+function madzarsko(k, p, vrsta, url, po) {
   const { ime_lige: liga, klub } = k
+  const ekipa = po.ekipa
+  const podpis = ekipa ? 'Az SLFF csapata' : po.ime
   const naj = p.naj ? `${p.naj}, ${tocke(p.tocke)} pont` : null
   if (vrsta === 'prvi') {
     return {
       zadeva: `${klub} játékosai a fantasy fociban (${liga})`,
-      telo: `Jó napot kívánok!
+      telo: `${ekipa ? 'Jó napot kívánunk!' : 'Jó napot kívánok!'}
 
-Luka vagyok az SLFF-től, amely egy ingyenes fantasy futballjáték amatőr bajnokságoknak. Nemrég bekerült a játékba ez a bajnokság is: ${liga}. A szurkolók a bajnokság valódi játékosaiból állítják össze a csapatukat, a pontok pedig a hivatalos mérkőzés-jegyzőkönyvekből származnak (adatbank.mlsz.hu). ${klub} játékosai közül már ${p.igralcev} szerepel a játékban:
+${ekipa ? 'Az SLFF csapata vagyunk. Az SLFF' : `${po.ime} vagyok az SLFF-től, amely`} egy ingyenes fantasy futballjáték amatőr bajnokságoknak. Nemrég bekerült a játékba ez a bajnokság is: ${liga}. A szurkolók a bajnokság valódi játékosaiból állítják össze a csapatukat, a pontok pedig a hivatalos mérkőzés-jegyzőkönyvekből származnak (adatbank.mlsz.hu). ${klub} játékosai közül már ${p.igralcev} szerepel a játékban:
 ${url}
 ${naj ? `
 Eddigi legjobb játékos: ${naj}.
@@ -281,7 +331,7 @@ Ha tetszik Önöknek, nyugodtan osszák meg a linket a klub csoportjában vagy a
 Ha valamelyik játékos nem szeretne a saját nevével szerepelni, vagy nem kérnek több levelet, elég egy rövid válasz.
 
 Üdvözlettel
-Luka
+${podpis}
 slff.eu
 `,
     }
@@ -289,19 +339,19 @@ slff.eu
   const ekip = p.ekip ?? 0
   return {
     zadeva: ekip >= 5 ? `${klub} játékosai már ${ekip} fantasy csapatban szerepelnek` : `${klub} a fantasy játékban: így állnak a játékosok`,
-    telo: `Jó napot kívánok!
+    telo: `${ekipa ? 'Jó napot kívánunk!' : 'Jó napot kívánok!'}
 
-Néhány napja írtam Önöknek az SLFF-ről, az ingyenes fantasy játékról (bajnokság: ${liga}). Röviden: ${klub} játékosai a játékban vannak és pontokat gyűjtenek${ekip >= 5 ? `, és már ${ekip} fantasy csapatban szerepelnek` : ''}.${naj ? ` Eddig a legjobb: ${naj}.` : ''}
+Néhány napja ${ekipa ? 'írtunk' : 'írtam'} Önöknek az SLFF-ről, az ingyenes fantasy játékról (bajnokság: ${liga}). Röviden: ${klub} játékosai a játékban vannak és pontokat gyűjtenek${ekip >= 5 ? `, és már ${ekip} fantasy csapatban szerepelnek` : ''}.${naj ? ` Eddig a legjobb: ${naj}.` : ''}
 
 A klub oldala statisztikákkal és megosztásra kész képpel:
 ${url}
 
 Ha kiteszik a linket a klub csoportjába vagy a Facebookra, a szurkolók és maguk a játékosok is versenyezhetnek egymással. A játék ingyenes.
 
-Ez az utolsó levelem ebben a témában. Ha valamelyik játékos nem szeretne a saját nevével szerepelni, elég egy rövid válasz.
+Ez az utolsó ${ekipa ? 'levelünk' : 'levelem'} ebben a témában. Ha valamelyik játékos nem szeretne a saját nevével szerepelni, elég egy rövid válasz.
 
 Üdvözlettel
-Luka
+${podpis}
 slff.eu
 `,
   }
@@ -317,12 +367,13 @@ const BESEDILA = {
 
 /**
  * Zadeva, telo in zadeva odjave za mail klubu, ali null za državo brez besedil.
- * `k`: { drzava, team_id, liga_slug, ime_lige, klub }; `p`: { igralcev, naj, tocke, ekip }.
+ * `k`: { drzava, team_id, liga_slug, ime_lige, klub }; `p`: { igralcev, naj, tocke, ekip };
+ * `po`: pošiljatelj (POSILJATELJI), ime v podpisu ali besedilo ekipe.
  */
-export function besedilo(k, p, vrsta) {
+export function besedilo(k, p, vrsta, po = POSILJATELJI[0]) {
   const b = BESEDILA[k.drzava]
   if (!b) return null
-  const { zadeva, telo } = b.sestavi(k, p, vrsta, `https://slff.eu/club/${k.team_id}?t=${k.liga_slug}`)
+  const { zadeva, telo } = b.sestavi(k, p, vrsta, `https://slff.eu/club/${k.team_id}?t=${k.liga_slug}`, po)
   return { zadeva, telo: telo.replace(/\n{3,}/g, '\n\n'), odjava: b.odjava }
 }
 
@@ -340,15 +391,16 @@ export function kodirajGlavo(s) {
 }
 
 /** Celoten mail (CRLF, telo v base64). */
-export function sporocilo({ na, zadeva, telo, odjava, zdaj = new Date(), id = randomUUID() }) {
+// Ekipa (klubi@) se podpiše kot "SLFF", ne "Ekipa SLFF (SLFF)".
+export function sporocilo({ na, zadeva, telo, odjava, po = POSILJATELJI[0], zdaj = new Date(), id = randomUUID() }) {
   const b64 = Buffer.from(telo.replace(/\r?\n/g, '\r\n')).toString('base64').match(/.{1,76}/g) ?? []
   return [
-    `From: "Luka (SLFF)" <${OD}>`,
+    `From: "${po.ekipa ? 'SLFF' : `${po.ime} (SLFF)`}" <${po.od}>`,
     `To: <${na}>`,
     `Subject: ${kodirajGlavo(zadeva)}`,
     `Date: ${zdaj.toUTCString().replace('GMT', '+0000')}`,
     `Message-ID: <${id}@slff.eu>`,
-    `List-Unsubscribe: <mailto:${OD}?subject=${encodeURIComponent(odjava)}>`,
+    `List-Unsubscribe: <mailto:${po.od}?subject=${encodeURIComponent(odjava)}>`,
     'MIME-Version: 1.0',
     'Content-Type: text/plain; charset=UTF-8',
     'Content-Transfer-Encoding: base64',
@@ -458,13 +510,14 @@ export function imap(p) {
 
 const iskanje = (vrstice) => vrstice.filter((v) => /^\* SEARCH/i.test(v)).flatMap((v) => v.slice(8).trim().split(/\s+/)).filter(Boolean)
 
-async function zImap(geslo, delo) {
+/** IMAP kot pošiljatelj `po` (njegov nabiralnik, njegovo geslo). */
+async function zImap(po, delo) {
   const p = await povezi(GOSTITELJ, 993)
   try {
     await p.vrstica() // pozdrav
     const ukaz = imap(p)
-    await ukaz(`LOGIN ${navednice(OD)} ${navednice(geslo)}`).catch(() => {
-      throw new NapakaPrijave(`IMAP prijava ${OD} zavrnjena`)
+    await ukaz(`LOGIN ${navednice(po.od)} ${navednice(po.geslo)}`).catch(() => {
+      throw new NapakaPrijave(`IMAP prijava ${po.od} zavrnjena`)
     })
     const out = await delo(ukaz)
     await ukaz('LOGOUT').catch(() => {})
@@ -499,7 +552,6 @@ export async function preveriNabiralnik(ukaz, { naslov, povezava, od }) {
 /** Naslov v dnevniku: "k***@domena". */
 export const zakrij = (t) => String(t ?? '').replace(/([^\s<>"'(),;:@]+)@([^\s<>"'(),;:@]+\.[a-z]{2,})/gi, (_, u, d) => `${u[0]}***@${d}`)
 
-const DAN = 86400e3
 const normKlub = (ime) => String(ime ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '')
 
 /** Vrstice istega kluba: isti team_id ali isto ime (brez šumnikov in ločil) v isti državi. */
@@ -510,15 +562,19 @@ export function istiKlub(s, vsi) {
 
 /**
  * Pošta istega kluba blokira: v zadnjih 3 dneh kdorkoli, v zadnjih 7 dneh drug
- * pošiljatelj. Prvi mail pa le, če klub (na katerikoli naslov) še ni dobil
- * nobenega prvega maila ali opomnika — en stik na klub.
+ * pošiljatelj kot `poslal` (pri prvem mailu ga še ne poznamo: null, blokira
+ * vsakdo). Prvi mail pa le, če klub (na katerikoli naslov) še ni dobil
+ * nobenega prvega maila ali opomnika — en stik na klub. Parkirana vrstica z
+ * opombo "poslano…" (mail je šel ali morda šel, v klub_stik_posta ga ni)
+ * blokira klub, dokler je človek ne razreši.
  */
-function klubBlokiran(s, vsi, poStiku, zdaj, prviMail) {
+function klubBlokiran(s, vsi, poStiku, zdaj, prviMail, poslal) {
   for (const o of istiKlub(s, vsi)) {
+    if (/^poslano/i.test(o.opomba ?? '')) return true
     for (const r of poStiku.get(o.id) ?? []) {
       const starost = zdaj.getTime() - Date.parse(r.poslano_at)
       if (starost < 3 * DAN) return true
-      if (starost < 7 * DAN && r.vrsta !== 'odgovor' && r.poslal !== POSLAL) return true
+      if (starost < 7 * DAN && r.vrsta !== 'odgovor' && r.poslal !== poslal) return true
       if (prviMail && o.id !== s.id && ['prvi', 'opomnik'].includes(r.vrsta)) return true
     }
   }
@@ -544,6 +600,7 @@ export function stareZaOpomnik(stiki, posta) {
 /**
  * Kandidati v vrstnem redu pošiljanja: najprej opomniki, nato prvi maili.
  * `vrsta`: vrstice v vrsti; `vsi`: vse vrstice klub_stik (pravilo kluba).
+ * Opomnik nosi `posiljatelj` (kljuc iz POSILJATELJI): pošlje ga, kdor je poslal prvi mail.
  */
 export function kandidati(vrsta, posta, aktivne, zdaj = new Date(), vsi = vrsta) {
   const poStiku = new Map()
@@ -552,21 +609,21 @@ export function kandidati(vrsta, posta, aktivne, zdaj = new Date(), vsi = vrsta)
   const prvi = []
   for (const s of vrsta) {
     if (!s.v_vrsti || !s.email || !BESEDILA[s.drzava] || !aktivne.has(s.liga_slug)) continue
-    if (klubBlokiran(s, vsi, poStiku, zdaj, s.stanje === 'nov')) continue
     const r = poStiku.get(s.id) ?? []
+    const p = r.filter((x) => x.vrsta === 'prvi')
+    const po = s.stanje === 'poslano' && p.length === 1 ? POSILJATELJI.find((x) => x.poslal === p[0].poslal) : null
+    if (klubBlokiran(s, vsi, poStiku, zdaj, s.stanje === 'nov', po?.poslal ?? null)) continue
     if (s.stanje === 'nov') {
       if (!r.length && (!s.poslji_od || Date.parse(s.poslji_od) <= zdaj.getTime())) prvi.push(s)
       continue
     }
-    if (s.stanje !== 'poslano') continue
-    const p = r.filter((x) => x.vrsta === 'prvi')
-    // Vsaka pošta drugega pošiljatelja (tudi klic, drugo) za vedno zapre opomnik.
-    if (p.length !== 1 || r.some((x) => x.vrsta !== 'odgovor' && x.poslal !== POSLAL) || r.some((x) => ['opomnik', 'odgovor'].includes(x.vrsta))) continue
+    // Prvi mail ni iz vrste (človek) ali vsaka pošta drugega pošiljatelja (tudi klic, drugo) za vedno zapre opomnik.
+    if (!po || r.some((x) => x.vrsta !== 'odgovor' && x.poslal !== po.poslal) || r.some((x) => ['opomnik', 'odgovor'].includes(x.vrsta))) continue
     if (Date.parse(p[0].poslano_at) > zdaj.getTime() - DNI_DO_OPOMNIKA * DAN) continue
-    opomniki.push({ ...s, prvi_at: p[0].poslano_at })
+    opomniki.push({ s, prvi_at: p[0].poslano_at, posiljatelj: po.kljuc })
   }
   opomniki.sort((a, b) => Date.parse(a.prvi_at) - Date.parse(b.prvi_at))
-  return [...opomniki.map((s) => ({ s, vrsta: 'opomnik' })), ...izmenicno(prvi).map((s) => ({ s, vrsta: 'prvi' }))]
+  return [...opomniki.map(({ s, posiljatelj }) => ({ s, vrsta: 'opomnik', posiljatelj })), ...izmenicno(prvi).map((s) => ({ s, vrsta: 'prvi' }))]
 }
 
 /**
@@ -587,8 +644,12 @@ const log = (t) => console.log(zakrij(t))
 const oznaka = (s) => `stik #${s.id} (${s.klub}, ${s.liga_slug})`
 const cakaj = (ms) => new Promise((r) => setTimeout(r, ms))
 
-/** En krog: največ `najvec` mailov. Vrne true, če je kaj ostalo neurejeno (opozorilo). */
-async function krog(db, { geslo, suho, najvec }) {
+/**
+ * En krog: vsak dejaven pošiljatelj največ `najvec` mailov. Vrne true, če je kaj
+ * ostalo neurejeno (opozorilo). Pošiljatelj z zavrnjeno prijavo gre v
+ * `zavrnjeni` (do ponovnega zagona); ko so zavrnjeni vsi, krog vrže NapakaPrijave.
+ */
+async function krog(db, { posiljatelji, suho, najvec, zavrnjeni = new Set() }) {
   const preveri = ({ data, error }) => {
     if (error) throw new Error(error.message)
     return data
@@ -596,21 +657,34 @@ async function krog(db, { geslo, suho, najvec }) {
   let opozorilo = false
   const zdaj = new Date()
   const vceraj = new Date(zdaj.getTime() - 30 * 3600e3).toISOString()
-  const danes = preveri(await db.from('klub_stik_posta').select('poslano_at').eq('poslal', POSLAL).in('vrsta', ['prvi', 'opomnik']).gte('poslano_at', vceraj))
-    .filter((r) => danDunaj(new Date(r.poslano_at)) === danDunaj(zdaj)).length +
-    // Parkirani "morda poslani" maili današnjega dne štejejo v mejo.
-    preveri(await db.from('klub_stik').select('updated_at').ilike('opomba', 'poslano%').gte('updated_at', vceraj))
-      .filter((r) => danDunaj(new Date(r.updated_at)) === danDunaj(zdaj)).length
-  if (danes >= NA_DAN && !suho) {
-    log(`Danes poslano: ${danes}/${NA_DAN} — dnevna meja`)
-    return false
+  const aktivni = posiljatelji.filter((po) => !zavrnjeni.has(po.kljuc))
+  if (!aktivni.length) throw new NapakaPrijave('vsi pošiljatelji imajo zavrnjeno prijavo')
+  // Danes poslano po pošiljatelju (klub_stik_posta.poslal, dunajski dan).
+  const danes = new Map(POSILJATELJI.map((po) => [po.kljuc, 0]))
+  for (const r of preveri(await db.from('klub_stik_posta').select('poslal, poslano_at').in('poslal', POSILJATELJI.map((po) => po.poslal)).in('vrsta', ['prvi', 'opomnik']).gte('poslano_at', vceraj))) {
+    if (danDunaj(new Date(r.poslano_at)) !== danDunaj(zdaj)) continue
+    const po = POSILJATELJI.find((x) => x.poslal === r.poslal)
+    danes.set(po.kljuc, danes.get(po.kljuc) + 1)
+  }
+  // Parkirani "morda poslani" maili današnjega dne štejejo v mejo pošiljatelja iz
+  // opombe (starejše opombe brez naslova štejejo Luki).
+  for (const r of preveri(await db.from('klub_stik').select('updated_at, opomba').ilike('opomba', 'poslano%').gte('updated_at', vceraj))) {
+    if (danDunaj(new Date(r.updated_at)) !== danDunaj(zdaj)) continue
+    const po = POSILJATELJI.find((x) => r.opomba.includes(x.od)) ?? POSILJATELJI[0]
+    danes.set(po.kljuc, danes.get(po.kljuc) + 1)
+  }
+  const prostor = new Map(aktivni.map((po) => [po.kljuc, { dan: dnevnaMeja(po, zdaj) - danes.get(po.kljuc), krog: najvec }]))
+  const stanjeDneva = () => aktivni.map((po) => `${po.kljuc} ${danes.get(po.kljuc)}/${dnevnaMeja(po, zdaj)}`).join(', ')
+  if (aktivni.every((po) => prostor.get(po.kljuc).dan <= 0)) {
+    log(`Danes poslano: ${stanjeDneva()} — dnevna meja`)
+    if (!suho) return false
   }
 
   const lige = preveri(await db.from('competitions').select('id, slug, name, active'))
   const poSlugu = new Map(lige.map((l) => [l.slug, l]))
   const aktivne = new Set(lige.filter((l) => l.active).map((l) => l.slug))
   const vsi = await vseVrstice((od, do_) =>
-    db.from('klub_stik').select('id, team_id, klub, drzava, liga_slug, email, stanje, v_vrsti, poslji_od').order('id').range(od, do_),
+    db.from('klub_stik').select('id, team_id, klub, drzava, liga_slug, email, stanje, v_vrsti, poslji_od, opomba').order('id').range(od, do_),
   )
   const vrsta = vsi.filter((s) => s.v_vrsti && ['nov', 'poslano'].includes(s.stanje))
   const posta = await vseVrstice((od, do_) =>
@@ -621,7 +695,7 @@ async function krog(db, { geslo, suho, najvec }) {
   // --suho pokaže naslednje maile tudi zunaj okna, da se besedilo da pregledati kadarkoli.
   const izbor = suho ? vsiKandidati : vOknuZdaj
   if (suho || izbor.length)
-    log(`Danes ${danes}/${NA_DAN}; v vrsti ${vsiKandidati.filter((x) => x.vrsta === 'opomnik').length} opomnikov, ${vsiKandidati.filter((x) => x.vrsta === 'prvi').length} prvih; v oknu zdaj ${vOknuZdaj.length}`)
+    log(`Danes ${stanjeDneva()}; v vrsti ${vsiKandidati.filter((x) => x.vrsta === 'opomnik').length} opomnikov, ${vsiKandidati.filter((x) => x.vrsta === 'prvi').length} prvih; v oknu zdaj ${vOknuZdaj.length}`)
   const sezone = new Map()
 
   async function podatki(s) {
@@ -656,9 +730,21 @@ async function krog(db, { geslo, suho, najvec }) {
     if (error) log(`  ! ${oznaka(s)}: vrnitev v vrsto ni uspela (${error.message}); mail NI šel`)
   }
 
+  // Zavrnjena prijava izklopi le tega pošiljatelja; ko so zavrnjeni vsi, napaka gre naprej.
+  const zavrni = (po, e) => {
+    zavrnjeni.add(po.kljuc)
+    prostor.get(po.kljuc).dan = 0
+    log(`Prijava ${po.kljuc} zavrnjena (${e.message}) — izklopljen do ponovnega zagona`)
+    if (posiljatelji.every((x) => zavrnjeni.has(x.kljuc))) throw e
+  }
+
   let poslanih = 0
-  for (const { s, vrsta: vrstaMaila } of izbor) {
-    if (poslanih >= najvec || (!suho && danes + poslanih >= NA_DAN)) break
+  for (const { s, vrsta: vrstaMaila, posiljatelj } of izbor) {
+    if (!izberiPosiljatelja(aktivni, prostor)) break
+    // Opomnik pošlje le, kdor je poslal prvi mail; če ni dejaven ali je poln, opomnik čaka.
+    const po = vrstaMaila === 'opomnik' ? aktivni.find((x) => x.kljuc === posiljatelj) : izberiPosiljatelja(aktivni, prostor)
+    const pr = po && prostor.get(po.kljuc)
+    if (!pr || pr.dan <= 0 || pr.krog <= 0) continue
     // Pred prevzemom vrstice: nič ni poslano, napaka le preskoči kandidata.
     let b
     try {
@@ -669,32 +755,37 @@ async function krog(db, { geslo, suho, najvec }) {
       }
       if (vrstaMaila === 'opomnik' && !suho) {
         const prvi = posta.find((r) => r.stik_id === s.id && r.vrsta === 'prvi')
-        const n = await zImap(geslo, (ukaz) => preveriNabiralnik(ukaz, {
+        const n = await zImap(po, (ukaz) => preveriNabiralnik(ukaz, {
           naslov: s.email, povezava: `slff.eu/club/${s.team_id}?t=${s.liga_slug}`, od: new Date(prvi.poslano_at),
         }))
         if (n.odgovor) {
-          const zapis = { stik_id: s.id, vrsta: 'odgovor', poslal: s.email, za: OD, opomba: 'odgovor v luka@slff.eu' }
+          const zapis = { stik_id: s.id, vrsta: 'odgovor', poslal: s.email, za: po.od, opomba: `odgovor v ${po.od}` }
           preveri(await db.from('klub_stik_posta').insert(zapis))
           posta.push({ ...zapis, poslano_at: new Date().toISOString() })
           log(`odgovor: ${oznaka(s)} — brez opomnika`)
           continue
         }
         if (n.odboj) {
-          preveri(await db.from('klub_stik').update({ stanje: 'napacen_mail', opomba: `odboj v luka@slff.eu (${danDunaj(zdaj)})` }).eq('id', s.id))
+          preveri(await db.from('klub_stik').update({ stanje: 'napacen_mail', opomba: `odboj v ${po.od} (${danDunaj(zdaj)})` }).eq('id', s.id))
           log(`odboj: ${oznaka(s)} — napacen_mail`)
           continue
         }
       }
-      b = besedilo({ ...s, ime_lige: p.ime_lige }, p, vrstaMaila)
+      b = besedilo({ ...s, ime_lige: p.ime_lige }, p, vrstaMaila, po)
     } catch (e) {
-      if (e instanceof NapakaPrijave) throw e
+      if (e instanceof NapakaPrijave) {
+        zavrni(po, e)
+        continue
+      }
       log(`preskok ${oznaka(s)}: ${e.message}`)
       continue
     }
     if (!b) continue
     if (suho) {
-      log(`\n--- ${vrstaMaila} → ${oznaka(s)} ${s.email}${vOknu(s.drzava, zdaj) ? '' : ' [zunaj okna]'}\n${b.zadeva}\n\n${b.telo}`)
+      log(`\n--- ${vrstaMaila} (${po.kljuc}) → ${oznaka(s)} ${s.email}${vOknu(s.drzava, zdaj) ? '' : ' [zunaj okna]'}\n${b.zadeva}\n\n${b.telo}`)
       poslanih++
+      pr.dan--
+      pr.krog--
       continue
     }
     if (poslanih) await cakaj((60 + Math.random() * 90) * 1000)
@@ -703,7 +794,7 @@ async function krog(db, { geslo, suho, najvec }) {
     let sveze
     try {
       const vrsticeDrzave = await vseVrstice((od, do_) =>
-        db.from('klub_stik').select('id, team_id, klub, drzava').eq('drzava', s.drzava).order('id').range(od, do_))
+        db.from('klub_stik').select('id, team_id, klub, drzava, opomba').eq('drzava', s.drzava).order('id').range(od, do_))
       const idji = istiKlub(s, vrsticeDrzave).map((o) => o.id)
       const postaKluba = preveri(await db.from('klub_stik_posta').select('id, stik_id, vrsta, poslal, poslano_at').in('stik_id', idji).order('id'))
       sveze = kandidati([s], postaKluba, aktivne, new Date(), vrsticeDrzave).length > 0
@@ -720,13 +811,14 @@ async function krog(db, { geslo, suho, najvec }) {
       log(`preskok ${oznaka(s)}: ${prevzem.error ? `prevzem ni uspel (${prevzem.error.message})` : 'vrstico je vzel drug zagon'}`)
       continue
     }
-    const m = sporocilo({ na: s.email, zadeva: b.zadeva, telo: b.telo, odjava: b.odjava })
+    const m = sporocilo({ na: s.email, zadeva: b.zadeva, telo: b.telo, odjava: b.odjava, po })
     try {
-      await posljiSmtp(await povezi(GOSTITELJ, 465), { od: OD, na: s.email, geslo, sporocilo: m })
+      await posljiSmtp(await povezi(GOSTITELJ, 465), { od: po.od, na: s.email, geslo: po.geslo, sporocilo: m })
     } catch (e) {
       if (e instanceof NapakaPrijave) {
         await vrniVVrsto(s)
-        throw e
+        zavrni(po, e)
+        continue
       }
       if (e instanceof ZavrnjenNaslov) {
         const { error } = await db.from('klub_stik').update({ stanje: 'napacen_mail', opomba: `SMTP zavrnil naslov: ${e.message}`.slice(0, 500) }).eq('id', s.id)
@@ -734,8 +826,10 @@ async function krog(db, { geslo, suho, najvec }) {
         continue
       }
       if (e.poDATA) {
-        // Mail je morda šel: nikoli samodejno znova.
-        await parkiraj(s, `poslano? preveri ročno (${vrstaMaila}, ${danDunaj(new Date())}): ${e.message}`)
+        // Mail je morda šel: nikoli samodejno znova, in šteje v mejo pošiljatelja.
+        pr.dan--
+        pr.krog--
+        await parkiraj(s, `poslano? preveri ročno (${vrstaMaila}, ${danDunaj(new Date())}, ${po.od}): ${e.message}`)
         log(`NEZNANO, ali je šel: ${oznaka(s)} — zunaj vrste, preveri Sent (${e.message})`)
         opozorilo = true
         continue
@@ -751,7 +845,9 @@ async function krog(db, { geslo, suho, najvec }) {
       return true
     }
     poslanih++
-    const zapis = { stik_id: s.id, vrsta: vrstaMaila, poslal: POSLAL, za: s.email, zadeva: b.zadeva, telo: b.telo }
+    pr.dan--
+    pr.krog--
+    const zapis = { stik_id: s.id, vrsta: vrstaMaila, poslal: po.poslal, za: s.email, zadeva: b.zadeva, telo: b.telo }
     let vpis
     for (let i = 0; i < 3; i++) {
       vpis = await db.from('klub_stik_posta').insert(zapis)
@@ -759,17 +855,17 @@ async function krog(db, { geslo, suho, najvec }) {
       await cakaj(5000)
     }
     if (vpis.error) {
-      await parkiraj(s, `poslano (${vrstaMaila}, ${danDunaj(new Date())}), a vpis v klub_stik_posta ni uspel — vpiši ročno`)
+      await parkiraj(s, `poslano (${vrstaMaila}, ${danDunaj(new Date())}, ${po.od}), a vpis v klub_stik_posta ni uspel — vpiši ročno`)
       log(`POSLANO, A NI VPISANO: ${oznaka(s)} (${vpis.error.message}) — zunaj vrste`)
       opozorilo = true
       continue
     }
     posta.push({ ...zapis, poslano_at: new Date().toISOString() })
-    // Nazaj v vrsto šele po vpisu (za opomnik čez tri dni).
-    const { error: eVrsta } = await db.from('klub_stik').update({ v_vrsti: true }).eq('id', s.id)
-    log(`${vrstaMaila} → ${oznaka(s)}${eVrsta ? ` (vrnitev v vrsto ni uspela: ${eVrsta.message})` : ''}`)
+    // Nazaj v vrsto šele po vpisu (za opomnik čez tri dni); posiljatelj = nabiralnik, ki je poslal.
+    const { error: eVrsta } = await db.from('klub_stik').update({ v_vrsti: true, posiljatelj: po.od }).eq('id', s.id)
+    log(`${vrstaMaila} (${po.kljuc}) → ${oznaka(s)}${eVrsta ? ` (vrnitev v vrsto ni uspela: ${eVrsta.message})` : ''}`)
     try {
-      await zImap(geslo, (ukaz) => ukaz(`APPEND "Sent" (\\Seen) {${Buffer.byteLength(m)}}`, m))
+      await zImap(po, (ukaz) => ukaz(`APPEND "Sent" (\\Seen) {${Buffer.byteLength(m)}}`, m))
     } catch (e) {
       log(`  (kopija v Sent ni uspela: ${e.message})`)
     }
@@ -791,7 +887,7 @@ async function main() {
   const zanka = process.argv.includes('--zanka') && !suho
   const najvec = Number(arg('--najvec') ?? 2)
   const env = process.env
-  const geslo = env.LUKA_SMTP_GESLO
+  const posiljatelji = aktivniPosiljatelji(env)
   // V zanki (Docker restart) pred izhodom počakamo, da manjkajoča nastavitev ne vrti ponovnih zagonov.
   const konec = async (sporocilo) => {
     console.error(sporocilo)
@@ -799,11 +895,12 @@ async function main() {
     process.exit(1)
   }
   if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) await konec('Manjka SUPABASE_URL ali SUPABASE_SERVICE_ROLE_KEY.')
-  if (!suho && !geslo) await konec('Manjka LUKA_SMTP_GESLO (geslo nabiralnika luka@slff.eu).')
+  if (!suho && !posiljatelji.length) await konec(`Manjka geslo nabiralnika (${POSILJATELJI.map((po) => po.env).join(', ')}).`)
   const db = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } })
   if (!zanka) {
     try {
-      if (await krog(db, { geslo, suho, najvec })) process.exitCode = 1
+      // --suho brez gesel pokaže razdelitev med vse pošiljatelje.
+      if (await krog(db, { posiljatelji: suho && !posiljatelji.length ? POSILJATELJI : posiljatelji, suho, najvec })) process.exitCode = 1
     } catch (e) {
       console.error(zakrij(e instanceof NapakaPrijave ? `Prijava v nabiralnik ni uspela: ${e.message}` : `Napaka: ${e.message}`))
       process.exit(1)
@@ -813,11 +910,12 @@ async function main() {
   // Delavec na strežniku (slff-posta): krog vsakih 10 minut; prehodne napake
   // le zabeleži. Zavrnjena prijava: ura premora, nato izhod (Docker ga
   // znova zažene) — da napačno geslo ne tolče po strežniku.
-  log('Pošta klubom: zanka teče (krog vsakih 10 minut).')
+  log(`Pošta klubom: zanka teče (krog vsakih 10 minut; ${posiljatelji.map((po) => po.kljuc).join(', ')}).`)
+  const zavrnjeni = new Set()
   for (;;) {
     const zacetek = Date.now()
     try {
-      await krog(db, { geslo, suho: false, najvec })
+      await krog(db, { posiljatelji, suho: false, najvec, zavrnjeni })
     } catch (e) {
       if (e instanceof NapakaPrijave) {
         console.error(zakrij(`Prijava v nabiralnik ni uspela: ${e.message} — premor 1 h, nato izhod`))
