@@ -104,3 +104,19 @@ for (const competition of [
     assert.throws(() => classifyHistoricalStatistics({competition, fixture:fixtureFor(hr,hr.entries[0]), rawSha256:hr.entries[0].rawSha256}), /policy|competition|provider/i)
   })
 }
+
+for (const competition of [
+  {slug:'hr-hnl',source:'hns'},
+  {slug:'hr-hnl',source:'hns',source_policy:null},
+  {source:'hns'},
+  {slug:'de-another-league',source:'dfb',source_policy:null},
+]) {
+  test(`known provider/match identity cannot become ordinary under another tuple ${JSON.stringify(competition)}`, () => {
+    const policy = competition.source === 'dfb' ? de : hr
+    assert.throws(() => classifyHistoricalStatistics({competition, fixture:fixtureFor(policy,policy.entries[0]), rawSha256:policy.entries[0].rawSha256}), /policy|competition|provider/i)
+  })
+}
+
+test('unregistered ordinary provider identity still follows strict normal parsing', () => {
+  assert.deepEqual(classifyHistoricalStatistics({competition:{slug:'hr-hnl',source:'hns',source_policy:null},fixture:{sourceMatchId:'unregistered'}}), {kind:'normal'})
+})
