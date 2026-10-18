@@ -58,3 +58,16 @@ test('cleanup retry retains original saved result after a committed response or 
   const calls=database.applyCalls;await assert.rejects(runFcfTargetActions({...retry,root:f.newRoot(),env:{...retry.env,FCF_TARGET_APPROVAL_SHA256:'0'.repeat(64)}}),/exact root approval bytes/);assert.equal(database.applyCalls,calls)
  })
 })
+
+test('GitHub binary GET uses artifact JSON Accept and release-asset octet-stream at the process boundary',async()=>{
+ const {githubGet}=await import('./fcf-target-actions.mjs');assert.equal(typeof githubGet,'function')
+ const prefix='repos/Lovro-splichal-orhanizagi/mnzgorenjska/',calls=[],zip=Buffer.from([0x50,0x4b,3,4,0,255]),execute=(command,args,options)=>{calls.push({command,args,options});return args.includes('-H')?zip:Buffer.from('{"id":17}')}
+ const artifactPath=prefix+'actions/artifacts/12150332401/zip'
+ assert.deepEqual(await githubGet(artifactPath,true,execute),zip)
+ assert.deepEqual(calls[0].args,['api','--method','GET',artifactPath,'-H','Accept: application/vnd.github+json']);assert.equal(calls[0].command,'gh');assert.equal(calls[0].options.maxBuffer,100*1024*1024);assert.equal(calls[0].options.timeout,60000);assert.deepEqual(calls[0].options.stdio,['ignore','pipe','pipe'])
+ const assetPath=prefix+'releases/assets/654400457'
+ assert.deepEqual(await githubGet(assetPath,true,execute),zip);assert.deepEqual(calls[1].args,['api','--method','GET',assetPath,'-H','Accept: application/octet-stream'])
+ assert.deepEqual(await githubGet(prefix+'actions/artifacts/12150332401',false,execute),{id:17});assert.deepEqual(calls[2].args,['api','--method','GET',prefix+'actions/artifacts/12150332401']);assert.equal(calls[2].options.maxBuffer,8*1024*1024)
+ for(const path of['repos/other/repo/actions/artifacts/17/zip',prefix+'../actions/artifacts/17/zip',prefix+'actions/artifacts/17/zip#fragment',prefix+'actions/artifacts/17/ zip'])await assert.rejects(githubGet(path,true,execute),/fixed repository GET path/)
+ assert.equal(calls.length,3)
+})
