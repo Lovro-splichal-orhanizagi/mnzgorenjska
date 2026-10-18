@@ -8017,6 +8017,15 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      apply_fcf_historical_cleanup: {
+        Args: {
+          p_before_image_text: string
+          p_before_sha: string
+          p_main_sha: string
+          p_policy_hashes: Json
+        }
+        Returns: Json
+      }
       apply_historical_statistics_policy: {
         Args: {
           p_competition_id: number
@@ -8514,6 +8523,10 @@ export type Database = {
       preklici_moj_zahtevek: { Args: { p_id: number }; Returns: undefined }
       prepare_dfb_historical_statistics: {
         Args: { p_manifest: string; p_sha256: string }
+        Returns: Json
+      }
+      prepare_fcf_historical_cleanup: {
+        Args: { p_main_sha: string; p_policy_hashes: Json }
         Returns: Json
       }
       prepovedane_besede: { Args: { p_besedilo: string }; Returns: string }
