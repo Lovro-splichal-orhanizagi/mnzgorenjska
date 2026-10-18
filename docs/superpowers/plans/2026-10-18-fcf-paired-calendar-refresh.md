@@ -27,6 +27,6 @@
 
 - [ ] Step1: Readspec, relevantCLAUDE/source docs and recovered G4raw/manifest. Buildprivacytrimmedauthenticheader fixtures withaccuratecacheprovenance; syntheticnewR5counterpart explicitlytestonly. Writefocusedtests forallreviewfocus/spec rules withnetworkforbidden.
 - [ ] Step2: RunfocusedRED beforeproductedit; realrecordedassertionmustshowtwooppositedirectionsinR20 currentlyreturnwithouttargetedrefresh.
-- [ ] Step3: Addminimalnarrowpairdetection, cachedreused-IDbookkeeping andsequentialboundedrefetch through existingtransport; validatesourceroute/headeridentity beforecachewrite and targetedpairdistinct-roundcoherence beforeblockreturn. Preserveotherblocksemantics/interfaces.
+- [ ] Step3: Addminimalnarrowpairdetection, cachedreused-IDbookkeeping andsequentialboundedrefetch through existingtransport; validatesourceroute/headeridentity beforecachewrite and full240/30/16 round/pair coherence after the spec-defined signature beforeblockreturn. Preserveotherblocksemantics/interfaces.
 - [ ] Step4: RunfocusedGREEN; existingFCFtransport/cachetests andcanonical/app comparison. Wiretest:sources andbriefsource-docnote. Runone npmrun smoke withNode22 andCI fakepublicenv; recordcounts/warnings. No DB-writing npmtest.
 - [ ] Step5: Selfreview, task-onlycommit andfullreport at suppliedSDDreportpath withRED/GREEN, actualcallbounds/provenance/unchangedfiles andresidualsourceuncertainty. No nestedagents/remoteoperations.
