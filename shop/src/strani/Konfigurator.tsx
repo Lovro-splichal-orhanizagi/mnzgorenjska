@@ -9,6 +9,7 @@ import { dodaj, kljuc, NAJVEC, shrani, useKosarica } from '../kosarica'
 import { barvaRazlicice, conaZa, Mockup, velikostRazlicice } from '../mockup'
 import { useNaslov } from '../Okvir'
 import { napakaPolja, normaliziraj, type Personalizacija, type VrednostVnosa } from '../personalizacija'
+import { MOTIVI } from '../motivi'
 import { coneMotiva, narisiMotiv, praznaCona, type VrednostiPolj } from '../risba'
 import { Nalaganje, useSeja } from '../seja'
 import { NakupnaVrstica } from './Izdelek'
@@ -26,9 +27,22 @@ const zacetne = (m: MotivIzdelka): Record<string, string> =>
 /** Izmišljena vrednost za predogled ekipe ali prvaka, dokler kupec ne izbere svoje. */
 const primerPolja = (m: MotivIzdelka, k: string): string | number | undefined => m.primeri.find((p) => p.polja[k] !== undefined)?.polja[k]
 
-/** Izris motiva v cono nosilca ali null (cona motiva nima ali je prazna). */
+/**
+ * Ali ima ta izdaja trgovine predlogo motiva. Migracije pridejo v bazo ob vsakem
+ * pushu, trgovina le ob objavi: motiv brez predloge se ne pokaže, ne podre strani.
+ */
+export const imaPredlogo = (slug: string): boolean => MOTIVI.some((m) => m.slug === slug)
+
+/** Ali se kupcu da izbrati ekipo: ime mora iti na motiv (baza zavrne daljše od max). */
+export const ekipaPrevelika = (ime: string, max = 24): boolean => [...ime].length > max
+
+/** Pri vnosu ali preklopu se gladko premakne le, kdor ne želi manj gibanja. */
+const gibanje = (): ScrollBehavior =>
+  typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
+
+/** Izris motiva v cono nosilca ali null (motiva ni v tej izdaji, cone nima ali je prazna). */
 export function svgCone(slug: string, polja: VrednostiPolj, barve: string[], cona: string): string | null {
-  return coneMotiva(slug).includes(cona) && !praznaCona(slug, polja, cona) ? narisiMotiv(slug, polja, barve, cona) : null
+  return imaPredlogo(slug) && coneMotiva(slug).includes(cona) && !praznaCona(slug, polja, cona) ? narisiMotiv(slug, polja, barve, cona) : null
 }
 
 /**
@@ -100,22 +114,33 @@ export function Konfigurator({ i }: { i: Izdelek }) {
   // Ekipe in prvaki, le če jih motiv potrebuje.
   const zEkipo = m.polja.some((p) => p.vrsta === 'ekipa')
   const zPrvakom = m.polja.some((p) => p.vrsta === 'prvak')
-  const [ekipe, setEkipe] = useState<{ id: number; name: string }[] | null>(null)
-  const [prvaki, setPrvaki] = useState<Prvak[] | null>(null)
+  // null = nalagam, 'napaka' = branje ni uspelo. Ob menjavi računa beremo znova.
+  const [ekipe, setEkipe] = useState<{ id: number; name: string }[] | null | 'napaka'>(null)
+  const [prvaki, setPrvaki] = useState<Prvak[] | null | 'napaka'>(null)
   useEffect(() => {
-    if (!uid || !zEkipo || ekipe) return
+    setEkipe(null)
+    if (!uid || !zEkipo) return
+    let ziv = true
     void (async () => {
-      const { data } = await supabase.from('fantasy_teams').select('id, name, competition_id').eq('owner_id', uid).eq('hisna', false).order('id')
+      const { data, error } = await supabase.from('fantasy_teams').select('id, name, competition_id').eq('owner_id', uid).eq('hisna', false).order('id')
       const ids = [...new Set((data ?? []).map((e) => e.competition_id))]
-      const { data: lige } = ids.length ? await supabase.from('competitions').select('id, slug').in('id', ids) : { data: [] }
-      const mladinske = new Set((lige ?? []).filter((l) => mladinska(l.slug)).map((l) => l.id))
+      const lige = ids.length ? await supabase.from('competitions').select('id, slug').in('id', ids) : { data: [], error: null }
+      if (!ziv) return
+      if (error || lige.error) return setEkipe('napaka')
+      const mladinske = new Set((lige.data ?? []).filter((l) => mladinska(l.slug)).map((l) => l.id))
       setEkipe((data ?? []).filter((e) => !mladinske.has(e.competition_id)).map(({ id, name }) => ({ id, name })))
     })()
-  }, [uid, zEkipo, ekipe])
+    return () => { ziv = false }
+  }, [uid, zEkipo])
   useEffect(() => {
-    if (!uid || !zPrvakom || prvaki) return
-    void supabase.rpc('trgovina_moji_prvaki').then(({ data }) => setPrvaki((data as unknown as Prvak[] | null) ?? []))
-  }, [uid, zPrvakom, prvaki])
+    setPrvaki(null)
+    if (!uid || !zPrvakom) return
+    let ziv = true
+    void supabase.rpc('trgovina_moji_prvaki').then(({ data, error }) => {
+      if (ziv) setPrvaki(error ? 'napaka' : ((data as unknown as Prvak[] | null) ?? []))
+    })
+    return () => { ziv = false }
+  }, [uid, zPrvakom])
 
   // Preloži fotografije, da je preklop barve in pogleda takojšen.
   useEffect(() => {
@@ -140,14 +165,15 @@ export function Konfigurator({ i }: { i: Izdelek }) {
     if (barve.includes(p.barva)) setBarva(p.barva)
     setPogled(m.cona)
     setDodano(null)
-    predogled.current?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' })
+    predogled.current?.scrollIntoView({ behavior: gibanje(), block: 'start' })
   }
 
   const barveSheme = (m.sheme.find((s) => s.kljuc === shema) ?? m.sheme[0]!).barve
 
   // Vrednosti: za predogled (natisnjeno besedilo), za bazo (vnos) in napake.
-  const izbranaEkipa = (p: PoljeMotiva) => ekipe?.find((e) => String(e.id) === vrednosti[p.kljuc])
-  const izbranPrvak = (p: PoljeMotiva) => (vrednosti[p.kljuc] ? prvaki?.[Number(vrednosti[p.kljuc])] : undefined)
+  const izbranaEkipa = (p: PoljeMotiva) =>
+    Array.isArray(ekipe) ? ekipe.find((e) => String(e.id) === vrednosti[p.kljuc] && !ekipaPrevelika(e.name, p.max)) : undefined
+  const izbranPrvak = (p: PoljeMotiva) => (vrednosti[p.kljuc] && Array.isArray(prvaki) ? prvaki[Number(vrednosti[p.kljuc])] : undefined)
   const besediloPrvaka = (x: Prvak) => (jezik === 'en' ? x.besedilo_en : x.besedilo_sl)
   const napake = Object.fromEntries(m.polja.map((p) => [p.kljuc, napakaPolja(p.vrsta, vrednosti[p.kljuc] ?? '', p.max ?? (p.vrsta === 'ekipa' ? 24 : 12))]))
   const natisnjeno: VrednostiPolj = {}
@@ -195,6 +221,15 @@ export function Konfigurator({ i }: { i: Izdelek }) {
     shrani(nova)
     setDodano(imam(nova) - imam(kosarica))
   }
+
+  // Sličice motivov in primeri se ne spreminjajo med tipkanjem: izris enkrat na motiv.
+  const sliciceSvg = useMemo(() => Object.fromEntries(motivi.map((x) => {
+    const pr = x.primeri[0]
+    const bs = (x.sheme.find((s) => s.kljuc === pr?.shema) ?? x.sheme[0]!).barve
+    return [x.slug, svgCone(x.slug, pr ? primerZaPredogled(pr) : {}, bs, x.cona)]
+  })), [motivi])
+  const primeriSvg = useMemo(() => m.primeri.map((p) =>
+    svgCone(m.slug, primerZaPredogled(p), (m.sheme.find((s) => s.kljuc === p.shema) ?? m.sheme[0]!).barve, m.cona)), [m])
 
   const conaPogleda = (k: string): Cona => conaZa(cone, k, barva) ?? cone[0]!
   const glavna = conaPogleda(m.cona)
@@ -253,15 +288,13 @@ export function Konfigurator({ i }: { i: Izdelek }) {
             <Korak n={1} naslov={t('motiv.korak.motiv')}>
               <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0" role="radiogroup" aria-label={t('motiv.korak.motiv')}>
                 {motivi.map((x) => {
-                  const pr = x.primeri[0]
-                  const barveX = (x.sheme.find((s) => s.kljuc === pr?.shema) ?? x.sheme[0]!).barve
                   const c = conaZa(cone, x.cona, barva) ?? glavna
                   const izbran = x.slug === m.slug
                   return (
                     <button key={x.slug} type="button" role="radio" aria-checked={izbran} onClick={() => izberiMotiv(x)}
                       className={`group w-32 shrink-0 snap-start overflow-hidden rounded-xl border text-left transition sm:w-auto ${
                         izbran ? 'border-gnl-400 bg-gnl-400/10 ring-2 ring-gnl-400/40' : 'border-white/10 bg-white/[0.03] hover:border-white/30'}`}>
-                      <Mockup cona={c} svg={svgCone(x.slug, pr ? primerZaPredogled(pr) : {}, barveX, x.cona)} barva={barva} alt="" povecava={1.9}
+                      <Mockup cona={c} svg={sliciceSvg[x.slug] ?? null} barva={barva} alt="" povecava={1.9}
                         className="transition duration-300 group-hover:scale-[1.03] motion-reduce:transition-none" />
                       <span className={`block truncate px-2.5 py-2 text-sm font-bold ${izbran ? 'text-gnl-200' : 'text-slate-200'}`}>{po(x.ime_sl, x.ime_en)}</span>
                     </button>
@@ -341,7 +374,7 @@ export function Konfigurator({ i }: { i: Izdelek }) {
         </div>
       </div>
 
-      <button type="button" onClick={() => predogled.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })} aria-label={t('motiv.vZivo')}
+      <button type="button" onClick={() => predogled.current?.scrollIntoView({ behavior: gibanje(), block: 'start' })} aria-label={t('motiv.vZivo')}
         tabIndex={plava ? 0 : -1} aria-hidden={!plava}
         className={`fixed bottom-24 right-3 z-30 w-28 overflow-hidden rounded-2xl shadow-2xl shadow-black/70 ring-2 ring-gnl-400/60 transition duration-300 motion-reduce:transition-none md:hidden ${
           plava ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-4 opacity-0'}`}>
@@ -358,10 +391,9 @@ export function Konfigurator({ i }: { i: Izdelek }) {
             {m.primeri.map((p, n) => {
               const b = barve.includes(p.barva) ? p.barva : barva
               const c = conaZa(cone, m.cona, b) ?? glavna
-              const bs = (m.sheme.find((s) => s.kljuc === p.shema) ?? m.sheme[0]!).barve
               return (
                 <li key={n} className="kartica w-64 shrink-0 snap-start overflow-hidden sm:w-auto">
-                  <Mockup cona={c} svg={svgCone(m.slug, primerZaPredogled(p), bs, m.cona)} barva={b} povecava={1.35}
+                  <Mockup cona={c} svg={primeriSvg[n] ?? null} barva={b} povecava={1.35}
                     alt={`${imeMotiva} · ${t('osebno.primer', { n: n + 1 })}`} />
                   <div className="flex items-center justify-between gap-2 p-3">
                     <p className="min-w-0 truncate text-sm font-semibold text-slate-200">
@@ -387,8 +419,8 @@ function PoljeVnosa({ p, vrednost, napaka, manjka, nastavi, uid, ekipe, prvaki, 
   manjka: boolean
   nastavi: (v: string) => void
   uid: string | null
-  ekipe: { id: number; name: string }[] | null
-  prvaki: Prvak[] | null
+  ekipe: { id: number; name: string }[] | null | 'napaka'
+  prvaki: Prvak[] | null | 'napaka'
   slug: string
   besediloPrvaka: (x: Prvak) => string
 }) {
@@ -418,18 +450,23 @@ function PoljeVnosa({ p, vrednost, napaka, manjka, nastavi, uid, ekipe, prvaki, 
     return (
       <div className="space-y-2">
         {oznaka}
-        {!uid ? prijava : seznam === null ? <Nalaganje /> : seznam.length === 0
+        {!uid ? prijava : seznam === null ? <Nalaganje /> : seznam === 'napaka' ? <p className="opozorilo">{t('napaka.nalaganje')}</p> : seznam.length === 0
           ? <p className="text-sm text-slate-400">{ekipa ? t('motiv.niEkip') : t('pers.niPrvak')}</p>
           : (
             <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={po(p.oznaka_sl, p.oznaka_en)}>
               {ekipa
-                ? ekipe!.map((e) => (
-                  <button key={e.id} type="button" role="radio" aria-checked={vrednost === String(e.id)} onClick={() => nastavi(String(e.id))}
-                    className={`rounded-xl border px-3 py-2 text-sm font-semibold ${vrednost === String(e.id) ? 'border-gnl-400 bg-gnl-400/15 text-gnl-200' : `border-white/15 bg-white/5 text-slate-200 hover:border-white/30 ${okvir}`}`}>
-                    {e.name}
-                  </button>
-                ))
-                : prvaki!.map((x, n) => (
+                ? (ekipe as { id: number; name: string }[]).map((e) => {
+                  const dolga = ekipaPrevelika(e.name, max)
+                  return (
+                    <button key={e.id} type="button" role="radio" aria-checked={vrednost === String(e.id)} disabled={dolga} onClick={() => nastavi(String(e.id))}
+                      aria-describedby={dolga ? `${id}-dolga-${e.id}` : undefined}
+                      className={`rounded-xl border px-3 py-2 text-left text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50 ${vrednost === String(e.id) ? 'border-gnl-400 bg-gnl-400/15 text-gnl-200' : `border-white/15 bg-white/5 text-slate-200 hover:border-white/30 ${okvir}`}`}>
+                      <span className="block">{e.name}</span>
+                      {dolga && <span id={`${id}-dolga-${e.id}`} className="block text-xs font-normal text-slate-400">{t('motiv.ekipaDolga', { max })}</span>}
+                    </button>
+                  )
+                })
+                : (prvaki as Prvak[]).map((x, n) => (
                   <button key={`${x.mini_liga_id}-${x.sezona}`} type="button" role="radio" aria-checked={vrednost === String(n)} onClick={() => nastavi(String(n))}
                     className={`rounded-xl border px-3 py-2 text-left text-sm ${vrednost === String(n) ? 'border-gnl-400 bg-gnl-400/15 text-gnl-200' : `border-white/15 bg-white/5 text-slate-200 hover:border-white/30 ${okvir}`}`}>
                     <span className="block font-semibold">{besediloPrvaka(x)}</span>

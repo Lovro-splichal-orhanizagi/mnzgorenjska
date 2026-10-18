@@ -8,22 +8,29 @@ import { cena, po, t } from '../besede'
 import { conaZa, Mockup } from '../mockup'
 import { useNaslov } from '../Okvir'
 import { Nalaganje } from '../seja'
-import { svgCone } from './Konfigurator'
+import { imaPredlogo, svgCone } from './Konfigurator'
 
-/** Motiv brez aktivnega nosilca (vsi izdelki neaktivni) se ne pokaže. */
-export const vProdaji = (motivi: MotivKataloga[]): MotivKataloga[] => motivi.filter((m) => m.izdelki.some((i) => i.cone.length > 0))
+/** Motiv brez aktivnega nosilca ali brez predloge v tej izdaji trgovine se ne pokaže. */
+export const vProdaji = (motivi: MotivKataloga[]): MotivKataloga[] =>
+  motivi.filter((m) => imaPredlogo(m.slug) && m.izdelki.some((i) => i.cone.length > 0))
 
-/** Aktivni motivi z vsaj enim aktivnim nosilcem; null med nalaganjem. */
+// Glava, katalog in vitrina berejo isto: ena poizvedba na obisk.
+let zahteva: Promise<{ motivi: MotivKataloga[]; napaka: boolean }> | null = null
+const preberiMotive = () =>
+  (zahteva ??= Promise.resolve(supabase.rpc('trgovina_motivi')).then(({ data, error }) => {
+    if (error) zahteva = null
+    return { motivi: error ? [] : vProdaji((data as unknown as MotivKataloga[] | null) ?? []), napaka: Boolean(error) }
+  }))
+
+/** Motivi v prodaji; null med nalaganjem. */
 export function useMotivi(): { motivi: MotivKataloga[] | null; napaka: boolean } {
-  const [motivi, setMotivi] = useState<MotivKataloga[] | null>(null)
-  const [napaka, setNapaka] = useState(false)
+  const [stanje, setStanje] = useState<{ motivi: MotivKataloga[] | null; napaka: boolean }>({ motivi: null, napaka: false })
   useEffect(() => {
-    void supabase.rpc('trgovina_motivi').then(({ data, error }) => {
-      setNapaka(Boolean(error))
-      setMotivi(error ? [] : vProdaji((data as unknown as MotivKataloga[] | null) ?? []))
-    })
+    let ziv = true
+    void preberiMotive().then((s) => ziv && setStanje(s))
+    return () => { ziv = false }
   }, [])
-  return { motivi, napaka }
+  return stanje
 }
 
 /** Primer motiva na svojem nosilcu (ali prvem aktivnem, če njegovega ni). */
@@ -40,21 +47,35 @@ const mirno = (): boolean => typeof matchMedia !== 'undefined' && matchMedia('(p
 function KarticaMotiva({ m, zamik }: { m: MotivKataloga; zamik: number }) {
   const ime = po(m.ime_sl, m.ime_en)
   const [n, setN] = useState(0)
-  const [ustavljeno, setUstavljeno] = useState(false)
+  // Trenutni primer zbledi in odkrije naslednjega, ki že čaka pod njim; v DOM sta le ta dva.
+  const [bledi, setBledi] = useState(false)
+  const [miska, setMiska] = useState(false)
+  const [fokus, setFokus] = useState(false)
+  const [zaklenjeno, setZaklenjeno] = useState(false)
   const primeri = m.primeri.slice(0, 4)
+  const naslednji = (n + 1) % primeri.length
+  const ustavljeno = miska || fokus || zaklenjeno
   useEffect(() => {
     if (ustavljeno || primeri.length < 2 || mirno()) return
     let iv: ReturnType<typeof setInterval> | undefined
-    const zacetek = setTimeout(() => { iv = setInterval(() => setN((x) => (x + 1) % primeri.length), 3600) }, zamik)
-    return () => { clearTimeout(zacetek); clearInterval(iv) }
+    let menjava: ReturnType<typeof setTimeout> | undefined
+    const zacetek = setTimeout(() => {
+      iv = setInterval(() => {
+        setBledi(true)
+        menjava = setTimeout(() => { setN((x) => (x + 1) % primeri.length); setBledi(false) }, 700)
+      }, 3600)
+    }, zamik)
+    return () => { clearTimeout(zacetek); clearInterval(iv); clearTimeout(menjava); setBledi(false) }
   }, [ustavljeno, primeri.length, zamik])
   const glavni = m.izdelki[0]!
+  const vidni = primeri.length > 1 ? [naslednji, n] : [n]
   return (
-    <article className="kartica group flex flex-col overflow-hidden" onMouseEnter={() => setUstavljeno(true)} onMouseLeave={() => setUstavljeno(false)}>
+    <article className="kartica group flex flex-col overflow-hidden" onMouseEnter={() => setMiska(true)} onMouseLeave={() => setMiska(false)}
+      onFocus={() => setFokus(true)} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFokus(false) }}>
       <Link to={`/p/${glavni.slug}?motiv=${m.slug}`} className="relative block aspect-square overflow-hidden" aria-label={`${t('osebno.cta')}: ${ime}`}>
-        {primeri.map((p, i) => (
-          <div key={i} aria-hidden={i !== n} className={`absolute inset-0 transition-opacity duration-700 motion-reduce:transition-none ${i === n ? 'opacity-100' : 'opacity-0'}`}>
-            <PrimerNaMockupu m={m} p={p} povecava={1.3} alt={`${ime} · ${t('osebno.primer', { n: i + 1 })}`}
+        {vidni.map((i) => (
+          <div key={i} aria-hidden={i !== n} className={`absolute inset-0 transition-opacity duration-700 motion-reduce:transition-none ${i === n && bledi ? 'opacity-0' : 'opacity-100'}`}>
+            <PrimerNaMockupu m={m} p={primeri[i]!} povecava={1.3} alt={`${ime} · ${t('osebno.primer', { n: i + 1 })}`}
               className="transition duration-500 group-hover:scale-[1.03] motion-reduce:transition-none" />
           </div>
         ))}
@@ -65,7 +86,7 @@ function KarticaMotiva({ m, zamik }: { m: MotivKataloga; zamik: number }) {
           {primeri.length > 1 && (
             <div className="flex shrink-0 gap-1.5 pt-2" role="group" aria-label={ime}>
               {primeri.map((_, i) => (
-                <button key={i} type="button" aria-label={t('osebno.primer', { n: i + 1 })} aria-pressed={i === n} onClick={() => { setN(i); setUstavljeno(true) }}
+                <button key={i} type="button" aria-label={t('osebno.primer', { n: i + 1 })} aria-pressed={i === n} onClick={() => { setBledi(false); setN(i); setZaklenjeno(true) }}
                   className={`h-2.5 rounded-full transition-all ${i === n ? 'w-6 bg-gnl-400' : 'w-2.5 bg-white/25 hover:bg-white/50'}`} />
               ))}
             </div>
@@ -112,14 +133,14 @@ export function Pahljaca({ motivi, majhna = false }: { motivi: MotivKataloga[]; 
 
 export function Personalizirano() {
   const { motivi, napaka } = useMotivi()
-  useNaslov(t('osebno.nadnaslov'), t('osebno.uvod'))
+  useNaslov(t('osebno.nadnaslov'), motivi?.length ? t('osebno.uvod', { n: motivi.length }) : undefined)
   return (
     <div className="space-y-12">
       <section className="grid items-center gap-8 md:grid-cols-2">
         <div className="space-y-5">
           <p className="znacka bg-gnl-400/15 text-gnl-300 ring-1 ring-gnl-400/30">{t('osebno.nadnaslov')}</p>
           <h1 className="text-4xl font-black leading-[1.05] naslov sm:text-6xl">{t('osebno.naslov')}</h1>
-          <p className="max-w-xl text-slate-400 sm:text-lg">{t('osebno.uvod')}</p>
+          <p className="min-h-[6rem] max-w-xl text-slate-400 sm:min-h-[5.25rem] sm:text-lg">{motivi?.length ? t('osebno.uvod', { n: motivi.length }) : ''}</p>
           <ul className="flex flex-wrap gap-2 text-xs font-semibold text-slate-300">
             {(['osebno.prednost1', 'osebno.prednost2', 'osebno.prednost3'] as const).map((k) => (
               <li key={k} className="rounded-full border border-white/10 bg-white/5 px-3 py-1">✓ {t(k)}</li>

@@ -78,7 +78,7 @@ export function Mockup({ cona, svg, barva, alt, povecava = 1, className = '' }: 
   const m = svetlost(barva)
 
   return (
-    <div ref={okvir} role="img" aria-label={alt} className={`relative aspect-square overflow-hidden ${className}`}>
+    <div ref={okvir} {...(alt ? { role: 'img', 'aria-label': alt } : { 'aria-hidden': true })} className={`relative aspect-square overflow-hidden ${className}`}>
       <div className="absolute inset-0" style={povecava !== 1 ? { transform: `scale(${povecava})`, transformOrigin: sredina } : undefined}>
         <img src={cona.slika} alt="" draggable={false} className="absolute inset-0 h-full w-full select-none object-cover" />
         {svg && (

@@ -8,17 +8,18 @@ import { SejaProvider } from './src/seja'
 import { Okvir } from './src/Okvir'
 import { Katalog, MrezaIzdelkov } from './src/strani/Katalog'
 import { Izdelek, IzdelekView, Predogled } from './src/strani/Izdelek'
-import { izPrimera } from './src/strani/Konfigurator'
-import { MrezaMotivov, Personalizirano, vProdaji } from './src/strani/Personalizirano'
+import { ekipaPrevelika, izPrimera } from './src/strani/Konfigurator'
+import { MrezaMotivov, Pahljaca, Personalizirano, vProdaji } from './src/strani/Personalizirano'
+import { VarnaStran } from './src/App'
 import { homografija, matrika } from './src/mockup'
-import { cenaKosa, Kosarica, ociscena, stripeNaslov } from './src/strani/Kosarica'
+import { cenaKosa, Kosarica, motivaNi, ociscena, SlikaMotiva, stripeNaslov } from './src/strani/Kosarica'
 import { Hvala } from './src/strani/Hvala'
 import { Narocila } from './src/strani/Narocila'
 import { Pogoji } from './src/strani/Pogoji'
 import { Odstop, mailOdstopa } from './src/strani/Odstop'
 import { Prijava, varnaPot } from './src/strani/Prijava'
 import { Admin, Dobavnica, Nalepka, zaPakiranje } from './src/strani/Admin'
-import { csvSerije, PogledSerije } from './src/strani/AdminTisk'
+import { csvSerije, datotekeTiska, PogledSerije, ROB, s300dpi, svgZaTisk } from './src/strani/AdminTisk'
 import { zahtevaBona } from './src/strani/AdminBoni'
 import { vCente, varnoIme } from './src/strani/AdminIzdelki'
 import { EN, SL, TELEFON, cena, type Kljuc } from './src/besede'
@@ -27,7 +28,7 @@ import { celicaCsv, doplacilo, napakaImena, napakaPolja, oblikaSvg, stabilno, st
 import { coneMotiva, narisiMotiv, poljaCone, praznaCona, velikostMm, zVgrajenoPisavo } from './src/risba'
 import { MOTIVI } from './src/motivi'
 import { readFileSync } from 'node:fs'
-import type { Cona, Izdelek as TIzdelek, IzdelekKataloga, MotivIzdelka, MotivKataloga, NarociloAdmin, PostavkaNarocila, Serija } from './src/baza'
+import type { Cona, Izdelek as TIzdelek, IzdelekKataloga, MotivIzdelka, MotivKataloga, NarociloAdmin, PostavkaNarocila, PostavkaTiska, Serija } from './src/baza'
 
 let napak = 0
 const preveri = (opis: string, ok: boolean, dodatno = '') => {
@@ -228,10 +229,56 @@ const serija: Serija = {
 const csv = csvSerije(serija)
 const vrsticeCsv = csv.split('\r\n')
 preveri('tisk: CSV serije (BOM, glava, ubežano, ime SVG)', csv.startsWith('﻿"Naročilo";"Postavka";"Šifra"') && vrsticeCsv.length === 4
-  && vrsticeCsv[1] === '"AB12CD34";"11";"MIS-CRN-M";"Majica (Črna / M)";"2";"Žan ""Z""";"7";"AB12CD34-11.svg"'
+  && vrsticeCsv[1] === '"AB12CD34";"11";"MIS-CRN-M";"Majica (Črna / M)";"2";"Žan ""Z""";"7";"AB12CD34-11.svg";"";"";"";""'
   && vrsticeCsv[2].includes(`"'=Tigri";""`), vrsticeCsv.slice(0, 3).join(' | '))
 const pogledSerije = renderToString(<PogledSerije s={serija} />)
 preveri('admin: pogled serije s predogledi', pogledSerije.includes('Serija 3') && pogledSerije.includes('AB12CD34') && pogledSerije.includes('data:image/svg+xml') && pogledSerije.includes('EF56GH78'))
+// Izvoz motiva za tisk: prava velikost cone, prirez, rezilne oznake, pisava
+{
+  const conaT = (kljuc: string, barva: string | null, sirina_mm: number, visina_mm: number): Cona => ({ kljuc, barva, slika: '', koti: [[0, 0], [1, 0], [1, 1], [0, 1]], sirina_mm, visina_mm })
+  const motivna: PostavkaTiska = {
+    postavka_id: 13, stanje_tiska: 'v_seriji', narocilo_id: 3, javna_oznaka: 'IJ90KL12', placano_at: null, sku: 'MPM-BEL-M', ime: 'Majica po meri', kolicina: 1,
+    personalizacija: { motiv: 'retro-dres', shema: 'retro', polja: { ime: 'Novak', stevilka: 9, sponzor: 'Bar Offside', leto: null }, ime: 'Retro dres · Novak · 9 · Bar Offside' },
+    razlicica: 'Bela / M', postopek: 'dtf', barve: ['#C8102E', '#F6C700', '#3A0A0F'],
+    cone: [conaT('hrbet', 'Črna', 300, 400), conaT('hrbet', 'Bela', 300, 400), conaT('prsi', 'Črna', 250, 110), conaT('prsi', 'Bela', 260, 120)],
+  }
+  const dat = datotekeTiska(motivna)
+  preveri('tisk motiva: datoteka na neprazno cono, ime <oznaka>-<cona>-<postopek>-<n>, mere cone nosilca te barve',
+    dat.map((d) => `${d.ime}:${d.mm.sirina}x${d.mm.visina}`).join() === 'IJ90KL12-hrbet-dtf-13:300x400,IJ90KL12-prsi-dtf-13:260x120'
+    && datotekeTiska({ ...motivna, personalizacija: { ...motivna.personalizacija, polja: { ime: 'Novak', stevilka: 9 } } }).length === 1
+    && datotekeTiska(serija.postavke[0]!).length === 0, dat.map((d) => `${d.ime}:${d.mm.sirina}x${d.mm.visina}`).join())
+  const list = svgZaTisk(motivna, dat[1]!)
+  const S = 260 + 2 * ROB
+  const V = 120 + 2 * ROB
+  const odseki = [...(/<path d="([^"]+)"[^>]*data-oznake="rez"/.exec(list)?.[1] ?? '').matchAll(/M([\d.]+) ([\d.]+)([VH])([\d.]+)/g)]
+  // Vsaka oznaka leži na črti reza (rob cone) in zunaj prireza (3 mm), znotraj lista.
+  const zunaj = odseki.every(([, x, y, smer, konec]) => {
+    const navpicna = smer === 'V'
+    const [a, b] = navpicna ? [Number(y), Number(konec)] : [Number(x), Number(konec)]
+    const meja = navpicna ? V : S
+    const naCrti = navpicna ? [ROB, S - ROB].includes(Number(x)) : [ROB, V - ROB].includes(Number(y))
+    return naCrti && Math.min(a, b) >= 0 && Math.max(a, b) <= meja && (Math.max(a, b) <= ROB - 3 || Math.min(a, b) >= meja - ROB + 3)
+  })
+  preveri('tisk motiva: list v mm s prirezom 3 mm in 8 rezilnimi oznakami zunaj prireza',
+    list.startsWith('<?xml') && list.includes(`<svg xmlns="http://www.w3.org/2000/svg" width="${S}mm" height="${V}mm" viewBox="0 0 ${S} ${V}">`)
+    && ROB >= 3 + 5 && list.includes(`<svg x="${ROB}" y="${ROB}" width="260" height="120" overflow="visible"`)
+    && odseki.length === 8 && zunaj && list.includes('#C8102E') && list.includes('BAR OFFSIDE'), list.slice(0, 400))
+  const sPisavo = await zVgrajenoPisavo(list)
+  preveri('tisk motiva: SVG ima vgrajeno pisavo Anton', /^<\?xml[^>]*>\n<svg [^>]*><style>@font-face\{font-family:Anton;src:url\(data:font\/ttf;base64,/.test(sPisavo))
+  const csvM = csvSerije({ ...serija, postavke: [motivna] }).split('\r\n')
+  preveri('tisk motiva: CSV vrstica na cono s stolpci motiv, postopek, cona',
+    csvM[0]!.endsWith('"SVG";"Motiv";"Postopek";"Cona";"PNG"') && csvM.length === 4
+    && csvM[1]!.endsWith('"IJ90KL12-hrbet-dtf-13.svg";"retro-dres";"dtf";"hrbet";"IJ90KL12-hrbet-dtf-13.png"') && csvM[2]!.includes('"prsi"'), csvM.join(' | '))
+  const { crc32 } = await import('node:zlib')
+  const lazni = new Uint8Array(45)
+  lazni.set([0x89, 0x50, 0x4e, 0x47], 0)
+  const png = new Uint8Array(await s300dpi(lazni).arrayBuffer())
+  const dv = new DataView(png.buffer)
+  preveri('tisk motiva: PNG dobi pHYs 300 dpi za IHDR', png.length === 66 && String.fromCharCode(...png.subarray(37, 41)) === 'pHYs'
+    && dv.getUint32(41) === 11811 && dv.getUint32(45) === 11811 && png[49] === 1 && dv.getUint32(50) === crc32(png.subarray(37, 50))
+    && (await s300dpi(png).arrayBuffer()).byteLength === 66)
+  preveri('tisk motiva: pogled serije pokaže cone', renderToString(<PogledSerije s={{ ...serija, postavke: [motivna] }} />).includes('IJ90KL12-prsi-dtf-13 · 260 × 120 mm'))
+}
 const pn = (x: Partial<PostavkaNarocila>): PostavkaNarocila => ({ ...narocilo.postavke[0], ...x })
 const nar = (postavke: PostavkaNarocila[]): NarociloAdmin => ({ ...narocilo, postavke })
 preveri('admin: za pakiranje le, ko je vse v paketu na zalogi ali natisnjeno',
@@ -416,6 +463,29 @@ preveri('pogoji: rok izdelave, darilni boni, popusti, personalizacija v zasebnos
   const vitrina = renderToString(<StaticRouter location="/personalised"><MrezaMotivov motivi={katalogMotivov} /></StaticRouter>)
   preveri('vitrina: motivi s primeri na mockupu in povezavo na nosilec z izbranim motivom', vitrina.includes('/p/majica-po-meri?motiv=retro-dres') && vitrina.includes('/p/majica-po-meri?motiv=hangover-xi')
     && vitrina.includes('>7</text>') && vitrina.includes('>10</text>') && vitrina.includes('/nosilci/majica-bela-hrbet.webp') && vitrina.includes('35,00') && vitrina.includes(SL['osebno.cta']))
+
+  // Motiv, ki je v bazi, a te izdaje trgovine še nima predloge, ne sme podreti nobene strani.
+  const neznan: MotivIzdelka = { ...retro, slug: 'nov-motiv', ime_sl: 'Nov motiv', ime_en: 'New design' }
+  const neznanKat: MotivKataloga = { ...katalogMotivov[0]!, slug: 'nov-motiv', ime_sl: 'Nov motiv', ime_en: 'New design' }
+  const brezNapake = (f: () => string): string | null => { try { return f() } catch { return null } }
+  preveri('neznan motiv: vitrina in pas v katalogu ga skrijeta in ne padeta', vProdaji([neznanKat, ...katalogMotivov]).every((m) => m.slug !== 'nov-motiv')
+    && brezNapake(() => renderToString(<StaticRouter location="/"><Pahljaca motivi={[neznanKat, ...katalogMotivov]} majhna /></StaticRouter>)) !== null
+    && brezNapake(() => renderToString(<StaticRouter location="/personalised"><MrezaMotivov motivi={[neznanKat]} /></StaticRouter>)) !== null)
+  const zNeznanim = (motivi: MotivIzdelka[], pot = '/p/majica-po-meri?motiv=nov-motiv') =>
+    brezNapake(() => renderToString(<StaticRouter location={pot}><SejaProvider><IzdelekView i={{ ...nosilec, motivi }} /></SejaProvider></StaticRouter>))
+  const kn = zNeznanim([neznan, retro])
+  preveri('neznan motiv: konfigurator ga izpusti in izbere znanega, sam neznan ne podre strani', kn !== null && !kn.includes('Nov motiv') && kn.includes('Retro dres')
+    && zNeznanim([neznan]) !== null)
+  const vrsticaN = dodaj(PRAZNA, 22, 1, 'majica-po-meri', { motiv: 'nov-motiv', polja: { ime: 'Novak' }, shema: 'klasika' }, 'Nov motiv · Novak', 20, { ime: 'Novak' }).postavke[0]!
+  const kos = (i: TIzdelek) => brezNapake(() => renderToString(<StaticRouter location="/cart"><SlikaMotiva iz={i} p={vrsticaN} oznaka="Črna / M" alt="x" /></StaticRouter>))
+  preveri('neznan ali umaknjen motiv v košarici: brez mockupa, z opozorilom, plačilo onemogočeno', kos({ ...nosilec, motivi: [retro, neznan] }) !== null
+    && !(kos({ ...nosilec, motivi: [retro, neznan] }) ?? '').includes('feImage') && motivaNi({ ...nosilec, motivi: [retro, neznan] }, vrsticaN)
+    && motivaNi(nosilec, vrsticaN) && !motivaNi(nosilec, kmp.postavke[0]!) && !motivaNi(nosilec, { razlicica_id: 1, slug: 'x', kolicina: 1 }))
+  preveri('konfigurator: predolgo ime ekipe ni izbirno', ekipaPrevelika('A'.repeat(25)) && !ekipaPrevelika('A'.repeat(24)) && ekipaPrevelika('Žan Novak', 8))
+  const varna = new VarnaStran({ children: null })
+  varna.state = VarnaStran.getDerivedStateFromError()
+  const nadomestna = renderToString(<>{varna.render()}</>)
+  preveri('napaka pri izrisu: sporočilo in ponovno nalaganje namesto prazne strani', nadomestna.includes(SL['napaka.stran']) && nadomestna.includes(SL['napaka.osvezi']))
 }
 
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)

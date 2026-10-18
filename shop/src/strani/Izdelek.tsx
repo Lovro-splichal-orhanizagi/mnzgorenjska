@@ -7,7 +7,7 @@ import { useNaslov } from '../Okvir'
 import { doplacilo, napakaImena, normaliziraj, PISAVA, stevilka, velikostImena, type Personalizacija, type Vrsta } from '../personalizacija'
 import { Nalaganje, useSeja } from '../seja'
 import { Slika, ZnackaVoljo } from './Katalog'
-import { Konfigurator } from './Konfigurator'
+import { imaPredlogo, Konfigurator } from './Konfigurator'
 
 /** Besedilo in številka čez sliko izdelka (hrbet majice), kot ju dobi tiskarna. */
 export function Predogled({ src, alt, ime, st }: { src?: string; alt: string; ime: string | null; st: number | null }) {
@@ -210,7 +210,8 @@ export function NakupnaVrstica({ kolicina, setKolicina, najvec, dodano, onemogoc
 }
 
 export function IzdelekView({ i }: { i: TIzdelek }) {
-  if (i.motivi?.length && i.cone?.length) return <Konfigurator i={i} />
+  const motivi = i.motivi?.filter((m) => imaPredlogo(m.slug)) ?? []
+  if (motivi.length && i.cone?.length) return <Konfigurator i={{ ...i, motivi }} />
   return <Navaden i={i} />
 }
 
