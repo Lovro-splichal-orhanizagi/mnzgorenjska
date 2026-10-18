@@ -50,6 +50,13 @@ EU-27. Prodajalec SPACE GUARDIAN d.o.o. Spec:
   pri prvaku `mini_liga_id`, `sezona`). Nosilec motivov brez motiva ni prodan.
   Javno `trgovina_motivi()`, `trgovina_izdelek().motivi/cone`; admin
   `trgovina_admin_motivi`, `_shrani_motiv` (aktiven, vrstni red, primeri, doplačila).
+- **Fotografije nosilcev** so v repozitoriju, `shop/nosilci/*.webp` (1600×1600,
+  prazna majica/pulover spredaj in zadaj). `publicDir` trgovine je `public/logo`,
+  zato jih vtičnik `slff-nosilci` v `shop/vite.config.js` streže v razvoju in ob
+  buildu prepiše v `dist-shop/nosilci/`; na strani so `https://shop.slff.eu/nosilci/…`
+  in pridejo gor z navadno objavo trgovine. `cone.slika` je pot `/nosilci/<ime>.webp`,
+  `cone.koti` so koti cone na tej sliki (TL, TR, BR, BL). Nova fotografija = nova
+  datoteka in nova migracija za vrstico cone (koti izmerjeni na fotografiji).
 - **Rezervacija**: naročilo `caka_placilo` drži zalogo 35 min
   (`rezervirano_do`), Stripe seja poteče v 31 min. Na voljo = zaloga −
   rezervirano. Največ 5 odprtih naročil na prijavljenega uporabnika ali (gost)

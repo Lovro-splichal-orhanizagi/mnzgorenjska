@@ -5042,6 +5042,18 @@ select pg_temp.napaka('trgovina3: admin ne nastavi negativnega doplacila',
 select pg_temp.napaka_sporocilo('trgovina3: motiv le na nosilec s postopkom tiska',
   $$select trgovina_admin_shrani_motiv('{"id":-927201,"doplacila":[{"izdelek_id":-927102,"doplacilo":100}]}')$$,
   'trgovina-vnos', '%doplačilo motiva%');
+reset role;
+update trgovina.izdelki set postopek = null where id = -927202;
+insert into trgovina.motivi_izdelki (motiv_id, izdelek_id, doplacilo) values (-927201, -927202, 300);
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
+select trgovina_admin_shrani_motiv('{"id":-927201,"doplacila":[{"izdelek_id":-927202,"doplacilo":null}]}');
+select pg_temp.preveri('trgovina3: motiv se odstrani tudi z izdelka, ki ni vec nosilec',
+  not trgovina_admin_motivi() @> '[{"id":-927201,"doplacila":[{"izdelek_id":-927202}]}]');
+reset role;
+update trgovina.izdelki set postopek = 'dtf' where id = -927202;
+select set_config('request.jwt.claim.sub','b8a06635-2322-4444-8c42-44e419f912ad',true);
+set local role authenticated;
 select pg_temp.napaka_sporocilo('trgovina3: vrstni red je celo stevilo',
   $$select trgovina_admin_shrani_motiv('{"id":-927201,"vrstni_red":1.5}')$$, 'trgovina-vnos', '%neveljaven motiv%');
 select pg_temp.napaka_sporocilo('trgovina3: primer z neznano shemo',

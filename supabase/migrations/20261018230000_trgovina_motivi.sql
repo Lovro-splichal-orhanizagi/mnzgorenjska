@@ -495,8 +495,10 @@ begin
     if jsonb_typeof(d->'izdelek_id') is distinct from 'number'
        or coalesce(jsonb_typeof(d->'doplacilo'), 'null') not in ('number', 'null')
        or (d->>'doplacilo')::numeric < 0 or (d->>'doplacilo')::numeric <> trunc((d->>'doplacilo')::numeric)
-       or not exists (select 1 from trgovina.izdelki i where i.id = (d->>'izdelek_id')::bigint
-                         and i.po_narocilu and i.postopek is not null and not i.digitalni) then
+       -- Odstraniti se sme vedno (tudi z izdelka, ki ni več nosilec); dodati le na nosilec.
+       or (d->>'doplacilo' is not null
+           and not exists (select 1 from trgovina.izdelki i where i.id = (d->>'izdelek_id')::bigint
+                         and i.po_narocilu and i.postopek is not null and not i.digitalni)) then
       raise exception 'Trgovina: neveljavno doplačilo motiva.' using hint = 'trgovina-vnos';
     end if;
     if d->>'doplacilo' is null then
@@ -576,18 +578,20 @@ join (values ('Črna', 'Black', 'CRN', 1), ('Bela', 'White', 'BEL', 2)) b(sl, en
 cross join (values ('S', 1), ('M', 2), ('L', 3), ('XL', 4), ('XXL', 5)) v(v, n)
 where not exists (select 1 from trgovina.razlicice r where r.izdelek_id = i.id);
 
--- Cone: začasna fotografija (prazna) in koti na sliki 1600×1600; zamenja jih del 3.
+-- Cone: fotografija praznega nosilca (shop/nosilci/, build jo da v /nosilci/) in
+-- koti na njej (1600×1600 px). Merilo ~1,8 px/mm pri majici in ~1,4 px/mm pri
+-- puloverju; hrbet pod ovratnikom, prsi na sredini (sponzor kot na dresu).
 insert into trgovina.cone (izdelek_id, kljuc, barva, slika, koti, sirina_mm, visina_mm)
-select i.id, c.kljuc, c.barva, '', c.koti::jsonb, c.s, c.v
+select i.id, c.kljuc, c.barva, c.slika, c.koti::jsonb, c.s, c.v
 from trgovina.izdelki i
 join (values
-  ('majica-po-meri', 'hrbet', 'Črna', '[[560,400],[1040,400],[1040,1040],[560,1040]]', 300, 400),
-  ('majica-po-meri', 'hrbet', 'Bela', '[[560,400],[1040,400],[1040,1040],[560,1040]]', 300, 400),
-  ('majica-po-meri', 'prsi',  'Črna', '[[540,520],[1060,520],[1060,760],[540,760]]', 260, 120),
-  ('majica-po-meri', 'prsi',  'Bela', '[[540,520],[1060,520],[1060,760],[540,760]]', 260, 120),
-  ('pulover-po-meri', 'hrbet', null,  '[[560,420],[1040,420],[1040,1060],[560,1060]]', 300, 400),
-  ('pulover-po-meri', 'prsi',  null,  '[[560,560],[1040,560],[1040,780],[560,780]]', 240, 110)
-) c(slug, kljuc, barva, koti, s, v) on c.slug = i.slug
+  ('majica-po-meri', 'hrbet', 'Črna', '/nosilci/majica-crna-hrbet.webp',   '[[530,330],[1070,330],[1070,1050],[530,1050]]', 300, 400),
+  ('majica-po-meri', 'hrbet', 'Bela', '/nosilci/majica-bela-hrbet.webp',   '[[525,320],[1065,320],[1065,1040],[525,1040]]', 300, 400),
+  ('majica-po-meri', 'prsi',  'Črna', '/nosilci/majica-crna-spredaj.webp', '[[566,430],[1034,430],[1034,646],[566,646]]', 260, 120),
+  ('majica-po-meri', 'prsi',  'Bela', '/nosilci/majica-bela-spredaj.webp', '[[561,410],[1029,410],[1029,626],[561,626]]', 260, 120),
+  ('pulover-po-meri', 'hrbet', null,  '/nosilci/pulover-crn-hrbet.webp',   '[[593,470],[1013,470],[1013,1030],[593,1030]]', 300, 400),
+  ('pulover-po-meri', 'prsi',  null,  '/nosilci/pulover-crn-spredaj.webp', '[[635,725],[971,725],[971,879],[635,879]]', 240, 110)
+) c(slug, kljuc, barva, slika, koti, s, v) on c.slug = i.slug
 on conflict do nothing;
 
 insert into trgovina.motivi (slug, ime_sl, ime_en, opis_sl, opis_en, cona, polja, sheme, primeri, vrstni_red) values
