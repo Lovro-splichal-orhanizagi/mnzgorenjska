@@ -4,8 +4,8 @@ import { readFileSync } from 'node:fs'
 import assert from 'node:assert/strict'
 import { createHash,createHmac } from 'node:crypto'
 import { createClient } from '@supabase/supabase-js'
-const container=process.env.SUPABASE_DB_CONTAINER
-if(process.env.FCF_HISTORY_DISPOSABLE_TEST!=='1'||!/^(?:supabase_db_)?slff_fcf_historical_test_[a-z0-9_]+$/.test(container??''))throw Error('Explicit owned FCF disposable container required')
+import {assertFcfDisposableTest,fcfDisposableCloneDumpArgs,fcfPostgrestSchemaReady} from './lib/fcf-disposable-test.mjs'
+const container=assertFcfDisposableTest()
 const database=`fcf_cleanup_race_${process.pid}`,rest=`fcf_cleanup_rest_${process.pid}`
 let restStarted=false
 const args=['exec','-i',container,'psql','-U','supabase_admin','-d',database,'-X','-qAt','-v','ON_ERROR_STOP=1']
@@ -18,8 +18,8 @@ const child=(sql,keepOpen=false)=>{
  return {p,done,output:()=>out,result:()=>result}
 }
 const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms))
-async function until(predicate,message){for(let i=0;i<60;i++){if(await predicate())return;await pause(50)}throw Error(message)}
-const baseline=execFileSync('docker',['exec',container,'pg_dump','-U','supabase_admin','-d','postgres','--no-owner','--no-privileges','--exclude-schema=cron','--exclude-schema=vault'],{maxBuffer:64*1024*1024}).toString()
+async function until(predicate,message,attempts=60){for(let i=0;i<attempts;i++){if(await predicate())return;await pause(50)}throw Error(message)}
+const baseline=execFileSync('docker',fcfDisposableCloneDumpArgs(),{maxBuffer:64*1024*1024}).toString()
 execFileSync('docker',['exec',container,'createdb','-U','supabase_admin','-T','template0',database])
 try{
  run('create schema if not exists vault;\n'+baseline.replace(/^CREATE EXTENSION IF NOT EXISTS pg_cron[^\n]*;$/gm,'').replace(/^COMMENT ON EXTENSION pg_cron[^\n]*;$/gm,''))
@@ -64,7 +64,7 @@ try{
   '-e','PGRST_DB_SCHEMAS=public','-e','PGRST_DB_ANON_ROLE=service_role','-e','PGRST_SERVER_PORT=31411',
   '-e',`PGRST_JWT_SECRET=${secret}`,'public.ecr.aws/supabase/postgrest:v14.5'])
  restStarted=true
- await until(()=>{try{return execFileSync('docker',['exec',container,'curl','-s','--max-time','1','http://127.0.0.1:31411/'],{encoding:'utf8'}).startsWith('{')}catch{return false}},'PostgREST did not start')
+ await until(()=>{try{return fcfPostgrestSchemaReady(execFileSync('docker',['exec',container,'curl','-s','--max-time','1','http://127.0.0.1:31411/'],{encoding:'utf8',maxBuffer:8*1024*1024}))}catch{return false}},'PostgREST RPC schema did not become ready',200)
  const bodies=[]
  const db=createClient('http://127.0.0.1:31411',jwt,{auth:{persistSession:false},global:{fetch:async(url,options)=>{
   // curl is only the network bridge into this unexposed disposable container;
@@ -76,6 +76,7 @@ try{
   return new Response(output.slice(0,split),{status:Number(output.slice(split+1)),headers:{'Content-Type':'application/json'}})
  }}})
  const prepared=await db.rpc('prepare_fcf_historical_cleanup',{p_main_sha:main,p_policy_hashes:hashes})
+ if(prepared.error)console.error(execFileSync('docker',['logs',rest],{encoding:'utf8'}))
  assert.equal(prepared.error,null,JSON.stringify(prepared.error))
  const proof=prepared.data
  assert.ok(proof.beforeImageText.includes('"points": 8.10'),'SQL numeric8.10 fixture missing')
