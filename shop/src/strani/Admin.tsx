@@ -6,12 +6,13 @@ import { cena, datum, t, type Kljuc } from '../besede'
 import { Nalaganje, useSeja } from '../seja'
 import { AdminBoni } from './AdminBoni'
 import { AdminIzdelki } from './AdminIzdelki'
+import { AdminMotivi } from './AdminMotivi'
 import { AdminTisk } from './AdminTisk'
 
 // /admin: pakiranje in odpošiljanje naročil, katalog. Pravice preveri baza
 // (trgovina.le_admin); kdor ni admin, dobi insufficient_privilege (42501).
 
-type Zavihek = 'pakiranje' | 'tisk' | 'poslano' | 'izdelki' | 'boni'
+type Zavihek = 'pakiranje' | 'tisk' | 'poslano' | 'izdelki' | 'motivi' | 'boni'
 type Tisk = { vrsta: 'nalepka' | 'dobavnica'; n: NarociloAdmin }
 
 const ZAVIHKI: [Zavihek, Kljuc][] = [
@@ -19,6 +20,7 @@ const ZAVIHKI: [Zavihek, Kljuc][] = [
   ['tisk', 'admin.zavihek.tisk'],
   ['poslano', 'admin.zavihek.poslano'],
   ['izdelki', 'admin.zavihek.izdelki'],
+  ['motivi', 'admin.zavihek.motivi'],
   ['boni', 'admin.zavihek.boni'],
 ]
 
@@ -65,6 +67,7 @@ export function Admin() {
         ))}
       </nav>
       {zavihek === 'izdelki' ? <AdminIzdelki zavrnjen={zavrnjen} />
+        : zavihek === 'motivi' ? <AdminMotivi zavrnjen={zavrnjen} />
         : zavihek === 'tisk' ? <AdminTisk zavrnjen={zavrnjen} />
         : zavihek === 'boni' ? <AdminBoni zavrnjen={zavrnjen} token={seja.access_token} />
         : <Narocila key={zavihek} stanje={zavihek === 'pakiranje' ? 'placano' : 'poslano'} zavrnjen={zavrnjen} token={seja.access_token} />}

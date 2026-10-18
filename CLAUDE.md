@@ -416,6 +416,8 @@ prodajalec Space Guardian): aplikacija `shop/` (`dev:shop`, `build:shop`,
 zaloga se odšteje le ob plačilu, rezervacija drži 35 min. CI jo objavi ob
 `SHOP_OBJAVA=1`; funkcije, Stripe tarife in živi ključ so ročni. Vse:
 `docs/trgovina.md`.
+Motivi po meri (nosilci, cone, predloge, tisk, slike s prizori, nov motiv):
+`docs/trgovina.md` (*Motivi*).
 
 ## Poti
 

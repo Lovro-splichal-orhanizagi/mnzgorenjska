@@ -1,31 +1,174 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { opisPersonalizacije, supabase, type PostavkaTiska, type Serija, type SerijaPovzetek } from '../baza'
 import { datum, t } from '../besede'
+import { barvaRazlicice, conaZa } from '../mockup'
 import { celicaCsv, oblikaSvg } from '../personalizacija'
+import { MOTIVI } from '../motivi'
+import { coneMotiva, narisiMotiv, praznaCona, velikostMm, zVgrajenoPisavo } from '../risba'
 import { Nalaganje } from '../seja'
 
 // Zavihek "Za tisk": plačane personalizirane postavke (za_tisk) → serija →
-// izvoz za tiskarno (CSV in SVG za vsako postavko) → "Poslano tiskarni" →
-// "Natisnjeno" (postavke natisnjeno; naročilo gre med "Za pakiranje").
-// ponytail: brez ZIP (ni knjižnice): CSV in SVG se preneseta vsak posebej.
+// izvoz za tiskarno (CSV, za vsako postavko SVG; motiv: SVG in PNG za vsako
+// cono) → "Poslano tiskarni" → "Natisnjeno" (postavke natisnjeno; naročilo gre
+// med "Za pakiranje").
+// ponytail: brez ZIP (ni knjižnice): datoteke se prenesejo vsaka posebej.
 
-/** serija-<id>.csv: ločilo ;, BOM za Excel, vsaka celica v narekovajih. */
+/** Datoteka motiva za tisk: neprazna cona postavke z merami cone nosilca v mm. */
+export interface DatotekaTiska {
+  cona: string
+  /** <oznaka>-<cona>-<postopek>-<postavka>, brez končnice. */
+  ime: string
+  mm: { sirina: number; visina: number }
+}
+
+/** Motiv postavke, za katerega v aplikaciji ni predloge (motiv dodan le v bazi): ne tiska se, admin vidi opozorilo. */
+export const brezPredloge = (p: PostavkaTiska): string | null => {
+  const motiv = p.personalizacija?.motiv
+  return motiv && !MOTIVI.some((m) => m.slug === motiv) ? motiv : null
+}
+
+/**
+ * Datoteke motiva postavke (prazna cona se ne tiska); stara oblika ali motiv brez predloge → [].
+ * Mere iz posnetka ob nakupu, za starejše postavke iz con nosilca, nazadnje iz predloge.
+ */
+export function datotekeTiska(p: PostavkaTiska): DatotekaTiska[] {
+  const motiv = p.personalizacija?.motiv
+  if (!motiv || brezPredloge(p)) return []
+  const polja = p.personalizacija?.polja ?? {}
+  const barva = p.razlicica ? barvaRazlicice(p.razlicica) : null
+  return coneMotiva(motiv).filter((cona) => !praznaCona(motiv, polja, cona)).map((cona) => {
+    const c = p.personalizacija?.cone?.[cona] ?? conaZa(p.cone ?? [], cona, barva)
+    return {
+      cona,
+      ime: `${p.javna_oznaka}-${cona}-${p.postopek ?? 'tisk'}-${p.postavka_id}`,
+      mm: c ? { sirina: c.sirina_mm, visina: c.visina_mm } : velikostMm(motiv, cona),
+    }
+  })
+}
+
+/** Motiv cone v pravi velikosti (koren v mm), brez prireza in oznak: datoteka za DTF. Pisave še ni. */
+export const svgDtf = (p: PostavkaTiska, d: DatotekaTiska): string =>
+  narisiMotiv(p.personalizacija!.motiv!, p.personalizacija?.polja ?? {}, p.personalizacija?.barve ?? p.barve ?? [], d.cona, d.mm)
+
+/** Prirez 3 mm, rezilne oznake 5 mm zunaj prireza, 2 mm roba: motiv je ROB mm od roba lista. */
+const PRIREZ = 3
+const ZNAK = 5
+export const ROB = PRIREZ + ZNAK + 2
+
+/**
+ * List za tiskarno: prava velikost cone v mm (+ prirez in oznake), motiv na
+ * sredini cone, rezilne oznake v vogalih zunaj prireza. Pisave še ni (zVgrajenoPisavo).
+ */
+export function svgZaTisk(p: PostavkaTiska, d: DatotekaTiska): string {
+  const { sirina: W, visina: H } = d.mm
+  const S = W + 2 * ROB
+  const V = H + 2 * ROB
+  // Koren motiva dobi mere v enotah lista (mm), ne v pravih mm; overflow: kar sega čez rob, gre v prirez.
+  const motiv = svgDtf(p, d)
+    .replace(/^<svg\b[^>]*>/, (o) => o.replace(/\s(width|height)="[^"]*"/g, '')
+      .replace(/^<svg/, `<svg x="${ROB}" y="${ROB}" width="${W}" height="${H}" overflow="visible"`))
+  const a = ROB - PRIREZ // oznaka od a - ZNAK do a, enako na drugi strani
+  const oznake = [
+    ...[ROB, ROB + W].flatMap((x) => [`M${x} ${a - ZNAK}V${a}`, `M${x} ${V - a}V${V - a + ZNAK}`]),
+    ...[ROB, ROB + H].flatMap((y) => [`M${a - ZNAK} ${y}H${a}`, `M${S - a} ${y}H${S - a + ZNAK}`]),
+  ].join('')
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${S}mm" height="${V}mm" viewBox="0 0 ${S} ${V}">`
+    + `<path d="${oznake}" fill="none" stroke="#000" stroke-width="0.25" data-oznake="rez"/>${motiv}</svg>\n`
+}
+
+const crc32 = (b: Uint8Array): number => {
+  let c = ~0
+  for (const x of b) {
+    c ^= x
+    for (let k = 0; k < 8; k++) c = (c >>> 1) ^ (0xedb88320 & -(c & 1))
+  }
+  return ~c >>> 0
+}
+
+/** Canvas zapiše PNG brez ločljivosti: za IHDR vstavimo pHYs 300 dpi (11811 px/m), da tiskarna vidi prave mere. */
+export function s300dpi(png: Uint8Array<ArrayBuffer>): Blob {
+  const kos = new Uint8Array(21)
+  const v = new DataView(kos.buffer)
+  v.setUint32(0, 9)
+  kos.set([0x70, 0x48, 0x59, 0x73], 4) // pHYs
+  v.setUint32(8, 11811)
+  v.setUint32(12, 11811)
+  kos[16] = 1
+  v.setUint32(17, crc32(kos.subarray(4, 17)))
+  const imaPhys = String.fromCharCode(...png.subarray(37, 41)) === 'pHYs'
+  return new Blob(imaPhys ? [png] : [png.subarray(0, 33), kos, png.subarray(33)], { type: 'image/png' })
+}
+
+/** PNG 300 dpi iz SVG z vgrajeno pisavo (brskalnik riše SVG kot sliko, nato na <canvas>). */
+export async function pngIzSvg(svg: string, sirinaMm: number, visinaMm: number): Promise<Blob> {
+  const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }))
+  try {
+    const slika = new Image()
+    slika.src = url
+    await slika.decode()
+    const platno = Object.assign(document.createElement('canvas'), {
+      width: Math.round((sirinaMm / 25.4) * 300), height: Math.round((visinaMm / 25.4) * 300),
+    })
+    platno.getContext('2d')!.drawImage(slika, 0, 0, platno.width, platno.height)
+    const png = await new Promise<Blob | null>((r) => platno.toBlob(r, 'image/png'))
+    if (!png) throw new Error('PNG')
+    return s300dpi(new Uint8Array(await png.arrayBuffer()))
+  } finally {
+    URL.revokeObjectURL(url)
+  }
+}
+
+/** serija-<id>.csv: ločilo ;, BOM za Excel, vsaka celica v narekovajih. Motiv: vrstica na cono. */
 export function csvSerije(s: Serija): string {
   const glava = [t('admin.tisk.oznaka'), t('admin.tisk.postavka'), t('admin.tisk.sku'), t('admin.tisk.izdelek'), t('admin.tisk.kolicina'),
-    t('admin.tisk.besedilo'), t('admin.tisk.stevilka'), 'SVG']
-  const vrstice = s.postavke.map((p) => [p.javna_oznaka, p.postavka_id, p.sku, p.ime, p.kolicina,
-    p.personalizacija?.ime ?? null, p.personalizacija?.stevilka ?? null, imeSvg(p)])
-  return `﻿${[glava, ...vrstice].map((v) => v.map(celicaCsv).join(';')).join('\r\n')}\r\n`
+    t('admin.tisk.besedilo'), t('admin.tisk.stevilka'), 'SVG', t('admin.tisk.motiv'), t('admin.tisk.postopek'), t('admin.tisk.cona'), 'PNG', 'PNG DTF']
+  const vrstice = s.postavke.flatMap((p) => {
+    const osnova = [p.javna_oznaka, p.postavka_id, p.sku, p.ime, p.kolicina, p.personalizacija?.ime ?? null]
+    const motiv = p.personalizacija?.motiv
+    if (!motiv) return [[...osnova, p.personalizacija?.stevilka ?? null, imeSvg(p), null, p.postopek ?? null, null, null, null]]
+    if (brezPredloge(p)) return [[...osnova, null, null, motiv, p.postopek ?? null, null, null, null]]
+    return datotekeTiska(p).map((d) => [...osnova, null, `${d.ime}.svg`, motiv, p.postopek ?? null, d.cona, `${d.ime}.png`, `${d.ime}-dtf.png`])
+  })
+  return `\ufeff${[glava, ...vrstice].map((v) => v.map(celicaCsv).join(';')).join('\r\n')}\r\n`
 }
 
 const imeSvg = (p: PostavkaTiska): string => `${p.javna_oznaka}-${p.postavka_id}.svg`
 export const svgPostavke = (p: PostavkaTiska): string => oblikaSvg(p.personalizacija?.ime ?? null, p.personalizacija?.stevilka ?? null)
 
-function prenesi(ime: string, vsebina: string, tip: string) {
+function prenesi(ime: string, vsebina: BlobPart, tip: string) {
   const url = URL.createObjectURL(new Blob([vsebina], { type: tip }))
   const a = Object.assign(document.createElement('a'), { href: url, download: ime })
   a.click()
   setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
+const premor = () => new Promise((r) => setTimeout(r, 300))
+
+/**
+ * Vse datoteke serije, ena za drugo (brskalnik sicer več hkratnih prenosov zavrne).
+ * Datoteka, ki ne uspe (PNG hrbta je večji od meje platna v iOS Safariju), ne ustavi
+ * ostalih; vrne imena neuspelih.
+ */
+export async function prenesiVse(s: Serija, shrani = prenesi): Promise<string[]> {
+  const neuspele: string[] = []
+  const datoteka = async (ime: string, vsebina: () => BlobPart | Promise<BlobPart>, tip: string) => {
+    try {
+      shrani(ime, await vsebina(), tip)
+      await premor()
+    } catch {
+      neuspele.push(ime)
+    }
+  }
+  for (const p of s.postavke) {
+    if (!p.personalizacija?.motiv) await datoteka(imeSvg(p), () => svgPostavke(p), 'image/svg+xml')
+    for (const d of datotekeTiska(p)) {
+      const list = () => zVgrajenoPisavo(svgZaTisk(p, d))
+      await datoteka(`${d.ime}.svg`, list, 'image/svg+xml')
+      await datoteka(`${d.ime}.png`, async () => pngIzSvg(await list(), d.mm.sirina + 2 * ROB, d.mm.visina + 2 * ROB), 'image/png')
+      await datoteka(`${d.ime}-dtf.png`, async () => pngIzSvg(await zVgrajenoPisavo(svgDtf(p, d)), d.mm.sirina, d.mm.visina), 'image/png')
+    }
+  }
+  return neuspele
 }
 
 export function AdminTisk({ zavrnjen }: { zavrnjen: () => void }) {
@@ -66,7 +209,14 @@ export function AdminTisk({ zavrnjen }: { zavrnjen: () => void }) {
         {napaka && <p className="opozorilo">{napaka}</p>}
         <div className="flex flex-wrap gap-2">
           <button type="button" className="gumb-tih" onClick={() => prenesi(`serija-${serija.id}.csv`, csvSerije(serija), 'text/csv;charset=utf-8')}>{t('admin.tisk.csv')}</button>
-          <button type="button" className="gumb-tih" onClick={() => serija.postavke.forEach((p, n) => setTimeout(() => prenesi(imeSvg(p), svgPostavke(p), 'image/svg+xml'), n * 300))}>
+          <button type="button" className="gumb-tih" disabled={poteka}
+            onClick={() => {
+              setPoteka(true)
+              setNapaka(null)
+              prenesiVse(serija)
+                .then((n) => setNapaka(n.length ? t('admin.tisk.neuspeleDatoteke', { datoteke: n.join(', ') }) : null))
+                .catch((e: unknown) => setNapaka(String(e))).finally(() => setPoteka(false))
+            }}>
             {t('admin.tisk.vsiSvg')}
           </button>
           <span className="flex-1" />
@@ -144,13 +294,35 @@ export function PogledSerije({ s }: { s: Serija }) {
       <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {s.postavke.map((p) => (
           <li key={p.postavka_id} className="kartica space-y-2 p-3 text-sm">
-            <img src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgPostavke(p))}`} alt={opisPersonalizacije(p.personalizacija)}
-              className="aspect-square w-full rounded-lg bg-white" />
+            {brezPredloge(p)
+              ? <p className="opozorilo">{t('admin.tisk.brezPredloge', { motiv: brezPredloge(p)! })}</p>
+              : p.personalizacija?.motiv
+              ? datotekeTiska(p).map((d) => <SlikaTiska key={d.cona} p={p} d={d} />)
+              : <img src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgPostavke(p))}`} alt={opisPersonalizacije(p.personalizacija)}
+                className="aspect-square w-full rounded-lg bg-white" />}
             <p><span className="font-mono">{p.javna_oznaka}</span> · <b>{p.kolicina} ×</b> {p.ime}</p>
             <p className="text-slate-500">{p.sku}</p>
           </li>
         ))}
       </ul>
     </div>
+  )
+}
+
+/** Predogled lista za tisk (ista SVG kot v izvozu, s pisavo Anton). */
+function SlikaTiska({ p, d }: { p: PostavkaTiska; d: DatotekaTiska }) {
+  const svg = useMemo(() => svgZaTisk(p, d), [p, d.cona]) // eslint-disable-line react-hooks/exhaustive-deps
+  const [s, setS] = useState(svg)
+  useEffect(() => {
+    let ziv = true
+    void zVgrajenoPisavo(svg).then((z) => ziv && setS(z))
+    return () => { ziv = false }
+  }, [svg])
+  return (
+    <figure className="space-y-1">
+      <img src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(s)}`} alt={`${opisPersonalizacije(p.personalizacija)} · ${d.cona}`}
+        className="w-full rounded-lg bg-white" />
+      <figcaption className="font-mono text-xs text-slate-500">{`${d.ime} · ${d.mm.sirina} × ${d.mm.visina} mm`}</figcaption>
+    </figure>
   )
 }

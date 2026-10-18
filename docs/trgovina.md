@@ -40,6 +40,23 @@ EU-27. Prodajalec SPACE GUARDIAN d.o.o. Spec:
   `trgovina_vracilo`; admin: `_za_tisk`,
   `_nova_serija`, `_serija`, `_serije`, `_serija_stanje`, `_boni`,
   `_shrani_personalizacijo`.
+- **Motivi** (migracija `20261018230000_trgovina_motivi.sql`, spec
+  `docs/superpowers/specs/2026-10-18-trgovina-motivi-design.md`): `izdelki.postopek`,
+  `cone` (fotografija nosilca, koti, mm), `motivi` (polja, sheme, primeri),
+  `motivi_izdelki` (doplačilo). Vhod `{motiv, polja, shema}` preveri
+  `trgovina.personaliziraj_motiv` (vrsta polja, dolžina, znaki, filter,
+  0–99, 1950–letos, izbira, kupčeva nehišna ekipa, prvak kot zgoraj, shema;
+  neznana polja zavrne); shrani `{motiv, polja, shema, ime}` (+ `fantasy_team_id`,
+  pri prvaku `mini_liga_id`, `sezona`). Nosilec motivov brez motiva ni prodan.
+  Javno `trgovina_motivi()`, `trgovina_izdelek().motivi/cone`; admin
+  `trgovina_admin_motivi`, `_shrani_motiv` (aktiven, vrstni red, primeri, doplačila).
+- **Fotografije nosilcev** so v repozitoriju, `shop/nosilci/*.webp` (1600×1600,
+  prazna majica/pulover spredaj in zadaj). `publicDir` trgovine je `public/logo`,
+  zato jih vtičnik `slff-nosilci` v `shop/vite.config.js` streže v razvoju in ob
+  buildu prepiše v `dist-shop/nosilci/`; na strani so `https://shop.slff.eu/nosilci/…`
+  in pridejo gor z navadno objavo trgovine. `cone.slika` je pot `/nosilci/<ime>.webp`,
+  `cone.koti` so koti cone na tej sliki (TL, TR, BR, BL). Nova fotografija = nova
+  datoteka in nova migracija za vrstico cone (koti izmerjeni na fotografiji).
 - **Rezervacija**: naročilo `caka_placilo` drži zalogo 35 min
   (`rezervirano_do`), Stripe seja poteče v 31 min. Na voljo = zaloga −
   rezervirano. Največ 5 odprtih naročil na prijavljenega uporabnika ali (gost)
@@ -114,6 +131,95 @@ EU-27. Prodajalec SPACE GUARDIAN d.o.o. Spec:
   `slff_preverjen_*` in `slff_znacka`, odstotek ali znesek, število uporab,
   rok do 2 let; koda se vrne enkrat in se ne beleži).
 
+## Motivi
+
+Motivi nedeljske lige (Retro dres, Legenda, Hangover XI, Kapetan, Kralj kafane,
+Prvak mini lige) na majici in puloverju po meri. Vse preverjanje in vse cene so
+v bazi (`trgovina.personaliziraj_motiv`); brskalnik le riše predogled.
+
+**Model** (migracija `20261018230000_trgovina_motivi.sql`):
+
+- **Nosilec** je izdelek z `postopek` (`dtf`, …), `po_narocilu` in povezavo v
+  `motivi_izdelki` (`doplacilo` v centih). Danes `majica-po-meri` (Črna/Bela)
+  in `pulover-po-meri` (Črna).
+- **Cona** (`trgovina.cone`): mesto tiska na nosilcu: `kljuc` (`hrbet`, `prsi`),
+  `barva` (različica, NULL = vse), `slika` (prazen nosilec, `/nosilci/<ime>.webp`),
+  `koti` (TL, TR, BR, BL v px te slike) in prava velikost `sirina_mm` × `visina_mm`.
+- **Motiv** (`trgovina.motivi`): `slug`, imena in opisi sl/en, glavna `cona`,
+  `polja`, `sheme`, `primeri`, `aktiven`, `vrstni_red`.
+  - `polja`: `{kljuc, vrsta, oznaka_sl, oznaka_en, max, obvezno, privzeto, moznosti, cona?}`;
+    vrste `besedilo` (znaki in filter žaljivk), `stevilka` (0–99), `leto`
+    (1950–letos), `ekipa` (lastna, ne hišna fantasy ekipa), `prvak`
+    (`trgovina.prvaki_uporabnika`, besedilo sestavi baza), `izbira` (`moznosti`).
+    Polje z lastno `cona` se natisne drugje (sponzor Retro dresa na prsih).
+  - `sheme`: `{kljuc, ime_sl, ime_en, barve: [3 × #hex]}`; barva 1 je srednji ton,
+    2 in 3 sta svetla/temna nasprotja, zato vsaka shema bere na črnem in belem.
+  - `primeri`: izmišljeni primeri (nikoli resnične osebe) `{polja, shema, izdelek, barva}`
+    za vitrino in "Začni s tem".
+- Postavka hrani `{motiv, polja, shema, ime}` (+ `fantasy_team_id`, pri prvaku
+  `mini_liga_id`, `sezona`); doplačilo vedno pride iz `motivi_izdelki`.
+
+**Risanje.** Predloge so SVG v `shop/src/motivi/` (`<slug>.svg` = glavna cona,
+`<slug>.<cona>.svg` = dodatna), viewBox v mm cone. Kavlji: `<text data-polje="…">`,
+`data-barva="1|2|3"` (polnilo), `data-crta` (obroba), `data-sirina` (pomanjšaj do
+širine), `data-luk` (besedilo v loku), `data-vrstice`, `data-oblika`, `data-ce`
+(podrobno v glavi `shop/src/risba.ts`). `narisiMotiv(slug, polja, barve, cona, mm)`
+je čist niz → niz (dela v brskalniku, smoke in Node), pisava je Anton
+(`shop/src/motivi/anton.ttf`, OFL). Predogled (`shop/src/mockup.tsx`) položi
+SVG na fotografijo cone (pravokotnik v %, sicer `matrix3d` iz 4 kotov) in ga
+pomnoži s svetlostjo fotografije.
+
+**Nov motiv:**
+
+1. Predloga `shop/src/motivi/<slug>.svg` (300 × 400 mm za hrbet) s kavlji za vsako
+   polje in vse tri barve; preizkusi dolge (max) in kratke vrednosti.
+2. Vrstica v manifestu `shop/src/motivi/index.ts` (`slug`, `cona`, `polja`, `barve`, `predloge`).
+3. **Nova migracija** z `insert into trgovina.motivi` (polja, 3 sheme, 3–4
+   izmišljeni primeri, `aktiven = false`) in `motivi_izdelki` (doplačilo).
+   Smoke bere seme iz migracije motivov; motiv v novi migraciji dodaj tudi v
+   branje semena v `shop/smoke.tsx`.
+4. `npm run smoke:shop` (predloga ↔ seme: polja po conah, barve, ubežanje,
+   dolge/kratke vrednosti), `npm run test:varnost`, nato admin → **Motivi**
+   (`AdminMotivi.tsx`): `aktiven`, vrstni red, doplačilo po nosilcu (prazno = motiva
+   ni na izdelku) in primeri kot JSON (preveri jih `trgovina_admin_shrani_motiv`;
+   prazen seznam je dovoljen, vitrina tedaj pokaže privzete vrednosti polj).
+   Nosilec (izdelek s `postopek`) brez motiva, ki ga izdaja zna narisati, pokaže
+   "Motivi prihajajo kmalu" brez gumba za nakup, zato ga lahko vklopiš pred motivi.
+
+**Nova fotografija nosilca / cona:**
+
+1. Prazen nosilec (brez napisov), raven, od spredaj, kvadrat; WebP 1600 px v
+   `shop/nosilci/` (vtičnik `slff-nosilci` jo streže in prepiše v build).
+2. Izmeri kote cone na sliki (TL, TR, BR, BL; hrbet: sredina, ~8 cm pod ovratnikom;
+   razmerje stranic = mm cone). Pomaga mreža: `magick slika.webp -draw 'line …'`
+   vsakih 50 px, nato pogled od blizu.
+3. Nova migracija z vrstico `trgovina.cone` (`slika`, `koti`, `sirina_mm`, `visina_mm`).
+4. Preveri predogled na izdelku z vsemi motivi (svetla in temna barva).
+
+**Tisk** (admin → Tisk, `AdminTisk.tsx`): za postavko z motivom SVG v pravi
+velikosti cone (mm na korenu), 3 mm prireza in rezilne oznake, ter PNG 300 dpi
+(z vgrajeno pisavo, zanesljiva datoteka za tiskarno); ime
+`<oznaka>-<cona>-<postopek>-<postavka>`; CSV ima stolpce `motiv`, `postopek`, `cona`.
+PNG hrbta (≈ 19 MP) je večji od meje platna v iOS Safariju: datoteka, ki ne uspe,
+ne ustavi serije, admin dobi seznam neuspelih. Izvažaj na računalniku.
+
+**Slike s prizori** (`scripts/trgovina-hero.mjs`): na izvirne fotografije prizorov
+(`scripts/trgovina-hero/*.jpg`: igrišče, gostilna, slačilnica; prazni nosilci)
+nalepi pravi motiv s perspektivo (4 koti) in senčenjem fotografije ter zapiše
+`shop/nosilci/hero-<scena>.webp` (2000 px in `-1000`) za `/personalised` in pas
+v katalogu ter `katalog-majica.webp` / `katalog-pulover.webp` (kataloški sliki
+nosilcev). Primeri in sheme pridejo iz semena v migraciji.
+
+```bash
+npx vite-node scripts/trgovina-hero.mjs                  # vse
+npx vite-node scripts/trgovina-hero.mjs gostilna --pregled /tmp/p.jpg
+```
+
+Potrebuje `rsvg-convert` in `magick`. Skripta sama nastavi fontconfig na
+`shop/src/motivi` in `PANGOCAIRO_BACKEND=fc` (brez tega pango na macOS tiho
+vzame Impact). Nov prizor = fotografija v `scripts/trgovina-hero/`, vrstica v
+`SCENE` (koti v px izvirnika, `ton` = svetloba prizora) in pogled rezultata od blizu.
+
 ## Objava
 
 Narejeno 18. 10. 2026: DNS `shop` (A 2.31.6.53, proxied), Caddy blok
@@ -135,7 +241,7 @@ Ostalo (enkrat):
    obvezna potrditev pogojev le ob `STRIPE_TOS=1` (skupno s preverjenimi; zahteva
    Settings → Public details → Terms of service URL), sicer besedilo nad gumbom.
 5. `select trgovina_pripravi_shrambo();` (vedro za slike).
-6. V adminu: cene, zaloga, slike, nato `aktiven`.
+6. V adminu: cene, zaloga, slike, nato `aktiven`; motive vklopi zavihek **Motivi**.
 
 ## Pred živo prodajo
 

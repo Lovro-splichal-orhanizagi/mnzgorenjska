@@ -52,6 +52,72 @@ export interface Izdelek {
   digitalni: boolean
   personalizacije: Moznost[]
   razlicice: Razlicica[]
+  /** Postopek tiska (dtf …) pri nosilcih motivov. */
+  postopek?: string | null
+  /** Aktivni motivi, ki veljajo za ta izdelek (nosilec). */
+  motivi?: MotivIzdelka[]
+  cone?: Cona[]
+}
+
+/** Polje motiva (trgovina.motivi.polja). */
+export interface PoljeMotiva {
+  kljuc: string
+  vrsta: 'besedilo' | 'stevilka' | 'leto' | 'ekipa' | 'prvak' | 'izbira'
+  oznaka_sl: string
+  oznaka_en: string
+  max?: number
+  obvezno: boolean
+  privzeto?: string | number
+  moznosti?: string[]
+  /** Cona, če ni glavna cona motiva (sponzor retro dresa → prsi). */
+  cona?: string
+}
+
+export interface ShemaMotiva {
+  kljuc: string
+  ime_sl: string
+  ime_en: string
+  barve: string[]
+}
+
+/** Izmišljen primer: ekipa in prvak sta natisnjeno besedilo. */
+export interface PrimerMotiva {
+  polja: Record<string, string | number>
+  shema: string
+  izdelek: string
+  barva: string
+}
+
+interface MotivOsnova {
+  slug: string
+  ime_sl: string
+  ime_en: string
+  opis_sl: string
+  opis_en: string
+  cona: string
+  polja: PoljeMotiva[]
+  sheme: ShemaMotiva[]
+  primeri: PrimerMotiva[]
+}
+
+/** Motiv v trgovina_izdelek(slug).motivi. */
+export interface MotivIzdelka extends MotivOsnova {
+  doplacilo: number
+}
+
+/** Cona tiska na fotografiji nosilca (koti TL, TR, BR, BL v px fotografije 1600×1600). */
+export interface Cona {
+  kljuc: string
+  barva: string | null
+  slika: string
+  koti: [number, number][]
+  sirina_mm: number
+  visina_mm: number
+}
+
+/** Element trgovina_motivi(): le aktivni izdelki (lahko prazno). */
+export interface MotivKataloga extends MotivOsnova {
+  izdelki: { slug: string; ime_sl: string; ime_en: string; postopek: string | null; doplacilo: number; cena_od: number; cone: Cona[] }[]
 }
 
 /** Shranjena personalizacija postavke (trgovina.personaliziraj). */
@@ -59,6 +125,13 @@ export interface PersonalizacijaPostavke {
   vrsta?: 'ime_ekipe' | 'poljubno_ime' | 'prvak' | 'znacka'
   ime?: string
   stevilka?: number
+  /** Motiv: natisnjene vrednosti polj (ekipa in prvak kot besedilo). */
+  motiv?: string
+  shema?: string
+  polja?: Record<string, string | number | null>
+  /** Posnetek ob nakupu: barve sheme in mere vsake neprazne cone nosilca te barve. */
+  barve?: string[]
+  cone?: Record<string, { sirina_mm: number; visina_mm: number }>
 }
 
 /** Postavka naročila (trgovina.narocilo_json). */
@@ -103,6 +176,13 @@ export interface PostavkaTiska {
   ime: string
   kolicina: number
   personalizacija: PersonalizacijaPostavke | null
+  /** Oznaka različice ("Črna / M"): barva izbere cono nosilca. */
+  razlicica?: string
+  postopek?: string | null
+  /** Barve sheme motiva; null pri stari obliki. */
+  barve?: string[] | null
+  /** Cone nosilca (mere v mm); null pri stari obliki. */
+  cone?: Cona[] | null
 }
 
 /** trgovina_admin_serija(id) */
@@ -210,6 +290,9 @@ export interface IzdelekAdmin {
   slike: string[]
   tax_code: string
   pismo: boolean
+  po_narocilu: boolean
+  digitalni: boolean
+  postopek: string | null
   aktiven: boolean
   vrstni_red: number
   razlicice: RazlicicaAdmin[]

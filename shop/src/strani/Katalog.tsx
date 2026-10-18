@@ -5,6 +5,7 @@ import { supabase, type IzdelekKataloga, type Voljo } from '../baza'
 import { cena, po, t } from '../besede'
 import { useNaslov } from '../Okvir'
 import { Nalaganje } from '../seja'
+import { Pahljaca, useMotivi } from './Personalizirano'
 
 /** Slika izdelka ali grb SLFF na temni podlagi, dokler slike ni. */
 export function Slika({ src, alt, majhna = false }: { src?: string; alt: string; majhna?: boolean }) {
@@ -56,6 +57,28 @@ export function MrezaIzdelkov({ izdelki }: { izdelki: IzdelekKataloga[] }) {
   )
 }
 
+/** Pas "Naredi svojega" (le, ko so motivi v prodaji). */
+function PasPoMeri() {
+  const { motivi } = useMotivi()
+  if (!motivi?.length) return null
+  return (
+    <Link to="/personalised" className="group relative block overflow-hidden rounded-3xl border border-gnl-400/25 bg-gradient-to-br from-gnl-900/80 via-slate-900 to-slate-950 p-6 transition hover:border-gnl-400/50 sm:p-8">
+      <img src="/nosilci/hero-gostilna-1000.webp" alt="" loading="lazy" decoding="async" width={1000} height={667}
+        className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-50 transition duration-700 group-hover:scale-[1.02] motion-reduce:transition-none" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/85 to-slate-950/30" />
+      <div className="relative grid items-center gap-6 md:grid-cols-[1fr_minmax(0,22rem)]">
+        <div className="space-y-3">
+          <p className="znacka bg-gnl-400/15 text-gnl-300 ring-1 ring-gnl-400/30">{t('osebno.nadnaslov')}</p>
+          <h2 className="text-3xl font-black naslov sm:text-4xl">{t('katalog.pasNaslov')}</h2>
+          <p className="max-w-xl text-slate-300">{t('katalog.pasOpis')}</p>
+          <span className="gumb-glavni inline-block">{t('katalog.pasGumb')} →</span>
+        </div>
+        <div className="transition duration-500 group-hover:scale-[1.03] motion-reduce:transition-none"><Pahljaca motivi={motivi} majhna /></div>
+      </div>
+    </Link>
+  )
+}
+
 export function Katalog() {
   const [izdelki, setIzdelki] = useState<IzdelekKataloga[] | null>(null)
   const [napaka, setNapaka] = useState(false)
@@ -79,6 +102,7 @@ export function Katalog() {
           ))}
         </ul>
       </section>
+      <PasPoMeri />
       <div aria-live="polite">{napaka && <p className="opozorilo">{t('napaka.nalaganje')}</p>}</div>
       {izdelki === null ? <Nalaganje /> : !napaka && <MrezaIzdelkov izdelki={izdelki} />}
     </div>

@@ -7,6 +7,7 @@ import { useNaslov } from '../Okvir'
 import { doplacilo, napakaImena, normaliziraj, PISAVA, stevilka, velikostImena, type Personalizacija, type Vrsta } from '../personalizacija'
 import { Nalaganje, useSeja } from '../seja'
 import { Slika, ZnackaVoljo } from './Katalog'
+import { imaPredlogo, Konfigurator } from './Konfigurator'
 
 /** Besedilo in številka čez sliko izdelka (hrbet majice), kot ju dobi tiskarna. */
 export function Predogled({ src, alt, ime, st }: { src?: string; alt: string; ime: string | null; st: number | null }) {
@@ -171,7 +172,70 @@ function Obrazec({ i, javi }: { i: TIzdelek; javi: (iz: Izbira) => void }) {
   )
 }
 
+/** Sporočilo o dodanem in gumb za košarico (na telefonu vedno na dnu zaslona). */
+export function NakupnaVrstica({ kolicina, setKolicina, najvec, dodano, onemogoceno, besedilo, dodaj }: {
+  kolicina: number
+  setKolicina: (f: (k: number) => number) => void
+  najvec: number
+  /** Koliko kosov je zadnji klik res dodal (null = še ni klika). */
+  dodano: number | null
+  onemogoceno: boolean
+  besedilo: string
+  dodaj: () => void
+}) {
+  return (
+    <>
+      <div aria-live="polite">
+        {dodano !== null && (
+          <p className={`${dodano > 0 ? 'uspeh' : 'opozorilo'} flex items-center justify-between gap-3`}>
+            {dodano === 0 ? t('izdelek.polno') : dodano < kolicina ? t('izdelek.delno', { n: dodano }) : t('izdelek.dodano')}
+            <Link to="/cart" className="povezava">{t('izdelek.vKosarico')} →</Link>
+          </p>
+        )}
+      </div>
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-slate-950/95 px-4 py-3 backdrop-blur md:static md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
+        <div className="mx-auto flex max-w-6xl items-center gap-3">
+          <div className="flex items-center rounded-xl border border-white/15 bg-white/5" role="group" aria-label={t('izdelek.kolicina')}>
+            <button type="button" aria-label={t('izdelek.manj')} disabled={kolicina <= 1} onClick={() => setKolicina((k) => k - 1)} className="px-3 py-2 text-lg font-bold disabled:opacity-30">−</button>
+            <span className="w-8 text-center font-semibold tabular-nums">{kolicina}</span>
+            <button type="button" aria-label={t('izdelek.vec')} disabled={kolicina >= najvec} onClick={() => setKolicina((k) => k + 1)} className="px-3 py-2 text-lg font-bold disabled:opacity-30">+</button>
+          </div>
+          <button type="button" disabled={onemogoceno} onClick={dodaj} className="gumb-glavni flex-1 py-3 md:flex-none md:px-8">
+            {besedilo}
+          </button>
+        </div>
+      </div>
+    </>
+  )
+}
+
 export function IzdelekView({ i }: { i: TIzdelek }) {
+  const motivi = i.motivi?.filter((m) => imaPredlogo(m.slug)) ?? []
+  if (motivi.length && i.cone?.length) return <Konfigurator i={{ ...i, motivi }} />
+  // Nosilec motivov brez motiva, ki ga ta izdaja zna narisati: baza ga brez motiva ne proda.
+  if (i.postopek && !i.digitalni) return <MotiviKmalu i={i} />
+  return <Navaden i={i} />
+}
+
+function MotiviKmalu({ i }: { i: TIzdelek }) {
+  const ime = po(i.ime_sl, i.ime_en)
+  useNaslov(ime, po(i.opis_sl, i.opis_en).slice(0, 160) || undefined)
+  return (
+    <div className="space-y-6">
+      <Link to="/" className="povezava text-sm">← {t('izdelek.nazaj')}</Link>
+      <div className="grid gap-6 md:grid-cols-2 md:gap-10">
+        <Slika src={i.slike[0]} alt={ime} />
+        <div className="space-y-4">
+          <h1 className="text-3xl font-black naslov sm:text-4xl">{ime}</h1>
+          <p className="kartica p-5 text-lg font-bold text-gnl-200">{t('izdelek.motiviKmalu')}</p>
+          <p className="text-slate-400">{t('izdelek.motiviKmaluOpis')}</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function Navaden({ i }: { i: TIzdelek }) {
   const kosarica = useKosarica()
   const ime = po(i.ime_sl, i.ime_en)
   const prodajne = i.razlicice.filter((r) => r.na_voljo !== 'ne')
@@ -259,28 +323,8 @@ export function IzdelekView({ i }: { i: TIzdelek }) {
             {personaliziran ? <li className="text-amber-200">! {t('izdelek.brezOdstopa')}</li> : <li>✓ {t('izdelek.odstop')}</li>}
           </ul>
 
-          <div aria-live="polite">
-            {dodano !== null && (
-              <p className={`${dodano > 0 ? 'uspeh' : 'opozorilo'} flex items-center justify-between gap-3`}>
-                {dodano === 0 ? t('izdelek.polno') : dodano < kolicina ? t('izdelek.delno', { n: dodano }) : t('izdelek.dodano')}
-                <Link to="/cart" className="povezava">{t('izdelek.vKosarico')} →</Link>
-              </p>
-            )}
-          </div>
-
-          {/* Na telefonu je gumb vedno na dnu zaslona. */}
-          <div className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-slate-950/95 px-4 py-3 backdrop-blur md:static md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
-            <div className="mx-auto flex max-w-6xl items-center gap-3">
-              <div className="flex items-center rounded-xl border border-white/15 bg-white/5" role="group" aria-label={t('izdelek.kolicina')}>
-                <button type="button" aria-label={t('izdelek.manj')} disabled={kolicina <= 1} onClick={() => setKolicina((k) => k - 1)} className="px-3 py-2 text-lg font-bold disabled:opacity-30">−</button>
-                <span className="w-8 text-center font-semibold tabular-nums">{kolicina}</span>
-                <button type="button" aria-label={t('izdelek.vec')} disabled={kolicina >= najvec} onClick={() => setKolicina((k) => k + 1)} className="px-3 py-2 text-lg font-bold disabled:opacity-30">+</button>
-              </div>
-              <button type="button" disabled={!r || r.na_voljo === 'ne' || izbira.vnos === null} onClick={vKosarico} className="gumb-glavni flex-1 py-3 md:flex-none md:px-8">
-                {r || prodajne.length === 0 ? t('izdelek.dodaj') : t('izdelek.izberi')}
-              </button>
-            </div>
-          </div>
+          <NakupnaVrstica kolicina={kolicina} setKolicina={setKolicina} najvec={najvec} dodano={dodano}
+            onemogoceno={!r || r.na_voljo === 'ne' || izbira.vnos === null} besedilo={r || prodajne.length === 0 ? t('izdelek.dodaj') : t('izdelek.izberi')} dodaj={vKosarico} />
         </div>
       </div>
     </div>

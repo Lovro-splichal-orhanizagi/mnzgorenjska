@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" width="300mm" height="400mm" font-family="Anton, Impact, 'Arial Narrow', sans-serif" text-anchor="middle" stroke-linejoin="round" data-cona="hrbet">
+  <defs>
+    <path id="zvezda" d="M0 -10L2.35 -3.24L9.51 -3.09L3.8 1.24L5.88 8.09L0 4L-5.88 8.09L-3.8 1.24L-9.51 -3.09L-2.35 -3.24Z"/>
+  </defs>
+  <!-- krona -->
+  <g data-barva="3" data-crta="3" stroke-width="10">
+    <path d="M92 98 L82 34 L117 64 L150 18 L183 64 L218 34 L208 98 Z"/>
+    <rect x="88" y="96" width="124" height="20" rx="3"/>
+    <circle cx="82" cy="32" r="7"/><circle cx="150" cy="16" r="8"/><circle cx="218" cy="32" r="7"/>
+  </g>
+  <g data-barva="1" data-crta="2" stroke-width="3" paint-order="stroke">
+    <path d="M92 98 L82 34 L117 64 L150 18 L183 64 L218 34 L208 98 Z"/>
+    <rect x="88" y="96" width="124" height="20" rx="3"/>
+    <circle cx="82" cy="32" r="7"/><circle cx="150" cy="16" r="8"/><circle cx="218" cy="32" r="7"/>
+  </g>
+  <g data-barva="2">
+    <circle cx="118" cy="106" r="4.5"/><rect x="144" y="100" width="12" height="12" rx="2" transform="rotate(45 150 106)"/><circle cx="182" cy="106" r="4.5"/>
+    <path d="M150 50 L158 66 L150 82 L142 66 Z"/>
+  </g>
+  <use href="#zvezda" transform="translate(54 72) scale(.8)" data-barva="1"/>
+  <use href="#zvezda" transform="translate(246 72) scale(.8)" data-barva="1"/>
+  <text x="152" y="152" font-size="28" letter-spacing="7" data-barva="3" data-crta="3" stroke-width="7">KRALJ KAFANE</text>
+  <text x="152" y="152" font-size="28" letter-spacing="7" data-barva="1" data-crta="2" stroke-width="2.4" paint-order="stroke">KRALJ KAFANE</text>
+  <!-- ime -->
+  <text x="150" y="232" font-size="76" letter-spacing="1.5" data-polje="ime" data-velike data-sirina="268" data-sredina data-barva="3" data-crta="3" stroke-width="12">BIZJAK</text>
+  <text x="150" y="232" font-size="76" letter-spacing="1.5" data-polje="ime" data-velike data-sirina="268" data-sredina data-barva="1" data-crta="2" stroke-width="5" paint-order="stroke">BIZJAK</text>
+  <!-- statistika -->
+  <g data-barva="1" data-crta="3" stroke-width="3.5">
+    <rect x="28" y="258" width="116" height="84" rx="8"/>
+    <rect x="156" y="258" width="116" height="84" rx="8"/>
+  </g>
+  <g fill="none" data-crta="2" stroke-width="1.4">
+    <rect x="34" y="264" width="104" height="72" rx="5"/>
+    <rect x="162" y="264" width="104" height="72" rx="5"/>
+  </g>
+  <text x="86" y="285" font-size="15" letter-spacing="4" data-barva="2">GOLI</text>
+  <text x="86" y="330" font-size="46" data-polje="goli" data-barva="2">23</text>
+  <text x="214" y="285" font-size="15" letter-spacing="4" data-barva="2">SEZONA</text>
+  <text x="214" y="326" font-size="36" data-polje="sezona" data-oblika="sezona" data-sirina="92" data-barva="2">2025/26</text>
+  <use href="#zvezda" transform="translate(132 368) scale(.55)" data-barva="1"/><use href="#zvezda" transform="translate(150 366) scale(.75)" data-barva="1"/><use href="#zvezda" transform="translate(168 368) scale(.55)" data-barva="1"/>
+  <text x="150" y="396" font-size="8" letter-spacing="3" data-barva="1">SLFF · NEDELJSKA LIGA</text>
+</svg>

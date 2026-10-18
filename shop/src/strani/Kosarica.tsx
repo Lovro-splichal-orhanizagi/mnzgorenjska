@@ -8,6 +8,8 @@ import { doplacilo } from '../personalizacija'
 import { useNaslov } from '../Okvir'
 import { Nalaganje } from '../seja'
 import { Slika, ZnackaVoljo } from './Katalog'
+import { imaPredlogo, svgCone } from './Konfigurator'
+import { barvaRazlicice, conaZa, Mockup } from '../mockup'
 
 type Izdelki = Record<string, Izdelek | null>
 
@@ -21,12 +23,26 @@ export function stripeNaslov(url: string): boolean {
   }
 }
 
+/** Motiv postavke ni (več) v prodaji ali ga ta izdaja trgovine ne pozna. */
+export const motivaNi = (iz: Izdelek | null | undefined, p: Postavka): boolean =>
+  Boolean(iz && p.personalizacija?.motiv && !iz.motivi?.some((m) => m.slug === p.personalizacija?.motiv && imaPredlogo(m.slug)))
+
+/** Mockup motiva v košarici: natisnjene vrednosti (prikaz) na barvi različice. */
+export function SlikaMotiva({ iz, p, oznaka, alt }: { iz: Izdelek; p: Postavka; oznaka: string; alt: string }) {
+  const m = iz.motivi?.find((x) => x.slug === p.personalizacija?.motiv)
+  const barva = barvaRazlicice(oznaka)
+  const cona = m && conaZa(iz.cone ?? [], m.cona, barva)
+  if (!m || !cona || !imaPredlogo(m.slug)) return <Slika src={iz.slike[0]} alt={alt} majhna />
+  const barve = (m.sheme.find((s) => s.kljuc === p.personalizacija?.shema) ?? m.sheme[0]!).barve
+  return <Mockup cona={cona} svg={svgCone(m.slug, p.prikaz ?? {}, barve, m.cona)} barva={barva} povecava={1.6} alt={alt} className="rounded-xl" />
+}
+
 const razlicica = (izdelki: Izdelki, slug: string, id: number) => izdelki[slug]?.razlicice.find((r) => r.id === id) ?? null
 
 /** Cena kosa z doplačilom personalizacije (prikaz; pravo izračuna baza), null če različice ni. */
 export const cenaKosa = (izdelki: Izdelki, p: Postavka): number | null => {
   const r = razlicica(izdelki, p.slug, p.razlicica_id)
-  return r ? r.cena + doplacilo(izdelki[p.slug]?.personalizacije ?? [], p.personalizacija) : null
+  return r ? r.cena + doplacilo(izdelki[p.slug]?.personalizacije ?? [], p.personalizacija, izdelki[p.slug]?.motivi) : null
 }
 
 /** Največ kosov v vrstici: značka 1, darilni bon 5 (v bazi skupaj), sicer 20. */
@@ -150,7 +166,7 @@ export function Kosarica() {
   const vmesna = skupaj(k, cene)
   const pismo = k.postavke.every((p) => izdelki[p.slug]?.pismo === true || izdelki[p.slug]?.digitalni === true)
   const zBonom = k.postavke.some((p) => izdelki[p.slug]?.digitalni === true)
-  const neveljavna = k.postavke.some((p) => (razlicica(izdelki, p.slug, p.razlicica_id)?.na_voljo ?? 'ne') === 'ne')
+  const neveljavna = k.postavke.some((p) => (razlicica(izdelki, p.slug, p.razlicica_id)?.na_voljo ?? 'ne') === 'ne' || motivaNi(izdelki[p.slug], p))
   const drzave = EU27.map((d) => [d, imeDrzave(d)] as const).sort((a, b) => a[1].localeCompare(b[1], jezik))
 
   return (
@@ -171,8 +187,8 @@ export function Kosarica() {
             const najvec = najvecKosov(iz)
             return (
               <li key={vrstica} className="kartica flex gap-3 p-3 sm:gap-4">
-                <Link to={`/p/${p.slug}`} className="w-20 shrink-0 sm:w-24">
-                  <Slika src={iz?.slike[0]} alt={ime} majhna />
+                <Link to={`/p/${p.slug}${p.personalizacija?.motiv ? `?motiv=${p.personalizacija.motiv}` : ''}`} className="w-20 shrink-0 sm:w-24">
+                  {iz && r && p.personalizacija?.motiv ? <SlikaMotiva iz={iz} p={p} oznaka={r.oznaka_sl} alt={ime} /> : <Slika src={iz?.slike[0]} alt={ime} majhna />}
                 </Link>
                 <div className="min-w-0 flex-1 space-y-2">
                   <div className="flex items-start justify-between gap-2">
@@ -182,6 +198,7 @@ export function Kosarica() {
                       {p.opis && <p className="break-words text-sm font-semibold uppercase text-gnl-200">{p.opis}</p>}
                       {iz?.digitalni && <p className="text-xs text-slate-500">{t('izdelek.digitalni')}</p>}
                       {napacna === vrstica && <p className="text-sm text-rose-300">{t('kosarica.napacnaVrstica')}</p>}
+                      {motivaNi(iz, p) && <p className="text-sm text-rose-300">{t('kosarica.motivNi')}</p>}
                     </div>
                     {kos !== null && <p className="shrink-0 font-bold tabular-nums">{cena(kos * p.kolicina)}</p>}
                   </div>

@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" width="300mm" height="400mm" font-family="Anton, Impact, 'Arial Narrow', sans-serif" text-anchor="middle" stroke-linejoin="round" data-cona="hrbet">
+  <defs>
+    <path id="zvezda" d="M0 -10L2.35 -3.24L9.51 -3.09L3.8 1.24L5.88 8.09L0 4L-5.88 8.09L-3.8 1.24L-9.51 -3.09L-2.35 -3.24Z"/>
+    <path id="list" d="M0 0C5 -5 6 -13 0 -21C-6 -13 -5 -5 0 0Z"/>
+  </defs>
+  <!-- naslov po loku z zvezdami -->
+  <text data-luk="150 330 290" font-size="22" letter-spacing="3.2" data-barva="1">LEGENDA NEDELJSKE LIGE</text>
+  <use href="#zvezda" transform="translate(130 64) scale(.6)" data-barva="1"/>
+  <use href="#zvezda" transform="translate(150 62) scale(.8)" data-barva="1"/>
+  <use href="#zvezda" transform="translate(170 64) scale(.6)" data-barva="1"/>
+  <!-- vzdevek: glavni napis -->
+  <text x="150" y="150" font-size="66" letter-spacing="1" data-polje="vzdevek" data-oblika="navednice" data-velike data-sirina="270" data-sredina data-barva="3" data-crta="3" stroke-width="11">“STARI LISJAK”</text>
+  <text x="150" y="150" font-size="66" letter-spacing="1" data-polje="vzdevek" data-oblika="navednice" data-velike data-sirina="270" data-sredina data-barva="1" data-crta="2" stroke-width="4.5" paint-order="stroke">“STARI LISJAK”</text>
+  <!-- trak z imenom -->
+  <path d="M28 186 H62 V226 H28 L40 206 Z M272 186 H238 V226 H272 L260 206 Z" data-barva="3" data-crta="1" stroke-width="2.5"/>
+  <path d="M50 176 H250 V218 H50 Z" data-barva="3" data-crta="1" stroke-width="3"/>
+  <path d="M50 218 L62 226 V218 Z M250 218 L238 226 V218 Z" data-barva="1"/>
+  <text x="150" y="211" font-size="31" letter-spacing="4" data-polje="ime" data-velike data-sirina="186" data-sredina data-barva="2">KRAJNC</text>
+  <!-- leto med lovorjem -->
+  <g data-barva="1" transform="translate(150 286) scale(.9) translate(-150 -306)">
+    <use href="#list" transform="translate(136.4 403.0) rotate(-57) scale(1.25)"/>
+    <use href="#list" transform="translate(136.4 403.0) rotate(3) scale(1.00)"/>
+    <use href="#list" transform="translate(113.3 396.9) rotate(-43) scale(1.21)"/>
+    <use href="#list" transform="translate(113.3 396.9) rotate(17) scale(0.97)"/>
+    <use href="#list" transform="translate(92.4 385.3) rotate(-29) scale(1.17)"/>
+    <use href="#list" transform="translate(92.4 385.3) rotate(31) scale(0.94)"/>
+    <use href="#list" transform="translate(74.9 369.0) rotate(-15) scale(1.13)"/>
+    <use href="#list" transform="translate(74.9 369.0) rotate(45) scale(0.90)"/>
+    <use href="#list" transform="translate(61.9 349.0) rotate(-1) scale(1.09)"/>
+    <use href="#list" transform="translate(61.9 349.0) rotate(59) scale(0.87)"/>
+    <use href="#list" transform="translate(54.1 326.4) rotate(13) scale(1.05)"/>
+    <use href="#list" transform="translate(54.1 326.4) rotate(73) scale(0.84)"/>
+    <use href="#list" transform="translate(52.1 302.6) rotate(27) scale(1.01)"/>
+    <use href="#list" transform="translate(52.1 302.6) rotate(87) scale(0.81)"/>
+    <use href="#list" transform="translate(55.8 279.0) rotate(41) scale(0.97)"/>
+    <use href="#list" transform="translate(163.6 403.0) rotate(57) scale(1.25)"/>
+    <use href="#list" transform="translate(163.6 403.0) rotate(-3) scale(1.00)"/>
+    <use href="#list" transform="translate(186.7 396.9) rotate(43) scale(1.21)"/>
+    <use href="#list" transform="translate(186.7 396.9) rotate(-17) scale(0.97)"/>
+    <use href="#list" transform="translate(207.6 385.3) rotate(29) scale(1.17)"/>
+    <use href="#list" transform="translate(207.6 385.3) rotate(-31) scale(0.94)"/>
+    <use href="#list" transform="translate(225.1 369.0) rotate(15) scale(1.13)"/>
+    <use href="#list" transform="translate(225.1 369.0) rotate(-45) scale(0.90)"/>
+    <use href="#list" transform="translate(238.1 349.0) rotate(1) scale(1.09)"/>
+    <use href="#list" transform="translate(238.1 349.0) rotate(-59) scale(0.87)"/>
+    <use href="#list" transform="translate(245.9 326.4) rotate(-13) scale(1.05)"/>
+    <use href="#list" transform="translate(245.9 326.4) rotate(-73) scale(0.84)"/>
+    <use href="#list" transform="translate(247.9 302.6) rotate(-27) scale(1.01)"/>
+    <use href="#list" transform="translate(247.9 302.6) rotate(-87) scale(0.81)"/>
+    <use href="#list" transform="translate(244.2 279.0) rotate(-41) scale(0.97)"/>
+  </g>
+  <text x="150" y="256" font-size="13" letter-spacing="3" data-barva="1">NA IGRIŠČU OD</text>
+  <text x="150" y="318" font-size="56" letter-spacing="1" data-polje="leto" data-barva="3" data-crta="3" stroke-width="10">1994</text>
+  <text x="150" y="318" font-size="56" letter-spacing="1" data-polje="leto" data-barva="1" data-crta="2" stroke-width="4" paint-order="stroke">1994</text>
+  <text x="150" y="342" font-size="8" letter-spacing="3" data-barva="1">SLFF</text>
+</svg>

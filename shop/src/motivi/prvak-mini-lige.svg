@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" width="300mm" height="400mm" font-family="Anton, Impact, 'Arial Narrow', sans-serif" text-anchor="middle" stroke-linejoin="round" data-cona="hrbet">
+  <defs>
+    <path id="zvezda" d="M0 -10L2.35 -3.24L9.51 -3.09L3.8 1.24L5.88 8.09L0 4L-5.88 8.09L-3.8 1.24L-9.51 -3.09L-2.35 -3.24Z"/>
+    <g id="pokal">
+      <path d="M104 22 H196 V40 Q196 100 160 116 V136 Q160 144 172 148 V156 H128 V148 Q140 144 140 136 V116 Q104 100 104 40 Z"/>
+      <path d="M104 34 Q72 34 72 58 Q72 86 110 94 L113 84 Q84 78 84 58 Q84 46 104 46 Z"/>
+      <path d="M196 34 Q228 34 228 58 Q228 86 190 94 L187 84 Q216 78 216 58 Q216 46 196 46 Z"/>
+      <rect x="110" y="156" width="80" height="26" rx="3"/>
+    </g>
+  </defs>
+  <!-- pokal z žarki -->
+  <g data-crta="1" stroke-width="3" stroke-linecap="round" fill="none">
+    <path d="M150 4 V0 M84 20 L76 12 M216 20 L224 12 M56 64 H44 M244 64 H256 M66 112 L56 120 M234 112 L244 120"/>
+  </g>
+  <use href="#pokal" data-barva="3" data-crta="3" stroke-width="10"/>
+  <use href="#pokal" data-barva="1" data-crta="2" stroke-width="3" paint-order="stroke"/>
+  <use href="#zvezda" transform="translate(150 62) scale(1.9)" data-barva="2"/>
+  <path d="M114 30 H186" data-crta="2" stroke-width="2" stroke-linecap="round"/>
+  <rect x="118" y="164" width="64" height="10" rx="2" data-barva="2"/>
+  <use href="#zvezda" transform="translate(40 30) scale(.8)" data-barva="1"/>
+  <use href="#zvezda" transform="translate(262 34) scale(.6)" data-barva="1"/>
+  <use href="#zvezda" transform="translate(30 150) scale(.55)" data-barva="1"/>
+  <use href="#zvezda" transform="translate(268 156) scale(.75)" data-barva="1"/>
+  <!-- trak z naslovom -->
+  <path d="M18 196 H52 V234 H18 L30 215 Z M282 196 H248 V234 H282 L270 215 Z" data-barva="3" data-crta="1" stroke-width="2.5"/>
+  <path d="M40 188 H260 V226 H40 Z" data-barva="3" data-crta="1" stroke-width="3"/>
+  <path d="M40 226 L52 234 V226 Z M260 226 L248 234 V226 Z" data-barva="1"/>
+  <text x="150" y="218" font-size="25" letter-spacing="4" data-polje="prvak" data-oblika="prvak-naslov" data-velike data-sirina="204" data-sredina data-barva="2">PRVAK MINI LIGE</text>
+  <!-- liga -->
+  <text x="150" y="314" font-size="74" letter-spacing="1" data-polje="prvak" data-oblika="prvak-liga" data-velike data-sirina="272" data-sredina data-vrstice="2" data-barva="3" data-crta="3" stroke-width="11">LIGA PRI ŠANKU</text>
+  <text x="150" y="314" font-size="74" letter-spacing="1" data-polje="prvak" data-oblika="prvak-liga" data-velike data-sirina="272" data-sredina data-vrstice="2" data-barva="1" data-crta="2" stroke-width="4.5" paint-order="stroke">LIGA PRI ŠANKU</text>
+  <!-- sezona -->
+  <path d="M28 358 H66 M234 358 H272" data-crta="1" stroke-width="3" stroke-linecap="round"/>
+  <text x="150" y="374" font-size="40" letter-spacing="2" data-polje="prvak" data-oblika="prvak-sezona" data-barva="3" data-crta="3" stroke-width="7">2025/26</text>
+  <text x="150" y="374" font-size="40" letter-spacing="2" data-polje="prvak" data-oblika="prvak-sezona" data-barva="1" data-crta="2" stroke-width="2.5" paint-order="stroke">2025/26</text>
+  <text x="150" y="394" font-size="8" letter-spacing="3" data-barva="1">SLFF · FANTASY</text>
+</svg>

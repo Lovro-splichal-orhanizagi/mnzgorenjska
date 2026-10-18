@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" width="300mm" height="400mm" font-family="Anton, Impact, 'Arial Narrow', sans-serif" text-anchor="middle" stroke-linejoin="round" data-cona="hrbet">
+  <defs>
+    <path id="zvezda" d="M0 -10L2.35 -3.24L9.51 -3.09L3.8 1.24L5.88 8.09L0 4L-5.88 8.09L-3.8 1.24L-9.51 -3.09L-2.35 -3.24Z"/>
+    <clipPath id="rd-st"><text x="150" y="292" font-size="200" data-polje="stevilka">9</text></clipPath>
+  </defs>
+  <!-- ime po loku čez ramena -->
+  <text data-polje="ime" data-velike data-luk="150 360 280" data-sirina="250" font-size="64" letter-spacing="2" data-barva="3" data-crta="3" stroke-width="10">NOVAK</text>
+  <text data-polje="ime" data-velike data-luk="150 360 280" data-sirina="250" font-size="64" letter-spacing="2" data-barva="1" data-crta="2" stroke-width="4" paint-order="stroke">NOVAK</text>
+  <!-- številka: senca, dvojna obroba, retro črte v spodnji polovici -->
+  <text x="157" y="299" font-size="200" data-polje="stevilka" data-barva="3" data-crta="3" stroke-width="16">9</text>
+  <text x="150" y="292" font-size="200" data-polje="stevilka" data-barva="3" data-crta="3" stroke-width="16">9</text>
+  <text x="150" y="292" font-size="200" data-polje="stevilka" data-barva="1" data-crta="2" stroke-width="7" paint-order="stroke">9</text>
+  <g clip-path="url(#rd-st)" data-barva="2">
+    <rect x="0" y="222" width="300" height="3"/><rect x="0" y="234" width="300" height="3.5"/>
+    <rect x="0" y="246" width="300" height="4"/><rect x="0" y="258" width="300" height="4.5"/>
+    <rect x="0" y="270" width="300" height="5"/><rect x="0" y="282" width="300" height="5.5"/>
+  </g>
+  <!-- ustanovljeno -->
+  <g data-ce="leto">
+    <rect x="96" y="320" width="108" height="34" rx="17" data-barva="3" data-crta="1" stroke-width="2.5"/>
+    <text x="141" y="346" font-size="23" letter-spacing="2" text-anchor="end" data-barva="2">EST.</text>
+    <text x="149" y="346" font-size="23" letter-spacing="2" text-anchor="start" data-polje="leto" data-barva="2">1998</text>
+    <use href="#zvezda" transform="translate(76 337) scale(.85)" data-barva="1"/>
+    <use href="#zvezda" transform="translate(224 337) scale(.85)" data-barva="1"/>
+  </g>
+  <text x="150" y="394" font-size="9" letter-spacing="3" data-barva="1">SLFF · NEDELJSKA LIGA</text>
+</svg>

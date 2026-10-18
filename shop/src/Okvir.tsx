@@ -5,6 +5,7 @@ import { supabase } from './baza'
 import { izberiJezik, jezik, t, TELEFON, TELEFON_POVEZAVA } from './besede'
 import { kosov, useKosarica } from './kosarica'
 import { useSeja } from './seja'
+import { useMotivi } from './strani/Personalizirano'
 
 /** Naslov zavihka (in opis za iskalnike) strani; ob odhodu se vrne privzeti. */
 export function useNaslov(naslov: string | null, opis?: string) {
@@ -32,6 +33,8 @@ const tiho = 'whitespace-nowrap rounded-lg px-3 py-1.5 text-slate-400 hover:bg-w
 export function Okvir({ children }: { children: ReactNode }) {
   const { seja } = useSeja()
   const n = kosov(useKosarica())
+  // Povezava se pokaže, ko je kak motiv v prodaji (kot pas v katalogu).
+  const poMeri = Boolean(useMotivi().motivi?.length)
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/80 backdrop-blur">
@@ -44,6 +47,7 @@ export function Okvir({ children }: { children: ReactNode }) {
           <span className="flex-1" />
           <nav className="hidden gap-1 text-sm sm:flex">
             <NavLink to="/" end className={povezava}>{t('nav.trgovina')}</NavLink>
+            {poMeri && <NavLink to="/personalised" className={povezava}>{t('nav.poMeri')}</NavLink>}
             {seja && <NavLink to="/orders" className={povezava}>{t('nav.narocila')}</NavLink>}
           </nav>
           <div className="flex items-center gap-1 text-sm">
@@ -74,6 +78,7 @@ export function Okvir({ children }: { children: ReactNode }) {
         {seja && (
           <nav className="mx-auto flex max-w-6xl gap-1 px-3 pb-2 text-sm sm:hidden">
             <NavLink to="/" end className={povezava}>{t('nav.trgovina')}</NavLink>
+            {poMeri && <NavLink to="/personalised" className={povezava}>{t('nav.poMeri')}</NavLink>}
             <NavLink to="/orders" className={povezava}>{t('nav.narocila')}</NavLink>
             <span className="flex-1" />
             <button type="button" onClick={() => void supabase.auth.signOut({ scope: 'local' })} className={tiho}>

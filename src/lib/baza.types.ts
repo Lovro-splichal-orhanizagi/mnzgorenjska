@@ -9161,6 +9161,7 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      trgovina_admin_motivi: { Args: Record<PropertyKey, never>; Returns: Json }
       trgovina_admin_narocila: { Args: { p_stanje?: string }; Returns: Json }
       trgovina_admin_narocilo: { Args: { p_id: number }; Returns: Json }
       trgovina_admin_nova_serija: {
@@ -9178,6 +9179,7 @@ export type Database = {
       }
       trgovina_admin_serije: { Args: Record<PropertyKey, never>; Returns: Json }
       trgovina_admin_shrani_izdelek: { Args: { p: Json }; Returns: number }
+      trgovina_admin_shrani_motiv: { Args: { p: Json }; Returns: number }
       trgovina_admin_shrani_personalizacijo: {
         Args: {
           p_doplacilo: number
@@ -9219,6 +9221,7 @@ export type Database = {
       }
       trgovina_moja_znacka: { Args: Record<PropertyKey, never>; Returns: Json }
       trgovina_moji_prvaki: { Args: Record<PropertyKey, never>; Returns: Json }
+      trgovina_motivi: { Args: Record<PropertyKey, never>; Returns: Json }
       trgovina_narocilo_seje: {
         Args: { p_checkout: string; p_odjemalec: string; p_user: string }
         Returns: Json
