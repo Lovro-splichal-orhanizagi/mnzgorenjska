@@ -267,6 +267,249 @@
           "rawSha256": "e69af6b2765dbed7ebe3b57535beb1ce259c7d77ed9cb7f90d9cb4998afd153a"
         }
       ]
+    },
+    {
+      "provider": "dfb",
+      "sourceClubId": "sv-werder-bremen-ii",
+      "sourceCategoryId": null,
+      "countryCode": "DE",
+      "canonicalNames": [
+        "Werder Bremen"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "2405268",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/4-spieltag/sv-werder-bremen-ii-altona-93-2405268",
+          "rawSha256": "546a0578a0623346e3295397b98cb999550d8fa715ee07a5ed221b768ec24c19"
+        }
+      ]
+    },
+    {
+      "provider": "dfb",
+      "sourceClubId": "altona-93",
+      "sourceCategoryId": null,
+      "countryCode": "DE",
+      "canonicalNames": [
+        "Altona 93"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "2405268",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/4-spieltag/sv-werder-bremen-ii-altona-93-2405268",
+          "rawSha256": "546a0578a0623346e3295397b98cb999550d8fa715ee07a5ed221b768ec24c19"
+        }
+      ]
+    },
+    {
+      "provider": "dfb",
+      "sourceClubId": "kickers-emden",
+      "sourceCategoryId": null,
+      "countryCode": "DE",
+      "canonicalNames": [
+        "Kickers Emden"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "2405441",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/22-spieltag/kickers-emden-hsc-hannover-2405441",
+          "rawSha256": "34a9f0090f190ebe15d54e40ab60225b92bd0cd4e91ad522bb8b69014dd6dbba"
+        }
+      ]
+    },
+    {
+      "provider": "dfb",
+      "sourceClubId": "hsc-hannover",
+      "sourceCategoryId": null,
+      "countryCode": "DE",
+      "canonicalNames": [
+        "HSC Hannover"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "2405441",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/22-spieltag/kickers-emden-hsc-hannover-2405441",
+          "rawSha256": "34a9f0090f190ebe15d54e40ab60225b92bd0cd4e91ad522bb8b69014dd6dbba"
+        }
+      ]
+    },
+    {
+      "provider": "dfb",
+      "sourceClubId": "wuppertaler-sv",
+      "sourceCategoryId": null,
+      "countryCode": "DE",
+      "canonicalNames": [
+        "Wuppertaler SV"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "2402287",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/12-spieltag/wuppertaler-sv-vfl-bochum-ii-2402287",
+          "rawSha256": "d5d18cbcb8b76e2a01151050abc6b57124426cf108883336a3a2bde6e80d60ff"
+        },
+        {
+          "sourceMatchId": "2402299",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/13-spieltag/borussia-moenchengladbach-ii-wuppertaler-sv-2402299",
+          "rawSha256": "dabf8ebd5c2026b1849ffa477b96fa5b25f95ecf90ffd2f810f8502f4d6fa87d"
+        },
+        {
+          "sourceMatchId": "2402306",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/14-spieltag/wuppertaler-sv-rot-weiss-oberhausen-2402306",
+          "rawSha256": "b3a3648ce1bc8e7bb7017c13b6a040e42167635b60f567acea3422b640eeb71b"
+        },
+        {
+          "sourceMatchId": "2402312",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/15-spieltag/fc-guetersloh-wuppertaler-sv-2402312",
+          "rawSha256": "930bc43649fb0dd1e92e5e2ed00b4e9138bca3a817455857635aa7069b0ed4df"
+        },
+        {
+          "sourceMatchId": "2402325",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/16-spieltag/wuppertaler-sv-fortuna-duesseldorf-ii-2402325",
+          "rawSha256": "cc878f107741ab43573a0e978375c114d4880db909cddab1e7270ff263e6a79e"
+        },
+        {
+          "sourceMatchId": "2402332",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/17-spieltag/bonner-sc-wuppertaler-sv-2402332",
+          "rawSha256": "4ec2d592f0fcfec7bb0a81116c3de1b818930d826e134c606005ec9a29f7ea45"
+        },
+        {
+          "sourceMatchId": "2402346",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/18-spieltag/fortuna-koeln-wuppertaler-sv-2402346",
+          "rawSha256": "282a2b0eae2f1b51353a55106677728b3daafee4947c06236c0db7c007b54b6f"
+        },
+        {
+          "sourceMatchId": "2402352",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/19-spieltag/wuppertaler-sv-ssvg-velbert-2402352",
+          "rawSha256": "123d7023ff8442359d925630eab0b89f6556306e13af08eccbe9886a94659b9b"
+        }
+      ]
+    },
+    {
+      "provider": "dfb",
+      "sourceClubId": "vfl-bochum-ii",
+      "sourceCategoryId": null,
+      "countryCode": "DE",
+      "canonicalNames": [
+        "VfL Bochum II"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "2402287",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/12-spieltag/wuppertaler-sv-vfl-bochum-ii-2402287",
+          "rawSha256": "d5d18cbcb8b76e2a01151050abc6b57124426cf108883336a3a2bde6e80d60ff"
+        }
+      ]
+    },
+    {
+      "provider": "dfb",
+      "sourceClubId": "borussia-moenchengladbach-ii",
+      "sourceCategoryId": null,
+      "countryCode": "DE",
+      "canonicalNames": [
+        "Borussia Mönchengladbach II"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "2402299",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/13-spieltag/borussia-moenchengladbach-ii-wuppertaler-sv-2402299",
+          "rawSha256": "dabf8ebd5c2026b1849ffa477b96fa5b25f95ecf90ffd2f810f8502f4d6fa87d"
+        }
+      ]
+    },
+    {
+      "provider": "dfb",
+      "sourceClubId": "rot-weiss-oberhausen",
+      "sourceCategoryId": null,
+      "countryCode": "DE",
+      "canonicalNames": [
+        "Rot-Weiß Oberhausen"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "2402306",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/14-spieltag/wuppertaler-sv-rot-weiss-oberhausen-2402306",
+          "rawSha256": "b3a3648ce1bc8e7bb7017c13b6a040e42167635b60f567acea3422b640eeb71b"
+        }
+      ]
+    },
+    {
+      "provider": "dfb",
+      "sourceClubId": "fc-guetersloh",
+      "sourceCategoryId": null,
+      "countryCode": "DE",
+      "canonicalNames": [
+        "FC Gütersloh"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "2402312",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/15-spieltag/fc-guetersloh-wuppertaler-sv-2402312",
+          "rawSha256": "930bc43649fb0dd1e92e5e2ed00b4e9138bca3a817455857635aa7069b0ed4df"
+        }
+      ]
+    },
+    {
+      "provider": "dfb",
+      "sourceClubId": "fortuna-duesseldorf-ii",
+      "sourceCategoryId": null,
+      "countryCode": "DE",
+      "canonicalNames": [
+        "Fortuna Düsseldorf II"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "2402325",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/16-spieltag/wuppertaler-sv-fortuna-duesseldorf-ii-2402325",
+          "rawSha256": "cc878f107741ab43573a0e978375c114d4880db909cddab1e7270ff263e6a79e"
+        }
+      ]
+    },
+    {
+      "provider": "dfb",
+      "sourceClubId": "bonner-sc",
+      "sourceCategoryId": null,
+      "countryCode": "DE",
+      "canonicalNames": [
+        "Bonner SC"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "2402332",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/17-spieltag/bonner-sc-wuppertaler-sv-2402332",
+          "rawSha256": "4ec2d592f0fcfec7bb0a81116c3de1b818930d826e134c606005ec9a29f7ea45"
+        }
+      ]
+    },
+    {
+      "provider": "dfb",
+      "sourceClubId": "fortuna-koeln",
+      "sourceCategoryId": null,
+      "countryCode": "DE",
+      "canonicalNames": [
+        "Fortuna Köln"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "2402346",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/18-spieltag/fortuna-koeln-wuppertaler-sv-2402346",
+          "rawSha256": "282a2b0eae2f1b51353a55106677728b3daafee4947c06236c0db7c007b54b6f"
+        }
+      ]
+    },
+    {
+      "provider": "dfb",
+      "sourceClubId": "ssvg-velbert",
+      "sourceCategoryId": null,
+      "countryCode": "DE",
+      "canonicalNames": [
+        "SSVg Velbert"
+      ],
+      "proofs": [
+        {
+          "sourceMatchId": "2402352",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/19-spieltag/wuppertaler-sv-ssvg-velbert-2402352",
+          "rawSha256": "123d7023ff8442359d925630eab0b89f6556306e13af08eccbe9886a94659b9b"
+        }
+      ]
     }
   ]
 }

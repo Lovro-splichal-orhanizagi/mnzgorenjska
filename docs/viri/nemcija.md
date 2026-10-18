@@ -504,3 +504,116 @@ imata samo 18 klubskih strani, brez zapisnikov. Südwest `2402929`
 (12 začetnikov) in `2403004` (dva pripisana rumena brez izključitve) sta
 ostala enako neveljavna tudi v ciljnem običajnem svežem DFB zajemu
 18. 10. 2026. Noben od teh treh kandidatov še ni pripravljen za vklop.
+
+
+## Omejena lokalna priprava pregledanih koledarjev Nord/West (18. 10. 2026)
+
+`dfb-calendar.mjs` in nespremenljivi, s SHA-256 pripeti dejstveni register
+`dfb-calendar-receipts.json` podpirata samo objavljeno orientacijo štirih
+podvojenih usmerjenih parov v sezoni 2026/27: Nord 2423139/2423378 in
+2423173/2423342, West 2425450/2425603 in 2425470/2425622. Register veže
+izvorne klubske šifre, prikazna imena, kroge in izvirna URL/SHA/UTC obeh
+sodelujočih klubskih strani. Ne vsebuje surovega HTML ali podatkov igralcev.
+Parser ohrani objavljene strani, datume, izide in statistiko. Aktualni
+`calendarEvidence` vsebuje SHA dejansko prebranih bajtov obeh različnih
+sodelujočih strani; spreminjanje ovoja strani ne zahteva starega SHA.
+
+Celota še vedno zahteva 306 tekem, 18 klubov, 34 krogov, devet tekem in
+18 različnih klubov na krog ter vsak neusmerjeni par natanko dvakrat.
+Nepregledan usmerjeni podvojeni par, druga identiteta ali manjkajoč oziroma
+spremenjen dokaz se zavrne. Če vir popravi par v običajni doma/gostje,
+uporabi strogo običajno preverjanje brez dokaza; to velja tudi, če drugi
+pregledani par še ostaja podvojen. Nobena tekma se samodejno ne obrne.
+
+Prvotna priprava je pokrivala parser in kanonično obliko. Stare različice
+regionalnega manifesta v1/v2/v3 izrecno zavrnejo vsak `calendarEvidence`;
+za koledarske dokaze je zdaj na voljo spodnja različica v4. Prvotna priprava
+ni dodala migracije, dovoljenja vklopa ali zgodovinske izjeme. Zgodovinska
+politika ostane omejena na dve obstoječi Südwestovi arhivski tekmi. Popolnost tekočih zapisnikov, začetnih postav in
+izrecnih vratarjev ostane obvezna. Lokalna ponovitev starih zajemov ne
+osveži zajema ali potrdi pripravljenosti Norda/West za vklop.
+
+`node --test scripts/test-dfb-calendar.mjs` pokriva identitete, dve dokazni
+strani, popravljene pare, sezonsko obliko, kanonične statistike in zavrnitev
+vklopa. Modul in register sta vključena v regionalni in Nordostov izvorni
+odtis; Nordostova kanonična oblika in ločeni pogoji vklopa se ne spreminjajo.
+
+## Regionalni manifest v4 za pregledane koledarje
+
+Migracija `20261018223000` doda ločeno zasebno SQL preverjanje samo za
+Nord/West. Manifest v4 veže `calendarReceiptSha256` in izrecni
+`provenanceVersion` 1 (preverjen neposredni zajem) ali 2 (preverjena
+ponovitev). Priprava ga izbere samodejno, ko resnične kanonične tekme
+vsebujejo pregledani `calendarEvidence`. Izvorni commit neposrednih
+Nord/West zajemov zdaj veže tudi celotno izvedbeno kodo in SQL vrata.
+
+SQL neodvisno preveri točnih osem identitet, izvorne klubske šifre, kroge,
+nespremenljivi SHA registra in URL/SHA dveh različnih sodelujočih strani.
+Vsak neusmerjeni par ostane natanko dvakrat; običajna tekma ne sme nositi
+izjeme. Razpored ostane 306/18/34 z izvirnimi stranmi. Preostanek vrat
+ohrani vsa dosedanja preverjanja uvoženih nastopov/golov, vratarjev, cen,
+kadra 2/5/5/3 in resničnega prihodnjega uradnega roka. V1/v2/v3 tudi v
+SQL zavrnejo vsak koledarski dokaz. Nordost in Südwestova pot v3 ostaneta
+ločena. Javnih podpisov RPC ni sprememb; pravica ostane samo servisna.
+
+Sam koledarski V4 ne odpusti nobenega arhivskega ali tekočega zapisnika.
+Ločena sestavljena zgodovinska pot spodaj podpira samo točno pregledani
+`statisticsPolicy`; sveži celotni tekoči zajemi ostanejo obvezni. Noben
+lokalni test ali prejšnji zajem ne osveži izvornih časov in ne vklopi lige.
+
+`node scripts/test-dfb-calendar-release-sql.mjs` zahteva izrecna
+`SUPABASE_DB_CONTAINER` in `SUPABASE_TEST_DB` odstranljive baze; vse
+fixture in mutacije razveljavi. Preveri obe množici identitet/dokazov in
+celotno shranjeno sezono s ponovljenimi pregledanimi usmerjenimi pari ter
+dosedanje regresije statistike, cen in rokov.
+
+## Točne zgodovinske izjeme Nord/West v sestavljenem v4
+
+Migracija `20261018231000` registrira samo spodnjih deset arhivskih izjem
+2025/26. Prvotni shranjeni zajem je po vseh že pregledanih popravkih dal
+Nord 304/306 in West 298/306 popolnih zapisnikov. Razlog, točni izvorni
+identiteti klubov, objavljeni datum/izid, URL in SHA ostanejo vezani na
+[skupni register](../../scripts/policies/historical-statistics-exclusions.json);
+[DFB dejstveni zapis](../../scripts/viri/dfb-historical-receipts.json) doda
+prvotni UTC, točno uro začetka, arhivsko prikazno ime kluba in nespremenjeno
+strogo diagnostiko. Nobena statistika igralca se ne rekonstruira.
+
+| liga | ID arhiva | preostala izvorna napaka |
+| --- | --- | --- |
+| Nord | 2405268 | manjkajoča postava/klop |
+| Nord | 2405441 | polčas v nasprotju s časovno označenim golom |
+| West | 2402287, 2402299, 2402306, 2402312, 2402325, 2402332, 2402346, 2402352 | manjkajoča postava/klop |
+
+Nordova vira objavita uri 19:30 in 16:00; Westovi 18:00, 19:30 ali 14:00.
+Ure se preverijo po točni tekmi. Nordov arhiv za izvorni
+`sv-werder-bremen-ii` objavi ime `Werder Bremen`; to ostane arhivsko ime,
+brez samodejne zamenjave s prikaznim imenom tekoče sezone.
+
+Manifest ostane **v4** in `provenanceVersion = 2`. Neobvezni
+`statisticsPolicy` je dovoljen samo za točno ligo, nespremenljivi SHA
+registrirane politike in datum resnične prihodnje prve fantasy tekme. Obe
+sezoni zahtevata dejanski uspešen policy replay; izvirni tekoči zajem mora
+biti strogo popoln in uspešen. Skupni SQL preverjevalnik koledarske oblike
+je isti za običajni in zgodovinski v4. Nobena različica manifesta, izvirna
+lineage ali ničelna statistika se ne prepiše za obhod drugih vrat.
+
+Ista servisna `prepare_dfb_historical_statistics` pred navadnim uvozom
+atomarno namesti samo resnične klube/kroge, točnih 2 oziroma 8 naslovov
+tekem in zaprte označbe. Liga mora biti neaktivna in brez uporabniških
+ekip. `starters`, `appearances` in `goals` ostanejo `null`;
+`imported_at` ostane NULL. Nameščeni označevalci se pred vsakim runtime
+uvozom v celoti preverijo in ti zapisniki se preskočijo pred zahtevkom.
+Nova ali drugače pokvarjena tekma nikoli ne dobi te izjeme.
+
+Isti javni servisni release RPC nato neodvisno primerja vse znane
+nastope/gole in vse nameščene naslove, preveri resnične trenutne vratarje,
+cene, veljaven kader 2/5/5/3 in prihodnji uradni rok. Südwestova različica
+v3 in Nordostov ločeni RPC ostaneta nespremenjena.
+
+`test-dfb-nord-west-historical.mjs` preveri izvirne bajte, identitete,
+nameščene označbe ter sestavljeni manifest.
+`test-dfb-nord-west-historical-sql.mjs` zahteva izrecno odstranljivo bazo,
+regiji poganja zaporedoma in vse spremembe razveljavi. Njegove posamezne
+postave/nastopi/goli so jasno označeni **TEST ONLY**; resnični so koledarski
+naslovi in točna nedosegljiva dokazila, testne individualne vrstice nikoli
+niso izvorni dokaz ali produkcijski paket.

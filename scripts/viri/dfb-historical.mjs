@@ -1,11 +1,11 @@
 // Runtime wrapper: only authoritative installed markers skip already excluded
 // reports. Initial installation is the dedicated verified offline packet RPC.
-import {DFB_HISTORICAL_POLICY,dfbPolicyBinding} from '../dfb-historical-policy.mjs'
+import {dfbPolicyBinding,dfbHistoricalScope} from '../dfb-historical-policy.mjs'
 import {getHistoricalStatisticsPolicy,classifyHistoricalStatistics} from '../lib/historical-statistics-policy.mjs'
 export function withDfbHistoricalStatistics(base,competition){
- if(base.ime!=='dfb'||competition?.source!=='dfb'||competition.slug!=='de-regionalliga-suedwest'||competition.source_policy!==DFB_HISTORICAL_POLICY)throw Error('DFB historical provider: invalid opt-in tuple')
+ if(base.ime!=='dfb'||competition?.source!=='dfb'||competition.source_policy!==dfbHistoricalScope(competition?.slug).policyId)throw Error('DFB historical provider: invalid opt-in tuple')
  const provider={...base,async zapisniki(code,fetchFn,options={}){
-  if(!['regionalliga-suedwest/2025-2026','regionalliga-suedwest/2026-2027'].includes(code))throw Error('DFB historical provider: foreign season/league')
+  if(!['2025-2026','2026-2027'].map(season=>`${competition.slug.slice(3)}/${season}`).includes(code))throw Error('DFB historical provider: foreign season/league')
   const binding=options.installedHistoricalMarkers,context={...competition,firstFantasyPlayedOn:binding?.firstFantasyPlayedOn},expected=dfbPolicyBinding(context),policy=getHistoricalStatisticsPolicy(competition.slug)
   if(binding?.installed!==true||binding.policyId!==expected.id||binding.policySha256!==expected.sha256||competition.firstFantasyPlayedOn!=null&&competition.firstFantasyPlayedOn!==binding.firstFantasyPlayedOn||!Array.isArray(binding.markers)||binding.markers.length!==policy.entries.length)throw Error('DFB historical provider: complete installed binding required')
   const skip=new Set(options.preskoci??[]),seen=new Set()
