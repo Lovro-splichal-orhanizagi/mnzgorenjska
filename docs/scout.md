@@ -387,8 +387,9 @@ SCOUT_DB_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres .venv/bin/p
 
 `test_baza.py` piše v bazo `SCOUT_TEST_DB` (privzeto lokalni Supabase
 `…@127.0.0.1:54322/postgres`, z uveljavljeno migracijo) in vse razveljavi;
-`test_ravni.py` pokliče `node` (primerja `ravenLige`). **Pythonovih testov CI
-ne poganja** — poženi jih sam ob vsaki spremembi `scout/stroj/`.
+`test_ravni.py` pokliče `node` (primerja `ravenLige`). CI jih poganja v
+`.github/workflows/scout-in-funkcije.yml` na PR, ki spremeni `scout/stroj/`,
+`scripts/visja-liga.mjs` ali migracije (z `supabase db start`).
 
 Brez `--pisi` stroj le izpiše backtest in prvih 10 vsake lige (pregled
 smiselnosti); `--pisi` zapiše model.

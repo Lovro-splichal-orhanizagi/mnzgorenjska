@@ -444,15 +444,16 @@ Deno.serve(async (req) => {
       .eq('fantasy_teams.hisna', false)
     if (error) return json({ error: error.message }, 500)
 
-    const poEkipi = new Map<number, {
+    type Ekipa = {
       owner_id: string
       team_name: string | null
       igralci: Array<{ ime: string; pozicija: string | null; klub: string | null }>
       zadnjiIzstop: string | null
-    }>()
+    }
+    const poEkipi = new Map<number, Ekipa>()
     // deno-lint-ignore no-explicit-any
     for (const v of (vrstice ?? []) as any[]) {
-      const e = poEkipi.get(v.fantasy_team_id) ??
+      const e: Ekipa = poEkipi.get(v.fantasy_team_id) ??
         { owner_id: v.fantasy_teams.owner_id, team_name: v.fantasy_teams.name, igralci: [], zadnjiIzstop: null }
       e.igralci.push({ ime: v.players.full_name, pozicija: v.players.position, klub: v.players.teams?.name ?? null })
       const izst: string | null = v.players.izstopil_at

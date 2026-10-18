@@ -398,8 +398,9 @@ objava, testi): `docs/scout.md`. Bistvo:
   git). Država se odpre v `scout.drzave` — **pred drugo državo mora pisanje teči pretočno**, sicer
   delavec preseže `mem_limit: 1g`.
 - `ravenLige` ima prepis v `scout/stroj/stroj/ravni.py` (test enakosti).
-  CI ga ne objavi (`scripts/hetzner/objavi-scout.sh`) in Pythonovih testov ne
-  poganja: `cd scout/stroj && .venv/bin/pytest -q`.
+  CI ga ne objavi (`scripts/hetzner/objavi-scout.sh`); Pythonove teste
+  (`cd scout/stroj && .venv/bin/pytest -q`) in `deno check`/`lint` robnih
+  funkcij poganja `scout-in-funkcije.yml`, le na PR, ki spremeni njuno mapo.
 
 ## SLFF Scout (klubi, scout.slff.eu)
 
