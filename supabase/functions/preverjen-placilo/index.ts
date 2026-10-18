@@ -162,6 +162,7 @@ Deno.serve(async (req) => {
       'line_items[0][price]': cena(CENE[vir]),
       'line_items[0][quantity]': 1,
       'automatic_tax[enabled]': true,
+      allow_promotion_codes: true,
       billing_address_collection: 'required',
       client_reference_id: u.user.id,
       success_url: `${nazaj}uspeh`,

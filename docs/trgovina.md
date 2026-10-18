@@ -19,6 +19,27 @@ EU-27. Prodajalec SPACE GUARDIAN d.o.o. Spec:
   `trgovina_rezerviraj`, `_vezi_sejo`, `_iz_placila`, `_potekla`, `_sprosti`,
   `_narocilo_seje` kliče le `service_role` (funkcije). Admin RPC
   `trgovina_admin_*` preverijo `is_admin()`.
+- **Personalizacija, tisk, boni** (migracija `20261018190000_trgovina_personalizacija.sql`,
+  spec `docs/superpowers/specs/2026-10-18-trgovina-personalizacija-design.md`):
+  `izdelki.po_narocilu` / `digitalni` (brez zaloge), `personalizacije`
+  (možnosti in doplačila), `postavke.personalizacija` / `doplacilo` /
+  `stanje_tiska`, `serije`, `boni` (koda le sha256 + zadnji 4 znaki).
+  `rezerviraj` preveri personalizacijo (ime ekipe do 24 znakov in poljubno
+  ime s filtrom `prepovedano_besedilo`, številka 0–99, prvak
+  `trgovina.prvaki_uporabnika`: liga nastala vsaj 60 dni in ekipa v njej vsaj
+  30 dni pred zadnjim rokom sezone, ime lige skozi `prepovedano_besedilo`
+  (sicer `trgovina-besedilo`), vrstica `trgovina.besedilo_prvaka` največ 40
+  znakov s "…"; značka vedno 1 kos `trgovina.znacka_uporabnika` po
+  stikalu `preverjeni_racuni` za kupca, ne v dveh odprtih naročilih); plačilo
+  značke vpiše `narocila_znack`. Napaka vrstice nosi detail `postavka:<n>`
+  (trgovina-nakup vrne `postavka`, košarica vrstico označi). Admin digitalnemu
+  izdelku ne doda personalizacije.
+  Kupec: `trgovina_moji_prvaki()`, `trgovina_moja_znacka()`; servis:
+  `trgovina_zabelezi_bon`, `trgovina_bon_porabljen`, `trgovina_bon_poslan`,
+  `trgovina_boni_narocila`,
+  `trgovina_vracilo`; admin: `_za_tisk`,
+  `_nova_serija`, `_serija`, `_serije`, `_serija_stanje`, `_boni`,
+  `_shrani_personalizacijo`.
 - **Rezervacija**: naročilo `caka_placilo` drži zalogo 35 min
   (`rezervirano_do`), Stripe seja poteče v 31 min. Na voljo = zaloga −
   rezervirano. Največ 5 odprtih naročil na prijavljenega uporabnika ali (gost)
@@ -35,10 +56,63 @@ EU-27. Prodajalec SPACE GUARDIAN d.o.o. Spec:
   Discord; poteklo → sprosti.
 - **Pošta**: `trgovina-posta` (Mailcow) — potrditev (z besedilom odstopa in
   obrazcem, trajni nosilec) in "poslano" s sledilno številko. Kliče jo webhook
-  (servisni ključ) ali admin.
+  (servisni ključ) ali admin. Potrditev navede personalizacijo in rok izdelave (1–2 tedna);
+  vrsta `bon` (le servis) pošlje kode darilnih bonov.
+- **Personaliziran nakup**: `trgovina-nakup` pošlje personalizacijo v
+  `rezerviraj`; cena v Stripe = cena + doplačilo. Personalizirana košarica
+  zahteva `brez_odstopa: true` (sicer 400 `trgovina-odstop`); samo digitalna
+  košarica (boni) nima dostave (naslov za račun da Stripe). Vsi trije
+  checkouti (trgovina, Scout, preverjeni) imajo `allow_promotion_codes`.
+- **Izdelek v Stripe**: vsaka nedigitalna postavka trgovine gre pod en stalni
+  izdelek "SLFF Trgovina" (id `slff-shop`, `tax_code` txcd_99999999), ne
+  `product_data`; darilni bon (`applies_to` = ta izdelek) zato velja tudi za
+  izdelke, dodane po izdaji bona. Darilni bon sam gre s `product_data` (z bonom
+  se bona ne kupi). Ime izdelka, različica in personalizacija so pod gumbom
+  Checkouta (`custom_text.after_submit`) in v potrditvi. **Meja:** davčna koda
+  je ena za vse blago (`izdelki.tax_code` velja le še za bone); boni, izdani
+  pred to spremembo, veljajo le za stare izdelke `slff-shop-<slug>-<jezik>`.
+- **Darilni boni**: webhook po plačilu (le naročilo `placano`/`poslano`; vrnjeno
+  kode ne dobi) za vsako enoto digitalne postavke ustvari kupon s stalnim id
+  `slff-shop-bon-<oznaka>-<postavka>-<enota>` (amount_off = cena, enkrat,
+  `max_redemptions` 1, rok 1 leto, `applies_to` izdelek "SLFF Trgovina") in kodo
+  `SLFF-XXXX-XXXX`. Že zabeležena enota (`trgovina_boni_narocila`) kode ne izda
+  znova: prebere jo iz Stripe po `stripe_promocija`. Zapis
+  `trgovina_zabelezi_bon` (sha256 + zadnji 4), kode gredo kupcu v mailu `bon`;
+  dokler `narocila.bon_mail_at` ni zapisan (`trgovina_bon_poslan`), webhook vrne
+  500 in Stripe dogodek ponovi (do 3 dni). Admin v zavihku Boni "Pošlji bon
+  znova" (`stripe-webhook` `{"akcija":"bon_znova","narocilo_id"}`, admin JWT)
+  kode prebere iz Stripe in jih pošlje znova. Naročilo samih bonov in značk gre
+  po mailu (oziroma takoj ob plačilu, če so le značke) v `poslano`. Največ 5 bonov
+  na naročilo. Napaka izdaje gre na Discord (brez kode). Klici bonov imajo
+  zapisano različico API `2025-03-31.basil`. Plačana seja s popustom (vse tri
+  aplikacije) → `trgovina_bon_porabljen`; popust seje se shrani v
+  `narocila.znesek_popust` in je v potrditvi ("Popust"). Seja
+  `no_payment_required` (bon pokrije vse) šteje za plačano.
+- **Vračilo** (`charge.refunded`, celotno): `trgovina_vracilo` (naročilo →
+  `vrnjeno`, še neodposlana značka preklicana, nenatisnjene postavke iz tiska)
+  in izklop promocijskih kod bonov naročila v Stripe, nato Discord. Delno
+  vračilo je le Discord (uredi ročno).
 - **Admin** `/admin`: naročila za pakiranje (nalepka 100×150 mm, dobavnica),
   sledilna številka → poslano + mail; izdelki, različice, cene, zaloga kot
   sprememba (`zaloga_dodaj`), slike v Storage (vedro `trgovina`).
+- **Stran izdelka in košarica**: obrazec po možnostih izdelka (ekipe kupca iz
+  `fantasy_teams` brez hišnih, prvaki `trgovina_moji_prvaki`, značka
+  `trgovina_moja_znacka`; brez prijave povezava na prijavo), predogled kot SVG
+  čez sliko, cena z doplačilom. Brskalnik pravila le zrcali
+  (`shop/src/personalizacija.ts`; žaljivke preveri šele baza). Košarica hrani
+  personalizacijo po vrstici (ključ različica + vnos), potrditev "ni mogoče
+  vrniti" pošlje `brez_odstopa`; samo boni: brez države in poštnine.
+- **Za tisk** (admin): postavke `za_tisk` → serija → izvoz `serija-<id>.csv`
+  (ločilo `;`, BOM, formule ubežane) in SVG za vsako postavko
+  (`<oznaka>-<postavka>.svg`, pisava Inter, besedilo ubežano) → "Poslano
+  tiskarni" → "Natisnjeno". ZIP-a ni (brez knjižnice). Za pakiranje je
+  naročilo, ko so vse postavke v paketu na zalogi ali natisnjene; darilni boni
+  in značke (tok `narocila_znack`) se ne pakirajo tu.
+- **Boni** (admin): izdani darilni boni (zadnji 4 znaki) in nova koda za Scout
+  ali preverjene prek funkcije `trgovina-boni` (admin po `is_admin`, kupon
+  `duration=once` z `applies_to` = izdelki cen `slff_scout_klub_*` oziroma
+  `slff_preverjen_*` in `slff_znacka`, odstotek ali znesek, število uporab,
+  rok do 2 let; koda se vrne enkrat in se ne beleži).
 
 ## Objava
 
@@ -54,7 +128,7 @@ Ostalo (enkrat):
    brez njega `trgovina-nakup` vrne 503), `SHOP_URL` (neobvezno),
    `TRGOVINA_TARIFE` (neobvezno, JSON id tarif), SMTP kot `posli-opomnik`.
 3. Funkcije: `scripts/hetzner/objavi-funkcije.sh trgovina-nakup`, nato
-   `trgovina-posta`, nato `stripe-webhook` (ena na klic).
+   `trgovina-posta`, `stripe-webhook` in `trgovina-boni` (ena na klic).
 4. Stripe: `STRIPE_SECRET_KEY=… scripts/stripe-trgovina.sh` (tarife; po
    spremembi tarif ponovni zagon funkcij), endpoint webhooka dobi dogodka
    `checkout.session.expired` in `checkout.session.async_payment_failed`,

@@ -13,7 +13,10 @@ export interface Postavka {
   price?: { lookup_key?: string | null; unit_amount?: number | null } | null
 }
 
-/** Seja ima natanko eno postavko: cena obdobja, en kos, znesek pred davkom brez popusta. */
+/**
+ * Seja ima natanko eno postavko: cena obdobja, en kos, znesek pred davkom in popustom
+ * enak ceni. Popust je dovoljen: promocijsko kodo (allow_promotion_codes) vnese kupec.
+ */
 export function scoutPostavkeVeljajo(postavke: Postavka[], obdobje: string): boolean {
   const kljuc = SCOUT_CENE[obdobje]
   const l = postavke[0]
@@ -22,8 +25,7 @@ export function scoutPostavkeVeljajo(postavke: Postavka[], obdobje: string): boo
     postavke.length === 1 &&
     l?.quantity === 1 &&
     l.price?.lookup_key === kljuc &&
-    l.amount_subtotal === l.price.unit_amount &&
-    (l.amount_discount ?? 0) === 0
+    l.amount_subtotal === l.price.unit_amount
   )
 }
 

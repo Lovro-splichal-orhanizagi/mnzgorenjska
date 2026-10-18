@@ -247,7 +247,7 @@ export const racun: NonNullable<Prevod['racun']> = {
       'Prigovor: na preuzetom profilu klikni Sakrij me iz Scouta ili piši na <eposta>info@slff.eu</eposta> sa linkom na stranicu igrača. U roku od 14 dana igrača skrivamo iz Scouta u svim našim ligama te države, i pri kasnijim uvozima. U fantasy igri ostaje.',
     trgovinaNaslov: 'SLFF Prodavnica (shop.slff.eu)',
     trgovinaKaj:
-      'Pri kupovini obrađujemo ime, e-poštu, adresu za dostavu, kupljene proizvode i iznose, a ako si prijavljen i tvoj SLFF nalog. Plaćanje obavlja Stripe: podatke kartice ne vidimo i ne čuvamo. Ime i adresu za dostavu dobija Pošta Slovenije. Radi sprečavanja zloupotrebe kod nezavršene kupovine privremeno čuvamo heš (nepovratan) IP adrese; briše se posle plaćanja ili isteka kupovine.',
+      'Pri kupovini obrađujemo ime, e-poštu, adresu za dostavu, kupljene proizvode i iznose, a ako si prijavljen i tvoj SLFF nalog. Plaćanje obavlja Stripe: podatke kartice ne vidimo i ne čuvamo. Ime i adresu za dostavu dobija Pošta Slovenije. Radi sprečavanja zloupotrebe kod nezavršene kupovine privremeno čuvamo heš (nepovratan) IP adrese; briše se posle plaćanja ili isteka kupovine. Tekst personalizacije (ime, broj) i ime fantasy ekipe na proizvodu deo su porudžbine; tekst dobija i štamparija koja izrađuje proizvod.',
     trgovinaPodlaga:
       'Pravni osnov je izvršenje ugovora (član 6(1)(b) GDPR) i zakonske obaveze (računovodstvo, porezi), a za heš IP adrese legitimni interes sprečavanja zloupotrebe (član 6(1)(f) GDPR). Rukovalac je SPACE GUARDIAN, računalniško programiranje, d.o.o.',
     trgovinaHramba:

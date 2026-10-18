@@ -246,7 +246,7 @@ export const racun: NonNullable<Prevod['racun']> = {
       'Objection: on a claimed profile click Hide me from Scout, or write to <eposta>info@slff.eu</eposta> with a link to the player page. Within 14 days we hide the player from Scout in all our leagues of that country, including future imports. The player stays in the fantasy game.',
     trgovinaNaslov: 'SLFF Shop (shop.slff.eu)',
     trgovinaKaj:
-      'When you buy, we process your name, email, delivery address, the products bought and the amounts, and your SLFF account if you are signed in. Payment is handled by Stripe: we do not see or store card details. Your name and address go to Pošta Slovenije for delivery. To limit abuse we temporarily keep a hashed (irreversible) IP address for an unfinished purchase; it is deleted when you pay or the purchase expires.',
+      'When you buy, we process your name, email, delivery address, the products bought and the amounts, and your SLFF account if you are signed in. Payment is handled by Stripe: we do not see or store card details. Your name and address go to Pošta Slovenije for delivery. To limit abuse we temporarily keep a hashed (irreversible) IP address for an unfinished purchase; it is deleted when you pay or the purchase expires. The personalisation text (name, number) and the fantasy team name on the product are part of the order; the text also goes to the print shop that makes the product.',
     trgovinaPodlaga:
       'The legal basis is performance of a contract (Article 6(1)(b) GDPR) and legal obligations (accounting, tax), and for the hashed IP address our legitimate interest in preventing abuse (Article 6(1)(f) GDPR). The controller is SPACE GUARDIAN, računalniško programiranje, d.o.o.',
     trgovinaHramba:
