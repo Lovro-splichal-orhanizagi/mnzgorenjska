@@ -459,7 +459,7 @@ async function igralecId(
 
   let poizvedba = db
     .from('players')
-    .select('id, position, position_source')
+    .select(POLJA_IGRALCA)
     .eq('competition_id', tekmovanje.id)
     .eq('team_id', teamId)
     .eq('full_name', polnoIme)
@@ -477,7 +477,7 @@ async function igralecId(
   if (!dvoumno && (zadetki?.length ?? 0) > 1 && st != null) {
     const { data: poDresu } = await db
       .from('players')
-      .select('id, position, position_source')
+      .select(POLJA_IGRALCA)
       .eq('competition_id', tekmovanje.id)
       .eq('team_id', teamId)
       .eq('full_name', polnoIme)
@@ -507,7 +507,7 @@ async function igralecId(
   if (!obstoj && dvoumno && zasedeni) {
     const { data: vsi } = await db
       .from('players')
-      .select('id, position, position_source')
+      .select(POLJA_IGRALCA)
       .eq('competition_id', tekmovanje.id)
       .eq('team_id', teamId)
       .eq('full_name', polnoIme)
@@ -531,7 +531,7 @@ async function igralecId(
     // po imenu ga ne posvojimo (šifra je identiteta, ime ni).
     const { data: drugje } = await db
       .from('players')
-      .select('id, position, position_source, team_id, teams(name)')
+      .select(`${POLJA_IGRALCA}, teams(name)`)
       .eq('competition_id', tekmovanje.id)
       .eq('full_name', polnoIme)
       .is('reg_st', null)
@@ -575,6 +575,17 @@ async function igralecId(
   }
 
   if (obstoj) {
+    // Razpored lahko izklopi igralca lanskega kluba, preden letošnji zapisnik
+    // potrdi prestop (tudi preimenovan klub). Brez šifre velja ista vrnitev
+    // kot pri registrskem ključu; ponoven uvoz mora popraviti tudi že prestopljenega.
+    if (tekocaSezona && obstoj.active === false && !obstoj.odsel_at &&
+        !obstoj.izstopil_at && !obstoj.anonimiziran_razlog) {
+      const { error } = await db.from('players').update({ active: true })
+        .eq('id', obstoj.id).eq('competition_id', tekmovanje.id).eq('team_id', teamId)
+        .eq('active', false).is('odsel_at', null).is('izstopil_at', null)
+        .is('anonimiziran_razlog', null)
+      if (error) throw new Error(`igralec ${polnoIme}: ${error.message}`)
+    }
     igralci.set(kljuc, obstoj.id)
     javiVratarjaIzPolja(obstoj)
     // vratar iz zapisnika povozi ugibanje
