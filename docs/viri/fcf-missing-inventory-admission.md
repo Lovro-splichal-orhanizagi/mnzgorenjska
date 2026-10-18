@@ -156,3 +156,38 @@ with no authenticated reader/writer/executable route. It grants none of the new
 native-data capabilities. This stage supplies no activation, prices, archive,
 previous-season data or legal15 permission. Root owns any later source staging,
 claim, dispatch and production decision after review.
+
+## Private draft transport boundary (18 October 2026)
+
+The first actual seed staging run `39158858524` could not resolve the draft
+through `releases/tags`; bounded authenticated release-list selection fixed that
+lookup. The next actual run `39160447076` still failed under the read-only
+Actions token. Root approved a narrow permission boundary: only the source-free
+`missing-inventory-seed` and `missing-inventory-approval` jobs receive job-level
+`contents:write` with `actions:read`, to make the private draft visible. Their
+GitHub client still issues GET only. They receive no database credentials and
+make no provider request. The draft remains private and its existing assets
+are never published or replaced.
+
+For missing inventory, `approval-stage` checks the actual running main workflow,
+reserved attempt1 staging job and active `Stage reviewed FCF inventory approval`
+step, downloads the exact root asset ID/SHA, validates the fixed current main
+approval/plan, and retains the original JSON bytes as `manifest.json`. Its exact
+upload step is `Retain reviewed FCF inventory approval`; immutable artifact name
+is `fcf-inventory-approval-<runId>-1`, with `overwrite:false`.
+
+Consume, capture, audit and receipt retain `contents:read/actions:read`. They
+read no draft release. They use the approval job's actual same-run artifact
+ID/digest and manifest SHA through explicit `needs` outputs. The reader verifies
+the authenticated run/main/attempt1, unique completed successful staging job,
+exact successful stage/upload steps, artifact identity, ZIP length/digest,
+closed single-member ZIP and raw manifest SHA. The raw JSON must also match
+the separately supplied root draft asset SHA, before the unchanged approval
+validator runs. Consumption can poll the protected claim only after this proof;
+G1/G9 still require all original claim, seed, consumption and audit checks.
+
+This transport change neither creates nor resets a claim. Root's protected
+create-once tag reservation and explicit source execution decision remain
+separate. Fixture tests verify the boundary offline; actual Actions token
+visibility still requires a source-free staging run after merge. Passing local
+tests does not assert that GitHub has exposed the draft to the job token.

@@ -103,6 +103,10 @@ jobs:
     if: github.ref == 'refs/heads/main' && inputs.mode == 'seed-stage'
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # Draft release visibility requires push permission; this stage only GETs GitHub.
+    permissions:
+      contents: write
+      actions: read
     env:
       GH_TOKEN: ${{ github.token }}
       FCF_INVENTORY_PRESET: ${{ inputs.preset }}
@@ -133,8 +137,50 @@ jobs:
           overwrite: false
           retention-days: 90
 
+  # Source-free private draft bridge. Readers below authenticate its actual immutable ZIP.
+  missing-inventory-approval:
+    name: missing-inventory-approval
+    if: github.ref == 'refs/heads/main' && inputs.mode == 'missing-inventory' && github.run_attempt == 1
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      FCF_INVENTORY_PRESET: ${{ inputs.preset }}
+      FCF_INVENTORY_ASSET_ID: ${{ inputs.asset_id }}
+      FCF_INVENTORY_ASSET_SHA: ${{ inputs.asset_sha256 }}
+    outputs:
+      artifact_id: ${{ steps.retain.outputs.artifact-id }}
+      artifact_digest: ${{ steps.retain.outputs.artifact-digest }}
+      manifest_sha: ${{ steps.approval.outputs.manifest_sha }}
+    steps:
+      - name: Checkout exact main
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Stage reviewed FCF inventory approval
+        id: approval
+        run: node scripts/fcf-missing-inventory-actions.mjs approval-stage
+      - name: Retain reviewed FCF inventory approval
+        id: retain
+        if: success() && steps.approval.outputs.evidence_ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fcf-inventory-approval-${{ github.run_id }}-1
+          path: fcf-inventory-approval/manifest.json
+          if-no-files-found: error
+          overwrite: false
+          retention-days: 90
+
   missing-inventory-consume:
     name: missing-inventory-consume
+    needs: [missing-inventory-approval]
     if: github.ref == 'refs/heads/main' && inputs.mode == 'missing-inventory'
     runs-on: ubuntu-latest
     timeout-minutes: 310
@@ -144,8 +190,10 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       FCF_INVENTORY_PRESET: ${{ inputs.preset }}
-      FCF_INVENTORY_ASSET_ID: ${{ inputs.asset_id }}
       FCF_INVENTORY_ASSET_SHA: ${{ inputs.asset_sha256 }}
+      FCF_APPROVAL_ID: ${{ needs.missing-inventory-approval.outputs.artifact_id }}
+      FCF_APPROVAL_DIGEST: ${{ needs.missing-inventory-approval.outputs.artifact_digest }}
+      FCF_APPROVAL_MANIFEST_SHA: ${{ needs.missing-inventory-approval.outputs.manifest_sha }}
     outputs:
       artifact_id: ${{ steps.retain.outputs.artifact-id }}
       artifact_digest: ${{ steps.retain.outputs.artifact-digest }}
@@ -175,7 +223,7 @@ jobs:
 
   missing-inventory-g1:
     name: missing-inventory-g1
-    needs: [missing-inventory-consume]
+    needs: [missing-inventory-approval, missing-inventory-consume]
     if: github.ref == 'refs/heads/main' && inputs.mode == 'missing-inventory' && github.run_attempt == 1
     runs-on: ubuntu-latest
     timeout-minutes: 360
@@ -185,8 +233,10 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       FCF_INVENTORY_PRESET: ${{ inputs.preset }}
-      FCF_INVENTORY_ASSET_ID: ${{ inputs.asset_id }}
       FCF_INVENTORY_ASSET_SHA: ${{ inputs.asset_sha256 }}
+      FCF_APPROVAL_ID: ${{ needs.missing-inventory-approval.outputs.artifact_id }}
+      FCF_APPROVAL_DIGEST: ${{ needs.missing-inventory-approval.outputs.artifact_digest }}
+      FCF_APPROVAL_MANIFEST_SHA: ${{ needs.missing-inventory-approval.outputs.manifest_sha }}
       FCF_CONSUMPTION_ID: ${{ needs.missing-inventory-consume.outputs.artifact_id }}
       FCF_CONSUMPTION_DIGEST: ${{ needs.missing-inventory-consume.outputs.artifact_digest }}
       FCF_CONSUMPTION_MANIFEST_SHA: ${{ needs.missing-inventory-consume.outputs.manifest_sha }}
@@ -253,7 +303,7 @@ jobs:
 
   missing-inventory-g9:
     name: missing-inventory-g9
-    needs: [missing-inventory-consume, missing-inventory-g1]
+    needs: [missing-inventory-approval, missing-inventory-consume, missing-inventory-g1]
     if: github.ref == 'refs/heads/main' && inputs.mode == 'missing-inventory' && github.run_attempt == 1
     runs-on: ubuntu-latest
     timeout-minutes: 360
@@ -263,8 +313,10 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       FCF_INVENTORY_PRESET: ${{ inputs.preset }}
-      FCF_INVENTORY_ASSET_ID: ${{ inputs.asset_id }}
       FCF_INVENTORY_ASSET_SHA: ${{ inputs.asset_sha256 }}
+      FCF_APPROVAL_ID: ${{ needs.missing-inventory-approval.outputs.artifact_id }}
+      FCF_APPROVAL_DIGEST: ${{ needs.missing-inventory-approval.outputs.artifact_digest }}
+      FCF_APPROVAL_MANIFEST_SHA: ${{ needs.missing-inventory-approval.outputs.manifest_sha }}
       FCF_CONSUMPTION_ID: ${{ needs.missing-inventory-consume.outputs.artifact_id }}
       FCF_CONSUMPTION_DIGEST: ${{ needs.missing-inventory-consume.outputs.artifact_digest }}
       FCF_CONSUMPTION_MANIFEST_SHA: ${{ needs.missing-inventory-consume.outputs.manifest_sha }}
@@ -339,7 +391,7 @@ jobs:
 
   missing-inventory-receipt:
     name: missing-inventory-receipt
-    needs: [missing-inventory-consume, missing-inventory-g1, missing-inventory-g9]
+    needs: [missing-inventory-approval, missing-inventory-consume, missing-inventory-g1, missing-inventory-g9]
     if: always() && github.ref == 'refs/heads/main' && inputs.mode == 'missing-inventory' && github.run_attempt == 1
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -349,8 +401,10 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       FCF_INVENTORY_PRESET: ${{ inputs.preset }}
-      FCF_INVENTORY_ASSET_ID: ${{ inputs.asset_id }}
       FCF_INVENTORY_ASSET_SHA: ${{ inputs.asset_sha256 }}
+      FCF_APPROVAL_ID: ${{ needs.missing-inventory-approval.outputs.artifact_id }}
+      FCF_APPROVAL_DIGEST: ${{ needs.missing-inventory-approval.outputs.artifact_digest }}
+      FCF_APPROVAL_MANIFEST_SHA: ${{ needs.missing-inventory-approval.outputs.manifest_sha }}
       FCF_CONSUMPTION_ID: ${{ needs.missing-inventory-consume.outputs.artifact_id }}
       FCF_CONSUMPTION_DIGEST: ${{ needs.missing-inventory-consume.outputs.artifact_digest }}
       FCF_CONSUMPTION_MANIFEST_SHA: ${{ needs.missing-inventory-consume.outputs.manifest_sha }}
