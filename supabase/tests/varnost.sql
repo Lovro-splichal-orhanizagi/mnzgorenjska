@@ -5001,6 +5001,18 @@ select pg_temp.preveri('trgovina3: veljaven motiv, doplacilo iz baze',
      "opis":"Test motiv · Žan Novak · 9 · 1998 · Tretji polčas · Kranjski Tigri",
      "personalizacija":{"motiv":"test-motiv","shema":"klasika","fantasy_team_id":-927001,
        "polja":{"ime":"Žan Novak","st":9,"leto":1998,"slogan":"Tretji polčas","ekipa":"Kranjski Tigri"}}}]}');
+select pg_temp.preveri('trgovina3: postavka shrani posnetek barv sheme in mer con',
+  (select p.personalizacija @> '{"barve":["#1E8C45","#F4F4F0"],"cone":{"hrbet":{"sirina_mm":300,"visina_mm":400}}}'
+     from trgovina.postavke p join trgovina.narocila n on n.id = p.narocilo_id
+    where n.odjemalec = encode(sha256('t3a'), 'hex')));
+update trgovina.motivi set sheme = '[{"kljuc":"klasika","ime_sl":"Klasika","ime_en":"Classic","barve":["#000000","#FFFFFF"]}]' where id = -927201;
+update trgovina.cone set sirina_mm = 280 where izdelek_id = -927201 and kljuc = 'hrbet';
+select pg_temp.preveri('trgovina3: sprememba sheme in cone po nakupu ne spremeni posnetka',
+  (select p.personalizacija->'barve' = '["#1E8C45","#F4F4F0"]' and p.personalizacija #>> '{cone,hrbet,sirina_mm}' = '300'
+     from trgovina.postavke p join trgovina.narocila n on n.id = p.narocilo_id
+    where n.odjemalec = encode(sha256('t3a'), 'hex')));
+update trgovina.motivi set sheme = '[{"kljuc":"klasika","ime_sl":"Klasika","ime_en":"Classic","barve":["#1E8C45","#F4F4F0"]}]' where id = -927201;
+update trgovina.cone set sirina_mm = 300 where izdelek_id = -927201 and kljuc = 'hrbet';
 delete from trgovina.narocila where odjemalec = encode(sha256('t3a'), 'hex');
 
 set local role anon;

@@ -19,7 +19,7 @@ import { Pogoji } from './src/strani/Pogoji'
 import { Odstop, mailOdstopa } from './src/strani/Odstop'
 import { Prijava, varnaPot } from './src/strani/Prijava'
 import { Admin, Dobavnica, Nalepka, zaPakiranje } from './src/strani/Admin'
-import { csvSerije, datotekeTiska, PogledSerije, ROB, s300dpi, svgZaTisk } from './src/strani/AdminTisk'
+import { csvSerije, datotekeTiska, PogledSerije, ROB, s300dpi, svgDtf, svgZaTisk } from './src/strani/AdminTisk'
 import { zahtevaBona } from './src/strani/AdminBoni'
 import { vCente, varnoIme } from './src/strani/AdminIzdelki'
 import { EN, SL, TELEFON, cena, type Kljuc } from './src/besede'
@@ -229,7 +229,7 @@ const serija: Serija = {
 const csv = csvSerije(serija)
 const vrsticeCsv = csv.split('\r\n')
 preveri('tisk: CSV serije (BOM, glava, ubežano, ime SVG)', csv.startsWith('﻿"Naročilo";"Postavka";"Šifra"') && vrsticeCsv.length === 4
-  && vrsticeCsv[1] === '"AB12CD34";"11";"MIS-CRN-M";"Majica (Črna / M)";"2";"Žan ""Z""";"7";"AB12CD34-11.svg";"";"";"";""'
+  && vrsticeCsv[1] === '"AB12CD34";"11";"MIS-CRN-M";"Majica (Črna / M)";"2";"Žan ""Z""";"7";"AB12CD34-11.svg";"";"";"";"";""'
   && vrsticeCsv[2].includes(`"'=Tigri";""`), vrsticeCsv.slice(0, 3).join(' | '))
 const pogledSerije = renderToString(<PogledSerije s={serija} />)
 preveri('admin: pogled serije s predogledi', pogledSerije.includes('Serija 3') && pogledSerije.includes('AB12CD34') && pogledSerije.includes('data:image/svg+xml') && pogledSerije.includes('EF56GH78'))
@@ -267,8 +267,8 @@ preveri('admin: pogled serije s predogledi', pogledSerije.includes('Serija 3') &
   preveri('tisk motiva: SVG ima vgrajeno pisavo Anton', /^<\?xml[^>]*>\n<svg [^>]*><style>@font-face\{font-family:Anton;src:url\(data:font\/ttf;base64,/.test(sPisavo))
   const csvM = csvSerije({ ...serija, postavke: [motivna] }).split('\r\n')
   preveri('tisk motiva: CSV vrstica na cono s stolpci motiv, postopek, cona',
-    csvM[0]!.endsWith('"SVG";"Motiv";"Postopek";"Cona";"PNG"') && csvM.length === 4
-    && csvM[1]!.endsWith('"IJ90KL12-hrbet-dtf-13.svg";"retro-dres";"dtf";"hrbet";"IJ90KL12-hrbet-dtf-13.png"') && csvM[2]!.includes('"prsi"'), csvM.join(' | '))
+    csvM[0]!.endsWith('"SVG";"Motiv";"Postopek";"Cona";"PNG";"PNG DTF"') && csvM.length === 4
+    && csvM[1]!.endsWith('"IJ90KL12-hrbet-dtf-13.svg";"retro-dres";"dtf";"hrbet";"IJ90KL12-hrbet-dtf-13.png";"IJ90KL12-hrbet-dtf-13-dtf.png"') && csvM[2]!.includes('"prsi"'), csvM.join(' | '))
   const { crc32 } = await import('node:zlib')
   const lazni = new Uint8Array(45)
   lazni.set([0x89, 0x50, 0x4e, 0x47], 0)
@@ -277,6 +277,19 @@ preveri('admin: pogled serije s predogledi', pogledSerije.includes('Serija 3') &
   preveri('tisk motiva: PNG dobi pHYs 300 dpi za IHDR', png.length === 66 && String.fromCharCode(...png.subarray(37, 41)) === 'pHYs'
     && dv.getUint32(41) === 11811 && dv.getUint32(45) === 11811 && png[49] === 1 && dv.getUint32(50) === crc32(png.subarray(37, 50))
     && (await s300dpi(png).arrayBuffer()).byteLength === 66)
+  const posnetek: PostavkaTiska = { ...motivna, personalizacija: { ...motivna.personalizacija, barve: ['#123456', '#ABCDEF', '#000000'], cone: { hrbet: { sirina_mm: 280, visina_mm: 380 } } } }
+  const datP = datotekeTiska(posnetek)
+  preveri('tisk motiva: posnetek ob nakupu ima prednost pred živimi conami in barvami',
+    datP.map((d) => `${d.cona}:${d.mm.sirina}x${d.mm.visina}`).join() === 'hrbet:280x380,prsi:260x120'
+    && svgZaTisk(posnetek, datP[0]!).includes('#123456') && !svgZaTisk(posnetek, datP[0]!).includes('#C8102E'))
+  const dtf = svgDtf(motivna, dat[1]!)
+  preveri('tisk motiva: DTF le motiv v pravi velikosti, brez prireza in oznak',
+    /^<svg\b[^>]*\swidth="260mm"/.test(dtf) && /^<svg\b[^>]*\sheight="120mm"/.test(dtf) && !dtf.includes('data-oznake') && dtf.includes('BAR OFFSIDE'))
+  const tuj: PostavkaTiska = { ...motivna, postavka_id: 14, personalizacija: { ...motivna.personalizacija, motiv: 'ni-predloge' } }
+  const pogledTuj = renderToString(<PogledSerije s={{ ...serija, postavke: [tuj, motivna] }} />)
+  preveri('tisk motiva: motiv brez predloge ne podre pogleda in nima datotek',
+    datotekeTiska(tuj).length === 0 && pogledTuj.includes('ni-predloge') && pogledTuj.includes('IJ90KL12-prsi-dtf-13')
+    && csvSerije({ ...serija, postavke: [tuj] }).split('\r\n')[1]!.endsWith('"";"";"ni-predloge";"dtf";"";"";""'))
   preveri('tisk motiva: pogled serije pokaže cone', renderToString(<PogledSerije s={{ ...serija, postavke: [motivna] }} />).includes('IJ90KL12-prsi-dtf-13 · 260 × 120 mm'))
 }
 const pn = (x: Partial<PostavkaNarocila>): PostavkaNarocila => ({ ...narocilo.postavke[0], ...x })

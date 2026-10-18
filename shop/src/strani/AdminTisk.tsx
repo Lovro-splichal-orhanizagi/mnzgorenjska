@@ -3,6 +3,7 @@ import { opisPersonalizacije, supabase, type PostavkaTiska, type Serija, type Se
 import { datum, t } from '../besede'
 import { barvaRazlicice, conaZa } from '../mockup'
 import { celicaCsv, oblikaSvg } from '../personalizacija'
+import { MOTIVI } from '../motivi'
 import { coneMotiva, narisiMotiv, praznaCona, velikostMm, zVgrajenoPisavo } from '../risba'
 import { Nalaganje } from '../seja'
 
@@ -20,14 +21,23 @@ export interface DatotekaTiska {
   mm: { sirina: number; visina: number }
 }
 
-/** Datoteke motiva postavke (prazna cona se ne tiska); stara oblika → []. */
+/** Motiv postavke, za katerega v aplikaciji ni predloge (motiv dodan le v bazi): ne tiska se, admin vidi opozorilo. */
+export const brezPredloge = (p: PostavkaTiska): string | null => {
+  const motiv = p.personalizacija?.motiv
+  return motiv && !MOTIVI.some((m) => m.slug === motiv) ? motiv : null
+}
+
+/**
+ * Datoteke motiva postavke (prazna cona se ne tiska); stara oblika ali motiv brez predloge → [].
+ * Mere iz posnetka ob nakupu, za starejše postavke iz con nosilca, nazadnje iz predloge.
+ */
 export function datotekeTiska(p: PostavkaTiska): DatotekaTiska[] {
   const motiv = p.personalizacija?.motiv
-  if (!motiv) return []
+  if (!motiv || brezPredloge(p)) return []
   const polja = p.personalizacija?.polja ?? {}
   const barva = p.razlicica ? barvaRazlicice(p.razlicica) : null
   return coneMotiva(motiv).filter((cona) => !praznaCona(motiv, polja, cona)).map((cona) => {
-    const c = conaZa(p.cone ?? [], cona, barva)
+    const c = p.personalizacija?.cone?.[cona] ?? conaZa(p.cone ?? [], cona, barva)
     return {
       cona,
       ime: `${p.javna_oznaka}-${cona}-${p.postopek ?? 'tisk'}-${p.postavka_id}`,
@@ -35,6 +45,10 @@ export function datotekeTiska(p: PostavkaTiska): DatotekaTiska[] {
     }
   })
 }
+
+/** Motiv cone v pravi velikosti (koren v mm), brez prireza in oznak: datoteka za DTF. Pisave še ni. */
+export const svgDtf = (p: PostavkaTiska, d: DatotekaTiska): string =>
+  narisiMotiv(p.personalizacija!.motiv!, p.personalizacija?.polja ?? {}, p.personalizacija?.barve ?? p.barve ?? [], d.cona, d.mm)
 
 /** Prirez 3 mm, rezilne oznake 5 mm zunaj prireza, 2 mm roba: motiv je ROB mm od roba lista. */
 const PRIREZ = 3
@@ -50,7 +64,7 @@ export function svgZaTisk(p: PostavkaTiska, d: DatotekaTiska): string {
   const S = W + 2 * ROB
   const V = H + 2 * ROB
   // Koren motiva dobi mere v enotah lista (mm), ne v pravih mm; overflow: kar sega čez rob, gre v prirez.
-  const motiv = narisiMotiv(p.personalizacija!.motiv!, p.personalizacija?.polja ?? {}, p.barve ?? [], d.cona, d.mm)
+  const motiv = svgDtf(p, d)
     .replace(/^<svg\b[^>]*>/, (o) => o.replace(/\s(width|height)="[^"]*"/g, '')
       .replace(/^<svg/, `<svg x="${ROB}" y="${ROB}" width="${W}" height="${H}" overflow="visible"`))
   const a = ROB - PRIREZ // oznaka od a - ZNAK do a, enako na drugi strani
@@ -107,12 +121,13 @@ export async function pngIzSvg(svg: string, sirinaMm: number, visinaMm: number):
 /** serija-<id>.csv: ločilo ;, BOM za Excel, vsaka celica v narekovajih. Motiv: vrstica na cono. */
 export function csvSerije(s: Serija): string {
   const glava = [t('admin.tisk.oznaka'), t('admin.tisk.postavka'), t('admin.tisk.sku'), t('admin.tisk.izdelek'), t('admin.tisk.kolicina'),
-    t('admin.tisk.besedilo'), t('admin.tisk.stevilka'), 'SVG', t('admin.tisk.motiv'), t('admin.tisk.postopek'), t('admin.tisk.cona'), 'PNG']
+    t('admin.tisk.besedilo'), t('admin.tisk.stevilka'), 'SVG', t('admin.tisk.motiv'), t('admin.tisk.postopek'), t('admin.tisk.cona'), 'PNG', 'PNG DTF']
   const vrstice = s.postavke.flatMap((p) => {
     const osnova = [p.javna_oznaka, p.postavka_id, p.sku, p.ime, p.kolicina, p.personalizacija?.ime ?? null]
     const motiv = p.personalizacija?.motiv
-    return !motiv ? [[...osnova, p.personalizacija?.stevilka ?? null, imeSvg(p), null, p.postopek ?? null, null, null]]
-      : datotekeTiska(p).map((d) => [...osnova, null, `${d.ime}.svg`, motiv, p.postopek ?? null, d.cona, `${d.ime}.png`])
+    if (!motiv) return [[...osnova, p.personalizacija?.stevilka ?? null, imeSvg(p), null, p.postopek ?? null, null, null, null]]
+    if (brezPredloge(p)) return [[...osnova, null, null, motiv, p.postopek ?? null, null, null, null]]
+    return datotekeTiska(p).map((d) => [...osnova, null, `${d.ime}.svg`, motiv, p.postopek ?? null, d.cona, `${d.ime}.png`, `${d.ime}-dtf.png`])
   })
   return `\ufeff${[glava, ...vrstice].map((v) => v.map(celicaCsv).join(';')).join('\r\n')}\r\n`
 }
@@ -142,6 +157,8 @@ async function prenesiVse(s: Serija) {
       prenesi(`${d.ime}.svg`, svg, 'image/svg+xml')
       await premor()
       prenesi(`${d.ime}.png`, await pngIzSvg(svg, d.mm.sirina + 2 * ROB, d.mm.visina + 2 * ROB), 'image/png')
+      await premor()
+      prenesi(`${d.ime}-dtf.png`, await pngIzSvg(await zVgrajenoPisavo(svgDtf(p, d)), d.mm.sirina, d.mm.visina), 'image/png')
       await premor()
     }
   }
@@ -267,7 +284,9 @@ export function PogledSerije({ s }: { s: Serija }) {
       <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {s.postavke.map((p) => (
           <li key={p.postavka_id} className="kartica space-y-2 p-3 text-sm">
-            {p.personalizacija?.motiv
+            {brezPredloge(p)
+              ? <p className="opozorilo">{t('admin.tisk.brezPredloge', { motiv: brezPredloge(p)! })}</p>
+              : p.personalizacija?.motiv
               ? datotekeTiska(p).map((d) => <SlikaTiska key={d.cona} p={p} d={d} />)
               : <img src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgPostavke(p))}`} alt={opisPersonalizacije(p.personalizacija)}
                 className="aspect-square w-full rounded-lg bg-white" />}

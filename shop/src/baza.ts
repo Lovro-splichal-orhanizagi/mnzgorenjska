@@ -129,6 +129,9 @@ export interface PersonalizacijaPostavke {
   motiv?: string
   shema?: string
   polja?: Record<string, string | number | null>
+  /** Posnetek ob nakupu: barve sheme in mere vsake neprazne cone nosilca te barve. */
+  barve?: string[]
+  cone?: Record<string, { sirina_mm: number; visina_mm: number }>
 }
 
 /** Postavka naročila (trgovina.narocilo_json). */

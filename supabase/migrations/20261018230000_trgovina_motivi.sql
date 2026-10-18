@@ -230,7 +230,9 @@ begin
 
   opis := concat_ws(' · ', case when p_jezik = 'en' then m.ime_en else m.ime_sl end,
                     nullif(array_to_string(v_opisi, ' · '), ''));
-  personalizacija := jsonb_build_object('motiv', m.slug, 'polja', v_izhod, 'shema', p_vhod->>'shema', 'ime', opis)
+  -- barve: posnetek sheme ob nakupu (kasnejša sprememba sheme ne spremeni tiska).
+  personalizacija := jsonb_build_object('motiv', m.slug, 'polja', v_izhod, 'shema', p_vhod->>'shema', 'ime', opis,
+                       'barve', (select s->'barve' from jsonb_array_elements(m.sheme) s where s->>'kljuc' = p_vhod->>'shema'))
                      || v_dodatno;
 end;
 $$;
@@ -555,8 +557,36 @@ $$;
 revoke all on function public.trgovina_admin_motivi(), public.trgovina_admin_shrani_motiv(jsonb) from public, anon;
 grant execute on function public.trgovina_admin_motivi(), public.trgovina_admin_shrani_motiv(jsonb) to authenticated;
 
+-- Posnetek con ob nakupu: postavka z motivom shrani mere (mm) vsake neprazne cone
+-- za nosilec in barvo različice ("Črna / M" → Črna; cona brez barve velja za vse).
+-- personaliziraj različice ne pozna, zato sprožilec; vedno prepiše, kar je prišlo.
+create function trgovina.posnetek_con() returns trigger
+language plpgsql
+as $$
+begin
+  if new.personalizacija ? 'motiv' then
+    new.personalizacija := new.personalizacija || jsonb_build_object('cone', (
+      select coalesce(jsonb_object_agg(k.cona, jsonb_build_object('sirina_mm', c.sirina_mm, 'visina_mm', c.visina_mm)), '{}'::jsonb)
+        from (select distinct coalesce(f->>'cona', m.cona) as cona
+                from trgovina.motivi m, jsonb_array_elements(m.polja) f
+               where m.slug = new.personalizacija->>'motiv'
+                 and coalesce(new.personalizacija->'polja', '{}'::jsonb) ? (f->>'kljuc')) k
+        join trgovina.razlicice r on r.id = new.razlicica_id
+        cross join lateral (select c.sirina_mm, c.visina_mm from trgovina.cone c
+                             where c.izdelek_id = r.izdelek_id and c.kljuc = k.cona
+                               and (c.barva is null or c.barva = split_part(r.oznaka_sl, ' / ', 1))
+                             order by c.barva nulls last limit 1) c));
+  end if;
+  return new;
+end;
+$$;
+revoke all on function trgovina.posnetek_con() from public, anon, authenticated;
+create trigger posnetek_con before insert on trgovina.postavke
+  for each row execute function trgovina.posnetek_con();
+
 -- Izvoz za tisk (trgovina_admin_za_tisk, serija): postavka z motivom dobi še
--- različico (barva → cona), postopek, barve sheme in cone nosilca (mere v mm).
+-- različico (barva → cona), postopek, barve sheme in cone nosilca (mere v mm);
+-- vmesnik ima raje posnetek v personalizacija (barve, cone), te le za starejše postavke.
 -- Novi stolpci so na koncu, zato create or replace.
 create or replace view trgovina.tisk as
 select p.id as postavka_id, p.serija_id, p.stanje_tiska, n.id as narocilo_id, n.javna_oznaka, n.placano_at,
