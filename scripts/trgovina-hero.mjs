@@ -32,7 +32,7 @@ const env = { ...process.env, PANGOCAIRO_BACKEND: 'fc', FONTCONFIG_FILE: join(tm
 const magick = (...a) => execFileSync('magick', a.flat(), { env })
 
 // Seme motivov iz migracije (isti vzorec kot shop/smoke.tsx): sheme in primeri.
-const sql = readFileSync(join(R, 'supabase/migrations/20261018230000_trgovina_motivi.sql'), 'utf8')
+const sql = readFileSync(join(R, 'supabase/migrations/20261019080000_trgovina_motivi.sql'), 'utf8')
 const seme = Object.fromEntries([...sql.slice(sql.indexOf('insert into trgovina.motivi (slug'))
   .matchAll(/^\('([a-z0-9-]+)',[\s\S]*?\n '[a-z]+',\n '\[[\s\S]*?\]',\n '(\[[\s\S]*?\])',\n '(\[[\s\S]*?\])',/gm)]
   .map((m) => [m[1], { sheme: JSON.parse(m[2]), primeri: JSON.parse(m[3]) }]))

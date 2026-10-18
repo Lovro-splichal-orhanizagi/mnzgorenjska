@@ -40,7 +40,7 @@ EU-27. Prodajalec SPACE GUARDIAN d.o.o. Spec:
   `trgovina_vracilo`; admin: `_za_tisk`,
   `_nova_serija`, `_serija`, `_serije`, `_serija_stanje`, `_boni`,
   `_shrani_personalizacijo`.
-- **Motivi** (migracija `20261018230000_trgovina_motivi.sql`, spec
+- **Motivi** (migracija `20261019080000_trgovina_motivi.sql`, spec
   `docs/superpowers/specs/2026-10-18-trgovina-motivi-design.md`): `izdelki.postopek`,
   `cone` (fotografija nosilca, koti, mm), `motivi` (polja, sheme, primeri),
   `motivi_izdelki` (doplačilo). Vhod `{motiv, polja, shema}` preveri
@@ -137,7 +137,7 @@ Motivi nedeljske lige (Retro dres, Legenda, Hangover XI, Kapetan, Kralj kafane,
 Prvak mini lige) na majici in puloverju po meri. Vse preverjanje in vse cene so
 v bazi (`trgovina.personaliziraj_motiv`); brskalnik le riše predogled.
 
-**Model** (migracija `20261018230000_trgovina_motivi.sql`):
+**Model** (migracija `20261019080000_trgovina_motivi.sql`):
 
 - **Nosilec** je izdelek z `postopek` (`dtf`, …), `po_narocilu` in povezavo v
   `motivi_izdelki` (`doplacilo` v centih). Danes `majica-po-meri` (Črna/Bela)

@@ -336,7 +336,7 @@ preveri('pogoji: rok izdelave, darilni boni, popusti, personalizacija v zasebnos
   }
   preveri('motivi: preverjanje XML zavrne pokvarjeno', urejenXml('<svg><text a="1">x &amp; y</text></svg>') && !urejenXml('<svg><text>a < b</text></svg>')
     && !urejenXml('<svg><g></svg>') && !urejenXml('<svg><text>a & b</text></svg>'))
-  const sql = readFileSync(new URL('../supabase/migrations/20261018230000_trgovina_motivi.sql', import.meta.url), 'utf8')
+  const sql = readFileSync(new URL('../supabase/migrations/20261019080000_trgovina_motivi.sql', import.meta.url), 'utf8')
   const seme = sql.slice(sql.indexOf('insert into trgovina.motivi (slug'))
   type PoljeSemena = { kljuc: string; vrsta: string; max?: number; cona?: string }
   const semena = [...seme.matchAll(/^\('([a-z0-9-]+)',[\s\S]*?\n '([a-z]+)',\n '(\[[\s\S]*?\])',\n '(\[[\s\S]*?\])',/gm)]
