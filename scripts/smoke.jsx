@@ -63,6 +63,7 @@ import { idIzdelka, izdelekPostavke, seznamPostavk } from '../supabase/functions
 import { sestaviMail as trgovinaMail, TELEFON as trgovinaTelefonMail, POGOJI_VERZIJA as trgovinaVerzijaMail } from '../supabase/functions/trgovina-posta/sporocila.ts'
 import { SL as trgovinaSL, EN as trgovinaEN, TELEFON as trgovinaTelefon, POGOJI_VERZIJA as trgovinaVerzija } from '../shop/src/besede.ts'
 import { EU27 as trgovinaEU27, tarifeZa } from '../supabase/functions/trgovina-nakup/tarife.ts'
+import { preberiVnos as vnosBona } from '../supabase/functions/trgovina-boni/vnos.ts'
 import { createHmac } from 'node:crypto'
 import { sestejOdKroga } from '../src/lib/lestvica'
 import { zdruziNavijace } from '../src/lib/navijaci'
@@ -13126,6 +13127,34 @@ preveri(
     izdelekPostavke('Majica (Bela / S)', 'sl', kat)?.slug === 'majica' &&
     izdelekPostavke('T-shirt (White / S)', 'en', kat)?.slug === 'majica' && izdelekPostavke('Skodelica (Bela)', 'sl', kat) === null &&
     idIzdelka('majica', 'en') === 'slff-shop-majica-en')
+  {
+    const zdaj = Date.parse('2026-10-18T12:00:00Z')
+    const v = vnosBona({ za: 'scout', odstotek: 20, uporab: 10, do: '2026-12-31' }, zdaj)
+    preveri('trgovina-boni: vnos (odstotek ali znesek, uporab 1–1000, rok v prihodnosti do 2 let)',
+      v?.za === 'scout' && v.odstotek === 20 && v.znesek === null && v.do === Date.parse('2026-12-31T23:59:59Z') / 1000
+      && vnosBona({ za: 'preverjen', znesek: 500, uporab: 1, do: '2027-01-01' }, zdaj)?.znesek === 500
+      && [
+        { za: 'shop', odstotek: 20, uporab: 1, do: '2026-12-31' },
+        { za: 'scout', uporab: 1, do: '2026-12-31' },
+        { za: 'scout', odstotek: 20, znesek: 100, uporab: 1, do: '2026-12-31' },
+        { za: 'scout', odstotek: 101, uporab: 1, do: '2026-12-31' },
+        { za: 'scout', odstotek: 2.5, uporab: 1, do: '2026-12-31' },
+        { za: 'scout', znesek: 0, uporab: 1, do: '2026-12-31' },
+        { za: 'scout', odstotek: 20, uporab: 0, do: '2026-12-31' },
+        { za: 'scout', odstotek: 20, uporab: 1001, do: '2026-12-31' },
+        { za: 'scout', odstotek: 20, uporab: 1, do: '2026-10-17' },
+        { za: 'scout', odstotek: 20, uporab: 1, do: '2029-01-01' },
+        { za: 'scout', odstotek: 20, uporab: 1, do: '31. 12. 2026' },
+        null,
+      ].every((x) => vnosBona(x, zdaj) === null))
+  }
+  {
+    const { racun: rSl } = await import('../src/i18n/sl/racun.ts')
+    const { racun: rEn } = await import('../src/i18n/en/racun.ts')
+    preveri('zasebnost #trgovina: personalizacija in ime ekipe (sl, en)',
+      rSl.pravno.trgovinaKaj.includes('Besedilo personalizacije') && rSl.pravno.trgovinaKaj.includes('fantasy ekipe')
+      && rEn.pravno.trgovinaKaj.includes('personalisation text') && rEn.pravno.trgovinaKaj.includes('fantasy team name'))
+  }
   preveri('trgovina stripe: seznam postavk pod gumbom', seznamPostavk([{ ime: 'Majica (Črna / M)', kolicina: 2, opis: 'Ana · 7' }, { ime: 'Bon (20 €)', kolicina: 1, opis: null }]) === '2 × Majica (Črna / M): Ana · 7; 1 × Bon (20 €)')
 }
 

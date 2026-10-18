@@ -3,7 +3,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase, type Izdelek } from '../baza'
 import { cena, imeDrzave, jezik, po, t, type Kljuc } from '../besede'
-import { EU27, izprazni, nastavi, NAJVEC, odstrani, postnina, shrani, shraniPlacilo, skupaj, useKosarica, zadnjePlacilo, type Kosarica as TKosarica } from '../kosarica'
+import { EU27, izprazni, kljuc, nastavi, NAJVEC, odstrani, postnina, shrani, shraniPlacilo, skupaj, useKosarica, zadnjePlacilo, type Kosarica as TKosarica, type Postavka } from '../kosarica'
+import { doplacilo } from '../personalizacija'
 import { useNaslov } from '../Okvir'
 import { Nalaganje } from '../seja'
 import { Slika, ZnackaVoljo } from './Katalog'
@@ -21,6 +22,16 @@ export function stripeNaslov(url: string): boolean {
 }
 
 const razlicica = (izdelki: Izdelki, slug: string, id: number) => izdelki[slug]?.razlicice.find((r) => r.id === id) ?? null
+
+/** Cena kosa z doplačilom personalizacije (prikaz; pravo izračuna baza), null če različice ni. */
+export const cenaKosa = (izdelki: Izdelki, p: Postavka): number | null => {
+  const r = razlicica(izdelki, p.slug, p.razlicica_id)
+  return r ? r.cena + doplacilo(izdelki[p.slug]?.personalizacije ?? [], p.personalizacija) : null
+}
+
+/** Največ kosov v vrstici: značka 1, darilni bon 5 (v bazi skupaj), sicer 20. */
+const najvecKosov = (iz: Izdelek | null | undefined): number =>
+  iz?.personalizacije.some((m) => m.vrsta === 'znacka') ? 1 : iz?.digitalni ? 5 : NAJVEC
 
 /** Po zavrnjeni košarici odstranimo, česar ni več ali je razprodano. */
 export const ociscena = (k: TKosarica, izdelki: Izdelki): TKosarica => ({
@@ -45,6 +56,7 @@ export function Kosarica() {
   const [poteka, setPoteka] = useState(false)
   // Po zavrnitvi zaradi zaloge: označimo vrstice z več kosi, kot jih je morda na voljo.
   const [premalo, setPremalo] = useState(false)
+  const [soglasje, setSoglasje] = useState(false)
   useNaslov(t('kosarica.naslov'))
   const slugi = useMemo(() => [...new Set(k.postavke.map((p) => p.slug))].sort(), [k.postavke])
   const kljucSlugov = slugi.join(',')
@@ -67,16 +79,20 @@ export function Kosarica() {
     return () => removeEventListener('pageshow', ob)
   }, [])
 
+  const personalizirano = k.postavke.some((p) => p.personalizacija)
+  const digitalno = izdelki !== null && k.postavke.every((p) => izdelki[p.slug]?.digitalni === true)
+
   async function placaj() {
     setPoteka(true)
     setSporocilo(null)
     setPremalo(false)
     const { data, error } = await supabase.functions.invoke<{ url?: string; seja?: string; oznaka?: string }>('trgovina-nakup', {
       body: {
-        postavke: k.postavke.map(({ razlicica_id, kolicina }) => ({ razlicica_id, kolicina })),
+        postavke: k.postavke.map(({ razlicica_id, kolicina, personalizacija }) => ({ razlicica_id, kolicina, ...(personalizacija && { personalizacija }) })),
         jezik,
-        drzava: k.drzava,
+        ...(!digitalno && { drzava: k.drzava }),
         prejsnja: zadnjePlacilo()?.seja,
+        ...(personalizirano && { brez_odstopa: soglasje }),
       },
     })
     const url = data?.url
@@ -94,6 +110,8 @@ export function Kosarica() {
         shraniPlacilo(null)
         izprazni()
         besedilo = t('kosarica.placano')
+      } else if (telo?.hint === 'trgovina-personalizacija' || telo?.hint === 'trgovina-prijava' || telo?.hint === 'trgovina-odstop') {
+        besedilo = t(`napaka.${telo.hint}` as Kljuc)
       } else if (telo?.hint === 'trgovina-zaloga' || telo?.hint === 'trgovina-vnos') {
         besedilo = t(`napaka.${telo.hint}` as Kljuc)
         const m = await nalozi()
@@ -123,9 +141,10 @@ export function Kosarica() {
   }
   if (!izdelki) return napakaBranja ? <p className="opozorilo">{t('napaka.nalaganje')}</p> : <Nalaganje />
 
-  const cene = Object.fromEntries(k.postavke.map((p) => [p.razlicica_id, razlicica(izdelki, p.slug, p.razlicica_id)?.cena ?? 0]))
+  const cene = Object.fromEntries(k.postavke.map((p) => [kljuc(p), cenaKosa(izdelki, p) ?? 0]))
   const vmesna = skupaj(k, cene)
-  const pismo = k.postavke.every((p) => izdelki[p.slug]?.pismo === true)
+  const pismo = k.postavke.every((p) => izdelki[p.slug]?.pismo === true || izdelki[p.slug]?.digitalni === true)
+  const zBonom = k.postavke.some((p) => izdelki[p.slug]?.digitalni === true)
   const neveljavna = k.postavke.some((p) => (razlicica(izdelki, p.slug, p.razlicica_id)?.na_voljo ?? 'ne') === 'ne')
   const drzave = EU27.map((d) => [d, imeDrzave(d)] as const).sort((a, b) => a[1].localeCompare(b[1], jezik))
 
@@ -142,8 +161,11 @@ export function Kosarica() {
             const iz = izdelki[p.slug]
             const r = razlicica(izdelki, p.slug, p.razlicica_id)
             const ime = iz ? po(iz.ime_sl, iz.ime_en) : p.slug
+            const kos = cenaKosa(izdelki, p)
+            const vrstica = kljuc(p)
+            const najvec = najvecKosov(iz)
             return (
-              <li key={p.razlicica_id} className="kartica flex gap-3 p-3 sm:gap-4">
+              <li key={vrstica} className="kartica flex gap-3 p-3 sm:gap-4">
                 <Link to={`/p/${p.slug}`} className="w-20 shrink-0 sm:w-24">
                   <Slika src={iz?.slike[0]} alt={ime} majhna />
                 </Link>
@@ -152,8 +174,10 @@ export function Kosarica() {
                     <div className="min-w-0">
                       <Link to={`/p/${p.slug}`} className="font-bold text-slate-100 hover:text-gnl-200">{ime}</Link>
                       {r && iz && iz.razlicice.length > 1 && <p className="text-sm text-slate-400">{po(r.oznaka_sl, r.oznaka_en)}</p>}
+                      {p.opis && <p className="break-words text-sm font-semibold uppercase text-gnl-200">{p.opis}</p>}
+                      {iz?.digitalni && <p className="text-xs text-slate-500">{t('izdelek.digitalni')}</p>}
                     </div>
-                    {r && <p className="shrink-0 font-bold tabular-nums">{cena(r.cena * p.kolicina)}</p>}
+                    {kos !== null && <p className="shrink-0 font-bold tabular-nums">{cena(kos * p.kolicina)}</p>}
                   </div>
                   {!r ? <p className="text-sm text-rose-300">{t('kosarica.niVec')}</p>
                     : r.na_voljo === 'ne' ? <p className="text-sm text-rose-300">{t('kosarica.razprodano')}</p>
@@ -162,11 +186,11 @@ export function Kosarica() {
                       : <ZnackaVoljo v="malo" />)}
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center rounded-lg border border-white/15 bg-white/5 text-sm" role="group" aria-label={t('izdelek.kolicina')}>
-                      <button type="button" aria-label={t('izdelek.manj')} disabled={!r || p.kolicina <= 1} onClick={() => shrani(nastavi(k, p.razlicica_id, p.kolicina - 1))} className="px-2.5 py-1 font-bold disabled:opacity-30">−</button>
+                      <button type="button" aria-label={t('izdelek.manj')} disabled={!r || p.kolicina <= 1} onClick={() => shrani(nastavi(k, vrstica, p.kolicina - 1))} className="px-2.5 py-1 font-bold disabled:opacity-30">−</button>
                       <span className="w-7 text-center tabular-nums">{p.kolicina}</span>
-                      <button type="button" aria-label={t('izdelek.vec')} disabled={!r || p.kolicina >= NAJVEC} onClick={() => shrani(nastavi(k, p.razlicica_id, p.kolicina + 1))} className="px-2.5 py-1 font-bold disabled:opacity-30">+</button>
+                      <button type="button" aria-label={t('izdelek.vec')} disabled={!r || p.kolicina >= najvec} onClick={() => shrani(nastavi(k, vrstica, p.kolicina + 1))} className="px-2.5 py-1 font-bold disabled:opacity-30">+</button>
                     </div>
-                    <button type="button" onClick={() => shrani(odstrani(k, p.razlicica_id))} className="text-sm text-slate-400 hover:text-rose-300">
+                    <button type="button" onClick={() => shrani(odstrani(k, vrstica))} className="text-sm text-slate-400 hover:text-rose-300">
                       {t('kosarica.odstrani')}
                     </button>
                   </div>
@@ -177,25 +201,37 @@ export function Kosarica() {
         </ul>
 
         <aside className="kartica h-fit space-y-4 p-5 lg:sticky lg:top-24">
-          <label className="block space-y-1 text-sm text-slate-400">
-            <span>{t('kosarica.drzava')}</span>
-            <select value={k.drzava} onChange={(e) => shrani({ ...k, drzava: e.target.value })} className="polje w-full">
-              {drzave.map(([d, ime]) => <option key={d} value={d}>{ime}</option>)}
-            </select>
-          </label>
+          {digitalno ? <p className="text-sm text-slate-400">{t('kosarica.digitalno')}</p> : (
+            <label className="block space-y-1 text-sm text-slate-400">
+              <span>{t('kosarica.drzava')}</span>
+              <select value={k.drzava} onChange={(e) => shrani({ ...k, drzava: e.target.value })} className="polje w-full">
+                {drzave.map(([d, ime]) => <option key={d} value={d}>{ime}</option>)}
+              </select>
+            </label>
+          )}
           <dl className="space-y-2 text-sm">
             <div className="flex justify-between">
               <dt className="text-slate-400">{t('kosarica.vmesna')}</dt>
               <dd className="font-bold tabular-nums">{cena(vmesna)}</dd>
             </div>
-            <div className="flex justify-between">
-              <dt className="text-slate-400">{t('kosarica.postnina')}</dt>
-              <dd className="tabular-nums">{t('kosarica.postninaOd', { cena: cena(postnina(k.drzava, pismo)) })}</dd>
-            </div>
+            {!digitalno && (
+              <div className="flex justify-between">
+                <dt className="text-slate-400">{t('kosarica.postnina')}</dt>
+                <dd className="tabular-nums">{t('kosarica.postninaOd', { cena: cena(postnina(k.drzava, pismo)) })}</dd>
+              </div>
+            )}
           </dl>
-          <p className="text-xs leading-relaxed text-slate-500">{t('kosarica.postninaOpis')}</p>
+          {!digitalno && <p className="text-xs leading-relaxed text-slate-500">{t('kosarica.postninaOpis')}</p>}
+          {zBonom && <p className="text-xs leading-relaxed text-slate-500">{t('kosarica.bon')}</p>}
+          <p className="text-xs leading-relaxed text-slate-500">{t('kosarica.koda')}</p>
           <p className="text-xs leading-relaxed text-slate-500">{t('kosarica.ddv')}</p>
-          <button type="button" disabled={poteka || neveljavna} onClick={() => void placaj()} className="gumb-glavni w-full py-3 text-lg">
+          {personalizirano && (
+            <label className="flex items-start gap-2 text-sm text-slate-200">
+              <input type="checkbox" checked={soglasje} onChange={(e) => setSoglasje(e.target.checked)} className="mt-1" required />
+              <span>{t('kosarica.potrdiOdstop')}</span>
+            </label>
+          )}
+          <button type="button" disabled={poteka || neveljavna || (personalizirano && !soglasje)} onClick={() => void placaj()} className="gumb-glavni w-full py-3 text-lg">
             {poteka ? t('kosarica.poteka') : t('kosarica.placaj')}
           </button>
           <p className="text-xs leading-relaxed text-slate-500">

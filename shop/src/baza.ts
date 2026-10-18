@@ -3,6 +3,7 @@
 // trgovina_* (Json), zato so oblike odgovorov opisane tu.
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '../../src/lib/baza.types'
+import type { Moznost } from './personalizacija'
 
 export const supabase = createClient<Database>(
   import.meta.env.VITE_SUPABASE_URL ?? '',
@@ -23,6 +24,8 @@ export interface IzdelekKataloga {
   cena_od: number
   cena_do: number
   na_voljo: Voljo
+  po_narocilu?: boolean
+  digitalni?: boolean
 }
 
 export interface Razlicica {
@@ -43,7 +46,90 @@ export interface Izdelek {
   kategorija: Kategorija
   slike: string[]
   pismo: boolean
+  /** Izdelava po naročilu (1–2 tedna, brez zaloge). */
+  po_narocilu: boolean
+  /** Darilni bon: koda po e-pošti, brez dostave. */
+  digitalni: boolean
+  personalizacije: Moznost[]
   razlicice: Razlicica[]
+}
+
+/** Shranjena personalizacija postavke (trgovina.personaliziraj). */
+export interface PersonalizacijaPostavke {
+  vrsta?: 'ime_ekipe' | 'poljubno_ime' | 'prvak' | 'znacka'
+  ime?: string
+  stevilka?: number
+}
+
+/** Postavka naročila (trgovina.narocilo_json). */
+export interface PostavkaNarocila {
+  id: number
+  razlicica_id: number
+  sku: string
+  ime: string
+  cena: number
+  doplacilo: number
+  kolicina: number
+  personalizacija: PersonalizacijaPostavke | null
+  stanje_tiska: 'za_tisk' | 'v_seriji' | 'natisnjeno' | null
+  po_narocilu: boolean
+  digitalni: boolean
+}
+
+/** Besedilo personalizacije za prikaz: "Kranjski Tigri · 10". */
+export const opisPersonalizacije = (p: PersonalizacijaPostavke | null | undefined): string =>
+  p ? [p.ime, p.stevilka].filter((x) => x !== undefined && x !== null && x !== '').join(' · ') : ''
+
+/** Element trgovina_moji_prvaki(). */
+export interface Prvak {
+  mini_liga_id: number
+  ime: string
+  sezona: string
+  fantasy_team_id: number
+  ekipa: string
+}
+
+/** Postavka v trgovina_admin_za_tisk() in seriji. */
+export interface PostavkaTiska {
+  postavka_id: number
+  stanje_tiska: 'za_tisk' | 'v_seriji' | 'natisnjeno'
+  narocilo_id: number
+  javna_oznaka: string
+  placano_at: string | null
+  sku: string
+  ime: string
+  kolicina: number
+  personalizacija: PersonalizacijaPostavke | null
+}
+
+/** trgovina_admin_serija(id) */
+export interface Serija {
+  id: number
+  created_at: string
+  poslana_at: string | null
+  natisnjena_at: string | null
+  postavke: PostavkaTiska[]
+}
+
+/** Element trgovina_admin_serije(). */
+export interface SerijaPovzetek {
+  id: number
+  created_at: string
+  poslana_at: string | null
+  natisnjena_at: string | null
+  postavk: number
+}
+
+/** Element trgovina_admin_boni() (koda le zadnji 4 znaki). */
+export interface Bon {
+  id: number
+  javna_oznaka: string
+  email: string | null
+  koda_konec: string
+  znesek: number
+  velja_do: string
+  porabljeno_at: string | null
+  created_at: string
 }
 
 /** Element trgovina_moja_narocila(). */
@@ -58,7 +144,7 @@ export interface Narocilo {
   placano_at: string | null
   poslano_at: string | null
   created_at: string
-  postavke: { razlicica_id: number; ime: string; cena: number; kolicina: number }[]
+  postavke: PostavkaNarocila[]
 }
 
 /** Naslov iz Stripe (narocila.naslov). */
@@ -90,7 +176,7 @@ export interface NarociloAdmin {
   placano_at: string | null
   poslano_at: string | null
   created_at: string
-  postavke: { razlicica_id: number; sku: string; ime: string; cena: number; kolicina: number }[]
+  postavke: PostavkaNarocila[]
 }
 
 /** Različica v trgovina_admin_izdelki(); na_voljo = zaloga − rezervirano. */

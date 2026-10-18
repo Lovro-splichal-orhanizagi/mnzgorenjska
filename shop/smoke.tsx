@@ -7,18 +7,21 @@ import type { ReactNode } from 'react'
 import { SejaProvider } from './src/seja'
 import { Okvir } from './src/Okvir'
 import { Katalog, MrezaIzdelkov } from './src/strani/Katalog'
-import { Izdelek, IzdelekView } from './src/strani/Izdelek'
-import { Kosarica, ociscena, stripeNaslov } from './src/strani/Kosarica'
+import { Izdelek, IzdelekView, Predogled } from './src/strani/Izdelek'
+import { cenaKosa, Kosarica, ociscena, stripeNaslov } from './src/strani/Kosarica'
 import { Hvala } from './src/strani/Hvala'
 import { Narocila } from './src/strani/Narocila'
 import { Pogoji } from './src/strani/Pogoji'
 import { Odstop, mailOdstopa } from './src/strani/Odstop'
 import { Prijava, varnaPot } from './src/strani/Prijava'
-import { Admin, Dobavnica, Nalepka } from './src/strani/Admin'
+import { Admin, Dobavnica, Nalepka, zaPakiranje } from './src/strani/Admin'
+import { csvSerije, PogledSerije } from './src/strani/AdminTisk'
+import { zahtevaBona } from './src/strani/AdminBoni'
 import { vCente, varnoIme } from './src/strani/AdminIzdelki'
 import { EN, SL, TELEFON, cena, type Kljuc } from './src/besede'
-import { dodaj, kosov, nastavi, odstrani, postnina, preberi, PRAZNA, skupaj } from './src/kosarica'
-import type { Izdelek as TIzdelek, IzdelekKataloga, NarociloAdmin } from './src/baza'
+import { dodaj, kljuc, kosov, nastavi, odstrani, postnina, preberi, PRAZNA, skupaj } from './src/kosarica'
+import { celicaCsv, doplacilo, napakaImena, oblikaSvg, stabilno, stevilka, veljavnaOblika } from './src/personalizacija'
+import type { Izdelek as TIzdelek, IzdelekKataloga, NarociloAdmin, PostavkaNarocila, Serija } from './src/baza'
 
 let napak = 0
 const preveri = (opis: string, ok: boolean, dodatno = '') => {
@@ -79,6 +82,7 @@ preveri('katalog: prazen pokaže sporočilo', renderToString(<StaticRouter locat
 
 const izdelek: TIzdelek = {
   slug: 'majica', ime_sl: 'Majica', ime_en: 'T-shirt', opis_sl: 'Bombaž.', opis_en: 'Cotton.', kategorija: 'oblacila', slike: [], pismo: false,
+  po_narocilu: false, digitalni: false, personalizacije: [],
   razlicice: [
     { id: 1, oznaka_sl: 'Črna / S', oznaka_en: 'Black / S', cena: 2500, na_voljo: 'da' },
     { id: 2, oznaka_sl: 'Črna / M', oznaka_en: 'Black / M', cena: 2500, na_voljo: 'ne' },
@@ -115,7 +119,7 @@ const narocilo: NarociloAdmin = {
   naslov: { name: 'Ana Novak', line1: 'Glavna 1', line2: null, postal_code: '10000', city: 'Zagreb', country: 'HR' },
   znesek_postavke: 2500, znesek_dostava: 990, znesek_ddv: 600, znesek_skupaj: 3490, dostava_kljuc: 'paket_eu', sledilna: null, manjka: 1,
   placano_at: '2026-10-18T10:00:00Z', poslano_at: null, created_at: '2026-10-18T09:55:00Z',
-  postavke: [{ razlicica_id: 1, sku: 'MAJ-CRN-S', ime: 'Majica (Črna / S)', cena: 2500, kolicina: 1 }],
+  postavke: [{ id: 1, razlicica_id: 1, sku: 'MAJ-CRN-S', ime: 'Majica (Črna / S)', cena: 2500, doplacilo: 0, kolicina: 1, personalizacija: null, stanje_tiska: null, po_narocilu: false, digitalni: false }],
 }
 const nalepka = renderToString(<Nalepka n={narocilo} />)
 preveri('admin: nalepka 100×150 mm s pošiljateljem in prejemnikom', ['100mm 150mm', 'SPACE GUARDIAN d.o.o.', 'Ulica Hermana Potočnika 5', '1000 Ljubljana', 'Ana Novak', 'Glavna 1', '10000 Zagreb', 'Croatia'].every((v) => nalepka.includes(v)), nalepka.slice(0, 300))
@@ -127,12 +131,12 @@ let k = dodaj(PRAZNA, 1, 2, 'majica')
 k = dodaj(k, 1, 3, 'majica')
 k = dodaj(k, 5, 1, 'sal')
 preveri('kosarica: dodaj sešteje isto različico', k.postavke.length === 2 && k.postavke[0].kolicina === 5 && kosov(k) === 6)
-preveri('kosarica: največ 20 na vrstico', dodaj(k, 1, 99, 'majica').postavke[0].kolicina === 20 && nastavi(k, 1, 50).postavke[0].kolicina === 20)
-preveri('kosarica: nastavi 0 in odstrani zbrišeta vrstico', nastavi(k, 5, 0).postavke.length === 1 && odstrani(k, 1).postavke.length === 1)
+preveri('kosarica: največ 20 na vrstico', dodaj(k, 1, 99, 'majica').postavke[0].kolicina === 20 && nastavi(k, '1|', 50).postavke[0].kolicina === 20)
+preveri('kosarica: nastavi 0 in odstrani zbrišeta vrstico', nastavi(k, '5|', 0).postavke.length === 1 && odstrani(k, '1|').postavke.length === 1)
 preveri('kosarica: neveljavna količina se ne doda', dodaj(PRAZNA, 1, 0, 'x').postavke.length === 0 && dodaj(PRAZNA, 1, -3, 'x').postavke.length === 0)
 const polna = Array.from({ length: 20 }, (_, n) => n + 1).reduce((a, id) => dodaj(a, id, 1, 's'), PRAZNA)
 preveri('kosarica: največ 20 vrstic', dodaj(polna, 99, 1, 's').postavke.length === 20)
-preveri('kosarica: skupaj v centih, brez neznane cene', skupaj(k, { 1: 2500 }) === 12500 && skupaj(k, { 1: 2500, 5: 2000 }) === 14500)
+preveri('kosarica: skupaj v centih, brez neznane cene', skupaj(k, { '1|': 2500 }) === 12500 && skupaj(k, { '1|': 2500, '5|': 2000 }) === 14500)
 preveri('kosarica: preberi zavrne smeti', preberi('{"postavke":[{"razlicica_id":"1","slug":"a","kolicina":1},{"razlicica_id":2,"slug":"b","kolicina":99}],"drzava":"US"}').postavke.length === 1
   && preberi('{"postavke":[{"razlicica_id":2,"slug":"b","kolicina":99}]}').postavke[0].kolicina === 20
   && preberi('{"drzava":"US"}').drzava === 'SI' && preberi('{"drzava":"HR"}').drzava === 'HR'
@@ -141,6 +145,99 @@ preveri('kosarica: preberi zavrne smeti', preberi('{"postavke":[{"razlicica_id":
 preveri('kosarica: poštnina (pismo le v SI)', postnina('SI', true) === 150 && postnina('SI', false) === 390 && postnina('HR', true) === 990)
 const cista = ociscena({ postavke: [{ razlicica_id: 1, slug: 'majica', kolicina: 1 }, { razlicica_id: 2, slug: 'majica', kolicina: 1 }, { razlicica_id: 9, slug: 'ni', kolicina: 1 }], drzava: 'AT' }, { majica: izdelek, ni: null })
 preveri('kosarica: po zavrnitvi ostane le, kar je na voljo', cista.postavke.length === 1 && cista.postavke[0].razlicica_id === 1 && cista.drzava === 'AT')
+
+// Personalizacija
+preveri('pers: ime 1–12 znakov, črke s šumniki, presledek, pika, vezaj, vsaj ena črka',
+  ['Ana', 'Žan Novak', 'J.-P. Šuc', '  Ana   Bo  ', 'ÉÖøž', 'Abcdefghijkl'].every((v) => napakaImena(v) === null)
+  && napakaImena('') === 'pers.napaka.prazno' && napakaImena('   ') === 'pers.napaka.prazno' && napakaImena('Abcdefghijklm') === 'pers.napaka.dolgo'
+  && ['Ana1', '...', '- .', 'A<b>', 'Ana_', 'Ⅻ', 'Ана', '😀'].every((v) => napakaImena(v) === 'pers.napaka.znaki'))
+preveri('pers: številka 0–99', stevilka('0') === 0 && stevilka(' 7 ') === 7 && stevilka('99') === 99
+  && ['100', '-1', '1.5', '', 'a', '1e1', '07a'].every((v) => stevilka(v) === null))
+const moznosti = [{ vrsta: 'poljubno_ime' as const, doplacilo: 500, obvezna: true }, { vrsta: 'stevilka' as const, doplacilo: 300, obvezna: false }]
+preveri('pers: doplačilo le za izbrane možnosti', doplacilo(moznosti, undefined) === 0 && doplacilo(moznosti, { poljubno_ime: 'Ana' }) === 500
+  && doplacilo(moznosti, { poljubno_ime: 'Ana', stevilka: 7 }) === 800)
+preveri('pers: oblika vnosa iz shrambe', veljavnaOblika({ poljubno_ime: 'Ana', stevilka: 7 }) !== null && veljavnaOblika({ prvak: { mini_liga_id: 1, sezona: '2025/26' } }) !== null
+  && veljavnaOblika({ znacka: {} }) !== null && veljavnaOblika({ ime_ekipe: 3 }) !== null
+  && [null, [], {}, { x: 1 }, { stevilka: 100 }, { stevilka: '7' }, { ime_ekipe: '3' }, { prvak: { sezona: 1 } }, { znacka: { ime: 'X' } }].every((v) => veljavnaOblika(v) === null))
+preveri('pers: stabilen ključ ne glede na vrstni red', stabilno({ b: 1, a: { d: 2, c: 'x' } }) === stabilno({ a: { c: 'x', d: 2 }, b: 1 }))
+
+let kp = dodaj(PRAZNA, 7, 1, 'majica-ime', { poljubno_ime: 'Ana', stevilka: 7 }, 'Ana · 7')
+kp = dodaj(kp, 7, 1, 'majica-ime', { poljubno_ime: 'Bor' }, 'Bor')
+kp = dodaj(kp, 7, 2, 'majica-ime', { stevilka: 7, poljubno_ime: 'Ana' }, 'Ana · 7')
+kp = dodaj(kp, 7, 1, 'majica-ime')
+preveri('kosarica: ista različica z drugim besedilom je druga vrstica', kp.postavke.length === 3 && kp.postavke[0].kolicina === 3 && kp.postavke[1].kolicina === 1
+  && kljuc(kp.postavke[0]) !== kljuc(kp.postavke[1]) && kljuc(kp.postavke[2]) === '7|')
+preveri('kosarica: odstrani le izbrano vrstico', odstrani(kp, kljuc(kp.postavke[1])).postavke.map((p) => p.opis ?? '').join() === 'Ana · 7,')
+const shranjena = preberi(JSON.stringify(kp))
+preveri('kosarica: personalizacija preživi shrambo', shranjena.postavke.length === 3 && shranjena.postavke[0].personalizacija?.poljubno_ime === 'Ana'
+  && shranjena.postavke[0].opis === 'Ana · 7' && shranjena.postavke[2].personalizacija === undefined)
+preveri('kosarica: neveljavna personalizacija iz shrambe zavržena', preberi(JSON.stringify({ postavke: [
+  { razlicica_id: 1, slug: 'a', kolicina: 1, personalizacija: { stevilka: 500 } },
+  { razlicica_id: 1, slug: 'a', kolicina: 1, personalizacija: { poljubno_ime: 'Ana' } },
+  { razlicica_id: 1, slug: 'a', kolicina: 2, personalizacija: { poljubno_ime: 'Ana' } },
+] })).postavke.length === 1)
+
+const majicaIme: TIzdelek = {
+  ...izdelek, slug: 'majica-ime', ime_sl: 'Majica z imenom', po_narocilu: true,
+  personalizacije: moznosti,
+  razlicice: [{ id: 7, oznaka_sl: 'Črna / M', oznaka_en: 'Black / M', cena: 2500, na_voljo: 'da' }],
+}
+preveri('kosarica: cena kosa z doplačilom', cenaKosa({ 'majica-ime': majicaIme }, kp.postavke[0]) === 3300 && cenaKosa({ 'majica-ime': majicaIme }, kp.postavke[2]) === 2500
+  && cenaKosa({}, kp.postavke[0]) === null)
+const izrisi = (i: TIzdelek) => renderToString(<StaticRouter location={`/p/${i.slug}`}><SejaProvider><IzdelekView i={i} /></SejaProvider></StaticRouter>)
+const stranPers = izrisi(majicaIme)
+preveri('izdelek: obrazec personalizacije, doplačila, brez odstopa, rok izdelave, gumb onemogočen',
+  [SL['pers.poljubno_ime'], SL['pers.stevilka'], '+5,00', '+3,00', SL['pers.neobvezno'], SL['izdelek.brezOdstopa'], SL['izdelek.poNarocilu'], SL['pers.imeNamig']].every((v) => stranPers.includes(v))
+  && !stranPers.includes(SL['izdelek.odstop']) && /disabled=""[^>]*>Dodaj v košarico/.test(stranPers), [SL['pers.poljubno_ime'], SL['pers.stevilka'], '+5,00', '+3,00', SL['pers.neobvezno'], SL['izdelek.brezOdstopa'], SL['izdelek.poNarocilu'], SL['pers.imeNamig']].filter((v) => !stranPers.includes(v)).join(' / ') + (stranPers.match(/.{80}Dodaj v ko/)?.[0] ?? ''))
+const ekipa: TIzdelek = { ...majicaIme, slug: 'majica-ekipa', personalizacije: [{ vrsta: 'ime_ekipe', doplacilo: 500, obvezna: true }] }
+const prvak: TIzdelek = { ...majicaIme, slug: 'majica-prvak', personalizacije: [{ vrsta: 'prvak', doplacilo: 0, obvezna: true }] }
+preveri('izdelek: ime ekipe in prvak brez prijave zahtevata prijavo', [ekipa, prvak].every((i) => {
+  const h = izrisi(i)
+  return h.includes(SL['pers.prijava']) && h.includes(`/login?next=/p/${i.slug}`)
+}))
+const bon: TIzdelek = { ...izdelek, slug: 'darilni-bon', digitalni: true, razlicice: [{ id: 9, oznaka_sl: '20 €', oznaka_en: '€20', cena: 2000, na_voljo: 'da' }] }
+const stranBon = izrisi(bon)
+preveri('izdelek: darilni bon po e-pošti, brez dostave', stranBon.includes(SL['izdelek.digitalni']) && stranBon.includes(SL['izdelek.bon']) && !stranBon.includes(SL['izdelek.dostava']))
+const pred = renderToString(<Predogled alt="x" ime="Žan <b>&" st={7} />)
+preveri('predogled: besedilo in številka čez sliko, ubežano', pred.includes('<svg') && pred.includes('ŽAN &lt;B&gt;&amp;') && pred.includes('>7</text>') && !pred.includes('<b>'), pred)
+preveri('predogled: brez besedila ni plasti', !renderToString(<Predogled alt="x" ime={null} st={null} />).includes('<svg'))
+
+// Tisk in boni (admin)
+const svg = oblikaSvg(`A<b>&"'`, 10)
+preveri('tisk: SVG ubeži besedilo, številka, pisava', svg.startsWith('<?xml') && svg.includes('A&lt;B&gt;&amp;&quot;&apos;') && !svg.includes('<b>') && svg.includes('>10</text>')
+  && svg.includes('Inter') && !oblikaSvg('Ana', null).includes('</text><text') && oblikaSvg(null, 5).includes('>5</text>'))
+preveri('tisk: CSV celica (narekovaji, formula)', celicaCsv('a"b') === '"a""b"' && celicaCsv('=1+1') === `"'=1+1"` && celicaCsv('-2') === `"'-2"`
+  && celicaCsv('@x') === `"'@x"` && celicaCsv(null) === '""' && celicaCsv(7) === '"7"' && celicaCsv('a;b\nc') === '"a;b\nc"')
+const serija: Serija = {
+  id: 3, created_at: '2026-10-18T10:00:00Z', poslana_at: null, natisnjena_at: null,
+  postavke: [
+    { postavka_id: 11, stanje_tiska: 'v_seriji', narocilo_id: 1, javna_oznaka: 'AB12CD34', placano_at: null, sku: 'MIS-CRN-M', ime: 'Majica (Črna / M)', kolicina: 2, personalizacija: { vrsta: 'poljubno_ime', ime: 'Žan "Z"', stevilka: 7 } },
+    { postavka_id: 12, stanje_tiska: 'v_seriji', narocilo_id: 2, javna_oznaka: 'EF56GH78', placano_at: null, sku: 'MIE-BEL-S', ime: 'Majica (Bela / S)', kolicina: 1, personalizacija: { vrsta: 'ime_ekipe', ime: '=Tigri' } },
+  ],
+}
+const csv = csvSerije(serija)
+const vrsticeCsv = csv.split('\r\n')
+preveri('tisk: CSV serije (BOM, glava, ubežano, ime SVG)', csv.startsWith('﻿"Naročilo";"Postavka";"Šifra"') && vrsticeCsv.length === 4
+  && vrsticeCsv[1] === '"AB12CD34";"11";"MIS-CRN-M";"Majica (Črna / M)";"2";"Žan ""Z""";"7";"AB12CD34-11.svg"'
+  && vrsticeCsv[2].includes(`"'=Tigri";""`), vrsticeCsv.slice(0, 3).join(' | '))
+const pogledSerije = renderToString(<PogledSerije s={serija} />)
+preveri('admin: pogled serije s predogledi', pogledSerije.includes('Serija 3') && pogledSerije.includes('AB12CD34') && pogledSerije.includes('data:image/svg+xml') && pogledSerije.includes('EF56GH78'))
+const pn = (x: Partial<PostavkaNarocila>): PostavkaNarocila => ({ ...narocilo.postavke[0], ...x })
+const nar = (postavke: PostavkaNarocila[]): NarociloAdmin => ({ ...narocilo, postavke })
+preveri('admin: za pakiranje le, ko je vse v paketu na zalogi ali natisnjeno',
+  zaPakiranje(nar([pn({})])) && zaPakiranje(nar([pn({}), pn({ id: 2, stanje_tiska: 'natisnjeno' })]))
+  && !zaPakiranje(nar([pn({}), pn({ id: 2, stanje_tiska: 'za_tisk' })])) && !zaPakiranje(nar([pn({ stanje_tiska: 'v_seriji' })]))
+  && !zaPakiranje(nar([pn({ digitalni: true })])) && !zaPakiranje(nar([pn({ personalizacija: { vrsta: 'znacka', ime: 'Ana' } })]))
+  && zaPakiranje(nar([pn({}), pn({ id: 2, digitalni: true }), pn({ id: 3, personalizacija: { vrsta: 'znacka', ime: 'Ana' } })])))
+const dobavnicaMesana = renderToString(<Dobavnica n={nar([pn({ personalizacija: { vrsta: 'poljubno_ime', ime: 'Ana', stevilka: 7 }, stanje_tiska: 'natisnjeno' }), pn({ id: 2, ime: 'Darilni bon (20 €)', digitalni: true })])} />)
+preveri('admin: dobavnica brez bonov, s personalizacijo', dobavnicaMesana.includes('Ana · 7') && !dobavnicaMesana.includes('Darilni bon'))
+preveri('admin: zahteva bona (odstotek ali znesek, uporab, rok)',
+  JSON.stringify(zahtevaBona('scout', 'odstotek', '20', '10', '2026-12-31')) === '{"za":"scout","odstotek":20,"uporab":10,"do":"2026-12-31"}'
+  && zahtevaBona('preverjen', 'znesek', '5,50', '1', '2026-12-31')?.znesek === 550
+  && [['odstotek', '0', '1', '2026-12-31'], ['odstotek', '101', '1', '2026-12-31'], ['znesek', '0', '1', '2026-12-31'], ['odstotek', '20', '0', '2026-12-31'],
+    ['odstotek', '20', '1001', '2026-12-31'], ['odstotek', '20', '1', '']].every(([v, a, b, c]) => zahtevaBona('scout', v as 'odstotek', a, b, c) === null))
+preveri('pogoji: rok izdelave, darilni boni, popusti, personalizacija v zasebnosti',
+  ['1–2 tednih', 'Darilni bon je koda', 'ostanek ne ostane', 'gotovino', 'promocijskimi kodami', 'besedilo personalizacije'].every((v) => pogoji.includes(v)))
 
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)
 process.exit(napak === 0 ? 0 : 1)

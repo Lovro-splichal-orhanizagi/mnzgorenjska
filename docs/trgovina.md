@@ -86,6 +86,24 @@ EU-27. Prodajalec SPACE GUARDIAN d.o.o. Spec:
 - **Admin** `/admin`: naročila za pakiranje (nalepka 100×150 mm, dobavnica),
   sledilna številka → poslano + mail; izdelki, različice, cene, zaloga kot
   sprememba (`zaloga_dodaj`), slike v Storage (vedro `trgovina`).
+- **Stran izdelka in košarica**: obrazec po možnostih izdelka (ekipe kupca iz
+  `fantasy_teams` brez hišnih, prvaki `trgovina_moji_prvaki`, značka
+  `trgovina_moja_znacka`; brez prijave povezava na prijavo), predogled kot SVG
+  čez sliko, cena z doplačilom. Brskalnik pravila le zrcali
+  (`shop/src/personalizacija.ts`; žaljivke preveri šele baza). Košarica hrani
+  personalizacijo po vrstici (ključ različica + vnos), potrditev "ni mogoče
+  vrniti" pošlje `brez_odstopa`; samo boni: brez države in poštnine.
+- **Za tisk** (admin): postavke `za_tisk` → serija → izvoz `serija-<id>.csv`
+  (ločilo `;`, BOM, formule ubežane) in SVG za vsako postavko
+  (`<oznaka>-<postavka>.svg`, pisava Inter, besedilo ubežano) → "Poslano
+  tiskarni" → "Natisnjeno". ZIP-a ni (brez knjižnice). Za pakiranje je
+  naročilo, ko so vse postavke v paketu na zalogi ali natisnjene; darilni boni
+  in značke (tok `narocila_znack`) se ne pakirajo tu.
+- **Boni** (admin): izdani darilni boni (zadnji 4 znaki) in nova koda za Scout
+  ali preverjene prek funkcije `trgovina-boni` (admin po `is_admin`, kupon
+  `duration=once` z `applies_to` = izdelki cen `slff_scout_klub_*` oziroma
+  `slff_preverjen_*` in `slff_znacka`, odstotek ali znesek, število uporab,
+  rok do 2 let; koda se vrne enkrat in se ne beleži).
 
 ## Objava
 
@@ -101,7 +119,7 @@ Ostalo (enkrat):
    brez njega `trgovina-nakup` vrne 503), `SHOP_URL` (neobvezno),
    `TRGOVINA_TARIFE` (neobvezno, JSON id tarif), SMTP kot `posli-opomnik`.
 3. Funkcije: `scripts/hetzner/objavi-funkcije.sh trgovina-nakup`, nato
-   `trgovina-posta`, nato `stripe-webhook` (ena na klic).
+   `trgovina-posta`, `stripe-webhook` in `trgovina-boni` (ena na klic).
 4. Stripe: `STRIPE_SECRET_KEY=… scripts/stripe-trgovina.sh` (tarife; po
    spremembi tarif ponovni zagon funkcij), endpoint webhooka dobi dogodka
    `checkout.session.expired` in `checkout.session.async_payment_failed`,

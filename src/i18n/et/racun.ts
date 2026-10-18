@@ -244,7 +244,7 @@ export const racun: NonNullable<Prevod['racun']> = {
       'Vastuväide: klõpsa ülevõetud profiilil Peida mind Scoutist või kirjuta aadressile <eposta>info@slff.eu</eposta> ja lisa link mängija lehele. 14 päeva jooksul peidame mängija Scoutist kõigis meie selle riigi liigades, ka hilisematel importidel. Fantaasiamängus jääb ta alles.',
     trgovinaNaslov: 'SLFF pood (shop.slff.eu)',
     trgovinaKaj:
-      'Ostu korral töötleme nime, e-posti, tarneaadressi, ostetud tooteid ja summasid ning sisselogimisel ka sinu SLFF-i kontot. Makset töötleb Stripe: kaardiandmeid me ei näe ega säilita. Nime ja aadressi saab kohaletoimetamiseks Pošta Slovenije. Kuritarvituste piiramiseks säilitame lõpetamata ostu korral ajutiselt IP-aadressi räsi (pöördumatu); see kustutatakse makse või ostu aegumise korral.',
+      'Ostu korral töötleme nime, e-posti, tarneaadressi, ostetud tooteid ja summasid ning sisselogimisel ka sinu SLFF-i kontot. Makset töötleb Stripe: kaardiandmeid me ei näe ega säilita. Nime ja aadressi saab kohaletoimetamiseks Pošta Slovenije. Kuritarvituste piiramiseks säilitame lõpetamata ostu korral ajutiselt IP-aadressi räsi (pöördumatu); see kustutatakse makse või ostu aegumise korral. Isikupärastamise tekst (nimi, number) ja fantasy-meeskonna nimi tootel on tellimuse osa; teksti saab ka trükikoda, kes toote valmistab.',
     trgovinaPodlaga:
       'Õiguslik alus on lepingu täitmine (GDPR artikli 6 lõike 1 punkt b) ja seadusest tulenevad kohustused (raamatupidamine, maksud), IP-aadressi räsi puhul õigustatud huvi kuritarvituste ennetamiseks (GDPR artikli 6 lõike 1 punkt f). Vastutav töötleja on SPACE GUARDIAN, računalniško programiranje, d.o.o.',
     trgovinaHramba:

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
-import { supabase, type Narocilo } from '../baza'
+import { opisPersonalizacije, supabase, type Narocilo } from '../baza'
 import { cena, datum, t } from '../besede'
 import { Nalaganje, useSeja } from '../seja'
 
@@ -48,9 +48,12 @@ export function Narocila() {
               {n.sledilna && <p className="text-sm text-slate-300">{t('narocila.sledilna', { st: n.sledilna })}</p>}
               <ul className="divide-y divide-white/5 text-sm">
                 {n.postavke.map((p) => (
-                  <li key={p.razlicica_id} className="flex justify-between gap-3 py-1.5">
-                    <span className="text-slate-300">{p.kolicina} × {p.ime}</span>
-                    <span className="tabular-nums">{cena(p.cena * p.kolicina)}</span>
+                  <li key={p.id} className="flex justify-between gap-3 py-1.5">
+                    <span className="text-slate-300">
+                      {p.kolicina} × {p.ime}
+                      {p.personalizacija && <span className="block text-xs font-semibold uppercase text-gnl-200">{opisPersonalizacije(p.personalizacija)}</span>}
+                    </span>
+                    <span className="tabular-nums">{cena((p.cena + p.doplacilo) * p.kolicina)}</span>
                   </li>
                 ))}
                 {n.znesek_dostava !== null && (
