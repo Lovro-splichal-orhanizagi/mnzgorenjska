@@ -18,10 +18,10 @@ test('HNS restore retains explicit target ACLs and excludes managed extension/de
  for(const n of [1,2,3,4,9])assert.ok(result.includes(rows[n-1]))
  for(const n of [5,6,7,8])assert.ok(!result.includes(rows[n-1]))
 })
-function dockerFake({collision=false,wrongIdentity=false}={}){
+function dockerFake({collision=false,wrongIdentity=false,image='public.ecr.aws/supabase/postgres:17.11.0.004'}={}){
  const calls=[]
  const run=(cmd,args)=>{assert.equal(cmd,'docker');calls.push(args)
-  if(args[0]==='inspect')return Buffer.from(JSON.stringify({name:wrongIdentity?'/user_database':'/slff_hr_historical_test_20261018',image:'public.ecr.aws/supabase/postgres:17.11.0.004'}))
+  if(args[0]==='inspect')return Buffer.from(JSON.stringify({name:wrongIdentity?'/user_database':'/slff_hr_historical_test_20261018',image}))
   if(args.includes('pg_dump')){assert.equal(args[args.indexOf('-U')+1],'supabase_admin');assert.ok(!args.includes('--no-privileges'));return Buffer.from('CUSTOM DUMP')}
   if(args.includes('pg_restore')&&args.includes('-l'))return Buffer.from('1; 0 0 ACL public TABLE players postgres\n')
   if(args.includes('psql')&&args.includes('-At'))return Buffer.from('t\n')
@@ -36,6 +36,10 @@ test('HNS clone drops only its successfully created random database even if a ch
  assert.ok(create);assert.ok(drop);assert.equal(drop.at(-1),create.at(-1));assert.notEqual(drop.at(-1),'postgres')
  assert.ok(!fake.calls.some(args=>args.includes('reset')||args.includes('--no-privileges')))
 })
-test('HNS clone cannot drop a pre-existing collision or operate in a mismatched container',async()=>{
+test('HNS clone accepts official registry fallback but rejects lookalikes, collisions and mismatched containers',async()=>{
+ const fallback=dockerFake({image:'ghcr.io/supabase/postgres:17.6.1.167'})
+ await helper.withHnsDisposableDatabase(local,()=>{}, {run:fallback.run})
+ assert.ok(fallback.calls.some(args=>args.includes('createdb')));assert.ok(fallback.calls.some(args=>args.includes('dropdb')))
+ for(const image of ['ghcr.io.evil/supabase/postgres:17.6.1.167','evil.io/supabase/postgres:17.6.1.167','ghcr.io/foreign/postgres:17.6.1.167','ghcr.io/supabase/postgres-other:17.6.1.167','ghcr.io/supabase/postgres:latest','ghcr.io/supabase/postgres:17.6.1.167-bad','public.ecr.aws.evil/supabase/postgres:17.6.1.167']){const fake=dockerFake({image});await assert.rejects(()=>helper.withHnsDisposableDatabase(local,()=>assert.fail('must reject foreign image'),{run:fake.run}),/identity\/image mismatch/);assert.equal(fake.calls.length,1)}
  for(const options of [{collision:true},{wrongIdentity:true}]){const fake=dockerFake(options);await assert.rejects(()=>helper.withHnsDisposableDatabase(local,()=>assert.fail('must not run child'),{run:fake.run}));assert.ok(!fake.calls.some(args=>args.includes('dropdb')))}
 })
