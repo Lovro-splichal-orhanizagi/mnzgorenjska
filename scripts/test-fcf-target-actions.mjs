@@ -40,3 +40,21 @@ test('actual GET-only metadata assembly reauthenticates source A into reusable w
  assert.equal(data.documents.length,240);assert.equal(data.binding.sourceCommit,w.plan.sourceCommit);assert.equal(data.binding.sourceClaimState,'consumed');assert.equal(data.binding.actualSourceGETs,477)
  assert.equal(paths.some(p=>/fcf\.cat|POST|PATCH/.test(p)),false)
 })
+
+test('cleanup retry retains original saved result after a committed response or retention loss',{skip:!retained},async t=>{
+ const {cleanupRecoveryFixture,cleanupRecoveryDatabase}=await import('./fcf-target-cleanup-recovery-test-fixture.mjs'),f=await cleanupRecoveryFixture(t)
+ for(const lostResponse of[true,false])await t.test(lostResponse?'lost committed response':'lost retained artifact',async()=>{
+  const database=cleanupRecoveryDatabase(f,{lostResponse}),root=f.newRoot(),first={mode:'cleanup-apply',env:f.envFor('999'),root,github:f.github,clock:()=>f.now,database}
+  if(lostResponse)await assert.rejects(runFcfTargetActions(first),/lost committed cleanup response/)
+  else assert.equal((await runFcfTargetActions(first)).code,0)
+  assert.equal(database.cleanupCommits,1)
+  const retryRoot=f.newRoot(),retry={...first,env:f.envFor('1000'),root:retryRoot}
+  assert.equal((await runFcfTargetActions(retry)).code,0)
+  const m=JSON.parse(readFileSync(join(retryRoot,'fcf-cleanup-applied/manifest.json')))
+  assert.deepEqual(m.result,f.cleanup.applyManifest.result);assert.deepEqual(m.markers,f.cleanup.applyManifest.markers)
+  assert.equal(m.prepareArtifactId,f.cleanup.input.expected.prepare.artifactId);assert.equal(m.prepareArtifactDigest,f.cleanup.input.expected.prepare.artifactDigest);assert.equal(m.beforeSha256,f.cleanup.prepare.beforeSha256)
+  assert.equal(database.applyCalls,2);assert.equal(database.cleanupCommits,1);assert.deepEqual(database.params[0],database.params[1])
+  assert.ok(database.snapshots.slice(-3).every(d=>d.groups.every(g=>g.source_policy==='es-fcf-reviewed-history-v1')))
+  const calls=database.applyCalls;await assert.rejects(runFcfTargetActions({...retry,root:f.newRoot(),env:{...retry.env,FCF_TARGET_APPROVAL_SHA256:'0'.repeat(64)}}),/exact root approval bytes/);assert.equal(database.applyCalls,calls)
+ })
+})

@@ -9,7 +9,7 @@ import {readFcfCapturedTargetEvidence,getFcfCapturedTargetData,readFcfCleanupEvi
 import {readFcfCleanupOriginalStage,readFcfTargetApprovalArtifact,readFcfTargetStageArtifact,fcfTargetStageContract,describeFcfCleanupOriginals} from './fcf-target-stage-evidence.mjs'
 import {deriveFcfTargetNativeMapping} from './fcf-target-native-adapter.mjs'
 import {verifyFcfNativeMappingProposal} from './fcf-target-native-plan.mjs'
-import {compileFcfTargetReleasePacket} from './fcf-target-release.mjs'
+import {compileFcfTargetReleasePacket,validateFcfTargetReleaseInventory} from './fcf-target-release.mjs'
 import {buildFcfTargetRollout,replayFcfTargetRollout,advanceFcfTargetRollout} from './fcf-target-rollout.mjs'
 import {createFcfTargetDatabase} from './fcf-target-db.mjs'
 import {buildFcfTargetReadiness} from './fcf-target-readiness.mjs'
@@ -96,7 +96,14 @@ export async function runFcfTargetActions({mode,env=process.env,root=process.cwd
  if(!a.cleanup?.prepare)fail('actual all-four cleanup prepare artifact required');const prep=await record(github,a.cleanup.prepare),applied=a.cleanup.applied?await record(github,a.cleanup.applied):null,cleanupEvidence=readFcfCleanupEvidence({prepareZipBytes:prep.zipBytes,prepareMetadata:prep.metadata,...(applied?{appliedZipBytes:applied.zipBytes,appliedMetadata:applied.metadata}:{}),expected:{prepare:a.cleanup.prepare,...(applied?{applied:a.cleanup.applied}:{})},originals:originalsProof.originals,now:clock()});base.cleanupEvidence=cleanupEvidence;inputs.cleanupBeforeSha256=cleanupEvidence.beforeSha256
  if(mode==='cleanup-apply'){
   if(cleanupEvidence.phase!=='prepared'||cleanupEvidence.sourceCommit!==a.sourceCommit||a.cleanup.applied!==null||a.previous!==null)fail('one atomic all-four cleanup apply only')
-  compileFcfTargetReleasePacket({targetSlug:slug,sourceCommit:a.sourceCommit,targetEvidence:inventoryAdmission,cleanupEvidence,databaseInventory,now:clock()})
+  if(databaseInventory.groups.every(g=>g.source_policy===null))compileFcfTargetReleasePacket({targetSlug:slug,sourceCommit:a.sourceCommit,targetEvidence:inventoryAdmission,cleanupEvidence,databaseInventory,now:clock()})
+  else{
+   // A committed cleanup may have lost its response or retained artifact. Keep
+   // the authentic original preparation unchanged and validate actual applied
+   // scope; the locked SQL wrapper returns its exact saved result for these
+   // same TEXT/SHA/policy/commit pins without running cleanup again.
+   validateFcfTargetReleaseInventory({targetSlug:slug,databaseInventory,cleanupPhase:'applied',now:clock()})
+  }
   const result=await db.mutate('apply',{p_main_sha:cleanupEvidence.sourceCommit,p_policy_hashes:cleanupEvidence.policyHashes,p_before_sha:cleanupEvidence.beforeSha256,p_before_image_text:cleanupEvidence.beforeImageText}),after=await db.inventory(slug,[]),markers=after.installedMarkers?.flatMap(x=>x.markers)
   if(result.removedAppearances!==126||result.removedGoals!==14||result.unavailableMatches!==4||markers?.length!==4)fail('committed cleanup requires exact readback; recover before retry')
   const d=directory(root,'fcf-cleanup-applied'),manifestSha=json(join(d,'manifest.json'),{schemaVersion:1,kind:'fcf-exact-four-cleanup-applied',sourceCommit:cleanupEvidence.sourceCommit,execution,prepareArtifactId:cleanupEvidence.prepareArtifact.id,prepareArtifactDigest:cleanupEvidence.prepareArtifact.digest,beforeSha256:cleanupEvidence.beforeSha256,policyHashes:cleanupEvidence.policyHashes,result,markers});output(env,{evidence_ready:'true',manifest_sha:manifestSha});return{code:0}
