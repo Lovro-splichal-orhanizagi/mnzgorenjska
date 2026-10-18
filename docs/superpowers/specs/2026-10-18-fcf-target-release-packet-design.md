@@ -93,4 +93,4 @@ Root's possible G1+G9 phase has at most19+22=41 GETs, with fewer when valid new 
 
 ## Work bounded by this review
 
-Implement only the new target packet and authenticated offline cache/audit/cleanup readers/composition, their fixtures/tests and source-test registration. Keep workflow cache-export only; do not add source/writer modes, migration180400, repricing, activation, public UI changes or other-country changes. Root owns fresh builder review before code and independent code review before any future execution. Do not touch HNS180300 or the dirty user checkout.
+Implement only the new target packet and authenticated offline cache/audit/cleanup readers/composition, their fixtures/tests and source-test registration. Keep workflow cache-export only; do not add source/writer modes, migration190300, repricing, activation, public UI changes or other-country changes. Root owns fresh builder review before code and independent code review before any future execution. Do not touch HNS180300 or the dirty user checkout.
