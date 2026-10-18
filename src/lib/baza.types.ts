@@ -8017,6 +8017,15 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      apply_fcf_current_target_cleanup: {
+        Args: {
+          p_before_image_text: string
+          p_before_sha: string
+          p_main_sha: string
+          p_policy_hashes: Json
+        }
+        Returns: Json
+      }
       apply_fcf_historical_cleanup: {
         Args: {
           p_before_image_text: string
@@ -8037,11 +8046,23 @@ export type Database = {
       }
       asistenca_odprta: { Args: { p_goal_id: number }; Returns: boolean }
       asistence_odprte_do: { Args: { p_match_id: number }; Returns: string }
+      check_fcf_current_target: {
+        Args: { p_activate?: boolean; p_rollout_text: string; p_sha256: string }
+        Returns: Json
+      }
       check_hns_women_release: {
         Args: { p_activate?: boolean; p_manifest: string; p_sha256: string }
         Returns: Json
       }
       dan_kroga: { Args: { p_round_id: number }; Returns: string }
+      get_fcf_current_target_inventory: {
+        Args: { p_privacy_keys: string[]; p_slug: string }
+        Returns: Json
+      }
+      get_fcf_target_pricing_snapshot: {
+        Args: { p_slug: string }
+        Returns: Json
+      }
       get_hns_women_import_context: {
         Args: { p_competition_id: number }
         Returns: Json
@@ -8054,6 +8075,10 @@ export type Database = {
       ime_hisnega_lastnika: {
         Args: { p_competition_id: number; p_id: number }
         Returns: string
+      }
+      import_fcf_current_target: {
+        Args: { p_rollout_text: string; p_sha256: string }
+        Returns: Json
       }
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
       isci_igralce: {
@@ -8817,6 +8842,10 @@ export type Database = {
         Returns: Json
       }
       razlog_neveljavne_ekipe: { Args: { p_team_id: number }; Returns: string }
+      read_fcf_current_target_receipt: {
+        Args: { p_slug: string }
+        Returns: Json
+      }
       recompute_round_scores: {
         Args: { p_round_id: number }
         Returns: undefined
