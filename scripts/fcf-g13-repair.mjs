@@ -16,7 +16,7 @@ const read = name => readFileSync(new URL(name,import.meta.url),'utf8')
 const literal = value => `'${value.replaceAll("'","''")}'`
 export function sessionSQL() {
   return `set local lock_timeout='10s';
-set local statement_timeout='90s';
+set local statement_timeout='180s';
 set local idle_in_transaction_session_timeout='120s';
 set local search_path=public,pg_temp;
 create temporary table g13_input(plan jsonb,fks jsonb) on commit drop;
@@ -43,14 +43,18 @@ function main() {
   mkdirSync(dir)
   const env=connectionEnvironment(process.env.SUPABASE_DB_URL)
   try {
-    const out=execFileSync('psql',['-X','-qAt','-v','ON_ERROR_STOP=1'],{env,input:transactionSQL(input),encoding:'utf8',timeout:180000,maxBuffer:8*1024*1024,stdio:['pipe','pipe','pipe']})
+    const out=execFileSync('psql',['-X','-qAt','-v','ON_ERROR_STOP=1'],{env,input:transactionSQL(input),encoding:'utf8',timeout:300000,maxBuffer:8*1024*1024,stdio:['pipe','pipe','pipe']})
     const evidence=JSON.parse(out.trim())
     if (!/^[a-f0-9]{64}$/.test(evidence.sha256) || evidence.mode!==(input.apply?'apply':'preview')) throw Error('Invalid database evidence')
     writeFileSync(path,JSON.stringify(evidence,null,2)+'\n',{flag:'wx'})
     console.log(`${evidence.mode}: ${evidence.sha256}; evidence: ${path}`)
   } catch (error) {
     // Never dump psql diagnostics, connection arguments or row DETAIL values.
-    const reason=String(error.stderr??'').match(/ERROR:\s+G13: ([A-Za-z0-9 ._\/-]+)/)?.[1]??'database execution failed; inspect state before retry'
+    const stderr=String(error.stderr??'')
+    const reason=error.code==='ETIMEDOUT' ? 'database process timeout; inspect state before retry'
+      : /(?:^|\n)(?:psql:[^\r\n]*: )?ERROR:[ \t]+canceling statement due to statement timeout\r?(?:\n|$)/.test(stderr)
+        ? 'database statement timeout; inspect state before retry'
+        : stderr.match(/ERROR:\s+G13: ([A-Za-z0-9 ._\/-]+)/)?.[1]??'database execution failed; inspect state before retry'
     writeFileSync(path,JSON.stringify({version:1,status:'failed-or-unknown',reason})+'\n',{flag:'wx'})
     throw Error(reason)
   }

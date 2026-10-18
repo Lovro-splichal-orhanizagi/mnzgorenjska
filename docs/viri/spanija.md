@@ -558,7 +558,10 @@ opozoril, kontumacije, oznake brez izida ali odvisnih vrstic. Sam rezultat
 Zavrne tudi klubske profile, račune, naročnine in znane Scout reference brez
 FK. Zaklepi vrstic varujejo nove/obstoječe FK zapise, kratki SUE zaklepi
 ščitijo katalog; za Scout reference brez FK uporabi SHARE na tabelah.
-`lock_timeout=10s`, `statement_timeout=90s`; napaka povrne celoten apply.
+`lock_timeout=10s`, `statement_timeout=180s`, seja brez dela 120s, proces
+psql največ 300s. Artefakt napake ostane `failed-or-unknown`; prepoznani
+časovni omejitvi stavka/procesa imata fiksni razlog brez surove diagnostike.
+Pred ponovitvijo preveri dejansko stanje in pridobi nov pregledan predogled/SHA.
 
 Spreminjajo se le klubski FK: 15 igralcev, 1 preživela tekma, 15 nastopov,
 2 gola; izbriše se 32 dokazano praznih tekem in klub 10388. Ostanejo
