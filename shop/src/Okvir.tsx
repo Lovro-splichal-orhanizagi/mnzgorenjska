@@ -88,7 +88,7 @@ export function Okvir({ children }: { children: ReactNode }) {
           <div className="flex flex-wrap justify-center gap-x-4 gap-y-2">
             <Link to="/terms" className="hover:text-slate-200">{t('noga.pogoji')}</Link>
             <Link to="/withdrawal" className="hover:text-slate-200">{t('noga.odstop')}</Link>
-            <a href="https://slff.eu/legal" className="hover:text-slate-200">{t('noga.zasebnost')}</a>
+            <a href="https://slff.eu/legal#trgovina" className="hover:text-slate-200">{t('noga.zasebnost')}</a>
             <a href="https://slff.eu" className="hover:text-slate-200">{t('noga.slff')}</a>
           </div>
           <p className="text-slate-500">

@@ -27,7 +27,7 @@ export function Pogoji() {
               </div>
             </>
           )}
-          {s === 's9' && <a href="https://slff.eu/legal" className="povezava inline-block">{t('pogoji.zasebnost')} →</a>}
+          {s === 's9' && <a href="https://slff.eu/legal#trgovina" className="povezava inline-block">{t('pogoji.zasebnost')} →</a>}
         </section>
       ))}
     </article>

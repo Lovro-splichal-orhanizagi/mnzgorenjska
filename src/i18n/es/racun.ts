@@ -238,6 +238,13 @@ export const racun: NonNullable<Prevod['racun']> = {
       'Un jugador con perfil reclamado puede añadir que está abierto a un traspaso, su año de nacimiento, las regiones que prefiere y el permiso para ser contactado. Es un consentimiento (artículo 6, apartado 1, letra a, del RGPD): solo lo ven los clubes de Scout, se puede retirar en cualquier momento en el perfil y, al retirarlo, borramos los datos. Un club escribe al jugador solo a través de Scout y no ve su correo electrónico.',
     scoutUgovor:
       'Oposición: en un perfil reclamado pulsa Ocúltame de Scout o escribe a <eposta>info@slff.eu</eposta> con un enlace a la página del jugador. En un plazo de 14 días ocultamos al jugador en Scout en todas nuestras ligas de ese país, también en importaciones posteriores. En el juego fantasy sigue.',
+    trgovinaNaslov: 'Tienda SLFF (shop.slff.eu)',
+    trgovinaKaj:
+      'Al comprar tratamos tu nombre, correo electrónico, dirección de entrega, los productos comprados y los importes, y, si has iniciado sesión, tu cuenta de SLFF. El pago lo gestiona Stripe: no vemos ni guardamos los datos de la tarjeta. El nombre y la dirección los recibe Pošta Slovenije para la entrega. Para limitar abusos, en una compra no finalizada guardamos temporalmente un hash (irreversible) de la dirección IP; se borra al pagar o al caducar la compra.',
+    trgovinaPodlaga:
+      'La base jurídica es la ejecución de un contrato (artículo 6.1.b RGPD) y las obligaciones legales (contabilidad, impuestos), y para el hash de la dirección IP el interés legítimo en prevenir abusos (artículo 6.1.f RGPD). El responsable es SPACE GUARDIAN, računalniško programiranje, d.o.o.',
+    trgovinaHramba:
+      'Conservamos los datos de pedidos y facturas el tiempo que exigen la ley del IVA y la normativa contable (10 años desde el año de emisión de la factura). El correo para avisos del pedido solo se usa para ese pedido. Para acceso, rectificación u oposición escribe a <eposta>info@slff.eu</eposta>.',
   },
   klubskiRacun: {
     naslov: 'Cuenta oficial del club',

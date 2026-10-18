@@ -243,6 +243,13 @@ export const racun: NonNullable<Prevod['racun']> = {
       'Az átvett profillal rendelkező játékos megadhatja, hogy nyitott az átigazolásra, a születési évét, a kívánt régiókat és a kapcsolatfelvétel engedélyét. Ez hozzájárulás (a GDPR 6. cikk (1) bekezdés a) pontja): csak a Scoutban lévő klubok látják, bármikor visszavonható a profilon, és visszavonáskor töröljük az adatokat. A klub csak a Scouton keresztül ír a játékosnak, és nem látja az e-mail-címét.',
     scoutUgovor:
       'Tiltakozás: az átvett profilon kattints a Rejts el a Scoutból gombra, vagy írj az <eposta>info@slff.eu</eposta> címre a játékos oldalának linkjével. 14 napon belül elrejtjük a játékost a Scoutból az adott ország összes bajnokságunkban, a későbbi importoknál is. A fantasy játékban marad.',
+    trgovinaNaslov: 'SLFF Bolt (shop.slff.eu)',
+    trgovinaKaj:
+      'Vásárláskor kezeljük a nevet, az e-mail-címet, a szállítási címet, a megvásárolt termékeket és az összegeket, bejelentkezéskor az SLFF-fiókodat is. A fizetést a Stripe végzi: a kártyaadatokat nem látjuk és nem tároljuk. A nevet és a címet a kézbesítéshez a Pošta Slovenije kapja meg. A visszaélések korlátozására befejezetlen vásárlásnál ideiglenesen tároljuk az IP-cím hash-ét (visszafordíthatatlan); fizetéskor vagy a vásárlás lejártakor törlődik.',
+    trgovinaPodlaga:
+      'A jogalap a szerződés teljesítése (GDPR 6. cikk (1) b)) és jogi kötelezettség (számvitel, adók), az IP-cím hash-énél a visszaélések megelőzéséhez fűződő jogos érdek (GDPR 6. cikk (1) f)). Az adatkezelő: SPACE GUARDIAN, računalniško programiranje, d.o.o.',
+    trgovinaHramba:
+      'A rendelési és számlaadatokat addig őrizzük, ameddig az áfatörvény és a számviteli előírások megkövetelik (a számla kiállításának évét követő 10 évig). A rendelési értesítők e-mail-címét csak az adott rendeléshez használjuk. Hozzáférést, helyesbítést vagy tiltakozást itt kérhetsz: <eposta>info@slff.eu</eposta>.',
   },
   klubskiRacun: {
     naslov: 'Hivatalos klubfiók',
