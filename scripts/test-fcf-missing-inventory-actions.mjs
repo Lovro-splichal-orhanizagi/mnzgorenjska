@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import {mkdtempSync,realpathSync,rmSync,readFileSync} from 'node:fs'
 import {tmpdir} from 'node:os'
 import {join} from 'node:path'
+import {runInNewContext} from 'node:vm'
 import {seedFixture,commit,now,manualPlan,sha,metadata,zip,repository,workflow} from './fcf-missing-inventory-test-fixture.mjs'
 import {buildFcfMissingInventoryPlan} from './fcf-missing-inventory-plan.mjs'
 const api=await import('./fcf-missing-inventory-actions.mjs').catch(()=>({})),planApi=await import('./fcf-missing-inventory-plan.mjs')
@@ -85,4 +86,39 @@ test('actual command chain consumes an authenticated claim then retains a single
  const manifestBytes=readFileSync(join(root,'fcf-inventory-consumption/manifest.json'));consumptionBytes=zip([{name:'manifest.json',body:manifestBytes}]);phase='capture';consumeJob.status='completed';consumeJob.conclusion='success';Object.assign(env,{GITHUB_JOB:'missing-inventory-g1',FCF_INVENTORY_TARGET:'es-ct-segona-g1',FCF_CONSUMPTION_ID:'790',FCF_CONSUMPTION_DIGEST:'sha256:'+sha(consumptionBytes),FCF_CONSUMPTION_MANIFEST_SHA:sha(manifestBytes)})
  cancelAfterWait=true;await assert.rejects(()=>call('runFcfMissingInventoryActions',{...base,argv:['capture']}),/FCF_INVENTORY/);assert.equal(sourceCalls,0);cancelAfterWait=false;coordinationObserved=false
  const result=await call('runFcfMissingInventoryActions',{...base,argv:['capture']});assert.equal(result.code,1);assert.equal(sourceCalls,1);const m=JSON.parse(readFileSync(join(root,'fcf-missing-es-ct-segona-g1/manifest.json')));assert.equal(m.actualSourceGETs,1);assert.equal(m.status,'failed');assert.equal(readFileSync(join(root,m.documents[1].artifactFile===null?'missing':'fcf-missing-es-ct-segona-g1/'+m.documents[1].artifactFile),'utf8'),'retained refusal')
+})
+
+// Execute the actual private transport with an in-memory child-process boundary.
+// This covers emitted CLI arguments without a subprocess, token, or HTTP request.
+const transport=(execute)=>{
+ const source=readFileSync(new URL('./fcf-missing-inventory-actions.mjs',import.meta.url),'utf8')
+ const start=source.indexOf('async function gh('),end=source.indexOf('\nexport async function readFcfDraftAsset',start)
+ assert.ok(start>=0&&end>start)
+ return runInNewContext(`${source.slice(start,end)};gh`,{repo:`repos/${repository}/`,execFileSync:execute,fail(message){throw Error('FCF_INVENTORY: '+message)}})
+}
+test('GitHub GET boundary requests Actions ZIP with GitHub JSON Accept and preserves binary bytes and bounds',async()=>{
+ const zipBytes=Buffer.from([0x50,0x4b,3,4,0xff,0,0x80]),path=`repos/${repository}/actions/artifacts/12150332401/zip`
+ let request
+ const github=transport((command,args,options)=>{request={command,args:Array.from(args),options};return zipBytes})
+ assert.equal(await github(path,true),zipBytes)
+ assert.equal(request.command,'gh');assert.deepEqual(request.args,['api','--method','GET',path,'-H','Accept: application/vnd.github+json'])
+ assert.equal(request.options.maxBuffer,100*1024*1024+1);assert.equal(request.options.timeout,60000);assert.deepEqual(Array.from(request.options.stdio),['ignore','pipe','pipe'])
+})
+test('GitHub GET boundary preserves release-asset octet-stream and JSON metadata behavior',async()=>{
+ const bytes=Buffer.from([0xff,0,0x80]),paths=[`repos/${repository}/releases/assets/22`,`repos/${repository}/actions/artifacts/12150332401`],calls=[]
+ const github=transport((command,args,options)=>{calls.push(Array.from(args));if(args[3]===paths[0]){assert.equal(options.maxBuffer,100*1024*1024+1);return bytes}assert.equal(options.maxBuffer,8*1024*1024+1);return Buffer.from('{"id":12150332401}')})
+ assert.equal(await github(paths[0],true),bytes);assert.equal((await github(paths[1])).id,12150332401)
+ assert.deepEqual(calls,[['api','--method','GET',paths[0],'-H','Accept: application/octet-stream'],['api','--method','GET',paths[1]]])
+})
+test('GitHub GET boundary rejects foreign and malformed API paths before execution',async()=>{
+ let calls=0;const github=transport(()=>{calls++;throw Error('must not execute')})
+ for(const path of ['https://api.github.com/repos/'+repository+'/actions/artifacts/1/zip','repos/foreign/repo/actions/artifacts/1/zip',`repos/${repository}/../actions/artifacts/1/zip`,`repos/${repository}/actions/artifacts/1/zip#fragment`,`repos/${repository}/actions/artifacts/1/zip\n`])await assert.rejects(()=>github(path,true),/fixed repository/)
+ assert.equal(calls,0)
+})
+test('GitHub GET boundary keeps sanitized failures and exact 404 classification',async()=>{
+ const path=`repos/${repository}/actions/artifacts/1/zip`
+ for(const status of [404,415]){
+  const github=transport(()=>{const e=Error('private details');e.stderr=Buffer.from('HTTP '+status);throw e})
+  await assert.rejects(()=>github(path,true),e=>e.message==='FCF_INVENTORY: authenticated GitHub GET failed'&&e.status===(status===404?404:undefined))
+ }
 })
