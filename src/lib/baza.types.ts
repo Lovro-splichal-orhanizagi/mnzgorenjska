@@ -8512,12 +8512,12 @@ export type Database = {
       potrdi_soigralca: { Args: { p_id: number }; Returns: string }
       povzetek_rasti: { Args: Record<PropertyKey, never>; Returns: string }
       preklici_moj_zahtevek: { Args: { p_id: number }; Returns: undefined }
-      prepovedane_besede: { Args: { p_besedilo: string }; Returns: string }
-      prepovedano_besedilo: { Args: { p_besedilo: string }; Returns: string }
       prepare_dfb_historical_statistics: {
         Args: { p_manifest: string; p_sha256: string }
         Returns: Json
       }
+      prepovedane_besede: { Args: { p_besedilo: string }; Returns: string }
+      prepovedano_besedilo: { Args: { p_besedilo: string }; Returns: string }
       preracunaj_cene: {
         Args: { p_round_id: number }
         Returns: {
