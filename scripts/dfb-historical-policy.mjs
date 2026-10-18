@@ -1,14 +1,19 @@
 // Provider-only adapter. Shared policy owns approval and availability semantics.
 import {createHash} from 'node:crypto'
+import {readFileSync} from 'node:fs'
 import {getHistoricalStatisticsPolicy,historicalStatisticsPolicySha256,classifyHistoricalStatistics} from './lib/historical-statistics-policy.mjs'
+import {verifyDfbCalendar} from './viri/dfb-calendar.mjs'
 import {vZapisnik} from './viri/dfb.mjs'
 export const DFB_HISTORICAL_POLICY='de-dfb-suedwest-2025-historical-unavailable-v1'
-const slug='de-regionalliga-suedwest',ids=['2402929','2403004'],sha=x=>createHash('sha256').update(x).digest('hex')
-const clubNames={'tsg-balingen':'TSG Balingen','kickers-offenbach':'Kickers Offenbach','tsv-steinbach-haiger':'TSV Steinbach Haiger'}
+const sha=x=>createHash('sha256').update(x).digest('hex')
+const scopes=JSON.parse(readFileSync(new URL('./viri/dfb-historical-receipts.json',import.meta.url))).scopes
+scopes['de-regionalliga-suedwest']={policyId:DFB_HISTORICAL_POLICY,ids:['2402929','2403004'],clubNames:{'tsg-balingen':'TSG Balingen','kickers-offenbach':'Kickers Offenbach','tsv-steinbach-haiger':'TSV Steinbach Haiger'},documents:{'2402929':{time:'14:00',strictDiagnostic:'dfb: nepopolna začetna postava ali vratar'},'2403004':{time:'14:00',strictDiagnostic:'dfb: podvojen rumeni karton brez izključitve'}}}
+const freeze=x=>{if(x&&typeof x==='object'){Object.values(x).forEach(freeze);Object.freeze(x)}return x};freeze(scopes)
+export function dfbHistoricalScope(slug){if(!Object.hasOwn(scopes,slug))throw Error('DFB historical policy: unreviewed scope');return scopes[slug]}
 const fail=message=>{throw Error(`DFB historical policy: ${message}`)}
 export function dfbHistoricalPolicy(competition){
- const policy=getHistoricalStatisticsPolicy(competition?.slug)
- if(competition?.slug!==slug||competition.source!=='dfb'||competition.source_policy!==DFB_HISTORICAL_POLICY||policy?.id!==DFB_HISTORICAL_POLICY||policy.sourcePolicy!==DFB_HISTORICAL_POLICY||policy.season!=='2025/26'||JSON.stringify(policy.entries.map(e=>e.sourceMatchId).sort())!==JSON.stringify(ids))fail('unreviewed scope/policy set')
+ const policy=getHistoricalStatisticsPolicy(competition?.slug),{policyId,ids}=dfbHistoricalScope(competition?.slug)
+ if(competition.source!=='dfb'||competition.source_policy!==policyId||policy?.id!==policyId||policy.sourcePolicy!==policyId||policy.season!=='2025/26'||JSON.stringify(policy.entries.map(e=>e.sourceMatchId).sort())!==JSON.stringify(ids))fail('unreviewed scope/policy set')
  const first=competition.firstFantasyPlayedOn
  if(!/^20\d{2}-\d{2}-\d{2}$/.test(first??'')||!Number.isFinite(Date.parse(first+'T00:00:00Z'))||new Date(first+'T00:00:00Z').toISOString().slice(0,10)!==first)fail('valid planned first fantasy fixture date required')
  return policy
@@ -17,30 +22,30 @@ export function dfbPolicyBinding(competition){
  const policy=dfbHistoricalPolicy(competition)
  return {id:policy.id,sha256:historicalStatisticsPolicySha256(policy),firstFantasyPlayedOn:competition.firstFantasyPlayedOn}
 }
-export function dfbFixtureEnvelope(t,round,season){
- return {sourceMatchId:String(t.dfbId??t.id).replace(/^de-dfb-/,''),sourceCompetitionId:`regionalliga-suedwest/${season.slice(0,4)}-20${season.slice(-2)}`,sourcePhase:null,sourceRound:round,playedOn:t.datum,homeSourceClubId:t.domaciId,awaySourceClubId:t.gostjeId,sourceUrl:t.url,observedHomeScore:t.izid?.domaci,observedAwayScore:t.izid?.gostje,season}
+export function dfbFixtureEnvelope(t,round,season,slug='de-regionalliga-suedwest'){
+ return {sourceMatchId:String(t.dfbId??t.id).replace(/^de-dfb-/,''),sourceCompetitionId:`${slug.slice(3)}/${season.slice(0,4)}-20${season.slice(-2)}`,sourcePhase:null,sourceRound:round,playedOn:t.datum,homeSourceClubId:t.domaciId,awaySourceClubId:t.gostjeId,sourceUrl:t.url,observedHomeScore:t.izid?.domaci,observedAwayScore:t.izid?.gostje,season}
 }
 export function collectDfbHistorical({slug:target,sezona,razpored,zapisniki,nepopolni,historicalPolicy}){
  if(!historicalPolicy)return new Map()
- const {competition,documents}=historicalPolicy,policy=dfbHistoricalPolicy(competition)
+ const {competition,documents}=historicalPolicy,policy=dfbHistoricalPolicy(competition),{ids,clubNames,documents:defects}=dfbHistoricalScope(competition.slug)
  if(target!==competition.slug||!['2025/26','2026/27'].includes(sezona)||!(documents instanceof Map))fail('closed source map/scope required')
  const expected=sezona==='2025/26'?ids:[],out=new Map(),reports=new Set(zapisniki.map(r=>r.id))
  for(const r of razpored)for(const t of r.tekme){
   const sourceId=String(t.dfbId??t.id),entry=policy.entries.find(e=>e.sourceMatchId===sourceId)
   if(!entry)continue
   if(sezona!==policy.season||!t.odigrana||reports.has('de-dfb-'+sourceId)||out.has('de-dfb-'+sourceId))fail('unreviewed season/duplicate/statistical report at exception')
-  if(t.ura!=='14:00')fail('fixture kickoff differs')
+  if(t.ura!==defects[sourceId].time)fail('fixture kickoff differs')
   if(t.domaci!==clubNames[entry.homeSourceClubId]||t.gostje!==clubNames[entry.awaySourceClubId])fail('fixture club names differ')
   const raw=documents.get(t.url)
   if(typeof raw!=='string')fail('missing captured exception bytes')
-  const classification=classifyHistoricalStatistics({competition,fixture:dfbFixtureEnvelope(t,r.stevilka,sezona),rawSha256:sha(raw),policy})
+  const classification=classifyHistoricalStatistics({competition,fixture:dfbFixtureEnvelope(t,r.stevilka,sezona,competition.slug),rawSha256:sha(raw),policy})
   if(classification.kind!=='unavailable_historical')fail('expected exact historical classification')
   // Preserve the authentic strict failure as a separate fact, never accept a
   // newly parseable or differently broken source as the reviewed defect.
   let error
-  try{vZapisnik(raw,{id:sourceId,tekma:t,liga:'regionalliga-suedwest'})}catch(e){error=e}
+  try{vZapisnik(raw,{id:sourceId,tekma:t,liga:competition.slug.slice(3)})}catch(e){error=e}
   const diagnostic=nepopolni.filter(n=>n.id==='de-dfb-'+sourceId)
-  const reason=sourceId==='2402929'?'dfb: nepopolna začetna postava ali vratar':'dfb: podvojen rumeni karton brez izključitve'
+  const reason=defects[sourceId].strictDiagnostic
   if(error?.koda!=='DFB_INVALID_REPORT'||error.message!==reason||diagnostic.length!==1||diagnostic[0].url!==t.url||diagnostic[0].status!==error.koda||diagnostic[0].razlog!==reason)fail('strict defect/diagnostic changed')
   out.set('de-dfb-'+sourceId,classification)
  }
@@ -48,10 +53,11 @@ export function collectDfbHistorical({slug:target,sezona,razpored,zapisniki,nepo
  return out
 }
 export function unavailableDfbFixture(t,round,classification){
- const e=classification.exception
+ const e=classification.exception,policy=Object.keys(scopes).map(slug=>getHistoricalStatisticsPolicy(slug)).find(p=>p.entries.some(entry=>entry.sourceMatchId===e.sourceMatchId))
+ if(!policy)fail('unknown unavailable policy')
  return {id:'de-dfb-'+e.sourceMatchId,round,date:t.datum,time:t.ura??null,home:t.domaci,away:t.gostje,played:true,
  homeGoals:e.observedHomeScore,awayGoals:e.observedAwayScore,url:e.sourceUrl,starters:null,warnings:[],appearances:null,goals:null,
- statisticsStatus:'unavailable_historical',statisticsReason:e.reasonCode,statisticsPolicyId:DFB_HISTORICAL_POLICY,statisticsPolicySha256:classification.policySha256,sourceRawSha256:e.rawSha256,
+ statisticsStatus:'unavailable_historical',statisticsReason:e.reasonCode,statisticsPolicyId:policy.id,statisticsPolicySha256:classification.policySha256,sourceRawSha256:e.rawSha256,
  sourceFixture:{sourceMatchId:e.sourceMatchId,sourceCompetitionId:e.sourceCompetitionId,sourcePhase:e.sourcePhase,sourceRound:e.sourceRound,playedOn:e.playedOn,homeSourceClubId:e.homeSourceClubId,awaySourceClubId:e.awaySourceClubId,sourceUrl:e.sourceUrl,observedHomeScore:e.observedHomeScore,observedAwayScore:e.observedAwayScore,season:'2025/26'}}
 }
 export function dfbStatisticsCoverage(fixtures){
@@ -76,13 +82,14 @@ function verifyAvailableFixture(f){
  }
  if(scores[0]!==f.homeGoals||scores[1]!==f.awayGoals)fail('normal played goal sides differ from score')
 }
-function verifySeasonShape(s){
- const ids=new Set(),pairs=new Set(),clubs=new Set(),keepers=new Set()
+function verifySeasonShape(s,slug){
+ const clubs=new Set(),keepers=new Set()
+ if(s.code!==`${slug.slice(3)}/${s.season.slice(0,4)}-20${s.season.slice(-2)}`)fail('manifest historical policy season scope differs')
+ verifyDfbCalendar({code:s.code,teams:18,rounds:34,fixtures:s.fixtures})
  if(s.fixtures.length!==306)fail('manifest season fixture count differs')
  for(const f of s.fixtures){
-  const pair=JSON.stringify([f.home,f.away])
-  if(!/^de-dfb-[1-9]\d{0,9}$/.test(f.id)||ids.has(f.id)||pairs.has(pair)||typeof f.home!=='string'||!f.home||typeof f.away!=='string'||!f.away||f.home===f.away||!Number.isSafeInteger(f.round)||f.round<1||f.round>34||typeof f.played!=='boolean'||s.season==='2025/26'&&!f.played)fail('manifest duplicate/invalid fixture or incomplete archive')
-  ids.add(f.id);pairs.add(pair);clubs.add(f.home);clubs.add(f.away)
+  if(!/^de-dfb-[1-9]\d{0,9}$/.test(f.id)||typeof f.home!=='string'||!f.home||typeof f.away!=='string'||!f.away||f.home===f.away||!Number.isSafeInteger(f.round)||f.round<1||f.round>34||typeof f.played!=='boolean'||s.season==='2025/26'&&!f.played)fail('manifest duplicate/invalid fixture or incomplete archive')
+  clubs.add(f.home);clubs.add(f.away)
   if(f.statisticsStatus==='available'&&f.played)for(const p of f.starters??[])if(p.keeper&&p.proof==='oznaka-T')keepers.add(p.side===0?f.home:f.away)
  }
  if(clubs.size!==18||[...clubs].some(c=>!keepers.has(c)))fail('manifest club/verified keeper coverage differs')
@@ -92,9 +99,10 @@ function verifySeasonShape(s){
  }
 }
 export function verifyDfbPolicySeason(s,binding){
- const competition={slug,source:'dfb',source_policy:DFB_HISTORICAL_POLICY,firstFantasyPlayedOn:binding?.firstFantasyPlayedOn},policy=dfbHistoricalPolicy(competition)
+ const slug=Object.keys(scopes).find(slug=>scopes[slug].policyId===binding?.id),{policyId,ids,clubNames,documents:defects}=dfbHistoricalScope(slug)
+ const competition={slug,source:'dfb',source_policy:policyId,firstFantasyPlayedOn:binding?.firstFantasyPlayedOn},policy=dfbHistoricalPolicy(competition)
  if(JSON.stringify(binding)!==JSON.stringify(dfbPolicyBinding(competition))||!Array.isArray(s.fixtures)||!['2025/26','2026/27'].includes(s.season))fail('manifest policy binding differs')
- verifySeasonShape(s)
+ verifySeasonShape(s,slug)
  const unavailable=s.fixtures.filter(f=>f.statisticsStatus==='unavailable_historical'),expected=s.season==='2025/26'?ids:[]
  if(JSON.stringify(unavailable.map(f=>f.id.slice(7)).sort())!==JSON.stringify(expected)||JSON.stringify(s.statisticsCoverage)!==JSON.stringify(dfbStatisticsCoverage(s.fixtures)))fail('manifest historical IDs/coverage differ')
  for(const f of s.fixtures){
@@ -103,7 +111,7 @@ export function verifyDfbPolicySeason(s,binding){
   }else if(f.statisticsStatus==='unavailable_historical'){
    if(f.starters!==null||f.appearances!==null||f.goals!==null||f.played!==true)fail('unavailable statistics must be null, never zero rows')
    const classification=classifyHistoricalStatistics({competition,fixture:f.sourceFixture,rawSha256:f.sourceRawSha256,policy}),e=classification.exception
-   if(classification.kind!=='unavailable_historical'||f.id!=='de-dfb-'+e.sourceMatchId||f.round!==e.sourceRound||f.date!==e.playedOn||f.url!==e.sourceUrl||f.home!==clubNames[e.homeSourceClubId]||f.away!==clubNames[e.awaySourceClubId]||f.time!=='14:00'||f.homeGoals!==e.observedHomeScore||f.awayGoals!==e.observedAwayScore||f.statisticsReason!==e.reasonCode||f.statisticsPolicyId!==policy.id||f.statisticsPolicySha256!==classification.policySha256)fail('manifest unavailable metadata differs')
+   if(classification.kind!=='unavailable_historical'||f.id!=='de-dfb-'+e.sourceMatchId||f.round!==e.sourceRound||f.date!==e.playedOn||f.url!==e.sourceUrl||f.home!==clubNames[e.homeSourceClubId]||f.away!==clubNames[e.awaySourceClubId]||f.time!==defects[e.sourceMatchId].time||f.homeGoals!==e.observedHomeScore||f.awayGoals!==e.observedAwayScore||f.statisticsReason!==e.reasonCode||f.statisticsPolicyId!==policy.id||f.statisticsPolicySha256!==classification.policySha256)fail('manifest unavailable metadata differs')
   }else fail('unknown statistics status')
  }
  return true

@@ -2,6 +2,7 @@
 // Profile links are optional and disappear independently of public names. Never
 // switch identity according to link availability: all players use name + club,
 // with same-team name collisions rejected. Numeric profile IDs are metadata.
+import {dfbCalendarEvidence,verifyDfbCalendar} from './dfb-calendar.mjs'
 import { encodeUnattributedYellow } from '../../src/lib/nepripisaniRumeni.mjs'
 import { razpakiraj } from '../klubi.mjs'
 import { nastopi as nastopiPoImenu } from './fss.mjs'
@@ -792,30 +793,29 @@ async function beri(prenesi,url,name,fresh){
 
 /** Discover the registered season and validate every directed home/away pair. */
 export async function tekmeSezone(koda,prenesi){
-  const conf=konfiguracijaDfb(koda),seed=conf.seed,first=tekmeEkipe(await beri(prenesi,naslovEkipe(koda,seed),`team-${koda.replaceAll('/','-')}-${seed}.html`,true),koda,seed)
-  const ids=new Set(first.ekipe.map(e=>e.id)),matches=new Map()
-  const merge=data=>{
+  const conf=konfiguracijaDfb(koda),seed=conf.seed,witnesses=new Map(),matches=new Map()
+  const load=async(club,url)=>{
+    const html=await beri(prenesi,url,`team-${koda.replaceAll('/','-')}-${club}.html`,true)
+    return {data:tekmeEkipe(html,koda,club),witness:{club,url,sha256:sha256(html)}}
+  }
+  const first=await load(seed,naslovEkipe(koda,seed)),ids=new Set(first.data.ekipe.map(e=>e.id))
+  const merge=({data,witness})=>{
     if(data.ekipe.some(e=>!ids.has(e.id)))fail('razpored vsebuje nepričakovano ekipo')
     for(const t of data.tekme){
       const prev=matches.get(t.id)
       if(prev && JSON.stringify(prev)!==JSON.stringify(t))fail(`razporeda se ne ujemata za tekmo ${t.id}`)
-      matches.set(t.id,t)
+      matches.set(t.id,t);witnesses.set(t.id,[...(witnesses.get(t.id)??[]),witness])
     }
   }
   merge(first)
-  for(const e of first.ekipe.filter(e=>e.id!==seed))merge(tekmeEkipe(await beri(prenesi,e.url,`team-${koda.replaceAll('/','-')}-${e.id}.html`,true),koda,e.id))
-  const all=[...matches.values()],pairs=new Set()
-  if(all.length!==conf.teams*(conf.teams-1))fail('nepopolna sezona: nepričakovano število tekem')
-  for(let k=1;k<=conf.rounds;k++){
-    const round=all.filter(t=>t.krog===k)
-    if(round.length!==Math.floor(conf.teams/2)||new Set(round.flatMap(t=>[t.domaciId,t.gostjeId])).size!==2*Math.floor(conf.teams/2))fail(`nepopoln krog ${k}`)
-  }
-  for(const t of all){const p=`${t.domaciId}|${t.gostjeId}`;if(pairs.has(p))fail('podvojen par ekip');pairs.add(p)}
-  for(const home of ids)for(const away of ids)if(home!==away&&!pairs.has(`${home}|${away}`))fail('nepopolni pari ekip')
-  if(conf.teams%2)for(const club of ids)for(const half of [0,1]){
-    const played=all.filter(t=>t.krog>half*conf.rounds/2&&t.krog<=(half+1)*conf.rounds/2&&(t.domaciId===club||t.gostjeId===club))
-    if(played.length!==conf.rounds/2-1)fail('neveljavni prosti krogi ekipe')
-  }
+  for(const e of first.data.ekipe.filter(e=>e.id!==seed))merge(await load(e.id,e.url))
+  const all=[...matches.values()],pairs=new Map()
+  const normalized=t=>({id:t.id,round:t.krog,home:t.domaci,away:t.gostje,homeSourceClubId:t.domaciId,awaySourceClubId:t.gostjeId,...(t.calendarEvidence?{calendarEvidence:t.calendarEvidence}:{})})
+  for(const t of all){const p=JSON.stringify([t.domaciId,t.gostjeId]);pairs.set(p,[...(pairs.get(p)??[]),t])}
+  try {
+  for(const games of pairs.values())if(games.length>1)for(const t of games)t.calendarEvidence=dfbCalendarEvidence(koda,normalized(t),witnesses.get(t.id))
+  verifyDfbCalendar({code:koda,teams:conf.teams,rounds:conf.rounds,fixtures:all.map(normalized)})
+  }catch(e){fail(`neveljaven razpored: ${e.message}`)}
   return all.sort((a,b)=>a.krog-b.krog||a.datum.localeCompare(b.datum)||a.id.localeCompare(b.id))
 }
 export function vRazpored(tekme){

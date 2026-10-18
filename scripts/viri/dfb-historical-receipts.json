@@ -1,0 +1,127 @@
+{
+  "version": 1,
+  "description": "Exact historical fixture kickoff, strict defect, source club names and original capture facts; no individual statistics.",
+  "scopes": {
+    "de-regionalliga-nord": {
+      "policyId": "de-dfb-nord-2025-historical-unavailable-v1",
+      "ids": [
+        "2405268",
+        "2405441"
+      ],
+      "clubNames": {
+        "sv-werder-bremen-ii": "Werder Bremen",
+        "altona-93": "Altona 93",
+        "kickers-emden": "Kickers Emden",
+        "hsc-hannover": "HSC Hannover"
+      },
+      "documents": {
+        "2405268": {
+          "time": "19:30",
+          "strictDiagnostic": "dfb: nepopolna postava ali klop",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/4-spieltag/sv-werder-bremen-ii-altona-93-2405268",
+          "rawSha256": "546a0578a0623346e3295397b98cb999550d8fa715ee07a5ed221b768ec24c19",
+          "capturedAt": "2026-10-17T11:27:37.887Z",
+          "file": "../vzorci/de-dfb-2405268.html"
+        },
+        "2405441": {
+          "time": "16:00",
+          "strictDiagnostic": "dfb: polčas se ne ujema s časovno označenimi goli",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-nord/2025-2026/22-spieltag/kickers-emden-hsc-hannover-2405441",
+          "rawSha256": "34a9f0090f190ebe15d54e40ab60225b92bd0cd4e91ad522bb8b69014dd6dbba",
+          "capturedAt": "2026-10-17T11:52:15.816Z",
+          "file": "../vzorci/de-dfb-2405441.html"
+        }
+      }
+    },
+    "de-regionalliga-west": {
+      "policyId": "de-dfb-west-2025-historical-unavailable-v1",
+      "ids": [
+        "2402287",
+        "2402299",
+        "2402306",
+        "2402312",
+        "2402325",
+        "2402332",
+        "2402346",
+        "2402352"
+      ],
+      "clubNames": {
+        "wuppertaler-sv": "Wuppertaler SV",
+        "vfl-bochum-ii": "VfL Bochum II",
+        "borussia-moenchengladbach-ii": "Borussia Mönchengladbach II",
+        "rot-weiss-oberhausen": "Rot-Weiß Oberhausen",
+        "fc-guetersloh": "FC Gütersloh",
+        "fortuna-duesseldorf-ii": "Fortuna Düsseldorf II",
+        "bonner-sc": "Bonner SC",
+        "fortuna-koeln": "Fortuna Köln",
+        "ssvg-velbert": "SSVg Velbert"
+      },
+      "documents": {
+        "2402287": {
+          "time": "18:00",
+          "strictDiagnostic": "dfb: nepopolna postava ali klop",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/12-spieltag/wuppertaler-sv-vfl-bochum-ii-2402287",
+          "rawSha256": "d5d18cbcb8b76e2a01151050abc6b57124426cf108883336a3a2bde6e80d60ff",
+          "capturedAt": "2026-10-17T12:39:21.720Z",
+          "file": "../vzorci/de-dfb-west-2402287.html"
+        },
+        "2402299": {
+          "time": "14:00",
+          "strictDiagnostic": "dfb: nepopolna postava ali klop",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/13-spieltag/borussia-moenchengladbach-ii-wuppertaler-sv-2402299",
+          "rawSha256": "dabf8ebd5c2026b1849ffa477b96fa5b25f95ecf90ffd2f810f8502f4d6fa87d",
+          "capturedAt": "2026-10-17T12:40:51.797Z",
+          "file": "../vzorci/de-dfb-west-2402299.html"
+        },
+        "2402306": {
+          "time": "19:30",
+          "strictDiagnostic": "dfb: nepopolna postava ali klop",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/14-spieltag/wuppertaler-sv-rot-weiss-oberhausen-2402306",
+          "rawSha256": "b3a3648ce1bc8e7bb7017c13b6a040e42167635b60f567acea3422b640eeb71b",
+          "capturedAt": "2026-10-17T12:41:26.365Z",
+          "file": "../vzorci/de-dfb-west-2402306.html"
+        },
+        "2402312": {
+          "time": "14:00",
+          "strictDiagnostic": "dfb: nepopolna postava ali klop",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/15-spieltag/fc-guetersloh-wuppertaler-sv-2402312",
+          "rawSha256": "930bc43649fb0dd1e92e5e2ed00b4e9138bca3a817455857635aa7069b0ed4df",
+          "capturedAt": "2026-10-17T12:43:35.396Z",
+          "file": "../vzorci/de-dfb-west-2402312.html"
+        },
+        "2402325": {
+          "time": "14:00",
+          "strictDiagnostic": "dfb: nepopolna postava ali klop",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/16-spieltag/wuppertaler-sv-fortuna-duesseldorf-ii-2402325",
+          "rawSha256": "cc878f107741ab43573a0e978375c114d4880db909cddab1e7270ff263e6a79e",
+          "capturedAt": "2026-10-17T12:44:46.639Z",
+          "file": "../vzorci/de-dfb-west-2402325.html"
+        },
+        "2402332": {
+          "time": "14:00",
+          "strictDiagnostic": "dfb: nepopolna postava ali klop",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/17-spieltag/bonner-sc-wuppertaler-sv-2402332",
+          "rawSha256": "4ec2d592f0fcfec7bb0a81116c3de1b818930d826e134c606005ec9a29f7ea45",
+          "capturedAt": "2026-10-17T12:46:18.054Z",
+          "file": "../vzorci/de-dfb-west-2402332.html"
+        },
+        "2402346": {
+          "time": "19:30",
+          "strictDiagnostic": "dfb: nepopolna postava ali klop",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/18-spieltag/fortuna-koeln-wuppertaler-sv-2402346",
+          "rawSha256": "282a2b0eae2f1b51353a55106677728b3daafee4947c06236c0db7c007b54b6f",
+          "capturedAt": "2026-10-17T12:47:02.664Z",
+          "file": "../vzorci/de-dfb-west-2402346.html"
+        },
+        "2402352": {
+          "time": "14:00",
+          "strictDiagnostic": "dfb: nepopolna postava ali klop",
+          "sourceUrl": "https://datencenter.dfb.de/datencenter/regionalliga-west/2025-2026/19-spieltag/wuppertaler-sv-ssvg-velbert-2402352",
+          "rawSha256": "123d7023ff8442359d925630eab0b89f6556306e13af08eccbe9886a94659b9b",
+          "capturedAt": "2026-10-17T12:48:39.935Z",
+          "file": "../vzorci/de-dfb-west-2402352.html"
+        }
+      }
+    }
+  }
+}

@@ -1,4 +1,5 @@
 import {repository} from './dfb-artifacts.mjs'
+import {receiptSha256} from './viri/dfb-calendar.mjs'
 export const captureWorkflow='.github/workflows/preveri-dfb-ligo.yml'
 export const replayWorkflow='.github/workflows/ponovi-dfb-regijo.yml'
 export const policyReplayStep='Ponovi sezono s pregledano zgodovinsko politiko — brez omrežja in baze'
@@ -37,10 +38,10 @@ export function verifyReplayExecution(run,jobs,{runId,commit,historical=false}){
  return {runId,jobId:String(job.id),commit,workflow:replayWorkflow,step:historical?policyReplayStep:replayStep}
 }
 export function verifyLineage(s,m){
- const l=s.lineage,c=l?.capture,r=l?.replay
+ const l=s.lineage,c=l?.capture,r=l?.replay,historical=m.version===3||m.version===4&&m.statisticsPolicy!=null
  const execution=x=>x&&/^[1-9]\d{0,19}$/.test(x.runId)&&/^[1-9]\d{0,19}$/.test(x.jobId)&&/^[a-f0-9]{40}$/.test(x.commit)&&/^[a-f0-9]{64}$/.test(x.workflowSha256)&&/^[a-f0-9]{64}$/.test(x.parserSha256)&&/^[1-9]\d{0,19}$/.test(x.artifactId)&&/^sha256:[a-f0-9]{64}$/.test(x.artifactDigest)
- if(!execution(c)||!execution(r)||c.workflow!==captureWorkflow||r.workflow!==replayWorkflow||c.step!==captureStep(s.season)||r.step!==(m.version===3?policyReplayStep:replayStep)||!['success','failure'].includes(c.conclusion)||c.runId===r.runId||r.runId!==s.runId||r.jobId!==s.jobId||r.commit!==m.sourceCommit||r.parserSha256!==m.parserSha256||!/^[a-f0-9]{64}$/.test(c.indexSha256)||c.documentsSha256!==s.documentsSha256||c.capturedAt!==s.capturedAt||!Number.isFinite(Date.parse(r.generatedAt))||Date.parse(r.generatedAt)<Date.parse(c.capturedAt)||Date.parse(r.generatedAt)>Date.now()+300000)throw Error('Invalid regional replay lineage')
- if(m.version===3&&s.season==='2026/27')assertStrictCurrentCapture(c)
- if(m.version===3&&(m.slug!=='de-regionalliga-suedwest'||m.provenanceVersion!==2||s.evidenceMode!=='policy-replay'||r.statisticsPolicyId!==m.statisticsPolicy?.id||r.statisticsPolicySha256!==m.statisticsPolicy?.sha256||r.firstFantasyPlayedOn!==m.statisticsPolicy?.firstFantasyPlayedOn))throw Error('Invalid historical policy replay binding')
+ if(!execution(c)||!execution(r)||c.workflow!==captureWorkflow||r.workflow!==replayWorkflow||c.step!==captureStep(s.season)||r.step!==(historical?policyReplayStep:replayStep)||!['success','failure'].includes(c.conclusion)||c.runId===r.runId||r.runId!==s.runId||r.jobId!==s.jobId||r.commit!==m.sourceCommit||r.parserSha256!==m.parserSha256||!/^[a-f0-9]{64}$/.test(c.indexSha256)||c.documentsSha256!==s.documentsSha256||c.capturedAt!==s.capturedAt||!Number.isFinite(Date.parse(r.generatedAt))||Date.parse(r.generatedAt)<Date.parse(c.capturedAt)||Date.parse(r.generatedAt)>Date.now()+300000)throw Error('Invalid regional replay lineage')
+ if(historical&&s.season==='2026/27')assertStrictCurrentCapture(c)
+ if(historical&&((m.version===3?m.slug!=='de-regionalliga-suedwest':!/^de-regionalliga-(nord|west)$/.test(m.slug)||m.calendarReceiptSha256!==receiptSha256)||m.provenanceVersion!==2||s.evidenceMode!=='policy-replay'||r.statisticsPolicyId!==m.statisticsPolicy?.id||r.statisticsPolicySha256!==m.statisticsPolicy?.sha256||r.firstFantasyPlayedOn!==m.statisticsPolicy?.firstFantasyPlayedOn))throw Error('Invalid historical policy replay binding')
  return l
 }

@@ -1,0 +1,9 @@
+# Reviewed Nord/West calendars
+
+Accept the actual published 2026/27 Nord and West calendar orientations only for four reviewed repeated directed pairs: Nord 2423139/2423378 and 2423173/2423342; West 2425450/2425603 and 2425470/2425622. Each region has 306 fixtures, 18 clubs, 34 rounds, nine matches and 18 distinct clubs per round, and every unordered club pair twice. Both participating clubs' original DFB pages corroborate each fixture.
+
+Preserve all source sides, dates, scores and statistical data. An immutable, hash-pinned factual receipt binds competition, season, source IDs, native club IDs/names, rounds, and original witness URLs/hashes/times. Public receipts contain no raw HTML, player data or local paths. Current parsed evidence requires the two distinct participating club pages and their raw hashes; fresh page bytes may change, but identity/orientation must remain reviewed. Unknown anomalies fail. Corrected ordinary home/away pairs follow the strict normal path without an exception, including partial correction of the reviewed set.
+
+Build only parser and JavaScript canonical/shape validation support. Add a per-fixture calendarEvidence object only for actual reviewed anomalous pairs; canonical fixture statistics remain unchanged. Manifest construction validates that evidence; release approval explicitly refuses it pending a future versioned provenance/SQL extension. Historical policy remains Südwest-only, with its two existing unavailable records; no calendar exception grants unavailable current statistics.
+
+No source GETs, dispatch, production writes, SQL changes, activation, historical registry extension, push, merge or PR. Use existing closed snapshots for local full-season verification and compare all previously accepted reports/canonical arrays against the unmodified base.
