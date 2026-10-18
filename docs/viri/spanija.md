@@ -271,6 +271,23 @@ Prvi uvoz bloka je ~240 strani — ob počasnem strežniku do ene ure.
 
 ## Omejena diagnostika zgodovinskega predpomnilnika G13 in Tercera G4
 
+**Calonge4116202 — dokazana dopolnitev75 (18.10.2026).** Fiksni pomočnik
+`scripts/viri/fcf-calonge-pair.mjs` dopolni samo domači par FCF31287135
+(Bouhmara Boulhout Mohamed, rezerva) za FCF48680949 (Adairak Dairak Mohamed,
+začetnik) ob75. Izrecni imenovani par/minuto poda uradna stran UE Calonge;
+FCF ima pri njem samo gol87 in nima nobene od obeh puščic. Vezava je po
+polnih registracijah/imenih, strani in vlogi, ne po klubskem podvojenem
+dresu21. Pred spremembo preveri izvorno pot, id/url, točen SHA celotnega
+prejetega HTML in prstni odtis vseh običajno razčlenjenih podatkov. Vsaka
+sprememba kandidata ustavi razčlenjevanje do novega pregleda. Popravljeni
+`preklopi` sta75/75; gol87, Edgarjev gol13 in vsi drugi dogodki ostanejo.
+`dopolnitveMenjav` ohrani izvirnik, popravek, URL-ja/hash-a dokazov in vezavo.
+[Izvor in obrezan avtentični vzorec](../../scripts/vzorci/es-fcf-calonge-4116202-provenance.md)
+ločita pravi zajem od testnega izseka, ki ga produkcijski razčlenjevalnik
+kot uradnega kandidata zavrne. To ne odpravi ločenega neskladja Palafolls–
+Montessori4116215 in ne vklopi TerceraG2. Brez prevrednotenja ali spremembe
+pravil; morebitni enojni uvoz zapisnika izvede izključno Actions po pregledu.
+
 Ročni main-only tok `fcf-g13-predpomnjeni-dokazi.yml` obnovi vsak od točnih
 ključev `zapisniki-ES-k1od1-39053159080-1` in
 `zapisniki-ES-k1od1-39078000693-1` v ločenem poslu. Brez branja FCF,

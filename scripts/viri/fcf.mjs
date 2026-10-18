@@ -38,10 +38,11 @@
 // na vrsti, sicer enkrat na teden. **Ob izzivu, CAPTCHI, 403 ali 429 se uvoz
 // ustavi — ne obhajaj.**
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import { razpakiraj } from '../klubi.mjs'
 import { nastopi } from './hlf.mjs'
 import { NEPOPOLN } from './frf.mjs'
+import { doplniCalongeMenjavo } from './fcf-calonge-pair.mjs'
 
 export { nastopi, NEPOPOLN }
 
@@ -520,7 +521,7 @@ export function vZapisnik(html, { id = null, url = null } = {}) {
     opozorila.push(`goli iz zapisnika (${zaEkipo(0)}:${zaEkipo(1)}) se ne ujemajo z izidom ${g.izid.domaci}:${g.izid.gostje}`)
   opozorila.sort((a, b) => Number(b.startsWith(NEPOPOLN)) - Number(a.startsWith(NEPOPOLN)))
 
-  return {
+  const zapisnik = {
     zapisnikId: id,
     url,
     sezona: g.sezona,
@@ -544,6 +545,12 @@ export function vZapisnik(html, { id = null, url = null } = {}) {
     prazen: !ekipe[0].postava.length && !ekipe[1].postava.length,
     opozorila,
   }
+  const sourcePath = vrsticeRsc(tokRsc(html)).get('0')?.c
+  return doplniCalongeMenjavo(zapisnik, {
+    sourcePath,
+    sourceSha256: sourcePath?.at(-1) === '4116202' || id === 'es4116202' || url === naslovZapisnika('4116202')
+      ? createHash('sha256').update(html).digest('hex') : null,
+  })
 }
 
 // --- klubi -------------------------------------------------------------------------
