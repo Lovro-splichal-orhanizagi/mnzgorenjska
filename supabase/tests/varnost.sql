@@ -4852,7 +4852,7 @@ select pg_temp.preveri('trgovina2: vrnjena postavka ni vec za tisk, natisnjena o
      and narocilo_id = (current_setting('test.trg2_m')::jsonb->>'narocilo_id')::bigint)
   and (select stanje_tiska = 'natisnjeno' from trgovina.postavke where id = current_setting('test.trg2_ep')::bigint));
 
--- --- trgovina3: motivi (20261018230000) -------------------------------------
+-- --- trgovina3: motivi (20261019080000) -------------------------------------
 -- Polja motiva preveri baza: vrsta, dolžina, filter, številka, leto, izbira,
 -- shema, lastništvo ekipe, prvak; doplačilo iz motivi_izdelki.
 reset role;
