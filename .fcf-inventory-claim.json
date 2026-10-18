@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "kind": "fcf-missing-inventory-execution-claim",
+  "repository": "Lovro-splichal-orhanizagi/mnzgorenjska",
+  "workflow": ".github/workflows/uvoz-fcf-zgodovina.yml",
+  "planSha256": "88efc2a85cd7516a954dfe05179f35e18f1ae43390b3db104d6594536480a2eb",
+  "sourceCommit": "9326f442b6df13d92b7d72b5b8b58ae2ec164350",
+  "runId": "39167055657",
+  "runAttempt": "1",
+  "preset": "g1-then-g9-missing-v1",
+  "maximumSourceGETs": 477,
+  "claimedUTC": "2026-10-18T21:16:44.296Z"
+}
