@@ -190,6 +190,7 @@ jobs:
         run: |
           node scripts/test-fcf-historical-sql.mjs
           node scripts/test-fcf-historical-race.mjs
+          node scripts/test-fcf-target-sql.mjs
       - name: FCF native target import, pricing gate and independent activation
         env:
           SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska
