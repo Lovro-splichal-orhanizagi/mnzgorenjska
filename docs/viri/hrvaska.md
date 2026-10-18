@@ -209,3 +209,74 @@ najprej brez `pisi`, po želji `tekmovanje`. Klub brez grba ima na Semaforju
 `logo nologo` brez slike in ostane pri grbu iz začetnic. Načrt (brez
 `--pisi`) dela tudi z javnim anon ključem. Po uvozu nove hrvaške lige ga
 poženi znova.
+
+## Prva HNLŽ: zaprt začetni uvoz
+
+`hr-prva-hnlz` uporablja ločen, strog adapter `hr-hnlz-v1`: tekoči vir
+`114471579`, arhiv `108043476` (vseh 75 tekem) in prvih 14 tekočih krogov.
+Arhivske faze se preslikajo brez izgube izvornega kroga ali faze. Osem
+izvornih klubskih ID-jev se pred uvozom preveri prek servisnega konteksta;
+sprememba prikaznega imena ne ustvari novega kluba. Organizacija `1274` ostane
+natančno tista organizacija, ki jo navaja preverjeni vir.
+
+Samo zgodovinski zapisniki `114471617`, `114471627` in `114471629` imajo
+izrecno nedostopno individualno statistiko. Uradni rezultat ostane, nastopi
+in goli se zanje ne ustvarijo. Noben prihodnji zapisnik ne dobi te izjeme.
+Zajeti dokazi 18. oktobra 2026 še blokirajo izdajo: pri `114471645` vloga
+vratarke od 86. do 90. minute ni objavljena. Zajem ob 17:37 UTC je za
+`114471644` objavil popoln strog zapisnik (27 nastopov, dva gola),
+`114471642` pa je ob 18:33 UTC objavil še poln zapisnik (30 nastopov, sedem
+golov). Edina preostala zapora je vloga vratarke pri `114471645`. Splošni seznam igralk ne
+zamenja podatka o vlogi na konkretni tekmi.
+
+Začetni uvoz vodi samo `uvoz-hr-zenske.yml`, z enako skupino hkratnosti kot
+ročni uvoz te lige. Običajni `uvoz-lige.yml` ta slug zavrne. Bralni posel
+brez ključa baze preveri natančen pregledani commit na `main`, draft izdajo
+v tem repozitoriju, ID sredstva, SHA arhiva in manifesta ter vse izvorne
+bajte. Arhiv sme vsebovati le `manifest.json` in imenovane HTML dokumente v
+`documents/`; poti navzgor, povezave, podvojene in prevelike datoteke odpadejo.
+Ime sredstva je `hns-women-<pregledani SHA>.tar.gz`; arhiv se naredi iz korena
+že preverjenega paketa, na primer:
+
+```bash
+tar -czf hns-women-<pregledani-SHA>.tar.gz -C <paket> manifest.json documents
+```
+
+Pisni posel ponovno preveri shranjeni arhiv, nato atomsko pripravi neaktivno
+ligo, 40 objavljenih krogov in tri oznake nedostopne statistike. Način `import`
+uvozi arhiv, tekoči razpored in stroge tekoče zapisnike ter zažene običajno
+oceno pozicij in cen. Vsak otrok teče z zaprtim prednalagalnikom:
+neznana HNS zahteva se zavrne, nikoli ne pade nazaj na živi vir. Izvorni časi
+zajema ostanejo nespremenjeni. Tudi neaktivni neposredni CLI zahteva tak
+preverjen paket z `releaseReady: true`.
+
+Neobjavljena ura začetka ostane `NULL`. Fantazijski rok za tak datum je
+00:00 v `Europe/Zagreb`, pri objavljeni uri pa velja šesturni odmik.
+Razpored piše kroge samo prek varovanega RPC: prihodnji rok sme premakniti
+le prej, zaklenjenega ali pretečenega pa ne odpre ponovno. Poznejša tekoča
+faza zahteva ločen pregled objavljenega vira.
+
+Po oceni cen način `import` ponovno izračuna točke vseh krogov te lige in
+njeno statistiko ter pokliče kanonično preverbo. Način `check` ponovi samo
+preverbo; `activate` v isti transakciji preveri podatke, podeli zasebno
+pooblastilo in vklopi samo ciljno ligo. Vsi štirje načini zahtevajo enak
+preverjen zaprt paket, preden pisni posel dobi dostop do baze.
+
+Servisni RPC `check_hns_women_release` zahteva izolacijo `READ COMMITTED`,
+zaklene ciljno ligo in tabele pred branjem celotnega stanja ter primerja
+vseh 131 shranjenih tekem, izvorne ID-je igralk in klubov, nastope in gole
+s pripravljenim paketom. Preveri natanko tri zgodovinske izjeme brez
+individualnih vrstic, izračunane točke in statistiko, trenutne izrecno
+dokazane vratarke, dejanske cene ter dosegljivo legalno ekipo 15 igralk
+za največ 100 z največ tremi iz posameznega kluba. Prvi fantazijski krog
+mora ostati popoln, prihodnji in nezaklenjen. Preverba ne spreminja rokov
+ali ključavnic; neuspeh ne pusti pooblastila za vklop.
+
+Migracija `20261018210100` ostane do neodvisnega pregleda nenamestljena.
+Trenutni vir še blokira izdajo: tudi ponovni zajem `114471645` ob 18:33 UTC
+ni objavil manjkajoče vloge vratarke. Skupaj je bilo prebranih 149 izvornih
+dokumentov; prvotni časi in bajti vseh zajemov se ohranijo. Iz teh dokazov
+ni mogoče sestaviti popolnega preverjenega paketa; izdaja ostane
+blokirana pred prvo zahtevo pisnega posla v bazo. Bralnik za objavljene tekme
+izbere najnovejši izvirni prejemek in ohrani njegove bajte ter čas, brez
+osveževanja starejših dokazov. Sintetični zeleni testi teh pogojev ne nadomestijo.

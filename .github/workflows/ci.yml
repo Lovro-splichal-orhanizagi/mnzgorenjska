@@ -79,6 +79,9 @@ jobs:
       - name: FCF missing inventory and authenticated target admission (source-free)
         run: node --test scripts/test-fcf-missing-inventory-plan.mjs scripts/test-fcf-missing-inventory-claim.mjs scripts/test-fcf-missing-inventory-capture.mjs scripts/test-fcf-missing-inventory-evidence.mjs scripts/test-fcf-missing-inventory-actions.mjs scripts/test-fcf-missing-inventory-workflow.mjs scripts/test-fcf-inventory-source-coordination.mjs scripts/test-fcf-missing-inventory-admission.mjs scripts/test-cakaj-na-uvoze.mjs scripts/test-fcf-history-cache-export.mjs scripts/test-fcf-target-evidence.mjs scripts/test-fcf-target-release.mjs
 
+      - name: HNS public parser, packet, runtime and activation guards
+        run: npm run test:hns-women
+
       - name: Tipi
         run: npx tsc --noEmit
 
@@ -153,6 +156,11 @@ jobs:
       - run: npm ci --ignore-scripts
       # Zagon same baze preveri celotno verigo migracij na praznem Postgresu.
       - run: npx --yes supabase@2.117.0 db start
+      - name: HNS canonical release, target ACLs and waiting writers
+        env:
+          SUPABASE_DB_CONTAINER: supabase_db_mnzgorenjska
+          HNS_WOMEN_DISPOSABLE_TEST: '1'
+        run: npm run test:hns-women-ci
       - name: Germany activation guard in fresh database
         run: node scripts/test-vklop-nemcije-sql.mjs
       - name: Regional DFB gate and concurrent writes

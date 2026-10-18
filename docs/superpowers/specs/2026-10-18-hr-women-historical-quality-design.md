@@ -1,5 +1,7 @@
 # Croatian women: bounded historical availability and launch design
 
+Migration reservation: undeployed HNS release migration is `20261018210100_hns_women_reviewed_release.sql`, after merged shop `20261018190000`, concurrent `20261018195300` and DE repair `20261018210000`. Original `20261018180300` was never deployed; no include-all or out-of-order deployment.
+
 Status: **ROOT approved implementation with the binding builder amendments below; production deployment and activation remain separately guarded**.
 Base inspected: `f7efba26c31f76372b5aab1e976061631fbaebda`. Source collection is stopped. The dirty user checkout is untouched.
 
