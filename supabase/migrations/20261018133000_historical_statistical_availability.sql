@@ -63,6 +63,7 @@ create function public.apply_historical_statistics_policy(p_competition_id bigin
 returns jsonb language plpgsql security definer set search_path=public,pg_temp as $$
 declare c public.competitions%rowtype;p private_historical_statistics.policies%rowtype;i private_historical_statistics.installed_policies%rowtype; first_day date;
 begin
+ if current_setting('transaction_isolation')<>'read committed'then raise exception 'HISTORICAL_POLICY: READ COMMITTED required';end if;
  select * into c from public.competitions where id=p_competition_id for update;
  select * into p from private_historical_statistics.policies where id=p_policy_id;
  if c.id is null or p.id is null or c.active or c.slug is distinct from p.document->>'competitionSlug' or c.source is distinct from p.document->>'provider'
@@ -103,6 +104,7 @@ create function public.upsert_unavailable_historical_match(p_competition_id bigi
 returns jsonb language plpgsql security definer set search_path=public,pg_temp as $$
 declare c public.competitions%rowtype;i private_historical_statistics.installed_policies%rowtype;p private_historical_statistics.policies%rowtype;e jsonb;f jsonb;mk private_historical_statistics.markers%rowtype;m public.matches%rowtype;r public.rounds%rowtype;home_id bigint;away_id bigint;report_id text;
 begin
+ if current_setting('transaction_isolation')<>'read committed'then raise exception 'HISTORICAL_POLICY: READ COMMITTED required';end if;
  select * into c from public.competitions where id=p_competition_id for update;
  select * into i from private_historical_statistics.installed_policies where competition_id=c.id;
  select * into p from private_historical_statistics.policies where id=i.policy_id;
@@ -113,14 +115,14 @@ begin
  if e is null or p_raw_sha256 is distinct from e->>'rawSha256' then raise exception 'HISTORICAL_POLICY: unapproved match or raw hash';end if;
  f:=(e-array['rawSha256','reasonCode'])||jsonb_build_object('season',p.document->>'season');
  if p_header->'fixture' is distinct from f or p_header-array['fixture','roundId','homeTeamId','awayTeamId']<>'{}'::jsonb then raise exception 'HISTORICAL_POLICY: fixture identity/header differs';end if;
+ lock table public.countries,public.teams,public.rounds,public.fantasy_teams,public.appearances,public.goals in share mode;
+ lock table public.matches in share row exclusive mode;
  select * into r from public.rounds where id=(p_header->>'roundId')::bigint;
  home_id:=(p_header->>'homeTeamId')::bigint;away_id:=(p_header->>'awayTeamId')::bigint;
  if r.id is null or r.competition_id<>c.id or r.season is distinct from p.document->>'season' or r.number is distinct from (e->>'sourceRound')::int
  or (e->>'playedOn')::date>=i.first_fantasy_played_on or home_id=away_id
  or (select count(*)from public.teams where id in(home_id,away_id)and country_id=c.country_id)<>2
  then raise exception 'HISTORICAL_POLICY: invalid DB fixture binding';end if;
- lock table public.teams,public.rounds,public.fantasy_teams,public.appearances,public.goals in share mode;
- lock table public.matches in share row exclusive mode;
  if exists(select 1 from public.fantasy_teams where competition_id=c.id)then raise exception 'HISTORICAL_POLICY: user-owned activity';end if;
  perform private_historical_statistics.bind_source_club(p.document->>'provider',e->>'homeSourceClubId',e->>'homeSourceCategoryId',c.country_id,home_id);
  perform private_historical_statistics.bind_source_club(p.document->>'provider',e->>'awaySourceClubId',e->>'awaySourceCategoryId',c.country_id,away_id);

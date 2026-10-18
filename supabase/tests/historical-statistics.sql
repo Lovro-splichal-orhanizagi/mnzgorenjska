@@ -151,3 +151,29 @@ set local role service_role;
 select public.get_installed_historical_statistics_markers((select id from public.competitions where slug='hr-prva-hnlz'))->>'installed' as service_marker_binding;
 reset role;
 rollback;
+
+begin isolation level repeatable read;
+do $$declare command text;begin
+ foreach command in array array['select public.apply_historical_statistics_policy(null,null,null,null)','select public.upsert_unavailable_historical_match(null,null,null,null,null,null)']loop
+  begin
+   execute command;
+   raise exception 'HISTORICAL TEST: non-READ COMMITTED accepted';
+  exception when others then
+   if sqlerrm<>'HISTORICAL_POLICY: READ COMMITTED required'then raise exception 'HISTORICAL TEST: wrong isolation refusal: %',sqlerrm;end if;
+  end;
+ end loop;
+end $$;
+rollback;
+
+begin isolation level serializable;
+do $$declare command text;begin
+ foreach command in array array['select public.apply_historical_statistics_policy(null,null,null,null)','select public.upsert_unavailable_historical_match(null,null,null,null,null,null)']loop
+  begin
+   execute command;
+   raise exception 'HISTORICAL TEST: non-READ COMMITTED accepted';
+  exception when others then
+   if sqlerrm<>'HISTORICAL_POLICY: READ COMMITTED required'then raise exception 'HISTORICAL TEST: wrong isolation refusal: %',sqlerrm;end if;
+  end;
+ end loop;
+end $$;
+rollback;
