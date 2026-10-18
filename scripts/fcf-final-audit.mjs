@@ -7,6 +7,7 @@ const scopes=Object.freeze({
  'es-ct-tercera-g2':{code:'4116188-4116427',maximum:20},
  'es-ct-tercera-g9':{code:'4118349-4118588',maximum:22},
 })
+export const fcfFinalAuditScope=slug=>scopes[slug]?{...scopes[slug]}:null
 const SHA=/^[a-f0-9]{64}$/,ID=/^[1-9]\d{0,19}$/
 const fail=message=>{throw Error(`FCF_AUDIT: ${message}`)}
 function assertAuditPlan(plan){
