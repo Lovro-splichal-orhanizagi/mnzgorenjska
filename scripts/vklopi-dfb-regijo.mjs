@@ -3,6 +3,7 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { createHash } from 'node:crypto'
+import {collectDfbHistorical,unavailableDfbFixture,dfbStatisticsCoverage,dfbPolicyBinding,verifyDfbPolicySeason} from './dfb-historical-policy.mjs'
 import { verifyLineage } from './dfb-replay-proof.mjs'
 import vir, { konfiguracijaDfb } from './viri/dfb.mjs'
 import { preveriPokritost } from './preveri-vir-sezono.mjs'
@@ -12,7 +13,7 @@ export function preveriPosnetek(dir,records){
  if(records.some(r=>Date.parse(r.at)>Date.now()+300000))throw Error('DFB capture timestamp is in the future')
  return snapshot
 }
-export const sourceFiles=['src/lib/nepripisaniRumeni.mjs','scripts/viri/dfb.mjs','scripts/viri/dfb-lige.json','scripts/viri/dfb-korekcije.json','scripts/viri/dfb-kronologija.json','scripts/viri/dfb-rezerve.json','scripts/viri/dfb-aliasi.json','scripts/viri/fussball.mjs','scripts/viri/fussball-pisava.mjs','scripts/viri/fussball-datumski-glifi.json','scripts/viri/fss.mjs','scripts/klubi.mjs','scripts/preveri-vir-sezono.mjs',
+export const sourceFiles=['scripts/dfb-historical-policy.mjs','scripts/lib/historical-statistics-policy.mjs','scripts/policies/historical-statistics-exclusions.json','src/lib/nepripisaniRumeni.mjs','scripts/viri/dfb.mjs','scripts/viri/dfb-lige.json','scripts/viri/dfb-korekcije.json','scripts/viri/dfb-kronologija.json','scripts/viri/dfb-rezerve.json','scripts/viri/dfb-aliasi.json','scripts/viri/fussball.mjs','scripts/viri/fussball-pisava.mjs','scripts/viri/fussball-datumski-glifi.json','scripts/viri/fss.mjs','scripts/klubi.mjs','scripts/preveri-vir-sezono.mjs',
  ...Object.values(JSON.parse(readFileSync(new URL('./viri/dfb-aliasi.json',import.meta.url))).matches.flatMap(e=>Object.values(e.files))).map(f=>`scripts/${f.file.replace('../','')}`),
  ...JSON.parse(readFileSync(new URL('./viri/dfb-kronologija.json',import.meta.url))).matches.flatMap(e=>e.evidenceFiles).map(f=>`scripts/${f.file.replace('../','')}`),
  ...JSON.parse(readFileSync(new URL('./viri/dfb-korekcije.json',import.meta.url))).matches.flatMap(e=>e.evidenceFiles??[]).map(f=>`scripts/${f.file.replace('../','')}`)]
@@ -31,8 +32,10 @@ export function kanonicniNastopi(z){return canonical(vir.nastopi(z).map(x=>({sid
  goals:x.goli,own_goals:x.avtogoli,penalties_scored:x.goliIzEnajstmetrovke,penalties_missed:x.zgreseneEnajstmetrovke,
  yellow_cards:x.rumeni,red_cards:x.rdeci,goals_conceded:x.prejetiGoli,clean_sheet:x.cleanSheet,is_goalkeeper:Boolean(x.vratar)})))}
 export function kanonicniGoli(z){return canonical(z.goli.map(g=>({side:g.ekipaIdx,name:g.ime,minute:g.minuta,is_own_goal:g.avtogol,is_penalty:g.enajstmetrovka,score_home:g.rezultat?.[0]??null,score_away:g.rezultat?.[1]??null})))}
-export function sestaviSezono({slug,sezona,razpored,zapisniki,nepopolni=[],capturedAt,runId,jobId,documentsSha256}){
- const c=configuration(slug,sezona),coverage=preveriPokritost({sezona,razpored,zapisniki,nepopolni})
+export function sestaviSezono({slug,sezona,razpored,zapisniki,nepopolni=[],capturedAt,runId,jobId,documentsSha256,historicalPolicy}){
+ const excluded=collectDfbHistorical({slug,sezona,razpored,zapisniki,nepopolni,historicalPolicy})
+ const knownSchedule=excluded.size?razpored.map(r=>({...r,tekme:r.tekme.filter(t=>!excluded.has(`de-dfb-${t.dfbId??t.id}`))})):razpored
+ const c=configuration(slug,sezona),coverage=preveriPokritost({sezona,razpored:knownSchedule,zapisniki,nepopolni:nepopolni.filter(n=>!excluded.has(n.id))})
  if(!coverage.pripravljeno)fail(`coverage/keepers: ${JSON.stringify(coverage)}`)
  const fixtures=razpored.flatMap(r=>r.tekme.map(t=>({...t,round:r.stevilka}))),pairs=new Set(),ids=new Set(),clubs=new Set(fixtures.flatMap(t=>[t.domaci,t.gostje]))
  if(razpored.length!==c.rounds||fixtures.length!==c.teams*(c.teams-1)||clubs.size!==c.teams)fail('season shape')
@@ -45,6 +48,7 @@ export function sestaviSezono({slug,sezona,razpored,zapisniki,nepopolni=[],captu
   const id=`de-dfb-${t.dfbId??t.id}`,pair=JSON.stringify([t.domaci,t.gostje]),r=reports.get(id),played=t.odigrana===true
   if(!/^de-dfb-[1-9]\d{0,9}$/.test(id)||ids.has(id)||pairs.has(pair)||t.domaci===t.gostje)fail('duplicate fixture/pair')
   ids.add(id);pairs.add(pair)
+  if(excluded.has(id))return unavailableDfbFixture(t,t.round,excluded.get(id))
   if(played!==!!r||sezona==='2025/26'&&!played)fail('complete archive/current reports required')
   const starters=[]
   if(r)for(const [side,e]of[r.z.domaci,r.z.gostje].entries()){
@@ -53,18 +57,25 @@ export function sestaviSezono({slug,sezona,razpored,zapisniki,nepopolni=[],captu
   }
   return {id,round:t.round,date:t.datum,time:t.ura??null,home:t.domaci,away:t.gostje,played,
    homeGoals:r?.z.rezultat.domaci??null,awayGoals:r?.z.rezultat.gostje??null,url:r?.url??t.url,
-   starters:canonical(starters),warnings:r?.z.opozorila??[],appearances:r?kanonicniNastopi(r.z):[],goals:r?kanonicniGoli(r.z):[]}
+   ...(historicalPolicy?{statisticsStatus:'available'}:{}),starters:canonical(starters),warnings:r?.z.opozorila??[],appearances:r?kanonicniNastopi(r.z):[],goals:r?kanonicniGoli(r.z):[]}
  }).sort((a,b)=>a.round-b.round||a.id.localeCompare(b.id))
- return {season:sezona,code:c.code,capturedAt,runId,jobId,documentsSha256,fixtures:out}
+ return {season:sezona,code:c.code,capturedAt,runId,jobId,documentsSha256,fixtures:out,...(historicalPolicy?{statisticsCoverage:dfbStatisticsCoverage(out)}:{})}
 }
 export function preveriOdobritev(raw,approvedSha,now=Date.now()){
  if(Buffer.byteLength(raw)>8*1024*1024||!/^[a-f0-9]{64}$/.test(approvedSha)||sha(raw)!==approvedSha)fail('approved manifest SHA/size mismatch')
  const m=JSON.parse(raw);configuration(m.slug)
- if(![1,2].includes(m.version)||!/^[a-f0-9]{40}$/.test(m.sourceCommit)||m.parserSha256!==parserSha256()||m.seasons?.length!==2)fail('scope/parser provenance mismatch')
+ if(![1,2,3].includes(m.version)||!/^[a-f0-9]{40}$/.test(m.sourceCommit)||m.parserSha256!==parserSha256()||m.seasons?.length!==2)fail('scope/parser provenance mismatch')
+ if(m.version===3){
+  if(m.slug!=='de-regionalliga-suedwest'||m.provenanceVersion!==2)fail('historical manifest scope/provenance')
+ }else if(m.statisticsPolicy!=null||m.provenanceVersion!=null)fail('historical policy requires manifest version3')
+ if(m.version===3&&!m.seasons[1].fixtures?.some(f=>f.date===m.statisticsPolicy?.firstFantasyPlayedOn&&f.played===false))fail('planned fantasy date lacks a real current future fixture')
  for(const [i,season]of['2025/26','2026/27'].entries()){
   const s=m.seasons[i],c=configuration(m.slug,season),age=now-Date.parse(s.capturedAt)
   if(s.season!==season||s.code!==c.code||!Number.isFinite(age)||age< -300000||age>(i?12:168)*3600000||!/^\d{1,20}$/.test(s.runId)||!/^\d{1,20}$/.test(s.jobId)||!/^[a-f0-9]{64}$/.test(s.documentsSha256)||s.fixtures?.length!==c.teams*(c.teams-1))fail('invalid/stale capture provenance')
-  if(m.version===2)verifyLineage(s,m)
+  if(m.version===3){
+   if(s.evidenceMode!=='policy-replay')fail('historical proof requires real policy-aware replay')
+   verifyDfbPolicySeason(s,m.statisticsPolicy);verifyLineage(s,m)
+  }else if(m.version===2)verifyLineage(s,m)
   else if(s.lineage!=null)fail('Replay lineage requires version2')
  }
  return m
@@ -73,26 +84,28 @@ export async function pripravi({slug,archiveDir,currentDir,sourceCommit,proof}){
  configuration(slug)
  if(!/^[a-f0-9]{40}$/.test(sourceCommit)||proof?.sourceCommit!==sourceCommit||proof.slug!==slug||proof.sourceFilesIdentical!==true)fail('verified job provenance required')
  const seasons=[],version=proof.version??1
- if(![1,2].includes(version))fail('Unknown provenance version')
+ if(![1,2,3].includes(version))fail('Unknown provenance version')
  for(const [i,dir]of[archiveDir,currentDir].entries()){
   const season=['2025/26','2026/27'][i],p=proof.proof?.[i]
   if(p?.season!==season||p.captureCommit!==sourceCommit||p.seasonJobPassed!==true)fail('season capture job mismatch')
-  if(version===2){
-   verifyLineage({...p,capturedAt:p.lineage?.capture.capturedAt,documentsSha256:p.lineage?.capture.documentsSha256},{sourceCommit,parserSha256:parserSha256()})
+  if(version===2||version===3){
+   verifyLineage({...p,...(version===3?{evidenceMode:'policy-replay'}:{}),capturedAt:p.lineage?.capture.capturedAt,documentsSha256:p.lineage?.capture.documentsSha256},{version,slug,provenanceVersion:version===3?2:undefined,statisticsPolicy:proof.statisticsPolicy,sourceCommit,parserSha256:parserSha256()})
    const {readClosedCapture}=await import('./ponovi-dfb-regijo.mjs');readClosedCapture(dir,slug,season,p.lineage.capture)
   }else if(p.lineage!=null)fail('Mixed direct/replay proof')
   const snapshot=preveriPosnetek(dir,JSON.parse(readFileSync(resolve(dir,'prenosi.json'),'utf8')))
   const read=async url=>{if(!snapshot.documents.has(url))fail(`missing captured URL ${url}`);return snapshot.documents.get(url)}
   const code=configuration(slug,season).code,razpored=await vir.razporedVseStrani(code,read),zapisniki=await vir.zapisniki(code,read,{zberiNapake:true})
-  const built=sestaviSezono({slug,sezona:season,razpored,zapisniki,nepopolni:vir.nepopolni??[],...snapshot,runId:p.runId,jobId:p.jobId})
-  if(version===2)built.lineage=p.lineage
+  const historicalPolicy=version===3?{competition:{slug,source:'dfb',source_policy:proof.statisticsPolicy?.id,firstFantasyPlayedOn:proof.statisticsPolicy?.firstFantasyPlayedOn},documents:snapshot.documents}:undefined
+  const built=sestaviSezono({slug,sezona:season,razpored,zapisniki,nepopolni:vir.nepopolni??[],...snapshot,runId:p.runId,jobId:p.jobId,historicalPolicy})
+  if(version===2||version===3)built.lineage=p.lineage
+  if(version===3)built.evidenceMode='policy-replay'
   seasons.push(built)
  }
- const m={version,slug,sourceCommit,parserSha256:parserSha256(),seasons};const raw=JSON.stringify(m)+'\n';preveriOdobritev(raw,sha(raw));return m
+ const m={version,...(version===3?{provenanceVersion:2,statisticsPolicy:proof.statisticsPolicy}:{}),slug,sourceCommit,parserSha256:parserSha256(),seasons};const raw=JSON.stringify(m)+'\n';preveriOdobritev(raw,sha(raw));return m
 }
 export function actionsOnly(){if(process.env.GITHUB_ACTIONS!=='true'||process.env.GITHUB_REPOSITORY!=='Lovro-splichal-orhanizagi/mnzgorenjska')fail('database operations require repository Actions')}
 export async function databaseCheck(raw,approvedSha,activate=false){
- const m=preveriOdobritev(raw,approvedSha);actionsOnly()
+ const m=preveriOdobritev(raw,approvedSha);if(m.version===3)fail('historical database release requires the separately reviewed shared schema/RPC checkpoint');actionsOnly()
  if(activate&&process.env.SERVER_READY!=='true')fail('verified German server deployment required')
  const base=process.env.SUPABASE_URL,key=process.env.SUPABASE_SERVICE_ROLE_KEY
  if(!key||!base||new URL(base).protocol!=='https:')fail('Actions database configuration required')

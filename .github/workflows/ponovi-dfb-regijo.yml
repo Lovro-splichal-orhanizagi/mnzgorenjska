@@ -19,6 +19,15 @@ on:
         description: Celotni pregledani SHA izvirnega zajema
         type: string
         required: true
+      historical_policy:
+        description: Pregledana zgodovinska politika; none ohrani strogo ponovitev
+        type: choice
+        options: ['none', 'de-dfb-suedwest-2025-historical-unavailable-v1']
+        default: 'none'
+      first_fantasy_day:
+        description: Predlagani datum dejanske prve fantasy tekme; samo za politiko
+        type: string
+        default: ''
 permissions:
   contents: read
   actions: read
@@ -35,6 +44,8 @@ jobs:
       SEASON: ${{ inputs.season }}
       CAPTURE_RUN: ${{ inputs.capture_run }}
       CAPTURE_COMMIT: ${{ inputs.capture_commit }}
+      HISTORICAL_POLICY: ${{ inputs.historical_policy }}
+      FIRST_FANTASY_DAY: ${{ inputs.first_fantasy_day }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -44,14 +55,34 @@ jobs:
         with:
           node-version: '22'
       - run: npm ci --ignore-scripts
+      - name: Preveri izbiro zgodovinske politike
+        run: |
+          case "$HISTORICAL_POLICY" in
+            none) test -z "$FIRST_FANTASY_DAY" ;;
+            de-dfb-suedwest-2025-historical-unavailable-v1)
+              test "$LIGA" = de-regionalliga-suedwest
+              [[ "$FIRST_FANTASY_DAY" =~ ^20[0-9]{2}-[0-9]{2}-[0-9]{2}$ ]] ;;
+            *) exit 1 ;;
+          esac
       - name: Preveri izvirni posel in SHA prenesenega arhiva
         env:
           GH_TOKEN: ${{ github.token }}
-        run: node scripts/ponovi-dfb-regijo.mjs capture "$LIGA" "$SEASON" "$CAPTURE_RUN" "$CAPTURE_COMMIT" original parent.json
+        run: |
+          if [ "$HISTORICAL_POLICY" = none ]; then
+            node scripts/ponovi-dfb-regijo.mjs capture "$LIGA" "$SEASON" "$CAPTURE_RUN" "$CAPTURE_COMMIT" original parent.json
+          else
+            node scripts/ponovi-dfb-regijo.mjs capture-policy "$LIGA" "$SEASON" "$CAPTURE_RUN" "$CAPTURE_COMMIT" original parent.json "$FIRST_FANTASY_DAY"
+          fi
       - name: Ponovi sezono — brez omrežja in baze
+        if: ${{ inputs.historical_policy == 'none' }}
         run: |
           set -euo pipefail
           sudo -E unshare --net -- node scripts/ponovi-dfb-regijo.mjs replay "$LIGA" "$SEASON" original parent.json replay
+      - name: Ponovi sezono s pregledano zgodovinsko politiko — brez omrežja in baze
+        if: ${{ inputs.historical_policy != 'none' }}
+        run: |
+          set -euo pipefail
+          sudo -E unshare --net -- node scripts/ponovi-dfb-regijo.mjs replay-policy "$LIGA" "$SEASON" original parent.json replay
       - name: Ime dokaza
         id: artifact
         run: |

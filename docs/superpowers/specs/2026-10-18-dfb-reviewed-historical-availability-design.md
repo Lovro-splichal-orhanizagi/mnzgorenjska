@@ -1,6 +1,6 @@
 # DFB Südwest: two reviewed historical reports unavailable
 
-Status: design for root review; no exemption implementation yet. Base is merged main `7a7c2ec1b617cdcc9eeccfc71059e76a10d223a1`. The owner has now approved reviewed historical exclusions for Germany: exact prelaunch matches may retain official fixture/result facts while individual statistics are explicitly unavailable. This supersedes complete archive statistics only for the reviewed exceptions; it does not allow guessed data or future missing reports.
+Status: root-approved design with builder amendments; read-only provider/manifest/replay checkpoint implemented, database/import checkpoint still disabled pending separate review. Base is merged main `7a7c2ec1b617cdcc9eeccfc71059e76a10d223a1`. The owner has now approved reviewed historical exclusions for Germany: exact prelaunch matches may retain official fixture/result facts while individual statistics are explicitly unavailable. This supersedes complete archive statistics only for the reviewed exceptions; it does not allow guessed data or future missing reports.
 
 ## Exact scope and evidence
 
@@ -13,7 +13,7 @@ Initial scope is only `de-regionalliga-suedwest`, archive `2025/26`, source `dfb
 
 Canonical DFB URLs are retained exactly in `scripts/vzorci/de-dfb-suedwest-provenance.json`; raw fixtures are `de-dfb-suedwest-2402929.html` and `de-dfb-suedwest-2403004.html`. These are from original complete Actions archive capture39043125440, not new captures. Their original SHA/UTC stay unchanged. Targeted ordinary18October requests returned the same strict failures but different page-shell SHA; they corroborate persistence of the defect and do not replace the approved original bytes or refresh the complete capture.
 
-The one shared policy registry must receive these two entries under policy ID `de-dfb-suedwest-2025-historical-unavailable-v1`, source competition `regionalliga-suedwest/2025-2026`, phase null, and exact source URL/round/date/clubs/observed score/raw SHA. Root supplies the authoritative approval reference and exact timestamp before seeding; an approximate timestamp must not be invented. Draft descriptors are in the private operations packet, not an active registry.
+The one shared policy registry must receive these two entries under policy ID `de-dfb-suedwest-2025-historical-unavailable-v1`, source competition `regionalliga-suedwest/2025-2026`, phase null, and exact source URL/round/date/clubs/observed score/raw SHA. The authoritative approval reference is `user reply to call_e8c944e47b7c42a38afa4f08fda48c23`; `recordedAt=2026-10-18T13:03:55.270673+00:00` is the execution-state recording time, not an invented user-send/approvedAt timestamp. Draft descriptors are in the private operations packet, not an active registry.
 
 ## Shared contract and ownership
 
@@ -21,10 +21,12 @@ HNS historical-availability owner owns all generic work:
 
 - `scripts/policies/historical-statistics-exclusions.json`, schemaVersion1 and one canonical policy registry. Germany provides descriptors rather than editing this file concurrently.
 - `scripts/lib/historical-statistics-policy.mjs`: `classifyHistoricalStatistics({competition,fixture,rawSha256,policy})` returns `{kind:'normal'}` or `{kind:'unavailable_historical',exception,policySha256}` and rejects identity/hash/time/policy drift.
-- Shared migration and service-only registry, `apply_historical_statistics_policy(p_competition_id uuid,p_policy_id text,p_policy_sha256 text,p_entries jsonb)` and `upsert_unavailable_historical_match(...)`. `upsert_unavailable_historical_match(p_competition_id uuid,p_source_match_id text,p_policy_id text,p_policy_sha256 text,p_raw_sha256 text,p_header jsonb)` is the agreed atomic signature.
+- Shared migration and service-only registry, `apply_historical_statistics_policy(p_competition_id bigint,p_policy_id text,p_policy_sha256 text,p_entries jsonb)` and `upsert_unavailable_historical_match(...)`. `upsert_unavailable_historical_match(p_competition_id bigint,p_source_match_id text,p_policy_id text,p_policy_sha256 text,p_raw_sha256 text,p_header jsonb)` is the agreed atomic signature.
 - `matches.statistics_status` with available default / unavailable_historical, public reason and source URL, shared statistics/scoring/cache masks, source-neutral unavailable UI/i18n, tests and regenerated database types.
 
-DFB owner owns only its provider adapter, release/audit/replay/offline-import code and a new DFB-specific RPC migration. The shared owner/Spain retain `scripts/uvoz-zapisnikov.mjs` and provider-factory integration ownership: DFB supplies its typed prepared/read unavailable envelope for their one shared pre-derivation hook rather than editing that common importer concurrently. An inactive exact provider/slug tuple opts into `competitions.source_policy=de-dfb-suedwest-history-v1`; ordinary DFB competitions keep the existing provider. The provider factory must refuse any inconsistent tuple. Do not create a second generic registry, second shared availability schema, or parallel UI implementation. Dependencies must land or be integrated before the DFB branch can claim readiness.
+The shared database guard must reject generic activation RPCs and direct `competitions.active` writes for policy-enabled competitions, allowing only a private verified transactional release boundary; no caller-spoofable GUC. Installed markers are verified against exact DB policy/fixture binding and skipped before report fetch/parsing in both stream and single-report entrypoints. The registry never needs nightly refetch of the original raw SHA.
+
+DFB owner owns only its provider adapter, release/audit/replay/offline-import code and a new DFB-specific RPC migration. The shared owner/Spain retain `scripts/uvoz-zapisnikov.mjs` and provider-factory integration ownership: DFB supplies its typed prepared/read unavailable envelope for their one shared pre-derivation hook rather than editing that common importer concurrently. An inactive exact provider/slug tuple opts into `competitions.source_policy=de-dfb-suedwest-2025-historical-unavailable-v1`; ordinary DFB competitions keep the existing provider. The provider factory must refuse any inconsistent tuple. Do not create a second generic registry, second shared availability schema, or parallel UI implementation. Dependencies must land or be integrated before the DFB branch can claim readiness.
 
 ## Representation: known result, unknown statistics
 
@@ -74,3 +76,7 @@ Price gates remain at most70% default4.5, maximum price at least8, valid2/5/5/3 
 4. Inactive Actions import304+2/current/positions/prices, production canonical preflight, deployed unavailable UI checks, future deadline/readiness; activate only if every gate passes. Verify public league/player prices and both unavailable match pages. No other league activates by implication.
 
 Required negative tests cover wrong/extra/missing policy rows; archive/current/future/foreign-league collisions; raw/URL/date/club/result/reason changes; old strict proof relabelled successful; source challenge/transport/truncation; stale originals; policy/code/manifest hash drift; null versusempty arrays; existing individual data/user fantasy teams; cross-league policy writes; source-cache bypass; keeper counts using exceptions; price/default/squad limits; guessed stats; postlaunch missing reports; concurrent writes/deadline locking; UI/cache/scoring zero-coalescing; and regression of ordinary v1/v2, Bayern and Nordost.
+
+## Read-only checkpoint boundary
+
+The first implementation intentionally rejects manifest-v3 production import and database release before any database request. Those guards are removed only with the separately reviewed shared schema/import marker seam and DFB RPC checkpoint. It does not seed source_policy, install policies, persist unavailable rows, activate, or call providers. The existing strict source parser remains unchanged.

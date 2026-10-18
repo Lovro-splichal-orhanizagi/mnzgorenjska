@@ -4,6 +4,7 @@ import {resolve} from 'node:path'
 import {pathToFileURL} from 'node:url'
 import {execFileSync} from 'node:child_process'
 import vir from './viri/dfb.mjs'
+import {dfbPolicyBinding,DFB_HISTORICAL_POLICY} from './dfb-historical-policy.mjs'
 import {configuration,sourceFiles,parserSha256,preveriPosnetek,sestaviSezono} from './vklopi-dfb-regijo.mjs'
 import {sha256,githubJson,downloadArtifact,writeArtifact} from './dfb-artifacts.mjs'
 import {scope,verifyCaptureExecution,verifyRunningReplay,captureWorkflow,replayWorkflow} from './dfb-replay-proof.mjs'
@@ -45,12 +46,14 @@ export async function withNoNetwork(callback){
  globalThis.fetch=async()=>{throw Error('Replay network access is disabled')}
  try{return await callback()}finally{globalThis.fetch=network}
 }
-export async function replaySnapshot({dir,slug,season,capture}){
+export async function replaySnapshot({dir,slug,season,capture,statisticsPolicy}){
  if(Object.entries(process.env).some(([k,v])=>v&&(/SUPABASE.*(?:KEY|TOKEN)|DATABASE_URL|PGPASSWORD/.test(k))))throw Error('Replay must not receive database credentials')
  return withNoNetwork(async()=>{
   const snapshot=readClosedCapture(dir,slug,season,capture),read=async url=>{if(!snapshot.documents.has(url))throw Error(`Replay missing captured URL ${url}`);return snapshot.documents.get(url)},code=configuration(slug,season).code
   const schedule=await vir.razporedVseStrani(code,read),reports=await vir.zapisniki(code,read,{zberiNapake:true})
-  const checked=sestaviSezono({slug,sezona:season,razpored:schedule,zapisniki:reports,nepopolni:vir.nepopolni,...snapshot,runId:capture.runId,jobId:capture.jobId})
+  const competition=statisticsPolicy?{slug,source:'dfb',source_policy:statisticsPolicy.id,firstFantasyPlayedOn:statisticsPolicy.firstFantasyPlayedOn}:null
+  if(statisticsPolicy&&JSON.stringify(dfbPolicyBinding(competition))!==JSON.stringify(statisticsPolicy))throw Error('Unreviewed historical replay policy')
+  const checked=sestaviSezono({slug,sezona:season,razpored:schedule,zapisniki:reports,nepopolni:vir.nepopolni,...snapshot,runId:capture.runId,jobId:capture.jobId,historicalPolicy:competition?{competition,documents:snapshot.documents}:undefined})
   return {schedule,reports,checked,binding:{indexSha256:snapshot.indexSha256,documentsSha256:snapshot.documentsSha256,capturedAt:snapshot.capturedAt}}
  })
 }
@@ -74,23 +77,26 @@ export function obtainCapture({slug,season,runId,commit,dir,expected}){
 }
 async function main(){
  const [mode,slug,season,...args]=process.argv.slice(2);scope(slug,season)
- if(mode==='capture'&&args.length===4){
-  const [runId,commit,dir,file]=args,replayRun=process.env.GITHUB_RUN_ID,replayCommit=process.env.GITHUB_SHA
+ if((mode==='capture'&&args.length===4)||(mode==='capture-policy'&&args.length===5)){
+  const [runId,commit,dir,file,firstFantasyPlayedOn]=args,replayRun=process.env.GITHUB_RUN_ID,replayCommit=process.env.GITHUB_SHA
   if(process.env.GITHUB_ACTIONS!=='true'||process.env.GITHUB_REPOSITORY!=='Lovro-splichal-orhanizagi/mnzgorenjska'||!/^[1-9]\d{0,19}$/.test(replayRun??'')||!/^[a-f0-9]{40}$/.test(replayCommit??''))throw Error('Actual replay Actions identity required')
   const listing=githubJson(`actions/runs/${replayRun}/jobs?per_page=100`)
   if(listing.total_count!==listing.jobs?.length)throw Error('Incomplete replay job listing')
   const replay=verifyRunningReplay(githubJson(`actions/runs/${replayRun}`),listing.jobs,{runId:replayRun,commit:replayCommit}),capture=obtainCapture({slug,season,runId,commit,dir})
-  writeFileSync(file,JSON.stringify({version:1,slug,season,capture,replay})+'\n');return
+  const statisticsPolicy=mode==='capture-policy'?dfbPolicyBinding({slug,source:'dfb',source_policy:DFB_HISTORICAL_POLICY,firstFantasyPlayedOn}):null
+  writeFileSync(file,JSON.stringify({version:statisticsPolicy?2:1,slug,season,capture,replay,...(statisticsPolicy?{statisticsPolicy}:{})})+'\n');return
  }
- if(mode==='replay'&&args.length===3){
+ if(['replay','replay-policy'].includes(mode)&&args.length===3){
   const [dir,parentFile,out]=args,parent=JSON.parse(readFileSync(parentFile)),commit=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),runId=process.env.GITHUB_RUN_ID
-  if(process.env.GITHUB_ACTIONS!=='true'||process.env.GITHUB_REPOSITORY!=='Lovro-splichal-orhanizagi/mnzgorenjska'||process.env.GITHUB_SHA!==commit||!/^[1-9]\d{0,19}$/.test(runId??'')||parent.version!==1||parent.slug!==slug||parent.season!==season||parent.replay?.runId!==runId||parent.replay?.commit!==commit||!/^[1-9]\d{0,19}$/.test(parent.replay?.jobId??''))throw Error('Actual replay Actions identity required')
-  const result=await replaySnapshot({dir,slug,season,capture:parent.capture}),generatedAt=new Date().toISOString()
-  const replay={runId,jobId:parent.replay.jobId,commit,workflowSha256:workflowHash(commit,replayWorkflow),parserSha256:parserSha256(),generatedAt}
+  if(process.env.GITHUB_ACTIONS!=='true'||process.env.GITHUB_REPOSITORY!=='Lovro-splichal-orhanizagi/mnzgorenjska'||process.env.GITHUB_SHA!==commit||!/^[1-9]\d{0,19}$/.test(runId??'')||parent.version!==(mode==='replay-policy'?2:1)||parent.slug!==slug||parent.season!==season||parent.replay?.runId!==runId||parent.replay?.commit!==commit||!/^[1-9]\d{0,19}$/.test(parent.replay?.jobId??''))throw Error('Actual replay Actions identity required')
+  const statisticsPolicy=mode==='replay-policy'?parent.statisticsPolicy:null
+  if(mode==='replay'&&parent.statisticsPolicy!=null)throw Error('Historical policy requires policy replay mode')
+  const result=await replaySnapshot({dir,slug,season,capture:parent.capture,statisticsPolicy}),generatedAt=new Date().toISOString()
+  const replay={runId,jobId:parent.replay.jobId,commit,workflowSha256:workflowHash(commit,replayWorkflow),parserSha256:parserSha256(),generatedAt,...(statisticsPolicy?{statisticsPolicyId:statisticsPolicy.id,statisticsPolicySha256:statisticsPolicy.sha256,firstFantasyPlayedOn:statisticsPolicy.firstFantasyPlayedOn}:{})}
   mkdirSync(out,{recursive:true})
-  writeFileSync(resolve(out,'replay.json'),JSON.stringify({version:1,slug,season,capture:parent.capture,replay})+'\n')
+  writeFileSync(resolve(out,'replay.json'),JSON.stringify({version:statisticsPolicy?2:1,slug,season,capture:parent.capture,replay,...(statisticsPolicy?{statisticsPolicy}:{})})+'\n')
   writeFileSync(resolve(out,'razpored.json'),JSON.stringify(result.schedule)+'\n');writeFileSync(resolve(out,'zapisniki.json'),JSON.stringify(result.reports)+'\n')
-  const summary={slug,season,generatedAt,...result.binding,fixtures:result.checked.fixtures.length,reports:result.reports.length,strictCoverage:true}
+  const summary={slug,season,generatedAt,...result.binding,fixtures:result.checked.fixtures.length,reports:result.reports.length,...(statisticsPolicy?{statisticsPolicy,statisticsCoverage:result.checked.statisticsCoverage,strictStatisticsCoverage:result.checked.statisticsCoverage.strictStatisticsCoverage,policyCoverage:true}:{strictCoverage:true})}
   writeFileSync(resolve(out,'summary.json'),JSON.stringify(summary)+'\n');console.log(JSON.stringify(summary));return
  }
  throw Error('capture <slug> <season> <parentRun> <parentCommit> <dir> <parent.json> | replay <slug> <season> <dir> <parent.json> <out>')

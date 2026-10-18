@@ -1,6 +1,6 @@
 # DFB reviewed historical availability implementation plan
 
-> **For agentic workers:** Use superpowers:executing-plans after root approves the design and shared contract. No exemption code before that gate.
+> **For agentic workers:** Use superpowers:executing-plans after root approves the design and shared contract. Root approved the gate with builder amendments; follow separate read-only and database/import checkpoints.
 
 **Goal:** Make Südwest eligible for a truthful304-verified-plus2-unavailable archive release while preserving complete current/postlaunch statistics and all other release gates.
 
@@ -59,4 +59,4 @@ Modify `scripts/uvozi-dfb-regijo.mjs` and DFB import adapter; consume the HNS/Sp
 - [ ] Actions-only inactive import, canonical production equality, verified-history price/squad gates and deployed unavailable UI; inspect both exact pages and future six-hour deadline.
 - [ ] Activate only the passing Südwest league through guarded Actions; read back future unlocked first round and public priced player list; report real live count and unresolved Nord/West source/schedule gaps.
 
-Current deliverable is this design/plan only. Root approval and shared prerequisites precede implementation; source packets do not activate anything.
+Read-only checkpoint now implements classification, manifest-v3 proof validation and closed replay with explicit writer-disable guards. Shared database/import/UI prerequisites and independently reviewed DFB RPC binding remain required; source packets do not activate anything.
