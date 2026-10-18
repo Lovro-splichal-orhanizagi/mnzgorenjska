@@ -29,3 +29,6 @@ for(const [name,change]of[
 test('new plan keeps strict age and future clocks independently of old accounting',{skip:!process.env.FCF_HELD_PARENT_WIRE},()=>{
  const f=fixture(),p=build(f);assert.throws(()=>check(f,p,f.now-1),/FCF_INVENTORY/);assert.throws(()=>check(f,p,f.now+86400001),/FCF_INVENTORY/)
 })
+test('cross-process validated new plans are deeply frozen before they carry a capability',{skip:!process.env.FCF_HELD_PARENT_WIRE},()=>{
+ const f=fixture(),p=structuredClone(build(f));check(f,p);assert.ok(Object.isFrozen(p));assert.ok(Object.isFrozen(p.limits));assert.ok(Object.isFrozen(p.child.fetchIds));assert.throws(()=>p.limits.sourceWindowMs=999999999,TypeError)
+})

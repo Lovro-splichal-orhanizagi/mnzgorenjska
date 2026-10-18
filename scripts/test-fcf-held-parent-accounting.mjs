@@ -45,3 +45,17 @@ test('retained genuine bytes still count after GitHub retention expiry', {skip:!
  const f=fixture();for(const b of [f.consumption,f.finalReceipt,f.children[0].inventory])b.artifact.expired=true
  assert.equal(read(f).actualSourceGETs,16)
 })
+test('new plan eligibility is a separate reader-issued capability for the reviewed content defect', {skip:!process.env.FCF_HELD_PARENT_WIRE},()=>{
+ const p=read(fixture());assert.equal(call('requireFcfHeldParentContinuationEligibility',p),p);assert.throws(()=>call('requireFcfHeldParentContinuationEligibility',structuredClone(p)),/FCF_INVENTORY/)
+})
+import {readInventoryZip} from './fcf-missing-inventory-artifact.mjs'
+import {zip,sha} from './fcf-missing-inventory-test-fixture.mjs'
+for(const [name,mutate]of[
+ ['provider403',m=>m.documents.find(d=>d.id==='4109404').receipt.httpStatus=403],['provider429',m=>m.documents.find(d=>d.id==='4109404').receipt.httpStatus=429],['redirect',m=>m.documents.find(d=>d.id==='4109404').receipt.redirected=true],['partial last body',m=>m.documents.find(d=>d.id==='4109404').receipt.bodyState='truncated'],['unknown old count',m=>m.actualSourceGETs=null],['different content defect',m=>m.stopReason='source-refusal'],
+])test(`root-pinned content-defect accounting refuses ${name} even after caller rehash`,{skip:!process.env.FCF_HELD_PARENT_WIRE},()=>{
+ const f=fixture(),b=f.children[0].inventory
+ // The ZIP helper is synthetic mutation only; no replacement artifact exists.
+ const files=readInventoryZip({...b,members:{'manifest.json':8*1024*1024,...Object.fromEntries(Array.from({length:17},(_,i)=>[`acta-${4109388+i}.html`,2*1024*1024]))}}),manifest=JSON.parse(files.get('manifest.json'));mutate(manifest)
+ b.zipBytes=zip([{name:'manifest.json',body:Buffer.from(JSON.stringify(manifest))}]);b.artifact.size_in_bytes=b.zipBytes.length;b.artifact.digest=b.expected.artifactDigest='sha256:'+sha(b.zipBytes);b.expected.manifestSha256=sha(Buffer.from(JSON.stringify(manifest)))
+ assert.throws(()=>read(f),/FCF_INVENTORY/)
+})

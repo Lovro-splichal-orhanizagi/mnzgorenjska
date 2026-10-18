@@ -41,6 +41,7 @@ on:
         type: choice
         options:
           - g1-then-g9-missing-v1
+          - g9-only-after-held-parent-v1
       asset_id:
         description: Actual uploaded root draft release asset ID
         type: string
@@ -250,7 +251,7 @@ jobs:
   missing-inventory-g1:
     name: missing-inventory-g1
     needs: [missing-inventory-approval, missing-inventory-consume]
-    if: github.ref == 'refs/heads/main' && inputs.mode == 'missing-inventory' && github.run_attempt == 1
+    if: github.ref == 'refs/heads/main' && inputs.mode == 'missing-inventory' && inputs.preset == 'g1-then-g9-missing-v1' && github.run_attempt == 1
     runs-on: ubuntu-latest
     timeout-minutes: 360
     permissions:
@@ -330,7 +331,7 @@ jobs:
   missing-inventory-g9:
     name: missing-inventory-g9
     needs: [missing-inventory-approval, missing-inventory-consume, missing-inventory-g1]
-    if: github.ref == 'refs/heads/main' && inputs.mode == 'missing-inventory' && github.run_attempt == 1
+    if: always() && !cancelled() && github.ref == 'refs/heads/main' && inputs.mode == 'missing-inventory' && github.run_attempt == 1 && needs.missing-inventory-approval.result == 'success' && needs.missing-inventory-consume.result == 'success' && (inputs.preset == 'g9-only-after-held-parent-v1' || needs.missing-inventory-g1.result == 'success')
     runs-on: ubuntu-latest
     timeout-minutes: 360
     permissions:

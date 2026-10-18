@@ -73,13 +73,13 @@ export function validateFcfCurrentReleaseCalendar(fixtures){
  return{clubs:[...clubs.values()].sort((a,b)=>`${a.sourceClubId}/${a.sourceCategoryId}`.localeCompare(`${b.sourceClubId}/${b.sourceCategoryId}`)),verifiedKeeperClubs:[...keepers].sort()}
 }
 /** Pure single-document proof for the closed packet and later offline consumers. */
-export function proveFcfCurrentReleaseDocument({competition:c,document:d,now=Date.now()}){
+function proveCurrentDocument({competition:c,document:d,now=Date.now()},freshG9Markers=false){
  const scope=fcfFinalAuditScope(c?.slug),policy=getHistoricalStatisticsPolicy(c?.slug),id=d?.id
  if(!scope||!policy||c.id!==competitionIds[c.slug]||c.source!=='fcf'||c.source_policy!=='es-fcf-reviewed-history-v1'||c.source_league_code!==scope.code||c.active!==false||c.sezona_koledarska!==false||c.firstFantasyPlayedOn!=='2026-10-24'||typeof id!=='string'||!ID.test(id)||!Number.isInteger(d.expectedSourceRound)||d.expectedSourceRound<1||d.expectedSourceRound>30||!Number.isFinite(now))fail('exact approved scope and actual source round required')
  const entry=policy.entries.find(e=>e.sourceMatchId===id)
  const header=validateFcfSingleReportSource(d.html,scope.code,{id:`es${id}`,tekmovanje:c,sezona:'2026/27',danes:now})
  if(header.krog!==d.expectedSourceRound)fail('actual source round differs from inventory')
- const source=provenance(d,c,header,now,!!entry),clubs=sourceClubs(d.html)
+ const source=provenance(d,c,header,now,!!entry&&!freshG9Markers),clubs=sourceClubs(d.html)
  let canonical
  if(entry){
   const classified=classifyFcfHistoricalStatistics({competition:c,id,html:d.html})
@@ -89,6 +89,15 @@ export function proveFcfCurrentReleaseDocument({competition:c,document:d,now=Dat
   canonical={statisticsStatus:parsed.status==='complete'?'available':'pending',statisticsReason:null,policyId:null,policySha256:null,sourceFixture:null,report:parsed.report,appearances:parsed.appearances,goals:parsed.report?.goli??null}
  }
  return{id:`es${id}`,round:header.krog,date:header.datum,time:header.ura,homeGoals:header.izid?.domaci??null,awayGoals:header.izid?.gostje??null,clubs,source,...canonical}
+}
+/** Original legacy marker receipts remain mandatory on the original pure API. */
+export function proveFcfCurrentReleaseDocument(input){return proveCurrentDocument(input)}
+/** Algorithm-only fresh G9 proof, selected only behind authenticated new admission.
+ * Marker raw hashes/identity/policy remain exact; its actual capture receipt stays fresh.
+ */
+export function proveFcfG9FreshReleaseDocument(input){
+ if(input?.competition?.slug!=='es-ct-tercera-g9')fail('fresh marker protocol is G9-only')
+ return proveCurrentDocument(input,true)
 }
 function compile({sourceCommit,groups,beforeImageText,beforeSha256,databaseInventory,now=Date.now()},auditedUTC){
  if(!Number.isFinite(now)||!COMMIT.test(sourceCommit??'')||typeof beforeImageText!=='string'||!SHA.test(beforeSha256??'')||sha(beforeImageText)!==beforeSha256||!Array.isArray(groups)||groups.length!==3||new Set(groups.map(g=>g.competition?.slug)).size!==3)fail('exact main, SQL backup text/SHA and closed three-group input required')

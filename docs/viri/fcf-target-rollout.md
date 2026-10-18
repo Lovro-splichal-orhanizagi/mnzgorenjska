@@ -1,8 +1,8 @@
 # Source-closed FCF current target release
 
-The writer accepts only the reviewed captured-inventory Task5 protocol for G1/783
-or G9/797. G2 remains held on its normal source evidence. There is no legacy
-cache execution route, new source claim, source GET, fallback or fifth exclusion.
+The writer accepts the reviewed captured-inventory Task5 protocol for G1/783
+or G9/797, and the separately specified held-parent G9-only protocol. G2 remains held on its normal source evidence. The writer has no legacy
+cache execution route, source claim creation, source GET, fallback or fifth exclusion.
 Capture commit A stays in source evidence; the reviewed writer execution commit B
 has a separate runtime closure. One consumed source parent can support both targets.
 
@@ -109,3 +109,12 @@ The source-free local helper
 `--pack-originals /canonical/retained-dir /new/canonical/originals.zip` validates
 the pinned genuine four buffers and writes only that ZIP. It cannot reach GitHub,
 FCF or the database. Root owns review, staging, dispatch, integration and production.
+
+The separate `g9-only-after-held-parent-v1` source union is also supported for
+G9 only, as specified in `fcf-missing-inventory-admission.md`. It preserves the
+old failed parent's16 GETs solely as accounting and requires a new independently
+audited full240 capture, with one protected continuation ref per old parent.
+The old G1-first packet is never reclassified as admissible. The unchanged native
+SQL admission kind carries explicit prior/new/cumulative counts and old accounting
+inside its independently rebuilt source fingerprint. Cleanup originals, captureA,
+writerB and every later pricing/legal15/future-R6/activation gate stay separate.

@@ -3,7 +3,7 @@ import {historicalStatisticsPolicySha256 as hash} from './lib/historical-statist
 import {readFcfInventoryExecutionClaim,readFcfInventoryConsumptionArtifact} from './fcf-missing-inventory-claim.mjs'
 import {readFcfMissingInventoryDiagnosticArtifact,readFcfMissingInventoryNotStartedChild,buildFcfMissingInventoryFinalReceipt} from './fcf-missing-inventory-evidence.mjs'
 import {inventoryFail as fail,exactKeys,frozenJSON,jsonBytes,readInventoryZip,verifyInventoryExecution} from './fcf-missing-inventory-artifact.mjs'
-const capabilities=new WeakSet(),same=(a,b)=>hash(a)===hash(b)
+const eligibility=new WeakSet(),capabilities=new WeakSet(),same=(a,b)=>hash(a)===hash(b)
 const parent={runId:'39170648473',runAttempt:'1',sourceCommit:'42879db003006f61feb4a36070e6ea2e584712ad',planSha256:'e0e902944cec4a3fc479b52bc11243bfeb7ab4dcbe115ee831299456b4d2a28c',claimCommit:'9a18df4a844b59bada6a1fc11bebb4c2f70ead0f',claimJsonSha256:'9b77ffdde34f623542ee36b8c3b1b2ce076b3f8217dd59903e7675b26a5befd4',rulesetId:'25355545',completedUTC:'2026-10-18T22:53:54.450Z'}
 const records={
  consumption:{jobId:'117802835871',artifactId:'12152467795',artifactDigest:'sha256:b1bd7eed32b1b7c8f63470642b8f328618b53d5ef5f05653f8804348c47ff3c6',manifestSha256:'ff83c4506975686aef79f720cd76a4254bd1df53904546f866f428af4da9f8c7',name:'fcf-inventory-consumption-39170648473-1'},
@@ -25,6 +25,7 @@ export function fcfCumulativeSourceGETs(input){
  if(!Number.isSafeInteger(priorSourceGETs)||!Number.isSafeInteger(newSourceGETs)||priorSourceGETs<0||newSourceGETs<0||priorSourceGETs+newSourceGETs>477)fail('cumulative source cap477 exceeded or unknown')
  return priorSourceGETs+newSourceGETs
 }
+export function requireFcfHeldParentContinuationEligibility(proof){requireFcfHeldParentAccounting(proof);if(!eligibility.has(proof))fail('reviewed content-defect continuation eligibility required');return proof}
 export function requireFcfHeldParentAccounting(proof){if(!capabilities.has(proof))fail('reader-issued held-parent accounting required');return proof}
 /** Reauthenticate a fixed historical failure, never grant source or target proof. */
 export function readFcfHeldParentAccounting(input){
@@ -49,6 +50,8 @@ export function readFcfHeldParentAccounting(input){
  const files=readInventoryZip({...wire,members:{'manifest.json':8*1024*1024}}),manifest=jsonBytes(files.get('manifest.json'),'held parent final receipt')
  const rebuilt=buildFcfMissingInventoryFinalReceipt({plan,claimProof,consumptionProof,childRecords:[g1Proof,g9Proof],execution:{...manifest.execution,jobId:binding.jobId},now:archivalClock})
  if(!same(manifest,rebuilt)||manifest.completedUTC!==parent.completedUTC||manifest.admissible!==false||manifest.actualSourceGETs!==16||g1Proof.actualSourceGETs!==16||g1Proof.status!=='failed'||g9Proof.actualSourceGETs!==0||g9Proof.status!=='not-started')fail('held parent spent accounting differs')
+ const diagnosticFiles=readInventoryZip({...diagnostic,members:{'manifest.json':8*1024*1024,...Object.fromEntries(Array.from({length:17},(_,i)=>[`acta-${4109388+i}.html`,2*1024*1024]))}}),oldManifest=jsonBytes(diagnosticFiles.get('manifest.json'),'reviewed content-defect diagnostic'),last=oldManifest.documents.find(d=>d.id==='4109404'),captured=oldManifest.documents.filter(d=>d.kind==='captured')
+ const eligible=oldManifest.stopReason==='source-or-output-invalid'&&oldManifest.attempts.length===16&&oldManifest.attempts.at(-1).id==='4109404'&&captured.length===16&&captured.every(d=>d.receipt.bodyState==='complete'&&d.receipt.httpStatus===200&&d.receipt.redirected===false&&d.receipt.responseURL===d.receipt.sourceUrl)&&last.rawSha256==='1a42a49bd0b55d0bd3a654a6e15b65f430a2c132e28813899205d394f05244dc'
  const proof=frozenJSON({kind:'fcf-held-parent-accounting-only',protocol:'g9-only-after-held-parent-v1',...parent,actualSourceGETs:16,g9ActualSourceGETs:0,admissible:false,maximumCumulativeSourceGETs:477,consumptionBinding:{...records.consumption},diagnosticBinding:{...records.diagnostic},finalReceiptBinding:binding})
- capabilities.add(proof);return proof
+ capabilities.add(proof);if(eligible)eligibility.add(proof);return proof
 }
