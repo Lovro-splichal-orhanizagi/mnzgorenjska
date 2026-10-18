@@ -31,17 +31,22 @@ export async function withHnsDisposableDatabase(env,body,{run=execFileSync}={}){
  let created=false
  try{
   const dump=docker(['exec',container,'pg_dump','-U','supabase_admin','-d',source,'-Fc','--exclude-schema=cron','--exclude-schema=vault','--exclude-schema=realtime'])
-  const toc=docker(['exec','-i',container,'pg_restore','-l'],{input:dump}).toString()
-  for(const[suffix,bytes]of [['dump',dump],['list',hnsRestoreToc(toc)]]){
+  const spool=(suffix,bytes)=>{
    const host=join(directory,`clone.${suffix}`),remote=`/tmp/${name}.${suffix}`
-   writeFileSync(host,bytes,{mode:0o600});docker(['cp',host,`${container}:${remote}`]);files.push(remote)
+   writeFileSync(host,bytes,{mode:0o600});files.push(remote)
+   docker(['cp',host,`${container}:${remote}`]);return remote
   }
+  const dumpFile=spool('dump',dump)
+  // A TOC reader may exit before consuming the archive; use its owned file,
+  // never pipe the whole custom dump into a process that can close stdin early.
+  const toc=docker(['exec',container,'pg_restore','-l',dumpFile]).toString()
+  const listFile=spool('list',hnsRestoreToc(toc))
   docker(['exec',container,'createdb','-U','postgres','-T','template0',name]);created=true
   docker(['exec',container,'psql','-U','postgres','-d',name,'-X','-v','ON_ERROR_STOP=1','-c','create schema vault;'])
-  docker(['exec',container,'pg_restore','-U','postgres','-d',name,'--no-owner','--exit-on-error','-L',files[1],files[0]])
+  docker(['exec',container,'pg_restore','-U','postgres','-d',name,'--no-owner','--exit-on-error','-L',listFile,dumpFile])
   return await body({...env,SUPABASE_DB_CONTAINER:container,SUPABASE_TEST_DB:name,HISTORICAL_STATISTICS_DISPOSABLE_TEST:'1'})
  }finally{
   try{if(created)docker(['exec',container,'dropdb','-U','postgres','--force',name])}
-  finally{try{if(files.length)docker(['exec',container,'rm','--',...files])}finally{rmSync(directory,{recursive:true,force:true})}}
+  finally{try{if(files.length)docker(['exec',container,'rm','-f','--',...files])}finally{rmSync(directory,{recursive:true,force:true})}}
  }
 }

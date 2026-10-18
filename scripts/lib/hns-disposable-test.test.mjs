@@ -18,12 +18,18 @@ test('HNS restore retains explicit target ACLs and excludes managed extension/de
  for(const n of [1,2,3,4,9])assert.ok(result.includes(rows[n-1]))
  for(const n of [5,6,7,8])assert.ok(!result.includes(rows[n-1]))
 })
-function dockerFake({collision=false,wrongIdentity=false,image='public.ecr.aws/supabase/postgres:17.11.0.004'}={}){
+function dockerFake({collision=false,wrongIdentity=false,failCopySuffix=null,image='public.ecr.aws/supabase/postgres:17.11.0.004'}={}){
  const calls=[]
- const run=(cmd,args)=>{assert.equal(cmd,'docker');calls.push(args)
+ const run=(cmd,args,options={})=>{assert.equal(cmd,'docker');calls.push(args)
   if(args[0]==='inspect')return Buffer.from(JSON.stringify({name:wrongIdentity?'/user_database':'/slff_hr_historical_test_20261018',image}))
   if(args.includes('pg_dump')){assert.equal(args[args.indexOf('-U')+1],'supabase_admin');assert.ok(!args.includes('--no-privileges'));return Buffer.from('CUSTOM DUMP')}
-  if(args.includes('pg_restore')&&args.includes('-l'))return Buffer.from('1; 0 0 ACL public TABLE players postgres\n')
+  if(args.includes('pg_restore')&&args.includes('-l')){
+   if(options.input)throw Object.assign(Error('TOC reader closed stdin early'),{code:'EPIPE'})
+   assert.ok(!args.includes('-i'));assert.match(args.at(-1),/^\/tmp\/hns_ci_[1-9][0-9]*_[a-f0-9]{16}\.dump$/)
+   assert.ok(calls.some(call=>call[0]==='cp'&&call.at(-1).endsWith(args.at(-1))));assert.equal(options.maxBuffer,128*1024*1024)
+   return Buffer.from('1; 0 0 ACL public TABLE players postgres\n')
+  }
+  if(failCopySuffix&&args[0]==='cp'&&args.at(-1).endsWith('.'+failCopySuffix))throw Error('injected partial copy failure')
   if(args.includes('psql')&&args.includes('-At'))return Buffer.from('t\n')
   if(collision&&args.includes('createdb'))throw Error('database already exists')
   return Buffer.alloc(0)
@@ -42,4 +48,15 @@ test('HNS clone accepts official registry fallback but rejects lookalikes, colli
  assert.ok(fallback.calls.some(args=>args.includes('createdb')));assert.ok(fallback.calls.some(args=>args.includes('dropdb')))
  for(const image of ['ghcr.io.evil/supabase/postgres:17.6.1.167','evil.io/supabase/postgres:17.6.1.167','ghcr.io/foreign/postgres:17.6.1.167','ghcr.io/supabase/postgres-other:17.6.1.167','ghcr.io/supabase/postgres:latest','ghcr.io/supabase/postgres:17.6.1.167-bad','public.ecr.aws.evil/supabase/postgres:17.6.1.167']){const fake=dockerFake({image});await assert.rejects(()=>helper.withHnsDisposableDatabase(local,()=>assert.fail('must reject foreign image'),{run:fake.run}),/identity\/image mismatch/);assert.equal(fake.calls.length,1)}
  for(const options of [{collision:true},{wrongIdentity:true}]){const fake=dockerFake(options);await assert.rejects(()=>helper.withHnsDisposableDatabase(local,()=>assert.fail('must not run child'),{run:fake.run}));assert.ok(!fake.calls.some(args=>args.includes('dropdb')))}
+})
+
+test('HNS clone tracks each remote spool before copy so partial dump/list failures clean only owned files',async()=>{
+ for(const failCopySuffix of ['dump','list']){
+  const fake=dockerFake({failCopySuffix})
+  await assert.rejects(()=>helper.withHnsDisposableDatabase(local,()=>assert.fail('copy failure cannot run SQL tests'),{run:fake.run}),/injected partial copy failure/)
+  const attempted=fake.calls.filter(args=>args[0]==='cp').map(args=>args.at(-1).split(':').at(-1)),cleanup=fake.calls.find(args=>args.includes('rm'))
+  assert.ok(cleanup);assert.ok(cleanup.includes('-f'))
+  for(const path of attempted)assert.ok(cleanup.includes(path))
+  assert.ok(!fake.calls.some(args=>args.includes('createdb')||args.includes('dropdb')))
+ }
 })
