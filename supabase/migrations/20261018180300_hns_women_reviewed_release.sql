@@ -100,3 +100,127 @@ begin
 end $$;
 revoke all on function public.update_hns_women_round(bigint,text,int,jsonb,text,timestamptz)from public,anon,authenticated;
 grant execute on function public.update_hns_women_round(bigint,text,int,jsonb,text,timestamptz)to service_role;
+
+create table private_hns_women_release.bootstrap_state(competition_id bigint primary key,first_fantasy_played_on date not null,initial_manifest_sha256 text not null,created_at timestamptz not null default clock_timestamp());
+create table private_hns_women_release.prepared_packets(competition_id bigint not null,manifest_sha256 text not null,document jsonb not null,prepared_at timestamptz not null default clock_timestamp(),primary key(competition_id,manifest_sha256));
+create table private_hns_women_release.club_bindings(competition_id bigint not null,source_club_id text not null,canonical_name text not null,team_id bigint not null,country_id bigint not null,primary key(competition_id,source_club_id),unique(competition_id,team_id));
+revoke all on all tables in schema private_hns_women_release from public,anon,authenticated,service_role;
+create function private_hns_women_release.guard_club()returns trigger language plpgsql security definer set search_path=public,pg_temp as $$
+begin
+ if exists(select 1 from private_hns_women_release.club_bindings where team_id=old.id)and(tg_op='DELETE'or new.id is distinct from old.id or new.country_id is distinct from old.country_id)then raise exception 'HNS_RELEASE: bound native club identity/country immutable';end if;
+ if tg_op='DELETE'then return old;end if;return new;
+end $$;
+revoke all on function private_hns_women_release.guard_club()from public,anon,authenticated,service_role;
+create trigger hns_women_native_club before update or delete on public.teams for each row execute function private_hns_women_release.guard_club();
+
+create function public.get_hns_women_import_context(p_competition_id bigint)returns jsonb language plpgsql stable security definer set search_path=public,pg_temp as $$
+declare c competitions%rowtype;b jsonb;m jsonb;
+begin
+ select *into c from competitions where id=p_competition_id;
+ if c.id is null or c.slug<>'hr-prva-hnlz'or c.source<>'hns'or c.source_league_code is distinct from '114471579'or c.source_policy is distinct from 'hr-hnlz-v1'or c.date_only_deadline_policy is distinct from 'midnight-local-v1'or c.rok_pomak_ur<>6 or not exists(select 1 from countries where id=c.country_id and code='HR')or not exists(select 1 from private_hns_women_release.bootstrap_state where competition_id=c.id)then raise exception 'HNS_RELEASE: complete prepared native context required';end if;
+ m:=public.get_installed_historical_statistics_markers(c.id);
+ if jsonb_array_length(m->'markers')<>3 then raise exception 'HNS_RELEASE: exact3installed markers required';end if;
+ if(select count(*)from private_hns_women_release.club_bindings where competition_id=c.id)<>8 or exists(select 1 from private_hns_women_release.club_bindings b left join teams t on t.id=b.team_id where b.competition_id=c.id and(t.id is null or t.country_id is distinct from c.country_id or b.country_id is distinct from c.country_id or not exists(select 1 from private_hns_women_release.fixture_catalog e where e.source_competition_id='114471579'and((e.document->>'domaciId'=b.source_club_id and e.document->>'domaci'=b.canonical_name)or(e.document->>'gostjeId'=b.source_club_id and e.document->>'gostje'=b.canonical_name)))))then raise exception 'HNS_RELEASE: native club/country binding differs';end if;
+ if exists(select 1 from jsonb_array_elements(m->'markers')x where not exists(select 1 from private_hns_women_release.club_bindings b where b.competition_id=c.id and b.source_club_id=x#>>'{fixture,homeSourceClubId}'and b.team_id=(x->>'homeTeamId')::bigint)or not exists(select 1 from private_hns_women_release.club_bindings b where b.competition_id=c.id and b.source_club_id=x#>>'{fixture,awaySourceClubId}'and b.team_id=(x->>'awayTeamId')::bigint))then raise exception 'HNS_RELEASE: marker and native club IDs differ';end if;
+ select jsonb_agg(jsonb_build_object('sourceClubId',source_club_id,'canonicalName',canonical_name,'teamId',team_id,'countryId',country_id)order by source_club_id)into b from private_hns_women_release.club_bindings where competition_id=c.id;
+ return jsonb_build_object('competitionId',c.id,'sourceCompetitionId','114471579','clubs',b);
+end $$;
+revoke all on function public.get_hns_women_import_context(bigint)from public,anon,authenticated;
+grant execute on function public.get_hns_women_import_context(bigint)to service_role;
+
+-- Verify the complete closed-packet metadata independently of caller readiness
+-- booleans. The Actions reader additionally replays every original raw byte
+-- before obtaining writer credentials. This function does not infer source facts.
+create function private_hns_women_release.validate_manifest(p_manifest text,p_sha256 text)returns jsonb language plpgsql security definer set search_path=public,pg_temp as $$
+declare v jsonb;p private_historical_statistics.policies%rowtype;s jsonb;k int;d jsonb;facts jsonb;expected_played int;normal_count int;unavailable_ids text[];
+begin
+ if current_setting('transaction_isolation')<>'read committed'then raise exception 'HNS_RELEASE: READ COMMITTED required';end if;
+ if p_manifest is null or octet_length(p_manifest)>10000000 or p_sha256 is null or p_sha256!~'^[a-f0-9]{64}$'or encode(sha256(convert_to(p_manifest,'UTF8')),'hex')<>p_sha256 then raise exception 'HNS_RELEASE: reviewed manifest SHA/size mismatch';end if;
+ v:=p_manifest::jsonb;
+ if v->>'version'is distinct from '1'or v->>'slug'is distinct from 'hr-prva-hnlz'or v->>'source'is distinct from 'hns'or v->>'sourcePolicy'is distinct from 'hr-hnlz-v1'or v->>'dateOnlyDeadlinePolicy'is distinct from 'midnight-local-v1'or coalesce(v->>'sourceCommit','')!~'^[a-f0-9]{40}$'or coalesce(v->>'parserSha256','')!~'^[a-f0-9]{64}$'or v->>'currentPhase'is distinct from 'initial14rounds_only'then raise exception 'HNS_RELEASE: exact reviewed source/code/phase tuple required';end if;
+ if v#>'{sourceBudget,refusalObserved}'is distinct from 'false'::jsonb or (v#>>'{sourceBudget,otherRequests}')::int is distinct from 1 or(v#>>'{sourceBudget,total}')::int is distinct from (v#>>'{sourceBudget,hnsRequests}')::int+1 or coalesce((v#>>'{sourceBudget,total}')::int,0)not between 138 and 160 then raise exception 'HNS_RELEASE: source refusal/budget differs';end if;
+ select *into p from private_historical_statistics.policies where id='hr-hnlz-history-2026-10-18-v1';
+ if v#>>'{statisticsPolicy,id}'is distinct from p.id or v#>>'{statisticsPolicy,sha256}'is distinct from p.policy_sha256 then raise exception 'HNS_RELEASE: immutable exact3historical policy required';end if;
+ if jsonb_typeof(v->'persistedFixtures')is distinct from 'array'or jsonb_array_length(v->'persistedFixtures')<>131 or jsonb_typeof(v->'schedules')is distinct from 'array'or jsonb_array_length(v->'schedules')<>2 then raise exception 'HNS_RELEASE: exact75archive+56current calendar required';end if;
+ drop table if exists pg_temp._hns_expected;
+ create temporary table _hns_expected(id text primary key,source_code text,season text,round int,f jsonb)on commit drop;
+ insert into pg_temp._hns_expected select f->>'sourceMatchId',f->>'sourceCompetitionId',f->>'season',(f->>'internalRound')::int,f from jsonb_array_elements(v->'persistedFixtures')f;
+ if exists(select 1 from pg_temp._hns_expected e left join private_hns_women_release.fixture_catalog c on c.source_match_id=e.id where c.source_match_id is null or e.source_code is distinct from c.source_competition_id or e.season is distinct from c.season or e.round is distinct from c.internal_round or e.f->'sourceRound'is distinct from c.document->'sourceRound'or e.f->'sourcePhase'is distinct from c.document->'sourcePhase'or e.f->'homeSourceClubId'is distinct from c.document->'domaciId'or e.f->'awaySourceClubId'is distinct from c.document->'gostjeId'or e.f->'homeName'is distinct from c.document->'domaci'or e.f->'awayName'is distinct from c.document->'gostje'or e.f->>'sourceUrl'is distinct from 'https://semafor.hns.family/utakmice/'||e.id||'/x/'or jsonb_typeof(e.f->'played')is distinct from 'boolean'or jsonb_typeof(e.f->'explicitPostponed')is distinct from 'boolean'or e.f->>'statisticsStatus'is null or e.f->>'statisticsStatus'not in('available','unavailable_historical'))then raise exception 'HNS_RELEASE: fixture native identity/phase/round/source differs';end if;
+ for s in select value from jsonb_array_elements(v->'schedules')loop
+  if s->>'code'not in('108043476','114471579')or s->>'code'is null or s->>'season'is distinct from(case s->>'code'when '108043476'then '2025/26'else '2026/27'end)or coalesce(s->>'sha256','')!~'^[a-f0-9]{64}$'or s->>'capturedAt'is null or(s->>'capturedAt')::timestamptz>clock_timestamp()+interval '5 minutes'or(s->>'capturedAt')::timestamptz<clock_timestamp()-(case s->>'code'when '108043476'then interval '168 hours'else interval '12 hours'end)or jsonb_typeof(s->'fixtures')is distinct from 'array'or jsonb_array_length(s->'fixtures')<>(case s->>'code'when '108043476'then 75 else 56 end)then raise exception 'HNS_RELEASE: original capture freshness/season scope differs';end if;
+  if exists(select 1 from jsonb_array_elements(s->'fixtures')x left join pg_temp._hns_expected e on e.id=x->>'id'and e.source_code=s->>'code'where e.id is null or e.f->'internalRound'is distinct from x->'krog'or e.f->'sourceRound'is distinct from x->'sourceRound'or e.f->'sourcePhase'is distinct from x->'sourcePhase'or e.f->'homeSourceClubId'is distinct from x->'domaciId'or e.f->'awaySourceClubId'is distinct from x->'gostjeId'or e.f->'homeName'is distinct from x->'domaci'or e.f->'awayName'is distinct from x->'gostje'or e.f->'playedOn'is distinct from x->'datum'or e.f->'kickoff'is distinct from x->'ura'or e.f->'homeGoals'is distinct from coalesce(x#>'{izid,domaci}','null'::jsonb)or e.f->'awayGoals'is distinct from coalesce(x#>'{izid,gostje}','null'::jsonb)or(e.f->>'played')::boolean is distinct from(x->'izid'<>'null'::jsonb)or e.f->'explicitPostponed'is distinct from x->'postponed')or(select count(distinct x->>'id')from jsonb_array_elements(s->'fixtures')x)<>jsonb_array_length(s->'fixtures')then raise exception 'HNS_RELEASE: published schedule and persisted evidence differ';end if;
+ end loop;
+ if v#>>'{schedules,0,code}'is distinct from '108043476'or v#>>'{schedules,1,code}'is distinct from '114471579'then raise exception 'HNS_RELEASE: two ordered main containers required';end if;
+ k:=(v->>'firstFantasyRound')::int;
+ if k is null or k not between 9 and 14 or v->'releaseReady'is distinct from 'true'::jsonb or v->'releaseBlockingPendingIds'is distinct from '[]'::jsonb or exists(select 1 from pg_temp._hns_expected where season='2026/27'and round<k and f->'played'<>'true'::jsonb and f->'explicitPostponed'<>'true'::jsonb)then raise exception 'HNS_RELEASE: elapsed prelaunch rounds still have unpublished reports';end if;
+ if exists(select 1 from pg_temp._hns_expected where f->'explicitPostponed'='true'::jsonb and(id<>'114471614'or f->'playedOn'<>'null'::jsonb or f->'played'<>'false'::jsonb))or exists(select 1 from pg_temp._hns_expected where season='2025/26'and f->'played'<>'true'::jsonb)then raise exception 'HNS_RELEASE: archive/postponed facts differ';end if;
+ select jsonb_agg(c.document||jsonb_build_object('datum',e.f->'playedOn','ura',e.f->'kickoff','postponed',e.f->'explicitPostponed'))into facts from pg_temp._hns_expected e join private_hns_women_release.fixture_catalog c on c.source_match_id=e.id where e.season='2026/27'and e.round=k;
+ d:=private_hns_women_release.source_deadline('114471579',k,facts,6);
+ if exists(select 1 from pg_temp._hns_expected where season='2026/27'and round=k and(f->'played'<>'false'::jsonb or f->'explicitPostponed'='true'::jsonb))or (d->>'deadlineAt')::timestamptz<=clock_timestamp()or (v#>>'{future,deadlineAt}')::timestamptz is distinct from(d->>'deadlineAt')::timestamptz or v#>>'{future,playedOn}'is distinct from d->>'playedOn'or v#>>'{statisticsPolicy,firstFantasyPlayedOn}'is distinct from d->>'playedOn'or (v#>>'{future,round}')::int is distinct from k then raise exception 'HNS_RELEASE: real complete future fantasy candidate required';end if;
+ select array_agg(id order by id)into unavailable_ids from pg_temp._hns_expected where f->>'statisticsStatus'='unavailable_historical';
+ if unavailable_ids is distinct from array['114471617','114471627','114471629']then raise exception 'HNS_RELEASE: exact3historical exceptions only';end if;
+ if exists(select 1 from pg_temp._hns_expected e left join lateral(select value entry from jsonb_array_elements(p.document->'entries')where value->>'sourceMatchId'=e.id)a on true where e.f->>'statisticsStatus'='unavailable_historical'and(a.entry is null or e.f->'played'is distinct from 'true'::jsonb or e.f->'appearances'is distinct from 'null'::jsonb or e.f->'goals'is distinct from 'null'::jsonb or e.f->'sourceFixture'is distinct from(a.entry-array['rawSha256','reasonCode'])||jsonb_build_object('season','2026/27')or e.f->>'rawSha256'is distinct from a.entry->>'rawSha256'or e.f#>>'{historicalStatistics,policyId}'is distinct from p.id or e.f#>>'{historicalStatistics,policySha256}'is distinct from p.policy_sha256 or e.f#>>'{historicalStatistics,reasonCode}'is distinct from a.entry->>'reasonCode'))then raise exception 'HNS_RELEASE: exact unavailable original header/hash/null observations differ';end if;
+ if exists(select 1 from pg_temp._hns_expected e where e.f->>'statisticsStatus'='available'and((e.f->>'played')::boolean and(jsonb_typeof(e.f->'appearances')is distinct from 'array'or jsonb_array_length(e.f->'appearances')<22 or jsonb_typeof(e.f->'goals')is distinct from 'array'or jsonb_typeof(e.f->'warnings')is distinct from 'array'or coalesce(e.f->>'rawSha256','')!~'^[a-f0-9]{64}$'or e.f->>'capturedAt'is null or(e.f->>'capturedAt')::timestamptz>clock_timestamp()+interval '5 minutes'or jsonb_typeof(e.f->'quality')is distinct from 'object'or e.f#>>'{quality,explicitKeeperSides}'is distinct from '2')or not(e.f->>'played')::boolean and(e.f->'appearances'is distinct from '[]'::jsonb or e.f->'goals'is distinct from '[]'::jsonb or e.f->'homeGoals'is distinct from 'null'::jsonb or e.f->'awayGoals'is distinct from 'null'::jsonb)))then raise exception 'HNS_RELEASE: strict normal report/unknown future observations differ';end if;
+ -- Every normal side retains explicit start/end keeper coverage. A published
+ -- red51/entry52 transition is permitted; unknown86-90 keeper roles are not.
+ if exists(select 1 from pg_temp._hns_expected e cross join lateral jsonb_to_recordset(case when e.f->>'statisticsStatus'='available'then e.f->'appearances'else '[]'::jsonb end)a(side int,"sourcePersonId"text,started boolean,minute_on int,minute_off int,minutes_played int,is_goalkeeper boolean,red_cards int)where a.side is null or a.side not in(0,1)or a."sourcePersonId"is null or a."sourcePersonId"!~'^[1-9][0-9]*$'or a.started is null or a.is_goalkeeper is null or a.minute_on is null or a.minute_off is null or a.minute_on<0 or a.minute_off>90 or a.minute_off<a.minute_on or a.minutes_played is distinct from a.minute_off-a.minute_on)
+ or exists(select e.id,a.side from pg_temp._hns_expected e cross join lateral jsonb_to_recordset(case when e.f->>'statisticsStatus'='available'then e.f->'appearances'else '[]'::jsonb end)a(side int,started boolean,minute_on int,minute_off int,minutes_played int,is_goalkeeper boolean,red_cards int)group by e.id,a.side having count(*)filter(where a.started)<>11 or count(*)filter(where a.started and a.is_goalkeeper)<>1 or min(a.minute_on)filter(where a.is_goalkeeper)<>0 or max(a.minute_off)filter(where a.is_goalkeeper)<>90 or sum(a.minutes_played)<>990-sum(case when a.red_cards>0 then 90-a.minute_off else 0 end))then raise exception 'HNS_RELEASE: explicit lineup/keeper/minute coverage differs';end if;
+ select count(*)filter(where(f->>'played')::boolean),count(*)filter(where(f->>'played')::boolean and f->>'statisticsStatus'='available')into expected_played,normal_count from pg_temp._hns_expected;
+ if jsonb_typeof(v->'reports')is distinct from 'array'or jsonb_array_length(v->'reports')<>expected_played or(select count(distinct x->>'id')from jsonb_array_elements(v->'reports')x)<>expected_played or exists(select 1 from jsonb_array_elements(v->'reports')x left join pg_temp._hns_expected e on e.id=x->>'id'where e.id is null or e.f->'played'<>'true'::jsonb or x->'statisticsStatus'is distinct from e.f->'statisticsStatus'or x->'rawSha256'is distinct from e.f->'rawSha256')or(v#>>'{coverage,normalComplete}')::int is distinct from normal_count or(v#>>'{coverage,archiveComplete}')::int is distinct from 75 or(v#>>'{coverage,currentPublishedPlayed}')::int is distinct from expected_played-75 or(v#>>'{coverage,unavailableHistorical}')::int is distinct from 3 or(v#>>'{coverage,pending}')::int is distinct from 131-expected_played then raise exception 'HNS_RELEASE: honest complete/unavailable/pending coverage differs';end if;
+ return v;
+end $$;
+revoke all on function private_hns_women_release.validate_manifest(text,text)from public,anon,authenticated,service_role;
+
+-- Atomic inactive registration, native team bindings, all published round
+-- metadata and exactly3unavailable headers. No individual rows are created.
+create function public.prepare_hns_women_release(p_manifest text,p_sha256 text)returns jsonb language plpgsql security definer set search_path=public,pg_temp as $$
+declare v jsonb;c competitions%rowtype;p private_historical_statistics.policies%rowtype;state private_hns_women_release.bootstrap_state%rowtype;x record;s jsonb;e jsonb;facts jsonb;binding private_hns_women_release.club_bindings%rowtype;tid bigint;rid bigint;hid bigint;aid bigint;country bigint;first_day date;markers jsonb;
+begin
+ v:=private_hns_women_release.validate_manifest(p_manifest,p_sha256);
+ lock table countries,teams,competitions,players,rounds,matches,appearances,goals,fantasy_teams,competition_teams in share row exclusive mode;
+ select id into country from countries where code='HR';
+ if country is null then raise exception 'HNS_RELEASE: HR country missing';end if;
+ select *into c from competitions where slug='hr-prva-hnlz'for update;
+ if c.id is null then
+  insert into competitions(slug,name,short_name,country_id,source,source_league_code,source_policy,date_only_deadline_policy,prvi_fantasy_krog,rok_pomak_ur,vir_ime,vir_url,active,sort_order)
+  values('hr-prva-hnlz','SuperSport Prva HNLŽ','Prva HNLŽ',country,'hns','114471579','hr-hnlz-v1','midnight-local-v1',(v->>'firstFantasyRound')::int,6,'Hrvatski nogometni savez','https://semafor.hns.family/natjecanja/114471579/supersport-prva-hnlz/',false,coalesce((select max(sort_order)from competitions where country_id=country),0)+1)returning *into c;
+ end if;
+ select *into state from private_hns_women_release.bootstrap_state where competition_id=c.id;
+ if c.active or c.country_id<>country or c.source<>'hns'or c.source_league_code is distinct from '114471579'or c.source_policy is distinct from 'hr-hnlz-v1'or c.date_only_deadline_policy is distinct from 'midnight-local-v1'or c.rok_pomak_ur<>6 or c.sezona_koledarska or c.prvi_fantasy_krog is distinct from(v->>'firstFantasyRound')::int or exists(select 1 from fantasy_teams where competition_id=c.id)then raise exception 'HNS_RELEASE: exact inactive no-userdata target required';end if;
+ if state.competition_id is null and(exists(select 1 from rounds where competition_id=c.id)or exists(select 1 from players where competition_id=c.id)or exists(select 1 from competition_teams where competition_id=c.id))then raise exception 'HNS_RELEASE: preexisting unreviewed league data cannot be adopted/cleared';end if;
+ first_day:=(v#>>'{statisticsPolicy,firstFantasyPlayedOn}')::date;
+ if state.competition_id is not null and state.first_fantasy_played_on is distinct from first_day then raise exception 'HNS_RELEASE: installed first-fantasy anchor immutable';end if;
+ for x in select distinct id,name from(select document->>'domaciId'id,document->>'domaci'name from private_hns_women_release.fixture_catalog where source_competition_id='114471579'union select document->>'gostjeId',document->>'gostje'from private_hns_women_release.fixture_catalog where source_competition_id='114471579')clubs loop
+  select *into binding from private_hns_women_release.club_bindings where competition_id=c.id and source_club_id=x.id;
+  if binding.competition_id is not null then
+   if binding.canonical_name<>x.name or binding.country_id<>country or not exists(select 1 from teams where id=binding.team_id and country_id=country)then raise exception 'HNS_RELEASE: installed native club identity differs';end if;
+  else
+   if state.competition_id is not null then raise exception 'HNS_RELEASE: partial native club bootstrap';end if;
+   if(select count(*)from teams where name=x.name and country_id=country)>1 then raise exception 'HNS_RELEASE: ambiguous canonical club';end if;
+   select id into tid from teams where name=x.name and country_id=country;
+   if tid is null then insert into teams(name,short_name,country_id)values(x.name,x.name,country)returning id into tid;end if;
+   insert into private_hns_women_release.club_bindings values(c.id,x.id,x.name,tid,country);
+  end if;
+ end loop;
+ for x in select source_code,season,round from pg_temp._hns_expected group by source_code,season,round order by season,round loop
+  select value into s from jsonb_array_elements(v->'schedules')where value->>'code'=x.source_code;
+  select jsonb_agg(catalog.document||jsonb_build_object('datum',expected.f->'playedOn','ura',expected.f->'kickoff','postponed',expected.f->'explicitPostponed')order by expected.id)into facts from pg_temp._hns_expected expected join private_hns_women_release.fixture_catalog catalog on catalog.source_match_id=expected.id where expected.source_code=x.source_code and expected.round=x.round;
+  perform public.update_hns_women_round(c.id,x.source_code,x.round,facts,s->>'sha256',(s->>'capturedAt')::timestamptz);
+ end loop;
+ select *into p from private_historical_statistics.policies where id=v#>>'{statisticsPolicy,id}';
+ perform public.apply_historical_statistics_policy(c.id,p.id,p.policy_sha256,p.document->'entries');
+ for e in select value from jsonb_array_elements(p.document->'entries')loop
+  select id into rid from rounds where competition_id=c.id and season='2026/27'and number=(e->>'sourceRound')::int;
+  select team_id into hid from private_hns_women_release.club_bindings where competition_id=c.id and source_club_id=e->>'homeSourceClubId';
+  select team_id into aid from private_hns_women_release.club_bindings where competition_id=c.id and source_club_id=e->>'awaySourceClubId';
+  perform public.upsert_unavailable_historical_match(c.id,e->>'sourceMatchId',p.id,p.policy_sha256,e->>'rawSha256',jsonb_build_object('roundId',rid,'homeTeamId',hid,'awayTeamId',aid,'fixture',(e-array['rawSha256','reasonCode'])||jsonb_build_object('season','2026/27')));
+ end loop;
+ insert into private_hns_women_release.bootstrap_state(competition_id,first_fantasy_played_on,initial_manifest_sha256)values(c.id,first_day,p_sha256)on conflict(competition_id)do nothing;
+ insert into private_hns_women_release.prepared_packets(competition_id,manifest_sha256,document)values(c.id,p_sha256,v)on conflict(competition_id,manifest_sha256)do nothing;
+ markers:=public.get_installed_historical_statistics_markers(c.id);
+ perform public.get_hns_women_import_context(c.id);
+ if markers->>'policySha256'is distinct from p.policy_sha256 or markers->>'firstFantasyPlayedOn'is distinct from first_day::text then raise exception 'HNS_RELEASE: atomic complete marker readback differs';end if;
+ return jsonb_build_object('prepared',true,'active',false,'competitionId',c.id,'unavailableHistorical',3,'nativeClubBindings',8,'publishedRounds',40,'firstFantasyRound',c.prvi_fantasy_krog,'firstFantasyPlayedOn',first_day,'manifestSha256',p_sha256);
+end $$;
+revoke all on function public.prepare_hns_women_release(text,text)from public,anon,authenticated;
+grant execute on function public.prepare_hns_women_release(text,text)to service_role;

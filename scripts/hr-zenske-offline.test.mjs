@@ -4,7 +4,8 @@ import {mkdtempSync,rmSync,readFileSync,writeFileSync,symlinkSync} from 'node:fs
 import {tmpdir} from 'node:os'
 import {join} from 'node:path'
 import {createHash} from 'node:crypto'
-import {buildHnsWomenPacket,readHnsWomenCaptures,writeHnsWomenPacket,readHnsWomenPacket} from './hr-zenske-paket.mjs'
+import {buildHnsWomenPacket,readHnsWomenCaptures,writeHnsWomenPacket,readHnsWomenPacket,validateHnsWomenPacket} from './hr-zenske-paket.mjs'
+import {syntheticHnsWomenManifest} from './hr-zenske-test-fixture.mjs'
 import {createHnsWomenOfflineFetch} from './hr-zenske-offline.mjs'
 const captureDir=process.env.SLFF_HNS_WOMEN_CAPTURE_DIR,pilotDir=process.env.SLFF_HNS_WOMEN_PILOT_DIR,sha=x=>createHash('sha256').update(x).digest('hex')
 test('closed HNS fetch never falls through to live source or foreign HNS paths',async()=>{
@@ -27,4 +28,10 @@ test('original packet round-trip verifies every byte before any source or DB fet
   writeFileSync(path,raw);rmSync(path);symlinkSync('/etc/hosts',path)
   assert.throws(()=>readHnsWomenPacket(dir,{approvedSha256,now}),/symlink|file/i)
  } finally {rmSync(dir,{recursive:true,force:true})}
+})
+
+test('SQL-only synthetic complete observations never authorize a production offline packet',()=>{
+ const manifest=syntheticHnsWomenManifest()
+ assert.equal(manifest.releaseReady,true)
+ assert.throws(()=>validateHnsWomenPacket({manifest,documents:[]},{approvedSha256:sha(JSON.stringify(manifest)),requireReady:true}),/HNS women packet|missing|documents/i)
 })
