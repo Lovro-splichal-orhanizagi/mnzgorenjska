@@ -1,6 +1,6 @@
 # Pošta klubom (scripts/posta-klubom.mjs --zanka) na VM: /opt/slff-posta/
 #   docker-compose.yml   ta datoteka
-#   .env                 SUPABASE_SERVICE_ROLE_KEY, LUKA_SMTP_GESLO (chmod 600, ustvari lastnik, NI v gitu)
+#   .env                 SUPABASE_SERVICE_ROLE_KEY, LUKA_/LOVRO_/NEJC_/KLUBI_SMTP_GESLO (chmod 600, ustvari lastnik, NI v gitu)
 #   app/scripts/…        skripte, ki jih rabi pošta (objavi-posto.sh)
 #   app/node_modules/    le @supabase/supabase-js
 # Objava: scripts/hetzner/objavi-posto.sh. CI tega ne objavi.
