@@ -101,4 +101,38 @@ export async function runFcfMissingInventoryActions({argv,env=process.env,root=p
 }
 function activeCapture(ctx,env,name){const r=ctx.b.run,e=ctx.execution,j=selectedJob(ctx.b.jobs,name),current=j.steps?.filter(s=>s.name==='Capture missing target inventory');if(String(r.id)!==e.runId||r.repository?.full_name!==repository||r.event!=='workflow_dispatch'||r.path!==workflow||r.head_branch!=='main'||r.head_sha!==e.sourceCommit||r.run_attempt!==1||r.status!=='in_progress'||r.conclusion!==null||env.GITHUB_JOB!==name||String(j.run_id)!==e.runId||j.run_attempt!==1||j.head_sha!==e.sourceCommit||j.status!=='in_progress'||current?.length!==1||current[0].status!=='in_progress')fail('actual sole current reserved capture step required');return j}
 function childJob(slug){return`missing-inventory-${slug==='es-ct-segona-g1'?'g1':'g9'}`}
-if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href){try{const result=await runFcfMissingInventoryActions({argv:process.argv.slice(2)});if(result.result)process.stdout.write(JSON.stringify(result.result)+'\n');process.exitCode=result.code}catch{const stage=process.argv[2],message=stage==='seed-stage'?'seed staging transport or validation failed closed':stage==='approval-stage'?'approval staging transport or validation failed closed':'command failed closed';process.stderr.write(`FCF_INVENTORY: ${message}.\n`);process.exitCode=1}}
+const CLI_STAGE_LABELS=new Map([['seed-stage','seed staging'],['approval-stage','approval staging'],['consume','consumption'],['capture','capture'],['audit','audit'],['receipt','receipt']])
+const CLI_ERROR_CODES=new Map([
+ ['FCF_INVENTORY: authenticated GitHub GET failed','github-read'],
+ ['FCF_INVENTORY: actual running approved main required','run-metadata'],
+ ['FCF_INVENTORY: exact actual job required','job-metadata'],
+ ['FCF_INVENTORY: exact source-free approval job required','job-metadata'],
+ ['FCF_INVENTORY: actual current approval staging step required','step-metadata'],
+ ['FCF_INVENTORY: actual owner-visible no-bypass ruleset and original check clock required','approval-snapshot'],
+ ['FCF_INVENTORY: independently approved ruleset snapshot/plan binding differs','approval-snapshot'],
+ ['FCF_INVENTORY: staged approval differs from root input SHA','approval-snapshot'],
+ ['FCF_INVENTORY: reviewed private draft staging release required','approval-snapshot'],
+ ['FCF_INVENTORY: draft release pagination unknown','approval-snapshot'],
+ ['FCF_INVENTORY: duplicate draft staging release','approval-snapshot'],
+ ['FCF_INVENTORY: bounded actual draft asset required','approval-snapshot'],
+ ['FCF_INVENTORY: draft asset pagination unknown','approval-snapshot'],
+ ['FCF_INVENTORY: duplicate draft asset','approval-snapshot'],
+ ['FCF_INVENTORY: draft asset bytes/digest differs','approval-snapshot'],
+ ['FCF_INVENTORY: exact main approval required','approval-plan'],
+ ['FCF_INVENTORY: approval closed fields differ','approval-plan'],
+ ['FCF_INVENTORY: inventory approval bytes/size/BOM invalid','approval-plan'],
+ ['FCF_INVENTORY: inventory approval UTF8/JSON invalid','approval-plan'],
+ ['FCF_INVENTORY: immutable plan/hash/time/limits differ','approval-plan'],
+ ['FCF_INVENTORY: exact two ordered children required','approval-plan'],
+ ['FCF_INVENTORY: fixed child target/IDs/originals/budget differ','approval-plan'],
+ ['FCF_INVENTORY: approval seed authentication differs','approval-plan'],
+ ['FCF_INVENTORY: exact no-DB Actions attempt1 required','actions-context'],
+])
+export function writeFcfMissingInventoryCliDiagnostic({stage,error,write=text=>process.stderr.write(text)}){
+ const label=CLI_STAGE_LABELS.get(stage)??'command'
+ let message=''
+ try{if(error instanceof Error&&typeof error.message==='string')message=error.message}catch{}
+ const code=CLI_ERROR_CODES.get(message)??'unknown'
+ write(`FCF_INVENTORY: ${label} failed closed (${code}).\n`)
+}
+if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href){try{const result=await runFcfMissingInventoryActions({argv:process.argv.slice(2)});if(result.result)process.stdout.write(JSON.stringify(result.result)+'\n');process.exitCode=result.code}catch(error){writeFcfMissingInventoryCliDiagnostic({stage:process.argv[2],error});process.exitCode=1}}
