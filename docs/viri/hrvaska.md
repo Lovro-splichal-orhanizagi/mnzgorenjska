@@ -54,8 +54,23 @@ postav po 11, 788 golov, 13 skupnih klubov. Raven v `ravenLige`: MŽNL je nad
 |---|---|---|---|
 | hr-vs-mznl-vinkovci-osijek | 16 | `114552510` | `100569067` |
 
-Ista napaka je skrivala **MŽNL SB-PŽ** (Brod-Požega, `114477020`, lani
-ŽNS Požega `100642980`) — ni vpisana, želja zanjo je v `zelje_lig`.
+Ista napaka je skrivala **MŽNL SB-PŽ** (Brod-Požega; migracija
+20261018203700, **neaktivna**, pregled 18. 10. 2026 po prošnji uporabnikov).
+Letos jo objavlja ŽNS brodsko-posavski (oid 35, "MŽNL SB-PŽ 26/27"), lani ŽNS
+požeško-slavonski (oid 314, "MŽNL **PŽ-SB** 25/26") — zveza in vrstni red
+županij v imenu se menjata, zato je `hrvaske-lige.mjs` po imenu ne poveže.
+Tekoča sezona 63 od 91 tekem (Semafor ima le jesenski del), vseh 126 postav
+po 11, 229 golov = izidi, oba vratarja povsod; arhiv 182 tekem, 363/364 postav
+po 11, 738 golov proti 734 po izidih (4 tekme z izidom za zeleno mizo 3:0, v
+dogodkih ostanejo goli z igrišča), 12 skupnih klubov. Trkov imen ni: 10 od 16
+klubov že ima zapis (2. ŽNL Zapad NG, 1. ŽNL BPŽ, 1. ŽNL PŽ, Treća NL Istok,
+juniori BPŽ, 1. NL juniori Istok), pri vseh je šifra kluba na Semaforju ista.
+Želje v `zelje_lig` ob pregledu ni bilo ("2 Žnl Brodsko posavska" je II. ŽNL).
+
+| liga | klubov | tekoča 2026/27 | arhiv 2025/26 |
+|---|---|---|---|
+| hr-bp-mznl-sb-pz | 14 | `114477020` | `100642980` |
+
 1. ŽNL Vukovarsko-srijemska (seniorji) je `hr-vs-prva-znl` in je že vklopljena.
 
 Pregled je našel trk **NK Otok**: Međimurje (Semafor 347, II. MNL, zapis 738
