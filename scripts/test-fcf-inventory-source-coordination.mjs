@@ -24,3 +24,10 @@ for(const [name,jobs]of[
  ['duplicate native ES job ID',[{id:1,name:'uvoz ES 1/2',status:'completed'},{id:1,name:'uvoz ES 2/2',status:'completed'}]],
 ])test(`nightly ${name} holds the source slot`,async()=>{await assert.rejects(()=>coordinate({runs:{'uvoz-zapisnikov.yml':[run()]},jobs}),/FCF_INVENTORY/)})
 test('all unique declared ES shards terminal clears the source slot',async()=>{const r=await coordinate({runs:{'uvoz-zapisnikov.yml':[run()]},jobs:[{id:1,name:'uvoz ES 1/2',status:'completed'},{id:2,name:'uvoz ES 2/2',status:'completed'},{id:3,name:'uvoz DE',status:'in_progress'}]});assert.equal(r.result.status,'clear')})
+
+test('fixed non-ES existing-data batch is visible but does not consume an ES source slot',async()=>{
+ assert.ok(api.FCF_INVENTORY_COORDINATION_FAMILY.includes('vklop-obstojecih-lig.yml'))
+ const registry=JSON.parse(readFileSync(new URL('./policies/existing-league-candidates-20261018.json',import.meta.url)))
+ assert.ok(registry.candidates.every(c=>!/^(es|de|hr)-/.test(c.slug)))
+ assert.equal((await coordinate({runs:{'vklop-obstojecih-lig.yml':[run(122,'Obstojece lige vklop pl-sk-4-liga')]}})).result.status,'clear')
+})
