@@ -92,3 +92,15 @@ test('registry rejects duplicate identities and malformed descriptors', () => {
     assert.throws(() => validateHistoricalStatisticsRegistry(copy), /registry|policy|entry|descriptor/i)
   }
 })
+
+for (const competition of [
+  { slug:'wrong-slug', source:'hns', source_policy:'hr-hnlz-v1' },
+  { slug:'wrong-slug', source:'hns', source_policy:'unreviewed-v99' },
+  { source:'hns', source_policy:'hr-hnlz-v1' },
+  { slug:'hr-prva-hnlz', source:'hns', source_policy:'unreviewed-v99' },
+  { slug:'hr-hnl', source:'hns', source_policy:'' },
+]) {
+  test(`omitted policy cannot turn an invalid opt-in tuple into normal stats ${JSON.stringify(competition)}`, () => {
+    assert.throws(() => classifyHistoricalStatistics({competition, fixture:fixtureFor(hr,hr.entries[0]), rawSha256:hr.entries[0].rawSha256}), /policy|competition|provider/i)
+  })
+}
