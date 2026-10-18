@@ -93,6 +93,30 @@ Server Components (`self.__next_f.push`), ki ga `drevoRsc` sestavi
   preizkusu 5–20 s na zahtevek s 3 s premora), zato je prvi uvoz skupine
   ~1 ura. Vse lige bere en gostitelj: `cakaj-na-uvoze.mjs` ima ES v
   `SKUPEN_VIR`, zagoni Španije se ne prekrivajo.
+- **Prenos praznega HTTP 200**: `fcfFetch` naredi največ dva izvorna
+  zahtevka. Le prvi odgovor z natanko 0 znaki, statusom 200 in brez
+  preusmeritve na izvirni niz
+  `https://www.fcf.cat/ca/competicio/acta/<pozitivna decimalna šifra>`
+  (brez vodilne ničle, vrat, poverilnic, poizvedbe, fragmenta ali presledkov)
+  sproži eno ponovitev istega naslova in možnosti. Premor je
+  `Math.ceil(15000 * SLFF_PREMOR_FAKTOR)` ms; manjkajoči faktor je 1,
+  sicer mora biti končen in vsaj 1, izračunani premor pa največ 2147483647 ms.
+  Neveljavna nastavitev se preveri ob klicu, pred prvim zahtevkom.
+  Vsak poskus ima svoj 90-sekundni timeout za glavo in telo; kot doslej
+  nadomesti vhodni signal. Drugi prazen HTTP 200 ustavi prenos z dokončno
+  napako in ne pride do predpomnilnika ali razčlenjevalnika. Presledkov,
+  manjkajočega zapisnika, izziva ali prvega preusmerjenega odgovora ta pot
+  ne ponavlja. Ob 403/429 takoj prekliče telo po najboljših močeh in vrže
+  `FcfZavrnitev`; na zaključek preklica ne čaka, napaka preklica ne preglasi
+  zavrnitve. Izziv/CAPTCHA še naprej ustavi obstoječe preverjanje strani.
+  Skupni prenos ohrani štiri poskuse za omrežne napake in 5xx: prepletena
+  prazna telesa in prehodne napake lahko zato porabijo **največ 8 izvornih
+  zahtevkov** pri privzetih nastavitvah, zgolj prazna telesa pa največ 2.
+  Klicateljev lasten seznam zunanjih ponovitev ohrani svojo mejo.
+  `zamiki: []` pomeni en klic običajnega ovoja `fcfFetch` (še vedno največ
+  2 izvorna zahtevka). Neodvisni fiksni audit sedmih zapisnikov uporablja
+  svoj izvorni transport z največ **enim zahtevkom na zapisnik**, brez te
+  ponovitve; ob prvi napaki se ustavi.
 - Klubi: ključ brez diakritike in ločil, **z obliko** ("ROSES, A.E." in "BASE
   ROSES, C.F." sta dva kluba); kratko ime je del pred vejico brez oblike
   ("Roses", "Sant Llorenç de la Muga"). Druge ekipe ("…, B") so svoj klub.
