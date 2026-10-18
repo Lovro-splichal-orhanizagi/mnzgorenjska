@@ -69,7 +69,7 @@ export function parseHnsWomenReport(html,{competition,fixture,sourceCompetitionI
    allPeople.add(p.person)
    const ins=p.events.filter(e=>e.kind==='substitutionIn'),outs=p.events.filter(e=>e.kind==='substitutionOut')
    if(ins.length>1||outs.length>1||!p.bench&&ins.length||p.bench&&outs.length&&!ins.length)fail('unsupported reentry or inconsistent substitution participation')
-   if(p.bench&&!ins.length&&p.events.some(e=>['goal','penalty','own_goal','penalty_failed','red','second_yellow'].includes(e.kind)))fail('bench event lacks explicit entry/participation')
+   if(p.bench&&!ins.length&&p.events.some(e=>['goal','penalty','own_goal','penalty_failed','yellow','red','second_yellow'].includes(e.kind)))fail('bench event lacks explicit entry/participation')
    if(p.events.some(e=>e.kind==='yellow'&&e.minute==null))warnings.push(`yellow clock missing for source person ${p.person}; attributed card retained`)
   }
  }

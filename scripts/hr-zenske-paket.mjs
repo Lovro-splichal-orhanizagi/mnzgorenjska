@@ -44,9 +44,9 @@ export function validateHnsWomenFixtureSet(fixtures,code) {
  }
  return fixtures
 }
-function fixtureSet(document,code) {
- return validateHnsWomenFixtureSet(normalizeHnsWomenFixtures(document.body,code),code).map(f=>{
-  const row=new RegExp(`data-match="${f.id}"[\\s\\S]*?<div class="date">([^<]*)<`).exec(document.body)
+export function hnsWomenScheduleFixtures(html,code) {
+ return validateHnsWomenFixtureSet(normalizeHnsWomenFixtures(html,code),code).map(f=>{
+  const row=new RegExp(`data-match="${f.id}"[\\s\\S]*?<div class="date">([^<]*)<`).exec(html)
   const postponed=f.datum==null&&row?.[1]?.trim()==='Odgođeno'
   if(f.datum==null&&!postponed)fail('unpublished source date is not an explicit postponement')
   return{...f,postponed}
@@ -54,7 +54,7 @@ function fixtureSet(document,code) {
 }
 export function hnsWomenParserSha256() {
  const files=[...new Set(['scripts/hr-zenske-paket.mjs','scripts/uvoz-zapisnikov.mjs','scripts/uvoz-razporeda.mjs','scripts/viri/index.mjs','scripts/tekmovanje.mjs',
- ...zaprtje('scripts/viri/hns-zenske-quality.mjs'),...zaprtje('scripts/hr-zenske-deadline.mjs'),...zaprtje('scripts/lib/historical-statistics-import.mjs'),
+ ...zaprtje('scripts/viri/hns-zenske-runtime.mjs'),...zaprtje('scripts/hr-zenske-offline.mjs'),...zaprtje('scripts/viri/hns-zenske-quality.mjs'),...zaprtje('scripts/hr-zenske-deadline.mjs'),...zaprtje('scripts/lib/historical-statistics-import.mjs'),
  'scripts/policies/historical-statistics-exclusions.json','scripts/vzorci/hns-zenske-archive-phase-fixtures.json','scripts/vzorci/hns-zenske-current-fixtures.json'])].sort()
  const hash=createHash('sha256');for(const file of files)hash.update(file).update(readFileSync(file));return hash.digest('hex')
 }
@@ -71,7 +71,7 @@ export function buildHnsWomenPacket({documents,sourceBudget,sourceCommit,firstFa
   const age=now-Date.parse(d.capturedAt)
   // Existing DFB release convention: original archive <=168h, current <=12h, future skew <=5min.
   if(age< -300000||age>(index?12:168)*3600000)fail('stale/invalid original schedule capture time')
-  return{code,season:index?'2026/27':'2025/26',file:d.file,sha256:d.sha256,capturedAt:d.capturedAt,fixtures:fixtureSet(d,code)}
+  return{code,season:index?'2026/27':'2025/26',file:d.file,sha256:d.sha256,capturedAt:d.capturedAt,fixtures:hnsWomenScheduleFixtures(d.body,code)}
  })
  const current=schedules[1],first=current.fixtures.filter(f=>f.krog===firstFantasyRound)
  if(first.length!==4||first.some(f=>f.izid||f.postponed))fail('complete unplayed future round required')
@@ -120,11 +120,25 @@ export function readHnsWomenCaptures({captureDir,pilotDir,currentFile}) {
  const current=load(records.find(r=>r.dir===captureDir&&r.file===currentFile)),archive=load(records.find(r=>r.dir===captureDir&&r.file==='spring-magenta.html'))
  if(current.id!=='114471579'||archive.id!=='108043476')fail('wrong main source containers')
  const documents=[archive,current]
- for(const [d,code]of [[archive,'108043476'],[current,'114471579']])for(const f of fixtureSet(d,code).filter(f=>f.izid)) {
+ for(const [d,code]of [[archive,'108043476'],[current,'114471579']])for(const f of hnsWomenScheduleFixtures(d.body,code).filter(f=>f.izid)) {
   const r=records.find(r=>/^https:\/\/semafor\.hns\.family\/utakmice\//.test(r.url)&&canonicalURL(r.url).id===f.id)
   documents.push(load(r))
  }
  return{documents,sourceBudget:{hnsRequests:records.length,otherRequests:1,total:records.length+1,refusalObserved:existsSync(resolve(captureDir,'STOP'))||records.some(r=>[401,403,429].includes(r.status??r.httpStatus))}}
+}
+export function readHnsWomenPacket(directory,{approvedSha256,now=Date.now(),requireReady=false}={}) {
+ const root=resolve(directory),folder=lstatSync(root),documentFolder=lstatSync(join(root,'documents'))
+ if(!folder.isDirectory()||folder.isSymbolicLink()||!documentFolder.isDirectory()||documentFolder.isSymbolicLink())fail('unsafe packet directory/symlink')
+ const read=(file,max)=>{const path=join(root,file),stat=lstatSync(path);if(!stat.isFile()||stat.isSymbolicLink()||stat.size>max)fail('unsafe packet file/symlink/size');return readFileSync(path,'utf8')}
+ const raw=read('manifest.json',10000000)
+ if(!/^[a-f0-9]{64}$/.test(approvedSha256??'')||sha(raw)!==approvedSha256)fail('approved manifest bytes SHA differs')
+ const manifest=JSON.parse(raw)
+ if(!Array.isArray(manifest.documents)||manifest.documents.length>133)fail('invalid packet documents')
+ const names=manifest.documents.map(d=>d.file)
+ if(names.some(file=>!/^documents\/(?:match|schedule)-[1-9]\d*\.html$/.test(file))||new Set(names).size!==names.length)fail('unsafe/duplicate packet document path')
+ if(readdirSync(root).sort().join(',')!=='documents,manifest.json'||readdirSync(join(root,'documents')).sort().join(',')!==names.map(file=>file.slice(10)).sort().join(','))fail('unexpected packet files')
+ const packet={manifest,documents:manifest.documents.map(d=>({...d,body:read(d.file,2000000)}))}
+ validateHnsWomenPacket(packet,{approvedSha256,now,requireReady});return packet
 }
 export function writeHnsWomenPacket(packet,directory) {
  mkdirSync(directory,{recursive:true,mode:0o700});if(readdirSync(directory).length)fail('packet output directory must be empty')

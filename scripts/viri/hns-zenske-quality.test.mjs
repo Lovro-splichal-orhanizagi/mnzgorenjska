@@ -49,3 +49,4 @@ test('missing yellow clock retains attributed card and an explicit warning',()=>
  assert.ok(r.quality.warnings.some(w=>/yellow/i.test(w)))
 })
 test('club source ID cannot be substituted by a same-country mens organization',()=>assert.throws(()=>parse(html(),{...fixture,domaciId:'1274'}),/club|identity/i))
+test('known unused-bench caution cannot disappear from individual accounting',()=>assert.throws(()=>parse(html({events:{'0:12':event('yellow',"70'")}})),/entry|participation|bench/i))
