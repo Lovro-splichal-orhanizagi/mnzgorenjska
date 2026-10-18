@@ -13,6 +13,9 @@ export const racun: NonNullable<Prevod['racun']> = {
     racunUstvarjen:
       'Ο λογαριασμός σου δημιουργήθηκε. Σου στείλαμε σύνδεσμο επιβεβαίωσης στο email: άνοιξέ τον και γύρνα εδώ.',
     prijavljenKot: 'Είσαι συνδεδεμένος ως {email}.',
+    posljiPotrditevZnova: 'Στείλε ξανά το email επιβεβαίωσης',
+    potrditevPoslanaZnova:
+      'Σου στείλαμε νέο email επιβεβαίωσης. Κοίτα και στα ανεπιθύμητα.',
     zGooglom: 'Συνέχεια με Google',
     zApplom: 'Συνέχεια με Apple',
     aliZEposto: 'ή με email',

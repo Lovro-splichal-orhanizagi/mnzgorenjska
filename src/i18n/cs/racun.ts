@@ -14,6 +14,9 @@ export const racun: NonNullable<Prevod['racun']> = {
     racunUstvarjen:
       'Účet je vytvořený. Na e-mail jsme ti poslali potvrzovací odkaz. Otevři ho a vrať se sem.',
     prijavljenKot: 'Jsi přihlášený jako {email}.',
+    posljiPotrditevZnova: 'Poslat potvrzovací e-mail znovu',
+    potrditevPoslanaZnova:
+      'Poslali jsme nový potvrzovací e-mail. Podívej se i do nevyžádané pošty.',
     zGooglom: 'Pokračovat přes Google',
     zApplom: 'Pokračovat přes Apple',
     aliZEposto: 'nebo přes e-mail',

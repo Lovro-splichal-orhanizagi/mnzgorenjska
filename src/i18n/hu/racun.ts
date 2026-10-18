@@ -13,6 +13,9 @@ export const racun: NonNullable<Prevod['racun']> = {
     racunUstvarjen:
       'A fiókod elkészült. Megerősítő linket küldtünk e-mailben: nyisd meg, aztán gyere vissza.',
     prijavljenKot: 'Bejelentkezve: {email}.',
+    posljiPotrditevZnova: 'Megerősítő e-mail újraküldése',
+    potrditevPoslanaZnova:
+      'Új megerősítő e-mailt küldtünk. Nézd meg a levélszemét mappát is.',
     zGooglom: 'Folytatás Google-lel',
     zApplom: 'Folytatás Apple-lel',
     aliZEposto: 'vagy e-maillel',

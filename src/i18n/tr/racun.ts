@@ -13,6 +13,9 @@ export const racun: NonNullable<Prevod['racun']> = {
     racunUstvarjen:
       'Hesabın oluşturuldu. E-postana bir onay bağlantısı gönderdik. Bağlantıyı aç ve geri dön.',
     prijavljenKot: '{email} olarak giriş yaptın.',
+    posljiPotrditevZnova: 'Onay e-postasını yeniden gönder',
+    potrditevPoslanaZnova:
+      'Yeni bir onay e-postası gönderdik. Gereksiz (spam) klasörüne de bak.',
     zGooglom: 'Google ile devam et',
     zApplom: 'Apple ile devam et',
     aliZEposto: 'ya da e-posta ile',
