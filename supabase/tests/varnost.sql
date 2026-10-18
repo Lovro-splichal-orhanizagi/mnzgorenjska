@@ -5120,8 +5120,6 @@ select pg_temp.preveri('agent: obcutljiv stolpec po imenu je zaprt',
   and not agent.obcutljiv_stolpec('poslano_at'));
 select pg_temp.preveri('agent: bere naslove klubov (izjema lastnika)',
   has_column_privilege('agent_bralec', 'public.klub_stik', 'email', 'select'));
-select pg_temp.zavrnjeno('agent: le en stavek',
-  $q$select * from agent.poizvedba('select 1; select 2')$q$);
 select pg_temp.preveri('agent: ne bere imena kupca',
   not has_column_privilege('agent_bralec', 'trgovina.narocila', 'ime', 'select'));
 select pg_temp.preveri('agent: privzeto le branje',

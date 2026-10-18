@@ -193,9 +193,18 @@ begin
     end loop;
   end if;
 exception when insufficient_privilege then
-  insert into agent.opozorila (kljuc, besedilo) values ('net', 'pravice PUBLIC na shemi net odvzemi ročno')
-  on conflict (kljuc) do nothing;
-  raise warning 'net: pravice PUBLIC odvzemi ročno (docs/agenti-baza.md)';
+  null;
+end $$;
+
+-- Ne-lastnik dobi pri GRANT/REVOKE le opozorilo, ne napake: preveri izid.
+do $$ begin
+  if to_regnamespace('net') is not null and has_schema_privilege('agent_bralec', 'net', 'usage') then
+    insert into agent.opozorila (kljuc, besedilo) values ('net', 'pravice PUBLIC na shemi net odvzemi ročno')
+    on conflict (kljuc) do nothing;
+    raise warning 'net: pravice PUBLIC odvzemi ročno (docs/agenti-baza.md)';
+  else
+    delete from agent.opozorila where kljuc = 'net';
+  end if;
 end $$;
 
 grant usage on schema public, trgovina to agent_bralec;
