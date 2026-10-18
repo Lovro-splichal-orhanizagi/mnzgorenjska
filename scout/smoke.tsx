@@ -71,13 +71,16 @@ const v = opisVrzeli({ vrsta: 'odvisnost', skupina: 'FWD', ime: 'Ana Novak', vre
 preveri('vrzeli: delež golov v odstotkih', v.includes('Ana Novak') && v.includes('45 %'), v)
 
 const kaderPreizkus = [
-  { player_id: 1, ime: 'A', skupina: 'FWD', nastopi: 9, minute: 800, delez_minut: 0.9, zacetki_delez: 1, goli: 5, onoff_ref_90: 0.3, kartoni_90: 0.1, trend_minut: 0 },
-  { player_id: 2, ime: 'B', skupina: 'FWD', nastopi: 4, minute: 200, delez_minut: 0.2, zacetki_delez: 0.2, goli: 1, onoff_ref_90: 0, kartoni_90: 0, trend_minut: null },
+  { player_id: 1, ime: 'A', skupina: 'FWD', nastopi: 9, minute: 800, delez_minut: 0.9, zacetki_delez: 1, goli: 5, onoff_ref_90: 0.3, kartoni_90: 0.1, trend_minut: 0, mladi: false },
+  { player_id: 2, ime: 'B', skupina: 'FWD', nastopi: 4, minute: 200, delez_minut: 0.2, zacetki_delez: 0.2, goli: 1, onoff_ref_90: 0, kartoni_90: 0, trend_minut: null, mladi: false },
+  { player_id: 3, ime: 'C', skupina: 'GK', nastopi: 6, minute: 540, delez_minut: null, zacetki_delez: 0.6, goli: 0, onoff_ref_90: null, kartoni_90: null, trend_minut: null, mladi: true },
 ] as const
 const gl = globina([...kaderPreizkus])
-preveri('klub: globina šteje igralce z vsaj 30 % minut in najde nosilca',
+preveri('klub: globina šteje igralce z vsaj 30 % minut in najde nosilca, U19 posebej',
   gl.find((x) => x.skupina === 'FWD')?.stalnih === 1 && gl.find((x) => x.skupina === 'FWD')?.nosilec?.ime === 'A'
-  && gl.find((x) => x.skupina === 'GK')?.nosilec === null)
+  && gl.find((x) => x.skupina === 'FWD')?.mladih === 0
+  && gl.find((x) => x.skupina === 'GK')?.stalnih === 0 && gl.find((x) => x.skupina === 'GK')?.nosilec === null
+  && gl.find((x) => x.skupina === 'GK')?.mladih === 1 && gl.find((x) => x.skupina === 'MID')?.nosilec === null)
 
 const stat = (x: number): StatEkipe => ({
   tekme: 11, tocke: x, za: x, proti: x, ciste: 0.2, tocke_doma: x, tocke_gost: x,
@@ -92,6 +95,7 @@ const pregled: PregledKluba = {
 }
 const primeri: [string, PregledKluba, string?][] = [
   ['klub: izris pregleda', pregled, '2. SNL'],
+  ['klub: izris igralca z mladinsko vrstico (brez povezave)', { ...pregled, kader: [kaderPreizkus[2]] }, '+ 1 U19'],
   ['klub: izris brez glave in ekipe', { ...pregled, glava: null, ekipa: null, kader: [], vrzeli: [] }],
   ['klub: izris brez statistike kluba', { ...pregled, ekipa: { klub: null, liga: stat(1.4) } }],
 ]
@@ -102,7 +106,7 @@ for (const [opis, pr, vsebuje] of primeri) {
         <PregledKlubaView p={pr} razvrsti="minute" setRazvrsti={() => {}} onIzbira={() => {}} />
       </StaticRouter>,
     )
-    preveri(opis, !vsebuje || html.includes(vsebuje))
+    preveri(opis, (!vsebuje || html.includes(vsebuje)) && !html.includes('/player/3'))
   } catch (e) {
     preveri(opis, false, String(e))
   }

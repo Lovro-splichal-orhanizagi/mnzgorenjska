@@ -6,12 +6,17 @@ import { Nalaganje } from '../seja'
 import { odst, st } from './Igralec'
 import { opisVrzeli } from './Vrzeli'
 
-/** Globina po poziciji iz kadra: koliko igralcev nosi vsaj 30 % minut in kdo največ. */
-export function globina(kader: IgralecKluba[]): { skupina: Skupina; stalnih: number; nosilec: IgralecKluba | null }[] {
+/** Globina po poziciji iz kadra: koliko igralcev nosi vsaj 30 % minut in kdo največ (brez U19, kot stroj), in koliko je U19. */
+export function globina(kader: IgralecKluba[]): { skupina: Skupina; stalnih: number; nosilec: IgralecKluba | null; mladih: number }[] {
   return SKUPINE.map((s) => {
-    const v = kader.filter((k) => k.skupina === s)
-    const nosilec = v.reduce<IgralecKluba | null>((a, b) => (!a || b.delez_minut > a.delez_minut ? b : a), null)
-    return { skupina: s, stalnih: v.filter((k) => k.delez_minut >= 0.3).length, nosilec }
+    const v = kader.filter((k) => k.skupina === s && !k.mladi)
+    const nosilec = v.reduce<IgralecKluba | null>((a, b) => (!a || (b.delez_minut ?? 0) > (a.delez_minut ?? 0) ? b : a), null)
+    return {
+      skupina: s,
+      stalnih: v.filter((k) => (k.delez_minut ?? 0) >= 0.3).length,
+      nosilec,
+      mladih: kader.filter((k) => k.skupina === s && k.mladi).length,
+    }
   })
 }
 
@@ -186,10 +191,17 @@ export function PregledKlubaView({ p, razvrsti, setRazvrsti, onIzbira }: {
                   {kader.map((k) => (
                     <tr key={k.player_id} className="group hover:bg-slate-800">
                       <td className="sticky left-0 whitespace-nowrap bg-slate-900 px-3 py-2 group-hover:bg-slate-800">
-                        <Link to={`/player/${k.player_id}`} className="font-semibold text-slate-100 hover:text-gnl-300">{k.ime}</Link>
+                        {k.mladi ? (
+                          <span className="font-semibold text-slate-100">
+                            {k.ime}{' '}
+                            <span title={t('klub.mladiOpis')} className="znacka bg-slate-700 text-slate-200">{t('klub.mladi')}</span>
+                          </span>
+                        ) : (
+                          <Link to={`/player/${k.player_id}`} className="font-semibold text-slate-100 hover:text-gnl-300">{k.ime}</Link>
+                        )}
                       </td>
                       <td className="px-3 py-2">
-                        <span className={`znacka poz-${k.skupina}`}>{t(`poz.${k.skupina}` as Kljuc)}</span>
+                        {k.skupina && <span className={`znacka poz-${k.skupina}`}>{t(`poz.${k.skupina}` as Kljuc)}</span>}
                       </td>
                       {STOLPCI.map(([kl, , f]) => (
                         <td key={kl} className="whitespace-nowrap px-3 py-2 text-right tabular-nums text-slate-300">{f(k)}</td>
@@ -199,6 +211,7 @@ export function PregledKlubaView({ p, razvrsti, setRazvrsti, onIzbira }: {
                 </tbody>
               </table>
             </div>
+            {p.kader.some((k) => k.mladi) && <p className="text-xs text-slate-500">{t('klub.mladi')}: {t('klub.mladiOpis')}</p>}
             <p className="text-xs text-slate-500">{t('iskanje.opomba')}</p>
           </section>
 
@@ -211,9 +224,10 @@ export function PregledKlubaView({ p, razvrsti, setRazvrsti, onIzbira }: {
                   <p className="text-sm text-slate-200">{t('klub.stalnih', { n: x.stalnih })}</p>
                   {x.nosilec && (
                     <p className="text-xs text-slate-400">
-                      {t('klub.nosilec', { ime: x.nosilec.ime, delez: Math.round(x.nosilec.delez_minut * 100) })}
+                      {t('klub.nosilec', { ime: x.nosilec.ime, delez: Math.round((x.nosilec.delez_minut ?? 0) * 100) })}
                     </p>
                   )}
+                  {x.mladih > 0 && <p className="text-xs text-slate-400">{t('klub.mladiVPoziciji', { n: x.mladih })}</p>}
                 </div>
               ))}
             </div>

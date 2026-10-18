@@ -92,15 +92,17 @@ export interface StatEkipe {
 export interface IgralecKluba {
   player_id: number
   ime: string
-  skupina: Skupina
+  skupina: Skupina | null
   nastopi: number
   minute: number
-  delez_minut: number
+  delez_minut: number | null
   zacetki_delez: number
   goli: number
-  onoff_ref_90: number
-  kartoni_90: number
+  onoff_ref_90: number | null
+  kartoni_90: number | null
   trend_minut: number | null
+  /** Igralec z mladinsko vrstico: le svojemu klubu, le javna dejstva tekem, brez profila. */
+  mladi: boolean
 }
 export interface PregledKluba {
   team_id: number

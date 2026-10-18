@@ -357,6 +357,8 @@ objava, testi): `docs/scout.md`. Bistvo:
 - **Mladinske lige, osebe z vrstico v mladinski ligi (razen s polnoletno
   letnico na potrjenem profilu, le prijavitelj), ugovor (`scout.ugovori`) in
   anonimizirani (tudi ista oseba v drugih ligah) ne vstopijo v izračun.**
+  Izjema: stran Klub lastnemu klubu pokaže njegove igralce z mladinsko
+  vrstico (le javna dejstva tekem, brez ugovora in anonimiziranih).
 - Privolitev igralca (odprt za prestop, letnica, regije, stik) je v zaprti
   `scout.privolitve`, ne v javnem `profil_igralca`; piše le
   `scout_shrani_privolitev`. Ugovor nikoli ne gre v javno tabelo.
