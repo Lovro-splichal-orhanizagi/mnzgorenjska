@@ -8809,6 +8809,15 @@ export type Database = {
         Args: { p_round_id: number }
         Returns: undefined
       }
+      reconcile_dfb_current_players: {
+        Args: {
+          p_manifest: string
+          p_plan: string
+          p_plan_sha256: string
+          p_sha256: string
+        }
+        Returns: Json
+      }
       roster_je_veljaven: { Args: { p_team_id: number }; Returns: boolean }
       scout_igralec: { Args: { p_player_id: number }; Returns: Json }
       scout_isci: {
@@ -9144,6 +9153,7 @@ export type Database = {
       }
       trgovina_bon_porabljen: { Args: { p_promocija: string }; Returns: string }
       trgovina_bon_poslan: { Args: { p_narocilo: number }; Returns: undefined }
+      trgovina_boni_narocila: { Args: { p_narocilo: number }; Returns: Json }
       trgovina_iz_placila: {
         Args: {
           p_checkout: string
