@@ -24,7 +24,7 @@ test('full stream forwards validated exact report skips without suppressing new 
 test('base FCF stream never reads cache/header/raw bytes for skipped installed report',async t=>{
  const old=process.cwd(),dir=mkdtempSync(join(tmpdir(),'fcf-historical-skip-'));process.chdir(dir);mkdirSync('scripts/.predpomnilnik/fcf',{recursive:true})
  t.after(()=>{process.chdir(old);rmSync(dir,{recursive:true,force:true})})
- assert.deepEqual(await baseFcf.zapisniki('4109388-4109388',()=>{throw Error('raw source forbidden')},{preskoci:new Set(['es4109388'])}),[])
+ assert.deepEqual(await baseFcf.zapisniki('4109388-4109388',()=>{throw Error('raw source forbidden')},{preskoci:new Set(['es4109388']),historicalFixtures:[{id:4109388,g:{krog:1,datum:'2026-09-20',sezona:'2026/27',domaci:'SANT JAUME OLOT B, C.F',gostje:'BEGUR, C.F.',tekmovanje:'SEGONA CATALANA',skupina:'GRUP 1',izid:{domaci:0,gostje:3}},historicalMarker:binding().markers[0]}]}),[])
 })
 test('missing/partial/drifted marker binding fails before provider',async()=>{
  for(const markers of [null,{...binding(),markers:[]},{...binding(),policySha256:'0'.repeat(64)}]) {
@@ -46,7 +46,7 @@ test('normal selected report delegates original strict preparation unchanged',as
 test('schedule keeps known official header and DB fixture without reading excluded raw report',async()=>{
  const calls=[]
  const provider=withFcfHistoricalStatistics(baseFcf,competition,{installedHistoricalMarkers:binding(),verifyInstalledMarker:verifyFcfInstalledHistoricalMarker,
-  async readBlock(...args){calls.push(args);return{tekme:[],skupina:'SEGONA CATALANA|GRUP 1|2026/27'}}
+  async readBlock(...args){calls.push(args);return{tekme:args[2].historicalFixtures.map(t=>({...t,html:null})),skupina:'SEGONA CATALANA|GRUP 1|2026/27'}}
  })
  const rounds=await provider.razporedVseStrani(competition.source_league_code,()=>{throw Error('excluded raw forbidden')})
  assert.equal(provider.razporedBrezUvodnegaPrenosa,true)
