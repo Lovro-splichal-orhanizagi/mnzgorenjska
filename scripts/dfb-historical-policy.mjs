@@ -1,6 +1,7 @@
 // Provider-only adapter. Shared policy owns approval and availability semantics.
 import {createHash} from 'node:crypto'
 import {getHistoricalStatisticsPolicy,historicalStatisticsPolicySha256,classifyHistoricalStatistics} from './lib/historical-statistics-policy.mjs'
+import {verifyDfbCalendar} from './viri/dfb-calendar.mjs'
 import {vZapisnik} from './viri/dfb.mjs'
 export const DFB_HISTORICAL_POLICY='de-dfb-suedwest-2025-historical-unavailable-v1'
 const slug='de-regionalliga-suedwest',ids=['2402929','2403004'],sha=x=>createHash('sha256').update(x).digest('hex')
@@ -77,12 +78,13 @@ function verifyAvailableFixture(f){
  if(scores[0]!==f.homeGoals||scores[1]!==f.awayGoals)fail('normal played goal sides differ from score')
 }
 function verifySeasonShape(s){
- const ids=new Set(),pairs=new Set(),clubs=new Set(),keepers=new Set()
+ const clubs=new Set(),keepers=new Set()
+ if(s.code!==`regionalliga-suedwest/${s.season.slice(0,4)}-20${s.season.slice(-2)}`)fail('manifest historical policy season scope differs')
+ verifyDfbCalendar({code:s.code,teams:18,rounds:34,fixtures:s.fixtures})
  if(s.fixtures.length!==306)fail('manifest season fixture count differs')
  for(const f of s.fixtures){
-  const pair=JSON.stringify([f.home,f.away])
-  if(!/^de-dfb-[1-9]\d{0,9}$/.test(f.id)||ids.has(f.id)||pairs.has(pair)||typeof f.home!=='string'||!f.home||typeof f.away!=='string'||!f.away||f.home===f.away||!Number.isSafeInteger(f.round)||f.round<1||f.round>34||typeof f.played!=='boolean'||s.season==='2025/26'&&!f.played)fail('manifest duplicate/invalid fixture or incomplete archive')
-  ids.add(f.id);pairs.add(pair);clubs.add(f.home);clubs.add(f.away)
+  if(!/^de-dfb-[1-9]\d{0,9}$/.test(f.id)||typeof f.home!=='string'||!f.home||typeof f.away!=='string'||!f.away||f.home===f.away||!Number.isSafeInteger(f.round)||f.round<1||f.round>34||typeof f.played!=='boolean'||s.season==='2025/26'&&!f.played)fail('manifest duplicate/invalid fixture or incomplete archive')
+  clubs.add(f.home);clubs.add(f.away)
   if(f.statisticsStatus==='available'&&f.played)for(const p of f.starters??[])if(p.keeper&&p.proof==='oznaka-T')keepers.add(p.side===0?f.home:f.away)
  }
  if(clubs.size!==18||[...clubs].some(c=>!keepers.has(c)))fail('manifest club/verified keeper coverage differs')

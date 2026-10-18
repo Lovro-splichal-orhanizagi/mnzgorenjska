@@ -5,6 +5,7 @@ import { pathToFileURL } from 'node:url'
 import { createHash } from 'node:crypto'
 import {collectDfbHistorical,unavailableDfbFixture,dfbStatisticsCoverage,dfbPolicyBinding,verifyDfbPolicySeason} from './dfb-historical-policy.mjs'
 import { verifyLineage } from './dfb-replay-proof.mjs'
+import {verifyDfbCalendar} from './viri/dfb-calendar.mjs'
 import vir, { konfiguracijaDfb } from './viri/dfb.mjs'
 import { preveriPokritost } from './preveri-vir-sezono.mjs'
 import { preveriPosnetek as preveriSuroviPosnetek } from './vklopi-nemcijo.mjs'
@@ -13,7 +14,7 @@ export function preveriPosnetek(dir,records){
  if(records.some(r=>Date.parse(r.at)>Date.now()+300000))throw Error('DFB capture timestamp is in the future')
  return snapshot
 }
-export const sourceFiles=['scripts/viri/dfb-historical.mjs','scripts/dfb-historical-policy.mjs','scripts/lib/historical-statistics-policy.mjs','scripts/policies/historical-statistics-exclusions.json','src/lib/nepripisaniRumeni.mjs','scripts/viri/dfb.mjs','scripts/viri/dfb-lige.json','scripts/viri/dfb-korekcije.json','scripts/viri/dfb-kronologija.json','scripts/viri/dfb-rezerve.json','scripts/viri/dfb-aliasi.json','scripts/viri/fussball.mjs','scripts/viri/fussball-pisava.mjs','scripts/viri/fussball-datumski-glifi.json','scripts/viri/fss.mjs','scripts/klubi.mjs','scripts/preveri-vir-sezono.mjs',
+export const sourceFiles=['scripts/viri/dfb-calendar.mjs','scripts/viri/dfb-calendar-receipts.json','scripts/viri/dfb-historical.mjs','scripts/dfb-historical-policy.mjs','scripts/lib/historical-statistics-policy.mjs','scripts/policies/historical-statistics-exclusions.json','src/lib/nepripisaniRumeni.mjs','scripts/viri/dfb.mjs','scripts/viri/dfb-lige.json','scripts/viri/dfb-korekcije.json','scripts/viri/dfb-kronologija.json','scripts/viri/dfb-rezerve.json','scripts/viri/dfb-aliasi.json','scripts/viri/fussball.mjs','scripts/viri/fussball-pisava.mjs','scripts/viri/fussball-datumski-glifi.json','scripts/viri/fss.mjs','scripts/klubi.mjs','scripts/preveri-vir-sezono.mjs',
  ...Object.values(JSON.parse(readFileSync(new URL('./viri/dfb-aliasi.json',import.meta.url))).matches.flatMap(e=>Object.values(e.files))).map(f=>`scripts/${f.file.replace('../','')}`),
  ...JSON.parse(readFileSync(new URL('./viri/dfb-kronologija.json',import.meta.url))).matches.flatMap(e=>e.evidenceFiles).map(f=>`scripts/${f.file.replace('../','')}`),
  ...JSON.parse(readFileSync(new URL('./viri/dfb-korekcije.json',import.meta.url))).matches.flatMap(e=>e.evidenceFiles??[]).map(f=>`scripts/${f.file.replace('../','')}`)]
@@ -37,17 +38,13 @@ export function sestaviSezono({slug,sezona,razpored,zapisniki,nepopolni=[],captu
  const knownSchedule=excluded.size?razpored.map(r=>({...r,tekme:r.tekme.filter(t=>!excluded.has(`de-dfb-${t.dfbId??t.id}`))})):razpored
  const c=configuration(slug,sezona),coverage=preveriPokritost({sezona,razpored:knownSchedule,zapisniki,nepopolni:nepopolni.filter(n=>!excluded.has(n.id))})
  if(!coverage.pripravljeno)fail(`coverage/keepers: ${JSON.stringify(coverage)}`)
- const fixtures=razpored.flatMap(r=>r.tekme.map(t=>({...t,round:r.stevilka}))),pairs=new Set(),ids=new Set(),clubs=new Set(fixtures.flatMap(t=>[t.domaci,t.gostje]))
- if(razpored.length!==c.rounds||fixtures.length!==c.teams*(c.teams-1)||clubs.size!==c.teams)fail('season shape')
- for(let n=1;n<=c.rounds;n++){
-  const f=fixtures.filter(t=>t.round===n)
-  if(f.length!==Math.floor(c.teams/2)||new Set(f.flatMap(t=>[t.domaci,t.gostje])).size!==f.length*2)fail('round participants/byes')
- }
+ const fixtures=razpored.flatMap(r=>r.tekme.map(t=>({...t,round:r.stevilka})))
+ if(razpored.length!==c.rounds)fail('season shape')
+ verifyDfbCalendar({code:c.code,teams:c.teams,rounds:c.rounds,fixtures:fixtures.map(t=>({id:t.dfbId??t.id,round:t.round,home:t.domaci,away:t.gostje,homeSourceClubId:t.domaciId,awaySourceClubId:t.gostjeId,...(Object.hasOwn(t,'calendarEvidence')?{calendarEvidence:t.calendarEvidence}:{})}))})
  const reports=new Map(zapisniki.map(r=>[r.id,r]))
  const out=fixtures.map(t=>{
-  const id=`de-dfb-${t.dfbId??t.id}`,pair=JSON.stringify([t.domaci,t.gostje]),r=reports.get(id),played=t.odigrana===true
-  if(!/^de-dfb-[1-9]\d{0,9}$/.test(id)||ids.has(id)||pairs.has(pair)||t.domaci===t.gostje)fail('duplicate fixture/pair')
-  ids.add(id);pairs.add(pair)
+  const id=`de-dfb-${t.dfbId??t.id}`,r=reports.get(id),played=t.odigrana===true
+  if(!/^de-dfb-[1-9]\d{0,9}$/.test(id))fail('invalid fixture ID')
   if(excluded.has(id))return unavailableDfbFixture(t,t.round,excluded.get(id))
   if(played!==!!r||sezona==='2025/26'&&!played)fail('complete archive/current reports required')
   const starters=[]
@@ -56,6 +53,7 @@ export function sestaviSezono({slug,sezona,razpored,zapisniki,nepopolni=[],captu
    for(const p of e.postava)starters.push({side,name:p.ime,keeper:p.vratar===true,proof:p.vratar===true?p.vratarVir:null})
   }
   return {id,round:t.round,date:t.datum,time:t.ura??null,home:t.domaci,away:t.gostje,played,
+   ...(Object.hasOwn(t,'calendarEvidence')?{homeSourceClubId:t.domaciId,awaySourceClubId:t.gostjeId,calendarEvidence:structuredClone(t.calendarEvidence)}:{}),
    homeGoals:r?.z.rezultat.domaci??null,awayGoals:r?.z.rezultat.gostje??null,url:r?.url??t.url,
    ...(historicalPolicy?{statisticsStatus:'available'}:{}),starters:canonical(starters),warnings:r?.z.opozorila??[],appearances:r?kanonicniNastopi(r.z):[],goals:r?kanonicniGoli(r.z):[]}
  }).sort((a,b)=>a.round-b.round||a.id.localeCompare(b.id))
@@ -66,6 +64,7 @@ export function sestaviSezono({slug,sezona,razpored,zapisniki,nepopolni=[],captu
 export function preveriOdobritev(raw,approvedSha,now=Date.now()){
  if(Buffer.byteLength(raw)>8*1024*1024||!/^[a-f0-9]{64}$/.test(approvedSha)||sha(raw)!==approvedSha)fail('approved manifest SHA/size mismatch')
  const m=JSON.parse(raw);configuration(m.slug)
+ if(m.seasons?.some(s=>s.fixtures?.some(f=>Object.hasOwn(f,'calendarEvidence'))))fail('calendar evidence unsupported for release; future versioned provenance/SQL gate required')
  if(![1,2,3].includes(m.version)||!/^[a-f0-9]{40}$/.test(m.sourceCommit)||m.parserSha256!==parserSha256()||m.seasons?.length!==2)fail('scope/parser provenance mismatch')
  if(m.version===3){
   if(m.slug!=='de-regionalliga-suedwest'||m.provenanceVersion!==2)fail('historical manifest scope/provenance')

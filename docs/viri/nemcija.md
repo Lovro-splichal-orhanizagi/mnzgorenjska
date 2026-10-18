@@ -504,3 +504,37 @@ imata samo 18 klubskih strani, brez zapisnikov. Südwest `2402929`
 (12 začetnikov) in `2403004` (dva pripisana rumena brez izključitve) sta
 ostala enako neveljavna tudi v ciljnem običajnem svežem DFB zajemu
 18. 10. 2026. Noben od teh treh kandidatov še ni pripravljen za vklop.
+
+
+## Omejena lokalna priprava pregledanih koledarjev Nord/West (18. 10. 2026)
+
+`dfb-calendar.mjs` in nespremenljivi, s SHA-256 pripeti dejstveni register
+`dfb-calendar-receipts.json` podpirata samo objavljeno orientacijo štirih
+podvojenih usmerjenih parov v sezoni 2026/27: Nord 2423139/2423378 in
+2423173/2423342, West 2425450/2425603 in 2425470/2425622. Register veže
+izvorne klubske šifre, prikazna imena, kroge in izvirna URL/SHA/UTC obeh
+sodelujočih klubskih strani. Ne vsebuje surovega HTML ali podatkov igralcev.
+Parser ohrani objavljene strani, datume, izide in statistiko. Aktualni
+`calendarEvidence` vsebuje SHA dejansko prebranih bajtov obeh različnih
+sodelujočih strani; spreminjanje ovoja strani ne zahteva starega SHA.
+
+Celota še vedno zahteva 306 tekem, 18 klubov, 34 krogov, devet tekem in
+18 različnih klubov na krog ter vsak neusmerjeni par natanko dvakrat.
+Nepregledan usmerjeni podvojeni par, druga identiteta ali manjkajoč oziroma
+spremenjen dokaz se zavrne. Če vir popravi par v običajni doma/gostje,
+uporabi strogo običajno preverjanje brez dokaza; to velja tudi, če drugi
+pregledani par še ostaja podvojen. Nobena tekma se samodejno ne obrne.
+
+To je samo priprava parserja in kanonične oblike. Obstoječe različice
+regionalnega manifesta v1/v2/v3 izrecno zavrnejo vsak `calendarEvidence`;
+za prihodnji vklop je potrebna nova različica provenience in samostojno
+SQL preverjanje. Nobena migracija, dovoljenje vklopa ali zgodovinska
+izjema ni dodana. Zgodovinska politika ostane omejena na dve obstoječi
+Südwestovi arhivski tekmi. Popolnost tekočih zapisnikov, začetnih postav in
+izrecnih vratarjev ostane obvezna. Lokalna ponovitev starih zajemov ne
+osveži zajema ali potrdi pripravljenosti Norda/West za vklop.
+
+`node --test scripts/test-dfb-calendar.mjs` pokriva identitete, dve dokazni
+strani, popravljene pare, sezonsko obliko, kanonične statistike in zavrnitev
+vklopa. Modul in register sta vključena v regionalni in Nordostov izvorni
+odtis; Nordostova kanonična oblika in ločeni pogoji vklopa se ne spreminjajo.
