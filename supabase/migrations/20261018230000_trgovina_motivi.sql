@@ -555,6 +555,23 @@ $$;
 revoke all on function public.trgovina_admin_motivi(), public.trgovina_admin_shrani_motiv(jsonb) from public, anon;
 grant execute on function public.trgovina_admin_motivi(), public.trgovina_admin_shrani_motiv(jsonb) to authenticated;
 
+-- Izvoz za tisk (trgovina_admin_za_tisk, serija): postavka z motivom dobi še
+-- različico (barva → cona), postopek, barve sheme in cone nosilca (mere v mm).
+-- Novi stolpci so na koncu, zato create or replace.
+create or replace view trgovina.tisk as
+select p.id as postavka_id, p.serija_id, p.stanje_tiska, n.id as narocilo_id, n.javna_oznaka, n.placano_at,
+       r.sku, p.ime, p.kolicina, p.personalizacija,
+       r.oznaka_sl as razlicica, i.postopek,
+       (select s -> 'barve' from trgovina.motivi m, jsonb_array_elements(m.sheme) s
+         where m.slug = p.personalizacija ->> 'motiv' and s ->> 'kljuc' = p.personalizacija ->> 'shema') as barve,
+       case when p.personalizacija ? 'motiv' then trgovina.cone_json(i.id) end as cone
+  from trgovina.postavke p
+  join trgovina.narocila n on n.id = p.narocilo_id
+  join trgovina.razlicice r on r.id = p.razlicica_id
+  join trgovina.izdelki i on i.id = r.izdelek_id
+ where p.stanje_tiska is not null and n.stanje in ('placano', 'poslano');
+revoke all on trgovina.tisk from public, anon, authenticated;
+
 -- --------------------------------------------------------------------------
 -- Začetni podatki (neaktivno; vklopi admin, ko so fotografije in predloge)
 -- --------------------------------------------------------------------------

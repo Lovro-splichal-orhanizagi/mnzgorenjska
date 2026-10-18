@@ -125,6 +125,10 @@ export interface PersonalizacijaPostavke {
   vrsta?: 'ime_ekipe' | 'poljubno_ime' | 'prvak' | 'znacka'
   ime?: string
   stevilka?: number
+  /** Motiv: natisnjene vrednosti polj (ekipa in prvak kot besedilo). */
+  motiv?: string
+  shema?: string
+  polja?: Record<string, string | number | null>
 }
 
 /** Postavka naročila (trgovina.narocilo_json). */
@@ -169,6 +173,13 @@ export interface PostavkaTiska {
   ime: string
   kolicina: number
   personalizacija: PersonalizacijaPostavke | null
+  /** Oznaka različice ("Črna / M"): barva izbere cono nosilca. */
+  razlicica?: string
+  postopek?: string | null
+  /** Barve sheme motiva; null pri stari obliki. */
+  barve?: string[] | null
+  /** Cone nosilca (mere v mm); null pri stari obliki. */
+  cone?: Cona[] | null
 }
 
 /** trgovina_admin_serija(id) */
