@@ -73,3 +73,22 @@
     @apply relative aspect-square overflow-hidden rounded-xl bg-gradient-to-br from-slate-800 via-slate-900 to-gnl-900;
   }
 }
+
+/* Tisk nalepke in dobavnice (/admin): natisne se le .tisk, ki je zunaj #root. */
+.tisk {
+  display: none;
+}
+
+@media print {
+  #root {
+    display: none !important;
+  }
+
+  body {
+    background: #fff !important;
+  }
+
+  .tisk {
+    display: block;
+  }
+}

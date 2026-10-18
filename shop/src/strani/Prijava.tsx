@@ -1,18 +1,30 @@
 import { useState, type FormEvent } from 'react'
 import grb from '../../../public/logo/slff-grb.png'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../baza'
 import { t } from '../besede'
 import { useSeja } from '../seja'
 
+/** ?next= le kot pot na tem izvoru ("/admin"), nikoli "//drug.si" ali polni naslov. */
+export function varnaPot(p: string | null): string | null {
+  if (!p?.startsWith('/')) return null
+  try {
+    const u = new URL(p, 'https://shop.invalid')
+    return u.origin === 'https://shop.invalid' ? u.pathname + u.search + u.hash : null
+  } catch {
+    return null
+  }
+}
+
 // Brez registracije in ponastavitve gesla: obe sta na slff.eu.
 export function Prijava() {
   const { seja } = useSeja()
+  const cilj = varnaPot(useSearchParams()[0].get('next')) ?? '/orders'
   const [eposta, setEposta] = useState('')
   const [geslo, setGeslo] = useState('')
   const [neuspeh, setNeuspeh] = useState(false)
   const [poteka, setPoteka] = useState(false)
-  if (seja) return <Navigate to="/orders" replace />
+  if (seja) return <Navigate to={cilj} replace />
 
   async function prijava(e: FormEvent) {
     e.preventDefault()
@@ -32,7 +44,7 @@ export function Prijava() {
       <div className="kartica space-y-4 p-5">
         <button
           type="button"
-          onClick={() => void supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${location.origin}/orders` } })}
+          onClick={() => void supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${location.origin}${cilj}` } })}
           className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-white px-4 py-2.5 font-semibold text-slate-900 hover:bg-slate-100"
         >
           <svg aria-hidden="true" width="18" height="18" viewBox="0 0 48 48">

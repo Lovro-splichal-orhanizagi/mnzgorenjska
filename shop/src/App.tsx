@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { Okvir } from './Okvir'
 import { SejaProvider } from './seja'
+import { Admin } from './strani/Admin'
 import { Hvala } from './strani/Hvala'
 import { Izdelek } from './strani/Izdelek'
 import { Katalog } from './strani/Katalog'
@@ -22,6 +23,7 @@ export function App() {
           <Route path="/orders" element={<Narocila />} />
           <Route path="/terms" element={<Pogoji />} />
           <Route path="/withdrawal" element={<Odstop />} />
+          <Route path="/admin" element={<Admin />} />
           <Route path="/login" element={<Prijava />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

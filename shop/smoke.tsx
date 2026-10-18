@@ -13,10 +13,12 @@ import { Hvala } from './src/strani/Hvala'
 import { Narocila } from './src/strani/Narocila'
 import { Pogoji } from './src/strani/Pogoji'
 import { Odstop, mailOdstopa } from './src/strani/Odstop'
-import { Prijava } from './src/strani/Prijava'
+import { Prijava, varnaPot } from './src/strani/Prijava'
+import { Admin, Dobavnica, Nalepka } from './src/strani/Admin'
+import { vCente, varnoIme } from './src/strani/AdminIzdelki'
 import { EN, SL, cena, type Kljuc } from './src/besede'
 import { dodaj, kosov, nastavi, odstrani, postnina, preberi, PRAZNA, skupaj } from './src/kosarica'
-import type { Izdelek as TIzdelek, IzdelekKataloga } from './src/baza'
+import type { Izdelek as TIzdelek, IzdelekKataloga, NarociloAdmin } from './src/baza'
 
 let napak = 0
 const preveri = (opis: string, ok: boolean, dodatno = '') => {
@@ -46,6 +48,8 @@ const strani: [string, string, ReactNode][] = [
   ['/terms', '/terms', <Pogoji />],
   ['/withdrawal', '/withdrawal', <Odstop />],
   ['/login', '/login', <Prijava />],
+  ['/login?next=/admin', '/login', <Prijava />],
+  ['/admin', '/admin', <Admin />],
 ]
 for (const [pot, vzorec, stran] of strani) {
   try {
@@ -94,6 +98,25 @@ preveri('besede: brez praznih nizov', prazni.length === 0, prazni.join(', '))
 const odstavkov = (s: string) => s.split('\n\n').length
 const pogojiRazlicni = kljuci.filter((k) => k.startsWith('pogoji.') && odstavkov(SL[k]) !== odstavkov(EN[k]))
 preveri('besede: pogoji imajo v obeh jezikih enako odstavkov', pogojiRazlicni.length === 0, pogojiRazlicni.join(', '))
+
+// Administracija
+preveri('admin: evri v cente', vCente('25') === 2500 && vCente('25,00') === 2500 && vCente('25.00') === 2500 && vCente(' 25,5 ') === 2550
+  && vCente('0,99') === 99 && vCente('12 €') === 1200
+  && [ '', '0', '0,00', '-5', '25,001', '1.234,00', 'abc', '25,', ',5', '1e3'].every((v) => vCente(v) === null))
+preveri('admin: next le pot na istem izvoru', varnaPot('/admin') === '/admin' && varnaPot('/admin?x=1') === '/admin?x=1'
+  && [null, '', 'admin', '//evil.eu', '/\\evil.eu', 'https://evil.eu/x', 'javascript:alert(1)'].every((v) => varnaPot(v) === null))
+preveri('admin: varno ime datoteke', varnoIme('Majica Črna (1).JPG') === 'majica-crna-1-.jpg' && varnoIme('../../x.png') === 'x.png' && varnoIme('čšž') === 'csz')
+const narocilo: NarociloAdmin = {
+  id: 1, javna_oznaka: 'AB12CD34', stanje: 'placano', email: 'a@b.si', ime: 'Ana Novak', jezik: 'sl',
+  naslov: { name: 'Ana Novak', line1: 'Glavna 1', line2: null, postal_code: '10000', city: 'Zagreb', country: 'HR' },
+  znesek_postavke: 2500, znesek_dostava: 990, znesek_ddv: 600, znesek_skupaj: 3490, dostava_kljuc: 'paket_eu', sledilna: null, manjka: 1,
+  placano_at: '2026-10-18T10:00:00Z', poslano_at: null, created_at: '2026-10-18T09:55:00Z',
+  postavke: [{ razlicica_id: 1, sku: 'MAJ-CRN-S', ime: 'Majica (Črna / S)', cena: 2500, kolicina: 1 }],
+}
+const nalepka = renderToString(<Nalepka n={narocilo} />)
+preveri('admin: nalepka 100×150 mm s pošiljateljem in prejemnikom', ['100mm 150mm', 'SPACE GUARDIAN d.o.o.', 'Ulica Hermana Potočnika 5', '1000 Ljubljana', 'Ana Novak', 'Glavna 1', '10000 Zagreb', 'Croatia'].every((v) => nalepka.includes(v)), nalepka.slice(0, 300))
+const dobavnica = renderToString(<Dobavnica n={narocilo} />)
+preveri('admin: dobavnica s postavkami', ['AB12CD34', 'MAJ-CRN-S', 'Majica (Črna / S)', SL['admin.tisk.dobavnica']].every((v) => dobavnica.includes(v)))
 
 // Košarica
 let k = dodaj(PRAZNA, 1, 2, 'majica')
