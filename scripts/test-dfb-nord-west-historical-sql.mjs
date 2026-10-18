@@ -33,8 +33,8 @@ insert into players(team_id,competition_id,first_name,last_name,full_name,positi
  select t.id,c.id,'TEST','ONLY',p.name,case when p.n=0 then'GK'when p.n<5 then'DEF'when p.n<9 then'MID'else'FWD'end,'zapisnik',case when p.n=0 then 8 else 4 end,case when p.n=0 then 8 else 4 end,
  exists(select 1 from nw_fixtures x where x.season='2026/27'and p.club in(x.f->>'home',x.f->>'away'))
  from nw_people p cross join competitions c join teams t on t.country_id=c.country_id where c.slug=current_setting('slff.test_slug')and t.name=p.club;
-insert into matches(round_id,home_team_id,away_team_id,played_on,zapisnik_id,source_url,imported_at,home_goals,away_goals)
- select r.id,h.id,a.id,(f->>'date')::date,case when(f->>'played')::boolean then f->>'id'end,f->>'url',case when(f->>'played')::boolean then now()end,coalesce((f->>'homeGoals')::int,0),coalesce((f->>'awayGoals')::int,0)
+insert into matches(round_id,home_team_id,away_team_id,played_on,zapisnik_id,source_url,imported_at,home_goals,away_goals,vir_brez_izida)
+ select r.id,h.id,a.id,(f->>'date')::date,case when(f->>'played')::boolean then f->>'id'end,f->>'url',case when(f->>'played')::boolean then now()end,coalesce((f->>'homeGoals')::int,0),coalesce((f->>'awayGoals')::int,0),f->>'id' in('de-dfb-2423176','de-dfb-2423187','de-dfb-2423188')
  from nw_fixtures ff cross join competitions c join rounds r on r.competition_id=c.id join teams h on h.country_id=c.country_id join teams a on a.country_id=c.country_id
  where c.slug=current_setting('slff.test_slug')and r.season=ff.season and r.number=(f->>'round')::int and h.name=f->>'home'and a.name=f->>'away'and f->>'statisticsStatus'='available';
 create temporary table nw_apps as select m.id match_id,p.id player_id,t.id team_id,a
@@ -55,6 +55,13 @@ insert into goals(match_id,scorer_id,team_id,minute,is_own_goal,is_penalty,score
  cross join competitions c join rounds r on r.competition_id=c.id join matches m on m.round_id=r.id join teams t on t.country_id=c.country_id join players p on p.competition_id=c.id and p.team_id=t.id
  where c.slug=current_setting('slff.test_slug')and r.season=ff.season and r.number=(f->>'round')::int and m.zapisnik_id=f->>'id'and t.name=case g->>'side'when'0'then f->>'home'else f->>'away'end and p.full_name=g->>'name';
 analyze public.players,public.rounds,public.matches,public.appearances,public.goals,public.player_scores,public.statistika_igralcev;
+do $$declare postponed_ids text[]:=array['de-dfb-2423176','de-dfb-2423187','de-dfb-2423188'];begin
+ if current_setting('slff.test_slug')<>'de-regionalliga-nord' then return;end if;
+ if (select count(*)from nw_fixtures where f->>'id'=any(postponed_ids)and season='2026/27'and(f->>'played')::boolean=false)<>3
+  or (select count(*)from matches m join rounds r on r.id=m.round_id join competitions c on c.id=r.competition_id where c.slug=current_setting('slff.test_slug')and r.season='2026/27'and m.source_url like any(array['%2423176','%2423187','%2423188'])and m.vir_brez_izida and m.imported_at is null and m.zapisnik_id is null and m.home_goals=0 and m.away_goals=0)<>3
+  or exists(select 1 from appearances ap join matches m on m.id=ap.match_id where m.source_url like any(array['%2423176','%2423187','%2423188']))
+  or exists(select 1 from goals g join matches m on m.id=g.match_id where m.source_url like any(array['%2423176','%2423187','%2423188'])) then raise exception 'Source-confirmed postponed fixture test setup differs';end if;
+end$$;
 grant select on nw_packet to service_role;
 set local role service_role;
 select public.prepare_dfb_historical_statistics(raw,encode(sha256(convert_to(raw,'UTF8')),'hex'))from nw_packet;
@@ -64,6 +71,16 @@ create function pg_temp.nw_reject(label text,mutation text)returns void language
  begin execute mutation;begin perform pg_temp.nw_check();exception when others then if sqlerrm not like'DE_RELEASE:%'and sqlerrm not like'HISTORICAL_POLICY:%'and sqlstate<>'23505'then raise;end if;rejected:=true;end;if not rejected then raise exception'MUTANT ACCEPTED: %',label;end if;raise exception'EXPECTED_MUTANT_REJECTION';exception when raise_exception then if sqlerrm<>'EXPECTED_MUTANT_REJECTION'then raise;end if;end;
  raise notice'PASS %',label;
 end$$;
+do $$begin if current_setting('slff.test_slug')='de-regionalliga-nord' then
+ perform pg_temp.nw_reject('played fixture marked source without result',$x$update matches set vir_brez_izida=true where id=(select id from matches where source_url like '%TEST-ONLY%' and imported_at is not null limit 1)$x$);
+ perform pg_temp.nw_reject('unplayed fixture with imported timestamp','update matches set imported_at=now() where source_url like ''%2423176''');
+ perform pg_temp.nw_reject('unplayed fixture with report ID','update matches set zapisnik_id=''de-dfb-2423176'' where source_url like ''%2423176''');
+ perform pg_temp.nw_reject('unplayed fixture with score','update matches set home_goals=1 where source_url like ''%2423176''');
+ perform pg_temp.nw_reject('unplayed fixture with appearance',$x$insert into appearances(match_id,player_id,team_id,shirt_number,started,minute_on,minute_off,minutes_played,goals,own_goals,penalties_scored,penalties_missed,yellow_cards,red_cards,goals_conceded,clean_sheet,is_goalkeeper) select m.id,p.id,m.home_team_id,99,false,0,1,1,0,0,0,0,0,0,0,false,false from matches m join players p on p.team_id=m.home_team_id where m.source_url like '%2423176'limit 1$x$);
+ perform pg_temp.nw_reject('unplayed fixture with goal',$x$insert into goals(match_id,scorer_id,team_id,minute,is_own_goal,is_penalty,score_home,score_away) select m.id,p.id,m.home_team_id,1,false,false,1,0 from matches m join players p on p.team_id=m.home_team_id where m.source_url like '%2423176'limit 1$x$);
+ perform pg_temp.nw_reject('wrong unplayed fixture date','update matches set played_on=played_on+1 where source_url like ''%2423176''');
+ perform pg_temp.nw_reject('unplayed fixture marked forfait','update matches set kontumacija=true where source_url like ''%2423176''');
+end if;end$$;
 select pg_temp.nw_reject('changed normal appearance','update appearances set minutes_played=89 where id=(select min(ap.id)from appearances ap join players p on p.id=ap.player_id where p.competition_id=(select id from competitions where slug=current_setting(''slff.test_slug'')))');
 select pg_temp.nw_reject('wrong policy hash',$x$update nw_packet set raw=jsonb_set(raw::jsonb,'{statisticsPolicy,sha256}',to_jsonb(repeat('0',64)))::text$x$);
 select pg_temp.nw_reject('failed current parent',$x$update nw_packet set raw=jsonb_set(raw::jsonb,'{seasons,1,lineage,capture,conclusion}','"failure"')::text$x$);
