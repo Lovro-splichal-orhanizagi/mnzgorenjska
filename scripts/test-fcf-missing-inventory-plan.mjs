@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {historicalStatisticsPolicySha256 as hash} from './lib/historical-statistics-policy.mjs'
 import {calendarFixture} from './fcf-release-test-fixture.mjs'
-import {now,commit,manualPlan,seedFixture,headerBytes,policies,sha,zip} from './fcf-missing-inventory-test-fixture.mjs'
+import {rulesetSnapshot,rulesetSnapshotSha256,now,commit,manualPlan,seedFixture,headerBytes,policies,sha,zip} from './fcf-missing-inventory-test-fixture.mjs'
 const api=await import('./fcf-missing-inventory-plan.mjs').catch(()=>({}))
 const call=(name,args)=>{assert.equal(typeof api[name],'function',`${name} required`);return api[name](args)}
 const validate=plan=>call('validateFcfMissingInventoryPlan',{plan,expectedPlanSha256:plan.planSha256,now})
@@ -15,11 +15,12 @@ test('fixed missing inventory validates exact239+238 partition and actual child 
  for(const c of children)assert.equal(c.childPlanSha256,hash({...p.children.find(x=>x.targetSlug===c.targetSlug),parentPlanSha256:p.planSha256}))
 })
 for(const [name,change] of [
+ ['missing independent protection hash',p=>delete p.rulesetSnapshotSha256],['invalid independent protection hash',p=>p.rulesetSnapshotSha256='not-a-sha'],
  ['expanded budget',p=>p.maximumSourceGETs=478],['extra target',p=>p.children.push(p.children[0])],['G2',p=>p.children[0].targetSlug='es-ct-tercera-g2'],['policy drift',p=>p.policyHashes['es-ct-segona-g1']='0'.repeat(64)],['unknown property',p=>p.verified=true],['non-main commit',p=>p.sourceCommit='bad'],['wrong original capture commit',p=>p.children[0].reuse[0].sourceCaptureCommit=commit],['marker GET',p=>p.children[0].fetchIds[0]='4109388'],['foreign ID',p=>p.children[0].fetchIds[0]='4109387'],['ID ordinal round',p=>p.children[0].fetchIds[0]={id:'4109389',sourceRound:1}],['duplicate ID',p=>p.children[1].fetchIds[1]=p.children[1].fetchIds[0]],['reordered requests',p=>p.children[1].fetchIds.reverse()],['missing target',p=>p.children.pop()],['false source time',p=>p.children[0].reuse[0].receipt.startedUTC=p.createdUTC],['changed limit',p=>p.limits.pauseMs=1],['stale plan',p=>p.createdUTC='2026-10-16T13:00:00.000Z'],['future plan',p=>p.createdUTC='2099-01-01T00:00:00.000Z'],['seed fake lineage',p=>p.seedBinding.verified=true],['zero artifact ID',p=>p.seedBinding.artifactId='0'],
 ])test(`missing inventory plan rejects ${name} even after canonical rehash`,()=>{const p=manualPlan();change(p);rehash(p);assert.throws(()=>validate(p),/FCF_INVENTORY/)})
 test('plan requires explicitly expected hash and an actual authenticated seed proof for building',()=>{
  const p=manualPlan();assert.throws(()=>call('validateFcfMissingInventoryPlan',{plan:p,expectedPlanSha256:'0'.repeat(64),now}),/FCF_INVENTORY/)
- assert.throws(()=>call('buildFcfMissingInventoryPlan',{sourceCommit:commit,seedEvidence:{verified:true,...p.seedBinding},policyHashes:policies(),now}),/FCF_INVENTORY/)
+ assert.throws(()=>call('buildFcfMissingInventoryPlan',{rulesetSnapshotSha256,sourceCommit:commit,seedEvidence:{verified:true,...p.seedBinding},policyHashes:policies(),now}),/FCF_INVENTORY/)
 })
 test('seed rejects synthetic bodies even with pinned descriptor hashes and authenticated-style test metadata',()=>assert.throws(()=>call('readFcfMissingInventorySeed',seedFixture()),/FCF_INVENTORY.*raw/))
 for(const [name,change]of[
@@ -27,11 +28,11 @@ for(const [name,change]of[
 ])test(`seed refuses ${name}`,()=>{const f=seedFixture();change(f);assert.throws(()=>call('readFcfMissingInventorySeed',f),/FCF_INVENTORY/)})
 const retained=process.env.FCF_HISTORICAL_RETAINED_DIR
 test('exact retained original seed authenticates bytes and builds immutable fixed source plan',{skip:!retained},()=>{
- const f=seedFixture(retained),seed=call('readFcfMissingInventorySeed',f),plan=call('buildFcfMissingInventoryPlan',{sourceCommit:commit,seedEvidence:seed,policyHashes:policies(),now})
+ const f=seedFixture(retained),seed=call('readFcfMissingInventorySeed',f),plan=call('buildFcfMissingInventoryPlan',{rulesetSnapshotSha256,sourceCommit:commit,seedEvidence:seed,policyHashes:policies(),now})
  assert.equal(seed.binding.sourceCaptureCommit,'f7efba26c31f76372b5aab1e976061631fbaebda');assert.equal(seed.binding.retentionCommit,commit);assert.equal(seed.binding.artifactDigest,f.artifact.digest)
  assert.deepEqual(validate(plan).map(c=>c.fetchIds.length),[239,238]);assert.ok(Object.isFrozen(seed));assert.ok(Object.isFrozen(plan.children[0].reuse[0].receipt))
  const bytes=call('getFcfMissingInventorySeedOriginals',seed);bytes[0].bytes.fill(0);assert.notEqual(call('getFcfMissingInventorySeedOriginals',seed)[0].bytes[0],0)
- assert.throws(()=>call('buildFcfMissingInventoryPlan',{sourceCommit:commit,seedEvidence:structuredClone(seed),policyHashes:policies(),now}),/FCF_INVENTORY/)
+ assert.throws(()=>call('buildFcfMissingInventoryPlan',{rulesetSnapshotSha256,sourceCommit:commit,seedEvidence:structuredClone(seed),policyHashes:policies(),now}),/FCF_INVENTORY/)
 })
 const derive=(bytes,args={})=>call('deriveFcfInventoryHeader',{targetSlug:'es-ct-segona-g1',id:'4109389',bytes,...args})
 test('header proof uses actual source round and exact native side links without individual parsing',()=>{

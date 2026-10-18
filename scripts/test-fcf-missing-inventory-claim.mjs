@@ -1,5 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import {createHash} from 'node:crypto'
 import {claimFixture,consumptionFixture,sha,zip} from './fcf-missing-inventory-test-fixture.mjs'
 const api=await import('./fcf-missing-inventory-claim.mjs').catch(()=>({}))
 const call=(name,args)=>{assert.equal(typeof api[name],'function',`${name} required`);return api[name](args)}
@@ -35,3 +36,35 @@ test('completed successful consumption stays authentic after a later parent-run 
  // Consumption proves reservation only; it is not final target admission.
  assert.equal(consume(f).kind,'fcf-missing-inventory-consumption-proof')
 })
+
+function attest(f){
+ const rule={...f.rulesets[0],source:'Lovro-splichal-orhanizagi/mnzgorenjska',source_type:'Repository',updated_at:'2026-10-18T13:00:00.000Z'}
+ f.rulesets=[structuredClone(rule)];f.claim.schemaVersion=2;f.claim.rulesetSnapshot={checkedUTC:'2026-10-18T13:04:00.000Z',ruleset:structuredClone(rule)}
+ return seal(f)
+}
+function seal(f){
+ f.claimBytes=Buffer.from(JSON.stringify(f.claim));const blobSha=createHash('sha1').update(`blob ${f.claimBytes.length}\0`).update(f.claimBytes).digest('hex')
+ f.claimCommit.tree.tree[0].sha=blobSha;Object.assign(f.claimCommit.blob,{sha:blobSha,size:f.claimBytes.length,content:f.claimBytes.toString('base64')});f.expected.claimJsonSha256=sha(f.claimBytes);return f
+}
+test('root ruleset snapshot requires actual visible empty bypass and a closed clock-bound projection',()=>{
+ const f=attest(claimFixture()),rule={...f.rulesets[0],name:'extra actual GitHub metadata',_links:{self:{href:'ignored metadata'}}},p=call('snapshotFcfInventoryRuleset',{ruleset:rule,checkedUTC:f.claim.rulesetSnapshot.checkedUTC,now:f.now})
+ assert.deepEqual(p,f.claim.rulesetSnapshot);assert.equal(Object.hasOwn(p.ruleset,'_links'),false)
+ const hidden=structuredClone(rule);delete hidden.bypass_actors;assert.throws(()=>call('snapshotFcfInventoryRuleset',{ruleset:hidden,checkedUTC:p.checkedUTC,now:f.now}),/FCF_INVENTORY/)
+})
+test('root ruleset snapshot in authenticated claim permits fresh redacted metadata without inferring empty bypass',()=>{
+ const f=attest(claimFixture());delete f.rulesets[0].bypass_actors
+ assert.equal(read(f).claimCommit,f.expected.claimCommit)
+ assert.equal(read(attest(claimFixture())).claimCommit,f.expected.claimCommit,'explicit fresh empty list also agrees')
+})
+test('claim self-attestation cannot replace the independently approved plan snapshot hash',()=>{
+ const f=attest(claimFixture());f.claim.rulesetSnapshot.checkedUTC='2026-10-18T13:03:00Z';seal(f);delete f.rulesets[0].bypass_actors
+ assert.throws(()=>read(f),/root-attested current/)
+})
+test('root ruleset snapshot normalizes equivalent actual GitHub timestamp offsets without refreshing clocks',()=>{
+ const f=attest(claimFixture()),r={...f.rulesets[0],updated_at:'2026-10-18T15:00:00.000+02:00'},p=call('snapshotFcfInventoryRuleset',{ruleset:r,checkedUTC:f.claim.rulesetSnapshot.checkedUTC,now:f.now})
+ assert.equal(p.ruleset.updated_at,'2026-10-18T13:00:00.000Z');assert.equal(p.checkedUTC,f.claim.rulesetSnapshot.checkedUTC)
+ delete r.bypass_actors;f.rulesets=[r];assert.equal(read(f).runId,'123')
+})
+for(const[name,change]of[
+ ['changed version',f=>f.rulesets[0].updated_at='2026-10-18T13:01:00Z'],['changed source',f=>f.rulesets[0].source='other/repository'],['changed source type',f=>f.rulesets[0].source_type='Organization'],['changed ruleset ID',f=>f.rulesets[0].id=13],['changed target',f=>f.rulesets[0].target='branch'],['changed enforcement',f=>f.rulesets[0].enforcement='disabled'],['changed rules',f=>f.rulesets[0].rules.pop()],['changed conditions',f=>f.rulesets[0].conditions.ref_name.exclude=['refs/tags/fcf-inventory-claim/*']],['explicit nonempty fresh bypass',f=>f.rulesets[0].bypass_actors=[{actor_type:'RepositoryRole',actor_id:5,bypass_mode:'always'}]],['missing root snapshot',f=>delete f.claim.rulesetSnapshot],['truncated root snapshot',f=>delete f.claim.rulesetSnapshot.ruleset.rules],['root hidden bypass',f=>delete f.claim.rulesetSnapshot.ruleset.bypass_actors],['root nonempty bypass',f=>f.claim.rulesetSnapshot.ruleset.bypass_actors=[{actor_type:'User',actor_id:1,bypass_mode:'always'}]],['future root check',f=>f.claim.rulesetSnapshot.checkedUTC='2099-01-01T00:00:00Z'],['root check after claim',f=>f.claim.rulesetSnapshot.checkedUTC='2026-10-18T13:05:01Z'],['version after root check',f=>f.claim.rulesetSnapshot.ruleset.updated_at='2026-10-18T13:04:01Z'],['unknown attestation field',f=>f.claim.rulesetSnapshot.verified=true],
+])test(`root ruleset snapshot refuses ${name} even inside a correctly rehashed claim blob`,()=>{const f=attest(claimFixture());change(f);seal(f);assert.throws(()=>read(f),/FCF_INVENTORY/)})

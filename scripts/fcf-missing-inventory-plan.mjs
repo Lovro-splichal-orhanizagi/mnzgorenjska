@@ -65,20 +65,20 @@ export function getFcfMissingInventorySeedOriginals(seedEvidence){
  const originals=seeds.get(seedEvidence);if(!originals)fail('actual authenticated seed proof required')
  return originals.map(row=>({id:row.id,bytes:Buffer.from(row.bytes)}))
 }
-export function buildFcfMissingInventoryPlan({sourceCommit,seedEvidence,policyHashes,now=Date.now()}){
+export function buildFcfMissingInventoryPlan({sourceCommit,seedEvidence,policyHashes,rulesetSnapshotSha256,now=Date.now()}){
  if(!seeds.has(seedEvidence))fail('actual authenticated seed proof required')
  policies(policyHashes)
- if(!commitId(sourceCommit)||!Number.isFinite(now))fail('exact source commit/time required')
+ if(!commitId(sourceCommit)||!sha256Id(rulesetSnapshotSha256)||!Number.isFinite(now))fail('exact source commit/time required')
  const descriptors=pinnedDescriptors(),children=scopes.map(scope=>({targetSlug:scope.targetSlug,competitionId:scope.competitionId,sourceCode:`${scope.start}-${scope.end}`,season:'2026/27',fetchIds:Array.from({length:240},(_,i)=>String(scope.start+i)).filter(id=>!descriptors.some(d=>d.id===id)),reuse:descriptors.filter(d=>Number(d.id)>=scope.start&&Number(d.id)<=scope.end),maximumSourceGETs:scope.maximumSourceGETs}))
- const body={schemaVersion:1,kind:'fcf-missing-inventory-plan',preset:'g1-then-g9-missing-v1',sourceCommit,createdUTC:new Date(now).toISOString(),maximumSourceGETs:477,stopOnDefect:true,seedBinding:clone(seedEvidence.binding),policyHashes:clone(policyHashes),limits:{...limits},children}
+ const body={schemaVersion:1,kind:'fcf-missing-inventory-plan',preset:'g1-then-g9-missing-v1',sourceCommit,createdUTC:new Date(now).toISOString(),rulesetSnapshotSha256,maximumSourceGETs:477,stopOnDefect:true,seedBinding:clone(seedEvidence.binding),policyHashes:clone(policyHashes),limits:{...limits},children}
  const plan={...body,planSha256:canonicalHash(body)}
  validateFcfMissingInventoryPlan({plan,expectedPlanSha256:plan.planSha256,now})
  return frozenJSON(plan)
 }
 export function validateFcfMissingInventoryPlan({plan,expectedPlanSha256,now=Date.now()}){
- exactKeys(plan,['schemaVersion','kind','preset','sourceCommit','createdUTC','maximumSourceGETs','stopOnDefect','seedBinding','policyHashes','limits','children','planSha256'],'plan')
+ exactKeys(plan,['schemaVersion','kind','preset','sourceCommit','createdUTC','rulesetSnapshotSha256','maximumSourceGETs','stopOnDefect','seedBinding','policyHashes','limits','children','planSha256'],'plan')
  const {planSha256,...body}=plan
- if(!sha256Id(expectedPlanSha256)||planSha256!==expectedPlanSha256||canonicalHash(body)!==planSha256||plan.schemaVersion!==1||plan.kind!=='fcf-missing-inventory-plan'||plan.preset!=='g1-then-g9-missing-v1'||!commitId(plan.sourceCommit)||!validUTC(plan.createdUTC)||!Number.isFinite(now)||Date.parse(plan.createdUTC)>now||now-Date.parse(plan.createdUTC)>limits.maximumPlanAgeMs||plan.maximumSourceGETs!==477||plan.stopOnDefect!==true||!equal(plan.limits,limits))fail('immutable plan/hash/time/limits differ')
+ if(!sha256Id(expectedPlanSha256)||planSha256!==expectedPlanSha256||canonicalHash(body)!==planSha256||plan.schemaVersion!==1||plan.kind!=='fcf-missing-inventory-plan'||plan.preset!=='g1-then-g9-missing-v1'||!commitId(plan.sourceCommit)||!sha256Id(plan.rulesetSnapshotSha256)||!validUTC(plan.createdUTC)||!Number.isFinite(now)||Date.parse(plan.createdUTC)>now||now-Date.parse(plan.createdUTC)>limits.maximumPlanAgeMs||plan.maximumSourceGETs!==477||plan.stopOnDefect!==true||!equal(plan.limits,limits))fail('immutable plan/hash/time/limits differ')
  validateSeedBinding(plan.seedBinding);policies(plan.policyHashes)
  if(!Array.isArray(plan.children)||plan.children.length!==2)fail('exact two ordered children required')
  const originals=pinnedDescriptors()
