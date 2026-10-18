@@ -65,6 +65,12 @@ function readChild(input,diagnostic=false){
   const bytes=files.get(doc.artifactFile),digest=doc.receipt?.bodyState==='truncated'?doc.receipt.prefixSha256:doc.rawSha256
   expectedNames.add(doc.artifactFile)
   if(!Buffer.isBuffer(bytes)||bytes.length!==doc.bytes||bytes.length>plan.limits.maximumBodyBytes||rawSha256(bytes)!==digest)fail('retained raw source bytes/hash differ')
+  // Refusals stop before header parsing. Retain/hash their last body without
+  // turning recognizable error-page content into a successful source header.
+  if(diagnostic&&!original&&doc.id===child.fetchIds[m.actualSourceGETs-1]){
+   const r=doc.receipt,status=r.httpStatus,redirect=r.redirected===true||typeof r.responseURL==='string'&&r.responseURL!==r.sourceUrl||status>=300&&status<400,reason=redirect?'redirect':[401,403,429].includes(status)?'source-refusal':Number.isInteger(status)&&status>=100&&status<=599&&status!==200?'http-status':null
+   if(reason){if(!validUTC(r.headersUTC)||!Number.isInteger(status)||status<100||status>599||typeof r.responseURL!=='string'||!r.responseURL||typeof r.redirected!=='boolean'||m.stopReason!==reason||doc.header!==null||!equal(doc.validation,{header:'not-run',earlyStrictCheck:'not-run',reason:null}))fail('refused diagnostic cannot claim a parsed header');continue}
+  }
   let header
   try{header=deriveFcfInventoryHeader({targetSlug:child.targetSlug,id:doc.id,bytes})}catch(error){if(!diagnostic||original||doc.id!==child.fetchIds[m.actualSourceGETs-1])throw error;continue}
   if(!equal(header,doc.header))fail('stored header differs from actual source')
