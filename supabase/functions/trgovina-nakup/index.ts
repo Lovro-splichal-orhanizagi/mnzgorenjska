@@ -3,10 +3,19 @@
 // Začetek plačila v trgovini (shop.slff.eu). Kliče brskalnik, kot gost ali
 // prijavljen (Bearer <access_token>; neveljaven žeton = gost):
 //
-//   {"postavke": [{"razlicica_id": 1, "kolicina": 2}], "jezik": "sl"|"en", "drzava": "SI", "prejsnja"?: "cs_…"}
+//   {"postavke": [{"razlicica_id": 1, "kolicina": 2, "personalizacija"?: {…}}], "jezik": "sl"|"en",
+//    "drzava": "SI" (ni potrebna, če so vse postavke digitalne), "prejsnja"?: "cs_…",
+//    "brez_odstopa"?: true (obvezno, če je v košarici personaliziran izdelek)}
 //     → {"url": "<Checkout>", "seja": "cs_…", "oznaka": "<javna oznaka>"}
-//   400 {"error", "hint": "trgovina-vnos"|"trgovina-zaloga"}, 429 {"hint": "trgovina-omejitev"},
-//   409 {"hint": "trgovina-placano"} (prejšnja seja je že plačana)
+//   400 {"error", "hint": "trgovina-vnos"|"trgovina-zaloga"|"trgovina-personalizacija"|"trgovina-prijava"|"trgovina-odstop"},
+//   429 {"hint": "trgovina-omejitev"}, 409 {"hint": "trgovina-placano"} (prejšnja seja je že plačana)
+//
+// Personalizacijo preveri in doplačilo izračuna baza; cena postavke v Stripe je
+// cena + doplačilo. Personalizirani izdelki nimajo pravice do odstopa, zato
+// brskalnik pošlje potrditev kupca (brez_odstopa). Košarica samih digitalnih
+// izdelkov (darilni boni) nima dostave ne naslova. Kupec lahko vnese
+// promocijsko kodo (allow_promotion_codes; darilni boni veljajo le za izdelke
+// trgovine, glej izdelki.ts).
 //
 // `prejsnja` je seja, ki jo je brskalnik dobil zadnjič (nazaj s Checkouta):
 // če je naročilo tega uporabnika ali odjemalca in še čaka plačilo, sejo
@@ -31,11 +40,13 @@
 // Env: STRIPE_SECRET_KEY, STRIPE_TOS (neobvezno, 1), TRGOVINA_PEPPER, SUPABASE_URL,
 // SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY, SHOP_URL (neobvezno, privzeto
 // https://shop.slff.eu), TRGOVINA_TARIFE (neobvezno, JSON {kljuc: shr_…},
-// sicer se tarife enkrat na proces preberejo iz Stripe).
+// sicer se tarife enkrat na proces preberejo iz Stripe). Izdelke v Stripe
+// (slff-shop-<slug>-<jezik>) funkcija ustvari sama ob prvem nakupu.
 // Objava: scripts/hetzner/objavi-funkcije.sh trgovina-nakup
 
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4'
 import { EU27, tarifeZa } from './tarife.ts'
+import { idIzdelka, type IzdelekKataloga, imeV, izdelekPostavke, seznamPostavk } from './izdelki.ts'
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -88,8 +99,60 @@ async function odjemalec(req: Request, poper: string): Promise<string> {
 interface Rezervacija {
   narocilo_id: number
   javna_oznaka: string
-  postavke: { ime: string; cena: number; kolicina: number; tax_code: string }[]
+  postavke: { ime: string; cena: number; doplacilo: number; kolicina: number; tax_code: string; opis: string | null }[]
   pismo: boolean
+  digitalno: boolean
+  personalizirano: boolean
+}
+
+type Servis = ReturnType<typeof createClient>
+interface IzdelekStripe { id: string; name: string; tax_code: string | { id: string } | null; metadata?: Record<string, string> }
+
+// Izdelki trgovine v Stripe (id → izdelek), enkrat na proces; ob neznanem imenu znova.
+let izdelki: Map<string, IzdelekStripe> | null = null
+let katalog: IzdelekKataloga[] = []
+
+/** Zagotovi izdelek v Stripe za vsak izdelek kataloga (oba jezika), da darilni bon velja za vse. */
+async function izdelkiTrgovine(service: Servis): Promise<Map<string, IzdelekStripe>> {
+  if (izdelki) return izdelki
+  const { data, error } = await service.rpc('trgovina_katalog')
+  if (error) throw new Error(`trgovina_katalog: ${error.message}`)
+  katalog = (data ?? []) as IzdelekKataloga[]
+  const m = new Map<string, IzdelekStripe>()
+  let stran: string | null = null
+  do {
+    const q: string = `products/search?limit=100&query=${encodeURIComponent("metadata['app']:'slff-shop'")}${stran ? `&page=${stran}` : ''}`
+    const s: { data: IzdelekStripe[]; next_page: string | null } = await stripe(q)
+    for (const p of s.data) m.set(p.id, p)
+    stran = s.next_page
+  } while (stran)
+  // Iskanje v Stripe zamuja do minute: nov izdelek, ki ga še ne vidi, javi "already exists".
+  for (const i of katalog)
+    for (const jezik of ['sl', 'en']) {
+      const id = idIzdelka(i.slug, jezik)
+      if (m.has(id)) continue
+      const polja = { id, name: imeV(i, jezik), 'metadata[app]': 'slff-shop', 'metadata[slug]': i.slug, 'metadata[jezik]': jezik, 'metadata[digitalni]': i.digitalni ? '1' : '0' }
+      m.set(id, await stripe<IzdelekStripe>('products', polja).catch(() => stripe<IzdelekStripe>(`products/${id}`)))
+    }
+  return (izdelki = m)
+}
+
+/** Id izdelka v Stripe za postavko (ime in tax_code popravi, če sta se spremenila); null = brez ujemanja. */
+async function izdelekZa(service: Servis, p: Rezervacija['postavke'][number], jezik: string): Promise<string | null> {
+  let i = izdelekPostavke(p.ime, jezik, katalog)
+  if (!i && izdelki) {
+    izdelki = null // nov izdelek v katalogu
+    await izdelkiTrgovine(service)
+    i = izdelekPostavke(p.ime, jezik, katalog)
+  }
+  if (!i) return null
+  const id = idIzdelka(i.slug, jezik)
+  const s = izdelki?.get(id)
+  const tax = typeof s?.tax_code === 'string' ? s.tax_code : (s?.tax_code?.id ?? null)
+  if (s && (s.name !== imeV(i, jezik) || tax !== p.tax_code)) {
+    izdelki!.set(id, await stripe<IzdelekStripe>(`products/${id}`, { name: imeV(i, jezik), tax_code: p.tax_code }))
+  }
+  return id
 }
 
 Deno.serve(async (req) => {
@@ -106,10 +169,12 @@ Deno.serve(async (req) => {
     : { data: null }
   const user = u?.user ?? null
 
-  const vhod = ((await req.json().catch(() => null)) ?? {}) as { postavke?: unknown; jezik?: string; drzava?: unknown; prejsnja?: unknown }
+  const vhod = ((await req.json().catch(() => null)) ?? {}) as {
+    postavke?: unknown; jezik?: string; drzava?: unknown; prejsnja?: unknown; brez_odstopa?: unknown
+  }
   const jezik = vhod.jezik === 'en' ? 'en' : 'sl'
-  const drzava = vhod.drzava
-  if (typeof drzava !== 'string' || !EU27.includes(drzava)) return json({ error: 'Dostava le v EU.', hint: 'trgovina-vnos' }, 400)
+  const drzava = typeof vhod.drzava === 'string' && EU27.includes(vhod.drzava) ? vhod.drzava : null
+  if (vhod.drzava != null && !drzava) return json({ error: 'Dostava le v EU.', hint: 'trgovina-vnos' }, 400)
   const service = createClient(URL_, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
   const p_odjemalec = await odjemalec(req, poper)
 
@@ -139,20 +204,30 @@ Deno.serve(async (req) => {
   })
   if (error) {
     if (error.hint === 'trgovina-omejitev') return json({ error: error.message, hint: error.hint }, 429)
-    if (error.hint === 'trgovina-vnos' || error.hint === 'trgovina-zaloga') return json({ error: error.message, hint: error.hint }, 400)
+    if (['trgovina-vnos', 'trgovina-zaloga', 'trgovina-personalizacija', 'trgovina-prijava'].includes(error.hint))
+      return json({ error: error.message, hint: error.hint }, 400)
     console.error('trgovina-nakup: rezerviraj', error)
     return json({ error: NAPAKA }, 500)
   }
   const r = data as Rezervacija
+  const zavrni = async (error: string, hint: string) => {
+    const sp = await service.rpc('trgovina_sprosti', { p_narocilo: r.narocilo_id })
+    if (sp.error) console.error('trgovina-nakup: sprosti', sp.error)
+    return json({ error, hint }, 400)
+  }
+  if (r.personalizirano && vhod.brez_odstopa !== true)
+    return await zavrni('Potrdite, da personaliziranih izdelkov ni mogoče vrniti.', 'trgovina-odstop')
+  if (!r.digitalno && !drzava) return await zavrni('Dostava le v EU.', 'trgovina-vnos')
 
   try {
-    const t = await tarifeTrgovine()
-    const ponudba = tarifeZa(drzava, r.pismo).map((k) => t[k]).filter((id): id is string => !!id)
+    const t: Record<string, string> = r.digitalno ? {} : await tarifeTrgovine()
+    const ponudba = drzava && !r.digitalno ? tarifeZa(drzava, r.pismo).map((k) => t[k]).filter((id): id is string => !!id) : []
+    await izdelkiTrgovine(service)
 
     const meta = { app: 'slff-shop', narocilo_id: String(r.narocilo_id), oznaka: r.javna_oznaka }
     const polja: Polja = {
       mode: 'payment',
-      'shipping_address_collection[allowed_countries][0]': drzava,
+      allow_promotion_codes: true,
       'automatic_tax[enabled]': true,
       customer_creation: 'if_required',
       customer_email: user?.email,
@@ -172,14 +247,24 @@ Deno.serve(async (req) => {
     } else {
       polja['custom_text[submit][message]'] = jezik === 'en' ? `By paying you accept the ${pogoji}.` : `S plačilom sprejmete ${pogoji}.`
     }
-    r.postavke.forEach((p, i) => {
+    // Brez dostave (sami boni) Stripe Tax potrebuje naslov za račun.
+    if (r.digitalno) polja.billing_address_collection = 'required'
+    else polja['shipping_address_collection[allowed_countries][0]'] = drzava
+    // Izdelek v Stripe nosi le ime izdelka: različico in personalizacijo pokažemo pod gumbom.
+    polja['custom_text[after_submit][message]'] = seznamPostavk(r.postavke)
+    for (const [i, p] of r.postavke.entries()) {
+      const izdelek = await izdelekZa(service, p, jezik)
       polja[`line_items[${i}][price_data][currency]`] = 'eur'
-      polja[`line_items[${i}][price_data][unit_amount]`] = p.cena
+      polja[`line_items[${i}][price_data][unit_amount]`] = p.cena + (p.doplacilo ?? 0)
       polja[`line_items[${i}][price_data][tax_behavior]`] = 'inclusive'
-      polja[`line_items[${i}][price_data][product_data][name]`] = p.ime
-      polja[`line_items[${i}][price_data][product_data][tax_code]`] = p.tax_code
+      if (izdelek) polja[`line_items[${i}][price_data][product]`] = izdelek
+      else {
+        // Ime brez izdelka v katalogu: postavka je pravilna, le darilni bon zanjo ne velja.
+        polja[`line_items[${i}][price_data][product_data][name]`] = p.ime
+        polja[`line_items[${i}][price_data][product_data][tax_code]`] = p.tax_code
+      }
       polja[`line_items[${i}][quantity]`] = p.kolicina
-    })
+    }
     ponudba.forEach((id, i) => (polja[`shipping_options[${i}][shipping_rate]`] = id))
     for (const [k, v] of Object.entries(meta)) {
       polja[`metadata[${k}]`] = v
@@ -188,6 +273,7 @@ Deno.serve(async (req) => {
 
     const s = await stripe<{ id: string; url: string }>('checkout/sessions', polja).catch((e) => {
       tarife = null // tarifa je morda izbrisana v Stripe: naslednji klic jih prebere znova
+      izdelki = null // prav tako izdelek
       throw e
     })
     const vez = await service.rpc('trgovina_vezi_sejo', { p_narocilo: r.narocilo_id, p_checkout: s.id })

@@ -46,7 +46,16 @@
 // in Discord ('premalo' z opozorilom o zalogi); 'neznano' (poteklo ali
 // preklicano naročilo) se ne označi samo: Discord "ročno potrdi ali vrni
 // denar" in 200. checkout.session.expired in async_payment_failed →
-// trgovina_potekla (sprosti rezervacijo).
+// trgovina_potekla (sprosti rezervacijo). Darilni boni (digitalne postavke,
+// tudi ob 'ze', da ponovitev dokonča prekinjeno izdajo): za vsako enoto kupon
+// s stalnim id (trgovina.ts idKupona; amount_off = cena, enkrat, applies_to =
+// izdelki trgovine v Stripe brez digitalnih, rok 1 leto, max_redemptions 1)
+// in ena promocijska koda SLFF-XXXX-XXXX. Ponovitev najde kupon in njegovo
+// kodo v Stripe in ne ustvari druge. Zapis trgovina_zabelezi_bon (le zgoščena
+// koda in zadnji 4 znaki), nove kode gredo kupcu (trgovina-posta, vrsta bon).
+//
+// Promocijske kode: plačana seja trgovine, Scouta ali preverjenih s popustom
+// → trgovina_bon_porabljen za vsako kodo (le zapis, napaka ne ustavi dogodka).
 //
 // Oblike objektov se med različicami API razlikujejo (basil: obdobje na
 // postavkah, naročnina računa pod `parent`, račun plačila prek
@@ -60,7 +69,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4'
 import { veljavenPodpis } from './podpis.ts'
 import { scoutCeneNarocnine, scoutPostavkeVeljajo } from './scout.ts'
-import { napacnaTarifa, trgovinaIzSeje } from './trgovina.ts'
+import { enoteBonov, idKupona, kodeSeje, napacnaTarifa, novaKoda, trgovinaIzSeje, zgostiKodo } from './trgovina.ts'
 
 // deno-lint-ignore no-explicit-any
 type Obj = Record<string, any>
@@ -72,10 +81,17 @@ const CENE = { letna: 'slff_preverjen_letna', dozivljenjska: 'slff_preverjen_doz
 const iso = (s: number | null | undefined) => (s ? new Date(s * 1000).toISOString() : null)
 const id = (v: unknown): string | null => (typeof v === 'string' ? v : ((v as Obj | null)?.id ?? null))
 
-async function stripe(pot: string, metoda = 'GET'): Promise<{ ok: boolean; status: number; j: Obj }> {
+// Boni: različica API je zapisana, ker clover (2025-09) spremeni obliko promocijskih kod.
+const RAZLICICA_BONOV = '2025-03-31.basil'
+
+async function stripe(pot: string, metoda = 'GET', polja?: Record<string, string | number>, razlicica?: string): Promise<{ ok: boolean; status: number; j: Obj }> {
+  const glave: Record<string, string> = { Authorization: `Bearer ${Deno.env.get('STRIPE_SECRET_KEY')}` }
+  if (razlicica) glave['Stripe-Version'] = razlicica
+  if (polja) glave['Content-Type'] = 'application/x-www-form-urlencoded'
   const r = await fetch(`https://api.stripe.com/v1/${pot}`, {
     method: metoda,
-    headers: { Authorization: `Bearer ${Deno.env.get('STRIPE_SECRET_KEY')}` },
+    headers: glave,
+    body: polja ? new URLSearchParams(Object.entries(polja).map(([k, v]) => [k, String(v)])) : undefined,
   })
   return { ok: r.ok, status: r.status, j: await r.json() }
 }
@@ -228,6 +244,7 @@ async function obdelaj(tip: string, o: Obj): Promise<string> {
     case 'checkout.session.completed':
     case 'checkout.session.async_payment_succeeded': {
       const m = o.metadata ?? {}
+      if (['slff', 'slff-scout', 'slff-shop'].includes(m.app) && o.payment_status === 'paid') await oznaciBone(o)
       if (m.app === 'slff-scout') return await scoutSeja(o)
       if (m.app === 'slff-shop') return await trgovinaSeja(o)
       if (m.app !== 'slff') return 'ignored'
@@ -304,6 +321,7 @@ async function obdelaj(tip: string, o: Obj): Promise<string> {
       return await podaljsaj(o.id, konec)
     }
     case 'charge.refunded': {
+      if (await vraciloTrgovine(o)) return 'trgovina'
       const nase = await nasePlacilo(o)
       if (!nase) return 'ignored'
       return await rpc('preverjen_vracilo', {
@@ -428,16 +446,27 @@ async function trgovinaSeja(o: Obj): Promise<string> {
     await discord(`🛒 Trgovina: plačilo za poteklo naročilo ${oznaka} — preveri zalogo in ročno potrdi ali vrni denar`)
     return izid
   }
+  if (izid === 'ze') {
+    await boniNarocila(o, oznaka) // ponovitev dokonča prekinjeno izdajo
+    return izid
+  }
   if (izid !== 'placano' && izid !== 'premalo') return izid
   await discord(`🛒 Trgovina: naročilo ${oznaka}, ${evri(args.p_skupaj)} €`)
   if (izid === 'premalo') await discord(`⚠️ Trgovina: naročilo ${oznaka} je plačano, zaloge ni bilo dovolj (manjka > 0 v naročilu; uredi s kupcem).`)
   if (napacnaTarifa(kljuc, drzava)) await discord(`⚠️ Trgovina: naročilo ${oznaka} ima tarifo ${kljuc} za državo ${drzava} (doplačilo ali vračilo).`)
   // Mail ne sme ponoviti dogodka: ponovitev bi dobila 'ze' in maila spet ne bi poslala.
+  await postaTrgovine({ vrsta: 'potrditev', narocilo_id: Number(o.metadata?.narocilo_id) }, oznaka, 'potrditev')
+  await boniNarocila(o, oznaka)
+  return izid
+}
+
+/** Pošlje mail trgovine; napaka gre na Discord, dogodka ne ponovi. */
+async function postaTrgovine(telo: Obj, oznaka: string, kaj: string): Promise<void> {
   try {
     const r = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/trgovina-posta`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ vrsta: 'potrditev', narocilo_id: Number(o.metadata?.narocilo_id) }),
+      body: JSON.stringify(telo),
       signal: AbortSignal.timeout(8000),
     })
     if (!r.ok) throw new Error(`trgovina-posta ${r.status}`)
@@ -445,8 +474,96 @@ async function trgovinaSeja(o: Obj): Promise<string> {
     console.error('stripe-webhook: trgovina-posta', String(e))
     // Ob časovni omejitvi je mail morda vseeno odšel.
     await discord((e as Error)?.name === 'TimeoutError'
-      ? `⚠️ Trgovina: potrditev naročila ${oznaka} ni potrjena — preveri email_log.`
-      : `⚠️ Trgovina: potrditev naročila ${oznaka} ni odšla po pošti.`)
+      ? `⚠️ Trgovina: mail (${kaj}) naročila ${oznaka} ni potrjen — preveri email_log.`
+      : `⚠️ Trgovina: mail (${kaj}) naročila ${oznaka} ni odšel po pošti.`)
   }
-  return izid
+}
+
+/** Izdelki trgovine v Stripe (brez digitalnih): darilni bon velja le zanje. */
+async function izdelkiZaBon(): Promise<string[]> {
+  const ids: string[] = []
+  let stran: string | null = null
+  do {
+    const q = encodeURIComponent("metadata['app']:'slff-shop' AND active:'true'")
+    const s = await beri(`products/search?limit=100&query=${q}${stran ? `&page=${stran}` : ''}`)
+    for (const p of s.data ?? []) if (p.metadata?.digitalni !== '1') ids.push(p.id)
+    stran = s.next_page ?? null
+  } while (stran)
+  return ids
+}
+
+/** Kupon in koda za enoto (najde obstoječa); vrne kodo v čistopisu, id kode in rok. */
+async function bonEnote(oznaka: string, narocilo: number, postavka: number, enota: number, znesek: number, izdelki: () => Promise<string[]>) {
+  const kid = idKupona(oznaka, postavka, enota)
+  const meta = { 'metadata[app]': 'slff-shop', 'metadata[narocilo]': String(narocilo), 'metadata[postavka]': String(postavka), 'metadata[enota]': String(enota) }
+  let k = await stripe(`coupons/${kid}`, 'GET', undefined, RAZLICICA_BONOV)
+  if (!k.ok) {
+    const polja: Record<string, string | number> = {
+      id: kid, name: 'SLFF darilni bon', amount_off: znesek, currency: 'eur', duration: 'once', max_redemptions: 1,
+      redeem_by: Math.floor(Date.now() / 1000) + 365 * 24 * 3600, ...meta,
+    }
+    ;(await izdelki()).forEach((p, i) => (polja[`applies_to[products][${i}]`] = p))
+    k = await stripe('coupons', 'POST', polja, RAZLICICA_BONOV)
+    // Hkratna ponovitev ga je morda ravno ustvarila.
+    if (!k.ok) k = await stripe(`coupons/${kid}`, 'GET', undefined, RAZLICICA_BONOV)
+    if (!k.ok) throw new Error(`kupon ${kid}: ${k.j?.error?.message ?? k.status}`)
+  }
+  const obstojeca = await stripe(`promotion_codes?coupon=${kid}&active=true&limit=1`, 'GET', undefined, RAZLICICA_BONOV)
+  if (!obstojeca.ok) throw new Error(`kode ${kid}: ${obstojeca.j?.error?.message ?? obstojeca.status}`)
+  let pc: Obj | undefined = obstojeca.j.data?.[0]
+  if (!pc) {
+    const n = await stripe('promotion_codes', 'POST', {
+      coupon: kid, code: novaKoda(), max_redemptions: 1, expires_at: k.j.redeem_by, ...meta,
+    }, RAZLICICA_BONOV)
+    if (!n.ok) throw new Error(`koda ${kid}: ${n.j?.error?.message ?? n.status}`)
+    pc = n.j
+  }
+  return { koda: String(pc!.code), promocija: String(pc!.id), velja_do: iso(pc!.expires_at ?? k.j.redeem_by)! }
+}
+
+/** Darilni boni plačanega naročila: izda manjkajoče, nove pošlje kupcu. Napaka = ponovitev dogodka. */
+async function boniNarocila(o: Obj, oznaka: string): Promise<void> {
+  const id_ = Number(o.metadata?.narocilo_id)
+  const { data, error } = await baza.rpc('trgovina_narocilo_za_posto', { p_id: id_ })
+  if (error) throw new Error(`trgovina_narocilo_za_posto: ${error.message}`)
+  const enote = enoteBonov((data as Obj | null)?.postavke ?? [])
+  if (!enote.length) return
+  let izdelki: Promise<string[]> | null = null
+  const zaBon = () => (izdelki ??= izdelkiZaBon().then((x) => (x.length ? x : Promise.reject(new Error('ni izdelkov trgovine v Stripe')))))
+  const nove: { koda: string; znesek: number; velja_do: string }[] = []
+  for (const [postavka, enota, znesek] of enote) {
+    const b = await bonEnote(oznaka, id_, postavka, enota, znesek, zaBon)
+    const izid = await rpc('trgovina_zabelezi_bon', {
+      p_postavka: postavka, p_zaporedje: enota, p_koda_hash: await zgostiKodo(b.koda),
+      p_koda_konec: b.koda.slice(-4), p_velja_do: b.velja_do, p_stripe_promocija: b.promocija,
+    })
+    if (izid === 'zabelezeno') nove.push({ koda: b.koda, znesek, velja_do: b.velja_do })
+  }
+  if (nove.length) await postaTrgovine({ vrsta: 'bon', narocilo_id: id_, kode: nove }, oznaka, 'darilni bon')
+}
+
+/**
+ * Vračilo plačila trgovine (metadata app=slff-shop na payment_intent): baza še
+ * nima servisnega RPC za vrnjeno naročilo, zato le Discord (značka in tisk ročno).
+ */
+async function vraciloTrgovine(placilo: Obj): Promise<boolean> {
+  const pi = id(placilo.payment_intent)
+  const meta = placilo.metadata?.app ? placilo.metadata : pi ? ((await stripe(`payment_intents/${pi}`)).j?.metadata ?? {}) : {}
+  if (meta.app !== 'slff-shop') return false
+  await discord(`↩️ Trgovina: vračilo ${meta.oznaka ?? pi} (${evri(placilo.amount_refunded ?? 0)} €) — preveri značko/tisk in bone v Stripe.`)
+  return true
+}
+
+/** Uporabljene promocijske kode plačane seje označi kot porabljene (le zapis; napaka ne ustavi dogodka). */
+async function oznaciBone(o: Obj): Promise<void> {
+  if (!((o.total_details?.amount_discount ?? 0) > 0)) return
+  try {
+    const s = await beri(`checkout/sessions/${o.id}?expand[]=total_details.breakdown`)
+    for (const k of kodeSeje(s)) {
+      const { error } = await baza.rpc('trgovina_bon_porabljen', { p_promocija: k })
+      if (error) console.error('stripe-webhook: bon porabljen', error.message)
+    }
+  } catch (e) {
+    console.error('stripe-webhook: bon porabljen', String(e))
+  }
 }

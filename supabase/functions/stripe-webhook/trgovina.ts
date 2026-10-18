@@ -52,3 +52,40 @@ export function trgovinaIzSeje(o: Obj): { args: PlaciloTrgovine; tarifa: string 
  */
 export const napacnaTarifa = (kljuc: string | null, drzava: string | null): boolean =>
   !!kljuc && kljuc.endsWith('_si') && drzava !== 'SI'
+
+// --- Darilni boni ------------------------------------------------------------
+
+/** Brez 0/O in 1/I, da kode ni mogoče prebrati narobe. */
+const ABECEDA = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+
+/** Naključna koda SLFF-XXXX-XXXX (8 znakov, 40 bitov). */
+export function novaKoda(): string {
+  const b = crypto.getRandomValues(new Uint8Array(8))
+  const z = Array.from(b, (x) => ABECEDA[x % ABECEDA.length]).join('')
+  return `SLFF-${z.slice(0, 4)}-${z.slice(4)}`
+}
+
+/**
+ * Stalni id kupona za enoto postavke: ponovljen webhook najde isti kupon in
+ * njegovo kodo (promotion_codes?coupon=…), zato druge kode za isto enoto ni.
+ * Oznaka naročila loči baze, ki si delijo testni Stripe.
+ */
+export const idKupona = (oznaka: string, postavka: number, enota: number): string =>
+  `slff-shop-bon-${oznaka}-${postavka}-${enota}`
+
+export async function zgostiKodo(koda: string): Promise<string> {
+  const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(koda))
+  return Array.from(new Uint8Array(h), (b) => b.toString(16).padStart(2, '0')).join('')
+}
+
+/** Postavke naročila (trgovina.narocilo_json), ki potrebujejo bon: [postavka, enota, znesek]. */
+export function enoteBonov(postavke: { id: number; cena: number; kolicina: number; digitalni?: boolean }[]): [number, number, number][] {
+  return postavke.filter((p) => p.digitalni).flatMap((p) => Array.from({ length: p.kolicina }, (_, i) => [p.id, i + 1, p.cena] as [number, number, number]))
+}
+
+/** Promocijske kode iz popustov seje (total_details.breakdown.discounts ali discounts; id ali objekt). */
+export function kodeSeje(o: Obj): string[] {
+  const id = (v: unknown): string | null => (typeof v === 'string' ? v : ((v as Obj | null)?.id ?? null))
+  const iz = [...(o.total_details?.breakdown?.discounts ?? []).map((d: Obj) => d.discount ?? {}), ...(o.discounts ?? [])]
+  return [...new Set(iz.map((d: Obj) => id(d.promotion_code)).filter((x): x is string => !!x))]
+}

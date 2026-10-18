@@ -58,7 +58,8 @@ import {
 import { tockeZaNastop, razloziTocke } from '../src/lib/tockovanje'
 import { veljavenPodpis } from '../supabase/functions/stripe-webhook/podpis.ts'
 import { scoutPostavkeVeljajo, scoutCeneNarocnine } from '../supabase/functions/stripe-webhook/scout.ts'
-import { trgovinaIzSeje, napacnaTarifa } from '../supabase/functions/stripe-webhook/trgovina.ts'
+import { trgovinaIzSeje, napacnaTarifa, novaKoda, idKupona, enoteBonov, kodeSeje, zgostiKodo } from '../supabase/functions/stripe-webhook/trgovina.ts'
+import { idIzdelka, izdelekPostavke, seznamPostavk } from '../supabase/functions/trgovina-nakup/izdelki.ts'
 import { sestaviMail as trgovinaMail, TELEFON as trgovinaTelefonMail, POGOJI_VERZIJA as trgovinaVerzijaMail } from '../supabase/functions/trgovina-posta/sporocila.ts'
 import { SL as trgovinaSL, EN as trgovinaEN, TELEFON as trgovinaTelefon, POGOJI_VERZIJA as trgovinaVerzija } from '../shop/src/besede.ts'
 import { EU27 as trgovinaEU27, tarifeZa } from '../supabase/functions/trgovina-nakup/tarife.ts'
@@ -13035,7 +13036,7 @@ preveri(
   preveri('scout stripe: mesečna postavka gre', scoutPostavkeVeljajo([p('slff_scout_klub_mesec')], 'mesec'))
   preveri('scout stripe: napačno obdobje pade', !scoutPostavkeVeljajo([p('slff_scout_klub_mesec')], 'sezona'))
   preveri('scout stripe: dva kosa padeta', !scoutPostavkeVeljajo([p('slff_scout_klub_mesec', 2, 7800)], 'mesec'))
-  preveri('scout stripe: popust pade', !scoutPostavkeVeljajo([{ ...p('slff_scout_klub_mesec'), amount_discount: 2000 }], 'mesec'))
+  preveri('scout stripe: popust (promocijska koda) gre', scoutPostavkeVeljajo([{ ...p('slff_scout_klub_mesec'), amount_discount: 2000 }], 'mesec'))
   preveri('scout stripe: dodatna postavka pade', !scoutPostavkeVeljajo([p('slff_scout_klub_mesec'), p('slff_znacka')], 'mesec'))
   preveri('scout stripe: neznano obdobje pade', !scoutPostavkeVeljajo([p('slff_scout_klub_mesec')], 'teden'))
   // Obnova: vse postavke naročnine so cene Scouta (obramba v globino).
@@ -13085,6 +13086,42 @@ preveri(
     [[sl, trgovinaSL, 'Pogoji z dne'], [enP, trgovinaEN, 'Terms dated']].every(([m, B, z]) =>
       B['pogoji.s6.besedilo'].split('\n\n').every((o) => m.besedilo.includes(o)) &&
       m.besedilo.includes(B['odstop.vzorec']) && m.besedilo.includes(`${z} ${trgovinaVerzija}`) && m.besedilo.includes(trgovinaTelefon)))
+
+  // Personalizacija in boni (trgovina-posta, stripe-webhook/trgovina.ts, trgovina-nakup/izdelki.ts).
+  const np = {
+    ...n, naslov: null,
+    postavke: [
+      { ime: 'Majica z imenom ekipe (Črna / M)', cena: 2500, doplacilo: 800, kolicina: 1, personalizacija: { ime: 'Kranjski Tigri', stevilka: 10 }, po_narocilu: true },
+      { ime: 'Darilni bon (20 €)', cena: 2000, doplacilo: 0, kolicina: 1, personalizacija: null, digitalni: true },
+    ],
+  }
+  const pm = trgovinaMail('potrditev', np, 'https://shop.slff.eu')
+  preveri('trgovina mail: personalizacija, doplačilo, rok izdelave, bon posebej',
+    pm.besedilo.includes('1 × Majica z imenom ekipe (Črna / M): Kranjski Tigri · 10 — 33,00 €') &&
+    pm.besedilo.includes('1–2 tednih') && pm.besedilo.includes('posebnem mailu') && !pm.besedilo.includes('Naslov za dostavo'))
+  const bm = trgovinaMail('bon', np, 'https://shop.slff.eu', [{ koda: 'SLFF-ABCD-EFGH', znesek: 2000, velja_do: '2027-10-18T10:00:00Z' }])
+  const be = trgovinaMail('bon', { ...np, jezik: 'en' }, 'https://shop.slff.eu', [{ koda: 'SLFF-ABCD-EFGH', znesek: 2000, velja_do: '2027-10-18T10:00:00Z' }])
+  preveri('trgovina mail: bon sl/en (koda, znesek, rok, enkratna, trgovina)',
+    bm.besedilo.includes('SLFF-ABCD-EFGH — vrednost 20,00 €, velja do 18. 10. 2027') && bm.besedilo.includes('enkratna') && bm.besedilo.includes('https://shop.slff.eu') &&
+    be.besedilo.includes('SLFF-ABCD-EFGH — value €20.00, valid until 18 Oct 2027') && be.naslov.includes('gift card') && !bm.besedilo.includes('Odstop od pogodbe'))
+  const kode = Array.from({ length: 50 }, novaKoda)
+  preveri('trgovina bon: koda SLFF-XXXX-XXXX brez 0/O/1/I, različne', kode.every((k) => /^SLFF-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/.test(k)) && new Set(kode).size === 50)
+  preveri('trgovina bon: zgoščena koda je sha256 hex', /^[0-9a-f]{64}$/.test(await zgostiKodo('SLFF-ABCD-EFGH')))
+  preveri('trgovina bon: stalni id kupona po enoti', idKupona('AB12CD34', 5, 2) === 'slff-shop-bon-AB12CD34-5-2')
+  preveri('trgovina bon: enote le digitalnih postavk',
+    JSON.stringify(enoteBonov([{ id: 1, cena: 2000, kolicina: 2, digitalni: true }, { id: 2, cena: 2500, kolicina: 1, digitalni: false }])) === '[[1,1,2000],[1,2,2000]]')
+  preveri('trgovina bon: kode seje iz popustov (id ali objekt, brez podvojenih)',
+    kodeSeje({ total_details: { breakdown: { discounts: [{ discount: { promotion_code: 'promo_1' } }] } }, discounts: [{ promotion_code: { id: 'promo_1' } }, { coupon: 'c' }] }).join() === 'promo_1')
+  const kat = [
+    { slug: 'majica', ime_sl: 'Majica', ime_en: 'T-shirt', digitalni: false },
+    { slug: 'majica-ime-ekipe', ime_sl: 'Majica z imenom ekipe', ime_en: 'Team name T-shirt', digitalni: false },
+  ]
+  preveri('trgovina stripe: izdelek postavke po imenu (daljše zmaga, jezik)',
+    izdelekPostavke('Majica z imenom ekipe (Črna / M)', 'sl', kat)?.slug === 'majica-ime-ekipe' &&
+    izdelekPostavke('Majica (Bela / S)', 'sl', kat)?.slug === 'majica' &&
+    izdelekPostavke('T-shirt (White / S)', 'en', kat)?.slug === 'majica' && izdelekPostavke('Skodelica (Bela)', 'sl', kat) === null &&
+    idIzdelka('majica', 'en') === 'slff-shop-majica-en')
+  preveri('trgovina stripe: seznam postavk pod gumbom', seznamPostavk([{ ime: 'Majica (Črna / M)', kolicina: 2, opis: 'Ana · 7' }, { ime: 'Bon (20 €)', kolicina: 1, opis: null }]) === '2 × Majica (Črna / M): Ana · 7; 1 × Bon (20 €)')
 }
 
 console.log(napak === 0 ? '\nVSE OK' : `\n${napak} NAPAK`)

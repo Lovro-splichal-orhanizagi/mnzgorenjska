@@ -47,7 +47,30 @@ EU-27. Prodajalec SPACE GUARDIAN d.o.o. Spec:
   Discord; poteklo → sprosti.
 - **Pošta**: `trgovina-posta` (Mailcow) — potrditev (z besedilom odstopa in
   obrazcem, trajni nosilec) in "poslano" s sledilno številko. Kliče jo webhook
-  (servisni ključ) ali admin.
+  (servisni ključ) ali admin. Potrditev navede personalizacijo in rok izdelave (1–2 tedna);
+  vrsta `bon` (le servis) pošlje kode darilnih bonov.
+- **Personaliziran nakup**: `trgovina-nakup` pošlje personalizacijo v
+  `rezerviraj`; cena v Stripe = cena + doplačilo. Personalizirana košarica
+  zahteva `brez_odstopa: true` (sicer 400 `trgovina-odstop`); samo digitalna
+  košarica (boni) nima dostave (naslov za račun da Stripe). Vsi trije
+  checkouti (trgovina, Scout, preverjeni) imajo `allow_promotion_codes`.
+- **Izdelki v Stripe**: postavka trgovine gre pod stalni izdelek
+  `slff-shop-<slug>-<jezik>` (ime izdelka, `tax_code` izdelka), ne
+  `product_data` — `price_data` ne sprejme obojega, darilni bon pa mora biti
+  vezan na izdelke (`applies_to`). Funkcija izdelke za ves katalog ustvari
+  sama (ob prvem nakupu na proces, ime in `tax_code` popravi); različica in
+  personalizacija sta pod gumbom Checkouta (`custom_text.after_submit`) in v
+  potrditvi. **Meja:** bon velja za izdelke, ki so bili v Stripe ob izdaji;
+  izdelek, vklopljen pozneje, starih bonov ne sprejme.
+- **Darilni boni**: webhook po plačilu za vsako enoto digitalne postavke
+  ustvari kupon s stalnim id `slff-shop-bon-<oznaka>-<postavka>-<enota>`
+  (amount_off = cena, enkrat, `max_redemptions` 1, rok 1 leto, `applies_to`
+  izdelki trgovine brez digitalnih) in kodo `SLFF-XXXX-XXXX`; ponovitev
+  dogodka najde kupon in njegovo aktivno kodo in druge ne ustvari. Zapis
+  `trgovina_zabelezi_bon` (sha256 + zadnji 4), kode gredo kupcu v mailu
+  `bon`. Klici bonov imajo zapisano različico API `2025-03-31.basil`.
+  Plačana seja s popustom (vse tri aplikacije) → `trgovina_bon_porabljen`.
+  Vračilo plačila trgovine (`charge.refunded`) je zaenkrat le Discord.
 - **Admin** `/admin`: naročila za pakiranje (nalepka 100×150 mm, dobavnica),
   sledilna številka → poslano + mail; izdelki, različice, cene, zaloga kot
   sprememba (`zaloga_dodaj`), slike v Storage (vedro `trgovina`).
