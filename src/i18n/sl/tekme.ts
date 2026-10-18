@@ -1,5 +1,15 @@
 // Nizi za področje `tekme` (glej src/i18n/index.tsx).
 export const tekme = {
+  statistika: {
+    brezStrelcev: "Ni preverjenih strelcev.",
+    nedosegljivo: "Statistika igralcev za to zgodovinsko tekmo ni na voljo. Uradni izid je ohranjen.",
+    kratko: "Statistika ni na voljo",
+    postaveTocke: "Postave in točke",
+    kartoni: "Kartoni",
+    delno: "Delna statistika sezone {sezona}: popolni podatki za {popolnih} od {odigranih} odigranih tekem lige. Zgodovinske tekme brez statistike igralcev: {nedosegljivih}. Seštevki in povprečja vključujejo le preverjene nastope.",
+    brezOpazovanj: "Ni preverjenih nastopov",
+  },
+
   krog: '{n}. krog',
   moraPrijava: 'Za glasovanje se moraš <prijava>prijaviti</prijava>.',
 

@@ -11,6 +11,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/useAuth'
 import { useTekmovanje } from '../lib/tekmovanje'
 import Grb from '../components/Grb'
+import { NedosegljivaStatistika } from '../components/PokritostStatistike'
 import GolZaGlasovanje, {
   PRAG_ASISTENCE_PRIVZETO,
   caka,
@@ -222,7 +223,7 @@ export default function Glasovanje() {
   )
 
   async function glasuj(golId: number, playerId: number | null) {
-    if (!session) return
+    if (!session || tekma?.statistics_status === 'unavailable_historical') return
     setNapaka(null)
 
     const { error } = await supabase.from('assist_votes').upsert(
@@ -407,7 +408,9 @@ export default function Glasovanje() {
                 <span className="text-sm font-black tabular-nums">
                   {tk.home_goals}:{tk.away_goals}
                 </span>
-                {Number(tk.brez_asistence ?? 0) === 0 ? (
+                {tk.statistics_status === 'unavailable_historical' ? (
+                  <span className="text-xs text-amber-200">{t('tekme.statistika.kratko')}</span>
+                ) : Number(tk.brez_asistence ?? 0) === 0 ? (
                   <span className="znacka bg-gnl-400/20 text-gnl-200" aria-label={t('tekme.glasovanje.vsePotrjeno')}>✓</span>
                 ) : tk.glasovanje_odprto ? (
                   <span className="znacka bg-amber-400/20 text-amber-300">
@@ -446,7 +449,7 @@ export default function Glasovanje() {
         </div>
       )}
 
-      {goli.length === 0 ? (
+      {tekma?.statistics_status === 'unavailable_historical' ? <NedosegljivaStatistika /> : goli.length === 0 ? (
         <p className="text-sm text-slate-400">{t('tekme.glasovanje.niGolov')}</p>
       ) : (
         <>

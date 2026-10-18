@@ -14,6 +14,11 @@ določi **skupnost z glasovanjem**:
 
 Pri **5 glasovih** za istega kandidata se podatek potrdi in začne šteti.
 
+Izrecno pregledane zgodovinske tekme imajo lahko ohranjen uradni izid in
+oznako, da statistika igralcev ni na voljo. Za te tekme ni nastopov, golov
+ali glasovanja o asistencah; seštevki in cene uporabljajo le preverjene
+nastope, vmesnik pa pokaže nepopolno pokritost zgodovine.
+
 ## Ključne funkcionalnosti
 
 - **Sestavljanje ekipe** — igrišče s prvo postavo in klopjo: 15 igralcev (2 vratarja,

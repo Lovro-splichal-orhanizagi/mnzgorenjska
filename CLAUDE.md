@@ -249,6 +249,19 @@ to področje. Bistvo, ki ga je treba vedeti vedno:
   `stripe-webhook`, **preklic naročnine mora biti vedno mogoč**; vse v
   `docs/podatkovni-model.md` (*Preverjeni igralci*).
 
+## Pregledane zgodovinske vrzeli
+
+`matches.statistics_status = 'unavailable_historical'` ohrani uradni izid,
+vendar nima nastopov/golov in `imported_at` ostane NULL. Izjeme so omejene
+na točne identitete in SHA v `scripts/policies/historical-statistics-exclusions.json`;
+zasebna shema hrani odobritev in nespremenljive označbe. Navaden uvoz ali
+neposredna sprememba `active` ne odobrita vklopa take lige. Za namestitev
+so potrebni servisni RPC, neaktivna liga brez uporabniških ekip in resničen
+prihodnji prvi fantasy krog. `get_installed_historical_statistics_markers`
+preveri vezave na klube/kroge; označba ni dovoljenje za ugibanje statistik.
+`match_assist_status` vrne NULL za neznane posamezne podatke in zapre
+glasovanje, `sezone` pa ločeno šteje popolne in nedosegljive zapisnike.
+
 ## Mobilna aplikacija
 
 Capacitor zapakira `dist/` (`ios/`, `android/`; načrt in gradnja v

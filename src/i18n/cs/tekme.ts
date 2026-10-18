@@ -2,6 +2,16 @@
 import type { Prevod } from '../jedro.ts'
 
 export const tekme: NonNullable<Prevod['tekme']> = {
+  statistika: {
+    brezStrelcev: "Žádní ověření střelci.",
+    nedosegljivo: "Statistiky hráčů pro tento historický zápas nejsou dostupné. Oficiální výsledek zůstává zachován.",
+    kratko: "Statistiky nejsou dostupné",
+    postaveTocke: "Sestavy a body",
+    kartoni: "Karty",
+    delno: "Částečné statistiky sezóny {sezona}: úplné údaje pro {popolnih} z {odigranih} odehraných ligových zápasů. Historické zápasy bez statistik hráčů: {nedosegljivih}. Součty a průměry zahrnují pouze ověřené starty.",
+    brezOpazovanj: "Žádné ověřené starty",
+  },
+
   krog: '{n}. kolo',
   moraPrijava: 'Pokud chceš hlasovat, musíš se <prijava>přihlásit</prijava>.',
 

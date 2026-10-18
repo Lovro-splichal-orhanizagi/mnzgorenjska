@@ -2,6 +2,16 @@
 import type { Prevod } from '../jedro.ts'
 
 export const tekme: NonNullable<Prevod['tekme']> = {
+  statistika: {
+    brezStrelcev: "Nincsenek ellenőrzött gólszerzők.",
+    nedosegljivo: "Ehhez a korábbi mérkőzéshez nem érhetők el játékosstatisztikák. A hivatalos eredmény megmarad.",
+    kratko: "A statisztika nem érhető el",
+    postaveTocke: "Felállások és pontok",
+    kartoni: "Lapok",
+    delno: "Részleges statisztika a(z) {sezona} idényről: teljes adatok {popolnih} mérkőzésről a(z) {odigranih} lejátszott bajnokiból. {nedosegljivih} korábbi mérkőzés játékosstatisztikái nem érhetők el. Az összegek és átlagok csak az ellenőrzött pályára lépéseket tartalmazzák.",
+    brezOpazovanj: "Nincs ellenőrzött pályára lépés",
+  },
+
   krog: '{n}. forduló',
   moraPrijava: 'A szavazáshoz <prijava>be kell jelentkezned</prijava>.',
 
