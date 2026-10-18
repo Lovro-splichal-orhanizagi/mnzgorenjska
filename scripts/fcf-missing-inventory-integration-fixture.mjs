@@ -10,17 +10,17 @@ import {collectFcfMissingInventoryChild} from './fcf-missing-inventory-capture.m
 let shared,cached,n=1000
 export const retained=process.env.FCF_HISTORICAL_RETAINED_DIR
 function copy(f){return{...f,artifact:structuredClone(f.artifact),run:structuredClone(f.run),jobs:structuredClone(f.jobs),expected:structuredClone(f.expected),entries:f.entries.map(e=>({...e,body:Buffer.from(e.body)})),manifest:structuredClone(f.manifest),zipBytes:Buffer.from(f.zipBytes)}}
-export async function inventoryFixture(t,{targetSlug='es-ct-segona-g1',previous,source,fresh=false}={}){
- if(cached&&!fresh&&!source&&targetSlug==='es-ct-segona-g1')return copy(cached)
+export async function inventoryFixture(t,{targetSlug='es-ct-segona-g1',previous,source,fresh=false,nativePlayers=false}={}){
+ if(cached&&!fresh&&!source&&!nativePlayers&&targetSlug==='es-ct-segona-g1')return copy(cached)
  if(!shared)shared={seed:readFcfMissingInventorySeed(seedFixture(retained)),groups:packetFixture(retained).groups}
  const plan=previous?.plan??buildFcfMissingInventoryPlan({sourceCommit:execution().sourceCommit,seedEvidence:shared.seed,policyHashes:fcfMissingInventoryPolicyHashes(),now:now-3600000+(++n)}),claimProof=previous?.claimProof??readFcfInventoryExecutionClaim(claimFixture(plan)),consumptionProof=previous?.consumptionProof??readFcfInventoryConsumptionArtifact(consumptionFixture(claimProof)),root=realpathSync(mkdtempSync(join(tmpdir(),'fcf-inventory-integration-')))
  t.after(()=>rmSync(root,{recursive:true,force:true}));let time=previous?.now??now,calls=0
- const group=shared.groups.find(g=>g.competition.slug===targetSlug),exec={...execution(),jobId:targetSlug.endsWith('-g1')?'555':'556'},input={plan,targetSlug,seedEvidence:shared.seed,execution:exec,consumptionProof,batchState:previous?.continuation,root,clock:()=>time,pause:async ms=>{time+=ms},request:async(url,init)=>{calls++;time+=5;return source?source(url,init):new Response(group.documents.find(d=>url.endsWith('/'+d.id)).html)}}
+ const group=(nativePlayers?packetFixture(retained,{nativePlayers:true}).groups:shared.groups).find(g=>g.competition.slug===targetSlug),exec={...execution(),jobId:targetSlug.endsWith('-g1')?'555':'556'},input={plan,targetSlug,seedEvidence:shared.seed,execution:exec,consumptionProof,batchState:previous?.continuation,root,clock:()=>time,pause:async ms=>{time+=ms},request:async(url,init)=>{calls++;time+=5;return source?source(url,init):new Response(group.documents.find(d=>url.endsWith('/'+d.id)).html)}}
  const result=await collectFcfMissingInventoryChild(input),entries=readdirSync(result.outputDirectory).map(name=>({name,body:readFileSync(join(result.outputDirectory,name))})),manifest=JSON.parse(entries.find(e=>e.name==='manifest.json').body),bytes=zip(entries),m=metadata({bytes,name:`fcf-missing-inventory-${targetSlug}-123-1`,jobName:`missing-inventory-${targetSlug.endsWith('-g1')?'g1':'g9'}`,steps:['Capture missing target inventory','Retain complete target inventory'],run:'in_progress',jobId:exec.jobId,artifactId:targetSlug.endsWith('-g1')?'888':'898'})
  m.jobs[0].status='in_progress';m.jobs[0].conclusion=null
  Object.assign(m.expected,{manifestSha256:sha(entries.find(e=>e.name==='manifest.json').body),planSha256:plan.planSha256,childPlanSha256:validateFcfMissingInventoryPlan({plan,expectedPlanSha256:plan.planSha256,now:time})[targetSlug.endsWith('-g1')?0:1].childPlanSha256})
  const fixture={...m,targetSlug,root,result,entries,manifest,plan,claimProof,consumptionProof,continuationProof:previous?.continuation,calls,now:time+1000}
- if(!fresh&&!source&&targetSlug==='es-ct-segona-g1')cached=fixture
+ if(!fresh&&!source&&!nativePlayers&&targetSlug==='es-ct-segona-g1')cached=fixture
  return copy(fixture)
 }
 export function artifactMetadata(f){return{artifact:f.artifact,run:f.run,jobs:f.jobs,expected:f.expected}}
